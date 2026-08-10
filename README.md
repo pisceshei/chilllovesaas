@@ -23,6 +23,7 @@
 | 08 | system-architecture | Shopify 服務端工程內幕（單體/Pods/SFR/搶購）與復刻對應 |
 | 09 | api-map | Admin/Storefront/Customer/Ajax API、Webhooks、Functions 地圖 |
 | 10 | implementation-playbook | 00–09 逐篇實作細節：工具/套件、代碼草稿、參考文檔、M0 開工清單 |
+| 21 | live-admin-teardown | 實測走訪 2026 春季版後台：十大結構性變化、逐頁紀錄、原型 v2 修正清單 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 
