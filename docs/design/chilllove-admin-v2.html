@@ -331,7 +331,7 @@ body.annotate .annot-bar{display:block}
     <button class="icon-btn" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="icon-btn" title="通知" aria-label="通知" onclick="toast('1 則通知：#1039 被標記為中風險訂單')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
-    <button class="store-chip"><span class="avatar">CL</span>CHILL LOVE<span class="dev-tag">demo</span></button>
+    <button class="store-chip" data-doc="storechip"><span class="avatar">CL</span>CHILL LOVE<span class="dev-tag">demo</span></button>
   </div>
 </header>
 
@@ -412,7 +412,7 @@ body.annotate .annot-bar{display:block}
           <button class="b-act" onclick="toast('Demo：批次封存')">封存</button>
           <button class="b-act" onclick="toast('Demo：加入標籤')">加標籤</button>
         </div>
-        <table class="idx" id="orderTable">
+        <table class="idx" id="orderTable" data-doc="ordertable">
           <thead><tr>
             <th style="width:36px"><input type="checkbox" class="cb" id="cbAllOrders" onclick="toggleAll(this)" aria-label="全選"></th>
             <th>訂單</th><th>日期</th><th>顧客</th><th>管道</th><th class="right">總計</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th><th>標籤</th>
@@ -431,9 +431,9 @@ body.annotate .annot-bar{display:block}
     <div class="page-head">
       <h1>產品</h1>
       <div class="head-actions">
-        <button class="btn btn-ghost btn-sm" onclick="toast('Demo：匯出')">匯出</button>
-        <button class="btn btn-ghost btn-sm" onclick="toast('Demo：匯入')">匯入</button>
-        <button class="btn btn-pri" onclick="toast('Demo：新增商品表單於 M1 實作')">新增商品</button>
+        <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出')">匯出</button>
+        <button class="btn btn-ghost btn-sm" data-doc="import" onclick="toast('Demo：匯入')">匯入</button>
+        <button class="btn btn-pri" data-doc="newproduct" onclick="toast('Demo：新增商品表單於 M1 實作')">新增商品</button>
       </div>
     </div>
     <div class="card">
@@ -445,7 +445,7 @@ body.annotate .annot-bar{display:block}
         </div>
         <button class="icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
-      <table class="idx" id="prodTable">
+      <table class="idx" id="prodTable" data-doc="prodtable">
         <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th>類型</th><th>供應商</th></tr></thead>
         <tbody></tbody>
       </table>
@@ -1236,6 +1236,21 @@ document.getElementById('aiInput').addEventListener('keydown',e=>{if(e.key==='En
 /* ================= palette / toast ================= */
 function openPalette(){document.getElementById('palOverlay').classList.add('show');setTimeout(()=>palInput.focus(),30);}
 function closePalette(){document.getElementById('palOverlay').classList.remove('show');}
+/* G 系列鍵盤跳轉（G→H/O/P/A/S，1 秒窗口）*/
+let gArmed=0;
+const G_MAP={h:'home',o:'orders',p:'products',a:'analytics'};
+document.addEventListener('keydown',e=>{
+  const typing=/input|textarea|select/i.test(e.target.tagName);
+  if(!typing&&!e.metaKey&&!e.ctrlKey){
+    const k=e.key.toLowerCase();
+    if(k==='g'){gArmed=Date.now();}
+    else if(gArmed&&Date.now()-gArmed<1000){
+      if(G_MAP[k]){go(G_MAP[k]);toast('已跳轉（G+'+k.toUpperCase()+'）');gArmed=0;}
+      else if(k==='s'){openSettings('general');gArmed=0;}
+      else gArmed=0;
+    }
+  }
+});
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}
   if(e.key==='Escape'){
@@ -1291,6 +1306,22 @@ const DOCS={
  "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
  "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
  "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
+ import:{t:"匯入 CSV",f:"批次建立/更新資源",l:"15MB 上限；欄名區分大小寫；覆寫勾選以 handle/email 比對；欄留空=清空、缺欄=保留",i:"P1・逐行 job+錯誤報告（規格 13-F6）；22 §0"},
+ newproduct:{t:"新增商品",f:"開啟商品建立表單",l:"預設 Draft；標題必填→自動生成 handle；≤3 選項展開變體",i:"P0・Catalog::SaveProduct 單一 transaction（規格 13-F1）；22 §2"},
+ prodtable:{t:"商品列表",f:"商品主檔清單",l:"庫存欄紅字=缺貨、黃字=低量；封存不出現於預設檢視；整列點入詳情",i:"P0・M：products/variants；列表查詢帶 shop_id 複合索引"},
+ ordertable:{t:"訂單列表",f:"訂單清單（雙狀態機）",l:"付款/出貨兩條獨立狀態；多幣別顯示原幣+代碼；取消單劃線；風險 icon",i:"P0・狀態物化欄位（規格 16-F1）；金額 MoneyBag 雙幣（06 §6）"},
+ storechip:{t:"商店切換器",f:"顯示當前店＋多店切換",l:"多店同帳號；demo 標籤=測試環境警示",i:"P2 多店；M：shops + org（05 §2）"},
+ "doc-m-shiplabels":{t:"運送標籤",f:"購買/列印宅配標籤",l:"買標→費用記平台帳單→自動標出貨+回填追蹤；void 可退",i:"P2・Labels::Quote/Purchase adapter（22 §1b）"},
+ "doc-m-giftcards":{t:"禮品卡",f:"發卡與餘額管理",l:"面額=變體；後台發卡 ≤$2,000；停用=永久；完整卡號僅顧客可見",i:"P1・M：gift_cards（code digest；22 §2）"},
+ "doc-m-catalogs":{t:"目錄",f:"市場×商品×價格組合",l:"固定價覆蓋 % 調整；也用於 B2B/AI 代理通路",i:"P2・M：catalogs（05 §1e）"},
+ "doc-m-menus":{t:"選單",f:"前台導航樹",l:"巢狀 ≤3 層；八種連結資源型；轉址同區管理",i:"P0(M2)・M：menus/menu_items + url_redirects（22 §6）"},
+ "doc-m-files":{t:"檔案庫",f:"全站資產",l:"一次 ≤20 檔；刪除警告引用斷裂；CDN 連結",i:"P1・M：file_assets + 引用計數（22 §6）"},
+ "doc-m-blog":{t:"部落格",f:"內容行銷",l:"排程發佈；作者限員工；SEO 同商品規則",i:"P1・M：blogs/articles（22 §6）"},
+ "doc-m-attribution":{t:"歸因",f:"行銷成效歸因",l:"UTM 自動比對；模型可切換",i:"P2・sessions 事件 + utm 欄（19-F3）"},
+ "doc-m-campaigns":{t:"行銷活動",f:"多通路活動管理",l:"分享連結/QR/UTM；自動化底層=事件流",i:"P2・outbox → automation（18-F1）"},
+ "doc-m-live":{t:"實況瀏覽",f:"即時戰情",l:"近 5 分訪客；午夜起指標（店時區）；行為漏斗近 10 分",i:"P1・sessions 即時層（19-F3）；地圖點=IP 國別（不落庫）"},
+ "doc-m-markets":{t:"市場",f:"國際化維度",l:"一國僅屬一市場；當地幣結帳；捨入規則；AI 建議行可關",i:"P2・M：markets；金額引擎 presentment 層（22 §7）"},
+ "doc-m-finance":{t:"財務",f:"收款/撥款/稅務總覽",l:"payout 對帳報表=交易+費用+撥款拆解",i:"P1 殼・Stripe balance/payout API 對接 P2（22 §7）"},
 };
 let annot=false;
 function toggleAnnot(){
