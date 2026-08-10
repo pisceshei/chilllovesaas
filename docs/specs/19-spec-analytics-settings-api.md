@@ -1,0 +1,79 @@
+# 19 — 功能規格：分析報表、Settings、對外 API（生產級）
+
+> 覆蓋功能：指標定義與 rollup、dashboard、sessions 追蹤、Settings 各域與稽核、公開 API（token/scope/限流/分頁/版本化）。規格對照研究 04 §5 / 05 / 09，基線見 11。
+
+## F1. 指標定義（先於一切圖表）
+
+**生產級做法**：
+1. 寫一份 `metrics.md` 指標辭典，每個指標三要素：公式、口徑、反例。起步集：
+   - Total sales = Σ(訂單總計) − Σ(退款) −（取消單全額）——含稅運費（毛口徑，跟隨行業慣例並註明）
+   - Orders = 成立訂單數（不含 draft 未完成、含取消但另列 cancelled 數）
+   - AOV = Total sales / Orders；Conversion = 完成訂單 sessions / 總 sessions
+2. **時區**：一切「按日」聚合用 shop 時區——MySQL `CONVERT_TZ(created_at, 'UTC', shop.tz)`；**部署 checklist：先灌 MySQL 時區表**（`mysql_tzinfo_to_sql /usr/share/zoneinfo`，11 §8 經典坑）。
+3. 比較期：本期 vs 前一等長期間 / 去年同期，區間邊界含頭不含尾（[start, end)）統一全站。
+
+**⚠️ 坑**：退款計入「退款發生日」而不是原訂單日（現金流視角，跟本尊一致）；測試訂單（test mode 金流）標記 `test: true` 並排除於一切指標；幣別未統一前不做跨店聚合。
+
+## F2. Rollup 與 Dashboard
+
+**生產級做法**：
+1. 兩層架構：`daily_rollups`（shop_id、date、metric、value——nightly job 算昨日 + 今日增量每 5 分鐘）+ 即時層（今日直接聚合，資料量小）。查詢永遠打 rollup，**不對 orders 表做大範圍即時聚合**。
+2. rollup 冪等可重算：`rake analytics:rebuild SHOP=x FROM=2026-01-01`（資料修正後重跑）；nightly 對帳（隨機抽 3 天全量重算 vs rollup 比對，漂移告警）。
+3. Dashboard API：一支 endpoint 回全部卡片（單次往返），含本期/比較期/走勢陣列；recharts 畫線，空資料給空狀態不給 0 假線。
+4. Top products/暢銷榜：rollup 表帶 dimension 欄（metric=units_sold, dimension=product_id）。
+
+**⚠️ 坑**：日界線在 shop 時區換日瞬間的訂單歸屬要有測試（23:59:59 vs 00:00:00）；rollup 寫入用 upsert（`ON DUPLICATE KEY UPDATE`）保冪等；「今日」卡片與 rollup 銜接處別重複計（today 從即時層、歷史從 rollup，邊界=今日 00:00 shop 時區）。
+
+## F3. Sessions 追蹤（轉換率的分母）
+
+**生產級做法**：demo 用第一方輕量方案——storefront 注入 3 行 script 打自家 `/collect` 端點（session_id = 簽名 cookie 30 分鐘滑動）；記錄：pageview、add_to_cart、reached_checkout、purchase 四事件（漏斗即成）；bot 過濾（UA 黑名單 + 無 cookie 者不計）；**不用第三方分析（隱私與依賴）**；IP 不落庫（只取國別後丟棄）。
+
+**⚠️ 坑**：cookie 同意（EU 流量）——第一方必要性 cookie 論證可行但要寫進隱私政策；/collect 要限流與 payload 白名單（會被灌垃圾）；轉換率分母口徑（session vs visitor）寫進指標辭典。
+
+## F4. Settings 框架與稽核
+
+**生產級做法**：
+1. 兩類儲存：結構化域（shipping/taxes/users/notifications/domains…專屬表 + 專屬 service）與輕量開關（`shops.settings` JSON，**逐鍵 schema 驗證**——settings key 註冊表：型別/預設/驗證，防 JSON 欄變垃圾場）。
+2. 所有 Settings 寫入走 `Settings::Update` service → 逐鍵 diff → audit_logs（before/after，12-F3）；危險變更（關店、改金流模式、改網域）二次確認 + 額外事件。
+3. 權限：settings 各域對應 permission key（`settings.payments` 等，05 研究的顆粒度）。
+4. General 域的幣別/時區：**建店後改幣別要鎖**（有訂單後不可改，只能 P2 的 Markets 處理）；改時區允許但註記「影響報表日界線」。
+
+**⚠️ 坑**：幣別可隨意改 = 歷史金額語意全毀（最常見的電商 SaaS 資料事故之一）；JSON settings 沒 schema = 半年後沒人知道哪些 key 活著；audit 漏 Settings = 出事無法追責。
+
+## F5. 對外 API（token / scope / 限流 / 分頁 / 版本）
+
+**生產級做法**：
+1. Token：`api_tokens`（token_digest SHA-256、prefix 明文前 8 碼供識別、scopes JSON、last_used_at、expires_at nullable）；**明文只在建立時顯示一次**；比對 `secure_compare`；格式 `cl_live_xxxx` / `cl_test_xxxx`。
+2. Scope：`read_products/write_products/read_orders/…`（照 09 命名）；controller concern `require_scope!("read_orders")`；403 帶所缺 scope 名。
+3. 限流：rack-attack 令牌桶（每 token 120 req/min 起步）+ 回應頭 `X-RateLimit-Limit/Remaining/Reset`；429 帶 `Retry-After`。
+4. 分頁：cursor（Base64 編碼 `[sort_value, id]`）+ `page_info.has_next`，排序固定帶 id tiebreaker（11 §4）；limit 上限 250。
+5. 錯誤封套統一：`{"errors":[{"code":"not_found","message":"...","field":null}]}`；code 表列管（文件化、永不改語意）。
+6. 版本：`/api/v1/` 凍結合約；棄用欄位先加 `Sunset`/`Deprecation` header 與 changelog，≥6 個月後移除（09 的節奏精神）。
+7. 文件：rswag 從 request spec 生 OpenAPI → `/api/docs`；附 `llms.txt`（對 AI 工具友善，09 結論）。
+8. 安全：API 全域 HTTPS、token 不入 log（filter）、寫操作記 audit（actor=token）、大 payload 上限 1MB。
+
+**代碼**：
+
+```ruby
+class Api::BaseController < ActionController::API
+  before_action :authenticate_token!, :set_tenant_from_token
+  def authenticate_token!
+    raw = request.headers["Authorization"]&.delete_prefix("Bearer ")
+    tok = raw && ApiToken.active.find_by(token_digest: Digest::SHA256.hexdigest(raw))
+    head :unauthorized unless tok
+    @api_token = tok.tap { _1.touch_last_used }   # 節流 touch：>5 分鐘才寫
+  end
+  def require_scope!(s) = @api_token.scopes.include?(s) || render_error(:forbidden, "missing_scope: #{s}")
+end
+```
+
+**⚠️ 坑**：
+- token 明文入庫/入 log 是最常見洩漏路徑——digest + filter + 建立頁「只顯示一次」三件套。
+- `last_used_at` 每請求 UPDATE 會把讀 API 變寫熱點——節流更新（>5 分鐘才寫）。
+- cursor 分頁若排序鍵可變（updated_at）會漏/重列——公開 API 只提供 created_at/id 排序。
+- 版本化「盡量不破壞」比「勤發新版」重要；v1 發布前用內部消費者（自家 admin 部分讀路徑）先吃 3 個月狗糧。
+- CORS：公開 API 預設不開瀏覽器 CORS（server-to-server 定位），開了就要重新審視 token 保管模型。
+
+## 本篇驗收（對照 11 §0）
+
+指標辭典三要素齊全且 rollup 對帳連續 7 天零漂移；換日邊界測試綠；/collect 濫灌測試被擋；改幣別在有訂單後被拒；API：token 洩漏演練（log 掃描無明文）、429/scope/404 封套一致、cursor 翻頁 10 萬筆無漏重、OpenAPI 文件與實際行為 diff 為零（rswag 保證）；Settings 全部變更可在 audit log 還原前後值。

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopify 模組地圖 — 復刻專案研究總覽</title>
+<style>
+  :root{
+    --bg:#f1f1f2; --surface:#ffffff; --surface-2:#f7f7f8; --text:#28292b; --text-2:#6b6d71;
+    --border:#e3e3e6; --brand:#2b2c2e; --accent:#4a5df9; --accent-soft:#eef0ff;
+    --success:#0a7a5c; --success-soft:#e6f3ee; --warn:#8a6116; --warn-soft:#fdf3dc;
+    --crit:#b3172c; --crit-soft:#fdecee; --info:#155e8f; --info-soft:#e8f2fa;
+    --radius:12px; --radius-sm:8px; --shadow:0 1px 2px rgba(20,20,25,.06),0 4px 16px rgba(20,20,25,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:Inter,"Noto Sans TC",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang TC","Microsoft JhengHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+  header.hero{margin-bottom:20px}
+  .hero h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+  .hero p{color:var(--text-2);margin-top:6px;max-width:760px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0 22px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+  .stat b{display:block;font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .stat span{color:var(--text-2);font-size:12px}
+  .toolbar{position:sticky;top:0;z-index:5;background:linear-gradient(var(--bg) 85%,rgba(241,241,242,0));padding:8px 0 12px;display:flex;flex-direction:column;gap:10px}
+  .search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;box-shadow:var(--shadow)}
+  .search svg{flex:none;opacity:.45}
+  .search input{border:0;outline:0;width:100%;font-size:14px;background:transparent;color:var(--text)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{border:1px solid var(--border);background:var(--surface);color:var(--text-2);border-radius:999px;padding:5px 12px;font-size:12.5px;cursor:pointer;transition:.15s;user-select:none}
+  .chip:hover{border-color:#c9c9ce}
+  .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .count{color:var(--text-2);font-size:12px;margin:2px 2px 8px}
+  section.cat{margin-bottom:26px}
+  .cat h2{font-size:13px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em;margin:0 2px 10px;display:flex;align-items:center;gap:8px}
+  .cat h2 .dot{width:8px;height:8px;border-radius:50%}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s, border-color .12s}
+  .card:hover{transform:translateY(-2px);border-color:#c5c6cc}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .card h3{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .badge{flex:none;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;letter-spacing:.02em}
+  .P0{background:var(--success-soft);color:var(--success)}
+  .P1{background:var(--warn-soft);color:var(--warn)}
+  .P2{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+  .P-{background:var(--info-soft);color:var(--info)}
+  .card p{color:var(--text-2);font-size:12.5px;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .doc{margin-top:8px;font-size:11px;color:#9a9ba0}
+  /* panel */
+  .overlay{position:fixed;inset:0;background:rgba(24,24,28,.42);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+  .overlay.show{opacity:1;pointer-events:auto}
+  .panel{position:fixed;top:0;right:-560px;width:min(540px,94vw);height:100%;background:var(--surface);z-index:21;box-shadow:-12px 0 40px rgba(20,20,25,.18);transition:right .25s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+  .panel.show{right:0}
+  .panel-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .panel-head h3{font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .panel-head .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .tag{font-size:11px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);border-radius:6px;padding:2px 8px}
+  .close{flex:none;border:1px solid var(--border);background:var(--surface);border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer;color:var(--text-2)}
+  .close:hover{background:var(--surface-2)}
+  .panel-body{padding:16px 22px 40px;overflow-y:auto}
+  .sec{margin-bottom:18px}
+  .sec h4{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+  .sec ul{list-style:none}
+  .sec li{position:relative;padding-left:16px;margin-bottom:6px;font-size:13.5px}
+  .sec li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:#b9bac0}
+  .objs{display:flex;flex-wrap:wrap;gap:5px}
+  .obj{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;background:var(--accent-soft);color:#3646c4;border-radius:6px;padding:2px 7px}
+  .empty{padding:60px 20px;text-align:center;color:var(--text-2)}
+  footer{margin-top:30px;color:#9a9ba0;font-size:12px;border-top:1px solid var(--border);padding-top:16px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>Shopify 模組地圖</h1>
+    <p>復刻專案第一階段研究總覽：52 個模組節點，涵蓋後台、前台、結帳金流、平台層、API 與系統架構。點擊卡片看細節；P0/P1/P2 為 demo 原型的實作優先級（詳見 07-mvp-plan）。</p>
+    <div class="stats">
+      <div class="stat"><b>10</b><span>研究文件（00–09）</span></div>
+      <div class="stat"><b>7</b><span>並行研究路線</span></div>
+      <div class="stat"><b>52</b><span>模組節點</span></div>
+      <div class="stat"><b>~40</b><span>核心資料表（06）</span></div>
+      <div class="stat"><b>M0–M6</b><span>Demo 里程碑（07）</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="搜尋模組、物件、關鍵字…（例：訂單、variant、save bar、webhook）">
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <main id="main"></main>
+
+  <footer>
+    研究基準 2025–2026・來源：help.shopify.com / shopify.dev / shopify.engineering / shopify.com（詳見各文件來源清單）・本頁為自製整理，非 Shopify 官方資料
+    <div class="legend">
+      <span><span class="badge P0">P0</span> demo 必做</span>
+      <span><span class="badge P1">P1</span> demo 加分</span>
+      <span><span class="badge P2">P2</span> 第三階段</span>
+      <span><span class="badge P-">參考</span> 知識/架構參考</span>
+    </div>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<aside class="panel" id="panel">
+  <div class="panel-head">
+    <div>
+      <h3 id="p-title"></h3>
+      <div class="meta" id="p-meta"></div>
+    </div>
+    <button class="close" id="p-close" aria-label="關閉">✕</button>
+  </div>
+  <div class="panel-body">
+    <div class="sec"><h4>職責</h4><p id="p-summary" style="font-size:13.5px"></p></div>
+    <div class="sec"><h4>核心物件 / 概念</h4><div class="objs" id="p-objs"></div></div>
+    <div class="sec"><h4>畫面與交互重點</h4><ul id="p-ui"></ul></div>
+    <div class="sec"><h4>復刻備註</h4><ul id="p-notes"></ul></div>
+  </div>
+</aside>
+
+<script>
+const CATS = [
+  {id:"admin",  name:"後台核心商務", color:"#0a7a5c"},
+  {id:"ui",     name:"UI 設計系統", color:"#4a5df9"},
+  {id:"store",  name:"前台與主題", color:"#b3641a"},
+  {id:"checkout",name:"結帳與金流", color:"#b3172c"},
+  {id:"growth", name:"行銷與分析", color:"#8148c9"},
+  {id:"platform",name:"平台與設定", color:"#155e8f"},
+  {id:"api",    name:"API 與擴充", color:"#0e7d86"},
+  {id:"arch",   name:"系統架構", color:"#5c5e66"},
+];
+const D = [
+// ===== 後台核心 =====
+{c:"admin",p:"P0",n:"Products 商品",doc:"01",s:"所有通路共用的商品主檔：變體、媒體、定價、SEO、狀態。",
+ o:["Product","ProductVariant","ProductOption","Media"],
+ u:["列表：All/Active/Draft/Archived tabs + 篩選 + bulk edit","詳情：標題描述/媒體/定價(compare-at, cost→margin)/庫存/運送/變體/SEO 卡片","右欄：狀態、通路發佈、type/vendor/collections/tags","≤3 options 展開成變體（上限 2048，2025-10 起）"],
+ t:["Draft→Active→Archived 三態","LineItem 下單時快照商品資訊","handle 唯一 + 301 redirect"]},
+{c:"admin",p:"P1",n:"Collections 集合",doc:"01",s:"商品分組：手動挑選（manual）或規則自動（smart，≤60 條件）。",
+ o:["Collection","CollectionRule"],
+ u:["建立時選 manual/automated","smart 條件：tag/title/price/vendor… all|any 匹配","前台 /collections/{handle} 直接消費"],
+ t:["demo 先 manual + 簡化 smart","automated 建立後不可轉 manual"]},
+{c:"admin",p:"P0",n:"Inventory 庫存",doc:"01",s:"品項 × 地點的數量帳：available/committed/on_hand + 調整 ledger。",
+ o:["InventoryItem","InventoryLevel","Location","InventoryAdjustment"],
+ u:["庫存頁按地點篩選，直接編輯 available/on hand + 調整原因","每筆變動寫 adjustment history","恆等式：on_hand = available + committed + unavailable"],
+ t:["下單 available−/committed+；出貨 committed−/on_hand−；退款 restock available+","ledger 從第一天記，否則之後重寫","demo 單一 location"]},
+{c:"admin",p:"P2",n:"Transfers / PO 調撥採購",doc:"01",s:"進貨與倉間調撥：incoming 在途量、逐行收貨。",
+ o:["Transfer","PurchaseOrder","Shipment"],
+ u:["Draft→Ordered/In transit→Partially received→Received","目的地顯示 incoming，收貨時 accept/reject"],
+ t:["P2：demo 不做，模型留 incoming 欄位即可"]},
+{c:"admin",p:"P1",n:"Gift cards 禮品卡",doc:"01",s:"isGiftCard 特殊商品；卡有 code 與餘額，結帳時作付款方式折抵。",
+ o:["GiftCard"],
+ u:["可售賣或由商家直接發行","餘額部分折抵，與折扣邏輯分開"],
+ t:["折扣不適用於禮品卡購買"]},
+{c:"admin",p:"P0",n:"Orders 訂單",doc:"01",s:"付款/出貨/退款的狀態機中樞；後台最核心的工作介面。",
+ o:["Order","LineItem","OrderTransaction","Refund","Event(Timeline)"],
+ u:["列表：All/Unfulfilled/Unpaid/Open/Archived tabs、雙狀態 badge、bulk fulfill/capture","詳情：line items 按出貨狀態分組卡 + Payment 卡 + Timeline + 右欄顧客/風險/tags","financial 與 fulfillment 是兩條獨立狀態機"],
+ t:["financial status 由 transactions 推導、fulfillment 由出貨數推導","Timeline 事件表第一天就記"]},
+{c:"admin",p:"P0",n:"Fulfillment 出貨",doc:"01",s:"以 FulfillmentOrder 為工作單元：選數量、填 tracking、通知顧客。",
+ o:["FulfillmentOrder","Fulfillment"],
+ u:["Unfulfilled 卡點 Fulfill → 數量 → tracking → 通知","部分出貨、on hold、多地點拆單"],
+ t:["訂單↔履約單分離是現行模型，schema 第一天就用"]},
+{c:"admin",p:"P1",n:"Draft Orders 草稿訂單",doc:"01",s:"商家代客建單：加品項、套折扣、寄 invoice 收款或標記已付。",
+ o:["DraftOrder"],
+ u:["OPEN→INVOICE_SENT→COMPLETED","可 custom item、reserve 庫存、代輸卡號"],
+ t:["重用 checkout 金額引擎"]},
+{c:"admin",p:"P1",n:"Returns / Refunds 退貨退款",doc:"01",s:"退款面板逐行選數量+restock；退貨流程含退運方式與換貨。",
+ o:["Return","Refund","RefundLineItem"],
+ u:["Refund：逐行數量、restock 勾選、退運費、通知","Return：requested→in_progress→inspection→returned"],
+ t:["refund 是一筆 transaction；手續費不退是平台慣例"]},
+{c:"admin",p:"P1",n:"Abandoned Checkouts 棄單",doc:"04",s:"留下聯絡方式未完成付款的 checkout：挽回信 + recovery 連結。",
+ o:["Checkout","AbandonedCheckout"],
+ u:["Orders 下獨立列表：email 狀態、recovery 狀態","約 10 分鐘判定、3 個月自動清除"],
+ t:["checkout 落表即棄單資料來源；recovery URL 免費拿到"]},
+{c:"admin",p:"P0",n:"Customers 顧客",doc:"01",s:"顧客檔案：身分、地址簿、消費統計、email/SMS 同意狀態、tags。",
+ o:["Customer","CustomerAddress","MarketingConsent"],
+ u:["列表：訂閱狀態/地區/訂單數/消費額","詳情：最近訂單、地址簿、稅務豁免、Timeline","guest checkout 也建檔；可合併重複"],
+ t:["email 與 SMS 同意狀態分開存","amount_spent/orders_count 做成統計欄位"]},
+{c:"admin",p:"P1",n:"Segments 分眾",doc:"01",s:"用 filter 語法定義的動態顧客名單，供行銷與折扣資格使用。",
+ o:["Segment"],
+ u:["語法：amount_spent > 100 AND last_order_date < -30d 風格","成員自動進出、提供範本"],
+ t:["demo 簡化為預設幾組 + 簡單條件組合器"]},
+{c:"admin",p:"P0",n:"Discounts 折扣",doc:"01",s:"四類折扣（商品/訂單/BxGy/免運）× code/automatic × 組合規則。",
+ o:["DiscountNode","combinesWith","DiscountApplication"],
+ u:["列表：Status/Method/Type/Combinations/Used","建立：類型→method→條件（最低消費/客群/次數/期間）","組合：class 間 combinesWith 雙方同意才疊加"],
+ t:["用 class+combinesWith 模型，不寫死一單一折","demo 先 code × (訂單%/免運)"]},
+// ===== UI =====
+{c:"ui",p:"P0",n:"Design Tokens",doc:"02",s:"色彩/字體/間距/圓角/陰影的變數系統——自建元件庫的規格基準。",
+ o:["color-bg/text/border/icon","space-100…3200","radius","Inter"],
+ u:["頁面底 #F1F1F1、卡片白、主按鈕近黑 #303030","4px 間距基準、卡片 12px 圓角、按鈕 8px","語意色：success 綠/critical 紅/warning 黃/info 藍"],
+ t:["⚠️ Polaris 授權非純 MIT：參考規格自建，不 import 套件","icon 用 Lucide 等 MIT 庫"]},
+{c:"ui",p:"P0",n:"App Frame 後台佈局",doc:"02",s:"灰底側欄導航 + 深色 top bar + 內容區的整體框架。",
+ o:["Sidebar","TopBar","SettingsFrame"],
+ u:["選中項白底膠囊+粗體；Sales channels/Apps 獨立群組","top bar：⌘K 全域搜尋、通知鈴鐺、商店切換","Settings 是獨立框架（左欄換設定分類）"],
+ t:["demo 先做主選單 8 項 + settings 框架"]},
+{c:"ui",p:"P0",n:"Index Page 列表模式",doc:"02",s:"後台最重要複合模式：tabs(saved views)+篩選+搜尋+批次+分頁。",
+ o:["IndexTable","IndexFilters","Pagination"],
+ u:["第一 tab 固定 All，其後自訂檢視（存篩選+排序）","Add filter→Popover 設值→filter pills","勾選後表頭變 bulk actions 列","cursor 分頁：只有前/後箭頭"],
+ t:["做成頁面級模板元件，所有模組列表共用"]},
+{c:"ui",p:"P0",n:"Detail Page 詳情模式",doc:"02",s:"主欄 2/3 表單卡 + 側欄 1/3 metadata 卡；改了就存的心智模型。",
+ o:["Page","Card","ContextualSaveBar"],
+ u:["頁首：返回+標題+狀態 badge+次要動作+上下筆","dirty 時頂部出現 Unsaved changes 列（Discard/Save）","離開未儲存→攔截 modal；錯誤→inline error+頂部 Banner"],
+ t:["save bar + 離開攔截是 Shopify 手感的靈魂，優先做對"]},
+{c:"ui",p:"P0",n:"回饋元件（Toast/Banner/Badge）",doc:"02",s:"操作回饋與狀態表達的統一語言。",
+ o:["Toast","Banner×4 tone","Badge+progress"],
+ u:["Toast：底部黑膠囊 5 秒自動消失，可帶 Undo","Badge：語意色+進度圈（空/半/實），文案過去式","destructive confirm：紅色主按鈕+不可復原說明"],
+ t:["訂單雙狀態 badge 的顏色語意照抄慣例"]},
+{c:"ui",p:"P1",n:"複合元件",doc:"02",s:"Resource picker、date range picker、Combobox/Tag、DropZone、富文本。",
+ o:["ResourcePicker","DateRangePicker","Combobox","DropZone"],
+ u:["選商品 modal：搜尋+多選+預選","分析頁日期選擇：預設區間+雙月曆+Apply","tags 輸入 = 多選 Combobox + 可移除 Tag"],
+ t:["富文本用 TipTap 自組（官方也非公開元件）"]},
+{c:"ui",p:"P1",n:"全域搜尋與快捷鍵",doc:"02",s:"⌘K command palette 式搜尋：跨資源、分類過濾、最近搜尋。",
+ o:["CommandPalette"],
+ u:["⌘K 開啟；輸入分類過濾 Orders/Products/Customers…","? 開快捷鍵總覽；Esc 關閉；skeleton 載入慣例"],
+ t:["demo 可後置，top bar 位置先留"]},
+// ===== 前台 =====
+{c:"store",p:"P0",n:"Theme 架構（OS 2.0）",doc:"03",s:"主題 = 檔案結構 + JSON templates + sections/blocks + settings schema。",
+ o:["layout/templates/sections","JSON template","settings_schema"],
+ u:["template = JSON：sections(type/settings/blocks)+order","每 template ≤25 sections、section ≤50 blocks","section schema 定義 settings/blocks/presets"],
+ t:["復刻核心抽象：theme = DB 裡的 JSON + section 元件註冊表","不實作 Liquid 語言本身（P2）"]},
+{c:"store",p:"P1",n:"Theme Editor 主題編輯器",doc:"03",s:"三欄：左 section 樹 / 中即時預覽 / 右設定表單；所見即所得。",
+ o:["SectionTree","Preview(iframe)","SettingsForm"],
+ u:["左樹：拖曳排序、眼睛隱藏(disabled)、Add section 清單","中：頁面/裝置切換、undo/redo、點預覽同步選中","Save 寫 JSON；draft theme→Publish 上線（library ≤20）"],
+ t:["= 對 template JSON 的視覺編輯器；M6 里程碑"]},
+{c:"store",p:"P-",n:"Liquid 模板語言",doc:"03",s:"objects / tags / filters 三件套；貫穿主題與通知信。",
+ o:["{{ product.title }}","{% for %}","| money | t"],
+ u:["核心物件：shop/product/collection/cart/customer/routes","只有 nil/false 是 falsy；filter 由左至右"],
+ t:["demo 用 React 渲染代替；通知信模板用簡化變數替換"]},
+{c:"store",p:"P0",n:"首頁與 Sections 庫",doc:"03",s:"image banner、featured collection、rich text 等可組合區塊。",
+ o:["image-banner","featured-collection","multicolumn"],
+ u:["Dawn 首頁預設：banner→rich-text→featured-collection→collage…","區塊有 settings（高度/欄數/hover 第二圖）"],
+ t:["demo 8 個 section：announcement/header/banner/featured/richtext/grid/newsletter/footer"]},
+{c:"store",p:"P0",n:"Collection 頁 + 篩選排序",doc:"03",s:"商品格線 + 篩選（filters）+ 排序 + 分頁。",
+ o:["collection.filters","sort_by"],
+ u:["篩選來源商家定義（≤25 個）；URL：filter.v.option.color=red","filter 間 AND、同 filter 值 OR","排序：manual/best-selling/title/price/created"],
+ t:["demo 排序先做，篩選簡化為 availability+price+選項"]},
+{c:"store",p:"P0",n:"Product 頁",doc:"03",s:"媒體畫廊 + variant picker + 價格 + buy buttons + 推薦。",
+ o:["variant picker","payment_button","recommendations"],
+ u:["選變體→局部重渲染價格/庫存/媒體/按鈕","不存在組合 unavailable 劃線；售罄 Sold out disabled","compare-at 劃線價+Sale badge；dynamic checkout 按鈕"],
+ t:["變體切換的 section 局部更新是體驗關鍵"]},
+{c:"store",p:"P0",n:"Cart 購物車",doc:"03",s:"page / drawer / notification 三型態；Ajax API 局部更新。",
+ o:["/cart.js","/cart/add.js","sections 參數"],
+ u:["加購→drawer 滑出→badge 更新，不整頁刷新","cart note、attributes；「稅運費結帳時計算」文案","免運進度條是常見自製慣例"],
+ t:["demo 做 drawer + Ajax 局部渲染"]},
+{c:"store",p:"P1",n:"Search 搜尋",doc:"03",s:"predictive search 下拉即時建議 + 完整結果頁。",
+ o:["/search/suggest","predictive-search"],
+ u:["輸入即查：建議詞/商品/頁面分組","submit 進 /search?q= 完整頁（支援篩選）"],
+ t:["demo 用 DB ILIKE/FTS 即可"]},
+{c:"store",p:"P1",n:"導航選單與頁面",doc:"03",s:"巢狀 menu（≤3 層）、mega menu、pages/blog/policies。",
+ o:["Menu","MenuItem","Page","Article"],
+ u:["拖曳縮排建巢狀；footer 只顯示頂層","policies 自動生成 /policies/* 頁"],
+ t:["demo：main+footer menu、pages、policies"]},
+{c:"store",p:"P1",n:"網域 / SEO / Handle",doc:"03",s:"URL 慣例、handle 生成、sitemap/robots、og tags、301。",
+ o:["handle","primary domain","sitemap.xml"],
+ u:["/products/{handle}、/collections/{handle} 結構固定","改 handle 可自動 301；canonical 指向 /products/*"],
+ t:["handle 生成器 + redirect 表第一天做"]},
+// ===== 結帳金流 =====
+{c:"checkout",p:"P0",n:"Checkout 結帳流程",doc:"04",s:"one-page：express 列→contact→address→shipping→payment→Pay now。",
+ o:["Checkout","MoneyBag"],
+ u:["左表單右摘要（sticky）；行動版摘要收合","地址自動完成；運送方式依 zone 即時計算","摘要：折扣碼輸入、小計/運費/稅/總計（幣別前綴）","所有方案可選 one-page 或 three-page"],
+ t:["金額引擎做純函式：小計→折扣→運費→稅→總計","送出付款時才扣庫存（冪等鍵防重複）"]},
+{c:"checkout",p:"P1",n:"Express Checkout / Shop Pay",doc:"04",s:"加速結帳：跨店錢包 + 錢包按鈕動態排序。",
+ o:["Shop Pay","wallets"],
+ u:["偵測買家已有錢包→按鈕排最前","Shop Pay：email 觸發→SMS 驗證碼→全欄位帶入"],
+ t:["demo 等價物：Stripe Link / Payment Request Button"]},
+{c:"checkout",p:"P0",n:"Payments 收單",doc:"04",s:"平台內建金流 + 第三方 gateway + 手動付款；測試模式。",
+ o:["PaymentGateway","test mode"],
+ u:["測試卡 4242…成功、…9995 餘額不足（與 Stripe 同構）","manual payments：下單 Pending→商家 mark as paid"],
+ t:["demo 用 Stripe test；gateway 做成 adapter 介面","第三方 gateway 加收費率是商業模式槓桿"]},
+{c:"checkout",p:"P1",n:"Authorize / Capture / Refund",doc:"04",s:"授權請款分離：四種 capture 模式 + transaction 鏈。",
+ o:["OrderTransaction","kind/status/parent"],
+ u:["授權期 7 天（Plus 可 30）；partial capture","refund 掛在 capture 之下成鏈"],
+ t:["transaction 表第一天用 kind/status/parent 模型"]},
+{c:"checkout",p:"P2",n:"Fraud Analysis 詐欺分析",doc:"04",s:"每單 low/medium/high 風險 + 指標清單（AVS/CVV/IP/多卡）。",
+ o:["OrderRisk"],
+ u:["訂單頁 Order risk 區：綠=正常、紅=詐欺常見、灰=補充","高風險可 hold/取消，搭 Flow 自動化"],
+ t:["demo 可做假指標示意；真模型是數據護城河"]},
+{c:"checkout",p:"P0",n:"Thank you / Order Status",doc:"04",s:"付款成功頁 → 同 URL 轉為訂單狀態頁（追蹤/重購）。",
+ o:["OrderStatusPage"],
+ u:["訂單編號+摘要；確認信自動寄出","無帳號者逾時需驗證再查看"],
+ t:["demo：thank you 頁 + 簡單 status 頁 + 確認信"]},
+// ===== 行銷分析 =====
+{c:"growth",p:"P2",n:"Marketing / Automations",doc:"04",s:"活動歸因 + 模板化自動流程（welcome/棄單/win-back）。",
+ o:["MarketingActivity","Automation"],
+ u:["活動自動帶 UTM；歸因模型可切換","automations 底層是 Flow"],
+ t:["P2；棄單挽回信可提前到 P1"]},
+{c:"growth",p:"P0",n:"Analytics Dashboard",doc:"04",s:"可自訂卡片的指標首頁：銷售/sessions/轉換率/AOV + 比較期。",
+ o:["dashboard card","date range"],
+ u:["卡片可增刪拖曳；資料近即時","轉換率含 加購→到結帳→成交 漏斗"],
+ t:["demo 5 張卡 + 日期範圍，SQL 聚合即可"]},
+{c:"growth",p:"P1",n:"Reports / Live View",doc:"04",s:"11 類預設報表 + 即時戰情（地圖、行為漏斗）。",
+ o:["Report","LiveView"],
+ u:["Sales/Customers/Finance/Inventory… 分類報表","Live View：即時訪客、Active carts→Checking out→Purchased"],
+ t:["demo 3 張報表；Live View 簡版加分"]},
+{c:"growth",p:"P0",n:"Notifications 通知信",doc:"04",s:"數十種事件信模板（Liquid 變數），全域 branding 一鍵套用。",
+ o:["NotificationTemplate"],
+ u:["order/shipping confirmation 等模板可改 subject+HTML","staff 新訂單通知"],
+ t:["demo 兩封：訂單確認、出貨通知（React Email）"]},
+// ===== 平台 =====
+{c:"platform",p:"P0",n:"Settings 設定框架",doc:"05",s:"20+ 設定領域的獨立框架 = 平台層 config service。",
+ o:["Shop","SettingsDomain"],
+ u:["General/Payments/Checkout/Shipping/Taxes/Notifications…","獨立左欄分類導航"],
+ t:["demo 做 8 個域；每域獨立頁"]},
+{c:"platform",p:"P1",n:"Users / Roles 權限",doc:"05",s:"staff + 細顆粒權限 + collaborator；owner 不可剝奪。",
+ o:["StaffMember","Role","Permission"],
+ u:["權限按模組×動作切（訂單退款、商品成本…分開授權）","Basic 0 名staff、Grow 5、Advanced 15、Plus 不限"],
+ t:["demo owner+staff 兩級；DB 直接用 role-permission 多對多"]},
+{c:"platform",p:"P0",n:"Shipping 運費",doc:"05",s:"profiles × zones × rates：固定/條件式/實時報價。",
+ o:["ShippingProfile","Zone","Rate"],
+ u:["1 general + ≤99 custom profiles","rate：flat / 重量或金額條件 / carrier API","local delivery / pickup 按地點啟用"],
+ t:["引擎介面 rates(cart,address)→options[]；demo flat+條件"]},
+{c:"platform",p:"P0",n:"Taxes 稅務",doc:"05",s:"登記驅動的稅率引擎 + override + 含稅/未稅顯示。",
+ o:["TaxSetting","TaxOverride"],
+ u:["Shopify Tax/Basic/Manual 三引擎","含稅價設定影響前台顯示與金額引擎"],
+ t:["demo：單一稅率表+含稅開關，計算收在金額引擎"]},
+{c:"platform",p:"P2",n:"Markets 多市場",doc:"05",s:"市場 × 幣別 × 語言 × 網域 × 價格調整的國際化模型。",
+ o:["Market","Catalog"],
+ u:["每市場：當地幣結帳、匯率捨入、subfolder 網域、% 價格調整","B2B/retail 也是 market 的一種"],
+ t:["P2；money 格式化與 presentment 欄位先預留"]},
+{c:"platform",p:"P1",n:"Custom Data (Metafields)",doc:"05",s:"definition + value 的自訂欄位系統；metaobjects 自訂資料表。",
+ o:["MetafieldDefinition","Metaobject"],
+ u:["definition：namespace.key+型別+驗證；可 pin 到資源頁","metaobject 可生成 storefront 頁面"],
+ t:["= 使用者自訂 schema 子系統；demo 做 metafield 簡版"]},
+{c:"platform",p:"P2",n:"Locations 地點",doc:"05",s:"倉庫/門市清單；庫存、出貨、POS、運費的共同維度。",
+ o:["Location"],
+ u:["fulfillment 優先序；方案限地點數"],
+ t:["demo 單地點，schema 保留 location_id"]},
+{c:"platform",p:"P1",n:"Customer Accounts 買家帳號",doc:"05",s:"新版 passwordless（email OTP）+ 平台託管帳戶頁。",
+ o:["CustomerAccount","OTP"],
+ u:["6 碼驗證碼登入、session 最長 365 天","自助退貨/重購/store credit"],
+ t:["demo：email OTP + 我的訂單頁"]},
+{c:"platform",p:"P2",n:"Plan / Billing 方案計費",doc:"05",s:"月費 × 支付費率互鎖的商業模式（Basic $39/Grow $105/Advanced $399/Plus $2300+）。",
+ o:["Plan","Subscription"],
+ u:["用自營金流免額外費、第三方 gateway 加收 0.2–2%","app/主題/網域是加值收入"],
+ t:["demo 假方案階梯 + feature flags 欄位"]},
+{c:"platform",p:"P2",n:"App 生態系",doc:"05",s:"16,000+ app：iframe 嵌入 + App Bridge + OAuth + webhooks。",
+ o:["App","AppBridge","OAuth scopes"],
+ u:["extension 擴充點：admin/checkout/theme/POS/Flow","分潤：年收 $1M 內 0%、超過 15%"],
+ t:["P2/P3；API scope 概念先進設計"]},
+{c:"platform",p:"P2",n:"Flow 自動化",doc:"05",s:"Trigger → Condition → Action 的商家自動化引擎。",
+ o:["Workflow","Trigger","Action"],
+ u:["範本：售罄下架、高風險 hold、VIP 打 tag","app 可貢獻 triggers/actions"],
+ t:["= 事件匯流排 + 條件求值器；第三階段高槓桿功能"]},
+{c:"platform",p:"P2",n:"POS / Sales Channels",doc:"05",s:"多通路模型：商品按通路上架、訂單統一回流。",
+ o:["SalesChannel","POS"],
+ u:["POS 與線上共用庫存/顧客/訂單","Shop/社群/marketplace 通路以 app 形式安裝"],
+ t:["demo 不做；Channel 維度先留 schema"]},
+// ===== API =====
+{c:"api",p:"P1",n:"Admin API（商家端）",doc:"09",s:"GraphQL-first：季度版本、OAuth、calculated query cost 限流、bulk operations。",
+ o:["productSet","draftOrderCreate","bulkOperationRunQuery"],
+ u:["REST 已 legacy（2024-10）；新 public app 強制 GraphQL（2025-04）","限流：query ≤1000 點、standard 100 點/秒","版本 YYYY-MM、每版支援 12 個月"],
+ t:["demo：內部 REST/tRPC + cursor 分頁 + 版本前綴 + 統一錯誤格式"]},
+{c:"api",p:"P1",n:"Storefront API（買家端）",doc:"09",s:"可公開 token 的買家 GraphQL：catalog 查詢 + cart 寫入 + checkoutUrl 交棒。",
+ o:["cartCreate","cartLinesAdd","checkoutUrl","@inContext"],
+ u:["tokenless→public→private 三層存取","cart 是前台唯一可寫資源；結帳只給 URL"],
+ t:["Shopify 最核心的邊界設計，值得完整繼承"]},
+{c:"api",p:"P2",n:"Customer Account API",doc:"09",s:"買家自助 GraphQL：訂單/地址/退貨；OAuth+OIDC（PKCE）。",
+ o:["OIDC","PKCE"],
+ u:["買家身分與商家身分是兩套 IdP"],
+ t:["demo：自家 session/JWT + 我的訂單 endpoints"]},
+{c:"api",p:"P0",n:"Ajax / Section Rendering",doc:"09",s:"主題同源免 token 端點：cart 全家 + 局部渲染。",
+ o:["/cart/add.js","?sections=a,b"],
+ u:["改 cart 同時拿回更新後 section HTML（bundled rendering）","predictive search、recommendations 端點"],
+ t:["demo 的 cart drawer 體驗靠這個模式"]},
+{c:"api",p:"P1",n:"Webhooks 事件流",doc:"09",s:"topic=資源/事件；HMAC 簽名；4 小時 8 次重試；GDPR 三支必接。",
+ o:["orders/create","X-Shopify-Hmac-Sha256"],
+ u:["通道：HTTPS/EventBridge/PubSub；at-least-once 不保序","24 小時持續失敗→移除訂閱"],
+ t:["demo：outbox 事件表先內用；對外時照抄 HMAC+重試規格"]},
+{c:"api",p:"P2",n:"Functions / UI Extensions",doc:"09",s:"WASM 伺服器端自訂邏輯 + sandbox 化 UI 擴充點。",
+ o:["WASM","Discount API","checkout UI ext"],
+ u:["Functions：毫秒級、無網路、輸入 128kB/輸出 20kB","UI extensions 跑在受控 sandbox 不能動 DOM"],
+ t:["demo 留 hook 介面：applyDiscounts(cart, config)"]},
+// ===== 架構 =====
+{c:"arch",p:"P-",n:"Modular Monolith",doc:"08",s:"280 萬行 Rails 單體、37 個 components、Packwerk 邊界、日部署 40 次。",
+ o:["Core","Packwerk","Sorbet"],
+ u:["明確拒絕微服務：拆散單體大增複雜度","只為好理由拆：SFR（效能）、卡號 vault（PCI）"],
+ t:["復刻：單一 monorepo + 資料夾邊界 + import lint"]},
+{c:"arch",p:"P-",n:"Pod 分片架構",doc:"08",s:"以 shop 為單位分片；pod = 隔離的 MySQL/Redis/memcached 全套。",
+ o:["Pod","Sorting Hat","Ghostferry"],
+ u:["100+ pods；pod 掛掉只影響該 pod 商店","Pod Mover 一分鐘整 pod 搬遷 DC"],
+ t:["復刻：單一 Postgres + 全表 shop_id + 複合索引——未來可分片的邏輯前提"]},
+{c:"arch",p:"P-",n:"Storefront Renderer",doc:"08",s:"把前台渲染拆成專用服務：三層快取、平均快 4–6 倍。",
+ o:["SFR","full-page cache"],
+ u:["前台是讀多、延遲敏感的路徑，值得用複雜度換效能","verifier 雙跑新舊比對後漸進切流"],
+ t:["復刻：Next.js SSR + CDN 快取；洞見=前台是可極致快取的 read path"]},
+{c:"arch",p:"P-",n:"搶購與庫存熱點",doc:"08",s:"edge 排隊 + one-row-per-unit + SKIP LOCKED；BFCM 2025 峰值 815 萬 RPS。",
+ o:["leaky bucket","SKIP LOCKED"],
+ u:["checkout throttle 在 edge 用 Lua 實作、排隊頁可快取","BFCM 2025：GMV $14.6B、$5.1M/分鐘"],
+ t:["復刻：交易內條件 UPDATE 扣庫存就夠；搶購需求再加 token bucket"]},
+{c:"arch",p:"P-",n:"Jobs / Kafka / 事件",doc:"08",s:"可中斷續跑的背景任務 + 月 1.75 兆訊息的 Kafka 管線（CDC/分析）。",
+ o:["job-iteration","Debezium CDC","outbox"],
+ u:["長任務寫成 enumerator 可被部署中斷","每 shard 一個 Debezium connector 讀 binlog"],
+ t:["復刻：Postgres 佇列 + outbox 表；Kafka 等第二個消費系統出現再說"]},
+{c:"arch",p:"P-",n:"部署與基礎設施",doc:"08",s:"Shipit + merge queue + 無 staging：feature flags + 秒級 rollback。",
+ o:["Shipit","feature flags","GCP/GKE"],
+ u:["10 萬+ 測試、15–20 分鐘 build","搜尋已自研 C++ 引擎 + ML 排序"],
+ t:["復刻：GitHub Actions + 單 image 部署；搜尋用 Postgres FTS/Meilisearch"]},
+];
+
+const chipsEl=document.getElementById('chips'), mainEl=document.getElementById('main'),
+      qEl=document.getElementById('q'), countEl=document.getElementById('count'),
+      overlay=document.getElementById('overlay'), panel=document.getElementById('panel');
+let activeCat='all';
+
+function chipRow(){
+  const all=[{id:'all',name:'全部',color:'#2b2c2e'}].concat(CATS);
+  chipsEl.innerHTML=all.map(c=>`<span class="chip ${activeCat===c.id?'on':''}" data-c="${c.id}">${c.name}</span>`).join('');
+  chipsEl.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{activeCat=ch.dataset.c;chipRow();render();});
+}
+function match(m,q){
+  if(!q) return true; q=q.toLowerCase();
+  return (m.n+m.s+(m.o||[]).join(' ')+(m.u||[]).join(' ')+(m.t||[]).join(' ')).toLowerCase().includes(q);
+}
+function render(){
+  const q=qEl.value.trim(); let total=0; let html='';
+  CATS.forEach(cat=>{
+    if(activeCat!=='all'&&activeCat!==cat.id) return;
+    const items=D.filter(m=>m.c===cat.id&&match(m,q));
+    if(!items.length) return; total+=items.length;
+    html+=`<section class="cat"><h2><span class="dot" style="background:${cat.color}"></span>${cat.name}<span style="font-weight:400;color:#a0a1a6">${items.length}</span></h2><div class="grid">`+
+      items.map(m=>{
+        const i=D.indexOf(m);
+        const pb=m.p==='P-'?'<span class="badge P-">參考</span>':`<span class="badge ${m.p}">${m.p}</span>`;
+        return `<div class="card" data-i="${i}"><div class="top"><h3>${m.n}</h3>${pb}</div><p>${m.s}</p><div class="doc">📄 ${m.doc}-*.md</div></div>`;
+      }).join('')+`</div></section>`;
+  });
+  mainEl.innerHTML=html||`<div class="empty">沒有符合「${q}」的模組——換個關鍵字試試</div>`;
+  countEl.textContent=`顯示 ${total} / ${D.length} 個模組節點`;
+  mainEl.querySelectorAll('.card').forEach(c=>c.onclick=()=>openPanel(+c.dataset.i));
+}
+function openPanel(i){
+  const m=D[i], cat=CATS.find(c=>c.id===m.c);
+  document.getElementById('p-title').textContent=m.n;
+  document.getElementById('p-meta').innerHTML=
+    `<span class="tag" style="border-color:${cat.color};color:${cat.color}">${cat.name}</span>`+
+    (m.p==='P-'?'<span class="badge P-">知識參考</span>':`<span class="badge ${m.p}">${m.p} 優先級</span>`)+
+    `<span class="tag">詳見 ${m.doc}-*.md</span>`;
+  document.getElementById('p-summary').textContent=m.s;
+  document.getElementById('p-objs').innerHTML=(m.o||[]).map(o=>`<span class="obj">${o}</span>`).join('')||'<span style="color:#9a9ba0">—</span>';
+  document.getElementById('p-ui').innerHTML=(m.u||[]).map(x=>`<li>${x}</li>`).join('');
+  document.getElementById('p-notes').innerHTML=(m.t||[]).map(x=>`<li>${x}</li>`).join('');
+  overlay.classList.add('show'); panel.classList.add('show');
+}
+function closePanel(){overlay.classList.remove('show');panel.classList.remove('show');}
+overlay.onclick=closePanel; document.getElementById('p-close').onclick=closePanel;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape')closePanel(); if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();qEl.focus();} });
+qEl.addEventListener('input',render);
+chipRow(); render();
+</script>
+</body>
+</html>
