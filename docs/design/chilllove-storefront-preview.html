@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CHILL LOVE — 慢下來，好好穿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f6f1e9;--paper:#fffdf8;--ink:#221e1a;--ink-2:#6e655c;--ink-3:#7d7367;
+  --line:#e7dfd3;--clay:#a9502c;--clay-dark:#8c3f20;--sage:#7d8a6f;
+  --serif:"Fraunces","Noto Serif TC",Georgia,serif;
+  --sans:Inter,"Noto Sans TC",system-ui,sans-serif;
+  --tr:200ms cubic-bezier(.25,.6,.3,1);--tr-big:360ms cubic-bezier(.22,.8,.26,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.7;letter-spacing:.015em;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+img{display:block;max-width:100%}
+.wrap{max-width:1280px;margin:0 auto;padding:0 40px}
+@media(max-width:760px){.wrap{padding:0 20px}}
+.eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+.serif{font-family:var(--serif)}
+:focus-visible{outline:2px solid var(--clay);outline-offset:2px}
+
+/* ===== announcement + header ===== */
+.announce{background:var(--ink);color:#efe9df;text-align:center;font-size:11.5px;letter-spacing:.12em;padding:9px 16px}
+.announce b{color:#fff}
+header.site{position:sticky;top:0;z-index:30;background:rgba(246,241,233,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.site-inner{display:flex;align-items:center;height:64px;gap:32px}
+.wordmark{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:.14em;white-space:nowrap}
+.wordmark span{color:var(--clay)}
+nav.main-nav{display:flex;gap:26px;font-size:12.8px;letter-spacing:.06em}
+nav.main-nav a{color:var(--ink);text-decoration:none;position:relative;padding:4px 0}
+nav.main-nav a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:var(--ink);transition:right var(--tr)}
+nav.main-nav a:hover::after{right:0}
+.hd-icons{margin-left:auto;display:flex;gap:4px}
+.hd-btn{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;transition:background var(--tr);position:relative}
+.hd-btn:hover{background:rgba(34,30,26,.06)}
+.cart-n{position:absolute;top:3px;right:1px;min-width:16px;height:16px;border-radius:99px;background:var(--clay);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px;transition:transform var(--tr)}
+.cart-n.bump{animation:bump .4s}
+@keyframes bump{30%{transform:scale(1.35)}}
+@media(max-width:760px){.site-inner{gap:16px}nav.main-nav{gap:18px;overflow-x:auto;scrollbar-width:none}
+.hd-btn{width:44px;height:44px}.qty{height:40px}.qty button{width:40px}.dr-remove{padding:8px 0}}
+
+/* ===== hero ===== */
+.hero{padding:72px 0 84px;position:relative;overflow:hidden}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:36px}}
+.hero h1{font-family:var(--serif);font-size:clamp(38px,4.6vw,58px);line-height:1.18;font-weight:500;letter-spacing:.01em;margin:18px 0 20px}
+.hero h1 em{font-style:normal;color:var(--clay);border-bottom:3px solid rgba(169,80,44,.35)}
+.hero p.lead{color:var(--ink-2);font-size:15px;max-width:42ch;margin-bottom:32px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 30px;font-size:12.5px;letter-spacing:.14em;font-weight:600;border-radius:2px;transition:all var(--tr)}
+.btn-ink{background:var(--ink);color:#f6f1e9}
+.btn-ink:hover{background:#3a342d;transform:translateY(-1px)}
+.btn-line{border:1px solid var(--ink);color:var(--ink)}
+.btn-line:hover{background:var(--ink);color:#f6f1e9}
+.hero-art{position:relative;aspect-ratio:4/4.6;border-radius:4px;overflow:hidden}
+.hero-tag{position:absolute;left:18px;bottom:18px;background:rgba(255,253,248,.92);backdrop-filter:blur(6px);border-radius:2px;padding:10px 16px;font-size:11.5px;letter-spacing:.08em}
+.hero-tag b{font-family:var(--serif);font-size:14px;display:block;letter-spacing:.02em}
+
+/* 藝術指導級佔位圖：暖色漸層 + 服裝線稿 + 顆粒 */
+.art{width:100%;height:100%;position:relative;display:grid;place-items:center;overflow:hidden}
+.art svg.garment{width:52%;height:auto;opacity:.9}
+.art .grain{position:absolute;inset:0;opacity:.5;mix-blend-mode:soft-light}
+.art .shade{position:absolute;inset:0;background:radial-gradient(120% 90% at 70% 15%,rgba(255,255,255,.5),transparent 55%)}
+
+/* ===== marquee ===== */
+.marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;padding:13px 0;background:var(--paper)}
+.marquee-track{display:flex;white-space:nowrap;animation:mq 26s linear infinite;font-size:11.5px;letter-spacing:.24em;color:var(--ink-2);text-transform:uppercase}
+.marquee-track span{margin-right:56px}
+.marquee:hover .marquee-track{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.marquee-track{animation:none}}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* ===== 精選商品 ===== */
+.section{padding:96px 0}
+#featured,#story,#cats{scroll-margin-top:88px}
+.sec-head{display:flex;align-items:flex-end;gap:16px;margin-bottom:36px}
+.sec-head h2{font-family:var(--serif);font-size:32px;font-weight:500;letter-spacing:.01em;margin-top:10px}
+.sec-head .more{margin-left:auto;font-size:12px;letter-spacing:.12em;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);padding-bottom:2px;transition:opacity var(--tr)}
+.sec-head .more:hover{opacity:.6}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+@media(max-width:1000px){.grid4{grid-template-columns:repeat(2,1fr)}}
+.pcard{cursor:pointer}
+.pcard .ph{aspect-ratio:3/4;border-radius:3px;overflow:hidden;position:relative;background:var(--paper)}
+.pcard .art{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.pcard:hover .art{transform:scale(1.04)}
+.pcard .alt{position:absolute;inset:0;opacity:0;transition:opacity .45s}
+.pcard:hover .alt{opacity:1}
+.quick{position:absolute;left:10px;right:10px;bottom:10px;height:40px;background:rgba(255,253,248,.96);backdrop-filter:blur(6px);border-radius:2px;font-size:11.5px;letter-spacing:.14em;font-weight:600;opacity:0;transform:translateY(8px);transition:all var(--tr);display:flex;align-items:center;justify-content:center}
+.pcard:hover .quick{opacity:1;transform:none}
+.quick:hover{background:var(--ink);color:#f6f1e9}
+@media(hover:none){.quick{opacity:1;transform:none}}
+.pcard:focus-within .quick{opacity:1;transform:none}
+.sale-tag{position:absolute;top:10px;left:10px;background:var(--clay);color:#fff;font-size:10.5px;letter-spacing:.1em;padding:3px 9px;border-radius:2px}
+.new-tag{position:absolute;top:10px;left:10px;background:var(--paper);color:var(--ink);font-size:10.5px;letter-spacing:.1em;padding:3px 9px;border-radius:2px;border:1px solid var(--line)}
+.pinfo{padding:14px 2px 0}
+.pname{font-size:14px;font-weight:500;letter-spacing:.03em}
+.pprice{margin-top:3px;font-size:13px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pprice .now{color:var(--clay);font-weight:600}
+.pprice s{color:var(--ink-3);margin-left:6px}
+.pswatches{display:flex;gap:5px;margin-top:8px}
+.psw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(34,30,26,.18)}
+
+/* ===== 敘事區 ===== */
+.story{background:var(--ink);color:#efe9df;overflow:hidden}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;min-height:520px}
+@media(max-width:900px){.story-grid{grid-template-columns:1fr}}
+.story-art{position:relative;min-height:340px}
+.story-txt{padding:80px 72px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:900px){.story-txt{padding:56px 24px}}
+.story .eyebrow{color:#b7ab9b}
+.story h2{font-family:var(--serif);font-size:32px;font-weight:500;line-height:1.3;margin:16px 0 18px;color:#fbf7f0}
+.story p{color:#c9bfb0;max-width:46ch;margin-bottom:30px}
+.btn-cream{border:1px solid #efe9df;color:#efe9df;align-self:flex-start}
+.btn-cream:hover{background:#efe9df;color:var(--ink)}
+
+/* ===== 分類卡 ===== */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+@media(max-width:900px){.grid3{grid-template-columns:1fr}}
+.ccard{position:relative;aspect-ratio:4/5;border-radius:3px;overflow:hidden;cursor:pointer}
+.ccard .art{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.ccard:hover .art{transform:scale(1.05)}
+.ccard .cname{position:absolute;left:20px;bottom:20px;background:rgba(255,253,248,.94);padding:10px 20px;border-radius:2px;font-size:12.5px;letter-spacing:.12em;font-weight:600}
+
+/* ===== 承諾列 ===== */
+.promises{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--paper)}
+.promise-grid{display:grid;grid-template-columns:repeat(3,1fr)}
+.promise{padding:34px 24px;text-align:center;border-left:1px solid var(--line)}
+.promise:first-child{border-left:0}
+.promise b{font-family:var(--serif);font-size:15px;font-weight:600;display:block;margin-bottom:4px;letter-spacing:.04em}
+.promise span{font-size:12.5px;color:var(--ink-2)}
+@media(max-width:760px){.promise-grid{grid-template-columns:1fr}.promise{border-left:0;border-top:1px solid var(--line)}}
+
+/* ===== newsletter + footer ===== */
+.news{padding:96px 0;text-align:center}
+.news h2{font-family:var(--serif);font-size:32px;font-weight:500;margin:14px 0 10px}
+.news p{color:var(--ink-2);margin-bottom:28px}
+.news-form{display:flex;max-width:420px;margin:0 auto;border:1px solid var(--ink);border-radius:2px;overflow:hidden;background:var(--paper)}
+.news-form input{flex:1;border:0;outline:0;padding:0 18px;font:inherit;background:transparent;height:48px}
+.news-form button{background:var(--ink);color:#f6f1e9;padding:0 26px;font-size:12px;letter-spacing:.14em;font-weight:600;transition:background var(--tr)}
+.news-form button:hover{background:#3a342d}
+footer.site{background:var(--ink);color:#b7ab9b;padding:64px 0 34px;font-size:12.5px}
+.f-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+@media(max-width:900px){.f-grid{grid-template-columns:1fr 1fr}}
+footer .wordmark{color:#fbf7f0;margin-bottom:14px;display:block}
+footer p{max-width:34ch;line-height:1.8}
+.f-col b{color:#efe9df;display:block;margin-bottom:14px;font-size:12px;letter-spacing:.12em}
+.f-col a{display:block;color:#b7ab9b;text-decoration:none;padding:4px 0;transition:color var(--tr)}
+.f-col a:hover{color:#fbf7f0}
+.f-bottom{border-top:1px solid rgba(239,233,223,.14);padding-top:22px;display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;color:#9c9180}
+.f-bottom .pay{margin-left:auto;letter-spacing:.06em}
+
+/* ===== cart drawer ===== */
+.veil{position:fixed;inset:0;background:rgba(34,30,26,.45);opacity:0;pointer-events:none;transition:opacity var(--tr-big);z-index:40}
+.veil.show{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,94vw);background:var(--paper);z-index:41;transform:translateX(105%);transition:transform var(--tr-big);display:flex;flex-direction:column;box-shadow:-20px 0 60px rgba(34,30,26,.25)}
+.drawer.show{transform:none}
+.dr-head{display:flex;align-items:center;padding:22px 24px;border-bottom:1px solid var(--line)}
+.dr-head h3{font-family:var(--serif);font-size:20px;font-weight:600;letter-spacing:.04em}
+.dr-head .n{color:var(--ink-2);margin-left:8px;font-size:13px}
+.dr-close{margin-left:auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;transition:background var(--tr)}
+.dr-close:hover{background:rgba(34,30,26,.07)}
+.ship-bar{padding:16px 24px;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+.ship-bar b{color:var(--clay)}
+.ship-track{height:3px;background:var(--line);border-radius:99px;margin-top:10px;overflow:hidden}
+.ship-fill{height:100%;background:var(--clay);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.dr-items{flex:1;overflow-y:auto;padding:8px 24px}
+.dr-item{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
+.dr-ph{width:76px;height:96px;border-radius:3px;overflow:hidden;flex:none}
+.dr-info{flex:1;min-width:0}
+.dr-name{font-size:13px;font-weight:500}
+.dr-var{font-size:11.5px;color:var(--ink-3);margin:2px 0 10px}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:2px;height:30px}
+.qty button{width:28px;height:100%;color:var(--ink-2);transition:background var(--tr)}
+.qty button:hover{background:var(--cream)}
+.qty span{min-width:26px;text-align:center;font-size:12.5px;font-variant-numeric:tabular-nums}
+.dr-price{text-align:right;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dr-remove{font-size:11px;color:var(--ink-3);text-decoration:underline;margin-top:10px;display:inline-block}
+.dr-remove:hover{color:var(--clay)}
+.dr-foot{border-top:1px solid var(--line);padding:20px 24px 24px;background:var(--paper)}
+.dr-sub{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:4px}
+.dr-note{font-size:11.5px;color:var(--ink-3);margin-bottom:16px}
+.btn-full{width:100%;height:50px;font-size:12.5px}
+.dr-continue{display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--ink-2);text-decoration:underline;cursor:pointer}
+.toastf{position:fixed;bottom:26px;left:50%;transform:translate(-50%,90px);background:var(--ink);color:#f6f1e9;padding:12px 22px;border-radius:2px;font-size:12.5px;letter-spacing:.06em;z-index:50;transition:transform var(--tr-big);display:flex;gap:10px;align-items:center}
+.toastf.show{transform:translate(-50%,0)}
+.empty-cart{text-align:center;padding:60px 20px;color:var(--ink-2)}
+.empty-cart .serif{font-size:18px;display:block;margin-bottom:8px;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="announce">全館滿 <b>NT$2,000</b> 免運・新會員首購 95 折（輸入 <b>HELLOCHILL</b>）</div>
+
+<header class="site">
+  <div class="wrap site-inner">
+    <a class="wordmark" href="#">CHILL <span><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span> LOVE</a>
+    <nav class="main-nav">
+      <a href="#featured">新品上市</a><a href="#featured">上衣</a><a href="#cats">外套</a><a href="#cats">配件</a><a href="#" style="color:var(--clay)">特惠</a>
+    </nav>
+    <div class="hd-icons">
+      <button class="hd-btn" title="搜尋" aria-label="搜尋" onclick="toastf('Demo：predictive search 在下一批 mockup')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+      <button class="hd-btn" title="會員" aria-label="會員中心" onclick="toastf('Demo：會員中心（email OTP 登入）於 M4 實作')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
+      <button class="hd-btn" title="購物袋" onclick="openCart()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 7V6a6 6 0 1112 0v1M4 7h16l-1.2 13.2a2 2 0 01-2 1.8H7.2a2 2 0 01-2-1.8z"/></svg>
+        <span class="cart-n" id="cartN">1</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- hero -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Autumn 2026 — 重磅棉系列</span>
+      <h1>慢下來，<br>好好<em>穿</em>一件衣服。</h1>
+      <p class="lead">我們只做基本款，然後把它做到最好——重磅有機棉、台灣在地製造、耐得住上百次水洗的版型。衣櫃可以很小，每一件都對。</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <a class="btn btn-ink" href="#featured">選購新品系列</a>
+        <a class="btn btn-line" href="#story">我們的理念</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="art" style="background:linear-gradient(160deg,#e8d3bd 0%,#cfa77f 55%,#b98a5e 100%)">
+        <svg class="garment" viewBox="0 0 200 220" fill="none" stroke="#5c4632" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".55">
+          <path d="M70 38l-38 22 14 34 18-8v96h72v-96l18 8 14-34-38-22a30 18 0 01-60 0z"/>
+          <path d="M70 38c0 16 13 26 30 26s30-10 30-26M85 20c2-8 28-8 30 0M100 64v22" opacity=".7"/>
+          <path d="M64 182h72" opacity=".4"/>
+        </svg>
+        <div class="shade"></div>
+        <svg class="grain" width="100%" height="100%"><filter id="g1"><feTurbulence baseFrequency=".8" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g1)" opacity=".16"/></svg>
+      </div>
+      <div class="hero-tag"><b>奶茶色寬版帽T</b>本週最受歡迎・NT$1,480</div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee"><div class="marquee-track">
+  <span>Organic Cotton</span><span>·</span><span>台灣製造</span><span>·</span><span>滿 NT$2,000 免運</span><span>·</span><span>30 天無條件退換</span><span>·</span><span>Slow Wear, Chill Life</span><span>·</span>
+  <span>Organic Cotton</span><span>·</span><span>台灣製造</span><span>·</span><span>滿 NT$2,000 免運</span><span>·</span><span>30 天無條件退換</span><span>·</span><span>Slow Wear, Chill Life</span><span>·</span>
+</div></div>
+
+<!-- 精選商品 -->
+<section class="section" id="featured">
+  <div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow">Featured</span><h2>本週精選</h2></div>
+      <a class="more" href="#" onclick="event.preventDefault();toastf('Demo：Collection 頁在下一批 mockup')">查看全部 8 件</a>
+    </div>
+    <div class="grid4" id="pgrid"></div>
+  </div>
+</section>
+
+<!-- 品牌敘事 -->
+<section class="story" id="story">
+  <div class="story-grid">
+    <div class="story-art">
+      <div class="art" style="background:linear-gradient(200deg,#8a7a63 0%,#5c4f3e 60%,#403627 100%)">
+        <svg class="garment" viewBox="0 0 200 220" fill="none" stroke="#d9c9b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".5">
+          <path d="M78 30l-44 24 14 32 16-7v104h72V79l16 7 14-32-44-24-10 12h-24z"/>
+          <path d="M100 42v58M84 100h32" opacity=".5"/>
+        </svg>
+        <svg class="grain" width="100%" height="100%"><filter id="g2"><feTurbulence baseFrequency=".8" numOctaves="2"/></filter><rect width="100%" height="100%" filter="url(#g2)" opacity=".2"/></svg>
+      </div>
+    </div>
+    <div class="story-txt">
+      <span class="eyebrow">Our Philosophy</span>
+      <h2>買得少一點，<br>穿得久一點。</h2>
+      <p>快時尚讓衣服變成拋棄式的東西。我們反著做：一年只出兩個系列，每一件打樣超過十次，用 400g 重磅棉和三本針縫線，讓你五年後還在穿。這是 CHILL LOVE 的慢哲學。</p>
+      <a class="btn btn-cream" href="#">閱讀品牌故事</a>
+    </div>
+  </div>
+</section>
+
+<!-- 分類 -->
+<section class="section" id="cats">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Categories</span><h2>依系列選購</h2></div></div>
+    <div class="grid3">
+      <div class="ccard" onclick="toastf('Demo：Collection 頁在下一批 mockup')">
+        <div class="art" style="background:linear-gradient(165deg,#ead9c4,#c9a578)"><svg class="garment" viewBox="0 0 200 220" fill="none" stroke="#6b5138" stroke-width="2" opacity=".5" stroke-linecap="round"><path d="M70 38l-38 22 14 34 18-8v96h72v-96l18 8 14-34-38-22a30 18 0 01-60 0z"/></svg></div>
+        <span class="cname">上衣・帽T</span>
+      </div>
+      <div class="ccard" onclick="toastf('Demo：Collection 頁在下一批 mockup')">
+        <div class="art" style="background:linear-gradient(165deg,#c3cbd4,#84919f)"><svg class="garment" viewBox="0 0 200 220" fill="none" stroke="#3e4a56" stroke-width="2" opacity=".5" stroke-linecap="round"><path d="M76 20h48l6 18-14 6v150l-16 14-16-14V44l-14-6z"/><path d="M88 20c0 10 24 10 24 0" opacity=".6"/></svg></div>
+        <span class="cname">襯衫・外套</span>
+      </div>
+      <div class="ccard" onclick="toastf('Demo：Collection 頁在下一批 mockup')">
+        <div class="art" style="background:linear-gradient(165deg,#efe6d3,#cbb894)"><svg class="garment" viewBox="0 0 200 220" fill="none" stroke="#77613f" stroke-width="2" opacity=".55" stroke-linecap="round"><path d="M60 80h80v100a8 8 0 01-8 8H68a8 8 0 01-8-8z"/><path d="M78 80c0-34 8-48 22-48s22 14 22 48" fill="none"/></svg></div>
+        <span class="cname">包袋・配件</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 承諾 -->
+<div class="promises"><div class="wrap promise-grid">
+  <div class="promise"><b>滿 NT$2,000 免運</b><span>全台 1–3 個工作天到貨</span></div>
+  <div class="promise"><b>30 天退換</b><span>不合穿就退，免費退貨標籤</span></div>
+  <div class="promise"><b>有機棉認證</b><span>GOTS 認證棉料・台灣縫製</span></div>
+</div></div>
+
+<!-- newsletter -->
+<section class="news">
+  <div class="wrap">
+    <span class="eyebrow">Stay Chill</span>
+    <h2>新系列上架，第一個知道</h2>
+    <p>訂閱電子報，拿新會員 95 折——我們一個月最多寄兩封，說到做到。</p>
+    <form class="news-form" onsubmit="event.preventDefault();toastf('已訂閱，歡迎加入 CHILL LOVE')">
+      <input type="email" placeholder="你的 email" required>
+      <button type="submit">訂閱</button>
+    </form>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="f-grid">
+      <div><span class="wordmark">CHILL <span style="color:var(--clay)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span> LOVE</span>
+        <p>慢下來，好好穿。基本款服飾品牌，台灣設計製造。</p></div>
+      <div class="f-col"><b>選購</b><a href="#">新品上市</a><a href="#">上衣・帽T</a><a href="#">襯衫・外套</a><a href="#">包袋・配件</a><a href="#">特惠專區</a></div>
+      <div class="f-col"><b>協助</b><a href="#">運送資訊</a><a href="#">退換貨政策</a><a href="#">尺寸指南</a><a href="#">聯絡我們</a></div>
+      <div class="f-col"><b>關於</b><a href="#">品牌故事</a><a href="#">永續承諾</a><a href="#">實體據點</a></div>
+    </div>
+    <div class="f-bottom">
+      <span>© 2026 CHILL LOVE</span><a href="#" style="color:inherit">隱私權政策</a><a href="#" style="color:inherit">服務條款</a>
+      <span class="pay">VISA・Mastercard・Apple Pay・LINE Pay</span>
+    </div>
+  </div>
+</footer>
+
+<!-- cart drawer -->
+<div class="veil" id="veil" onclick="closeCart()"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="購物袋">
+  <div class="dr-head"><h3>購物袋</h3><span class="n" id="drCount">1 件</span>
+    <button class="dr-close" onclick="closeCart()" title="關閉" aria-label="關閉購物袋">✕</button></div>
+  <div class="ship-bar"><span id="shipMsg"></span><div class="ship-track"><div class="ship-fill" id="shipFill" style="width:0"></div></div></div>
+  <div class="dr-items" id="drItems"></div>
+  <div class="dr-foot">
+    <div class="dr-sub"><span>小計</span><span id="drSub">NT$1,480</span></div>
+    <div class="dr-note">運費與折扣將於結帳時計算</div>
+    <button class="btn btn-ink btn-full" onclick="toastf('Demo：one-page 結帳頁是 M3 的重頭戲')">前往結帳</button>
+    <span class="dr-continue" onclick="closeCart()">繼續逛逛</span>
+  </div>
+</aside>
+<div class="toastf" id="toastf" role="status" aria-live="polite"><span style="color:var(--clay)"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span id="toastfMsg">已加入購物袋</span></div>
+
+<script>
+/* 商品資料（真內容） */
+const P=[
+ {n:"奶茶色寬版帽T",p:1480,o:1880,tag:"sale",g1:"linear-gradient(160deg,#e9d5c3,#c8a184)",g2:"linear-gradient(160deg,#dfc5aa,#b08a63)",sw:["#d8bfa5","#5c5148"],v:"M / 奶茶",garment:"hoodie"},
+ {n:"水洗丹寧襯衫",p:1680,o:null,tag:"new",g1:"linear-gradient(160deg,#c3cdd8,#8598a9)",g2:"linear-gradient(160deg,#aebcc9,#75879a)",sw:["#8598a9","#4e5a68"],v:"L / 淺藍",garment:"shirt"},
+ {n:"有機棉圓領白T（三件組）",p:990,o:null,tag:null,g1:"linear-gradient(160deg,#f3f0ea,#d9d4c8)",g2:"linear-gradient(160deg,#eae6dd,#c8c2b2)",sw:["#f3f0ea","#d9d4c8","#a7a294"],v:"M / 白",garment:"tee"},
+ {n:"燕麥色針織開衫",p:2280,o:null,tag:"new",g1:"linear-gradient(160deg,#e8dfcc,#c2b295)",g2:"linear-gradient(160deg,#ddd2ba,#ab9a78)",sw:["#d9cbae","#8d7f63"],v:"F / 燕麥",garment:"cardigan"},
+];
+const GARMENTS={
+ hoodie:'<path d="M70 38l-38 22 14 34 18-8v96h72v-96l18 8 14-34-38-22a30 18 0 01-60 0z"/><path d="M70 38c0 16 13 26 30 26s30-10 30-26M85 20c2-8 28-8 30 0" opacity=".7"/>',
+ shirt:'<path d="M76 20h48l6 18-14 6v150H84V44l-14-6z"/><path d="M88 20c0 10 24 10 24 0M100 56v14M100 86v14" opacity=".6"/>',
+ tee:'<path d="M72 30l-34 20 12 30 16-7v104h68V73l16 7 12-30-34-20a28 14 0 01-56 0z"/>',
+ cardigan:'<path d="M74 26l-40 22 13 31 17-8v106h32V70l8-14 8 14v107h16V71l17 8 13-31-40-22-14 10z"/><circle cx="96" cy="92" r="2" opacity=".6"/><circle cx="96" cy="116" r="2" opacity=".6"/>'};
+function artHTML(g,garment,ink){return `<div class="art" style="background:${g}">
+  <svg class="garment" viewBox="0 0 200 220" fill="none" stroke="${ink}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity=".55">${GARMENTS[garment]}</svg>
+  <div class="shade"></div></div>`;}
+const fmt=n=>"NT$"+n.toLocaleString();
+document.getElementById('pgrid').innerHTML=P.map((p,i)=>`
+ <div class="pcard" onclick="toastf('Demo：商品頁在下一批 mockup')">
+   <div class="ph">
+     ${artHTML(p.g1,p.garment,'#6b5138')}
+     <div class="alt">${artHTML(p.g2,p.garment,'#4e3d29')}</div>
+     ${p.tag==='sale'?'<span class="sale-tag">SALE</span>':p.tag==='new'?'<span class="new-tag">NEW</span>':''}
+     <button class="quick" onclick="event.stopPropagation();addToCart(${i},this)">＋ 快速加入購物袋</button>
+   </div>
+   <div class="pinfo">
+     <div class="pname">${p.n}</div>
+     <div class="pprice">${p.o?`<span class="now">${fmt(p.p)}</span><s>${fmt(p.o)}</s>`:fmt(p.p)}</div>
+     <div class="pswatches">${p.sw.map(c=>`<span class="psw" style="background:${c}"></span>`).join('')}</div>
+   </div>
+ </div>`).join('');
+
+/* 購物袋 */
+let cart=[{i:0,q:1}];
+const FREE=2000;
+function openCart(){renderCart();document.getElementById('veil').classList.add('show');document.getElementById('drawer').classList.add('show');document.body.style.overflow='hidden';}
+function closeCart(){document.getElementById('veil').classList.remove('show');document.getElementById('drawer').classList.remove('show');document.body.style.overflow='';}
+function addToCart(i,btn){
+  const f=cart.find(c=>c.i===i);f?f.q++:cart.push({i,q:1});
+  if(btn){btn.textContent='✓ 已加入';setTimeout(()=>btn.textContent='＋ 快速加入購物袋',1200);}
+  bumpBadge();toastf('已加入購物袋');setTimeout(openCart,350);
+}
+function chQty(x,d){const c=cart[x];c.q+=d;if(c.q<=0)cart.splice(x,1);renderCart();bumpBadge();}
+function rm(x){cart.splice(x,1);renderCart();bumpBadge();}
+function bumpBadge(){const n=document.getElementById('cartN');n.textContent=cart.reduce((s,c)=>s+c.q,0);n.classList.remove('bump');void n.offsetWidth;n.classList.add('bump');}
+function renderCart(){
+  const it=document.getElementById('drItems');
+  const total=cart.reduce((s,c)=>s+P[c.i].p*c.q,0);
+  document.getElementById('drCount').textContent=cart.reduce((s,c)=>s+c.q,0)+' 件';
+  document.getElementById('drSub').textContent=fmt(total);
+  const left=FREE-total;
+  document.getElementById('shipMsg').innerHTML=left>0?`再買 <b>${fmt(left)}</b> 即可享免運`:`✓ 已達 <b>免運</b> 門檻`;
+  requestAnimationFrame(()=>{document.getElementById('shipFill').style.width=Math.min(100,total/FREE*100)+'%';});
+  it.innerHTML=cart.length?cart.map((c,x)=>`
+   <div class="dr-item">
+     <div class="dr-ph">${artHTML(P[c.i].g1,P[c.i].garment,'#6b5138')}</div>
+     <div class="dr-info">
+       <div class="dr-name">${P[c.i].n}</div><div class="dr-var">${P[c.i].v}</div>
+       <div class="qty"><button onclick="chQty(${x},-1)">−</button><span>${c.q}</span><button onclick="chQty(${x},1)">＋</button></div>
+       <a class="dr-remove" onclick="rm(${x})">移除</a>
+     </div>
+     <div class="dr-price">${fmt(P[c.i].p*c.q)}</div>
+   </div>`).join('')
+   :`<div class="empty-cart"><span class="serif">購物袋是空的</span>去挑一件五年後還在穿的衣服吧</div>`;
+}
+let tfTimer;
+function toastf(m){const t=document.getElementById('toastf');document.getElementById('toastfMsg').textContent=m;
+ t.classList.add('show');clearTimeout(tfTimer);tfTimer=setTimeout(()=>t.classList.remove('show'),2400);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
+renderCart();
+</script>
+</body>
+</html>
