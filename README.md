@@ -51,6 +51,7 @@
 | chilllove-admin-preview.html | 商家後台高保真互動 mockup（Home 圖表/商品列表/商品詳情 save bar/訂單/⌘K）— 品質基準線 |
 | chilllove-storefront-preview.html | CHILL LOVE 前台首頁高保真互動 mockup（hero/精選/敘事/購物袋 drawer + 免運進度條） |
 | critique-round-1.md | 第一輪 design critique 紀錄：20 項已修 + backlog |
+| chilllove-admin-v2.html | **後台 v2**：2026 實測結構（淺色頂列/pulse 首頁/AI 框/新導航）+ 全導航樹真頁面（訂單詳情、草稿、棄單、庫存、分群、成長、折扣 modal、市場、財務、報告、實況、設定 12 分頁）；已過第二輪 critique（10 項修復） |
 
 ## 快速結論
 
