@@ -24,6 +24,7 @@
 | 09 | api-map | Admin/Storefront/Customer/Ajax API、Webhooks、Functions 地圖 |
 | 10 | implementation-playbook | 00–09 逐篇實作細節：工具/套件、代碼草稿、參考文檔、M0 開工清單 |
 | 21 | live-admin-teardown | 實測走訪 2026 春季版後台：十大結構性變化、逐頁紀錄、原型 v2 修正清單 |
+| 22 | admin-button-inventory | **按鈕級對照表**：每個控制項的功能→邏輯→實作註釋（M/S/API/P 級），含配額常數表與方案補充；與 v2 原型「開發註釋模式」同步 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 
