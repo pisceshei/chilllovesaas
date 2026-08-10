@@ -24,14 +24,16 @@
 | D1 技術棧 | **Rails 8.1 + MySQL 8 + Vite/React(TS) 後台 + Rails SSR/Hotwire 前台**；Stripe test mode；Solid Queue/Cache（不用 Redis） | `docs/DECISIONS.md` |
 | D2 路線 | A→B→C：先成交閉環（M0–M3）→ 後台深化（M4–M5）→ 主題編輯器（M6） | 同上 |
 | D3 品牌 | 平台名 **CHILL LOVE**，做成單一變數可改名 | 同上 |
+| D4 前台引擎 | **Liquid 相容主題引擎**：liquid gem（MIT）＋自實作平台層與端點，第三方 Shopify 主題可匯入（授權 gate 必備）。取代 07/10 的 ViewComponent 簡化案 | `docs/research/25` |
 | 架構原則 | 單體 monorepo；全表 `shop_id`；金額 integer cents；寫路徑冪等；outbox 事件 | `docs/research/08` §7、`docs/specs/11` |
 
 ## 3. 法律紅線（絕對不可越）
 
-1. **不可使用** `@shopify/polaris`、Polaris icons/插圖、Dawn 主題代碼——Polaris 授權限制用於 Shopify 整合應用（見 `docs/research/02` §1）。icon 用 **Lucide（MIT）**。
+1. **不可使用** `@shopify/polaris`、Polaris icons/插圖、**Dawn/Horizon 主題代碼**——Polaris 授權限 Shopify 整合應用；Dawn/Horizon 的 LICENSE 明文「僅限與 Shopify 互通、其他用途一律禁止」（**非純 MIT**，2026-06 Shopify v. SHOPLINE 和解先例證明會執法；見 `docs/research/25` §8）。icon 用 **Lucide（MIT）**。
 2. 不可抄 Shopify 的 CSS 源碼、圖片資產、品牌與文案；**可以**實作相同的功能邏輯、佈局結構、交互行為（不受著作權保護），視覺值用我們自己的 token 表（23 號文件）。
-3. 例外：**Liquid gem 是 MIT**，通知信模板可直接用。
-4. 產品內不得出現 Shopify 字樣或其品牌視覺。
+3. 例外：**Liquid gem、theme-check（TS）、theme-liquid-docs 是標準 MIT**——這是 D4 主題引擎的法律基礎，可自由使用。
+4. Theme Store 主題授權限「單一 Shopify 商店」：平台**不預載、不散布**任何 Shopify 主題；第一方預設主題從零自寫；商家匯入第三方主題必須通過**授權聲明 gate**（25 §8 產品義務）。
+5. 產品內不得出現 Shopify 字樣或其品牌視覺；行銷話術用「相容 Shopify 主題格式」。
 
 ## 4. UI 與交互的單一真相（你的 CSS 從哪來）
 
@@ -49,11 +51,11 @@
 |---|---|---|
 | M0 地基 | Rails 骨架、40 表 migration（`docs/research/06` §7）、`config/limits.yml`（22 §9.4 常數表）、tokens.css、第一批元件、admin shell、多租戶 middleware、staff 認證 | 登入看到 CHILL LOVE shell + 商品空狀態 |
 | M1 商品線 | Products CRUD＋變體 diff 更新＋媒體＋系列＋庫存 ledger | 22 §2 逐行打勾；併發加購不超賣測試 |
-| M2 前台線 | Storefront SSR＋theme JSON 渲染＋cart drawer（Turbo） | storefront-preview 還原度 |
+| M2 前台線 | **Liquid 引擎接入**（gem＋T0 平台層）＋自寫預設主題＋`/cart/*.js` 家族與 Section Rendering API（`docs/research/25` §5-6） | storefront-preview 還原度＋預設主題全站可逛、cart drawer 走相容端點 |
 | M3 成交線 | one-page checkout＋金額引擎＋Stripe test＋訂單成立 | `docs/specs/15` 驗收清單全綠（併發 50 執行緒恰好 1 單等） |
 | M4 履約線 | 訂單詳情全功能（出貨/退款/取消/編輯/時間軸）＋顧客 | 22 §1b guard 清單全實作 |
 | M5 增長線 | 折扣引擎＋分析 rollup＋設定八域＋通知信 | `docs/specs/17/19` 驗收 |
-| M6 編輯器 | 三欄主題編輯器 | `docs/specs/14`-F3 |
+| M6 編輯器 | 主題編輯器（24 §3 六原子操作）＋**主題匯入管線**（zip→theme-check→降級報告→授權 gate）＋T1 平台層補完 | `docs/specs/14`-F3＋`docs/research/25` §4/§9：外部 OS 2.0 主題匯入後可逛可加購 |
 
 每個功能上線前過 `docs/specs/11` §0 的**七維度驗收表**（安全/資料/併發/效能/可觀測/測試/合規）。各 specs 文件末尾都有該模組的具體驗收清單。
 
@@ -67,6 +69,9 @@ docs/research/00–09       ← Shopify 逐模組研究（功能邏輯的百科�
 docs/research/10          ← 實作手冊（工具/代碼草稿/M0 清單）
 docs/research/21          ← 2026 春季版實測 teardown（結構差異）
 docs/research/22          ← ★按鈕級對照表（每頁開發時的驗收清單）
+docs/research/24          ← 主題編輯器＋結帳系統實測 teardown（Horizon/checkout editor）
+docs/research/25          ← ★Liquid 相容層架構（D4 引擎/匯入管線/端點規格/授權紅線）
+docs/research/26          ← ★Liquid API 全量 checklist（138 objects/30 tags/154 filters 分層）
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）

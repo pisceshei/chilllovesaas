@@ -7,7 +7,7 @@
 ## 目前狀態
 
 - ✅ 第一階段：深度研究完成（`docs/research/`，11 份文件 + 互動式模組地圖）
-- 🔜 第二階段：demo 原型——已決策（見 `docs/DECISIONS.md`）：**Rails + React（本尊同款棧）**、路線 **A→B→C**、品牌名 **CHILL LOVE**
+- 🔜 第二階段：demo 原型——已決策（見 `docs/DECISIONS.md`）：**Rails + React（本尊同款棧）**、路線 **A→B→C**、品牌名 **CHILL LOVE**、**D4 前台走 Liquid 相容引擎（第三方 Shopify 主題可匯入）**
 - ⬜ 第三階段：真產品路線（見 07 §9）
 
 ## 文件索引（docs/research/）
@@ -27,6 +27,9 @@
 | 10 | implementation-playbook | 00–09 逐篇實作細節：工具/套件、代碼草稿、參考文檔、M0 開工清單 |
 | 21 | live-admin-teardown | 實測走訪 2026 春季版後台：十大結構性變化、逐頁紀錄、原型 v2 修正清單 |
 | 22 | admin-button-inventory | **按鈕級對照表**：每個控制項的功能→邏輯→實作註釋（M/S/API/P 級），含配額常數表與方案補充；與 v2 原型「開發註釋模式」同步 |
+| 24 | theme-editor-checkout-teardown | 主題編輯器（Horizon 4.1.3）＋結帳設定/結帳編輯器實測 teardown：sections 樹/巢狀 blocks/picker/市場覆寫/checkout profiles/branding/extension targets |
+| 25 | liquid-compat-spec | **D4 核心規格**：Liquid 相容層架構——gem 能力邊界、匯入管線、/cart/*.js 等端點欄位級規格、T0-T2 分層測試、**授權紅線**（Dawn/Horizon 非 MIT、Theme Store 單店授權、SHOPLINE 先例） |
+| 26 | liquid-api-inventory | Liquid API 全量 checklist：138 objects / 30 tags / 154 filters 逐項（含 tier 標注）、模板結構 schema、30 種 setting input types——M2/M6 實作與驗收基準 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 

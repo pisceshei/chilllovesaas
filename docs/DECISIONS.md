@@ -22,3 +22,13 @@
 - 平台（SaaS 本體）品牌名，用於 logo 文字、後台左上角、登入頁、通知信署名與網域規劃。
 - 全部做成單一變數/設定，之後可一行改名。
 - demo 內不出現 Shopify 字樣與其品牌資產（07 §10 的紅線）。
+
+## 2026-08-10（同日晚間）— 前台引擎重大修訂
+
+### D4. 前台改走 Liquid 相容主題引擎（第三方 Shopify 主題可直接匯入）
+
+- 選擇：買家前台的渲染引擎從「Rails ViewComponent 自有 section 系統」改為 **Shopify/liquid gem（MIT）＋ 自行實作平台層（138 objects / 9 tags / 94 filters）＋ 主題 JS 硬依賴端點（/cart/*.js、Section Rendering API 等）1:1 實作**。
+- 動機：使用者明確要求「Shopify 本身的第三方主題可以直接套用」。
+- 影響範圍：**取代** 07 號 §與 10 號中「前台用 ViewComponent 簡化」的舊方案；M2/M6 里程碑內容修訂（見 25 號 §9、HANDOFF §5）；14 號 spec 的 theme JSON/編輯器規格仍有效。
+- 法律基礎：liquid gem、theme-check（TS 版）、theme-liquid-docs 皆標準 MIT；**但 Dawn/Horizon 授權含「僅限與 Shopify 互通」限制（非純 MIT）、Theme Store 主題授權限單一 Shopify 商店**——平台不預載/散布任何 Shopify 主題或其衍生物，第一方預設主題從零自寫，商家匯入第三方主題須過授權聲明 gate（詳見 25 號 §8，含 2026-06 Shopify v. SHOPLINE 和解先例）。
+- 規格文件：24（編輯器/結帳 teardown）、25（相容層架構）、26（API 全量 checklist）。
