@@ -30,6 +30,7 @@
 | 24 | theme-editor-checkout-teardown | 主題編輯器（Horizon 4.1.3）＋結帳設定/結帳編輯器實測 teardown：sections 樹/巢狀 blocks/picker/市場覆寫/checkout profiles/branding/extension targets |
 | 25 | liquid-compat-spec | **D4 核心規格**：Liquid 相容層架構——gem 能力邊界、匯入管線、/cart/*.js 等端點欄位級規格、T0-T2 分層測試、**授權紅線**（Dawn/Horizon 非 MIT、Theme Store 單店授權、SHOPLINE 先例） |
 | 26 | liquid-api-inventory | Liquid API 全量 checklist：138 objects / 30 tags / 154 filters 逐項（含 tier 標注）、模板結構 schema、30 種 setting input types——M2/M6 實作與驗收基準 |
+| 27 | ella-case-study | **Golden theme 驗收基準**：Ella 7.2.0 逐檔解剖（245 blocks 卡片系統/商品頁 4 層巢狀/preset 動態來源）＋編輯器運行時契約（8 個 DOM 事件/標記/ID 規則/picker 規則/?view= fragment）＋差距修訂 14 條＋M6 十條驗收 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 

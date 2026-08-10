@@ -55,7 +55,7 @@
 | M3 成交線 | one-page checkout＋金額引擎＋Stripe test＋訂單成立 | `docs/specs/15` 驗收清單全綠（併發 50 執行緒恰好 1 單等） |
 | M4 履約線 | 訂單詳情全功能（出貨/退款/取消/編輯/時間軸）＋顧客 | 22 §1b guard 清單全實作 |
 | M5 增長線 | 折扣引擎＋分析 rollup＋設定八域＋通知信 | `docs/specs/17/19` 驗收 |
-| M6 編輯器 | 主題編輯器（24 §3 六原子操作）＋**主題匯入管線**（zip→theme-check→降級報告→授權 gate）＋T1 平台層補完 | `docs/specs/14`-F3＋`docs/research/25` §4/§9：外部 OS 2.0 主題匯入後可逛可加購 |
+| M6 編輯器 | 主題編輯器（24 §3 六原子操作＋25 §11 運行時契約：8 個 DOM 事件/draft-render/picker 規則）＋**主題匯入管線**（zip→tolerant parse→theme-check→降級報告→授權 gate）＋T1 平台層補完 | **Golden theme 驗收：Ella 7.2.0 匯入後 `docs/research/27` §8 十條全綠**（含商品頁 blocks 拖拽、product card 卡片裝修、編輯器事件觸發主題互動） |
 
 每個功能上線前過 `docs/specs/11` §0 的**七維度驗收表**（安全/資料/併發/效能/可觀測/測試/合規）。各 specs 文件末尾都有該模組的具體驗收清單。
 
@@ -70,8 +70,9 @@ docs/research/10          ← 實作手冊（工具/代碼草稿/M0 清單）
 docs/research/21          ← 2026 春季版實測 teardown（結構差異）
 docs/research/22          ← ★按鈕級對照表（每頁開發時的驗收清單）
 docs/research/24          ← 主題編輯器＋結帳系統實測 teardown（Horizon/checkout editor）
-docs/research/25          ← ★Liquid 相容層架構（D4 引擎/匯入管線/端點規格/授權紅線）
+docs/research/25          ← ★Liquid 相容層架構（D4 引擎/匯入管線/端點規格/授權紅線/編輯器契約摘要）
 docs/research/26          ← ★Liquid API 全量 checklist（138 objects/30 tags/154 filters 分層）
+docs/research/27          ← ★Golden theme：Ella 案例研究（卡片系統解剖/編輯器 8 事件契約/M6 十條驗收）
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）

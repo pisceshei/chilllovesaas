@@ -104,6 +104,7 @@
 | `GET /search/suggest.json` | q＋resources[type]（product,page,article,collection,query）＋limit(1-10)＋limit_scope＋options[unavailable_products=show\|hide\|last]＋options[fields]。回 `{resources:{results:{queries[],products[],collections[],pages[],articles[]}}}`（欄位見代理報告；Dawn 同時用 `?section_id=` HTML 版——**兩形都要**） |
 | `GET /recommendations/products.json` | product_id＋limit(1-10)＋intent(related\|complementary) → `{intent, products:[…完整商品 JSON]}`；HTML 版 `?section_id=` |
 | `POST /localization` | form 欄位：form_type=localization/utf8/_method=put/return_to/country_code＋語言欄位——**Dawn 用 `locale_code`、Horizon 用 `language_code`，兩個名字都要接受**；302 回 return_to 套 locale 前綴 |
+| **`?view={suffix}` alternate template 路由** | `{type}.{suffix}.{json\|liquid}` 解析＋`{% layout none %}` 支援——主題把 alternate template 當 **AJAX fragment 端點**用（Ella：`?view=ajax_edit_cart`/`quick_add`/`block_wishlist_card` 等 5 個，見 27 號 §6.6）。**升級 M2**（cart 編輯彈窗依賴） |
 
 > 這張表直接併入 09 號 API 地圖與 M2 驗收：**先讓 Dawn 的 cart drawer 對著我們的端點動起來，再談其他**。
 
@@ -184,3 +185,18 @@ end
 8. **資源限制不設**：一個惡意 for 迴圈主題能吃爆 worker——resource limits＋timeout 是多租戶的底線。
 9. **liquid-c 誘惑**：已停維護，別為 3x parse 速度引入。
 10. **授權 gate 跳過**：§8 的聲明勾選不是 nice-to-have，是上線前置條件。
+11. **寬容解析缺失**：第三方原始碼包的 schema/settings JSON 常帶註解與尾逗號（官方後台會清、原始碼不會）——匯入管線必須 tolerant parse＋規範化，否則 Ella 這類主題第一步就掛。
+12. **缺 group 檔要寬容**：Ella 的 theme.liquid 引用不存在的 `toolbar-mobile` group——渲染空＋警告，不可炸。
+13. **`Shopify.*` no-op stubs 不做**：主題 JS 引用 ShopifyXR/PaymentButton/loadFeatures/CountryProvinceSelector——沒有 stub 就是 console 炸裂＋功能連鎖失效。
+
+## 11. 編輯器運行時契約（Ella 驗證版——完整規格見 27 號 §6）
+
+「編輯器與 Shopify 完全一樣」的硬邊界＝主題 JS 實際監聽的介面：
+
+1. **八個 DOM 事件**：`shopify:section:load/unload/select/deselect/reorder`、`shopify:block:select/deselect`、`shopify:inspector:activate/deactivate`——bubbles、detail 含 `sectionId/blockId/load`；target＝section wrapper 或帶 `data-shopify-editor-block` 的元素。
+2. **標記**：wrapper `id="shopify-section-{fullId}"`＋design mode 的 `data-shopify-editor-section`；`{{ block.shopify_attributes }}` → `data-shopify-editor-block='{"id","type"}'`（僅 design mode）。
+3. **旗標**：`window.Shopify.designMode` ↔ `{{ request.design_mode }}`。
+4. **重渲染語義**：draft-render 私有端點（公開 SRA 不能帶未儲存設定）→ `unload` → outerHTML 替換（**script 不自動執行**，主題自己在 load 時重跑）→ `load` → 選中態補發 `select(load:true)`；排序只動 DOM＋`reorder`；color/text 有即時 patch 快通道（CSS var/文字節點）。
+5. **ID 規則**：生成 `{type 底線化}_{6 碼 base62}`；讀入兼容 timestamp+hex 與 UUID 舊世代；fullId `template--{n}__{key}`；block id 唯一範圍＝section。
+6. **picker 規則**：section＝有 presets 才可加（category 分組/name 排序/enabled_on 過濾）；block＝顯式白名單（可含 `_` 私有）∪ `@theme`（排除私有），顯式者 recommended；靜態 block 不可拖/刪。
+7. **golden theme**：Ella 7.2.0——M6 驗收＝27 號 §8 十條全綠。
