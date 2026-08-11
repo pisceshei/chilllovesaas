@@ -1,0 +1,72 @@
+name: Claude Review
+
+# Codex 開 PR → 這個 workflow 自動啟動 Claude 對照 docs 規格驗收 → findings 回貼到 PR
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          # 訂閱制授權（推薦，用你的 Claude 方案額度）：
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 若改用 API key 計費，把上面那行換成：
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
+
+            審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。
+
+            ## 驗收依據（依序讀，變更碰到哪塊就讀哪塊）
+            1. `AGENTS.md` — 技術鐵律與工作規約（違反即打回）
+            2. `HANDOFF.md` §2 決策 D1–D7、§3 法律紅線、§5 里程碑驗收
+            3. `docs/research/22-admin-button-inventory.md` — admin 畫面的按鈕級驗收清單
+            4. `docs/specs/11-production-baseline.md` §0 — 七維度驗收表（安全/資料/併發/效能/可觀測/測試/合規）
+            5. 對應模組的 `docs/specs/12-19`、API 面看 `docs/research/28-api-contract.md`
+            6. 主題引擎相關看 `docs/research/25/26/27/31`
+            7. UI 值一律對照 `docs/design/23-interaction-css-spec.md` §1 tokens
+
+            ## 必查的硬性紅線（發現即標 🔴 Important）
+            - 金額出現 float / 非 integer cents
+            - 資料表缺 `shop_id`，或複合索引開頭不是 `shop_id`
+            - admin 前端直接打 REST 而非 `/admin/api/{version}/graphql.json`；業務錯誤走 HTTP 4xx 而非 `userErrors`
+            - 寫入型操作缺冪等（訂單成立／退款／庫存調整必須帶 idempotencyKey）
+            - transaction 內做外部 IO
+            - 上限值硬編碼而非引用 `config/limits.yml`
+            - 使用 `@shopify/polaris`、抄 Dawn/Horizon 代碼或 Shopify CSS/資產/文案
+            - 併發要害（超賣、折扣用量、退款上限）缺測試
+
+            ## 輸出
+            用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼一則審核意見，格式：
+
+            **驗收結論**：通過 / 需修改（一句話理由）
+            **🔴 必須修**：逐條，附 `檔案:行號` 與對應規格章節
+            **🟡 建議**：逐條
+            **✅ 已符合**：簡列有對到規格的部分
+            **未覆蓋**：這個 PR 沒做但里程碑要求的項目
+
+            具體、可執行、指到規格章節；不要泛泛稱讚。找不到問題就明說通過。
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
