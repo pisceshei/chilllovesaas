@@ -1,6 +1,24 @@
 name: Claude Review
 
-# Codex 開 PR → 這個 workflow 自動啟動 Claude 對照 docs 規格驗收 → findings 回貼到 PR
+# ============================================================
+# 自動驗收閉環（Codex 實作 × Claude 驗收）
+#
+#   Codex 開 PR / push
+#     └→ Claude 依 docs 規格驗收，貼出【驗收結論】
+#          ├─ 需修改 → 自動留言 @codex 派修 → Codex push → synchronize 觸發重審（乒乓）
+#          │            └─ 超過 MAX_FIX_ROUNDS 輪 → 停止自動派修，改請人工介入
+#          └─ 通過   → 自動 approve；AUTO_MERGE=true 時 squash 合併
+#                       └→ 關閉本階段 issue，並在下一個里程碑 issue 留言 @codex 自動派工
+#
+# 開關：
+#   MAX_FIX_ROUNDS             同一 PR 自動派修輪數上限（超過即停）
+#   AUTO_MERGE                 通過後是否自動合併＋派工下一階段（"false"＝只 approve）
+#   secrets.CODEX_PING_TOKEN   可選。設為 pisceshei 的 fine-grained PAT（僅本 repo、
+#                              Issues+Pull requests Read/Write）時，@codex 留言以本人身分發出，
+#                              Codex 必定視為有效請求；未設定則以 github-actions bot 留言，
+#                              Codex 對 bot 留言可能不回應。
+# ============================================================
+
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review]
@@ -9,15 +27,19 @@ concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  MAX_FIX_ROUNDS: "3"
+  AUTO_MERGE: "true"
+
 jobs:
   review:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
-      issues: read
+      issues: write
       id-token: write
       actions: read
     steps:
@@ -25,18 +47,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: anthropics/claude-code-action@v1
+      - name: Claude 驗收
+        uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ github.token }}
         with:
-          # 訂閱制授權（推薦，用你的 Claude 方案額度）：
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # 若改用 API key 計費，把上面那行換成：
-          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
 
-            審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。
+            審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。PR 標題或分支對應里程碑（M0–M6）時，驗收範圍以 `HANDOFF.md` §5 該里程碑的完成定義為準。
 
             ## 驗收依據（依序讀，變更碰到哪塊就讀哪塊）
             1. `AGENTS.md` — 技術鐵律與工作規約（違反即打回）
@@ -57,16 +77,97 @@ jobs:
             - 使用 `@shopify/polaris`、抄 Dawn/Horizon 代碼或 Shopify CSS/資產/文案
             - 併發要害（超賣、折扣用量、退款上限）缺測試
 
-            ## 輸出
-            用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼一則審核意見，格式：
+            ## 輸出（格式必須嚴格遵守，後續自動化步驟會機器解析）
+            用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼**恰好一則**審核意見：
 
-            **驗收結論**：通過 / 需修改（一句話理由）
-            **🔴 必須修**：逐條，附 `檔案:行號` 與對應規格章節
-            **🟡 建議**：逐條
-            **✅ 已符合**：簡列有對到規格的部分
-            **未覆蓋**：這個 PR 沒做但里程碑要求的項目
+            - 第一行必須是下列兩者之一，一字不差（全形【】）：
+              - 【驗收結論】通過
+              - 【驗收結論】需修改：一句話理由
+            - 「【驗收結論】」這個標記只能出現在第一行，其餘任何段落都不得再出現這五個字加括號的組合。
+            - 之後依序：
+              - **🔴 必須修**：逐條，附 `檔案:行號` 與對應規格章節（結論為通過時省略）
+              - **🟡 建議**：逐條
+              - **✅ 已符合**：簡列有對到規格的部分
+              - **未覆蓋**：這個 PR 沒做但該里程碑要求的項目
+            - 只要存在任何一條 🔴，結論必須是需修改；沒有 🔴 就下通過（🟡 不擋通過）。
 
-            具體、可執行、指到規格章節；不要泛泛稱讚。找不到問題就明說通過。
+            具體、可執行、指到規格章節；不要泛泛稱讚。
+            不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
           claude_args: |
             --max-turns 40
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
+
+      - name: 解析結論並驅動閉環
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODEX_PING_TOKEN: ${{ secrets.CODEX_PING_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -uo pipefail
+          PING="${CODEX_PING_TOKEN:-}"
+
+          COMMENTS=$(gh api "repos/$REPO/issues/$PR/comments?per_page=100")
+          LATEST=$(printf '%s' "$COMMENTS" | jq -r '[.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("【驗收結論】"))] | (.[-1].body // "")')
+          ROUNDS=$(printf '%s' "$COMMENTS" | jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("【驗收結論】需修改"))] | length')
+
+          if [ -z "$LATEST" ]; then
+            gh pr comment "$PR" --body "⚠️ 自動驗收沒有產生結論（Claude 步驟可能失敗或逾時）。請到 Actions 分頁查 log；重新 push 即會重跑驗收。"
+            exit 0
+          fi
+
+          if printf '%s' "$LATEST" | grep -q "【驗收結論】需修改"; then
+            if [ "$ROUNDS" -le "$MAX_FIX_ROUNDS" ]; then
+              FIXBODY="@codex 請依本 PR 最新一則 Claude 驗收意見，逐條修復 🔴 必須修 的項目（🟡 建議 視情況採納），直接 push 到本分支（$PR_BRANCH），不要開新 PR。push 後會自動重新驗收。（自動派修第 $ROUNDS 輪／上限 $MAX_FIX_ROUNDS 輪）"
+              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh pr comment "$PR" --body "$FIXBODY"; else gh pr comment "$PR" --body "$FIXBODY"; fi
+            else
+              gh pr comment "$PR" --body "⛔ 已達自動派修上限（$MAX_FIX_ROUNDS 輪），停止自動 @codex，請人工介入：直接修好 push 本分支會自動重審；或自行留言 @codex 再派一輪。"
+            fi
+            exit 0
+          fi
+
+          if printf '%s' "$LATEST" | grep -q "【驗收結論】通過"; then
+            gh pr review "$PR" --approve --body "Claude 驗收通過 ✅（自動核准）" \
+              || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
+
+            if [ "$AUTO_MERGE" != "true" ]; then
+              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併；合併後如需派工下一階段，到下一個里程碑 issue 留言 @codex。"
+              exit 0
+            fi
+
+            if ! gh pr merge "$PR" --squash --delete-branch; then
+              gh pr comment "$PR" --body "⚠️ 驗收通過但自動合併失敗（可能與 main 衝突或被保護規則擋下），請手動合併。"
+              exit 0
+            fi
+
+            STAGE=$(printf '%s' "$PR_TITLE" | grep -oE '^M[0-9]+' || true)
+            if [ -z "$STAGE" ]; then
+              STAGE=$(printf '%s' "$PR_BRANCH" | grep -oE '^m[0-9]+' | tr 'a-z' 'A-Z' || true)
+            fi
+
+            if [ -n "$STAGE" ]; then
+              DONE=$(gh issue list --state open --json number,title --jq "[.[] | select(.title | startswith(\"$STAGE:\"))] | (.[0].number // \"\")")
+              if [ -n "$DONE" ]; then
+                gh issue close "$DONE" --comment "✅ $STAGE 已通過 Claude 驗收並合併（PR #$PR）。"
+              fi
+            fi
+
+            NEXT_NUM=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | test("^M[0-9]+:"))] | sort_by(.title) | (.[0].number // "")')
+            NEXT_TITLE=$(gh issue list --state open --json number,title --jq '[.[] | select(.title | test("^M[0-9]+:"))] | sort_by(.title) | (.[0].title // "")')
+
+            if [ -n "$NEXT_NUM" ]; then
+              NEXT_STAGE=$(printf '%s' "$NEXT_TITLE" | grep -oE '^M[0-9]+')
+              NEXT_BRANCH=$(printf '%s' "$NEXT_STAGE" | tr 'A-Z' 'a-z')
+              DISPATCH="@codex 上一階段已通過驗收並合併（PR #$PR）。請開始 $NEXT_TITLE — 範圍見本 issue 描述與 HANDOFF.md §5；規約見 AGENTS.md（分支命名 $NEXT_BRANCH/{功能}、不直接推 main、PR 標題以「$NEXT_STAGE:」開頭、描述附規格對照＋自測結果＋假設清單）。完成後開 PR，Claude 會自動驗收。"
+              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh issue comment "$NEXT_NUM" --body "$DISPATCH"; else gh issue comment "$NEXT_NUM" --body "$DISPATCH"; fi
+              gh pr comment "$PR" --body "🚀 已自動派工下一階段 → issue #$NEXT_NUM（$NEXT_TITLE）"
+            else
+              gh pr comment "$PR" --body "🏁 沒有待辦的里程碑 issue——所有階段已完成，或下一階段 issue 尚未建立。"
+            fi
+            exit 0
+          fi
+
+          gh pr comment "$PR" --body "⚠️ 驗收意見含結論標記但無法判讀（既非通過也非需修改），請人工判讀最新一則驗收意見。"
