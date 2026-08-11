@@ -1,6 +1,20 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
+inherit_mode:
+  merge:
+    - Exclude
+
+AllCops:
+  Exclude:
+    # Rails 與 Solid gems 會重建這些 schema snapshots；lint migration source，
+    # 避免不同 adapter/dumper 版本造成無業務意義的格式漂移。
+    - "db/schema.rb"
+    - "db/*_schema.rb"
+    # Phase 1 的 Liquid 相容性 PoC 不會載入 M0 runtime；其格式債由 M2
+    # 正式移植時處理，避免 M0 CI 擅自改寫既有研究樣本。
+    - "poc/**/*"
+
 # Overwrite or add rules to create your own house style
 #
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`

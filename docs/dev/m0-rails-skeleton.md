@@ -237,7 +237,7 @@ bin/rails db:seed
 | `pnpm test` | 通過，Vitest 3/3 cases（空狀態、錯誤重試、資料表與搜尋空結果） |
 | test／production frontend build | 兩個環境皆通過 |
 | `RAILS_ENV=test bin/rails zeitwerk:check` | 通過，`All is good!` |
-| `bin/rubocop` | 通過，70 files／0 offenses |
+| `bin/rubocop` | 通過，70 files／0 offenses；machine-generated schema 與 M0 runtime 未載入的 Phase 1 PoC 明確排除 |
 | `bin/brakeman --no-pager --exit-on-warn --exit-on-error` | 通過；掃描 5 controllers、12 models、5 templates，0 warnings |
 | `bin/bundler-audit` | 通過；RubySec database 1,232 advisories，0 vulnerabilities |
 | `pnpm audit` | 通過，0 vulnerabilities |
