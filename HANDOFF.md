@@ -46,7 +46,7 @@
   - `chilllove-admin-v2.html`——後台全導航樹（2026 結構：淺色頂列、pulse 首頁、AI 框、檢視下拉、訂單詳情、分析、設定 12 分頁）
   - `chilllove-admin-preview.html`——v1（商品詳情頁的 save bar 交互看這裡）
   - `chilllove-storefront-preview.html`——前台品牌方向（cart drawer、免運進度條）
-  - `chilllove-platform-admin.html`——**平台總控後台**（租戶管理/監控/審計/人員/設定；深色頂列＝平台模式；規格見 `docs/design/32`，M8 交付）
+  - `chilllove-platform-admin.html`——**平台總控後台 v2**（16 區：租戶全生命週期/KYC 審核/計費催繳/清結算/爭議風控/違規申訴/合規/可靠性/灰度/環境/審計/權限；深色頂列＝平台模式；規格見 `docs/design/32`＋競品拆解與迭代波次見 `docs/design/33`，M8 交付）
 - **圖表**：一律遵守 dataviz 規格（單系列 #2a78d6、2px 線、10% 面積、髮絲網格、hover 十字、附數據表格；色板已過對比驗證）。
 
 ## 5. 開發路線與驗收
@@ -61,7 +61,7 @@
 | M5 增長線 | 折扣引擎＋分析 rollup＋設定八域＋通知信＋**Markets P1**（29 號：市場模型/市場定價/hreflang 全量）＋**feed 生成器**（30 §9-8：GMC 規格＋Merchant API＋IndexNow） | `docs/specs/17/19` 驗收＋GMC 測試 feed 零錯誤 |
 | M6 編輯器 | **31 號 M6a–M6c 全計畫**：編輯器 ED1–ED12（三面板/巢狀拖拽/30 控件/預覽橋 8 事件/draft 渲染/picker/佈景設定/代碼編輯/主題庫）＋安裝管線 IN＋R 線 T1 補完 | **31 §6 驗收矩陣全綠**（Ella/Dawn 復現版/OS 2.0 舊主題 × 十項；含 27 §8 十條） |
 | M7 部署線 | **生產部署（真產品階段開始）**：Docker 化（web/worker/renderer 分離）＋Kamal 2 部署 staging＋production（`docs/research/10` 部署節）；secrets 管理；每日全量備份＋binlog 歸檔＋還原演練腳本（11 §2）；strong_migrations 上線 DDL 安全；租戶子網域萬用憑證＋自訂網域 CNAME 對應與 DNS 驗證（07 §租戶路由、28 §網域）＋平台子網域→自訂網域 301（30 §9-3） | staging 一鍵部署可重複執行；測試店以子網域與自訂網域皆可逛完前台＋下單；備份還原演練通過；`/up` 綠 |
-| M8 運營線 | **可運營**：結構化日誌（request_id＋shop_id）＋錯誤上報＋關鍵指標 dashboard＋合成下單巡檢（11 §5）；Solid Queue 佇列監控與死信告警；webhook 投遞監控＋重試；成本型限流全面啟用（28 §0）＋登入/結帳防濫用；`Platform::` 平台後台（specs/12）：租戶列表/開停店/跨租戶監控；註冊開店流程（07 §租戶）；PII 遮罩＋審計日誌 | 11 §5 可觀測基線逐條就位；壓測下限流生效且 Retry-After 正確；平台後台對照 `docs/design/32` §9 十二條＋platform 原型逐控件打勾；巡檢告警可實際觸發 |
+| M8 運營線 | **可運營**：結構化日誌（request_id＋shop_id）＋錯誤上報＋關鍵指標 dashboard＋合成下單巡檢（11 §5）；Solid Queue 佇列監控與死信告警；webhook 投遞監控＋重試；成本型限流全面啟用（28 §0）＋登入/結帳防濫用；`Platform::` 平台後台（specs/12）：租戶列表/開停店/跨租戶監控；註冊開店流程（07 §租戶）；PII 遮罩＋審計日誌 | 11 §5 可觀測基線逐條就位；壓測下限流生效且 Retry-After 正確；平台後台對照 `docs/design/33` §5 十二條＋§4 的 W1/W2 波次範圍，並與 platform 原型逐控件打勾；巡檢告警可實際觸發 |
 | M9 上線線 | **生產驗收**：全模組 11 §0 七維度終審；負載測試（結帳併發/瀏覽尖峰/`/cart/*.js` 突刺）＋EXPLAIN 慢查詢抽查；brakeman 0 高危＋bullet 0 報警；資安複核（session/CSRF/webhook HMAC/秘鑰輪換）；運營 runbook（部署/回滾/備份還原/事故分級）；法遵頁面模板（隱私/條款/退換貨） | **11 §9 上線前 checklist 全綠一條不缺**；併發 50 結帳恰好 1 單在生產拓撲重測通過；合成下單連續 24h 無失敗 |
 | 貫穿 | **API-first 鐵律（D5）**：每個 admin 功能先寫 28 號對應操作，SPA 只打 GraphQL；schema lint 擋裸 float 金額與 offset 分頁 | 28 §18 六條驗收 |
 
@@ -90,7 +90,8 @@ docs/research/31          ← ★主題引擎與編輯器完整補齊計畫（R/
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）
-docs/design/32            ← ★平台總控後台規格（租戶狀態機/權限矩陣/Platform:: API/M8 驗收清單）
+docs/design/32            ← ★平台總控後台規格（定位/權限矩陣/Platform:: API/驗收）
+docs/design/33            ← ★平台後台競品拆解與迭代方案（八家橫向矩陣/機制數值/W1–W5 波次）
 docs/design/*.html        ← ★四個高保真原型（驗收基準；v2 與 platform 含註釋模式）
 docs/design/critique-*    ← 設計評審紀錄
 ```
