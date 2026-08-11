@@ -25,6 +25,9 @@
 | D2 路線 | A→B→C：先成交閉環（M0–M3）→ 後台深化（M4–M5）→ 主題編輯器（M6） | 同上 |
 | D3 品牌 | 平台名 **CHILL LOVE**，做成單一變數可改名 | 同上 |
 | D4 前台引擎 | **Liquid 相容主題引擎**：liquid gem（MIT）＋自實作平台層與端點，第三方 Shopify 主題可匯入（授權 gate 必備）。取代 07/10 的 ViewComponent 簡化案 | `docs/research/25` |
+| D5 API-first | admin SPA 與服務端**只走 GraphQL Admin API**（1:1 仿 Shopify 慣例：GID/cursor/userErrors/cost/MoneyBag/webhooks HMAC） | `docs/research/28` |
+| D6 基建對映 | 全面走 Shopify 路線：demo 形態→生產路線對照表（MySQL→Vitess、Solid Queue→Kafka、ngram→OpenSearch、imgproxy CDN、獨立 renderer） | `docs/DECISIONS.md` D6 |
+| D7 國際化與 SEO | Markets P0→P2 路線（29 號）；SEO 合規內建 storefront；GMC 規格 feed 生成器＋Merchant API；IndexNow；Simprosys 雙軌 | `docs/research/29/30` |
 | 架構原則 | 單體 monorepo；全表 `shop_id`；金額 integer cents；寫路徑冪等；outbox 事件 | `docs/research/08` §7、`docs/specs/11` |
 
 ## 3. 法律紅線（絕對不可越）
@@ -51,11 +54,12 @@
 |---|---|---|
 | M0 地基 | Rails 骨架、40 表 migration（`docs/research/06` §7）、`config/limits.yml`（22 §9.4 常數表）、tokens.css、第一批元件、admin shell、多租戶 middleware、staff 認證 | 登入看到 CHILL LOVE shell + 商品空狀態 |
 | M1 商品線 | Products CRUD＋變體 diff 更新＋媒體＋系列＋庫存 ledger | 22 §2 逐行打勾；併發加購不超賣測試 |
-| M2 前台線 | **Liquid 引擎接入**（gem＋T0 平台層）＋自寫預設主題＋`/cart/*.js` 家族與 Section Rendering API（`docs/research/25` §5-6） | storefront-preview 還原度＋預設主題全站可逛、cart drawer 走相容端點 |
+| M2 前台線 | **Liquid 引擎接入**（31 號 M2a/M2b：T0 filters/drops＋圖片管線＋字型庫＋搜尋推薦後端）＋自寫預設主題＋`/cart/*.js` 家族與 SRA＋**i18n P0**（29 號：locales/translations/多幣顯示）＋**SEO 基線**（30 §9：canonical/JSON-LD/sitemap/robots/410） | 預設主題全站可逛、cart drawer 走相容端點；Rich Results 測試通過；切語言雙層翻譯生效 |
 | M3 成交線 | one-page checkout＋金額引擎＋Stripe test＋訂單成立 | `docs/specs/15` 驗收清單全綠（併發 50 執行緒恰好 1 單等） |
 | M4 履約線 | 訂單詳情全功能（出貨/退款/取消/編輯/時間軸）＋顧客 | 22 §1b guard 清單全實作 |
-| M5 增長線 | 折扣引擎＋分析 rollup＋設定八域＋通知信 | `docs/specs/17/19` 驗收 |
-| M6 編輯器 | 主題編輯器（24 §3 六原子操作＋25 §11 運行時契約：8 個 DOM 事件/draft-render/picker 規則）＋**主題匯入管線**（zip→tolerant parse→theme-check→降級報告→授權 gate）＋T1 平台層補完 | **Golden theme 驗收：Ella 7.2.0 匯入後 `docs/research/27` §8 十條全綠**（含商品頁 blocks 拖拽、product card 卡片裝修、編輯器事件觸發主題互動） |
+| M5 增長線 | 折扣引擎＋分析 rollup＋設定八域＋通知信＋**Markets P1**（29 號：市場模型/市場定價/hreflang 全量）＋**feed 生成器**（30 §9-8：GMC 規格＋Merchant API＋IndexNow） | `docs/specs/17/19` 驗收＋GMC 測試 feed 零錯誤 |
+| M6 編輯器 | **31 號 M6a–M6c 全計畫**：編輯器 ED1–ED12（三面板/巢狀拖拽/30 控件/預覽橋 8 事件/draft 渲染/picker/佈景設定/代碼編輯/主題庫）＋安裝管線 IN＋R 線 T1 補完 | **31 §6 驗收矩陣全綠**（Ella/Dawn 復現版/OS 2.0 舊主題 × 十項；含 27 §8 十條） |
+| 貫穿 | **API-first 鐵律（D5）**：每個 admin 功能先寫 28 號對應操作，SPA 只打 GraphQL；schema lint 擋裸 float 金額與 offset 分頁 | 28 §18 六條驗收 |
 
 每個功能上線前過 `docs/specs/11` §0 的**七維度驗收表**（安全/資料/併發/效能/可觀測/測試/合規）。各 specs 文件末尾都有該模組的具體驗收清單。
 
@@ -73,6 +77,10 @@ docs/research/24          ← 主題編輯器＋結帳系統實測 teardown（Ho
 docs/research/25          ← ★Liquid 相容層架構（D4 引擎/匯入管線/端點規格/授權紅線/編輯器契約摘要）
 docs/research/26          ← ★Liquid API 全量 checklist（138 objects/30 tags/154 filters 分層）
 docs/research/27          ← ★Golden theme：Ella 案例研究（卡片系統解剖/編輯器 8 事件契約/M6 十條驗收）
+docs/research/28          ← ★API 契約（D5：慣例＋逐模組操作表＋webhooks＋前台面＋對接矩陣）
+docs/research/29          ← 多語言/多貨幣/多市場（Markets 全機制＋表結構＋P0-P2）
+docs/research/30          ← SEO/Merchant Center/社媒 feed/Simprosys（官方要求＋平台落地清單）
+docs/research/31          ← ★主題引擎與編輯器完整補齊計畫（R/E/ED/IN/D 五線工作包＋驗收矩陣＋排期）
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）

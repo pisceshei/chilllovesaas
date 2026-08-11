@@ -31,6 +31,10 @@
 | 25 | liquid-compat-spec | **D4 核心規格**：Liquid 相容層架構——gem 能力邊界、匯入管線、/cart/*.js 等端點欄位級規格、T0-T2 分層測試、**授權紅線**（Dawn/Horizon 非 MIT、Theme Store 單店授權、SHOPLINE 先例） |
 | 26 | liquid-api-inventory | Liquid API 全量 checklist：138 objects / 30 tags / 154 filters 逐項（含 tier 標注）、模板結構 schema、30 種 setting input types——M2/M6 實作與驗收基準 |
 | 27 | ella-case-study | **Golden theme 驗收基準**：Ella 7.2.0 逐檔解剖（245 blocks 卡片系統/商品頁 4 層巢狀/preset 動態來源）＋編輯器運行時契約（8 個 DOM 事件/標記/ID 規則/picker 規則/?view= fragment）＋差距修訂 14 條＋M6 十條驗收 |
+| 28 | api-contract | **D5 全項目 API 化**：Shopify 慣例（GID/cursor/userErrors/cost/MoneyBag）＋14 模組 GraphQL 操作表＋webhooks 24 topics＋前台 HTTP 面＋三端對接矩陣＋六條驗收 |
+| 29 | markets-i18n | 多語言（30 種可翻資源/digest 機制/Adapt）＋多貨幣（雙記/匯率/rounding/零小數/退款匯率）＋多市場（模型/網域策略/contextual templates）＋P0-P2 路線 |
+| 30 | seo-merchant-feeds | Google/Bing 官方要求（結構化資料兩套體驗/sitemap/CWV/IndexNow）＋GMC/MMC feed 規格（Merchant API）＋Meta/TikTok/Pinterest 對映＋Simprosys OpenAPI 實證與雙軌對接契約 |
+| 31 | theme-engine-complete-plan | **★最高優先**：「一安裝就能用」五線工作包（R 渲染完備/E 端點/ED 編輯器 30 控件+預覽橋/IN 安裝管線/D 資料模型）＋三主題驗收矩陣＋15-18 週排期 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 
