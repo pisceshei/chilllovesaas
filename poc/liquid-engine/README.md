@@ -6,11 +6,11 @@
 
 ```bash
 git clone --depth 1 --branch v5.5.0 https://github.com/Shopify/liquid.git /tmp/liquid
-ELLA_DIR=/path/to/ella ruby render_ella.rb   # 需 Ruby 3.2+；輸出 out/index.html + compat-report.json
+ELLA_DIR=../../test/fixtures/themes/ella-7.2.0 ruby render_ella.rb   # 需 Ruby 3.2+；輸出 out/index.html + compat-report.json
 # 註：生產用 5.13.x（需 strscan ≥3.1.1）；沙箱 Ruby 3.3.6 內建 strscan 較舊故用 5.5.0，語言面一致
 ```
 
-Ella 原始碼因授權不入 repo（見 25 §8）——本 PoC 讀外部路徑，`out/` 已 gitignore。
+Ella 原始碼＝使用者已購授權的測試 fixture，位於 `test/fixtures/themes/ella-7.2.0`（授權邊界見該目錄 LICENSE-NOTE 與 25 §8）；`out/` 已 gitignore。
 
 ## 檔案
 

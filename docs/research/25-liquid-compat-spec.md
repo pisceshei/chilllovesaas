@@ -156,6 +156,7 @@ end
 |---|---|---|
 | liquid gem / theme-check(TS) / theme-liquid-docs | 標準 MIT | ✅ 自由使用（引擎與驗證器無虞） |
 | **Theme Store 主題**（含付費） | Shopify ToS §9.6：授權**單一商店**（"licensed to use it for a single Store only"…"not permitted to transfer or sell…elsewhere"）；IP 屬第三方設計師（各有 EULA） | ⚠️ 商家把主題搬來我們平台＝條款文字未授權的使用。**產品義務**：匯入流程強制授權聲明 gate（「我確認我有權在本平台使用此主題」勾選＋說明文案）；我們不提供、不轉售、不預載任何 Theme Store 主題 |
+| **Ella 7.2.0（本專案 golden theme）** | ThemeForest/Envato 通路商業主題；**使用者已購買授權**（單店使用、不得再散布） | ✅ **使用者自用面已解決**：作為測試 fixture 入私有倉庫（`test/fixtures/themes/ella-7.2.0`＋LICENSE-NOTE）、跑相容測試、用於使用者自有商店——皆在其授權內。❌ 平台面不變：不得預載/散布給**其他**商家（每商家自購或談 Halothemes 平台合作）；第一方主題仍從零自寫 |
 | **Dawn** | **不是純 MIT**——LICENSE.md 是加了使用領域限制的修改版 MIT：「僅可用於開發與 Shopify 軟體/服務整合互通的主題…**所有其他用途一律禁止**」（2021 年首 commit 即如此） | ❌ 平台端禁止使用/衍生 Dawn 代碼（與既有紅線一致，現在有了確切條款依據） |
 | **Horizon** | 同款 interop 限制且更嚴：禁止經「**任何站外渠道**」散布衍生主題；Shopify 有權單方認定何為衍生 | ❌ 同上 |
 | **訴訟先例** | Shopify v. SHOPLINE（2024 起訴：其 Seed 主題抄 Dawn；**2026-06 和解**：賠款＋停止散布） | 🔴 Shopify 對「非 Shopify 平台重用其主題資產」**積極執法**。我們的第一方主題必須從零自寫（結構模式可學、代碼不可抄）；平台自身絕不散布 Dawn/Horizon 衍生物 |

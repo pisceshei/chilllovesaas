@@ -35,7 +35,7 @@
 1. **不可使用** `@shopify/polaris`、Polaris icons/插圖、**Dawn/Horizon 主題代碼**——Polaris 授權限 Shopify 整合應用；Dawn/Horizon 的 LICENSE 明文「僅限與 Shopify 互通、其他用途一律禁止」（**非純 MIT**，2026-06 Shopify v. SHOPLINE 和解先例證明會執法；見 `docs/research/25` §8）。icon 用 **Lucide（MIT）**。
 2. 不可抄 Shopify 的 CSS 源碼、圖片資產、品牌與文案；**可以**實作相同的功能邏輯、佈局結構、交互行為（不受著作權保護），視覺值用我們自己的 token 表（23 號文件）。
 3. 例外：**Liquid gem、theme-check（TS）、theme-liquid-docs 是標準 MIT**——這是 D4 主題引擎的法律基礎，可自由使用。
-4. Theme Store 主題授權限「單一 Shopify 商店」：平台**不預載、不散布**任何 Shopify 主題；第一方預設主題從零自寫；商家匯入第三方主題必須通過**授權聲明 gate**（25 §8 產品義務）。
+4. Theme Store 主題授權限「單一 Shopify 商店」：平台**不預載、不散布**任何 Shopify 主題；第一方預設主題從零自寫；商家匯入第三方主題必須通過**授權聲明 gate**（25 §8 產品義務）。**例外：Ella 7.2.0 使用者已購授權**——已入倉作 golden theme 測試 fixture（`test/fixtures/themes/ella-7.2.0`，倉庫保持私有），開發與測試放心用；仍不得散布給其他商家。
 5. 產品內不得出現 Shopify 字樣或其品牌視覺；行銷話術用「相容 Shopify 主題格式」。
 
 ## 4. UI 與交互的單一真相（你的 CSS 從哪來）
