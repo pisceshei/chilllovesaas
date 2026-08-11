@@ -188,6 +188,8 @@ end
 11. **寬容解析缺失**：第三方原始碼包的 schema/settings JSON 常帶註解與尾逗號（官方後台會清、原始碼不會）——匯入管線必須 tolerant parse＋規範化，否則 Ella 這類主題第一步就掛。
 12. **缺 group 檔要寬容**：Ella 的 theme.liquid 引用不存在的 `toolbar-mobile` group——渲染空＋警告，不可炸。
 13. **`Shopify.*` no-op stubs 不做**：主題 JS 引用 ShopifyXR/PaymentButton/loadFeatures/CountryProvinceSelector——沒有 stub 就是 console 炸裂＋功能連鎖失效。
+14. **（PoC 實測）`blank` 語義依賴 ActiveSupport**：gem 的 `x == blank` 走 `MethodLiteral(:blank?)`，裸 Ruby 無 `Object#blank?` → `undefined == blank` 恆 false——主題「`if x == blank` → assign」慣用法全滅（實測 Ella 全部標題消失）。Rails 環境自帶 ActiveSupport 即修復；**引擎啟動自檢必須驗證 blank?/present? 已載**。
+15. **（PoC 實測）strscan 版本鏈**：liquid 5.6+ 需 strscan ≥3.1.1（`peek_byte`）；Ruby 3.3 內建 3.0.x 直接炸——Gemfile 明鎖 `gem "strscan", ">= 3.1.1"`。
 
 ## 11. 編輯器運行時契約（Ella 驗證版——完整規格見 27 號 §6）
 

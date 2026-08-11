@@ -188,3 +188,13 @@ main-product
 10. 隱藏/顯示、duplicate、undo/redo、儲存後 dirty 清零——與 24 號 §3 六原子操作一致。
 
 —— 以上每條都可寫成 E2E 測試（headless）；第 4/5/7 條是「和 Shopify 完全一樣」的核心體感。
+
+## 9. PoC 實證（已完成——`poc/liquid-engine/`）
+
+驗收第 1 條的雛形已在本 repo 以可跑代碼證明：liquid gem（MIT）＋自實作平台層（content_for/blocks 機制、~70 filters、schema 型別感知 drops、動態來源 resolver），渲染 **Ella 未經修改的原始檔案＋真實實例資料**，0 Liquid errors：
+
+1. announcement-bar（header-group 實例、4 層 blocks 樹、color scheme）；
+2. 商品卡 card-product-flex ×4（recommendations 實例子樹；closest.product 逐卡切換；變體感知按鈕；cents→money 劃線價）；
+3. main-product 商品詳情頁（⚓×3 靜態卡槽＋9 巢狀卡片：動態來源 H1、hot-stock 庫存條、個人化欄位、quantity/subtotal）。
+
+過程中實測抓到兩個文檔讀不出來的一級坑（ActiveSupport `blank?` 依賴、color 設定物件化），已回寫 25 號坑清單 #14/#15。PoC 即 M2 引擎起點；跑法見 `poc/liquid-engine/README.md`。
