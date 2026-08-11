@@ -76,6 +76,8 @@ jobs:
             - 上限值硬編碼而非引用 `config/limits.yml`
             - 使用 `@shopify/polaris`、抄 Dawn/Horizon 代碼或 Shopify CSS/資產/文案
             - 併發要害（超賣、折扣用量、退款上限）缺測試
+            - 新增的 public class/module/方法缺文檔註釋（用途/參數/回傳/副作用）；複雜邏輯（金額/併發/冪等/Liquid 相容）缺「為什麼」註釋與規格出處（規範見 `AGENTS.md` 註釋與文檔節）
+            - 新增功能的 PR 缺 `docs/dev/m{N}-{功能}.md` 功能文檔（模板見 `docs/dev/README.md`）；修復/重構 PR 未更新受影響的既有文檔且未在 PR 描述說明理由
 
             ## 輸出（格式必須嚴格遵守，後續自動化步驟會機器解析）
             用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼**恰好一則**審核意見：

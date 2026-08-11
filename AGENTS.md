@@ -24,6 +24,15 @@
 5. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify CSS/資產/文案；icon 用 Lucide；Liquid gem（MIT）可用。`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture——僅限測試，不得散布。
 6. 文案繁體中文；金額顯示 `NT$1,480`（tabular-nums）。
 
+## 註釋與文檔（強制——缺了即打回，與技術鐵律同級）
+
+> 目的：任何工程師或代理隨時接手，讀註釋與 `docs/dev/` 即可上手。把「以後有人接手」當成驗收標準來寫代碼。
+
+1. **文檔註釋**：所有 public class/module/方法必須有文檔註釋——用途、參數、回傳、副作用（Ruby 用 YARD 風格，TS/React 用 TSDoc；繁體中文為主、術語保留英文）。React 元件註明 props 與對應 `docs/design/23` tokens 章節。
+2. **「為什麼」註釋**：複雜業務邏輯（金額計算、併發控制、冪等、庫存 ledger、Liquid 相容行為、快取失效）必須註明設計原因並引用規格出處，例：`# 併發扣庫存用悲觀鎖，見 docs/specs/14 §3`。migration 檔頭註明對應 `docs/research/06` §7 的表定義條目。
+3. **功能文檔**：每個新增功能的 PR 必須同時新增 `docs/dev/m{N}-{功能}.md`（模板與規則見 `docs/dev/README.md`）：概述、規格出處、架構與資料流、API 對應、資料表、關鍵取捨、測試、已知限制。修 bug／重構的 PR 則更新受影響的既有篇章。
+4. PR 描述加一欄「文檔」：列出本 PR 的 docs/dev 變更；沒有變更要寫明理由（例：純 CI 修改）。
+
 ## 測試與驗收基準
 
 - 每功能過 `docs/specs/11` §0 七維度；併發場景（超賣/折扣用量/退款上限）必須有測試。

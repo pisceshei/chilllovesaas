@@ -25,6 +25,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 - 畫面對照 `docs/research/22` 逐按鈕打勾；原型 `docs/design/chilllove-admin-v2.html`（開「⌗ 註釋模式」可看每個控件的功能／邏輯／實作）。
 - 主題引擎 golden theme＝Ella：`docs/research/27` §8 十條、`docs/research/31` §6 矩陣；Liquid API 面對照 `docs/research/26`。
 - 併發要害必須有測試：超賣、折扣用量、退款上限。
+- **註釋與文檔強制驗收**（缺了一律 🔴 打回）：public 介面缺文檔註釋；複雜邏輯（金額/併發/冪等/Liquid 相容）缺「為什麼」註釋與規格出處；新增功能 PR 缺 `docs/dev/m{N}-{功能}.md`（規範見 `AGENTS.md` 註釋與文檔節、模板見 `docs/dev/README.md`）。
 
 ## 文件地圖
 
