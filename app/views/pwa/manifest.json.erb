@@ -1,0 +1,18 @@
+{
+  "name": <%= Rails.configuration.x.brand.name.to_json.html_safe %>,
+  "short_name": <%= Rails.configuration.x.brand.name.to_json.html_safe %>,
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/admin",
+  "display": "standalone",
+  "scope": "/",
+  "description": <%= "#{Rails.configuration.x.brand.name} 管理後台".to_json.html_safe %>,
+  "theme_color": "#2b2c2e",
+  "background_color": "#f4f4f5"
+}

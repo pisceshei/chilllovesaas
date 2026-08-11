@@ -15,7 +15,7 @@
 
 - **產品**：CHILL LOVE——多租戶電商 SaaS。商家註冊開店 → 後台管理（商品/訂單/顧客/折扣/分析/設定）→ 買家前台（主題化商店）→ one-page 結帳（Stripe）。
 - **對標**：功能邏輯、頁面結構、交互行為 1:1 對齊 Shopify 2026 春季版後台（已實測走訪，見 `docs/research/21`）；視覺用自有設計語言（不是 Polaris）。
-- **三階段**：研究（✅ 完成）→ demo 原型（🔜 你負責，里程碑 M0–M6）→ 真產品。
+- **三階段**：研究（✅ 完成）→ demo 原型（🚧 M0 已建立，接續 M1–M6）→ 真產品。
 
 ## 2. 已鎖定的決策（不要重新辯論，除非使用者本人改變主意）
 
@@ -106,6 +106,6 @@ docs/design/critique-*    ← 設計評審紀錄
 
 - Git 歷史：Phase 1 docs → teardown → v2 原型 → 按鈕對照+註釋模式 → 本交接包（見 `git log`）。
 - GitHub：`https://github.com/pisceshei/chilllovesaas`（private）。以倉庫內容為準；若你拿到的是 zip，解壓後即完整專案。
-- 尚未有任何應用程式代碼——M0 從零開始，這是刻意的：規格先行。
+- M0 應用程式地基已建立：Rails 8.1/MySQL 8、Solid Queue/Cache、租戶與 staff auth、版本化 Admin GraphQL、React Admin shell、48 張業務表；實作與驗證細節見 `docs/dev/m0-rails-skeleton.md`。
 
 有問題先查文件；文件沒有答案的，才是真正需要問使用者的問題。祝順利。

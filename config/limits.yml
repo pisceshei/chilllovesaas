@@ -1,0 +1,58 @@
+shared: &shared
+  # docs/research/22-admin-button-inventory.md §9.4：所有產品配額的單一真相。
+  discounts:
+    automatic_per_shop: 25
+    codes_per_shop: 20000000
+    automatic_customer_segments: 5
+    code_customer_segments: 100
+    applicable_resources: 100
+  products:
+    variants: 2048
+    options: 3
+    media: 250
+    description_bytes: 65536
+  smart_collections:
+    per_shop: 5000
+    conditions: 60
+  themes:
+    library: 20
+    trials: 19
+  locations:
+    basic_through_advanced: 10
+    plus: 200
+  fulfillment_orders:
+    manual_holds: 10
+  timeline:
+    editable_minutes: 5
+  abandoned_checkouts:
+    retention_months: 3
+  exports:
+    synchronous_rows: 50
+  csv:
+    megabytes: 15
+    bytes: 15728640
+  text:
+    title_characters: 255
+  orders:
+    starting_number: 1001
+
+  # docs/research/28-api-contract.md §0.3–0.4：GraphQL 邊界與 cost bucket。
+  api:
+    graphql:
+      connection_page_size: 250
+      input_array_items: 250
+      object_cost: 1
+      scalar_cost: 0
+      mutation_base_cost: 10
+      max_request_cost: 1000
+      bucket_capacity: 2000
+      restore_rate_per_second: 100
+
+development:
+  <<: *shared
+
+test:
+  <<: *shared
+
+production:
+  <<: *shared

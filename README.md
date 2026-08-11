@@ -7,7 +7,7 @@
 ## 目前狀態
 
 - ✅ 第一階段：深度研究完成（`docs/research/`，11 份文件 + 互動式模組地圖）
-- 🔜 第二階段：demo 原型——已決策（見 `docs/DECISIONS.md`）：**Rails + React（本尊同款棧）**、路線 **A→B→C**、品牌名 **CHILL LOVE**、**D4 前台走 Liquid 相容引擎（第三方 Shopify 主題可匯入）**
+- 🚧 第二階段：demo 原型——**M0 地基已建立**（見 `docs/dev/m0-rails-skeleton.md`）；技術決策為 **Rails + React**、路線 **A→B→C**、品牌名 **CHILL LOVE**、**D4 前台走 Liquid 相容引擎（第三方 Shopify 主題可匯入）**
 - ⬜ 第三階段：真產品路線（見 07 §9）
 
 ## 文件索引（docs/research/）

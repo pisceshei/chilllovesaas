@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <title><%= content_for(:title) || Rails.configuration.x.brand.name %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="application-name" content="<%= Rails.configuration.x.brand.name %>">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tokens", "stylesheets/admin", data: { turbo_track: "reload" } %>
+    <%= vite_client_tag %>
+    <%= vite_react_refresh_tag %>
+    <%= vite_javascript_tag "admin.tsx" %>
+    <%= yield :head %>
+  </head>
+
+  <body class="admin-layout">
+    <%= yield %>
+  </body>
+</html>

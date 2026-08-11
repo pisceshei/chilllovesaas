@@ -6,6 +6,10 @@
 
 `m{里程碑}-{功能}.md`，全小寫、連字號。例：`m0-rails-skeleton.md`、`m1-products-crud.md`、`m2-liquid-engine.md`。
 
+## 篇章索引
+
+- [M0：Rails 地基與 Admin Shell](m0-rails-skeleton.md)
+
 ## 模板（複製開始寫）
 
 ```markdown

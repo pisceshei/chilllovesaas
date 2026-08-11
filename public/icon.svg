@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="icon-title">
+  <title id="icon-title">CHILL LOVE</title>
+  <rect width="512" height="512" rx="96" fill="#2b2c2e"/>
+  <path
+    d="M244 160h-22c-53 0-86 40-86 96s33 96 86 96h22M292 160v192h84"
+    fill="none"
+    stroke="#fff"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    stroke-width="36"
+  />
+</svg>
