@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CHILL LOVE — 商家後台 v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f4f5;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
+  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;--border:#e3e3e6;--border-2:#ececef;
+  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#2a78d6;
+  --success:#0a7a5c;--success-bg:#e2f1ea;--warning:#8a6116;--warning-bg:#fdf3dc;
+  --critical:#b3172c;--critical-bg:#fdecee;--attention:#6d5f00;--attention-bg:#f9f1bc;
+  --info:#155e8f;--info-bg:#e8f2fa;--ai:#6d28d9;--ai-bg:#f3efff;
+  --chart:#2a78d6;--grid:#ececef;
+  --r-card:12px;--r-btn:8px;--sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  --tr:150ms cubic-bezier(.2,.6,.3,1);--tr-big:240ms cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px}
+body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea,select{font:inherit;color:inherit}
+::placeholder{color:var(--text-3)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-radius:4px}
+.num{font-variant-numeric:tabular-nums}
+svg{flex:none}
+
+/* ===== 頂部列 ===== */
+.topbar{height:52px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 16px;position:relative;z-index:40}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;letter-spacing:.05em;white-space:nowrap}
+.logo .heart{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#e9b8a2,#a9502c);display:grid;place-items:center}
+.ver{font-size:11px;font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:999px;padding:2px 8px}
+.searchbox{flex:1;max-width:600px;margin:0 auto;height:34px;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--text-3);font-size:13px;cursor:pointer;transition:all var(--tr)}
+.searchbox:hover{background:#f0f0f2;border-color:#d5d5d9}
+.kbd{margin-left:auto;font-size:11px;border:1px solid var(--border);background:#fff;border-radius:4px;padding:1px 6px;color:var(--text-3)}
+.top-right{display:flex;align-items:center;gap:6px}
+.icon-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--text-2);transition:background var(--tr);position:relative}
+.icon-btn:hover{background:var(--surface-2)}
+.dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid #fff}
+.store-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:9px;padding:4px 10px 4px 5px;font-size:13px;font-weight:600;transition:background var(--tr)}
+.store-chip:hover{background:var(--surface-2)}
+.avatar{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex:none}
+.dev-tag{font-size:11px;color:var(--text-3);border:1px solid var(--border);border-radius:5px;padding:0 5px}
+
+/* ===== 版面 ===== */
+.frame{display:flex;height:calc(100vh - 52px)}
+.sidebar{width:220px;background:#f7f7f8;border-right:1px solid var(--border);padding:10px 8px 8px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;flex:none}
+.nav-item{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;color:#3f4144;font-size:13px;font-weight:500;width:100%;text-align:left;transition:background var(--tr),color var(--tr)}
+.nav-item:hover{background:#ededee}
+.nav-item.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(26,28,30,.08)}
+.nav-item svg{opacity:.75}
+.nav-item.on svg{opacity:1}
+.nav-count{margin-left:auto;font-size:11px;font-weight:600;background:#e8e8ea;border-radius:999px;padding:1px 7px;color:#55575b}
+.nav-sub{padding:5px 10px 5px 36px;font-size:13px;color:#5c5e62;border-radius:8px;width:100%;text-align:left;transition:background var(--tr);display:none}
+.nav-sub:hover{background:#ededee}
+.nav-sub.show{display:block}
+.nav-sub.on{color:var(--text);font-weight:600;background:#fff;box-shadow:0 1px 2px rgba(26,28,30,.08)}
+.nav-group{margin-top:16px;padding:0 10px 4px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-3)}
+.sidebar .spacer{flex:1}
+.nav-foot{border-top:1px solid var(--border-2);margin-top:8px;padding-top:8px}
+.main{flex:1;overflow-y:auto;position:relative}
+.page{max-width:1200px;margin:0 auto;padding:16px 32px 90px;display:none}
+.page.on{display:block;animation:fade .18s ease-out}
+#page-home,#page-orderdetail{max-width:998px}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+.page-head{display:flex;align-items:center;gap:12px;margin:4px 0 16px}
+h1{font-size:20px;font-weight:700;letter-spacing:0}
+.head-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* ===== 元件 ===== */
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:var(--r-btn);font-size:13px;font-weight:600;transition:all var(--tr);border:1px solid transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn-pri{background:var(--brand);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
+.btn-pri:hover:not(:disabled){background:var(--brand-hover)}
+.btn-sec{background:#fff;border-color:#c9cace;color:var(--text);box-shadow:0 1px 2px rgba(26,28,30,.06)}
+.btn-sec:hover:not(:disabled){background:var(--surface-2)}
+.btn-ghost{color:var(--text-2)}
+.btn-ghost:hover{background:rgba(26,28,30,.06);color:var(--text)}
+.btn-sm{height:28px;padding:0 10px;font-size:12px}
+.split{display:inline-flex}
+.split .btn:first-child{border-radius:8px 0 0 8px}
+.split .btn:last-child{border-radius:0 8px 8px 0;border-left:1px solid rgba(255,255,255,.25);padding:0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh)}
+.card-pad{padding:16px}
+.card h3{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3 .h-act{margin-left:auto;color:var(--text-2)}
+.badge{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.badge .pip{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex:none}
+.badge .pip.full{background:currentColor}
+.badge .pip.half{background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.b-success{background:var(--success-bg);color:var(--success)}
+.b-attention{background:var(--attention-bg);color:var(--attention)}
+.b-warning{background:var(--warning-bg);color:var(--warning)}
+.b-critical{background:var(--critical-bg);color:var(--critical)}
+.b-info{background:var(--info-bg);color:var(--info)}
+.b-ai{background:var(--ai-bg);color:var(--ai)}
+.b-default{background:#eeeef0;color:#55575b}
+.input{width:100%;height:32px;border:1px solid #c9cace;border-radius:var(--r-btn);padding:0 10px;background:#fff;font-size:13px;transition:border-color var(--tr),box-shadow var(--tr)}
+.input:hover{border-color:#a9aaae}
+.input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px rgba(42,120,214,.18)}
+.mut{color:var(--text-2)}.mut3{color:var(--text-3)}
+.thumb{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);flex:none;background-size:cover}
+.banner-err{background:var(--critical-bg);border:1px solid #f2c4cb;color:var(--critical);border-radius:10px;padding:10px 14px;font-size:13px;display:flex;gap:8px;align-items:center}
+.skeleton{background:linear-gradient(90deg,#ededef 25%,#f6f6f7 50%,#ededef 75%);background-size:200% 100%;animation:sh 1.2s infinite;border-radius:6px;height:14px}
+@keyframes sh{to{background-position:-200% 0}}
+.empty-wrap{padding:48px 20px;text-align:center;color:var(--text-2)}
+.empty-wrap b{display:block;color:var(--text);font-size:14px;margin-bottom:4px}
+.empty-wrap .btn{margin-top:12px}
+
+/* ===== 首頁 ===== */
+.pulse{display:flex;align-items:center;gap:28px;padding:8px 4px 16px;border-bottom:1px solid var(--border-2);margin-bottom:28px;flex-wrap:wrap}
+.pulse .p-scope{font-size:13px}
+.pulse .p-scope b{display:block}
+.p-item{display:flex;align-items:flex-end;gap:8px}
+.p-item .p-label{font-size:12px;color:var(--text-2)}
+.p-item .p-val{font-size:14px;font-weight:700;letter-spacing:-.01em}
+.p-live{margin-left:auto;text-align:right;font-size:12px;color:var(--text-2)}
+.p-live b{display:block;font-size:14px;color:var(--text)}
+.p-live .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22a06b;margin-left:6px;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.4}}
+.hero-hello{text-align:center;margin:32px 0 8px}
+.hero-hello h2{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.hero-hello p{color:var(--text-2);margin-top:2px;font-size:14px}
+.ai-box{max-width:640px;margin:16px auto 8px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);padding:6px 6px 6px 14px;display:flex;align-items:center;gap:10px;transition:box-shadow var(--tr),border-color var(--tr)}
+.ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px rgba(42,120,214,.14)}
+.ai-badge{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:#fff;flex:none}
+.ai-box input{flex:1;border:0;outline:0;font-size:14px;background:none}
+.ai-send{width:32px;height:32px;border-radius:9px;background:var(--brand);color:#fff;display:grid;place-items:center;transition:opacity var(--tr)}
+.ai-send:hover{opacity:.85}
+.ai-reply{max-width:640px;margin:0 auto 8px;background:var(--ai-bg);border:1px solid #e2d9f8;border-radius:12px;padding:12px 16px;font-size:13px;line-height:1.6;display:none}
+.ai-reply.show{display:block;animation:fade .2s ease-out}
+.ai-reply b{color:var(--ai)}
+.task-chips{display:flex;justify-content:center;gap:8px;margin:16px 0 32px}
+.task-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 16px;font-size:13px;font-weight:600;box-shadow:var(--sh);transition:all var(--tr)}
+.task-chip:hover{transform:translateY(-1px);border-color:#c9cace}
+.task-chip .n{background:var(--brand);color:#fff;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;font-size:11px}
+.setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.setup-card{padding:16px;display:flex;flex-direction:column;gap:8px;min-height:168px;position:relative;overflow:hidden}
+.setup-card .sc-prog{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:6px}
+.ring{width:16px;height:16px;border-radius:50%;background:conic-gradient(var(--success) var(--deg,60deg),#e3e3e6 0);position:relative;flex:none}
+.ring::after{content:"";position:absolute;inset:3px;background:#fff;border-radius:50%}
+.setup-card h4{font-size:14px;font-weight:700}
+.setup-card p{font-size:12px;color:var(--text-2);line-height:1.55;max-width:75%}
+.setup-card .btn{margin-top:auto;align-self:flex-start}
+.setup-art{position:absolute;right:-6px;bottom:-6px;width:84px;height:84px;border-radius:16px;transform:rotate(-8deg);opacity:.9}
+
+/* ===== 列表 ===== */
+.listbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border-2)}
+.view-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:#fff;border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;position:relative;white-space:nowrap}
+.view-chip:hover{background:var(--surface-2)}
+.view-menu{position:absolute;top:34px;left:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(26,28,30,.16);min-width:170px;padding:5px;display:none;z-index:10}
+.view-menu.show{display:block;animation:fade .12s ease-out}
+.view-menu button{display:flex;width:100%;text-align:left;padding:7px 10px;border-radius:7px;font-size:13px;gap:8px;align-items:center}
+.view-menu button:hover{background:var(--surface-2)}
+.view-menu button.cur{font-weight:600}
+.view-menu .chk{width:14px;color:var(--brand);visibility:hidden}
+.view-menu button.cur .chk{visibility:visible}
+.filterbar{flex:1;display:flex;align-items:center;gap:8px;height:32px;border:1px solid #c9cace;border-radius:8px;padding:0 10px;background:#fff}
+.filterbar input{border:0;outline:0;flex:1;font-size:13px;background:none}
+table.idx{width:100%;border-collapse:collapse;font-size:13px}
+.idx th{font-size:12px;font-weight:600;color:var(--text-2);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border-2);background:var(--surface-3);white-space:nowrap}
+.idx td{padding:8px 12px;border-bottom:1px solid var(--border-2);vertical-align:middle}
+.idx tbody tr{transition:background var(--tr);cursor:pointer}
+.idx tbody tr:hover{background:#fafafc}
+.idx tr.selected{background:#f0f5ff}
+.idx tr.cancelled td{text-decoration:line-through;color:var(--text-3)}
+.idx tr.cancelled td .badge{text-decoration:none}
+.cb{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
+.right{text-align:right}
+.risk-ic{color:var(--warning);margin-left:5px;vertical-align:-1px}
+.bulkbar{position:absolute;left:12px;right:12px;top:6px;height:36px;background:#1a1b1d;color:#fff;border-radius:10px;display:none;align-items:center;gap:6px;padding:0 8px 0 14px;font-size:13px;box-shadow:0 8px 24px rgba(26,28,30,.35);z-index:3;animation:pop .16s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+.bulkbar.show{display:flex}
+.bulkbar .b-act{padding:5px 10px;border-radius:7px;font-size:12px;color:#e6e7e9}
+.bulkbar .b-act:hover{background:rgba(255,255,255,.15)}
+.idx-wrap{position:relative}
+.pagination{display:flex;justify-content:center;gap:4px;padding:12px}
+.pg{width:28px;height:28px;border:1px solid var(--border);border-radius:8px;display:grid;place-items:center;color:var(--text-2);background:#fff;transition:all var(--tr)}
+.pg:hover:not(:disabled){background:var(--surface-2);color:var(--text)}
+.pg:disabled{opacity:.4;cursor:default}
+.tagchip{display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:12px;margin:0 4px 4px 0}
+.ai-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--ai-bg);border-top:1px solid #e2d9f8;color:var(--ai);font-size:13px;font-weight:600;cursor:pointer}
+.ai-row:hover{background:#ece4ff}
+.ai-row .x{margin-left:auto;color:#8b7bb8;width:22px;height:22px;border-radius:6px;display:grid;place-items:center}
+.ai-row .x:hover{background:#e0d5fb}
+
+/* ===== 訂單詳情 ===== */
+.od-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px}
+.od-line{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-2)}
+.od-line:last-of-type{border-bottom:0}
+.od-line .li-info{flex:1;min-width:0}
+.od-line .li-name{font-weight:500}
+.od-line .li-var{font-size:12px;color:var(--text-3)}
+.pay-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.pay-row.total{border-top:1px solid var(--border-2);margin-top:6px;padding-top:10px;font-weight:700}
+.timeline{margin-top:4px}
+.tl-compose{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px;box-shadow:var(--sh)}
+.tl-compose .avatar{margin-top:2px}
+.tl-compose .tc-main{flex:1}
+.tl-compose textarea{width:100%;border:0;outline:0;resize:none;font-size:13px;min-height:20px;background:none}
+.tc-tools{display:flex;gap:2px;margin-top:8px;color:var(--text-3);align-items:center}
+.tc-tools .icon-btn{width:26px;height:26px}
+.tc-tools .btn{margin-left:auto}
+.tl-hint{text-align:right;font-size:11px;color:var(--text-3);margin:6px 2px 14px}
+.tl-day{font-size:12px;font-weight:600;color:var(--text-2);margin:8px 0 6px 34px}
+.tl-ev{display:flex;gap:12px;padding:5px 0;position:relative}
+.tl-ev::before{content:"";position:absolute;left:15px;top:-6px;bottom:-6px;width:2px;background:var(--border-2)}
+.tl-ev:last-child::before{bottom:12px}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:#b9bac0;border:2px solid #fff;margin:5px 0 0 12px;position:relative;z-index:1;flex:none;box-shadow:0 0 0 1px var(--border)}
+.tl-body{flex:1;font-size:13px;display:flex;gap:10px}
+.tl-time{margin-left:auto;color:var(--text-3);font-size:12px;white-space:nowrap}
+.tl-comment{background:var(--warning-bg);border:1px solid #f2e3b3;border-radius:10px;padding:8px 12px;flex:1}
+.side-kv{font-size:13px;padding:6px 0;border-bottom:1px solid var(--border-2)}
+.side-kv:last-child{border-bottom:0}
+.side-kv .k{color:var(--text-3);font-size:12px;display:block}
+.addr{font-size:13px;line-height:1.7}
+
+/* ===== 分析 ===== */
+.ana-filters{display:flex;gap:8px;margin-bottom:16px}
+.ana-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.stat-card{padding:16px}
+.stat-card .t-label{font-size:12px;color:var(--text-2)}
+.stat-card .t-value{font-size:24px;font-weight:700;letter-spacing:-.02em;margin:5px 0 2px}
+.t-delta{font-size:12px;font-weight:600}
+.up{color:var(--success)}.down{color:var(--critical)}
+.t-vs{color:var(--text-3);font-weight:400}
+.chart2{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px}
+.chart-card{padding:16px 16px 8px}
+.chart-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.chart-head h3{margin:0}
+.chart-head .big{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.chart-wrap{position:relative}
+.tooltip{position:absolute;pointer-events:none;background:#1a1b1d;color:#fff;border-radius:8px;padding:7px 10px;font-size:12px;line-height:1.5;opacity:0;transition:opacity .12s;white-space:nowrap;transform:translate(-50%,-115%);z-index:5}
+.hbar-row{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:13px}
+.hbar-row .hl{width:88px;color:var(--text-2);flex:none}
+.hbar-track{flex:1;height:16px;display:flex;align-items:center}
+.hbar{height:16px;border-radius:0 4px 4px 0;background:var(--chart);min-width:2px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.hbar-row .hv{width:90px;text-align:right;font-weight:600;white-space:nowrap}
+.table-toggle{font-size:12px;color:var(--link);padding:6px 0;display:inline-block}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0 10px;display:none}
+.data-table.show{display:table}
+.data-table th,.data-table td{border-top:1px solid var(--border-2);padding:5px 8px;text-align:right;color:var(--text-2)}
+.data-table th:first-child,.data-table td:first-child{text-align:left}
+.live-wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.live-map{background:#191a1c;border-radius:var(--r-card);min-height:320px;position:relative;overflow:hidden;border:1px solid #232427}
+.live-map .dot{position:absolute;width:7px;height:7px;border-radius:50%}
+.live-map .legend{position:absolute;left:14px;bottom:12px;color:#c9cacd;font-size:12px;display:flex;gap:14px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+
+/* ===== 設定 ===== */
+.settings{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
+.settings.show{display:flex;animation:fade .18s ease-out}
+.set-close{position:absolute;top:14px;right:18px;width:34px;height:34px;border:1px solid var(--border);background:#fff;border-radius:9px;display:grid;place-items:center;color:var(--text-2);z-index:5}
+.set-close:hover{background:var(--surface-2)}
+.set-body{flex:1;overflow:auto;display:flex;justify-content:center;gap:20px;padding:24px}
+.set-nav{width:270px;flex:none;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--sh);padding:14px;height:fit-content}
+.set-org{font-size:13px;font-weight:700;padding:2px 8px}
+.set-org span{display:block;font-size:11px;font-weight:400;color:var(--text-3)}
+.set-search{margin:10px 0;display:flex;align-items:center;gap:8px;height:30px;border:1px solid var(--border);border-radius:8px;padding:0 10px;background:var(--surface-3);color:var(--text-3);font-size:12px}
+.set-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:6px 10px;border-radius:8px;font-size:13px;color:#3f4144;transition:background var(--tr)}
+.set-item:hover{background:var(--surface-2)}
+.set-item.on{background:var(--surface-2);font-weight:600;color:var(--text)}
+.set-store{display:flex;align-items:center;gap:8px;padding:8px 8px 6px;border-top:1px solid var(--border-2);margin-top:8px;font-size:13px;font-weight:600}
+.set-store span{display:block;font-size:11px;font-weight:400;color:var(--text-3)}
+.set-content{width:660px;display:flex;flex-direction:column;gap:16px}
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-2);font-size:13px}
+.set-row:last-child{border-bottom:0}
+.set-row .chev{margin-left:auto;color:var(--text-3)}
+.set-row .sub{display:block;font-size:12px;color:var(--text-2)}
+.flag{width:26px;height:18px;border-radius:3px;background:linear-gradient(180deg,#3a5ba0 33%,#fff 33%,#fff 66%,#c33 66%);border:1px solid var(--border);flex:none}
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.plan{border:1px solid var(--border);border-radius:10px;padding:14px;position:relative}
+.plan.cur{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.plan b{font-size:14px}
+.plan .pp{font-size:20px;font-weight:700;margin:6px 0}
+.plan .pp span{font-size:12px;color:var(--text-2);font-weight:400}
+.plan ul{list-style:none;font-size:12px;color:var(--text-2);margin:8px 0;display:grid;gap:4px}
+.toggle{width:36px;height:20px;border-radius:999px;background:#c9cace;position:relative;transition:background var(--tr);flex:none;margin-left:auto}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left var(--tr)}
+.toggle.on{background:var(--success)}
+.toggle.on::after{left:18px}
+
+/* ===== modal / palette / toast ===== */
+.overlay{position:fixed;inset:0;background:rgba(26,28,30,.4);z-index:80;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.overlay.show{display:flex}
+.modal{width:520px;background:#fff;border-radius:14px;box-shadow:0 24px 64px rgba(26,28,30,.35);overflow:hidden;animation:pop .15s ease-out}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;display:flex;align-items:center}
+.modal-head button{margin-left:auto;color:var(--text-3)}
+.dtype{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 18px;border-bottom:1px solid var(--border-2);transition:background var(--tr)}
+.dtype:hover{background:var(--surface-2)}
+.dtype .dt-ic{width:34px;height:34px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;color:var(--text-2)}
+.dtype b{display:block;font-size:13px}
+.dtype span{font-size:12px;color:var(--text-2)}
+.dtype .chev{margin-left:auto;color:var(--text-3)}
+.modal-foot{padding:12px 18px;display:flex;justify-content:flex-end}
+.palette{width:560px;background:#fff;border-radius:14px;box-shadow:0 24px 64px rgba(26,28,30,.35);overflow:hidden;animation:pop .15s ease-out}
+.palette input{width:100%;border:0;outline:0;padding:16px 18px;font-size:14px;border-bottom:1px solid var(--border)}
+.pal-group{padding:8px 10px 4px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-3)}
+.pal-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;margin:0 6px;font-size:13px;cursor:pointer}
+.pal-item:hover,.pal-item.on{background:var(--surface-2)}
+.pal-item .mut3{margin-left:auto}
+.pal-foot{padding:8px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);display:flex;gap:14px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);background:#1a1b1d;color:#fff;border-radius:10px;padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(26,28,30,.4);z-index:90;transition:transform var(--tr-big),opacity var(--tr-big);opacity:0}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+/* ===== 開發註釋模式 ===== */
+body.annotate [data-doc]{outline:1.5px dashed var(--ai);outline-offset:2px;cursor:help}
+.annot-on{background:var(--ai-bg)!important;color:var(--ai)!important}
+.annot-bar{position:fixed;bottom:20px;left:20px;background:var(--ai);color:#fff;border-radius:10px;padding:8px 14px;font-size:12px;z-index:70;display:none;box-shadow:0 8px 24px rgba(109,40,217,.35);max-width:400px}
+body.annotate .annot-bar{display:block}
+.doc-pop{position:fixed;max-width:380px;background:#1a1b1d;color:#e8e9ea;border-radius:12px;padding:14px 34px 14px 16px;font-size:12px;line-height:1.65;z-index:95;box-shadow:0 16px 48px rgba(26,28,30,.5);display:none}
+.doc-pop.show{display:block;animation:pop .14s ease-out}
+.doc-pop b{color:#fff;font-size:13px;display:block;margin-bottom:6px}
+.doc-pop .dp-k{color:#b7a5ec;font-weight:600}
+.doc-pop .dp-close{position:absolute;top:8px;right:10px;color:#9a9ba0}
+.doc-pop .dp-close:hover{color:#fff}
+</style>
+</head>
+<body data-palette="#2a78d6">
+
+<header class="topbar">
+  <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span>CHILL LOVE <span class="ver">秋季 '26</span></div>
+  <button class="searchbox" data-doc="search" onclick="openPalette()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>搜尋<span class="kbd">CTRL K</span>
+  </button>
+  <div class="top-right">
+    <button class="icon-btn" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
+    <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
+    <button class="icon-btn" title="通知" aria-label="通知" onclick="toast('1 則通知：#1039 被標記為中風險訂單')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
+    <button class="store-chip" data-doc="storechip"><span class="avatar">CL</span>CHILL LOVE<span class="dev-tag">demo</span></button>
+  </div>
+</header>
+
+<div class="frame">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main">
+
+  <!-- 首頁 -->
+  <section class="page on" id="page-home">
+    <div class="pulse" data-doc="pulse">
+      <div class="p-scope"><span class="mut3">所有管道</span><b>過去 30 天</b></div>
+      <div class="p-item"><span class="p-label">工作階段</span><span class="p-val num">8,600</span><svg class="spk" width="56" height="20"></svg></div>
+      <div class="p-item"><span class="p-label">總銷售額</span><span class="p-val num">NT$407,700</span><svg class="spk" width="56" height="20"></svg></div>
+      <div class="p-item"><span class="p-label">訂單</span><span class="p-val num">240</span><svg class="spk" width="56" height="20"></svg></div>
+      <div class="p-item"><span class="p-label">轉換率</span><span class="p-val num">2.8%</span><svg class="spk down" width="56" height="20"></svg></div>
+      <div class="p-live">即時訪客<b class="num">7<span class="live-dot"></span></b></div>
+    </div>
+    <div class="hero-hello"><h2>午安，Benny。</h2><p>繼續拓展你的業務。</p></div>
+    <div class="ai-box" data-doc="aibox">
+      <span class="ai-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>
+      <input id="aiInput" placeholder="問問你的 AI 助理…（試試「這個月賣最好的是什麼」）">
+      <button class="ai-send" aria-label="送出" onclick="aiAsk()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    </div>
+    <div class="ai-reply" id="aiReply"></div>
+    <div class="task-chips" data-doc="taskchips">
+      <button class="task-chip" onclick="go('orders')">為訂單出貨 <span class="n num">5</span></button>
+      <button class="task-chip" onclick="go('products')">補貨低庫存商品 <span class="n num">2</span></button>
+    </div>
+    <div class="setup-grid" data-doc="setup">
+      <div class="card setup-card">
+        <span class="sc-prog"><span class="ring" style="--deg:216deg"></span>已完成 5 項任務中的 3 項</span>
+        <h4>完成商店設定</h4><p>接好金流與運費，你的商店就能開始收款。</p>
+        <button class="btn btn-sec btn-sm" onclick="openSettings('payments')">前往設定</button>
+        <div class="setup-art" style="background:linear-gradient(135deg,#e9d5c3,#c8a184)"></div>
+      </div>
+      <div class="card setup-card">
+        <span class="sc-prog"><span class="ring" style="--deg:120deg"></span>已完成 6 項任務中的 2 項</span>
+        <h4>挑選商店設計</h4><p>用主題編輯器打造符合品牌的門面。</p>
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：主題編輯器是 M6 重頭戲')">開始自訂</button>
+        <div class="setup-art" style="background:linear-gradient(135deg,#c3cdd8,#8598a9)"></div>
+      </div>
+      <div class="card setup-card">
+        <span class="sc-prog"><span class="ring" style="--deg:0deg"></span>已完成 4 項任務中的 0 項</span>
+        <h4>把目錄開放給 AI 代理</h4><p>讓 AI 購物助理也能推薦並下單你的商品。</p>
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：AI 代理通路屬第三階段')">瞭解更多</button>
+        <div class="setup-art" style="background:linear-gradient(135deg,#ddd3f5,#9f8bd8)"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 訂單 -->
+  <section class="page" id="page-orders">
+    <div class="page-head">
+      <h1>訂單</h1>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出訂單')">匯出</button>
+        <button class="btn btn-sec btn-sm" data-doc="bulkrecent" onclick="toast('Demo：批次為近期訂單出貨')">批次處理近期訂單</button>
+        <button class="btn btn-pri" data-doc="createorder" onclick="go('m-drafts')">建立訂單</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="listbar">
+        <div style="position:relative">
+          <button class="view-chip" data-doc="views" onclick="toggleViewMenu(event)"><span id="viewLabel">全部</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+          <div class="view-menu" id="viewMenu"></div>
+        </div>
+        <div class="filterbar" data-doc="filterbar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="orderSearch" placeholder="搜尋單號、顧客…">
+        </div>
+        <button class="icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
+      </div>
+      <div class="idx-wrap">
+        <div class="bulkbar" id="bulkbar" data-doc="bulkbar">
+          <span id="bulkCount" class="num"></span><span style="flex:1"></span>
+          <button class="b-act" onclick="toast('Demo：批次出貨')">標記為已出貨</button>
+          <button class="b-act" onclick="toast('Demo：批次封存')">封存</button>
+          <button class="b-act" onclick="toast('Demo：加入標籤')">加標籤</button>
+        </div>
+        <table class="idx" id="orderTable" data-doc="ordertable">
+          <thead><tr>
+            <th style="width:36px"><input type="checkbox" class="cb" id="cbAllOrders" onclick="toggleAll(this)" aria-label="全選"></th>
+            <th>訂單</th><th>日期</th><th>顧客</th><th>管道</th><th class="right">總計</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th><th>標籤</th>
+          </tr></thead><tbody></tbody>
+        </table>
+      </div>
+      <div class="pagination"><button class="pg" disabled aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
+    </div>
+  </section>
+
+  <!-- 訂單詳情 -->
+  <section class="page" id="page-orderdetail"></section>
+
+  <!-- 產品 -->
+  <section class="page" id="page-products">
+    <div class="page-head">
+      <h1>產品</h1>
+      <div class="head-actions">
+        <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出')">匯出</button>
+        <button class="btn btn-ghost btn-sm" data-doc="import" onclick="toast('Demo：匯入')">匯入</button>
+        <button class="btn btn-pri" data-doc="newproduct" onclick="toast('Demo：新增商品表單於 M1 實作')">新增商品</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="listbar">
+        <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="filterbar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="prodSearch" placeholder="搜尋商品、SKU…">
+        </div>
+        <button class="icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
+      </div>
+      <table class="idx" id="prodTable" data-doc="prodtable">
+        <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th>類型</th><th>供應商</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="pagination"><button class="pg" disabled aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
+    </div>
+  </section>
+
+  <!-- 通用模組頁（所有子分頁） -->
+  <section class="page" id="page-module"></section>
+
+  <!-- 分析 -->
+  <section class="page" id="page-analytics">
+    <div class="page-head">
+      <h1>分析</h1>
+      <div class="head-actions">
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：目標設定')">目標</button>
+        <button class="btn btn-pri btn-sm" onclick="toast('Demo：自訂探索（查詢編輯器）')">新增探索</button>
+      </div>
+    </div>
+    <div class="ana-filters" data-doc="anafilters">
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：切換日期範圍')">過去 30 天 ▾</button>
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：幣別')">NT$ ▾</button>
+    </div>
+    <div class="ana-grid">
+      <div class="card stat-card"><div class="t-label">總銷售額</div><div class="t-value num">NT$407,700</div><span class="t-delta up">↑ 18.2% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">240</div><span class="t-delta up">↑ 6.1% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">回頭客比率</div><div class="t-value num">18.3%</div><span class="t-delta up">↑ 2.1pt <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">平均訂單價值</div><div class="t-value num">NT$1,699</div><span class="t-delta up">↑ 11.4% <span class="t-vs">vs 前期</span></span></div>
+    </div>
+    <div class="chart2">
+      <div class="card chart-card">
+        <div class="chart-head"><h3>隨時間的總銷售額</h3><span class="big num">NT$407,700</span></div>
+        <div class="chart-wrap" data-doc="anachart"><svg id="anaChart" width="100%" height="200"></svg><div class="tooltip" id="anaTip"></div></div>
+        <button class="table-toggle" id="anaToggle" onclick="toggleAnaTable()">檢視數據表格</button>
+        <table class="data-table num" id="anaTable"><thead><tr><th>日期</th><th>銷售額</th></tr></thead><tbody id="anaTableBody"></tbody></table>
+      </div>
+      <div class="card chart-card"><div class="chart-head"><h3>依管道的總銷售額</h3></div><div id="chanBars"></div></div>
+    </div>
+    <div class="chart2">
+      <div class="card chart-card"><div class="chart-head"><h3>依商品的總銷售額（前 5）</h3></div><div id="prodBars"></div></div>
+      <div class="card chart-card" data-doc="funnel"><div class="chart-head"><h3>轉換漏斗</h3></div><div id="funnel"></div></div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<!-- 設定 -->
+<div class="settings" id="settings" role="dialog" aria-modal="true" aria-label="設定">
+  <button class="set-close" id="setClose" onclick="closeSettings()" aria-label="關閉設定">✕</button>
+  <div class="set-body">
+    <div class="set-nav" data-doc="setnav">
+      <div class="set-org">CHILL LOVE HOLDINGS<span>組織</span></div>
+      <div class="set-search"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>搜尋設定</div>
+      <button class="set-item" data-set="org">組織</button>
+      <button class="set-item" data-set="users">使用者</button>
+      <div class="set-store"><span class="avatar">CL</span><div>CHILL LOVE 示範店<span>chilllove.demo</span></div></div>
+      <button class="set-item" data-set="general">一般</button>
+      <button class="set-item" data-set="plan">方案</button>
+      <button class="set-item" data-set="billing">帳單</button>
+      <button class="set-item" data-set="payments">付款</button>
+      <button class="set-item" data-set="checkout">結帳</button>
+      <button class="set-item" data-set="accounts">顧客帳號</button>
+      <button class="set-item" data-set="shipping">運送與配送</button>
+      <button class="set-item" data-set="taxes">稅額與關稅</button>
+      <button class="set-item" data-set="locations">地點</button>
+      <button class="set-item" data-set="domains">網域</button>
+      <button class="set-item" data-set="notifications">通知</button>
+      <button class="set-item" data-set="customdata">自訂資料</button>
+    </div>
+    <div class="set-content" id="setContent"></div>
+  </div>
+</div>
+
+<!-- 折扣類型 modal -->
+<div class="overlay" id="discOverlay" onclick="if(event.target===this)closeDiscModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="選取折扣類型">
+    <div class="modal-head">選取折扣類型<button onclick="closeDiscModal()" aria-label="關閉">✕</button></div>
+    <div id="discTypes" data-doc="disctypes"></div>
+    <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeDiscModal()">取消</button></div>
+  </div>
+</div>
+
+<div class="annot-bar">開發註釋模式：點任何<b>虛線框</b>元素看「功能／邏輯／實作」對照（同步文件：docs/research/22）。再按一次 ⌗ 關閉。</div>
+<div class="doc-pop" id="docPop" role="dialog" aria-label="開發註釋"><button class="dp-close" onclick="closeDocPop()" aria-label="關閉">✕</button><div id="docPopBody"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span></div>
+
+<!-- CTRL K -->
+<div class="overlay" id="palOverlay" onclick="if(event.target===this)closePalette()">
+  <div class="palette" role="dialog" aria-modal="true" aria-label="全域搜尋">
+    <input placeholder="搜尋或跳轉…（輸入過濾、↑↓ 選擇、Enter 開啟）" id="palInput">
+    <div class="pal-group">快速跳轉</div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('home')">首頁<span class="mut3">G H</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('orders')">訂單<span class="mut3">G O</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('products')">產品<span class="mut3">G P</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('analytics')">分析<span class="mut3">G A</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();openSettings('general')">設定<span class="mut3">G S</span></div>
+    <div class="pal-group">訂單</div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();openOrder('1042')">#1042 林芷妍<span class="mut3">NT$2,932・未出貨</span></div>
+    <div class="pal-group">商品</div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('products')">奶茶色寬版帽T<span class="mut3">NT$1,480</span></div>
+    <div class="pal-foot"><span>↑↓ 移動</span><span>↵ 開啟</span><span>esc 關閉</span></div>
+  </div>
+</div>
+
+<script>
+/* ================= 圖示 ================= */
+const ICONS={
+ home:'<path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1z"/>',
+ orders:'<path d="M6 2l1 4h10l1-4M4 6h16l-1.5 14a2 2 0 01-2 2h-9a2 2 0 01-2-2z"/>',
+ products:'<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12L3 7m9 5v10"/>',
+ customers:'<path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/>',
+ growth:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+ discounts:'<path d="M9 9h.01M15 15h.01M19 5L5 19"/><circle cx="12" cy="12" r="10"/>',
+ content:'<rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 20h10M8 9h8M8 13h5"/>',
+ markets:'<circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 010 18"/>',
+ finance:'<path d="M3 21h18M5 21V10l7-6 7 6v11M9 21v-6h6v6"/>',
+ analytics:'<path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/>',
+ store:'<path d="M4 7l1.5-4h13L20 7M4 7h16M4 7v13a1 1 0 001 1h14a1 1 0 001-1V7M9 21v-7h6v7"/>',
+ agent:'<rect x="4" y="6" width="16" height="12" rx="3"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><path d="M12 3v3"/>',
+ pos:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h4"/>',
+ apps:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/>',
+ ai:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>'};
+function icon(n,s=15){return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONS[n]}</svg>`;}
+
+/* ================= 導航樹（全節點皆真頁） ================= */
+const NAV=[
+ {id:"home",name:"首頁",icon:"home"},
+ {id:"orders",name:"訂單",icon:"orders",count:5,kids:[["m-drafts","草稿"],["m-shiplabels","運送標籤"],["m-abandoned","未完成結帳"]]},
+ {id:"products",name:"產品",icon:"products",kids:[["m-collections","商品系列"],["m-inventory","庫存"],["m-giftcards","禮品卡"]]},
+ {id:"m-customers",name:"顧客",icon:"customers",kids:[["m-segments","分群"]]},
+ {id:"m-growth",name:"成長",icon:"growth",kids:[["m-attribution","歸因"],["m-campaigns","行銷活動"]]},
+ {id:"m-discounts",name:"折扣",icon:"discounts"},
+ {id:"m-metaobjects",name:"內容",icon:"content",kids:[["m-files","檔案"],["m-menus","選單"],["m-blog","部落格貼文"]]},
+ {id:"m-markets",name:"市場",icon:"markets",kids:[["m-catalogs","目錄"]]},
+ {id:"m-finance",name:"財務",icon:"finance"},
+ {id:"analytics",name:"分析",icon:"analytics",kids:[["m-reports","報告"],["m-live","實況瀏覽"]]},
+];
+const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders","m-abandoned":"orders",
+ "m-collections":"products","m-inventory":"products","m-giftcards":"products",
+ "m-segments":"m-customers","m-attribution":"m-growth","m-campaigns":"m-growth",
+ "m-files":"m-metaobjects","m-menus":"m-metaobjects","m-blog":"m-metaobjects",
+ "m-catalogs":"m-markets","m-reports":"analytics","m-live":"analytics"};
+let current="home";
+function renderSidebar(){
+  const grp=GROUP_OF[current]||current;
+  let h=NAV.map(n=>{
+    const on=grp===n.id;
+    let s=`<button class="nav-item ${on&&current===n.id?'on':''}" onclick="go('${n.id}')">${icon(n.icon)}${n.name}${n.count?`<span class="nav-count num">${n.count}</span>`:''}</button>`;
+    (n.kids||[]).forEach(([target,label])=>{
+      s+=`<button class="nav-sub ${on?'show':''} ${current===target?'on':''}" onclick="go('${target}')">${label}</button>`;
+    });
+    return s;
+  }).join('');
+  h+=`<div class="nav-group">銷售管道</div>
+  <button class="nav-item" onclick="toast('Demo：前台商店見 storefront preview')">${icon('store')}線上商店</button>
+  <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}AI 代理</button>
+  <button class="nav-item" onclick="toast('Demo：門市 POS 屬第三階段')">${icon('pos')}門市 POS</button>
+  <div class="nav-group">應用程式</div>
+  <button class="nav-item" onclick="toast('App 生態系屬第三階段')">${icon('apps')}新增應用程式</button>
+  <div class="spacer"></div>
+  <div class="nav-foot">
+  <button class="nav-item" onclick="go('home');setTimeout(()=>aiInput.focus(),200)">${icon('ai')}AI 助理對話</button>
+  <button class="nav-item" onclick="openSettings('general')">${icon('settings')}設定</button>
+  </div>`;
+  document.getElementById('sidebar').innerHTML=h;
+}
+function go(p){
+  current=p;renderSidebar();
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  const modules=p.startsWith('m-');
+  document.getElementById(modules?'page-module':'page-'+p).classList.add('on');
+  if(modules)renderModule(p);
+  if(p==='home')requestAnimationFrame(drawSparks);
+  if(p==='analytics')requestAnimationFrame(drawAnalytics);
+  document.querySelector('.main').scrollTop=0;
+}
+
+/* ================= 資料 ================= */
+const P_G={hoodie:"linear-gradient(150deg,#e9d5c3,#c8a184)",shirt:"linear-gradient(150deg,#b9c6d2,#7a8fa3)",tee:"linear-gradient(150deg,#f2efe9,#d8d3c8)",knit:"linear-gradient(150deg,#e6ddcb,#bfb097)",pants:"linear-gradient(150deg,#c9cbcd,#8d9093)",tote:"linear-gradient(150deg,#efe8da,#cdbfa4)",linen:"linear-gradient(150deg,#e8e2d0,#c6bd9f)"};
+const PRODUCTS=[
+ {n:"奶茶色寬版帽T",s:"active",inv:65,v:6,type:"帽T",vd:"CHILL LOVE 自製",g:P_G.hoodie},
+ {n:"水洗丹寧襯衫",s:"active",inv:42,v:4,type:"襯衫",vd:"CHILL LOVE 自製",g:P_G.shirt},
+ {n:"有機棉圓領白T（三件組）",s:"active",inv:120,v:3,type:"T-Shirt",vd:"CHILL LOVE 自製",g:P_G.tee},
+ {n:"燕麥色針織開衫",s:"active",inv:9,v:4,type:"針織",vd:"CHILL LOVE 自製",g:P_G.knit},
+ {n:"鯊魚灰工裝長褲",s:"active",inv:7,v:5,type:"長褲",vd:"合作工坊",g:P_G.pants},
+ {n:"帆布托特包・生成色",s:"active",inv:54,v:1,type:"配件",vd:"合作工坊",g:P_G.tote},
+ {n:"2026 秋季亞麻襯衫（打樣）",s:"draft",inv:0,v:2,type:"襯衫",vd:"CHILL LOVE 自製",g:P_G.linen},
+];
+const ORDERS=[
+ {id:"1042",d:"今天 14:02",c:"林芷妍",ch:"線上商店",amt:"NT$2,932",pay:"paid",ful:"unful",items:2,tags:["VIP","送禮"],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶・CL-HD-M-MT",q:1,p:"NT$1,480",g:P_G.hoodie},{n:"燕麥色針織開衫",v:"F / 燕麥・CL-KN-F-OT",q:1,p:"NT$1,480",g:P_G.knit}],
+  pays:[["小計・2 件品項","NT$2,960"],["折扣・WELCOME5","−NT$148"],["運送・宅配（1.2 kg）","NT$120"],["稅額・內含 5%","NT$139"]],total:"NT$2,932",paid:"NT$2,932",
+  cust:{name:"林芷妍",meta:"3 筆訂單・VIP",mail:"zhiyan.lin@example.com",addr:"林芷妍<br>台北市大安區和平東路二段 106 號 8 樓<br>台北市 106・台灣<br>+886 912 345 678"}},
+ {id:"1041",d:"今天 11:47",c:"陳柏睿",ch:"線上商店",amt:"NT$1,600",pay:"paid",ful:"unful",items:1,tags:[],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"L / 深可可・CL-HD-L-CC",q:1,p:"NT$1,480",g:P_G.hoodie}],
+  pays:[["小計・1 件品項","NT$1,480"],["運送・宅配","NT$120"]],total:"NT$1,600",paid:"NT$1,600",
+  cust:{name:"陳柏睿",meta:"1 筆訂單",mail:"borui.chen@example.com",addr:"陳柏睿<br>台中市西區公益路 155 號<br>台中市 403・台灣"}},
+ {id:"1040",d:"昨天 21:15",c:"Tan Junyi",ch:"AI 代理",amt:"RM 639.74",cur:"MYR",pay:"paid",ful:"unful",items:3,tags:["agent"],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶",q:2,p:"RM 213.25",g:P_G.hoodie},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"RM 128.43",g:P_G.tote}],
+  pays:[["小計・3 件品項","RM 554.93"],["運送・國際（馬來西亞）","RM 84.81"]],total:"RM 639.74",paid:"RM 639.74",
+  cust:{name:"Tan Junyi",meta:"1 筆訂單・AI 代理下單",mail:"junyi.tan@example.my",addr:"Tan Junyi<br>8A-17-9, Jln Thean Teik<br>11500 Ayer Itam, Penang・馬來西亞"}},
+ {id:"1039",d:"昨天 18:33",c:"guest（王小姐）",ch:"線上商店",amt:"NT$1,800",pay:"pending",ful:"unful",items:1,tags:[],risk:true,
+  lines:[{n:"水洗丹寧襯衫",v:"M / 淺藍・CL-SH-M-LB",q:1,p:"NT$1,680",g:P_G.shirt}],
+  pays:[["小計・1 件品項","NT$1,680"],["運送・宅配","NT$120"]],total:"NT$1,800",paid:"NT$0",
+  cust:{name:"guest（王小姐）",meta:"訪客結帳",mail:"wang.guest@example.com",addr:"王小姐<br>高雄市左營區博愛二路 777 號<br>高雄市 813・台灣"}},
+ {id:"1038",d:"昨天 09:20",c:"WONG BENNY",ch:"AI 代理",amt:"HK$218.00",cur:"HKD",pay:"paid",ful:"ful",items:1,tags:["agent"],risk:false,
+  lines:[{n:"有機棉圓領白T（三件組）",v:"M / 白",q:1,p:"HK$218.00",g:P_G.tee}],
+  pays:[["小計・1 件品項","HK$218.00"],["運送・免運","HK$0"]],total:"HK$218.00",paid:"HK$218.00",
+  cust:{name:"WONG BENNY",meta:"2 筆訂單",mail:"benny.wong@example.hk",addr:"WONG BENNY<br>九龍灣宏開道 8 號<br>九龍・香港"}},
+ {id:"1037",d:"8月8日",c:"許哲瑋",ch:"線上商店",amt:"NT$2,280",pay:"paid",ful:"partial",items:2,tags:[],risk:false,
+  lines:[{n:"燕麥色針織開衫",v:"F / 燕麥",q:1,p:"NT$2,280",g:P_G.knit},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$0（贈品）",g:P_G.tote}],
+  pays:[["小計・2 件品項","NT$2,280"],["運送・免運門檻","NT$0"]],total:"NT$2,280",paid:"NT$2,280",
+  cust:{name:"許哲瑋",meta:"4 筆訂單",mail:"zhewei.hsu@example.com",addr:"許哲瑋<br>新竹市東區光復路一段 89 號<br>新竹市 300・台灣"}},
+ {id:"1036",d:"8月8日",c:"黃郁婷",ch:"線上商店",amt:"NT$960",pay:"refund",ful:"ful",items:1,tags:[],risk:false,
+  lines:[{n:"有機棉圓領白T（三件組）",v:"S / 白",q:1,p:"NT$990",g:P_G.tee}],
+  pays:[["小計・1 件品項","NT$990"],["折扣・首購 95 折","−NT$50"],["運送・宅配","NT$120"],["退款・2026-08-09","−NT$960"]],total:"NT$960",paid:"NT$0（已全額退款）",
+  cust:{name:"黃郁婷",meta:"1 筆訂單",mail:"yuting.huang@example.com",addr:"黃郁婷<br>台南市東區大學路 1 號<br>台南市 701・台灣"}},
+ {id:"1035",d:"8月7日",c:"測試訂單",ch:"線上商店",amt:"NT$167",pay:"paid",ful:"unful",items:1,tags:["已取消"],risk:false,cancelled:true,
+  lines:[{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$167",g:P_G.tote}],
+  pays:[["小計・1 件品項","NT$167"]],total:"NT$167",paid:"NT$167（取消時已退款）",
+  cust:{name:"測試訂單",meta:"內部測試",mail:"dev@chilllove.demo",addr:"—"}},
+];
+const sales=[8200,9400,7600,10200,11800,9900,12400,13100,11200,10400,12800,14200,13600,12100,11400,15200,16800,14400,13900,12600,15800,17200,16400,14800,13400,16200,18400,17800,16900,19600];
+const days=[...Array(30)].map((_,i)=>{const d=new Date(2026,6,12+i);return `${d.getMonth()+1}/${d.getDate()}`;});
+const SPK={
+ sessions:[240,265,255,290,310,280,295,320,305,335,350,342],
+ sales:sales.slice(-12),
+ orders:[7,9,8,8,7,9,11,10,9,8,10,13],
+ conv:[3.4,3.3,3.3,3.2,3.2,3.1,3.0,3.0,2.95,2.9,2.85,2.8]};
+
+/* ================= 訂單列表 ================= */
+const PAY={paid:'<span class="badge b-default"><span class="pip full"></span>已付款</span>',
+ pending:'<span class="badge b-warning"><span class="pip half"></span>待付款</span>',
+ refund:'<span class="badge b-default"><span class="pip full"></span>已退款</span>'};
+const FUL={unful:'<span class="badge b-attention"><span class="pip"></span>未出貨</span>',
+ partial:'<span class="badge b-warning"><span class="pip half"></span>部分出貨</span>',
+ ful:'<span class="badge b-default"><span class="pip full"></span>已出貨</span>'};
+const VIEWS=[["all","全部"],["unful","未出貨"],["unpaid","未付款"],["archived","已封存"]];
+let orderView="all";
+function renderViewMenu(){
+  document.getElementById('viewMenu').innerHTML=VIEWS.map(([k,l])=>
+   `<button class="${orderView===k?'cur':''}" onclick="setView('${k}')"><span class="chk">✓</span>${l}</button>`).join('');
+}
+function toggleViewMenu(e){e.stopPropagation();document.getElementById('viewMenu').classList.toggle('show');}
+function setView(k){orderView=k;document.getElementById('viewLabel').textContent=VIEWS.find(v=>v[0]===k)[1];renderViewMenu();renderOrders();}
+document.addEventListener('click',()=>document.getElementById('viewMenu')?.classList.remove('show'));
+const riskSvg='<span class="risk-ic" title="中風險訂單"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>';
+function renderOrders(){
+  const raw=(document.getElementById('orderSearch').value||'').trim();
+  const q=raw.replace(/^#/,'').toLowerCase();
+  const rows=ORDERS.filter(o=>{
+    if(orderView==='unful'&&!(o.ful==='unful'&&!o.cancelled))return false;
+    if(orderView==='unpaid'&&o.pay!=='pending')return false;
+    if(orderView==='archived')return false;
+    return !q||o.id.includes(q)||o.c.toLowerCase().includes(q);
+  }).map(o=>`
+   <tr class="${o.cancelled?'cancelled':''}" onclick="openOrder('${o.id}')">
+     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb rowcb" onchange="bulk()" aria-label="選取 #${o.id}"></td>
+     <td><b>#${o.id}</b>${o.risk?riskSvg:''}</td>
+     <td class="mut">${o.d}</td><td>${o.c}</td><td class="mut">${o.ch}</td>
+     <td class="right num" style="font-weight:600">${o.amt}${o.cur?` <span class="mut3">${o.cur}</span>`:''}</td>
+     <td>${PAY[o.pay]}</td><td>${odS(o.id)?.fulfilled?FUL.ful:FUL[o.ful]}</td><td class="right num mut">${o.items}</td>
+     <td>${o.tags.map(t=>`<span class="tagchip" style="margin:0 3px 0 0">${t}</span>`).join('')}</td>
+   </tr>`).join('');
+  document.querySelector('#orderTable tbody').innerHTML=rows||`<tr><td colspan="10"><div class="empty-wrap"><b>${raw?`找不到符合「${raw}」的訂單`:'此檢視沒有訂單'}</b>${raw?'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'orderSearch\').value=\'\';renderOrders()">清除搜尋</button>':'<button class="btn btn-sec btn-sm" onclick="setView(\'all\')">回到全部</button>'}</div></td></tr>`;
+  bulk();
+}
+document.getElementById('orderSearch').addEventListener('input',renderOrders);
+function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=cb.checked);bulk();}
+function bulk(){
+  const rows=[...document.querySelectorAll('.rowcb')],n=rows.filter(x=>x.checked).length;
+  const head=document.getElementById('cbAllOrders');
+  if(head){head.checked=n>0&&n===rows.length;head.indeterminate=n>0&&n<rows.length;}
+  document.getElementById('bulkCount').textContent=`已選取 ${n} 筆訂單`;
+  document.getElementById('bulkbar').classList.toggle('show',n>0);
+  rows.forEach(x=>x.closest('tr').classList.toggle('selected',x.checked));
+}
+
+/* ================= 訂單詳情（per-order 狀態） ================= */
+const OD={};
+function odS(id){return OD[id];}
+function seedEvents(o){
+  const ev=[
+   {t:"sys",txt:`已為此訂單產生確認編號 #CL-${o.id}KD`,time:o.d},
+   {t:"sys",txt:`${o.c} 透過 ${o.ch} 下了此訂單`,time:o.d}];
+  if(o.pay==='paid')ev.unshift({t:"sys",txt:`付款已確認：${o.total}（${o.ch==='AI 代理'?'代理錢包':'信用卡 •• 4242'}）`,time:o.d});
+  if(o.pay==='refund')ev.unshift({t:"sys",txt:`已退款 ${o.total.replace('NT$','NT$')}，並回補庫存`,time:"8月9日"});
+  if(o.cancelled)ev.unshift({t:"sys",txt:"訂單已取消（原因：測試訂單），款項已退回",time:"8月7日"});
+  if(o.id==='1042')ev.unshift({t:"comment",who:"BW",txt:"顧客備註要送禮包裝，出貨前確認。",time:"下午 2:10"});
+  return ev;
+}
+let curOrder=null;
+function openOrder(id){
+  const o=ORDERS.find(x=>x.id===id);if(!o)return;
+  OD[id]??={fulfilled:o.ful==='ful',events:seedEvents(o)};
+  curOrder=o;renderOrderDetail();go('orderdetail');
+}
+function renderOrderDetail(){
+  const o=curOrder,st=OD[o.id];
+  const fulBadge=st.fulfilled?FUL.ful:FUL[o.ful];
+  const payCard={
+   paid:`<h3><span class="badge b-default"><span class="pip full"></span>已付款</span></h3>`,
+   pending:`<h3><span class="badge b-warning"><span class="pip half"></span>待付款</span><span class="h-act"><button class="btn btn-sec btn-sm" onclick="toast('Demo：寄送付款連結')">寄送付款連結</button></span></h3><div class="banner-err" style="background:var(--warning-bg);border-color:#f2e3b3;color:var(--warning);margin-bottom:10px">尚未收到款項——付款完成前請勿出貨</div>`,
+   refund:`<h3><span class="badge b-default"><span class="pip full"></span>已退款</span></h3>`}[o.pay];
+  document.getElementById('page-orderdetail').innerHTML=`
+  <div class="page-head" style="flex-wrap:wrap">
+    <button class="btn btn-sec btn-sm" onclick="go('orders')" aria-label="返回訂單列表" style="width:32px;padding:0">←</button>
+    <h1>#${o.id}</h1>
+    ${o.cancelled?'<span class="badge b-critical"><span class="pip full"></span>已取消</span>':PAY[o.pay]+' '+fulBadge}
+    <span class="mut3" style="font-size:12px">${o.d}・${o.ch}</span>
+    <div class="head-actions">
+      <button class="btn btn-sec btn-sm" data-doc="refund" ${o.pay!=='paid'?'disabled':''} onclick="toast('Demo：退款面板規格見 16-F5')">退款</button>
+      <button class="btn btn-sec btn-sm" data-doc="editorder" ${o.cancelled?'disabled':''} onclick="toast('Demo：訂單編輯於 M4 後段')">編輯</button>
+      <button class="btn btn-sec btn-sm" data-doc="moreactions" onclick="toast('Demo：更多動作（取消／封存／列印）')">更多動作 ▾</button>
+      <button class="pg" onclick="toast('上一筆')" aria-label="上一筆">‹</button><button class="pg" onclick="toast('下一筆')" aria-label="下一筆">›</button>
+    </div>
+  </div>
+  ${o.cancelled?'<div class="banner-err" style="margin-bottom:16px">此訂單已於 8月7日 取消——內容僅供檢視，款項已退回原付款方式。</div>':''}
+  <div class="od-grid">
+    <div class="col">
+      <div class="card card-pad">
+        <h3>${st.fulfilled?'<span class="badge b-default"><span class="pip full"></span>已出貨 ('+o.items+')</span>':'<span class="badge b-attention"><span class="pip"></span>未出貨 ('+o.items+')</span>'}<span class="h-act mut3" style="font-size:12px">${o.ch==='AI 代理'?'國際運送':'宅配到府'}</span></h3>
+        ${o.lines.map(l=>`
+        <div class="od-line">
+          <span class="thumb" style="background:${l.g}"></span>
+          <div class="li-info"><div class="li-name">${l.n}</div><div class="li-var">${l.v}</div></div>
+          <span class="num mut">${l.p} × ${l.q}</span>
+        </div>`).join('')}
+        ${st.fulfilled
+          ?`<p class="mut" style="font-size:12px;margin-top:10px">已出貨・黑貓宅急便 903-2214-88${o.id.slice(-2)}</p>`
+          :o.cancelled||o.pay==='refund'?''
+          :o.pay==='pending'?`<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-pri" disabled title="待付款訂單不可出貨">標記為已出貨</button></div>`
+          :`<div style="display:flex;justify-content:flex-end;margin-top:12px"><span class="split" data-doc="fulfill">
+             <button class="btn btn-pri" onclick="markFulfilled('${o.id}')">標記為已出貨</button>
+             <button class="btn btn-pri" onclick="toast('Demo：更多出貨選項（部分出貨/購買標籤）')" aria-label="更多出貨選項">▾</button>
+           </span></div>`}
+      </div>
+      <div class="card card-pad">
+        ${payCard}
+        ${o.pays.map(([k,v])=>`<div class="pay-row"><span class="mut">${k}</span><span class="num">${v}</span></div>`).join('')}
+        <div class="pay-row total"><span>總計</span><span class="num">${o.total}</span></div>
+        <div class="pay-row"><span class="mut">顧客已付款</span><span class="num">${o.paid}</span></div>
+      </div>
+      <div class="timeline" data-doc="timeline">
+        <div class="tl-compose">
+          <span class="avatar">BW</span>
+          <div class="tc-main">
+            <textarea id="tlInput" rows="1" placeholder="撰寫備註…"></textarea>
+            <div class="tc-tools">
+              <button class="icon-btn" title="表情" aria-label="表情">☺</button>
+              <button class="icon-btn" title="提及" aria-label="提及">@</button>
+              <button class="btn btn-sec btn-sm" onclick="postComment()">發佈</button>
+            </div>
+          </div>
+        </div>
+        <p class="tl-hint">只有你和其他員工可以看見備註</p>
+        <p class="tl-day">最近</p>
+        <div id="tlList"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card card-pad"><h3>備註<span class="h-act">✎</span></h3><p class="mut" style="font-size:13px">${o.id==='1042'?'要送禮包裝':'顧客未提供備註'}</p></div>
+      <div class="card card-pad">
+        <h3>顧客</h3>
+        <p style="color:var(--link);font-weight:600;font-size:13px">${o.cust.name}</p>
+        <p class="mut" style="font-size:12px;margin:2px 0 10px">${o.cust.meta}</p>
+        <div class="side-kv"><span class="k">聯絡資訊</span>${o.cust.mail}</div>
+        <div class="side-kv"><span class="k">運送地址</span><span class="addr">${o.cust.addr}</span></div>
+        <div class="side-kv"><span class="k">帳單地址</span>同運送地址</div>
+      </div>
+      <div class="card card-pad" data-doc="risk"><h3>訂單風險</h3>
+        ${o.risk
+         ?'<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span class="badge b-warning"><span class="pip half"></span>中</span><span class="mut">IP 與帳單地址不一致</span></div>'
+         :'<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span class="badge b-success"><span class="pip full"></span>低</span><span class="mut">風險分析正常</span></div>'}
+      </div>
+      <div class="card card-pad"><h3>標籤<span class="h-act">✎</span></h3>
+        <div id="odTags">${o.tags.map(t=>`<span class="tagchip">${t} ×</span>`).join('')}</div>
+        <input class="input" placeholder="新增標籤後按 Enter" style="margin-top:8px" onkeydown="if(event.key==='Enter'&&this.value.trim()){addTag('${o.id}',this.value.trim());this.value=''}">
+      </div>
+    </div>
+  </div>`;
+  renderTimeline();
+}
+function renderTimeline(){
+  const el=document.getElementById('tlList');if(!el||!curOrder)return;
+  el.innerHTML=OD[curOrder.id].events.map(e=>`
+   <div class="tl-ev"><span class="tl-dot"></span>
+     ${e.t==='comment'
+      ?`<div class="tl-body"><div class="tl-comment"><b style="font-size:12px">${e.who}</b><br>${e.txt}</div><span class="tl-time">${e.time}</span></div>`
+      :`<div class="tl-body"><span>${e.txt}</span><span class="tl-time">${e.time}</span></div>`}
+   </div>`).join('');
+}
+function postComment(){
+  const t=document.getElementById('tlInput');if(!t.value.trim())return;
+  OD[curOrder.id].events.unshift({t:"comment",who:"BW",txt:t.value.trim(),time:"剛剛"});
+  t.value='';renderTimeline();toast('已發佈備註');
+}
+function addTag(id,tag){
+  const o=ORDERS.find(x=>x.id===id);o.tags.push(tag);
+  document.getElementById('odTags').innerHTML=o.tags.map(t=>`<span class="tagchip">${t} ×</span>`).join('');
+  toast(`已新增標籤「${tag}」`);renderOrders();
+}
+function markFulfilled(id){
+  OD[id].fulfilled=true;
+  OD[id].events.unshift({t:"sys",txt:"BW 已將品項標記為已出貨（黑貓宅急便），並已通知顧客",time:"剛剛"});
+  renderOrderDetail();renderOrders();
+  toast('已標記為已出貨，並已通知顧客');
+}
+
+/* ================= 產品列表 ================= */
+const S_BADGE={active:'<span class="badge b-success"><span class="pip full"></span>使用中</span>',
+ draft:'<span class="badge b-info"><span class="pip"></span>草稿</span>'};
+function renderProducts(){
+  const q=(document.getElementById('prodSearch').value||'').trim();
+  document.querySelector('#prodTable tbody').innerHTML=PRODUCTS.filter(p=>!q||p.n.includes(q)).map(p=>`
+   <tr onclick="toast('Demo：商品詳情頁見 v1 preview（v2 整合於 M1）')">
+     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" aria-label="選取 ${p.n}"></td>
+     <td><div style="display:flex;align-items:center;gap:10px;font-weight:500"><span class="thumb" style="background:${p.g}"></span>${p.n}</div></td>
+     <td>${S_BADGE[p.s]}</td>
+     <td class="right num" ${p.inv===0?'style="color:var(--critical)"':p.inv<10?'style="color:var(--warning)"':''}>${p.inv===0?'缺貨':p.inv+' 件'}<span class="mut3">・${p.v} 變體</span></td>
+     <td class="mut">${p.type}</td><td class="mut">${p.vd}</td>
+   </tr>`).join('')||`<tr><td colspan="6"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+}
+document.getElementById('prodSearch').addEventListener('input',renderProducts);
+
+/* ================= 通用模組頁（所有子分頁真頁面） ================= */
+const chip=(txt,tone)=>`<span class="badge b-${tone}"><span class="pip full"></span>${txt}</span>`;
+const MODULES={
+ "m-drafts":{title:"草稿訂單",act:[["建立草稿訂單","pri","toast('Demo：草稿訂單表單於 M4 實作')"]],
+  cols:["草稿","日期","顧客","狀態","總計"],
+  rows:[
+   [`<b>#D12</b>`,"今天 10:20","林芷妍",chip("開啟","info"),`<span class="num">NT$4,440</span>`],
+   [`<b>#D11</b>`,"昨天 16:02","公司採購（大宗）",chip("已寄發票","warning"),`<span class="num">NT$29,600</span>`],
+   [`<b>#D10</b>`,"8月6日","陳柏睿",chip("已完成","default"),`<span class="num">NT$1,600</span>`]],
+  note:"草稿 → 寄送發票 → 收款後轉正式訂單（規格 01 §3）"},
+ "m-shiplabels":{title:"運送標籤",empty:{t:"還沒有運送標籤",d:"為未出貨訂單購買並列印宅配標籤，追蹤號碼會自動回填到訂單。",b:["購買標籤","toast('Demo：接物流商 API 屬 P1')"]}},
+ "m-abandoned":{title:"未完成結帳",act:[["設定挽回信","sec","toast('Demo：棄單挽回自動化於 M5')"]],
+  cols:["結帳","日期","顧客","金額","挽回信","狀態"],
+  rows:[
+   [`<b>#C118</b>`,"今天 09:44","yi***@gmail.com",`<span class="num">NT$3,160</span>`,chip("已排程","info"),chip("未恢復","attention")],
+   [`<b>#C117</b>`,"昨天 22:10","ch***@outlook.com",`<span class="num">NT$1,480</span>`,chip("已寄出","default"),chip("已恢復下單","success")],
+   [`<b>#C115</b>`,"昨天 14:03","（未留 email）",`<span class="num">NT$990</span>`,chip("不適用","default"),chip("未恢復","attention")]],
+  note:"留下聯絡方式且超過 1 小時未付款才列入；90 天後自動清除（規格 15-F7）"},
+ "m-collections":{title:"商品系列",act:[["新增商品系列","pri","toast('Demo：系列編輯器於 M1 實作')"]],
+  cols:["標題","類型","商品數","銷售管道"],
+  rows:[
+   [`<b>秋冬系列</b>`,chip("智慧型","ai"),`<span class="num">12</span>`,"線上商店"],
+   [`<b>重磅棉</b>`,chip("智慧型","ai"),`<span class="num">8</span>`,"線上商店"],
+   [`<b>首頁精選</b>`,chip("手動","default"),`<span class="num">4</span>`,"線上商店・AI 代理"]],
+  note:"智慧型系列＝條件自動納入（標籤/類型/價格…），手動系列＝自選商品"},
+ "m-inventory":{title:"庫存",act:[["匯出","ghost","toast('Demo：匯出')"],["匯入","ghost","toast('Demo：匯入')"]],
+  cols:["商品","SKU","不可用","已佔用","可用","現有庫存","在途"],
+  rows:PRODUCTS.filter(p=>p.s==='active').map(p=>{
+   const committed=p.n.includes('帽T')?3:p.n.includes('針織')?1:0;
+   return [`<div style="display:flex;align-items:center;gap:10px;font-weight:500"><span class="thumb" style="background:${p.g};width:30px;height:30px"></span>${p.n}</div>`,
+    `<span class="mut num">CL-${p.type==='帽T'?'HD':p.type==='襯衫'?'SH':p.type==='配件'?'AC':'XX'}-${100+PRODUCTS.indexOf(p)}</span>`,
+    `<span class="num">0</span>`,`<span class="num">${committed}</span>`,
+    `<span class="num" ${p.inv<10?'style="color:var(--warning);font-weight:600"':''}>${p.inv}</span>`,
+    `<span class="num">${p.inv+committed}</span>`,`<span class="num mut">${p.n.includes('亞麻')?40:0}</span>`];}),
+  note:"現有庫存 = 可用 + 已佔用 + 不可用；帳目變動全走 ledger（規格 13-F5）"},
+ "m-giftcards":{title:"禮品卡",empty:{t:"還沒有發行禮品卡",d:"發行後顧客可在結帳時折抵；每張卡有獨立卡號與餘額。",b:["發行禮品卡","toast('Demo：禮品卡屬 P1')"]}},
+ "m-customers":{title:"顧客",act:[["匯出","ghost","toast('Demo：匯出')"],["新增顧客","pri","toast('Demo：顧客表單於 M4 實作')"]],
+  ai:"描述你想找的分群：例如「90 天內買過帽T、消費超過 3,000 的顧客」",
+  cols:["顧客","電子郵件訂閱","地區","訂單","消費金額"],
+  rows:[
+   [`<b>林芷妍</b> <span class="tagchip" style="margin:0">VIP</span>`,chip("已訂閱","success"),"台北・台灣",`<span class="num">3</span>`,`<span class="num">NT$8,120</span>`],
+   [`<b>許哲瑋</b>`,chip("已訂閱","success"),"新竹・台灣",`<span class="num">4</span>`,`<span class="num">NT$7,440</span>`],
+   [`<b>WONG BENNY</b>`,chip("未訂閱","default"),"九龍・香港",`<span class="num">2</span>`,`<span class="num">NT$1,730</span>`],
+   [`<b>Tan Junyi</b>`,chip("未訂閱","default"),"Penang・馬來西亞",`<span class="num">1</span>`,`<span class="num">NT$4,480</span>`],
+   [`<b>陳柏睿</b>`,chip("已訂閱","success"),"台中・台灣",`<span class="num">1</span>`,`<span class="num">NT$1,600</span>`]],
+  note:"email 與 SMS 是各自獨立的同意狀態（規格 01 §4）"},
+ "m-segments":{title:"分群",act:[["建立分群","pri","toast('Demo：分群條件編輯器於 M5')"]],
+  cols:["分群名稱","條件","成員","上次使用"],
+  rows:[
+   [`<b>VIP 熟客</b>`,`<span class="mut num">amount_spent > 5000 AND orders > 2</span>`,`<span class="num">18</span>`,"折扣 VIP10"],
+   [`<b>90 天未回購</b>`,`<span class="mut num">last_order_date < -90d</span>`,`<span class="num">126</span>`,"挽回 email"],
+   [`<b>訂閱未購買</b>`,`<span class="mut num">subscribed AND orders = 0</span>`,`<span class="num">342</span>`,"—"]],
+  note:"分群＝動態名單，成員自動進出；可作為折扣資格與行銷受眾"},
+ "m-attribution":{title:"歸因",custom:"growth"},
+ "m-campaigns":{title:"行銷活動",act:[["建立行銷活動","pri","toast('Demo：行銷活動屬 P2')"]],
+  empty:{t:"還沒有行銷活動",d:"建立活動後，這裡會顯示各管道的歸因銷售額、工作階段與轉換。",b:["建立行銷活動","toast('Demo：行銷活動屬 P2')"]}},
+ "m-discounts":{title:"折扣",custom:"discounts"},
+ "m-metaobjects":{title:"內容・元物件",act:[["管理","sec","toast('Demo：定義管理')"],["新增定義","pri","openDefModal()"]],
+  cols:["定義","欄位","條目","用途"],
+  rows:[
+   [`<b>設計師檔案</b>`,`<span class="mut">姓名・照片・簡介</span>`,`<span class="num">3</span>`,"商品頁「設計師」區塊"],
+   [`<b>材質說明</b>`,`<span class="mut">名稱・成分・洗滌方式</span>`,`<span class="num">6</span>`,"商品頁摺疊資訊"]],
+  note:"元物件＝自訂資料模型；條目可被 metafield 引用或生成前台頁面（規格 05 §1f）"},
+ "m-files":{title:"內容・檔案",act:[["上傳檔案","pri","toast('Demo：檔案庫上傳')"]],
+  cols:["檔案","類型","大小","使用位置"],
+  rows:[
+   [`<b>hero-autumn.jpg</b>`,"影像","1.2 MB","首頁 banner"],
+   [`<b>size-guide.pdf</b>`,"文件","420 KB","商品頁尺寸指南"],
+   [`<b>brand-story.mp4</b>`,"影片","18 MB","品牌頁"]]},
+ "m-menus":{title:"內容・選單",act:[["新增選單","pri","toast('Demo：選單編輯器（巢狀拖曳）於 M2')"]],
+  cols:["選單","項目","位置"],
+  rows:[
+   [`<b>主選單</b>`,`<span class="mut">新品上市・上衣・外套・配件・特惠</span>`,"前台 header"],
+   [`<b>頁尾選單</b>`,`<span class="mut">關於我們・運送資訊・退換貨政策</span>`,"前台 footer"]],
+  note:"巢狀最多三層；前台 header 支援下拉與 mega menu（規格 03 §4）"},
+ "m-blog":{title:"內容・部落格貼文",act:[["建立貼文","pri","toast('Demo：貼文編輯器於 M2 後段')"]],
+  cols:["標題","狀態","作者","發佈日"],
+  rows:[
+   [`<b>慢時尚是什麼？我們的三個回答</b>`,chip("已發佈","success"),"CHILL LOVE 編輯部","8月1日"],
+   [`<b>400g 重磅棉的保養指南</b>`,chip("草稿","info"),"BW","—"]]},
+ "m-markets":{title:"市場",custom:"markets"},
+ "m-catalogs":{title:"市場・目錄",act:[["建立目錄","pri","toast('Demo：目錄（per-market 價格表）屬 P2')"]],
+  cols:["目錄","對象","商品","價格調整"],
+  rows:[
+   [`<b>台灣（預設）</b>`,"商店預設值",`<span class="num">7</span>`,"—"],
+   [`<b>香港・馬來西亞</b>`,"International 市場",`<span class="num">6</span>`,`<span class="num">+8%</span>`],
+   [`<b>AI 代理目錄</b>`,"AI 代理通路",`<span class="num">5</span>`,"—"]],
+  note:"目錄＝市場 × 商品 × 價格的組合（規格 05 §1e）"},
+ "m-finance":{title:"財務",custom:"finance"},
+ "m-reports":{title:"報告",act:[["建立自訂報告","pri","toast('Demo：報告編輯器屬 P2')"]],
+  cols:["報告","分類","上次檢視"],
+  rows:[
+   [`<b>依商品的銷售額</b>`,"銷售","今天"],
+   [`<b>依流量來源的工作階段</b>`,"獲客","昨天"],
+   [`<b>新客 vs 回頭客</b>`,"顧客","8月8日"],
+   [`<b>庫存月報</b>`,"庫存","8月5日"],
+   [`<b>稅額摘要</b>`,"財務","7月31日"]],
+  note:"預設報告庫 + 可另存自訂（規格 04 §5）"},
+ "m-live":{title:"實況瀏覽",custom:"live"},
+};
+let moduleTimer=null;
+function renderModule(key){
+  const M=MODULES[key];const el=document.getElementById('page-module');
+  const acts=(M.act||[]).map(([l,t,fn])=>`<button class="btn btn-${t} btn-sm" onclick="${fn}">${l}</button>`).join('');
+  let body;
+  if(M.custom==='growth')body=growthHTML();
+  else if(M.custom==='discounts')body=discountsHTML();
+  else if(M.custom==='markets')body=marketsHTML();
+  else if(M.custom==='finance')body=financeHTML();
+  else if(M.custom==='live')body=liveHTML();
+  else if(M.empty&&!M.rows)body=`<div class="card"><div class="empty-wrap"><b>${M.empty.t}</b>${M.empty.d}<br><button class="btn btn-pri btn-sm" onclick="${M.empty.b[1]}">${M.empty.b[0]}</button></div></div>`;
+  else body=`<div class="card">
+    ${M.ai?`<div class="ai-row" onclick="toast('Demo：AI 分群（自然語言→條件）屬 P2')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>${M.ai}<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>`:''}
+    <div class="listbar">
+      <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="filterbar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="搜尋…" oninput="filterModuleRows(this)"></div>
+    </div>
+    <table class="idx" data-doc="doc-${key}"><thead><tr>${M.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody id="moduleRows">${M.rows.map(()=>`<tr><td colspan="${M.cols.length}"><div class="skeleton" style="width:${55+Math.floor(Math.random()*30)}%"></div></td></tr>`).join('')}</tbody></table>
+    ${M.note?`<p class="mut3" style="font-size:12px;padding:10px 12px">${M.note}</p>`:''}
+  </div>`;
+  el.innerHTML=`<div class="page-head"><h1>${M.title}</h1><div class="head-actions">${acts}</div></div>${body}`;
+  clearTimeout(moduleTimer);
+  if(M.rows&&!M.custom){
+    moduleTimer=setTimeout(()=>{
+      const tb=document.getElementById('moduleRows');
+      if(tb)tb.innerHTML=M.rows.map(r=>`<tr onclick="toast('Demo：詳情頁在建置排程中')">${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('');
+    },350);
+  }
+}
+function filterModuleRows(inp){
+  const q=inp.value.trim().toLowerCase();
+  document.querySelectorAll('#moduleRows tr').forEach(tr=>{
+    tr.style.display=!q||tr.textContent.toLowerCase().includes(q)?'':'none';});
+}
+function growthHTML(){return `
+  <div class="ana-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">NT$38,200</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
+    <div class="card stat-card"><div class="t-label">依流量類型的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs">直接 62%・社群 24%・搜尋 14%</span></span></div>
+    <div class="card stat-card"><div class="t-label">行銷轉換率</div><div class="t-value num">1.9%</div><span class="t-delta up">↑ 0.4pt <span class="t-vs">vs 前期</span></span></div>
+  </div>
+  <div class="card chart-card"><div class="chart-head"><h3>依管道的歸因銷售額</h3></div>
+    <div class="hbar-row"><span class="hl">IG 廣告</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">NT$21,400</span></div>
+    <div class="hbar-row"><span class="hl">LINE 官方帳號</span><div class="hbar-track"><div class="hbar" style="width:52%"></div></div><span class="hv num">NT$11,200</span></div>
+    <div class="hbar-row"><span class="hl">電子報</span><div class="hbar-track"><div class="hbar" style="width:26%"></div></div><span class="hv num">NT$5,600</span></div>
+  </div>`;}
+function discountsHTML(){return `
+  <div class="card"><div class="empty-wrap">
+    <b>管理折扣與促銷活動</b>建立結帳時輸入的折扣碼，或符合條件自動套用的折扣。
+    <br><button class="btn btn-pri" onclick="openDiscModal()">建立折扣</button>
+  </div></div>
+  <p class="mut3" style="font-size:12px;margin-top:10px">四類型 × code/自動 × 組合規則——引擎規格見 17；用量上限的併發硬保證在訂單成立時原子執行</p>`;}
+function marketsHTML(){return `
+  <div class="card">
+    <div class="listbar">
+      <button class="view-chip">商店預設值 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="filterbar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="在所有市場中搜尋"></div>
+    </div>
+    <table class="idx"><thead><tr><th>市場</th><th>狀態</th><th>包含</th><th>幣別</th><th>價格調整</th></tr></thead><tbody>
+      <tr onclick="toast('Demo：市場詳情')"><td><b>台灣（預設）</b></td><td>${chip("啟用中","success")}</td><td class="mut">1 個地區</td><td class="mut">TWD（NT$）</td><td class="num">—</td></tr>
+      <tr onclick="toast('Demo：市場詳情')"><td><b>International</b></td><td>${chip("啟用中","success")}</td><td class="mut">香港・馬來西亞</td><td class="mut">當地幣別</td><td class="num">+8%</td></tr>
+    </tbody></table>
+    <div class="ai-row" onclick="toast('Demo：AI 建議——依近期流量建立日本市場')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>建議：近 30 天有 214 個日本工作階段——建立「日本」市場 ＋<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
+  </div>`;}
+function financeHTML(){return `
+  <div class="banner-err" style="background:var(--info-bg);border-color:#cfe3f2;color:var(--info);margin-bottom:16px">啟用兩步驟驗證以保護你的帳戶。<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="toast('Demo：2FA 設定（規格 12-F2）')">設定</button></div>
+  <div class="chart2" style="grid-template-columns:1fr 1.4fr">
+    <div class="col">
+      <div class="card card-pad"><h3>稅務</h3><div class="set-row" style="border:0;padding:6px 0"><div><b>設定稅金代收</b><span class="sub">依地區稅率自動計算</span></div><span class="chev">›</span></div></div>
+      <div class="card card-pad"><h3>工具</h3><div class="set-row" style="border:0;padding:6px 0"><div><b>對帳報表</b><span class="sub">撥款與訂單的對帳明細</span></div><span class="chev">›</span></div></div>
+    </div>
+    <div class="card card-pad" style="text-align:center;padding:36px">
+      <b style="font-size:16px">開始收款</b>
+      <p class="mut" style="max-width:340px;margin:8px auto 16px">接上金流供應商後即可收款，撥款會依排程進入你的帳戶。demo 使用 Stripe 測試模式。</p>
+      <button class="btn btn-pri" onclick="openSettings('payments')">啟用收款</button>
+    </div>
+  </div>`;}
+function liveHTML(){
+  const dots=[...Array(26)].map((_,i)=>{
+    const buy=i%7===0;
+    return `<span class="dot" style="left:${8+((i*37)%84)}%;top:${12+((i*23)%70)}%;background:${buy?'#b28cf5':'#4a90e2'};opacity:${.4+(i%5)*.12}"></span>`;}).join('');
+  return `
+  <div class="live-wrap">
+    <div class="live-map">${dots}
+      <div class="legend"><span><i style="background:#4a90e2"></i>近期工作階段</span><span><i style="background:#b28cf5"></i>訂單</span></div>
+    </div>
+    <div class="col">
+      <div class="card stat-card"><div class="t-label">目前訪客</div><div class="t-value num">7</div><span class="t-vs">近 5 分鐘活躍</span></div>
+      <div class="card stat-card"><div class="t-label">今日銷售額（店家時區）</div><div class="t-value num">NT$4,532</div><span class="t-vs num">3 筆訂單・182 個工作階段</span></div>
+      <div class="card chart-card"><div class="chart-head"><h3>顧客行為（近 10 分鐘）</h3></div>
+        <div class="hbar-row"><span class="hl">瀏覽中</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">7</span></div>
+        <div class="hbar-row"><span class="hl">購物車有商品</span><div class="hbar-track"><div class="hbar" style="width:43%"></div></div><span class="hv num">3</span></div>
+        <div class="hbar-row"><span class="hl">結帳中</span><div class="hbar-track"><div class="hbar" style="width:14%"></div></div><span class="hv num">1</span></div>
+        <div class="hbar-row"><span class="hl">已購買</span><div class="hbar-track"><div class="hbar" style="width:14%"></div></div><span class="hv num">1</span></div>
+      </div>
+    </div>
+  </div>`;}
+
+/* ================= 折扣 modal ================= */
+const DISC_TYPES=[
+ ["扣減商品金額","為特定商品或商品系列提供折扣","tag"],
+ ["買 X 送 Y","顧客買指定商品後，指定商品免費或打折","gift"],
+ ["扣減訂單金額","整筆訂單金額打折或折抵","order"],
+ ["免運費","符合條件的訂單免運費","ship"]];
+const DT_IC={tag:'<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.2"/>',gift:'<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M5 12v9h14v-9M12 8s-4.5.2-4.5-2.6C7.5 3 12 3.6 12 8zm0 0s4.5.2 4.5-2.6C16.5 3 12 3.6 12 8z"/>',order:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',ship:'<path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/>'};
+function openDiscModal(){
+  document.getElementById('discTypes').innerHTML=DISC_TYPES.map(([t,d,ic])=>`
+   <button class="dtype" onclick="toast('Demo：建立「${t}」表單於 M5 實作');closeDiscModal()">
+     <span class="dt-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${DT_IC[ic]}</svg></span>
+     <span><b>${t}</b><span>${d}</span></span><span class="chev">›</span>
+   </button>`).join('');
+  document.getElementById('discOverlay').classList.add('show');
+}
+function closeDiscModal(){document.getElementById('discOverlay').classList.remove('show');}
+
+/* ================= 設定（12 分頁） ================= */
+const setRow=(t,sub,right='<span class="chev">›</span>')=>`<div class="set-row"><div><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>${right}</div>`;
+const SET_PAGES={
+ org:`<div class="card card-pad"><h3>組織</h3>${setRow("CHILL LOVE HOLDINGS","2 間商店・集中帳單")}${setRow("組織安全政策","強制兩步驟驗證：關閉")}</div>`,
+ users:`<div class="card card-pad"><h3>使用者與角色</h3>
+   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・完整權限</span></div><span class="badge b-default">店主</span></div>
+   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服</span></div><span class="badge b-info">員工</span></div>
+   ${setRow("邀請使用者","72 小時單次邀請連結（規格 12-F3）")}</div>
+  <div class="card card-pad"><h3>角色權限</h3>${setRow("出貨與客服","orders.view / orders.fulfill / customers.view")}${setRow("行銷","discounts.* / growth.*")}</div>`,
+ general:`<div class="card card-pad"><h3>商家詳細資訊</h3><p class="mut" style="font-size:12px;margin:-6px 0 8px">用於金流、市場與稅務的商業實體</p>
+   <div class="set-row"><span class="flag"></span><div><b>CHILL LOVE — 主體</b><span class="sub">台灣</span></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：管理實體')">⋯</button></div></div>
+  <div class="card card-pad"><h3>商店聯絡詳細資訊</h3>${setRow("CHILL LOVE 示範店","hello@chilllove.demo・未設定電話")}${setRow("商店地址","台灣")}</div>
+  <div class="card card-pad"><h3>商店預設值</h3>
+   ${setRow("幣別顯示","顧客看到的幣別由市場設定決定",'<span class="tagchip num" style="margin:0">新台幣（NT$）</span>')}
+   ${setRow("時區","影響報表日界線",'<span class="tagchip" style="margin:0">(GMT+08:00) 台北</span>')}
+   ${setRow("訂單編號","每店連號，不洩漏平台總量（規格 15-F5）",'<span class="tagchip num" style="margin:0">#1042</span>')}</div>`,
+ plan:`<div class="card card-pad"><h3>方案</h3><div class="plan-grid">
+   <div class="plan"><b>入門</b><div class="pp num">NT$890<span>/月</span></div><ul><li>2 個員工帳號</li><li>基本報告</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：降級流程')">切換</button></div>
+   <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">NT$2,490<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled>使用中</button></div>
+   <div class="plan"><b>企業</b><div class="pp num">洽談<span>/年約</span></div><ul><li>不限員工</li><li>組織多店・API 加量</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：升級流程')">升級</button></div>
+  </div></div>`,
+ billing:`<div class="card card-pad"><h3>帳單</h3>${setRow("付款方式","VISA •• 4242")}${setRow("帳單週期","每月 14 日")}${setRow("發票紀錄","2026 年 7 月・NT$2,490")}</div>`,
+ payments:`<div class="card card-pad"><h3>金流供應商</h3>
+   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip half"></span>TEST</span></div>
+   ${setRow("請款方式","自動請款（下單即請款）；手動請款見規格 15-F4")}</div>
+  <div class="card card-pad"><h3>手動付款方式</h3>${setRow("銀行轉帳","下單後 3 日內轉帳，後台標記已收款")}${setRow("新增手動付款方式","貨到付款、面交…")}</div>`,
+ checkout:`<div class="card card-pad"><h3>結帳</h3>
+   ${setRow("顧客聯絡方式","結帳時要求 email")}
+   ${setRow("姓名格式","要求填寫姓氏與名字")}
+   ${setRow("小費","關閉")}
+   <div class="set-row"><div><b>結帳版式</b><span class="sub">one-page（單頁式）</span></div><div class="toggle on" role="switch" aria-checked="true" onclick="this.classList.toggle('on');toast('Demo：版式切換')"></div></div></div>
+  <div class="card card-pad"><h3>棄單挽回</h3>${setRow("自動挽回信","1 小時後寄出・附回購連結（規格 15-F7）")}</div>`,
+ accounts:`<div class="card card-pad"><h3>顧客帳號</h3>
+   <div class="set-row"><div><b>登入方式</b><span class="sub">Email 一次性驗證碼（免密碼）</span></div><span class="badge b-success"><span class="pip full"></span>新版</span></div>
+   ${setRow("結帳時","帳號選填——訪客也能結帳")}
+   ${setRow("自助退貨","開啟；退貨規則見規格 16-F5")}</div>`,
+ shipping:`<div class="card card-pad"><h3>運送方案</h3>
+   <div class="set-row"><div><b>一般方案</b><span class="sub">7 個商品・1 個出貨地點</span></div><span class="chev">›</span></div>
+   ${setRow("台灣（本島）","宅配 NT$120・滿 NT$2,000 免運")}
+   ${setRow("香港・馬來西亞","國際運送 依重量計價")}</div>
+  <div class="card card-pad"><h3>本地取貨</h3>${setRow("台北門市","關閉——POS 屬第三階段")}</div>`,
+ taxes:`<div class="card card-pad"><h3>稅額與關稅</h3>
+   ${setRow("台灣","營業稅 5%・含稅定價")}
+   ${setRow("跨境訂單","關稅由顧客承擔（DDU）")}
+   <p class="mut3" style="font-size:12px;margin-top:8px">稅額計算收斂在金額引擎（規格 15-F2），設定只決定稅率與含稅/未稅顯示</p></div>`,
+ locations:`<div class="card card-pad"><h3>地點</h3>
+   <div class="set-row"><div><b>主倉（預設）</b><span class="sub">台北市內湖區・出貨優先序 1</span></div><span class="badge b-success"><span class="pip full"></span>使用中</span></div>
+   ${setRow("新增地點","多地點庫存屬 P1（規格 13-F5）")}</div>`,
+ domains:`<div class="card card-pad"><h3>網域</h3>
+   <div class="set-row"><div><b>chilllove.demo</b><span class="sub">主要網域</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
+   ${setRow("chilllove.myplatform.app","平台子網域・301 轉址到主網域")}
+   ${setRow("連結既有網域","CNAME 驗證流程（規格 12-F1）")}</div>`,
+ notifications:`<div class="card card-pad"><h3>顧客通知</h3>
+   ${setRow("訂單確認信","已啟用・Liquid 模板")}
+   ${setRow("出貨通知信","已啟用・含追蹤連結")}
+   ${setRow("棄單挽回信","已啟用・1 小時後")}
+   <p class="mut3" style="font-size:12px;margin-top:8px">模板渲染走 Liquid 沙箱：Drops 白名單＋資源上限（規格 18-F2）</p></div>
+  <div class="card card-pad"><h3>員工通知</h3>${setRow("新訂單通知","hello@chilllove.demo")}</div>`,
+ customdata:`<div class="card card-pad"><h3>中繼欄位定義</h3>
+   ${setRow("商品・材質成分","單行文字・前台可見")}
+   ${setRow("商品・洗滌方式","富文本")}
+   ${setRow("顧客・生日","日期・行銷用")}
+   ${setRow("新增定義","namespace.key + 型別驗證（規格 05 §1f）")}</div>`,
+};
+function openSettings(page='general'){
+  document.getElementById('settings').classList.add('show');
+  setPage(page);
+  document.getElementById('setClose').focus();
+}
+function setPage(key){
+  document.querySelectorAll('.set-item').forEach(b=>b.classList.toggle('on',b.dataset.set===key));
+  document.getElementById('setContent').innerHTML=SET_PAGES[key]||'';
+}
+document.querySelectorAll('.set-item').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.set)));
+function closeSettings(){document.getElementById('settings').classList.remove('show');}
+
+/* ================= 圖表（dataviz 規格） ================= */
+function drawSparks(){
+  const series=[SPK.sessions,SPK.sales,SPK.orders,SPK.conv];
+  document.querySelectorAll('.spk').forEach((svg,k)=>{
+    const base=series[k]||SPK.sales;
+    const down=svg.classList.contains('down');
+    const min=Math.min(...base),max=Math.max(...base);
+    const pts=base.map((v,i)=>[i*(56/11),17-((v-min)/(max-min||1))*13+1.5]);
+    const end=down?'#8a8c90':'#2a78d6';
+    svg.innerHTML=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#c3c4c8" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+     <polyline points="${pts.slice(-2).map(p=>p.join(',')).join(' ')}" fill="none" stroke="${end}" stroke-width="1.7" stroke-linecap="round"/>
+     <circle cx="${pts[11][0]}" cy="${pts[11][1]}" r="2.3" fill="${end}" stroke="#fff" stroke-width="1.4"/>`;
+  });
+}
+function toggleAnaTable(){
+  const t=document.getElementById('anaTable');t.classList.toggle('show');
+  document.getElementById('anaToggle').textContent=t.classList.contains('show')?'隱藏數據表格':'檢視數據表格';
+}
+function drawAnalytics(){
+  const svg=document.getElementById('anaChart');
+  if(!svg||!svg.clientWidth)return;
+  const W=svg.clientWidth,H=200,P={t:12,r:12,b:24,l:48};
+  const max=20000;
+  const x=i=>P.l+i*(W-P.l-P.r)/(sales.length-1);
+  const y=v=>P.t+(1-v/max)*(H-P.t-P.b);
+  let g='';
+  [0,5000,10000,15000,20000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?v/1000+'K':'0'}</text>`;});
+  [0,7,14,21,29].forEach(i=>{g+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i===29?'end':i===0?'start':'middle'}" font-size="11" fill="#67696e">${days[i]}</text>`;});
+  const line=sales.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('');
+  svg.innerHTML=g+`<path d="${line}L${x(29)},${y(0)}L${x(0)},${y(0)}Z" fill="rgba(42,120,214,.10)"/>
+   <path d="${line}" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+   <circle cx="${x(29)}" cy="${y(sales[29])}" r="4" fill="#2a78d6" stroke="#fff" stroke-width="2"/>
+   <line id="anaX" y1="${P.t}" y2="${H-P.b}" stroke="#b9bac0" opacity="0"/><circle id="anaDot" r="4.5" fill="#2a78d6" stroke="#fff" stroke-width="2" opacity="0"/>`;
+  const tip=document.getElementById('anaTip');
+  svg.onmousemove=e=>{
+    const r=svg.getBoundingClientRect();
+    const i=Math.max(0,Math.min(29,Math.round((e.clientX-r.left-P.l)/((W-P.l-P.r)/29))));
+    const cx=x(i),cy=y(sales[i]);
+    svg.querySelector('#anaX').setAttribute('x1',cx);svg.querySelector('#anaX').setAttribute('x2',cx);svg.querySelector('#anaX').setAttribute('opacity',1);
+    const d=svg.querySelector('#anaDot');d.setAttribute('cx',cx);d.setAttribute('cy',cy);d.setAttribute('opacity',1);
+    tip.style.left=cx+'px';tip.style.top=(cy-4)+'px';tip.style.opacity=1;
+    tip.innerHTML=`${days[i]}<br><b class="num">NT$${sales[i].toLocaleString()}</b>`;
+  };
+  svg.onmouseleave=()=>{tip.style.opacity=0;svg.querySelector('#anaX').setAttribute('opacity',0);svg.querySelector('#anaDot').setAttribute('opacity',0);};
+  document.getElementById('anaTableBody').innerHTML=days.map((d,i)=>`<tr><td>${d}</td><td>NT$${sales[i].toLocaleString()}</td></tr>`).join('');
+  const chan=[["線上商店",362400],["AI 代理",38200],["門市 POS",7100]];
+  document.getElementById('chanBars').innerHTML=chan.map(([l,v])=>`
+   <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/chan[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
+  const prods=[["奶茶色寬版帽T",96200],["水洗丹寧襯衫",71800],["有機棉白T三件組",54900],["燕麥色針織開衫",41200],["帆布托特包",22600]];
+  document.getElementById('prodBars').innerHTML=prods.map(([l,v])=>`
+   <div class="hbar-row"><span class="hl" style="width:130px">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/prods[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
+  const fun=[["工作階段",8600],["加入購物車",940],["進入結帳",412],["完成購買",240]];
+  document.getElementById('funnel').innerHTML=fun.map(([l,v],i)=>`
+   <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/fun[0][1]*100}%;min-width:6px"></div></div><span class="hv num">${v.toLocaleString()}${i?` <span class="mut3">${(v/fun[i-1][1]*100).toFixed(1)}%</span>`:''}</span></div>`).join('');
+}
+
+/* ================= AI 框 ================= */
+function aiAsk(){
+  const q=document.getElementById('aiInput').value.trim();
+  const box=document.getElementById('aiReply');
+  box.classList.add('show');box.innerHTML='思考中…';
+  setTimeout(()=>{
+    box.innerHTML=q.includes('賣')||q===''
+     ?`過去 30 天賣最好的是 <b>奶茶色寬版帽T</b>：售出 65 件、貢獻 NT$96,200（佔總銷售 23.6%）。深可可 L 號已售罄——建議補貨。<br><span class="mut3" style="font-size:12px">（demo 示意：正式版由 AI 查詢商店資料生成，屬 P2）</span>`
+     :`收到你的問題：「${q}」。<br>正式版會查詢商店資料後回答並附操作建議；demo 先示意這個交互位置與樣式。`;
+  },600);
+}
+document.getElementById('aiInput').addEventListener('keydown',e=>{if(e.key==='Enter')aiAsk();});
+
+/* ================= palette / toast ================= */
+function openPalette(){document.getElementById('palOverlay').classList.add('show');setTimeout(()=>palInput.focus(),30);}
+function closePalette(){document.getElementById('palOverlay').classList.remove('show');}
+/* G 系列鍵盤跳轉（G→H/O/P/A/S，1 秒窗口）*/
+let gArmed=0;
+const G_MAP={h:'home',o:'orders',p:'products',a:'analytics'};
+document.addEventListener('keydown',e=>{
+  const typing=/input|textarea|select/i.test(e.target.tagName);
+  if(!typing&&!e.metaKey&&!e.ctrlKey){
+    const k=e.key.toLowerCase();
+    if(k==='g'){gArmed=Date.now();}
+    else if(gArmed&&Date.now()-gArmed<1000){
+      if(G_MAP[k]){go(G_MAP[k]);toast('已跳轉（G+'+k.toUpperCase()+'）');gArmed=0;}
+      else if(k==='s'){openSettings('general');gArmed=0;}
+      else gArmed=0;
+    }
+  }
+});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}
+  if(e.key==='Escape'){
+    if(document.getElementById('docPop').classList.contains('show'))closeDocPop();
+    else if(document.getElementById('palOverlay').classList.contains('show'))closePalette();
+    else if(document.getElementById('discOverlay').classList.contains('show'))closeDiscModal();
+    else closeSettings();
+  }
+});
+const palInput=document.getElementById('palInput');
+palInput.addEventListener('input',()=>{const q=palInput.value.trim();
+  document.querySelectorAll('.pal-item').forEach(x=>x.style.display=!q||x.textContent.includes(q)?'flex':'none');});
+palInput.addEventListener('keydown',e=>{
+  const items=[...document.querySelectorAll('.pal-item')].filter(x=>x.style.display!=='none');
+  let i=items.findIndex(x=>x.classList.contains('on'));
+  if(e.key==='ArrowDown'){e.preventDefault();items[i]?.classList.remove('on');items[Math.min(items.length-1,i+1)]?.classList.add('on');}
+  if(e.key==='ArrowUp'){e.preventDefault();items[i]?.classList.remove('on');items[Math.max(0,i-1)]?.classList.add('on');}
+  if(e.key==='Enter'){e.preventDefault();(items[i]||items[0])?.click();}
+});
+let toastTimer;
+function toast(m){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=m;
+ t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ================= 開發註釋模式 ================= */
+const DOCS={
+ search:{t:"全域搜尋（CTRL K）",f:"跨資源搜尋與快速跳轉",l:"支援結構化語法 title:/tag:/AND/OR；訂單可搜單號/顧客/email/SKU",i:"P1・各資源 FULLTEXT ngram（規格 14-F4）＋語法解析器；詳見 22 §0"},
+ pulse:{t:"Pulse 指標列",f:"跨管道 30 天核心指標＋即時訪客",l:"工作階段/銷售額/訂單/轉換率須與分析頁同源同口徑",i:"P0・daily_rollups + 即時層（規格 19-F2）；sparkline 走 dataviz 規格"},
+ aibox:{t:"AI 助理輸入框",f:"自然語言查詢商店資料、給操作建議",l:"2026 版後台首屏核心；答案要附可執行動作",i:"P2・LLM + 內部查詢 API（19）+ 事件模型（06）；先做 UI 殼"},
+ taskchips:{t:"任務 chip",f:"把待辦（出貨/補貨）做成一鍵入口",l:"數字必須與對應列表實際筆數一致（對帳原則）",i:"P0・SQL 即時 count；點擊帶入預設篩選"},
+ setup:{t:"開店設定指南",f:"任務進度卡引導完成開店",l:"進度圈=已完成任務比例；完成後卡片收合",i:"P1・M：setup_tasks 表 + 完成偵測（事件驅動）"},
+ views:{t:"檢視切換器（saved views）",f:"預設+自訂檢視（儲存篩選/排序/欄位）",l:"預設檢視唯讀；自訂可改名/複製/刪除",i:"P0・M：saved_views(filters_json, sort, columns_json)；22 §0"},
+ filterbar:{t:"搜尋＋篩選一體欄",f:"關鍵字即時過濾＋加條件",l:"條件間 AND、同條件多值 OR；# 前綴與大小寫要正規化",i:"P0・白名單欄位編譯 SQL（防注入，規格 11 §1）"},
+ columns:{t:"欄位設定",f:"自訂列表顯示欄位",l:"儲存在自訂檢視內",i:"P1・saved_views.columns_json"},
+ bulkbar:{t:"批次操作列",f:"多選後的批次動作",l:">50 筆轉背景 job；逐筆獨立 transaction+結果報告；批次出貨不填追蹤碼",i:"P0・規格 16-F1；半選狀態 indeterminate 必做"},
+ export:{t:"匯出",f:"CSV 匯出（範圍四選一）",l:">50 筆改寄 email 下載連結；交易史另有獨立匯出",i:"P1・streaming CSV + job + 簽名連結（規格 13-F6）"},
+ bulkrecent:{t:"批次處理近期訂單",f:"一鍵處理近期未出貨單",l:"2026 版新入口；等同帶條件的批次出貨",i:"P1・重用批次管線"},
+ createorder:{t:"建立訂單（草稿）",f:"商家代客建單",l:"草稿→寄發票/收款→轉正式單；可 Reserve 庫存、Lock 價格",i:"P1・M：draft_orders；金額引擎重用（規格 15-F2）；22 §1c"},
+ refund:{t:"退款",f:"逐行退款+restock+退運費",l:"上限=實收−已退；免運單不可退運費；退款後不能再建退貨；手續費不退",i:"P0・規格 16-F5：先落 pending 再打金流；restock 冪等"},
+ editorder:{t:"編輯訂單",f:"加減品項後算差額（補收/退）",l:"不能改訂單層折扣；已出貨項不可移除；稅重算、運費不重算；分期單不可編",i:"P1・金額引擎重算＋差額發票流；guard 清單見 22 §1b"},
+ moreactions:{t:"更多動作",f:"複製/取消/封存/列印裝箱單",l:"取消：原因必選、restock 預設勾、未捕獲→Voided；複製不帶折扣運費；裝箱單=Liquid 模板",i:"P0 取消/封存；P1 複製/列印（規格 16-F4）"},
+ fulfill:{t:"標記為已出貨（split button）",f:"出貨：數量+追蹤碼+通知顧客",l:"on hold 須先解除；部分出貨=數量制；追蹤碼自動辨識物流商；待付款單禁出貨",i:"P0・M：fulfillment_orders 條件累加（規格 16-F3）；庫存 committed−/on_hand−"},
+ timeline:{t:"交易時間軸",f:"內部留言+系統事件流",l:"@提及寄通知；發布後 5 分鐘可編輯；僅員工可見；事件 append-only",i:"P0・M：events；規格 16-F2；提及 P1"},
+ risk:{t:"訂單風險",f:"詐欺風險等級與指標",l:"綠=正常/紅=可疑/灰=補充；中高風險列表示警；可配自動 hold",i:"P0 欄位、P2 模型（規格 15-F4）"},
+ anafilters:{t:"分析篩選列",f:"日期範圍/幣別切換",l:"按店時區切日；比較期=等長前期",i:"P0・rollup 查詢（規格 19-F1/F2；MySQL 先灌時區表）"},
+ anachart:{t:"銷售曲線",f:"單系列折線+面積+hover 十字",l:"dataviz 規格：2px 線/10% 面積/髮絲網格/無圖例/附數據表格",i:"P0・色板已過驗證器（#2a78d6 on #fff）"},
+ funnel:{t:"轉換漏斗",f:"工作階段→加購→結帳→成交",l:"分母口徑寫進指標辭典；與 pulse 轉換率同源",i:"P1・sessions 事件（規格 19-F3）"},
+ setnav:{t:"設定導航（組織層+商店層）",f:"組織（組織/使用者）在上、商店 14 分頁在下",l:"使用者管理上移組織層（2026 實測）；每分頁對應獨立 service",i:"P0 八分頁・M：settings 各域表＋shops.settings JSON（規格 19-F4 逐鍵驗證）"},
+ disctypes:{t:"折扣類型選擇",f:"四類型入口",l:"商品/訂單/BxGy/免運；建立後 class 決定組合規則",i:"P0・M：discounts(class, combines_with)；引擎規格 17-F2"},
+ "doc-m-inventory":{t:"庫存五欄帳",f:"不可用/已佔用/可用/現有/在途",l:"Adjust by vs Set to 兩模式；原因 7 種；歷史 180 天；匯入僅 on hand 可寫＋防過期校驗",i:"P0・ledger 唯一入口（規格 13-F5）；恆等式 nightly 對帳"},
+ "doc-m-abandoned":{t:"棄單列表",f:"未完成結帳＋挽回",l:"留 email＋≥10 分鐘才列入；3 個月自動刪；挽回信手動/自動",i:"P0 列表・P1 自動信（規格 15-F7）；90 天 purge job"},
+ "doc-m-drafts":{t:"草稿訂單",f:"代客建單流程",l:"自訂品項不入目錄；Reserve 佔庫存；寄發票=簽名結帳連結",i:"P1・22 §1c 全表"},
+ "doc-m-segments":{t:"顧客分群",f:"條件語法動態名單",l:"filter+運算子+相對日期；MATCHES 複合查詢；成員自動進出",i:"P1・語法白名單編譯 SQL；先做 5 個核心 filter（22 §3）"},
+ "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
+ "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
+ "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
+ import:{t:"匯入 CSV",f:"批次建立/更新資源",l:"15MB 上限；欄名區分大小寫；覆寫勾選以 handle/email 比對；欄留空=清空、缺欄=保留",i:"P1・逐行 job+錯誤報告（規格 13-F6）；22 §0"},
+ newproduct:{t:"新增商品",f:"開啟商品建立表單",l:"預設 Draft；標題必填→自動生成 handle；≤3 選項展開變體",i:"P0・Catalog::SaveProduct 單一 transaction（規格 13-F1）；22 §2"},
+ prodtable:{t:"商品列表",f:"商品主檔清單",l:"庫存欄紅字=缺貨、黃字=低量；封存不出現於預設檢視；整列點入詳情",i:"P0・M：products/variants；列表查詢帶 shop_id 複合索引"},
+ ordertable:{t:"訂單列表",f:"訂單清單（雙狀態機）",l:"付款/出貨兩條獨立狀態；多幣別顯示原幣+代碼；取消單劃線；風險 icon",i:"P0・狀態物化欄位（規格 16-F1）；金額 MoneyBag 雙幣（06 §6）"},
+ storechip:{t:"商店切換器",f:"顯示當前店＋多店切換",l:"多店同帳號；demo 標籤=測試環境警示",i:"P2 多店；M：shops + org（05 §2）"},
+ "doc-m-shiplabels":{t:"運送標籤",f:"購買/列印宅配標籤",l:"買標→費用記平台帳單→自動標出貨+回填追蹤；void 可退",i:"P2・Labels::Quote/Purchase adapter（22 §1b）"},
+ "doc-m-giftcards":{t:"禮品卡",f:"發卡與餘額管理",l:"面額=變體；後台發卡 ≤$2,000；停用=永久；完整卡號僅顧客可見",i:"P1・M：gift_cards（code digest；22 §2）"},
+ "doc-m-catalogs":{t:"目錄",f:"市場×商品×價格組合",l:"固定價覆蓋 % 調整；也用於 B2B/AI 代理通路",i:"P2・M：catalogs（05 §1e）"},
+ "doc-m-menus":{t:"選單",f:"前台導航樹",l:"巢狀 ≤3 層；八種連結資源型；轉址同區管理",i:"P0(M2)・M：menus/menu_items + url_redirects（22 §6）"},
+ "doc-m-files":{t:"檔案庫",f:"全站資產",l:"一次 ≤20 檔；刪除警告引用斷裂；CDN 連結",i:"P1・M：file_assets + 引用計數（22 §6）"},
+ "doc-m-blog":{t:"部落格",f:"內容行銷",l:"排程發佈；作者限員工；SEO 同商品規則",i:"P1・M：blogs/articles（22 §6）"},
+ "doc-m-attribution":{t:"歸因",f:"行銷成效歸因",l:"UTM 自動比對；模型可切換",i:"P2・sessions 事件 + utm 欄（19-F3）"},
+ "doc-m-campaigns":{t:"行銷活動",f:"多通路活動管理",l:"分享連結/QR/UTM；自動化底層=事件流",i:"P2・outbox → automation（18-F1）"},
+ "doc-m-live":{t:"實況瀏覽",f:"即時戰情",l:"近 5 分訪客；午夜起指標（店時區）；行為漏斗近 10 分",i:"P1・sessions 即時層（19-F3）；地圖點=IP 國別（不落庫）"},
+ "doc-m-markets":{t:"市場",f:"國際化維度",l:"一國僅屬一市場；當地幣結帳；捨入規則；AI 建議行可關",i:"P2・M：markets；金額引擎 presentment 層（22 §7）"},
+ "doc-m-finance":{t:"財務",f:"收款/撥款/稅務總覽",l:"payout 對帳報表=交易+費用+撥款拆解",i:"P1 殼・Stripe balance/payout API 對接 P2（22 §7）"},
+};
+let annot=false;
+function toggleAnnot(){
+  annot=!annot;
+  document.body.classList.toggle('annotate',annot);
+  document.getElementById('annotBtn').classList.toggle('annot-on',annot);
+  if(!annot)closeDocPop();
+  toast(annot?'開發註釋模式：點虛線元素看實作對照':'已關閉開發註釋模式');
+}
+document.addEventListener('click',e=>{
+  if(!annot)return;
+  const el=e.target.closest('[data-doc]');
+  if(!el){closeDocPop();return;}
+  e.preventDefault();e.stopPropagation();
+  const d=DOCS[el.dataset.doc]||{t:"模組頁",f:"本模組的清單/操作",l:"詳細規則見對照文件",i:"docs/research/22 對應章節"};
+  document.getElementById('docPopBody').innerHTML=
+    `<b>${d.t}</b><span class="dp-k">功能</span>：${d.f}<br><span class="dp-k">邏輯</span>：${d.l}<br><span class="dp-k">實作</span>：${d.i}`;
+  const pop=document.getElementById('docPop');pop.classList.add('show');
+  const r=el.getBoundingClientRect();
+  pop.style.left=Math.min(window.innerWidth-400,Math.max(12,r.left))+'px';
+  pop.style.top=Math.min(window.innerHeight-190,r.bottom+8)+'px';
+},true);
+function closeDocPop(){document.getElementById('docPop').classList.remove('show');}
+
+/* init */
+renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();
+window.addEventListener('resize',()=>{drawSparks();drawAnalytics();});
+</script>
+</body>
+</html>

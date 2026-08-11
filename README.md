@@ -1,11 +1,13 @@
 # shopifysystem — 復刻 Shopify 的三階段專案
 
+> **接手開發？先讀 [`HANDOFF.md`](HANDOFF.md)**——15 分鐘完整上下文（給 Codex／任何工程代理的交接文件）。
+
 目標：深度研究 Shopify 的功能模組與 UI 交互邏輯（第一階段）→ 做出可運行的 demo 原型（第二階段）→ 往真產品方向演進（第三階段）。
 
 ## 目前狀態
 
 - ✅ 第一階段：深度研究完成（`docs/research/`，11 份文件 + 互動式模組地圖）
-- 🔜 第二階段：demo 原型——已決策（見 `docs/DECISIONS.md`）：**Rails + React（本尊同款棧）**、路線 **A→B→C**、品牌名 **CHILL LOVE**
+- 🔜 第二階段：demo 原型——已決策（見 `docs/DECISIONS.md`）：**Rails + React（本尊同款棧）**、路線 **A→B→C**、品牌名 **CHILL LOVE**、**D4 前台走 Liquid 相容引擎（第三方 Shopify 主題可匯入）**
 - ⬜ 第三階段：真產品路線（見 07 §9）
 
 ## 文件索引（docs/research/）
@@ -23,6 +25,16 @@
 | 08 | system-architecture | Shopify 服務端工程內幕（單體/Pods/SFR/搶購）與復刻對應 |
 | 09 | api-map | Admin/Storefront/Customer/Ajax API、Webhooks、Functions 地圖 |
 | 10 | implementation-playbook | 00–09 逐篇實作細節：工具/套件、代碼草稿、參考文檔、M0 開工清單 |
+| 21 | live-admin-teardown | 實測走訪 2026 春季版後台：十大結構性變化、逐頁紀錄、原型 v2 修正清單 |
+| 22 | admin-button-inventory | **按鈕級對照表**：每個控制項的功能→邏輯→實作註釋（M/S/API/P 級），含配額常數表與方案補充；與 v2 原型「開發註釋模式」同步 |
+| 24 | theme-editor-checkout-teardown | 主題編輯器（Horizon 4.1.3）＋結帳設定/結帳編輯器實測 teardown：sections 樹/巢狀 blocks/picker/市場覆寫/checkout profiles/branding/extension targets |
+| 25 | liquid-compat-spec | **D4 核心規格**：Liquid 相容層架構——gem 能力邊界、匯入管線、/cart/*.js 等端點欄位級規格、T0-T2 分層測試、**授權紅線**（Dawn/Horizon 非 MIT、Theme Store 單店授權、SHOPLINE 先例） |
+| 26 | liquid-api-inventory | Liquid API 全量 checklist：138 objects / 30 tags / 154 filters 逐項（含 tier 標注）、模板結構 schema、30 種 setting input types——M2/M6 實作與驗收基準 |
+| 27 | ella-case-study | **Golden theme 驗收基準**：Ella 7.2.0 逐檔解剖（245 blocks 卡片系統/商品頁 4 層巢狀/preset 動態來源）＋編輯器運行時契約（8 個 DOM 事件/標記/ID 規則/picker 規則/?view= fragment）＋差距修訂 14 條＋M6 十條驗收 |
+| 28 | api-contract | **D5 全項目 API 化**：Shopify 慣例（GID/cursor/userErrors/cost/MoneyBag）＋14 模組 GraphQL 操作表＋webhooks 24 topics＋前台 HTTP 面＋三端對接矩陣＋六條驗收 |
+| 29 | markets-i18n | 多語言（30 種可翻資源/digest 機制/Adapt）＋多貨幣（雙記/匯率/rounding/零小數/退款匯率）＋多市場（模型/網域策略/contextual templates）＋P0-P2 路線 |
+| 30 | seo-merchant-feeds | Google/Bing 官方要求（結構化資料兩套體驗/sitemap/CWV/IndexNow）＋GMC/MMC feed 規格（Merchant API）＋Meta/TikTok/Pinterest 對映＋Simprosys OpenAPI 實證與雙軌對接契約 |
+| 31 | theme-engine-complete-plan | **★最高優先**：「一安裝就能用」五線工作包（R 渲染完備/E 端點/ED 編輯器 30 控件+預覽橋/IN 安裝管線/D 資料模型）＋三主題驗收矩陣＋15-18 週排期 |
 
 另附 `shopify-module-map.html`：可互動瀏覽的模組地圖（同內容存為 Cowork artifact）。
 
@@ -50,6 +62,7 @@
 | chilllove-admin-preview.html | 商家後台高保真互動 mockup（Home 圖表/商品列表/商品詳情 save bar/訂單/⌘K）— 品質基準線 |
 | chilllove-storefront-preview.html | CHILL LOVE 前台首頁高保真互動 mockup（hero/精選/敘事/購物袋 drawer + 免運進度條） |
 | critique-round-1.md | 第一輪 design critique 紀錄：20 項已修 + backlog |
+| chilllove-admin-v2.html | **後台 v2**：2026 實測結構（淺色頂列/pulse 首頁/AI 框/新導航）+ 全導航樹真頁面（訂單詳情、草稿、棄單、庫存、分群、成長、折扣 modal、市場、財務、報告、實況、設定 12 分頁）；已過第二輪 critique（10 項修復） |
 
 ## 快速結論
 
