@@ -98,6 +98,7 @@ docs/design/critique-*    ← 設計評審紀錄
 1. **開新畫面前**：先讀 22 對應章節 + 打開 v2 註釋模式對照；先寫/更新註釋再寫代碼——註釋即規格。
 2. **鐵律**：全表帶 `shop_id` 且複合索引開頭；金額全程 integer cents（出現 float 即 bug）；transaction 內禁外部 IO；一切上限引用 `config/limits.yml`；出現在 UI 的數字必須同源對帳（pulse=分析頁=列表 count）。
 3. **每完成一段**：跑測試 → 對照 specs 驗收清單 → commit（訊息格式 `M1: products CRUD with variant diff`）→ push。
+4. **註釋與文檔強制**：public 介面文檔註釋＋複雜邏輯「為什麼」註釋（引用規格出處）＋每個功能一篇 `docs/dev/m{N}-{功能}.md`（規範見 `AGENTS.md`、模板見 `docs/dev/README.md`）；驗收逐項檢查，缺了打回。
 4. **不確定時**：查 docs 對應章節；仍不確定 → 在 PR/commit 註明假設，不要靜默猜。
 5. 文案語言：繁體中文為主，技術名詞保留英文；金額顯示 `NT$1,480`（tabular-nums）。
 
