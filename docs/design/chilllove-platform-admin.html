@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CHILL LOVE 平台總控後台 v2 — 高保真原型</title>
 <!--
   平台側總管理後台（SaaS 營運方）高保真原型 v2
@@ -312,15 +312,152 @@ body.annotate .annot-bar{display:block}
 .doc-pop .dp-close{position:absolute;top:8px;right:10px;color:#9a9ba0}
 .doc-pop .dp-close:hover{color:#fff}
 
-@media (max-width:1200px){.kpis{grid-template-columns:repeat(3,1fr)}.queues,.health{grid-template-columns:repeat(2,1fr)}.detail-grid,.two-col,.three-col{grid-template-columns:1fr}.kanban{grid-template-columns:repeat(2,1fr)}}
+/* ==========================================================
+   響應式系統（斷點 1279 / 1023 / 767 / 429，全部 max-width 往下適配）
+   桌面 ≥1280 外觀與改造前完全一致。規格見 docs/design/34。
+   ========================================================== */
+
+/* 通用防溢出（各斷點皆生效） */
+.kpis>*,.queues>*,.health>*,.two-col>*,.three-col>*,.detail-grid>*,.kanban>*,.usage-row>*,.mini-list li>*,.flag-row>*,.card-head>*{min-width:0}
+.mini-list .ml-sub,.dl dd,.kitem .sub,.idx .sub{overflow-wrap:anywhere}
+code{overflow-wrap:anywhere}
+.num{white-space:nowrap}
+.u-num .uh{color:var(--text-3);overflow-wrap:anywhere}
+
+/* 漢堡與遮罩：桌面隱藏 */
+.hamburger{display:none;width:34px;height:34px;border-radius:8px;place-items:center;color:#c9cace;transition:background var(--tr);flex:none}
+.hamburger:hover{background:#232427}
+.nav-veil{position:fixed;inset:52px 0 0 0;background:rgba(26,28,30,.42);z-index:39;opacity:0;pointer-events:none;transition:opacity var(--tr-big)}
+body.nav-open .nav-veil{opacity:1;pointer-events:auto}
+
+/* 表格橫捲容器（JS 自動包覆） */
+.tscroll-wrap{position:relative}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tscroll-wrap::after{content:"";position:absolute;top:0;right:0;bottom:0;width:26px;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.92));opacity:0;transition:opacity var(--tr)}
+.tscroll-wrap.has-more::after{opacity:1}
+
+@media (max-width:1279px){
+  .main{padding:20px 20px 90px}
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .queues,.health{grid-template-columns:repeat(2,1fr)}
+  .three-col{grid-template-columns:1fr 1fr}
+  .kanban{grid-template-columns:repeat(2,1fr)}
+  .idx{min-width:max-content}          /* 寧可橫捲，不擠字（CJK min-content 極小） */
+  .tscroll .idx{width:100%}
+}
+
+@media (max-width:1023px){
+  /* 側欄轉抽屜 */
+  .hamburger{display:grid}
+  .sidebar{transform:translateX(-100%);visibility:hidden;transition:transform var(--tr-big),visibility 0s linear var(--tr-big);width:250px;box-shadow:var(--sh-pop)}
+  body.nav-open .sidebar{transform:none;visibility:visible;transition:transform var(--tr-big),visibility 0s}
+  .main{margin-left:0}
+  /* 搜尋收成 icon 鈕，避免窄寬度把提示字擠成直排 */
+  .searchbox{flex:none;width:44px;max-width:44px;padding:0;justify-content:center;margin-left:auto}
+  .searchbox .sb-label,.searchbox kbd{display:none}
+  .logo{margin-right:auto}
+  .two-col,.three-col,.detail-grid{grid-template-columns:1fr}
+  .detail-grid>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+  .detail-grid>div:last-child>.card{margin-top:0}
+  .usage-row{grid-template-columns:110px 1fr 140px}
+  .dl{grid-template-columns:100px 1fr}
+}
+
+@media (max-width:767px){
+  html{font-size:14px}
+  .main{padding:16px 14px 96px}
+  .page-head h1{font-size:clamp(17px,4.6vw,20px)}
+  .kpis,.queues,.health{grid-template-columns:repeat(2,1fr);gap:10px}
+  .kanban{grid-template-columns:1fr;gap:10px}
+  .detail-grid>div:last-child{grid-template-columns:1fr}
+  .logo .env-tag{display:none}
+  .staff-chip span:not(.avatar){display:none}
+  .staff-chip{padding:0 4px}
+  /* 輸入：防 iOS 聚焦自動放大 */
+  .input{font-size:16px;height:40px}
+  .searchwrap .input,select.input[style]{font-size:16px}
+  textarea.input{font-size:16px}
+  /* listbar 換行 */
+  .listbar{gap:6px}
+  .searchwrap{max-width:none;flex:1 1 100%;order:9}
+  /* 分頁標籤吸附橫捲 */
+  .tabs{scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;margin-bottom:12px}
+  .tab{scroll-snap-align:start;height:40px}
+  /* 資料表轉堆疊卡片 */
+  .card-table thead{display:none}
+  .card-table,.card-table tbody,.card-table tr,.card-table td{display:block;width:auto}
+  .card-table{min-width:0}
+  .card-table tr{border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:10px 12px}
+  .card-table tr:first-child{margin-top:12px}
+  .card-table td{border:0;padding:3px 0;display:flex;align-items:center;gap:10px;text-align:left!important}
+  .card-table td::before{content:attr(data-label);font-size:12px;color:var(--text-3);font-weight:600;flex:none;min-width:74px;margin-right:auto}
+  .card-table td:first-child{padding-bottom:7px;margin-bottom:5px;border-bottom:1px solid var(--border-2)}
+  .card-table td:first-child::before{display:none}
+  .card-table td:first-child .strong{font-size:14px}
+  .card-table td:empty{display:none}
+  .pagination{flex-wrap:wrap}
+  /* Modal 轉貼底 sheet */
+  .overlay{align-items:flex-end;padding-top:0}
+  .modal,.modal.wide{width:100%;max-width:100%;border-radius:14px 14px 0 0;margin-bottom:0;max-height:92dvh;display:flex;flex-direction:column;animation:sheetUp .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes sheetUp{from{transform:translateY(18px);opacity:.6}to{transform:none;opacity:1}}
+  .modal-body{overflow-y:auto;flex:1}
+  .modal-foot{position:sticky;bottom:0;background:#fff;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  .modal-foot .btn{flex:1;justify-content:center}
+  .modal-foot .left{flex:1 1 100%;margin:0 0 8px}
+  .modal .diff{grid-template-columns:1fr}
+  /* 步驟軸換行 */
+  .steps{gap:6px 0}
+  .step-line{min-width:10px}
+  /* toast／註釋列 */
+  .toast{left:12px;right:12px;transform:translateY(20px);max-width:none;text-align:center;bottom:calc(16px + env(safe-area-inset-bottom))}
+  .toast.show{transform:none}
+  .annot-bar{left:12px;right:12px;bottom:auto;top:60px;max-width:none}
+  .doc-pop{left:12px!important;right:12px;max-width:none;width:auto}
+  .sp-bars i:nth-child(n+16){display:none}
+}
+
+@media (max-width:429px){
+  .kpis,.queues,.health{grid-template-columns:1fr}
+  .usage-row{grid-template-columns:1fr;gap:4px}
+  .usage-row .u-num{text-align:left}
+  .page-actions{width:100%}
+  .page-actions .btn{flex:1;justify-content:center}
+  .dl{grid-template-columns:1fr;gap:2px 0}
+  .dl dt{font-size:12px;margin-top:6px}
+  .sp-bars{display:none}
+  .logo span:not(.mark):not(.pf-tag){display:none}
+}
+
+/* 觸控裝置：命中區 ≥44px（不動字級與桌面視覺） */
+@media (pointer:coarse){
+  /* 視覺尺寸不變，用偽元素把命中區撐到 ≥44px（WCAG 2.5.5） */
+  .btn-sm,.btn-xs,.filter-chip,.view-chip{min-height:36px;position:relative}
+  .btn-sm::before,.btn-xs::before,.filter-chip::before,.view-chip::before{content:"";position:absolute;inset:-5px -3px;border-radius:inherit}
+  .btn{min-height:44px}
+  .searchbox,.staff-chip{min-height:44px}
+  .icon-btn,.hamburger{width:44px;height:44px}
+  .nav-item{height:44px}
+  .tab{min-height:44px}
+  .switch{position:relative}
+  .switch::before{content:"";position:absolute;inset:-12px -6px;border-radius:inherit}
+  .modal-head .x,.dp-close{position:relative}
+  .modal-head .x::before,.dp-close::before{content:"";position:absolute;inset:-9px;border-radius:8px}
+  .chk input{width:20px;height:20px}
+  .mini-list li{min-height:48px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
 <header class="topbar" data-doc="topbar">
-  <div class="logo"><span class="mark">CL</span>CHILL LOVE <span class="pf-tag">平台總控</span><span class="env-tag">demo</span></div>
+  <button class="hamburger" id="hamburger" aria-label="開啟導航" aria-expanded="false" aria-controls="sidebar" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <div class="logo"><span class="mark">CL</span><span>CHILL LOVE</span> <span class="pf-tag">平台總控</span><span class="env-tag">demo</span></div>
   <button class="searchbox" data-doc="search" onclick="toast('Demo：全域搜尋——商店／擁有者／網域／統編／訂單號／工單號')">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    搜尋商店、擁有者、網域、統編…<kbd>Ctrl K</kbd>
+    <span class="sb-label">搜尋商店、擁有者、網域、統編…</span><kbd>Ctrl K</kbd>
   </button>
   <div class="tb-right">
     <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
@@ -329,7 +466,8 @@ body.annotate .annot-bar{display:block}
   </div>
 </header>
 
-<nav class="sidebar" data-doc="sidenav" aria-label="平台導航">
+<div class="nav-veil" id="navVeil" onclick="toggleNav(false)" aria-hidden="true"></div>
+<nav class="sidebar" id="sidebar" data-doc="sidenav" aria-label="平台導航">
   <div class="nav-group">
     <div class="nav-label">營運</div>
     <button class="nav-item on" id="nav-overview" onclick="go('overview')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>總覽</button>
@@ -1102,8 +1240,43 @@ function go(v){
   document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("on"));
   const nav=document.getElementById("nav-"+(v==="shop-detail"?"shops":v)); if(nav)nav.classList.add("on");
   if(v==="shops")renderShops();
+  toggleNav(false);                       // 手機：選完自動收抽屜
   window.scrollTo(0,0);
+  requestAnimationFrame(()=>{enhanceTables();refreshScrollHints();});
 }
+
+/* ===== 抽屜導航（≤1023）＝ 響應式 ===== */
+function toggleNav(force){
+  const open=force===undefined?!document.body.classList.contains("nav-open"):force;
+  document.body.classList.toggle("nav-open",open);
+  const h=document.getElementById("hamburger");
+  if(h)h.setAttribute("aria-expanded",String(open));
+  if(open){const f=document.querySelector(".sidebar .nav-item");if(f)f.focus();}
+}
+window.addEventListener("resize",()=>{if(window.innerWidth>1023)toggleNav(false);});
+
+/* ===== 表格自適應：自動補 data-label＋包橫捲容器 ===== */
+function enhanceTables(){
+  document.querySelectorAll(".idx").forEach(tb=>{
+    const ths=[...tb.querySelectorAll("thead th")].map(th=>th.textContent.trim());
+    tb.querySelectorAll("tbody tr").forEach(tr=>{
+      [...tr.children].forEach((td,i)=>{ if(ths[i]&&!td.hasAttribute("data-label"))td.setAttribute("data-label",ths[i]); });
+    });
+    // 欄數 ≤8 卡片化（主列表在手機用卡片較可讀）；更多欄的走橫捲避免卡片過高
+    tb.classList.toggle("card-table",ths.length>0&&ths.length<=8);
+    if(!tb.parentElement.classList.contains("tscroll")){
+      const wrap=document.createElement("div"); wrap.className="tscroll-wrap";
+      const sc=document.createElement("div"); sc.className="tscroll";
+      tb.parentNode.insertBefore(wrap,tb); wrap.appendChild(sc); sc.appendChild(tb);
+      sc.addEventListener("scroll",()=>updHint(wrap,sc),{passive:true});
+    }
+  });
+  refreshScrollHints();
+}
+function updHint(wrap,sc){wrap.classList.toggle("has-more",sc.scrollWidth-sc.clientWidth-sc.scrollLeft>4);}
+function refreshScrollHints(){document.querySelectorAll(".tscroll-wrap").forEach(w=>{const sc=w.querySelector(".tscroll");if(sc)updHint(w,sc);});}
+new MutationObserver(()=>{clearTimeout(window.__et);window.__et=setTimeout(enhanceTables,60);})
+  .observe(document.querySelector("main.main"),{childList:true,subtree:true});
 function sdTab(t){curTab=t;
   document.querySelectorAll("#sdTabs .tab").forEach(x=>x.classList.toggle("on",x.dataset.tab===t));
   document.querySelectorAll("#v-shop-detail .tabpane").forEach(p=>p.classList.remove("on"));
@@ -1214,7 +1387,7 @@ function openShop(id){
   const lim=[["商品數",s.products,5000,""],["變體數",s.products*3,50000,""],["員工席次",s.st==="trial"?2:6,15,""],["媒體儲存 (MB)",Math.round(s.products*0.9),5000,""],["API 成本／分",s.id===9?86:12,100,"吃滿即 429＋Retry-After"],["Webhook 端點",4,25,""],["自訂網域",s.dom.length-1,3,""]];
   document.getElementById("sdUsage").innerHTML=lim.map(([t,u,m,hint])=>{
     const p=Math.min(100,Math.round(u/m*100)); const cls=p>=100?"bad":p>=60?"warn":"";
-    return '<div class="usage-row"><div>'+t+'</div><div class="meter"><i class="'+cls+'" style="width:'+p+'%"></i><span class="thr" style="left:60%"></span></div><div class="u-num num">'+u.toLocaleString()+' / '+m.toLocaleString()+(hint?"・"+hint:"")+'</div></div>';
+    return '<div class="usage-row"><div>'+t+'</div><div class="meter"><i class="'+cls+'" style="width:'+p+'%"></i><span class="thr" style="left:60%"></span></div><div class="u-num"><span class="num">'+u.toLocaleString()+' / '+m.toLocaleString()+'</span>'+(hint?'<span class="uh">・'+hint+'</span>':"")+'</div></div>';
   }).join("")+'<div class="sub" style="margin-top:8px">直線＝60% warn 門檻。超過即上儀表板並進每日摘要 email；達 100% 由 error 段擋下。</div>';
 
   // 計費
@@ -1419,13 +1592,17 @@ function renderAll(){
 /* ===== 圖表 ===== */
 function drawChart(){
   const svg=document.getElementById("gmvChart"); if(!svg)return;
-  const W=svg.clientWidth||900,H=200,P={t:12,r:16,b:22,l:44};
+  const W=svg.clientWidth||900,H=200,P={t:12,r:16,b:22,l:W<480?34:44};
   const min=6,max=10, xs=i=>P.l+(W-P.l-P.r)*i/(GMV.length-1), ys=v=>P.t+(H-P.t-P.b)*(1-(v-min)/(max-min));
   let g="";
-  for(let t=0;t<5;t++){const v=min+(max-min)*t/4,y=ys(v);
+  const yTicks=W<420?3:5;
+  for(let t=0;t<yTicks;t++){const v=min+(max-min)*t/(yTicks-1),y=ys(v);
     g+='<line x1="'+P.l+'" y1="'+y+'" x2="'+(W-P.r)+'" y2="'+y+'" stroke="var(--grid)" stroke-width="1"/>';
     g+='<text x="'+(P.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#67696e">'+v.toFixed(0)+'M</text>';}
-  [0,9,19,29].forEach(i=>{g+='<text x="'+xs(i)+'" y="'+(H-5)+'" text-anchor="middle" font-size="12" fill="#67696e">'+(7+Math.floor((12+i)/31))+'/'+((12+i)%31+1)+'</text>';});
+  // 小螢幕減少 x 軸刻度，避免標籤重疊
+  const xTicks=W<360?[0,29]:W<560?[0,14,29]:[0,9,19,29];
+  xTicks.forEach(i=>{const anchor=i===0?"start":i===29?"end":"middle";
+    g+='<text x="'+xs(i)+'" y="'+(H-5)+'" text-anchor="'+anchor+'" font-size="12" fill="#67696e">'+(7+Math.floor((12+i)/31))+'/'+((12+i)%31+1)+'</text>';});
   const pts=GMV.map((v,i)=>xs(i)+","+ys(v)).join(" ");
   g+='<polygon points="'+xs(0)+','+ys(min)+' '+pts+' '+xs(GMV.length-1)+','+ys(min)+'" fill="rgba(42,120,214,.10)"/>';
   g+='<polyline points="'+pts+'" fill="none" stroke="var(--chart)" stroke-width="2" stroke-linejoin="round"/>';
@@ -1553,20 +1730,23 @@ document.addEventListener("click",e=>{
   document.getElementById("docPopBody").innerHTML='<b>'+d.t+'</b><span class="dp-k">功能：</span>'+d.f+'<br><span class="dp-k">邏輯：</span>'+d.l+'<br><span class="dp-k">實作：</span>'+d.i;
   const pop=document.getElementById("docPop");pop.classList.add("show");
   const r=el.getBoundingClientRect();
-  pop.style.left=Math.min(window.innerWidth-410,Math.max(12,r.left))+"px";
-  pop.style.top=Math.min(window.innerHeight-190,r.bottom+8)+"px";
+  if(window.innerWidth>767){pop.style.left=Math.min(window.innerWidth-410,Math.max(12,r.left))+"px";}
+  else{pop.style.left="";}
+  const ph=pop.offsetHeight||180;
+  pop.style.top=Math.max(12,Math.min(window.innerHeight-ph-12,r.bottom+8))+"px";
 },true);
 function closeDocPop(){document.getElementById("docPop").classList.remove("show");}
 document.addEventListener("keydown",e=>{
   if(e.key!=="Escape")return;
   if(document.getElementById("docPop").classList.contains("show")){closeDocPop();return;}
   const ov=[...document.querySelectorAll(".overlay")].find(o=>o.classList.contains("show"));
-  if(ov)ov.classList.remove("show");
+  if(ov){ov.classList.remove("show");return;}
+  if(document.body.classList.contains("nav-open"))toggleNav(false);
 });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("show");}));
 
-renderAll(); renderShops(); drawChart();
-window.addEventListener("resize",drawChart);
+renderAll(); renderShops(); drawChart(); enhanceTables();
+let __rz; window.addEventListener("resize",()=>{clearTimeout(__rz);__rz=setTimeout(()=>{drawChart();refreshScrollHints();},120);});
 </script>
 </body>
 </html>

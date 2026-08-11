@@ -153,6 +153,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
 .idx tbody tr:hover{background:#fafafc}
 .idx tr.selected{background:#f0f5ff}
 .cb{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
+.idx th.cb-col{width:36px}
 .thumb{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);flex:none;background-size:cover}
 .pcell{display:flex;align-items:center;gap:10px;font-weight:500}
 .right{text-align:right}
@@ -216,6 +217,192 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
 .pal-foot{padding:8px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);display:flex;gap:14px}
 .skeleton{background:linear-gradient(90deg,#ededef 25%,#f6f6f7 50%,#ededef 75%);background-size:200% 100%;animation:sh 1.2s infinite;border-radius:6px}
 @keyframes sh{to{background-position:-200% 0}}
+
+/* 漢堡鈕與側欄遮罩：桌面隱藏，≤1023 才登場 */
+.nav-toggle{display:none;width:32px;height:32px;border-radius:8px;place-items:center;color:#c9cacd;flex:none;transition:background var(--tr)}
+.nav-toggle:hover{background:rgba(255,255,255,.14)}
+.nav-veil{display:none;position:fixed;inset:48px 0 0;background:rgba(26,28,30,.42);opacity:0;pointer-events:none;transition:opacity var(--tr-big);z-index:44}
+.nav-veil.show{opacity:1;pointer-events:auto}
+/* 表格橫捲容器（桌面內容不超寬，等同 no-op）*/
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+
+/* ================================================================
+   RESPONSIVE SYSTEM — 斷點 1279 / 1023 / 767 / 429
+   一律 max-width 往下適配；不動任何 :root token（含 html 13px 基準，
+   來源 docs/design/23 §1「HTML 基準 13px」）。
+   ================================================================ */
+
+/* --- 0. 全域護欄 --- */
+.frame{height:calc(100vh - 48px);height:calc(100dvh - 48px)}
+.page-head>*,.detail-head>*,.tiles>*,.home-grid>*,.detail-grid>*,
+.price-grid>*,.list-row>*,.setup>*,.side-item>*,.toolbar-row>*,.chart-head>*{min-width:0}
+h1,.hello,.pcell,.pal-item{min-width:0;overflow-wrap:anywhere}
+/* 金額／計數一律不准折行（違反 CLAUDE.md 金額顯示規則）*/
+.badge,.nav-count,.t-delta,.pg,.kbd,.tile .t-value,.pal-item .mut3,
+.idx td.right.num,.vtable td:nth-child(2),.sb-txt{white-space:nowrap}
+
+/* --- 1. ≤1279 --- */
+@media(max-width:1279px){
+  .page{padding:18px 22px 80px}
+  .tiles{gap:12px}
+  /* 側欄仍佔 216 時 4 欄指標卡會擠爆 NT$407,700，字級降到 scale 的 20 */
+  .tile .t-value{font-size:20px}
+}
+
+/* --- 2. ≤1023 側欄轉抽屜、詳情與首頁轉單欄 --- */
+@media(max-width:1023px){
+  .nav-toggle{display:grid}
+  .nav-veil{display:block}
+  .sidebar{position:fixed;top:48px;left:0;bottom:0;z-index:45;width:264px;
+    padding:12px 10px calc(16px + env(safe-area-inset-bottom));
+    transform:translateX(-102%);transition:transform var(--tr-big);
+    box-shadow:0 12px 40px rgba(26,28,30,.22);overscroll-behavior:contain}
+  .sidebar.open{transform:none}
+  .page{padding:16px 20px 88px;max-width:none}
+  #page-home,#page-detail{max-width:none}
+  .tiles{grid-template-columns:repeat(2,1fr);gap:14px}
+  .home-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .idx-wrap,.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  .idx-wrap>table.idx{min-width:640px}
+  .palette{width:min(560px,92vw)}
+}
+
+/* --- 3. ≤767 手機：topbar 精簡、表格轉卡片、modal 貼底全寬 --- */
+@media(max-width:767px){
+  /* 3a. topbar：搜尋收成圖示鈕、商店名只留頭像 */
+  .topbar{gap:6px;padding:0 8px}
+  .searchbox{flex:none;width:32px;max-width:none;margin:0 0 0 auto;justify-content:center;padding:0}
+  .searchbox .sb-label,.searchbox .kbd{display:none}
+  .store-chip{padding:4px;gap:0}
+  .store-chip .store-name{display:none}
+  .top-right{gap:4px}
+
+  /* 3b. 頁面骨架 */
+  .page{padding:14px 14px 96px}
+  h1,.hello{font-size:18px}
+  .page-head,.detail-head{flex-wrap:wrap;gap:8px 10px;margin-bottom:12px}
+  .head-actions{flex-wrap:wrap;gap:6px}
+  .card-pad{padding:14px}
+  .tiles{gap:10px}
+  .tile{padding:13px}
+  .tile .t-value{font-size:20px}
+  .tile .t-delta{font-size:11px}
+  .t-vs{display:none}
+  .chart-card{padding:14px 12px 6px}
+  .chart-head{flex-wrap:wrap;gap:6px 10px}
+  .range{margin-left:0}
+  .list-row,.setup{flex-wrap:wrap;gap:6px 8px}
+  .list-row .btn{margin-left:auto}
+
+  /* 3c. 列表頁工具列 */
+  .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;scroll-snap-type:x proximity}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;scroll-snap-align:start}
+  .toolbar-row{flex-wrap:wrap;padding:10px}
+  .search-inline{flex:1 1 100%;height:40px}
+  .pills{padding:0 10px 10px}
+  /* bulkbar 改成佔位塊，不再蓋住第一列 */
+  .bulkbar{position:static;height:auto;min-height:36px;flex-wrap:wrap;gap:4px;
+    margin:10px 10px 0;left:auto;right:auto;top:auto;padding:7px 10px;border-radius:10px}
+  .bulkbar .b-act{padding:7px 9px;font-size:11.8px}
+
+  /* 3d. .idx 表格 → 卡片流（無 thead，欄位換行成 chip 列）*/
+  .idx-wrap{overflow-x:visible}
+  .idx-wrap>table.idx{min-width:0}
+  table.idx,.idx>thead,.idx>tbody{display:block}
+  .idx>thead{display:none}
+  /* 勾選框抽出成絕對定位，其餘欄位在同一個縮排欄內流動 → 標題一行、meta 一行 */
+  .idx tbody tr{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;
+    padding:11px 12px 11px 46px;border-bottom:1px solid var(--border-2)}
+  .idx td{display:block;padding:0;border:0;text-align:left;vertical-align:baseline}
+  .idx td:first-child{position:absolute;left:2px;top:4px;padding:12px;line-height:0}
+  .idx td:nth-child(2){flex:1 1 100%;min-width:0;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+  .idx td:nth-child(n+3){font-size:11.8px;color:var(--text-2)}
+  .idx td.right{text-align:left}
+  .idx td[colspan]{position:static;flex:1 1 100%;text-align:center;padding:28px 0!important}
+  .idx tbody tr:has(td[colspan]){padding-left:12px}
+  #orderRows td:nth-child(8)::before{content:"品項 ";color:var(--text-3)}
+  .thumb{width:30px;height:30px;border-radius:7px}
+
+  /* 3e. 詳情頁 */
+  .media-grid{grid-template-columns:repeat(4,1fr)}
+  .price-grid{grid-template-columns:repeat(2,1fr)}
+  .table-scroll>.vtable{min-width:480px}
+  .detail-head h1{flex:1 1 100%;order:-1}
+
+  /* 3f. 輸入框 16px（iOS 對焦不放大）＋ 高度同步放大 */
+  .input,textarea.input,select.input,.search-inline input,.palette input,.vtable input{font-size:16px}
+  .input,select.input{height:40px}
+  .vtable input{height:34px;width:84px}
+  .palette input{padding:15px 16px}
+
+  /* 3g. modal → 貼底全寬 sheet；savebar / toast 全寬 */
+  .overlay{align-items:flex-end;padding:0}
+  .palette{width:100%;max-width:none;border-radius:14px 14px 0 0;
+    max-height:86dvh;overflow-y:auto;overscroll-behavior:contain;
+    padding-bottom:env(safe-area-inset-bottom)}
+  /* 清單捲動時搜尋框釘在頂端 */
+  .palette input{position:sticky;top:0;background:#fff;z-index:1}
+  .savebar{padding:0 12px;gap:8px}
+  .toast{left:12px;right:12px;max-width:none;justify-content:center;
+    bottom:calc(16px + env(safe-area-inset-bottom));transform:translateY(90px)}
+  .toast.show{transform:translateY(0)}
+}
+
+/* --- 4. ≤429 --- */
+@media(max-width:429px){
+  .topbar{padding:0 6px;gap:4px}
+  .logo{padding:0 2px}
+  .logo .logo-text{display:none}
+  .page{padding:12px 12px 96px}
+  .tiles{grid-template-columns:repeat(2,1fr);gap:8px}
+  .tile{padding:11px}
+  .head-actions{width:100%;margin-left:0}
+  .head-actions .btn{flex:1 1 auto;justify-content:center}
+  .detail-head .head-actions{width:auto;margin-left:auto}
+  .media-grid{grid-template-columns:repeat(3,1fr)}
+  .price-grid{grid-template-columns:1fr}
+  .savebar{padding:0 10px;gap:6px}
+  .savebar .sb-txt{font-size:12px}
+  .sb-discard,.sb-save{padding:6px 10px}
+  .idx tbody tr{padding:10px 10px 10px 44px}
+  .pagination{padding:10px}
+  .pal-item .mut3{display:none}
+}
+
+/* --- 5. 觸控裝置：可點元素 ≥44×44 --- */
+@media(pointer:coarse){
+  .btn,.btn-sm{min-height:44px}
+  .icon-btn,.nav-toggle,.pg,.back{width:44px;height:44px}
+  .searchbox{min-width:44px;min-height:44px}
+  .store-chip{min-width:44px;min-height:44px;justify-content:center}
+  .nav-item{min-height:44px}
+  .tab{min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+  .input,select.input,textarea.input{min-height:44px}
+  .search-inline{min-height:44px}
+  .table-toggle,.pal-item{min-height:44px;display:flex;align-items:center}
+  .range button{min-height:44px;min-width:48px}
+  .b-act{min-height:40px}
+  .sb-save,.sb-discard{min-height:44px}
+  /* 篩選 pill 的 × 只有 16px：用偽元素撐出 44×44 命中區，視覺不變 */
+  .pill button{position:relative}
+  .pill button::before{content:"";position:absolute;top:50%;left:50%;
+    transform:translate(-50%,-50%);width:44px;height:44px}
+  /* 原生 checkbox 無法用偽元素撐大：放大到 20px，並由外圍 cell/列轉發點擊（見 JS forwardCbTap）*/
+  .cb{width:20px;height:20px}
+  .idx td:first-child,.idx th:first-child{padding:12px;cursor:pointer}
+  .idx th.cb-col{width:52px}
+  .side-item{min-height:44px;padding:11px 0;cursor:pointer}
+}
+
+/* --- 6. 減少動態偏好 --- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  .skeleton{animation:none!important;background:#ededef}
+}
 </style>
 </head>
 <body data-palette="#2a78d6">
@@ -231,21 +418,25 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
 
 <!-- 頂部列 -->
 <header class="topbar">
-  <div class="logo"><span class="heart"><svg width="11" height="11" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span>CHILL LOVE</div>
+  <button class="nav-toggle" id="navToggle" aria-label="開啟導覽選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleSide()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="logo"><span class="heart"><svg width="11" height="11" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-text">CHILL LOVE</span></div>
   <button class="searchbox" onclick="openPalette()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    搜尋商品、訂單、顧客…
+    <span class="sb-label">搜尋商品、訂單、顧客…</span>
     <span class="kbd">⌘K</span>
   </button>
   <div class="top-right">
     <button class="icon-btn" title="通知"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
-    <button class="store-chip"><span class="avatar">CL</span>CHILL LOVE 示範店</button>
+    <button class="store-chip"><span class="avatar">CL</span><span class="store-name">CHILL LOVE 示範店</span></button>
   </div>
 </header>
 
 <div class="frame">
+  <div class="nav-veil" id="navVeil" onclick="closeSide()"></div>
   <!-- 側欄 -->
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar" aria-label="主導覽">
     <button class="nav-item on" data-page="home" onclick="go('home',this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1z"/></svg>首頁</button>
     <button class="nav-item" data-page="orders" onclick="go('orders',this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2l1 4h10l1-4M4 6h16l-1.5 14a2 2 0 01-2 2h-9a2 2 0 01-2-2z"/></svg>訂單<span class="nav-count num">12</span></button>
     <button class="nav-item" data-page="products" onclick="go('products',this)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12L3 7m9 5v10"/></svg>商品</button>
@@ -309,7 +500,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
         <div id="tooltip"></div>
       </div>
       <button class="table-toggle" onclick="document.getElementById('chartTable').classList.toggle('show')">檢視數據表格</button>
-      <table class="data-table num" id="chartTable"><thead><tr><th>日期</th><th>銷售額</th><th>訂單</th></tr></thead><tbody id="chartTableBody"></tbody></table>
+      <div class="table-scroll"><table class="data-table num" id="chartTable"><thead><tr><th>日期</th><th>銷售額</th><th>訂單</th></tr></thead><tbody id="chartTableBody"></tbody></table></div>
     </div>
 
     <div class="home-grid">
@@ -375,7 +566,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
         </div>
         <table class="idx" id="prodTable">
           <thead><tr>
-            <th style="width:36px"><input type="checkbox" class="cb" id="cbAll" onclick="toggleAll(this)"></th>
+            <th class="cb-col"><input type="checkbox" class="cb" id="cbAll" onclick="toggleAll(this)"></th>
             <th class="sortable sorted">商品</th><th>狀態</th><th class="right sortable">庫存</th><th>分類</th><th>供應商</th>
           </tr></thead>
           <tbody></tbody>
@@ -404,10 +595,12 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
         <button class="tab">未收款 <span class="cnt num">2</span></button>
         <button class="tab">已封存</button>
       </div>
-      <table class="idx">
-        <thead><tr><th style="width:36px"><input type="checkbox" class="cb"></th><th>訂單</th><th>日期</th><th>顧客</th><th class="right">金額</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th></tr></thead>
+      <div class="idx-wrap">
+      <table class="idx" id="orderTable">
+        <thead><tr><th class="cb-col"><input type="checkbox" class="cb"></th><th>訂單</th><th>日期</th><th>顧客</th><th class="right">金額</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th></tr></thead>
         <tbody id="orderRows"></tbody>
       </table>
+      </div>
       <div class="pagination"><button class="pg" disabled>‹</button><button class="pg" onclick="toast('Demo：下一頁')">›</button></div>
     </div>
   </section>
@@ -454,6 +647,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
         </div>
         <div class="card card-pad">
           <h3>變體 <span class="mut3" style="font-weight:400">尺寸 × 顏色・6 個變體</span></h3>
+          <div class="table-scroll">
           <table class="vtable num">
             <thead><tr><th>變體</th><th>售價</th><th>庫存</th><th>SKU</th></tr></thead>
             <tbody>
@@ -465,6 +659,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:12.7px}
               <tr><td><span class="swatch" style="background:#5c5148"></span>L / 深可可</td><td><input class="watch" value="1,480"></td><td><input class="watch" value="0"></td><td class="mut">CL-HD-L-CC</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
       <div class="col">
@@ -546,9 +741,24 @@ const days=[...Array(30)].map((_,i)=>{const d=new Date(2026,6,12+i);return `${d.
 const sales=[8200,9400,7600,10200,11800,9900,12400,13100,11200,10400,12800,14200,13600,12100,11400,15200,16800,14400,13900,12600,15800,17200,16400,14800,13400,16200,18400,17800,16900,19600];
 const orders30=[4,5,4,6,7,5,7,8,6,6,7,9,8,7,6,9,10,8,8,7,9,11,10,9,8,10,12,11,10,13];
 
+/* ===== 側欄抽屜（≤1023；≥1024 漢堡鈕 display:none，這些函式不會被觸發）===== */
+const sidebarEl=document.getElementById('sidebar'),navVeil=document.getElementById('navVeil');
+function sideOpen(){return sidebarEl.classList.contains('open');}
+function openSide(){sidebarEl.classList.add('open');navVeil.classList.add('show');
+  document.getElementById('navToggle').setAttribute('aria-expanded','true');}
+function closeSide(){sidebarEl.classList.remove('open');navVeil.classList.remove('show');
+  document.getElementById('navToggle').setAttribute('aria-expanded','false');}
+function toggleSide(){sideOpen()?closeSide():openSide();}
+sidebarEl.addEventListener('click',e=>{if(e.target.closest('.nav-item')&&sideOpen())closeSide();});
+/* 轉回桌面寬度時抽屜狀態歸零 */
+const mqWide=window.matchMedia('(min-width:1024px)');
+(mqWide.addEventListener?mqWide.addEventListener.bind(mqWide,'change'):mqWide.addListener.bind(mqWide))(
+  e=>{if(e.matches&&sideOpen())closeSide();});
+
 /* ===== 導航 ===== */
 function go(p,btn){
   if(savebar.classList.contains('show')){toast('請先儲存或捨棄變更');return;}
+  closeSide();
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   document.getElementById('page-'+p).classList.add('on');
   if(btn){document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('on'));btn.classList.add('on');}
@@ -680,7 +890,7 @@ function openPalette(){document.getElementById('palOverlay').classList.add('show
 function closePalette(){document.getElementById('palOverlay').classList.remove('show');}
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}
-  if(e.key==='Escape')closePalette();
+  if(e.key==='Escape'){closePalette();if(sideOpen()){closeSide();document.getElementById('navToggle').focus();}}
 });
 const palInput=document.getElementById('palInput');
 palInput.addEventListener('input',()=>{const q=palInput.value.trim();
@@ -692,6 +902,17 @@ palInput.addEventListener('keydown',e=>{
   if(e.key==='ArrowUp'){e.preventDefault();items[i]?.classList.remove('on');items[Math.max(0,i-1)]?.classList.add('on');}
   if(e.key==='Enter'){e.preventDefault();(items[i]||items[0])?.click();}
 });
+
+/* 觸控：checkbox 本體只有 20px，讓外圍 cell 與 .side-item 整塊都能勾選 */
+document.addEventListener('click',function forwardCbTap(e){
+  const host=e.target.closest&&e.target.closest('.idx td:first-child,.idx th:first-child,.side-item');
+  if(!host||e.target.tagName==='INPUT')return;
+  const cb=host.querySelector('input[type=checkbox]');
+  if(!cb)return;
+  cb.checked=!cb.checked;
+  cb.dispatchEvent(new Event('change',{bubbles:true}));
+  e.stopPropagation();
+},true);
 
 renderProducts();drawChart();
 window.addEventListener('resize',drawChart);

@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>CHILL LOVE — 商家後台 v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -318,25 +318,280 @@ body.annotate .annot-bar{display:block}
 .doc-pop .dp-k{color:#b7a5ec;font-weight:600}
 .doc-pop .dp-close{position:absolute;top:8px;right:10px;color:#9a9ba0}
 .doc-pop .dp-close:hover{color:#fff}
+
+/* ==================================================================
+   自適應層（RWD）— 斷點 1279 / 1023 / 767 / 429，全部走 max-width。
+   ≥1280 桌面外觀與改造前完全一致：本層只新增 class 與 media query，
+   不改動 :root 任何 design token（tokens 單一真相＝23-interaction-css-spec §1）。
+   ================================================================== */
+
+/* --- 基礎（各斷點共用的新元件；桌面下不可見或無視覺影響）--- */
+.hamb{display:none;width:34px;height:34px;border-radius:8px;place-items:center;color:var(--text-2);flex:none;transition:background var(--tr)}
+.hamb:hover{background:var(--surface-2)}
+.scrim{position:fixed;inset:52px 0 0;background:rgba(26,28,30,.42);z-index:44;opacity:0;pointer-events:none;transition:opacity var(--tr-big)}
+.tscroll-wrap{position:relative}
+.ana-grid.g3{grid-template-columns:repeat(3,1fr)}
+.chart2.c14{grid-template-columns:1fr 1.4fr}
+.hbar-row .hl.wide{width:130px}
+.btn.btn-icon{width:32px;padding:0}
+#anaChart{width:100%;max-width:100%}   /* 不加 display:block：會少掉 inline 行框的 3px，破壞桌面既有版面 */
+img{max-width:100%;height:auto}
+.thumb,.avatar,.dt-ic,.ai-badge,.setup-art{aspect-ratio:1/1}
+.thumb img,.avatar img,.setup-art img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+@keyframes fadeonly{from{opacity:0}to{opacity:1}}
+
+/* ================= ≤1279：小筆電（表格轉可橫捲，防溢出）================= */
+@media (max-width:1279px){
+  .main{min-width:0}
+  .page{padding:16px 24px 90px}
+  .ana-grid>*,.chart2>*,.live-wrap>*,.setup-grid>*,.od-grid>*,.plan-grid>*,.col>*,
+  .page-head>*,.listbar>*,.pulse>*,.hbar-row>*,.od-line>*,.set-body>*,.tl-body>*,.set-row>*{min-width:0}
+  .filterbar input{min-width:0}
+  /* 長字串（email／網域／GID／SKU）不撐破容器 */
+  .idx td,.side-kv,.addr,.set-row,.pal-item,.tl-body,.empty-wrap,.dtype,.li-name,.li-var,.hv,.hl{overflow-wrap:anywhere}
+}
+
+/* ===== 768–1279：表格維持表格，改走橫捲容器＋首欄 sticky＋右緣漸層 ===== */
+@media (min-width:767.02px) and (max-width:1279px){
+  /* 用 max-content 撐住自然欄寬，寧可橫捲也不讓文字被擠成 2–3 行 */
+  table.idx{min-width:max-content}
+  .tscroll{overflow-x:auto;overscroll-behavior-x:contain}
+  .tscroll::-webkit-scrollbar{height:8px}
+  .tscroll::-webkit-scrollbar-thumb{background:#d2d3d7;border-radius:999px}
+  .tscroll-wrap::after{content:"";position:absolute;top:0;right:0;bottom:0;width:24px;pointer-events:none;z-index:1;
+    background:linear-gradient(90deg,rgba(26,28,30,0),rgba(26,28,30,.10));opacity:0;transition:opacity var(--tr)}
+  .tscroll-wrap.can-scroll::after{opacity:1}
+  .tscroll-wrap.at-end::after{opacity:0}
+  .idx th.cell-cb,.idx td.cell-cb{position:sticky;left:0;z-index:2}
+  .idx td.cell-lead,.idx th.cell-lead{position:sticky;left:0;z-index:2}
+  .idx.has-cb td.cell-lead,.idx.has-cb th.cell-lead{left:36px}
+  .idx th.cell-cb,.idx th.cell-lead{background:var(--surface-3)}
+  .idx td.cell-cb,.idx td.cell-lead{background:#fff}
+  .idx tbody tr:hover td.cell-cb,.idx tbody tr:hover td.cell-lead{background:#fafafc}
+  .idx tr.selected td.cell-cb,.idx tr.selected td.cell-lead{background:#f0f5ff}
+}
+
+/* ================= ≤1023：平板 — sidebar 改 off-canvas 抽屜 ================= */
+@media (max-width:1023px){
+  .frame{height:calc(100dvh - 52px)}
+  .hamb{display:grid}
+  .sidebar{position:fixed;top:52px;bottom:0;left:0;width:min(272px,84vw);z-index:45;
+    padding:10px 10px 16px;overscroll-behavior:contain;box-shadow:0 16px 44px rgba(26,28,30,.2);
+    transform:translateX(-100%);visibility:hidden;
+    transition:transform var(--tr-big),visibility 0s linear .24s}
+  body.nav-open .sidebar{transform:none;visibility:visible;transition:transform var(--tr-big),visibility 0s}
+  body.nav-open .scrim{opacity:1;pointer-events:auto}
+  body.nav-open .main{overflow:hidden}
+  .page{padding:14px 16px 96px}
+  /* topbar：搜尋收成 icon（避免與 logo／右側 icon 群互擠成兩行）*/
+  .searchbox{flex:0 0 auto;width:36px;margin:0 0 0 auto;padding:0;justify-content:center}
+  .searchbox .sb-text,.searchbox .kbd{display:none}
+  .top-right{gap:4px}
+  /* 格線降階：4→2、3→2、兩欄→單欄 */
+  .setup-grid{grid-template-columns:repeat(2,1fr)}
+  .ana-grid,.ana-grid.g3{grid-template-columns:repeat(2,1fr)}
+  .chart2,.chart2.c14,.live-wrap{grid-template-columns:1fr}
+  .od-grid{grid-template-columns:1fr}     /* 側欄 300px 卡片落到主欄之後 */
+  .setup-card p{max-width:none;padding-right:80px}
+  .head-actions{flex-wrap:wrap}
+  /* 設定 overlay：頂部讓出 44px 給關閉鈕，避免壓在卡片右上角 */
+  .set-body{padding:44px 16px 24px;gap:14px}
+  .set-nav{width:230px;padding:12px}
+  .set-content{width:auto;flex:1;max-width:660px}
+  .set-close{top:6px;right:12px}
+}
+
+/* ================= ≤767：手機 — 表格卡片化、sheet、底部列 ================= */
+@media (max-width:767px){
+  html{font-size:14px}
+  /* ---- topbar ---- */
+  .topbar{gap:8px;padding:0 8px}
+  .logo{font-size:13px;gap:6px}
+  .logo .ver{display:none}
+  .top-right{gap:2px}
+  .store-chip{padding:4px;border-color:transparent}
+  .store-chip .sc-txt,.store-chip .dev-tag{display:none}
+  /* ---- 頁面框 ---- */
+  .page{padding:12px 12px 104px}
+  h1{font-size:clamp(17px,4.6vw,20px)}
+  .page-head{gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+  .page-head .head-actions{margin-left:0;width:100%;gap:6px}
+  /* ---- 首頁 ---- */
+  .pulse{gap:12px 18px;padding:4px 2px 14px;margin-bottom:20px}
+  .p-item{flex-wrap:wrap;gap:2px 8px;align-items:center}
+  .p-item .p-label{flex:1 0 100%}
+  .p-live{margin-left:0;text-align:left}
+  .hero-hello{margin:20px 0 6px}
+  .hero-hello h2{font-size:clamp(19px,5.4vw,24px)}
+  .hero-hello p{font-size:13px}
+  .ai-box{padding:6px 6px 6px 12px;gap:8px}
+  .task-chips{flex-wrap:wrap;margin:14px 0 24px}
+  .setup-grid{grid-template-columns:1fr}
+  .setup-card{min-height:0}
+  .setup-card p{padding-right:74px}
+  /* ---- 分析／圖表 ---- */
+  .ana-filters{flex-wrap:wrap}
+  .ana-grid,.ana-grid.g3{grid-template-columns:repeat(2,1fr)}
+  .stat-card{padding:12px}
+  .stat-card .t-value{font-size:22px}
+  .chart-card{padding:12px 12px 6px}
+  .chart-head{flex-wrap:wrap;gap:4px 10px}
+  .hbar-row{gap:8px;margin:10px 0}
+  .hbar-row .hl,.hbar-row .hl.wide{width:82px;font-size:12px}
+  .hbar-row .hv{width:auto;min-width:58px;font-size:12px}
+  .live-map{min-height:240px}
+  .live-map .legend{flex-wrap:wrap;gap:6px 12px}
+  /* ---- .idx 資料表 → 堆疊卡片（td::before 顯示欄名）---- */
+  table.idx{display:block;width:100%;font-size:13px}
+  /* 表頭改由 td::before 呈現；但「全選」是功能鍵，保留成卡片列上方的一行 */
+  .idx thead,.idx thead tr{display:block}
+  .idx thead th{display:none}
+  .idx.has-cb thead tr{padding:2px 2px 6px}
+  .idx thead th.cell-cb{display:flex;align-items:center;gap:8px;padding:0;border:0;background:none;white-space:nowrap}
+  .idx thead th.cell-cb::after{content:"全選";font-size:12px;font-weight:500;color:var(--text-2)}
+  .idx tbody{display:block}
+  .idx tbody tr{display:block;position:relative;background:#fff;border:1px solid var(--border);
+    border-radius:10px;margin:10px 0;padding:10px 12px;box-shadow:var(--sh)}
+  .idx tbody tr:hover{background:#fff}
+  .idx tbody tr.selected{background:#f0f5ff;border-color:#b9cdf5}   /* 與桌面選取列同色 */
+  .idx td{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;padding:6px 0;border:0;text-align:left}
+  .idx td+td{border-top:1px solid var(--border-2)}
+  /* margin-right:auto 讓「欄名」貼左、同一格的多個值互相靠攏後整組貼右 */
+  .idx td::before{content:attr(data-label);flex:0 0 auto;max-width:46%;margin-right:auto;
+    color:var(--text-2);font-size:12px;font-weight:500}
+  .idx td:empty{display:none}
+  .idx td[colspan]{display:block;padding:0}
+  .idx td[colspan]::before{display:none}
+  .idx td.right{text-align:right}
+  .idx td.cell-lead{display:block;font-weight:600;font-size:14px;padding:0 34px 8px 0;border:0}
+  .idx td.cell-lead::before{display:none}
+  .idx td.cell-cb{position:absolute;top:9px;right:8px;left:auto;display:block;padding:0;border:0;z-index:2}
+  .idx td.cell-cb::before{display:none}
+  .idx tr.cancelled td{text-decoration:line-through}
+  .idx tr.cancelled td::before{text-decoration:none}
+  .listbar{padding:8px}
+  .pagination{padding:10px}
+  /* ---- 訂單詳情 ---- */
+  .od-line{gap:10px;padding:10px 0}
+  .tl-body{flex-wrap:wrap;gap:4px 10px}
+  .tl-time{margin-left:auto}
+  .tl-day{margin-left:24px}
+  .banner-err{flex-wrap:wrap}
+  /* ---- 設定 overlay：全螢幕＋頂部橫捲 chips ---- */
+  .set-body{flex-direction:column;padding:44px 0 24px;gap:0}
+  .set-close{top:5px;right:10px}
+  .set-nav{width:auto;flex:none;display:flex;align-items:center;gap:6px;height:auto;
+    border-radius:0;border-width:0 0 1px;box-shadow:none;padding:8px 10px;
+    overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+  .set-nav::-webkit-scrollbar{display:none}
+  .set-nav .set-search,.set-nav .set-org{display:none}
+  .set-store{flex:none;border:0;margin:0;padding:0 2px}   /* 只留頭像，當作組織／商店分隔 */
+  .set-store div{display:none}
+  .set-item{flex:none;width:auto;white-space:nowrap;border:1px solid var(--border);border-radius:999px;padding:7px 12px}
+  .set-item.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .set-content{width:auto;max-width:none;padding:14px 12px;gap:14px}
+  .plan-grid{grid-template-columns:1fr}
+  /* ---- Modal → 貼底全寬 sheet ---- */
+  .overlay{align-items:flex-end;padding:0}
+  .modal{width:100%;max-height:92dvh;border-radius:16px 16px 0 0;display:flex;flex-direction:column}
+  .modal-head{flex:none;position:relative;padding-top:20px}
+  .modal-head::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:36px;height:4px;border-radius:999px;background:var(--border)}
+  .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border-2);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  .modal-foot .btn{width:100%;justify-content:center}
+  /* ---- 命令面板 → 貼頂 sheet（避開手機鍵盤）---- */
+  #palOverlay{align-items:flex-start;padding:0}
+  .palette{width:100%;max-height:86dvh;border-radius:0 0 16px 16px;overflow-y:auto;overscroll-behavior:contain}
+  .pal-foot{position:sticky;bottom:0;background:#fff}
+  /* ---- bulkbar / toast / annot-bar 貼底全寬 ---- */
+  .bulkbar{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;border-radius:12px 12px 0 0;
+    flex-wrap:wrap;gap:6px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));z-index:60;
+    box-shadow:0 -8px 26px rgba(26,28,30,.3)}
+  .bulkbar .bb-gap{display:none}
+  .bulkbar #bulkCount{flex:1 0 100%}
+  .bulkbar .b-act{flex:1;text-align:center;background:rgba(255,255,255,.12)}
+  .toast{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+    transform:translateY(90px);justify-content:center;text-align:center}
+  .toast.show{transform:none}
+  body:has(.bulkbar.show) .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
+  .annot-bar{left:8px;right:8px;bottom:auto;top:60px;max-width:none}
+  body.annotate .page{padding-top:70px}   /* 註釋橫幅改置頂，內容讓位不被蓋住 */
+  .doc-pop{max-width:calc(100vw - 24px);max-height:52dvh;overflow-y:auto}
+  /* ---- 輸入框：16px 防 iOS 聚焦縮放；高度 40 ---- */
+  .input,.filterbar,.set-search{height:40px}
+  .input,input,textarea,select,.filterbar input,.ai-box input,.palette input{font-size:16px}
+  .ai-box input{font-size:16px}
+}
+
+/* ================= ≤429：小手機 ================= */
+@media (max-width:429px){
+  .page{padding:10px 10px 104px}
+  .logo .logo-txt{display:none}
+  .top-right .top-ai{display:none}
+  .ana-grid,.ana-grid.g3{grid-template-columns:1fr}
+  .task-chip{width:100%;justify-content:center}
+  .hbar-row .hl,.hbar-row .hl.wide{width:72px}
+  .pulse{gap:10px 14px}
+  .tl-compose{padding:8px 10px}
+  .set-content{padding:12px 10px}
+  .empty-wrap{padding:32px 12px}
+}
+
+/* ================= 觸控裝置：最小 44×44（不動字級）================= */
+@media (pointer:coarse){
+  .icon-btn,.pg,.ai-send,.set-close,.hamb,.searchbox{min-width:44px;min-height:44px}
+  .btn,.view-chip,.task-chip,.store-chip,.dtype,.b-act,.table-toggle,.nav-item,.set-item,
+  .pal-item,.view-menu button,.filterbar,.tc-tools .icon-btn{min-height:44px}
+  .btn-sm{min-height:40px}
+  .btn.btn-icon{min-width:44px;min-height:44px}
+  .tc-tools .icon-btn{min-width:44px}
+  .nav-sub{padding-top:12px;padding-bottom:12px}
+  .table-toggle{display:inline-flex;align-items:center}
+  .cb{width:20px;height:20px}
+  /* 用 pseudo 擴大熱區，不改變視覺尺寸 */
+  .toggle::before,.ai-row .x::after,.doc-pop .dp-close::after{content:"";position:absolute;inset:-12px}
+  .toggle,.ai-row .x,.doc-pop .dp-close{position:relative}
+  .idx td.cell-cb{padding:10px;margin:-10px}
+  .idx thead th.cell-cb{min-height:44px}
+}
+
+/* ================= 降低動效偏好 ================= */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important}
+  .live-dot,.skeleton,.task-chip:hover{animation:none;transform:none}
+  .page.on,.view-menu.show,.bulkbar,.modal,.palette,.doc-pop.show,.ai-reply.show,.settings.show{animation-name:fadeonly}
+  .hbar{transition:none}
+  .sidebar{transition:none!important}
+  .toast{transform:translate(-50%,0)}
+  .toast.show{transform:translate(-50%,0)}
+}
+@media (prefers-reduced-motion:reduce) and (max-width:767px){
+  .toast,.toast.show{transform:none}
+}
 </style>
 </head>
 <body data-palette="#2a78d6">
 
 <header class="topbar">
-  <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span>CHILL LOVE <span class="ver">秋季 '26</span></div>
-  <button class="searchbox" data-doc="search" onclick="openPalette()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>搜尋<span class="kbd">CTRL K</span>
+  <button class="hamb" id="hambBtn" aria-label="開啟導航選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-txt">CHILL LOVE</span> <span class="ver">秋季 '26</span></div>
+  <button class="searchbox" data-doc="search" aria-label="搜尋（CTRL K）" onclick="openPalette()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text">搜尋</span><span class="kbd">CTRL K</span>
   </button>
   <div class="top-right">
-    <button class="icon-btn" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
+    <button class="icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="icon-btn" title="通知" aria-label="通知" onclick="toast('1 則通知：#1039 被標記為中風險訂單')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
-    <button class="store-chip" data-doc="storechip"><span class="avatar">CL</span>CHILL LOVE<span class="dev-tag">demo</span></button>
+    <button class="store-chip" data-doc="storechip" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
   </div>
 </header>
 
+<div class="scrim" id="scrim" aria-hidden="true" onclick="closeNav(true)"></div>
+
 <div class="frame">
-  <nav class="sidebar" id="sidebar"></nav>
+  <nav class="sidebar" id="sidebar" aria-label="主導航"></nav>
   <main class="main">
 
   <!-- 首頁 -->
@@ -407,7 +662,7 @@ body.annotate .annot-bar{display:block}
       </div>
       <div class="idx-wrap">
         <div class="bulkbar" id="bulkbar" data-doc="bulkbar">
-          <span id="bulkCount" class="num"></span><span style="flex:1"></span>
+          <span id="bulkCount" class="num"></span><span class="bb-gap" style="flex:1"></span>
           <button class="b-act" onclick="toast('Demo：批次出貨')">標記為已出貨</button>
           <button class="b-act" onclick="toast('Demo：批次封存')">封存</button>
           <button class="b-act" onclick="toast('Demo：加入標籤')">加標籤</button>
@@ -524,7 +779,7 @@ body.annotate .annot-bar{display:block}
 <div class="overlay" id="discOverlay" onclick="if(event.target===this)closeDiscModal()">
   <div class="modal" role="dialog" aria-modal="true" aria-label="選取折扣類型">
     <div class="modal-head">選取折扣類型<button onclick="closeDiscModal()" aria-label="關閉">✕</button></div>
-    <div id="discTypes" data-doc="disctypes"></div>
+    <div class="modal-body" id="discTypes" data-doc="disctypes"></div>
     <div class="modal-foot"><button class="btn btn-sec btn-sm" onclick="closeDiscModal()">取消</button></div>
   </div>
 </div>
@@ -615,6 +870,7 @@ function renderSidebar(){
   document.getElementById('sidebar').innerHTML=h;
 }
 function go(p){
+  closeNav(false);
   current=p;renderSidebar();
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
   const modules=p.startsWith('m-');
@@ -622,6 +878,7 @@ function go(p){
   if(modules)renderModule(p);
   if(p==='home')requestAnimationFrame(drawSparks);
   if(p==='analytics')requestAnimationFrame(drawAnalytics);
+  requestAnimationFrame(refreshScrollHints);   /* 切頁後才量得到表格寬度 */
   document.querySelector('.main').scrollTop=0;
 }
 
@@ -754,7 +1011,7 @@ function renderOrderDetail(){
    refund:`<h3><span class="badge b-default"><span class="pip full"></span>已退款</span></h3>`}[o.pay];
   document.getElementById('page-orderdetail').innerHTML=`
   <div class="page-head" style="flex-wrap:wrap">
-    <button class="btn btn-sec btn-sm" onclick="go('orders')" aria-label="返回訂單列表" style="width:32px;padding:0">←</button>
+    <button class="btn btn-sec btn-sm btn-icon" onclick="go('orders')" aria-label="返回訂單列表">←</button>
     <h1>#${o.id}</h1>
     ${o.cancelled?'<span class="badge b-critical"><span class="pip full"></span>已取消</span>':PAY[o.pay]+' '+fulBadge}
     <span class="mut3" style="font-size:12px">${o.d}・${o.ch}</span>
@@ -926,6 +1183,7 @@ const MODULES={
    [`<b>90 天未回購</b>`,`<span class="mut num">last_order_date < -90d</span>`,`<span class="num">126</span>`,"挽回 email"],
    [`<b>訂閱未購買</b>`,`<span class="mut num">subscribed AND orders = 0</span>`,`<span class="num">342</span>`,"—"]],
   note:"分群＝動態名單，成員自動進出；可作為折扣資格與行銷受眾"},
+ "m-growth":{title:"成長",custom:"growth"},   /* 修：原本缺這筆，點側欄「成長」會 TypeError */
  "m-attribution":{title:"歸因",custom:"growth"},
  "m-campaigns":{title:"行銷活動",act:[["建立行銷活動","pri","toast('Demo：行銷活動屬 P2')"]],
   empty:{t:"還沒有行銷活動",d:"建立活動後，這裡會顯示各管道的歸因銷售額、工作階段與轉換。",b:["建立行銷活動","toast('Demo：行銷活動屬 P2')"]}},
@@ -1009,7 +1267,7 @@ function filterModuleRows(inp){
     tr.style.display=!q||tr.textContent.toLowerCase().includes(q)?'':'none';});
 }
 function growthHTML(){return `
-  <div class="ana-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="ana-grid g3">
     <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">NT$38,200</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
     <div class="card stat-card"><div class="t-label">依流量類型的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs">直接 62%・社群 24%・搜尋 14%</span></span></div>
     <div class="card stat-card"><div class="t-label">行銷轉換率</div><div class="t-value num">1.9%</div><span class="t-delta up">↑ 0.4pt <span class="t-vs">vs 前期</span></span></div>
@@ -1039,7 +1297,7 @@ function marketsHTML(){return `
   </div>`;}
 function financeHTML(){return `
   <div class="banner-err" style="background:var(--info-bg);border-color:#cfe3f2;color:var(--info);margin-bottom:16px">啟用兩步驟驗證以保護你的帳戶。<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="toast('Demo：2FA 設定（規格 12-F2）')">設定</button></div>
-  <div class="chart2" style="grid-template-columns:1fr 1.4fr">
+  <div class="chart2 c14">
     <div class="col">
       <div class="card card-pad"><h3>稅務</h3><div class="set-row" style="border:0;padding:6px 0"><div><b>設定稅金代收</b><span class="sub">依地區稅率自動計算</span></div><span class="chev">›</span></div></div>
       <div class="card card-pad"><h3>工具</h3><div class="set-row" style="border:0;padding:6px 0"><div><b>對帳報表</b><span class="sub">撥款與訂單的對帳明細</span></div><span class="chev">›</span></div></div>
@@ -1153,6 +1411,7 @@ const SET_PAGES={
    ${setRow("新增定義","namespace.key + 型別驗證（規格 05 §1f）")}</div>`,
 };
 function openSettings(page='general'){
+  closeNav(false);
   document.getElementById('settings').classList.add('show');
   setPage(page);
   document.getElementById('setClose').focus();
@@ -1160,6 +1419,9 @@ function openSettings(page='general'){
 function setPage(key){
   document.querySelectorAll('.set-item').forEach(b=>b.classList.toggle('on',b.dataset.set===key));
   document.getElementById('setContent').innerHTML=SET_PAGES[key]||'';
+  /* ≤767 分類清單是頂部橫捲 chips：把目前分頁捲進可視範圍 */
+  const on=document.querySelector('.set-item.on');
+  if(on&&window.innerWidth<=767)on.scrollIntoView({block:'nearest',inline:'center'});
 }
 document.querySelectorAll('.set-item').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.set)));
 function closeSettings(){document.getElementById('settings').classList.remove('show');}
@@ -1185,13 +1447,15 @@ function toggleAnaTable(){
 function drawAnalytics(){
   const svg=document.getElementById('anaChart');
   if(!svg||!svg.clientWidth)return;
-  const W=svg.clientWidth,H=200,P={t:12,r:12,b:24,l:48};
+  /* RWD：窄螢幕縮小 y 軸留白並減少 x 軸刻度，避免日期標籤重疊 */
+  const W=svg.clientWidth,H=200,P={t:12,r:12,b:24,l:W<480?32:48};
+  const xTicks=W<300?[0,29]:W<400?[0,14,29]:W<540?[0,9,19,29]:[0,7,14,21,29];
   const max=20000;
   const x=i=>P.l+i*(W-P.l-P.r)/(sales.length-1);
   const y=v=>P.t+(1-v/max)*(H-P.t-P.b);
   let g='';
   [0,5000,10000,15000,20000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?v/1000+'K':'0'}</text>`;});
-  [0,7,14,21,29].forEach(i=>{g+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i===29?'end':i===0?'start':'middle'}" font-size="11" fill="#67696e">${days[i]}</text>`;});
+  xTicks.forEach(i=>{g+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i===29?'end':i===0?'start':'middle'}" font-size="11" fill="#67696e">${days[i]}</text>`;});
   const line=sales.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('');
   svg.innerHTML=g+`<path d="${line}L${x(29)},${y(0)}L${x(0)},${y(0)}Z" fill="rgba(42,120,214,.10)"/>
    <path d="${line}" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
@@ -1204,7 +1468,7 @@ function drawAnalytics(){
     const cx=x(i),cy=y(sales[i]);
     svg.querySelector('#anaX').setAttribute('x1',cx);svg.querySelector('#anaX').setAttribute('x2',cx);svg.querySelector('#anaX').setAttribute('opacity',1);
     const d=svg.querySelector('#anaDot');d.setAttribute('cx',cx);d.setAttribute('cy',cy);d.setAttribute('opacity',1);
-    tip.style.left=cx+'px';tip.style.top=(cy-4)+'px';tip.style.opacity=1;
+    tip.style.left=Math.max(52,Math.min(W-52,cx))+'px';tip.style.top=(cy-4)+'px';tip.style.opacity=1;
     tip.innerHTML=`${days[i]}<br><b class="num">NT$${sales[i].toLocaleString()}</b>`;
   };
   svg.onmouseleave=()=>{tip.style.opacity=0;svg.querySelector('#anaX').setAttribute('opacity',0);svg.querySelector('#anaDot').setAttribute('opacity',0);};
@@ -1214,7 +1478,7 @@ function drawAnalytics(){
    <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/chan[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
   const prods=[["奶茶色寬版帽T",96200],["水洗丹寧襯衫",71800],["有機棉白T三件組",54900],["燕麥色針織開衫",41200],["帆布托特包",22600]];
   document.getElementById('prodBars').innerHTML=prods.map(([l,v])=>`
-   <div class="hbar-row"><span class="hl" style="width:130px">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/prods[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
+   <div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/prods[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
   const fun=[["工作階段",8600],["加入購物車",940],["進入結帳",412],["完成購買",240]];
   document.getElementById('funnel').innerHTML=fun.map(([l,v],i)=>`
    <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/fun[0][1]*100}%;min-width:6px"></div></div><span class="hv num">${v.toLocaleString()}${i?` <span class="mut3">${(v/fun[i-1][1]*100).toFixed(1)}%</span>`:''}</span></div>`).join('');
@@ -1257,7 +1521,8 @@ document.addEventListener('keydown',e=>{
     if(document.getElementById('docPop').classList.contains('show'))closeDocPop();
     else if(document.getElementById('palOverlay').classList.contains('show'))closePalette();
     else if(document.getElementById('discOverlay').classList.contains('show'))closeDiscModal();
-    else closeSettings();
+    else if(document.getElementById('settings').classList.contains('show'))closeSettings();
+    else closeNav(true);
   }
 });
 const palInput=document.getElementById('palInput');
@@ -1341,14 +1606,113 @@ document.addEventListener('click',e=>{
     `<b>${d.t}</b><span class="dp-k">功能</span>：${d.f}<br><span class="dp-k">邏輯</span>：${d.l}<br><span class="dp-k">實作</span>：${d.i}`;
   const pop=document.getElementById('docPop');pop.classList.add('show');
   const r=el.getBoundingClientRect();
-  pop.style.left=Math.min(window.innerWidth-400,Math.max(12,r.left))+'px';
-  pop.style.top=Math.min(window.innerHeight-190,r.bottom+8)+'px';
+  if(window.innerWidth<=767){
+    /* 手機：貼齊左右邊界並確保完整落在視窗內 */
+    pop.style.left='12px';
+    pop.style.top=Math.max(60,Math.min(window.innerHeight-pop.offsetHeight-12,r.bottom+8))+'px';
+  }else{
+    pop.style.left=Math.min(window.innerWidth-400,Math.max(12,r.left))+'px';
+    pop.style.top=Math.min(window.innerHeight-190,r.bottom+8)+'px';
+  }
 },true);
 function closeDocPop(){document.getElementById('docPop').classList.remove('show');}
 
+/* ================= 自適應 1：off-canvas 導航抽屜（≤1023）================= */
+const MQ_NAV=matchMedia('(max-width:1023px)');
+const MQ_COARSE=matchMedia('(pointer:coarse)');
+let navOpen=false;
+function openNav(){
+  if(!MQ_NAV.matches||navOpen)return;
+  navOpen=true;
+  document.body.classList.add('nav-open');
+  document.getElementById('hambBtn').setAttribute('aria-expanded','true');
+  const first=document.querySelector('#sidebar .nav-item');
+  if(first)setTimeout(()=>first.focus(),80);   /* 開啟時焦點移入抽屜 */
+}
+function closeNav(back){
+  if(!navOpen)return;
+  navOpen=false;
+  document.body.classList.remove('nav-open');
+  const b=document.getElementById('hambBtn');
+  b.setAttribute('aria-expanded','false');
+  if(back)b.focus();                            /* Esc／遮罩關閉時焦點還給漢堡鈕 */
+}
+function toggleNav(){navOpen?closeNav(true):openNav();}
+MQ_NAV.addEventListener('change',e=>{if(!e.matches)closeNav(false);});
+document.addEventListener('keydown',e=>{       /* 抽屜開啟時 Tab 焦點循環 */
+  if(!navOpen||e.key!=='Tab')return;
+  const sb=document.getElementById('sidebar');
+  const f=[...sb.querySelectorAll('button')].filter(x=>x.offsetParent!==null);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(!sb.contains(document.activeElement)){e.preventDefault();(e.shiftKey?last:first).focus();}
+  else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+
+/* ================= 自適應 2：資料表（≤1279 橫捲 / ≤767 堆疊卡片）=================
+   為每個 <td> 補 data-label（取自對應 <th>），CSS 用 td::before 顯示欄名；
+   同時保留 table 語意（display 被覆寫後補 role），並把表格包進橫捲容器。 */
+function updateScrollHint(w){
+  const sc=w.firstElementChild;if(!sc)return;
+  const can=sc.scrollWidth-sc.clientWidth>2;
+  w.classList.toggle('can-scroll',can);
+  w.classList.toggle('at-end',can&&sc.scrollLeft+sc.clientWidth>=sc.scrollWidth-2);
+}
+function refreshScrollHints(){document.querySelectorAll('.tscroll-wrap').forEach(w=>updateScrollHint(w));}
+function enhanceTables(){
+  document.querySelectorAll('table.idx').forEach(tb=>{
+    if(!tb.parentElement.classList.contains('tscroll')){
+      const wrap=document.createElement('div');wrap.className='tscroll-wrap';
+      const sc=document.createElement('div');sc.className='tscroll';
+      tb.parentNode.insertBefore(wrap,tb);sc.appendChild(tb);wrap.appendChild(sc);
+      sc.addEventListener('scroll',()=>updateScrollHint(wrap),{passive:true});
+    }
+    tb.setAttribute('role','table');
+    tb.querySelectorAll('thead,tbody').forEach(g=>g.setAttribute('role','rowgroup'));
+    tb.querySelectorAll('tr').forEach(tr=>tr.setAttribute('role','row'));
+    const heads=[...tb.querySelectorAll('thead th')];
+    const labels=heads.map(th=>th.textContent.trim());
+    let cbIdx=-1,leadIdx=-1;
+    heads.forEach((th,i)=>{
+      th.setAttribute('role','columnheader');
+      if(th.querySelector('input[type=checkbox]')){if(cbIdx<0)cbIdx=i;th.classList.add('cell-cb');}
+      else if(leadIdx<0){leadIdx=i;th.classList.add('cell-lead');}
+    });
+    tb.classList.toggle('has-cb',cbIdx===0);
+    tb.querySelectorAll('tbody tr').forEach(tr=>{
+      [...tr.children].forEach((td,i)=>{
+        td.setAttribute('role','cell');
+        if(td.hasAttribute('colspan'))return;
+        if(i===cbIdx||td.querySelector('input.cb')){td.classList.add('cell-cb');return;}
+        if(i===leadIdx){td.classList.add('cell-lead');return;}
+        if(labels[i])td.setAttribute('data-label',labels[i]);
+      });
+    });
+  });
+  refreshScrollHints();
+}
+let enhT;
+new MutationObserver(()=>{clearTimeout(enhT);enhT=setTimeout(enhanceTables,0);})
+  .observe(document.querySelector('.main'),{childList:true,subtree:true});
+
+/* 觸控裝置：整個 checkbox 儲存格都是熱區（≥44px），滑鼠環境行為不變 */
+document.addEventListener('click',e=>{
+  if(!MQ_COARSE.matches||!e.target.closest)return;
+  const cell=e.target.closest('td.cell-cb');
+  if(!cell||e.target.tagName==='INPUT')return;
+  const cb=cell.querySelector('input.cb');if(!cb)return;
+  e.preventDefault();e.stopPropagation();
+  cb.checked=!cb.checked;
+  cb.dispatchEvent(new Event('change',{bubbles:true}));
+},true);
+
 /* init */
-renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();
-window.addEventListener('resize',()=>{drawSparks();drawAnalytics();});
+renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();
+let rzT=0;
+function onResize(){drawSparks();drawAnalytics();refreshScrollHints();}
+window.addEventListener('resize',()=>{cancelAnimationFrame(rzT);rzT=requestAnimationFrame(onResize);});
+window.addEventListener('orientationchange',()=>setTimeout(onResize,150));
 </script>
 </body>
 </html>

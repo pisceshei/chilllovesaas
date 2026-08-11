@@ -15,12 +15,11 @@
   --tr:200ms cubic-bezier(.25,.6,.3,1);--tr-big:360ms cubic-bezier(.22,.8,.26,1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.7;letter-spacing:.015em;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;font-size:14px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--cream);color:var(--ink);font-size:14px;line-height:1.7;letter-spacing:.015em;-webkit-font-smoothing:antialiased;overflow-wrap:break-word}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 img{display:block;max-width:100%}
 .wrap{max-width:1280px;margin:0 auto;padding:0 40px}
-@media(max-width:760px){.wrap{padding:0 20px}}
 .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
 .serif{font-family:var(--serif)}
 :focus-visible{outline:2px solid var(--clay);outline-offset:2px}
@@ -42,13 +41,18 @@ nav.main-nav a:hover::after{right:0}
 .cart-n{position:absolute;top:3px;right:1px;min-width:16px;height:16px;border-radius:99px;background:var(--clay);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 4px;transition:transform var(--tr)}
 .cart-n.bump{animation:bump .4s}
 @keyframes bump{30%{transform:scale(1.35)}}
-@media(max-width:760px){.site-inner{gap:16px}nav.main-nav{gap:18px;overflow-x:auto;scrollbar-width:none}
-.hd-btn{width:44px;height:44px}.qty{height:40px}.qty button{width:40px}.dr-remove{padding:8px 0}}
+/* 漢堡鈕／抽屜關閉鈕／抽屜標題／導航遮罩：桌面隱藏，≤767 才登場 */
+.nav-toggle{display:none;width:44px;height:44px;place-items:center;border-radius:50%;margin-left:-10px;flex:none;transition:background var(--tr)}
+.nav-toggle:hover{background:rgba(34,30,26,.06)}
+.nav-close{display:none;position:absolute;top:9px;right:9px;width:44px;height:44px;place-items:center;border-radius:50%;font-size:17px;color:var(--ink-2);transition:background var(--tr)}
+.nav-close:hover{background:rgba(34,30,26,.07)}
+.nav-title{display:none;font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.06em;padding:0 14px 14px}
+.nav-veil{display:none;position:fixed;inset:0;background:rgba(34,30,26,.45);opacity:0;pointer-events:none;transition:opacity var(--tr-big);z-index:1}
+header.site.nav-open .nav-veil{opacity:1;pointer-events:auto}
 
 /* ===== hero ===== */
 .hero{padding:72px 0 84px;position:relative;overflow:hidden}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
-@media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:36px}}
 .hero h1{font-family:var(--serif);font-size:clamp(38px,4.6vw,58px);line-height:1.18;font-weight:500;letter-spacing:.01em;margin:18px 0 20px}
 .hero h1 em{font-style:normal;color:var(--clay);border-bottom:3px solid rgba(169,80,44,.35)}
 .hero p.lead{color:var(--ink-2);font-size:15px;max-width:42ch;margin-bottom:32px}
@@ -63,7 +67,7 @@ nav.main-nav a:hover::after{right:0}
 
 /* 藝術指導級佔位圖：暖色漸層 + 服裝線稿 + 顆粒 */
 .art{width:100%;height:100%;position:relative;display:grid;place-items:center;overflow:hidden}
-.art svg.garment{width:52%;height:auto;opacity:.9}
+.art svg.garment{width:52%;height:auto;max-height:82%;opacity:.9}
 .art .grain{position:absolute;inset:0;opacity:.5;mix-blend-mode:soft-light}
 .art .shade{position:absolute;inset:0;background:radial-gradient(120% 90% at 70% 15%,rgba(255,255,255,.5),transparent 55%)}
 
@@ -83,7 +87,6 @@ nav.main-nav a:hover::after{right:0}
 .sec-head .more{margin-left:auto;font-size:12px;letter-spacing:.12em;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);padding-bottom:2px;transition:opacity var(--tr)}
 .sec-head .more:hover{opacity:.6}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
-@media(max-width:1000px){.grid4{grid-template-columns:repeat(2,1fr)}}
 .pcard{cursor:pointer}
 .pcard .ph{aspect-ratio:3/4;border-radius:3px;overflow:hidden;position:relative;background:var(--paper)}
 .pcard .art{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
@@ -108,10 +111,8 @@ nav.main-nav a:hover::after{right:0}
 /* ===== 敘事區 ===== */
 .story{background:var(--ink);color:#efe9df;overflow:hidden}
 .story-grid{display:grid;grid-template-columns:1fr 1fr;min-height:520px}
-@media(max-width:900px){.story-grid{grid-template-columns:1fr}}
 .story-art{position:relative;min-height:340px}
 .story-txt{padding:80px 72px;display:flex;flex-direction:column;justify-content:center}
-@media(max-width:900px){.story-txt{padding:56px 24px}}
 .story .eyebrow{color:#b7ab9b}
 .story h2{font-family:var(--serif);font-size:32px;font-weight:500;line-height:1.3;margin:16px 0 18px;color:#fbf7f0}
 .story p{color:#c9bfb0;max-width:46ch;margin-bottom:30px}
@@ -120,7 +121,6 @@ nav.main-nav a:hover::after{right:0}
 
 /* ===== 分類卡 ===== */
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-@media(max-width:900px){.grid3{grid-template-columns:1fr}}
 .ccard{position:relative;aspect-ratio:4/5;border-radius:3px;overflow:hidden;cursor:pointer}
 .ccard .art{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
 .ccard:hover .art{transform:scale(1.05)}
@@ -133,7 +133,6 @@ nav.main-nav a:hover::after{right:0}
 .promise:first-child{border-left:0}
 .promise b{font-family:var(--serif);font-size:15px;font-weight:600;display:block;margin-bottom:4px;letter-spacing:.04em}
 .promise span{font-size:12.5px;color:var(--ink-2)}
-@media(max-width:760px){.promise-grid{grid-template-columns:1fr}.promise{border-left:0;border-top:1px solid var(--line)}}
 
 /* ===== newsletter + footer ===== */
 .news{padding:96px 0;text-align:center}
@@ -145,7 +144,6 @@ nav.main-nav a:hover::after{right:0}
 .news-form button:hover{background:#3a342d}
 footer.site{background:var(--ink);color:#b7ab9b;padding:64px 0 34px;font-size:12.5px}
 .f-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
-@media(max-width:900px){.f-grid{grid-template-columns:1fr 1fr}}
 footer .wordmark{color:#fbf7f0;margin-bottom:14px;display:block}
 footer p{max-width:34ch;line-height:1.8}
 .f-col b{color:#efe9df;display:block;margin-bottom:14px;font-size:12px;letter-spacing:.12em}
@@ -190,6 +188,222 @@ footer p{max-width:34ch;line-height:1.8}
 .toastf.show{transform:translate(-50%,0)}
 .empty-cart{text-align:center;padding:60px 20px;color:var(--ink-2)}
 .empty-cart .serif{font-size:18px;display:block;margin-bottom:8px;color:var(--ink)}
+
+/* ================================================================
+   RESPONSIVE SYSTEM — 斷點 1279 / 1023 / 767 / 429
+   規則：一律 max-width 往下適配，桌面 ≥1280 完全不受影響。
+   不新增／不修改任何 design token；只加 media query 與新 class。
+   ================================================================ */
+
+/* --- 0. 全域護欄（桌面數學上不觸發，等同 no-op）--- */
+.hero-grid>*,.story-grid>*,.grid4>*,.grid3>*,.f-grid>*,.site-inner>*,
+.promise-grid>*,.dr-item>*,.sec-head>*,.news-form>*,.f-bottom>*,
+.pcard>*,.pinfo>*,.dr-info>*{min-width:0}
+/* 價格／折扣標籤／免運數字：任何寬度都不准折行錯位 */
+.sale-tag,.new-tag,.pprice .now,.pprice s,.ship-bar b,.dr-price,
+.hero-tag b,.cart-n,.qty span{white-space:nowrap}
+/* 真圖替換佔位圖時的 CLS 保險：框有 aspect-ratio，圖一律 cover 填滿 */
+.art>img,.ph>img,.hero-art>img,.ccard>img,.story-art>img,.dr-ph>img,.media-frame>img{
+  width:100%;height:100%;object-fit:cover;display:block}
+/* 可重用的定比例圖框（給下一批 mockup 直接套） */
+.media-frame{position:relative;overflow:hidden;background:var(--paper);aspect-ratio:3/4}
+.media-frame.r-square{aspect-ratio:1/1}
+.media-frame.r-wide{aspect-ratio:16/9}
+
+/* --- 1. ≤1279 小筆電／橫式平板 --- */
+@media(max-width:1279px){
+  .wrap{padding:0 32px}
+  .grid4{grid-template-columns:repeat(3,1fr);gap:20px}
+  .hero-grid{gap:44px}
+  /* 長字串（商品名、SEO slug、中英混排）不撐破容器 */
+  /* 注意：含金額的節點（.hero-tag / .promise b / .pprice）不加 anywhere，
+     否則 NT$1,480 會被拆行 —— 中文本來就能自然斷行，不需要 */
+  .pname,.dr-name,.hero h1,.sec-head h2,.cname,
+  .news h2,.story h2,.f-col a,.empty-cart{overflow-wrap:anywhere}
+}
+
+/* --- 2. ≤1023 直式平板：hero／story／分類全部轉單欄，導航開始橫捲 --- */
+@media(max-width:1023px){
+  .wrap{padding:0 28px}
+  .section,.news{padding:80px 0}
+  .hero{padding:56px 0 64px}
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .hero h1{font-size:clamp(32px,6.2vw,58px)}
+  .hero p.lead{max-width:58ch}
+  .hero-art{aspect-ratio:16/9}
+  .grid4{grid-template-columns:repeat(2,1fr)}
+  .grid3{grid-template-columns:repeat(2,1fr)}
+  .ccard{aspect-ratio:1/1}
+  .ccard:last-child{grid-column:span 2;aspect-ratio:16/6}
+  .story-grid{grid-template-columns:1fr;min-height:0}
+  .story-art{aspect-ratio:16/9;min-height:0}
+  .story-txt{padding:64px 40px}
+  .story p{max-width:62ch}
+  .f-grid{grid-template-columns:repeat(2,1fr);gap:28px 32px}
+  .f-grid>div:first-child{grid-column:1/-1}
+  footer p{max-width:52ch}
+  /* 導航橫捲：不可壓縮、scroll-snap；漸層只在真的捲得動時才出現（JS 掛 fade-l/fade-r）*/
+  nav.main-nav{overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
+    scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+  nav.main-nav::-webkit-scrollbar{display:none}
+  nav.main-nav a{flex:none;white-space:nowrap;scroll-snap-align:start}
+  nav.main-nav.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 24px),transparent 100%);
+                              mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 24px),transparent 100%)}
+  nav.main-nav.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 100%);
+                              mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 100%)}
+  nav.main-nav.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent 100%);
+                                     mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent 100%)}
+  .site-inner{gap:24px}
+}
+
+/* --- 3. ≤767 手機：導航收漢堡抽屜、購物袋全寬、區塊間距降到 68px --- */
+@media(max-width:767px){
+  .wrap{padding:0 20px}
+  .announce{font-size:11px;letter-spacing:.08em;padding:8px 14px;line-height:1.55}
+  .section,.news{padding:68px 0}
+  .hero{padding:40px 0 52px}
+  .hero-grid{gap:26px}
+  .hero-art{aspect-ratio:4/3}
+  .hero h1{margin:14px 0 16px}
+  .hero p.lead{font-size:14.5px;margin-bottom:26px}
+  .hero-tag{left:14px;bottom:14px;max-width:calc(100% - 28px)}
+  .marquee{padding:11px 0}
+  .sec-head{margin-bottom:24px;gap:12px}
+  .grid4{grid-template-columns:repeat(2,1fr);gap:18px 16px}
+  .grid3{gap:12px}
+  .story-art{aspect-ratio:4/3}
+  .story-txt{padding:52px 20px}
+  .promise-grid{grid-template-columns:1fr}
+  .promise{border-left:0;border-top:1px solid var(--line);padding:24px 16px}
+  .promise:first-child{border-top:0}
+  footer.site{padding:52px 0 28px}
+  .f-grid{gap:24px;margin-bottom:36px}
+  .f-bottom{gap:10px 16px}
+  .f-bottom .pay{margin-left:0;flex:1 1 100%}
+  /* ≤767 輸入框 16px，避免 iOS focus 時自動放大版面 */
+  input,textarea,select,.news-form input{font-size:16px}
+
+  /* 3a. 主導航 → 左側漢堡抽屜（header 取消 backdrop-filter，
+         否則會變成 fixed 定位的 containing block，抽屜會被關進 header 裡）*/
+  header.site{backdrop-filter:none;background:rgba(246,241,233,.97)}
+  header.site.nav-open{z-index:45}
+  .site-inner{gap:6px;height:60px}
+  .nav-toggle{display:grid}
+  .nav-veil{display:block}
+  nav.main-nav{position:fixed;top:0;left:0;bottom:0;z-index:2;
+    width:min(320px,86vw);max-width:100vw;
+    background:var(--paper);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:stretch;gap:0;
+    padding:66px 10px calc(24px + env(safe-area-inset-bottom));
+    overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+    transform:translateX(-102%);transition:transform var(--tr-big);
+    box-shadow:20px 0 60px rgba(34,30,26,.22);
+    -webkit-mask-image:none;mask-image:none}
+  nav.main-nav.open{transform:none}
+  nav.main-nav.fade-l,nav.main-nav.fade-r,nav.main-nav.fade-l.fade-r{
+    -webkit-mask-image:none;mask-image:none}
+  nav.main-nav a{display:flex;align-items:center;min-height:52px;padding:0 14px;
+    font-size:15px;letter-spacing:.04em;border-bottom:1px solid var(--line);flex:none}
+  nav.main-nav a::after{display:none}
+  .nav-title,.nav-close{display:grid}
+  .nav-title{display:block}
+
+  /* 3b. 購物袋抽屜 → 全寬、內容可捲、結帳鈕貼底 + safe-area */
+  .drawer{width:100%;max-width:none;max-height:100dvh;box-shadow:none}
+  .dr-head{padding:14px 18px}
+  .dr-head h3{font-size:18px}
+  .dr-close{width:44px;height:44px;font-size:17px}
+  .ship-bar{padding:14px 18px}
+  .dr-items{padding:4px 18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .dr-foot{position:sticky;bottom:0;z-index:2;
+    padding:16px 18px calc(16px + env(safe-area-inset-bottom));
+    box-shadow:0 -12px 24px rgba(34,30,26,.07)}
+  .btn-full{height:52px}
+  .dr-name{overflow-wrap:anywhere}
+  .dr-price{flex:none}
+  /* 價格區在窄寬度改 baseline flex，劃線價不會掉行造成錯位 */
+  .pprice{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px}
+  .pprice s{margin-left:0}
+  .toastf{left:16px;right:16px;max-width:none;justify-content:center;
+    bottom:calc(20px + env(safe-area-inset-bottom));transform:translateY(90px)}
+  .toastf.show{transform:translateY(0)}
+}
+
+/* --- 4. ≤429 小手機：保留 2 欄小卡（視覺優於單欄），間距降到 56px --- */
+@media(max-width:429px){
+  .wrap{padding:0 16px}
+  .announce{font-size:10.5px;letter-spacing:.06em}
+  .site-inner{gap:2px}
+  .wordmark{font-size:16px;letter-spacing:.1em}
+  .hd-icons{gap:0}
+  .section,.news{padding:56px 0}
+  .hero{padding:32px 0 44px}
+  .hero-art{aspect-ratio:1/1}
+  .hero p.lead{font-size:14px;margin-bottom:22px}
+  .hero-tag{padding:8px 12px;font-size:11px}
+  .marquee-track span{margin-right:36px}
+  .sec-head{flex-wrap:wrap;gap:6px 12px}   /* 保持 align-items:flex-end：更多連結對齊 h2 基線 */
+  .sec-head h2{margin-top:4px}
+  .sec-head .more{margin-left:0}
+  .grid4{gap:14px 10px}
+  .pinfo{padding:10px 0 0}
+  .pname{font-size:13px;line-height:1.5}
+  .pprice{font-size:12.5px}
+  .psw{width:12px;height:12px}
+  .quick{left:6px;right:6px;bottom:6px;font-size:10.5px;letter-spacing:.02em}
+  .sale-tag,.new-tag{top:6px;left:6px;font-size:10px;padding:2px 7px}
+  .grid3{gap:10px}
+  .ccard{aspect-ratio:3/4}
+  .ccard:last-child{aspect-ratio:16/7}
+  .ccard .cname{left:10px;bottom:10px;padding:8px 12px;font-size:11.5px;
+    max-width:calc(100% - 20px)}
+  .story-art{aspect-ratio:1/1}
+  .story-txt{padding:44px 16px}
+  .promise{padding:20px 12px}
+  /* 訂閱表單改直式，窄寬度不會把輸入框壓成 0 */
+  .news-form{flex-direction:column;border:0;background:none;overflow:visible;gap:10px}
+  .news-form input{height:50px;border:1px solid var(--ink);border-radius:2px;background:var(--paper)}
+  .news-form button{height:50px;border-radius:2px}
+  .f-grid{gap:20px}
+  .dr-item{gap:10px}
+  .dr-ph{width:64px;height:82px}
+  .toastf{font-size:12px;padding:11px 16px}
+}
+
+/* --- 5. 觸控裝置：可點元素 ≥44×44 --- */
+@media(pointer:coarse){
+  .hd-btn{width:44px;height:44px}
+  .nav-toggle,.nav-close,.dr-close{width:44px;height:44px}
+  .qty{height:46px}          /* border-box：外框 46 → 內部按鈕實高 44 */
+  .qty button{width:44px}
+  .quick{height:44px}
+  .dr-remove{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 6px;margin-top:4px}
+  .dr-continue{padding:12px 0;margin-top:6px}
+  .f-col a{padding:12px 0}
+  .f-bottom a{padding:13px 0;display:inline-block}
+  .news-form button{min-width:96px}
+  .wordmark{display:inline-flex;align-items:center;min-height:44px}
+  /* 底線要貼著文字，所以用 ::before 撐開 44px 命中區而不動視覺 */
+  .sec-head .more,.pcard,.ccard{position:relative}
+  .sec-head .more::before{content:"";position:absolute;left:-6px;right:-6px;
+    top:50%;transform:translateY(-50%);height:44px}
+}
+/* 768–1023 導航仍是橫列，觸控時把每個連結撐到 44×44 */
+@media(pointer:coarse) and (min-width:768px){
+  nav.main-nav a{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:44px}
+  .site-inner{gap:18px}
+}
+
+/* --- 6. 減少動態偏好：marquee／drawer／hover 位移全停 --- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important}
+  html{scroll-behavior:auto}
+  .marquee-track{animation:none!important;transform:none!important}
+  .pcard:hover .art,.ccard:hover .art{transform:none!important}
+  .btn-ink:hover{transform:none!important}
+}
 </style>
 </head>
 <body>
@@ -198,10 +412,16 @@ footer p{max-width:34ch;line-height:1.8}
 
 <header class="site">
   <div class="wrap site-inner">
+    <button class="nav-toggle" id="navToggle" aria-label="開啟主選單" aria-controls="mainNav" aria-expanded="false" onclick="toggleNav()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
     <a class="wordmark" href="#">CHILL <span><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span> LOVE</a>
-    <nav class="main-nav">
+    <nav class="main-nav" id="mainNav" aria-label="主選單">
+      <span class="nav-title">選購</span>
       <a href="#featured">新品上市</a><a href="#featured">上衣</a><a href="#cats">外套</a><a href="#cats">配件</a><a href="#" style="color:var(--clay)">特惠</a>
+      <button class="nav-close" aria-label="關閉主選單" onclick="closeNav()">✕</button>
     </nav>
+    <div class="nav-veil" id="navVeil" onclick="closeNav()"></div>
     <div class="hd-icons">
       <button class="hd-btn" title="搜尋" aria-label="搜尋" onclick="toastf('Demo：predictive search 在下一批 mockup')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
       <button class="hd-btn" title="會員" aria-label="會員中心" onclick="toastf('Demo：會員中心（email OTP 登入）於 M4 實作')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
@@ -382,11 +602,40 @@ document.getElementById('pgrid').innerHTML=P.map((p,i)=>`
    </div>
  </div>`).join('');
 
+/* 主導航抽屜（≤767 才會出現；≥768 漢堡鈕 display:none，這些函式不會被觸發）*/
+const siteHeader=document.querySelector('header.site'),mainNav=document.getElementById('mainNav');
+function navOpen(){return mainNav.classList.contains('open');}
+function openNav(){
+  closeCart();
+  siteHeader.classList.add('nav-open');mainNav.classList.add('open');
+  document.getElementById('navToggle').setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+  mainNav.querySelector('.nav-close').focus();
+}
+function closeNav(){
+  siteHeader.classList.remove('nav-open');mainNav.classList.remove('open');
+  document.getElementById('navToggle').setAttribute('aria-expanded','false');
+  /* 購物袋還開著就不要把 body 捲動還原 */
+  if(!document.getElementById('drawer').classList.contains('show'))document.body.style.overflow='';
+}
+function toggleNav(){navOpen()?closeNav():openNav();}
+mainNav.addEventListener('click',e=>{if(e.target.closest('a'))closeNav();});
+/* 橫捲導航的邊緣漸層提示：只有真的捲得動才顯示，避免最後一個連結被誤蓋成半透明 */
+function syncNavFade(){
+  const over=mainNav.scrollWidth-mainNav.clientWidth;
+  mainNav.classList.toggle('fade-l',mainNav.scrollLeft>1);
+  mainNav.classList.toggle('fade-r',over>1&&mainNav.scrollLeft<over-1);
+}
+mainNav.addEventListener('scroll',syncNavFade,{passive:true});
+window.addEventListener('resize',syncNavFade);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(syncNavFade);
+syncNavFade();
+
 /* 購物袋 */
 let cart=[{i:0,q:1}];
 const FREE=2000;
-function openCart(){renderCart();document.getElementById('veil').classList.add('show');document.getElementById('drawer').classList.add('show');document.body.style.overflow='hidden';}
-function closeCart(){document.getElementById('veil').classList.remove('show');document.getElementById('drawer').classList.remove('show');document.body.style.overflow='';}
+function openCart(){renderCart();closeNav();document.getElementById('veil').classList.add('show');document.getElementById('drawer').classList.add('show');document.body.style.overflow='hidden';}
+function closeCart(){document.getElementById('veil').classList.remove('show');document.getElementById('drawer').classList.remove('show');if(!navOpen())document.body.style.overflow='';}
 function addToCart(i,btn){
   const f=cart.find(c=>c.i===i);f?f.q++:cart.push({i,q:1});
   if(btn){btn.textContent='✓ 已加入';setTimeout(()=>btn.textContent='＋ 快速加入購物袋',1200);}
@@ -418,7 +667,10 @@ function renderCart(){
 let tfTimer;
 function toastf(m){const t=document.getElementById('toastf');document.getElementById('toastfMsg').textContent=m;
  t.classList.add('show');clearTimeout(tfTimer);tfTimer=setTimeout(()=>t.classList.remove('show'),2400);}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCart();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(navOpen()){closeNav();document.getElementById('navToggle').focus();}closeCart();}});
+/* 從手機轉回桌面寬度時，抽屜狀態要歸零，否則 body 會卡在 overflow:hidden */
+const mqDesktop=window.matchMedia('(min-width:768px)');
+(mqDesktop.addEventListener?mqDesktop.addEventListener.bind(mqDesktop,'change'):mqDesktop.addListener.bind(mqDesktop))(e=>{if(e.matches&&navOpen())closeNav();});
 renderCart();
 </script>
 </body>
