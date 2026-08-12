@@ -1415,6 +1415,46 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   .ck-canvas,.ck-insp{transition:none}
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   模組 E：設定分頁的「真控件列」（49 號稽核：setRow 不可點佔位列全面汰換）
+   規則同擴建層——不新增 :root token，只組合既有變數；斷點一律用 em（47 §F）
+   ══════════════════════════════════════════════════════════════════════ */
+/* 設定列的文字欄：吃掉剩餘寬度，長字串斷行不撐破版 */
+.set-row>.sr-t{flex:1;min-width:0;overflow-wrap:anywhere}
+/* 右側控件槽：桌機右對齊定寬，≤767 整條掉到標題下方（不橫向溢出）*/
+.set-row:has(>.set-ctl){flex-wrap:wrap;row-gap:var(--sp-200)}
+.set-row>.set-ctl{margin-left:auto;flex:none}
+.set-row>.set-fld{width:240px;max-width:100%}
+.sr-stack{display:flex;flex-direction:column;gap:var(--sp-050);align-items:stretch}
+/* 唯讀列：沒有可操作控件，靠「唯讀」badge 明示——與「還沒做的佔位列」語意不同 */
+.set-row.is-ro>.sr-ro{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:var(--sp-200);flex-wrap:wrap}
+/* 47 §D destructive-secondary（白底紅框紅字）＝既有 .btn-danger-o，這裡只負責列內定位 */
+.set-row>.sr-act{margin-left:auto;flex:none}
+/* 48 §31 字元計數器：格式 `已使用 {n}/{max} 個字元`；max 由呼叫端注入（config/limits.yml）*/
+.cl-counter{font-size:var(--t-2xs);line-height:var(--lh-2xs);color:var(--text-3);text-align:right;
+  font-variant-numeric:tabular-nums;white-space:nowrap;transition:color var(--dur-fast) var(--ease-standard)}
+.cl-counter.is-warn{color:var(--sem-caution-text);font-weight:500}
+.cl-counter.is-over{color:var(--critical);font-weight:500}
+/* 次級視圖裡的排序清單（出貨優先序）*/
+.ord-row{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) 0;
+  border-bottom:var(--hairline) solid var(--border-2);font-size:var(--t-sm)}
+.ord-row:last-child{border-bottom:0}
+.ord-row .o-n{width:var(--h-24);height:var(--h-24);border-radius:var(--r-100);background:var(--surface-2);
+  display:grid;place-items:center;font-size:var(--t-xs);font-weight:600;flex:none;font-variant-numeric:tabular-nums}
+.ord-row .o-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.ord-row .o-t span{display:block;font-size:var(--t-xs);color:var(--text-2)}
+/* 設定 overlay 是 z-dialog 全螢幕層、會蓋掉頂欄 → 設定內的 save bar 拉回浮動態並抬到 overlay 之上。
+   一般頁面仍維持 44 §22.5 的「佔用搜尋框槽位」行為，兩條規則以 :has 互斥、不衝突。 */
+body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--sp-600);bottom:var(--sp-600);
+  flex:none;width:auto;max-width:none;margin:0;height:auto;z-index:var(--z-popover);
+  border-radius:var(--r-300);padding:var(--sp-200) var(--sp-200) var(--sp-200) var(--sp-400);box-shadow:var(--sh-float)}
+@media (max-width:47.9975em){
+  .set-row>.set-fld{flex:1 0 100%;width:auto;margin-left:0}
+  .set-row.is-ro>.sr-ro{margin-left:0;flex:1 0 100%}
+  body:has(.settings.show) .savebar{left:var(--sp-200);right:var(--sp-200);
+    bottom:calc(var(--sp-200) + env(safe-area-inset-bottom))}
+}
+
 </style>
 </head>
 <body data-palette="#2a78d6">
@@ -2251,88 +2291,114 @@ function openDiscModal(){
 }
 function closeDiscModal(){document.getElementById('discOverlay').classList.remove('show');}
 
-/* ================= 設定（12 分頁） ================= */
-const setRow=(t,sub,right='<span class="chev">›</span>')=>`<div class="set-row"><div><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>${right}</div>`;
+/* ================= 設定（分頁） =================
+   49 號稽核：setRow 產出的是不可點的佔位 <div>，設定區大量分頁因此形同空殼。
+   本層把設定列拆成六種「真控件」，每一種都帶 data-f（save bar 快照 diff 抓得到）
+   與 data-doc（開發註釋四欄）：
+     setRow      唯讀列——值由系統推導或平台鎖定，右側掛「唯讀」badge，DOCS 必須寫「為什麼不可改」
+     setRowTgl   布林開關（role=switch＋aria-checked 同步；可用 data-dep 驅動相依欄位）
+     setRowSel   有限選項
+     setRowInp   自由文字／數值（可掛 48 §31 字元計數器）
+     setRowBtn   進次級視圖／跳頁（既有元件，定義在模組 A 前）
+     setRowAdd   新增動作（既有元件）
+     setRowDanger 破壞性動作（47 §D destructive-secondary ＝ .btn-danger-o，必走二次確認）
+   呼叫端自行 escape（沿用 setRowBtn／setRowAdd 的既有約定，不另立一套）。 */
+
+/* 唯讀列：不是「還沒做」，是「這個值本來就不給改」——右側一律掛 chip('唯讀') 明示 */
+const setRow=(t,sub,right='',doc='')=>`<div class="set-row is-ro"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>
+  <span class="sr-ro">${right}${chip('唯讀','default','')}</span></div>`;
+
+/* data-dep：改變時開關下游區塊；data-dep-mode="dim" 走 47 §E（只降文字色不降 opacity）
+   data-dep-val="a,b"：select 的哪些值算「開」（省略＝非空即開） */
+const _dep=(o={})=>`${o.dep?` data-dep="${o.dep}"`:''}${o.depInv?` data-dep-inv="${o.depInv}"`:''}${o.depMode?` data-dep-mode="${o.depMode}"`:''}${o.depVal?` data-dep-val="${o.depVal}"`:''}${o.note?` data-note="${o.note}"`:''}`;
+
+const setRowTgl=(t,sub,f,on,doc,o={})=>`<div class="set-row"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>
+  <input type="checkbox" class="tgl set-ctl" data-f="${f}" role="switch" aria-checked="${on?'true':'false'}"
+    aria-label="${t}"${on?' checked':''}${o.dep?` aria-controls="${o.dep}"`:''}${_dep(o)}></div>`;
+
+const setRowSel=(t,sub,f,opts,cur,doc,o={})=>`<div class="set-row"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>
+  <select class="input set-ctl set-fld" data-f="${f}" aria-label="${t}"${o.dep?` aria-controls="${o.dep}"`:''}${_dep(o)}>${
+    opts.map(x=>{const[v,l]=Array.isArray(x)?x:[x,x];return `<option value="${v}"${String(v)===String(cur)?' selected':''}>${l}</option>`;}).join('')
+  }</select></div>`;
+
+/* o.max 有值就掛 48 §31 計數器（初值由 setSyncAll 算，格式只寫在 counterSync 一處）
+   o.min／o.max 同時寫進 data-val，走既有 validOne（min 規則見表單驗證節） */
+const setRowInp=(t,sub,f,v,ph,doc,o={})=>{
+  const cid=o.max?`cnt-${f}`:'';
+  const val=o.val||(o.max?`req|${o.min?`min:${o.min}|`:''}max:${o.max}`:'');
+  const inp=`<input class="input" data-f="${f}" value="${v}" placeholder="${ph}" aria-label="${t}"
+    ${o.type?`type="${o.type}"`:''}${val?` data-val="${val}"`:''}${cid?` data-counter="${cid}" data-max="${o.max}"${o.min?` data-min="${o.min}"`:''} aria-describedby="${cid}"`:''}${_dep(o)}>`;
+  return `<div class="set-row"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>
+  ${cid?`<span class="set-ctl set-fld sr-stack field">${inp}<span class="cl-counter" id="${cid}" aria-live="polite" aria-atomic="true"></span><span class="msg"></span></span>`
+       :`<span class="set-ctl set-fld field">${inp}<span class="msg"></span></span>`}</div>`;
+};
+
+/* 破壞性動作：白底紅框紅字（47 §D destructive-secondary）＋ confirmDanger 二次確認（23 §4.6）。
+   irr=false 用於「可還原」的破壞性動作（如 Pause and Build），確認框不寫「此動作無法復原」。 */
+const setRowDanger=(t,sub,btn,title,msg,ok,fn,doc,irr=true)=>`<div class="set-row"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b>${sub?`<span class="sub">${sub}</span>`:''}</div>
+  <span class="sr-act"><button class="btn btn-danger-o btn-sm"
+    onclick="confirmDanger(${JQ(title)},${JQ(msg)},${JQ(ok)},function(){${fn}},${irr})">${btn}</button></span></div>`;
+
+/* 可點列：真的能進次級視圖／新增資料，不是 setRow 的不可點佔位（原定義在模組 A，為了讓
+   靜態分頁字串用得到而上移；模組 A 的次級視圖仍照常使用同一份） */
+const setRowBtn=(t,sub,right,onclick,doc,ic)=>`<button class="set-rowbtn" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
+  ${ic?`<span class="rb-ic" aria-hidden="true">${ic}</span>`:''}
+  <span class="rb-t"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</span>${right||''}</button>`;
+const setRowAdd=(t,sub,onclick,doc)=>`<button class="set-rowbtn rb-add" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
+  <span class="rb-t"><b>⊕ ${t}</b>${sub?`<span>${sub}</span>`:''}</span></button>`;
+
 const SET_PAGES={
- org:`<div class="card card-pad"><h3>組織</h3>${setRow("CHILL LOVE HOLDINGS","2 間商店・集中帳單")}${setRow("組織安全政策","強制兩步驟驗證：關閉")}</div>`,
- users:`<div class="card card-pad"><h3>使用者與角色</h3>
-   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・完整權限</span></div><span class="badge b-default"><span class="pip full"></span>店主</span></div>
-   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服</span></div><span class="badge b-info"><span class="pip full"></span>員工</span></div>
-   ${setRow("邀請使用者","72 小時單次邀請連結（規格 12-F3）")}</div>
-  <div class="card card-pad"><h3>角色權限</h3>${setRow("出貨與客服","orders.view / orders.fulfill / customers.view")}${setRow("行銷","discounts.* / growth.*")}</div>`,
- general:`<div class="card card-pad"><h3>商家詳細資訊</h3><p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於金流、市場與稅務的商業實體</p>
-   <div class="set-row"><span class="flag"></span><div><b>CHILL LOVE — 主體</b><span class="sub">台灣</span></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：管理實體')">⋯</button></div></div>
-  <div class="card card-pad"><h3>商店聯絡詳細資訊</h3>${setRow("CHILL LOVE 示範店","hello@chilllove.demo・未設定電話")}${setRow("商店地址","台灣")}</div>
-  <div class="card card-pad"><h3>商店預設值</h3>
-   ${setRow("幣別顯示","顧客看到的幣別由市場設定決定",'<span class="tagchip num" style="margin:0">新台幣（NT$）</span>')}
-   ${setRow("時區","影響報表日界線",'<span class="tagchip" style="margin:0">(GMT+08:00) 台北</span>')}
-   ${setRow("訂單編號","每店連號，不洩漏平台總量（規格 15-F5）",'<span class="tagchip num" style="margin:0">#1042</span>')}</div>`,
+ /* plan／accounts 是這一層唯一沒被後面 Object.assign 覆蓋的兩個鍵（其餘 12 鍵原本整份被覆蓋＝死碼，已刪）*/
  plan:`<div class="card card-pad"><h3>方案</h3><div class="plan-grid">
    <div class="plan"><b>入門</b><div class="pp num">NT$890<span>/月</span></div><ul><li>2 個員工帳號</li><li>基本報告</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：降級流程')">切換</button></div>
    <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">NT$2,490<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled aria-disabled="true">使用中</button></div>
    <div class="plan"><b>企業</b><div class="pp num">洽談<span>/年約</span></div><ul><li>不限員工</li><li>組織多店・API 加量</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：升級流程')">升級</button></div>
   </div></div>`,
- billing:`<div class="card card-pad"><h3>帳單</h3>${setRow("付款方式","VISA •• 4242")}${setRow("帳單週期","每月 14 日")}${setRow("發票紀錄","2026 年 7 月・NT$2,490")}</div>`,
- payments:`<div class="card card-pad"><h3>金流供應商</h3>
-   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip blocked"></span>TEST</span></div>
-   ${setRow("請款方式","自動請款（下單即請款）；手動請款見規格 15-F4")}</div>
-  <div class="card card-pad"><h3>手動付款方式</h3>${setRow("銀行轉帳","下單後 3 日內轉帳，後台標記已收款")}${setRow("新增手動付款方式","貨到付款、面交…")}</div>`,
- checkout:`<div class="card card-pad"><h3>結帳</h3>
-   ${setRow("顧客聯絡方式","結帳時要求 email")}
-   ${setRow("姓名格式","要求填寫姓氏與名字")}
-   ${setRow("小費","關閉")}
-   <div class="set-row"><div><b>結帳版式</b><span class="sub">one-page（單頁式）</span></div><div class="toggle on" role="switch" aria-checked="true" onclick="this.classList.toggle('on');toast('Demo：版式切換')"></div></div></div>
-  <div class="card card-pad"><h3>棄單挽回</h3>${setRow("自動挽回信","1 小時後寄出・附回購連結（規格 15-F7）")}</div>`,
  accounts:`<div class="card card-pad" data-doc="set-accounts"><h3>顧客帳號</h3>
-   <div class="set-row"><div><b>登入方式</b><span class="sub">Email 一次性驗證碼（免密碼）</span></div><span class="badge b-success"><span class="pip full"></span>新版</span></div>
-   ${setRow("結帳時","帳號選填——訪客也能結帳")}
-   ${setRow("自助退貨","開啟；退貨窗 30 天、起算＝整單最後一項送達日（return rules）")}
-   ${setRow("店內額度","顧客帳號頁顯示餘額與到期日")}
-   ${setRow("帳號頁網址","chilllove.demo/account（託管）")}</div>`,
- shipping:`<div class="card card-pad"><h3>運送方案</h3>
-   <button class="set-rowbtn" onclick="openShipProfile('general')"><span class="rb-t"><b>一般方案</b><span>7 個商品・1 個出貨地點・2 個區域</span></span><span class="chev" aria-hidden="true">›</span></button>
-   ${setRow("台灣（本島）","宅配 NT$120・滿 NT$2,000 免運")}
-   ${setRow("香港・馬來西亞","國際運送 依重量計價")}</div>
-  <div class="card card-pad"><h3>本地取貨</h3>${setRow("台北門市","關閉——POS 屬第三階段")}</div>`,
- taxes:`<div class="card card-pad"><h3>稅額與關稅</h3>
-   ${setRow("台灣","營業稅 5%・含稅定價")}
-   ${setRow("跨境訂單","關稅由顧客承擔（DDU）")}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">稅額計算收斂在金額引擎（規格 15-F2），設定只決定稅率與含稅/未稅顯示</p></div>`,
- locations:`<div class="card card-pad"><h3>地點</h3>
-   <div class="set-row"><div><b>主倉（預設）</b><span class="sub">台北市內湖區・出貨優先序 1</span></div><span class="badge b-success"><span class="pip full"></span>使用中</span></div>
-   ${setRow("新增地點","多地點庫存屬 P1（規格 13-F5）")}</div>`,
- domains:`<div class="card card-pad"><h3>網域</h3>
-   <div class="set-row"><div><b>chilllove.demo</b><span class="sub">主要網域</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
-   ${setRow("chilllove.myplatform.app","平台子網域・301 轉址到主網域")}
-   ${setRow("連結既有網域","CNAME 驗證流程（規格 12-F1）")}</div>`,
- notifications:`<div class="card card-pad"><h3>顧客通知</h3>
-   ${setRow("訂單確認信","已啟用・Liquid 模板")}
-   ${setRow("出貨通知信","已啟用・含追蹤連結")}
-   ${setRow("棄單挽回信","已啟用・1 小時後")}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">模板渲染走 Liquid 沙箱：Drops 白名單＋資源上限（規格 18-F2）</p></div>
-  <div class="card card-pad"><h3>員工通知</h3>${setRow("新訂單通知","hello@chilllove.demo")}</div>`,
- customdata:`<div class="card card-pad"><h3>中繼欄位定義</h3>
-   ${setRow("商品・材質成分","單行文字・前台可見")}
-   ${setRow("商品・洗滌方式","富文本")}
-   ${setRow("顧客・生日","日期・行銷用")}
-   ${setRow("新增定義","namespace.key + 型別驗證（規格 05 §1f）")}</div>`,
+   <div class="set-row"><div class="sr-t"><b>登入方式</b><span class="sub">Email 一次性驗證碼（免密碼）</span></div><span class="set-ctl">${chip('新版','success','full')}</span></div>
+   ${setRowSel('結帳時的帳號要求','三態：不使用帳號／選填／必填；選「必填」時聯絡方式被鎖成 email','acctReq',
+     [['none','不使用帳號——一律訪客結帳'],['optional','選填——訪客也能結帳'],['required','必填——必須登入才能結帳']],'optional','set-acct-req',
+     {dep:'acctReqNote',depVal:'required',note:'limits.yml checkout.require_login_forces_email_contact＝true'})}
+   <div id="acctReqNote" hidden class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>「必填」會強制把結帳聯絡方式鎖成 <b>email</b>（電話通道無法寄出登入碼）——結帳分頁的「顧客聯絡方式」會同步變成唯讀。</span></div>
+   ${setRowTgl('自助退貨','顧客可在帳號頁自行提出退貨；關閉則前台完全不出現入口','acctSelfReturn',true,'set-acct-return',{dep:'acctReturnFields',depMode:'dim'})}
+   <div id="acctReturnFields">
+     ${setRowSel('退貨期限','檔位取自 limits.yml return.window_day_options，不硬編','acctReturnWin',
+       [['14','14 天'],['30','30 天'],['90','90 天'],['unlimited','不限'],['custom','自訂天數']],'30','set-acct-window')}
+     ${setRowSel('期限起算點','limits.yml return.window_start_options 二選一','acctReturnBasis',
+       [['item_delivered_at','個別品項送達日'],['order_last_item_delivered_at','整單最後一項送達日']],'order_last_item_delivered_at','set-acct-basis')}
+   </div>
+   ${setRowTgl('店內額度（store credit）','顧客帳號頁顯示餘額與到期日','acctCredit',true,'set-acct-credit')}
+   ${setRow('帳號頁網址','託管頁，網址由主網域推導','<span class="tagchip" style="margin:0">chilllove.demo/account</span>','set-acct-url')}</div>`,
 };
+/* 有「新增／排序」動作的分頁：內容隨狀態變動，改成每次進頁重算（沿用 policies 的既有做法）。
+   靜態分頁維持字串常數，不進這張表。 */
+const SET_DYN={};
 function openSettings(page='general'){
   closeNav(false);
   document.getElementById('settings').classList.add('show');
   setPage(page);
   document.getElementById('setClose').focus();
 }
+let SETKEY='general';
 function setPage(key){
+  SETKEY=key;
   document.querySelectorAll('.set-item').forEach(b=>b.classList.toggle('on',b.dataset.set===key));
   document.getElementById('setContent').innerHTML=SET_PAGES[key]||'';
   enhanceTables();                              /* 設定 overlay 不在 .main 內，需手動處理表格 */
+  setAfterRender();                             /* 真控件：aria-checked／相依欄位／字元計數器初值 ＋ 接上 save bar */
   /* ≤767 分類清單是頂部橫捲 chips：把目前分頁捲進可視範圍 */
   const on=document.querySelector('.set-item.on');
   if(on&&window.innerWidth<=767)on.scrollIntoView({block:'nearest',inline:'center'});
 }
 document.querySelectorAll('.set-item').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.set)));
-function closeSettings(){document.getElementById('settings').classList.remove('show');}
+/* 離開設定要把 dirty 狀態一起收掉，否則 save bar 會殘留在下一個畫面 */
+function closeSettings(){document.getElementById('settings').classList.remove('show');FORM=null;formSetDirty(false);}
 
 /* ================= 圖表（dataviz 規格） ================= */
 function drawSparks(){
@@ -2668,9 +2734,10 @@ function openGen(o){
 }
 function closeGen(){document.getElementById('genOverlay').classList.remove('show');GEN_OK=null;}
 function genRun(){const f=GEN_OK;closeGen();if(f)f();}
-/* 危險動作二次確認：紅主鈕 ＋「無法復原」（23 §4.6）*/
-function confirmDanger(title,msg,okLabel,fn){
-  openGen({title,body:`<div class="help">${msg}<p style="margin-top:var(--sp-200);color:var(--critical);font-weight:600">此動作無法復原。</p></div>`,
+/* 危險動作二次確認：紅主鈕 ＋「無法復原」（23 §4.6）。
+   irr=false ＝ 動作可還原（Pause and Build 之類），就不能寫「無法復原」誤導商家。 */
+function confirmDanger(title,msg,okLabel,fn,irr=true){
+  openGen({title,body:`<div class="help">${msg}${irr?'<p style="margin-top:var(--sp-200);color:var(--critical);font-weight:600">此動作無法復原。</p>':''}</div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="genRun()">${okLabel}</button>`,ok:fn});
 }
 
@@ -2718,6 +2785,7 @@ function validOne(x){
     if(n==='req'&&!v)msg=msg||'此欄位為必填';
     else if(!v)return;
     if(n==='max'&&v.length>+a)msg=msg||`最多 ${a} 字（目前 ${v.length}）`;
+    if(n==='min'&&v.length<+a)msg=msg||`至少 ${a} 字（目前 ${v.length}）`;
     if(n==='num'&&!/^-?\d+(\.\d+)?$/.test(v))msg=msg||'請輸入數字';
     if(n==='money'&&!/^\d+(\.\d{1,2})?$/.test(v))msg=msg||'請輸入有效金額（最多兩位小數，不含幣別符號）';
     if(n==='int'&&!/^-?\d+$/.test(v))msg=msg||'請輸入整數';
@@ -2740,6 +2808,70 @@ function guardNav(){
   clShake(document.getElementById('saveBar'));
   toast('有未儲存的變更——再點一次即離開並捨棄');
   return false;
+}
+
+/* ==================================================================
+   設定分頁「真控件」的執行期（49 號稽核：佔位列汰換）
+   ================================================================== */
+/* 48 §31.4：grapheme 計數（CJK 一字算一字、emoji 一個算一個），不用 String.length */
+const _SEG=(typeof Intl!=='undefined'&&Intl.Segmenter)?new Intl.Segmenter('zh-Hant',{granularity:'grapheme'}):null;
+const gcount=s=>_SEG?[..._SEG.segment(String(s??''))].length:[...String(s??'')].length;
+/* 48 §31.1 格式硬性：`已使用 {n}/{max} 個字元`；超限改 `已超出 {n-max} 個字元`。
+   max 一律由 data-max 注入（呼叫端對應 config/limits.yml 的鍵），元件內不硬編任何上限。 */
+function counterSync(el){
+  const box=document.getElementById(el.dataset.counter);if(!box)return;
+  const max=+el.dataset.max,min=+el.dataset.min||0,n=gcount(el.value);
+  const over=n>max,short=min>0&&n<min;
+  box.textContent=over?`已超出 ${n-max} 個字元`:`已使用 ${n}/${Number(max).toLocaleString('en-US')} 個字元`;
+  box.classList.toggle('is-over',over||short);
+  box.classList.toggle('is-warn',!over&&!short&&n>max*0.8);
+}
+/* 相依欄位：hide（預設）＝整塊收起；dim＝47 §E 只降文字色（不降 opacity）＋ aria-disabled */
+function setDep(id,on,dim){
+  const el=document.getElementById(id);if(!el)return;
+  if(dim){
+    el.hidden=false;
+    el.classList.toggle('is-dim',!on);
+    el.setAttribute('aria-disabled',String(!on));
+    el.querySelectorAll('input,select,textarea,button').forEach(x=>{
+      x.disabled=!on;
+      if(!on)x.setAttribute('aria-disabled','true');else x.removeAttribute('aria-disabled');
+    });
+  }else el.hidden=!on;
+}
+/* 每次重繪／每次改動後把宣告式狀態推回 DOM：aria-checked、相依欄位、字元計數器 */
+function setSyncAll(root){
+  const el=root||document.getElementById('setContent');if(!el)return;
+  el.querySelectorAll('.tgl[role="switch"]').forEach(x=>x.setAttribute('aria-checked',x.checked?'true':'false'));
+  el.querySelectorAll('[data-dep]').forEach(x=>{
+    const on=x.type==='checkbox'?x.checked
+      :(x.dataset.depVal?x.dataset.depVal.split(',').includes(x.value):!!x.value);
+    setDep(x.dataset.dep,on,x.dataset.depMode==='dim');
+    /* data-dep-inv：條件為假時才顯示的另一半（例如「半徑」vs「郵遞區號清單」二選一）*/
+    if(x.dataset.depInv)setDep(x.dataset.depInv,!on,x.dataset.depMode==='dim');
+  });
+  el.querySelectorAll('[data-counter]').forEach(counterSync);
+}
+/* 統一的操作回饋文案（避免每個控件各寫一串 inline toast）*/
+function setCtlMsg(t){
+  const n=t.getAttribute('aria-label')||'此設定',note=t.dataset.note?'——'+t.dataset.note:'';
+  if(t.type==='checkbox')return (t.checked?'已開啟「':'已關閉「')+n+'」'+note;
+  if(t.tagName==='SELECT')return '「'+n+'」已設為：'+t.options[t.selectedIndex].text+note;
+  return '「'+n+'」已更新'+note;
+}
+/* 設定內的改動 → 同步相依狀態 ＋ 觸發 save bar（formInit 掛在同一個容器上，兩者各自監聽）*/
+const _setContentEl=document.getElementById('setContent');
+_setContentEl.addEventListener('input',()=>setSyncAll());
+_setContentEl.addEventListener('change',e=>{
+  const t=e.target;if(!t||!t.dataset||!t.dataset.f)return;
+  setSyncAll();toast(setCtlMsg(t));
+});
+function setAfterRender(){
+  setSyncAll();
+  formInit('#setContent',{
+    save:()=>'已儲存設定（逐設定域各自的 mutation；業務錯誤只吃 userErrors，HTTP 恆 200）',
+    /* 捨棄後值已被還原，但相依欄位的顯示／dim 狀態要重算一次 */
+    discard:()=>setSyncAll()});
 }
 
 /* ==================================================================
@@ -4848,148 +4980,220 @@ const permCats=[['訂單','View／Manage order info／Edit／Apply discounts／S
  ['顧客','View／Create-edit／Erase personal data／Request data／Export／Merge／View store credit／Edit store credit／Delete'],
  ['內容與線上商店','Menus／Metaobject definitions×3／Entries×3／Files×4／Themes／Edit code／Blog posts and pages'],
  ['商店設定與財務','Manage settings／View billing／Manage plan／Payments／Shipping／Taxes／Locations／Domains／Custom pixels／Policies；Finance：View payouts／Balance activity']];
+/* ---------- 設定分頁的可變狀態：新增／排序在 demo 也要真的生效 ---------- */
+const MANUAL_PAY=[{n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記已收款',ins:'請匯款至 台灣銀行 (004) 123-456-789012，戶名 CHILL LOVE，並於備註填單號。'}];
+const CARRIER_ACCTS=[];
+const PKG_LIST=[{n:'標準紙箱 S',s:'20 × 15 × 10 cm・120 g'},{n:'標準紙箱 M',s:'30 × 22 × 16 cm・210 g'},{n:'自訂信封袋',s:'25 × 18 cm・25 g'}];
+const TAX_OVERRIDES=[{n:'童裝',rate:'0',s:'商品系列・免徵營業稅'}];
+const LOC_ORDER=[{n:'主倉（內湖）',s:'台北市內湖區',ship:true},{n:'台北門市',s:'台北市大安區',ship:true},{n:'台中寄倉',s:'台中市西屯區・僅存貨',ship:false}];
+const WEBHOOKS=[{topic:'orders/create',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'},
+                {topic:'products/update',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'}];
+const METAOBJ=[{n:'設計師檔案',k:'designer',c:4},{n:'材質說明',k:'material_note',c:5},{n:'門市據點',k:'store_location',c:2}];
+const BILL_CARDS=[{n:'VISA •• 4242',s:'到期 08/29',primary:true}];
+
 Object.assign(SET_PAGES,{
  general:`<div class="card card-pad" data-doc="set-general"><h3>商店詳細資訊</h3>
-   ${setRow("CHILL LOVE 示範店","商店名稱（顯示於通知信與前台）")}
-   ${setRow("寄件者 email","hello@chilllove.demo・已驗證 SPF/DKIM")}
-   ${setRow("聯絡 email","benny@chilllove.demo・平台通知寄這裡")}</div>
+   ${setRowInp('商店名稱','顯示於通知信、結帳頁與前台頁尾','shopName','CHILL LOVE 示範店','例：CHILL LOVE 示範店','set-shopname',{val:'req'})}
+   ${setRowInp('寄件者 email','所有顧客通知的 From；換網域後 SPF/DKIM 要重跑驗證','shopSender','hello@chilllove.demo','name@yourdomain.com','set-sender-email',{type:'email',val:'req|email'})}
+   ${setRowInp('聯絡 email','平台自己的通知（帳單、事故、政策變更）寄這裡，顧客看不到','shopContact','benny@chilllove.demo','you@example.com','set-contact-email',{type:'email',val:'req|email'})}</div>
   <div class="card card-pad"><h3>商家詳細資訊（法律實體）</h3><p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於金流、市場與稅務；不對顧客顯示</p>
-   <div class="set-row"><span class="flag"></span><div><b>CHILL LOVE — 主體</b><span class="sub">台灣・統編 12345678</span></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：管理商業實體')">管理</button></div></div>
+   <div class="set-row"><span class="flag"></span><div class="sr-t"><b>CHILL LOVE — 主體</b><span class="sub">台灣・統編 12345678</span></div><button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：商業實體是組織層資源，商店層只能引用（44 §8.3）')">管理</button></div></div>
   <div class="card card-pad"><h3>商店預設值</h3>
-   ${setRow("幣別顯示","顧客看到的幣別由市場設定決定",'<span class="tagchip num" style="margin:0">新台幣（NT$）</span>')}
-   ${setRow("單位制","公制（kg／cm）")}
-   ${setRow("時區","影響報表日界線",'<span class="tagchip" style="margin:0">(GMT+08:00) 台北</span>')}
-   ${setRow("訂單編號","只能改前後綴，流水號固定 1001 起不可變",'<span class="tagchip num" style="margin:0">#1042</span>')}
-   ${setRow("兜底地區 backup region","市場移除國家後的定價回退區",'<span class="tagchip" style="margin:0">台灣</span>')}</div>`,
+   ${setRowSel('幣別顯示','商店基準幣別；顧客實際看到的幣別由各市場的 presentment 設定決定','shopCurrency',
+     [['TWD','新台幣（NT$）'],['USD','美元（US$）'],['JPY','日圓（¥）'],['HKD','港幣（HK$）'],['SGD','新加坡幣（S$）'],['EUR','歐元（€）']],'TWD','set-currency')}
+   ${setRowSel('單位制','影響重量／尺寸欄位與運費級距的單位','shopUnit',[['metric','公制（kg／cm）'],['imperial','英制（lb／in）']],'metric','set-unitsystem')}
+   ${setRowSel('時區','報表日界線、排程發布與到期判定都以此為準','shopTz',
+     [['Asia/Taipei','(GMT+08:00) 台北'],['Asia/Hong_Kong','(GMT+08:00) 香港'],['Asia/Singapore','(GMT+08:00) 新加坡'],['Asia/Tokyo','(GMT+09:00) 東京'],['America/Los_Angeles','(GMT-08:00) 太平洋時間'],['UTC','(GMT+00:00) UTC']],'Asia/Taipei','set-timezone')}
+   ${setRow('訂單編號','流水號由平台配發、單店連號，不可改也不可重設','<span class="tagchip num" style="margin:0">#1042</span>','set-ordernumber')}
+   ${setRow('兜底地區 backup region','由「還留在 active market 的國家」推導，不是可挑的欄位','<span class="tagchip" style="margin:0">台灣</span>','set-backup-region')}</div>`,
  users:`<div class="card card-pad" data-doc="set-users"><h3>使用者與角色（組織層）</h3>
-   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・2FA 已啟用・最後登入：今天</span></div><span class="badge b-default"><span class="pip full"></span>店主</span></div>
-   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="badge b-info"><span class="pip full"></span>員工</span></div>
+   <div class="set-row"><span class="avatar">BW</span><div class="sr-t"><b>Benny W.（你）</b><span class="sub">店主・2FA 已啟用・最後登入：今天</span></div><span class="set-ctl">${chip('店主','default','full')}</span></div>
+   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div class="sr-t"><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="set-ctl">${chip('員工','info','full')}</span></div>
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：邀請使用者（單發或 CSV 批量，72 小時單次連結）')">邀請使用者</button>
      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：協作者申請碼（4 碼，不佔名額）')">協作者</button></div></div>
   <div class="card card-pad"><h3>角色（權限集模板）</h3>
-   ${permCats.map(([c,p])=>`<div class="set-row"><div><b>${c}</b><span class="sub">${p}</span></div><span class="chev">›</span></div>`).join('')}
+   ${permCats.map(([c,pm])=>`<div class="set-row"><div class="sr-t"><b>${c}</b><span class="sub">${pm}</span></div><span class="chev">›</span></div>`).join('')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">13 類顆粒權限對照 Pundit policy；staff 角色映射為 API scope 集合（28 §0.2）。</p></div>
   <div class="card card-pad"><h3>安全</h3>
-   <div class="set-row"><div><b>強制兩步驟驗證</b><span class="sub">所有成員下次登入時必須設定</span></div><input type="checkbox" class="tgl" role="switch" aria-label="強制兩步驟驗證" onchange="toast(this.checked?'已要求全員啟用 2FA':'已取消強制 2FA')"></div>
-   ${setRow("登出所有裝置","立即撤銷所有 session")}</div>`,
- payments:`<div class="card card-pad" data-doc="set-payments"><h3>金流供應商</h3>
-   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip blocked"></span>TEST</span></div>
-   ${setRow("帳單敘述名","顧客信用卡帳單上顯示的名稱（2–19 字元）",'<span class="tagchip" style="margin:0">CHILLLOVE</span>')}
-   ${setRow("撥款排程","每日（T+2 入帳）")}</div>
-  <div class="card card-pad"><h3>請款方式（三模式）</h3>
-   ${['結帳後自動請款','全單出貨後自動請款','手動請款（授權期 7 天）'].map((m,i)=>`<label class="set-row" style="cursor:pointer"><div><b>${m}</b>${i===2?'<span class="sub">逾期未請款則授權失效</span>':''}</div>
-     <input type="radio" name="capmode" class="cl-radio" style="margin-left:auto" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
-  <div class="card card-pad"><h3>手動付款方式</h3>${setRow("銀行轉帳","下單後 3 日內轉帳，後台標記已收款")}${setRow("新增手動付款方式","貨到付款、面交…（自訂名禁保留字）")}</div>`,
+   ${setRowTgl('強制兩步驟驗證','所有成員下次登入時必須設定；未設定者被擋在登入頁','sec2fa',false,'set-sec-2fa')}
+   ${setRowDanger('登出所有裝置','立即撤銷所有成員的 session（含你自己）','登出所有裝置',
+     '登出所有裝置','所有成員（包含你自己）的 session 會立即失效，正在進行的後台操作會中斷，未儲存的表單內容不會保留。','全部登出',
+     "toast('已撤銷全部 session——所有成員需重新登入')",'set-signout-all')}</div>`,
  checkout:`<div class="card card-pad" data-doc="set-checkout"><h3>結帳</h3>
-   <div class="set-row"><div><b>自訂結帳外觀</b><span class="sub">品牌色／字體／圓角（checkout profile）</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：Checkout 編輯器規格見 24 §6')">自訂結帳</button></div>
-   ${setRow("顧客聯絡方式","結帳時要求 email")}
-   ${setRow("姓名格式","要求填寫姓氏與名字")}
-   ${setRow("公司名稱／地址第二行／電話","選填（三態：不含／選填／必填）")}
-   ${setRow("行銷同意","Email 可預勾（依地區）；SMS 永不預勾")}
-   ${setRow("小費","關閉（三檔 % 可設）")}</div>
+   ${setRowBtn('自訂結帳外觀','品牌色／字體／圓角——與上方設定檔共用同一個編輯器','<span class="chev" aria-hidden="true">›</span>',"openCheckoutEditor('checkout')",'set-ck-branding','🎨')}
+   ${setRowSel('顧客聯絡方式','顧客帳號設為「結帳必填」時，這裡會被鎖成僅 email','ckContact',
+     [['email','僅 email'],['phone_or_email','電話號碼或 email']],'email','set-ck-contact')}
+   ${setRowSel('姓名格式','影響地址表單欄位數與物流單列印','ckName',[['last_first','要求姓氏與名字'],['last_only','只需要姓氏']],'last_first','set-ck-name')}
+   ${setRowBtn('表單欄位（公司名稱／地址第二行／電話）','逐欄三態：不顯示／選填／必填','<span class="chev" aria-hidden="true">›</span>','openCkFields()','set-ck-fields','🧾')}
+   ${setRowTgl('Email 行銷同意預先勾選','依地區法規決定能不能預勾；SMS 永不可預勾（硬規則，無開關）','ckOptin',false,'set-ck-optin',
+     {dep:'ckOptinScope',note:'SMS 同意永不預勾（limits.yml checkout.sms_consent_never_prechecked）'})}
+   <div id="ckOptinScope" hidden>${setRowSel('預先勾選的適用地區','GDPR／PIPL 管轄地一律不可預勾，這裡只能再縮小範圍','ckOptinScopeSel',
+     [['non_gdpr','僅非 GDPR 地區'],['tw_only','僅台灣'],['all','全部市場（不建議）']],'non_gdpr','set-ck-optin-scope')}</div>
+   ${setRowTgl('小費','結帳頁顯示小費選項（三檔預設 ＋ 自訂金額）','ckTip',false,'set-ck-tip',{dep:'ckTipFields',depMode:'dim'})}
+   <div id="ckTipFields">${setRowInp('小費三檔百分比','逗號分隔；顧客仍可自行輸入金額','ckTipPresets','5,10,15','例：5,10,15','set-ck-tip-presets',{val:'req'})}</div></div>
   <div class="card card-pad"><h3>訂單處理</h3>
-   ${setRow("帳單地址","預設同運送地址")}
-   ${setRow("付款後自動出貨","關閉（僅數位商品自動）")}
-   ${setRow("自動封存","出貨且付款完成後自動封存")}
-   <div class="set-row"><div><b>結帳版式</b><span class="sub">one-page（單頁式，已統一）</span></div><span class="badge b-default"><span class="pip full"></span>one-page</span></div></div>
-  <div class="card card-pad"><h3>棄單挽回（legacy）</h3>${setRow("自動挽回信","已遷移至行銷自動化；此為 legacy 開關")}</div>`,
- shipping:`<div class="card card-pad" data-doc="set-shipping"><h3>依市場的運送選項（新模型）</h3>
-   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">Market → Shipping option（顧客可見名）→ Rates；子市場繼承父市場可覆寫</p>
-   ${MARKETS.slice(0,2).map(m=>`<div class="set-row"><div><b>${m.t}</b><span class="sub">Standard NT$120／Express NT$260・滿 NT$2,000 免運</span></div><span class="chev">›</span></div>`).join('')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market。</p></div>
-  <div class="card card-pad"><h3>本地配送</h3>${setRow("台北門市","半徑 10 km・基本費 NT$80・滿 NT$1,500 免費（≤10 區／地點）")}
-   <p class="mut3" style="font-size:var(--t-xs)">Apple／Google／Amazon Pay 與 PayPal 不支援本地配送。</p></div>
-  <div class="card card-pad"><h3>店面取貨</h3>${setRow("台北門市","備貨時間：24 小時內・取貨指示覆寫通知模板")}</div>
-  <div class="card card-pad"><h3>包裹與文件</h3>${setRow("已儲存的包裹","標準紙箱 S／M・自訂 1 種")}${setRow("裝箱單模板","Liquid 模板・可預覽")}${setRow("Carrier 帳號","未連接")}</div>`,
- taxes:`<div class="card card-pad" data-doc="set-taxes"><h3>稅額與關稅</h3>
-   ${setRow("台灣","營業稅 5%・含稅定價")}
-   ${setRow("香港","不課稅")}
-   ${setRow("馬來西亞","SST 依商品類別")}
-   <div class="set-row"><div><b>價格含稅</b><span class="sub">前台顯示價已內含稅額</span></div><input type="checkbox" class="tgl" role="switch" checked aria-label="價格含稅" onchange="toast('Demo：含稅切換會重算前台顯示價')"></div>
-   ${setRow("稅則覆寫","以商品系列為單位（可用未發布系列）")}
-   ${setRow("跨境關稅","DDU（顧客承擔）；DDP 需 HS code + 原產地")}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">引擎讀取順序：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15 §）。</p></div>`,
- locations:`<div class="card card-pad" data-doc="set-locations"><h3>地點</h3>
-   ${[['主倉（內湖）','台北市內湖區・出貨優先序 1',true],['台北門市','台北市大安區・出貨優先序 2',true],['台中寄倉','台中市西屯區・不出貨（僅存貨）',false]]
-     .map(([n,s,f])=>`<div class="set-row"><div><b>${n}</b><span class="sub">${s}</span></div>
-       <input type="checkbox" class="tgl" role="switch" ${f?'checked':''} aria-label="從此地點出貨：${n}" onchange="toast(this.checked?'已開啟從「${n}」出貨':'已關閉——此地點不再參與自動分單')"></div>`).join('')}
-   ${setRow("出貨優先序","拖曳排序＝自動分單 routing 依據")}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">停用地點前必須移走庫存與待出貨單；app 地點（3PL）唯讀且不佔配額。</p></div>`,
+   ${setRowSel('帳單地址','決定結帳頁要不要另外收帳單地址','ckBilling',[['same','預設同運送地址'],['ask','每次詢問'],['none','不收集（僅數位商品可用）']],'same','set-ck-billing')}
+   ${setRowTgl('付款後自動出貨','付款成功即自動建立 fulfillment','ckAutoFulfill',false,'set-ck-autofulfill',{dep:'ckAutoFulfillScope'})}
+   <div id="ckAutoFulfillScope" hidden>${setRowSel('自動出貨的適用範圍','實體商品自動出貨會直接動到 committed，開之前先確認揀貨流程','ckAutoFulfillScopeSel',
+     [['digital','僅數位商品'],['all','全部商品']],'digital','set-ck-autofulfill-scope')}</div>
+   ${setRowTgl('自動封存','出貨完成且付款完成後自動從待辦清單移除','ckAutoArchive',true,'set-ck-autoarchive')}
+   <div class="set-row"><div class="sr-t"><b>結帳版式</b><span class="sub">one-page（單頁式，已統一）</span></div><span class="set-ctl">${chip('one-page','default','full')}</span></div></div>
+  <div class="card card-pad"><h3>棄單挽回（legacy）</h3>
+   ${setRowTgl('自動挽回信','已遷移至行銷自動化；此為 legacy 開關，兩邊同時開會重複寄','ckAband',true,'set-ck-aband',{dep:'ckAbandFields',depMode:'dim'})}
+   <div id="ckAbandFields">
+     ${setRowSel('寄出延遲','四檔與預設值取自 limits.yml abandoned_checkout.recovery_delay_hour_options','ckAbandDelay',
+       [['1','1 小時後'],['6','6 小時後'],['10','10 小時後（建議）'],['24','24 小時後']],'10','set-ck-aband-delay')}
+     ${setRowSel('寄送對象','limits.yml abandoned_checkout.recovery_audience_options 二選一','ckAbandAud',
+       [['any_incomplete_checkout','所有未完成結帳的顧客'],['email_subscribers_only','僅 email 訂閱者']],'any_incomplete_checkout','set-ck-aband-aud')}</div></div>`,
  domains:`<div class="card card-pad" data-doc="set-domains"><h3>網域</h3>
-   <div class="set-row"><div><b>chilllove.demo</b><span class="sub">主要網域・SSL 已簽發</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
-   <div class="set-row"><div><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="badge b-default"><span class="pip full"></span>子網域</span></div>
-   <div class="set-row"><div><b>chilllove.demo/int</b><span class="sub">International 市場・子資料夾</span></div><span class="badge b-info"><span class="pip full"></span>國際</span></div>
-   <div class="set-row"><div><b>將所有流量導向主網域</b><span class="sub">使用國際網域策略時需關閉</span></div><input type="checkbox" class="tgl" role="switch" checked aria-label="導向主網域" onchange="toast('Demo：301 導向開關')"></div>
+   <div class="set-row"><div class="sr-t"><b>chilllove.demo</b><span class="sub">主要網域・SSL 已簽發</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
+   <div class="set-row"><div class="sr-t"><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="set-ctl">${chip('子網域','default','full')}</span></div>
+   <div class="set-row"><div class="sr-t"><b>chilllove.demo/int</b><span class="sub">International 市場・子資料夾</span></div><span class="set-ctl">${chip('國際','info','full')}</span></div>
+   ${setRowTgl('將所有流量導向主網域','使用國際網域策略（子網域／子資料夾）時必須關閉','domRedirect',true,'set-dom-redirect')}
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：搜尋並購買網域（含年費與自動續約）')">購買網域</button>
      <button class="btn btn-sec btn-sm" onclick="toast('Demo：連結既有網域——引導改 A/CNAME → 驗證輪詢 → 自動簽發 SSL')">連結既有網域</button></div></div>`,
- notifications:`<div class="card card-pad" data-doc="set-notifications"><h3>顧客通知</h3>
-   ${[['訂單確認','不可停用',true],['訂單已編輯','',true],['訂單發票','',true],['訂單已取消','可停用',true],['退款通知','可停用',true],
-     ['出貨確認','可停用',true],['出貨更新','可停用',true],['配送中','可停用',false],['已送達','可停用',false],
-     ['可取貨通知','本地取貨',true],['退貨已建立','',true],['退貨標籤','',true],['帳號邀請','',true],['密碼重設','',true],['禮品卡已建立','',true]]
-     .map(([n,s,on])=>`<div class="set-row"><div><b>${n}</b>${s?`<span class="sub">${s}</span>`:''}</div>
-       <button class="btn btn-ghost btn-sm" onclick="notifTpl('${n}')">編輯</button>
-       <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${n==='訂單確認'?'disabled aria-disabled="true"':''} aria-label="啟用 ${n}" onchange="toast(this.checked?'已啟用「${n}」':'已停用「${n}」')"></div>`).join('')}</div>
-  <div class="card card-pad"><h3>員工通知</h3>${setRow("新訂單通知","hello@chilllove.demo・可加收件人與 per-location 過濾")}</div>
-  <div class="card card-pad"><h3>Webhooks</h3>
-   ${setRow("orders/create → https://feed.chilllove.demo/hook","JSON・2026-08・HMAC 已驗證")}
-   ${setRow("products/update → https://feed.chilllove.demo/hook","JSON・供 feed 增量與 IndexNow")}
-   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：建立 webhook（topic + URL + 格式 + API 版本）')">建立 webhook</button></div>`,
- customdata:`<div class="card card-pad" data-doc="set-customdata"><h3>中繼欄位定義</h3>
-   ${[['商品・材質成分','single_line_text・前台可讀・已 pin'],['商品・洗滌方式','rich_text・前台可讀'],['顧客・生日','date・行銷用・未 pin'],['訂單・禮物訊息','multi_line_text・已 pin']]
-     .map(([n,s])=>`<div class="set-row"><div><b>${n}</b><span class="sub">${s}</span></div><span class="chev">›</span></div>`).join('')}
-   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="metafieldDef()">新增定義</button>
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pin 了才會出現在資源頁卡片與列表篩選；型別 30+ 種（含 list.* 變體）。</p></div>
-  <div class="card card-pad"><h3>元物件定義</h3>${setRow("設計師檔案・材質說明・門市據點","3 個定義・11 筆條目")}<button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往元物件 ›</button></div>`,
  languages:`<div class="card card-pad" data-doc="set-languages"><h3>商店語言</h3>
-   ${[['繁體中文','預設語言',true],['English','已發布',true],['日本語','未發布',false]].map(([l,s,on])=>`<div class="set-row"><div><b>${l}</b><span class="sub">${s}</span></div>
-     <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${l==='繁體中文'?'disabled aria-disabled="true"':''} aria-label="發布 ${l}" onchange="toast(this.checked?'已發布「${l}」':'已取消發布「${l}」')"></div>`).join('')}
+   ${[['繁體中文','預設語言',true],['English','已發布',true],['日本語','未發布',false]].map(([l,s2,on],i)=>`<div class="set-row"><div class="sr-t"><b>${l}</b><span class="sub">${s2}</span></div>
+     <input type="checkbox" class="tgl set-ctl" data-f="lang${i}" role="switch" aria-checked="${on?'true':'false'}" ${on?'checked':''} ${l==='繁體中文'?'disabled aria-disabled="true"':''} aria-label="發布 ${l}" onchange="toast(this.checked?'已發布「${l}」':'已取消發布「${l}」')"></div>`).join('')}
    <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增語言（≤20 種）→ 翻譯途徑 Translate & Adapt')">新增語言</button>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">每個市場的可用語言子集在 Markets 設定；未發布語言只能用預覽連結查看。</p></div>`,
- policies:`<div class="card card-pad" data-doc="set-policies"><h3>商店政策</h3>
-   ${['退款政策','隱私權政策','服務條款','運送政策','聯絡資訊','法律聲明'].map(p=>`<div class="set-row"><div><b>${p}</b><span class="sub">/policies/${p==='退款政策'?'refund-policy':'…'}・固定 URL</span></div>
-     <button class="btn btn-ghost btn-sm" onclick="toast('Demo：編輯政策（可用範本生成器產生草稿）')">編輯</button></div>`).join('')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">政策是文案、return rules 是機器規則，兩者分離（41 §12.15）。</p></div>`,
  brand:`<div class="card card-pad" data-doc="set-brand"><h3>品牌</h3>
-   <div class="set-row"><div><b>Logo</b><span class="sub">預設版＋方形版</span></div><span class="thumb" style="background:linear-gradient(135deg,#e9b8a2,#a9502c)"></span></div>
-   <div class="set-row"><div><b>品牌色</b><span class="sub">主色 #A9502C・輔色 #F6F1E9（對比檢查通過）</span></div>
-     <span class="rowflex"><span class="thumb" style="width:22px;height:22px;background:#a9502c"></span><span class="thumb" style="width:22px;height:22px;background:#f6f1e9"></span></span></div>
-   ${setRow("標語 slogan","慢慢做，好好穿")}
-   ${setRow("簡短描述","台灣製造的日常基本款")}
-   ${setRow("社群連結","IG／LINE／YouTube")}
+   <div class="set-row"><div class="sr-t"><b>Logo</b><span class="sub">預設版＋方形版</span></div><span class="thumb set-ctl" style="background:linear-gradient(135deg,#e9b8a2,#a9502c)"></span></div>
+   <div class="set-row"><div class="sr-t"><b>品牌色</b><span class="sub">主色 #A9502C・輔色 #F6F1E9（對比檢查通過）</span></div>
+     <span class="rowflex set-ctl"><span class="thumb" style="width:22px;height:22px;background:#a9502c"></span><span class="thumb" style="width:22px;height:22px;background:#f6f1e9"></span></span></div>
+   ${setRowInp('標語 slogan','一句話講清楚你在賣什麼；Liquid 以 shop.brand.slogan 讀取','brandSlogan','慢慢做，好好穿','例：慢慢做，好好穿','set-brand-slogan')}
+   ${setRowInp('簡短描述','Shop app 與社群分享卡的描述文字','brandDesc','台灣製造的日常基本款','例：台灣製造的日常基本款','set-brand-desc')}
+   ${setRowBtn('社群連結','IG／LINE／YouTube…前台頁尾與 Shop app 都會取用','<span class="chev" aria-hidden="true">›</span>','openBrandSocial()','set-brand-social','🔗')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">供銷售管道與 app（Shop app、社群卡）與結帳預設取用；Liquid 以 shop.brand 讀取。</p></div>`,
  privacy:`<div class="card card-pad" data-doc="set-privacy"><h3>顧客隱私</h3>
-   <div class="set-row"><div><b>Cookie 同意橫幅</b><span class="sub">依地區顯示（歐盟／英國／加州）</span></div><input type="checkbox" class="tgl" role="switch" checked aria-label="Cookie 橫幅" onchange="toast('Demo：cookie banner 開關')"></div>
-   ${setRow("全球隱私控制 GPC","自動遵循瀏覽器 GPC 訊號")}
-   ${setRow("資料銷售退出","提供「不要出售我的個資」連結")}
-   ${setRow("隱私政策生成器","依收集的資料類型產生草稿")}</div>`,
+   ${setRowTgl('Cookie 同意橫幅','依地區顯示（歐盟／英國／加州）；關閉後分析類 pixel 在管轄地不載入','pvBanner',true,'set-pv-banner')}
+   ${setRowTgl('全球隱私控制 GPC','自動遵循瀏覽器送出的 Sec-GPC 訊號，視同顧客已選擇退出','pvGpc',true,'set-pv-gpc')}
+   ${setRowTgl('資料銷售退出','前台頁尾顯示「不要出售或分享我的個人資訊」連結','pvOptout',true,'set-pv-optout',{dep:'pvOptoutFields',depMode:'dim'})}
+   <div id="pvOptoutFields">${setRowInp('連結文字','CCPA/CPRA 對字樣有要求，改寫前先過法務','pvOptoutLabel','不要出售或分享我的個人資訊','不要出售或分享我的個人資訊','set-pv-optout-label',{val:'req'})}</div>
+   ${setRowBtn('隱私政策生成器','依你實際收集的資料類型產生政策草稿','<span class="chev" aria-hidden="true">›</span>','openPrivacyGen()','set-pv-gen','📝')}</div>`,
  events:`<div class="card card-pad" data-doc="set-events"><h3>顧客事件（自訂 pixel）</h3>
-   <div class="set-row"><div><b>GA4 pixel</b><span class="sub">訂閱：page_viewed／product_viewed／checkout_completed</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
-   <div class="set-row"><div><b>Meta pixel</b><span class="sub">未設定</span></div><span class="badge b-default"><span class="pip"></span>未連線</span></div>
+   <div class="set-row"><div class="sr-t"><b>GA4 pixel</b><span class="sub">訂閱：page_viewed／product_viewed／checkout_completed</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
+   <div class="set-row"><div class="sr-t"><b>Meta pixel</b><span class="sub">未設定</span></div><span class="set-ctl">${chip('未連線','default','')}</span></div>
    <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增 pixel＝名稱＋JS 沙箱代碼＋訂閱事件清單')">新增自訂 pixel</button>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pixel 在沙箱 iframe 執行，只能收到訂閱的事件（不接觸 DOM）。</p></div>`,
  apps:`<div class="card card-pad" data-doc="set-apps"><h3>已安裝的應用程式</h3>
    ${[['Messaging（行銷自動化）','已授權：read_customers, write_marketing'],['Simprosys Feed','已授權：read_products, read_orders']]
-     .map(([n,s])=>`<div class="set-row"><div><b>${n}</b><span class="sub">${s}</span></div>
-       <button class="btn btn-ghost btn-sm" onclick="confirmDanger('解除安裝','解除安裝後這個 app 寫入的資料（selling plan／自動化流程）會停止運作。','解除安裝',function(){toast('已解除安裝')})">解除安裝</button></div>`).join('')}</div>
+     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
+       <button class="btn btn-ghost btn-sm sr-act" onclick="confirmDanger('解除安裝','解除安裝後這個 app 寫入的資料（selling plan／自動化流程）會停止運作。','解除安裝',function(){toast('已解除安裝')})">解除安裝</button></div>`).join('')}</div>
   <div class="card card-pad"><h3>銷售管道</h3>
    ${[['線上商店','已啟用'],['AI 代理','已啟用・目錄開放中'],['門市 POS','未啟用'],['Shop','未啟用']]
-     .map(([n,s])=>`<div class="set-row"><div><b>${n}</b><span class="sub">${s}</span></div><span class="chev">›</span></div>`).join('')}</div>`,
+     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div><span class="chev">›</span></div>`).join('')}</div>`,
  giftcards:`<div class="card card-pad" data-doc="set-giftcards"><h3>禮品卡</h3>
-   ${setRow("到期政策","不設到期日（多數地區法規禁止）")}
-   <div class="set-row"><div><b>Apple Wallet passes</b><span class="sub">顧客可把禮品卡加入 Wallet</span></div><input type="checkbox" class="tgl" role="switch" aria-label="Apple Wallet" onchange="toast('Demo：Apple Wallet passes 開關')"></div>
+   ${setRowSel('到期政策','多數地區法規禁止設到期日；設了就必須能證明合規','gcExpiry',
+     [['never','不設到期日'],['12','發卡後 12 個月'],['24','發卡後 24 個月'],['custom','自訂月數']],'never','set-gc-expiry',{dep:'gcExpiryCustom',depVal:'custom'})}
+   <div id="gcExpiryCustom" hidden>${setRowInp('自訂有效月數','到期以商店時區的當日結束為準（同 store credit）','gcExpiryMonths','36','例：36','set-gc-expiry-months',{val:'req|int'})}</div>
+   ${setRowTgl('Apple Wallet passes','顧客可把禮品卡加入 Apple Wallet，餘額變動即時同步','gcWallet',false,'set-gc-wallet')}
    <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-giftcards')">前往禮品卡列表 ›</button></div>`,
  plan:(SET_PAGES.plan||'').replace('<div class="card card-pad"><h3>方案</h3>','<div class="card card-pad" data-doc="set-plan"><h3>方案</h3>')
    +`<div class="card card-pad"><h3>其他方案動作</h3>
-   ${setRow("Pause and Build","暫停結帳／折扣／禮品卡；前台可看不可買")}
-   ${setRow("關閉商店","結清 → 斷開網域 → 資料保留 2 年可復原")}</div>`,
- billing:`<div class="card card-pad" data-doc="set-billing"><h3>帳單</h3>
-   ${setRow("付款方式","VISA •• 4242・到期 08/29")}
-   ${setRow("帳單週期","每月 14 日・30 天週期")}
-   ${setRow("帳單門檻","累積 NT$3,000 或週期結束時請款")}
-   ${setRow("帳單幣別","新台幣（NT$）")}
-   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`,
- org:`<div class="card card-pad" data-doc="set-org"><h3>組織</h3>${setRow("CHILL LOVE HOLDINGS","2 間商店・集中帳單")}${setRow("組織安全政策","強制兩步驟驗證：關閉")}${setRow("組織使用者","使用者管理已上移組織層（2026 實測）")}</div>`,
+   ${setRowDanger('Pause and Build','暫停結帳／折扣／禮品卡；前台可看不可買','暫停商店',
+     '暫停並建置（Pause and Build）','暫停期間顧客無法結帳，折扣與禮品卡一併停用，既有訂單與資料全部保留。恢復營業要手動解除，暫停期間仍會收取暫停費率的月費。','暫停商店',
+     "toast('已切換為 Pause and Build——前台可瀏覽但無法結帳')",'set-plan-pause',false)}
+   ${setRowDanger('關閉商店','結清帳款 → 斷開網域 → 資料保留 2 年可復原','關閉商店',
+     '關閉商店','關閉後前台立即下線、網域解除綁定、所有員工帳號失效。資料保留 2 年可申請復原，超過即永久刪除；未結清的帳款會先請款。','關閉商店',
+     "toast('Demo：進入關店流程——先結清帳款')",'set-plan-close')}</div>`,
+ org:`<div class="card card-pad" data-doc="set-org"><h3>組織</h3>
+   ${setRowInp('組織名稱','2 間商店・集中帳單；顯示於組織層導航與發票抬頭','orgName','CHILL LOVE HOLDINGS','例：CHILL LOVE HOLDINGS','set-org-name',{val:'req'})}
+   ${setRowTgl('強制兩步驟驗證（組織政策）','所有成員下次登入時必須設定 2FA；未設定者被擋在登入頁','org2fa',false,'set-org-2fa',{dep:'org2faGrace'})}
+   <div id="org2faGrace" hidden>${setRowSel('寬限期','寬限期內可先跳過，逾期強制','org2faGraceSel',[['0','立即生效'],['7','7 天'],['30','30 天']],'7','set-org-2fa-grace')}</div>
+   ${setRowBtn('組織使用者','使用者管理已上移組織層（2026 實測）——到「使用者」分頁管理','<span class="chev" aria-hidden="true">›</span>',"setPage('users')",'set-org-users','👥')}</div>`,
 });
+
+/* ---------- 有新增／排序動作的分頁：每次進頁重算 ---------- */
+function paymentsPage(){
+ return `<div class="card card-pad" data-doc="set-payments"><h3>金流供應商</h3>
+   <div class="set-row"><div class="sr-t"><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="set-ctl">${chip('TEST','warning','blocked')}</span></div>
+   ${setRowInp('帳單敘述名','顧客信用卡帳單上看到的字樣——認不出來就會變成爭議款','payDescriptor','CHILLLOVE','2–19 個字元，建議直接用店名','set-descriptor',{min:2,max:19})}
+   ${setRowSel('撥款排程','款項從金流商轉進銀行帳戶的頻率','payPayout',
+     [['daily','每日（T+2 入帳）'],['weekly','每週一（T+2 入帳）'],['monthly','每月 1 日（T+2 入帳）'],['manual','手動撥款']],'daily','set-payout')}</div>
+  <div class="card card-pad"><h3>請款方式（三模式）</h3>
+   ${['結帳後自動請款','全單出貨後自動請款','手動請款（授權期 7 天）'].map((m,i)=>`<label class="set-row" style="cursor:pointer"><div class="sr-t"><b>${m}</b>${i===2?'<span class="sub">逾期未請款則授權失效</span>':''}</div>
+     <input type="radio" name="capmode" class="cl-radio set-ctl" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
+  <div class="card card-pad"><h3>手動付款方式</h3>
+   ${MANUAL_PAY.map((m,i)=>setRowBtn(H(m.n),H(m.s),'<span class="chev" aria-hidden="true">›</span>',`openManualPay(${i})`,'set-manualpay','🏦')).join('')}
+   ${setRowAdd('新增手動付款方式','貨到付款、面交、郵局匯款…（自訂名不得使用保留字）','manualPayAdd()','set-manualpay-add')}</div>`;
+}
+function shippingPage(){
+ return `<div class="card card-pad" data-doc="set-shipping"><h3>依市場的運送選項（新模型）</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">Market → Shipping option（顧客可見名）→ Rates；子市場繼承父市場可覆寫</p>
+   ${MARKETS.slice(0,2).map(m=>`<div class="set-row"><div class="sr-t"><b>${m.t}</b><span class="sub">Standard NT$120／Express NT$260・滿 NT$2,000 免運</span></div><span class="chev">›</span></div>`).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market。</p></div>
+  <div class="card card-pad"><h3>本地配送</h3>
+   ${setRowBtn('台北門市','半徑 10 km・基本費 NT$80・滿 NT$1,500 免費','<span class="chev" aria-hidden="true">›</span>','openLocalDelivery()','set-localdelivery','🛵')}
+   <p class="mut3" style="font-size:var(--t-xs)">Apple／Google／Amazon Pay 與 PayPal 不支援本地配送。</p></div>
+  <div class="card card-pad"><h3>店面取貨</h3>
+   ${setRowSel('台北門市｜備貨時間','顯示在結帳頁的可取貨時間；取貨指示會覆寫通知模板','pickupPrep',
+     [['24h','24 小時內'],['1_2d','1–2 個工作天'],['3_5d','3–5 個工作天'],['off','關閉此地點的店面取貨']],'24h','set-pickup-prep')}</div>
+  <div class="card card-pad"><h3>包裹與文件</h3>
+   ${setRowBtn('已儲存的包裹',`${PKG_LIST.length} 種・購買運送標籤時可直接套用`,'<span class="chev" aria-hidden="true">›</span>','openPackages()','set-packages','📦')}
+   ${setRowBtn('裝箱單模板','Liquid 模板・可預覽與寄測試','<span class="chev" aria-hidden="true">›</span>','openPackingSlip()','set-packingslip','🧾')}
+   ${CARRIER_ACCTS.map(c=>`<div class="set-row"><div class="sr-t"><b>${H(c.n)}</b><span class="sub">${H(c.s)}</span></div><span class="set-ctl">${chip('已連接','success','full')}</span></div>`).join('')}
+   ${setRowAdd('連接 Carrier 帳號','用自家與物流商的合約費率取代平台費率','carrierAdd()','set-carrier-add')}</div>`;
+}
+function taxesPage(){
+ return `<div class="card card-pad" data-doc="set-taxes"><h3>稅額與關稅</h3>
+   ${setRowInp('台灣｜營業稅率（%）','含稅定價；稅額由金額引擎反推，不另外加價','taxTW','5','5','set-tax-tw',{val:'req|pct'})}
+   ${setRowInp('香港｜稅率（%）','不課銷售稅，填 0','taxHK','0','0','set-tax-hk',{val:'req|pct'})}
+   ${setRowInp('馬來西亞｜SST 稅率（%）','此為預設稅率；依商品類別的差異走下方「稅則覆寫」','taxMY','6','6','set-tax-my',{val:'req|pct'})}
+   ${setRowTgl('價格含稅','前台顯示價已內含稅額；切換會重算所有市場的顯示價','taxIncl',true,'set-tax-incl')}
+   ${setRowBtn('稅則覆寫',`${TAX_OVERRIDES.length} 條・以商品系列為單位（可用未發布系列）`,'<span class="chev" aria-hidden="true">›</span>','openTaxOverrides()','set-tax-override','⚖️')}
+   ${setRowSel('跨境關稅','DDP 需要每個品項都有 HS code 與原產地，缺一即自動退回 DDU','taxDuty',
+     [['ddu','DDU——關稅由顧客在收件時支付'],['ddp','DDP——結帳時預收關稅與進口稅']],'ddu','set-tax-duty',{dep:'taxDdpNote',depVal:'ddp'})}
+   <div id="taxDdpNote" hidden class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>切到 DDP 之前，「海關資訊」必須以<b>商品子類</b>批次補齊 HS code 與原產地；任一品項缺漏時該筆訂單會自動退回 DDU 計價。</span></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">引擎讀取順序：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15 §）。</p></div>`;
+}
+function locationsPage(){
+ return `<div class="card card-pad" data-doc="set-locations"><h3>地點</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">已使用 <span class="num">${LOC_ORDER.length}</span> 個地點（配額依方案，見 limits.yml location.quota_*）</p>
+   ${LOC_ORDER.map((l,i)=>setRowTgl(H(l.n),`${H(l.s)}・出貨優先序 ${i+1}`,'locShip'+i,l.ship,'set-loc-ship')).join('')}
+   ${setRowBtn('出貨優先序','排序＝自動分單 routing 的命中順序','<span class="chev" aria-hidden="true">›</span>','openLocPriority()','set-loc-priority','🧭')}
+   ${setRowAdd('新增地點','app 建立的地點（3PL）唯讀且不佔配額','locAdd()','set-loc-add')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">停用地點前必須移走庫存與待出貨單；app 地點（3PL）唯讀且不佔配額。</p></div>`;
+}
+function notificationsPage(){
+ return `<div class="card card-pad" data-doc="set-notifications"><h3>顧客通知</h3>
+   ${[['訂單確認','不可停用',true],['訂單已編輯','',true],['訂單發票','',true],['訂單已取消','可停用',true],['退款通知','可停用',true],
+     ['出貨確認','可停用',true],['出貨更新','可停用',true],['配送中','可停用',false],['已送達','可停用',false],
+     ['可取貨通知','本地取貨',true],['退貨已建立','',true],['退貨標籤','',true],['帳號邀請','',true],['密碼重設','',true],['禮品卡已建立','',true]]
+     .map(([n,s2,on],i)=>`<div class="set-row"><div class="sr-t"><b>${n}</b>${s2?`<span class="sub">${s2}</span>`:''}</div>
+       <button class="btn btn-ghost btn-sm" onclick="notifTpl('${n}')">編輯</button>
+       <input type="checkbox" class="tgl set-ctl" data-f="notif${i}" role="switch" aria-checked="${on?'true':'false'}" ${on?'checked':''} ${n==='訂單確認'?'disabled aria-disabled="true"':''} aria-label="啟用 ${n}" onchange="toast(this.checked?'已啟用「${n}」':'已停用「${n}」')"></div>`).join('')}</div>
+  <div class="card card-pad"><h3>員工通知</h3>
+   ${setRowInp('新訂單通知收件人','逗號分隔多個收件人；per-location 過濾在各地點設定','notifStaff','hello@chilllove.demo','name@yourdomain.com','set-staff-notif',{val:'req'})}</div>
+  <div class="card card-pad"><h3>Webhooks</h3>
+   ${WEBHOOKS.map((w,i)=>setRowBtn(`${H(w.topic)} → ${H(w.url)}`,`${w.fmt.toUpperCase()}・${H(w.ver)}・HMAC 已驗證`,
+     '<span class="chev" aria-hidden="true">›</span>',`openWebhook(${i})`,'set-webhook','🔗')).join('')}
+   ${setRowAdd('建立 webhook','topic ＋ URL ＋ 格式（JSON／XML）＋ API 版本','webhookAdd()','set-webhook-add')}</div>`;
+}
+function customdataPage(){
+ return `<div class="card card-pad" data-doc="set-customdata"><h3>中繼欄位定義</h3>
+   ${[['商品・材質成分','single_line_text・前台可讀・已 pin'],['商品・洗滌方式','rich_text・前台可讀'],['顧客・生日','date・行銷用・未 pin'],['訂單・禮物訊息','multi_line_text・已 pin']]
+     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div><span class="chev">›</span></div>`).join('')}
+   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="metafieldDef()">新增定義</button>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pin 了才會出現在資源頁卡片與列表篩選；型別 30+ 種（含 list.* 變體）。</p></div>
+  <div class="card card-pad"><h3>元物件定義</h3>
+   ${setRowBtn('元物件定義',`${METAOBJ.length} 個定義・${METAOBJ.reduce((a,b)=>a+b.c,0)} 筆條目`,'<span class="chev" aria-hidden="true">›</span>','openMetaobjects()','set-metaobj','🧩')}
+   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往元物件 ›</button></div>`;
+}
+function billingPage(){
+ const pri=BILL_CARDS.find(c=>c.primary)||BILL_CARDS[0];
+ return `<div class="card card-pad" data-doc="set-billing"><h3>帳單</h3>
+   ${setRowBtn('付款方式',`${BILL_CARDS.length} 張・主要：${H(pri?pri.n:'未設定')}`,'<span class="chev" aria-hidden="true">›</span>','openBillCards()','set-bill-method','💳')}
+   ${setRow('帳單週期','由方案開通日推導的 30 天週期，平台鎖定','<span class="tagchip num" style="margin:0">每月 14 日</span>','set-bill-cycle')}
+   ${setRowSel('帳單門檻','累積到門檻或週期結束（先到者）就請款一次','billThreshold',
+     [['1000','NT$1,000'],['3000','NT$3,000'],['10000','NT$10,000'],['cycle','只在週期結束時請款']],'3000','set-bill-threshold')}
+   ${setRowSel('帳單幣別','平台向你收費的幣別，與商店的銷售幣別互不相干','billCurrency',[['TWD','新台幣（NT$）'],['USD','美元（US$）']],'TWD','set-bill-currency')}
+   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`;
+}
+Object.assign(SET_DYN,{payments:paymentsPage,taxes:taxesPage,locations:locationsPage,
+  notifications:notificationsPage,customdata:customdataPage,billing:billingPage});
+
 function notifTpl(name){
   openGen({title:`通知模板：${name}`,wide:true,body:`<div class="stack">
     ${F('主旨',`<input class="input" value="您的訂單 {{ order.name }} 已確認" data-val="req">`)}
@@ -5237,6 +5441,7 @@ function setSubOpen(sub,html){
   const el=document.getElementById('setContent');
   el.innerHTML=html;
   enhanceTables();
+  setSyncAll();                                 /* 次級視圖裡的 toggle／相依欄位／計數器也要有初值 */
   const b=el.querySelector('.cr-back');if(b)b.focus();
   const body=document.querySelector('.set-body');if(body)body.scrollTop=0;
 }
@@ -5244,12 +5449,8 @@ function setSubBack(page){SETSUB=null;setPage(page);const body=document.querySel
 const setCrumb=(ic,title,page)=>`<nav class="set-crumb" aria-label="麵包屑">
   <button class="cr-back" onclick="setSubBack('${page}')" aria-label="返回上一層">${ic}</button>
   <span class="cr-sep" aria-hidden="true">›</span><b>${title}</b></nav>`;
-/* 可點列：真的能進次級視圖／新增資料，不是 setRow 的不可點佔位 */
-const setRowBtn=(t,sub,right,onclick,doc,ic)=>`<button class="set-rowbtn" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
-  ${ic?`<span class="rb-ic" aria-hidden="true">${ic}</span>`:''}
-  <span class="rb-t"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</span>${right||''}</button>`;
-const setRowAdd=(t,sub,onclick,doc)=>`<button class="set-rowbtn rb-add" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
-  <span class="rb-t"><b>⊕ ${t}</b>${sub?`<span>${sub}</span>`:''}</span></button>`;
+/* 可點列 setRowBtn／setRowAdd 已上移到設定控件列那一節（見「設定（分頁）」開頭），
+   因為靜態分頁字串在那之前就要用到它們（const 有 TDZ，不能靠 hoisting）。 */
 
 /* ==================================================================
    模組 A：政策分頁（第一張卡＝退貨與取消規則，不是法務條款）
@@ -5458,17 +5659,298 @@ function shipAddZone(){
   toast('已新增區域——建了區域不代表能賣，國家還必須加進市場（44 §19.2）');
 }
 
+/* ==================================================================
+   模組 E：設定分頁的次級視圖（49 號稽核——setRow 佔位列 → 真控件／真表單）
+   每個次級視圖都以 setCrumb 開頭（可返回父分頁），內容是真的表單或清單。
+   ================================================================== */
+
+/* ---------- E1 結帳表單欄位（三態）---------- */
+const FIELD_TRI=[['hidden','不顯示'],['optional','選填'],['required','必填']];
+const CK_FIELDS=[{k:'company',n:'公司名稱',v:'hidden'},{k:'addr2',n:'地址第 2 行（公寓、單位等）',v:'optional'},{k:'phone',n:'運送地址電話號碼',v:'optional'}];
+function openCkFields(){setSubOpen('ck-fields',ckFieldsPage());setAfterRender();}
+function ckFieldsPage(){
+  return setCrumb('🧾','結帳表單欄位','checkout')
+  +`<div class="card"><div class="card-pad" data-doc="sub-ck-fields"><h3>顧客資訊欄位</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">每一欄三態，對應 limits.yml checkout.field_visibility_modes</p>
+    ${CK_FIELDS.map(f=>setRowSel(f.n,`field_key: <span class="mono">${f.k}</span>`,'ckf_'+f.k,FIELD_TRI,f.v,'sub-ck-field')).join('')}
+    </div>
+    <div class="card-note">「必填」只擋結帳表單，不會回填既有顧客資料；改成「不顯示」時，該欄在既有訂單上的值仍會保留在快照裡。</div></div>
+   <div class="card card-pad" data-doc="sub-ck-fieldrule"><h3>跨欄硬規則</h3>
+    <p class="help">① 顧客帳號設為「結帳必填」時，聯絡方式強制為 email（電話通道寄不出登入碼）。<br>
+    ② SMS 行銷同意<b>永遠</b>不可預先勾選，這條沒有開關。<br>
+    ③ 姓名格式與這三欄分開存：姓名是 <span class="mono">name_format</span>，這三欄是 <span class="mono">checkout_field_config</span>。</p></div>`;
+}
+
+/* ---------- E2 手動付款方式 ---------- */
+let MP_ID=0;
+function openManualPay(i){MP_ID=i;setSubOpen('manual-pay',manualPayPage());setAfterRender();}
+function manualPayPage(){
+  const m=MANUAL_PAY[MP_ID]||MANUAL_PAY[0];
+  return setCrumb('🏦',H(m.n),'payments')
+  +`<div class="card card-pad" data-doc="sub-manualpay"><h3>手動付款方式</h3>
+    ${setRowInp('顯示名稱','顧客在結帳頁看到的付款方式名稱','mpName',H(m.n),'例：銀行轉帳','sub-manualpay-name',{val:'req'})}
+    ${setRowInp('額外詳細資訊','顯示在名稱下方的一行說明','mpSub',H(m.s),'例：下單後 3 日內完成轉帳','sub-manualpay-sub')}
+    <div class="field" style="margin-top:var(--sp-300)" data-doc="sub-manualpay-ins"><label>付款指示</label>
+      <textarea class="input" data-f="mpIns" rows="4" placeholder="例：請匯款至 台灣銀行 (004) …，並於備註填單號">${H(m.ins)}</textarea>
+      <span class="hint">會原樣帶進「結帳完成頁」與「訂單確認信」；支援 Liquid 變數，不接受任意 HTML</span></div>
+    ${setRowTgl('啟用','關閉後結帳頁不再出現這個付款方式；既有未付款訂單不受影響','mpOn',true,'sub-manualpay-on')}
+    <div class="card-sec"><button class="btn btn-danger-o btn-sm"
+      onclick="confirmDanger('刪除付款方式','刪除後結帳頁立即不再出現；已用這個方式建立但尚未付款的訂單會停在待付款狀態。','刪除',function(){manualPayDel()})">刪除付款方式</button></div></div>`;
+}
+function manualPayAdd(){
+  MANUAL_PAY.push({n:'新的手動付款方式 '+(MANUAL_PAY.length+1),s:'尚未填寫付款指示',ins:''});
+  setPage('payments');
+  toast('已新增一種手動付款方式——點進去填顯示名稱與付款指示');
+}
+function manualPayDel(){
+  MANUAL_PAY.splice(MP_ID,1);
+  if(!MANUAL_PAY.length)MANUAL_PAY.push({n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記已收款',ins:''});
+  setSubBack('payments');toast('已刪除手動付款方式');
+}
+
+/* ---------- E3 本地配送 ---------- */
+const LD_ZONES=[{n:'大安區・信義區',s:'半徑 5 km 內・NT$60'},{n:'中山區・松山區',s:'半徑 10 km 內・NT$80'}];
+function openLocalDelivery(){setSubOpen('local-delivery',localDeliveryPage());setAfterRender();}
+function localDeliveryPage(){
+  return setCrumb('🛵','本地配送・台北門市','shipping')
+  +`<div class="card card-pad" data-doc="sub-localdelivery"><h3>配送範圍</h3>
+    ${setRowSel('範圍設定方式','半徑或郵遞區號二選一','ldMode',[['radius','以門市為圓心的半徑'],['zip','郵遞區號清單']],'radius','sub-ld-mode',
+      {dep:'ldRadiusBox',depVal:'radius',depInv:'ldZipBox'})}
+    <div id="ldRadiusBox">${setRowInp('半徑（km）','上限見 limits.yml shipping.local_delivery_max_radius_km','ldRadiusKm','10','10','sub-ld-radius',{val:'req|num'})}</div>
+    <div id="ldZipBox" hidden class="field" style="padding-top:var(--sp-300)"><label>郵遞區號清單</label>
+      <textarea class="input" data-f="ldZips" rows="3" placeholder="106, 105, 110（逗號分隔）">106, 105, 110</textarea>
+      <span class="hint">字數上限見 limits.yml shipping.local_delivery_postal_codes_max_chars</span></div>
+    ${setRowInp('基本配送費（NT$）','0 ＝ 免費配送','ldFee','80','80','sub-ld-fee',{val:'req|money'})}
+    ${setRowInp('免運門檻（NT$）','留空 ＝ 不設免運門檻','ldFree','1500','1500','sub-ld-free',{val:'money'})}
+    ${setRowInp('配送說明','顯示在結帳頁的配送方式下方','ldNote','當日 18:00 前下單，隔日送達','例：當日 18:00 前下單，隔日送達','sub-ld-note')}</div>
+   <div class="card"><div class="card-pad"><h3>配送區域</h3>
+    ${LD_ZONES.map(z=>`<div class="set-row"><div class="sr-t"><b>${H(z.n)}</b><span class="sub">${H(z.s)}</span></div>
+      <button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：編輯配送區域')">編輯</button></div>`).join('')}
+    ${setRowAdd('新增配送區域','每個地點的區域數上限見 limits.yml shipping.local_delivery_max_zones_per_location',
+      "toast('Demo：新增配送區域——超過上限時新增鈕會 disabled')",'sub-ld-zone-add')}</div>
+    <div class="card-note">Apple Pay／Google Pay／Amazon Pay 與 PayPal 的快速結帳不支援本地配送，這些通道會自動隱藏此選項。</div></div>`;
+}
+
+/* ---------- E4 已儲存的包裹 ---------- */
+function openPackages(){setSubOpen('packages',packagesPage());setAfterRender();}
+function packagesPage(){
+  return setCrumb('📦','已儲存的包裹','shipping')
+  +`<div class="card"><div class="card-pad" data-doc="sub-packages"><h3>包裹</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">購買運送標籤與試算運費時可直接套用；預設包裹會自動帶入</p>
+    ${PKG_LIST.map((k,i)=>`<div class="set-row"><div class="sr-t"><b>${H(k.n)}</b><span class="sub">${H(k.s)}</span></div>
+      <span class="sr-act rowflex">${i===0?chip('預設','info','full'):''}
+      <button class="btn btn-ghost btn-sm" onclick="pkgDel(${i})" aria-label="刪除 ${H(k.n)}">刪除</button></span></div>`).join('')}
+    ${setRowAdd('新增包裹','箱／袋／信封三型，各自帶長寬高與空重','pkgAdd()','sub-packages-add')}</div>
+    <div class="card-note">空重會加進總重量再去算費率；超商取貨另有材積與重量上限（limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg）。</div></div>`;
+}
+function pkgAdd(){
+  PKG_LIST.push({n:'自訂包裹 '+(PKG_LIST.length+1),s:'尚未填寫尺寸與空重'});
+  setSubOpen('packages',packagesPage());setAfterRender();toast('已新增一個包裹——填好長寬高與空重才會出現在標籤購買頁');
+}
+function pkgDel(i){
+  PKG_LIST.splice(i,1);
+  setSubOpen('packages',packagesPage());setAfterRender();toast('已刪除包裹');
+}
+
+/* ---------- E5 裝箱單模板 ---------- */
+function openPackingSlip(){setSubOpen('packing-slip',packingSlipPage());setAfterRender();}
+function packingSlipPage(){
+  return setCrumb('🧾','裝箱單模板','shipping')
+  +`<div class="card card-pad" data-doc="sub-packingslip"><h3>Liquid 模板</h3>
+    ${setRowSel('紙張大小','影響列印邊界與每頁行數','psPaper',[['a4','A4'],['letter','Letter'],['a5','A5']],'a4','sub-ps-paper')}
+    ${setRowTgl('顯示商品圖片','關閉可讓每頁塞下更多品項','psImg',true,'sub-ps-img')}
+    <div class="field" style="margin-top:var(--sp-300)"><label>模板內容</label>
+      <textarea class="codebox" data-f="psTpl" rows="8">{% raw %}&lt;h1&gt;{{ shop.name }}&lt;/h1&gt;
+&lt;p&gt;訂單 {{ order.name }}・{{ order.created_at | date: "%Y-%m-%d" }}&lt;/p&gt;
+{% for line in line_items %}
+  &lt;tr&gt;&lt;td&gt;{{ line.title }}&lt;/td&gt;&lt;td&gt;{{ line.quantity }}&lt;/td&gt;&lt;/tr&gt;
+{% endfor %}{% endraw %}</textarea>
+      <span class="hint">走 Liquid 沙箱：Drops 白名單＋資源上限（規格 18-F2）；<span class="mono">line_items</span> 是這張出貨單的品項，不是整張訂單</span></div>
+    <div class="card-sec rowflex">
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：以最近一張訂單渲染預覽 PDF')">預覽</button>
+      <button class="btn btn-ghost btn-sm" onclick="confirmDanger('還原為預設模板','你對這份模板的所有修改都會被覆蓋。','還原',function(){toast('已還原為平台預設裝箱單模板')})">還原預設</button></div></div>`;
+}
+
+/* ---------- E6 稅則覆寫 ---------- */
+function openTaxOverrides(){setSubOpen('tax-override',taxOverridePage());setAfterRender();}
+function taxOverridePage(){
+  return setCrumb('⚖️','稅則覆寫','taxes')
+  +`<div class="card"><div class="card-pad" data-doc="sub-taxoverride"><h3>覆寫規則</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">以商品系列為單位；可以用未發布的系列當作純稅務用的分組</p>
+    ${TAX_OVERRIDES.map((t,i)=>`<div class="set-row"><div class="sr-t"><b>${H(t.n)}</b><span class="sub">${H(t.s)}</span></div>
+      <span class="sr-act rowflex"><span class="tagchip num" style="margin:0">${H(t.rate)}%</span>
+      <button class="btn btn-ghost btn-sm" onclick="taxOvDel(${i})" aria-label="刪除 ${H(t.n)}">刪除</button></span></div>`).join('')}
+    ${setRowAdd('新增稅則覆寫','選一個商品系列 ＋ 指定稅率','taxOvAdd()','sub-taxoverride-add')}</div>
+    <div class="card-note">引擎讀取順序固定：<b>顧客免稅 &gt; 稅則覆寫 &gt; 登記稅率</b>；同一商品命中多條覆寫時取最後建立的一條並記在訂單稅務快照裡。</div></div>`;
+}
+function taxOvAdd(){
+  TAX_OVERRIDES.push({n:'新的覆寫 '+(TAX_OVERRIDES.length+1),rate:'0',s:'尚未指定商品系列'});
+  setSubOpen('tax-override',taxOverridePage());setAfterRender();toast('已新增一條稅則覆寫——記得指定商品系列與稅率');
+}
+function taxOvDel(i){
+  TAX_OVERRIDES.splice(i,1);
+  setSubOpen('tax-override',taxOverridePage());setAfterRender();toast('已刪除稅則覆寫');
+}
+
+/* ---------- E7 出貨優先序 ---------- */
+function openLocPriority(){setSubOpen('loc-priority',locPriorityPage());setAfterRender();}
+function locPriorityPage(){
+  return setCrumb('🧭','出貨優先序','locations')
+  +`<div class="card"><div class="card-pad" data-doc="sub-locpriority"><h3>自動分單順序</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">由上而下逐一嘗試：第一個「可出貨且庫存足夠」的地點勝出</p>
+    ${LOC_ORDER.map((l,i)=>`<div class="ord-row"><span class="o-n">${i+1}</span>
+      <span class="o-t"><b>${H(l.n)}</b><span>${H(l.s)}${l.ship?'':'・不參與分單'}</span></span>
+      <button class="btn btn-ghost btn-sm" ${i===0?'disabled aria-disabled="true"':''} onclick="locMove(${i},-1)" aria-label="將 ${H(l.n)} 上移">↑</button>
+      <button class="btn btn-ghost btn-sm" ${i===LOC_ORDER.length-1?'disabled aria-disabled="true"':''} onclick="locMove(${i},1)" aria-label="將 ${H(l.n)} 下移">↓</button></div>`).join('')}</div>
+    <div class="card-note">關閉「從此地點出貨」的地點會被略過，但仍佔一個順位；整單分不出來時才會拆成多張 fulfillment order。</div></div>`;
+}
+function locMove(i,d){
+  const j=i+d;if(j<0||j>=LOC_ORDER.length)return;
+  const t=LOC_ORDER[i];LOC_ORDER[i]=LOC_ORDER[j];LOC_ORDER[j]=t;
+  setSubOpen('loc-priority',locPriorityPage());setAfterRender();
+  toast(`已把「${LOC_ORDER[j].n}」移到第 ${j+1} 順位`);
+}
+function locAdd(){
+  LOC_ORDER.push({n:'新地點 '+(LOC_ORDER.length+1),s:'尚未填寫地址',ship:false});
+  setPage('locations');
+  toast('已新增一個地點——填好地址並開啟「從此地點出貨」才會進入分單');
+}
+
+/* ---------- E8 Webhook ---------- */
+let WH_ID=0;
+const WH_TOPICS=['orders/create','orders/updated','orders/cancelled','orders/fulfilled','products/create','products/update','customers/create','refunds/create','inventory_levels/update'];
+function openWebhook(i){WH_ID=i;setSubOpen('webhook',webhookPage());setAfterRender();}
+function webhookPage(){
+  const w=WEBHOOKS[WH_ID]||WEBHOOKS[0];
+  return setCrumb('🔗','Webhook','notifications')
+  +`<div class="card card-pad" data-doc="sub-webhook"><h3>訂閱設定</h3>
+    ${setRowSel('事件 topic','一個 webhook 一個 topic；要多個事件就建多筆','whTopic',WH_TOPICS,w.topic,'sub-webhook-topic')}
+    ${setRowInp('接收網址','必須是 https；平台會用 HMAC-SHA256 簽章','whUrl',H(w.url),'https://example.com/hook','sub-webhook-url',{val:'req'})}
+    ${setRowSel('格式','JSON 與 XML 都支援','whFmt',[['json','JSON'],['xml','XML']],w.fmt,'sub-webhook-fmt')}
+    ${setRowSel('API 版本','舊版本停用前 12 個月會先寄棄用通知','whVer',[['2026-08','2026-08（最新）'],['2026-04','2026-04'],['2025-10','2025-10']],w.ver,'sub-webhook-ver')}
+    <div class="card-sec rowflex">
+      <button class="btn btn-sec btn-sm" onclick="toast('已送出一筆測試 payload——查看你端點的 200/非 200 回應')">傳送測試通知</button>
+      <button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除 webhook','刪除後這個 topic 不再推送；重試佇列中尚未送達的事件會一併丟棄。','刪除',function(){webhookDel()})">刪除</button></div></div>
+   <div class="card card-pad" data-doc="sub-webhook-retry"><h3>最近投遞</h3>
+    <p class="help">連續失敗 48 小時後自動停用並寄信通知；重試採指數退避，最多 19 次。</p>
+    <div class="set-row"><div class="sr-t"><b>2026-08-12 09:41</b><span class="sub">HTTP 200・耗時 142 ms</span></div><span class="set-ctl">${chip('成功','success','full')}</span></div>
+    <div class="set-row"><div class="sr-t"><b>2026-08-12 09:12</b><span class="sub">HTTP 503・第 2 次重試後成功</span></div><span class="set-ctl">${chip('部分受阻','warning','blocked')}</span></div></div>`;
+}
+function webhookAdd(){
+  WEBHOOKS.push({topic:'orders/updated',url:'https://example.com/hook',fmt:'json',ver:'2026-08'});
+  setPage('notifications');
+  toast('已建立 webhook——記得改成你自己的端點並驗證 HMAC');
+}
+function webhookDel(){
+  WEBHOOKS.splice(WH_ID,1);
+  setSubBack('notifications');toast('已刪除 webhook');
+}
+
+/* ---------- E9 元物件定義 ---------- */
+function openMetaobjects(){setSubOpen('metaobj',metaobjPage());setAfterRender();}
+function metaobjPage(){
+  return setCrumb('🧩','元物件定義','customdata')
+  +`<div class="card"><div class="card-pad" data-doc="sub-metaobj"><h3>定義</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">元物件是「自己定義的資源型別」，條目可被商品／頁面以 reference 型中繼欄位引用</p>
+    ${METAOBJ.map((m,i)=>`<div class="set-row"><div class="sr-t"><b>${H(m.n)}</b><span class="sub"><span class="mono">${H(m.k)}</span>・${m.c} 筆條目</span></div>
+      <span class="sr-act rowflex"><button class="btn btn-ghost btn-sm" onclick="closeSettings();go('m-metaobjects')">檢視條目</button>
+      <button class="btn btn-ghost btn-sm" onclick="metaDel(${i})" aria-label="刪除 ${H(m.n)}">刪除</button></span></div>`).join('')}
+    ${setRowAdd('新增元物件定義','type handle ＋ 欄位清單 ＋ 是否開放 Storefront 讀取','metaAdd()','sub-metaobj-add')}</div>
+    <div class="card-note">刪除定義會連帶刪除其下所有條目，引用它的中繼欄位會變成 dangling reference——刪除前先確認前台沒有在用。</div></div>`;
+}
+function metaAdd(){
+  METAOBJ.push({n:'新的定義 '+(METAOBJ.length+1),k:'custom_type_'+(METAOBJ.length+1),c:0});
+  setSubOpen('metaobj',metaobjPage());setAfterRender();toast('已新增元物件定義——接著設定欄位與 Storefront 可讀性');
+}
+function metaDel(i){
+  const m=METAOBJ[i];
+  confirmDanger('刪除元物件定義',`「${H(m.n)}」與其 ${m.c} 筆條目都會被刪除，引用它的中繼欄位會變成空引用。`,'刪除',function(){
+    METAOBJ.splice(i,1);setSubOpen('metaobj',metaobjPage());setAfterRender();toast('已刪除元物件定義');});
+}
+
+/* ---------- E10 社群連結 ---------- */
+function openBrandSocial(){setSubOpen('brand-social',brandSocialPage());setAfterRender();}
+function brandSocialPage(){
+  return setCrumb('🔗','社群連結','brand')
+  +`<div class="card"><div class="card-pad" data-doc="sub-brandsocial"><h3>社群帳號</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">留空的欄位不會在前台頁尾出現對應圖示</p>
+    ${setRowInp('Instagram','完整網址','socIg','https://instagram.com/chilllove.tw','https://instagram.com/yourhandle','sub-social-row')}
+    ${setRowInp('LINE 官方帳號','完整網址','socLine','https://lin.ee/chilllove','https://lin.ee/xxxxxxx','sub-social-row')}
+    ${setRowInp('YouTube','完整網址','socYt','https://youtube.com/@chilllove','https://youtube.com/@yourchannel','sub-social-row')}
+    ${setRowInp('Facebook','完整網址','socFb','','https://facebook.com/yourpage','sub-social-row')}
+    ${setRowInp('X（Twitter）','完整網址','socX','','https://x.com/yourhandle','sub-social-row')}</div>
+    <div class="card-note">同一組值同時餵給：前台頁尾、Shop app 商店檔案、社群分享卡的 <span class="mono">sameAs</span> 結構化資料。</div></div>`;
+}
+
+/* ---------- E11 隱私政策生成器 ---------- */
+function openPrivacyGen(){setSubOpen('privacy-gen',privacyGenPage());setAfterRender();}
+function privacyGenPage(){
+  const types=[['pgOrder','訂單與付款資訊','姓名、地址、電話、付款方式末四碼',true],
+               ['pgAcct','顧客帳號資料','email、登入紀錄、地址簿',true],
+               ['pgAnalytics','分析與行為資料','工作階段、瀏覽紀錄、來源 UTM',true],
+               ['pgMarketing','行銷同意紀錄','email／SMS 訂閱狀態與時間戳',true],
+               ['pgCookie','第三方 cookie','GA4／Meta pixel 等自訂 pixel',false],
+               ['pgBio','生物特徵或健康資料','本店未收集',false]];
+  return setCrumb('📝','隱私政策生成器','privacy')
+  +`<div class="card"><div class="card-pad" data-doc="sub-privacygen"><h3>你實際收集哪些資料</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">勾選項目會決定草稿裡出現哪些段落；勾錯比不勾更危險</p>
+    ${types.map(([f,n,sub2,on])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${sub2}</span></div>
+      <input type="checkbox" class="tgl set-ctl" data-f="${f}" role="switch" aria-checked="${on?'true':'false'}" ${on?'checked':''} aria-label="${n}"></div>`).join('')}
+    ${setRowSel('適用法規基準','會決定草稿的用語與必備段落','pgLaw',
+      [['tw','台灣個資法'],['gdpr','GDPR（歐盟／英國）'],['ccpa','CCPA/CPRA（加州）'],['multi','以上全部（最嚴格取交集）']],'multi','sub-privacygen-law')}
+    <div class="card-sec rowflex">
+      <button class="btn btn-pri btn-sm" onclick="toast('已產生草稿——存為「隱私權政策」並標記為「● 自動」，商家改寫後轉「已設定」')">產生草稿</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeSettings();openSettings('policies')">前往政策分頁 ›</button></div></div>
+    <div class="card-note">生成器產出的是<b>草稿</b>不是法律意見；政策頁會標成「● 自動」，商家改寫後才轉為「已設定」（44 §18.6 三態）。</div></div>`;
+}
+
+/* ---------- E12 帳單付款方式 ---------- */
+function openBillCards(){setSubOpen('bill-cards',billCardsPage());setAfterRender();}
+function billCardsPage(){
+  return setCrumb('💳','帳單付款方式','billing')
+  +`<div class="card"><div class="card-pad" data-doc="sub-billcards"><h3>已登記的付款方式</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">主要方式扣款失敗時會自動改用備援方式，連續失敗 3 次即暫停商店</p>
+    ${BILL_CARDS.map((c,i)=>`<div class="set-row"><div class="sr-t"><b>${H(c.n)}</b><span class="sub">${H(c.s)}</span></div>
+      <span class="sr-act rowflex">${c.primary?chip('主要','success','full'):`<button class="btn btn-ghost btn-sm" onclick="billSetPrimary(${i})">設為主要</button>`}
+      <button class="btn btn-ghost btn-sm" ${BILL_CARDS.length<2?'disabled aria-disabled="true" title="至少要保留一張"':''} onclick="billCardDel(${i})" aria-label="移除 ${H(c.n)}">移除</button></span></div>`).join('')}
+    ${setRowAdd('新增付款方式','信用卡或 PayPal；卡號走金流商 tokenization，平台不落庫','billCardAdd()','sub-billcards-add')}</div>
+    <div class="card-note">平台只保存 token 與末四碼，完整卡號永遠不進我們的資料庫（規格 11 §0 安全維度）。</div></div>`;
+}
+function billCardAdd(){
+  BILL_CARDS.push({n:'MASTER •• '+(1000+BILL_CARDS.length*111),s:'到期 12/30',primary:false});
+  setSubOpen('bill-cards',billCardsPage());setAfterRender();toast('已新增備援付款方式');
+}
+function billCardDel(i){
+  if(BILL_CARDS.length<2)return;
+  const wasPri=BILL_CARDS[i].primary;
+  BILL_CARDS.splice(i,1);
+  if(wasPri)BILL_CARDS[0].primary=true;
+  setSubOpen('bill-cards',billCardsPage());setAfterRender();toast(wasPri?'已移除——備援方式自動升為主要':'已移除付款方式');
+}
+function billSetPrimary(i){
+  BILL_CARDS.forEach((c,j)=>c.primary=(i===j));
+  setSubOpen('bill-cards',billCardsPage());setAfterRender();toast('已設為主要付款方式');
+}
+
+/* ---------- E13 Carrier 帳號（新增動作，直接落一列）---------- */
+function carrierAdd(){
+  CARRIER_ACCTS.push({n:'DHL Express 合約帳號',s:'帳號 95xxxxxxx・費率覆寫平台費率'});
+  setPage('shipping');
+  toast('已連接 Carrier 帳號——之後的即時運費改用你的合約費率');
+}
+
 /* ---------- 掛上設定路由：政策整頁重寫、運送頁前置設定檔卡 ---------- */
-Object.assign(SET_PAGES,{
- policies:policiesPage(),
- shipping:SHIP_PROFILE_CARD+(SET_PAGES.shipping||''),
+Object.assign(SET_DYN,{
+ policies:policiesPage,
+ /* 運送頁＝設定檔卡（外層）＋ 依市場的運送選項與包裹（內容隨 PKG_LIST／CARRIER_ACCTS 變動）*/
+ shipping:()=>SHIP_PROFILE_CARD+shippingPage(),
 });
-/* policies 卡片內容隨 RET_RULES 變動 → setPage 時重算（其餘分頁維持靜態字串）；
+/* 有動態內容的分頁在 setPage 時重算（靜態分頁維持字串常數）；
    同時負責離開次級視圖時把 SETSUB 歸零。既有的 .set-item 監聽器以識別字呼叫 setPage，會取到這層。 */
 const _setPage=setPage;
 setPage=function(key){
   SETSUB=null;
-  if(key==='policies')SET_PAGES.policies=policiesPage();
+  if(SET_DYN[key])SET_PAGES[key]=SET_DYN[key]();
   _setPage(key);
 };
 
@@ -6269,13 +6751,13 @@ function ckProfileCard(){
        onclick="openCheckoutEditor('checkout')">編輯</button></div>`).join('')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">「使用中」badge 與編輯器頂欄第二行的綠點是同一個欄位（44 §21.6 結論 4）。</p></div>`;
 }
-SET_PAGES.checkout=ckProfileCard()+SET_PAGES.checkout.replace(
- `<div class="set-row"><div><b>自訂結帳外觀</b><span class="sub">品牌色／字體／圓角（checkout profile）</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：Checkout 編輯器規格見 24 §6')">自訂結帳</button></div>`,
- `${setRow('自訂結帳外觀','品牌色／字體／圓角——由上方設定檔的編輯器維護')}`);
+/* 結帳分頁前置設定檔卡；「自訂結帳外觀」那一列已改成 setRowBtn 直接進編輯器，
+   原本的字串 replace（脆弱、依賴逐字相符）連同佔位列一起移除。 */
+SET_PAGES.checkout=ckProfileCard()+SET_PAGES.checkout;
 /* 只換結尾那個卡片收尾的 </div>（字串中間還有很多 set-row 的 </div>，不能用第一個）*/
 SET_PAGES.accounts=SET_PAGES.accounts.replace(/<\/div>$/,
- `<div class="set-row" style="border:0"><div><b>自訂帳號頁版面</b><span class="sub">登入／訂單／訂單狀態／個人資料——與結帳同一個編輯器</span></div>
-   <button class="btn btn-sec btn-sm" data-doc="ck-entry" style="margin-left:auto" onclick="openCheckoutEditor('orders')">開啟編輯器</button></div></div>`);
+ `<div class="set-row" style="border:0"><div class="sr-t"><b>自訂帳號頁版面</b><span class="sub">登入／訂單／訂單狀態／個人資料——與結帳同一個編輯器</span></div>
+   <button class="btn btn-sec btn-sm sr-act" data-doc="ck-entry" onclick="openCheckoutEditor('orders')">開啟編輯器</button></div></div>`);
 
 Object.assign(DOCS,{
 /* ---------- 共用：save bar 位置更正（44 §22.5 實測）---------- */
@@ -6442,6 +6924,368 @@ Object.assign(DOCS,{
  "ck-announce":{t:"公告列（帳號頁專屬區段）",f:"帳號頁頂層的公告橫幅區段",
   l:"44 §21.3 末段：「公告列」是顧客帳號頁才有的頂層區段，結帳頁沒有——所以 section 集合是 per page 的 seed，不是全域共用一份",
   i:"P0(M3)・[tbl:checkout_sections(page_id,section_key='announcement')]（只 seed 給帳號頁）"},
+});
+
+/* ==================================================================
+   模組 E 註釋條目：設定分頁真控件（49 號稽核，佔位列 → 真控件）
+   l 欄一律引 44 §、docs/specs/*、或 config/limits.yml 的鍵；
+   i 欄的數字上限一律指向 limits.yml 的鍵，不在畫面上硬編。
+   ================================================================== */
+Object.assign(DOCS,{
+/* ---------- 一般 ---------- */
+ "set-shopname":{t:"商店名稱",f:"改商店對外顯示名",
+  l:"44 §8.3「商店聯絡詳細資訊」：這個名字同時出現在通知信寄件者顯示名、結帳頁 header 與前台頁尾，改名是對顧客可見的動作，不是內部備註",
+  i:"P0・[api:shopUpdate]（name）[tbl:shops.name]；長度上限以後端 schema 為準（config/limits.yml 待補 shop.name_max_chars），前端不硬編"},
+ "set-sender-email":{t:"寄件者 email",f:"所有顧客通知的 From 位址",
+  l:"44 §18.7 通知 hub 第一張卡逐字「您的商店與顧客收發電子郵件所使用的電子郵件地址」；換網域後 SPF/DKIM 要重跑驗證，未驗證前平台會退回用平台網域寄送以免進垃圾桶",
+  i:"P0・[api:shopUpdate]（senderEmail）＋[job:dns_verify_spf_dkim] [tbl:shops.sender_email,shops.sender_verified_at]"},
+ "set-contact-email":{t:"聯絡 email",f:"平台寄給商家的通知位址",
+  l:"與寄件者 email 是兩個欄位：這個只收平台自己的通知（帳單、事故、政策變更），顧客永遠看不到（44 §8.3 商店聯絡詳細資訊）",
+  i:"P0・[api:shopUpdate]（contactEmail）[tbl:shops.contact_email]"},
+ "set-currency":{t:"幣別顯示（商店基準幣別）",f:"選擇商店的 base currency",
+  l:"29 §1 與 06 §6：base currency 只決定入帳與報表口徑；顧客實際看到的是各市場的 presentment currency，兩者以 MoneyBag 雙記。改 base 會讓歷史報表口徑斷裂，因此後端要擋「已有訂單後改幣別」",
+  i:"P0・[api:shopUpdate]（currencyCode）[tbl:shops.currency,orders.shop_money_currency]；金額全程 integer cents"},
+ "set-unitsystem":{t:"單位制",f:"公制／英制切換",
+  l:"44 §8.3 商店預設值有「單位系統」與「預設重量單位」兩欄；本原型合併成一個單位制，重量單位由單位制推導（公制→kg、英制→lb），避免兩欄互相矛盾",
+  i:"P1・[api:shopUpdate]（unitSystem, weightUnit）[tbl:shops.unit_system]；影響 product_variants.weight 的顯示換算，儲存值恆為公克"},
+ "set-timezone":{t:"時區",f:"報表與排程的時區基準",
+  l:"44 §8.3 逐字「設定記錄訂單和分析資料的時間」；19-F1／F2 的 rollup 依店時區切日界線，禮品卡與 store credit 的到期也以店時區當日結束為準（limits.yml store_credit.expiry_boundary）",
+  i:"P0・[api:shopUpdate]（ianaTimezone）[tbl:shops.timezone]；MySQL 需先灌時區表才能用 CONVERT_TZ 做 rollup"},
+ "set-ordernumber":{t:"訂單編號（唯讀）",f:"顯示目前的訂單流水號",
+  l:"**為什麼不可改**：流水號是單店連號的單調遞增序列，訂單號一旦配發就寫進顧客通知信、發票與金流商的 reference，改號會讓對帳失據；同時 15-F5 要求號碼不得洩漏平台總量，所以序列由平台配發、起始值鎖在 limits.yml order.number_start（1001）。實站也只開放改前後綴（44 §8.3／22:146）",
+  i:"P0・唯讀欄位，無 mutation。[tbl:orders.number]（per-shop sequence，BIGINT 單調遞增）；前後綴另存 [tbl:shops.order_prefix/order_suffix]，起始值讀 config/limits.yml order.number_start"},
+ "set-backup-region":{t:"兜底地區 backup region（唯讀）",f:"顯示目前的定價回退區",
+  l:"**為什麼不可改**：44 §8.3 逐字「決定適用於您市場以外顧客的設定」——這個值是由「哪些國家還留在 active market」推導出來的（29 §1.2），不是可挑的欄位。要換就得去 Markets 調整 active market，這裡改只會與市場設定互相矛盾",
+  i:"P1・唯讀衍生值，由 [tbl:markets] 即時推導（無獨立欄位）；[api:markets] 讀取後於序列化層計算"},
+/* ---------- 使用者與安全 ---------- */
+ "set-sec-2fa":{t:"強制兩步驟驗證（商店層）",f:"要求所有成員啟用 2FA",
+  l:"44 §8.1：使用者／角色／安全性都在組織層，商店層這顆是組織政策的鏡像顯示；12-F3 規定開啟後未設定 2FA 的成員在下次登入被導去設定頁，而不是直接鎖帳號",
+  i:"P0・[api:TBD-organizationSecurityUpdate]（28 待補組織層 mutation）[tbl:organizations.require_2fa,users.totp_secret]"},
+ "set-signout-all":{t:"登出所有裝置（破壞性）",f:"一次撤銷所有成員的 session",
+  l:"12-F3 session 管理：撤銷是把 session 版本號 +1，所有既有 token 立即失效（含觸發者自己）。屬破壞性動作，走 23 §4.6 二次確認＋47 §D destructive-secondary（白底紅框紅字）",
+  i:"P0・[api:TBD-sessionsRevokeAll]（28 待補）[tbl:users.session_version,sessions]；撤銷後前端要主動導回登入頁"},
+/* ---------- 付款 ---------- */
+ "set-descriptor":{t:"帳單敘述名（含字元計數器）",f:"顧客信用卡帳單上顯示的字樣",
+  l:"認不出來的敘述名是爭議款（chargeback）的首要來源，因此金流商規定長度 2–19 且僅限 ASCII 英數與空白。計數器格式走 48 §31.1 硬性 `已使用 {n}/{max} 個字元`，超限改 `已超出 {n-max} 個字元`；採軟限制不用 maxlength（貼上長文會無聲截斷）",
+  i:"P1・[api:TBD-paymentsSettingsUpdate]（28 待補金流設定端點）[tbl:payment_settings.statement_descriptor]；**上限不硬編**——2/19 讀 config/limits.yml payments.statement_descriptor_min_chars／max_chars（待補鍵），元件只吃 data-max/data-min"},
+ "set-payout":{t:"撥款排程",f:"款項轉進銀行帳戶的頻率",
+  l:"排程只影響「何時把餘額轉出」，不影響請款時點；T+2 是金流商的清算期，改排程不會縮短它。手動撥款時餘額仍會累積，但要自己按下撥款",
+  i:"P1・[api:TBD-payoutScheduleUpdate]（28 待補）[tbl:payment_settings.payout_interval] [job:payout_dispatch]"},
+ "set-manualpay":{t:"手動付款方式列",f:"點入該筆手動付款方式的編輯頁",
+  l:"手動付款方式＝結帳時不經金流商、由商家事後手動標記為已收款的通道（銀行轉帳／貨到付款／面交）。15-F4：這類訂單建立時 financial_status＝pending，收款要走 orderMarkAsPaid",
+  i:"P1・[api:TBD-manualPaymentMethod]（28 待補）[tbl:manual_payment_methods(shop_id,name,instructions,enabled,position)]"},
+ "set-manualpay-add":{t:"新增手動付款方式",f:"再建一種手動收款通道",
+  l:"自訂名稱不得使用平台保留字（Shopify Payments、PayPal…之類）以免顧客誤認為第三方託管付款；名稱在同一店內唯一",
+  i:"P1・[api:TBD-manualPaymentMethodCreate] [tbl:manual_payment_methods] UNIQUE(shop_id,name)"},
+/* ---------- 結帳 ---------- */
+ "set-ck-branding":{t:"自訂結帳外觀（進編輯器）",f:"開啟結帳與帳號編輯器",
+  l:"44 §21：品牌色／字體／圓角屬 checkout profile 的一部分，只能在編輯器裡改；設定頁這一列是入口而不是欄位，所以做成 setRowBtn 不是佔位列",
+  i:"P0(M3)・[api:TBD-checkoutBrandingUpsert]（28 待補）[tbl:checkout_profiles,checkout_branding]"},
+ "set-ck-contact":{t:"顧客聯絡方式",f:"結帳要收哪一種聯絡通道",
+  l:"44 §18.2 逐字：radio 兩態「電話號碼或電子郵件」／「電子郵件」；且「要求顧客登入才能結帳」勾選時強制只能 email（limits.yml checkout.require_login_forces_email_contact＝true）——這是一條前端聯動硬規則，顧客帳號分頁選「必填」時這裡要跟著鎖成唯讀",
+  i:"P0・[api:checkoutSettingsUpdate]（contactMethod）[tbl:checkout_settings.contact_method]"},
+ "set-ck-name":{t:"姓名格式",f:"姓名欄的必填組合",
+  l:"44 §18.2「顧客資訊」四列之一，姓名另有「僅姓氏必填／名字與姓氏皆必填」變體，與其他三欄的三態不同源，所以存在獨立欄位 name_format 而不是併進 checkout_field_config",
+  i:"P0・[api:checkoutSettingsUpdate]（nameFormat）[tbl:checkout_settings.name_format]"},
+ "set-ck-fields":{t:"表單欄位（進次級視圖）",f:"逐欄設定公司名稱／地址第二行／電話的三態",
+  l:"44 §18.2 行動項 23：三欄各自三態（不顯示／選填／必填），檔位取自 limits.yml checkout.field_visibility_modes；一列塞三個 select 在 ≤767 會溢出，所以拆成次級視圖",
+  i:"P0・[api:checkoutSettingsUpdate]（fieldConfig）[tbl:checkout_field_config(shop_id,field_key,visibility)] UNIQUE(shop_id,field_key)"},
+ "set-ck-optin":{t:"Email 行銷同意預先勾選",f:"開關結帳頁行銷同意的預設勾選",
+  l:"44 §18.2／行動項 24：實站是「在特定地區預設勾選核取方塊」＝法規驅動的自動化，GDPR 區不預勾、美國預勾；SMS 則<b>永不</b>可預勾（limits.yml checkout.sms_consent_never_prechecked＝true），所以 SMS 沒有對應開關",
+  i:"P1・[api:checkoutSettingsUpdate]（emailConsentPrechecked）[tbl:consent_default_by_region(shop_id,region,channel,prechecked)]；同意紀錄另存 [tbl:customer_consents]（append-only，含時間戳與來源）"},
+ "set-ck-optin-scope":{t:"預先勾選的適用地區",f:"縮小預勾的地區範圍",
+  l:"這個 select 只能<b>縮小</b>範圍：GDPR／PIPL 管轄地在後端一律強制不預勾，就算選「全部市場」也會被地區規則否決（GDPR 為硬約束，不是偏好）",
+  i:"P1・[tbl:consent_default_by_region]；後端以 region allowlist 求交集，前端選項只是上界"},
+ "set-ck-tip":{t:"小費開關",f:"結帳頁是否顯示小費選項",
+  l:"44 §18.2 逐字「顧客可以從 3 個預設金額中選擇，或輸入自訂金額」；關閉時下方的三檔百分比欄位一併 disabled（47 §E：只降文字色不降 opacity，並加 aria-disabled）",
+  i:"P3・[api:checkoutSettingsUpdate]（tipEnabled）[tbl:checkout_settings.tip_enabled]；小費金額不課稅、不進商品銷售額（19 號指標辭典）"},
+ "set-ck-tip-presets":{t:"小費三檔百分比",f:"三個預設百分比",
+  l:"必須剛好三檔（44 §18.2 實測 3 個預設金額）；百分比以訂單小計為基數，不含運費與稅",
+  i:"P3・[tbl:checkout_settings.tip_presets]（JSON array，長度固定 3）；金額計算走同一個金額引擎（06 §6），integer cents"},
+ "set-ck-billing":{t:"帳單地址",f:"是否額外收帳單地址",
+  l:"44 §18.2「進階偏好設定 → 地址蒐集」；選「不收集」只有在整張購物車都是數位商品時成立，含實體商品時後端會強制退回「預設同運送地址」",
+  i:"P1・[api:checkoutSettingsUpdate]（billingAddressMode）[tbl:checkout_settings.billing_address_mode]"},
+ "set-ck-autofulfill":{t:"付款後自動出貨",f:"付款成功即自動建立 fulfillment",
+  l:"16-F3：自動出貨會直接把庫存從 committed 扣掉並寄出出貨通知，一旦寄出無法撤回；因此預設只開給數位商品。開啟後才顯示適用範圍 select（相依欄位）",
+  i:"P0・[api:checkoutSettingsUpdate]（autoFulfill）＋[api:fulfillmentCreate] [tbl:checkout_settings.auto_fulfill_scope,fulfillment_orders]；自動出貨必帶 idempotencyKey"},
+ "set-ck-autofulfill-scope":{t:"自動出貨的適用範圍",f:"僅數位商品／全部商品",
+  l:"實體商品自動出貨等於跳過揀貨確認，庫存帳與實體庫存會開始漂移；選「全部商品」時後端要求商店已設定至少一個出貨地點",
+  i:"P0・[tbl:checkout_settings.auto_fulfill_scope] enum(digital,all)"},
+ "set-ck-autoarchive":{t:"自動封存",f:"出貨且付款完成後自動封存訂單",
+  l:"16-F1：封存只是把訂單移出預設檢視（open→archived），不影響任何金額或庫存狀態，可隨時取消封存；與「取消」是兩件事",
+  i:"P0・[api:checkoutSettingsUpdate]（autoArchive）＋[api:orderClose] [tbl:checkout_settings.auto_archive,orders.closed_at]"},
+ "set-ck-aband":{t:"棄單挽回信（legacy 開關）",f:"開關自動挽回信",
+  l:"44 §18.2 資訊橫幅：新版棄單自動化已遷到行銷自動化（Messaging），這顆是 legacy 開關，兩邊同時開會重複寄。棄單判定門檻＝留下 email 後 10 分鐘未完成（limits.yml abandoned_checkout.qualify_after_minutes）",
+  i:"P1・[api:TBD-marketingAutomationUpdate]（28 待補）[tbl:checkout_settings.abandoned_email_enabled,checkouts] [job:abandoned_recovery]"},
+ "set-ck-aband-delay":{t:"棄單信寄出延遲",f:"選擇延遲時數",
+  l:"44 §18.2／行動項 25 實測四檔 1/6/10/24 小時、預設 10 且官方標「建議」；**檔位與預設值一律讀 config/limits.yml abandoned_checkout.recovery_delay_hour_options／recovery_delay_default_hours**，不在畫面硬編",
+  i:"P1・[tbl:checkout_settings.abandoned_delay_hours] [job:abandoned_recovery]（delay 由設定讀取，非常數）"},
+ "set-ck-aband-aud":{t:"棄單信寄送對象",f:"所有未完成結帳／僅 email 訂閱者",
+  l:"limits.yml abandoned_checkout.recovery_audience_options 兩選一；選「所有未完成結帳」時仍受交易性信件的合規界線約束——挽回信屬行銷性質，未訂閱者在部分管轄地不得寄送",
+  i:"P1・[tbl:checkout_settings.abandoned_audience] enum；寄送前逐筆檢查 [tbl:customer_consents]"},
+/* ---------- 網域 ---------- */
+ "set-dom-redirect":{t:"將所有流量導向主網域",f:"301 導向開關",
+  l:"29 §2：採用國際網域策略（子網域／子資料夾）時必須關閉，否則 /int 會被 301 吃掉，hreflang 也會全部指向同一頁而失效",
+  i:"P1・[api:TBD-domainUpdate]（redirectToPrimary）[tbl:domains.redirect_to_primary]；邊緣層執行 301，不進 Rails"},
+/* ---------- 運送與配送 ---------- */
+ "set-localdelivery":{t:"本地配送（進次級視圖）",f:"設定某地點的本地配送範圍與費用",
+  l:"44 §15：本地配送是 per location 的獨立通道，不是運送設定檔裡的 rate；半徑上限與區域數上限見 limits.yml shipping.local_delivery_max_radius_km／local_delivery_max_zones_per_location",
+  i:"P2・[api:TBD-localDeliverySettingUpsert]（28 待補）[tbl:local_delivery_settings(location_id,mode,radius_km,postal_codes,fee_cents,free_threshold_cents)]"},
+ "set-pickup-prep":{t:"店面取貨備貨時間",f:"顧客可取貨的前置時間",
+  l:"44 §18.7 通知表：備貨時間決定「已可到店取貨」通知的預估時間文字；選「關閉」時該地點在結帳頁不再出現取貨選項，但既有待取訂單不受影響",
+  i:"P2・[api:TBD-pickupSettingUpsert]（28 待補）[tbl:pickup_settings(location_id,prep_time,instructions,enabled)]"},
+ "set-packages":{t:"已儲存的包裹（進次級視圖）",f:"維護可重複使用的包裹規格",
+  l:"包裹的空重會加進總重再算費率，所以不是純展示資料；超商取貨另有材積與重量上限（limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg），超過時該通道要在結帳頁隱藏",
+  i:"P2・[api:TBD-packagePresetCreate]（28 待補）[tbl:package_presets(shop_id,type,length_mm,width_mm,height_mm,tare_g,is_default)]"},
+ "set-packingslip":{t:"裝箱單模板（進次級視圖）",f:"編輯裝箱單的 Liquid 模板",
+  l:"16-F4：裝箱單是 Liquid 模板渲染成 PDF，走 18-F2 的沙箱（Drops 白名單＋資源上限）；模板拿到的是<b>該張出貨單</b>的 line_items，不是整張訂單，拆單時兩者不同",
+  i:"P2・[api:TBD-packingSlipTemplateUpdate]（28 待補）[tbl:packing_slip_templates(shop_id,body_liquid,paper,show_images)] [job:packing_slip_render]"},
+ "set-carrier-add":{t:"連接 Carrier 帳號",f:"綁定自家的物流商合約帳號",
+  l:"接上之後即時運費改用你的合約費率，取代平台費率；carrier 回傳逾時要 fail-open 退回 flat rate，不能讓結帳卡住（15-F3）",
+  i:"P2・[api:carrierServiceCreate] [tbl:carrier_accounts,carrier_services,shipping_rates(type='carrier')]；逾時上限與退回策略見 15-F3"},
+/* ---------- 稅額 ---------- */
+ "set-tax-tw":{t:"台灣營業稅率",f:"設定台灣的稅率",
+  l:"44 §18.3：香港／馬來西亞等地屬 Manual Tax 檔（tax_region.service_tier=manual）才會出現自訂稅率編輯器；台灣營業稅 5% 且採含稅定價，稅額由金額引擎自售價反推，不另外加價（15-F2）",
+  i:"P0・[api:TBD-taxRegionUpdate]（28 待補）[tbl:tax_regions(shop_id,country,rate_bp,service_tier)]；稅率存 basis points 整數，不存 float"},
+ "set-tax-hk":{t:"香港稅率",f:"設定香港的稅率",
+  l:"香港不課銷售稅，填 0；44 §18.3 把香港列在 Manual Tax 檔，因此仍需要一筆稅務地區紀錄（不是不建立），否則跨境訂單找不到適用稅則",
+  i:"P0・[tbl:tax_regions] rate_bp=0；0 與 NULL 語意不同：0＝已確認免稅、NULL＝尚未設定會擋結帳"},
+ "set-tax-my":{t:"馬來西亞 SST 稅率",f:"設定馬來西亞的預設稅率",
+  l:"SST 依商品類別而異，這裡只是預設值；差異走「稅則覆寫」（以商品系列為單位）。引擎讀取順序固定：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15-F2）",
+  i:"P0・[tbl:tax_regions,tax_overrides]；覆寫命中時把命中的 override_id 寫進訂單稅務快照"},
+ "set-tax-incl":{t:"價格含稅",f:"前台顯示價是否內含稅額",
+  l:"44 §18.3 額外設定第一項逐字「在商品價格與運費費率中包含銷售稅」，副標說明採用<b>動態稅金內含</b>的市場會依當地稅率調整；切換會重算所有市場的顯示價，是跨市場影響不是單店開關",
+  i:"P0・[api:TBD-taxSettingsUpdate] [tbl:tax_settings.prices_include_tax]；顯示價重算走金額引擎（06 §6），歷史訂單沿用下單當時的快照"},
+ "set-tax-override":{t:"稅則覆寫（進次級視圖）",f:"以商品系列為單位指定稅率",
+  l:"44 §18.3：可用<b>未發布</b>的系列當作純稅務用的分組（歐盟數位商品 VAT 就是靠特殊 collection 驅動，行動項 30）；同一商品命中多條時取最後建立的一條並寫進訂單稅務快照",
+  i:"P1・[api:TBD-taxOverrideCreate]（28 待補）[tbl:tax_overrides(shop_id,collection_id,rate_bp,created_at)] [tbl:orders.tax_snapshot_id]"},
+ "set-tax-duty":{t:"跨境關稅 DDU／DDP",f:"關稅由顧客付還是結帳預收",
+  l:"44 §18.3：DDP 需要每個品項都有 HS code 與原產地，缺一即自動退回 DDU 計價；海關資訊以<b>商品子類 taxonomy</b> 批次設定（13,356 個子類），不是逐商品填（行動項 29）",
+  i:"P2・[api:TBD-dutiesSettingsUpdate] [tbl:tax_settings.duty_mode] [tbl:inventory_items.harmonized_system_code,country_code_of_origin]；DDP 交易費另計"},
+/* ---------- 地點 ---------- */
+ "set-loc-ship":{t:"從此地點出貨",f:"該地點是否參與自動分單",
+  l:"44 §18.4：關閉的地點仍佔一個順位、仍可存放庫存，只是分單時被略過；停用（deactivate）地點前必須先移走庫存與待出貨單，這與「不出貨」是兩層",
+  i:"P0・[api:locationActivate]／[api:locationDeactivate]（必帶 idempotencyKey，見 limits.yml idempotency.required_for）[tbl:locations.fulfills_online_orders]"},
+ "set-loc-priority":{t:"出貨優先序（進次級視圖）",f:"調整自動分單的嘗試順序",
+  l:"13-F5：由上而下逐一嘗試，第一個「可出貨且庫存足夠」的地點勝出；整單分不出來時才拆成多張 fulfillment order。順序是資料不是視覺排版，必須落地成整數 position",
+  i:"P1・[api:TBD-locationsReorder]（28 待補）[tbl:locations.fulfillment_priority] UNIQUE(shop_id,fulfillment_priority)"},
+ "set-loc-add":{t:"新增地點",f:"建立一個新的庫存／出貨地點",
+  l:"44 §18.4 副標逐字「您的方案提供 200 個有效地點，目前已使用 1 個」——配額要直接顯示在頁面上；app 建立的地點（3PL）唯讀且不佔配額",
+  i:"P1・[api:TBD-locationCreate]（28 待補）[tbl:locations]；**配額不硬編**——讀 config/limits.yml location.quota_basic_to_advanced／quota_plus／app_locations_count_toward_quota，到頂時新增鈕 disabled"},
+/* ---------- 通知 ---------- */
+ "set-staff-notif":{t:"新訂單通知收件人",f:"設定員工通知的收件 email",
+  l:"44 §18.7：員工通知與顧客通知是兩套模板；收件人可多筆並可依地點過濾（per-location），所以後端是一張明細表不是 shops 上的單一欄位",
+  i:"P1・[api:TBD-staffNotificationUpdate]（28 待補）[tbl:staff_notifications(shop_id,event_key,email,location_id NULL)]"},
+ "set-webhook":{t:"Webhook 訂閱列",f:"點入該筆 webhook 的設定頁",
+  l:"44 §18.7／行動項 34：webhook 歸在「通知」而不是開發者區，且<b>同時支援 JSON 與 XML</b>（28 號原本只設計 JSON，須補格式欄）；投遞以 HMAC-SHA256 簽章，接收端必須驗簽",
+  i:"P1・[api:webhookSubscriptionUpdate] [tbl:webhook_subscriptions(shop_id,topic,url,format,api_version,secret_digest)]"},
+ "set-webhook-add":{t:"建立 webhook",f:"新增一筆事件訂閱",
+  l:"一筆 webhook 一個 topic；要多個事件就建多筆（不是一筆多選）。事件送出走 outbox，transaction 內禁外部 IO（18-F1）",
+  i:"P1・[api:webhookSubscriptionCreate] [tbl:webhook_subscriptions,event_outbox] [job:webhook_deliver]"},
+/* ---------- 自訂資料 ---------- */
+ "set-metaobj":{t:"元物件定義（進次級視圖）",f:"管理自訂資源型別的定義",
+  l:"44 §11.1：元物件＝自己定義的資源型別，條目可被商品／頁面以 reference 型中繼欄位引用；刪除定義會連帶刪條目並讓引用變成 dangling reference，所以刪除必須二次確認",
+  i:"P2・[api:metaobjectDefinitionCreate]／[api:metaobjectDefinitionDelete] [tbl:metaobject_definitions,metaobjects,metaobject_fields]"},
+/* ---------- 品牌 ---------- */
+ "set-brand-slogan":{t:"標語 slogan",f:"一句話的品牌標語",
+  l:"供銷售管道與 app（Shop app、社群卡）與結帳預設取用；Liquid 以 shop.brand.slogan 讀取（26 號 Liquid API 面）。這是品牌資產不是 SEO 欄位，與首頁 SEO 標題分開存",
+  i:"P1・[api:TBD-brandUpdate]（28 待補）[tbl:shop_brand.slogan]；長度上限以後端 schema 為準（config/limits.yml 待補 brand.slogan_max_chars）"},
+ "set-brand-desc":{t:"簡短描述",f:"商店的簡短介紹",
+  l:"Shop app 商店檔案與社群分享卡取用；與 SEO meta description 是兩個欄位（後者上限 320，見 limits.yml content.seo_meta_description_max_chars）不可共用",
+  i:"P1・[tbl:shop_brand.short_description]；上限讀 config/limits.yml（待補 brand.short_description_max_chars）"},
+ "set-brand-social":{t:"社群連結（進次級視圖）",f:"維護各社群平台的網址",
+  l:"同一組值同時餵給前台頁尾、Shop app 商店檔案與結構化資料的 sameAs（30 §）；留空的平台不輸出圖示也不輸出 sameAs 項，避免產生死連結",
+  i:"P1・[tbl:shop_brand_socials(shop_id,platform,url)]；Liquid 以 shop.brand.social 讀取（26 號）"},
+/* ---------- 顧客隱私 ---------- */
+ "set-pv-banner":{t:"Cookie 同意橫幅",f:"開關依地區顯示的同意橫幅",
+  l:"38 號信任模組：關閉後分析類 pixel 在歐盟／英國／加州不得載入（不是「不顯示橫幅但照樣追蹤」）；橫幅顯示與否由訪客 IP 對應的管轄地決定",
+  i:"P1・[api:TBD-privacySettingsUpdate]（28 待補）[tbl:privacy_settings.cookie_banner_enabled]；pixel 載入判斷在邊緣層做，不進 Rails"},
+ "set-pv-gpc":{t:"全球隱私控制 GPC",f:"自動遵循瀏覽器的 Sec-GPC 訊號",
+  l:"38 號：GPC 是法定訊號不是偏好——收到 Sec-GPC:1 即視同顧客已選擇退出資料銷售／分享，必須立刻生效且不得再詢問。在加州屬強制遵循",
+  i:"P1・[tbl:privacy_settings.honor_gpc]；請求進來時解析 Sec-GPC header → 寫入 [tbl:customer_consents]（來源標 gpc）"},
+ "set-pv-optout":{t:"資料銷售退出",f:"前台是否顯示退出連結",
+  l:"CCPA/CPRA：只要有向第三方「出售或分享」個資（含廣告 pixel），就必須提供顯著的退出連結；關閉這顆等於宣告本店不出售個資，與已啟用的第三方 pixel 互相矛盾時要示警",
+  i:"P1・[tbl:privacy_settings.data_sale_optout_enabled]；退出紀錄寫 [tbl:customer_consents]（append-only）"},
+ "set-pv-optout-label":{t:"退出連結文字",f:"自訂連結的顯示文字",
+  l:"CCPA/CPRA 對字樣有明文要求（Do Not Sell or Share My Personal Information 的在地化版本），改寫前必須過法務；這是合規文案不是行銷文案",
+  i:"P1・[tbl:privacy_settings.optout_label]（i18n key per locale）"},
+ "set-pv-gen":{t:"隱私政策生成器（進次級視圖）",f:"依收集的資料類型產生政策草稿",
+  l:"44 §18.6 行動項 33：政策有第三態「● 自動」＝系統代生成，商家改寫後轉「已設定」；生成器產出的是草稿不是法律意見，必須在 UI 明說",
+  i:"P2・[api:TBD-shopPolicyUpdate]（帶 source enum: manual|generated）[tbl:shop_policies(shop_id,type,body,source)]"},
+/* ---------- 禮品卡 ---------- */
+ "set-gc-expiry":{t:"禮品卡到期政策",f:"選擇是否設到期日",
+  l:"多數地區法規禁止禮品卡設到期日，設了就必須能證明合規；到期以商店時區的當日結束為準（同 store credit，limits.yml store_credit.expiry_boundary）。選「自訂月數」才展開月數欄位",
+  i:"P1・[api:TBD-giftCardSettingsUpdate]（28 待補）[tbl:gift_card_settings.expiry_policy,expiry_months]"},
+ "set-gc-expiry-months":{t:"自訂有效月數",f:"設定發卡後的有效月數",
+  l:"只有到期政策選「自訂」時才有效；月數是相對值，實際到期時間在發卡當下計算並寫進卡片（改設定不追溯既有卡片）",
+  i:"P1・[tbl:gift_cards.expires_at]（發卡時計算並固化）；上限以後端 schema 為準（config/limits.yml 待補 gift_card.max_expiry_months）"},
+ "set-gc-wallet":{t:"Apple Wallet passes",f:"允許顧客把禮品卡加入 Wallet",
+  l:"Wallet pass 的餘額要與 gift_cards.balance 同步（消費後推播更新），因此開啟後每次餘額變動都要多一次 push；未設定 Apple 憑證時後端會拒絕開啟",
+  i:"P3・[tbl:gift_card_settings.apple_wallet_enabled] [job:wallet_pass_push]；餘額為 integer cents"},
+/* ---------- 方案 ---------- */
+ "set-plan-pause":{t:"Pause and Build（破壞性但可還原）",f:"暫停商店的銷售能力",
+  l:"44 §19.3：破壞性動作放在卡片 footer、用 destructive-secondary（白底紅框紅字）不是紅底實心。暫停期間前台可瀏覽但不可結帳，折扣與禮品卡一併停用；**可還原**，所以二次確認不寫「此動作無法復原」",
+  i:"P2・[api:TBD-shopPause]（28 待補）[tbl:shops.status enum(active,paused,closed)]；暫停期間 checkout 路由回 423"},
+ "set-plan-close":{t:"關閉商店（破壞性，不可復原）",f:"結束這間商店",
+  l:"44 §19.3 實測「刪除商店」為紅框紅字 secondary；關店＝結清帳款 → 斷開網域 → 員工帳號失效，資料保留 2 年可申請復原，超過即永久刪除。屬不可逆動作，二次確認必寫「此動作無法復原」（23 §4.6）",
+  i:"P2・[api:TBD-shopClose]（28 待補）[tbl:shops.status,shops.closed_at] [job:shop_purge]（2 年後）；未結清帳款先請款"},
+/* ---------- 帳單 ---------- */
+ "set-bill-method":{t:"帳單付款方式（進次級視圖）",f:"管理向平台付款的卡片",
+  l:"44 §19.4：帳單頁有虛線列「⊕ 新增付款方式」；主要方式扣款失敗時改用備援，連續失敗會暫停商店。平台只保存 token 與末四碼（11 §0 安全維度）",
+  i:"P1・[api:TBD-billingPaymentMethodCreate]（28 待補）[tbl:billing_payment_methods(org_id,gateway_token,brand,last4,is_primary)]；完整卡號永不落庫"},
+ "set-bill-cycle":{t:"帳單週期（唯讀）",f:"顯示目前的請款日",
+  l:"**為什麼不可改**：44 §19.4 的「目前帳單週期」是一段固定 30 天區間，起點由方案開通日決定；商家自選請款日會讓比例計費（proration）與已開立發票的區間重疊，因此平台鎖定。要換週期只能換方案",
+  i:"P1・唯讀衍生值，由 [tbl:subscriptions.started_at] 推導；[api:TBD-billingCycle] 只讀不寫"},
+ "set-bill-threshold":{t:"帳單門檻",f:"累積多少金額就先請款一次",
+  l:"門檻與週期是「先到者觸發」的雙條件，不是二選一；門檻請款後週期不重置，這一點要在 UI 講清楚以免商家誤解為提前結算",
+  i:"P1・[tbl:subscriptions.billing_threshold_cents]（integer cents）[job:billing_threshold_check]"},
+ "set-bill-currency":{t:"帳單幣別",f:"平台向你收費的幣別",
+  l:"與商店的銷售幣別互不相干（後者見「幣別顯示」）；帳單幣別一經開立發票即不可回溯變更，改動只影響下一期",
+  i:"P1・[tbl:subscriptions.currency]；金額 integer cents，跨幣別以開票當下匯率固定"},
+/* ---------- 組織 ---------- */
+ "set-org-name":{t:"組織名稱",f:"改組織的顯示名",
+  l:"44 §8.1：組織層標題顯示法人名＋副標「組織」，這個名字會出現在組織導航與帳單發票抬頭；與各商店的商店名是不同層級的欄位",
+  i:"P1・[api:TBD-organizationUpdate]（28 待補）[tbl:organizations.name]"},
+ "set-org-2fa":{t:"組織安全政策：強制 2FA",f:"組織層的 2FA 強制開關",
+  l:"44 §8.1：使用者／角色／安全性在組織層，這顆是唯一的真相來源，商店層的同名開關只是鏡像。開啟後所有商店的成員一體適用",
+  i:"P0・[api:TBD-organizationSecurityUpdate] [tbl:organizations.require_2fa]"},
+ "set-org-2fa-grace":{t:"2FA 寬限期",f:"強制生效前的緩衝天數",
+  l:"寬限期內成員可先跳過設定，逾期即在登入時強制導向設定頁；寬限期以「政策開啟時間」起算而不是以個別成員的首次登入起算，避免永遠不到期",
+  i:"P0・[tbl:organizations.require_2fa_grace_days,organizations.require_2fa_enabled_at]"},
+ "set-org-users":{t:"組織使用者（跳分頁）",f:"跳到使用者分頁管理成員",
+  l:"44 §8.1／22 §8：使用者管理已上移組織層，所以這一列不是佔位而是導向；同一份成員清單在組織層與商店層是同一張表，不做兩份",
+  i:"P0・前端路由 setPage('users')，無 API；成員資料 [tbl:organization_members,users]"},
+/* ---------- 顧客帳號 ---------- */
+ "set-acct-req":{t:"結帳時的帳號要求",f:"不使用帳號／選填／必填",
+  l:"44 §18.2：勾「要求顧客登入才能結帳」時聯絡方式被強制鎖成 email（limits.yml checkout.require_login_forces_email_contact＝true）——所以選「必填」要同步把結帳分頁的聯絡方式改成唯讀，這是跨分頁的欄位聯動",
+  i:"P1・[api:checkoutSettingsUpdate]（requireLogin）＋[api:TBD-customerAccountsUpdate] [tbl:checkout_settings.require_login,shops.customer_account_mode]"},
+ "set-acct-return":{t:"自助退貨",f:"開關顧客自助提出退貨",
+  l:"44 §18.5 第 3 列「自助退貨與取消」逐字「透過退貨與取消規則設定條件與費用」——開關只管入口，條件在政策分頁的規則卡；關閉時前台完全不出現退貨入口（不是提交後才拒絕，16-F7.4 規則 5）",
+  i:"P1・[api:returnPolicyUpdate]（returnsEnabled）[tbl:return_rules,shops.self_serve_returns]"},
+ "set-acct-window":{t:"退貨期限",f:"選擇自助退貨的可申請天數",
+  l:"**檔位讀 config/limits.yml return.window_day_options（14／30／90／unlimited／custom）**，不硬編；台灣消保法七日鑑賞期是下限（limits.yml return.tw_minimum_window_days，標記 verify），選低於下限時後端要擋",
+  i:"P0・[api:returnPolicyUpdate]（windowDays）[tbl:return_rules.window_days]；下單當下 snapshot 到 [tbl:return_policy_snapshots]，改設定不追溯既往"},
+ "set-acct-basis":{t:"退貨期限起算點",f:"個別品項送達日／整單最後一項送達日",
+  l:"limits.yml return.window_start_options 二選一；16-F7.4 規則 7 要求兩種 basis 都要落地，到店領取以實際領件時間為準（16-F4 (c)）",
+  i:"P0・[tbl:return_rules.window_start_basis] enum；判定時讀 [tbl:fulfillments.delivered_at]"},
+ "set-acct-credit":{t:"店內額度（store credit）",f:"顧客帳號頁是否顯示餘額",
+  l:"44 §18.5 第 4 列＋§21.5（帳號頁首有餘額藥丸）；store credit 需新版顧客帳號、最早到期的先用、到期以商店時區當日結束為準（limits.yml store_credit.*）。與禮品卡是不同系統",
+  i:"P2・[api:customerStoreCreditAccounts] [tbl:store_credit_accounts(customer_id,balance_cents,currency)]；單一顧客累計上限讀 limits.yml store_credit.max_balance_usd"},
+ "set-acct-url":{t:"帳號頁網址（唯讀）",f:"顯示託管帳號頁的網址",
+  l:"**為什麼不可改**：44 §18.5 第 5 列實測就是唯讀值（`https://shopify.com/{shop_id}/account`），顧客帳號是掛在平台網域下的獨立 SPA 不是主題頁面。網址由主網域＋固定路徑推導，要換只能走「變更網域」改主網域，不能單獨編這一格",
+  i:"P1・唯讀衍生值：primary_domain + '/account'，由 [tbl:domains.is_primary] 推導；[api:TBD-customerAccountDomainUpdate] 改的是網域不是這格"},
+/* ---------- 次級視圖 ---------- */
+ "sub-ck-fields":{t:"結帳表單欄位（次級視圖）",f:"逐欄的三態設定清單",
+  l:"44 §18.2「顧客資訊」四列實測；三態值域取自 limits.yml checkout.field_visibility_modes（hidden／optional／required）",
+  i:"P0・[api:checkoutSettingsUpdate]（fieldConfig）[tbl:checkout_field_config] UNIQUE(shop_id,field_key)"},
+ "sub-ck-field":{t:"單一欄位三態",f:"設定該欄不顯示／選填／必填",
+  l:"改成「不顯示」不會刪除既有訂單上的值——訂單存的是下單當下的地址快照，設定只影響之後的結帳表單",
+  i:"P0・[tbl:checkout_field_config(shop_id,field_key,visibility)]；訂單側 [tbl:order_addresses] 為快照"},
+ "sub-ck-fieldrule":{t:"跨欄硬規則說明",f:"列出三條不可由 UI 破壞的約束",
+  l:"① require_login ⇒ email（limits.yml checkout.require_login_forces_email_contact）② SMS 同意永不預勾（同檔 sms_consent_never_prechecked）③ 姓名格式與三欄分表存（44 §18.2 姓名有自己的變體）",
+  i:"P0・三條都在後端 validator 落地，不能只做前端 disabled [tbl:checkout_settings,checkout_field_config]"},
+ "sub-manualpay":{t:"手動付款方式編輯（次級視圖）",f:"名稱／說明／付款指示／啟用",
+  l:"15-F4：手動付款訂單建立時 financial_status=pending，收款要走 orderMarkAsPaid 而不是金流回呼；停用只影響新結帳，既有未付款訂單照舊",
+  i:"P1・[api:TBD-manualPaymentMethodUpdate] [tbl:manual_payment_methods]"},
+ "sub-manualpay-name":{t:"付款方式顯示名稱",f:"顧客在結帳頁看到的名稱",
+  l:"名稱在同一店內唯一，且不得使用平台保留字以免顧客誤認為第三方託管付款",
+  i:"P1・[tbl:manual_payment_methods.name] UNIQUE(shop_id,name)；保留字清單在後端 validator"},
+ "sub-manualpay-sub":{t:"額外詳細資訊",f:"名稱下方的一行說明",
+  l:"顯示在結帳頁的付款方式選項下方，用來寫「下單後 3 日內轉帳」這類期限；與付款指示（結帳完成後才出現）是兩個欄位",
+  i:"P1・[tbl:manual_payment_methods.subtitle]"},
+ "sub-manualpay-ins":{t:"付款指示",f:"結帳完成頁與訂單確認信的匯款說明",
+  l:"會原樣帶進通知模板，走 18-F2 的 Liquid 沙箱（Drops 白名單），不接受任意 HTML——否則等於在通知信開一個 XSS 面",
+  i:"P1・[tbl:manual_payment_methods.instructions]（Liquid 片段）[tbl:notification_templates]"},
+ "sub-manualpay-on":{t:"付款方式啟用開關",f:"是否出現在結帳頁",
+  l:"關閉是軟停用：結帳頁不再出現，但已用這個方式建立而尚未付款的訂單仍要能標記為已收款，所以不能實體刪除紀錄",
+  i:"P1・[tbl:manual_payment_methods.enabled]；刪除採 soft delete（deleted_at）"},
+ "sub-localdelivery":{t:"本地配送（次級視圖）",f:"範圍、費用與配送區域",
+  l:"44 §15：本地配送是 per location 的獨立通道；半徑上限、郵遞區號字數與區域數三個上限全部讀 limits.yml shipping.local_delivery_max_radius_km／local_delivery_postal_codes_max_chars／local_delivery_max_zones_per_location",
+  i:"P2・[api:TBD-localDeliverySettingUpsert] [tbl:local_delivery_settings,local_delivery_zones]"},
+ "sub-ld-mode":{t:"配送範圍設定方式",f:"半徑或郵遞區號二選一",
+  l:"兩種模式互斥：選半徑時郵遞區號欄位整塊隱藏，反之亦然（相依欄位的正／反兩半）。半徑以門市座標為圓心，需要先有地點的經緯度",
+  i:"P2・[tbl:local_delivery_settings.mode] enum(radius,postal_codes)；地理編碼結果存 [tbl:locations.lat,lng]"},
+ "sub-ld-radius":{t:"配送半徑",f:"以門市為圓心的公里數",
+  l:"上限讀 config/limits.yml shipping.local_delivery_max_radius_km（160 km）；判定用直線距離不是路徑距離，UI 要說清楚避免商家誤設",
+  i:"P2・[tbl:local_delivery_settings.radius_km]；結帳時以 haversine 判定，超出即隱藏此配送方式"},
+ "sub-ld-fee":{t:"基本配送費",f:"本地配送的固定費用",
+  l:"金額全程 integer cents（CLAUDE.md 鐵律 3）；0 代表免費配送，與「未設定」不同",
+  i:"P2・[tbl:local_delivery_settings.fee_cents]"},
+ "sub-ld-free":{t:"免運門檻",f:"訂單金額達標即免配送費",
+  l:"門檻以折扣後小計為基數（與運費折扣的疊加規則見 17-F2）；留空＝不設門檻，與填 0 語意不同",
+  i:"P2・[tbl:local_delivery_settings.free_threshold_cents] NULL allowed"},
+ "sub-ld-note":{t:"配送說明",f:"結帳頁配送方式下方的說明文字",
+  l:"純顯示文案，不參與費率計算；會一併帶進「訂單開始當地配送」通知模板（44 §18.7 當地配送分組）",
+  i:"P2・[tbl:local_delivery_settings.note]"},
+ "sub-ld-zone-add":{t:"新增配送區域",f:"再建一個費率不同的區域",
+  l:"每個地點的區域數上限讀 config/limits.yml shipping.local_delivery_max_zones_per_location（10）；到頂時新增鈕 disabled（47 §E 只降文字色）",
+  i:"P2・[tbl:local_delivery_zones(location_id,name,fee_cents,geo)]"},
+ "sub-packages":{t:"已儲存的包裹（次級視圖）",f:"包裹規格清單與新增／刪除",
+  l:"包裹空重會加進總重再算費率，所以刪除會改變既有費率試算結果；預設包裹在購買標籤時自動帶入。超商取貨的材積與重量上限見 limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg",
+  i:"P2・[api:TBD-packagePresetCreate/Delete] [tbl:package_presets]；尺寸存 mm、空重存 g（整數）"},
+ "sub-packages-add":{t:"新增包裹",f:"建立一組可重用的包裹規格",
+  l:"三型（箱／袋／信封）各自的欄位不同：信封沒有高度。未填長寬高與空重的包裹不會出現在標籤購買頁",
+  i:"P2・[tbl:package_presets(type,length_mm,width_mm,height_mm,tare_g)]"},
+ "sub-packingslip":{t:"裝箱單模板（次級視圖）",f:"Liquid 模板、紙張與預覽",
+  l:"16-F4：模板拿到的是<b>該張出貨單</b>的 line_items 而不是整張訂單，拆單時兩者不同；渲染走 18-F2 沙箱（Drops 白名單＋資源上限），逾時或超量即回退預設模板",
+  i:"P2・[api:TBD-packingSlipTemplateUpdate] [tbl:packing_slip_templates] [job:packing_slip_render]"},
+ "sub-ps-paper":{t:"裝箱單紙張大小",f:"A4／Letter／A5",
+  l:"影響列印邊界與每頁行數；跨境出貨的報關文件另有固定尺寸，不吃這個設定",
+  i:"P2・[tbl:packing_slip_templates.paper] enum"},
+ "sub-ps-img":{t:"裝箱單顯示商品圖片",f:"開關品項縮圖",
+  l:"關閉可讓每頁塞下更多品項，也能大幅縮短 PDF 渲染時間（圖片下載是渲染 job 的主要耗時）",
+  i:"P2・[tbl:packing_slip_templates.show_images] [job:packing_slip_render]"},
+ "sub-taxoverride":{t:"稅則覆寫（次級視圖）",f:"覆寫規則清單與新增／刪除",
+  l:"44 §18.3：可用未發布的系列當純稅務分組；引擎讀取順序固定 顧客免稅 &gt; 覆寫 &gt; 登記稅率（15-F2），同一商品命中多條時取最後建立的一條",
+  i:"P1・[api:TBD-taxOverrideCreate/Delete] [tbl:tax_overrides(shop_id,collection_id,rate_bp,created_at)]；稅率存 basis points 整數"},
+ "sub-taxoverride-add":{t:"新增稅則覆寫",f:"指定商品系列與稅率",
+  l:"未指定系列的覆寫不生效（不是套用到全店）；建立後要把命中的 override_id 寫進訂單稅務快照，否則改設定會讓歷史訂單稅額對不起來",
+  i:"P1・[tbl:tax_overrides] [tbl:orders.tax_snapshot_id]"},
+ "sub-locpriority":{t:"出貨優先序（次級視圖）",f:"上／下移調整分單順序",
+  l:"13-F5：由上而下逐一嘗試，第一個可出貨且庫存足夠的地點勝出；關閉出貨的地點被略過但仍佔順位。順序是資料，必須落成整數 position 而不是純視覺排序",
+  i:"P1・[api:TBD-locationsReorder] [tbl:locations.fulfillment_priority] UNIQUE(shop_id,fulfillment_priority)"},
+ "sub-webhook":{t:"Webhook 設定（次級視圖）",f:"topic／URL／格式／API 版本",
+  l:"44 §18.7 行動項 34：支援 JSON 與 XML 兩種格式（28 號原本只設計 JSON）；投遞以 HMAC-SHA256 簽章，接收端必須驗簽後才處理",
+  i:"P1・[api:webhookSubscriptionUpdate] [tbl:webhook_subscriptions(shop_id,topic,url,format,api_version,secret_digest)]"},
+ "sub-webhook-topic":{t:"事件 topic",f:"訂閱哪一個商店事件",
+  l:"一筆訂閱一個 topic；事件送出走 outbox，transaction 內禁外部 IO（CLAUDE.md 鐵律 5、18-F1）",
+  i:"P1・[tbl:webhook_subscriptions.topic] [tbl:event_outbox] [job:webhook_deliver]"},
+ "sub-webhook-url":{t:"接收網址",f:"事件推送的目標端點",
+  l:"必須 https；平台會拒絕內網位址與非公開網域（SSRF 防護，11 §0 安全維度）",
+  i:"P1・[tbl:webhook_subscriptions.url]；建立時做 DNS 解析與 IP 範圍檢查"},
+ "sub-webhook-fmt":{t:"payload 格式",f:"JSON 或 XML",
+  l:"44 §18.7 實測明說支援 XML 與 JSON；格式只影響序列化，事件內容與簽章方式相同",
+  i:"P1・[tbl:webhook_subscriptions.format] enum(json,xml)"},
+ "sub-webhook-ver":{t:"API 版本",f:"payload 的 schema 版本",
+  l:"版本停用前 12 個月會先寄棄用通知（28 §0 版本政策）；不指定版本會被釘在建立當下的版本，不會自動升級",
+  i:"P1・[tbl:webhook_subscriptions.api_version]"},
+ "sub-webhook-retry":{t:"最近投遞紀錄",f:"顯示近期投遞結果與重試",
+  l:"18-F1：重試採指數退避，連續失敗 48 小時後自動停用並寄信；失敗態 badge 用 ⊘（部分／受阻）不是紅色實心，符合 47 §D 的狀態圖示編碼",
+  i:"P1・[tbl:webhook_deliveries(subscription_id,status,http_code,duration_ms,attempt)]（保留 7 天）"},
+ "sub-metaobj":{t:"元物件定義（次級視圖）",f:"定義清單與新增／刪除",
+  l:"44 §11.1：條目可被商品／頁面以 reference 型中繼欄位引用；刪除定義會讓引用變成 dangling reference，所以刪除必須二次確認並列出條目數",
+  i:"P2・[api:metaobjectDefinitionCreate/Delete] [tbl:metaobject_definitions,metaobjects,metaobject_fields]"},
+ "sub-metaobj-add":{t:"新增元物件定義",f:"建立一個自訂資源型別",
+  l:"type handle 建立後不可改（前台 Liquid 與 API 都以 handle 定址）；Storefront 可讀性預設關閉，開啟才會出現在前台 API",
+  i:"P2・[tbl:metaobject_definitions(shop_id,type,storefront_access)] UNIQUE(shop_id,type)"},
+ "sub-brandsocial":{t:"社群連結（次級視圖）",f:"各平台網址的表單",
+  l:"同一組值同時餵前台頁尾、Shop app 檔案與結構化資料 sameAs（30 §）；留空不輸出，避免產生死連結與無效 sameAs",
+  i:"P1・[tbl:shop_brand_socials(shop_id,platform,url)] UNIQUE(shop_id,platform)"},
+ "sub-social-row":{t:"社群平台網址",f:"單一平台的完整網址",
+  l:"存完整 URL 不存 handle——各平台的 handle 規則不同，拼接容易出錯；儲存前正規化為 https 並去掉追蹤參數",
+  i:"P1・[tbl:shop_brand_socials.url]"},
+ "sub-privacygen":{t:"隱私政策生成器（次級視圖）",f:"勾選收集的資料類型並產生草稿",
+  l:"44 §18.6 行動項 33：產出後政策標記為「● 自動」，商家改寫即轉「已設定」；勾選項目決定草稿的段落，勾錯比不勾更危險，所以 UI 要明說這是草稿不是法律意見",
+  i:"P2・[api:TBD-shopPolicyUpdate]（source enum: manual|generated）[tbl:shop_policies(shop_id,type,body,source)]"},
+ "sub-privacygen-law":{t:"適用法規基準",f:"選擇草稿依據的法規",
+  l:"選「以上全部」時取各法規<b>最嚴格</b>的交集（不是聯集）——例如 GDPR 的不預勾規則會蓋過 CCPA 的較寬鬆版本",
+  i:"P2・[tbl:shop_policies.jurisdiction]；規則表在後端，前端只送 enum"},
+ "sub-billcards":{t:"帳單付款方式（次級視圖）",f:"卡片清單、設為主要與移除",
+  l:"44 §19.4：主要方式扣款失敗時自動改用備援，連續失敗 3 次即暫停商店；至少要保留一張，所以只剩一張時移除鈕 disabled（47 §E 只降文字色＋aria-disabled）",
+  i:"P1・[api:TBD-billingPaymentMethodCreate/Delete/SetPrimary] [tbl:billing_payment_methods(org_id,gateway_token,brand,last4,is_primary)]"},
+ "sub-billcards-add":{t:"新增帳單付款方式",f:"再登記一張卡或 PayPal",
+  l:"卡號走金流商 tokenization，平台只收 token 與末四碼，完整卡號永遠不進資料庫（11 §0 安全維度、PCI-DSS SAQ-A）",
+  i:"P1・[api:TBD-billingPaymentMethodCreate]；前端直接對金流商 tokenize，token 才送我方 API"},
 });
 
 /* init */
