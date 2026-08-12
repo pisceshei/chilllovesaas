@@ -1199,6 +1199,222 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 
 #page-detail{max-width:998px}
 
+/* ══════════════════════════════════════════════════════════════════════
+   模組 C：B2B 公司與地點（49 P0-04／44 §22.5）
+   ══════════════════════════════════════════════════════════════════════ */
+/* 44 §22.5：新增公司表單為單欄置中（實測 ~630px），不是兩欄 od-grid */
+.form1{max-width:630px;margin:0 auto;display:flex;flex-direction:column;gap:var(--sp-400)}
+/* 44 §22.5 save bar 實測更正：dirty 時 save bar 佔用「搜尋框」那個 flex 槽位，把搜尋列換掉（不是疊加）。
+   規則放在此處是因為必須排在 §1039／§1044 的 .savebar 響應式覆寫之後才吃得到；
+   ≤767 頂欄只剩 icon 寬度塞不下三顆控件，退回既有的底部浮動條（刻意偏離，見 DOCS savebar）。*/
+@media (min-width:48em){
+  /* 未 dirty 時必須完全退出 flex 流，否則會跟搜尋框搶 640px 槽位 */
+  .savebar{display:none;position:static;flex:1;max-width:640px;margin:0 auto;height:var(--h-36);
+    padding:0 var(--sp-150) 0 var(--sp-300);box-shadow:var(--sh-raised);
+    transform:none;opacity:1;pointer-events:auto;transition:none}
+  .savebar.show{display:flex;animation:pop var(--dur-base) var(--ease-decelerate)}
+  /* 驗證失敗要抖的是 save bar 本身——.cl-shake 只有一個 class，特異性輸給 .savebar.show，這裡搶回來 */
+  .savebar.show.cl-shake{animation:cl-shake var(--dur-shake) var(--ease-standard)}
+  /* 「取代」＝ 搜尋列真的消失，兩者不同時存在 */
+  .topbar:has(.savebar.show) .searchbox{display:none}
+}
+/* 空態插圖區：本檔不外連圖檔，以 token 漸層方塊＋字符代替插圖 */
+.emp-art{width:96px;height:96px;margin:0 auto var(--sp-300);border-radius:var(--r-400);
+  background:linear-gradient(150deg,var(--surface-sunken),var(--surface-2));
+  border:var(--hairline) solid var(--border);display:grid;place-items:center;font-size:var(--t-3xl);line-height:var(--lh-3xl)}
+/* B2B 四支柱（44 §22.5 副標逐字拆成四點，讓「自訂定價/淨付款條款/多地點/買家權限」看得見）*/
+.pillars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-200);
+  max-width:460px;margin:var(--sp-300) auto 0;text-align:left}
+.pillars li{list-style:none;display:flex;gap:var(--sp-200);align-items:flex-start;font-size:var(--t-xs);line-height:1.5;color:var(--text-2)}
+.pillars li b{display:block;color:var(--text);font-weight:600}
+.pillars .p-ic{color:var(--sem-info-icon);flex:none;line-height:1.5}
+/* 地點卡內的子卡（44 §22.5：地點卡裡再包一張「運送地址」子卡＋右上「清除」）*/
+.subcard{border:var(--hairline) solid var(--border);border-radius:var(--r-200);
+  padding:var(--sp-300);background:var(--surface-3);margin-bottom:var(--sp-300)}
+.subcard-head{display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-xs);font-weight:600;margin-bottom:var(--sp-200)}
+.subcard-head .sc-act{margin-left:auto}
+/* 單選列（訂單提交兩態）：整列可點、副標說明命中條件 */
+.radio-row{display:flex;gap:var(--sp-200);align-items:flex-start;padding:var(--sp-200) 0;cursor:pointer}
+.radio-row+.radio-row{border-top:var(--hairline) solid var(--border-2)}
+.radio-row .rr-t{min-width:0}
+.radio-row .rr-t b{display:block;font-weight:600;font-size:var(--t-sm)}
+.radio-row .rr-t span{display:block;font-size:var(--t-xs);color:var(--text-2);line-height:1.5}
+/* 「掛在地點不是公司」的層級標記（公司詳情每一列都要看得到）*/
+/* .set-rowbtn .rb-t span{display:block} 會把行內 chip 拉成整條；這裡提高特異性搶回 inline-flex */
+.set-rowbtn .rb-t b .lvl-tag{display:inline-flex;margin-left:var(--sp-150);color:var(--sem-info-text);font-size:var(--t-2xs)}
+.lvl-tag{display:inline-flex;align-items:center;gap:var(--sp-050);flex:none;
+  background:var(--sem-info-surface);color:var(--sem-info-text);border:var(--hairline) solid var(--sem-info-border);
+  border-radius:var(--r-pill);padding:0 var(--sp-150);font-size:var(--t-2xs);font-weight:600;line-height:var(--lh-2xs);height:18px}
+
+/* ══════════════════════════════════════════════════════════════════════
+   模組 D：結帳與帳號編輯器（49 P0-22／44 §21）——自己的全螢幕殼層
+   （不是設定分頁：.settings 只是同族做法，兩者互不共用 DOM）
+   ══════════════════════════════════════════════════════════════════════ */
+.ckedit{position:fixed;inset:0;background:var(--surface-2);z-index:var(--z-dialog);display:none;flex-direction:column}
+.ckedit.show{display:flex;animation:fade var(--dur-slow) var(--ease-decelerate)}
+/* 44 §21.1 頂欄：離開｜商店 icon｜兩行標題｜裝置切換／⋯／disabled 儲存 */
+.ck-top{flex:none;height:var(--topbar-h);display:flex;align-items:center;gap:var(--sp-200);
+  padding:0 var(--sp-300);background:var(--surface);border-bottom:var(--hairline) solid var(--border);
+  position:relative;z-index:var(--z-sticky)}
+.ck-div{width:var(--hairline);height:var(--h-24);background:var(--border);flex:none}
+.ck-shop{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);background:var(--surface-2);
+  display:grid;place-items:center;flex:none;font-size:var(--t-sm)}
+.ck-title{display:flex;flex-direction:column;min-width:0}
+.ck-page{display:inline-flex;align-items:center;gap:var(--sp-100);font-size:var(--t-sm);font-weight:600;
+  padding:0 var(--sp-150);margin-left:calc(var(--sp-150) * -1);border-radius:var(--r-200);max-width:100%}
+.ck-page:hover{background:var(--surface-2)}
+.ck-page b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-prof{display:flex;align-items:center;gap:var(--sp-100);font-size:var(--t-2xs);line-height:var(--lh-2xs);color:var(--text-2)}
+/* 綠點＝設定檔使用中（44 §21.6 結論 4：與結帳設定檔卡片的「使用中」badge 同源）*/
+.ck-dot{width:var(--sp-150);height:var(--sp-150);border-radius:50%;background:var(--sem-success-icon);flex:none}
+.ck-right{margin-left:auto;display:flex;align-items:center;gap:var(--sp-200)}
+.ck-seg{display:inline-flex;background:var(--surface-sunken);border-radius:var(--r-200);padding:var(--sp-050);gap:var(--sp-050)}
+.ck-seg button{height:var(--h-24);padding:0 var(--sp-200);border-radius:var(--r-100);
+  font-size:var(--t-xs);font-weight:600;color:var(--text-2)}
+.ck-seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--sh-raised)}
+/* 三欄：左圖層樹／中預覽／右屬性檢查器 */
+.ck-body{flex:1;min-height:0;display:grid;grid-template-columns:264px minmax(0,1fr) 300px;
+  grid-template-areas:"tree stage insp";gap:var(--sp-300);padding:var(--sp-300);overflow:hidden}
+.ck-tree{grid-area:tree;background:var(--surface);border:var(--hairline) solid var(--border);
+  border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-200);overflow:auto;overscroll-behavior:contain}
+.ck-stage{grid-area:stage;overflow:auto;overscroll-behavior:contain;display:flex;justify-content:center;align-items:flex-start}
+.ck-insp{grid-area:insp;background:var(--surface);border:var(--hairline) solid var(--border);
+  border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-300);overflow:auto;overscroll-behavior:contain}
+.ck-insp h4{font-size:var(--t-xs);font-weight:600;color:var(--text-2);margin-bottom:var(--sp-200)}
+/* 抽屜關閉鈕只在抽屜態出現（桌機第三欄常駐，沒有東西可關）*/
+.ck-ix{display:none;position:absolute;top:var(--sp-200);right:var(--sp-200);
+  width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);place-items:center;color:var(--text-2)}
+.ck-ix:hover{background:var(--surface-2);color:var(--text)}
+/* ≤767 的圖層／預覽 tab 列（桌機不存在）*/
+.ck-mtabs{display:none;flex:none;gap:var(--sp-050);padding:var(--sp-200) var(--sp-200) 0}
+.ck-mtabs button{flex:1;height:var(--h-32);border-radius:var(--r-200);font-size:var(--t-sm);font-weight:600;
+  color:var(--text-2);background:var(--surface-sunken)}
+.ck-mtabs button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--sh-raised)}
+/* 44 §21.3 圖層樹：區段標題列＋節點列＋⊕ 新增區塊 */
+.ck-grp{font-size:var(--t-2xs);line-height:var(--lh-2xs);font-weight:600;letter-spacing:.08em;
+  color:var(--text-3);padding:var(--sp-200) var(--sp-150) var(--sp-100)}
+.ck-sec{margin-bottom:var(--sp-150)}
+.ck-row{display:flex;align-items:center;border-radius:var(--r-200);min-width:0}
+.ck-row:hover{background:var(--surface-2)}
+.ck-row.on{background:var(--surface-selected)}
+.ck-row.on .ck-t{font-weight:600}
+.ck-hit{flex:1;min-width:0;display:flex;align-items:center;gap:var(--sp-150);
+  height:var(--h-28);padding:0 var(--sp-150);text-align:left;font-size:var(--t-xs);color:var(--text);border-radius:var(--r-200)}
+.ck-row .ck-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-row.off .ck-t{color:var(--text-disabled)}
+.ck-sechead .ck-hit{font-size:var(--t-sm);font-weight:600}
+.ck-row.d1 .ck-hit{padding-left:var(--sp-300)}
+.ck-row.d2 .ck-hit{padding-left:var(--sp-600)}
+.ck-row.d3 .ck-hit{padding-left:calc(var(--sp-600) + var(--sp-300))}
+/* 44 §21.3 圖示語意：實心 icon＝系統群組（不可刪）；虛線方框＝區塊（block）*/
+.ck-sic{width:var(--sp-400);height:var(--sp-400);display:grid;place-items:center;flex:none;font-size:var(--t-xs);line-height:1}
+.ck-bic{width:var(--sp-400);height:var(--sp-400);flex:none;border-radius:var(--r-100);
+  border:var(--hairline) dashed var(--border-strong)}
+.ck-caret,.ck-eye,.ck-chev{flex:none;width:var(--h-24);height:var(--h-24);display:grid;place-items:center;
+  color:var(--text-3);border-radius:var(--r-100);font-size:var(--t-xs)}
+.ck-caret:hover,.ck-eye:hover,.ck-chev:hover{background:var(--surface-sunken);color:var(--text)}
+.ck-caret[aria-expanded="true"]{transform:rotate(180deg)}
+.ck-sp{flex:none;width:var(--h-24)}
+.ck-add{display:flex;align-items:center;gap:var(--sp-150);width:100%;text-align:left;
+  height:var(--h-28);padding:0 var(--sp-150) 0 var(--sp-300);border-radius:var(--r-200);
+  font-size:var(--t-xs);font-weight:600;color:var(--link)}
+.ck-add:hover{background:var(--surface-2)}
+/* 預覽區：桌機/手機兩態（44 §21.6 結論 5：無平板態）*/
+.ck-canvas{width:100%;max-width:840px;background:var(--surface);border:var(--hairline) solid var(--border);
+  border-radius:var(--r-300);box-shadow:var(--sh);
+  transition:max-width var(--dur-slower) var(--ease-standard)}
+.ck-canvas.mob{max-width:390px}
+.ck-prev{padding:var(--sp-600) var(--sp-400)}
+.ck-prev-2col{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:var(--sp-600);align-items:start}
+.ck-canvas.mob .ck-prev-2col{grid-template-columns:minmax(0,1fr)}
+/* 44 §21.4 選取態：藍色 2px 外框（2px＝--sp-050 階，不另立 token）＋左上角藍底白字標籤 chip */
+.ck-node{position:relative;cursor:pointer;border-radius:var(--r-100)}
+.ck-node:hover{outline:var(--hairline) solid var(--sem-info-border)}
+.ck-node.sel{outline:var(--sp-050) solid var(--focus)}
+.ck-node.sel::before{content:attr(data-label);position:absolute;left:calc(var(--sp-050) * -1);top:0;
+  transform:translateY(-100%);background:var(--focus);color:var(--text-inverse);
+  font-size:var(--t-2xs);line-height:var(--lh-2xs);font-weight:600;white-space:nowrap;
+  padding:var(--sp-050) var(--sp-150);border-radius:var(--r-100) var(--r-100) 0 0;z-index:var(--z-base)}
+.ck-node.is-hid{opacity:.4}
+.ck-ph{background:var(--surface-2);border-radius:var(--r-200);padding:var(--sp-300);font-size:var(--t-xs);color:var(--text-2)}
+.ck-ph b{display:block;color:var(--text);font-size:var(--t-sm);margin-bottom:var(--sp-100)}
+.ck-line{height:var(--sp-200);border-radius:var(--r-pill);background:var(--surface-sunken);margin-top:var(--sp-150)}
+/* 帳號頁首：商店抵用金餘額藥丸 ＋ avatar（44 §21.5／行動項 61）*/
+.ck-acct-top{display:flex;align-items:center;gap:var(--sp-200);
+  padding-bottom:var(--sp-300);border-bottom:var(--hairline) solid var(--border-2)}
+.ck-credit{margin-left:auto}
+/* 44 §21.2 頁面選擇器：桌機下拉；≤768 bottom sheet（含拖曳把手）*/
+.ck-pick{position:absolute;top:calc(var(--topbar-h) - var(--sp-100));left:calc(var(--sp-600) * 3);width:288px;
+  background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);
+  box-shadow:var(--sh-pop);padding:var(--sp-100);display:none;z-index:var(--z-popover);max-height:72dvh;overflow:auto}
+.ck-pick.show{display:block;animation:popin var(--dur-slow) var(--ease-decelerate)}
+.ck-pick .pk-grp{font-size:var(--t-2xs);line-height:var(--lh-2xs);font-weight:600;letter-spacing:.08em;
+  color:var(--text-3);padding:var(--sp-200) var(--sp-200) var(--sp-100)}
+.ck-pick button{display:flex;align-items:center;gap:var(--sp-200);width:100%;text-align:left;
+  padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-sm)}
+.ck-pick button:hover{background:var(--surface-2)}
+.ck-pick button.cur{background:var(--surface-selected);font-weight:600}
+.ck-pick .pk-foot{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-100);padding-top:var(--sp-100)}
+.ck-handle{display:none}
+.ck-scrim{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;
+  z-index:var(--z-scrim);transition:opacity var(--dur-base) var(--ease-standard)}
+/* ⊕ 新增區塊 popover：44 §21.4 實測為空態（無內建 block 庫）*/
+.ck-addpop{position:fixed;width:264px;background:var(--surface);border:var(--hairline) solid var(--border);
+  border-radius:var(--r-300);box-shadow:var(--sh-pop);padding:var(--sp-300);display:none;
+  z-index:var(--z-popover);font-size:var(--t-xs);line-height:1.6;color:var(--text-2)}
+.ck-addpop.show{display:block;animation:popin var(--dur-slow) var(--ease-decelerate)}
+.ck-addpop b{display:block;color:var(--text);font-size:var(--t-sm);margin-bottom:var(--sp-100)}
+@keyframes sheetup{from{transform:translateY(100%)}to{transform:none}}
+
+/* 桌機常駐第三欄時，抽屜用的遮罩不存在 */
+.ck-iscrim{display:none}
+/* ≤1040（既有 64.9975em 階，最接近規格的 ≤1023）：收成兩欄——樹＋預覽；
+   屬性檢查器改成「點選後由右側滑入」的抽屜，不再佔一條常駐欄軌 */
+@media (max-width:64.9975em){
+  .ck-body{grid-template-columns:232px minmax(0,1fr);grid-template-areas:"tree stage";
+    gap:var(--sp-200);padding:var(--sp-200)}
+  .ck-insp{position:fixed;top:var(--topbar-h);right:0;bottom:0;width:min(320px,88vw);
+    border-radius:var(--r-400) 0 0 0;border-width:var(--hairline) 0 0 var(--hairline);
+    box-shadow:var(--sh-pop);padding-top:var(--sp-600);
+    /* 抽屜必須壓過自己的遮罩：兩者同在 .ckedit 的堆疊脈絡內，遮罩(518) 在 DOM 序後面 */
+    z-index:var(--z-dialog);
+    transform:translateX(100%);transition:transform var(--dur-slower) var(--ease-standard)}
+  .ck-insp.open{transform:none}
+  .ck-ix{display:grid}
+  /* 只有抽屜遮罩在這一階可見；頁面選擇器此階仍是桌機下拉，不該壓暗全屏 */
+  .ck-iscrim{display:block}
+  .ck-iscrim.show{opacity:1;pointer-events:auto}
+  .ck-pick{left:var(--sp-400)}
+}
+/* ≤768（47.9975em 主斷點）：單欄——圖層樹與預覽用 tab 二選一；頁面選擇器改 bottom sheet */
+@media (max-width:47.9975em){
+  .ck-mtabs{display:flex}
+  .ck-body{display:block;overflow:auto;overscroll-behavior:contain;padding:var(--sp-200)}
+  .ck-tree{max-height:none;overflow:visible}
+  .ck-stage{display:block}
+  .ck-body[data-mtab="stage"] .ck-tree{display:none}
+  .ck-body[data-mtab="tree"] .ck-stage{display:none}
+  .ck-insp{width:min(320px,92vw)}
+  .ck-scrim.show{opacity:1;pointer-events:auto}
+  .ck-canvas,.ck-canvas.mob{max-width:none}
+  .ck-top{gap:var(--sp-150);padding:0 var(--sp-200)}
+  .ck-shop,.ck-div,.ck-exit .ck-x,.ck-seg .ck-x{display:none}
+  .ck-right{gap:var(--sp-100)}
+  .ck-prev{padding:var(--sp-400) var(--sp-300)}
+  .ck-prev-2col{grid-template-columns:minmax(0,1fr);gap:var(--sp-400)}
+  .ck-pick{position:fixed;top:auto;left:0;right:0;bottom:0;width:auto;max-height:80dvh;
+    border-radius:var(--r-400) var(--r-400) 0 0;
+    padding:0 var(--sp-200) calc(var(--sp-300) + env(safe-area-inset-bottom))}
+  .ck-pick.show{animation:sheetup var(--dur-slower) var(--ease-decelerate)}
+  .ck-handle{display:block;width:36px;height:4px;border-radius:var(--r-pill);
+    background:var(--border);margin:var(--sp-200) auto var(--sp-100)}
+  .pillars{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){
+  .ckedit.show,.ck-pick.show,.ck-addpop.show{animation-name:fadeonly}
+  .ck-canvas,.ck-insp{transition:none}
+}
+
 </style>
 </head>
 <body data-palette="#2a78d6">
@@ -1209,6 +1425,12 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   <button class="searchbox" data-doc="search" aria-label="搜尋（CTRL K）" onclick="openPalette()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text">搜尋</span><span class="kbd">CTRL K</span>
   </button>
+  <!-- 44 §22.5：save bar 就在搜尋框的槽位上，dirty 時「取代」搜尋列而不是疊加（≤767 才退回底部浮動條） -->
+  <div class="savebar" id="saveBar" role="region" aria-label="未儲存的變更" data-doc="savebar">
+    <span class="sb-t">未儲存的變更</span>
+    <button class="btn btn-sec btn-sm" onclick="formDiscard()">捨棄</button>
+    <button class="btn btn-pri btn-sm" id="sbSave" onclick="formSave()">儲存</button>
+  </div>
   <div class="top-right">
     <button class="m-hover icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
@@ -1423,13 +1645,6 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   </div>
 </div>
 
-<!-- 浮動儲存列（表單 dirty 時浮出） -->
-<div class="savebar" id="saveBar" role="region" aria-label="未儲存的變更">
-  <span class="sb-t">未儲存的變更</span>
-  <button class="btn btn-sec btn-sm" onclick="formDiscard()">捨棄</button>
-  <button class="btn btn-pri btn-sm" id="sbSave" onclick="formSave()">儲存</button>
-</div>
-
 <!-- 通用 modal（picker／確認／編輯面板共用） -->
 <div class="overlay" id="genOverlay" onclick="if(event.target===this)closeGen()">
   <div class="modal" id="genModal" role="dialog" aria-modal="true" aria-labelledby="genTitle">
@@ -1465,6 +1680,11 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   </div>
 </div>
 
+<!-- 結帳與帳號編輯器（49 P0-22／44 §21）：全螢幕覆蓋層，與 .settings 同族但獨立殼層。
+     殼層內容由 checkoutEditorPage() 產生（頁面函式慣例），首次開啟才掛載 -->
+<div class="ckedit" id="ckEditor" role="dialog" aria-modal="true" aria-label="結帳與帳號編輯器"></div>
+<div class="ck-addpop" id="ckAddPop" role="dialog" aria-label="新增區塊" data-doc="ck-addblock"></div>
+
 <script>
 /* ================= 圖示 ================= */
 const ICONS={
@@ -1491,7 +1711,7 @@ const NAV=[
  {id:"home",name:"首頁",icon:"home"},
  {id:"orders",name:"訂單",icon:"orders",count:5,kids:[["m-drafts","草稿"],["m-shiplabels","運送標籤"],["m-abandoned","未完成結帳"]]},
  {id:"products",name:"產品",icon:"products",kids:[["m-collections","商品系列"],["m-inventory","庫存"],["m-giftcards","禮品卡"]]},
- {id:"m-customers",name:"顧客",icon:"customers",kids:[["m-segments","分群"]]},
+ {id:"m-customers",name:"顧客",icon:"customers",kids:[["m-segments","分群"],["m-companies","公司"]]},
  {id:"m-growth",name:"成長",icon:"growth",kids:[["m-attribution","歸因"],["m-campaigns","行銷活動"]]},
  {id:"m-discounts",name:"折扣",icon:"discounts"},
  {id:"m-metaobjects",name:"內容",icon:"content",kids:[["m-files","檔案"],["m-menus","選單"],["m-blog","部落格貼文"]]},
@@ -1501,12 +1721,13 @@ const NAV=[
 ];
 const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders","m-abandoned":"orders",
  "m-collections":"products","m-inventory":"products","m-giftcards":"products",
- "m-segments":"m-customers","m-attribution":"m-growth","m-campaigns":"m-growth",
+ "m-segments":"m-customers","m-companies":"m-customers","m-attribution":"m-growth","m-campaigns":"m-growth",
  "m-files":"m-metaobjects","m-menus":"m-metaobjects","m-blog":"m-metaobjects",
  "m-catalogs":"m-markets","m-reports":"analytics","m-live":"analytics",
  "m-billing":"m-finance","m-pages":"m-themes","m-redirects":"m-themes","m-prefs":"m-themes",
  "d-draft":"orders","d-product":"products","d-collection":"products","d-customer":"m-customers",
- "d-segment":"m-customers","d-discount":"m-discounts","d-menu":"m-metaobjects","d-article":"m-metaobjects",
+ "d-segment":"m-customers","d-company":"m-customers","d-company-new":"m-customers",
+ "d-discount":"m-discounts","d-menu":"m-metaobjects","d-article":"m-metaobjects",
  "d-market":"m-markets","d-report":"analytics"};
 let current="home";
 function renderSidebar(){
@@ -5344,6 +5565,883 @@ Object.assign(DOCS,{
  "ship-add-zone":{t:"新增區域",f:"再建一個運送區域",
   l:"44 §19.2：⊕ 新增區域在卡片外；新區域的國家一旦加入，立刻觸發 zone≠market 差集校驗（見 ship-market-warn）",
   i:"P0・[api:deliveryProfileUpdate]（zonesToCreate） [tbl:shipping_zones,shipping_zone_countries]"},
+});
+
+/* ==================================================================
+   模組 C：B2B 公司與地點（49 P0-04／44 §22.5）
+   ── 全檔最關鍵的模型更正 ─────────────────────────────────────────
+   catalog／checkout profile／payment terms／tax 全部掛在 company_location，
+   company 只是「容器」。我們原本的 B2B 規格把這些掛在 company 上，要改。
+   UI 因此必須把層級講出來（.lvl-tag ＋ 詳情頁分頁），否則實作又會掛錯層。
+   ================================================================== */
+const PAY_TERMS=[['none','沒有付款條件'],['net15','Net 15（發票後 15 天）'],['net30','Net 30（發票後 30 天）'],
+ ['net60','Net 60（發票後 60 天）'],['fulfill','出貨時付款'],['prepaid','預付（下單即付款）']];
+const TERM_T=v=>(PAY_TERMS.find(t=>t[0]===v)||PAY_TERMS[0])[1];
+const TAX_MODES=[['collect','收取稅金'],['exempt','免稅（持豁免證明）'],['reverse','買方自行申報（reverse charge）']];
+const SUBMIT_T={auto:'自動提交訂單',draft:'全部草稿審核'};
+/* 44 §22.5 實測：/companies 初始就是空態，建立後才有表格態 */
+const COMPANIES=[];
+let CO_SEQ=0;
+const LVL='<span class="lvl-tag" title="此設定掛在 company_location，不是 company">地點層</span>';
+
+function companiesPage(){
+  if(!COMPANIES.length){
+    const P=[['💰','自訂定價','以目錄（catalog）覆寫價目表'],['🧾','淨付款條款','Net 15／30／60 與預付'],
+      ['📍','多個地點','每個地點各自帶目錄與結帳設定'],['🔑','買家權限','指派買家可下單／可審核']];
+    return `<div class="page-head"><h1>公司</h1></div>
+    <div class="card" data-doc="b2b-empty"><div class="empty-wrap">
+      <div class="emp-art" aria-hidden="true">🏢</div>
+      <b>為您的 B2B 業務帶來強大的自訂功能</b>
+      集中管理 B2B 所需的一切功能。請新增公司，並指派自訂定價、淨付款條款，以及多個地點和買家的權限，即可開始使用。
+      <span class="mut3" style="display:block;font-size:var(--t-2xs);margin-top:var(--sp-150)">四項能力全部作用在<b style="display:inline">地點</b>層，不是公司層：</span>
+      <ul class="pillars">${P.map(([ic,t,d])=>`<li><span class="p-ic" aria-hidden="true">${ic}</span><span><b>${t}</b>${d}</span></li>`).join('')}</ul>
+      <br><button class="btn btn-pri" data-doc="b2b-new" onclick="openCompany('new')">新增公司</button>
+      <button class="btn btn-ghost btn-sm" style="margin-left:var(--sp-200)" onclick="b2bSeed()">載入示範資料</button>
+    </div></div>
+    <p style="text-align:center;margin-top:var(--sp-300)">
+      <button class="btn btn-ghost btn-sm" data-doc="b2b-learn" onclick="toast('Demo：說明中心「公司與地點」——B2B 四支柱全部作用在地點層')">深入瞭解公司</button></p>`;
+  }
+  return listPage({key:'comp',title:'公司',doc:'b2b-companies',ph:'搜尋公司名稱、公司 ID、主要聯絡人…',
+    actions:[['匯出','ghost',"toast('Demo：匯出公司與地點 CSV（地點層欄位逐欄展開）')",'export'],
+      ['新增公司','pri',"openCompany('new')",'b2b-new']],
+    views:[['全部',()=>true],['有付款條件',r=>r.locs.some(l=>l.terms!=='none')],['需審核訂單',r=>r.locs.some(l=>l.submit==='draft')]],
+    filters:[{k:'terms',l:'付款條件',opts:PAY_TERMS.map(t=>t[1]),test:(r,v)=>r.locs.some(l=>TERM_T(l.terms)===v)},
+      {k:'submit',l:'訂單提交',opts:[SUBMIT_T.auto,SUBMIT_T.draft],test:(r,v)=>r.locs.some(l=>SUBMIT_T[l.submit]===v)}],
+    cols:[{l:'公司',c:r=>`<b>${H(r.name)}</b>${r.extId?` <span class="mut3 num">・${H(r.extId)}</span>`:''}`,v:r=>r.name},
+      {l:'地點數',right:true,c:r=>N(r.locs.length),v:r=>r.locs.length},
+      /* 付款條件與地點數是純值，走 tagchip；訂單提交是狀態，才走 chip＋pip */
+      {l:'付款條件',c:r=>[...new Set(r.locs.map(l=>TERM_T(l.terms)))].map(t=>`<span class="tagchip" style="margin:0 var(--sp-050) 0 0">${H(t)}</span>`).join(''),v:r=>TERM_T(r.locs[0].terms)},
+      {l:'訂單提交模式',c:r=>r.locs.some(l=>l.submit==='draft')
+        ?chip('草稿審核','caution','blocked'):chip('自動提交','success','full'),v:r=>r.locs[0].submit},
+      {l:'建立日期',c:r=>`<span class="mut">${H(r.created)}</span>`,v:r=>r.created}],
+    rows:COMPANIES,id:r=>r.id,onRow:r=>`openCompany('${r.id}')`,
+    search:r=>[r.name,r.extId,r.contact,...r.locs.map(l=>l.name+' '+l.extId)].join(' '),
+    bulk:[['指派目錄'],['設定付款條件'],['刪除',null,null,'danger']],
+    note:'一列＝一間公司，但每一欄的實際承載層都是 company_location——同一間公司的兩個地點可以有不同目錄、不同 Net 條款、不同稅務設定（44 §22.5）。'});
+}
+function b2bSeed(){
+  COMPANIES.push(
+   {id:'co1',name:'晴光文創股份有限公司',extId:'ERP-8841',contact:'林芷妍',created:'2026-05-12',
+    locs:[{id:'l1',name:'台北總部',addr:'台北市信義區松智路 100 號 12 樓',billSame:true,extId:'LOC-TP',market:'台灣',
+      catalog:'B2B 批發目錄（台灣）',profile:'B2B 結帳設定檔',terms:'net30',submit:'draft',taxId:'12345678',tax:'collect'},
+     {id:'l2',name:'台中分公司',addr:'台中市西屯區台灣大道三段 301 號',billSame:false,extId:'LOC-TC',market:'台灣',
+      catalog:'B2B 批發目錄（台灣）',profile:'B2B 結帳設定檔',terms:'net15',submit:'auto',taxId:'12345678',tax:'collect'}]},
+   {id:'co2',name:'Penang Retail Sdn Bhd',extId:'ERP-9027',contact:'Tan Junyi',created:'2026-07-03',
+    locs:[{id:'l3',name:'Penang HQ',addr:'8A-17-9, Jln Thean Teik, 11500 Ayer Itam, Penang',billSame:true,extId:'LOC-PG',
+      market:'International',catalog:'International 目錄（+8%）',profile:'預設結帳設定檔',terms:'prepaid',submit:'auto',taxId:'MY-556213',tax:'reverse'}]});
+  CO_SEQ=2;lrender();
+  toast('已載入 2 間示範公司——注意兩個地點的付款條件與訂單提交模式並不相同');
+}
+
+/* ---------- 新增公司（單欄置中表單；一改動就觸發 save bar）---------- */
+function openCompany(id){
+  if(id==='new'){goDetail('d-company-new',{});return;}
+  CO=COMPANIES.find(c=>c.id===id)||COMPANIES[0];CO_TAB=0;goDetail('d-company',{id});
+}
+function companyNewPage(){
+  return detailHead('新增公司','',
+    `<button class="btn btn-sec btn-sm" onclick="go('m-companies')">取消</button>
+     <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'m-companies')
+  +`<div class="form1" data-form="conew">
+    <div class="card card-pad">
+      ${F('公司名稱',TXT('coName','','例：晴光文創股份有限公司','req|max:255','data-doc="b2b-co-name"'),'此名稱會顯示在顧客帳號和結帳頁面')}
+      ${F('公司 ID',TXT('coExtId','','例：ERP-8841','max:64','data-doc="b2b-co-extid"'),'您可以新增現有的外部 ID，或建立唯一的 ID。')}
+    </div>
+    <div class="card card-pad" data-doc="b2b-contact"><h3>主要聯絡人</h3>
+      <p class="help" style="margin-bottom:var(--sp-200)">此人會收到發票與訂單通知；必須是已存在的顧客。</p>
+      <input type="hidden" data-f="coContact" id="coContactVal" value="">
+      <div id="coContactRow"><button class="btn btn-sec btn-sm" onclick="coPickContact()">選擇顧客</button></div>
+    </div>
+    <div class="card card-pad" data-doc="b2b-loc-card"><h3>地點</h3>
+      <p class="help" style="margin-bottom:var(--sp-300)">您可以為此公司新增地點。此地點為您運送商品的目的地。<b>每個地點都可自訂目錄、結帳頁面設定等項目。</b>您稍後仍可新增更多地點。</p>
+      <div class="subcard" data-doc="b2b-ship-addr">
+        <div class="subcard-head">運送地址<span class="sc-act"><button class="btn btn-ghost btn-sm" onclick="coClearAddr()">清除</button></span></div>
+        <input type="hidden" data-f="loAddr" id="loAddrVal" value="">
+        <div id="coAddrBox"><p class="mut3" style="font-size:var(--t-xs)">尚未填寫運送地址——市場欄會依此地址推導。</p></div>
+        ${setRowAdd('新增地址','填入國家後即可推導市場與稅務登記','coAddAddr()','b2b-addr-add')}
+      </div>
+      <label class="inline-lbl" data-doc="b2b-bill-same"><input type="checkbox" class="cb" data-f="loBillSame" checked
+        aria-controls="coBillBox" onchange="coBillSame(this.checked)"><span>帳單地址與運送地址相同</span></label>
+      <div id="coBillBox" hidden>
+        <div class="subcard" style="margin-top:var(--sp-300)">
+          <div class="subcard-head">帳單地址<span class="sc-act"><span class="mut3" style="font-size:var(--t-2xs)">發票抬頭走這組地址</span></span></div>
+          ${F('國家／地區',SEL('loBillCountry',['台灣','香港','馬來西亞','United States'],'台灣'))}
+          ${F('地址',TXT('loBillAddr','','例：台北市中山區南京東路三段 1 號','max:255'))}
+        </div>
+      </div>
+      <div class="card-sec">${F('地點 ID',TXT('loExtId','','例：LOC-TP','max:64','data-doc="b2b-loc-extid"'),'您可以新增現有的外部 ID，或建立唯一的 ID。')}</div>
+    </div>
+    <div class="card card-pad" data-doc="b2b-market"><h3>市場</h3>
+      <p class="help" style="margin-bottom:var(--sp-200)">唯讀——依運送地址的國家自動推導，決定幣別與可用目錄。</p>
+      <div id="coMarket"><span class="tagchip" style="margin:0">🌐 尚未推導</span></div>
+    </div>
+    <div class="card card-pad" data-doc="b2b-catalog"><h3>目錄</h3>
+      <input type="hidden" data-f="loCatalog" id="loCatalogVal" value="">
+      <div id="coCatalogBox"><p class="mut3" style="font-size:var(--t-xs)">未指派目錄時，此地點看到的是商店預設價目。</p></div>
+      ${setRowAdd('新增目錄','目錄掛在地點，不是掛在公司','coAddCatalog()','b2b-catalog-add')}
+    </div>
+    <div class="card card-pad" data-doc="b2b-terms"><h3>付款條件</h3>
+      ${F('付款條件',SEL('loTerms',PAY_TERMS,'none','onchange="toast(\'付款條件：\'+this.options[this.selectedIndex].text)"'),'到期日＝發票日 ＋ N 天；逾期單在後台走催款流程')}
+    </div>
+    <div class="card card-pad" data-doc="b2b-ordersubmit"><h3>訂單提交</h3>
+      <input type="hidden" data-f="loSubmit" id="loSubmitVal" value="auto">
+      <label class="radio-row"><input type="radio" name="cosubmit" class="cl-radio" checked aria-label="自動提交訂單"
+        aria-controls="coSubmitNote" onchange="coSubmit('auto')">
+        <span class="rr-t"><b>自動提交訂單</b><span>沒有運送地址的訂單將作為訂單草稿提交</span></span></label>
+      <label class="radio-row"><input type="radio" name="cosubmit" class="cl-radio" aria-label="將所有訂單作為草稿提交以供審核"
+        aria-controls="coSubmitNote" onchange="coSubmit('draft')">
+        <span class="rr-t"><b>將所有訂單作為草稿提交以供審核</b><span>買家送出後先進草稿佇列，商家核准才成單</span></span></label>
+      <div id="coSubmitNote" class="card-sec" data-doc="b2b-submit-note">${coSubmitNoteHTML('auto')}</div>
+    </div>
+    <div class="card card-pad" data-doc="b2b-tax"><h3>稅務詳細資訊</h3>
+      <div class="grid2">${F('稅籍編號',TXT('loTaxId','','例：12345678','max:32'),'統編／VAT／SST；影響發票與稅額計算')}
+        ${F('稅金設定',SEL('loTax',TAX_MODES,'collect'),'免稅需上傳豁免證明並設到期日')}</div>
+    </div>
+    <div class="card card-pad" style="display:flex;justify-content:flex-end">
+      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button></div>
+  </div>`;
+}
+function coPickContact(){
+  pickerModal('選擇主要聯絡人',CUSTOMERS.map(c=>({t:c.n,s:c.mail+'・'+c.loc})),sel=>{
+    document.getElementById('coContactVal').value=sel[0].t;
+    document.getElementById('coContactRow').innerHTML=
+      `<div class="set-row" style="padding:var(--sp-200) 0;border:0"><span class="avatar">${H(sel[0].t.slice(0,2))}</span>
+       <div><b>${H(sel[0].t)}</b><span class="sub">${H(sel[0].s)}</span></div>
+       <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="coPickContact()">變更</button></div>`;
+    formCheck();
+  });
+}
+function coAddAddr(){
+  openGen({title:'新增運送地址',body:`<div class="stack">
+    ${F('國家／地區',SEL('_ac',['台灣','香港','馬來西亞','United States'],'台灣'),'國家決定市場、稅務登記與可用運送區域')}
+    ${F('地址',TXT('_a1','','例：台北市信義區松智路 100 號 12 樓','req|max:255'))}
+    ${F('郵遞區號',TXT('_az','','110'))}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="coAddrDone()">新增地址</button>`});
+}
+function coAddrDone(){
+  const c=(document.querySelector('#genBody [data-f="_ac"]')||{}).value||'台灣';
+  const a=((document.querySelector('#genBody [data-f="_a1"]')||{}).value||'').trim();
+  if(!a){toast('請先填寫地址');return;}
+  closeGen();
+  document.getElementById('loAddrVal').value=c+'｜'+a;
+  document.getElementById('coAddrBox').innerHTML=`<p class="addr">${H(a)}<br>${H(c)}</p>`;
+  document.getElementById('coMarket').innerHTML=
+    `<span class="tagchip" style="margin:0">🌐 ${H(c==='台灣'?'台灣':'International')}</span>
+     <span class="mut3" style="font-size:var(--t-2xs)">依「${H(c)}」推導</span>`;
+  formCheck();
+  toast('已填入運送地址——市場依國家自動推導，不可手動指定');
+}
+function coClearAddr(){
+  document.getElementById('loAddrVal').value='';
+  document.getElementById('coAddrBox').innerHTML='<p class="mut3" style="font-size:var(--t-xs)">尚未填寫運送地址——市場欄會依此地址推導。</p>';
+  document.getElementById('coMarket').innerHTML='<span class="tagchip" style="margin:0">🌐 尚未推導</span>';
+  formCheck();toast('已清除運送地址');
+}
+function coAddCatalog(){
+  pickerModal('新增目錄',[{t:'B2B 批發目錄（台灣）',s:'固定價・7 件商品'},{t:'International 目錄（+8%）',s:'百分比調整・6 件商品'},
+    {t:'新客首購目錄',s:'固定價・3 件商品'}],sel=>{
+    document.getElementById('loCatalogVal').value=sel[0].t;
+    document.getElementById('coCatalogBox').innerHTML=
+      `<div class="set-row" style="padding:var(--sp-200) 0;border:0"><div><b>${H(sel[0].t)}</b><span class="sub">${H(sel[0].s)}・掛在此地點</span></div>
+       <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="coAddCatalog()">變更</button></div>`;
+    formCheck();
+  });
+}
+/* radio 聯動：切「全部草稿」時把審核流的後果講出來（這是 B2B 審核流的唯一入口）*/
+function coSubmitNoteHTML(v){
+  return v==='draft'
+   ? `<p class="help"><b>此地點的訂單一律先進草稿佇列。</b>買家在前台結帳送出後不會成單，會落在<b>訂單 › 草稿</b>並標記來源 <span class="num">b2b</span>；商家核准（Complete draft）才轉正式訂單並扣庫存。核准者需要「草稿訂單」權限。</p>`
+   : `<p class="help">買家結帳即成單。但<b>沒有運送地址</b>的訂單仍會落草稿——因為缺地址就算不出運費與稅額。</p>`;
+}
+function coSubmit(v){
+  document.getElementById('loSubmitVal').value=v;
+  document.getElementById('coSubmitNote').innerHTML=coSubmitNoteHTML(v);
+  formCheck();
+}
+/* checkbox 聯動：取消勾選才展開第二組帳單地址欄（44 §22.5 預設勾選）*/
+function coBillSame(same){
+  const box=document.getElementById('coBillBox');
+  box.hidden=!!same;
+  if(same)box.querySelectorAll('[data-f]').forEach(x=>{x.value=x.tagName==='SELECT'?x.options[0].value:'';});
+  formCheck();
+  toast(same?'帳單地址將沿用運送地址——只寫一筆 address row':'已展開帳單地址——會另存一筆 type=billing 的地址');
+}
+function companySaveNew(){
+  const el=document.querySelector('[data-form="conew"]');if(!el)return '已儲存';
+  const g=f=>{const x=el.querySelector('[data-f="'+f+'"]');return x?(x.type==='checkbox'?x.checked:x.value):'';};
+  const addr=String(g('loAddr')||''),country=addr.split('｜')[0]||'台灣';
+  COMPANIES.push({id:'co'+(++CO_SEQ),name:g('coName')||'未命名公司',extId:g('coExtId'),contact:g('coContact')||'—',created:'今天',
+    locs:[{id:'l'+CO_SEQ+'a',name:(addr.split('｜')[1]||'主要地點').slice(0,18),addr:addr.split('｜')[1]||'—',
+      billSame:!!g('loBillSame'),extId:g('loExtId'),market:country==='台灣'?'台灣':'International',
+      catalog:g('loCatalog')||'（未指派，用商店預設價目）',profile:'預設結帳設定檔',
+      terms:g('loTerms')||'none',submit:g('loSubmit')||'auto',taxId:g('loTaxId'),tax:g('loTax')||'collect'}]});
+  setTimeout(()=>go('m-companies'),260);
+  return '已建立公司——目錄／結帳設定檔／付款條件／稅務全部寫在 company_location（44 §22.5）';
+}
+
+/* ---------- 公司詳情：用分頁 tab 呈現「地點層級」的設定 ---------- */
+let CO=null,CO_TAB=0;
+function coTab(i){CO_TAB=i;renderDetail('d-company');}
+function coAddLoc(){
+  const c=CO;c.locs.push({id:'l'+c.locs.length+'x',name:'新地點 '+(c.locs.length+1),addr:'—',billSame:true,extId:'',
+    market:'台灣',catalog:'（未指派）',profile:'預設結帳設定檔',terms:'none',submit:'auto',taxId:'',tax:'collect'});
+  CO_TAB=c.locs.length-1;renderDetail('d-company');
+  toast('已新增地點——新地點不會繼承其他地點的目錄與付款條件（各自獨立）');
+}
+function companyPage(){
+  const c=CO,l=c.locs[CO_TAB]||c.locs[0];
+  return detailHead(H(c.name),`<span class="tagchip" style="margin:0">${c.locs.length} 個地點</span>`,
+    `<button class="btn btn-sec btn-sm" onclick="toast('Demo：管理買家——company_contact 對應既有 customer，權限分「可下單／可審核」')">管理買家</button>
+     <button class="btn btn-pri btn-sm" onclick="coAddLoc()">新增地點</button>`,'m-companies')
+  +`<div class="banner-caution" data-doc="b2b-loc-model">
+    <span class="bc-ic" aria-hidden="true">${IC(IC_WARN,14)}</span>
+    <span><b>公司只是容器。</b>目錄、結帳設定檔、付款條件、稅務全部掛在<b>地點（company_location）</b>——同一間公司的兩個地點可以完全不同。下面用分頁切換地點，就是在切換這一整組設定。</span></div>
+  <div class="card card-pad" data-doc="b2b-co-fields"><h3>公司（容器層）</h3>
+    <div class="grid2">${F('公司名稱',`<input class="input" value="${H(c.name)}" aria-label="公司名稱" onchange="toast('Demo：公司改名會同步顧客帳號與結帳頁顯示')">`,'顯示在顧客帳號和結帳頁面')}
+      ${F('公司 ID（外部）',`<input class="input num" value="${H(c.extId)}" aria-label="公司 ID" onchange="toast('Demo：外部 ID 用於對接 ERP，需在店內唯一')">`,'對接 ERP 的外部鍵')}</div>
+    <div class="card-sec"><div class="set-row" style="padding:var(--sp-200) 0;border:0"><span class="avatar">${H(String(c.contact).slice(0,2))}</span>
+      <div><b>${H(c.contact)}</b><span class="sub">主要聯絡人・建立於 ${H(c.created)}</span></div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：變更主要聯絡人')">變更</button></div></div>
+    <p class="help card-sec">公司層只有識別與聯絡欄位——這裡<b>沒有</b>任何商務設定，是刻意的。</p></div>
+  <div class="card" data-doc="b2b-loc-tabs"><div class="card-pad">
+    <h3>地點層設定</h3>
+    <div class="tabs" role="tablist" style="margin-top:var(--sp-200)">
+      ${c.locs.map((x,i)=>`<button class="tab ${i===CO_TAB?'on':''}" role="tab" aria-selected="${i===CO_TAB}" onclick="coTab(${i})">${H(x.name)}</button>`).join('')}
+      <button class="tab" onclick="coAddLoc()">＋ 新增地點</button></div>
+    ${setRowBtn('目錄 '+LVL,H(l.catalog),'<span class="chev" aria-hidden="true">›</span>',
+      "toast('Demo：切換此地點的目錄——只影響這個地點看到的價目')",'b2b-loc-catalog','🗂')}
+    ${setRowBtn('結帳設定檔 '+LVL,H(l.profile)+'・由結帳與帳號編輯器維護','<span class="chev" aria-hidden="true">›</span>',
+      "openCheckoutEditor('checkout')",'b2b-loc-profile','🧾')}
+    ${setRowBtn('付款條件 '+LVL,l.terms==='none'?'即時付款，不產生應收帳款':l.terms==='prepaid'?'下單即付款（不掛帳）':'到期日＝發票日 ＋ '+l.terms.replace('net','')+' 天',
+      `<span class="tagchip" style="margin:0">${H(TERM_T(l.terms))}</span><span class="chev" aria-hidden="true">›</span>`,
+      "toast('Demo：Net 條款寫在地點——同公司不同地點可以不同')",'b2b-loc-terms','💳')}
+    ${setRowBtn('訂單提交 '+LVL,l.submit==='draft'?'所有訂單皆作為草稿提交以供審核':'自動提交訂單（無運送地址者轉草稿）',
+      l.submit==='draft'?chip('草稿審核','caution','blocked'):chip('自動提交','success','full'),
+      "toast('Demo：B2B 訂單審核流——草稿佇列與一般草稿訂單同表，來源標 b2b')",'b2b-loc-submit','📥')}
+    ${setRowBtn('稅務 '+LVL,(l.taxId||'未填稅籍編號')+'・'+((TAX_MODES.find(t=>t[0]===l.tax)||TAX_MODES[0])[1]),'<span class="chev" aria-hidden="true">›</span>',
+      "toast('Demo：稅務登記掛地點——跨境公司各地點的稅別不同')",'b2b-loc-tax','🧮')}
+    ${setRowBtn('市場 '+LVL,'依運送地址推導，唯讀',`<span class="tagchip" style="margin:0">🌐 ${H(l.market)}</span>`,
+      "toast('市場由地址推導，不可手動指定（44 §22.5）')",'b2b-loc-market','🌐')}
+    ${setRowBtn('運送地址','帳單地址'+(l.billSame?'相同':'另設')+'・地點 ID '+(l.extId||'—'),'<span class="chev" aria-hidden="true">›</span>',
+      "toast('Demo：編輯地點地址——改國家會連動市場與稅務登記')",'b2b-loc-addr','📍')}
+  </div>
+  <div class="card-note">實作上這一整組欄位都在 <b>company_locations</b>：改分頁＝換一筆 row，不是換一個欄位群。</div></div>`;
+}
+
+/* ==================================================================
+   模組 D：結帳與帳號編輯器（49 P0-22／44 §21，M3 核心）
+   全螢幕編輯器，不是設定分頁；資料模型 checkout_profile → page(6) → section → block，
+   與主題的 theme → template → section → block 平行但不共用表（44 §21.6 結論 1）。
+   ================================================================== */
+const CK_PAGES={
+ checkout:{t:'結帳',ic:'🛒',grp:'結帳'},
+ thanks:{t:'感謝您',ic:'✓',grp:'購買後'},
+ login:{t:'登入',ic:'🔑',grp:'顧客帳號'},
+ orders:{t:'訂單',ic:'📥',grp:'顧客帳號'},
+ status:{t:'訂單狀態',ic:'◔',grp:'顧客帳號'},
+ profile:{t:'個人資料',ic:'👤',grp:'顧客帳號'},
+};
+const CK_GRPS=['結帳','購買後','顧客帳號'];
+/* 節點形狀：{k,t}＋ic＝系統群組（實心 icon，不可刪）｜block:true＝區塊（虛線方框 ⛶）
+   exp:true＝有 ⌄ 可展開子區塊｜eye:true＝列尾 👁 可切顯隱｜chev:true＝區段有 › 進設定 */
+const CK_FOOT={k:'footer',t:'頁尾',items:[{k:'policies',t:'政策',ic:'🖼',eye:true}]};
+const CK_TREES={
+ checkout:[
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true},{k:'cartlink',t:'購物車連結',block:true}]},
+  {k:'main',t:'主要',items:[
+    {k:'contact',t:'聯絡資訊',ic:'👤',kids:[{k:'emailphone',t:'電子郵件或電話號碼',block:true}]},
+    {k:'delivery',t:'配送',ic:'🚚',kids:[{k:'addr',t:'配送地址',block:true},
+      {k:'shipmethod',t:'運送方式',block:true,exp:true,kids:[{k:'shiplist',t:'運送選項清單',block:true}]}]},
+    {k:'payment',t:'付款',ic:'💳',kids:[{k:'payopt',t:'付款選項',block:true}]},
+    {k:'action',t:'動作',ic:'▶',kids:[{k:'paynow',t:'立即付款',block:true}]}]},
+  {k:'summary',t:'訂單摘要',chev:true,items:[
+    {k:'cart',t:'購物車',ic:'🛒',kids:[{k:'cartitems',t:'購物車中的品項',block:true}]},
+    {k:'totals',t:'總計',ic:'🧾'}]},
+  {k:'footer',t:'頁尾',chev:true,items:[{k:'policies',t:'政策',ic:'🖼',eye:true}]}],
+ thanks:[
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true}]},
+  {k:'main',t:'主要',items:[
+    {k:'confirm',t:'訂單確認',ic:'✓',kids:[{k:'confirmmsg',t:'確認訊息',block:true},{k:'ordersum',t:'訂單摘要',block:true}]},
+    {k:'custinfo',t:'顧客資訊',ic:'👤',kids:[{k:'shipsum',t:'配送與付款摘要',block:true}]}]},
+  CK_FOOT],
+ login:[
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true}]},
+  {k:'main',t:'主要',items:[{k:'signin',t:'登入',ic:'🔑',kids:[{k:'emailphone',t:'電子郵件或電話號碼',block:true},
+    {k:'otp',t:'一次性驗證碼說明',block:true}]}]},
+  CK_FOOT],
+ /* 44 §21.3 末段：帳號「訂單」頁多一個頂層「公告列」區段 */
+ orders:[
+  {k:'announce',t:'公告列',items:[]},
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true},{k:'credit',t:'商店抵用金餘額',block:true}]},
+  {k:'main',t:'主要',chev:true,items:[{k:'orderlist',t:'訂單清單',ic:'📥'},{k:'orderact',t:'訂單動作',block:true}]},
+  CK_FOOT],
+ status:[
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true}]},
+  {k:'main',t:'主要',chev:true,items:[{k:'statustrack',t:'訂單狀態',ic:'◔',kids:[{k:'trackmap',t:'配送進度',block:true},
+    {k:'ordersum',t:'訂單摘要',block:true}]}]},
+  CK_FOOT],
+ profile:[
+  {k:'announce',t:'公告列',items:[]},
+  {k:'header',t:'頁首',chev:true,items:[{k:'logo',t:'標誌',block:true},{k:'credit',t:'商店抵用金餘額',block:true}]},
+  {k:'main',t:'主要',chev:true,items:[{k:'profileinfo',t:'個人資料',ic:'👤',kids:[{k:'contactinfo',t:'聯絡資訊',block:true},
+    {k:'addrbook',t:'地址簿',block:true}]}]},
+  CK_FOOT],
+};
+/* mtab＝≤767 的「圖層／預覽」單欄切換；insp＝≤1040 的屬性檢查器抽屜開合 */
+const CK={page:'checkout',sel:null,dev:'desk',dirty:false,exp:{shipmethod:true},hid:{},secMode:false,mtab:'stage',insp:false};
+let ckWarn=0,ckMounted=false;
+/* 檢查器在此寬度以下改成「點選後從右側滑入」的抽屜（既有 em 階梯最接近 1023 的一階） */
+const MQ_CK_NARROW=matchMedia('(max-width:64.9975em)');
+
+/* ---------- 全螢幕殼層（頁面函式慣例）---------- */
+function checkoutEditorPage(){
+  return `<header class="ck-top" data-doc="ck-top">
+    <button class="btn btn-ghost btn-sm ck-exit" data-doc="ck-exit" onclick="closeCheckoutEditor()" aria-label="離開編輯器">⇤<span class="ck-x"> 離開</span></button>
+    <span class="ck-div" aria-hidden="true"></span>
+    <span class="ck-shop" aria-hidden="true">🏪</span>
+    <div class="ck-title" data-doc="ck-title">
+      <button class="ck-page" id="ckPageBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="ckPicker" onclick="ckTogglePicker(event)"><b id="ckPageName">結帳</b><span aria-hidden="true">⌄</span></button>
+      <span class="ck-prof"><span class="ck-dot" aria-hidden="true"></span>「CHILL LOVE」設定</span>
+    </div>
+    <div class="ck-right">
+      <div class="ck-seg" role="group" aria-label="預覽裝置" data-doc="ck-device">
+        <button id="ckDevDesk" class="on" aria-pressed="true" onclick="ckDevice('desk')">🖥<span class="ck-x"> 桌機</span></button>
+        <button id="ckDevMob" aria-pressed="false" onclick="ckDevice('mob')">📱<span class="ck-x"> 手機</span></button>
+      </div>
+      <button class="icon-btn" data-doc="ck-more" aria-label="頁面選單" onclick="ckMore()">⋯</button>
+      <button class="btn btn-pri btn-sm" id="ckSave" data-doc="ck-save" disabled aria-disabled="true" onclick="ckSave()">儲存</button>
+    </div>
+  </header>
+  <!-- ≤767 單欄：圖層樹與預覽用 tab 互換（44 §21 只給桌機三欄，窄版是我方補的） -->
+  <div class="ck-mtabs" role="tablist" aria-label="編輯器面板" data-doc="ck-mtabs">
+    <button role="tab" id="ckMtTree" aria-selected="false" aria-controls="ckTree" onclick="ckMTab('tree')">圖層</button>
+    <button role="tab" id="ckMtStage" aria-selected="true" aria-controls="ckStage" onclick="ckMTab('stage')">預覽</button>
+  </div>
+  <div class="ck-body" id="ckBody" data-mtab="stage">
+    <aside class="ck-tree" id="ckTree" role="tabpanel" aria-label="圖層樹"></aside>
+    <div class="ck-stage" id="ckStage" role="tabpanel" onclick="ckSelect(null)"><div class="ck-canvas" id="ckCanvas" data-doc="ck-preview"></div></div>
+    <aside class="ck-insp" id="ckInsp" aria-label="屬性檢查器" data-doc="ck-insp">
+      <button class="ck-ix" data-doc="ck-insp-close" aria-label="關閉屬性檢查器" onclick="ckInspClose()">✕</button>
+      <div id="ckInspBody"></div>
+    </aside>
+  </div>
+  <!-- scrim 必須在 .ckedit 內：.ckedit 自成堆疊脈絡，放外面時 --z-scrim(518) 會落在 --z-dialog(519) 之下而看不見 -->
+  <div class="ck-scrim" id="ckScrim" aria-hidden="true" onclick="ckClosePicker()"></div>
+  <div class="ck-scrim ck-iscrim" id="ckIScrim" aria-hidden="true" onclick="ckInspClose()"></div>
+  <nav class="ck-pick" id="ckPicker" role="listbox" aria-label="選擇頁面" data-doc="ck-picker"></nav>`;
+}
+function ckMount(){
+  if(ckMounted)return;
+  const ed=document.getElementById('ckEditor');
+  ed.innerHTML=checkoutEditorPage();ckMounted=true;
+  /* 預覽節點 role=button，需要 Enter／Space（掛在 canvas 上做事件委派，重繪不用重掛）*/
+  document.getElementById('ckCanvas').addEventListener('keydown',e=>{
+    const el=e.target.closest('.ck-node');
+    if(!el||(e.key!=='Enter'&&e.key!==' '))return;
+    e.preventDefault();e.stopPropagation();ckSelect(el.dataset.k);
+  });
+}
+function openCheckoutEditor(page){
+  closeSettings();                       /* 44 §21：編輯器是獨立路由，⇤ 離開才回設定 */
+  ckMount();
+  CK.page=CK_PAGES[page]?page:'checkout';CK.sel=null;CK.secMode=false;CK.hid={};CK.exp={shipmethod:true};
+  CK.mtab='stage';CK.insp=false;
+  document.getElementById('ckEditor').classList.add('show');
+  ckDirty(false);ckRender();
+  /* 焦點落在「離開」而不是標題按鈕：頂欄只有 56px，標題鈕的 focus 環會壓到第二行的設定檔名 */
+  document.querySelector('#ckEditor .ck-exit').focus();
+}
+function closeCheckoutEditor(){
+  if(CK.dirty&&Date.now()-ckWarn>4000){
+    ckWarn=Date.now();clShake(document.getElementById('ckSave'));
+    toast('有未儲存的變更——再點一次「離開」即捨棄');return;}
+  ckClosePicker();ckAddClose();ckInspClose();
+  document.getElementById('ckEditor').classList.remove('show');
+  ckDirty(false);openSettings('checkout');
+}
+/* ≤767：圖層／預覽二選一（三欄塞不進 375px；檢查器在這個寬度已經是抽屜）*/
+function ckMTab(t){
+  CK.mtab=t;
+  document.getElementById('ckBody').dataset.mtab=t;
+  document.getElementById('ckMtTree').setAttribute('aria-selected',String(t==='tree'));
+  document.getElementById('ckMtStage').setAttribute('aria-selected',String(t==='stage'));
+}
+/* ≤1040：檢查器不是常駐第三欄，而是選取後從右側滑入的抽屜 */
+function ckInspOpen(){
+  CK.insp=true;
+  document.getElementById('ckInsp').classList.add('open');
+  document.getElementById('ckIScrim').classList.add('show');
+}
+function ckInspClose(){
+  CK.insp=false;
+  const i=document.getElementById('ckInsp');if(!i)return;
+  i.classList.remove('open');
+  document.getElementById('ckIScrim').classList.remove('show');
+}
+/* 44 §21.6 結論 3／行動項 62：編輯器是第三種存檔模式——頂欄單一 disabled-until-dirty 儲存，
+   不是浮動 save bar（save bar 屬設定/詳情頁表單，兩者不可混用）*/
+function ckDirty(on){
+  CK.dirty=!!on;const b=document.getElementById('ckSave');
+  b.disabled=!on;b.setAttribute('aria-disabled',String(!on));
+}
+function ckSave(){
+  const b=document.getElementById('ckSave');b.textContent='儲存中…';b.disabled=true;
+  setTimeout(()=>{b.textContent='儲存';ckDirty(false);
+    toast('已儲存——一次存整個 profile 的 layout JSON（44 §21.6 結論 3）');},450);
+}
+function ckRender(){
+  const t=document.getElementById('ckTree'),st=t.scrollTop;
+  document.getElementById('ckPageName').textContent=CK_PAGES[CK.page].t;
+  t.innerHTML=ckTreeHTML();t.scrollTop=st;
+  const cv=document.getElementById('ckCanvas');
+  cv.className='ck-canvas'+(CK.dev==='mob'?' mob':'');
+  cv.innerHTML=ckPreviewHTML();
+  document.getElementById('ckInspBody').innerHTML=ckInspectorHTML();
+  document.getElementById('ckPicker').innerHTML=ckPickerHTML();
+  /* 從圖層樹選取時，把預覽捲到該節點——否則長頁面（或右側抽屜擋住時）看不到藍框 */
+  const sel=cv.querySelector('.ck-node.sel');
+  if(sel)sel.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+/* ---------- 左欄圖層樹（44 §21.3）---------- */
+function ckTreeHTML(){
+  return (CK_TREES[CK.page]||[]).map(s=>`<div class="ck-sec">
+    <div class="ck-row ck-sechead ${CK.sel===s.k?'on':''}" data-doc="ck-sec">
+      <span class="ck-sp" aria-hidden="true"></span>
+      <button class="ck-hit" onclick="ckSelect('${s.k}')"><span class="ck-t">${H(s.t)}</span></button>
+      ${s.chev?`<button class="ck-chev" data-doc="ck-secgo" aria-label="進入「${H(s.t)}」區段設定" onclick="ckSection('${s.k}')">›</button>`:''}
+    </div>
+    ${(s.items||[]).map(n=>ckNodeHTML(n,1)).join('')}
+    <button class="ck-add" data-doc="ck-addblock" onclick="ckAddPop(event,'${s.k}')">⊕ 新增區塊</button>
+  </div>`).join('');
+}
+function ckNodeHTML(n,d){
+  const kids=n.kids||[],open=!!CK.exp[n.k],hid=!!CK.hid[n.k];
+  return `<div class="ck-row d${d} ${CK.sel===n.k?'on':''} ${hid?'off':''}" data-doc="${n.block?'ck-block':'ck-sysgroup'}">
+    ${n.exp?`<button class="ck-caret" data-doc="ck-expand" aria-expanded="${open}" aria-label="展開／收合「${H(n.t)}」的子區塊" onclick="ckExpand('${n.k}')">⌄</button>`
+      :'<span class="ck-sp" aria-hidden="true"></span>'}
+    <button class="ck-hit" onclick="ckSelect('${n.k}')">
+      ${n.block?'<span class="ck-bic" aria-hidden="true"></span>':`<span class="ck-sic" aria-hidden="true">${n.ic||'●'}</span>`}
+      <span class="ck-t">${H(n.t)}</span></button>
+    ${n.eye?`<button class="ck-eye" data-doc="ck-eye" aria-pressed="${hid?'false':'true'}" aria-label="切換顯示：${H(n.t)}" onclick="ckEye('${n.k}')">${hid?'🙈':'👁'}</button>`:''}
+  </div>`
+  +((n.exp&&!open)?'':kids.map(c=>ckNodeHTML(c,d+1)).join(''));
+}
+function ckWalk(list,fn,parent){(list||[]).forEach(n=>{fn(n,parent);ckWalk(n.kids,fn,n);});}
+function ckFind(k){
+  let hit=null;
+  (CK_TREES[CK.page]||[]).forEach(s=>{
+    if(s.k===k)hit={n:s,type:'section'};
+    ckWalk(s.items,n=>{if(n.k===k)hit={n,type:n.block?'block':'group',sec:s};});
+  });
+  return hit;
+}
+function ckSelect(k){
+  CK.sel=k;CK.secMode=false;ckRender();
+  /* 桌機檢查器常駐第三欄；≤1040 才滑抽屜出來（取消選取＝關抽屜）*/
+  if(!MQ_CK_NARROW.matches)return;
+  k?ckInspOpen():ckInspClose();
+}
+function ckSection(k){
+  CK.sel=k;CK.secMode=true;ckRender();
+  if(MQ_CK_NARROW.matches)ckInspOpen();
+  toast('已進入「'+CK_PAGES[CK.page].t+' › '+(ckFind(k)||{n:{t:k}}).n.t+'」區段設定');
+}
+function ckExpand(k){CK.exp[k]=!CK.exp[k];ckRender();}     /* 展開只是檢視狀態，不算變更 */
+function ckEye(k){
+  CK.hid[k]=!CK.hid[k];ckDirty(true);ckRender();
+  toast(CK.hid[k]?'已隱藏此列——版面 JSON 記 visible:false，不是刪除':'已顯示此列');
+}
+function ckDevice(d){
+  CK.dev=d;
+  document.getElementById('ckDevDesk').classList.toggle('on',d==='desk');
+  document.getElementById('ckDevMob').classList.toggle('on',d==='mob');
+  document.getElementById('ckDevDesk').setAttribute('aria-pressed',String(d==='desk'));
+  document.getElementById('ckDevMob').setAttribute('aria-pressed',String(d==='mob'));
+  ckRender();
+}
+function ckMore(){
+  openGen({title:'頁面選單',pad:false,body:[['重設此頁為預設版面','Demo：重設會清掉此頁所有 app block 的設定'],
+    ['複製設定檔','Demo：複製 checkout_profile（含 6 頁 layout JSON）'],
+    ['檢視版本記錄','Demo：layout JSON 逐版 diff（append-only）']]
+    .map(([t,m])=>`<button class="pick" onclick="closeGen();toast('${m}')"><span class="pk-i"><b>${t}</b></span><span class="chev">›</span></button>`).join('')});
+}
+/* ---------- 頁面選擇器：桌機下拉／≤768 bottom sheet（44 §21.2）---------- */
+function ckPickerHTML(){
+  return '<div class="ck-handle" aria-hidden="true"></div>'
+   +CK_GRPS.map(g=>`<div class="pk-grp">${g}</div>`
+     +Object.keys(CK_PAGES).filter(k=>CK_PAGES[k].grp===g).map(k=>
+       `<button role="option" aria-selected="${CK.page===k}" class="${CK.page===k?'cur':''}" onclick="ckGoPage('${k}')">
+         <span aria-hidden="true">${CK_PAGES[k].ic}</span>${CK_PAGES[k].t}</button>`).join('')).join('')
+   +`<div class="pk-foot"><button data-doc="ck-theme-link" onclick="ckClosePicker();toast('Demo：跳「網路商店佈景主題」編輯器——兩個編輯器是姊妹關係，不是同一個（44 §21.1）')">
+      <span aria-hidden="true">🏪</span>網路商店佈景主題 →</button></div>`;
+}
+function ckTogglePicker(e){
+  e.stopPropagation();
+  document.getElementById('ckPicker').classList.contains('show')?ckClosePicker():ckOpenPicker();
+}
+function ckOpenPicker(){
+  document.getElementById('ckPicker').classList.add('show');
+  document.getElementById('ckScrim').classList.add('show');
+  document.getElementById('ckPageBtn').setAttribute('aria-expanded','true');
+}
+function ckClosePicker(){
+  document.getElementById('ckPicker').classList.remove('show');
+  document.getElementById('ckScrim').classList.remove('show');
+  document.getElementById('ckPageBtn').setAttribute('aria-expanded','false');
+}
+function ckGoPage(k){
+  CK.page=k;CK.sel=null;CK.secMode=false;ckClosePicker();ckInspClose();ckRender();
+  toast('已切換到「'+CK_PAGES[k].t+'」——同一個編輯器管 6 頁（44 §21.2）');
+}
+/* ---------- ⊕ 新增區塊 popover：44 §21.4 實測是空態 ---------- */
+function ckAddPop(e,secK){
+  e.stopPropagation();
+  const acct=CK_PAGES[CK.page].grp==='顧客帳號',sec=ckFind(secK);
+  const p=document.getElementById('ckAddPop');
+  p.innerHTML=`<b>此區段沒有可用的區塊</b>
+    <p>「${H(sec?sec.n.t:secK)}」目前沒有任何已安裝應用程式提供對應 target 的區塊。</p>
+    <button class="btn btn-ghost btn-sm" style="margin-top:var(--sp-200);padding-left:0"
+      onclick="ckAddClose();toast('Demo：跳應用程式商店，依 target=${H(CK.page)}.${H(secK)} 過濾')">尋找${acct?'顧客帳號':'結帳'}應用程式 →</button>`;
+  p.classList.add('show');
+  const r=e.currentTarget.getBoundingClientRect();
+  p.style.left=Math.min(window.innerWidth-276,Math.max(12,r.left))+'px';
+  p.style.top=Math.min(window.innerHeight-170,r.bottom+8)+'px';
+}
+function ckAddClose(){document.getElementById('ckAddPop').classList.remove('show');}
+/* ---------- 預覽區（44 §21.4 選取態＝藍框＋左上藍底白字 chip）---------- */
+const ckN=(k,label,inner)=>`<div class="ck-node ${CK.sel===k?'sel':''}${CK.hid[k]?' is-hid':''}"
+  data-label="⛶ ${H(label)}" data-k="${k}" role="button" tabindex="0"
+  onclick="event.stopPropagation();ckSelect('${k}')">${inner}</div>`;
+const ckPH=(t,lines=2)=>`<div class="ck-ph"><b>${H(t)}</b>${[...Array(lines)].map(()=>'<div class="ck-line"></div>').join('')}</div>`;
+function ckPreviewHTML(){
+  if(CK.page==='checkout')return ckPrevCheckout();
+  if(CK.page==='thanks')return ckPrevThanks();
+  return ckPrevAccount();
+}
+function ckPrevCheckout(){
+  return `<div class="ck-prev">
+    ${ckN('header','頁首',`<div style="display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-200)">
+      ${ckN('logo','標誌','<b style="font-size:var(--t-lg);line-height:var(--lh-lg)">CHILL LOVE</b>')}
+      <span style="margin-left:auto">${ckN('cartlink','購物車連結','<span class="mut" style="font-size:var(--t-xs)">🛒 購物車</span>')}</span></div>`)}
+    <div class="ck-prev-2col" style="margin-top:var(--sp-400)">
+      <div class="stack">
+        ${ckN('contact','聯絡資訊',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">聯絡資訊</b>
+          ${ckN('emailphone','電子郵件或電話號碼',ckPH('email@example.com',1))}</div>`)}
+        ${ckN('delivery','配送',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">配送</b>
+          ${ckN('addr','配送地址',ckPH('收件地址（姓名／地址／郵遞區號）',2))}
+          ${ckN('shipmethod','運送方式',`<div style="margin-top:var(--sp-200)"><b style="font-size:var(--t-xs)">運送方式</b>
+            ${ckN('shiplist','運送選項清單',ckPH('宅配 NT$120・7-11 取貨 NT$60',2))}</div>`)}</div>`)}
+        ${ckN('payment','付款',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">付款</b>
+          ${ckN('payopt','付款選項',ckPH('信用卡・Apple Pay・LINE Pay',2))}</div>`)}
+        ${ckN('action','動作',`<div style="padding:var(--sp-200)">
+          ${ckN('paynow','立即付款','<span class="btn btn-pri" style="width:100%;justify-content:center">立即付款</span>')}</div>`)}
+      </div>
+      <div class="stack">
+        ${ckN('summary','訂單摘要',`<div style="padding:var(--sp-200);background:var(--surface-3);border-radius:var(--r-200)">
+          ${ckN('cart','購物車',`<div><b style="font-size:var(--t-xs)">購物車</b>
+            ${ckN('cartitems','購物車中的品項',`<div style="display:flex;gap:var(--sp-200);align-items:center;padding:var(--sp-200) 0">
+              <span class="thumb" style="background:${P_G.hoodie}"></span>
+              <span style="font-size:var(--t-xs)">奶茶色寬版帽T<br><span class="mut3">M / 奶茶</span></span>
+              <span class="num" style="margin-left:auto;font-size:var(--t-xs)">NT$1,480</span></div>`)}</div>`)}
+          ${ckN('totals','總計',`<div class="kv" style="font-size:var(--t-xs);padding-top:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
+            <span class="k">總計</span><b class="num">NT$1,600</b></div>`)}</div>`)}
+      </div>
+    </div>
+    ${ckN('footer','頁尾',`<div style="margin-top:var(--sp-400);padding:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
+      ${ckN('policies','政策','<span class="mut3" style="font-size:var(--t-2xs)">退款政策・隱私權政策・服務條款</span>')}</div>`)}
+  </div>`;
+}
+function ckPrevThanks(){
+  return `<div class="ck-prev">
+    ${ckN('header','頁首',`<div style="padding:var(--sp-200)">${ckN('logo','標誌','<b style="font-size:var(--t-lg);line-height:var(--lh-lg)">CHILL LOVE</b>')}</div>`)}
+    ${ckN('confirm','訂單確認',`<div style="padding:var(--sp-300) var(--sp-200)">
+      ${ckN('confirmmsg','確認訊息',`<div><span class="badge b-success"><span class="pip full"></span>已確認</span>
+        <h3 style="margin-top:var(--sp-200)">謝謝你，芷妍！</h3><p class="mut" style="font-size:var(--t-xs)">訂單 #1042 已成立，確認信已寄出。</p></div>`)}
+      ${ckN('ordersum','訂單摘要',ckPH('2 件品項・NT$2,932',2))}</div>`)}
+    ${ckN('custinfo','顧客資訊',`<div style="padding:var(--sp-200)">
+      ${ckN('shipsum','配送與付款摘要',ckPH('宅配到台北市大安區・信用卡末四碼 4242',2))}</div>`)}
+    ${ckN('footer','頁尾',`<div style="margin-top:var(--sp-300);padding:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
+      ${ckN('policies','政策','<span class="mut3" style="font-size:var(--t-2xs)">退款政策・隱私權政策・服務條款</span>')}</div>`)}
+  </div>`;
+}
+/* 44 §21.5：帳號頁首＝商店名 ＋ 商店抵用金餘額藥丸 ＋ 圓形 avatar；水平文字 tab */
+function ckPrevAccount(){
+  const body={
+    login:ckN('signin','登入',`<div style="padding:var(--sp-300) var(--sp-200);max-width:340px;margin:0 auto">
+      <h3>登入</h3>${ckN('emailphone','電子郵件或電話號碼',ckPH('email@example.com',1))}
+      ${ckN('otp','一次性驗證碼說明','<p class="mut3" style="font-size:var(--t-2xs);padding:var(--sp-200)">我們會寄送 6 位數驗證碼，免密碼登入。</p>')}</div>`),
+    orders:ckN('orderlist','訂單清單',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">訂單</b>
+      <div style="display:flex;gap:var(--sp-300);align-items:center;padding:var(--sp-300) 0">
+        <span class="thumb" style="width:64px;height:64px;background:${P_G.hoodie}"></span>
+        <span style="font-size:var(--t-xs)"><b>#1042</b><br><span class="mut">2 件品項・NT$2,932</span></span></div>
+      ${ckN('orderact','訂單動作','<span class="btn btn-sec btn-sm">檢視訂單</span> <span class="btn btn-ghost btn-sm">申請退貨</span>')}</div>`),
+    status:ckN('statustrack','訂單狀態',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">訂單狀態</b>
+      ${ckN('trackmap','配送進度',ckPH('已出貨・預計 8/14 送達（黑貓 800123456789）',2))}
+      ${ckN('ordersum','訂單摘要',ckPH('2 件品項・NT$2,932',1))}</div>`),
+    profile:ckN('profileinfo','個人資料',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">個人資料</b>
+      ${ckN('contactinfo','聯絡資訊',ckPH('林芷妍・zhiyan.lin@example.com',2))}
+      ${ckN('addrbook','地址簿',ckPH('預設地址：台北市大安區和平東路二段 106 號',2))}</div>`),
+  }[CK.page]||'';
+  const ann=(CK_TREES[CK.page]||[]).some(s=>s.k==='announce');
+  return `<div class="ck-prev">
+    ${ann?ckN('announce','公告列',`<div style="background:var(--brand);color:var(--text-inverse);border-radius:var(--r-200);
+      padding:var(--sp-150);text-align:center;font-size:var(--t-2xs);margin-bottom:var(--sp-300)">全站滿 NT$2,000 免運</div>`):''}
+    ${ckN('header','頁首',`<div class="ck-acct-top">
+      ${ckN('logo','標誌','<b style="font-size:var(--t-lg);line-height:var(--lh-lg)">CHILL LOVE</b>')}
+      <span class="ck-credit">${ckN('credit','商店抵用金餘額','<span class="tagchip num" style="margin:0">NT$100.00</span>')}</span>
+      <span class="avatar" aria-hidden="true">W</span></div>
+      <div class="tabs" style="margin:var(--sp-300) 0 0" role="tablist">
+        <span class="tab ${CK.page==='profile'?'':'on'}">訂單</span><span class="tab ${CK.page==='profile'?'on':''}">個人資料</span></div>`)}
+    <div style="margin-top:var(--sp-300)">${body}</div>
+    ${ckN('footer','頁尾',`<div style="margin-top:var(--sp-400);padding:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
+      ${ckN('policies','政策','<span class="mut3" style="font-size:var(--t-2xs)">退款政策・隱私權政策・服務條款</span>')}</div>`)}
+  </div>`;
+}
+/* ---------- 右欄屬性檢查器 ---------- */
+function ckInspectorHTML(){
+  const f=CK.sel?ckFind(CK.sel):null;
+  if(!f)return `<h4>屬性</h4><p class="help">在左側圖層樹或中間預覽點一個區段／區塊，這裡會顯示它的設定。<br><br>
+    區段（實心 icon）是系統群組不可刪；虛線方框是區塊，全部由已安裝 app 的 UI extension 提供。</p>`;
+  const n=f.n,isBlock=f.type==='block',sysGrp=f.type==='group';
+  const kind=f.type==='section'?chip('系統區段','info',''):isBlock?chip('區塊','default','full'):chip('系統群組','info','');
+  return `<h4>${CK.secMode?'區段設定':'屬性'}</h4>
+   <div style="display:flex;align-items:center;gap:var(--sp-200);margin-bottom:var(--sp-300)">
+     ${isBlock?'<span class="ck-bic" aria-hidden="true"></span>':`<span class="ck-sic" aria-hidden="true">${n.ic||'▦'}</span>`}
+     <b style="flex:1;min-width:0">${H(n.t)}</b>${kind}</div>
+   <div class="stack">
+     ${F('顯示名稱',`<input class="input" value="${H(n.t)}" ${isBlock?'':'disabled'} aria-label="顯示名稱" onchange="ckDirty(true)">`,
+       isBlock?'區塊名稱可改，寫進 layout JSON':'系統群組名稱由平台鎖定，不可改')}
+     ${CK.secMode?F('區段寬度',SEL('_ckw',[['page','跟隨頁面寬'],['narrow','窄（560px）'],['wide','寬（960px）']],'page','onchange="ckDirty(true);toast(\'區段寬度已變更\')"'),'區段級設定，套用到底下所有區塊'):''}
+     ${F('上下留白',SEL('_ckp',[['s','小'],['m','中'],['l','大']],'m','onchange="ckDirty(true);toast(\'留白已變更——改動即 enable 頂欄儲存\')"'),'44 §21.6：改動只 enable 頂欄「儲存」，不叫出 save bar')}
+     ${n.eye?`<div class="swrow"><div class="sw-t"><b>在此頁顯示</b><span>等同列尾 👁；存 visible:false 不是刪除</span></div>
+       <input type="checkbox" class="tgl" role="switch" aria-label="在此頁顯示：${H(n.t)}" ${CK.hid[n.k]?'':'checked'} onchange="ckEye('${n.k}')"></div>`:''}
+     <div class="card-sec"><p class="help" data-doc="ck-source">
+       <b>來源</b>：${isBlock?'<span class="num">core</span>（內建 block 也走同一套 registry 註冊）':'<span class="num">platform</span>（系統群組，不可刪）'}<br>
+       <b>target</b>：<span class="num">${H(CK.page)}.${H((f.sec||n).k)}</span>——app 的 UI extension 就是靠這個 target 決定能不能加進這個區段。</p></div>
+   </div>`;
+}
+/* 外點關閉：頁面選擇器（桌機下拉態）與新增區塊 popover */
+document.addEventListener('click',e=>{
+  const p=document.getElementById('ckPicker');
+  if(p&&p.classList.contains('show')&&!e.target.closest('#ckPicker')&&!e.target.closest('#ckPageBtn'))ckClosePicker();
+  const a=document.getElementById('ckAddPop');
+  if(a&&a.classList.contains('show')&&!e.target.closest('#ckAddPop'))ckAddClose();
+});
+/* Escape：編輯器開啟時由這裡吃掉（capture），避免落到全域的 closeNav */
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const ed=document.getElementById('ckEditor');
+  if(!ed||!ed.classList.contains('show'))return;
+  e.stopPropagation();
+  if(document.getElementById('docPop').classList.contains('show'))closeDocPop();
+  else if(document.getElementById('genOverlay').classList.contains('show'))closeGen();
+  else if(document.getElementById('ckPicker').classList.contains('show'))ckClosePicker();
+  else if(document.getElementById('ckAddPop').classList.contains('show'))ckAddClose();
+  else if(document.getElementById('ckInsp').classList.contains('open'))ckInspClose();
+  else closeCheckoutEditor();
+},true);
+
+/* ---------- 路由與入口掛載 ---------- */
+Object.assign(MODULES,{"m-companies":{title:"公司",full:true,custom:companiesPage}});
+Object.assign(DETAILS,{'d-company':companyPage,'d-company-new':companyNewPage});
+/* 新增公司表單要接 save bar，但存檔行為是自訂的（要真的把公司寫進列表）→ 包一層 afterRoute */
+const _afterRoute=afterRoute;
+afterRoute=function(p){
+  if(p==='d-company-new'){
+    formInit('[data-form="conew"]',{save:companySaveNew,discard:()=>renderDetail('d-company-new')});
+    return;
+  }
+  _afterRoute(p);
+};
+/* 44 §21：編輯器入口＝設定 → 結帳頁面 → 設定檔卡片「編輯」（一個編輯器同時管結帳與帳號 6 頁）*/
+const CK_PROFILES=[
+ {id:'p1',name:'「CHILL LOVE」設定',sub:'6 頁版面・3 個 app block',saved:'今天 10:24',active:true},
+ {id:'p2',name:'B2B 結帳設定檔',sub:'採購單號欄位・指派給 2 個公司地點',saved:'2026-07-28 16:03',active:false}];
+function ckProfileCard(){
+  return `<div class="card card-pad" data-doc="ck-profiles"><h3>結帳設定檔</h3>
+   <p class="help" style="margin-bottom:var(--sp-200)">一個設定檔＝一整組版面（結帳／感謝您／顧客帳號 4 頁，共 6 頁）。同時只有一個是使用中；B2B 地點可指派專屬設定檔。</p>
+   ${CK_PROFILES.map(p=>`<div class="set-row">
+     <div style="flex:1;min-width:0"><b>${H(p.name)}</b>
+       <span class="sub">${H(p.sub)}・上次儲存：<span class="num">${H(p.saved)}</span></span></div>
+     ${p.active?chip('使用中','success','full'):chip('未使用','default','')}
+     <button class="btn ${p.active?'btn-pri':'btn-sec'} btn-sm" data-doc="ck-entry"
+       onclick="openCheckoutEditor('checkout')">編輯</button></div>`).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">「使用中」badge 與編輯器頂欄第二行的綠點是同一個欄位（44 §21.6 結論 4）。</p></div>`;
+}
+SET_PAGES.checkout=ckProfileCard()+SET_PAGES.checkout.replace(
+ `<div class="set-row"><div><b>自訂結帳外觀</b><span class="sub">品牌色／字體／圓角（checkout profile）</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：Checkout 編輯器規格見 24 §6')">自訂結帳</button></div>`,
+ `${setRow('自訂結帳外觀','品牌色／字體／圓角——由上方設定檔的編輯器維護')}`);
+/* 只換結尾那個卡片收尾的 </div>（字串中間還有很多 set-row 的 </div>，不能用第一個）*/
+SET_PAGES.accounts=SET_PAGES.accounts.replace(/<\/div>$/,
+ `<div class="set-row" style="border:0"><div><b>自訂帳號頁版面</b><span class="sub">登入／訂單／訂單狀態／個人資料——與結帳同一個編輯器</span></div>
+   <button class="btn btn-sec btn-sm" data-doc="ck-entry" style="margin-left:auto" onclick="openCheckoutEditor('orders')">開啟編輯器</button></div></div>`);
+
+Object.assign(DOCS,{
+/* ---------- 共用：save bar 位置更正（44 §22.5 實測）---------- */
+ "savebar":{t:"未儲存變更列（contextual save bar）",f:"dirty 時出現的『捨棄／儲存』列",
+  l:"44 §22.5 實測更正：save bar 不是右下浮動條，而是<b>直接取代頂欄整條搜尋列</b>（兩者不同時存在），且與詳情頁頁尾的 disabled『儲存』鈕<b>並存</b>——同一份表單有兩個提交入口。原型在 ≤767 退回底部浮動條，因為 56px 頂欄在窄版只剩 icon 寬度，塞不下三顆控件（刻意偏離，實作時窄版可改用 sticky 底部列）",
+  i:"P0・純前端 dirty 判定（快照 diff）；送出走各表單自己的 mutation，save bar 本身不打 API"},
+/* ---------- C：B2B 公司與地點（44 §22.5）---------- */
+ "b2b-companies":{t:"公司列表",f:"B2B 公司清單（公司／地點數／付款條件／訂單提交模式／建立日期）",
+  l:"44 §22.5：列表一列是公司，但每一欄的承載層都是 company_location——付款條件與訂單提交在同一間公司的不同地點可以不同，所以欄位要能顯示多值",
+  i:"P1・[api:companies]（cursor 分頁） [api:companyLocations] [tbl:companies(shop_id,name,external_id),company_locations]"},
+ "b2b-empty":{t:"公司空態（B2B 四支柱）",f:"未建立公司時的引導卡",
+  l:"44 §22.5 逐字：「集中管理 B2B 所需的一切功能。請新增公司，並指派自訂定價、淨付款條款，以及多個地點和買家的權限」——四支柱全部作用在地點層，文案不可寫成「為公司指派」",
+  i:"P1・空態不打 API；四支柱對應 [tbl:catalogs] [tbl:company_locations.payment_terms_id] [tbl:company_locations] [tbl:company_contacts.role]"},
+ "b2b-learn":{t:"深入瞭解公司（卡外連結）",f:"連到說明中心",
+  l:"44 §22.5：此連結在卡片外、不是卡內 secondary action——空態的教學連結一律外置，避免與 primary 競爭",
+  i:"P3・靜態說明頁；無 API"},
+ "b2b-new":{t:"新增公司",f:"開啟單欄置中的建立表單",
+  l:"44 §22.5：表單一改動就出現頂欄 save bar（取代整條搜尋列，不是疊加）；頁尾另有一顆 disabled 儲存與 save bar 並存",
+  i:"P1・[api:companyCreate]（companyInput ＋ companyLocation 一起帶，location 是必填不是選填） [tbl:companies,company_locations]"},
+ "b2b-co-name":{t:"公司名稱",f:"公司顯示名",
+  l:"44 §22.5 helper 逐字「此名稱會顯示在顧客帳號和結帳頁面」——所以改名會影響前台，不是純內部欄位",
+  i:"P1・[api:companyUpdate]（name） [tbl:companies.name]"},
+ "b2b-co-extid":{t:"公司 ID（外部 ID）",f:"對接既有系統的識別碼",
+  l:"44 §22.5 helper「您可以新增現有的外部 ID，或建立唯一的 ID」——這是 ERP／經銷商系統的對接鍵：匯入既有 B2B 客戶時用它比對，不可自動流水號覆蓋。店內唯一",
+  i:"P1・[api:companyCreate]（externalId） [tbl:companies.external_id UNIQUE(shop_id,external_id)]"},
+ "b2b-contact":{t:"主要聯絡人",f:"顧客搜尋選擇器",
+  l:"44 §22.5：主要聯絡人必須是既有 customer（company_contact 是 customer 的角色，不是另一張人員表）；收發票與訂單通知",
+  i:"P1・[api:customers]（picker） [api:companyAssignMainContact] [tbl:company_contacts(company_id,customer_id,is_main)]"},
+ "b2b-loc-card":{t:"地點卡",f:"建立公司時同時建立第一個地點",
+  l:"44 §22.5 逐字「每個地點都可自訂目錄、結帳頁面設定等項目」——這句就是模型的白話版：catalog／checkout profile／payment terms／tax 全掛 company_location。公司不能沒有地點",
+  i:"P1・[api:companyCreate]（companyLocation 必填） [tbl:company_locations(company_id,name,external_id,billing_same_as_shipping)]"},
+ "b2b-ship-addr":{t:"運送地址（子卡）",f:"地點的收貨地址",
+  l:"44 §22.5：子卡右上有「清除」；地址的國家會往下推導市場、稅務登記與可用運送區域，所以先填地址才有市場",
+  i:"P1・[api:companyLocationAssignAddress]（shippingAddress） [tbl:company_location_addresses(type enum(shipping,billing))]"},
+ "b2b-addr-add":{t:"新增地址",f:"開地址表單",
+  l:"44 §22.5：⊕ 新增地址 › 在子卡內；國家欄是推導市場的唯一輸入，不可讓商家手選市場",
+  i:"P1・[api:companyLocationAssignAddress] [tbl:company_location_addresses,market_countries]"},
+ "b2b-bill-same":{t:"帳單地址與運送地址相同",f:"預設勾選的地址複用",
+  l:"44 §22.5 預設勾選；取消勾選才展開第二組地址欄。發票抬頭走帳單地址，稅籍編號另存（不在地址上）",
+  i:"P1・[tbl:company_locations.billing_same_as_shipping] ＋ 取消勾選時才寫 type='billing' 的第二筆地址"},
+ "b2b-loc-extid":{t:"地點 ID（外部 ID）",f:"地點層的外部識別碼",
+  l:"44 §22.5 與公司 ID 同 helper 文案，但是兩個不同層的欄位——ERP 常以「客戶代號＋出貨點代號」兩段對接，兩個 external_id 都要有",
+  i:"P1・[tbl:company_locations.external_id UNIQUE(company_id,external_id)]"},
+ "b2b-market":{t:"市場（唯讀）",f:"依運送地址國家推導的市場",
+  l:"44 §22.5：chip 唯讀、不可手選。市場決定幣別與可用目錄；地址改國家就要重推導，若該國不屬任何 active market 要擋下（同 44 §19.2 的 zone≠market 校驗）",
+  i:"P1・唯讀推導：SELECT market_id FROM market_countries WHERE country=? AND status='active' [api:markets] [tbl:company_locations.market_id]"},
+ "b2b-catalog":{t:"目錄（地點層）",f:"指派此地點看到的價目表",
+  l:"44 §22.5：目錄掛地點不掛公司——同公司的台北與台中可用不同目錄。未指派時 fallback 到商店預設價目；B2B 目錄與 AI 代理／市場目錄共用同一張 catalogs 表",
+  i:"P2・[api:catalogContextUpdate]（companyLocationIds） [tbl:catalogs,catalog_company_locations,price_list_prices]"},
+ "b2b-catalog-add":{t:"新增目錄",f:"目錄 picker",
+  l:"一個地點可掛多個目錄時需定義優先序（固定價 > 百分比調整）；本原型先做單選，多選規則待 05 §1e 補",
+  i:"P2・[api:catalogs]（picker） [tbl:catalog_company_locations(location_id,catalog_id,position)]"},
+ "b2b-terms":{t:"付款條件（淨付款條款）",f:"Net 15／30／60 與預付",
+  l:"44 §22.5：預設「沒有付款條件」＝即時付款；掛在地點。到期日＝發票日＋N 天，逾期單要能列表與催收——這是 B2B 與 B2C 最大的金流差異（B2C 沒有應收帳款）",
+  i:"P2・[api:paymentTermsCreate]（PaymentTermsTemplate） [tbl:payment_terms_templates,company_locations.payment_terms_id,orders.payment_due_at]"},
+ "b2b-ordersubmit":{t:"訂單提交（B2B 訂單審核流）",f:"自動提交／全部作為草稿提交以供審核",
+  l:"44 §22.5 逐字兩態：自動提交（副標「沒有運送地址的訂單將作為訂單草稿提交」＝即使選自動，缺地址仍落草稿）／全部草稿審核。掛在地點，因此同公司可以只讓分公司走審核",
+  i:"P2・[api:companyLocationUpdate]（checkoutToDraft） [tbl:company_locations.orders_to_draft] ＋ 前台結帳分流到 [tbl:draft_orders(source='b2b')]"},
+ "b2b-submit-note":{t:"訂單提交聯動說明",f:"隨 radio 切換的後果說明",
+  l:"兩態的後果不同，必須寫在畫面上：選「全部草稿」時買家結帳不成單、落 draft_orders 並標 source='b2b'，核准（draftOrderComplete）才扣庫存；選「自動提交」時仍有一條例外——缺運送地址算不出運費與稅額，一樣落草稿（44 §22.5 副標逐字）",
+  i:"P2・[tbl:company_locations.orders_to_draft] [tbl:draft_orders(source)] [api:draftOrderComplete]；核准者需「草稿訂單」權限（41 §12）"},
+ "b2b-tax":{t:"稅務詳細資訊（地點層）",f:"稅籍編號與稅金設定",
+  l:"44 §22.5：稅籍編號＋稅金設定（收取稅金／免稅）掛地點——跨境公司各地點稅別不同（台灣統編 vs 馬來西亞 SST vs EU reverse charge）。免稅要能存豁免證明與到期日",
+  i:"P2・[api:companyLocationTaxSettingsUpdate] [tbl:company_locations(tax_registration_id,tax_exempt,tax_exemption_expires_at)] ＋ 稅額引擎讀取順序見 15 §"},
+ "b2b-loc-model":{t:"「公司只是容器」警示",f:"把模型層級寫在畫面上",
+  l:"44 §22.5 結論：我們原本的 B2B 規格把 catalog／checkout profile／payment terms／tax 掛在 company 上——要改成掛 company_location。這條橫幅是防止實作再掛錯層的視覺護欄",
+  i:"P1・schema 級決定：company_locations 才是這四組外鍵的所在；companies 只有 name/external_id/main_contact"},
+ "b2b-loc-tabs":{t:"地點分頁（地點層設定）",f:"用 tab 切換地點，一次看一個地點的完整設定",
+  l:"44 §22.5：切分頁＝換一筆 company_locations row，不是換欄位群。每列的「地點層」標記是刻意重複的——實作者最容易把這些欄位往 company 表上放",
+  i:"P1・[api:companyLocations]（company 下的 location 清單） [tbl:company_locations]"},
+ "b2b-co-fields":{t:"公司容器層欄位",f:"公司只有名稱／外部 ID／主要聯絡人／建立日期",
+  l:"公司層刻意沒有任何商務設定；若未來要加「公司預設值」，也必須是 location 建立時的初始值複製，不能變成執行期的 fallback（否則兩層都能改，對帳會爆）",
+  i:"P1・[tbl:companies(shop_id,name,external_id,main_contact_id,created_at)]"},
+ "b2b-loc-catalog":{t:"地點 › 目錄",f:"此地點使用的目錄",i:"P2・[api:catalogContextUpdate] [tbl:catalog_company_locations]",
+  l:"44 §22.5：同公司兩個地點可掛不同目錄；價格解析順序＝地點目錄 > 市場目錄 > 商店預設"},
+ "b2b-loc-profile":{t:"地點 › 結帳設定檔",f:"此地點套用的 checkout profile",
+  l:"44 §22.5＋§21：checkout profile 也掛地點——B2B 地點可以套用專屬結帳版面（例如顯示採購單號欄位），由結帳與帳號編輯器維護",
+  i:"P2・[api:companyLocationUpdate]（checkoutProfileId） [tbl:company_locations.checkout_profile_id,checkout_profiles]"},
+ "b2b-loc-terms":{t:"地點 › 付款條件",f:"此地點的 Net 條款",
+  l:"到期日與催收都以地點為單位；訂單成立時把條款快照到 order（條款會被改，訂單不能追溯變動）",
+  i:"P2・[tbl:company_locations.payment_terms_id,orders.payment_terms_snapshot]"},
+ "b2b-loc-submit":{t:"地點 › 訂單提交",f:"自動成單或全部進草稿審核",
+  l:"審核流與一般草稿訂單共用 draft_orders，用 source='b2b' 區分；核准者需要「草稿訂單→Create-edit」權限（41 §12 權限表）",
+  i:"P2・[tbl:company_locations.orders_to_draft,draft_orders.source] [api:draftOrderComplete]"},
+ "b2b-loc-tax":{t:"地點 › 稅務",f:"稅籍編號與課稅模式",
+  l:"稅額引擎讀取順序：顧客免稅 > 稅則覆寫 > 登記稅率；B2B 的免稅是掛在 company_location 上的顧客級免稅",
+  i:"P2・[tbl:company_locations.tax_registration_id,company_locations.tax_exempt]"},
+ "b2b-loc-market":{t:"地點 › 市場",f:"唯讀，依地址推導",
+  l:"與 b2b-market 同一條規則；地點改國家時要重跑推導並檢查該國是否屬 active market",
+  i:"P1・[tbl:company_locations.market_id,market_countries]"},
+ "b2b-loc-addr":{t:"地點 › 運送地址",f:"收貨地址與帳單地址",
+  l:"改國家會連動市場、稅務登記與運送區域三處；歷史訂單的地址是快照，不隨此處變更",
+  i:"P1・[api:companyLocationAssignAddress] [tbl:company_location_addresses]"},
+/* ---------- D：結帳與帳號編輯器（44 §21）---------- */
+ "ck-profiles":{t:"結帳設定檔卡片",f:"設定檔清單（名稱／使用中 badge／上次儲存／編輯）",
+  l:"44 §21 進入路徑的起點：一個 profile ＝一整組 6 頁版面。同時只有一個 is_active（卡上的『使用中』badge 與編輯器頂欄綠點同源，§21.6 結論 4）；非使用中的 profile 仍可編輯與預覽，並可指派給 B2B company_location（§22.5）。「上次儲存」讀的是 layout 版本表的最新一筆，不是 profile.updated_at",
+  i:"P0(M3)・[api:checkoutProfiles] [tbl:checkout_profiles(shop_id,name,is_active)] [tbl:checkout_layout_versions(profile_id,created_at)]"},
+ "ck-mtabs":{t:"圖層／預覽 tab（≤767）",f:"窄版單欄時二選一切換",
+  l:"44 §21 只量到桌機三欄；≤767 三欄塞不下 375px，本原型補的窄版解法＝樹與預覽用 tab 互換、檢查器一律走右側抽屜。這是我方決定不是實測，實作可改為底部分頁列",
+  i:"P1・純前端檢視狀態，不落庫"},
+ "ck-insp-close":{t:"關閉屬性檢查器（抽屜態）",f:"≤1040 時抽屜的 ✕",
+  l:"≤1040 檢查器不再常駐第三欄，改為點選節點後由右側滑入；關閉抽屜<b>不清除選取</b>（預覽的藍框仍在），因為選取是編輯器的全域狀態、抽屜只是它的一個視圖",
+  i:"P1・純前端；selection state 與抽屜開合是兩個獨立變數"},
+ "ck-entry":{t:"編輯器入口",f:"從設定進入全螢幕編輯器",
+  l:"44 §21：路徑 設定 → 結帳頁面 → 設定檔卡片「編輯」，URL /settings/checkout/editor/profiles/{profileId}?page={pageKey}；顧客帳號設定也進同一個編輯器（一個編輯器管 6 頁）",
+  i:"P0(M3)・[api:checkoutProfiles] [tbl:checkout_profiles(shop_id,name,is_active)]"},
+ "ck-top":{t:"編輯器頂欄",f:"離開｜商店 icon｜兩行標題｜裝置切換／⋯／儲存",
+  l:"44 §21.1：與主題編輯器同構但獨立——資料模型 checkout_profile → page(6) → section → block，與 theme → template → section → block 平行但不共用表（§21.6 結論 1）",
+  i:"P0(M3)・[tbl:checkout_profiles,checkout_pages,checkout_sections,checkout_blocks]"},
+ "ck-exit":{t:"⇤ 離開編輯器",f:"回到設定",
+  l:"44 §21.1：離開回設定（不是回首頁）；有未儲存變更時要攔一次——本原型沿用 guardNav 的「再點一次即捨棄」模式",
+  i:"P0(M3)・純前端路由；離開前比對 layout JSON 是否 dirty"},
+ "ck-title":{t:"兩行標題（頁面名＋設定檔）",f:"第一行＝目前頁面名可點開選擇器；第二行＝綠點＋設定檔名",
+  l:"44 §21.1：綠點＝設定檔使用中，與結帳設定檔卡片上的「使用中」badge 同源（§21.6 結論 4）。標題第一行是選擇器觸發點，不是純文字",
+  i:"P0(M3)・[tbl:checkout_profiles.is_active]（同時只有一個 active）"},
+ "ck-picker":{t:"頁面選擇器",f:"6 頁分三組切換＋佈景主題連結",
+  l:"44 §21.2：分組＝結帳（結帳）／購買後（感謝您）／顧客帳號（登入・訂單・訂單狀態・個人資料）。實測窄版是 bottom sheet（含拖曳把手），本原型 ≤768 走 sheet、桌機走下拉。這推翻 24 號「編輯器只管結帳三步」的假設",
+  i:"P0(M3)・[tbl:checkout_pages(profile_id,page_key enum(checkout,thanks,login,orders,status,profile))]"},
+ "ck-theme-link":{t:"網路商店佈景主題 →",f:"跳主題編輯器",
+  l:"44 §21.1：頁面選擇器最後一列；兩個編輯器是姊妹關係不是同一個——共用互動語彙（圖層樹／選取態／裝置切換），但資料表分開",
+  i:"P1・跨編輯器導頁；[tbl:themes] 與 [tbl:checkout_profiles] 不共用"},
+ "ck-device":{t:"裝置切換",f:"桌機／手機兩態預覽",
+  l:"44 §21.6 結論 5：只有兩態，沒有平板。切換只改預覽視窗寬度，不改 layout JSON（不是響應式覆寫）",
+  i:"P0(M3)・純前端；預覽 iframe 寬度切換"},
+ "ck-more":{t:"⋯ 頁級選單",f:"重設版面／複製設定檔／版本記錄",
+  l:"44 §21.1：頂欄右側；重設會清掉此頁所有 app block 設定，需二次確認",
+  i:"P1・[api:checkoutProfileDuplicate] [tbl:checkout_layout_versions(append-only)]"},
+ "ck-save":{t:"儲存（disabled-until-dirty）",f:"未變更即 disabled 的頂欄儲存鈕",
+  l:"44 §21.6 結論 3／行動項 62：這是全站第三種存檔模式（另兩種＝浮動 save bar、詳情頁頁尾鈕）。一次存整個 profile 的 layout JSON，不是逐 block PATCH——所以不能沿用 save bar 元件",
+  i:"P0(M3)・[api:checkoutProfileLayoutUpdate]（整份 layout JSON） [tbl:checkout_profiles.layout_json,checkout_layout_versions]"},
+ "ck-sec":{t:"圖層樹區段列",f:"頁首／主要／訂單摘要／頁尾等頂層區段",
+  l:"44 §21.3：區段是系統定義的固定集合，不可新增不可刪除不可排序——商家只能在區段內加 block。帳號頁另有頂層「公告列」區段",
+  i:"P0(M3)・[tbl:checkout_sections(page_id,section_key,position)]（seed 資料，非使用者建立）"},
+ "ck-secgo":{t:"› 進入區段設定",f:"開啟該區段的設定面板",
+  l:"44 §21.3 圖示語意：› ＝ 進入該 section 的設定頁（區段級：寬度、留白、背景），與選取某個 block 是兩層不同的設定",
+  i:"P0(M3)・[tbl:checkout_sections.settings_json]"},
+ "ck-sysgroup":{t:"系統群組（實心 icon）",f:"聯絡資訊／配送／付款／動作等群組",
+  l:"44 §21.3：實心 Lucide 風 icon ＝ 系統群組，不可刪；它們是結帳流程的骨架，商家只能在群組內加 block 或調順序",
+  i:"P0(M3)・[tbl:checkout_sections.kind='system'] ＋ 刪除 API 對 system 直接回 userErrors"},
+ "ck-block":{t:"區塊（虛線方框 ⛶）",f:"可加可刪的內容單元",
+  l:"44 §21.3：虛線方框＝block。§21.4 結論：編輯器沒有內建 block 庫，內建 block 也要用同一套 registry 註冊（source: core|app），否則日後 app 生態接不上（§21.6 結論 2）",
+  i:"P0(M3)・[tbl:checkout_blocks(section_id,block_key,source enum(core,app),app_id,settings_json,position,visible)]"},
+ "ck-expand":{t:"⌄ 展開子區塊",f:"展開／收合巢狀 block",
+  l:"44 §21.3：⌄ ＝ 展開子區塊（實測「運送方式」下有「運送選項清單」）——block 可以有子 block，樹深至少兩層，資料表要能自參照",
+  i:"P0(M3)・[tbl:checkout_blocks.parent_block_id]（自參照；展開狀態純前端不落庫）"},
+ "ck-eye":{t:"👁 顯隱切換",f:"切換該列在前台是否顯示",
+  l:"44 §21.3：列尾眼睛＝顯示/隱藏切換。隱藏是 visible:false 不是刪除——刪除會失去該 block 的 settings，隱藏要能無損還原",
+  i:"P0(M3)・[tbl:checkout_blocks.visible]（預設 true）；前台渲染時過濾"},
+ "ck-addblock":{t:"⊕ 新增區塊（空態）",f:"在區段內加 block；目前為空態",
+  l:"44 §21.4 架構級結論：popover 空態逐字「此區段沒有可用的區塊」＋連結「尋找結帳／顧客帳號應用程式」——編輯器本身沒有內建 block 庫，所有可加的 block 都由已安裝 app 的 UI extension 提供，並依 target（section）過濾。編輯器只是渲染器",
+  i:"P0(M3)・[tbl:checkout_ui_extensions(app_id,target,block_key,settings_schema)] ＋ 查詢 WHERE target=? AND app_id IN (已安裝) [api:appInstallations]"},
+ "ck-preview":{t:"預覽區（選取態）",f:"即時預覽與點選",
+  l:"44 §21.4／行動項 60：選取態＝藍色 2px 外框 ＋ 左上角藍底白字標籤 chip（chip 貼齊框上緣、與框同色）。樹與預覽雙向選取，是同一個 selection state",
+  i:"P0(M3)・預覽走 iframe 渲染真實 checkout 模板；postMessage 同步 selection"},
+ "ck-insp":{t:"屬性檢查器",f:"顯示選取節點的設定",
+  l:"44 §21：block 的表單欄位由 UI extension 的 settings_schema 動態生成（我們不硬寫 UI）；系統群組只有版面級設定，名稱鎖定",
+  i:"P0(M3)・[tbl:checkout_ui_extensions.settings_schema]（JSON Schema → 動態表單） [tbl:checkout_blocks.settings_json]"},
+ "ck-source":{t:"來源與 target",f:"標示 block 由誰提供、能掛哪個區段",
+  l:"44 §21.4：target 決定一個 block 能不能加進某區段——這是 registry 的過濾鍵，也是 app 上架時要宣告的欄位",
+  i:"P0(M3)・[tbl:checkout_ui_extensions(app_id,target,block_key)] UNIQUE(app_id,target,block_key)"},
+ "ck-acct-credit":{t:"帳號頁首抵用金藥丸",f:"商店抵用金餘額 ＋ avatar",
+  l:"44 §21.5／行動項 61：帳號頁首直接顯示商店抵用金餘額藥丸，對應 §18.5 的「商店抵用金」toggle；storefront-v2 的帳戶頁要補這顆",
+  i:"P1・[api:customerStoreCreditAccounts] [tbl:store_credit_accounts(customer_id,balance_cents,currency)]"},
+ "ck-announce":{t:"公告列（帳號頁專屬區段）",f:"帳號頁頂層的公告橫幅區段",
+  l:"44 §21.3 末段：「公告列」是顧客帳號頁才有的頂層區段，結帳頁沒有——所以 section 集合是 per page 的 seed，不是全域共用一份",
+  i:"P0(M3)・[tbl:checkout_sections(page_id,section_key='announcement')]（只 seed 給帳號頁）"},
 });
 
 /* init */
