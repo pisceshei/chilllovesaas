@@ -20,6 +20,20 @@
 - `option_values` 順序敏感（Size/Color vs Color/Size 是不同變體識別）→ digest 前先按 option position 排序。
 - 富文本描述是租戶輸入、買家可見 → 存前 sanitize（rails-html-sanitizer 白名單：p/br/strong/em/ul/ol/li/a[href 限 http(s)]/img[src 限自家 CDN]），**前台輸出處再 sanitize 一次**（雙保險）。
 
+### F1.1 最終銷售品項與退貨規則的商品側掛載（P0-10 的商品端）
+
+<!-- 依 46c:427–432、44:433、44:439 補寫，原文：「最終銷售品項」以 **collection 或 product** 為粒度指定（44 實測為 radio 二選一）；
+     逐字「Your customers can't submit return or cancellation requests for final sale items.」＝入口層擋掉，不是提交後被拒；
+     且「套裝組合（bundles）不能設為最終銷售品項」。我方原本 13／16／42 皆無 -->
+
+| # | 規則 | 實作 |
+|---|---|---|
+| 1 | 最終銷售的**指定粒度為二選一**：`商品系列(collection)` 或 `商品(product)` | `return_rules.final_sale_scope` enum ＋ `return_rule_final_sale_targets(rule_id, target_type, target_id)` |
+| 2 | 命中即**前台完全不出現退貨/取消申請入口** | 判定放在 `Product.returnable?` 與 line item 層，前台入口與 API 兩處都擋 |
+| 3 | **bundles 不可設為最終銷售** | 儲存時驗證：target 為 bundle → userError |
+| 4 | 判定**一律讀下單當下的快照**，不是現行規則 | 見 16-F7.4：`order_line_items.return_policy_snapshot_id` |
+| 5 | 退貨規則關閉時，最終銷售整卡 disabled/灰化 | 44 實測行為，UI 照做 |
+
 ## F2. Handle 與 SEO 欄位
 
 **生產級做法**：
@@ -56,7 +70,11 @@
 ## F5. 庫存帳（ledger）與調整
 
 **生產級做法**：
-1. 模型照 06：`inventory_levels`（available/committed 兩欄起步）+ `inventory_adjustments`（append-only ledger：delta、reason、reference、actor）。
+1. 模型照 06：`inventory_levels`（**available / committed / unavailable / incoming 四欄 ＋ unavailable 子分類明細表**，見 F5.1）+ `inventory_adjustments`（append-only ledger：delta、**from_state / to_state**、reason、reference、actor）。
+   <!-- 依 46c:891–927、06:111、44:150 修正，原文：官方頂層五態＝現有/可販售/已分配/不可販售/待入庫，`不可販售` 底下四子分類（損壞/品質控管/安全庫存/其他），`待入庫不計入現有`。
+        🔴 此處原本寫錯：13:59 原寫「`inventory_levels`（available/committed 兩欄起步）」——與 06:111 的恆等式和 44:150 的實測四欄對不上，
+        草稿單保留庫存（46c:546–549 逐字「進 Unavailable，不是 Committed」）與「待收退貨品項」（46c:296）皆無處可存 → 恆等式恆不成立、nightly 對帳永遠告警、且會超賣。
+        任何人翻舊版看到「兩欄起步」都不要改回去。 -->
 2. 一切變動走 `Inventory::Adjust` service（條件式 UPDATE + ledger 同 transaction）；**任何地方不准直接 `update(available:)`**（rubocop 自訂 cop 掃）。
 3. 對帳工具：rake task 重放 ledger 驗證 `SUM(delta) == 現值`，nightly 跑、不一致告警——這是庫存系統的黑盒測試。
 4. 售罄可續賣（policy CONTINUE）時 available 允許負數；前台顯示「缺貨」但可下單（明確文案）。
@@ -82,6 +100,62 @@ end
 - 退款 restock 重複觸發（webhook 重放/重複點擊）→ restock 以 refund_line_item id 冪等（唯一索引 `refund_line_item_id`）。
 - 訂單取消 vs 出貨的競態：取消動作要先搶 fulfillment_order 狀態（條件式 UPDATE status='open'→'cancelled'），搶不到就報「已出貨不可取消」。
 - committed 只能由訂單流程動（下單+、出貨−、取消−），後台手動調整只准動 available——UI 直接不給入口。
+
+### F5.1 庫存頂層五態與 unavailable 子分類（P0-15）
+
+> <!-- 依 46c:891–927 補寫（H18/H19/H20 zh-TW＋en 逐字），並與 06 §5 恆等式、44:150 實測四欄對齊 -->
+
+**(a) 頂層五態（`limits.inventory.top_level_states`）**
+
+| 狀態 | zh-TW 官方用詞 | 定義（46c:891–907 逐字節錄） | 落庫方式 |
+|---|---|---|---|
+| `on_hand` | 現有庫存 | 「由已分配、不可販售與可販售庫存的總和組成」 | **derived，不落庫**（避免雙寫漂移） |
+| `available` | 可販售 | 「不會分配至任何訂單，也不會保留給任何訂單草稿；不包含被視為待入庫的庫存」 | `inventory_levels.available` |
+| `committed` | 已分配 | 「已納入訂單但尚未履行的單位數。**若單位屬於訂單草稿…在該草稿轉為訂單之前，不會計入已分配庫存**」 | `inventory_levels.committed` |
+| `unavailable` | 不可販售 | 「因訂單草稿保留、由 app 保留，或其他擱置原因而被保留的單位數」 | `inventory_levels.unavailable` ＋ 子分類明細表 |
+| `incoming` | 待入庫 | 「從庫存轉移或 app 正在運送至您地點的庫存」 | `inventory_levels.incoming`，**不計入 on_hand** |
+
+**(b) 恆等式（nightly 對帳 job 的斷言，與 06 §5 一致）**
+
+```
+on_hand  = available + committed + unavailable          # incoming 不在其中
+unavailable = Σ inventory_unavailable_buckets.quantity  # 子分類加總必須等於彙總欄
+incoming    獨立計（在途，不入 on_hand）
+```
+
+**(c) `unavailable` 的子分類（`limits.inventory.unavailable_subtypes`）**
+`damaged`（損壞）／`quality_control`（品質控管）／`safety_stock`（安全庫存）／**`draft_reserved`（訂單草稿保留）**／`app_reserved`（app 保留）／`other`（其他）。
+表：`inventory_unavailable_buckets(shop_id, inventory_level_id, subtype, quantity)`，唯一索引 `(inventory_level_id, subtype)`。
+> 46c:925–927 官方列四子分類（損壞/品質控管/安全庫存/其他）；`draft_reserved` 與 `app_reserved` 由 46c:891–907 的 `Unavailable` 定義逐字導出（「因訂單草稿保留、由 app 保留」），拆出獨立 bucket 是為了讓草稿到期回補可精準定位。
+
+**(d) 狀態間移動（每一筆都寫 ledger，帶 `from_state` / `to_state`）**
+
+| 事件 | 移動 | reason |
+|---|---|---|
+| 訂單成立 | `available → committed` | `order_created` |
+| 出貨 | `committed → 出庫`（on_hand 隨之減少） | `fulfillment` |
+| 取消訂單（restock:true） | `committed → available` | `order_cancelled` |
+| **訂單草稿保留庫存** | **`available → unavailable[draft_reserved]`**（**不是 committed**） | `draft_reservation` |
+| 草稿轉正式訂單 | `unavailable[draft_reserved] → committed` | `draft_converted` |
+| 草稿保留到期 | `unavailable[draft_reserved] → available` | `reservation_expired` |
+| 建立退貨（待收退貨品項） | **不動任何數量**（僅標記），退貨處理時才進 `available` | `return_created`（delta = 0 的標記事件） |
+| 退貨處理 disposition = RESTOCKED | `→ available`（選重新入庫地點） | `return_restock` |
+| 標記損壞/品管/安全庫存 | `available ⇄ unavailable[子分類]` | 對應 reason |
+| 庫存轉移建立／收貨 | `→ incoming` ／ `incoming → available` | `transfer_created` / `received` |
+
+<!-- 依 46c:546–549、46c:895 修正，原文：「訂單草稿保留庫存 → 進 Unavailable 狀態（不是 Committed）；草稿單位在轉正式訂單前不計入 Committed」 -->
+<!-- 依 46c:296、46c:330 補寫，原文：「建立退貨當下庫存不變，品項標記『待收退貨品項』；處理時才選重新入庫地點」 -->
+
+**(e) 編輯連動規則**（46c:594–595、46c:909–911 逐字）
+- 編輯 **現有庫存（on_hand）** → **可販售等量變動**（因為 on_hand 是 derived，實作上是改 `available`）。
+- 編輯 **可販售（available）** → **現有庫存等量變動**（自然成立）。
+- **後台不得直接編輯 `committed`**（只能由訂單流程驅動）——UI 不給入口。
+
+**(f) 調整原因七項（`limits.inventory.adjustment_reasons`，第一項為預設）**
+`correction`（更正，預設）／`count`（盤點）／`received`（已收件）／`return_restock`（退貨重新入庫）／`damaged`（損壞）／`theft_or_loss`（遭竊或遺失）／`promotion_or_donation`（促銷或捐贈）。
+> <!-- 依 46c:608–617 修正，原文：官方七項清單。我方原本兩處清單不同且不完整——28:63 的枚舉含官方沒有的 `sold`（已移除，出庫由 fulfillment 事件表達，不是調整原因）。 -->
+
+**(g) 調整記錄事件型別**：手動 7 種（＝(f) 七原因）＋ 系統 6 種（訂單成立/出貨/取消/退貨入庫/轉移收貨/草稿保留）＋ **狀態間移動型**（如「移至安全庫存」）。ledger 的 `from_state`/`to_state` 就是為此而設。保留 `limits.inventory.adjustment_history_retention_days`（180 天）。
 
 ## F6. CSV 匯入/匯出
 

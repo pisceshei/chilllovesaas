@@ -11,16 +11,82 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
+  /* ══ 中性階（47 §6：只取層級關係，色值為 CHILL LOVE 自有）══════════════ */
   --bg:#f4f4f5;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
-  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;--border:#e3e3e6;--border-2:#ececef;
+  --surface-sunken:#e6e6e9;      /* 47 §6：次級按鈕底「比頁底深一階」（原 --surface-2 比頁底淺，層級反轉）*/
+  --surface-sunken-hover:#dcdce0;--surface-sunken-active:#d2d2d7;
+  --surface-inverse:#1a1b1d;     /* 深色浮層底（toast／bulkbar／savebar／doc-pop）*/
+  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;
+  --text-disabled:#b5b5b5;       /* 47 §E：disabled 只降文字色、底色不動 */
+  --text-inverse:#fff;           /* 47 §6：深底上的文字階 */
+  --icon:#4a4a4a;                /* 47 §6：圖示灰獨立一階 */
+  --border:#e3e3e6;--border-2:#ececef;--border-strong:#c9cace;
   --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#2a78d6;
-  --success:#0a7a5c;--success-bg:#e2f1ea;--warning:#8a6116;--warning-bg:#fdf3dc;
-  --critical:#b3172c;--critical-bg:#fdecee;--attention:#6d5f00;--attention-bg:#f9f1bc;
-  --info:#155e8f;--info-bg:#e8f2fa;--ai:#6d28d9;--ai-bg:#f3efff;
+  --ai:#6d28d9;--ai-bg:#f3efff;
   --chart:#2a78d6;--grid:#ececef;
-  --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  --surface-hover:#ededee;        /* 導航／列 hover 底 */
+  --surface-row-hover:#fafafc;    /* 表格列 hover */
+  --surface-selected:#f0f5ff;     /* 表格選取列 */
+  --surface-chip:#eeeef0;--surface-count:#e8e8ea;
+  --text-nav:#3f4144;--text-nav-2:#5c5e62;--text-quiet:#55575b;
+  --border-hover:#a9aaae;         /* 輸入框 hover 框色 */
+  --scroll-thumb:#d2d3d7;
+  --skeleton-1:#ededef;--skeleton-2:#f6f6f7;
+  --ai-border:#e2d9f8;--danger-border:#e6b3bc;
+  --touch-min:44px;               /* 34 §觸控：命中區下限（行為常數）*/
 
-  /* ── 47 §1 間距七階（唯一允許的間距值：2/4/6/8/12/16/24）───────────── */
+  /* ══ 47 §H2-1 語意色：5 族 × 5 層 × 3 態 = 75 token ════════════════════
+     族：info / success / caution（黃）/ warning（橘）/ critical
+     層：surface（極淺染色底）/ fill（實色底）/ border / icon / text
+     態：base / hover / active
+     色相為 CHILL LOVE 自有；明度階梯取自 47 §H2-1 量測公式：
+       surface L≈94–97%，hover −2~3，active −4~7。
+     text 層一律驗過 ≥6.5:1（AA+）、icon 層 ≥3.5:1（WCAG 1.4.11）於同族 surface 上。
+     caution 與 warning 是兩族，不是同一族的兩階（47 §H2-1）。 */
+  --sem-info-surface:#ebf4fa;--sem-info-surface-hover:#e3eff8;--sem-info-surface-active:#d0e5f4;
+  --sem-info-fill:#1e78b8;--sem-info-fill-hover:#1c6fab;--sem-info-fill-active:#1a679e;
+  --sem-info-border:#bbd5e7;--sem-info-border-hover:#accbe2;--sem-info-border-active:#9dc2dd;
+  --sem-info-icon:#2486cc;--sem-info-icon-hover:#217aba;--sem-info-icon-active:#1e6fa9;
+  --sem-info-text:#195885;--sem-info-text-hover:#164d74;--sem-info-text-active:#134163;
+  --sem-success-surface:#e9f8f4;--sem-success-surface-hover:#ddf4ee;--sem-success-surface-active:#cff0e8;
+  --sem-success-fill:#158468;--sem-success-fill-hover:#13765e;--sem-success-fill-active:#116953;
+  --sem-success-border:#bbe7dc;--sem-success-border-hover:#ace2d4;--sem-success-border-active:#9dddcd;
+  --sem-success-icon:#1a9375;--sem-success-icon-hover:#178267;--sem-success-icon-active:#14715a;
+  --sem-success-text:#13634f;--sem-success-text-hover:#105141;--sem-success-text-active:#0c4033;
+  --sem-caution-surface:#fefcf1;--sem-caution-surface-hover:#fdfae8;--sem-caution-surface-active:#fcf7dd;
+  --sem-caution-fill:#847115;--sem-caution-fill-hover:#766613;--sem-caution-fill-active:#695b11;
+  --sem-caution-border:#e7e0bb;--sem-caution-border-hover:#e2d9ac;--sem-caution-border-active:#ddd29d;
+  --sem-caution-icon:#98831b;--sem-caution-icon-hover:#867418;--sem-caution-icon-active:#756515;
+  --sem-caution-text:#675914;--sem-caution-text-hover:#564a10;--sem-caution-text-active:#453b0d;
+  --sem-warning-surface:#fcf2ea;--sem-warning-surface-hover:#fbece0;--sem-warning-surface-active:#fae5d5;
+  --sem-warning-fill:#af5c1d;--sem-warning-fill-hover:#a2551a;--sem-warning-fill-active:#954e18;
+  --sem-warning-border:#e7cebb;--sem-warning-border-hover:#e2c3ac;--sem-warning-border-active:#ddb89d;
+  --sem-warning-icon:#c36822;--sem-warning-icon-hover:#b25f1f;--sem-warning-icon-active:#a0561c;
+  --sem-warning-text:#814618;--sem-warning-text-hover:#6f3c15;--sem-warning-text-active:#5e3312;
+  --sem-critical-surface:#fcebee;--sem-critical-surface-hover:#fae2e5;--sem-critical-surface-active:#f8d6da;
+  --sem-critical-fill:#db243c;--sem-critical-fill-hover:#ce2239;--sem-critical-fill-active:#c11f35;
+  --sem-critical-border:#e7bbc1;--sem-critical-border-hover:#e2acb3;--sem-critical-border-active:#dd9da5;
+  --sem-critical-icon:#d0253c;--sem-critical-icon-hover:#bf2237;--sem-critical-icon-active:#ad1f32;
+  --sem-critical-text:#921c2b;--sem-critical-text-hover:#811826;--sem-critical-text-active:#6f1521;
+  /* critical 專屬例外（47 §H2-1：只有 critical 多出按鈕填色）*/
+  --sem-critical-button-fill:#c11f35;
+  --sem-critical-button-gradient-fill:linear-gradient(180deg,#db243c,#b81c30);
+
+  /* 相容別名（既有 markup 的 .b-* 與 --success 等仍可用）*/
+  --success:var(--sem-success-text);--success-bg:var(--sem-success-surface);
+  --warning:var(--sem-warning-text);--warning-bg:var(--sem-warning-surface);
+  --caution:var(--sem-caution-text);--caution-bg:var(--sem-caution-surface);
+  --attention:var(--sem-caution-text);--attention-bg:var(--sem-caution-surface);   /* attention ＝ caution 的舊名 */
+  --critical:var(--sem-critical-text);--critical-bg:var(--sem-critical-surface);
+  --info:var(--sem-info-text);--info-bg:var(--sem-info-surface);
+
+  /* ══ 47 §C 髮絲線＝1 個「裝置」像素（不是固定 1px）════════════════════
+     dpr 三檔於 :root 覆寫此 token；全站邊框一律 var(--hairline)。
+     48 §00.4 的 --bw-100:1px 依 51 表 6 作廢，不落地。 */
+  --hairline:1px;
+  --bw-150:1.5px;                /* 僅供 badge pip 環與 dashed 落點區使用 */
+
+  /* ══ 47 §1 間距七階（唯一允許的間距值：2/4/6/8/12/16/24）══════════════ */
   --sp-050:2px;   /* 表頭列內距、小 pill 上下內距 */
   --sp-100:4px;   /* icon 按鈕內距、密集列 gap */
   --sp-150:6px;   /* 欄位標題按鈕內距、次級 gap */
@@ -30,131 +96,257 @@
   --sp-600:24px;  /* 區段之間 */
   /* >24px 一律以上列階梯的整數倍組合（calc），不得出現裸值 */
 
-  /* ── 47 §3 字級五階（size / line-height / weight）──────────────────── */
-  --t-xs:12px;  --lh-xs:16px; --fw-xs:500;   /* 表格內容、欄位標題 */
-  --t-sm:13px;  --lh-sm:20px; --fw-sm:500;   /* UI 預設（原 14px，47 §3 修正為 13） */
-  --t-md:14px;  --lh-md:20px; --fw-md:500;   /* 次要標題 */
-  --t-lg:16px;  --lh-lg:20px; --fw-lg:450;   /* 卡片標題（weight 刻意降為 450） */
-  --t-xl:18px;  --lh-xl:24px; --fw-xl:500;   /* 區段標題 */
+  /* ══ 47 §3 字級階（size / line-height / weight）════════════════════════ */
+  --t-2xs:11px; --lh-2xs:14px; --fw-2xs:600;  /* 微標籤（47 未量到，我方保留階）*/
+  --t-xs:12px;  --lh-xs:16px;  --fw-xs:500;   /* 表格內容、欄位標題 */
+  --t-sm:13px;  --lh-sm:20px;  --fw-sm:500;   /* UI 預設（原 14px，47 §3 修正為 13） */
+  --t-md:14px;  --lh-md:20px;  --fw-md:500;   /* 次要標題 */
+  --t-lg:16px;  --lh-lg:20px;  --fw-lg:450;   /* 卡片標題（weight 刻意降為 450） */
+  --t-xl:18px;  --lh-xl:24px;  --fw-xl:500;   /* 區段標題 */
+  --t-2xl:20px; --lh-2xl:24px;                /* 頁面標題 */
+  --t-3xl:24px; --lh-3xl:32px;                /* 統計數字 */
+  --fw-split:550;                             /* 47 §6.5：split 鈕字重 550（介於 500/600）*/
 
-  /* ── 47 §2 圓角四階 ─────────────────────────────────────────────── */
+  /* ══ 47 §2 圓角四階 ═══════════════════════════════════════════════════ */
   --r-100:4px;    /* 最小元素 */
-  --r-200:8px;    /* 控件：按鈕、輸入框、chip、tab */
+  --r-200:8px;    /* 控件：按鈕、輸入框、chip、tab、badge */
   --r-300:12px;   /* 卡片 */
-  --r-400:18px;   /* 大容器／藥丸 */
+  --r-400:18px;   /* 大容器 */
+  --r-pill:999px; /* 標籤 tag／進度條（47 §D：tag 才是全圓藥丸）*/
   --r-card:var(--r-300);--r-btn:var(--r-200);   /* 相容別名 */
 
-  /* ── 47 §4 控件高度四階 ─────────────────────────────────────────── */
+  /* ══ 47 §4／§B 控件高度與版面常數 ═════════════════════════════════════ */
   --h-24:24px;  /* 列表 tab */
   --h-28:28px;  /* icon 按鈕、表頭按鈕 */
   --h-32:32px;  /* 表格資料列、輸入框、按鈕 */
   --h-36:36px;  /* 頂欄控件 */
+  --topbar-h:56px;    /* 47 §0／§B 量測真值（原 52，51 表 1 P0-11）*/
+  --sidebar-w:240px;  /* 47 §B 桌機常駐側欄真值（原 220，51 表 1 P0-11）*/
 
-  /* ── 47 §5 動效系統（5 時長 × 3 曲線）──────────────────────────── */
+  /* ══ 47 §G／§H2-2 z-index 窄帶（浮層全部擠在 510–520，靠 DOM 序決勝）══ */
+  --z-base:1;        /* 卡片內基礎堆疊 */
+  --z-sticky:100;    /* 表格 sticky 表頭／儲存格、常駐導航 */
+  --z-mid:400;       /* 中層雜項（tooltip、面板內關閉鈕）*/
+  --z-bulk:510;      /* 表格批次操作 sticky 列、浮動儲存列 */
+  --z-topbar:517;    /* 頂欄、側欄寬度把手 */
+  --z-drawer:518;    /* nav drawer */
+  --z-scrim:518;     /* modal／drawer 遮罩 */
+  --z-dialog:519;    /* 對話框本體 */
+  --z-popover:520;   /* 下拉選單／popover／toast（必須 > dialog）*/
+  --scrim:rgba(0,0,0,.5);   /* 47 §H2-2 實測遮罩不透明度 = .5 */
+
+  /* ══ 47 §H2-3 focus 環：outline:none ＋ 雙層 box-shadow ════════════════
+     內層＝底色做出的留白間隙，外層＝環本身（環寬＝4 個實體像素）。
+     48 §A.2「不准用 box-shadow 模擬焦點環」依 51 表 6 已被 47 推翻。 */
+  --focus-ring:#2b2c2e;   /* 47 §H2-3 目視為深中性、非品牌藍 */
+  --focus-gap-w:2px;      /* 內層間隙寬 */
+  --focus-ring-w:4px;     /* 環寬＝dpr1.5 下 computed 2.667px ＝ 4 個實體像素 */
+  --border-control:#8a8a8a;  /* 47 §H2-4 表單控件框色（inset 陰影用）*/
+  --surface-bright:#fdfdfd;  /* radio 已選內點 */
+  --focus-gap:var(--bg);  /* 深色浮層內會就地覆寫成該浮層底色 */
+
+  /* ══ 47 §5 動效系統（5 時長 × 3 曲線）═════════════════════════════════ */
   --dur-fast:100ms;    /* 色彩、邊框、focus、accordion */
   --dur-base:150ms;    /* 底色 hover、淡入淡出 */
   --dur-slow:200ms;    /* popover 進場（opacity + scale） */
   --dur-slower:250ms;  /* 抽屜 transform */
   --dur-slowest:300ms; /* 側欄寬度 */
+  --dur-shake:300ms;   /* 47 #88 驗證失敗 shake */
+  --dur-bar-grow:500ms;/* 條圖／進度條生長（非 M1–M7，屬資料視覺化）*/
+  --dur-shimmer:1200ms;/* skeleton */
+  --dur-pulse:2000ms;  /* live dot 呼吸 */
   --ease-standard:cubic-bezier(.25,.1,.25,1);
   --ease-in-out:cubic-bezier(.42,0,.58,1);
   --ease-decelerate:cubic-bezier(.19,.91,.38,1);
   --tr:var(--dur-base) var(--ease-standard);--tr-big:var(--dur-slower) var(--ease-standard);
+
+  /* ══ 陰影階（整條 token 化，51 表 2 要求）═════════════════════════════ */
+  --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  --sh-raised:0 1px 2px rgba(26,28,30,.08);
+  --sh-pop:0 12px 32px rgba(26,28,30,.16);
+  --sh-modal:0 24px 64px rgba(26,28,30,.35);
+  --sh-drawer:0 16px 44px rgba(26,28,30,.2);
+  --sh-bulk:0 8px 24px rgba(26,28,30,.35);
+  --sh-float:0 12px 32px rgba(26,28,30,.35);
+  --sh-doc:0 16px 48px rgba(26,28,30,.5);
+
+  /* ══ 47 §F 斷點階梯（8 階，em，root 16）— 供實作者對照 ═════════════════
+     22.5em=360 / 30.625em=490 / 41.6875em=667 / 48em=768（主斷點，用量 421）
+     / 65em=1040 / 75em=1200 / 90em=1440 / 160em=2560
+     max 配對一律 −0.0025em。media query 的 em 以初始字級 16px 計算，
+     不受 html{font-size:13px} 影響，故 px→em 換算安全（51 表 3.1 註 4）。
+     CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
 }
+
+/* 47 §C：髮絲線＝1 個實體像素。dpr 三檔就地覆寫 --hairline，全站邊框同步變細。 */
+@media (-webkit-min-device-pixel-ratio:1.5),(min-resolution:1.5dppx){:root{--hairline:.667px}}
+@media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx){:root{--hairline:.5px}}
+/* 47 §C 自寫 utility：markup 直接標記單邊髮絲線用 */
+.cl-hairline{border-bottom:var(--hairline) solid var(--border)}
+.cl-hairline-t{border-top:var(--hairline) solid var(--border)}
+
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:var(--t-sm)}
 body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-sm);letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::placeholder{color:var(--text-3)}
-:focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-radius:var(--r-100)}
+/* 47 §H2-3：實站 outline-style=none，焦點環是雙層 box-shadow（內層底色間隙 + 外層環）。
+   環寬 4 個實體像素；48 §A.2「不准用 box-shadow 做焦點環」已依 51 表 6 由 47 推翻，
+   其裁切顧慮改用 overflow:clip + overflow-clip-margin 解（見 .seg）。 */
+:focus-visible{outline:none;box-shadow:0 0 0 2px var(--focus-gap),0 0 0 4px var(--focus-ring)}
+/* 深色浮層內就地換環色，避免深環壓在深底上看不見 */
+.bulkbar,.toast,.savebar,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--surface)}
+.seg{overflow:clip;overflow-clip-margin:4px}
 .num{font-variant-numeric:tabular-nums}
 svg{flex:none}
 
+/* ══════════ 47 §5 動效原語 M1–M7 —— 全站唯一的 transition 來源 ══════════
+   每條規則的選擇器 = 原語 class ＋ 實際套用該原語的元件。
+   原語不再是死碼：元件不自帶 transition，一律由此處供給（51 表 4.0 最後一列）。
+   ════════════════════════════════════════════════════════════════════════ */
+/* M1 hover 底色：150ms ease */
+.m-hover,.icon-btn,.hamb,.store-chip,.nav-sub,.set-item,.dtype,.pick,.alertrow,.pal-item,
+.view-menu button,.seg button,.bulkbar .b-act,.idx tbody tr,.toggle,.tgl,.ai-row,.ftile,
+.media-tile .mt-x,.rule .rm,.mi .mi-act button{transition:background-color var(--dur-base) ease}
+/* M2 文字色：100ms（比底色快，避免文字先於底色定格）*/
+.m-text,.tab,.idx th.sortable,.table-toggle,.valchip .x,.doc-pop .dp-close{transition:color var(--dur-fast) var(--ease-standard)}
+/* M1 ＋ M2 同時（底色與文字色都變的元件）*/
+.m-hover.m-text,.nav-item,.pg,.btn-ghost{transition:background-color var(--dur-base) ease,
+  color var(--dur-fast) var(--ease-standard)}
+/* M3 focus／邊框態：border-color + border-width + box-shadow 三屬性同時、100ms decelerate */
+.m-focus,.input,.filterbar,.codebox,.ai-box,.idx td .cellin,.cl-radio,.set-search,.fsel,
+.media-add,.dropzone,.mi,.step,.plan{transition:border-color var(--dur-fast) var(--ease-decelerate),
+  border-width var(--dur-fast) var(--ease-decelerate),
+  box-shadow var(--dur-fast) var(--ease-decelerate)}
+/* M1 ＋ M3（既換底色又換框：搜尋框、任務 chip）*/
+.searchbox,.task-chip{transition:background-color var(--dur-base) ease,
+  border-color var(--dur-fast) var(--ease-decelerate),
+  box-shadow var(--dur-fast) var(--ease-decelerate)}
+/* M1 ＋ M2 ＋ M3（按鈕：三態齊備）*/
+.btn{transition:background-color var(--dur-base) ease,color var(--dur-fast) var(--ease-standard),
+  border-color var(--dur-fast) var(--ease-decelerate),border-width var(--dur-fast) var(--ease-decelerate),
+  box-shadow var(--dur-fast) var(--ease-decelerate)}
+/* M4 摺疊：max-height（不用 height，避免 reflow）*/
+.m-accordion,.nav-subs{overflow:hidden;transition:max-height var(--dur-fast) var(--ease-decelerate)}
+/* 48 §A.2 的裁切顧慮：焦點環是 box-shadow，用 overflow:clip + clip-margin 讓環不被摺疊容器切掉 */
+.nav-subs{max-height:0;display:flex;flex-direction:column;gap:var(--sp-050);overflow:clip;overflow-clip-margin:var(--focus-ring-w)}
+.nav-subs.open{max-height:240px}
+/* M5 popover／淡入進場：opacity + scale（scale 不是 transform，避免與位移衝突）*/
+.m-pop,.tooltip,.ai-send{transition:opacity var(--dur-slow) var(--ease-decelerate),
+  scale var(--dur-slow) var(--ease-decelerate)}
+/* M6 抽屜／浮動列滑入：transform 250ms standard（opacity 段套 M5 參數）*/
+.m-drawer,.toast,.savebar{transition:transform var(--dur-slower) var(--ease-standard),
+  opacity var(--dur-slow) var(--ease-decelerate)}
+/* M7 側欄寬度：max-width（不用 width，避免內容重排）*/
+.m-sidebar,.sidebar{transition:max-width var(--dur-slowest) var(--ease-in-out)}
+/* 遮罩／邊緣漸層的純淡入：M1 的淡入版（51 表 4.1 列為合理豁免）*/
+.scrim,.tscroll-wrap::after{transition:opacity var(--dur-base) var(--ease-in-out)}
+/* 開關把手：改 transform（48 #87：禁止轉場 left／width 等幾何屬性）*/
+.toggle::after,.tgl::after{transition:transform var(--dur-fast) var(--ease-decelerate)}
+
 /* ===== 頂部列 ===== */
-.topbar{height:52px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:40}
+.topbar{height:var(--topbar-h);background:var(--surface);border-bottom:var(--hairline) solid var(--border);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
 .logo{display:flex;align-items:center;gap:var(--sp-200);font-weight:700;font-size:var(--t-md);line-height:var(--lh-md);letter-spacing:.05em;white-space:nowrap}
 .logo .heart{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#e9b8a2,#a9502c);display:grid;place-items:center}
-.ver{font-size:11px;font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:999px;padding:var(--sp-050) var(--sp-200)}
-.searchbox{flex:1;max-width:600px;margin:0 auto;height:var(--h-36);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-200);display:flex;align-items:center;gap:var(--sp-200);padding:0 var(--sp-300);color:var(--text-3);font-size:var(--t-sm);cursor:pointer;transition:background-color var(--dur-base) ease,border-color var(--dur-fast) var(--ease-decelerate)}
-.searchbox:hover{background:#f0f0f2;border-color:#d5d5d9}
-.kbd{margin-left:auto;font-size:11px;border:1px solid var(--border);background:#fff;border-radius:var(--r-100);padding:var(--sp-050) var(--sp-150);color:var(--text-3)}
+.ver{font-size:var(--t-2xs);font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-200)}
+.searchbox{flex:1;max-width:640px;margin:0 auto;height:var(--h-36);background:var(--surface-2);border:var(--hairline) solid var(--border);border-radius:var(--r-300);display:flex;align-items:center;gap:var(--sp-200);padding:0 var(--sp-300);color:var(--text-3);font-size:var(--t-sm);cursor:pointer}
+.searchbox:hover{background:var(--surface-hover);border-color:var(--border-strong)}
+.kbd{margin-left:auto;font-size:var(--t-2xs);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-100);padding:var(--sp-050) var(--sp-150);color:var(--text-3)}
 .top-right{display:flex;align-items:center;gap:var(--sp-150)}
-.icon-btn{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);transition:background-color var(--dur-base) ease;position:relative}
+.icon-btn{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);position:relative}
 .icon-btn:hover{background:var(--surface-2)}
-.dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid #fff}
-.store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:1px solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600;transition:background-color var(--dur-base) ease}
+.dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
+.store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600}
 .store-chip:hover{background:var(--surface-2)}
-.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex:none}
-.dev-tag{font-size:11px;color:var(--text-3);border:1px solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
+.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:var(--text-inverse);font-size:var(--t-2xs);font-weight:700;flex:none}
+.dev-tag{font-size:var(--t-2xs);color:var(--text-3);border:var(--hairline) solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
 
 /* ===== 版面 ===== */
-.frame{display:flex;height:calc(100vh - 52px)}
-.sidebar{width:220px;background:#f7f7f8;border-right:1px solid var(--border);padding:var(--sp-200) var(--sp-200) var(--sp-200);display:flex;flex-direction:column;gap:var(--sp-050);overflow-y:auto;flex:none}
-.nav-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);color:#3f4144;font-size:var(--t-sm);font-weight:500;width:100%;text-align:left;transition:background-color var(--dur-base) ease,color var(--dur-fast) var(--ease-standard)}
-.nav-item:hover{background:#ededee}
-.nav-item.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(26,28,30,.08)}
+.frame{display:flex;height:calc(100vh - var(--topbar-h))}
+.sidebar{width:var(--sidebar-w);max-width:var(--sidebar-w);background:var(--surface-2);border-right:var(--hairline) solid var(--border);padding:var(--sp-200) var(--sp-200) var(--sp-200);display:flex;flex-direction:column;gap:var(--sp-050);overflow-y:auto;flex:none}
+.nav-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);color:var(--text-nav);font-size:var(--t-sm);font-weight:500;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface-hover)}
+.nav-item.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-raised)}
 .nav-item svg{opacity:.75}
 .nav-item.on svg{opacity:1}
-.nav-count{margin-left:auto;font-size:11px;font-weight:600;background:#e8e8ea;border-radius:999px;padding:var(--sp-050) var(--sp-150);color:#55575b}
-.nav-sub{padding:var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300)*3);font-size:var(--t-sm);color:#5c5e62;border-radius:var(--r-200);width:100%;text-align:left;transition:background-color var(--dur-base) ease;display:none}
-.nav-sub:hover{background:#ededee}
+.nav-count{margin-left:auto;font-size:var(--t-2xs);font-weight:600;background:var(--surface-count);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-150);color:var(--text-quiet)}
+.nav-sub{padding:var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300)*3);font-size:var(--t-sm);color:var(--text-nav-2);border-radius:var(--r-200);width:100%;text-align:left;display:none}
+.nav-sub:hover{background:var(--surface-hover)}
 .nav-sub.show{display:block}
-.nav-sub.on{color:var(--text);font-weight:600;background:#fff;box-shadow:0 1px 2px rgba(26,28,30,.08)}
-.nav-group{margin-top:var(--sp-400);padding:0 var(--sp-200) var(--sp-100);font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-3)}
+.nav-sub.on{color:var(--text);font-weight:600;background:var(--surface);box-shadow:var(--sh-raised)}
+.nav-group{margin-top:var(--sp-400);padding:0 var(--sp-200) var(--sp-100);font-size:var(--t-2xs);font-weight:600;letter-spacing:.08em;color:var(--text-3)}
 .sidebar .spacer{flex:1}
-.nav-foot{border-top:1px solid var(--border-2);margin-top:var(--sp-200);padding-top:var(--sp-200)}
+.nav-foot{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-200);padding-top:var(--sp-200)}
 .main{flex:1;overflow-y:auto;position:relative}
 .page{max-width:1200px;margin:0 auto;padding:var(--sp-400) calc(var(--sp-400)*2) calc(var(--sp-600)*4);display:none}
-.page.on{display:block;animation:fade .18s ease-out}
+.page.on{display:block;animation:fade var(--dur-slow) var(--ease-decelerate)}
 #page-home,#page-orderdetail{max-width:998px}
-@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+@keyframes fade{from{opacity:0;scale:.98}to{opacity:1;scale:1}}
 .page-head{display:flex;align-items:center;gap:var(--sp-300);margin:var(--sp-100) 0 var(--sp-400)}
-h1{font-size:20px;line-height:24px;font-weight:var(--fw-lg);letter-spacing:0}
+h1{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:var(--fw-lg);letter-spacing:0}
 .head-actions{margin-left:auto;display:flex;gap:var(--sp-200);align-items:center}
 
 /* ===== 元件 ===== */
-.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:600;transition:background-color var(--dur-base) ease,color var(--dur-fast) var(--ease-standard),border-color var(--dur-fast) var(--ease-decelerate),border-width var(--dur-fast) var(--ease-decelerate),box-shadow var(--dur-fast) var(--ease-decelerate);border:1px solid transparent}
-.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
-.btn-pri{background:var(--brand);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
+.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:600;border:var(--hairline) solid transparent}
+/* 47 §E：disabled 只把文字色降到 --text-disabled，底色一律不動（降 opacity 會在深底發灰、淺底發白）*/
+.btn:disabled,.btn[aria-disabled="true"]{color:var(--text-disabled);cursor:not-allowed;box-shadow:none}
+.btn-pri{background:var(--brand);color:var(--text-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
 .btn-pri:hover:not(:disabled){background:var(--brand-hover)}
-.btn-sec{background:#fff;border-color:#c9cace;color:var(--text);box-shadow:0 1px 2px rgba(26,28,30,.06)}
-.btn-sec:hover:not(:disabled){background:var(--surface-2)}
+/* 47 §D：primary / secondary / tertiary 三層「只靠填色深淺」分，等高等圓角、無邊框。
+   原本 secondary＝白底+邊框，47 §D 明指方向錯誤。 */
+.btn-sec,.btn-ter{background:var(--surface-sunken);border-color:transparent;color:var(--text);box-shadow:none}
+.btn-sec:hover:not(:disabled),.btn-ter:hover:not(:disabled){background:var(--surface-sunken-hover)}
+.btn-sec:active:not(:disabled),.btn-ter:active:not(:disabled){background:var(--surface-sunken-active)}
+.btn-split{font-weight:var(--fw-split)}   /* 47 §6.5：split 鈕字重 550 */
 .btn-ghost{color:var(--text-2)}
 .btn-ghost:hover{background:rgba(26,28,30,.06);color:var(--text)}
 .btn-sm{height:var(--h-28);padding:0 var(--sp-200);font-size:var(--t-xs)}
 .split{display:inline-flex}
 .split .btn:first-child{border-radius:var(--r-200) 0 0 var(--r-200)}
-.split .btn:last-child{border-radius:0 var(--r-200) var(--r-200) 0;border-left:1px solid rgba(255,255,255,.25);padding:0 var(--sp-200)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh)}
+.split .btn:last-child{border-radius:0 var(--r-200) var(--r-200) 0;border-left:var(--hairline) solid rgba(255,255,255,.25);padding:0 var(--sp-200)}
+.card{background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh)}
 .card-pad{padding:var(--sp-400)}
 .card h3{font-size:var(--t-lg);line-height:var(--lh-lg);font-weight:var(--fw-lg);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .card h3 .h-act{margin-left:auto;color:var(--text-2)}
-.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:0 var(--sp-200);border-radius:999px;font-size:var(--t-xs);font-weight:500;white-space:nowrap}
-.badge .pip{width:7px;height:7px;border-radius:50%;border:1.5px solid currentColor;flex:none}
+.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:0 var(--sp-200);border-radius:var(--r-200);font-size:var(--t-xs);font-weight:500;white-space:nowrap}
+/* 47 §D 徽章狀態圖示——形狀本身即編碼狀態（WCAG 1.4.1 不以顏色單獨傳達）：
+   ● 實心 = 完成／success｜○ 空心 = 未開始／attention｜⊘ 斜線圓 = 部分／受阻 */
+.badge .pip{width:7px;height:7px;border-radius:50%;border:var(--bw-150) solid currentColor;flex:none;position:relative}
 .badge .pip.full{background:currentColor}
-.badge .pip.half{background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
-.b-success{background:var(--success-bg);color:var(--success)}
-.b-attention{background:var(--attention-bg);color:var(--attention)}
-.b-warning{background:var(--warning-bg);color:var(--warning)}
-.b-critical{background:var(--critical-bg);color:var(--critical)}
-.b-info{background:var(--info-bg);color:var(--info)}
+.badge .pip.blocked,.badge .pip.half{background:transparent}
+.badge .pip.blocked::after,.badge .pip.half::after{content:"";position:absolute;left:50%;top:-2px;
+  width:var(--bw-150);height:calc(100% + 4px);background:currentColor;transform:translateX(-50%) rotate(45deg)}
+.b-success{background:var(--sem-success-surface);color:var(--sem-success-text)}
+.b-caution,.b-caution{background:var(--sem-caution-surface);color:var(--sem-caution-text)}   /* 黃：未開始／需注意 */
+.b-warning{background:var(--sem-warning-surface);color:var(--sem-warning-text)}                /* 橘：部分／受阻 */
+.b-critical{background:var(--sem-critical-surface);color:var(--sem-critical-text)}
+.b-info{background:var(--sem-info-surface);color:var(--sem-info-text)}
 .b-ai{background:var(--ai-bg);color:var(--ai)}
-.b-default{background:#eeeef0;color:#55575b}
-.input{width:100%;height:var(--h-32);border:1px solid #c9cace;border-radius:var(--r-btn);padding:0 var(--sp-200);background:#fff;font-size:var(--t-sm);transition:border-color var(--dur-fast) var(--ease-decelerate),border-width var(--dur-fast) var(--ease-decelerate),box-shadow var(--dur-fast) var(--ease-decelerate)}
-.input:hover{border-color:#a9aaae}
-.input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px rgba(42,120,214,.18)}
+.b-default{background:var(--surface-chip);color:var(--text-quiet)}
+/* 實色底變體（5 族 fill 層）*/
+.b-fill-info{background:var(--sem-info-fill);color:var(--text-inverse)}
+.b-fill-success{background:var(--sem-success-fill);color:var(--text-inverse)}
+.b-fill-caution{background:var(--sem-caution-fill);color:var(--text-inverse)}
+.b-fill-warning{background:var(--sem-warning-fill);color:var(--text-inverse)}
+.b-fill-critical{background:var(--sem-critical-fill);color:var(--text-inverse)}
+/* 47 §H2-4：表單控件的 1px 框一律用 inset box-shadow，不用 border
+   —— 不佔 box model、可做次像素、與 §C 髮絲線同一套。 */
+.input{width:100%;height:var(--h-32);border:0;border-radius:var(--r-btn);padding:0 var(--sp-200);background:var(--surface);font-size:var(--t-sm);
+  box-shadow:inset 0 0 0 var(--hairline) var(--border-strong)}
+.input:hover{box-shadow:inset 0 0 0 var(--hairline) var(--border-hover)}
+.input:focus{outline:none;box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
 .mut{color:var(--text-2)}.mut3{color:var(--text-3)}
-.thumb{width:36px;height:36px;border-radius:var(--r-200);border:1px solid var(--border);flex:none;background-size:cover}
-.banner-err{background:var(--critical-bg);border:1px solid #f2c4cb;color:var(--critical);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-sm);display:flex;gap:var(--sp-200);align-items:center}
-.skeleton{background:linear-gradient(90deg,#ededef 25%,#f6f6f7 50%,#ededef 75%);background-size:200% 100%;animation:sh 1.2s infinite;border-radius:var(--r-200);height:14px}
+.thumb{width:36px;height:36px;border-radius:var(--r-200);border:var(--hairline) solid var(--border);flex:none;background-size:cover}
+.banner-err{background:var(--critical-bg);border:var(--hairline) solid #f2c4cb;color:var(--critical);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-sm);display:flex;gap:var(--sp-200);align-items:center}
+.skeleton{background:linear-gradient(90deg,var(--skeleton-1) 25%,var(--skeleton-2) 50%,var(--skeleton-1) 75%);background-size:200% 100%;animation:sh var(--dur-shimmer) linear infinite;border-radius:var(--r-200);height:14px}
 @keyframes sh{to{background-position:-200% 0}}
 .empty-wrap{padding:calc(var(--sp-600)*2) var(--sp-600);text-align:center;color:var(--text-2)}
 .empty-wrap b{display:block;color:var(--text);font-size:var(--t-md);line-height:var(--lh-md);margin-bottom:var(--sp-100)}
 .empty-wrap .btn{margin-top:var(--sp-300)}
 
 /* ===== 首頁 ===== */
-.pulse{display:flex;align-items:center;gap:var(--sp-600);padding:var(--sp-200) var(--sp-100) var(--sp-400);border-bottom:1px solid var(--border-2);margin-bottom:var(--sp-600);flex-wrap:wrap}
+.pulse{display:flex;align-items:center;gap:var(--sp-600);padding:var(--sp-200) var(--sp-100) var(--sp-400);border-bottom:var(--hairline) solid var(--border-2);margin-bottom:var(--sp-600);flex-wrap:wrap}
 .pulse .p-scope{font-size:var(--t-sm)}
 .pulse .p-scope b{display:block}
 .p-item{display:flex;align-items:flex-end;gap:var(--sp-200)}
@@ -162,62 +354,71 @@ h1{font-size:20px;line-height:24px;font-weight:var(--fw-lg);letter-spacing:0}
 .p-item .p-val{font-size:var(--t-md);line-height:var(--lh-md);font-weight:700;letter-spacing:-.01em}
 .p-live{margin-left:auto;text-align:right;font-size:var(--t-xs);color:var(--text-2)}
 .p-live b{display:block;font-size:var(--t-md);line-height:var(--lh-md);color:var(--text)}
-.p-live .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22a06b;margin-left:var(--sp-150);animation:pulse 2s infinite}
+.p-live .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22a06b;margin-left:var(--sp-150);animation:pulse var(--dur-pulse) var(--ease-in-out) infinite}
 @keyframes pulse{50%{opacity:.4}}
 .hero-hello{text-align:center;margin:calc(var(--sp-400)*2) 0 var(--sp-200)}
-.hero-hello h2{font-size:24px;line-height:32px;font-weight:var(--fw-lg);letter-spacing:-.01em}
+.hero-hello h2{font-size:var(--t-3xl);line-height:var(--lh-3xl);font-weight:var(--fw-lg);letter-spacing:-.01em}
 .hero-hello p{color:var(--text-2);margin-top:var(--sp-050);font-size:var(--t-sm)}
-.ai-box{max-width:640px;margin:var(--sp-400) auto var(--sp-200);background:#fff;border:1px solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);display:flex;align-items:center;gap:var(--sp-200);transition:border-color var(--dur-fast) var(--ease-decelerate),border-width var(--dur-fast) var(--ease-decelerate),box-shadow var(--dur-fast) var(--ease-decelerate)}
-.ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 3px rgba(42,120,214,.14)}
-.ai-badge{width:26px;height:26px;border-radius:var(--r-200);background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:#fff;flex:none}
+.ai-box{max-width:640px;margin:var(--sp-400) auto var(--sp-200);background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
+.ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
+.ai-badge{width:26px;height:26px;border-radius:var(--r-200);background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:var(--text-inverse);flex:none}
 .ai-box input{flex:1;border:0;outline:0;font-size:var(--t-sm);background:none}
-.ai-send{width:var(--h-32);height:var(--h-32);border-radius:var(--r-200);background:var(--brand);color:#fff;display:grid;place-items:center;transition:opacity var(--dur-base) var(--ease-in-out)}
+.ai-send{width:var(--h-32);height:var(--h-32);border-radius:var(--r-200);background:var(--brand);color:var(--text-inverse);display:grid;place-items:center}
 .ai-send:hover{opacity:.85}
-.ai-reply{max-width:640px;margin:0 auto var(--sp-200);background:var(--ai-bg);border:1px solid #e2d9f8;border-radius:var(--r-300);padding:var(--sp-300) var(--sp-400);font-size:var(--t-sm);line-height:1.6;display:none}
-.ai-reply.show{display:block;animation:fade .2s ease-out}
+.ai-reply{max-width:640px;margin:0 auto var(--sp-200);background:var(--ai-bg);border:var(--hairline) solid var(--ai-border);border-radius:var(--r-300);padding:var(--sp-300) var(--sp-400);font-size:var(--t-sm);line-height:1.6;display:none}
+.ai-reply.show{display:block;animation:fade var(--dur-slow) var(--ease-decelerate)}
 .ai-reply b{color:var(--ai)}
 .task-chips{display:flex;justify-content:center;gap:var(--sp-200);margin:var(--sp-400) 0 calc(var(--sp-400)*2)}
-.task-chip{display:inline-flex;align-items:center;gap:var(--sp-200);border:1px solid var(--border);background:#fff;border-radius:999px;padding:var(--sp-150) var(--sp-400);font-size:var(--t-sm);font-weight:600;box-shadow:var(--sh);transition:transform var(--dur-base) var(--ease-standard),border-color var(--dur-fast) var(--ease-decelerate)}
-.task-chip:hover{transform:translateY(-1px);border-color:#c9cace}
-.task-chip .n{background:var(--brand);color:#fff;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;font-size:11px}
+.task-chip{display:inline-flex;align-items:center;gap:var(--sp-200);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-pill);padding:var(--sp-150) var(--sp-400);font-size:var(--t-sm);font-weight:600;box-shadow:var(--sh)}
+.task-chip:hover{background:var(--surface-2);border-color:var(--border-strong)}
+.task-chip .n{background:var(--brand);color:var(--text-inverse);border-radius:var(--r-pill);min-width:20px;height:20px;display:grid;place-items:center;font-size:var(--t-2xs)}
 .setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-400)}
 .setup-card{padding:var(--sp-400);display:flex;flex-direction:column;gap:var(--sp-200);min-height:168px;position:relative;overflow:hidden}
 .setup-card .sc-prog{font-size:var(--t-xs);color:var(--text-2);display:flex;align-items:center;gap:var(--sp-150)}
 .ring{width:16px;height:16px;border-radius:50%;background:conic-gradient(var(--success) var(--deg,60deg),#e3e3e6 0);position:relative;flex:none}
-.ring::after{content:"";position:absolute;inset:3px;background:#fff;border-radius:50%}
+.ring::after{content:"";position:absolute;inset:3px;background:var(--surface);border-radius:50%}
 .setup-card h4{font-size:var(--t-lg);line-height:var(--lh-lg);font-weight:var(--fw-lg)}
 .setup-card p{font-size:var(--t-xs);color:var(--text-2);line-height:1.55;max-width:75%}
 .setup-card .btn{margin-top:auto;align-self:flex-start}
 .setup-art{position:absolute;right:-6px;bottom:-6px;width:84px;height:84px;border-radius:var(--r-400);transform:rotate(-8deg);opacity:.9}
 
 /* ===== 列表 ===== */
-.listbar{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);border-bottom:1px solid var(--border-2)}
-.view-chip{display:inline-flex;align-items:center;height:var(--h-28);gap:var(--sp-150);border:1px solid var(--border);background:#fff;border-radius:var(--r-200);padding:0 var(--sp-200);font-size:var(--t-sm);font-weight:600;position:relative;white-space:nowrap}
+.listbar{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2)}
+.view-chip{display:inline-flex;align-items:center;height:var(--h-28);gap:var(--sp-150);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);padding:0 var(--sp-200);font-size:var(--t-sm);font-weight:600;position:relative;white-space:nowrap}
 .view-chip:hover{background:var(--surface-2)}
-.view-menu{position:absolute;top:var(--h-32);left:0;background:#fff;border:1px solid var(--border);border-radius:var(--r-300);box-shadow:0 12px 32px rgba(26,28,30,.16);min-width:170px;padding:var(--sp-100);display:none;z-index:10}
+.view-menu{position:absolute;top:var(--h-32);left:0;background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh-pop);min-width:170px;padding:var(--sp-100);display:none;z-index:var(--z-popover)}
 .view-menu.show{display:block;animation:popin var(--dur-slow) var(--ease-decelerate)}
 .view-menu button{display:flex;width:100%;text-align:left;padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-sm);gap:var(--sp-200);align-items:center}
 .view-menu button:hover{background:var(--surface-2)}
 .view-menu button.cur{font-weight:600}
 .view-menu .chk{width:14px;color:var(--brand);visibility:hidden}
 .view-menu button.cur .chk{visibility:visible}
-.filterbar{flex:1;display:flex;align-items:center;gap:var(--sp-200);height:var(--h-32);border:1px solid #c9cace;border-radius:var(--r-200);padding:0 var(--sp-200);background:#fff}
+.filterbar{flex:1;display:flex;align-items:center;gap:var(--sp-200);height:var(--h-32);border:0;border-radius:var(--r-200);padding:0 var(--sp-200);background:var(--surface);
+  box-shadow:inset 0 0 0 var(--hairline) var(--border-strong)}
+.filterbar:focus-within{box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
 .filterbar input{border:0;outline:0;flex:1;font-size:var(--t-sm);background:none}
 table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:var(--lh-xs)}
-.idx th{font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-xs);color:var(--text-2);text-align:left;padding:var(--sp-150) var(--sp-300);border-bottom:1px solid var(--border-2);background:var(--surface-3);white-space:nowrap}
+.idx th{font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-xs);color:var(--text-2);text-align:left;padding:var(--sp-150) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);background:var(--surface-3);white-space:nowrap}
 /* 47 §4 表格資料列 32：12/16 字級 + 8px 上下內距；整列 32px 皆為可點命中區 */
-.idx td{padding:var(--sp-200) var(--sp-300);border-bottom:1px solid var(--border-2);vertical-align:middle;height:var(--h-32)}
-.idx tbody tr{transition:background-color var(--dur-base) ease;cursor:pointer}
-.idx tbody tr:hover{background:#fafafc}
-.idx tr.selected{background:#f0f5ff}
+.idx td{padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);vertical-align:middle;height:var(--h-32)}
+.idx tbody tr{cursor:pointer}
+.idx tbody tr:hover{background:var(--surface-row-hover)}
+.idx tr.selected{background:var(--surface-selected)}
 .idx tr.cancelled td{text-decoration:line-through;color:var(--text-3)}
 .idx tr.cancelled td .badge{text-decoration:none}
 /* 47 §4 修正 86：checkbox 本體維持 16px，命中區以 ::before 擴大到 32×32（不放大控件本身）*/
 .cb{width:16px;height:16px;accent-color:var(--brand);cursor:pointer;position:relative}
+/* 47 §H2-4 單選鈕：框用 inset 陰影、已選＝主文字色填滿 + 白內點（不是品牌色）*/
+.cl-radio{appearance:none;-webkit-appearance:none;width:16px;height:16px;border-radius:50%;flex:none;margin:0;
+  background:transparent;box-shadow:inset 0 0 0 var(--hairline) var(--border-control);cursor:pointer;position:relative;
+  transition:background-color var(--dur-base) ease,box-shadow var(--dur-fast) var(--ease-decelerate)}
+.cl-radio:checked{background:var(--text);box-shadow:inset 0 0 0 var(--hairline) var(--text)}
+.cl-radio:checked::after{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--surface-bright)}
+.cl-radio::before{content:"";position:absolute;inset:-8px}   /* 命中區 32×32，視覺盒鎖死 16 */
 .cb::before{content:'';position:absolute;inset:-8px}
 .right{text-align:right}
 .risk-ic{color:var(--warning);margin-left:var(--sp-100);vertical-align:-1px}
-.bulkbar{position:absolute;left:12px;right:12px;top:6px;height:var(--h-36);background:#1a1b1d;color:#fff;border-radius:var(--r-300);display:none;align-items:center;gap:var(--sp-150);padding:0 var(--sp-200) 0 var(--sp-300);font-size:var(--t-sm);box-shadow:0 8px 24px rgba(26,28,30,.35);z-index:3;animation:pop .16s ease-out}
+.bulkbar{position:absolute;left:var(--sp-300);right:var(--sp-300);top:var(--sp-150);height:var(--h-36);background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-300);display:none;align-items:center;gap:var(--sp-150);padding:0 var(--sp-200) 0 var(--sp-300);font-size:var(--t-sm);box-shadow:var(--sh-bulk);z-index:var(--z-bulk);animation:pop var(--dur-slower) var(--ease-standard)}
 @keyframes pop{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
 /* M5 popover／選單進場：opacity + scale（不用 transform，避免與位移衝突）*/
 @keyframes popin{from{opacity:0;scale:.98}to{opacity:1;scale:1}}
@@ -226,11 +427,11 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .bulkbar .b-act:hover{background:rgba(255,255,255,.15)}
 .idx-wrap{position:relative}
 .pagination{display:flex;justify-content:center;gap:var(--sp-100);padding:var(--sp-300)}
-.pg{width:var(--h-28);height:var(--h-28);border:1px solid var(--border);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);background:#fff;transition:background-color var(--dur-base) ease,color var(--dur-fast) var(--ease-standard)}
+.pg{width:var(--h-28);height:var(--h-28);border:var(--hairline) solid var(--border);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);background:var(--surface)}
 .pg:hover:not(:disabled){background:var(--surface-2);color:var(--text)}
-.pg:disabled{opacity:.4;cursor:default}
-.tagchip{display:inline-flex;align-items:center;gap:var(--sp-100);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-200);padding:var(--sp-050) var(--sp-200);font-size:var(--t-xs);margin:0 var(--sp-100) var(--sp-100) 0}
-.ai-row{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);background:var(--ai-bg);border-top:1px solid #e2d9f8;color:var(--ai);font-size:var(--t-sm);font-weight:600;cursor:pointer}
+.pg:disabled,.pg[aria-disabled="true"]{color:var(--text-disabled);cursor:default}
+.tagchip{display:inline-flex;align-items:center;gap:var(--sp-100);background:var(--surface-2);border:var(--hairline) solid var(--border);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-200);font-size:var(--t-xs);margin:0 var(--sp-100) var(--sp-100) 0}
+.ai-row{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);background:var(--ai-bg);border-top:var(--hairline) solid var(--ai-border);color:var(--ai);font-size:var(--t-sm);font-weight:600;cursor:pointer}
 .ai-row:hover{background:#ece4ff}
 .ai-row .x{margin-left:auto;color:#8b7bb8;width:22px;height:22px;border-radius:var(--r-200);display:grid;place-items:center}
 .ai-row .x:hover{background:#e0d5fb}
@@ -238,31 +439,31 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 /* ===== 訂單詳情 ===== */
 .od-grid{display:grid;grid-template-columns:1fr 300px;gap:var(--sp-400);align-items:start}
 .col{display:flex;flex-direction:column;gap:var(--sp-400)}
-.od-line{display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-300) 0;border-bottom:1px solid var(--border-2)}
+.od-line{display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-300) 0;border-bottom:var(--hairline) solid var(--border-2)}
 .od-line:last-of-type{border-bottom:0}
 .od-line .li-info{flex:1;min-width:0}
 .od-line .li-name{font-weight:500}
 .od-line .li-var{font-size:var(--t-xs);color:var(--text-3)}
 .pay-row{display:flex;justify-content:space-between;padding:var(--sp-100) 0;font-size:var(--t-sm)}
-.pay-row.total{border-top:1px solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200);font-weight:700}
+.pay-row.total{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200);font-weight:700}
 .timeline{margin-top:var(--sp-100)}
-.tl-compose{display:flex;gap:var(--sp-200);align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);box-shadow:var(--sh)}
+.tl-compose{display:flex;gap:var(--sp-200);align-items:flex-start;background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);box-shadow:var(--sh)}
 .tl-compose .avatar{margin-top:var(--sp-050)}
 .tl-compose .tc-main{flex:1}
 .tl-compose textarea{width:100%;border:0;outline:0;resize:none;font-size:var(--t-sm);min-height:20px;background:none}
 .tc-tools{display:flex;gap:var(--sp-050);margin-top:var(--sp-200);color:var(--text-3);align-items:center}
 .tc-tools .icon-btn{width:var(--h-28);height:var(--h-28)}
 .tc-tools .btn{margin-left:auto}
-.tl-hint{text-align:right;font-size:11px;color:var(--text-3);margin:var(--sp-150) var(--sp-050) var(--sp-300)}
+.tl-hint{text-align:right;font-size:var(--t-2xs);color:var(--text-3);margin:var(--sp-150) var(--sp-050) var(--sp-300)}
 .tl-day{font-size:var(--t-xs);font-weight:600;color:var(--text-2);margin:var(--sp-200) 0 var(--sp-150) calc(var(--sp-400)*2)}
 .tl-ev{display:flex;gap:var(--sp-300);padding:var(--sp-100) 0;position:relative}
 .tl-ev::before{content:"";position:absolute;left:15px;top:-6px;bottom:-6px;width:2px;background:var(--border-2)}
-.tl-ev:last-child::before{bottom:12px}
-.tl-dot{width:8px;height:8px;border-radius:50%;background:#b9bac0;border:2px solid #fff;margin:var(--sp-100) 0 0 var(--sp-300);position:relative;z-index:1;flex:none;box-shadow:0 0 0 1px var(--border)}
+.tl-ev:last-child::before{bottom:var(--sp-300)}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:#b9bac0;border:2px solid var(--surface);margin:var(--sp-100) 0 0 var(--sp-300);position:relative;z-index:var(--z-base);flex:none;box-shadow:0 0 0 var(--hairline) var(--border)}
 .tl-body{flex:1;font-size:var(--t-sm);display:flex;gap:var(--sp-200)}
 .tl-time{margin-left:auto;color:var(--text-3);font-size:var(--t-xs);white-space:nowrap}
-.tl-comment{background:var(--warning-bg);border:1px solid #f2e3b3;border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);flex:1}
-.side-kv{font-size:var(--t-sm);padding:var(--sp-150) 0;border-bottom:1px solid var(--border-2)}
+.tl-comment{background:var(--warning-bg);border:var(--hairline) solid #f2e3b3;border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);flex:1}
+.side-kv{font-size:var(--t-sm);padding:var(--sp-150) 0;border-bottom:var(--hairline) solid var(--border-2)}
 .side-kv:last-child{border-bottom:0}
 .side-kv .k{color:var(--text-3);font-size:var(--t-xs);display:block}
 .addr{font-size:var(--t-sm);line-height:1.7}
@@ -272,7 +473,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .ana-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-400);margin-bottom:var(--sp-400)}
 .stat-card{padding:var(--sp-400)}
 .stat-card .t-label{font-size:var(--t-xs);color:var(--text-2)}
-.stat-card .t-value{font-size:24px;line-height:32px;font-weight:700;letter-spacing:-.02em;margin:var(--sp-100) 0 var(--sp-050)}
+.stat-card .t-value{font-size:var(--t-3xl);line-height:var(--lh-3xl);font-weight:700;letter-spacing:-.02em;margin:var(--sp-100) 0 var(--sp-050)}
 .t-delta{font-size:var(--t-xs);font-weight:600}
 .up{color:var(--success)}.down{color:var(--critical)}
 .t-vs{color:var(--text-3);font-weight:400}
@@ -280,103 +481,104 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .chart-card{padding:var(--sp-400) var(--sp-400) var(--sp-200)}
 .chart-head{display:flex;align-items:baseline;gap:var(--sp-200);margin-bottom:var(--sp-150)}
 .chart-head h3{margin:0}
-.chart-head .big{font-size:20px;line-height:24px;font-weight:700;letter-spacing:-.01em}
+.chart-head .big{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:700;letter-spacing:-.01em}
 .chart-wrap{position:relative}
-.tooltip{position:absolute;pointer-events:none;background:#1a1b1d;color:#fff;border-radius:var(--r-200);padding:var(--sp-150) var(--sp-200);font-size:var(--t-xs);line-height:1.5;opacity:0;transition:opacity var(--dur-base) var(--ease-in-out);white-space:nowrap;transform:translate(-50%,-115%);z-index:5}
+.tooltip{position:absolute;pointer-events:none;background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-200);padding:var(--sp-150) var(--sp-200);font-size:var(--t-xs);line-height:1.5;opacity:0;white-space:nowrap;transform:translate(-50%,-115%);z-index:var(--z-mid)}
 .hbar-row{display:flex;align-items:center;gap:var(--sp-200);margin:var(--sp-200) 0;font-size:var(--t-sm)}
 .hbar-row .hl{width:88px;color:var(--text-2);flex:none}
 .hbar-track{flex:1;height:16px;display:flex;align-items:center}
-.hbar{height:16px;border-radius:0 var(--r-100) var(--r-100) 0;background:var(--chart);min-width:2px;transition:width 500ms var(--ease-decelerate)}
+.hbar{height:16px;border-radius:0 var(--r-100) var(--r-100) 0;background:var(--chart);min-width:2px;transition:width var(--dur-bar-grow) var(--ease-decelerate)}
 .hbar-row .hv{width:90px;text-align:right;font-weight:600;white-space:nowrap}
 .table-toggle{font-size:var(--t-xs);color:var(--link);padding:var(--sp-150) 0;display:inline-block}
 .data-table{width:100%;border-collapse:collapse;font-size:var(--t-xs);margin:var(--sp-100) 0 var(--sp-200);display:none}
 .data-table.show{display:table}
-.data-table th,.data-table td{border-top:1px solid var(--border-2);padding:var(--sp-100) var(--sp-200);text-align:right;color:var(--text-2)}
+.data-table th,.data-table td{border-top:var(--hairline) solid var(--border-2);padding:var(--sp-100) var(--sp-200);text-align:right;color:var(--text-2)}
 .data-table th:first-child,.data-table td:first-child{text-align:left}
 .live-wrap{display:grid;grid-template-columns:1.4fr 1fr;gap:var(--sp-400)}
-.live-map{background:#191a1c;border-radius:var(--r-card);min-height:320px;position:relative;overflow:hidden;border:1px solid #232427}
+.live-map{background:#191a1c;border-radius:var(--r-card);min-height:320px;position:relative;overflow:hidden;border:var(--hairline) solid #232427}
 .live-map .dot{position:absolute;width:7px;height:7px;border-radius:50%}
-.live-map .legend{position:absolute;left:14px;bottom:12px;color:#c9cacd;font-size:var(--t-xs);display:flex;gap:var(--sp-300)}
+.live-map .legend{position:absolute;left:14px;bottom:var(--sp-300);color:#c9cacd;font-size:var(--t-xs);display:flex;gap:var(--sp-300)}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:var(--sp-100)}
 
 /* ===== 設定 ===== */
-.settings{position:fixed;inset:0;background:var(--bg);z-index:50;display:none;flex-direction:column}
-.settings.show{display:flex;animation:fade .18s ease-out}
-.set-close{position:absolute;top:14px;right:18px;width:var(--h-36);height:var(--h-36);border:1px solid var(--border);background:#fff;border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);z-index:5}
+.settings{position:fixed;inset:0;background:var(--bg);z-index:var(--z-dialog);display:none;flex-direction:column}
+.settings.show{display:flex;animation:fade var(--dur-slow) var(--ease-decelerate)}
+.set-close{position:absolute;top:14px;right:18px;width:var(--h-36);height:var(--h-36);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);z-index:var(--z-mid)}
 .set-close:hover{background:var(--surface-2)}
 .set-body{flex:1;overflow:auto;display:flex;justify-content:center;gap:var(--sp-600);padding:var(--sp-600)}
-.set-nav{width:270px;flex:none;background:#fff;border:1px solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-300);height:fit-content}
+.set-nav{width:270px;flex:none;background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-300);height:fit-content}
 .set-org{font-size:var(--t-sm);font-weight:700;padding:var(--sp-050) var(--sp-200)}
-.set-org span{display:block;font-size:11px;font-weight:400;color:var(--text-3)}
-.set-search{margin:var(--sp-200) 0;display:flex;align-items:center;gap:var(--sp-200);height:var(--h-28);border:1px solid var(--border);border-radius:var(--r-200);padding:0 var(--sp-200);background:var(--surface-3);color:var(--text-3);font-size:var(--t-xs)}
-.set-item{display:flex;align-items:center;gap:var(--sp-200);width:100%;text-align:left;padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-sm);color:#3f4144;transition:background-color var(--dur-base) ease}
+.set-org span{display:block;font-size:var(--t-2xs);font-weight:400;color:var(--text-3)}
+.set-search{margin:var(--sp-200) 0;display:flex;align-items:center;gap:var(--sp-200);height:var(--h-28);border:0;box-shadow:inset 0 0 0 var(--hairline) var(--border);border-radius:var(--r-200);padding:0 var(--sp-200);background:var(--surface-3);color:var(--text-3);font-size:var(--t-xs)}
+.set-item{display:flex;align-items:center;gap:var(--sp-200);width:100%;text-align:left;padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-sm);color:var(--text-nav)}
 .set-item:hover{background:var(--surface-2)}
 .set-item.on{background:var(--surface-2);font-weight:600;color:var(--text)}
-.set-store{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-200) var(--sp-150);border-top:1px solid var(--border-2);margin-top:var(--sp-200);font-size:var(--t-sm);font-weight:600}
-.set-store span{display:block;font-size:11px;font-weight:400;color:var(--text-3)}
+.set-store{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-200) var(--sp-150);border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-200);font-size:var(--t-sm);font-weight:600}
+.set-store span{display:block;font-size:var(--t-2xs);font-weight:400;color:var(--text-3)}
 .set-content{width:660px;display:flex;flex-direction:column;gap:var(--sp-400)}
-.set-row{display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-300) 0;border-bottom:1px solid var(--border-2);font-size:var(--t-sm)}
+.set-row{display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-300) 0;border-bottom:var(--hairline) solid var(--border-2);font-size:var(--t-sm)}
 .set-row:last-child{border-bottom:0}
 .set-row .chev{margin-left:auto;color:var(--text-3)}
 .set-row .sub{display:block;font-size:var(--t-xs);color:var(--text-2)}
-.flag{width:26px;height:18px;border-radius:var(--r-100);background:linear-gradient(180deg,#3a5ba0 33%,#fff 33%,#fff 66%,#c33 66%);border:1px solid var(--border);flex:none}
+.flag{width:26px;height:18px;border-radius:var(--r-100);background:linear-gradient(180deg,#3a5ba0 33%,var(--surface) 33%,var(--surface) 66%,#c33 66%);border:var(--hairline) solid var(--border);flex:none}
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-300)}
-.plan{border:1px solid var(--border);border-radius:var(--r-300);padding:var(--sp-300);position:relative}
-.plan.cur{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.plan{border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-300);position:relative}
+.plan.cur{border-color:var(--brand);box-shadow:0 0 0 var(--hairline) var(--brand)}
 .plan b{font-size:var(--t-md)}
-.plan .pp{font-size:20px;line-height:24px;font-weight:700;margin:var(--sp-150) 0}
+.plan .pp{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:700;margin:var(--sp-150) 0}
 .plan .pp span{font-size:var(--t-xs);color:var(--text-2);font-weight:400}
 .plan ul{list-style:none;font-size:var(--t-xs);color:var(--text-2);margin:var(--sp-200) 0;display:grid;gap:var(--sp-100)}
-.toggle{width:36px;height:20px;border-radius:999px;background:#c9cace;position:relative;transition:background-color var(--dur-base) ease;flex:none;margin-left:auto}
-.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left var(--dur-base) var(--ease-standard)}
-.toggle.on{background:var(--success)}
-.toggle.on::after{left:18px}
+.toggle{width:36px;height:20px;border-radius:var(--r-pill);background:var(--border-strong);position:relative;flex:none;margin-left:auto}
+.toggle::after{content:"";position:absolute;top:var(--sp-050);left:var(--sp-050);width:16px;height:16px;border-radius:50%;background:var(--surface)}
+.toggle.on{background:var(--sem-success-fill)}
+.toggle.on::after{transform:translateX(16px)}
 
 /* ===== modal / palette / toast ===== */
-.overlay{position:fixed;inset:0;background:rgba(26,28,30,.4);z-index:80;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+.overlay{position:fixed;inset:0;background:var(--scrim);z-index:var(--z-dialog);display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
 .overlay.show{display:flex}
-.modal{width:520px;background:#fff;border-radius:var(--r-300);box-shadow:0 24px 64px rgba(26,28,30,.35);overflow:hidden;animation:popin var(--dur-slow) var(--ease-decelerate)}
-.modal-head{padding:var(--sp-300) var(--sp-400);border-bottom:1px solid var(--border);font-size:var(--t-xl);line-height:var(--lh-xl);font-weight:var(--fw-xl);display:flex;align-items:center}
+.modal{width:520px;background:var(--surface);border-radius:var(--r-300);box-shadow:var(--sh-modal);overflow:hidden;animation:popin var(--dur-slow) var(--ease-decelerate)}
+.modal-head{padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border);font-size:var(--t-xl);line-height:var(--lh-xl);font-weight:var(--fw-xl);display:flex;align-items:center}
 .modal-head button{margin-left:auto;color:var(--text-3)}
-.dtype{display:flex;align-items:center;gap:var(--sp-300);width:100%;text-align:left;padding:var(--sp-300) var(--sp-400);border-bottom:1px solid var(--border-2);transition:background-color var(--dur-base) ease}
+.dtype{display:flex;align-items:center;gap:var(--sp-300);width:100%;text-align:left;padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border-2)}
 .dtype:hover{background:var(--surface-2)}
 .dtype .dt-ic{width:34px;height:34px;border-radius:var(--r-200);background:var(--surface-2);display:grid;place-items:center;color:var(--text-2)}
 .dtype b{display:block;font-size:var(--t-sm)}
 .dtype span{font-size:var(--t-xs);color:var(--text-2)}
 .dtype .chev{margin-left:auto;color:var(--text-3)}
 .modal-foot{padding:var(--sp-300) var(--sp-400);display:flex;justify-content:flex-end}
-.palette{width:560px;background:#fff;border-radius:var(--r-300);box-shadow:0 24px 64px rgba(26,28,30,.35);overflow:hidden;animation:popin var(--dur-slow) var(--ease-decelerate)}
-.palette input{width:100%;border:0;outline:0;padding:var(--sp-400) var(--sp-400);font-size:var(--t-sm);border-bottom:1px solid var(--border)}
-.pal-group{padding:var(--sp-200) var(--sp-200) var(--sp-100);font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-3)}
+.palette{width:560px;background:var(--surface);border-radius:var(--r-300);box-shadow:var(--sh-modal);overflow:hidden;animation:popin var(--dur-slow) var(--ease-decelerate)}
+.palette input{width:100%;border:0;outline:0;padding:var(--sp-400) var(--sp-400);font-size:var(--t-sm);border-bottom:var(--hairline) solid var(--border)}
+.pal-group{padding:var(--sp-200) var(--sp-200) var(--sp-100);font-size:var(--t-2xs);font-weight:600;letter-spacing:.08em;color:var(--text-3)}
 .pal-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);border-radius:var(--r-200);margin:0 var(--sp-150);font-size:var(--t-sm);cursor:pointer}
 .pal-item:hover,.pal-item.on{background:var(--surface-2)}
 .pal-item .mut3{margin-left:auto}
-.pal-foot{padding:var(--sp-200) var(--sp-400);border-top:1px solid var(--border);font-size:11px;color:var(--text-3);display:flex;gap:var(--sp-300)}
-.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,80px);background:#1a1b1d;color:#fff;border-radius:var(--r-300);padding:var(--sp-200) var(--sp-400);font-size:var(--t-sm);display:flex;align-items:center;gap:var(--sp-200);box-shadow:0 12px 32px rgba(26,28,30,.4);z-index:90;transition:transform var(--dur-slower) var(--ease-standard),opacity var(--dur-base) var(--ease-in-out);opacity:0}
+.pal-foot{padding:var(--sp-200) var(--sp-400);border-top:var(--hairline) solid var(--border);font-size:var(--t-2xs);color:var(--text-3);display:flex;gap:var(--sp-300)}
+.toast{position:fixed;bottom:var(--sp-600);left:50%;transform:translate(-50%,80px);background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-400);font-size:var(--t-sm);display:flex;align-items:center;gap:var(--sp-200);box-shadow:var(--sh-float);z-index:var(--z-popover);opacity:0}
 .toast.show{transform:translate(-50%,0);opacity:1}
 
 /* ===== 開發註釋模式 ===== */
 body.annotate [data-doc]{outline:1.5px dashed var(--ai);outline-offset:2px;cursor:help}
 .annot-on{background:var(--ai-bg)!important;color:var(--ai)!important}
-.annot-bar{position:fixed;bottom:20px;left:20px;background:var(--ai);color:#fff;border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-xs);z-index:70;display:none;box-shadow:0 8px 24px rgba(109,40,217,.35);max-width:400px}
+.annot-bar{position:fixed;bottom:20px;left:20px;background:var(--ai);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-xs);z-index:var(--z-topbar);display:none;box-shadow:0 8px 24px rgba(109,40,217,.35);max-width:400px}
 body.annotate .annot-bar{display:block}
-.doc-pop{position:fixed;max-width:380px;background:#1a1b1d;color:#e8e9ea;border-radius:var(--r-300);padding:var(--sp-300) calc(var(--sp-400)*2) var(--sp-300) var(--sp-400);font-size:var(--t-xs);line-height:1.65;z-index:95;box-shadow:0 16px 48px rgba(26,28,30,.5);display:none}
+.doc-pop{position:fixed;max-width:380px;background:var(--surface-inverse);color:#e8e9ea;border-radius:var(--r-300);padding:var(--sp-300) calc(var(--sp-400)*2) var(--sp-300) var(--sp-400);font-size:var(--t-xs);line-height:1.65;z-index:var(--z-popover);box-shadow:var(--sh-doc);display:none}
 .doc-pop.show{display:block;animation:popin var(--dur-slow) var(--ease-decelerate)}
-.doc-pop b{color:#fff;font-size:var(--t-sm);display:block;margin-bottom:var(--sp-150)}
+.doc-pop b{color:var(--text-inverse);font-size:var(--t-sm);display:block;margin-bottom:var(--sp-150)}
 .doc-pop .dp-k{color:#b7a5ec;font-weight:600}
-.doc-pop .dp-close{position:absolute;top:8px;right:10px;color:#9a9ba0}
-.doc-pop .dp-close:hover{color:#fff}
+.doc-pop .dp-close{position:absolute;top:var(--sp-200);right:10px;color:#9a9ba0}
+.doc-pop .dp-close:hover{color:var(--text-inverse)}
 
 /* ==================================================================
-   自適應層（RWD）— 斷點 1279 / 1023 / 767 / 429，全部走 max-width。
-   ≥1280 桌面外觀與改造前完全一致：本層只新增 class 與 media query，
-   不改動 :root 任何 design token（tokens 單一真相＝23-interaction-css-spec §1）。
+   自適應層（RWD）— 斷點改為 47 §F 實測階梯的 em 值：
+   90em(1440) / 75em(1200) / 65em(1040) / 48em(768，主斷點) / 30.6225em(490)。
+   360（22.5em）／667（41.6875em）／2560（160em）三階實站有、本原型目前無對應規則，
+   保留在 :root 註解中待用。
    ================================================================== */
 
 /* --- 基礎（各斷點共用的新元件；桌面下不可見或無視覺影響）--- */
-.hamb{display:none;width:var(--h-36);height:var(--h-36);border-radius:var(--r-200);place-items:center;color:var(--text-2);flex:none;transition:background-color var(--dur-base) ease}
+.hamb{display:none;width:var(--h-36);height:var(--h-36);border-radius:var(--r-200);place-items:center;color:var(--text-2);flex:none}
 .hamb:hover{background:var(--surface-2)}
-.scrim{position:fixed;inset:52px 0 0;background:rgba(26,28,30,.42);z-index:44;opacity:0;pointer-events:none;transition:opacity var(--dur-base) var(--ease-in-out)}
+.scrim{position:fixed;inset:var(--topbar-h) 0 0;background:var(--scrim);z-index:var(--z-scrim);opacity:0;pointer-events:none}
 .tscroll-wrap{position:relative}
 .ana-grid.g3{grid-template-columns:repeat(3,1fr)}
 .chart2.c14{grid-template-columns:1fr 1.4fr}
@@ -388,10 +590,17 @@ img{max-width:100%;height:auto}
 .thumb img,.avatar img,.setup-art img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
 @keyframes fadeonly{from{opacity:0}to{opacity:1}}
 
-/* ================= ≤1279：小筆電（表格轉可橫捲，防溢出）================= */
-@media (max-width:1279px){
+/* ══════════════ 47 §F 斷點階梯（em，不是 px）══════════════════════════
+   實測 8 階：22.5em=360／30.625em=490／41.6875em=667／48em=768（主斷點，
+   用量 421 次，是唯一的「佈局換手線」）／65em=1040／75em=1200／90em=1440／160em=2560。
+   max 配對一律 −0.0025em。改 em 是無障礙決定：使用者調大瀏覽器預設字型時，
+   版面會提早換到寬鬆佈局（47 §F）。media query 的 em 以初始字級 16px 計算，
+   不受 html{font-size:13px} 影響（51 表 3.1 註 4）。
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ================= ≤1440（90em）：溢出防護層（無視覺位移）============== */
+@media (max-width:89.9975em){
   .main{min-width:0}
-  .page{padding:var(--sp-400) var(--sp-600) calc(var(--sp-600)*4)}
   .ana-grid>*,.chart2>*,.live-wrap>*,.setup-grid>*,.od-grid>*,.plan-grid>*,.col>*,
   .page-head>*,.listbar>*,.pulse>*,.hbar-row>*,.od-line>*,.set-body>*,.tl-body>*,.set-row>*{min-width:0}
   .filterbar input{min-width:0}
@@ -399,32 +608,37 @@ img{max-width:100%;height:auto}
   .idx td,.side-kv,.addr,.set-row,.pal-item,.tl-body,.empty-wrap,.dtype,.li-name,.li-var,.hv,.hl{overflow-wrap:anywhere}
 }
 
-/* ===== 768–1279：表格維持表格，改走橫捲容器＋首欄 sticky＋右緣漸層 ===== */
-@media (min-width:767.02px) and (max-width:1279px){
+/* ================= ≤1200（75em）：小筆電——頁邊距收一階 ================= */
+@media (max-width:74.9975em){
+  .page{padding:var(--sp-400) var(--sp-600) calc(var(--sp-600)*4)}
+}
+
+/* ===== 768–1200：表格維持表格，改走橫捲容器＋首欄 sticky＋右緣漸層 ===== */
+@media (min-width:48em) and (max-width:74.9975em){
   /* 用 max-content 撐住自然欄寬，寧可橫捲也不讓文字被擠成 2–3 行 */
   table.idx{min-width:max-content}
   .tscroll{overflow-x:auto;overscroll-behavior-x:contain}
   .tscroll::-webkit-scrollbar{height:8px}
-  .tscroll::-webkit-scrollbar-thumb{background:#d2d3d7;border-radius:999px}
-  .tscroll-wrap::after{content:"";position:absolute;top:0;right:0;bottom:0;width:24px;pointer-events:none;z-index:1;
-    background:linear-gradient(90deg,rgba(26,28,30,0),rgba(26,28,30,.10));opacity:0;transition:opacity var(--dur-base) var(--ease-in-out)}
+  .tscroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:var(--r-pill)}
+  .tscroll-wrap::after{content:"";position:absolute;top:0;right:0;bottom:0;width:24px;pointer-events:none;z-index:var(--z-base);
+    background:linear-gradient(90deg,rgba(26,28,30,0),rgba(26,28,30,.10));opacity:0}
   .tscroll-wrap.can-scroll::after{opacity:1}
   .tscroll-wrap.at-end::after{opacity:0}
-  .idx th.cell-cb,.idx td.cell-cb{position:sticky;left:0;z-index:2}
-  .idx td.cell-lead,.idx th.cell-lead{position:sticky;left:0;z-index:2}
+  .idx th.cell-cb,.idx td.cell-cb{position:sticky;left:0;z-index:var(--z-sticky)}
+  .idx td.cell-lead,.idx th.cell-lead{position:sticky;left:0;z-index:var(--z-sticky)}
   .idx.has-cb td.cell-lead,.idx.has-cb th.cell-lead{left:36px}
   .idx th.cell-cb,.idx th.cell-lead{background:var(--surface-3)}
-  .idx td.cell-cb,.idx td.cell-lead{background:#fff}
-  .idx tbody tr:hover td.cell-cb,.idx tbody tr:hover td.cell-lead{background:#fafafc}
-  .idx tr.selected td.cell-cb,.idx tr.selected td.cell-lead{background:#f0f5ff}
+  .idx td.cell-cb,.idx td.cell-lead{background:var(--surface)}
+  .idx tbody tr:hover td.cell-cb,.idx tbody tr:hover td.cell-lead{background:var(--surface-row-hover)}
+  .idx tr.selected td.cell-cb,.idx tr.selected td.cell-lead{background:var(--surface-selected)}
 }
 
-/* ================= ≤1023：平板 — sidebar 改 off-canvas 抽屜 ================= */
-@media (max-width:1023px){
-  .frame{height:calc(100dvh - 52px)}
+/* ============ ≤1040（65em）：平板 — sidebar 改 off-canvas 抽屜 ============ */
+@media (max-width:64.9975em){
+  .frame{height:calc(100dvh - var(--topbar-h))}
   .hamb{display:grid}
-  .sidebar{position:fixed;top:52px;bottom:0;left:0;width:min(272px,84vw);z-index:45;
-    padding:var(--sp-200) var(--sp-200) var(--sp-400);overscroll-behavior:contain;box-shadow:0 16px 44px rgba(26,28,30,.2);
+  .sidebar{position:fixed;top:var(--topbar-h);bottom:0;left:0;width:min(272px,84vw);max-width:min(272px,84vw);z-index:var(--z-drawer);
+    padding:var(--sp-200) var(--sp-200) var(--sp-400);overscroll-behavior:contain;box-shadow:var(--sh-drawer);
     transform:translateX(-100%);visibility:hidden;
     transition:transform var(--dur-slower) var(--ease-standard),visibility 0s linear var(--dur-slower)}
   body.nav-open .sidebar{transform:none;visibility:visible;transition:transform var(--dur-slower) var(--ease-standard),visibility 0s}
@@ -442,15 +656,15 @@ img{max-width:100%;height:auto}
   .od-grid{grid-template-columns:1fr}     /* 側欄 300px 卡片落到主欄之後 */
   .setup-card p{max-width:none;padding-right:calc(var(--sp-400)*5)}
   .head-actions{flex-wrap:wrap}
-  /* 設定 overlay：頂部讓出 44px 給關閉鈕，避免壓在卡片右上角 */
+  /* 設定 overlay：頂部讓出 var(--touch-min) 給關閉鈕，避免壓在卡片右上角 */
   .set-body{padding:calc(var(--sp-600)*2) var(--sp-400) var(--sp-600);gap:var(--sp-300)}
   .set-nav{width:230px;padding:var(--sp-300)}
   .set-content{width:auto;flex:1;max-width:660px}
-  .set-close{top:6px;right:12px}
+  .set-close{top:var(--sp-150);right:var(--sp-300)}
 }
 
-/* ================= ≤767：手機 — 表格卡片化、sheet、底部列 ================= */
-@media (max-width:767px){
+/* ========= ≤768（47.9975em，主斷點）：手機 — 表格卡片化、sheet、底部列 ========= */
+@media (max-width:47.9975em){
   html{font-size:var(--t-md)}
   /* ---- topbar ---- */
   .topbar{gap:var(--sp-200);padding:0 var(--sp-200)}
@@ -461,7 +675,7 @@ img{max-width:100%;height:auto}
   .store-chip .sc-txt,.store-chip .dev-tag{display:none}
   /* ---- 頁面框 ---- */
   .page{padding:var(--sp-300) var(--sp-300) calc(var(--sp-600)*4)}
-  h1{font-size:clamp(17px,4.6vw,20px);line-height:24px}
+  h1{font-size:clamp(17px,4.6vw,20px);line-height:var(--lh-2xl)}
   .page-head{gap:var(--sp-200);margin:var(--sp-050) 0 var(--sp-300);flex-wrap:wrap}
   .page-head .head-actions{margin-left:0;width:100%;gap:var(--sp-150)}
   /* ---- 首頁 ---- */
@@ -470,7 +684,7 @@ img{max-width:100%;height:auto}
   .p-item .p-label{flex:1 0 100%}
   .p-live{margin-left:0;text-align:left}
   .hero-hello{margin:var(--sp-600) 0 var(--sp-150)}
-  .hero-hello h2{font-size:clamp(19px,5.4vw,24px);line-height:32px}
+  .hero-hello h2{font-size:clamp(19px,5.4vw,24px);line-height:var(--lh-3xl)}
   .hero-hello p{font-size:var(--t-sm)}
   .ai-box{padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);gap:var(--sp-200)}
   .task-chips{flex-wrap:wrap;margin:var(--sp-300) 0 var(--sp-600)}
@@ -499,15 +713,15 @@ img{max-width:100%;height:auto}
   .idx thead th.cell-cb::after{content:"全選";font-size:var(--t-xs);font-weight:500;color:var(--text-2)}
   .idx tbody{display:block}
   /* 47 §2 堆疊卡片群組：整段列表為一個群組，首張圓上緣、末張圓下緣、中間直角 */
-  .idx tbody tr{display:block;position:relative;background:#fff;border:1px solid var(--border);
+  .idx tbody tr{display:block;position:relative;background:var(--surface);border:var(--hairline) solid var(--border);
     border-top-width:0;border-radius:0;margin:0;padding:var(--sp-200) var(--sp-300);box-shadow:none}
-  .idx tbody tr:first-child{border-top-width:1px;border-radius:var(--r-300) var(--r-300) 0 0}
+  .idx tbody tr:first-child{border-top-width:var(--hairline);border-radius:var(--r-300) var(--r-300) 0 0}
   .idx tbody tr:last-child{border-radius:0 0 var(--r-300) var(--r-300)}
   .idx tbody tr:only-child{border-radius:var(--r-300)}
-  .idx tbody tr:hover{background:#fff}
-  .idx tbody tr.selected{background:#f0f5ff;border-color:#b9cdf5}   /* 與桌面選取列同色 */
+  .idx tbody tr:hover{background:var(--surface)}
+  .idx tbody tr.selected{background:var(--surface-selected);border-color:#b9cdf5}   /* 與桌面選取列同色 */
   .idx td{display:flex;flex-wrap:wrap;gap:var(--sp-150);align-items:baseline;padding:var(--sp-150) 0;border:0;text-align:left;height:auto}
-  .idx td+td{border-top:1px solid var(--border-2)}
+  .idx td+td{border-top:var(--hairline) solid var(--border-2)}
   /* margin-right:auto 讓「欄名」貼左、同一格的多個值互相靠攏後整組貼右 */
   .idx td::before{content:attr(data-label);flex:0 0 auto;max-width:46%;margin-right:auto;
     color:var(--text-2);font-size:var(--t-xs);font-weight:500}
@@ -517,7 +731,7 @@ img{max-width:100%;height:auto}
   .idx td.right{text-align:right}
   .idx td.cell-lead{display:block;font-weight:600;font-size:var(--t-md);line-height:var(--lh-md);padding:0 calc(var(--sp-400)*2) var(--sp-200) 0;border:0}
   .idx td.cell-lead::before{display:none}
-  .idx td.cell-cb{position:absolute;top:9px;right:8px;left:auto;display:block;padding:0;border:0;z-index:2}
+  .idx td.cell-cb{position:absolute;top:9px;right:var(--sp-200);left:auto;display:block;padding:0;border:0;z-index:var(--z-sticky)}
   .idx td.cell-cb::before{display:none}
   .idx tr.cancelled td{text-decoration:line-through}
   .idx tr.cancelled td::before{text-decoration:none}
@@ -533,42 +747,42 @@ img{max-width:100%;height:auto}
   .set-body{flex-direction:column;padding:calc(var(--sp-600)*2) 0 var(--sp-600);gap:0}
   .set-close{top:5px;right:10px}
   .set-nav{width:auto;flex:none;display:flex;align-items:center;gap:var(--sp-150);height:auto;
-    border-radius:0;border-width:0 0 1px;box-shadow:none;padding:var(--sp-200) var(--sp-200);
+    border-radius:0;border-width:0 0 var(--hairline);box-shadow:none;padding:var(--sp-200) var(--sp-200);
     overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
   .set-nav::-webkit-scrollbar{display:none}
   .set-nav .set-search,.set-nav .set-org{display:none}
   .set-store{flex:none;border:0;margin:0;padding:0 var(--sp-050)}   /* 只留頭像，當作組織／商店分隔 */
   .set-store div{display:none}
-  .set-item{flex:none;width:auto;white-space:nowrap;border:1px solid var(--border);border-radius:999px;padding:var(--sp-150) var(--sp-300)}
-  .set-item.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .set-item{flex:none;width:auto;white-space:nowrap;border:var(--hairline) solid var(--border);border-radius:var(--r-pill);padding:var(--sp-150) var(--sp-300)}
+  .set-item.on{background:var(--brand);color:var(--text-inverse);border-color:var(--brand)}
   .set-content{width:auto;max-width:none;padding:var(--sp-300) var(--sp-300);gap:var(--sp-300)}
   .plan-grid{grid-template-columns:1fr}
   /* ---- Modal → 貼底全寬 sheet ---- */
   .overlay{align-items:flex-end;padding:0}
   .modal{width:100%;max-height:92dvh;border-radius:var(--r-400) var(--r-400) 0 0;display:flex;flex-direction:column}
   .modal-head{flex:none;position:relative;padding-top:var(--sp-600)}
-  .modal-head::before{content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
-    width:36px;height:4px;border-radius:999px;background:var(--border)}
+  .modal-head::before{content:"";position:absolute;top:var(--sp-200);left:50%;transform:translateX(-50%);
+    width:36px;height:4px;border-radius:var(--r-pill);background:var(--border)}
   .modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-  .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--border-2);
+  .modal-foot{position:sticky;bottom:0;background:var(--surface);border-top:var(--hairline) solid var(--border-2);
     padding:var(--sp-300) var(--sp-400) calc(var(--sp-300) + env(safe-area-inset-bottom))}
   .modal-foot .btn{width:100%;justify-content:center}
   /* ---- 命令面板 → 貼頂 sheet（避開手機鍵盤）---- */
   #palOverlay{align-items:flex-start;padding:0}
   .palette{width:100%;max-height:86dvh;border-radius:0 0 var(--r-400) var(--r-400);overflow-y:auto;overscroll-behavior:contain}
-  .pal-foot{position:sticky;bottom:0;background:#fff}
+  .pal-foot{position:sticky;bottom:0;background:var(--surface)}
   /* ---- bulkbar / toast / annot-bar 貼底全寬 ---- */
   .bulkbar{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;border-radius:var(--r-300) var(--r-300) 0 0;
-    flex-wrap:wrap;gap:var(--sp-150);padding:var(--sp-200) var(--sp-300) calc(var(--sp-200) + env(safe-area-inset-bottom));z-index:60;
+    flex-wrap:wrap;gap:var(--sp-150);padding:var(--sp-200) var(--sp-300) calc(var(--sp-200) + env(safe-area-inset-bottom));z-index:var(--z-bulk);
     box-shadow:0 -8px 26px rgba(26,28,30,.3)}
   .bulkbar .bb-gap{display:none}
   .bulkbar #bulkCount{flex:1 0 100%}
   .bulkbar .b-act{flex:1;text-align:center;background:rgba(255,255,255,.12)}
-  .toast{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  .toast{left:var(--sp-300);right:var(--sp-300);bottom:calc(12px + env(safe-area-inset-bottom));
     transform:translateY(90px);justify-content:center;text-align:center}
   .toast.show{transform:none}
   body:has(.bulkbar.show) .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
-  .annot-bar{left:8px;right:8px;bottom:auto;top:60px;max-width:none}
+  .annot-bar{left:var(--sp-200);right:var(--sp-200);bottom:auto;top:60px;max-width:none}
   body.annotate .page{padding-top:calc(var(--sp-600)*3)}   /* 註釋橫幅改置頂，內容讓位不被蓋住 */
   .doc-pop{max-width:calc(100vw - 24px);max-height:52dvh;overflow-y:auto}
   /* ---- 輸入框：16px 防 iOS 聚焦縮放；高度 40 ---- */
@@ -578,8 +792,8 @@ img{max-width:100%;height:auto}
   .ai-box input{font-size:16px}
 }
 
-/* ================= ≤429：小手機 ================= */
-@media (max-width:429px){
+/* ================= ≤490（30.6225em）：小手機 ================= */
+@media (max-width:30.6225em){
   .page{padding:var(--sp-200) var(--sp-200) calc(var(--sp-600)*4)}
   .logo .logo-txt{display:none}
   .top-right .top-ai{display:none}
@@ -594,12 +808,12 @@ img{max-width:100%;height:auto}
 
 /* ================= 觸控裝置：最小 44×44（不動字級）================= */
 @media (pointer:coarse){
-  .icon-btn,.pg,.ai-send,.set-close,.hamb,.searchbox{min-width:44px;min-height:44px}
+  .icon-btn,.pg,.ai-send,.set-close,.hamb,.searchbox{min-width:var(--touch-min);min-height:var(--touch-min)}
   .btn,.view-chip,.task-chip,.store-chip,.dtype,.b-act,.table-toggle,.nav-item,.set-item,
-  .pal-item,.view-menu button,.filterbar,.tc-tools .icon-btn{min-height:44px}
+  .pal-item,.view-menu button,.filterbar,.tc-tools .icon-btn{min-height:var(--touch-min)}
   .btn-sm{min-height:40px}
-  .btn.btn-icon{min-width:44px;min-height:44px}
-  .tc-tools .icon-btn{min-width:44px}
+  .btn.btn-icon{min-width:var(--touch-min);min-height:var(--touch-min)}
+  .tc-tools .icon-btn{min-width:var(--touch-min)}
   .nav-sub{padding-top:var(--sp-300);padding-bottom:var(--sp-300)}
   .table-toggle{display:inline-flex;align-items:center}
   /* 觸控：仍不放大 checkbox 本體，只把 ::before 命中區撐到 44×44 */
@@ -609,7 +823,7 @@ img{max-width:100%;height:auto}
   .toggle::before,.ai-row .x::after,.doc-pop .dp-close::after{content:"";position:absolute;inset:-12px}
   .toggle,.ai-row .x,.doc-pop .dp-close{position:relative}
   .idx td.cell-cb{padding:var(--sp-200);margin:calc(var(--sp-200) * -1)}
-  .idx thead th.cell-cb{min-height:44px}
+  .idx thead th.cell-cb{min-height:var(--touch-min)}
 }
 
 /* ================= 降低動效偏好 ================= */
@@ -622,7 +836,7 @@ img{max-width:100%;height:auto}
   .toast{transform:translate(-50%,0)}
   .toast.show{transform:translate(-50%,0)}
 }
-@media (prefers-reduced-motion:reduce) and (max-width:767px){
+@media (prefers-reduced-motion:reduce) and (max-width:47.9975em){
   .toast,.toast.show{transform:none}
 }
 
@@ -633,7 +847,7 @@ img{max-width:100%;height:auto}
    ================================================================== */
 
 /* --- 分頁籤（詳情頁／庫存頁／設定內分區）--- */
-.tabs{display:flex;gap:var(--sp-050);border-bottom:1px solid var(--border);margin:0 0 var(--sp-400);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.tabs{display:flex;gap:var(--sp-050);border-bottom:var(--hairline) solid var(--border);margin:0 0 var(--sp-400);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{display:inline-flex;align-items:center;height:var(--h-24);padding:0 var(--sp-300);font-size:var(--t-sm);font-weight:500;color:var(--text-2);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px;border-radius:var(--r-200) var(--r-200) 0 0}
 .tab:hover{color:var(--text);background:var(--surface-2)}
@@ -642,10 +856,11 @@ img{max-width:100%;height:auto}
 /* --- 表單 --- */
 .field{display:flex;flex-direction:column;gap:var(--sp-100);min-width:0}
 .field>label{font-size:var(--t-xs);font-weight:500;color:var(--text-2)}
-.field .hint{font-size:11px;color:var(--text-3);line-height:1.5}
+.field .hint{font-size:var(--t-2xs);color:var(--text-3);line-height:1.5}
 .field .msg{font-size:var(--t-xs);color:var(--critical);display:none}
 .field.bad .msg{display:block}
-.field.bad .input{border-color:var(--critical);box-shadow:0 0 0 2px rgba(179,23,44,.14)}
+.field.bad .input{box-shadow:inset 0 0 0 var(--bw-150) var(--sem-critical-icon)}
+.field.bad .input:focus{box-shadow:inset 0 0 0 var(--bw-150) var(--sem-critical-icon),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--sem-critical-icon)}
 textarea.input{height:auto;min-height:70px;padding:var(--sp-200) var(--sp-200);line-height:1.6;resize:vertical}
 select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600);cursor:pointer;
   background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2367696e' stroke-width='2.6'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -656,119 +871,119 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--sp-300)}
 .stack{display:flex;flex-direction:column;gap:var(--sp-300);min-width:0}
 .rowflex{display:flex;gap:var(--sp-200);align-items:center;flex-wrap:wrap;min-width:0}
-.card-sec{border-top:1px solid var(--border-2);margin-top:var(--sp-300);padding-top:var(--sp-300)}
+.card-sec{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-300);padding-top:var(--sp-300)}
 .card-sec>.field+.field,.card-pad>.field+.field{margin-top:var(--sp-300)}
 .help{font-size:var(--t-xs);color:var(--text-2);line-height:1.6}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--t-xs)}
 
 /* 開關（可被表單 dirty 追蹤的原生 checkbox）*/
-.tgl{appearance:none;-webkit-appearance:none;width:36px;height:20px;border-radius:999px;background:#c9cace;
-  position:relative;transition:background-color var(--dur-base) ease;flex:none;cursor:pointer;margin:0}
-.tgl::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left var(--dur-base) var(--ease-standard)}
-.tgl:checked{background:var(--success)}
-.tgl:checked::after{left:18px}
-.swrow{display:flex;align-items:flex-start;gap:var(--sp-300);padding:var(--sp-200) 0;border-bottom:1px solid var(--border-2)}
+.tgl{appearance:none;-webkit-appearance:none;width:36px;height:20px;border-radius:var(--r-pill);background:var(--border-strong);
+  position:relative;flex:none;cursor:pointer;margin:0}
+.tgl::after{content:"";position:absolute;top:var(--sp-050);left:var(--sp-050);width:16px;height:16px;border-radius:50%;background:var(--surface)}
+.tgl:checked{background:var(--sem-success-fill)}
+.tgl:checked::after{transform:translateX(16px)}
+.swrow{display:flex;align-items:flex-start;gap:var(--sp-300);padding:var(--sp-200) 0;border-bottom:var(--hairline) solid var(--border-2)}
 .swrow:last-child{border-bottom:0}
 .swrow .sw-t{flex:1;min-width:0;font-size:var(--t-sm)}
 .swrow .sw-t span{display:block;font-size:var(--t-xs);color:var(--text-2);margin-top:var(--sp-050)}
 
 /* --- 浮動儲存列（23 §3 定案：右下浮動）--- */
-.savebar{position:fixed;right:24px;bottom:24px;z-index:65;display:flex;align-items:center;gap:var(--sp-200);
-  background:#1a1b1d;color:#fff;border-radius:var(--r-300);padding:var(--sp-200) var(--sp-200) var(--sp-200) var(--sp-400);
-  box-shadow:0 12px 32px rgba(26,28,30,.35);transform:translateY(120px);opacity:0;pointer-events:none;
-  transition:transform var(--dur-slower) var(--ease-standard),opacity var(--dur-base) var(--ease-in-out)}
+.savebar{position:fixed;right:var(--sp-600);bottom:var(--sp-600);z-index:var(--z-bulk);display:flex;align-items:center;gap:var(--sp-200);
+  background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-200) var(--sp-200) var(--sp-400);
+  box-shadow:var(--sh-float);transform:translateY(120px);opacity:0;pointer-events:none}
 .savebar.show{transform:none;opacity:1;pointer-events:auto}
 .savebar .sb-t{font-size:var(--t-sm);font-weight:500;white-space:nowrap}
-.savebar .btn-sec{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#fff;box-shadow:none}
+.savebar .btn-sec{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:var(--text-inverse);box-shadow:none}
 .savebar .btn-sec:hover:not(:disabled){background:rgba(255,255,255,.24)}
-.savebar .btn-pri{background:#fff;color:#1a1b1d;box-shadow:none}
+.savebar .btn-pri{background:var(--surface);color:var(--text);box-shadow:none}
 .savebar .btn-pri:hover:not(:disabled){background:#e9e9eb}
-@keyframes nudge{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.savebar.nudge{animation:nudge .3s ease-out}
+@keyframes cl-shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* 47 #88／§5：驗證失敗 shake（實站於 Modal 整體，含 footer）*/
+.cl-shake{animation:cl-shake var(--dur-shake) var(--ease-standard)}
 
 /* --- 危險動作 --- */
-.btn-danger{background:var(--critical);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(26,28,30,.2)}
+.btn-danger{background:var(--critical);color:var(--text-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(26,28,30,.2)}
 .btn-danger:hover:not(:disabled){background:#93131f}
-.btn-danger-o{background:#fff;border-color:#e6b3bc;color:var(--critical)}
+.btn-danger-o{background:var(--surface);border-color:var(--danger-border);color:var(--critical)}
 .btn-danger-o:hover:not(:disabled){background:var(--critical-bg)}
 
 /* --- 下拉／區段控制 --- */
 .dd{position:relative}
 .view-menu.right{left:auto;right:0}
 .view-menu .sep{height:1px;background:var(--border-2);margin:var(--sp-100) 0}
-.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-200);overflow:hidden;background:#fff;flex:none}
-.seg button{padding:var(--sp-150) var(--sp-300);font-size:var(--t-xs);font-weight:600;color:var(--text-2);border-right:1px solid var(--border);white-space:nowrap}
+.seg{display:inline-flex;border:var(--hairline) solid var(--border);border-radius:var(--r-200);overflow:hidden;background:var(--surface);flex:none}
+.seg button{padding:var(--sp-150) var(--sp-300);font-size:var(--t-xs);font-weight:600;color:var(--text-2);border-right:var(--hairline) solid var(--border);white-space:nowrap}
 .seg button:last-child{border-right:0}
 .seg button:hover{background:var(--surface-2)}
-.seg button.on{background:var(--brand);color:#fff}
-.fsel{height:var(--h-32);border:1px solid var(--border);border-radius:var(--r-200);background:#fff;font-size:var(--t-xs);font-weight:600;
+.seg button.on{background:var(--brand);color:var(--text-inverse)}
+.fsel{height:var(--h-32);border:var(--hairline) solid var(--border);border-radius:var(--r-200);background:var(--surface);font-size:var(--t-xs);font-weight:600;
   color:var(--text);padding:0 var(--sp-600) 0 var(--sp-200);appearance:none;-webkit-appearance:none;cursor:pointer;max-width:100%;
   background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2367696e' stroke-width='2.6'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 9px center}
 .fsel:hover{background-color:var(--surface-2)}
-.fsel.act{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
-.chipbar{display:flex;flex-wrap:wrap;gap:var(--sp-150);align-items:center;padding:var(--sp-200) var(--sp-300);border-bottom:1px solid var(--border-2)}
+.fsel.act{border-color:var(--brand);box-shadow:0 0 0 var(--hairline) var(--brand)}
+.chipbar{display:flex;flex-wrap:wrap;gap:var(--sp-150);align-items:center;padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2)}
 .listbar.wrap{flex-wrap:wrap;row-gap:var(--sp-150)}
 .listbar .lb-grow{flex:1;min-width:120px}
-.count-note{font-size:var(--t-xs);color:var(--text-2);padding:var(--sp-200) var(--sp-300);border-top:1px solid var(--border-2)}
+.count-note{font-size:var(--t-xs);color:var(--text-2);padding:var(--sp-200) var(--sp-300);border-top:var(--hairline) solid var(--border-2)}
 
 /* --- 表格橫捲（新頁面的寬表在桌面也能捲，不撐破版面）--- */
 .tscroll{overflow-x:auto;overscroll-behavior-x:contain}
 .tscroll::-webkit-scrollbar{height:8px}
-.tscroll::-webkit-scrollbar-thumb{background:#d2d3d7;border-radius:999px}
+.tscroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:var(--r-pill)}
 .idx th.sortable{cursor:pointer;user-select:none}
 .idx th.sortable:hover{color:var(--text)}
 .idx th .sar{opacity:.45;margin-left:var(--sp-050)}
 .idx th.sorted .sar{opacity:1}
 .idx tr.norow:hover{background:none;cursor:default}
-.idx td .cellin{height:var(--h-28);width:100%;min-width:64px;border:1px solid transparent;border-radius:var(--r-200);padding:0 var(--sp-150);background:none;font-size:var(--t-sm)}
-.idx td .cellin:hover{border-color:#c9cace;background:#fff}
-.idx td .cellin:focus{outline:none;border-color:var(--focus);background:#fff;box-shadow:0 0 0 2px rgba(42,120,214,.18)}
+.idx td .cellin{height:var(--h-28);width:100%;min-width:64px;border:0;border-radius:var(--r-200);padding:0 var(--sp-150);background:none;font-size:var(--t-sm)}
+.idx td .cellin:hover{box-shadow:inset 0 0 0 var(--hairline) var(--border-strong);background:var(--surface)}
+.idx td .cellin:focus{outline:none;background:var(--surface);box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
 
 /* --- 媒體管理 --- */
 .media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:var(--sp-200)}
-.media-tile{position:relative;aspect-ratio:1/1;border:1px solid var(--border);border-radius:var(--r-300);overflow:hidden;background:var(--surface-2)}
+.media-tile{position:relative;aspect-ratio:1/1;border:var(--hairline) solid var(--border);border-radius:var(--r-300);overflow:hidden;background:var(--surface-2)}
 .media-tile.lead{outline:2px solid var(--brand);outline-offset:-2px}
-.media-tile .mt-tag{position:absolute;left:5px;top:5px;background:rgba(26,28,30,.72);color:#fff;font-size:10px;border-radius:var(--r-100);padding:var(--sp-050) var(--sp-100)}
-.media-tile .mt-x{position:absolute;right:4px;top:4px;width:22px;height:22px;border-radius:var(--r-200);background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:11px;color:#1a1b1d;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.media-tile .mt-tag{position:absolute;left:5px;top:5px;background:rgba(26,28,30,.72);color:var(--text-inverse);font-size:10px;border-radius:var(--r-100);padding:var(--sp-050) var(--sp-100)}
+.media-tile .mt-x{position:absolute;right:var(--sp-100);top:var(--sp-100);width:22px;height:22px;border-radius:var(--r-200);background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:var(--t-2xs);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.18)}
 .media-tile.drag{opacity:.35}
 .media-tile.over{outline:2px dashed var(--focus);outline-offset:-2px}
 .media-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--sp-050);aspect-ratio:1/1;
-  border:1.5px dashed #c9cace;border-radius:var(--r-300);color:var(--text-2);font-size:11px;width:100%}
+  border:var(--bw-150) dashed var(--border-strong);border-radius:var(--r-300);color:var(--text-2);font-size:var(--t-2xs);width:100%}
 .media-add:hover{border-color:var(--focus);color:var(--focus);background:#f7faff}
 
 /* --- 選項／值 chips --- */
 .valchips{display:flex;flex-wrap:wrap;gap:var(--sp-150);align-items:center}
-.valchip{display:inline-flex;align-items:center;gap:var(--sp-150);border:1px solid var(--border);background:#fff;border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200);font-size:var(--t-xs);max-width:100%;overflow-wrap:anywhere}
+.valchip{display:inline-flex;align-items:center;gap:var(--sp-150);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200);font-size:var(--t-xs);max-width:100%;overflow-wrap:anywhere}
 .valchip .x{color:var(--text-3);position:relative}
 .valchip .x:hover{color:var(--critical)}
-.optcard{border:1px solid var(--border);border-radius:var(--r-300);padding:var(--sp-300);margin-bottom:var(--sp-200);background:var(--surface-3)}
+.optcard{border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-300);margin-bottom:var(--sp-200);background:var(--surface-3)}
 
 /* --- 條件建構器（智慧系列／分群／折扣）--- */
 .rule{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr) 34px;gap:var(--sp-200);align-items:center;margin-bottom:var(--sp-200)}
-.rule .rm{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-3);border:1px solid var(--border);background:#fff}
-.rule .rm:hover{color:var(--critical);border-color:#e6b3bc;background:var(--critical-bg)}
-.codebox{width:100%;border:1px solid #c9cace;border-radius:var(--r-btn);background:var(--surface-3);padding:var(--sp-200) var(--sp-300);
+.rule .rm{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-3);border:var(--hairline) solid var(--border);background:var(--surface)}
+.rule .rm:hover{color:var(--critical);border-color:var(--danger-border);background:var(--critical-bg)}
+.codebox{width:100%;border:0;box-shadow:inset 0 0 0 var(--hairline) var(--border-strong);border-radius:var(--r-btn);background:var(--surface-3);padding:var(--sp-200) var(--sp-300);
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--t-xs);line-height:1.75;min-height:92px;resize:vertical;overflow-wrap:anywhere}
-.codebox:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px rgba(42,120,214,.18)}
-.tokchip{border:1px solid var(--border);background:#fff;border-radius:var(--r-200);padding:var(--sp-050) var(--sp-200);font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--info)}
+.codebox:focus{outline:none;box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
+.tokchip{border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);padding:var(--sp-050) var(--sp-200);font-size:var(--t-2xs);font-family:ui-monospace,Menlo,monospace;color:var(--info)}
 .tokchip:hover{background:var(--info-bg);border-color:#cfe3f2}
 
 /* --- 選單樹（巢狀拖曳）--- */
 .mtree{display:flex;flex-direction:column;gap:var(--sp-150)}
-.mi{display:flex;align-items:center;gap:var(--sp-200);border:1px solid var(--border);background:#fff;border-radius:var(--r-200);padding:var(--sp-200) var(--sp-200);font-size:var(--t-sm);box-shadow:var(--sh);margin-left:calc(var(--d,0)*var(--sp-600))}
+.mi{display:flex;align-items:center;gap:var(--sp-200);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);padding:var(--sp-200) var(--sp-200);font-size:var(--t-sm);box-shadow:var(--sh);margin-left:calc(var(--d,0)*var(--sp-600))}
 .mi.drag{opacity:.35}
 .mi.over{border-color:var(--focus);box-shadow:0 0 0 2px rgba(42,120,214,.18)}
 .mi .grip{color:var(--text-3);cursor:grab;flex:none}
 .mi .mi-t{flex:1;min-width:0;overflow-wrap:anywhere}
-.mi .mi-t span{display:block;font-size:11px;color:var(--text-3)}
+.mi .mi-t span{display:block;font-size:var(--t-2xs);color:var(--text-3)}
 .mi .mi-act{display:flex;gap:var(--sp-050);flex:none}
-.mi .mi-act button{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);border:1px solid var(--border);background:#fff}
+.mi .mi-act button{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);border:var(--hairline) solid var(--border);background:var(--surface)}
 .mi .mi-act button:hover:not(:disabled){background:var(--surface-2);color:var(--text)}
-.mi .mi-act button:disabled{opacity:.35;cursor:not-allowed}
+.mi .mi-act button:disabled,.mi .mi-act button[aria-disabled="true"]{color:var(--text-disabled);cursor:not-allowed}
 
 /* --- 選取清單（modal picker）--- */
-.pick{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);border-bottom:1px solid var(--border-2);width:100%;text-align:left;font-size:var(--t-sm)}
+.pick{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);width:100%;text-align:left;font-size:var(--t-sm)}
 .pick:hover{background:var(--surface-2)}
 .pick .pk-i{flex:1;min-width:0;overflow-wrap:anywhere}
 .pick .pk-i span{display:block;font-size:var(--t-xs);color:var(--text-2)}
@@ -778,54 +993,54 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 
 /* --- 步驟卡（批次出貨）／檔案庫／主題庫 --- */
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--sp-200)}
-.step{border:1px solid var(--border);border-radius:var(--r-300);padding:var(--sp-300) var(--sp-300);background:#fff;text-align:left}
-.step.on{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.step{border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-300) var(--sp-300);background:var(--surface);text-align:left}
+.step.on{border-color:var(--brand);box-shadow:0 0 0 var(--hairline) var(--brand)}
 .step.done{background:var(--success-bg);border-color:#bfe0d3}
 .step b{display:block;font-size:var(--t-sm)}
 .step span{font-size:var(--t-xs);color:var(--text-2)}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:var(--sp-300)}
-.ftile{border:1px solid var(--border);border-radius:var(--r-300);overflow:hidden;background:#fff;text-align:left;box-shadow:var(--sh)}
-.ftile:hover{border-color:#c9cace}
+.ftile{border:var(--hairline) solid var(--border);border-radius:var(--r-300);overflow:hidden;background:var(--surface);text-align:left;box-shadow:var(--sh)}
+.ftile:hover{border-color:var(--border-strong)}
 .ftile .fprev{aspect-ratio:4/3;display:grid;place-items:center;color:var(--text-3);background:var(--surface-2)}
 .ftile .fmeta{padding:var(--sp-200) var(--sp-200);font-size:var(--t-xs);overflow-wrap:anywhere}
-.ftile .fmeta span{display:block;color:var(--text-3);font-size:11px;margin-top:var(--sp-050)}
-.dropzone{border:1.5px dashed #c9cace;border-radius:var(--r-300);padding:var(--sp-600);text-align:center;color:var(--text-2);font-size:var(--t-sm);background:var(--surface-3)}
+.ftile .fmeta span{display:block;color:var(--text-3);font-size:var(--t-2xs);margin-top:var(--sp-050)}
+.dropzone{border:var(--bw-150) dashed var(--border-strong);border-radius:var(--r-300);padding:var(--sp-600);text-align:center;color:var(--text-2);font-size:var(--t-sm);background:var(--surface-3)}
 .dropzone.over{border-color:var(--focus);background:#f5f9ff;color:var(--focus)}
 .theme-hero{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:var(--sp-400);align-items:start}
-.theme-shot{aspect-ratio:4/3;border-radius:var(--r-300);border:1px solid var(--border);background:linear-gradient(160deg,#f6f1e9,#e2d6c6)}
-.thumb-lg{width:52px;height:52px;border-radius:var(--r-200);border:1px solid var(--border);flex:none;background-size:cover}
+.theme-shot{aspect-ratio:4/3;border-radius:var(--r-300);border:var(--hairline) solid var(--border);background:linear-gradient(160deg,#f6f1e9,#e2d6c6)}
+.thumb-lg{width:52px;height:52px;border-radius:var(--r-200);border:var(--hairline) solid var(--border);flex:none;background-size:cover}
 
 /* --- 側欄黏著（詳情頁 summary）--- */
-.sticky-side{position:sticky;top:8px}
+.sticky-side{position:sticky;top:var(--sp-200)}
 .kv{display:flex;justify-content:space-between;gap:var(--sp-300);font-size:var(--t-sm);padding:var(--sp-100) 0}
 .kv .k{color:var(--text-2)}
 .ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:var(--sp-200)}
-.ledger div{border:1px solid var(--border-2);border-radius:var(--r-200);padding:var(--sp-200) var(--sp-200);background:var(--surface-3)}
+.ledger div{border:var(--hairline) solid var(--border-2);border-radius:var(--r-200);padding:var(--sp-200) var(--sp-200);background:var(--surface-3)}
 .ledger b{display:block;font-size:var(--t-lg);line-height:var(--lh-lg);font-weight:700;letter-spacing:-.01em}
-.ledger span{font-size:11px;color:var(--text-2)}
-.progress{height:6px;border-radius:999px;background:var(--border-2);overflow:hidden}
-.progress i{display:block;height:100%;background:var(--chart);border-radius:999px;transition:width 500ms var(--ease-decelerate)}
-.serp{border:1px solid var(--border-2);border-radius:var(--r-300);padding:var(--sp-300);background:var(--surface-3)}
+.ledger span{font-size:var(--t-2xs);color:var(--text-2)}
+.progress{height:6px;border-radius:var(--r-pill);background:var(--border-2);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--chart);border-radius:var(--r-pill);transition:width var(--dur-bar-grow) var(--ease-decelerate)}
+.serp{border:var(--hairline) solid var(--border-2);border-radius:var(--r-300);padding:var(--sp-300);background:var(--surface-3)}
 .serp .s-t{color:#1a0dab;font-size:var(--t-lg);line-height:1.3;overflow-wrap:anywhere}
 .serp .s-u{color:#0a7a5c;font-size:var(--t-xs);margin:var(--sp-050) 0 var(--sp-100);overflow-wrap:anywhere}
 .serp .s-d{font-size:var(--t-xs);color:var(--text-2);line-height:1.5}
-.avatar-lg{width:44px;height:44px;border-radius:var(--r-300);font-size:var(--t-lg)}
+.avatar-lg{width:var(--touch-min);height:var(--touch-min);border-radius:var(--r-300);font-size:var(--t-lg)}
 .globe{background:radial-gradient(circle at 34% 30%,#22364d,#12181f 70%)}
 .strip{display:flex;gap:var(--sp-200);overflow-x:auto;padding-bottom:var(--sp-100);overscroll-behavior-x:contain}
-.alertrow{display:flex;gap:var(--sp-200);padding:var(--sp-300) var(--sp-300);border-bottom:1px solid var(--border-2);font-size:var(--t-sm);text-align:left;width:100%}
+.alertrow{display:flex;gap:var(--sp-200);padding:var(--sp-300) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);font-size:var(--t-sm);text-align:left;width:100%}
 .alertrow:hover{background:var(--surface-2)}
 .alertrow.unread{background:#f7fbff}
 .alertrow .ad{width:7px;height:7px;border-radius:50%;background:var(--link);margin-top:var(--sp-150);flex:none}
 .alertrow .ai-t{flex:1;min-width:0;overflow-wrap:anywhere}
-.alertrow .ai-t span{display:block;font-size:11px;color:var(--text-3);margin-top:var(--sp-050)}
+.alertrow .ai-t span{display:block;font-size:var(--t-2xs);color:var(--text-3);margin-top:var(--sp-050)}
 
 /* ================= 擴建層 RWD ================= */
-@media (max-width:1023px){
+@media (max-width:64.9975em){
   .theme-hero{grid-template-columns:1fr}
   .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .savebar{right:16px;bottom:16px}
+  .savebar{right:var(--sp-400);bottom:var(--sp-400)}
 }
-@media (max-width:767px){
+@media (max-width:47.9975em){
   .grid2,.grid3,.grid4{grid-template-columns:1fr}
   .rule{grid-template-columns:1fr;gap:var(--sp-150)}
   .rule .rm{width:100%}
@@ -842,64 +1057,53 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   .chipbar{padding:var(--sp-200)}
   .modal.wide{width:100%}
   .modal.tall .modal-body{max-height:none}
-  .idx td .cellin{border-color:#c9cace;background:#fff;height:var(--h-36)}
+  .idx td .cellin{box-shadow:inset 0 0 0 var(--hairline) var(--border-strong);background:var(--surface);height:var(--h-36)}
   .mi{flex-wrap:wrap;margin-left:calc(var(--d,0)*var(--sp-400))}
   .mi .mi-t{flex:1 0 55%}
   .mi .mi-act{width:100%;justify-content:flex-end;margin-top:var(--sp-050)}
   .seg{width:100%}
   .seg button{flex:1;text-align:center}
 }
-@media (max-width:429px){
+@media (max-width:30.6225em){
   .ledger{grid-template-columns:1fr}
 }
 /* 觸控：新元件同樣 ≥44 命中區 */
 @media (pointer:coarse){
-  .btn-sm{min-height:44px}
-  .tab,.fsel,.pick,.seg button,.step,.tokchip,.valchip .x,.mi .mi-act button,.media-tile .mt-x,.media-add,.ftile,.alertrow{min-height:44px}
-  .fsel,.mi .mi-act button,.media-tile .mt-x{min-width:44px}
+  .btn-sm{min-height:var(--touch-min)}
+  .tab,.fsel,.pick,.seg button,.step,.tokchip,.valchip .x,.mi .mi-act button,.media-tile .mt-x,.media-add,.ftile,.alertrow{min-height:var(--touch-min)}
+  .fsel,.mi .mi-act button,.media-tile .mt-x{min-width:var(--touch-min)}
   .tgl{position:relative}
   .tgl::before{content:"";position:absolute;inset:-12px}
   /* 既有元件的命中區補正（僅觸控環境，桌面外觀不受影響）*/
-  .store-chip{min-width:44px;justify-content:center}
+  .store-chip{min-width:var(--touch-min);justify-content:center}
   .idx td.cell-cb{padding:var(--sp-300);margin:calc(var(--sp-300) * -1)}
-  .idx th.cell-cb,.idx thead th.cell-cb{min-width:44px}
-  .icon-btn.top-ai,.tc-tools .icon-btn{min-width:44px;min-height:44px}
-  .btn,.btn-sm{min-width:44px}
-  .modal-head button,.set-org+.set-search{min-width:44px;min-height:44px}
-  .nav-sub{min-height:44px;display:flex;align-items:center}
+  .idx th.cell-cb,.idx thead th.cell-cb{min-width:var(--touch-min)}
+  .icon-btn.top-ai,.tc-tools .icon-btn{min-width:var(--touch-min);min-height:var(--touch-min)}
+  .btn,.btn-sm{min-width:var(--touch-min)}
+  .modal-head button,.set-org+.set-search{min-width:var(--touch-min);min-height:var(--touch-min)}
+  .nav-sub{min-height:var(--touch-min);display:flex;align-items:center}
   .nav-sub:not(.show){display:none}
-  .input,select.input{min-height:44px}
-  .inline-lbl{min-height:44px}
+  .input,select.input{min-height:var(--touch-min)}
+  .inline-lbl{min-height:var(--touch-min)}
   .valchip .x{position:relative;display:inline-flex;align-items:center;justify-content:center}
   .valchip .x::after{content:"";position:absolute;inset:0 -17px}
-  .rule .rm{min-height:44px;min-width:44px}
-  .idx td .cellin{min-height:44px}
-  .valchip{min-height:44px}
+  .rule .rm{min-height:var(--touch-min);min-width:var(--touch-min)}
+  .idx td .cellin{min-height:var(--touch-min)}
+  .valchip{min-height:var(--touch-min)}
   .tokchip{display:inline-flex;align-items:center}
 }
 @media (prefers-reduced-motion:reduce){
   .savebar,.savebar.show{transform:none}
-  .savebar.nudge{animation:none}
+  .cl-shake{animation:none}
   .progress i{transition:none}
 }
 /* ══ 47 §2 堆疊卡片群組：連續列表卡片—首張只圓上緣、末張只圓下緣、中間全直角 ══ */
 .card-stack{display:flex;flex-direction:column}
 .card-stack>.card{border-radius:0;border-top-width:0;box-shadow:none}
-.card-stack>.card:first-child{border-radius:var(--r-300) var(--r-300) 0 0;border-top-width:1px}
+.card-stack>.card:first-child{border-radius:var(--r-300) var(--r-300) 0 0;border-top-width:var(--hairline)}
 .card-stack>.card:last-child{border-radius:0 0 var(--r-300) var(--r-300)}
-.card-stack>.card:only-child{border-radius:var(--r-300);border-top-width:1px}
+.card-stack>.card:only-child{border-radius:var(--r-300);border-top-width:var(--hairline)}
 
-/* ══ 47 §5 動效原語（M1–M7）：全站禁用萬用屬性轉場，一律具名屬性 ══ */
-.m-hover{transition:background-color var(--dur-base) ease}                       /* M1 hover 底色 */
-.m-text{transition:color var(--dur-fast) var(--ease-standard)}                    /* M2 文字色 */
-.m-focus{transition:border-color var(--dur-fast) var(--ease-decelerate),
-  border-width var(--dur-fast) var(--ease-decelerate),
-  box-shadow var(--dur-fast) var(--ease-decelerate)}                              /* M3 focus 環（三屬性同時）*/
-.m-accordion{overflow:hidden;transition:max-height var(--dur-fast) var(--ease-decelerate)}  /* M4 摺疊：max-height 不用 height */
-.m-pop{transition:opacity var(--dur-slow) var(--ease-decelerate),
-  scale var(--dur-slow) var(--ease-decelerate)}                                   /* M5 popover 進場 */
-.m-drawer{transition:transform var(--dur-slower) var(--ease-standard)}            /* M6 抽屜 */
-.m-sidebar{transition:max-width var(--dur-slowest) var(--ease-in-out)}            /* M7 側欄寬度：max-width 不用 width */
 
 #page-detail{max-width:998px}
 
@@ -914,9 +1118,9 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text">搜尋</span><span class="kbd">CTRL K</span>
   </button>
   <div class="top-right">
-    <button class="icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
-    <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
-    <button class="icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
+    <button class="m-hover icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
+    <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
+    <button class="m-hover icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
     <button class="store-chip" data-doc="storechip" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
   </div>
 </header>
@@ -924,7 +1128,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 <div class="scrim" id="scrim" aria-hidden="true" onclick="closeNav(true)"></div>
 
 <div class="frame">
-  <nav class="sidebar" id="sidebar" aria-label="主導航"></nav>
+  <nav class="sidebar m-sidebar m-drawer" id="sidebar" aria-label="主導航"></nav>
   <main class="main">
 
   <!-- 首頁 -->
@@ -938,7 +1142,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
       <div class="p-live">即時訪客<b class="num">7<span class="live-dot"></span></b></div>
     </div>
     <div class="hero-hello"><h2>午安，Benny。</h2><p>繼續拓展你的業務。</p></div>
-    <div class="ai-box" data-doc="aibox">
+    <div class="ai-box m-focus" data-doc="aibox">
       <span class="ai-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>
       <input id="aiInput" placeholder="問問你的 AI 助理…（試試「這個月賣最好的是什麼」）">
       <button class="ai-send" aria-label="送出" onclick="aiAsk()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
@@ -975,7 +1179,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
     <div class="page-head">
       <h1>訂單</h1>
       <div class="head-actions">
-        <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出訂單')">匯出</button>
+        <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出訂單')">匯出</button>
         <button class="btn btn-sec btn-sm" data-doc="bulkrecent" onclick="go('m-shiplabels')">批次處理近期訂單</button>
         <button class="btn btn-pri" data-doc="createorder" onclick="openDraft('new')">建立訂單</button>
       </div>
@@ -985,20 +1189,20 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
         <div style="position:relative">
           <button class="view-chip" data-doc="views" onclick="toggleViewMenu(event)"><span id="viewLabel">全部</span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
-          <div class="view-menu" id="viewMenu"></div>
+          <div class="m-pop view-menu" id="viewMenu"></div>
         </div>
-        <div class="filterbar" data-doc="filterbar">
+        <div class="filterbar m-focus" data-doc="filterbar">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="orderSearch" placeholder="搜尋單號、顧客…">
         </div>
-        <button class="icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
+        <button class="m-hover icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
       <div class="idx-wrap">
         <div class="bulkbar" id="bulkbar" data-doc="bulkbar">
           <span id="bulkCount" class="num"></span><span class="bb-gap" style="flex:1"></span>
-          <button class="b-act" onclick="toast('Demo：批次出貨')">標記為已出貨</button>
-          <button class="b-act" onclick="toast('Demo：批次封存')">封存</button>
-          <button class="b-act" onclick="toast('Demo：加入標籤')">加標籤</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次出貨')">標記為已出貨</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次封存')">封存</button>
+          <button class="b-act m-hover" onclick="toast('Demo：加入標籤')">加標籤</button>
         </div>
         <table class="idx" id="orderTable" data-doc="ordertable">
           <thead><tr>
@@ -1007,7 +1211,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
           </tr></thead><tbody></tbody>
         </table>
       </div>
-      <div class="pagination"><button class="pg" disabled aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
+      <div class="pagination"><button class="pg" disabled aria-disabled="true" aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
     </div>
   </section>
 
@@ -1019,7 +1223,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
     <div class="page-head">
       <h1>產品</h1>
       <div class="head-actions">
-        <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出')">匯出</button>
+        <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出')">匯出</button>
         <button class="btn btn-ghost btn-sm" data-doc="import" onclick="toast('Demo：匯入')">匯入</button>
         <button class="btn btn-pri" data-doc="newproduct" onclick="openProduct(0)">新增商品</button>
       </div>
@@ -1027,17 +1231,17 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
     <div class="card">
       <div class="listbar">
         <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
-        <div class="filterbar">
+        <div class="filterbar m-focus">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="prodSearch" placeholder="搜尋商品、SKU…">
         </div>
-        <button class="icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
+        <button class="m-hover icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
       <table class="idx" id="prodTable" data-doc="prodtable">
         <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th>類型</th><th>供應商</th></tr></thead>
         <tbody></tbody>
       </table>
-      <div class="pagination"><button class="pg" disabled aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
+      <div class="pagination"><button class="pg" disabled aria-disabled="true" aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
     </div>
   </section>
 
@@ -1069,8 +1273,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
     <div class="chart2">
       <div class="card chart-card">
         <div class="chart-head"><h3>隨時間的總銷售額</h3><span class="big num">NT$407,700</span></div>
-        <div class="chart-wrap" data-doc="anachart"><svg id="anaChart" width="100%" height="200"></svg><div class="tooltip" id="anaTip"></div></div>
-        <button class="table-toggle" id="anaToggle" onclick="toggleAnaTable()">檢視數據表格</button>
+        <div class="chart-wrap" data-doc="anachart"><svg id="anaChart" width="100%" height="200"></svg><div class="tooltip m-pop" id="anaTip"></div></div>
+        <button class="table-toggle m-text" id="anaToggle" onclick="toggleAnaTable()">檢視數據表格</button>
         <table class="data-table num" id="anaTable"><thead><tr><th>日期</th><th>銷售額</th></tr></thead><tbody id="anaTableBody"></tbody></table>
       </div>
       <div class="card chart-card"><div class="chart-head"><h3>依管道的總銷售額</h3></div><div id="chanBars"></div></div>
@@ -1218,16 +1422,23 @@ function renderSidebar(){
   let h=NAV.map(n=>{
     const on=grp===n.id;
     let s=`<button class="nav-item ${on&&current===n.id?'on':''}" onclick="go('${n.id}')">${icon(n.icon)}${n.name}${n.count?`<span class="nav-count num">${n.count}</span>`:''}</button>`;
-    (n.kids||[]).forEach(([target,label])=>{
-      s+=`<button class="nav-sub ${on?'show':''} ${current===target?'on':''}" onclick="go('${target}')">${label}</button>`;
-    });
+    /* 47 §5 M4：子項群組用 max-height 摺疊（不用 height，避免 reflow）*/
+    if((n.kids||[]).length){
+      s+=`<div class="nav-subs m-accordion ${on?'open':''}">`;
+      (n.kids||[]).forEach(([target,label])=>{
+        s+=`<button class="nav-sub ${on?'show':''} ${current===target?'on':''}" onclick="go('${target}')">${label}</button>`;
+      });
+      s+=`</div>`;
+    }
     return s;
   }).join('');
   h+=`<div class="nav-group">銷售管道</div>
   <button class="nav-item ${current==='m-themes'?'on':''}" onclick="go('m-themes')">${icon('store')}線上商店</button>
+  <div class="nav-subs m-accordion ${grp==='m-themes'?'open':''}">
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-pages'?'on':''}" onclick="go('m-pages')">頁面</button>
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-redirects'?'on':''}" onclick="go('m-redirects')">網址重新導向</button>
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-prefs'?'on':''}" onclick="go('m-prefs')">偏好設定</button>
+  </div>
   <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}AI 代理</button>
   <button class="nav-item" onclick="toast('Demo：門市 POS 屬第三階段')">${icon('pos')}門市 POS</button>
   <div class="nav-group">應用程式</div>
@@ -1310,10 +1521,10 @@ const SPK={
 
 /* ================= 訂單列表 ================= */
 const PAY={paid:'<span class="badge b-default"><span class="pip full"></span>已付款</span>',
- pending:'<span class="badge b-warning"><span class="pip half"></span>待付款</span>',
+ pending:'<span class="badge b-warning"><span class="pip blocked"></span>待付款</span>',
  refund:'<span class="badge b-default"><span class="pip full"></span>已退款</span>'};
-const FUL={unful:'<span class="badge b-attention"><span class="pip"></span>未出貨</span>',
- partial:'<span class="badge b-warning"><span class="pip half"></span>部分出貨</span>',
+const FUL={unful:'<span class="badge b-caution"><span class="pip"></span>未出貨</span>',
+ partial:'<span class="badge b-warning"><span class="pip blocked"></span>部分出貨</span>',
  ful:'<span class="badge b-default"><span class="pip full"></span>已出貨</span>'};
 const VIEWS=[["all","全部"],["unful","未出貨"],["unpaid","未付款"],["archived","已封存"]];
 let orderView="all";
@@ -1380,7 +1591,7 @@ function renderOrderDetail(){
   const fulBadge=st.fulfilled?FUL.ful:FUL[o.ful];
   const payCard={
    paid:`<h3><span class="badge b-default"><span class="pip full"></span>已付款</span></h3>`,
-   pending:`<h3><span class="badge b-warning"><span class="pip half"></span>待付款</span><span class="h-act"><button class="btn btn-sec btn-sm" onclick="toast('Demo：寄送付款連結')">寄送付款連結</button></span></h3><div class="banner-err" style="background:var(--warning-bg);border-color:#f2e3b3;color:var(--warning);margin-bottom:var(--sp-200)">尚未收到款項——付款完成前請勿出貨</div>`,
+   pending:`<h3><span class="badge b-warning"><span class="pip blocked"></span>待付款</span><span class="h-act"><button class="btn btn-sec btn-sm" onclick="toast('Demo：寄送付款連結')">寄送付款連結</button></span></h3><div class="banner-err" style="background:var(--warning-bg);border-color:#f2e3b3;color:var(--warning);margin-bottom:var(--sp-200)">尚未收到款項——付款完成前請勿出貨</div>`,
    refund:`<h3><span class="badge b-default"><span class="pip full"></span>已退款</span></h3>`}[o.pay];
   document.getElementById('page-orderdetail').innerHTML=`
   <div class="page-head" style="flex-wrap:wrap">
@@ -1389,8 +1600,8 @@ function renderOrderDetail(){
     ${o.cancelled?'<span class="badge b-critical"><span class="pip full"></span>已取消</span>':PAY[o.pay]+' '+fulBadge}
     <span class="mut3" style="font-size:var(--t-xs)">${o.d}・${o.ch}</span>
     <div class="head-actions">
-      <button class="btn btn-sec btn-sm" data-doc="refund" ${o.pay!=='paid'?'disabled':''} onclick="orderRefund()">退款</button>
-      <button class="btn btn-sec btn-sm" data-doc="editorder" ${o.cancelled?'disabled':''} onclick="toast('Demo：訂單編輯於 M4 後段')">編輯</button>
+      <button class="btn btn-sec btn-sm" data-doc="refund" ${o.pay!=='paid'?'disabled aria-disabled="true"':''} onclick="orderRefund()">退款</button>
+      <button class="btn btn-sec btn-sm" data-doc="editorder" ${o.cancelled?'disabled aria-disabled="true"':''} onclick="toast('Demo：訂單編輯於 M4 後段')">編輯</button>
       <button class="btn btn-sec btn-sm" data-doc="moreactions" onclick="orderMore()">更多動作 ▾</button>
       <button class="pg" onclick="toast('上一筆')" aria-label="上一筆">‹</button><button class="pg" onclick="toast('下一筆')" aria-label="下一筆">›</button>
     </div>
@@ -1399,7 +1610,7 @@ function renderOrderDetail(){
   <div class="od-grid">
     <div class="col">
       <div class="card card-pad">
-        <h3>${st.fulfilled?'<span class="badge b-default"><span class="pip full"></span>已出貨 ('+o.items+')</span>':'<span class="badge b-attention"><span class="pip"></span>未出貨 ('+o.items+')</span>'}<span class="h-act mut3" style="font-size:var(--t-xs)">${o.ch==='AI 代理'?'國際運送':'宅配到府'}</span></h3>
+        <h3>${st.fulfilled?'<span class="badge b-default"><span class="pip full"></span>已出貨 ('+o.items+')</span>':'<span class="badge b-caution"><span class="pip"></span>未出貨 ('+o.items+')</span>'}<span class="h-act mut3" style="font-size:var(--t-xs)">${o.ch==='AI 代理'?'國際運送':'宅配到府'}</span></h3>
         ${o.lines.map(l=>`
         <div class="od-line">
           <span class="thumb" style="background:${l.g}"></span>
@@ -1409,7 +1620,7 @@ function renderOrderDetail(){
         ${st.fulfilled
           ?`<p class="mut" style="font-size:var(--t-xs);margin-top:var(--sp-200)">已出貨・黑貓宅急便 903-2214-88${o.id.slice(-2)}</p>`
           :o.cancelled||o.pay==='refund'?''
-          :o.pay==='pending'?`<div style="display:flex;justify-content:flex-end;margin-top:var(--sp-300)"><button class="btn btn-pri" disabled title="待付款訂單不可出貨">標記為已出貨</button></div>`
+          :o.pay==='pending'?`<div style="display:flex;justify-content:flex-end;margin-top:var(--sp-300)"><button class="btn btn-pri" disabled aria-disabled="true" title="待付款訂單不可出貨">標記為已出貨</button></div>`
           :`<div style="display:flex;justify-content:flex-end;margin-top:var(--sp-300)"><span class="split" data-doc="fulfill">
              <button class="btn btn-pri" onclick="markFulfilled('${o.id}')">標記為已出貨</button>
              <button class="btn btn-pri" onclick="toast('Demo：更多出貨選項（部分出貨/購買標籤）')" aria-label="更多出貨選項">▾</button>
@@ -1427,8 +1638,8 @@ function renderOrderDetail(){
           <div class="tc-main">
             <textarea id="tlInput" rows="1" placeholder="撰寫備註…"></textarea>
             <div class="tc-tools">
-              <button class="icon-btn" title="表情" aria-label="表情">☺</button>
-              <button class="icon-btn" title="提及" aria-label="提及">@</button>
+              <button class="m-hover icon-btn" title="表情" aria-label="表情">☺</button>
+              <button class="m-hover icon-btn" title="提及" aria-label="提及">@</button>
               <button class="btn btn-sec btn-sm" onclick="postComment()">發佈</button>
             </div>
           </div>
@@ -1450,7 +1661,7 @@ function renderOrderDetail(){
       </div>
       <div class="card card-pad" data-doc="risk"><h3>訂單風險</h3>
         ${o.risk
-         ?'<div style="display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-sm)"><span class="badge b-warning"><span class="pip half"></span>中</span><span class="mut">IP 與帳單地址不一致</span></div>'
+         ?'<div style="display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-sm)"><span class="badge b-warning"><span class="pip blocked"></span>中</span><span class="mut">IP 與帳單地址不一致</span></div>'
          :'<div style="display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-sm)"><span class="badge b-success"><span class="pip full"></span>低</span><span class="mut">風險分析正常</span></div>'}
       </div>
       <div class="card card-pad"><h3>標籤<span class="h-act">✎</span></h3>
@@ -1504,7 +1715,11 @@ function renderProducts(){
 document.getElementById('prodSearch').addEventListener('input',renderProducts);
 
 /* ================= 通用模組頁（所有子分頁真頁面） ================= */
-const chip=(txt,tone)=>`<span class="badge b-${tone}"><span class="pip full"></span>${txt}</span>`;
+/* 47 §D 徽章狀態圖示——形狀本身即編碼狀態，不以顏色單獨傳達（WCAG 1.4.1）：
+   ● full = 完成｜○（無修飾）= 未開始｜⊘ blocked = 部分／受阻。
+   預設形狀由語意色族推導；語意與族不一致時（如 info 的「部分收貨」）用第三參數覆寫。 */
+const PIP_SHAPE={success:'full',default:'full',ai:'full',info:'',caution:'',attention:'',warning:'blocked',critical:'blocked'};
+const chip=(txt,tone,shape)=>`<span class="badge b-${tone}"><span class="pip ${shape===undefined?(PIP_SHAPE[tone]??'full'):shape}"></span>${txt}</span>`;
 const MODULES={
  "m-drafts":{title:"草稿訂單",act:[["建立草稿訂單","pri","toast('Demo：草稿訂單表單於 M4 實作')"]],
   cols:["草稿","日期","顧客","狀態","總計"],
@@ -1517,9 +1732,9 @@ const MODULES={
  "m-abandoned":{title:"未完成結帳",act:[["設定挽回信","sec","toast('Demo：棄單挽回自動化於 M5')"]],
   cols:["結帳","日期","顧客","金額","挽回信","狀態"],
   rows:[
-   [`<b>#C118</b>`,"今天 09:44","yi***@gmail.com",`<span class="num">NT$3,160</span>`,chip("已排程","info"),chip("未恢復","attention")],
+   [`<b>#C118</b>`,"今天 09:44","yi***@gmail.com",`<span class="num">NT$3,160</span>`,chip("已排程","info"),chip("未恢復","caution")],
    [`<b>#C117</b>`,"昨天 22:10","ch***@outlook.com",`<span class="num">NT$1,480</span>`,chip("已寄出","default"),chip("已恢復下單","success")],
-   [`<b>#C115</b>`,"昨天 14:03","（未留 email）",`<span class="num">NT$990</span>`,chip("不適用","default"),chip("未恢復","attention")]],
+   [`<b>#C115</b>`,"昨天 14:03","（未留 email）",`<span class="num">NT$990</span>`,chip("不適用","default"),chip("未恢復","caution")]],
   note:"留下聯絡方式且超過 1 小時未付款才列入；90 天後自動清除（規格 15-F7）"},
  "m-collections":{title:"商品系列",act:[["新增商品系列","pri","toast('Demo：系列編輯器於 M1 實作')"]],
   cols:["標題","類型","商品數","銷售管道"],
@@ -1623,7 +1838,7 @@ function renderModule(key){
     ${M.ai?`<div class="ai-row" onclick="toast('Demo：AI 分群（自然語言→條件）屬 P2')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>${M.ai}<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>`:''}
     <div class="listbar">
       <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="filterbar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="搜尋…" oninput="filterModuleRows(this)"></div>
+      <div class="filterbar m-focus"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="搜尋…" oninput="filterModuleRows(this)"></div>
     </div>
     <table class="idx" data-doc="doc-${key}"><thead><tr>${M.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
     <tbody id="moduleRows">${M.rows.map(()=>`<tr><td colspan="${M.cols.length}"><div class="skeleton" style="width:${55+Math.floor(Math.random()*30)}%"></div></td></tr>`).join('')}</tbody></table>
@@ -1664,7 +1879,7 @@ function marketsHTML(){return `
   <div class="card">
     <div class="listbar">
       <button class="view-chip">商店預設值 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
-      <div class="filterbar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="在所有市場中搜尋"></div>
+      <div class="filterbar m-focus"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="在所有市場中搜尋"></div>
     </div>
     <table class="idx"><thead><tr><th>市場</th><th>狀態</th><th>包含</th><th>幣別</th><th>價格調整</th></tr></thead><tbody>
       <tr onclick="toast('Demo：市場詳情')"><td><b>台灣（預設）</b></td><td>${chip("啟用中","success")}</td><td class="mut">1 個地區</td><td class="mut">TWD（NT$）</td><td class="num">—</td></tr>
@@ -1728,8 +1943,8 @@ const setRow=(t,sub,right='<span class="chev">›</span>')=>`<div class="set-row
 const SET_PAGES={
  org:`<div class="card card-pad"><h3>組織</h3>${setRow("CHILL LOVE HOLDINGS","2 間商店・集中帳單")}${setRow("組織安全政策","強制兩步驟驗證：關閉")}</div>`,
  users:`<div class="card card-pad"><h3>使用者與角色</h3>
-   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・完整權限</span></div><span class="badge b-default">店主</span></div>
-   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服</span></div><span class="badge b-info">員工</span></div>
+   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・完整權限</span></div><span class="badge b-default"><span class="pip full"></span>店主</span></div>
+   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服</span></div><span class="badge b-info"><span class="pip full"></span>員工</span></div>
    ${setRow("邀請使用者","72 小時單次邀請連結（規格 12-F3）")}</div>
   <div class="card card-pad"><h3>角色權限</h3>${setRow("出貨與客服","orders.view / orders.fulfill / customers.view")}${setRow("行銷","discounts.* / growth.*")}</div>`,
  general:`<div class="card card-pad"><h3>商家詳細資訊</h3><p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於金流、市場與稅務的商業實體</p>
@@ -1741,12 +1956,12 @@ const SET_PAGES={
    ${setRow("訂單編號","每店連號，不洩漏平台總量（規格 15-F5）",'<span class="tagchip num" style="margin:0">#1042</span>')}</div>`,
  plan:`<div class="card card-pad"><h3>方案</h3><div class="plan-grid">
    <div class="plan"><b>入門</b><div class="pp num">NT$890<span>/月</span></div><ul><li>2 個員工帳號</li><li>基本報告</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：降級流程')">切換</button></div>
-   <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">NT$2,490<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled>使用中</button></div>
+   <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">NT$2,490<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled aria-disabled="true">使用中</button></div>
    <div class="plan"><b>企業</b><div class="pp num">洽談<span>/年約</span></div><ul><li>不限員工</li><li>組織多店・API 加量</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：升級流程')">升級</button></div>
   </div></div>`,
  billing:`<div class="card card-pad"><h3>帳單</h3>${setRow("付款方式","VISA •• 4242")}${setRow("帳單週期","每月 14 日")}${setRow("發票紀錄","2026 年 7 月・NT$2,490")}</div>`,
  payments:`<div class="card card-pad"><h3>金流供應商</h3>
-   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip half"></span>TEST</span></div>
+   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip blocked"></span>TEST</span></div>
    ${setRow("請款方式","自動請款（下單即請款）；手動請款見規格 15-F4")}</div>
   <div class="card card-pad"><h3>手動付款方式</h3>${setRow("銀行轉帳","下單後 3 日內轉帳，後台標記已收款")}${setRow("新增手動付款方式","貨到付款、面交…")}</div>`,
  checkout:`<div class="card card-pad"><h3>結帳</h3>
@@ -2165,13 +2380,20 @@ function formDiscard(){
   formSetDirty(false);if(FORM.discard)FORM.discard();
   toast('已捨棄變更，還原為上次儲存的內容');
 }
+/* 47 #88：驗證失敗回饋——重播 cl-shake（先移除 class 並強制 reflow 才會重跑）*/
+function clShake(el){if(!el)return;el.classList.remove('cl-shake');void el.offsetWidth;el.classList.add('cl-shake');}
 function formSave(){
   if(!FORM)return;
   const bad=formValidate(FORM.el);
-  if(bad){toast('有欄位未通過驗證——請修正紅色欄位');bad.focus();return;}
-  const b=document.getElementById('sbSave');b.textContent='儲存中…';b.disabled=true;
+  if(bad){
+    toast('有欄位未通過驗證——請修正紅色欄位');
+    /* 47 #88：欄位在 Modal 內就抖 Modal 整體，否則抖 save bar */
+    clShake(bad.closest('.modal')||bad.closest('.palette')||document.getElementById('saveBar'));
+    bad.focus();return;
+  }
+  const b=document.getElementById('sbSave');b.textContent='儲存中…';b.disabled=true;b.setAttribute('aria-disabled','true');
   setTimeout(()=>{
-    b.textContent='儲存';b.disabled=false;FORM.snap=formRead(FORM.el);formSetDirty(false);
+    b.textContent='儲存';b.disabled=false;b.removeAttribute('aria-disabled');FORM.snap=formRead(FORM.el);formSetDirty(false);
     toast((FORM.save&&FORM.save())||'已儲存變更');
   },450);
 }
@@ -2202,7 +2424,7 @@ function guardNav(){
   if(!formDirty())return true;
   if(Date.now()-navWarn<4000){FORM=null;formSetDirty(false);return true;}
   navWarn=Date.now();
-  const sb=document.getElementById('saveBar');sb.classList.remove('nudge');void sb.offsetWidth;sb.classList.add('nudge');
+  clShake(document.getElementById('saveBar'));
   toast('有未儲存的變更——再點一次即離開並捨棄');
   return false;
 }
@@ -2233,17 +2455,17 @@ function listPage(cfg){
     ${cfg.ai?`<div class="ai-row" data-doc="${cfg.aiDoc||'ai-suggest'}" onclick="${cfg.aiFn||`toast('Demo：AI 建議')`}">${SPARK}${cfg.ai}<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉建議">✕</span></div>`:''}
     <div class="listbar wrap">
       <div class="dd"><button class="view-chip" data-doc="views" onclick="ddToggle(event,'vm-${cfg.key}')">${views[s.view][0]} ${CHEV}</button>
-        <div class="view-menu" id="vm-${cfg.key}">${vmenu}</div></div>
+        <div class="m-pop view-menu" id="vm-${cfg.key}">${vmenu}</div></div>
       <div class="filterbar lb-grow" data-doc="filterbar">${SEARCH_IC}
         <input placeholder="${cfg.ph||'搜尋…'}" value="${H(s.q)}" oninput="lsearch('${cfg.key}',this.value)" aria-label="搜尋">
       </div>
-      ${cfg.cols.length>3?`<button class="icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="lcolumns('${cfg.key}')">${IC('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/>')}</button>`:''}
-      <button class="icon-btn" data-doc="list-states" title="切換載入／空／錯誤狀態" aria-label="切換列表狀態" onclick="lcycle('${cfg.key}')">${IC(IC_STATES)}</button>
+      ${cfg.cols.length>3?`<button class="m-hover icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="lcolumns('${cfg.key}')">${IC('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/>')}</button>`:''}
+      <button class="m-hover icon-btn" data-doc="list-states" title="切換載入／空／錯誤狀態" aria-label="切換列表狀態" onclick="lcycle('${cfg.key}')">${IC(IC_STATES)}</button>
     </div>
     ${filters?`<div class="chipbar" data-doc="list-filters">${filters}${Object.keys(s.f).some(k=>s.f[k])?`<button class="btn btn-ghost btn-sm" onclick="lclear('${cfg.key}')">清除篩選</button>`:''}</div>`:''}
     <div class="idx-wrap">
       ${cfg.bulk?`<div class="bulkbar" id="bb-${cfg.key}" data-doc="bulkbar"><span id="bc-${cfg.key}" class="num"></span><span class="bb-gap" style="flex:1"></span>
-        ${cfg.bulk.map((b,i)=>`<button class="b-act" onclick="lbulkAct('${cfg.key}',${i})">${b[0]}</button>`).join('')}</div>`:''}
+        ${cfg.bulk.map((b,i)=>`<button class="b-act m-hover" onclick="lbulkAct('${cfg.key}',${i})">${b[0]}</button>`).join('')}</div>`:''}
       <table class="idx" id="tb-${cfg.key}"><thead><tr>${th}</tr></thead><tbody id="tby-${cfg.key}"></tbody></table>
     </div>
     <div id="pg-${cfg.key}"></div>
@@ -2287,9 +2509,9 @@ function lbody(k){
       ${c.bulk?`<td onclick="event.stopPropagation()"><input type="checkbox" class="cb" data-id="${H(id)}" ${s.sel.has(id)?'checked':''} onchange="lsel('${k}','${H(id)}',this.checked)" aria-label="選取"></td>`:''}
       ${c.cols.map(col=>`<td class="${col.right?'right':''}">${col.c(r)}</td>`).join('')}</tr>`;}).join('');
   document.getElementById('pg-'+k).innerHTML=all.length>per
-    ?`<div class="pagination"><button class="pg" ${s.page===1?'disabled':''} onclick="lpage('${k}',-1)" aria-label="上一頁">‹</button>
+    ?`<div class="pagination"><button class="pg" ${s.page===1?'disabled aria-disabled="true"':''} onclick="lpage('${k}',-1)" aria-label="上一頁">‹</button>
       <span class="mut3 num" style="align-self:center;padding:0 var(--sp-200);font-size:var(--t-xs)">第 ${s.page} / ${pages} 頁・共 ${all.length} 筆</span>
-      <button class="pg" ${s.page===pages?'disabled':''} onclick="lpage('${k}',1)" aria-label="下一頁">›</button></div>`
+      <button class="pg" ${s.page===pages?'disabled aria-disabled="true"':''} onclick="lpage('${k}',1)" aria-label="下一頁">›</button></div>`
     :`<div class="count-note num">共 ${all.length} 筆</div>`;
   lbulkSync(k);
 }
@@ -2339,7 +2561,7 @@ function pickerModal(title,items,onPick,multi){
     ${multi?`<input type="checkbox" class="cb" id="pk${i}" onclick="event.stopPropagation();pkChoose(${i},true)" aria-label="選取 ${H(it.t)}">`:`<span class="chev">›</span>`}</button>`).join('');
   window.PK={items,onPick,sel:new Set()};
   openGen({title,pad:false,tall:true,
-    body:`<div style="padding:var(--sp-200) var(--sp-300);border-bottom:1px solid var(--border-2)"><div class="filterbar">${SEARCH_IC}<input placeholder="搜尋…" oninput="pkFilter(this.value)" aria-label="搜尋"></div></div><div id="pkList">${rows}</div>`,
+    body:`<div style="padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2)"><div class="filterbar m-focus">${SEARCH_IC}<input placeholder="搜尋…" oninput="pkFilter(this.value)" aria-label="搜尋"></div></div><div id="pkList">${rows}</div>`,
     foot:multi?`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="pkDone()">加入所選</button>`
       :`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>`});
 }
@@ -2564,10 +2786,10 @@ function draftPage(){
     <div class="od-line">
       <span class="thumb" style="background:${l.g}"></span>
       <div class="li-info"><div class="li-name">${H(l.n)}</div><div class="li-var">${H(l.v)}${l.disc?` ・行折扣 −${NT(l.disc)}`:''}</div></div>
-      <button class="icon-btn" title="編輯單價與行級折扣" aria-label="編輯單價與行級折扣" onclick="draftEditLine(${i})">${IC(IC_EDIT,14)}</button>
+      <button class="m-hover icon-btn" title="編輯單價與行級折扣" aria-label="編輯單價與行級折扣" onclick="draftEditLine(${i})">${IC(IC_EDIT,14)}</button>
       <input class="cellin num" style="max-width:56px;text-align:right" value="${l.q}" aria-label="數量" onchange="draftQty(${i},this.value)">
       <span class="num mut" style="min-width:78px;text-align:right">${NT(l.p*l.q-(l.disc||0))}</span>
-      <button class="icon-btn" title="移除品項" aria-label="移除品項" onclick="draftDel(${i})">✕</button>
+      <button class="m-hover icon-btn" title="移除品項" aria-label="移除品項" onclick="draftDel(${i})">✕</button>
     </div>`).join('')
    :`<div class="empty-wrap" style="padding:var(--sp-600)"><b>尚未加入商品</b>搜尋既有商品，或加入不在目錄中的自訂品項。</div>`;
   return detailHead(DRAFT.id?`草稿 #${DRAFT.id}`:'建立訂單',
@@ -2718,7 +2940,7 @@ function abandonedPage(){
       {l:'顧客',c:r=>r.c,v:r=>r.c},{l:'品項',right:true,c:r=>N(r.items),v:r=>r.items},
       {l:'金額',right:true,c:r=>N(NT(r.amt)),v:r=>r.amt},
       {l:'挽回信',c:r=>chip(r.mail,r.mail==='已寄出'?'default':r.mail==='已排程'?'info':'default'),v:r=>r.mail},
-      {l:'恢復狀態',c:r=>chip(r.rec,r.rec==='未恢復'?'attention':'success'),v:r=>r.rec}],
+      {l:'恢復狀態',c:r=>chip(r.rec,r.rec==='未恢復'?'caution':'success'),v:r=>r.rec}],
     rows:ABANDONED,id:r=>r.id,onRow:r=>`abandonDetail('${r.id}')`,
     bulk:[['轉為草稿訂單'],['刪除',null,null,'danger']],
     note:'不寄挽回信的邊界：付款處理錯誤／地址不可配送／只留電話沒 email／庫存全無／全免費商品。保留 3 個月自動刪除（41 §2.4）。'});
@@ -2732,7 +2954,7 @@ function abandonDetail(id){
     <div class="kv"><span class="k">恢復狀態</span><span>${a.rec}</span></div>
     <p class="help">手動挽回＝點顧客 email 開本機郵件客戶端並帶入結帳連結（不是站內寄信）；站內自動信走行銷自動化（41 §2.4）。</p></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已轉為草稿訂單保存')">轉為草稿訂單</button>
-     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" ${a.ph?'disabled title="只留電話沒有 email，無法寄信"':''} onclick="closeGen();toast('已開啟郵件草稿（帶結帳連結）')">寄送挽回信</button>`});
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" ${a.ph?'disabled aria-disabled="true" title="只留電話沒有 email，無法寄信"':''} onclick="closeGen();toast('已開啟郵件草稿（帶結帳連結）')">寄送挽回信</button>`});
 }
 function abandonSettings(){
   openGen({title:'棄單挽回設定',body:`<div class="stack">
@@ -2819,8 +3041,8 @@ function productPage(){
             <span style="margin-left:auto" class="rowflex">
               <button class="btn btn-ghost btn-sm" data-doc="pd-ai" onclick="toast('Demo：✨ AI 生成商品說明（P2）')">${SPARK} AI 生成</button>
               <button class="btn btn-ghost btn-sm" onclick="toast('Demo：切換 HTML 原始碼檢視')">&lt;/&gt; HTML</button></span></div>
-          <div class="rowflex" style="border:1px solid #c9cace;border-bottom:0;border-radius:var(--r-200) var(--r-200) 0 0;padding:var(--sp-100) var(--sp-150);gap:var(--sp-050);background:var(--surface-3)">
-            ${['B','I','U','H2','•','1.','🔗','⌗'].map(t=>`<button class="icon-btn" style="width:28px;height:26px;font-size:var(--t-xs)" aria-label="格式：${t}" onclick="toast('Demo：富文本 ${t}')">${t}</button>`).join('')}</div>
+          <div class="rowflex" style="border:var(--hairline) solid var(--border-strong);border-bottom:0;border-radius:var(--r-200) var(--r-200) 0 0;padding:var(--sp-100) var(--sp-150);gap:var(--sp-050);background:var(--surface-3)">
+            ${['B','I','U','H2','•','1.','🔗','⌗'].map(t=>`<button class="m-hover icon-btn" style="width:28px;height:26px;font-size:var(--t-xs)" aria-label="格式：${t}" onclick="toast('Demo：富文本 ${t}')">${t}</button>`).join('')}</div>
           <textarea class="input" data-f="pdesc" rows="4" style="border-radius:0 0 var(--r-200) var(--r-200)" data-val="max:64000">${H(p.desc)}</textarea>
           <span class="hint">富文本上限 64KB（22 §2 配額表）</span>
         </div>
@@ -2958,16 +3180,16 @@ function variantCard(){
     <div class="card-pad" style="padding-bottom:0"><h3>子類（變體）
       <span class="h-act rowflex">
         ${PV.opts.length?`<select class="fsel" aria-label="分組依據" onchange="pvGroup(this.value)"><option value="">不分組</option>${PV.opts.map(o=>`<option ${PV.group===o.n?'selected':''}>${H(o.n)}</option>`).join('')}</select>`:''}
-        <button class="btn btn-sec btn-sm" ${PV.opts.length>=3?'disabled title="最多 3 個選項"':''} onclick="pvAddOpt()">＋ 新增選項</button></span></h3>
+        <button class="btn btn-sec btn-sm" ${PV.opts.length>=3?'disabled aria-disabled="true" title="最多 3 個選項"':''} onclick="pvAddOpt()">＋ 新增選項</button></span></h3>
       ${opts}
       ${PV.opts.length?`<p class="help" style="margin-bottom:var(--sp-200)">選項值笛卡兒積自動生成 <b class="num">${PV.vars.length}</b> 個變體（上限 2,048）。改選項值時採 <b>diff 更新</b>：既有變體資料與 ID 保留，不像 Shopify 重建（22 §2）。</p>`:'<p class="help" style="margin-bottom:var(--sp-200)">此商品沒有選項——只有一個預設變體。新增選項後會生成變體矩陣。</p>'}
     </div>
     ${PV.vars.length?`<div class="idx-wrap">
       <div class="bulkbar ${PV.sel.size?'show':''}" id="pvBulk"><span class="num">已選取 ${PV.sel.size} 個變體</span><span class="bb-gap" style="flex:1"></span>
-        <button class="b-act" onclick="pvBulkEdit('price')">批次改價</button>
-        <button class="b-act" onclick="pvBulkEdit('qty')">批次改庫存</button>
-        <button class="b-act" onclick="toast('Demo：開啟試算表批次編輯器（41 §1.4）')">在 bulk editor 編輯</button>
-        <button class="b-act" onclick="pvBulkDel()">刪除</button></div>
+        <button class="b-act m-hover" onclick="pvBulkEdit('price')">批次改價</button>
+        <button class="b-act m-hover" onclick="pvBulkEdit('qty')">批次改庫存</button>
+        <button class="b-act m-hover" onclick="toast('Demo：開啟試算表批次編輯器（41 §1.4）')">在 bulk editor 編輯</button>
+        <button class="b-act m-hover" onclick="pvBulkDel()">刪除</button></div>
       <table class="idx"><thead><tr><th style="width:36px"><input type="checkbox" class="cb" onclick="pvAll(this)" aria-label="全選變體"></th>
         <th>變體</th><th>價格</th><th>可用庫存</th><th>SKU</th><th class="right">動作</th></tr></thead>
       <tbody>${body}</tbody></table></div>`:''}</div>`;
@@ -3089,7 +3311,7 @@ function collectionPage(){
             <select class="input" aria-label="運算子" onchange="colRule(${i},1,this.value)">${(['price','weight','inventory','compare_at_price'].includes(r[0])?RULE_OPS.numb:RULE_OPS.text).map(o=>`<option ${r[1]===o?'selected':''}>${o}</option>`).join('')}</select>
             <input class="input" value="${H(r[2])}" placeholder="值" aria-label="條件值" onchange="colRule(${i},2,this.value)">
             <button class="rm" aria-label="移除條件" onclick="colDelRule(${i})">${IC(IC_TRASH,14)}</button></div>`).join('')}
-          <button class="btn btn-sec btn-sm" ${COL.rules.length>=60?'disabled':''} onclick="colAddRule()">＋ 新增條件</button>
+          <button class="btn btn-sec btn-sm" ${COL.rules.length>=60?'disabled aria-disabled="true"':''} onclick="colAddRule()">＋ 新增條件</button>
           <p class="help" style="margin-top:var(--sp-200)">≤60 條件、全店智慧系列 ≤5,000（22 §2 配額表）；規則變更後背景重算 membership。</p>
         </div>`:`<div class="card-sec"><button class="btn btn-sec btn-sm" onclick="colAddProducts()">＋ 加入商品</button>
           <p class="help" style="margin-top:var(--sp-200)">手動系列支援拖曳排序（position 欄）。</p></div>`}
@@ -3132,7 +3354,7 @@ function inventoryPage(){
   const tabs=[['levels','庫存'],['hist','調整歷史'],['xfer','轉移'],['po','採購單']];
   const head=`<div class="page-head"><h1>庫存</h1><div class="head-actions">
       <select class="fsel" aria-label="地點" onchange="INVLOC=this.value;renderModule('m-inventory')">${['主倉（內湖）','台北門市','台中寄倉'].map(l=>`<option ${INVLOC===l?'selected':''}>${l}</option>`).join('')}</select>
-      <button class="btn btn-ghost btn-sm" data-doc="export" onclick="toast('Demo：匯出庫存 CSV（僅 On hand 可寫回＋防過期校驗欄）')">匯出</button>
+      <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出庫存 CSV（僅 On hand 可寫回＋防過期校驗欄）')">匯出</button>
       <button class="btn btn-ghost btn-sm" data-doc="import" onclick="toast('Demo：匯入庫存 CSV')">匯入</button>
       <button class="btn btn-pri btn-sm" data-doc="inv-adjust" onclick="invAdjust()">調整庫存</button></div></div>
     <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab ${INVTAB===k?'on':''}" role="tab" aria-selected="${INVTAB===k}" onclick="INVTAB='${k}';renderModule('m-inventory')">${l}</button>`).join('')}</div>`;
@@ -3220,7 +3442,7 @@ function xferOpen(id){
 function invPO(){
   return `<div class="card"><table class="idx"><thead><tr><th>採購單</th><th>供應商</th><th>目的地</th><th>付款條件</th><th class="right">件數</th><th>狀態</th><th>預計到貨</th></tr></thead><tbody>
     <tr onclick="toast('Demo：採購單詳情——收貨介面同轉移（accept/reject）')"><td><b>#PO-88</b></td><td>合作工坊</td><td>主倉（內湖）</td><td>Net 30</td><td class="right num">120</td><td>${chip('已下單','warning')}</td><td>8月20日</td></tr>
-    <tr onclick="toast('Demo：採購單詳情')"><td><b>#PO-87</b></td><td>亞麻供應商 A</td><td>主倉（內湖）</td><td>Net 15</td><td class="right num">40</td><td>${chip('部分收貨','info')}</td><td>8月14日</td></tr>
+    <tr onclick="toast('Demo：採購單詳情')"><td><b>#PO-87</b></td><td>亞麻供應商 A</td><td>主倉（內湖）</td><td>Net 15</td><td class="right num">40</td><td>${chip('部分收貨','info','blocked')}</td><td>8月14日</td></tr>
     <tr onclick="toast('Demo：採購單詳情')"><td><b>#PO-86</b></td><td>合作工坊</td><td>主倉（內湖）</td><td>Net 30</td><td class="right num">60</td><td>${chip('已收貨','success')}</td><td>8月1日</td></tr>
     </tbody></table><p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">PO 行＝變體＋supplier SKU＋成本＋數量＋稅%；Mark as ordered 後記 Incoming（41 §3.8）。</p></div>`;
 }
@@ -3631,9 +3853,9 @@ function discountPage(){
       </div>
       <div class="card card-pad" data-doc="disc-combo"><h3>組合 Combinations</h3>
         <p class="help" style="margin-bottom:var(--sp-200)">勾選這個折扣可以和哪些類別的折扣同時套用。同類別折扣通常互斥（同品項雙 product 折扣為 Plus 專屬）。</p>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcp" ${DISC.comb.p?'checked':''} ${t==='product'||t==='bxgy'?'disabled':''} onchange="DISC.comb.p=this.checked;discSyncSummary()"> 商品折扣${t==='product'||t==='bxgy'?'<span class="hint">（本身即商品折扣，同類互斥）</span>':''}</label>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dco" ${DISC.comb.o?'checked':''} ${t==='order'?'disabled':''} onchange="DISC.comb.o=this.checked;discSyncSummary()"> 訂單折扣${t==='order'?'<span class="hint">（本身即訂單折扣，同類互斥）</span>':''}</label>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcs" ${DISC.comb.s?'checked':''} ${t==='ship'?'disabled':''} onchange="DISC.comb.s=this.checked;discSyncSummary()"> 運費折扣${t==='ship'?'<span class="hint">（本身即運費折扣，同類互斥）</span>':''}</label>
+        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcp" ${DISC.comb.p?'checked':''} ${t==='product'||t==='bxgy'?'disabled aria-disabled="true"':''} onchange="DISC.comb.p=this.checked;discSyncSummary()"> 商品折扣${t==='product'||t==='bxgy'?'<span class="hint">（本身即商品折扣，同類互斥）</span>':''}</label>
+        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dco" ${DISC.comb.o?'checked':''} ${t==='order'?'disabled aria-disabled="true"':''} onchange="DISC.comb.o=this.checked;discSyncSummary()"> 訂單折扣${t==='order'?'<span class="hint">（本身即訂單折扣，同類互斥）</span>':''}</label>
+        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcs" ${DISC.comb.s?'checked':''} ${t==='ship'?'disabled aria-disabled="true"':''} onchange="DISC.comb.s=this.checked;discSyncSummary()"> 運費折扣${t==='ship'?'<span class="hint">（本身即運費折扣，同類互斥）</span>':''}</label>
       </div>
       <div class="card card-pad" data-doc="disc-dates"><h3>有效期間</h3>
         <div class="grid2">${F('開始日期','<input class="input" type="date" data-f="dsd" value="2026-08-11">')}${F('開始時間','<input class="input" type="time" data-f="dst" value="09:00">')}</div>
@@ -3671,7 +3893,7 @@ function discPromote(){
   openGen({title:'推廣折扣',body:`<div class="stack">
     ${F('分享連結',`<input class="input mono" readonly value="https://chilllove.demo/discount/${H(DISC.title)}?redirect=/collections/all">`,'開啟即自動套用折扣碼')}
     ${F('導向頁面',SEL('_dp',['首頁','所有商品','指定系列','指定商品'],'所有商品'))}
-    <div class="rowflex"><div style="width:88px;height:88px;border:1px solid var(--border);border-radius:var(--r-300);display:grid;place-items:center;background:repeating-conic-gradient(#1a1b1d 0 25%,#fff 0 50%) 0 0/12px 12px" aria-label="QR code 示意"></div>
+    <div class="rowflex"><div style="width:88px;height:88px;border:var(--hairline) solid var(--border);border-radius:var(--r-300);display:grid;place-items:center;background:repeating-conic-gradient(#1a1b1d 0 25%,#fff 0 50%) 0 0/12px 12px" aria-label="QR code 示意"></div>
       <span class="help">QR code 可下載為 PNG，貼在包裝或線下物料。</span></div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已複製分享連結')">複製連結</button>
      <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已下載 QR code')">下載 QR</button>`});
@@ -3781,10 +4003,10 @@ function menuPage(){
         <span class="grip" aria-hidden="true">${IC(IC_DRAG,14)}</span>
         <span class="mi-t"><b>${H(it.t)}</b><span class="mono">${H(it.u)}</span></span>
         <span class="mi-act">
-          <button aria-label="向上移動" ${i===0?'disabled':''} onclick="menuMove(${i},-1)">↑</button>
-          <button aria-label="向下移動" ${i===MENU.items.length-1?'disabled':''} onclick="menuMove(${i},1)">↓</button>
-          <button aria-label="減少縮排" ${it.d===0?'disabled':''} onclick="menuIndent(${i},-1)">←</button>
-          <button aria-label="增加縮排" ${it.d>=2||i===0||MENU.items[i-1].d<it.d?'disabled':''} onclick="menuIndent(${i},1)">→</button>
+          <button aria-label="向上移動" ${i===0?'disabled aria-disabled="true"':''} onclick="menuMove(${i},-1)">↑</button>
+          <button aria-label="向下移動" ${i===MENU.items.length-1?'disabled aria-disabled="true"':''} onclick="menuMove(${i},1)">↓</button>
+          <button aria-label="減少縮排" ${it.d===0?'disabled aria-disabled="true"':''} onclick="menuIndent(${i},-1)">←</button>
+          <button aria-label="增加縮排" ${it.d>=2||i===0||MENU.items[i-1].d<it.d?'disabled aria-disabled="true"':''} onclick="menuIndent(${i},1)">→</button>
           <button aria-label="編輯項目" onclick="menuEdit(${i})">${IC(IC_EDIT,13)}</button>
           <button aria-label="刪除項目" onclick="menuDel(${i})">✕</button></span></div>`).join('')}
       </div>
@@ -3792,7 +4014,7 @@ function menuPage(){
     </div><div class="col">
       <div class="card card-pad"><h3>連結型別</h3><p class="help">首頁／系列／所有系列頁／商品／頁面／部落格／部落格文章／政策頁／外部 URL／email（mailto:）／電話（tel:）；每種都有搜尋式 picker。</p></div>
       <div class="card card-pad"><h3>前台預覽</h3>
-        <div style="border:1px solid var(--border-2);border-radius:var(--r-300);padding:var(--sp-200);background:var(--surface-3);font-size:var(--t-xs)">
+        <div style="border:var(--hairline) solid var(--border-2);border-radius:var(--r-300);padding:var(--sp-200);background:var(--surface-3);font-size:var(--t-xs)">
           ${MENU.items.filter(i=>i.d===0).map(i=>`<div style="padding:var(--sp-050) 0">${H(i.t)}${MENU.items.some(x=>x.d===1)&&i.t==='上衣'?' ⌄':''}</div>`).join('')}</div></div>
       <div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除選單','前台引用這個 handle 的區塊會顯示空選單。','刪除選單',function(){toast('已刪除選單');go('m-menus');})">刪除選單</button></div>
     </div></div>`;
@@ -3897,8 +4119,8 @@ function articlePage(){
       ${F('標題',TXT('at',ART.t,'','req|max:255'))}
       <div class="card-sec"><div class="rowflex" style="margin-bottom:var(--sp-150)"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">內容</label>
         <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：✨ AI 生成草稿')">${SPARK} AI 生成</button></div>
-        <div class="rowflex" style="border:1px solid #c9cace;border-bottom:0;border-radius:var(--r-200) var(--r-200) 0 0;padding:var(--sp-100) var(--sp-150);gap:var(--sp-050);background:var(--surface-3)">
-          ${['B','I','H2','•','1.','🔗','🖼','⌗'].map(t=>`<button class="icon-btn" style="width:28px;height:26px;font-size:var(--t-xs)" aria-label="格式：${t}" onclick="toast('Demo：富文本 ${t}')">${t}</button>`).join('')}</div>
+        <div class="rowflex" style="border:var(--hairline) solid var(--border-strong);border-bottom:0;border-radius:var(--r-200) var(--r-200) 0 0;padding:var(--sp-100) var(--sp-150);gap:var(--sp-050);background:var(--surface-3)">
+          ${['B','I','H2','•','1.','🔗','🖼','⌗'].map(t=>`<button class="m-hover icon-btn" style="width:28px;height:26px;font-size:var(--t-xs)" aria-label="格式：${t}" onclick="toast('Demo：富文本 ${t}')">${t}</button>`).join('')}</div>
         <textarea class="input" data-f="ab" rows="8" style="border-radius:0 0 var(--r-200) var(--r-200)" placeholder="開始撰寫…"></textarea></div>
       ${isPage?'':`<div class="card-sec">${F('摘要 Excerpt',TA('aex',ART.ex,'列表頁與社群卡會用到',2,'max:320'))}</div>`}
     </div>
@@ -3940,8 +4162,8 @@ function marketNew(){
     ${F('市場名稱','<input class="input" data-val="req|max:60" placeholder="例：日本">')}
     ${F('市場型別',SEL('_mt',['依國家／地區','B2B 公司地點','實體零售地點','銷售管道'],'依國家／地區'))}
     <div class="field"><label>包含的國家／地區</label>
-      <div class="filterbar">${SEARCH_IC}<input placeholder="搜尋國家…" aria-label="搜尋國家"></div>
-      <div style="max-height:150px;overflow:auto;border:1px solid var(--border);border-radius:var(--r-200);padding:var(--sp-200);margin-top:var(--sp-150)">
+      <div class="filterbar m-focus">${SEARCH_IC}<input placeholder="搜尋國家…" aria-label="搜尋國家"></div>
+      <div style="max-height:150px;overflow:auto;border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-200);margin-top:var(--sp-150)">
         ${['日本','韓國','新加坡','泰國','越南','澳洲'].map(c=>`<label class="inline-lbl" style="padding:var(--sp-100) 0"><input type="checkbox" class="cb"> ${c}</label>`).join('')}</div>
       <span class="hint">勾選的國家若已屬其他市場，會自動從原市場移出（需確認）</span></div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立市場（草稿）——設定網域與幣別後即可啟用')">建立市場</button>`});
@@ -4040,7 +4262,7 @@ function financePage(){
       <div class="card" data-doc="fin-payouts"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>撥款紀錄</h3></div>
         <table class="idx"><thead><tr><th>日期</th><th class="right">金額</th><th>狀態</th><th class="right">訂單數</th></tr></thead><tbody>
         ${PAYOUTS.map(p=>`<tr onclick="payoutOpen(${JQ(p.d)})"><td class="mut">${p.d}</td><td class="right num">${NT(p.amt)}</td>
-          <td>${chip(p.st,p.st==='已入帳'?'success':p.st==='在途'?'info':'critical')}</td><td class="right num">${p.n}</td></tr>`).join('')}</tbody></table></div>
+          <td>${chip(p.st,p.st==='已入帳'?'success':p.st==='在途'?'info':'critical',p.st==='在途'?'blocked':undefined)}</td><td class="right num">${p.n}</td></tr>`).join('')}</tbody></table></div>
     </div>`;
 }
 function payoutOpen(d){
@@ -4049,7 +4271,7 @@ function payoutOpen(d){
     <div class="kv"><span class="k">退款 refunds</span><span class="num">−${NT(960)}</span></div>
     <div class="kv"><span class="k">手續費 fees</span><span class="num">−${NT(1820)}</span></div>
     <div class="kv"><span class="k">調整 adjustments</span><span class="num">${NT(0)}</span></div>
-    <div class="kv" style="border-top:1px solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>實際撥款</b></span><span class="num"><b>${NT(38420)}</b></span></div></div>`,
+    <div class="kv" style="border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>實際撥款</b></span><span class="num"><b>${NT(38420)}</b></span></div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已匯出此撥款的對帳 CSV')">匯出 CSV</button>`});
 }
 function billingPage(){
@@ -4327,8 +4549,8 @@ Object.assign(SET_PAGES,{
    ${setRow("訂單編號","只能改前後綴，流水號固定 1001 起不可變",'<span class="tagchip num" style="margin:0">#1042</span>')}
    ${setRow("兜底地區 backup region","市場移除國家後的定價回退區",'<span class="tagchip" style="margin:0">台灣</span>')}</div>`,
  users:`<div class="card card-pad" data-doc="set-users"><h3>使用者與角色（組織層）</h3>
-   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・2FA 已啟用・最後登入：今天</span></div><span class="badge b-default">店主</span></div>
-   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="badge b-info">員工</span></div>
+   <div class="set-row"><span class="avatar">BW</span><div><b>Benny W.（你）</b><span class="sub">店主・2FA 已啟用・最後登入：今天</span></div><span class="badge b-default"><span class="pip full"></span>店主</span></div>
+   <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="badge b-info"><span class="pip full"></span>員工</span></div>
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：邀請使用者（單發或 CSV 批量，72 小時單次連結）')">邀請使用者</button>
      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：協作者申請碼（4 碼，不佔名額）')">協作者</button></div></div>
   <div class="card card-pad"><h3>角色（權限集模板）</h3>
@@ -4338,12 +4560,12 @@ Object.assign(SET_PAGES,{
    <div class="set-row"><div><b>強制兩步驟驗證</b><span class="sub">所有成員下次登入時必須設定</span></div><input type="checkbox" class="tgl" role="switch" aria-label="強制兩步驟驗證" onchange="toast(this.checked?'已要求全員啟用 2FA':'已取消強制 2FA')"></div>
    ${setRow("登出所有裝置","立即撤銷所有 session")}</div>`,
  payments:`<div class="card card-pad" data-doc="set-payments"><h3>金流供應商</h3>
-   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip half"></span>TEST</span></div>
+   <div class="set-row"><div><b>Stripe（測試模式）</b><span class="sub">信用卡・Apple Pay・LINE Pay</span></div><span class="badge b-warning"><span class="pip blocked"></span>TEST</span></div>
    ${setRow("帳單敘述名","顧客信用卡帳單上顯示的名稱（2–19 字元）",'<span class="tagchip" style="margin:0">CHILLLOVE</span>')}
    ${setRow("撥款排程","每日（T+2 入帳）")}</div>
   <div class="card card-pad"><h3>請款方式（三模式）</h3>
    ${['結帳後自動請款','全單出貨後自動請款','手動請款（授權期 7 天）'].map((m,i)=>`<label class="set-row" style="cursor:pointer"><div><b>${m}</b>${i===2?'<span class="sub">逾期未請款則授權失效</span>':''}</div>
-     <input type="radio" name="capmode" class="cb" style="margin-left:auto" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
+     <input type="radio" name="capmode" class="cl-radio" style="margin-left:auto" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
   <div class="card card-pad"><h3>手動付款方式</h3>${setRow("銀行轉帳","下單後 3 日內轉帳，後台標記已收款")}${setRow("新增手動付款方式","貨到付款、面交…（自訂名禁保留字）")}</div>`,
  checkout:`<div class="card card-pad" data-doc="set-checkout"><h3>結帳</h3>
    <div class="set-row"><div><b>自訂結帳外觀</b><span class="sub">品牌色／字體／圓角（checkout profile）</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：Checkout 編輯器規格見 24 §6')">自訂結帳</button></div>
@@ -4356,7 +4578,7 @@ Object.assign(SET_PAGES,{
    ${setRow("帳單地址","預設同運送地址")}
    ${setRow("付款後自動出貨","關閉（僅數位商品自動）")}
    ${setRow("自動封存","出貨且付款完成後自動封存")}
-   <div class="set-row"><div><b>結帳版式</b><span class="sub">one-page（單頁式，已統一）</span></div><span class="badge b-default">one-page</span></div></div>
+   <div class="set-row"><div><b>結帳版式</b><span class="sub">one-page（單頁式，已統一）</span></div><span class="badge b-default"><span class="pip full"></span>one-page</span></div></div>
   <div class="card card-pad"><h3>棄單挽回（legacy）</h3>${setRow("自動挽回信","已遷移至行銷自動化；此為 legacy 開關")}</div>`,
  shipping:`<div class="card card-pad" data-doc="set-shipping"><h3>依市場的運送選項（新模型）</h3>
    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">Market → Shipping option（顧客可見名）→ Rates；子市場繼承父市場可覆寫</p>
@@ -4382,8 +4604,8 @@ Object.assign(SET_PAGES,{
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">停用地點前必須移走庫存與待出貨單；app 地點（3PL）唯讀且不佔配額。</p></div>`,
  domains:`<div class="card card-pad" data-doc="set-domains"><h3>網域</h3>
    <div class="set-row"><div><b>chilllove.demo</b><span class="sub">主要網域・SSL 已簽發</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
-   <div class="set-row"><div><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="badge b-default">子網域</span></div>
-   <div class="set-row"><div><b>chilllove.demo/int</b><span class="sub">International 市場・子資料夾</span></div><span class="badge b-info">國際</span></div>
+   <div class="set-row"><div><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="badge b-default"><span class="pip full"></span>子網域</span></div>
+   <div class="set-row"><div><b>chilllove.demo/int</b><span class="sub">International 市場・子資料夾</span></div><span class="badge b-info"><span class="pip full"></span>國際</span></div>
    <div class="set-row"><div><b>將所有流量導向主網域</b><span class="sub">使用國際網域策略時需關閉</span></div><input type="checkbox" class="tgl" role="switch" checked aria-label="導向主網域" onchange="toast('Demo：301 導向開關')"></div>
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：搜尋並購買網域（含年費與自動續約）')">購買網域</button>
      <button class="btn btn-sec btn-sm" onclick="toast('Demo：連結既有網域——引導改 A/CNAME → 驗證輪詢 → 自動簽發 SSL')">連結既有網域</button></div></div>`,
@@ -4393,7 +4615,7 @@ Object.assign(SET_PAGES,{
      ['可取貨通知','本地取貨',true],['退貨已建立','',true],['退貨標籤','',true],['帳號邀請','',true],['密碼重設','',true],['禮品卡已建立','',true]]
      .map(([n,s,on])=>`<div class="set-row"><div><b>${n}</b>${s?`<span class="sub">${s}</span>`:''}</div>
        <button class="btn btn-ghost btn-sm" onclick="notifTpl('${n}')">編輯</button>
-       <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${n==='訂單確認'?'disabled':''} aria-label="啟用 ${n}" onchange="toast(this.checked?'已啟用「${n}」':'已停用「${n}」')"></div>`).join('')}</div>
+       <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${n==='訂單確認'?'disabled aria-disabled="true"':''} aria-label="啟用 ${n}" onchange="toast(this.checked?'已啟用「${n}」':'已停用「${n}」')"></div>`).join('')}</div>
   <div class="card card-pad"><h3>員工通知</h3>${setRow("新訂單通知","hello@chilllove.demo・可加收件人與 per-location 過濾")}</div>
   <div class="card card-pad"><h3>Webhooks</h3>
    ${setRow("orders/create → https://feed.chilllove.demo/hook","JSON・2026-08・HMAC 已驗證")}
@@ -4407,7 +4629,7 @@ Object.assign(SET_PAGES,{
   <div class="card card-pad"><h3>元物件定義</h3>${setRow("設計師檔案・材質說明・門市據點","3 個定義・11 筆條目")}<button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往元物件 ›</button></div>`,
  languages:`<div class="card card-pad" data-doc="set-languages"><h3>商店語言</h3>
    ${[['繁體中文','預設語言',true],['English','已發布',true],['日本語','未發布',false]].map(([l,s,on])=>`<div class="set-row"><div><b>${l}</b><span class="sub">${s}</span></div>
-     <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${l==='繁體中文'?'disabled':''} aria-label="發布 ${l}" onchange="toast(this.checked?'已發布「${l}」':'已取消發布「${l}」')"></div>`).join('')}
+     <input type="checkbox" class="tgl" role="switch" ${on?'checked':''} ${l==='繁體中文'?'disabled aria-disabled="true"':''} aria-label="發布 ${l}" onchange="toast(this.checked?'已發布「${l}」':'已取消發布「${l}」')"></div>`).join('')}
    <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增語言（≤20 種）→ 翻譯途徑 Translate & Adapt')">新增語言</button>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">每個市場的可用語言子集在 Markets 設定；未發布語言只能用預覽連結查看。</p></div>`,
  policies:`<div class="card card-pad" data-doc="set-policies"><h3>商店政策</h3>
@@ -4429,7 +4651,7 @@ Object.assign(SET_PAGES,{
    ${setRow("隱私政策生成器","依收集的資料類型產生草稿")}</div>`,
  events:`<div class="card card-pad" data-doc="set-events"><h3>顧客事件（自訂 pixel）</h3>
    <div class="set-row"><div><b>GA4 pixel</b><span class="sub">訂閱：page_viewed／product_viewed／checkout_completed</span></div><span class="badge b-success"><span class="pip full"></span>已連線</span></div>
-   <div class="set-row"><div><b>Meta pixel</b><span class="sub">未設定</span></div><span class="badge b-default">未連線</span></div>
+   <div class="set-row"><div><b>Meta pixel</b><span class="sub">未設定</span></div><span class="badge b-default"><span class="pip"></span>未連線</span></div>
    <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增 pixel＝名稱＋JS 沙箱代碼＋訂閱事件清單')">新增自訂 pixel</button>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pixel 在沙箱 iframe 執行，只能收到訂閱的事件（不接觸 DOM）。</p></div>`,
  apps:`<div class="card card-pad" data-doc="set-apps"><h3>已安裝的應用程式</h3>

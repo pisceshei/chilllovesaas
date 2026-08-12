@@ -33,19 +33,82 @@
 **做法**：
 1. 每個外鍵都建 DB 級 FK 約束；業務唯一性（handle、討code、SKU per shop）用**唯一索引**兜底，不能只靠 model validation（validation 有競態）。
 2. 交易邊界收在 service 物件內：一個業務動作 = 一個 transaction；**transaction 內絕不呼叫外部 API**（Stripe/寄信/HTTP）——這是最常見的生產事故源（外部慢 → 鎖持有 → 連線池耗盡 → 全站掛）。外部呼叫放 transaction 前後或丟 job。
-3. 冪等：`idempotency_keys(key, shop_id, response_digest, created_at)` 表 + controller concern；checkout 提交、webhook 接收、金流回調必掛。
+3. 冪等：見 §2.1 完整規格（表結構、TTL、回放語義、錯誤碼、參數指紋）；checkout 提交、webhook 接收、金流回調、**退款、庫存調整、訂單取消**必掛。
 4. MySQL 全庫 `utf8mb4` + `utf8mb4_0900_ai_ci`（商品標題會有 emoji 與中文）。
 5. **`strong_migrations` gem 強制上線後的 DDL 安全**：大表加欄位/索引要用 online DDL，禁止鎖表操作直接跑。
 6. 備份：每日全量（mysqldump --single-transaction）+ binlog 連續歸檔（可 point-in-time 還原）；**每季做一次還原演練**——沒演練過的備份等於沒有備份。
 
+### 2.1 冪等完整規格（P0-11）
+
+> <!-- 依 46a:781–794、46a:1000–1016 修正，原文：
+>      ①回放逐字「Successfully cached responses are **constructed from current database state**, so on rare occasions, the cached GraphQL response may not be the same as the original one.」（46a:791、46a:1009）
+>      ②保留期逐字「The retention window is **24 hours** from the original request. After this period, idempotency keys expire and retries are treated as separate operations.」（46a:789、46a:1006）
+>      ③兩個錯誤碼 `IDEMPOTENCY_CONCURRENT_REQUEST` / `IDEMPOTENCY_KEY_PARAMETER_MISMATCH`（46a:763–764、46a:1010–1011）
+>      ④指紋逐字「Ensure consistent ordering of input fields to avoid fingerprinting mismatches」（46a:793、46a:816）
+>      🔴 此處原本寫錯：11:45–48 的 `with_idempotency` 把 `response_body` 存起來**原樣回放**，與官方語義**相反**。
+>      官方是「重跑 serializer、由當前 DB 狀態重建」。任何人翻舊版看到 `response_body` 原樣回放都不要改回去。 -->
+
+**(a) 表結構（取代原本存 `response_body` 的設計）**
+
+```sql
+idempotency_keys(
+  shop_id, key,                  -- 唯一索引 (shop_id, key)
+  mutation_name,                 -- 用於錯誤訊息與稽核
+  params_fingerprint CHAR(64),   -- 見 (d)，偵測同 key 不同參數
+  state ENUM('processing','succeeded','failed'),
+  result_ref_type, result_ref_id,-- 🔴 存「結果物件的指標」而非回應快照
+  created_at, expires_at         -- expires_at = created_at + limits.idempotency.ttl_hours(24h)
+)
+```
+
+**(b) 回放語義：由當前 DB 狀態重建，不存回應快照**
+| state | 行為 |
+|---|---|
+| 無此 key | 建 `processing` 列（唯一索引搶佔）→ 執行 → 寫 `succeeded` ＋ `result_ref` |
+| `succeeded` | **依 `result_ref` 重新載入物件、重跑同一支 serializer** 產生回應。**不讀任何快取的 body** |
+| `processing` | 回 `IDEMPOTENCY_CONCURRENT_REQUEST`，呼叫端 exponential backoff 後**用同一把 key** 重試 |
+| `failed` | 視為未執行，允許以同一把 key 重試 |
+| 已過 `expires_at` | **視為全新操作**（TTL 24h，`limits.idempotency.ttl_hours`） |
+| `result_ref` 指向的物件已被刪除 | 回網域性 `*_NOT_FOUND`（如 `LOCATION_NOT_FOUND`），語義＝「原請求成功，但關聯資料隨後被刪除」 |
+
+> 為什麼照抄「重建」而非「快照」：①與 Shopify 行為一致；②不必為每支 mutation 維護回應版本；③回應必然反映最新狀態（不會回放過期金額）。副作用是**回放的回應可能與原始回應不同**（官方明示可接受）。
+
+**(c) 錯誤碼（進 28 §0.3 的 typed code enum）**
+| code | 何時 | 呼叫端該做什麼 |
+|---|---|---|
+| `IDEMPOTENCY_CONCURRENT_REQUEST` | 同一把 key 有另一個請求正在處理 | 退避後**用同一把 key** 重試（不可換 key） |
+| `IDEMPOTENCY_KEY_PARAMETER_MISMATCH` | 同一把 key 但 `params_fingerprint` 不同 | 這是呼叫端 bug，換新 key 或修正參數 |
+
+**(d) 參數指紋正規化（不做會誤判 mismatch 而卡死）**
+```
+fingerprint = SHA256( canonical_json(input) )
+canonical_json：① 物件 key 遞迴**字典序排序** ② 移除 null 欄位 ③ 陣列**保持原順序**（順序有語義）
+                ④ 數字一律整數 cents ⑤ 不含 idempotencyKey 本身
+```
+逐字依據：「Ensure consistent ordering of input fields to avoid fingerprinting mismatches」——**輸入欄位順序會影響指紋**，必須先排序再 hash。
+
+**(e) 適用範圍與 key 產生**
+- 強制帶 key 的 mutation 清單見 `config/limits.yml` 的 `idempotency.required_for`（含 Shopify 2026-04 起強制的 17 個，以 refund／inventory 為主；缺 key **執行期直接報錯**，不是靜默通過）。
+- 額外由**本專案**強制（Shopify 文檔未載明）：`returnProcess`（內含退款）、`orderCancel`（非同步 job）。
+- key 格式：互動請求 UUID v4/v7；**背景排程用 UUID v5**（namespace ＋ job 參數 → 同一 job ＋ 同變數永遠產生相同 key，免持久化）。
+- **送出前先持久化 key**（防當機後重送換 key）；成功後才產生新 key。
+- **Bulk 操作每個 JSONL row 一把獨立 key，絕不共用**（`limits.idempotency.bulk_key_per_row`）。
+
 **代碼**：
 
 ```ruby
-# 冪等 concern（用法：include Idempotent; idempotent_action key: -> { params[:checkout_token] }）
-def with_idempotency(key)
-  digest = IdempotencyKey.find_by(shop: Current.shop, key:)
-  return render(json: JSON.parse(digest.response_body), status: digest.status) if digest
-  yield.tap { |resp| IdempotencyKey.create!(shop: Current.shop, key:, response_body: resp.to_json, status: 200) }
+# 冪等 concern（用法：include Idempotent; idempotent_action key: -> { params[:idempotency_key] }）
+# 為什麼是「重建」而非「回放快照」：46a:791/46a:1009 逐字——Shopify 的 cached response
+# 「constructed from current database state」。存 response_body 原樣回放與官方語義相反（原 11:45–48 的錯誤）。
+def with_idempotency(key, mutation:, input:)
+  fp  = Idempotency.fingerprint(input)                    # §2.1(d) canonical_json → SHA256
+  rec = IdempotencyKey.claim!(shop: Current.shop, key:, mutation:, fingerprint: fp)
+        # claim! 以唯一索引搶佔：搶到 → processing；已存在 → 依 state 回 (b) 表的分支
+  return Idempotency.rebuild(rec) if rec.succeeded?       # 重載 result_ref + 重跑 serializer
+  raise Idempotency::Concurrent  if rec.processing?       # → IDEMPOTENCY_CONCURRENT_REQUEST
+  raise Idempotency::Mismatch    if rec.fingerprint != fp # → IDEMPOTENCY_KEY_PARAMETER_MISMATCH
+
+  yield.tap { |obj| rec.succeed!(result: obj, expires_at: 24.hours.from_now) }
 end
 ```
 

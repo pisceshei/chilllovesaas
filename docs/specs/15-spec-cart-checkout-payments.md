@@ -6,7 +6,13 @@
 
 **生產級做法**：
 1. `carts`（token 簽名 cookie `_cl_buyer`，host-only 綁店網域）+ `cart_line_items`（variant_id、quantity、加入當下價格僅供顯示）。
-2. 寫入 API：add/change/update/clear（對齊 03 的 Ajax 慣例），全部回 turbo_stream 局部更新；quantity 上限（每行 999、行數 100）。
+2. 寫入 API：add/change/update/clear（對齊 03 的 Ajax 慣例），全部回 turbo_stream 局部更新；**兩層數量限制並存**：
+   - **`cart_item_limit`（官方概念）＝購物車「總件數」上限**，系統建議值 **50**，可由商家在「結帳 › 進階偏好設定 › 加入購物車數量上限」開關與調整；**例外：POS／草稿單／B2B／不追蹤庫存的品項不受限**。值取自 `limits.cart.item_limit_suggested`。
+   - **本專案防呆上限**：每行 999、行數 100（`limits.cart.max_quantity_per_line` / `max_lines`）——這是防呆，**不是** `cart_item_limit`。
+   <!-- 依 44:378、24:230 修正，原文：後台 modal 實測 toggle（開）＋ stepper=50 ＋灰字「您商店的建議上限為 50」，用途「保護您可用的庫存數量不外洩」，
+        例外為 POS/draft/B2B/不追蹤庫存。
+        🔴 此處原本寫錯：15:9 原本只有「每行 999、行數 100」，把「總件數上限」與「單行/行數上限」混為一談，
+        且官方的 `cart_item_limit` 概念完全缺席。兩者是不同概念，必須並存。任何人翻舊版都不要刪掉 cart_item_limit。 -->
 3. **價格以當下為準**：cart 顯示即時價（查 variant），進 checkout 時重新快照；商品下架/售罄 → cart 行標記不可購並擋結帳。
 4. 過期：90 天未動的 cart purge job。
 5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 `(cart_id, variant_id)` + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`）。
@@ -51,6 +57,29 @@ end
 
 **⚠️ 坑**：checkout 快照後商品改價 → 以快照價成交是行規（防買家頁面停留期間被漲價），但快照要有效期（24h 後重新快照）；後退鍵/多分頁重複提交 → F5 冪等鍵兜底；別把 checkout token 記進一般 log。
 
+### F3.1 取貨點（超商取貨）的結帳 → admin 交接（P0-13）
+
+> <!-- 依 44:322 補寫，原文：Shopify 後台「其他配送方式」三列＝`🚚 當地配送` / `🏠 到店取貨` / **`📍 取貨點`**（44 逐字標「這正是台灣超商取貨的對應概念；我們 42 號前台的超商取貨流程在 admin 側要對應此設定」）。
+>      46b:551–552 佐證 `purchase.checkout.pickup-point-list.*` 與 `pickup-location-list.*`（到店取貨）是兩組不同的結帳擴充點 → pickup point 是獨立的第三種配送方式。
+>      我方原本只有 42 §12.2 的前台流程，15/16/22/28 的 admin 與資料模型側完全空白 → 前台選了門市，後台無處存、無法出貨 -->
+
+**(a) 配送方式三分法**（寫進 `checkouts.delivery_method_type` 與 `shipping_lines`）：`SHIPPING` / `LOCAL_PICKUP` / **`PICKUP_POINT`**。三者的結帳表單不同：`PICKUP_POINT` **隱藏收件地址表單**，只收「取件人姓名 ＋ 手機」（超商以手機號＋證件領件）。
+
+**(b) 門市選擇的交接契約**（前台流程細節見 42 §12.2）：
+1. 買家選超商通路 → 「選擇門市」按鈕（**未選前結帳鈕 disabled**，提示「請先選擇取貨門市」）。
+2. 開啟物流商電子地圖 → 回拋 `CVSStoreID / CVSStoreName / CVSAddress / CVSTelephone / CVSOutSide`。
+3. 回拋端點呼叫 **`checkoutPickupPointSet`**（28 §11）→ 寫入 `checkouts.pickup_point_*` **快照欄位**。
+4. 訂單成立時，快照原樣複製到 `order_pickup_points`（**快照不是外鍵**——門市會關店，外鍵會斷）。
+
+**(c) 結帳期硬驗證**（提交前 server 端重驗，與 F3.4 同一道 gate）：
+- `delivery_method_type = PICKUP_POINT` 但 `pickup_point` 為空 → 擋下（`userErrors`）。
+- COD（取貨付款）金額 > `limits.pickup_point.cod_max_amount_twd`（NT$20,000）→ **隱藏 COD 選項**並擋下。
+- 購物車含超材積商品（三邊和 > 105cm 或 > 5kg）→ 購物車階段即擋「含大型商品不可超商取貨」。
+- 外島門市（`CVSOutSide=1`）→ 依商家設定提示不可選或加天數。
+
+**(d) 下游**：admin 側資料模型、出貨畫面差異、`READY_FOR_PICKUP` 事件與退貨「已送達」判定 → 見 **16-F3.3**；API 契約 → 見 **28 §11**。
+**⚠ 待查證（來源未載明）**：Shopify 官方對 pickup point 的 admin 側是否有對應 GraphQL 型別、以及台灣各物流商的 COD／材積合約值——三方文檔皆未載明（V-11）。
+
 ## F4. Stripe 整合
 
 **生產級做法**：
@@ -91,7 +120,15 @@ end
 
 ## F7. 棄單（abandoned checkout）
 
-**生產級做法**：checkout 有 email + active 超過 1 小時 → 列入後台棄單列表（研究說 10 分鐘，demo 取 1 小時降噪，可設定）；recovery URL = 簽名 token 恢復該 checkout；90 天 purge job（隱私保存期限）；自動挽回信（P1）：延遲可設、每 checkout 只寄一次、內含退訂連結。
+**生產級做法**：checkout **留下 email 後 10 分鐘未完成** → 列入後台棄單列表（`limits.abandoned_checkout.qualify_after_minutes: 10`）；recovery URL = 簽名 token 恢復該 checkout；90 天 purge job（隱私保存期限）；自動挽回信：
+1. **延遲四檔 `1 / 6 / 10 / 24` 小時，預設 10 小時**（官方在 UI 上標「建議」）——`limits.abandoned_checkout.recovery_delay_hour_options` / `recovery_delay_default_hours`。
+2. **寄送對象二選一**：`任何未完成結帳的顧客` ／ `未完成結帳的電子郵件訂閱者`（`recovery_audience_options`）。
+3. 每 checkout 只寄一次、內含退訂連結。
+
+<!-- 依 44:373、24:228 修正，原文：後台「未完成結帳作業電子郵件」卡片實測——傳送對象 radio 兩選項；傳送時間 radio `1 小時`/`6 小時`/**`10 小時 (建議)`**/`24 小時`。
+     棄單判定門檻見 22:60「留 email、≥10 分鐘」。
+     🔴 此處原本寫錯：15:94 原寫「active 超過 1 小時 →（研究說 10 分鐘，demo 取 1 小時降噪）」——與官方及我方 22:60／24:228 三處門檻不一致，
+     且四檔延遲與兩種對象完全未寫。已統一至 config/limits.yml。任何人翻舊版都不要改回 1 小時。 -->
 
 **⚠️ 坑**：挽回信屬行銷邊緣——只寄給 marketing consent 或至少提供退訂（合規底線）；recovery 連結點開時商品可能已售罄/改價 → 重新驗證 + 明確提示，不能默默改金額。
 

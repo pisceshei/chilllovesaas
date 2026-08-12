@@ -1,0 +1,379 @@
+# config/limits.yml — CHILL LOVE 全域上限與預設值（唯一真相）
+#
+# 鐵律 6（CLAUDE.md）：所有上限值一律引用本檔，**不得硬編碼**。
+# 建立依據：docs/specs/50-logic-gap-register.md P0-11／H-02／H-18／H-44～H-47，
+#           以及 docs/research/22 §9.4「配額類常數表 → 建 config/limits.yml 一處管理」。
+#
+# 每一條都必須帶出處註解，格式：
+#   # 出處：<檔案>:<行號>（<官方層級>）
+#   官方層級：dev＝shopify.dev 開發文檔（46a/46b，最高權威）
+#             help＝help.shopify.com 商家文檔（46c，次高）
+#             live＝2026-08 實測畫面（44，第三）
+#             ours＝本專案決策（官方未載明；必須註明「Shopify 未公開，本專案決策」）
+#
+# ⚠ 標記 `verify: true` 的條目代表「來源未載明或三方衝突」，實作前必須查證（見 docs/specs/52 §附錄 A）。
+
+# =============================================================================
+# 1. API 契約（GraphQL）
+# =============================================================================
+api:
+  # 分頁 cursor 每頁上限。出處：docs/research/28-api-contract.md:18（ours，對齊 Shopify）
+  pagination_max_page_size: 250
+  # 陣列型 input 元素上限。出處：docs/research/28-api-contract.md:21（ours，對齊 Shopify）
+  array_input_max_items: 250
+  # 單一請求 cost 上限。出處：docs/research/28-api-contract.md:23（ours，對齊 Shopify）
+  max_query_cost_points: 1000
+  # Leaky bucket 容量與回填速率。出處：docs/research/28-api-contract.md:24（ours）
+  cost_bucket_capacity: 2000
+  cost_restore_points_per_sec: 100
+  # metafieldsSet 單次原子上限。出處：docs/research/28-api-contract.md:159（ours，對齊 Shopify）
+  metafields_set_max_items: 25
+
+# =============================================================================
+# 2. 冪等（P0-11）
+# =============================================================================
+idempotency:
+  # 冪等鍵保留期。逾期後同一把 key 的重試「視為全新操作」。
+  # 出處：docs/research/46a-shopify-docs-orders-returns.md:789、46a:1006（dev，逐字
+  #       「The retention window is 24 hours from the original request.」）
+  ttl_hours: 24
+  # 回放策略：由「當前 DB 狀態重建回應」，不存原始回應快照。
+  # 出處：46a:791、46a:1009（dev，逐字「Successfully cached responses are constructed
+  #       from current database state」）。11 號 spec 原本寫「存 response_body 原樣回放」＝寫錯，已修正。
+  replay_strategy: rebuild_from_current_state
+  # 參數指紋：欄位遞迴排序後再 hash，否則同一請求換欄位順序會誤判 mismatch。
+  # 出處：46a:793、46a:816（dev，逐字「Ensure consistent ordering of input fields」）
+  fingerprint_normalize_field_order: true
+  # 建議的 key 產生方式：互動請求 UUID v4/v7；排程/背景任務 UUID v5（namespace + job 參數）。
+  # 出處：46a（dev，S47/S48）
+  key_format_interactive: uuid_v4_or_v7
+  key_format_scheduled: uuid_v5
+  # Bulk 操作每個 JSONL row 一把獨立 key，絕不共用。出處：46a:1015（dev）
+  bulk_key_per_row: true
+  # 強制帶 key 的 mutation 家族（Shopify 自 2026-04 起強制，共 17 個，以 refund/inventory 為主）。
+  # 出處：46a:781–787（dev，公告日 2025-12-12）
+  required_for:
+    - refundCreate
+    - returnProcess        # Shopify 文檔未載明其冪等；本專案強制（46a:620、46a:1062，ours）
+    - orderCancel          # 非同步 job，本專案強制（46a:877 async；ours）
+    - inventoryAdjustQuantities
+    - inventoryMoveQuantities
+    - inventorySetQuantities
+    - inventorySetOnHandQuantities
+    - inventoryShipmentReceive
+    - inventoryShipmentCreate
+    - inventoryTransferCreate
+    - locationActivate
+    - locationDeactivate
+
+# =============================================================================
+# 3. 訂單／取消／編輯
+# =============================================================================
+order:
+  # 訂單流水號起始值（只能改前後綴，流水號不可變）。出處：docs/research/22:146（live）
+  number_start: 1001
+  # orderCancel.staffNote 字元上限（買家不可見）。出處：46a:848、46a:880（dev）
+  cancel_staff_note_max_chars: 255
+  # 批次取消訂單單次上限。出處：46c:149（help）
+  bulk_cancel_max_orders: 250
+  # 匯出/批次動作轉背景 job 的門檻。出處：docs/research/22:160（ours）
+  bulk_async_threshold: 50
+  # 訂單編輯 session TTL 與並發鎖。
+  # ⚠ Shopify 文檔未載明鎖/TTL/並發行為（46a:961、46a:988–989、46a:1061）→ 本專案決策。
+  edit_session_ttl_hours: 24
+  edit_session_single_open_per_order: true
+  # orderEditAddVariant.allowDuplicates 預設值。出處：46a:924、46a:991（dev）
+  edit_add_variant_allow_duplicates_default: false
+  # orderEditSetQuantity.restock 預設值。出處：46a:929、46a:991（dev）
+  edit_set_quantity_restock_default: false
+  # 訂單草稿閒置自動刪除（2025-04-01 後建立者）。出處：46c:552（help）
+  draft_idle_auto_delete_days: 365
+
+# =============================================================================
+# 4. 履行（FulfillmentOrder / Fulfillment）
+# =============================================================================
+fulfillment_order:
+  # 每張 FulfillmentOrder 最多同時存在的 active hold 數，超過回 userError。
+  # 出處：46a:320、46a:374（dev）
+  max_active_holds: 10
+  # fulfillmentOrderSplit 單次最大拆分數。
+  # ⚠ 文檔未載明（46a:1049–1067 已逐條列為未載明項）→ 實作前查證，暫不設限。
+  max_splits_per_call: null
+  verify_max_splits: true
+
+fulfillment:
+  # 單張 fulfillment 的 tracking number / URL 數量上限。
+  # ⚠ 文檔未載明（46a §3②）→ 實作前查證。
+  max_tracking_numbers: null
+  verify_max_tracking_numbers: true
+
+# =============================================================================
+# 5. 退貨／退款（P0-01、P0-02）
+# =============================================================================
+return:
+  # returnReasonNote 字元上限。出處：46a:523、46a:653（dev）
+  reason_note_max_chars: 255
+  # 自助退貨單次可申請的品項上限。出處：46c:375–384（help，H16 zh-TW）
+  self_serve_max_line_items: 250
+  # 退貨期間可選檔位（天）；`unlimited` 代表「不限」。出處：46c:415–416（help）
+  window_day_options: [14, 30, 90, unlimited, custom]
+  # 退貨期間起算點二選一。出處：46c:415–416（help）
+  window_start_options: [item_delivered_at, order_last_item_delivered_at]
+  # 退貨運費三選一。出處：46c:417（help）
+  shipping_fee_modes: [free, flat_fee_per_return, customer_buys_own_label]
+  # 重新上架費：以退貨金額的**百分比**計（per line item）。出處：46c:418–419（help）、46a:526（dev）
+  restocking_fee_is_percentage: true
+  # RestockingFeeInput.percentage 最大值。
+  # ⚠ 文檔未載明（46a §4② 逐字「最大值：文檔未載明」）→ 實作前查證；暫以 100 作為程式防呆上界。
+  restocking_fee_max_percentage_guard: 100
+  verify_restocking_fee_max: true
+  # 在 Shopify 內建立退貨運送單的地區限制。出處：46c:297（help，逐字「僅限美國地點」）
+  platform_label_supported_countries: [US]
+  # 台灣消保法「網購七日鑑賞期」下限。⚠ TW-10，法規原文須覆核（本檔僅記錄，不得直接當唯一依據）。
+  tw_minimum_window_days: 7
+  verify_tw_minimum_window: true
+
+refund:
+  # 退款金額下限鉗制：建議退款不得為負，一律 floor 到 0。
+  # 出處：46a:595–601（dev，逐字「the suggested amount cannot be lower than $0 CAD」）
+  floor_to_zero: true
+  # 軟上限：預設 netPayment（Σcaptured − Σrefunded）。**不得做成 DB CHECK 硬擋**——
+  # help 明載「先發過商店抵用金者可對原付款方式超額退款」（46c:223、46c:241）。
+  # maximumRefundable 公式 ⚠ Shopify 未公開（46a:606、46a:770、46a:819）→ 以下為本專案決策。
+  soft_cap_strategy: net_payment
+  over_refund_requires_permission: "orders.over_refund"
+  over_refund_requires_confirm: true
+  verify_maximum_refundable_formula: true
+
+# =============================================================================
+# 6. 請款／授權（P0-12）
+# =============================================================================
+capture:
+  # 請款四模式（**不是三模式**；22:147/22:157 原本寫「三模式」＝寫錯，已修正）。
+  # 出處：46c:508–514（help，H33 zh-TW）
+  modes:
+    - automatic_at_checkout      # 結帳時自動請款（預設，全方案）
+    - automatic_after_fulfilled  # 整張訂單出貨完成後自動請款（全方案）
+    - automatic_per_fulfillment  # 每次出貨各自請款一次（🔴 僅 Shopify Plus）
+    - manual                     # 手動請款（全方案）
+  default_mode: automatic_at_checkout
+  plus_only_modes: [automatic_per_fulfillment]
+  # 授權效期（天）。出處：46c:517–525（help，Shopify Payments）
+  authorization_days_default: 7
+  authorization_days_plus:
+    visa: 30
+    mastercard: 30
+    amex: 30
+    discover: 10
+    jcb: 10
+    diners: 7
+    cup: 7
+  # 顧客銀行帳單上的 pending hold 最長顯示天數。出處：46c:517–525（help）
+  pending_hold_display_max_days: 30
+  # 逾授權期限後才請款的附加費率。出處：46c:526（help）
+  late_capture_surcharge_rate: 0.0175
+  # 授權到期示警提前天數。出處：docs/research/22:40（ours，對應 46c:536「即將到期 badge」）
+  expiry_warning_days_before: 2
+
+# =============================================================================
+# 7. 庫存（P0-15）
+# =============================================================================
+inventory:
+  # 頂層五態（不可省略）。出處：46c:891–907（help，H18 zh-TW）、44:150（live）
+  top_level_states: [on_hand, available, committed, unavailable, incoming]
+  # unavailable 的子分類。出處：46c:925–927（help，H20 zh-TW）
+  unavailable_subtypes: [damaged, quality_control, safety_stock, draft_reserved, app_reserved, other]
+  # 調整原因七項（第一項為預設）。出處：46c:608–617（help）
+  adjustment_reasons: [correction, count, received, return_restock, damaged, theft_or_loss, promotion_or_donation]
+  # 調整歷史保留天數。出處：docs/research/22:81（live）
+  adjustment_history_retention_days: 180
+  # 訂單草稿保留庫存的去向＝unavailable（**不是 committed**）。出處：46c:546–549、46c:895（help）
+  draft_reservation_target_state: unavailable
+
+# =============================================================================
+# 8. 商品／集合／媒體
+# =============================================================================
+product:
+  # 出處：46c:657–669（help）、docs/research/22:70/74/160（live）
+  max_options: 3
+  max_variants: 2048
+  max_media: 250
+  title_max_chars: 255
+  description_max_bytes: 65536
+  # 子類每日上傳速率（>500,000 子類的店）；Plus 豁免。出處：46c:657–669（help）
+  daily_variant_upload_limit: 10000
+  daily_variant_upload_plus_exempt: true
+
+collection:
+  # 出處：docs/research/22:160（live）
+  max_smart_collections_per_shop: 5000
+  max_rules_per_collection: 60
+
+media:
+  # 出處：docs/research/22:160（live）
+  csv_max_upload_mb: 15
+
+# =============================================================================
+# 9. 折扣（P0-03 相關上限）
+# =============================================================================
+discount:
+  # 同時 active 的自動折扣上限（**全店口徑，不是每張訂單**；錯誤碼 ACTIVE_PERIOD_OVERLAP）。
+  # 出處：46b:264（dev）。46c:688 寫「每張訂單」是 help 自身誤植（50 號表 3 T-09）。
+  max_active_automatic_per_shop: 25
+  # 每店累計唯一折扣碼數。出處：46b:265（dev）
+  max_codes_per_shop: 20000000
+  # 單一折扣碼可指定的顧客／商品／變體數。出處：46b:266（dev）
+  max_entitlements_per_code: 100
+  # 單次結帳可用碼數。出處：46b:267（dev）
+  max_codes_per_checkout_product_and_order: 5
+  max_codes_per_checkout_shipping: 1
+  # 自動折扣可指定客群數／折扣碼可指定客群數。出處：46c:690–691（help）
+  max_segments_per_automatic: 5
+  max_segments_per_code: 100
+  # 折扣 tags。出處：46b:268–270（dev）
+  max_tags: 5
+  tag_max_chars: 255
+  max_tags_same_cart_line_plus: 10
+  # 百分比值域為 0–1 Float（不是 0–100）；內部以 basis points（0–10000 整數）儲存，
+  # 序列化除以 10000。出處：46b:189、46b:272（dev），46b §2⑥-2 建議。
+  percentage_wire_range: [0.0, 1.0]
+  percentage_storage: basis_points
+  # combines_with 三旗標的預設值＝全 false（組合不會自動發生，商家須逐折扣開啟）。
+  # 出處：46c:705（help）
+  combines_with_default: false
+  # 硬規則：運費折扣不可疊運費折扣（非 combinesWith 旗標可控）。出處：46b:285、46c:716（dev+help）
+  shipping_plus_shipping_allowed: false
+
+# =============================================================================
+# 10. 結帳／購物車／棄單
+# =============================================================================
+cart:
+  # 加入購物車「總件數」上限（cart_item_limit），系統建議值 50。
+  # 例外：POS／草稿單／B2B／不追蹤庫存的品項不受限。
+  # 出處：44:378（live，modal 實測 stepper=50＋「您商店的建議上限為 50」）、24:230
+  item_limit_suggested: 50
+  item_limit_enabled_default: true
+  item_limit_exempt: [pos, draft_order, b2b, untracked_inventory]
+  # 單行數量上限與行數上限（本專案防呆，與 cart_item_limit 是不同概念，兩者並存）。
+  # 出處：docs/specs/15:9（ours）
+  max_quantity_per_line: 999
+  max_lines: 100
+  # 未動作的 cart purge 天數。出處：docs/specs/15:9（ours）
+  purge_days: 90
+
+abandoned_checkout:
+  # 判定為棄單的門檻：**留下 email 後 10 分鐘未完成**（唯一權威門檻）。
+  # 出處：44:373（live）、docs/research/22:60（live）。
+  # 15:94 原寫「active 超過 1 小時」、三處門檻不一致，已統一至此值。
+  qualify_after_minutes: 10
+  # 棄單挽回信延遲四檔（小時），預設 10 且官方標「建議」。出處：44:373（live）、24:228
+  recovery_delay_hour_options: [1, 6, 10, 24]
+  recovery_delay_default_hours: 10
+  # 寄送對象二選一。出處：44:373（live）
+  recovery_audience_options: [any_incomplete_checkout, email_subscribers_only]
+  # 棄單資料保留期。出處：docs/research/22:60、22:160（live）
+  retention_days: 90
+
+checkout:
+  # 表單欄位三態。出處：46c:756–768（help）、44:369–371（live）
+  field_visibility_modes: [hidden, optional, required]
+  # 「要求登入」⇒ 強制 email 通道（欄位聯動硬規則）。出處：46c:756–768（help）、44:369（live）
+  require_login_forces_email_contact: true
+  # SMS 行銷同意永不可預先勾選。出處：46c:756–768（help）
+  sms_consent_never_prechecked: true
+
+# =============================================================================
+# 11. 地點／運送
+# =============================================================================
+location:
+  # 地點配額（app 建立的地點不佔配額），頁面須顯示「已用 N / 配額 M」。
+  # 出處：44:400（live）、docs/research/22:152（live）
+  quota_basic_to_advanced: 10
+  quota_plus: 200
+  app_locations_count_toward_quota: false
+
+shipping:
+  # 運送設定檔：一般 1 ＋ 自訂 ≤99；預設設定檔的商品集合是「補集」。
+  # 出處：46c:863（help）、44:513（live）
+  general_profiles: 1
+  max_custom_profiles: 99
+  # 本地外送半徑上限與郵遞區號字數。出處：docs/research/22:150（live）
+  local_delivery_max_radius_km: 160
+  local_delivery_postal_codes_max_chars: 3000
+  local_delivery_max_zones_per_location: 10
+
+# 超商取貨／取貨點（P0-13）
+pickup_point:
+  # Shopify 側「其他配送方式」第三種（取貨點 / pickup points）。出處：44:322（live）
+  # 台灣通路對應 ECPay LogisticsSubType。出處：docs/research/42:521–540（ours，已查證 ECPay 合約）
+  carriers:
+    unimart:  { name: "7-ELEVEN", subtypes: [UNIMART, UNIMARTC2C, UNIMARTFREEZE] }
+    fami:     { name: "全家",     subtypes: [FAMI, FAMIC2C] }
+    hilife:   { name: "萊爾富",   subtypes: [HILIFE, HILIFEC2C] }
+    okmart:   { name: "OK",       subtypes: [OKMARTC2C] }
+  # 貨到付款（超商代收）金額上限（TWD）。出處：docs/research/42:530（ours，超商代收慣例）
+  cod_max_amount_twd: 20000
+  # 材積／重量慣例上限。出處：docs/research/42:530（ours，超商慣例，非官方文檔）
+  max_dimension_sum_cm: 105
+  max_weight_kg: 5
+  # ⚠ 以上 COD 上限與材積限制為業界慣例值，非 Shopify 官方文檔；各物流商合約值須逐一覆核。
+  verify_tw_carrier_limits: true
+
+# =============================================================================
+# 12. 商店抵用金（store credit）
+# =============================================================================
+store_credit:
+  # 單一顧客累計上限（美元）。出處：46c:253–277（help）
+  max_balance_usd: 15000
+  # 需新版顧客帳號；最早到期的先用；到期以商店時區當日結束為準。出處：46c:253–277（help）
+  requires_new_customer_accounts: true
+  consumption_order: earliest_expiry_first
+  expiry_boundary: shop_timezone_end_of_day
+  unsupported_contexts: [draft_order, edited_order, third_party_channel]
+
+# =============================================================================
+# 13. 顧客帳號／內容
+# =============================================================================
+customer_account:
+  # session 最長天數。出處：46c:796–800（help）、44:414（live）
+  session_max_days: 365
+  # 升級新版後可還原的天數（超過即不可逆）。出處：46c:807–819（help）
+  upgrade_revert_window_days: 30
+
+content:
+  # 密碼保護頁與 SEO 字元計數。出處：44:571–578（live）
+  password_page_password_max_chars: 100
+  password_page_message_max_chars: 5000
+  seo_title_max_chars: 70
+  seo_meta_description_max_chars: 320
+  # 主題庫與試用。出處：docs/research/22:160（live）
+  theme_library_max: 20
+  theme_trial_max: 19
+  # 留言可編輯窗（分鐘）。出處：docs/research/22:160（live）
+  comment_edit_window_minutes: 5
+
+# =============================================================================
+# 14. Shopify Functions（P2，先記錄不實作）
+# =============================================================================
+functions:
+  # 每店每類上限。出處：46b:99–104、46b:964–969（dev）
+  max_discount_functions_per_shop: 25
+  max_validation_functions_per_shop: 25
+  max_delivery_customizations_per_shop: 25
+  max_payment_customizations_per_shop: 25
+  max_cart_transform_per_app_per_shop: 1
+  max_discounts_allocator_per_shop: 1
+  # 資源限制。出處：46b:69–94、46b:953–963（dev）
+  binary_max_kb: 256
+  linear_memory_max_kb: 10000
+  stack_max_kb: 512
+  log_max_kb: 1
+  max_instructions: 11000000
+  input_max_kb: 128
+  output_max_kb: 20
+  input_query_max_bytes: 3000
+  metafield_max_bytes: 10000
+  list_argument_max_items: 100
+  query_cost_max: 30
+  # 本專案等價護欄（46b §1⑥-2 建議換算）。（ours）
+  equivalent_guard_max_cart_lines: 200
