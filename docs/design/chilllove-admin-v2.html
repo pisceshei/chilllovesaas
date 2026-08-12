@@ -308,6 +308,9 @@ h1{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:var(--fw-lg);let
 .btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:600;border:var(--hairline) solid transparent}
 /* 47 §E：disabled 只把文字色降到 --text-disabled，底色一律不動（降 opacity 會在深底發灰、淺底發白）*/
 .btn:disabled,.btn[aria-disabled="true"]{color:var(--text-disabled);cursor:not-allowed;box-shadow:none}
+/* Chromium 的 UA 樣式對 disabled 的表單控件套 opacity:.7——那正是 47 §E 禁止的做法。
+   明確覆寫回 1，全站的 disabled 一律只用文字色表達（53號 P0-17 灰化整卡時量到才發現）。*/
+input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disabled)}
 .btn-pri{background:var(--brand);color:var(--text-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
 .btn-pri:hover:not(:disabled){background:var(--brand-hover)}
 /* 47 §D：primary / secondary / tertiary 三層「只靠填色深淺」分，等高等圓角、無邊框。
@@ -463,6 +466,14 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .od-line .li-var{font-size:var(--t-xs);color:var(--text-3)}
 .pay-row{display:flex;justify-content:space-between;padding:var(--sp-100) 0;font-size:var(--t-sm)}
 .pay-row.total{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200);font-weight:700}
+/* 53號 P0-01 fulfillment order 分卡：卡內附註塊與動作列（沿用既有 token，不自創色值與尺寸）*/
+.fo-note{background:var(--surface-2);border-radius:var(--r-200);padding:var(--sp-200) var(--sp-300);
+  margin:var(--sp-200) 0;font-size:var(--t-xs);line-height:1.6}
+.fo-note b{display:block;font-weight:600}
+.fo-note span{display:block;color:var(--text-2)}
+.fo-note .mut3{color:var(--text-3)}
+.fo-acts{display:flex;flex-wrap:wrap;gap:var(--sp-200);justify-content:flex-end;
+  margin-top:var(--sp-300);padding-top:var(--sp-300);border-top:var(--hairline) solid var(--border-2)}
 .timeline{margin-top:var(--sp-100)}
 .tl-compose{display:flex;gap:var(--sp-200);align-items:flex-start;background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);box-shadow:var(--sh)}
 .tl-compose .avatar{margin-top:var(--sp-050)}
@@ -1178,6 +1189,12 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .is-dim .cl-radio:checked{background:var(--text-disabled);box-shadow:inset 0 0 0 var(--hairline) var(--text-disabled)}
 .is-dim .set-rowbtn{cursor:not-allowed}
 .is-dim .set-rowbtn:hover{background:transparent}
+/* 53號 P0-17：整卡灰化要蓋到金額列（.num 與總計列），否則只有標籤變灰、數字仍是全黑 */
+.is-dim .pay-row,.is-dim .pay-row .num,.is-dim .pay-row.total,.is-dim .swrow .sw-t,.is-dim .swrow .sw-t span{color:var(--text-disabled)}
+/* 開關在灰化卡裡仍畫成亮綠會讓整卡看起來還能操作——比照 .is-dim .cl-radio 的既有做法，
+   一樣只換成 --text-disabled 這顆既有 token，不降 opacity（47 §E）*/
+.is-dim .tgl{background:var(--text-disabled);cursor:not-allowed}
+.is-dim .tgl:checked{background:var(--text-disabled)}
 
 /* 設定面板內的內嵌連結（本檔僅此二處用 <a>，其餘皆為 button）*/
 .set-content a{color:var(--link);text-underline-offset:var(--sp-050)}
@@ -1857,6 +1874,126 @@ function go(p){
   if(p==='analytics')requestAnimationFrame(drawAnalytics);
   requestAnimationFrame(refreshScrollHints);   /* 切頁後才量得到表格寬度 */
   document.querySelector('.main').scrollTop=0;
+  urlSync(true);                               /* 53號 P0-18：切頁進 history stack */
+}
+
+/* ==================================================================
+   53號 P0-18｜路由狀態進 URL（hash 路由）
+   ------------------------------------------------------------------
+   為什麼是 hash 而不是 History API：
+   本原型是**單檔 HTML、以 file:// 直接開**。本機 headless Chromium 實測
+   file:// 下 history.pushState / replaceState 都**不**拋 SecurityError
+   （`file:///tmp/ps.html` → pushState('#x=1') 與 pushState('ps.html?p=2') 皆成功），
+   所以「file:// 一定會炸」這個常見說法在 Chromium 上並不成立。仍然選 hash，理由是：
+     ① file:// 的 origin 各家瀏覽器實作不一致（Firefox 視為 opaque origin），
+        同一份檔案換一個瀏覽器就可能拋 SecurityError——單檔原型要能到處開，不賭這個。
+        本輪只驗得到 Chromium，驗不到的部分就不假設它可用。
+     ② pushState 改的是路徑／query；貼給別人或重新整理時瀏覽器會真的去抓那個路徑。
+        hash 永遠不觸發文件請求，所以帶狀態的網址不會 404。
+     ③ hashchange 天生涵蓋上一頁／下一頁，不必另外接 popstate。
+   實際落地是「hash 編碼 ＋ 只借 replaceState 改寫同一個 hash」：狀態一律編在 hash 裡，
+   history.replaceState 只用在「不想新增 history 項」的情境（連續打字搜尋），
+   而且外面包 try/catch，拋錯就退回 location.replace()——所以就算某個瀏覽器不給用也不會壞。
+   ⚠️ 實作時**不要照抄這裡的 page=N**：
+      CLAUDE.md 第 4 條與 28 §0 規定分頁走 **cursor ＋ pageInfo（每頁 ≤250）**，
+      URL 帶的必須是 **cursor（after／before 游標）不是 page number**。
+      原型用頁碼是因為資料在記憶體裡；照抄成 offset 分頁會在資料變動時漏行／重複行。
+   範圍：目前頁面／分頁頁碼／搜尋字／檢視索引／排序欄與方向／各篩選值／詳情頁的資源 id。
+   設定 overlay 的分頁狀態**不進** URL（它是浮層不是路由，且關掉就回到底層頁面）。
+   ================================================================== */
+const URLQ={busy:false,lk:{}};      /* lk：頁面 → 該頁清單引擎的 key（listPage 掛載時登記）*/
+/* 詳情頁要有「哪一筆資源」的上下文才畫得出來，否則 renderDetail 會對 null 取值直接拋錯。
+   open()：能從 URL 的 id 參數重建上下文（訂單、草稿——demo 資料就在記憶體，查得到）。
+   ok()  ：上下文還活著（同一次工作階段內按上一頁回到剛才那頁）就直接切回去。
+   miss()：兩者皆不成立（冷開一個詳情頁網址）→ 退回對應列表。
+   為什麼其餘詳情頁沒有 open：原型沒有 by-id 讀取層，那些頁的上下文只存在記憶體；
+   與其硬還原成空白頁或拋錯，不如落在列表上——這是誠實的降級，不是假裝做到了。 */
+const URL_OPEN={
+ 'orderdetail':{open:id=>openOrder(id),miss:()=>go('orders')},
+ 'd-draft':{open:id=>openDraft(id),miss:()=>openDraft('new')},
+ 'd-product':{ok:()=>!!PV,miss:()=>go('products')},
+ 'd-collection':{ok:()=>!!COL,miss:()=>go('m-collections')},
+ 'd-customer':{ok:()=>!!CUS,miss:()=>go('m-customers')},
+ 'd-segment':{ok:()=>!!SEG,miss:()=>go('m-segments')},
+ 'd-discount':{ok:()=>!!DISC,miss:()=>go('m-discounts')},
+ 'd-menu':{ok:()=>!!MENU,miss:()=>go('m-menus')},
+ 'd-article':{ok:()=>!!ART,miss:()=>go('m-blog')},
+ 'd-market':{ok:()=>!!MKT,miss:()=>go('m-markets')},
+ 'd-company':{ok:()=>!!CO,miss:()=>go('m-companies')}};
+function urlListKey(p){return URLQ.lk[p||current];}
+function urlBuild(){
+  const q=[],k=urlListKey(),s=k&&LS[k];
+  if(s){
+    if(s.page>1)q.push('page='+s.page);
+    if(s.q)q.push('q='+encodeURIComponent(s.q));
+    if(s.view)q.push('view='+s.view);
+    if(s.sort>=0)q.push('sort='+s.sort+'&dir='+(s.dir<0?'desc':'asc'));
+    Object.keys(s.f).sort().forEach(fk=>{if(s.f[fk])q.push('f_'+encodeURIComponent(fk)+'='+encodeURIComponent(s.f[fk]));});
+  }
+  const id=current==='orderdetail'?(curOrder&&curOrder.id):(DCTX&&DCTX.id);
+  if(URL_OPEN[current]&&id!=null&&id!=='')q.push('id='+encodeURIComponent(id));
+  return '#/'+current+(q.length?'?'+q.join('&'):'');
+}
+function urlSync(push){
+  if(URLQ.busy)return;                       /* 還原途中不回寫，否則會把使用者的網址蓋掉 */
+  const h=urlBuild();
+  if(location.hash===h)return;
+  if(push===false){
+    /* 連續事件（打字搜尋）不該塞滿上一頁堆疊 → replace。History API 不可用時退回 location.replace。 */
+    try{history.replaceState(null,'',h);}catch(e){location.replace(location.href.split('#')[0]+h);}
+  }else location.hash=h;
+}
+function urlParse(){
+  const raw=(location.hash||'').replace(/^#\/?/,'');
+  if(!raw)return null;
+  const i=raw.indexOf('?'),o={};
+  (i<0?'':raw.slice(i+1)).split('&').filter(Boolean).forEach(kv=>{
+    const j=kv.indexOf('=');
+    o[decodeURIComponent(j<0?kv:kv.slice(0,j))]=j<0?'':decodeURIComponent(kv.slice(j+1).replace(/\+/g,' '));
+  });
+  return {page:decodeURIComponent(i<0?raw:raw.slice(0,i)),q:o};
+}
+function urlValid(p){
+  if(!p)return false;
+  if(p.startsWith('m-'))return !!MODULES[p];
+  if(p.startsWith('d-'))return !!DETAILS[p];
+  return !!document.getElementById('page-'+p);
+}
+/* 反向還原：直接開一個帶狀態的網址要能回到那個狀態。
+   只做單向（寫進去、開不回來）等於沒做，這是本條最容易漏的一半。 */
+function urlRestore(){
+  const u=urlParse();
+  if(!u||!urlValid(u.page))return false;
+  URLQ.busy=true;
+  try{
+    const h=URL_OPEN[u.page];
+    if(h){
+      if(h.open&&u.q.id)h.open(u.q.id);
+      else if(h.ok&&h.ok())go(u.page);
+      if(current!==u.page)h.miss();      /* 開不起來就退回列表，不留空白頁 */
+    }else go(u.page);
+    const k=urlListKey(u.page);
+    if(k){
+      const s=lstate(k);
+      s.page=Math.max(1,parseInt(u.q.page,10)||1);
+      s.q=u.q.q||'';
+      s.view=Math.max(0,parseInt(u.q.view,10)||0);
+      const so=parseInt(u.q.sort,10);
+      s.sort=so>=0?so:-1;
+      s.dir=u.q.dir==='desc'?-1:1;
+      s.f={};Object.keys(u.q).forEach(x=>{if(x.indexOf('f_')===0&&u.q[x])s.f[x.slice(2)]=u.q[x];});
+      lrender();                 /* 整頁重繪：檢視 chip 與篩選 select 的選取狀態才會一起還原 */
+    }
+  }finally{URLQ.busy=false;}
+  urlSync(false);                /* 正規化，維持 location.hash === urlBuild() 這條不變量 */
+  return true;
+}
+/* 上一頁／下一頁：hash 路由用 hashchange 就夠，不必另接 popstate。
+   判斷「這次變動是不是我們自己寫的」＝比對 urlBuild()，比 busy 旗標可靠（設 hash 是非同步觸發）。 */
+function urlOnHash(){if(location.hash!==urlBuild())urlRestore();}
+function urlBoot(){
+  window.addEventListener('hashchange',urlOnHash);
+  if(!urlRestore())urlSync(false);   /* 沒有／非法 hash → 用目前狀態寫一次，不新增 history 項 */
 }
 
 /* ================= 資料 ================= */
@@ -1870,37 +2007,67 @@ const PRODUCTS=[
  {n:"帆布托特包・生成色",s:"active",inv:54,v:1,type:"配件",vd:"合作工坊",g:P_G.tote},
  {n:"2026 秋季亞麻襯衫（打樣）",s:"draft",inv:0,v:2,type:"襯衫",vd:"CHILL LOVE 自製",g:P_G.linen},
 ];
+/* 53號 P0-01：一張訂單依「指派地點 × 配送方式」拆成多張 fulfillment order。
+   FO 是履約鏈的核心資料模型（46a:207–209），不是視覺分組——動作掛在 FO 上不是訂單上。
+   foSeed 是函式宣告（hoisting），所以可以在 ORDERS 這個 const 的初始化式裡呼叫。
+   supportedActions 刻意留空：46a §2⑦-8 要求它是「伺服器端計算欄位」，
+   本原型無伺服器，改由 foSync() 依 status/requestStatus 重算，語義與出處相同（見 DOCS fo-actions）。 */
+function foSeed(id,loc,status,lineItems,o={}){
+  return {id,assignedLocation:loc,deliveryMethod:o.method||'宅配到府',status,
+    requestStatus:o.requestStatus||'UNSUBMITTED',fulfillmentService:o.service||null,
+    fulfillAt:o.fulfillAt||null,holds:o.holds||[],lineItems,supportedActions:[],
+    parentId:o.parentId||null,splitReason:o.splitReason||null,externalUrl:o.externalUrl||null};
+}
 const ORDERS=[
  {id:"1042",d:"今天 14:02",c:"林芷妍",ch:"線上商店",amt:"NT$2,932",pay:"paid",ful:"unful",items:2,tags:["VIP","送禮"],risk:false,
   lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶・CL-HD-M-MT",q:1,p:"NT$1,480",g:P_G.hoodie},{n:"燕麥色針織開衫",v:"F / 燕麥・CL-KN-F-OT",q:1,p:"NT$1,480",g:P_G.knit}],
+  /* ★ 多 FO 示範：同一張訂單依地點拆兩張——台北門市可出、台中寄倉缺貨 hold 住 */
+  fulfillmentOrders:[
+   foSeed('1042-F1','台北門市','OPEN',[{i:0,q:1}]),
+   foSeed('1042-F2','台中寄倉','ON_HOLD',[{i:1,q:1}],{holds:[{reason:'INVENTORY_OUT_OF_STOCK',note:'燕麥色 F 待補貨，預計 8/15 到倉'}]})],
   pays:[["小計・2 件品項","NT$2,960"],["折扣・WELCOME5","−NT$148"],["運送・宅配（1.2 kg）","NT$120"],["稅額・內含 5%","NT$139"]],total:"NT$2,932",paid:"NT$2,932",
   cust:{name:"林芷妍",meta:"3 筆訂單・VIP",mail:"zhiyan.lin@example.com",addr:"林芷妍<br>台北市大安區和平東路二段 106 號 8 樓<br>台北市 106・台灣<br>+886 912 345 678"}},
  {id:"1041",d:"今天 11:47",c:"陳柏睿",ch:"線上商店",amt:"NT$1,600",pay:"paid",ful:"unful",items:1,tags:[],risk:false,
   lines:[{n:"奶茶色寬版帽T",v:"L / 深可可・CL-HD-L-CC",q:1,p:"NT$1,480",g:P_G.hoodie}],
+  /* 單一 FO・SCHEDULED：deferred 到 fulfillAt 才可履行（46a:219），只出得了 MARK_AS_OPEN 一類動作 */
+  fulfillmentOrders:[foSeed('1041-F1','台北門市','SCHEDULED',[{i:0,q:1}],{fulfillAt:'2026-08-14 09:00'})],
   pays:[["小計・1 件品項","NT$1,480"],["運送・宅配","NT$120"]],total:"NT$1,600",paid:"NT$1,600",
   cust:{name:"陳柏睿",meta:"1 筆訂單",mail:"borui.chen@example.com",addr:"陳柏睿<br>台中市西區公益路 155 號<br>台中市 403・台灣"}},
  {id:"1040",d:"昨天 21:15",c:"Tan Junyi",ch:"AI 代理",amt:"RM 639.74",cur:"MYR",pay:"paid",ful:"unful",items:3,tags:["agent"],risk:false,
   lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶",q:2,p:"RM 213.25",g:P_G.hoodie},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"RM 128.43",g:P_G.tote}],
+  /* 單一 FO 但兩個 line item → SPLIT 可用（46a:271；拆完會變成同地點兩張 → MERGE 才會出現）*/
+  fulfillmentOrders:[foSeed('1040-F1','主倉（內湖）','OPEN',[{i:0,q:2},{i:1,q:1}],{method:'國際運送'})],
   pays:[["小計・3 件品項","RM 554.93"],["運送・國際（馬來西亞）","RM 84.81"]],total:"RM 639.74",paid:"RM 639.74",
   cust:{name:"Tan Junyi",meta:"1 筆訂單・AI 代理下單",mail:"junyi.tan@example.my",addr:"Tan Junyi<br>8A-17-9, Jln Thean Teik<br>11500 Ayer Itam, Penang・馬來西亞"}},
  {id:"1039",d:"昨天 18:33",c:"guest（王小姐）",ch:"線上商店",amt:"NT$1,800",pay:"pending",ful:"unful",items:1,tags:[],risk:true,
   lines:[{n:"水洗丹寧襯衫",v:"M / 淺藍・CL-SH-M-LB",q:1,p:"NT$1,680",g:P_G.shirt}],
+  /* 待付款 → 系統自動掛 AWAITING_PAYMENT hold（46a:281），出貨動作因此整組消失，不是靠前端 disabled */
+  fulfillmentOrders:[foSeed('1039-F1','主倉（內湖）','ON_HOLD',[{i:0,q:1}],{holds:[{reason:'AWAITING_PAYMENT',note:'尚未收到款項'}]})],
   pays:[["小計・1 件品項","NT$1,680"],["運送・宅配","NT$120"]],total:"NT$1,800",paid:"NT$0",
   cust:{name:"guest（王小姐）",meta:"訪客結帳",mail:"wang.guest@example.com",addr:"王小姐<br>高雄市左營區博愛二路 777 號<br>高雄市 813・台灣"}},
  {id:"1038",d:"昨天 09:20",c:"WONG BENNY",ch:"AI 代理",amt:"HK$218.00",cur:"HKD",pay:"paid",ful:"ful",items:1,tags:["agent"],risk:false,
   lines:[{n:"有機棉圓領白T（三件組）",v:"M / 白",q:1,p:"HK$218.00",g:P_G.tee}],
+  fulfillmentOrders:[foSeed('1038-F1','香港觀塘倉','CLOSED',[{i:0,q:1}],{method:'本地快遞'})],
   pays:[["小計・1 件品項","HK$218.00"],["運送・免運","HK$0"]],total:"HK$218.00",paid:"HK$218.00",
   cust:{name:"WONG BENNY",meta:"2 筆訂單",mail:"benny.wong@example.hk",addr:"WONG BENNY<br>九龍灣宏開道 8 號<br>九龍・香港"}},
  {id:"1037",d:"8月8日",c:"許哲瑋",ch:"線上商店",amt:"NT$2,280",pay:"paid",ful:"partial",items:2,tags:[],risk:false,
   lines:[{n:"燕麥色針織開衫",v:"F / 燕麥",q:1,p:"NT$2,280",g:P_G.knit},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$0（贈品）",g:P_G.tote}],
+  /* ★ 多 FO 示範之二：一張自營已完成、一張交給第三方 fulfillment service。
+     只有指派給 service 的 FO 才會走 requestStatus 這條正交軸（46a:256）。 */
+  fulfillmentOrders:[
+   foSeed('1037-F1','主倉（內湖）','CLOSED',[{i:0,q:1}]),
+   foSeed('1037-F2','香港觀塘倉','IN_PROGRESS',[{i:1,q:1}],
+     {method:'本地快遞',service:'CHILL 物流（3PL）',requestStatus:'ACCEPTED',externalUrl:'https://3pl.example/fo/1037-F2'})],
   pays:[["小計・2 件品項","NT$2,280"],["運送・免運門檻","NT$0"]],total:"NT$2,280",paid:"NT$2,280",
   cust:{name:"許哲瑋",meta:"4 筆訂單",mail:"zhewei.hsu@example.com",addr:"許哲瑋<br>新竹市東區光復路一段 89 號<br>新竹市 300・台灣"}},
  {id:"1036",d:"8月8日",c:"黃郁婷",ch:"線上商店",amt:"NT$960",pay:"refund",ful:"ful",items:1,tags:[],risk:false,
   lines:[{n:"有機棉圓領白T（三件組）",v:"S / 白",q:1,p:"NT$990",g:P_G.tee}],
+  fulfillmentOrders:[foSeed('1036-F1','主倉（內湖）','CLOSED',[{i:0,q:1}])],
   pays:[["小計・1 件品項","NT$990"],["折扣・首購 95 折","−NT$50"],["運送・宅配","NT$120"],["退款・2026-08-09","−NT$960"]],total:"NT$960",paid:"NT$0（已全額退款）",
   cust:{name:"黃郁婷",meta:"1 筆訂單",mail:"yuting.huang@example.com",addr:"黃郁婷<br>台南市東區大學路 1 號<br>台南市 701・台灣"}},
  {id:"1035",d:"8月7日",c:"測試訂單",ch:"線上商店",amt:"NT$167",pay:"paid",ful:"unful",items:1,tags:["已取消"],risk:false,cancelled:true,
   lines:[{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$167",g:P_G.tote}],
+  fulfillmentOrders:[foSeed('1035-F1','主倉（內湖）','CANCELLED',[{i:0,q:1}])],
   pays:[["小計・1 件品項","NT$167"]],total:"NT$167",paid:"NT$167（取消時已退款）",
   cust:{name:"測試訂單",meta:"內部測試",mail:"dev@chilllove.demo",addr:"—"}},
 ];
@@ -1943,7 +2110,7 @@ function renderOrders(){
      <td><b>#${o.id}</b>${o.risk?riskSvg:''}</td>
      <td class="mut">${o.d}</td><td>${o.c}</td><td class="mut">${o.ch}</td>
      <td class="right num" style="font-weight:600">${o.amt}${o.cur?` <span class="mut3">${o.cur}</span>`:''}</td>
-     <td>${PAY[o.pay]}</td><td>${odS(o.id)?.fulfilled?FUL.ful:FUL[o.ful]}</td><td class="right num mut">${o.items}</td>
+     <td>${PAY[o.pay]}</td><td>${FUL[foOrderStatus(o.id)]}</td><td class="right num mut">${o.items}</td>
      <td>${o.tags.map(t=>`<span class="tagchip" style="margin:0 var(--sp-050) 0 0">${t}</span>`).join('')}</td>
    </tr>`).join('');
   document.querySelector('#orderTable tbody').innerHTML=rows||`<tr><td colspan="10"><div class="empty-wrap"><b>${raw?`找不到符合「${raw}」的訂單`:'此檢視沒有訂單'}</b>${raw?'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'orderSearch\').value=\'\';renderOrders()">清除搜尋</button>':'<button class="btn btn-sec btn-sm" onclick="setView(\'all\')">回到全部</button>'}</div></td></tr>`;
@@ -1979,9 +2146,277 @@ function openOrder(id){
   OD[id]??={fulfilled:o.ful==='ful',events:seedEvents(o)};
   curOrder=o;renderOrderDetail();go('orderdetail');
 }
+
+/* ==================================================================
+   53號 P0-01｜FulfillmentOrder 分卡引擎（權威來源：46a §2，優先於我方 15/16 舊文）
+   ------------------------------------------------------------------
+   三條正交軸，分開存分開判（46a:213/243/258，規格 16-F3.1 同步後的版本）：
+     status(7) × requestStatus(8) × supportedActions(12，伺服器計算)
+   兩條最容易漏、本檔真的做出來的語義：
+     ① fulfillmentOrderCancel 不是就地改狀態——46a:236/240 逐字「Cancels order and
+        creates replacement for remaining work」，必須在同一步產生一張**替代 FO**
+        承接剩餘工作，否則剩餘品項憑空消失、訂單永遠卡在 partially_fulfilled。
+        本檔 foDo('CANCEL_FULFILLMENT_ORDER') 真的會多長出一張 splitReason='cancel_replacement' 的卡。
+     ② fulfillmentOrderClose 導向 INCOMPLETE **不是** CLOSED——46a:235/241 逐字
+        「Marks in-progress order as incomplete」，命名與結果不一致。中文標「未能完成」。
+        本檔 foDo('CLOSE') 真的把狀態寫成 INCOMPLETE，且該狀態可被 MARK_AS_OPEN 拉回 OPEN。
+   ================================================================== */
+const FO_MAX_HOLDS=10;                       /* 46a:320「up to 10 active holds per fulfillment order」*/
+/* 47 §D 形狀即語意：●=完成／○=未開始／⊘=部分或受阻。IN_PROGRESS 用第三參數把
+   info 族的 ○ 覆寫成 ⊘（處理中＝部分），這正是 chip() 第三參數存在的理由。 */
+const FO_STATUS={OPEN:['待處理','caution',undefined],IN_PROGRESS:['處理中','info','blocked'],
+ SCHEDULED:['已排程','info',undefined],ON_HOLD:['保留中','warning',undefined],
+ INCOMPLETE:['未能完成','critical',undefined],CLOSED:['已完成','success',undefined],
+ CANCELLED:['已取消','default',undefined]};
+/* 46a:245–254 八值。自營（未指派 fulfillment service）恆為 UNSUBMITTED，因此不顯示這顆 badge。 */
+const FO_REQ={SUBMITTED:['已送出','info'],ACCEPTED:['已接受','success'],REJECTED:['已拒絕','critical'],
+ CANCELLATION_REQUESTED:['已請求取消','caution'],CANCELLATION_ACCEPTED:['取消已接受','default'],
+ CANCELLATION_REJECTED:['取消被拒','critical'],CLOSED:['服務方關閉','default']};
+const FO_HOLD_REASON=[['AWAITING_PAYMENT','等待付款'],['AWAITING_RETURN_ITEMS','等待退貨到貨（換貨專用）'],
+ ['HIGH_RISK_OF_FRAUD','高詐騙風險'],['INCORRECT_ADDRESS','地址錯誤'],['INVENTORY_OUT_OF_STOCK','庫存不足'],
+ ['UNKNOWN_DELIVERY_DATE','配送日未定'],['ONLINE_STORE_POST_PURCHASE_CROSS_SELL','購後加購'],['OTHER','其他']];
+const FO_LOCATIONS=['主倉（內湖）','台北門市','台中寄倉','香港觀塘倉'];
+/* 12 值 supportedActions 的按鈕表（46a:262–275 逐條對 mutation）。
+   CLOSE 刻意不在這張表裡——它**不是** FulfillmentOrderAction 的 12 個值之一，
+   所以它的顯示條件不能來自 supportedActions，只能來自 status===IN_PROGRESS（46a:235）。 */
+const FO_ACTIONS={
+ CREATE_FULFILLMENT:['建立出貨','pri'],REQUEST_FULFILLMENT:['請求履行','sec'],
+ CANCEL_FULFILLMENT_ORDER:['取消履行單','sec'],REQUEST_CANCELLATION:['請求取消','sec'],
+ HOLD:['保留','sec'],RELEASE_HOLD:['解除保留','pri'],MOVE:['移動地點','ghost'],
+ SPLIT:['拆分','ghost'],MERGE:['合併','ghost'],MARK_AS_OPEN:['標記為開啟','pri'],
+ REPORT_PROGRESS:['回報進度','ghost'],EXTERNAL:['外部連結','ghost']};
+
+/* 取這張訂單的 FO 清單；第一次取用時把 ORDERS 的種子深拷貝進 per-order 狀態，
+   之後所有 mutation 都只動拷貝，種子不被汙染（回到列表再進來狀態才會留著）。 */
+function foGet(id){
+  const o=ORDERS.find(x=>x.id===id);if(!o)return [];
+  const st=OD[id]??={fulfilled:o.ful==='ful',events:seedEvents(o)};
+  if(!st.fulfillmentOrders){
+    st.fulfillmentOrders=JSON.parse(JSON.stringify(o.fulfillmentOrders||[]));
+    st.foSeq=st.fulfillmentOrders.length;
+    foSync(id);
+  }
+  return st.fulfillmentOrders;
+}
+/* supportedActions ＝ 伺服器端計算欄位（46a §2⑦-8：「admin SPA 的按鈕啟用/停用完全由它驅動，
+   不要在前端重寫一套 guard」）。原型沒有伺服器，這支就是那顆伺服器：每次 mutation 後
+   把 12 個值依 status/requestStatus/兄弟單 重算一次寫回 fo.supportedActions。 */
+function foSync(id){
+  const st=OD[id];if(!st||!st.fulfillmentOrders)return;
+  const all=st.fulfillmentOrders;
+  all.forEach(f=>{
+    const a=[],s=f.status,rq=f.requestStatus,live=s!=='CLOSED'&&s!=='CANCELLED';
+    if(s==='OPEN'||s==='IN_PROGRESS')a.push('CREATE_FULFILLMENT');
+    if(f.fulfillmentService&&rq==='UNSUBMITTED')a.push('REQUEST_FULFILLMENT');
+    if(live)a.push('CANCEL_FULFILLMENT_ORDER');
+    if(f.fulfillmentService&&(rq==='SUBMITTED'||rq==='ACCEPTED'))a.push('REQUEST_CANCELLATION');
+    if((s==='OPEN'||s==='SCHEDULED')&&(f.holds||[]).length<FO_MAX_HOLDS)a.push('HOLD');
+    if(s==='ON_HOLD')a.push('RELEASE_HOLD');
+    if(s==='OPEN'||s==='ON_HOLD'||s==='SCHEDULED')a.push('MOVE');
+    if(s==='OPEN'&&(f.lineItems.length>1||f.lineItems.some(l=>l.q>1)))a.push('SPLIT');
+    if(s==='OPEN'&&all.some(x=>x!==f&&x.assignedLocation===f.assignedLocation&&x.status===f.status))a.push('MERGE');
+    if(s==='SCHEDULED'||s==='INCOMPLETE')a.push('MARK_AS_OPEN');
+    if(s==='OPEN')a.push('REPORT_PROGRESS');
+    if(f.externalUrl)a.push('EXTERNAL');
+    f.supportedActions=a;
+  });
+  /* 訂單層的出貨狀態是 FO 的物化結果，不是獨立欄位（規格 16-F3 §2「fulfillment_status 重新物化」）*/
+  st.fulfilled=foOrderStatus(id)==='ful';
+}
+function foOrderStatus(id){
+  const live=foGet(id).filter(f=>f.status!=='CANCELLED');
+  if(!live.length)return 'unful';
+  const done=live.filter(f=>f.status==='CLOSED').length;
+  return done===0?'unful':(done===live.length?'ful':'partial');
+}
+function foQty(fo){return fo.lineItems.reduce((a,l)=>a+l.q,0);}
+function foFind(id,foId){return foGet(id).find(f=>f.id===foId);}
+function foLog(id,txt){const st=OD[id];if(st)st.events.unshift({t:"sys",txt,time:"剛剛"});}
+function foRepaint(id){foSync(id);renderOrderDetail();renderOrders();}
+
+/* ---- 單張 FO 卡（一張卡＝一張 FO，卡頭 status badge ＋ 指派地點）---- */
+function foCard(o,fo,n){
+  const [lbl,tone,shape]=FO_STATUS[fo.status]||['未知','default',undefined];
+  const req=fo.fulfillmentService?FO_REQ[fo.requestStatus]:null;
+  const held=(fo.holds||[]).map(h=>{
+    const r=FO_HOLD_REASON.find(x=>x[0]===h.reason);
+    return `<div class="fo-note" data-doc="fo-hold"><b>保留中・${r?r[1]:h.reason}</b>${h.note?`<span>${H(h.note)}</span>`:''}
+      <span class="mut3">保留期間不可 fulfillmentCreate（46a:220）；每張 FO 最多 ${FO_MAX_HOLDS} 個 active hold</span></div>`;}).join('');
+  const sched=fo.status==='SCHEDULED'&&fo.fulfillAt
+    ?`<div class="fo-note"><b>已排程・${H(fo.fulfillAt)} 後才可履行</b><span class="mut3">deferred（46a:219）；要提前出貨須先「標記為開啟」</span></div>`:'';
+  const born=fo.parentId
+    ?`<div class="fo-note"><b>${fo.splitReason==='cancel_replacement'?'替代履行單':'拆分產生的履行單'}</b>
+       <span class="mut3">承接 #${H(fo.parentId)} 的剩餘工作（splitReason=「${H(fo.splitReason||'manual_split')}」；46a:236／規格 16-F3.2）</span></div>`:'';
+  const lines=fo.lineItems.map(li=>{const l=o.lines[li.i];if(!l)return '';
+    return `<div class="od-line">
+      <span class="thumb" style="background:${l.g}"></span>
+      <div class="li-info"><div class="li-name">${H(l.n)}</div><div class="li-var">${H(l.v)}</div></div>
+      <span class="num mut">${H(l.p)} × ${li.q}</span>
+    </div>`;}).join('');
+  return `<div class="card card-pad" data-doc="fo-card" data-fo="${H(fo.id)}" data-fo-status="${fo.status}">
+    <h3><span class="rowflex">${chip(`${lbl}（${foQty(fo)}）`,tone,shape)}
+      ${req?chip(req[0],req[1]):''}
+      <span class="mut3" style="font-size:var(--t-xs);font-weight:400">履行單 ${n} · #${H(fo.id)}</span></span>
+      <span class="h-act mut3" style="font-size:var(--t-xs)">指派地點 <b>${H(fo.assignedLocation)}</b></span></h3>
+    <p class="mut3" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-100)">
+      配送方式 ${H(fo.deliveryMethod)}${
+      fo.fulfillmentService?`・出貨商 <b>${H(fo.fulfillmentService)}</b>`:'・自營出貨（未指派 fulfillment service ⇒ requestStatus 恆為 UNSUBMITTED）'}</p>
+    ${born}${sched}${held}
+    ${lines}
+    ${foActionBar(o,fo)}
+  </div>`;
+}
+/* 動作列完全由 supportedActions 決定——每張卡因此長得不一樣（46a §2⑦-8）。
+   唯一的例外是「標示為未能完成」：CLOSE 不是那 12 個值之一，條件另取 status===IN_PROGRESS。 */
+function foActionBar(o,fo){
+  const btn=(a)=>{const m=FO_ACTIONS[a];return `<button class="btn btn-${m[1]} btn-sm" data-fo-act="${a}"
+     onclick="foDo('${o.id}','${fo.id}','${a}')">${m[0]}</button>`;};
+  const acts=fo.supportedActions.map(btn);
+  if(fo.status==='IN_PROGRESS')acts.push(`<button class="btn btn-sec btn-sm" data-fo-act="CLOSE"
+     data-doc="fo-close" onclick="foDo('${o.id}','${fo.id}','CLOSE')">標示為未能完成</button>`);
+  if(!acts.length)return `<p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-300)">
+    終態履行單，無可用動作（46a:240：CLOSED／CANCELLED 為終態）</p>`;
+  return `<div class="fo-acts" data-doc="fo-actions">${acts.join('')}</div>`;
+}
+
+/* ---- mutation 派發 ---- */
+function foDo(orderId,foId,action){
+  const fo=foFind(orderId,foId);if(!fo)return;
+  if(action==='CREATE_FULFILLMENT')return foFulfill(orderId,foId);
+  if(action==='HOLD')return foHold(orderId,foId);
+  if(action==='CANCEL_FULFILLMENT_ORDER')return foCancel(orderId,foId);
+  if(action==='CLOSE')return foClose(orderId,foId);
+  if(action==='MOVE')return foMove(orderId,foId);
+  if(action==='RELEASE_HOLD'){
+    const h=fo.holds.pop();
+    /* 46a／規格 16-F3.1 T6：釋放最後一個 hold 才轉態，還有剩就維持 ON_HOLD */
+    if(!fo.holds.length)fo.status='OPEN';
+    foLog(orderId,`已解除 #${fo.id} 的保留（${h?h.reason:'—'}）${fo.holds.length?`，仍有 ${fo.holds.length} 個 hold 未解除`:'，狀態回到待處理'}`);
+    foRepaint(orderId);return toast(fo.holds.length?`已解除 1 個 hold，仍保留中`:'已解除保留，履行單回到「待處理」');
+  }
+  if(action==='MARK_AS_OPEN'){
+    fo.status='OPEN';fo.fulfillAt=null;
+    foLog(orderId,`#${fo.id} 已標記為開啟（fulfillmentOrderOpen）`);
+    foRepaint(orderId);return toast('履行單已開啟');
+  }
+  if(action==='REQUEST_FULFILLMENT'){
+    fo.requestStatus='SUBMITTED';fo.status='IN_PROGRESS';
+    foLog(orderId,`已向 ${fo.fulfillmentService} 送出 #${fo.id} 的履行請求（requestStatus: UNSUBMITTED → SUBMITTED）`);
+    foRepaint(orderId);return toast('已送出履行請求');
+  }
+  if(action==='REQUEST_CANCELLATION'){
+    fo.requestStatus='CANCELLATION_REQUESTED';
+    foLog(orderId,`已向 ${fo.fulfillmentService} 請求取消 #${fo.id}（出貨商可接受或拒絕）`);
+    foRepaint(orderId);return toast('已送出取消請求——status 不變，只動 requestStatus 這條軸');
+  }
+  if(action==='REPORT_PROGRESS'){
+    fo.status='IN_PROGRESS';
+    foLog(orderId,`#${fo.id} 已回報進度，狀態轉為處理中`);
+    foRepaint(orderId);return toast('已回報進度');
+  }
+  if(action==='SPLIT')return foSplit(orderId,foId);
+  if(action==='MERGE')return foMerge(orderId,foId);
+  if(action==='EXTERNAL')return toast(`Demo：開啟出貨商外部頁面 ${fo.externalUrl}`);
+}
+function foFulfill(orderId,foId){
+  openGen({title:'建立出貨',body:`<div class="stack">
+    <p class="help">只對這一張履行單出貨。一次呼叫只能涵蓋同一張訂單、同一個地點，跨地點要分多次送出（46a:400）。</p>
+    ${F('物流商','<input class="input" id="foCar" value="黑貓宅急便" data-val="req">')}
+    ${F('追蹤碼','<input class="input num" id="foTrk" placeholder="例：903-2214-8800" data-val="req">','追蹤網址由物流商模板表推導（規格 16-F3 §3）')}
+    ${CHK('foNotify',true,'寄出貨通知信給顧客')}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="foFulfillOK('${orderId}','${foId}')">建立出貨</button>`});
+}
+function foFulfillOK(orderId,foId){
+  const c=document.getElementById('foCar'),t=document.getElementById('foTrk');
+  if(!validOne(c)|!validOne(t)){toast('請修正紅色欄位');return;}
+  const fo=foFind(orderId,foId);
+  /* 全部剩餘品項一次出完 → T9：CLOSED。部分出貨（數量制）狀態不變，本原型只做全出。 */
+  fo.status='CLOSED';fo.tracking={carrier:c.value.trim(),no:t.value.trim()};
+  foLog(orderId,`已對 #${fo.id}（${fo.assignedLocation}）建立出貨：${c.value.trim()} ${t.value.trim()}`);
+  closeGen();foRepaint(orderId);
+  toast(`履行單 #${fo.id} 已出貨——訂單層狀態物化為「${{unful:'未出貨',partial:'部分出貨',ful:'已出貨'}[foOrderStatus(orderId)]}」`);
+}
+function foHold(orderId,foId){
+  openGen({title:'保留履行單',body:`<div class="stack">
+    <p class="help">保留後 「fulfillmentCreate」會被擋下，直到解除保留（46a:220）。每張履行單最多 ${FO_MAX_HOLDS} 個 active hold。</p>
+    ${F('保留原因',SEL('_fohr',FO_HOLD_REASON.map(r=>[r[0],r[1]]),'INVENTORY_OUT_OF_STOCK'),'8 個值出自 FulfillmentHoldReason（46a:277–290）')}
+    ${F('備註',TXT('_fohn','','例：待 8/15 到倉'))}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="foHoldOK('${orderId}','${foId}')">保留</button>`});
+}
+function foHoldOK(orderId,foId){
+  const fo=foFind(orderId,foId);
+  const r=document.querySelector('#genBody [data-f="_fohr"]').value;
+  const n=document.querySelector('#genBody [data-f="_fohn"]').value;
+  fo.holds=fo.holds||[];fo.holds.push({reason:r,note:n});fo.status='ON_HOLD';
+  foLog(orderId,`#${fo.id} 已保留（${r}）${n?'：'+n:''}`);
+  closeGen();foRepaint(orderId);toast('履行單已保留');
+}
+/* 🔴 46a:236 逐字「Cancels order and creates replacement for remaining work」。
+   取消不是就地改狀態——同一步要產生替代單，否則剩餘品項憑空消失（規格 16-F3.2）。 */
+function foCancel(orderId,foId){
+  const fo=foFind(orderId,foId);
+  confirmDanger('取消履行單',
+    `#${H(fo.id)}（${H(fo.assignedLocation)}）將轉為 <b>已取消</b>，並<b>同時產生一張替代履行單</b>承接尚未出貨的 <b class="num">${foQty(fo)}</b> 件剩餘工作。<br>
+     這是 「fulfillmentOrderCancel」的官方語義（46a:236），不做替代單會讓品項憑空消失。`,
+    '取消並建立替代單',()=>{
+      const st=OD[orderId];
+      fo.status='CANCELLED';
+      const remain=fo.lineItems.map(l=>({...l}));
+      if(remain.length){
+        st.foSeq=(st.foSeq||0)+1;
+        const rep=foSeed(`${orderId}-F${st.foSeq}`,fo.assignedLocation,'OPEN',remain,
+          {method:fo.deliveryMethod,service:fo.fulfillmentService,parentId:fo.id,splitReason:'cancel_replacement'});
+        st.fulfillmentOrders.push(rep);
+        foLog(orderId,`#${fo.id} 已取消，系統建立替代履行單 #${rep.id} 承接 ${foQty(rep)} 件剩餘工作`);
+      }else foLog(orderId,`#${fo.id} 已取消（無剩餘工作，不產生替代單）`);
+      foRepaint(orderId);
+      toast(remain.length?`已取消 #${fo.id}，並建立替代履行單`:'已取消履行單（無剩餘工作）');
+    });
+}
+/* 🔴 46a:235/241 逐字「Marks in-progress order as incomplete」——close 進的是 INCOMPLETE 不是 CLOSED。 */
+function foClose(orderId,foId){
+  const fo=foFind(orderId,foId);
+  confirmDanger('標示為未能完成',
+    `#${H(fo.id)} 將轉為 <b>未能完成（INCOMPLETE）</b>——注意 「fulfillmentOrderClose」這個 mutation
+     的名字叫 close，結果卻<b>不是</b> CLOSED（46a:241）。INCOMPLETE 不是終態，之後可用「標記為開啟」拉回待處理。`,
+    '標示為未能完成',()=>{
+      fo.status='INCOMPLETE';
+      foLog(orderId,`#${fo.id} 已標示為未能完成（fulfillmentOrderClose → INCOMPLETE，非 CLOSED）`);
+      foRepaint(orderId);toast('履行單狀態：未能完成（INCOMPLETE）');
+    },false);
+}
+function foMove(orderId,foId){
+  const fo=foFind(orderId,foId);
+  pickerModal('移動到其他地點',FO_LOCATIONS.filter(l=>l!==fo.assignedLocation).map(l=>({t:l,s:'把這張履行單的全部品項改派到此地點'})),
+    s=>{const from=fo.assignedLocation;fo.assignedLocation=s[0].t;
+      foLog(orderId,`#${fo.id} 已從 ${from} 移動到 ${fo.assignedLocation}（只移部分品項時會另產生 remainingFulfillmentOrder）`);
+      foRepaint(orderId);toast(`已移動到 ${fo.assignedLocation}`);});
+}
+function foSplit(orderId,foId){
+  const fo=foFind(orderId,foId),st=OD[orderId];
+  let taken;
+  if(fo.lineItems.length>1)taken=[fo.lineItems.pop()];                    /* 多品項：拆掉最後一項 */
+  else{fo.lineItems[0].q-=1;taken=[{i:fo.lineItems[0].i,q:1}];}           /* 單品項多數量：拆 1 件 */
+  st.foSeq=(st.foSeq||0)+1;
+  const nf=foSeed(`${orderId}-F${st.foSeq}`,fo.assignedLocation,'OPEN',taken,
+    {method:fo.deliveryMethod,service:fo.fulfillmentService,parentId:fo.id,splitReason:'manual_split'});
+  st.fulfillmentOrders.push(nf);
+  foLog(orderId,`#${fo.id} 已拆分出 #${nf.id}（同地點、同配送方式）`);
+  foRepaint(orderId);toast(`已拆分為兩張履行單——同地點同狀態，因此兩張都出現「合併」動作`);
+}
+function foMerge(orderId,foId){
+  const fo=foFind(orderId,foId),st=OD[orderId];
+  const other=st.fulfillmentOrders.find(x=>x!==fo&&x.assignedLocation===fo.assignedLocation&&x.status===fo.status);
+  if(!other)return toast('沒有可合併的履行單（需同訂單、同地點、同狀態）');
+  other.lineItems.forEach(li=>{const hit=fo.lineItems.find(x=>x.i===li.i);if(hit)hit.q+=li.q;else fo.lineItems.push(li);});
+  st.fulfillmentOrders.splice(st.fulfillmentOrders.indexOf(other),1);
+  foLog(orderId,`#${other.id} 已併入 #${fo.id}`);
+  foRepaint(orderId);toast(`已合併 #${other.id} → #${fo.id}`);
+}
 function renderOrderDetail(){
   const o=curOrder,st=OD[o.id];
-  const fulBadge=st.fulfilled?FUL.ful:FUL[o.ful];
+  const fos=foGet(o.id);
+  const fulBadge=FUL[foOrderStatus(o.id)];
   const payCard={
    paid:`<h3><span class="badge b-default"><span class="pip full"></span>已付款</span></h3>`,
    pending:`<h3><span class="badge b-warning"><span class="pip blocked"></span>待付款</span><span class="h-act"><button class="btn btn-sec btn-sm" onclick="toast('Demo：寄送付款連結')">寄送付款連結</button></span></h3><div class="banner-err" style="background:var(--warning-bg);border-color:#f2e3b3;color:var(--warning);margin-bottom:var(--sp-200)">尚未收到款項——付款完成前請勿出貨</div>`,
@@ -2002,23 +2437,9 @@ function renderOrderDetail(){
   ${o.cancelled?'<div class="banner-err" style="margin-bottom:var(--sp-400)">此訂單已於 8月7日 取消——內容僅供檢視，款項已退回原付款方式。</div>':''}
   <div class="od-grid">
     <div class="col">
-      <div class="card card-pad">
-        <h3>${st.fulfilled?'<span class="badge b-default"><span class="pip full"></span>已出貨 ('+o.items+')</span>':'<span class="badge b-caution"><span class="pip"></span>未出貨 ('+o.items+')</span>'}<span class="h-act mut3" style="font-size:var(--t-xs)">${o.ch==='AI 代理'?'國際運送':'宅配到府'}</span></h3>
-        ${o.lines.map(l=>`
-        <div class="od-line">
-          <span class="thumb" style="background:${l.g}"></span>
-          <div class="li-info"><div class="li-name">${l.n}</div><div class="li-var">${l.v}</div></div>
-          <span class="num mut">${l.p} × ${l.q}</span>
-        </div>`).join('')}
-        ${st.fulfilled
-          ?`<p class="mut" style="font-size:var(--t-xs);margin-top:var(--sp-200)">已出貨・黑貓宅急便 903-2214-88${o.id.slice(-2)}</p>`
-          :o.cancelled||o.pay==='refund'?''
-          :o.pay==='pending'?`<div style="display:flex;justify-content:flex-end;margin-top:var(--sp-300)"><button class="btn btn-pri" disabled aria-disabled="true" title="待付款訂單不可出貨">標記為已出貨</button></div>`
-          :`<div style="display:flex;justify-content:flex-end;margin-top:var(--sp-300)"><span class="split" data-doc="fulfill">
-             <button class="btn btn-pri" onclick="markFulfilled('${o.id}')">標記為已出貨</button>
-             <button class="btn btn-pri" onclick="toast('Demo：更多出貨選項（部分出貨/購買標籤）')" aria-label="更多出貨選項">▾</button>
-           </span></div>`}
-      </div>
+      ${fos.length>1?`<p class="mut" style="font-size:var(--t-xs);margin:0 0 var(--sp-200)" data-doc="fo-split">
+        這張訂單依<b>指派地點 × 配送方式</b>拆成 <b class="num">${fos.length}</b> 張履行單，每張各有自己的狀態與動作集（46a:209）。</p>`:''}
+      ${fos.map((f,i)=>foCard(o,f,i+1)).join('')}
       <div class="card card-pad">
         ${payCard}
         ${o.pays.map(([k,v])=>`<div class="pay-row"><span class="mut">${k}</span><span class="num">${v}</span></div>`).join('')}
@@ -2084,12 +2505,8 @@ function addTag(id,tag){
   document.getElementById('odTags').innerHTML=o.tags.map(t=>`<span class="tagchip">${t} ×</span>`).join('');
   toast(`已新增標籤「${tag}」`);renderOrders();
 }
-function markFulfilled(id){
-  OD[id].fulfilled=true;
-  OD[id].events.unshift({t:"sys",txt:"BW 已將品項標記為已出貨（黑貓宅急便），並已通知顧客",time:"剛剛"});
-  renderOrderDetail();renderOrders();
-  toast('已標記為已出貨，並已通知顧客');
-}
+/* 53號 P0-01：原本的整單 markFulfilled() 已移除——出貨動作掛在 FO 上不是訂單上。
+   入口改為每張履行單卡自己的 CREATE_FULFILLMENT（foFulfill / foFulfillOK）。 */
 
 /* ================= 產品列表 ================= */
 const S_BADGE={active:'<span class="badge b-success"><span class="pip full"></span>使用中</span>',
@@ -2614,6 +3031,33 @@ const DOCS={
  "doc-m-markets":{t:"市場",f:"國際化維度",l:"一國僅屬一市場；當地幣結帳；捨入規則；AI 建議行可關",i:"P2・M：markets；金額引擎 presentment 層（22 §7）"},
  "doc-m-finance":{t:"財務",f:"收款/撥款/稅務總覽",l:"payout 對帳報表=交易+費用+撥款拆解",i:"P1 殼・Stripe balance/payout API 對接 P2（22 §7）"},
 };
+/* 開發註釋條目（FO 分卡）。只描述本檔真的做出來的行為——X-07 事故（DOCS 超前實作）的教訓。 */
+Object.assign(DOCS,{
+ "fo-split":{t:"訂單拆成多張履行單",
+  f:"一張訂單依「指派地點 × 配送方式」拆成多張 fulfillment order",
+  l:"46a:209：FulfillmentOrder 是履約鏈的核心資料模型，不是視覺分組。示範資料裡 #1042（台北門市／台中寄倉）與 #1037（自營／3PL）各拆 2 張；#1041、#1040 等仍是單一 FO，兩種形態都看得到",
+  i:"P0・[api:order.fulfillmentOrders] [tbl:fulfillment_orders(shop_id,order_id,assigned_location_id,status,request_status,parent_fulfillment_order_id,split_reason)]（規格 16-F3.1）"},
+ "fo-card":{t:"履行單卡（一卡＝一張 FulfillmentOrder）",
+  f:"卡頭＝status badge ＋ requestStatus badge ＋ 指派地點；卡身＝該 FO 的品項",
+  l:"三條正交軸分開存分開判（46a:213/243/258）：status 7 值（OPEN／IN_PROGRESS／SCHEDULED／ON_HOLD／INCOMPLETE／CLOSED／CANCELLED）× requestStatus 8 值 × supportedActions 12 值。requestStatus badge <b>只在指派給 fulfillment service 時出現</b>——自營 FO 恆為 UNSUBMITTED（46a:247 逐字「the only valid request status for fulfillment orders not assigned to a fulfillment service」）。badge 形狀沿用 47 §D 語意編碼，處理中用 chip() 第三參數把 ○ 覆寫成 ⊘",
+  i:"P0・[api:fulfillmentOrder] [tbl:fulfillment_orders,fulfillment_order_line_items]（規格 16-F3.1 (a)(d)）"},
+ "fo-actions":{t:"履行單動作列（由 supportedActions 驅動）",
+  f:"每張卡的按鈕組各自不同，不是每張卡都長一樣",
+  l:"46a §2⑦-8 鐵律：supportedActions 是<b>伺服器端計算欄位</b>，admin 的按鈕啟用完全由它驅動，前端不得另寫一套 guard（兩份邏輯必然漂移）。本原型無伺服器，改由 foSync() 在每次 mutation 後依 status／requestStatus／兄弟單重算並寫回 fo.supportedActions，出處與判準同 46a:262–275。注意「標示為未能完成」<b>不在</b>這 12 個值裡，它的顯示條件另取 status===IN_PROGRESS",
+  i:"P0・[api:fulfillmentOrder.supportedActions]（伺服器計算，不落表）；對照 22 §1b guard 清單改為渲染層對照表"},
+ "fo-hold":{t:"履行單保留（hold）",
+  f:"以 8 個官方原因之一保留這張 FO，保留期間不可出貨",
+  l:"46a:277–290 的 FulfillmentHoldReason 全 8 值；46a:220 逐字「fulfillment process can't be initiated until the hold ... is released」。每張 FO 最多 10 個 active hold（46a:320），超過回 userError。解除時<b>釋放最後一個 hold 才轉態</b>——還有剩就維持 ON_HOLD（規格 16-F3.1 T6）。只 hold 部分品項時官方會回 remainingFulfillmentOrder 自動拆單，本原型只做整張 hold",
+  i:"P0・[api:fulfillmentOrderHold] [api:fulfillmentOrderReleaseHold] [tbl:fulfillment_holds(fulfillment_order_id,reason,notes,handle)]；limits.yml fulfillment_order.max_active_holds=10"},
+ "draft-tax":{t:"草稿稅額的「未計算」態",
+  f:"缺品項／缺地址時明說算不出來，而不是顯示 0",
+  l:"空車顯示「稅額 0」是<b>錯的資訊</b>不是暫時的 0——商家會讀成免稅。稅要等「有品項 ＋ 有收件地址 ＋ 有市場」三者齊備才算得出來，缺一即 unknown。前端<b>不得內建稅率常數</b>：CLAUDE.md 第 11 條基準法域＝香港，而香港沒有銷售稅，原本寫死的「內含 5%」在基準法域下本身就是錯的（那是 tw pack 的營業稅率）。稅務憑證與稅率是<b>法域能力</b>（56 號 jurisdiction pack），核心只發稅務事件，由市場對應的 pack 決定要不要課。amount=null＝unknown（不進總計並在總計下方明示），amount=0 才是「真的不課」",
+  i:"P1・[api:draftOrderUpdate]（taxExempt）＋[api:TBD-taxServiceQuote]（28 待補：稅務服務由 jurisdiction pack 提供） [tbl:draft_orders.tax_exempt,markets]"},
+ "fo-close":{t:"標示為未能完成（fulfillmentOrderClose）",
+  f:"把處理中的履行單標成 INCOMPLETE",
+  l:"🔴 46a:235/241 逐字「Marks in-progress order as incomplete」——mutation 叫 close，結果卻是 <b>INCOMPLETE 不是 CLOSED</b>，命名與結果不一致，復刻時極易寫錯。INCOMPLETE 不是終態，可被 fulfillmentOrderOpen 拉回 OPEN（規格 16-F3.1 T11／T12）。中文 UI 標「未能完成」",
+  i:"P0・[api:fulfillmentOrderClose]（前置：status=IN_PROGRESS） [tbl:fulfillment_orders.status]"},
+});
 let annot=false;
 function toggleAnnot(){
   annot=!annot;
@@ -3059,6 +3503,7 @@ const LS={};
 function lstate(k){return LS[k]??={q:'',view:0,sort:-1,dir:1,page:1,sel:new Set(),phase:'load',f:{}};}
 function listPage(cfg){
   const s=lstate(cfg.key);s.cfg=cfg;
+  URLQ.lk[current]=cfg.key;      /* 53號 P0-18：登記「這一頁的清單狀態要進 URL」*/
   const acts=(cfg.actions||[]).map(a=>`<button class="btn btn-${a[1]} btn-sm"${a[3]?` data-doc="${a[3]}"`:''} onclick="${a[2]}">${a[0]}</button>`).join('');
   const views=cfg.views||[['全部',()=>true]];
   const vmenu=views.map((v,i)=>`<button class="${s.view===i?'cur':''}" onclick="lsetView('${cfg.key}',${i})"><span class="chk">✓</span>${v[0]}</button>`).join('')
@@ -3138,12 +3583,16 @@ function lbody(k){
   lbulkSync(k);
 }
 function lreload(k){const s=lstate(k);s.phase='load';lbody(k);clearTimeout(s.t);s.t=setTimeout(()=>{s.phase='ok';lbody(k);},350);}
-function lsearch(k,v){const s=lstate(k);s.q=v;s.page=1;lbody(k);}
-function lsetView(k,i){const s=lstate(k);s.view=i;s.page=1;s.sel.clear();lrender();}
-function lsetFilter(k,fk,v){const s=lstate(k);s.f[fk]=v;s.page=1;lrender();}
-function lclear(k,alsoQ){const s=lstate(k);s.f={};if(alsoQ)s.q='';s.page=1;lrender();}
-function lsort(k,i){const s=lstate(k);if(s.sort===i)s.dir*=-1;else{s.sort=i;s.dir=1;}lrender();}
-function lpage(k,d){const s=lstate(k);s.page+=d;lbody(k);document.querySelector('.main').scrollTop=0;}
+/* 53號 P0-18：清單狀態的每個寫入點都同步進 URL。
+   打字搜尋用 replace（否則每敲一鍵就多一筆 history），其餘是使用者的導航意圖 → push。 */
+function lsearch(k,v){const s=lstate(k);s.q=v;s.page=1;lbody(k);urlSync(false);}
+function lsetView(k,i){const s=lstate(k);s.view=i;s.page=1;s.sel.clear();lrender();urlSync(true);}
+function lsetFilter(k,fk,v){const s=lstate(k);s.f[fk]=v;s.page=1;lrender();urlSync(true);}
+function lclear(k,alsoQ){const s=lstate(k);s.f={};if(alsoQ)s.q='';s.page=1;lrender();urlSync(true);}
+/* 改排序要回第 1 頁（與檢視／篩選一致）：換了排序，「第 2 頁」指的已不是同一批資料。
+   真實系統走 cursor 更是如此——排序鍵一變，舊 cursor 直接失效（28 §0）。 */
+function lsort(k,i){const s=lstate(k);if(s.sort===i)s.dir*=-1;else{s.sort=i;s.dir=1;}s.page=1;lrender();urlSync(true);}
+function lpage(k,d){const s=lstate(k);s.page+=d;lbody(k);document.querySelector('.main').scrollTop=0;urlSync(true);}
 function lcycle(k){const s=lstate(k),order=['ok','empty','err','load'];
   s.phase=order[(order.indexOf(s.phase)+1)%4];
   toast('列表狀態：'+({ok:'成功（有資料）',empty:'空狀態',err:'錯誤狀態',load:'骨架載入'}[s.phase]));
@@ -3389,21 +3838,58 @@ function draftsPage(){
 /* ---- 建單器 ---- */
 let DRAFT={lines:[],cust:null,disc:null,ship:null,note:'',tags:[],reserve:null,terms:'Due on receipt',market:'台灣（預設）',tax:true};
 function openDraft(id){
+  /* 53號 P0-18：URL 可能帶到不存在的草稿號（分享舊連結／手改網址）→ 退回新建，不讓路由炸掉 */
+  if(id!=='new'&&!DRAFTS.some(x=>x.id===id))id='new';
   if(id==='new')DRAFT={lines:[],cust:null,disc:null,ship:null,note:'',tags:[],reserve:null,terms:'Due on receipt',market:'台灣（預設）',tax:true};
   else{const d=DRAFTS.find(x=>x.id===id);
     DRAFT={id,lines:[{n:PRODUCTS[0].n,v:'M / 奶茶',p:1480,q:2,g:PRODUCTS[0].g,disc:0},{n:PRODUCTS[3].n,v:'F / 燕麥',p:2280,q:1,g:PRODUCTS[3].g,disc:0}],
       cust:CUSTOMERS.find(c=>c.n===d.c)||null,disc:null,ship:{n:'宅配到府',p:120},note:'',tags:[],reserve:null,terms:'Due on receipt',market:'台灣（預設）',tax:true};}
   goDetail('d-draft',{id});
 }
+/* 53號 P0-17｜稅額的「未計算」態
+   ------------------------------------------------------------------
+   為什麼不能顯示 0：空車時的「稅額 0」是**錯的資訊**，不是「暫時的 0」——商家會讀成免稅。
+   稅要等「有品項 ＋ 有收件地址 ＋ 有市場」三者齊備才算得出來，缺一就是 unknown，不是 zero。
+   為什麼不寫死稅率：CLAUDE.md 第 11 條，基準法域＝香港，而**香港沒有銷售稅**，
+   所以原本那行「稅額・內含 5%」在基準法域下本身就是錯的（那是 tw pack 的營業稅率）。
+   稅務憑證與稅率是**法域能力**（56 號 jurisdiction pack），核心只發稅務事件，
+   由市場對應的 pack 決定要不要課、課多少——前端一律不得內建稅率常數。
+   回傳 amount=null 代表 unknown（不進總計並在總計下方明示），amount=0 才是「真的不課」。 */
+function draftTaxState(){
+  if(!DRAFT.lines.length)
+    return {code:'no-items',amount:null,label:'未計算',why:'新增商品以計算總計——沒有品項就沒有稅基'};
+  if(!DRAFT.tax)
+    return {code:'off',amount:0,label:'不課稅',why:'已為此訂單關閉課稅，整單不計（41 §2.3）'};
+  if(!DRAFT.cust)
+    return {code:'no-address',amount:null,label:'未計算',why:'需要收件地址才能判定適用稅則——請先指定顧客'};
+  return {code:'deferred',amount:null,label:'未計算',
+    why:`稅額於開立發票時由「${H(DRAFT.market)}」對應的法域規則計算並鎖定匯率。基準法域香港無銷售稅；是否課稅、稅率多少一律由市場的 jurisdiction pack 決定，不在前端內建稅率。`};
+}
 function draftTotals(){
   const sub=DRAFT.lines.reduce((a,l)=>a+(l.p*l.q-(l.disc||0)),0);
   const dsc=DRAFT.disc?(DRAFT.disc.kind==='%'?Math.round(sub*DRAFT.disc.v/100):DRAFT.disc.v):0;
   const ship=DRAFT.ship?DRAFT.ship.p:0;
-  const tax=DRAFT.tax?Math.round((sub-dsc)*0.05):0;
-  return {sub,dsc,ship,tax,total:sub-dsc+ship+tax};
+  const tax=draftTaxState();
+  return {sub,dsc,ship,tax:tax.amount,taxState:tax,total:sub-dsc+ship+(tax.amount||0)};
+}
+/* 53號 P0-17｜空車 → 付款卡整卡 disabled
+   做法照 47 §E：**只降文字色**（--text-disabled）、底色與 opacity 一律不動；
+   class 與 aria-disabled 的同步方式完全沿用站內先例 rrFinalSync()（退貨規則最終銷售卡）。
+   這支必須是「動態翻轉」而不是寫死：加了品項就要解除。掛在 afterRoute('d-draft')，
+   每次 draftRefresh() 重繪後都會重跑一次，所以 aria-disabled 不會殘留過期值。 */
+function draftPaySync(){
+  const empty=!DRAFT.lines.length,c=document.getElementById('draftPay');
+  if(!c)return;
+  c.classList.toggle('is-dim',empty);
+  c.setAttribute('aria-disabled',String(empty));
+  c.querySelectorAll('input,button,select,textarea').forEach(x=>{
+    x.disabled=empty;
+    if(empty)x.setAttribute('aria-disabled','true');else x.removeAttribute('aria-disabled');
+  });
 }
 function draftPage(){
   const t=draftTotals();
+  const empty=!DRAFT.lines.length;      /* 53號 P0-17：空車＝付款卡整卡 disabled 的唯一判準 */
   const lines=DRAFT.lines.length?DRAFT.lines.map((l,i)=>`
     <div class="od-line">
       <span class="thumb" style="background:${l.g}"></span>
@@ -3428,12 +3914,15 @@ function draftPage(){
         ${lines}
         ${DRAFT.reserve?`<p class="help" style="margin-top:var(--sp-200)">已預留庫存至 <b class="num">${DRAFT.reserve}</b>（Available → Unavailable，到期自動釋放）</p>`:''}
       </div>
-      <div class="card card-pad" data-doc="draft-pay"><h3>付款</h3>
+      <div class="card card-pad${empty?' is-dim':''}" id="draftPay" data-doc="draft-pay" aria-disabled="${empty}"><h3>付款</h3>
+        ${empty?`<p class="help" style="margin-bottom:var(--sp-200)">尚未加入商品，付款區暫停使用——先在上方加入至少一項商品。</p>`:''}
         <div class="pay-row"><span class="mut">小計・${DRAFT.lines.reduce((a,l)=>a+l.q,0)} 件品項</span><span class="num">${NT(t.sub)}</span></div>
         <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftDiscount()">加入折扣</button><span class="num">${t.dsc?'−'+NT(t.dsc):'—'}</span></div>
         <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftShipping()">加入運費</button><span class="num">${t.ship?NT(t.ship):'—'}</span></div>
-        <div class="pay-row"><span class="mut">稅額・內含 5%${DRAFT.tax?'':'（已停用）'}</span><span class="num">${NT(t.tax)}</span></div>
+        <div class="pay-row"><span class="mut">稅額</span><span class="num">${t.tax===null?H(t.taxState.label):NT(t.tax)}</span></div>
+        <p class="help" data-doc="draft-tax">${t.taxState.why}</p>
         <div class="pay-row total"><span>總計</span><span class="num">${NT(t.total)}</span></div>
+        ${t.tax===null?`<p class="help">總計尚未含稅（稅額${H(t.taxState.label)}）。</p>`:''}
         <div class="card-sec">${SWROW('dtax',DRAFT.tax,'向此訂單收取稅額','取消勾選後整單不計稅（41 §2.3）')}
           ${F('付款條件',SEL('dterms',['Due on receipt','Due on fulfillment','Net 7','Net 15','Net 30','Net 45','Net 60','Net 90','固定日期'],DRAFT.terms),'Plus 方案可再加 % 訂金 deposit')}</div>
       </div>
@@ -3455,7 +3944,7 @@ function draftPage(){
       </div>
     </div></div>`;
 }
-function draftRefresh(){renderDetail('d-draft');}
+function draftRefresh(){renderDetail('d-draft');}   /* renderDetail → afterRoute('d-draft') → draftPaySync() */
 function draftAdd(){
   pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${NT(p.price)}・${p.v} 個變體・庫存 ${p.inv}`,g:p.g,p})),
     sel=>{sel.forEach(x=>DRAFT.lines.push({n:x.p.n,v:x.p.opts.length?x.p.opts.map(o=>o.v[0]).join(' / '):'單一規格',p:x.p.price,q:1,g:x.p.g,disc:0}));
@@ -3488,6 +3977,7 @@ function draftLineOK(i){
   DRAFT.lines[i].p=+p.value;DRAFT.lines[i].disc=+d.value||0;closeGen();draftRefresh();toast('已套用行級調整');
 }
 function draftDiscount(){
+  if(!DRAFT.lines.length)return toast('請先加入至少一項商品');   /* 空車時按鈕已 disabled，這是第二層防線 */
   openGen({title:'加入折扣',body:`<div class="stack">
     ${F('折扣類型',SEL('_dk',[['%','百分比'],['amt','固定金額'],['code','套用既有折扣碼']],'%'),'行級與單級折扣可並存')}
     ${F('值 / 折扣碼','<input class="input" id="ddV" placeholder="例：10 或 WELCOME5" data-val="req">')}
@@ -3501,6 +3991,7 @@ function draftDiscOK(){
   closeGen();draftRefresh();toast('已套用訂單層折扣');
 }
 function draftShipping(){
+  if(!DRAFT.lines.length)return toast('請先加入至少一項商品');   /* 同上：與 disabled 態一致 */
   openGen({title:'加入運費',body:`<div class="stack">
     ${F('運費來源',SEL('_sk',['店內費率（需先選顧客與地址）','Local delivery','Local pickup','自訂運費'],'自訂運費'))}
     <div class="grid2">${F('名稱','<input class="input" id="dsN" value="宅配到府" data-val="req">')}${F('價格（NT$）','<input class="input num" id="dsP" value="120" data-val="req|money">')}</div></div>`,
@@ -5252,6 +5743,8 @@ function renderDetail(route){
 function afterRoute(p){
   if(FORMSEL[p])formInit(FORMSEL[p],{save:()=>'已儲存變更（走 GraphQL mutation，錯誤只吃 userErrors）'});
   else{FORM=null;formSetDirty(false);}
+  /* 53號 P0-17：宣告式狀態每次重繪後推回 DOM，aria-disabled 才不會殘留過期值 */
+  if(p==='d-draft')draftPaySync();
 }
 /* 列表引擎重繪：模組頁與詳情頁共用 */
 function lrender(){current.startsWith('d-')?renderDetail(current):renderModule(current);}
@@ -5526,7 +6019,7 @@ Object.assign(DOCS,{
 /* ---------- 訂單：草稿建單器 ---------- */
  "draft-new":{t:"建立草稿訂單",f:"開啟代客建單器",l:"草稿號獨立序列；2025-04-01 後建立的草稿閒置 1 年自動刪除（41 §2.3）",i:"P1・[api:draftOrderCreate] [tbl:draft_orders,line_items]"},
  "draft-items":{t:"草稿品項卡",f:"加入目錄商品／自訂品項、改量、行級折扣",l:"自訂品項不入目錄（title+price 直填）；行級折扣可與訂單級並存；單價可覆寫（41 §2.3）",i:"P1・[api:draftOrderUpdate]（lineItems[{variantId|custom{title,price},quantity,appliedDiscount}]） [tbl:draft_orders,product_variants]"},
- "draft-pay":{t:"草稿付款卡",f:"小計／折扣／運費／稅／總計與付款條件",l:"金額走同一個金額引擎（06 §6）；可整單關閉課稅；條款 enum：Due on receipt／Due on fulfillment／Net 7-90／固定日期，Plus 可加 % 訂金",i:"P1・[api:draftOrderUpdate] [tbl:draft_orders,tax_settings]"},
+ "draft-pay":{t:"草稿付款卡",f:"小計／折扣／運費／稅／總計與付款條件",l:"金額走同一個金額引擎（06 §6）；可整單關閉課稅；條款 enum：Due on receipt／Due on fulfillment／Net 7-90／固定日期，Plus 可加 % 訂金。<b>空車時整卡進 disabled 態</b>（53 號 P0-17）：aria-disabled=\"true\" ＋ 內部所有控件真的 disabled，做法照 47 §E 只降文字色不用 opacity，與退貨規則最終銷售卡 rrFinalSync() 同一套；加入品項後即時翻回可用，不是寫死",i:"P1・[api:draftOrderUpdate] [tbl:draft_orders,tax_settings]"},
  "draft-customer":{t:"草稿顧客卡",f:"指定或新建顧客",l:"未指定顧客時無法取店內運費費率（需要地址）；B2B 選 company location 會帶入 catalog 價與付款條件",i:"P1・[api:customers] [api:draftOrderUpdate] [tbl:customers,customer_addresses]"},
  "draft-market":{t:"草稿市場與幣別",f:"以指定市場的定價與幣別建單",l:"匯率在開發票那一刻鎖定（41 §2.3）；金額回 MoneyBag 雙記",i:"P2・[api:markets] [api:draftOrderUpdate] [tbl:markets]（06 §7 待補）"},
  "draft-reserve":{t:"預留庫存 Reserve",f:"把草稿品項的庫存先保留到指定時間",l:"Available → Unavailable；到期自動釋放；到期日含時間（41 §2.3）",i:"P2・[api:TBD-draftOrderReserveInventory]（28 待補：draftOrderInput 目前無 reserveInventoryUntil） [tbl:inventory_levels,inventory_adjustments] [job:reserve_expiry]"},
@@ -7597,6 +8090,7 @@ Object.assign(DOCS,{
 
 /* init */
 renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();
+urlBoot();   /* 53號 P0-18：最後才掛路由——MODULES／DETAILS 到這裡才全部登記完 */
 let rzT=0;
 function onResize(){drawSparks();drawAnalytics();refreshScrollHints();}
 window.addEventListener('resize',()=>{cancelAnimationFrame(rzT);rzT=requestAnimationFrame(onResize);});
