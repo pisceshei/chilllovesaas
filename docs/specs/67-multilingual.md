@@ -62,7 +62,7 @@
 
 | # | 既有寫法 | 本輪處置 | 誰改 |
 |---|---|---|---|
-| 1 | **62 §F.3**「handle 保留 CJK、URL 走 percent-encoding」（登記為 V-119） | **裁定推翻**：一律 ASCII。§F.3 已改寫並留追溯註釋，V-119 結案 | ✅ **本輪已改** |
+| 1 | **62 §F.3**「handle 保留 CJK、URL 走 percent-encoding」（登記為 V-119） | **裁定推翻**：一律 ASCII。§F.3 已改寫並留追溯註釋。<br>🔴 **2026-08-12 二次修正（68 §B-1）**：V-119 的結案敘述原寫成「對齊問題消失」，實際是**本尊保留 CJK、裁定覆蓋 Shopify** ⇒ 已改寫為**明知偏離登記**（62 §F.3-1） | ✅ **本輪已改** |
 | 2 | **13 §F2-1**「中文標題不轉拼音，demo 選 unicode handle（`/products/棉質短T` 可用）」 | 同上被推翻。本檔**不改 13 號**（另有 agent 在改 13/63/65），登記於 §M-1 | 13 §F2 |
 | 3 | **29 §2.1** 把 `PRODUCT/COLLECTION/ARTICLE.handle` 列入可翻譯資源型別 | **我方刻意偏離**：handle **不可翻譯**，語言維度由 URL 前綴承載（§D.3）。登記於 §M-2 | 29 §2.1 |
 | 4 | **63 §D.3** 頁級 fragment key **無條件**含 `locale` | 改為**依實際依賴降維**（§G.2），並沿用 63 §D.3 既有的 `touched_sources` 自檢把降維做成可執行斷言。登記於 §M-4 | 63 §D.3 |
@@ -439,7 +439,7 @@ handle      ：kerastase-specifique-stimuliste-nutri-energising-daily-anti-hairl
 | 2 | 全部小寫 | **大小寫折疊**在折疊變音符號之後（避免 `İ` 之類的邊界） |
 | 3 | `Nutri-Energising` 的連字號保留為 `-` | 既有 `-` 與分隔符**同構**，不做特別處理 |
 | 4 | `125ml/4.2oz` → `125ml-4-2oz` | 🔴 **`/` 與 `.` 都轉成分隔符，不是刪除。** 若刪除 `.` 會得到 `42oz`——**規格數字被改寫**。這是本節最重要的一條 |
-| 5 | 長度 86 未被截斷 | 上限**遠大於 86**。我方定 255（`handle.max_chars`；⚠ Shopify 的實際上限未查證 ⇒ **V-160**） |
+| 5 | 長度 86 未被截斷 | 上限**遠大於 86**。我方定 255（`handle.max_chars`；⚠ 官方出處未取得，但已有 `press` 級二手佐證且**數值相同** ⇒ 原 V-160 降級，官方出處由 68 的 **V-183** 承接） |
 | 6 | 沒有任何連續分隔符、沒有首尾分隔符 | **收斂 ＋ 修剪** |
 
 **完整管線**（`Handles::Generate`，全專案唯一實作；下列步驟已用範例做過可重跑驗證，輸出與裁定給的字串**逐字元相同**）：
@@ -475,6 +475,24 @@ handleize_url(text):
 | `香港手工曲奇禮盒` | `（空）` | ❌ ⇒ **落 fallback** |
 
 > **`%` 的處置**：`50%` → `50`（分隔後收斂）。**不做 `%`→`percent` 的詞彙展開**，也不做 `&`→`and`〔ours〕。理由：詞彙展開是**英文特定**的，一旦開了頭就要為每個語言維護一張展開表，而它換來的 SEO 收益沒有任何證據支持。
+> ✅ **依 68 號 §C-6 補證：與 Shopify 完全一致，實測 5 次確認**（`test`）：`Carroll&Chan → carroll-chan`、`Bags & Wallets → bags-wallets`、`Herbs & Grow Kits → herbs-grow-kits`、`Plant Duos & Trios → plant-duos-trios`、`… Clarks Originals & the New York Yankees → …-clarks-originals-the-new-york-yankees`；**0 例展開成 `and`**。`%`／`$` 同樣轉分隔（`Clearance 50% Off → clearance-50-off`、`Only HK$88 → only-hk-88`）。⇒ 本條從〔ours〕升為**已對齊本尊**，不得再被當成待確認項重開。
+
+**與 Shopify 實際行為的逐條對照**（依 68 號 §C-4 補入；`dev` ＝官方文檔，`test` ＝本輪對真實店鋪 `/products.json`／`/collections.json` 的一手實測）：
+
+| 我方步驟 | Shopify 行為 | 對照 | 出處 |
+|---|---|---|---|
+| 1 NFKC（全形→半形） | **未查證** | ⚠ 未知 | 68 **V-181** |
+| 2 撇號／引號**刪除** | 刪除（`Women's → womens`、`16" Cash Drawer → 16-cash-drawer`） | ✅ 一致 | `test` |
+| 3 不可分解拉丁字母轉寫 | 拉丁擴充**折疊成 ASCII**（`mašīna → masina`、`… ŭ → …-u`） | ✅ 同方向 | `press`（staff 復現） |
+| 4 變音符號折疊 | 折疊（`Créature → creature`、`Décor → decor`） | ✅ 一致 | `test` |
+| 5 轉小寫 | 一律小寫 | ✅ 一致 | `dev` |
+| 6 其餘 → 分隔符（含 `.` `/` `%` `$` `&`） | 全部轉分隔（`A.P.C. → a-p-c`、`#AU/NZ → au-nz`、`&` 不展開 ×5） | ✅ 一致（🔴 觀察 4 被 `A.P.C.` 與 `#AU/NZ` 獨立佐證） | `dev` ＋ `test` |
+| 7 收斂＋首尾修剪 | 收斂；**開頭移除**（官方明載）、**結尾修剪**（官方只提開頭，實測確認結尾也修） | ✅ 一致 | `dev` ＋ `test` |
+| 8 分隔符邊界截斷（255） | 上限 255、超過截斷 | ⚠ 僅 `press` ⇒ 68 **V-183** | `press` |
+| 9 **品質閘門** | 🔴 **Shopify 無此概念**（它保留 CJK 就不需要） | 🔴 **我方獨有**，「一律英文」裁定的必然衍生物 | 68 §C-4 |
+| `_` 的處置 | handle 中**允許存在**；自動生成是否保留**未證** | ⚠ 未知；我方 `_ → -` | 68 **V-181** |
+| 非拉丁（CJK 等） | 🔴 **原樣保留** | 🔴 **明知偏離**（裁定 > Shopify），登記於 62 §F.3-1 | `press` ×4 |
+| 改標題不動 handle | 不自動改 | ✅ 一致（`regenerate_on_title_change: false`） | `dev` |
 
 **保留數字與規格串**：步驟 6 不在字母與數字之間插入分隔符（`125ml` 保持一個 token），這與範例一致，也是規格型 handle 可讀的關鍵。
 
@@ -488,8 +506,13 @@ handleize_url(text):
 | **B. 機器翻譯自動落庫** | ❌ **違反設計原則 3（URL 是永久身分，生成器必須確定性）**：MT 的輸出隨供應商模型版本改變，同一個標題今天譯成 `moisturizing-mask`、明天譯成 `hydrating-mask`；而 handle 每變一次就是一條 301 ＋ 一個永不回收的舊 handle（§D.4）。另外它**在寫入路徑上引入外部 IO**，直接撞 63 §A.2「transaction 內禁外部 IO」與鐵律 5 |
 | **C. 要求商家手填** | ⚠ 品質最高但**不能當成唯一路徑**：擋住儲存 ⇒ 商家繞道亂打（`aaa-bbb`），那比自動代碼更糟——**亂打的字串無法被偵測與修復，自動代碼可以** |
 | **D. 用 SKU／型號** | ❌ ①SKU 非必填、可重複（軟唯一，61 §1.5）；②SKU 常含內部編碼與供應商代號，放進公開 URL 是**營運資訊外洩**；③`sku-ab-12345` 對搜尋與 AI 一樣無語義 |
+| **E. 照 Shopify 保留 CJK**（中文標題 ⇒ 中文 handle，URL 走 percent-encoding） | 🔴 **這是本尊的實際做法**（68 §B-1：非拉丁字集**原樣保留**，`press` ×4；本尊沒有 fallback 代碼也沒有品質閘門，因為它不需要）。**被使用者裁定直接排除**——裁定逐字「url hand 使用英文標題，**禁止使用中文**」。<br>⇒ 本選項不是「評估後淘汰」，是「**裁定 > Shopify**，沒有評估空間」。<!-- 依 68 號 §B-1 新增本列：原表只有 A–D 四個選項，讀起來像是「我方在四個爛選項裡挑一個」，而事實是**還有第五個選項、它是本尊的做法、而且我方明知並偏離**。缺這一列，日後回頭看會以為我方沒查過本尊怎麼做。 --> |
 
 **🔴 我方決策 D-67-H1：handle 的來源是「英文（`en`）標題」，並以確定性 fallback 兜底；不做拼音、不做 MT 自動落庫、不擋商家做生意。**
+
+> 🔴 **本決策是「明知偏離 Shopify」，不是「對齊 Shopify」**（68 §B-1，登記於 62 §F.3-1）：本尊會保留 CJK 並給出中文 handle，從不落代碼、也不擋發布。我方偏離的**唯一依據是使用者裁定**。
+> ✅ **「不擋發布」這一半與本尊一致**（Shopify 也不擋，官方沒有 handle 品質的閘門、警告或健康度概念）——所以 `require_meaningful_on_publish: false` 是**對齊**，不是我方的寬鬆。
+> 🔴 **品質閘門（§D.2(b)）與中英混排保留英文片段是「一律英文」裁定的必然衍生物**，本尊**無此概念**（68 §C-4／C-5）。裁定若改，它們必須連帶重審——它們不是獨立的設計選擇。
 
 ```
 handle_source_priority（handle.source_field_priority）:
@@ -516,7 +539,28 @@ handle_source_priority（handle.source_field_priority）:
 
 ### D.3 每語言一個，還是全站一個？—— **全站一個，語言在前綴**
 
-**🔴 我方決策 D-67-H2：`handle` 是 per-shop-per-resource 的單一值，不隨語言變；語言維度由 URL 路徑前綴承載。**
+**🔴 決策 D-67-H2 —— 明知偏離 Shopify：`handle` 是 per-shop-per-resource 的單一值，不隨語言變；語言維度由 URL 路徑前綴承載。**
+
+<!-- 依 68 號 §F-1 改標（2026-08-12）。原標題：「**🔴 我方決策 D-67-H2：…**」
+     🔴 **原標題讀起來像是我方自己選的技術偏好，實際上它偏離了 Shopify 的既有能力，而 68 號之前
+        沒有人把這件事寫下來**（它甚至不在 2026-08-12 的待裁決清單裡）。
+     Shopify 的實際能力（`dev`：shopify.dev/changelog/resource-url-handles-are-now-translatable，
+       **2023-06-26**，API 2023-04）：**product／collection／article／blog／page 的 URL handle
+       可透過 `translationsRegister` 註冊翻譯**，產生在地化的線上商店 URL
+       （官方例 `/products/red-shoes` 與 `/products/…/zapatos-rojos`）。
+       實務佐證（`press`）：啟用多語言後同一商品在各語言下**就是不同的 handle**；
+       AJAX API `/products/{handle}.js` 必須用**該語言的 handle**。
+     我方 `docs/research/29-markets-i18n.md` §2.1 **早就記載** PRODUCT 的可翻欄位含 `handle`。
+     ⇒ 這條偏離**同樣是「handle 一律英文」裁定的下游後果**，不是獨立的技術偏好：
+       handle 一律英文 ⇒ per-locale 的三個 handle 都會是英文 ⇒ 那不是在地化，是同義詞增生。 -->
+
+| | 內容 |
+|---|---|
+| **Shopify 的能力** | handle **是可翻譯欄位**（2023-06-26 起，`dev`）；多語言下同一資源在各語言可有不同 handle |
+| **我方的行為** | 單一 handle（`limits.handle.per_locale_enabled: false`、`translatable: false`），語言走 URL 前綴 |
+| **偏離的依據** | 🔴 **裁定的下游後果**：handle 一律英文 ⇒ per-locale 收益為零，卻要付三倍的 301、唯一性與 N+1 成本（下面四條理由）。**唯一依據是裁定，不是技術偏好** |
+| **裁定若改** | 本決策**必須連帶重審**。逃生口已就位（`per_locale_schema_reserved: true`，開鍵即可，不需 migration） |
+| **待使用者確認** | ⚠ 「handle 一律英文」是否**同時**意味著放棄 Shopify 的 per-locale handle 能力？**我方推定是，但這是推定**（68 §F-1 明列為要問使用者的一句話） |
 
 ```
 ✅ 採用           /products/kerastase-…-4-2oz            （primary market 的預設語言，無前綴）
@@ -548,12 +592,25 @@ handle_source_priority（handle.source_field_priority）:
 
 **(b) 衝突處置：生成與手填要用不同策略**〔ours〕
 
+<!-- 依 68 號 §C-4/5/6 附帶條跟隨 Shopify 做法修正（2026-08-12）。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「| **系統生成**（§D.2 的 2/3/4 步） | 自動加尾碼 `-2`、`-3`…（`handle.collision_strategy_generated`）。
+           首個重複者得 `-2`（不是 `-1`）——「第二個」的直覺對應 |
+        > ⚠ 既有 13 §F2-2 寫的是「衝突自動 `-1` `-2` 後綴」，與本節的 `-2` 起算及「手填拒絕」不一致
+          ⇒ 登記於 §M-1。」
+     🔴 **這條不一致是反向解決的：13 §F2-2 寫的 `-1` 本來就是對的，要改的是本檔。**
+        Shopify 實際行為＝**自 `-1` 起算**：官方例兩個同名商品得到 `potion` 與 `potion-1`
+        （`dev`，liquid/basics）；本輪實測（`test`）同店兩個同名系列得到
+        `ceiling-fans` / `ceiling-fans-1`，另見 `home-decor-accessories-1`、`nathan-road-collection-1`。
+        原文的「『第二個』的直覺」**沒有任何依據**，而它的代價是：從 Shopify 匯入的資料重新生成時
+        整批偏移一號（本尊 `potion-1`、我方 `potion-2`），對不上舊 URL。 -->
+
 | 來源 | 衝突時 |
 |---|---|
-| **系統生成**（§D.2 的 2/3/4 步） | 自動加尾碼 `-2`、`-3`…（`handle.collision_strategy_generated`）。首個重複者得 `-2`（不是 `-1`）——「第二個」的直覺對應 |
-| **商家手填** | 🔴 **拒絕**，回 `userErrors{field:"handle", code:"HANDLE_TAKEN"}`，並在訊息中指出佔用者（含「該 handle 已退役但仍有 301 指向 X」的情形）。**不得靜默加尾碼**：那是把商家明確輸入的值偷偷改掉 |
+| **系統生成**（§D.2 的 2/3/4 步） | 自動加尾碼 **`-1`、`-2`…**（`handle.collision_strategy_generated: numeric_suffix_from_1`）。**首個重複者得 `-1`**——跟隨 Shopify（`dev` 官方例 `potion`／`potion-1` ＋ `test` 實測 ×4） |
+| **商家手填** | 🔴 **拒絕**，回 `userErrors{field:"handle", code:"HANDLE_TAKEN"}`，並在訊息中指出佔用者（含「該 handle 已退役但仍有 301 指向 X」的情形）。**不得靜默加尾碼**：那是把商家明確輸入的值偷偷改掉。⚠ 官方講的自動加尾碼是針對「duplicate **title**」，**不是手填 handle**，本尊對手填重複的處置**無一手證據**（68 **V-184**）⇒ **維持 reject（保守失效）** |
 
-> ⚠ 既有 13 §F2-2 寫的是「衝突自動 `-1` `-2` 後綴」，與本節的 `-2` 起算及「手填拒絕」不一致 ⇒ 登記於 §M-1。
+> ✅ **與 13 §F2-2 的不一致已反向結案**（§M-1）：13 的 `-1` 起算是對的，本節改為 `-1`。**兩份規格現已一致，任何一方不得單獨改回 `-2`。**
 
 **(c) 保留字**：`handle.reserved` —— 至少含 `all`（`/collections/all` 是平台路由）、`new`、`index`、以及**全部啟用中的 locale 前綴與市場 subfolder suffix**。新增語言時必須檢查其前綴不與既有第一路徑段衝突（`handle.reserved_first_segments`），衝突則拒絕新增語言。
 
@@ -579,14 +636,27 @@ class="swatch-{{ value | handleize }}"
 
 **規定**（`handle.liquid_filter_ascii_only: false`）：
 
+<!-- 依 68 號 §F-3 跟隨 Shopify 做法修正（2026-08-12）：**fallback 觸發條件收窄**。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「| 空結果 | 落 §D.2 的 fallback | 🔴 落 `h-{sha1(input)[0,8]}`——**空字串會造成選擇器碰撞，必須有值** |」
+     原文沒有說清楚「空結果」是怎麼來的，實作時最自然的讀法是「套完清洗規則後結果為空」——
+     而那個讀法會讓 `{{ '顏色' | handleize }}` 落到 `h-xxxxxxxx`。
+     68 §F-3 查到（community.shopify.dev/t/unicode-in-handleize-output/1060，2024-10，**staff 已復現**）：
+       `{{ 'Abc 123-D--E 🔪 ŭ' | handleize }}` 的實際輸出**保留 emoji**、`ŭ` 折成 `u`
+       ⇒ Shopify 的 filter 對非拉丁字元是**保留**，不是落空。
+     🔴 ⇒ `{{ '顏色' | handleize }}` 在本尊**回 `顏色`**。我方若落 fallback，會輸出一個
+        **本尊永遠不會產生的字串**；主題若把 handleize 的輸出寫死進 CSS（Ella 91 處用量）就對不上，
+        而且是「樣式靜默失效」這種最難查的形態。 -->
+
 | | `Handles::Generate`（URL 身分） | Liquid `handleize` filter（主題字串工具） |
 |---|---|---|
-| 值域 | `[a-z0-9-]`，ASCII only（裁定） | **保留非 ASCII 字母**（維持既有行為） |
-| 空結果 | 落 §D.2 的 fallback | 🔴 落 `h-{sha1(input)[0,8]}`——**空字串會造成選擇器碰撞，必須有值** |
+| 值域 | `[a-z0-9-]`，ASCII only（裁定） | **保留非 ASCII 字母**（維持既有行為，✅ 與本尊一致：staff 復現的輸出保留 emoji） |
+| **fallback 觸發** | 品質閘門不過 ⇒ 落 §D.2 的 fallback | 🔴 **只在「輸入本身為空或全為分隔符」時**落 `h-{sha1(input)[0,8]}`（`handle.liquid_filter_fallback_trigger: empty_or_all_separator_input_only`）。<br>🔴 **不得因「結果非 ASCII」觸發**（`liquid_filter_fallback_on_non_ascii_result_forbidden: true`）——`{{ '顏色' \| handleize }}` 必須回 `顏色`，**不是** `h-xxxxxxxx` |
 | 用途 | 資源的永久 URL 身分 | DOM id／CSS class／JS 鍵 |
-| 實作 | 🔴 **兩個獨立實作，不得共用**；filter 的文檔註釋必須寫明「這不是 URL 生成器」 | |
+| 實作 | 🔴 **兩個獨立實作，不得共用**；filter 的文檔註釋必須寫明「這不是 URL 生成器」。<br>（本條**不變**：URL 要 ASCII-only 是裁定、filter 要保留非 ASCII 是相容需求，兩個值域天生不同。68 §F-3 修正的是 fallback 觸發條件與其**依據**，不是這條分離規則。） | |
 
-> ⚠ **V-161**：Shopify `handleize` filter 對 CJK 的實際輸出（保留／落空／轉寫）——這是**原 V-119 的主題相容殘留**。V-119 的**政策面**已由裁定結案（我方 URL 一律 ASCII，不再需要對齊 Shopify），但**主題相容面**仍未知：若 Shopify 實際上輸出空字串，Ella 這類主題在中文選項名下本來就有這個 bug，我方的 `h-xxxxxxxx` fallback 會與本尊**行為不同**（我方更正確，但輸出字串不同 ⇒ 主題若把它寫死在 CSS 就對不上）。**在結案前維持 fallback**，並在主題匯入的 degradation report（25 §4-4）加一行說明。
+> ✅ **V-161 已依 68 §F-3 縮小**：原問題「Shopify `handleize` filter 對 CJK 的實際輸出（保留／落空／轉寫）」**已被正面回答＝保留**（`press`，staff 復現的 bug 報告；官方文檔與實際輸出不符，staff 承認並轉產品團隊，無結論）。
+> ⇒ 這正面解決了本節最擔心的情境：**本尊不會產生空結果，所以我方的 fallback 在對齊本尊的情境下永遠不該被觸發**。殘留未證的只剩**全形字元**與**空輸入／全分隔符輸入**兩個邊界（併入 68 的 **V-181**）。主題匯入的 degradation report（25 §4-4）仍加一行說明。
 
 ### D.6 遷移：既有 unicode handle 的處置
 
@@ -682,27 +752,72 @@ Script::Convert(from: zh-Hant, to: zh-Hans)   ⇒ value_source = 'script_convers
 - 🔴 **兩個方向的品質不對稱，UI 必須說明**：繁→簡接近無損；**簡→繁是一對多**（`发`→`發`／`髮`、`干`→`干`／`乾`／`幹`、`后`→`后`／`後`），必然需要人工覆核。因此 `zh-Hans → zh-Hant` 的批次**預設把整批標為 `review_required` 並在完成報告中列出含歧義字的筆數**。
 - 🔴 **它不做詞彙在地化**：`软件/軟體`、`视频/影片`、`鼠标/滑鼠` 是**用詞**不是字形，查表不會處理。UI 文案必須寫「這是字形轉換，不是翻譯」——否則商家會以為簡體版已經可以上線。
 
-### E.6 匯入匯出：翻譯是**第三套**，且與商品 CSV 的空白語義**相反**
+### E.6 匯入匯出：翻譯是**第三套**；空白語義與商品 CSV **同向**
+
+<!-- 依 68 號 §B-3 跟隨 Shopify 生態做法整節改寫（2026-08-12）。
+     原節標題：「### E.6 匯入匯出：翻譯是**第三套**，且與商品 CSV 的空白語義**相反**」
+     原理由 3（保留供追溯，🔴 任何人不得改回）：
+       「3. 🔴 **空白語義相反，而且相反的方向是資料毀損**：商品 CSV 的「以相同 handle 覆寫商品」
+           語義是「**空白儲存格會把既有資料洗掉**」（61 §6.1）。同樣的語義套到翻譯上 ＝
+           譯者交回一份只填了 20% 的檔案，其餘 80% 的既有譯文全被清空。」
+     原 CSV 契約行：「🔴 空白 = 不變更（與商品 CSV 相反）。清空譯文必須明確寫 __CLEAR__」
+
+     🔴 **原理由擔心的誤刪風險是真的，這次翻面不是把它一筆勾銷。**
+        68 §B-3 查到的生態事實標準（matrixify.app/documentation/translations/，press）是：
+        翻譯匯入時 Translation Value 欄留空 ＝ **刪除該語言該欄的既有譯文**，與商品 CSV **同向**。
+        ⇒ 我方原設計的「空白＝不變更」在 Shopify 生態裡**沒有對應**。
+        而生態解決誤刪的方式**不是**把空白解釋成不變更，**而是讓「不變更」以「欄位／列缺席」表達**。
+     🔴 **所以本節翻的不是一個布林值，是換了一套表達機制**——三件事缺一不可，見 (a)。
+     ⚠ 本條的「跟隨」目前建立在 **Matrixify 這個第三方事實標準**上，等級只有 `press`，
+        **不是 Shopify 官方語義**（Shopify 原生是否提供翻譯 CSV 匯入匯出本輪無法確認 ⇒ 68 的 V-182，
+        併入本檔 V-163）。若日後查出官方原生行為與 Matrixify 不同，本條要重判。 -->
 
 61 §6.1／§6.2 已確認商品 CSV 與庫存 CSV 是兩套（63 §L-8）。**翻譯必須是第三套**，理由三條：
 
 1. **鍵不同**：商品 CSV 的鍵是 `handle` ＋ 變體行；翻譯的鍵是 `(resource_type, resource_id, locale, field_key, market)`。硬塞進商品 CSV 就要為每個語言加一組欄位（3 語 × 6 欄 = 18 欄），加第 4 個語言時整張表要改。
 2. **範圍不同**：翻譯涵蓋頁面、部落格、選單、主題字串、通知範本、政策——這些**根本不在商品 CSV 裡**。
-3. 🔴 **空白語義相反，而且相反的方向是資料毀損**：商品 CSV 的「以相同 handle 覆寫商品」語義是「**空白儲存格會把既有資料洗掉**」（61 §6.1）。同樣的語義套到翻譯上 ＝ 譯者交回一份只填了 20% 的檔案，其餘 80% 的既有譯文全被清空。
+3. **生命週期不同**：翻譯檔會**出境**（交給外部譯者／TMS）再回來，因此需要 `source_digest` 這種商品 CSV 沒有的東西（見下）。**空白語義不再是分家的理由**——它現在與商品 CSV 同向。
+
+#### (a) 🔴 空白＝清空，而「不變更」用**缺席**表達（三件事一起才成立）
+
+| # | 機制 | 鍵 | 沒有它會怎樣 |
+|---|---|---|---|
+| ① | **儲存格空白 ＝ 清空該譯文** | `i18n.import.blank_means_unchanged: false`（原 `true`） | 與商品 CSV 反向，且與生態工具反向：同一份檔案在 Matrixify 與我方得到相反結果 |
+| ② | **匯出可選語言與欄位**——不想動的**不要出現在檔案裡** | `i18n.export.selectable_locales` / `selectable_fields` / `omit_unselected_as_columns` | ①翻面後商家**沒有任何辦法**表達「只改標題、別動描述」⇒ ① 單獨存在就是一台誤刪產生器 |
+| ③ | **匯入預覽把「將被清空的儲存格數」單獨列成一個數字** | `i18n.import.preview_required` / `preview_clear_count_separate` / `clear_ratio_confirm_threshold: 0.2` | 商家在按下確認前看不到自己要刪掉多少東西。**Shopify 沒有這一條，但翻面之後我方必須有** |
+
+**「不變更」的三種表達（本節的核心契約）**：
+
+```
+列缺席   ⇒ 該 (resource, locale, field) 完全不處理
+欄位缺席 ⇒ 該欄位對檔案內所有列都不處理
+儲存格空 ⇒ 🔴 清空該譯文（本次翻面的內容）
+```
+
+🔴 **缺席與空白必須在解析層就分開**（`i18n.import.absent_vs_blank_distinguished_by_header: true`）：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」在多數 CSV 函式庫裡都會塌成 `nil`。匯入器**必須以表頭判定欄位是否存在，不以值判定**——這一行寫錯，②③ 兩道護欄同時失效，而且測試很可能全綠（因為測試檔通常欄位齊全）。
+
+#### (b) 檔案契約
 
 ```
 翻譯 CSV（i18n.export.format: csv）
   欄位：resource_type, resource_gid, field_key, locale, market_handle(選填),
         source_text(唯讀參考), translated_text, source_digest, status
-  🔴 空白 = 不變更（與商品 CSV 相反）。清空譯文必須明確寫 __CLEAR__（i18n.import.explicit_clear_token）
+  🔴 translated_text 空白 = **清空該譯文**（與商品 CSV 同向，61 §6.1）
+     「不變更」＝ 讓該列／該欄**不出現在檔案裡**（見 (a)）
+     __CLEAR__（i18n.import.explicit_clear_token）保留為空白的**同義寫法**，兩者都清空——
+       它現在的用途是「讓『我是故意清空的』在檔案裡看得出來」，不再是唯一的清空手段
   🔴 匯入必比對 source_digest：
        相符   ⇒ 正常寫入，outdated=false
        不相符 ⇒ **仍然寫入**（譯者是照當時原文翻的，內容多半可用）
                 但 outdated=true, severity 依 §C.5(b) 計算, review_required=true
                 並在匯入報告單列出。**不得靜默當成最新**
        缺欄   ⇒ 整檔拒絕（沒有 digest 就無法安全回寫）
+  🔴 清空一律寫稽核軌（i18n.import.clear_writes_audit_trail）：誰、何時、哪一次匯入。
+     沒有它，「譯者交錯檔案」這件事在事後完全無法還原
   分檔：按 (locale, resource_type) 分檔；單檔上限沿用 csv.product_max_upload_mb(15MB)
 ```
+
+⚠ **舊格式檔案的語義已經反轉**：在翻面前寫的檔案裡，**空白儲存格**原本代表「不變更」，現在代表「清空」。這正是本次翻面的內容，**必須靠 ③ 的預覽數字讓商家在按下確認前看見**——不能靠 release note，因為檔案是譯者給的，商家不會知道它是什麼時候寫的。
 
 - **匯出必含 `source_text`**（唯讀參考欄）：沒有原文的翻譯檔對譯者不可用。
 - **XLIFF 2.1 匯出**列為 P2〔ours〕：TMS 工作流的產業標準；⚠ 我方是否需要、以及 Shopify 是否提供對應格式**未查證 ⇒ V-163**。首發只做 CSV。
@@ -761,7 +876,7 @@ url_prefix ∉ handle.reserved_first_segments      -- products / collections / p
 
 | 項 | 規則 | 依據 |
 |---|---|---|
-| 自動重導 | 🔴 **不做**（地區自動重導預設關閉已由 62 §K.2 定案，Google 明文建議避免）。**語言維度同樣不自動重導** | 62 §K |
+| 自動重導（**語言維度**） | 🔴 **不做**（`i18n.storefront.auto_redirect_on_language: false`）。<!-- 依 68 號 §C-3 修正理由（2026-08-12）。原文：「🔴 **不做**（地區自動重導預設關閉已由 62 §K.2 定案，Google 明文建議避免）。**語言維度同樣不自動重導**」🔴 **值不變，理由必須換**：原文把「語言不重導」掛在「地區也不重導」上，而**地區的預設已翻成啟用**（62 §K.2）。不改這行，下一個人會照著括號裡那句話把語言也一起翻開——那是 Shopify **明文預設停用**的東西。 -->✅ **這一條本來就與 Shopify 一致**：本尊**預設停用自動語言偵測**（`help`，68 §C-3），只有**地區**重導預設啟用。**兩個預設值方向相反，不得連動。** | 62 §K.2（地區維度已翻為預設啟用）＋ `help` |
 | `Accept-Language` | **只用來決定「要不要顯示建議橫幅」與切換器的預設高亮**，🔴 **不得改變同一 URL 的輸出內容** | 本檔〔ours〕 |
 | Cookie | 同上：只影響建議橫幅是否再顯示。🔴 **不得**讓 cookie 決定頁面語言 | 本檔〔ours〕 |
 | 切換器 | 必須是**真實 `<a href>`**，指向目標語言的完整 URL | 62 §K.2 已定（爬蟲發現其他版本的路徑之一） |
@@ -949,7 +1064,7 @@ cache_stamp = MAX(
 | L9 | 快取維度降維 ＋ `touched_dimensions` 斷言 ＋ 新 `cache_stamp` 來源 | **M2** | 63 §D.3 | I18N-10／I18N-11 |
 | L10 | hreflang 的語言維度接入（餵 62 §I.1）＋ 語言變更的失效掛鉤 | **M2**（單市場多語言，62 S11 已列） | L7 | 62 §O REG-1／REG-2／REG-7 |
 | L11 | 翻譯後台（資源樹 ＋ 雙欄 ＋ outdated 標示） | **M2** | L3～L5 | 29 §2.4 形態 |
-| L12 | 翻譯 CSV 匯入匯出（digest 比對、空白＝不變更） | **M5** | L3 | AD-7～AD-9 |
+| L12 | 翻譯 CSV 匯入匯出（digest 比對、🔴 **空白＝清空／缺席＝不變更** ＋ 選擇性匯出 ＋ 匯入預覽清空計數）<!-- 依 68 §B-3 修正，原文：「翻譯 CSV 匯入匯出（digest 比對、空白＝不變更）」。🔴 選擇性匯出與清空計數**不是加分項，是翻面後的必要配套**，不得拆到後面的里程碑。 --> | **M5** | L3 | AD-7、AD-7b、AD-8、AD-9 |
 | L13 | 機器翻譯 provider ＋ 批次 ＋ 稽核欄 | **M5** | L3 | AD-5／AD-6 |
 | L14 | 繁簡轉換工具（含歧義報告） | **M5** | L13 的批次骨架 | AD-6 |
 | L15 | per-market 翻譯覆寫（Adapt，`market_id` 非 NULL） | **M5**（Markets P1，29 §8 已列） | 29 markets 全表 | I18N-6 |
@@ -980,6 +1095,20 @@ cache_stamp = MAX(
 | `catalog_flow.default_variant_liquid_title` | `Default Title` 契約（與語言無關） | §B.3-3 |
 | `csv.product_max_upload_mb` | 翻譯 CSV 沿用同一上限 | §E.6 |
 | `notification.non_toggleable_ui` | 唯讀欄位的 UI 形態（灰化＋tooltip） | §E.3 |
+
+**2026-08-12 依 68 號「全部跟隨 Shopify」裁定的鍵變更**（本檔範圍；每鍵在 `limits.yml` 內都有 `依 68 號 §X … 原值：…` 的追溯註釋）：
+
+| 鍵 | 原值 → 新值 | 依據 | 本檔落點 |
+|---|---|---|---|
+| `i18n.import.blank_means_unchanged` | `true` → **`false`**（空白＝清空） | 68 §B-3（`press`，Matrixify 事實標準；與商品 CSV 同向） | §E.6(a)① |
+| `i18n.import.absent_row_means_unchanged` / `absent_column_means_unchanged` / `absent_vs_blank_distinguished_by_header` | 新增 | 68 §B-3（「不變更」改以**缺席**表達） | §E.6(a) |
+| `i18n.export.selectable_locales` / `selectable_fields` / `omit_unselected_as_columns` | 新增 | 68 §B-3② | §E.6(a)② |
+| `i18n.import.preview_required` / `preview_clear_count_separate` / `clear_ratio_confirm_threshold` / `clear_writes_audit_trail` | 新增 | 68 §B-3③（Shopify 沒有，翻面後**必須**有） | §E.6(a)③ |
+| `i18n.import.explicit_clear_token_is_alias_of_blank` | 新增 `true` | 同上（`__CLEAR__` 降為同義寫法） | §E.6(b) |
+| `handle.collision_strategy_generated` | `numeric_suffix_from_2` → **`numeric_suffix_from_1`** | 68 §C-4（`dev` `potion`／`potion-1` ＋ `test` ×4） | §D.4(b)、§M-1 |
+| `handle.liquid_filter_fallback_trigger` / `liquid_filter_fallback_on_non_ascii_result_forbidden` | 新增 | 68 §F-3（staff 復現：filter **保留**非 ASCII） | §D.5、V-161 |
+| `handle.ascii_only` / `expand_symbol_words` / `delete_chars` / `max_chars` | **值不變**，註釋補出處與偏離標記 | 68 §B-1／§C-4／§C-6 | §D.1 對照表、62 §F.3-1 |
+| `i18n.storefront.auto_redirect_on_language` | **值不變（`false`）**，理由改寫 | 68 §C-3（本尊亦預設停用；**地區**那一半已翻為啟用） | §F.2 |
 
 ---
 
@@ -1026,10 +1155,10 @@ cache_stamp = MAX(
 | HDL-4 | 不可分解字母 | `Straße` ⇒ `strasse`（**不是** `stra-e`） |
 | HDL-5 | 品質閘門 | `棉質短T` ⇒ 落 fallback；`無印良品 MUJI 有機棉 T-Shirt` ⇒ `muji-t-shirt` |
 | HDL-6 | 截斷在分隔符 | 超長標題截斷後無半個詞、無尾隨 `-` |
-| HDL-7 | 衝突策略 | 生成衝突 ⇒ `-2`；**手填衝突 ⇒ 拒絕**並回 `HANDLE_TAKEN` |
+| HDL-7 | 衝突策略 | <!-- 依 68 §C-4 修正，原文：「生成衝突 ⇒ `-2`」 -->生成衝突 ⇒ **`-1`**（第二個同名資源得 `-1`，第三個得 `-2`；對照 Shopify 官方例 `potion`／`potion-1`）；**手填衝突 ⇒ 拒絕**並回 `HANDLE_TAKEN` |
 | HDL-8 | 永不回收 | 改名後以舊 handle 建新商品 ⇒ 拒絕（除非商家已刪該 301） |
 | HDL-9 | **前綴保留的 301** | `/en/products/舊` ⇒ 301 到 `/en/products/新`（不得掉回無前綴） |
-| HDL-10 | filter 不共用實作 | `{{ '顏色' \| handleize }}` 不得為空字串；且與 `Handles::Generate` 是不同實作 |
+| HDL-10 | filter 不共用實作 | <!-- 依 68 §F-3 收緊，原判準：「`{{ '顏色' \| handleize }}` 不得為空字串；且與 `Handles::Generate` 是不同實作」——「不得為空」擋不住「落成 h-xxxxxxxx」 -->`{{ '顏色' \| handleize }}` **必須恰為 `顏色`**（不得為空字串，**也不得是 `h-{sha1}` fallback**——本尊保留非 ASCII）；`{{ '' \| handleize }}` 與 `{{ '---' \| handleize }}` ⇒ 落 `h-{sha1}`；且與 `Handles::Generate` 是不同實作 |
 
 **後台**
 
@@ -1041,7 +1170,8 @@ cache_stamp = MAX(
 | AD-4 | 進度數字同源 | 列表徽章／翻譯後台／健康頁／GraphQL 四處數字相同（改一筆譯文後同時變） |
 | AD-5 | 機翻稽核 | MT 寫入的每一列 `value_source='machine'` ∧ `review_required=true`；批次超門檻需二次確認 |
 | AD-6 | 繁簡轉換 | 簡→繁批次的完成報告列出含歧義字的筆數；UI 明示「字形轉換不是翻譯」 |
-| AD-7 | **翻譯 CSV 空白＝不變更** | 匯入只填部分欄位的檔案，未填欄位的既有譯文**不變** |
+| AD-7 | **翻譯 CSV 空白＝清空；缺席＝不變更** | <!-- 依 68 §B-3 反轉，原文：「**翻譯 CSV 空白＝不變更** \| 匯入只填部分欄位的檔案，未填欄位的既有譯文**不變**」 -->三條一起測：①匯入含空白 `translated_text` 的列 ⇒ 該譯文**被清空**；②匯入**不含** `translated_text` 欄的檔案（表頭就沒有）⇒ 既有譯文**不變**（🔴 與 ① 用同一份資料對照，確認解析層真的分得出缺席與空白）；③dry-run 預覽的「將清空 N 筆」與實際清空筆數相等，且清空比例 > `clear_ratio_confirm_threshold` 時需二次確認 |
+| AD-7b | **清空可回溯** | 被清空的譯文在稽核軌可查到（誰、何時、哪一次匯入） |
 | AD-8 | digest 不符不靜默 | digest 不符的列寫入後標 `outdated` ＋ `review_required`，並出現在匯入報告 |
 | AD-9 | 缺 digest 欄拒收 | 缺 `source_digest` 欄的檔案整檔拒絕 |
 
@@ -1049,9 +1179,9 @@ cache_stamp = MAX(
 
 | # | 條目 | 判準 |
 |---|---|---|
-| SF-1 | 語言只由 URL 決定 | 同一 URL 送三種 `Accept-Language`，回應主體逐位元組相同 |
+| SF-1 | 語言只由 URL 決定 | 同一 URL 送三種 `Accept-Language`，回應主體逐位元組相同。<!-- 依 68 §C-3 補測試實作註記（2026-08-12）：**地區**自動重導已預設啟用（62 §K.2），而其判定輸入含瀏覽器語言 ⇒ 三次請求的**狀態碼可能不同**（302 vs 200）。本條斷言的是**回應主體**，不是狀態碼 ⇒ 測試必須**跟隨重導到最終 URL 後再比對主體**，否則會把「地區重導預設開」誤判成跨語言污染。 -->⚠ 測試須**跟隨重導**後再比對主體（地區重導預設開，狀態碼可能不同；本條測的是語言維度） |
 | SF-2 | 無 `Vary: Accept-Language` | 回應標頭不含該值 |
-| SF-3 | 不自動重導 | 預設不因語言重導；切換器是真實 `<a href>` |
+| SF-3 | **語言**不自動重導 | 預設不因**語言**重導（`auto_redirect_on_language: false`，✅ 與本尊一致）；切換器是真實 `<a href>`。<!-- 依 68 §C-3 補充：**地區**重導的預設已翻為啟用（62 §K.2），本條**只管語言維度**，兩者不得連動。 -->⚠ 本條**不涵蓋地區重導**——地區維度預設**啟用**，其驗收在 62 §O REG-9 |
 | SF-4 | 未發布語言 404 | 未發布語言的 URL 回 404，且不在 hreflang／sitemap 內 |
 | SF-5 | 三層字串解析 | 商家覆寫 → 主題檔 → 平台預設；未命中不得輸出 key 名或空字串 |
 | SF-6 | JSONC 容錯 | 帶 `/* */`、CRLF、BOM、尾隨逗號的 locale 檔可解析 |
@@ -1064,14 +1194,19 @@ cache_stamp = MAX(
 
 > 起編說明：倉庫現有最大編號 **V-146**（66 號 §C.3）。本檔自 **V-160** 起編，留 13 號緩衝避免與同輪其他 agent 撞號。
 >
-> **本檔結案的既有條目**：**V-119**（Shopify `handleize` 對 CJK 的行為）——政策面由 2026-08-12 裁定結案（我方一律 ASCII，不再需要對齊），已於 62 §F.3 與 §附錄 A 標記結案；其**主題相容殘留**改由 V-161 承接。
+> **本檔結案的既有條目**：**V-119**（Shopify `handleize` 對 CJK 的行為）。
+> <!-- 依 68 號 §B-1 改寫，原文：「政策面由 2026-08-12 裁定結案（我方一律 ASCII，**不再需要對齊**），
+>      已於 62 §F.3 與 §附錄 A 標記結案；其**主題相容殘留**改由 V-161 承接。」
+>      🔴 「不再需要對齊」是錯的敘述——68 號**把答案查出來了**（本尊保留 CJK），
+>      所以這是「查到了、而且我方明知並偏離」，不是「不必比較」。 -->
+> **正確形態**：68 號已查明本尊行為＝**保留 CJK**（`press` ×4，官方從未文件化）；我方一律 ASCII 是**明知偏離**，唯一依據＝使用者裁定（**裁定 > Shopify**）。偏離登記在 **62 §F.3-1**。其**主題相容殘留**（filter 面）由 V-161 承接，**該條亦已依 68 §F-3 縮小**（filter 保留非 ASCII 已證實）。
 
 | # | 未取得的是什麼 | 取得途徑 | 結案前的處置 | 影響章節 |
 |---|---|---|---|---|
-| **V-160** | Shopify handle 的字元數上限；以及 `handleize` 對 `.` 與撇號的實際處置（轉分隔／刪除） | shopify.dev 商品欄位頁；或 dev store 實測 | 我方定 `handle.max_chars: 255`、`.`→分隔、撇號→刪除（皆由裁定範例逆推，§D.1 已可重跑驗證）。**不因未查證而改動** | §D.1 |
-| **V-161** | Liquid `handleize` **filter** 對 CJK 的實際輸出（保留／落空／轉寫）——原 V-119 的主題相容殘留 | 實測（中文選項名的主題渲染） | filter 保留非 ASCII ＋ 空結果落 `h-{sha1}`；與 `Handles::Generate` **不共用實作** | §D.5 |
+| ~~**V-160**~~<br>✅ **後半已答，前半降級** | ~~Shopify handle 的字元數上限；以及 `handleize` 對 `.` 與撇號的實際處置（轉分隔／刪除）~~<br>**後半已答**（68 §C-4 `test`）：`.`→分隔（`A.P.C. → a-p-c`、`B.M.B BREWERY → b-m-b-brewery`）、`/`→分隔（`#AU/NZ → au-nz`）、撇號與引號**刪除**（`Women's → womens`、`16" Cash Drawer → 16-cash-drawer`）⇒ **逐條與我方相同**。<br>**前半（字元上限）**：255 已有二手佐證且**數值恰好相同**（`press`，matrixify）⇒ 從「未查證」降為「二手佐證」，**取得官方出處改由 68 的 V-183 承接** | shopify.dev 商品欄位頁；或以超長標題實測 | 維持 `handle.max_chars: 255`、`.`→分隔、撇號→刪除。**不因未查證而改動** | §D.1 |
+| ~~**V-161**~~<br>✅ **已縮小** | ~~Liquid `handleize` **filter** 對 CJK 的實際輸出（保留／落空／轉寫）~~ ⇒ **已答：保留**（`press`，community.shopify.dev 1060，2024-10，**staff 復現**：輸出保留 emoji、`ŭ`→`u`）。**殘留**：全形字元、以及空輸入／全分隔符輸入的輸出 ⇒ 併入 68 的 **V-181** | 實測（中文選項名的主題渲染）＋ Liquid 沙箱 | <!-- 依 68 §F-3 縮小，原處置：「filter 保留非 ASCII ＋ 空結果落 `h-{sha1}`；與 `Handles::Generate` **不共用實作**」 -->filter **保留非 ASCII**（✅ 已證與本尊一致）；`h-{sha1}` fallback 🔴 **只在空／全分隔符輸入時觸發，不得因結果非 ASCII 觸發**；與 `Handles::Generate` **不共用實作** | §D.5 |
 | **V-162** | Shopify 對帶 script subtag 語言（`zh-Hant`／`zh-Hans`）使用的 URL 子資料夾字串 | help.shopify.com/manual/markets；實測 | 我方用 `/zh-hant`／`/zh-hans`（理由見 §F.1(b)），**不用 `/zh-tw`** | §F.1 |
-| **V-163** | Shopify 翻譯匯入匯出的官方檔案格式與欄位（是否 CSV、是否帶 digest、空白語義） | help.shopify.com Translate & Adapt 子頁 | 我方 CSV ＋ 強制 `source_digest` ＋ **空白＝不變更**；XLIFF 列 P2 | §E.6 |
+| **V-163**<br>⚠ **處置已改** | Shopify **原生**是否提供翻譯 CSV 匯入匯出、格式與欄位、以及**空白語義**（68 §B-3 本輪亦無法確認原生能力是否存在 ⇒ 併入 68 的 **V-182**） | help.shopify.com Translate & Adapt 子頁逐頁；或 dev store 實測 | <!-- 依 68 §B-3 改寫，原處置：「我方 CSV ＋ 強制 `source_digest` ＋ **空白＝不變更**；XLIFF 列 P2」 -->我方 CSV ＋ 強制 `source_digest` ＋ 🔴 **空白＝清空、缺席＝不變更**（§E.6(a) 三件套）；XLIFF 列 P2。⚠ 本處置跟隨的是 **Matrixify 這個第三方事實標準**（`press`），**不是 Shopify 官方語義**——若查出官方原生行為不同，本條要**重判**（連 `blank_means_unchanged` 一起） | §E.6 |
 | **V-164** | `translationsRegister` 在 `translatableContentDigest` 不符時的官方行為（拒絕？寫入並標過期？） | shopify.dev mutation 頁的錯誤碼表 | 我方**寫入並標 outdated ＋ review_required**（§E.6）。不得靜默當成最新 | §C.5、§E.6 |
 | **V-165** | 商家可新增的語言集合是否封閉（Shopify 是否只允許其支援清單內的語言） | help.shopify.com 語言設定頁；`shopLocaleEnable` 的錯誤碼 | 我方**開放**（裁定明文「可自行添加任何語言」），只驗 BCP-47 格式與禁用碼 | §A.2、§C.1 |
 | **V-166** | MySQL 8 可用的中文排序 collation（是否有 `utf8mb4_zh_0900_as_cs`、其排序依據是拼音或筆畫） | MySQL 官方文檔；實機 `SHOW COLLATION` | 沿用預設 collation，UI 標「依系統順序」，**不宣稱拼音或筆畫排序** | §C.7 |
@@ -1087,8 +1222,9 @@ cache_stamp = MAX(
 
 | # | 衝突 | 現況 | 本檔立場 | 誰該改 |
 |---|---|---|---|---|
-| **M-1** | **handle 允許 CJK** | 13 §F2-1：「中文標題不轉拼音，改用『允許 unicode handle（URL encode）』……demo 選 unicode handle（`/products/棉質短T` 可用）」；13 §F2-2「衝突自動 `-1` `-2` 後綴」 | 🔴 **被 2026-08-12 裁定推翻**：一律 ASCII（§D.1）。另衝突尾碼自 `-2` 起算，且**手填衝突拒絕不加尾碼**（§D.4(b)） | **13 §F2**（本檔不改 13，另有 agent 在改） |
-| **M-2** | **handle 列為可翻譯資源** | 29 §2.1 把 `PRODUCT/COLLECTION/ARTICLE.handle` 列入 `TranslatableResourceType` 的欄位集 | 我方 handle **不可翻**（§D.3，刻意偏離官方）。29 §2.1 需加註「本專案不採用 handle 的可翻譯性，語言維度由 URL 前綴承載，見 67 §D.3」 | 29 §2.1 |
+| **M-1** | **handle 允許 CJK** | 13 §F2-1：「中文標題不轉拼音，改用『允許 unicode handle（URL encode）』……demo 選 unicode handle（`/products/棉質短T` 可用）」；13 §F2-2「衝突自動 `-1` `-2` 後綴」 | 🔴 **前半：被 2026-08-12 裁定推翻**——一律 ASCII（§D.1）。⚠ 但要寫清楚這是**明知偏離 Shopify**（本尊保留 CJK，68 §B-1；登記於 62 §F.3-1），不是「13 寫錯了」。<br>✅ **後半：反向結案**——<!-- 依 68 §C-4 修正，原文：「另衝突尾碼自 `-2` 起算，且**手填衝突拒絕不加尾碼**（§D.4(b)）」 -->**13 §F2-2 的 `-1` 起算本來就是對的**（Shopify 官方例 `potion`／`potion-1` ＋ 實測），要改的是本檔，已改（§D.4(b)）。**手填衝突拒絕不加尾碼**維持（68 V-184 無一手證據 ⇒ 保守失效） | **13 §F2-1 仍待改**（ASCII 化）；**13 §F2-2 不必改**（它是對的） |
+| **M-2** | **handle 列為可翻譯資源** | 29 §2.1 把 `PRODUCT/COLLECTION/ARTICLE.handle` 列入 `TranslatableResourceType` 的欄位集。<br>🔴 **68 §F-1 補強了這條的份量**：這不只是 29 號的一張表——`shopify.dev/changelog/resource-url-handles-are-now-translatable`（**2023-06-26**）是**官方明文能力**，且實務上啟用多語言後同一商品在各語言**就是不同 handle**（AJAX API 必須用該語言的 handle） | 我方 handle **不可翻**（§D.3，**明知偏離**，依據＝「一律英文」裁定的下游後果，不是技術偏好）。29 §2.1 需加註「本專案不採用 handle 的可翻譯性，語言維度由 URL 前綴承載，見 67 §D.3」。⚠ **待使用者確認**：「handle 一律英文」是否**同時**意味著放棄 per-locale handle 能力（我方推定是） | 29 §2.1 |
+| **M-8** | **本輪跟隨 Shopify 的結論反轉，尚未回寫到下游檔案** | `docs/handoff/2026-08-12-open-decisions.md` 的 **B-3／C-1／C-2／C-3／D-3** 五條仍記著反轉前的結論；`63 §G.4`／`65 §A2·T11`／`55` 金額測試矩陣仍記著「exponent=3 於 market 建立時擋下」；`13 §F2-1` 仍是 unicode handle | 以 `config/limits.yml` 的鍵為準（每鍵都有 `依 68 號 §X` 追溯註釋）。🔴 **這些檔案本輪不得改**（另有 agent 在跑），必須由其擁有者回寫，否則會出現「規格說 A、鍵說 B」的分裂 | open-decisions／63／65／55／13 |
 | **M-3** | ~~62 §M S2「`handle` 欄位＋可翻譯」~~ | — | ✅ **本輪已改**（改為標註不可翻並指向 67 §D.4） | — |
 | **M-4** | **頁級 cache key 無條件含 locale** | 63 §D.3 的 key 組成把 `locale` 寫死在列表裡 | 改為**依實際依賴降維**（§G.2），並沿用該節既有的 `touched_sources` 自檢做 fail-closed 判定。另 `catalog_flow.cache_stamp_sources` 必須加入 `translations` | 63 §D.3（本檔不改 63） |
 | **M-5** | **`translations` 表缺六個欄位** | 29 §2.2 的表定義只有 `source_digest` ＋ `outdated` | 需補 `outdated_severity`／`value_source`／`review_required`／`source_locale_tag`／`updated_by_staff_id`／`updated_at`（§C.2） | 29 §2.2 |

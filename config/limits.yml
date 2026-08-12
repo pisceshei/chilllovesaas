@@ -139,7 +139,12 @@ currency_display:
   #      psp_minor_unit = storage_cents / 10 ** (2 - iso_exponent)
   #    JPY 的 ¥1,480 顯示 `¥1,480.00`、儲存 148_000、**送 Stripe 必須是 1480**。
   #    把儲存值直接送出去＝收款金額 100 倍。餘數不為 0 時直接 raise（代表上游湊整沒套用），
-  #    **不得四捨五入抹掉**。exponent=3 的幣別首發不支援，見 catalog_flow.unsupported_currency_exponents。
+  #    **不得四捨五入抹掉**。
+  #    <!-- 依 68 號 §D-3 修正交叉引用，原文：「exponent=3 的幣別首發不支援，見
+  #         catalog_flow.unsupported_currency_exponents。」該鍵已由 [3] 改為 []（跟隨 Shopify：
+  #         幣別代碼開放、金額當 2 位處理）。🔴 **本條（送款依 ISO exponent 換算、餘數 raise、
+  #         禁四捨五入）不受影響，一個字都沒鬆**——exponent=3 幣別現在是「可選但送款須 PSP pack
+  #         明文宣告，未宣告即 reject」，見 catalog_flow.exponent3_* 四鍵與 money_boundary R5。 -->
   psp_minor_unit_follows_iso4217: true
   # 🔴 **本鍵不是 PSP 換算的資料來源**（65 §J M-4）：`iso4217_zero_decimal_overridden` 的用途是
   #    「哪些幣別的**顯示位數**被裁定二覆蓋」，鍵名裡的 `iso4217` 講的是被覆蓋的對象，不是宣告值。
@@ -182,8 +187,17 @@ money_boundary:
   psp_minor_unit_must_be_declared_by_pack: true
   psp_undeclared_currency_action: reject
   psp_undeclared_error_code: PSP_MINOR_UNIT_UNDECLARED
-  # 首發只支援 exponent ≤ 2（儲存尺度 ×100 表達不了 exponent=3 的最小單位）。
-  # 與 catalog_flow.unsupported_currency_exponents:[3] 是同一條規則的兩個執法點（market 建立期／送款期）。
+  # 送款只支援 exponent ≤ 2（儲存尺度 ×100 表達不了 exponent=3 的最小單位）。
+  # <!-- 依 68 號 §D-3 修正交叉引用，原文：「首發只支援 exponent ≤ 2（…）。與
+  #      catalog_flow.unsupported_currency_exponents:[3] 是同一條規則的兩個執法點
+  #      （market 建立期／送款期）。」
+  #      跟隨 Shopify 之後，**market 建立期的那個執法點被移除了**（幣別代碼開放，
+  #      catalog_flow.unsupported_currency_exponents: []）。
+  #      🔴 **本鍵的值不變（2），而且從「兩個執法點之一」變成「唯一的執法點」——
+  #         也就是說它比改動前更重要，不是更不重要。** 任何人不得因為「幣別已經開放了」
+  #         而把本鍵提高到 3 或刪除：那不是放寬幣別清單，那是動金額模型（鐵律 3、65 號全文）。
+  #         exponent=3 幣別的收款路徑是「PSP pack 明文宣告 minor unit ＋ 宣告儲存精度不足的處理」，
+  #         不是把本鍵改大。 -->
   max_supported_iso_exponent: 2
   # 換算餘數不為 0 ⇒ raise（代表上游湊整沒套用），**禁止四捨五入抹掉**。
   psp_non_integral_conversion_action: raise
@@ -238,6 +252,10 @@ money_boundary:
   #    exponent=2 的幣別下所有轉換的 divisor 都是 1，錯誤實作與正確實作**輸出完全相同**。
   test_matrix_zero_decimal_required: [JPY, TWD, KRW]
   test_matrix_two_decimal_required: [HKD, USD]
+  # 🔴 「rejected」自 2026-08-12（68 §D-3）起指的是**送 PSP 時被 reject**，
+  #    **不再**是「market 建立時被擋掉」——幣別本身已可選（catalog_flow.exponent3_currency_selectable）。
+  #    斷言要測的是：KWD 市場可建立、金額以 2 位小數儲存與顯示、精度損失被登記，
+  #    **而 to_psp_minor 在 PSP pack 未宣告 minor unit 時 raise/reject**。
   test_matrix_three_decimal_rejected: [KWD]
   test_matrix_boundary_values: [0, 1, smallest_representable, non_representable_remainder, bigint_max]
   # 金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，CI fail。
@@ -2084,6 +2102,31 @@ market:
   max_nesting_depth: null
   verify_market_limits: true
 
+  # --- 新市場的 web presence 預設（62 §J.2；依 68 號 §C-2 跟隨 Shopify 做法新增）--------
+  # 🔴 **預設值與建議值是兩件事，Shopify 刻意把它們拆開，我方照做。**
+  # 原本 62 §J.2 只寫「預設＝子資料夾」一個值，把兩者壓成一個 ⇒ 商家每開一個市場就靜默多一份站點。
+  # Shopify 實際做法（出處：changelog.shopify.com/posts/
+  #   subfolders-are-no-longer-created-by-default-for-new-markets，**2023-05-23**，dev）：
+  #   在此之前新的單國市場會**自動建立語言／國家子資料夾**；此後**新市場預設沿用 primary market 的
+  #   URL 結構**，子資料夾改為商家自行設定。
+  # 建議值（help.shopify.com/en/manual/international/managing-international-domains，help）：
+  #   首次設定國際銷售**建議**子資料夾（設定簡單、共享網域權重）——這一條我方一致，維持。
+  # 🔴 **為什麼不是雞毛蒜皮**：自動配子資料夾＝新增一批可索引 URL、一批 hreflang 條目、一批
+  #    sitemap 列。Shopify 在 2023 專門為此發 changelog 把它關掉，方向很明確——
+  #    **多市場的 URL 增生必須是商家的明示動作。**
+  # 🔴 **防回退**：看到 `inherit_primary` 不要當成「還沒設定好」而改成 subfolder。
+  #    要改的是 UI 建議值（ui_recommended_strategy），不是這個鍵。
+  web_presence:
+    default_for_new_market: inherit_primary      # 繼承 primary web presence 的網域與 URL 結構
+    auto_create_subfolder_on_market_create: false
+    ui_recommended_strategy: subfolder           # 建議值（help）；建議 ≠ 預設
+    # 四種可選策略（help 同頁）。URL 參數（?loc=de）Google 明文不建議 ⇒ 我方不提供（62 §J.1）。
+    strategies_allowed: [primary_domain_only, cctld, subdomain, subfolder]
+    # domain 與 subfolderSuffix 互斥（XOR）；語言-only 子資料夾僅限 primary market（29 §1.2）。
+    domain_xor_subfolder: true
+    # 建議獨立網域的判準一律走法域能力，不得寫國別 if-else（鐵律 11；62 §J.2）。
+    local_domain_recommendation_source: jurisdiction_pack_capability
+
 # =============================================================================
 # 16. B2B（P1-33／H-64～H-68；規格見 29 §10、契約見 28 §13b）
 # =============================================================================
@@ -2248,9 +2291,40 @@ catalog_flow:
   price_scale_internal: micro_cents
   # 匯率存 parts-per-million 的 BIGINT。29 §1.4 的 currency_exchange_rates.rate 未指定型別（63 §L-5）。
   exchange_rate_storage: rate_ppm
-  # 🔴 儲存尺度 ×100 不足以表達 exponent=3 幣別（KWD/BHD/JOD）的最小單位。
-  #    首發擋下：market 建立時回 userErrors{code: INCLUSION}。⚠ V-94（63 §G.4）
-  unsupported_currency_exponents: [3]
+  # 依 68 號 §D-3 跟隨 Shopify 做法修正（2026-08-12）。
+  # 原值 `[3]`，原註釋：「🔴 儲存尺度 ×100 不足以表達 exponent=3 幣別（KWD/BHD/JOD）的最小單位。
+  #   首發擋下：market 建立時回 userErrors{code: INCLUSION}。⚠ V-94（63 §G.4）」
+  # Shopify 實際做法（68 §D-3）：
+  #   幣別代碼**支援**——`CurrencyCode` enum 含 KWD／BHD／JOD／OMR／TND（dev）；
+  #   金額**四捨五入到 2 位**——商家以 API 送 `3.004`，Shopify 存成 `3.00`（press，community 147003）；
+  #   顯示不一致（BHD 首頁 3 位、商品頁 2 位，press 197071）⇒ 官方沒有把 3 位小數做通；
+  #   收款：Shopify Payments **不支援** Kuwait／Bahrain／Oman 開店（press 1069509）。
+  #   ⇒ 本尊的實質做法是「**幣別代碼開放、金額當 2 位處理、精度損失不處理**」，不是「擋掉幣別」。
+  # ⇒ 我方改成：**不擋幣別**（擋掉會讓 1:1 對齊出現一個 Shopify 沒有的缺口），改為下列三條。
+  #
+  # 🔴🔴 **不得把本條讀成「鐵律 3 放寬了」。** 改的是**幣別清單**，不是**金額邊界**：
+  #    KWD 的 milli-unit 問題**依然無解**（`2.905` 存不進 ×100 的尺度，會落成 `2.90`）——
+  #    Shopify 也是直接四捨五入，所以這是**跟隨的結果**，不是我方的缺陷；但它必須被寫下來，不能靠沉默。
+  #    `money_boundary.max_supported_iso_exponent: 2` 與 `psp_undeclared_currency_action: reject`
+  #    **一個字都不動**（65 號單位邊界契約）。市場建立期的閘門被移除之後，**PSP 邊界是唯一的執法點**。
+  unsupported_currency_exponents: []
+  # ① 幣別可選：market／price list 可選 exponent=3 幣別，建立時**不再**回 INCLUSION。
+  exponent3_currency_selectable: true
+  # ② 顯示與儲存一律 2 位小數——與 2026-08-12 裁定二（所有國家一律兩位小數）**天然吻合**，
+  #    不需要任何例外邏輯（currency_display.force_minor_unit_digits: 2 已涵蓋）。
+  exponent3_amount_decimals: 2
+  # ③ 精度損失必須明文登記，不得靜默：KWD 2.905 ⇒ 落 2.90。
+  #    建立 exponent=3 市場時 UI 必須明示此損失（形態同 58 §D 的 degradation report）。
+  exponent3_precision_loss_disclosed_on_market_create: true
+  # 🔴 收款仍受 PSP 邊界節制：該幣別要能結帳，PSP pack 必須**明文宣告** minor unit，
+  #    且（因為 ISO 的 KWD exponent=3 與我方 ×100 的儲存尺度不同源）**必須同時宣告
+  #    儲存精度不足時如何處理**；未宣告一律 reject（money_boundary.psp_undeclared_currency_action）。
+  #    ⇒ 幣別可選 ≠ 可收款。這兩件事在 UI 上必須分開講，否則商家會開了店才發現不能結帳。
+  exponent3_checkout_requires_psp_pack_declaration: true
+  # ⚠ V-94 的處置**已改變**（原＝首發擋下）：現為「可選、2 位、PSP 未宣告即 reject」。
+  #    ⚠ V-188（68 §I）：Shopify 對 exponent=3 幣別**有無官方立場**通篇沉默，本條全靠社群回報。
+  # 🔴 **63 §G.4 / 65 §A2·T11 / 55 金額測試矩陣仍寫著「market 建立時擋下」——那三處尚未更新**
+  #    （本輪不得改 13/15/16/55/58/63/65）。實作前必須以本鍵為準，並回頭修那三處。
   verify_currency_exponent_3: true
   # 多 catalog 命中同商品取 MIN。官方 H-66 只講 company location，本篇延伸適用所有市場類型。
   # ⚠ V-93（不延伸就會有「兩個 catalog 命中時行為未定義」）。（ours，63 §G.2）
@@ -2331,12 +2405,22 @@ seo:
   redirect_max_chain: 10
   # 參與 canonical 的 query 參數採**白名單**制，白名單外一律剝除（62 §B.1 變形 6）。（ours）
   canonical_query_allowlist: [page, q, type, constraint]
-  # 變體 URL 模式：a＝單頁多變體（預設，canonical 去 ?variant=）；b＝變體獨立頁（opt-in）。
+  # 變體 URL 模式：a＝單頁多變體（canonical 去 ?variant=）。
   # 出處：developers.google.com/search/docs/appearance/structured-data/product-variants（google）
   #   「單頁站的整個 ProductGroup 只能有一個 canonical，通常是不預選變體的基底 URL」
+  # ✅ 依 68 號 §B-6(b) 補一手實測（test）：Shopify 自身 `canonical_url` 在 `?variant=` 下
+  #    **不含該參數**（thesill.com、otherland.com 兩店主題不同、輸出形態一致）⇒ **V-110 結案**，
+  #    我方「按 Google 規則去參數」的既有實作**證實與 Shopify 一致**。
   variant_url_mode_default: a
-  # 模式 b 開啟前的強制檢查：每個變體頁的標題／描述／主圖至少各自不同，否則拒絕開啟。（ours）
-  variant_url_mode_b_requires_unique_content: true
+  # 依 68 號 §B-6(c) 跟隨 Shopify 做法修正（2026-08-12）：**模式 B 廢除**。
+  # 原鍵 `variant_url_mode_b_requires_unique_content: true`，原註釋：「模式 b 開啟前的強制檢查：
+  #   每個變體頁的標題／描述／主圖至少各自不同，否則拒絕開啟。（ours）」
+  # 🔴 「同一個商品的變體各自有 URL」正是 Shopify **刻意不做**的形態（會產生近似頁）。
+  #    官方等價物是 **Combined Listings**：在**資料模型層**就讓它們是不同商品，於是不存在重複內容問題。
+  #    ⇒ 模式 B 不是「Shopify 有而我方關掉」，是**一個本尊沒有的形態**，開關本身就不該存在。
+  variant_independent_urls_supported: false
+  # 我方的等價缺口登記在 62 §B.2；上限值見 §22 combined_listing（是否實作待裁定）。
+  combined_listing_is_the_official_equivalent: true
   # 🔴 **不得跨市場 canonical**（62 §B.4）：被 canonical 指走的 URL 不會被索引，
   #    也就無法作為 hreflang 的有效目標。兩者互斥，我方一律 self-canonical。⚠ V-120 未結案前不得改。
   cross_market_canonical_forbidden: true
@@ -2397,18 +2481,45 @@ seo:
 
   # --- 地區重導（62 §K）------------------------------------------------------
   redirect_geo:
-    # 🔴 預設**關閉**。Google 明文建議避免自動重導，且 IP 判斷不可靠、可能導致無法正確抓取各版本。
-    # 出處：developers.google.com/search/docs/specialty/international/managing-multi-regional-sites（google）
-    enabled_default: false
+    # 依 68 號 §C-3 跟隨 Shopify 做法修正（2026-08-12）。
+    # 原值 `false`，原註釋：「🔴 預設**關閉**。Google 明文建議避免自動重導，且 IP 判斷不可靠、
+    #   可能導致無法正確抓取各版本。出處：developers.google.com/search/docs/specialty/international/
+    #   managing-multi-regional-sites（google）」
+    # Shopify 實際做法：**新店預設啟用地區自動重導**（出處：help.shopify.com/en/manual/markets/
+    #   getting-started/localization，help，明文給出預設值）；**自動語言偵測預設停用**。
+    # 🔴 **這一條是「跟隨 Shopify」與「外部權威（Google）」的直接衝突，不是與使用者裁定衝突。**
+    #    Google 的多地區指南**仍然成立**、原註釋的推理**沒有被推翻**——Shopify 之所以敢預設開，
+    #    靠的是「爬蟲不重導 ＋ hreflang 完整」把 Google 的疑慮擋掉。⇒ 見下面 non_disableable_invariants。
+    enabled_default: true
     # 開啟時：302（地區偏好不是永久事實）、只攔一次、對已驗證爬蟲不套用。
     status_code: 302
     once_per_visitor: true
     exclude_verified_crawlers: true
     crawler_verification: reverse_dns          # UA 比對 ＋ 反向 DNS；未通過驗證者當一般使用者
-    # ⚠ V-116：「排除爬蟲」是否被 Google 視為可接受（非 cloaking）未取得官方表態 ⇒ 預設維持關閉。
-    verify_crawler_exclusion_is_compliant: true
     # 🔴 不變量：出現在 hreflang／sitemap 的 URL 必須對**任何**客戶端直接回 200（62 §0.2 原則 4）。
     hreflang_urls_must_return_200: true
+    # 🔴 **本清單內的鍵自 2026-08-12 起是不可關閉的不變量，不是「開啟時的選配護欄」**（68 §C-3）。
+    #    升格理由：預設值一翻成 true，這三條就是「預設開」與「不傷索引」之間唯一的東西。
+    #    少了任何一條，預設開就是真的傷索引——而且傷的是**每一個新租戶**，不是有意開啟的那些。
+    #    實作面：不得提供關閉這三條的後台開關、API 欄位或環境變數；試圖關閉一律 reject。
+    non_disableable_invariants:
+      [exclude_verified_crawlers, hreflang_urls_must_return_200, once_per_visitor]
+    # ⚠ V-116 **已依 68 §C-3 重寫**：原處置是「未取得 Google 對『排除爬蟲』的官方表態 ⇒ 預設維持關閉」，
+    #    該處置的**前提（預設關閉）已消失**。新處置＝預設開、三條護欄不可關、風險登記在 62 §K。
+    #    本鍵保留為「該風險已知且已登記」的旗標，不再是「等表態才開」的閘門。
+    verify_crawler_exclusion_is_compliant: true
+    # 🔴 **EU 例外是法遵不是偏好**（68 §C-3，出處 help.shopify.com/en/manual/international/
+    #    automatic-redirection）：使用 EU ccTLD 的在地化體驗，EU 來源客戶**不得**被自動重導；
+    #    Shopify 官方要商家改用第三方 app 提供「建議」而不是重導。
+    #    市場用非國別網域（.com／.shop）時 EU 客戶照常重導。
+    #    🔴 判定不得寫成 SEO 層的國別 if-else（鐵律 11）——由 jurisdiction pack 宣告
+    #    `forbids_geo_auto_redirect`，SEO 層只讀該能力（掛載點見 56 號 capability contract）。
+    eu_cctld_no_redirect: true
+    eu_exception_source: jurisdiction_pack_capability
+    # Shopify 自己**沒有**內建 recommendation banner（官方把「建議」推給第三方 app）。
+    # 我方在自動重導關閉時本來就有建議橫幅（62 §K.2）⇒ 這是**超出 Shopify** 的一條，
+    # 也正好是 EU ccTLD 情境下唯一合法的形態。⚠ 是否要把它做成正式產品能力待裁定（68 §H）。
+    recommendation_banner_is_ours_not_shopify: true
 
   # --- JSON-LD（62 §A）-------------------------------------------------------
   jsonld:
@@ -2460,11 +2571,25 @@ agents:
   #   /llms.txt / /llms-full.txt ← 各自模板 → agents.md 模板 → 平台預設
   agents_md_enabled: true
   llms_txt_enabled: true                 # 零成本別名；**不做內容策展**（62 §H.2 結論）
-  # 🔴 llms-full.txt 預設**關閉**：①沒有任何引擎官方宣稱消費它（V-117）
-  #    ②等於把商家全站內容做成一鍵可抓封包（授權／頻寬／競品比價）
-  #    ③生成成本隨商品數線性成長。商家可開，開啟後受大小上限。（ours）
-  llms_full_txt_enabled: false
+  # 依 68 號 §C-1 跟隨 Shopify 做法修正（2026-08-12）。
+  # 原值 `false`，原註釋：「🔴 llms-full.txt 預設**關閉**：①沒有任何引擎官方宣稱消費它（V-117）
+  #   ②等於把商家全站內容做成一鍵可抓封包（授權／頻寬／競品比價）③生成成本隨商品數線性成長。
+  #   商家可開，開啟後受大小上限。（ours）」
+  # 🔴 **原理由②③的前提是錯的**：它們針對的是 `llms-full.txt` 的**原始語義**（整站 markdown 打包），
+  #    而 Shopify 的實作**不是打包**——`/llms.txt` 與 `/llms-full.txt` 預設都是 `agents.md` 的**別名**
+  #    （出處：shopify.dev/changelog/customize-llmstxt-llms-fulltxt-and-agentsmd，2026-05-28，dev）。
+  #    別名形態下沒有第二份內容、沒有第二套快取、成本不隨商品數成長 ⇒ ②③消失；
+  #    ①（無引擎宣稱消費）對 `/llms.txt` 同樣成立而我方已接受 ⇒ 不構成兩者差別待遇的理由。
+  #    這是**我方誤讀 Shopify 實作造成的分歧，不是價值觀分歧**。
+  # 🔴 **防回退**：看到這個鍵是 `true` 不要當成「沒評估過就打開」而改回 `false`。改回去會讓
+  #    從 Shopify 搬過來的商家的 `/llms-full.txt` 從有內容變成 404，且與 GEN-4 驗收直接衝突。
+  #    要改回 `false` 的前提是：Shopify 把這條路徑改成非別名，或使用者推翻「全部跟隨 Shopify」。
+  llms_full_txt_enabled: true
+  # 🔴 別名形態下用不到，但**保留**：商家一旦自訂 templates/llms-full.txt.liquid，
+  #    原始語義（整站打包）就回來了，那時這個護欄是必要的。刪掉它＝把護欄留給第一個踩到的大租戶。
   llms_full_txt_max_bytes: 5242880       # 5MB
+  # 三條路徑預設全開且內容相同（agents.md 為 fallback 源）。（dev，同一 changelog）
+  llms_paths_default_alias_of_agents_md: true
   # 受限 Liquid context：只有 request 與 agents 兩個物件（避免市場/語言污染快取鍵）。
   # 出處：shopify.dev/docs/storefronts/themes/architecture/templates/agents-md-liquid（dev）
   template_context_objects: [request, agents]
@@ -2666,7 +2791,8 @@ i18n:
     # 🔴 它不做詞彙在地化（软件/軟體、视频/影片）——UI 必須寫「這是字形轉換，不是翻譯」。
     ui_must_state_not_translation: true
 
-  # --- 匯入匯出（67 §E.6）—— 翻譯是**第三套**，且空白語義與商品 CSV 相反 --------
+  # --- 匯入匯出（67 §E.6）—— 翻譯是**第三套**；空白語義與商品 CSV **同向** ------
+  # 依 68 號 §B-3 跟隨生態事實標準修正（2026-08-12）。詳細三件套見下方 import 區塊。
   export:
     format: csv
     # 匯出必含 source_text 唯讀參考欄（沒有原文的翻譯檔對譯者不可用）。
@@ -2674,15 +2800,53 @@ i18n:
     columns: [resource_type, resource_gid, field_key, locale, market_handle,
               source_text, translated_text, source_digest, status]
     split_by: [locale, resource_type]
+    # 🔴 **選擇性匯出是「空白＝清空」翻面後的必要配套，不是便利功能**（68 §B-3）：
+    #    翻面之後，「不變更」**唯一**的表達方式是「讓那個語言／那個欄位**不出現在檔案裡**」。
+    #    沒有這兩個鍵，商家就沒有任何辦法表達「只改標題、別動描述」⇒ 第 1 條就是誤刪產生器。
+    selectable_locales: true            # 匯出時勾選要匯出哪些語言
+    selectable_fields: true             # 匯出時勾選要匯出哪些 field_key
+    # 匯出檔預設只含被勾選的語言與欄位；未勾選者**整欄／整批列不輸出**（不是輸出空值）。
+    omit_unselected_as_columns: true
     # 單檔上限沿用 csv.product_max_upload_mb（15MB，出處 61 §6.1/§6.2 help）。
     max_upload_mb_key: csv.product_max_upload_mb
     # XLIFF 2.1 列 P2；⚠ V-163 未查證官方格式。
     xliff_enabled: false
   import:
-    # 🔴 空白 ＝ **不變更**（與商品 CSV 相反：後者「空白儲存格會把既有資料洗掉」，61 §6.1）。
-    #    同樣語義套到翻譯上 ＝ 譯者交回只填 20% 的檔案，其餘 80% 既有譯文全被清空。
-    blank_means_unchanged: true
+    # 依 68 號 §B-3 跟隨 Shopify 生態做法修正（2026-08-12）。
+    # 原值 `true`，原註釋：「🔴 空白 ＝ **不變更**（與商品 CSV 相反：後者「空白儲存格會把既有資料
+    #   洗掉」，61 §6.1）。同樣語義套到翻譯上 ＝ 譯者交回只填 20% 的檔案，其餘 80% 既有譯文全被清空。」
+    # 生態事實標準（matrixify.app/documentation/translations/，press）：翻譯匯入時
+    #   Translation Value 欄留空 ＝ **刪除該語言該欄的既有譯文**，與商品 CSV（help，61 §6.1）**同向**。
+    # 🔴 **原註釋擔心的誤刪風險是真的，翻面不等於把它一筆勾銷。** Shopify 生態的解法不是把空白
+    #    解釋成「不變更」，而是**讓「不變更」以「欄位／列缺席」表達**。所以本條必須三件事一起才成立：
+    #      ① blank_means_unchanged: false（空白＝清空）
+    #      ② 選擇性匯出（export.selectable_locales / selectable_fields）——不想動的不要出現在檔案裡
+    #      ③ 匯入預覽把「將被清空的儲存格數」單獨列成一個數字（Shopify 沒有，但翻面後**必須**有）
+    #    🔴 只做 ① 不做 ②③ ＝ 誤刪產生器。任何人若要拆掉 ② 或 ③，必須連 ① 一起改回去。
+    blank_means_unchanged: false
+    # 「不變更」的三種表達（**這是本區塊的核心契約**）：
+    #   列缺席   ⇒ 該 (resource, locale, field) 完全不處理
+    #   欄位缺席 ⇒ 該欄位對檔案內所有列都不處理（匯入器**不得**把缺席欄當成空字串）
+    #   儲存格空 ⇒ 🔴 **清空該譯文**（本次翻面的內容）
+    absent_row_means_unchanged: true
+    absent_column_means_unchanged: true
+    # 🔴 缺席與空白必須在解析層就分開：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」
+    #    在多數 CSV 函式庫裡都會塌成 nil ⇒ 匯入器必須以**表頭**判定欄位是否存在，不以值判定。
+    absent_vs_blank_distinguished_by_header: true
+    # `__CLEAR__` 保留為空白的**同義寫法**（兩者都清空），理由：讓「我是故意清空的」在檔案裡看得出來，
+    # 且舊格式檔案裡寫 `__CLEAR__` 的那些儲存格語義不變。
+    # ⚠ 舊格式檔案裡**空白**儲存格的語義**已經反轉**（原本不變更、現在清空）——這正是本次翻面的內容，
+    #   必須靠 ③ 的預覽數字讓商家在按下確認前看見。
     explicit_clear_token: "__CLEAR__"
+    explicit_clear_token_is_alias_of_blank: true
+    # ③ 匯入預覽（dry-run）必須把清空數單獨列出，不得混進「將更新 N 筆」。
+    preview_required: true
+    preview_clear_count_separate: true
+    # 清空筆數佔該檔案總列數超過此比例 ⇒ 二次確認（形態同 machine_translation.batch_confirm_above_resources）。
+    clear_ratio_confirm_threshold: 0.2
+    # 🔴 清空是可回溯的：被清空的譯文進 translations 的稽核軌（誰、何時、由哪一次匯入），
+    #    否則「譯者交錯檔案」這件事在事後完全無法還原。
+    clear_writes_audit_trail: true
     # 缺 source_digest 欄 ⇒ 整檔拒絕（沒有 digest 就無法安全回寫）。
     require_source_digest_column: true
     # digest 不符 ⇒ **仍然寫入**（譯者是照當時原文翻的，內容多半可用）但標過期＋待覆核，
@@ -2748,7 +2912,13 @@ i18n:
     emit_vary_accept_language: false
     # 建議橫幅必須是 locale-invariant 片段（否則把 Accept-Language 拉回快取鍵）。
     suggestion_banner_locale_invariant: true
-    # 語言自動重導：**不做**（地區重導已由 seo.redirect_geo.enabled_default: false 定案，62 §K）。
+    # 依 68 號 §C-3 跟隨 Shopify 做法修正（2026-08-12）。
+    # 原註釋：「語言自動重導：**不做**（地區重導已由 seo.redirect_geo.enabled_default: false 定案，62 §K）」
+    # 🔴 **值不變（仍為 false），改的是理由**：原註釋把「語言不重導」掛在「地區也不重導」上，
+    #    而地區的預設已翻成 true（seo.redirect_geo.enabled_default）。若不改這行，下一個人會
+    #    照著括號裡那句話把本鍵一起翻成 true——那是 Shopify **明文預設停用**的東西。
+    # Shopify 實際做法：**地區自動重導預設啟用、自動語言偵測預設停用**（help，兩個預設值方向相反）。
+    #    ⇒ 本鍵維持 false 不是我方偏好，而是**與 Shopify 一致**；我方之前沒意識到這一半已經對齊了。
     auto_redirect_on_language: false
     # 切換器必須是真實 <a href>（62 §K.2 已定：爬蟲發現其他版本的路徑之一）。
     switcher_must_be_anchor: true
@@ -2838,12 +3008,20 @@ i18n:
 handle:
   # --- 字元規則（67 §D.1，由裁定範例逆推；已用該範例做過可重跑驗證，逐字元相同）------
   charset: "a-z0-9-"
-  ascii_only: true                       # （ruling）
+  # （ruling）🔴 依 68 號 §B-1 補記：**Shopify 實際不是這樣。** 本尊對非拉丁字集（CJK／西里爾／
+  #   希伯來／emoji）是**原樣保留**，中文標題得到的是中文 handle，從不落代碼、也不擋發布
+  #   （press ×4，含 staff 承認的兩則）。本鍵**依使用者裁定**（「url handle 一律英文，禁止中文」）
+  #   而存在，是**明知偏離 Shopify**，不是對齊。裁定若改，本鍵與 min_latin_alpha_chars／
+  #   max_dropped_letter_ratio／fallback_pattern 四者必須連帶重審（67 §D.2、62 §F.3）。
+  ascii_only: true
   separator: "-"
   lowercase: true
   nfkc_normalize: true                   # 全形 → 半形：ＳＫ－ＩＩ　230ｍL → sk-ii-230ml
   # 撇號與引號類**刪除**（不是分隔）：Bob's → bobs，不是 bob-s。
-  # ⚠ Shopify 的實際處置未查證 ⇒ V-160；我方由範例形態與可讀性定案。
+  # ✅ 依 68 號 §C-4 補出處：**與 Shopify 一致**，本輪實測（test）：`Women's → womens`（allbirds）、
+  #   `Men's → mens`（god）、`16" Cash Drawer → 16-cash-drawer`（hardware.shopify.com）。
+  #   同表另證：`.`／`/` 轉分隔（`A.P.C. → a-p-c`、`#AU/NZ → au-nz`）、變音折疊
+  #   （`Créature → creature`、`Décor → decor`）、首尾分隔修剪、`®` 消失 —— 逐條與我方相同。
   delete_chars: ["'", "’", "‘", "ʼ", "\"", "“", "”", "`", "´"]
   # 🔴 不可分解的拉丁字母必須先查表轉寫——NFKD **不分解**這些字母，
   #    少了這一步 Straße 會變成 stra-e（HDL-4）。
@@ -2856,11 +3034,19 @@ handle:
   decimal_point_to_separator: true
   # 不做詞彙展開（& → and、% → percent）：那是英文特定的，開了頭就要為每個語言維護一張表，
   # 而它換來的 SEO 收益沒有任何證據支持。（ours）
+  # ✅ 依 68 號 §C-6 補出處：**與 Shopify 完全一致，本輪實測 5 次確認**（test）：
+  #   `Carroll&Chan → carroll-chan`、`Bags & Wallets → bags-wallets`、`Herbs & Grow Kits →
+  #   herbs-grow-kits`、`Plant Duos & Trios → plant-duos-trios`、`… Originals & the New York
+  #   Yankees → …-originals-the-new-york-yankees`；0 例展開成 `and`。`%`／`$` 同樣轉分隔符
+  #   （`Clearance 50% Off → clearance-50-off`、`Only HK$88 → only-hk-88`）。
+  #   ⇒ 本鍵從「我方判斷（ours）」升格為「已對齊本尊（test）」，不得再被當成待確認項重開。
   expand_symbol_words: false
   collapse_separators: true
   trim_separators: true
   # 長度上限。裁定範例本身 86 字元未被截斷 ⇒ 上限遠大於 86。
-  # ⚠ Shopify 實際上限未查證 ⇒ V-160。
+  # 依 68 號 §C-4 更新出處：Shopify 的 255 已有**二手佐證且數值與我方相同**
+  #   （matrixify.app/documentation/shopify-limits/，press，記載「超過會被截斷」）。
+  #   ⇒ 原 V-160 的「未查證」狀態降為「二手佐證」；「取得官方出處」改由 **V-183** 承接。
   max_chars: 255
   # 🔴 截斷必須在分隔符邊界，不得從字元中間切（會產生半個詞）。
   truncate_on_separator_boundary: true
@@ -2921,9 +3107,17 @@ handle:
   #    handle，兩張表會立刻不同步。
   never_reuse_retired_handles: true
   retired_handle_source: url_redirects
-  # 生成衝突 ⇒ 自動尾碼，自 -2 起算（「第二個」的直覺）。
-  # ⚠ 13 §F2-2 寫的是 -1 起算 ⇒ 不一致，登記於 67 §M-1。
-  collision_strategy_generated: numeric_suffix_from_2
+  # 依 68 號 §C-4/5/6 附帶條跟隨 Shopify 做法修正（2026-08-12）。
+  # 原值 `numeric_suffix_from_2`，原註釋：「生成衝突 ⇒ 自動尾碼，自 -2 起算（「第二個」的直覺）。
+  #   ⚠ 13 §F2-2 寫的是 -1 起算 ⇒ 不一致，登記於 67 §M-1。」
+  # Shopify 實際做法：**自 `-1` 起算**。出處：shopify.dev/docs/api/liquid/basics（dev，官方例
+  #   兩個同名商品 ⇒ `potion` 與 `potion-1`）＋ 本輪實測（test）：同店兩個同名系列得到
+  #   `ceiling-fans` / `ceiling-fans-1`；另見 `home-decor-accessories-1`、`nathan-road-collection-1`。
+  # 🔴 **這條不一致是反向解決的：13 §F2-2 寫的 `-1` 本來就是對的，要改的是 67（與本鍵）。**
+  #    「第二個用 -2」只是我方的直覺，沒有任何依據，而它會讓從 Shopify 匯入的 handle 在
+  #    重新生成時全部偏移一號（`potion-1` 已存在 ⇒ 我方生 `potion-2`，本尊生 `potion-1`）。
+  # 🔴 **防回退**：不要因為「-1 看起來像第一個」而改回 from_2。67 §M-1 已反向結案。
+  collision_strategy_generated: numeric_suffix_from_1
   # 🔴 手填衝突 ⇒ **拒絕**（userErrors HANDLE_TAKEN），不得靜默加尾碼——
   #    那是把商家明確輸入的值偷偷改掉。
   collision_strategy_explicit: reject
@@ -2951,7 +3145,55 @@ handle:
   liquid_filter_ascii_only: false
   # 空結果必須有值（空字串會造成選擇器碰撞）。
   liquid_filter_empty_fallback: "h-{sha1_8}"
+  # 依 68 號 §F-3 跟隨 Shopify 做法修正（2026-08-12）：**觸發條件收窄**。
+  # 原本沒有這個鍵，§D.5 的敘述隱含「ASCII-only 會讓結果落空 ⇒ 落 fallback」。
+  # 68 §F-3 查到（community.shopify.dev/t/unicode-in-handleize-output/1060，2024-10，**staff 已復現**）：
+  #   `{{ 'Abc 123-D--E 🔪 ŭ' | handleize }}` 的實際輸出**保留 emoji**、把 `ŭ` 折成 `u`
+  #   ⇒ Shopify 的 filter 對非拉丁字元是**保留**，不是落空。
+  # ⇒ 🔴 `{{ '顏色' | handleize }}` 在 Shopify **回 `顏色`，不是空字串**，
+  #   所以我方的 `h-{sha1_8}` fallback **不得因「結果非 ASCII」而觸發**——那樣會輸出一個
+  #   本尊不會產生的字串，主題若把 handleize 的輸出寫死進 CSS（Ella 91 處）就對不上。
+  #   fallback **只在輸入本身為空或全為分隔符**時觸發（那時本尊也產生空字串，是真的必須兜底）。
+  liquid_filter_fallback_trigger: empty_or_all_separator_input_only
+  liquid_filter_fallback_on_non_ascii_result_forbidden: true
   # 🔴 兩個獨立實作，不得共用；filter 的文檔註釋必須寫明「這不是 URL 生成器」。
+  #    （本條**不變**：URL 身分要 ASCII-only 是裁定，filter 要保留非 ASCII 是相容需求，
+  #     兩個值域天生不同。68 §F-3 修正的是 fallback 觸發條件與其**依據**，不是這條分離規則。）
   liquid_filter_shares_implementation: false
-  # ⚠ V-161：Shopify handleize filter 對 CJK 的實際輸出未查證
-  #    （這是原 V-119 的主題相容殘留；V-119 的政策面已由裁定結案）。
+  # ⚠ V-161 **已依 68 §F-3 縮小**：原問題「Shopify handleize filter 對 CJK 的實際輸出
+  #    （保留／落空／轉寫）」已由 staff 復現的 bug 報告正面回答＝**保留**。
+  #    殘留未證的只剩「**全形字元** 與 **空輸入／全分隔符輸入**」兩個邊界 ⇒ 併入 68 的 V-181。
+
+# =============================================================================
+# 22. Combined Listings（合併商品）——Shopify 官方等價物，**是否實作待裁定**
+# =============================================================================
+# 依 68 號 §B-6(c) 新增（2026-08-12）。出處：help.shopify.com/en/manual/products/
+#   combined-listings-app（help）。
+# 🔴 **本區塊是「已登記的缺口」，不是「已決定要做的功能」。**
+#    背景：我方 62 §B.2 原有「模式 B＝變體獨立 URL」——那正是 Shopify **刻意不做**的形態。
+#    官方要「每個變體一個獨立可索引 URL」時給的是 Combined Listings：
+#      形態不是「給變體加 URL」，而是**把數個真實商品串成一個前台商品列表**；
+#      每個子商品保有自己的 title／description／URL／圖片／價格／庫存，在 feed 裡是獨立項目。
+#    ⇒ 這在架構上是不同的東西（parent/child 的商品關係），**不是一個開關**。
+# 🔴 **未實作前這些鍵不得被任何程式碼讀取**（承 62 §0.2 原則 3「未宣告 ≠ 支援」）：
+#    它們的用途是把上限值先落鍵（鐵律 6），避免日後實作時散落硬編碼。
+combined_listing:
+  implemented: false
+  # 待裁定：我方要不要做等價物、要不要照 Shopify 做成方案閘門（68 §H）。
+  pending_user_decision: true
+  # --- 官方上限（help）--------------------------------------------------------
+  max_products: 60                # 每個 combined listing 最多 60 個子商品
+  max_custom_options: 3
+  max_option_values: 2000
+  # --- 官方限制（help）--------------------------------------------------------
+  requires_plan: plus             # Plus／enterprise 方案
+  requires_online_store_channel: true
+  free_theme_min_version: "15.0.0"   # 其他主題要改碼
+  product_single_membership: true    # 商品同時只能屬於一個 combined listing
+  # --- 我方定案（先寫下來，避免實作時猜）--------------------------------------
+  # 🔴 子商品一律 **self-canonical**（與 62 §B.4「一律 self-canonical，不跨市場 canonical」同一條），
+  #    **不指向 parent**——指向 parent 等於宣告子商品不該被索引，那就失去做這件事的意義。
+  child_canonical: self
+  # ⚠ V-187（68 §I）：Combined Listings 子商品的 canonical **實際輸出**官方 help 未述，
+  #    第三方文章只講「Google 分別索引」⇒ 我方按上一條定案，**不猜 Shopify**。
+  verify_child_canonical: true

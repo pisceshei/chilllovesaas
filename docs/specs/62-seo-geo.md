@@ -185,7 +185,7 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
 | # | 變形 | 範例 | canonical 指向 | 額外處置 |
 |---|---|---|---|---|
 | 1 | 基底 PDP | `/products/{handle}` | 自身 | — |
-| 2 | 變體參數 | `/products/{handle}?variant=123` | **`/products/{handle}`**（去參數） | §B.2 的模式 A；模式 B 另有規則 |
+| 2 | 變體參數 | `/products/{handle}?variant=123` | **`/products/{handle}`**（去參數） | §B.2 唯一模式<!-- 依 68 §B-6 修正，原文：「§B.2 的模式 A；模式 B 另有規則」——模式 B 已廢除 -->；✅ 與 Shopify 實測輸出一致（V-110 結案） |
 | 3 | 系列路徑商品 | `/collections/{c}/products/{p}` | `/products/{p}` | 平台仍需可訪（主題會生這種連結） |
 | 4 | 系列分頁 | `/collections/{c}?page=2` | **自身**（不指第一頁） | 30 §1.3；`rel=prev/next` 已死 |
 | 5 | 篩選／排序 | `?filter.*=`／`?sort_by=` | 基底系列頁 | **同時** robots disallow（canonical 對 facet 不夠力，30 §1.3） |
@@ -195,21 +195,58 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
 
 **共通規則**：canonical 一律**絕對 URL**、含 scheme 與最終網域、**每頁自引**（30 §1.3 三訊號）。大小寫正規化、尾斜線正規化在 canonical 之前先做（路由層 301），不要靠 canonical 收拾。
 
-### B.2 變體 URL：兩種模式，選一，不可混用
+### B.2 變體 URL：單頁多變體（唯一模式）；「每變體一個 URL」不做
 
 <!-- 依 google 官方 product-variants 頁補寫；30 §2.3 只寫了模式 A 的一半 -->
+<!-- 依 68 號 §B-6 跟隨 Shopify 做法改寫（2026-08-12）：**模式 B 廢除**。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「### B.2 變體 URL：兩種模式，選一，不可混用
+        | | 模式 A（預設）：單頁多變體 | 模式 B（opt-in）：變體獨立頁 |
+        | URL | `/products/{handle}` ＋ `?variant=` 預選 | 每變體一個可索引 URL |
+        | canonical | 整個 ProductGroup **只有一個** canonical＝不預選變體的基底 URL | 每頁 self-canonical |
+        | JSON-LD | `ProductGroup` ＋ `hasVariant[]`（靜態全量，不隨 DOM 變） | 每頁**完整自足**標記，
+                    `inProductGroupWithID` 指回父群組 |
+        | 適用 | 顏色/尺寸等純屬性變體 | 變體本身有獨立需求量（不同型號、不同容量）時 |
+        | 風險 | 單一 URL 難以針對「紅色 XX」做標題最佳化 | 內容近似頁大量增生，踩 thin content／重複內容 |
+        **決策**：預設模式 A。模式 B 做成**商品級開關**（`product.seo.variant_urls_enabled`），
+        開啟時平台強制檢查「每個變體頁的標題／描述／主圖至少各自不同」，不通過則拒絕開啟
+        （避免商家一鍵生出 500 個近似頁）。」
+     🔴 **廢除理由不是「風險太高」，是「形態根本不對」**：「同一個商品的變體各自有 URL」正是
+        Shopify **刻意不做**的東西。官方要達成同樣目的時，做的是 **Combined Listings**——
+        在**資料模型層**就讓它們是不同商品，於是不存在重複內容問題。
+        我方原本的「模式 B ＋ 內容差異檢查」是在**用檢查去補一個錯的形態**：
+        檢查通過只證明三個欄位不同，不改變「它們是同一個商品」這件事。 -->
 
-| | 模式 A（預設）：單頁多變體 | 模式 B（opt-in）：變體獨立頁 |
-|---|---|---|
-| URL | `/products/{handle}` ＋ `?variant=` 預選 | 每變體一個可索引 URL |
-| canonical | 整個 ProductGroup **只有一個** canonical＝不預選變體的基底 URL | 每頁 self-canonical |
-| JSON-LD | `ProductGroup` ＋ `hasVariant[]`（靜態全量，不隨 DOM 變） | 每頁**完整自足**標記，`inProductGroupWithID` 指回父群組 |
-| 適用 | 顏色/尺寸等純屬性變體 | 變體本身有獨立需求量（不同型號、不同容量）時 |
-| 風險 | 單一 URL 難以針對「紅色 XX」做標題最佳化 | 內容近似頁大量增生，踩 thin content／重複內容 |
+**唯一模式：單頁多變體。**
 
-**決策**：預設模式 A。模式 B 做成**商品級開關**（`product.seo.variant_urls_enabled`），開啟時平台強制檢查「每個變體頁的標題／描述／主圖至少各自不同」，不通過則拒絕開啟（避免商家一鍵生出 500 個近似頁）。
+| | 規則 |
+|---|---|
+| URL | `/products/{handle}` ＋ `?variant=` 預選 |
+| canonical | 整個 ProductGroup **只有一個** canonical ＝ **不預選變體的基底 URL**（`?variant=` 去參數） |
+| JSON-LD | `ProductGroup` ＋ `hasVariant[]`（靜態全量，不隨 DOM 變） |
+| 適用 | 全部情形。顏色／尺寸等純屬性變體如此，不同型號／容量的變體**也如此** |
+| 已知代價 | 單一 URL 難以針對「紅色 XX」做標題最佳化。**這是 Shopify 也有的代價，不是我方的缺陷**；官方的出路是把它們建成不同商品（見下） |
 
-> ⚠️ **V-110**：Shopify 自身 `canonical_url` 在 `?variant=` 下的**實際輸出**（含或不含該參數）本輪只取得主題商／代理商的二手描述（`press`），未取得官方文檔或實測。我方**按 Google 規則實作**（去參數），不按傳聞對齊 Shopify。
+> ✅ **V-110 結案**（2026-08-12，依 68 §B-6(b)／§F-2）：Shopify 自身 `canonical_url` 在 `?variant=` 下的實際輸出**已由一手實測確認＝不含該參數**（`test`，兩店主題不同、輸出形態一致：`thesill.com/products/monstera?variant=…` → `…/products/monstera-deliciosa`；`otherland.com/products/…?variant=…` → 去參數的基底 URL）。
+> <!-- 原條目：「⚠️ **V-110**：Shopify 自身 `canonical_url` 在 `?variant=` 下的**實際輸出**
+>      （含或不含該參數）本輪只取得主題商／代理商的二手描述（`press`），未取得官方文檔或實測。
+>      我方**按 Google 規則實作**（去參數），不按傳聞對齊 Shopify。」 -->
+> ⇒ 我方原本「按 Google 規則實作（去參數）、不對齊傳聞」的處置，**現在證實與 Shopify 一致**。出處等級由 `press` 升為 `test`。
+
+#### B.2-1 🔴 缺口登記：Combined Listings（我方目前沒有等價物）
+
+**Shopify 對「每個變體要有獨立可索引 URL」這個需求的官方答案是 Combined Listings（合併商品）**（`help`）——**它不是「給變體加 URL」，是另一個東西**：
+
+| 面向 | Combined Listings 的形態 |
+|---|---|
+| 資料模型 | **把數個真實商品串成一個前台商品列表**。每個子商品保有自己的 title／description／URL／圖片／價格／庫存，在 feed 裡是**獨立項目** |
+| 為什麼沒有重複內容問題 | 因為它們**本來就是不同商品**——差異在資料層，不在渲染層。這正是「模式 B」做不到的事 |
+| 方案閘門 | **Plus／enterprise**；需 Online Store 通路；免費主題 15.0.0+ 支援，其他主題要改碼 |
+| 約束 | 商品必須已存在；**同時只能屬於一個 combined listing** |
+| 上限 | 每個 listing ≤ **60** 個商品、**3** 個自訂選項、**2000** 個選項值（`limits.combined_listing.*`，鐵律 6） |
+| 我方 canonical 定案 | 🔴 **子商品一律 self-canonical**（與 §B.4「一律 self-canonical」同一條），**不指向 parent**——指向 parent 等於宣告子商品不該被索引，那就失去做這件事的意義。⚠ **V-187**（68 §I）：官方 help 未述子商品 canonical 的實際輸出，第三方文章只講「Google 分別索引」⇒ 我方按此定案，**不猜 Shopify** |
+
+🔴 **狀態：已登記的缺口，不是已排程的功能。** 這在架構上是 parent/child 的商品關係（資料模型在 13 號），**不是一個開關**，因此不能靠 §B.2 的一行設定補上。**是否實作、是否照 Shopify 做成方案閘門，待使用者裁定**（68 §H）；`limits.combined_listing.implemented: false` ＋ `pending_user_decision: true`。在裁定前，**任何人不得以「補回模式 B」的形式繞過本條**——那會把 Shopify 刻意避開的重複內容問題重新引進來。
 
 ### B.3 分頁
 
@@ -304,11 +341,15 @@ Shopify 的機制：平台自動產生預設 `robots.txt`，主題可加 `templa
 |---|---|---|
 | 首頁 | `{{ shop.name }}{% if shop.slogan %} — {{ shop.slogan }}{% endif %}` | `{{ shop.description }}` |
 | 商品 | `{{ product.title }} — {{ shop.name }}` | 商品描述前 N 字（N＝`limits.seo.meta_description_recommended_chars`） |
-| 商品（模式 B 變體頁） | `{{ product.title }} {{ variant.title }} — {{ shop.name }}` | 同上＋變體屬性 |
 | 系列 | `{{ collection.title }} — {{ shop.name }}` | 系列描述 → 空則不輸出 |
 | 系列第 N 頁 | `{{ collection.title }} — 第 {{ page }} 頁 — {{ shop.name }}` | 同第 1 頁（或不輸出） |
 | 頁面／文章 | `{{ title }} — {{ shop.name }}` | 摘要 → 內文首段 |
 | 搜尋 | `搜尋：{{ terms }} — {{ shop.name }}` | 不輸出（該頁 `noindex`） |
+
+<!-- 依 68 號 §B-6 刪除「商品（模式 B 變體頁）」一列（原值：`{{ product.title }} {{ variant.title }} — {{ shop.name }}` ／ 描述「同上＋變體屬性」）。
+     模式 B 已廢除（§B.2），不存在「變體頁」這個模板。Combined Listings 的子商品**是真實商品**，
+     直接套用上面「商品」那一列即可，**不需要第二套樣板**——這正是 Combined Listings 與模式 B 的差別：
+     前者不需要為「半個商品」發明任何東西。 -->
 
 **分隔符、順序（店名在前或在後）做成主題設定**，因為這是 Shopify 主題間差異最大的一項（`help` 註明依主題而定）。**上限**：標題 `limits.content.seo_title_max_chars`（70，已存在）並在 60 字提示；描述 `limits.content.seo_meta_description_max_chars`（320，已存在），建議值 160（新增鍵，§N）。截斷一律在**詞界／字界**，多位元組字元不得截半，尾綴 `…`。
 
@@ -375,9 +416,40 @@ handleize_url(title):            # 完整九步管線與驗證樣本見 67 §D.1
 
 **語言維度不在 handle 裡**（67 §D.3）：handle 是 per-shop-per-resource 的單一值，語言由 **URL 路徑前綴**承載（`/en/products/x`），因此 §I.1 的 `absolute_url(resource, wp, loc)` 是純字串拼接，不需對每個 (wp, locale) 查 handle。handle **不可翻譯**（刻意偏離 29 §2.1，登記於 67 §M-2）。
 
-> 🔴 **Liquid `handleize` filter 不適用本節規則**：它產生的是 CSS class／DOM id／JS 鍵（Ella 用 91 處，27 §5），不是 URL。套上 ASCII-only 會讓 `{{ '顏色' | handleize }}` 回空字串 ⇒ 選擇器碰撞 ⇒ 變體選錯而不報錯。兩者**不得共用實作**，見 67 §D.5（`limits.handle.liquid_filter_ascii_only: false`）與 **V-161**。
+> 🔴 **Liquid `handleize` filter 不適用本節規則**：它產生的是 CSS class／DOM id／JS 鍵（Ella 用 91 處，27 §5），不是 URL。若把 ASCII-only 管線套上它，`{{ '顏色' | handleize }}` 會回空字串 ⇒ 選擇器碰撞 ⇒ 變體選錯而不報錯。兩者**不得共用實作**，見 67 §D.5（`limits.handle.liquid_filter_ascii_only: false`）與 **V-161**。
+> <!-- 依 68 號 §F-3 補正事實（2026-08-12）：Shopify 的 filter **保留非 ASCII**
+>      （community.shopify.dev/t/unicode-in-handleize-output/1060，2024-10，staff 已復現：
+>      `{{ 'Abc 123-D--E 🔪 ŭ' | handleize }}` 的實際輸出**保留 emoji**、`ŭ` 折成 `u`）。
+>      ⇒ `{{ '顏色' | handleize }}` 在**本尊會回 `顏色`，不會回空字串**。上面那句「回空字串」
+>      講的是「**我方若誤用 URL 管線**會怎樣」（那正是本條要防的事故），不是本尊的行為。
+>      🔴 連帶結論：我方 filter 端的 `h-{sha1}` fallback **不得因「結果非 ASCII」觸發**，
+>      只在**輸入本身為空或全為分隔符**時觸發（67 §D.5 已據此修正）。 -->
 
-> ✅ **V-119 結案**（2026-08-12）：原問題是「Shopify `handleize` 對 CJK 的實際行為」，用途是決定我方要不要對齊。裁定已直接定死我方行為（一律 ASCII），**對齊問題消失**，故結案。其**主題相容殘留**（filter 面）改由 **V-161** 承接（67 §L）。
+<!-- 依 68 號 §B-1 修正 V-119 的結案敘述（2026-08-12）。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「> ✅ **V-119 結案**（2026-08-12）：原問題是「Shopify `handleize` 對 CJK 的實際行為」，
+          用途是決定我方要不要對齊。裁定已直接定死我方行為（一律 ASCII），**對齊問題消失**，故結案。
+          其**主題相容殘留**（filter 面）改由 **V-161** 承接（67 §L）。」
+     🔴 **原文說「對齊問題消失」是錯的。** 68 號把 V-119 的原問題**正面查出來了**：
+        Shopify 對非拉丁字集是**原樣保留**，中文標題得到的是中文 handle。
+        ⇒ 對齊問題**沒有消失，它有答案，而我方明知答案仍然不照做**。
+        這兩件事在日後回頭看時意義完全不同：前者是「不必比了」，後者是「比過了，我方選擇偏離」。
+        寫成前者，下一輪稽核只會看到一條已結案的項目；寫成後者，才能在裁定改變時被正確重審。 -->
+
+#### F.3-1 🔴 明知偏離 Shopify 的一條：handle 一律 ASCII（原 V-119 的正確結案形態）
+
+**比照 13 §F1(g)、15 §F4.2、58 §D.2 的既有「刻意偏離」寫法，本條明文登記，避免下一輪稽核當成遺漏重新開單。**
+
+| | 內容 |
+|---|---|
+| **Shopify 的實際行為** | 🔴 **保留非拉丁字集**。拉丁系變音符號折疊成 ASCII（`mašīna → masina`）；**CJK／西里爾／希伯來／emoji 原樣保留**，URL 以 percent-encoding 呈現。純中文標題得到的 handle 就是**中文本身**——不是 `product-{id}`，也不是空字串。Shopify **沒有 fallback 代碼這回事，因為它不需要**；也**沒有任何 handle 品質閘門**，不擋發布 |
+| **出處與等級** | `press` ×4（community 80006／239594／223998、community.shopify.dev 1060 staff 復現）＋ `press` 實例頁面 URL。🔴 **官方文檔完全沒有敘述非拉丁字集的處置規則** ⇒ 描述本尊行為時**只能標 `press`，不得標 `dev`**（68 §I，V-180）。反例 1 則（goodsofdesire.com `8折 → 8`）研判為商家手改 |
+| **我方的行為** | handle 一律 `[a-z0-9-]`（`limits.handle.ascii_only: true`）＋ 品質閘門 ＋ 確定性 fallback `{resource}-{token8}`。**不擋發布**（這一半與 Shopify 相同） |
+| **偏離的唯一依據** | 🔴 **使用者 2026-08-12 裁定**：「url hand 使用英文標題，**禁止使用中文**」。**裁定 > Shopify**（68 §0 凌駕規則 1）。**不是**技術判斷、**不是** SEO 判斷、**不是**查不到而保守 |
+| **連帶物** | 品質閘門（`min_latin_alpha_chars`／`max_dropped_letter_ratio`）與中英混排保留英文片段——**Shopify 無此概念**（它保留 CJK 就不需要）。兩者是「一律英文」裁定的**必然衍生物**，不是獨立設計（68 §C-4／C-5） |
+| **裁定若改** | 本條、`limits.handle.ascii_only`、品質閘門三鍵、`fallback_pattern`、以及 67 §D.2／§D.3 **必須連帶重審**。單獨改任何一個都會產生半套狀態 |
+
+> ✅ **V-119 的原問題已由 68 號查明並結案**（答案＝保留 CJK），但**結案理由是「查到了」，不是「不用查了」**。其**主題相容殘留**（Liquid filter 面）改由 **V-161** 承接（67 §L；該條已依 68 §F-3 縮小，見下）。
 
 **改名 301**：handle 變更時，於同一 transaction 插入 `url_redirects(from=舊, to=新, 301, source=handle_change)`。**舊 handle 永不回收**（除非商家手動刪除該重導；唯一性檢查因此要比對 `url_redirects`，67 §D.4(a)）。**多語言補充**：登記與比對一律用**不帶前綴的正規路徑**，路由層命中 404 前先剝 locale 前綴 → 查表 → **命中後把前綴加回去再 301**（`/en/products/舊` → `/en/products/新`，不得丟回 `/products/新`）。下架商品：預設 **410**，可選 301 至最相關頁（30 §9-5）。**禁止 soft-404**。
 
@@ -424,13 +496,41 @@ handleize_url(title):            # 完整九步管線與驗證樣本見 67 §D.1
 
 ### H.2 `llms.txt` 到底做不做——結論與依據
 
-**結論：做，但只做成「與 `agents.md` 同源的別名端點」，且 `llms-full.txt` 預設關閉。不投入任何內容策展與人力。**
+<!-- 依 68 號 §C-1 跟隨 Shopify 做法修正（2026-08-12）。
+     原文：「**結論：做，但只做成「與 `agents.md` 同源的別名端點」，且 `llms-full.txt` 預設關閉。
+             不投入任何內容策展與人力。**」
+     原結論的**前半（別名端點、不做內容策展）是對的，保留**；**後半（預設關閉）是錯的**，
+     錯因是把 Shopify 的 `llms-full.txt` 誤讀成「整站 markdown 打包」——它不是，它是第三個別名。
+     🔴 這是**我方誤讀本尊實作造成的分歧，不是價值觀分歧**（68 §C-1 逐字結論）。
+     🔴 **防回退**：不要因為「llms-full 聽起來就是整站傾印」而把預設改回關閉。
+        真正的整站傾印只會在商家自訂 `templates/llms-full.txt.liquid` 之後出現，
+        那個情境由 `limits.agents.llms_full_txt_max_bytes` 承接，不是由預設值承接。 -->
+
+**結論：做，但只做成「與 `agents.md` 同源的別名端點」；三條路徑（`/agents.md`／`/llms.txt`／`/llms-full.txt`）預設全開且內容相同。不投入任何內容策展與人力。**
 
 **依據（三條，全部可追溯）**：
 
 1. **反面證據是硬的**：Google 官方明文說 AI 功能不需要新的機器可讀檔案（事實 2），Google 代表更直接說沒有任何 AI 系統在用（事實 3，`press` ⇒ V-117）。OpenAI 的 bots 文檔通篇講 robots.txt 與 UA，**完全沒有提到 `llms.txt`**（事實 5）。也就是說：**沒有任何一家引擎的官方文檔宣稱消費它。**
 2. **但成本可以壓到接近零**：Shopify 已經把 `/llms.txt` 做成 `agents.md` 的別名（事實 6）。我方照抄這個形態，等於**多兩條路由指向同一個生成器**，沒有第二份內容、沒有第二套快取、沒有商家要維護的東西。反過來，**不做的成本反而存在**：從 Shopify 搬過來的商家，舊站這兩個 URL 有東西、新站 404——59 號的裁定精神（「肌肉記憶不能斷」）在 URL 面同樣成立。
-3. **`llms-full.txt` 是另一回事，要拒絕**：它的語義是「把整站內容打包成 markdown」。①沒有引擎宣稱消費它；②它等於把商家全站內容做成一鍵可抓的封包，與內容授權、頻寬成本、競品比價全部衝突；③生成成本隨商品數線性成長，大租戶會把它變成一個昂貴的無人使用端點。**預設 `false`，商家可開，開啟時強制套大小上限與快取**。
+3. **`llms-full.txt` 在 Shopify 不是打包，是別名 ⇒ 與 `/llms.txt` 同等待遇，預設開**（`dev`，2026-05-28 changelog；68 §C-1）。
+
+   <!-- 依 68 號 §C-1 跟隨 Shopify 做法整段改寫（2026-08-12）。原文（保留供追溯，🔴 任何人不得改回）：
+        「3. **`llms-full.txt` 是另一回事，要拒絕**：它的語義是「把整站內容打包成 markdown」。
+            ①沒有引擎宣稱消費它；②它等於把商家全站內容做成一鍵可抓的封包，與內容授權、頻寬成本、
+            競品比價全部衝突；③生成成本隨商品數線性成長，大租戶會把它變成一個昂貴的無人使用端點。
+            **預設 `false`，商家可開，開啟時強制套大小上限與快取**。」
+        🔴 **原文的三條理由本身沒有錯，錯的是它們針對的對象。** ①②③ 針對的是 `llms-full.txt` 的
+           **原始語義**（整站 markdown 打包）；而 Shopify 的實作**根本不是打包**——`/llms.txt` 與
+           `/llms-full.txt` 預設都指向同一份 `agents.md` 內容（本節事實 6）。前提換掉之後：
+             ② 沒有第二份內容 ⇒ 不存在「全站封包」這件事；
+             ③ 沒有第二套生成 ⇒ 成本不隨商品數成長；
+             ① 對 `/llms.txt` 同樣成立，而我方已經接受了 ⇒ 不能拿它單獨否決第三條路徑。
+        🔴 **這是誤讀本尊實作造成的分歧，不是價值觀分歧**——記下這個區別，是為了讓日後回頭看的人
+           知道「當時的推理沒壞，只是餵給它的事實是錯的」，而不是把整段推理一起丟掉。 -->
+
+   - **預設值**：`limits.agents.llms_full_txt_enabled: true`（原 `false`）。三條路徑預設全開、內容相同、共用同一個生成器與同一份快取。
+   - **`llms_full_txt_max_bytes: 5242880` 保留**：別名形態下用不到，但商家一旦自訂 `templates/llms-full.txt.liquid`，**原始語義（整站打包）就回來了**——那時這個護欄是必要的。**護欄跟著「商家可以寫任意 Liquid」這件事走，不跟著預設值走。**
+   - **①（無引擎官方宣稱消費）仍然成立**（V-117 不因本次改動結案）：它的結論是「不投入內容策展」，不是「不提供路徑」。
 
 **反過來說，真正該投資的是什麼**：事實 8/9/10/11/12 指向同一個方向——2026 的生成式通路吃的是**結構化的商務能力與商品資料**（Catalog、MCP 工具、UCP 能力宣告），不是一個文字檔。我方的投資順序因此是：**§H.4 資料完整度 ＞ §H.3 代理端點 ＞ `llms.txt`**。
 
@@ -443,8 +543,10 @@ handleize_url(title):            # 完整九步管線與驗證樣本見 67 §D.1
 ```
 /agents.md      ← templates/agents.md.liquid      → 平台預設生成器
 /llms.txt       ← templates/llms.txt.liquid       → agents.md 模板 → 平台預設生成器
-/llms-full.txt  ← templates/llms-full.txt.liquid  → agents.md 模板 → 平台預設生成器（預設關閉）
+/llms-full.txt  ← templates/llms-full.txt.liquid  → agents.md 模板 → 平台預設生成器
 ```
+<!-- 依 68 號 §C-1 修正，原文該行尾為「（預設關閉）」。三條路徑**預設全開且內容相同**（dev，2026-05-28）。 -->
+🔴 **三條路徑預設全開**（`limits.agents.llms_paths_default_alias_of_agents_md: true`）。沒有「哪一條預設關」這回事——關掉其中一條就會讓從 Shopify 搬來的商家在那條 URL 上從有內容變成 404。
 Liquid context **只給兩個物件**（`request`、`agents`），全域物件不可用——理由與 Shopify 相同且我方更需要：這三個端點走**裸主網域、無 locale 前綴、不可在地化**，若讓模板取用 `collections`／`shop`，快取鍵會被市場與語言污染，而這個檔案根本沒有市場維度。
 
 `agents` drop 的欄位（我方等價物，命名對齊以利主題移植）：`store_name`、`store_url`、`sitemap_url`、`currency`、`ucp_discovery_url`、`mcp_endpoint_url`、`ucp_versions`。
@@ -534,7 +636,7 @@ knowledge_entries(shop_id, kind, question, answer, locale, market_id NULL=全域
 | # | 議題 | 重疊（兩邊都好） | 衝突（必須取捨） | 我方處置 |
 |---|---|---|---|---|
 | 1 | 內容完整度 | 結構化欄位、政策、規格：SEO 富摘要與代理端點共用 | **大量 AI 生成的商品文案**：對 AI 通路是「內容完整」，對 Google 是 **scaled content abuse**（30 §1.2，可能整站受罰） | AI 產文一律落 `content_source` 稽核欄；後台對「一次生成 >N 篇」加摩擦與警告 |
-| 2 | `llms.txt` 類檔案 | — | Google 明說不需要（事實 2/3）；業界又在推 | §H.2：零成本別名做，內容策展不做，`llms-full.txt` 預設關 |
+| 2 | `llms.txt` 類檔案 | — | Google 明說不需要（事實 2/3）；業界又在推 | §H.2：零成本別名做，內容策展不做；<!-- 依 68 §C-1 修正，原文：「`llms-full.txt` 預設關」 -->**三條路徑預設全開**（Shopify 的 `llms-full.txt` 是別名不是打包） |
 | 3 | 訓練型爬蟲 | — | 封鎖保護內容，但可能減少品牌在模型中的內化；**效果無公開實驗**（V-123） | 分成三組開關（§D.3），文案只陳述官方定義，不宣稱效果 |
 | 4 | 代理內直接結帳 | 轉換路徑短、成交快 | **買家不再進站**：分析、再行銷、CWV 樣本、A/B 測試全部失去該次 session；歸因模型要改 | 代理訂單必須帶 `channel=agentic` 與代理識別；分析頁把代理成交**單獨一軸**，不混進自然搜尋 |
 | 5 | 即時價格／庫存開放 | 代理報價準確＝更可能被推薦 | 等於對競品開放即時比價與庫存掃描 | §H.4(b)④：供貨只回級別不回數量；限流；可設定的延遲/快取 |
@@ -593,7 +695,10 @@ hreflang_code(market, locale):
 29 §1.5 的繼承語義：`catalogs` 與 `webPresences` 是**累加（additive）**，其餘是**覆寫**。落到 hreflang：
 
 **(a) 用「解析後」的 web presence 集合，不是市場自己那一列。**
-子市場的 web presence 集合 ＝ 自身 ∪ 沿 lineage 上溯的全部（`limits.market.inheritance_additive` 已含 `web_presences`）。因此 `hreflang_set` 第二行必須呼叫 `resolved_web_presences(m)`，**不是** `m.web_presences`。若寫成後者，子市場的頁面會漏掉繼承自父市場的語言版本，hreflang 集合不完整 ⇒ 雙向性破裂 ⇒ 整組標註可能被忽略。**這是 P0-02 的繼承模型在 SEO 面最直接、也最容易漏的後果。**
+子市場的 web presence 集合 ＝ 自身 ∪ 沿 lineage 上溯的全部（`limits.market.inheritance_additive` 已含 `web_presences`）。因此 `hreflang_set` 第二行必須呼叫 `resolved_web_presences(m)`，**不是** `m.web_presences`。
+
+<!-- 依 68 號 §C-2 補（2026-08-12）：新市場預設 `inherit_primary` 之後，本條的**常態**變了。 -->
+🔴 **新市場預設 `inherit_primary`（§J.2）讓「繼承來的 web presence」從邊緣情形變成常態**，實作上要接住兩件事：**①** 一個沒有自己網域／子資料夾的市場**不產生新 URL**，它只是讓同一個 URL 多掛一個 hreflang 碼——**同一 URL 對多碼是合法的**；**②** `dedupe_codes`（§I.3(c)）處理的是**同碼多 URL**，**不得**把 ① 也當成衝突去刪，否則繼承市場的條目會被誤刪、雙向性隨即破裂。若寫成後者，子市場的頁面會漏掉繼承自父市場的語言版本，hreflang 集合不完整 ⇒ 雙向性破裂 ⇒ 整組標註可能被忽略。**這是 P0-02 的繼承模型在 SEO 面最直接、也最容易漏的後果。**
 
 **(b) 父子關係是推導的，所以 hreflang 是「market conditions 的函式」。**
 `markets.derived_parent_market_id` 是物化快取（29 §1.5(a)）。任一 market 的 conditions 變更 ⇒ 受影響子樹重算 ⇒ **hreflang 矩陣與 sitemap 必須同步失效**。實作：market conditions 變更事件 → 失效 `hreflang_matrix:{shop_id}` 快取 → 觸發 sitemap 重生 ＋ IndexNow 批次（30 §9-9，去抖 ≥5 分鐘）。**漏掉這個掛鉤，商家改了市場範圍，hreflang 會停在舊值好幾天**——與 55 §D G-03「掛勾寫了沒接上」同一類病根。
@@ -634,7 +739,35 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 
 ### J.2 我方預設與選擇準則（不寫死國別）
 
-**預設＝子資料夾。** 理由：新租戶沒有網域權重可分，共享主網域是最快進索引的路徑，且成本最低。**準則做成後台的決策提示，而不是硬性建議**：
+<!-- 依 68 號 §C-2 跟隨 Shopify 做法修正（2026-08-12）。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「**預設＝子資料夾。** 理由：新租戶沒有網域權重可分，共享主網域是最快進索引的路徑，
+         且成本最低。」
+     🔴 **原文把「預設值」與「建議值」壓成了一個值——Shopify 刻意把它們拆開，我方照做。**
+        Shopify 的兩個事實方向相反、但不矛盾：
+          建議值（help，managing-international-domains）：首次設定國際銷售**建議**子資料夾；
+          預設值（changelog.shopify.com/posts/subfolders-are-no-longer-created-by-default-for-new-markets，
+                  **2023-05-23**）：在此之前新的單國市場會**自動建立**語言／國家子資料夾；
+                  此後**新市場預設沿用 primary market 的 URL 結構**，子資料夾改為商家自行設定。
+        原文的理由（共享權重、成本最低）**只支持「建議子資料夾」，不支持「自動配子資料夾」**——
+        它沒有回答「商家還沒想清楚要不要多一份站點時，平台該不該替他生」。 -->
+
+**預設值與建議值是兩件事，分開寫（跟隨 Shopify 的做法）：**
+
+| | 值 | 出處 | 說明 |
+|---|---|---|---|
+| **新建市場的預設** | **繼承 primary web presence 的網域與 URL 結構**（`limits.market.web_presence.default_for_new_market: inherit_primary`） | `dev`（2023-05-23 changelog） | 🔴 **不自動配子資料夾。** 平台不替商家新增任何 URL |
+| **UI 建議值** | **子資料夾**（`limits.market.web_presence.ui_recommended_strategy: subfolder`） | `help` | 商家點「設定網域」時的預選項與推薦文案；理由仍是原文那兩條（共享權重、成本最低） |
+
+**為什麼這條不是雞毛蒜皮**：自動配子資料夾 ＝ 一次新增**一批可索引 URL ＋ 一批 hreflang 條目 ＋ 一批 sitemap 列**。Shopify 在 2023 專門為此發了一則 changelog 把它關掉，方向很明確——**多市場的 URL 增生必須是商家的明示動作**。我方若沿用「預設子資料夾」，商家每開一個市場就靜默多一份站點，而他可能只是想針對該國調個價。
+
+**與 §I 的接縫（`inherit_primary` 的直接後果，實作時最容易漏）**：繼承 primary web presence 的市場**不產生新的 URL**，它只是讓**同一個 URL 多掛一個 hreflang 碼**。因此：
+
+- **同一 URL 對應多個 hreflang 碼 ＝ 合法且是本預設下的常態**（`en-hk` 與 `en-sg` 同指 `example.com/products/x`）。
+- **同一個碼對應多個 URL ＝ 非法**，那才是 §I.3(c) `dedupe_codes` 要處理的東西。**兩者不要搞混**：把前者也拿去 dedupe，會把繼承市場的條目誤刪，hreflang 的雙向性隨即破裂。
+- 商家之後**手動**改成子資料夾時，那批 URL 才第一次出現 ⇒ 走 §J.3 的遷移路徑（新增而非搬遷，不需 301，但要進 sitemap 與矩陣並觸發失效）。
+
+**選擇準則做成後台的決策提示，而不是硬性建議**：
 
 ```
 建議獨立網域，當且僅當：該市場有在地法人/法遵要求（jurisdiction pack 宣告 requires_local_domain）
@@ -645,9 +778,16 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 ```
 `requires_local_domain` 是**法域能力**（56 號的 capability contract），不是 SEO 層的 if-else。**SEO 層不得出現任何國別清單**（鐵律 11）。
 
+🔴 **上面這座階梯是「商家來問的時候給的建議」，不是「商家沒動作時系統做的事」。** 商家沒有明示選擇時，一律 `inherit_primary`——`其餘：子資料夾` 這一行講的是**推薦哪一個選項**，不是**預設幫他建哪一個**。
+
 ### J.3 遷移路徑（策略改變時）
 
 子資料夾 → 獨立網域是一次 site move：全量 301 ≥1 年 ＋ 雙 sitemap ＋ GSC Change of Address（30 §9-6）。**平台必須擋住「直接改設定就切換」**：改網域策略要走精靈，產生重導表、保留舊 URL、並在 90 天內於 SEO 健康頁常駐監控 404/流量落差。
+
+<!-- 依 68 號 §C-2 新增下面這一條（2026-08-12）：新市場預設 `inherit_primary` 之後，
+     最常見的「策略改變」不再是子資料夾 → 獨立網域，而是 **inherit → 子資料夾**，
+     而原節完全沒有涵蓋它。 -->
+🔴 **`inherit_primary` → 子資料夾／子網域／獨立網域是「新增」不是「搬遷」，兩者的處置完全不同**：繼承狀態下該市場**沒有自己的 URL**（§J.2），所以沒有舊 URL 要 301，**不得**套用上面的 site move 流程（產生一批 `from == to` 的重導列是製造垃圾與重導鏈風險）。要做的是：**新 URL 進 sitemap ＋ 進 hreflang 矩陣 ＋ 觸發 §I.3(b) 的失效管線**，並在 SEO 健康頁提示「本市場新增了 N 個可索引 URL」。反向（子資料夾 → 回到 inherit）**才**是搬遷：那些 URL 已被索引，必須 301 回主網域對應頁，走上面的精靈。
 
 ---
 
@@ -655,21 +795,55 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 
 ### K.1 事實
 
-- **Google**：建議**避免**依語言自動重導；這類重導「可能讓使用者（與搜尋引擎）看不到你網站的其他版本」，且 IP 定位判斷不可靠、可能導致 Google 無法正確抓取各版本（`google`）。
+- **Google**：建議**避免**依語言自動重導；這類重導「可能讓使用者（與搜尋引擎）看不到你網站的其他版本」，且 IP 定位判斷不可靠、可能導致 Google 無法正確抓取各版本（`google`）。**這條事實沒有被推翻，本節下面的定案是在明知它成立的前提下做的。**
 - **Shopify**：自動重導**只作用於顧客，搜尋引擎爬蟲被排除**（`help`）。
-- 29 §4 我方既有結論：「爬蟲永不 redirect；GeoIP → 建議切換 banner ＋ cookie 記住選擇」。
+- 🔴 **Shopify 的預設值**（`help`，`/manual/markets/getting-started/localization`，68 §C-3 取得）：**新店預設「啟用」地區自動重導**，預設「**停用**」自動語言偵測。**兩個預設值方向相反。**
+- **判斷依據**：瀏覽器語言 ＋ 地理位置；`geoip` 已被併入自動重導（`dev` changelog）。
+- 🔴 **EU 例外（法遵，不是偏好）**（`help`，`/international/automatic-redirection`）：使用 **EU ccTLD** 的在地化體驗，**EU 客戶不會在 EU 內被自動重導**；官方要商家改用第三方 app 提供「**建議**」而不是重導。市場用非國別網域（`.com`／`.shop`）時，EU 客戶照常重導。
+- **Shopify 自己沒有內建 recommendation banner**——「建議」這個形態官方是推給第三方 app 的。
+- 29 §4 我方既有結論：「爬蟲永不 redirect；GeoIP → 建議切換 banner ＋ cookie 記住選擇」。**前半跟隨後仍然成立且升格為不變量；後半從「預設行為」降為「關閉自動重導時的行為」＋「EU ccTLD 下的唯一合法行為」。**
 
 ### K.2 我方規格
 
+<!-- 依 68 號 §C-3 跟隨 Shopify 做法整節翻面（2026-08-12）。
+     原文（保留供追溯，🔴 任何人不得改回）：
+       「| 預設 | **關閉自動重導**。預設行為＝顯示「建議切換到 {市場}」橫幅 ＋ cookie 記住選擇
+                ＋ 常駐的語言/地區切換器 |
+        | 若商家開啟 | ①一律 302 ②對已驗證的搜尋引擎爬蟲不套用 ③只重導一次 ④EU ccTLD 不自動跳轉 |」
+     🔴 **這一條是「跟隨 Shopify」與「外部權威（Google）」的直接衝突，不是與使用者裁定衝突**
+        （68 §G 逐條分類如此）。使用者裁定「全部跟隨 Shopify」⇒ 預設開。
+     🔴 **代價必須明寫，不得只翻布林值**：Shopify 之所以敢預設開，靠的是
+        「爬蟲不重導 ＋ hreflang 完整」把 Google 的疑慮擋掉。⇒ 我方一旦預設開，
+        原本「開啟時的選配護欄」三條就**升格為不可關閉的不變量**（下表 🔒 標記）。
+        少了它們，預設開就是真的傷索引，而且傷的是**每一個新租戶**，不是有意開啟的那些。 -->
+
 | 項 | 規則 |
 |---|---|
-| 預設 | **關閉自動重導**。預設行為＝顯示「建議切換到 {市場}」橫幅 ＋ cookie 記住選擇 ＋ 常駐的語言/地區切換器 |
-| 若商家開啟 | ①一律 **302**（不是 301——地區偏好不是永久事實）②**對已驗證的搜尋引擎爬蟲不套用** ③**只重導一次**（cookie 標記），使用者手動切回後不再攔截 ④EU ccTLD 依既有結論不自動跳轉（29 §4） |
+| **預設** | 🔴 **啟用**地區自動重導（`limits.seo.redirect_geo.enabled_default: true`，原 `false`）。跟隨 Shopify 的預設值 |
+| **語言自動偵測** | ✅ **維持停用**（`limits.i18n.storefront.auto_redirect_on_language: false`）——**這一半本來就與 Shopify 一致**（本尊亦預設停用），我方之前沒意識到自己已經對齊了。🔴 不要因為地區那一半翻成 true 就把這一半一起翻 |
+| 重導形態 | 一律 **302**（不是 301——地區偏好不是永久事實） |
+| 🔒 **不變量 1** | **對已驗證的搜尋引擎爬蟲不套用**（`exclude_verified_crawlers`）。**不可關閉**：不提供後台開關、API 欄位或環境變數；試圖關閉一律 reject |
+| 🔒 **不變量 2** | **出現在 hreflang／sitemap 的 URL 對任何客戶端直接回 200**（`hreflang_urls_must_return_200`，§0.2 原則 4）。**不可關閉**。這是本節與 §I 的接縫，也是最容易做壞的地方 |
+| 🔒 **不變量 3** | **只重導一次**（`once_per_visitor`，cookie 標記），使用者手動切回後不再攔截。**不可關閉**：無限重導＝使用者永遠回不到他想看的版本，那比不重導糟得多 |
 | 爬蟲判定 | UA 比對 ＋ **反向 DNS 驗證**（Googlebot/Bingbot 官方驗證法）。未通過驗證的自稱爬蟲**當一般使用者處理**（否則變成偽裝繞過的漏洞） |
-| 不變量 | 出現在 hreflang／sitemap 的 URL，對**任何**客戶端直接回 200（§0.2 原則 4）。自動重導的實作**不得**違反此條——這是本節與 §I 的接縫，也是最容易做壞的地方 |
+| **EU 例外** | 🔴 **法遵，不是偏好**：EU ccTLD 的在地化體驗 ＋ EU 來源客戶 ⇒ **不重導**，改顯示建議橫幅。判定**不得**寫成 SEO 層的國別 if-else（鐵律 11）——由 jurisdiction pack 宣告 `forbids_geo_auto_redirect`，SEO 層只讀該能力（`limits.seo.redirect_geo.eu_exception_source: jurisdiction_pack_capability`；掛載點見 56 號 capability contract） |
+| 建議橫幅 | 自動重導**關閉時**、以及 **EU ccTLD 情境下**的行為：顯示「建議切換到 {市場}」橫幅 ＋ cookie 記住選擇。⚠ **Shopify 自己沒有內建這個**（官方推給第三方 app）⇒ 這是我方**超出本尊**的一條，標 `ours`；是否升為正式產品能力待裁定（68 §H） |
 | 切換器 | 無論是否開啟自動重導，切換器必須是**真實連結**（`<a href>` 指向目標市場 URL），不能是純 JS。理由：那是爬蟲發現其他市場版本的路徑之一 |
+| 商家可關 | 自動重導本身**可由商家關閉**（那是 Shopify 也有的開關）；🔒 三條不變量**不隨之可關**——關掉自動重導時它們自然不生效，但不存在「開著重導卻關掉護欄」的組合 |
+| 🔴 **與快取的接縫** | **重導判定的輸入含瀏覽器語言與地理位置**（`help`：geoip 已併入自動重導）⇒ 它**依請求而異**。因此：①**重導判定必須在快取之前、且判定結果本身不得進頁面快取**（否則一份被快取的 302 會把所有人送去同一個市場，或一份被快取的 200 讓該重導的人不被重導）；②頁面快取鍵**不因此新增 `Accept-Language` 維度**——67 §G.2 的降維與 `i18n.storefront.emit_vary_accept_language: false` **維持不變**，因為**被重導的請求根本沒有進到頁面渲染**；③**重導只發生在導覽層，不改變任何 URL 的回應主體**——這是不變量 2 的另一面 |
 
-> ⚠️ **V-116**：「對爬蟲不套用自動重導」是否被 Google 視為可接受（而非 cloaking）——Shopify 宣稱其實作排除爬蟲，但 **Google 官方文檔只說「避免自動重導」，未對「排除爬蟲」表態**。我方的緩解是：對 bot 與人**回傳完全相同的頁面內容**，唯一差異是「人可能被建議/重導到另一個 URL」，且該另一個 URL 對 bot 同樣可直接訪問回 200。在 V-116 結案前，**預設維持關閉**。
+<!-- 依 68 號 §C-3 補（2026-08-12）：上面「與快取的接縫」一列是**預設值翻面後才出現的新問題**，
+     原節不需要它（預設關閉時沒有任何請求會被重導）。
+     🔴 它同時是 67 §K.1 SF-1（「同一 URL 送三種 Accept-Language，回應主體逐位元組相同」）
+        的邊界：SF-1 斷言的是**回應主體**，在自動重導開啟後，**狀態碼可能不同**（302 vs 200）。
+        SF-1 不需要改（它測的是語言維度、且主體確實相同），但**測試實作必須跟隨最終 URL 後再比對主體**，
+        否則會把「地區重導預設開」誤判成「語言污染」。 -->
+
+> 🔴 **V-116 重寫**（依 68 §C-3；原條目的處置前提已消失）
+> **原處置**：「『排除爬蟲是否被 Google 視為可接受』未取得官方表態 ⇒ **預設維持關閉**。」
+> **前提消失**：預設值已依裁定翻成啟用，「維持關閉」這個處置沒有東西可以依附。
+> **新處置**：**預設開；三條護欄不可關；風險登記在此。** 未知本身沒有變——Google 官方文檔至今只說「避免自動重導」，**未對「排除爬蟲」表態**（既不認可也不否定）。我方的緩解不變且加碼：對 bot 與人**回傳完全相同的頁面內容**，唯一差異是「人可能被建議／重導到另一個 URL」，而該 URL 對 bot 同樣直接回 200（不變量 2）。**這不是 cloaking 的形態**（cloaking 是給 bot 看不同內容），但**我方無法代替 Google 宣稱它可接受**。
+> **若 Google 日後表態不可接受**：要改的是 `enabled_default`（翻回 false），**不是**拆掉三條護欄。
 
 ---
 
@@ -707,6 +881,27 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | `Offer.price` | `"1000.00"` | §A.4 定案（數值等價，Google 只禁符號與逗號） |
 | feed `price` | `"1000.00 JPY"` | ⚠️ **V-115 未結案**：GMC 對 zero-decimal 幣別是否接受兩位小數未取得明文 |
 
+### L.5 exponent=3 幣別（KWD／BHD／JOD）在 SEO 面的處置
+
+<!-- 依 68 號 §D-3 跟隨 Shopify 做法新增（2026-08-12）。本節是 D-3 在**本檔**（序列化與顯示面）的落點；
+     幣別清單本身的裁定落在 `limits.catalog_flow.exponent3_*`，金額邊界仍歸 65 號。 -->
+
+**Shopify 的實際做法**：幣別代碼**支援**（`CurrencyCode` enum 含 KWD／BHD／JOD／OMR／TND，`dev`）；金額**四捨五入到 2 位**（`press`：以 API 送 `3.004` 存成 `3.00`）；顯示不一致（BHD 首頁 3 位、商品頁 2 位，`press`）⇒ 官方沒有把 3 位小數做通；Shopify Payments **不支援**該三國開店（`press`）。
+
+⇒ **本尊的實質做法是「幣別代碼開放、金額當 2 位處理、精度損失不處理」，不是「擋掉這些幣別」** ⇒ 我方跟隨：**不擋幣別**（`limits.catalog_flow.unsupported_currency_exponents: []`，原 `[3]`）。
+
+| 面 | KWD 的值 | 說明 |
+|---|---|---|
+| 儲存 | `290`（＝KWD 2.90 的 cents，×100 不看幣別） | 🔴 **`2.905` 存不進來，會落成 `2.90`**——精度損失是**跟隨的結果**，Shopify 也是這樣（四捨五入），但**必須明文記錄，不能靠沉默** |
+| 顯示 | `KD 2.90`（兩位小數） | 與裁定二**天然吻合**，不需要例外邏輯 |
+| `Offer.price` | `"2.90"` | §A.4 的 `amount_cents / 100` 一律適用、**不看幣別** ⇒ 本節**不需要**在序列化層新增任何分支 |
+| feed `price` | `"2.90 KWD"` | 同一生成器 |
+| **收款** | 🔴 **PSP pack 未明文宣告 minor unit ⇒ reject** | 鐵律 3 ／ 65 §R5 **原封不動** |
+
+> 🔴🔴 **不得把本節讀成「鐵律 3 放寬了」。** 跟隨 Shopify 改的是**幣別清單**，不是**金額邊界**。KWD 的 milli-unit 問題**依然無解**：ISO 4217 的 KWD exponent=3，若某 PSP pack 宣告 3，`Money::PspMinor` 的基數就是 1000，而我方儲存是 ×100 ⇒ **儲存尺度與 PSP 單位在此幣別下不同源**。跟隨 Shopify **不解決這個問題，只是允許幣別存在**。⇒ **幣別可選、收款要等 PSP pack 明文宣告，且該 pack 必須同時宣告如何處理儲存精度不足。** `money_boundary.max_supported_iso_exponent: 2` 一個字都不動——它從「兩個執法點之一」變成**唯一的執法點**，比改動前更重要。
+>
+> 🔴 **交叉引用待修（本輪不得改那三份檔案）**：`63 §G.4`、`65 §A2／T11`、`55` 的金額測試矩陣目前仍寫著「exponent=3 於 **market 建立時**擋下、回 `INCLUSION`」——**那個執法點已被本次跟隨移除**。實作前必須以 `limits.catalog_flow.exponent3_*` 為準並回頭修那三處，否則會出現「規格說擋、鍵說不擋」的分裂。⚠ 另見 68 §I **V-188**（Shopify 對 exponent=3 有無官方立場，通篇沉默，本條全靠社群回報）。
+
 ---
 
 ## M. 落地：里程碑對應
@@ -725,7 +920,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | S10 | `robots.txt.liquid` ＋平台保底注入＋lint | **M2** | 26:220–224 物件 | 覆寫後仍有 `Sitemap:` 行 |
 | S11 | hreflang（locale 維度，單市場多語言） | **M2**（P0） | §I.1 | 自指＋雙向 |
 | S12 | `<h1>` 唯一性 lint＋CWV 預算與圖片管線 | **M2** | — | LCP/INP/CLS 門檻；lint 0 error |
-| S13 | `/agents.md`＋`/llms.txt` 別名端點＋`agents` drop | **M2**（低成本，隨路由層一起做） | 模板類型 ＋ `agents` drop 7 欄 | 三條路由 fallback 鏈正確；`ucp_*` 欄位在未實作時**不輸出** |
+| S13 | `/agents.md`＋`/llms.txt`＋**`/llms-full.txt`** 三條別名端點＋`agents` drop<!-- 依 68 §C-1 修正：原文只列兩條端點（`llms-full.txt` 當時預設關），現三條預設全開 --> | **M2**（低成本，隨路由層一起做） | 模板類型 ＋ `agents` drop 7 欄 | 三條路由 fallback 鏈正確；**三條預設皆回 200 且內容相同**（GEN-1／GEN-4）；`ucp_*` 欄位在未實作時**不輸出** |
 | S14 | AI 爬蟲三組開關＋預設值 | **M2** | shop settings | robots 輸出符合分組；`Googlebot` 不可關 |
 | S15 | `knowledge_entries` ＋前台區塊 | **M5** | §H.5(a) | 一份資料三出口；不出 `FAQPage` |
 | S16 | hreflang 全量矩陣（market×locale）＋x-default＋碼衝突解析 | **M5** | §I.1–I.3 | REG-1～REG-8 全綠 |
@@ -733,7 +928,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | S18 | feed 生成器接入 `PriceView`＋IndexNow | **M5** | 30 §9-8/9-9 | GMC 測試 feed 零錯誤（HANDOFF M5 驗收已列） |
 | S19 | 代理通路：catalog／faq 端點＋逐通路開關＋限流 | **M5**（唯讀）/ **M6**（管道 UI） | §H.4 | 端點回應價格與 PDP 全等；未發佈商品不出現 |
 | S20 | 主題側 `structured_data` 等價 filter ＋ 編輯器 SEO 面 | **M6** | 26:410 | 主題只能新增節點 |
-| S21 | 網域策略（自訂網域、per-market 網域、平台子網域 301）＋site move 精靈 | **M7** | HANDOFF M7 已列 | 雙網域皆可逛；301 全量 |
+| S21 | 網域策略（自訂網域、per-market 網域、平台子網域 301）＋site move 精靈<br>🔴 **含新市場預設 `inherit_primary`**（`limits.market.web_presence.*`，§J.2）<!-- 依 68 §C-2 補 --> | **M7**（**但 `inherit_primary` 的預設值必須在「能建市場」的那個里程碑就正確**，不能等 M7） | HANDOFF M7 已列 ＋ `market.web_presence.*` | 雙網域皆可逛；301 全量；**建立新市場時不自動產生任何子資料夾 URL**（測：建市場後 sitemap 與 hreflang 條目數不變） |
 | S22 | UCP 階段 1（唯讀 Catalog 能力宣告） | **M7+**，`enable_gate: [V-113, V-114]` | `/.well-known/ucp` | 未結案不得 enable |
 | S23 | SEO/GEO 可觀測（GSC API、AI 流量分軸、hreflang 完整性巡檢、富摘要驗證 job） | **M8** | §H.7 | 巡檢可觸發告警 |
 
@@ -754,6 +949,25 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | `carrier.money.storage_multiplier: 100` | 換算尺度的前例與警告 | §L.1 防呆 2 |
 
 新增鍵清單見 `config/limits.yml` 的 §18／§19 兩節（每鍵帶出處註解）。
+
+**2026-08-12 依 68 號「全部跟隨 Shopify」裁定的鍵變更**（本檔範圍內，逐鍵可追溯；每鍵在 `limits.yml` 內都有 `依 68 號 §X … 原值：…` 的追溯註釋）：
+
+| 鍵 | 原值 → 新值 | 依據 | 本檔落點 |
+|---|---|---|---|
+| `agents.llms_full_txt_enabled` | `false` → **`true`** | 68 §C-1（`dev` changelog：三路徑預設全開、內容相同） | §H.2、§H.3(a)、§H.6-2、§O GEN-4 |
+| `agents.llms_paths_default_alias_of_agents_md` | 新增 `true` | 同上 | §H.3(a) |
+| `seo.redirect_geo.enabled_default` | `false` → **`true`** | 68 §C-3（`help`：新店預設啟用） | §K.1／§K.2、§O REG-9、V-116 |
+| `seo.redirect_geo.non_disableable_invariants` | 新增（三條護欄升格） | 68 §C-3 | §K.2 🔒 三列 |
+| `seo.redirect_geo.eu_cctld_no_redirect` / `eu_exception_source` | 新增 | 68 §C-3（`help`，法遵） | §K.2 |
+| `market.web_presence.*` | 新增（`default_for_new_market: inherit_primary` 等） | 68 §C-2（`dev` 2023-05-23 changelog） | §J.2 |
+| `seo.variant_url_mode_b_requires_unique_content` | **刪除** → `variant_independent_urls_supported: false` | 68 §B-6（模式 B 廢除） | §B.2、§B.2-1 |
+| `combined_listing.*`（§22 新區塊） | 新增（`implemented: false`、60／3／2000） | 68 §B-6(c)（`help`） | §B.2-1 |
+| `catalog_flow.unsupported_currency_exponents` | `[3]` → **`[]`** ＋ `exponent3_*` 四鍵 | 68 §D-3（`dev` enum ＋ `press` 四捨五入） | §L.5 |
+| `handle.collision_strategy_generated` | `numeric_suffix_from_2` → **`numeric_suffix_from_1`** | 68 §C-4（`dev` `potion`/`potion-1` ＋ `test`） | 67 §D.4(b)（本檔 §F.3 引用） |
+| `handle.liquid_filter_fallback_trigger` | 新增 `empty_or_all_separator_input_only` | 68 §F-3（staff 復現：filter 保留非 ASCII） | §F.3 註 ＋ 67 §D.5 |
+| `i18n.import.blank_means_unchanged` | `true` → **`false`** ＋ 缺席語義三鍵 ＋ 預覽三鍵 | 68 §B-3（Matrixify 事實標準，`press`） | 67 §E.6 |
+
+🔴 **`money_boundary.*` 一個鍵都沒動**（鐵律 3／65 號）。D-3 改的是幣別清單，不是金額模型；`max_supported_iso_exponent: 2` 的**註釋**有更新（說明它已成為唯一執法點），**值不變**。
 
 ---
 
@@ -785,7 +999,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | GEN-1 | 三端點 fallback 鏈 | 移除 `llms.txt.liquid` 後 `/llms.txt` 落到 `agents.md` 模板；再移除落到平台預設 |
 | GEN-2 | `agents` drop 受限 context | 模板內存取 `collections` 應為 nil，不得拋錯也不得洩漏 |
 | GEN-3 | **未實作能力不得宣告** | `limits.agents.ucp.provider_enabled: false` 時，`/agents.md` 輸出中**不含** `ucp_discovery_url` 與 `ucp_versions`（不是輸出空字串） |
-| GEN-4 | `llms-full.txt` 預設關 | 預設回 404；開啟後受大小上限 |
+| GEN-4 | **`llms-full.txt` 預設開且＝`agents.md` 別名** | 未安裝任何模板時 `/llms-full.txt` 回 **200 且內容與 `/agents.md` 逐位元組相同**（**不是 404**）；自訂 `llms-full.txt.liquid` 後受 `limits.agents.llms_full_txt_max_bytes` 上限<br><!-- 依 68 §C-1 反轉，原文：「`llms-full.txt` 預設關 \| 預設回 404；開啟後受大小上限」。🔴 不反轉這條，CI 會把**正確行為**判成失敗。 --> |
 | GEN-5 | AI 爬蟲分組 | 關訓練組不影響搜尋組；`Googlebot` 無法被租戶關閉 |
 | GEN-6 | 代理端點價格同源 | 與 SEO-2 同一套斷言 |
 | GEN-7 | 代理端點市場明示 | 無 `country` 參數時回應必含解析到的 market handle |
@@ -803,7 +1017,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | REG-6 | **可達性不變量** | hreflang／sitemap 內所有 URL 對任何客戶端直接 200、self-canonical、非 noindex |
 | REG-7 | 失效掛鉤 | 改 market conditions／移除語言後，矩陣與 sitemap 在去抖窗內更新 |
 | REG-8 | 碼衝突 | 造出兩個同語言多國市場 → 展開為逐國碼 ＋ 落 lint 記錄，**不得靜默丟棄** |
-| REG-9 | 重導 | 預設不自動重導；開啟後 302、對已驗證爬蟲不套用、只攔一次 |
+| REG-9 | **重導（預設開）** | <!-- 依 68 §C-3 反轉，原文：「預設不自動重導；開啟後 302、對已驗證爬蟲不套用、只攔一次」 -->新店預設**啟用**地區重導；302；🔒 已驗證爬蟲不套用、🔒 只攔一次、🔒 hreflang／sitemap URL 對任何客戶端回 200 —— **三條護欄無法由任何設定關閉**（測試：嘗試以 API／設定關閉任一條 ⇒ reject）；EU ccTLD ＋ EU 來源 ⇒ 不重導改顯示建議；**語言自動偵測維持關閉** |
 | REG-10 | 幣別一致 | 每市場的可見價格／`priceCurrency`／feed 幣別三者相同 |
 
 ---
@@ -818,10 +1032,10 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | **V-113** | `/.well-known/ucp` 是否對所有 Shopify 商店自動提供；其內容、快取策略與 `ucp_versions` 值域 | shopify.dev `/docs/agents` 子頁；或實測任一商店 | `agents.ucp.provider_enabled: false`，**不輸出** `ucp_discovery_url` | §H.3 |
 | **V-114** | UCP／MCP 如何攜帶買家國別與幣別以取得 per-market 價格 | ucp.dev capability schema 逐項；Shopify Catalog MCP 參數表 | 我方代理端點**強制 `country` 參數**並回應明示市場 | §H.3、§H.6-7 |
 | **V-115** | GMC／Merchant API 對 zero-decimal 幣別的 `price` 是否接受兩位小數（`1000.00 JPY`）；富摘要驗證器是否告警 | support.google.com/merchants 產品資料規格逐欄；Merchant API schema | feed 維持兩位小數（與頁面同源優先），並加 GMC 診斷告警規則 | §A.4、§L.4 |
-| **V-116** | 「對爬蟲不套用地區自動重導」是否被 Google 視為可接受（非 cloaking） | Google Search Central 官方明文或官方人員表態 | **自動重導預設關閉**；開啟時 bot 與人取得相同頁面內容 | §K |
+| **V-116**<br>🔴 **處置已重寫** | 「對爬蟲不套用地區自動重導」是否被 Google 視為可接受（非 cloaking）——**未知本身未變**：Google 官方至今只說「避免自動重導」，未對「排除爬蟲」表態 | Google Search Central 官方明文或官方人員表態 | <!-- 依 68 §C-3 重寫，原處置：「**自動重導預設關閉**；開啟時 bot 與人取得相同頁面內容」——該處置的前提（預設關閉）已隨裁定消失 -->**預設啟用**（跟隨 Shopify）；bot 與人取得相同頁面內容；🔒 排除爬蟲／hreflang 回 200／只攔一次**三條升格為不可關閉的不變量**；風險登記於 §K.2。若 Google 日後表態不可接受 ⇒ 翻回 `enabled_default: false`，**不得改為拆護欄** | §K |
 | **V-117** | 是否有**任何** AI 供應商官方文檔宣稱消費 `llms.txt`（本輪只查到 Google 明確否定 ＋ OpenAI 文檔未提及） | 各家開發者文檔逐一覆核（Anthropic／Perplexity／Microsoft） | `llms.txt` 僅做零成本別名；不投入內容策展 | §H.2 |
 | **V-118** | `agents.md`／`llms.txt`／`.well-known/ucp` **是否真被代理抓取**（伺服器日誌級證據） | **我方自己量**（§H.7 端點命中率儀表板） | 端點照做，但不據此宣稱效果 | §H.2、§H.7 |
-| ~~**V-119**~~ | ~~Shopify `handleize` 對 CJK 標題的實際行為（保留／轉寫／落 id）~~ | — | ✅ **2026-08-12 結案**：使用者裁定「url hand 使用英文標題，禁止使用中文」⇒ 我方一律 ASCII，**不再需要對齊 Shopify**，原問題失去用途。主題相容殘留（Liquid `handleize` filter 面）改由 **V-161** 承接（67 §L） | §F.3（已改寫） |
+| ~~**V-119**~~ | ~~Shopify `handleize` 對 CJK 標題的實際行為（保留／轉寫／落 id）~~ | 68 號查證（`press` ×4） | ✅ **2026-08-12 結案，答案＝保留 CJK**（不是「問題消失」）<br><!-- 依 68 §B-1 改寫，原處置：「✅ **2026-08-12 結案**：使用者裁定「url hand 使用英文標題，禁止使用中文」⇒ 我方一律 ASCII，**不再需要對齊 Shopify**，原問題失去用途。」🔴 原敘述把「裁定覆蓋 Shopify」寫成「對齊問題消失」——前者是明知偏離、後者是不必比較，日後重審的意義完全不同。 -->Shopify 對非拉丁字集**原樣保留**，中文標題得到中文 handle，從不落代碼、也不擋發布。我方一律 ASCII 是**明知偏離**，唯一依據＝使用者裁定（**裁定 > Shopify**），登記於 §F.3-1。⚠ 官方**從未文件化**此行為 ⇒ 描述本尊時只能標 `press`（68 V-180）。主題相容殘留改由 **V-161** 承接（67 §L，已縮小） | §F.3-1 |
 | **V-120** | Google 兩份官方文檔的張力：多地區重複內容建議 canonical 到偏好版本 vs 在地化頁需可索引才能被 hreflang 服務 | 實測（同語言雙地區，觀察 GSC 收錄） | **一律 self-canonical**，不跨市場 canonical | §B.4 |
 | **V-121** | Shopify Catalog 的商品「符合資格」條件具體清單 | help.shopify.com Catalog 子頁逐頁；或 dev store 觀察拒登原因 | 我方以 GMC 規格為完整度門檻（超集策略） | §H.4 |
 | **V-122** | 各 AI 通路（ChatGPT／Copilot／Gemini／Meta）對商品欄位的硬性要求與拒登原因碼 | 各通路官方文檔；或代理管道後台的錯誤清單 | 同上 | §H.4 |
