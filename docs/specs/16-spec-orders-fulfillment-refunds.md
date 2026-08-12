@@ -233,6 +233,22 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 - 衍生旗標（全部 derived，不落庫）：`confirmed` / `fulfillable` / `refundable` / `restockable` / `unpaid` / `fullyPaid` / `edited`。
 - `OrderDisplayFulfillmentStatus`：現行 7 值（含 **`REQUEST_DECLINED`**）＋ 3 個 deprecated（`OPEN` / `PENDING_FULFILLMENT` / `RESTOCKED`，GraphQL enum 保留標 deprecated、不落地）。**此欄為 derived 不可寫入**；`ON_HOLD` / `SCHEDULED` 的定義是「***所有*** unfulfilled items 皆處於該狀態」。
 
+### F4.4 COD（貨到付款）對帳回寫（P1-08／TW-7）
+
+> <!-- 依 42:542 補寫，原文逐字：「COD 訂單付款狀態＝pending（`manual` gateway），出貨後由物流代收→對帳回寫 paid（16 號）」。
+>      50 號 TW-7 缺口③逐字：「COD 對帳回寫 paid 的流程在 16 完全沒有（無 manual gateway 對帳規格）」。本輪複核確認成立。 -->
+
+| 階段 | 狀態 | 動作 |
+|---|---|---|
+| 訂單成立 | `financial_status = PENDING`、`gateway = manual`、`order_transactions` **不建 sale 列** | 只建 `kind = 'sale', status = 'pending'` 的一列，金額＝含代收手續費的應收總額 |
+| 出貨 | 不變 | fulfillment 帶物流商代收單號；`orders.cod_expected_cents` 落庫 |
+| 物流商撥款對帳 | `PENDING → PAID` | 匯入物流商對帳檔 → 逐筆比對 `(carrier, cod_tracking_no, amount_cents)`；**完全相符才**條件式 UPDATE transaction `pending → success` |
+| 金額不符 | 停在 `PENDING` ＋ 標 `review` | **不得自動回寫**；進「COD 對帳差異」佇列由人工處置（差 1 元也不放行——這是現金流入口） |
+| 買家未取件退回 | `PENDING → VOIDED`（或取消訂單） | 走 F4 取消流程；庫存依 `restock` 回補；**觸發 F5.5 的發票 router** |
+
+**硬要求**：對帳匯入是**冪等**的（以 `(carrier, statement_id, row_no)` 唯一索引去重，重覆匯入同一份對帳檔不得產生兩筆 paid）；回寫一律走 `Orders::MarkAsPaid` 同一支 service（不得在匯入器裡直接 `update(financial_status:)`）。
+**⚠ 待查證（來源未載明）**：各物流商對帳檔格式與撥款週期為合約值，非官方文檔（同 V-11 的 `verify_tw_carrier_limits`）。
+
 ## F5. 退款（Refund）
 
 **生產級做法**：
@@ -288,6 +304,20 @@ suggested_refund   = max(0, net)                                       # 🔴 fl
 balance_to_collect = max(0, -net)                                      # 見下方「負值的兩種語義」
 ```
 
+**稅額分攤規則（P1-02，補完 H-07 的第二半）**
+<!-- 依 46a:595–601 補寫上位公式；稅額分攤的**具體規則官方未載明**（46a:1049–1067 逐條列為未載明項之一，見 V-09）。
+     50 號 P1「H-07 的稅額分攤未定義」成立：P0 輪只寫了 `line_tax[i] = 最大餘數法(該行稅額, 退貨比例)` 一行，
+     未涵蓋①未稅／含稅兩種定價模式的分工 ②運費稅 ③退貨費用是否課稅 ④部分數量退貨的餘數歸屬。以下為**本專案定義**。 -->
+
+| # | 情境 | 規則 | 理由 |
+|---|---|---|---|
+| X1 | **含稅定價**（台灣預設，`taxes_included = true`） | `line_tax[i] = 0`；稅只是 `line_net[i]` 的內含反推值，**不另加、不另退** | 稅已在單價內，重複加總會多退一次稅 |
+| X2 | **未稅定價**（`taxes_included = false`） | `line_tax[i] = 最大餘數法( order_line_items.tax_cents[i] , qty_returned[i]/qty_ordered[i] )`——**分攤原始已收稅額，不用現行稅率重算** | 稅率可能已變更；重算會與原訂單對不上帳（同 15-F2「訂單存快照」原則） |
+| X3 | **餘數歸屬** | 同一行分多次部分退貨時，餘數一律歸**最後一次**退貨（`Σ 各次 line_tax == 原始 tax_cents`，全退完必須精確歸零） | 保證「全部退完 ⟹ 稅退光」，不會殘留 1 分錢 |
+| X4 | **運費稅** | 退運費時按 `refund_shipping_amount / shipping_cents` 比例分攤 `shipping_tax_cents`，同樣走最大餘數法；**訂單層免運折扣 ⟹ 運費與運費稅皆不可退**（46c:238） | 與 F5.1 運費退款規則同一道判斷 |
+| X5 | **退貨費用（restocking／return shipping）是否課稅** | 本專案**不對退貨費用課稅**（`return_fees` 以未稅金額直接抵減 `net`） | **⚠ 待查證（來源未載明）**：46a 只給 `percentage` 與 `amount`，未定義稅務屬性——見 §待查證 V-13 延伸 |
+| X6 | **不變量** | `Σ_i line_tax[i] ≤ 該訂單原始稅額 − 已退稅額`，且任何路徑都不得用 float 中間值 | 對帳測試斷言 |
+
 **負值的兩種語義（不可混為一談）**
 - `exchange_value > 0` 或 `outstanding > 0` 造成 `net < 0` → **向買家收取差額**（46c:351–358 逐字：「Return fees and exchange items are applied against returned items to determine whether a refund is due or **payment needs to be collected**」）。產生應收，走 15-F3 的補款結帳連結。
 - **只有退貨費用**造成 `net < 0`（無換貨、無欠款）→ 46a:601 只說「建議金額不得低於 0」，**未說**會產生應收。本專案：`suggested_refund = 0`，**不自動產生應收**，由商家自行決定是否另行收款。
@@ -304,7 +334,7 @@ balance_to_collect = max(0, -net)                                      # 見下�
 **運費退款規則**：`amount`（指定金額）或 `fullRefund`（全退）二選一；退運費**不得超過可退運費**；**訂單套用了訂單層級免運折扣 → 完全不可退運費**（46c:218–221、46c:238）。
 **⚠ 待查證（來源未載明）**：`RefundShippingInput` 同時給 `amount` 與 `fullRefund` 的行為（46a §6② 明列為未載明）。
 
-**混合付款的退款分配順序（P1，但屬同一段程式碼）**：混合付款時**先把退款金額套用到禮品卡**，直到禮品卡達可退全額，餘額才走其他付款方式（46c:221）。
+**混合付款的退款分配順序**：見 F5.4（P1-05，完整演算法與算例）。
 
 **`returnCalculate` 與 `returnProcess` 必須共用同一份計算程式碼**（鐵律 7 數字同源）——預覽的建議值與實際退款金額若能對不上就是 bug。同一支 `Refunds::Calculator` 純函式，兩處呼叫。
 
@@ -372,6 +402,81 @@ balance_to_collect = max(0, -net)                                      # 見下�
 1. **建議值層（API 權威）**：`returnCalculate` / `returnProcess` **自動**依 F5.1 扣抵退貨費用與換貨扣抵。
 2. **覆寫層（UI 能力）**：admin 建立退貨時顯示退貨運費**可逐筆編輯**、重新上架費**可按個別品項編輯**；退款頁可手動改退款金額。
 3. **退貨規則只是預設值來源，不是硬約束**——商家在 admin 端永遠可覆寫（覆寫要寫 audit log）。
+
+### F5.4 混合付款的退款分配順序（P1-05／H-83，金額正確性）
+
+> <!-- 依 46c:221 補寫，原文（H05 zh-TW 逐字）：「混合付款時，**系統先把退款金額套用到禮品卡**，直到禮品卡達可退全額，餘額才用其他付款方式」。
+>      並依 46c:222「退款去向：原付款方式／商店抵用金／兩者併用」、46c:223「超額退款允許」、46c:241「已發過商店抵用金後想改退原付款方式需超額退款權限」。
+>      我方原本只有 22:32 與 16-F5.1 各一句規則描述，**沒有演算法、沒有算例** → 混合付款訂單的退款會分配到錯誤的 transaction 上。 -->
+
+**(a) 名詞**：`R` ＝ 本次要退的總額（＝ F5.1 的 `suggested_refund` 或商家覆寫值，integer cents）；
+`payments[]` ＝ 該訂單所有**成功且尚有可退餘額**的付款 transaction，每筆帶 `gateway`、`captured_cents`、`already_refunded_cents`；
+`refundable(t) = captured_cents(t) − already_refunded_cents(t)`。
+
+**(b) 分配演算法（`Refunds::Allocator`，純函式、確定性、integer cents）**
+
+```
+# 第 1 順位：禮品卡（46c:221 逐字硬規則，不是偏好設定，商家不可調整順序）
+gift = payments.select { gateway == 'gift_card' }.sort_by { |t| [t.created_at, t.id] }   # 同類多筆：先收先退
+# 第 2 順位：其餘付款方式（原付款方式）
+rest = payments.reject { gateway == 'gift_card' }.sort_by { |t| [t.created_at, t.id] }
+
+remaining = R
+allocation = []
+for t in (gift + rest):                       # 順序固定：禮品卡在前
+    take = min(remaining, refundable(t))      # 逐筆吃滿再進下一筆，不按比例攤
+    if take > 0: allocation << { transaction: t, amount_cents: take }
+    remaining -= take
+    break if remaining == 0
+
+# remaining > 0 ⇒ 已超出所有付款方式的可退餘額
+if remaining > 0:
+    → 走 F5.1 的「超額退款」路徑：需 `orders.over_refund` 權限 ＋ 二次確認 ＋ audit log；
+      超出部分只能退到 **store credit**，或由商家明示指定某一筆原付款 transaction 承擔（46c:241）。
+```
+
+- **無捨入**：`min` 與減法皆整數；`Σ allocation.amount_cents + remaining == R` 為不變量。
+- **不是按比例攤**：逐筆吃滿（greedy）是官方描述的語義（「直到禮品卡達可退全額」），按比例攤會讓禮品卡退不完。
+- 退到 store credit 時走 `refundMethods`（46a:743），寫 `store_credit_transactions`（06 §7）。
+
+**(c) 三個算例（TWD integer cents）**
+
+**算例 A — 禮品卡吃得下**：訂單 100000，禮品卡付 30000 ＋ 信用卡付 70000；退 25000。
+→ 禮品卡 25000、信用卡 0。（**不是**禮品卡 7500／信用卡 17500 的比例攤）
+
+**算例 B — 禮品卡吃不下，溢出到原付款方式**：同上付款組成，退 50000。
+→ 禮品卡 30000（吃滿）、信用卡 20000。
+
+**算例 C — 已退過 ＋ 超額**：同上付款組成，先前已對禮品卡退 30000、對信用卡退 70000（`refundable` 全為 0），現因先前發過商店抵用金而需再退 5000。
+→ 迴圈結束 `remaining = 5000` → 觸發超額退款路徑：需 `orders.over_refund` 權限＋二次確認，退往 store credit 並寫 audit log。**不得**被 DB CHECK 擋死（NP0-A 已定案）。
+
+**(d) 必測性質**：①分配總和恆等於 `R`；②禮品卡永遠排在第一位（改成可設定即為 bug）；③同類多筆按 `created_at, id` 穩定排序（結果可重現）；④併發兩筆退款同時分配時，`refundable` 以條件式 UPDATE 取得（不可先讀後寫）。
+
+### F5.5 退款／取消必須觸發電子發票 router（P1-09／TW-5，稅務正確性）
+
+> <!-- 依 38:876–877（33 §2.14）補寫，原文：開立時機三選一「付款／**出貨（建議）**／收貨」；「全額取消**自動作廢**、部分退貨**自動折讓**」；
+>      落地物在 38:1338–1356 `Platform::Einvoice::RefundRouter`（== 作廢／< 折讓／> 作廢，金額全程 integer cents）與 38:1104 的 `VoidJob` / `AllowanceJob`。
+>      50 號 TW-5 逐字：「`16-F5` 退款流程（16:45 的執行順序）完全沒有呼叫發票 router 的步驟；`16-F4` 取消訂單也沒有；`18-F1` outbox topic 清單沒有 `einvoice/*`
+>      → 退款不會觸發作廢/折讓 ＝ 稅務錯誤」。本輪複核確認：`grep 發票|einvoice` 於 15／16／18 命中數 ＝ 0。 -->
+
+**(a) 掛鉤點（三處，缺一即稅務錯誤）**
+
+| 觸發 | 位置 | 事件 topic | 下游 |
+|---|---|---|---|
+| 訂單全額取消 | F4 主流程最後一步（**transaction 內寫 outbox，transaction 外執行**） | `einvoice/void_requested` | `Platform::Einvoice::VoidJob`（38:1104） |
+| 退款（不論走 `refundCreate` 或 `returnProcess`） | F5 執行順序第 3 步之後 | `einvoice/refund_routed` | `Platform::Einvoice::RefundRouter`（38:1341）→ VoidJob 或 AllowanceJob |
+| 出貨（`issue_timing = on_fulfillment` 時的開立） | F3 出貨 transaction 的 outbox | `einvoice/issue_requested` | `Platform::Einvoice::IssueJob`（38:1103） |
+| **訂單編輯 commit 造成總額變動**（NP1-H，本輪新發現） | F8.1(c) 的 commit transaction | `einvoice/refund_routed`（同 router） | 總額**下降**⇒ 折讓；總額**上升**⇒ 補開一張發票（不是改原發票） |
+
+**⚠ 待查證（來源未載明，NP1-G）**：退款分配到**禮品卡**的部分是否計入發票折讓基數——F5.4 會把退款優先分配給禮品卡，但 38:1341 的 router 只比較「退款金額 vs 發票金額」。台灣實務上商品禮券退回未必等同現金退款，兩份規格的交界**皆未定義**。在覆核前，router 的輸入一律傳「**扣除禮品卡分配後**的實際金流退款額」並標旗標，見 §待查證 V-20。
+
+**(b) 路由判定（照 38:1341 的既有規則，本節只負責「一定要呼叫它」）**：退款金額 `== 發票金額` → 作廢；`<` → 折讓；`>`（超額退款）→ 作廢。**金額比較全程 integer cents**（傳入 float 即 raise）。
+
+**(c) 硬要求**
+1. outbox 寫入與退款／取消**同一個 transaction**（18-F1 的「事件必達」保證）；provider 呼叫一律在 transaction 外。
+2. 發票 job 失敗**不得**回滾退款——退款已對顧客生效，發票補開由 38 的重試與「開立失敗待重試」告警承擔（38:909）。
+3. 尚未開立發票的訂單被退款 → router 直接 no-op（不產生孤兒作廢）。
+4. 18-F1 的 topic 清單與 28 §15 的 webhook topics 必須同步新增這三個 `einvoice/*`。
 
 ## F6. 顧客管理
 
@@ -445,7 +550,22 @@ balance_to_collect = max(0, -net)                                      # 見下�
 **(h) `ReverseFulfillmentOrderDispositionType`（4 值）**：`RESTOCKED` / `NOT_RESTOCKED` / `MISSING` / **`PROCESSING_REQUIRED`**。
 > **`PROCESSING_REQUIRED` 是中間態** → disposition **不是一次性終態**，同一 line item 要允許**多筆** disposition 紀錄、取最新一筆為準（46a:678–680）。M4 只做 `RESTOCKED` / `NOT_RESTOCKED`，enum 一次定義完 4 值。
 
-**(i) 訂單層 `OrderReturnStatus`（6 值，聚合欄位）**：`NO_RETURN` / `RETURN_REQUESTED` / `IN_PROGRESS` / `INSPECTION_COMPLETE` / `RETURNED` / `RETURN_FAILED`——**derived，不可寫入**，由該訂單所有 return 聚合推導；訂單列表篩選器要支援。
+**(i) 訂單層 `OrderReturnStatus`（6 值，聚合欄位）**：`NO_RETURN` / `RETURN_REQUESTED` / `IN_PROGRESS` / `INSPECTION_COMPLETE` / `RETURNED` / `RETURN_FAILED`——**derived，不可寫入**，由該訂單所有 return 聚合推導；訂單列表篩選器要支援（`28 §4` 的 `return_status` 搜尋語法）。
+
+**推導表（P1-10，逐條可測；`Rs` ＝ 該訂單所有 return）**
+<!-- 依 46a:123–134 補寫，原文：`OrderReturnStatus` 6 值。P0 輪已把 6 值落地於本節與 06:114、28 §4，
+     但**未寫「由 5 態 return 如何聚合成 6 態」的推導規則** → 兩個開發者會寫出兩套結果。以下推導式為本專案定義（46a 只給值不給推導）。 -->
+
+| 順位 | 值 | 判定式（由上而下，first match wins） | 說明 |
+|---|---|---|---|
+| 1 | `NO_RETURN` | `Rs 為空`，或全部 `∈ {CANCELED}` | 取消掉的退貨視同沒發生 |
+| 2 | `RETURN_FAILED` | `∃ r ∈ Rs, r.status = DECLINED` 且**無**任何 `∈ {REQUESTED, OPEN}` 的 return | 只有在沒有進行中退貨時才顯示失敗，否則以進行中優先 |
+| 3 | `RETURN_REQUESTED` | `∃ r, r.status = REQUESTED` | 待審優先於進行中（商家要先看到「有東西等你審」） |
+| 4 | `IN_PROGRESS` | `∃ r, r.status = OPEN` 且該 r **未**完成全部 disposition | help 的「進行中」 |
+| 5 | `INSPECTION_COMPLETE` | `∃ r, r.status = OPEN` 且該 r **已**完成全部 disposition、**尚未** `returnProcess` 出退款 | 即 46c C-07 判定「help 的『檢查完成』是 `OPEN` 底下的子進度 `inspection_completed_at`」的**訂單層投影** |
+| 6 | `RETURNED` | 其餘（`Rs` 非空且全部 `∈ {CLOSED, CANCELED}`，至少一筆 `CLOSED`） | 全部處理完 |
+
+**不變量**：①本欄**永遠不落庫為權威值**，可物化為查詢快取但必須能由 `Rs` 完全重算（nightly 對帳斷言重算值 == 快取值）；②`returnReopen`（R9）會讓訂單層從 `RETURNED` 退回 `IN_PROGRESS`——**訂單層是可逆的**，即使 return 層有不可逆轉移；③6 個值任一都不得由 API 直接寫入（`orderUpdate` 無此欄位）。
 
 ### F7.2 `return_line_items` 的外鍵（P0-08，schema 級，上線後改不得）
 
@@ -507,6 +627,26 @@ returns ────────────────────────
 | 6 | **最終銷售品項**以 collection 或 product 為粒度；命中即**前台完全不出現申請入口**（不是提交後被拒）；**bundles 不可設為最終銷售** | 入口層擋掉（46c:427–432 逐字「Your customers can't submit return or cancellation requests for final sale items」） |
 | 7 | 退貨期間選項 `14 / 30 / 90 / 不限 / 自訂`；起算點＝**個別品項配送日** 或 **訂單最後一項配送日** | `limits.return.window_day_options` / `window_start_options`；我方原本缺「不限」與「訂單最後一項配送日」 |
 | 8 | 建立退貨當下**庫存不變**，品項標記「待收退貨品項」；處理時才選重新入庫地點 | 佔位存在 13-F5 的 `unavailable` 子分類（P0-15），不是 `committed` |
+| 9 | **台灣七日鑑賞期的處置＝軟 guard，不是硬下限**（見下方 (b)） | `limits.return.tw_minimum_window_days: 7`，`tw_minimum_window_enforcement: warn` |
+
+**(b) 台灣七日鑑賞期與退貨期間下限（P1-31／TW-10）**
+<!-- 50 號 TW-10 逐字：「退貨規則的『退貨期間』下限未強制 ≥7 天——22:62 寫「14/30/90/自訂」，自訂可填 3 天即違法。`config` 與 spec 均無下限 guard」。
+     🔻 **本輪複核：原判定的「硬下限」處方不成立，改為軟 guard**。三個理由：
+     ①《消保法》第 19 條的七日解約權是**法定權利，獨立於商家退貨規則存在**——商家把自訂窗口設成 3 天並不會消滅它，
+       平台該做的是「保證法定管道存在」，不是把商家的自訂窗口硬綁 ≥7。
+     ②同法授權之「合理例外情事適用準則」明列多類**排除適用**的商品（易腐敗／客製化／已拆封影音／報紙期刊／線上數位服務等）；
+       硬性 ≥7 會讓合法的例外商品**無法設定**，等於用一個錯誤取代另一個錯誤。
+     ③本專案為多租戶 SaaS，商家可能銷往非台灣市場（退貨規則可按市場切換，F7.4 規則 4）——把台灣法規套到所有市場是錯的。
+     法規原文仍未由本專案覆核（`limits.return.verify_tw_minimum_window: true`），因此**不寫死任何法律結論**。 -->
+
+| # | 規則 | 落地 |
+|---|---|---|
+| B1 | 規則適用市場含 `TW` 且 `window_days < 7` 且 `is_final_sale = false` → **儲存時出警示**（可繼續儲存），文案指向消保法七日鑑賞期，並要求商家勾選「本商品屬合理例外情事」 | `returnRuleCreate/Update` 回 `userWarnings`（不是 `userErrors`）；勾選結果落 `return_rules.tw_statutory_exemption_claimed` |
+| B2 | **法定管道恆存在**：不論商家規則設定為何，`TW` 市場的訂單在「配送日 + 7 天」內，前台一律提供「依消保法申請解約」入口（走 `returnRequest`，`reason = STATUTORY_WITHDRAWAL_TW`） | 這條才是真正的合規保證；B1 只是提醒 |
+| B3 | B2 的入口對 `is_final_sale = true` 的品項**仍然出現**（最終銷售不能排除法定權利），但對已勾 `tw_statutory_exemption_claimed` 的品項出現時附例外說明 | 與 F7.4 規則 6「最終銷售前台不出現入口」的**唯一例外**，實作要特別測 |
+| B4 | 商家未在 admin 設定任何退貨規則時，`TW` 市場的預設快照 `window_days = 7` | 預設值取自 `limits.return.tw_minimum_window_days` |
+
+**⚠ 待查證（來源未載明）**：《消費者保護法》第 19 條與「通訊交易解除權合理例外情事適用準則」的**條文原文與現行例外清單**尚未由本專案覆核（同 50 號 §必須查證 的精神）——B1–B4 的**機制**可以先實作，**具體例外品類清單不得由本規格臆測**，須以主管機關公告原文填入。見 §待查證 V-17。
 
 ### F7.5 `returnProcess` 的冪等（文檔空白處，本專案強制）
 
@@ -525,6 +665,104 @@ returns ────────────────────────
 
 兩條路底層共用同一個 `Refunds::Calculator` ＋ `RefundService`（鐵律 7）。
 
+## F8. 訂單編輯（Order Edit）
+
+> 本節為新增。原本 16 號完全沒有訂單編輯規格，只散落在 22 §1b 的按鈕表一列與 28 §4 的一行 mutation 鏈。
+
+### F8.1 CalculatedOrder 暫存層與 `stagedStatus`（P1-16／S-19）
+
+> <!-- 依 46a:889–903、46a:985–986 補寫，原文（逐字）：
+>      「Order ──orderEditBegin──> CalculatedOrder（暫存區，含 OrderEditSession）… CalculatedOrder ──orderEditCommit──> Order（套用，觸發 orders/edited webhook）」；
+>      「`CalculatedOrder` 是**暫存區**（staging area），內含 `addedLineItems`、`lineItems`、`shippingLines`」；
+>      「`shippingLines` 有 **`stagedStatus`** 欄位，值為 `ADDED` / `REMOVED` / `UNCHANGED`」；
+>      「The system recalculates taxes and totals automatically as edits occur.」；「Commit 後 `Order.edited` 變 `true`」。
+>      46a §8⑦-39 逐字：「**必須實作 CalculatedOrder 暫存層**（獨立資料表 + session），不能做成『直接改單』。編輯期間原訂單完全不動，commit 才落地——這是可回退、可預覽的唯一做法。」
+>      我方 28:94 原本只有 `orderEditBegin → … → orderEditCommit` 一行鏈，**沒有暫存表、沒有 stagedStatus、沒有 session** → 照現有規格會做成「直接改單」，無法預覽/回退。 -->
+
+**(a) 資料模型（兩張新表）**
+
+| 表 | 欄位 | 說明 |
+|---|---|---|
+| `order_edit_sessions` | `shop_id`, `order_id`, `staff_id`, `started_at`, `committed_at`(NULL), `abandoned_at`(NULL), `expires_at` | **唯一索引 `(order_id) WHERE committed_at IS NULL AND abandoned_at IS NULL`**（見 F8.2） |
+| `calculated_orders` | `shop_id`, `order_edit_session_id`, `snapshot_json`, `subtotal_cents`, `discount_total_cents`, `shipping_cents`, `tax_cents`, `total_cents`, `recalculated_at` | 暫存區；**原 `orders` / `order_line_items` 在 commit 前一個欄位都不動** |
+
+`snapshot_json` 內含三個集合，每個元素帶 `staged_status`：
+
+| 集合 | 元素 | `staged_status` 值 |
+|---|---|---|
+| `lineItems` | 原有品項（含改量、加品項折扣） | `UNCHANGED` / `REMOVED`（數量歸零）／`ADDED`（新加） |
+| `addedLineItems` | 本次新增的 variant 與自訂品項 | 恆 `ADDED` |
+| `shippingLines` | 運費行 | **`ADDED` / `REMOVED` / `UNCHANGED`**（46a:901 逐字三值，enum 照抄） |
+
+**前端 diff 渲染完全由 `staged_status` 驅動**（`ADDED` 綠底、`REMOVED` 刪除線、`UNCHANGED` 常態）——**不得**在前端自行 diff 兩份 JSON 算差異（會與伺服器的稅額重算對不上）。
+
+**(b) 每個 edit mutation 都即時重算**（46a:902 逐字）：任一 `orderEdit*` 之後立刻重跑 **15-F2 的同一支 Calculator**（鐵律 7），把結果寫回 `calculated_orders` 的金額欄位。**不是** commit 時才算一次——UI 的「差額」數字必須每步都正確。
+
+**(c) commit 與放棄**
+
+| 動作 | 行為 |
+|---|---|
+| `orderEditCommit` | 單一 transaction：套用 `snapshot_json` → 更新 `orders`／`order_line_items` → `orders.edited = true` → 寫 timeline 與 outbox `orders/edited` → `committed_at = now()` |
+| 差額 > 0（總額上升） | 產生應收，走**寄發票／補款結帳連結**；**該補款結帳頁沒有加速結帳**（Shop Pay／Apple Pay 不可用，46c:470 逐字「You won't have accelerated checkouts available through the new checkout」） |
+| 差額 < 0（總額下降） | 走 F5 退款流程（**不可逆**，二次確認） |
+| 放棄／逾時 | `abandoned_at = now()`，`calculated_orders` 保留 7 天供稽核後 purge；**原訂單完全未變** |
+
+🔴 **`orderEditCommit` 必須帶冪等鍵（NP1-D，本輪新發現，50 號漏列）**：`46a:962` 逐字「`orderEditCommit` **不在**強制冪等名單內（S49）」——但它會產生應收或退款，**是金流寫入**。與 `returnProcess`（P0-11 已強制）完全同性質：重覆 commit ⇒ 重複扣款或重複退款。
+處置：比照 P0-11 的既有決策（**金流寫入一律強制冪等**）把 `orderEditCommit` 加入 `limits.idempotency.required_for`，並在鍵值註明「Shopify 未強制，本專案強制」。**不要因為官方沒列就不做。**
+
+**(d) 兩個預設值照抄（P0 輪已進 limits，此處為使用點）**：`orderEditAddVariant.allowDuplicates` 預設 **false**（`limits.order.edit_add_variant_allow_duplicates_default`）、`orderEditSetQuantity.restock` 預設 **false**（`limits.order.edit_set_quantity_restock_default`）。
+**(e) 加品項套 contextual pricing**（46a:927 逐字「respecting the variant's contextual pricing」）：依訂單的 market／presentment 幣別情境定價，**不是** variant 預設價。
+**(f) `orderEditUpdateShippingLine` 只能改「本次新加入」的運費行**（46a:933 逐字「Modify title or price on **newly added** lines」）→ guard：`staged_status == 'ADDED'`，否則 `userErrors`。既有運費行只能 `RemoveShippingLine` 後重加。
+**(g) 刻意不復刻**：46a:908「2019-01-01 前的訂單不可編輯」是 Shopify 的歷史包袱，**CHILL LOVE 不復刻**（46a §8⑦-46 明確建議），此處明文標註以免下輪稽核誤判為遺漏。
+
+### F8.2 編輯 session 的併發鎖與 TTL（P1-17／H-33，文檔空白處）
+
+> <!-- 依 46a:959–963、46a:988–989 補寫，原文逐字：「**文檔未載明** OrderEditSession 的鎖機制、TTL、或同一訂單並發編輯的行為」；
+>      「唯一的併發線索：`orderEditBegin` 回傳 `orderEditSession`，暗示 session 是具名資源，**但文檔未說明兩個 session 同時開啟會發生什麼**」。
+>      46a §8⑦-42/43 逐字建議：「同一訂單同時只允許一個 open 的 edit session（DB unique index on `order_id where committed_at is null`），第二個 begin 回 `userErrors` 帶 `INVALID_STATE`。
+>      要在程式碼註明『Shopify 未載明，此為本專案決策』」「Session TTL 自訂（建議 24h，與冪等 TTL 對齊），逾時自動丟棄，寫進 `config/limits.yml`」。 -->
+
+**⚠ 這整節是「Shopify 文檔未載明 → 本專案決策」**（46a 自己標的空白處，`limits.order.edit_session_*` 已於 P0 輪落地，本節是它的規格面）。
+
+| # | 規則 | 落地 |
+|---|---|---|
+| C1 | **同一訂單同時只允許一個 open session** | DB 部分唯一索引 `(order_id) WHERE committed_at IS NULL AND abandoned_at IS NULL`（`limits.order.edit_session_single_open_per_order: true`）；第二個 `orderEditBegin` 回 `userErrors{code: INVALID_STATE}` 並帶持有者 staff 名稱與開始時間 |
+| C2 | **TTL 24 小時**，與冪等 TTL 對齊 | `limits.order.edit_session_ttl_hours: 24`；`expires_at = started_at + TTL`；hourly job 把逾期 session 標 `abandoned_at` |
+| C3 | 逾期 session 的 commit | 一律拒絕（`INVALID_STATE`）——不可讓 24 小時前的暫存值套用到已被別人改過的訂單 |
+| C4 | commit 前**重驗訂單版本** | `orders.lock_version` 在 begin 時快照，commit 時比對；不一致 → 拒絕並要求重開 session（樂觀鎖） |
+| C5 | 強制接管 | `orders.force_release_edit_session` 權限者可強制 `abandoned` 他人的 session，寫 audit log |
+
+### F8.3 不可編輯訂單的九條聯集 guard（P1-21／H-94）
+
+> <!-- 依 46c:479–488（help 側 6 條）與 46a:907–913（dev 側 5 條）**取聯集**補寫。46c C-09 判定逐字「不可編輯訂單清單 help/dev 無交集 → 取聯集」。
+>      原文（help，46c:482–487 逐字）：「匯入 Shopify 管理介面的訂單（app 建立的，除非由訂單草稿轉換而來）」「使用 Shop Pay 分期付款的訂單」
+>      「配送方式為當地配送（local delivery）的訂單」「待處理付款（Pending payment）狀態的訂單」「含已出貨品項的部分」「含已出貨品項且帶稅/關稅的訂單」；
+>      原文（dev，46a:908–912 逐字）：「Archived orders or **orders placed before January 1st, 2019**」「Orders placed in currencies other than store currency (without Checkout Extensions upgrade)」
+>      「**You can only edit unfulfilled line items.**」「Subscription orders with prepaid plans…」「Subscription orders via checkout UI extensions」。
+>      我方 22:38（現 22:38 Edit 列）原本只有「已出貨項不可移除」「分期付款單不可編輯」**兩條**，其餘七條全缺。 -->
+
+**判定順序：整單級（E1–E7，擋住 `orderEditBegin`）→ 行級（E8–E9，擋住個別 mutation）**
+
+| # | 條件 | 判定式 | 來源 | 層級 |
+|---|---|---|---|---|
+| E1 | 訂單已取消 | `orders.cancelled_at IS NOT NULL` | 本專案（與 F4.1 對稱） | 整單 |
+| E2 | **匯入訂單**（外部 app 建立，且非由草稿轉換） | `orders.source = 'import'` AND `orders.draft_order_id IS NULL` | 46c:482 | 整單 |
+| E3 | **Shop Pay 分期付款單** | `EXISTS(order_transactions WHERE payment_method_type = 'installments')` | 46c:483 ＋ 我方原有 | 整單 |
+| E4 | **當地配送（local delivery）訂單** | `EXISTS(shipping_lines WHERE delivery_method_type = 'LOCAL_DELIVERY')` | 46c:484 | 整單 |
+| E5 | **待處理付款訂單** | `financial_status = 'PENDING'` | 46c:485 | 整單 |
+| E6 | **非商店幣別訂單**（未升級 Checkout Extensions 時） | `presentment_currency != shop.currency` AND NOT `shop.checkout_extensibility_enabled` | 46a:909 | 整單 |
+| E7 | **預付型訂閱訂單**（改數量時）／經 checkout UI extension 建立的訂閱單 | `EXISTS(subscription_contracts WHERE prepaid = true)` | 46a:911–912 | 整單 |
+| E8 | **只能編輯未履行品項**（最硬的一條） | `order_line_items.fulfilled_quantity = 0`；已出貨部分不可移除／改量 | 46a:910、46c:486 | **逐行** |
+| E9 | **不能新增／移除／更新訂單層級折扣**；折扣碼／script／自動折扣皆不可編輯 | `order_level_discount_applications` 唯讀 | 46c:462–463 | 整單（折扣面） |
+
+**兩條「反直覺、最容易做反」的規則**（46c:461 逐字）：
+1. **品項層手動折扣：已出貨與未出貨品項「都能」管理**——E8 只鎖「移除／改量」，**不鎖品項層折扣**。把 E8 寫成「已出貨行整行唯讀」是錯的。
+2. **運送方式與運費不重算、不能更改配送方式**；只能**加**自訂運費行（46c:460、46c:1070）。稅則相反：**每次編輯自動重算**（46c:464）。
+
+**E8 必須在每一個 edit mutation 前檢查，不只在 commit 時**（46a:987 逐字「必須在每個 edit mutation 前檢查，不只在 commit 時」）——只在 commit 檢查會讓商家做完一整輪編輯才被拒絕。
+
+**必測**：九條各自的獨立案例；「已出貨行可加品項折扣但不可改量」的組合案例；「E9 訂單層折扣唯讀但品項層可改」的組合案例；`orderEditBegin` 在 E1–E7 任一成立時回 `INVALID_STATE` 且**不建立** session。
+
 ## 本篇驗收（對照 11 §0）
 
 雙 staff 併發 fulfill/refund 不產生超量；退款上限在惡意請求下不可突破（request spec）；restock 重放冪等；cancel 後庫存恆等式仍成立（ledger 對帳）；訂單列表 10 萬筆下 p95 <300ms（keyset 驗證）；匿名化後全文搜尋/匯出查無 PII；每個動作 timeline 都有事件且 audit 可追。
@@ -538,3 +776,12 @@ returns ────────────────────────
 - **F4.1 G3 互鎖**：存在 `REQUESTED`/`OPEN` 的 return 時 `orderCancel` 必失敗；反向亦然。
 - 換貨：建立帶 `exchangeLineItems` 的 return 後，該 FO 必為 `ON_HOLD` ＋ `AWAITING_RETURN_ITEMS`，且 `fulfillmentCreate` 必失敗。
 - 快照：改退貨規則後，舊訂單的 `returnCalculate` 結果**不變**（回歸測試）。
+
+**本次新增（P1 修正對應，見 `docs/specs/54-p1-logic-fixes.md`）**：
+- **稅額分攤（F5.1 X1–X6）**：含稅模式 `line_tax = 0`；未稅模式分攤原始已收稅額且**分多次退完後精確歸零**（無 1 分錢殘留）。
+- **混合付款分配（F5.4）**：算例 A/B/C 逐一斷言；**禮品卡永遠第一順位**（改成可設定即為 bug）；`Σ allocation == R` 不變量。
+- **發票掛鉤（F5.5）**：退款／取消／出貨三處各有一筆 `einvoice/*` outbox 事件且與業務同 transaction；發票 job 失敗不回滾退款。
+- **COD 對帳（F4.4）**：金額不符不得自動回寫 paid；同一份對帳檔重覆匯入冪等。
+- **OrderReturnStatus 推導（F7.1(i)）**：6 值推導表逐條；`returnReopen` 後訂單層可從 `RETURNED` 退回 `IN_PROGRESS`。
+- **訂單編輯（F8）**：commit 前原訂單零變動（欄位級斷言）；`stagedStatus` 三值驅動 diff；同訂單第二個 `orderEditBegin` 回 `INVALID_STATE`；逾期 session 的 commit 被拒；E1–E9 九條 guard 各自案例＋兩條反直覺組合案例。
+- **台灣七日鑑賞期（F7.4(b)）**：B2 的法定管道對 `is_final_sale` 品項**仍然出現**（與 F7.4 規則 6 的唯一例外）。

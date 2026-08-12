@@ -56,6 +56,9 @@ idempotency:
     - refundCreate
     - returnProcess        # Shopify 文檔未載明其冪等；本專案強制（46a:620、46a:1062，ours）
     - orderCancel          # 非同步 job，本專案強制（46a:877 async；ours）
+    - orderEditCommit      # 🔴 46a:962 逐字「不在強制冪等名單內」，但它產生應收/退款＝金流寫入，
+                           #    與 returnProcess 同性質；重覆 commit ⇒ 重複扣款或重複退款。
+                           #    **本專案強制**（NP1-D，50 號漏列；見 docs/specs/16 F8.1(c)、docs/specs/54 §4）
     - inventoryAdjustQuantities
     - inventoryMoveQuantities
     - inventorySetQuantities
@@ -129,9 +132,17 @@ return:
   verify_restocking_fee_max: true
   # 在 Shopify 內建立退貨運送單的地區限制。出處：46c:297（help，逐字「僅限美國地點」）
   platform_label_supported_countries: [US]
-  # 台灣消保法「網購七日鑑賞期」下限。⚠ TW-10，法規原文須覆核（本檔僅記錄，不得直接當唯一依據）。
+  # 台灣消保法「網購七日鑑賞期」。⚠ TW-10，法規原文須覆核（本檔僅記錄，不得直接當唯一依據）。
   tw_minimum_window_days: 7
   verify_tw_minimum_window: true
+  # 🔻 P1-31 處置更正：**不是硬下限，是軟 guard**（見 docs/specs/16 F7.4(b) 與 docs/specs/54 §P1-31）。
+  # 理由：①七日解約權是**法定權利，獨立於商家退貨規則存在**，商家設 3 天並不會消滅它；
+  #      ②「合理例外情事適用準則」明列多類排除適用的商品（易腐敗／客製化／已拆封影音…），硬性 ≥7 會讓合法例外無法設定；
+  #      ③退貨規則可按市場切換，把台灣法規套到所有市場是錯的。
+  # 真正的合規保證是 B2：TW 市場恆提供「依消保法申請解約」的法定管道入口。
+  tw_minimum_window_enforcement: warn      # warn | block（**不得**改成 block）
+  tw_statutory_channel_always_available: true
+  tw_statutory_reason_code: STATUTORY_WITHDRAWAL_TW
 
 refund:
   # 退款金額下限鉗制：建議退款不得為負，一律 floor 到 0。
@@ -144,6 +155,19 @@ refund:
   over_refund_requires_permission: "orders.over_refund"
   over_refund_requires_confirm: true
   verify_maximum_refundable_formula: true
+  # 混合付款的退款分配順序（P1-05／H-83）：**禮品卡永遠第一順位**，逐筆吃滿再進下一筆（不按比例攤）。
+  # 出處：46c:221（help，H05 zh-TW 逐字「混合付款時，系統先把退款金額套用到禮品卡，直到禮品卡達可退全額，餘額才用其他付款方式」）
+  # 🔴 這是硬規則，**不得做成商家可調整的順序設定**。演算法與三個算例見 docs/specs/16 F5.4。
+  allocation_order: [gift_card, others]
+  allocation_within_group_sort: [created_at, id]   # 同類多筆：先收先退（結果可重現）
+  allocation_strategy: greedy_fill                 # 逐筆吃滿，**不是** proportional
+  # 稅額分攤（P1-02／H-07）：分攤**原始已收稅額**，不用現行稅率重算；餘數歸最後一次退貨。
+  # ⚠ 官方未載明退款稅額分攤規則（46a:1049–1067 列為未載明項）→ 以下為本專案定義。見 16-F5.1 X1–X6。
+  tax_allocation_basis: original_collected_tax
+  tax_allocation_rounding: largest_remainder
+  tax_allocation_remainder_owner: last_refund
+  return_fees_taxable: false
+  verify_tax_allocation_rule: true
 
 # =============================================================================
 # 6. 請款／授權（P0-12）
@@ -170,8 +194,16 @@ capture:
     cup: 7
   # 顧客銀行帳單上的 pending hold 最長顯示天數。出處：46c:517–525（help）
   pending_hold_display_max_days: 30
-  # 逾授權期限後才請款的附加費率。出處：46c:526（help）
-  late_capture_surcharge_rate: 0.0175
+  # 🔻 informational only — 不參與任何計算（P1-06 降級）。
+  # 出處：46c:526（help）逐字「超過授權期限後才請款，需付 1.75% 附加費」。
+  # 那是 **Shopify Payments 對商家的收單定價**；CHILL LOVE 依 TW-9 電支條例鐵律（37 §3、37 §479–491）
+  # 不代收代付、不是收單機構，租戶貨款直接進租戶自持商戶號 → 既不收這筆費、也無權加收。
+  # **不得**在帳單或訂單金額引擎產生 1.75% 行項。保留此鍵僅供「若未來自營收單」時參考。見 docs/specs/54 §P1-06。
+  late_capture_surcharge_rate_informational_only: 0.0175
+  # 上方 authorization_days_* 是 **PSP／卡組織屬性，不是方案旗標**（P1-07）：
+  # 只作為 UI 顯示與到期提醒 job 的預設值，實際上界以 Stripe PaymentIntent 為準。
+  # 寫成「Plus ⇒ 30 天」的硬邏輯會產生「系統說還能請款、Stripe 已 declined」的錯誤狀態。見 docs/specs/15 F4.1(b)。
+  authorization_days_source: psp_and_card_network   # 非 shop.plan
   # 授權到期示警提前天數。出處：docs/research/22:40（ours，對應 46c:536「即將到期 badge」）
   expiry_warning_days_before: 2
 
@@ -302,6 +334,32 @@ shipping:
   local_delivery_postal_codes_max_chars: 3000
   local_delivery_max_zones_per_location: 10
 
+  # --- 跨設定檔合併運費（P1-23／原 NP0-F；完整公式與五個算例見 docs/specs/15 F2.1）---
+  # 出處：46c:869–876（help，H42 zh-TW 逐字四條）：
+  #   「名稱相同的運費費率會相加」／「若所有費率的名稱都不同，系統會將最便宜的選項相加」
+  #   「（同一 location group 內多地點）系統會只收取一次單一費率」
+  #   「重量制逐品項加上商店預設包裹重量後再相加，可能算出比單一設定檔更高的總額」
+  #   46c:876 逐字：「費率名稱是**合併鍵**。名稱一字之差就會從『相加』變成『取最便宜相加』」
+  rate_merge_key: rate_name                       # 合併鍵＝費率名稱（不是 rate id、不是 service code）
+  rate_merge_participant_unit: profile_x_location_group   # 合併的最小單位，同 group 多地點只收一次
+  rate_merge_no_common_name_strategy: sum_of_cheapest_per_participant
+  # 名稱正規化規則：Unicode NFC ＋ trim，**大小寫敏感**。
+  # ⚠ 46c 只說「名稱相同」，未定義正規化 → 以下為本專案決策，實作前查證（V-15）。
+  rate_merge_key_normalization: nfc_trim_case_sensitive
+  verify_rate_name_case_sensitivity: true
+  # 無共同名稱時，合併選項對顧客顯示的名稱。⚠ 文檔未載明（V-15）。
+  merged_option_fallback_label: "運費"
+  # 重量制：每個 participant 各加一次商店預設包裹重量（這是 46c 說「可能更貴」的成因，不是 bug）
+  weight_adds_package_weight_per_participant: true
+  # UI 硬要求（46c:876 明確點名）：跨設定檔的近似但不相同名稱要出警示
+  warn_on_near_duplicate_rate_names: true
+  near_duplicate_edit_distance: 2
+
+  # --- zone ≠ market（P1-24／H-112）---
+  # 出處：44:524（live，zone 頁黃色警示橫幅逐字「若要在此區域開始銷售至 27 個國家/地區，請將這些國家/地區加入市場」）
+  # 兩個方向都要 guard：有 zone 不在 market → 不可販售；在 market 無 zone → 結帳運送階段擋。見 15-F2.2／29 §5。
+  zone_requires_market: true
+
 # 超商取貨／取貨點（P0-13）
 pickup_point:
   # Shopify 側「其他配送方式」第三種（取貨點 / pickup points）。出處：44:322（live）
@@ -318,6 +376,22 @@ pickup_point:
   max_weight_kg: 5
   # ⚠ 以上 COD 上限與材積限制為業界慣例值，非 Shopify 官方文檔；各物流商合約值須逐一覆核。
   verify_tw_carrier_limits: true
+
+# 貨到付款（COD）代收手續費（P1-08／TW-7；金額引擎行項規格見 docs/specs/15 F2.3）
+cod:
+  # 宅配到府代收常見手續費區間（TWD cents）。出處：docs/research/42:542（ours，業界慣例，**非官方文檔**）
+  # 這是 UI 預設值提示用的區間，**不是硬約束**——實際值存 `shipping_rates.cod_fee_cents`。
+  fee_cents_default_range: [3000, 6000]
+  # COD 上限比較的基數＝顧客實際要付的代收金額（含手續費），不是商品小計。
+  # 用小計比較會讓 19,900 + 60 的單超出物流商上限而被退件。
+  cap_compares_against: total_including_fee
+  # 代收手續費是否課稅。⚠ 台灣實務有兩種做法，官方文檔無載 → 暫定不課稅（V-16）。
+  fee_taxable: false
+  verify_fee_taxable: true
+  # 對帳匯入冪等鍵。出處：docs/research/42:542（ours）
+  settlement_idempotency_key: [carrier, statement_id, row_no]
+  # 金額不符時**不得**自動回寫 paid（現金流入口，差 1 元也不放行）。
+  settlement_mismatch_action: hold_for_manual_review
 
 # =============================================================================
 # 12. 商店抵用金（store credit）
@@ -353,7 +427,95 @@ content:
   comment_edit_window_minutes: 5
 
 # =============================================================================
-# 14. Shopify Functions（P2，先記錄不實作）
+# 14. 通知範本（P1-28）
+# =============================================================================
+notification:
+  # 顧客通知範本總數與分組數。出處：44:449–469（live，後台 /settings/notifications/customer 實測）
+  customer_template_count_observed: 45
+  group_count: 12
+  # 🔴 `toggleable` 是**白名單**，不是預設值——預設 false（強制寄）。
+  # 出處：44:469（live）逐字「**只有部分範本可關閉**（當地配送/運送狀態更新/雙重確認/Shop 再行銷），
+  #       交易性範本強制寄——這是一條**合規約束，不是 UI 偏好**」。
+  # 照原規格（22 只寫「模板分類+個別開關」）實作會做成全部可關 → 關掉訂單確認信/退款通知信＝合規風險。
+  toggleable_groups:
+    - local_delivery          # 當地配送（預設開）
+    - shipping_update         # 運送資訊更新（預設開）
+    - double_optin            # 行銷訊息雙重確認加入（預設**關**）
+    - offsite_remarketing     # 站外再行銷（對應本尊「透過 Shop 再行銷」，預設開）
+  toggleable_default: false
+  # `toggleable` 由種子決定、API 唯讀；`enabled` 只在 toggleable=true 時可寫。
+  toggleable_is_readonly: true
+  # 不可關閉的範本在 UI 要**灰化＋tooltip**（「此為交易性通知，依法必須寄送」），不是隱藏。
+  non_toggleable_ui: disabled_with_tooltip
+  # M1–M4 先落地的交易性範本數（其餘進種子表標 implemented:false，表結構一次做對）
+  phase1_implemented_count: 12
+  # ⚠ 44 的 45+ 範本清單為 UI 實測，官方文檔未提供完整 event_key 列表；本專案 event_key 命名為自定（V-18）。
+  verify_event_key_catalog: true
+
+# =============================================================================
+# 15. Markets 繼承（P1-32）
+# =============================================================================
+market:
+  # 父子關係**由 conditions 自動推導**，不是手動指定的欄位。
+  # 出處：46b:636–639（dev）逐字「parent 不是手動指定的，是自動推導的（lineage inference）」；
+  #       46b:664 逐字「沒有 `inherited: Boolean` 這種顯式旗標，也沒有 `parentMarketId` 欄位」。
+  # 🔴 我方 29:42 原本把 `parent_market_id` 當權威欄位存 → 商家改 regions 後父子關係不會變。已改為 derived 快取。
+  parent_resolution: derived_from_conditions
+  parent_column_is_cache: true            # markets.derived_parent_market_id
+  # 命中優先序（buyer 同時命中多市場）。出處：46b:641–648（dev）
+  specificity_stack: [company_location, retail_location, region, store_default]
+  # 繼承語義：NULL ＝ 繼承。出處：46b:650–664（dev）
+  inheritance_additive: [catalogs, web_presences]
+  inheritance_override: [currency_settings, price_inclusions]
+  # ⚠ V-02：`delivery.shipping` 到底繼不繼承——46b:659–661「Null means the market inherits shipping from its parent」
+  #   vs 44:866「運送與隱私權不繼承，永遠市場本地」。**直接矛盾，未定案前不得預設任一邊**。
+  shipping_inherits: null
+  verify_shipping_inheritance: true
+  # UI 有 8 個可繼承維度（44:862 實測），公開 API 只對 4＋1 個有官方語義（46b:788）。
+  # 其餘 4 個標「Shopify 公開 API 未載明，本專案決策」。
+  ui_inheritable_dimensions:
+    [currency, catalogs, discounts, theme, checkout_profile, domain_and_language, tax_and_duties, return_rules]
+  api_documented_dimensions: [catalogs, web_presences, currency_settings, price_inclusions]
+  # ⚠ 每店 markets 總數上限／巢狀層數上限／MarketUserErrorCode：46b:993–1010 逐條標未載明。
+  #   社群的「50 markets」說法**未經官方證實，勿引用**。
+  max_markets_per_shop: null
+  max_nesting_depth: null
+  verify_market_limits: true
+
+# =============================================================================
+# 16. B2B（P1-33／H-64～H-68；規格見 29 §10、契約見 28 §13b）
+# =============================================================================
+b2b:
+  # 出處：46b:898–904（help + dev）
+  max_companies_per_shop: null            # 官方逐字「Unlimited」
+  max_locations_per_company: 10000
+  max_contacts_per_company: 10000
+  max_contacts_per_location: 50           # 🔴 最容易漏的一條（與 per company 的 10,000 差兩個數量級）
+  max_catalogs_per_location: 25
+  max_prices_per_price_list_request: 250
+  max_companies_per_customer: 1           # 逐字「can add a customer only to one company」
+  # B2B market catalog 指派：Basic/Grow/Advanced 3；Plus unlimited。出處：46b:905（help）
+  max_market_catalogs_non_plus: 3
+  # 方案要求：Shopify Plus 才有 B2B（dev store 例外）。出處：46b:906（dev）
+  requires_plus: true
+  # 不支援的購買選項。出處：46b:907（dev）
+  unsupported_purchase_options: [subscriptions, pre_orders, try_before_you_buy]
+  # 🔴 掛載鐵律（H-64）：以下一律掛 company_location；company 層只有 name/note/default_role/main_contact。
+  # 出處：46b:817–830（dev + help）逐字「Catalogs attach exclusively to company locations, not companies.」
+  location_scoped_settings:
+    [catalog, payment_terms, tax, checkout_config, currency, locale, billing_address, shipping_address]
+  company_scoped_settings: [name, note, default_role, main_contact]
+  # PaymentTermsType 5 值。出處：46b:881–889（dev）
+  payment_terms_types: [FIXED, FULFILLMENT, NET, RECEIPT, UNKNOWN]
+  # 多 catalog 解析取最低價；商品須至少發佈到一個 applicable publication。出處：46b:910–911（dev）
+  multi_catalog_price_resolution: lowest
+  # CompanyLocation.market 已 deprecated → 不得建 location→market 正向外鍵。出處：46b:830、46b:943（dev）
+  location_to_market_fk_forbidden: true
+  # ⚠ 標準 NET 7/15/30/45/60/90 內建清單：46b:892 逐字「文檔未載明」；CheckoutProfile 有無 company/location 欄位：46b:828 未載明。
+  verify_net_terms_catalog: true
+
+# =============================================================================
+# 17. Shopify Functions（P2，先記錄不實作）
 # =============================================================================
 functions:
   # 每店每類上限。出處：46b:99–104、46b:964–969（dev）

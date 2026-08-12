@@ -9,7 +9,15 @@
 2. code 正規化：upcase + trim + 唯一索引 `(shop_id, code)`；產碼器排除易混字元（0/O、1/I/L）；status（scheduled/active/expired）**由時間欄位求值推導**，不落庫、不用 cron 翻牌（消滅時鐘競態）。
 3. 適用範圍：products/collections 多對多（`discount_entitlements`），求值時展開為 variant id 集合（快取）。
 
-**⚠️ 坑**：status 落庫 + cron 更新 = 到期瞬間的競態與時區 bug 溫床，推導制一勞永逸；fixed 金額有幣別語意（欄位帶 currency，跨幣別直接不適用——P2 Markets 前不會踩到，但 schema 先留）。
+4. **`combines_with` 三旗標不是對稱的**——按 discount class 有兩條 schema 級約束（P1-01／H-41、H-42）：
+   - **class = `shipping` 的折扣：`combines_with.shipping` 欄位不存在**（不是 false，是**不提供**）。免運折扣的 `combinesWith` 官方**只有 `orderDiscounts` / `productDiscounts` 兩個旗標**。
+   - **引擎級硬規則：運費折扣不可疊運費折扣**——由 F2 的引擎強制，**不由旗標控制**（`limits.discount.shipping_plus_shipping_allowed: false`）。
+   - 落地：`discount_combines_with` 子表以 `(discount_id, target_class)` 為唯一鍵，**寫入 `(shipping 類折扣, shipping)` 這組即回 `INVALID_COMBINES_WITH_FOR_DISCOUNT_CLASS`**（46b:344 的官方錯誤碼）。做成對稱三旗欄位就會允許非法組合。
+   <!-- 依 46b:197、46b:285、46b:374、46c:716 修正，原文：「免運折扣的 combinesWith 只有 order/product 兩個旗標（無 shippingDiscounts）」＋「Multiple shipping discounts can't apply to the same order.」（硬規則，非 combinesWith 旗標可控）。
+        原文（我方）：17:8 原本寫 `combines_with JSON {product:bool, order:bool, shipping:bool}` **三旗標一律對稱**——照此實作即可疊兩張運費折扣。
+        P0 輪已在 17-F2 寫了引擎級硬規則，但**資料模型這一層仍是對稱三旗標**，本輪補上 schema 級約束。 -->
+
+**⚠️ 坑**：status 落庫 + cron 更新 = 到期瞬間的競態與時區 bug 溫床，推導制一勞永逸；fixed 金額有幣別語意（欄位帶 currency，跨幣別直接不適用——P2 Markets 前不會踩到，但 schema 先留）；`combines_with` 做成對稱三旗標是 H-41／H-42 的直接成因——**旗標集合依 class 而異**。
 
 ## F2. 結帳求值管線（Discounts::Engine）
 
@@ -17,6 +25,7 @@
 1. 求值順序固定：**product 類 → order 類 → shipping 類**（後級以前級折後價為基礎）——寫成 pipeline，每級輸出不可變中間結果。
    **但同一級之內（尤其 order 級）的多個折扣一律共用同一個基數，不得互相串接**——見 F2.1。
    **運費折扣在「配送選項生成之後」才作用**（官方 7 步中的第 5 步，第 4 步才產生配送選項）→「滿額免運」這類跨階段規則必須在選項生成後求值，否則會算錯。
+   🔴 **「配送選項生成」包含 15-F2.1 的跨設定檔合併**——運費折扣打在**合併後**的單一金額上。若對每個運送設定檔的費率各自先套免運折扣再合併，免運會被套用 N 次，金額直接錯（NP1-E，本輪新發現）。
    <!-- 依 46b:38–50、46b:134 補寫，原文：結帳 Function 7 步執行順序 Cart Transform → 商品/訂單折扣 → 履行約束+路由 → 配送客製 → **運費折扣** → 付款客製 → 驗證；我方 17:18 原本只寫 product → order → shipping，缺「運費折扣在配送選項生成之後」這一層 -->
    **硬規則：運費折扣不可疊運費折扣**（`limits.discount.shipping_plus_shipping_allowed: false`）——這**不是** `combines_with` 旗標可控的，是引擎級硬約束；免運折扣的 `combinesWith` **只有 order／product 兩個旗標**（無 shippingDiscounts）。
    <!-- 依 46b:197、46b:285、46b:374、46c:716 補寫，原文：「Multiple shipping discounts can't apply to the same order.」；我方 17:8 的三旗標對稱模型若照實作即可疊兩張運費折扣 -->

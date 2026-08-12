@@ -206,3 +206,24 @@ shops, staff_members, roles, role_permissions；products, product_options, optio
 | `store_credit_accounts` / `store_credit_transactions` | `refundMethods` 的 store credit（原型已標「06 §7 待補」） | P0-01（退款方式） |
 
 `idempotency_keys` 的欄位定義改為「存 `result_ref` 指標」而非 `response_body` 快照——見 `docs/specs/11` §2.1（P0-11）。
+
+**P1 修正後**再補的表（8 張，見 `docs/specs/54-p1-logic-fixes.md`）：
+
+| 表 | 為什麼必要 | P1 |
+|---|---|---|
+| `order_edit_sessions` | 訂單編輯 session；**部分唯一索引 `(order_id) WHERE committed_at IS NULL AND abandoned_at IS NULL`**＝單一 open session 鎖 | P1-17（16-F8.2） |
+| `calculated_orders` | **CalculatedOrder 暫存區**；commit 前原訂單零變動；`snapshot_json` 內每個元素帶 `staged_status`(ADDED/REMOVED/UNCHANGED) | P1-16（16-F8.1） |
+| `order_edit_deltas` | 編輯增量的報表歸屬（`order_id, session_id, delta_cents, occurred_on`）——不產生幽靈訂單 | P1-22（19-F1.1） |
+| `companies` | **只有** `name` / `note` / `default_role_id` / `main_contact_id`（掛載鐵律） | P1-33（29 §10） |
+| `company_locations` | catalog／payment terms／tax／checkout 設定／currency／locale／地址 **一律掛這裡** | P1-33 |
+| `company_contacts` | **`customer_id` 外鍵 → 復用 `customers`**（contact 不是獨立帳號）；角色走 `company_contact_role_assignments`（contact × location × role） | P1-33（H-68） |
+| `market_settings` | `(market_id, key, value JSON)`，**`value IS NULL` ＝ 繼承**；取代原本權威的 `parent_market_id` | P1-32（29 §1.5） |
+| `cod_settlement_rows` | COD 對帳檔匯入（`carrier, statement_id, row_no` 唯一索引 ⇒ 重覆匯入冪等） | P1-08（16-F4.4） |
+
+**既有表的欄位變更（P1）**：
+- `markets`：`parent_market_id` → **`derived_parent_market_id`（推導快取，非權威）**；conditions 變更時同 transaction 重算子樹。
+- `notification_templates`：補 `event_key` / `group_key` / `channel` / **`toggleable`（種子決定、唯讀）** / `enabled` / `locale` / `implemented`（18-F2.1）。
+- `discount_combines_with`：唯一鍵 `(discount_id, target_class)`，且**寫入 `(shipping 類折扣, shipping)` 一律拒絕**（17-F1 第 4 點）。
+- `shipping_rates`：補 `cod_fee_cents`（15-F2.3）。
+- `return_rules`：補 `tw_statutory_exemption_claimed`（16-F7.4(b)）。
+- `orders`：補 `cod_expected_cents`；`edited`（bool）由 F8 commit 寫入。

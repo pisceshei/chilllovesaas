@@ -91,7 +91,7 @@
 | 類別 | Queries | Mutations |
 |---|---|---|
 | 訂單 | `orders(first, query, sortKey, **return_status 可篩**)`, `order(id)`（金額全 MoneyBag；timeline events connection） | `orderUpdate(note, tags, email, shippingAddress)`, `orderClose/Open`, **`orderCancel(orderId: ID!, reason: OrderCancelReason!, restock: Boolean!, notifyCustomer: Boolean, staffNote: String, refundMethod: OrderCancelRefundMethodInput) → { job{id,done}, orderCancelUserErrors }`**（**非同步**）, `orderMarkAsPaid`, `orderCapture(amount, parentTransactionId)` |
-| 訂單編輯 | `order.editSession` | `orderEditBegin(id)` → `orderEditAddVariant/AddCustomItem/SetQuantity/AddLineItemDiscount/RemoveDiscount` → `orderEditCommit(notifyCustomer, staffNote)`（差額走 15 §金額引擎重算＋補收/退差） |
+| 訂單編輯 | **`order.editSession`**、**`calculatedOrder(id)`**（暫存區：`lineItems`／`addedLineItems`／`shippingLines{stagedStatus}`＋即時重算後的金額） | `orderEditBegin(id!) → { calculatedOrder, orderEditSession, userErrors }`；`orderEditAddVariant(id!, variantId!, quantity!, allowDuplicates=false, locationId)`／`orderEditAddCustomItem`／`orderEditSetQuantity(id!, lineItemId!, quantity!, restock=false)`／`orderEditAddLineItemDiscount`／**`orderEditUpdateDiscount`**／`orderEditRemoveDiscount`／**`orderEditAddShippingLine`**／**`orderEditUpdateShippingLine`（僅限新加入的行）**／**`orderEditRemoveShippingLine`**；`orderEditCommit(id!, notifyCustomer, staffNote)` |
 | 草稿單 | `draftOrders`, `draftOrder(id)` | `draftOrderCreate(input{lineItems[{variantId\|custom{title,price}, quantity, appliedDiscount}], customerId, shippingAddress, appliedDiscount, shippingLine, note, email})`, `draftOrderUpdate`, `draftOrderDelete`, `draftOrderComplete(paymentPending: Boolean)` → 轉正式單, `draftOrderInvoiceSend(email 主旨/內文)` |
 | 棄單 | `abandonedCheckouts(first, query)` | `abandonedCheckoutSendRecovery`（15 §棄單信規則） |
 
@@ -109,6 +109,25 @@
 - **不可取消五條件（聯集 guard）**：已取消／有待處理付款授權／**有進行中的退貨（`REQUESTED`/`OPEN`）**／有無法履行的未結出貨／已（部分）出貨 → 皆回 `INVALID_STATE`。
 - **停用地點**：已付款 ＋ `restock:true` → **整個 mutation 失敗**；未付款 → 成功但庫存不回補。
 - 副作用：關閉／取消所有未結 FulfillmentOrder（走 §5 的替代單語義）。
+
+**訂單編輯契約（P1-16／P1-17／P1-21）**
+<!-- 依 46a:889–903、46a:933、46a:959–963、46a:985–989、46c:462–463、46c:470、46c:479–488 補寫，原文：
+     「Order ──orderEditBegin──> CalculatedOrder（暫存區，含 OrderEditSession）… ──orderEditCommit──> Order」；
+     「`shippingLines` 有 `stagedStatus` 欄位，值為 ADDED / REMOVED / UNCHANGED」；
+     「The system recalculates taxes and totals automatically as edits occur.」；
+     「`orderEditUpdateShippingLine`：Modify title or price on **newly added** lines」；
+     「**文檔未載明** OrderEditSession 的鎖機制、TTL、或同一訂單並發編輯的行為」。
+     🔴 此處原本寫錯：本表原本只有 `orderEditBegin → …→ orderEditCommit` 一行鏈，**沒有 CalculatedOrder 暫存區、沒有 stagedStatus、沒有 OrderEditSession、缺 4 個 shipping/discount mutation**
+     → 照原契約實作會做成「直接改單」，無法預覽與回退。任何人翻舊版都不要改回單行鏈。 -->
+- **`CalculatedOrder` 是必做的暫存層**（獨立資料表，見 16-F8.1）：commit 前原 `orders` / `order_line_items` **一個欄位都不動**。
+- **`stagedStatus`（`ADDED` / `REMOVED` / `UNCHANGED`）照抄**——前端 diff 渲染完全由它驅動，不得自行比對兩份 JSON。
+- **每次 edit mutation 即時重算稅與總額**（回傳的 `calculatedOrder` 帶最新金額），不是 commit 才算。
+- `orderEditUpdateShippingLine` **只能改本次新加入的 shipping line**（`stagedStatus == ADDED`），否則 `userErrors`。
+- **⚠ 本專案決策（Shopify 文檔未載明）**：同一訂單同時只允許一個 open edit session（部分唯一索引），第二個 `orderEditBegin` 回 `INVALID_STATE`；session TTL ＝ `limits.order.edit_session_ttl_hours`(24)；commit 前以 `lock_version` 樂觀鎖重驗。見 16-F8.2。
+- **`orderEditBegin` 的九條 guard**（help 6 條 ∪ dev 5 條的聯集，見 16-F8.3）：已取消／匯入單／Shop Pay 分期單／當地配送單／待處理付款單／非商店幣別單（未升級 Checkout Extensions）／預付型訂閱單 → 整單擋；已履行品項不可移除改量（**逐行**、且**每個 mutation 前都要檢查**）；訂單層折扣唯讀。
+- **反直覺兩條**：①**已出貨品項「可以」管理品項層折扣**（只鎖移除／改量）；②運費**不重算、不可改配送方式**，只能加自訂運費行；稅則**每次編輯自動重算**。
+- 補款結帳頁**沒有加速結帳**（Shop Pay／Apple Pay 不可用，46c:470）。
+- **刻意不復刻**：46a:908「2019-01-01 前的訂單不可編輯」為 Shopify 歷史包袱，本專案不實作（46a §8⑦-46 建議）。
 
 ## 5. 履約（read/write_fulfillments）
 
@@ -154,6 +173,14 @@
 - `returnProcess` 內含退款 → **本專案強制 `idempotencyKey`**（Shopify 未載明）。
 - **退款上限是軟上限、不是 DB 硬鎖**：預設 `netPayment`，超額需 `orders.over_refund` 權限＋二次確認（46c:223 明載超額退款合法）。
 - `ReturnErrorCode` **26 值全部落地**為 `userErrors.code`；`INVALID_STATE` 為狀態機違規統一碼。
+
+**`ReturnErrorCode` 全 26 值（P1-11／S-20，逐字照抄）**
+<!-- 依 46a:560–591 補寫，原文：46a 逐字標「這是本研究中**唯一一份完整的錯誤碼清單**（S29）」，並附每值的官方描述。
+     本檔原本只寫「26 值全部落地」一句宣告，**沒有列出任何一個值** → 開發者無從照抄，必然各自發明錯誤碼。 -->
+
+`ALREADY_EXISTS`（已存在）、`BLANK`（空白）、`CREATION_FAILED`（建立失敗）、`EQUAL_TO`（須等於）、`FEATURE_NOT_ENABLED`（功能未啟用）、`GREATER_THAN`（須大於）、`GREATER_THAN_OR_EQUAL_TO`（須大於等於）、`INCLUSION`（不在允許清單）、`INCOMPATIBLE_WITH_STANDARD_POLICY`（與標準退貨政策衝突）、`INTERNAL_ERROR`（內部錯誤）、**`INVALID_STATE`（狀態不符——狀態機違規統一碼，全專案沿用）**、`INVALID`（無效）、`LESS_THAN`（須小於）、`LESS_THAN_OR_EQUAL_TO`（須小於等於）、`MISSING_PERMISSION`（缺少權限）、`NOT_A_NUMBER`（非數字）、`NOT_EDITABLE`（不可編輯）、`NOT_FOUND`（找不到）、`NOTIFICATION_FAILED`（通知失敗）、`PRESENT`（須為空）、`TAKEN`（已被佔用）、`TOO_BIG`（值過大）、`TOO_LONG`（過長）、`TOO_MANY_ARGUMENTS`（參數過多）、`TOO_SHORT`（過短）、`WRONG_LENGTH`（長度錯誤）。
+
+> **通用碼複用鐵律**：上表中 20 個是泛用驗證碼（`BLANK`/`TOO_LONG`/`NOT_FOUND`…），**全專案所有 mutation 的 `userErrors.code` 一律從這組取值**，不得各模組自造同義碼（`EMPTY` vs `BLANK`、`MISSING` vs `NOT_FOUND`）。`INCOMPATIBLE_WITH_STANDARD_POLICY` 與 `NOTIFICATION_FAILED` 為退貨線專屬。
 - **⚠ 待查證（來源未載明）**：`restockType` 的真實列舉值——46a:747 為 `RESTOCK`/`NO_RESTOCK`/`LEGACY_RESTOCK`，本檔原寫 `RETURN`/`CANCEL`/`NO_RESTOCK`，實務另有第三套 → **三方互斥，須 GraphQL introspection 定案，實作前不得二選一**（50 號 T-08／V-01）。
 - **⚠ 待查證（來源未載明）**：`maximumRefundable` 公式、稅額在退款時的分攤規則、`RefundShippingInput` 同時給 `amount` 與 `fullRefund` 的行為、`RestockingFeeInput.percentage` 最大值。
 
@@ -184,7 +211,20 @@
 - `combinesWith` 三旗標**預設全 false**（46c:705）；**運費折扣不可疊運費折扣**是引擎級硬規則，不由旗標控制。
 - `percentage` 線上格式為 **0–1 Float**（不是 0–100），內部存 basis points（46b:189、46b:272）。
 - 上限一律引用 `config/limits.yml` 的 `discount.*`（自動折扣全店同時 ≤25、每店碼 2,000 萬、每碼適用清單 100、每次結帳 5 碼＋1 運費碼、tags 5／長度 255）。
-- **⚠ 待查證（來源未載明）**：`DiscountErrorCode` 39 值尚未落地（46b:323–367，建議全部照抄）；單一折扣可綁 markets 數上限（46b:993–1010 標未載明）。
+- **⚠ 待查證（來源未載明）**：單一折扣可綁 markets 數上限（46b:993–1010 標未載明）。
+
+**`DiscountErrorCode` 全 39 值（P1-12／S-23，逐字照抄）**
+<!-- 依 46b:323–367 補寫，原文：46b §2⑤ 完整表格 39 值＋官方描述；46b §2⑥-7 逐字建議「**`DiscountErrorCode` 39 值全部照抄**進 `userErrors.code` 列舉——這是最省事的相容性資產，直接進 `28-api-contract.md`」。
+     🔴 本檔原本把這條標成「⚠ 待查證（來源未載明）」——**分類錯誤**：來源（46b:323–367）載明得非常完整，它只是「還沒抄過來」，不是「查不到」。
+     混在待查證清單裡會讓它永遠不被實作。已改為落地清單。任何人翻舊版都不要改回「待查證」。 -->
+
+| 類別 | 值 |
+|---|---|
+| **折扣專屬（19）** | `ACTIVE_PERIOD_OVERLAP`（同時 active 的自動折扣超過 25）、`APPLIES_ON_NOTHING`、`CONFLICT`、`DISCOUNT_NOT_COMPATIBLE_WITH_CONDITION_TYPES`、`END_DATE_BEFORE_START_DATE`、`IMPLICIT_DUPLICATE`、**`INVALID_COMBINES_WITH_FOR_DISCOUNT_CLASS`**（17-F1 第 4 點的 shipping 旗標約束用它）、`INVALID_DISCOUNT_CLASS_FOR_PRICE_RULE`、`INVALID_PRODUCT_DISCOUNTS_FALSE_WITH_EXISTING_TAGS_ON_SAME_CART_LINE`、`INVALID_PRODUCT_DISCOUNTS_WITH_TAGS_ON_SAME_CART_LINE_FOR_DISCOUNT_CLASS`、`INVALID_PRODUCT_DISCOUNTS_WITH_TAGS_ON_SAME_CART_LINE_WITHOUT_PRODUCT_DISCOUNTS`、`INVALID_TAG_LENGTH`、`MAX_APP_DISCOUNTS`、`MINIMUM_SUBTOTAL_AND_QUANTITY_RANGE_BOTH_PRESENT`、`MISSING_FUNCTION_IDENTIFIER`、`MULTIPLE_FUNCTION_IDENTIFIERS`、`MULTIPLE_RECURRING_CYCLE_LIMIT_FOR_NON_SUBSCRIPTION_ITEMS`、`PRODUCT_DISCOUNTS_WITH_TAGS_ON_SAME_CART_LINE_NOT_ENTITLED`（方案不足）、`RECURRING_CYCLE_LIMIT_NOT_A_VALID_INTEGER` |
+| **上限類（3）** | `EXCEEDED_MAX`、`TOO_MANY_PRODUCT_DISCOUNTS_WITH_TAGS_ON_SAME_CART_LINE`（>10）、`TOO_MANY_TAGS`（>5） |
+| **泛用驗證（17）** | `BLANK`、`DUPLICATE`、`EQUAL_TO`、`GREATER_THAN`、`GREATER_THAN_OR_EQUAL_TO`、`INCLUSION`、`INTERNAL_ERROR`、`INVALID`、`LESS_THAN`、`LESS_THAN_OR_EQUAL_TO`、`MISSING_ARGUMENT`、`PRESENT`、`TAKEN`、`TOO_LONG`、`TOO_MANY_ARGUMENTS`、`TOO_SHORT`、`VALUE_OUTSIDE_RANGE` |
+
+**用法對照**（三條最容易漏接的）：超過 `limits.discount.max_active_automatic_per_shop`(25) → `ACTIVE_PERIOD_OVERLAP`；shipping 類折扣寫入 `combinesWith.shippingDiscounts` → `INVALID_COMBINES_WITH_FOR_DISCOUNT_CLASS`；Plus 專屬的 `productDiscountsWithTagsOnSameCartLine` 在非進階方案 → `PRODUCT_DISCOUNTS_WITH_TAGS_ON_SAME_CART_LINE_NOT_ENTITLED`。
 
 ## 9. 內容與線上商店（read/write_content, read/write_themes）
 
@@ -226,7 +266,7 @@ REST-ish 內部端點（编辑器高頻小 payload，不走 GraphQL）：
 | **退貨與取消規則**（P0-10） | **`returnRules`**（多條：預設 ＋ N 條，可按市場切換）, **`returnPolicySnapshot(id)`** | **`returnRuleCreate/Update/Delete(input{returnsEnabled, cancellationsEnabled, windowDays\|unlimited, windowStartBasis: ITEM_DELIVERED\|ORDER_LAST_ITEM_DELIVERED, shippingFeeMode: FREE\|FLAT_FEE\|CUSTOMER_BUYS_LABEL, shippingFeeAmount, restockingFeeBp, finalSaleTargets[{type: COLLECTION\|PRODUCT, id}], marketId})** |
 | 結帳設定 | `checkoutSettings`（24 §5 全欄位） | `checkoutSettingsUpdate(contactMethod, requireLogin, nameMode, companyMode, addressAutocomplete, tipping{...}, abandoned{...}, cartItemLimit)` |
 | 結帳外觀 | `checkoutProfiles`, `checkoutProfile(id)` | `checkoutProfileCreate/Duplicate/Delete`, `checkoutBrandingUpsert(profileId, designSystem{colors, typography, cornerRadius}, customizations{...})`（24 §6.4 jsonb 結構） |
-| 通知 | `notificationTemplates` | `notificationTemplateUpdate(templateId, subject, bodyLiquid)`（18 號 Liquid 沙箱） |
+| 通知 | `notificationTemplates`（**`eventKey`／`groupKey`／`channel`／`toggleable`／`enabled`／`locale`**；12 分組） | **`notificationTemplateUpdate(templateId, subject, bodyLiquid, enabled)`**（18 號 Liquid 沙箱）——`enabled` 僅在 `toggleable = true` 時可寫，否則 `userErrors`；`toggleable` **唯讀、由種子決定** |
 | 網域 | `domains` | `domainCreate(host)` → DNS 驗證流程, `domainSetPrimary`, `domainDelete` |
 | 支付 | `paymentProviders` | `paymentProviderActivate(stripe test keys)`（15 號） |
 
@@ -264,6 +304,51 @@ type 系統首發 15 種：single_line_text/multi_line_text/rich_text/integer/de
 
 `markets/market/marketCreate/Update/Delete`、`webPresence*`、`marketCurrencySettingsUpdate`、`catalog*`、`priceList*`＋`priceListFixedPrices*`、`translatableResources/translationsRegister/Remove`、`marketLocalizations*`、`shopLocale*`。金額回傳一律 MoneyBag；storefront context 由 SSR RequestContext 承擔（等價 @inContext）。
 
+**Market 繼承與父子關係（P1-32／T-05）**
+<!-- 依 46b:636–639、46b:659–664、46b:690–717 修正，原文逐字：
+     「A market can have **one or more parent markets**. If a market does not define a customization, it will inherit the customization from its parents, or the store defaults」；
+     「**parent 不是手動指定的，是自動推導的（lineage inference）**：子市場的 region 是父市場 condition 的嚴格子集 → 成立父子；…；**具體地點列舉不參與 lineage 計算**」；
+     「**用 null 表達繼承**…**沒有 `inherited: Boolean` 這種顯式旗標，也沒有 `parentMarketId` 欄位**（Market 物件無 parent/child 欄位）」。
+     🔴 我方 29:42 原本把 `parent_market_id` 當**權威欄位**存 → 商家改了 regions、父子關係不會跟著變。改為 derived 快取，見 29 §1.5。 -->
+- **`Market` 物件不暴露 `parentMarketId` / `childMarkets`**（照抄官方 schema）；父子由 conditions 推導。我方 DB 的 `markets.derived_parent_market_id` 是**推導快取**（每次 conditions 變更重算），API 不可寫入。
+- **繼承用 `null` 表達**：customization 欄位為 null ＝ 沿 lineage 上溯；`catalogs`／`webPresences` **累加**，`currencySettings`／`priceInclusions` **覆寫**。
+- 新增 **`Market.assignedCustomization(customizationId:)`**——admin「繼承／已覆寫」徽章的資料來源（46b 有、本檔原本缺）。
+- 逐項覆寫走 **`marketSettingUpsert(marketId, key, value)`**（`value = NULL` ⇒ 恢復繼承）；`market_setting(market_id, key, value NULL=繼承)` 見 29 §1.5。
+- 市場命中優先序（buyer 同時命中多市場）：**Company Location > Retail Location > Region > Store Default**（46b:641–648）。
+- **⚠ 待查證（來源未載明）**：`delivery.shipping` 到底繼不繼承——46b:659–661 逐字「Null means the market inherits shipping from its parent」vs 44:866 逐字「運送與隱私權不繼承，永遠市場本地」，**直接矛盾**，須 introspection 覆核（V-02，維持待查證，不得二選一寫死）。
+
+## 13b. B2B（Company／CompanyLocation，P1-33／H-64～H-68）
+
+<!-- 依 46b:810–830、46b:850–868、46b:881–911、46b:935–943 補寫，原文逐字：
+     「`CompanyContact`：A person that acts on behalf of the company. A company contact is **associated with a retail customer record**.」；
+     「Catalogs attach exclusively to company locations, not companies.」；
+     「some information, such as tax IDs and exemptions, is **location-specific and must be updated from the location page**」；
+     「`CompanyLocation.market` — **已 Deprecated**」；
+     「…they receive the **lowest listed price** within those catalogs」＋「must be published in at least one applicable publication to be visible」。
+     50 號 H-64 逐字：「44 行動項 71 說『我們 B2B 規格原本掛在 company 上——要改』，但實際上不存在該規格」——本輪複核確認 `docs/specs` 下**無任何 B2B 規格檔**，僅 admin 原型有註釋。 -->
+
+| 類別 | Queries | Mutations |
+|---|---|---|
+| 公司 | `companies(first, query)`, `company(id)`（**只有** `name` / `note` / `defaultRole` / `mainContact` / `externalId`） | `companyCreate`, `companyUpdate`, `companyDelete`, `companyAssignMainContact` |
+| 公司地點 | `company.locations`, `companyLocation(id)`（catalogs／paymentTerms／taxSettings／`buyerExperienceConfiguration`／currency／locale／billing+shipping 地址） | `companyLocationCreate`, `companyLocationUpdate`, `companyLocationAssignTaxExemptions`, `companyLocationAssignAddress`, `companyLocationDelete` |
+| 聯絡人 | `company.contacts`（**每筆帶 `customerId`**） | `companyContactCreate(companyId, customerId)`, `companyContactAssignRole(contactId, companyLocationId, roleId)`, `companyContactRevokeRole`, `companyContactDelete` |
+| 付款條件 | `paymentTermsTemplates` | `paymentTermsCreate`, `paymentTermsUpdate`, `paymentTermsDelete` |
+| B2B 草稿單 | `draftOrder.purchasingEntity` | `draftOrderCreate(purchasingEntity{companyId, companyLocationId, companyContactId})`, **`draftOrderCalculate`**, `draftOrderInvoiceSend`, `draftOrderComplete` |
+
+**掛載層級鐵律（H-64，照抄官方，最重要的一條）**
+> **catalog／payment terms／tax（tax ID・exemptions）／checkout 設定（`checkoutToDraft`・`editableShippingAddress`・deposit）／currency／locale／billing+shipping 地址 —— 一律掛 `company_location`。**
+> **`company` 層只有 `name` / `note` / `default_role` / `main_contact`。**
+> admin UI 可提供「從 company 頁批次套用到所有 location」的便利操作，但**資料仍逐一寫進每個 location**——這樣就沒有「company 值 vs location 值誰贏」的繼承地獄。
+
+其餘四條：
+- **H-68 company contact 不是獨立帳號**：`company_contacts.customer_id` 外鍵 → 復用 `customers` 表；同一個 customer 可同時是 B2C 顧客與 B2B 聯絡人。**角色是 `contact × location` 的指派**（`ordering_only` / `location_admin`），不是 contact 的全域屬性。
+- **H-66 多 catalog 取最低價**：同一 company location 命中多個含相同商品的 catalog → 取 **`MIN(price)`**；且商品**必須至少發佈到一個 applicable publication 才可見**。寫成 `B2b::PriceResolver` 並測「同商品多 catalog」。
+- **H-67 `CompanyLocation.market` 已 deprecated**：**不得建 location → market 的正向外鍵**；改由 `COMPANY_LOCATION` 型 market 的 `companyLocationsCondition` 反查（與 §13 的 conditions 模型一致）。
+- **S-26／S-27 付款條件與審核流**：`PaymentTermsType` **5 值** `FIXED` / `FULFILLMENT` / `NET`（搭 `dueInDays`）/ `RECEIPT` / `UNKNOWN`。`checkoutToDraft: true` ⇒ 結帳不建 order 而建 draft order（前台按鈕文案「送出待審核」）。付款結果**三態**：無 terms → 立即付款；NET → `payment_pending`；NET＋deposit → `partially_paid`。
+  > **`checkoutToDraft` 是「轉向」、validation 是「擋」**——兩者職責不同，不要混用（46b §5⑥-3）。
+- **上限**一律引用 `limits.b2b.*`（10,000 locations/company、10,000 contacts/company、**50 contacts/location**、25 catalogs/location、250 prices/request、**1 company/customer**）。
+- **⚠ 待查證（來源未載明）**：標準 NET 7/15/30/45/60/90 的內建清單（46b:892 逐字「文檔未載明」，只給泛用 `dueInDays`）；`CheckoutProfile` 有無 company/location 欄位（46b:828 標未載明）。見 §待查證 V-19。
+
 ## 14. 分析（read_analytics）
 
 | 類別 | Queries |
@@ -280,6 +365,9 @@ type 系統首發 15 種：single_line_text/multi_line_text/rich_text/integer/de
 - **簽章**：`X-CL-Hmac-Sha256`＝base64(HMAC-SHA256(raw body, app secret))，timing-safe 比較；headers `X-CL-Topic/X-CL-Shop-Domain/X-CL-Webhook-Id（去重）/X-CL-Event-Id/X-CL-Triggered-At/X-CL-API-Version`。
 - **投遞**：5 秒內 2xx；重試指數退避（demo 3 次；規格目標 8 次/4 小時）；API 建立的訂閱連續失敗自動刪除；outbox 驅動（18 號）。
 - **Topics 首發 24 個**：`app/uninstalled`, `shop/update`；`products/create|update|delete`；`collections/create|update|delete`；`inventory_levels/update`；`orders/create|updated|paid|cancelled|fulfilled|partially_fulfilled|edited`；`draft_orders/create|update`；`customers/create|update|delete`；`fulfillments/create|update`；`refunds/create`；`checkouts/create|update`（棄單）；`themes/publish`；`bulk_operations/finish`（佔位）。payload＝資源 snake_case JSON＋`admin_graphql_api_id`。
+- **內部 topic 3 個（不對外開放訂閱）**：`einvoice/issue_requested`、`einvoice/void_requested`、`einvoice/refund_routed`——由 16-F5.5 寫入、38 號的 job 消費。**不出現在 `webhookSubscriptionCreate` 的可選 topic 列表**（發票 payload 含統編等敏感欄位）。
+  <!-- 依 38:876–877、38:1338–1356 補寫：全額取消自動作廢、部分退貨自動折讓。原本 topic 清單無 einvoice/* → 退款不觸發作廢/折讓＝稅務錯誤（50 號 TW-5） -->
+- **⚠ 已知差異（不實作）**：44:447 實測 Shopify 的 webhook 支援 **XML 與 JSON 兩種格式**且歸在「通知」IA 下；本專案 `format: JSON` 單一（H-117 屬 P2，此處明文記錄以免被誤判為遺漏）。
 - Feed/SEO 消費者（30 號）：products/update→feed 增量＋IndexNow；orders/*→Simprosys 訂單餵送。
 
 ## 16. 前台 HTTP 面（買家端）

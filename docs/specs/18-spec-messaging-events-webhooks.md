@@ -10,13 +10,17 @@
 3. 語意 **at-least-once**：每個消費者自行冪等（processed 去重表或天然冪等操作）；順序不保證，消費者不得依賴順序。
 4. payload 規範：`{topic, event_id, occurred_at, resource: {type, id}, diff?}`——只帶 ID 與必要摘要，消費時再查現值（防 PII 蔓延與陳舊資料）。
 5. 保留 30 天 purge；失敗 attempts ≥8 → status=dead + 告警 + 後台可重推。
+6. **topic 清單的單一真相＝28 §15**（首發 24 個）。本輪新增**三個內部 topic（不對外開放訂閱）**：`einvoice/issue_requested`、`einvoice/void_requested`、`einvoice/refund_routed`——由 16-F5.5 的退款／取消／出貨三處寫入，消費者為 38 號的 `IssueJob` / `VoidJob` / `AllowanceJob`。
+   <!-- 依 38:876–877、38:1338–1356、38:1103–1104 補寫，原文：「全額取消**自動作廢**、部分退貨**自動折讓**」；落地物 `Platform::Einvoice::RefundRouter`（== 作廢／< 折讓／> 作廢）與三支 job。
+        原本 18-F1 與 28 §15 的 topic 清單皆無 `einvoice/*` → 退款不會觸發作廢／折讓 ＝ 稅務錯誤（50 號 TW-5）。 -->
+   **內部 topic 不進 `webhookSubscriptionCreate` 的可訂閱列表**（發票資料含統編等敏感欄位，不對外投遞）。
 
 **⚠️ 坑**：dispatcher 多實例並發靠 `SKIP LOCKED`（沒有它會重複派發）；locked_at 超時回收（worker 死掉的孤兒事件）；事件寫在 transaction 外 = 「訂單建了事件丟了」的隱形事故——code review 死盯。
 
 ## F2. 通知信管線與 Liquid 沙箱
 
 **生產級做法**：
-1. `notification_templates`（shop_id、key: order_confirmation/shipping_confirmation/…、subject、body_html——**兩者皆 Liquid**）；種子提供預設模板（自寫文案），商家可改、可「還原預設」。
+1. `notification_templates`（shop_id、**`event_key`**、**`group_key`**、**`channel`**（email/sms）、**`toggleable`**、**`enabled`**、`locale`、subject、body_html——subject/body 皆 Liquid）；種子提供預設模板（自寫文案），商家可改、可「還原預設」。**完整範本與可關閉性規格見 F2.1。**
 2. 渲染：**Liquid gem 嚴格沙箱**——只暴露白名單 Drops（OrderDrop/ShopDrop/CustomerDrop/LineItemDrop，逐屬性手工暴露）；`Liquid::Template.parse(source, error_mode: :strict)`；render 帶 **resource limits**（render 長度 256KB、迭代上限）與 3s timeout（Timeout 包 job 層級）。
 3. 模板儲存時即 parse 驗證，語法錯誤即時回報編輯器（不留到寄信時炸）。
 4. 寄送：事件 → NotificationJob（transaction 外）→ 渲染 → Action Mailer → Resend/SES；每封記 `email_deliveries`（template key、to hash、message_id、狀態）。
@@ -27,6 +31,35 @@
 - 商家模板可以寫死迴圈/巨大輸出 → resource limits + timeout 缺一不可。
 - HTML 信件相容性：table 佈局 + inline CSS（premailer-rails 自動內聯）；純文字版一併生成（multipart）。
 - subject 也是 Liquid → 同樣沙箱；別忘 escape（信頭注入：subject 含換行要清）。
+- **把所有範本都做成可關閉是合規事故**——交易性通知強制寄，見 F2.1。
+
+### F2.1 通知範本註冊表與 `toggleable`（P1-28／H-116，合規約束）
+
+> <!-- 依 44:449–469 補寫，原文：後台 `/settings/notifications/customer` 實測**顧客通知範本共 45+ 個、12 個事件分組**（訂單處理／到店取貨／當地配送／禮品卡／商店抵用金／訂單異常／付款／POS／運送資訊更新／退貨與取消／帳號與外展行銷／行銷訊息雙重確認加入＋Shop 再行銷）；
+>      逐字結論：「`notification_templates` 需要 `(event_key, group_key, channel, toggleable, locale)`；**只有部分範本可關閉**（當地配送／運送狀態更新／雙重確認／Shop 再行銷），交易性範本強制寄——這是一條**合規約束，不是 UI 偏好**」。
+>      44:447 另記 Webhook 被歸在「通知」IA 下且支援 XML 與 JSON 兩種格式（我方 28:279 只設計 JSON；XML 屬 P2，此處僅記錄不實作）。
+>      我方 18-F2 原本的 `notification_templates` 只有 (shop_id, key, subject, body_html) **四欄，沒有分組、沒有 toggleable**，
+>      22:189 只寫「模板分類+個別開關」→ 照現有規格會做成**全部可關**（合規風險：關掉訂單確認信、退款通知信是不能允許的）。 -->
+
+**(a) `toggleable` 是白名單，不是預設值**——預設 `toggleable = false`（強制寄），只有下列**四個分組**的範本 `toggleable = true`：
+
+| 可關閉的分組 | 範本（44 實測） | 預設 |
+|---|---|---|
+| 當地配送 | 訂單開始當地配送／訂單已完成當地配送／訂單錯過當地配送 | 開 |
+| 運送資訊更新 | 運送資訊更新／配送中／已送達 | 開 |
+| 行銷訊息雙重確認加入 | 顧客行銷訂閱確認 | **關** |
+| 透過 Shop 再行銷（本專案對應「站外再行銷」） | 購物車提醒／重新補貨／降價／瀏覽後離開 | 開 |
+
+其餘 **8 個分組**（訂單處理／到店取貨／禮品卡／商店抵用金／訂單異常／付款／POS／退貨與取消／帳號與外展行銷）一律 `toggleable = false`。
+
+**(b) 硬要求**
+1. `toggleable` **由種子資料決定，商家與 API 皆不可改**（`notificationTemplateUpdate` 只收 `subject` / `bodyLiquid` / `enabled`，且 `enabled` 寫入時先驗 `toggleable = true`，否則回 `userErrors`）。
+2. 前端關閉開關**必須灰化 + tooltip**（「此為交易性通知，依法必須寄送」），不是隱藏——商家要知道為什麼不能關。
+3. 範本清單以 **`event_key` 為主鍵語義**，新增範本走 migration 種子，**不允許商家自建 event_key**（Liquid 沙箱的 Drop 白名單綁 event_key，見 F2 第 2 點）。
+4. `channel` 分 email／sms；**SMS 行銷同意永不可預先勾選**（15-F3.2 L2）與此處的 `toggleable` 是兩件事，不要混。
+
+**(c) 範圍**：44 實測 45+ 個範本是 Shopify 的完整清單；CHILL LOVE **M1–M4 先落地 12 個交易性範本**（訂單確認／出貨確認／退款／取消／發票／退貨四種／取貨點三種），其餘進種子表但標 `implemented = false`——**表結構一次做對，範本逐步補**，避免日後為了加 `toggleable` 改 schema。
+**⚠ 待查證（來源未載明）**：44 的 45+ 範本清單為 UI 實測，Shopify 官方文檔未提供完整 event_key 列表；本專案的 `event_key` 命名為自定（見 §待查證 V-18）。
 
 ## F3. Email 送達性（deliverability）
 
