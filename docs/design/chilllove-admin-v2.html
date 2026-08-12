@@ -5324,7 +5324,7 @@ Object.assign(DOCS,{
 /* ---------- 市場 ---------- */
  "mkt-map":{t:"市場圖表檢視",f:"世界地圖著色顯示市場分布",l:"21 §2 實測 2026 版右上入口；著色＝該市場銷售額",i:"P3・[api:markets]＋[api:report] [tbl:markets,orders]"},
  "mkt-new":{t:"建立市場",f:"名稱＋型別＋國家群",l:"一國僅屬一市場，加入時自動從原市場移出（含確認）；型別：國家／B2B company location／retail location／sales channel（41 §6）",i:"P2・[api:marketCreate] [tbl:markets]（06 §7 待補）"},
- "mkt-ai":{t:"市場 AI 建議行",f:"依流量建議建立新市場",l:"21 §1.6 實測；可關閉；建議來源＝近 30 天各國 sessions",i:"P3・[api:TBD-marketSuggest]（28 待補）＋[api:report] [tbl:sessions]"},
+ "ai-suggest":{t:"AI 建議行（通用預設）",f:"列表頂部的 AI 建議條，點擊執行建議動作、✕ 關閉當次",l:"這是 buildList 的 aiDoc 預設值——呼叫端未指定 aiDoc 時就落到這個 key。47 §D 實測：AI 建議在實站是**紫色 inline 列混在資料列中、可 ✕ dismiss**，屬於有別於 banner 的第三種提示層級（44 §22.6）。dismiss 應記在使用者偏好，同一建議不重複打擾；建議本身由後端評分產生，前端不做判斷。",i:"P2・[api:aiSuggestionList] [api:aiSuggestionDismiss] [tbl:ai_suggestions,user_prefs]"},"mkt-ai":{t:"市場 AI 建議行",f:"依流量建議建立新市場",l:"21 §1.6 實測；可關閉；建議來源＝近 30 天各國 sessions",i:"P3・[api:TBD-marketSuggest]（28 待補）＋[api:report] [tbl:sessions]"},
  "mk-status":{t:"市場狀態",f:"啟用／停用此市場",l:"停用後這些國家導向兜底 backup region（設定→一般）；空市場自動刪除",i:"P2・[api:marketUpdate]（enabled） [tbl:markets]"},
  "mk-countries":{t:"市場包含的國家",f:"國家清單管理",l:"一國僅屬一市場；移出後回到 backup region 定價（29 §6）",i:"P2・[api:marketUpdate]（conditions） [tbl:markets]"},
  "mk-domain":{t:"網域與語言",f:"三選一網域策略＋語言子集",l:"子資料夾／子網域／獨立網域；hreflang 自動輸出（線上商店偏好設定預設開）；每市場語言子集（29 §1.2）",i:"P2・[api:webPresenceUpdate] [api:marketLocalizationsRegister] [tbl:markets,shops]"},
