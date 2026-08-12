@@ -196,7 +196,7 @@ input,textarea,select{font:inherit;color:inherit}
    其裁切顧慮改用 overflow:clip + overflow-clip-margin 解（見 .seg）。 */
 :focus-visible{outline:none;box-shadow:0 0 0 2px var(--focus-gap),0 0 0 4px var(--focus-ring)}
 /* 深色浮層內就地換環色，避免深環壓在深底上看不見 */
-.bulkbar,.toast,.savebar,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse);--focus-ring:var(--surface)}
+.bulkbar,.toast,.savebar,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse)}
 .seg{overflow:clip;overflow-clip-margin:4px}
 .num{font-variant-numeric:tabular-nums}
 svg{flex:none}
@@ -898,6 +898,9 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .savebar .btn-sec:hover:not(:disabled){background:rgba(255,255,255,.24)}
 .savebar .btn-pri{background:var(--surface);color:var(--text);box-shadow:none}
 .savebar .btn-pri:hover:not(:disabled){background:#e9e9eb}
+/* 53號 N-03：上面兩條 .savebar .btn-* 的 box-shadow:none 特異性(0,2,0) 壓過 :focus-visible(0,1,0)，
+   會讓 save bar 兩顆按鈕鍵盤聚焦時完全沒有焦點環（WCAG 2.4.7）。此處以 (0,3,0) 重新宣告。 */
+.savebar .btn-pri:focus-visible,.savebar .btn-sec:focus-visible{box-shadow:0 0 0 2px var(--focus-gap),0 0 0 4px var(--focus-ring)}
 @keyframes cl-shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 /* 47 #88／§5：驗證失敗 shake（實站於 Modal 整體，含 footer）*/
 .cl-shake{animation:cl-shake var(--dur-shake) var(--ease-standard)}
@@ -2281,14 +2284,7 @@ const DISC_TYPES=[
  ["扣減訂單金額","整筆訂單金額打折或折抵","order"],
  ["免運費","符合條件的訂單免運費","ship"]];
 const DT_IC={tag:'<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.2"/>',gift:'<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M5 12v9h14v-9M12 8s-4.5.2-4.5-2.6C7.5 3 12 3.6 12 8zm0 0s4.5.2 4.5-2.6C16.5 3 12 3.6 12 8z"/>',order:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',ship:'<path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/>'};
-function openDiscModal(){
-  document.getElementById('discTypes').innerHTML=DISC_TYPES.map(([t,d,ic])=>`
-   <button class="dtype" onclick="toast('Demo：建立「${t}」表單於 M5 實作');closeDiscModal()">
-     <span class="dt-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${DT_IC[ic]}</svg></span>
-     <span><b>${t}</b><span>${d}</span></span><span class="chev">›</span>
-   </button>`).join('');
-  document.getElementById('discOverlay').classList.add('show');
-}
+/* 53號 N-07：此處原有第二份 openDiscModal（demo toast 版），與 L~4965 的正式版同名。 頂層函式宣告提升會讓後者勝出，前者為死碼且易誤導，已移除。 */
 function closeDiscModal(){document.getElementById('discOverlay').classList.remove('show');}
 
 /* ================= 設定（分頁） =================
@@ -5181,7 +5177,7 @@ function customdataPage(){
    ${setRowBtn('元物件定義',`${METAOBJ.length} 個定義・${METAOBJ.reduce((a,b)=>a+b.c,0)} 筆條目`,'<span class="chev" aria-hidden="true">›</span>','openMetaobjects()','set-metaobj','🧩')}
    <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往元物件 ›</button></div>`;
 }
-function billingPage(){
+function setBillingPage(){
  const pri=BILL_CARDS.find(c=>c.primary)||BILL_CARDS[0];
  return `<div class="card card-pad" data-doc="set-billing"><h3>帳單</h3>
    ${setRowBtn('付款方式',`${BILL_CARDS.length} 張・主要：${H(pri?pri.n:'未設定')}`,'<span class="chev" aria-hidden="true">›</span>','openBillCards()','set-bill-method','💳')}
@@ -5192,7 +5188,7 @@ function billingPage(){
    <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`;
 }
 Object.assign(SET_DYN,{payments:paymentsPage,taxes:taxesPage,locations:locationsPage,
-  notifications:notificationsPage,customdata:customdataPage,billing:billingPage});
+  notifications:notificationsPage,customdata:customdataPage,billing:setBillingPage});
 
 function notifTpl(name){
   openGen({title:`通知模板：${name}`,wide:true,body:`<div class="stack">
