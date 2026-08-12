@@ -27,7 +27,9 @@
 
 1. **物流商是一層，不是一個欄位。** 加一個 `carrier` 字串欄位再到處 `if carrier == 'sf'` 是本檔要防的正是那件事。與 56 §0.2 原則 1 完全同一條——`if` 散落各處保證會漏，而物流商的漏法比法域更貴：漏一次就是多一張運單、多一筆運費。
 2. **未宣告 ≠ 不支援。** 缺值時**不得靜默降級**。「這家物流商沒有運費試算 API」必須是 pack 裡**寫出來的一行** `rate_quote: { supported: false, reason: ... }`，不能是「沒填所以當作沒有」。理由與 56 §A.3 逐字同構，見 §A.3。
-3. **取號是不可回收的外部副作用，且是有價的。** 這是本檔與其他規格最大的不同點——訂單、退款、庫存都可以在我方 DB 內回滾，**運單號不行**。取了不用，物流商照樣計費。因此 §D.5 的「銷號帳」是硬要求，不是選配。
+3. **取號是不可回收的外部副作用。** 這是本檔與其他規格最大的不同點——訂單、退款、庫存都可以在我方 DB 內回滾，**運單號不行**。因此 §D.5 的「銷號帳」是硬要求，不是選配。
+   <!-- 依 2026-08-12 第二輪順豐查證修正，原文：「取號是不可回收的外部副作用，且是有價的。……運單號不行。取了不用，物流商照樣計費。因此 §D.5 的「銷號帳」是硬要求，不是選配。」 -->
+   🔴 **但原文的「取了不用，物流商照樣計費」是把未查證的商業假設寫成了事實，本輪已推翻其事實地位。** 順豐官方兩份 PDF 對「未使用運單號是否計費」**完全沉默**（SF-15）——那屬月結合約條款，不屬 API 契約。**銷號帳並不因此廢除**，因為它的真正依據換成了官方明載的一條：**識別不可回收**（SF-14）。計費與否只決定**告警等級**（§D.5(d)），不決定帳要不要記。這條修正的完整論證見 §D.5(a)。
 4. **carrier ≠ fulfillment service。** 這兩個概念在 46a 的模型裡是不同的東西，混在一起會污染 `requestStatus` 這條軸。完整論證見 §C.3——**這是本檔最容易被實作者做錯的一條**。
 5. **carrier pack 與 jurisdiction pack 正交。** 兩者都可插拔，但不是同一層，也不可互相繼承。物流商的**可用性**是法域的函數，物流商的**能力**不是。見 §H。
 
@@ -37,7 +39,19 @@
 |---|---|---|
 | `carrier-official` | 物流商**官方**發布的文檔（官網 PDF／官方開發者入口頁）。URL 見 §附錄 B。 | ✅ 可 |
 | `carrier-secondary` | 第三方來源（開源 SDK 的常數表、技術部落格、聚合商說明頁）**佐證**了某個介面名或行為。**可寫進規格作為「疑似值」，但一律同時登記 V 編號**，實作前須以官方文檔或實測覆核。 | ⚠️ 需覆核 |
-| `carrier-unobtainable` | 本輪**確實取不到**：頁面需登入、或頁面為 JS 前端渲染（WebFetch 只拿得到 meta 標籤）、或文檔未公開。**一律寫「未能取得」並登記 V 編號，不得推測補寫。** | ❌ 禁止 |
+| `carrier-unobtainable` | 本輪**確實取不到**：頁面需登入、或文檔未公開、或已窮盡下列取得手段仍無正文。**一律寫「未能取得」並登記 V 編號，不得推測補寫。** | ❌ 禁止 |
+
+> <!-- 依 2026-08-12 第二輪查證修正，原文本級的定義為：「頁面需登入、或頁面為 JS 前端渲染（WebFetch 只拿得到 meta 標籤）、或文檔未公開」 -->
+> 🔴 **「頁面是 JS 渲染的 SPA」不構成 `carrier-unobtainable`——上一輪據此結案是錯的，本輪已推翻。**
+> SPA 只代表**這一種抓法**失敗，不代表文檔不公開。順豐的 API 目錄**不需要帳號**即可閱讀。本輪從同一批「抓不到」的頁面上，改用下列手段仍取得了官方事實（SF-12～SF-21）：
+>
+> | 手段 | 本輪取得了什麼 | 為什麼算官方 |
+> |---|---|---|
+> | **靜態檔案路徑**（`doc/download/*.pdf`）| SF-13～SF-19 的全部內容 | 順豐自己發布的 PDF |
+> | **搜尋引擎索引的頁面標題** | 介面名 ＋ 服務代碼 ＋ 所屬分類（SF-20） | 標題由順豐頁面自身輸出，索引只是搬運；**僅可據以確認「介面存在與其分類」，不可據以推斷欄位** |
+> | **DNS 解析** | 端點網域正確寫法（SF-12） | 權威 DNS 是比 PDF 更硬的事實 |
+>
+> **由此新增一條方法論鐵則**：判定 `carrier-unobtainable` 前，**必須逐一試過並記錄**「靜態檔案路徑／搜尋引擎索引標題／DNS 或其他帶外事實」三條路徑。只試了 WebFetch 就結案，等同把「我沒查到」寫成「查不到」——那正是 CLAUDE.md「寫錯的事實比缺漏的事實傷害大」要防的東西。本輪試過的完整 URL 清單見 §附錄 B。
 
 > **本檔對 `carrier-unobtainable` 的處理原則**（CLAUDE.md：「寫錯的事實比缺漏的事實傷害大」）：
 > 抽象層（§A–§H）**不依賴**任何未查證的順豐細節就能成立。順豐的具體欄位缺失只影響 `carrier/sf_express` 這一個 pack 的填值，不影響介面設計。**這正是把它抽成 pack 的好處**——文檔拿不到，架構照樣往下做。
@@ -55,6 +69,16 @@
 | SF-5 | 舊版（V3.8，XML 世代）的服務清單另有 `OrderService`／`OrderSearchService`／`OrderConfirmService`／`OrderFilterService`／`RouteService`／`OrderZDService`／`PushOrderState`／`RoutePushService`／`RegisterRouteService`／`OrderReverseService`。**順豐存在兩個世代的 API**（XML 版與 JSON `/std/service` 版），對接時必須先確認帳號被開通的是哪一版。 | B-1（官方 API 規範 PDF V3.8） |
 | SF-6 | 官方文檔明示查單介面的存在理由是**網路不可靠**（逐字要點：Internet 環境下網路不是絕對可靠，故提供訂單結果查詢介面）。 | B-1 |
 | SF-7 | 官方文檔（B-1、B-2 兩份）**均未載明**限流／QPS、逾時重試建議、冪等機制。 | B-1、B-2 |
+| SF-12 | **端點網域的正確寫法是 `sf-express.com`（有連字號）。** 官方 SDK PDF 印的 `sfapi.sfexpress.com` / `sfapi-sbox.sfexpress.com`（無連字號）**在權威 DNS 上沒有 A 記錄**，連 apex `sfexpress.com` 也沒有；`sfapi.sf-express.com` 與 `sfapi-sbox.sf-express.com` 皆正常解析。⇒ **官方 PDF 這一處是錯的／過期的，第三方寫法才對。** | B-12（本機 DNS 解析，2026-08-12） |
+| SF-13 | **錯誤碼（節錄自官方錯誤碼表）**：`8016` 重複下單、`8019` 訂單已確認或已取消、`4001` 系統資料錯誤／執行期例外；RLS 側 `1000` 成功、`0000` 介面參數異常、`0001` XML 解析異常、`0002` 欄位校驗異常、`0003` 單號節點超過上限、`0004` 缺少必填欄位、`0010` 其他異常。 | B-1 |
+| SF-14 | **識別不可回收**：取消走 `OrderConfirmService` 的 `dealtype=2`（`1`＝確認、`2`＝取消，值域僅此二值）；官方明載**訂單取消之後，客戶訂單號（`orderid`）不得重複使用**。文檔**未**述及順豐運單號（`mailno`）本身是否回收或可重發。二次取消回 `8019`。 | B-1 |
+| SF-15 | **官方兩份 PDF 均未載明**：未使用之運單號是否計費、銷號時間窗、未使用運單號的有效期。**「取號未使用照樣計費」在官方文檔中無任何依據**（既未確認亦未否認）。 | B-1、B-2 |
+| SF-16 | **路由推送（`RoutePushService`）官方未定義任何驗簽欄位。** 接收方須回 XML，且**結果只能為 `OK` / `ERR`**；回 `ERR` 或失敗時順豐「將重新推送此次交易的所有資訊」，但**未載明重送次數與間隔**。 | B-1 |
+| SF-17 | **路由操作碼未在規範內列舉**（原文要求「可在文檔中心查看路由節點資訊操作碼」），文中僅出現示例 `50`（上門收件）、`922`（簽單返還單號）。 | B-1 |
+| SF-18 | **官方明載的批次上限**：`OrderService` 不支援批次；`OrderFilterService` ≤ 5 個 `OrderFilter`；`RouteService` ≤ 10 個 `tracking_number`；`RoutePushService` ≤ 10 個 `WaybillRoute`；RLS 路由標籤批次 ≤ 100 個單號（超過回 `0003`）；`OrderZDService` 的 `parcel_quantity` ≤ 20 個新子單號。 | B-1 |
+| SF-19 | **香港／國際件走同一支介面、同一個端點**：國際件與國內件同用 `OrderService`，以 `d_deliverycode` 標目的地（香港＝`852`）、`declared_value_currency` 支援 `HKD`，另有 `send_cert_type`／`order_cert_type` 等證件欄位。**`express_type`（快件產品類別）的值域在附錄《快件產品類別表》，而該附錄未含於本 PDF 內**，文中僅出現無圖例的示例值。 | B-1 |
+| SF-20 | **雲打印面單介面確實存在且屬「面單類API」**：順豐官方頁面標題為「雲打印面單打印2.0接口-`COM_RECE_CLOUD_PRINT_WAYBILLS`」（`level3=317`）；同族另有「ISV刪除自定義模板接口-`COM_RECE_CLOUD_CUSTOMTEMPLATE_DELETE`」（`level3=320`，歸「基礎通用API-面單類接口」）。**僅確認介面名、服務代碼與分類；欄位表仍未取得。** | B-13、B-14（順豐官方頁面標題） |
+| SF-21 | **API 目錄的 URL 參數語義**：目錄頁為 `/Api?category={業務線}&apiClassify={介面型態}`，明細頁為 `/Api/ApiDetails?...`；舊式明細頁另有扁平的 `level3={介面流水號}`。**已證實的值**：`category=1`＝速運類API、`category=4`＝冷運API；`apiClassify=1`＝請求／回應型介面、`apiClassify=2`＝推送型介面（`RoutePushService` 位於 `category=1&apiClassify=2`）。**其餘 `category` 值（含使用者提供的 `category=6`）的分類名稱未能取得**（V-41）。 | B-13、B-15、B-16 |
 
 > **SF-6 是本檔 §F.4 的直接依據。** 順豐自己把「查單介面」定位成回應遺失時的補救手段——這等於官方承認 `EXP_RECE_CREATE_ORDER` 的回應**可能丟失但副作用已發生**。我方的 `UNKNOWN` 狀態與回查對帳流程不是我方多慮，是照著物流商自己的說明設計的。
 
@@ -62,22 +86,37 @@
 
 | # | 疑似事實 | 佐證來源 | V 編號 |
 |---|---|---|---|
-| SF-8 | 存在雲打印面單 2.0 介面，服務代碼疑為 `COM_RECE_CLOUD_PRINT_WAYBILLS`（順豐官方 API 目錄頁的查詢結果標題含此字串，但頁面內容取不到） | B-4 搜尋結果標題 | **V-39** |
+| ~~SF-8~~ **已升級為官方** | 雲打印面單 2.0 介面與服務代碼 `COM_RECE_CLOUD_PRINT_WAYBILLS` **已由順豐官方頁面標題確認**，見 SF-20。**欄位表仍未取得**，V-39 只縮小不結案。 | → SF-20 | **V-39（部分）** |
+| SF-22 | 雲打印面單的**回傳檔案形態疑為 PDF**，且模板以「模板代碼」選定、尺寸為離散值域，疑似含 `100×150` / `100×180` / `100×210` / `76×130` 四種國內規格與 `100×150` / `100×210` 兩種國際規格；請求疑有 `fileType`、`masterWaybillNo`、`branchWaybillNo` 等欄位 | B-17（第三方閘道商的順豐雲打印文檔，**標的為 1.0 版，非官方 2.0**） | **V-39** |
+| SF-23 | **未見任何來源指出順豐雲打印介面本身會輸出 ZPL 指令流**；B-17 明列輸出為 PDF。聚合商 EasyPost 宣稱可提供順豐面單的 `ZPL` / `PNG` / `PDF` 三種形態，但那是**聚合商自己的轉檔輸出**，不等於順豐原生支援 | B-17、B-18 | **V-40** |
 | SF-9 | 服務代碼另有 `EXP_RECE_VALIDATE_WAYBILLNO`（運單號合法性驗證）、`EXP_RECE_QUERY_GIS_DEPARTMENT`（網點查詢）、`EXP_RECE_QUERY_DELIVERTM`（時效與價格查詢）、`EXP_RECE_SEARCH_PROMITM`（預計送達時間）、`EXP_EXCE_CHECK_PICKUP_TIME`（取件時間校驗）、`EXP_RECE_CREATE_REVERSE_ORDER`（退貨下單）、`EXP_RECE_WANTED_INTERCEPT`（攔截） | B-5 開源 SDK 常數表 | **V-37** |
-| SF-10 | 端點網域疑有兩種寫法：官方 SDK PDF 為 `sfexpress.com`（無連字號），第三方實作為 `sf-express.com`（有連字號） | B-2 vs B-6 | **V-38** |
-| SF-11 | `msgDigest` 的計算疑為以 `msgData`＋`timestamp`＋`checkword` 為輸入，官方 SDK 只暴露方法簽名 `getMsgDigest(msgData, timeStamp, checkWord)`，**演算法本身（串接順序／雜湊／編碼）官方 PDF 未載明** | B-2 | **V-40** |
+| ~~SF-10~~ **已結案** | 端點網域兩種寫法之爭**已由 DNS 解析判定**：`sf-express.com`（有連字號）才是對的，官方 SDK PDF 的無連字號寫法無法解析。見 SF-12。 | → SF-12 | ~~V-38~~ 已結案 |
+| SF-11 | `msgDigest` 的計算疑為以 `msgData`＋`timestamp`＋`checkword` 為輸入，官方 SDK 只暴露方法簽名 `getMsgDigest(msgData, timeStamp, checkWord)`，**演算法本身（串接順序／雜湊／編碼）官方兩份 PDF 均未載明**（本輪再次覆核，仍未載明） | B-1、B-2 | **V-51** |
+| SF-24 | 順豐憑證疑為**三件式**而非兩件式：聚合商 EasyPost 要求 `customer_code`、`customer_id`、`checkword` 三個欄位，與 SF-3（`clientCode` ＋ `checkword` 兩件式）不一致 | B-18 | **V-52** |
+
+> **SF-11 的 V 編號原本標成 `V-40` 是錯的**——附錄 A 的 V-40 是「是否支援 ZPL」，msgDigest 演算法在附錄 A **從來沒有登記過**，等於一個沒有掛號的缺口。本輪改標 **V-51** 並補登記。
+> <!-- 依 2026-08-12 第二輪查證修正，原文 SF-11 的 V 編號為 V-40（與附錄 A 的 V-40「ZPL」定義衝突，屬誤標） -->
+> **這一條比它看起來重要**：`msgDigest` 算不出來 ⇒ **一個請求都送不出去**。它應該是 `sf_express` pack 的**第一號阻塞項**，卻因為誤標而在 `enable_gate` 裡完全不存在（原 gate 為 `[V-39, V-40, V-42, V-43, V-44, V-47, V-48]`，無任何一項對應簽章）。本輪已補進 gate。
 
 **(c) `carrier-unobtainable` — 本輪確實取不到，已登記**
 
-| 取不到的東西 | 為什麼取不到 | 試過的 URL | V 編號 |
-|---|---|---|---|
-| 順豐開放平台的完整介面目錄與逐介面欄位表 | `open.sf-express.com` 與 `qiao.sf-express.com` 皆為**前端 JS 渲染的 SPA**，抓取只回得到 `<meta>` 標籤，正文由瀏覽器端載入；容器內直連受代理政策阻擋（CONNECT 403），無法以瀏覽器渲染取得 | B-3、B-4 | **V-41** |
-| 雲打印面單的請求／回應欄位、檔案格式、模板代碼、尺寸 | 同上；且該頁疑似需登入 | B-4 | **V-39** |
-| 順豐運單號未使用時的計費與銷號機制 | 官方 PDF 未涵蓋；`EXP_RECE_UPDATE_ORDER` 的參數值域未公開 | B-1、B-2 | **V-42** |
-| 順豐香港站與丰桥是否同一套 API／同一組 `partnerID` | 香港站（`htm.sf-express.com` / `hk.sf-express.com`）為商用說明頁，無開發文檔；丰桥文檔未提及香港 | B-7 | **V-43** |
-| 順豐香港／中港澳／國際的服務（`expressType`）代碼值域 | 同上 | B-7 | **V-44** |
+<!-- 依 2026-08-12 第二輪查證整表重寫。原表把「JS 渲染 SPA」當成取不到的理由，並據此把五項全列為 unobtainable；其中三項本輪已部分或全部取得。原表五列見 git 歷史。 -->
 
-> **對 §0.4(c) 的處置**：`carrier/sf_express` pack 在這五項填值到手之前，其 `enable_gate` **不得為空**（見 §H.4）。也就是說——**順豐 pack 在本輪不可上線**，只能建骨架。這與 56 §A 對未定案 pack 的處置一致：能力沒宣告完，pack 就不准 enable。
+> **本表已於 2026-08-12 第二輪整表重寫。** 原表的共同理由是「頁面為 JS 渲染的 SPA ⇒ 取不到」，該判斷已被推翻（見 §0.3 的修正框）。下表是**改用三條替代路徑後仍然取不到**的部分，且逐列寫明**這一輪實際試過什麼**。
+
+| 取不到的東西 | 本輪試過什麼、為什麼仍取不到 | V 編號 |
+|---|---|---|
+| 完整介面目錄（全部 `category` 分類名稱與逐介面欄位表） | ①`/Api?category=…&apiClassify=…` 與 `/Api/ApiDetails?…` 皆只回 `<meta>`；②**該站對任何未命中靜態檔的路徑一律回退 index.html**（連 `robots.txt`、`sitemap.xml` 都回 SPA 外殼），故無法用站內索引枚舉；③容器內直連受出口政策阻擋（CONNECT 403），無法自行渲染；④`web.archive.org` 亦被出口政策阻擋（403），無法用 CDX 枚舉歷史 URL。**已取得的部分見 SF-20／SF-21。** | **V-41（縮小）** |
+| 雲打印面單 2.0 的請求／回應欄位、模板代碼與尺寸的**官方**值域 | 同上。介面名與分類已由官方頁面標題確認（SF-20）；欄位與尺寸僅有第三方 1.0 版佐證（SF-22），**不可直接當 2.0 用** | **V-39（縮小）** |
+| 順豐**運單號**（`mailno`，非 `orderid`）取消後是否回收、未使用是否計費、銷號時間窗 | 官方兩份 PDF 逐節覆核後確認**通篇沉默**（SF-15）。取消動作本身與 `orderid` 的不可重用性已取得（SF-14）。**此項本質上是月結合約條款，不在 API 文檔的涵蓋範圍內**——這不是「文檔沒抓到」，是「這件事根本不寫在 API 文檔裡」 | **V-42（改性質）** |
+| **香港商戶**能否申請丰橋帳號、以香港為**寄件地**下單 | 丰橋文檔全篇以中國內地為寄件地；香港站（`htm.` / `hk.sf-express.com`）為商用說明頁，本輪再查仍無開發文檔。**「香港作為目的地」已確認可行（SF-19），「香港作為寄件地」仍未確認**——這兩件事被原表混為一談 | **V-43（拆分後縮小）** |
+| `express_type`（快件產品類別）的**數值值域** | 官方 PDF 明指值域在附錄《快件產品類別表》，而**該附錄未含於 PDF 內**，亦未給出獨立檔名或 URL（SF-19）。香港端的**服務名稱**已取得（標準快遞／國際特惠，B-19），但**名稱到數值代碼的對應仍缺** | **V-44（縮小）** |
+
+> **對 §0.4(c) 的處置**：`carrier/sf_express` pack 在這些填值到手之前，其 `enable_gate` **不得為空**（見 §H.4）。也就是說——**順豐 pack 在本輪仍不可上線**，只能建骨架。這與 56 §A 對未定案 pack 的處置一致：能力沒宣告完，pack 就不准 enable。
+>
+> **但本輪 gate 的組成變了，且變得更誠實**：移除已結案的 V-38；新增本輪才發現的 **V-51（`msgDigest` 演算法）**——那是「連一個請求都送不出去」的第一號阻塞項，卻因誤標而原本不在 gate 裡（見 SF-11 下方的說明框）。**gate 從「湊了七項看起來很嚴」變成「七項各自對應一個真實的、會擋住實作的缺口」。**
+>
+> 🔴 **V-42 的性質變了，這一點影響最大**：它從「文檔沒抓到」變成「**這件事不寫在 API 文檔裡**」。所以它**永遠不會**因為多抓幾個網頁而結案——它只能由**順豐月結合約或商務窗口**回答。把它留在 `enable_gate` 裡等網頁查證，等於讓 pack 永遠卡住。正確處置見 §D.5(f)。
 
 **(d) 對照組：其他物流商的對接形態（用來驗證抽象是否切對）**
 
@@ -297,21 +336,24 @@ end
 |---|---|---|---|---|---|
 | K1 `rate_quote` | ❔ V-37（`EXP_RECE_QUERY_SFWAYBILL` 語義未覆核） | ✅ Rating | ❔ V-45 | ❔ V-45 | ❌（宣告 false，改靜態運費表） |
 | K2 `shipment_create` | ✅ `EXP_RECE_CREATE_ORDER` | ✅ Shipment | ❔ V-45 | ❔ V-45 | ❌（手填單號） |
-| K3 `label_render` | ❔ V-39（雲打印 2.0） | ✅ Shipment／Get Image | ❔ V-45 | ❔ V-45 | ❌ |
-| K4 `shipment_void` | — **V-42**（機制未公開） | — V-45 | ❔ Void Shipment V-45 | ❔ Cancel Shipment V-45 | ❌（無號可銷） |
-| K5 `shipment_cancel` | ✅ `EXP_RECE_UPDATE_ORDER`（值域待查 V-42） | ✅ Pickup 取消 | ❔ V-45 | ❔ V-45 | ❌ |
-| K6 `tracking_pull` | ✅ `EXP_RECE_SEARCH_ROUTES` | ✅ Tracking | ❔ V-45 | ❔ V-45 | ❌ |
-| K7 `tracking_push` | ✅ `EXP_RECE_REGISTER_ROUTE`（驗簽方式待查 V-47） | — V-45 | — V-45 | — V-45 | ❌ |
+| K3 `label_render` | ❔ **介面已確認** `COM_RECE_CLOUD_PRINT_WAYBILLS`（SF-20）；欄位／格式／尺寸待查 **V-39** | ✅ Shipment／Get Image | ❔ V-45 | ❔ V-45 | ❌ |
+| K4 `shipment_void` | ❔ **動作已確認**（`dealtype=2`，SF-14）；`frees_number`／`billed_if_unused`／`window_hours` **官方沉默** **V-42** | — V-45 | ❔ Void Shipment V-45 | ❔ Cancel Shipment V-45 | ❌（無號可銷） |
+| K5 `shipment_cancel` | ✅ `EXP_RECE_UPDATE_ORDER`／舊世代 `OrderConfirmService` `dealtype ∈ {1,2}`（**值域已結案**，SF-14） | ✅ Pickup 取消 | ❔ V-45 | ❔ V-45 | ❌ |
+| K6 `tracking_pull` | ✅ `EXP_RECE_SEARCH_ROUTES`（批次上限 10，SF-18） | ✅ Tracking | ❔ V-45 | ❔ V-45 | ❌ |
+| K7 `tracking_push` | ❔ 介面存在，但**官方確認無驗簽欄位**且事件碼值域未列舉（SF-16／SF-17）**V-47** | — V-45 | — V-45 | — V-45 | ❌ |
 | K8 `pickup_schedule` | ❔ `EXP_EXCE_CHECK_PICKUP_TIME` V-37 | ✅ Pickup | ❔ V-45 | ❔ V-45 | ❌ |
 | K9 `cod` | — **V-48**（香港可用性與上限未知） | — V-45 | — V-45 | — V-45 | ❌ |
-| K10 `customs_doc` | — V-44 | ✅ Invoice／Landed Cost | — V-45 | — V-45 | ❌ |
+| K10 `customs_doc` | ❔ 國際件與國內件**同一支介面**，有 `d_deliverycode`／證件欄位／`HKD` 幣別（SF-19）；`express_type` 值域仍缺 **V-44** | ✅ Invoice／Landed Cost | — V-45 | — V-45 | ❌ |
 | K11 `service_point` | ❔ `EXP_RECE_QUERY_GIS_DEPARTMENT` V-37 | ✅ Service Point | — V-45 | — V-45 | ❌ |
 | K12 `address_validate` | — | ✅ Address | — V-45 | — V-45 | ❌ |
 | K13 `billing_reconciliation` | — V-42 | — V-45 | — V-45 | — V-45 | ❌ |
 
 **這張表的兩個結論**
 
-1. **本輪唯一能 enable 的 pack 是 `manual`。** 它十三項全部宣告完整（全 `false` ＋ reason），因此通過 §A.3 的 gate。`sf_express` 有 5 個 `—`，`dhl_express` 有 5 個 `—` ⇒ **兩者皆不得 enable**。這是規格刻意的結果，不是缺漏——沒查證完就上線才是缺漏。
+1. **本輪唯一能 enable 的 pack 仍是 `manual`。** 它十三項全部宣告完整（全 `false` ＋ reason），因此通過 §A.3 的 gate。
+   <!-- 依 2026-08-12 第二輪查證更新計數，原文：「`sf_express` 有 5 個 `—`，`dhl_express` 有 5 個 `—` ⇒ 兩者皆不得 enable。」 -->
+   `sf_express` 本輪由 **5 個 `—` 降到 3 個**（K9／K12／K13；K4 與 K10 升為 `❔`），`dhl_express` 仍 5 個 `—` ⇒ **兩者皆不得 enable**。這是規格刻意的結果，不是缺漏——沒查證完就上線才是缺漏。
+   > **降到 3 個不代表接近可上線。** `❔` 一樣擋 gate（§A.3 要的是**非 null 的宣告**，`❔`＝疑似＝仍是 null）。真正的距離要看 `enable_gate` 的長度，而 `sf_express` 的 gate 本輪**從 7 項變成 8 項**（結案 V-38、新增 V-41／V-51）——**查得越細，已知的洞越多**。這是正常的，不是退步。
 2. **`manual` pack 必須先做，而且它不是玩具。** 它是所有 carrier 尚未接通時的正式營運路徑（商家自己去物流商後台下單、回填單號），也是任何 carrier 故障時的降級目的地（§F.5）。
 
 ### B.2 能力缺席時 UI 顯示什麼（逐項，給前端照做）
@@ -435,7 +477,26 @@ assigned_fulfillment_service_id IS NULL  ⟹  request_status = 'UNSUBMITTED'
 
 1. 推送端點為 **per shop per carrier** 的獨立路徑，帶不可猜測的 token：`/carriers/:carrier_code/push/:endpoint_token`。**不得**用單一全域端點再靠 payload 裡的 shop 識別——那等於讓任何人都能對任意租戶灌事件。
 2. **先驗簽，後解析。** `adapter.verify_push` 失敗一律回 **401**，不得回 200。
-   > ⚠️ 順豐推送的驗簽方式**本輪未取得**（**V-47**）。在 V-47 結案前，`sf_express` 的 K7 宣告雖為 `✅`（介面存在），但 `push_verification` 子欄位為 `null` ⇒ 依 §A.3 該 pack **不得 enable**。**禁止**先上一個「不驗簽照收」的版本。
+   <!-- 依 2026-08-12 第二輪查證改寫。原文：「順豐推送的驗簽方式本輪未取得（V-47）。在 V-47 結案前，sf_express 的 K7 宣告雖為 ✅（介面存在），但 push_verification 子欄位為 null ⇒ 依 §A.3 該 pack 不得 enable。禁止先上一個『不驗簽照收』的版本。」 -->
+   > 🔴 **V-47 的答案比「查不到」更糟：查到了，而答案是「沒有」。**
+   > 順豐官方規範對舊世代的 `RoutePushService` **完全沒有定義任何驗簽欄位**——接收方只被要求回一段 XML 且結果只能是 `OK` / `ERR`；失敗時順豐會重推全部資訊，但**未載明重送次數與間隔**（SF-16）。新世代 `EXP_RECE_REGISTER_ROUTE` 的推送是否附簽章，**仍未取得**。
+   >
+   > **這改變了處置方向，不是放寬。** 原文假設「等查到驗簽方式再實作」；現在必須假設**可能根本沒有驗簽方式可查**。因此：
+   >
+   > | 原處置 | 新處置 |
+   > |---|---|
+   > | `push_verification = null` ⇒ 等 V-47 | `push_verification` **改為必須明確二選一**：`{ mode: "carrier_signature", … }` 或 `{ mode: "none", compensating_controls: [...] }` |
+   > | 「禁止不驗簽照收」 | **仍然禁止「裸接」，但允許「宣告無載體簽章 ＋ 補償控制」** |
+   >
+   > **`mode: "none"` 時的補償控制為必填，且至少要有這四項**（缺一即 pack 不得 enable）：
+   > 1. **不可猜測的 per-shop-per-carrier 端點 token**（第 1 點已規定），且 token 可輪替；
+   > 2. **來源 IP 允許清單**（值取 `limits.carrier.tracking.push_source_ip_allowlist_required`，清單本身屬 carrier account 設定，非本檔常數）；
+   > 3. **運單號歸屬校驗**：推送的 `waybill_number` 必須已存在於**該 `shop_id` 的 `waybills`**，否則丟棄並記一列——這是防止他人對任意租戶灌事件的最後一道，也是**唯一一道不依賴任何外部秘密的**；
+   > 4. **推送只能推進追蹤時間軸，不得觸發任何金流或狀態機躍遷**（不得據以標記已送達而觸發撥款）。
+   >
+   > **為什麼 (3) 是關鍵**：沒有簽章時，`waybill_number` 本身就是那個共享秘密——它由順豐發放、不可預測、且我方已知道它屬於哪個租戶。這不是強驗證，但它把攻擊面從「任何人可對任意租戶灌任意事件」縮到「必須先知道一個真實運單號才能對**該運單**灌事件」。**必須寫在規格裡，否則實作者在沒有簽章可用時只會直接放行。**
+   >
+   > ⚠️ 順豐的 `event_code_vocabulary` **仍未取得**：官方規範未列舉路由操作碼，只說「可在文檔中心查看」，文中僅出現示例 `50`（上門收件）、`922`（簽單返還單號）（SF-17）。⇒ `sf_express.tracking_push.event_code_vocabulary` 維持 `null`，**pack 仍不得 enable**（V-47 未結案）。**不得**拿這兩個示例值當值域。
 3. **接收即入 outbox，不即時處理**（鐵律 5：事件走 outbox）。HTTP handler 只做：驗簽 → 寫 `carrier_push_events`（原始報文 ＋ `received_at`）→ 回 200。解析與狀態更新由 job 做。
 4. **冪等**：以 `(shop_id, carrier_code, waybill_number, carrier_event_code, carrier_event_at)` 建唯一索引去重。物流商重送同一事件是常態，**不得**產生兩列時間軸。
 5. **事件映射**：`TrackingEvent` 的 `status` 一律映射到我方既有的 fulfillment event 值域，**不得**把物流商的原始代碼直接顯示給買家。特別注意 16-F3.3(c) 已經定下的一條：**到店領取 ≠ 已送達**，需要 `READY_FOR_PICKUP` 這個獨立事件；carrier 的「已到達自提點」事件必須映到它，**不得**映到 `DELIVERED`。
@@ -494,7 +555,22 @@ waybill_labels(shop_id, waybill_id, format, size_code, checksum, storage_key,
 2. **尺寸用代碼不用毫米數。** 尺寸是物流商定義的離散值域（各家代碼不同），我方存 `size_code` 字串 ＋ pack 宣告的 `sizes[]` 清單。**不得**讓商家自填任意毫米數——面單尺寸不對，物流商可拒收。
 3. **面單檔案是 PII 載體**（含收件人姓名、地址、電話）。存 Active Storage 私有 bucket，取用一律簽名連結，有效期取 `limits.carrier.label.signed_url_ttl_seconds`；保存期取 `limits.carrier.label.retention_days`，到期由 purge 任務刪除（對應 11 §0 維度 7）。**簽名連結不得寫進日誌。**
 
-> ⚠️ **順豐的面單格式本輪未取得**（**V-39**）：雲打印 2.0 介面（疑為 `COM_RECE_CLOUD_PRINT_WAYBILLS`）的回應是 PDF、圖片、base64 還是檔案 URL，模板代碼與尺寸值域為何，官方頁面為 JS 渲染取不到。**是否支援 ZPL 亦未知**。在 V-39 結案前 `sf_express` 的 `label_render.formats` 為 `null` ⇒ pack 不得 enable。
+<!-- 依 2026-08-12 第二輪查證改寫本警示框。原文：「順豐的面單格式本輪未取得（V-39）：……官方頁面為 JS 渲染取不到。是否支援 ZPL 亦未知。」 -->
+
+> ⚠️ **順豐面單：介面已確認，欄位仍未取得（V-39 縮小，未結案）**
+> **已確認（官方）**：介面名為「雲打印面單打印2.0接口」、服務代碼 `COM_RECE_CLOUD_PRINT_WAYBILLS`、歸類於「面單類API」；同族有「ISV刪除自定義模板接口」`COM_RECE_CLOUD_CUSTOMTEMPLATE_DELETE`，可知**模板是可自訂的資源**（SF-20）。
+> **仍未取得（官方）**：請求／回應欄位、回傳形態（URL／base64／二進位）、模板代碼與尺寸的值域。
+> **僅有第三方佐證（SF-22，且標的為 1.0 版）**：輸出為 PDF；尺寸疑為 `100×150`／`100×180`／`100×210`／`76×130`（國內）與 `100×150`／`100×210`（國際）。**這些值不得寫進 pack**，只作為「值域大概長什麼樣」的預期，供實作者拿到官方文檔時對照。
+> ⇒ `sf_express` 的 `label_render.formats` 與 `sizes` 維持 `null`，pack 不得 enable。
+
+> 🟢 **V-40（我方要不要接 ZPL 指令流）——本輪可以決策了，不必等 V-39 結案。**
+> **證據**：沒有任何來源顯示順豐雲打印介面本身輸出 ZPL；第三方文檔明列輸出為 PDF；聚合商雖能給 ZPL，但那是**聚合商轉檔**的產物（SF-23）。
+> **決策（我方架構決策，不是順豐事實）**：**`zpl` 留在 `limits.carrier.label.formats_allowed` 裡，但不為順豐建任何 ZPL 路徑。**
+> 理由分兩層，必須分開看：
+> 1. **抽象層**：ZPL 支援是 `label_render.formats` 的一個值，DHL／UPS／FedEx 普遍原生支援。為了一家不支援就把 `zpl` 從值域拿掉，等於讓抽象層遷就單一 pack——正是 §0.2 原則 1 要防的事。**上面「ZPL 原樣位元組保存」那條規則照留**，它是格式的性質，與哪家支援無關。
+> 2. **順豐 pack**：`sf_express.label_render.formats` 依 §A.3 維持 `null`（**不是** `["pdf"]`，因為官方欄位表還沒到手；也**不是** `[]`）。
+>
+> **對「我方運單打印要不要接 ZPL 指令流」這個問題的直接回答**：**首發不接。** 首發物流商若為順豐，走 PDF 就夠；ZPL 的位元組級處理（不轉碼、串接以 `^XA`…`^XZ` 為單位）**規格先寫好、程式後做**，等到第一個原生輸出 ZPL 的 pack（DHL／UPS／FedEx）真的要上線時再實作。**不要為了一個沒有 pack 會用到的格式先寫熱感印表機驅動路徑。**
 
 ### D.3 批次打印
 
@@ -522,8 +598,29 @@ waybill_labels(shop_id, waybill_id, format, size_code, checksum, storage_key,
 
 ### D.5 運單號是有成本的資源——銷號帳（本檔最容易被漏掉的一節）
 
-> **一句話**：**取號＝向物流商借了一個有價的資源。借了不用，要還；不還，物流商照樣計費。**
-> 紙上談兵的規格會寫「支援取消運單」就結束了。真正會出事的是那些**沒有人去按取消**的單——商家改用另一家物流商、訂單被取消、系統重試多產了一張、倉庫換箱重新取號……這些單在我方 DB 裡看起來一切正常，只有月底帳單會告訴你。
+<!-- 依 2026-08-12 第二輪順豐查證改寫本節的立論基礎。原立論：「取號＝向物流商借了一個有價的資源。借了不用，要還；不還，物流商照樣計費。」該句被當成事實陳述，但官方文檔對計費完全沉默（SF-15）。機制（(a)–(e)）全部保留，(a) 前新增立論說明，(f) 為新增。 -->
+
+> **一句話（改寫後）**：**取號＝燒掉一個永不回頭的識別。識別一定回不來（官方明載）；錢會不會白花，看合約（官方沉默）。兩者都要記帳，但只有後者決定告警等級。**
+
+**(a0) 本節的立論被換過，先讀這一段再往下（否則會誤判哪些規則可以放寬）**
+
+原文的立論是「取了不用，物流商照樣計費」，並把它當**事實**。**本輪查證後這個事實地位被撤銷**：
+
+| 命題 | 官方怎麼說 | 現在的地位 |
+|---|---|---|
+| 取消後客戶訂單號（`orderid`）**不得重複使用** | **明載**（SF-14） | ✅ **事實**，可據以寫死實作 |
+| 取消動作存在，值域僅 `dealtype ∈ {1 確認, 2 取消}`；重覆取消回 `8019` | **明載**（SF-13、SF-14） | ✅ **事實** |
+| 順豐**運單號**（`mailno`）取消後是否回收、可否重發 | **通篇未提**（SF-15） | ❓ 未知 ⇒ `frees_number: unknown` ⇒ **一律不重用** |
+| **取號未使用是否照樣計費** | **通篇未提**（SF-15） | ❓ 未知，且**不會由 API 文檔回答**——屬月結合約 |
+| 可銷號的時間窗 | **通篇未提**（SF-15） | ❓ 未知 ⇒ `window_hours: null` |
+
+**所以這一節為什麼還在？** 因為它換了一根更硬的樑：
+
+> **不是「號有價所以要記帳」，而是「號不可回收所以要記帳」。**
+> 就算最後查明順豐對未使用的號**一毛都不收**，(b) 的五個場景、(c) 的閉環不變量、(e) 的待銷號佇列**一條都不能拿掉**——因為場景 4（換物流商／換箱重取號）造成的是**同一張 FO 掛著兩個都無法回收的識別**，那是**資料正確性事故**，與計費無關：出貨掃描時會有兩張面單對得上同一批貨，倉庫拿哪一張都「看起來對」。
+> **計費與否只改變 (d) 的告警等級，不改變任何機制的存廢。** 這正是原文把 `billed_if_unused` 設計成 pack 級宣告（而非全域常數）的價值——**當初的機制設計是對的，錯的只是那句被寫成事實的旁白。**
+
+🔴 **據此撤回一條全域斷言**：`limits.carrier.waybill.number_is_billable_resource: true` 原本是一句**跨所有物流商的事實斷言**，本輪改為 `policy_default`（我方保守**姿態**，不是物流商**事實**），權威一律回到 pack 級的 `capabilities.shipment_void.billed_if_unused`。理由：一個全域 `true` 會讓實作者以為「計費」這件事已經查證過了。
 
 **(a) 運單狀態機**（`waybills.status`）
 
@@ -577,9 +674,33 @@ waybill_labels(shop_id, waybill_id, format, size_code, checksum, storage_key,
 | `billed_if_unused: false` | P3 資料清理 | 僅記錄 |
 | `billed_if_unused: null`（未宣告） | **pack 不得 enable**（§A.3） | — |
 
-> ⚠️ **順豐是哪一種，本輪未取得**（**V-42**）。在結案前 `sf_express` 的 `shipment_void` 整項為 `null`。
+> ⚠️ **順豐是哪一種，本輪仍未取得**（**V-42**），但**理由變了**：不是沒抓到網頁，是**這件事不寫在 API 文檔裡**（SF-15）。`sf_express` 的 `shipment_void.billed_if_unused` 維持 `null`。
+> **不得**因為「官方沒說會收錢」就填 `false`——**沉默不是否認**。這正是 §A.3 全篇在講的那件事。
 
 **(e) UI 必須有一個「待銷號」佇列**，位置在後台出貨相關頁面，顯示：運單號、取號時間、逾期時長、金額風險（若 pack 宣告了單張運單費率）、一鍵銷號／標記已人工處理。**沒有這個畫面，上面所有規則都不會被執行。**
+
+**(f) 客戶側識別（`client_reference`）一律用後即棄——本輪新增，直接來自 SF-14**
+
+順豐官方明載：**訂單取消之後，客戶訂單號不得重複使用。** 這條看似瑣碎，卻打穿了一個很自然的實作直覺：「這單失敗了，用同一個單號重試一次」。
+
+| 規則 | 內容 |
+|---|---|
+| **識別絕不重用** | 送給物流商的客戶側識別（`client_reference`）**每次取號嘗試都必須是新的**，取 `shipment_intents.id`（§F.4 前提 1 已如此規定）。**同一個 intent 重試時沿用同一個識別；一旦該 intent 落到 `FAILED` 或該運單被 void，就必須開新 intent、換新識別。** 對應 `limits.carrier.shipment_intent.client_reference_reuse_forbidden: true` |
+| **為什麼不能只靠冪等鍵** | 我方的 `idempotency_key` 擋的是「同一次請求被送兩遍」；這裡擋的是「**不同次**請求想借用同一個識別」。兩者是不同的東西，§E.2 的兩層模型必須各管各的 |
+| **DB 兜底** | `waybills` / `shipment_intents` 對 `(shop_id, carrier_account_id, client_reference)` 建唯一索引。**重用即撞索引**，不是靠程式自律（11 §2「業務唯一性用唯一索引兜底」） |
+| **對回查的影響** | 因為識別不重用，§F.4 的回查結果**沒有歧義**：查到就是這一次 intent 的結果，不可能撈到上一次的。**若識別可重用，整個 `UNKNOWN` 回查機制就是不可靠的**——這是 SF-14 意外替我方背書的一點 |
+
+**(g) V-42 怎麼結案（它不會自己結）**
+
+V-42 是本檔唯一一個**不可能由公開文檔結案**的 V 編號。處置：
+
+| 動作 | 由誰 | 產出 |
+|---|---|---|
+| 向順豐商務／月結窗口以書面確認三件事：①未使用之運單號是否計費 ②可銷號的時間窗 ③銷號後 `mailno` 是否回收 | 商務 | 一封書面回覆，存檔並在 §附錄 B 補一列（來源＝合約／書面回覆，日期） |
+| 在拿到書面回覆前的**營運上可行的過渡**：把 `sf_express` 的 `shipment_void` 宣告為 `supported: false` ＋ `reason: "銷號機制未經合約確認"`，讓所有順豐運單的逾期未交寄一律進 **`VOID_MANUAL_REQUIRED`** 人工佇列 | 實作 | pack 可通過 §A.3 的 gate（因為**宣告完整**），但銷號走人工 |
+
+> **(g) 的第二列是本節唯一放寬的地方，且它並不違反 §A.3。** §A.3 要求的是「**宣告**完整」，不是「**支援**完整」——`supported: false` ＋ 非空 `reason` 是合法宣告。差別在於：`null`（沒人想過）⇒ 擋 pack；`false` ＋ reason（想過了，決定走人工）⇒ 放行，但必須有 (e) 的佇列接住。
+> ⚠️ **但這條過渡只解 V-42。** `sf_express` 仍被 V-39／V-40／V-41／V-43／V-44／V-47／V-48／V-51 擋著，**本輪依舊不可 enable**。
 
 ---
 
@@ -620,8 +741,38 @@ CLAUDE.md 鐵律 5 原本要求「訂單成立／退款／庫存調整」必帶 
 
 第二層：對物流商的請求冪等（各家機制不同，多數沒有）
         擋的是：我方 job 對物流商的重送
-        ⚠️ 順豐是否以 requestID 做伺服器端去重、重送同 requestID 的語義為何 —— 未取得（V-49）
+        順豐：以 orderid（客戶訂單號）去重，不是 requestID；且**去重的結果是報錯不是回放** —— 見下方 V-49
 ```
+
+<!-- 依 2026-08-12 第二輪查證改寫。原文此處為：「⚠️ 順豐是否以 requestID 做伺服器端去重、重送同 requestID 的語義為何 —— 未取得（V-49）」 -->
+
+> 🟢 **V-49 已實質結案，答案對我方的冪等策略是好消息也是壞消息。**
+>
+> | 問題 | 答案 | 出處 |
+> |---|---|---|
+> | `requestID` 是否被伺服器端去重？ | **沒有證據顯示是。** 官方 SDK 只把它示範成每次呼叫新產生的 UUID（`UUID.randomUUID()`），全篇**未賦予它任何去重語義**。⇒ **一律當作不去重** | SF-2、B-2 |
+> | 那什麼被去重？ | **`orderid`（客戶訂單號）。** 官方明載 `orderid` 不唯一會導致下單失敗，錯誤碼 `8016` 重複下單 | SF-13、B-1、B-2 |
+> | 重送同一 `orderid` 會回什麼？ | **回錯誤 `8016`，不回放原結果。** 文檔的錯誤範例只有錯誤報文，**沒有夾帶原本的 `mailno`** | SF-13 |
+>
+> **這三行決定了我方的重試策略，逐條說明後果：**
+>
+> 1. **`requestID` 不能當冪等鍵。** 把 `idempotency_key` 映到 `requestID` 送出去是無效的——順豐不看它。**我方的第一層冪等必須完全自理**，不得指望第二層。
+> 2. **`orderid` 是我方唯一能用的第二層冪等載體**，且它就是 §F.4 的 `client_reference`（＝`shipment_intents.id`）。**這一點很值**：它讓「重送」在順豐側**天然安全**——重送最壞是拿到 `8016`，**不會**產生第二張運單。
+> 3. **但 `8016` 不回放結果，所以「重送成功了嗎」問不出來。** 收到 `8016` **只證明「這個 `orderid` 已經被受理過」，不證明「上一次拿到了什麼號」。** ⇒ **`8016` 必須映射成 `unknown` 而非 `business_rejected`**，並走 §F.4 的回查取回 `mailno`。
+>    🔴 **把 `8016` 當成 `business_rejected`（「重複下單，失敗」）是本輪最容易被實作者做錯的一步**——那會讓 intent 落到 `FAILED`，而順豐那邊其實**已經有一張運單**，且因為 `orderid` 不可重用（SF-14），這張運單再也接不回任何 intent，直接變成 §D.5 的 `ABANDONED_UNRESOLVED`。
+> 4. **`8019`（訂單已確認或已取消）同理**：它是**狀態衝突**不是業務拒絕，映射到銷號／取消路徑的 `too_late`，不是 `refused`。
+>
+> ⇒ 沿用 §A.2 K2 的四值模型，`sf_express` 的原始碼映射表（pack 級，不進核心）：
+>
+> | 順豐原始碼 | 映射到 | 為什麼 |
+> |---|---|---|
+> | `8016` 重複下單 | `unknown` | 副作用可能已發生，且結果查不回來 ⇒ 必須回查 |
+> | `8019` 訂單已確認或已取消 | `too_late`（K4／K5）| 狀態衝突，非拒絕 |
+> | `4001` 系統資料錯誤／執行期例外 | `transient_error` | 對方系統面問題，可退避重試 |
+> | `0000`／`0001`／`0002`／`0004` 參數／解析／校驗／缺欄位 | `business_rejected` | 我方報文有問題，重試無用 |
+> | `0003` 單號節點超過上限 | `business_rejected` | 我方分批分錯，屬程式 bug，**不得重試**（分批上限見 `limits.carrier.packs.sf_express.documented_limits`）|
+>
+> **這張表必須有測試**（§K 維度 6）：每一列一個 case，特別是 `8016 → unknown` 那一列。
 
 **第二層缺席時的規則（預設假設所有物流商都沒有第二層）**：
 
@@ -852,7 +1003,23 @@ Lane = { origin_country, destination_country, service_code, display_name,
 
 **origin/destination 用 ISO 3166-1 alpha-2**，**不得**用物流商自己的區域代碼（順豐的區域劃分與 DHL 不同，洩漏進核心就是廠商鎖定）。adapter 內部自行把 ISO 碼翻成廠商代碼。
 
-> ⚠️ **順豐的香港／中港澳／國際服務代碼值域本輪未取得**（**V-44**），且**香港站與丰桥是否為同一套 API 亦未確認**（**V-43**）。因此 `sf_express` 的 `serviceable_lanes` 目前為空陣列 ⇒ 即使其他條件都滿足，也不會有任何服務可用。**這是正確的失效方向**：不知道就不提供，而不是猜一個代碼上線。
+<!-- 依 2026-08-12 第二輪查證改寫。原文：「順豐的香港／中港澳／國際服務代碼值域本輪未取得（V-44），且香港站與丰桥是否為同一套 API 亦未確認（V-43）。因此 sf_express 的 serviceable_lanes 目前為空陣列……」 -->
+
+> ⚠️ **V-43／V-44：原本的問法把兩件事混在一起，本輪拆開後結論不同。**
+>
+> 原問題「香港站與丰橋是否同一套 API」其實包含兩個獨立的問題，答案不一樣：
+>
+> | 問題 | 答案 | 出處 |
+> |---|---|---|
+> | **香港作為「目的地」**：內地寄件到香港，走的是同一套丰橋 API 嗎？ | ✅ **是。** 國際件與國內件**同用 `OrderService`、同一個端點**，香港以 `d_deliverycode=852` 表達，`declared_value_currency` 支援 `HKD` | SF-19（`carrier-official`）|
+> | **香港作為「寄件地」**：香港商戶能否申請丰橋帳號、以香港為 origin 下單？ | ❌ **仍未確認。** 丰橋文檔全篇以中國內地為寄件地；香港站無開發文檔 | V-43（仍開）|
+> | 香港端有哪些**服務名稱**？ | ✅ 順豐香港官方價目表列出**標準快遞 / Standard Express** 與 **國際特惠 / Economy Express** 兩種，涵蓋 40＋ 目的地（含澳門、台灣）| B-19（`carrier-official`，順豐香港官網 PDF）|
+> | 這些服務名稱對應的 **`express_type` 數值**？ | ❌ **仍未取得**（值域在未公開的附錄《快件產品類別表》內）| V-44（仍開）|
+>
+> 🔴 **對「順豐能不能當香港首發物流商」的直接影響（鐵律 11：基準法域＝香港）**：
+> 我方首發需要的是 **HK → HK 本地** 與 **HK → 海外** 這兩條 lane，也就是**香港必須是 origin**。而本輪唯一拿到官方確認的，是**香港作為 destination**（內地寄出）。**兩者恰好互補，不能互相替代。**
+> ⇒ **`sf_express.serviceable_lanes` 維持空陣列**，理由**不是**「不知道代碼」，而是更根本的一條：**連「香港商戶能不能用丰橋」都還沒確認**。這是正確的失效方向：不知道就不提供。
+> ⇒ **順豐本輪不能作為香港首發物流商**，完整結論與替代方案見 §H.5。
 
 ### H.3 與 56 的 `pickup_networks` 的接縫（本節是正交性的具體證明）
 
@@ -892,9 +1059,40 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 | pack | enable_gate | 可否 enable |
 |---|---|---|
 | `manual` | `[]` | ✅ |
-| `sf_express` | `[V-39, V-40, V-42, V-43, V-44, V-47, V-48]` | ❌ |
+| `sf_express` | `[V-39, V-41, V-42, V-43, V-44, V-47, V-48, V-51]` | ❌ |
 | `dhl_express` | `[V-45]` | ❌ |
 | `ups` / `fedex` | `[V-45]` | ❌ |
+
+<!-- 依 2026-08-12 第二輪查證更新 sf_express 的 gate。原值：[V-39, V-40, V-42, V-43, V-44, V-47, V-48]
+     變動：移除 V-38（DNS 已結案，且原本就不在 gate 裡）與 V-40（已由我方架構決策結案，見 §D.2）；
+           新增 V-41（完整目錄，仍缺）與 V-51（msgDigest 演算法 —— 原本因誤標成 V-40 而完全不在 gate 裡）。 -->
+
+> **本輪 gate 的兩項變動都值得記住**：
+> - **移出 V-40**：它問的是「順豐支不支援 ZPL」，但我方**不需要這個答案**就能決策（§D.2）。**一個不影響任何決策的問題不該擋著 pack**——V 編號是用來擋「不知道會做錯事」的，不是用來收集知識的。
+> - **移入 V-51**：`msgDigest` 演算法不明＝**一個請求都送不出去**。它原本因誤標而不在 gate 裡，意味著 gate 曾經**漏掉了最硬的那個阻塞項**。這是一個 gate 機制本身的教訓：**gate 的內容要定期對照「實作者第一天會卡在哪」重新檢查**，不能只累加。
+
+### H.5 順豐能否作為香港首發物流商（鐵律 11 的直接結論）
+
+**結論：不能。本輪不具備把順豐作為香港首發物流商的條件，且缺口不是靠再查文檔能補上的。**
+
+| 首發需要什麼 | 現況 | 缺口性質 |
+|---|---|---|
+| HK → HK 本地 lane | ❌ 未確認香港商戶能否申請丰橋帳號、以香港為 origin | **商務問題**（V-43），需順豐香港窗口回答 |
+| HK → 海外 lane | ❌ 同上；服務**名稱**已知（標準快遞／國際特惠，B-19），**代碼**未知 | 商務＋文檔（V-43／V-44）|
+| 面單可印 | ❌ 雲打印欄位與格式未取得 | 文檔（V-39）|
+| 能送出第一個請求 | ❌ `msgDigest` 演算法未取得 | 文檔（V-51）|
+| 銷號帳可閉環 | ❌ 計費與時間窗屬合約 | **合約問題**（V-42）|
+| COD（香港常見） | ❌ 香港可用性與上限未知 | 商務（V-48）|
+
+**三條可執行的路，按建議順序：**
+
+1. **首發用 `manual` pack。** 它已可 enable，是**正式營運路徑**而非過渡玩具（§B.1 結論 2）：商家自行在順豐香港系統下單、回填單號，我方負責追蹤展示與對帳。**這條路今天就能走，不阻塞任何里程碑。**
+2. **同時啟動兩條非工程的問詢**（因為它們的前置期最長，且工程再努力也無法自解）：
+   - 順豐香港商務窗口 → V-43 / V-44 / V-48；
+   - 順豐月結合約 → V-42。
+3. **不要為了「有一個真的 carrier」而先接內地丰橋。** 內地丰橋能做的是**內地寄出**，與我方香港首發需要的 origin 相反（§H.2 的表）。接了也點不亮任何一條首發需要的 lane，只會製造一個 enable 不了的 pack 和一堆維護成本。
+
+> **這一節同時是對 §0.2 原則 5 的驗證**：carrier 的**可用性**是法域的函數。順豐作為一家公司在香港顯然有營業（B-19 是它自己的香港價目表），但**「公司在營業」與「我方能以 API 對接」是兩件事**——中間隔著帳號開通、寄件地支援、與合約。抽象層把這件事表達成 `serviceable_lanes` 為空，而不是「順豐不支援香港」，正是為了不把商務缺口誤記成技術事實。
 
 ---
 
@@ -948,6 +1146,12 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 | `carrier.capability_skips_table` | §A.3 |
 | `carrier.money.*`（`storage` / `parse_from_carrier` / `float_parsing_forbidden` / `display_decimals` / `minor_unit_source` / `round_forbidden`） | §G.3 |
 | `carrier.waybill.*`（`number_is_billable_resource` / `unused_void_after_hours` / `void_attempt_max` / `void_ledger_table` / `reconcile_cron` / `unaccounted_alert_threshold` / `one_active_waybill_per_fulfillment_order`） | §D.5 |
+| **（二輪改）** `carrier.waybill.number_is_billable_resource`：由 `true` 改為 **`policy_default`**，並新增 `number_is_billable_resource_authority` 與 `billed_if_unused_null_means` | §D.5(a0) |
+| **（二輪新增）** `carrier.shipment_intent.client_reference_reuse_forbidden` / `client_reference_unique_key` | §D.5(f) |
+| **（二輪新增）** `carrier.tracking.push_verification_modes` / `push_none_mode_required_controls` / `push_source_ip_allowlist_required` | §C.4 第 2 點 |
+| **（二輪新增）** `carrier.packs.sf_express.endpoints.*` / `base_url_freeform_allowed` | §附錄 A V-38（已結案）|
+| **（二輪新增）** `carrier.packs.sf_express.documented_limits.*`（順豐官方明載的六項分批上限）| §附錄 A V-46 |
+| **（二輪新增）** `carrier.packs.sf_express.error_code_outcome_map`（原始錯誤碼 → 四值 outcome）| §E.2 |
 | `carrier.label.*`（`formats_allowed` / `batch_max_per_call` / `batch_max_per_job` / `render_timeout_ms` / `reprint_requires_reason` / `retention_days` / `signed_url_ttl_seconds` / `zpl_byte_exact`） | §D.2–§D.4 |
 | `carrier.rate_quote.*`（`checkout_timeout_ms` / `admin_timeout_ms` / `on_timeout` / `cache_ttl_seconds`） | §A.1 K1、§I |
 | `carrier.tracking.*`（`poll_interval_seconds` / `stop_polling_on_terminal` / `push_dedupe_key`） | §C.4 |
@@ -968,6 +1172,7 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 1. `carrier_accounts` 的憑證欄位在 DB 中為密文——**直接 `SELECT` 取出的值不含明文子字串**（測試以已知 checkword 斷言）。
 2. 應用日誌、job payload（`solid_queue_jobs`）、錯誤上報三處，grep `limits.carrier.credentials.log_filter_keys` 的每個鍵名對應的值，**命中數為 0**。
 3. carrier 推送端點：偽造簽章的請求回 **401**，且**不落 `carrier_push_events`**。無 `endpoint_token` 的請求回 404。
+3b. **（二輪新增）`push_verification.mode: "none"` 的 pack 專用**：①`push_none_mode_required_controls` 四項缺任一 ⇒ **開機期 fail**；②帶正確 `endpoint_token` 但 `waybill_number` **不屬於該 `shop_id`** ⇒ 丟棄、回 404、**不落庫**，且落一列稽核；③來源 IP 不在允許清單 ⇒ 401。**這三條是沒有簽章時唯一的防線（§C.4 第 2 點），缺測試等於沒有。**
 4. 生產 shop 綁 sandbox 憑證 ⇒ `CROSS_ENVIRONMENT_CREDENTIAL`，**不得**送出任何外部請求。
 5. 平台管理端 schema 快照測試：**不存在**任何回傳租戶憑證明文的欄位。
 
@@ -978,6 +1183,8 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 8. **銷號帳閉環**（§D.5(c)）：造 100 張運單（隨機交寄／銷號／逾期），nightly job 的等式成立，且 `ABANDONED_UNRESOLVED == 0` 時不告警、`> 0` 時告警。
 9. 外部呼叫成功但 settle 的 txn #2 失敗 ⇒ 重跑 job **不重打 API**，用已存的 `result_payload` 完成 settle（§F.2 要求 2）。
 10. 每個 `supported: false` 的能力被觸及 ⇒ `carrier_capability_skips` **恰增一列**且 `reason` 可讀。**靜默 return 即測試失敗。**
+10b. **（二輪新增）`client_reference` 不得重用**（§D.5(f)，出處 SF-14）：對同一 FO 依序做「取號 → void → 再取號」，斷言兩次送給物流商的 `client_reference` **不相同**；並以直接 INSERT 重複值驗證 `(shop_id, carrier_account_id, client_reference)` 唯一索引會拒絕。
+10c. **（二輪新增）銷號帳的立論已與計費脫鉤**（§D.5(a0)）：把 pack 的 `billed_if_unused` 設為 `false`，斷言 §D.5(b) 五個場景的程式路徑**全部照常執行**、待銷號佇列照常進列——**只有 (d) 的告警等級從 P1 降為 P3**。**若把 `billed_if_unused: false` 做成「跳過整套銷號帳」，此測試必須失敗。**
 
 ### 3 併發
 
@@ -1005,6 +1212,9 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 23. 金額路徑 100% 覆蓋（11 §0 維度 6）：`to_cents` 對 `"12.50"` / `"12.5"` / `12.5`(number) / `"12.505"`(應 raise) / `"0"` / 負值 各一條斷言。
 24. **`Float` 掃描**：adapter 回傳的所有金額欄位 `assert_kind_of Integer`；`app/services/carrier/` 下 grep `to_f` 命中數為 0。
 25. 快樂路徑 system test：建立出貨 → 取號 → 印面單 → 收到追蹤推送 → FO 轉 `CLOSED`。
+25b. **（二輪新增）原始錯誤碼映射表逐列測試**（§E.2、`limits.carrier.packs.sf_express.error_code_outcome_map`）：八個碼各一條 case。
+   🔴 **其中 `8016 → unknown` 那一列必須另加一條端到端斷言**：mock 順豐回 `8016` ⇒ intent 進 `UNKNOWN`（**不是 `FAILED`**）⇒ 觸發 §F.4 回查 ⇒ 回查取回 `mailno` ⇒ intent 轉 `SUCCEEDED` 且**運單數為 1**。
+   **把 `8016` 當 `business_rejected` 是本檔第二容易犯的錯**（第一是把 `unknown` 併進 `transient_error`），後果是順豐側已有一張運單卻永遠接不回任何 intent，直接變成 `ABANDONED_UNRESOLVED`。
 
 ### 7 合規／隱私
 
@@ -1020,6 +1230,8 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 - **CI-3**：`limits.carrier.packs` 的 pack 清單與 `app/services/carrier/packs/` 下的實作**一一對應**（不得有宣告無實作，或有實作無宣告）。
 - **CI-4**：`idempotency.required_for` 中的每一支 mutation 在 schema 中都存在且 `idempotencyKey` 為必填（`!`）。
 - **CI-5**：本檔引用的每個 `limits.*` 鍵在 `config/limits.yml` 中存在（防規格與設定漂移）。
+- **CI-6（二輪新增）**：`carrier.packs.<code>.error_code_outcome_map` 的每個 value 必須落在四值 outcome 值域 `{success, business_rejected, transient_error, unknown}` ∪ `{too_late, refused, voided}`（後三者為 K4／K5 專用），**打錯字即 build fail**。映射錯一個碼的代價見 §E.2。
+- **CI-7（二輪新增）**：`capabilities.tracking_push.push_verification.mode == "none"` 的 pack，其補償控制必須涵蓋 `limits.carrier.tracking.push_none_mode_required_controls` 的**全部四項**，缺一即 build fail（§C.4 第 2 點）。
 
 ---
 
@@ -1028,21 +1240,44 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 > 規則沿用 52 §附錄 A：**無明確出處一律不自補規則**。每一項寫「要查什麼」「去哪查」「沒查到的當前處置」。
 > **當前處置一律是「保守失效」**——不是猜一個值上線。
 
+**2026-08-12 第二輪查證後的狀態總表**（起因：使用者指出「文檔為 JS 渲染的 SPA 所以抓不到」的判斷是錯的，API 文檔不需要帳號）
+
+| V | 狀態 | 一句話 |
+|---|---|---|
+| V-37 | ⏳ 仍開 | 官方仍只有 8 個服務代碼；SF-9 那七個的官方佐證仍為零 |
+| V-38 | ✅ **結案** | **DNS 判定：`sf-express.com`（有連字號）才對，官方 SDK PDF 印錯了** |
+| V-39 | 🟡 縮小 | 介面名／代碼／分類已官方確認；**欄位表仍缺** |
+| V-40 | ✅ **結案（架構決策）** | 順豐無 ZPL 證據 ⇒ **首發不接 ZPL 指令流**；`zpl` 留在抽象層值域 |
+| V-41 | 🟡 縮小 | `category`／`apiClassify` 語義與兩個值已知；完整目錄仍缺 |
+| V-42 | 🔴 **性質改變** | **「取號不用會被計費」在官方文檔中無任何依據**；且這問題不會由文檔回答 ⇒ §D.5 已換立論 |
+| V-43 | 🟡 拆分 | 香港作**目的地**＝同一套 API（已確認）；香港作**寄件地**＝仍未確認（**我方首發要的是後者**）|
+| V-44 | 🟡 縮小 | 香港服務**名稱**已知；`express_type` **數值**仍缺 |
+| V-45 | ⏳ 仍開 | 本輪未動（DHL／UPS／FedEx）|
+| V-46 | 🟡 部分 | 速率上限仍無；**但取得六項官方分批上限**（已落 limits）|
+| V-47 | 🟡 部分＋**處置改向** | **官方確認舊世代推送沒有驗簽機制** ⇒ 從「等值」改成「二選一＋補償控制」|
+| V-48 | ⏳ 仍開 | 香港 COD 仍無任何來源 |
+| V-49 | ✅ **結案** | **去重鍵是 `orderid` 不是 `requestID`，且回錯誤不回放** ⇒ `8016` 必須映射成 `unknown` |
+| V-50 | ✅ 前輪已結案 | — |
+| **V-51** | 🔴 **新登記** | `msgDigest` 演算法未載明——**第一號阻塞項**，原本因誤標而不在 gate 裡 |
+| **V-52** | 🟡 新登記 | 憑證兩件式 vs 三件式有矛盾 |
+
 | # | 待查證項目 | 去哪查 | 當前處置 | 阻塞什麼 |
 |---|---|---|---|---|
-| **V-37** | 順豐服務代碼的**完整值域**與各自語義（本檔 SF-9 列出的 `EXP_RECE_VALIDATE_WAYBILLNO`／`EXP_RECE_QUERY_GIS_DEPARTMENT`／`EXP_RECE_QUERY_DELIVERTM`／`EXP_RECE_SEARCH_PROMITM`／`EXP_EXCE_CHECK_PICKUP_TIME`／`EXP_RECE_CREATE_REVERSE_ORDER`／`EXP_RECE_WANTED_INTERCEPT` 僅有開源 SDK 常數表佐證）；特別是 `EXP_RECE_QUERY_SFWAYBILL` 的語義是否等同「運費試算」 | 丰桥開發者入口（需帳號登入）；或申請沙箱後以實測覆核 | `sf_express` 的 K1／K8／K11 標 `❔`，不得 enable | §B.1 |
-| **V-38** | 順豐端點網域正確寫法：`sfapi.sfexpress.com`（官方 SDK PDF）vs `sfapi.sf-express.com`（第三方實作） | 丰桥控制台的端點說明頁；或 DNS／實測 | pack 的 `base_url` 為 `null`；設定期強制商家從下拉選單選，不自填 | 連線 |
-| **V-39** | 雲打印面單介面（疑為 `COM_RECE_CLOUD_PRINT_WAYBILLS`）的**請求／回應欄位、回傳檔案形態（PDF／圖片／base64／URL）、模板代碼、尺寸值域** | `open.sf-express.com/Api/ApiDetails?level3=317&interName=…`（**JS 渲染 ＋ 疑似需登入，本輪取不到**） | `sf_express.label_render.formats = null` ⇒ 不得 enable | §D.2 |
-| **V-40** | 順豐**是否支援 ZPL 指令輸出**（熱感標籤機直印） | 同 V-39 | 假設**不支援**，但**不寫進 pack**（寫 null 而非 false）——依 §A.3，「假設」不等於「宣告」 | §D.2 |
-| **V-41** | 順豐開放平台的**完整介面目錄**（分類與逐介面欄位表） | `qiao.sf-express.com` / `open.sf-express.com`（**兩站皆為 JS 渲染 SPA，抓取只得 meta 標籤；容器內直連受代理阻擋**）⇒ **需帳號登入後由人工匯出** | 以本檔 §0.4(a)(b) 的部分清單為準，其餘不假設 | 全 pack |
-| **V-42** | 順豐**運單號未使用的計費與銷號機制**：`EXP_RECE_UPDATE_ORDER` 的參數值域（哪個值代表取消）、取消後號碼是否失效／可否回收、取號未使用是否照樣計費、可銷號的時間窗 | 丰桥文檔 ＋ **月結合約條款**（計費屬合約值，可能不在 API 文檔內） | `shipment_void` 整項為 `null` ⇒ 不得 enable。**這是 §D.5 的關鍵缺口** | §D.5 |
-| **V-43** | 順豐**香港站與丰桥是否為同一套 API、同一組 `partnerID`**；香港商戶要對接走哪個入口 | 順豐香港商務窗口；`htm.sf-express.com` / `hk.sf-express.com` 僅為商用說明頁，無開發文檔 | `serviceable_lanes = []` ⇒ 無任何服務可用 | §H.2 |
-| **V-44** | 順豐**香港／中港澳／國際的服務（`expressType`）代碼值域**與各自可用性 | 同 V-43 | 同上 | §H.2 |
+| **V-37**<br>⏳ **仍開（未縮小）** | 順豐服務代碼的**完整值域**與各自語義（本檔 SF-9 列出的 `EXP_RECE_VALIDATE_WAYBILLNO`／`EXP_RECE_QUERY_GIS_DEPARTMENT`／`EXP_RECE_QUERY_DELIVERTM`／`EXP_RECE_SEARCH_PROMITM`／`EXP_EXCE_CHECK_PICKUP_TIME`／`EXP_RECE_CREATE_REVERSE_ORDER`／`EXP_RECE_WANTED_INTERCEPT` 僅有開源 SDK 常數表佐證）；特別是 `EXP_RECE_QUERY_SFWAYBILL` 的語義是否等同「運費試算」<br>**2026-08-12 二輪**：官方 SDK PDF 覆核後**仍只列 8 個**服務代碼（SF-4），未擴充；另由官方頁面標題新增確認 `COM_RECE_CLOUD_PRINT_WAYBILLS` 與 `COM_RECE_CLOUD_CUSTOMTEMPLATE_DELETE` 兩個**面單類**代碼（SF-20），但那不屬本項所問的速運類清單。**SF-9 那七個代碼的官方佐證仍為零。** | 丰桥開發者入口的目錄頁（需以瀏覽器渲染，見 V-41）；或申請沙箱後以實測覆核 | `sf_express` 的 K1／K8／K11 標 `❔`，不得 enable | §B.1 |
+| ~~**V-38**~~<br>✅ **已結案（2026-08-12）** | 順豐端點網域正確寫法：`sfapi.sfexpress.com`（官方 SDK PDF）vs `sfapi.sf-express.com`（第三方實作）<br>**答案：`sf-express.com`（有連字號）才是對的。** 權威 DNS 查詢顯示 `sfapi.sfexpress.com`、`sfapi-sbox.sfexpress.com` 乃至 apex `sfexpress.com` **皆無 A 記錄**；`sfapi.sf-express.com`／`sfapi-sbox.sf-express.com` 正常解析。**官方 SDK PDF 這一處是錯的或已過期。** | 已由 DNS 解析結案（B-12） | `base_url` 改為可填：沙箱 `https://sfapi-sbox.sf-express.com/std/service`、生產 `https://sfapi.sf-express.com/std/service`。**仍不自填**——設定期由下拉選單選，避免打錯字打到別人的主機 | 已無阻塞 |
+| **V-39**<br>🟡 **已縮小，未結案** | 雲打印面單介面的**請求／回應欄位、回傳檔案形態、模板代碼、尺寸值域**<br>**2026-08-12 二輪已確認（官方）**：介面名「雲打印面單打印2.0接口」、服務代碼 `COM_RECE_CLOUD_PRINT_WAYBILLS`、分類「面單類API」；同族存在 `COM_RECE_CLOUD_CUSTOMTEMPLATE_DELETE`（可知模板可自訂）——SF-20。<br>**仍缺**：欄位表、回傳形態、模板代碼與尺寸的**官方**值域。第三方（1.0 版）佐證見 SF-22，**不得寫進 pack**。 | 目錄頁需瀏覽器渲染（見 V-41）；或申請沙箱後實測 | `sf_express.label_render.formats` / `sizes = null` ⇒ 不得 enable | §D.2 |
+| ~~**V-40**~~<br>✅ **已結案（2026-08-12，以我方架構決策結案）** | 順豐**是否支援 ZPL 指令輸出**（熱感標籤機直印）<br>**查證結果**：無任何來源顯示順豐雲打印介面本身輸出 ZPL；第三方文檔明列輸出為 PDF；聚合商可提供 ZPL 但屬其自行轉檔（SF-23）。<br>**結案方式不是查到答案，而是判定「這個答案不影響決策」**：`zpl` 留在 `limits.carrier.label.formats_allowed`（DHL／UPS／FedEx 原生支援，屬抽象層值域），但 `sf_express.label_render.formats` 依 §A.3 維持 `null`，**且我方首發不建任何 ZPL 指令流路徑**。 | 已由 §D.2 決策結案 | `zpl` 的位元組級處理規則**先寫規格、後做程式**，等第一個原生輸出 ZPL 的 pack 上線時再實作 | 已無阻塞（**已移出 `enable_gate`**）|
+| **V-41**<br>🟡 **已縮小，未結案** | 順豐開放平台的**完整介面目錄**（全部 `category` 分類名稱與逐介面欄位表）<br>**2026-08-12 二輪已確認**：URL 參數語義 ＋ 部分值域——`/Api?category={業務線}&apiClassify={介面型態}`，`category=1`＝速運類API、`category=4`＝冷運API、`apiClassify=1`＝請求／回應型、`apiClassify=2`＝推送型；舊式明細頁為 `level3={介面流水號}`（SF-21）。<br>**仍缺**：其餘 `category` 值的分類名稱（含使用者提供的 `category=6`）與逐介面欄位表。 | **本輪已試過且失敗的四條路**（勿重複）：①WebFetch 直取 → 只得 `<meta>`；②站內索引枚舉 → 該站對任何未命中靜態檔的路徑一律回退 index.html，`robots.txt`／`sitemap.xml` 亦然；③容器內直連 → 出口政策 CONNECT 403；④`web.archive.org` CDX → 出口政策 403。<br>**未試而可行的一條**：**以能執行 JS 的瀏覽器開啟該頁**（頁面不需登入，使用者已確認公開可讀） | 以本檔 §0.4(a)(b) 的部分清單為準，其餘不假設 | 全 pack |
+| **V-42**<br>🔴 **性質已改變（見下方說明）** | 順豐**運單號未使用的計費與銷號機制**<br>**2026-08-12 二輪已確認（官方）**：取消動作存在，`dealtype ∈ {1 確認, 2 取消}`（值域**已結案**）；**取消後客戶訂單號不得重複使用**；二次取消回 `8019`（SF-13／SF-14）。<br>**仍缺，且不會由 API 文檔回答**：①未使用之運單號是否計費 ②可銷號時間窗 ③銷號後 `mailno` 是否回收——官方兩份 PDF **通篇沉默**（SF-15）。 | 🔴 **順豐月結合約條款／商務窗口書面回覆。不是文檔問題，再查網頁也不會有答案。** | `shipment_void.billed_if_unused` 等三欄維持 `null`。**過渡辦法見 §D.5(g)**：宣告 `supported: false` ＋ reason，走人工銷號佇列 | §D.5 |
+| **V-43**<br>🟡 **已拆分並縮小** | 順豐**香港站與丰桥是否為同一套 API**；香港商戶要對接走哪個入口<br>**2026-08-12 二輪拆成兩問**：<br>✅ **香港作為「目的地」**＝同一套 API（國際件與國內件同用 `OrderService`、同一端點，`d_deliverycode=852`、支援 `HKD`）——SF-19。<br>❌ **香港作為「寄件地」**＝**仍未確認**。丰橋文檔全篇以中國內地為寄件地；香港站無開發文檔。**我方首發需要的正是後者。** | 順豐香港商務窗口（**商務問題，非文檔問題**） | `serviceable_lanes = []` ⇒ 無任何服務可用 | §H.2、§H.5 |
+| **V-44**<br>🟡 **已縮小** | 順豐**香港／中港澳／國際的服務代碼值域**與各自可用性<br>**2026-08-12 二輪已確認**：香港端**服務名稱**為「標準快遞 / Standard Express」與「國際特惠 / Economy Express」，涵蓋 40＋ 目的地含澳門、台灣（B-19，順豐香港官網價目表）。<br>**仍缺**：名稱到 `express_type` **數值代碼**的對應——官方 PDF 明指值域在附錄《快件產品類別表》，**該附錄未含於 PDF 內，亦未給出檔名或 URL**（SF-19）。 | 順豐香港商務窗口；或索取《快件產品類別表》附錄 | 同上 | §H.2、§H.5 |
 | **V-45** | **DHL Express／UPS／FedEx 的逐項能力值**：面單格式代碼與尺寸代碼、作廢／取消的時間窗與是否釋放號碼、推送 webhook 的驗簽方式 | DHL：`developer.dhl.com`（Reference Data Guide）；UPS：`developer.ups.com`；FedEx：`developer.fedex.com`。**本輪僅取得 DHL 的端點與操作分類**（B-8），UPS／FedEx 僅有第三方佐證 | 三個 pack 皆 `enable_gate: [V-45]`，不得 enable | §B.1 |
-| **V-46** | 順豐的**限流（QPS／日配額）與逾時重試建議**——官方兩份 PDF 均未載明（SF-7） | 丰桥控制台的配額頁；或與順豐技術窗口確認 | 客戶端自我節流取 `limits.carrier.client_qps_default`（保守值），**不假設物流商端無限制** | §F.5 |
-| **V-47** | 順豐**路由推送**（`EXP_RECE_REGISTER_ROUTE` / `RoutePushService`）的**驗簽方式、重送策略、事件代碼值域** | 同 V-41 | `push_verification = null` ⇒ 不得 enable。**禁止先上「不驗簽照收」版本** | §C.4 |
-| **V-48** | 順豐 **COD（代收貨款）在香港的可用性、上限、撥款週期與對帳檔格式** | 順豐香港商務窗口（屬合約值，非 API 文檔） | `cod` 整項為 `null`；COD × 順豐的組合在結帳頁不出現 | §A.2 K9 |
-| **V-49** | 順豐的**冪等機制**：`requestID` 是否被伺服器端去重、重送同一 `requestID` 的語義（回放原結果／視為新單／報錯） | 同 V-41 | 一律假設**無伺服器端去重**，`unknown` 禁止自動重試（§E.2） | §E.2 |
+| **V-46**<br>🟡 **已部分結案** | 順豐的**限流（QPS／日配額）與逾時重試建議**<br>**2026-08-12 二輪**：QPS／日配額／重試建議——**再次覆核兩份官方 PDF，確認通篇未載明**（SF-7 維持）。**但取得了另一類真實的官方上限**：`OrderFilterService` ≤5、`RouteService` ≤10 個 `tracking_number`、`RoutePushService` ≤10 個 `WaybillRoute`、RLS 路由標籤批次 ≤100（超過回 `0003`）、`OrderZDService` 的 `parcel_quantity` ≤20（SF-18）。**這些是分批上限，不是速率上限——兩者不可互相替代。** | 丰桥控制台的配額頁；或與順豐技術窗口確認 | 速率：客戶端自我節流取 `limits.carrier.client_qps_default`（保守值），**不假設物流商端無限制**。<br>分批：一律取 `limits.carrier.packs.sf_express.documented_limits.*`，**不得硬編**（鐵律 6） | §F.5 |
+| **V-47**<br>🟡 **部分結案，且答案改變了處置方向** | 順豐**路由推送**的**驗簽方式、重送策略、事件代碼值域**<br>**2026-08-12 二輪已確認（官方）**：舊世代 `RoutePushService` **沒有定義任何驗簽欄位**；接收方只能回 XML `OK`／`ERR`；失敗時順豐重推全部資訊但**未載明次數與間隔**（SF-16）。路由操作碼**未在規範內列舉**，僅示例 `50`／`922`（SF-17）。<br>**仍缺**：新世代 `EXP_RECE_REGISTER_ROUTE` 的推送是否附簽章；事件代碼完整值域。 | 同 V-41（目錄頁）；事件碼另需順豐「文檔中心」的操作碼表 | **處置已改**：`push_verification` 不再是「等一個值」，而是**必須明確二選一**（`carrier_signature` 或 `none` ＋ 四項補償控制，見 §C.4 第 2 點）。`event_code_vocabulary` 仍為 `null` ⇒ **不得 enable**。**不得**拿 `50`／`922` 兩個示例值當值域 | §C.4 |
+| **V-48**<br>⏳ **仍開** | 順豐 **COD（代收貨款）在香港的可用性、上限、撥款週期與對帳檔格式**<br>**2026-08-12 二輪**：順豐香港官網價目表（B-19）與聚合商文檔（B-18）**均未提及** COD。仍無任何來源。 | 順豐香港商務窗口（屬合約值，非 API 文檔） | `cod` 整項為 `null`；COD × 順豐的組合在結帳頁不出現 | §A.2 K9 |
+| **V-49**<br>✅ **已實質結案（2026-08-12）** | 順豐的**冪等機制**：`requestID` 是否被伺服器端去重、重送的語義<br>**答案**：①**`requestID` 沒有證據被去重**——官方 SDK 只把它示範成每次新產生的 UUID，未賦予任何去重語義 ⇒ **一律當作不去重**；②**真正被去重的是 `orderid`（客戶訂單號）**，重複會下單失敗並回 `8016`；③**`8016` 回錯誤、不回放原結果**（錯誤報文不夾帶 `mailno`）。 | 已由 B-1／B-2 官方 PDF 結案 | **三條實作後果**：①我方第一層冪等必須完全自理，不得指望第二層；②`orderid`＝`client_reference`＝`shipment_intents.id`，且**永不重用**（`client_reference_reuse_forbidden`）；③🔴 **`8016` 必須映射成 `unknown` 而非 `business_rejected`**，走 §F.4 回查。映射表與必要測試見 §E.2 | §E.2 |
+| **V-51**<br>🔴 **新登記（本輪發現的誤標）** | 順豐 `msgDigest` **簽章演算法**：串接順序、雜湊演算法、編碼方式。官方 SDK 只暴露方法簽名 `getMsgDigest(msgData, timeStamp, checkWord)`，**兩份官方 PDF 均未載明演算法本身**（SF-11，二輪再次覆核仍未載明）。 | 丰桥開發者入口的簽章說明；或**直接讀官方 SDK 的 jar／zip**（SDK 指南提及 `SF-CSIM-EXPRESS-SDK-V2.1.6.jar` 但**未給下載 URL**，本輪亦無法下載二進位檔） | 🔴 **這是 `sf_express` 的第一號阻塞項——算不出簽章就一個請求都送不出去。** 原本因誤標成 V-40 而完全不在 `enable_gate` 裡，本輪已補入 | 全 pack 的連線 |
+| **V-52**<br>🟡 **新登記（低優先）** | 順豐憑證究竟是**兩件式**（`clientCode` ＋ `checkword`，SF-3）還是**三件式**（`customer_code` ＋ `customer_id` ＋ `checkword`，聚合商 EasyPost 的要求，SF-24） | 丰桥控制台的憑證頁；或申請沙箱後實測 | `credential_schema` 以官方 SDK 的兩件式為準，但**設定頁預留第三欄位並標為選填**，待覆核 | §G.2 |
 | ~~**V-50**~~ **已結案** | 「所有幣別顯示兩位小數」與 ISO 4217 minor unit 的關係 | **已由同日（2026-08-12）新增的 `limits.currency_display` 裁定解決**：`force_minor_unit_digits: 2`、`storage_scale_unchanged: true`、`iso4217_zero_decimal_overridden: [JPY, TWD]`，且 `currency_format.exponent` 語義改為「顯示位數」（TWD 0→2） | 本檔 §G.3 已依此改寫：**換算一律 ×100，不得用 `exponent`**；`limits.carrier.money.storage_multiplier: 100` | 已無阻塞 |
 
 ---
@@ -1062,6 +1297,33 @@ enabled ⟺ ① K1–K7 七項必宣告能力全部有非 null 的 supported 值
 | B-9 | UPS 開發者文檔（搜尋結果，未逐頁覆核） | 操作分類（Rating／Shipping／Label Recovery／Void Shipment） | `carrier-secondary` |
 | B-10 | `https://developer.fedex.com/api/en-us/catalog/ship.html`（搜尋結果，未逐頁覆核） | Ship／Cancel Shipment／Open Ship 分類存在 | `carrier-secondary` |
 | B-11 | `https://www.shipany.io/…`、`https://apps.shopify.com/shipany-1` | 香港市場實務上以**聚合商**為主流接法（批次面單、多平台同步） | `carrier-secondary` |
+
+**第二輪查證新增（2026-08-12）**
+
+| # | URL／來源 | 取得了什麼 | 出處等級 |
+|---|---|---|---|
+| B-12 | **DNS 解析**（容器內 `getent ahostsv4`，2026-08-12）：`sfexpress.com`／`sfapi.sfexpress.com`／`sfapi-sbox.sfexpress.com`／`sfapi.sf-express.com`／`sfapi-sbox.sf-express.com` | **V-38 結案**：無連字號的三個**皆無 A 記錄**，有連字號的兩個正常解析（SF-12） | `carrier-official`（權威 DNS 優於 PDF）|
+| B-13 | `https://open.sf-express.com/Api/ApiDetails?level3=317&interName=雲打印面單2.0接口-COM_RECE_CLOUD_PRINT_WAYBILLS` — **頁面標題**（正文仍為 JS 渲染，取不到） | 雲打印 2.0 的介面名、服務代碼、分類（SF-20） | `carrier-official`（標題由順豐頁面自身輸出）|
+| B-14 | `https://open.sf-express.com/Api/ApiDetails?level3=320&interName=ISV刪除自定義模板接口-COM_RECE_CLOUD_CUSTOMTEMPLATE_DELETE` — 頁面標題 | 面單模板可自訂（SF-20） | `carrier-official` |
+| B-15 | `https://open.sf-express.com/Api?category=4&apiClassify=1` — 頁面標題「冷運API」 | `category=4` 的分類名（SF-21） | `carrier-official` |
+| B-16 | `https://open.sf-express.com/Api/ApiDetails?apiClassify=2&apiServiceCode=RoutePushService&category=1&interName=路由推送接口-RoutePushService`；`…level3=396…EXP_RECE_SEARCH_ORDER_RESP` — 頁面標題「…-速運類API」 | `category=1`＝速運類API、`apiClassify=2`＝推送型（SF-21） | `carrier-official` |
+| B-17 | `https://doc.fw199.com/docs/h7b/sf-waybill-cloudprint` — 第三方閘道商的順豐雲打印文檔 | 雲打印**1.0** 的輸出形態（PDF）、模板代碼與尺寸的疑似值域（SF-22、SF-23） | `carrier-secondary`（**且版本不符，標的為 1.0 非 2.0**）|
+| B-18 | `https://docs.easypost.com/carriers/sf-express-guide` — 聚合商 EasyPost 的順豐對接指南 | 面單可得 ZPL／PNG／PDF（**屬聚合商轉檔**，SF-23）；憑證疑為三件式（SF-24）；順豐服務層級含國際標快／國際特惠 | `carrier-secondary` |
+| B-19 | `https://htm.sf-express.com/hk/tc/download/HKSEEX_TC.pdf` — **順豐香港官網**的國際服務價目表 | 香港端服務名稱＝標準快遞／國際特惠，涵蓋 40＋ 目的地含澳門、台灣；**未提及 COD、月結、API**（V-44 部分、V-48 仍開）| `carrier-official`（順豐香港官方文件）|
+| B-20 | `https://apps.shopify.com/sf-express-elctronic-waybill` — 第三方 Shopify App | 香港／澳門／中國市場存在「順豐電子面單」對接方案，**要求順豐月結帳號**，支援批次建單與批次列印 | `carrier-secondary`（佐證香港對接在商業上可行，**不佐證任何介面細節**）|
+
+**本輪試過但取不到的路徑（記錄下來以免下一輪重複）**
+
+| 路徑 | 結果 |
+|---|---|
+| `https://qiao.sf-express.com/Api?category=1&apiClassify=1`、`?category=6&apiClassify=2`（使用者提供）| WebFetch 只得 `<meta>`；**正文由 JS 渲染** |
+| `https://qiao.sf-express.com/robots.txt`、`/sitemap.xml` | **回 SPA 外殼**（該站對未命中靜態檔的路徑一律回退 index.html）⇒ 無法用站內索引枚舉 |
+| 容器內 `curl` 直連 `qiao.sf-express.com` | 出口政策 **CONNECT 403** |
+| `https://web.archive.org/cdx/search/cdx?url=open.sf-express.com/Api*` | 出口政策 **403**（該網域被阻擋），無法用 CDX 枚舉歷史 URL |
+| 第三方渲染／代理服務（`r.jina.ai`、`api.microlink.io`、`api.codetabs.com`、`api.allorigins.win`）| 分別為 403／robots 禁止／robots 禁止／逾時 |
+| GitHub 程式碼搜尋（找 SDK 常數表）| 本 session 僅允許 repo-scoped 端點，搜尋 API 回 403 |
+
+> ⭐ **下一輪最有效的一步**：**用能執行 JS 的瀏覽器開 `https://qiao.sf-express.com/Api?category=1&apiClassify=1`**。使用者已確認該文檔**不需帳號**，缺的只是 JS 渲染能力。一次渲染即可同時結案 **V-37／V-39／V-41／V-47（事件碼）／V-51**——本輪剩下的技術性缺口幾乎全部集中在這一步。V-42／V-43／V-44／V-48 則**無論如何都不會由網頁回答**，那是商務與合約問題。
 
 > **本附錄的用途**：V 編號結案時，實作者應在此表新增一列，標明「以什麼來源、什麼日期覆核」。**不得**只把 V 編號從 `enable_gate` 拿掉而不留來源。
 

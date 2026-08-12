@@ -10,7 +10,15 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 
 1. **技術棧（D1/D4）**：Rails 8.1 + MySQL 8 + Vite/React(TS) admin + Liquid 相容前台；Solid Queue/Cache，不用 Redis；不引入未討論的重型依賴。
 2. **多租戶**：全表帶 `shop_id`，且複合索引以 `shop_id` 開頭。
-3. **金額**：全程 **integer cents**，出現 float 即 bug；序列化層才轉 `MoneyV2` / `MoneyBag`。
+3. **金額（單位邊界）**：內部全程 **integer cents（一律 ×100，不看幣別）**，出現 float 即 bug；序列化層才轉 `MoneyV2` / `MoneyBag`。**契約全文＝`docs/specs/65`，下列五條是它的鐵律摘要。**
+   <!-- 依 63 號 §G.4 / 61 號 §1.3 修正，原文：「**金額**：全程 **integer cents**，出現 float 即 bug；序列化層才轉 `MoneyV2` / `MoneyBag`。」
+        原文只擋住「float」，擋不住「單位」——2026-08-12 裁定二讓儲存一律 ×100 之後，
+        把儲存值直接送 PSP 就是 100 倍收款，而原文對此完全沉默。🔴 任何人不得把本條縮回一行。 -->
+   - 🔴 **儲存尺度 ≠ 顯示位數 ≠ 對外單位，這是三件事**：儲存一律 ×100／顯示一律兩位小數（2026-08-12 裁定二）／**送 PSP 依該 PSP pack 明文宣告的 minor unit**（正常值＝ISO 4217 exponent；**未宣告一律 reject，不得預設**）。物流商走十進位字串（58 §G.3），與 PSP 的整數 minor unit **不是同一件事**，不得合併成一個「對外轉換」。
+   - 🔴 **把儲存值直接送 PSP＝收款 100 倍**（JPY ¥1,480 儲存 `148000`，送出必須是 `1480`）；**把 PSP 回報值直接落庫＝少記 99%**；**拿 PSP 金額直接比對 checkout 金額＝每張 JPY 訂單被判成金額不符而自動退款**。三種形態同一個根因，**且在 HKD／USD 這些 exponent=2 的幣別下全部測試皆綠**。
+   - 不同單位用**不同型別**（`Money::Storage` / `Money::PspMinor` / `Money::Decimal`，無隱式 `to_i`）與**不同識別字後綴**（`*_cents` / `*_minor` / `*_decimal`）；PSP adapter 簽名只收 `Money::PspMinor`，傳裸 Integer 即 `TypeError`。**註釋不算防呆**（65 §C）。
+   - **zero-decimal 幣別必須進金額測試矩陣**（至少 **JPY／TWD／KRW**），缺者 CI fail（65 §H）。沒有這一條，這個 bug 只會在上線後的對帳日出現。
+   - **不得**用 `jurisdictions.<code>.currency_format.exponent` 或 `currency_display.iso4217_zero_decimal_overridden` 當換算基數——前者自 2026-08-12 起語義是**顯示位數**（58 §G.3），後者是**被覆蓋的顯示清單**，兩者都不是 PSP 單位來源。
 4. **API-first（D5）**：admin SPA 只打 `/admin/api/{version}/graphql.json`；命名 `resourceVerb`；業務錯誤走 `userErrors{field,message,code}`（HTTP 恆 200）；分頁用 cursor＋`pageInfo`（≤250）；GID 格式 `gid://chilllove/{Type}/{id}`。契約見 `docs/research/28`。
 5. **冪等與事件**：訂單成立／退款／庫存調整必帶 `idempotencyKey`；transaction 內禁外部 IO；事件走 outbox。
 6. **上限值**：一律引用 `config/limits.yml`（常數表見 `docs/research/22` §9.4），不得硬編碼。
@@ -34,7 +42,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 
 ## 文件地圖
 
-`docs/research/00-10` 模組研究｜`21/22` 實測與按鈕表｜`24` 編輯器與結帳 teardown｜`25/26/27/31` Liquid 引擎四件套｜`28` API 契約｜`29` Markets 國際化｜`30` SEO 與 feed｜`docs/specs/11-19` 生產級規格｜`docs/design/20/23` UI 方案與 tokens｜`poc/liquid-engine` 引擎 PoC。
+`docs/research/00-10` 模組研究｜`21/22` 實測與按鈕表｜`24` 編輯器與結帳 teardown｜`25/26/27/31` Liquid 引擎四件套｜`28` API 契約｜`29` Markets 國際化｜`30` SEO 與 feed｜`docs/specs/11-19` 生產級規格｜`docs/specs/65` **金額單位邊界契約（鐵律 3 全文）**｜`docs/design/20/23` UI 方案與 tokens｜`poc/liquid-engine` 引擎 PoC。
 
 ## 工作方式
 

@@ -141,6 +141,109 @@ currency_display:
   #    把儲存值直接送出去＝收款金額 100 倍。餘數不為 0 時直接 raise（代表上游湊整沒套用），
   #    **不得四捨五入抹掉**。exponent=3 的幣別首發不支援，見 catalog_flow.unsupported_currency_exponents。
   psp_minor_unit_follows_iso4217: true
+  # 🔴 **本鍵不是 PSP 換算的資料來源**（65 §J M-4）：`iso4217_zero_decimal_overridden` 的用途是
+  #    「哪些幣別的**顯示位數**被裁定二覆蓋」，鍵名裡的 `iso4217` 講的是被覆蓋的對象，不是宣告值。
+  #    拿它去推導 PSP minor unit＝下一個 100 倍事故。PSP 單位一律走 `money_boundary`（見下一區塊）。
+  not_a_psp_unit_source: true
+
+# =============================================================================
+# 0b. 金額單位邊界契約（money unit boundary）——規格見 docs/specs/65-money-unit-boundary.md
+# =============================================================================
+# 🔴 **儲存尺度 ≠ 顯示位數 ≠ 對外單位，這是三件事。** 上一區塊（currency_display）只管前兩件；
+#    第三件（對外送款）在這裡。把儲存值直接送 PSP＝**收款 100 倍**；把 PSP 回報值直接落庫＝
+#    **少記 99%**。兩個方向都要轉，而且**在 HKD／USD／MYR 這些 exponent=2 的幣別下兩者都不會
+#    被任何測試抓到**——這是本區塊存在的唯一理由。
+# 出處：docs/specs/65（ours，承 63 §G.4／58 §G.3／62 §A.4 三處既有裁定，本區塊是它們的共同上位契約）
+money_boundary:
+  # --- R1 內部儲存 -------------------------------------------------------------
+  # 一律 ×100，**不看幣別**（＝currency_display.storage_scale_unchanged 的數值化）。
+  storage_scale_multiplier: 100
+  storage_scale_ignores_currency: true
+  # DB 金額欄位的硬約束：名字以 _cents 結尾、型別 bigint。migration 掃描違反即 CI fail（65 §C 檢查 C3）。
+  storage_column_suffix: _cents
+  storage_column_sql_type: bigint
+  storage_column_decimal_or_float_forbidden: true
+
+  # --- R4 十進位字串（JSON-LD／feed／CSV／MoneyV2.amount／物流商）----------------
+  # 恆兩位小數、無幣別符號、無千分位、小數點為 "."。與 seo.jsonld.price_* 同一規則，不重複定義。
+  decimal_string_digits: 2
+  decimal_string_regex: '^-?\d+\.\d{2}$'
+  decimal_string_divisor: 100
+  # 解析外部十進位字串：BigDecimal 全程，小數超過 2 位 ⇒ raise/該行失敗，**不得 round**（58 §G.3 規則 2）。
+  decimal_parse_type: BigDecimal
+  decimal_parse_float_forbidden: true
+  decimal_parse_excess_precision_action: raise
+
+  # --- R5 PSP minor unit（🔴 100 倍事故點）--------------------------------------
+  # 正常值＝ISO 4217 exponent，但**必須由該 PSP pack 明文宣告**，不得「沒宣告就當 ISO」。
+  # 理由（比照 56 §A.3 與 58 §A.3「未宣告 ≠ 預設」）：業界確實存在「ISO 為 2 位、但該 PSP 要求
+  # 金額為 100 的倍數」的特例幣別（⚠ V-130 未取得一手出處），靜默套 ISO 會在那些幣別上直接算錯。
+  psp_minor_unit_source_default: iso4217
+  psp_minor_unit_must_be_declared_by_pack: true
+  psp_undeclared_currency_action: reject
+  psp_undeclared_error_code: PSP_MINOR_UNIT_UNDECLARED
+  # 首發只支援 exponent ≤ 2（儲存尺度 ×100 表達不了 exponent=3 的最小單位）。
+  # 與 catalog_flow.unsupported_currency_exponents:[3] 是同一條規則的兩個執法點（market 建立期／送款期）。
+  max_supported_iso_exponent: 2
+  # 換算餘數不為 0 ⇒ raise（代表上游湊整沒套用），**禁止四捨五入抹掉**。
+  psp_non_integral_conversion_action: raise
+  psp_rounding_forbidden: true
+  # ISO 4217 minor unit 表的來源：進 repo、版本釘死，不用未釘版的 gem。⚠ V-131
+  iso4217_table_source: config/iso4217_minor_units.yml
+  iso4217_table_unpinned_gem_forbidden: true
+
+  # --- 型別層防呆（65 §C；註釋不算防呆）-----------------------------------------
+  # 三個值物件彼此不可隱式互換；PSP adapter 簽名只收 Money::PspMinor，傳裸 Integer 即 TypeError。
+  value_objects:
+    storage: Money::Storage          # R1
+    psp_minor: Money::PspMinor       # R5
+    decimal: Money::Decimal          # R4
+  # 🔴 值物件**不得**實作 to_i / to_int / coerce / 數值型 to_s——一旦有隱式轉換，防線等於不存在。
+  value_object_implicit_coercion_forbidden: true
+  # Money::PspMinor 的唯一建構路徑是 Money::Storage#to_psp_minor(psp:)；.new 為 private_class_method。
+  psp_minor_single_construction_path: true
+  psp_adapter_rejects_bare_integer: true
+  # 識別字後綴鐵律（人眼的編譯期）：看到 `_cents` 出現在送款呼叫點就是 bug。
+  identifier_suffixes:
+    storage: _cents
+    psp_minor: _minor
+    decimal_string: _decimal
+    display_string: _display
+  # CI 靜態檢查（命中即 fail；機器的編譯期）。逐條說明見 65 §C。
+  ci_checks:
+    - psp_dir_must_not_reference_cents      # app/services/psp/** 出現 `_cents`（白名單兩處除外）
+    - external_call_kwarg_must_be_minor     # 對 Psp::* 的呼叫傳入的金額 kwarg 名須為 *_minor
+    - money_migration_must_be_bigint_cents  # 新增金額欄位須 bigint ＋ _cents 結尾
+
+  # --- 反方向（inbound；🔴 1/100 事故點）----------------------------------------
+  # PSP 回應／webhook 的金額是 R5，落庫前必須轉回 R1；直接存＝少記 99%。
+  inbound_psp_minor_must_convert: true
+  # 🔴 金額比對必須先化到同一表示法。15 §F4「PI 金額與 checkout 現值不符 ⇒ 不建單、自動退款」
+  #    若拿 PI 的 R5 直接比 checkout 的 R1，**每一張 JPY 訂單都會被判成金額不一致而自動退款**。
+  inbound_comparison_must_normalize_to_storage: true
+  # 冪等鍵一律用 R1（15 §F4-1 的 "pi-{token}-{amount_cents}"）。中途改成 R5 會讓 key 全變 ⇒ 重複建 PI。
+  idempotency_key_amount_representation: storage_cents
+
+  # --- 會計分錄與對帳 ----------------------------------------------------------
+  # 分錄一律 R1 ＋ 幣別碼；**禁止**以 PSP minor 記帳（對不回訂單金額）。雙幣別走 MoneyBag 雙欄，兩欄都是 R1。
+  journal_representation: storage_cents
+  journal_psp_minor_forbidden: true
+  # 三方對帳（我方訂單 R1／PSP 結算檔 R5／銀行入帳 R4 字串）必須各自先轉成 R1 再比。
+  reconciliation_normalize_to: storage_cents
+  # 跨幣別不得直接相加（平台 rollup 的 gmv_*_cents 尤其）。⚠ V-134：換算時點口徑未定。
+  cross_currency_sum_forbidden: true
+
+  # --- 測試矩陣（65 §H）--------------------------------------------------------
+  # 🔴 **zero-decimal 幣別必須進矩陣**。沒有這條，這個 bug 會在上線後才出現：
+  #    exponent=2 的幣別下所有轉換的 divisor 都是 1，錯誤實作與正確實作**輸出完全相同**。
+  test_matrix_zero_decimal_required: [JPY, TWD, KRW]
+  test_matrix_two_decimal_required: [HKD, USD]
+  test_matrix_three_decimal_rejected: [KWD]
+  test_matrix_boundary_values: [0, 1, smallest_representable, non_representable_remainder, bigint_max]
+  # 金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，CI fail。
+  test_matrix_missing_zero_decimal_action: ci_fail
+  # 往返自檢：from_psp_minor(to_psp_minor(x)) == x，在非生產環境每次轉換都跑。
+  roundtrip_selfcheck_envs: [development, test, staging]
 
 # =============================================================================
 # 1. API 契約（GraphQL）
@@ -291,6 +394,10 @@ order:
   edit_set_quantity_restock_default: false
   # 訂單草稿閒置自動刪除（2025-04-01 後建立者）。出處：46c:552（help）
   draft_idle_auto_delete_days: 365
+  # 🔴 訂單／訂單草稿的**單一標籤**字元上限是 **40**，與商品／顧客／轉移／網誌文章的 255 **不同**。
+  #    兩者共用一個常數＝訂單標籤可以寫進 255 字元，之後在 Shopify 匯入時整批被拒。
+  #    出處：help.shopify.com/en/manual/products/details/tags（P9，help；61 §9.1）
+  tag_max_chars: 40
 
 # =============================================================================
 # 4. 履行（FulfillmentOrder / Fulfillment）
@@ -447,6 +554,10 @@ inventory:
   # 調整歷史保留天數。出處：docs/research/22:81（live）
   adjustment_history_retention_days: 180
   # 訂單草稿保留庫存的去向＝unavailable（**不是 committed**）。出處：46c:546–549、46c:895（help）
+  # 🔴 **官方正在遷移這個值，本鍵目前刻意不改**（61 §3.3／§9.4，衝突 C-1）：
+  #    shopify.dev/changelog/draft-order-and-transfer-shipment-inventory-is-moving-from-reserved-to-committed
+  #    （2026-08-05，dev）宣告草稿訂單／轉移保留正從 unavailable 遷往 **committed**，help 尚未更新。
+  #    ⚠ **V-53 結案前不要因為「dev 比 help 新」就改值**——遷移未完成時改了會兩頭不對。
   draft_reservation_target_state: unavailable
 
 # =============================================================================
@@ -454,19 +565,147 @@ inventory:
 # =============================================================================
 product:
   # 出處：46c:657–669（help）、docs/research/22:70/74/160（live）
+  # 本輪（61 §9.1）以官方頁逐一覆核：
+  #   max_options 3        — help.shopify.com/en/manual/products/variants/add-variants（P14）
+  #                          ＋ shopify.dev/.../mutations/productOptionsCreate 錯誤碼 OPTIONS_OVER_LIMIT（D6）
+  #   max_variants 2048    — 同 P14 ＋ shopify.dev/changelog/the-product-variant-limit-is-now-2048-for-all-merchants（D12）
+  #   max_media 250        — 同 P14 ＋ help.shopify.com/en/manual/products/import-export/using-csv（P51）
   max_options: 3
   max_variants: 2048
   max_media: 250
-  title_max_chars: 255
-  description_max_bytes: 65536
-  # 子類每日上傳速率（>500,000 子類的店）；Plus 豁免。出處：46c:657–669（help）
+  # 🔴 下列兩鍵**不是官方值**（61 §9.1 V-68 逐頁查證：help 與 dev 的商品欄位頁、REST Product 資源
+  #    皆未載明字元／位元組上限）。原本掛的「出處：46c／22」是誤植，本輪改標為本專案自訂。
+  #    ⚠ V-68：若日後取得官方值再改；在那之前**不得**在規格裡寫成「對齊 Shopify」。
+  title_max_chars: 255            # ours（非官方）
+  description_max_bytes: 65536    # ours（非官方）
+  # 子類每日上傳速率（>500,000 子類的店）；Plus 豁免。出處：46c:657–669（help）、P14、P54
   daily_variant_upload_limit: 10000
   daily_variant_upload_plus_exempt: true
+  # 上述速率只在變體數超過此門檻的商店生效（原本只在註解裡，本輪成鍵）。出處：P14、P54（help）
+  daily_variant_upload_applies_above_variants: 500000
+  # --- 61 §9.1 新增（全部有官方 URL 出處）-------------------------------------
+  # 每個商品的標籤數／單一標籤字元數。
+  # 出處：help.shopify.com/en/manual/products/details/tags（P9，help）
+  #      ＋ shopify.dev/docs/api/admin-rest/latest/resources/product（D16，dev）
+  max_tags: 250
+  tag_max_chars: 255
+  # 每個變體可掛的圖片數（官方明載變體不支援 3D 模型與影片，且每變體只能一張圖）。
+  # 出處：help.shopify.com/en/manual/products/product-media/add-images-variants（P21，help）
+  max_images_per_variant: 1
+  # 單次 productVariantsBulkCreate 帶入的變體數／單一查詢可取回的變體數。
+  # 出處：shopify.dev/docs/apps/build/graphql/migrate/new-product-model（D8，dev）、D1
+  variant_bulk_create_max: 2048
+  variant_query_max: 2048
+  # 🔴 每個選項的選項值數上限：錯誤碼 OPTION_VALUES_OVER_LIMIT 存在（shopify.dev/.../enums/
+  #    ProductOptionUpdateUserErrorCode，D7）證明**有**這個上限，但官方未公布數字，
+  #    ShopResourceLimits（D5）也沒有對應欄位 ⇒ 留 null，UI 不做前端提示，靠後端錯誤碼回報。⚠ V-50
+  max_option_values_per_option: null
+  # 每店商品數上限：官方未載明 ⇒ 不設上限。⚠ V-69
+  max_products_per_shop: null
+  # ⚠ ShopResourceLimits 同時暴露 maxProductOptions 與 maxProductVariants 兩個 Int!（D5）
+  #    ⇒ 上限是 **per-shop 可查詢的**，不是全域常數。本檔的值是**預設值**，須允許 per-shop 覆寫，
+  #    否則之後接 Plus 級租戶會撞牆。
+  limits_are_per_shop_overridable: true
+
+  # --- 商品狀態：官方是**四**態（規格見 docs/specs/13 §F1.2）---------------------
+  # 出處：shopify.dev/docs/api/admin-graphql/latest/enums/ProductStatus（D3，dev）
+  #      ＋ shopify.dev/docs/apps/build/product-merchandising/unlisted-products（D4，dev）
+  # 🔴 我方原本寫死三態（13 第 13 行）。UNLISTED＝**可購買但不可被發現**，
+  #    它的存在證明「可購買」與「可被發現」是兩個獨立維度，一個 scope 兼管兩件事必定出錯。
+  status_values: [ACTIVE, DRAFT, ARCHIVED, UNLISTED]
+  # 兩個獨立 scope（取代原本單一的 Product.published）。真值表見 13 §F1.2。
+  purchasable_statuses: [ACTIVE, UNLISTED]
+  discoverable_statuses: [ACTIVE]
+  # 恆等不變量：discoverable ⊆ purchasable。違反＝把買家從搜尋送進買不了的頁面（soft-404）。
+  discoverable_subset_of_purchasable: true
+  # UNLISTED 的對外行為（D4 逐條）：輸出 noindex,nofollow、排除於 sitemap、排除於平台 catalog。
+  unlisted_meta_robots: "noindex,nofollow"
+  unlisted_excluded_from: [sitemap, search_index, collections_storefront, recommendations,
+                           feed, agent_catalog, jsonld_offer, hreflang]
+  # 🔴 我方**刻意不做** Shopify 那種「舊 API 版本把 unlisted 回成 active」的降級（D4）：
+  #    那會讓舊版整合把 UNLISTED 當 ACTIVE 處理，再把它送進 feed／索引，等於 noindex 完全失效。
+  #    我方 enum 一次到位四值，舊版本一律照實回 UNLISTED。（ours，刻意偏離，13 §F1.2(f)）
+  unlisted_downgrade_on_old_api_version: false
 
 collection:
-  # 出處：docs/research/22:160（live）
-  max_smart_collections_per_shop: 5000
-  max_rules_per_collection: 60
+  # 出處：docs/research/22:160（live）；本輪（61 §9.3）以官方頁覆核並補齊四項。
+  # help.shopify.com/en/manual/products/collections/create-collection（P23，help）
+  max_smart_collections_per_shop: 5000     # ＝官方「每店含任何條件的商品系列」上限
+  max_rules_per_collection: 60             # ＝官方「單一商品系列的條件總數」上限
+  # --- 61 §9.3 新增（全部出自 P23／P26，官方逐字有數字）------------------------
+  # 每店「含手動或自動加入之**變體**」的商品系列數。出處：P23（help）
+  max_with_variants_per_shop: 100
+  # 每店「**內含**另一個商品系列」的商品系列數。出處：P23（help）
+  max_containing_collection_per_shop: 50
+  # 每店「**排除**另一個商品系列」的商品系列數。出處：P23（help）
+  max_excluding_collection_per_shop: 5
+  # 商品系列品項區每頁顯示數。出處：help.shopify.com/en/manual/products/collections/collection-layout（P26，help）
+  items_page_size: 60
+  # 單一商品系列可手動加入的商品數：官方未載明 ⇒ 不設上限，靠分頁與效能測試把關。⚠ V-59
+  max_manual_items_per_collection: null
+
+  # --- sources 模型（規格見 docs/specs/13 §F4）----------------------------------
+  # 🔴 官方已把 manual／smart 二分法標為 **legacy**（P22 有「Legacy smart collections」與
+  #    「Legacy manual collections」兩個獨立頁面）。新模型是**來源（sources）**：
+  #    來源有四型，每型可 include 也可 exclude。
+  # 出處：help.shopify.com/en/manual/products/collections/manage-sources（P25，help）
+  source_types: [products, variants, collections, apps]
+  source_modes: [include, exclude]
+  source_selections: [manual, conditions]
+  # 條件的邏輯連接只有「全部符合(AND)／任一符合(OR)」，**官方未提供混合或括號分組**。出處：P24（help）
+  condition_logic_modes: [all, any]
+  condition_grouping_supported: false
+  # 🔴 求值優先序：exclude > manual include > conditions include。
+  #    「手動加入者除非手動移除否則永遠留著」是官方明載（P23，help）⇒ manual 勝過 conditions。
+  #    **但 exclude 與 include 的交互官方未載明（61 §4.1 ⚠ V-57）** ⇒ 下列順序是**我方假設**。
+  #    做成一個鍵是刻意的：官方日後澄清時改這一個鍵＋求值器的排序，**不動資料模型**。
+  source_precedence: [exclude, manual_include, conditions_include]   # ours（假設，V-57）
+  verify_source_precedence: true
+  # 巢狀來源（collection 套 collection）的深度上限。**官方只給了 per-shop 家數（50／5），
+  # 未給深度** ⇒ 本鍵為本專案推導：depth 每加一層，rebuild 的扇出與失效傳播成本乘一次。⚠ V-135
+  source_nesting_max_depth: 5              # ours（官方未載明）
+  verify_source_nesting_depth: true
+  # 巢狀取的是來源系列的**最終成員**（＝它自己的 exclude 套用後的結果），不是候選集。（ours，13 §F4.5）
+  nested_source_uses_final_membership: true
+  # 🔴 環偵測：寫入期可達性檢查擋不住併發成環（兩個 transaction 各加一條邊，各自檢查都會過）。
+  #    必須以 shop 粒度的圖鎖序列化寫入——這是唯一擋得住的做法。（ours，13 §F4.5）
+  cycle_detection_on_write: true
+  cycle_detection_error_code: CYCLIC_REFERENCE
+  source_graph_lock_table: collection_graph_locks
+  # 求值期第二道保險：visited 集合 ＋ 深度計數，超限即中止該系列 rebuild 並告警，**不得部分寫入**。
+  rebuild_cycle_guard: visited_set_and_depth_counter
+
+  # --- 標籤條件是集合運算，不是子字串（🔴 61 §4.2 C-6）--------------------------
+  # `Product tag` 的運算子是 includes / does not include（集合），與字串類的 contains 是**不同東西**。
+  # 實作成 LIKE '%red%' 會讓 `red` 誤中 `red-new`。出處：P24（help）
+  tag_condition_operators: [includes, does_not_include]
+  tag_condition_sql_form: exists_equality_on_tag_key    # 不是 LIKE
+  # 字串類欄位（title／type／vendor／variant title）的 contains 才是子字串，用 LIKE，
+  # 且 `%` 與 `_` 必須跳脫（商家輸入 `50%` 不跳脫會變成萬用字元）。（ours，13 §F4.3）
+  string_contains_requires_wildcard_escape: true
+  # 標籤正規化：官方明載 `red_new`／`red+new`／`red&new` 與 `red-new` 被當成**同一個標籤**。
+  # 出處：help.shopify.com/en/manual/products/details/tags（P9，help）
+  # 不做正規化 ⇒ product_tags 會出現兩列，條件比對結果與 Shopify 不一致（61 §10 C-7）。
+  tag_normalize_before_write: true
+  tag_normalize_equivalent_chars: ["_", "+", "&"]   # 全部映射到 "-"（官方明載）
+  tag_normalize_to: "-"
+  # 下列三步官方未載明，為本專案推導（13 §F4.4）：NFKC、連續分隔壓縮、大小寫摺疊。⚠ V-136
+  tag_normalize_unicode_form: NFKC                  # ours
+  tag_normalize_collapse_repeats: true              # ours
+  tag_normalize_casefold: true                      # ours
+  verify_tag_normalize_casefold: true
+  # 🔴 正規化只有一處實作；DB **不得**再加自己的等價規則 ⇒ tag_key 欄位 collation 明文宣告 bin，
+  #    不依賴 schema 預設（預設 collation 在 dev／prod 不同時會產生兩套比對行為）。
+  tag_key_collation: utf8mb4_bin
+
+  # --- 排序（P26 九種）----------------------------------------------------------
+  sort_orders: [most_relevant, best_selling, alpha_asc, alpha_desc,
+                price_desc, price_asc, created_desc, created_asc, manual]
+  # 🔴「最暢銷」官方定義是**全期訂單數**。13 §F4 原寫「90 天銷量 rollup」＝我方自訂且與官方不同
+  #    （61 §10 C-8），鐵律 7（數字同源）下會在分析頁與系列頁露餡。本輪改為全期。出處：P26（help）
+  best_selling_window: all_time
+  # 手動排序的移動操作。出處：P26（help）
+  manual_move_actions: [move_to_front, move_to_back, move_to_position]
 
 media:
   # 出處：docs/research/22:160（live）
@@ -731,10 +970,25 @@ carrier:
     display_decimals: 2
     display_digits_source: currency_display.force_minor_unit_digits
 
-  # --- 運單號＝有成本的資源（58 §D.5，本檔最容易被漏掉的一節）--------------------
+  # --- 運單號＝不可回收的識別（58 §D.5，本檔最容易被漏掉的一節）------------------
   waybill:
-    # 取號＝向物流商借了一個有價的資源。借了不用要還；不還，物流商照樣計費。
-    number_is_billable_resource: true
+    # 🔴 2026-08-12 第二輪順豐查證後改寫本區塊的立論。
+    #    原鍵值為 `number_is_billable_resource: true`，註解為「取號＝向物流商借了一個有價的資源。
+    #    借了不用要還；不還，物流商照樣計費。」—— 那是把**未查證的商業假設**寫成了跨物流商的事實斷言。
+    #    順豐官方兩份 PDF 對「未使用之運單號是否計費」通篇沉默（58 §0.4 SF-15），且該問題屬月結
+    #    合約條款，不在 API 文檔的涵蓋範圍內 —— 它不會因為多查幾個網頁而有答案。
+    #
+    #    改法：把「計費」降級為我方的**保守姿態**（policy_default），權威一律回到 pack 級的
+    #    capabilities.shipment_void.billed_if_unused。留一個全域 true 會讓實作者以為這件事查證過了。
+    #
+    #    ⚠️ 但本區塊其餘規則**一條都沒放寬**，因為銷號帳換了一根更硬的樑：
+    #    不是「號有價所以要記帳」，而是「**號不可回收**所以要記帳」——順豐官方明載訂單取消後
+    #    客戶訂單號不得重複使用（SF-14）。就算查明未使用的號一毛都不收，場景 4（換物流商／換箱
+    #    重取號）造成的仍是同一張 FO 掛著兩個都無法回收的識別 ＝ **資料正確性事故**，與計費無關。
+    number_is_billable_resource: policy_default
+    number_is_billable_resource_authority: capabilities.shipment_void.billed_if_unused
+    # 🔴 未宣告（null）**不得**當作 false —— 沉默不是否認（58 §A.3）。
+    billed_if_unused_null_means: unknown_blocks_pack_enable
     # 逾此時數仍在 ALLOCATED 且未交寄 ⇒ 自動銷號（有 K4）或入人工佇列（無 K4）。
     unused_void_after_hours: 24
     void_attempt_max: 3
@@ -751,8 +1005,13 @@ carrier:
 
   # --- 面單（58 §D.2–§D.4）-----------------------------------------------------
   label:
+    # 🔴 `zpl` 留在值域裡，但**不是因為順豐支援**（順豐不支援，且我方首發不建 ZPL 路徑，58 §D.2）。
+    #    它留著是因為 DHL／UPS／FedEx 原生支援 —— 為了一家不支援就把值從抽象層拿掉，等於讓抽象層
+    #    遷就單一 pack，正是 58 §0.2 原則 1 要防的事。
+    #    ⚠️ 值域裡有 `zpl` **不等於**任何 pack 宣告了 `zpl`：pack 級的 label_render.formats 才是權威。
     formats_allowed: [pdf, zpl, png]
     # ZPL 是**指令流**不是圖片：原樣位元組保存，禁止任何轉碼或字串正規化，改一個位元組就印歪。
+    # 規格先寫好、程式後做 —— 等第一個原生輸出 ZPL 的 pack 真的要上線時再實作（58 §D.2 V-40 結案）。
     zpl_byte_exact: true
     batch_max_per_call: 50
     batch_max_per_job: 500
@@ -781,6 +1040,20 @@ carrier:
     push_dedupe_key: [shop_id, carrier_code, waybill_number, carrier_event_code, carrier_event_at]
     # 驗簽失敗一律 401 且不落庫；未宣告驗簽方式的 pack 不得 enable（58 §C.4 第 2 點）。
     push_verification_required: true
+    # 🔴 2026-08-12 第二輪查證：順豐官方規範對 RoutePushService **沒有定義任何驗簽欄位**
+    #    （58 §0.4 SF-16）—— 也就是說「等查到驗簽方式」可能永遠等不到。因此處置改為：
+    #    pack 必須在 carrier_signature / none 之間**明確二選一**，選 none 時補償控制為必填。
+    push_verification_modes: [carrier_signature, none]
+    # mode: none 時下列四項補償控制**缺一不可**，否則 pack 不得 enable（58 §C.4 第 2 點）。
+    push_none_mode_required_controls:
+      - per_shop_endpoint_token       # 不可猜測、可輪替
+      - source_ip_allowlist           # 清單本身屬 carrier account 設定，非本檔常數
+      - waybill_ownership_check       # 運單號必須已存在於該 shop_id 的 waybills，否則丟棄並記一列
+      - tracking_only_no_side_effects # 推送只能推進追蹤時間軸，不得觸發金流或狀態機躍遷
+    # 🔴 沒有簽章時，waybill_number 本身就是那個共享秘密（由物流商發放、不可預測、我方已知歸屬）。
+    #    這不是強驗證，但它把攻擊面從「任何人可對任意租戶灌任意事件」縮到「必須先知道一個真實
+    #    運單號才能對該運單灌事件」。必須寫成常數，否則實作者在沒有簽章可用時只會直接放行。
+    push_source_ip_allowlist_required: true
 
   # --- 出貨編排（58 §F）---------------------------------------------------------
   shipment_intent:
@@ -795,6 +1068,15 @@ carrier:
     # unknown 只能靠回查解開；回查需要下單時帶我方唯一識別（＝shipment_intent id，不是 order name
     # 也不是 FO id —— 同一張 FO 可能有多個 intent，用 FO id 回查會撈到舊的）。
     reconcile_reference_source: shipment_intent_id
+    # 🔴 2026-08-12 第二輪查證新增（58 §D.5(f)，出處 SF-14）：
+    #    順豐官方明載「訂單取消之後，客戶訂單號也是不能重複利用的」。這打穿一個很自然的直覺：
+    #    「這單失敗了，用同一個單號重試一次」。送給物流商的 client_reference 一律用後即棄 ——
+    #    同一個 intent 重試沿用同一識別；intent 落 FAILED 或運單被 void ⇒ 必須開新 intent、換新識別。
+    #    ⚠️ 這與 idempotency_key 是**兩件事**：idempotency_key 擋「同一次請求送兩遍」，
+    #       本鍵擋「**不同次**請求想借用同一個識別」。58 §E.2 的兩層模型各管各的。
+    #    DB 兜底：(shop_id, carrier_account_id, client_reference) 唯一索引，重用即撞索引。
+    client_reference_reuse_forbidden: true
+    client_reference_unique_key: [shop_id, carrier_account_id, client_reference]
 
   # --- 節流與熔斷（58 §F.5）-----------------------------------------------------
   # 順豐官方兩份 PDF 均未載明限流／QPS（58 §0.4 SF-7 → V-46）⇒ 客戶端自我節流取保守值，
@@ -849,12 +1131,54 @@ carrier:
     sf_express:
       display_name: 順豐速運
       enabled: false
-      # 出處：docs/specs/58 附錄 A。V-39 面單格式／V-40 ZPL／V-42 銷號與計費／
-      #       V-43 香港站是否同一套 API／V-44 香港與國際服務代碼／V-47 推送驗簽／V-48 COD
-      enable_gate: [V-39, V-40, V-42, V-43, V-44, V-47, V-48]
-      # 官方 PDF 確認的端點（58 §0.4 SF-1）。網域寫法有 sfexpress.com / sf-express.com 兩說 ⇒ V-38。
-      endpoints_verified: false
-      serviceable_lanes: []   # V-43／V-44 未結案 ⇒ 空陣列＝無任何服務可用（正確的失效方向）
+      # 出處：docs/specs/58 附錄 A（2026-08-12 第二輪查證後更新）。
+      #   V-39 面單欄位與格式／V-41 完整介面目錄／V-42 銷號與計費／V-43 香港能否為寄件地／
+      #   V-44 服務代碼數值／V-47 推送驗簽與事件碼／V-48 COD／V-51 msgDigest 演算法
+      # 變動：移除 V-40（已由我方架構決策結案，58 §D.2：zpl 留在抽象層值域，順豐 pack 不建 ZPL 路徑）。
+      #       新增 V-41 與 V-51。
+      # 🔴 V-51 是本輪才補進來的，而它是**第一號阻塞項** —— 簽章演算法不明＝一個請求都送不出去。
+      #    它原本因為在 58 §0.4(b) 被誤標成 V-40（ZPL）而完全不在 gate 裡。
+      #    教訓：gate 要定期對照「實作者第一天會卡在哪」重新檢查，不能只累加。
+      enable_gate: [V-39, V-41, V-42, V-43, V-44, V-47, V-48, V-51]
+      # ✅ V-38 已結案（2026-08-12，DNS）：官方 SDK PDF 印的 sfexpress.com（無連字號）**無 A 記錄**，
+      #    連 apex 都沒有；sf-express.com（有連字號）才正確。官方 PDF 這一處是錯的或已過期。
+      endpoints_verified: true
+      endpoints:
+        sandbox: https://sfapi-sbox.sf-express.com/std/service
+        production: https://sfapi.sf-express.com/std/service
+      # 🔴 仍不讓商家自填 base_url —— 設定期由下拉選單選，避免打錯字打到別人的主機。
+      base_url_freeform_allowed: false
+      # 🔴 空陣列的理由**不是**「不知道服務代碼」，而是更根本的一條：連「香港商戶能不能用丰橋」
+      #    都還沒確認（V-43）。已確認的只有「香港作為**目的地**」（內地寄出，SF-19），
+      #    而我方香港首發需要的是「香港作為**寄件地**」—— 兩者互補，不能互相替代。（58 §H.5）
+      serviceable_lanes: []
+      # --- 官方明載的分批上限（58 §0.4 SF-18；鐵律 6：不得硬編）------------------
+      # ⚠️ 這些是**分批上限**，不是**速率上限**。順豐官方兩份 PDF 對 QPS／日配額通篇未載明
+      #    （SF-7，V-46 仍開）⇒ 速率仍走 carrier.client_qps_default 的保守自我節流。
+      #    兩者不可互相替代：分批對了不代表不會被限流。
+      documented_limits:
+        order_filter_max_elements: 5          # OrderFilterService
+        route_query_max_tracking_numbers: 10  # RouteService
+        route_push_max_elements: 10           # RoutePushService
+        route_label_batch_max: 100            # RLS 路由標籤批次，超過回錯誤碼 0003
+        sub_waybill_max_parcel_quantity: 20   # OrderZDService parcel_quantity
+        order_create_batch_supported: false   # OrderService 明載不支援批次
+      # --- 原始錯誤碼 → 我方四值 outcome 的映射（58 §E.2；pack 級，不進核心）-----
+      # 🔴 8016（重複下單）必須映射成 unknown 而非 business_rejected。
+      #    順豐以 orderid 去重，且**回錯誤不回放原結果**（錯誤報文不夾帶 mailno），所以收到 8016
+      #    只證明「這個 orderid 已被受理過」，不證明「上一次拿到了什麼號」。
+      #    當成 business_rejected ⇒ intent 落 FAILED，但順豐那邊其實已經有一張運單，且因為
+      #    orderid 不可重用（SF-14），這張運單再也接不回任何 intent，直接變成 ABANDONED_UNRESOLVED。
+      #    這張表每一列都必須有測試（58 §K 維度 6）。
+      error_code_outcome_map:
+        "8016": unknown            # 重複下單 ⇒ 副作用可能已發生且結果查不回來 ⇒ 走回查
+        "8019": too_late           # 訂單已確認或已取消 ⇒ 狀態衝突，非拒絕（K4／K5 路徑）
+        "4001": transient_error    # 系統資料錯誤／執行期例外
+        "0000": business_rejected  # 介面參數異常
+        "0001": business_rejected  # XML 解析異常
+        "0002": business_rejected  # 欄位校驗異常
+        "0003": business_rejected  # 單號節點超過上限 ⇒ 我方分批分錯，屬程式 bug，不得重試
+        "0004": business_rejected  # 缺少必填欄位
     dhl_express:
       display_name: DHL Express
       enabled: false
