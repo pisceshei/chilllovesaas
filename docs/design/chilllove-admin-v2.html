@@ -2701,8 +2701,10 @@ function financeHTML(){return `
   <div class="banner-err" style="background:var(--info-bg);border-color:#cfe3f2;color:var(--info);margin-bottom:var(--sp-400)">啟用兩步驟驗證以保護你的帳戶。<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="toast('Demo：2FA 設定（規格 12-F2）')">設定</button></div>
   <div class="chart2 c14">
     <div class="col">
-      <div class="card card-pad"><h3>稅務</h3><div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>設定稅金代收</b><span class="sub">依地區稅率自動計算</span></div><span class="chev">›</span></div></div>
-      <div class="card card-pad"><h3>工具</h3><div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>對帳報表</b><span class="sub">撥款與訂單的對帳明細</span></div><span class="chev">›</span></div></div>
+      <div class="card card-pad"><h3>稅務</h3><div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>設定稅金代收</b><span class="sub">稅區服務層級三檔與稅率</span></div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openSettings('taxes')">前往 ›</button></div></div>
+      <div class="card card-pad"><h3>工具</h3><div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>對帳報表</b><span class="sub">撥款與訂單的對帳明細</span></div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')">匯出 ›</button></div></div>
     </div>
     <div class="card card-pad" style="text-align:center;padding:calc(var(--sp-300)*3)">
       <b style="font-size:var(--t-lg)">開始收款</b>
@@ -3780,10 +3782,57 @@ const THEMES=[
  {t:'Dawn 改版',v:'15.2.0',role:'未發佈',d:'2026-05-12',up:false},
  {t:'開發用複本',v:'2.4.0',role:'開發',d:'2026-08-10',up:false}];
 
+/* ==================================================================
+   53號 P0-02：市場父子繼承模型（資料層）
+   ------------------------------------------------------------------
+   46b:632–634 逐字：「A market can have one or more parent markets. If a market does not
+   define a customization, it will inherit the customization from its parents, or the store
+   defaults if no customization is defined on any parent.」
+   46b:636–639：**parent 不是手動指定的欄位，是由 conditions 自動推導（lineage inference）**——
+     子市場 region 是父市場 condition 的嚴格子集 → 成立父子；
+     子市場的 location／company location 落在父市場 region 內 → 成立父子；
+     具體地點列舉不參與推導。
+   46b:664 逐字：「沒有 inherited: Boolean 這種顯式旗標，也沒有 parentMarketId 欄位」
+     ⇒ 繼承一律用 **null 表達**（欄位為 null ＝ 此市場未定義該客製）。
+   所以這裡：`regions`＋`type` 是權威來源，`pid` 只是 mktDerive() 算出來的 **derived 快取**
+   （limits.yml market.parent_resolution=derived_from_conditions／parent_column_is_cache=true），
+   改 regions 就要重算，不得當成可寫欄位。
+   繼承語意兩種（limits.yml market.inheritance_additive／inheritance_override，出處 46b:650–657）：
+     累加 additive ＝ catalogs／web presences（語言與網域）——父的加進子的，子不能移除父的
+     覆寫 override ＝ currency settings／price inclusions（幣別、價格調整、稅金行為）
+   ⚠ 運送：46b:659–661 說 null＝繼承，44:866 實測說「永遠市場本地」——**直接矛盾**，
+     limits.yml market.shipping_inherits 標 null（未定案），UI 照實標「繼承語意未定案」不選邊。
+   ⚠ 法域 jurisdiction：56 §A.0 硬要求 2「永遠市場本地，不可繼承」——否則會出現
+     「香港母市場下掛台灣子市場卻套用香港稅制」。UI 標「不可繼承」且無覆寫／還原動作。
+   ================================================================== */
+/* lineage 都沒有定義時的最後回退（46b:634「or the store defaults」）*/
+const MKT_STORE_DEFAULT={currency:'TWD（NT$）',priceAdj:'0%',domain:'chilllove.demo',
+  duty:'DDU（顧客承擔）',taxIncl:'價格未含稅（結帳另加）',shipping:'一般設定檔（Standard／Express）',
+  returnRule:'預設規則（30 天）',langs:['繁體中文'],catalogs:['台灣（預設）']};
+/* cust 的每個鍵：null ＝ 未定義 ⇒ 繼承；有值 ＝ 此市場自己定義（已覆寫）。
+   示範資料刻意做出三層鏈：hk-b2b ← hk ← intl ←（商店預設值），否則「繼承鏈不只一層」看不出來。 */
 const MARKETS=[
- {id:'tw',t:'台灣（預設）',st:'啟用中',inc:'1 個地區',cur:'TWD（NT$）',adj:'—',dom:'chilllove.demo',langs:['繁體中文'],duty:'不適用'},
- {id:'intl',t:'International',st:'啟用中',inc:'香港・馬來西亞',cur:'當地幣別',adj:'+8%',dom:'chilllove.demo/int',langs:['繁體中文','English'],duty:'DDU（顧客承擔）'},
- {id:'jp',t:'日本',st:'草稿',inc:'日本',cur:'JPY（¥）',adj:'+12%',dom:'（未設定）',langs:['日本語'],duty:'DDP'}];
+ {id:'tw',t:'台灣（預設）',st:'啟用中',type:'region',regions:['TW'],inc:'台灣',jur:'tw（未啟用 pack）',
+  perf:{s:'7,120',o:'218',rev:'NT$362,400'},
+  cust:{currency:'TWD（NT$）',priceAdj:null,domain:'chilllove.demo',duty:null,taxIncl:null,
+        shipping:null,returnRule:null,langs:['繁體中文'],catalogs:['台灣（預設）']}},
+ {id:'intl',t:'International（亞太）',st:'啟用中',type:'region',regions:['HK','MY','JP','SG'],
+  inc:'香港・馬來西亞・日本・新加坡',jur:'依收貨地逐國解析',perf:{s:'1,480',o:'22',rev:'NT$45,300'},
+  cust:{currency:'當地幣別（自動）',priceAdj:'+8%',domain:'chilllove.demo/int',duty:'DDU（顧客承擔）',
+        taxIncl:null,shipping:'國際費率表',returnRule:null,langs:['繁體中文','English'],catalogs:['亞太（+8%）']}},
+ {id:'hk',t:'香港',st:'啟用中',type:'region',regions:['HK'],inc:'香港',jur:'hk（基準法域）',
+  perf:{s:'860',o:'14',rev:'HK$18,240'},
+  cust:{currency:'HKD（HK$）',priceAdj:null,domain:null,duty:null,taxIncl:null,
+        shipping:null,returnRule:null,langs:null,catalogs:null}},
+ {id:'hk-b2b',t:'香港・B2B 批發',st:'草稿',type:'company_location',regions:['HK'],
+  inc:'公司地點：BulkCo 香港（2 個地點）',jur:'hk（基準法域）',perf:{s:'—',o:'0',rev:'HK$0'},
+  cust:{currency:null,priceAdj:'−15%',domain:null,duty:null,taxIncl:null,
+        shipping:null,returnRule:'B2B 規則（14 天・不收補貨費）',langs:null,catalogs:['大宗採購（B2B）']}},
+ {id:'jp',t:'日本',st:'草稿',type:'region',regions:['JP'],inc:'日本',jur:'jp（未建立 pack）',
+  perf:{s:'214',o:'0',rev:'HK$0'},
+  cust:{currency:'JPY（¥）',priceAdj:'+12%',domain:null,duty:'DDP（結帳預收）',taxIncl:null,
+        shipping:null,returnRule:null,langs:['日本語'],catalogs:null}}];
+mktDerive();                        /* 由 conditions 推導 pid（函式宣告提升，定義在市場模組那一節）*/
 
 const CATALOGS=[
  {t:'台灣（預設）',aim:'商店預設值',n:7,adj:'—',st:'啟用中'},
@@ -5383,10 +5432,14 @@ function marketsPage(){
     ai:'建議：近 30 天有 214 個日本工作階段——建立「日本」市場',aiDoc:'mkt-ai',aiFn:"marketNew()",
     views:[['全部',()=>true],['啟用中',r=>r.st==='啟用中'],['草稿',r=>r.st==='草稿']],
     cols:[{l:'市場',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'狀態',c:r=>chip(r.st,r.st==='啟用中'?'success':'info'),v:r=>r.st},
-      {l:'包含',c:r=>`<span class="mut">${r.inc}</span>`,v:r=>r.inc},{l:'幣別',c:r=>`<span class="mut">${r.cur}</span>`,v:r=>r.cur},
-      {l:'價格調整',right:true,c:r=>N(r.adj),v:r=>r.adj},{l:'網域',c:r=>`<span class="mut mono">${r.dom}</span>`,v:r=>r.dom}],
+      /* 53號 P0-02：清單就要看得出階層，否則要點進去才知道誰繼承誰 */
+      {l:'上層市場',c:r=>{const p=mktParent(r);return p?`<span class="mut">${H(p.t)}</span>`:`<span class="mut3">—（頂層）</span>`;},v:r=>{const p=mktParent(r);return p?p.t:'';}},
+      {l:'包含',c:r=>`<span class="mut">${H(r.inc)}</span>`,v:r=>r.inc},
+      {l:'幣別',c:r=>mktCell(r,'currency'),v:r=>mktRes(r,'currency').v},
+      {l:'價格調整',right:true,c:r=>mktCell(r,'priceAdj'),v:r=>mktRes(r,'priceAdj').v},
+      {l:'網域',c:r=>mktCell(r,'domain',true),v:r=>mktRes(r,'domain').v}],
     rows:MARKETS,id:r=>r.id,onRow:r=>`openMarket('${r.id}')`,
-    note:'一個國家只能屬於一個市場，加入時自動從原市場移出；空市場自動刪除；兜底 backup region 在設定→一般（29 §6）。'});
+    note:'一個國家只能屬於一個市場，加入時自動從原市場移出；空市場自動刪除；兜底 backup region 在設定→一般（29 §6）。父子關係由 conditions 推導，不是可寫欄位（46b:636）。'});
 }
 function marketNew(){
   openGen({title:'建立市場',wide:true,body:`<div class="stack">
@@ -5401,45 +5454,164 @@ function marketNew(){
 }
 let MKT=null;
 function openMarket(id){MKT=MARKETS.find(m=>m.id===id);goDetail('d-market',{id});}
+
+/* ---------- 53號 P0-02：繼承解析引擎（mkt*）---------- */
+/* 父子由 conditions 推導（46b:636–639），不是可寫欄位。pid 只是 derived 快取。
+   多個候選父市場時取**最特定者**＝ regions 最少的那個（46b:641–648 specificity stack：
+   company location > retail location > region > store default）。 */
+function mktDerive(){
+  const inside=(a,b)=>a.every(x=>b.includes(x));
+  MARKETS.forEach(m=>{
+    const isLoc=m.type!=='region';        /* 地點型：落在父 region 內即可，不必嚴格子集 */
+    const cands=MARKETS.filter(p=>p!==m&&p.type==='region'&&inside(m.regions,p.regions)
+      &&(isLoc||p.regions.length>m.regions.length));
+    cands.sort((a,b)=>a.regions.length-b.regions.length);
+    m.pid=cands.length?cands[0].id:null;
+  });
+}
+function mktParent(m){return m&&m.pid?MARKETS.find(x=>x.id===m.pid)||null:null;}
+function mktChain(m){                     /* 由近到遠的祖先鏈（不含自己）*/
+  const out=[];let p=mktParent(m),guard=0;
+  while(p&&guard++<8){out.push(p);p=mktParent(p);}
+  return out;
+}
+/* 覆寫型維度的解析：自己有值 → 沿 lineage 找第一個有值的 → 商店預設值 */
+function mktRes(m,k){
+  if(m.cust[k]!=null)return {v:m.cust[k],own:true,from:m};
+  for(const p of mktChain(m))if(p.cust[k]!=null)return {v:p.cust[k],own:false,from:p};
+  return {v:MKT_STORE_DEFAULT[k],own:false,from:null};
+}
+/* 累加型維度的解析（46b:654–656：Catalogs 與 WebPresences 是 added to the child）：
+   沿 lineage 聯集，且記住每一項來自哪一層——子市場不能移除父市場加進來的項目。 */
+function mktResAdd(m,k){
+  const out=[],push=(arr,src)=>(arr||[]).forEach(v=>{if(!out.some(o=>o.v===v))out.push({v,from:src});});
+  push(m.cust[k],m);mktChain(m).forEach(p=>push(p.cust[k],p));
+  if(!out.length)push(MKT_STORE_DEFAULT[k],null);
+  return out;
+}
+/* 語意標示：**不得只靠顏色**（WCAG 1.4.1）——文字 ＋ PIP_SHAPE 形狀雙編碼。
+   繼承＝info（空圈 ○）／已覆寫＝success（實心 ●）／不可繼承＝default（實心，文字寫明）。 */
+const mktBadge=r=>r.own?chip('已覆寫','success','full')
+  :chip('繼承自 '+H(r.from?r.from.t:'商店預設值'),'info','');
+/* 清單頁的格子：值 ＋ 繼承來源（來源用小字，不是只有顏色差） */
+function mktCell(m,k,mono){
+  const r=mktRes(m,k);
+  return `<span class="${mono?'mut mono':'mut'}">${H(r.v)}</span>`
+    +(r.own?'':`<span class="mut3" style="font-size:var(--t-2xs);display:block">↖ 繼承自 ${H(r.from?r.from.t:'商店預設值')}</span>`);
+}
+/* 繼承鏈文字：「香港 ← International（亞太） ← 商店預設值」，>1 層才看得出多級繼承 */
+function mktChainText(m){
+  return [H(m.t),...mktChain(m).map(p=>H(p.t)),'商店預設值'].join(' <span class="mut3" aria-hidden="true">←</span> ');
+}
+/* 覆寫型維度的一列：繼承時顯示唯讀值＋「覆寫」；已覆寫時顯示真控件＋「還原為繼承」 */
+const MKT_OPTS={
+  currency:['TWD（NT$）','HKD（HK$）','MYR（RM）','JPY（¥）','當地幣別（自動）'],
+  priceAdj:['−15%','0%','+8%','+12%'],
+  domain:['chilllove.demo','chilllove.demo/int','int.chilllove.demo','chilllove.jp'],
+  duty:['DDU（顧客承擔）','DDP（結帳預收）'],
+  taxIncl:['價格含稅（內含）','價格未含稅（結帳另加）'],
+  shipping:['一般設定檔（Standard／Express）','國際費率表','本地當日配送'],
+  returnRule:['預設規則（30 天）','B2B 規則（14 天・不收補貨費）','最終銷售（不可退）']};
+function mktRow(m,k,label,sub,doc){
+  const r=mktRes(m,k),o=MKT_OPTS[k]||[];
+  const ctl=r.own
+    ? `<select class="input set-fld" aria-label="${H(label)}" onchange="mktSet('${k}',this.value)">${
+        o.map(v=>`<option${v===r.v?' selected':''}>${H(v)}</option>`).join('')}</select>`
+    : `<span class="mut">${H(r.v)}</span>`;
+  const act=r.own
+    ? `<button class="btn btn-ghost btn-sm" onclick="mktRevert('${k}')">還原為繼承</button>`
+    : `<button class="btn btn-sec btn-sm" onclick="mktOverride('${k}')">覆寫</button>`;
+  /* 值／徽章／動作放在同一個右側群組，避免副標換行時與值互相插隊 */
+  return `<div class="set-row" style="align-items:flex-start"${doc?` data-doc="${doc}"`:''}>
+    <div class="sr-t" style="min-width:0"><b>${H(label)}</b><span class="sub">${sub}</span></div>
+    <span class="sr-act" style="margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:var(--sp-200);flex-wrap:wrap;justify-content:flex-end">${ctl}${mktBadge(r)}${act}</span></div>`;
+}
+/* 累加型維度的一列：父層帶下來的項目**不可移除**（additive 的定義），只能加自己的 */
+function mktRowAdd(m,k,label,sub){
+  const items=mktResAdd(m,k);
+  return `<div class="set-row" style="align-items:flex-start"><div class="sr-t"><b>${H(label)}</b><span class="sub">${sub}</span></div>
+    <span class="sr-act" style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:var(--sp-150)">
+    ${items.map(it=>`<span style="display:inline-flex;align-items:center;gap:var(--sp-150)">
+      <span class="mut">${H(it.v)}</span>${it.from===m?chip('本市場新增','success','full'):chip('繼承自 '+H(it.from?it.from.t:'商店預設值'),'info','')}
+      ${it.from===m?`<button class="btn btn-ghost btn-sm" onclick="mktDelVal('${k}',${JQ(it.v)})" aria-label="移除 ${H(it.v)}">移除</button>`:''}</span>`).join('')}
+    <button class="btn btn-sec btn-sm" onclick="mktAddVal('${k}',${JQ(label)})">新增</button></span></div>`;
+}
+function mktRefresh(msg){renderDetail('d-market');if(msg)toast(msg);}
+function mktOverride(k){
+  MKT.cust[k]=mktRes(MKT,k).v;              /* 覆寫＝把目前解析出來的值落成自己的（欄位由 null 變有值）*/
+  mktRefresh(`已覆寫「${MKT.t}」的此項設定——不再跟著上層市場變動`);
+}
+function mktRevert(k){
+  const before=mktRes(MKT,k).v;MKT.cust[k]=null;const after=mktRes(MKT,k);
+  mktRefresh(`已還原為繼承：${before} → ${after.v}（來自 ${after.from?after.from.t:'商店預設值'}）`);
+}
+function mktSet(k,v){MKT.cust[k]=v;mktRefresh('已更新此市場的覆寫值');}
+function mktAddVal(k,label){
+  openGen({title:'新增'+label,body:`<div class="stack">${F(label,TXT('_mkav','','例：English'),'加進本市場；父市場帶下來的項目不受影響（累加型繼承）')}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="mktAddValOK('${k}')">新增</button>`});
+}
+function mktAddValOK(k){
+  const v=(document.querySelector('[data-f="_mkav"]')||{}).value;
+  closeGen();
+  if(!v||!v.trim())return toast('未輸入名稱，已取消');
+  MKT.cust[k]=(MKT.cust[k]||[]).concat(v.trim());
+  mktRefresh('已加入本市場（累加型繼承：父市場的項目仍在）');
+}
+function mktDelVal(k,v){
+  MKT.cust[k]=(MKT.cust[k]||[]).filter(x=>x!==v);
+  if(!MKT.cust[k].length)MKT.cust[k]=null;   /* 空陣列＝仍是「有定義」，改回 null 才是真的回到繼承 */
+  mktRefresh('已移除本市場新增的項目');
+}
 function marketPage(){
-  const m=MKT;
-  return detailHead(H(m.t),chip(m.st,m.st==='啟用中'?'success':'info'),
+  const m=MKT,par=mktParent(m),kids=MARKETS.filter(x=>x.pid===m.id);
+  return detailHead(H(m.t),chip(m.st,m.st==='啟用中'?'success':'info')
+      +(par?chip('子市場','info',''):chip('頂層市場','default','full')),
     `<button class="btn btn-sec btn-sm" onclick="toast('Demo：以此市場 context 預覽前台（價格／可售性）')">預覽</button>
      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'m-markets')
   +`<div class="od-grid" data-form="mkt"><div class="col">
     <div class="card card-pad" data-doc="mk-status"><h3>狀態</h3>${SWROW('mkon',m.st==='啟用中','市場已啟用','停用後這些國家的顧客會導向兜底 backup region')}</div>
-    <div class="card card-pad" data-doc="mk-countries"><h3>條件（包含的國家）</h3>
-      <p class="help">${m.inc}</p>
-      <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="marketNew()">管理國家清單</button></div></div>
-    <div class="card card-pad" data-doc="mk-domain"><h3>網域與語言</h3>
-      ${F('網域策略',SEL('mkd',['子資料夾 /int','子網域 int.chilllove.demo','獨立網域'],'子資料夾 /int'),'國際網域策略會關閉「全部導向主網域」開關')}
-      ${F('主要語言',SEL('mkl',['繁體中文','English','日本語'],m.langs[0]))}
-      <div class="card-sec">${['繁體中文','English','日本語'].map((l,i)=>SWROW('mkl'+i,m.langs.includes(l),l,i===0?'預設語言':'')).join('')}</div>
-      <p class="help card-sec">hreflang 自動輸出（線上商店偏好設定，預設開啟）。</p></div>
-    <div class="card card-pad" data-doc="mk-currency"><h3>幣別與定價</h3>
-      ${F('結帳幣別',SEL('mkc',['TWD（NT$）','HKD（HK$）','MYR（RM）','JPY（¥）','當地幣別（自動）'],m.cur))}
-      ${SWROW('mkauto',true,'使用自動匯率','關閉後改用手動匯率，需自行維護')}
-      <div class="grid2 card-sec">${F('價格調整（±%）',TXT('mkadj',m.adj==='—'?'0':m.adj.replace('%',''),'','num'))}${F('捨入規則',SEL('mkr',['不捨入','進位到整數','結尾 .00','結尾 .99'],'結尾 .00'))}</div></div>
-    <div class="card card-pad" data-doc="mk-duty"><h3>關稅與稅金</h3>
-      ${F('關稅模式',SEL('mkdu',['DDU（顧客承擔）','DDP（結帳預收）'],m.duty.startsWith('DDP')?'DDP（結帳預收）':'DDU（顧客承擔）'),'DDP 需要商品有 HS code 與原產地')}</div>
-    <div class="card card-pad" data-doc="mk-shipping"><h3>運送</h3>
-      <div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>此市場的運送選項</b><span class="sub">Standard／Express＋費率（新模型：Shipping options by market）</span></div>
-        <button class="btn btn-ghost btn-sm" onclick="openSettings('shipping')">前往設定 ›</button></div></div>
-    <div class="card card-pad" data-doc="mk-catalog"><h3>目錄與翻譯覆寫</h3>
-      <div class="set-row" style="border:0;padding:var(--sp-150) 0"><div><b>目錄</b><span class="sub">${m.t} 的發布範圍與價格表</span></div><button class="btn btn-ghost btn-sm" onclick="go('m-catalogs')">管理 ›</button></div>
-      <div class="card-sec"><b style="font-size:var(--t-sm)">翻譯覆寫</b>
-        <table class="idx"><thead><tr><th>資源</th><th>原文</th><th>此市場覆寫</th></tr></thead><tbody>
-          <tr class="norow"><td>商品標題</td><td class="mut">奶茶色寬版帽T</td><td><input class="cellin" value="Milk Tea Oversized Hoodie" aria-label="覆寫商品標題"></td></tr>
-          <tr class="norow"><td>運送政策</td><td class="mut">台灣本島滿 2,000 免運</td><td><input class="cellin" value="Free shipping over HK$500" aria-label="覆寫運送政策"></td></tr>
-        </tbody></table>
-        <p class="help" style="margin-top:var(--sp-200)">市場層覆寫優先於語言層翻譯（29 §2）；未覆寫的欄位回退到語言翻譯，再回退原文。</p></div></div>
+    <div class="card card-pad" data-doc="mk-lineage"><h3>市場階層</h3>
+      <p class="help">繼承鏈：${mktChainText(m)}</p>
+      <div class="card-sec">
+        <div class="kv"><span class="k">上層市場</span><span>${par?`<button class="btn btn-ghost btn-sm" style="padding:0" onclick="openMarket('${par.id}')">${H(par.t)} ›</button>`:'<span class="mut3">—（此市場已是頂層，未定義的設定直接回退商店預設值）</span>'}</span></div>
+        <div class="kv"><span class="k">下層市場</span><span>${kids.length?kids.map(k=>`<button class="btn btn-ghost btn-sm" style="padding:0" onclick="openMarket('${k.id}')">${H(k.t)} ›</button>`).join('　'):'<span class="mut3">—</span>'}</span></div>
+        <div class="kv"><span class="k">命中條件</span><span class="mut">${H(m.inc)}</span></div></div>
+      <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">父子關係<b>不是手動指定的欄位</b>，由條件推導：region 是父市場的嚴格子集，或公司／零售地點落在父市場 region 內（46b:636–639）。改條件就會重算整條鏈。</p></div>
+    <div class="card card-pad" data-doc="mk-inherit"><h3>繼承的設定</h3>
+      <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">未定義的項目沿繼承鏈往上取第一個有定義的值；覆寫後可還原為繼承</p>
+      ${mktRow(m,'currency','結帳幣別','覆寫型（46b:657 Currency Settings are overridden）','mk-currency')}
+      ${mktRow(m,'priceAdj','價格調整（±%）','覆寫型；固定價（目錄）仍優先於百分比調整')}
+      ${mktRow(m,'domain','網域策略','覆寫型；國際網域策略會關閉「全部導向主網域」','mk-domain')}
+      ${mktRow(m,'duty','關稅模式','覆寫型；DDP 需要每個品項都有 HS code 與原產地','mk-duty')}
+      ${mktRow(m,'taxIncl','稅金行為（price inclusions）','覆寫型（46b:657 PriceInclusions are overridden）')}
+      ${mktRow(m,'returnRule','退貨規則','覆寫型——⚠ Shopify 公開 API 未載明繼承語意，本專案自定（46b:796）')}
+      ${mktRowAdd(m,'langs','語言（web presences）','累加型（46b:654 Inherited WebPresences are added to the child）——父市場的語言不可在子市場移除')}
+      ${mktRowAdd(m,'catalogs','目錄','累加型（46b:654 Inherited Catalogs are added to the child）')}
+      <div class="set-row" data-doc="mk-shipping"><div class="sr-t"><b>運送</b><span class="sub">此市場的運送選項與費率</span></div>
+        <span class="sr-act" style="margin-left:auto;display:inline-flex;align-items:center;gap:var(--sp-200)">
+        ${chip('繼承語意未定案','caution','')}<button class="btn btn-sec btn-sm" onclick="openSettings('shipping')">前往運送設定</button></span></div>
+      <p class="mut3" style="font-size:var(--t-xs)">⚠ 運送的繼承語意<b>直接矛盾</b>：46b:659–661「Null means the market inherits shipping from its parent」vs 44:866 實測「運送與隱私權不繼承，永遠市場本地」。<code>limits.yml market.shipping_inherits</code> 目前是 <code>null</code>（未定案），所以這一項<b>不提供覆寫／還原動作</b>，不預選任何一邊。</p>
+      <div class="set-row is-ro"><div class="sr-t"><b>司法管轄區 jurisdiction</b><span class="sub">${H(m.jur)}</span></div>
+        <span class="sr-ro">${chip('不可繼承','default','full')}</span></div>
+      <p class="mut3" style="font-size:var(--t-xs)">法域<b>永遠市場本地</b>（56 §A.0 硬要求 2）——子市場若繼承父市場的法域，會出現「香港母市場下掛台灣子市場卻套用香港稅制」。</p></div>
+    <div class="card card-pad" data-doc="mk-catalog"><h3>翻譯覆寫</h3>
+      <table class="idx"><thead><tr><th>資源</th><th>原文</th><th>此市場覆寫</th></tr></thead><tbody>
+        <tr class="norow"><td>商品標題</td><td class="mut">奶茶色寬版帽T</td><td><input class="cellin" value="Milk Tea Oversized Hoodie" aria-label="覆寫商品標題"></td></tr>
+        <tr class="norow"><td>運送政策</td><td class="mut">台灣本島滿 2,000 免運</td><td><input class="cellin" value="Free shipping over HK$500" aria-label="覆寫運送政策"></td></tr>
+      </tbody></table>
+      <p class="help" style="margin-top:var(--sp-200)">市場層覆寫優先於語言層翻譯（29 §2）；未覆寫的欄位回退到語言翻譯，再回退原文。</p></div>
     </div><div class="col">
       <div class="card card-pad"><h3>此市場成效</h3>
-        <div class="kv"><span class="k">工作階段</span><span class="num">${m.id==='tw'?'7,120':'1,480'}</span></div>
-        <div class="kv"><span class="k">訂單</span><span class="num">${m.id==='tw'?'218':'22'}</span></div>
-        <div class="kv"><span class="k">銷售額</span><span class="num">${NT(m.id==='tw'?362400:45300)}</span></div></div>
+        <div class="kv"><span class="k">工作階段</span><span class="num">${H(m.perf.s)}</span></div>
+        <div class="kv"><span class="k">訂單</span><span class="num">${H(m.perf.o)}</span></div>
+        <div class="kv"><span class="k">銷售額</span><span class="num">${H(m.perf.rev)}</span></div></div>
+      <div class="card card-pad" data-doc="mk-countries"><h3>條件（命中的國家／地點）</h3>
+        <p class="help">${H(m.inc)}</p>
+        <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="marketNew()">管理國家清單</button></div>
+        <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">改動條件會重算父子鏈，連帶改變此頁所有「繼承自 …」的來源。</p></div>
       <div class="card card-pad"><h3>佈景主題內容</h3><button class="btn btn-sec btn-sm" onclick="toast('Demo：以此市場 context 開啟主題編輯器')">編輯此市場的主題內容</button></div>
-      ${m.id!=='tw'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除市場','此市場的國家會退回兜底 backup region，該區的固定價與翻譯覆寫將一併移除。','刪除市場',function(){toast('已刪除市場');go('m-markets');})">刪除市場</button></div>`:''}
+      ${m.id!=='tw'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除市場','此市場的國家會退回兜底 backup region；${kids.length?'其下層市場會改為繼承更上層，':''}該區的固定價與翻譯覆寫將一併移除。','刪除市場',function(){toast('已刪除市場');go('m-markets');})">刪除市場</button></div>`:''}
     </div></div>`;
 }
 function catalogsPage(){
@@ -5471,11 +5643,47 @@ function catalogOpen(t){
 /* ==================================================================
    財務：總覽（餘額／撥款）／帳單
    ================================================================== */
+/* ==================================================================
+   53號 P0-19：財務 2FA 是**閘門**不是 banner
+   ------------------------------------------------------------------
+   原本是 `.banner-err` inline 提示：has2fa=false 但餘額／待入帳／手續費／撥款排程照常顯示在
+   banner 下方 —— 那是**安全缺口不是 UI 缺口**，未啟用 2FA 就看得到金流數字。
+   🔴 修法必須是「資料層不放進 DOM」：不是 display:none、不是 visibility、不是 opacity——
+      那三種都能用 F12 讀回來，等於沒擋。下面 financePage() 在未過閘時**根本不產生**
+      含金額的字串（含 KPI 卡、撥款排程、撥款紀錄表、對帳匯出）。
+   🔴 正式版的擋在**伺服器端**：`Finance::Policy` 於 GraphQL resolver 檢查 staff 的 2FA 狀態，
+      未過就回 userErrors{code: TWO_FACTOR_REQUIRED} 且**不回傳任何金額欄位**。
+      前端閘門只是體驗層——前端擋不住 API，真正的擋在後端。這一條寫在 DOCS fin-gate。
+   ================================================================== */
+let FIN_2FA=false;                 /* demo 初值＝未啟用，預設就看得到閘門形態 */
+function finToggle2fa(){
+  FIN_2FA=!FIN_2FA;
+  renderModule('m-finance');
+  toast(FIN_2FA?'示範：2FA 已啟用——金流數字現在才進 DOM'
+               :'示範：2FA 已停用——金流數字已從 DOM 移除（不是隱藏）');
+}
+/* 閘門畫面：要有出路，不能是死路（明確的「前往啟用兩步驟驗證」動作）*/
+function finGate(){
+  return `<div class="card" data-doc="fin-gate"><div class="empty-wrap" style="max-width:520px;margin:0 auto">
+      <span class="rb-ic" aria-hidden="true" style="font-size:28px">🔒</span>
+      <b>需要兩步驟驗證才能查看財務資料</b>
+      餘額、待入帳、手續費、撥款排程與撥款紀錄都屬於金流資料。<b>你的帳號尚未啟用兩步驟驗證，因此這些數字沒有被載入</b>——不是隱藏起來，是伺服器端根本沒有回傳。
+      <div class="rowflex" style="justify-content:center;margin-top:var(--sp-400);gap:var(--sp-200)">
+        <button class="btn btn-pri btn-sm" onclick="openSettings('users')">前往啟用兩步驟驗證</button>
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：改用另一個已啟用 2FA 的帳號登入')">改用其他帳號</button>
+      </div>
+      <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-400)">啟用後回到此頁即可看到完整財務資料。組織可在「設定 → 組織」強制全員啟用。</p>
+    </div></div>`;
+}
 function financePage(){
-  return `<div class="page-head"><h1>財務</h1><div class="head-actions">
-      <button class="btn btn-sec btn-sm" data-doc="fin-export" onclick="toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')">匯出對帳報表</button>
-      <button class="btn btn-sec btn-sm" onclick="go('m-billing')">帳單</button></div></div>
-    <div class="banner-err" data-doc="fin-2fa" style="background:var(--info-bg);border-color:#cfe3f2;color:var(--info);margin-bottom:var(--sp-400)">啟用兩步驟驗證以保護你的帳戶。<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="openSettings('users')">設定</button></div>
+  const head=`<div class="page-head"><h1>財務</h1><div class="head-actions">
+      ${FIN_2FA?`<button class="btn btn-sec btn-sm" data-doc="fin-export" onclick="toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')">匯出對帳報表</button>`:''}
+      <button class="btn btn-sec btn-sm" onclick="go('m-billing')">帳單</button>
+      <button class="btn btn-ghost btn-sm" data-doc="fin-2fa-demo" onclick="finToggle2fa()">示範：2FA ${FIN_2FA?'已啟用':'未啟用'}</button></div></div>`;
+  if(!FIN_2FA)return head+finGate();
+  return head
+   +`<div class="banner-caution" data-doc="fin-2fa" style="margin-bottom:var(--sp-400)"><span class="bc-ic" aria-hidden="true">✓</span>
+      <span>此帳號已啟用兩步驟驗證，因此可以看到金流數字。<b>前端閘門只是體驗層</b>——正式版由伺服器端授權檢查決定要不要回傳這些欄位。</span></div>
     <div class="ana-grid g3" data-doc="doc-m-finance">
       <div class="card stat-card"><div class="t-label">可用餘額</div><div class="t-value num">NT$38,420</div><span class="t-vs">下次撥款 2026-08-13</span></div>
       <div class="card stat-card"><div class="t-label">待入帳（處理中）</div><div class="t-value num">NT$12,860</div><span class="t-vs">授權未請款 3 筆</span></div>
@@ -5487,8 +5695,8 @@ function financePage(){
           ${F('排程',SEL('_fp',['每日','每週（週一）','每月（1 日）'],'每日'))}
           <p class="help card-sec">撥款＝charges − refunds − fees + adjustments；失敗會退回可用餘額並寄通知。</p></div>
         <div class="card card-pad"><h3>工具</h3>
-          <div class="set-row" style="padding:var(--sp-200) 0"><div><b>對帳報表</b><span class="sub">撥款與訂單的對帳明細</span></div><span class="chev">›</span></div>
-          <div class="set-row" style="padding:var(--sp-200) 0;border:0"><div><b>稅務設定</b><span class="sub">依地區稅率自動計算</span></div><button class="btn btn-ghost btn-sm" onclick="openSettings('taxes')">前往 ›</button></div></div>
+          ${setRowBtn('對帳報表','撥款與訂單的對帳明細——產生 CSV','',"toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')",'fin-recon','📑')}
+          ${setRowBtn('稅務設定','稅區服務層級三檔與稅率','',"openSettings('taxes')",'fin-taxlink','⚖️')}</div>
       </div>
       <div class="card" data-doc="fin-payouts"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>撥款紀錄</h3></div>
         <table class="idx"><thead><tr><th>日期</th><th class="right">金額</th><th>狀態</th><th class="right">訂單數</th></tr></thead><tbody>
@@ -5497,6 +5705,9 @@ function financePage(){
     </div>`;
 }
 function payoutOpen(d){
+  /* 閘門要擋在**資料組裝之前**：即使有人從 console 直接呼叫，也不得組出含金額的字串。
+     正式版這裡是伺服器端 resolver 的授權檢查，不是這個 if。 */
+  if(!FIN_2FA)return toast('需要兩步驟驗證才能查看撥款明細——請先到「設定 → 使用者」啟用');
   openGen({title:`撥款 ${d}`,body:`<div class="stack">
     <div class="kv"><span class="k">交易總額 charges</span><span class="num">${NT(41200)}</span></div>
     <div class="kv"><span class="k">退款 refunds</span><span class="num">−${NT(960)}</span></div>
@@ -5778,6 +5989,12 @@ const LOC_ORDER=[{n:'主倉（內湖）',s:'台北市內湖區',ship:true},{n:'�
 const WEBHOOKS=[{topic:'orders/create',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'},
                 {topic:'products/update',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'}];
 const METAOBJ=[{n:'設計師檔案',k:'designer',c:4},{n:'材質說明',k:'material_note',c:5},{n:'門市據點',k:'store_location',c:2}];
+/* 53號 N-04：原本是四條寫死的假可點列，改成真的資料 ＋ metafieldDef(i) 編輯 */
+const METAFIELD_DEFS=[
+ {n:'材質成分',own:'商品',key:'custom.material',type:'single_line_text',val:'max:120',pin:true,sf:true},
+ {n:'洗滌方式',own:'商品',key:'custom.care',type:'rich_text',val:'',pin:false,sf:true},
+ {n:'生日',own:'顧客',key:'custom.birthday',type:'date',val:'',pin:false,sf:false},
+ {n:'禮物訊息',own:'訂單',key:'custom.gift_note',type:'multi_line_text',val:'max:200',pin:true,sf:false}];
 const BILL_CARDS=[{n:'VISA •• 4242',s:'到期 08/29',primary:true}];
 
 Object.assign(SET_PAGES,{
@@ -5800,9 +6017,10 @@ Object.assign(SET_PAGES,{
    <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div class="sr-t"><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="set-ctl">${chip('員工','info','full')}</span></div>
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：邀請使用者（單發或 CSV 批量，72 小時單次連結）')">邀請使用者</button>
      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：協作者申請碼（4 碼，不佔名額）')">協作者</button></div></div>
-  <div class="card card-pad"><h3>角色（權限集模板）</h3>
-   ${permCats.map(([c,pm])=>`<div class="set-row"><div class="sr-t"><b>${c}</b><span class="sub">${pm}</span></div><span class="chev">›</span></div>`).join('')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">13 類顆粒權限對照 Pundit policy；staff 角色映射為 API scope 集合（28 §0.2）。</p></div>
+  <div class="card card-pad" data-doc="set-perm-cats"><h3>顆粒權限目錄</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">13 類顆粒權限對照 Pundit policy；staff 角色映射為 API scope 集合（28 §0.2）</p>
+   ${permCats.map(([c,pm])=>setRow(H(c),H(pm),'','set-perm-cat')).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：這六列原本帶 <b>›</b> 卻沒有 handler。原型<b>沒有角色 CRUD</b>（沒有可編輯的角色物件），做一個勾不到任何角色的權限勾選頁只是換一種假控件——因此改為明示唯讀的<b>權限目錄</b>。逐項勾選屬 M5 的角色編輯器，屆時入口掛在角色列上，不是掛在這裡。</p></div>
   <div class="card card-pad"><h3>安全</h3>
    ${setRowTgl('強制兩步驟驗證','所有成員下次登入時必須設定；未設定者被擋在登入頁','sec2fa',false,'set-sec-2fa')}
    ${setRowDanger('登出所有裝置','立即撤銷所有成員的 session（含你自己）','登出所有裝置',
@@ -5860,18 +6078,17 @@ Object.assign(SET_PAGES,{
    ${setRowTgl('資料銷售退出','前台頁尾顯示「不要出售或分享我的個人資訊」連結','pvOptout',true,'set-pv-optout',{dep:'pvOptoutFields',depMode:'dim'})}
    <div id="pvOptoutFields">${setRowInp('連結文字','CCPA/CPRA 對字樣有要求，改寫前先過法務','pvOptoutLabel','不要出售或分享我的個人資訊','不要出售或分享我的個人資訊','set-pv-optout-label',{val:'req'})}</div>
    ${setRowBtn('隱私政策生成器','依你實際收集的資料類型產生政策草稿','<span class="chev" aria-hidden="true">›</span>','openPrivacyGen()','set-pv-gen','📝')}</div>`,
- events:`<div class="card card-pad" data-doc="set-events"><h3>顧客事件（自訂 pixel）</h3>
-   <div class="set-row"><div class="sr-t"><b>GA4 pixel</b><span class="sub">訂閱：page_viewed／product_viewed／checkout_completed</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
-   <div class="set-row"><div class="sr-t"><b>Meta pixel</b><span class="sub">未設定</span></div><span class="set-ctl">${chip('未連線','default','')}</span></div>
-   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增 pixel＝名稱＋JS 沙箱代碼＋訂閱事件清單')">新增自訂 pixel</button>
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pixel 在沙箱 iframe 執行，只能收到訂閱的事件（不接觸 DOM）。</p></div>`,
+ /* events 分頁改成 SET_DYN（新增／刪除／訂閱勾選都要隨狀態重算）——見下方 evPage()。
+    53號 N-05：這一頁是「58 條佔位列轉真控件」那一輪的漏網，原本整頁只有兩個唯讀 chip ＋ 一顆 demo toast。 */
  apps:`<div class="card card-pad" data-doc="set-apps"><h3>已安裝的應用程式</h3>
    ${[['Messaging（行銷自動化）','已授權：read_customers, write_marketing'],['Simprosys Feed','已授權：read_products, read_orders']]
      .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
        <button class="btn btn-ghost btn-sm sr-act" onclick="confirmDanger('解除安裝','解除安裝後這個 app 寫入的資料（selling plan／自動化流程）會停止運作。','解除安裝',function(){toast('已解除安裝')})">解除安裝</button></div>`).join('')}</div>
-  <div class="card card-pad"><h3>銷售管道</h3>
-   ${[['線上商店','已啟用'],['AI 代理','已啟用・目錄開放中'],['門市 POS','未啟用'],['Shop','未啟用']]
-     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div><span class="chev">›</span></div>`).join('')}</div>`,
+  <div class="card card-pad" data-doc="set-channels"><h3>銷售管道</h3>
+   ${[['線上商店','商品發布範圍由目錄決定',true],['AI 代理','目錄開放中',true],['門市 POS','需 POS 訂閱',false],['Shop','需先通過商店審核',false]]
+     .map(([n,s2,on])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
+       <span class="set-ctl">${on?chip('已啟用','success','full'):chip('未啟用','default','')}</span></div>`).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：這四列原本帶 <b>›</b> 卻沒有 handler。各管道的設定頁<b>屬該管道自己的 app</b>（不是平台設定的一部分），原型不做這一層，因此只顯示啟用狀態、<b>不掛 ›</b>。商品要出現在某管道，是在商品／目錄側設定發布範圍。</p></div>`,
  giftcards:`<div class="card card-pad" data-doc="set-giftcards"><h3>禮品卡</h3>
    ${setRowSel('到期政策','多數地區法規禁止設到期日；設了就必須能證明合規','gcExpiry',
      [['never','不設到期日'],['12','發卡後 12 個月'],['24','發卡後 24 個月'],['custom','自訂月數']],'never','set-gc-expiry',{dep:'gcExpiryCustom',depVal:'custom'})}
@@ -5907,10 +6124,72 @@ function paymentsPage(){
    ${MANUAL_PAY.map((m,i)=>setRowBtn(H(m.n),H(m.s),'<span class="chev" aria-hidden="true">›</span>',`openManualPay(${i})`,'set-manualpay','🏦')).join('')}
    ${setRowAdd('新增手動付款方式','貨到付款、面交、郵局匯款…（自訂名不得使用保留字）','manualPayAdd()','set-manualpay-add')}</div>`;
 }
+/* 53號 N-04：這兩列原本帶 › 卻沒有 handler。「此市場的運送選項」**應該**有下一層
+   （Market → option → rates 是新模型的三層），站內已有 openShipProfile／openCkFields 的次級視圖
+   先例，照抄同一套 setSubOpen 模式做成 mktShipOpen()。 */
+const MKT_SHIP={
+ tw:[{n:'Standard',rates:[{n:'標準宅配',cond:'訂單金額 < NT$2,000',p:'NT$120'},{n:'標準宅配',cond:'訂單金額 ≥ NT$2,000',p:'免運'}]},
+     {n:'Express',rates:[{n:'快遞',cond:'全部訂單',p:'NT$260'}]}],
+ intl:[{n:'International Standard',rates:[{n:'國際標準',cond:'全部訂單',p:'HK$95'}]},
+       {n:'International Express',rates:[{n:'國際快遞',cond:'全部訂單',p:'HK$210'}]}],
+ hk:[{n:'本地宅配',rates:[{n:'本地宅配',cond:'訂單金額 < HK$500',p:'HK$30'},{n:'本地宅配',cond:'訂單金額 ≥ HK$500',p:'免運'}]}],
+ 'hk-b2b':[],jp:[]};
+let MKTSHIP_ID=null;
+function mktShipOpen(id){MKTSHIP_ID=id;setSubOpen('mkt-ship',mktShipPage());setAfterRender();}
+function mktShipPage(){
+  const m=MARKETS.find(x=>x.id===MKTSHIP_ID)||MARKETS[0],par=mktParent(m),opts=MKT_SHIP[m.id]||[];
+  return setCrumb('🚚',H(m.t)+'｜運送選項','shipping')
+  +`<div class="card"><div class="card-pad" data-doc="sub-mktship"><h3>Shipping options（顧客可見名）</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+      市場 <b>${H(m.t)}</b>${par?`・上層市場 ${H(par.t)}`:'・頂層市場'}・命中條件 ${H(m.inc)}</p>
+    <div class="banner-caution" data-doc="sub-mktship-inherit"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>運送的<b>繼承語意未定案</b>：46b:659–661「Null means the market inherits shipping from its parent」vs 44:866 實測「運送與隱私權不繼承，永遠市場本地」——<b>直接矛盾</b>。
+      <code>limits.yml market.shipping_inherits</code> 目前是 <code>null</code>，因此這一頁<b>不提供「還原為繼承」動作</b>，也不預設任何一邊；此市場沒有選項時就是沒有，不會自動套父市場的。</span></div>
+    ${opts.length?opts.map((o,oi)=>`<div class="card-sec" data-doc="sub-mktship-opt">
+      <div class="rowflex" style="justify-content:space-between;align-items:center">
+        <b style="font-size:var(--t-sm)">${H(o.n)}</b>
+        <button class="btn btn-ghost btn-sm" onclick="mktShipDelOpt(${oi})" aria-label="移除選項 ${H(o.n)}">移除選項</button></div>
+      <table class="idx"><thead><tr><th>費率名稱</th><th>條件</th><th class="right">價格</th><th class="right">動作</th></tr></thead><tbody>
+      ${o.rates.map((r,ri)=>`<tr class="norow">
+        <td><input class="cellin" value="${H(r.n)}" aria-label="${H(o.n)} 第 ${ri+1} 筆費率名稱" onchange="mktShipSet(${oi},${ri},'n',this.value)"></td>
+        <td><input class="cellin" value="${H(r.cond)}" aria-label="${H(o.n)} 第 ${ri+1} 筆條件" onchange="mktShipSet(${oi},${ri},'cond',this.value)"></td>
+        <td class="right"><input class="cellin num" style="text-align:right" value="${H(r.p)}" aria-label="${H(o.n)} 第 ${ri+1} 筆價格" onchange="mktShipSet(${oi},${ri},'p',this.value)"></td>
+        <td class="right" style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="mktShipDelRate(${oi},${ri})" aria-label="移除費率">移除</button></td></tr>`).join('')}
+      </tbody></table>
+      ${setRowAdd('新增費率','Flat／Order amount 條件／Weight 條件／Carrier-app 計算','mktShipAddRate('+oi+')','sub-mktship-rate-add')}</div>`).join('')
+     :`<div class="empty-wrap"><b>此市場尚未定義運送選項</b>沒有可用運送選項的市場，顧客在結帳時會看到「此地區暫不提供配送」。</div>`}
+    ${setRowAdd('新增運送選項','顧客在結帳頁看到的名稱（Standard／Express…）','mktShipAddOpt()','sub-mktship-opt-add')}</div>
+    <div class="card-note">Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market。</div></div>`;
+}
+function mktShipRefresh(msg){setSubOpen('mkt-ship',mktShipPage());setAfterRender();if(msg)toast(msg);}
+function mktShipAddOpt(){
+  (MKT_SHIP[MKTSHIP_ID]??=[]).push({n:'新運送選項',rates:[{n:'新費率',cond:'全部訂單',p:'HK$0'}]});
+  mktShipRefresh('已新增運送選項——名稱是顧客在結帳頁看到的字樣，請直接編輯');
+}
+function mktShipDelOpt(oi){
+  const o=(MKT_SHIP[MKTSHIP_ID]||[]).splice(oi,1)[0];
+  mktShipRefresh(`已移除運送選項「${o?o.n:''}」`);
+}
+function mktShipAddRate(oi){
+  const o=(MKT_SHIP[MKTSHIP_ID]||[])[oi];if(!o)return;
+  o.rates.push({n:'新費率',cond:'全部訂單',p:'HK$0'});
+  mktShipRefresh('已新增費率');
+}
+function mktShipDelRate(oi,ri){
+  const o=(MKT_SHIP[MKTSHIP_ID]||[])[oi];if(!o)return;
+  o.rates.splice(ri,1);
+  mktShipRefresh('已移除費率');
+}
+function mktShipSet(oi,ri,k,v){
+  const o=(MKT_SHIP[MKTSHIP_ID]||[])[oi];
+  if(o&&o.rates[ri])o.rates[ri][k]=v;
+}
 function shippingPage(){
  return `<div class="card card-pad" data-doc="set-shipping"><h3>依市場的運送選項（新模型）</h3>
-   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">Market → Shipping option（顧客可見名）→ Rates；子市場繼承父市場可覆寫</p>
-   ${MARKETS.slice(0,2).map(m=>`<div class="set-row"><div class="sr-t"><b>${m.t}</b><span class="sub">Standard NT$120／Express NT$260・滿 NT$2,000 免運</span></div><span class="chev">›</span></div>`).join('')}
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">Market → Shipping option（顧客可見名）→ Rates；市場階層見「市場」頁，運送的繼承語意<b>未定案</b>（limits.yml market.shipping_inherits）</p>
+   ${MARKETS.map(m=>{const o=MKT_SHIP[m.id]||[],p=mktParent(m);
+     const sub=o.length?o.map(x=>H(x.n)+'（'+x.rates.length+' 筆費率）').join('／'):'尚未定義運送選項';
+     return setRowBtn(H(m.t),sub+(p?`・上層市場 ${H(p.t)}`:'・頂層市場'),'<span class="chev" aria-hidden="true">›</span>',`mktShipOpen('${m.id}')`,'set-mkt-ship','🚚');}).join('')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market。</p></div>
   <div class="card card-pad"><h3>本地配送</h3>
    ${setRowBtn('台北門市','半徑 10 km・基本費 NT$80・滿 NT$1,500 免費','<span class="chev" aria-hidden="true">›</span>','openLocalDelivery()','set-localdelivery','🛵')}
@@ -5924,18 +6203,104 @@ function shippingPage(){
    ${CARRIER_ACCTS.map(c=>`<div class="set-row"><div class="sr-t"><b>${H(c.n)}</b><span class="sub">${H(c.s)}</span></div><span class="set-ctl">${chip('已連接','success','full')}</span></div>`).join('')}
    ${setRowAdd('連接 Carrier 帳號','用自家與物流商的合約費率取代平台費率','carrierAdd()','set-carrier-add')}</div>`;
 }
+/* ==================================================================
+   53號 P0-07：稅務服務三檔 managed / basic / manual
+   ------------------------------------------------------------------
+   44:387–388 實測：稅務服務分三檔——`Shopify Tax`（加拿大、英國…）／`Basic Tax`（挪威、紐西蘭、
+   新加坡…）／`Manual Tax`（以色列、阿聯、南韓、**香港**、**馬來西亞**…），
+   對應我方模型 `tax_region.service_tier enum(managed, basic, manual)`，**manual 才顯示自訂稅率編輯器**。
+   50 H-113／44:385：**稅區不是自己建的，是「有運送區域才會出現」**——shipping zone 是稅區的上游依賴。
+   ⚠ 法域中性（CLAUDE.md 鐵律 11、56 §A）：基準法域＝香港，**香港沒有銷售稅／VAT／GST，也沒有政府發票**
+     （limits.yml jurisdictions.hk.consumption_tax.kind=none、tax_invoice.kind=none）。
+     所以本頁在 HK 下的預設樣貌就是「有稅區、有 service tier，但沒有稅率也沒有憑證」——
+     核心只發稅務事件（56 §A.2 C1 的 TaxEvent），要不要落地成憑證由 jurisdiction pack 決定。
+     台灣形態（營業稅 5% 含稅定價）**不刪**，降級為 `jurisdiction/tw` pack 素材並標未啟用。
+   ================================================================== */
+const TAX_TIERS=[['managed','平台代管 Shopify-managed','平台維護稅率與品類稅則，精算至街道層級；超量按單計費'],
+  ['basic','基本 Basic','平台只提供國家／州層級的基本稅率表，不做品類稅則'],
+  ['manual','手動 Manual','平台不提供此地的稅率，稅率由商家自行維護（下方自訂稅率編輯器）']];
+/* 稅區由運送區域推導出來（44:385），所以每筆帶 `zone` 說明它為什麼會在這裡。
+   tier 值取自 44:387 的實測歸類，不是猜的。 */
+const TAX_REGIONS=[
+ {code:'HK',n:'香港',zone:'運送區域「香港」',tier:'manual',jur:'hk（基準法域・已啟用）',
+  note:'香港無銷售稅／VAT／GST（limits.yml jurisdictions.hk.consumption_tax.kind=none）。稅額寫成「已宣告的 0」而非「未計算」，帶 tax_basis=no_consumption_tax_regime。',rates:[]},
+ {code:'MY',n:'馬來西亞',zone:'運送區域「馬來西亞」',tier:'manual',jur:'my（未建立 pack）',
+  note:'SST 由商家自行維護；品類差異走「稅則覆寫」。',rates:[{n:'SST（銷售與服務稅）',pct:'6',scope:'全部商品'}]},
+ {code:'SG',n:'新加坡',zone:'運送區域「新加坡」',tier:'basic',jur:'sg（未建立 pack）',
+  note:'44:387 實測新加坡屬 Basic Tax 檔。',rates:[]},
+ {code:'GB',n:'英國',zone:'運送區域「英國」',tier:'managed',jur:'gb（未建立 pack）',
+  note:'44:387 實測英國屬 Shopify Tax（平台代管）檔。',rates:[]}];
+const taxTierMeta=t=>TAX_TIERS.find(x=>x[0]===t)||TAX_TIERS[2];
+const taxRegion=c=>TAX_REGIONS.find(r=>r.code===c);
+function taxRefresh(msg){setPage('taxes');if(msg)toast(msg);}
+function taxTierSet(code,tier){
+  const r=taxRegion(code);if(!r||r.tier===tier)return;
+  r.tier=tier;
+  taxRefresh(tier==='manual'?`${r.n}｜已切換為「手動」——下方出現自訂稅率編輯器`
+    :`${r.n}｜已切換為「${taxTierMeta(tier)[1]}」——自訂稅率編輯器已收起，稅率改由平台維護`);
+}
+function taxRateAdd(code){
+  const r=taxRegion(code);if(!r)return;
+  r.rates.push({n:'新稅率',pct:'0',scope:'全部商品'});
+  taxRefresh(`已新增一筆 ${r.n} 的手動稅率——名稱與稅率請直接編輯`);
+}
+function taxRateDel(code,i){
+  const r=taxRegion(code);if(!r)return;
+  const g=r.rates.splice(i,1)[0];
+  taxRefresh(`已移除手動稅率「${g?g.n:''}」`);
+}
+function taxRateSet(code,i,k,v){const r=taxRegion(code);if(r&&r.rates[i])r.rates[i][k]=v;}
+/* manual 才出現的自訂稅率編輯器——這是 P0-07 的核心，不是裝飾 */
+function taxManualEditor(r){
+  return `<div class="card-sec" data-doc="set-tax-manual">
+    <b style="font-size:var(--t-sm)">自訂稅率（僅 manual 檔有）</b>
+    ${r.rates.length?`<table class="idx"><thead><tr><th>名稱</th><th class="right">稅率（%）</th><th>適用範圍</th><th class="right">動作</th></tr></thead><tbody>
+      ${r.rates.map((x,i)=>`<tr class="norow">
+        <td><input class="cellin" value="${H(x.n)}" aria-label="${H(r.n)} 第 ${i+1} 筆稅率名稱" onchange="taxRateSet('${r.code}',${i},'n',this.value)"></td>
+        <td class="right"><input class="cellin num" style="text-align:right" value="${H(x.pct)}" aria-label="${H(r.n)} 第 ${i+1} 筆稅率百分比" onchange="taxRateSet('${r.code}',${i},'pct',this.value)"></td>
+        <td><input class="cellin" value="${H(x.scope)}" aria-label="${H(r.n)} 第 ${i+1} 筆適用範圍" onchange="taxRateSet('${r.code}',${i},'scope',this.value)"></td>
+        <td class="right" style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="taxRateDel('${r.code}',${i})" aria-label="移除 ${H(x.n)}">移除</button></td></tr>`).join('')}
+      </tbody></table>`
+     :`<p class="help">此地區目前沒有任何手動稅率${r.code==='HK'?'——香港無銷售稅，這是<b>正確的預設樣貌</b>，不是漏設定':''}。</p>`}
+    ${setRowAdd('新增手動稅率','平台不代管此地稅率，數值與適用範圍由商家自負其責','taxRateAdd('+JQ(r.code)+')','set-tax-manual-add')}</div>`;
+}
+function taxRegionCard(r){
+  const meta=taxTierMeta(r.tier);
+  return `<div class="card card-pad" data-doc="set-tax-region">
+    <h3>${H(r.n)}　${chip(meta[1],r.tier==='manual'?'caution':r.tier==='basic'?'info':'success',r.tier==='manual'?'':r.tier==='basic'?'':'full')}</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">${H(r.zone)} 推導出此稅區・法域 ${H(r.jur)}</p>
+    <div class="rowflex" role="radiogroup" aria-label="${H(r.n)} 的稅務服務層級" style="flex-wrap:wrap;gap:var(--sp-300)">
+      ${TAX_TIERS.map(([v,l])=>`<label class="inline-lbl" style="gap:var(--sp-200)">
+        <input type="radio" name="taxTier${r.code}" class="cl-radio" value="${v}" ${r.tier===v?'checked':''}
+          aria-label="${H(r.n)}：${H(l)}" onchange="taxTierSet('${r.code}','${v}')"><span>${H(l)}</span></label>`).join('')}
+    </div>
+    <p class="help card-sec">${H(meta[2])}${r.note?'<br>'+r.note:''}</p>
+    ${r.tier==='manual'?taxManualEditor(r)
+      :`<div class="card-sec"><div class="set-row is-ro"><div class="sr-t"><b>稅率來源</b><span class="sub">${r.tier==='managed'?'平台稅率表＋品類稅則，每月更新':'平台基本稅率表（國家／州層級）'}</span></div>
+        <span class="sr-ro">${chip('平台維護','info','')}</span></div>
+        <p class="help">切換到「手動 Manual」才會出現自訂稅率編輯器。</p></div>`}</div>`;
+}
 function taxesPage(){
- return `<div class="card card-pad" data-doc="set-taxes"><h3>稅額與關稅</h3>
-   ${setRowInp('台灣｜營業稅率（%）','含稅定價；稅額由金額引擎反推，不另外加價','taxTW','5','5','set-tax-tw',{val:'req|pct'})}
-   ${setRowInp('香港｜稅率（%）','不課銷售稅，填 0','taxHK','0','0','set-tax-hk',{val:'req|pct'})}
-   ${setRowInp('馬來西亞｜SST 稅率（%）','此為預設稅率；依商品類別的差異走下方「稅則覆寫」','taxMY','6','6','set-tax-my',{val:'req|pct'})}
-   ${setRowTgl('價格含稅','前台顯示價已內含稅額；切換會重算所有市場的顯示價','taxIncl',true,'set-tax-incl')}
+ return `<div class="card card-pad" data-doc="set-taxes"><h3>稅務服務與稅區</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">稅區不是自己建的——<b>有運送區域才會出現</b>（shipping zone 是稅區的上游依賴，44 §18.3）</p>
+   <div class="banner-caution" data-doc="set-tax-jur"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>基準法域<b>香港</b>：無銷售稅／VAT／GST，<b>也沒有政府發票</b>。核心流程只發<b>稅務事件</b>（<code>sale_recognised / sale_reversed / sale_reduced / sale_increased / sale_uncollected</code>），
+     要不要落地成憑證由 jurisdiction pack 決定；HK pack 一律回 <code>no_document</code> 並落一列 <code>jurisdiction_capability_skips</code>，<b>不得靜默略過</b>（56 §A.2 C1）。
+     買家仍會收到單據，但那是<b>純商業收據、無稅務效力</b>（<code>invoice_document.kind=commercial_receipt</code>），單據上必須明示「本文件非稅務憑證」。</span></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">服務層級三檔對應 <code>tax_region.service_tier enum(managed, basic, manual)</code>；地區歸檔依 44 §18.3 實測。</p></div>
+  ${TAX_REGIONS.map(taxRegionCard).join('')}
+  <div class="card card-pad" data-doc="set-taxes-common"><h3>共同設定</h3>
+   ${setRowTgl('價格含稅','前台顯示價已內含稅額；切換會重算所有市場的顯示價。HK 預設關閉——無稅可內含（limits.yml jurisdictions.hk.consumption_tax.taxes_included_default）','taxIncl',false,'set-tax-incl')}
    ${setRowBtn('稅則覆寫',`${TAX_OVERRIDES.length} 條・以商品系列為單位（可用未發布系列）`,'<span class="chev" aria-hidden="true">›</span>','openTaxOverrides()','set-tax-override','⚖️')}
    ${setRowSel('跨境關稅','DDP 需要每個品項都有 HS code 與原產地，缺一即自動退回 DDU','taxDuty',
      [['ddu','DDU——關稅由顧客在收件時支付'],['ddp','DDP——結帳時預收關稅與進口稅']],'ddu','set-tax-duty',{dep:'taxDdpNote',depVal:'ddp'})}
    <div id="taxDdpNote" hidden class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
      <span>切到 DDP 之前，「海關資訊」必須以<b>商品子類</b>批次補齊 HS code 與原產地；任一品項缺漏時該筆訂單會自動退回 DDU 計價。</span></div>
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">引擎讀取順序：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15 §）。</p></div>`;
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">引擎讀取順序：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15 §）。跨境關稅是<b>唯一不受法域重分類影響</b>的稅務事件點（56 §B.2）。</p></div>
+  <div class="card card-pad" data-doc="set-tax-twpack"><h3>台灣 pack 素材 ${chip('未啟用','default','')}</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">以下是既有的台灣形態設定，已依 56 號降級為 <code>jurisdiction/tw</code> pack 素材（<code>limits.yml jurisdictions.tw.enabled=false</code>）——<b>不刪、也不生效</b>，待台灣市場開通時由 pack 接管</p>
+   ${setRowInp('台灣｜營業稅率（%）','含稅定價；稅額由金額引擎反推，不另外加價。tw pack 未啟用時此值不進金額引擎','taxTW','5','5','set-tax-tw',{val:'req|pct'})}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">統一發票／字軌／折讓／作廢屬 tw pack 的 <code>tax_invoice.kind=gui</code> 能力，核心流程不直接引用（CLAUDE.md 鐵律 11）。</p></div>`;
 }
 function locationsPage(){
  return `<div class="card card-pad" data-doc="set-locations"><h3>地點</h3>
@@ -5961,10 +6326,13 @@ function notificationsPage(){
    ${setRowAdd('建立 webhook','topic ＋ URL ＋ 格式（JSON／XML）＋ API 版本','webhookAdd()','set-webhook-add')}</div>`;
 }
 function customdataPage(){
+ /* 53號 N-04：這四列原本帶 › 卻沒有 handler。中繼欄位定義**本來就該有下一層**（改型別／驗證／pin／
+    storefront 可讀性），而且站內已有「新增定義」的 modal——把同一支加上編輯模式即可，不另立函式。 */
  return `<div class="card card-pad" data-doc="set-customdata"><h3>中繼欄位定義</h3>
-   ${[['商品・材質成分','single_line_text・前台可讀・已 pin'],['商品・洗滌方式','rich_text・前台可讀'],['顧客・生日','date・行銷用・未 pin'],['訂單・禮物訊息','multi_line_text・已 pin']]
-     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div><span class="chev">›</span></div>`).join('')}
-   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="metafieldDef()">新增定義</button>
+   ${METAFIELD_DEFS.map((d,i)=>setRowBtn(`${H(d.own)}・${H(d.n)}`,
+     `${H(d.type)}・${d.sf?'前台可讀':'僅 Admin API'}・${d.pin?'已 pin':'未 pin'}・<span class="mono">${H(d.key)}</span>`,
+     '<span class="chev" aria-hidden="true">›</span>',`metafieldDef(${i})`,'set-metafield-def','🏷')).join('')}
+   ${setRowAdd('新增定義','適用資源 ＋ namespace.key ＋ 型別 ＋ 驗證 ＋ pin','metafieldDef()','set-metafield-add')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pin 了才會出現在資源頁卡片與列表篩選；型別 30+ 種（含 list.* 變體）。</p></div>
   <div class="card card-pad"><h3>元物件定義</h3>
    ${setRowBtn('元物件定義',`${METAOBJ.length} 個定義・${METAOBJ.reduce((a,b)=>a+b.c,0)} 筆條目`,'<span class="chev" aria-hidden="true">›</span>','openMetaobjects()','set-metaobj','🧩')}
@@ -5980,8 +6348,126 @@ function setBillingPage(){
    ${setRowSel('帳單幣別','平台向你收費的幣別，與商店的銷售幣別互不相干','billCurrency',[['TWD','新台幣（NT$）'],['USD','美元（US$）']],'TWD','set-bill-currency')}
    <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`;
 }
+/* ==================================================================
+   53號 N-05：顧客事件（自訂 pixel）——真的 CRUD，不是兩個唯讀 chip
+   ------------------------------------------------------------------
+   既有那句「pixel 在沙箱 iframe 執行，只能收到訂閱的事件（不接觸 DOM）」是對的，保留；
+   本輪讓 UI 真的反映它：**訂閱清單是逐項勾選的**（沒勾就收不到），沙箱說明寫在編輯頁裡，
+   代碼欄明示它跑在沙箱 iframe（不接觸 storefront DOM、不能改 window.top）。
+   ================================================================== */
+/* 可訂閱的標準顧客事件（pixel 只會收到勾選的那些）*/
+const EV_CATALOG=[
+ ['page_viewed','瀏覽頁面'],['collection_viewed','瀏覽商品系列'],['product_viewed','瀏覽商品'],
+ ['search_submitted','送出搜尋'],['cart_viewed','檢視購物車'],['product_added_to_cart','加入購物車'],
+ ['product_removed_from_cart','移出購物車'],['checkout_started','開始結帳'],
+ ['checkout_contact_info_submitted','送出聯絡資訊'],['checkout_address_info_submitted','送出地址'],
+ ['payment_info_submitted','送出付款資訊'],['checkout_completed','完成結帳']];
+const EV_PIXELS=[
+ {id:'ga4',n:'GA4 pixel',on:true,subs:['page_viewed','product_viewed','checkout_completed'],
+  code:"analytics.subscribe('checkout_completed', function(e){\n  send({ id: e.id, total: e.data.checkout.totalPrice.amount });\n});"},
+ {id:'meta',n:'Meta pixel',on:false,subs:[],code:''}];
+let EV_ID=null;
+const evFind=id=>EV_PIXELS.find(x=>x.id===id);
+function evPage(){
+  return `<div class="card card-pad" data-doc="set-events"><h3>顧客事件（自訂 pixel）</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">每個 pixel＝名稱 ＋ 沙箱 JS ＋ 訂閱事件清單；<b>沒勾選的事件收不到</b></p>
+   ${EV_PIXELS.length?EV_PIXELS.map(x=>`<div class="set-row" data-doc="set-ev-row">
+     <div class="sr-t"><b>${H(x.n)}</b><span class="sub">訂閱 ${x.subs.length} 個事件${x.subs.length?'：'+x.subs.slice(0,3).map(H).join('／')+(x.subs.length>3?'…':''):'（尚未訂閱任何事件，等同不會被呼叫）'}</span></div>
+     <span class="sr-act" style="margin-left:auto;display:inline-flex;align-items:center;gap:var(--sp-200)">
+       ${x.on?chip('啟用中','success','full'):chip('已停用','default','')}
+       <input type="checkbox" class="tgl" role="switch" aria-checked="${x.on?'true':'false'}" ${x.on?'checked':''}
+         aria-label="啟用 ${H(x.n)}" onchange="evToggle('${x.id}')">
+       <button class="btn btn-sec btn-sm" onclick="evOpen('${x.id}')">編輯</button>
+       <button class="btn btn-ghost btn-sm" onclick="evDel('${x.id}')" aria-label="刪除 ${H(x.n)}">刪除</button></span></div>`).join('')
+    :`<div class="empty-wrap"><b>尚未建立任何自訂 pixel</b>建立後可訂閱標準顧客事件，並在沙箱裡送到你自己的分析服務。</div>`}
+   ${setRowAdd('新增自訂 pixel','名稱 ＋ 沙箱 JS ＋ 訂閱事件清單','evAdd()','set-ev-add')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pixel 在沙箱 iframe 執行，只能收到訂閱的事件（不接觸 DOM）。</p></div>`;
+}
+function evRefresh(msg){setPage('events');if(msg)toast(msg);}
+function evToggle(id){
+  const x=evFind(id);if(!x)return;
+  x.on=!x.on;evRefresh(x.on?`已啟用「${x.n}」——下一次前台載入即開始收訂閱的事件`
+    :`已停用「${x.n}」——沙箱不再載入，設定與訂閱清單保留`);
+}
+function evAdd(){
+  openGen({title:'新增自訂 pixel',body:`<div class="stack">
+    ${F('名稱','<input class="input" data-f="_evn" data-val="req|max:40" placeholder="例：Meta pixel">','只給後台辨識用，不會出現在前台')}
+    </div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="evAddOK()">建立並設定</button>`});
+}
+function evAddOK(){
+  const n=((document.querySelector('[data-f="_evn"]')||{}).value||'').trim();
+  closeGen();
+  if(!n)return toast('名稱必填，已取消');
+  const id='px'+Date.now().toString(36);
+  EV_PIXELS.push({id,n,on:false,subs:[],code:''});
+  toast('已建立 pixel（預設停用）——先勾訂閱事件與貼上代碼再啟用');
+  evOpen(id);
+}
+function evDel(id){
+  const x=evFind(id);if(!x)return;
+  confirmDanger('刪除 pixel',`刪除「${x.n}」後，它的沙箱代碼與訂閱清單會一併移除，前台立即停止載入。已送出的歷史事件不受影響。`,'刪除 pixel',function(){
+    const i=EV_PIXELS.indexOf(x);if(i>=0)EV_PIXELS.splice(i,1);
+    if(EV_ID===id)EV_ID=null;
+    evRefresh('已刪除 pixel');
+  });
+}
+function evOpen(id){EV_ID=id;setSubOpen('ev-pixel',evEditPage());setAfterRender();}
+function evEditPage(){
+  const x=evFind(EV_ID)||EV_PIXELS[0];
+  if(!x)return evPage();
+  return setCrumb('📡',H(x.n),'events')
+  +`<div class="card"><div class="card-pad" data-doc="sub-ev-edit"><h3>基本設定</h3>
+    ${F('名稱',`<input class="input" value="${H(x.n)}" data-val="req|max:40" aria-label="pixel 名稱" onchange="evSet('n',this.value)">`)}
+    <div class="swrow"><div class="sw-t"><b>啟用此 pixel</b><span>停用＝沙箱不載入，設定與訂閱清單保留</span></div>
+      <input type="checkbox" class="tgl" role="switch" aria-label="啟用此 pixel" ${x.on?'checked':''} onchange="evToggleHere()"></div>
+    <div class="field"><label for="evCode">沙箱 JavaScript</label>
+      <textarea class="codebox" id="evCode" rows="6" aria-describedby="evCodeHint" onchange="evSet('code',this.value)">${H(x.code)}</textarea>
+      <span class="hint" id="evCodeHint">在沙箱 iframe 執行：拿不到 storefront 的 DOM、不能改 window.top、只能透過 <span class="mono">analytics.subscribe()</span> 收下方勾選的事件</span></div>
+    </div>
+    <div class="card-note">未勾選的事件<b>不會</b>送進沙箱——就算代碼裡 subscribe 了也收不到。訂閱清單是白名單，不是提示。</div></div>
+   <div class="card card-pad" data-doc="sub-ev-subs"><h3>訂閱的事件（${x.subs.length}／${EV_CATALOG.length}）</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">勾選這個 pixel 要收到的標準顧客事件</p>
+    <div class="rowflex" style="margin-bottom:var(--sp-300);gap:var(--sp-200)">
+      <button class="btn btn-sec btn-sm" onclick="evSubAll(true)">全選</button>
+      <button class="btn btn-sec btn-sm" onclick="evSubAll(false)">全部取消</button></div>
+    ${EV_CATALOG.map(([k,l])=>`<label class="set-row" style="cursor:pointer">
+      <div class="sr-t"><b>${H(l)}</b><span class="sub mono">${H(k)}</span></div>
+      <input type="checkbox" class="cb set-ctl" ${x.subs.includes(k)?'checked':''}
+        aria-label="訂閱 ${H(l)}（${H(k)}）" onchange="evSubToggle('${k}')"></label>`).join('')}</div>
+   <div class="card card-pad" data-doc="sub-ev-sandbox"><h3>沙箱說明</h3>
+    <p class="help">① pixel 跑在 <b>同源隔離的 iframe</b> 裡，取不到 storefront 的 DOM、cookie 與 <span class="mono">window.top</span>。<br>
+    ② 事件是<b>推給沙箱</b>的：只有上方勾選的事件會被送進去，未訂閱的事件連 payload 都不會產生。<br>
+    ③ 沙箱 throw 例外不會影響前台結帳流程；連續失敗會自動停用並通知。<br>
+    ④ 顧客隱私設定（Cookie 同意／GPC）會先過濾一次——被退出的顧客不會產生事件。</p></div>
+   <div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="evDel('${x.id}')">刪除此 pixel</button></div>`;
+}
+function evSet(k,v){
+  const x=evFind(EV_ID);if(!x)return;
+  x[k]=v;
+  if(k==='n')setSubOpen('ev-pixel',evEditPage());
+  toast('已更新 pixel 設定');
+}
+function evToggleHere(){
+  const x=evFind(EV_ID);if(!x)return;
+  x.on=!x.on;setSubOpen('ev-pixel',evEditPage());
+  toast(x.on?`已啟用「${x.n}」`:`已停用「${x.n}」——沙箱不再載入`);
+}
+function evSubToggle(k){
+  const x=evFind(EV_ID);if(!x)return;
+  x.subs=x.subs.includes(k)?x.subs.filter(s=>s!==k):x.subs.concat(k);
+  setSubOpen('ev-pixel',evEditPage());
+  toast(x.subs.includes(k)?`已訂閱 ${k}`:`已取消訂閱 ${k}——沙箱之後不會再收到這個事件`);
+}
+function evSubAll(on){
+  const x=evFind(EV_ID);if(!x)return;
+  x.subs=on?EV_CATALOG.map(e=>e[0]):[];
+  setSubOpen('ev-pixel',evEditPage());
+  toast(on?'已訂閱全部標準事件':'已取消全部訂閱——此 pixel 目前收不到任何事件');
+}
 Object.assign(SET_DYN,{payments:paymentsPage,taxes:taxesPage,locations:locationsPage,
-  notifications:notificationsPage,customdata:customdataPage,billing:setBillingPage});
+  notifications:notificationsPage,customdata:customdataPage,billing:setBillingPage,events:evPage});
 
 function notifTpl(name){
   openGen({title:`通知模板：${name}`,wide:true,body:`<div class="stack">
@@ -5996,15 +6482,36 @@ function notifTpl(name){
      <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已還原為預設模板')">還原預設</button>
      <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存通知模板')">儲存</button>`});
 }
-function metafieldDef(){
-  openGen({title:'新增中繼欄位定義',wide:true,body:`<div class="stack">
-    <div class="grid2">${F('名稱','<input class="input" data-val="req|max:60" placeholder="例：材質成分">')}${F('namespace.key','<input class="input mono" value="custom.material" data-val="req">')}</div>
-    <div class="grid2">${F('適用資源',SEL('_mo',['商品','變體','商品系列','顧客','訂單','草稿訂單','公司','地點','頁面','部落格','文章','市場','商店'],'商品'))}
-      ${F('型別',SEL('_mt2',['single_line_text','multi_line_text','rich_text','number_integer','number_decimal','money','date','date_time','url','json','boolean','color','weight','volume','dimension','rating','id','link','language','file_reference','product_reference','variant_reference','collection_reference','page_reference','customer_reference','metaobject_reference','list.single_line_text','list.product_reference'],'single_line_text'))}</div>
-    ${F('驗證','<input class="input" placeholder="例：max:120｜min-max｜regex">')}
-    ${SWROW('_mp',true,'釘選 pin','pin 了才出現在資源頁卡片與列表篩選')}
-    ${SWROW('_ms',true,'Storefront 可讀取','關閉則只有 Admin API 讀得到')}</div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立中繼欄位定義')">建立定義</button>`});
+/* i 有值＝編輯既有定義（53號 N-04 的次級視圖）；i 省略＝新增。同一支表單兩種模式，不另立函式。 */
+function metafieldDef(i){
+  const edit=typeof i==='number'&&METAFIELD_DEFS[i],d=edit||{n:'',own:'商品',key:'custom.',type:'single_line_text',pin:true,sf:true,val:''};
+  openGen({title:edit?`編輯中繼欄位定義：${d.own}・${d.n}`:'新增中繼欄位定義',wide:true,body:`<div class="stack">
+    <div class="grid2">${F('名稱',`<input class="input" data-f="_mfn" value="${H(d.n)}" data-val="req|max:60" placeholder="例：材質成分">`)}${F('namespace.key',`<input class="input mono" data-f="_mfk" value="${H(d.key)}" data-val="req">`,edit?'已建立的 key 改動會讓既有資料失聯——正式版鎖定不可改':'')}</div>
+    <div class="grid2">${F('適用資源',SEL('_mo',['商品','變體','商品系列','顧客','訂單','草稿訂單','公司','地點','頁面','部落格','文章','市場','商店'],d.own))}
+      ${F('型別',SEL('_mt2',['single_line_text','multi_line_text','rich_text','number_integer','number_decimal','money','date','date_time','url','json','boolean','color','weight','volume','dimension','rating','id','link','language','file_reference','product_reference','variant_reference','collection_reference','page_reference','customer_reference','metaobject_reference','list.single_line_text','list.product_reference'],d.type))}</div>
+    ${F('驗證',`<input class="input" data-f="_mfv" value="${H(d.val||'')}" placeholder="例：max:120｜min-max｜regex">`)}
+    ${SWROW('_mp',!!d.pin,'釘選 pin','pin 了才出現在資源頁卡片與列表篩選')}
+    ${SWROW('_ms',!!d.sf,'Storefront 可讀取','關閉則只有 Admin API 讀得到')}</div>`,
+   foot:(edit?`<button class="btn btn-danger-o btn-sm" onclick="closeGen();metafieldDel(${i})">刪除定義</button>`:'')
+     +`<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="closeGen()">取消</button>
+       <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="metafieldSave(${edit?i:-1})">${edit?'儲存定義':'建立定義'}</button>`});
+}
+function metafieldSave(i){
+  const g=f=>(document.querySelector(`[data-f="${f}"]`)||{}).value||'';
+  const ck=f=>{const e=document.querySelector(`[data-f="${f}"]`);return !!(e&&e.checked);};
+  const rec={n:g('_mfn').trim(),own:g('_mo')||'商品',key:g('_mfk').trim(),type:g('_mt2')||'single_line_text',
+    val:g('_mfv').trim(),pin:ck('_mp'),sf:ck('_ms')};
+  closeGen();
+  if(!rec.n||!rec.key)return toast('名稱與 namespace.key 必填，已取消');
+  if(i>=0)METAFIELD_DEFS[i]=rec;else METAFIELD_DEFS.push(rec);
+  setPage('customdata');
+  toast(i>=0?`已儲存定義「${rec.n}」`:`已建立定義「${rec.n}」`);
+}
+function metafieldDel(i){
+  const d=METAFIELD_DEFS[i];if(!d)return;
+  confirmDanger('刪除中繼欄位定義',`刪除「${d.own}・${d.n}」後，已寫入這個 key 的資料會失去定義（型別與驗證），前台 Liquid 取值會變成空字串。`,'刪除定義',function(){
+    METAFIELD_DEFS.splice(i,1);setPage('customdata');toast('已刪除定義');
+  });
 }
 
 /* ==================================================================
@@ -6119,6 +6626,12 @@ Object.assign(DOCS,{
  "mkt-new":{t:"建立市場",f:"名稱＋型別＋國家群",l:"一國僅屬一市場，加入時自動從原市場移出（含確認）；型別：國家／B2B company location／retail location／sales channel（41 §6）",i:"P2・[api:marketCreate] [tbl:markets]（06 §7 待補）"},
  "ai-suggest":{t:"AI 建議行（通用預設）",f:"列表頂部的 AI 建議條，點擊執行建議動作、✕ 關閉當次",l:"這是 buildList 的 aiDoc 預設值——呼叫端未指定 aiDoc 時就落到這個 key。47 §D 實測：AI 建議在實站是**紫色 inline 列混在資料列中、可 ✕ dismiss**，屬於有別於 banner 的第三種提示層級（44 §22.6）。dismiss 應記在使用者偏好，同一建議不重複打擾；建議本身由後端評分產生，前端不做判斷。",i:"P2・[api:aiSuggestionList] [api:aiSuggestionDismiss] [tbl:ai_suggestions,user_prefs]"},"mkt-ai":{t:"市場 AI 建議行",f:"依流量建議建立新市場",l:"21 §1.6 實測；可關閉；建議來源＝近 30 天各國 sessions",i:"P3・[api:TBD-marketSuggest]（28 待補）＋[api:report] [tbl:sessions]"},
  "mk-status":{t:"市場狀態",f:"啟用／停用此市場",l:"停用後這些國家導向兜底 backup region（設定→一般）；空市場自動刪除",i:"P2・[api:marketUpdate]（enabled） [tbl:markets]"},
+ "mk-lineage":{t:"市場階層（父子鏈）",f:"顯示上層／下層市場與整條繼承鏈",
+  l:"53號 P0-02。46b:632–634 逐字「A market can have one or more parent markets. If a market does not define a customization, it will inherit the customization from its parents, or the store defaults」。**父子不是手動指定的欄位**（46b:636–639）：region 嚴格子集，或公司／零售地點落在父 region 內；具體地點列舉不參與推導。多父時取最特定者，順序 company location > retail location > region > store default（46b:641–648）。原型的 mktDerive() 就是這條純函式，pid 只是 derived 快取（limits.yml market.parent_resolution／parent_column_is_cache）",
+  i:"P1(M4)・[api:markets]（conditions）＋伺服器端 lineage 推導純函式＋golden test [tbl:markets(conditions_json, derived_parent_market_id 快取欄位)]"},
+ "mk-inherit":{t:"繼承的設定（逐項覆寫／還原）",f:"每一項標示繼承來源或已覆寫，並可覆寫、還原為繼承",
+  l:"53號 P0-02。繼承用 **null 表達**，不加 inherited 布林旗標（46b:664 逐字「沒有 inherited: Boolean 這種顯式旗標，也沒有 parentMarketId 欄位」）⇒『還原為繼承』＝把欄位設回 null。兩種語意（46b:650–657、limits.yml market.inheritance_additive／inheritance_override）：**累加** catalogs／web presences（父的加進子的，子不可移除父的）；**覆寫** currency settings／price inclusions。退貨規則的繼承語意 Shopify 公開 API 未載明，覆寫型是本專案自定（46b:796）。運送的繼承語意 46b:659–661 與 44:866 直接矛盾，limits.yml market.shipping_inherits=null 未定案，UI 因此不提供覆寫動作。法域永遠市場本地不可繼承（56 §A.0 硬要求 2）。標示不得只靠顏色：文字＋PIP_SHAPE 形狀雙編碼（WCAG 1.4.1）",
+  i:"P1(M4)・[api:marketUpdate]（欄位設 null ＝ 回到繼承）＋[api:market.assignedCustomization] 形狀（46b:799）供徽章判斷 [tbl:markets(currency_settings_json, price_inclusions_json … 全部可空)]"},
  "mk-countries":{t:"市場包含的國家",f:"國家清單管理",l:"一國僅屬一市場；移出後回到 backup region 定價（29 §6）",i:"P2・[api:marketUpdate]（conditions） [tbl:markets]"},
  "mk-domain":{t:"網域與語言",f:"三選一網域策略＋語言子集",l:"子資料夾／子網域／獨立網域；hreflang 自動輸出（線上商店偏好設定預設開）；每市場語言子集（29 §1.2）",i:"P2・[api:webPresenceUpdate] [api:marketLocalizationsRegister] [tbl:markets,shops]"},
  "mk-currency":{t:"幣別與定價",f:"結帳幣別／自動匯率／±% 調整／捨入",l:"價格調整與捨入規則作用於 presentment 價；固定價（目錄）優先於 % 調整（29 §1.3）",i:"P2・[api:marketCurrencySettingsUpdate] [api:priceListUpdate] [tbl:price_lists]（06 §7 待補）"},
@@ -6128,7 +6641,15 @@ Object.assign(DOCS,{
  "cat-new":{t:"建立目錄",f:"名稱／對象／價格調整",l:"目錄＝發布範圍＋價格；適用市場或 B2B company location（≤25 catalogs/location）",i:"P2・[api:catalogCreate] [api:priceListCreate] [tbl:catalogs,price_lists]"},
 /* ---------- 財務 ---------- */
  "fin-export":{t:"匯出對帳報表",f:"撥款與訂單的對帳 CSV",l:"拆解＝charges − refunds − fees + adjustments；>50 筆改寄 email 下載連結（22 §0）",i:"P1・[api:TBD-payoutList]（28 待補）＋[api:orders] [tbl:order_transactions,orders] [job:csv_export]"},
- "fin-2fa":{t:"2FA 警示 banner",f:"提醒啟用兩步驟驗證",l:"財務頁未開 2FA 時常駐（41 §7）；點擊跳使用者設定",i:"P1・[api:staffMembers] [tbl:staff_members]"},
+ "fin-2fa":{t:"2FA 已通過提示",f:"說明為什麼這一頁看得到金流數字",l:"53號 P0-19 修正後：未啟用 2FA 時<b>整頁走閘門</b>（見 fin-gate），這條 banner 只在已啟用時出現，用來說明「你看得到是因為過了閘門，而且真正的擋在後端」",i:"P1・[api:staffMembers]（twoFactorEnabled） [tbl:staff_members.two_factor_enabled]"},
+ "fin-gate":{t:"財務 2FA 閘門",f:"未啟用 2FA 時整頁擋下，並提供啟用入口",
+  l:"53號 P0-19。原本是可略過的 banner——has2fa=false 但餘額／待入帳／手續費／撥款排程照常顯示在 banner 下方，這是<b>安全缺口不是 UI 缺口</b>。🔴 修法必須是<b>資料層不放進 DOM</b>：display:none／visibility／opacity 三種都能用 F12 讀回來，等於沒擋；financePage() 在未過閘時根本不產生含金額的字串。🔴 <b>正式版是伺服器端授權檢查，前端閘門只是體驗層</b>——前端擋不住 API，真正的擋在後端：GraphQL resolver 檢查 staff 的 2FA 狀態，未過回 userErrors{code:TWO_FACTOR_REQUIRED} 且不回傳任何金額欄位。閘門畫面必須有出路（前往啟用／改用其他帳號），不是死路",
+  i:"P0(M4)・[api:staffMembers]（twoFactorEnabled）＋ Finance::Policy 於 resolver 層攔截 [tbl:staff_members.two_factor_enabled]；審計：每次被擋落一列 access_denied 事件"},
+ "fin-2fa-demo":{t:"示範：切換 2FA 狀態",f:"原型專用的閘門狀態切換",
+  l:"原型才有的 demo 裝置，讓兩種形態都能被看到與驗證（未啟用＝金額字串不進 DOM；已啟用＝完整頁面）。<b>正式版沒有這顆按鈕</b>——2FA 狀態來自 staff 帳號，不是頁面開關",
+  i:"—（demo-only，不進實作）"},
+ "fin-recon":{t:"對帳報表",f:"產生撥款與訂單的對帳 CSV",l:"53號 N-04：原本是帶 › 卻沒有 handler 的假可點列，改成真的匯出動作。拆解＝charges − refunds − fees + adjustments；>50 筆改寄 email 下載連結（22 §0）",i:"P1・[api:TBD-payoutList]（28 待補）＋[api:orders] [job:csv_export]"},
+ "fin-taxlink":{t:"稅務設定入口",f:"跳到設定 → 稅務服務與稅區",l:"53號 N-04：原本已是按鈕但與上一列形態不一致，統一成 setRowBtn。稅區服務層級三檔見 set-tax-region",i:"—（導航，無 API）"},
  "fin-payout-sched":{t:"撥款排程",f:"每日／每週／每月",l:"撥款失敗會退回可用餘額並寄通知；狀態 scheduled→in_transit→paid/failed（06 §4）",i:"P2・[api:TBD-payoutScheduleUpdate]（28 待補） [tbl:payouts]（06 §7 待補）"},
  "fin-payouts":{t:"撥款紀錄",f:"撥款清單與單筆拆解",l:"單筆拆解＝charges/refunds/fees/adjustments；對帳連訂單 transactions（41 §7）",i:"P2・[api:TBD-payoutList]（28 待補） [tbl:payouts,order_transactions]"},
  "bill-kpi":{t:"帳單指標",f:"本期應付／方案費／標籤費",l:"帳單週期 30 天；含訂閱費、app 費、運送標籤費與網域費（41 §7）",i:"P2・[api:TBD-shopBillingInvoices]（28 待補） [tbl:shops]"},
@@ -6166,7 +6687,7 @@ Object.assign(DOCS,{
  "set-checkout":{t:"設定・結帳",f:"欄位三態／行銷同意／小費／訂單處理",l:"姓名/公司/地址2/電話 三態（不含/選填/必填）；Email 可預勾按地區、SMS 永不預勾；one-page 已統一（41 §12.6）",i:"P0・[api:checkoutSettingsUpdate] [api:checkoutBrandingUpsert] [tbl:shops]"},
  "set-accounts":{t:"設定・顧客帳號",f:"新版 OTP vs Legacy 密碼制",l:"新版：6 碼 OTP＋365 天 session＋託管帳號頁；B2B 強制新版；自助退貨開關連 return rules（41 §12.10）",i:"P1・[api:checkoutSettingsUpdate]（requireLogin）＋[api:TBD-customerAccountsUpdate]（28 待補） [tbl:shops,customers]"},
  "set-shipping":{t:"設定・運送與配送",f:"依市場的運送選項／本地配送／取貨／包裹",l:"新模型 Market→option→rates，子市場繼承可覆寫；rate 四型且 flat+order amount 並存取最高符合者；本地配送半徑 ≤160km 或郵遞區號 ≤3,000 字元、≤10 區/地點（41 §12.7）",i:"P0・[api:deliveryProfileCreate] [api:deliveryProfileUpdate] [api:TBD-shippingOptionsByMarketUpdate]（新模型 28 待補） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
- "set-taxes":{t:"設定・稅額與關稅",f:"稅率登記／含稅／覆寫／DDP",l:"引擎讀取順序：顧客免稅 > 覆寫 > 登記稅率；覆寫以商品系列為單位（可用未發布系列）（22 §8）",i:"P0・[api:taxSettingsUpdate] [tbl:tax_settings,collections]"},
+ "set-taxes":{t:"設定・稅務服務與稅區",f:"稅區清單／服務層級三檔／含稅／覆寫／DDP",l:"53號 P0-07：service_tier 三檔 managed／basic／manual（44:387），manual 才出現自訂稅率編輯器；稅區由運送區域推導（44:385）。引擎讀取順序：顧客免稅 > 覆寫 > 登記稅率；覆寫以商品系列為單位（可用未發布系列）（22 §8）。法域中性見 set-tax-jur",i:"P0・[api:taxSettingsUpdate] [api:TBD-taxRegionUpdate] [tbl:tax_settings,tax_regions,tax_rates,collections]"},
  "set-locations":{t:"設定・地點",f:"地點清單／出貨開關／優先序",l:"停用前須移走庫存與待出貨單；出貨優先序拖曳＝自動分單 routing；app 地點唯讀不佔配額（41 §12.9）",i:"P1・[api:locationAdd] [api:locationEdit] [api:locationDeactivate] [tbl:locations,inventory_levels]"},
  "set-domains":{t:"設定・網域",f:"主網域／子網域／國際網域與 SSL",l:"myshopify 型子網域終身僅可改名 1 次；使用國際網域策略時須關閉「導向主網域」（41 §12.11）",i:"P1・[api:domainCreate] [api:domainSetPrimary] [api:domainDelete] [tbl:shops]"},
  "set-notifications":{t:"設定・通知",f:"顧客通知模板／員工通知／webhooks",l:"訂單確認信不可停用；出貨家族可停用；棄單信已遷行銷自動化；模板走 Liquid 沙箱（18 §）",i:"P1・[api:notificationTemplateUpdate] [api:webhookSubscriptionCreate] [tbl:notification_templates,event_outbox]"},
@@ -6175,8 +6696,26 @@ Object.assign(DOCS,{
  "set-policies":{t:"設定・政策",f:"六類政策文案",l:"固定 URL /policies/*；政策是文案、return rules 是機器規則（41 §12.15）；範本生成器產草稿",i:"P0・[api:TBD-shopPolicyUpdate]（28 待補） [tbl:shops,pages]"},
  "set-brand":{t:"設定・品牌",f:"Logo／色彩／標語／社群連結",l:"供銷售管道、app 與結帳預設取用；Liquid 以 shop.brand 讀取；色彩需通過對比檢查（41 §12.16）",i:"P2・[api:TBD-brandSettingsUpdate]（28 待補） [tbl:shops,files]"},
  "set-privacy":{t:"設定・顧客隱私",f:"Cookie 橫幅／GPC／資料銷售退出",l:"依地區顯示（歐盟／英國／加州）；自動遵循 GPC 訊號（41 §12.17）",i:"P2・[api:TBD-privacySettingsUpdate]（28 待補） [tbl:shops,customers]"},
- "set-events":{t:"設定・顧客事件",f:"自訂 pixel 管理",l:"pixel＝名稱＋JS 沙箱代碼＋訂閱事件；在沙箱 iframe 執行不接觸 DOM；狀態 connected/disconnected（41 §12.18）",i:"P2・[api:TBD-webPixelCreate]（28 待補） [tbl:shops,sessions]"},
+ "set-events":{t:"設定・顧客事件",f:"自訂 pixel 的新增／編輯／刪除／啟用與事件訂閱",l:"53號 N-05：這一頁是「58 條佔位列轉真控件」那輪的漏網（原本整頁只有兩個唯讀 chip ＋ 一顆 demo toast）。pixel＝名稱＋JS 沙箱代碼＋訂閱事件清單；在沙箱 iframe 執行不接觸 DOM（41 §12.18）。<b>訂閱清單是白名單不是提示</b>：沒勾的事件連 payload 都不產生",i:"P2・[api:TBD-webPixelCreate/Update/Delete]（28 待補）[tbl:web_pixels(shop_id,name,enabled,code,subscriptions_json)]"},
+ "set-ev-row":{t:"單一 pixel 列",f:"狀態、訂閱數、啟用開關、編輯、刪除",
+  l:"訂閱 0 個事件的 pixel 等同不會被呼叫——列上直接寫明，避免商家以為「建了就會收」。停用是 enabled=false（沙箱不載入），與刪除分開",
+  i:"P2・[tbl:web_pixels.enabled,subscriptions_json]"},
+ "set-ev-add":{t:"新增自訂 pixel",f:"建立一個新的沙箱 pixel",
+  l:"新增後預設<b>停用</b>：代碼與訂閱都還沒設就啟用，只會在前台載入一個空沙箱",
+  i:"P2・[api:TBD-webPixelCreate] [tbl:web_pixels]"},
+ "sub-ev-edit":{t:"pixel 編輯（次級視圖）",f:"名稱／啟用／沙箱 JavaScript",
+  l:"代碼欄的 hint 明示執行環境：拿不到 storefront DOM、不能改 window.top、只能透過 analytics.subscribe() 收<b>勾選過的</b>事件。這是既有那句沙箱說明的 UI 落地",
+  i:"P2・[tbl:web_pixels.code]；前台以 sandboxed iframe（allow-scripts，無 allow-same-origin）載入"},
+ "sub-ev-subs":{t:"事件訂閱清單",f:"逐項勾選這個 pixel 要收到的標準顧客事件",
+  l:"白名單語意：未勾選的事件不會送進沙箱，就算代碼裡 subscribe 了也收不到。全選／全部取消是批次操作不是另一種狀態",
+  i:"P2・[tbl:web_pixels.subscriptions_json]（string[]）；前台推事件前先過濾 [tbl:customer_privacy_consents]"},
+ "sub-ev-sandbox":{t:"沙箱說明",f:"四條執行環境約束",
+  l:"① 同源隔離 iframe，取不到 DOM/cookie/window.top ② 事件是推給沙箱的，未訂閱不產生 payload ③ 沙箱 throw 不影響結帳，連續失敗自動停用並通知 ④ Cookie 同意／GPC 會先過濾一次（見 set-pv-gpc）",
+  i:"P2・[tbl:web_pixels] ＋ [tbl:web_pixel_failures(pixel_id,occurred_at,message)]；自動停用門檻進 config"},
  "set-apps":{t:"設定・應用程式與管道",f:"已安裝 app 權限與銷售管道",l:"解除安裝會停掉該 app 寫入的資料（selling plan／自動化）；管道 pin 到側欄（41 §12.19）",i:"P3・[api:TBD-appUninstall]（28 待補）＋[api:publishablePublish] [tbl:shops]"},
+ "set-channels":{t:"銷售管道清單",f:"顯示各管道的啟用狀態",
+  l:"53號 N-04：這四列原本帶 › 卻沒有 handler。<b>處置＝移除 ›、改狀態 chip ＋ 說明文字</b>，理由：各管道的設定頁屬<b>該管道自己的 app</b>（線上商店走主題編輯器、POS 走 POS app、Shop 走 Shop 管理台），不是平台設定的一部分——原型不做這一層。商品要出現在某管道是在商品／目錄側設定發布範圍（publication），不在這裡",
+  i:"P3・[api:publishablePublish]／[api:publishableUnpublish] [tbl:publications,product_publications]；管道啟用狀態來自 [tbl:app_installations]"},
  "set-giftcards":{t:"設定・禮品卡",f:"到期政策與 Apple Wallet",l:"多數地區法規禁止設到期日；Wallet passes 開關為店級（41 §12.20）",i:"P2・[api:TBD-giftCardSettingsUpdate]（28 待補） [tbl:gift_cards,shops]"},
 });
 
@@ -6454,6 +6993,158 @@ function shipAddZone(){
    ================================================================== */
 
 /* ---------- E1 結帳表單欄位（三態）---------- */
+/* ==================================================================
+   53號 P0-09：結帳規則引擎（商品購買限制／年齡驗證）
+   ------------------------------------------------------------------
+   🔴 這**不是內建規則**，是 app 的 **validation function 擴充**。
+      46b:482 逐字：「『結帳規則』不是一個獨立功能，是 validation function 的商家 UI 外殼。
+      實測畫面上的『結帳規則』列表 ＝ 已啟用的 validation function 清單（上限 25）。」
+      44:376 空態逐字：「您尚未安裝任何包含購物車或結帳頁面規則的應用程式。請前往 Shopify App Store 安裝。」
+      ⇒ 平台本身**沒有內建規則庫**，規則的邏輯由 app 提供、商家在這裡設定條件與訊息。
+        與結帳編輯器的 block registry 是**同一套說法**（見 DOCS ck-addblock／ck-source：
+        「編輯器本身沒有內建 block 庫，所有可加的 block 都由已安裝 app 的 UI extension 提供」）。
+        沒寫清楚這一條，實作的人會把它做成寫死的 if-else。
+   求值時機三段（46b:424–428 buyerJourney.step）必須全部實作，只在提交時驗證會讓買家填完整張表才被擋。
+   輸出固定形狀 `{operations:[{validationAdd:{errors:[{message,target}]}}]}`；
+   `target` 是 JSONPath 白名單（46b:432–458 共 25 條），不在白名單一律拒絕。
+   買家端唯一錯誤碼 `VALIDATION_CUSTOM`（Storefront Cart.userErrors）。
+   ⚠ 它在 Accelerated Checkout 也生效（46b:390）⇒ **伺服器端 gate，不是前端檢查**，快速結帳要共用同一管線。
+   ================================================================== */
+const CKR_STEPS=[['CART_INTERACTION','購物車互動'],['CHECKOUT_INTERACTION','結帳互動'],['CHECKOUT_COMPLETION','結帳完成']];
+/* 46b:432–458 的 target 白名單節選（完整 25 條進 config；不在白名單的 target 回 INVALID）*/
+const CKR_TARGETS=[['$.cart','購物車（全域）'],['$.cart.buyerIdentity.email','email'],
+ ['$.cart.buyerIdentity.phone','電話'],['$.cart.deliveryGroups[0].deliveryAddress.countryCode','配送國家'],
+ ['$.cart.deliveryGroups[0].deliveryAddress.zip','配送郵遞區號'],['$.cart.poNumber','PO number（B2B）']];
+const CKR_KINDS=[['purchase_limit','商品購買限制','每單數量上限／地區限制／需驗證身分'],
+ ['age_verify','年齡驗證','未通過年齡或身分驗證即擋下結帳']];
+const CKR_ACTS=[['block','擋下結帳（validationAdd → errors）'],['warn','僅提示，不擋（訊息掛在 target 欄位）']];
+const CK_RULES=[
+ {id:'r1',kind:'purchase_limit',n:'限量商品每單上限',app:'Chill Guard',ext:'checkout-validation@2026-07',
+  cond:'品項數量 > 2（商品系列：限量聯名）',act:'block',msg:'限量商品每筆訂單最多 2 件',
+  target:'$.cart',step:'CART_INTERACTION',on:true,blocked:37},
+ {id:'r2',kind:'age_verify',n:'酒類商品年齡驗證',app:'Chill Guard',ext:'checkout-validation@2026-07',
+  cond:'購物車含商品系列「酒品」且顧客未通過年齡驗證',act:'block',msg:'此訂單含需年齡驗證的商品，請先完成身分驗證',
+  target:'$.cart.buyerIdentity.email',step:'CHECKOUT_INTERACTION',on:true,blocked:12},
+ {id:'r3',kind:'purchase_limit',n:'指定地區不配送大型商品',app:'Chill Guard',ext:'checkout-validation@2026-07',
+  cond:'配送郵遞區號 ∈ 指定清單 且 品項含「大型家具」',act:'block',msg:'此地區暫不配送大型商品',
+  target:'$.cart.deliveryGroups[0].deliveryAddress.zip',step:'CHECKOUT_INTERACTION',on:false,blocked:0}];
+let CKR_ID=null;
+const ckrKindLabel=k=>(CKR_KINDS.find(x=>x[0]===k)||CKR_KINDS[0])[1];
+const ckrStepLabel=s=>(CKR_STEPS.find(x=>x[0]===s)||CKR_STEPS[0])[1];
+const ckrFind=id=>CK_RULES.find(r=>r.id===id);
+function ckrOpen(){setSubOpen('ck-rules',ckrPage());setAfterRender();}
+function ckrPage(){
+  const on=CK_RULES.filter(r=>r.on).length;
+  return setCrumb('🛡','結帳規則','checkout')
+  +`<div class="card"><div class="card-pad" data-doc="sub-ckr-list"><h3>結帳規則</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+      規則可設定購物車或結帳頁面在不同顧客情境下的回應方式：商品購買限制、年齡驗證等。
+      已啟用 <span class="num">${on}</span> 條（每店 validation function 上限見 <code>limits.yml functions.max_validation_functions_per_shop</code>）</p>
+    <div class="banner-caution" data-doc="sub-ckr-ext"><span class="bc-ic" aria-hidden="true">ⓘ</span>
+      <span>平台<b>沒有內建規則庫</b>——每一條規則的判斷邏輯都由<b>已安裝 app 的 validation function 擴充</b>提供（<code>cart.validations.generate.run</code>），
+      這裡只是商家設定條件、訊息與生效時機的外殼。與結帳編輯器的區塊一樣：編輯器只是渲染器，能力來自 app。</span></div>
+    ${CK_RULES.length?CK_RULES.map((r,i)=>`<div class="set-row" data-doc="sub-ckr-row">
+      <div class="sr-t"><b>${H(r.n)}</b><span class="sub">${H(ckrKindLabel(r.kind))}・${H(r.app)}（${H(r.ext)}）・${H(ckrStepLabel(r.step))}</span></div>
+      <span class="sr-act" style="margin-left:auto;display:inline-flex;align-items:center;gap:var(--sp-200)">
+        ${r.on?chip('啟用中','success','full'):chip('已停用','default','')}
+        <span class="tagchip num" style="margin:0" title="近 30 天此規則擋下的結帳次數">已擋下 ${r.blocked} 次</span>
+        <button class="btn btn-ghost btn-sm" onclick="ckrMove(${i},-1)" aria-label="上移 ${H(r.n)}" ${i===0?'disabled aria-disabled="true"':''}>↑</button>
+        <button class="btn btn-ghost btn-sm" onclick="ckrMove(${i},1)" aria-label="下移 ${H(r.n)}" ${i===CK_RULES.length-1?'disabled aria-disabled="true"':''}>↓</button>
+        <input type="checkbox" class="tgl" role="switch" aria-checked="${r.on?'true':'false'}" ${r.on?'checked':''}
+          aria-label="啟用 ${H(r.n)}" onchange="ckrToggle('${r.id}')">
+        <button class="btn btn-sec btn-sm" onclick="ckrEdit('${r.id}')">編輯</button></span></div>`).join('')
+     :`<div class="empty-wrap"><b>尚未安裝任何提供結帳規則的應用程式</b>結帳規則由 app 的 validation function 提供，平台本身沒有內建規則。</div>`}
+    ${setRowAdd('新增規則','選擇規則類型與提供它的 app，再設定條件 → 動作','ckrAdd()','sub-ckr-add')}</div>
+    <div class="card-note">排序＝求值順序：由上而下逐條求值，<b>所有</b>啟用中的規則都會跑（不是命中即停），errors 一次全部回給買家。</div></div>
+   <div class="card card-pad" data-doc="sub-ckr-note"><h3>這條規則實際上怎麼跑</h3>
+    <p class="help">求值時機由 <span class="mono">buyerJourney.step</span> 決定，三段都要實作：<b>購物車互動 / 結帳互動 / 結帳完成</b>——只在提交時驗證會讓買家填完整張表才被擋。<br>
+    輸出固定形狀 <span class="mono">{operations:[{validationAdd:{errors:[{message,target}]}}]}</span>；<span class="mono">target</span> 是 JSONPath 白名單，不在白名單一律拒絕。<br>
+    買家端錯誤碼固定 <span class="mono">VALIDATION_CUSTOM</span>（Storefront <span class="mono">Cart.userErrors</span>），message 由規則自帶、需支援多語。<br>
+    <b>快速結帳（Apple Pay／Google Pay 等）也會經過同一條管線</b>——這是伺服器端 gate，不是前端檢查，最容易漏的安全洞。</p></div>`;
+}
+function ckrToggle(id){
+  const r=ckrFind(id);if(!r)return;
+  r.on=!r.on;ckrOpen();
+  toast(r.on?`已啟用「${r.n}」——下一次購物車／結帳求值即生效`:`已停用「${r.n}」——規則保留但不再求值（不是刪除）`);
+}
+function ckrMove(i,d){
+  const j=i+d;if(j<0||j>=CK_RULES.length)return;
+  const [x]=CK_RULES.splice(i,1);CK_RULES.splice(j,0,x);
+  ckrOpen();
+  const el=document.querySelectorAll('[data-doc="sub-ckr-row"]')[j];
+  if(el){const b=el.querySelector('button');if(b)b.focus();}
+  toast(`已調整求值順序：「${x.n}」移到第 ${j+1} 位`);
+}
+function ckrAdd(){
+  openGen({title:'新增結帳規則',wide:true,body:`<div class="stack">
+    ${F('規則名稱','<input class="input" data-f="_ckrn" data-val="req|max:60" placeholder="例：限量商品每單上限">')}
+    ${F('規則類型',SEL('_ckrk',CKR_KINDS.map(k=>[k[0],k[1]+'——'+k[2]]),'purchase_limit'),'兩類都由同一支 validation function 承接，差別在條件與訊息')}
+    ${F('提供此規則的應用程式',SEL('_ckra',['Chill Guard','（尚未安裝其他提供結帳規則的 app）'],'Chill Guard'),'平台沒有內建規則庫——規則邏輯來自已安裝 app 的 validation function')}
+    ${F('求值時機',SEL('_ckrs',CKR_STEPS,'CART_INTERACTION'),'buyerJourney.step；三段都會跑，這裡選最早開始擋的那一段')}
+    </div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="ckrAddOK()">新增並編輯條件</button>`});
+}
+function ckrAddOK(){
+  const g=f=>(document.querySelector(`[data-f="${f}"]`)||{}).value||'';
+  const n=g('_ckrn').trim(),kind=g('_ckrk')||'purchase_limit',app=g('_ckra')||'Chill Guard',step=g('_ckrs')||'CART_INTERACTION';
+  closeGen();
+  if(!n)return toast('規則名稱必填，已取消');
+  const id='r'+(CK_RULES.length+1)+'-'+Date.now().toString(36);
+  CK_RULES.push({id,kind,n,app,ext:'checkout-validation@2026-07',cond:'（尚未設定條件）',
+    act:'block',msg:kind==='age_verify'?'請先完成年齡／身分驗證':'此訂單不符合購買限制',
+    target:'$.cart',step,on:false,blocked:0});
+  toast('已新增規則（預設停用）——設定條件與訊息後再啟用');
+  ckrEdit(id);
+}
+function ckrEdit(id){CKR_ID=id;setSubOpen('ck-rule',ckrEditPage());setAfterRender();}
+function ckrEditPage(){
+  const r=ckrFind(CKR_ID)||CK_RULES[0];
+  return `<nav class="set-crumb" aria-label="麵包屑">
+    <button class="cr-back" onclick="ckrOpen()" aria-label="返回結帳規則清單">🛡</button>
+    <span class="cr-sep" aria-hidden="true">›</span><b>${H(r.n)}</b></nav>
+   <div class="card"><div class="card-pad" data-doc="sub-ckr-edit"><h3>條件 → 動作</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">邏輯由 ${H(r.app)} 的 validation function 執行；這裡設定的是它的輸入參數與輸出訊息</p>
+    ${F('規則名稱',`<input class="input" value="${H(r.n)}" data-val="req|max:60" aria-label="規則名稱" onchange="ckrSet('n',this.value)">`)}
+    ${F('規則類型',SEL('_ckek',CKR_KINDS.map(k=>[k[0],k[1]]),r.kind,'onchange="ckrSet(\'kind\',this.value)"'),H(ckrKindLabel(r.kind)))}
+    ${F('條件（IF）',`<input class="input" value="${H(r.cond)}" aria-label="條件" placeholder="例：品項數量 > 2（商品系列：限量聯名）" onchange="ckrSet('cond',this.value)">`,
+      '正式版是結構化條件（JSON DSL）不是自由文字；原型以單行表達同一份資料')}
+    ${F('動作（THEN）',SEL('_ckea',CKR_ACTS,r.act,'onchange="ckrSet(\'act\',this.value)"'),'block ＝ 回 validationAdd errors，買家無法前進')}
+    ${F('顯示給買家的訊息',`<input class="input" value="${H(r.msg)}" data-val="req" aria-label="錯誤訊息" onchange="ckrSet('msg',this.value)">`,
+      'errors[].message；錯誤碼固定 VALIDATION_CUSTOM，需支援多語（走 translations）')}
+    ${F('訊息掛在哪個欄位（target）',SEL('_cket',CKR_TARGETS,r.target,'onchange="ckrSet(\'target\',this.value)"'),
+      'errors[].target 是 JSONPath 白名單；不在白名單一律回 INVALID。$.cart ＝ 掛在購物車層級')}
+    ${F('求值時機',SEL('_ckes',CKR_STEPS,r.step,'onchange="ckrSet(\'step\',this.value)"'),'buyerJourney.step')}
+    <div class="swrow"><div class="sw-t"><b>啟用此規則</b><span>停用＝保留設定但不求值，不是刪除</span></div>
+      <input type="checkbox" class="tgl" role="switch" aria-label="啟用此規則" ${r.on?'checked':''} onchange="ckrToggleHere()"></div>
+    </div>
+    <div class="card-note">近 30 天已擋下 <b class="num">${r.blocked}</b> 次。沒有這個回饋，商家不知道規則到底有沒有在生效——空規則與從沒命中的規則在畫面上長得一樣。</div></div>
+   <div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="ckrDel()">刪除此規則</button>
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">刪除只移除設定；提供邏輯的 app 仍安裝著。要整組停用請到「應用程式與銷售管道」解除安裝該 app。</p></div>`;
+}
+function ckrSet(k,v){
+  const r=ckrFind(CKR_ID);if(!r)return;
+  r[k]=v;
+  if(k==='n'||k==='kind')setSubOpen('ck-rule',ckrEditPage());
+  toast('已更新規則設定');
+}
+function ckrToggleHere(){
+  const r=ckrFind(CKR_ID);if(!r)return;
+  r.on=!r.on;setSubOpen('ck-rule',ckrEditPage());
+  toast(r.on?`已啟用「${r.n}」`:`已停用「${r.n}」——規則保留但不再求值`);
+}
+function ckrDel(){
+  const r=ckrFind(CKR_ID);if(!r)return;
+  confirmDanger('刪除結帳規則',`刪除「${r.n}」後，這條規則的條件、訊息與擋單統計都會一併移除。提供邏輯的 app 不受影響。`,'刪除規則',function(){
+    const i=CK_RULES.indexOf(r);if(i>=0)CK_RULES.splice(i,1);
+    CKR_ID=null;ckrOpen();toast('已刪除規則');
+  });
+}
+const ckrEntryCard=()=>`<div class="card card-pad" data-doc="set-ck-rules"><h3>結帳規則</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">設定購物車或結帳頁面在不同顧客情境下的回應方式</p>
+   ${setRowBtn('結帳規則（商品限制／年齡驗證）','由已安裝 app 的 validation function 擴充提供，平台沒有內建規則庫','<span class="chev" aria-hidden="true">›</span>','ckrOpen()','set-ck-rules-row','🛡')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">規則在<b>伺服器端</b>求值，快速結帳也走同一條管線；上限見 <code>limits.yml functions.max_validation_functions_per_shop</code>。</p></div>`;
+
 const FIELD_TRI=[['hidden','不顯示'],['optional','選填'],['required','必填']];
 const CK_FIELDS=[{k:'company',n:'公司名稱',v:'hidden'},{k:'addr2',n:'地址第 2 行（公寓、單位等）',v:'optional'},{k:'phone',n:'運送地址電話號碼',v:'optional'}];
 function openCkFields(){setSubOpen('ck-fields',ckFieldsPage());setAfterRender();}
@@ -7553,7 +8244,8 @@ function ckProfileCard(){
 }
 /* 結帳分頁前置設定檔卡；「自訂結帳外觀」那一列已改成 setRowBtn 直接進編輯器，
    原本的字串 replace（脆弱、依賴逐字相符）連同佔位列一起移除。 */
-SET_PAGES.checkout=ckProfileCard()+SET_PAGES.checkout;
+/* 53號 P0-09：結帳規則卡接在結帳分頁最後（入口卡是靜態的，規則清單與計數在次級視圖裡才算） */
+SET_PAGES.checkout=ckProfileCard()+SET_PAGES.checkout+ckrEntryCard();
 /* 只換結尾那個卡片收尾的 </div>（字串中間還有很多 set-row 的 </div>，不能用第一個）*/
 SET_PAGES.accounts=SET_PAGES.accounts.replace(/<\/div>$/,
  `<div class="set-row" style="border:0"><div class="sr-t"><b>自訂帳號頁版面</b><span class="sub">登入／訂單／訂單狀態／個人資料——與結帳同一個編輯器</span></div>
@@ -7758,6 +8450,12 @@ Object.assign(DOCS,{
   l:"**為什麼不可改**：44 §8.3 逐字「決定適用於您市場以外顧客的設定」——這個值是由「哪些國家還留在 active market」推導出來的（29 §1.2），不是可挑的欄位。要換就得去 Markets 調整 active market，這裡改只會與市場設定互相矛盾",
   i:"P1・唯讀衍生值，由 [tbl:markets] 即時推導（無獨立欄位）；[api:markets] 讀取後於序列化層計算"},
 /* ---------- 使用者與安全 ---------- */
+ "set-perm-cats":{t:"顆粒權限目錄",f:"列出 13 類顆粒權限的完整清單",
+  l:"53號 N-04：這六列原本帶 › 卻沒有 handler（比 setRow 佔位更誤導，因為 setRow 至少有唯讀 chip 明示）。<b>處置＝移除 ›、改明示唯讀</b>，理由：原型沒有角色 CRUD，沒有可編輯的角色物件——做一個勾不到任何角色的權限勾選頁只是換一種假控件。逐項勾選屬 M5 角色編輯器，入口屆時掛在角色列上",
+  i:"P1(M5)・[tbl:roles,role_permissions(role_id,permission_key)]；權限鍵對照 Pundit policy，staff 角色映射 API scope（28 §0.2）"},
+ "set-perm-cat":{t:"單一權限類別（唯讀）",f:"顯示該類別底下的顆粒權限名稱",
+  l:"唯讀不是「還沒做」，是「這一層在原型階段本來就不給改」——右側掛唯讀 chip 明示，與其他唯讀列同一套（見 setRow 的既有約定）",
+  i:"P1(M5)・[tbl:role_permissions]"},
  "set-sec-2fa":{t:"強制兩步驟驗證（商店層）",f:"要求所有成員啟用 2FA",
   l:"44 §8.1：使用者／角色／安全性都在組織層，商店層這顆是組織政策的鏡像顯示；12-F3 規定開啟後未設定 2FA 的成員在下次登入被導去設定頁，而不是直接鎖帳號",
   i:"P0・[api:TBD-organizationSecurityUpdate]（28 待補組織層 mutation）[tbl:organizations.require_2fa,users.totp_secret]"},
@@ -7828,6 +8526,24 @@ Object.assign(DOCS,{
   l:"29 §2：採用國際網域策略（子網域／子資料夾）時必須關閉，否則 /int 會被 301 吃掉，hreflang 也會全部指向同一頁而失效",
   i:"P1・[api:TBD-domainUpdate]（redirectToPrimary）[tbl:domains.redirect_to_primary]；邊緣層執行 301，不進 Rails"},
 /* ---------- 運送與配送 ---------- */
+ "set-mkt-ship":{t:"依市場的運送選項（進次級視圖）",f:"每個市場的 Shipping options 與費率",
+  l:"53號 N-04：這兩列原本帶 › 卻沒有 handler。<b>處置＝做出真的次級視圖</b>，理由：Market → option → rates 是新模型明確的三層結構，下一層本來就該存在；照抄 openShipProfile／openCkFields 的 setSubOpen 模式。列上的副標顯示該市場實際的選項與費率筆數，不是寫死字串",
+  i:"P0・[api:TBD-shippingOptionsByMarketUpdate]（28 僅有 deliveryProfile*）[tbl:market_shipping_options(market_id,name,position)] [tbl:market_shipping_rates(option_id,name,condition_json,price_cents)]"},
+ "sub-mktship":{t:"市場運送選項（次級視圖）",f:"新增／編輯／移除此市場的運送選項與費率",
+  l:"顧客可見名在 option 層，費率在 rate 層——同一個 option 底下可以有多筆條件費率（例：未滿額 vs 滿額免運）。Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market（否則稅區與運送都建不起來，見 50 H-113）",
+  i:"P0・[tbl:market_shipping_options,market_shipping_rates]；rate 價格存 integer cents（CLAUDE.md 鐵律 3）"},
+ "sub-mktship-inherit":{t:"運送繼承語意未定案警示",f:"說明為什麼這一頁沒有「還原為繼承」",
+  l:"🔴 46b:659–661「Null means the market inherits shipping from its parent」vs 44:866 實測「運送與隱私權不繼承，永遠市場本地」——<b>直接矛盾</b>。limits.yml market.shipping_inherits=null 且 verify_shipping_inheritance=true（待查證）。未定案前<b>不得預設任一邊</b>，所以這一頁不提供覆寫／還原動作；市場頁的繼承卡同樣把運送標成 caution 而非 info/success",
+  i:"⚠ 待查證（V-02）・定案後才決定 [tbl:market_shipping_options] 可否為空並沿 lineage 解析"},
+ "sub-mktship-opt":{t:"單一運送選項",f:"顧客在結帳頁看到的名稱＋其下費率表",
+  l:"option 名稱是<b>顧客可見</b>字樣，也是跨設定檔合併運費的合併鍵之一（limits.yml shipping.rate_merge_key=rate_name，名稱一字之差就從『相加』變成『取最便宜相加』）——所以改名不是純視覺操作",
+  i:"P0・[tbl:market_shipping_options.name]；合併鍵正規化 NFC＋trim＋大小寫敏感（limits.yml shipping.rate_merge_key_normalization）"},
+ "sub-mktship-rate-add":{t:"新增費率",f:"在此運送選項下加一筆費率",
+  l:"新增後名稱／條件／價格皆可就地編輯。條件在正式版是結構化 JSON（金額區間／重量區間／carrier service），原型以單行文字表達同一份資料，不做超前宣稱",
+  i:"P0・[api:TBD-shippingRateCreate] [tbl:market_shipping_rates]"},
+ "sub-mktship-opt-add":{t:"新增運送選項",f:"為此市場加一個顧客可見的運送選項",
+  l:"沒有任何運送選項的市場，顧客在結帳時會看到「此地區暫不提供配送」——空態在這裡是有意義的狀態，不是未完成",
+  i:"P0・[api:TBD-shippingOptionCreate] [tbl:market_shipping_options]"},
  "set-localdelivery":{t:"本地配送（進次級視圖）",f:"設定某地點的本地配送範圍與費用",
   l:"44 §15：本地配送是 per location 的獨立通道，不是運送設定檔裡的 rate；半徑上限與區域數上限見 limits.yml shipping.local_delivery_max_radius_km／local_delivery_max_zones_per_location",
   i:"P2・[api:TBD-localDeliverySettingUpsert]（28 待補）[tbl:local_delivery_settings(location_id,mode,radius_km,postal_codes,fee_cents,free_threshold_cents)]"},
@@ -7844,15 +8560,27 @@ Object.assign(DOCS,{
   l:"接上之後即時運費改用你的合約費率，取代平台費率；carrier 回傳逾時要 fail-open 退回 flat rate，不能讓結帳卡住（15-F3）",
   i:"P2・[api:carrierServiceCreate] [tbl:carrier_accounts,carrier_services,shipping_rates(type='carrier')]；逾時上限與退回策略見 15-F3"},
 /* ---------- 稅額 ---------- */
- "set-tax-tw":{t:"台灣營業稅率",f:"設定台灣的稅率",
-  l:"44 §18.3：香港／馬來西亞等地屬 Manual Tax 檔（tax_region.service_tier=manual）才會出現自訂稅率編輯器；台灣營業稅 5% 且採含稅定價，稅額由金額引擎自售價反推，不另外加價（15-F2）",
-  i:"P0・[api:TBD-taxRegionUpdate]（28 待補）[tbl:tax_regions(shop_id,country,rate_bp,service_tier)]；稅率存 basis points 整數，不存 float"},
- "set-tax-hk":{t:"香港稅率",f:"設定香港的稅率",
-  l:"香港不課銷售稅，填 0；44 §18.3 把香港列在 Manual Tax 檔，因此仍需要一筆稅務地區紀錄（不是不建立），否則跨境訂單找不到適用稅則",
-  i:"P0・[tbl:tax_regions] rate_bp=0；0 與 NULL 語意不同：0＝已確認免稅、NULL＝尚未設定會擋結帳"},
- "set-tax-my":{t:"馬來西亞 SST 稅率",f:"設定馬來西亞的預設稅率",
-  l:"SST 依商品類別而異，這裡只是預設值；差異走「稅則覆寫」（以商品系列為單位）。引擎讀取順序固定：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15-F2）",
-  i:"P0・[tbl:tax_regions,tax_overrides]；覆寫命中時把命中的 override_id 寫進訂單稅務快照"},
+ "set-tax-jur":{t:"法域稅務行為說明",f:"說明本店基準法域下稅務頁的樣貌",
+  l:"53號 P0-07 ＋ CLAUDE.md 鐵律 11。基準法域＝香港：無銷售稅／VAT／GST，也沒有政府發票（limits.yml jurisdictions.hk.consumption_tax.kind=none、tax_invoice.kind=none）。核心<b>只發稅務事件</b>，五個法域中性的 kind（sale_recognised/reversed/reduced/increased/uncollected，56 §A.2 C1）取代 TW 的「開立／作廢／折讓／補開」；HK pack 一律回 no_document 並落一列 jurisdiction_capability_skips，<b>不得靜默略過</b>。C1 與 C9 分工：tax_invoice=監管管線、invoice_document=買家收到的那張紙——HK 是 none ＋ commercial_receipt，<b>不開發票不等於不出單據</b>",
+  i:"P0(M4)・[tbl:tax_events(kind,order_id,jurisdiction,source_write_point,tax_cents)] [tbl:jurisdiction_capability_skips(capability,jurisdiction,event_kind,reason)]；未宣告能力一律 reject（limits.yml jurisdiction.undeclared_capability_action）"},
+ "set-tax-region":{t:"稅區與服務層級三檔",f:"每個稅區選 managed／basic／manual",
+  l:"53號 P0-07。44:387 實測三檔：Shopify Tax（加拿大、英國…）／Basic Tax（挪威、紐西蘭、新加坡…）／Manual Tax（以色列、阿聯、南韓、香港、馬來西亞…）⇒ tax_region.service_tier enum(managed,basic,manual)。<b>manual 才顯示自訂稅率編輯器</b>——切換 tier 是真的改變下面顯示什麼，不是標籤。50 H-113／44:385：稅區<b>不是自己建的</b>，有運送區域才會出現，shipping zone 是上游依賴。香港仍需要一筆稅務地區紀錄（不是不建立），否則跨境訂單找不到適用稅則；rate 0 與 NULL 語意不同：0＝已確認免稅、NULL＝尚未設定會擋結帳",
+  i:"P0・[api:TBD-taxRegionUpdate]（28 待補）[tbl:tax_regions(shop_id,country,service_tier,rate_bp)]；稅率存 basis points 整數不存 float；tax_regions 由 shipping_zones 觸發建立"},
+ "set-tax-manual":{t:"自訂稅率編輯器（manual 專屬）",f:"手動維護此稅區的稅率清單",
+  l:"53號 P0-07 的核心：只有 service_tier=manual 的稅區才渲染這一塊，切到 basic／managed 會整塊移除（不是隱藏）。平台不代管此地稅率，數值與適用範圍由商家自負其責。馬來西亞 SST 依商品類別而異，這裡是預設值，差異走「稅則覆寫」；引擎讀取順序固定：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15-F2）",
+  i:"P0・[tbl:tax_regions,tax_rates(tax_region_id,name,rate_bp,scope)]；覆寫命中時把 override_id 寫進訂單稅務快照 [tbl:orders.tax_snapshot_id]"},
+ "set-tax-manual-add":{t:"新增手動稅率",f:"在 manual 稅區加一筆稅率",
+  l:"只在 manual 檔出現。新增後名稱／稅率／適用範圍都可直接就地編輯；空清單在香港是<b>正確的預設樣貌</b>不是漏設定（HK 無銷售稅）",
+  i:"P0・[api:TBD-taxRateCreate]（28 待補）[tbl:tax_rates]"},
+ "set-taxes-common":{t:"稅務共同設定",f:"價格含稅／稅則覆寫／跨境關稅",
+  l:"與 service tier 無關、跨全部稅區的三項。HK 下「價格含稅」預設關閉——無稅可內含（limits.yml jurisdictions.hk.consumption_tax.taxes_included_default=false，對照 tw=true）。跨境關稅是 56 §B.2 重分類後<b>唯一不受法域影響</b>的稅務事件點",
+  i:"P0・[api:TBD-taxSettingsUpdate] [tbl:tax_settings(prices_include_tax,duty_mode)]"},
+ "set-tax-twpack":{t:"台灣 pack 素材（未啟用）",f:"既有台灣形態設定的歸位處",
+  l:"CLAUDE.md 鐵律 11／56 §C.1：既有台灣內容<b>一行不刪</b>，降級為 jurisdiction/tw pack 素材並標未啟用（limits.yml jurisdictions.tw.enabled=false）。核心規格不得再直接引用統一發票／字軌／折讓／超商取貨／統編／電支條例——要引就引 pack 的能力介面",
+  i:"P2・[tbl:tax_regions] 僅在 tw pack 啟用後才進金額引擎；tw 的 tax_invoice.kind=gui 走 38 §3B 全套"},
+ "set-tax-tw":{t:"台灣營業稅率（tw pack 素材）",f:"設定台灣的稅率",
+  l:"台灣營業稅 5% 且採含稅定價，稅額由金額引擎自售價反推，不另外加價（15-F2）。<b>tw pack 未啟用時此值不進金額引擎</b>——留著是 56 §C.1 要求的「既有內容不刪」，不是現行行為",
+  i:"P0(tw pack)・[api:TBD-taxRegionUpdate]（28 待補）[tbl:tax_regions(shop_id,country,rate_bp,service_tier)]；稅率存 basis points 整數，不存 float"},
  "set-tax-incl":{t:"價格含稅",f:"前台顯示價是否內含稅額",
   l:"44 §18.3 額外設定第一項逐字「在商品價格與運費費率中包含銷售稅」，副標說明採用<b>動態稅金內含</b>的市場會依當地稅率調整；切換會重算所有市場的顯示價，是跨市場影響不是單店開關",
   i:"P0・[api:TBD-taxSettingsUpdate] [tbl:tax_settings.prices_include_tax]；顯示價重算走金額引擎（06 §6），歷史訂單沿用下單當時的快照"},
@@ -7883,6 +8611,12 @@ Object.assign(DOCS,{
   l:"一筆 webhook 一個 topic；要多個事件就建多筆（不是一筆多選）。事件送出走 outbox，transaction 內禁外部 IO（18-F1）",
   i:"P1・[api:webhookSubscriptionCreate] [tbl:webhook_subscriptions,event_outbox] [job:webhook_deliver]"},
 /* ---------- 自訂資料 ---------- */
+ "set-metafield-def":{t:"中繼欄位定義（開編輯表單）",f:"改型別／驗證／pin／Storefront 可讀性，或刪除",
+  l:"53號 N-04：這四列原本帶 › 卻沒有 handler。<b>處置＝做出真的下一層</b>，理由：中繼欄位定義本來就有可編輯的屬性，站內也已有「新增定義」表單——同一支加上編輯模式即可，不另立函式。⚠ namespace.key 在正式版<b>建立後鎖定</b>：改了會讓既有 metafield 資料失聯，表單 hint 已寫明",
+  i:"P1・[api:metafieldDefinitionUpdate]／[api:metafieldDefinitionDelete] [tbl:metafield_definitions(shop_id,owner_type,namespace,key,type,validations_json,pinned,storefront_access)] UNIQUE(shop_id,owner_type,namespace,key)"},
+ "set-metafield-add":{t:"新增中繼欄位定義",f:"建立一個新的 metafield 定義",
+  l:"型別 30+ 種（含 list.* 變體）；pin 了才會出現在資源頁卡片與列表篩選；access.storefront 決定前台 Liquid 讀不讀得到",
+  i:"P1・[api:metafieldDefinitionCreate] [tbl:metafield_definitions]"},
  "set-metaobj":{t:"元物件定義（進次級視圖）",f:"管理自訂資源型別的定義",
   l:"44 §11.1：元物件＝自己定義的資源型別，條目可被商品／頁面以 reference 型中繼欄位引用；刪除定義會連帶刪條目並讓引用變成 dangling reference，所以刪除必須二次確認",
   i:"P2・[api:metaobjectDefinitionCreate]／[api:metaobjectDefinitionDelete] [tbl:metaobject_definitions,metaobjects,metaobject_fields]"},
@@ -7974,6 +8708,31 @@ Object.assign(DOCS,{
  "set-acct-url":{t:"帳號頁網址（唯讀）",f:"顯示託管帳號頁的網址",
   l:"**為什麼不可改**：44 §18.5 第 5 列實測就是唯讀值（`https://shopify.com/{shop_id}/account`），顧客帳號是掛在平台網域下的獨立 SPA 不是主題頁面。網址由主網域＋固定路徑推導，要換只能走「變更網域」改主網域，不能單獨編這一格",
   i:"P1・唯讀衍生值：primary_domain + '/account'，由 [tbl:domains.is_primary] 推導；[api:TBD-customerAccountDomainUpdate] 改的是網域不是這格"},
+/* ---------- 結帳規則（53號 P0-09） ---------- */
+ "set-ck-rules":{t:"結帳規則卡",f:"結帳分頁上的規則入口",
+  l:"53號 P0-09。44:376 實測說明逐字「規則可設定購物車或結帳頁面在不同顧客情境下的回應方式。您可以設定商品限制、執行年齡驗證等。」空態逐字「您尚未安裝任何包含購物車或結帳頁面規則的應用程式。」——⇒ 這是 <b>app 擴充點</b>不是內建功能。44 行動項 26：storefront 的 age gate 原本硬寫在主題，正解是搬到結帳規則引擎",
+  i:"P1(M4)・[tbl:checkout_rules(shop_id,app_id,extension_target,kind,condition_json,action,message,target_path,step,enabled,position)]；求值走 Cart::ValidationPipeline"},
+ "set-ck-rules-row":{t:"進入結帳規則清單",f:"開啟規則清單次級視圖",
+  l:"與 openReturnRule／openShipProfile／openCkFields 同一套次級視圖模式（setSubOpen）；清單與計數放在次級視圖裡才會隨狀態更新，入口卡是靜態字串",
+  i:"—（導航）"},
+ "sub-ckr-list":{t:"結帳規則清單（次級視圖）",f:"規則的啟用／停用、排序、擋單計數與編輯入口",
+  l:"46b:482 逐字：「『結帳規則』不是一個獨立功能，是 validation function 的商家 UI 外殼。實測畫面上的『結帳規則』列表＝已啟用的 validation function 清單（上限 25）」⇒ 我們要做的是規則 CRUD ＋ 內建規則引擎（JSON 條件 DSL），<b>不是讓商家寫程式</b>。上限鍵 limits.yml functions.max_validation_functions_per_shop（不硬編數字）。排序＝求值順序，<b>所有</b>啟用中的規則都會跑（不是命中即停），errors 一次全部回給買家",
+  i:"P1(M4)・[api:TBD-checkoutRuleCreate/Update/Delete]（28 待補）[tbl:checkout_rules] UNIQUE(shop_id,position)；停用是 enabled=false 不是刪除"},
+ "sub-ckr-ext":{t:"「由 app 擴充提供」說明",f:"點明規則邏輯的來源",
+  l:"🔴 沒寫清楚這一條，實作的人會把它做成寫死的 if-else。與結帳編輯器 block registry 同一套說法（見 ck-addblock／ck-source：「編輯器本身沒有內建 block 庫，所有可加的 block 都由已安裝 app 的 UI extension 提供，並依 target 過濾。編輯器只是渲染器」）。規則的 target 是 cart.validations.generate.run（46b:386）",
+  i:"P1(M4)・[tbl:function_extensions(app_id,target,api_version)] ＋ [tbl:checkout_rules.app_id] FK；未安裝 app 時清單為空態"},
+ "sub-ckr-row":{t:"單一規則列",f:"狀態 chip／擋單計數／上下移／啟用開關／編輯",
+  l:"「已擋下 N 次」不是裝飾：沒有這個回饋，商家不知道規則有沒有在生效——空規則與從沒命中的規則在畫面上長得一樣。計數來源是求值管線的命中事件 rollup（CLAUDE.md 鐵律 7 數字同源：與分析頁同一份 rollup）。排序用 ↑↓ 按鈕（帶 aria-label ＋ 邊界 disabled），與地點優先序同一套鍵盤可用做法",
+  i:"P1(M4)・[tbl:checkout_rules.position,enabled] [tbl:checkout_rule_hits(rule_id,occurred_at,cart_token)] → 日 rollup"},
+ "sub-ckr-add":{t:"新增規則",f:"選類型＋提供它的 app＋求值時機",
+  l:"兩類對應 44:376 點名的商品購買限制與年齡驗證。新增後預設<b>停用</b>——條件還沒設就啟用會擋掉真實訂單。app 下拉只列已安裝且宣告 cart.validations.generate.run target 的 app",
+  i:"P1(M4)・[api:TBD-checkoutRuleCreate]＋查詢 WHERE target='cart.validations.generate.run' AND app_id IN (已安裝)"},
+ "sub-ckr-edit":{t:"規則編輯（條件 → 動作）",f:"條件、動作、買家訊息、target、求值時機",
+  l:"輸出固定形狀 {operations:[{validationAdd:{errors:[{message,target}]}}]}（46b:405–410）。target 是 JSONPath 白名單共 25 條（46b:432–458），不在白名單一律回 INVALID。買家端錯誤碼固定 VALIDATION_CUSTOM（46b:471）。求值時機三段 CART_INTERACTION／CHECKOUT_INTERACTION／CHECKOUT_COMPLETION <b>必須全部實作</b>（46b:487）——只在提交時驗證會讓買家填完整張表才被擋。⚠ Accelerated Checkout 也生效（46b:390）⇒ 伺服器端 gate，快速結帳共用同一管線。原型的條件是單行文字，正式版是結構化 JSON DSL——這一點已在 UI 的 hint 寫明，不做超前宣稱",
+  i:"P1(M4)・[tbl:checkout_rules(condition_json,action,message,target_path,step)]；message 需多語 [tbl:translations]"},
+ "sub-ckr-note":{t:"規則求值說明",f:"說明三段時機、輸出形狀與錯誤碼",
+  l:"把 46b §3 的模型寫在商家看得到的地方，避免「以為只在按下付款時檢查」。快速結帳共用管線是最容易漏的安全洞（46b:494 實作結論 4）",
+  i:"—（說明文字，無 API）"},
 /* ---------- 次級視圖 ---------- */
  "sub-ck-fields":{t:"結帳表單欄位（次級視圖）",f:"逐欄的三態設定清單",
   l:"44 §18.2「顧客資訊」四列實測；三態值域取自 limits.yml checkout.field_visibility_modes（hidden／optional／required）",
