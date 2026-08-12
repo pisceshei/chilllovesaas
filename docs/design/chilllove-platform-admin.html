@@ -655,9 +655,9 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 <header class="topbar" data-doc="topbar">
   <button class="hamburger" id="hamburger" aria-label="開啟導航" aria-expanded="false" aria-controls="sidebar" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="mark">CL</span><span>CHILL LOVE</span> <span class="pf-tag">平台總控</span><span class="env-tag">demo</span></div>
-  <button class="searchbox" data-doc="search" onclick="toast('Demo：全域搜尋——商店／擁有者／網域／統編／訂單號／工單號')">
+  <button class="searchbox" data-doc="search" onclick="toast('Demo：全域搜尋——商店／擁有者／網域／稅籍編號／訂單號／工單號')">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-    <span class="sb-label">搜尋商店、擁有者、網域、統編…</span><kbd>Ctrl K</kbd>
+    <span class="sb-label">搜尋商店、擁有者、網域、稅籍編號…</span><kbd>Ctrl K</kbd>
   </button>
   <div class="tb-right">
     <button class="icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
@@ -723,7 +723,7 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
     <button class="kpi" onclick="filterShops('trial')"><div class="k-label">試用中</div><div class="k-val num">118</div><div class="k-delta">14 天內到期 26</div></button>
     <button class="kpi" onclick="filterShops('past_due')"><div class="k-label">逾期／受限</div><div class="k-val num">37</div><div class="k-delta down">＋6 本週</div></button>
     <button class="kpi" onclick="toast('Demo：跨店訂單查詢')"><div class="k-label">今日訂單</div><div class="k-val num">3,412</div><div class="k-delta up">＋8.4%</div></button>
-    <button class="kpi" onclick="toast('Demo：GMV 口徑＝已付款訂單，與圖表同源（33 §2）')"><div class="k-label">今日 GMV</div><div class="k-val num">NT$8.26M</div><div class="k-delta up">＋5.2%</div></button>
+    <button class="kpi" onclick="toast('Demo：GMV 口徑＝已付款訂單，與圖表同源（33 §2）')"><div class="k-label">今日 GMV</div><div class="k-val num" data-money="206500000" data-money-compact></div><div class="k-delta up">＋5.2%</div></button>
   </div>
 
   <div class="health" data-doc="health">
@@ -734,8 +734,15 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
   </div>
 
   <div class="card chart-card" data-doc="gmvchart">
-    <div class="chart-head"><h3>平台 GMV（30 天）</h3><span class="big num">NT$236.4M</span><span style="color:var(--success);font-size:var(--t-xs)">＋6.8% vs 前期</span>
-      <span style="margin-left:auto"></span><button class="btn btn-ghost btn-sm" id="chartTblBtn" onclick="toggleChartTable()">表格</button>
+    <div class="chart-head"><h3>平台 GMV（30 天）</h3><span class="big num" data-money="5981500000" data-money-compact></span><span style="color:var(--success);font-size:var(--t-xs)">＋6.8% vs 前期</span>
+      <span style="margin-left:auto"></span>
+      <span class="rowflex" data-doc="platcur" role="group" aria-label="平台報表幣別">
+        <span class="sub">報表幣別</span>
+        <button class="btn btn-ghost btn-sm on" data-mktcur="HKD" aria-pressed="true" onclick="setPlatformCur('HKD')">HKD</button>
+        <button class="btn btn-ghost btn-sm" data-mktcur="TWD" aria-pressed="false" onclick="setPlatformCur('TWD')">TWD</button>
+        <button class="btn btn-ghost btn-sm" data-mktcur="JPY" aria-pressed="false" onclick="setPlatformCur('JPY')">JPY</button>
+        <button class="btn btn-ghost btn-sm" data-mktcur="USD" aria-pressed="false" onclick="setPlatformCur('USD')">USD</button></span>
+      <button class="btn btn-ghost btn-sm" id="chartTblBtn" onclick="toggleChartTable()">表格</button>
     </div>
     <div class="chart-wrap"><svg id="gmvChart" width="100%" height="200" role="img" aria-label="平台 GMV 三十天折線圖"></svg><div class="tooltip" id="gmvTip"></div></div>
     <div class="chart-table" id="chartTable"></div>
@@ -776,7 +783,7 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
       <button class="filter-chip" data-f="closed" onclick="filterShops('closed')">已關閉</button>
       <div class="searchwrap" style="margin-left:auto" data-doc="shopsearch">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input class="input" id="shopSearch" placeholder="名稱／子網域／email／統編" oninput="renderShops()" aria-label="搜尋商店">
+        <input class="input" id="shopSearch" placeholder="名稱／子網域／email／稅籍編號" oninput="renderShops()" aria-label="搜尋商店">
       </div>
     </div>
     <div style="overflow-x:auto">
@@ -867,7 +874,7 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
   </div>
 
   <div class="tabpane" id="pane-pay">
-    <div class="card" data-doc="paychannel"><div class="card-head"><h3>金流通道</h3><span class="hint">租戶自持商戶號，平台不碰資金（電支條例紅線）</span></div><div class="card-body" id="sdPay"></div></div>
+    <div class="card" data-doc="paychannel"><div class="card-head"><h3>金流通道</h3><span class="hint">租戶自持商戶號，平台不碰資金（儲值監管紅線）</span></div><div class="card-body" id="sdPay"></div></div>
     <div class="card" data-doc="payout"><div class="card-head"><h3>撥款與保留金</h3></div><div class="card-body" id="sdPayout"></div></div>
   </div>
 
@@ -882,8 +889,8 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
   </div>
 
   <div class="tabpane" id="pane-comp">
-    <div class="card" data-doc="shopcompliance"><div class="card-head"><h3>前台合規巡檢</h3><span class="hint">台灣：統編揭露／隱私政策／退換貨／鑑賞期告知</span><span class="spacer"></span><button class="btn btn-sec btn-sm" onclick="toast('Demo：立即重掃前台')">重新掃描</button></div><ul class="mini-list" id="sdCompliance"></ul></div>
-    <div class="card" data-doc="shopinvoice"><div class="card-head"><h3>電子發票</h3></div><div class="card-body" id="sdInvoice"></div></div>
+    <div class="card" data-doc="shopcompliance"><div class="card-head"><h3>前台合規巡檢</h3><span class="hint">檢查項由租戶法域 pack 提供</span><span class="spacer"></span><button class="btn btn-sec btn-sm" onclick="toast('Demo：立即重掃前台')">重新掃描</button></div><ul class="mini-list" id="sdCompliance"></ul></div>
+    <div class="card" data-doc="shoptaxdoc"><div class="card-head"><h3>稅務憑證</h3><span class="hint" id="sdInvoiceHint"></span></div><div class="card-body" id="sdInvoice"></div></div>
   </div>
 
   <div class="tabpane" id="pane-tick">
@@ -924,15 +931,15 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 
 <!-- ============ 計費與催繳 ============ -->
 <section class="view" id="v-billing">
-  <div class="page-head"><h1>計費與催繳</h1><span class="sub">MRR NT$4.82M・逾期 37 家</span>
+  <div class="page-head"><h1>計費與催繳</h1><span class="sub">MRR <span class="num" data-money="120500000" data-money-compact></span>・逾期 37 家</span>
     <div class="page-actions"><button class="btn btn-sec btn-sm" onclick="toast('Demo：匯出應收帳齡表')">帳齡表</button><button class="btn btn-sec btn-sm" onclick="openDunningPolicy()">催繳政策</button></div>
   </div>
   <div class="kpis" style="grid-template-columns:repeat(5,1fr)" data-doc="billkpi">
-    <button class="kpi" onclick="toast('Demo：MRR 組成明細')"><div class="k-label">MRR</div><div class="k-val num">NT$4.82M</div><div class="k-delta up">＋3.4%</div></button>
-    <button class="kpi" onclick="toast('Demo：GMV 抽成收入（CYBERBIZ 式 1%）')"><div class="k-label">抽成收入</div><div class="k-val num">NT$1.94M</div><div class="k-delta up">＋6.1%</div></button>
-    <button class="kpi" onclick="toast('Demo：模組加購收入')"><div class="k-label">加購模組</div><div class="k-val num">NT$0.71M</div><div class="k-delta up">＋9%</div></button>
+    <button class="kpi" onclick="toast('Demo：MRR 組成明細')"><div class="k-label">MRR</div><div class="k-val num" data-money="120500000" data-money-compact></div><div class="k-delta up">＋3.4%</div></button>
+    <button class="kpi" onclick="toast('Demo：GMV 抽成收入（CYBERBIZ 式 1%）')"><div class="k-label">抽成收入</div><div class="k-val num" data-money="48500000" data-money-compact></div><div class="k-delta up">＋6.1%</div></button>
+    <button class="kpi" onclick="toast('Demo：模組加購收入')"><div class="k-label">加購模組</div><div class="k-val num" data-money="17750000" data-money-compact></div><div class="k-delta up">＋9%</div></button>
     <button class="kpi" onclick="toast('Demo：本月流失')"><div class="k-label">Churn（家）</div><div class="k-val num">7</div><div class="k-delta down">＋2</div></button>
-    <button class="kpi" onclick="toast('Demo：應收未收')"><div class="k-label">逾期應收</div><div class="k-val num">NT$392K</div><div class="k-delta down">37 家</div></button>
+    <button class="kpi" onclick="toast('Demo：應收未收')"><div class="k-label">逾期應收</div><div class="k-val num" data-money="9800000" data-money-compact></div><div class="k-delta down">37 家</div></button>
   </div>
   <div class="card" data-doc="dunningtable">
     <div class="card-head"><h3>催繳中</h3><span class="hint">D+28 凍結線・凍結後 60 天終止線（Shopify 兩條硬線）</span><span class="spacer"></span><button class="btn btn-sec btn-sm" onclick="toast('Demo：批次重試扣款')">批次重試</button></div>
@@ -942,8 +949,12 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 
 <!-- ============ 清結算 ============ -->
 <section class="view" id="v-settlement">
-  <div class="page-head"><h1>清結算</h1><span class="sub">通道對帳與分潤結算・平台無資金池（電支條例）</span></div>
-  <div class="note note-crit" style="margin-bottom:var(--sp-300)" data-doc="nopool"><b>架構紅線：</b>平台不代收代付、不保管資金。租戶自持金流商戶號（平台僅存 MerchantID／HashKey／HashIV 做代理設定），此頁僅做<b>對帳、分潤結算與通道治理</b>——不得出現「平台錢包／提現」。依《電子支付機構管理條例》。</div>
+  <div class="page-head"><h1>清結算</h1><span class="sub">通道對帳與分潤結算・平台無資金池（各法域儲值監管紅線）</span></div>
+  <div class="note note-crit" style="margin-bottom:var(--sp-300)" data-doc="nopool"><b>架構紅線：</b>平台不代收代付、不保管資金。租戶自持金流商戶號（平台僅存 MerchantID／HashKey／HashIV 做代理設定），此頁僅做<b>對帳、分潤結算與通道治理</b>——不得出現「平台錢包／提現」。
+    <br><span class="sub">法源逐法域不同，由 pack 的 <code>stored_value_regime</code> 提供（<code>limits.yml jurisdictions.{code}.stored_value_regime</code>）。基準法域<b>香港</b>＝PSSVFO／SVF；<b>單一用途豁免</b>是產品級硬限制——禮品卡不得跨租戶通用（56 §B.3）。</span>
+    <!-- TW-PACK -->
+    <br><span class="sub">jurisdiction/tw pack（未啟用）：《電子支付機構管理條例》——平台代收代付並保管資金即需特許。</span>
+    <!-- /TW-PACK --></div>
   <div class="three-col">
     <div class="card"><div class="card-head"><h3>通道分佈</h3></div><ul class="mini-list" id="chanList"></ul></div>
     <div class="card"><div class="card-head"><h3>今日撥款批次</h3><span class="hint">T+4 工作日</span></div><ul class="mini-list" id="payoutList"></ul></div>
@@ -1014,8 +1025,8 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
     </div>
   </div>
   <div class="two-col" style="margin-top:var(--sp-400)">
-    <div class="card" data-doc="einvoice">
-      <div class="card-head"><h3>電子發票管線</h3><span class="hint">字軌餘量／憑證到期</span></div>
+    <div class="card" data-doc="taxdoc">
+      <div class="card-head"><h3>稅務憑證管線</h3><span class="hint">依租戶法域 pack 的 tax_invoice 能力</span></div>
       <div class="card-body" id="invPipeline"></div>
     </div>
     <div class="card" data-doc="frontscan">
@@ -1311,6 +1322,134 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 <div class="annot-bar">開發註釋模式：點任何<b>虛線框</b>元素看「功能／邏輯／實作」（同步文件：docs/design/32、33）。再按一次 ⌗ 關閉。</div>
 <div class="doc-pop" id="docPop" role="dialog" aria-label="開發註釋"><button class="dp-close" onclick="closeDocPop()" aria-label="關閉">✕</button><div id="docPopBody"></div></div>
 <script>
+/* ==================================================================
+   市場 locale 表與金額格式化（CLAUDE.md 鐵律 3／10／11、56 §D.3）
+   ------------------------------------------------------------------
+   🔴 這裡刻意**不是**「把 NT$ 換成 HK$」。56 §D.3 硬要求 1 逐字：
+      「把 NT$ 換成 HK$ 只是把同一個錯誤搬到另一個國家」。
+      符號、符號位置、小數位、千分位分組**全部是市場資料**，
+      格式化函式體內不得出現任何幣別符號或小數位常數。
+      事故：2026-08-12 盤點——本檔原有一支集中式格式化函式，卻把符號寫死在函式體內；
+      「有集中式函式」最容易被誤判成「已經抽象化了」，其實符號就長在函式裡。
+   🔴 56 §D.3 硬要求 3：三個原型的金額 formatter 必須**同源**。
+      本表與 chilllove-admin-v2.html 的 MARKET_LOCALES 逐欄相同，改一邊就要改另一邊；
+      正式版是 admin SPA 的共用模組，不是三份複本。
+   欄位名與 config/limits.yml `jurisdictions.<code>.currency_format` 同名同義
+      （default_currency／symbol／symbol_position／exponent／grouping）。
+   金額單位：**integer cents，一律 ×100**，與 limits.yml 同慣例——
+      `jurisdictions.tw.pickup_networks.cod_max_cents: 2000000` 代表 20,000 TWD，
+      TWD 的 ISO exponent 是 0 但儲存仍是 ×100。
+      ⇒ exponent 只決定**顯示**幾位小數，不決定儲存單位。
+      鐵律 3：金額全程 integer cents，出現 float 即 bug（fmtMoney 對非整數 console.warn）。
+   ⚠️ exponent 差異（HKD 2／TWD 0／JPY 0）正是硬編符號抓不到的那類 bug。
+   基準市場＝香港（鐵律 11 基準法域）。PLATFORM_CUR 是平台**報表幣別**。
+   ⚠️ demo **不做匯率換算**——切換市場只換格式不換金額，目的是驗證格式真的由表驅動。
+   ================================================================== */
+/* CURRENCY-TABLE */
+/* 這是全檔唯一允許出現幣別符號字面量的區段（lint r_hardcoded_currency 的宣告式豁免）。
+   符號總得有個源頭，但源頭必須只有一個——每檔只准一份 CURRENCY-TABLE，lint 會擋第二份。
+   在這個區段之外寫任何 'HK$'／'NT$'／'¥' 都是硬編，鐵律 10。 */
+const MARKET_LOCALES={
+ HKD:{default_currency:'HKD',name:'港幣',  symbol:'HK$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[100000000,'億'],[10000,'萬']]},
+ MYR:{default_currency:'MYR',name:'令吉',  symbol:'RM', symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:' ',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ USD:{default_currency:'USD',name:'美元',  symbol:'US$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[100000000,'億'],[10000,'万']]}};
+/* /CURRENCY-TABLE */
+const MARKET_BASE='HKD';                 /* 鐵律 11：基準法域＝香港，開站預設就是它 */
+let PLATFORM_CUR=MARKET_BASE;
+function marketLocale(code){return MARKET_LOCALES[code]||MARKET_LOCALES[PLATFORM_CUR]||MARKET_LOCALES[MARKET_BASE];}
+const CURSYM=code=>marketLocale(code).symbol;
+const curLabel=code=>{const L=marketLocale(code);return L.default_currency+'（'+L.symbol+'）';};
+const toCents=v=>Math.round((Number(v)||0)*100);
+const fromCents=c=>Math.round(Number(c)||0)/100;
+/* grouping ＝「由右往左的各段長度」，最後一段重複套用（[3]＝每三位、[3,2]＝印度式）*/
+function groupDigits(intStr,groups,sep){
+  const g=(groups&&groups.length)?groups:[3];
+  let out='',i=intStr.length,k=0;
+  while(i>0){const n=g[Math.min(k,g.length-1)],s=Math.max(0,i-n);
+    out=intStr.slice(s,i)+(out?sep+out:'');i=s;k++;}
+  return out;
+}
+function fmtMoney(cents,code){
+  const L=marketLocale(code),raw=Number(cents)||0;
+  if(!Number.isInteger(raw))console.warn('[money] 非整數 cents（鐵律 3：金額全程 integer cents）：',cents);
+  const fixed=(Math.abs(raw)/100).toFixed(L.exponent);
+  const d=fixed.indexOf('.');
+  const body=groupDigits(d<0?fixed:fixed.slice(0,d),L.grouping,L.sep)+(d<0?'':L.dec+fixed.slice(d+1));
+  return (raw<0?'−':'')+(L.symbol_position==='suffix'?body+L.gap+L.symbol:L.symbol+L.gap+body);
+}
+/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡 */
+function fmtMoneyCompact(cents,code){
+  const L=marketLocale(code),raw=Number(cents)||0,major=Math.abs(raw)/100;
+  const step=(L.abbr||[]).find(a=>major>=a[0]);
+  if(!step)return fmtMoney(cents,code);
+  const t=(major/step[0]).toFixed(2).replace(/\.?0+$/,'');
+  const dp=t.indexOf('.');
+  const n=groupDigits(dp<0?t:t.slice(0,dp),L.grouping,L.sep)+(dp<0?'':L.dec+t.slice(dp+1));
+  return (raw<0?'−':'')+(L.symbol_position==='suffix'?n+step[1]+L.gap+L.symbol:L.symbol+L.gap+n+step[1]);
+}
+const money=(cents,code)=>fmtMoney(cents,code);
+const moneyC=(cents,code)=>fmtMoneyCompact(cents,code);
+/* 宣告式金額：靜態 markup 掛 <span class="num" data-money="cents">，由 paintMoney() 依目前
+   市場填字。冪等（值沒變就不碰 DOM），否則 enhanceTables 的 MutationObserver 會被自己的寫入打成迴圈。 */
+function paintMoney(root){
+  (root||document).querySelectorAll('[data-money]').forEach(el=>{
+    const cur=el.dataset.moneyCur||'',sig=el.dataset.money+'|'+cur+'|'+PLATFORM_CUR;
+    if(el.dataset.moneySig===sig)return;
+    el.dataset.moneySig=sig;
+    el.textContent=(el.dataset.moneyCompact!=null?moneyC:money)(+el.dataset.money,cur||undefined);
+  });
+}
+function setPlatformCur(code){
+  if(!MARKET_LOCALES[code])return;
+  PLATFORM_CUR=code;
+  document.querySelectorAll('[data-mktcur]').forEach(b=>{
+    const on=b.dataset.mktcur===code;
+    b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));
+  });
+  paintMoney();renderAll();renderShops();drawChart();
+  const t=document.getElementById("chartTable");if(t){t.innerHTML="";t.classList.remove("show");
+    const btn=document.getElementById("chartTblBtn");if(btn)btn.textContent="表格";}
+  if(curShop)openShop(curShop.id);
+  toast('平台報表幣別已切換為 '+marketLocale().name+'（'+marketLocale().default_currency+'）——demo 只換格式，不換匯率');
+}
+/* ==================================================================
+   法域 pack 能力表（CLAUDE.md 鐵律 11、56 §A.2）
+   ------------------------------------------------------------------
+   對應 config/limits.yml `jurisdictions.<code>`。核心只發稅務事件，
+   要不要落地成憑證由 pack 的 tax_invoice 能力決定；HK 一律 no_document。
+   `tw.enabled=false`＝台灣 pack 尚未開通，其素材保留但不生效（56 §C.1「不刪、只標」）。
+   平台端所有稅務憑證類模組都以這張表 gate，不是寫死顯示。
+   ================================================================== */
+const JURISDICTIONS={
+ hk:{code:'hk',name:'香港',enabled:true, tax_invoice:'none',taxIdLabel:'BR number',
+     storedValue:'PSSVFO／SVF 單一用途豁免',note:'無銷售稅、無政府發票；買家收到的是純商業收據（invoice_document.kind=commercial_receipt）'},
+/* TW-PACK */
+ tw:{code:'tw',name:'台灣',enabled:false,tax_invoice:'gui', taxIdLabel:'統一編號',
+     storedValue:'《電子支付機構管理條例》（不得資金池）',note:'tax_invoice.kind=gui 全套（開立／作廢／折讓／字軌）；limits.yml jurisdictions.tw.enabled=false 時不載入'}
+/* /TW-PACK */ };
+const taxInvoiceJurs=()=>Object.values(JURISDICTIONS).filter(j=>j.enabled&&j.tax_invoice!=='none');
+/* 租戶的預設幣別與時區也是法域屬性（29 §1.5 market 繼承之外，jurisdiction 永遠本地）*/
+const JUR_LOCALE={hk:{cur:'HKD',tz:'Asia/Hong_Kong'},tw:{cur:'TWD',tz:'Asia/Taipei'}};
+/* 租戶法域徽章：pack 未啟用時明講，避免讀者以為功能沒做 */
+function jurBadge(s){
+  const j=JURISDICTIONS[s.jur]||JURISDICTIONS.hk;
+  return '<span class="badge '+(j.enabled?'success':'')+'"><span class="pip '+(j.enabled?'full':'')+'"></span>'+
+    j.name+'（'+j.code+'）'+(j.enabled?'':'・pack 未啟用')+'</span>';
+}
+/* 「本法域不適用」的統一空態——標記完不能留一片空白，要說得出為什麼沒東西（56 §A.2 C1：不得靜默略過）*/
+function jurEmptyState(title,why,packName){
+  return '<div class="empty" style="padding:var(--sp-500) var(--sp-300)"><b>'+title+'</b>'+
+    '<span class="sub" style="display:block;margin-top:var(--sp-200);max-width:46em">'+why+'</span>'+
+    (packName?'<span class="sub" style="display:block;margin-top:var(--sp-200)"><code>limits.yml jurisdictions.'+packName+'.enabled=false</code></span>':'')+'</div>';
+}
+
 /* ===== Mock 資料（僅原型；口徑規則見 32 §8、門檻見 33 §2） ===== */
 const ST={
  draft:{t:"草稿",c:""},pending_review:{t:"待審",c:"info",p:"half"},info_required:{t:"補件中",c:"attention",p:"half"},
@@ -1319,20 +1458,23 @@ const ST={
  frozen:{t:"凍結",c:"critical",p:""},closed:{t:"已關閉",c:"",p:"full"},deleted:{t:"註銷",c:"",p:""}
 };
 const FLAGS=[["payin","收款凍結","停止新交易收款，店仍可運營"],["payout","提現凍結","撥款批次暫停"],["trade","交易凍結","結帳完全關閉"],["readonly","後台唯讀","商家只能讀不能寫"],["offline","前台下線","503＋noindex，顧客看不到"],["banned","帳號查封","禁止登入，最終手段"]];
+/* jur ＝ 該租戶的營運法域（56 §A.0：法域永遠本地、不可繼承）。
+   平台是多法域的：預設 hk（基準法域），示範保留兩家 tw 租戶，
+   好讓「法域 pack 沒提供該能力時，這個位置該長什麼樣」在畫面上驗得到。 */
 const SHOPS=[
- {id:1,name:"花見選物",sub:"hanami-select",owner:"王詠晴",email:"yc.wang@gmail.com",tax:"54836271",st:"active",risk:"Normal",plan:"電商戰略家",modules:["CRM 會員行銷","定期購"],products:412,orders30:236,gmv30:842300,peak:62,created:"2026-03-02",disp:{r:0.12,e:0.14},rs:{},dom:[{h:"hanami-select.mychilllove.com",p:false,d:"platform"},{h:"hanami.tw",p:true,d:"verified"}]},
- {id:2,name:"山丘咖啡",sub:"hillside-coffee",owner:"陳冠宇",email:"hi@hillside.coffee",tax:"27194053",st:"active",risk:"Normal",plan:"網店探索者",modules:[],products:96,orders30:1184,gmv30:1963200,peak:41,created:"2026-01-18",disp:{r:0.31,e:0.28},rs:{},dom:[{h:"hillside-coffee.mychilllove.com",p:true,d:"platform"}]},
- {id:3,name:"沐光香氛",sub:"muguang-scent",owner:"林亭妤",email:"muguang@muguang.tw",tax:"83015492",st:"active",risk:"Elevated",plan:"OMO 大師",modules:["促銷活動","數據分析 Pro","全通路進階整合"],products:4870,orders30:903,gmv30:2411800,peak:97,created:"2025-12-05",disp:{r:0.78,e:0.91},rs:{},dom:[{h:"muguang-scent.mychilllove.com",p:false,d:"platform"},{h:"muguang.tw",p:true,d:"verified"}]},
- {id:4,name:"好日子文具",sub:"goodday-stationery",owner:"許博翔",email:"goodday.st@gmail.com",tax:"—",st:"pending_review",risk:"Not assessed",plan:"試用",modules:[],products:38,orders30:0,gmv30:0,peak:6,created:"2026-08-03",disp:{r:0,e:0},rs:{payin:1},dom:[{h:"goodday-stationery.mychilllove.com",p:true,d:"platform"}]},
- {id:5,name:"島嶼服飾",sub:"island-apparel",owner:"黃郁婷",email:"service@island-ap.com",tax:"16250938",st:"frozen",reason:"付款逾期",risk:"Elevated",plan:"電商戰略家",modules:[],products:1240,orders30:0,gmv30:0,peak:0,created:"2025-11-20",disp:{r:0.42,e:0.44},rs:{payin:1,trade:1,readonly:1,offline:1},dom:[{h:"island-apparel.mychilllove.com",p:true,d:"platform"}]},
- {id:6,name:"綠植研究所",sub:"plantlab",owner:"蔡承翰",email:"lab@plantlab.tw",tax:"49281736",st:"active",risk:"Normal",plan:"網店探索者",modules:["定期購"],products:214,orders30:342,gmv30:512600,peak:33,created:"2026-02-14",disp:{r:0.08,e:0.09},rs:{},dom:[{h:"plantlab.mychilllove.com",p:true,d:"platform"}]},
- {id:7,name:"手感烘焙",sub:"handbake",owner:"郭欣慈",email:"handbake@gmail.com",tax:"—",st:"info_required",risk:"Not assessed",plan:"試用",modules:[],products:22,orders30:31,gmv30:42100,peak:9,created:"2026-08-08",disp:{r:0,e:0},rs:{payin:1},dom:[{h:"handbake.mychilllove.com",p:true,d:"platform"}]},
- {id:8,name:"貓下去雜貨",sub:"catdown-goods",owner:"劉品睿",email:"meow@catdown.tw",tax:"70563184",st:"past_due",risk:"Normal",plan:"電商戰略家",modules:["促銷活動"],products:663,orders30:518,gmv30:734900,peak:55,created:"2026-04-22",disp:{r:0.19,e:0.22},rs:{},dom:[{h:"catdown-goods.mychilllove.com",p:true,d:"platform"}]},
- {id:9,name:"北緯 25 選品",sub:"n25-select",owner:"楊子毅",email:"ops@n25.tw",tax:"38047165",st:"restricted",reason:"爭議率越線",risk:"Highest",plan:"全通路領航員",modules:["促銷活動","CRM 會員行銷","網紅團購","Smart OMO"],products:2980,orders30:1422,gmv30:3860400,peak:118,created:"2025-10-30",disp:{r:1.62,e:1.71},rs:{payin:1,payout:1},dom:[{h:"n25-select.mychilllove.com",p:true,d:"platform"},{h:"shop.n25.tw",p:false,d:"pending"}]},
- {id:10,name:"微醺酒藏",sub:"tipsy-cellar",owner:"周雅涵",email:"cellar@tipsy.tw",tax:"91627304",st:"restricted",reason:"違禁品審查（酒類廣告）",risk:"Elevated",plan:"網店探索者",modules:[],products:189,orders30:12,gmv30:31200,peak:14,created:"2026-05-09",disp:{r:0.22,e:0.25},rs:{payin:1,readonly:1},dom:[{h:"tipsy-cellar.mychilllove.com",p:true,d:"platform"}]},
- {id:11,name:"老宅茶事",sub:"oldhouse-tea",owner:"謝孟儒",email:"tea@oldhouse.tw",tax:"25783019",st:"trial",risk:"Not assessed",plan:"試用 14 天",modules:[],products:74,orders30:167,gmv30:298700,peak:21,created:"2026-08-01",disp:{r:0,e:0},rs:{},dom:[{h:"oldhouse-tea.mychilllove.com",p:true,d:"platform"}]},
- {id:12,name:"拾光眼鏡",sub:"shiguang-optics",owner:"洪偉倫",email:"sg.optics@gmail.com",tax:"63920475",st:"closed",risk:"Not assessed",plan:"—",modules:[],products:0,orders30:0,gmv30:0,peak:0,created:"2025-09-12",disp:{r:0,e:0},rs:{},dom:[{h:"shiguang-optics.mychilllove.com",p:true,d:"platform"}]},
- {id:13,name:"日常花器",sub:"daily-vase",owner:"施languid",email:"hi@dailyvase.tw",tax:"—",st:"paused",risk:"Normal",plan:"網店探索者",modules:[],products:143,orders30:0,gmv30:0,peak:3,created:"2026-01-09",disp:{r:0,e:0},rs:{trade:1},dom:[{h:"daily-vase.mychilllove.com",p:true,d:"platform"}]},
+ {id:1,jur:"hk",name:"花見選物",sub:"hanami-select",owner:"王詠晴",email:"yc.wang@gmail.com",tax:"54836271-000",st:"active",risk:"Normal",plan:"電商戰略家",modules:["CRM 會員行銷","定期購"],products:412,orders30:236,gmv30:21057500,peak:62,created:"2026-03-02",disp:{r:0.12,e:0.14},rs:{},dom:[{h:"hanami-select.mychilllove.com",p:false,d:"platform"},{h:"hanami.tw",p:true,d:"verified"}]},
+ {id:2,jur:"hk",name:"山丘咖啡",sub:"hillside-coffee",owner:"陳冠宇",email:"hi@hillside.coffee",tax:"27194053-000",st:"active",risk:"Normal",plan:"網店探索者",modules:[],products:96,orders30:1184,gmv30:49080000,peak:41,created:"2026-01-18",disp:{r:0.31,e:0.28},rs:{},dom:[{h:"hillside-coffee.mychilllove.com",p:true,d:"platform"}]},
+ {id:3,jur:"tw",name:"沐光香氛",sub:"muguang-scent",owner:"林亭妤",email:"muguang@muguang.tw",tax:"83015492",st:"active",risk:"Elevated",plan:"OMO 大師",modules:["促銷活動","數據分析 Pro","全通路進階整合"],products:4870,orders30:903,gmv30:60295000,peak:97,created:"2025-12-05",disp:{r:0.78,e:0.91},rs:{},dom:[{h:"muguang-scent.mychilllove.com",p:false,d:"platform"},{h:"muguang.tw",p:true,d:"verified"}]},
+ {id:4,jur:"hk",name:"好日子文具",sub:"goodday-stationery",owner:"許博翔",email:"goodday.st@gmail.com",tax:"—",st:"pending_review",risk:"Not assessed",plan:"試用",modules:[],products:38,orders30:0,gmv30:0,peak:6,created:"2026-08-03",disp:{r:0,e:0},rs:{payin:1},dom:[{h:"goodday-stationery.mychilllove.com",p:true,d:"platform"}]},
+ {id:5,jur:"hk",name:"島嶼服飾",sub:"island-apparel",owner:"黃郁婷",email:"service@island-ap.com",tax:"16250938-000",st:"frozen",reason:"付款逾期",risk:"Elevated",plan:"電商戰略家",modules:[],products:1240,orders30:0,gmv30:0,peak:0,created:"2025-11-20",disp:{r:0.42,e:0.44},rs:{payin:1,trade:1,readonly:1,offline:1},dom:[{h:"island-apparel.mychilllove.com",p:true,d:"platform"}]},
+ {id:6,jur:"hk",name:"綠植研究所",sub:"plantlab",owner:"蔡承翰",email:"lab@plantlab.tw",tax:"49281736-000",st:"active",risk:"Normal",plan:"網店探索者",modules:["定期購"],products:214,orders30:342,gmv30:12815000,peak:33,created:"2026-02-14",disp:{r:0.08,e:0.09},rs:{},dom:[{h:"plantlab.mychilllove.com",p:true,d:"platform"}]},
+ {id:7,jur:"hk",name:"手感烘焙",sub:"handbake",owner:"郭欣慈",email:"handbake@gmail.com",tax:"—",st:"info_required",risk:"Not assessed",plan:"試用",modules:[],products:22,orders30:31,gmv30:1052500,peak:9,created:"2026-08-08",disp:{r:0,e:0},rs:{payin:1},dom:[{h:"handbake.mychilllove.com",p:true,d:"platform"}]},
+ {id:8,jur:"hk",name:"貓下去雜貨",sub:"catdown-goods",owner:"劉品睿",email:"meow@catdown.tw",tax:"70563184-000",st:"past_due",risk:"Normal",plan:"電商戰略家",modules:["促銷活動"],products:663,orders30:518,gmv30:18372500,peak:55,created:"2026-04-22",disp:{r:0.19,e:0.22},rs:{},dom:[{h:"catdown-goods.mychilllove.com",p:true,d:"platform"}]},
+ {id:9,jur:"tw",name:"北緯 25 選品",sub:"n25-select",owner:"楊子毅",email:"ops@n25.tw",tax:"38047165",st:"restricted",reason:"爭議率越線",risk:"Highest",plan:"全通路領航員",modules:["促銷活動","CRM 會員行銷","網紅團購","Smart OMO"],products:2980,orders30:1422,gmv30:96510000,peak:118,created:"2025-10-30",disp:{r:1.62,e:1.71},rs:{payin:1,payout:1},dom:[{h:"n25-select.mychilllove.com",p:true,d:"platform"},{h:"shop.n25.tw",p:false,d:"pending"}]},
+ {id:10,jur:"hk",name:"微醺酒藏",sub:"tipsy-cellar",owner:"周雅涵",email:"cellar@tipsy.tw",tax:"91627304-000",st:"restricted",reason:"違禁品審查（酒類廣告）",risk:"Elevated",plan:"網店探索者",modules:[],products:189,orders30:12,gmv30:780000,peak:14,created:"2026-05-09",disp:{r:0.22,e:0.25},rs:{payin:1,readonly:1},dom:[{h:"tipsy-cellar.mychilllove.com",p:true,d:"platform"}]},
+ {id:11,jur:"hk",name:"老宅茶事",sub:"oldhouse-tea",owner:"謝孟儒",email:"tea@oldhouse.tw",tax:"25783019-000",st:"trial",risk:"Not assessed",plan:"試用 14 天",modules:[],products:74,orders30:167,gmv30:7467500,peak:21,created:"2026-08-01",disp:{r:0,e:0},rs:{},dom:[{h:"oldhouse-tea.mychilllove.com",p:true,d:"platform"}]},
+ {id:12,jur:"hk",name:"拾光眼鏡",sub:"shiguang-optics",owner:"洪偉倫",email:"sg.optics@gmail.com",tax:"63920475-000",st:"closed",risk:"Not assessed",plan:"—",modules:[],products:0,orders30:0,gmv30:0,peak:0,created:"2025-09-12",disp:{r:0,e:0},rs:{},dom:[{h:"shiguang-optics.mychilllove.com",p:true,d:"platform"}]},
+ {id:13,jur:"hk",name:"日常花器",sub:"daily-vase",owner:"施languid",email:"hi@dailyvase.tw",tax:"—",st:"paused",risk:"Normal",plan:"網店探索者",modules:[],products:143,orders30:0,gmv30:0,peak:3,created:"2026-01-09",disp:{r:0,e:0},rs:{trade:1},dom:[{h:"daily-vase.mychilllove.com",p:true,d:"platform"}]},
 ];
 const LIFECYCLE=["pending_review","trial","active","past_due","frozen","closed"];
 const AUDIT=[
@@ -1344,7 +1486,10 @@ const AUDIT=[
  {t:"09:05",who:"陳柏睿",act:"tenant.unfreeze",obj:"綠植研究所",src:"API",out:"success",ip:"61.216.3.77",cls:"ok",prev:{status:"frozen"},next:{status:"active",note:"付款完成自動核對"}},
 ];
 const SIGNUPS=[{n:"日常花器",s:"daily-vase",t:"今天 11:20"},{n:"步行者鞋履",s:"walker-shoes",t:"今天 09:47"},{n:"手感烘焙",s:"handbake",t:"3 天前"},{n:"好日子文具",s:"goodday-stationery",t:"8 天前"}];
-const GMV=[6.9,7.2,6.8,7.5,7.1,7.8,8.3,7.6,7.2,7.9,8.1,7.4,7.7,8.6,9.1,8.2,7.8,8.4,8.0,7.6,8.2,8.8,8.5,7.9,8.3,9.0,8.6,8.1,8.4,8.26];
+/* 平台 30 天日 GMV，**integer cents**（原本是「台幣百萬」的浮點數——鐵律 3：出現 float 即 bug）。
+   換算為港幣量級（TWD≈4×HKD）；合計 5,981,500,000 cents，與圖表標題同源（鐵律 7）。 */
+const GMV=[172500000,180000000,170000000,187500000,177500000,195000000,207500000,190000000,180000000,197500000,202500000,185000000,192500000,215000000,227500000,205000000,195000000,210000000,200000000,190000000,205000000,220000000,212500000,197500000,207500000,225000000,215000000,202500000,210000000,206500000];
+const GMV_TOTAL=GMV.reduce((a,v)=>a+v,0);
 const KYC={
  new:[{n:"日常花器",s:"個人",d:"今天 11:20",b:"6 項待審"},{n:"步行者鞋履",s:"有限公司",d:"今天 09:47",b:"9 項待審"},{n:"晨間麵包",s:"獨資",d:"昨天",b:"6 項待審"},{n:"深藍衝浪",s:"有限公司",d:"2 天前",b:"9 項待審"},{n:"木語家具",s:"股份有限公司",d:"2 天前",b:"11 項待審"},{n:"小島香料",s:"個人",d:"3 天前",b:"6 項待審"}],
  info:[{n:"好日子文具",s:"個人",d:"2 天前",b:"缺 存摺封面",code:"BANK_NAME_MISMATCH"},{n:"手感烘焙",s:"獨資",d:"3 天前",b:"缺 網域所有權證明",code:"SITE_NOT_LIVE"},{n:"光合植栽",s:"有限公司",d:"4 天前",b:"UBO 未填",code:"UBO_MISSING"},{n:"暖暖毛線",s:"個人",d:"5 天前",b:"證件照不清",code:"DOC_UNREADABLE"},{n:"river 選物",s:"有限公司",d:"5 天前",b:"營業項目不符",code:"SCOPE_MISMATCH"}],
@@ -1360,17 +1505,17 @@ const TICKETS=[
  {id:"#5079",shop:"微醺酒藏",cat:"違規申訴",p:"P1",st:"待審理",sla:"逾 SLA 3h",own:"—",bad:1},
 ];
 const DUN=[
- {n:"島嶼服飾",plan:"電商戰略家",amt:55000,first:"07-08",tries:"4／已達上限",left:"已凍結",bad:1},
- {n:"貓下去雜貨",plan:"電商戰略家",amt:55000,first:"07-22",tries:"3",left:"3 天",bad:1},
- {n:"微醺酒藏",plan:"網店探索者",amt:40000,first:"07-25",tries:"3",left:"6 天",bad:1},
- {n:"晴天餐具",plan:"網店探索者",amt:40000,first:"08-01",tries:"2",left:"13 天"},
- {n:"海風民宿",plan:"OMO 大師",amt:68000,first:"08-04",tries:"1",left:"16 天"},
- {n:"文青書店",plan:"網店探索者",amt:40000,first:"08-07",tries:"1",left:"19 天"},
+ {n:"島嶼服飾",plan:"電商戰略家",amt:1375000,first:"07-08",tries:"4／已達上限",left:"已凍結",bad:1},
+ {n:"貓下去雜貨",plan:"電商戰略家",amt:1375000,first:"07-22",tries:"3",left:"3 天",bad:1},
+ {n:"微醺酒藏",plan:"網店探索者",amt:1000000,first:"07-25",tries:"3",left:"6 天",bad:1},
+ {n:"晴天餐具",plan:"網店探索者",amt:1000000,first:"08-01",tries:"2",left:"13 天"},
+ {n:"海風民宿",plan:"OMO 大師",amt:1700000,first:"08-04",tries:"1",left:"16 天"},
+ {n:"文青書店",plan:"網店探索者",amt:1000000,first:"08-07",tries:"1",left:"19 天"},
 ];
-const CHAN=[["綠界 ECPay","512 家","2.75%"],["藍新 NewebPay","408 家","2.8%"],["TapPay","221 家","2.6%"],["Stripe（跨境）","143 家","3.4%＋NT$10"]];
-const PAYOUTS=[["綠界批次 #20260811-A","NT$12.4M・486 家","已送出"],["藍新批次 #20260811-B","NT$9.1M・377 家","已送出"],["TapPay 批次 #20260811-C","NT$4.8M・198 家","處理中"]];
-const SETTLE_ISSUES=[["對帳差異 3 筆","綠界 07-31 批次・差 NT$1,240","調查中"],["撥款退回 1 筆","島嶼服飾・帳戶名不符","待商家更新"],["MCC 待指派 2 家","新開通商家","待處理"]];
-const NEG=[["北緯 25 選品","爭議扣回","-NT$284,600","2026-06-02","110 天","已保留金抵扣 60%"],["島嶼服飾","退款超出餘額","-NT$41,200","2026-07-19","162 天","催收中"]];
+const CHAN=[["綠界 ECPay","512 家","2.75%"],["藍新 NewebPay","408 家","2.8%"],["TapPay","221 家","2.6%"],["Stripe（跨境）","143 家",()=>"3.4%＋"+money(250)]];
+const PAYOUTS=[["綠界批次 #20260811-A",310000000,"486 家","已送出"],["藍新批次 #20260811-B",227500000,"377 家","已送出"],["TapPay 批次 #20260811-C",120000000,"198 家","處理中"]];
+const SETTLE_ISSUES=[["對帳差異 3 筆",()=>"綠界 07-31 批次・差 "+money(31000),"調查中"],["撥款退回 1 筆","島嶼服飾・帳戶名不符","待商家更新"],["MCC 待指派 2 家","新開通商家","待處理"]];
+const NEG=[["北緯 25 選品","爭議扣回",-7115000,"2026-06-02","110 天","已保留金抵扣 60%"],["島嶼服飾","退款超出餘額",-1030000,"2026-07-19","162 天","催收中"]];
 const RATES=[
  {n:"北緯 25 選品",sys:"Visa VAMP",r:1.62,e:1.71,thr:1.5,st:"excessive"},
  {n:"沐光香氛",sys:"Visa VAMP",r:0.78,e:0.91,thr:0.5,st:"noncompliant"},
@@ -1378,10 +1523,10 @@ const RATES=[
  {n:"山丘咖啡",sys:"Visa VAMP",r:0.31,e:0.28,thr:0.5,st:"ok"},
 ];
 const DISPUTES=[
- ["DP-2418","北緯 25 選品","NT$12,800","under_review","08-18（剩 7 天）","平台先扣"],
- ["DP-2415","沐光香氛","NT$3,240","open","08-15（剩 4 天）","租戶"],
- ["DP-2409","北緯 25 選品","NT$8,600","won","—","已退回"],
- ["DP-2401","島嶼服飾","NT$5,100","lost","—","已扣回"],
+ ["DP-2418","北緯 25 選品",320000,"under_review","08-18（剩 7 天）","平台先扣"],
+ ["DP-2415","沐光香氛",81000,"open","08-15（剩 4 天）","租戶"],
+ ["DP-2409","北緯 25 選品",215000,"won","—","已退回"],
+ ["DP-2401","島嶼服飾",127500,"lost","—","已扣回"],
 ];
 const VIOL=[
  {id:"V-3081",n:"微醺酒藏",cat:"酒類廣告未加警語",type:"B",pt:"B 12",act:"商品下架・限制促銷",st:"處置中"},
@@ -1406,7 +1551,7 @@ const FLAGSD=[
  {k:"new_editor_beta",s:"Active",l:"Live",tg:"cohort：beta 名單 42 家",n:42,pct:"25%"},
  {k:"markets_p1",s:"Launched",l:"Ready for code removal",tg:"全部租戶",n:1284,pct:"100%"},
  {k:"liquid_engine_v2",s:"Launched",l:"Ready for code removal",tg:"全部租戶",n:1284,pct:"100%"},
- {k:"checkout_v3",s:"Active",l:"Live",tg:"cohort：GMV ≥ NT$1M／月",n:186,pct:"5%"},
+ {k:"checkout_v3",s:"Active",l:"Live",tg:()=>"cohort：GMV ≥ "+moneyC(25000000)+"／月",n:186,pct:"5%"},
  {k:"legacy_theme_shim",s:"Inactive",l:"Ready to archive",tg:"—",n:0,pct:"0%"},
 ];
 const ENVS=[
@@ -1427,8 +1572,10 @@ const STAFF=[
 const RM=[["檢視全部","✓","✓","✓","✓","✓"],["凍結／解凍／關店","✓","✓","—","—","—"],["排程刪除","✓","—","—","—","—"],["上限覆寫／flags","✓","✓","—","—","—"],["請求存取（代登入）","✓","✓","✓","—","—"],["webhook 重試／佇列","✓","✓","✓","✓","—"],["人員管理／角色","✓","—","—","—","—"],["審計匯出","✓","✓","—","—","—"],["金流通道變更","✓＋四眼","—","—","—","—"]];
 const ANN=[
  ["8/18 維護視窗預告","全部租戶","08-15 09:00 發送","已排程","—"],
- ["電子發票字軌即將用罄提醒","字軌餘量 <15% 的 37 家","已發送 08-10","已發送","68%"],
- ["結帳 v3 beta 招募","GMV ≥ NT$1M／月・186 家","已發送 08-06","已發送","54%"],
+/* TW-PACK */
+ ["電子發票字軌即將用罄提醒","字軌餘量 <15% 的 37 家（分眾條件：jurisdiction=tw）","已發送 08-10","已發送","68%"],
+/* /TW-PACK */
+ ["結帳 v3 beta 招募",()=>"GMV ≥ "+moneyC(25000000)+"／月・186 家","已發送 08-06","已發送","54%"],
 ];
 const APIV=[["2026-10（unstable）","開發中","—"],["2026-07（stable，目前預設）","支援至 2027-07","864 個 app／整合"],["2026-04（stable）","支援至 2027-04","311 個"],["2026-01（stable，即將終止）","支援至 2027-01・剩 5 個月","88 個・已寄棄用通知"]];
 
@@ -1588,6 +1735,9 @@ function enhanceTables(){
       sc.addEventListener("scroll",()=>updHint(wrap,sc),{passive:true});
     }
   });
+  /* 宣告式金額一併補畫：靜態 markup 與 innerHTML 注入的 [data-money] 都會經過這裡
+     （MutationObserver 帶進來）。paintMoney 冪等，不會與 observer 互相打圈。 */
+  paintMoney();
   refreshScrollHints();
 }
 function updHint(wrap,sc){wrap.classList.toggle("has-more",sc.scrollWidth-sc.clientWidth-sc.scrollLeft>4);}
@@ -1606,7 +1756,6 @@ function filterShops(f){shopFilter=f;go("shops");
 function clearShopFilters(){document.getElementById("shopSearch").value="";filterShops("all");}
 
 /* ===== 工具 ===== */
-const NT=n=>"NT$"+n.toLocaleString("en-US");
 const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 function stBadge(s){const d=ST[s.st]||ST.active;const extra=s.reason?"・"+s.reason:"";
   return '<span class="badge '+d.c+'"><span class="pip '+(d.p||"")+'"></span>'+d.t+extra+'</span>';}
@@ -1624,7 +1773,7 @@ function renderShops(){
     '<td><div class="strong">'+s.name+'</div><div class="sub">'+s.sub+'.mychilllove.com</div></td>'+
     '<td>'+s.owner+'<div class="sub">'+s.email+'</div></td>'+
     '<td>'+stBadge(s)+'</td><td>'+riskBadge(s.risk)+'</td>'+
-    '<td class="r num">'+(s.gmv30?NT(s.gmv30):"—")+'</td>'+
+    '<td class="r num">'+(s.gmv30?money(s.gmv30):"—")+'</td>'+
     '<td class="r num" style="color:'+(s.disp.e>=1.5?"var(--critical)":s.disp.e>=0.5?"var(--warning)":"inherit")+'">'+(s.disp.e?s.disp.e.toFixed(2)+"%":"—")+'</td>'+
     '<td class="r num" style="color:'+(s.peak>=95?"var(--critical)":s.peak>=60?"var(--warning)":"inherit")+'">'+s.peak+'%</td>'+
     '<td class="num">'+s.created+'</td></tr>').join("");
@@ -1665,8 +1814,9 @@ function openShop(id){
   document.getElementById("sdBasic").innerHTML=
     '<dt>子網域</dt><dd>'+s.sub+'.mychilllove.com</dd>'+
     '<dt>主要網域</dt><dd>'+s.dom.find(d=>d.p).h+'</dd>'+
-    '<dt>統一編號</dt><dd>'+s.tax+(s.tax==="—"?' <span class="badge attention"><span class="pip"></span>未完成稅籍</span>':' <span class="badge success"><span class="pip full"></span>已驗證</span>')+'</dd>'+
-    '<dt>幣別／時區</dt><dd>TWD・Asia/Taipei</dd>'+
+    '<dt>法域 jurisdiction</dt><dd>'+jurBadge(s)+'</dd>'+
+    '<dt>稅籍編號<span class="sub">（'+JURISDICTIONS[s.jur].taxIdLabel+'）</span></dt><dd>'+s.tax+(s.tax==="—"?' <span class="badge attention"><span class="pip"></span>未完成稅籍</span>':' <span class="badge success"><span class="pip full"></span>已驗證</span>')+'</dd>'+
+    '<dt>幣別／時區</dt><dd>'+JUR_LOCALE[s.jur].cur+'・'+JUR_LOCALE[s.jur].tz+'</dd>'+
     '<dt>建立於</dt><dd class="num">'+s.created+'</dd>'+
     '<dt>Shop GID</dt><dd><code>gid://chilllove/Shop/'+s.id+'</code></dd>';
 
@@ -1696,8 +1846,8 @@ function openShop(id){
     {b:"past_due",k:"bank_account.statement",r:"撥款帳戶名稱與登記名稱不符",d:"已逾期 2 天"},
     {b:"currently_due",k:"identity.ubo",r:"最終受益人（UBO）身分文件",d:"08-15 到期"},
     {b:"currently_due",k:"domain.ownership",r:"網域所有權證明",d:"08-15 到期"},
-    {b:"pending_verification",k:"company.registration",r:"公司登記抄本",d:"審核中（1 工作天）"},
-    {b:"eventually_due",k:"tax.invoice_permit",r:"統一發票購票證",d:"開通金流後 30 天內"}];
+    {b:"pending_verification",k:"company.registration",r:"公司登記抄本",d:"審核中（1 工作天）"}]
+    .concat(s.jur==='tw'?TW_KYC_REQS():[]);   /* 憑證類要件是法域能力，不是每個租戶都有 */
   const BK={past_due:["critical","past_due 逾期"],currently_due:["warning","currently_due"],pending_verification:["info","pending_verification"],eventually_due:["","eventually_due"]};
   document.getElementById("sdKyc").innerHTML=kycDone
     ? '<div class="note note-ok">資質已通過（'+s.created+' 核准）。主體類型：'+(s.tax==="—"?"個人":"有限公司")+'。<b>主體變更不走編輯，須走「店鋪過戶」流程並簽轉讓協議</b>（有贊模型）。</div>'
@@ -1716,8 +1866,8 @@ function openShop(id){
   document.getElementById("sdBill").innerHTML='<dl class="dl">'+
     '<dt>方案</dt><dd>'+s.plan+'（年繳）</dd>'+
     '<dt>本期</dt><dd class="num">2026-08-01 ~ 2026-08-31</dd>'+
-    '<dt>應收</dt><dd class="num">'+(s.st==="past_due"||s.st==="frozen"?'<span style="color:var(--critical)">'+NT(55000)+' 逾期</span>':NT(0)+' 已結清')+'</dd>'+
-    '<dt>GMV 抽成</dt><dd class="num">'+NT(Math.round(s.gmv30*0.01))+'（1%）</dd>'+
+    '<dt>應收</dt><dd class="num">'+(s.st==="past_due"||s.st==="frozen"?'<span style="color:var(--critical)">'+money(1375000)+' 逾期</span>':money(0)+' 已結清')+'</dd>'+
+    '<dt>GMV 抽成</dt><dd class="num">'+money(Math.round(s.gmv30*0.01))+'（1%）</dd>'+
     '<dt>付款方式</dt><dd>信用卡 •••• 4821 <span class="badge '+(s.st==="past_due"||s.st==="frozen"?"critical":"success")+'"><span class="pip '+(s.st==="past_due"||s.st==="frozen"?"":"full")+'"></span>'+(s.st==="past_due"||s.st==="frozen"?"扣款失敗":"正常")+'</span></dd>'+
     '</dl>';
   const dun=(s.st==="past_due"||s.st==="frozen")?[
@@ -1739,9 +1889,9 @@ function openShop(id){
     '<dt>3DS</dt><dd><span class="badge success"><span class="pip full"></span>已啟用</span></dd></dl>';
   document.getElementById("sdPayout").innerHTML=
     '<div class="usage-row" style="grid-template-columns:1fr auto"><div>撥款週期</div><div>T+4 工作日・每週一三五</div></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>下次撥款</div><div class="num">08-13・'+NT(Math.round(s.gmv30*0.28))+'</div></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>保留金</div><div class="num">'+(s.risk==="Highest"?NT(180000)+"（風險保留 5%）":NT(0))+'</div></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>負餘額</div><div class="num" style="color:'+(s.id===9?"var(--critical)":"inherit")+'">'+(s.id===9?"-"+NT(284600)+"・距 180 天剩 70 天":NT(0))+'</div></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>下次撥款</div><div class="num">08-13・'+money(Math.round(s.gmv30*0.28))+'</div></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>保留金</div><div class="num">'+(s.risk==="Highest"?money(4500000)+"（風險保留 5%）":money(0))+'</div></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>負餘額</div><div class="num" style="color:'+(s.id===9?"var(--critical)":"inherit")+'">'+(s.id===9?money(-7115000)+"・距 180 天剩 70 天":money(0))+'</div></div>'+
     (s.id===9?'<div class="note note-crit" style="margin-top:var(--sp-200)">負餘額滿 <b>180 天</b>由平台餘額補平——這是平台的實際損失曝險，需在到期前完成催收或抵扣。</div>':"");
 
   // 網域與環境
@@ -1764,14 +1914,32 @@ function openShop(id){
     '<div class="sub" style="margin-top:var(--sp-150)">兩條直線＝0.5%（Non-compliant）與 1.5%（Excessive）。'+(over?'<b style="color:var(--critical)">已越 Excessive 線，必定收費——已自動開案並限制提現。</b>':warn?'<b style="color:var(--warning)">已越 Non-compliant 線，可能收費。</b>':'目前安全。')+'</div>';
 
   // 合規
-  const scan=[["營業人名稱與統一編號揭露",s.tax!=="—"],["隱私權政策頁",true],["退換貨政策頁",true],["七天鑑賞期告知",s.id!==10],["鑑賞期例外商品標示",s.id!==3],["稅籍登記網域一致",s.tax!=="—"]];
-  document.getElementById("sdCompliance").innerHTML=scan.map(c=>'<li><div>'+c[0]+'</div><div class="ml-right">'+(c[1]?'<span class="badge success"><span class="pip full"></span>通過</span>':'<span class="badge critical"><span class="pip"></span>未通過・已開工單</span>')+'</div></li>').join("")+'<li><div class="sub">上次掃描：今天 06:00（每日自動）</div></li>';
-  document.getElementById("sdInvoice").innerHTML='<dl class="dl">'+
-    '<dt>加值中心</dt><dd>綠界 ECPay <span class="badge success"><span class="pip full"></span>委任生效</span></dd>'+
-    '<dt>開立時機</dt><dd>出貨時（官方建議，避免取消後作廢）</dd>'+
-    '<dt>字軌餘量</dt><dd class="num">'+(s.id===3?'<span style="color:var(--critical)">1,240 張（12%）</span> <span class="badge critical"><span class="pip"></span>低於門檻</span>':'8,640 張（72%）')+'</dd>'+
-    '<dt>工商憑證</dt><dd>2028-04-11 到期<span class="badge success"><span class="pip full"></span>有效</span><span class="sub">到期前 60 天內須重新申請</span></dd>'+
-    '<dt>本月開立／作廢／折讓</dt><dd class="num">1,284 / 12 / 31</dd></dl>';
+  /* 巡檢項目來自法域 pack 的 buyer/seller capability，不是全平台一套。
+     🔴 HK **沒有**通訊交易法定鑑賞期，且 56 §E.1 明講「多做會出事」——對買家宣稱一個
+        不存在的法定權利本身可能構成 TDO 的不實陳述，所以 HK 租戶不得出現鑑賞期檢查項。 */
+  /* TW-PACK */
+  /* TW 專屬：營業人名稱與統編揭露（38:1444）＋消保法七日鑑賞期，見 TW_COMPLIANCE_ROWS()。 */
+  /* /TW-PACK */
+  const scan=[["名稱與稅籍編號揭露"+(JURISDICTIONS[s.jur].code==='hk'?'（HK 義務未覆核，V-25）':''),s.tax!=="—"],["隱私權政策頁",true],["退換貨政策頁",true]]
+    .concat(s.jur==='tw'?TW_COMPLIANCE_ROWS(s):[["法定鑑賞期告知","n/a"],["稅籍登記網域一致",s.tax!=="—"]]);
+  document.getElementById("sdCompliance").innerHTML=scan.map(c=>'<li><div>'+c[0]+'</div><div class="ml-right">'+
+    (c[1]==="n/a"?'<span class="badge"><span class="pip"></span>本法域不適用</span>'
+      :c[1]?'<span class="badge success"><span class="pip full"></span>通過</span>'
+      :'<span class="badge critical"><span class="pip"></span>未通過・已開工單</span>')+'</div></li>').join("")+
+    '<li><div class="sub">上次掃描：今天 06:00（每日自動）・檢查項來自 <code>limits.yml jurisdictions.'+s.jur+'</code> 的 tax_id_format／consumer_rights 能力</div></li>';
+  const jur=JURISDICTIONS[s.jur];
+  document.getElementById("sdInvoiceHint").textContent=jur.name+'（'+jur.code+'）・tax_invoice='+jur.tax_invoice;
+  document.getElementById("sdInvoice").innerHTML=
+    jur.tax_invoice==='none'
+      ? jurEmptyState('本法域不適用：'+jur.name+'沒有政府發票',
+          jur.note+'。核心只發稅務事件，pack 回 <code>no_document</code> 並記一列 <code>jurisdiction_capability_skips</code>——'+
+          '這一格空著是<b>正確的樣貌</b>，不是功能沒做（56 §A.2 C1）。')
+      : jur.enabled
+        ? twShopInvoiceHTML(s,true)
+        : jurEmptyState(jur.name+' pack 未啟用',
+            '此租戶的法域是 '+jur.name+'，pack 提供 <code>tax_invoice.kind='+jur.tax_invoice+'</code>，'+
+            '但目前尚未開通，所以不會有任何憑證被開立。以下是保留下來的 pack 素材（不刪、不生效）。',jur.code)
+          +'<div class="is-dim" aria-disabled="true" style="margin-top:var(--sp-300)">'+twShopInvoiceHTML(s,false)+'</div>';
 
   // 工單／審計
   document.getElementById("sdTickets").innerHTML=TICKETS.filter(t=>t.shop===s.name).map(t=>'<li><div><b>'+t.id+'</b> '+t.cat+'<div class="ml-sub">'+t.st+'・'+t.own+'</div></div><div class="ml-right">'+(t.bad?'<span class="badge critical"><span class="pip"></span>'+t.sla+'</span>':'<span class="badge">'+t.sla+'</span>')+'</div></li>').join("")||'<li><div class="sub">目前沒有工單</div></li>';
@@ -1857,15 +2025,15 @@ function renderAll(){
 
   document.getElementById("ticketRows").innerHTML=TICKETS.map(t=>'<tr class="clickable" onclick="toast(\'Demo：開啟工單 '+t.id+'\')"><td class="strong">'+t.id+'</td><td>'+t.shop+'</td><td>'+t.cat+'</td><td><span class="badge '+(t.p==="P1"?"critical":"")+'">'+t.p+'</span></td><td>'+t.st+'</td><td>'+(t.bad?'<span class="badge critical"><span class="pip"></span>'+t.sla+'</span>':'<span class="badge">'+t.sla+'</span>')+'</td><td>'+t.own+'</td></tr>').join("");
 
-  document.getElementById("dunRows").innerHTML=DUN.map(d=>'<tr><td class="strong">'+d.n+'</td><td>'+d.plan+'</td><td class="r num">'+NT(d.amt)+'</td><td class="num">'+d.first+'</td><td class="num">'+d.tries+'</td><td>'+(d.bad?'<span class="badge critical"><span class="pip"></span>'+d.left+'</span>':'<span class="badge warning"><span class="pip half"></span>'+d.left+'</span>')+'</td><td><button class="btn btn-sec btn-xs" onclick="toast(\'Demo：手動重試扣款\')">重試</button> <button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：延長寬限（落審計）\')">延長</button></td></tr>').join("");
+  document.getElementById("dunRows").innerHTML=DUN.map(d=>'<tr><td class="strong">'+d.n+'</td><td>'+d.plan+'</td><td class="r num">'+money(d.amt)+'</td><td class="num">'+d.first+'</td><td class="num">'+d.tries+'</td><td>'+(d.bad?'<span class="badge critical"><span class="pip"></span>'+d.left+'</span>':'<span class="badge warning"><span class="pip half"></span>'+d.left+'</span>')+'</td><td><button class="btn btn-sec btn-xs" onclick="toast(\'Demo：手動重試扣款\')">重試</button> <button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：延長寬限（落審計）\')">延長</button></td></tr>').join("");
 
-  document.getElementById("chanList").innerHTML=CHAN.map(c=>'<li><div><b>'+c[0]+'</b><div class="ml-sub">費率 '+c[2]+'</div></div><div class="ml-right num">'+c[1]+'</div></li>').join("");
-  document.getElementById("payoutList").innerHTML=PAYOUTS.map(p=>'<li><div><b>'+p[0]+'</b><div class="ml-sub">'+p[1]+'</div></div><div class="ml-right"><span class="badge '+(p[2]==="已送出"?"success":"warning")+'"><span class="pip '+(p[2]==="已送出"?"full":"half")+'"></span>'+p[2]+'</span></div></li>').join("");
-  document.getElementById("settleIssues").innerHTML=SETTLE_ISSUES.map(i=>'<li><div><b>'+i[0]+'</b><div class="ml-sub">'+i[1]+'</div></div><div class="ml-right"><span class="badge warning"><span class="pip half"></span>'+i[2]+'</span></div></li>').join("");
-  document.getElementById("negRows").innerHTML=NEG.map(n=>'<tr><td class="strong">'+n[0]+'</td><td>'+n[1]+'</td><td class="r num" style="color:var(--critical)">'+n[2]+'</td><td class="num">'+n[3]+'</td><td class="num">'+n[4]+'</td><td>'+n[5]+'</td></tr>').join("");
+  document.getElementById("chanList").innerHTML=CHAN.map(c=>'<li><div><b>'+c[0]+'</b><div class="ml-sub">費率 '+V(c[2])+'</div></div><div class="ml-right num">'+c[1]+'</div></li>').join("");
+  document.getElementById("payoutList").innerHTML=PAYOUTS.map(p=>'<li><div><b>'+p[0]+'</b><div class="ml-sub"><span class="num">'+moneyC(p[1])+'</span>・'+p[2]+'</div></div><div class="ml-right"><span class="badge '+(p[3]==="已送出"?"success":"warning")+'"><span class="pip '+(p[3]==="已送出"?"full":"half")+'"></span>'+p[3]+'</span></div></li>').join("");
+  document.getElementById("settleIssues").innerHTML=SETTLE_ISSUES.map(i=>'<li><div><b>'+i[0]+'</b><div class="ml-sub">'+V(i[1])+'</div></div><div class="ml-right"><span class="badge warning"><span class="pip half"></span>'+i[2]+'</span></div></li>').join("");
+  document.getElementById("negRows").innerHTML=NEG.map(n=>'<tr><td class="strong">'+n[0]+'</td><td>'+n[1]+'</td><td class="r num" style="color:var(--critical)">'+money(n[2])+'</td><td class="num">'+n[3]+'</td><td class="num">'+n[4]+'</td><td>'+n[5]+'</td></tr>').join("");
 
   document.getElementById("rateRows").innerHTML=RATES.map(r=>'<tr class="clickable" onclick="toast(\'Demo：展開該租戶爭議明細\')"><td class="strong">'+r.n+'</td><td>'+r.sys+'</td><td class="r num">'+r.r.toFixed(2)+'%</td><td class="r num" style="color:'+(r.e>=r.thr?"var(--critical)":"inherit")+'">'+r.e.toFixed(2)+'%</td><td class="num">'+r.thr+'%</td><td>'+rateBadge(r.st)+'</td><td>'+(r.st!=="ok"?'<button class="btn btn-sec btn-xs" onclick="event.stopPropagation();toast(\'Demo：開違規案件＋限制提現\')">處置</button>':"")+'</td></tr>').join("");
-  document.getElementById("dispRows").innerHTML=DISPUTES.map(d=>'<tr><td class="strong">'+d[0]+'</td><td>'+d[1]+'</td><td class="r num">'+d[2]+'</td><td><span class="badge '+(d[3]==="won"?"success":d[3]==="lost"?"critical":d[3]==="under_review"?"warning":"info")+'"><span class="pip '+(d[3]==="won"||d[3]==="lost"?"full":"half")+'"></span>'+d[3]+'</span></td><td class="num">'+d[4]+'</td><td>'+d[5]+'</td></tr>').join("");
+  document.getElementById("dispRows").innerHTML=DISPUTES.map(d=>'<tr><td class="strong">'+d[0]+'</td><td>'+d[1]+'</td><td class="r num">'+money(d[2])+'</td><td><span class="badge '+(d[3]==="won"?"success":d[3]==="lost"?"critical":d[3]==="under_review"?"warning":"info")+'"><span class="pip '+(d[3]==="won"||d[3]==="lost"?"full":"half")+'"></span>'+d[3]+'</span></td><td class="num">'+d[4]+'</td><td>'+d[5]+'</td></tr>').join("");
 
   document.getElementById("violRows").innerHTML=VIOL.map(v=>'<tr class="clickable" onclick="toast(\'Demo：開啟案件 '+v.id+'——證據／處置／通知／申訴狀態\')"><td class="strong">'+v.id+'</td><td>'+v.n+'</td><td>'+v.cat+'</td><td class="c"><span class="badge '+(v.type==="B"?"critical":"attention")+'">'+v.pt+'</span></td><td class="sub">'+v.act+'</td><td>'+v.st+'</td><td><button class="btn btn-ghost btn-xs">處置</button></td></tr>').join("");
 
@@ -1876,14 +2044,9 @@ function renderAll(){
   document.getElementById("apGrant").innerHTML=ac(APPEALS.grant,"success");
 
   document.getElementById("dsrRows").innerHTML=DSR.map(d=>'<tr class="clickable" onclick="toast(\'Demo：DSR 詳情——controller 為商家、平台為 processor\')"><td class="strong">'+d[0]+'</td><td>'+d[1]+'</td><td><code>'+d[2]+'</code></td><td class="num" style="color:'+(parseInt(d[3])<=7?"var(--critical)":"inherit")+'">'+d[3]+'</td><td>'+d[4]+'</td></tr>').join("");
-  document.getElementById("invPipeline").innerHTML=
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>字軌餘量低於 15% 的商店</div><span class="badge critical"><span class="pip"></span>37 家</span></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>工商憑證 60 天內到期</div><span class="badge warning"><span class="pip half"></span>8 家</span></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>今日開立／作廢／折讓</div><span class="num">18,402 / 214 / 486</span></div>'+
-    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>開立失敗待重試</div><span class="badge warning"><span class="pip half"></span>12 張</span></div>'+
-    '<div class="note note-warn" style="margin-top:var(--sp-200)">字軌耗盡即<b>無法自動開立</b>——這是台灣營運最常見的事故來源，需在 15% 門檻主動通知並協助申請。</div>';
+  document.getElementById("invPipeline").innerHTML=taxDocPipelineHTML();
   document.getElementById("scanSummary").innerHTML=
-    '<div class="usage-row"><div>統編揭露</div><div class="meter"><i style="width:94%"></i></div><div class="u-num num">1,207 / 1,284</div></div>'+
+    '<div class="usage-row"><div>稅籍編號揭露<span class="uh">・僅適用有揭露義務的法域</span></div><div class="meter"><i style="width:94%"></i></div><div class="u-num num">1,207 / 1,284</div></div>'+
     '<div class="usage-row"><div>隱私權政策</div><div class="meter"><i style="width:99%"></i></div><div class="u-num num">1,271 / 1,284</div></div>'+
     '<div class="usage-row"><div>退換貨政策</div><div class="meter"><i class="warn" style="width:88%"></i></div><div class="u-num num">1,130 / 1,284</div></div>'+
     '<div class="usage-row"><div>鑑賞期告知</div><div class="meter"><i class="warn" style="width:84%"></i></div><div class="u-num num">1,078 / 1,284</div></div>'+
@@ -1902,7 +2065,7 @@ function renderAll(){
     '<div style="display:flex;align-items:center;gap:var(--sp-300);margin-bottom:var(--sp-200)"><b style="font-size:var(--t-sm)">new_editor_beta</b><span class="badge ai">rolling release</span><span style="margin-left:auto"></span><button class="btn btn-sec btn-sm" onclick="toast(\'Demo：批准下一階段（50%）\')">批准下一階段</button><button class="btn btn-danger btn-sm" onclick="toast(\'Demo：kill switch——立即中止並回滾至 0%\')">中止</button></div>'+
     '<div class="steps"><div class="step done"><span class="sdot">✓</span>configured</div><span class="step-line"></span><div class="step done"><span class="sdot">✓</span>started 5%</div><span class="step-line"></span><div class="step cur"><span class="sdot">3</span>approved 25%</div><span class="step-line"></span><div class="step"><span class="sdot">4</span>50%</div><span class="step-line"></span><div class="step"><span class="sdot">5</span>completed 100%</div></div>'+
     '<div class="sub">定向 cohort：beta 名單 42 家・錯誤率 0.21%（基線 0.19%）・逐階段需人工批准，批准動作本身寫入審計。</div>';
-  document.getElementById("flagRows").innerHTML=FLAGSD.map(f=>'<tr><td><code>'+f.k+'</code></td><td><span class="badge '+(f.s==="Active"?"info":f.s==="Launched"?"success":"")+'">'+f.s+'</span></td><td class="sub">'+f.l+'</td><td class="sub">'+f.tg+'</td><td class="r num">'+f.n.toLocaleString()+'（'+f.pct+'）</td><td>'+(f.l==="Ready to archive"?'<button class="btn btn-sec btn-xs" onclick="toast(\'Demo：archive（已無 code reference）\')">archive</button>':'<button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：編輯定向／百分比\')">編輯</button>')+'</td></tr>').join("");
+  document.getElementById("flagRows").innerHTML=FLAGSD.map(f=>'<tr><td><code>'+f.k+'</code></td><td><span class="badge '+(f.s==="Active"?"info":f.s==="Launched"?"success":"")+'">'+f.s+'</span></td><td class="sub">'+f.l+'</td><td class="sub">'+V(f.tg)+'</td><td class="r num">'+f.n.toLocaleString()+'（'+f.pct+'）</td><td>'+(f.l==="Ready to archive"?'<button class="btn btn-sec btn-xs" onclick="toast(\'Demo：archive（已無 code reference）\')">archive</button>':'<button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：編輯定向／百分比\')">編輯</button>')+'</td></tr>').join("");
 
   document.getElementById("envRows").innerHTML=ENVS.map(e=>'<tr><td class="strong">'+e[0]+'</td><td><span class="badge '+(e[1]==="production"?"critical":e[1]==="staging"?"warning":"info")+'">'+e[1]+'</span></td><td class="num">'+e[2]+'</td><td class="num">'+e[3]+'</td><td><span class="badge success"><span class="pip full"></span>'+e[4]+'</span></td><td class="num sub">'+e[5]+'</td><td><button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：Branch / Merge / Sync / Redeploy\')">動作</button></td></tr>').join("");
   document.getElementById("backupRows").innerHTML=BACKUPS.map(b=>'<li><div><b>'+b[0]+'</b><div class="ml-sub">'+b[1]+'</div></div><div class="ml-right"><span class="sub">'+b[2]+'</span> <button class="btn btn-sec btn-xs" onclick="toast(\'Demo：還原確認框會顯示依資料量估算耗時（42.8GB ≈ 45 分鐘）\')">還原</button></div></li>').join("");
@@ -1911,7 +2074,7 @@ function renderAll(){
   document.getElementById("staffRows").innerHTML=STAFF.map(s=>'<tr><td class="strong">'+s[0]+'</td><td>'+s[1]+'</td><td><span class="badge '+(s[2]==="platform_owner"||s[2]==="admin"?"info":"")+'">'+s[2]+'</span></td><td>'+(s[3]==="已啟用"?'<span class="badge success"><span class="pip full"></span>已啟用</span>':s[3]==="待啟用"?'<span class="badge attention"><span class="pip"></span>待啟用</span>':'<span class="badge">'+s[3]+'</span>')+'</td><td class="num">'+s[4]+'</td><td>'+(s[2]==="platform_owner"?"":'<button class="btn btn-ghost btn-xs" onclick="toast(\'Demo：編輯角色（僅 owner 可改）\')">編輯</button>')+'</td></tr>').join("");
   document.getElementById("roleMatrix").innerHTML='<thead><tr><th>動作</th><th class="c">owner</th><th class="c">admin</th><th class="c">support</th><th class="c">ops</th><th class="c">read_only</th></tr></thead><tbody>'+RM.map(r=>'<tr><td>'+r[0]+'</td>'+r.slice(1).map(c=>'<td class="c" style="color:'+(c==="—"?"var(--text-3)":"var(--success)")+'">'+c+'</td>').join("")+'</tr>').join("")+'</tbody>';
 
-  document.getElementById("annRows").innerHTML=ANN.map(a=>'<tr class="clickable" onclick="toast(\'Demo：公告詳情——分眾條件／排程／已讀追蹤\')"><td class="strong">'+a[0]+'</td><td class="sub">'+a[1]+'</td><td class="num sub">'+a[2]+'</td><td><span class="badge '+(a[3]==="已發送"?"success":"info")+'"><span class="pip '+(a[3]==="已發送"?"full":"half")+'"></span>'+a[3]+'</span></td><td class="r num">'+a[4]+'</td></tr>').join("");
+  document.getElementById("annRows").innerHTML=ANN.map(a=>'<tr class="clickable" onclick="toast(\'Demo：公告詳情——分眾條件／排程／已讀追蹤\')"><td class="strong">'+V(a[0])+'</td><td class="sub">'+V(a[1])+'</td><td class="num sub">'+a[2]+'</td><td><span class="badge '+(a[3]==="已發送"?"success":"info")+'"><span class="pip '+(a[3]==="已發送"?"full":"half")+'"></span>'+a[3]+'</span></td><td class="r num">'+a[4]+'</td></tr>').join("");
   document.getElementById("apiVersions").innerHTML=APIV.map(v=>'<div class="usage-row" style="grid-template-columns:1fr 160px auto"><div><b>'+v[0]+'</b></div><div class="sub">'+v[1]+'</div><div class="sub num">'+v[2]+'</div></div>').join("")+'<div class="note note-info" style="margin-top:var(--sp-200)">每租戶提供 <b>API health report</b>：告訴他們自己踩到哪些棄用欄位——這是唯一被驗證能大規模推動升級的做法（Shopify）。</div>';
 }
 
@@ -1924,7 +2087,7 @@ function drawChart(){
   const yTicks=W<420?3:5;
   for(let t=0;t<yTicks;t++){const v=min+(max-min)*t/(yTicks-1),y=ys(v);
     g+='<line x1="'+P.l+'" y1="'+y+'" x2="'+(W-P.r)+'" y2="'+y+'" stroke="var(--grid)" stroke-width="1"/>';
-    g+='<text x="'+(P.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#67696e">'+v.toFixed(0)+'M</text>';}
+    g+='<text x="'+(P.l-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#67696e">'+moneyC(Math.round(v))+'</text>';}
   // 小螢幕減少 x 軸刻度，避免標籤重疊
   const xTicks=W<360?[0,29]:W<560?[0,14,29]:[0,9,19,29];
   xTicks.forEach(i=>{const anchor=i===0?"start":i===29?"end":"middle";
@@ -1944,16 +2107,76 @@ function drawChart(){
     xh.setAttribute("x1",xs(i));xh.setAttribute("x2",xs(i));xh.style.display="block";
     hp.setAttribute("cx",xs(i));hp.setAttribute("cy",ys(GMV[i]));hp.style.display="block";
     tip.style.display="block";tip.style.left=Math.min(W-140,xs(i)+10)+"px";tip.style.top=(ys(GMV[i])-34)+"px";
-    tip.innerHTML="7/"+(12+i>31?12+i-31:12+i)+" · <b>NT$"+GMV[i].toFixed(2)+"M</b>";
+    tip.innerHTML="7/"+(12+i>31?12+i-31:12+i)+" · <b>"+moneyC(GMV[i])+"</b>";
   };
   svg.onmouseleave=()=>{["gmvTip","xh","hp"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display="none";});};
 }
 function toggleChartTable(){
   const t=document.getElementById("chartTable"),show=!t.classList.contains("show");
-  if(show&&!t.innerHTML)t.innerHTML="<table><thead><tr><th>日期</th><th>GMV</th></tr></thead><tbody>"+GMV.map((v,i)=>'<tr><td class="num">7/'+(12+i>31?12+i-31:12+i)+'</td><td class="num">NT$'+v.toFixed(2)+'M</td></tr>').join("")+"</tbody></table>";
+  if(show&&!t.innerHTML)t.innerHTML="<table><thead><tr><th>日期</th><th>GMV</th></tr></thead><tbody>"+GMV.map((v,i)=>'<tr><td class="num">7/'+(12+i>31?12+i-31:12+i)+'</td><td class="num">'+moneyC(v)+'</td></tr>').join("")+"</tbody></table>";
   t.classList.toggle("show",show);
   document.getElementById("chartTblBtn").textContent=show?"圖表":"表格";
 }
+
+/* ==================================================================
+   稅務憑證管線（平台級）——能力驅動，不是寫死顯示
+   ------------------------------------------------------------------
+   56 §A.2：核心只發稅務事件（sale_recognised／sale_reversed／…），要不要落地成憑證
+   由該租戶法域 pack 的 tax_invoice 能力決定。HK 一律回 no_document 並落一列
+   jurisdiction_capability_skips——**不得靜默略過**，所以這裡也不能靜默留白：
+   沒有任何啟用中的 pack 提供 tax_invoice 時，要說得出「為什麼這裡是空的」。
+   ================================================================== */
+function taxDocPipelineHTML(){
+  const provs=taxInvoiceJurs();
+  const byJur=code=>SHOPS.filter(s=>s.jur===code).length;
+  const head=
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>核心稅務事件（今日）</div><span class="num">18,402</span></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>落地為憑證</div><span class="badge"><span class="pip"></span>'+(provs.length?'依 pack':'0 張')+'</span></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>capability skip（已記錄，非靜默）</div><span class="num">18,402</span></div>';
+  if(provs.length)return head+twInvoicePipelineHTML(true);
+  return head+
+    jurEmptyState('本法域不適用：香港沒有政府發票',
+      '基準法域＝香港（CLAUDE.md 鐵律 11）。HK 無銷售稅、無政府發票，'+
+      'pack 對每一筆稅務事件回 <code>no_document</code> 並寫入 <code>jurisdiction_capability_skips</code>（56 §A.2 C1，不得靜默略過）。'+
+      '買家仍會收到單據，但那是<b>純商業收據、無稅務效力</b>（<code>invoice_document.kind=commercial_receipt</code>）。'+
+      '目前 '+byJur('hk')+' 家租戶在 hk、'+byJur('tw')+' 家在 tw；tw pack 未啟用，所以沒有任何憑證管線在跑。')+
+    '<div class="card-head" style="margin-top:var(--sp-300);border-top:var(--hairline) solid var(--border-2);padding-top:var(--sp-300)">'+
+      '<h3 style="font-size:var(--t-sm)">台灣 pack 素材（未啟用・預覽）</h3>'+
+      '<span class="badge"><span class="pip"></span>jurisdiction/tw</span></div>'+
+    '<div class="is-dim" aria-disabled="true">'+twInvoicePipelineHTML(false)+'</div>';
+}
+/* TW-PACK */
+/* ↑ 以下整段是 jurisdiction/tw pack 的素材（鐵律 11：既有台灣內容不刪，只降級標記）。
+   pack 未啟用時只作為「預覽」出現在空態底下，並整塊灰化、不參與任何統計。
+   包含：平台級發票管線、租戶級發票卡、台灣專屬的前台合規巡檢項。 */
+function twShopInvoiceHTML(s,live){
+  return '<dl class="dl">'+
+    '<dt>加值中心</dt><dd>綠界 ECPay <span class="badge '+(live?'success':'')+'"><span class="pip full"></span>委任'+(live?'生效':'（待 pack 啟用）')+'</span></dd>'+
+    '<dt>開立時機</dt><dd>出貨時（官方建議，避免取消後作廢）</dd>'+
+    '<dt>字軌餘量</dt><dd class="num">'+(s.id===3?(live?'<span style="color:var(--critical)">1,240 張（12%）</span> <span class="badge critical"><span class="pip"></span>低於門檻</span>':'1,240 張（12%）'):'8,640 張（72%）')+'</dd>'+
+    '<dt>工商憑證</dt><dd>2028-04-11 到期<span class="badge '+(live?'success':'')+'"><span class="pip full"></span>有效</span><span class="sub">到期前 60 天內須重新申請</span></dd>'+
+    '<dt>本月開立／作廢／折讓</dt><dd class="num">1,284 / 12 / 31</dd></dl>';
+}
+/* 台灣專屬的前台合規巡檢項（消保法第 19 條七日鑑賞期＋例外準則七款）。
+   🔴 HK 沒有等價義務，且照搬會出事（56 §E.1），所以只在 tw 租戶掛上。 */
+function TW_COMPLIANCE_ROWS(s){
+  return [["七天鑑賞期告知",s.id!==10],["鑑賞期例外商品標示",s.id!==3],["稅籍登記網域一致",s.tax!=="—"]];
+}
+/* 台灣專屬的 KYC 要件（開立 gui 發票才需要）*/
+function TW_KYC_REQS(){
+  return [{b:"eventually_due",k:"tax.invoice_permit",r:"統一發票購票證",d:"開通金流後 30 天內"}];
+}
+function twInvoicePipelineHTML(live){
+  return '<div class="usage-row" style="grid-template-columns:1fr auto"><div>字軌餘量低於 15% 的商店</div><span class="badge '+(live?'critical':'')+'"><span class="pip"></span>37 家</span></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>工商憑證 60 天內到期</div><span class="badge '+(live?'warning':'')+'"><span class="pip half"></span>8 家</span></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>今日開立／作廢／折讓</div><span class="num">18,402 / 214 / 486</span></div>'+
+    '<div class="usage-row" style="grid-template-columns:1fr auto"><div>開立失敗待重試</div><span class="badge '+(live?'warning':'')+'"><span class="pip half"></span>12 張</span></div>'+
+    '<div class="note '+(live?'note-warn':'note-info')+'" style="margin-top:var(--sp-200)">字軌耗盡即<b>無法自動開立</b>——這是台灣營運最常見的事故來源，需在 15% 門檻主動通知並協助申請。</div>';
+}
+/* /TW-PACK */
+
+/* 部分 mock 欄位是 thunk（內含金額，必須在**渲染時**才格式化，否則切換報表幣別不會變）*/
+const V=x=>typeof x==='function'?x():x;
 
 /* ===== Toast ===== */
 let toastT; function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2800);}
@@ -1961,7 +2184,7 @@ let toastT; function toast(m){const t=document.getElementById("toast");t.textCon
 /* ===== 開發註釋模式 ===== */
 const DOCS={
  topbar:{t:"平台深色頂列",f:"平台模式的視覺標識（商家後台＝淺色頂列）",l:"平台與商家後台是兩個獨立入口與認證域，防止支援人員混淆身分",i:"32 §0・platform.chilllove.tw＋platform_staffs 認證＋robots noindex"},
- search:{t:"平台全域搜尋",f:"跨租戶搜尋商店／擁有者／網域／統編／訂單號／工單號",l:"跨租戶查詢一律走 Platform:: 命名空間（without_tenant 集中管理）",i:"P1・32 §0；白名單欄位編譯 SQL"},
+ search:{t:"平台全域搜尋",f:"跨租戶搜尋商店／擁有者／網域／稅籍編號／訂單號／工單號",l:"跨租戶查詢一律走 Platform:: 命名空間（without_tenant 集中管理）",i:"P1・32 §0；白名單欄位編譯 SQL"},
  staffchip:{t:"平台人員 chip",f:"當前身分、角色、JIT 提權剩餘時間",l:"零常設權限（ZSP）：高危動作須臨時提權，過期自動撤銷",i:"33 §B・jit_elevations 表"},
  sidenav:{t:"平台導航（16 區・5 群）",f:"營運／金流／信任安全／平台工程／治理",l:"badge 數字與各區佇列同源",i:"33 §3 資訊架構"},
  actionqueues:{t:"可行動佇列",f:"把四條線的待處理量做成入口",l:"這是總覽的核心——不是看數字，是看『今天要處理什麼』",i:"P0・各佇列 count 與對應頁同源"},
@@ -1974,14 +2197,14 @@ const DOCS={
  bulkops:{t:"批次操作",f:"加入 cohort／批次公告／批次覆寫上限",l:"批次寫入逐筆獨立 transaction＋結果報告",i:"P1"},
  createshop:{t:"代建商店",f:"平台代開（少用）",l:"admin 以上；一般走自助註冊",i:"P1"},
  shopviews:{t:"saved views",f:"儲存篩選為檢視",l:"預設檢視唯讀（同商家後台 22 §0 慣例）",i:"P1"},
- shopsearch:{t:"租戶搜尋",f:"名稱／子網域／email／統編",l:"白名單欄位編譯 SQL 防注入（specs/11 §1）",i:"P0"},
+ shopsearch:{t:"租戶搜尋",f:"名稱／子網域／email／稅籍編號",l:"白名單欄位編譯 SQL 防注入（specs/11 §1）；稅籍編號是跨法域欄位，長度與格式依租戶法域的 tax_id_format（HK＝BR number、MY＝SST），<b>不得</b>照 36:457 的 tax_id VARCHAR(8) 台灣假設建欄（56 §D.1 P0-7）",i:"P0"},
  shoptable:{t:"租戶列表",f:"跨租戶索引，含風險與爭議率欄",l:"狀態 badge 用 pip 語意；爭議率 ≥0.5% 轉黃、≥1.5% 轉紅；cursor 分頁 ≤250",i:"P0・33 §2.5 門檻"},
  sdtabs:{t:"租戶詳情十分頁",f:"概覽/KYC/用量/計費/金流/網域環境/風控/合規/工單/審計",l:"每頁對應一條治理線；避免把所有東西塞進單頁",i:"33 §3"},
  accessrequest:{t:"請求存取（授權式代登入）",f:"取代無條件 impersonate",l:"4 位數授權碼＋逐項權限＋商家核准＋60 分鐘 TTL＋90 天閒置失效＋商家端橫幅＋雙寫審計；禁改密碼/超額退款/刪店",i:"P0・33 §2.9・access_grants 表"},
  restrict:{t:"處置（分級凍結）",f:"六個獨立旗標可組合",l:"補件期間常見組合＝收款凍結但不停店；單一 boolean 是錯的模型",i:"P0・33 §2.2・shop_restrictions 表"},
  moreactions:{t:"更多動作",f:"重寄驗證信／重驗網域／匯出資料／擁有權轉移",l:"擁有權轉移：發起方重驗＋受讓方接受＋欠款歸屬規則＋阻擋條件",i:"P1"},
  lifecycle:{t:"生命週期",f:"12 態狀態機視覺化",l:"每態定義前台 HTTP／後台可讀寫／金流／webhook 四維度；轉移走單一入口且冪等",i:"P0・33 §2.1"},
- basicinfo:{t:"基本資料",f:"子網域／主網域／統編／GID",l:"統編未驗證＝稅籍未完成，前台揭露義務不成立",i:"P0"},
+ basicinfo:{t:"基本資料",f:"子網域／主網域／稅籍編號／法域／GID",l:"稅籍編號未驗證＝稅籍未完成。<b>是否有前台揭露義務本身是法域能力</b>（limits.yml jurisdictions.{code}.tax_id_format.storefront_disclosure_required：TW=true、HK 未覆核），核心不預設每個法域都要揭露",i:"P0・36:457 的 VARCHAR(8) 是台灣假設，須放寬（56 §D.1 P0-7）"},
  restrictions:{t:"限制旗標",f:"六級處置狀態顯示",l:"可設到期自動解除；每次變更落審計並通知商家",i:"P0"},
  owner:{t:"擁有者卡",f:"聯絡＋支援動作",l:"驗證網域擁有權後可自助重設 2FA（砍大量客服工單）；重設需 owner 覆核",i:"P0/P1"},
  planbox:{t:"方案與模組",f:"三層計價顯示",l:"方案月費＋模組加購矩陣＋GMV 抽成（對照 SHOPLINE 14 模組／CYBERBIZ 1%）",i:"W2"},
@@ -1998,15 +2221,18 @@ const DOCS={
  shopenvs:{t:"環境",f:"企業方案的 staging／preview",l:"非正式環境預設擋搜尋引擎＋停對外信；還原後自動停 webhook",i:"W4・33 §2.12"},
  riskscore:{t:"風險評估",f:"四級風險＋Radar 命中／高風險訂單／退款率",l:"風險階梯：暫停撥款→暫停收款→拒絕（永久）",i:"W2"},
  shopdisputes:{t:"爭議率監控",f:"回報值／估算值雙欄＋門檻線",l:"Visa 同月分母；MC 用上月分母；越線自動開案",i:"W2・33 §2.5"},
- shopcompliance:{t:"前台合規巡檢",f:"六項台灣法遵檢查",l:"每日 06:00 自動掃；不合格自動開工單。競品都沒有＝差異化",i:"W3・33 §2.14"},
- shopinvoice:{t:"電子發票",f:"委任／開立時機／字軌餘量／憑證到期",l:"字軌耗盡即無法開立；工商憑證 5 年效期須到期前 60 天重辦",i:"W3"},
+ shopcompliance:{t:"前台合規巡檢",f:"檢查項由租戶法域 pack 提供",l:"每日 06:00 自動掃；不合格自動開工單。<b>檢查項不是全平台一套</b>：揭露義務看 tax_id_format.storefront_disclosure_required、鑑賞期看 consumer_rights.cooling_off_days。🔴 HK 無法定鑑賞期，照搬 TW 的告知項等於對買家宣稱一個不存在的法定權利（56 §E.1），所以 HK 租戶顯示「本法域不適用」而不是「未通過」",i:"W3・33 §2.14・limits.yml jurisdictions.{code}"},
+ shoptaxdoc:{t:"稅務憑證（租戶層）",f:"依租戶法域 pack 的 tax_invoice 能力決定顯示什麼",l:"三種樣貌：① tax_invoice=none（HK）→「本法域不適用」空態＋說明核心只發稅務事件、pack 回 no_document 並落 jurisdiction_capability_skips；② pack 有能力且已啟用 → 真的憑證管線；③ 有能力但 pack 未啟用（目前的 tw）→ 說明原因＋保留的 pack 素材灰化預覽。<b>空著要說得出為什麼空</b>，不得靜默略過（56 §A.2 C1）",i:"W3・limits.yml jurisdictions.{code}.tax_invoice"},
+/* TW-PACK */
+ shopinvoice:{t:"電子發票（jurisdiction/tw pack 素材）",f:"委任／開立時機／字軌餘量／憑證到期",l:"字軌耗盡即無法開立；工商憑證 5 年效期須到期前 60 天重辦。整塊已依鐵律 11 降級為 tw pack 素材——不刪、只標，pack 未啟用時以灰化預覽呈現",i:"W3・僅在 jurisdictions.tw.enabled=true 時載入"},
+/* /TW-PACK */
  shopaudit:{t:"本店平台操作記錄",f:"這家店被平台做過什麼",l:"append-only；租戶端亦可見＝信任差異化",i:"P0"},
  kycorder:{t:"佇列排序規則",f:"五分類的處理優先序",l:"照 Stripe「Actions required」排序，避免逾期件被淹沒",i:"P0"},
  kycboard:{t:"審核看板",f:"待審／補件／逾期／已決 四欄",l:"逾期未補自動轉 past_due 並停收款（不停店）",i:"P0"},
  tickettable:{t:"工單表",f:"工單／商店／分類／優先／SLA",l:"P1 2h／P2 8h／P3 1 工作天；代登入必須綁工單編號",i:"W2"},
  billkpi:{t:"計費 KPI",f:"MRR／抽成／加購／churn／逾期應收",l:"三層收入分別計算，與財務對帳同源",i:"W2"},
  dunningtable:{t:"催繳中清單",f:"欠款／重試次數／距凍結天數",l:"距凍結 ≤3 天標紅；可手動重試或延長寬限（落審計）",i:"W1"},
- nopool:{t:"無資金池架構",f:"法規紅線宣告",l:"《電子支付機構管理條例》：平台代收代付並保管資金即需特許。租戶自持商戶號，平台只做對帳與分潤",i:"必須・33 §2.6"},
+ nopool:{t:"無資金池架構",f:"法規紅線宣告（法源由法域 pack 提供）",l:"結論是<b>跨法域共通</b>的：平台不代收代付、不保管資金，租戶自持商戶號，平台只做對帳與分潤。<b>法源逐法域不同</b>，核心不直接引任一國法條——HK＝PSSVFO／SVF（單一用途豁免 ⇒ 禮品卡不得跨租戶通用，產品級硬限制）；TW pack 的法源見該 pack 的 stored_value_regime",i:"必須・33 §2.6・limits.yml jurisdictions.{code}.stored_value_regime"},
  negbal:{t:"負餘額與保留金",f:"平台損失曝險表",l:"滿 180 天由平台餘額補平；到期前需完成催收或保留金抵扣",i:"W2"},
  ratecaveat:{t:"爭議率口徑說明",f:"避免誤判的計算規則",l:"Visa 同月分母；MC 本月爭議÷上月交易；回報值延遲 1 個月故雙欄並列",i:"W2"},
  ratemonitor:{t:"爭議率監控表",f:"逐租戶對三制門檻",l:"越線自動開違規案件＋限制提現；MC 需連續 3 個月低於門檻才除名",i:"W2・33 §2.5"},
@@ -2016,7 +2242,11 @@ const DOCS={
  appealboard:{t:"申訴看板",f:"待審理／補證／維持／撤銷",l:"SLA 3–7 工作天；審理人留痕；結果 email 通知",i:"W2"},
  dsr:{t:"資料主體請求",f:"access／erasure／portability",l:"GDPR 30 天、CCPA 45 天硬時限；商家是 controller、平台是 processor；erasure 與 legal hold 衝突時 hold 優先",i:"W3・33 §2.13"},
  pdpa:{t:"個資事件與稽核",f:"72 小時通報／年度稽核／守則簽署",l:"台灣辦法：外洩 72 小時內依附表二通報數位部；軌跡保存 5 年；平台須要求租戶簽署個資保護守則",i:"W3・法規強制"},
- einvoice:{t:"電子發票管線",f:"字軌餘量／憑證到期／開立統計",l:"15% 門檻主動通知；字軌耗盡＝無法開立（台灣最常見事故）",i:"W3"},
+ taxdoc:{t:"稅務憑證管線（平台級）",f:"核心稅務事件量／落地憑證數／capability skip 數",l:"56 §A.2：核心只發稅務事件，落不落地成憑證由各租戶法域 pack 的 tax_invoice 決定。目前沒有任何啟用中的 pack 提供 tax_invoice（tw 未啟用、hk 為 none），所以顯示「本法域不適用」空態＋原因，底下掛保留的 tw pack 素材預覽。skip 要記錄不得靜默（C1）",i:"W3・limits.yml jurisdictions.{code}.tax_invoice；CI-3：非 tw pack 啟用時 app/services 下不得存在 einvoice/* 呼叫路徑"},
+ platcur:{t:"平台報表幣別切換",f:"切換平台報表金額的顯示 locale（HKD／TWD／JPY／USD）",l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。切換器存在的理由是讓「格式真的由表驅動」可被肉眼驗證——HKD exponent 2 顯示兩位小數、TWD／JPY exponent 0 不顯示小數，縮寫級距也不同（K／M vs 萬／億）。⚠️ <b>原型只換格式不換匯率</b>",i:"P1・MARKET_LOCALES 對應 limits.yml jurisdictions.{code}.currency_format，與 admin 原型同源（56 §D.3 硬要求 3）"},
+/* TW-PACK */
+ einvoice:{t:"電子發票管線（jurisdiction/tw pack 素材）",f:"字軌餘量／憑證到期／開立統計",l:"15% 門檻主動通知；字軌耗盡＝無法開立（台灣最常見事故）。整個模組已依鐵律 11 降級為 tw pack 素材",i:"W3・僅在 jurisdictions.tw.enabled=true 時載入"},
+/* /TW-PACK */
  frontscan:{t:"前台合規巡檢",f:"全平台合規達成率",l:"每日掃描；不合格自動開工單。西方平台沒有此模組",i:"W3・差異化"},
  queues:{t:"佇列監控",f:"深度／p95／死信",l:"死信>0 告警",i:"P0"},
  webhookfails:{t:"Webhook 失敗",f:"24h 清單＋手動重試",l:"自動指數退避；手動重試落審計",i:"P0"},
@@ -2075,7 +2305,7 @@ document.addEventListener("keydown",e=>{
 });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)closeOv(o.id);}));
 
-renderAll(); renderShops(); drawChart(); enhanceTables();
+renderAll(); renderShops(); drawChart(); enhanceTables(); paintMoney();
 let __rz; window.addEventListener("resize",()=>{clearTimeout(__rz);__rz=setTimeout(()=>{drawChart();refreshScrollHints();},120);});
 </script>
 </body>

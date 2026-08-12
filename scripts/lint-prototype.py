@@ -245,9 +245,166 @@ def r_dead_css(src, style, script):
     return out
 
 
+def r_hardcoded_currency(src, style, script):
+    """不得硬編幣別符號。
+
+    為什麼：CLAUDE.md 鐵律 10 ——「實際符號與小數位由市場的 locale 決定，不得硬編」。
+    這條規則刻意**不是**「把 NT$ 換成 HK$」。56 號 §513 講得很清楚：換成 HK$ 只是把
+    同一個錯誤搬到另一個國家。我們要做全球市場，硬編任何符號都是同一個 bug。
+
+    事故：2026-08-12 盤點發現三份原型共 211 處硬編 `NT$`，其中包含一支集中式格式化
+    函式 `const NT=n=>'NT$'+…`。有集中式函式卻仍硬編符號，是最容易被誤判為「已經
+    抽象化了」的形態——函式在，但符號長在函式裡。
+
+    允許的例外：`/* TW-PACK */ … /* /TW-PACK */` 等 pack 標記區段內（鐵律 11：既有
+    台灣內容不刪、降級為 jurisdiction/tw pack 素材），以及註釋——註釋不會被渲染，
+    而在註釋裡引用一個法規值（「台灣超商代收上限 NT$20,000」）是**正確且必要的溯源
+    資訊**。2026-08-12 首版沒有排除註釋，逼得執行者把出處註釋改寫成「台幣兩萬元」，
+    等於規則在誘導後人刪掉溯源——這是規則自身的傷害，已修正。
+    """
+    out, seen = [], set()   # 同一處會同時命中「字面量」與「格式化函式」兩條 pattern，去重
+    # locale 表是**唯一**允許出現幣別符號字面量的地方——符號總得有個源頭。
+    # 但這個豁免必須是「宣告的」不是「推斷的」，而且刻意限定每檔只准一個：
+    # 允許多個等於允許把逃生口撒得到處都是，規則就名存實亡了。
+    # 順序要緊：標記本身是 JS 區塊註釋，必須在 _strip_comments 之前處理，否則會被
+    # 當成註釋抹掉，豁免就永遠不會生效（第一版就是這樣，全站 locale 表全被誤報）。
+    body = _strip_pack_regions(src)
+    n_tables = len(re.findall(r"/\*\s*CURRENCY-TABLE\s*\*/", body))
+    if n_tables > 1:
+        out.append((ERROR, f"CURRENCY-TABLE 標記出現 {n_tables} 次 — 每檔只准一份 locale 表", None))
+    body = _strip_comments(
+        re.sub(r"/\*\s*CURRENCY-TABLE\s*\*/.*?/\*\s*/CURRENCY-TABLE\s*\*/", _blank, body, flags=re.S))
+    # 多字元符號（含 $）本身無歧義，後面接什麼都算硬編——首版要求後接數字，
+    # 於是漏掉 `placeholder="NT$ 最低"` 這種真硬編（兩位執行者各自獨立回報）。
+    for m in re.finditer(r"(?<![A-Za-z])(NT\$|HK\$|US\$|S\$|RM\$|A\$|C\$)", body):
+        if m.start() in seen: continue
+        seen.add(m.start())
+        out.append((ERROR, f"硬編幣別符號 `{m.group(1)}` — 鐵律 10：符號與小數位由市場 locale 決定",
+                    _lineno(body, m.start())))
+    # 單字元／裸字母符號有歧義（RM 會命中 FORM 2／ROOM 3），必須要詞界 + 後接數字
+    for m in re.finditer(r"(?<![A-Za-z0-9])(RM|¥|₩|€|£|฿|₫)\s?[0-9]", body):
+        if m.start() in seen: continue
+        seen.add(m.start())
+        out.append((ERROR, f"硬編幣別符號 `{m.group(1)}` — 鐵律 10：符號與小數位由市場 locale 決定",
+                    _lineno(body, m.start())))
+    # 格式化函式把符號寫死，最容易被誤判為「已經抽象化了」——函式在，但符號長在函式裡。
+    # 三種變體都要抓：前綴 'X$'+n、後綴 n+'X$'、樣板 `X${n}`。首版只抓第一種。
+    sym = r"NT\$|HK\$|US\$|S\$|¥|€|£|₩|RM"
+    for pat, why in [
+        (rf"""["'](?:{sym})["']\s*\+""", "前綴串接"),
+        (rf"""\+\s*["'](?:{sym})["']""", "後綴串接"),
+        (rf"""`[^`\n]{{0,20}}(?:{sym})\s*\$\{{""", "樣板字面量"),
+    ]:
+        for m in re.finditer(pat, body):
+            span = set(range(m.start(), m.end()))
+            if span & seen: continue      # 同一處已被字面量規則報過
+            seen |= span
+            out.append((ERROR, f"格式化函式硬編幣別符號（{why}）— 符號必須來自 market locale 表",
+                        _lineno(body, m.start())))
+    return _cap(out, "硬編幣別符號")
+
+
+def r_tw_outside_pack(src, style, script):
+    """台灣法域專屬詞彙不得出現在未標記為 pack 的區段。
+
+    為什麼：CLAUDE.md 鐵律 11 ——「核心規格不得再直接引用 統一發票／字軌／折讓／
+    超商取貨／統編／電支條例，要引就引 pack 介面」。基準法域是香港，香港沒有政府
+    發票、沒有超商取貨網路。
+
+    這條規則的重點是「不刪、只標」：把台灣內容包進 `data-pack="tw"`（markup）或
+    `/* TW-PACK */ … /* /TW-PACK */`（JS/CSS）就通過。目的是讓「這是某個法域的素材」
+    這件事在程式碼裡看得見，而不是靠讀者記得。
+
+    事故：2026-08-12 盤點發現 storefront 從頭到尾是一份台灣店（超商取貨／電子發票／
+    統編／ECPay 電子地圖／COD 上限），platform-admin 有整個「電子發票管線」模組，
+    但沒有任何一處標明這是法域專屬。56 號把法域做成可插拔架構之後，這些內容
+    在核心層仍然是無標記的，等於架構只做在文件裡、沒做進程式碼。
+    """
+    terms = ["統一發票", "統一編號", "統編", "字軌", "超商取貨", "超商代收", "超商代碼",
+             "電子支付機構管理條例", "電支條例", "雲端發票", "發票載具", "統一發票購票證"]
+    body = _strip_cites(_strip_pack_regions(src))
+    out, seen = [], set()
+    for t in sorted(terms, key=len, reverse=True):      # 長詞先比，統一發票購票證 不再拆成三筆
+        for m in re.finditer(re.escape(t), body):
+            span = set(range(m.start(), m.end()))
+            if span & seen: continue
+            seen |= span
+            out.append((ERROR, f"`{t}` 出現在未標記 pack 的區段 — 鐵律 11：要引就引 pack 介面",
+                        _lineno(body, m.start())))
+    return _cap(out, "台灣法域詞彙未標 pack")
+
+
+def _blank(m):
+    """替換成等長空白，行號才不會位移。"""
+    return re.sub(r"[^\n]", " ", m.group(0))
+
+
+def _strip_pack_regions(src: str) -> str:
+    """挖掉 pack 標記區段。
+
+    注意 `data-pack="tw"` 的巢狀問題：首版用 `<(\\w+)[^>]*data-pack="tw"[^>]*>.*?</\\1>`
+    非貪婪匹配，遇到巢狀同名標籤（`<div data-pack="tw">` 裡有任何 `<div>`，幾乎必然）
+    只會吃到第一個 `</div>`，後半仍判 ERROR——三種標記法裡宣稱可用的那一種，對真實
+    markup 幾乎都失效。兩位執行者各自獨立踩到並回報。改為配對計數。
+    """
+    src = re.sub(r"/\*\s*TW-PACK\s*\*/.*?/\*\s*/TW-PACK\s*\*/", _blank, src, flags=re.S)
+    src = re.sub(r"<!--\s*TW-PACK\s*-->.*?<!--\s*/TW-PACK\s*-->", _blank, src, flags=re.S)
+    return _strip_nested_attr(src, 'data-pack="tw"')
+
+
+def _strip_nested_attr(src: str, attr: str) -> str:
+    """挖掉帶指定屬性的元素，用配對計數正確處理巢狀同名標籤。"""
+    while True:
+        m = re.search(rf'<([a-z]+)[^>]*{re.escape(attr)}', src)
+        if not m:
+            return src
+        tag, i = m.group(1), m.start()
+        depth, pos = 0, i
+        pat = re.compile(rf"</?{tag}\b", re.I)
+        while True:
+            t = pat.search(src, pos)
+            if not t:                       # 沒有結束標籤：吃到檔尾，寧可誤放不要誤報
+                end = len(src)
+                break
+            depth += -1 if src[t.start():t.start() + 2] == "</" else 1
+            pos = t.end()
+            if depth == 0:
+                end = src.index(">", t.start()) + 1
+                break
+        src = src[:i] + re.sub(r"[^\n]", " ", src[i:end]) + src[end:]
+
+
+def _strip_comments(src: str) -> str:
+    """挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。"""
+    src = re.sub(r"/\*.*?\*/", _blank, src, flags=re.S)
+    src = re.sub(r"<!--.*?-->", _blank, src, flags=re.S)
+    return src
+
+
+def _strip_cites(src: str) -> str:
+    """挖掉 `/* CITE */ … /* /CITE */` 與 `<!-- CITE --> … <!-- /CITE -->`。
+
+    為什麼需要這個逃生口：規則會抓到自己的引用——任何解釋「鐵律 11 禁用哪些詞」的
+    DOCS 或註釋，本身就含有那些詞。把 meta 文件硬包成 TW-PACK 在語意上是錯的
+    （它是規則說明，不是某個法域的素材）。CITE 專門標記這種「引述而非使用」。
+    """
+    src = re.sub(r"/\*\s*CITE\s*\*/.*?/\*\s*/CITE\s*\*/", _blank, src, flags=re.S)
+    src = re.sub(r"<!--\s*CITE\s*-->.*?<!--\s*/CITE\s*-->", _blank, src, flags=re.S)
+    return src
+
+
+def _cap(out, label, n=6):
+    """同類命中太多時只列前 n 條，其餘折疊成一行——否則一條規則就能淹掉整個報告。"""
+    if len(out) <= n:
+        return out
+    rest = len(out) - n
+    return out[:n] + [(out[0][0], f"（另有 {rest} 處{label}，同型不再逐條列出）", None)]
+
+
 RULES = [r_dup_functions, r_dangling_onclick, r_hairline, r_naked_zindex, r_px_breakpoint,
          r_transition_all, r_disabled_opacity, r_brace_balance, r_single_script,
-         r_docs_coverage, r_fake_affordance, r_dead_css]
+         r_docs_coverage, r_fake_affordance, r_dead_css,
+         r_hardcoded_currency, r_tw_outside_pack]
 
 
 def lint(path: Path):

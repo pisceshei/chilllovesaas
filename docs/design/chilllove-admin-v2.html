@@ -1547,7 +1547,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <div class="pulse" data-doc="pulse">
       <div class="p-scope"><span class="mut3">所有管道</span><b>過去 30 天</b></div>
       <div class="p-item"><span class="p-label">工作階段</span><span class="p-val num">8,600</span><svg class="spk" width="56" height="20"></svg></div>
-      <div class="p-item"><span class="p-label">總銷售額</span><span class="p-val num">NT$407,700</span><svg class="spk" width="56" height="20"></svg></div>
+      <div class="p-item"><span class="p-label">總銷售額</span><span class="p-val num" data-money="10193000"></span><svg class="spk" width="56" height="20"></svg></div>
       <div class="p-item"><span class="p-label">訂單</span><span class="p-val num">240</span><svg class="spk" width="56" height="20"></svg></div>
       <div class="p-item"><span class="p-label">轉換率</span><span class="p-val num">2.8%</span><svg class="spk down" width="56" height="20"></svg></div>
       <div class="p-live">即時訪客<b class="num">7<span class="live-dot"></span></b></div>
@@ -1673,17 +1673,27 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     </div>
     <div class="ana-filters" data-doc="anafilters">
       <button class="btn btn-sec btn-sm" onclick="toast('Demo：切換日期範圍')">過去 30 天 ▾</button>
-      <button class="btn btn-sec btn-sm" onclick="toast('Demo：幣別')">NT$ ▾</button>
+      <div class="rowflex" data-doc="ana-currency" role="group" aria-label="報表顯示幣別">
+        <span class="mut3" style="font-size:var(--t-xs)">報表幣別</span>
+        <button class="btn btn-sec btn-sm on" data-mktcur="HKD" aria-pressed="true" onclick="setMarketCur('HKD')">HKD</button>
+        <button class="btn btn-sec btn-sm" data-mktcur="TWD" aria-pressed="false" onclick="setMarketCur('TWD')">TWD</button>
+        <button class="btn btn-sec btn-sm" data-mktcur="JPY" aria-pressed="false" onclick="setMarketCur('JPY')">JPY</button>
+        <button class="btn btn-sec btn-sm" data-mktcur="MYR" aria-pressed="false" onclick="setMarketCur('MYR')">MYR</button>
+        <button class="btn btn-sec btn-sm" data-mktcur="USD" aria-pressed="false" onclick="setMarketCur('USD')">USD</button>
+        <!-- 空著是刻意的：初值由 setMarketCur() 從 locale 表寫入（鐵律 10——符號不得寫死在
+             markup 裡）。寫一個「暫時的」HK$ 在這裡，等於在唯一的 CURRENCY-TABLE 之外又
+             開了第二個符號來源，換基準法域時必然漏改。 -->
+        <span class="mut3 num" id="anaCurLabel" style="font-size:var(--t-xs)"></span></div>
     </div>
     <div class="ana-grid">
-      <div class="card stat-card"><div class="t-label">總銷售額</div><div class="t-value num">NT$407,700</div><span class="t-delta up">↑ 18.2% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">總銷售額</div><div class="t-value num" data-money="10193000"></div><span class="t-delta up">↑ 18.2% <span class="t-vs">vs 前期</span></span></div>
       <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">240</div><span class="t-delta up">↑ 6.1% <span class="t-vs">vs 前期</span></span></div>
       <div class="card stat-card"><div class="t-label">回頭客比率</div><div class="t-value num">18.3%</div><span class="t-delta up">↑ 2.1pt <span class="t-vs">vs 前期</span></span></div>
-      <div class="card stat-card"><div class="t-label">平均訂單價值</div><div class="t-value num">NT$1,699</div><span class="t-delta up">↑ 11.4% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">平均訂單價值</div><div class="t-value num" data-money="42471"></div><span class="t-delta up">↑ 11.4% <span class="t-vs">vs 前期</span></span></div>
     </div>
     <div class="chart2">
       <div class="card chart-card">
-        <div class="chart-head"><h3>隨時間的總銷售額</h3><span class="big num">NT$407,700</span></div>
+        <div class="chart-head"><h3>隨時間的總銷售額</h3><span class="big num" data-money="10193000"></span></div>
         <div class="chart-wrap" data-doc="anachart"><svg id="anaChart" width="100%" height="200"></svg><div class="tooltip m-pop" id="anaTip"></div></div>
         <button class="table-toggle m-text" id="anaToggle" onclick="toggleAnaTable()">檢視數據表格</button>
         <table class="data-table num" id="anaTable"><thead><tr><th>日期</th><th>銷售額</th></tr></thead><tbody id="anaTableBody"></tbody></table>
@@ -1770,9 +1780,9 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('m-discounts')">折扣<span class="mut3">四型</span></div>
     <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('m-markets')">市場<span class="mut3">國際化</span></div>
     <div class="pal-group">訂單</div>
-    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();openOrder('1042')">#1042 林芷妍<span class="mut3">NT$2,932・未出貨</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();openOrder('1042')">#1042 林芷妍<span class="mut3"><span class="num" data-money="73300"></span>・未出貨</span></div>
     <div class="pal-group">商品</div>
-    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('products')">奶茶色寬版帽T<span class="mut3">NT$1,480</span></div>
+    <div class="pal-item" role="option" tabindex="0" onclick="closePalette();go('products')">奶茶色寬版帽T<span class="mut3"><span class="num" data-money="37000"></span></span></div>
     <div class="pal-foot"><span>↑↓ 移動</span><span>↵ 開啟</span><span>esc 關閉</span></div>
   </div>
 </div>
@@ -1783,6 +1793,119 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 <div class="ck-addpop" id="ckAddPop" role="dialog" aria-label="新增區塊" data-doc="ck-addblock"></div>
 
 <script>
+/* ==================================================================
+   市場 locale 表與金額格式化（CLAUDE.md 鐵律 3／10／11、56 §D.3）
+   ------------------------------------------------------------------
+   🔴 這裡刻意**不是**「把 NT$ 換成 HK$」。56 §D.3 硬要求 1 逐字：
+      「把 NT$ 換成 HK$ 只是把同一個錯誤搬到另一個國家」。
+      符號、符號位置、小數位、千分位分組**全部是市場資料**，
+      格式化函式體內不得出現任何幣別符號或小數位常數。
+      事故：2026-08-12 盤點——本檔原有一支集中式格式化函式，卻把符號寫死在函式體內；
+      「有集中式函式」最容易被誤判成「已經抽象化了」，其實符號就長在函式裡。
+   欄位名與 config/limits.yml `jurisdictions.<code>.currency_format` 同名同義
+      （default_currency／symbol／symbol_position／exponent／grouping）。
+   金額單位：**integer cents，一律 ×100**，與 limits.yml 同慣例——
+      `jurisdictions.tw.pickup_networks.cod_max_cents: 2000000` 代表 20,000 TWD，
+      TWD 的 ISO exponent 是 0 但儲存仍是 ×100。
+      ⇒ exponent 只決定**顯示**幾位小數，不決定儲存單位。
+      鐵律 3：金額全程 integer cents，出現 float 即 bug（fmtMoney 會對非整數 console.warn）。
+   ⚠️ exponent 差異（HKD 2／TWD 0／JPY 0）正是硬編符號抓不到的那類 bug：
+      同一個 cents 值 148000：HKD 顯示 1,480.00（exponent 2）、TWD 與 JPY 顯示 1,480（exponent 0），
+      前綴符號則各自來自 symbol 欄位。
+   基準市場＝香港（鐵律 11 基準法域）。MARKET_CUR 是「報表顯示幣別」；
+      個別訂單另帶 presentment currency（ORDERS[].cur），不隨報表幣別變動。
+   ⚠️ demo **不做匯率換算**——切換市場只換格式不換金額，目的是驗證格式真的由表驅動。
+      正式版的 presentment 換算走 29 號 Markets 的匯率快照，不在原型範圍。
+   ================================================================== */
+/* CURRENCY-TABLE */
+/* 這是全檔唯一允許出現幣別符號字面量的區段（lint r_hardcoded_currency 的宣告式豁免）。
+   符號總得有個源頭，但源頭必須只有一個——每檔只准一份 CURRENCY-TABLE，lint 會擋第二份。
+   在這個區段之外寫任何 'HK$'／'NT$'／'¥' 都是硬編，鐵律 10。 */
+const MARKET_LOCALES={
+ HKD:{default_currency:'HKD',name:'港幣',  symbol:'HK$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[100000000,'億'],[10000,'萬']]},
+ MYR:{default_currency:'MYR',name:'令吉',  symbol:'RM', symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:' ',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ USD:{default_currency:'USD',name:'美元',  symbol:'US$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[1000000,'M'],[1000,'K']]},
+ JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[100000000,'億'],[10000,'万']]}};
+/* /CURRENCY-TABLE */
+/* 上限值一律引 config/limits.yml 的鍵名，不在畫面上硬編數字（CLAUDE.md 鐵律 6）。
+   值本身是 integer cents，顯示時交給 money() 依市場 locale 格式化。 */
+const LIMITS={giftCardMaxCents:200000};   /* limits.yml gift_card.max_initial_value_cents */
+const MARKET_BASE='HKD';                 /* 鐵律 11：基準法域＝香港，開站預設就是它 */
+let MARKET_CUR=MARKET_BASE;
+function marketLocale(code){return MARKET_LOCALES[code]||MARKET_LOCALES[MARKET_CUR]||MARKET_LOCALES[MARKET_BASE];}
+const CURSYM=code=>marketLocale(code).symbol;                 /* 表單標籤用，不得寫死 */
+const curLabel=code=>{const L=marketLocale(code);return L.default_currency+'（'+L.symbol+'）';};
+const curOptions=()=>Object.keys(MARKET_LOCALES).map(k=>[k,MARKET_LOCALES[k].name+'（'+MARKET_LOCALES[k].symbol+'）']);
+/* 使用者在表單輸入的是主單位，存進資料前一律轉 integer cents（鐵律 3）*/
+const toCents=v=>Math.round((Number(v)||0)*100);
+const fromCents=c=>Math.round(Number(c)||0)/100;
+/* grouping ＝「由右往左的各段長度」，最後一段重複套用（[3]＝每三位、[3,2]＝印度式）*/
+function groupDigits(intStr,groups,sep){
+  const g=(groups&&groups.length)?groups:[3];
+  let out='',i=intStr.length,k=0;
+  while(i>0){const n=g[Math.min(k,g.length-1)],s=Math.max(0,i-n);
+    out=intStr.slice(s,i)+(out?sep+out:'');i=s;k++;}
+  return out;
+}
+function fmtMoney(cents,code){
+  const L=marketLocale(code),raw=Number(cents)||0;
+  if(!Number.isInteger(raw))console.warn('[money] 非整數 cents（鐵律 3：金額全程 integer cents）：',cents);
+  const fixed=(Math.abs(raw)/100).toFixed(L.exponent);        /* 小數位＝locale 的 exponent */
+  const d=fixed.indexOf('.');
+  const body=groupDigits(d<0?fixed:fixed.slice(0,d),L.grouping,L.sep)+(d<0?'':L.dec+fixed.slice(d+1));
+  return (raw<0?'−':'')+(L.symbol_position==='suffix'?body+L.gap+L.symbol:L.symbol+L.gap+body);
+}
+/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡 */
+function fmtMoneyCompact(cents,code){
+  const L=marketLocale(code),raw=Number(cents)||0,major=Math.abs(raw)/100;
+  const step=(L.abbr||[]).find(a=>major>=a[0]);
+  if(!step)return fmtMoney(cents,code);
+  const t=(major/step[0]).toFixed(2).replace(/\.?0+$/,'');
+  const dp=t.indexOf('.');
+  const n=groupDigits(dp<0?t:t.slice(0,dp),L.grouping,L.sep)+(dp<0?'':L.dec+t.slice(dp+1));
+  return (raw<0?'−':'')+(L.symbol_position==='suffix'?n+step[1]+L.gap+L.symbol:L.symbol+L.gap+n+step[1]);
+}
+const money=(cents,code)=>fmtMoney(cents,code);
+const moneyC=(cents,code)=>fmtMoneyCompact(cents,code);
+/* 宣告式金額：靜態 markup 掛 <span class="num" data-money="cents">，由 paintMoney() 依目前
+   市場填字，切換市場時不必重寫 markup。冪等（值沒變就不碰 DOM），否則 enhanceTables 的
+   MutationObserver 會被自己的寫入打成無限迴圈。 */
+function paintMoney(root){
+  (root||document).querySelectorAll('[data-money]').forEach(el=>{
+    const cur=el.dataset.moneyCur||'',sig=el.dataset.money+'|'+cur+'|'+MARKET_CUR;
+    if(el.dataset.moneySig===sig)return;
+    el.dataset.moneySig=sig;
+    el.textContent=(el.dataset.moneyCompact!=null?moneyC:money)(+el.dataset.money,cur||undefined);
+  });
+  /* 幣別標籤也從 locale 表寫入。放這裡而不是放 setMarketCur()，是因為 paintMoney() 開站
+     就會跑（檔尾 init），setMarketCur() 只在使用者點切換器時跑——標籤若只在後者寫入，
+     開站那一刻會是空的。同一個值只准有一個來源。 */
+  const lb=document.getElementById('anaCurLabel');
+  if(lb)lb.textContent=CURSYM()+' '+marketLocale().default_currency;
+}
+/* 報表幣別切換器（分析頁）——只換格式不換匯率，見本節開頭 ⚠️ */
+function setMarketCur(code){
+  if(!MARKET_LOCALES[code])return;
+  MARKET_CUR=code;
+  document.querySelectorAll('[data-mktcur]').forEach(b=>{
+    const on=b.dataset.mktcur===code;
+    b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));
+  });
+  const lb=document.getElementById('anaCurLabel');
+  if(lb)lb.textContent=CURSYM()+' '+marketLocale().default_currency;
+  paintMoney();
+  renderOrders();renderProducts();drawSparks();drawAnalytics();
+  if(current&&current.startsWith('m-'))renderModule(current);
+  else if(current&&current.startsWith('d-'))renderDetail(current);
+  toast('報表幣別已切換為 '+marketLocale().name+'（'+marketLocale().default_currency+'）——demo 只換格式，不換匯率');
+}
+
 /* ================= 圖示 ================= */
 const ICONS={
  home:'<path d="M3 10.5L12 3l9 7.5V21a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1z"/>',
@@ -2019,59 +2142,62 @@ function foSeed(id,loc,status,lineItems,o={}){
     parentId:o.parentId||null,splitReason:o.splitReason||null,externalUrl:o.externalUrl||null};
 }
 const ORDERS=[
- {id:"1042",d:"今天 14:02",c:"林芷妍",ch:"線上商店",amt:"NT$2,932",pay:"paid",ful:"unful",items:2,tags:["VIP","送禮"],risk:false,
-  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶・CL-HD-M-MT",q:1,p:"NT$1,480",g:P_G.hoodie},{n:"燕麥色針織開衫",v:"F / 燕麥・CL-KN-F-OT",q:1,p:"NT$1,480",g:P_G.knit}],
+ {id:"1042",d:"今天 14:02",c:"林芷妍",ch:"線上商店",amt:73300,cur:"HKD",pay:"paid",ful:"unful",items:2,tags:["VIP","送禮"],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶・CL-HD-M-MT",q:1,p:37000,g:P_G.hoodie},{n:"燕麥色針織開衫",v:"F / 燕麥・CL-KN-F-OT",q:1,p:37000,g:P_G.knit}],
   /* ★ 多 FO 示範：同一張訂單依地點拆兩張——台北門市可出、台中寄倉缺貨 hold 住 */
   fulfillmentOrders:[
    foSeed('1042-F1','台北門市','OPEN',[{i:0,q:1}]),
    foSeed('1042-F2','台中寄倉','ON_HOLD',[{i:1,q:1}],{holds:[{reason:'INVENTORY_OUT_OF_STOCK',note:'燕麥色 F 待補貨，預計 8/15 到倉'}]})],
-  pays:[["小計・2 件品項","NT$2,960"],["折扣・WELCOME5","−NT$148"],["運送・宅配（1.2 kg）","NT$120"],["稅額・內含 5%","NT$139"]],total:"NT$2,932",paid:"NT$2,932",
+  pays:[["小計・2 件品項",74000],["折扣・WELCOME5",-3700],["運送・宅配（1.2 kg）",3000],["稅額・香港無銷售稅（56 §A.2）",0]],total:73300,paid:73300,
   cust:{name:"林芷妍",meta:"3 筆訂單・VIP",mail:"zhiyan.lin@example.com",addr:"林芷妍<br>台北市大安區和平東路二段 106 號 8 樓<br>台北市 106・台灣<br>+886 912 345 678"}},
- {id:"1041",d:"今天 11:47",c:"陳柏睿",ch:"線上商店",amt:"NT$1,600",pay:"paid",ful:"unful",items:1,tags:[],risk:false,
-  lines:[{n:"奶茶色寬版帽T",v:"L / 深可可・CL-HD-L-CC",q:1,p:"NT$1,480",g:P_G.hoodie}],
+ {id:"1041",d:"今天 11:47",c:"陳柏睿",ch:"線上商店",amt:40000,cur:"HKD",pay:"paid",ful:"unful",items:1,tags:[],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"L / 深可可・CL-HD-L-CC",q:1,p:37000,g:P_G.hoodie}],
   /* 單一 FO・SCHEDULED：deferred 到 fulfillAt 才可履行（46a:219），只出得了 MARK_AS_OPEN 一類動作 */
   fulfillmentOrders:[foSeed('1041-F1','台北門市','SCHEDULED',[{i:0,q:1}],{fulfillAt:'2026-08-14 09:00'})],
-  pays:[["小計・1 件品項","NT$1,480"],["運送・宅配","NT$120"]],total:"NT$1,600",paid:"NT$1,600",
+  pays:[["小計・1 件品項",37000],["運送・宅配",3000]],total:40000,paid:40000,
   cust:{name:"陳柏睿",meta:"1 筆訂單",mail:"borui.chen@example.com",addr:"陳柏睿<br>台中市西區公益路 155 號<br>台中市 403・台灣"}},
- {id:"1040",d:"昨天 21:15",c:"Tan Junyi",ch:"AI 代理",amt:"RM 639.74",cur:"MYR",pay:"paid",ful:"unful",items:3,tags:["agent"],risk:false,
-  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶",q:2,p:"RM 213.25",g:P_G.hoodie},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"RM 128.43",g:P_G.tote}],
+ {id:"1040",d:"昨天 21:15",c:"Tan Junyi",ch:"AI 代理",amt:63974,cur:"MYR",pay:"paid",ful:"unful",items:3,tags:["agent"],risk:false,
+  lines:[{n:"奶茶色寬版帽T",v:"M / 奶茶",q:2,p:21325,g:P_G.hoodie},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:12843,g:P_G.tote}],
   /* 單一 FO 但兩個 line item → SPLIT 可用（46a:271；拆完會變成同地點兩張 → MERGE 才會出現）*/
   fulfillmentOrders:[foSeed('1040-F1','主倉（內湖）','OPEN',[{i:0,q:2},{i:1,q:1}],{method:'國際運送'})],
-  pays:[["小計・3 件品項","RM 554.93"],["運送・國際（馬來西亞）","RM 84.81"]],total:"RM 639.74",paid:"RM 639.74",
+  pays:[["小計・3 件品項",55493],["運送・國際（馬來西亞）",8481]],total:63974,paid:63974,
   cust:{name:"Tan Junyi",meta:"1 筆訂單・AI 代理下單",mail:"junyi.tan@example.my",addr:"Tan Junyi<br>8A-17-9, Jln Thean Teik<br>11500 Ayer Itam, Penang・馬來西亞"}},
- {id:"1039",d:"昨天 18:33",c:"guest（王小姐）",ch:"線上商店",amt:"NT$1,800",pay:"pending",ful:"unful",items:1,tags:[],risk:true,
-  lines:[{n:"水洗丹寧襯衫",v:"M / 淺藍・CL-SH-M-LB",q:1,p:"NT$1,680",g:P_G.shirt}],
+ {id:"1039",d:"昨天 18:33",c:"guest（王小姐）",ch:"線上商店",amt:45000,cur:"HKD",pay:"pending",ful:"unful",items:1,tags:[],risk:true,
+  lines:[{n:"水洗丹寧襯衫",v:"M / 淺藍・CL-SH-M-LB",q:1,p:42000,g:P_G.shirt}],
   /* 待付款 → 系統自動掛 AWAITING_PAYMENT hold（46a:281），出貨動作因此整組消失，不是靠前端 disabled */
   fulfillmentOrders:[foSeed('1039-F1','主倉（內湖）','ON_HOLD',[{i:0,q:1}],{holds:[{reason:'AWAITING_PAYMENT',note:'尚未收到款項'}]})],
-  pays:[["小計・1 件品項","NT$1,680"],["運送・宅配","NT$120"]],total:"NT$1,800",paid:"NT$0",
+  pays:[["小計・1 件品項",42000],["運送・宅配",3000]],total:45000,paid:0,
   cust:{name:"guest（王小姐）",meta:"訪客結帳",mail:"wang.guest@example.com",addr:"王小姐<br>高雄市左營區博愛二路 777 號<br>高雄市 813・台灣"}},
- {id:"1038",d:"昨天 09:20",c:"WONG BENNY",ch:"AI 代理",amt:"HK$218.00",cur:"HKD",pay:"paid",ful:"ful",items:1,tags:["agent"],risk:false,
-  lines:[{n:"有機棉圓領白T（三件組）",v:"M / 白",q:1,p:"HK$218.00",g:P_G.tee}],
+ {id:"1038",d:"昨天 09:20",c:"WONG BENNY",ch:"AI 代理",amt:21800,cur:"HKD",pay:"paid",ful:"ful",items:1,tags:["agent"],risk:false,
+  lines:[{n:"有機棉圓領白T（三件組）",v:"M / 白",q:1,p:21800,g:P_G.tee}],
   fulfillmentOrders:[foSeed('1038-F1','香港觀塘倉','CLOSED',[{i:0,q:1}],{method:'本地快遞'})],
-  pays:[["小計・1 件品項","HK$218.00"],["運送・免運","HK$0"]],total:"HK$218.00",paid:"HK$218.00",
+  pays:[["小計・1 件品項",21800],["運送・免運",0]],total:21800,paid:21800,
   cust:{name:"WONG BENNY",meta:"2 筆訂單",mail:"benny.wong@example.hk",addr:"WONG BENNY<br>九龍灣宏開道 8 號<br>九龍・香港"}},
- {id:"1037",d:"8月8日",c:"許哲瑋",ch:"線上商店",amt:"NT$2,280",pay:"paid",ful:"partial",items:2,tags:[],risk:false,
-  lines:[{n:"燕麥色針織開衫",v:"F / 燕麥",q:1,p:"NT$2,280",g:P_G.knit},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$0（贈品）",g:P_G.tote}],
+ {id:"1037",d:"8月8日",c:"許哲瑋",ch:"線上商店",amt:57000,cur:"HKD",pay:"paid",ful:"partial",items:2,tags:[],risk:false,
+  lines:[{n:"燕麥色針織開衫",v:"F / 燕麥",q:1,p:57000,g:P_G.knit},{n:"帆布托特包・生成色",v:"單一規格",q:1,p:0,note:"贈品",g:P_G.tote}],
   /* ★ 多 FO 示範之二：一張自營已完成、一張交給第三方 fulfillment service。
      只有指派給 service 的 FO 才會走 requestStatus 這條正交軸（46a:256）。 */
   fulfillmentOrders:[
    foSeed('1037-F1','主倉（內湖）','CLOSED',[{i:0,q:1}]),
    foSeed('1037-F2','香港觀塘倉','IN_PROGRESS',[{i:1,q:1}],
      {method:'本地快遞',service:'CHILL 物流（3PL）',requestStatus:'ACCEPTED',externalUrl:'https://3pl.example/fo/1037-F2'})],
-  pays:[["小計・2 件品項","NT$2,280"],["運送・免運門檻","NT$0"]],total:"NT$2,280",paid:"NT$2,280",
+  pays:[["小計・2 件品項",57000],["運送・免運門檻",0]],total:57000,paid:57000,
   cust:{name:"許哲瑋",meta:"4 筆訂單",mail:"zhewei.hsu@example.com",addr:"許哲瑋<br>新竹市東區光復路一段 89 號<br>新竹市 300・台灣"}},
- {id:"1036",d:"8月8日",c:"黃郁婷",ch:"線上商店",amt:"NT$960",pay:"refund",ful:"ful",items:1,tags:[],risk:false,
-  lines:[{n:"有機棉圓領白T（三件組）",v:"S / 白",q:1,p:"NT$990",g:P_G.tee}],
+ {id:"1036",d:"8月8日",c:"黃郁婷",ch:"線上商店",amt:23710,cur:"HKD",pay:"refund",ful:"ful",items:1,tags:[],risk:false,
+  lines:[{n:"有機棉圓領白T（三件組）",v:"S / 白",q:1,p:21800,g:P_G.tee}],
   fulfillmentOrders:[foSeed('1036-F1','主倉（內湖）','CLOSED',[{i:0,q:1}])],
-  pays:[["小計・1 件品項","NT$990"],["折扣・首購 95 折","−NT$50"],["運送・宅配","NT$120"],["退款・2026-08-09","−NT$960"]],total:"NT$960",paid:"NT$0（已全額退款）",
+  pays:[["小計・1 件品項",21800],["折扣・首購 95 折",-1090],["運送・宅配",3000],["退款・2026-08-09",-23710]],total:23710,paid:0,paidNote:"已全額退款",
   cust:{name:"黃郁婷",meta:"1 筆訂單",mail:"yuting.huang@example.com",addr:"黃郁婷<br>台南市東區大學路 1 號<br>台南市 701・台灣"}},
- {id:"1035",d:"8月7日",c:"測試訂單",ch:"線上商店",amt:"NT$167",pay:"paid",ful:"unful",items:1,tags:["已取消"],risk:false,cancelled:true,
-  lines:[{n:"帆布托特包・生成色",v:"單一規格",q:1,p:"NT$167",g:P_G.tote}],
+ {id:"1035",d:"8月7日",c:"測試訂單",ch:"線上商店",amt:17000,cur:"HKD",pay:"paid",ful:"unful",items:1,tags:["已取消"],risk:false,cancelled:true,
+  lines:[{n:"帆布托特包・生成色",v:"單一規格",q:1,p:17000,g:P_G.tote}],
   fulfillmentOrders:[foSeed('1035-F1','主倉（內湖）','CANCELLED',[{i:0,q:1}])],
-  pays:[["小計・1 件品項","NT$167"]],total:"NT$167",paid:"NT$167（取消時已退款）",
+  pays:[["小計・1 件品項",17000]],total:17000,paid:17000,paidNote:"取消時已退款",
   cust:{name:"測試訂單",meta:"內部測試",mail:"dev@chilllove.demo",addr:"—"}},
 ];
-const sales=[8200,9400,7600,10200,11800,9900,12400,13100,11200,10400,12800,14200,13600,12100,11400,15200,16800,14400,13900,12600,15800,17200,16400,14800,13400,16200,18400,17800,16900,19600];
+/* 30 天日銷售額（HKD integer cents）。原本是台幣示範值，改為港幣量級（TWD≈4×HKD）並取整到好看的數字。
+   合計 10,193,000 cents（基準市場下顯示為 101,930）——分析頁與報告頁的總銷售額都由這個陣列導出（鐵律 7 數字同源）。 */
+const sales=[205000,235000,190000,255000,295000,248000,310000,328000,280000,260000,320000,355000,340000,302000,285000,380000,420000,360000,348000,315000,395000,430000,410000,370000,335000,405000,460000,445000,422000,490000];
+const salesTotal=sales.reduce((a,v)=>a+v,0);   /* 10193000 cents */
 const days=[...Array(30)].map((_,i)=>{const d=new Date(2026,6,12+i);return `${d.getMonth()+1}/${d.getDate()}`;});
 const SPK={
  sessions:[240,265,255,290,310,280,295,320,305,335,350,342],
@@ -2109,7 +2235,7 @@ function renderOrders(){
      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb rowcb" onchange="bulk()" aria-label="選取 #${o.id}"></td>
      <td><b>#${o.id}</b>${o.risk?riskSvg:''}</td>
      <td class="mut">${o.d}</td><td>${o.c}</td><td class="mut">${o.ch}</td>
-     <td class="right num" style="font-weight:600">${o.amt}${o.cur?` <span class="mut3">${o.cur}</span>`:''}</td>
+     <td class="right num" style="font-weight:600">${money(o.amt,o.cur)}${o.cur&&o.cur!==MARKET_BASE?` <span class="mut3">${o.cur}</span>`:''}</td>
      <td>${PAY[o.pay]}</td><td>${FUL[foOrderStatus(o.id)]}</td><td class="right num mut">${o.items}</td>
      <td>${o.tags.map(t=>`<span class="tagchip" style="margin:0 var(--sp-050) 0 0">${t}</span>`).join('')}</td>
    </tr>`).join('');
@@ -2134,8 +2260,8 @@ function seedEvents(o){
   const ev=[
    {t:"sys",txt:`已為此訂單產生確認編號 #CL-${o.id}KD`,time:o.d},
    {t:"sys",txt:`${o.c} 透過 ${o.ch} 下了此訂單`,time:o.d}];
-  if(o.pay==='paid')ev.unshift({t:"sys",txt:`付款已確認：${o.total}（${o.ch==='AI 代理'?'代理錢包':'信用卡 •• 4242'}）`,time:o.d});
-  if(o.pay==='refund')ev.unshift({t:"sys",txt:`已退款 ${o.total.replace('NT$','NT$')}，並回補庫存`,time:"8月9日"});
+  if(o.pay==='paid')ev.unshift({t:"sys",txt:`付款已確認：<span class="num">${money(o.total,o.cur)}</span>（${o.ch==='AI 代理'?'代理錢包':'信用卡 •• 4242'}）`,time:o.d});
+  if(o.pay==='refund')ev.unshift({t:"sys",txt:`已退款 <span class="num">${money(o.total,o.cur)}</span>，並回補庫存`,time:"8月9日"});
   if(o.cancelled)ev.unshift({t:"sys",txt:"訂單已取消（原因：測試訂單），款項已退回",time:"8月7日"});
   if(o.id==='1042')ev.unshift({t:"comment",who:"BW",txt:"顧客備註要送禮包裝，出貨前確認。",time:"下午 2:10"});
   return ev;
@@ -2251,7 +2377,7 @@ function foCard(o,fo,n){
     return `<div class="od-line">
       <span class="thumb" style="background:${l.g}"></span>
       <div class="li-info"><div class="li-name">${H(l.n)}</div><div class="li-var">${H(l.v)}</div></div>
-      <span class="num mut">${H(l.p)} × ${li.q}</span>
+      <span class="num mut">${money(l.p,o.cur)}${l.note?`（${H(l.note)}）`:''} × ${li.q}</span>
     </div>`;}).join('');
   return `<div class="card card-pad" data-doc="fo-card" data-fo="${H(fo.id)}" data-fo-status="${fo.status}">
     <h3><span class="rowflex">${chip(`${lbl}（${foQty(fo)}）`,tone,shape)}
@@ -2442,9 +2568,9 @@ function renderOrderDetail(){
       ${fos.map((f,i)=>foCard(o,f,i+1)).join('')}
       <div class="card card-pad">
         ${payCard}
-        ${o.pays.map(([k,v])=>`<div class="pay-row"><span class="mut">${k}</span><span class="num">${v}</span></div>`).join('')}
-        <div class="pay-row total"><span>總計</span><span class="num">${o.total}</span></div>
-        <div class="pay-row"><span class="mut">顧客已付款</span><span class="num">${o.paid}</span></div>
+        ${o.pays.map(([k,v])=>`<div class="pay-row"><span class="mut">${k}</span><span class="num">${money(v,o.cur)}</span></div>`).join('')}
+        <div class="pay-row total"><span>總計</span><span class="num">${money(o.total,o.cur)}</span></div>
+        <div class="pay-row"><span class="mut">顧客已付款</span><span class="num">${money(o.paid,o.cur)}${o.paidNote?`（${H(o.paidNote)}）`:''}</span></div>
       </div>
       <div class="timeline" data-doc="timeline">
         <div class="tl-compose">
@@ -2534,17 +2660,17 @@ const MODULES={
  "m-drafts":{title:"草稿訂單",act:[["建立草稿訂單","pri","toast('Demo：草稿訂單表單於 M4 實作')"]],
   cols:["草稿","日期","顧客","狀態","總計"],
   rows:[
-   [`<b>#D12</b>`,"今天 10:20","林芷妍",chip("開啟","info"),`<span class="num">NT$4,440</span>`],
-   [`<b>#D11</b>`,"昨天 16:02","公司採購（大宗）",chip("已寄發票","warning"),`<span class="num">NT$29,600</span>`],
-   [`<b>#D10</b>`,"8月6日","陳柏睿",chip("已完成","default"),`<span class="num">NT$1,600</span>`]],
+   [`<b>#D12</b>`,"今天 10:20","林芷妍",chip("開啟","info"),`<span class="num" data-money="111000"></span>`],
+   [`<b>#D11</b>`,"昨天 16:02","公司採購（大宗）",chip("已寄發票","warning"),`<span class="num" data-money="740000"></span>`],
+   [`<b>#D10</b>`,"8月6日","陳柏睿",chip("已完成","default"),`<span class="num" data-money="40000"></span>`]],
   note:"草稿 → 寄送發票 → 收款後轉正式訂單（規格 01 §3）"},
  "m-shiplabels":{title:"運送標籤",empty:{t:"還沒有運送標籤",d:"為未出貨訂單購買並列印宅配標籤，追蹤號碼會自動回填到訂單。",b:["購買標籤","toast('Demo：接物流商 API 屬 P1')"]}},
  "m-abandoned":{title:"未完成結帳",act:[["設定挽回信","sec","toast('Demo：棄單挽回自動化於 M5')"]],
   cols:["結帳","日期","顧客","金額","挽回信","狀態"],
   rows:[
-   [`<b>#C118</b>`,"今天 09:44","yi***@gmail.com",`<span class="num">NT$3,160</span>`,chip("已排程","info"),chip("未恢復","caution")],
-   [`<b>#C117</b>`,"昨天 22:10","ch***@outlook.com",`<span class="num">NT$1,480</span>`,chip("已寄出","default"),chip("已恢復下單","success")],
-   [`<b>#C115</b>`,"昨天 14:03","（未留 email）",`<span class="num">NT$990</span>`,chip("不適用","default"),chip("未恢復","caution")]],
+   [`<b>#C118</b>`,"今天 09:44","yi***@gmail.com",`<span class="num" data-money="79000"></span>`,chip("已排程","info"),chip("未恢復","caution")],
+   [`<b>#C117</b>`,"昨天 22:10","ch***@outlook.com",`<span class="num" data-money="37000"></span>`,chip("已寄出","default"),chip("已恢復下單","success")],
+   [`<b>#C115</b>`,"昨天 14:03","（未留 email）",`<span class="num" data-money="24800"></span>`,chip("不適用","default"),chip("未恢復","caution")]],
   note:"留下聯絡方式且超過 1 小時未付款才列入；90 天後自動清除（規格 15-F7）"},
  "m-collections":{title:"商品系列",act:[["新增商品系列","pri","toast('Demo：系列編輯器於 M1 實作')"]],
   cols:["標題","類型","商品數","銷售管道"],
@@ -2568,11 +2694,11 @@ const MODULES={
   ai:"描述你想找的分群：例如「90 天內買過帽T、消費超過 3,000 的顧客」",
   cols:["顧客","電子郵件訂閱","地區","訂單","消費金額"],
   rows:[
-   [`<b>林芷妍</b> <span class="tagchip" style="margin:0">VIP</span>`,chip("已訂閱","success"),"台北・台灣",`<span class="num">3</span>`,`<span class="num">NT$8,120</span>`],
-   [`<b>許哲瑋</b>`,chip("已訂閱","success"),"新竹・台灣",`<span class="num">4</span>`,`<span class="num">NT$7,440</span>`],
-   [`<b>WONG BENNY</b>`,chip("未訂閱","default"),"九龍・香港",`<span class="num">2</span>`,`<span class="num">NT$1,730</span>`],
-   [`<b>Tan Junyi</b>`,chip("未訂閱","default"),"Penang・馬來西亞",`<span class="num">1</span>`,`<span class="num">NT$4,480</span>`],
-   [`<b>陳柏睿</b>`,chip("已訂閱","success"),"台中・台灣",`<span class="num">1</span>`,`<span class="num">NT$1,600</span>`]],
+   [`<b>林芷妍</b> <span class="tagchip" style="margin:0">VIP</span>`,chip("已訂閱","success"),"台北・台灣",`<span class="num">3</span>`,`<span class="num" data-money="203000"></span>`],
+   [`<b>許哲瑋</b>`,chip("已訂閱","success"),"新竹・台灣",`<span class="num">4</span>`,`<span class="num" data-money="186000"></span>`],
+   [`<b>WONG BENNY</b>`,chip("未訂閱","default"),"九龍・香港",`<span class="num">2</span>`,`<span class="num" data-money="43600"></span>`],
+   [`<b>Tan Junyi</b>`,chip("未訂閱","default"),"Penang・馬來西亞",`<span class="num">1</span>`,`<span class="num" data-money="112000"></span>`],
+   [`<b>陳柏睿</b>`,chip("已訂閱","success"),"台中・台灣",`<span class="num">1</span>`,`<span class="num" data-money="40000"></span>`]],
   note:"email 與 SMS 是各自獨立的同意狀態（規格 01 §4）"},
  "m-segments":{title:"分群",act:[["建立分群","pri","toast('Demo：分群條件編輯器於 M5')"]],
   cols:["分群名稱","條件","成員","上次使用"],
@@ -2670,14 +2796,14 @@ function filterModuleRows(inp){
 }
 function growthHTML(){return `
   <div class="ana-grid g3">
-    <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">NT$38,200</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
+    <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
     <div class="card stat-card"><div class="t-label">依流量類型的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs">直接 62%・社群 24%・搜尋 14%</span></span></div>
     <div class="card stat-card"><div class="t-label">行銷轉換率</div><div class="t-value num">1.9%</div><span class="t-delta up">↑ 0.4pt <span class="t-vs">vs 前期</span></span></div>
   </div>
   <div class="card chart-card"><div class="chart-head"><h3>依管道的歸因銷售額</h3></div>
-    <div class="hbar-row"><span class="hl">IG 廣告</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">NT$21,400</span></div>
-    <div class="hbar-row"><span class="hl">LINE 官方帳號</span><div class="hbar-track"><div class="hbar" style="width:52%"></div></div><span class="hv num">NT$11,200</span></div>
-    <div class="hbar-row"><span class="hl">電子報</span><div class="hbar-track"><div class="hbar" style="width:26%"></div></div><span class="hv num">NT$5,600</span></div>
+    <div class="hbar-row"><span class="hl">IG 廣告</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">${money(535000)}</span></div>
+    <div class="hbar-row"><span class="hl">LINE 官方帳號</span><div class="hbar-track"><div class="hbar" style="width:52%"></div></div><span class="hv num">${money(280000)}</span></div>
+    <div class="hbar-row"><span class="hl">電子報</span><div class="hbar-track"><div class="hbar" style="width:26%"></div></div><span class="hv num">${money(140000)}</span></div>
   </div>`;}
 function discountsHTML(){return `
   <div class="card"><div class="empty-wrap">
@@ -2692,8 +2818,7 @@ function marketsHTML(){return `
       <div class="filterbar m-focus"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input placeholder="在所有市場中搜尋"></div>
     </div>
     <table class="idx"><thead><tr><th>市場</th><th>狀態</th><th>包含</th><th>幣別</th><th>價格調整</th></tr></thead><tbody>
-      <tr onclick="toast('Demo：市場詳情')"><td><b>台灣（預設）</b></td><td>${chip("啟用中","success")}</td><td class="mut">1 個地區</td><td class="mut">TWD（NT$）</td><td class="num">—</td></tr>
-      <tr onclick="toast('Demo：市場詳情')"><td><b>International</b></td><td>${chip("啟用中","success")}</td><td class="mut">香港・馬來西亞</td><td class="mut">當地幣別</td><td class="num">+8%</td></tr>
+      ${MARKETS.filter(m=>m.st==='啟用中').map(m=>`<tr onclick="openMarket('${m.id}')"><td><b>${H(m.t)}</b></td><td>${chip(m.st,"success")}</td><td class="mut">${H(m.inc)}</td><td class="mut">${H(m.cust.currency||MKT_STORE_DEFAULT.currency)}</td><td class="num">${H(m.cust.priceAdj||'—')}</td></tr>`).join('')}
     </tbody></table>
     <div class="ai-row" onclick="toast('Demo：AI 建議——依近期流量建立日本市場')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>建議：近 30 天有 214 個日本工作階段——建立「日本」市場 ＋<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
   </div>`;}
@@ -2723,7 +2848,7 @@ function liveHTML(){
     </div>
     <div class="col">
       <div class="card stat-card"><div class="t-label">目前訪客</div><div class="t-value num">7</div><span class="t-vs">近 5 分鐘活躍</span></div>
-      <div class="card stat-card"><div class="t-label">今日銷售額（店家時區）</div><div class="t-value num">NT$4,532</div><span class="t-vs num">3 筆訂單・182 個工作階段</span></div>
+      <div class="card stat-card"><div class="t-label">今日銷售額（店家時區）</div><div class="t-value num">${money(113000)}</div><span class="t-vs num">3 筆訂單・182 個工作階段</span></div>
       <div class="card chart-card"><div class="chart-head"><h3>顧客行為（近 10 分鐘）</h3></div>
         <div class="hbar-row"><span class="hl">瀏覽中</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">7</span></div>
         <div class="hbar-row"><span class="hl">購物車有商品</span><div class="hbar-track"><div class="hbar" style="width:43%"></div></div><span class="hv num">3</span></div>
@@ -2810,8 +2935,8 @@ const setRowAdd=(t,sub,onclick,doc)=>`<button class="set-rowbtn rb-add" ${doc?`d
 const SET_PAGES={
  /* plan／accounts 是這一層唯一沒被後面 Object.assign 覆蓋的兩個鍵（其餘 12 鍵原本整份被覆蓋＝死碼，已刪）*/
  plan:`<div class="card card-pad"><h3>方案</h3><div class="plan-grid">
-   <div class="plan"><b>入門</b><div class="pp num">NT$890<span>/月</span></div><ul><li>2 個員工帳號</li><li>基本報告</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：降級流程')">切換</button></div>
-   <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">NT$2,490<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled aria-disabled="true">使用中</button></div>
+   <div class="plan"><b>入門</b><div class="pp num">${money(22000)}<span>/月</span></div><ul><li>2 個員工帳號</li><li>基本報告</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：降級流程')">切換</button></div>
+   <div class="plan cur"><b>成長（目前方案）</b><div class="pp num">${money(62000)}<span>/月</span></div><ul><li>5 個員工帳號</li><li>進階報告・分群</li><li>較低手續費</li></ul><button class="btn btn-pri btn-sm" disabled aria-disabled="true">使用中</button></div>
    <div class="plan"><b>企業</b><div class="pp num">洽談<span>/年約</span></div><ul><li>不限員工</li><li>組織多店・API 加量</li></ul><button class="btn btn-sec btn-sm" onclick="toast('Demo：升級流程')">升級</button></div>
   </div></div>`,
  accounts:`<div class="card card-pad" data-doc="set-accounts"><h3>顧客帳號</h3>
@@ -2887,11 +3012,13 @@ function drawAnalytics(){
   /* RWD：窄螢幕縮小 y 軸留白並減少 x 軸刻度，避免日期標籤重疊 */
   const W=svg.clientWidth,H=200,P={t:12,r:12,b:24,l:W<480?32:48};
   const xTicks=W<300?[0,29]:W<400?[0,14,29]:W<540?[0,9,19,29]:[0,7,14,21,29];
-  const max=20000;
+  const max=500000;                       /* cents；上限＝日銷售額量級（基準市場約 5,000 主單位）*/
   const x=i=>P.l+i*(W-P.l-P.r)/(sales.length-1);
   const y=v=>P.t+(1-v/max)*(H-P.t-P.b);
   let g='';
-  [0,5000,10000,15000,20000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?v/1000+'K':'0'}</text>`;});
+  /* 軸標籤刻意只放數字（主單位／千）不放符號：幣別已寫在圖表標題的金額上，
+     每格再重複一次符號會擠爆 46px 的軸寬。單位由標題的 data-money 表達。 */
+  [0,125000,250000,375000,500000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?fromCents(v)/1000+'K':'0'}</text>`;});
   xTicks.forEach(i=>{g+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i===29?'end':i===0?'start':'middle'}" font-size="11" fill="#67696e">${days[i]}</text>`;});
   const line=sales.map((v,i)=>`${i?'L':'M'}${x(i)},${y(v)}`).join('');
   svg.innerHTML=g+`<path d="${line}L${x(29)},${y(0)}L${x(0)},${y(0)}Z" fill="rgba(42,120,214,.10)"/>
@@ -2906,16 +3033,16 @@ function drawAnalytics(){
     svg.querySelector('#anaX').setAttribute('x1',cx);svg.querySelector('#anaX').setAttribute('x2',cx);svg.querySelector('#anaX').setAttribute('opacity',1);
     const d=svg.querySelector('#anaDot');d.setAttribute('cx',cx);d.setAttribute('cy',cy);d.setAttribute('opacity',1);
     tip.style.left=Math.max(52,Math.min(W-52,cx))+'px';tip.style.top=(cy-4)+'px';tip.style.opacity=1;
-    tip.innerHTML=`${days[i]}<br><b class="num">NT$${sales[i].toLocaleString()}</b>`;
+    tip.innerHTML=`${days[i]}<br><b class="num">${money(sales[i])}</b>`;
   };
   svg.onmouseleave=()=>{tip.style.opacity=0;svg.querySelector('#anaX').setAttribute('opacity',0);svg.querySelector('#anaDot').setAttribute('opacity',0);};
-  document.getElementById('anaTableBody').innerHTML=days.map((d,i)=>`<tr><td>${d}</td><td>NT$${sales[i].toLocaleString()}</td></tr>`).join('');
-  const chan=[["線上商店",362400],["AI 代理",38200],["門市 POS",7100]];
+  document.getElementById('anaTableBody').innerHTML=days.map((d,i)=>`<tr><td>${d}</td><td class="num">${money(sales[i])}</td></tr>`).join('');
+  const chan=[["線上商店",9060000],["AI 代理",955000],["門市 POS",178000]];   /* HKD cents，合計≈salesTotal */
   document.getElementById('chanBars').innerHTML=chan.map(([l,v])=>`
-   <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/chan[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
-  const prods=[["奶茶色寬版帽T",96200],["水洗丹寧襯衫",71800],["有機棉白T三件組",54900],["燕麥色針織開衫",41200],["帆布托特包",22600]];
+   <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/chan[0][1]*100}%"></div></div><span class="hv num">${moneyC(v)}</span></div>`).join('');
+  const prods=[["奶茶色寬版帽T",2405000],["水洗丹寧襯衫",1795000],["有機棉白T三件組",1372000],["燕麥色針織開衫",1030000],["帆布托特包",565000]];
   document.getElementById('prodBars').innerHTML=prods.map(([l,v])=>`
-   <div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/prods[0][1]*100}%"></div></div><span class="hv num">NT$${(v/1000).toFixed(1)}K</span></div>`).join('');
+   <div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/prods[0][1]*100}%"></div></div><span class="hv num">${moneyC(v)}</span></div>`).join('');
   const fun=[["工作階段",8600],["加入購物車",940],["進入結帳",412],["完成購買",240]];
   document.getElementById('funnel').innerHTML=fun.map(([l,v],i)=>`
    <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/fun[0][1]*100}%;min-width:6px"></div></div><span class="hv num">${v.toLocaleString()}${i?` <span class="mut3">${(v/fun[i-1][1]*100).toFixed(1)}%</span>`:''}</span></div>`).join('');
@@ -2928,7 +3055,7 @@ function aiAsk(){
   box.classList.add('show');box.innerHTML='思考中…';
   setTimeout(()=>{
     box.innerHTML=q.includes('賣')||q===''
-     ?`過去 30 天賣最好的是 <b>奶茶色寬版帽T</b>：售出 65 件、貢獻 NT$96,200（佔總銷售 23.6%）。深可可 L 號已售罄——建議補貨。<br><span class="mut3" style="font-size:var(--t-xs)">（demo 示意：正式版由 AI 查詢商店資料生成，屬 P2）</span>`
+     ?`過去 30 天賣最好的是 <b>奶茶色寬版帽T</b>：售出 65 件、貢獻 ${money(2405000)}（佔總銷售 23.6%）。深可可 L 號已售罄——建議補貨。<br><span class="mut3" style="font-size:var(--t-xs)">（demo 示意：正式版由 AI 查詢商店資料生成，屬 P2）</span>`
      :`收到你的問題：「${q}」。<br>正式版會查詢商店資料後回答並附操作建議；demo 先示意這個交互位置與樣式。`;
   },600);
 }
@@ -3005,6 +3132,9 @@ const DOCS={
  timeline:{t:"交易時間軸",f:"內部留言+系統事件流",l:"@提及寄通知；發布後 5 分鐘可編輯；僅員工可見；事件 append-only",i:"P0・M：events；規格 16-F2；提及 P1"},
  risk:{t:"訂單風險",f:"詐欺風險等級與指標",l:"綠=正常/紅=可疑/灰=補充；中高風險列表示警；可配自動 hold",i:"P0 欄位、P2 模型（規格 15-F4）"},
  anafilters:{t:"分析篩選列",f:"日期範圍/幣別切換",l:"按店時區切日；比較期=等長前期",i:"P0・rollup 查詢（規格 19-F1/F2；MySQL 先灌時區表）"},
+ "ana-currency":{t:"報表顯示幣別切換",f:"切換報表金額的顯示 locale（HKD／TWD／JPY／MYR／USD）",
+  l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。此切換器存在的理由就是讓「格式真的由表驅動」可被肉眼驗證——HKD exponent 2 顯示兩位小數、TWD／JPY exponent 0 不顯示小數。⚠️ <b>原型只換格式不換匯率</b>：金額本身不做 presentment 換算，正式版的換算走 29 §3 的匯率快照，不在原型範圍",
+  i:"P1・MARKET_LOCALES 對應 limits.yml jurisdictions.{code}.currency_format（symbol／symbol_position／exponent／grouping 同名同義）；正式版由 [api:markets] 回傳 presentment currency"},
  anachart:{t:"銷售曲線",f:"單系列折線+面積+hover 十字",l:"dataviz 規格：2px 線/10% 面積/髮絲網格/無圖例/附數據表格",i:"P0・色板已過驗證器（#2a78d6 on #fff）"},
  funnel:{t:"轉換漏斗",f:"工作階段→加購→結帳→成交",l:"分母口徑寫進指標辭典；與 pulse 轉換率同源",i:"P1・sessions 事件（規格 19-F3）"},
  setnav:{t:"設定導航（組織層+商店層）",f:"組織（組織/使用者）在上、商店 14 分頁在下",l:"使用者管理上移組織層（2026 實測）；每分頁對應獨立 service",i:"P0 八分頁・M：settings 各域表＋shops.settings JSON（規格 19-F4 逐鍵驗證）"},
@@ -3282,6 +3412,9 @@ function enhanceTables(){
       });
     });
   });
+  /* 宣告式金額也在這裡補畫：靜態 markup 與任何 innerHTML 注入的 [data-money] 都會被 MutationObserver
+     帶到這一支，不必每個 render 路徑各自記得呼叫。paintMoney 冪等，所以不會與 observer 互相打圈。 */
+  paintMoney();
   refreshScrollHints();
 }
 let enhT;
@@ -3307,7 +3440,6 @@ document.addEventListener('click',e=>{
 const H=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 /* 產生可安全嵌進 onclick="" 的 JS 單引號字串 */
 const JQ=s=>"'"+String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;')+"'";
-const NT=n=>'NT$'+Number(n).toLocaleString('en-US');
 const N=s=>`<span class="num">${s}</span>`;
 const CHEV='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>';
 const SEARCH_IC='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>';
@@ -3661,29 +3793,29 @@ function detailHead(title,badges,actions,back){
    擴建層 v2.1 — 示範資料（沿用既有 PRODUCTS/ORDERS，補齊各模組）
    ================================================================== */
 const PMETA=[
- {price:1480,cost:620,sku:'CL-HD-MT',bar:'4712345678901',w:0.62,desc:'400g 重磅棉、落肩寬版剪裁；奶茶色為本季主打。',cat:'服飾 › 上衣 › 帽T',tags:['秋冬','重磅棉','主打'],cols:['秋冬系列','重磅棉'],media:4,
+ {price:37000,cost:15500,sku:'CL-HD-MT',bar:'4712345678901',w:0.62,desc:'400g 重磅棉、落肩寬版剪裁；奶茶色為本季主打。',cat:'服飾 › 上衣 › 帽T',tags:['秋冬','重磅棉','主打'],cols:['秋冬系列','重磅棉'],media:4,
   opts:[{n:'尺寸',v:['S','M','L']},{n:'顏色',v:['奶茶','深可可']}]},
- {price:1680,cost:710,sku:'CL-SH-LB',bar:'4712345678902',w:0.44,desc:'水洗丹寧，越洗越合身。',cat:'服飾 › 上衣 › 襯衫',tags:['丹寧'],cols:['秋冬系列'],media:3,
+ {price:42000,cost:17800,sku:'CL-SH-LB',bar:'4712345678902',w:0.44,desc:'水洗丹寧，越洗越合身。',cat:'服飾 › 上衣 › 襯衫',tags:['丹寧'],cols:['秋冬系列'],media:3,
   opts:[{n:'尺寸',v:['S','M','L','XL']}]},
- {price:990,cost:330,sku:'CL-TE-WH',bar:'4712345678903',w:0.28,desc:'有機棉三件組。',cat:'服飾 › 上衣 › T恤',tags:['基本款','組合'],cols:['首頁精選'],media:2,
+ {price:21800,cost:7200,sku:'CL-TE-WH',bar:'4712345678903',w:0.28,desc:'有機棉三件組。',cat:'服飾 › 上衣 › T恤',tags:['基本款','組合'],cols:['首頁精選'],media:2,
   opts:[{n:'尺寸',v:['S','M','L']}]},
- {price:2280,cost:980,sku:'CL-KN-OT',bar:'4712345678904',w:0.7,desc:'羊毛混紡針織開衫。',cat:'服飾 › 上衣 › 針織',tags:['秋冬'],cols:['秋冬系列'],media:5,
+ {price:57000,cost:24500,sku:'CL-KN-OT',bar:'4712345678904',w:0.7,desc:'羊毛混紡針織開衫。',cat:'服飾 › 上衣 › 針織',tags:['秋冬'],cols:['秋冬系列'],media:5,
   opts:[{n:'尺寸',v:['F']},{n:'顏色',v:['燕麥','炭黑','磚紅','霧藍']}]},
- {price:1980,cost:840,sku:'CL-PT-GY',bar:'4712345678905',w:0.86,desc:'多口袋工裝長褲。',cat:'服飾 › 下身 › 長褲',tags:['工裝'],cols:[],media:3,
+ {price:49500,cost:21000,sku:'CL-PT-GY',bar:'4712345678905',w:0.86,desc:'多口袋工裝長褲。',cat:'服飾 › 下身 › 長褲',tags:['工裝'],cols:[],media:3,
   opts:[{n:'尺寸',v:['28','30','32','34','36']}]},
- {price:680,cost:210,sku:'CL-AC-TO',bar:'4712345678906',w:0.32,desc:'12 oz 厚帆布托特包。',cat:'配件 › 包款',tags:['配件'],cols:['首頁精選'],media:2,opts:[]},
- {price:1880,cost:790,sku:'CL-LN-BG',bar:'4712345678907',w:0.36,desc:'2026 秋季亞麻襯衫（打樣中）。',cat:'服飾 › 上衣 › 襯衫',tags:['打樣'],cols:[],media:1,
+ {price:17000,cost:5200,sku:'CL-AC-TO',bar:'4712345678906',w:0.32,desc:'12 oz 厚帆布托特包。',cat:'配件 › 包款',tags:['配件'],cols:['首頁精選'],media:2,opts:[]},
+ {price:47000,cost:19800,sku:'CL-LN-BG',bar:'4712345678907',w:0.36,desc:'2026 秋季亞麻襯衫（打樣中）。',cat:'服飾 › 上衣 › 襯衫',tags:['打樣'],cols:[],media:1,
   opts:[{n:'尺寸',v:['M','L']}]}];
 PRODUCTS.forEach((p,i)=>Object.assign(p,PMETA[i],{i}));
 
 const CUSTOMERS=[
- {id:'c1',n:'林芷妍',mail:'zhiyan.lin@example.com',ph:'+886 912 345 678',loc:'台北・台灣',ord:3,spent:8120,sub:'已訂閱',sms:'已訂閱',tags:['VIP','送禮'],rfm:'CHAMPIONS',tier:'HIGH',since:'2025-11-02',note:'偏好無包裝配送；生日 3/14。',tax:'課稅',lang:'繁體中文',credit:200},
- {id:'c2',n:'許哲瑋',mail:'zhewei.hsu@example.com',ph:'+886 933 221 100',loc:'新竹・台灣',ord:4,spent:7440,sub:'已訂閱',sms:'未訂閱',tags:['熟客'],rfm:'LOYAL',tier:'HIGH',since:'2025-08-19',note:'',tax:'課稅',lang:'繁體中文',credit:0},
- {id:'c3',n:'WONG BENNY',mail:'benny.wong@example.hk',ph:'+852 9123 4567',loc:'九龍・香港',ord:2,spent:1730,sub:'未訂閱',sms:'未訂閱',tags:[],rfm:'ACTIVE',tier:'MEDIUM',since:'2026-02-08',note:'',tax:'課稅',lang:'繁體中文',credit:0},
- {id:'c4',n:'Tan Junyi',mail:'junyi.tan@example.my',ph:'+60 12-345 6789',loc:'Penang・馬來西亞',ord:1,spent:4480,sub:'未訂閱',sms:'未訂閱',tags:['agent'],rfm:'NEW',tier:'MEDIUM',since:'2026-08-10',note:'AI 代理下單',tax:'免稅（出口）',lang:'English',credit:0},
- {id:'c5',n:'陳柏睿',mail:'borui.chen@example.com',ph:'+886 921 000 111',loc:'台中・台灣',ord:1,spent:1600,sub:'已訂閱',sms:'未訂閱',tags:[],rfm:'PROMISING',tier:'LOW',since:'2026-07-30',note:'',tax:'課稅',lang:'繁體中文',credit:0},
+ {id:'c1',n:'林芷妍',mail:'zhiyan.lin@example.com',ph:'+886 912 345 678',loc:'台北・台灣',ord:3,spent:203000,sub:'已訂閱',sms:'已訂閱',tags:['VIP','送禮'],rfm:'CHAMPIONS',tier:'HIGH',since:'2025-11-02',note:'偏好無包裝配送；生日 3/14。',tax:'課稅',lang:'繁體中文',credit:5000},
+ {id:'c2',n:'許哲瑋',mail:'zhewei.hsu@example.com',ph:'+886 933 221 100',loc:'新竹・台灣',ord:4,spent:186000,sub:'已訂閱',sms:'未訂閱',tags:['熟客'],rfm:'LOYAL',tier:'HIGH',since:'2025-08-19',note:'',tax:'課稅',lang:'繁體中文',credit:0},
+ {id:'c3',n:'WONG BENNY',mail:'benny.wong@example.hk',ph:'+852 9123 4567',loc:'九龍・香港',ord:2,spent:43600,sub:'未訂閱',sms:'未訂閱',tags:[],rfm:'ACTIVE',tier:'MEDIUM',since:'2026-02-08',note:'',tax:'課稅',lang:'繁體中文',credit:0},
+ {id:'c4',n:'Tan Junyi',mail:'junyi.tan@example.my',ph:'+60 12-345 6789',loc:'Penang・馬來西亞',ord:1,spent:112000,sub:'未訂閱',sms:'未訂閱',tags:['agent'],rfm:'NEW',tier:'MEDIUM',since:'2026-08-10',note:'AI 代理下單',tax:'免稅（出口）',lang:'English',credit:0},
+ {id:'c5',n:'陳柏睿',mail:'borui.chen@example.com',ph:'+886 921 000 111',loc:'台中・台灣',ord:1,spent:40000,sub:'已訂閱',sms:'未訂閱',tags:[],rfm:'PROMISING',tier:'LOW',since:'2026-07-30',note:'',tax:'課稅',lang:'繁體中文',credit:0},
  {id:'c6',n:'黃郁婷',mail:'yuting.huang@example.com',ph:'—',loc:'台南・台灣',ord:1,spent:0,sub:'已取消訂閱',sms:'未訂閱',tags:['退貨'],rfm:'AT_RISK',tier:'LOW',since:'2026-05-21',note:'首單全額退款',tax:'課稅',lang:'繁體中文',credit:0},
- {id:'c7',n:'公司採購（大宗）',mail:'buyer@bulkco.example',ph:'+886 2 2700 0000',loc:'台北・台灣',ord:2,spent:59200,sub:'未訂閱',sms:'未訂閱',tags:['B2B'],rfm:'LOYAL',tier:'HIGH',since:'2026-03-04',note:'Net 30；統編 12345678',tax:'免稅（VAT 已驗證）',lang:'繁體中文',credit:0}];
+ {id:'c7',n:'公司採購（大宗）',mail:'buyer@bulkco.example',ph:'+886 2 2700 0000',loc:'台北・台灣',ord:2,spent:1480000,sub:'未訂閱',sms:'未訂閱',tags:['B2B'],rfm:'LOYAL',tier:'HIGH',since:'2026-03-04',note:'Net 30；稅籍編號 12345678（格式依市場 pack 的 tax_id_format）',tax:'免稅（VAT 已驗證）',lang:'繁體中文',credit:0}];
 
 const COLLECTIONS=[
  {id:'k1',t:'秋冬系列',type:'智慧型',n:12,ch:'線上商店',sort:'手動排序',rules:[['tag','等於','秋冬']],any:false,desc:'2026 秋冬主打選品。'},
@@ -3692,22 +3824,22 @@ const COLLECTIONS=[
  {id:'k4',t:'出清',type:'智慧型',n:0,ch:'線上商店',sort:'price-asc',rules:[['inventory','小於','5']],any:false,desc:''}];
 
 const DRAFTS=[
- {id:'D12',d:'今天 10:20',c:'林芷妍',st:'開啟',amt:4440,items:3},
- {id:'D11',d:'昨天 16:02',c:'公司採購（大宗）',st:'已寄發票',amt:29600,items:20},
- {id:'D10',d:'8月6日',c:'陳柏睿',st:'已完成',amt:1600,items:1},
- {id:'D09',d:'8月2日',c:'（未指定顧客）',st:'開啟',amt:990,items:1}];
+ {id:'D12',d:'今天 10:20',c:'林芷妍',st:'開啟',amt:111000,items:3},
+ {id:'D11',d:'昨天 16:02',c:'公司採購（大宗）',st:'已寄發票',amt:740000,items:20},
+ {id:'D10',d:'8月6日',c:'陳柏睿',st:'已完成',amt:40000,items:1},
+ {id:'D09',d:'8月2日',c:'（未指定顧客）',st:'開啟',amt:24800,items:1}];
 
 const ABANDONED=[
- {id:'C118',d:'今天 09:44',c:'yi***@gmail.com',amt:3160,mail:'已排程',rec:'未恢復',items:2,ph:false},
- {id:'C117',d:'昨天 22:10',c:'ch***@outlook.com',amt:1480,mail:'已寄出',rec:'已恢復下單',items:1,ph:false},
- {id:'C115',d:'昨天 14:03',c:'（只留電話）',amt:990,mail:'不適用',rec:'未恢復',items:1,ph:true},
- {id:'C114',d:'8月8日',c:'ju***@example.my',amt:5240,mail:'已寄出',rec:'未恢復',items:4,ph:false},
- {id:'C112',d:'8月7日',c:'be***@example.hk',amt:2180,mail:'已寄出',rec:'未恢復',items:2,ph:false}];
+ {id:'C118',d:'今天 09:44',c:'yi***@gmail.com',amt:79000,mail:'已排程',rec:'未恢復',items:2,ph:false},
+ {id:'C117',d:'昨天 22:10',c:'ch***@outlook.com',amt:37000,mail:'已寄出',rec:'已恢復下單',items:1,ph:false},
+ {id:'C115',d:'昨天 14:03',c:'（只留電話）',amt:24800,mail:'不適用',rec:'未恢復',items:1,ph:true},
+ {id:'C114',d:'8月8日',c:'ju***@example.my',amt:131000,mail:'已寄出',rec:'未恢復',items:4,ph:false},
+ {id:'C112',d:'8月7日',c:'be***@example.hk',amt:54500,mail:'已寄出',rec:'未恢復',items:2,ph:false}];
 
 const BATCHES=[
- {id:'B-2041',d:'今天 08:00',n:18,st:'撿貨中',step:0,cost:2160},
- {id:'B-2040',d:'昨天 08:00',n:24,st:'已列印',step:1,cost:2880},
- {id:'B-2039',d:'8月8日',n:31,st:'已完成',step:2,cost:3720}];
+ {id:'B-2041',d:'今天 08:00',n:18,st:'撿貨中',step:0,cost:54000},
+ {id:'B-2040',d:'昨天 08:00',n:24,st:'已列印',step:1,cost:72000},
+ {id:'B-2039',d:'8月8日',n:31,st:'已完成',step:2,cost:93000}];
 
 const TRANSFERS=[
  {id:'T-118',from:'主倉（內湖）',to:'台北門市',st:'進行中',n:24,eta:'8月13日'},
@@ -3715,10 +3847,10 @@ const TRANSFERS=[
  {id:'T-116',from:'主倉（內湖）',to:'台中寄倉',st:'已轉移',n:16,eta:'8月6日'}];
 
 const GIFTCARDS=[
- {id:'g1',last4:'8F2K',c:'林芷妍',bal:1200,init:2000,st:'啟用中',d:'2026-06-01',exp:'—'},
- {id:'g2',last4:'2QJ9',c:'（未指定）',bal:1000,init:1000,st:'啟用中',d:'2026-07-14',exp:'2027-07-14'},
- {id:'g3',last4:'77AB',c:'陳柏睿',bal:0,init:500,st:'已用罄',d:'2026-03-02',exp:'—'},
- {id:'g4',last4:'M31X',c:'測試',bal:500,init:500,st:'已停用',d:'2026-01-09',exp:'—'}];
+ {id:'g1',last4:'8F2K',c:'林芷妍',bal:30000,init:50000,st:'啟用中',d:'2026-06-01',exp:'—'},
+ {id:'g2',last4:'2QJ9',c:'（未指定）',bal:25000,init:25000,st:'啟用中',d:'2026-07-14',exp:'2027-07-14'},
+ {id:'g3',last4:'77AB',c:'陳柏睿',bal:0,init:12500,st:'已用罄',d:'2026-03-02',exp:'—'},
+ {id:'g4',last4:'M31X',c:'測試',bal:12500,init:12500,st:'已停用',d:'2026-01-09',exp:'—'}];
 
 const SEGMENTS=[
  {id:'s1',t:'VIP 熟客',q:"amount_spent > 5000 AND number_of_orders > 2",n:18,use:'折扣 VIP10',d:'2026-05-02'},
@@ -3734,10 +3866,10 @@ const DISCOUNTS=[
  {id:'d5',t:'VIP10',type:'扣減訂單金額',method:'折扣碼',st:'已過期',used:76,cap:'500 次',dates:'2026-03-01 – 2026-05-31',comb:'—'}];
 
 const CAMPAIGNS=[
- {id:'m1',t:'秋冬新品上市',st:'進行中',ch:'Shopify Email・IG',ses:2140,ord:64,sales:96200,d:'8月1日 –'},
+ {id:'m1',t:'秋冬新品上市',st:'進行中',ch:'Shopify Email・IG',ses:2140,ord:64,sales:2405000,d:'8月1日 –'},
  {id:'m2',t:'週年慶預熱',st:'已排程',ch:'Shopify Email',ses:0,ord:0,sales:0,d:'9月1日 –'},
- {id:'m3',t:'棄單挽回（自動）',st:'進行中',ch:'自動化',ses:410,ord:22,sales:31800,d:'長期'},
- {id:'m4',t:'夏季出清',st:'已結束',ch:'IG・LINE',ses:3120,ord:88,sales:112400,d:'6月1日 – 7月31日'}];
+ {id:'m3',t:'棄單挽回（自動）',st:'進行中',ch:'自動化',ses:410,ord:22,sales:795000,d:'長期'},
+ {id:'m4',t:'夏季出清',st:'已結束',ch:'IG・LINE',ses:3120,ord:88,sales:2810000,d:'6月1日 – 7月31日'}];
 
 const FILES=[
  {n:'hero-autumn.jpg',t:'影像',sz:'1.2 MB',use:'首頁 banner',ref:3,d:'8月1日',g:'linear-gradient(150deg,#e9d5c3,#c8a184)'},
@@ -3806,44 +3938,44 @@ const THEMES=[
      「香港母市場下掛台灣子市場卻套用香港稅制」。UI 標「不可繼承」且無覆寫／還原動作。
    ================================================================== */
 /* lineage 都沒有定義時的最後回退（46b:634「or the store defaults」）*/
-const MKT_STORE_DEFAULT={currency:'TWD（NT$）',priceAdj:'0%',domain:'chilllove.demo',
-  duty:'DDU（顧客承擔）',taxIncl:'價格未含稅（結帳另加）',shipping:'一般設定檔（Standard／Express）',
-  returnRule:'預設規則（30 天）',langs:['繁體中文'],catalogs:['台灣（預設）']};
+const MKT_STORE_DEFAULT={currency:curLabel(MARKET_BASE),priceAdj:'0%',domain:'chilllove.demo',
+  duty:'DDU（顧客承擔）',taxIncl:'價格未含稅（HK 無銷售稅，結帳不另加）',shipping:'一般設定檔（本地／國際）',
+  returnRule:'預設規則（30 天）',langs:['繁體中文'],catalogs:['香港（預設）']};
 /* cust 的每個鍵：null ＝ 未定義 ⇒ 繼承；有值 ＝ 此市場自己定義（已覆寫）。
    示範資料刻意做出三層鏈：hk-b2b ← hk ← intl ←（商店預設值），否則「繼承鏈不只一層」看不出來。 */
 const MARKETS=[
- {id:'tw',t:'台灣（預設）',st:'啟用中',type:'region',regions:['TW'],inc:'台灣',jur:'tw（未啟用 pack）',
-  perf:{s:'7,120',o:'218',rev:'NT$362,400'},
-  cust:{currency:'TWD（NT$）',priceAdj:null,domain:'chilllove.demo',duty:null,taxIncl:null,
-        shipping:null,returnRule:null,langs:['繁體中文'],catalogs:['台灣（預設）']}},
- {id:'intl',t:'International（亞太）',st:'啟用中',type:'region',regions:['HK','MY','JP','SG'],
-  inc:'香港・馬來西亞・日本・新加坡',jur:'依收貨地逐國解析',perf:{s:'1,480',o:'22',rev:'NT$45,300'},
+ {id:'hk',t:'香港（預設）',st:'啟用中',type:'region',regions:['HK'],inc:'香港',jur:'hk（基準法域）',
+  perf:{s:'7,120',o:'218',rev:8480000},
+  cust:{currency:curLabel('HKD'),priceAdj:null,domain:'chilllove.demo',duty:null,taxIncl:null,
+        shipping:null,returnRule:null,langs:['繁體中文'],catalogs:['香港（預設）']}},
+ {id:'intl',t:'International（亞太）',st:'啟用中',type:'region',regions:['TW','MY','JP','SG'],
+  inc:'台灣・馬來西亞・日本・新加坡',jur:'依收貨地逐國解析',perf:{s:'1,480',o:'22',rev:1132000},
   cust:{currency:'當地幣別（自動）',priceAdj:'+8%',domain:'chilllove.demo/int',duty:'DDU（顧客承擔）',
         taxIncl:null,shipping:'國際費率表',returnRule:null,langs:['繁體中文','English'],catalogs:['亞太（+8%）']}},
- {id:'hk',t:'香港',st:'啟用中',type:'region',regions:['HK'],inc:'香港',jur:'hk（基準法域）',
-  perf:{s:'860',o:'14',rev:'HK$18,240'},
-  cust:{currency:'HKD（HK$）',priceAdj:null,domain:null,duty:null,taxIncl:null,
+ {id:'tw',t:'台灣',st:'啟用中',type:'region',regions:['TW'],inc:'台灣',jur:'tw（pack 未啟用）',
+  perf:{s:'860',o:'14',rev:456000},
+  cust:{currency:curLabel('TWD'),priceAdj:null,domain:null,duty:null,taxIncl:null,
         shipping:null,returnRule:null,langs:null,catalogs:null}},
  {id:'hk-b2b',t:'香港・B2B 批發',st:'草稿',type:'company_location',regions:['HK'],
-  inc:'公司地點：BulkCo 香港（2 個地點）',jur:'hk（基準法域）',perf:{s:'—',o:'0',rev:'HK$0'},
+  inc:'公司地點：BulkCo 香港（2 個地點）',jur:'hk（基準法域）',perf:{s:'—',o:'0',rev:0},
   cust:{currency:null,priceAdj:'−15%',domain:null,duty:null,taxIncl:null,
         shipping:null,returnRule:'B2B 規則（14 天・不收補貨費）',langs:null,catalogs:['大宗採購（B2B）']}},
  {id:'jp',t:'日本',st:'草稿',type:'region',regions:['JP'],inc:'日本',jur:'jp（未建立 pack）',
-  perf:{s:'214',o:'0',rev:'HK$0'},
-  cust:{currency:'JPY（¥）',priceAdj:'+12%',domain:null,duty:'DDP（結帳預收）',taxIncl:null,
+  perf:{s:'214',o:'0',rev:0},
+  cust:{currency:curLabel('JPY'),priceAdj:'+12%',domain:null,duty:'DDP（結帳預收）',taxIncl:null,
         shipping:null,returnRule:null,langs:['日本語'],catalogs:null}}];
 mktDerive();                        /* 由 conditions 推導 pid（函式宣告提升，定義在市場模組那一節）*/
 
 const CATALOGS=[
- {t:'台灣（預設）',aim:'商店預設值',n:7,adj:'—',st:'啟用中'},
- {t:'香港・馬來西亞',aim:'International 市場',n:6,adj:'+8%',st:'啟用中'},
+ {t:'香港（預設）',aim:'商店預設值',n:7,adj:'—',st:'啟用中'},
+ {t:'台灣・馬來西亞',aim:'International 市場',n:6,adj:'+8%',st:'啟用中'},
  {t:'AI 代理目錄',aim:'AI 代理通路',n:5,adj:'—',st:'啟用中'},
  {t:'大宗採購（B2B）',aim:'公司地點：BulkCo 台北',n:7,adj:'−15%',st:'草稿'}];
 
 const PAYOUTS=[
- {d:'2026-08-11',amt:38420,st:'在途',n:22},{d:'2026-08-08',amt:51260,st:'已入帳',n:31},
- {d:'2026-08-05',amt:29880,st:'已入帳',n:18},{d:'2026-08-01',amt:44100,st:'已入帳',n:27},
- {d:'2026-07-29',amt:12400,st:'失敗',n:8}];
+ {d:'2026-08-11',amt:960000,st:'在途',n:22},{d:'2026-08-08',amt:1282000,st:'已入帳',n:31},
+ {d:'2026-08-05',amt:747000,st:'已入帳',n:18},{d:'2026-08-01',amt:1103000,st:'已入帳',n:27},
+ {d:'2026-07-29',amt:310000,st:'失敗',n:8}];
 
 const REPORTS=[
  ['隨時間的銷售額','銷售','今天'],['依商品的銷售額','銷售','今天'],['依變體 SKU 的銷售額','銷售','8月9日'],
@@ -3865,7 +3997,7 @@ const ALERTS=[
  {t:'#1039 被標記為中風險訂單',s:'訂單・10 分鐘前',u:true},
  {t:'商品 CSV 匯入完成：更新 7 筆、失敗 0 筆',s:'背景任務・1 小時前',u:true},
  {t:'鯊魚灰工裝長褲 庫存低於安全水位（7 件）',s:'庫存・今天 09:12',u:false},
- {t:'撥款 NT$38,420 已在途',s:'財務・今天 08:00',u:false},
+ {t:'撥款 <span class="num" data-money="960000"></span> 已在途',s:'財務・今天 08:00',u:false},
  {t:'金流服務短暫中斷已恢復',s:'服務狀態・昨天',u:false}];
 
 /* ==================================================================
@@ -3879,7 +4011,7 @@ function draftsPage(){
     filters:[{k:'st',l:'狀態',opts:['開啟','已寄發票','已完成'],test:(r,v)=>r.st===v}],
     cols:[{l:'草稿',c:r=>`<b>#${r.id}</b>`,v:r=>r.id},{l:'日期',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},
       {l:'顧客',c:r=>r.c,v:r=>r.c},{l:'狀態',c:r=>chip(r.st,DST[r.st]),v:r=>r.st},
-      {l:'品項',right:true,c:r=>N(r.items),v:r=>r.items},{l:'總計',right:true,c:r=>N(NT(r.amt)),v:r=>r.amt}],
+      {l:'品項',right:true,c:r=>N(r.items),v:r=>r.items},{l:'總計',right:true,c:r=>N(money(r.amt)),v:r=>r.amt}],
     rows:DRAFTS,id:r=>r.id,onRow:r=>`openDraft('${r.id}')`,
     bulk:[['加標籤'],['刪除',null,null,'danger']],
     note:'狀態流：開啟 → 已寄發票 → 已完成（轉正式訂單）。2025-04-01 後建立的草稿閒置 1 年自動刪除（41 §2.3）。'});
@@ -3942,10 +4074,10 @@ function draftPage(){
   const lines=DRAFT.lines.length?DRAFT.lines.map((l,i)=>`
     <div class="od-line">
       <span class="thumb" style="background:${l.g}"></span>
-      <div class="li-info"><div class="li-name">${H(l.n)}</div><div class="li-var">${H(l.v)}${l.disc?` ・行折扣 −${NT(l.disc)}`:''}</div></div>
+      <div class="li-info"><div class="li-name">${H(l.n)}</div><div class="li-var">${H(l.v)}${l.disc?` ・行折扣 −${money(l.disc)}`:''}</div></div>
       <button class="m-hover icon-btn" title="編輯單價與行級折扣" aria-label="編輯單價與行級折扣" onclick="draftEditLine(${i})">${IC(IC_EDIT,14)}</button>
       <input class="cellin num" style="max-width:56px;text-align:right" value="${l.q}" aria-label="數量" onchange="draftQty(${i},this.value)">
-      <span class="num mut" style="min-width:78px;text-align:right">${NT(l.p*l.q-(l.disc||0))}</span>
+      <span class="num mut" style="min-width:78px;text-align:right">${money(l.p*l.q-(l.disc||0))}</span>
       <button class="m-hover icon-btn" title="移除品項" aria-label="移除品項" onclick="draftDel(${i})">✕</button>
     </div>`).join('')
    :`<div class="empty-wrap" style="padding:var(--sp-600)"><b>尚未加入商品</b>搜尋既有商品，或加入不在目錄中的自訂品項。</div>`;
@@ -3965,12 +4097,12 @@ function draftPage(){
       </div>
       <div class="card card-pad${empty?' is-dim':''}" id="draftPay" data-doc="draft-pay" aria-disabled="${empty}"><h3>付款</h3>
         ${empty?`<p class="help" style="margin-bottom:var(--sp-200)">尚未加入商品，付款區暫停使用——先在上方加入至少一項商品。</p>`:''}
-        <div class="pay-row"><span class="mut">小計・${DRAFT.lines.reduce((a,l)=>a+l.q,0)} 件品項</span><span class="num">${NT(t.sub)}</span></div>
-        <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftDiscount()">加入折扣</button><span class="num">${t.dsc?'−'+NT(t.dsc):'—'}</span></div>
-        <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftShipping()">加入運費</button><span class="num">${t.ship?NT(t.ship):'—'}</span></div>
-        <div class="pay-row"><span class="mut">稅額</span><span class="num">${t.tax===null?H(t.taxState.label):NT(t.tax)}</span></div>
+        <div class="pay-row"><span class="mut">小計・${DRAFT.lines.reduce((a,l)=>a+l.q,0)} 件品項</span><span class="num">${money(t.sub)}</span></div>
+        <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftDiscount()">加入折扣</button><span class="num">${t.dsc?'−'+money(t.dsc):'—'}</span></div>
+        <div class="pay-row"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="draftShipping()">加入運費</button><span class="num">${t.ship?money(t.ship):'—'}</span></div>
+        <div class="pay-row"><span class="mut">稅額</span><span class="num">${t.tax===null?H(t.taxState.label):money(t.tax)}</span></div>
         <p class="help" data-doc="draft-tax">${t.taxState.why}</p>
-        <div class="pay-row total"><span>總計</span><span class="num">${NT(t.total)}</span></div>
+        <div class="pay-row total"><span>總計</span><span class="num">${money(t.total)}</span></div>
         ${t.tax===null?`<p class="help">總計尚未含稅（稅額${H(t.taxState.label)}）。</p>`:''}
         <div class="card-sec">${SWROW('dtax',DRAFT.tax,'向此訂單收取稅額','取消勾選後整單不計稅（41 §2.3）')}
           ${F('付款條件',SEL('dterms',['Due on receipt','Due on fulfillment','Net 7','Net 15','Net 30','Net 45','Net 60','Net 90','固定日期'],DRAFT.terms),'Plus 方案可再加 % 訂金 deposit')}</div>
@@ -3995,35 +4127,35 @@ function draftPage(){
 }
 function draftRefresh(){renderDetail('d-draft');}   /* renderDetail → afterRoute('d-draft') → draftPaySync() */
 function draftAdd(){
-  pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${NT(p.price)}・${p.v} 個變體・庫存 ${p.inv}`,g:p.g,p})),
+  pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${money(p.price)}・${p.v} 個變體・庫存 ${p.inv}`,g:p.g,p})),
     sel=>{sel.forEach(x=>DRAFT.lines.push({n:x.p.n,v:x.p.opts.length?x.p.opts.map(o=>o.v[0]).join(' / '):'單一規格',p:x.p.price,q:1,g:x.p.g,disc:0}));
       draftRefresh();toast(`已加入 ${sel.length} 項商品`);},true);
 }
 function draftCustom(){
   openGen({title:'加入自訂品項',body:`<div class="stack">${F('名稱','<input class="input" id="ciN" data-val="req|max:255" placeholder="例：手工包裝費">')}
-    <div class="grid2">${F('單價（NT$）','<input class="input num" id="ciP" data-val="req|money" placeholder="0">')}${F('數量','<input class="input num" id="ciQ" value="1" data-val="req|int">')}</div>
+    <div class="grid2">${F(`單價（${CURSYM()}）`,'<input class="input num" id="ciP" data-val="req|money" placeholder="0">')}${F('數量','<input class="input num" id="ciQ" value="1" data-val="req|int">')}</div>
     ${CHK('ciShip',true,'這是實體商品（需要運送）')}</div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="draftCustomOK()">加入品項</button>`});
 }
 function draftCustomOK(){
   const n=document.getElementById('ciN'),p=document.getElementById('ciP'),q=document.getElementById('ciQ');
   if(!validOne(n)|!validOne(p)|!validOne(q)){toast('請修正紅色欄位');return;}
-  DRAFT.lines.push({n:n.value.trim(),v:'自訂品項（不入目錄）',p:+p.value,q:+q.value,g:'linear-gradient(150deg,#e8e8ea,#c9cace)',disc:0});
+  DRAFT.lines.push({n:n.value.trim(),v:'自訂品項（不入目錄）',p:toCents(p.value),q:+q.value,g:'linear-gradient(150deg,#e8e8ea,#c9cace)',disc:0});
   closeGen();draftRefresh();toast('已加入自訂品項');
 }
 function draftQty(i,v){DRAFT.lines[i].q=Math.max(1,parseInt(v)||1);draftRefresh();}
 function draftDel(i){DRAFT.lines.splice(i,1);draftRefresh();toast('已移除品項');}
 function draftEditLine(i){
   const l=DRAFT.lines[i];
-  openGen({title:'編輯品項',body:`<div class="stack">${F('單價（NT$）',`<input class="input num" id="elP" value="${l.p}" data-val="req|money">`,'覆寫目錄價，僅影響此草稿')}
-    ${F('行級折扣金額（NT$）',`<input class="input num" id="elD" value="${l.disc||0}" data-val="money">`)}
+  openGen({title:'編輯品項',body:`<div class="stack">${F(`單價（${CURSYM()}）`,`<input class="input num" id="elP" value="${fromCents(l.p)}" data-val="req|money">`,'覆寫目錄價，僅影響此草稿')}
+    ${F(`行級折扣金額（${CURSYM()}）`,`<input class="input num" id="elD" value="${fromCents(l.disc||0)}" data-val="money">`)}
     ${F('折扣原因',`<input class="input" id="elR" placeholder="例：樣品瑕疵折讓">`,'原因會寫入訂單時間軸')}</div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="draftLineOK(${i})">套用</button>`});
 }
 function draftLineOK(i){
   const p=document.getElementById('elP'),d=document.getElementById('elD');
   if(!validOne(p)|!validOne(d)){toast('請修正紅色欄位');return;}
-  DRAFT.lines[i].p=+p.value;DRAFT.lines[i].disc=+d.value||0;closeGen();draftRefresh();toast('已套用行級調整');
+  DRAFT.lines[i].p=toCents(p.value);DRAFT.lines[i].disc=toCents(d.value);closeGen();draftRefresh();toast('已套用行級調整');
 }
 function draftDiscount(){
   if(!DRAFT.lines.length)return toast('請先加入至少一項商品');   /* 空車時按鈕已 disabled，這是第二層防線 */
@@ -4036,20 +4168,20 @@ function draftDiscount(){
 function draftDiscOK(){
   const k=document.querySelector('#genBody [data-f="_dk"]').value,v=document.getElementById('ddV');
   if(!validOne(v))return;
-  DRAFT.disc=k==='%'?{kind:'%',v:+v.value||0}:{kind:'amt',v:+v.value||0};
+  DRAFT.disc=k==='%'?{kind:'%',v:+v.value||0}:{kind:'amt',v:toCents(v.value)};   /* % 是百分比不是金額；amt 才轉 cents */
   closeGen();draftRefresh();toast('已套用訂單層折扣');
 }
 function draftShipping(){
   if(!DRAFT.lines.length)return toast('請先加入至少一項商品');   /* 同上：與 disabled 態一致 */
   openGen({title:'加入運費',body:`<div class="stack">
     ${F('運費來源',SEL('_sk',['店內費率（需先選顧客與地址）','Local delivery','Local pickup','自訂運費'],'自訂運費'))}
-    <div class="grid2">${F('名稱','<input class="input" id="dsN" value="宅配到府" data-val="req">')}${F('價格（NT$）','<input class="input num" id="dsP" value="120" data-val="req|money">')}</div></div>`,
+    <div class="grid2">${F('名稱','<input class="input" id="dsN" value="宅配到府" data-val="req">')}${F(`價格（${CURSYM()}）`,`<input class="input num" id="dsP" value="${fromCents(3000)}" data-val="req|money">`)}</div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="draftShipOK()">套用</button>`});
 }
 function draftShipOK(){
   const n=document.getElementById('dsN'),p=document.getElementById('dsP');
   if(!validOne(n)|!validOne(p))return;
-  DRAFT.ship={n:n.value,p:+p.value};closeGen();draftRefresh();toast('已加入運費');
+  DRAFT.ship={n:n.value,p:toCents(p.value)};closeGen();draftRefresh();toast('已加入運費');
 }
 function draftPickCustomer(){
   pickerModal('選擇顧客',CUSTOMERS.map(c=>({t:c.n,s:`${c.mail}・${c.ord} 筆訂單・${c.loc}`,c})),
@@ -4088,7 +4220,7 @@ function draftCollect(){
 }
 function draftComplete(){
   const t=draftTotals();
-  toast(`草稿已轉為正式訂單（總計 ${NT(t.total)}）——庫存已扣、確認信已寄出`);
+  toast(`草稿已轉為正式訂單（總計 ${money(t.total)}）——庫存已扣、確認信已寄出`);
   go('orders');
 }
 /* ---- 棄單 ---- */
@@ -4100,7 +4232,7 @@ function abandonedPage(){
              {k:'rec',l:'恢復狀態',opts:['未恢復','已恢復下單'],test:(r,v)=>r.rec===v}],
     cols:[{l:'結帳',c:r=>`<b>#${r.id}</b>`,v:r=>r.id},{l:'日期',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},
       {l:'顧客',c:r=>r.c,v:r=>r.c},{l:'品項',right:true,c:r=>N(r.items),v:r=>r.items},
-      {l:'金額',right:true,c:r=>N(NT(r.amt)),v:r=>r.amt},
+      {l:'金額',right:true,c:r=>N(money(r.amt)),v:r=>r.amt},
       {l:'挽回信',c:r=>chip(r.mail,r.mail==='已寄出'?'default':r.mail==='已排程'?'info':'default'),v:r=>r.mail},
       {l:'恢復狀態',c:r=>chip(r.rec,r.rec==='未恢復'?'caution':'success'),v:r=>r.rec}],
     rows:ABANDONED,id:r=>r.id,onRow:r=>`abandonDetail('${r.id}')`,
@@ -4111,7 +4243,7 @@ function abandonDetail(id){
   const a=ABANDONED.find(x=>x.id===id);
   openGen({title:`未完成結帳 #${a.id}`,body:`<div class="stack">
     <div class="kv"><span class="k">顧客</span><span>${H(a.c)}</span></div>
-    <div class="kv"><span class="k">金額</span><span class="num">${NT(a.amt)}・${a.items} 件</span></div>
+    <div class="kv"><span class="k">金額</span><span class="num">${money(a.amt)}・${a.items} 件</span></div>
     <div class="kv"><span class="k">挽回信</span><span>${a.mail}</span></div>
     <div class="kv"><span class="k">恢復狀態</span><span>${a.rec}</span></div>
     <p class="help">手動挽回＝點顧客 email 開本機郵件客戶端並帶入結帳連結（不是站內寄信）；站內自動信走行銷自動化（41 §2.4）。</p></div>`,
@@ -4140,7 +4272,7 @@ function shipLabelsPage(){
     ${listPage({key:'slab',title:'',noHead:true,doc:'doc-m-shiplabels',ph:'搜尋批次…',
       cols:[{l:'批次',c:r=>`<b>#${r.id}</b>`,v:r=>r.id},{l:'建立',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},
         {l:'出貨數',right:true,c:r=>N(r.n),v:r=>r.n},{l:'狀態',c:r=>chip(r.st,r.st==='已完成'?'success':'info'),v:r=>r.st},
-        {l:'標籤費用',right:true,c:r=>N(NT(r.cost)),v:r=>r.cost}],
+        {l:'標籤費用',right:true,c:r=>N(money(r.cost)),v:r=>r.cost}],
       rows:BATCHES,id:r=>r.id,onRow:r=>`slBatch('${r.id}')`,
       note:'購買標籤自動標記出貨＋回填追蹤碼；費用進財務帳單（41 §2.5）。'})}`;
 }
@@ -4151,7 +4283,7 @@ function slBatch(id){
     <div class="rowflex"><button class="btn btn-sec btn-sm" onclick="toast('已產生撿貨單 PDF')">列印撿貨單</button>
       <button class="btn btn-sec btn-sm" onclick="toast('已產生裝箱單 PDF')">列印裝箱單</button>
       <button class="btn btn-sec btn-sm" onclick="toast('已重印 ${b.n} 張標籤')">重印標籤</button></div>
-    <p class="help">此批 ${b.n} 個 fulfillment，標籤費用 ${NT(b.cost)} 已記入平台帳單。每批上限 250 個 fulfillment。</p></div>`});
+    <p class="help">此批 ${b.n} 個 fulfillment，標籤費用 ${money(b.cost)} 已記入平台帳單。每批上限 250 個 fulfillment。</p></div>`});
 }
 function slBuy(){
   openGen({title:'批次購買運送標籤',wide:true,pad:false,body:`
@@ -4161,8 +4293,8 @@ function slBuy(){
       <td><select class="input" style="height:28px;font-size:var(--t-xs)"><option>標準紙箱 S</option><option>標準紙箱 M</option><option>自訂</option></select></td>
       <td><input class="cellin num" value="1.2" aria-label="重量 kg" style="max-width:64px"> kg</td>
       <td><select class="input" style="height:28px;font-size:var(--t-xs)"><option>黑貓宅急便</option><option>7-11 交貨便</option><option>國際快遞</option></select></td>
-      <td class="right num">${NT(o.ch==='AI 代理'?420:120)}</td></tr>`).join('')}</tbody></table>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已購買 4 張標籤（NT$780）——訂單自動標記出貨並回填追蹤碼')">購買 4 張標籤</button>`});
+      <td class="right num">${money(o.ch==='AI 代理'?10500:3000)}</td></tr>`).join('')}</tbody></table>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已購買 4 張標籤（${money(19500)}）——訂單自動標記出貨並回填追蹤碼')">購買 4 張標籤</button>`});
 }
 
 /* ==================================================================
@@ -4226,7 +4358,7 @@ function productPage(){
           ${F('原價（劃線價）',`<input class="input num" data-f="pcompare" value="" data-val="money" placeholder="選填">`)}
           ${F('每件成本',`<input class="input num" data-f="pcost" value="${p.cost}" data-val="money" oninput="pdMargin()">`,'不對顧客顯示')}
         </div>
-        <div class="rowflex card-sec"><span class="help">利潤 <b class="num" id="pdProfit">${NT(p.price-p.cost)}</b></span>
+        <div class="rowflex card-sec"><span class="help">利潤 <b class="num" id="pdProfit">${money(p.price-p.cost)}</b></span>
           <span class="help">毛利率 <b class="num" id="pdMarginV">${(((p.price-p.cost)/p.price)*100).toFixed(1)}%</b></span>
           <span class="mut3" style="font-size:11px">（price − cost）/ price × 100</span></div>
         <div class="card-sec">${CHK('ptax',true,'向此商品收取稅額')}
@@ -4283,7 +4415,7 @@ function productPage(){
       <div class="card card-pad" data-doc="pd-insights"><h3>銷售紀錄</h3>
         <div class="kv"><span class="k">近 30 天售出</span><span class="num">${p.i===0?65:12} 件</span></div>
         <div class="kv"><span class="k">顧客數</span><span class="num">${p.i===0?48:9}</span></div>
-        <div class="kv"><span class="k">淨銷售額</span><span class="num">${NT(p.i===0?96200:14800)}</span></div>
+        <div class="kv"><span class="k">淨銷售額</span><span class="num">${money(p.i===0?2405000:370000)}</span></div>
         <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="go('m-reports')">查看完整報告 ›</button>
       </div>
       <div class="card card-pad"><h3>危險區</h3>
@@ -4295,7 +4427,7 @@ function productPage(){
 function pdMargin(){
   const f=document.querySelector('[data-f="pprice"]'),c=document.querySelector('[data-f="pcost"]');
   const price=+f.value||0,cost=+c.value||0;
-  document.getElementById('pdProfit').textContent=NT(Math.max(0,price-cost));
+  document.getElementById('pdProfit').textContent=money(Math.max(0,price-cost));
   document.getElementById('pdMarginV').textContent=price?(((price-cost)/price)*100).toFixed(1)+'%':'—';
 }
 function pdMore(){
@@ -4329,7 +4461,7 @@ function variantCard(){
   const groups=PV.group?[...new Set(PV.vars.map(v=>v.c[PV.opts.findIndex(o=>o.n===PV.group)]))]:[null];
   const body=PV.vars.length?groups.map(g=>{
     const rows=PV.vars.filter(v=>!g||v.c[PV.opts.findIndex(o=>o.n===PV.group)]===g);
-    const head=g?`<tr class="norow"><td colspan="6" style="background:var(--surface-3)"><b>${H(g)}</b> <span class="mut3 num">・${rows.length} 個變體・庫存 ${rows.reduce((a,v)=>a+v.qty,0)}・${NT(Math.min(...rows.map(v=>v.price)))}–${NT(Math.max(...rows.map(v=>v.price)))}</span></td></tr>`:'';
+    const head=g?`<tr class="norow"><td colspan="6" style="background:var(--surface-3)"><b>${H(g)}</b> <span class="mut3 num">・${rows.length} 個變體・庫存 ${rows.reduce((a,v)=>a+v.qty,0)}・${money(Math.min(...rows.map(v=>v.price)))}–${money(Math.max(...rows.map(v=>v.price)))}</span></td></tr>`:'';
     return head+rows.map(v=>{const idx=PV.vars.indexOf(v);return `<tr>
       <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" ${PV.sel.has(idx)?'checked':''} onchange="pvSel(${idx},this.checked)" aria-label="選取 ${H(v.k)}"></td>
       <td><div style="display:flex;align-items:center;gap:var(--sp-200)"><span class="thumb" style="width:28px;height:28px;background:${PRODUCTS[PV.i].g}"></span><b>${H(v.k)}</b></div></td>
@@ -4385,7 +4517,7 @@ function pvGroup(v){PV.group=v;pvRefresh();}
 function pvBulkEdit(k){
   openGen({title:k==='price'?'批次改價':'批次改庫存',
    body:`<div class="stack"><p class="help">將套用到已選取的 <b class="num">${PV.sel.size}</b> 個變體。</p>
-     ${F(k==='price'?'新價格（NT$）':'新可用庫存',`<input class="input num" id="pvB" data-val="req|${k==='price'?'money':'int'}">`)}</div>`,
+     ${F(k==='price'?`新價格（${CURSYM()}）`:'新可用庫存',`<input class="input num" id="pvB" data-val="req|${k==='price'?'money':'int'}">`)}</div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="pvBulkOK('${k}')">套用</button>`});
 }
 function pvBulkOK(k){
@@ -4481,7 +4613,7 @@ function collectionPage(){
       <div class="card" data-doc="col-products"><div class="card-pad" style="padding-bottom:var(--sp-200)"><h3>符合的商品<span class="h-act num mut3" style="font-size:var(--t-xs)">${matched.length} 件</span></h3></div>
         ${matched.length?`<table class="idx"><thead><tr><th>商品</th><th>狀態</th><th class="right">庫存</th><th class="right">價格</th></tr></thead><tbody>
           ${matched.map(p=>`<tr onclick="openProduct(${p.i})"><td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>${H(p.n)}</div></td>
-            <td>${S_BADGE[p.s]}</td><td class="right num">${p.inv}</td><td class="right num">${NT(p.price)}</td></tr>`).join('')}</tbody></table>`
+            <td>${S_BADGE[p.s]}</td><td class="right num">${p.inv}</td><td class="right num">${money(p.price)}</td></tr>`).join('')}</tbody></table>`
           :`<div class="empty-wrap"><b>目前沒有商品符合條件</b>放寬條件或改用「任一條件」再試一次。</div>`}
       </div>
       <div class="card card-pad" data-doc="col-seo"><h3>搜尋引擎列表</h3>
@@ -4503,7 +4635,7 @@ function colRule(i,j,v){COL.rules[i][j]=v;renderDetail('d-collection');}
 function colAddRule(){COL.rules.push(['title','包含','']);renderDetail('d-collection');}
 function colDelRule(i){COL.rules.splice(i,1);if(!COL.rules.length)COL.rules.push(['title','包含','']);renderDetail('d-collection');}
 function colAddProducts(){
-  pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${NT(p.price)}・庫存 ${p.inv}`,g:p.g,p})),
+  pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${money(p.price)}・庫存 ${p.inv}`,g:p.g,p})),
     sel=>{sel.forEach(x=>{if(!x.p.cols.includes(COL.t))x.p.cols.push(COL.t);});renderDetail('d-collection');toast(`已加入 ${sel.length} 件商品`);},true);
 }
 
@@ -4618,16 +4750,16 @@ function giftPage(){
     views:[['全部',()=>true],['啟用中',r=>r.st==='啟用中'],['已用罄',r=>r.st==='已用罄'],['已停用',r=>r.st==='已停用']],
     filters:[{k:'st',l:'狀態',opts:['啟用中','已停用','已用罄'],test:(r,v)=>r.st===v}],
     cols:[{l:'卡號末四碼',c:r=>`<b class="mono">•••• ${r.last4}</b>`,v:r=>r.last4},{l:'顧客',c:r=>r.c,v:r=>r.c},
-      {l:'餘額',right:true,c:r=>N(NT(r.bal)),v:r=>r.bal},{l:'面額',right:true,c:r=>N(NT(r.init)),v:r=>r.init},
+      {l:'餘額',right:true,c:r=>N(money(r.bal)),v:r=>r.bal},{l:'面額',right:true,c:r=>N(money(r.init)),v:r=>r.init},
       {l:'狀態',c:r=>chip(r.st,r.st==='啟用中'?'success':r.st==='已停用'?'critical':'default'),v:r=>r.st},
       {l:'建立日',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},{l:'到期日',c:r=>r.exp,v:r=>r.exp}],
     rows:GIFTCARDS,id:r=>r.id,onRow:r=>`giftOpen('${r.id}')`,
     bulk:[['停用',null,null,'danger']],
-    note:'面額 ≤NT$2,000；停用為永久動作；完整卡號僅顧客可見（後台只留末四碼與 digest）。'});
+    note:`面額 ≤<span class="num">${money(LIMITS.giftCardMaxCents)}</span>（limits.yml gift_card.max_initial_value_cents）；停用為永久動作；完整卡號僅顧客可見（後台只留末四碼與 digest）。`});
 }
 function giftIssue(){
   openGen({title:'發行禮品卡',body:`<div class="stack">
-    ${F('面額（NT$）','<input class="input num" id="gcV" data-val="req|money" placeholder="1000">','上限 NT$2,000')}
+    ${F(`面額（${CURSYM()}）`,'<input class="input num" id="gcV" data-val="req|money" placeholder="1000">',`上限 ${money(LIMITS.giftCardMaxCents)}（limits.yml gift_card.max_initial_value_cents）`)}
     ${F('卡號',SEL('_gc',['自動產生','自訂碼'],'自動產生'))}
     ${F('顧客 email','<input class="input" id="gcE" data-val="req|email" placeholder="必填：email 或電話">')}
     ${F('到期日','<input class="input" type="date">','多數地區法規禁止禮品卡設到期日')}
@@ -4637,20 +4769,20 @@ function giftIssue(){
 function giftIssueOK(){
   const v=document.getElementById('gcV'),e=document.getElementById('gcE');
   if(!validOne(v)|!validOne(e))return;
-  if(+v.value>2000){document.getElementById('gcV').closest('.field').classList.add('bad');
-    document.querySelector('#gcV').closest('.field').querySelector('.msg').textContent='面額上限 NT$2,000';return;}
-  closeGen();toast(`已發行 ${NT(+v.value)} 禮品卡並寄送到 ${e.value}`);
+  if(toCents(v.value)>LIMITS.giftCardMaxCents){document.getElementById('gcV').closest('.field').classList.add('bad');
+    document.querySelector('#gcV').closest('.field').querySelector('.msg').textContent='面額上限 '+money(LIMITS.giftCardMaxCents);return;}
+  closeGen();toast(`已發行 ${money(toCents(v.value))} 禮品卡並寄送到 ${e.value}`);
 }
 function giftOpen(id){
   const g=GIFTCARDS.find(x=>x.id===id);
   openGen({title:`禮品卡 •••• ${g.last4}`,wide:true,body:`<div class="stack">
-    <div class="ledger"><div><b class="num">${NT(g.bal)}</b><span>目前餘額</span></div><div><b class="num">${NT(g.init)}</b><span>原始面額</span></div><div><b>${g.st}</b><span>狀態</span></div><div><b>${g.exp}</b><span>到期日</span></div></div>
+    <div class="ledger"><div><b class="num">${money(g.bal)}</b><span>目前餘額</span></div><div><b class="num">${money(g.init)}</b><span>原始面額</span></div><div><b>${g.st}</b><span>狀態</span></div><div><b>${g.exp}</b><span>到期日</span></div></div>
     <table class="idx"><thead><tr><th>日期</th><th>訂單</th><th class="right">金額</th></tr></thead><tbody>
-      <tr class="norow"><td class="mut">${g.d}</td><td>發卡</td><td class="right num">+${NT(g.init)}</td></tr>
-      ${g.bal<g.init?`<tr class="norow"><td class="mut">7月28日</td><td style="color:var(--link)">#1037</td><td class="right num">−${NT(g.init-g.bal)}</td></tr>`:''}</tbody></table></div>`,
+      <tr class="norow"><td class="mut">${g.d}</td><td>發卡</td><td class="right num">+${money(g.init)}</td></tr>
+      ${g.bal<g.init?`<tr class="norow"><td class="mut">7月28日</td><td style="color:var(--link)">#1037</td><td class="right num">−${money(g.init-g.bal)}</td></tr>`:''}</tbody></table></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已重寄禮品卡到顧客 email')">重寄</button>
      <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('Demo：修改到期日')">改到期日</button>
-     <button class="btn btn-danger-o btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();confirmDanger('停用禮品卡','停用後這張卡的剩餘餘額 '+${JQ(NT(g.bal))}+' 將無法再使用。','停用禮品卡',function(){toast('已停用禮品卡')})">停用</button>`});
+     <button class="btn btn-danger-o btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();confirmDanger('停用禮品卡','停用後這張卡的剩餘餘額 '+${JQ(money(g.bal))}+' 將無法再使用。','停用禮品卡',function(){toast('已停用禮品卡')})">停用</button>`});
 }
 
 /* ==================================================================
@@ -4668,7 +4800,7 @@ function customersPage(){
       {l:'Email 訂閱',c:r=>chip(r.sub,r.sub==='已訂閱'?'success':r.sub==='已取消訂閱'?'critical':'default'),v:r=>r.sub},
       {l:'地區',c:r=>`<span class="mut">${r.loc}</span>`,v:r=>r.loc},
       {l:'訂單',right:true,c:r=>N(r.ord),v:r=>r.ord},
-      {l:'消費金額',right:true,c:r=>N(NT(r.spent)),v:r=>r.spent},
+      {l:'消費金額',right:true,c:r=>N(money(r.spent)),v:r=>r.spent},
       {l:'CLV 預測',c:r=>chip(r.tier,r.tier==='HIGH'?'success':r.tier==='MEDIUM'?'info':'default'),v:r=>r.tier}],
     rows:CUSTOMERS,id:r=>r.id,onRow:r=>`openCustomer('${r.id}')`,
     bulk:[['加標籤'],['更新行銷同意'],['合併顧客'],['刪除',null,null,'danger']],
@@ -4689,7 +4821,7 @@ function openCustomer(id){
 }
 function customerPage(){
   const c=CUS,orders=ORDERS.filter(o=>o.c===c.n);
-  const ev=[['下單 #1042・NT$2,932','今天 14:02'],['訂閱電子報（來源：結帳頁勾選）','2026-06-02 10:11'],
+  const ev=[[`下單 #1042・${money(73300)}`,'今天 14:02'],['訂閱電子報（來源：結帳頁勾選）','2026-06-02 10:11'],
     ['寄出「訂單確認信」・已送達','今天 14:03'],['帳號建立（來源：線上商店）',c.since]];
   return detailHead(H(c.n||'新增顧客'),c.tags.map(t=>`<span class="tagchip">${H(t)}</span>`).join(''),
     `<button class="btn btn-sec btn-sm" onclick="custMore()">更多動作 ▾</button>
@@ -4697,13 +4829,13 @@ function customerPage(){
   +`<div class="od-grid" data-form="cus">
     <div class="col">
       <div class="card card-pad" data-doc="cd-stats"><div class="ledger">
-        <div><b class="num">${NT(c.spent)}</b><span>總消費金額</span></div>
+        <div><b class="num">${money(c.spent)}</b><span>總消費金額</span></div>
         <div><b class="num">${c.ord}</b><span>訂單數</span></div>
-        <div><b class="num">${c.ord?NT(Math.round(c.spent/c.ord)):'—'}</b><span>平均訂單價值</span></div>
+        <div><b class="num">${c.ord?money(Math.round(c.spent/c.ord)):'—'}</b><span>平均訂單價值</span></div>
         <div><b>${c.since}</b><span>成為顧客</span></div></div></div>
       <div class="card" data-doc="cd-orders"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>訂單紀錄<span class="h-act"><button class="btn btn-ghost btn-sm" onclick="openDraft('new')">代客建單</button></span></h3></div>
         ${orders.length?`<table class="idx"><thead><tr><th>訂單</th><th>日期</th><th class="right">總計</th><th>付款</th><th>出貨</th></tr></thead><tbody>
-          ${orders.map(o=>`<tr onclick="openOrder('${o.id}')"><td><b>#${o.id}</b></td><td class="mut">${o.d}</td><td class="right num">${o.amt}</td><td>${PAY[o.pay]}</td><td>${FUL[o.ful]}</td></tr>`).join('')}
+          ${orders.map(o=>`<tr onclick="openOrder('${o.id}')"><td><b>#${o.id}</b></td><td class="mut">${o.d}</td><td class="right num">${money(o.amt,o.cur)}</td><td>${PAY[o.pay]}</td><td>${FUL[o.ful]}</td></tr>`).join('')}
           </tbody></table>`:'<div class="empty-wrap"><b>還沒有訂單</b>代客建單或寄出折扣邀請，把這位顧客帶進第一筆交易。</div>'}</div>
       <div class="card card-pad" data-doc="cd-timeline"><h3>時間軸</h3>
         <div class="tl-compose"><span class="avatar">BW</span><div class="tc-main">
@@ -4726,9 +4858,9 @@ function customerPage(){
         <p class="help card-sec">同意帶時間戳與來源（GDPR 稽核）。</p></div>
       <div class="card card-pad" data-doc="cd-tax"><h3>稅務</h3>
         ${F('稅務狀態',SEL('ctax',['課稅','免稅（全部）','免稅（依豁免清單）'],c.tax.startsWith('免稅')?'免稅（全部）':'課稅'))}
-        ${F('VAT／統編',TXT('cvat',c.tags.includes('B2B')?'12345678':''),'輸入後自動驗證格式與有效性')}</div>
+        ${F('稅籍編號',TXT('cvat',c.tags.includes('B2B')?'12345678':''),'跨法域欄位：格式與檢核由市場 pack 的 tax_id_format 提供（HK＝BR number／MY＝SST／EU＝VAT），不是單一國家的欄位')}</div>
       <div class="card card-pad" data-doc="cd-credit"><h3>店內額度 Store credit</h3>
-        <div class="kv"><span class="k">目前餘額</span><span class="num">${NT(c.credit)}</span></div>
+        <div class="kv"><span class="k">目前餘額</span><span class="num">${money(c.credit)}</span></div>
         <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="custCredit('發放')">發放額度</button><button class="btn btn-ghost btn-sm" onclick="custCredit('扣減')">扣減</button></div></div>
       <div class="card card-pad"><h3>標籤與備註</h3>
         ${F('標籤',TXT('ctags',c.tags.join('、'),'以逗號分隔（合併時上限 250）'))}
@@ -4755,7 +4887,7 @@ function custAddr(){
     <div style="padding:var(--sp-300) var(--sp-300)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：新增地址表單')">＋ 新增地址</button></div>`});
 }
 function custCredit(kind){
-  openGen({title:kind+'店內額度',body:`<div class="stack">${F('金額（NT$）',`<input class="input num" data-val="req|money" placeholder="0">`)}
+  openGen({title:kind+'店內額度',body:`<div class="stack">${F(`金額（${CURSYM()}）`,`<input class="input num" data-val="req|money" placeholder="0">`)}
     ${F('到期日','<input class="input" type="date">','留空＝不過期')}${F('原因',TXT('_cr','','例：客訴補償'))}</div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已${kind}店內額度')">${kind}</button>`});
 }
@@ -4819,7 +4951,7 @@ function segmentPage(){
       </div>
       <div class="card" data-doc="seg-preview"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>成員預覽<span class="h-act num mut3" style="font-size:var(--t-xs)">${n} 位顧客</span></h3></div>
         <table class="idx"><thead><tr><th>顧客</th><th>Email</th><th class="right">訂單</th><th class="right">消費金額</th></tr></thead><tbody>
-        ${CUSTOMERS.slice(0,n||0).map(c=>`<tr onclick="openCustomer('${c.id}')"><td><b>${H(c.n)}</b></td><td class="mut">${H(c.mail)}</td><td class="right num">${c.ord}</td><td class="right num">${NT(c.spent)}</td></tr>`).join('')
+        ${CUSTOMERS.slice(0,n||0).map(c=>`<tr onclick="openCustomer('${c.id}')"><td><b>${H(c.n)}</b></td><td class="mut">${H(c.mail)}</td><td class="right num">${c.ord}</td><td class="right num">${money(c.spent)}</td></tr>`).join('')
           ||'<tr class="norow"><td colspan="4"><div class="empty-wrap"><b>目前沒有符合的顧客</b>放寬條件再試一次。</div></td></tr>'}</tbody></table></div>
     </div>
     <div class="col">
@@ -4851,19 +4983,19 @@ function growthPage(){
     <div class="ai-row" data-doc="gr-autopilot" onclick="toast('Demo：Campaign Autopilot 搶先體驗（21 §2）')">${SPARK}Campaign Autopilot 搶先體驗——讓 AI 依成效自動調整投放組合<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
     <div style="height:12px"></div>
     <div class="ana-grid g3" data-doc="gr-kpi">
-      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">NT$38,200</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
       <div class="card stat-card"><div class="t-label">依流量類型的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs">直接 62%・社群 24%・搜尋 14%</span></span></div>
       <div class="card stat-card"><div class="t-label">行銷轉換率</div><div class="t-value num">1.9%</div><span class="t-delta up">↑ 0.4pt <span class="t-vs">vs 前期</span></span></div></div>
     <div style="height:16px"></div>
     <div class="card chart-card" data-doc="gr-channels"><div class="chart-head"><h3>依管道的成效</h3></div>
       <table class="idx"><thead><tr><th>管道</th><th class="right">工作階段</th><th class="right">訂單</th><th class="right">歸因銷售額</th><th class="right">轉換率</th></tr></thead><tbody>
         ${[['IG 廣告',2140,42,21400,'1.96%'],['LINE 官方帳號',1820,31,11200,'1.70%'],['電子報',960,18,5600,'1.88%'],['自然搜尋',1204,9,3200,'0.75%'],['直接流量',2476,140,362400,'5.65%']]
-          .map(r=>`<tr onclick="go('m-attribution')"><td><b>${r[0]}</b></td><td class="right num">${r[1].toLocaleString()}</td><td class="right num">${r[2]}</td><td class="right num">${NT(r[3])}</td><td class="right num">${r[4]}</td></tr>`).join('')}
+          .map(r=>`<tr onclick="go('m-attribution')"><td><b>${r[0]}</b></td><td class="right num">${r[1].toLocaleString()}</td><td class="right num">${r[2]}</td><td class="right num">${money(r[3])}</td><td class="right num">${r[4]}</td></tr>`).join('')}
       </tbody></table></div>
     <div style="height:16px"></div>
     ${listPage({key:'camp0',noHead:true,title:'',doc:'gr-recent',ph:'搜尋活動…',
       cols:[{l:'最近活動',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'狀態',c:r=>chip(r.st,r.st==='進行中'?'success':r.st==='已排程'?'info':'default'),v:r=>r.st},
-        {l:'管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch},{l:'銷售額',right:true,c:r=>N(NT(r.sales)),v:r=>r.sales}],
+        {l:'管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch},{l:'銷售額',right:true,c:r=>N(money(r.sales)),v:r=>r.sales}],
       rows:CAMPAIGNS,id:r=>r.id,onRow:r=>`campaignOpen('${r.id}')`,per:4})}`;
 }
 function attributionPage(){
@@ -4875,9 +5007,9 @@ function attributionPage(){
         ${F('回溯窗',SEL('await',['7 天','14 天','30 天'],'30 天'),'41 §9.1：官方未公開實際預設值，此為原型佔位')}
         <p class="help card-sec">UTM 自動掛在活動連結上（utm_campaign＝活動名）；歸因銷售額與分析頁同源（19 號 rollup）。</p></div>
       <div class="card chart-card" data-doc="attr-table"><div class="chart-head"><h3>依模型比較的歸因銷售額</h3></div>
-        <div class="hbar-row"><span class="hl wide">最後非直接</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">NT$38,200</span></div>
-        <div class="hbar-row"><span class="hl wide">首次點擊</span><div class="hbar-track"><div class="hbar" style="width:78%"></div></div><span class="hv num">NT$29,800</span></div>
-        <div class="hbar-row"><span class="hl wide">最後點擊</span><div class="hbar-track"><div class="hbar" style="width:64%"></div></div><span class="hv num">NT$24,400</span></div></div>
+        <div class="hbar-row"><span class="hl wide">最後非直接</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">${money(955000)}</span></div>
+        <div class="hbar-row"><span class="hl wide">首次點擊</span><div class="hbar-track"><div class="hbar" style="width:78%"></div></div><span class="hv num">${money(745000)}</span></div>
+        <div class="hbar-row"><span class="hl wide">最後點擊</span><div class="hbar-track"><div class="hbar" style="width:64%"></div></div><span class="hv num">${money(611000)}</span></div></div>
     </div><div class="col">
       <div class="card card-pad"><h3>UTM 對照</h3>
         <div class="kv"><span class="k">utm_source</span><span class="mono">ig / line / newsletter</span></div>
@@ -4892,7 +5024,7 @@ function campaignsPage(){
     cols:[{l:'名稱',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'狀態',c:r=>chip(r.st,r.st==='進行中'?'success':r.st==='已排程'?'info':'default'),v:r=>r.st},
       {l:'管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch},{l:'期間',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},
       {l:'工作階段',right:true,c:r=>N(r.ses.toLocaleString()),v:r=>r.ses},{l:'訂單',right:true,c:r=>N(r.ord),v:r=>r.ord},
-      {l:'歸因銷售額',right:true,c:r=>N(NT(r.sales)),v:r=>r.sales}],
+      {l:'歸因銷售額',right:true,c:r=>N(money(r.sales)),v:r=>r.sales}],
     rows:CAMPAIGNS,id:r=>r.id,onRow:r=>`campaignOpen('${r.id}')`,
     bulk:[['結束活動',null,null,'danger']],
     note:'Campaign＝多活動容器（目標＋期間）；activity＝單一投放（Email／社群／廣告，由對應 app 提供）。'});
@@ -4916,7 +5048,7 @@ function campaignOpen(id){
   const c=CAMPAIGNS.find(x=>x.id===id);
   openGen({title:H(c.t),wide:true,body:`<div class="stack">
     <div class="ledger"><div><b class="num">${c.ses.toLocaleString()}</b><span>工作階段</span></div><div><b class="num">${c.ord}</b><span>訂單</span></div>
-      <div><b class="num">${NT(c.sales)}</b><span>歸因銷售額</span></div><div><b>${c.st}</b><span>狀態</span></div></div>
+      <div><b class="num">${money(c.sales)}</b><span>歸因銷售額</span></div><div><b>${c.st}</b><span>狀態</span></div></div>
     <div class="hbar-row"><span class="hl">觸及</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">4,820</span></div>
     <div class="hbar-row"><span class="hl">開信</span><div class="hbar-track"><div class="hbar" style="width:38%"></div></div><span class="hv num">1,832</span></div>
     <div class="hbar-row"><span class="hl">點擊</span><div class="hbar-track"><div class="hbar" style="width:11%"></div></div><span class="hv num">530</span></div>
@@ -4989,7 +5121,7 @@ function discountPage(){
       <div style="margin-top:var(--sp-200)">${CHK('dgmax',true,'設定每張訂單的使用次數上限','X 與 Y 同品項時，折抵顧客所選較低價的那件')}</div></div>`,
     ship:`${F('國家範圍',SEL('dsc',['所有國家','指定國家'],'所有國家'))}
       <div class="card-sec">${CHK('dsx',false,'排除超過特定金額的運費費率')}
-        ${F('排除門檻（NT$）',TXT('dsv','','例：500','money'))}</div>`}[t];
+        ${F(`排除門檻（${CURSYM()}）`,TXT('dsv','','例：500','money'))}</div>`}[t];
   return detailHead(DISC.id==='new'?'建立折扣':H(DISC.title),
     chip({product:'商品折扣',order:'訂單折扣',bxgy:'買 X 送 Y',ship:'免運費'}[t],'info'),
     `${DISC.id!=='new'?`<button class="btn btn-sec btn-sm" onclick="discPromote()">推廣</button>`:''}
@@ -5032,7 +5164,7 @@ function discountPage(){
         <div id="discSum">${discSummary()}</div>
         <div class="card-sec"><b style="font-size:var(--t-sm)">效能</b>
           <div class="kv"><span class="k">使用次數</span><span class="num">${DISC.id==='new'?0:(DISCOUNTS.find(x=>x.id===DISC.id)||{}).used}</span></div>
-          <div class="kv"><span class="k">歸因銷售額</span><span class="num">${DISC.id==='new'?NT(0):NT(28400)}</span></div></div>
+          <div class="kv"><span class="k">歸因銷售額</span><span class="num">${DISC.id==='new'?money(0):money(710000)}</span></div></div>
         ${DISC.id!=='new'?`<div class="card-sec rowflex"><button class="btn btn-sec btn-sm" onclick="toast('已停用折扣')">停用</button>
           <button class="btn btn-ghost btn-sm" onclick="toast('已複製折扣')">複製</button>
           <button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除折扣','刪除後既有的分享連結與 QR code 會失效；已完成的訂單不受影響。','刪除折扣',function(){toast('已刪除折扣');go('m-discounts');})">刪除</button></div>`:''}
@@ -5046,7 +5178,7 @@ function discGen(){
   document.querySelector('[data-f="dcode"]').value=c;DISC.title=c;formCheck();toast('已產生隨機折扣碼 '+c);
 }
 function discPick(kind){
-  const map={product:['選擇商品',PRODUCTS.map(p=>({t:p.n,s:NT(p.price),g:p.g}))],
+  const map={product:['選擇商品',PRODUCTS.map(p=>({t:p.n,s:money(p.price),g:p.g}))],
     collection:['選擇商品系列',COLLECTIONS.map(c=>({t:c.t,s:`${c.n} 件商品`}))],
     segment:['選擇顧客分群',SEGMENTS.map(s=>({t:s.t,s:`${s.n} 位顧客`}))]}[kind];
   pickerModal(map[0],map[1],sel=>toast(`已選取 ${sel.length} 項（上限 100）`),true);
@@ -5505,7 +5637,7 @@ function mktChainText(m){
 }
 /* 覆寫型維度的一列：繼承時顯示唯讀值＋「覆寫」；已覆寫時顯示真控件＋「還原為繼承」 */
 const MKT_OPTS={
-  currency:['TWD（NT$）','HKD（HK$）','MYR（RM）','JPY（¥）','當地幣別（自動）'],
+  currency:Object.keys(MARKET_LOCALES).map(curLabel).concat(['當地幣別（自動）']),
   priceAdj:['−15%','0%','+8%','+12%'],
   domain:['chilllove.demo','chilllove.demo/int','int.chilllove.demo','chilllove.jp'],
   duty:['DDU（顧客承擔）','DDP（結帳預收）'],
@@ -5598,14 +5730,14 @@ function marketPage(){
     <div class="card card-pad" data-doc="mk-catalog"><h3>翻譯覆寫</h3>
       <table class="idx"><thead><tr><th>資源</th><th>原文</th><th>此市場覆寫</th></tr></thead><tbody>
         <tr class="norow"><td>商品標題</td><td class="mut">奶茶色寬版帽T</td><td><input class="cellin" value="Milk Tea Oversized Hoodie" aria-label="覆寫商品標題"></td></tr>
-        <tr class="norow"><td>運送政策</td><td class="mut">台灣本島滿 2,000 免運</td><td><input class="cellin" value="Free shipping over HK$500" aria-label="覆寫運送政策"></td></tr>
+        <tr class="norow"><td>運送政策</td><td class="mut">香港本地滿 ${money(50000)} 免運</td><td><input class="cellin" value="Free shipping over ${money(50000)}" aria-label="覆寫運送政策"></td></tr>
       </tbody></table>
       <p class="help" style="margin-top:var(--sp-200)">市場層覆寫優先於語言層翻譯（29 §2）；未覆寫的欄位回退到語言翻譯，再回退原文。</p></div>
     </div><div class="col">
       <div class="card card-pad"><h3>此市場成效</h3>
         <div class="kv"><span class="k">工作階段</span><span class="num">${H(m.perf.s)}</span></div>
         <div class="kv"><span class="k">訂單</span><span class="num">${H(m.perf.o)}</span></div>
-        <div class="kv"><span class="k">銷售額</span><span class="num">${H(m.perf.rev)}</span></div></div>
+        <div class="kv"><span class="k">銷售額</span><span class="num">${money(m.perf.rev)}</span><span class="mut3" style="font-size:var(--t-2xs)">報表幣別</span></div></div>
       <div class="card card-pad" data-doc="mk-countries"><h3>條件（命中的國家／地點）</h3>
         <p class="help">${H(m.inc)}</p>
         <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="marketNew()">管理國家清單</button></div>
@@ -5636,7 +5768,7 @@ function catalogOpen(t){
     <table class="idx"><thead><tr><th>商品</th><th>發布</th><th class="right">基準價</th><th class="right">固定價</th></tr></thead><tbody>
     ${PRODUCTS.slice(0,5).map(p=>`<tr class="norow"><td>${H(p.n)}</td>
       <td><input type="checkbox" class="tgl" checked aria-label="發布 ${H(p.n)}"></td>
-      <td class="right num">${NT(p.price)}</td><td class="right"><input class="cellin num" style="text-align:right" placeholder="—" aria-label="固定價"></td></tr>`).join('')}</tbody></table>`,
+      <td class="right num">${money(p.price)}</td><td class="right"><input class="cellin num" style="text-align:right" placeholder="—" aria-label="固定價"></td></tr>`).join('')}</tbody></table>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存目錄價格')">儲存</button>`});
 }
 
@@ -5685,9 +5817,9 @@ function financePage(){
    +`<div class="banner-caution" data-doc="fin-2fa" style="margin-bottom:var(--sp-400)"><span class="bc-ic" aria-hidden="true">✓</span>
       <span>此帳號已啟用兩步驟驗證，因此可以看到金流數字。<b>前端閘門只是體驗層</b>——正式版由伺服器端授權檢查決定要不要回傳這些欄位。</span></div>
     <div class="ana-grid g3" data-doc="doc-m-finance">
-      <div class="card stat-card"><div class="t-label">可用餘額</div><div class="t-value num">NT$38,420</div><span class="t-vs">下次撥款 2026-08-13</span></div>
-      <div class="card stat-card"><div class="t-label">待入帳（處理中）</div><div class="t-value num">NT$12,860</div><span class="t-vs">授權未請款 3 筆</span></div>
-      <div class="card stat-card"><div class="t-label">本月手續費</div><div class="t-value num">NT$4,982</div><span class="t-vs">費率 2.9% + NT$5</span></div></div>
+      <div class="card stat-card"><div class="t-label">可用餘額</div><div class="t-value num">${money(960000)}</div><span class="t-vs">下次撥款 2026-08-13</span></div>
+      <div class="card stat-card"><div class="t-label">待入帳（處理中）</div><div class="t-value num">${money(321000)}</div><span class="t-vs">授權未請款 3 筆</span></div>
+      <div class="card stat-card"><div class="t-label">本月手續費</div><div class="t-value num">${money(124000)}</div><span class="t-vs">費率 2.9% + ${money(150)}</span></div></div>
     <div style="height:16px"></div>
     <div class="chart2 c14">
       <div class="col">
@@ -5700,7 +5832,7 @@ function financePage(){
       </div>
       <div class="card" data-doc="fin-payouts"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>撥款紀錄</h3></div>
         <table class="idx"><thead><tr><th>日期</th><th class="right">金額</th><th>狀態</th><th class="right">訂單數</th></tr></thead><tbody>
-        ${PAYOUTS.map(p=>`<tr onclick="payoutOpen(${JQ(p.d)})"><td class="mut">${p.d}</td><td class="right num">${NT(p.amt)}</td>
+        ${PAYOUTS.map(p=>`<tr onclick="payoutOpen(${JQ(p.d)})"><td class="mut">${p.d}</td><td class="right num">${money(p.amt)}</td>
           <td>${chip(p.st,p.st==='已入帳'?'success':p.st==='在途'?'info':'critical',p.st==='在途'?'blocked':undefined)}</td><td class="right num">${p.n}</td></tr>`).join('')}</tbody></table></div>
     </div>`;
 }
@@ -5709,25 +5841,25 @@ function payoutOpen(d){
      正式版這裡是伺服器端 resolver 的授權檢查，不是這個 if。 */
   if(!FIN_2FA)return toast('需要兩步驟驗證才能查看撥款明細——請先到「設定 → 使用者」啟用');
   openGen({title:`撥款 ${d}`,body:`<div class="stack">
-    <div class="kv"><span class="k">交易總額 charges</span><span class="num">${NT(41200)}</span></div>
-    <div class="kv"><span class="k">退款 refunds</span><span class="num">−${NT(960)}</span></div>
-    <div class="kv"><span class="k">手續費 fees</span><span class="num">−${NT(1820)}</span></div>
-    <div class="kv"><span class="k">調整 adjustments</span><span class="num">${NT(0)}</span></div>
-    <div class="kv" style="border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>實際撥款</b></span><span class="num"><b>${NT(38420)}</b></span></div></div>`,
+    <div class="kv"><span class="k">交易總額 charges</span><span class="num">${money(1030000)}</span></div>
+    <div class="kv"><span class="k">退款 refunds</span><span class="num">−${money(24000)}</span></div>
+    <div class="kv"><span class="k">手續費 fees</span><span class="num">−${money(46000)}</span></div>
+    <div class="kv"><span class="k">調整 adjustments</span><span class="num">${money(0)}</span></div>
+    <div class="kv" style="border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>實際撥款</b></span><span class="num"><b>${money(960000)}</b></span></div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已匯出此撥款的對帳 CSV')">匯出 CSV</button>`});
 }
 function billingPage(){
   return `<div class="page-head"><h1>帳單</h1><div class="head-actions">
       <button class="btn btn-sec btn-sm" onclick="openSettings('billing')">帳單設定</button></div></div>
     <div class="ana-grid g3" data-doc="bill-kpi">
-      <div class="card stat-card"><div class="t-label">本期應付</div><div class="t-value num">NT$3,270</div><span class="t-vs">結算日 2026-08-14</span></div>
-      <div class="card stat-card"><div class="t-label">方案費用</div><div class="t-value num">NT$2,490</div><span class="t-vs">成長方案・月繳</span></div>
-      <div class="card stat-card"><div class="t-label">運送標籤費</div><div class="t-value num">NT$780</div><span class="t-vs">本期 6 張</span></div></div>
+      <div class="card stat-card"><div class="t-label">本期應付</div><div class="t-value num">${money(81500)}</div><span class="t-vs">結算日 2026-08-14</span></div>
+      <div class="card stat-card"><div class="t-label">方案費用</div><div class="t-value num">${money(62000)}</div><span class="t-vs">成長方案・月繳</span></div>
+      <div class="card stat-card"><div class="t-label">運送標籤費</div><div class="t-value num">${money(19500)}</div><span class="t-vs">本期 6 張</span></div></div>
     <div style="height:16px"></div>
     <div class="card" data-doc="bill-invoices"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>發票紀錄</h3></div>
       <table class="idx"><thead><tr><th>期間</th><th>項目</th><th class="right">金額</th><th>狀態</th><th class="right">動作</th></tr></thead><tbody>
-      ${[['2026-07','方案 + app + 標籤',3120,'已付款'],['2026-06','方案 + 網域',2790,'已付款'],['2026-05','方案',2490,'已付款']]
-        .map(r=>`<tr class="norow"><td class="mut">${r[0]}</td><td>${r[1]}</td><td class="right num">${NT(r[2])}</td><td>${chip(r[3],'success')}</td>
+      ${[['2026-07','方案 + app + 標籤',78000,'已付款'],['2026-06','方案 + 網域',69800,'已付款'],['2026-05','方案',62000,'已付款']]
+        .map(r=>`<tr class="norow"><td class="mut">${r[0]}</td><td>${r[1]}</td><td class="right num">${money(r[2])}</td><td>${chip(r[3],'success')}</td>
         <td class="right"><button class="btn btn-ghost btn-sm" onclick="toast('已下載發票 PDF')">下載</button></td></tr>`).join('')}</tbody></table>
       <p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">帳單週期 30 天；含訂閱費、app 費用、運送標籤費與網域費（41 §7）。</p></div>`;
 }
@@ -5761,20 +5893,20 @@ function reportPage(){
       <button class="btn btn-sec btn-sm" onclick="toast('Demo：加入篩選條件（管道／地點／折扣…）')">＋ 篩選</button>
       <button class="btn btn-sec btn-sm" onclick="toast('Demo：編輯欄位')">編輯欄位</button></div></div>
     <div style="height:16px"></div>
-    <div class="card chart-card" data-doc="rep-chart"><div class="chart-head"><h3>${H(name)}</h3><span class="big num">NT$407,700</span></div>
+    <div class="card chart-card" data-doc="rep-chart"><div class="chart-head"><h3>${H(name)}</h3><span class="big num">${money(salesTotal)}</span></div>
       <div class="chart-wrap"><svg id="repChart" width="100%" height="190"></svg></div></div>
     <div style="height:16px"></div>
     <div class="card" data-doc="rep-table"><table class="idx"><thead><tr><th>日期</th><th class="right">訂單</th><th class="right">總銷售額</th><th class="right">折扣</th><th class="right">淨銷售額</th></tr></thead><tbody>
-      ${days.slice(-12).map((d,i)=>{const s=sales[sales.length-12+i];return `<tr class="norow"><td>${d}</td><td class="right num">${Math.round(s/1700)}</td>
-        <td class="right num">${NT(s)}</td><td class="right num">−${NT(Math.round(s*0.04))}</td><td class="right num">${NT(Math.round(s*0.96))}</td></tr>`;}).join('')}
-      </tbody><tfoot><tr><th>總計（含未顯示列）</th><th class="right num">240</th><th class="right num">NT$407,700</th><th class="right num">−NT$16,308</th><th class="right num">NT$391,392</th></tr></tfoot></table></div>`;
+      ${days.slice(-12).map((d,i)=>{const s=sales[sales.length-12+i];return `<tr class="norow"><td>${d}</td><td class="right num">${Math.round(s/42471)}</td>
+        <td class="right num">${money(s)}</td><td class="right num">−${money(Math.round(s*0.04))}</td><td class="right num">${money(Math.round(s*0.96))}</td></tr>`;}).join('')}
+      </tbody><tfoot><tr><th>總計（含未顯示列）</th><th class="right num">240</th><th class="right num">${money(salesTotal)}</th><th class="right num">−${money(Math.round(salesTotal*0.04))}</th><th class="right num">${money(Math.round(salesTotal*0.96))}</th></tr></tfoot></table></div>`;
 }
 function drawReport(){
   const svg=document.getElementById('repChart');if(!svg||!svg.clientWidth)return;
-  const W=svg.clientWidth,Hh=190,P={t:10,r:10,b:22,l:W<480?32:46},d=sales.slice(-12),mx=20000;
+  const W=svg.clientWidth,Hh=190,P={t:10,r:10,b:22,l:W<480?32:46},d=sales.slice(-12),mx=500000;
   const x=i=>P.l+i*(W-P.l-P.r)/(d.length-1),y=v=>P.t+(1-v/mx)*(Hh-P.t-P.b);
-  let g='';[0,10000,20000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?v/1000+'K':'0'}</text>`;});
-  d.forEach((v,i)=>{const bw=Math.max(6,(W-P.l-P.r)/d.length*.6);g+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${Hh-P.b-y(v)}" fill="#2a78d6" rx="2"><title>${days[days.length-12+i]}：NT$${v.toLocaleString()}</title></rect>`;});
+  let g='';[0,250000,500000].forEach(v=>{g+=`<line x1="${P.l}" y1="${y(v)}" x2="${W-P.r}" y2="${y(v)}" stroke="#ececef"/><text x="${P.l-8}" y="${y(v)+3.5}" text-anchor="end" font-size="11" fill="#67696e">${v?fromCents(v)/1000+'K':'0'}</text>`;});
+  d.forEach((v,i)=>{const bw=Math.max(6,(W-P.l-P.r)/d.length*.6);g+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${Hh-P.b-y(v)}" fill="#2a78d6" rx="2"><title>${days[days.length-12+i]}：${money(v)}</title></rect>`;});
   svg.innerHTML=g;
 }
 function reportQL(){
@@ -5804,7 +5936,7 @@ function livePage(){
         <div class="grid2">
           <div class="card stat-card"><div class="t-label">今日工作階段</div><div class="t-value num">${v('182')}</div><span class="t-vs">午夜起・店時區</span></div>
           <div class="card stat-card"><div class="t-label">今日訂單</div><div class="t-value num">${v('3')}</div><span class="t-vs">全管道</span></div></div>
-        <div class="card stat-card"><div class="t-label">今日銷售額</div><div class="t-value num">${v('NT$4,532')}</div><span class="t-vs">gross − 折扣 − 沖銷 + 運費 + 稅</span></div>
+        <div class="card stat-card"><div class="t-label">今日銷售額</div><div class="t-value num">${v(money(113000))}</div><span class="t-vs">gross − 折扣 − 沖銷 + 運費 + 稅</span></div>
         <div class="card chart-card" data-doc="live-funnel"><div class="chart-head"><h3>顧客行為（近 10 分鐘）</h3></div>
           ${[['瀏覽中',7,100],['購物車有商品',3,43],['結帳中',1,14],['已購買',1,14]].map(([l,n,w])=>
             `<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(n)}</span></div>`).join('')}</div>
@@ -5985,7 +6117,9 @@ const MANUAL_PAY=[{n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記�
 const CARRIER_ACCTS=[];
 const PKG_LIST=[{n:'標準紙箱 S',s:'20 × 15 × 10 cm・120 g'},{n:'標準紙箱 M',s:'30 × 22 × 16 cm・210 g'},{n:'自訂信封袋',s:'25 × 18 cm・25 g'}];
 const TAX_OVERRIDES=[{n:'童裝',rate:'0',s:'商品系列・免徵營業稅'}];
-const LOC_ORDER=[{n:'主倉（內湖）',s:'台北市內湖區',ship:true},{n:'台北門市',s:'台北市大安區',ship:true},{n:'台中寄倉',s:'台中市西屯區・僅存貨',ship:false}];
+/* 基準法域＝香港：香港觀塘倉排第一（也是訂單示範資料裡實際出貨的地點）。
+   其餘台灣地點保留——多法域營運本來就會同時有兩地倉庫。 */
+const LOC_ORDER=[{n:'香港觀塘倉',s:'香港・觀塘',ship:true},{n:'主倉（內湖）',s:'台北市內湖區',ship:true},{n:'台北門市',s:'台北市大安區',ship:true},{n:'台中寄倉',s:'台中市西屯區・僅存貨',ship:false}];
 const WEBHOOKS=[{topic:'orders/create',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'},
                 {topic:'products/update',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'}];
 const METAOBJ=[{n:'設計師檔案',k:'designer',c:4},{n:'材質說明',k:'material_note',c:5},{n:'門市據點',k:'store_location',c:2}];
@@ -6003,10 +6137,10 @@ Object.assign(SET_PAGES,{
    ${setRowInp('寄件者 email','所有顧客通知的 From；換網域後 SPF/DKIM 要重跑驗證','shopSender','hello@chilllove.demo','name@yourdomain.com','set-sender-email',{type:'email',val:'req|email'})}
    ${setRowInp('聯絡 email','平台自己的通知（帳單、事故、政策變更）寄這裡，顧客看不到','shopContact','benny@chilllove.demo','you@example.com','set-contact-email',{type:'email',val:'req|email'})}</div>
   <div class="card card-pad"><h3>商家詳細資訊（法律實體）</h3><p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於金流、市場與稅務；不對顧客顯示</p>
-   <div class="set-row"><span class="flag"></span><div class="sr-t"><b>CHILL LOVE — 主體</b><span class="sub">台灣・統編 12345678</span></div><button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：商業實體是組織層資源，商店層只能引用（44 §8.3）')">管理</button></div></div>
+   <div class="set-row"><span class="flag"></span><div class="sr-t"><b>CHILL LOVE — 主體</b><span class="sub">香港・稅籍編號 12345678-000（tax_id_format.label＝BR number，limits.yml jurisdictions.hk.tax_id_format）</span></div><button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：商業實體是組織層資源，商店層只能引用（44 §8.3）')">管理</button></div></div>
   <div class="card card-pad"><h3>商店預設值</h3>
    ${setRowSel('幣別顯示','商店基準幣別；顧客實際看到的幣別由各市場的 presentment 設定決定','shopCurrency',
-     [['TWD','新台幣（NT$）'],['USD','美元（US$）'],['JPY','日圓（¥）'],['HKD','港幣（HK$）'],['SGD','新加坡幣（S$）'],['EUR','歐元（€）']],'TWD','set-currency')}
+     curOptions(),MARKET_BASE,'set-currency')}
    ${setRowSel('單位制','影響重量／尺寸欄位與運費級距的單位','shopUnit',[['metric','公制（kg／cm）'],['imperial','英制（lb／in）']],'metric','set-unitsystem')}
    ${setRowSel('時區','報表日界線、排程發布與到期判定都以此為準','shopTz',
      [['Asia/Taipei','(GMT+08:00) 台北'],['Asia/Hong_Kong','(GMT+08:00) 香港'],['Asia/Singapore','(GMT+08:00) 新加坡'],['Asia/Tokyo','(GMT+09:00) 東京'],['America/Los_Angeles','(GMT-08:00) 太平洋時間'],['UTC','(GMT+00:00) UTC']],'Asia/Taipei','set-timezone')}
@@ -6128,11 +6262,14 @@ function paymentsPage(){
    （Market → option → rates 是新模型的三層），站內已有 openShipProfile／openCkFields 的次級視圖
    先例，照抄同一套 setSubOpen 模式做成 mktShipOpen()。 */
 const MKT_SHIP={
- tw:[{n:'Standard',rates:[{n:'標準宅配',cond:'訂單金額 < NT$2,000',p:'NT$120'},{n:'標準宅配',cond:'訂單金額 ≥ NT$2,000',p:'免運'}]},
-     {n:'Express',rates:[{n:'快遞',cond:'全部訂單',p:'NT$260'}]}],
- intl:[{n:'International Standard',rates:[{n:'國際標準',cond:'全部訂單',p:'HK$95'}]},
-       {n:'International Express',rates:[{n:'國際快遞',cond:'全部訂單',p:'HK$210'}]}],
- hk:[{n:'本地宅配',rates:[{n:'本地宅配',cond:'訂單金額 < HK$500',p:'HK$30'},{n:'本地宅配',cond:'訂單金額 ≥ HK$500',p:'免運'}]}],
+ /* 每個市場的費率以**該市場的 presentment currency** 呈現（29 §1.5），不是報表幣別；
+    金額一律 integer cents ＋ money(cents, code) 格式化，符號來自 MARKET_LOCALES。 */
+ hk:[{n:'本地宅配',rates:[{n:'本地宅配',cond:`訂單金額 < ${money(50000,'HKD')}`,p:money(3000,'HKD')},{n:'本地宅配',cond:`訂單金額 ≥ ${money(50000,'HKD')}`,p:'免運'}]},
+     {n:'順豐站／智能櫃自取',rates:[{n:'自取',cond:'全部訂單',p:money(1800,'HKD')}]}],
+ intl:[{n:'International Standard',rates:[{n:'國際標準',cond:'全部訂單',p:money(9500,'HKD')}]},
+       {n:'International Express',rates:[{n:'國際快遞',cond:'全部訂單',p:money(21000,'HKD')}]}],
+ tw:[{n:'Standard',rates:[{n:'標準宅配',cond:`訂單金額 < ${money(200000,'TWD')}`,p:money(12000,'TWD')},{n:'標準宅配',cond:`訂單金額 ≥ ${money(200000,'TWD')}`,p:'免運'}]},
+     {n:'Express',rates:[{n:'快遞',cond:'全部訂單',p:money(26000,'TWD')}]}],
  'hk-b2b':[],jp:[]};
 let MKTSHIP_ID=null;
 function mktShipOpen(id){MKTSHIP_ID=id;setSubOpen('mkt-ship',mktShipPage());setAfterRender();}
@@ -6163,7 +6300,7 @@ function mktShipPage(){
 }
 function mktShipRefresh(msg){setSubOpen('mkt-ship',mktShipPage());setAfterRender();if(msg)toast(msg);}
 function mktShipAddOpt(){
-  (MKT_SHIP[MKTSHIP_ID]??=[]).push({n:'新運送選項',rates:[{n:'新費率',cond:'全部訂單',p:'HK$0'}]});
+  (MKT_SHIP[MKTSHIP_ID]??=[]).push({n:'新運送選項',rates:[{n:'新費率',cond:'全部訂單',p:money(0)}]});
   mktShipRefresh('已新增運送選項——名稱是顧客在結帳頁看到的字樣，請直接編輯');
 }
 function mktShipDelOpt(oi){
@@ -6172,7 +6309,7 @@ function mktShipDelOpt(oi){
 }
 function mktShipAddRate(oi){
   const o=(MKT_SHIP[MKTSHIP_ID]||[])[oi];if(!o)return;
-  o.rates.push({n:'新費率',cond:'全部訂單',p:'HK$0'});
+  o.rates.push({n:'新費率',cond:'全部訂單',p:money(0)});
   mktShipRefresh('已新增費率');
 }
 function mktShipDelRate(oi,ri){
@@ -6192,7 +6329,7 @@ function shippingPage(){
      return setRowBtn(H(m.t),sub+(p?`・上層市場 ${H(p.t)}`:'・頂層市場'),'<span class="chev" aria-hidden="true">›</span>',`mktShipOpen('${m.id}')`,'set-mkt-ship','🚚');}).join('')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">Rate 四型：Flat／Order amount 條件／Weight 條件／Carrier-app 計算；同 option 內 flat + order amount 並存時取最高符合者。前置規則：國家必須先屬於某個 active market。</p></div>
   <div class="card card-pad"><h3>本地配送</h3>
-   ${setRowBtn('台北門市','半徑 10 km・基本費 NT$80・滿 NT$1,500 免費','<span class="chev" aria-hidden="true">›</span>','openLocalDelivery()','set-localdelivery','🛵')}
+   ${setRowBtn('觀塘門市',`半徑 10 km・基本費 <span class="num">${money(3000)}</span>・滿 <span class="num">${money(30000)}</span> 免費`,'<span class="chev" aria-hidden="true">›</span>','openLocalDelivery()','set-localdelivery','🛵')}
    <p class="mut3" style="font-size:var(--t-xs)">Apple／Google／Amazon Pay 與 PayPal 不支援本地配送。</p></div>
   <div class="card card-pad"><h3>店面取貨</h3>
    ${setRowSel('台北門市｜備貨時間','顯示在結帳頁的可取貨時間；取貨指示會覆寫通知模板','pickupPrep',
@@ -6297,10 +6434,12 @@ function taxesPage(){
    <div id="taxDdpNote" hidden class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
      <span>切到 DDP 之前，「海關資訊」必須以<b>商品子類</b>批次補齊 HS code 與原產地；任一品項缺漏時該筆訂單會自動退回 DDU 計價。</span></div>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">引擎讀取順序：顧客免稅 &gt; 覆寫 &gt; 登記稅率（15 §）。跨境關稅是<b>唯一不受法域重分類影響</b>的稅務事件點（56 §B.2）。</p></div>
-  <div class="card card-pad" data-doc="set-tax-twpack"><h3>台灣 pack 素材 ${chip('未啟用','default','')}</h3>
+  <!-- TW-PACK -->
+  <div class="card card-pad is-dim" data-doc="set-tax-twpack" aria-disabled="true"><h3>台灣 pack 素材 ${chip('未啟用','default','')}</h3>
    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">以下是既有的台灣形態設定，已依 56 號降級為 <code>jurisdiction/tw</code> pack 素材（<code>limits.yml jurisdictions.tw.enabled=false</code>）——<b>不刪、也不生效</b>，待台灣市場開通時由 pack 接管</p>
    ${setRowInp('台灣｜營業稅率（%）','含稅定價；稅額由金額引擎反推，不另外加價。tw pack 未啟用時此值不進金額引擎','taxTW','5','5','set-tax-tw',{val:'req|pct'})}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">統一發票／字軌／折讓／作廢屬 tw pack 的 <code>tax_invoice.kind=gui</code> 能力，核心流程不直接引用（CLAUDE.md 鐵律 11）。</p></div>`;
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">統一發票／字軌／折讓／作廢屬 tw pack 的 <code>tax_invoice.kind=gui</code> 能力，核心流程不直接引用（CLAUDE.md 鐵律 11）。</p></div>
+  <!-- /TW-PACK -->`;
 }
 function locationsPage(){
  return `<div class="card card-pad" data-doc="set-locations"><h3>地點</h3>
@@ -6344,8 +6483,8 @@ function setBillingPage(){
    ${setRowBtn('付款方式',`${BILL_CARDS.length} 張・主要：${H(pri?pri.n:'未設定')}`,'<span class="chev" aria-hidden="true">›</span>','openBillCards()','set-bill-method','💳')}
    ${setRow('帳單週期','由方案開通日推導的 30 天週期，平台鎖定','<span class="tagchip num" style="margin:0">每月 14 日</span>','set-bill-cycle')}
    ${setRowSel('帳單門檻','累積到門檻或週期結束（先到者）就請款一次','billThreshold',
-     [['1000','NT$1,000'],['3000','NT$3,000'],['10000','NT$10,000'],['cycle','只在週期結束時請款']],'3000','set-bill-threshold')}
-   ${setRowSel('帳單幣別','平台向你收費的幣別，與商店的銷售幣別互不相干','billCurrency',[['TWD','新台幣（NT$）'],['USD','美元（US$）']],'TWD','set-bill-currency')}
+     [['25000',money(25000)],['75000',money(75000)],['250000',money(250000)],['cycle','只在週期結束時請款']],'75000','set-bill-threshold')}
+   ${setRowSel('帳單幣別','平台向你收費的幣別，與商店的銷售幣別互不相干','billCurrency',[[MARKET_BASE,curLabel(MARKET_BASE)],['USD',curLabel('USD')]],MARKET_BASE,'set-bill-currency')}
    <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`;
 }
 /* ==================================================================
@@ -6568,7 +6707,7 @@ Object.assign(DOCS,{
  "inv-adjust":{t:"調整庫存",f:"Adjust by／Set to ＋原因＋參考單據",l:"原因 7 種（Correction 預設／Cycle count／Damaged／Promotion or donation／Quality control／Received／Theft or loss）；併發用 compareQuantity CAS（28 §3）",i:"P0・[api:inventoryAdjustQuantities] [api:inventorySetQuantities] [tbl:inventory_levels,inventory_adjustments]"},
  "inv-transfer":{t:"轉移 Transfers",f:"地點間調撥與收貨",l:"狀態機：草稿（不佔庫存、唯一可刪）→待出貨（起點轉 reserved）→進行中（目的地記 Incoming）→已轉移／已取消；一轉移可多 shipment，條碼 ≤250 字元（41 §3.7）",i:"P2・[api:TBD-inventoryTransferCreate] [api:TBD-inventoryTransferReceive]（28 待補轉移模型）＋[api:inventoryAdjustQuantities] [tbl:inventory_levels,inventory_adjustments]"},
 /* ---------- 禮品卡 ---------- */
- "gift-issue":{t:"發行禮品卡",f:"面額／卡號／顧客／到期日",l:"面額 ≤NT$2,000（22 §4 配額）；必填 email 或電話；多數地區法規禁止設到期日；CSV 不能建新禮品卡商品",i:"P1・[api:giftCardCreate] [tbl:gift_cards]（06 §7 待補）"},
+ "gift-issue":{t:"發行禮品卡",f:"面額／卡號／顧客／到期日",l:"面額上限引 limits.yml gift_card.max_initial_value_cents（22 §4 配額），顯示值由市場 locale 格式化、不硬編符號；必填 email 或電話；多數地區法規禁止設到期日；CSV 不能建新禮品卡商品",i:"P1・[api:giftCardCreate] [tbl:gift_cards]（06 §7 待補）"},
 /* ---------- 顧客 ---------- */
  "cust-new":{t:"新增顧客",f:"建立顧客檔案",l:"email／電話在同一商店唯一；行銷同意需帶時間戳與來源（GDPR）",i:"P0・[api:customerCreate] [tbl:customers,customer_addresses]"},
  "cust-ai":{t:"AI 分群輸入列",f:"自然語言 → 分群 DSL 草稿",l:"2026 版顧客列表頂部入口（21 §1.6）；產生的是草稿，需人工確認後存為分群",i:"P2・[api:TBD-segmentSuggest]（28 待補 AI 端點）→[api:segmentCreate] [tbl:segments]"},
@@ -6737,13 +6876,13 @@ function orderCancel(){
      <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('訂單已取消——庫存已回補、款項已退回')">取消訂單（無法復原）</button>`});
 }
 function orderRefund(){
-  const o=curOrder,maxAmt=parseInt(String(o.total).replace(/[^\d]/g,''))||0;
+  const o=curOrder,maxAmt=o.total|0;                 /* 資料已是 integer cents，不再從顯示字串挖數字 */
   openGen({title:'退款 #'+o.id,wide:true,body:`<div class="stack">
     <table class="idx"><thead><tr><th>品項</th><th class="right">已購買</th><th class="right">退貨數量</th></tr></thead><tbody>
       ${o.lines.map((l,i)=>`<tr class="norow"><td>${H(l.n)}<span class="mut3"> ・${H(l.v)}</span></td><td class="right num">${l.q}</td>
-        <td class="right"><input class="cellin num" style="text-align:right" value="0" max="${l.q}" aria-label="退貨數量" oninput="rfCalc()" data-p="${parseInt(String(l.p).replace(/[^\d]/g,''))||0}"></td></tr>`).join('')}</tbody></table>
-    <div class="grid2">${F('退運費（NT$）','<input class="input num" id="rfShip" value="0" data-val="money" oninput="rfCalc()">','免運單不可退運費')}
-      ${F('退款金額（NT$）','<input class="input num" id="rfAmt" value="0" data-val="req|money">','上限＝實收 − 已退：'+NT(maxAmt))}</div>
+        <td class="right"><input class="cellin num" style="text-align:right" value="0" max="${l.q}" aria-label="退貨數量" oninput="rfCalc()" data-p="${l.p|0}"></td></tr>`).join('')}</tbody></table>
+    <div class="grid2">${F(`退運費（${CURSYM(o.cur)}）`,'<input class="input num" id="rfShip" value="0" data-val="money" oninput="rfCalc()">','免運單不可退運費')}
+      ${F(`退款金額（${CURSYM(o.cur)}）`,'<input class="input num" id="rfAmt" value="0" data-val="req|money">','上限＝實收 − 已退：'+money(maxAmt,o.cur))}</div>
     ${CHK('_rr',true,'回補庫存到主倉')}${CHK('_rn',true,'通知顧客')}
     ${F('原因（僅內部）',TXT('_rz','','例：尺寸不合'))}
     <p class="help">退款上限硬保證：Σrefunds ≤ captured（DB 層鎖）；手續費不退；退款後不能再建退貨。</p></div>`,
@@ -6751,9 +6890,10 @@ function orderRefund(){
      <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已送出退款——先落 pending 再打金流，restock 冪等')">退款</button>`});
 }
 function rfCalc(){
-  let sum=0;document.querySelectorAll('#genBody input[data-p]').forEach(i=>sum+=(+i.value||0)*(+i.dataset.p||0));
-  sum+=+((document.getElementById('rfShip')||{}).value||0);
-  const a=document.getElementById('rfAmt');if(a)a.value=sum;
+  /* data-p 是 integer cents、輸入框是主單位——換算只在邊界做一次，內部一律 cents（鐵律 3）*/
+  let cents=0;document.querySelectorAll('#genBody input[data-p]').forEach(i=>cents+=(+i.value||0)*(+i.dataset.p||0));
+  cents+=toCents((document.getElementById('rfShip')||{}).value||0);
+  const a=document.getElementById('rfAmt');if(a)a.value=fromCents(cents);
 }
 
 /* ==================================================================
@@ -6840,7 +6980,7 @@ function returnRulePage(){
         <div class="card-sec" data-doc="ret-shipfee">
           <div class="grid2">
             ${F('退貨運費',SEL('rrShip',[['free','免費（商家吸收）'],['flat','固定金額（每張退貨單）'],['customer','由顧客自理']],RRULE.ship,'onchange="RRULE.ship=this.value;rrShipSync()"'),'16-F5.3：固定額、per return、幣別必須等於訂單 presentment 幣別')}
-            <div id="rrShipAmt" ${RRULE.ship==='flat'?'':'hidden'}>${F('金額（NT$）',`<input class="input num" data-f="rrShipFee" value="${RRULE.shipFee}" data-val="money" oninput="RRULE.shipFee=+this.value||0">`)}</div>
+            <div id="rrShipAmt" ${RRULE.ship==='flat'?'':'hidden'}>${F(`金額（${CURSYM()}）`,`<input class="input num" data-f="rrShipFee" value="${fromCents(RRULE.shipFee)}" data-val="money" oninput="RRULE.shipFee=toCents(this.value)">`)}</div>
           </div>
         </div>
         <div class="card-sec" data-doc="ret-restock">
@@ -6910,14 +7050,26 @@ function rrFsDel(i){
    ================================================================== */
 /* 44 §19.2 模型：shipping_profile → zone(1..n) → rate(1..n)，rate 兩型 manual／carrier */
 const SHIP_ZONES=[
- {id:'dom',ic:'🇹🇼',n:'Domestic',sum:'台灣',rates:[
-   {ic:'🚚',n:'宅配',sub:'1–2 個工作天',price:'NT$120',type:'manual'},
+ /* 基準法域＝香港（CLAUDE.md 鐵律 11），所以 Domestic 是香港區域。
+    HK 的取貨網絡在 limits.yml `jurisdictions.hk.pickup_networks` 是三層 carrier→network→brand，
+    且合約值（COD 上限／材積／重量）全部 null＋verify_hk_pickup_contract_values: true——
+    **不得**把台灣的值換算過來充當 HK 值（56 §B.4／V-27），所以這裡只放通道不放限制值。 */
+ {id:'dom',ic:'🇭🇰',n:'Domestic',sum:'香港',rates:[
+   {ic:'🚚',n:'本地宅配',sub:'1–2 個工作天',price:money(3000),type:'manual'},
    /* 免運表達照實站：副標寫「滿 X 免費」，價格 badge 仍顯示原價，不改成 0 */
-   {ic:'🏪',n:'超商取貨',sub:'滿 NT$2,000 免費 • 3–5 個工作天',price:'NT$60',type:'manual',free:true}]},
+   {ic:'📦',n:'順豐站／智能櫃自取',sub:`滿 ${money(50000)} 免費 • 2–4 個工作天（合約值待覆核，V-27）`,price:money(1800),type:'manual',free:true}]},
+/* TW-PACK */
+/* ↑ 標記起點：以下整個運送區域是 jurisdiction/tw pack 的素材（鐵律 11：既有台灣內容不刪，只降級標記）。
+   limits.yml jurisdictions.tw.enabled=false，所以 UI 上標「未啟用」並整區灰化，不參與費率試算。
+   取貨通道與材積／重量／COD 上限見 limits.yml jurisdictions.tw.pickup_networks.*。 */
+ {id:'twpack',ic:'🇹🇼',n:'Domestic（台灣）',sum:'台灣',pack:'tw',rates:[
+   {ic:'🚚',n:'宅配',sub:'1–2 個工作天',price:money(12000,'TWD'),type:'manual'},
+   {ic:'🏪',n:'超商取貨',sub:`滿 ${money(200000,'TWD')} 免費 • 3–5 個工作天`,price:money(6000,'TWD'),type:'manual',free:true}]},
+/* /TW-PACK */
  {id:'intl',ic:'🌐',n:'International',sum:'香港, 馬來西亞, 新加坡、尚有 4 個',warn:7,rates:[
    {ic:'✈️',n:'DHL Express',sub:'1 項服務・支援預繳關稅・自動計算的運送時間',price:'自動計算',type:'carrier',
     svcs:['DHL Express Worldwide（DDP 可選）']},
-   {ic:'📮',n:'中華郵政 國際包裹',sub:'3 項服務・自動計算的運送時間',price:'自動計算',type:'carrier',group:'Worldwide',
+   {ic:'📮',n:'香港郵政 國際包裹',sub:'3 項服務・自動計算的運送時間',price:'自動計算',type:'carrier',group:'Worldwide',
     svcs:['國際快捷 EMS','國際航空包裹','國際水陸包裹']}]}];
 
 /* 外層：運送設定檔卡（44 §19.1「商店預設 → 一般設定檔」），列可點進內層 */
@@ -6944,9 +7096,11 @@ function shipProfilePage(){
   ${setRowAdd('新增區域','一個國家只能屬於同一設定檔的一個區域','shipAddZone()','ship-add-zone')}`;
 }
 function shipZone(z){
-  return `<section class="zone" data-doc="${z.id==='intl'?'ship-zone-intl':'ship-zone-dom'}">
+  /* pack 區域＝法域素材，UI 必須看得出來（照 set-tax-twpack 卡的先例：未啟用 chip ＋ 整卡灰化）*/
+  return `<section class="zone${z.pack?' is-dim':''}" data-doc="${z.id==='intl'?'ship-zone-intl':z.pack?'ship-zone-twpack':'ship-zone-dom'}"${z.pack?` data-pack="${z.pack}" aria-disabled="true"`:''}>
     <div class="zone-head"><span class="z-ic" aria-hidden="true">${z.ic}</span>
       <span class="z-t"><b>${H(z.n)}</b><span>${H(z.sum)}</span></span>
+      ${z.pack?chip(`jurisdiction/${z.pack} pack・未啟用`,'default','')+`<span class="mut3" style="font-size:var(--t-2xs)">limits.yml jurisdictions.${z.pack}.enabled=false</span>`:''}
       <button class="btn btn-ghost btn-sm" onclick="toast('Demo：編輯／刪除區域、增減國家')" aria-label="${H(z.n)} 區域的更多動作">⋯</button></div>
     ${z.warn?`<div class="banner-caution" data-doc="ship-market-warn" role="note"><span class="bc-ic" aria-hidden="true">⚠</span>
       <span>若要在此區域開始銷售至 ${z.warn} 個國家/地區，請先將這些國家/地區加入<a href="#" onclick="event.preventDefault();closeSettings();go('m-markets')">市場</a>。</span></div>`:''}
@@ -6977,7 +7131,7 @@ function shipToggleSvc(id,btn){
 }
 function shipAddRate(zid){
   const z=SHIP_ZONES.find(x=>x.id===zid);if(!z)return;
-  z.rates.push({ic:'📦',n:'新運送選項 '+(z.rates.length+1),sub:'手動費率・尚未設定時效',price:'NT$0',type:'manual'});
+  z.rates.push({ic:'📦',n:'新運送選項 '+(z.rates.length+1),sub:'手動費率・尚未設定時效',price:money(0),type:'manual'});
   setSubOpen('ship-profile',shipProfilePage());
   toast('已新增手動費率——rate 兩型：manual（固定價＋滿額免運門檻＋手填時效）／carrier（綁帳號、自動計算）');
 }
@@ -7189,22 +7343,23 @@ function manualPayDel(){
 }
 
 /* ---------- E3 本地配送 ---------- */
-const LD_ZONES=[{n:'大安區・信義區',s:'半徑 5 km 內・NT$60'},{n:'中山區・松山區',s:'半徑 10 km 內・NT$80'}];
+/* 費率存 integer cents，顯示交給樣板（`s` 走 H() 逃脫，金額 span 不能塞在這裡）*/
+const LD_ZONES=[{n:'觀塘・九龍灣',r:'半徑 5 km 內',fee:2000},{n:'中環・灣仔',r:'半徑 10 km 內',fee:3000}];
 function openLocalDelivery(){setSubOpen('local-delivery',localDeliveryPage());setAfterRender();}
 function localDeliveryPage(){
-  return setCrumb('🛵','本地配送・台北門市','shipping')
+  return setCrumb('🛵','本地配送・觀塘門市','shipping')
   +`<div class="card card-pad" data-doc="sub-localdelivery"><h3>配送範圍</h3>
     ${setRowSel('範圍設定方式','半徑或郵遞區號二選一','ldMode',[['radius','以門市為圓心的半徑'],['zip','郵遞區號清單']],'radius','sub-ld-mode',
       {dep:'ldRadiusBox',depVal:'radius',depInv:'ldZipBox'})}
     <div id="ldRadiusBox">${setRowInp('半徑（km）','上限見 limits.yml shipping.local_delivery_max_radius_km','ldRadiusKm','10','10','sub-ld-radius',{val:'req|num'})}</div>
     <div id="ldZipBox" hidden class="field" style="padding-top:var(--sp-300)"><label>郵遞區號清單</label>
-      <textarea class="input" data-f="ldZips" rows="3" placeholder="106, 105, 110（逗號分隔）">106, 105, 110</textarea>
+      <textarea class="input" data-f="ldZips" rows="3" placeholder="以郵政編碼／地區代碼逗號分隔">觀塘, 九龍灣, 牛頭角</textarea>
       <span class="hint">字數上限見 limits.yml shipping.local_delivery_postal_codes_max_chars</span></div>
-    ${setRowInp('基本配送費（NT$）','0 ＝ 免費配送','ldFee','80','80','sub-ld-fee',{val:'req|money'})}
-    ${setRowInp('免運門檻（NT$）','留空 ＝ 不設免運門檻','ldFree','1500','1500','sub-ld-free',{val:'money'})}
+    ${setRowInp(`基本配送費（${CURSYM()}）`,'0 ＝ 免費配送','ldFee',String(fromCents(3000)),String(fromCents(3000)),'sub-ld-fee',{val:'req|money'})}
+    ${setRowInp(`免運門檻（${CURSYM()}）`,'留空 ＝ 不設免運門檻','ldFree',String(fromCents(30000)),String(fromCents(30000)),'sub-ld-free',{val:'money'})}
     ${setRowInp('配送說明','顯示在結帳頁的配送方式下方','ldNote','當日 18:00 前下單，隔日送達','例：當日 18:00 前下單，隔日送達','sub-ld-note')}</div>
    <div class="card"><div class="card-pad"><h3>配送區域</h3>
-    ${LD_ZONES.map(z=>`<div class="set-row"><div class="sr-t"><b>${H(z.n)}</b><span class="sub">${H(z.s)}</span></div>
+    ${LD_ZONES.map(z=>`<div class="set-row"><div class="sr-t"><b>${H(z.n)}</b><span class="sub">${H(z.r)}・<span class="num">${money(z.fee)}</span></span></div>
       <button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：編輯配送區域')">編輯</button></div>`).join('')}
     ${setRowAdd('新增配送區域','每個地點的區域數上限見 limits.yml shipping.local_delivery_max_zones_per_location',
       "toast('Demo：新增配送區域——超過上限時新增鈕會 disabled')",'sub-ld-zone-add')}</div>
@@ -7221,7 +7376,7 @@ function packagesPage(){
       <span class="sr-act rowflex">${i===0?chip('預設','info','full'):''}
       <button class="btn btn-ghost btn-sm" onclick="pkgDel(${i})" aria-label="刪除 ${H(k.n)}">刪除</button></span></div>`).join('')}
     ${setRowAdd('新增包裹','箱／袋／信封三型，各自帶長寬高與空重','pkgAdd()','sub-packages-add')}</div>
-    <div class="card-note">空重會加進總重量再去算費率；超商取貨另有材積與重量上限（limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg）。</div></div>`;
+    <div class="card-note">空重會加進總重量再去算費率；取貨點通道另有材積與重量上限，由該法域 pack 提供（limits.yml jurisdictions.{code}.pickup_networks.max_dimension_sum_cm／max_weight_kg；HK 的合約值尚未覆核，見 56 §B.4 V-27）。</div></div>`;
 }
 function pkgAdd(){
   PKG_LIST.push({n:'自訂包裹 '+(PKG_LIST.length+1),s:'尚未填寫尺寸與空重'});
@@ -7511,6 +7666,9 @@ Object.assign(DOCS,{
  "ship-zone-dom":{t:"Domestic 區域",f:"本國區域與其手動費率",
   l:"44 §19.2 實站結構：rate 列＝icon＋名稱＋副標（時效）＋價格 badge＋⋯；時效為手填字串不是計算值",
   i:"P0・[api:deliveryProfileUpdate]（methodDefinitionsToCreate） [tbl:shipping_zones,shipping_rates]"},
+ "ship-zone-twpack":{t:"Domestic（台灣）區域——tw pack 素材（未啟用）",f:"原本的台灣本國區域與其手動費率，整區降級標記",
+  l:"CLAUDE.md 鐵律 11／56 §C.1：既有台灣內容<b>不刪、只標</b>。基準法域是香港，所以 Domestic 是香港區域；原本的台灣區域整塊留著但標成 jurisdiction/tw pack 素材並灰化（limits.yml jurisdictions.tw.enabled=false），不參與費率試算。標記在程式碼裡是 <code>data-pack=\"tw\"</code>＋<code>/* TW-PACK */</code> 包住整段資料，讓「這是某個法域的素材」看得見而不是靠讀者記得",
+  i:"P2・區域只在 pack 啟用時載入；取貨通道與上限見 limits.yml jurisdictions.tw.pickup_networks.*"},
  "ship-zone-intl":{t:"International 區域",f:"跨境區域、警示橫幅與承運商費率",
   l:"44 §19.2：涵蓋摘要末段是虛線底線 tooltip（「尚有 N 個」）；此區同時示範 carrier 型費率與 zone≠market 硬約束",
   i:"P0・[api:deliveryProfileUpdate] [api:carrierServices] [tbl:shipping_zones,carrier_accounts]"},
@@ -7524,7 +7682,7 @@ Object.assign(DOCS,{
   l:"44 §19.2：carrier ＝ 綁承運商帳號、services[] 子清單、badge「自動計算」、可支援 DDP 預繳關稅；副標格式「N 項服務・支援預繳關稅・自動計算的運送時間」；展開後為純文字服務清單",
   i:"P1・[api:carrierServiceCreate] [api:deliveryProfileUpdate]（methodDefinition.participant{carrierServiceId,services}） [tbl:carrier_accounts,carrier_services,shipping_rates(type='carrier',supports_ddp)]"},
  "ship-rate-free":{t:"滿額免運的呈現法",f:"門檻達標即免運的顯示規則",
-  l:"44 §19.2 逐字照抄：副標寫「滿 NT$2,000 免費」，價格 badge 仍顯示原價 NT$60——不是把價格改成 0。門檻比對用小計（折後、未稅、不含運）",
+  l:"44 §19.2 實測行為：副標寫「滿〈免運門檻〉免費」，價格 badge 仍顯示〈原費率〉——不是把價格改成 0。門檻與費率是市場資料（金額由 market locale 格式化），這裡記的是表達方式不是金額。門檻比對用小計（折後、未稅、不含運）",
   i:"P0・前台結帳挑選費率時才折成 0；[tbl:shipping_rates.free_over_cents]；金額口徑對齊金額引擎（15-F2）"},
  "ship-add-rate":{t:"新增運送選項",f:"在此區域內加一筆費率",
   l:"44 §19.2：⊕ 位於 zone 內（不是卡外）；新增時先選 manual 或 carrier，兩型欄位不同",
@@ -7661,7 +7819,7 @@ function companyNewPage(){
       <div id="coSubmitNote" class="card-sec" data-doc="b2b-submit-note">${coSubmitNoteHTML('auto')}</div>
     </div>
     <div class="card card-pad" data-doc="b2b-tax"><h3>稅務詳細資訊</h3>
-      <div class="grid2">${F('稅籍編號',TXT('loTaxId','','例：12345678','max:32'),'統編／VAT／SST；影響發票與稅額計算')}
+      <div class="grid2">${F('稅籍編號',TXT('loTaxId','','例：12345678-000','max:32'),'格式依該地點所屬法域的 tax_id_format（HK＝BR number／MY＝SST／EU＝VAT）；影響單據與稅額計算')}
         ${F('稅金設定',SEL('loTax',TAX_MODES,'collect'),'免稅需上傳豁免證明並設到期日')}</div>
     </div>
     <div class="card card-pad" style="display:flex;justify-content:flex-end">
@@ -8104,7 +8262,7 @@ function ckPrevCheckout(){
         ${ckN('delivery','配送',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">配送</b>
           ${ckN('addr','配送地址',ckPH('收件地址（姓名／地址／郵遞區號）',2))}
           ${ckN('shipmethod','運送方式',`<div style="margin-top:var(--sp-200)"><b style="font-size:var(--t-xs)">運送方式</b>
-            ${ckN('shiplist','運送選項清單',ckPH('宅配 NT$120・7-11 取貨 NT$60',2))}</div>`)}</div>`)}
+            ${ckN('shiplist','運送選項清單',ckPH(`本地宅配 ${money(3000)}・順豐站自取 ${money(1800)}`,2))}</div>`)}</div>`)}
         ${ckN('payment','付款',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">付款</b>
           ${ckN('payopt','付款選項',ckPH('信用卡・Apple Pay・LINE Pay',2))}</div>`)}
         ${ckN('action','動作',`<div style="padding:var(--sp-200)">
@@ -8116,9 +8274,9 @@ function ckPrevCheckout(){
             ${ckN('cartitems','購物車中的品項',`<div style="display:flex;gap:var(--sp-200);align-items:center;padding:var(--sp-200) 0">
               <span class="thumb" style="background:${P_G.hoodie}"></span>
               <span style="font-size:var(--t-xs)">奶茶色寬版帽T<br><span class="mut3">M / 奶茶</span></span>
-              <span class="num" style="margin-left:auto;font-size:var(--t-xs)">NT$1,480</span></div>`)}</div>`)}
+              <span class="num" style="margin-left:auto;font-size:var(--t-xs)">${money(37000)}</span></div>`)}</div>`)}
           ${ckN('totals','總計',`<div class="kv" style="font-size:var(--t-xs);padding-top:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
-            <span class="k">總計</span><b class="num">NT$1,600</b></div>`)}</div>`)}
+            <span class="k">總計</span><b class="num">${money(40000)}</b></div>`)}</div>`)}
       </div>
     </div>
     ${ckN('footer','頁尾',`<div style="margin-top:var(--sp-400);padding:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
@@ -8131,7 +8289,7 @@ function ckPrevThanks(){
     ${ckN('confirm','訂單確認',`<div style="padding:var(--sp-300) var(--sp-200)">
       ${ckN('confirmmsg','確認訊息',`<div><span class="badge b-success"><span class="pip full"></span>已確認</span>
         <h3 style="margin-top:var(--sp-200)">謝謝你，芷妍！</h3><p class="mut" style="font-size:var(--t-xs)">訂單 #1042 已成立，確認信已寄出。</p></div>`)}
-      ${ckN('ordersum','訂單摘要',ckPH('2 件品項・NT$2,932',2))}</div>`)}
+      ${ckN('ordersum','訂單摘要',ckPH(`2 件品項・${money(73300)}`,2))}</div>`)}
     ${ckN('custinfo','顧客資訊',`<div style="padding:var(--sp-200)">
       ${ckN('shipsum','配送與付款摘要',ckPH('宅配到台北市大安區・信用卡末四碼 4242',2))}</div>`)}
     ${ckN('footer','頁尾',`<div style="margin-top:var(--sp-300);padding:var(--sp-200);border-top:var(--hairline) solid var(--border-2)">
@@ -8147,11 +8305,11 @@ function ckPrevAccount(){
     orders:ckN('orderlist','訂單清單',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">訂單</b>
       <div style="display:flex;gap:var(--sp-300);align-items:center;padding:var(--sp-300) 0">
         <span class="thumb" style="width:64px;height:64px;background:${P_G.hoodie}"></span>
-        <span style="font-size:var(--t-xs)"><b>#1042</b><br><span class="mut">2 件品項・NT$2,932</span></span></div>
+        <span style="font-size:var(--t-xs)"><b>#1042</b><br><span class="mut">2 件品項・${money(73300)}</span></span></div>
       ${ckN('orderact','訂單動作','<span class="btn btn-sec btn-sm">檢視訂單</span> <span class="btn btn-ghost btn-sm">申請退貨</span>')}</div>`),
     status:ckN('statustrack','訂單狀態',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">訂單狀態</b>
       ${ckN('trackmap','配送進度',ckPH('已出貨・預計 8/14 送達（黑貓 800123456789）',2))}
-      ${ckN('ordersum','訂單摘要',ckPH('2 件品項・NT$2,932',1))}</div>`),
+      ${ckN('ordersum','訂單摘要',ckPH(`2 件品項・${money(73300)}`,1))}</div>`),
     profile:ckN('profileinfo','個人資料',`<div style="padding:var(--sp-200)"><b style="font-size:var(--t-sm)">個人資料</b>
       ${ckN('contactinfo','聯絡資訊',ckPH('林芷妍・zhiyan.lin@example.com',2))}
       ${ckN('addrbook','地址簿',ckPH('預設地址：台北市大安區和平東路二段 106 號',2))}</div>`),
@@ -8159,10 +8317,10 @@ function ckPrevAccount(){
   const ann=(CK_TREES[CK.page]||[]).some(s=>s.k==='announce');
   return `<div class="ck-prev">
     ${ann?ckN('announce','公告列',`<div style="background:var(--brand);color:var(--text-inverse);border-radius:var(--r-200);
-      padding:var(--sp-150);text-align:center;font-size:var(--t-2xs);margin-bottom:var(--sp-300)">全站滿 NT$2,000 免運</div>`):''}
+      padding:var(--sp-150);text-align:center;font-size:var(--t-2xs);margin-bottom:var(--sp-300)">全站滿 ${money(50000)} 免運</div>`):''}
     ${ckN('header','頁首',`<div class="ck-acct-top">
       ${ckN('logo','標誌','<b style="font-size:var(--t-lg);line-height:var(--lh-lg)">CHILL LOVE</b>')}
-      <span class="ck-credit">${ckN('credit','商店抵用金餘額','<span class="tagchip num" style="margin:0">NT$100.00</span>')}</span>
+      <span class="ck-credit">${ckN('credit','商店抵用金餘額',`<span class="tagchip num" style="margin:0">${money(10000)}</span>`)}</span>
       <span class="avatar" aria-hidden="true">W</span></div>
       <div class="tabs" style="margin:var(--sp-300) 0 0" role="tablist">
         <span class="tab ${CK.page==='profile'?'':'on'}">訂單</span><span class="tab ${CK.page==='profile'?'on':''}">個人資料</span></div>`)}
@@ -8312,7 +8470,7 @@ Object.assign(DOCS,{
   l:"兩態的後果不同，必須寫在畫面上：選「全部草稿」時買家結帳不成單、落 draft_orders 並標 source='b2b'，核准（draftOrderComplete）才扣庫存；選「自動提交」時仍有一條例外——缺運送地址算不出運費與稅額，一樣落草稿（44 §22.5 副標逐字）",
   i:"P2・[tbl:company_locations.orders_to_draft] [tbl:draft_orders(source)] [api:draftOrderComplete]；核准者需「草稿訂單」權限（41 §12）"},
  "b2b-tax":{t:"稅務詳細資訊（地點層）",f:"稅籍編號與稅金設定",
-  l:"44 §22.5：稅籍編號＋稅金設定（收取稅金／免稅）掛地點——跨境公司各地點稅別不同（台灣統編 vs 馬來西亞 SST vs EU reverse charge）。免稅要能存豁免證明與到期日",
+  l:"44 §22.5：稅籍編號＋稅金設定（收取稅金／免稅）掛地點——跨境公司各地點稅別不同（HK BR number vs 馬來西亞 SST vs EU reverse charge），格式一律由該法域 pack 的 tax_id_format 提供，核心不內建任一國格式。免稅要能存豁免證明與到期日",
   i:"P2・[api:companyLocationTaxSettingsUpdate] [tbl:company_locations(tax_registration_id,tax_exempt,tax_exemption_expires_at)] ＋ 稅額引擎讀取順序見 15 §"},
  "b2b-loc-model":{t:"「公司只是容器」警示",f:"把模型層級寫在畫面上",
   l:"44 §22.5 結論：我們原本的 B2B 規格把 catalog／checkout profile／payment terms／tax 掛在 company 上——要改成掛 company_location。這條橫幅是防止實作再掛錯層的視覺護欄",
@@ -8551,7 +8709,7 @@ Object.assign(DOCS,{
   l:"44 §18.7 通知表：備貨時間決定「已可到店取貨」通知的預估時間文字；選「關閉」時該地點在結帳頁不再出現取貨選項，但既有待取訂單不受影響",
   i:"P2・[api:TBD-pickupSettingUpsert]（28 待補）[tbl:pickup_settings(location_id,prep_time,instructions,enabled)]"},
  "set-packages":{t:"已儲存的包裹（進次級視圖）",f:"維護可重複使用的包裹規格",
-  l:"包裹的空重會加進總重再算費率，所以不是純展示資料；超商取貨另有材積與重量上限（limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg），超過時該通道要在結帳頁隱藏",
+  l:"包裹的空重會加進總重再算費率，所以不是純展示資料；取貨點通道另有材積與重量上限，由該法域 pack 提供（limits.yml jurisdictions.{code}.pickup_networks.max_dimension_sum_cm／max_weight_kg），超過時該通道要在結帳頁隱藏",
   i:"P2・[api:TBD-packagePresetCreate]（28 待補）[tbl:package_presets(shop_id,type,length_mm,width_mm,height_mm,tare_g,is_default)]"},
  "set-packingslip":{t:"裝箱單模板（進次級視圖）",f:"編輯裝箱單的 Liquid 模板",
   l:"16-F4：裝箱單是 Liquid 模板渲染成 PDF，走 18-F2 的沙箱（Drops 白名單＋資源上限）；模板拿到的是<b>該張出貨單</b>的 line_items，不是整張訂單，拆單時兩者不同",
@@ -8575,9 +8733,11 @@ Object.assign(DOCS,{
  "set-taxes-common":{t:"稅務共同設定",f:"價格含稅／稅則覆寫／跨境關稅",
   l:"與 service tier 無關、跨全部稅區的三項。HK 下「價格含稅」預設關閉——無稅可內含（limits.yml jurisdictions.hk.consumption_tax.taxes_included_default=false，對照 tw=true）。跨境關稅是 56 §B.2 重分類後<b>唯一不受法域影響</b>的稅務事件點",
   i:"P0・[api:TBD-taxSettingsUpdate] [tbl:tax_settings(prices_include_tax,duty_mode)]"},
+/* TW-PACK */
  "set-tax-twpack":{t:"台灣 pack 素材（未啟用）",f:"既有台灣形態設定的歸位處",
   l:"CLAUDE.md 鐵律 11／56 §C.1：既有台灣內容<b>一行不刪</b>，降級為 jurisdiction/tw pack 素材並標未啟用（limits.yml jurisdictions.tw.enabled=false）。核心規格不得再直接引用統一發票／字軌／折讓／超商取貨／統編／電支條例——要引就引 pack 的能力介面",
   i:"P2・[tbl:tax_regions] 僅在 tw pack 啟用後才進金額引擎；tw 的 tax_invoice.kind=gui 走 38 §3B 全套"},
+/* /TW-PACK */
  "set-tax-tw":{t:"台灣營業稅率（tw pack 素材）",f:"設定台灣的稅率",
   l:"台灣營業稅 5% 且採含稅定價，稅額由金額引擎自售價反推，不另外加價（15-F2）。<b>tw pack 未啟用時此值不進金額引擎</b>——留著是 56 §C.1 要求的「既有內容不刪」，不是現行行為",
   i:"P0(tw pack)・[api:TBD-taxRegionUpdate]（28 待補）[tbl:tax_regions(shop_id,country,rate_bp,service_tier)]；稅率存 basis points 整數，不存 float"},
@@ -8780,7 +8940,7 @@ Object.assign(DOCS,{
   l:"每個地點的區域數上限讀 config/limits.yml shipping.local_delivery_max_zones_per_location（10）；到頂時新增鈕 disabled（47 §E 只降文字色）",
   i:"P2・[tbl:local_delivery_zones(location_id,name,fee_cents,geo)]"},
  "sub-packages":{t:"已儲存的包裹（次級視圖）",f:"包裹規格清單與新增／刪除",
-  l:"包裹空重會加進總重再算費率，所以刪除會改變既有費率試算結果；預設包裹在購買標籤時自動帶入。超商取貨的材積與重量上限見 limits.yml pickup_point.max_dimension_sum_cm／max_weight_kg",
+  l:"包裹空重會加進總重再算費率，所以刪除會改變既有費率試算結果；預設包裹在購買標籤時自動帶入。取貨點通道的材積與重量上限由法域 pack 提供，見 limits.yml jurisdictions.{code}.pickup_networks.max_dimension_sum_cm／max_weight_kg",
   i:"P2・[api:TBD-packagePresetCreate/Delete] [tbl:package_presets]；尺寸存 mm、空重存 g（整數）"},
  "sub-packages-add":{t:"新增包裹",f:"建立一組可重用的包裹規格",
   l:"三型（箱／袋／信封）各自的欄位不同：信封沒有高度。未填長寬高與空重的包裹不會出現在標籤購買頁",
@@ -8848,7 +9008,7 @@ Object.assign(DOCS,{
 });
 
 /* init */
-renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();
+renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();paintMoney();
 urlBoot();   /* 53號 P0-18：最後才掛路由——MODULES／DETAILS 到這裡才全部登記完 */
 let rzT=0;
 function onResize(){drawSparks();drawAnalytics();refreshScrollHints();}
