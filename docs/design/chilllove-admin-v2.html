@@ -208,7 +208,8 @@ svg{flex:none}
 /* M1 hover 底色：150ms ease */
 .m-hover,.icon-btn,.hamb,.store-chip,.nav-sub,.set-item,.dtype,.pick,.alertrow,.pal-item,
 .view-menu button,.seg button,.bulkbar .b-act,.idx tbody tr,.toggle,.tgl,.ai-row,.ftile,
-.media-tile .mt-x,.rule .rm,.mi .mi-act button{transition:background-color var(--dur-base) ease}
+.media-tile .mt-x,.rule .rm,.mi .mi-act button,
+.set-rowbtn,.rate-row,.set-crumb .cr-back{transition:background-color var(--dur-base) ease}
 /* M2 文字色：100ms（比底色快，避免文字先於底色定格）*/
 .m-text,.tab,.idx th.sortable,.table-toggle,.valchip .x,.doc-pop .dp-close{transition:color var(--dur-fast) var(--ease-standard)}
 /* M1 ＋ M2 同時（底色與文字色都變的元件）*/
@@ -242,8 +243,8 @@ svg{flex:none}
 .m-sidebar,.sidebar{transition:max-width var(--dur-slowest) var(--ease-in-out)}
 /* 遮罩／邊緣漸層的純淡入：M1 的淡入版（51 表 4.1 列為合理豁免）*/
 .scrim,.tscroll-wrap::after{transition:opacity var(--dur-base) var(--ease-in-out)}
-/* 開關把手：改 transform（48 #87：禁止轉場 left／width 等幾何屬性）*/
-.toggle::after,.tgl::after{transition:transform var(--dur-fast) var(--ease-decelerate)}
+/* 開關把手／摺疊箭頭：改 transform（48 #87：禁止轉場 left／width 等幾何屬性）*/
+.toggle::after,.tgl::after,.rate-row .r-caret{transition:transform var(--dur-fast) var(--ease-decelerate)}
 
 /* ===== 頂部列 ===== */
 .topbar{height:var(--topbar-h);background:var(--surface);border-bottom:var(--hairline) solid var(--border);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
@@ -1071,6 +1072,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 @media (pointer:coarse){
   .btn-sm{min-height:var(--touch-min)}
   .tab,.fsel,.pick,.seg button,.step,.tokchip,.valchip .x,.mi .mi-act button,.media-tile .mt-x,.media-add,.ftile,.alertrow{min-height:var(--touch-min)}
+  .set-rowbtn,.rate-row{min-height:var(--touch-min)}
+  .set-crumb .cr-back{min-width:var(--touch-min);min-height:var(--touch-min)}
   .fsel,.mi .mi-act button,.media-tile .mt-x{min-width:var(--touch-min)}
   .tgl{position:relative}
   .tgl::before{content:"";position:absolute;inset:-12px}
@@ -1104,6 +1107,95 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .card-stack>.card:last-child{border-radius:0 0 var(--r-300) var(--r-300)}
 .card-stack>.card:only-child{border-radius:var(--r-300);border-top-width:var(--hairline)}
 
+/* ══════════════════════════════════════════════════════════════════════
+   退貨與取消規則（49 P0-03／44 §18.6）＋ 運送設定檔內層（49 P0-05／P0-06／44 §19.2）
+   ══════════════════════════════════════════════════════════════════════ */
+/* 設定內的次級視圖麵包屑：icon chip ＋ › ＋ 目前層級（44 §18.6／§19.2 逐字結構）*/
+.set-crumb{display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-sm);margin-bottom:calc(var(--sp-100) * -1)}
+.set-crumb .cr-back{display:inline-flex;align-items:center;justify-content:center;width:var(--h-28);height:var(--h-28);
+  border-radius:var(--r-200);background:var(--surface-sunken);color:var(--text);font-size:var(--t-md);flex:none}
+.set-crumb .cr-back:hover{background:var(--surface-sunken-hover)}
+.set-crumb .cr-sep{color:var(--text-3)}
+.set-crumb b{font-size:var(--t-md);line-height:var(--lh-md);font-weight:600}
+
+/* 可點的設定列（.set-row 的 button 版：真的能進次級視圖，不是佔位圖）*/
+.set-rowbtn{display:flex;align-items:center;gap:var(--sp-300);text-align:left;
+  padding:var(--sp-300) var(--sp-200);margin:0 calc(var(--sp-200) * -1);width:calc(100% + var(--sp-400));
+  border-bottom:var(--hairline) solid var(--border-2);border-radius:var(--r-200);font-size:var(--t-sm)}
+.set-rowbtn:hover{background:var(--surface-2)}
+.set-rowbtn:last-child{border-bottom:0}
+.set-rowbtn .rb-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.set-rowbtn .rb-t b{display:block;font-weight:600}
+.set-rowbtn .rb-t span{display:block;font-size:var(--t-xs);color:var(--text-2)}
+.set-rowbtn .chev{color:var(--text-3);flex:none}
+.set-rowbtn .rb-ic{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);background:var(--surface-2);
+  display:grid;place-items:center;flex:none;font-size:var(--t-md)}
+/* ⊕ 新增列：與資料列同一族，但無 chevron、字色為連結色 */
+.set-rowbtn.rb-add .rb-t b{color:var(--link);font-weight:600}
+
+/* 卡片底部灰底提示（44 §18.6 卡片 1 footer）：貼齊卡片內緣、不留白邊 */
+.card-note{background:var(--surface-2);border-top:var(--hairline) solid var(--border-2);
+  border-radius:0 0 var(--r-300) var(--r-300);padding:var(--sp-300) var(--sp-400);
+  font-size:var(--t-xs);line-height:1.6;color:var(--text-2)}
+.card:has(>.card-note)>.card-pad{padding-bottom:var(--sp-300)}
+
+/* 47 §E disabled：只降文字色、底色與 opacity 一律不動（整卡灰化用）*/
+.is-dim,.is-dim b,.is-dim h3,.is-dim .sub,.is-dim .mut,.is-dim .mut3,.is-dim .help,.is-dim label,
+.is-dim .set-row,.is-dim .set-rowbtn .rb-t b,.is-dim .set-rowbtn .rb-t span{color:var(--text-disabled)}
+.is-dim .set-rowbtn.rb-add .rb-t b{color:var(--text-disabled)}
+.is-dim .cl-radio{box-shadow:inset 0 0 0 var(--hairline) var(--text-disabled);cursor:not-allowed}
+.is-dim .cl-radio:checked{background:var(--text-disabled);box-shadow:inset 0 0 0 var(--hairline) var(--text-disabled)}
+.is-dim .set-rowbtn{cursor:not-allowed}
+.is-dim .set-rowbtn:hover{background:transparent}
+
+/* 設定面板內的內嵌連結（本檔僅此二處用 <a>，其餘皆為 button）*/
+.set-content a{color:var(--link);text-underline-offset:var(--sp-050)}
+
+/* 黃色警示橫幅（44 §19.2：zone ≠ market 跨模組硬約束）*/
+.banner-caution{display:flex;gap:var(--sp-200);align-items:flex-start;
+  background:var(--sem-caution-surface);border:var(--hairline) solid var(--sem-caution-border);
+  color:var(--sem-caution-text);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);
+  font-size:var(--t-xs);line-height:1.6;margin:var(--sp-200) 0 var(--sp-300)}
+.banner-caution .bc-ic{color:var(--sem-caution-icon);flex:none;line-height:var(--lh-sm)}
+.banner-caution a{color:var(--sem-caution-text);font-weight:600;text-underline-offset:var(--sp-050)}
+
+/* 運送區域（zone）＝ 標題列 ＋ 費率列（44 §19.2）*/
+.zone{border:var(--hairline) solid var(--border);border-radius:var(--r-300);padding:var(--sp-300);margin-bottom:var(--sp-300)}
+.zone:last-of-type{margin-bottom:0}
+.zone-head{display:flex;align-items:center;gap:var(--sp-200);min-width:0}
+.zone-head .z-ic{font-size:var(--t-lg);line-height:var(--lh-lg);flex:none}
+.zone-head .z-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.zone-head .z-t b{display:block;font-size:var(--t-sm);font-weight:600}
+.zone-head .z-t span{display:block;font-size:var(--t-xs);color:var(--text-2)}
+.zone-sub{font-size:var(--t-2xs);font-weight:600;letter-spacing:.08em;color:var(--text-3);
+  padding:var(--sp-200) 0 var(--sp-100)}
+.rate-row{display:flex;align-items:center;gap:var(--sp-200);width:100%;text-align:left;min-width:0;
+  padding:var(--sp-200) var(--sp-150);border-radius:var(--r-200);border-top:var(--hairline) solid var(--border-2);font-size:var(--t-sm)}
+.rate-row:hover{background:var(--surface-2)}
+.rate-row .r-ic{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);background:var(--surface-2);
+  display:grid;place-items:center;flex:none}
+.rate-row .r-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.rate-row .r-t b{display:block;font-weight:600}
+.rate-row .r-t span{display:block;font-size:var(--t-xs);color:var(--text-2)}
+.rate-row .r-price{margin-left:auto;flex:none}
+.rate-row .r-caret,.rate-row .chev{color:var(--text-3);flex:none;display:inline-block}
+.rate-row[aria-expanded="true"] .r-caret{transform:rotate(180deg)}
+.rate-svcs{list-style:none;font-size:var(--t-xs);color:var(--text-2);
+  padding:var(--sp-100) 0 var(--sp-200) calc(var(--h-28) + var(--sp-300));display:grid;gap:var(--sp-100)}
+.rate-svcs[hidden]{display:none}
+
+/* ≤768（47 §F 主斷點）：zone 費率列堆疊，不橫向溢出 */
+@media (max-width:47.9975em){
+  .set-rowbtn{flex-wrap:wrap}
+  .set-rowbtn .rb-t{flex:1 0 60%}
+  .rate-row{flex-wrap:wrap;row-gap:var(--sp-150)}
+  .rate-row .r-t{flex:1 0 calc(100% - var(--h-28) - var(--sp-200))}
+  .rate-row .r-price{margin-left:calc(var(--h-28) + var(--sp-200));order:3}
+  .rate-row .r-caret,.rate-row .chev{margin-left:auto;order:4}
+  .rate-svcs{padding-left:var(--sp-300)}
+  .zone{padding:var(--sp-200)}
+  .card-note{padding:var(--sp-300)}
+}
 
 #page-detail{max-width:998px}
 
@@ -1977,7 +2069,7 @@ const SET_PAGES={
    ${setRow("店內額度","顧客帳號頁顯示餘額與到期日")}
    ${setRow("帳號頁網址","chilllove.demo/account（託管）")}</div>`,
  shipping:`<div class="card card-pad"><h3>運送方案</h3>
-   <div class="set-row"><div><b>一般方案</b><span class="sub">7 個商品・1 個出貨地點</span></div><span class="chev">›</span></div>
+   <button class="set-rowbtn" onclick="openShipProfile('general')"><span class="rb-t"><b>一般方案</b><span>7 個商品・1 個出貨地點・2 個區域</span></span><span class="chev" aria-hidden="true">›</span></button>
    ${setRow("台灣（本島）","宅配 NT$120・滿 NT$2,000 免運")}
    ${setRow("香港・馬來西亞","國際運送 依重量計價")}</div>
   <div class="card card-pad"><h3>本地取貨</h3>${setRow("台北門市","關閉——POS 屬第三階段")}</div>`,
@@ -4910,6 +5002,349 @@ function rfCalc(){
   sum+=+((document.getElementById('rfShip')||{}).value||0);
   const a=document.getElementById('rfAmt');if(a)a.value=sum;
 }
+
+/* ==================================================================
+   擴建層 v2.2 —— 兩個空白模組補建
+   A：退貨與取消規則（49 P0-03／44 §18.6／16-F5.3・F7.4）
+   B：運送設定檔內層 zones×rates（49 P0-05・P0-06／44 §19.1・§19.2）
+   ================================================================== */
+
+/* ---------- 設定內的次級視圖（sub-view）：麵包屑可返回，導航高亮留在父分頁 ---------- */
+let SETSUB=null;
+function setSubOpen(sub,html){
+  SETSUB=sub;
+  const el=document.getElementById('setContent');
+  el.innerHTML=html;
+  enhanceTables();
+  const b=el.querySelector('.cr-back');if(b)b.focus();
+  const body=document.querySelector('.set-body');if(body)body.scrollTop=0;
+}
+function setSubBack(page){SETSUB=null;setPage(page);const body=document.querySelector('.set-body');if(body)body.scrollTop=0;}
+const setCrumb=(ic,title,page)=>`<nav class="set-crumb" aria-label="麵包屑">
+  <button class="cr-back" onclick="setSubBack('${page}')" aria-label="返回上一層">${ic}</button>
+  <span class="cr-sep" aria-hidden="true">›</span><b>${title}</b></nav>`;
+/* 可點列：真的能進次級視圖／新增資料，不是 setRow 的不可點佔位 */
+const setRowBtn=(t,sub,right,onclick,doc,ic)=>`<button class="set-rowbtn" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
+  ${ic?`<span class="rb-ic" aria-hidden="true">${ic}</span>`:''}
+  <span class="rb-t"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</span>${right||''}</button>`;
+const setRowAdd=(t,sub,onclick,doc)=>`<button class="set-rowbtn rb-add" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
+  <span class="rb-t"><b>⊕ ${t}</b>${sub?`<span>${sub}</span>`:''}</span></button>`;
+
+/* ==================================================================
+   模組 A：政策分頁（第一張卡＝退貨與取消規則，不是法務條款）
+   ================================================================== */
+/* 44 §18.6：規則可有多條（預設 ＋ N 條）；狀態三態同法務政策列 */
+const RET_RULES=[{id:'default',t:'預設規則',sub:'套用於所有市場與商品（未命中其他規則時）',st:'unset'}];
+/* 44 §18.6／33 號行動項：法務政策三態 —— 未設定政策／● 自動（系統生成）／已設定 */
+const LEGAL_POLICIES=[
+ {t:'退款政策',u:'/policies/refund-policy',st:'unset'},
+ {t:'隱私權政策',u:'/policies/privacy-policy',st:'auto'},
+ {t:'服務條款',u:'/policies/terms-of-service',st:'unset'},
+ {t:'運送政策',u:'/policies/shipping-policy',st:'set'}];
+const POLICY_BADGE={unset:()=>chip('未設定政策','default',''),auto:()=>chip('自動','success','full'),set:()=>chip('已設定','info','full')};
+const RULE_BADGE={unset:()=>chip('未設定規則','default',''),set:()=>chip('已設定規則','success','full')};
+
+function policiesPage(){
+  return `<div class="card" data-doc="ret-rules">
+    <div class="card-pad"><h3>退貨與取消規則</h3>
+      <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-100)">設定退貨與取消要求的條件與費用</p>
+      <div id="retRuleList">${RET_RULES.map(r=>setRowBtn(H(r.t),H(r.sub),
+        `${RULE_BADGE[r.st]()}<span class="chev" aria-hidden="true">›</span>`,`openReturnRule('${r.id}')`,'ret-rule-row')).join('')}</div>
+      ${setRowAdd('新增規則','可依市場／商品／顧客分群命中不同規則','retAddRule()','ret-rule-add')}</div>
+    <div class="card-note">政策是給人看的文案，退貨與取消規則是給機器執行的條件——兩者分離（41 §12.15）。</div>
+  </div>
+  <div class="card card-pad" data-doc="set-policies">
+    <h3>商店政策</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-100)">顧客可在結帳頁與頁尾看到；URL 固定不可改</p>
+    <div data-doc="legal-3state">${LEGAL_POLICIES.map(p=>`<div class="set-row"><div><b>${H(p.t)}</b><span class="sub">${H(p.u)}</span></div>
+      <span style="margin-left:auto">${POLICY_BADGE[p.st]()}</span>
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：編輯「${H(p.t)}」（可用範本生成器產生草稿）')">編輯</button></div>`).join('')}</div>
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">「● 自動」＝系統依商店收集的資料類型代為生成，商家改寫後即轉為「已設定」。</p></div>`;
+}
+function retAddRule(){
+  const n=RET_RULES.length;
+  RET_RULES.push({id:'r'+n,t:'規則 '+n,sub:'尚未指定命中條件（市場／商品系列／顧客分群）',st:'unset'});
+  setPage('policies');
+  toast('已新增一條規則——多條規則在下單時解析出唯一適用者並快照（16-F7.4 規則 4）');
+}
+
+/* ---------- 規則編輯頁（次級視圖）---------- */
+/* 16-F5.3 模型：補貨費 = 百分比／per line item；退貨運費 = 固定額／per return（不對稱設計不可統一）*/
+const RRULE={ret:false,cancel:false,win:'30',basis:'item',ship:'flat',shipFee:120,restock:0,scope:'collection',
+  fsCols:['最終銷售・出清'],cancelWin:'48'};
+let RRULE_ID='default';
+function openReturnRule(id){RRULE_ID=id;setSubOpen('return-rule',returnRulePage());rrFinalSync();}
+function returnRulePage(){
+  const r=RET_RULES.find(x=>x.id===RRULE_ID)||RET_RULES[0];
+  return setCrumb('🗒',H(r.t),'policies')
+  +`<div class="card" data-doc="ret-rule-card">
+    <div class="card-pad">
+      <div class="set-row" data-doc="ret-toggle-return"><div><b>退貨規則</b><span class="sub">套用於訂單中<b>已履行</b>的品項</span></div>
+        <input type="checkbox" class="tgl" id="rrRet" role="switch" style="margin-left:auto" aria-label="啟用退貨規則"
+          ${RRULE.ret?'checked':''} aria-controls="rrRetFields" onchange="rrToggle('ret',this)"></div>
+      <div id="rrRetFields" ${RRULE.ret?'':'hidden'} style="padding:var(--sp-300) 0 var(--sp-100)">
+        <div class="grid2">
+          ${F('退貨期限',SEL('rrWin',[['14','14 天'],['30','30 天'],['90','90 天'],['unlimited','不限'],['custom','自訂天數']],RRULE.win,'data-doc="ret-window" onchange="RRULE.win=this.value;toast(\'退貨期限：\'+this.options[this.selectedIndex].text)"'),'起算點見下欄；快照後不隨規則變更（16-F7.4 規則 3）')}
+          ${F('期限起算點',SEL('rrBasis',[['item','個別品項配送日'],['order','訂單最後一項配送日']],RRULE.basis,'onchange="RRULE.basis=this.value;toast(\'起算點：\'+this.options[this.selectedIndex].text)"'),'16-F7.4 規則 7：兩種 basis 都要落地')}
+        </div>
+        <div class="card-sec" data-doc="ret-shipfee">
+          <div class="grid2">
+            ${F('退貨運費',SEL('rrShip',[['free','免費（商家吸收）'],['flat','固定金額（每張退貨單）'],['customer','由顧客自理']],RRULE.ship,'onchange="RRULE.ship=this.value;rrShipSync()"'),'16-F5.3：固定額、per return、幣別必須等於訂單 presentment 幣別')}
+            <div id="rrShipAmt" ${RRULE.ship==='flat'?'':'hidden'}>${F('金額（NT$）',`<input class="input num" data-f="rrShipFee" value="${RRULE.shipFee}" data-val="money" oninput="RRULE.shipFee=+this.value||0">`)}</div>
+          </div>
+        </div>
+        <div class="card-sec" data-doc="ret-restock">
+          ${F('補貨費（重新上架費，%）',`<input class="input num" data-f="rrRestock" value="${RRULE.restock}" data-val="money" oninput="RRULE.restock=+this.value||0">`,
+            '16-F5.3：百分比、<b>per line item</b>（同一張退貨各品項可不同 %）；0 ＝ 不收。存為 basis points（0–10000），上界先以 100% 防呆。')}
+        </div>
+      </div>
+      <div class="set-row" data-doc="ret-toggle-cancel"><div><b>取消規則</b><span class="sub">套用於訂單中<b>未出貨</b>的品項</span></div>
+        <input type="checkbox" class="tgl" id="rrCan" role="switch" style="margin-left:auto" aria-label="啟用取消規則"
+          ${RRULE.cancel?'checked':''} aria-controls="rrCanFields" onchange="rrToggle('cancel',this)"></div>
+      <div id="rrCanFields" ${RRULE.cancel?'':'hidden'} style="padding:var(--sp-300) 0 var(--sp-100)" data-doc="ret-cancel-window">
+        ${F('可提出取消要求的期限',SEL('rrCanWin',[['2','下單後 2 小時內'],['24','下單後 24 小時內'],['48','下單後 48 小時內'],['unfulfilled','只要尚未出貨都可以']],RRULE.cancelWin,'onchange="RRULE.cancelWin=this.value;toast(\'取消期限：\'+this.options[this.selectedIndex].text)"'),'退貨 vs 取消以履行狀態切分：同一張訂單可能兩者並存（16-F7.4 規則 5）')}
+      </div>
+    </div>
+    <div class="card-note" data-doc="ret-snapshot">退貨與取消規則僅適用於<b>規則啟用或更新後所購買</b>的品項——既有訂單沿用下單當下的快照，不受本次修改影響。</div>
+  </div>
+  <div class="card card-pad" id="rrFinal" data-doc="ret-final">
+    <h3>最終銷售品項</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">顧客無法對最終銷售商品提出退貨或取消要求</p>
+    <div class="rowflex" data-doc="ret-final-scope" role="radiogroup" aria-label="最終銷售品項的指定粒度">
+      ${[['collection','商品系列'],['product','商品']].map(([v,l])=>`<label class="inline-lbl" style="gap:var(--sp-200)">
+        <input type="radio" name="rrScope" class="cl-radio" value="${v}" ${RRULE.scope===v?'checked':''} aria-label="${l}"
+          onchange="RRULE.scope=this.value;rrScopeSync()"><span>${l}</span></label>`).join('')}
+    </div>
+    <div class="card-sec" id="rrFsList">${RRULE.fsCols.map((c,i)=>`<div class="set-row"><div><b>${H(c)}</b><span class="sub">命中即前台完全不出現申請入口（不是提交後才拒絕）</span></div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="rrFsDel(${i})" aria-label="移除 ${H(c)}">移除</button></div>`).join('')}</div>
+    ${setRowAdd('新增最終銷售商品系列','bundles 不可設為最終銷售（16-F7.4 規則 6）','rrFsAdd()','ret-final-add')}
+  </div>
+  <p class="mut3" style="font-size:var(--t-xs)"><a href="#" onclick="event.preventDefault();toast('Demo：深入瞭解退貨與取消規則')">深入瞭解退貨與取消規則</a></p>`;
+}
+function rrToggle(k,el){
+  RRULE[k]=el.checked;
+  const f=document.getElementById(k==='ret'?'rrRetFields':'rrCanFields');if(f)f.hidden=!el.checked;
+  rrFinalSync();
+  toast(el.checked?`已啟用${k==='ret'?'退貨':'取消'}規則——本次變更只影響之後成立的訂單`
+                 :`已停用${k==='ret'?'退貨':'取消'}規則`);
+}
+/* 兩個 toggle 都關閉 → 最終銷售整卡 disabled：47 §E 只降文字色、不降 opacity，並加 aria-disabled */
+function rrFinalSync(){
+  const on=RRULE.ret||RRULE.cancel,c=document.getElementById('rrFinal');
+  if(!c)return;
+  c.classList.toggle('is-dim',!on);
+  c.setAttribute('aria-disabled',String(!on));
+  c.querySelectorAll('input,button,select').forEach(x=>{
+    x.disabled=!on;
+    if(!on)x.setAttribute('aria-disabled','true');else x.removeAttribute('aria-disabled');
+  });
+}
+function rrShipSync(){
+  const b=document.getElementById('rrShipAmt');if(b)b.hidden=RRULE.ship!=='flat';
+  toast(RRULE.ship==='flat'?'退貨運費：固定金額，per return（16-F5.3）':'退貨運費：'+(RRULE.ship==='free'?'商家吸收':'顧客自理'));
+}
+function rrScopeSync(){toast('最終銷售以「'+(RRULE.scope==='collection'?'商品系列':'商品')+'」為粒度標記');}
+function rrFsAdd(){
+  RRULE.fsCols.push('最終銷售商品系列 '+(RRULE.fsCols.length+1));
+  setSubOpen('return-rule',returnRulePage());rrFinalSync();
+  toast('已加入一個最終銷售商品系列（demo）');
+}
+function rrFsDel(i){
+  RRULE.fsCols.splice(i,1);
+  setSubOpen('return-rule',returnRulePage());rrFinalSync();
+  toast('已移除');
+}
+
+/* ==================================================================
+   模組 B：運送設定檔內層（zones × rates）
+   ================================================================== */
+/* 44 §19.2 模型：shipping_profile → zone(1..n) → rate(1..n)，rate 兩型 manual／carrier */
+const SHIP_ZONES=[
+ {id:'dom',ic:'🇹🇼',n:'Domestic',sum:'台灣',rates:[
+   {ic:'🚚',n:'宅配',sub:'1–2 個工作天',price:'NT$120',type:'manual'},
+   /* 免運表達照實站：副標寫「滿 X 免費」，價格 badge 仍顯示原價，不改成 0 */
+   {ic:'🏪',n:'超商取貨',sub:'滿 NT$2,000 免費 • 3–5 個工作天',price:'NT$60',type:'manual',free:true}]},
+ {id:'intl',ic:'🌐',n:'International',sum:'香港, 馬來西亞, 新加坡、尚有 4 個',warn:7,rates:[
+   {ic:'✈️',n:'DHL Express',sub:'1 項服務・支援預繳關稅・自動計算的運送時間',price:'自動計算',type:'carrier',
+    svcs:['DHL Express Worldwide（DDP 可選）']},
+   {ic:'📮',n:'中華郵政 國際包裹',sub:'3 項服務・自動計算的運送時間',price:'自動計算',type:'carrier',group:'Worldwide',
+    svcs:['國際快捷 EMS','國際航空包裹','國際水陸包裹']}]}];
+
+/* 外層：運送設定檔卡（44 §19.1「商店預設 → 一般設定檔」），列可點進內層 */
+const SHIP_PROFILE_CARD=`<div class="card card-pad" data-doc="ship-profiles"><h3>運送設定檔</h3>
+  <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-100)">管理運送地點及商品運費費率</p>
+  <div class="zone-sub">商店預設</div>
+  ${setRowBtn('一般設定檔','所有商品 • 1 個地點 • 2 個區域','<span class="chev" aria-hidden="true">›</span>',
+    "openShipProfile('general')",'ship-prof-general','🚚')}
+  ${setRowAdd('新增自訂設定檔','自訂設定檔會把商品從預設設定檔「吃走」',"toast('Demo：新增自訂設定檔——選定商品後，這些商品即脫離一般設定檔')",'ship-prof-add')}</div>`;
+
+function openShipProfile(){setSubOpen('ship-profile',shipProfilePage());}
+function shipProfilePage(){
+  return setCrumb('🚚','一般設定檔','shipping')
+  +`<div class="card card-pad" data-doc="ship-prof-products"><h3>商品</h3>
+    ${setRowBtn('未包含於其他設定檔的所有商品','7 件商品目前落在此設定檔','<span class="chev" aria-hidden="true">›</span>',
+      "toast('Demo：檢視補集內容——建立自訂設定檔會讓商品從這裡消失')",'ship-prof-complement','🏷')}
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">系統預設會將新商品加入此設定檔。</p></div>
+  <div class="card card-pad" data-doc="ship-prof-locations"><h3>出貨地點</h3>
+    <div class="set-row"><span class="flag" aria-hidden="true"></span><div><b>主倉（內湖）</b><span class="sub">台灣</span></div>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toast('Demo：管理此設定檔的出貨地點')" aria-label="主倉（內湖）的更多動作">⋯</button></div>
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">未列入的地點不會為此設定檔的商品產生費率。</p></div>
+  <div class="card card-pad" data-doc="ship-zones"><h3>運送區域</h3>
+    <div id="shipZoneList">${SHIP_ZONES.map(shipZone).join('')}</div></div>
+  ${setRowAdd('新增區域','一個國家只能屬於同一設定檔的一個區域','shipAddZone()','ship-add-zone')}`;
+}
+function shipZone(z){
+  return `<section class="zone" data-doc="${z.id==='intl'?'ship-zone-intl':'ship-zone-dom'}">
+    <div class="zone-head"><span class="z-ic" aria-hidden="true">${z.ic}</span>
+      <span class="z-t"><b>${H(z.n)}</b><span>${H(z.sum)}</span></span>
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：編輯／刪除區域、增減國家')" aria-label="${H(z.n)} 區域的更多動作">⋯</button></div>
+    ${z.warn?`<div class="banner-caution" data-doc="ship-market-warn" role="note"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>若要在此區域開始銷售至 ${z.warn} 個國家/地區，請先將這些國家/地區加入<a href="#" onclick="event.preventDefault();closeSettings();go('m-markets')">市場</a>。</span></div>`:''}
+    ${z.rates.map((r,i)=>shipRate(z,r,i)).join('')}
+    ${setRowAdd('新增運送選項','手動費率或承運商計算費率','shipAddRate(\''+z.id+'\')','ship-add-rate')}
+  </section>`;
+}
+function shipRate(z,r,i){
+  const id=z.id+'-'+i;
+  return (r.group?`<div class="zone-sub">${H(r.group)}</div>`:'')
+  +`<button class="rate-row" data-doc="${r.type==='carrier'?'ship-rate-carrier':'ship-rate-manual'}"
+      ${r.type==='carrier'?`aria-expanded="false" aria-controls="svc-${id}" onclick="shipToggleSvc('${id}',this)"`
+        :`onclick="toast('Demo：編輯費率「${H(r.n)}」——固定價＋可選滿額免運門檻＋手填時效')"`}>
+    <span class="r-ic" aria-hidden="true">${r.ic}</span>
+    <span class="r-t"><b>${H(r.n)}</b><span${r.free?' data-doc="ship-rate-free"':''}>${H(r.sub)}</span></span>
+    <span class="r-price">${r.type==='carrier'
+      /* carrier 是狀態徽章（chip＋pip）；manual 是金額值，走既有 tagchip 值標籤，不掛無意義的狀態點 */
+      ?chip(r.price,'info','full')
+      :`<span class="tagchip num" style="margin:0">${H(r.price)}</span>`}</span>
+    ${r.type==='carrier'?'<span class="r-caret" aria-hidden="true">⌄</span>':'<span class="chev" aria-hidden="true">›</span>'}
+  </button>`
+  +(r.type==='carrier'?`<ul class="rate-svcs" id="svc-${id}" hidden>${r.svcs.map(s=>`<li>${H(s)}</li>`).join('')}</ul>`:'');
+}
+function shipToggleSvc(id,btn){
+  const ul=document.getElementById('svc-'+id);if(!ul)return;
+  const open=ul.hidden;ul.hidden=!open;
+  btn.setAttribute('aria-expanded',String(open));
+}
+function shipAddRate(zid){
+  const z=SHIP_ZONES.find(x=>x.id===zid);if(!z)return;
+  z.rates.push({ic:'📦',n:'新運送選項 '+(z.rates.length+1),sub:'手動費率・尚未設定時效',price:'NT$0',type:'manual'});
+  setSubOpen('ship-profile',shipProfilePage());
+  toast('已新增手動費率——rate 兩型：manual（固定價＋滿額免運門檻＋手填時效）／carrier（綁帳號、自動計算）');
+}
+function shipAddZone(){
+  SHIP_ZONES.push({id:'z'+SHIP_ZONES.length,ic:'🌏',n:'新區域 '+SHIP_ZONES.length,sum:'尚未加入國家/地區',rates:[]});
+  setSubOpen('ship-profile',shipProfilePage());
+  toast('已新增區域——建了區域不代表能賣，國家還必須加進市場（44 §19.2）');
+}
+
+/* ---------- 掛上設定路由：政策整頁重寫、運送頁前置設定檔卡 ---------- */
+Object.assign(SET_PAGES,{
+ policies:policiesPage(),
+ shipping:SHIP_PROFILE_CARD+(SET_PAGES.shipping||''),
+});
+/* policies 卡片內容隨 RET_RULES 變動 → setPage 時重算（其餘分頁維持靜態字串）；
+   同時負責離開次級視圖時把 SETSUB 歸零。既有的 .set-item 監聽器以識別字呼叫 setPage，會取到這層。 */
+const _setPage=setPage;
+setPage=function(key){
+  SETSUB=null;
+  if(key==='policies')SET_PAGES.policies=policiesPage();
+  _setPage(key);
+};
+
+Object.assign(DOCS,{
+/* ---------- A：退貨與取消規則 ---------- */
+ "ret-rules":{t:"退貨與取消規則卡",f:"設定退貨與取消要求的條件與費用；規則可多條（預設 ＋ N 條）",
+  l:"44 §18.6：政策頁第一張卡就是規則卡、不是法務條款；規則依市場／商品／顧客分群命中，下單時解析出唯一適用者（16-F7.4 規則 4）",
+  i:"P0・[api:returnPolicyCreate] [api:returnPolicyUpdate] [tbl:return_rules,return_policy_snapshots]"},
+ "ret-rule-row":{t:"規則列（進編輯頁）",f:"點入該條規則的編輯頁",
+  l:"44 §18.6 實測路由 /settings/legal/cancel-return-rules/{id}；badge 三態同法務政策列（未設定規則／已設定規則）",
+  i:"P0・[api:returnPolicy]（單筆讀取） [tbl:return_rules]"},
+ "ret-rule-add":{t:"新增規則",f:"再建一條命中條件不同的規則",
+  l:"16-F7.4 規則 4：return_rules 一對多、可按市場切換；命中順序需可排；同一 line item 只能命中一條",
+  i:"P1・[api:returnPolicyCreate] [tbl:return_rules,markets,collections,customer_segments]"},
+ "legal-3state":{t:"法務政策三態列",f:"退款／隱私權／服務條款／運送政策的狀態",
+  l:"44 §18.6 ＋ 44 行動項 33：實站有第三態「● 自動」＝系統代生成（隱私權政策可由範本產出），我們 22 號原本只有填/不填兩態；商家改寫後轉「已設定」",
+  i:"P0・[api:TBD-shopPolicyUpdate]（28 待補；需帶 source enum: manual|generated） [tbl:shop_policies]"},
+ "ret-rule-card":{t:"規則編輯頁卡片 1",f:"退貨規則／取消規則兩個獨立 toggle",
+  l:"44 §18.6：退貨管「已履行」品項、取消管「未出貨」品項；16-F7.4 規則 5 兩者獨立且同一訂單可並存",
+  i:"P0・[api:returnPolicyUpdate] [tbl:return_rules,order_line_items]"},
+ "ret-toggle-return":{t:"退貨規則 toggle",f:"開關對已履行品項的自助退貨",
+  l:"16-F7.1 R1：品項須來自「已送達」的 fulfillment；到店領取以實際領件時間為準（16-F4 (c)）；關閉時前台不出現退貨入口",
+  i:"P0・[api:returnPolicyUpdate]（returnsEnabled） [api:returnRequest] [tbl:return_rules,fulfillments]"},
+ "ret-toggle-cancel":{t:"取消規則 toggle",f:"開關對未出貨品項的自助取消",
+  l:"16-F7.4 規則 5：前台「申請」按鈕要逐 line item 判斷顯示退貨或取消，不是整單一個按鈕",
+  i:"P0・[api:returnPolicyUpdate]（cancellationsEnabled） [tbl:return_rules,fulfillment_orders]"},
+ "ret-snapshot":{t:"購買時點快照提示",f:"說明規則變更不追溯既往",
+  l:"16-F7.4（＝44 §18.6 頁尾逐字）：規則必須在下單當下 snapshot 到 line item，order_line_items.return_policy_snapshot_id NOT NULL；不可只存 return_rule_id 外鍵，因為規則會被改。快照表 append-only、immutable，每次儲存產生新一筆",
+  i:"P0・[tbl:return_policy_snapshots(shop_id,source_rule_id,window_days,window_start_basis,shipping_fee_mode,shipping_fee_cents,restocking_fee_bp,is_final_sale)] [tbl:order_line_items.return_policy_snapshot_id]"},
+ "ret-window":{t:"退貨期限",f:"可提出退貨要求的天數",
+  l:"16-F7.4 規則 7：選項 14／30／90／不限／自訂；起算點兩種——個別品項配送日 或 訂單最後一項配送日；一律讀快照不讀現行規則（規則 3）",
+  i:"P0・[api:returnPolicyUpdate]（windowDays, windowStartBasis）；上限走 limits.return.window_day_options [tbl:return_policy_snapshots]"},
+ "ret-shipfee":{t:"退貨運費",f:"退貨時向顧客收取的運費",
+  l:"16-F5.3：固定金額、per return（不是 per line）；幣別必須等於 orders.presentment_currency（DB CHECK）；此不對稱設計與 returnCalculate 建議值對齊，不可統一成百分比",
+  i:"P0・[api:returnCalculate] [api:returnProcess]（returnShippingFee） [tbl:returns.return_shipping_fee_cents,returns.return_shipping_fee_currency]"},
+ "ret-restock":{t:"補貨費（重新上架費）",f:"退貨時扣抵的重新上架費",
+  l:"16-F5.3：百分比、per line item（同一張退貨各品項可不同 %）；存 basis points 0–10000，物化 restocking_fee_cents=floor(line_net×bp/10000) 供對帳；上界文檔未載明，先以 100% 防呆",
+  i:"P0・[api:returnCalculate]（suggestedRefund 自動扣抵，UI 可覆寫且寫 audit log） [tbl:return_line_items.restocking_fee_bp,return_line_items.restocking_fee_cents]"},
+ "ret-final":{t:"最終銷售品項卡",f:"標記不可退貨／取消的商品",
+  l:"16-F7.4 規則 6：命中即前台完全不出現申請入口（不是提交後才拒絕）；兩個 toggle 都關閉時整卡 disabled（47 §E：只降文字色、不降 opacity，並加 aria-disabled）",
+  i:"P0・[api:returnPolicyUpdate]（finalSaleCollectionIds／finalSaleProductIds） [tbl:return_rules_final_sale,collections,products]"},
+ "ret-final-scope":{t:"最終銷售粒度",f:"以商品系列或單一商品指定",
+  l:"16-F7.4 規則 6：粒度只有 collection 與 product 兩種；bundles 不可設為最終銷售；快照時把 is_final_sale 一併凍結",
+  i:"P0・[tbl:return_rules_final_sale(rule_id,scope enum(collection,product),target_id)] [tbl:return_policy_snapshots.is_final_sale]"},
+ "ret-final-add":{t:"新增最終銷售商品系列",f:"把一個商品系列列為最終銷售",
+  l:"智慧商品系列成員會自動進出，因此命中判定必須在下單當下解析並寫進快照，不能在退貨時才回查（16-F7.4 規則 3＋13-F4）",
+  i:"P0・[api:collections]（picker） [tbl:return_rules_final_sale,collection_products]"},
+ "ret-cancel-window":{t:"取消要求期限",f:"下單後多久內可提出取消",
+  l:"16-F7.4 規則 5：取消只作用於 unfulfilled 品項；已出貨部分要改走退貨流；同一張訂單兩流可並存",
+  i:"P1・[api:orderCancel]（部分取消走 fulfillmentOrder 層） [tbl:return_rules,fulfillment_orders]"},
+/* ---------- B：運送設定檔內層 ---------- */
+ "ship-profiles":{t:"運送設定檔卡",f:"設定檔清單與新增入口",
+  l:"44 §19.1：群組標題「商店預設」→ 一般設定檔（摘要「所有商品 • N 個地點 • N 個區域」）；模型 shipping_profile → zone(1..n) → rate(1..n)",
+  i:"P0・[api:deliveryProfiles] [api:deliveryProfileCreate] [tbl:shipping_profiles]"},
+ "ship-prof-general":{t:"一般設定檔（進內層）",f:"點入設定檔的商品／地點／區域內層",
+  l:"44 §19.2 路由 /settings/shipping/profiles/{id}；內層三張卡：商品／出貨地點／運送區域",
+  i:"P0・[api:deliveryProfile]（單筆含 profileLocationGroups → locationGroupZones） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
+ "ship-prof-add":{t:"新增自訂設定檔",f:"為特定商品另立一套費率",
+  l:"自訂設定檔會把商品從預設設定檔的補集中「吃走」；一件商品同時只能屬於一個設定檔（44 §19.2）",
+  i:"P1・[api:deliveryProfileCreate]（variantsToAssociate） [tbl:shipping_profiles,shipping_profile_products]"},
+ "ship-prof-products":{t:"設定檔商品卡",f:"此設定檔涵蓋哪些商品",
+  l:"44 §19.2 關鍵：預設設定檔的商品集合是「補集」不是「全集」——列名逐字為「未包含於其他設定檔的所有商品」；建立自訂設定檔會讓商品從這裡消失。新商品預設落入此設定檔",
+  i:"P0・查詢為 NOT EXISTS 子句（不是全表 join）：products LEFT JOIN shipping_profile_products WHERE profile_id IS NULL [tbl:shipping_profiles,shipping_profile_products,products]"},
+ "ship-prof-complement":{t:"補集商品清單",f:"檢視落在預設設定檔的商品",
+  l:"清單為動態補集，隨自訂設定檔增減即時變化；不可物化成靜態名單，否則新商品與被吃走的商品會對不上（44 §19.2）",
+  i:"P0・[api:deliveryProfile]（unassignedProducts） [tbl:products,shipping_profile_products]"},
+ "ship-prof-locations":{t:"出貨地點卡",f:"此設定檔從哪些地點出貨",
+  l:"44 §19.2：地點群組（locationGroup）決定可用區域；未列入的地點不為此設定檔商品產生費率",
+  i:"P0・[api:deliveryProfileUpdate]（locationGroupsToCreate） [tbl:shipping_profile_locations,locations]"},
+ "ship-zones":{t:"運送區域卡",f:"zone 清單與費率",
+  l:"44 §19.2：zone header ＝ 旗標/地球 icon ＋ 名稱 ＋ 涵蓋摘要 ＋ ⋯；一個國家在同一設定檔內只能屬於一個區域",
+  i:"P0・[api:deliveryProfileUpdate]（zonesToCreate/zonesToUpdate） [tbl:shipping_zones,shipping_zone_countries]"},
+ "ship-zone-dom":{t:"Domestic 區域",f:"本國區域與其手動費率",
+  l:"44 §19.2 實站結構：rate 列＝icon＋名稱＋副標（時效）＋價格 badge＋⋯；時效為手填字串不是計算值",
+  i:"P0・[api:deliveryProfileUpdate]（methodDefinitionsToCreate） [tbl:shipping_zones,shipping_rates]"},
+ "ship-zone-intl":{t:"International 區域",f:"跨境區域、警示橫幅與承運商費率",
+  l:"44 §19.2：涵蓋摘要末段是虛線底線 tooltip（「尚有 N 個」）；此區同時示範 carrier 型費率與 zone≠market 硬約束",
+  i:"P0・[api:deliveryProfileUpdate] [api:carrierServices] [tbl:shipping_zones,carrier_accounts]"},
+ "ship-market-warn":{t:"zone ≠ market 跨模組硬約束",f:"提醒把區域內國家加進市場才真的能賣",
+  l:"49 P0-06／44 §19.2 逐字「若要在此區域開始銷售至 N 個國家/地區，請將這些國家/地區加入市場」——建了運送區域不代表能賣；29 號 Markets 與 15 號 Shipping 原本都沒寫這條。N ＝ zone.countries − active_market.countries 的差集大小，需即時計算",
+  i:"P0・儲存 zone 後跑差集校驗並回傳 warning（非 blocking）：SELECT country FROM shipping_zone_countries WHERE country NOT IN (SELECT country FROM market_countries WHERE status='active') [api:markets] [tbl:shipping_zone_countries,market_countries]"},
+ "ship-rate-manual":{t:"manual 型費率",f:"商家手填的固定價費率",
+  l:"44 §19.2 模型結論：manual ＝ 固定價 ＋ 可選「滿額免運門檻」＋ 手填運送時效；與 carrier 型是兩種 rate，不可合併成一張表的可空欄位",
+  i:"P0・[api:deliveryProfileUpdate]（methodDefinition.rateDefinition{price}） [tbl:shipping_rates(type='manual',price_cents,free_over_cents,transit_label)]"},
+ "ship-rate-carrier":{t:"carrier 型費率",f:"綁承運商帳號、自動計算運費",
+  l:"44 §19.2：carrier ＝ 綁承運商帳號、services[] 子清單、badge「自動計算」、可支援 DDP 預繳關稅；副標格式「N 項服務・支援預繳關稅・自動計算的運送時間」；展開後為純文字服務清單",
+  i:"P1・[api:carrierServiceCreate] [api:deliveryProfileUpdate]（methodDefinition.participant{carrierServiceId,services}） [tbl:carrier_accounts,carrier_services,shipping_rates(type='carrier',supports_ddp)]"},
+ "ship-rate-free":{t:"滿額免運的呈現法",f:"門檻達標即免運的顯示規則",
+  l:"44 §19.2 逐字照抄：副標寫「滿 NT$2,000 免費」，價格 badge 仍顯示原價 NT$60——不是把價格改成 0。門檻比對用小計（折後、未稅、不含運）",
+  i:"P0・前台結帳挑選費率時才折成 0；[tbl:shipping_rates.free_over_cents]；金額口徑對齊金額引擎（15-F2）"},
+ "ship-add-rate":{t:"新增運送選項",f:"在此區域內加一筆費率",
+  l:"44 §19.2：⊕ 位於 zone 內（不是卡外）；新增時先選 manual 或 carrier，兩型欄位不同",
+  i:"P0・[api:deliveryProfileUpdate]（methodDefinitionsToCreate） [tbl:shipping_rates]"},
+ "ship-add-zone":{t:"新增區域",f:"再建一個運送區域",
+  l:"44 §19.2：⊕ 新增區域在卡片外；新區域的國家一旦加入，立刻觸發 zone≠market 差集校驗（見 ship-market-warn）",
+  i:"P0・[api:deliveryProfileUpdate]（zonesToCreate） [tbl:shipping_zones,shipping_zone_countries]"},
+});
 
 /* init */
 renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();
