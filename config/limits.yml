@@ -134,6 +134,13 @@ currency_display:
   # 恢復 ISO 行為的方式（保留在這裡，免得日後靠考古）
   restore_iso_behaviour_by: set jurisdictions.<code>.currency_format.exponent to ISO minor unit
   source: 使用者 2026-08-12 裁定（ours；**非** ISO 4217）
+  # 🔴 **救命條款**（63 §G.4，ours）：本裁定管的是**顯示**與**儲存**，**不管對外送款**。
+  #    送 PSP／物流商／任何外部系統的金額一律依 ISO 4217 exponent 換算：
+  #      psp_minor_unit = storage_cents / 10 ** (2 - iso_exponent)
+  #    JPY 的 ¥1,480 顯示 `¥1,480.00`、儲存 148_000、**送 Stripe 必須是 1480**。
+  #    把儲存值直接送出去＝收款金額 100 倍。餘數不為 0 時直接 raise（代表上游湊整沒套用），
+  #    **不得四捨五入抹掉**。exponent=3 的幣別首發不支援，見 catalog_flow.unsupported_currency_exponents。
+  psp_minor_unit_follows_iso4217: true
 
 # =============================================================================
 # 1. API 契約（GraphQL）
@@ -241,6 +248,26 @@ idempotency:
     shipmentVoid:              [waybill_id]
     shipmentCancel:            [waybill_id]
     carrierPickupSchedule:     [carrier_account_id, location_id, pickup_window_start, pickup_window_end]
+  # 🔴 **建立型（B 類）商品線 mutation 的強制冪等**（63 §A.3，ours）。
+  #    判準與上面 22+4 支相同——「重放會不會憑空多出一個實體或一筆錢」——但商品沒有錢動，
+  #    它多出來的是**實體**：handle 衝突時自動加 -1 後綴（13 §F2-2）、title 可合法重複，
+  #    ⇒ **沒有任何業務唯一鍵可以兜底**，重複點擊儲存就是兩個一模一樣的商品。
+  #    宣告式覆寫型（productUpdate/productSet/productVariantsBulkUpdate/metafieldsSet/
+  #    publishablePublish…）**刻意不列入**：它們天然冪等且沒有錢動，強制帶 key 只會讓
+  #    idempotency_keys 表在 CSV 匯入（5 萬行，13 §F6）下無謂膨脹；那一類的併發防線是
+  #    `lock_version` 樂觀鎖（63 §A.4），要擋的是靜默覆蓋不是重放。
+  # ⚠ 刻意獨立成鍵而不併進上面的 `required_for`：後者的註解承載「官方 17 支／我方 9 支金流／
+  #    我方 4 支物流」的出處分層，本清單是第四類來源，混入會讓出處註解失真。
+  required_for_catalog_create:
+    - productCreate
+    - productDuplicate
+    - productVariantsBulkCreate
+    - productCreateMedia
+    - collectionCreate
+    - fileCreate
+  # 合併進 `required_for` 是一行改動，但**必須同步更新 CI 的無條件斷言**
+  #（教訓見上面 required_for_platform 那段：斷言與清單語義不同步會讓 schema 快照測試紅掉）。
+  catalog_create_merge_pending: true
 
 # =============================================================================
 # 3. 訂單／取消／編輯
@@ -1521,3 +1548,391 @@ functions:
   query_cost_max: 30
   # 本專案等價護欄（46b §1⑥-2 建議換算）。（ours）
   equivalent_guard_max_cart_lines: 200
+
+# =============================================================================
+# 18. 商品資料流（後台寫入 → 前台渲染 → 平台總後台）
+# =============================================================================
+# 出處：docs/specs/63-product-data-flow.md（本區塊全部鍵的唯一規格出處）
+# 上游事實：docs/research/60 §1（無變體＝隱含變體）、§4（庫存五態官方定義）、§5（發布錯誤排序維度）；
+#           docs/research/59 §2/§7（pill 收合、建立與詳情同元件）；
+#           test/fixtures/themes/ella-7.2.0（golden theme 原始碼實測，出處等級 `fixture`）。
+# 🔴 本區塊只新增鍵，不改既有鍵的值。
+catalog_flow:
+  # --- B. 商品與變體的寫入語義（63 §B）---------------------------------------
+  # 商品恆有至少一個變體；「無變體」＝ variants.length == 1 的呈現特例。
+  # 出處：docs/research/60:36–54（live，三張卡的分組 id 為 product_variant_collapsible_*）
+  product_min_variants: 1
+  # Liquid 對外必須吐這個字串（後台 UI 不得顯示）。
+  # 出處：test/fixtures/themes/ella-7.2.0（fixture）——golden theme 四處直接比對：
+  #   blocks/_color-comparison-content.liquid:20 / snippets/product-swatch.liquid:23 /
+  #   snippets/card-product-flex.liquid:195 / snippets/product-card-compare.liquid:195
+  # 不做 ⇒ 無變體商品在 Ella 渲染出空的變體選擇器（M6 golden theme 驗收直接失敗，27 §8）。
+  default_variant_liquid_title: "Default Title"
+  # sku/barcode 的權威表＝inventory_items（單一權威欄位，避免雙寫漂移）。（ours，63 §B.6）
+  # 佐證：docs/research/60:122（live）——庫存頁 checkbox value 為 gid://shopify/InventoryItem/…
+  sku_owner: inventory_item
+  # SKU 是**軟唯一**：官方要求唯一、偵測到重複顯示警告但**不阻擋**。
+  # 出處：docs/research/61 §1.5（help P10）。⇒ DB 建**一般索引** (shop_id, sku)，不是唯一索引；
+  #      唯一索引會讓「同款不同包裝共用 SKU」與 CSV 批次匯入（合法情境）直接失敗，與官方相反。
+  # 🔴 specs/11 §2-1 把「SKU per shop」列為唯一索引的例子——**那個例子是錯的**（63 §L-1）。
+  sku_unique_per_shop: false
+  # 重複時回 payload 的 `warnings`（不是 userErrors——後者代表操作失敗，鐵律 4）。28 §0.3 目前沒有
+  # warnings 慣例，需補（63 §L-9）。
+  sku_duplicate_action: warn_not_block
+  # 官方措辭是「建議不超過 16 字元」——**建議不是技術上限**，硬上限官方未載明 ⇒ 不驗證，只在 UI 提示。
+  sku_recommended_max_chars: 16
+  # ⚠ V-91：要不要提供「SKU 必須唯一」設定項以服務有 WMS 整合的商家（比官方嚴）——需使用者裁定。
+  verify_sku_strict_mode_option: true
+  # ProductInput / ProductUpdateInput 不得出現的欄位（schema 快照測試斷言）。（ours，63 §B.1 B1-5）
+  # 一旦出現過一次，前端就會有人用它，之後兩套價格欄位的同步邏輯會爛掉（60:54 逐字警告）。
+  product_input_forbidden_fields:
+    [price, compareAtPrice, sku, barcode, weight, inventoryQuantity]
+  # admin 商品頁「儲存」的唯一映射（全樹宣告式 upsert；建立與更新同一支）。（ours，63 §B.4）
+  product_write_entry_mutation: productSet
+  # 變體價格的合法寫入路徑（其餘一律 userErrors）。（ours，63 §B.3）
+  variant_price_write_mutations: [productSet, productVariantsBulkUpdate]
+  # 商品寫入路徑不得寫庫存數量；唯一例外＝建立頁的初始量（同 transaction，冪等鍵由父請求派生）。
+  # 出處：docs/research/59:172（live，建立頁有「數量」input、詳情頁只有逐地點表格）
+  initial_quantity_allowed_on_create_only: true
+
+  # --- D. 前台渲染與快取（63 §D）---------------------------------------------
+  # 🔴 唯一許可的快取策略。delete-based 失效的失敗是靜默的（顯示舊價格且沒有人會知道）。
+  # 出處：docs/specs/11 §4-3（既有：cache key 永遠 key-based expiry，不手動 delete）
+  cache_strategy: key_based_expiry_only
+  # cache key 必須覆蓋的資料維度。漏一個＝顯示舊值，這是 key-based 策略的唯一真實風險。
+  cache_stamp_sources:
+    - products.updated_at
+    - products.variants_updated_at
+    - products.publications_updated_at
+    - products.media_updated_at
+    - shops.catalog_version
+    - market_settings_version          # 🔴 市場繼承解析結果變了，商品 updated_at 一動也沒動（63 §G.5）
+    - price_list_updated_at
+  # render 期記錄 drop 讀過哪些表，結束時斷言 touched_sources ⊆ cache_stamp_sources。
+  # 把「漏維度」從人工紀律變成可執行斷言。（ours，63 §D.3）
+  cache_stamp_selfcheck_envs: [development, test, staging]
+  # HTML 不進 CDN（首發）。purge 是跨網路的分散式操作，會部分失敗、會靜默。（ours，63 §D.4）
+  html_cdn_cache_enabled: false
+  # 開啟 html_cdn_cache_enabled 前必須先做到的四條之二（另兩條見 63 §D.4）。
+  cdn_surrogate_key_template: "s{shop_id}-p{product_id}"   # 🔴 必帶 shop 命名空間，否則跨租戶 purge
+  cdn_purge_failure_action: degrade_to_max_age_zero        # 寧可全部回源，也不要顯示舊價格
+  # volatile 欄位：讀到即把該 fragment 的 cache entry 加 TTL 上限（drop 內自動註冊，非人工標註）。
+  # 出處：test/fixtures/themes/ella-7.2.0（fixture）——inventory_quantity 41 處／16 檔，
+  #       其中 snippets/card-product-flex.liquid 是**商品卡**⇒ 集合頁卡片會退化成 TTL 快取。
+  #       incoming 與 next_incoming_date 在 Ella 為 0 處，但仍列入（其他主題會用）。
+  volatile_liquid_fields:
+    ["variant.inventory_quantity", "variant.incoming", "variant.next_incoming_date",
+     "variant.store_availabilities"]
+  # ⚠ V-96：60 秒無真實流量佐證。太長 ⇒「僅剩 3 件」長期失真；太短 ⇒ 集合頁命中率崩。
+  volatile_section_ttl_seconds: 60
+  verify_volatile_ttl: true
+  # 價格類欄位零容忍陳舊（它們天然被 cache_stamp 覆蓋，不需要 TTL）。（ours，63 §D.5）
+  price_critical_fields_zero_staleness: true
+
+  # --- E. 庫存（63 §E）---------------------------------------------------------
+  # available_for_sale 只在「可買 ⇄ 不可買」翻轉時才寫 product_variants（bump updated_at）。
+  # available: 5→4 不寫；1→0 才寫。同時解決快取命中率與「售罄要即時」兩個需求。（ours，63 §D.2）
+  availability_materialization: flip_only
+  # zh-TW 顯示用詞：**維持 specs/13 §F5.1 現況（help 官方那套：可販售／已分配／不可販售／待入庫）**。
+  # 60 §4 建議改採「庫存頁那套」，但 docs/research/61 §3.2 指出那是**回退**——實站 UI 譯名在兩個頁面
+  # 就已經不一致（不穩），help 文檔是唯一同時給出「術語＋定義＋恆等式」的錨。
+  # ⚠ **V-52（61 號登記）**：三套譯名的最終取捨需使用者裁定。API enum 與恆等式在三套下完全相同，
+  #    所以此項不阻擋實作；唯一硬要求是**全站只用一套**（逐頁不同正是 Shopify 自己犯的錯）。
+  inventory_display_terms_source: help_official
+  # 同一 (shop_id, inventory_item_id, location_id) 在窗內且仍 pending 的事件合併成一筆。
+  # ledger 不合併（append-only 稽核帳，13 §F5-1），合併的只有事件。（ours，63 §C.6）
+  inventory_event_coalesce_window_ms: 1000
+  # 🔴 永不被合併掉：它驅動快取 stamp、JSON-LD availability、IndexNow、feed。
+  #    漏掉＝已售罄的商品在前台還能加入購物車。
+  inventory_event_coalesce_exempt: [availability_flipped]
+  # 多地點：地點指派與 available 扣減必須同一 transaction；扣減失敗改派下一順位並重試。
+  # 不做 ⇒ 兩個併發訂單都被指派到同一個只剩 1 件的地點 ⇒ 一張永遠出不了貨的訂單。（ours，63 §E.4）
+  location_assignment_max_retries: 3
+
+  # --- G. 多市場價格（63 §G）---------------------------------------------------
+  # 中間值放大到 micro-cents，只在最後一步取整一次。逐步取整會累積 3 cents 誤差
+  # 且不同呼叫順序得到不同結果（違反鐵律 7 數字同源）。（ours，63 §G.3）
+  price_scale_internal: micro_cents
+  # 匯率存 parts-per-million 的 BIGINT。29 §1.4 的 currency_exchange_rates.rate 未指定型別（63 §L-5）。
+  exchange_rate_storage: rate_ppm
+  # 🔴 儲存尺度 ×100 不足以表達 exponent=3 幣別（KWD/BHD/JOD）的最小單位。
+  #    首發擋下：market 建立時回 userErrors{code: INCLUSION}。⚠ V-94（63 §G.4）
+  unsupported_currency_exponents: [3]
+  verify_currency_exponent_3: true
+  # 多 catalog 命中同商品取 MIN。官方 H-66 只講 company location，本篇延伸適用所有市場類型。
+  # ⚠ V-93（不延伸就會有「兩個 catalog 命中時行為未定義」）。（ours，63 §G.2）
+  multi_catalog_price_resolution: min
+  verify_multi_catalog_min: true
+
+  # --- H. 發布到銷售管道會失敗（63 §H.2）---------------------------------------
+  # 出處：docs/research/60:139（live）——商品列表排序選單有「發布錯誤」維度。
+  # 反推：發布不是商品上的布林欄位，而是跨系統的非同步操作，會失敗，且失敗要能排序。
+  publication_retry_max_attempts: 5
+  publication_retry_backoff_seconds: [30, 120, 600, 3600, 21600]
+  # 🔴 發布是**兩層**的：商品級 ＋ 變體級，且是 AND 規則
+  #（「要在某管道顯示，父商品與該變體必須都發布到該管道」）。
+  # 出處：docs/research/61 §2.2（help P16）＋ docs/research/60:66（live，變體表有「發佈」欄）。
+  # 我方原本只有商品級 ⇒ Product.published scope 不加變體層過濾會**洩漏未發布的變體**。
+  variant_level_publishing: true
+  # 官方明載**不能為個別變體設定排程發布日期**（排程只有商品級）。出處：61 §2.2（help P16）
+  variant_publish_scheduling_allowed: false
+  # 未發布到某目錄的變體**不套用**該目錄的定價調整 ⇒ PresentmentResolver 收集 catalog price 前
+  # 必須先過 variant_publications 過濾（63 §G.2）。出處：61 §2.2（help P16）
+  catalog_pricing_requires_variant_publication: true
+  # ⚠ V-98：各管道錯誤碼各異，不硬編列舉；存管道原始碼字串＋我方分類。
+  publication_error_categories: [VALIDATION, AUTH, RATE_LIMIT, UNKNOWN]
+  verify_publication_error_codes: true
+
+  # --- F. 平台總後台（63 §F）---------------------------------------------------
+  # 🔴 平台側的商品線指標一律走 rollup，不得直查租戶明細表。
+  #    CI 靜態掃描：app/**/platform/** 內出現 Product/ProductVariant/InventoryLevel 查詢即 fail
+  #    （without_tenant 也不放行）。平台後台不得成為繞過租戶隔離的後門。
+  platform_product_access: rollup_only
+  # rollup 落後超過此值 ⇒ 顯示昨日值＋「資料延遲」註記，**不顯示 0**（36 §2 既有規則）。
+  # 顯示 0 會讓平台人員以為租戶把商品刪光了。
+  platform_rollup_staleness_warn_minutes: 60
+  # 違禁品掃描：租戶推、平台不拉。平台只持有摘要，不持有商品全文。（ours，63 §F.3）
+  scan_excerpt_max_chars: 120
+
+  # --- 其他上限 ---------------------------------------------------------------
+  # 商品列表每頁筆數。出處：docs/research/60:133、docs/research/59:183（live，「選取此頁的全部 50」）
+  # 與 api.pagination_max_page_size(250) 是兩回事：後者是 API 硬上限，本鍵是 admin 列表預設。
+  admin_list_page_size: 50
+  # 變體列表的渲染分批（單一商品最多 product.max_variants(2048) 個變體）。（ours）
+  variant_render_batch: 250
+  # 投影全量重建任務清單。新增投影必須同時新增重建任務，CI 斷言清單與 rake task 一一對應。
+  # 商品線沒有 saga，只有可重跑的投影——這是本篇對「補償」的統一答案（63 §H.3）。
+  projection_rebuild_tasks:
+    - catalog:rebuild:collections
+    - catalog:rebuild:search
+    - catalog:rebuild:materialized
+    - catalog:rebuild:feed
+    - catalog:resync:publications
+
+# =============================================================================
+# 18. SEO 與多地區（GEO-R）——規格見 docs/specs/62-seo-geo.md
+# =============================================================================
+# 出處等級在本區塊另加三級（檔頭的 dev／help／live／ours 之外；定義見 62 §0.3）：
+#   google  ＝ developers.google.com/search 官方文檔（最高權威，搜尋引擎規則的唯一來源）
+#   openai  ＝ developers.openai.com 官方文檔
+#   ucp     ＝ ucp.dev 規格 / shopify.engineering 工程文
+#   press   ＝ 業界二手來源轉述官方發言 ⇒ **一律登記 V 編號，不得據以寫死實作**
+# 🔴 既有鍵不重複定義：標題／描述上限在 `content.seo_title_max_chars` 與
+#    `content.seo_meta_description_max_chars`（§13）；顯示位數在 `currency_display`；
+#    市場繼承語義在 `market.inheritance_additive`。本區塊只放 62 號新增的鍵。
+seo:
+  # --- 標題與描述（62 §E）----------------------------------------------------
+  # 建議值（非上限）。出處：help.shopify.com/.../seo/adding-keywords（help）
+  #   「標題最多 70 字元；為避免搜尋結果被截斷，建議 60 字元以內」「描述建議 160 字元」
+  # ⚠ 上限請引用 content.seo_title_max_chars(70) / content.seo_meta_description_max_chars(320)。
+  title_recommended_chars: 60
+  meta_description_recommended_chars: 160
+  # 截斷一律在詞界／字界，多位元組字元不得截半（62 §E.2）。（ours）
+  truncate_suffix: "…"
+  truncate_on_grapheme_boundary: true
+  # 🔴 最終描述為空時**不輸出** <meta name="description">，不得輸出空字串或以店家標語充數。
+  omit_empty_meta_description: true
+
+  # --- Canonical 與重導（62 §B）----------------------------------------------
+  # Google 記載 redirect ≤10 hops。出處：docs/research/30-seo-merchant-feeds.md:8（google）
+  redirect_max_chain: 10
+  # 參與 canonical 的 query 參數採**白名單**制，白名單外一律剝除（62 §B.1 變形 6）。（ours）
+  canonical_query_allowlist: [page, q, type, constraint]
+  # 變體 URL 模式：a＝單頁多變體（預設，canonical 去 ?variant=）；b＝變體獨立頁（opt-in）。
+  # 出處：developers.google.com/search/docs/appearance/structured-data/product-variants（google）
+  #   「單頁站的整個 ProductGroup 只能有一個 canonical，通常是不預選變體的基底 URL」
+  variant_url_mode_default: a
+  # 模式 b 開啟前的強制檢查：每個變體頁的標題／描述／主圖至少各自不同，否則拒絕開啟。（ours）
+  variant_url_mode_b_requires_unique_content: true
+  # 🔴 **不得跨市場 canonical**（62 §B.4）：被 canonical 指走的 URL 不會被索引，
+  #    也就無法作為 hreflang 的有效目標。兩者互斥，我方一律 self-canonical。⚠ V-120 未結案前不得改。
+  cross_market_canonical_forbidden: true
+
+  # --- Sitemap（62 §C；分片結構見 30 §3/§9-1）--------------------------------
+  # 出處：docs/research/30-seo-merchant-feeds.md:45（google）
+  sitemap_max_urls_per_file: 50000
+  sitemap_max_bytes: 52428800          # 50MB
+  sitemap_max_images_per_url: 1000
+  # priority/changefreq 一律忽略 ⇒ 不輸出。ping endpoint 2024-01 已移除 ⇒ 不實作。
+  sitemap_emit_priority_changefreq: false
+  sitemap_ping_endpoint_enabled: false
+  # lastmod ＝**實質內容更新**時間，不是任何欄位的 updated_at（庫存變動不算）。灌水會讓
+  # Google 整體不信任本站 lastmod（30 §3）。
+  sitemap_lastmod_source: substantive_content_update
+  # draft market（可瀏覽不可結帳，29 §1.1）的 URL 不入 sitemap／hreflang，且輸出 noindex。
+  # ⚠ Shopify 的處置未取得（V-112）；本鍵為我方定案，不等 V-112。（ours）
+  sitemap_include_draft_markets: false
+  noindex_draft_market_urls: true
+
+  # --- robots（62 §D）--------------------------------------------------------
+  # 出處：docs/research/30-seo-merchant-feeds.md:8（google，robots.txt ≤500KiB）
+  robots_max_bytes: 512000
+  # 平台保底注入：無論主題怎麼覆寫都會 append（62 §D.1）。（ours）
+  robots_platform_enforced_disallow: ["/cart", "/checkout", "/account", "/search"]
+  robots_platform_enforced_sitemap_line: true
+  # 覆寫造成 Disallow: / 或移除 Sitemap: 行時，儲存需二次確認並常駐紅色橫幅。
+  robots_override_requires_confirmation: true
+
+  # --- hreflang（62 §I）------------------------------------------------------
+  hreflang:
+    # 碼格式：ISO 639-1 (+ 可選 ISO 15924 script) (+ 可選 ISO 3166-1 alpha-2)。
+    # 出處：developers.google.com/search/docs/specialty/international/localized-versions（google）
+    #   官方明確舉例 `zh-Hant` 為合法值；並列 `EU`／`UK`／單獨地區碼為常見錯誤。
+    code_format: "iso639_1[-iso15924][-iso3166_1_alpha2]"
+    forbidden_codes: [EU, UK, es-419]          # es-419 另見 30 §9-12
+    # 🔴 基準法域＝香港（鐵律 11）：繁體中文一律 zh-Hant，HK 市場 ⇒ zh-Hant-HK。
+    #    **不得**借用 zh-TW 表示繁體（那是地區碼不是字體）；TW 若啟用是 zh-Hant-TW，由 market 推導。
+    #    本鍵是**格式範例**不是市場清單——SEO 層不得出現任何寫死的國別清單。
+    script_subtag_example: zh-Hant
+    # 碼粒度：單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼。
+    # 出處：help.shopify.com/manual/markets/seo ＋ shopify.dev/docs/storefronts/themes/seo/hreflang（help/dev）
+    region_qualified_when_single_country_market: true
+    # x-default 恰一個，指主網域上 primary market 預設語言的對應 URL。（help）
+    x_default_required: true
+    # 碼衝突（兩個多國市場同語言）的解析：先展開為逐國碼，超過此上限則依 market.specificity_stack 取捨。
+    # ⚠ Shopify 的規則未載明（V-111）；**不得靜默丟棄**，一律落 seo_lint_findings。（ours）
+    max_expanded_countries_per_market: 40
+    conflict_resolution: [expand_to_country_codes, specificity_stack, lint_finding]
+    silent_drop_forbidden: true
+    # 🔴 集合必須用**解析後（沿 lineage 累加）**的 web presence 集合，不是 market 自己那一列。
+    #    依據 market.inheritance_additive 含 web_presences（29 §1.5）。寫成後者會漏掉繼承的語言版本
+    #    ⇒ 雙向性破裂 ⇒ 整組標註可能被 Google 忽略（62 §I.3(a)）。
+    use_resolved_web_presences: true
+    # market conditions 變更 ⇒ 矩陣與 sitemap 必須失效重算（去抖沿用 IndexNow 的 5 分鐘）。
+    invalidate_on_market_conditions_change: true
+    invalidation_debounce_minutes: 5
+
+  # --- 地區重導（62 §K）------------------------------------------------------
+  redirect_geo:
+    # 🔴 預設**關閉**。Google 明文建議避免自動重導，且 IP 判斷不可靠、可能導致無法正確抓取各版本。
+    # 出處：developers.google.com/search/docs/specialty/international/managing-multi-regional-sites（google）
+    enabled_default: false
+    # 開啟時：302（地區偏好不是永久事實）、只攔一次、對已驗證爬蟲不套用。
+    status_code: 302
+    once_per_visitor: true
+    exclude_verified_crawlers: true
+    crawler_verification: reverse_dns          # UA 比對 ＋ 反向 DNS；未通過驗證者當一般使用者
+    # ⚠ V-116：「排除爬蟲」是否被 Google 視為可接受（非 cloaking）未取得官方表態 ⇒ 預設維持關閉。
+    verify_crawler_exclusion_is_compliant: true
+    # 🔴 不變量：出現在 hreflang／sitemap 的 URL 必須對**任何**客戶端直接回 200（62 §0.2 原則 4）。
+    hreflang_urls_must_return_200: true
+
+  # --- JSON-LD（62 §A）-------------------------------------------------------
+  jsonld:
+    # 🔴 換算尺度**一律 ×100，不看幣別**（同 carrier.money.storage_multiplier 的理由）。
+    #    ⚠️ **不要**用 jurisdictions.<code>.currency_format.exponent —— 那一欄在 2026-08-12 裁定後
+    #    已改為「顯示位數」（TWD 由 0 改為 2），拿它當換算基數會在 zero-decimal 幣別上算出 100 倍誤差。
+    #    出處：58 §G.3 的同一條警告；本鍵是它在 SEO 序列化層的對應。
+    amount_divisor: 100
+    # price 一律固定兩位小數字串、無幣別符號、無千分位。
+    # 出處：developers.google.com/search/docs/appearance/structured-data/merchant-listing（google）
+    price_decimals: 2
+    price_regex: '^\d+\.\d{2}$'
+    # priceCurrency ＝ presentment 幣別（29 §3.1），**不是** shop currency，也不是法域預設幣別。
+    price_currency_source: presentment
+    # priceValidUntil 只在有真實結束時點（促銷檔期／price list 排程）時輸出；否則整個屬性省略。
+    # 理由：浮動匯率市場無法誠實宣告有效期；Google 對過期值可能不顯示富摘要。（ours ＋ google）
+    price_valid_until_only_when_scheduled: true
+    # compare_at ≤ price 時不輸出 StrikethroughPrice（不是輸出相等值）。（ours）
+    strikethrough_requires_higher_compare_at: true
+    # 評論筆數為 0 一律不輸出整個 AggregateRating 節點。（ours）
+    omit_aggregate_rating_when_zero: true
+    # 不實作清單（連理由一起記，避免日後有人補上）：
+    #   FAQPage（Google 2026-05 移除富摘要）／WebSite+SearchAction（2024-11 落日）／
+    #   AggregateOffer（merchant listing 要求 Offer）／自家 Review。出處：30 §2.4 ＋ 本輪覆核。
+    forbidden_types: [FAQPage, SearchAction, AggregateOffer]
+    # 平台注入層主題不可移除；主題只能新增節點（62 §A.1）。
+    platform_layer_removable_by_theme: false
+
+  # --- Core Web Vitals（62 §G；門檻沿用 30 §4）--------------------------------
+  cwv:
+    lcp_ms: 2500
+    inp_ms: 200
+    cls: 0.1
+    # 伺服器端預算：超過即記 slow_render 事件（M8 可觀測）。（ours）
+    ttfb_budget_ms: 600
+    # 渲染期 DB 查詢上限（防主題 N+1 drop）；dev 模式報錯、生產記事件。（ours）
+    max_queries_per_render: 80
+
+# =============================================================================
+# 19. 生成式引擎與代理通路（GEO-G）——規格見 docs/specs/62-seo-geo.md §H
+# =============================================================================
+# 🔴 本區塊的第一原則（承 56 §A.3、58 §0.2 原則 2）：**未宣告 ≠ 支援**。
+#    能力沒實作就**不輸出該欄位**，不得輸出空字串或佔位 URL——輸出一個指向 404 的
+#    ucp_discovery_url，代理會在買家面前失敗，那比沒有這個欄位糟糕得多。
+agents:
+  # --- 三個 AI 面向端點（62 §H.3）--------------------------------------------
+  # 形態對齊 shopify.dev/changelog/customize-llmstxt-llms-fulltxt-and-agentsmd（2026-05-28，dev）：
+  #   /agents.md ← templates/agents.md.liquid → 平台預設
+  #   /llms.txt / /llms-full.txt ← 各自模板 → agents.md 模板 → 平台預設
+  agents_md_enabled: true
+  llms_txt_enabled: true                 # 零成本別名；**不做內容策展**（62 §H.2 結論）
+  # 🔴 llms-full.txt 預設**關閉**：①沒有任何引擎官方宣稱消費它（V-117）
+  #    ②等於把商家全站內容做成一鍵可抓封包（授權／頻寬／競品比價）
+  #    ③生成成本隨商品數線性成長。商家可開，開啟後受大小上限。（ours）
+  llms_full_txt_enabled: false
+  llms_full_txt_max_bytes: 5242880       # 5MB
+  # 受限 Liquid context：只有 request 與 agents 兩個物件（避免市場/語言污染快取鍵）。
+  # 出處：shopify.dev/docs/storefronts/themes/architecture/templates/agents-md-liquid（dev）
+  template_context_objects: [request, agents]
+  # 該檔走裸主網域、無 locale 前綴、不可在地化。（dev）
+  served_at_bare_primary_domain: true
+  localizable: false
+  # agents drop 欄位（命名對齊 Shopify 以利主題移植）。（dev）
+  drop_fields: [store_name, store_url, sitemap_url, currency, ucp_discovery_url, mcp_endpoint_url, ucp_versions]
+
+  # --- UCP（62 §H.3(c)）------------------------------------------------------
+  ucp:
+    # 🔴 未實作前恆 false，且**不輸出** ucp_discovery_url／ucp_versions。
+    provider_enabled: false
+    declare_when_disabled: false
+    # 兩條未結案前不得 enable（同 58 §A.3 的 enable_gate 形態）。
+    enable_gate: [V-113, V-114]
+    # 規格版本以日期命名且會滾動 ⇒ 一律當變數，不得寫成常數。
+    # 出處：ucp.dev/2026-04-08/specification/overview/（ucp）
+    spec_version_is_variable: true
+    known_spec_version_at_survey: "2026-04-08"
+    discovery_path: "/.well-known/ucp"
+    # 規格要求的最低快取。（ucp）
+    discovery_cache_control: "public, max-age=60"
+    # 階段 1＝唯讀 Catalog 宣告（M7 可評估）；階段 2＝Cart/Checkout/Order（M7+，需簽章金鑰與 webhook 驗簽）。
+    phase1_capabilities: [catalog]
+    phase2_capabilities: [cart, checkout, order]
+
+  # --- 代理 catalog／FAQ 端點（62 §H.4）---------------------------------------
+  catalog_api:
+    # 🔴 價格一律走 resolve_price_view()（62 §A.3 的第 5 個消費者），與 PDP／feed 四方全等。
+    price_source: resolve_price_view
+    # 未帶 country 時用 primary market，但**回應必須明示解析到哪個市場**，不得靜默。
+    # ⚠ V-114：UCP/MCP 如何攜帶買家國別與幣別未確認 ⇒ 我方端點強制此規則。
+    country_param_required: true
+    echo_resolved_market: true
+    # 未發佈到該市場 catalog 的商品不得出現（29 §1.3）。
+    respect_market_publication: true
+    # 🔴 供貨只回級別不回精確數量（免認證公開端點＝競品可即時掃庫存）。（ours）
+    availability_granularity: level_only
+    max_page_size: 50
+
+  # --- AI 爬蟲（62 §D.3）------------------------------------------------------
+  crawlers:
+    # 🔴 分成三組，**不做成一個 AI 開關**：把 OAI-SearchBot 和 GPTBot 綁在一起，
+    #    商家關訓練的同時會無聲關掉 ChatGPT 曝光——那是最貴的誤操作。
+    # 出處：developers.openai.com/api/docs/bots（openai）；
+    #       developers.google.com/search/docs/crawling-indexing/google-common-crawlers（google，
+    #       Google-Extended「不影響搜尋收錄，也不是排名訊號」）
+    groups:
+      search_answer:                     # 影響 AI 答案曝光；封鎖＝不出現在該平台答案
+        default: allow
+        agents: [OAI-SearchBot]
+      training:                          # 影響模型訓練／grounding
+        default: allow                   # ⚠ 需使用者裁定；V-123 無公開對照實驗，文案不得宣稱效果
+        agents: [GPTBot, Google-Extended]
+      user_triggered:                    # 使用者即時觸發；官方註明 robots 規則可能不適用 ⇒ 不可靠
+        default: allow
+        agents: [ChatGPT-User]
+        controllable: false
+    # Googlebot 不可由租戶關閉（整站消失級別的誤操作）。（ours）
+    googlebot_blockable_by_tenant: false
+    # ⚠ V-126：ClaudeBot／PerplexityBot 等的官方 UA 字串與語義本輪未逐一取得 ⇒
+    #    清單做成**可設定資料**（DB seed），不得寫死在程式碼。
+    extensible_agent_list: true
