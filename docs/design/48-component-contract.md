@@ -3,13 +3,19 @@
 > **用途**：這是給實作者（Codex）的單一操作手冊。拿著它就能把交互寫到與實測基準無差別，不需要再回頭問「這個態長怎樣」。每個元件固定給滿七節：**解剖／完整態表／動效／鍵盤與焦點／響應式／邊界情況／實作備註**。
 >
 > **權威順序**（衝突時由上往下勝出）：
-> 1. `docs/design/47-measured-interaction-spec.md` — 幾何、動效、字級的**量測真值**（本次唯一權威）
+> 1. `docs/design/47-measured-interaction-spec.md` — 幾何、動效、字級、色彩結構、斷點、z-index 的**量測真值**（**唯一權威，含第三～五輪的 §A–§I**，不只 §8 的 #81–#89）
 > 2. 本文件 §00「新增 token」— 47 未量到、但實作必需的補值（每條標明推導依據）
 > 3. `docs/research/44-live-shopify-teardown-2026-08.md` — 元件的**存在性、結構、行為**
 > 4. `docs/design/34-responsive-cross-device-spec.md` — 斷點與斷點下的轉換規則
 > 5. `docs/design/23-interaction-css-spec.md` — 舊 token 表，**凡與 47 衝突一律作廢**（作廢對照見 §0）
 >
-> **法務邊界（CLAUDE.md 鐵律 9）**：本文件只描述 CHILL LOVE 自有實作。全文**不含任何第三方 class 名、選擇器、變數名或 CSS 原始碼**；結構描述來自 44 號的行為觀察，尺寸來自 47 號的量測數字（等同拿尺量畫面），色值全部是我們自有調色。
+> **法務邊界（CLAUDE.md 鐵律 9）**：本文件只描述 CHILL LOVE 自有實作。全文**不含任何第三方 class 名、選擇器、變數名、元件標籤名或 CSS 原始碼**；結構描述來自 44 號的行為觀察，尺寸／時長／緩動／狀態轉移來自 47 號的量測數字（等同拿尺量畫面），**色相全部是我們自有調色**。語意色只取 47 §H2-1 的**結構與明度公式**，不取其色值。
+>
+> **色值的兩個例外（都經明確裁定，其餘一律自有調色）**：
+> 1. **focus 環 `#005bd3`（淺底）／`#4b92e5`（深底反轉）** —— 47 §I 由使用者裁定可採用，理由是它本質為**無障礙功能參數**（WCAG 2.4.11 只要求對相鄰色 ≥3:1，色相自由），且已收斂成單一 token 隨時可換；**storefront 不採用**，維持自有品牌色。
+> 2. **`--text-disabled: #b5b5b5`** —— 47 §E 量到的 disabled 文字階，是**中性灰、無色相**，且三份原型已採用同值。**若法務評審認為連中性灰也不宜沿用，只需改這一顆 token 的值**，全檔不必動（這正是把它 token 化的目的）。
+>
+> 47 量到的其餘第三方色值（中性階、分隔線、表單控件框）本文件**一律只記錄層級關係與明度關係，不記錄色值**，需要查原始量測值時去看 47。
 >
 > **關於範例中的文字（重要）**：本文件 HTML 骨架與態表中出現的中文字串，一律是**佔位文案**，作用是說明「這個位置放什麼性質的內容、長度大概多少」。**它們不是最終文案**。真正的 UX 文案由我們自己撰寫，術語表以 `46c §6 結論 8` 為準（庫存四欄用 `無法供貨/已承諾/可供貨/現有庫存`、`最終銷售品項`）。實作時若直接沿用範例字串，PR 一律打回。**唯二例外**（這兩者是格式契約不是文案）：字元計數器的 `已使用 {n}/{max} 個字元` 格式（§31.1）、狀態 badge 的「過去式單詞」規則（§11.2）。
 >
@@ -17,18 +23,43 @@
 >
 > **數值規範（硬性）**：元件 CSS 內**不得出現裸數值**，一律 `var(--token)`。Code review 用 `/:\s*-?\d+(px|rem|ms|s)\b/` 掃 diff，命中即打回。
 >
+> ---
+>
+> ## 🔴 2026-08-12 全檔對齊 47 號（**方向與以往相反：原型對、契約錯**）
+>
+> 本文件初稿寫成後，47 號又做了**第三輪（root 16px 桌機正式量測，§A–§I）／第四輪（§H2-1～H2-4）／第五輪（§H2-3′）**。
+> 這些量測**沒有進 47 §8 的 #81–#89 修正清單**，本文件因此漏接，而**三份原型 HTML 已全部依 47 改完**——
+> 形成「原型對、契約錯」的狀態（以往都是相反）。53 §9 的 **N-11** 點名了其中三處（z-index／斷點／badge pip），
+> 本次是**逐節全面對齊**，完整清單見 **§0.12**（14 條 47 來源 ＋ 2 條法規來源）。
+>
+> **契約失真比原型失真危險**：照契約寫程式的人不會知道自己錯了，因為契約看起來很權威。
+> 所以每一處修正都留了 `<!-- 依 47 §X 實測修正，原文：… -->` 的追溯註釋 ＋
+> `🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。` 的防回退註記。
+> **看到這兩個標記就代表：舊版讀起來一樣合理，但它是錯的，別回退。**
+>
+> 三個特別容易被回退的點：
+> 1. **`disabled` 只降文字色，不用 `opacity`**（47 §E）——本檔 §1.7 曾有一條把方向寫反的「常見錯誤」，已修正並註記。
+> 2. **focus 環 `outline` 與 `box-shadow` 並用**（47 §H2-3′ 推翻 §H2-3）——引用時只准引 **H2-3′**。
+> 3. **badge pip 第三形是 ⊘ 斜線圓不是半圓**（47 §D）——44 §2.2 的「半圓」是遠距誤判，已作廢。
+>
+> ---
+
 > **僅五個例外**（其餘一律視為違規）：
 > 1. `0`、`100%`
-> 2. `1px`（僅限 `border-width`，且應優先用 `--bw-100`）
-> 3. **media query 的條件式**（`@media (max-width: 767px)`）——CSS 自訂屬性不能用在條件式，斷點必須是建置期常數（見 §00.13）
+> 2. `1px`（僅限 `border-width`，且應優先用 `--hairline`；只有「刻意要看得見、不隨 dpr 變細」的線才用 `--bw-100`，見 §00.4）
+> 3. **media query 的條件式**（`@media (max-width: 47.9975em)`）——CSS 自訂屬性不能用在條件式，斷點必須是建置期常數，且**單位一律 `em`**（見 §00.13）
 > 4. **`font-size: 16px` 在 ≤767 的輸入類控件**——這不是設計值，是 iOS Safari 的行為約束（<16px 會觸發聚焦自動放大）
 > 5. **SVG／`<img>` 的 `width`/`height` 屬性**——這是防 CLS 的必要標註（34 §規則 9），不是樣式
 
 ---
 
-## §00 本文件新增的 token（47 號未涵蓋）
+## §00 本文件新增的 token（47 號未涵蓋者）＋ 依 47 實測校正的 token
 
-> 規則：47 號有的**原名照用**，一個都不改。以下是 47 沒有、但寫元件一定會用到的補值。**每一條都標推導依據**；標「〔待覆核〕」者需在 47 §7 桌機補測後回頭確認。
+> 規則：47 號有的**原名照用**，一個都不改。以下是 47 沒有、但寫元件一定會用到的補值。**每一條都標推導依據**；標「〔待覆核〕」者需在 47 §7 補測後回頭確認。
+>
+> **本節在 2026-08-12 的對齊中被大幅改寫**：初稿有幾個小節（00.4／00.5／00.6／00.7／00.9／00.13）宣稱「47 未涵蓋」，
+> 但那是只讀了 47 §8 修正清單的結果——47 的第三～五輪（§A–§I）其實都量到了。這些小節已改為引用實測值。
+> 真正仍屬本文件自訂的，一律標 **〔48 號自訂，47 未量測〕**；沒有這個標記的就是實測值，不得改動。
 
 ### 00.1 控件高度（47 §4 有階梯、無命名）
 
@@ -52,25 +83,58 @@
 
 ```css
 --r-000: 0;       /* 堆疊卡片中段、可排序表頭鈕（47 §4 實測表頭鈕圓角 0） */
---r-pill: 999px;  /* badge／pill／藥丸。h≤36 時與 --r-400 視覺等價，但不隨高度失真 */
+--r-pill: 999px;  /* **tag（標籤）／toggle 軌道與把手／進度條**。47 §D：全圓藥丸是 tag 的形狀，
+                     **badge 不是**（badge ＝ --r-200 圓角矩形）。h≤36 時與 --r-400 視覺等價，但不隨高度失真 */
 ```
 
-### 00.4 邊框寬
+### 00.4 邊框寬與髮絲線
+
+<!-- 依 47 §C／§H2-4 實測修正，原文：「--bw-100: 1px;  /* 預設框線 */」＋ 全文以 --bw-100 當分隔線／控件框。
+     47 §C 實測列分隔線 computed = 0.666667px，dpr = 1.5 → 0.667 × 1.5 = 1 個實體像素；
+     dpr=2 應為 .5px、dpr=1 才是 1px。47 §H2-4 另實測表單控件的框是 inset box-shadow（0.66px）不是 border。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。寫死 1px 在 Retina 上會比實站粗一倍，
+        47 §C 逐字標「這是我們三份原型全部缺的細節……是『看起來就是不對』的主因之一」。 -->
 
 ```css
---bw-100: 1px;    /* 預設框線 */
+/* 髮絲線＝1 個「裝置」像素，隨 dpr 換算（47 §C）。分隔線、卡片框、列底線一律用它。 */
+--hairline: 1px;                                    /* dpr 1 */
+@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 1.5dppx) { :root{ --hairline: .667px } }
+@media (-webkit-min-device-pixel-ratio: 2),   (min-resolution: 2dppx)   { :root{ --hairline: .5px   } }
+
+--bw-100: 1px;    /* 〔48 號自訂，47 未量測〕**非分隔線**的實心 1px 框（dashed 落點區、split 分隔線之類必須看得見的線） */
+--bw-150: 1.5px;  /* 〔48 號自訂，47 未量測〕badge pip 的環寬 */
 --bw-200: 2px;    /* 選取態外框、tab 底線、編輯器選取框（44 §21.4 實測 2px 選取外框） */
 ```
 
-### 00.5 焦點環（47 §5 M3 只說「怎麼動」，沒說「動到什麼」）
+**用哪一個的判準（硬性）**：
+- **分隔線／列底線／卡片框／表單控件框** → `--hairline`（47 §C）。
+- **表單控件（checkbox／radio／輸入框）的 1px 框** → 進一步改用 **`inset box-shadow`** 而非 `border`（47 §H2-4：「不佔 box model、可做次像素、與 §C 的髮絲線同一套」）。
+- `--bw-100` 只保留給「刻意要粗、不能隨 dpr 變細」的線。
+
+### 00.5 焦點環（47 §H2-3′ 第五輪定案）
+
+<!-- 依 47 §H2-3′ 實測修正，原文：「--focus-ring-offset: 1px;」單一值 ＋「--focus-ring: var(--focus);」未給實值。
+     47 §H2-3′ 掃描全部樣式表的 437 條 focus 規則後定案：環寬 2px（.125rem）；offset 1–2px（小控件 1、大控件 2）；
+     環色淺底 #005bd3、深色底反轉 #4b92e5；outline 98 條為主要做法、box-shadow 96 條為次要做法，**兩者並用**。
+     ⚠ 這推翻了 47 §H2-3（第四輪）「focus 不是用 outline 畫的」——那個結論只對單一元件成立。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。特別是 #005bd3 —— 47 §I 已由使用者裁定可採用
+        （理由：focus 環本質是無障礙功能參數，WCAG 2.4.11 只管對比不管色相；且收斂成單一 token 隨時可換），
+        admin／platform 採用量測值，storefront 維持自有品牌色。這是 CLAUDE.md 鐵律 9 的唯一色值例外。 -->
 
 ```css
---focus-ring-w: 2px;        /* 沿用 23 §3「焦點環 2px offset 1px，全元件一致」 */
---focus-ring-offset: 1px;
---focus-ring: var(--focus);
+--focus-ring-w: 2px;         /* 47 §H2-3′：環寬 2px（.125rem），98+96 條規則一致 */
+--focus-ring-offset: 1px;    /* 小控件（≤--ctl-28）：1px */
+--focus-ring-offset-lg: 2px; /* 大控件（≥--ctl-32、卡片、整列）：2px */
+--focus: #005bd3;            /* 47 §H2-3′ 量測值（淺底環色）。唯一獲裁定可採用的第三方色值，見 47 §I */
+--focus-inverse: #4b92e5;    /* 47 §H2-3′ 量測值（深色底反轉環）。深底浮層一律換這顆 */
+--focus-ring: var(--focus);  /* 深色浮層內就地覆寫為 var(--focus-inverse) */
+--focus-gap-w: 2px;          /* box-shadow 寫法時的內層間隙寬（＝outline-offset 的等價物） */
+--focus-gap: var(--bg);      /* 內層間隙色＝所在容器底色；深色浮層內就地覆寫 */
 --focus-glow: 0 0 0 2px color-mix(in srgb, var(--focus) 18%, transparent); /* 輸入框內光暈 */
 --focus-glow-critical: 0 0 0 2px color-mix(in srgb, var(--critical) 14%, transparent);
 ```
+
+**環色的使用範圍（47 §H2-3′ 定案）**：admin／platform 用 `--focus`（`#005bd3`）；**storefront 維持自有品牌色**（買家前台有獨立視覺語言，藍環會與暖色調衝突；WCAG 只管對比不管色相）。三端一律收斂成同一顆 token 名，換色只改一處。
 
 ### 00.6 中性階補位（47 #89「只取層級關係」，我們缺 5 個層）
 
@@ -78,66 +142,212 @@
 > 23 §1 的 `--surface-2` 目前**比 `--bg` 淺**，直接拿去當次級按鈕底會反轉層級 → 補 `--surface-sunken`。
 
 ```css
---surface-sunken:  #e9e9eb;  /* 次級/tertiary/icon 按鈕靜置底、鍵盤 kbd 底。必須深於 --bg */
---surface-hover:   #f0f0f2;  /* M1 的 hover 目標色（原型有 #ededee/#fafafc/#f0f0f2 三種，統一） */
+--surface-sunken:  #e9e9eb;  /* 次級/tertiary/split/icon 按鈕靜置底、鍵盤 kbd 底。必須深於 --bg */
+--surface-sunken-hover:  #e0e0e3;  /* 47 §D：secondary 的 hover 是「填色再深一階」，不是加框 */
+--surface-sunken-active: #d6d6da;  /* 同上，按下態 */
+--surface-hover:   #f0f0f2;  /* M1 的 hover 目標色（透明底元件用）。原型有 #ededee/#fafafc/#f0f0f2 三種，統一 */
 --surface-active:  #e4e4e7;  /* 按下態（比 hover 再深一階） */
 --surface-inverse: #1a1b1d;  /* 深底浮層：批次列／toast／save bar（原型硬編 8 處） */
 --text-inverse:    #ffffff;
 --border-strong:   #c9cace;  /* 輸入框／可編輯控件框線（原型硬編 15 處，23 §1 漏了這個 token） */
 --selected-bg:     #f0f5ff;  /* 表格選取列底（原型硬編 3 處） */
---disabled-opacity: .45;     /* 23 §3 有值未 token 化 */
---scrim: rgba(26,28,30,.42); /* modal／drawer／sheet 遮罩 */
+--text-disabled:   #b5b5b5;  /* 47 §E 實測：disabled 的唯一變化就是文字色降到這一階 */
+--scrim: rgba(0,0,0,.5);     /* 47 §H2-2 實測遮罩不透明度＝.5；modal／drawer／sheet 共用 */
 ```
 
-### 00.7 語意色的框線階（23 §1 只有 bg+fg 兩色，banner 需要第三個）
+<!-- 依 47 §E／§H2-2 實測修正，原文兩條：
+     ①「--disabled-opacity: .45;  /* 23 §3 有值未 token 化 */」——**整條刪除**。
+        47 §E 實測停用的「儲存」鈕為 `48×28, pad 4/6, r8, f12/16/500, fg rgb(181,181,181)`，底維持透明：
+        **disabled 的做法是「只降文字對比、不改底色」，不是降整體 opacity**。47 §E 逐字：
+        「降 opacity 會讓 disabled 元素在深色底上發灰、在淺色底上發白，不穩定；只換文字色則到處一致。要改。」
+     ②「--scrim: rgba(26,28,30,.42);」→ 47 §H2-2 實測 `rgba(0, 0, 0, 0.5)`。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        全文所有 `opacity: var(--disabled-opacity)` 一律已改為 `color: var(--text-disabled)`；
+        看到任何地方又冒出 `--disabled-opacity` 就是回退，直接打回。 -->
+
+**disabled 的全站唯一寫法（47 §E）**：
 
 ```css
---success-border:  color-mix(in srgb, var(--success) 26%, #fff);
---warning-border:  color-mix(in srgb, var(--warning) 26%, #fff);
---critical-border: color-mix(in srgb, var(--critical) 26%, #fff);
---attention-border:color-mix(in srgb, var(--attention) 26%, #fff);
---info-border:     color-mix(in srgb, var(--info) 26%, #fff);
---ai-border:       color-mix(in srgb, var(--ai) 22%, #fff);
+/* 只降文字色。底色、邊框、陰影、opacity 一律不動。 */
+:where(.cl-btn, .cl-pop__item, .cl-views__tab, .cl-fchip, .cl-pagination__prev, .cl-pagination__next)
+  :is(:disabled, [aria-disabled="true"]){
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+/* 整區灰化（44 §18.6 規則關閉時整卡灰化）同理：降文字色 ＋ inert，不降 opacity */
+.is-disabled{ color: var(--text-disabled); pointer-events: none; }   /* 搭配 inert 屬性 */
+.is-disabled :is(.cl-card__title, .cl-swrow__title, .cl-swrow__desc, p, span, b){ color: var(--text-disabled); }
 ```
 
-### 00.8 陰影（47 未量；沿用 23 §1 並補兩階）
+- **例外只有一個**：`opacity` 仍可用在**非 disabled 語意**的地方（skeleton、拖曳中的列 `.5`、圖層樹「已隱藏」`.55`、hover 才顯示的動作鈕 `0→1`）。那些不是停用態。
+- 圖示與 SVG 用 `currentColor`，才會跟著文字色一起降。
+
+### 00.7 語意色：5 族 × 5 層 × 3 態（47 §H2-1）
+
+<!-- 依 47 §H2-1 實測修正，原文：只有六條 `--*-border: color-mix(…26%, #fff)`，
+     且語意族為 success／warning／critical／attention／info（**把 caution 與 warning 併成一族**），
+     每族只有 bg＋fg＋border 三色、沒有態階、沒有 fill／icon 層。
+     47 §H2-1 實測 `:root` 共 539 個自訂屬性、其中語意色 75 個，結構為 **5 族 × 5 層 × 3 態**：
+       族＝info / success / **caution（黃）** / **warning（橘）** / critical  ← caution 與 warning 是兩族，不是一族的兩階
+       層＝bg-surface / bg-fill / border / icon / text
+       態＝base / hover / active
+       例外＝**只有 critical 多出 button-bg-fill 與 button-gradient-bg-fill**（破壞性按鈕專屬填色，其他族沒有）
+     47 §H2-1 逐字：「caution 與 warning 是兩個不同的族（黃 vs 橘），我們現有 token 只有一個『warning』，少一族。」
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+     ⚠ 法務邊界（CLAUDE.md 鐵律 9）：**只取結構與明度公式，色相用我方自有**。不得引用其色值。 -->
+
+**結構（75 個 token）**：
+
+```
+--sem-{family}-{layer}[-{state}]
+  family = info | success | caution | warning | critical
+  layer  = surface | fill | border | icon | text
+  state  = （base 省略）| hover | active
+＋ critical 專屬兩顆：--sem-critical-button-fill、--sem-critical-button-gradient-fill
+```
+
+**明度公式（47 §H2-1 量到的相對明度關係，色相為 CHILL LOVE 自有）**：
+
+| 層 | 生成規則 |
+|---|---|
+| `surface` | **L ≈ 94–97%**（極淺染色）；hover **−2~3**；active **−4~7** |
+| `fill` | 實色底，需與 `--text-inverse` ≥4.5:1；hover／active 各降一階 |
+| `border` | 介於 surface 與 icon 之間 |
+| `icon` | 於同族 `surface` 上 ≥3.5:1（WCAG 1.4.11 非文字對比） |
+| `text` | 於同族 `surface` 上 ≥4.5:1（目標 ≥6.5:1） |
+
+47 §H2-1 量到的 surface base 明度樣本：info 95.2（hover −2.0／active −6.6）｜success 94.3（−3.1／−6.6）｜caution 97.0（−1.9／−4.3）｜warning 95.3（−2.1／−4.5）。
+
+**相容別名**（既有 markup 與 §11／§21 的 `--success` 等短名仍可用）：
 
 ```css
---sh:        0 1px 2px rgba(26,28,30,.05), 0 1px 6px rgba(26,28,30,.04);  /* 卡片 */
---sh-sticky: 0 1px 0 var(--border-2), 0 2px 6px rgba(26,28,30,.06);       /* sticky 表頭吸附後 */
---sh-pop:    0 12px 32px rgba(26,28,30,.16);                              /* popover／選單 */
---sh-modal:  0 24px 64px rgba(26,28,30,.35);                              /* modal／drawer／sheet */
+--success:  var(--sem-success-text);  --success-bg:  var(--sem-success-surface);
+--caution:  var(--sem-caution-text);  --caution-bg:  var(--sem-caution-surface);
+--warning:  var(--sem-warning-text);  --warning-bg:  var(--sem-warning-surface);
+--critical: var(--sem-critical-text); --critical-bg: var(--sem-critical-surface);
+--info:     var(--sem-info-text);     --info-bg:     var(--sem-info-surface);
+--attention:var(--sem-caution-text);  --attention-bg:var(--sem-caution-surface);  /* attention ＝ caution 的舊名，新代碼不要再用 */
+--success-border: var(--sem-success-border);  --caution-border: var(--sem-caution-border);
+--warning-border: var(--sem-warning-border);  --critical-border:var(--sem-critical-border);
+--info-border:    var(--sem-info-border);
+--ai-border:      color-mix(in srgb, var(--ai) 22%, #fff);   /* 〔48 號自訂，47 未量測〕AI 是我方第 6 族，實站沒有 */
 ```
 
-### 00.9 z-index（23 §1 有散列、未 token 化；47 完全沒有）
+**兩條硬規則**：① **`caution`（黃）與 `warning`（橘）不可互相代用**——47 §D 實測 `未出貨`＝黃（caution／未開始）、`部分已履行`＝橘（warning／部分或受阻），這是兩個不同的狀態語意；② **`button-bg-fill` 只有 critical 有**，其他族的按鈕一律用中性填色，不要為 success／info 造破壞性風格的實心鈕。
+
+### 00.8 陰影（多數為 48 號自訂、47 未量測；`--sh-raised` 依 47 §6.5 新增）
 
 ```css
---z-content: 0;   --z-sticky: 3;    --z-bulkbar: 5;   --z-shell: 40;
---z-scrim: 44;    --z-settings: 50; --z-drawer: 60;   --z-savebar: 65;
---z-sheet: 70;    --z-overlay: 80;  --z-modal: 81;    --z-popover: 85;
---z-toast: 90;    --z-docpop: 95;
+--sh:        0 1px 2px rgba(26,28,30,.05), 0 1px 6px rgba(26,28,30,.04);  /* 卡片。〔48 號自訂，47 未量測〕 */
+--sh-sticky: 0 1px 0 var(--border-2), 0 2px 6px rgba(26,28,30,.06);       /* sticky 表頭吸附後。〔48 號自訂，47 未量測〕 */
+--sh-pop:    0 12px 32px rgba(26,28,30,.16);                              /* popover／選單。〔48 號自訂，47 未量測〕 */
+--sh-modal:  0 24px 64px rgba(26,28,30,.35);                              /* modal／drawer／sheet。〔48 號自訂，47 未量測〕 */
+--sh-raised: inset 0 -1px 0 0 var(--border-strong), 0 1px 2px rgba(26,28,30,.1);  /* 次級／split 按鈕的立體感 */
 ```
 
-**兩條硬規則**：① `--z-popover(85) > --z-modal(81)` —— modal 內的 select／日期選擇器必須能蓋在 modal 上；② `--z-toast(90) > 全部浮層` —— toast 永遠可見，但 ≤767 要用 `:has()` 讓位給 bulkbar／save bar（34 §已定）。
+<!-- 依 47 §6.5 實測新增 --sh-raised，原文：本節原本沒有任何「按鈕」層級的陰影，
+     §1.1 的 secondary 直接沿用卡片陰影 --sh。
+     47 §6.5 是本輪唯一成功解析到繪製盒的按鈕（split），配方為兩層：
+       ① inset 0 -1px 0 0 <中性灰>   ← 底緣 1px 內陰影（px 類，真值 1px，**不隨 dpr 變細**；色值見 47 §6.5，我方以 --border-strong 承接）
+       ② drop rgba(0,0,0,.1) …       ← 外投影
+     47 §6.5 逐字：「這個『白底 + 底緣內陰影 + 外投影』是次級按鈕的立體感來源，我們原型目前只有純邊框，缺這兩層。」
+     色值用我方 --border-strong 承接（CLAUDE.md 鐵律 9：只取結構，不抄色值）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。底緣內陰影是 1 CSS px 不是髮絲線——
+        它是「刻意要看得見的立體邊」，不能套 §00.4 的 dpr 換算。 -->
 
-### 00.10 動效補充（47 §5 缺）
+**`--sh-raised` 的 1px 為何不套髮絲線**：47 §0 的量測基準表已分類——`border-width`／hairline 是 px 類（不可除、不隨 dpr 換算），而這條 inset 陰影在實站是 px 撰寫。它是造型用的立體邊，不是分隔線。
+
+### 00.9 z-index（47 §G ＋ §H2-2 實測階梯）
+
+<!-- 依 47 §G／§H2-2 實測修正，原文：
+       --z-content: 0;   --z-sticky: 3;    --z-bulkbar: 5;   --z-shell: 40;
+       --z-scrim: 44;    --z-settings: 50; --z-drawer: 60;   --z-savebar: 65;
+       --z-sheet: 70;    --z-overlay: 80;  --z-modal: 81;    --z-popover: 85;
+       --z-toast: 90;    --z-docpop: 95;
+     以及「兩條硬規則：① --z-popover(85) > --z-modal(81) ② --z-toast(90) > 全部浮層」。
+     本節標題原本寫「47 完全沒有」——**這句話在 47 §G／§H2-2 寫出來之後就不成立了**，一併改掉。
+     47 §G 掃出實站在用的值為 1 ×16／100 ×29／400 ×4／510 ×2／517 ×2／518 ×12／519 ×18／520 ×12，
+     §H2-2 開啟 popover 與 modal 後把 510–520 這一帶逐層歸屬完畢：
+       520 popover／下拉選單（最高）｜519 modal 對話框本體｜518 modal 遮罩 scrim（rgba(0,0,0,.5)）
+       518 nav drawer、Skip-to-content｜517 頂欄 topbar、側欄寬度把手｜510 表格批次操作 sticky 列
+       400 中層雜項｜100 表格 sticky 表頭／儲存格｜1 卡片內基礎堆疊
+     47 §G 逐字：「浮層全部擠在單一窄帶（510–520）內，靠 DOM 順序而非數字大小決勝。
+                  這比我們原型現在散落的 z-index: 9999 健康得多。」
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        `popover(520) > dialog(519)` 這條 47 §H2-2 逐字標為「先前標為『猜錯就是肉眼可見 bug』的那條，現在有實測背書」。 -->
 
 ```css
---dur-shimmer: 1200ms;     /* skeleton（23 §5 沿用） */
---dur-shake: 300ms;        /* Modal 驗證失敗（47 #88 只說有此動畫，未給參數） */
---shake-amp: 5px;          /* 〔推導〕沿用原型既有的 ±5px 位移量 */
---dur-toast-dwell: 2600ms; /* toast 停留（23 §3 沿用） */
---dur-bar-grow: 500ms;     /* 條圖生長（23 §5 沿用，不屬 M1–M7） */
---ease-linear: linear;
+--z-base:     1;    /* 卡片內基礎堆疊（47 §G ×16） */
+--z-sticky:   100;  /* 表格 sticky 表頭／儲存格、常駐導航（47 §G ×29） */
+--z-mid:      400;  /* 中層雜項：tooltip、面板內關閉鈕（47 §G ×4） */
+/* ── 以下為浮層窄帶 510–520。上限 520，超過即代表設計有問題（47 §G）── */
+--z-bulkbar:  510;  /* 表格批次操作 sticky 列、浮動儲存列 */
+--z-topbar:   517;  /* 頂欄、側欄寬度調整把手 */
+--z-drawer:   518;  /* nav drawer、Skip-to-content */
+--z-scrim:    518;  /* modal／drawer／sheet 遮罩（與 drawer 同層，靠 DOM 序決勝） */
+--z-dialog:   519;  /* modal／bottom sheet／設定 overlay 的對話框本體 */
+--z-popover:  520;  /* popover／下拉選單／toast／doc-pop（必須 > dialog） */
 ```
 
-### 00.11 字級補充
+**三條硬規則**：
+1. **`--z-popover(520) > --z-dialog(519)`** —— modal 內的 select／日期選擇器／`⋯` 選單必須能蓋在對話框之上。47 §H2-2 實測背書。
+2. **浮層只准用 510–520 這 11 個數字**，且**同層時靠 DOM 順序決勝，不靠加數字**。要新增浮層先問「它真的是新的一層嗎」，而不是直接寫 521。
+3. `--z-popover` 同時承載 toast —— toast 永遠可見；≤767 要用 `:has()` 讓位給 bulkbar／save bar（34 §已定）。
+
+**舊名對照**（`--z-content` / `--z-shell` / `--z-settings` / `--z-savebar` / `--z-sheet` / `--z-overlay` / `--z-modal` / `--z-docpop` **一律作廢**）：
+
+| 舊 token（作廢） | 新 token |
+|---|---|
+| `--z-content: 0` | `--z-base: 1` |
+| `--z-sticky: 3` | `--z-sticky: 100` |
+| `--z-bulkbar: 5`／`--z-savebar: 65` | `--z-bulkbar: 510` |
+| `--z-shell: 40` | `--z-topbar: 517` |
+| `--z-scrim: 44` | `--z-scrim: 518` |
+| `--z-drawer: 60` | `--z-drawer: 518` |
+| `--z-settings: 50`／`--z-sheet: 70`／`--z-overlay: 80`／`--z-modal: 81` | `--z-dialog: 519` |
+| `--z-popover: 85`／`--z-toast: 90`／`--z-docpop: 95` | `--z-popover: 520` |
+
+### 00.10 動效補充（47 §5 的 5 時長 × 3 曲線之外）
+
+> **47 §5 的原生 token 原名照用，一個都不改**（本節不重複列出）：
+> `--dur-fast:100ms`（色彩／邊框／focus／accordion）｜`--dur-base:150ms`（底色 hover／淡入淡出）｜
+> `--dur-slow:200ms`（popover 進場）｜`--dur-slower:250ms`（抽屜 transform）｜`--dur-slowest:300ms`（側欄寬度）
+> × `--ease-standard: cubic-bezier(.25,.1,.25,1)`／`--ease-in-out: cubic-bezier(.42,0,.58,1)`／`--ease-decelerate: cubic-bezier(.19,.91,.38,1)`
+>
+> 使用方式**只准透過 M1–M7 七條具名規則**（§A.3）。**全站禁用 `transition: all`**——47 §5 逐字說明實站的 284 處 `transition: all` 是繼承的無效宣告（`transition-duration: 0s`），實際生效的只有那九條具名屬性。
+
+以下是 47 §5 沒有給參數、由本文件補的值：
 
 ```css
---t-2xs:     11 / 16 / 500;  /* 鍵盤鍵帽、分組標題（大寫加字距）、浮層註腳。23 §1 已在用，47 未量 */
---t-3xl:     24 / 32 / 450;  /* 〔待覆核〕桌機頁標題、空態標題、指標卡大數 */
---t-display: 32 / 40 / 450;  /* 〔待覆核〕頂層 404 主標、帳單累積總計（44 §19.4 的 display 級數字） */
+--dur-shimmer: 1200ms;     /* 〔48 號自訂，47 未量測〕skeleton（23 §5 沿用） */
+--dur-shake: 300ms;        /* 〔48 號自訂，47 未量測〕Modal 驗證失敗（47 #88 只說有此動畫，未給參數；§7 第 13 項列為待補測） */
+--shake-amp: 5px;          /* 〔48 號自訂，47 未量測〕沿用原型既有的 ±5px 位移量 */
+--dur-toast-dwell: 2600ms; /* 〔48 號自訂，47 未量測〕toast 停留（23 §3 沿用） */
+--dur-bar-grow: 500ms;     /* 〔48 號自訂，47 未量測〕條圖生長（23 §5 沿用，不屬 M1–M7） */
+--ease-linear: linear;     /* 〔48 號自訂，47 未量測〕shimmer 專用 */
 ```
+
+### 00.11 字級與字重補充
+
+```css
+--t-2xs:     11 / 16 / 500;  /* 〔48 號自訂，47 未量測〕鍵盤鍵帽、分組標題（大寫加字距）、浮層註腳。23 §1 已在用 */
+--t-3xl:     24 / 32 / 450;  /* 〔48 號自訂，47 未量測〕〔待覆核〕桌機頁標題、空態標題、指標卡大數 */
+--t-display: 32 / 40 / 450;  /* 〔48 號自訂，47 未量測〕〔待覆核〕頂層 404 主標、帳單累積總計（44 §19.4 的 display 級數字） */
+--fw-split:  550;            /* 47 §6.5 實測：split／次級按鈕字重 550（介於 500 與 600 的一階） */
+```
+
+<!-- 依 47 §6.5 實測新增 --fw-split，原文：本節只有三條字級 token，沒有任何字重補充；
+     §1.1 的 split button 沿用 --t-sm 的 weight 500。
+     47 §6.5 對 split 按鈕的完整配方逐字標「字級 12/16，字重 550   ← 注意是 550，不是 500 或 600」，
+     並總結「字重 550 也是我們沒有的階」。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        550 只有**可變字體軸**（variable font weight axis）能渲染；
+        若字體只提供靜態權重清單（400/500/600…），550 會被四捨五入回 500 或 600，這一階就消失了。
+        → 實作硬性要求：`Inter` 必須載入 **variable** 版本（`font-variation-settings:'wght' 550`
+        或 `font-weight:550` ＋ `@font-face` 宣告 `font-weight: 100 900`），
+        不得只載靜態權重。同一條也適用 47 §3 的 --t-lg 字重 **450**。 -->
+
+**可變字體是硬性依賴**：本文件用到 **450**（`--t-lg`／`--t-3xl`／`--t-display`）與 **550**（`--fw-split`）兩個非整百字重。這兩階**只有可變字體軸能渲染**；載靜態權重清單會被四捨五入掉，導致「卡片標題看起來還是太重」「次級按鈕字重跟 primary 一樣」這兩個症狀。字體載入設定屬於 `base.css` 的驗收項（附錄 C）。
 
 ⚠ **47 §3 的一個未解衝突（實作前必看）**：`--t-xl` 是 `18/24/500`，`--t-2xl` 也是 `18/24/500`（表上寫「27→18」是 150% 縮放還原後的值）。**兩階撞值，實作無法區分**。且 §8 #83 說「大標題字重降到 450」，但表上只有 `--t-lg`(16) 是 450，更大的 `--t-xl`／`--t-2xl` 反而是 500。**本文件的處置**：`--t-xl`／`--t-2xl` 原值照用（用於 ≤767 窄版），桌機（≥768）的頁標題改用新增的 `--t-3xl`（24/32/450），符合 #83 的意圖。**47 §7 桌機補測後必須回頭定案。**
 
@@ -151,34 +361,88 @@
 --w-settings-content: 660px; --w-settings-nav: 270px;
 --w-modal-sm: 400px; --w-modal: 520px; --w-modal-lg: 720px;
 --w-drawer: 380px;   --w-popover-min: 180px; --w-popover-max: 320px;
---w-search-shell: 600px;     /* 頂欄全域搜尋最大寬（23 §2） */
---w-search-shell-m: 420px;   /* 同上，1024–1279 */
+--w-search-shell: 640px;     /* 47 §B 實測：頂欄搜尋框 640 × 36（原 600，取自 23 §2 的估值） */
+--w-search-shell-m: 420px;   /* 同上，中桌機帶。〔48 號自訂，47 未量測〕 */
+--r-topbar: 12px;            /* 47 §B 實測：頂欄搜尋框與頂欄圖示鈕的圓角是 12（＝--r-300），不是控件通用的 8 */
 --w-crumbtitle: 240px;       /* 編輯器頂欄兩行標題的截斷寬 */
---art-lg: 200px; --art-md: 140px; --art-sm: 100px;  /* 空態插圖三階 */
---art-404: 280px;            /* 頂層 404 插圖 */
---sp-800: 32px;              /* 頁邊（23 §1 慣用值，47 的七階止於 24，這是版面層不是元件層） */
---sp-1200: 48px;             /* 全頁空態的垂直內距 */
+--art-lg: 200px; --art-md: 140px; --art-sm: 100px;  /* 空態插圖三階。〔48 號自訂，47 未量測〕 */
+--art-404: 280px;            /* 頂層 404 插圖。〔48 號自訂，47 未量測〕 */
+--sp-800: calc(var(--sp-400) * 2);   /* 32＝版面層頁邊。〔48 號自訂，47 未量測〕見下方使用邊界 */
+--sp-1200: calc(var(--sp-600) * 2);  /* 48＝全頁空態的垂直內距。〔48 號自訂，47 未量測〕 */
 ```
 
-**`--sp-800`／`--sp-1200` 的使用邊界**：**只准用在版面容器**（`.cl-page`、`.cl-empty--page`）。元件內部一律只能用 47 的七階（2/4/6/8/12/16/24）。
+<!-- 依 47 §1 實測收緊 --sp-800／--sp-1200 的定義，原文：
+       「--sp-800: 32px;   /* 頁邊（23 §1 慣用值，47 的七階止於 24，這是版面層不是元件層） */
+        --sp-1200: 48px;  /* 全頁空態的垂直內距 */」
+     47 §1 逐字：「4px 基準的階梯，實際只用 2/4/6/8/12/16/24 七階。我們 23 號原本有 10 階，
+                  砍到七階即可覆蓋全部真實用例，多的是噪音。」
+     → 這兩顆確實不在 47 的七階內。處置：**不新增第 8/9 階裸值**，改為以七階的整數倍 calc() 組出，
+       並把使用範圍鎖死在版面容器。這樣 token 仍然存在（實作需要），但階梯的唯一真值來源仍是 47 的七階。
+     🔴 任何人翻舊版都不要改回去：不要把它們改寫回 `32px`／`48px` 的裸值，也不要新增 --sp-900 之類的第 8 階。 -->
 
-### 00.13 斷點（47 完全沒有；取自 34 §1）
+**`--sp-800`／`--sp-1200` 的使用邊界（硬性）**：
+- **只准用在版面容器**：`.cl-page` 的頁邊、`.cl-empty--page` 的垂直內距、`.cl-savefoot` 的下方留白、`.cl-404--top` 的 gap。
+- **元件內部一律只能用 47 的七階**（2/4/6/8/12/16/24）。Code review 看到元件 CSS 內出現 `--sp-800` 就打回。
+- 需要更大的間距時，**用七階的 calc 倍數**（`calc(var(--sp-600) * 2)`），**不要**新增第 8 階。
 
-```
-L   ≥1280        設計基準寬，不下任何 media query
-M   1024–1279    收邊距、格線降階、表格改橫捲
-S   768–1023     側欄轉抽屜、兩欄轉單欄
-XS  430–767      表格轉卡片、modal 轉貼底 sheet、輸入 16px/40 高
-XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
-```
+### 00.13 斷點（47 §F 實測 8 階，單位 `em`）
 
-⚠ **CSS 自訂屬性不能用在 media query 條件式**。斷點必須是建置期常數（PostCSS custom-media 或 Tailwind screens），寫法一律 `max-width`（desktop-first，理由見 34 §1）。
+<!-- 依 47 §F 實測修正，原文：
+       「### 00.13 斷點（47 完全沒有；取自 34 §1）
+        L   ≥1280        設計基準寬，不下任何 media query
+        M   1024–1279    收邊距、格線降階、表格改橫捲
+        S   768–1023     側欄轉抽屜、兩欄轉單欄
+        XS  430–767      表格轉卡片、modal 轉貼底 sheet、輸入 16px/40 高
+        XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識」
+     本節標題原本寫「47 完全沒有」——**47 §F 是從全部 stylesheet 的 @media 條件直接抽出並按出現次數排序的權威值**，
+     這句話不成立，一併改掉。
+     47 §F 實測（次數 / 宣告 / = px）：
+       421 `min-width: 48em`      = 768   ← **主斷點**，用量遠超其他
+       110 `min-width: 30.625em`  = 490
+        78 `max-width: 47.9975em` = 767.96
+        51 `max-width: 30.6225em` = 489.96
+        38 `max-width: 41.685em`  = 666.96
+        35 `min-width: 65em`      = 1040
+        32 `min-width: 90em`      = 1440
+        25 `min-width: 41.6875em` = 667
+        13 `min-width: 75em`      = 1200
+         3 `min-width: 22.5em`    = 360
+         3 `min-width: 160em`     = 2560
+     → 8 階：360 / 490 / 667 / 768 / 1040 / 1200 / 1440 / 2560。
+     47 §F 對我方 34 號 4 階的逐條差異：429 vs **490**（差 61px，我們的手機大斷點太早）；
+       767 vs **768**（幾乎一致 ✅）；1023 vs **1040**（差 17px）；1279 vs **1200 或 1440**（我們少了一階）。
+     47 §F 逐字：「斷點以 `em` 撰寫，不是 `px` —— 這是**無障礙設計決定**：使用者調大瀏覽器預設字型時，
+       版面會**提早**切換到寬鬆佈局……我們三份原型全部用 px 斷點，應改為 em。
+       這是一行改動換一整類無障礙情境，CP 值極高。」
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        特別是**單位**——把 em 改回 px 會直接殺掉「使用者調大字級時版面提早放寬」這個無障礙行為，
+        而這正是 47 §0 那次「1024px 視窗卻拿到極窄版」事故的根因（root=24px 時 48em = 1152px）。 -->
 
-⚠ **47 的量測全部在 683px 有效視口（窄版）取得**。本文件把 47 的控件高度階視為 **S/XS 帶的真值**，桌機（≥1280）沿用同一階梯直到 47 §7 補測推翻為止。這是本文件最大的已知風險。
+**8 階階梯（單位一律 `em`，以初始字級 16px 換算）**：
+
+| 階 | `min-width` | `max-width` 配對 | = px | 角色 |
+|---|---|---|---:|---|
+| 1 | `22.5em` | `22.4975em` | **360** | 最小手機 |
+| 2 | `30.625em` | `30.6225em` | **490** | 小手機 → 大手機 |
+| 3 | `41.6875em` | `41.685em` | **667** | 平板直式 |
+| 4 | **`48em`** | **`47.9975em`** | **768** | **主斷點（佈局換手的唯一分界）** |
+| 5 | `65em` | `64.9975em` | **1040** | 桌機 |
+| 6 | `75em` | `74.9975em` | **1200** | 中桌機 |
+| 7 | `90em` | `89.9975em` | **1440** | 寬桌機 |
+| 8 | `160em` | `159.9975em` | **2560** | 超寬 |
+
+**三條硬規則（47 §F 的三個結論）**：
+1. **`max` 配對一律 `min − 0.0025em`**（＝ 1/16 px 的四捨五入邊界），不要寫 `47.99em` 或 `767px`。
+2. **主斷點只有一個：768（48em）**。佈局換手（側欄↔抽屜、表格↔卡片、兩欄↔單欄）**只准發生在這裡**；1040/1200/1440 只做欄數與密度微調，**不重排結構**。
+3. **單位是 `em` 不是 `px`**。`em` 在 media query 條件式中以**初始字級 16px** 計算，不受 `html{font-size}` 影響，所以 px→em 的換算是安全的。
+
+⚠ **CSS 自訂屬性不能用在 media query 條件式**。斷點必須是建置期常數（PostCSS custom-media 或 Tailwind screens）。這是 §00 開頭「僅五個例外」的第 3 條。
+
+⚠ **47 §1–§5 的量測全部在 683px 有效視口（窄版）取得**。本文件把 47 的控件高度階視為 **≤768 帶的真值**；47 §B 的第三輪桌機量測（root 16px、2294px 視口）已確認頂欄 56／側欄 240／列高 32／表頭鈕 28／檢視 tab 24 在桌機同樣成立，**四階階梯桌機共用**。剩餘缺口見附錄 D。
 
 ---
 
-## §0 修正對照（47 §8 #81–#89 逐條展開）
+## §0 修正對照（**§0～§0.11＝47 §8 的 #81–#89**；**§0.12＝47 第三～五輪 §A–§I**，本次補上）
 
 > 格式：**23 號原本寫什麼 → 改成什麼 → 影響哪些原型檔案的哪些選擇器**。
 > 原型檔案代號：**A** = `docs/design/chilllove-admin-v2.html`；**P** = `docs/design/chilllove-platform-admin.html`；**S** = `docs/design/chilllove-storefront-v2.html`；**A1** = `chilllove-admin-preview.html`；**S1** = `chilllove-storefront-preview.html`。行號為改版當下的位置，以選擇器名為準。
@@ -219,8 +483,8 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 | | 內容 |
 |---|---|
 | **23 原文** | §1「`--r-card:12px; --r-btn:8px; --r-pill:999px`」——三個語意名 |
-| **改成** | 改為**四階尺寸名**：`--r-100:4 --r-200:8 --r-300:12 --r-400:18`，另加 `--r-000:0`、`--r-pill:999px`。對應：`--r-100`＝最小元素（鍵帽、旗標）／`--r-200`＝**所有控件**（按鈕、輸入、chip、tab）／`--r-300`＝**卡片**（最高頻）／`--r-400`＝大容器與 sheet 上緣 |
-| **新規則（原型完全沒有）** | **堆疊卡片群組單邊圓角**：群組內第一張 `border-radius: var(--r-300) var(--r-300) 0 0`、最後一張 `0 0 var(--r-300) var(--r-300)`、中間 `var(--r-000)`，相鄰邊只留一條 `--bw-100` 分隔線（不是兩條疊起來）。詳見 §13.1 |
+| **改成** | 改為**四階尺寸名**：`--r-100:4 --r-200:8 --r-300:12 --r-400:18`，另加 `--r-000:0`、`--r-pill:999px`。對應：`--r-100`＝最小元素（鍵帽、旗標）／`--r-200`＝**所有控件與 badge**（按鈕、輸入、chip、tab、**狀態 badge**）／`--r-300`＝**卡片**（最高頻）／`--r-400`＝大容器與 sheet 上緣／**`--r-pill`＝只給 tag（標籤）與 toggle 軌道**（47 §D） |
+| **新規則（原型完全沒有）** | **堆疊卡片群組單邊圓角**：群組內第一張 `border-radius: var(--r-300) var(--r-300) 0 0`、最後一張 `0 0 var(--r-300) var(--r-300)`、中間 `var(--r-000)`，相鄰邊只留一條 `--hairline` 分隔線（不是兩條疊起來）。詳見 §13.1 |
 | **影響 A（off-scale 圓角全清）** | 9px ×9 → `--r-200`：`.searchbox`、`.store-chip`、`.ai-send`、`.set-close`、`.seg`、`.dt-ic`、`.set-search`｜10px ×18 → `--r-300`（浮層／banner／bulkbar）或 `--r-200`（小按鈕）：`.view-menu`、`.banner-err`、`.toast`、`.bulkbar`、`.plan`、`.annot-bar`｜14px ×4 → `--r-400`：`.modal`、`.palette`、`.ai-box`、`.set-nav`｜7px ×6 → `--r-200`：`.logo .heart`、`.avatar`、`.view-menu button`、`.bulkbar .b-act`｜6px ×6 → `--r-100`：`.skeleton`、`.tagchip`、`.ai-row .x`；`.tab{border-radius:6px 6px 0 0}`→`var(--r-200) var(--r-200) 0 0`｜5px `.dev-tag`→`--r-100`｜16px `.setup-art`→`--r-400`｜3px `.flag`→`--r-100`｜`.split .btn:first-child{border-radius:8px 0 0 8px}`→`var(--r-200) 0 0 var(--r-200)` |
 | **影響 P** | 同樣把 2/3/5/6/7/9/10/14px 收斂到四階 |
 
@@ -233,6 +497,14 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 | **影響 A** | `.topbar{height:52px}`→`var(--h-topbar)`；連帶 `.frame{height:calc(100vh - 52px)}`、`.scrim{inset:52px 0 0}` 兩處硬編 52 一起改｜`.sidebar{width:220px}`→`var(--w-sidebar)`｜`.searchbox{height:34px}`→`var(--ctl-36)`（頂欄階）｜`.set-search{height:30px}`→`var(--ctl-28)`｜`.hamb{34px}`／`.set-close{34px}`→`var(--ctl-36)`｜`.view-menu{top:34px}`→`calc(var(--ctl-28) + var(--sp-150))`（跟著觸發元高度算，別再硬編）｜`.idx td{padding:8px 12px}` 維持，但因字級改 12/16 而使列高自然落在 32｜`.tab{padding:8px 12px}`→`height:var(--ctl-32);padding:0 var(--sp-300)`｜`.btn{32}`／`.btn-sm{28}`／`.pg{28}`／`.input{32}`／`.filterbar{32}` 皆已合規，改成引用 token |
 | **影響 P** | `.tab{height:34px}`→`var(--ctl-32)`；`.filter-chip{height:28px}`→`var(--ctl-28)` |
 | **⚠ 風險** | 這四階是 **683px 窄版**量到的。桌機是否同階未經量測（47 §7 第 1/3/5 項）。**桌機沿用同階梯**是本文件的暫定決策 |
+
+<!-- 依 47 §B 實測修正 --w-search-shell 與新增 --r-topbar，原文：
+       「--w-search-shell: 600px;     /* 頂欄全域搜尋最大寬（23 §2） */」，且無頂欄圓角 token。
+     47 §B 桌機真值表（root 16px、innerWidth 2294、dpr 1.5）：
+       頂欄搜尋框 **640 × 36**，圓角 **12px**（含 CTRL K 鍵帽）｜頂欄圖示鈕 **36 × 36**，圓角 **12px**
+     → 寬度 600 是 23 §2 的估值，被實測推翻；且頂欄控件的圓角是 12 不是控件通用的 8。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        頂欄是全站唯一「控件圓角 ≠ --r-200」的區域，看到 --r-topbar 被改回 --r-200 就是回退。 -->
 
 ### #86 checkbox 16px ＋ 列級 32px 命中區（不放大 checkbox 本身）
 
@@ -268,9 +540,17 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 |---|---|
 | **23 原文** | §1 的 `--bg/--surface/--surface-2/--surface-3/--text/--text-2/--text-3/--border/--border-2` 九個中性 token |
 | **改成** | **色值全部保留（是我們的品牌資產）**，但要補齊 47 §6 量到的**層級關係**所需的 5 個缺位：`--surface-sunken`（次級按鈕底，**必須深於 `--bg`**）、`--surface-hover`、`--surface-active`、`--surface-inverse`、`--border-strong`（見 §00.6） |
-| **關鍵發現** | 47 §6 的層級事實之一是「**次級按鈕底比頁底深一階**」。23 的 `--surface-2:#f7f7f8` **比 `--bg:#f4f4f5` 淺**，拿它當 tertiary／icon 按鈕的靜置底會**反轉層級**。→ 新增 `--surface-sunken:#e9e9eb` 承接這個角色。（我們的 secondary 按鈕維持「白底＋`--border-strong` 框」，因為它主要出現在白卡上，這是我們自有的視覺選擇，與層級事實不衝突） |
+| **關鍵發現** | 47 §6 的層級事實之一是「**次級按鈕底比頁底深一階**」。23 的 `--surface-2:#f7f7f8` **比 `--bg:#f4f4f5` 淺**，拿它當 tertiary／icon 按鈕的靜置底會**反轉層級**。→ 新增 `--surface-sunken:#e9e9eb` 承接這個角色。**secondary 按鈕同樣改用 `--surface-sunken` 淺灰實心＋無邊框**（47 §D，見 §1.1） |
 | **影響 A（硬編色清除）** | `#c9cace` ×15 處 → `var(--border-strong)`：`.btn-sec`、`.input`、`.task-chip:hover`、`.filterbar`、`.toggle`、`.tgl`、`.idx td .cellin`、`.codebox`、`.ftile:hover`、`.dropzone`｜`#1a1b1d` ×8 → `var(--surface-inverse)`：`.bulkbar`、`.toast`、`.savebar`、`.doc-pop`｜`#f0f5ff` ×3 → `var(--selected-bg)`｜`#ededee`／`#fafafc`／`#f0f0f2`／`#e8e8ea` → 統一 `var(--surface-hover)`｜`#a9aaae`（`.input:hover`）→ `color-mix` 自 `--border-strong`｜`.banner-err` 的 `#f2c4cb` → `var(--critical-border)`｜`.skeleton` 的 `#ededef/#f6f6f7` → `var(--surface-hover)/var(--surface)` |
 | **影響 P** | 同一組硬編色，同一組替換 |
+
+<!-- 依 47 §D 實測修正本列，原文括號內：
+     「（我們的 secondary 按鈕維持「白底＋`--border-strong` 框」，因為它主要出現在白卡上，
+       這是我們自有的視覺選擇，與層級事實不衝突）」
+     47 §D 逐字推翻此句：「三個層級靠『填色深淺』區分，不靠邊框或尺寸。
+       我們原型目前 secondary 用白底＋邊框，**方向就不對**。」
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        這句括號是本檔唯一一處「明知 47 怎麼說、仍寫下相反決定」的地方，特別容易被當成先例引用。 -->
 
 ### §0.10 其它連帶處置
 
@@ -299,6 +579,40 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 | **#46** | 無 | 字元計數器統一 `已使用 {n}/{max} 個字元` | A 新增（見 §31） |
 | **#13** | 無 | 空資料時的 `匯出` 鈕 **disabled 而非隱藏** | 全域規則（見 §A.2） |
 
+### §0.12 來自 47 第三～五輪（§A–§I）的修正——**本文件曾落後於此**
+
+> **背景**：47 §8 的 #81–#89 是**第一／二輪**（683px 窄版、root 24px）的產出，本文件 §0 已逐條落地。
+> 但 47 後來又做了**第三輪（root 16px 桌機正式量測，§A–§I）**、**第四輪（§H2-1～H2-4）**、**第五輪（§H2-3′）**，
+> 這些**沒有進 47 §8 的修正清單**，本文件當時因此漏接，形成「原型已對齊、契約落後」的狀態
+> （53 §9 的 **N-11** 點名了其中三處，本節是全面對齊後的完整清單）。
+>
+> **方向提醒**：這一輪與以往相反——**以往是契約對、原型落後；這一次是原型對、契約錯**。
+> 🔴 這也是為什麼本節每一條都帶「任何人翻舊版都不要改回去」：舊版讀起來一樣權威，但它是錯的。
+
+| # | 47 出處 | 48 舊值（已作廢） | 47 實測真值 | 落地在 |
+|---|---|---|---|---|
+| **A-1** | **§G ＋ §H2-2** | z-index 散列 `0/3/5/40/44/50/60/65/70/80/81/85/90/95` | **浮層集中 510–520**：popover **520** > dialog **519** > scrim **518**（`rgba(0,0,0,.5)`）；sticky 100；base 1 | §00.9、§12.1、§16.1、§17.1、§18.1、§19.1、§20.1、§26.7 |
+| **A-2** | **§F** | 斷點 5 階、單位 `px`（取自 34 號） | **8 階、單位 `em`**：360/490/667/768/1040/1200/1440/2560；**主斷點 768（48em）**；`max` 配對 `−0.0025em` | §00.13、§A.5 |
+| **A-3** | **§D** | badge pip 第三形＝「半圓」 | **⊘ 斜線圓**（`scale(7)` 放大判讀確認）。語意：**● 完成／○ 未開始／⊘ 部分或受阻**；WCAG 1.4.1 不得只靠顏色 | §11.1、§11.2、§11.5、§11.8 |
+| **A-4** | **§C** | 分隔線／控件框＝固定 `1px`（`--bw-100`） | **髮絲線＝1 個裝置像素**（dpr 1.5 時 `0.667px`、dpr 2 時 `0.5px`） | §00.4 ＋ 全檔 18 處框線 |
+| **A-5** | **§E** | disabled ＝ `opacity: .45` | **只降文字色到 `--text-disabled`**（47 §E 量到的中性階），底色／邊框／opacity 一律不動 | §00.6 ＋ 全檔 16 處態表 |
+| **A-6** | **§H2-2** | `--scrim: rgba(26,28,30,.42)` | **`rgba(0,0,0,.5)`** | §00.6 |
+| **A-7** | **§H2-3′** | 「**不准**用 `box-shadow` 模擬焦點環」；環色 `var(--focus)` 未給實值；offset 固定 1px；深底環用 `--text-inverse` | **outline（98 條）與 box-shadow（96 條）並用**；環寬 2px；offset **1–2px 兩階**；環色 **`#005bd3`**／深底反轉 **`#4b92e5`** | §00.5、§A.2、§12.4、§26.2、§28.2 |
+| **A-8** | **§H2-1** | 語意色 5 名（把 caution 與 warning 併成一族）、只有 bg+fg+border | **5 族 × 5 層 × 3 態＝75 token**；**caution（黃）與 warning（橘）是兩族**；**只有 critical 有 `button-bg-fill`** | §00.7、§11.2、§21.2、§22.1 |
+| **A-9** | **§H2-4** | 表單控件的框用 `border` | **一律 `inset box-shadow`**（不佔 box model、可做次像素、與髮絲線同一套）；radio 已選＝實心填滿＋白色內點 | §A.2、§2.1、§4.1、§5.1 |
+| **A-10** | **§D** | badge 圓角 `--r-pill`，tag 是 badge 的變體 | **badge ＝ `--r-200` 圓角矩形＋狀態圖示、不折疊**；**tag ＝ 全圓藥丸、無圖示、一律淺灰、溢出收 `+N`**——**兩種不同元件** | §00.3、§11.1a、§11.6 |
+| **A-11** | **§D ＋ §6.5** | secondary ＝白底＋`--border-strong` 框＋`--sh` | **三層級只靠填色深淺分**：primary 深色近黑／secondary＋split 淺灰實心**無框**＋`--sh-raised`（底緣 inset ＋ 外投影）／tertiary 淺灰無陰影 | §00.8、§1.1、§1.8、§0 #89 |
+| **A-12** | **§6.5** | 無 550 這一階 | **split／次級按鈕字重 `550`**（介於 500 與 600）；與 §3 的 **450** 同屬「只有可變字體軸能渲染」的階 | §00.11、§1.8 |
+| **A-13** | **§B** | badge 高度標〔推導〕 | **20px 為實測值**（內容盒 66×20）；列分隔線 **0.667px**（1 個裝置像素）；桌機列高 32／表頭鈕 28／檢視 tab 24 **與窄版同階** | §11.1、§12.1、§00.13 |
+| **A-14** | **§1** | `--sp-800:32px`／`--sp-1200:48px` 為裸值第 8/9 階 | 47 只有**七階**（2/4/6/8/12/16/24）→ 改以七階的 `calc()` 整數倍組出，使用範圍鎖死在版面容器 | §00.12 |
+
+**另同步處理的非 47 來源修正**（法規/文案層，來自 CLAUDE.md）：
+
+| # | 依據 | 舊 | 新 |
+|---|---|---|---|
+| L-1 | **CLAUDE.md 鐵律 10／11** | 金額範例一律用**台幣符號前綴**（7 處） | `HK$…`；並加註**符號、符號位置、小數位、分組一律由市場 locale 決定，不得硬編**（§A.6）。驗收：`grep` 台幣符號對本檔應恆為 **0** |
+| L-2 | **CLAUDE.md 鐵律 11** | 「7 態**發票** tabs」等台灣稅務憑證聯想詞 | 改法域中性的「**帳單**」（44 §19.4 該頁標題本來就是「帳單」，指平台計費單據不是稅務憑證） |
+
 ---
 
 ## §A 共通約定（所有元件都適用，不再逐一重述）
@@ -325,19 +639,57 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 - 純粹不適用（分頁到底、無資料匯出）→ 用原生 `disabled`。
 - **44 §6／行動項 13 的規則**：資料為空時，動作鈕 **disabled 而非隱藏**（讓使用者知道功能存在）。
 
-### A.2 焦點環（全站唯一寫法）
+### A.2 焦點環（47 §H2-3′ 定案：`outline` 與 `box-shadow` **並用**）
+
+<!-- 依 47 §H2-3′ 實測修正，原文：
+       「- **不准**用 `box-shadow` 模擬焦點環（會被 `overflow:hidden` 的父層裁掉）。**唯一例外**：輸入框的內光暈 `--focus-glow`，那是「額外」不是「取代」。
+        - 深色底浮層（bulkbar／toast／save bar／編輯器頂欄）上的焦點環改用 `--text-inverse`，`--focus` 在深底上對比不足。」
+     47 §H2-3′ 掃描全部樣式表的 **437 條** focus 規則後，系統層級的真相是**兩種並用**：
+       `outline: <2px> solid <focus色>`          98 條 → **主要做法**
+       `box-shadow: 0 0 0 .125rem <focus色>`     96 條 → **次要做法**（outline 會被 overflow 裁切時改用）
+       `outline-offset: <1px>` 41 條／`<2px>` 28 條／`outline-color: <淺藍>` 4 條（深色底上的反轉環）
+     47 §H2-3′ 逐字：「我方原型現用的 `box-shadow: 0 0 0 2px <底色>, 0 0 0 4px <環色>` 是**等價寫法**
+       （2px 間隙 + 2px 環），保留即可，**只需把環色改為量測值**。」
+     → 所以「不准用 box-shadow」這條**被推翻**：box-shadow 是系統的正式次要做法，不是違規的模擬。
+     另：深底環色不是 --text-inverse（白），是量測到的 **#4b92e5**（--focus-inverse）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        ⚠ 特別注意 47 §H2-3（第四輪）與 §H2-3′（第五輪）是**同一件事的兩個結論，後者推翻前者**。
+        47 §H2-3 寫「focus 不是用 outline 畫的」，那只對**單一個封閉 shadow DOM 元件**成立（47 §A 說明實站已改用封閉 shadow 的 web components，其內部樣式無法由 JS 讀取），
+        47 自己在 §H2-3′ 開頭已標「⚠ **更正**」。**引用時只准引 H2-3′**。 -->
+
+**兩種寫法都是合法的，依容器是否會裁切選用**：
 
 ```css
+/* 寫法 A（預設）：outline ＋ outline-offset。47 §H2-3′ 的主要做法（98 條）。 */
 .cl-focusable:focus-visible{
   outline: var(--focus-ring-w) solid var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
-  border-radius: inherit;                /* 別讓環變方角 */
+  outline-offset: var(--focus-ring-offset);       /* 大控件／卡片／整列改 --focus-ring-offset-lg */
+  border-radius: inherit;                          /* 別讓環變方角 */
   transition: outline-color var(--dur-fast) var(--ease-decelerate);  /* M3 */
 }
+
+/* 寫法 B（容器有 overflow:hidden/clip 而 outline 會被裁時）：雙層 box-shadow。
+   47 §H2-3′ 的次要做法（96 條），且明確認定與寫法 A 等價（內層＝間隙、外層＝環）。 */
+.cl-focusable--clipped:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 var(--focus-gap-w) var(--focus-gap),
+              0 0 0 calc(var(--focus-gap-w) + var(--focus-ring-w)) var(--focus-ring);
+  transition: box-shadow var(--dur-fast) var(--ease-decelerate);     /* M3 */
+}
+
+/* 深色底浮層：就地換環色與間隙色，不改寫法 */
+.cl-bulkbar, .cl-toast, .cl-savebar, .cl-editorbar, .cl-docpop{
+  --focus-ring: var(--focus-inverse);      /* #4b92e5，47 §H2-3′ 的深底反轉環 */
+  --focus-gap:  var(--surface-inverse);
+}
 ```
-- **不准**用 `box-shadow` 模擬焦點環（會被 `overflow:hidden` 的父層裁掉）。**唯一例外**：輸入框的內光暈 `--focus-glow`，那是「額外」不是「取代」。
-- 深色底浮層（bulkbar／toast／save bar／編輯器頂欄）上的焦點環改用 `--text-inverse`，`--focus` 在深底上對比不足。
-- 焦點**永遠不得被裁切**：任何 `overflow:hidden` 的容器，其內可聚焦子元素要留 `padding: var(--focus-ring-w)` 或改用 `overflow:clip; overflow-clip-margin: var(--sp-100)`。
+
+- **offset 是 1–2px 兩階**（47 §H2-3′：小控件 1px、大控件 2px），不是固定 1px。`--ctl-24`／`--ctl-28` 用 `--focus-ring-offset`；`--ctl-32` 以上、卡片、整列用 `--focus-ring-offset-lg`。
+- 深色底浮層上的環色用 **`--focus-inverse`（`#4b92e5`）**，不是 `--text-inverse`（白環在深底上會與內容白字混淆）。
+- 輸入框的內光暈 `--focus-glow` 是**額外**不是取代，與寫法 A 疊加。
+- 焦點**永遠不得被裁切**：容器 `overflow:hidden` 時，**優先**改成 `overflow: clip; overflow-clip-margin: var(--focus-ring-w)`；真的不行才退到寫法 B。
+
+**表單控件的框改用 `inset box-shadow`（47 §H2-4）**：checkbox／radio／輸入框的 1px 框**不要用 `border`**，改 `box-shadow: inset 0 0 0 var(--hairline) var(--border-strong)`。理由（47 §H2-4 逐字）：「不佔 box model、可做次像素、與 §C 的髮絲線同一套」。這讓 focus 態的環（外層 box-shadow）與框（inset box-shadow）能寫在同一個宣告裡、同一條 M3 轉場，不會兩套時序打架。
 
 ### A.3 動效規則（47 §5 的 M1–M7，全站只准用這七條）
 
@@ -384,15 +736,42 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 
 **focus trap 三條**：① 開啟時焦點移到浮層的第一個可聚焦元素（或標題，`tabindex="-1"`）；② Tab 在浮層內循環，`inert` 掉背景；③ **關閉時焦點必須回到觸發元**（存 `WeakRef`，觸發元若已卸載則回到最近的 landmark）。
 
-### A.5 響應式共通轉換（34 §2 已定，這裡只列元件會用到的）
+### A.5 響應式共通轉換（斷點依 47 §F 的 8 階 `em`）
 
-| 斷點 | 元件級轉換 |
+<!-- 依 47 §F 實測修正，原文（px 五階）：
+       | ≥1280 | 基準。不下 media query |
+       | ≤1279 | 頁邊 --sp-800→--sp-400；表格改橫捲容器＋黏性首欄；三欄→兩欄 |
+       | ≤1023 | 側欄→抽屜；詳情兩欄→單欄；popover 仍是 popover |
+       | ≤767  | 表格→卡片；modal→貼底 sheet；輸入 16px/--ctl-40；主要按鈕全寬＋--ctl-44；… |
+       | ≤429  | 全單欄；次要標識隱藏；並排按鈕改上下堆疊 |
+     47 §F 實測 8 階 em：360/490/667/768/1040/1200/1440/2560，主斷點 768（用量 421 次，遠超其他）。
+     我方 429→**490**（差 61px，手機大斷點太早）、1023→**1040**、1279→**1200/1440**（我們少一階）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。單位必須是 em（無障礙），見 §00.13。
+     ⚠ 本表以下所有元件章節的「響應式」小節仍沿用舊的 px 描述（≥1280／1024–1279／768–1023／≤767／≤429）
+        作為**閱讀用的粗略帶**；實作時一律換算到本表的 em 斷點。對照關係見下方「舊帶 → 新斷點」。 -->
+
+| 斷點（`em`） | = px | 元件級轉換 |
+|---|---:|---|
+| `min-width: 90em` | ≥1440 | 寬桌機：欄數與密度微調（**不重排結構**）；表格可顯示全部欄位 |
+| `min-width: 75em` | ≥1200 | 中桌機：基準版面；詳情頁三欄／兩欄 |
+| `min-width: 65em` | ≥1040 | 桌機：常駐側欄；頁邊 `--sp-800` |
+| `max-width: 64.9975em` | ≤1039 | 頁邊 `--sp-800`→`--sp-400`；表格改橫捲容器＋黏性首欄；三欄→兩欄；側欄→抽屜；詳情兩欄→單欄（側欄卡片移到主欄之後）；popover 仍是 popover |
+| **`max-width: 47.9975em`** | **≤767** | **佈局換手（唯一分界）**：表格→卡片（≤8 欄）；modal→貼底 sheet；popover→貼底 sheet；輸入 `font-size:16px`＋`height:var(--ctl-40)`（**<16px 會觸發 iOS 聚焦放大**）；主要按鈕全寬＋`--ctl-44`；bulkbar／toast／save bar 貼底＋`env(safe-area-inset-bottom)`；分頁標籤橫捲＋`scroll-snap` |
+| `max-width: 41.685em` | ≤666 | 平板直式以下：次要標識開始隱藏 |
+| `max-width: 30.6225em` | ≤489 | 全單欄；並排按鈕改上下堆疊；插圖縮小或隱藏 |
+| `min-width: 22.5em` | ≥360 | 最小支援寬度（低於此不保證） |
+
+**舊帶 → 新斷點對照**（各元件章節的響應式小節仍用舊帶敘述，實作時照這張表換算）：
+
+| 章節內寫的舊帶 | 實作用的 47 §F 斷點 |
 |---|---|
-| ≥1280 | 基準。不下 media query |
-| ≤1279 | 頁邊 `--sp-800`→`--sp-400`；表格改橫捲容器＋黏性首欄；三欄→兩欄 |
-| ≤1023 | 側欄→抽屜；詳情兩欄→單欄（側欄卡片移到主欄之後）；popover 仍是 popover |
-| ≤767 | 表格→卡片（≤8 欄）；modal→貼底 sheet；輸入 `font-size:16px`＋`height:var(--ctl-40)`（**<16px 會觸發 iOS 聚焦放大**）；主要按鈕全寬＋`--ctl-44`；bulkbar／toast／save bar 貼底＋`env(safe-area-inset-bottom)`；分頁標籤橫捲＋`scroll-snap` |
-| ≤429 | 全單欄；次要標識隱藏；並排按鈕改上下堆疊 |
+| `≥1280` | `min-width: 75em`（1200）以上 |
+| `1024–1279` | `min-width: 65em`（1040）～ `max-width: 74.9975em` |
+| `768–1023` | `min-width: 48em`（768）～ `max-width: 64.9975em` |
+| `≤767` | `max-width: 47.9975em` |
+| `≤429` | `max-width: 30.6225em`（**490**，不是 429） |
+
+**主斷點原則（47 §F 結論 3）**：**佈局換手只准發生在 768（48em）**。1040/1200/1440 只做欄數與密度微調，不重排結構。若你發現自己在 1040 做「兩欄變單欄」這種結構性改動，那是設計問題不是實作問題。
 
 ### A.6 CJK 與金額（全元件通用，34 §6 已踩過的坑）
 
@@ -400,7 +779,19 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 .cl-text  { overflow-wrap: anywhere; line-break: strict; }   /* 長 email/網域/GID/SKU */
 .cl-money { white-space: nowrap; font-variant-numeric: tabular-nums; }
 ```
-- **兩者互斥，混用會把 `NT$407,700` 折成兩行**。任何同時含文字與金額的儲存格，**必須拆成兩個 span**。
+- **兩者互斥，混用會把 `HK$407,700` 折成兩行**。任何同時含文字與金額的儲存格，**必須拆成兩個 span**。
+
+<!-- 依 CLAUDE.md 鐵律 10／鐵律 11 修正，原文：本句與全檔另 6 處的金額範例都用**台幣符號前綴**
+     （§A.6 本句、§1.6、§9.7、§11.7、§12.11、§16.6、§20.6，共 7 處），例如本句原本寫「折成兩行」的那個數字是
+     台幣符號 ＋ `407,700`。全部改為 `HK$` 前綴。
+     （追溯註釋刻意不重現舊字串本身，好讓 `grep 'NT'＋錢符號` 對本檔恆為 0 —— 這是驗收用的回退偵測器：
+      一旦有人把舊範例改回來，grep 立刻由 0 變非 0。）
+     🔴 任何人翻舊版都不要改回去：基準法域已於 2026-08-12 決議改為**香港**（CLAUDE.md 鐵律 11），
+        台灣內容整批降級為未啟用的 `jurisdictions.tw` pack。
+     ⚠ 但也**不要**把 `HK$` 當成新的硬編值——56 §513 逐字：「不要硬改成 HK——要做成 market-driven。
+        把（台幣符號）換成 `HK$` 只是把同一個錯誤搬到另一個國家。」 -->
+
+**金額顯示是 locale 的輸出，不是常數（CLAUDE.md 鐵律 10）**：本文件所有 `HK$1,480` 只是**範例**。實際的**幣別符號、符號位置（前綴／後綴）、小數位數（exponent）、千分位分組**一律由**市場的 locale** 決定，**不得硬編在元件**。元件只負責：① 拿到已格式化的字串；② 套 `.cl-money`（`nowrap` ＋ `tabular-nums`）。儲存值一律 integer cents（CLAUDE.md 鐵律 3）。
 - CJK 截斷一律 `text-overflow: ellipsis` ＋ `title` 屬性給完整值；**多行截斷用 `-webkit-line-clamp`**，不要用固定高度裁切。
 - 中文標題 `letter-spacing: 0`（47 §3：字距一律 normal）。**23 §1 的「中文標題字距 0」保留，其餘元素也一律 normal**，原型 `body{letter-spacing:.01em}` 要移除。
 
@@ -429,7 +820,7 @@ XXS ≤429         全單欄、按鈕撐滿、隱藏次要標識
 cl-btn  (inline-flex, align-items:center, justify-content:center)
 ├─ cl-btn__icon-start   16×16, flex:none, aria-hidden
 ├─ cl-btn__label        --t-sm, white-space:nowrap
-├─ cl-btn__count        可選；數字徽章，--t-2xs, --r-pill, --sp-050 內距
+├─ cl-btn__count        可選；純計數 pill（不是 §11 的狀態 badge），--t-2xs, --r-pill, --sp-050 內距
 ├─ cl-btn__icon-end     16×16（split 的 ⌄ 不在這裡，見 1.8）
 └─ cl-btn__spinner      loading 時絕對定位置中，16×16
 ```
@@ -440,29 +831,53 @@ cl-btn  (inline-flex, align-items:center, justify-content:center)
 | `cl-btn--sm` | `--ctl-28` | `0 var(--sp-200)` | `--r-200` | `--t-sm` | `--sp-100` |
 | `cl-btn--lg`（頂欄／表單主鈕） | `--ctl-36` | `0 var(--sp-400)` | `--r-200` | `--t-sm` | `--sp-200` |
 | `cl-btn--icon` | `--ctl-28`（正方） | `var(--sp-100)` | `--r-200` | — | — |
-| `cl-btn--icon.cl-btn--lg` | `--ctl-36`（正方） | `var(--sp-200)` | `--r-200` | — | — |
+| `cl-btn--icon.cl-btn--lg` | `--ctl-36`（正方） | `var(--sp-200)` | `--r-200`；**放在頂欄時改 `--r-topbar`(12)** | — | — |
+
+<!-- 依 47 §B 實測補註，原文該列圓角只有 `--r-200`。
+     47 §B：「頂欄圖示鈕 **36 × 36**，圓角 **12px**」——頂欄的 36 階控件圓角是 12，不是 8。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
 **七個變體的靜置外觀**：
 
 | 變體 | 底 | 字 | 框 | 陰影 | 用在哪 |
 |---|---|---|---|---|---|
-| `--primary` | `--brand` | `--text-inverse` | 無 | `inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(26,28,30,.2)` | 每個視圖**最多一顆** |
-| `--secondary` | `--surface` | `--text` | `--bw-100 var(--border-strong)` | `--sh` | 次要動作、並排第二顆 |
+| `--primary` | `--brand`（深色近黑實心） | `--text-inverse` | **無** | `inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(26,28,30,.2)` | 每個視圖**最多一顆** |
+| `--secondary` | **`--surface-sunken`（淺灰實心）** | `--text` | **無**（47 §D：不靠邊框分層級） | `--sh-raised`（47 §6.5 的底緣內陰影＋外投影） | 次要動作、並排第二顆 |
 | `--tertiary` | `--surface-sunken` | `--text` | 無 | 無 | 卡內密集動作列、工具列（**這是 47 §6「次級按鈕比頁底深一階」的承接者**） |
 | `--plain` | 透明 | `--text-2` | 無 | 無 | 列內文字動作、「深入瞭解」、卡頭右上動作 |
-| `--destructive` | `--critical` | `--text-inverse` | 無 | 同 primary | **只用在確認 modal 的主鈕** |
-| `--destructive-secondary` | `--surface` | `--critical` | `--bw-100 var(--critical-border)` | 無 | **卡片 footer bar 的破壞性入口**（刪除商店、刪除帳號） |
+| `--destructive` | `--sem-critical-button-fill` | `--text-inverse` | 無 | 同 primary | **只用在確認 modal 的主鈕**。這是 47 §H2-1 唯一給了 `button-bg-fill` 的族 |
+| `--destructive-secondary` | `--surface` | `--critical` | `--hairline var(--critical-border)` | 無 | **卡片 footer bar 的破壞性入口**（刪除商店、刪除帳號） |
 | `--icon` | 透明（或 `--surface-sunken` 當常駐工具） | `--text-2` | 無 | 無 | 表頭工具、列尾動作、關閉鈕 |
+| `--split`（§1.8 的主段與 toggle 段） | 同 `--secondary` | `--text` | 無 | `--sh-raised` | 字重 **`--fw-split`（550）**，47 §6.5 實測 |
+
+<!-- 依 47 §D／§6.5 實測修正 --secondary 一列，原文：
+     「| `--secondary` | `--surface` | `--text` | `--bw-100 var(--border-strong)` | `--sh` | 次要動作、並排第二顆 |」
+     47 §D 高倍率目視判讀頁首動作組（匯出 / 更多動作 ⌄ / 建立訂單）：
+       tertiary（匯出）＝淺灰實心・深色字・~8px・**無邊框**
+       split（更多動作）＝淺灰實心・深色字・~8px・右側 chevron 同一顆
+       primary（建立訂單）＝**深色（近黑）實心**・白字・~8px
+       「三者**等高、等圓角**，只靠填色分層級」
+     47 §D 逐字：「**三個層級靠「填色深淺」區分，不靠邊框或尺寸**。
+                  我們原型目前 secondary 用白底＋邊框，**方向就不對**。」
+     47 §6.5 補上次級按鈕的立體感來源＝白底 ＋ 底緣 1px inset 陰影 ＋ 外投影（見 §00.8 的 --sh-raised）。
+     → secondary 改為「淺灰實心 ＋ 無邊框 ＋ --sh-raised」，與 tertiary 的差別只剩陰影（層級感）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+     ⚠ **本文件 §0 #89 括號內原本寫著**「（我們的 secondary 按鈕維持『白底＋--border-strong 框』，
+        因為它主要出現在白卡上，這是我們自有的視覺選擇，與層級事實不衝突）」——**該句已被 47 §D 推翻並刪除**。
+        47 §6.5（3440px、root 24px）觀察到的是白底 split，47 §D（root 16px 正式量測）看到的是淺灰實心；
+        後者是較晚且條件正確的一輪，依權威順序勝出。 -->
+
+**三個層級只靠填色深淺區分（47 §D 硬規則）**：`primary`（深色近黑）＞ `secondary`／`split`（淺灰＋`--sh-raised`）＞ `tertiary`（淺灰無陰影）＞ `plain`（透明）。**等高、等圓角、不靠邊框、不靠尺寸**。唯一還帶框的是 `--destructive-secondary`，因為紅框本身是「這會刪東西」的警示訊號，不是層級訊號。
 
 ### 1.2 完整態表
 
 | 態 | primary | secondary | tertiary / plain / icon | destructive | destructive-secondary |
 |---|---|---|---|---|---|
 | **default** | 見上表 | 見上表 | 見上表 | 見上表 | 見上表 |
-| **hover** | `background: --brand-hover` | `background: --surface-hover`；`border-color` 深一階 | `background: --surface-hover`；`color: --text` | `background:` 深一階 | `background: --critical-bg` |
-| **active** | `background: --brand-hover`；`box-shadow: inset 0 1px 2px rgba(0,0,0,.18)`（微沉，**不位移**） | `background: --surface-active`；`box-shadow:none` | `background: --surface-active` | 同 primary 邏輯 | `background: --critical-bg`；`box-shadow: inset …` |
-| **focus-visible** | 疊 `outline: 2px --focus`, offset 1px | 同 | 同 | 同 | 同 |
-| **disabled** | `opacity: var(--disabled-opacity)`；`box-shadow:none`；`cursor:not-allowed`；**保留原底色不轉灰**（轉灰會讓 primary/secondary 分不出來） | 同 | 同 | 同 | 同 |
+| **hover** | `background: --brand-hover` | `background: --surface-sunken-hover`（填色深一階，**無框**） | `background: --surface-hover`；`color: --text` | `background:` 深一階 | `background: --critical-bg` |
+| **active** | `background: --brand-hover`；`box-shadow: inset 0 1px 2px rgba(0,0,0,.18)`（微沉，**不位移**） | `background: --surface-sunken-active`；`box-shadow: none`（`--sh-raised` 的立體感在按下時收掉） | `background: --surface-active` | 同 primary 邏輯 | `background: --critical-bg`；`box-shadow: inset …` |
+| **focus-visible** | 疊 `outline: var(--focus-ring-w) solid var(--focus-ring)`，offset `--focus-ring-offset`（`--ctl-32` 以上用 `--focus-ring-offset-lg`）。深底浮層內 `--focus-ring` 已就地換成 `--focus-inverse`（§A.2） | 同 | 同 | 同 | 同 |
+| **disabled** | `color: var(--text-disabled)`；`box-shadow:none`；`cursor:not-allowed`；**底色、邊框、opacity 一律不動**（47 §E：只降文字對比。保留原底色才分得出 primary/secondary） | 同 | 同 | 同 | 同 |
 | **loading** | `aria-busy="true"`；**label `visibility:hidden` 但保留佔位**（寬度不得跳動）；spinner 絕對置中 16×16；`pointer-events:none`；同時 `aria-disabled="true"` | 同 | 同 | 同 | 同 |
 | **error** | N/A（按鈕不承載錯誤態，錯誤走 banner／toast） | N/A | N/A | N/A | N/A |
 | **selected** | N/A | N/A | **只有 `--icon`／`--tertiary` 當 toggle 用時有**：`background: --surface-active`；`color: --text`；`aria-pressed="true"` | N/A | N/A |
@@ -476,7 +891,7 @@ cl-btn  (inline-flex, align-items:center, justify-content:center)
 |---|---|---|
 | `background-color` | **M1** | hover 底色的標準回饋（47 實測 ×14，最高頻互動） |
 | `color` | **M2** | 比底色快 50ms，避免文字先於底色定格（plain／icon 變體特別明顯） |
-| `border-color`, `box-shadow` | **M3** | secondary 的框與 active 的內陰影 |
+| `border-color`, `border-width`, `box-shadow` | **M3**（三屬性同時） | `--sh-raised` 的兩層陰影、destructive-secondary 的紅框、active 的內陰影 |
 | 焦點環 | **M3** | 三屬性同時 |
 | spinner | `rotate 700ms linear infinite`（不屬 M1–M7，是持續動畫） | — |
 
@@ -484,11 +899,23 @@ cl-btn  (inline-flex, align-items:center, justify-content:center)
 
 ### 1.4 鍵盤與焦點
 
-- Tab 順序＝DOM 序。並排按鈕的 DOM 序 = **視覺左到右**，`primary` 放最右但 DOM 也在最右（44 §18.1 實測 `新增商品`(pri) 在左、`新增自訂品項`(sec) 在右時，DOM 就照這個序）。
+- **頁首動作組的排列順序（47 §6.5／§D 實測，硬性）**：由左至右 **`tertiary` → `split` → `primary`**，**主要動作永遠在最右**（實測序：`匯出`(tertiary) → `更多動作 ⌄`(split) → `建立訂單`(primary)），窄版與桌機一致。**Tab 順序＝DOM 序＝視覺左到右**，所以 primary 是這一組裡最後一個被 Tab 抵達的。
+- Tab 順序＝DOM 序。**modal footer 同理**：`取消`(secondary) 在左、主動作在右（§16.2）。**唯一的反例是 44 §18.1 的表單內並排按鈕**（`新增商品`(pri) 在左、`新增自訂品項`(sec) 在右）——那是「表單內的兩個平行入口」不是「頁首動作組」，兩者不要互相引用。
 - `Enter`／`Space` 觸發；`Space` 要 `preventDefault()`。
 - `aria-disabled` 型的 disabled **留在 Tab 序**，聚焦時用 `aria-describedby` 指向原因說明（例：「未變更，無法儲存」）。
 - loading 時 `aria-busy="true"`；完成時用 `role="status"` 區塊播報結果，**不要靠按鈕本身播報**。
 - icon-only 必須 `aria-label`；若有 tooltip，tooltip 文字與 aria-label **必須一致**。
+
+<!-- 依 47 §6.5／§D 實測補寫「頁首動作組順序」，原文本節只有：
+     「- Tab 順序＝DOM 序。並排按鈕的 DOM 序 = **視覺左到右**，`primary` 放最右但 DOM 也在最右
+        （44 §18.1 實測 `新增商品`(pri) 在左、`新增自訂品項`(sec) 在右時，DOM 就照這個序）。」
+     —— 這句同時說「primary 放最右」又舉了一個「primary 在左」的例子，讀起來自相矛盾，
+     實作者會不知道頁首到底該怎麼排。47 兩輪都直接量到了頁首動作組：
+       §6.5：「頁首動作區 由右至左 **`建立訂單`(primary) → `更多動作 ⌄`(split) → `匯出`(tertiary)**
+              ——**主要動作在最右**，與窄版一致」
+       §D  ：「頁首動作組（由左至右：匯出 → 更多動作 ⌄ → 建立訂單）」
+     → 頁首組的順序是實測事實；44 §18.1 那個例子是**表單內的並排入口**，不同語境，已分開敘述。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
 ### 1.5 響應式
 
@@ -505,7 +932,7 @@ cl-btn  (inline-flex, align-items:center, justify-content:center)
 | 情況 | 處置 |
 |---|---|
 | **超長 CJK 標籤**（「批次處理近期訂單並重新計算稅額」） | 桌機 `white-space:nowrap`＋`max-width: 22ch`＋`ellipsis`＋`title`；≤767 允許兩行（`white-space:normal; line-height:` 仍為 20，高度改 `min-height`） |
-| **金額在按鈕內**（「退款 NT$1,480」） | label 拆兩個 span，金額 span 掛 `.cl-money` |
+| **金額在按鈕內**（「退款 HK$1,480」） | label 拆兩個 span，金額 span 掛 `.cl-money` |
 | **零筆資料** | 動作鈕 **disabled 不隱藏**（44 行動項 13），`title` 說明「沒有可匯出的資料」 |
 | **極大數量徽章** | `cl-btn__count` 超過 99 顯示 `99+`；超過 9999 顯示 `9k+` |
 | **慢網路** | 點擊後 100ms 內進 loading；>8s 未回應→ 保持 loading 但出 inline banner「處理時間較長，請勿重複送出」；**永遠不要自動取消** |
@@ -541,32 +968,60 @@ cl-btn  (inline-flex, align-items:center, justify-content:center)
 - ❌ 用 `<div>` 或 `<a href="#">` 當按鈕 → 鍵盤與螢幕閱讀器全失效。
 - ❌ 忘記 `type="button"` → 在 `<form>` 內變成 submit，誤送表單。
 - ❌ loading 時把文字換成「儲存中…」→ 寬度跳動，版面抖。
-- ❌ 用 `opacity` 之外的方式做 disabled（如換成灰色底）→ primary 與 secondary 的 disabled 態變得一模一樣。
+- ❌ **用 `opacity` 做 disabled** → 47 §E 實測的做法是**只降文字色到 `--text-disabled`，底色一律不動**。降 opacity 會讓 disabled 元素在深色底上發灰、在淺色底上發白，不穩定；只換文字色則到處一致。
+- ❌ **disabled 時把底色換成灰色** → 那會讓 primary 與 secondary 的 disabled 態變得一模一樣。**底色不動**才分得出來。
+- ❌ **secondary 用白底＋邊框** → 47 §D：三個層級靠**填色深淺**分，不靠邊框。白底＋框「方向就不對」。
 - ❌ 一個視圖放兩顆 primary → 使用者不知道主動作是哪個。
 - ❌ 破壞性動作用紅底實心放在頁面上 → 只有**確認 modal 的主鈕**才准用實心紅；頁面上一律 `--destructive-secondary`。
 
-### 1.8 split button `cl-split`（44 §2.2）
+<!-- 依 47 §E 實測修正，原文：
+     「- ❌ 用 `opacity` 之外的方式做 disabled（如換成灰色底）→ primary 與 secondary 的 disabled 態變得一模一樣。」
+     🔴 **這一條把修正方向寫反了**：它把「用 opacity」當成正解、把「不用 opacity」當成錯誤，
+        而 47 §E 的實測結論恰好相反——「disabled 的做法是『只降文字對比、不改底色』，
+        而非我們原型現在的『降整體 opacity』……要改。」
+     原句想守住的那半條（「不要換底色」）是對的，已拆成獨立一條保留；
+     「用 opacity」那半條已改成明確禁止。
+     任何人翻舊版都不要改回去：這是實測值，不是估計值。
+     ⚠ 這是本檔目前已知**唯一一條把方向寫反**的敘述，回退它等於同時推翻 §00.6 與全檔 16 處態表。 -->
+
+### 1.8 split button `cl-split`（44 §2.2、47 §6.5）
 
 ```
 cl-split (inline-flex)
 ├─ cl-btn（主動作）           border-radius: var(--r-200) 0 0 var(--r-200)
 └─ cl-split__toggle           border-radius: 0 var(--r-200) var(--r-200) 0
-                              width: var(--ctl-32)（正方）；左側 1px 分隔線
+                              width: var(--ctl-32)（正方）；左側 var(--bw-100) 分隔線
 ```
 
-| 層 | 值 |
-|---|---|
-| 分隔線 | primary 變體：`rgba(255,255,255,.25)`；secondary 變體：`var(--border-strong)` |
-| toggle 內距 | `0 var(--sp-200)` |
-| 選單 | 展開時對齊 split 右緣，`min-width` 不小於 split 全寬 |
+| 層 | 值 | 出處 |
+|---|---|---|
+| 填色 | `--surface-sunken`（淺灰實心，**無外框**）；深底浮層內反轉 | 47 §D |
+| 陰影 | `--sh-raised`（底緣 inset ＋ 外投影） | 47 §6.5 |
+| **字重** | **`--fw-split`（550）** —— 不是 500、也不是 600 | **47 §6.5 實測** |
+| 字級 | `--t-xs`（12/16） | 47 §6.5 |
+| 高／內距／圓角 | `--ctl-28`／`var(--sp-150) var(--sp-300)`／`--r-200` | 47 §6.5 |
+| 分隔線 | primary 變體：`rgba(255,255,255,.25)`；secondary 變體：`var(--border-strong)`（**用 `--bw-100` 不用 `--hairline`**——這條線要看得見，不是分隔髮絲線） | — |
+| toggle 內距 | `0 var(--sp-200)` | — |
+| 選單 | 展開時對齊 split 右緣，`min-width` 不小於 split 全寬 | — |
+| chevron | **與本體同一顆**（非分離式），在右側 | 47 §D |
+
+<!-- 依 47 §6.5／§D 實測補寫上表，原文只有「分隔線／toggle 內距／選單」三列，
+     沒有填色、陰影、字重、字級、高度。47 §6.5 是本輪唯一成功解析到繪製盒的按鈕，配方逐字：
+       「高 28（rem 類，真值待確認）／內距 6 上下 · 12 左右／圓角 8
+        字級 12/16，字重 550   ← 注意是 550，不是 500 或 600
+        背景 <白>
+        陰影兩層：① inset 0 -1px 0 0 <中性灰>  ② drop rgba(0,0,0,.1) …」
+     ⚠ 其中「背景＝白」是第二輪（3440px、root 24px）的觀察；47 §D（root 16px 正式量測）
+       看到頁首的 split 是**淺灰實心**。填色以 §D 為準，陰影配方以 §6.5 為準，兩者不衝突。
+     🔴 任何人翻舊版都不要改回去：字重 550 尤其容易被「順手改成 600」，見 §00.11 的可變字體要求。 -->
 
 **態表差異**（其餘同 §1.2）：
 | 態 | 行為 |
 |---|---|
-| hover | **兩段獨立 hover**（游標在哪段就哪段變底），不整顆一起變 |
+| hover | **兩段獨立 hover**（游標在哪段就哪段變底 `--surface-sunken-hover`），不整顆一起變 |
 | focus-visible | 兩段各自可聚焦，各自出環 |
-| selected | toggle 展開時 `aria-expanded="true"`，toggle 段套 `--surface-active` |
-| disabled | **兩段一起 disabled**，不准只 disable 一段 |
+| selected | toggle 展開時 `aria-expanded="true"`，toggle 段套 `--surface-sunken-active` |
+| disabled | **兩段一起 disabled**，不准只 disable 一段；一律 `color: var(--text-disabled)`（47 §E） |
 
 **鍵盤**：Tab 依序抵達主段→toggle 段；在主段按 `↓` 或 `Alt+↓` 也要能開選單（常見期待）；選單開啟後 `↑↓` 移動、`Enter` 選取、`Esc` 關並把焦點還給 toggle 段。
 **a11y**：toggle 段 `aria-haspopup="menu" aria-expanded aria-label="更多出貨動作"`；選單 `role="menu"`，項目 `role="menuitem"`。
@@ -597,7 +1052,7 @@ cl-field                       （欄位容器，flex column, gap: var(--sp-150)
 | 高 | `--ctl-32`（≤767 → `--ctl-40`） |
 | 內距 | `0 var(--sp-300)`；有 prefix 時左內距 `calc(var(--sp-300) * 2 + var(--sp-400))`；有 suffix 時右內距同理 |
 | 圓角 | `--r-200` |
-| 框 | `--bw-100 solid var(--border-strong)` |
+| 框 | **`box-shadow: inset 0 0 0 var(--hairline) var(--border-strong)`**（47 §H2-4：表單控件的框用 inset 陰影不用 `border`；47 §C：寬度是 1 個裝置像素） |
 | 字級 | `--t-sm`（≤767 → **16px**，防 iOS 聚焦放大） |
 | 底 | `--surface` |
 | placeholder | `--text-3` |
@@ -715,7 +1170,7 @@ cl-select-wrap  (position:relative)
 | **hover** | `border-color` 深一階；`--inline` 變體額外 `background: --surface-hover`（M1） |
 | **active**（原生下拉展開中） | `border-color: --focus`；caret **旋轉 180°**（`--dur-fast`）；原生選單由 OS 繪製，我們不接管 |
 | **focus-visible** | 同 `cl-input`（M3 三屬性＋outline） |
-| **disabled** | `background: --surface-sunken`；`color: --text-3`；caret `--text-3` 且 `opacity: var(--disabled-opacity)` |
+| **disabled** | `background: --surface-sunken`；`color: var(--text-disabled)`；caret `var(--text-disabled)`（**不降 opacity**，47 §E） |
 | **loading**（選項非同步載入） | `disabled` ＋ caret 換成 spinner；第一個 option 文字＝「載入中…」 |
 | **error** | 同 `cl-input` error |
 | **selected** | 原生行為。**若當前值＝預設/空值**（如「沒有付款條件」），文字色用 `--text-2` 而非 `--text`，讓「未設定」在視覺上可辨識 |
@@ -799,7 +1254,7 @@ cl-check                (label, display:flex, align-items:flex-start, gap: var(-
 | 視覺盒 | `16×16`（`--sp-400`）——**任何斷點、任何情境都不改** |
 | 命中區 | 桌機 `--hit-row`(32)；≤767 `--hit-min`(44) |
 | 圓角 | `--r-100` |
-| 框（未勾） | `--bw-100 solid var(--border-strong)` |
+| 框（未勾） | **`box-shadow: inset 0 0 0 var(--hairline) var(--border-strong)`**（47 §H2-4 實測 radio 的未選態就是 `inset 0 0 0 0.66px` 當外框；checkbox 同套） |
 | 勾選底 | `--brand`；勾號 `--text-inverse`，`stroke-width: 2.5` |
 | 對齊 | 與第一行文字**基線對齊**：`margin-top: calc((20px - 16px) / 2)` ＝ `var(--sp-050)`（`--t-sm` 行高 20） |
 
@@ -811,7 +1266,7 @@ cl-check                (label, display:flex, align-items:flex-start, gap: var(-
 | **hover** | `border-color:` 深一階；**同時整個 `cl-check` 的命中區內 hover**（不只 16px 方塊）。在表格列中，hover checkbox 也要讓整列進 hover 態 |
 | **active** | `background: --surface-active`（未勾時）／`--brand-hover`（已勾時） |
 | **focus-visible** | `outline: 2px --focus` offset 1px，**環繞 16px 方塊**（不是命中區） |
-| **disabled** | `opacity: var(--disabled-opacity)`；label 與 desc 一起降透明；`cursor:not-allowed`。**若整卡 disabled**（44 §18.6 規則關閉時「最終銷售品項」整卡灰化）→ 用容器 `.is-disabled` 一次處理，不要逐個 checkbox 加屬性 |
+| **disabled** | `color: var(--text-disabled)`（label 與 desc 一起）；方塊框 `box-shadow: inset 0 0 0 var(--hairline) var(--text-disabled)`；`cursor:not-allowed`；**不降 opacity**（47 §E）。**若整卡 disabled**（44 §18.6 規則關閉時「最終銷售品項」整卡灰化）→ 用容器 `.is-disabled` 一次處理，不要逐個 checkbox 加屬性 |
 | **loading** | 方塊換 12×12 spinner，維持 16×16 佔位；`aria-busy="true"`；樂觀更新只准用在**輕量玩具級**操作（23 §4.5），金流/庫存一律等回應 |
 | **error** | `border-color: --critical`；錯誤文字放在**群組層級**（`fieldset` 之下），不是逐項 |
 | **selected（已勾）** | `background: --brand`；`border-color: --brand`；勾號路徑 `stroke-dashoffset` 由 100%→0 |
@@ -892,11 +1347,39 @@ cl-check                (label, display:flex, align-items:flex-start, gap: var(-
 
 **兩種形態**，用途不同：
 
-**(a) 標準 radio `cl-radio`** — 幾何與 `cl-check` 完全相同，差別只有 `border-radius: var(--r-pill)`、選中時中心 6px 實心圓點（`--sp-150`）而非勾號。
+**(a) 標準 radio `cl-radio`** — 幾何與 `cl-check` 完全相同，差別只有 `border-radius: 50%`、選中時中心實心圓點而非勾號。
+
+<!-- 依 47 §H2-4 實測補寫，原文：
+     「**(a) 標準 radio `cl-radio`** — 幾何與 `cl-check` 完全相同，差別只有 `border-radius: var(--r-pill)`、
+       選中時中心 6px 實心圓點（`--sp-150`）而非勾號。」
+     47 §H2-4 的單選鈕（原生 <input type=radio>，light DOM，可完整讀取）實測：
+       尺寸        16 × 16，`appearance: none`，`border-radius: 50%`
+       未選 idle   `background: transparent`；**`box-shadow: inset 0 0 0 0.66px <中性灰>`** ← 用 inset 陰影當外框（色值見 47 §H2-4，我方以 --border-strong 承接）
+       已選        `background:` **主要文字色**（不是品牌色）；`::after` content=""、`background:` 近白（白色內點）
+       停用        文字轉 --text-disabled 這一階（§E）
+     47 §H2-4 逐字兩條技法：
+       ①「表單控件的 1px 框一律用 `inset box-shadow` 而非 `border`——不佔 box model、可做次像素、
+          與 §C 的髮絲線同一套（`0.66px` 又出現，再次確認「1 個實體像素」原則）。」
+       ②「已選狀態不是用品牌色，是用**主要文字色**填滿 + 白色內點——克制、與整體中性調一致。
+          我們原型用品牌青色填滿，**與實站的克制感不同，需要一併決定要不要跟**。」
+     → ① 已落地（框改 inset box-shadow、寬度改 --hairline、圓角改 50%）。
+       ② 47 自己標為「需要一併決定」＝**未定案**，本文件維持 `--brand` 填色並在下表標註待裁定。
+     🔴 任何人翻舊版都不要改回去：radio 的框是 inset box-shadow，不是 border；圓角是 50% 不是 --r-pill
+        （`--r-pill: 999px` 在 16px 的方盒上視覺等價，但語意上 --r-pill 已被 47 §D 指定給 tag，別混用）。 -->
+
+| 屬性 | 值 | 出處 |
+|---|---|---|
+| 尺寸 | `16 × 16`（`--sp-400`），`appearance: none` | 47 §H2-4 |
+| 圓角 | `50%` | 47 §H2-4 |
+| 未選態的框 | **`box-shadow: inset 0 0 0 var(--hairline) var(--border-strong)`**，底 `transparent` | 47 §H2-4（實測 `inset 0 0 0 0.66px`） |
+| 已選態的填色 | `--brand`〔**待裁定**，見下〕 | 47 §H2-4 實測為「主要文字色」，未定案 |
+| 已選態的內點 | `::after`，白色（`--surface`），直徑 `--sp-150`(6) | 47 §H2-4（實測白色內點） |
+
+**〔待裁定〕已選態的填色**：47 §H2-4 實測實站用**主要文字色**（中性深灰）填滿＋白色內點，**不是品牌色**，並逐字標「我們原型用品牌青色填滿，與實站的克制感不同，**需要一併決定要不要跟**」。47 自己沒有定案，所以本文件**維持 `--brand`**，並列為 §附錄 D 的待決項。這不是回退——是 47 明確留給我們的設計選擇。
 
 **(b) 卡片型 radio `cl-radio-card`**（44 §22.4）
 ```
-cl-radio-card   (label, --r-300, --bw-100 --border, padding: var(--sp-400))
+cl-radio-card   (label, --r-300, box-shadow: inset 0 0 0 var(--hairline) var(--border), padding: var(--sp-400))
 ├─ input[type=radio]  視覺隱藏（sr-only），保留可聚焦
 ├─ cl-radio-card__art     插圖，aspect-ratio 固定
 ├─ cl-radio-card__title   --t-md
@@ -907,14 +1390,14 @@ cl-radio-card   (label, --r-300, --bw-100 --border, padding: var(--sp-400))
 
 | 態 | 標準 radio | 卡片型 radio |
 |---|---|---|
-| **default** | 白底＋`--border-strong` 框 | `--surface` 底＋`--border` 框 |
-| **hover** | `border-color` 深一階 | `background: --surface-hover`；`border-color: --border-strong` |
+| **default** | 透明底 ＋ `box-shadow: inset 0 0 0 var(--hairline) var(--border-strong)`（47 §H2-4） | `--surface` 底 ＋ `inset 0 0 0 var(--hairline) var(--border)` 框 |
+| **hover** | inset 框色深一階（`--border-hover`） | `background: --surface-hover`；`border-color: --border-strong` |
 | **active** | `background: --surface-active` | `background: --surface-active` |
 | **focus-visible** | outline 環繞 16px 圓 | outline 環繞**整張卡**（因為 input 是 sr-only，環要用 `:has(:focus-visible)` 掛在卡上） |
-| **disabled** | `opacity: var(--disabled-opacity)` | 整卡 `opacity: var(--disabled-opacity)`；`pointer-events:none` |
+| **disabled** | `color: var(--text-disabled)`；圓框 `box-shadow: inset 0 0 0 var(--hairline) var(--text-disabled)`（47 §E，**不降 opacity**） | 整卡 `.is-disabled`：文字轉 `--text-disabled` ＋ `pointer-events:none` ＋ `inert`（**不降 opacity**） |
 | **loading** | N/A | N/A |
 | **error** | 群組層級紅字＋`fieldset` 加 `--critical` 左框 | 同 |
-| **selected** | 中心 `--sp-150` 實心圓，色 `--brand`；框 `--brand` | `border: var(--bw-200) solid var(--focus)`；`background: color-mix(in srgb, var(--focus) 6%, var(--surface))`；**內距要減 1px 補償框變厚**，否則卡片會抖 |
+| **selected** | `background: --brand`〔待裁定，見 §5.1〕；`::after` 白色內點直徑 `--sp-150`(6)；inset 框同色（47 §H2-4 的結構：**實心填滿 ＋ 白色內點**，不是「白底 ＋ 彩色點」） | `border: var(--bw-200) solid var(--focus)`；`background: color-mix(in srgb, var(--focus) 6%, var(--surface))`；**內距要減 1px 補償框變厚**，否則卡片會抖 |
 | **read-only** | disabled ＋「唯讀」chip | 同 |
 
 **單選群組的鐵律**：**radio 不可取消選取**。若「都不選」是合法狀態，必須顯式提供一個「不設定／不顯示」選項（44 §18.2 的 select 三態就是這個道理）。
@@ -950,7 +1433,7 @@ cl-radio-card   (label, --r-300, --bw-100 --border, padding: var(--sp-400))
 | 情況 | 處置 |
 |---|---|
 | **超長 CJK 副標**（44 §22.5「沒有運送地址的訂單將作為訂單草稿提交」） | 副標可換行，radio 圓維持頂端對齊 |
-| **選項含硬數字**（44 §18.2 傳送時間 1/6/10/24 小時，預設 10 標「建議」） | 「建議」用 `--attention` badge 接在 label 後，**不要**寫進 label 文字（輔具會念成「10 小時建議」變成一個怪名字） |
+| **選項含硬數字**（44 §18.2 傳送時間 1/6/10/24 小時，預設 10 標「建議」） | 「建議」用 `--caution` badge（黃，47 §H2-1）接在 label 後，**不要**寫進 label 文字（輔具會念成「10 小時建議」變成一個怪名字） |
 | **零筆選項** | 群組不渲染，改顯示卡內空態 |
 | **選項極多**（>7） | 改用 select 或可搜尋 popover |
 | **慢網路** | 切換即送出的 radio 群組：切換後群組 `aria-busy`，失敗回滾到原選項並出 critical toast |
@@ -1015,7 +1498,7 @@ cl-swrow                 （設定列容器，flex, align-items:flex-start, gap:
 | **hover** | 軌道 `color-mix(…深一階)`；**整列 `cl-swrow` 不變底**（設定列 hover 不該整列反白，會誤導成可點整列） |
 | **active** | 把手 `scale: 1.06`（按壓感）；軌道不變 |
 | **focus-visible** | `outline: 2px --focus` offset 1px 環繞軌道 |
-| **disabled** | `opacity: var(--disabled-opacity)`；title 與 desc 同步降透明；**必須說明原因**——44 §18.7 的交易性通知範本不可關閉，要在 desc 尾端加「（此通知為交易必要，無法關閉）」而不是只給一個灰掉的開關 |
+| **disabled** | `color: var(--text-disabled)`（title 與 desc 同步）；軌道底轉 `--surface-sunken`；**不降 opacity**（47 §E）；**必須說明原因**——44 §18.7 的交易性通知範本不可關閉，要在 desc 尾端加「（此通知為交易必要，無法關閉）」而不是只給一個灰掉的開關 |
 | **loading** | 軌道保持當前色但降 60% 不透明；把手換成 12px spinner；`aria-busy="true"`；**位置不動**（成功才移動） |
 | **error** | 切換失敗 → 把手**動畫回彈到原位**（`translateX` 逆向，`--dur-base`）＋ critical toast。軌道不留紅色 |
 | **selected（開）** | 軌道 `--success`；把手 `translateX(var(--sp-400))`；`aria-checked="true"` |
@@ -1206,7 +1689,8 @@ cl-field
 **三種尺寸**，同一套結構：
 
 ```
-cl-search  (flex, align-items:center, gap: var(--sp-200), --r-200, --bw-100 --border-strong)
+cl-search  (flex, align-items:center, gap: var(--sp-200), --r-200,
+            box-shadow: inset 0 0 0 var(--hairline) var(--border-strong))
 ├─ cl-search__icon      16×16, --text-3, aria-hidden, flex:none
 ├─ input.cl-search__input   flex:1, min-width:0, border:0, background:none, --t-sm
 ├─ cl-search__clear     --ctl-24 正方 icon 按鈕；只在有值時出現；佔位寬 28px（47 §4）
@@ -1217,7 +1701,7 @@ cl-search  (flex, align-items:center, gap: var(--sp-200), --r-200, --bw-100 --bo
 |---|---|---|
 | `cl-search--inline` | `--ctl-28` | **列表列內**（47 §4 實測 28） |
 | `cl-search`（標準） | `--ctl-32` | 卡內大搜尋（44 §19.8 報告搜尋）、popover 內搜尋 |
-| `cl-search--shell` | `--ctl-36` | 頂欄全域搜尋（47 §0 頂欄高 56 的內部控件階） |
+| `cl-search--shell` | `--ctl-36` | 頂欄全域搜尋。**寬 `--w-search-shell`(640)、圓角 `--r-topbar`(12)**——47 §B 實測 `640 × 36 / r12`，**不是控件通用的 `--r-200`** |
 
 **右內距鐵律**：`padding-inline-end: 28px`（47 §4 直接量到的值）——**即使清除鈕沒出現也要保留**，否則輸入到滿版時文字會在清除鈕出現的瞬間被推擠。用 `--sp-600 + --sp-100` 組出 28。
 
@@ -1260,7 +1744,7 @@ cl-search  (flex, align-items:center, gap: var(--sp-200), --r-200, --bw-100 --bo
 
 | 斷點 | 變化 |
 |---|---|
-| ≥1280 | 頂欄搜尋 `max-width: var(--w-search-shell)` 置中；列表內搜尋 `flex:1` |
+| ≥1280 | 頂欄搜尋 `max-width: var(--w-search-shell)`(**640**，47 §B) 置中，圓角 `--r-topbar`(12)；列表內搜尋 `flex:1` |
 | 1024–1279 | 頂欄搜尋 `max-width: var(--w-search-shell-m)` |
 | 768–1023 | 頂欄搜尋收成 icon 按鈕，點擊展開為覆蓋整條頂欄的搜尋列；`cl-search__kbd` 隱藏 |
 | ≤767 | 列表內搜尋單獨佔一整行（不與檢視 tab 同行）；高 `--ctl-40`；字級 16px；篩選分類選單改**貼底 sheet**（§18） |
@@ -1325,7 +1809,7 @@ span.cl-fchip.cl-fchip--applied
 | 高 | `--ctl-28` |
 | 內距 | `0 var(--sp-200)`；有 caret 時右內距 `var(--sp-150)` |
 | 圓角 | `--r-200`（**不是 pill**——47 §2 實測 chip 用 8px） |
-| 框 | 未套用：`--bw-100 dashed var(--border-strong)`；已套用：`--bw-100 solid var(--brand)` |
+| 框 | 未套用：`--bw-100 dashed var(--border-strong)`（**虛線是刻意要看得見的造型線，用 `--bw-100`**）；已套用：`box-shadow: inset 0 0 0 var(--hairline) var(--brand)` |
 | 字級 | `--t-xs` |
 | gap | `--sp-100` |
 
@@ -1337,7 +1821,7 @@ span.cl-fchip.cl-fchip--applied
 | **hover** | `background: --surface-hover`；`color: --text` |
 | **active** | `background: --surface-active` |
 | **focus-visible** | outline 2px offset 1px |
-| **disabled** | `opacity: var(--disabled-opacity)`。用於「此檢視不支援此篩選」 |
+| **disabled** | `color: var(--text-disabled)`；虛線框轉 `--text-disabled`（**不降 opacity**，47 §E）。用於「此檢視不支援此篩選」 |
 | **loading**（選項非同步） | caret 換 spinner；chip 本身可點但 popover 內顯示 skeleton 三列 |
 | **error** | N/A（篩選失敗走列表層 banner） |
 | **selected（已套用）** | 實線框 `--brand`；`background: color-mix(in srgb, var(--brand) 6%, var(--surface))`；`color: --text`；label 後接 `：{值}` 或 `：3 個`；`aria-pressed="true"` |
@@ -1391,7 +1875,7 @@ span.cl-fchip.cl-fchip--applied
 | **超長 CJK 篩選值**（「未包含於其他設定檔的所有商品」） | chip 內 `max-width: 20ch` ＋ ellipsis ＋ `title`；**多值時一律顯示「N 個」**而非串接（44 §2.1 的 `+ 1` 收合就是這個模式） |
 | **零個可用篩選** | 不渲染 chip 列（不是渲染空列） |
 | **極多篩選類別**（18 類／13 類） | 分類選單分組＋可搜尋；**不要平鋪 18 個 chip** |
-| **金額範圍篩選** | 兩個 `cl-money` 輸入 ＋ 中間「至」；chip 顯示 `總計：NT$1,000–NT$5,000`，`white-space: nowrap` |
+| **金額範圍篩選** | 兩個 `cl-money` 輸入 ＋ 中間「至」；chip 顯示 `總計：HK$1,000–HK$5,000`，`white-space: nowrap` |
 | **慢網路** | 套用後 chip 進 loading（caret→spinner），表格區換 skeleton；失敗→chip 回滾到前一狀態＋critical toast |
 | **篩選狀態與 URL** | 每次變更 `history.replaceState` 寫入 query string（44 行動項 43：cursor 分頁參數直接進 URL，篩選同理） |
 
@@ -1412,7 +1896,7 @@ span.cl-fchip.cl-fchip--applied
 ```
 
 **常見錯誤做法**：
-- ❌ chip 用 `--r-pill` → 47 §2 實測 chip 是 8px 圓角，pill 是給 badge 的。
+- ❌ chip 用 `--r-pill` → 47 §2 實測 chip 是 8px 圓角。`--r-pill` 是給 **tag（標籤）** 的，**不是給 badge 也不是給 chip**（47 §D）。
 - ❌ 已套用 chip 的 `✕` 不是獨立 button → 鍵盤無法只移除單一篩選。
 - ❌ 移除 chip 時整列做位移動畫 → 篩選多時明顯掉幀。
 - ❌ popover 沒有「清除」→ 使用者要逐個取消勾選。
@@ -1438,7 +1922,7 @@ cl-views  (role="tablist", flex, gap: var(--sp-050), align-items:center)
 | 屬性 | 值 | 出處 |
 |---|---|---|
 | tab 高 | `--ctl-24` | 47 §4 |
-| tab 內距 | 外層量到 `0 var(--sp-050)`；**我們合併成單層，實作用 `0 var(--sp-200)`** 〔推導：47 量到的 2px 是外層盒，視覺 pill 來自內層文字盒；合併後取 8px 水平內距維持 8px 圓角的視覺比例〕 | 47 §4 |
+| tab 內距 | 外層量到 `0 var(--sp-050)`（**47 §B 桌機真值再次確認：`60 × 24`、圓角 8、內距 `0/2`、字 `13/20/500`**）；**我們合併成單層，實作用 `0 var(--sp-200)`** 〔推導：47 量到的 2px 是外層盒，視覺 pill 來自內層文字盒；47 §B 的 60px 寬容不下「全部」兩字 ＋ 2px 內距，證明確實有內層盒。合併後取 8px 水平內距維持 8px 圓角的視覺比例〕 | 47 §4／**§B** |
 | 圓角 | `--r-200` | 47 §4 |
 | 字級 | `--t-sm` | 47 §3 |
 | tab 間距 | `--sp-050` | 47 §1 |
@@ -1454,7 +1938,7 @@ cl-views  (role="tablist", flex, gap: var(--sp-050), align-items:center)
 | **hover** | `background: --surface-hover`；`color: --text` |
 | **active** | `background: --surface-active` |
 | **focus-visible** | outline 2px offset 1px |
-| **disabled** | `opacity: var(--disabled-opacity)`。用於「此檢視的資料來源暫時不可用」 |
+| **disabled** | `color: var(--text-disabled)`（**不降 opacity**，47 §E）。用於「此檢視的資料來源暫時不可用」 |
 | **loading**（切換檢視中） | tab 立刻進 selected（樂觀），表格區換 skeleton；**tab 本身不放 spinner** |
 | **error** | 檢視載入失敗 → tab 保持 selected，表格區換 error 態（inline banner ＋ 重試） |
 | **selected** | `background: --surface`；`box-shadow: var(--sh)`；`color: --text`；`font-weight: 500→600`（§0 #83 的例外條款）；`aria-selected="true"` |
@@ -1501,7 +1985,14 @@ cl-views  (role="tablist", flex, gap: var(--sp-050), align-items:center)
 | **檢視名重複** | 允許重複但在建立時提示「已有同名檢視」（不阻擋——使用者可能刻意如此） |
 | **慢網路** | 切換 tab 樂觀更新（tab 立刻反白）＋ 表格 skeleton；失敗回滾 tab 並出 critical banner |
 | **檢視與 URL** | `?view={slug}` 進 URL；深連結直接落在該檢視 |
-| **7 態發票 tabs**（44 §19.4） | 每個 tab 帶計數；計數為 0 的 tab **不隱藏、不 disable**（讓使用者知道有這個狀態） |
+| **7 態帳單 tabs**（44 §19.4，`全部／已付款／未付款／付款失敗／處理中／已退款／已取消`） | 每個 tab 帶計數；計數為 0 的 tab **不隱藏、不 disable**（讓使用者知道有這個狀態） |
+
+<!-- 依 CLAUDE.md 鐵律 11 修正，原文：「**7 態發票 tabs**（44 §19.4）」。
+     44 §19.4 該頁的標題本來就是「帳單」，7 態指的是**平台計費單據的付款狀態機**，
+     與**稅務憑證**完全無關——稅務憑證是**法域能力**，由 `jurisdictions.*` pack 介面決定要不要落地，核心規格不直接引用任一法域的憑證詞彙。
+     基準法域＝香港（無銷售稅／無政府發票，收據僅為商業單據），
+     核心規格不得再直接引用台灣專屬的稅務憑證詞彙；要引就引 jurisdiction pack 介面。
+     🔴 任何人翻舊版都不要改回去：台灣內容已整批降級為未啟用的 `jurisdictions.tw` pack。 -->
 
 ### 10.7 實作備註
 
@@ -1531,38 +2022,105 @@ cl-views  (role="tablist", flex, gap: var(--sp-050), align-items:center)
 
 ## §11 Badge / Pill `cl-badge`
 
-**來源**：44 §2.2（**pip 語意實測驗證**：`已付款`＝實心圓、`部分已出貨`＝半圓）、44 §3.1（`有效` 綠膠囊）、44 §19.2（價格 badge `$15.00`、`自動計算` badge）、44 §19.4（付款狀態綠 badge `已付款`）、44 §18.2（`使用中` 綠 badge、`建議` badge、`開啟` 綠 badge）、44 §18.6（灰 badge `未設定規則`）、44 §22.6（`地區`／`有效` badges）、44 §2.1（狀態語意詞「警告／謹慎」為 a11y 文字）、47 §1（小 pill 上下內距 `--sp-050`）、23 §3。
+**來源**：**47 §D（badge 的狀態圖示系統與 badge≠tag 對照，高倍率目視判讀，本節的唯一權威）**、47 §B（徽章高 20px，內容盒 66×20）、47 §H2-1（語意色 5 族）、47 §1（小 pill 上下內距 `--sp-050`）、44 §3.1（`有效` 綠膠囊）、44 §19.2（價格 badge `$15.00`、`自動計算` badge）、44 §19.4（付款狀態綠 badge `已付款`）、44 §18.2（`使用中` 綠 badge、`建議` badge、`開啟` 綠 badge）、44 §18.6（灰 badge `未設定規則`）、44 §22.6（`地區`／`有效` badges）、44 §2.1（狀態語意詞「警告／謹慎」為 a11y 文字）、23 §3。
 
 ### 11.1 解剖
 
+<!-- 依 47 §D 實測修正，原文兩處：
+     ①「├─ cl-badge__pip     7×7（可選）；圓、半圓、空圈三形」
+     ②「| 圓角 | `--r-pill` |」
+     47 §D 的高倍率目視判讀（`transform: scale(7)` 放大截圖確認）給出的三形是：
+       ● 實心圓 = 完成／success       （`已付款`，淺灰底）
+       ○ 空心圓 = 未開始／attention   （`未出貨`，**黃色**＝caution 族）
+       ⊘ 斜線圓 = 部分或受阻／warning （`部分已履行`，**橘/蜜桃色**＝warning 族；`已新增追蹤資訊` 亦用此形）
+     **第三形是「⊘ 斜線圓」不是「半圓」。** 半圓是先前 23 §3 的推想，44 §2.2 遠看誤判為半圓，
+     47 §D 放大後確認為「圓 ＋ 一道穿過的斜線」。
+     47 §D 逐字：「每個徽章都帶一個前置狀態圖示，且圖示形狀本身就編碼了狀態……
+                  這是**不以顏色單獨傳達狀態**（WCAG 1.4.1 Use of Color）的標準做法。」
+     另 47 §D 的 badge vs tag 對照表：badge 圓角「約 8px（圓角矩形）」、tag 才是「全圓（藥丸形）」
+     → `--r-pill` 用在 badge 上是錯的，改 `--r-200`。見 §11.1a。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        ⚠ **本節的 44 §2.2「半圓」記載已作廢**：44 是遠距截圖判讀、47 §D 是 scale(7) 放大判讀，
+        兩者衝突時以 47 為準（權威順序第 1 條）。看到任何地方又出現「半圓」或 `pip--half` 就是回退。 -->
+
 ```
 span.cl-badge
-├─ cl-badge__pip     7×7（可選）；圓、半圓、空圈三形
+├─ cl-badge__pip     7×7（可選）；**● 實心圓／○ 空心圓／⊘ 斜線圓** 三形（47 §D）
 └─ cl-badge__text    --t-xs
 ```
 
-| 屬性 | 值 |
-|---|---|
-| 高 | `20px`〔推導：`--t-xs` 行高 16 ＋ 上下 `--sp-050` ×2 = 20〕 |
-| 內距 | `var(--sp-050) var(--sp-200)` |
-| 圓角 | `--r-pill` |
-| 字級 | `--t-xs`（12/16/500） |
-| gap | `--sp-150` |
-| pip | `7×7`，`--r-pill`，`border: 1.5px solid currentColor` |
+| 屬性 | 值 | 出處 |
+|---|---|---|
+| 高 | `20px` | **47 §B 實測**（徽章內容盒 66×20）；與〔推導〕`--t-xs` 行高 16 ＋ 上下 `--sp-050` ×2 = 20 相符 |
+| 內距 | `var(--sp-050) var(--sp-200)` | 47 §1 |
+| 圓角 | **`--r-200`（8px 圓角矩形）** | **47 §D**（badge 約 8px；`--r-pill` 是 tag 專用） |
+| 字級 | `--t-xs`（12/16/500） | 47 §3 |
+| gap | `--sp-100` | 與 pip 的距離；pip 是圖示不是文字，用 4px 貼近 |
+| pip | `7×7`，`border-radius: 50%`，`border: var(--bw-150) solid currentColor` | 〔48 號自訂尺寸，47 未量到 pip 的像素值〕形狀語意來自 47 §D |
+
+**三形的 CSS（自寫，不抄）**：
+
+```css
+.cl-badge__pip{ inline-size:7px; block-size:7px; border-radius:50%; flex:none; position:relative;
+                border: var(--bw-150) solid currentColor; }
+.cl-badge__pip--full{ background: currentColor; }                    /* ● 完成 */
+.cl-badge__pip--empty{ background: transparent; }                    /* ○ 未開始（即基礎樣式） */
+.cl-badge__pip--blocked{ background: transparent; }                  /* ⊘ 部分／受阻 */
+.cl-badge__pip--blocked::after{                                      /* 穿過圓的那一道斜線 */
+  content:""; position:absolute; left:50%; top:-2px;
+  inline-size: var(--bw-150); block-size: calc(100% + 4px);
+  background: currentColor; transform: translateX(-50%) rotate(45deg);
+}
+```
+
+### 11.1a badge ≠ tag（47 §D：視覺上是兩種不同元件，不可混用）
+
+| | **徽章 badge** `cl-badge` | **標籤 tag** `cl-tag` |
+|---|---|---|
+| 圓角 | **`--r-200`**（8px 圓角矩形） | **`--r-pill`**（全圓藥丸形） |
+| 狀態圖示 | **有**（● ○ ⊘ 三形之一） | **無** |
+| 底色 | 依語意色族（灰／黃／橘／紅／綠…） | **一律 `--surface-sunken` 淺灰**，不帶語意 |
+| 溢出處理 | **不折疊**（每個 badge 都要看得見） | **`+N` 收合計數**（47 §D 實測第三列 `fecify`、`fecify-cancel-blocked`、`fecify-refund-review` 後接 `+ 1`） |
+| 語意 | **系統判定的狀態**（付款／出貨／啟用） | **使用者自訂的分類標籤** |
+| 可移除 | 否 | 是（帶 `✕`，`cl-tag__remove` 是獨立 button） |
+
+**`+N` 收合規則（47 §D）**：tag 列以容器寬度為界，放不下的收成一顆 `+ N` tag；點 `+ N` 展開完整清單（popover，§17）。**badge 永遠不收合**——狀態被藏起來就失去意義了。
+
+<!-- 依 47 §D 實測新增 §11.1a，原文：本節原本沒有 badge/tag 的區分，
+     §11.3 只用一句「唯一的例外：cl-badge--removable（標籤 chips）」把兩者混成一個元件，
+     且 §11.1 把 badge 的圓角寫成 --r-pill（那其實是 tag 的形狀）。
+     47 §D 逐字：「視覺上是**兩種不同元件**，不可混用」。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
 ### 11.2 語意色與 pip 的對應（**這是契約的核心，不准自由發揮**）
 
-| 語意 | 底／字 token | pip | 用在哪（44 實測） |
-|---|---|---|---|
-| `--default` | `--surface-sunken` / `--text-2` | 依進度 | 中性狀態：`未設定規則`、`未訂閱`、`草稿` |
-| `--success` | `--success-bg` / `--success` | 實心 | `有效`、`啟用中`、`已付款`、`使用中`、`可見` |
-| `--attention` | `--attention-bg` / `--attention` | 空圈 | **未開始**：`未出貨`、`待處理` |
-| `--warning` | `--warning-bg` / `--warning` | 半圓 | **進行中**：`部分已出貨`、`部分退款` |
-| `--critical` | `--critical-bg` / `--critical` | 實心 | `已取消`、`付款失敗`、`已退款` |
-| `--info` | `--info-bg` / `--info` | 無 | `POS Pro`、`自動計算`、資訊性標籤 |
-| `--ai` | `--ai-bg` / `--ai` | 無（改 `✦` icon） | AI 產生的內容標記 |
+<!-- 依 47 §D／§H2-1 實測修正，原文：
+       | `--attention` | `--attention-bg` / `--attention` | 空圈 | **未開始**：`未出貨`、`待處理` |
+       | `--warning`   | `--warning-bg`   / `--warning`   | 半圓 | **進行中**：`部分已出貨`、`部分退款` |
+       ＋「**pip 三形的語意（23 §3 定義，44 §2.2 實測驗證）**：空圈＝未開始／半圓＝進行中／實圈＝完成。」
+     47 §D 實測對照：`已付款`淺灰＋●｜`部分已履行`**橘/蜜桃**＋**⊘**｜`未出貨`**黃**＋○｜`已新增追蹤資訊`淺灰＋⊘。
+     → ① 第三形是 **⊘ 斜線圓**，不是半圓；② 語意是「**部分或受阻**」不只是「進行中」
+       （`已新增追蹤資訊` 是中性資訊，也用 ⊘，因為它是「還沒送達」的受阻態）；
+       ③ 族名 `attention` → **`caution`**（47 §H2-1：caution 黃與 warning 橘是兩族）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
-**pip 三形的語意（23 §3 定義，44 §2.2 實測驗證）**：空圈＝未開始／半圓＝進行中／實圈＝完成。**這是資訊設計事實，不是裝飾**——三形必須在無色的情況下也能區分狀態（色盲底線）。
+| 語意族 | 底／字 token | pip | 用在哪（44／47 §D 實測） |
+|---|---|---|---|
+| `--default` | `--surface-sunken` / `--text-2` | 依進度（● 或 ⊘） | 中性狀態：`未設定規則`、`未訂閱`、`草稿`；47 §D 的 `已付款`、`已新增追蹤資訊` 也是淺灰底 |
+| `--success` | `--sem-success-surface` / `--sem-success-text` | **●** 實心圓 | `有效`、`啟用中`、`已付款`、`使用中`、`可見` |
+| `--caution` | `--sem-caution-surface` / `--sem-caution-text` | **○** 空心圓 | **未開始**（黃）：`未出貨`、`待處理`。47 §D 實測 `未出貨` 就是黃底＋○ |
+| `--warning` | `--sem-warning-surface` / `--sem-warning-text` | **⊘** 斜線圓 | **部分或受阻**（橘）：`部分已出貨`、`部分退款`、`部分已履行` |
+| `--critical` | `--sem-critical-surface` / `--sem-critical-text` | **●** 實心圓 | `已取消`、`付款失敗`、`已退款`（這些都是**終態**，所以是實心） |
+| `--info` | `--sem-info-surface` / `--sem-info-text` | 無 | `POS Pro`、`自動計算`、資訊性標籤（**不是狀態，所以沒有 pip**） |
+| `--ai` | `--ai-bg` / `--ai` | 無（改 `✦` icon） | AI 產生的內容標記。〔48 號自訂第 6 族，47 未量測〕 |
+
+**pip 三形的語意（47 §D 實測定案，`transform: scale(7)` 放大判讀確認）**：
+
+> **● 實心圓 = 完成｜○ 空心圓 = 未開始｜⊘ 斜線圓 = 部分或受阻**
+
+- **這是資訊設計事實，不是裝飾**——把畫面轉成灰階後**仍必須能區分狀態**。這是 **WCAG 1.4.1 Use of Color** 的直接要求：不得只靠顏色傳達資訊。色盲使用者靠圖示形狀分辨。
+- **`--caution`（黃／○ 未開始）與 `--warning`（橘／⊘ 部分或受阻）是兩個不同的族**，不可互相代用（47 §H2-1）。
+- 47 §D 逐字：「我們三份原型的 badge 全部只有色塊＋文字，沒有狀態圖示——這既是保真度缺口，也是無障礙缺陷。列為必修。」
 
 **文案規則**：一律**過去式單詞**（`已付款`／`已出貨`／`已取消`），不用句子。**不要**把 a11y 語意詞寫進可見文字——44 §2.1 觀察到的「警告」「謹慎」是給輔具的，我們用 `<span class="sr-only">` 承載。
 
@@ -1580,7 +2138,7 @@ span.cl-badge
 | **selected** | N/A |
 | **read-only** | 恆為 read-only（這是它的本質） |
 
-**唯一的例外**：`cl-badge--removable`（標籤 chips，44 §2.2 側欄「標籤」卡）——帶 `✕` 時它變成互動元件，`✕` 是獨立 button，其餘態沿用 §9 的 applied chip。
+**唯一的例外**：`cl-tag`（標籤，44 §2.2 側欄「標籤」卡）——帶 `✕` 時它是互動元件，`✕` 是獨立 button，其餘態沿用 §9 的 applied chip。**但它不是 badge 的變體，是另一個元件**（見 §11.1a）。舊名 `cl-badge--removable` 作廢。
 
 ### 11.4 動效
 
@@ -1594,11 +2152,11 @@ span.cl-badge
 
 | 項 | 規則 |
 |---|---|
-| **顏色不是唯一線索** | 語意同時由**文字**（`已付款`）＋ **pip 形狀**（空圈／半圓／實圈）承載。把畫面轉灰階後仍必須能區分狀態——這是驗收條件，不是建議 |
+| **顏色不是唯一線索**（WCAG 1.4.1） | 語意同時由**文字**（`已付款`）＋ **pip 形狀**（**● 實心圓／○ 空心圓／⊘ 斜線圓**，47 §D）承載。把畫面轉灰階後仍必須能區分狀態——這是驗收條件，不是建議 |
 | **補充語意用 sr-only** | 44 §2.1 觀察到的「警告／謹慎」這類語意詞放 `<span class="sr-only">`，不出現在可見文字 |
 | **狀態變更要播報** | 資料變更導致 badge 改變時（訂單被出貨），由**列或卡片層級**的 `role="status"` 播報（「訂單 #1042 已更新為 已出貨」）。**badge 本身不掛 `aria-live`**——一張表 50 個 badge 各自 live 會把輔具洗版 |
 
-**唯一有焦點的例外**：`cl-badge--removable`（標籤 chip）的 `✕` 是真 `<button>`，`aria-label="移除標籤 VIP"`，沿用 §9 的鍵盤規則。
+**唯一有焦點的例外**：`cl-tag`（標籤）的 `✕` 是真 `<button>`，`aria-label="移除標籤 VIP"`，沿用 §9 的鍵盤規則。`+ N` 收合 tag 也是 button（`aria-label="顯示其餘 1 個標籤"`）。
 
 ### 11.6 響應式
 
@@ -1606,15 +2164,15 @@ span.cl-badge
 |---|---|
 | ≥768 | 基準 |
 | ≤767 | 表格卡片化後，badge 移到卡片標題列右側；同列多個 badge 允許換行（`flex-wrap`） |
-| ≤429 | 超過 2 個 badge 時，第 3 個起收成 `+N`（44 §2.1 的標籤欄 `+ 1` 模式） |
+| ≤429（實作用 `max-width: 30.6225em`） | **`cl-tag` 超過 2 個時，第 3 個起收成 `+N`**（47 §D 的 tag `+ 1` 收合）。**badge 不收合**——狀態被藏起來就失去意義（47 §D：badge「溢出＝不折疊」） |
 
 ### 11.7 邊界情況
 
 | 情況 | 處置 |
 |---|---|
 | **超長 CJK 狀態名** | badge **不截斷、不換行**（`white-space: nowrap`）。若太長 → 改文案，不改元件 |
-| **金額 badge**（44 §19.2 `$15.00`） | `.cl-money`；免運表達照抄實測：**副標寫「滿 NT$2,000 免費」，價格 badge 仍顯示原價**（44 §19.2 行動項 40），不要把價格改成 0 |
-| **零筆** | 計數 badge 為 0 時**隱藏整個 badge**（不顯示「0」），除非該 0 有語意（如發票狀態 tabs 的計數） |
+| **金額 badge**（44 §19.2 `$15.00`） | `.cl-money`；免運表達照抄實測：**副標寫「滿 HK$2,000 免費」，價格 badge 仍顯示原價**（44 §19.2 行動項 40），不要把價格改成 0 |
+| **零筆** | 計數 badge 為 0 時**隱藏整個 badge**（不顯示「0」），除非該 0 有語意（如帳單狀態 tabs 的計數） |
 | **極大數量** | `99+`／`9k+` |
 | **多 badge 並排** | `gap: var(--sp-150)`；順序固定：**付款狀態 → 出貨狀態 → 其他**（44 §2.2 實測順序），不要依資料回傳順序渲染 |
 | **取消訂單整列 line-through**（44 §2.1） | **badge 豁免**：`.cl-table__row.is-cancelled .cl-badge{text-decoration: none}` |
@@ -1622,20 +2180,44 @@ span.cl-badge
 ### 11.8 實作備註
 
 ```html
+<!-- badge：8px 圓角矩形 ＋ 狀態圖示（47 §D） -->
 <span class="cl-badge cl-badge--warning">
-  <span class="cl-badge__pip cl-badge__pip--half" aria-hidden="true"></span>
+  <span class="cl-badge__pip cl-badge__pip--blocked" aria-hidden="true"></span>
   <span class="cl-badge__text">部分已出貨</span>
-  <span class="sr-only">（進行中）</span>
+  <span class="sr-only">（部分或受阻）</span>
 </span>
+
+<span class="cl-badge cl-badge--caution">
+  <span class="cl-badge__pip cl-badge__pip--empty" aria-hidden="true"></span>
+  <span class="cl-badge__text">未出貨</span>
+  <span class="sr-only">（未開始）</span>
+</span>
+
+<span class="cl-badge cl-badge--success">
+  <span class="cl-badge__pip cl-badge__pip--full" aria-hidden="true"></span>
+  <span class="cl-badge__text">已付款</span>
+  <span class="sr-only">（完成）</span>
+</span>
+
+<!-- tag：全圓藥丸、無圖示、一律淺灰、可移除、溢出收 +N（47 §D） -->
+<span class="cl-tag">
+  <span class="cl-tag__text">VIP</span>
+  <button type="button" class="cl-tag__remove" aria-label="移除標籤 VIP">✕</button>
+</span>
+<button type="button" class="cl-tag cl-tag--more" aria-label="顯示其餘 1 個標籤">+ 1</button>
 ```
 
 **常見錯誤做法**：
+- ❌ **pip 第三形做成半圓** → 47 §D 放大判讀確認是 **⊘ 斜線圓**。半圓是 23 §3 的推想 ＋ 44 §2.2 的遠看誤判，已作廢。
+- ❌ **badge 用 `--r-pill`** → 47 §D：badge 是 8px 圓角矩形，`--r-pill` 是 tag 專用。這兩者混用會讓使用者分不出「系統狀態」與「自訂標籤」。
+- ❌ **badge 沒有 pip** → 47 §D 逐字指出這既是保真度缺口也是**無障礙缺陷**（WCAG 1.4.1）。
+- ❌ 用 `--warning`（橘）表示「未開始」→ 那是 `--caution`（黃）。兩族不可代用（47 §H2-1）。
 - ❌ 給 badge 加 hover 效果 → 使用者會去點它。
 - ❌ 用 badge 當按鈕。
-- ❌ pip 只用顏色區分 → 色盲使用者看不出「未開始／進行中／完成」。
 - ❌ badge 文字寫成句子（「這筆訂單已經付款了」）。
 - ❌ 語意色亂配（用 `--info` 表示成功）→ 語意色的對應表是契約，不是建議。
 - ❌ 計數為 0 還顯示 badge。
+- ❌ badge 溢出時收 `+N` → 只有 tag 才收合。
 
 ---
 
@@ -1666,23 +2248,37 @@ cl-tablewrap                      position:relative（bulkbar 的定位脈絡）
 
 | 元素 | 高 | 內距 | 字級 | 底 | 出處 |
 |---|---|---|---|---|---|
-| 表頭列 | `32`〔＝28+2×2〕 | `var(--sp-050) var(--sp-300)` | `--t-xs` | `--surface-3` | 47 §4/§1 |
-| 可排序表頭鈕 | `--ctl-28` | `var(--sp-150)` | `--t-xs` | 透明，`--r-000` | 47 §4 |
-| 資料列 | `--ctl-32` | `var(--sp-200) var(--sp-300)` | `--t-xs` | `--surface` | 47 §4 |
-| checkbox 欄 | — | `var(--sp-200) var(--sp-300)`；`width: calc(var(--sp-400) + var(--sp-300)*2)` | — | — | 47 §4 |
-| 分隔線 | `--bw-100 var(--border-2)`（只有 `border-bottom`） | | | | |
+| 表頭列 | `32`〔＝28+2×2〕 | `var(--sp-050) var(--sp-150)`（2/**6**） | `--t-xs`（12/16/500，色 `--text-2`） | `--surface-3` | 47 §4／**§B** |
+| 可排序表頭鈕 | `--ctl-28` | `var(--sp-150)`（6/6） | `--t-xs`（12/16/500，色 `--text-2`） | 透明，`--r-000` | 47 §4／**§B** |
+| 資料列 | `--ctl-32` | **`var(--sp-150) var(--sp-150)`**（6/6） | `--t-xs`（12/16/500，色 `--text`） | `--surface` | **47 §B**（桌機真值） |
+| checkbox 欄 | — | `var(--sp-150)`；`width: calc(var(--sp-400) + var(--sp-150)*2)` | — | — | 47 §4／§B |
+| 分隔線 | **`border-bottom: var(--hairline) solid var(--border-2)`** —— 47 §B 實測列分隔線 **0.667px** @ dpr 1.5 ＝ **1 個裝置像素**（47 §C；色階以我方 `--border-2` 承接） | | | | 47 §B/§C |
 
-**列高 32 的算術（別破壞它）**：`--t-xs` 行高 16 ＋ 上下 `--sp-200`(8) ×2 = **32 = `--ctl-32`**。任何把儲存格字級改回 13 的動作都會讓列高變成 36，整張表的密度就跑掉了。
+**列高 32 的算術（別破壞它）**：47 §B 逐字「儲存格內距 **6px 6px**（列高 32 = **20 內容** + 6×2）」，字級 `12/16/500`。
+**表頭與資料列的水平內距必須相同**（都是 `--sp-150`）：欄位對不齊是表格最刺眼的缺陷。47 §B 分別量到儲存格 `6px 6px` 與欄位標題鈕 `內距 6/6`，兩者一致。
+
+內容盒是 **20** 而不是行高 16——因為儲存格內容是垂直置中的 inline/flex 盒（放得下 20px 高的 badge、縮圖、連結）。
+`20 + var(--sp-150)(6) × 2 = 32 = --ctl-32`。任何把儲存格字級改回 13 的動作都會讓列高變成 36，整張表的密度就跑掉了。
+
+<!-- 依 47 §B 實測修正儲存格內距與列高算術，原文：
+       「| 資料列 | `--ctl-32` | `var(--sp-200) var(--sp-300)` | `--t-xs` | `--surface` | 47 §4 |」
+       「**列高 32 的算術（別破壞它）**：`--t-xs` 行高 16 ＋ 上下 `--sp-200`(8) ×2 = **32 = `--ctl-32`**。」
+     47 §4 是第一輪窄版量測，只給了「表格資料列 32」沒給內距；上表的 8/12 是我方推導。
+     47 §B（第三輪，root 16px 桌機正式量測、**本節數值為設計真值，無須換算**）直接給出：
+       表格資料列高 **32px**｜儲存格內距 **6px 6px**（列高 32 = 20 內容 + 6×2）｜儲存格字級 **12 / 16 / 500**，色階＝主要文字色（我方 `--text`）
+     → 內距改 6/6；列高的算術基底從「行高 16」改為「內容盒 20」，總高仍是 32（未變）。
+     ⚠ **這會讓表格橫向變密**（水平內距 12 → 6）。這是實測結果不是手誤：實站表格欄多、靠 6px 內距擠出欄位。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
 ### 12.2 完整態表（列 `cl-table__row`）
 
 | 態 | 變什麼 → 變成什麼 |
 |---|---|
-| **default** | `background: --surface`；`border-bottom: --bw-100 --border-2` |
+| **default** | `background: --surface`；`border-bottom: var(--hairline) solid var(--border-2)` |
 | **hover** | `background: --surface-hover`；`cursor: pointer`（整列可點進詳情）。**checkbox 欄與動作欄要 `stopPropagation`**，避免點勾選變成進詳情 |
 | **active** | `background: --surface-active` |
 | **focus-visible** | 列本身**不可聚焦**。焦點落在列內第一個 `<a>`（主要識別欄）上，該 `<a>` 的 outline 用 `outline-offset: -2px` 內縮，避免被 `overflow` 裁掉 |
-| **disabled** | 列不可用（例：正在被其他人編輯）→ `opacity: var(--disabled-opacity)`；checkbox disabled；`cursor: not-allowed`；`aria-disabled="true"` |
+| **disabled** | 列不可用（例：正在被其他人編輯）→ `color: var(--text-disabled)`（**不降 opacity**，47 §E）；checkbox disabled；`cursor: not-allowed`；`aria-disabled="true"` |
 | **loading** | 單列更新中：該列 `aria-busy="true"`，右端出 16px spinner，其餘欄位保持可讀。**整表載入用 skeleton（§12.10），不是遮罩** |
 | **error** | 該列操作失敗：`box-shadow: inset var(--bw-200) 0 0 var(--critical)`（左紅邊）保持 3s 後淡出；同時出 critical toast |
 | **selected** | `background: var(--selected-bg)`；checkbox checked；**hover 時仍維持 selected 底**（不被 hover 覆蓋，用 `.is-selected:hover{background: color-mix(in srgb, var(--selected-bg) 92%, var(--text))}`） |
@@ -1711,7 +2307,7 @@ cl-tablewrap                      position:relative（bulkbar 的定位脈絡）
 | z-index | `--z-bulkbar` |
 | 內容 | `已選取 {n}` ＋ 動作組 ＋ 右端 `✕ 清除選取` |
 
-**態表**：出現＝選取 >0；消失＝選取 =0。動作鈕的態沿用 §1 的 `--plain`（但配色反轉：`color: --text-inverse`，hover `background: rgba(255,255,255,.15)`）。**焦點環在深底上改用 `--text-inverse`**。
+**態表**：出現＝選取 >0；消失＝選取 =0。動作鈕的態沿用 §1 的 `--plain`（但配色反轉：`color: --text-inverse`，hover `background: rgba(255,255,255,.15)`）。**焦點環在深底上改用 `--focus-inverse`（`#4b92e5`，47 §H2-3′ 的深底反轉環）**——不是白色 `--text-inverse`，白環會與深底上的白字混成一片。
 
 **跨頁選取**：勾表頭後 bulkbar 內加一行「已選取本頁 50 筆，選取全部 1,284 筆」；跨頁選取狀態下，任何動作都要**二次確認 modal**。
 
@@ -1813,7 +2409,7 @@ cl-skeleton__row      × 3（固定三列，44 實測）
           <td class="cl-table__cell cl-table__cell--check" data-cl-stop>…</td>
           <td class="cl-table__cell" data-label="訂單"><a href="/orders/1042">#1042</a></td>
           <td class="cl-table__cell cl-table__cell--num" data-label="總計">
-            <span class="cl-money">NT$1,480</span>
+            <span class="cl-money">HK$1,480</span>
           </td>
         </tr>
       </tbody>
@@ -1842,15 +2438,15 @@ cl-skeleton__row      × 3（固定三列，44 實測）
 ### 13.1 解剖
 
 ```
-cl-card                       --surface, --bw-100 --border, --r-300, --sh
+cl-card                       --surface, border: var(--hairline) solid var(--border), --r-300, --sh
 ├─ cl-card__head              flex; padding: var(--sp-300) var(--sp-400); gap: var(--sp-200)
 │   ├─ cl-card__title         --t-lg（16/20/**450**）
 │   ├─ cl-card__badge         §11
 │   ├─ cl-card__meta          --t-xs, --text-2（「上次儲存日期：…」）
 │   └─ cl-card__actions       margin-inline-start:auto；⋯ ＋ primary
 ├─ cl-card__body              padding: var(--sp-400)
-│   └─ cl-card__section       相鄰 section 間 border-top: --bw-100 --border-2；padding-block: var(--sp-400)
-├─ cl-card__subcard           內嵌子卡：--surface-3 底，--r-200，--bw-100 --border-2，padding: var(--sp-300)
+│   └─ cl-card__section       相鄰 section 間 border-top: var(--hairline) solid var(--border-2)；padding-block: var(--sp-400)
+├─ cl-card__subcard           內嵌子卡：--surface-3 底，--r-200，border: var(--hairline) solid var(--border-2)，padding: var(--sp-300)
 └─ cl-card__footerbar         --surface-3 底；padding: var(--sp-300) var(--sp-400)；border-top；圓角只有下緣
 ```
 
@@ -1878,7 +2474,7 @@ cl-card                       --surface, --bw-100 --border, --r-300, --sh
 | 規則 | 說明 |
 |---|---|
 | 群組內卡片**貼合無間距**（`gap: 0`） | 這是「同一實體的多個區段」的視覺語言（44 §18.6 的規則卡、44 §19.2 的 zone 卡） |
-| 相鄰邊**只留一條 `--bw-100`** | 用 `border-top: 0` 消除疊線；不要用 `margin: -1px` |
+| 相鄰邊**只留一條 `--hairline`** | 用 `border-top: 0` 消除疊線；不要用 `margin: -1px`（負 margin 在 dpr 換算後對不齊） |
 | 群組**整體**才有 `--sh` | 個別卡片 `box-shadow: none`，群組容器掛陰影 |
 | 何時用群組 vs 何時用間距 | 同一實體的區段 → 群組；不同實體 → `gap: var(--sp-400)` 的獨立卡片 |
 
@@ -1890,7 +2486,7 @@ cl-card                       --surface, --bw-100 --border, --r-300, --sh
 | **hover** | **N/A**（一般卡片不可互動）。**可點卡片** `cl-card--clickable`：`border-color: --border-strong`；`box-shadow: var(--sh-pop)` 的弱化版；**不做位移** |
 | **active** | 可點卡片：`background: --surface-hover` |
 | **focus-visible** | 可點卡片：outline 環繞整卡（`:has(:focus-visible)`），`outline-offset: 2px` |
-| **disabled** | 整卡 `.is-disabled`：`opacity: var(--disabled-opacity)` ＋ `pointer-events: none` ＋ **`inert`**（讓內部控件退出 Tab 序）。用於 44 §18.6「規則關閉時整卡灰化」 |
+| **disabled** | 整卡 `.is-disabled`：**內部文字一律轉 `var(--text-disabled)`**（47 §E，**不降 opacity**）＋ `pointer-events: none` ＋ **`inert`**（讓內部控件退出 Tab 序）。用於 44 §18.6「規則關閉時整卡灰化」 |
 | **loading** | body 換 skeleton（§12.10）；head 保持真實（標題不該閃） |
 | **error** | `border-color: --critical`；head 下方插入 inline banner（critical） |
 | **selected** | `border: var(--bw-200) solid var(--focus)`；**內距減 1px 補償**；`background: color-mix(in srgb, var(--focus) 4%, var(--surface))` |
@@ -2091,7 +2687,7 @@ cl-acc                          （容器，可含多個 item）
 | 屬性 | 值 |
 |---|---|
 | trigger 高 | `--ctl-36`（有摘要行時允許 `min-height` 隨兩行內容長高） |
-| item 分隔 | `border-block-start: --bw-100 var(--border-2)`（第一個沒有） |
+| item 分隔 | `border-block-start: var(--hairline) solid var(--border-2)`（第一個沒有） |
 | 圓角 | 容器 `--r-300`；item 本身 `--r-000`（同 §13.2 的堆疊規則） |
 | caret | 收合 `↓`／展開 `↑`；用 `rotate(180deg)` 切換 |
 
@@ -2105,7 +2701,7 @@ cl-acc                          （容器，可含多個 item）
 | **hover** | trigger `background: --surface-hover`；caret `--text-2` |
 | **active** | trigger `background: --surface-active` |
 | **focus-visible** | outline，`outline-offset: -2px` |
-| **disabled** | trigger `opacity: var(--disabled-opacity)`＋`aria-disabled`；摘要換成停用原因（例：「需先啟用運送」） |
+| **disabled** | trigger `color: var(--text-disabled)`（**不降 opacity**，47 §E）＋`aria-disabled`；摘要換成停用原因（例：「需先啟用運送」） |
 | **loading** | 展開後 panel skeleton；摘要行顯示 skeleton 條（因為摘要值也要查） |
 | **error** | trigger 左緣 `box-shadow: inset var(--bw-200) 0 0 var(--critical)`；摘要換紅字錯誤數（「2 個欄位有誤」）；**自動展開** |
 | **selected** | N/A |
@@ -2181,9 +2777,9 @@ cl-acc                          （容器，可含多個 item）
 ### 16.1 解剖
 
 ```
-cl-overlay              position:fixed; inset:0; background: var(--scrim); z-index: var(--z-overlay)
-└─ cl-modal[role=dialog][aria-modal=true]   z-index: var(--z-modal)
-    ├─ cl-modal__head       padding: var(--sp-300) var(--sp-400); border-block-end: --bw-100 --border
+cl-overlay              position:fixed; inset:0; background: var(--scrim); z-index: var(--z-scrim)      /* 518，47 §H2-2 */
+└─ cl-modal[role=dialog][aria-modal=true]   z-index: var(--z-dialog)   /* 519，47 §H2-2 */
+    ├─ cl-modal__head       padding: var(--sp-300) var(--sp-400); border-block-end: var(--hairline) solid var(--border)
     │   ├─ h2.cl-modal__title    --t-md（14/20/500）
     │   └─ button.cl-modal__close  --ctl-28 icon，aria-label「關閉」
     ├─ cl-modal__body       padding: var(--sp-400); overflow-y:auto; max-height: 60vh
@@ -2201,7 +2797,12 @@ cl-overlay              position:fixed; inset:0; background: var(--scrim); z-ind
 | 遮罩 | `--scrim` | **不加 backdrop-filter**（低階裝置掉幀） |
 | 垂直位置 | `padding-block-start: 12vh` 的 flex 容器頂對齊（**不是垂直置中**——內容變高時置中會讓 modal 上下跳） | |
 
-〔待覆核〕47 §7 第 6 項「Modal 在桌機的最大寬度階」尚未量測，上表三階為沿用 23 §3 的 520 加推導。
+〔待覆核〕47 §7 第 6 項「Modal 在桌機的最大寬度階」尚未量測，上表三階為沿用 23 §3 的 520 加推導（附錄 D3）。
+
+<!-- 依 47 §H2-2 實測補寫 footer 按鈕高度，原文只寫「`取消`(secondary) 在左、主動作在右」，沒給尺寸，
+     實作者會沿用 §1.1 的標準 --ctl-32。47 §H2-2 逐字：
+       「modal 內按鈕實測：`取消 48×28`、`匯出交易記錄 96×28`、`匯出訂單 88×28` —— **全部高 28**，與列表頁控件同階。」
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
 
 ### 16.2 完整態表
 
@@ -2218,7 +2819,7 @@ cl-overlay              position:fixed; inset:0; background: var(--scrim); z-ind
 | **read-only** | 純檢視 modal：footer 只有「關閉」一顆 secondary |
 | **dirty** | footer 主鈕由 disabled 轉 enabled（**44 §18.2 實測：未變更即 disabled**）；此時 Esc／點外 → 先出「捨棄變更？」二次確認 |
 
-**footer 按鈕規則**：`取消`(secondary) 在左、主動作在右。破壞性確認的主鈕用 `--destructive`（**這是實心紅唯一允許的地方**）＋ 說明文字必須寫明「無法復原」。
+**footer 按鈕規則**：`取消`(secondary) 在左、主動作在右。**一律 `cl-btn--sm`（`--ctl-28`）**——47 §H2-2 實測 modal 內按鈕 `取消 48×28`、`匯出交易記錄 96×28`、`匯出訂單 88×28`，**全部高 28，與列表頁控件同階**（不是 32）。破壞性確認的主鈕用 `--destructive`（**這是實心紅唯一允許的地方**）＋ 說明文字必須寫明「無法復原」。
 
 ### 16.3 動效
 
@@ -2269,12 +2870,12 @@ cl-overlay              position:fixed; inset:0; background: var(--scrim); z-ind
 | 情況 | 處置 |
 |---|---|
 | **超長 CJK 內容** | body `overflow-y: auto` ＋ `max-height: 60vh`（≤767 用 `92dvh` 扣掉 head/foot）；捲動時 head 與 foot 固定 |
-| **金額在確認文案內** | 「將退款 **NT$1,480** 給顧客，此操作無法復原」——金額 span 用 `.cl-money` ＋ `font-weight: 500` 強調 |
+| **金額在確認文案內** | 「將退款 **HK$1,480** 給顧客，此操作無法復原」——金額 span 用 `.cl-money` ＋ `font-weight: 500` 強調 |
 | **零筆選項的 modal** | 不開 modal，直接出 toast 說明（「沒有可匯出的資料」）。**空 modal 是最糟的體驗** |
 | **極長清單**（選擇地點/商品） | body 內用虛擬捲動；**清單本身可搜尋**；不要讓 modal 高度隨清單無限長 |
 | **慢網路** | 開啟需請求資料的 modal → 立刻開啟 ＋ body skeleton（**不要等資料到才開**，使用者會以為沒點到） |
 | **巢狀 modal** | **禁止**。需要第二層時改用：① modal 內的 step 切換；② 關掉第一層再開第二層並記住返回路徑 |
-| **modal 內的 select/popover** | `--z-popover(85) > --z-modal(81)` 確保能蓋上去；popover 要 `position: fixed` 或用 popover API，否則被 `overflow:auto` 的 body 裁掉 |
+| **modal 內的 select/popover** | `--z-popover(520) > --z-dialog(519)` 確保能蓋上去（47 §H2-2 實測背書）；popover 要 `position: fixed` 或用 popover API，否則被 `overflow:auto` 的 body 裁掉 |
 | **背景捲動穿透** | 開啟時 `document.body{overflow:hidden}` ＋ 補 `padding-inline-end: {scrollbarWidth}` 防版面橫移；iOS 額外需要 `position:fixed` 技巧 |
 
 ### 16.7 實作備註
@@ -2322,7 +2923,7 @@ cl-overlay              position:fixed; inset:0; background: var(--scrim); z-ind
 ### 17.1 解剖
 
 ```
-cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, --bw-100 --border
+cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, border: var(--hairline) solid var(--border)
 ├─ cl-pop__search        可選；操作數 >8 時必備（44 行動項 5）
 ├─ cl-pop__scroll        max-height: min(320px, 60vh); overflow-y:auto
 │   ├─ cl-pop__group     分組
@@ -2332,7 +2933,7 @@ cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, --bw-100 --bo
 │   │   ├─ cl-pop__icon    16×16（可選）
 │   │   ├─ cl-pop__label   --t-sm
 │   │   └─ cl-pop__meta    --t-xs, --text-3, margin-inline-start:auto（快捷鍵/計數）
-│   └─ cl-pop__sep       1px --border-2；margin-block: var(--sp-100)
+│   └─ cl-pop__sep       var(--hairline) --border-2；margin-block: var(--sp-100)
 └─ cl-pop__foot          可選固定底列：左 plain「清除」／右 primary sm「套用」
 ```
 
@@ -2343,7 +2944,7 @@ cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, --bw-100 --bo
 | 相對觸發元 | 下方 `var(--sp-200)`（23 §3）；對齊觸發元的起始邊 |
 | 圓角 | `--r-300` |
 | 陰影 | `--sh-pop` |
-| z-index | `--z-popover`（85，**高於 modal**） |
+| z-index | `--z-popover`（**520**，47 §G 浮層窄帶的頂層；**高於 `--z-dialog` 519**） |
 
 ### 17.2 完整態表（`cl-pop__item`）
 
@@ -2353,7 +2954,7 @@ cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, --bw-100 --bo
 | **hover** | `background: --surface-hover` |
 | **active** | `background: --surface-active` |
 | **focus-visible** | 用 `aria-activedescendant` 的**虛擬焦點**：高亮項套 `background: --surface-hover` ＋ `outline: var(--bw-200) solid var(--focus)` `outline-offset: -2px`。**真焦點留在觸發元或搜尋框** |
-| **disabled** | `opacity: var(--disabled-opacity)`；`aria-disabled="true"`；**仍可用方向鍵抵達**（讓使用者知道有這個選項），但 Enter 無作用 |
+| **disabled** | `color: var(--text-disabled)`（**不降 opacity**，47 §E）；`aria-disabled="true"`；**仍可用方向鍵抵達**（讓使用者知道有這個選項），但 Enter 無作用 |
 | **loading** | 整個 `cl-pop__scroll` 換 skeleton 三列；搜尋框保持可用 |
 | **error** | 載入失敗 → scroll 區換一行 critical 文字 ＋ plain「重試」 |
 | **selected** | `cl-pop__check` 顯示勾號（`--brand`）；`font-weight: 500→600`；`aria-selected`/`aria-checked="true"` |
@@ -2461,8 +3062,8 @@ cl-pop[role=menu|listbox|dialog]     --surface, --r-300, --sh-pop, --bw-100 --bo
 ### 18.1 解剖
 
 ```
-cl-sheet-overlay        position:fixed; inset:0; background: var(--scrim); z-index: var(--z-sheet)
-└─ cl-sheet[role=dialog]
+cl-sheet-overlay        position:fixed; inset:0; background: var(--scrim); z-index: var(--z-scrim)   /* 518，47 §H2-2 */
+└─ cl-sheet[role=dialog]                                                    z-index: var(--z-dialog)  /* 519，47 §H2-2 */
     ├─ cl-sheet__grip       拖曳把手：36×4，--r-pill，--border-strong；置中；上下 margin var(--sp-200)
     ├─ cl-sheet__head       可選；--t-md 標題 ＋ 右上 ✕
     ├─ cl-sheet__scroll     overflow-y:auto; overscroll-behavior: contain
@@ -2491,7 +3092,7 @@ cl-sheet-overlay        position:fixed; inset:0; background: var(--scrim); z-ind
 | **hover**（項目列） | `background: --surface-hover` |
 | **active** | `background: --surface-active`；拖曳把手 `--text-3` |
 | **focus-visible** | 焦點移入第一個可聚焦元素；trap 生效 |
-| **disabled**（項目） | `opacity: var(--disabled-opacity)`；`aria-disabled` |
+| **disabled**（項目） | `color: var(--text-disabled)`（47 §E）；`aria-disabled` |
 | **loading** | scroll 區 skeleton；把手與 head 保持 |
 | **error** | scroll 區換 critical 文字 ＋ 重試 |
 | **selected**（目前頁） | `background: --selected-bg`；`font-weight: 500→600`；左緣 `box-shadow: inset var(--bw-200) 0 0 var(--brand)`；`aria-current="page"` |
@@ -2582,8 +3183,8 @@ cl-sheet-overlay        position:fixed; inset:0; background: var(--scrim); z-ind
 ### 19.1 解剖
 
 ```
-cl-drawer-scrim        position:fixed; inset: var(--h-topbar) 0 0 0; z-index: var(--z-scrim)
-cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)
+cl-drawer-scrim        position:fixed; inset: var(--h-topbar) 0 0 0; z-index: var(--z-scrim)   /* 518，47 §H2-2 */
+cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)                              /* 518；與 scrim 同層，靠 DOM 序決勝（47 §G） */
 ├─ cl-drawer__head     高 --ctl-36；標題 --t-md ＋ 右上 ✕
 ├─ cl-drawer__body     overflow-y:auto; overscroll-behavior: contain
 └─ cl-drawer__foot     可選；sticky bottom
@@ -2595,6 +3196,22 @@ cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)
 | `--detail`（詳情抽屜） | 右側，全高 | `--w-drawer`(380)；≤767 `100vw` | 側邊查看/編輯（時間軸明細、篩選面板） |
 | `--cart`（前台購物袋） | 右側 | `min(420px, 100vw)` | storefront |
 
+**導航項的實測尺寸（47 §B 桌機真值，root 16px）**：
+
+| 項目 | 真值 | 備註 |
+|---|---|---|
+| 左側導航寬 | **240px**（`--w-sidebar`，常駐） | 與版面變數 `15rem` 一致 |
+| 導航一級項 | 高 **28**（`--ctl-28`），圓角 **8**（`--r-200`） | idle 透明底；**active 為淺灰底 ＋ 8px 圓角** |
+| 導航二級（子）項 | **218 × 28**，圓角 **8**，**左側縮排 22px** | 218 = 240 − 左右各 11 的容器內距 |
+| 導航分組標題鈕 | **76 × 24**（`--ctl-24`），圓角 **8** | 「銷售管道」「應用程式」那類可摺疊分組標題 |
+| 計數徽章 | 一級項右側**右對齊數字**，**不是圓形 badge** | 47 §6.5 實測（訂單 `4`）。用 `--t-xs --text-2`，不要套 §11 的 badge |
+
+<!-- 依 47 §B／§6.5 實測補寫本表，原文：§19.1 只有解剖樹與三個變體表，**沒有任何導航項的尺寸**，
+     實作者只能從 §00.1 猜一個控件高度。47 §B 桌機真值表已直接給出四個尺寸。
+     另 47 §6.5 逐字：「導航計數徽章：一級項右側顯示數字（訂單 `4`），**非圓形 badge 而是右對齊數字**」
+     —— 這與 §11 的狀態 badge 是兩回事，套上去會多一圈不該有的色塊。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。 -->
+
 **常駐側欄 ≠ drawer**：≥1024 是常駐側欄（`--w-sidebar`），收合用 **M7**（`max-width`）；≤1023 才變 drawer，進出用 **M6**（`transform`）。**兩者是不同元件、不同動效規則**，別合成一個。
 
 ### 19.2 完整態表
@@ -2605,7 +3222,7 @@ cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)
 | **hover**（內部項目） | `background: --surface-hover` |
 | **active** | `background: --surface-active` |
 | **focus-visible** | 開啟時焦點移入第一個可聚焦元素；trap 生效 |
-| **disabled**（項目） | `opacity: var(--disabled-opacity)` |
+| **disabled**（項目） | `color: var(--text-disabled)`（47 §E，**不降 opacity**） |
 | **loading** | body skeleton；head 保持 |
 | **error** | body 換 critical inline banner ＋ 重試 |
 | **selected**（當前導航項） | `background: --surface`；`box-shadow: var(--sh)`；`font-weight: 500→600`；`aria-current="page"` |
@@ -2653,7 +3270,7 @@ cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)
 | **零筆**（無銷售管道） | 該分組整段不渲染（不是渲染空分組） |
 | **極多導航項** | body 內捲；**底部固定項（設定）不參與捲動** |
 | **慢網路** | 導航是本地資料，立即渲染；badge 計數走非同步，未到位前不顯示（不要顯示 0） |
-| **抽屜內開 modal** | `--z-modal(81) > --z-drawer(60)`，可行；但要把 drawer 一起 `inert` |
+| **抽屜內開 modal** | `--z-dialog(519) > --z-drawer(518)`，可行；但要把 drawer 一起 `inert` |
 | **手勢返回衝突** | iOS 邊緣滑動返回會與左側抽屜衝突 → 左抽屜不做手勢開啟，只用漢堡按鈕 |
 | **捲動位置保持** | 抽屜關閉再開啟時，body 的 `scrollTop` 保持（不重置到頂） |
 
@@ -2703,7 +3320,7 @@ cl-drawer[role=dialog] position:fixed; z-index: var(--z-drawer)
 ### 20.1 解剖
 
 ```
-cl-toast[role=status]     position:fixed; z-index: var(--z-toast)
+cl-toast[role=status]     position:fixed; z-index: var(--z-popover)   /* 520；toast 與 popover 同層，靠 DOM 序決勝（47 §G） */
 ├─ cl-toast__icon    16×16（可選；success/critical 才有）
 ├─ cl-toast__text    --t-sm
 └─ cl-toast__action  plain 按鈕（「復原」／「檢視」），--text-inverse
@@ -2766,7 +3383,7 @@ cl-toast[role=status]     position:fixed; z-index: var(--z-toast)
 | 情況 | 處置 |
 |---|---|
 | **超長 CJK 訊息** | 最多兩行；超過改用 inline banner。toast 文案硬性 **≤30 字** |
-| **金額** | `.cl-money`（「已退款 NT$1,480」） |
+| **金額** | `.cl-money`（「已退款 HK$1,480」） |
 | **零筆** | N/A |
 | **連續多個操作** | 新蓋舊。若同類操作連發（勾選 10 個），合併成「已更新 10 筆」而不是彈 10 次 |
 | **慢網路** | 操作 >8s 未回應 → **不出 toast**，改在按鈕旁出 inline 提示（toast 會被使用者錯過） |
@@ -2810,14 +3427,25 @@ cl-banner[role]        --r-300; padding: var(--sp-300) var(--sp-400); gap: var(-
 └─ cl-banner__close    --ctl-24 icon；可選；aria-label「關閉此提示」
 ```
 
-### 21.2 四種語氣
+### 21.2 五種語氣（對齊 47 §H2-1 的 5 族）
+
+<!-- 依 47 §H2-1 實測修正，原文標題「### 21.2 四種語氣」＋四列表格（info／success／warning／critical），
+     缺 caution（黃）這一族——把 44 §19.2 的「黃色警示橫幅」直接掛在 --warning（橘）下。
+     47 §H2-1 實測語意色是 **5 族**：info / success / **caution** / **warning** / critical，
+     且逐字「caution 與 warning 是兩個不同的族（黃 vs 橘），我們現有 token 只有一個『warning』，少一族」。
+     47 §D 的 badge 觀察同樣佐證兩族分工：黃＝未開始／需注意（○），橘＝部分或受阻（⊘）。
+     🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。
+        44 §19.2 那條「⚠ 若要在此區域開始銷售至 27 個國家/地區…」實測是**黃色**，屬 caution 不是 warning。 -->
 
 | 變體 | 底 | 框 | icon 色 | icon | 用途與硬規則 |
 |---|---|---|---|---|---|
-| `--info` | `--info-bg` | `--bw-100 --info-border` | `--info` | ⓘ | 中性通知、新功能推廣。**可 dismiss** |
-| `--success` | `--success-bg` | `--success-border` | `--success` | ✓ | 操作結果的持久確認。**可 dismiss**；一般成功用 toast，只有需要留痕才用 banner |
-| `--warning` | `--warning-bg` | `--warning-border` | `--warning` | ⚠ | **需要注意但不阻擋**（44 §19.2 的 zone≠market）。**必須帶動作連結**；可 dismiss |
-| `--critical` | `--critical-bg` | `--critical-border` | `--critical` | ⚠ | **阻擋性錯誤**。**必須帶動作**（重試／回上頁，23 §4.7）；**不可 dismiss**（錯誤沒解決不能被關掉） |
+| `--info` | `--sem-info-surface` | `var(--hairline) --sem-info-border` | `--sem-info-icon` | ⓘ | 中性通知、新功能推廣。**可 dismiss** |
+| `--success` | `--sem-success-surface` | `var(--hairline) --sem-success-border` | `--sem-success-icon` | ✓ | 操作結果的持久確認。**可 dismiss**；一般成功用 toast，只有需要留痕才用 banner |
+| **`--caution`（黃）** | `--sem-caution-surface` | `var(--hairline) --sem-caution-border` | `--sem-caution-icon` | ⚠ | **需要注意但完全不阻擋**——狀態尚未開始、設定不完整。44 §19.2 的「zone ≠ market」黃色橫幅就是這一族。**必須帶動作連結**；可 dismiss |
+| **`--warning`（橘）** | `--sem-warning-surface` | `var(--hairline) --sem-warning-border` | `--sem-warning-icon` | ⚠ | **部分完成或受阻**——事情做到一半卡住了（部分出貨失敗、部分退款待處理）。**必須帶動作**；可 dismiss |
+| `--critical` | `--sem-critical-surface` | `var(--hairline) --sem-critical-border` | `--sem-critical-icon` | ⚠ | **阻擋性錯誤**。**必須帶動作**（重試／回上頁，23 §4.7）；**不可 dismiss**（錯誤沒解決不能被關掉） |
+
+**caution vs warning 的判準（別再混用）**：**還沒開始做 → caution（黃）｜做到一半卡住 → warning（橘）｜完全失敗 → critical（紅）**。這與 §11.2 的 badge pip 三形是同一套語意軸（○ ／ ⊘ ／ ●）。
 
 **dismiss 的持久化**：關閉後寫 localStorage `dismissed:{bannerKey}:{version}`。`version` 讓我們能在文案更新後重新顯示。**不要**存伺服器（除非是帳號級公告）。
 
@@ -2904,7 +3532,7 @@ cl-banner[role]        --r-300; padding: var(--sp-300) var(--sp-400); gap: var(-
 ### 22.1 解剖
 
 ```
-cl-banner2                --r-300; overflow: clip; --bw-100 solid {語氣}-border
+cl-banner2                --r-300; overflow: clip; border: var(--hairline) solid {語氣}-border
 ├─ cl-banner2__head       深色語氣條
 │   ├─ icon 16×16
 │   └─ cl-banner2__title  --t-sm weight 500
@@ -2915,8 +3543,14 @@ cl-banner2                --r-300; overflow: clip; --bw-100 solid {語氣}-borde
 
 | 層 | 底 | 字 | 內距 | 圓角 |
 |---|---|---|---|---|
-| head | 語氣色的**深階**（`--warning-bg` 再深一階：`color-mix(in srgb, var(--warning) 22%, #fff)`） | `--warning`（保持 ≥4.5:1） | `var(--sp-200) var(--sp-400)` | `var(--r-300) var(--r-300) 0 0` |
+| head | 語氣色的 **`surface-active` 階**（47 §H2-1 已給出這一階：surface base −4~7 明度），例：`var(--sem-caution-surface-active)` | 同族 `text` 層（`--sem-caution-text`，已驗 ≥4.5:1） | `var(--sp-200) var(--sp-400)` | `var(--r-300) var(--r-300) 0 0` |
 | body | `--surface` | `--text` | `var(--sp-300) var(--sp-400)` | `0 0 var(--r-300) var(--r-300)` |
+
+<!-- 依 47 §H2-1 實測修正 head 一列，原文：「| head | 語氣色的**深階**（`--warning-bg` 再深一階：`color-mix(in srgb, var(--warning) 22%, #fff)`） | `--warning`（保持 ≥4.5:1） | … |」
+     原文用 `color-mix(… 22% …)` 現算一個「深階」，但 47 §H2-1 已經量出語意色本來就有 base/hover/**active** 三態，
+     active 正是「surface 再深 4~7 明度」——直接用 `--sem-{族}-surface-active`，不需要自己 mix。
+     這也順帶解掉 §22.7「對比度」那條的顧慮（color-mix 結果要另外實測），因為 active 階是已驗過的靜態值。
+     🔴 任何人翻舊版都不要改回去：不要再用 color-mix 現算語氣色的深階。 -->
 
 **單邊圓角的來源**：47 §2 量到的成對用法 `12px 12px 0 0` / `0 0 12px 12px`。這裡與 §13.2 的堆疊卡片是**同一條規則的兩個應用**。
 
@@ -2942,7 +3576,7 @@ cl-banner2                --r-300; overflow: clip; --bw-100 solid {語氣}-borde
 | **focus-visible** | 內部元素出環 |
 | **disabled** | N/A |
 | **loading** | 動作鈕 loading |
-| **error** | 語氣改 `--critical`（head 用 `color-mix(… var(--critical) 22% …)`） |
+| **error** | 語氣改 `--critical`（head 用 `var(--sem-critical-surface-active)`） |
 | **selected** | N/A |
 | **read-only** | N/A |
 | **collapsed**（可選） | head 保留、body 收合（**M4**）；head 右端加 `⌄`。用於使用者已知情但問題未解決時（**不提供完全關閉**，只提供收合） |
@@ -2980,7 +3614,7 @@ cl-banner2                --r-300; overflow: clip; --bw-100 solid {語氣}-borde
 | **零筆** | 不渲染 |
 | **慢網路** | 狀態未知前**不渲染**（不要先渲染 skeleton banner，會嚇到使用者） |
 | **與頁面 sticky 元素疊放** | 雙層 banner **不 sticky**，跟著頁面捲走；sticky 的是 listbar |
-| **對比度** | head 的深色底 ＋ 語氣色文字必須實測 ≥4.5:1（23 §4.8）。`color-mix` 的結果要在 tokens.css 落成靜態值並實測，不要相信估算 |
+| **對比度** | head 的深色底 ＋ 語氣色文字必須實測 ≥4.5:1（23 §4.8）。**直接引用 `--sem-{族}-surface-active` ＋ `--sem-{族}-text`**，這兩階在 §00.7 產生時就已驗過對比；不要用 `color-mix` 現算後相信估算 |
 
 ### 22.8 實作備註
 
@@ -3037,7 +3671,7 @@ button.cl-airow          （整列可點；混在 tbody 之後或列表末尾）
 | 高 | `min-height: var(--ctl-32)`（與資料列同高，才「混得進去」） |
 | 內距 | `var(--sp-200) var(--sp-300)`（與表格儲存格同） |
 | 底 | `--ai-bg` |
-| 上緣線 | `--bw-100 solid var(--ai-border)` |
+| 上緣線 | `var(--hairline) solid var(--ai-border)` |
 | 字級／色 | `--t-sm` / `--ai` |
 | gap | `--sp-200` |
 
@@ -3418,7 +4052,7 @@ cl-savebar             取代 cl-listbar 的位置；同高 --ctl-36；sticky to
 | **default（非 dirty）** | **不存在**（listbar 正常顯示） |
 | **hover** | 僅按鈕（深底上的 secondary：`background: rgba(255,255,255,.14)`；hover `.24`） |
 | **active** | 按鈕沿用 §1 |
-| **focus-visible** | 按鈕出環，**環色用 `--text-inverse`**（深底上 `--focus` 對比不足） |
+| **focus-visible** | 按鈕出環，**環色用 `--focus-inverse`（`#4b92e5`）**（47 §H2-3′ 的深底反轉環；`--focus` 在深底上對比不足，白色 `--text-inverse` 又會與白字混淆） |
 | **disabled** | 「儲存」在**驗證未通過**時 disabled ＋ tooltip 說明；「捨棄」永不 disabled |
 | **loading（儲存中）** | 「儲存」進 loading；「捨棄」disabled；savebar 本身保持；`aria-busy="true"` |
 | **error（儲存失敗）** | savebar 保持；文字改「儲存失敗」＋ `--critical` icon；**同時**在內容區頂部插 critical inline banner 列出錯誤；「儲存」回到可點狀態 |
@@ -3475,7 +4109,7 @@ cl-savebar             取代 cl-listbar 的位置；同高 --ctl-36；sticky to
 | **極多變更**（>50 欄位） | 深比對用結構化 diff（不要每次 keystroke 全量 `JSON.stringify` 比對，會掉幀）；用 `requestIdleCallback` 或 200ms debounce |
 | **慢網路** | 儲存 loading；>8s 出 inline 提示「儲存時間較長，請勿重新整理」 |
 | **並發編輯**（他人同時改） | 儲存回 409 → critical banner「此資料已被 {who} 更新」＋ 兩顆按鈕「檢視差異」「覆寫」 |
-| **與 sticky 表頭並存** | savebar `--z-sticky`(3)；表頭也是 3 → savebar 在 DOM 中更前，自然壓住。若不夠，savebar 用 `--z-bulkbar`(5) |
+| **與 sticky 表頭並存** | savebar `--z-sticky`(**100**)；表頭也是 100 → savebar 在 DOM 中更前，自然壓住（47 §G：同層靠 DOM 序決勝，不靠加數字）。若真的不夠，savebar 用 `--z-bulkbar`(**510**) |
 | **與 bulkbar 同時成立** | **不可能同時** —— 有選取時不該能編輯表單。若真的發生，savebar 優先，清空選取 |
 
 ### 26.8 實作備註
@@ -3502,7 +4136,7 @@ cl-savebar             取代 cl-listbar 的位置；同高 --ctl-36；sticky to
 - ❌ dirty 判定用「有沒有觸發過 input 事件」→ 改了又改回來仍然 dirty，違反 44 §18.2 的「未變更即 disabled」。
 - ❌ savebar 與 listbar 高度不同 → 切換時內容上下跳。
 - ❌ `beforeunload` 永遠綁著 → 使用者每次離開都被警告。
-- ❌ 深底上的焦點環用 `--focus`。
+- ❌ 深底上的焦點環用 `--focus`（對比不足）或 `--text-inverse`（與白字混淆）→ 一律 `--focus-inverse`（47 §H2-3′）。
 
 ---
 
@@ -3604,7 +4238,7 @@ cl-savefoot          display:flex; justify-content:flex-end; gap: var(--sp-200)
 cl-editorbar          height: var(--h-topbar); background: --surface-inverse
 ├─ cl-editorbar__left
 │   ├─ button 離開編輯器  --ctl-36 icon，aria-label「離開編輯器」
-│   ├─ cl-editorbar__sep  1px 直線，--sp-400 高，rgba(255,255,255,.2)
+│   ├─ cl-editorbar__sep  var(--bw-100) 直線（刻意可見的造型線，不套髮絲線），--sp-400 高，rgba(255,255,255,.2)
 │   └─ button 商店        --ctl-36 icon
 ├─ cl-editorbar__title    （兩行，可點）
 │   ├─ button.cl-editorbar__page   第一行：目前頁名 --t-sm ＋ ⌄
@@ -3629,10 +4263,10 @@ cl-editorbar          height: var(--h-topbar); background: --surface-inverse
 
 | 態 | 變什麼 → 變成什麼 |
 |---|---|
-| **default（非 dirty）** | **disabled**（44 §21.1 實測）；`opacity: var(--disabled-opacity)` |
+| **default（非 dirty）** | **disabled**（44 §21.1 實測）；`color: var(--text-disabled)`（47 §E，**不降 opacity**） |
 | **hover** | `background: color-mix(in srgb, var(--text-inverse) 92%, var(--surface-inverse))` |
 | **active** | 再深一階 |
-| **focus-visible** | outline `--text-inverse` 2px offset 1px |
+| **focus-visible** | outline `var(--focus-inverse)`（`#4b92e5`，47 §H2-3′）`var(--focus-ring-w)`，offset `var(--focus-ring-offset)` |
 | **disabled** | 見 default；`aria-disabled` ＋ 說明「尚未有變更」 |
 | **loading** | spinner（深色，因為底是白的）；label 保留佔位 |
 | **error** | 儲存失敗 → 頂欄下方插一條 critical inline banner（**橫跨編輯器全寬**）；「儲存」回可點 |
@@ -3859,14 +4493,14 @@ cl-pagehead                     flex; align-items:center; gap: var(--sp-300)
 ```
 nav.cl-pagination        display:flex; justify-content:center; align-items:center
                          gap: var(--sp-100); padding: var(--sp-300)
-├─ button.cl-pagination__prev   --ctl-28 正方；--r-200；--bw-100 --border
+├─ button.cl-pagination__prev   --ctl-28 正方；--r-200；border: var(--hairline) solid var(--border)
 ├─ cl-pagination__range          --t-xs; --text-2; tabular-nums；「1-50」或「1-50 / 共 1,284」
 └─ button.cl-pagination__next   同 prev
 ```
 
 | 屬性 | 值 |
 |---|---|
-| 按鈕 | `--ctl-28` 正方；`--r-200`；`--bw-100 solid var(--border)`；底 `--surface` |
+| 按鈕 | `--ctl-28` 正方；`--r-200`；`var(--hairline) solid var(--border)`；底 `--surface` |
 | 範圍文字 | `--t-xs`；`--text-2`；`font-variant-numeric: tabular-nums` |
 | 對齊 | 置中（44 兩處實測皆置中） |
 | 位置 | 卡片內、表格下方；**在卡片的圓角內**（不要溢出） |
@@ -3881,7 +4515,7 @@ nav.cl-pagination        display:flex; justify-content:center; align-items:cente
 | **hover** | `background: --surface-hover`；`color: --text` |
 | **active** | `background: --surface-active` |
 | **focus-visible** | outline 2px offset 1px |
-| **disabled** | 首頁時 `prev` disabled、末頁時 `next` disabled：`opacity: var(--disabled-opacity)`；`cursor: default`；**保留顯示不隱藏**（44 §19.4 實測） |
+| **disabled** | 首頁時 `prev` disabled、末頁時 `next` disabled：`color: var(--text-disabled)`（47 §E，**不降 opacity**）；`cursor: default`；**保留顯示不隱藏**（44 §19.4 實測） |
 | **loading** | 兩顆都 disabled；範圍文字換 skeleton 條；**表格區換 skeleton 不換空白** |
 | **error** | 換頁失敗 → 表格區出 critical banner ＋「重試」；分頁器回復到前一狀態 |
 | **selected** | N/A（無頁碼） |
@@ -3998,7 +4632,7 @@ span.cl-counter          --t-xs; --text-3; tabular-nums; white-space: nowrap
 | **hover** | N/A |
 | **active** | N/A |
 | **focus-visible**（關聯欄位聚焦時） | `color: --text-2`（提一階，暗示「正在數」） |
-| **disabled**（關聯欄位 disabled） | **仍顯示**（44 §19.6 實測 disabled 的 textarea 下方計數器照樣在）；`color: --text-3` ＋ `opacity: var(--disabled-opacity)` |
+| **disabled**（關聯欄位 disabled） | **仍顯示**（44 §19.6 實測 disabled 的 textarea 下方計數器照樣在）；`color: var(--text-disabled)`（47 §E，**不降 opacity**） |
 | **loading** | N/A |
 | **warning**（80% < n ≤ 100%） | `color: --warning`；`font-weight: 500` |
 | **error**（n > max） | `color: --critical`；文字改 `已超出 {n-max} 個字元`；同時關聯欄位進 error 態、送出鈕 disabled |
@@ -4100,7 +4734,7 @@ ul.cl-draglist
 | 屬性 | 值 |
 |---|---|
 | 列高 | `--ctl-36`（比表格列高，因為要放把手與三顆動作鈕） |
-| 分隔線 | `--bw-100 var(--border-2)` |
+| 分隔線 | `var(--hairline) solid var(--border-2)` |
 | 把手 | `--text-3`；hover `--text-2`；`cursor: grab`／拖曳中 `grabbing` |
 | 巢狀縮排（圖層樹） | 每層 `--sp-600`(24)；最多 **3 層** |
 | 動作鈕 | 桌機：hover 或 focus 該列時才顯示（`opacity 0→1`）；**≤767 恆顯示**（沒有 hover） |
@@ -4212,27 +4846,27 @@ ul.cl-draglist
 
 | § | 元件 | class | 主要來源 |
 |---|---|---|---|
-| 1 | 按鈕（7 變體＋split） | `cl-btn` / `cl-split` | 47 §3/§4/§5、44 §2.2/§18.1/§19.3 |
+| 1 | 按鈕（7 變體＋split） | `cl-btn` / `cl-split` | **47 §D（填色分層級）／§6.5（split 550＋雙層陰影）／§E（disabled）**、47 §3/§4/§5、44 §2.2/§18.1/§19.3 |
 | 2 | 輸入框 | `cl-input` / `cl-field` | 47 §4/§5 M3、44 §19.6/§22.2 |
 | 3 | Select | `cl-select` | 44 §18.2/§22.2/§22.5 |
-| 4 | Checkbox | `cl-check` | 47 §4/#86、44 §3.1/§19.8 |
-| 5 | Radio | `cl-radio` / `cl-radio-card` | 44 §18.2/§22.2/§22.4/§22.5 |
+| 4 | Checkbox | `cl-check` | **47 §H2-4（inset box-shadow 當框）／§C（髮絲線）**、47 §4/#86、44 §3.1/§19.8 |
+| 5 | Radio | `cl-radio` / `cl-radio-card` | **47 §H2-4（16×16、inset 框、實心填滿＋白內點）**、44 §18.2/§22.2/§22.4/§22.5 |
 | 6 | Toggle | `cl-toggle` / `cl-swrow` | 44 §18.5/§18.7/§19.6 |
 | 7 | Textarea | `cl-textarea` | 44 §19.6 |
 | 8 | 搜尋欄 | `cl-search` | 47 §4、44 §2.1/§2.2/§19.8 |
 | 9 | Filter chip | `cl-fchip` | 44 §19.8/§2.1、47 §2 |
 | 10 | Saved-view tab ＋ `+` | `cl-views` | 47 §4、44 §19.9/§18.4/§19.4 |
-| 11 | Badge / Pill | `cl-badge` | 44 §2.2/§3.1/§19.2/§19.4 |
-| 12 | 表格 | `cl-table` | 47 §4/§1、44 §2.1/§3.1/§19.4/§19.5/§19.8 |
+| 11 | Badge ／ Tag | `cl-badge` / `cl-tag` | **47 §D（● ○ ⊘ 三形、badge≠tag、圓角 8 vs pill、`+N` 收合）／§B（高 20）／§H2-1（5 族）**、44 §3.1/§19.2/§19.4 |
+| 12 | 表格 | `cl-table` | **47 §B（列高 32／儲存格內距 6-6／分隔線 0.667px）／§C（髮絲線）／§G（sticky z 100）**、47 §4/§1、44 §2.1/§3.1/§19.4/§19.5/§19.8 |
 | 13 | 卡片（含堆疊群組） | `cl-card` / `cl-cardgroup` | 47 §2/§1/§3、44 §18.2/§19.3 |
 | 14 | CollapsedEditCard | `cl-cec` | 44 §22.2、47 M4 |
 | 15 | Accordion | `cl-acc` | 44 §19.1/§18.7/§19.2、47 M4 |
-| 16 | Modal（含 shake） | `cl-modal` | 44 §18.2、47 §5/#88 |
-| 17 | Popover / 選單 | `cl-pop` | 44 §19.8/§2.2/§21.4/§22.4、47 M5 |
+| 16 | Modal（含 shake） | `cl-modal` | **47 §H2-2（dialog 519／scrim 518 @ rgba(0,0,0,.5)／modal 內按鈕全高 28）**、44 §18.2、47 §5/#88 |
+| 17 | Popover / 選單 | `cl-pop` | **47 §H2-2（popover 520 > dialog 519）**、44 §19.8/§2.2/§21.4/§22.4、47 M5 |
 | 18 | Bottom sheet | `cl-sheet` | 44 §21.2、47 M6 |
-| 19 | Drawer | `cl-drawer` | 44 §0/§9、47 §0/M6/M7 |
+| 19 | Drawer | `cl-drawer` | **47 §B（側欄 240／一級項 28-r8／子項 218×28／分組鈕 76×24）／§6.5（計數為右對齊數字非 badge）**、44 §0/§9、47 §0/M6/M7 |
 | 20 | Toast | `cl-toast` | 23 §3、47 M6 |
-| 21 | Inline banner | `cl-banner` | 44 §18.2/§19.2/§19.6 |
+| 21 | Inline banner | `cl-banner` | **47 §H2-1（5 族語氣，caution≠warning）**、44 §18.2/§19.2/§19.6 |
 | 22 | 雙層 banner | `cl-banner2` | 44 §19.9、47 §2 |
 | 23 | AI 建議 inline 列 | `cl-airow` | 44 §22.6/§7 |
 | 24 | 空態（兩種） | `cl-empty` | 44 §22.1/§22.3/§6/§22.5 |
@@ -4258,7 +4892,13 @@ ul.cl-draglist
 
 ## 附錄 C — Code review 檢查清單（每個 PR 都跑）
 
-- [ ] CSS 內無裸數值（`/:\s*-?\d+(px|rem|ms|s)\b/` 掃 diff，例外只有 `0`／`100%`／`1px` border）
+- [ ] CSS 內無裸數值（`/:\s*-?\d+(px|rem|ms|s)\b/` 掃 diff，例外只有 `0`／`100%`／media query 條件式的 `em` 常數／`font-size:16px`(iOS)／SVG 的 width·height）
+- [ ] **分隔線、卡片框、控件框一律 `var(--hairline)`，不是 `1px`**（47 §C：1 個裝置像素）
+- [ ] **無 `opacity: var(--disabled-opacity)`**——disabled 一律 `color: var(--text-disabled)`（47 §E）
+- [ ] **z-index 只出現 1 / 100 / 400 / 510–520**，浮層不超過 520（47 §G）
+- [ ] **media query 一律 `em`**，`max` 配對為 `min − 0.0025em`（47 §F）
+- [ ] **badge 有狀態 pip（● ○ ⊘）且圓角是 `--r-200`**；tag 才是 `--r-pill`（47 §D）
+- [ ] 字體載入 **variable 版本**（450／550 兩階需要可變軸，§00.11）
 - [ ] 無 `transition: all`
 - [ ] 所有 transition 都對應到 M1–M7 其中一條（覆寫要註明理由）
 - [ ] 九態表逐項對照，不適用的要在 storybook 標 N/A
@@ -4272,17 +4912,44 @@ ul.cl-draglist
 - [ ] 金額用 integer cents ＋ `.cl-money`
 - [ ] 無任何第三方 class 名／選擇器／CSS 原始碼
 
-## 附錄 D — 本文件的已知缺口（需 47 §7 桌機補測後回填）
+## 附錄 D — 本文件的已知缺口
+
+> **2026-08-12 更新**：原表 6 條中的 **D1／D5 已由 47 第三輪（§B）關閉**，其餘仍開放；並新增三條由 47 第四／五輪帶出的待裁定項。
+
+### D-a 已關閉（47 第三輪 §B 補測完成）
+
+| 原 # | 原缺口 | 47 §B 給出的真值 |
+|---|---|---|
+| ~~D1~~ | 桌機控件高度階未量測 | **與窄版同階**：頂欄 56／列高 32／表頭鈕 28／檢視 tab 24／頂欄控件 36。四階階梯桌機共用 |
+| ~~D5~~ | 表格在寬視口下的欄位可見數與 sticky 行為 | 桌機 **10 欄**（窄版 6 欄）→ 前 6 欄為核心、後 4 欄 ≥桌機才出現；表格有 **min-width**，即使 3440px 仍有水平捲軸（47 §6.5） |
+
+### D-b 仍開放（需 47 §7 補測）
 
 | # | 缺口 | 影響的節 |
 |---|---|---|
-| D1 | 桌機控件高度階未量測（本文件沿用窄版的 24/28/32/36） | §1、§2、§8、§10、§12 |
 | D2 | `--t-xl` 與 `--t-2xl` 撞值；#83 的字重降階起點未定 | §00.11、§13、§24、§29 |
-| D3 | Modal 在桌機的最大寬度階未量測 | §16 |
+| D3 | Modal 在桌機的最大寬度階未量測（47 §H2-2 只確認 modal 內按鈕**全高 28**，未給 modal 寬） | §16 |
 | D4 | 設定頁雙欄寬、編輯器三欄寬未量測 | §28、§A.5 |
-| D5 | 表格在寬視口下的欄位可見數與 sticky 行為未量測 | §12 |
-| D6 | 常駐側欄的展開態、群組摺疊、hover/active 樣式未量測 | §19 |
+| D6 | 常駐側欄的**展開態、群組摺疊、hover/active 樣式**未量測（§B 只給了 idle／active 的尺寸與圓角） | §19 |
+| D7 | `prefers-reduced-motion` 的實站對應規則；shake 的振幅與次數；skeleton shimmer 參數（47 §7 第 13 項） | §A.3、§16.3、§12.10 |
+
+### D-c 需使用者裁定（47 量到了，但明確把選擇權留給我們）
+
+| # | 事項 | 47 的原話 | 本文件的暫定處置 |
+|---|---|---|---|
+| **J1** | **radio 已選態的填色** | 47 §H2-4：「已選狀態不是用品牌色，是用主要文字色填滿 + 白色內點——克制、與整體中性調一致。我們原型用品牌青色填滿，**與實站的克制感不同，需要一併決定要不要跟**。」 | **維持 `--brand`**（§5.1）。要不要改成中性深灰是品牌決定，不是保真度問題 |
+| **J2** | **focus 環色的採用範圍** | 47 §I：admin／platform 採用量測值 `#005bd3`；**storefront 維持自有品牌色**（藍環與暖色調衝突；WCAG 只管對比不管色相） | 已照 47 §I 落地（§00.5）。三端收斂成同一顆 token 名，換色只改一處 |
+| **J3** | **表格儲存格水平內距 12 → 6** | 47 §B：「儲存格內距 **6px 6px**（列高 32 = 20 內容 + 6×2）」 | 已依實測改為 6/6（§12.1）。**這會讓表格明顯變密**——若視覺評審後決定放寬，要以「我方刻意偏離實測」的形式明寫，不要默默改回 12 |
+
 
 ---
 
 **文件結束。** 本文件所有數值均引用 47 號 token 名或 §00 新增 token；所有元件均標明 44／47 出處；全文不含任何第三方 class 名、選擇器或 CSS 原始碼。
+
+---
+
+## 給下一個維護者的三句話
+
+1. **本檔於 2026-08-12 逐節對齊 47 號**（完整清單見 §0.12）。修正方向是「原型對、契約錯」——與 49 號那次相反。
+2. **看到 `<!-- 依 47 §X 實測修正，原文：… -->` 就不要回退**，那些註釋裡的「原文」是**已作廢**的舊值，留著只為了讓你認得出回退。
+3. **要新增 token 前先確認 47 沒量過**。47 的量測散在 §1–§6.5（第一／二輪）、**§A–§I（第三輪起，不在 §8 修正清單裡）**——本檔上一次失真就是只讀了 §8。

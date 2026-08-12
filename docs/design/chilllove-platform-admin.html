@@ -193,6 +193,20 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-x
 .muted{color:var(--text-3)}
 .sub{font-size:var(--t-xs);line-height:var(--lh-xs);color:var(--text-2)}
 
+/* ══════════ 53號 P0-15：螢幕閱讀器專用文字 ＋ skip link ══════════════════
+   .vh 與 storefront（S:118）、admin 逐字相同、class 名也相同，三份原型保持一致。
+   clip:rect() 是刻意的舊寫法——display:none／visibility:hidden 連 SR 都讀不到，
+   而 .vh 要的正好相反：只給 SR 讀、不佔版面。
+   ════════════════════════════════════════════════════════════════════════ */
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* skip link：平台後台側欄常駐 15 個導覽項，沒有它鍵盤使用者每頁都要 Tab 過整條側欄。
+   收起位置用 calc(--topbar-h * -1)＝既有量測值，不另造數字；.topbar 是 fixed，故這裡也用 fixed。 */
+.skip{position:fixed;left:var(--sp-200);top:calc(var(--topbar-h) * -1);z-index:var(--z-popover);
+  background:var(--surface-inverse);color:var(--text-inverse);padding:var(--sp-300) var(--sp-400);
+  border-radius:var(--r-200);font-size:var(--t-xs);text-decoration:none;
+  --focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse)}
+.skip:focus{top:var(--sp-200)}
+
 /* ===== 深色頂列＝平台模式 ===== */
 .topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar-h);background:var(--surface-inverse);color:var(--text-inverse);display:flex;align-items:center;gap:var(--sp-300);padding:0 var(--sp-400);z-index:var(--z-topbar)}
 .logo{display:flex;align-items:center;gap:var(--sp-200);font-weight:700;font-size:var(--t-md);color:var(--white);white-space:nowrap}
@@ -633,6 +647,11 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 </style>
 </head>
 <body>
+<!-- 53號 P0-15：skip link 必須是 body 的第一個可聚焦元素，第一個 Tab 就要拿到它 -->
+<a class="skip" href="#main">跳至主要內容</a>
+<!-- 53號 P0-15：全站唯一的 aria-live 播報區，由 announce() 寫入。
+     與 #toast 分開：toast 是給看得見畫面的人的視覺回饋、會自動消失；這一區只給 SR、不佔版面。 -->
+<div class="vh" id="srLive" role="status" aria-live="polite" aria-atomic="true"></div>
 <header class="topbar" data-doc="topbar">
   <button class="hamburger" id="hamburger" aria-label="開啟導航" aria-expanded="false" aria-controls="sidebar" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="mark">CL</span><span>CHILL LOVE</span> <span class="pf-tag">平台總控</span><span class="env-tag">demo</span></div>
@@ -683,7 +702,8 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
   </div>
 </nav>
 
-<main class="main">
+<!-- tabindex="-1"：skip link 與焦點還原的落點錨；沒有它 .focus() 對 <main> 是 no-op -->
+<main class="main" id="main" tabindex="-1">
 <!-- ============ 總覽 ============ -->
 <section class="view on" id="v-overview">
   <div class="page-head"><h1>總覽</h1><span class="sub">全平台・過去 30 天｜台北時間 08-11 14:32</span>
@@ -1414,6 +1434,113 @@ const APIV=[["2026-10（unstable）","開發中","—"],["2026-07（stable，目
 
 let curShop=null,shopFilter="all",curTab="ov";
 
+/* ══════════════════════════════════════════════════════════════════════════
+   浮層焦點管理：focus trap ＋ 焦點還原 ＋ 背景 inert（53號 P0-14 / X-02）
+   ──────────────────────────────────────────────────────────────────────────
+   `role="dialog" aria-modal="true"` 只是宣告，瀏覽器不會據此攔 Tab；53 號實跑 admin
+   三個浮層 Tab 全部逃到背景，平台後台的 8 個 modal 是同一個寫法、同一個病。
+   與 admin 那份同一支工具、同一組命名，兩檔行為一致：
+   ① 完整可聚焦選擇器（不是只查 button），排除 disabled／aria-disabled／aria-hidden／不可見；
+   ② 背景 inert，但 inert 只是加強——Tab 循環照樣跑，舊瀏覽器沒有 inert 也關得住；
+   ③ 關閉時焦點回到開啟它的那顆控件，元素不在了就退回 <main> 錨點，絕不掉回 <body>。
+   多層浮層：FT_STACK 後進先出，Tab 只約束最上層，Esc 交給既有的分層鏈。
+   ══════════════════════════════════════════════════════════════════════════ */
+const FT_STACK=[];
+const FT_SEL='a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])';
+/* 永遠不 inert：live region 與註釋泡泡（inert 會把節點移出無障礙樹並擋掉點擊＝播報失效／
+   註釋泡泡點不動；docPop 是 z-popover(520) > z-dialog(519)，modal 開著時仍疊在最上面顯示）。 */
+const FT_KEEP_IDS=["srLive","toast","docPop"];
+const ftKeeps=()=>FT_KEEP_IDS.map(id=>document.getElementById(id)).filter(Boolean);
+/* position:fixed 依規範 offsetParent 恆為 null，只看 offsetParent 會誤判為隱藏 */
+function ftVisible(x){
+  if(x.offsetParent!==null)return true;
+  return getComputedStyle(x).position==="fixed"&&x.getClientRects().length>0;
+}
+function ftFocusable(t){
+  const out=[];
+  t.roots.forEach(r=>{
+    if(!r)return;
+    r.querySelectorAll(FT_SEL).forEach(x=>{
+      if(x.disabled||x.getAttribute("aria-disabled")==="true")return;
+      if(x.getAttribute("aria-hidden")==="true"||x.closest('[aria-hidden="true"]'))return;
+      if(x.closest("[inert]"))return;
+      if(!ftVisible(x))return;
+      out.push(x);
+    });
+  });
+  return out.sort((a,b)=>(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING)?-1:1);
+}
+/* 保留節點的祖先鏈往下鑽、只 inert 旁支（抽屜的 nav-veil、頂欄內個別控件都靠這條） */
+function ftInert(node,keeps){
+  [...node.children].forEach(c=>{
+    if(c.tagName==="SCRIPT"||c.tagName==="STYLE")return;
+    if(keeps.some(k=>k===c||k.contains(c)))return;
+    if(keeps.some(k=>c.contains(k))){ftInert(c,keeps);return;}
+    c.setAttribute("inert","");c.setAttribute("data-ft-inert","");
+  });
+}
+function ftSync(){
+  document.querySelectorAll("[data-ft-inert]").forEach(x=>{x.removeAttribute("inert");x.removeAttribute("data-ft-inert");});
+  const t=FT_STACK[FT_STACK.length-1];
+  if(t)ftInert(document.body,t.roots.concat(ftKeeps()));
+}
+function ftAnchor(){
+  const t=FT_STACK[FT_STACK.length-1];
+  if(t){const f=ftFocusable(t);if(f.length)return f[0];}
+  return document.getElementById("main")||document.querySelector(".topbar .searchbox");
+}
+function ftRestoreFocus(prev){
+  if(prev&&prev!==document.body&&document.contains(prev)&&ftVisible(prev)){
+    try{prev.focus();}catch(e){}
+    if(document.activeElement===prev)return;
+  }
+  const a=ftAnchor();if(a)a.focus();
+}
+function withFocusTrap(el,opts){
+  if(!el)return null;
+  opts=opts||{};
+  if(FT_STACK.some(t=>t.el===el))return null;
+  const roots=[el].concat((opts.also||[]).map(s=>typeof s==="string"?document.querySelector(s):s).filter(Boolean));
+  const t={el,roots,prev:opts.returnTo||document.activeElement,restore:opts.restore!==false};
+  FT_STACK.push(t);
+  ftSync();
+  if(opts.focus!==false){
+    const f=(opts.focus&&opts.focus.focus)?opts.focus:ftFocusable(t)[0];
+    if(f)f.focus();
+  }
+  return t;
+}
+function releaseFocusTrap(el,opt){
+  const i=FT_STACK.findIndex(t=>t.el===el);
+  if(i<0)return;
+  const t=FT_STACK.splice(i,1)[0];
+  ftSync();
+  if(t.restore&&!(opt&&opt.restore===false))ftRestoreFocus(t.prev);
+}
+document.addEventListener("keydown",e=>{         /* 浮層開啟時 Tab 焦點循環（inert 的退路）*/
+  if(e.key!=="Tab"||!FT_STACK.length)return;
+  const t=FT_STACK[FT_STACK.length-1];
+  const f=ftFocusable(t);
+  if(!f.length){e.preventDefault();return;}
+  const first=f[0],last=f[f.length-1];
+  if(!t.roots.some(r=>r.contains(document.activeElement))){e.preventDefault();(e.shiftKey?last:first).focus();}
+  else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+/* 53號 P0-15：aria-live 播報。先清空再寫入，否則連續兩次相同字串 SR 不會重讀。 */
+function announce(msg){
+  const el=document.getElementById("srLive");
+  if(!el)return;
+  el.textContent="";
+  setTimeout(()=>{el.textContent=msg;},50);
+}
+/* 8 個 modal 的統一開關口：原本各自 classList.add("show")，trap 會漏掛 */
+function openOv(id,focusEl){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.add("show");
+  withFocusTrap(el,focusEl?{focus:focusEl}:{});
+}
+
 /* ===== 導航 ===== */
 function go(v){
   document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));
@@ -1421,20 +1548,29 @@ function go(v){
   document.querySelectorAll(".nav-item").forEach(x=>x.classList.remove("on"));
   const nav=document.getElementById("nav-"+(v==="shop-detail"?"shops":v)); if(nav)nav.classList.add("on");
   if(v==="shops")renderShops();
-  toggleNav(false);                       // 手機：選完自動收抽屜
+  toggleNav(false,true);                  // 手機：選完自動收抽屜（焦點留在剛點的導覽項，不搶回漢堡鈕）
   window.scrollTo(0,0);
   requestAnimationFrame(()=>{enhanceTables();refreshScrollHints();});
 }
 
 /* ===== 抽屜導航（≤1023）＝ 響應式 ===== */
-function toggleNav(force){
-  const open=force===undefined?!document.body.classList.contains("nav-open"):force;
+/* noFocus=true：路由切換／視窗變寬造成的收起，焦點應該留在使用者剛操作的地方，不要搶回漢堡鈕 */
+function toggleNav(force,noFocus){
+  const was=document.body.classList.contains("nav-open");
+  const open=force===undefined?!was:force;
   document.body.classList.toggle("nav-open",open);
   const h=document.getElementById("hamburger");
   if(h)h.setAttribute("aria-expanded",String(open));
+  /* 53號 P0-14：抽屜也走同一支 trap。#navVeil 與 #hamburger 一起放進 roots——遮罩沒有可聚焦元素
+     但 inert 會擋掉點擊（點遮罩收抽屜會失效）；漢堡鈕是抽屜自己的開關，而 .nav-veil 從 --topbar-h
+     才開始蓋、頂欄仍然看得見，把它 inert 等於畫面上有一顆按得到卻沒反應的鈕。
+     只在 ≤1023 抽屜態掛 trap；桌機側欄是常駐導航，不該被關進去。 */
+  const sb=document.getElementById("sidebar");
+  if(open&&!was&&window.innerWidth<=1023)withFocusTrap(sb,{focus:false,also:["#navVeil","#hamburger"]});
+  if(!open&&was)releaseFocusTrap(sb,{restore:!noFocus});
   if(open){const f=document.querySelector(".sidebar .nav-item");if(f)f.focus();}
 }
-window.addEventListener("resize",()=>{if(window.innerWidth>1023)toggleNav(false);});
+window.addEventListener("resize",()=>{if(window.innerWidth>1023)toggleNav(false,true);});
 
 /* ===== 表格自適應：自動補 data-label＋包橫捲容器 ===== */
 function enhanceTables(){
@@ -1479,6 +1615,7 @@ function riskBadge(r){const m={Normal:"",Elevated:"warning",Highest:"critical","
 function rateBadge(st){return st==="excessive"?'<span class="badge critical"><span class="pip"></span>Excessive</span>':st==="noncompliant"?'<span class="badge warning"><span class="pip half"></span>Non-compliant</span>':'<span class="badge success"><span class="pip full"></span>正常</span>';}
 
 /* ===== 租戶列表 ===== */
+let shopsRendered=false;          /* 首次渲染不播報（見函式尾端） */
 function renderShops(){
   const q=(document.getElementById("shopSearch").value||"").trim().toLowerCase();
   const rows=SHOPS.filter(s=>shopFilter==="all"||s.st===shopFilter)
@@ -1494,6 +1631,10 @@ function renderShops(){
   document.getElementById("shopEmpty").style.display=rows.length?"none":"block";
   document.getElementById("shopCount").textContent="顯示 "+rows.length+" 家（demo 樣本）・全平台 1,284 家";
   document.getElementById("pageInfo").textContent="1–"+rows.length;
+  /* 53號 P0-15：篩選／搜尋是「畫面默默換一批列」的典型情境——螢幕閱讀器使用者沒有任何回饋。
+     首次渲染（rsInit）不播報，只在使用者真的動了篩選或搜尋時播。 */
+  if(shopsRendered)announce(rows.length?"篩選結果：符合 "+rows.length+" 家租戶。":"篩選結果：沒有符合的租戶。");
+  shopsRendered=true;
 }
 
 /* ===== 租戶詳情 ===== */
@@ -1650,7 +1791,7 @@ function openRestrict(){
     return '<label class="chk"><input type="checkbox" data-flag="'+f[0]+'" '+(on?"checked":"")+' onchange="rsSum()"><span><b>'+f[1]+'</b><span class="cd"> — '+f[2]+'</span></span></label>';
   }).join("");
   document.getElementById("rsReason").value="";document.getElementById("rsNote").value="";
-  rsSum(); document.getElementById("ovRestrict").classList.add("show");
+  rsSum(); openOv("ovRestrict");
 }
 function rsSum(){
   const on=[...document.querySelectorAll("#rsFlags input:checked")].map(i=>FLAGS.find(f=>f[0]===i.dataset.flag)[1]);
@@ -1674,7 +1815,7 @@ function doRestrict(){
     toast("已套用處置："+(keys.length?keys.length+" 項限制":"全部解除")+"（已通知商家、落審計）");
   },450);
 }
-function openAccess(){if(!curShop)return;document.getElementById("acCode").value="";document.getElementById("acReason").value="";document.getElementById("ovAccess").classList.add("show");document.getElementById("acCode").focus();}
+function openAccess(){if(!curShop)return;document.getElementById("acCode").value="";document.getElementById("acReason").value="";openOv("ovAccess",document.getElementById("acCode"));}
 function doAccess(){
   const c=document.getElementById("acCode").value.trim(), r=document.getElementById("acReason").value.trim();
   if(c.length!==4){toast("請輸入商家提供的 4 位數授權碼");return;}
@@ -1682,12 +1823,16 @@ function doAccess(){
   closeOv("ovAccess");
   toast("已送出存取請求給 "+curShop.name+"——商家核准後生效 60 分鐘");
 }
-function openThresholds(){document.getElementById("ovThresholds").classList.add("show");}
-function openActionLadder(){document.getElementById("ovLadder").classList.add("show");}
-function openDunningPolicy(){document.getElementById("ovDunning").classList.add("show");}
-function openMaintenance(){document.getElementById("ovMaint").classList.add("show");}
-function openIncident(){document.getElementById("ovInc").classList.add("show");}
-function closeOv(id){document.getElementById(id).classList.remove("show");}
+function openThresholds(){openOv("ovThresholds");}
+function openActionLadder(){openOv("ovLadder");}
+function openDunningPolicy(){openOv("ovDunning");}
+function openMaintenance(){openOv("ovMaint");}
+function openIncident(){openOv("ovInc");}
+function closeOv(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.remove("show");
+  releaseFocusTrap(el);            /* 53號 P0-14：焦點回到開啟它的那顆鈕，不掉回 <body> */
+}
 function toggleFlag(el){const on=el.classList.toggle("on");el.setAttribute("aria-checked",on);toast("Demo："+el.getAttribute("aria-label")+" → "+(on?"開":"關")+"（僅影響新商店預設，變更落審計）");}
 function showDiff(i){
   const a=AUDIT[i];
@@ -1695,7 +1840,7 @@ function showDiff(i){
   document.getElementById("dfMeta").innerHTML='<dt>時間</dt><dd class="num">2026-08-11 '+a.t+'</dd><dt>人員</dt><dd>'+a.who+'</dd><dt>對象</dt><dd>'+a.obj+'</dd><dt>來源</dt><dd>'+a.src+'</dd><dt>結果</dt><dd>'+a.out+'</dd><dt>IP</dt><dd class="num">'+a.ip+'</dd><dt>request_id</dt><dd><code>req_8f2c'+(4000+i)+'</code></dd>';
   document.getElementById("dfPrev").textContent=JSON.stringify(a.prev,null,2);
   document.getElementById("dfNext").textContent=JSON.stringify(a.next,null,2);
-  document.getElementById("ovDiff").classList.add("show");
+  openOv("ovDiff");
 }
 
 /* ===== 各區渲染 ===== */
@@ -1920,11 +2065,15 @@ function closeDocPop(){document.getElementById("docPop").classList.remove("show"
 document.addEventListener("keydown",e=>{
   if(e.key!=="Escape")return;
   if(document.getElementById("docPop").classList.contains("show")){closeDocPop();return;}
+  /* 53號 P0-14：Esc 只關「最上層」。改用 FT_STACK 的堆疊頂端而不是 DOM 順序的第一個 .overlay.show，
+     否則兩個 modal 疊起來時會關錯一個；並且一律走 closeOv() 才會做焦點還原與解除 inert。 */
+  const top=FT_STACK.length?FT_STACK[FT_STACK.length-1].el:null;
+  if(top&&top.classList.contains("overlay")&&top.classList.contains("show")){closeOv(top.id);return;}
   const ov=[...document.querySelectorAll(".overlay")].find(o=>o.classList.contains("show"));
-  if(ov){ov.classList.remove("show");return;}
+  if(ov){closeOv(ov.id);return;}
   if(document.body.classList.contains("nav-open"))toggleNav(false);
 });
-document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)o.classList.remove("show");}));
+document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)closeOv(o.id);}));
 
 renderAll(); renderShops(); drawChart(); enhanceTables();
 let __rz; window.addEventListener("resize",()=>{clearTimeout(__rz);__rz=setTimeout(()=>{drawChart();refreshScrollHints();},120);});

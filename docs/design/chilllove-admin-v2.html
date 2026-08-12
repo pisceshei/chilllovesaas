@@ -201,6 +201,22 @@ input,textarea,select{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
 svg{flex:none}
 
+/* ══════════ 53號 P0-15：螢幕閱讀器專用文字 ＋ skip link ══════════════════
+   .vh 與 storefront（S:118）逐字相同、class 名也刻意相同，三份原型保持一致。
+   用 clip:rect() 這種舊寫法是刻意的——display:none／visibility:hidden 會連 SR 都讀不到，
+   而 .vh 的用途正好相反：只給 SR 讀、不佔版面。
+   ════════════════════════════════════════════════════════════════════════ */
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* skip link：admin 側欄常駐 20+ 個導覽項目，沒有它，鍵盤使用者每次進頁都要 Tab 過整條側欄。
+   S 用 position:absolute；admin 的 body 是 overflow:hidden 的 app shell，
+   絕對定位會依賴 body 的 overflow 傳播規則，改用 fixed 才穩定浮在頂欄（--z-topbar）之上。
+   收起位置用 calc(--topbar-h * -1)：頂欄高度就是「剛好在畫面外」的既有量測值，不另造數字。 */
+.skip{position:fixed;left:var(--sp-200);top:calc(var(--topbar-h) * -1);z-index:var(--z-drawer);
+  background:var(--surface-inverse);color:var(--text-inverse);padding:var(--sp-300) var(--sp-400);
+  border-radius:var(--r-200);font-size:var(--t-xs);text-decoration:none;
+  --focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse)}
+.skip:focus{top:var(--sp-200)}
+
 /* ══════════ 47 §5 動效原語 M1–M7 —— 全站唯一的 transition 來源 ══════════
    每條規則的選擇器 = 原語 class ＋ 實際套用該原語的元件。
    原語不再是死碼：元件不自帶 transition，一律由此處供給（51 表 4.0 最後一列）。
@@ -978,7 +994,17 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .mi{display:flex;align-items:center;gap:var(--sp-200);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-200);padding:var(--sp-200) var(--sp-200);font-size:var(--t-sm);box-shadow:var(--sh);margin-left:calc(var(--d,0)*var(--sp-600))}
 .mi.drag{opacity:.35}
 .mi.over{border-color:var(--focus);box-shadow:0 0 0 2px rgba(42,120,214,.18)}
-.mi .grip{color:var(--text-3);cursor:grab;flex:none}
+.mi .grip{color:var(--text-3);cursor:grab;flex:none;display:grid;place-items:center;
+  width:var(--h-28);height:var(--h-28);border-radius:var(--r-200)}
+.mi .grip:hover{color:var(--text-2);background:var(--surface-2)}
+/* 53號 P0-16：鍵盤「抓取模式」的視覺態。48 §32.4 明說不能只有 aria-grabbed——
+   看得見畫面的鍵盤使用者也要知道自己正抓著哪一列，所以同時給邊框環、底色與一枚可見標籤。
+   標籤走 ::after 而不是 markup，因為每次移動都會整棵重繪，狀態只存在 class 上比較不會走鐘。 */
+.mi.is-grabbed{border-color:var(--focus);box-shadow:var(--sh-pop);background:var(--surface-selected)}
+.mi.is-grabbed .grip{cursor:grabbing;color:var(--text)}
+.mi.is-grabbed .mi-t b::after{content:'抓取中';margin-left:var(--sp-200);vertical-align:middle;
+  font-size:var(--t-2xs);font-weight:var(--fw-2xs);color:var(--focus);
+  border:var(--hairline) solid var(--focus);border-radius:var(--r-pill);padding:0 var(--sp-150)}
 .mi .mi-t{flex:1;min-width:0;overflow-wrap:anywhere}
 .mi .mi-t span{display:block;font-size:var(--t-2xs);color:var(--text-3)}
 .mi .mi-act{display:flex;gap:var(--sp-050);flex:none}
@@ -1078,6 +1104,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   .set-rowbtn,.rate-row{min-height:var(--touch-min)}
   .set-crumb .cr-back{min-width:var(--touch-min);min-height:var(--touch-min)}
   .fsel,.mi .mi-act button,.media-tile .mt-x{min-width:var(--touch-min)}
+  /* 53號 P0-16：把手升級成真控件後也要吃命中區下限（48 §32.5 ≤767 把手 --hit-min）*/
+  .mi .grip{min-width:var(--touch-min);min-height:var(--touch-min)}
   .tgl{position:relative}
   .tgl::before{content:"";position:absolute;inset:-12px}
   /* 既有元件的命中區補正（僅觸控環境，桌面外觀不受影響）*/
@@ -1462,6 +1490,14 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 </head>
 <body data-palette="#2a78d6">
 
+<!-- 53號 P0-15：skip link 必須是 body 的第一個可聚焦元素，第一個 Tab 就要拿到它 -->
+<a class="skip" href="#main">跳至主要內容</a>
+<!-- 53號 P0-15：全站唯一的 aria-live 播報區，由 announce() 寫入（拖曳排序等純鍵盤操作靠它回報結果）。
+     與 #toast 分開：toast 是給看得見畫面的人的視覺回饋、會自動消失；這一區只給 SR、不佔版面。 -->
+<div class="vh" id="srLive" role="status" aria-live="polite" aria-atomic="true"></div>
+<!-- 53號 P0-16 / 48 §32.4：所有把手共用的操作說明（aria-describedby 指到這裡）-->
+<span class="vh" id="dragHelp">按 Enter 或空白鍵抓取這個項目，再用上下鍵移動、左右鍵調整層級，Enter 放下，Esc 取消並回到原位。</span>
+
 <header class="topbar">
   <button class="hamb" id="hambBtn" aria-label="開啟導航選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-txt">CHILL LOVE</span> <span class="ver">秋季 '26</span></div>
@@ -1486,7 +1522,8 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 
 <div class="frame">
   <nav class="sidebar m-sidebar m-drawer" id="sidebar" aria-label="主導航"></nav>
-  <main class="main">
+  <!-- tabindex="-1"：skip link 與焦點還原的落點錨；沒有它 .focus() 對 <main> 是 no-op -->
+  <main class="main" id="main" tabindex="-1">
 
   <!-- 首頁 -->
   <section class="page on" id="page-home">
@@ -2285,7 +2322,10 @@ const DISC_TYPES=[
  ["免運費","符合條件的訂單免運費","ship"]];
 const DT_IC={tag:'<path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.2"/>',gift:'<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M5 12v9h14v-9M12 8s-4.5.2-4.5-2.6C7.5 3 12 3.6 12 8zm0 0s4.5.2 4.5-2.6C16.5 3 12 3.6 12 8z"/>',order:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',ship:'<path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/>'};
 /* 53號 N-07：此處原有第二份 openDiscModal（demo toast 版），與 L~4965 的正式版同名。 頂層函式宣告提升會讓後者勝出，前者為死碼且易誤導，已移除。 */
-function closeDiscModal(){document.getElementById('discOverlay').classList.remove('show');}
+function closeDiscModal(){
+  document.getElementById('discOverlay').classList.remove('show');
+  releaseFocusTrap(document.getElementById('discOverlay'));   /* 53號 P0-14：同一支共用工具 */
+}
 
 /* ================= 設定（分頁） =================
    49 號稽核：setRow 產出的是不可點的佔位 <div>，設定區大量分頁因此形同空殼。
@@ -2376,10 +2416,15 @@ const SET_PAGES={
    靜態分頁維持字串常數，不進這張表。 */
 const SET_DYN={};
 function openSettings(page='general'){
+  const back=document.activeElement;          /* closeNav 可能先把焦點搬走，先存起來當還原目標 */
   closeNav(false);
   document.getElementById('settings').classList.add('show');
   setPage(page);
-  document.getElementById('setClose').focus();
+  /* 53號 P0-14：save bar 要一起進 trap。設定 overlay 蓋住整個頂欄（z-dialog > z-topbar），
+     但 CSS 依 :has 把 save bar 浮到 overlay 之上仍然可用——它必須是 Tab 序的一部分，
+     否則鍵盤使用者在設定裡改了東西卻按不到「儲存」。 */
+  withFocusTrap(document.getElementById('settings'),
+    {also:['#saveBar'],returnTo:back,focus:document.getElementById('setClose')});
 }
 let SETKEY='general';
 function setPage(key){
@@ -2394,7 +2439,10 @@ function setPage(key){
 }
 document.querySelectorAll('.set-item').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.set)));
 /* 離開設定要把 dirty 狀態一起收掉，否則 save bar 會殘留在下一個畫面 */
-function closeSettings(){document.getElementById('settings').classList.remove('show');FORM=null;formSetDirty(false);}
+function closeSettings(){
+  document.getElementById('settings').classList.remove('show');FORM=null;formSetDirty(false);
+  releaseFocusTrap(document.getElementById('settings'));   /* 焦點還給開啟設定的那顆鈕，不掉回 <body> */
+}
 
 /* ================= 圖表（dataviz 規格） ================= */
 function drawSparks(){
@@ -2468,8 +2516,15 @@ function aiAsk(){
 document.getElementById('aiInput').addEventListener('keydown',e=>{if(e.key==='Enter')aiAsk();});
 
 /* ================= palette / toast ================= */
-function openPalette(){document.getElementById('palOverlay').classList.add('show');setTimeout(()=>palInput.focus(),30);}
-function closePalette(){document.getElementById('palOverlay').classList.remove('show');}
+function openPalette(){
+  document.getElementById('palOverlay').classList.add('show');
+  withFocusTrap(document.getElementById('palOverlay'),{focus:false});   /* 53號 P0-14 */
+  setTimeout(()=>palInput.focus(),30);
+}
+function closePalette(){
+  document.getElementById('palOverlay').classList.remove('show');
+  releaseFocusTrap(document.getElementById('palOverlay'));
+}
 /* G 系列鍵盤跳轉（G→H/O/P/A/S，1 秒窗口）*/
 let gArmed=0;
 const G_MAP={h:'home',o:'orders',p:'products',a:'analytics'};
@@ -2588,6 +2643,128 @@ document.addEventListener('click',e=>{
 },true);
 function closeDocPop(){document.getElementById('docPop').classList.remove('show');}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   浮層焦點管理：focus trap ＋ 焦點還原 ＋ 背景 inert（53號 P0-14 / X-02）
+   ──────────────────────────────────────────────────────────────────────────
+   事故背景：53 號實跑三個浮層全部漏——openGen modal 第 3 個 Tab 就跑到頂欄搜尋框、
+   設定 overlay 第 29 個 Tab 跑進背景側欄、結帳編輯器第 53 個 Tab 同樣跑掉；
+   `aria-modal="true"` 只是宣告，瀏覽器不會據此攔 Tab。全站 [inert] 當時是 0，
+   Esc 關掉設定後 document.activeElement 掉回 <body>。
+
+   這一支是「側欄抽屜那版」的擴充，不是另起爐灶：
+   ① 抽屜版只查 querySelectorAll('button')（抽屜裡剛好只有按鈕）→ 這裡改成完整的
+      可聚焦選擇器，並排除 disabled／aria-disabled／aria-hidden／不可見；
+   ② 抽屜版沒有背景 inert → 這裡補上，且 inert 只是「加強」：Tab 循環照樣跑，
+      舊瀏覽器（無 inert、也沒有 polyfill）退回純 JS 循環仍然關得住；
+   ③ 抽屜版的焦點還原寫死在 closeNav → 這裡統一成 prev 快照＋錨點退路。
+   抽屜自己也改用這支（見下方 openNav／closeNav），全檔只有這一份實作。
+
+   多層浮層：FT_STACK 後進先出，Tab 只約束最上層；Esc 的分層鏈維持原本兩處
+   （全域鏈 ＋ 結帳編輯器 capture 鏈），本工具不介入 Esc，避免打壞既有順序。
+   ══════════════════════════════════════════════════════════════════════════ */
+const FT_STACK=[];
+const FT_SEL='a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])';
+/* 永遠不 inert：live region 與註釋泡泡。inert 會把節點一併移出無障礙樹並擋掉點擊——
+   播報區被 inert 等於整個 announce() 失效；docPop 是 z-popover(520) > z-dialog(519) 的浮層，
+   浮層開啟時仍然疊在最上面顯示（註釋模式要在設定 overlay 內逐控件對照），被 inert 就點不動。 */
+const FT_KEEP_IDS=['srLive','dragHelp','toast','docPop'];
+const ftKeeps=()=>FT_KEEP_IDS.map(id=>document.getElementById(id)).filter(Boolean);
+/* position:fixed 的元素依規範 offsetParent 恆為 null，只用 offsetParent 會把它們誤判為隱藏
+   （save bar 在設定 overlay 開啟時就是 fixed）。故 fixed 改以 client rect 判定。 */
+function ftVisible(x){
+  if(x.offsetParent!==null)return true;
+  return getComputedStyle(x).position==='fixed'&&x.getClientRects().length>0;
+}
+function ftFocusable(t){
+  const out=[];
+  t.roots.forEach(r=>{
+    if(!r)return;
+    r.querySelectorAll(FT_SEL).forEach(x=>{
+      if(x.disabled||x.getAttribute('aria-disabled')==='true')return;
+      if(x.getAttribute('aria-hidden')==='true'||x.closest('[aria-hidden="true"]'))return;
+      if(x.closest('[inert]'))return;
+      if(!ftVisible(x))return;
+      out.push(x);
+    });
+  });
+  /* roots 可能不照 DOM 序傳進來（設定 overlay 的 save bar 住在頂欄、DOM 在 overlay 之前），
+     Tab 順序必須是視覺／DOM 順序，這裡統一重排。 */
+  return out.sort((a,b)=>(a.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING)?-1:1);
+}
+/* 對 node 的子樹加 inert，但「保留節點」的祖先鏈要往下鑽、只 inert 旁支。
+   為什麼要鑽：設定 overlay 開啟時 save bar 仍然可用（CSS 依 :has 把它浮到 overlay 之上），
+   但它住在 .topbar 裡面——整條 topbar 上 inert 會讓「儲存／捨棄」變成點不下去的死鈕。 */
+function ftInert(node,keeps){
+  [...node.children].forEach(c=>{
+    if(c.tagName==='SCRIPT'||c.tagName==='STYLE')return;
+    if(keeps.some(k=>k===c||k.contains(c)))return;
+    if(keeps.some(k=>c.contains(k))){ftInert(c,keeps);return;}
+    c.setAttribute('inert','');c.setAttribute('data-ft-inert','');
+  });
+}
+function ftSync(){
+  document.querySelectorAll('[data-ft-inert]').forEach(x=>{x.removeAttribute('inert');x.removeAttribute('data-ft-inert');});
+  const t=FT_STACK[FT_STACK.length-1];
+  if(t)ftInert(document.body,t.roots.concat(ftKeeps()));
+}
+/* 焦點還原的退路：浮層關閉後絕不允許焦點落到 <body>（那等於鍵盤使用者要從頭 Tab 一次）。
+   還有下層浮層就回下層的第一個控件，否則回 <main>（tabindex=-1 的錨）。 */
+function ftAnchor(){
+  const t=FT_STACK[FT_STACK.length-1];
+  if(t){const f=ftFocusable(t);if(f.length)return f[0];}
+  return document.getElementById('main')||document.querySelector('.topbar .searchbox');
+}
+function ftRestoreFocus(prev){
+  if(prev&&prev!==document.body&&document.contains(prev)&&ftVisible(prev)){
+    try{prev.focus();}catch(e){}
+    if(document.activeElement===prev)return;
+  }
+  const a=ftAnchor();if(a)a.focus();
+}
+/* el＝浮層根節點；opts.also＝額外納入 trap 的節點（選擇器或元素）；
+   opts.focus＝false 表示呼叫端自己決定初始焦點；opts.returnTo＝指定還原目標。 */
+function withFocusTrap(el,opts){
+  if(!el)return null;
+  opts=opts||{};
+  if(FT_STACK.some(t=>t.el===el))return null;         /* 重複開啟不重複入棧 */
+  const roots=[el].concat((opts.also||[])
+    .map(s=>typeof s==='string'?document.querySelector(s):s).filter(Boolean));
+  const t={el,roots,prev:opts.returnTo||document.activeElement,restore:opts.restore!==false};
+  FT_STACK.push(t);
+  ftSync();                                            /* 先 inert，再把焦點送進浮層 */
+  if(opts.focus!==false){
+    const f=(opts.focus&&opts.focus.focus)?opts.focus:ftFocusable(t)[0];
+    if(f)f.focus();
+  }
+  return t;
+}
+function releaseFocusTrap(el,opt){
+  const i=FT_STACK.findIndex(t=>t.el===el);
+  if(i<0)return;                                       /* 沒開過就關＝no-op */
+  const t=FT_STACK.splice(i,1)[0];
+  ftSync();
+  if(t.restore&&!(opt&&opt.restore===false))ftRestoreFocus(t.prev);
+}
+document.addEventListener('keydown',e=>{               /* 浮層開啟時 Tab 焦點循環（inert 的退路）*/
+  if(e.key!=='Tab'||!FT_STACK.length)return;
+  const t=FT_STACK[FT_STACK.length-1];
+  const f=ftFocusable(t);
+  if(!f.length){e.preventDefault();return;}
+  const first=f[0],last=f[f.length-1];
+  if(!t.roots.some(r=>r.contains(document.activeElement))){e.preventDefault();(e.shiftKey?last:first).focus();}
+  else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+
+/* 53號 P0-15：aria-live 播報。先清空再寫入，否則連續兩次相同字串 SR 不會重讀
+   （拖曳排序連按 ↓ 到邊界時就會踩到）。 */
+function announce(msg){
+  const el=document.getElementById('srLive');
+  if(!el)return;
+  el.textContent='';
+  setTimeout(()=>{el.textContent=msg;},50);
+}
+
 /* ================= 自適應 1：off-canvas 導航抽屜（≤1023）================= */
 const MQ_NAV=matchMedia('(max-width:1023px)');
 const MQ_COARSE=matchMedia('(pointer:coarse)');
@@ -2597,8 +2774,13 @@ function openNav(){
   navOpen=true;
   document.body.classList.add('nav-open');
   document.getElementById('hambBtn').setAttribute('aria-expanded','true');
+  /* 焦點循環／背景 inert／還原全部交給共用工具；這裡只保留「延遲 80ms 進第一個導覽項」的原行為。
+     #scrim 與 #hambBtn 一起放進 roots：遮罩沒有可聚焦元素但 inert 會擋掉點擊（點遮罩關抽屜會失效）；
+     漢堡鈕是這個抽屜自己的開關（aria-expanded 掛在它身上），而 .scrim 只從 --topbar-h 開始蓋、
+     頂欄仍然看得見，把它一起 inert 等於畫面上有一顆按得到卻沒反應的鈕。 */
+  withFocusTrap(document.getElementById('sidebar'),{focus:false,also:['#scrim','#hambBtn']});
   const first=document.querySelector('#sidebar .nav-item');
-  if(first)setTimeout(()=>first.focus(),80);   /* 開啟時焦點移入抽屜 */
+  if(first)setTimeout(()=>first.focus(),80);
 }
 function closeNav(back){
   if(!navOpen)return;
@@ -2606,20 +2788,12 @@ function closeNav(back){
   document.body.classList.remove('nav-open');
   const b=document.getElementById('hambBtn');
   b.setAttribute('aria-expanded','false');
+  /* back=false 是「被別的浮層接手」（如 openSettings），此時不要搶焦點回漢堡鈕 */
+  releaseFocusTrap(document.getElementById('sidebar'),{restore:!!back});
   if(back)b.focus();                            /* Esc／遮罩關閉時焦點還給漢堡鈕 */
 }
 function toggleNav(){navOpen?closeNav(true):openNav();}
 MQ_NAV.addEventListener('change',e=>{if(!e.matches)closeNav(false);});
-document.addEventListener('keydown',e=>{       /* 抽屜開啟時 Tab 焦點循環 */
-  if(!navOpen||e.key!=='Tab')return;
-  const sb=document.getElementById('sidebar');
-  const f=[...sb.querySelectorAll('button')].filter(x=>x.offsetParent!==null);
-  if(!f.length)return;
-  const first=f[0],last=f[f.length-1];
-  if(!sb.contains(document.activeElement)){e.preventDefault();(e.shiftKey?last:first).focus();}
-  else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
-  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
-});
 
 /* ================= 自適應 2：資料表（≤1279 橫捲 / ≤767 堆疊卡片）=================
    為每個 <td> 補 data-label（取自對應 <th>），CSS 用 td::before 顯示欄名；
@@ -2726,9 +2900,16 @@ function openGen(o){
   document.getElementById('genOverlay').classList.add('show');
   GEN_OK=o.ok||null;
   enhanceTables();
+  /* 53號 P0-14：modal 開啟即 trap（原本第 3 個 Tab 就跑到頂欄搜尋框）。
+     focus:false ＝ 沿用原本「桌機才把焦點送進 body 第一個控件、≤767 不搶焦點避免彈鍵盤」的行為；
+     ≤767 焦點雖然留在原處，Tab 循環與背景 inert 仍然生效，第一次 Tab 就會被拉進 modal。 */
+  withFocusTrap(document.getElementById('genOverlay'),{focus:false});
   setTimeout(()=>{const f=document.querySelector('#genBody input,#genBody select,#genBody textarea,#genBody button');if(f&&window.innerWidth>767)f.focus();},60);
 }
-function closeGen(){document.getElementById('genOverlay').classList.remove('show');GEN_OK=null;}
+function closeGen(){
+  document.getElementById('genOverlay').classList.remove('show');GEN_OK=null;
+  releaseFocusTrap(document.getElementById('genOverlay'));
+}
 function genRun(){const f=GEN_OK;closeGen();if(f)f();}
 /* 危險動作二次確認：紅主鈕 ＋「無法復原」（23 §4.6）。
    irr=false ＝ 動作可還原（Pause and Build 之類），就不能寫「無法復原」誤導商家。 */
@@ -4441,7 +4622,10 @@ function menuPage(){
       <div class="mtree" id="mtree">
       ${MENU.items.map((it,i)=>`<div class="mi" draggable="true" style="--d:${it.d}"
         ondragstart="menuDrag(${i})" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="menuDrop(event,${i})">
-        <span class="grip" aria-hidden="true">${IC(IC_DRAG,14)}</span>
+        <span class="grip" role="button" tabindex="0" data-drag="menu" data-i="${i}"
+          aria-roledescription="可排序項目" aria-describedby="dragHelp" aria-grabbed="false"
+          aria-label="拖曳排序：${H(it.t)}（第 ${i+1} 項，共 ${MENU.items.length} 項）"
+          onkeydown="dragKey(event,this)" onclick="dragToggle(this)">${IC(IC_DRAG,14)}</span>
         <span class="mi-t"><b>${H(it.t)}</b><span class="mono">${H(it.u)}</span></span>
         <span class="mi-act">
           <button aria-label="向上移動" ${i===0?'disabled aria-disabled="true"':''} onclick="menuMove(${i},-1)">↑</button>
@@ -4469,16 +4653,131 @@ function menuDrop(e,to){
   if(to===0)it.d=0;else if(it.d>MENU.items[to-1].d+1)it.d=MENU.items[to-1].d+1;
   MDRAG=-1;menuRefresh();toast('已移動選單項目');
 }
+/* menuRefresh() 會把整棵樹重繪，原本聚焦的那顆鈕整個被換掉、焦點掉回 <body>——
+   鍵盤使用者每按一次 ↓ 就要重新 Tab 回來。這裡記住「第幾列的第幾顆鈕」，重繪後放回去；
+   該鈕在新位置若變成 disabled（例如移到第一列後 ↑ 失效）就退回該列的把手。 */
+function menuFocusSlot(){
+  const a=document.activeElement;
+  if(!a)return null;
+  if(a.classList&&a.classList.contains('grip'))return{b:-1};
+  const act=a.closest&&a.closest('.mi .mi-act');
+  return act?{b:[...act.children].indexOf(a)}:null;
+}
+function menuRefocus(j,slot){
+  if(!slot)return;
+  const row=document.querySelectorAll('.mtree .mi')[j];if(!row)return;
+  const b=slot.b>=0?row.querySelectorAll('.mi-act button')[slot.b]:null;
+  const t=(b&&!b.disabled)?b:row.querySelector('.grip');
+  if(t)t.focus();
+}
 function menuMove(i,d){
   const j=i+d;if(j<0||j>=MENU.items.length)return;
+  const slot=menuFocusSlot();
   const a=MENU.items;[a[i],a[j]]=[a[j],a[i]];
   if(j===0)a[0].d=0;menuRefresh();
+  /* 53號 P0-16：↑↓ 鈕與鍵盤抓取模式共用同一支播報——看不見畫面的人只能靠它知道現在第幾項 */
+  announce(`已將「${a[j].t}」移到第 ${j+1} 項，共 ${a.length} 項。`);
+  if(KGRAB&&KGRAB.list==='menu'){KGRAB.i=j;dragPaint();}else menuRefocus(j,slot);
 }
 function menuIndent(i,d){
   const it=MENU.items[i],nd=it.d+d;
-  if(nd<0||nd>2)return;
-  if(d>0&&(i===0||MENU.items[i-1].d<nd-0))return toast('上一層項目不存在——無法再縮排');
+  if(nd<0||nd>2)return announce(nd<0?'已經是第一層，無法再往外。':'巢狀最多 3 層。');
+  if(d>0&&(i===0||MENU.items[i-1].d<nd-0)){toast('上一層項目不存在——無法再縮排');return announce('上一層項目不存在，無法再縮排。');}
+  const slot=menuFocusSlot();
   it.d=nd;menuRefresh();
+  announce(`「${it.t}」已調整為第 ${nd+1} 層，位置維持第 ${i+1} 項。`);
+  if(KGRAB&&KGRAB.list==='menu')dragPaint();else menuRefocus(i,slot);
+}
+/* ══════════════════════════════════════════════════════════════════════════
+   拖曳排序的鍵盤操作（53號 P0-16；鍵盤模型見 48 §32.4）
+   ──────────────────────────────────────────────────────────────────────────
+   原狀：.grip 是 <span aria-hidden="true">，無 tabindex／無 role／無 onkeydown。
+   53 號實跑選單編輯器 7 個 .mi，focus grip → Space → ArrowDown → Space，順序完全沒變——
+   等於「只能用滑鼠拖」，鍵盤與螢幕閱讀器使用者完全無法排序（48 §32.7 列為本元件最嚴重的錯）。
+
+   這裡把把手升級成真控件，並用一台共用狀態機驅動：每個可排序清單註冊一組 adapter，
+   移動邏輯仍然沿用該清單原本的函式（選單＝menuMove／menuIndent），
+   所以「每列 ↑↓←→ 四顆鈕」的既有替代方案與鍵盤抓取模式走的是同一條路徑、同一支 announce()，
+   兩者並存不會各講各的。
+   ══════════════════════════════════════════════════════════════════════════ */
+let KGRAB=null;                      /* {list,i,from,snap} — 目前被抓取的項目 */
+const KDRAG={
+  menu:{
+    len:()=>MENU.items.length,
+    name:i=>MENU.items[i].t,
+    move:(i,d)=>{menuMove(i,d);return i+d;},
+    indent:(i,d)=>{menuIndent(i,d);return i;},
+    snap:()=>JSON.parse(JSON.stringify(MENU.items)),
+    undo:s=>{MENU.items=s;menuRefresh();},
+    grip:i=>document.querySelectorAll('.mtree .mi .grip')[i]
+  }
+};
+function dragGrab(list,i){
+  const api=KDRAG[list];if(!api)return;
+  KGRAB={list,i,from:i,snap:api.snap()};
+  dragPaint();
+  announce(`已抓取「${api.name(i)}」，目前第 ${i+1} 項，共 ${api.len()} 項。用上下鍵移動，左右鍵調整層級，Enter 放下，Esc 取消。`);
+}
+/* refocus=false：Tab 觸發的放下——焦點正要交給瀏覽器移到下一個控件，這裡不要搶回把手 */
+function dragDrop(refocus){
+  if(!KGRAB)return;
+  const g=KGRAB,api=KDRAG[g.list];KGRAB=null;
+  dragClear();
+  if(refocus!==false){const el=api.grip(g.i);if(el)el.focus();}
+  announce(`已放下，「${api.name(g.i)}」現在是第 ${g.i+1} 項，共 ${api.len()} 項。`);
+  toast('已更新排序——記得按「儲存」送出整棵樹');
+}
+function dragCancel(){
+  if(!KGRAB)return;
+  const g=KGRAB,api=KDRAG[g.list];KGRAB=null;
+  api.undo(g.snap);                                   /* 回到抓取前的完整快照，不是只還原位置 */
+  dragClear();
+  const el=api.grip(g.from);if(el)el.focus();
+  announce(`已取消排序，「${api.name(g.from)}」回到第 ${g.from+1} 項。`);
+}
+function dragClear(){
+  document.querySelectorAll('.is-grabbed').forEach(x=>x.classList.remove('is-grabbed'));
+  document.querySelectorAll('[aria-grabbed="true"]').forEach(x=>x.setAttribute('aria-grabbed','false'));
+}
+/* 每次移動都會整棵重繪 → 抓取態（class ＋ aria-grabbed ＋ 焦點）必須重新貼回新位置的把手 */
+function dragPaint(){
+  dragClear();
+  if(!KGRAB)return;
+  const el=KDRAG[KGRAB.list].grip(KGRAB.i);
+  if(!el)return;
+  el.setAttribute('aria-grabbed','true');
+  const row=el.closest('.mi');if(row)row.classList.add('is-grabbed');
+  el.focus();
+}
+function dragToggle(el){
+  const list=el.dataset.drag,i=+el.dataset.i;
+  if(KGRAB&&KGRAB.list===list&&KGRAB.i===i)dragDrop();
+  else{if(KGRAB)dragDrop();dragGrab(list,i);}
+}
+function dragKey(e,el){
+  const list=el.dataset.drag,i=+el.dataset.i,api=KDRAG[list];
+  if(!api)return;
+  const k=e.key,n=api.len(),held=!!KGRAB&&KGRAB.list===list;
+  if(k===' '||k==='Spacebar'||k==='Enter'){e.preventDefault();dragToggle(el);return;}
+  if(!held)return;                       /* 沒進抓取模式：↑↓ 讓給瀏覽器／頁面捲動，不劫持 */
+  if(k==='ArrowUp'||k==='ArrowDown'){
+    e.preventDefault();
+    const d=k==='ArrowUp'?-1:1;
+    if(i+d<0||i+d>=n){announce(d<0?'已經是第一項，無法再往上。':`已經是最後一項（共 ${n} 項），無法再往下。`);return;}
+    KGRAB.i=api.move(i,d);
+  }else if(api.indent&&(k==='ArrowLeft'||k==='ArrowRight')){
+    e.preventDefault();KGRAB.i=api.indent(i,k==='ArrowLeft'?-1:1);
+  }else if(k==='Home'||k==='End'){
+    e.preventDefault();
+    const to=k==='Home'?0:n-1,d=to>i?1:-1;
+    let c=i;while(c!==to){api.move(c,d);c+=d;}       /* 逐格搬，沿用清單自己的邊界規則 */
+    KGRAB.i=to;dragPaint();
+  }else if(k==='Escape'){
+    /* 抓取中的 Esc 只做「取消排序」，不能冒泡到全域 Esc 鏈去關浮層／抽屜 */
+    e.preventDefault();e.stopPropagation();dragCancel();
+  }else if(k==='Tab'){
+    dragDrop(false);                     /* 焦點要離開把手了：先放下，不留孤兒抓取態 */
+  }
 }
 function menuEdit(i){
   const it=MENU.items[i];
@@ -4965,6 +5264,7 @@ function openDiscModal(){
      <span><b>${t}</b><span>${d}</span></span><span class="chev">›</span>
    </button>`).join('');
   document.getElementById('discOverlay').classList.add('show');
+  withFocusTrap(document.getElementById('discOverlay'));      /* 53號 P0-14 */
 }
 
 /* ==================================================================
@@ -5312,7 +5612,7 @@ Object.assign(DOCS,{
  "menu-redirects":{t:"網址轉址入口",f:"從選單頁跳到轉址管理",l:"轉址與選單同區管理（41 §5.3）",i:"P0・[api:urlRedirects] [tbl:url_redirects]（06 §7 待補）"},
  "menu-new":{t:"新增選單",f:"建立導航選單",l:"每個選單有 handle，前台以 handle 引用",i:"P0・[api:menuCreate] [tbl:menus,menu_items]"},
  "menu-basic":{t:"選單標題與 handle",f:"名稱與前台引用鍵",l:"handle 只能小寫字母數字連字號；改 handle 會讓引用它的主題區塊失效",i:"P0・[api:menuUpdate] [tbl:menus]"},
- "menu-tree":{t:"選單樹（巢狀拖曳）",f:"拖曳排序＋←→ 調整層級",l:"巢狀 ≤3 層；子項不能比上一項深超過 1 層；儲存時整棵樹一次提交（41 §5.3）",i:"P0・[api:menuUpdate]（items[{title,type,resourceId|url,items 巢狀}]） [tbl:menus,menu_items]"},
+ "menu-tree":{t:"選單樹（巢狀拖曳）",f:"拖曳排序＋←→ 調整層級；把手為 role=button 的真控件，可純鍵盤排序",l:"巢狀 ≤3 層；子項不能比上一項深超過 1 層；儲存時整棵樹一次提交（41 §5.3）。鍵盤（48 §32.4）：把手 Enter／Space 進入抓取模式（列出現「抓取中」標記＋aria-grabbed），↑↓ 移動、←→ 調整層級、Home/End 移到首末、Enter 放下、Esc 取消回原位；每次移動都寫入 #srLive 播報「項目名＋第幾項／共幾項」。每列 ↑↓←→ 四顆鈕為並存的替代路徑，走同一支 menuMove／menuIndent 與同一支 announce()",i:"P0・[api:menuUpdate]（items[{title,type,resourceId|url,items 巢狀}]） [tbl:menus,menu_items]；排序以整批新順序送出，不逐筆 move"},
  "redir-list":{t:"網址轉址列表",f:"舊路徑 → 新目標對照",l:"命中在 storefront router 進 404 前查表；無實務上限（十萬級）；支援 CSV 匯入匯出",i:"P0・[api:urlRedirects] [api:urlRedirectBulkDeleteAll] [tbl:url_redirects]"},
  "redir-new":{t:"建立轉址",f:"新增 301 轉址",l:"舊路徑必須以 / 開頭且目前不存在於商店（41 §5.3）；目標可為相對路徑或完整 URL",i:"P0・[api:urlRedirectCreate] [tbl:url_redirects]"},
  "blog-manage":{t:"管理部落格",f:"blog 層級設定",l:"每 blog＝標題＋handle＋留言三態（關閉／需審核／自動發布）＋SEO＋範本（41 §5.4）",i:"P1・[api:blogCreate] [api:blogUpdate] [tbl:blogs]（06 §3 ER）"},
@@ -5805,6 +6105,11 @@ function locMove(i,d){
   const t=LOC_ORDER[i];LOC_ORDER[i]=LOC_ORDER[j];LOC_ORDER[j]=t;
   setSubOpen('loc-priority',locPriorityPage());setAfterRender();
   toast(`已把「${LOC_ORDER[j].n}」移到第 ${j+1} 順位`);
+  /* 53號 P0-16：↑↓ 鈕也要走同一支播報（這張表沒有把手，鍵盤路徑只有這兩顆鈕）*/
+  announce(`已把「${LOC_ORDER[j].n}」移到第 ${j+1} 順位，共 ${LOC_ORDER.length} 個地點。`);
+  /* setSubOpen 會把焦點搶到麵包屑返回鈕——放回剛剛按的那顆鈕，否則每按一次就要重 Tab 一輪 */
+  const row=document.querySelectorAll('.ord-row')[j];
+  if(row){const b=row.querySelectorAll('button')[d<0?0:1];if(b&&!b.disabled)b.focus();else row.querySelectorAll('button')[d<0?1:0].focus();}
 }
 function locAdd(){
   LOC_ORDER.push({n:'新地點 '+(LOC_ORDER.length+1),s:'尚未填寫地址',ship:false});
@@ -6421,14 +6726,18 @@ function ckMount(){
   });
 }
 function openCheckoutEditor(page){
+  const back=document.activeElement;     /* closeSettings 會先把焦點還原掉，得在那之前存 */
   closeSettings();                       /* 44 §21：編輯器是獨立路由，⇤ 離開才回設定 */
   ckMount();
   CK.page=CK_PAGES[page]?page:'checkout';CK.sel=null;CK.secMode=false;CK.hid={};CK.exp={shipmethod:true};
   CK.mtab='stage';CK.insp=false;
   document.getElementById('ckEditor').classList.add('show');
   ckDirty(false);ckRender();
-  /* 焦點落在「離開」而不是標題按鈕：頂欄只有 56px，標題鈕的 focus 環會壓到第二行的設定檔名 */
-  document.querySelector('#ckEditor .ck-exit').focus();
+  /* 53號 P0-14：原本第 53 個 Tab 會跑進背景側欄。#ckAddPop 是 body 層的 popover（不在 #ckEditor 裡），
+     必須一起納入 roots，否則「⊕ 新增區塊」開出來的面板會被 inert 擋成點不到。
+     焦點落在「離開」而不是標題按鈕：頂欄只有 56px，標題鈕的 focus 環會壓到第二行的設定檔名。 */
+  withFocusTrap(document.getElementById('ckEditor'),
+    {also:['#ckAddPop'],returnTo:back,focus:document.querySelector('#ckEditor .ck-exit')});
 }
 function closeCheckoutEditor(){
   if(CK.dirty&&Date.now()-ckWarn>4000){
@@ -6436,6 +6745,8 @@ function closeCheckoutEditor(){
     toast('有未儲存的變更——再點一次「離開」即捨棄');return;}
   ckClosePicker();ckAddClose();ckInspClose();
   document.getElementById('ckEditor').classList.remove('show');
+  /* restore:false ＝ 焦點交給緊接著開啟的設定 overlay（它會自己聚焦 ✕），避免兩者互搶 */
+  releaseFocusTrap(document.getElementById('ckEditor'),{restore:false});
   ckDirty(false);openSettings('checkout');
 }
 /* ≤767：圖層／預覽二選一（三欄塞不進 375px；檢查器在這個寬度已經是抽屜）*/
