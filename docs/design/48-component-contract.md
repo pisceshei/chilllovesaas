@@ -95,21 +95,37 @@
      🔴 任何人翻舊版都不要改回去：這是實測值，不是估計值。寫死 1px 在 Retina 上會比實站粗一倍，
         47 §C 逐字標「這是我們三份原型全部缺的細節……是『看起來就是不對』的主因之一」。 -->
 
+<!-- 🔴 依 64 §4 實測**再次修正**（2026-08-12 第二次）：髮絲線不是「1 個裝置像素」，
+     是一個**固定的次像素常數 0.66px**。
+     原文（上一版）：
+       --hairline: 1px;                                    /* dpr 1 */
+       @media (…min-resolution: 1.5dppx) { :root{ --hairline: .667px } }
+       @media (…min-resolution: 2dppx)   { :root{ --hairline: .5px   } }
+     為什麼推翻：47 §C 只量到 dpr=1.5 的 0.667px，於是「反推」成裝置像素換算。
+     64 號改用 getComputedStyle 穿透 shadow root，在 **dpr = 1** 的螢幕上讀到 **0.66px**——
+     若真是裝置像素，dpr=1 應該讀到 1px。三檔 media query 是錯的推論，不是量測值。
+     ⚠ 這一條連帶影響 §00.4 下方「用哪一個的判準」與附錄 C 的檢查清單，兩處都已改。 -->
+
 ```css
-/* 髮絲線＝1 個「裝置」像素，隨 dpr 換算（47 §C）。分隔線、卡片框、列底線一律用它。 */
---hairline: 1px;                                    /* dpr 1 */
-@media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 1.5dppx) { :root{ --hairline: .667px } }
-@media (-webkit-min-device-pixel-ratio: 2),   (min-resolution: 2dppx)   { :root{ --hairline: .5px   } }
+/* 64 §4：髮絲線是**固定次像素常數**，與 dpr 無關。分隔線、卡片框、列底線一律用它。 */
+--hairline: .66px;
 
 --bw-100: 1px;    /* 〔48 號自訂，47 未量測〕**非分隔線**的實心 1px 框（dashed 落點區、split 分隔線之類必須看得見的線） */
 --bw-150: 1.5px;  /* 〔48 號自訂，47 未量測〕badge pip 的環寬 */
 --bw-200: 2px;    /* 選取態外框、tab 底線、編輯器選取框（44 §21.4 實測 2px 選取外框） */
 ```
 
+> **原型落地狀況**：`chilllove-admin-v2.html` 已改為固定 `.66px`，兩條 dppx media query 已刪，
+> 刪除處留有說明註釋。**`scripts/lint-prototype.py` 的 `r_hairline` 仍以 47 §C 為依據**，
+> 會 WARN「有 `--hairline` 但無 min-resolution/dppx 媒體查詢」——那條 WARN 現在是過期的，
+> 待 lint 擁有者依本節更新。（原型的說明註釋內含 `dppx` 字樣，因此該 WARN 目前不會觸發；
+> 這是巧合不是設計，不要把它當成「規則已經改好了」。）
+
 **用哪一個的判準（硬性）**：
-- **分隔線／列底線／卡片框／表單控件框** → `--hairline`（47 §C）。
+- **分隔線／列底線／表單控件框** → `--hairline`（47 §C ＋ 64 §4 的值）。
+- **卡片框** → **不是 border**。64 §2 實測卡片 `border-width: 0`，那條框線是六層陰影的最後一層（見 §00.8 的 `--sh-card`）。
 - **表單控件（checkbox／radio／輸入框）的 1px 框** → 進一步改用 **`inset box-shadow`** 而非 `border`（47 §H2-4：「不佔 box model、可做次像素、與 §C 的髮絲線同一套」）。
-- `--bw-100` 只保留給「刻意要粗、不能隨 dpr 變細」的線。
+- `--bw-100` 只保留給「刻意要粗、不隨任何東西變細」的線。
 
 ### 00.5 焦點環（47 §H2-3′ 第五輪定案）
 
@@ -237,8 +253,23 @@
 
 ### 00.8 陰影（多數為 48 號自訂、47 未量測；`--sh-raised` 依 47 §6.5 新增）
 
+<!-- 🔴 依 64 §2 實測新增 --sh-card。原文：本節的 --sh 註記為「卡片。〔48 號自訂，47 未量測〕」——
+     現在量到了，而且與我方兩層的自訂值差很遠：實站卡片是**六層**堆疊，
+     且**最後一層 `0 0 0 1px` 就是那條看起來像 border 的框線**（卡片本身 border-width: 0）。 -->
+
 ```css
---sh:        0 1px 2px rgba(26,28,30,.05), 0 1px 6px rgba(26,28,30,.04);  /* 卡片。〔48 號自訂，47 未量測〕 */
+/* 64 §2 實測：卡片＝圓角 12 ／ 背景 #FFF ／ border-width 0 ／ 六層陰影。
+   前五層是同步收斂的柔和投影（offset・blur・spread 一起遞減，不是隨手疊的）；
+   第六層是框線。收斂成**一顆** token——寫六次的話，日後調一層一定有卡片沒跟上。 */
+--sh-card:
+  rgba(0,0,0,.03) 0 5px   5px   -2.5px,
+  rgba(0,0,0,.02) 0 3px   3px   -1.5px,
+  rgba(0,0,0,.02) 0 2px   2px   -1px,
+  rgba(0,0,0,.03) 0 1px   1px   -0.5px,
+  rgba(0,0,0,.04) 0 0.5px 0.5px  0,
+  rgba(0,0,0,.06) 0 0     0      1px;   /* ← 這層取代 border */
+
+--sh:        0 1px 2px rgba(26,28,30,.05), 0 1px 6px rgba(26,28,30,.04);  /* 非卡片的一般浮起面。〔48 號自訂〕 */
 --sh-sticky: 0 1px 0 var(--border-2), 0 2px 6px rgba(26,28,30,.06);       /* sticky 表頭吸附後。〔48 號自訂，47 未量測〕 */
 --sh-pop:    0 12px 32px rgba(26,28,30,.16);                              /* popover／選單。〔48 號自訂，47 未量測〕 */
 --sh-modal:  0 24px 64px rgba(26,28,30,.35);                              /* modal／drawer／sheet。〔48 號自訂，47 未量測〕 */
@@ -333,8 +364,31 @@
 --t-2xs:     11 / 16 / 500;  /* 〔48 號自訂，47 未量測〕鍵盤鍵帽、分組標題（大寫加字距）、浮層註腳。23 §1 已在用 */
 --t-3xl:     24 / 32 / 450;  /* 〔48 號自訂，47 未量測〕〔待覆核〕桌機頁標題、空態標題、指標卡大數 */
 --t-display: 32 / 40 / 450;  /* 〔48 號自訂，47 未量測〕〔待覆核〕頂層 404 主標、帳單累積總計（44 §19.4 的 display 級數字） */
---fw-split:  550;            /* 47 §6.5 實測：split／次級按鈕字重 550（介於 500 與 600 的一階） */
+
+/* ── 64 §3 字重四階（實測，取代「只有 --fw-split 一階」的舊寫法）───────────── */
+--fw-body:    450;             /* 內文、輸入框文字、標籤、段落 —— 13 / 20 / 450 */
+--fw-control: 500;             /* pill 與按鈕（可點控件）    —— 13 / 20 / 500 */
+--fw-split:   550;             /* badge ＋ split／次級按鈕    —— 12 / 16 / 550 */
+--fw-badge:   var(--fw-split); /* badge 與 split 是同一階，只給語意名，不再多一個值 */
+--fw-title:   600;             /* 卡片標題                   —— 13 / 20 / 600 */
 ```
+
+<!-- 🔴 依 64 §3 實測修正兩處，原文：
+     ① 本節只有 --fw-split 一顆字重 token（47 §6.5 只量到 550 那一階）；
+     ② §00.11 與 47 §3 都把**卡片標題**記成 --t-lg（16px）／字重 450。
+     64 §3 用 getComputedStyle 逐元素讀出的是四階：450 / 500 / 550 / 600，
+     而卡片標題 h2 是 **13 / 20 / 600**——字級比我方小、字重比我方重，**兩處都錯**，
+     只改其中一處會得到「小而輕」的錯誤觀感。§13 卡片與 §11 badge 的字重欄依此更新。
+     🔴 任何人翻舊版都不要改回去：這是量測值，不是估計值。 -->
+
+**四階的用途對照（硬性，元件一律引 token 不再各寫數字）**
+
+| 階 | token | 用在哪 |
+|---|---|---|
+| 450 | `--fw-body` | 內文、段落、輸入值、欄位標籤 |
+| 500 | `--fw-control` | pill、所有按鈕 |
+| 550 | `--fw-split` / `--fw-badge` | badge、split／次級按鈕 |
+| 600 | `--fw-title` | 卡片標題、pill 上的**值**（與標籤拉開一階） |
 
 <!-- 依 47 §6.5 實測新增 --fw-split，原文：本節只有三條字級 token，沒有任何字重補充；
      §1.1 的 split button 沿用 --t-sm 的 weight 500。
@@ -356,7 +410,17 @@
 ```css
 --h-topbar: 56px;            /* 47 §0 實測 */
 --w-sidebar: 240px;          /* 47 §0 實測 15rem */
---w-index-max: 1200px;  --w-detail-max: 998px;   --w-aside: 300px;
+--w-index-max: 1200px;
+/* ── 64 §1 實測詳情頁雙欄（取代估值 --w-detail-max: 998px / --w-aside: 300px）────
+   左欄（主）633、右欄（次）317、欄間 16；右欄內層盒 285 ⇒ 左右內距各 16
+   （317 − 285 = 32），恰好等於卡片內距 --sp-400，不必另開內距 token。
+   詳情頁容器最大寬由這三顆推導，不要再寫死一個數字——寫死的那個就是上一版的 998，
+   它會把主欄擠成 601（原型實測），量起來永遠差 32。 */
+--w-col-main: 633px;  --w-col-aside: 317px;
+--w-detail-max: calc(var(--w-col-main) + var(--sp-400) + var(--w-col-aside) + var(--sp-800));
+/* 64 §1：卡片間距 16（同群）／52（跨群）。52 不在 47 的七階內 ⇒ 同 --sp-800 的處置，
+   以七階整數倍 calc 組出，不新增第 8 階裸值。 */
+--sp-group: calc(var(--sp-600) * 2 + var(--sp-100));   /* 52 */
 --w-narrow: 630px;           /* 單欄置中編輯器（44 §19.7 選單編輯器實測 ~630px） */
 --w-settings-content: 660px; --w-settings-nav: 270px;
 --w-modal-sm: 400px; --w-modal: 520px; --w-modal-lg: 720px;
@@ -4854,10 +4918,17 @@ ul.cl-draglist
 
 ## §33 Pill 收合欄位組 `cl-pillset`
 
-**來源**：59 §2（實站商品詳情頁的核心交互，light DOM 抽取；**只取行為與結構事實，樣式與 class 名一律自有**，CLAUDE.md 鐵律 9）、59 §7（建立頁與詳情頁的 pill 分組鍵一字不差 ⇒ 這是元件不是頁面裝飾）、47 §5 M1／M4、48 §15（摘要行的靈魂論在此升級成「pill 上的值」）。
-**原型落地狀況（2026-08-12，寫清楚以免本節被讀成「全都做完了」）**：`docs/design/chilllove-admin-v2.html` 的 `pillSet()` / `pillToggle()` / `pillValue()` / `pillKey()` / `pillAnim()` / `pillAfter()`，首批三個實例＝商品頁的 `pillgrp-pricing` / `pillgrp-inventory` / `pillgrp-shipping`（詳情態與建立態共用）。
+**來源**：59 §2（實站商品詳情頁的核心交互，light DOM 抽取；**只取行為與結構事實，樣式與 class 名一律自有**，CLAUDE.md 鐵律 9）、59 §7（建立頁與詳情頁的 pill 分組鍵一字不差 ⇒ 這是元件不是頁面裝飾）、**60 §1／§3（變體詳情頁量到同樣三組、同樣的鍵 ⇒ 這三組 pill 屬於「變體」不屬於「商品頁」）**、**64 §3／§4（尺寸與字重的計算樣式真值）**、47 §5 M1／M4、48 §15（摘要行的靈魂論在此升級成「pill 上的值」）。
+**原型落地狀況（2026-08-12 第二輪，寫清楚以免本節被讀成「全都做完了」）**：`docs/design/chilllove-admin-v2.html` 的 `pillSet()` / `pillToggle()` / `pillValue()` / `pillKey()` / `pillAnim()` / `pillAfter()`。
+- **實例（三組，兩個宿主頁面共用同一份程式碼）**：`pillgrp-pricing` / `pillgrp-inventory` / `pillgrp-shipping`。
+  宿主一＝**無變體商品頁**（詳情態與建立態共用）；宿主二＝**變體詳情頁 `d-variant`**。
+  兩個宿主呼叫的是同一組卡片產生器 `pdPriceCard()` / `pdInvCard()` / `pdShipCard()`，
+  因此連分組鍵與 `PILL_OPEN` 的展開狀態都共用——**在商品頁展開定價，進變體詳情頁它還是開的**。
+  🔴 **不要為變體詳情頁複製第二份卡片或第二套分組鍵**：60 §1 的整個結論就是「那三張卡是變體的卡」，
+  複製一份等於把剛剛確立的模型再拆回兩套。
 - **已實作**：§33.1 解剖、§33.2 的 default（空值／有值）／hover／active／focus-visible／expanded 五態、§33.3 全部（含 M4 兩個陷阱的收尾）、§33.4 全部、§33.5 的換行與 `pointer: coarse` 命中區、§33.6 的值 ellipsis／金額／布林／預設 enum 視為空值／多組同時展開／區域內表格。
 - **尚未實作**（本節是給正式 React 版的契約，不是原型現況）：disabled／loading／error 三態、值的 skeleton、sessionStorage 持久化（原型用記憶體物件 `PILL_OPEN`）。
+- **一處刻意不跟實測**（64 §6）：實站 pill 與按鈕的 `transition` 量到的是 **`all`**，我方 `scripts/lint-prototype.py` 明文禁止，**維持禁令**。理由：`all` 會連帶動畫非預期屬性（本元件首當其衝的就是展開時的 `height`／`max-height`），且對不上 47 §5 的 M1–M7 具名動效。這是**我方刻意偏離實測**，記在此處以免日後被當成漏抄。
 - **class 名對照**：原型沿用自己的既有命名（`.pillset` / `.pills` / `.pill` / `.pl-l` / `.pl-v` / `.pl-c` / `.pillpanel` / `.pp-in`），正式版依 §A.7 一律 `cl-` 前綴，對照如下：`pillset→cl-pillset`、`pills→cl-pillset__row`、`pill→cl-pill`、`pl-l→cl-pill__label`、`pl-v→cl-pill__value`、`pl-c→cl-pill__caret`、`pillpanel→cl-pillset__panel`、`pp-in→cl-pillset__panel-in`。
 
 > **這個元件在解什麼問題**：商品頁的欄位太多。主要欄位（價格／數量／重量）常駐可見，次要欄位（成本／條碼／HS 代碼）收成一排 pill，**但 pill 上仍然顯示目前值**——所以不必展開就知道有沒有填。這比「全部展開」（版面爆炸）與「摺疊成一個標題」（要展開才知道填沒填）都省視覺成本。
@@ -4874,25 +4945,41 @@ ul.cl-draglist
 
 ### 33.1 解剖
 
+<!-- 🔴 依 64 §3／§4 實測修正三處，原文：
+       「│   └─ button.cl-pill  × N          高 --ctl-28；padding --sp-050 --sp-200；圓角 --r-200
+        │       ├─ cl-pill__label           --t-xs, --text-2（**恆在**）」
+       ＋ 屬性表的「pill 底 | idle --surface／…」與（隱含的）idle 有 --hairline 框。
+     64 §4 逐字量到：pill「高 28、圓角 8、內距 **4 / 8**、**無框、背景透明**、色 rgb(48,48,48)」；
+     64 §3 量到 pill 是 **13 / 20 / 500**（不是 --t-xs 的 12）。
+     ⚠ 「無框、背景透明」不是省略而是量測結果，而且它正是高度剛好 28 的原因：
+        內容 20（行高）＋ 上下內距 4×2 ＝ 28。加一圈髮絲線就變 29.3，量起來永遠差一點。
+        原型實測：改成無框後 getBoundingClientRect().height === 28。
+     hover／展開／focus 三態的底色**保留**（64 沒量那三態；全部拿掉會讓一排 pill 沒有任何可點提示）。 -->
+
 ```
 cl-pillset                          data-cl-pillset="<groupId>"；margin-block-start: --sp-300
 ├─ cl-pillset__row                  role="group" aria-label="<卡片名>"；flex-wrap; gap --sp-150
-│   └─ button.cl-pill  × N          高 --ctl-28；padding --sp-050 --sp-200；圓角 --r-200
-│       ├─ cl-pill__label           --t-xs, --text-2（**恆在**）
-│       ├─ cl-pill__value           --t-sm/600, --text（**只在有值時存在**；金額加 .cl-money）
+│   └─ button.cl-pill  × N          高 --ctl-28（min-height）；padding --sp-100 --sp-200（4 / 8）
+│                                   圓角 --r-200；border 0；background transparent
+│                                   字 --t-sm / --fw-control(500) / --text
+│       ├─ cl-pill__label           繼承 pill 的字級與色（**恆在**）
+│       ├─ cl-pill__value           --t-sm / --fw-title(600) / --text（**只在有值時存在**；金額加 .cl-money）
 │       └─ cl-pill__caret           --t-2xs, --text-3；展開時 rotate(180deg)
 └─ cl-pillset__panel                id="<groupId>"；**整組共用這一個**
     └─ cl-pillset__panel-in         border-block-start: var(--hairline) solid var(--border-2)
                                     padding-block-start / margin-block-start: --sp-300
 ```
 
-| 屬性 | 值 |
+| 屬性 | 值（64 §3／§4 實測） |
 |---|---|
-| pill 高 | `--ctl-28`（用 `min-height`，值長時允許長高，不裁字） |
-| pill 圓角 | `--r-200`（**不是 `--r-pill`**——47 §D：全圓藥丸是 tag 專用，可點的控件一律 8） |
-| pill 底 | idle `--surface`／hover `--surface-2`／**展開 `--surface-sunken`** |
+| pill 高 | **28**（`--ctl-28`，用 `min-height`，值長時允許長高，不裁字） |
+| pill 內距 | **4 / 8**（`--sp-100` / `--sp-200`） |
+| pill 圓角 | `--r-200`＝8（**不是 `--r-pill`**——47 §D：全圓藥丸是 tag 專用，可點的控件一律 8） |
+| pill 框 | **無**（`border: 0`）。有框就量不到 28，見上方註釋 |
+| pill 底 | idle **transparent**／hover `--surface-2`／**展開 `--surface-sunken`** |
+| pill 字 | 13 / 20 / **500**（`--fw-control`）；值 **600**（`--fw-title`） |
 | 值的最大寬 | `19ch` 級的固定上限 ＋ ellipsis（超長 SKU 不能把一排 pill 撐成三行） |
-| panel 內距 | 上緣一條 `--hairline` 分隔線；其餘沿用卡片內距 |
+| panel 內距 | 上緣一條 `--hairline`（0.66px）分隔線；其餘沿用卡片內距 |
 
 **三條硬性規則**（少一條就不是這個元件）：
 
@@ -4904,8 +4991,8 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 
 | 態 | 變什麼 → 變成什麼 |
 |---|---|
-| **default（收合／空值）** | 只有標籤；底 `--surface`，框 `--hairline solid --border`，字 `--text-2` |
-| **default（收合／有值）** | 標籤 ＋ 值；值 `--text` / 600 字重。**有值與空值的差別必須靠「有沒有那段文字」，不是靠顏色**（WCAG 1.4.1） |
+| **default（收合／空值）** | 只有標籤；底 **transparent**、**無框**、字 `--text` / `--fw-control`（64 §4：實站 pill 無框且底透明） |
+| **default（收合／有值）** | 標籤 ＋ 值；值 `--text` / `--fw-title`(600)。**有值與空值的差別必須靠「有沒有那段文字」，不是靠顏色也不是靠字重**（WCAG 1.4.1；字重只是加速掃視） |
 | **hover** | 底 `--surface-2`（M1） |
 | **active** | 底 `--surface-sunken-active` |
 | **focus-visible** | §A.2 的雙層環；`overflow` 用 `clip` ＋ `overflow-clip-margin: var(--focus-ring-w)`，否則環會被收合容器切掉 |
@@ -4963,6 +5050,8 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 | **值需要非同步取得** | 標籤先渲染、值放 skeleton；不要延遲整排 pill |
 | **同頁多組同時展開** | 允許。這不是手風琴 |
 | **區域內是表格** | 表格自己包 `tscroll`；`max-height` 動畫量的是包好之後的高度 |
+| **同一組 pill 出現在兩個頁面**（商品頁 ↔ 變體詳情頁） | **展開狀態跟著分組鍵走，不跟著頁面走**。切頁後仍然是展開的——因為使用者關心的是「我正在看定價這一段」，不是「我在哪一個路由」。原型實測：商品頁展開 `pillgrp-pricing` → 進 `d-variant` → 仍為 `hidden=false`；在側欄切換變體後也仍然展開 |
+| **宿主換了資料物件**（切到另一個變體） | 只重繪、不重置 `PILL_OPEN`；pill 上的值由 `pillValue()` 依**當下 DOM 的欄位值**重寫，不用渲染快照（§33.7 常見錯誤最後一條） |
 
 ### 33.7 實作備註
 
@@ -5050,7 +5139,9 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 ## 附錄 C — Code review 檢查清單（每個 PR 都跑）
 
 - [ ] CSS 內無裸數值（`/:\s*-?\d+(px|rem|ms|s)\b/` 掃 diff，例外只有 `0`／`100%`／media query 條件式的 `em` 常數／`font-size:16px`(iOS)／SVG 的 width·height）
-- [ ] **分隔線、卡片框、控件框一律 `var(--hairline)`，不是 `1px`**（47 §C：1 個裝置像素）
+- [ ] **分隔線與控件框一律 `var(--hairline)`，不是 `1px`**（64 §4：固定次像素常數 `.66px`，**不隨 dpr 換算**，已推翻 47 §C 的三檔 media query）
+- [ ] **卡片沒有 `border`**——框線是 `--sh-card` 的第六層（64 §2）；看到 `.cl-card { border: … }` 就打回
+- [ ] **字重只出現四階 450／500／550／600，且一律引 token**（64 §3；散寫數字或出現 400／700 就打回）
 - [ ] **無 `opacity: var(--disabled-opacity)`**——disabled 一律 `color: var(--text-disabled)`（47 §E）
 - [ ] **z-index 只出現 1 / 100 / 400 / 510–520**，浮層不超過 520（47 §G）
 - [ ] **media query 一律 `em`**，`max` 配對為 `min − 0.0025em`（47 §F）
@@ -5105,8 +5196,12 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 
 ---
 
-## 給下一個維護者的三句話
+## 給下一個維護者的四句話
 
 1. **本檔於 2026-08-12 逐節對齊 47 號**（完整清單見 §0.12）。修正方向是「原型對、契約錯」——與 49 號那次相反。
-2. **看到 `<!-- 依 47 §X 實測修正，原文：… -->` 就不要回退**，那些註釋裡的「原文」是**已作廢**的舊值，留著只為了讓你認得出回退。
-3. **要新增 token 前先確認 47 沒量過**。47 的量測散在 §1–§6.5（第一／二輪）、**§A–§I（第三輪起，不在 §8 修正清單裡）**——本檔上一次失真就是只讀了 §8。
+2. **同日第二輪再依 64 號（`getComputedStyle` 穿透 shadow root 的計算樣式真值）改了五處**：
+   §00.4 髮絲線（1 裝置像素 → 固定 `.66px`）、§00.8 卡片六層陰影（新 `--sh-card`，卡片無 border）、
+   §00.11 字重四階（450／500／550／600，卡片標題 13/20/600）、§00.12 雙欄 633/317 與跨群間距 52、
+   §33 pill（無框、底透明、13/20/500、內距 4/8）。**64 是量測、47 §C 是推論**，衝突時以 64 為準。
+3. **看到 `<!-- 依 47 §X／64 §X 實測修正，原文：… -->` 就不要回退**，那些註釋裡的「原文」是**已作廢**的舊值，留著只為了讓你認得出回退。
+4. **要新增 token 前先確認 47／64 沒量過**。47 的量測散在 §1–§6.5（第一／二輪）、**§A–§I（第三輪起，不在 §8 修正清單裡）**；64 是計算樣式那一輪。本檔曾經失真兩次，兩次都是只讀了其中一份。

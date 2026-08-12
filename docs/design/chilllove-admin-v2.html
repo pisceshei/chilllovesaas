@@ -6,13 +6,16 @@
 <title>CHILL LOVE — 商家後台 v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- 47號 §3 實測：卡片標題等大字級字重為 450（非 400/500）。450 只有可變字體軸能渲染，
-     故 Inter 必須載入 variable axis wght@100..900；靜態權重清單會被瀏覽器四捨五入而失去該階。 -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- 64 §3 實測字重是**四階**：450（內文與輸入值）／500（pill 與按鈕）／550（badge）／600（卡片標題）。
+     450 與 550 只有**可變字體軸**渲染得出來；靜態權重清單會被瀏覽器四捨五入（450→400、550→500 或 600），
+     四階直接塌成兩階。故拉丁與中日韓兩支字體**都**必須載 variable axis wght@100..900——
+     只修 Inter 不修 Noto Sans TC 的話，繁體中文（本站主要文案）仍然只有 400/500/700 三階。 -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap" rel="stylesheet">
 <style>
 :root{
   /* ══ 中性階（47 §6：只取層級關係，色值為 CHILL LOVE 自有）══════════════ */
-  --bg:#f4f4f5;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
+  /* 64 §1 實測頁面底色 rgb(241,241,241)。原值 #f4f4f5 是估計值，本輪換成量測值。 */
+  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
   --surface-sunken:#e6e6e9;      /* 47 §6：次級按鈕底「比頁底深一階」（原 --surface-2 比頁底淺，層級反轉）*/
   --surface-sunken-hover:#dcdce0;--surface-sunken-active:#d2d2d7;
   --surface-inverse:#1a1b1d;     /* 深色浮層底（toast／bulkbar／savebar／doc-pop）*/
@@ -80,10 +83,14 @@
   --critical:var(--sem-critical-text);--critical-bg:var(--sem-critical-surface);
   --info:var(--sem-info-text);--info-bg:var(--sem-info-surface);
 
-  /* ══ 47 §C 髮絲線＝1 個「裝置」像素（不是固定 1px）════════════════════
-     dpr 三檔於 :root 覆寫此 token；全站邊框一律 var(--hairline)。
-     48 §00.4 的 --bw-100:1px 依 51 表 6 作廢，不落地。 */
-  --hairline:1px;
+  /* ══ 64 §4 髮絲線＝**固定次像素常數 0.66px**（推翻 47 §C 的「1 裝置像素」解釋）══
+     為什麼改：47 §C 當時只量到 dpr=1.5 的 0.667px，於是推論成「1 個裝置像素」，
+     並據此寫了三檔 min-resolution / dppx 媒體查詢讓它隨 dpr 變細。
+     64 號改用 getComputedStyle 穿透 shadow root 重量，**在 dpr = 1 的螢幕上讀到 0.66px**——
+     若真是「1 裝置像素」，dpr=1 應該讀到 1px。所以那不是換算出來的值，是寫死的次像素常數。
+     ⇒ 三檔 dppx 媒體查詢本輪整組移除（保留這段說明，才認得出這是刻意刪的不是漏的）。
+     全站邊框一律 var(--hairline)；48 §00.4 的 --bw-100:1px 依 51 表 6 作廢，不落地。 */
+  --hairline:.66px;
   --bw-150:1.5px;                /* 僅供 badge pip 環與 dashed 落點區使用 */
 
   /* ══ 47 §1 間距七階（唯一允許的間距值：2/4/6/8/12/16/24）══════════════ */
@@ -99,13 +106,25 @@
   /* ══ 47 §3 字級階（size / line-height / weight）════════════════════════ */
   --t-2xs:11px; --lh-2xs:14px; --fw-2xs:600;  /* 微標籤（47 未量到，我方保留階）*/
   --t-xs:12px;  --lh-xs:16px;  --fw-xs:500;   /* 表格內容、欄位標題 */
-  --t-sm:13px;  --lh-sm:20px;  --fw-sm:500;   /* UI 預設（原 14px，47 §3 修正為 13） */
+  --t-sm:13px;  --lh-sm:20px;  --fw-sm:var(--fw-body);  /* UI 預設 13/20；64 §3 把此階字重定為 450 */
   --t-md:14px;  --lh-md:20px;  --fw-md:500;   /* 次要標題 */
   --t-lg:16px;  --lh-lg:20px;  --fw-lg:450;   /* 卡片標題（weight 刻意降為 450） */
   --t-xl:18px;  --lh-xl:24px;  --fw-xl:500;   /* 區段標題 */
   --t-2xl:20px; --lh-2xl:24px;                /* 頁面標題 */
   --t-3xl:24px; --lh-3xl:32px;                /* 統計數字 */
+  /* ══ 64 §3 字重四階（實測值，非估計）════════════════════════════════════
+     450 內文／輸入值／標籤｜500 pill 與按鈕｜550 badge｜600 卡片標題。
+     這四階是**同一條軸上的四格**，所以收斂成四顆 token，元件一律引用不再各寫數字。
+     47 §6.5 先前只發現 550 一階（--fw-split），64 補齊另外三階並改寫其用途表：
+       ・卡片標題原本是 --fw-lg:450（47 §3 的舊判讀），64 實測是 **13 / 20 / 600**——
+         字級變小、字重變大，兩處都要改，只改一處會得到「小而輕」的錯誤觀感。
+       ・badge 原本硬寫 500，實測 550（＝與 split 鈕同一階，故 --fw-badge 直接指向它）。
+     ⚠ 依賴可變字體軸，見 <head> 的字體載入註釋。 */
+  --fw-body:450;                              /* 64 §3：內文、輸入框文字、標籤、段落 */
+  --fw-control:500;                           /* 64 §3：pill 與按鈕（可點控件）*/
   --fw-split:550;                             /* 47 §6.5：split 鈕字重 550（介於 500/600）*/
+  --fw-badge:var(--fw-split);                 /* 64 §3：badge 12/16/550 ＝ 與 split 同階 */
+  --fw-title:600;                             /* 64 §3：卡片標題 13/20/600 */
 
   /* ══ 47 §2 圓角四階 ═══════════════════════════════════════════════════ */
   --r-100:4px;    /* 最小元素 */
@@ -122,6 +141,17 @@
   --h-36:36px;  /* 頂欄控件 */
   --topbar-h:56px;    /* 47 §0／§B 量測真值（原 52，51 表 1 P0-11）*/
   --sidebar-w:240px;  /* 47 §B 桌機常駐側欄真值（原 220，51 表 1 P0-11）*/
+  --sz-icon:20px;     /* 64 §4：圖示 20 × 20（我方原本散落 15／16，本輪收斂成一顆 token）*/
+  /* ══ 64 §1 詳情頁雙欄版面（實測）═══════════════════════════════════════
+     左欄（主）寬 633、右欄（次）寬 317；右欄內層盒 285 ⇒ 左右內距各 16
+     （317 − 285 = 32），恰好等於 .card-pad 的 --sp-400，不必另開內距 token。
+     主欄用 minmax(0, …) 只做「上限」不做「固定」——窄視口仍要能收縮，
+     否則 47 §F 的 em 斷點還沒生效就先撐破版面。 */
+  --col-main:633px;
+  --col-aside:317px;
+  /* 64 §1：卡片間距 16（同群）／52（跨群）。52 > 24 ⇒ 依 47 §1「>24px 一律以階梯的
+     整數倍組合」寫成 calc（24×2 + 4），不得出現裸值。同群間距即 .col 的 gap（--sp-400）。 */
+  --sp-group:calc(var(--sp-600)*2 + var(--sp-100));
 
   /* ══ 47 §G／§H2-2 z-index 窄帶（浮層全部擠在 510–520，靠 DOM 序決勝）══ */
   --z-base:1;        /* 卡片內基礎堆疊 */
@@ -162,6 +192,20 @@
 
   /* ══ 陰影階（整條 token 化，51 表 2 要求）═════════════════════════════ */
   --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  /* ── 64 §2 卡片：圓角 12／背景 #FFF／**border-width: 0**／六層陰影 ──────────
+     前五層是同步收斂的柔和投影（offset、blur、spread 一起遞減），**第六層
+     `0 0 0 1px` 就是那條看起來像 border 的框線**——卡片根本沒有 border。
+     為什麼這樣做（64 §2 的解釋）：框線走 box-shadow 就不佔 box model、可做次像素、
+     且能與投影合成一次繪製，與 47 §H2-4「表單控件框也用 inset box-shadow」同一套。
+     收斂成**一顆** token：六層寫六次的話，日後調一層就會有卡片沒跟上。
+     不透明度沿用實測的 .03/.02/.02/.03/.04/.06；色相為純黑，屬中性層級不是品牌色。 */
+  --sh-card:
+    rgba(0,0,0,.03) 0 5px 5px -2.5px,
+    rgba(0,0,0,.02) 0 3px 3px -1.5px,
+    rgba(0,0,0,.02) 0 2px 2px -1px,
+    rgba(0,0,0,.03) 0 1px 1px -.5px,
+    rgba(0,0,0,.04) 0 .5px .5px 0,
+    rgba(0,0,0,.06) 0 0 0 1px;
   --sh-raised:0 1px 2px rgba(26,28,30,.08);
   --sh-pop:0 12px 32px rgba(26,28,30,.16);
   --sh-modal:0 24px 64px rgba(26,28,30,.35);
@@ -178,16 +222,18 @@
      CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
 }
 
-/* 47 §C：髮絲線＝1 個實體像素。dpr 三檔就地覆寫 --hairline，全站邊框同步變細。 */
-@media (-webkit-min-device-pixel-ratio:1.5),(min-resolution:1.5dppx){:root{--hairline:.667px}}
-@media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx){:root{--hairline:.5px}}
+/* 64 §4：此處原有兩條 (-webkit-min-device-pixel-ratio / min-resolution:…dppx) 媒體查詢，
+   把 --hairline 依 dpr 降成 .667px／.5px。本輪依實測整組刪除——髮絲線是固定 0.66px，
+   與 dpr 無關（理由見 :root 的 --hairline 註釋）。
+   ⚠ scripts/lint-prototype.py 的 r_hairline 仍會 WARN「有 --hairline 但無 dppx 媒體查詢」，
+     那條 WARN 的依據是已被 64 §4 推翻的 47 §C；lint 不在本輪可改的檔案清單內，留待其擁有者更新。 */
 /* 47 §C 自寫 utility：markup 直接標記單邊髮絲線用 */
 .cl-hairline{border-bottom:var(--hairline) solid var(--border)}
 .cl-hairline-t{border-top:var(--hairline) solid var(--border)}
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:var(--t-sm)}
-body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-sm);letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-body);letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::placeholder{color:var(--text-3)}
@@ -272,6 +318,11 @@ svg{flex:none}
 .kbd{margin-left:auto;font-size:var(--t-2xs);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-100);padding:var(--sp-050) var(--sp-150);color:var(--text-3)}
 .top-right{display:flex;align-items:center;gap:var(--sp-150)}
 .icon-btn{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);position:relative}
+/* 64 §4：圖示 20 × 20。本輪只套在**本輪對齊範圍內**的商品／變體詳情頁——
+   其餘頁面的圖示仍是既有的 15／16，等各自對齊那一輪再收斂到同一顆 token。
+   寫成 CSS 規則而不是只改 IC() 的參數，是為了讓 --sz-icon 有真正的消費者
+   （宣告卻沒人用的 token 會在下一次稽核被當成已落地）。 */
+[data-form="prod"] .icon-btn>svg,[data-form="prod"] .media-add>svg{width:var(--sz-icon);height:var(--sz-icon)}
 .icon-btn:hover{background:var(--surface-2)}
 .dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
 .store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600}
@@ -305,7 +356,10 @@ h1{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:var(--fw-lg);let
 .head-actions{margin-left:auto;display:flex;gap:var(--sp-200);align-items:center}
 
 /* ===== 元件 ===== */
-.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:600;border:var(--hairline) solid transparent}
+/* 64 §4：主要按鈕高 28、圓角 8、內距 6/12；字重 500（64 §3，原本硬寫 600）。
+   垂直內距 6 不寫進 padding——本站 line-height 是 20，height 28 + padding 6 會把盒撐成 32；
+   實測的是「盒高 28、水平內距 12」這兩個事實，照它們落地（見 .btn-sm）。 */
+.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:var(--fw-control);border:var(--hairline) solid transparent}
 /* 47 §E：disabled 只把文字色降到 --text-disabled，底色一律不動（降 opacity 會在深底發灰、淺底發白）*/
 .btn:disabled,.btn[aria-disabled="true"]{color:var(--text-disabled);cursor:not-allowed;box-shadow:none}
 /* Chromium 的 UA 樣式對 disabled 的表單控件套 opacity:.7——那正是 47 §E 禁止的做法。
@@ -321,15 +375,19 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .btn-split{font-weight:var(--fw-split)}   /* 47 §6.5：split 鈕字重 550 */
 .btn-ghost{color:var(--text-2)}
 .btn-ghost:hover{background:rgba(26,28,30,.06);color:var(--text)}
-.btn-sm{height:var(--h-28);padding:0 var(--sp-200);font-size:var(--t-xs)}
+.btn-sm{height:var(--h-28);padding:0 var(--sp-300);font-size:var(--t-sm)}   /* 64 §4：高 28、水平內距 12；字級 13（64 §3 pill/按鈕同階）*/
 .split{display:inline-flex}
 .split .btn:first-child{border-radius:var(--r-200) 0 0 var(--r-200)}
 .split .btn:last-child{border-radius:0 var(--r-200) var(--r-200) 0;border-left:var(--hairline) solid rgba(255,255,255,.25);padding:0 var(--sp-200)}
-.card{background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-card);box-shadow:var(--sh)}
+/* 64 §2：卡片沒有 border——那條框線是六層陰影的最後一層。border-width 明寫 0，
+   不是「不寫」：舊值是 var(--hairline) solid var(--border)，留 0 才看得出是刻意拿掉的。 */
+.card{background:var(--surface);border:0;border-radius:var(--r-card);box-shadow:var(--sh-card)}
 .card-pad{padding:var(--sp-400)}
-.card h3{font-size:var(--t-lg);line-height:var(--lh-lg);font-weight:var(--fw-lg);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
-.card h3 .h-act{margin-left:auto;color:var(--text-2)}
-.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:0 var(--sp-200);border-radius:var(--r-200);font-size:var(--t-xs);font-weight:500;white-space:nowrap}
+/* 64 §3：卡片標題 13 / 20 / 600（原 16 / 20 / 450 是 47 §3 的舊判讀）*/
+.card h3{font-size:var(--t-sm);line-height:var(--lh-sm);font-weight:var(--fw-title);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
+.card h3 .h-act{margin-left:auto;color:var(--text-2);font-weight:var(--fw-body)}
+/* 64 §4：badge 高 20、圓角 8、內距 2/8；64 §3：12 / 16 / 550 */
+.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:var(--sp-050) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-badge);white-space:nowrap}
 /* 47 §D 徽章狀態圖示——形狀本身即編碼狀態（WCAG 1.4.1 不以顏色單獨傳達）：
    ● 實心 = 完成／success｜○ 空心 = 未開始／attention｜⊘ 斜線圓 = 部分／受阻 */
 .badge .pip{width:7px;height:7px;border-radius:50%;border:var(--bw-150) solid currentColor;flex:none;position:relative}
@@ -352,7 +410,9 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .b-fill-critical{background:var(--sem-critical-fill);color:var(--text-inverse)}
 /* 47 §H2-4：表單控件的 1px 框一律用 inset box-shadow，不用 border
    —— 不佔 box model、可做次像素、與 §C 髮絲線同一套。 */
-.input{width:100%;height:var(--h-32);border:0;border-radius:var(--r-btn);padding:0 var(--sp-200);background:var(--surface);font-size:var(--t-sm);
+/* 64 §4：控件盒 高 32、圓角 8、框 = inset 0.66px；輸入值字重 450（64 §3）。
+   text-field 整組高 56 ＝ 標籤 20 ＋ 控件 32 ＋ 間距 4，由 .field 的 gap --sp-100 湊出。 */
+.input{width:100%;height:var(--h-32);border:0;border-radius:var(--r-btn);padding:0 var(--sp-200);background:var(--surface);font-size:var(--t-sm);font-weight:var(--fw-body);
   box-shadow:inset 0 0 0 var(--hairline) var(--border-strong)}
 .input:hover{box-shadow:inset 0 0 0 var(--hairline) var(--border-hover)}
 .input:focus{outline:none;box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
@@ -457,8 +517,13 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .ai-row .x:hover{background:#e0d5fb}
 
 /* ===== 訂單詳情 ===== */
-.od-grid{display:grid;grid-template-columns:1fr 300px;gap:var(--sp-400);align-items:start}
+/* 64 §1：左欄（主）633、右欄（次）317、欄間 16。主欄用 minmax(0,…) 只設上限——
+   固定寬會在窄視口撐破版面，而 47 §F 的 em 斷點要到 48em 才接手。 */
+.od-grid{display:grid;grid-template-columns:minmax(0,var(--col-main)) var(--col-aside);gap:var(--sp-400);align-items:start}
+/* 64 §1：同群卡片間距 16 */
 .col{display:flex;flex-direction:column;gap:var(--sp-400)}
+/* 64 §1：跨群 52。.col 已給 16，這裡只補差額 36，兩個機制不要重複相加。 */
+.col>.gap-group{margin-top:calc(var(--sp-group) - var(--sp-400))}
 .od-line{display:flex;align-items:center;gap:var(--sp-300);padding:var(--sp-300) 0;border-bottom:var(--hairline) solid var(--border-2)}
 .od-line:last-of-type{border-bottom:0}
 .od-line .li-info{flex:1;min-width:0}
@@ -681,7 +746,7 @@ img{max-width:100%;height:auto}
   .setup-grid{grid-template-columns:repeat(2,1fr)}
   .ana-grid,.ana-grid.g3{grid-template-columns:repeat(2,1fr)}
   .chart2,.chart2.c14,.live-wrap{grid-template-columns:1fr}
-  .od-grid{grid-template-columns:1fr}     /* 側欄 300px 卡片落到主欄之後 */
+  .od-grid{grid-template-columns:1fr}     /* 側欄（64 §1 實測 317）卡片落到主欄之後 */
   .setup-card p{max-width:none;padding-right:calc(var(--sp-400)*5)}
   .head-actions{flex-wrap:wrap}
   /* 設定 overlay：頂部讓出 var(--touch-min) 給關閉鈕，避免壓在卡片右上角 */
@@ -883,7 +948,7 @@ img{max-width:100%;height:auto}
 
 /* --- 表單 --- */
 .field{display:flex;flex-direction:column;gap:var(--sp-100);min-width:0}
-.field>label{font-size:var(--t-xs);font-weight:500;color:var(--text-2)}
+.field>label{font-size:var(--t-xs);font-weight:var(--fw-body);color:var(--text-2)}   /* 64 §3：標籤與內文同階 450 */
 .field .hint{font-size:var(--t-2xs);color:var(--text-3);line-height:1.5}
 .field .msg{font-size:var(--t-xs);color:var(--critical);display:none}
 .field.bad .msg{display:block}
@@ -905,11 +970,12 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--t-xs)}
 
 /* 開關（可被表單 dirty 追蹤的原生 checkbox）*/
-.tgl{appearance:none;-webkit-appearance:none;width:36px;height:20px;border-radius:var(--r-pill);background:var(--border-strong);
+/* 64 §4：switch 32 × 24（原 36 × 20）。旋鈕 16 × 16、四邊內縮 4 ⇒ 行程 32 − 4 − 4 − 16 = 8。 */
+.tgl{appearance:none;-webkit-appearance:none;width:32px;height:24px;border-radius:var(--r-pill);background:var(--border-strong);
   position:relative;flex:none;cursor:pointer;margin:0}
-.tgl::after{content:"";position:absolute;top:var(--sp-050);left:var(--sp-050);width:16px;height:16px;border-radius:50%;background:var(--surface)}
+.tgl::after{content:"";position:absolute;top:var(--sp-100);left:var(--sp-100);width:16px;height:16px;border-radius:50%;background:var(--surface)}
 .tgl:checked{background:var(--sem-success-fill)}
-.tgl:checked::after{transform:translateX(16px)}
+.tgl:checked::after{transform:translateX(8px)}
 .swrow{display:flex;align-items:flex-start;gap:var(--sp-300);padding:var(--sp-200) 0;border-bottom:var(--hairline) solid var(--border-2)}
 .swrow:last-child{border-bottom:0}
 .swrow .sw-t{flex:1;min-width:0;font-size:var(--t-sm)}
@@ -997,13 +1063,21 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
    色值與尺寸全部取自既有 token（鐵律 8）；動效走既有 M1（底色）與 M4（max-height）。 */
 .pillset{margin-top:var(--sp-300)}
 .pills{display:flex;flex-wrap:wrap;gap:var(--sp-150);align-items:center}
+/* 64 §4：pill 高 28、圓角 8、內距 4/8、**無框、背景透明**；64 §3：13 / 20 / 500。
+   「無框、背景透明」不是省略而是量到的事實，而且它正是高度剛好 28 的原因：
+   內容 20（行高）＋ 上下內距 4×2 ＝ 28；加一圈髮絲線就變 29.3，量起來永遠差一點。
+   ⇒ 48 §33.2 原本寫的「idle 有 --hairline 框、底 --surface」依本輪實測改為無框透明；
+     hover／展開／focus 三態的底色**保留**（64 沒量到那三態，它們是我方既有的可視回饋，
+     拿掉會讓一排 pill 完全沒有可點提示）。 */
 .pill{display:inline-flex;align-items:center;gap:var(--sp-150);max-width:100%;min-height:var(--h-28);
-  padding:var(--sp-050) var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);
-  background:var(--surface);font-size:var(--t-xs);color:var(--text-2);text-align:left}
+  padding:var(--sp-100) var(--sp-200);border:0;border-radius:var(--r-200);
+  background:transparent;font-size:var(--t-sm);font-weight:var(--fw-control);color:var(--text);text-align:left}
 .pill:hover{background:var(--surface-2)}
 /* 展開態用「沉下一階的底」表示這排 pill 對應的區域正開著（47 §6 --surface-sunken 的用途） */
 .pill[aria-expanded="true"]{background:var(--surface-sunken);color:var(--text)}
-.pill .pl-v{color:var(--text);font-weight:600;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 值比標籤重一階（48 §33.2：有值／空值的差別必須是「有沒有那段文字」，字重只是輔助）。
+   pill 本體是 500（64 §3），值用 --fw-title 拉開對比。 */
+.pill .pl-v{color:var(--text);font-weight:var(--fw-title);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pill .pl-c{color:var(--text-3);font-size:var(--t-2xs);line-height:1}
 /* 48 §15.3：caret 旋轉 180°，不用 transform（避免與位移動畫互相覆寫）*/
 .pill .pl-c{transition:rotate var(--dur-fast) var(--ease-decelerate)}
@@ -1018,7 +1092,26 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .derow{display:flex;flex-wrap:wrap;gap:var(--sp-400);align-items:baseline}
 .derow .de{display:flex;gap:var(--sp-150);align-items:baseline;font-size:var(--t-xs);color:var(--text-2)}
 .derow .de b{font-size:var(--t-sm);color:var(--text)}
-.derow .de b.unknown{color:var(--text-3);font-weight:500}
+.derow .de b.unknown{color:var(--text-3);font-weight:var(--fw-control)}
+/* 13 §F1.2 兩維讀值（可購買／可被發現）：是／否兩個字本身就承載語意，
+   顏色只是加速掃視，不單獨傳達狀態（WCAG 1.4.1）。 */
+.derow .de b.pos{color:var(--sem-success-text)}
+.derow .de b.neg{color:var(--sem-critical-text)}
+
+/* --- 變體詳情次級視圖（60 §3：左側是變體切換側欄，不是回商品頁再點）------------
+   側欄寬度沿用 --col-aside 這一階（64 §1 的次欄真值），主區吃剩下的空間。 */
+.vd-grid{display:grid;grid-template-columns:var(--col-aside) minmax(0,var(--col-main));gap:var(--sp-400);align-items:start}
+.vd-side{position:sticky;top:0}
+.vd-side .vd-head{padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border-2)}
+.vd-side .vd-count{font-size:var(--t-xs);color:var(--text-2);padding:var(--sp-200) var(--sp-400) 0}
+.vd-list{display:flex;flex-direction:column;padding:var(--sp-100)}
+.vd-item{display:flex;align-items:center;gap:var(--sp-200);width:100%;text-align:left;padding:var(--sp-150) var(--sp-200);
+  border-radius:var(--r-200);font-size:var(--t-sm);color:var(--text-2);min-height:var(--h-32)}
+.vd-item:hover{background:var(--surface-2);color:var(--text)}
+.vd-item[aria-current="true"]{background:var(--surface-sunken);color:var(--text);font-weight:var(--fw-control)}
+.vd-item .vd-sw{width:20px;height:20px;border-radius:var(--r-100);flex:none}
+.vd-item .vd-q{margin-left:auto;font-size:var(--t-xs);color:var(--text-3)}
+@media (max-width:47.9975em){.vd-grid{grid-template-columns:1fr}.vd-side{position:static}}
 
 /* --- 條件建構器（智慧系列／分群／折扣）--- */
 .rule{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr) 34px;gap:var(--sp-200);align-items:center;margin-bottom:var(--sp-200)}
@@ -1276,7 +1369,10 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   .card-note{padding:var(--sp-300)}
 }
 
-#page-detail{max-width:998px}
+/* 64 §1：詳情頁內容寬＝主欄 633 ＋ 欄間 16 ＋ 次欄 317 ＝ 966，加上 .page 左右各
+   calc(--sp-400*2)=32 的內距 ⇒ 1030。原本寫死 998，會把主欄擠到 601（實測），
+   量起來就是「欄寬對不上 64 號」。用 calc 由欄寬 token 推導，日後改欄寬不會再漏這一處。 */
+#page-detail{max-width:calc(var(--col-main) + var(--sp-400) + var(--col-aside) + var(--sp-400)*4)}
 
 /* ══════════════════════════════════════════════════════════════════════
    模組 C：B2B 公司與地點（49 P0-04／44 §22.5）
@@ -1874,7 +1970,10 @@ const MARKET_LOCALES={
 const LIMITS={giftCardMaxCents:200000,   /* limits.yml gift_card.max_initial_value_cents */
  productMaxMedia:250,                    /* limits.yml product.max_media */
  productMaxOptions:3,                    /* limits.yml product.max_options */
- productMaxVariants:2048};               /* limits.yml product.max_variants */
+ productMaxVariants:2048,                /* limits.yml product.max_variants */
+ productMaxTags:250,                     /* limits.yml product.max_tags */
+ productTagMaxChars:255,                 /* limits.yml product.tag_max_chars */
+ productMaxImagesPerVariant:1};          /* limits.yml product.max_images_per_variant（變體只能掛一張圖）*/
 const MARKET_BASE='HKD';                 /* 鐵律 11：基準法域＝香港，開站預設就是它 */
 let MARKET_CUR=MARKET_BASE;
 function marketLocale(code){return MARKET_LOCALES[code]||MARKET_LOCALES[MARKET_CUR]||MARKET_LOCALES[MARKET_BASE];}
@@ -2078,6 +2177,8 @@ const URL_OPEN={
  'orderdetail':{open:id=>openOrder(id),miss:()=>go('orders')},
  'd-draft':{open:id=>openDraft(id),miss:()=>openDraft('new')},
  'd-product':{ok:()=>!!PV,miss:()=>go('products')},
+ /* 變體詳情要有商品上下文才畫得出來；冷開這個網址時退回商品列表（誠實降級，不假裝還原）。 */
+ 'd-variant':{ok:()=>!!(PV&&PVD&&PV.vars&&PV.vars[PVD.i]),miss:()=>go('products')},
  'd-collection':{ok:()=>!!COL,miss:()=>go('m-collections')},
  'd-customer':{ok:()=>!!CUS,miss:()=>go('m-customers')},
  'd-segment':{ok:()=>!!SEG,miss:()=>go('m-segments')},
@@ -2678,8 +2779,36 @@ function addTag(id,tag){
    入口改為每張履行單卡自己的 CREATE_FULFILLMENT（foFulfill / foFulfillOK）。 */
 
 /* ================= 產品列表 ================= */
-const S_BADGE={active:'<span class="badge b-success"><span class="pip full"></span>使用中</span>',
- draft:'<span class="badge b-info"><span class="pip"></span>草稿</span>'};
+/* ══════════════════════════════════════════════════════════════════════════
+   13 §F1.2：商品狀態是**四**態，而且前台可見性是**兩個獨立維度**，不是一個開關。
+   值域＝config/limits.yml `product.status_values`（鐵律 6：引鍵名，不硬編清單）；
+   兩個 scope 的成員＝`product.purchasable_statuses` / `product.discoverable_statuses`。
+
+   為什麼要兩維：`UNLISTED` 的存在本身就是證據——它「可購買但不可被發現」。
+   一個 `published` 布林兼管兩件事，在三態下剛好不出錯（三態兩維完全同步），
+   補上 UNLISTED 必定撞牆：要嘛它完全買不到，要嘛它出現在搜尋與 sitemap 裡（SEO 事故）。
+   ⇒ UI 也必須把兩維分開顯示，否則商家看不出「未列出」到底差在哪。
+   ══════════════════════════════════════════════════════════════════════════ */
+const P_STATUS=[
+ {k:'ACTIVE',t:'啟用',bt:'啟用中',badge:'b-success',pip:'full',purchasable:true,discoverable:true,
+  why:'可販售也可被發現。直接 URL 回 200；進 sitemap、站內搜尋、預測搜尋、商品系列、商品推薦與各管道 feed。'},
+ {k:'UNLISTED',t:'未列出',bt:'未列出',badge:'b-caution',pip:'',purchasable:true,discoverable:false,
+  why:'<b>可買，但不可被發現</b>。拿到直接連結的顧客，其購物車／結帳／訂單／購後流程與「啟用」完全相同；但它<b>不進</b>站內搜尋、預測搜尋、商品系列、商品推薦、sitemap、hreflang 矩陣、GMC／Meta feed、商品 JSON-LD 與 AI 代理 catalog，且 &lt;head&gt; 輸出 limits.yml <code>product.unlisted_meta_robots</code>。可達路徑只有直接 URL、中繼欄位參照與分享連結。'},
+ {k:'DRAFT',t:'草稿',bt:'草稿',badge:'b-info',pip:'',purchasable:false,discoverable:false,
+  why:'尚未備妥，顧客在任何管道都取用不到；直接 URL 回 404。'},
+ {k:'ARCHIVED',t:'已封存',bt:'已封存',badge:'b-default',pip:'blocked',purchasable:false,discoverable:false,
+  why:'已停售，顧客在任何管道都取用不到；直接 URL 回 404（本專案推導：ARCHIVED 可回 410——曾存在、已永久停售，410 讓爬蟲更快移除索引）。'}];
+/* 13 §F1.2 的恆等不變量（limits.yml `product.discoverable_subset_of_purchasable`）：
+   discoverable ⊆ purchasable 恆成立。寫成**可執行斷言**而不是註釋——真值表是給人對照的，
+   不變量才是能擋住迴歸的東西。違反＝把買家從搜尋結果送進一個買不了的頁面（soft-404）。 */
+P_STATUS.forEach(s=>{if(s.discoverable&&!s.purchasable)
+  console.error('[status] 違反 discoverable ⊆ purchasable：'+s.k+'（13 §F1.2 恆等不變量）');});
+const P_STATUS_OF=k=>P_STATUS.find(s=>s.k===String(k||'').toUpperCase())||P_STATUS[0];
+/* 徽章由同一張表生成——狀態多一個值時不會有第二個地方要記得改。
+   鍵用小寫是為了直接吃 PRODUCTS[].s 的既有值（active／draft）。 */
+const S_BADGE={};
+P_STATUS.forEach(s=>{S_BADGE[s.k.toLowerCase()]=
+  `<span class="badge ${s.badge}"><span class="pip ${s.pip}"></span>${s.bt}</span>`;});
 function renderProducts(){
   const q=(document.getElementById('prodSearch').value||'').trim();
   document.querySelector('#prodTable tbody').innerHTML=PRODUCTS.filter(p=>!q||p.n.includes(q)).map(p=>`
@@ -4457,6 +4586,7 @@ function slBuy(){
    商品模組：詳情頁（含變體矩陣）／系列／庫存／禮品卡
    ================================================================== */
 let PV=null;   /* 目前編輯中的商品狀態（含變體矩陣）；PV.isNew 決定建立態／詳情態 */
+let PVD=null;  /* 變體詳情次級視圖的狀態：{i} ＝ PV.vars 的索引。null ＝ 沒開變體詳情 */
 /* ══════════════════════════════════════════════════════════════════════════
    59 §7 架構結論：**建立頁與詳情頁是同一個元件的兩種狀態，不是兩個頁面。**
    實站拆解顯示兩者的版面、卡片順序、pill 分組鍵一字不差，差異全部落在
@@ -4473,27 +4603,65 @@ const PD_NEW={n:'',s:'draft',inv:0,v:1,type:'',vd:'',g:P_G.tee,price:null,cost:n
    直接寫 PRODUCTS[PV.i] 的地方一律改走這裡，否則建立態會對 undefined 取值。 */
 function pdProduct(){return PV&&PV.isNew?PV.draft:PRODUCTS[PV.i];}
 function pdIsNew(){return !!(PV&&PV.isNew);}
+/* ══════════════════════════════════════════════════════════════════════════
+   60 §1 架構發現：**無變體商品 ＝ 只有一個隱含變體的商品。**
+   證據鏈：59 號在**無變體**商品頁量到的三組 pill 分組鍵是
+   `product_variant_collapsible_pricing / _inventory / _shipping`；60 號拆**有變體**
+   商品的變體詳情頁，量到**同樣三組、同樣的鍵、同樣的 pill 組成**。
+   ⇒ 那三張卡從來都是「變體」的卡，不是「商品」的卡：
+        無變體 → 就地內嵌顯示那個唯一的隱含變體
+        有變體 → 商品頁上**完全消失**，搬到變體詳情頁
+   對資料模型的意義：商品**恆有**至少一個變體，「無變體」只是 PV.opts.length===0 的呈現特例。
+   做成「商品有價格欄位、變體也有價格欄位」兩套，同步邏輯遲早爛掉——這也是為什麼
+   Shopify 的 GraphQL 把價格掛在 ProductVariant 而不是 Product。
+   ══════════════════════════════════════════════════════════════════════════ */
+const PV_IMPLICIT='__implicit__';                 /* 隱含變體的鍵，永遠不會與選項值組合撞名 */
+function pdHasVariants(){return !!(PV&&PV.opts.length);}          /* 有具名選項 ⇒ 多變體形態 */
+/* 三張卡目前在編輯哪一個變體：變體詳情頁＝側欄選中的那個；商品頁＝那個隱含變體。 */
+function pdActiveVariant(){
+  if(!PV||!PV.vars||!PV.vars.length)return null;
+  if(PVD&&current==='d-variant')return PV.vars[PVD.i]||PV.vars[0];
+  return PV.vars[0];
+}
+/* 鐵律 4：GID 格式 gid://chilllove/{Type}/{id}。60 §2 實測列 checkbox 的 value 就是 GID。 */
+function pvGid(i){return 'gid://chilllove/ProductVariant/'+(4920633665000+i*7);}
 function openProduct(i){
   const p=PRODUCTS[i];
   PV={i,isNew:false,draft:null,opts:JSON.parse(JSON.stringify(p.opts||[])),vars:null,group:'',sel:new Set()};
+  PVD=null;
   pvBuild(true);
   goDetail('d-product',{i});
 }
 function newProduct(){
-  PV={i:null,isNew:true,draft:JSON.parse(JSON.stringify(PD_NEW)),opts:[],vars:[],group:'',sel:new Set()};
+  PV={i:null,isNew:true,draft:JSON.parse(JSON.stringify(PD_NEW)),opts:[],vars:null,group:'',sel:new Set()};
+  PVD=null;
+  pvBuild(true);
   goDetail('d-product',{});
 }
 function pvCombos(){
   if(!PV.opts.length)return [];
   return PV.opts.reduce((acc,o)=>acc.flatMap(a=>o.v.map(v=>a.concat([v]))),[[]]);
 }
+/* 一個變體的完整欄位集＝三張卡讀寫的所有欄位。三張卡只寫一次（pdPriceCard／pdInvCard／
+   pdShipCard），所以欄位也只能有一套；放在商品上、又放在變體上就是 60 §1 警告的那個坑。 */
+function pvSeed(p,k,c,qty,sku){
+  return {k,c,implicit:k===PV_IMPLICIT,pub:true,img:false,qty,sku,
+    price:p.price==null?null:p.price,compare:p.compare==null?null:p.compare,cost:p.cost==null?null:p.cost,
+    bar:p.bar||'',w:p.w==null?'':String(p.w),taxable:p.taxable!==false,cont:p.cont===true,
+    unit:'不啟用',orig:'（未指定）',hs:'',pkg:PD_PKGS[0].t};
+}
 function pvBuild(first){
   const p=pdProduct(),prev={};
   (PV.vars||[]).forEach(v=>prev[v.k]=v);
-  PV.vars=pvCombos().map((c,idx)=>{
+  const combos=pvCombos();
+  if(!combos.length){
+    /* 60 §1：沒有具名選項時仍然要有一個變體，只是不畫成表格。 */
+    PV.vars=[prev[PV_IMPLICIT]||pvSeed(p,PV_IMPLICIT,[],p.inv||0,p.sku||'')];
+    return;
+  }
+  PV.vars=combos.map((c,idx)=>{
     const k=c.join(' / '),suf=c.map(x=>x.slice(0,2).toUpperCase()).join('');
-    return prev[k]||{k,c,price:p.price==null?0:p.price,cost:p.cost==null?0:p.cost,
-      qty:first?[18,12,9,6,14,7,11,4][idx%8]:0,sku:p.sku?`${p.sku}-${suf}`:suf,img:false};
+    return prev[k]||pvSeed(p,k,c,first?[18,12,9,6,14,7,11,4][idx%8]:0,p.sku?`${p.sku}-${suf}`:suf);
   });
 }
 /* ── 金額輸入框：畫面上是主單位兩位小數，運算前一律轉 integer cents ──────────
@@ -4549,9 +4717,10 @@ const PD_PKGS=[
  {t:'標準紙箱 M：35 × 25 × 15 cm，0.24 kg'},
  {t:'快遞信封：32 × 24 cm，0.02 kg'},
  {t:'自訂尺寸…'}];
-function pdLocRows(){
-  const p=pdProduct();
-  const total=(PV.vars&&PV.vars.length)?PV.vars.reduce((a,v)=>a+v.qty,0):(p.inv||0);
+/* 逐地點四欄是**該變體**在各地點的帳（60 §3 的變體詳情頁量到的就是這張表），
+   所以吃的是變體不是商品——商品層的總量是各變體加總，不是另一份帳。 */
+function pdLocRows(v){
+  const total=v?v.qty:0;
   const share=[Math.round(total*0.7),Math.round(total*0.2)];
   share.push(total-share[0]-share[1]);
   return PD_LOCS.map((loc,i)=>{
@@ -4560,14 +4729,114 @@ function pdLocRows(){
     return {loc,unavailable,committed,available,onHand:available+committed+unavailable};
   });
 }
+/* ══════════════════════════════════════════════════════════════════════════
+   ⭐ 價格／庫存／運送三張卡——**全檔只寫這一次**（60 §1）
+   商品頁（無變體時）與變體詳情頁各自呼叫，兩邊拿到的是同一份 markup、
+   同一組 pill 分組鍵、同一支 pillSet()。這正是實站三組 pill 的鍵叫
+   `product_variant_collapsible_*` 而不是 `product_*` 的原因。
+   ⚠ 不要因為「變體詳情頁的欄位好像少一點」就複製一份改——那會讓兩邊各自長歪，
+     而且長歪的那天不會有人收到通知（53 號 N-01 的教訓）。
+   金額：欄位值一律 integer cents（65 §A R1），只在 MONEYIN／money() 這兩個
+   序列化邊界（65 §B X1／X2）轉成顯示字串，函式體內不出現任何幣別符號（鐵律 10）。
+   ══════════════════════════════════════════════════════════════════════════ */
+function pdPriceCard(v){
+  const pr=pdProfitState(v.price,v.cost);
+  return `<div class="card card-pad" data-doc="pd-price"><h3>定價</h3>
+        ${F(`價格（${CURSYM()}）`,MONEYIN('pprice',v.price,'req|money','0.00'))}
+        <div data-doc="pd-pill-pricing">${pillSet('pillgrp-pricing','定價',[
+          {l:'比較價格',v:v.compare==null?'':money(v.compare),num:true},
+          {l:'單價',v:v.unit==='不啟用'?'':v.unit},
+          {l:'收取稅金',v:v.taxable?'是':'否'},
+          {l:'每品項成本',v:v.cost==null?'':money(v.cost),num:true}],
+         `<div class="grid2">${F('原價（劃線價）',MONEYIN('pcompare',v.compare,'money','選填'),'高於售價時前台顯示劃線價')}
+            ${F('每品項成本',MONEYIN('pcost',v.cost,'money','0.00'),'不對顧客顯示')}</div>
+          <div class="card-sec derow" data-doc="pd-margin">
+            <span class="de">利潤 <b id="pdProfitV" class="num${pr.profit==null?' unknown':''}">${pr.profit==null?'--':money(pr.profit)}</b></span>
+            <span class="de">利潤率 <b id="pdMarginV" class="num${pr.margin==null?' unknown':''}">${pr.margin==null?'--':pr.margin.toFixed(1)+'%'}</b></span>
+          </div>
+          <p class="help" id="pdProfitWhy">${H(pr.why)}</p>
+          <div class="card-sec">${CHK('ptax',v.taxable,'向此商品收取稅額','建立商品時預設收取；實際課不課、課多少由市場的 jurisdiction pack 決定')}
+            ${F('單位定價（歐盟法規）',SEL('punit',['不啟用','每 100 ml','每 100 g','每 1 kg','每 1 m'],v.unit),'特定市場強制顯示；不啟用時不輸出')}</div>
+          <div class="card-sec" data-doc="pd-presentment"><label style="font-size:var(--t-xs);font-weight:var(--fw-body);color:var(--text-2)">其他顯示價格</label>
+            <div class="tscroll-wrap"><table class="idx"><thead><tr><th>市場</th><th class="right">顯示價格</th><th>來源</th></tr></thead><tbody>
+            ${MARKETS.slice(0,3).map((m,i)=>`<tr class="norow"><td>${H(m.t)}</td>
+              <td class="right num">${v.price==null?'--':money(v.price)}</td>
+              <td class="mut">${i?'未覆寫——由基準價換算':'基準市場'}</td></tr>`).join('')}
+            </tbody></table></div>
+            <p class="help">價目表未覆寫時由基準價換算；覆寫走 29 號 Markets 的 price list。demo 只換格式不換匯率，所以三列數字相同。</p></div>`)}</div>
+      </div>`;
+}
+function pdInvCard(v,isNew){
+  return `<div class="card card-pad" data-doc="pd-inventory"><h3>庫存</h3>
+        ${SWROW('ptrack',true,'已追蹤庫存','關閉時不寫 ledger，前台不擋庫存')}
+        ${isNew?`<div class="grid2 card-sec">${F('數量',`<input class="input num" data-f="pqty" value="${v.qty}" data-val="int">`,'Shop location・可用數量')}
+            ${F('地點',SEL('ploc',PD_LOCS,PD_LOCS[0]),'建立後才會有逐地點的異動歷史')}</div>
+          <p class="help card-sec">新商品還沒有任何庫存異動，因此這裡只收一個起始數量；儲存後本區會換成逐地點的四欄表與調整記錄。</p>`
+        :`<div class="card-sec"><div class="tscroll-wrap"><table class="idx" data-doc="pd-invtable">
+            <thead><tr><th>地點</th><th class="right">無法供貨</th><th class="right">已承諾</th><th class="right">可供貨</th><th class="right">現有庫存</th></tr></thead>
+            <tbody>${pdLocRows(v).map(r=>`<tr class="norow"><td>${H(r.loc)}</td>
+              <td class="right num">${r.unavailable}</td><td class="right num">${r.committed}</td>
+              <td class="right num">${r.available}</td><td class="right num">${r.onHand}</td></tr>`).join('')}</tbody></table></div>
+          <div class="rowflex" style="margin-top:var(--sp-200)">
+            <button class="btn btn-ghost btn-sm" style="padding:0" data-doc="pd-invhistory" onclick="INVTAB='hist';go('m-inventory')">檢視調整記錄 ›</button>
+            <span class="mut3" style="font-size:var(--t-xs)">現有庫存＝可供貨＋已承諾＋無法供貨（待入庫獨立計，不在此表）</span></div></div>`}
+        <div data-doc="pd-pill-inventory">${pillSet('pillgrp-inventory','庫存',[
+          {l:'存貨單位（SKU）',v:v.sku||''},
+          {l:'條碼',v:v.bar||''},
+          {l:'無庫存時繼續銷售',v:v.cont?'開啟':'關閉'}],
+         `<div class="grid2">${F('SKU（庫存單位）',TXT('psku',v.sku,'','max:64'))}${F('條碼（ISBN／UPC／GTIN）',TXT('pbar',v.bar))}</div>
+          <div class="card-sec">${CHK('pcont',v.cont,'售完後仍可繼續銷售（inventoryPolicy=CONTINUE）','允許 available 為負；前台顯示缺貨但可下單')}</div>`)}</div>
+      </div>`;
+}
+function pdShipCard(v){
+  return `<div class="card card-pad" data-doc="pd-shipping"><h3>運送</h3>
+        ${CHK('pphys',true,'這是實體商品')}
+        <div class="grid2 card-sec">${F('商品重量（kg）',`<input class="input num" data-f="pw" value="${H(v.w)}" data-val="num" placeholder="0.00">`)}
+          ${F('包材',SEL('ppkg',PD_PKGS.map(k=>k.t),v.pkg),'尺寸與空箱重量帶入運費試算；「商店預設」跟著運送設定走')}</div>
+        <div data-doc="pd-pill-shipping">${pillSet('pillgrp-shipping','運送',[
+          {l:'原產地國家／地區',v:v.orig==='（未指定）'?'':v.orig},
+          {l:'HS 代碼',v:v.hs||''}],
+         `<div class="grid2">${F('原產國／地區',SEL('porig',['（未指定）','香港','台灣','中國','越南','葡萄牙'],v.orig))}
+            ${F('HS 關稅代碼',TXT('phs',v.hs,'例：6110.20'),'跨境 DDP 需要；缺漏時結帳改 DDU')}</div>`)}</div>
+      </div>`;
+}
+/* ── 13 §F1.2 狀態卡：四態 ＋ 兩維（可購買／可被發現）─────────────────────────
+   為什麼兩維要畫在畫面上：商家看到「未列出」四個字並不會自動知道它跟「啟用」差在哪。
+   把 purchasable／discoverable 攤開，「可買但搜不到」這件事才變成可讀的事實，
+   而不是一個要去查文件的 enum 值。 */
+function pdStatusCard(p,isNew){
+  const s=P_STATUS_OF(isNew?'DRAFT':p.s);
+  const yn=(on,id)=>`<b id="${id}" class="num ${on?'pos':'neg'}">${on?'是':'否'}</b>`;
+  return `<div class="card card-pad" data-doc="pd-status"><h3>狀態</h3>
+      ${SEL('pstatus',P_STATUS.map(x=>[x.k,x.t]),s.k,'onchange="pdStatusSet(this.value)"')}
+      <div class="card-sec derow" data-doc="pd-scope">
+        <span class="de">可購買 purchasable ${yn(s.purchasable,'pdScopeBuy')}</span>
+        <span class="de">可被發現 discoverable ${yn(s.discoverable,'pdScopeDisc')}</span>
+      </div>
+      <p class="help" id="pdStatusWhy" style="margin-top:var(--sp-200)">${s.why}</p>
+    </div>`;
+}
+/* 切狀態時把兩維、說明文字與頁首徽章一起更新。三處都從 P_STATUS 這**一張表**取值——
+   任何一處自己判斷 `k==='UNLISTED'`，就是下一個忘了同步的地方。 */
+function pdStatusSet(k){
+  const s=P_STATUS_OF(k);
+  [['pdScopeBuy',s.purchasable],['pdScopeDisc',s.discoverable]].forEach(([id,on])=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=on?'是':'否';el.className='num '+(on?'pos':'neg');}
+  });
+  const w=document.getElementById('pdStatusWhy');if(w)w.innerHTML=s.why;
+  const b=document.getElementById('pdHeadBadge');if(b)b.innerHTML=S_BADGE[s.k.toLowerCase()]||'';
+  announce(`狀態已改為「${s.t}」：可購買 ${s.purchasable?'是':'否'}、可被發現 ${s.discoverable?'是':'否'}`);
+}
 function productPage(){
   const isNew=pdIsNew(),p=pdProduct();
-  const inv=PV.vars.length?PV.vars.reduce((a,v)=>a+v.qty,0):(p.inv||0);
-  const taxOn=p.taxable!==false,contOn=p.cont===true;
-  const pr=pdProfitState(p.price==null?null:p.price,p.cost==null?null:p.cost);
+  const hasV=pdHasVariants(),v=pdActiveVariant();
   const handle=(p.sku||'').toLowerCase();
+  const prices=PV.vars.map(x=>x.price).filter(x=>x!=null);
+  const seoPrice=prices.length?(hasV&&Math.min(...prices)!==Math.max(...prices)
+    ?money(Math.min(...prices))+'–'+money(Math.max(...prices)):money(prices[0])):null;
   /* 59 §7：建立頁與詳情頁的差異全部集中在這裡——預設值與空態，沒有第二個版面。 */
-  return detailHead(isNew?'新增商品':H(p.n),S_BADGE[isNew?'draft':p.s],
+  return detailHead(isNew?'新增商品':H(p.n),`<span id="pdHeadBadge">${S_BADGE[isNew?'draft':p.s]||''}</span>`,
     (isNew?'':
     `<button class="btn btn-sec btn-sm" data-doc="pd-preview" onclick="toast('Demo：在前台預覽（帶 market context）')">預覽</button>
      <button class="btn btn-sec btn-sm" data-doc="pd-share" onclick="pdShare()">分享</button>
@@ -4581,7 +4850,7 @@ function productPage(){
       <div class="card card-pad" data-doc="pd-title">
         ${F('標題',TXT('ptitle',p.n,'例：奶茶色寬版帽T','req|max:255'),'≤255 字；儲存時自動生成 handle 並唯一化')}
         <div class="card-sec">
-          <div class="rowflex" style="margin-bottom:var(--sp-150)"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">說明</label>
+          <div class="rowflex" style="margin-bottom:var(--sp-150)"><label style="font-size:var(--t-xs);font-weight:var(--fw-body);color:var(--text-2)">說明</label>
             <span style="margin-left:auto" class="rowflex">
               <button class="btn btn-ghost btn-sm" data-doc="pd-ai" onclick="toast('Demo：✨ AI 生成商品說明（P2）')">${SPARK} AI 生成</button>
               <button class="btn btn-ghost btn-sm" onclick="toast('Demo：切換 HTML 原始碼檢視')">&lt;/&gt; HTML</button></span></div>
@@ -4602,7 +4871,7 @@ function productPage(){
           ${[...Array(p.media)].map((_,i)=>`<div class="media-tile ${i===0?'lead':''}" draggable="true" style="background:${p.g}" data-mi="${i}"
              ondragstart="mdDrag(event,${i})" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="mdDrop(event,${i})">
              ${i===0?'<span class="mt-tag">精選</span>':''}<button class="mt-x" aria-label="刪除圖片 ${i+1}" onclick="mdDel(${i})">✕</button></div>`).join('')}
-          <button class="media-add" onclick="toast('Demo：上傳／從檔案庫選（圖 ≤20MB／25MP）')">${IC(IC_PLUS,16)}<span>新增</span></button>
+          <button class="media-add" onclick="toast('Demo：上傳／從檔案庫選（圖 ≤20MB／25MP）')">${IC(IC_PLUS,20)}<span>新增</span></button>
         </div>`}
       </div>
       <div class="card card-pad" data-doc="pd-category">
@@ -4613,60 +4882,7 @@ function productPage(){
           <span class="de">帶出的中繼欄位 <b class="${p.cat?'':'unknown'}">${p.cat?'尺寸／顏色／材質（標準值）':'--'}</b></span>
         </div>
       </div>
-      <div class="card card-pad" data-doc="pd-price"><h3>定價</h3>
-        ${F(`價格（${CURSYM()}）`,MONEYIN('pprice',p.price,'req|money','0.00'))}
-        <div data-doc="pd-pill-pricing">${pillSet('pillgrp-pricing','定價',[
-          {l:'比較價格',v:p.compare==null?'':money(p.compare),num:true},
-          {l:'單價',v:''},
-          {l:'收取稅金',v:taxOn?'是':'否'},
-          {l:'每品項成本',v:p.cost==null?'':money(p.cost),num:true}],
-         `<div class="grid2">${F('原價（劃線價）',MONEYIN('pcompare',p.compare==null?null:p.compare,'money','選填'),'高於售價時前台顯示劃線價')}
-            ${F('每品項成本',MONEYIN('pcost',p.cost,'money','0.00'),'不對顧客顯示')}</div>
-          <div class="card-sec derow" data-doc="pd-margin">
-            <span class="de">利潤 <b id="pdProfitV" class="num${pr.profit==null?' unknown':''}">${pr.profit==null?'--':money(pr.profit)}</b></span>
-            <span class="de">利潤率 <b id="pdMarginV" class="num${pr.margin==null?' unknown':''}">${pr.margin==null?'--':pr.margin.toFixed(1)+'%'}</b></span>
-          </div>
-          <p class="help" id="pdProfitWhy">${H(pr.why)}</p>
-          <div class="card-sec">${CHK('ptax',taxOn,'向此商品收取稅額','建立商品時預設收取；實際課不課、課多少由市場的 jurisdiction pack 決定')}
-            ${F('單位定價（歐盟法規）',SEL('punit',['不啟用','每 100 ml','每 100 g','每 1 kg','每 1 m'],'不啟用'),'特定市場強制顯示；不啟用時不輸出')}</div>
-          <div class="card-sec" data-doc="pd-presentment"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">其他顯示價格</label>
-            <div class="tscroll-wrap"><table class="idx"><thead><tr><th>市場</th><th class="right">顯示價格</th><th>來源</th></tr></thead><tbody>
-            ${MARKETS.slice(0,3).map((m,i)=>`<tr class="norow"><td>${H(m.t)}</td>
-              <td class="right num">${p.price==null?'--':money(p.price)}</td>
-              <td class="mut">${i?'未覆寫——由基準價換算':'基準市場'}</td></tr>`).join('')}
-            </tbody></table></div>
-            <p class="help">價目表未覆寫時由基準價換算；覆寫走 29 號 Markets 的 price list。demo 只換格式不換匯率，所以三列數字相同。</p></div>`)}</div>
-      </div>
-      <div class="card card-pad" data-doc="pd-inventory"><h3>庫存</h3>
-        ${SWROW('ptrack',true,'已追蹤庫存','關閉時不寫 ledger，前台不擋庫存')}
-        ${isNew?`<div class="grid2 card-sec">${F('數量',`<input class="input num" data-f="pqty" value="0" data-val="int">`,'Shop location・可用數量')}
-            ${F('地點',SEL('ploc',PD_LOCS,PD_LOCS[0]),'建立後才會有逐地點的異動歷史')}</div>
-          <p class="help card-sec">新商品還沒有任何庫存異動，因此這裡只收一個起始數量；儲存後本區會換成逐地點的四欄表與調整記錄。</p>`
-        :`<div class="card-sec"><div class="tscroll-wrap"><table class="idx" data-doc="pd-invtable">
-            <thead><tr><th>地點</th><th class="right">無法供貨</th><th class="right">已承諾</th><th class="right">可供貨</th><th class="right">現有庫存</th></tr></thead>
-            <tbody>${pdLocRows().map(r=>`<tr class="norow"><td>${H(r.loc)}</td>
-              <td class="right num">${r.unavailable}</td><td class="right num">${r.committed}</td>
-              <td class="right num">${r.available}</td><td class="right num">${r.onHand}</td></tr>`).join('')}</tbody></table></div>
-          <div class="rowflex" style="margin-top:var(--sp-200)">
-            <button class="btn btn-ghost btn-sm" style="padding:0" data-doc="pd-invhistory" onclick="INVTAB='hist';go('m-inventory')">檢視調整記錄 ›</button>
-            <span class="mut3" style="font-size:var(--t-xs)">現有庫存＝可供貨＋已承諾＋無法供貨（待入庫獨立計，不在此表）</span></div></div>`}
-        <div data-doc="pd-pill-inventory">${pillSet('pillgrp-inventory','庫存',[
-          {l:'存貨單位（SKU）',v:p.sku||''},
-          {l:'條碼',v:p.bar||''},
-          {l:'無庫存時繼續銷售',v:contOn?'開啟':'關閉'}],
-         `<div class="grid2">${F('SKU（庫存單位）',TXT('psku',p.sku,'','max:64'))}${F('條碼（ISBN／UPC／GTIN）',TXT('pbar',p.bar))}</div>
-          <div class="card-sec">${CHK('pcont',contOn,'售完後仍可繼續銷售（inventoryPolicy=CONTINUE）','允許 available 為負；前台顯示缺貨但可下單')}</div>`)}</div>
-      </div>
-      <div class="card card-pad" data-doc="pd-shipping"><h3>運送</h3>
-        ${CHK('pphys',true,'這是實體商品')}
-        <div class="grid2 card-sec">${F('商品重量（kg）',`<input class="input num" data-f="pw" value="${p.w}" data-val="num" placeholder="0.00">`)}
-          ${F('包材',SEL('ppkg',PD_PKGS.map(k=>k.t),PD_PKGS[0].t),'尺寸與空箱重量帶入運費試算；「商店預設」跟著運送設定走')}</div>
-        <div data-doc="pd-pill-shipping">${pillSet('pillgrp-shipping','運送',[
-          {l:'原產地國家／地區',v:''},
-          {l:'HS 代碼',v:''}],
-         `<div class="grid2">${F('原產國／地區',SEL('porig',['（未指定）','香港','台灣','中國','越南','葡萄牙'],'（未指定）'))}
-            ${F('HS 關稅代碼',TXT('phs','','例：6110.20'),'跨境 DDP 需要；缺漏時結帳改 DDU')}</div>`)}</div>
-      </div>
+      ${hasV?'':pdPriceCard(v)+pdInvCard(v,isNew)+pdShipCard(v)}
       ${variantCard()}
       <div class="card card-pad" data-doc="pd-purchase"><h3>購買選項</h3>
         <div class="steps">
@@ -4675,7 +4891,7 @@ function productPage(){
           <button class="step" onclick="toast('Demo：先出貨後扣款，試用期滿 capture')"><b>先試後買 TBYB</b><span>authorize → 期滿 capture</span></button></div>
         <p class="help card-sec">三者皆為 deferred purchase options（selling plans 模型），與折扣的 purchase type 欄聯動。</p>
       </div>
-      <div class="card card-pad" data-doc="pd-metafields"><h3>商品中繼欄位</h3>
+      <div class="card card-pad gap-group" data-doc="pd-metafields"><h3>商品中繼欄位</h3>
         <div class="grid2">${F('材質成分',TXT('pm1',isNew?'':'100% 有機棉','選填'))}${F('洗滌方式',TXT('pm2',isNew?'':'冷水手洗・勿漂白','選填'))}</div>
       </div>
       <div class="card card-pad" data-doc="pd-disclosures"><h3>揭露事項 Disclosures</h3>
@@ -4686,7 +4902,7 @@ function productPage(){
         :`<div class="serp"><div class="s-t" id="seoT">${H(p.n)} | CHILL LOVE</div>
           <div class="s-u">CHILL LOVE https://chilllove.demo › products › ${H(handle)}</div>
           <div class="s-d" id="seoD">${H(p.desc)}</div>
-          <div class="s-d num" style="margin-top:var(--sp-100);color:var(--text)">${p.price==null?'--':money(p.price)+' '+marketLocale().default_currency}</div></div>`}
+          <div class="s-d num" style="margin-top:var(--sp-100);color:var(--text)">${seoPrice==null?'--':seoPrice+' '+marketLocale().default_currency}</div></div>`}
         <div class="card-sec stack">
           ${F('頁面標題',`<input class="input" data-f="pseoT" value="${isNew?'':H(p.n)+' | CHILL LOVE'}" data-val="max:70" placeholder="留空時沿用商品標題" oninput="pdSeoSync()">`,'≤70 字；留空時 fallback 用商品標題')}
           ${F('中繼說明',`<textarea class="input" data-f="pseoD" rows="2" data-val="max:320" placeholder="留空時沿用商品說明" oninput="pdSeoSync()">${H(p.desc)}</textarea>`,'≤320 字')}
@@ -4695,7 +4911,7 @@ function productPage(){
       </div>
     </div>
     <div class="col">
-      ${isNew?'':`<div class="card card-pad" data-doc="pd-status">${F('狀態',SEL('pstatus',['使用中','草稿','已封存','未列出（Unlisted）'],p.s==='active'?'使用中':'草稿'),'未列出＝可用連結購買但不出現在目錄與搜尋')}</div>`}
+      ${isNew?'':pdStatusCard(p,isNew)}
       <div class="card card-pad" data-doc="pd-publish"><h3>發布</h3>
         ${['線上商店','AI 代理','門市 POS'].map((c,i)=>SWROW('pch'+i,i<2,c,i===0?'排程上線：立即':'')).join('')}
         <div class="card-sec">${MARKETS.slice(0,2).map((m,i)=>SWROW('pmk'+i,true,m.t,'市場 catalog 定價')).join('')}</div>
@@ -4710,14 +4926,14 @@ function productPage(){
       <div class="card card-pad" data-doc="pd-organize"><h3>商品組織分類</h3>
         <div class="stack">${F('商品類型',TXT('ptype',p.type))}${F('廠商',TXT('pvendor',p.vd))}
           ${F('商品系列',`<input class="input" data-f="pcols" value="${H(p.cols.join('、'))}" placeholder="搜尋系列…">`,'手動系列可直接加入；智慧系列由規則決定')}
-          ${F('標籤',`<input class="input" data-f="ptags" value="${H(p.tags.join('、'))}" placeholder="以逗號分隔（≤250 個）">`)}</div>
+          ${F('標籤',`<input class="input" data-f="ptags" value="${H(p.tags.join('、'))}" placeholder="以逗號分隔">`,`每個商品 ≤${LIMITS.productMaxTags} 個標籤、單一標籤 ≤${LIMITS.productTagMaxChars} 字（limits.yml <code>product.max_tags</code> / <code>tag_max_chars</code>）`)}</div>
       </div>
       <div class="card card-pad" data-doc="pd-template"><h3>佈景主題範本</h3>
         <div class="rowflex" style="flex-wrap:nowrap">
           <span style="flex:1;min-width:0">${SEL('ptpl',['預設商品','product.wide','product.bundle'],'預設商品')}</span>
-          <button class="m-hover icon-btn" aria-label="預覽此範本" title="預覽此範本" onclick="toast('Demo：以此範本在前台預覽')">${IC(IC_EYE,15)}</button></div>
+          <button class="m-hover icon-btn" aria-label="預覽此範本" title="預覽此範本" onclick="toast('Demo：以此範本在前台預覽')">${IC(IC_EYE,20)}</button></div>
       </div>
-      <div class="card card-pad"><h3>危險區</h3>
+      <div class="card card-pad gap-group"><h3>危險區</h3>
         <div class="rowflex"><button class="btn btn-sec btn-sm" onclick="toast('Demo：複製商品（不帶庫存與銷售紀錄）')">複製</button>
         <button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除商品','將永久刪除《'+${JQ(p.n)}+'》與其 '+PV.vars.length+' 個變體；歷史訂單的品項快照不受影響。','刪除商品',function(){toast('已刪除商品');go('products');})">刪除商品</button></div>
       </div>`}
@@ -4771,7 +4987,7 @@ function pdSeoSync(){
 /* 事件委派掛在 document：詳情頁每次重繪都是全新的 DOM，掛在節點上的 listener 會跟著沒掉。
    條件裡先比 current 再比容器，避免每一次全站輸入都跑一遍商品頁的同步。 */
 ['input','change'].forEach(ev=>document.addEventListener(ev,e=>{
-  if(current!=='d-product'||!e.target||!e.target.closest)return;
+  if((current!=='d-product'&&current!=='d-variant')||!e.target||!e.target.closest)return;
   if(e.target.closest('[data-form="prod"]'))pdSync();
 },true));
 function pdPrev(){if(PV.i>0)openProduct(PV.i-1);}
@@ -4803,8 +5019,13 @@ function mdDrop(e,to){
 function mdDel(i){confirmDanger('刪除媒體','刪除後前台與所有引用此圖的變體都會失去這張圖片。','刪除',()=>{
   const t=document.querySelector(`.media-tile[data-mi="${i}"]`);if(t)t.remove();toast('已刪除媒體');});}
 
-/* ---- 變體矩陣 ---- */
+/* ---- 子類（變體）卡 ＋ 變體矩陣 ----
+   60 §2 的實站欄位是 `子類｜價格｜可售數量｜發佈`（四欄）。我方在此之外多一欄「動作」
+   （進變體詳情頁），並把 SKU／條碼收成變體名下的次行——**仍可就地編輯**，
+   只是不再各佔一欄。這是為了讓欄位集與實站對得上而不犧牲既有的行內編輯能力
+   （60 §9 的警告：不得為了對齊而刪我方既有功能）。 */
 function variantCard(){
+  const hasV=pdHasVariants();
   const opts=PV.opts.map((o,i)=>`<div class="optcard" data-doc="${i===0?'pd-option':''}">
     <div class="grid2">${F('選項名稱',`<input class="input" value="${H(o.n)}" onchange="pvRename(${i},this.value)" data-val="req">`,'可連結類別 metafield 標準值')}
       <div class="field"><label>選項值</label><div class="valchips">
@@ -4813,36 +5034,76 @@ function variantCard(){
       </div><span class="hint">拖曳排序（demo 以新增順序）；≤${LIMITS.productMaxOptions} 個選項</span></div></div>
     <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-ghost btn-sm" onclick="pvDelOpt(${i})">移除此選項</button></div></div>`).join('');
   const groups=PV.group?[...new Set(PV.vars.map(v=>v.c[PV.opts.findIndex(o=>o.n===PV.group)]))]:[null];
-  const body=PV.vars.length?groups.map(g=>{
+  const price=v=>v.price==null?'':fromCents(v.price).toFixed(2);
+  const body=hasV?groups.map(g=>{
     const rows=PV.vars.filter(v=>!g||v.c[PV.opts.findIndex(o=>o.n===PV.group)]===g);
-    const head=g?`<tr class="norow"><td colspan="6" style="background:var(--surface-3)"><b>${H(g)}</b> <span class="mut3 num">・${rows.length} 個變體・庫存 ${rows.reduce((a,v)=>a+v.qty,0)}・${money(Math.min(...rows.map(v=>v.price)))}–${money(Math.max(...rows.map(v=>v.price)))}</span></td></tr>`:'';
+    const ps=rows.map(v=>v.price).filter(x=>x!=null);
+    const head=g?`<tr class="norow"><td colspan="6" style="background:var(--surface-3)"><b>${H(g)}</b> <span class="mut3 num">・${rows.length} 個變體・庫存 ${rows.reduce((a,v)=>a+v.qty,0)}${ps.length?'・'+money(Math.min(...ps))+'–'+money(Math.max(...ps)):''}</span></td></tr>`:'';
     return head+rows.map(v=>{const idx=PV.vars.indexOf(v);return `<tr>
-      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" ${PV.sel.has(idx)?'checked':''} onchange="pvSel(${idx},this.checked)" aria-label="選取 ${H(v.k)}"></td>
-      <td><div style="display:flex;align-items:center;gap:var(--sp-200)"><span class="thumb" style="width:28px;height:28px;background:${pdProduct().g}"></span><b>${H(v.k)}</b></div></td>
-      <td><input class="cellin num" value="${fromCents(v.price).toFixed(2)}" aria-label="價格" onchange="pvSet(${idx},'price',this.value)"></td>
-      <td><input class="cellin num" value="${v.qty}" aria-label="庫存" onchange="pvSet(${idx},'qty',this.value)"></td>
-      <td><input class="cellin mono" value="${H(v.sku)}" aria-label="SKU" onchange="pvSet(${idx},'sku',this.value)"></td>
-      <td class="right"><button class="btn btn-ghost btn-sm" onclick="pvOpen(${idx})">編輯 ›</button></td></tr>`;}).join('');
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" ${PV.sel.has(idx)?'checked':''} onchange="pvSel(${idx},this.checked)" value="${pvGid(idx)}" aria-label="選取 ${H(v.k)}"></td>
+      <td><div style="display:flex;align-items:center;gap:var(--sp-200)">
+          <span class="thumb" style="width:28px;height:28px;background:${v.img?pdProduct().g:'var(--surface-2)'}" title="${v.img?'已套用圖片':'未套用圖片（≤'+LIMITS.productMaxImagesPerVariant+' 張／變體）'}"></span>
+          <span style="min-width:0"><b>${H(v.k)}</b>
+            <span class="rowflex" style="gap:var(--sp-150);margin-top:var(--sp-050)">
+              <input class="cellin mono" style="max-width:120px" value="${H(v.sku)}" aria-label="${H(v.k)} 的 SKU" onchange="pvSet(${idx},'sku',this.value)" placeholder="SKU">
+              <input class="cellin mono" style="max-width:130px" value="${H(v.bar)}" aria-label="${H(v.k)} 的條碼" onchange="pvSet(${idx},'bar',this.value)" placeholder="條碼"></span></span></div></td>
+      <td><input class="cellin num" value="${price(v)}" aria-label="${H(v.k)} 的價格" onchange="pvSet(${idx},'price',this.value)" placeholder="0.00"></td>
+      <td><input class="cellin num" value="${v.qty}" aria-label="${H(v.k)} 的可售數量" onchange="pvSet(${idx},'qty',this.value)"></td>
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="tgl" role="switch" ${v.pub?'checked':''} onchange="pvPub(${idx},this.checked)" aria-label="發佈 ${H(v.k)}"></td>
+      <td class="right"><button class="btn btn-ghost btn-sm" onclick="pvGo(${idx})">編輯 ›</button></td></tr>`;}).join('');
   }).join(''):'';
+  const totalQty=PV.vars.reduce((a,v)=>a+v.qty,0);
   return `<div class="card" data-doc="pd-variants">
-    <div class="card-pad" style="padding-bottom:0"><h3>子類（變體）
+    <div class="card-pad" style="padding-bottom:0"><h3>子類
       <span class="h-act rowflex">
-        ${PV.opts.length?`<select class="fsel" aria-label="分組依據" onchange="pvGroup(this.value)"><option value="">不分組</option>${PV.opts.map(o=>`<option ${PV.group===o.n?'selected':''}>${H(o.n)}</option>`).join('')}</select>`:''}
-        <button class="btn btn-sec btn-sm" ${PV.opts.length>=LIMITS.productMaxOptions?`disabled aria-disabled="true" title="最多 ${LIMITS.productMaxOptions} 個選項"`:''} onclick="pvAddOpt()">＋ 新增選項</button></span></h3>
+        ${hasV?`<select class="fsel" aria-label="分組依據" onchange="pvGroup(this.value)"><option value="">不分組</option>${PV.opts.map(o=>`<option ${PV.group===o.n?'selected':''}>${H(o.n)}</option>`).join('')}</select>
+        <button class="btn btn-ghost btn-sm" data-doc="pd-quicktransfer" onclick="pdQuickTransfer()">快速轉移</button>`:''}
+        <button class="btn btn-sec btn-sm" ${PV.opts.length>=LIMITS.productMaxOptions?`disabled aria-disabled="true" title="最多 ${LIMITS.productMaxOptions} 個選項"`:''} onclick="pvAddOpt()">${hasV?'新增其他選項':'＋ 新增子類'}</button></span></h3>
       ${opts}
-      ${PV.opts.length?`<p class="help" style="margin-bottom:var(--sp-200)">選項值笛卡兒積自動生成 <b class="num">${PV.vars.length}</b> 個變體（上限 ${N(LIMITS.productMaxVariants)}）。改選項值時採 <b>diff 更新</b>：既有變體資料與 ID 保留，不像 Shopify 重建（22 §2）。</p>`:'<p class="help" style="margin-bottom:var(--sp-200)">此商品沒有選項——只有一個預設變體。新增選項後會生成變體矩陣。</p>'}
+      ${hasV?`<p class="help" style="margin-bottom:var(--sp-200)">選項值笛卡兒積自動生成 <b class="num">${PV.vars.length}</b> 個變體（上限 ${N(LIMITS.productMaxVariants)}）。改選項值時採 <b>diff 更新</b>：既有變體資料與 ID 保留，不像 Shopify 重建（22 §2）。<br>有子類時，<b>定價／庫存／運送三張卡不在本頁</b>——它們是變體的卡，請從下表進入變體詳情頁編輯（60 §1）。</p>`
+        :`<p class="help" style="margin-bottom:var(--sp-200)">新增尺寸或顏色等選項。此商品目前沒有具名選項，模型上仍是<b>一個隱含變體</b>——上面的定價／庫存／運送三張卡編輯的就是它（60 §1）。</p>`}
     </div>
-    ${PV.vars.length?`<div class="idx-wrap">
+    ${hasV?`<div class="idx-wrap">
       <div class="bulkbar ${PV.sel.size?'show':''}" id="pvBulk"><span class="num">已選取 ${PV.sel.size} 個變體</span><span class="bb-gap" style="flex:1"></span>
         <button class="b-act m-hover" onclick="pvBulkEdit('price')">批次改價</button>
         <button class="b-act m-hover" onclick="pvBulkEdit('qty')">批次改庫存</button>
         <button class="b-act m-hover" onclick="toast('Demo：開啟試算表批次編輯器（41 §1.4）')">在 bulk editor 編輯</button>
         <button class="b-act m-hover" onclick="pvBulkDel()">刪除</button></div>
-      <table class="idx"><thead><tr><th style="width:36px"><input type="checkbox" class="cb" onclick="pvAll(this)" aria-label="全選變體"></th>
-        <th>變體</th><th>價格（${CURSYM()}）</th><th>可用庫存</th><th>SKU</th><th class="right">動作</th></tr></thead>
-      <tbody>${body}</tbody></table></div>`:''}</div>`;
+      <table class="idx"><thead><tr><th style="width:36px"><input type="checkbox" class="cb" onclick="pvAll(this)" aria-label="選取此頁的全部 ${PV.vars.length} 個子類"></th>
+        <th>子類</th><th>價格（${CURSYM()}）</th><th>可售數量</th><th>發佈</th><th class="right">動作</th></tr></thead>
+      <tbody>${body}</tbody></table>
+      <div class="count-note">${H(PD_LOCS[0])} 總庫存：<b class="num">${totalQty}</b> 件可供貨</div></div>`:''}</div>`;
 }
-function pvRefresh(){document.getElementById('page-detail').querySelector('[data-doc="pd-variants"]').outerHTML=variantCard();enhanceTables();formCheck();}
+/* 只換子類卡就好——**除非形態翻面了**。
+   60 §1：有沒有具名選項會決定價格／庫存／運送三張卡在不在，那是**卡片層**的變化，
+   只替換子類卡的 outerHTML 是換不到的（實測：在無變體商品上按「新增子類」，
+   子類表格出現了，但三張卡還留在畫面上——一個商品同時有商品層與變體層的價格欄位，
+   正是 60 §1 警告的那個爛掉的模型，只是這次爛在畫面上）。
+   偵測方式是「三張卡現在在不在」對「現在該不該在」，不一致就整頁重繪。
+   不無條件整頁重繪：改個價格也重繪會把行內編輯的焦點打掉。 */
+function pvRefresh(){
+  const root=document.getElementById('page-detail'),card=root.querySelector('[data-doc="pd-variants"]');
+  if(!card)return;
+  const shown=!!root.querySelector('[data-doc="pd-price"]');
+  if(shown===pdHasVariants()){renderDetail('d-product');return;}
+  card.outerHTML=variantCard();enhanceTables();formCheck();
+}
+/* 逐變體發布（13 §F1.2(c)）：商品層與變體層是 **AND** 不是 OR——
+   要在某管道顯示，父商品與該變體都必須發布到該管道。變體層沒有排程發布（只有商品級有）。 */
+function pvPub(i,on){
+  PV.vars[i].pub=on;
+  toast(on?`已發佈「${PV.vars[i].k}」——仍需父商品也發布到該管道才會顯示（兩層 AND）`
+          :`已取消發佈「${PV.vars[i].k}」——該變體在所有管道都不會顯示`);
+  formCheck();
+}
+function pdQuickTransfer(){
+  openGen({title:'快速轉移',body:`<div class="stack">
+    <p class="help">在地點之間搬動這些子類的庫存。轉移是<b>實際貨物移動</b>的紀錄（五態狀態機），與採購單那份<b>商業協議</b>各自獨立——改一邊不會動另一邊（61 號官方文檔查核，推翻 60 號初版的「一條鏈」寫法）。</p>
+    <div class="grid2">${F('出貨地',SEL('_qtf',PD_LOCS,PD_LOCS[0]))}${F('收件地',SEL('_qtt',PD_LOCS,PD_LOCS[1]))}</div>
+    ${F('要轉移的子類數',`<input class="input num" value="${PV.vars.length}" readonly>`,'唯讀：目前這張表的全部子類')}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();INVTAB='xfer';go('m-inventory')">建立轉移</button>`});
+}
 function pvAddOpt(){
   if(PV.opts.length>=LIMITS.productMaxOptions)return;
   PV.opts.push({n:['尺寸','顏色','材質'][PV.opts.length]||'選項',v:['預設值']});
@@ -4864,8 +5125,16 @@ function pvDelVal(i,j){
     PV.opts[i].v.splice(j,1);if(!PV.opts[i].v.length)PV.opts.splice(i,1);
     PV.sel.clear();pvBuild();pvRefresh();toast('已刪除選項值');});
 }
-/* 鐵律 3：畫面收的是主單位，存進模型前一律 toCents()；qty 不是金額，維持整數。 */
-function pvSet(i,k,v){PV.vars[i][k]=k==='sku'?v:(k==='price'||k==='cost'?toCents(v):(parseInt(v,10)||0));pvRefresh();}
+/* 鐵律 3 ＋ 65 §B X6（表單輸入 → R1 儲存 cents）：畫面收的是**主單位**，
+   存進模型前一律 toCents()（整數，Math.round 收尾）；qty 與字串欄位不是金額，各走各的。
+   空字串在金額欄要保留成 null——「沒填」不是「零元」（53 號 P0-17）。 */
+const PV_STR={sku:1,bar:1,hs:1,orig:1,pkg:1,unit:1,w:1};
+function pvSet(i,k,v){
+  PV.vars[i][k]=PV_STR[k]?v
+    :(k==='price'||k==='cost'||k==='compare')?(String(v).trim()===''?null:toCents(v))
+    :(parseInt(v,10)||0);
+  pvRefresh();
+}
 function pvSel(i,on){on?PV.sel.add(i):PV.sel.delete(i);pvRefresh();}
 function pvAll(cb){PV.sel=cb.checked?new Set(PV.vars.map((_,i)=>i)):new Set();pvRefresh();}
 function pvGroup(v){PV.group=v;pvRefresh();}
@@ -4885,22 +5154,68 @@ function pvBulkDel(){
   confirmDanger('刪除變體',`將刪除 ${n} 個變體及其庫存帳與 SKU 對應。`,'刪除變體',()=>{
     PV.vars=PV.vars.filter((_,i)=>!PV.sel.has(i));PV.sel.clear();pvRefresh();toast(`已刪除 ${n} 個變體`);});
 }
-function pvOpen(i){
-  const v=PV.vars[i],p=pdProduct();
-  openGen({title:`變體：${H(v.k)}`,wide:true,body:`<div class="stack">
-    <div class="grid3">${F(`價格（${CURSYM()}）`,`<input class="input num" id="vvP" value="${fromCents(v.price).toFixed(2)}" data-val="req|money">`)}${F('原價',`<input class="input num" data-val="money" placeholder="選填">`)}${F('每品項成本',`<input class="input num" value="${fromCents(v.cost).toFixed(2)}" data-val="money">`)}</div>
-    <div class="grid2">${F('SKU',`<input class="input mono" id="vvS" value="${H(v.sku)}">`)}${F('條碼',`<input class="input mono" value="${p.bar}">`)}</div>
-    <div class="grid3">${F('重量（kg）',`<input class="input num" value="${p.w}" data-val="num">`)}${F('HS 代碼',`<input class="input mono" value="" placeholder="例：6110.20">`)}${F('原產地',SEL('_vo',['（未指定）','香港','台灣','中國','越南'],'（未指定）'))}</div>
-    <div class="grid2">${F(PD_LOCS[0]+' 可供貨',`<input class="input num" id="vvQ" value="${v.qty}" data-val="int">`)}${F(PD_LOCS[1]+' 可供貨',`<input class="input num" value="0" data-val="int">`)}</div>
-    ${F('綁定圖片',SEL('_vi',['（沿用商品精選圖）','圖片 1','圖片 2','圖片 3'],'（沿用商品精選圖）'),'同選項值可一鍵套用同一張圖')}
-    ${CHK('_vp',true,'這是實體商品')}</div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="pvOne(${i})">儲存變體</button>`});
+/* ══════════════════════════════════════════════════════════════════════════
+   變體詳情次級視圖（60 §3）——`/products/{pid}/variants/{vid}` 的形態
+   左側是**變體切換側欄**（不是回商品頁再點一次），主區頂部是管道／目錄 chips，
+   下面就是與無變體商品頁**完全相同**的三張卡。
+   「完全相同」在本檔是可驗證的事實而不是形容詞：兩邊呼叫的是同一支
+   pdPriceCard／pdInvCard／pdShipCard，同一組 pillSet 分組鍵
+   （pillgrp-pricing／_inventory／_shipping），連 PILL_OPEN 的展開狀態都共用。
+   ══════════════════════════════════════════════════════════════════════════ */
+function pvGo(i){PVD={i};goDetail('d-variant',{id:i});}
+function pvBack(){PVD=null;goDetail('d-product',{i:PV.i});}
+function pvPick(i){
+  /* 側欄切換：只換 PVD.i 再重繪，PILL_OPEN 不動 ⇒ 展開的區域在切變體之後仍然開著。
+     這是 48 §33.4「展開狀態存記憶體不存 DOM」那條規則真正發揮作用的地方。 */
+  PVD={i};renderDetail('d-variant');
 }
-function pvOne(i){
-  const p=document.getElementById('vvP'),q=document.getElementById('vvQ');
-  if(!validOne(p)|!validOne(q))return;
-  PV.vars[i].price=toCents(p.value);PV.vars[i].qty=parseInt(q.value,10)||0;PV.vars[i].sku=document.getElementById('vvS').value;
-  closeGen();pvRefresh();toast('已儲存變體');
+function variantDetailPage(){
+  const p=pdProduct(),v=pdActiveVariant();
+  if(!v)return '<div class="empty-wrap"><b>找不到子類</b>請回到商品頁重新選取。</div>';
+  const st=P_STATUS_OF(p.s);
+  return detailHead(H(p.n)+' — '+H(v.k),S_BADGE[String(p.s).toLowerCase()]||'',
+    `<span class="rowflex" data-doc="pvd-nav" style="gap:var(--sp-050)">
+       <button class="btn btn-sec btn-sm btn-icon" aria-label="上一個子類" ${PVD.i<=0?'disabled aria-disabled="true"':`onclick="pvPick(${PVD.i-1})"`}>︿</button>
+       <button class="btn btn-sec btn-sm btn-icon" aria-label="下一個子類" ${PVD.i>=PV.vars.length-1?'disabled aria-disabled="true"':`onclick="pvPick(${PVD.i+1})"`}>﹀</button></span>
+     <button class="btn btn-sec btn-sm" onclick="pvBack()">回到商品</button>
+     <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'products')
+  +`<div class="vd-grid" data-form="prod">
+    <div class="card" data-doc="pvd-switch">
+      <div class="vd-head"><b>${H(p.n)}</b> ${S_BADGE[String(p.s).toLowerCase()]||''}</div>
+      <div class="vd-count">${PV.vars.length} 個子類</div>
+      <div style="padding:var(--sp-200) var(--sp-400) 0">
+        <input class="input" placeholder="搜尋子類…" aria-label="搜尋子類" oninput="pvFilter(this.value)">
+        <p class="hint" style="margin-top:var(--sp-100)">選項：${PV.opts.map(o=>H(o.n)).join('、')||'（無具名選項）'}</p>
+      </div>
+      <div class="vd-list" id="vdList">
+        ${PV.vars.map((x,i)=>`<button class="vd-item" data-vn="${H(x.k).toLowerCase()}" aria-current="${i===PVD.i}" onclick="pvPick(${i})">
+          <span class="vd-sw" style="background:${x.img?p.g:'var(--surface-sunken)'}"></span>
+          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${H(x.k)}</span>
+          <span class="vd-q num">${x.qty}</span></button>`).join('')}
+      </div>
+      <div class="count-note"><button class="btn btn-ghost btn-sm" style="padding:0" onclick="pvBack()">＋ 新增篩選條件／管理選項 ›</button></div>
+    </div>
+    <div class="col">
+      <div class="rowflex" data-doc="pvd-chips">
+        <span class="tagchip">管道：所有管道</span><span class="tagchip">目錄：無</span>
+        <span class="tagchip">${st.discoverable?'可被發現':'不可被發現'}・${st.purchasable?'可購買':'不可購買'}</span>
+      </div>
+      ${pdPriceCard(v)}
+      ${pdInvCard(v,false)}
+      ${pdShipCard(v)}
+      <div class="card card-pad" data-doc="pvd-media">
+        ${F('綁定圖片',SEL('pvimg',['（沿用商品精選圖）','圖片 1','圖片 2','圖片 3'],v.img?'圖片 1':'（沿用商品精選圖）'),
+          `同選項值可一鍵套用同一張圖；每個變體最多 ${LIMITS.productMaxImagesPerVariant} 張（limits.yml <code>product.max_images_per_variant</code>），且變體不支援影片與 3D 模型`)}
+        <div class="card-sec">${SWROW('pvpub',v.pub,'在所有管道發佈此子類','商品層與變體層是 AND：父商品沒發布到該管道，這裡打開也不會顯示（13 §F1.2(c)）；變體層沒有排程發布')}</div>
+      </div>
+    </div></div>`;
+}
+/* 側欄搜尋只做顯示過濾，不動 PV.vars——過濾器改資料是「搜尋完就少了幾個變體」那類 bug 的來源。 */
+function pvFilter(q){
+  const s=String(q||'').trim().toLowerCase();
+  document.querySelectorAll('#vdList .vd-item').forEach(el=>{
+    el.style.display=!s||el.dataset.vn.includes(s)?'':'none';
+  });
 }
 
 /* ==================================================================
@@ -6424,10 +6739,13 @@ Object.assign(MODULES,{
  "m-pages":{title:"頁面",full:true,custom:pagesPage},
  "m-prefs":{title:"偏好設定",full:true,custom:prefsPage},
 });
-const DETAILS={'d-draft':draftPage,'d-product':productPage,'d-collection':collectionPage,'d-customer':customerPage,
+const DETAILS={'d-draft':draftPage,'d-product':productPage,'d-variant':variantDetailPage,'d-collection':collectionPage,'d-customer':customerPage,
  'd-segment':segmentPage,'d-discount':discountPage,'d-menu':menuPage,'d-article':articlePage,
  'd-market':marketPage,'d-report':reportPage};
-const FORMSEL={'d-product':'[data-form="prod"]','d-collection':'[data-form="col"]','d-customer':'[data-form="cus"]',
+/* d-variant 刻意沿用 `[data-form="prod"]`：三張卡與其 pill 是同一套元件，欄位的 data-f
+   也是同一組（pprice／pcost／psku…）。同一時間只會掛載一個詳情頁，所以不會撞；
+   換一組選擇器反而要把 pdCents／pdPillSync 全部改成兩路查詢，那才是分家的第一步。 */
+const FORMSEL={'d-product':'[data-form="prod"]','d-variant':'[data-form="prod"]','d-collection':'[data-form="col"]','d-customer':'[data-form="cus"]',
  'd-segment':'[data-form="seg"]','d-discount':'[data-form="disc"]','d-menu':'[data-form="menu"]',
  'd-article':'[data-form="art"]','d-market':'[data-form="mkt"]','m-prefs':'[data-form="prefs"]','m-attribution':'[data-form="attr"]'};
 function renderDetail(route){
@@ -6444,8 +6762,9 @@ function afterRoute(p){
   /* 53號 P0-17：宣告式狀態每次重繪後推回 DOM，aria-disabled 才不會殘留過期值 */
   if(p==='d-draft')draftPaySync();
   /* 同一條原則：商品頁的衍生值（利潤／利潤率、pill 摘要）每次重繪後重算一次，
-     否則 pvRefresh／renderDetail 之後 pill 會停在上一輪的值 */
-  if(p==='d-product')pdSync();
+     否則 pvRefresh／renderDetail 之後 pill 會停在上一輪的值。
+     變體詳情頁掛的是同一組卡與同一組 pill，所以走同一條路——不另開一支 pvdSync()。 */
+  if(p==='d-product'||p==='d-variant')pdSync();
 }
 /* 列表引擎重繪：模組頁與詳情頁共用 */
 function lrender(){current.startsWith('d-')?renderDetail(current):renderModule(current);}
@@ -7051,7 +7370,7 @@ Object.assign(DOCS,{
   l:"🔴 <b>算不出來時顯示 <code>--</code> 不是 0</b>。與 53號 P0-17 的 draftTaxState() 同一條原則、同一套語彙：null＝unknown、0＝真的是零。缺價格、缺成本都是 unknown——顯示 0 等於告訴商家「這件不賺錢」，那是<b>錯的資訊</b>不是暫時值。售價為 0 時利潤仍可顯示、利潤率無定義（分母 0）。計算全程 integer cents：profit=priceCents−costCents；利潤率＝兩個整數相除後才進浮點並只取一位小數，float 不碰金額本身（鐵律 3）",
   i:"P0・前端衍生欄位，不獨立落庫；成本來源 [tbl:inventory_items.cost]，售價來源 [tbl:product_variants.price]"},
  "pd-pill-pricing":{t:"定價 pill 組（cl-pillset）",f:"比較價格／單價／收取稅金／每品項成本 四顆 pill，共用一個展開區",
-  l:"元件契約 48 §33。三條規則：①次要欄位收合成 pill、主要欄位常駐；②<b>有值顯示「標籤＋目前值」、空值只顯示標籤</b>，所以不展開也知道填沒填；③四顆 pill 的 <code>aria-controls</code> 指向<b>同一個</b>區域，展開時四顆的 <code>aria-expanded</code> 一起翻（只翻被點的那顆會讓 SR 讀到互相矛盾的按鈕）。鍵盤：Enter／Space 切換、←→ 在組內移動、Home／End 首末、Esc 收合；每次切換寫 <code>#srLive</code> 播報",
+  l:"元件契約 48 §33。三條規則：①次要欄位收合成 pill、主要欄位常駐；②<b>有值顯示「標籤＋目前值」、空值只顯示標籤</b>，所以不展開也知道填沒填；③四顆 pill 的 <code>aria-controls</code> 指向<b>同一個</b>區域，展開時四顆的 <code>aria-expanded</code> 一起翻（只翻被點的那顆會讓 SR 讀到互相矛盾的按鈕）。鍵盤：Enter／Space 切換、←→ 在組內移動、Home／End 首末、Esc 收合；每次切換寫 <code>#srLive</code> 播報。<br>尺寸取自 64 §4 實測：高 28、圓角 8、內距 4/8、字重 500（64 §3）。<br>🔴 <b>一處刻意不跟實測</b>（64 §6）：實站 pill 與按鈕的 <code>transition</code> 量到的是 <code>all</code>，我方 <code>scripts/lint-prototype.py</code> 明文禁止並維持禁令——<code>all</code> 會連帶動畫非預期屬性（pill 展開時的 height 首當其衝），也對不上 47 §5 的 M1–M7 具名動效。這是<b>我方刻意偏離</b>，不是漏抄",
   i:"P0・純前端版面；欄位本身走 [api:productVariantsBulkUpdate]"},
  "pd-presentment":{t:"其他顯示價格（presentment prices）",f:"逐市場的顯示價格與來源",
   l:"未覆寫的市場由基準價換算，覆寫走 29 號 Markets 的 price list；訂單一旦成立即快照 presentment currency，不隨報表幣別變動。demo <b>不做匯率換算</b>（只換格式），所以三列數字相同——這是刻意的，用來驗證格式真的由 locale 表驅動",
@@ -7074,7 +7393,12 @@ Object.assign(DOCS,{
  "pd-pill-shipping":{t:"運送 pill 組（cl-pillset）",f:"原產地國家／地區、HS 代碼 兩顆 pill，共用一個展開區",
   l:"同 48 §33 契約。分組鍵 <code>pillgrp-shipping</code>，對應 59 §2 表的第三組。兩者皆空值時只顯示標籤，正好對上實站形態",
   i:"P1・[api:inventoryItemUpdate]（countryCodeOfOrigin, harmonizedSystemCode） [tbl:inventory_items]"},
- "pd-variants":{t:"變體矩陣",f:"選項笛卡兒積生成、inline 編輯、分組、批次操作",l:"≤3 選項、≤2048 變體（userErrors VARIANT_LIMIT_EXCEEDED）；改選項值採 diff 更新保留既有變體 ID（22 §2，與 Shopify 重建語意不同）；Group by 顯示組級合計庫存與價格區間",i:"P0・[api:productOptionsUpdate] [api:productVariantsBulkCreate] [api:productVariantsBulkUpdate] [api:productVariantsBulkDelete] [tbl:product_options,option_values,product_variants,inventory_levels]"},
+ "pd-variants":{t:"子類（變體）卡",f:"選項 chips ＋ 變體表格（子類｜價格｜可售數量｜發佈）＋ 分組與批次操作",
+  l:"🔴 <b>形態隨有無變體整個翻面（60 §1）</b>：有具名選項時，<b>定價／庫存／運送三張卡從商品頁完全消失</b>，改由本卡的表格進入變體詳情頁編輯；沒有選項時三張卡就地內嵌，編輯的是那個<b>隱含變體</b>——商品恆有至少一個變體，「無變體」只是 <code>opts.length===0</code> 的呈現特例。證據：59 號在無變體商品頁量到的 pill 分組鍵是 <code>product_variant_collapsible_*</code>，60 號在變體詳情頁量到同樣三組同樣的鍵。<br>欄位集依 60 §2 實測＝<b>子類｜價格｜可售數量｜發佈</b>；我方多一欄「動作」，並把 SKU／條碼收成子類名下的次行（仍可行內編輯，不砍既有能力）。列 checkbox 的 value 是 GID（鐵律 4 <code>gid://chilllove/ProductVariant/{id}</code>）；表尾為地點總庫存。<br>上限：≤"+LIMITS.productMaxOptions+" 選項、≤"+LIMITS.productMaxVariants+" 變體（limits.yml <code>product.max_options</code> / <code>max_variants</code>，userErrors <code>OPTIONS_OVER_LIMIT</code> / <code>VARIANT_LIMIT_EXCEEDED</code>）；改選項值採 <b>diff 更新</b>保留既有變體 ID（22 §2，與 Shopify 重建語意不同）",
+  i:"P0・[api:productOptionsUpdate] [api:productVariantsBulkCreate] [api:productVariantsBulkUpdate] [api:productVariantsBulkDelete] [tbl:product_options,option_values,product_variants,inventory_levels]"},
+ "pd-quicktransfer":{t:"快速轉移",f:"把這些子類的庫存在地點之間搬動",
+  l:"轉移＝<b>實際貨物移動</b>（五態狀態機 Draft／Ready to ship／In progress／Transferred／Canceled ＋ 收貨三動作），採購單＝<b>商業協議</b>（只有草稿／已訂購兩態，收貨根本不在採購單上）。兩份紀錄<b>各自獨立</b>，<code>連結採購單</code> 只是關聯不是流程串接——60 號初版把它寫成「採購單→轉移→入帳一條鏈」，已由 61 號官方文檔查核推翻；照初版實作會做出一個不存在的狀態機",
+  i:"P1・[api:inventoryTransferCreate]（28 待補）[tbl:inventory_transfers,inventory_transfer_lines]"},
  "pd-option":{t:"選項編輯器",f:"選項名稱與值清單（可拖曳排序）",l:"選項名可連結類別 metafield 標準值；刪除選項值會連帶刪除含該值的變體（二次確認）",i:"P0・[api:productOptionsCreate] [api:productOptionsReorder] [tbl:product_options,option_values]"},
  "pd-purchase":{t:"購買選項",f:"訂閱／預購／先試後買",l:"三者皆為 deferred purchase options（selling plans 模型）；與折扣的 purchase type 欄聯動（41 §3.4）",i:"P3・[api:TBD-sellingPlanGroupCreate]（28 待補 selling plans） [tbl:products,product_variants]"},
  "pd-metafields":{t:"商品中繼欄位",f:"自訂欄位值（pin 過的 definition）",l:"只顯示 pin 過的 definition；類別選定後會自動帶出該類別的標準中繼欄位（見 pd-category）",i:"P1・[api:metafieldsSet]（≤25 筆 atomic） [tbl:metafields,metafield_definitions]"},
@@ -7084,9 +7408,22 @@ Object.assign(DOCS,{
  "pd-seo":{t:"搜尋引擎產品資訊",f:"富摘要預覽（含價格）＋標題／說明／handle",
   l:"標題 ≤70、說明 ≤320 字；留空 fallback 商品標題與說明；改 handle 建議同時建 301 轉址（30 §）。預覽含<b>價格列</b>（59 §3 第 11 項實站形態：金額＋ISO 代碼），金額走 money() 由市場 locale 決定符號與位數。<b>建立態顯示空態</b>：還沒有標題與說明就沒有東西可預覽（59 §7）",
   i:"P0・[api:productUpdate]（seo{title,description}, handle）＋[api:urlRedirectCreate] [tbl:products]"},
- "pd-status":{t:"商品狀態",f:"使用中／草稿／已封存／未列出",l:"DRAFT→ACTIVE⇄ARCHIVED（06 §4）；Unlisted＝可用連結購買但不進目錄與搜尋（22 §2 新狀態）",i:"P0・[api:productChangeStatus] [tbl:products]"},
- "pd-publish":{t:"發布（管道與市場）",f:"逐管道／逐市場開關與排程上線",l:"每管道可設排程上線時間；變體層級可單獨排除於管道（41 §3.2）",i:"P1・[api:publishablePublish] [api:publishableUnpublish] [tbl:products,markets]（markets 06 §7 待補）"},
- "pd-organize":{t:"商品整理",f:"類型／供應商／系列／標籤",l:"標籤 ≤250 個；手動系列可直接加入，智慧系列由規則決定不可手動加",i:"P0・[api:productUpdate]（productType, vendor, tags）＋[api:collectionAddProducts] [tbl:products,collections,collection_products]"},
+ "pd-status":{t:"商品狀態（四態）",f:"啟用／未列出／草稿／已封存，切換時即時反映兩個 scope",
+  l:"值域＝limits.yml <code>product.status_values</code>（13 §F1.2）。狀態轉移 DRAFT→ACTIVE⇄ARCHIVED（06 §4）；<b>UNLISTED 於 2025-10 引入</b>。四個值不是四個標籤，是<b>兩個獨立維度的四種組合</b>——見 pd-scope",
+  i:"P0・[api:productChangeStatus]（enum 一次到位四值，<b>不做</b>舊 API 版本降級成 active：limits.yml <code>unlisted_downgrade_on_old_api_version: false</code>，降級等於讓 noindex 完全失效） [tbl:products.status]"},
+ "pd-scope":{t:"可購買 / 可被發現（兩個獨立 scope）",f:"把 purchasable 與 discoverable 兩維攤在畫面上",
+  l:"🔴 <b>UNLISTED 的存在證明「可購買」與「可被發現」是兩個維度</b>，不是一個 published 布林（13 §F1.2）。判定式：<code>purchasable := status ∈ purchasable_statuses ∧ 商品已發布到該管道 ∧ 該變體已發布到該管道</code>；<code>discoverable</code> 只差 status 那一行（<code>= ACTIVE</code>）——所以實作是<b>同一支 scope 產生器吃不同的 status 集合</b>，不是兩份複製貼上的 SQL。<br>恆等不變量 <code>discoverable ⊆ purchasable</code>（limits.yml <code>discoverable_subset_of_purchasable</code>）：違反＝把買家從搜尋結果送進一個買不了的頁面（soft-404，30 §1.1 嚴禁）。原型把它寫成載入時的可執行斷言，不只是註釋。<br>UNLISTED 的影響面：不進 sitemap／hreflang／站內與預測搜尋／商品推薦／前台商品系列／GMC・Meta feed／商品 JSON-LD／<b>AI 代理 catalog</b>（最容易漏的一格——代理是新通路，官方的 noindex 在代理面完全不生效）",
+  i:"P0・兩個 scope 共用同一支產生器；索引以 shop_id 開頭（鐵律 2） [tbl:products,product_publications,variant_publications]"},
+ "pd-publish":{t:"發布（管道與市場）",f:"逐管道／逐市場開關與排程上線",l:"每管道可設排程上線時間；<b>變體也有獨立發布層，兩層是 AND 不是 OR</b>——要在某管道顯示，父商品與該變體必須都發布到該管道（13 §F1.2(c)）。<b>不能為個別變體設排程發布日期</b>，排程只有商品級",i:"P1・[api:publishablePublish] [api:publishableUnpublish] [tbl:products,markets,product_publications,variant_publications]（markets 06 §7 待補）"},
+ "pd-organize":{t:"商品整理",f:"類型／供應商／系列／標籤",l:"標籤上限引 limits.yml <code>product.max_tags</code>（250）與 <code>tag_max_chars</code>（255），畫面數字由 LIMITS 帶入不硬編（鐵律 6）；手動系列可直接加入，智慧系列由規則決定不可手動加",i:"P0・[api:productUpdate]（productType, vendor, tags）＋[api:collectionAddProducts] [tbl:products,collections,collection_products]"},
+ "pvd-switch":{t:"變體切換側欄",f:"在同一個商品的子類之間直接切換，不必回商品頁",
+  l:"60 §3 實站形態：商品名＋狀態 → <code>N 個子類</code> → 搜尋子類 → 選項名 → 子類清單。切換只換 PVD.i 再重繪，<b>PILL_OPEN 不動</b>——所以定價／庫存／運送任何一組展開著，切到下一個子類仍然是展開的（48 §33.4「展開狀態存記憶體不存 DOM」的實際效用）。搜尋只做顯示過濾，不動 PV.vars",
+  i:"P1・[api:product]（variants 連線，cursor＋pageInfo ≤250） [tbl:product_variants]"},
+ "pvd-nav":{t:"上一個／下一個子類",f:"在子類之間循序移動",l:"與商品頁的 ︿﹀ 同一個動線概念（59 §3），只是範圍換成同商品的子類。頭尾兩端 disabled（只降文字色，47 §E）",i:"P2・正式版沿用側欄當下的排序與篩選"},
+ "pvd-chips":{t:"管道／目錄 chips",f:"目前這個子類套用到哪些管道與目錄",l:"60 §3 實站主區頂部就是這兩顆 chip（<code>管道:所有管道</code>／<code>目錄:無</code>）。第三顆是我方補的兩維摘要，讓「這個子類現在買不買得到、搜不搜得到」不必回右欄狀態卡看",i:"P1・[api:publicationsByProduct] [tbl:product_publications,catalogs]"},
+ "pvd-media":{t:"子類綁定圖片與發佈",f:"指定此子類的圖片，並逐子類發佈／取消發佈",
+  l:"每個變體最多 "+LIMITS.productMaxImagesPerVariant+" 張圖（limits.yml <code>product.max_images_per_variant</code>），且<b>變體不支援影片與 3D 模型</b>（官方明載）。發佈開關是 13 §F1.2(c) 的變體層：與父商品層是 AND，父商品沒發布到該管道時這裡打開也不會顯示",
+  i:"P1・[api:productVariantsBulkUpdate]（mediaId）＋[api:publishablePublish]（variant scope） [tbl:product_variants,variant_media,variant_publications]"},
  "pd-template":{t:"佈景主題範本",f:"指定此商品使用的 template suffix",l:"對應主題 templates/product.{suffix}.json；前台 ?view= 亦可切 alternate template（25 §5）",i:"P1・[api:productUpdate]（templateSuffix） [tbl:products,templates]"},
  "pd-insights":{t:"銷售",f:"件數／顧客數／淨銷售額",l:"與分析頁同源同口徑（19 號 rollup，CLAUDE.md #7 同數字鐵律）。建立態不顯示——新商品沒有銷售紀錄（59 §7）",i:"P1・[api:report]（sales_by_product） [tbl:orders,line_items]"},
  "pd-share":{t:"分享商品",f:"取得此商品的前台連結",l:"連結帶目前市場 context；草稿商品的連結只有登入員工打得開。改 handle 後舊連結需 301 轉址",i:"P2・[api:productByHandle]＋前台路由 [tbl:products.handle,url_redirects]"},

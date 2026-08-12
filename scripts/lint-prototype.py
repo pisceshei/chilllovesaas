@@ -100,17 +100,29 @@ def r_dangling_onclick(src, style, script):
 
 
 def r_hairline(src, style, script):
-    """髮絲線不得硬寫 1px。
+    """髮絲線不得硬寫 1px；且 --hairline 必須是固定次像素值，不得是 dpr 算式。
 
-    為什麼：47 §C 實測 Shopify 的分隔線是 **1 個裝置像素**（dpr 1.5 → 0.667px、
-    dpr 2 → 0.5px），硬寫 1px 在 Retina 上會粗一倍，是「看起來就是不對」的主因之一。
+    為什麼（依據已更新）：47 §C 原本判定髮絲線＝「1 個裝置像素」，並要求配
+    min-resolution/dppx 媒體查詢。**64 號用 getComputedStyle 直接量到值是
+    `0.66px`，而且是在 dpr=1 的螢幕上** —— 所以它是寫死的次像素常數，與 dpr 無關。
+    47 §C 的解釋已被推翻，本規則隨之反向：有 dppx 媒體查詢反而是錯的。
+
+    事故：這條規則舊版用 `"dppx" not in style` 做子字串比對，於是**任何在註釋裡
+    提到 dppx 的檔案都會讓 WARN 靜默消失**——2026-08-12 有人在刪除媒體查詢時
+    於註釋裡寫了「已刪除 dppx 媒體查詢」，WARN 就再也不響了。子字串比對整份
+    樣式表（含註釋）是假陽性與假陰性的雙向來源，已改為只看真正的 at-rule。
     """
     out = []
     for m in re.finditer(r"border[^:;{}]*:\s*1px\s+(?:solid|dashed)", src):
-        out.append((ERROR, "硬寫 1px 邊框 — 應用 var(--hairline)（47 §C：髮絲線＝1 裝置像素）",
+        out.append((ERROR, "硬寫 1px 邊框 — 應用 var(--hairline)（64 §4：實測 0.66px）",
                     _lineno(src, m.start())))
-    if "--hairline" in style and "dppx" not in style:
-        out.append((WARN, "有 --hairline 但無 min-resolution/dppx 媒體查詢 — 高 dpr 不會變細", None))
+    # 只認真正的 @media at-rule，不掃註釋（舊版用子字串比對，被註釋裡的 dppx 騙過）
+    style_nc = re.sub(r"/\*.*?\*/", " ", style, flags=re.S)
+    if re.search(r"@media[^{]*(?:min-resolution|-webkit-min-device-pixel-ratio|dppx)", style_nc):
+        out.append((ERROR, "--hairline 綁 dpr 媒體查詢 — 64 §4 實測是固定 0.66px，與 dpr 無關", None))
+    m = re.search(r"--hairline\s*:\s*([^;]+);", style_nc)
+    if m and re.search(r"calc|/\s*var|dpr", m.group(1)):
+        out.append((ERROR, f"--hairline 用算式定義（`{m.group(1).strip()}`）— 應為固定次像素常數（64 §4）", None))
     return out
 
 

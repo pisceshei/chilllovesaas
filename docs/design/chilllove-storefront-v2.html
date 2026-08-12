@@ -29,7 +29,10 @@
 
   /* 髮絲線＝1 個「裝置」像素（47 §C）：實站列分隔線 computed .667px @dpr1.5＝1 實體像素。
      以 token 承載、dpr 由 :root 下方兩段 @media 覆寫，全檔邊框一律 var(--hairline)。 */
-  --hairline:1px;
+  /* 64 §4 實測：dpr=1 的螢幕上量到 0.66px ⇒ 髮絲線是寫死的次像素常數，與 dpr 無關。
+     47 §C 原本判定為「1 個裝置像素」並配 dpr 媒體查詢，該解釋已被推翻，媒體查詢已刪除。
+     🔴 不要改回 1px、也不要重新加 min-resolution/dppx 媒體查詢——lint r_hairline 會擋。 */
+  --hairline:.66px;
   --bw-200:2px;             /* 強調框（選取態）：髮絲線之外唯一的另一階 */
   --bw-pip:1.5px;           /* 徽章狀態圖示的環寬／斜線寬（字形筆畫，非分隔線） */
 
@@ -91,8 +94,6 @@
 }
 /* 髮絲線 dpr 三檔（47 §C）：1px @dpr1 → .667px @dpr1.5 → .5px @dpr2，
    每一檔都恰好落在 1 個實體像素上。只改 token，全檔 var(--hairline) 邊框自動跟著換。 */
-@media (-webkit-min-device-pixel-ratio:1.5),(min-resolution:1.5dppx){ :root{--hairline:.667px} }
-@media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx){ :root{--hairline:.5px} }
 /* 47 §C 髮絲線 utility */
 .cl-hairline{border-bottom:var(--hairline) solid var(--line)}
 .cl-hairline-t{border-top:var(--hairline) solid var(--line)}
