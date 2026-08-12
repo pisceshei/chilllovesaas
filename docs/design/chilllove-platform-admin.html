@@ -28,7 +28,7 @@
   --border-inverse:#3a3b40;--border-inverse-hover:#55565c;
   --text-inverse:#e8e9ea;--text-inverse-2:#c9cace;--text-inverse-3:#9a9ba0;--text-inverse-4:#8b8c92;
   --brand:#2b2c2e;--brand-hover:#1f2022;
-  --link:#2a5bd7;--focus:#2a78d6;
+  --link:#2a5bd7;--focus:#005bd3;/* 47 §H2-3′ 量測值 */--focus-inverse:#4b92e5;
   --ai:#6d28d9;--ai-bg:#f3efff;--ai-on-dark:#b7a5ec;
   --chart:var(--focus);--grid:#ececef;
   /* rgb 分量：供 rgba() 疊層（陰影／高光／遮罩／漸層）使用，避免散落裸 rgba 值 */
@@ -185,7 +185,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-x
    裁切顧慮改用 overflow:clip + overflow-clip-margin 解（見 .tscroll）。 */
 :focus-visible{outline:none;box-shadow:0 0 0 var(--focus-ring-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring);border-radius:var(--r-100)}
 /* 深色容器內的 focus 間隙必須換成該容器底色，否則會出現一圈白邊 */
-.topbar,.tooltip,.toast,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse)}
+.topbar,.tooltip,.toast,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse)}
 /* disabled（47 §E）：只降文字對比到 #B5B5B5，**底色不動**。
    降 opacity 會讓元素在深色底發灰、淺色底發白，跨元件不一致，且會連帶壓低本已合格的對比。 */
 [disabled],[aria-disabled="true"]{cursor:not-allowed}

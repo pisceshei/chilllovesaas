@@ -21,7 +21,7 @@
   --text-inverse:#fff;           /* 47 §6：深底上的文字階 */
   --icon:#4a4a4a;                /* 47 §6：圖示灰獨立一階 */
   --border:#e3e3e6;--border-2:#ececef;--border-strong:#c9cace;
-  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#2a78d6;
+  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
   --ai:#6d28d9;--ai-bg:#f3efff;
   --chart:#2a78d6;--grid:#ececef;
   --surface-hover:#ededee;        /* 導航／列 hover 底 */
@@ -138,7 +138,7 @@
   /* ══ 47 §H2-3 focus 環：outline:none ＋ 雙層 box-shadow ════════════════
      內層＝底色做出的留白間隙，外層＝環本身（環寬＝4 個實體像素）。
      48 §A.2「不准用 box-shadow 模擬焦點環」依 51 表 6 已被 47 推翻。 */
-  --focus-ring:#2b2c2e;   /* 47 §H2-3 目視為深中性、非品牌藍 */
+  --focus-ring:var(--focus);   /* 47 §H2-3 目視為深中性、非品牌藍 */
   --focus-gap-w:2px;      /* 內層間隙寬 */
   --focus-ring-w:4px;     /* 環寬＝dpr1.5 下 computed 2.667px ＝ 4 個實體像素 */
   --border-control:#8a8a8a;  /* 47 §H2-4 表單控件框色（inset 陰影用）*/
@@ -196,7 +196,7 @@ input,textarea,select{font:inherit;color:inherit}
    其裁切顧慮改用 overflow:clip + overflow-clip-margin 解（見 .seg）。 */
 :focus-visible{outline:none;box-shadow:0 0 0 2px var(--focus-gap),0 0 0 4px var(--focus-ring)}
 /* 深色浮層內就地換環色，避免深環壓在深底上看不見 */
-.bulkbar,.toast,.savebar,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--surface)}
+.bulkbar,.toast,.savebar,.doc-pop,.annot-bar{--focus-gap:var(--surface-inverse);--focus-ring:var(--focus-inverse);--focus-ring:var(--surface)}
 .seg{overflow:clip;overflow-clip-margin:4px}
 .num{font-variant-numeric:tabular-nums}
 svg{flex:none}
