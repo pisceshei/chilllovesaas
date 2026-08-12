@@ -17,7 +17,12 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 7. **數字同源**：同一指標在 pulse／列表 badge／分析頁必須來自同一 rollup 查詢。
 8. **UI 值**：一律取自 `docs/design/23-interaction-css-spec.md` §1 的 tokens，不自創色值與尺寸；icon 用 Lucide（MIT）。
 9. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify 的 CSS/圖片/文案/商標；Liquid gem、theme-check、theme-liquid-docs 為 MIT 可用；`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture，僅供測試、不得隨平台散布。
-10. **文案**：繁體中文為主、技術名詞保留英文；金額顯示 `NT$1,480`（tabular-nums）。
+10. **文案**：繁體中文為主、技術名詞保留英文；金額顯示 `HK$1,480`（tabular-nums），實際符號與小數位由市場的 locale 決定，不得硬編。
+11. **司法管轄區（2026-08-12 決議，取代先前的台灣預設）**：**基準法域＝香港**，並且**必須做成可插拔的 jurisdiction pack**，因為目標是全球市場。
+    - 稅務憑證是**法域能力**不是核心功能：HK＝無銷售稅／無政府發票（收據僅為商業單據）；TW＝統一發票＋字軌＋折讓＋作廢；MY＝LHDN e-Invoice。核心流程只發「稅務事件」，由 pack 決定要不要落地成憑證。
+    - 儲值監管同理：HK＝PSSVFO/SVF，**單一用途豁免 ⇒ 禮品卡不得跨租戶通用**（產品級硬限制）；TW＝電支條例不得資金池。
+    - 取貨網路、隱私法（HK PDPO / TW 個資法 / GDPR）、幣別格式、稅號格式（HK BR / TW 統編）一律 per-jurisdiction。
+    - **既有台灣內容不刪，降級為 `jurisdiction/tw` pack 的素材**；核心規格不得再直接引用 `統一發票／字軌／折讓／超商取貨／統編／電支條例`——要引就引 pack 介面。
 
 ## 驗收基準
 

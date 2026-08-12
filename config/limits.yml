@@ -14,6 +14,59 @@
 # ⚠ 標記 `verify: true` 的條目代表「來源未載明或三方衝突」，實作前必須查證（見 docs/specs/52 §附錄 A）。
 
 # =============================================================================
+# 0. 司法管轄區契約（jurisdiction capability contract）
+# =============================================================================
+# 出處：docs/specs/56-jurisdiction-architecture.md（使用者 2026-08-12 裁定；CLAUDE.md 鐵律 11）
+# 🔴 基準法域＝**香港**，其餘法域以 pack 形式擴充（目標是全球市場）。
+#    本區塊只定義**契約**（有哪些能力、未宣告時怎麼辦）；能力的**值**一律在 `jurisdictions.<code>.*`。
+#    核心規格不得再直接引用「統一發票／字軌／折讓／超商取貨／統編／電支條例」——要引就引本契約的能力名。
+jurisdiction:
+  default: hk
+  # 解析順序（先命中先用）。訂單一旦成立即**快照**法域碼，日後改市場不回溯
+  #（同 15-F2「訂單存快照」、55 §B.1 T30「不回溯」）。
+  resolution_order: [order_snapshot, market_jurisdiction, shop_operating_entity, platform_default]
+  snapshot_on_order: true
+  # 🔴 一筆交易有**兩個**法域：賣方（營運主體稅籍所在地）與買方（收貨／買家所在地）。
+  #    把兩者混成一個 `country` 欄位是最容易犯的錯——跨境單會用錯稅制或錯的消費者權利。
+  seller_capabilities: [tax_invoice, consumption_tax, stored_value_regime, tax_id_format, invoice_document]
+  buyer_capabilities: [privacy_regime, pickup_networks, currency_format, consumer_rights]
+  required_capabilities:
+    [tax_invoice, consumption_tax, stored_value_regime, privacy_regime, tax_id_format,
+     pickup_networks, currency_format, consumer_rights, invoice_document]
+  # 🔴 **未宣告 ≠ none**：能力缺值時不得靜默取預設。三種合法 fallback，依序取最保守者——
+  #    reject（回 userErrors `JURISDICTION_CAPABILITY_UNDECLARED`）／
+  #    manual_queue（不阻斷已成立的金流，比照 55 §D G-01 的處置）／
+  #    documented_no_op（必須落一列 `jurisdiction_capability_skips` 稽核）。
+  #    **禁止靜默略過**——病根同 55 §D G-03（掛勾寫了沒接上）與 G-05（router 入參語義不成立），只是換到法域層。
+  undeclared_capability_action: reject
+  allowed_fallback_actions: [reject, manual_queue, documented_no_op]
+  silent_skip_forbidden: true
+  # pack 未通過 `jurisdictions.<code>.enable_gate` 時解析器拒絕啟動（比照 54 號 V-02 的既有處置）。
+  resolver_refuses_start_when_gate_unmet: true
+  # 🔴 schema 級決定一律取**所有 pack 的聯集**，不得只按 default pack 建表
+  #    （例：`einvoices(shop_id, order_id)` 仍**不得**建唯一索引——55 §D G-04 的結論在 HK 雖 N/A 但要保留）。
+  schema_is_union_of_all_packs: true
+  # 舊鍵路徑 → 新鍵路徑（本輪搬移；引用舊路徑的文件清單與修改計畫見 56 §D.1／§D.2）
+  _moved_keys:
+    einvoice: jurisdictions.tw.tax_invoice
+    pickup_point.carriers: jurisdictions.tw.pickup_networks.providers
+    pickup_point.cod_max_amount_twd: jurisdictions.tw.pickup_networks.cod_max_cents
+    pickup_point.max_dimension_sum_cm: jurisdictions.tw.pickup_networks.max_dimension_sum_cm
+    pickup_point.max_weight_kg: jurisdictions.tw.pickup_networks.max_weight_kg
+    cod.fee_cents_default_range: jurisdictions.tw.cod.fee_cents_default_range
+    cod.fee_taxable: jurisdictions.tw.cod.fee_taxable
+    return.tw_minimum_window_days: jurisdictions.tw.consumer_rights.cooling_off_days
+    return.tw_minimum_window_enforcement: jurisdictions.tw.consumer_rights.enforcement
+    return.tw_statutory_channel_always_available: jurisdictions.tw.consumer_rights.statutory_channel_required
+    return.tw_statutory_reason_code: jurisdictions.tw.consumer_rights.statutory_reason_code
+    gift_card.tax_event_on_issue: jurisdictions.tw.accounting.gift_card_on_sale
+    gift_card.tax_event_on_redeem: jurisdictions.tw.accounting.gift_card_on_redeem
+    gift_card.tax_event_on_expire: jurisdictions.tw.accounting.gift_card_on_expire
+    store_credit.tax_event_on_issue: jurisdictions.tw.accounting.store_credit_on_issue
+    store_credit.tax_event_on_use: jurisdictions.tw.accounting.store_credit_on_use
+    dispute.tax_event_on_lost: jurisdictions.<code>.accounting.chargeback_lost_treatment
+
+# =============================================================================
 # 1. API 契約（GraphQL）
 # =============================================================================
 api:
@@ -159,17 +212,15 @@ return:
   verify_restocking_fee_max: true
   # 在 Shopify 內建立退貨運送單的地區限制。出處：46c:297（help，逐字「僅限美國地點」）
   platform_label_supported_countries: [US]
-  # 台灣消保法「網購七日鑑賞期」。⚠ TW-10，法規原文須覆核（本檔僅記錄，不得直接當唯一依據）。
-  tw_minimum_window_days: 7
-  verify_tw_minimum_window: true
-  # 🔻 P1-31 處置更正：**不是硬下限，是軟 guard**（見 docs/specs/16 F7.4(b) 與 docs/specs/54 §P1-31）。
-  # 理由：①七日解約權是**法定權利，獨立於商家退貨規則存在**，商家設 3 天並不會消滅它；
-  #      ②「合理例外情事適用準則」明列多類排除適用的商品（易腐敗／客製化／已拆封影音…），硬性 ≥7 會讓合法例外無法設定；
-  #      ③退貨規則可按市場切換，把台灣法規套到所有市場是錯的。
-  # 真正的合規保證是 B2：TW 市場恆提供「依消保法申請解約」的法定管道入口。
-  tw_minimum_window_enforcement: warn      # warn | block（**不得**改成 block）
-  tw_statutory_channel_always_available: true
-  tw_statutory_reason_code: STATUTORY_WITHDRAWAL_TW
+  # 🔴 法定鑑賞期／法定解約管道已搬到 `jurisdictions.<code>.consumer_rights`（原 `return.tw_*` 五鍵）。
+  #    第三個搬移理由本來就寫在原註解裡：「退貨規則可按市場切換，把台灣法規套到所有市場是錯的」——
+  #    本輪只是把它做成結構，不是新結論。
+  # 🔴 香港的值是 `cooling_off_days: null` ＋ `statutory_channel_forbidden: true`：
+  #    HK **無**通訊交易法定鑑賞期，提供「依法申請解約」入口等於宣稱一個不存在的法定權利
+  #    （可能構成 TDO 的不實陳述）。這是「少做一件事」與「多做會出事」的差別，見 56 §E.1。
+  consumer_rights_ref: jurisdictions.<code>.consumer_rights
+  # pack 未宣告 consumer_rights ⇒ 只走商家自訂退貨規則，且 UI **不得**出現任何「依法…」字樣。
+  undeclared_action: merchant_policy_only_no_statutory_claim
 
 refund:
   # 退款金額下限鉗制：建議退款不得為負，一律 floor 到 0。
@@ -410,31 +461,21 @@ shipping:
 # 超商取貨／取貨點（P0-13）
 pickup_point:
   # Shopify 側「其他配送方式」第三種（取貨點 / pickup points）。出處：44:322（live）
-  # 台灣通路對應 ECPay LogisticsSubType。出處：docs/research/42:521–540（ours，已查證 ECPay 合約）
-  carriers:
-    unimart:  { name: "7-ELEVEN", subtypes: [UNIMART, UNIMARTC2C, UNIMARTFREEZE] }
-    fami:     { name: "全家",     subtypes: [FAMI, FAMIC2C] }
-    hilife:   { name: "萊爾富",   subtypes: [HILIFE, HILIFEC2C] }
-    okmart:   { name: "OK",       subtypes: [OKMARTC2C] }
-  # 貨到付款（超商代收）金額上限（TWD）。出處：docs/research/42:530（ours，超商代收慣例）
-  cod_max_amount_twd: 20000
-  # 材積／重量慣例上限。出處：docs/research/42:530（ours，超商慣例，非官方文檔）
-  max_dimension_sum_cm: 105
-  max_weight_kg: 5
-  # ⚠ 以上 COD 上限與材積限制為業界慣例值，非 Shopify 官方文檔；各物流商合約值須逐一覆核。
-  verify_tw_carrier_limits: true
+  # 🔴 本區塊只留**法域無關的機制鍵**；業者清單與合約值（COD 上限／材積／領件方式／離島規則）
+  #    已搬到 `jurisdictions.<code>.pickup_networks`（搬移對照見 `jurisdiction._moved_keys`）。
+  #    理由：台灣是 carrier==brand 兩層、香港是 carrier→network→brand 三層，硬塞同一個 `carriers`
+  #    欄位會逼實作者二選一。核心只需要知道「這個市場有沒有取貨點、選了哪一個」。
+  # pack 未宣告 `pickup_networks` ⇒ 該市場的「取貨點」配送方式**不出現**（不是出現但選不了）。
+  capability_ref: jurisdictions.<code>.pickup_networks
+  undeclared_action: hide_delivery_method
 
 # 貨到付款（COD）代收手續費（P1-08／TW-7；金額引擎行項規格見 docs/specs/15 F2.3）
 cod:
-  # 宅配到府代收常見手續費區間（TWD cents）。出處：docs/research/42:542（ours，業界慣例，**非官方文檔**）
-  # 這是 UI 預設值提示用的區間，**不是硬約束**——實際值存 `shipping_rates.cod_fee_cents`。
-  fee_cents_default_range: [3000, 6000]
+  # 🔴 手續費區間與「是否課稅」為法域值，已搬到 `jurisdictions.tw.cod`；
+  #    「是否課稅」在 HK 為 **N/A**（無消費稅 ⇒ 沒有這個問題）。以下只留法域無關的機制鍵。
   # COD 上限比較的基數＝顧客實際要付的代收金額（含手續費），不是商品小計。
   # 用小計比較會讓 19,900 + 60 的單超出物流商上限而被退件。
   cap_compares_against: total_including_fee
-  # 代收手續費是否課稅。⚠ 台灣實務有兩種做法，官方文檔無載 → 暫定不課稅（V-16）。
-  fee_taxable: false
-  verify_fee_taxable: true
   # 對帳匯入冪等鍵。出處：docs/research/42:542（ours）
   settlement_idempotency_key: [carrier, statement_id, row_no]
   # 金額不符時**不得**自動回寫 paid（現金流入口，差 1 元也不放行）。
@@ -456,12 +497,14 @@ store_credit:
   # 兩分頁同時結帳用同一帳戶 ⇒ 超額扣抵；累計上限（< USD 15,000）在併發下也會被突破。
   concurrent_debit_strategy: conditional_update      # UPDATE … WHERE balance_cents >= ?
   balance_floor_cents: 0
-  # ⚠ 待查證 V-22（**我方依台灣法規自訂，Shopify 無此概念**）：
-  #   ①發放抵用金是否為應稅事件 ②使用時屬「付款方式」（發票金額＝商品總額）或「折扣」（發票金額＝扣抵後實收）
-  #   二選一直接決定發票金額，差額等於抵用金全額。定案前不得預設任一邊。
-  tax_event_on_issue: null
-  tax_event_on_use: null
-  verify_tw_tax_treatment: true
+  # 🔴 儲值監管：抵用金帳戶**必須綁單一 shop_id 且不可跨 shop 使用**（HK PSSVFO 單一用途豁免，
+  #    見 `jurisdictions.hk.stored_value_regime`）。跨租戶通用＝多用途 ⇒ 平台可能需要 SVF 牌照。
+  redeemable_scope: issuing_shop_only        # 設計預設（非法遵閘門，2026-08-12 降級）
+  # 🔴 稅務／會計定性已搬到 `jurisdictions.<code>.accounting.store_credit_on_issue|on_use`。
+  #    TW＝稅務問題（V-22：付款方式 vs 折扣，直接決定發票金額）；
+  #    HK＝會計問題（V-29：合約負債 vs 退款負債，直接決定收入認列金額）。
+  #    **問題沒有消失，只是換了法域就換了性質**——不可互相套用答案。（56 §E.1）
+  accounting_ref: jurisdictions.<code>.accounting
 
 # =============================================================================
 # 12b. 禮品卡（55 號盤點新增；金流寫入點 M27–M32、稅務事件點 T19–T21）
@@ -481,18 +524,22 @@ gift_card:
   # 併發：同一張卡兩張訂單同時結帳 ⇒ 超額扣抵（最典型的併發資損，55 §A.2）
   balance_floor_cents: 0
   concurrent_debit_strategy: conditional_update      # UPDATE … WHERE balance_cents >= ?
-  # ⚠ 待查證 V-21（**我方依台灣法規自訂，Shopify 不開立台灣統一發票 → 46a/46b/46c 不可能有答案**）：
-  #   台灣「商品禮券」的開立時點為二選一，**互斥**——
-  #     模式 A：發行時開立、兌換時不再開立
-  #     模式 B：發行時不開立、兌換時開立
-  #   兩邊都開 ⇒ 同一筆銷售兩張發票（重複課稅）；兩邊都不開 ⇒ 漏開。財政部函釋原文尚未由本專案覆核。
-  tax_event_on_issue: null
-  tax_event_on_redeem: null
-  tax_event_on_expire: null
-  verify_tw_voucher_tax_treatment: true
-  # 比照 limits.market.shipping_inherits 的既有處置（54 號 V-02）：**未定案時解析器拒絕啟動**，
-  # 不讓它靜默取一個預設值。這是唯一能保證「不會悄悄開錯發票」的做法。
-  resolver_refuses_start_when_undecided: true
+  # 🔴 **儲值監管硬限制（產品級，不是設定項）**：一張卡只能在**發行它的那一個租戶店內**使用。
+  #    法源＝HK PSSVFO 單一用途豁免（`jurisdictions.hk.stored_value_regime`，hk-user 已查證）：
+  #    跨多個不相關商戶＝多用途 ⇒ 平台自己可能需要 SVF 牌照。
+  #    落地：`gift_cards.shop_id NOT NULL`；`gift_card_transactions` 以**複合外鍵 (shop_id, gift_card_id)**
+  #    綁回卡片（單欄 gift_card_id 擋不住跨店扣抵）；`giftCardDebit` 驗 shop_id 不符即回
+  #    `CROSS_SHOP_REDEMPTION_FORBIDDEN`；`Platform::` 不得有任何跨租戶發卡／扣抵的 mutation
+  #    （比照 37:895「無任何發起撥款的 mutation」的既有寫法）。
+  #    平台想做全平台通用的行銷抵用 ⇒ 只能用**平台補貼的折扣碼**（17 號折扣引擎），不是儲值工具。（56 §B.3）
+  redeemable_scope: issuing_shop_only        # 設計預設（非法遵閘門，2026-08-12 降級）
+  cross_shop_redemption_error_code: CROSS_SHOP_REDEMPTION_FORBIDDEN
+  # 🔴 稅務／會計定性已搬到 `jurisdictions.<code>.accounting.gift_card_on_sale|on_redeem|on_expire`。
+  #    TW＝**稅務時點**二選一（V-21，兩邊都開＝重複課稅）；
+  #    HK＝**會計分類**（HKFRS 15：售出＝合約負債、兌換＝認列收入、breakage 依預期兌換模式，hk-user 已查證）。
+  #    ⚠ 原 `resolver_refuses_start_when_undecided: true` 一併移入 `jurisdictions.tw.accounting` 並**限定 TW**：
+  #    照搬到 HK 會讓禮品卡永遠無法啟用（HK 根本沒有 tax_event_* 這回事）。（56 §E.1）
+  accounting_ref: jurisdictions.<code>.accounting
 
 # =============================================================================
 # 13. 顧客帳號／內容
@@ -542,85 +589,399 @@ notification:
   verify_event_key_catalog: true
 
 # =============================================================================
-# 14b. 台灣電子發票（55 號盤點新增；稅務事件點 T01–T30，規格見 docs/specs/38 §3B 與 docs/specs/16 F5.5）
+# 14b. 司法管轄區包（jurisdiction packs）
 # =============================================================================
-# 🔴 **本區塊在 55 號盤點前完全不存在**，但 `docs/specs/38:1467` 逐字要求
-#    「建 5 張表；`config/limits.yml` 加 `einvoice.track_low_ratio: 0.15`、`einvoice.cert_warn_days: 60`」
-#    ——38 自己把 0.15 寫成程式碼常數 `LOW_RATIO = 0.15`（38:1265），違反 CLAUDE.md 鐵律 6。（55 §D G-11）
+# 🔴 本區塊**取代**原本的頂層 `einvoice:` 區塊（55 號建立、本輪整段搬入 `jurisdictions.tw.tax_invoice`）。
+#    搬移對照表見 `jurisdiction._moved_keys`；**既有台灣內容一行未刪**，只是降級為 tw pack 的素材。
 #
-# 🔴 **官方層級全部是 ours**：Shopify **不開立台灣統一發票**，46a/46b/46c 三份官方文檔中沒有任何一條
-#    關於字軌／折讓／作廢／載具／統編的規則。本區塊一律是「**我方依台灣法規自訂**」，
-#    **不得**在任何文件中把它們寫成 Shopify 行為。法規原文未覆核者一律 null ＋ verify 旗標。
-einvoice:
-  # --- 字軌與憑證監控（出處：docs/specs/38:1467、38:1265、38:910，ours 轉述 33 §2.14）---
-  track_low_ratio: 0.15            # 餘量低於 15% 開 track_low 告警（38 明言「台灣營運最常見的事故來源」）
-  cert_warn_days: 60               # 工商憑證到期前 60 天示警
+# 出處標記在本區塊另加兩級（檔頭的 dev／help／live／ours 之外）：
+#   hk-user      ＝ 使用者 2026-08-12 裁定時提供並聲明「已查證」的香港事實（四條）
+#   hk-secondary ＝ 本專案查得的第二手來源（律所／立法會秘書處研究刊物／業者頁面）；URL 見 56 §H
+#   未標者一律 **⚠ 待查證**，不准臆造。
+jurisdictions:
 
-  # --- 開立時機（出處：docs/specs/38:876，ours，逐字「付款／**出貨（建議）**／收貨」三選一）---
-  issue_timing_options: [on_payment, on_fulfillment, on_delivery]
-  issue_timing_default: on_fulfillment
-  # ⚠ 待查證 V-23：`on_fulfillment` 在**部分出貨**（一張訂單分多次出貨）時的開立粒度——
-  #   「每次出貨各開一張」與「全部出完才開一張」互斥；38:876／33 §2.14 只寫「出貨」，未定義多次出貨。
-  #   🔴 定案前：`on_fulfillment` ＋ 多次出貨的組合**一律擋下並轉人工佇列**，不得靜默選一邊。（55 §D G-01）
-  partial_fulfillment_issue_granularity: null
-  verify_partial_fulfillment_granularity: true
+  # ---------------------------------------------------------------------------
+  # 香港（基準法域，2026-08-12 決議）
+  # ---------------------------------------------------------------------------
+  hk:
+    enabled: true
+    display_name: 香港
+    country_codes: [HK]
+    enable_gate: []          # 無阻擋項；待查證項見各能力的 verify_* 與 56 §E.2（V-25～V-33）
 
-  # --- 上傳／作廢／折讓的法定期限（全部未覆核）---
-  # ⚠ V-06（52 號既有）：38:885 逐字「『48 小時上傳』來自媒體整理，建議以財政部《電子發票實施作業要點》
-  #   原文複核——**不得寫死**」；作廢是否受「該期別申報前」限制 33 未載。
-  upload_deadline_hours: null
-  verify_upload_deadline: true
-  void_window_policy: null                 # 對應 38:1356 的 EinvoiceVoidPolicy.window_open? 掛勾
-  verify_void_window: true
-  allowance_deadline_days: null            # ⚠ V-06 延伸：折讓證明單的開立期限，38 未載
-  verify_allowance_deadline: true
+    # 【tax_invoice】香港無增值稅／銷售稅／消費稅 ⇒ 沒有政府強制發票、沒有字軌、沒有折讓單、
+    #   沒有作廢重開。收據＝純商業單據。（hk-user，已查證）
+    # 🔴 `none` 是**明確宣告**，不是「沒填」。核心流程照常發稅務事件，pack 一律回 no_document
+    #    並落一列 `jurisdiction_capability_skips`（documented_no_op），**不得靜默略過**。
+    tax_invoice:
+      kind: none
+      issues_documents: false
+      numbering_authority: null
+      void_mechanism: null
+      allowance_mechanism: null
+      reissue_mechanism: null
+      # 55 §B 的 30 條稅務事件點在 HK 的重分類見 56 §B.2：
+      #   20 條轉純會計事件／8 條完全消失／1 條改由 tax_id_format 承接／1 條不受影響（跨境關稅）。
+      event_handling: accounting_only
+      # 🔴 55 §D G-01 的「未定案前擋下多次出貨並轉人工佇列」**不得**在本法域生效——
+      #    HK 沒有憑證可開，照搬會把所有多次出貨的訂單卡死。（56 §E.1）
+      block_multi_fulfillment_when_undecided: false
 
-  # --- 折讓／作廢的路由不變量（55 §B.2 收斂版，修正 38:1341 的單張單次判定）---
-  # 🔴 38:1341 原本用 `refund.amount_cents >= invoice.total_cents` 只看**本次**退款額：
-  #    兩次各退 60% 會開出兩張各 60% 的折讓 ⇒ 折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆。
-  allowance_cumulative_cap: invoice_total          # Σ allowances(per invoice) ≤ einvoices.total_cents
-  allowance_cap_enforcement: conditional_update
-  # 作廢窗已關時**降級為全額折讓**（不是失敗）——38:1356 的掛勾原本從未被 router 呼叫。（55 §D G-03）
-  void_window_closed_fallback: full_allowance
-  # 開立在途（state='issuing'）時發生退款 ⇒ **延後重試**，🔴 不得判為 no_invoice 而 no-op。（55 §D G-10）
-  defer_when_issuing: true
-  # 一張訂單可有多張發票（訂單編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）。
-  # 🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引——38:1346 的 `refund.order.einvoice`（單數）
-  #    與 16-F5.5 的「補開一張」直接矛盾，此鍵為裁決結果。（55 §D G-04）
-  multiple_invoices_per_order_allowed: true
-  # 多張發票的沖銷順序：能追溯到品項的先沖該張；不能追溯者 LIFO（後開的先沖，離作廢窗關閉最遠）。
-  # ⚠ 無官方來源，本專案決策。
-  allowance_offset_order: traceable_then_lifo
+    # 【consumption_tax】無 VAT／GST／SST／營業稅。（hk-user，已查證）
+    # 🔴 稅額必須寫成「**已宣告的 0**」而非「未計算」：金額引擎仍寫 tax_cents: 0 並帶
+    #    tax_basis: no_consumption_tax_regime，報表與稽核才分得出「無稅制」與「漏算稅」。
+    consumption_tax:
+      kind: none
+      rate_bp: 0
+      taxes_included_default: false           # 無稅可內含（對照 tw: true，16-F5.1 X1）
+      tax_basis_label: no_consumption_tax_regime
+      zero_rated_exports: null                # 沒有稅率就沒有零稅率（55 T26／G-21 在 HK 為 N/A）
+      # ⚠ V-31：賣往有 VAT／GST 的市場時，**買方所在地**的代收與註冊義務（EU IOSS／UK／AU／SG
+      #   低價值貨物）未由本專案覆核。這是「目標全球市場」的真正稅務風險，不是 HK 本地問題。
+      verify_outbound_vat_obligations: true
 
-  # --- 折讓基數（55 §B.3 的收斂定義）---
-  # 基數＝**實際金流退款額**（Σ F5.4 的 allocation），不是 suggested_refund 名目值、不是退貨品項價值。
-  # 退貨費用不需再扣一次（它們在 F5.1 的 net 階段就沒被退出去；重複扣 ⇒ 短報銷貨退回）。
-  allowance_base: actual_cash_refund
-  # ⚠ V-20（54 號，本輪**擴大至商店抵用金**）＋ V-22：兩者是否計入折讓基數皆未定案，暫扣除。
-  allowance_base_excludes: [gift_card_allocation, store_credit_allocation]
-  verify_allowance_base: true
-  # 稅額拆分：未稅 floor、稅額用差額法 ⇒ 保證 `未稅 + 稅 == 含稅` 精確相等（無 1 分錢漂移）。
-  # ⚠ 法定捨入方向未覆核；此為本專案決策的機械規則。
-  allowance_tax_split: floor_untaxed_then_difference
+    # 【stored_value_regime】使用者 2026-08-12 裁定：**PSSVFO 不列為法遵閘門**。
+    #   理由（使用者原話）：不自建支付系統，整合 Airwallex / Stripe / PayPal 等持牌業者。
+    #   ── 本檔補充的判斷依據（避免日後誤解為「已豁免所以怎樣都行」）──
+    #   PSP 整合解決的是「支付處理」；禮品卡是「預先收款、之後兌換」，兩者是不同問題。
+    #   真正讓 PSSVFO 不構成風險的是**現行設計本身**：禮品卡由租戶發行、僅限自家店兌換
+    #   ＝單一用途，且平台僅提供軟體、非發行人。
+    #   ⇒ 因此 `issuing_shop_only` 從「法遵硬限制」降級為 **設計預設（design default）**：
+    #      不再作為啟動阻擋條件，但仍是預設值。若日後要做跨租戶通用儲值，
+    #      **那不是改一個列舉值，而是要重新評估發行人身分與牌照**（屆時再議）。
+    #   出處：PSSVFO 單一用途豁免（HKMA）；本專案不依賴此豁免作為合規主張。
+    #   單一用途（只能在發行商自己的店消費）豁免；跨多個不相關商戶＝多用途需牌照；
+    #   有限多場所豁免設 HK$1,000,000 儲值總額上限。
+    #   二次來源（hk-secondary）：ONC《PSSVFO》說明——Schedule 3 單一用途豁免、Schedule 8 多用途豁免
+    #   （逐字「HK$1,000,000 or its equivalent」）。URL 見 56 §H；**法例原文未由本專案覆核**。
+    # 🔴 **產品級硬限制**：每張禮品卡／每個抵用金帳戶只能在**發行它的那一個租戶店內**使用。
+    #    若 CHILL LOVE 發行跨租戶通用禮品卡 ⇒ 平台自己可能需要 SVF 牌照。（56 §B.3）
+    stored_value_regime:
+      kind: svf_pssvfo
+      single_purpose_exempt: true
+      cross_shop_redemption_allowed: false            # 🔴 不得改成 true
+      cross_shop_redemption_error_code: CROSS_SHOP_REDEMPTION_FORBIDDEN
+      redeemable_scope_enum: [issuing_shop_only]      # 設計預設；擴充需先評估發行人身分（見上）
+      platform_wide_instrument_forbidden: false       # 2026-08-12 降級：不再作為啟動阻擋條件
+      cross_tenant_requires_licensing_review: true    # 但要做跨租戶時必須先走一次評估
+      # 備援路線（我們走單一用途，不走這條）：有限多場所豁免的儲值總額上限。
+      limited_premises_float_cap_cents: 100000000     # HK$1,000,000
+      # ⚠ V-32：上限的適用主體是租戶還是平台、單一用途豁免下是否仍有 HKMA 申報義務——未覆核。
+      # verify_svf_exemption_scope: 已移除——不再以 SVF 豁免作為合規主張（2026-08-12）
+      # 無資金池：租戶貨款直接進租戶自持的通道商戶號，平台不代收代付、不得出現「平台錢包／提現」。
+      # 🔴 這條在 TW 的法源是《電子支付機構管理條例》（37:895 TW-9），在 HK 的法源是 PSSVFO
+      #    ＋ ⚠ 其他 HK 金融監管（未覆核）。**法源換了，結論不變**——不得因為「HK 沒有電支條例」就放寬。
+      no_fund_pooling: true
+      verify_hk_money_service_rules: true
 
-  # --- 買方與載具（出處：docs/research/42:518–523，ours，我方依台灣法規自訂）---
-  buyer_types: [b2c, b2b]
-  carrier_types: [member, mobile_barcode, natural_person_cert]
-  mobile_barcode_regex: '^/[0-9A-Z.+-]{7}$'
-  natural_person_cert_regex: '^[A-Z]{2}[0-9]{14}$'
-  donation_code_length_range: [3, 7]
-  tax_id_length: 8
-  # ⚠ V-04（52 號既有）：42:520 的統編檢核為舊規則（權重 1,2,1,2,1,2,4,1）；
-  #   財政部是否已放寬（新增「可被 5 整除」）**須以原文覆核**，不得臆測。
-  verify_tax_id_checksum_rule: true
-  # 營業稅率（basis points）。**我方依台灣法規自訂**；專案內既有假設見 docs/specs/16:360 算例 2「TW 5% 內含」。
-  # 法規原文未由本專案覆核 → 保留 verify 旗標（含稅反推公式在 16-F5.1 X1／55 §B.3）。
-  business_tax_rate_bp: 500
-  verify_tax_rate_source: true
+    # 【accounting】HKFRS 15：禮品卡／抵用金**售出＝合約負債（遞延收入）**，兌換時才認列收入；
+    #   未兌換 breakage 依預期兌換模式比例認列，或於兌換可能性極低時認列。（hk-user，已查證）
+    # 🔴 這是**會計問題不是稅務問題**——55 號 V-21「開立時點二選一」在 HK 不成立（56 §E.1）。
+    #    對應地，`gift_card.resolver_refuses_start_when_undecided` 若照搬到 HK 會讓禮品卡永遠無法啟用。
+    accounting:
+      framework: hkfrs
+      gift_card_on_sale: contract_liability
+      gift_card_on_redeem: recognise_revenue
+      gift_card_breakage_method: expected_redemption_pattern_or_remote
+      # ⚠ V-28：breakage 的估計方法與**首年無歷史兌換資料**時的處置未覆核。
+      #   定案前保守側錯：**不認列 breakage**（負債留著），不得為了帳面好看提前認列。
+      breakage_recognition_when_undecided: defer_all
+      verify_breakage_method: true
+      # ⚠ V-29（＝55 號 V-22 的 HK 版）：商店抵用金是合約負債還是退款負債（refund liability）未覆核。
+      #   問題**沒有消失，只是從稅務變成會計**——影響收入認列金額，不影響任何憑證。
+      store_credit_on_issue: null
+      store_credit_on_use: null
+      verify_store_credit_liability_class: true
+      # ⚠ V-30（＝55 號 V-24 的 HK 版）：chargeback lost 的會計處理未覆核 → 不自動沖銷，開人工工單。
+      chargeback_lost_treatment: null
+      verify_chargeback_lost_treatment: true
 
-  # --- 對帳（55 §B.2 不變量 2／§D G-24）---
-  # nightly 斷言：Σ 該訂單 issued 發票金額 − Σ 折讓 == Σ 實收金流。38:1509 的 ReconcileJob 只對字軌，不對金額。
-  reconcile_invoice_vs_cash: true
+    # 【privacy_regime】PDPO（個人資料（私隱）條例），**不是**台灣個資法。（hk-user，已查證）
+    privacy_regime:
+      kind: pdpo_hk
+      # ⚠ V-26：DSR 法定回覆天數、資料外洩通報是否強制與時限、跨境傳輸條文的生效狀態——皆未覆核。
+      #   定案前沿用 38:885 的既有處置：以「已宣告 pack 中最嚴者」為內部 SLA，UI 標「法定期限待確認」。
+      dsr_statutory_days: null
+      breach_notification_hours: null
+      breach_notification_mandatory: null
+      cross_border_transfer_rule: null
+      log_retention_years: null
+      fallback_sla_source: strictest_enabled_pack
+      verify_pdpo_details: true
+
+    # 【tax_id_format】HK 是 BR number（商業登記號），**不是**統編。（hk-user，已查證）
+    # 🔴 36:457／36:1646 的 `tax_id VARCHAR(8)` 是**寫死的台灣假設**，BR number 放不進去
+    #    ⇒ schema 級待修（56 §D.1 P0）。
+    tax_id_format:
+      label: BR number
+      regex: null
+      checksum_rule: null
+      length: null
+      # TW 有「前台須揭露營業人名稱與統編」的義務（38:1444）；HK 是否有等價義務未覆核。
+      storefront_disclosure_required: null
+      verify_br_number_format: true            # ⚠ V-25
+
+    # 【pickup_networks】⚠ hk-secondary（第三方 Shopify app 供應商說明頁＋業者頁面，URL 見 56 §H）：
+    #   順豐（SF Express）聚合的自取網絡＝EF Locker 智能櫃／順豐站（Service Centre）／
+    #   合作便利店（7-Eleven、Circle K、VanGO），逾 1,000 點。
+    # 🔴 **合約值一律未查證**：COD 是否支援與上限、材積／重量、離島限制、領件身分驗證方式、
+    #    API 與回拋契約——**不得**把台灣的 NT$20,000／三邊和 105cm／5kg 換算過來充當 HK 值。（V-27）
+    pickup_networks:
+      available: true
+      # 三層模型（carrier → network → brand）；TW 是兩層（carrier == brand，ECPay 直接對應四大超商）。
+      # 差異六項見 56 §B.4。
+      model: carrier_network_brand
+      providers: null
+      cod_supported: null
+      cod_max_cents: null
+      max_dimension_sum_cm: null
+      max_weight_kg: null
+      identity_at_pickup: null
+      outlying_island_rule: null
+      verify_hk_pickup_contract_values: true
+
+    # 【currency_format】HKD；exponent 2（ISO 4217，hk-secondary）。
+    #   CLAUDE.md 鐵律 10 的示例 `HK$1,480` 是整數金額的顯示樣態，不代表 exponent 為 0。
+    currency_format:
+      default_currency: HKD
+      symbol: "HK$"
+      exponent: 2
+      symbol_position: prefix
+      grouping: [3]
+      # 是否隱藏 .00 由 29 §3.3 的 rounding 設定決定，不在此寫死。
+      verify_hkd_display_convention: true
+
+    # 【consumer_rights】香港**無**通訊交易的法定鑑賞期；適用 TDO（不公平營商手法）與
+    #   SGO（貨品須有令人滿意的品質、符合說明）。
+    #   出處（hk-secondary）：立法會秘書處《E-consumer protection》ISE08/19-20，URL 見 56 §H。
+    # 🔴 反直覺結論：在 HK **不是少做一件事，而是多做會出事**——16-F7.4(b) 的 B2「法定管道恆存在」
+    #    若照搬到 HK，等於對買家宣稱一個不存在的法定權利，本身可能構成 TDO 的不實陳述／誤導性遺漏。
+    #    **HK 市場不得出現「依法申請解約」入口**。（56 §E.1）
+    consumer_rights:
+      cooling_off_days: null
+      statutory_channel_required: false
+      statutory_channel_forbidden: true        # 🔴 不得提供
+      statutory_reason_code: null
+      applicable_laws: [TDO, SGO]
+      # 消費者委員會 2018 年報告倡議特定行業強制 7 天冷靜期，**尚未立法** → 追蹤項。
+      pending_legislation_watch: mandatory_cooling_off_specific_trades
+      verify_hk_consumer_law_details: true     # ⚠ V-33
+
+    # 【invoice_document】買家收到的單據＝**純商業收據**，無稅務效力。（hk-user，已查證）
+    invoice_document:
+      kind: commercial_receipt
+      mandatory: false
+      numbering_authority: merchant            # 商家自行編號，無政府字軌
+      amendment_mechanism: free_form           # 直接改開／註記，無「作廢重開」的法定程序
+      must_state_not_a_tax_document: true      # 單據上必須明示「本文件非稅務憑證」
+      retention_years: null
+      verify_hk_receipt_requirements: true
+
+  # ---------------------------------------------------------------------------
+  # 台灣（既有內容歸位處；**未啟用**，待台灣市場開通時實作）
+  # ---------------------------------------------------------------------------
+  # 🔴 本 pack 的內容**全部來自既有規格，一行未刪**，只是從「核心設定」降級為「tw pack 素材」。
+  #    來源檔案與章節對照表見 56 §C.1。
+  tw:
+    enabled: false
+    display_name: 台灣
+    country_codes: [TW]
+    # 🔴 啟用前必須先結案的待查證（55 號已證明這些未定案項會導致重複開立／漏開）：
+    enable_gate: [V-04, V-05, V-06, V-20, V-21, V-22, V-23, V-24]
+
+    # 【tax_invoice】統一發票（政府強制、字軌管制、作廢／折讓／補開皆有法定程序）。
+    # 🔴 以下 whole block 為 55 號建立的頂層 `einvoice:` 原樣搬入（縮排＋4，內容一字未改）。
+    #    官方層級全部是 ours：Shopify **不開立台灣統一發票**，46a/46b/46c 不可能是來源。
+    tax_invoice:
+      kind: gui
+      issues_documents: true
+      numbering_authority: government_track      # 字軌，由加值中心代辦
+      void_mechanism: void_and_reissue
+      allowance_mechanism: credit_note           # 折讓證明單
+      reissue_mechanism: additional_invoice
+      event_handling: issue_documents
+      # 55 §D G-01 的既有處置——🔴 **只在本法域生效**（HK 為 false，見 hk.tax_invoice）。
+      block_multi_fulfillment_when_undecided: true
+      # --- 字軌與憑證監控（出處：docs/specs/38:1467、38:1265、38:910，ours 轉述 33 §2.14）---
+      track_low_ratio: 0.15            # 餘量低於 15% 開 track_low 告警（38 明言「台灣營運最常見的事故來源」）
+      cert_warn_days: 60               # 工商憑證到期前 60 天示警
+
+      # --- 開立時機（出處：docs/specs/38:876，ours，逐字「付款／**出貨（建議）**／收貨」三選一）---
+      issue_timing_options: [on_payment, on_fulfillment, on_delivery]
+      issue_timing_default: on_fulfillment
+      # ⚠ 待查證 V-23：`on_fulfillment` 在**部分出貨**（一張訂單分多次出貨）時的開立粒度——
+      #   「每次出貨各開一張」與「全部出完才開一張」互斥；38:876／33 §2.14 只寫「出貨」，未定義多次出貨。
+      #   🔴 定案前：`on_fulfillment` ＋ 多次出貨的組合**一律擋下並轉人工佇列**，不得靜默選一邊。（55 §D G-01）
+      partial_fulfillment_issue_granularity: null
+      verify_partial_fulfillment_granularity: true
+
+      # --- 上傳／作廢／折讓的法定期限（全部未覆核）---
+      # ⚠ V-06（52 號既有）：38:885 逐字「『48 小時上傳』來自媒體整理，建議以財政部《電子發票實施作業要點》
+      #   原文複核——**不得寫死**」；作廢是否受「該期別申報前」限制 33 未載。
+      upload_deadline_hours: null
+      verify_upload_deadline: true
+      void_window_policy: null                 # 對應 38:1356 的 EinvoiceVoidPolicy.window_open? 掛勾
+      verify_void_window: true
+      allowance_deadline_days: null            # ⚠ V-06 延伸：折讓證明單的開立期限，38 未載
+      verify_allowance_deadline: true
+
+      # --- 折讓／作廢的路由不變量（55 §B.2 收斂版，修正 38:1341 的單張單次判定）---
+      # 🔴 38:1341 原本用 `refund.amount_cents >= invoice.total_cents` 只看**本次**退款額：
+      #    兩次各退 60% 會開出兩張各 60% 的折讓 ⇒ 折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆。
+      allowance_cumulative_cap: invoice_total          # Σ allowances(per invoice) ≤ einvoices.total_cents
+      allowance_cap_enforcement: conditional_update
+      # 作廢窗已關時**降級為全額折讓**（不是失敗）——38:1356 的掛勾原本從未被 router 呼叫。（55 §D G-03）
+      void_window_closed_fallback: full_allowance
+      # 開立在途（state='issuing'）時發生退款 ⇒ **延後重試**，🔴 不得判為 no_invoice 而 no-op。（55 §D G-10）
+      defer_when_issuing: true
+      # 一張訂單可有多張發票（訂單編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）。
+      # 🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引——38:1346 的 `refund.order.einvoice`（單數）
+      #    與 16-F5.5 的「補開一張」直接矛盾，此鍵為裁決結果。（55 §D G-04）
+      multiple_invoices_per_order_allowed: true
+      # 多張發票的沖銷順序：能追溯到品項的先沖該張；不能追溯者 LIFO（後開的先沖，離作廢窗關閉最遠）。
+      # ⚠ 無官方來源，本專案決策。
+      allowance_offset_order: traceable_then_lifo
+
+      # --- 折讓基數（55 §B.3 的收斂定義）---
+      # 基數＝**實際金流退款額**（Σ F5.4 的 allocation），不是 suggested_refund 名目值、不是退貨品項價值。
+      # 退貨費用不需再扣一次（它們在 F5.1 的 net 階段就沒被退出去；重複扣 ⇒ 短報銷貨退回）。
+      allowance_base: actual_cash_refund
+      # ⚠ V-20（54 號，本輪**擴大至商店抵用金**）＋ V-22：兩者是否計入折讓基數皆未定案，暫扣除。
+      allowance_base_excludes: [gift_card_allocation, store_credit_allocation]
+      verify_allowance_base: true
+      # 稅額拆分：未稅 floor、稅額用差額法 ⇒ 保證 `未稅 + 稅 == 含稅` 精確相等（無 1 分錢漂移）。
+      # ⚠ 法定捨入方向未覆核；此為本專案決策的機械規則。
+      allowance_tax_split: floor_untaxed_then_difference
+
+      # --- 買方與載具（出處：docs/research/42:518–523，ours，我方依台灣法規自訂）---
+      buyer_types: [b2c, b2b]
+      carrier_types: [member, mobile_barcode, natural_person_cert]
+      mobile_barcode_regex: '^/[0-9A-Z.+-]{7}$'
+      natural_person_cert_regex: '^[A-Z]{2}[0-9]{14}$'
+      donation_code_length_range: [3, 7]
+      tax_id_length: 8
+      # ⚠ V-04（52 號既有）：42:520 的統編檢核為舊規則（權重 1,2,1,2,1,2,4,1）；
+      #   財政部是否已放寬（新增「可被 5 整除」）**須以原文覆核**，不得臆測。
+      verify_tax_id_checksum_rule: true
+      # 營業稅率（basis points）。**我方依台灣法規自訂**；專案內既有假設見 docs/specs/16:360 算例 2「TW 5% 內含」。
+      # 法規原文未由本專案覆核 → 保留 verify 旗標（含稅反推公式在 16-F5.1 X1／55 §B.3）。
+      business_tax_rate_bp: 500
+      verify_tax_rate_source: true
+
+      # --- 對帳（55 §B.2 不變量 2／§D G-24）---
+      # nightly 斷言：Σ 該訂單 issued 發票金額 − Σ 折讓 == Σ 實收金流。38:1509 的 ReconcileJob 只對字軌，不對金額。
+      reconcile_invoice_vs_cash: true
+    # 【consumption_tax】營業稅。稅率鍵沿用上方 tax_invoice.business_tax_rate_bp（⚠ V-04／未覆核），
+    #   不另立第二處真相。
+    consumption_tax:
+      kind: business_tax
+      rate_bp_ref: jurisdictions.tw.tax_invoice.business_tax_rate_bp
+      taxes_included_default: true             # 16-F5.1 X1「含稅定價（台灣預設）」
+      zero_rated_exports: null                 # ⚠ 55 §D G-21 外銷零稅率規則未覆核
+      verify_zero_rated_exports: true
+
+    # 【stored_value_regime】《電子支付機構管理條例》（37 §3、37:479–491、37:895 的 TW-9 鐵律）。
+    stored_value_regime:
+      kind: epayment_act
+      no_fund_pooling: true                    # 不代收代付、不保管資金；後台不得出現「平台錢包／提現」
+      cross_shop_redemption_allowed: false
+      platform_wide_instrument_forbidden: true
+      verify_epayment_act_scope: true
+
+    # 【accounting】台灣的禮品卡／抵用金問題是**稅務時點**（開立時 vs 兌換時），不是會計分類——
+    #   與 HK 的 HKFRS 15 合約負債是**不同性質的問題**，不可互相套用。（56 §B.3、§E.1）
+    accounting:
+      framework: null
+      gift_card_on_sale: null                  # ⚠ V-21（原 limits.gift_card.tax_event_on_issue）
+      gift_card_on_redeem: null                # ⚠ V-21（原 limits.gift_card.tax_event_on_redeem）
+      gift_card_on_expire: null                # ⚠ V-21（原 limits.gift_card.tax_event_on_expire）
+      store_credit_on_issue: null              # ⚠ V-22（原 limits.store_credit.tax_event_on_issue）
+      store_credit_on_use: null                # ⚠ V-22（原 limits.store_credit.tax_event_on_use）
+      chargeback_lost_treatment: null          # ⚠ V-24（原 limits.dispute.tax_event_on_lost）
+      verify_tw_voucher_tax_treatment: true
+      verify_tw_store_credit_tax_treatment: true
+      verify_chargeback_tax_treatment: true
+      # 🔴 原 `limits.gift_card.resolver_refuses_start_when_undecided: true` 移到這裡並**限定本法域**：
+      #    照搬到 HK 會讓禮品卡永遠無法啟用（HK 的 tax_event_* 本來就不存在）。（56 §E.1）
+      resolver_refuses_start_when_undecided: true
+
+    # 【privacy_regime】《個人資料保護法》。
+    privacy_regime:
+      kind: pdpa_tw
+      dsr_statutory_days: null                 # ⚠ V-07／38:885、38:1146 逐字「待定，需使用者確認」
+      breach_notification_hours: 72            # 38:1012 `pdpa_incidents`
+      breach_notification_mandatory: true
+      breach_clock_start: null                 # ⚠ V-07：起算點是「知悉」或「發生」，33 未載
+      log_retention_years: 5                   # 38:1701、38 §12 C1（與 PCI 12 個月衝突，取嚴）
+      verify_pdpa_details: true
+
+    # 【tax_id_format】統一編號。
+    tax_id_format:
+      label: 統一編號
+      length_ref: jurisdictions.tw.tax_invoice.tax_id_length          # 8
+      checksum_rule: weighted_1_2_1_2_1_2_4_1
+      verify_tax_id_checksum_rule: true        # ⚠ V-04（是否含「可被 5 整除」的放寬）
+      storefront_disclosure_required: true     # 38:1444 前台合規巡檢「揭露的統編必須等於 shops.tax_id」
+
+    # 【pickup_networks】超商取貨（原 `limits.pickup_point` 的台灣段，原樣搬入）。
+    pickup_networks:
+      available: true
+      model: carrier_equals_brand              # 兩層；HK 是三層 carrier→network→brand
+      # 台灣通路對應 ECPay LogisticsSubType。出處：docs/research/42:521–540（ours，已查證 ECPay 合約）
+      providers:
+        unimart:  { name: "7-ELEVEN", subtypes: [UNIMART, UNIMARTC2C, UNIMARTFREEZE] }
+        fami:     { name: "全家",     subtypes: [FAMI, FAMIC2C] }
+        hilife:   { name: "萊爾富",   subtypes: [HILIFE, HILIFEC2C] }
+        okmart:   { name: "OK",       subtypes: [OKMARTC2C] }
+      # 貨到付款（超商代收）金額上限。出處：docs/research/42:530（ours，超商代收慣例）
+      cod_supported: true
+      cod_max_cents: 2000000                   # NT$20,000（原 pickup_point.cod_max_amount_twd: 20000）
+      # 材積／重量慣例上限。出處：docs/research/42:530（ours，超商慣例，非官方文檔）
+      max_dimension_sum_cm: 105
+      max_weight_kg: 5
+      identity_at_pickup: mobile_number_and_id # 42:537 逐字「以手機號＋證件領件」
+      outlying_island_rule: cvs_outside_flag   # 42:538 外島門市常排除（CVSOutSide=1）
+      # ⚠ 以上 COD 上限與材積限制為業界慣例值，非 Shopify 官方文檔；各物流商合約值須逐一覆核。
+      verify_tw_carrier_limits: true           # ⚠ V-11
+
+    # 【cod】宅配到府代收的台灣慣例值（原 `limits.cod` 的台灣段）。
+    cod:
+      # 常見手續費區間（TWD cents）。出處：docs/research/42:542（ours，業界慣例，**非官方文檔**）
+      # 這是 UI 預設值提示用的區間，**不是硬約束**——實際值存 `shipping_rates.cod_fee_cents`。
+      fee_cents_default_range: [3000, 6000]
+      # 代收手續費是否課稅。⚠ V-16：台灣實務有兩種做法，官方文檔無載 → 暫定不課稅。
+      # 🔴 本鍵在 HK 為 **N/A**（無消費稅 ⇒ 沒有「是否課稅」這個問題）。
+      fee_taxable: false
+      verify_fee_taxable: true
+
+    # 【currency_format】TWD。
+    currency_format:
+      default_currency: TWD
+      symbol: "NT$"
+      exponent: 0                              # 42:508「TWD exponent=0 實務顯示整數」
+      symbol_position: prefix
+      grouping: [3]
+
+    # 【consumer_rights】《消費者保護法》第 19 條七日解約權（原 `limits.return.tw_*`，原樣搬入）。
+    # 🔴 處置＝**軟 guard 不是硬下限**（16-F7.4(b)、54 §P1-31）；三個理由見原註解。
+    consumer_rights:
+      cooling_off_days: 7
+      verify_cooling_off_source: true          # ⚠ 法規原文須覆核（原 verify_tw_minimum_window）
+      enforcement: warn                        # warn | block（**不得**改成 block）
+      statutory_channel_required: true         # 真正的合規保證是 B2：法定管道恆存在
+      statutory_channel_forbidden: false
+      statutory_reason_code: STATUTORY_WITHDRAWAL_TW
+      applicable_laws: [消保法, 通訊交易解除權合理例外情事適用準則]
+      exceptions_source: null                  # ⚠ V-17：例外品類清單不得由本規格臆測
+
+    # 【invoice_document】統一發票本身即稅務憑證，與商業收據不是同一份文件。
+    invoice_document:
+      kind: tax_document
+      mandatory: true
+      numbering_authority: government_track
+      amendment_mechanism: void_or_credit_note
+      must_state_not_a_tax_document: false
+      retention_years: null                    # ⚠ 未覆核
 
 # =============================================================================
 # 14c. 爭議與退單（租戶側；55 號盤點新增。平台側完整規格見 docs/specs/37 §爭議與風控）
@@ -631,11 +992,10 @@ dispute:
   tenant_transaction_kinds: [chargeback, chargeback_reversal]   # ours
   # 負餘額 180 天由平台承擔。出處：docs/specs/37:531（ours，33 §2.6）
   negative_balance_deadline_days: 180
-  # ⚠ 待查證 V-24（**我方依台灣法規自訂**）：爭議敗訴時資金被扣回但**商品未退回**、買賣關係未解除，
-  #   與一般退款的稅務性質不同 → 是否構成銷貨退回而應開立折讓，法規與實務作法皆未覆核。
-  #   定案前：**不自動折讓**，開人工工單由合規窗口判定。
-  tax_event_on_lost: null
-  verify_chargeback_tax_treatment: true
+  # 🔴 敗訴的稅務／會計後果已搬到 `jurisdictions.<code>.accounting.chargeback_lost_treatment`。
+  #    TW＝是否構成銷貨退回而應開立折讓（V-24）；HK＝HKFRS 下如何沖銷（V-30，無折讓可開）。
+  #    兩者定案前的處置相同：**不自動沖銷，開人工工單由合規窗口判定**。
+  accounting_ref: jurisdictions.<code>.accounting
 
 # =============================================================================
 # 15. Markets 繼承（P1-32）
