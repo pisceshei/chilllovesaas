@@ -98,7 +98,11 @@ else:
 ```
 
 **捨入位置（鐵律 3）**：全程 **integer cents**，加總與取最小值都是精確整數運算，**本節沒有任何捨入點**。
-唯一與幣別有關的處理在序列化層（零小數幣別由 15-F4 `stripe_amount()` 處理）；presentment 換匯在 29 §3 的 money service，**不得在合併階段換匯**（會產生「先換匯再相加」與「先相加再換匯」差 1 分錢的兩套答案）。
+唯一與幣別有關的處理在**跨界轉換點**（R1 儲存 cents → PSP 的 minor unit，由 F4 第 5 點的 `Money::Storage#to_psp_minor(psp:)` 負責，契約見 **65 §D**；本節的 `price_cents` 全程是 R1，業務層不感知 PSP 單位）；presentment 換匯在 29 §3 的 money service，**不得在合併階段換匯**（會產生「先換匯再相加」與「先相加再換匯」差 1 分錢的兩套答案）。
+<!-- 依 65 §J M-1 修正，原文：「唯一與幣別有關的處理在序列化層（零小數幣別由 15-F4 `stripe_amount()` 處理）」。
+     這是 M-1 那句話的**第四個指標**（65 §J 只點名了 15 §F4-5、16 §F5、55 §A 三處，本處是修 M-1 時 grep 到的）。
+     指標方向本來就是對的（業務層不感知 ✅），錯的是它指向一個已被裁定二作廢的定義。
+     🔴 **防回退**：不得改回「零小數幣別由 stripe_amount() 處理」——那個函式與那句描述都已隨 M-1 廢止。 -->
 
 **(d) 合併鍵的正規化**：`normalize(name) = Unicode NFC → 去除前後空白`，**大小寫敏感**、中間空白不壓縮。
 **⚠ 待查證（來源未載明）**：Shopify 對費率名稱比對是否 case-insensitive、是否 trim——`46c:869–876` 只說「名稱相同」，未定義正規化規則。上式為**本專案決策**（`limits.shipping.rate_merge_key_normalization`，`verify_rate_name_case_sensitivity: true`）。
@@ -269,16 +273,36 @@ total_cents = subtotal - discount_total + shipping_cents + cod_fee_cents + tax_c
 
 **生產級做法**：
 1. 建立 PaymentIntent：金額只取 Calculator 結果；`idempotency_key = "pi-#{checkout.token}-#{amount_cents}"`（金額變了 = 新 key，舊 PI cancel）；metadata 帶 checkout_token、shop_id。**呼叫在 transaction 外**。
+   🔴 **冪等鍵裡的那個數恆為 R1（`amount_cents`），不是送出去的 R5。** `money_boundary.idempotency_key_amount_representation: storage_cents`（65 §E.1-3）——**不得**因為「送出去的是 `1480`」就把鍵也順手統一成 `1480`：改了會讓所有既有 key 失效 ⇒ 同一個 checkout 重複建 PaymentIntent。
 2. 前端 Payment Element（自動處理 3DS/SCA）；`return_url = /checkouts/<token>/complete`。
 3. **雙路徑完成，先到先贏、都冪等**：(a) buyer 回到 return_url → server 以 PI id 向 Stripe 查狀態；(b) webhook `payment_intent.succeeded`。兩路都呼叫 `Orders::CreateFromCheckout`（見 F5）。
 4. webhook endpoint：驗簽（`Stripe::Webhook.construct_event`，容忍 5 分鐘時鐘偏差）、**立即 200 + 丟 job 處理**（Stripe 超時會重送）、以 event.id 去重表冪等。
-5. 幣別：`stripe_amount()` helper 統一處理小數位（JPY 等零小數幣別不乘 100、個別幣別有整除規則）——**不准在業務代碼手寫 ×100**。
+5. **幣別與單位（🔴 契約全文＝`docs/specs/65` §D，本點只是它在 Stripe 這條路徑上的落地）**：儲存一律 **×100、不看幣別**（JPY `¥1,480` ⇒ `148000`）；**送 PSP 前必須換算成「該 PSP pack 明文宣告的 minor unit」**——唯一出口是 `Money::Storage#to_psp_minor(psp:)`，`divisor = 10 ** (money_boundary.max_supported_iso_exponent − exponent)`（JPY ⇒ `divisor 100`，送出 `1480`；HKD ⇒ `divisor 1`，送出 `148000`）。四條必跑斷言逐條見 **65 §D.2**：①pack 未宣告該幣別的 minor unit ⇒ `PSP_MINOR_UNIT_UNDECLARED`，**不得預設 ISO**；②`exponent ≤ 2`，否則 reject；③`cents % divisor == 0`，**餘數不得 round**；④回傳型別必為 `Money::PspMinor`，且送出前再驗 `psp` 相符。
+   **不准在業務代碼手寫 ×100，更不准把 `*_cents` 直接當成 PSP 的 `amount` 送出去**——後者就是那個 100 倍。
+   <!-- 依 65 §J M-1 修正，原文：「5. 幣別：`stripe_amount()` helper 統一處理小數位（JPY 等零小數幣別不乘 100、個別幣別有整除規則）——**不准在業務代碼手寫 ×100**。」
+        原文在 2026-08-12 **裁定二之前**的儲存模型下是對的：那時 JPY 儲存 `1480`，所以「不乘 100」正確。
+        裁定二把儲存改成**一律 ×100、不看幣別** ⇒ JPY 儲存 `148000`。照原文實作（不除以 100 就送出）＝**收款 ¥148,000，整整 100 倍**。
+        `stripe_amount()` 這個名字一併退場：它把「Stripe」寫死在函式名裡，而**兩家 PSP 對同一幣別可能宣告不同 minor unit**，
+        拿 A 家的換算結果送 B 家就是下一個 100 倍（65 §C.1 L3 因此要求 adapter 簽名只收 `Money::PspMinor` 並驗 `psp` 相符）。
+        🔴 **防回退**：任何人不得把本點改回「零小數幣別不乘 100」，也不得把它縮回一行「由 helper 統一處理」。
+        理由是本專案發生過「翻舊版改回去」的事故，而**這一條的回退不會被任何測試抓到**——
+        在 HKD／USD／MYR／EUR（exponent=2 ⇒ divisor=1）下，換不換算輸出一模一樣，測試矩陣 100% 全綠（65 §0.2）。
+        它的發現時點不是 CI，是上線後第一筆 JPY 交易的對帳日。直接斷言＝65 §H.2 的 T3／T9。 -->
 6. 退款：`Stripe::Refund.create(payment_intent:, amount:)` + 冪等 key = refund 內部 id；本地 transaction 列先建 pending、webhook `charge.refunded` 確認 success。
+   🔴 **`amount:` 與第 5 點走同一條路**：它是**出向**金額 ⇒ 必須是 `to_psp_minor(psp:)` 的產物（R5），不是 `refund.amount_cents`。退款側的 100 倍不會被買家投訴——**它會被退款上限擋下或直接退超**，兩種都是財務事故（65 §B X7 對「任何金額離開行程邊界」一體適用，不分收款或退款）。
 7. 金鑰：test/live 分開存 credentials；webhook secret 獨立；後台 Payments 設定頁顯示模式 badge（TEST 橘色橫幅，防真店誤跑測試模式）。
 
 **⚠️ 坑**：
 - **成功頁比 webhook 先到**（常態）：return_url handler 必須自己查 PI 並能建單，不能傻等 webhook；反之 webhook 也不能假設 buyer 有回來。
 - 金額不一致攻擊：PI 建立後 buyer 改購物車再付 → PI 金額與 checkout 現值必須在建單時比對，不符 → 不建單、自動退款、告警。
+  🔴 **比對前兩邊都必須先化到 R1（儲存 cents）**：PI 上的金額是 R5（PSP minor unit），checkout 現值是 R1，**它們不是同一個單位**。先 `Money::PspMinor#to_storage` 再比，`Money::Storage` 之間才准用 `==`（65 §E.1-2、§B X8）。
+  <!-- 依 65 §J M-1 修正（同根因的**第三種表現形態**，65 §E.1-2 直接點名本條），原文：
+       「金額不一致攻擊：PI 建立後 buyer 改購物車再付 → PI 金額與 checkout 現值必須在建單時比對，不符 → 不建單、自動退款、告警。」
+       原文的規則本身是對的，缺的是**「比對前要先化到同一表示法」這句**。少了它的實作長這樣：`event.amount == checkout.total_cents`
+         - HKD：`148000 == 148000` ⇒ 相等 ⇒ 正常 ✅
+         - **JPY：`1480 == 148000` ⇒ 永不相等 ⇒ 每一張 JPY 訂單都被判成「金額不一致攻擊」⇒ 自動退款 ＋ 告警風暴。**
+       這比 100 倍收款更難歸因：現象是「日本訂單全部莫名其妙被退掉」，看起來像風控太嚴，不像單位錯。
+       🔴 **防回退**：不得把這兩行併回原本那一行。它同樣在 HKD 下測試全綠（65 §0.2），直接斷言＝65 §H.2 的 T5。 -->
 - webhook handler 拋錯回 500 → Stripe 重送風暴：接收層永遠 200，錯誤在 job 裡處理與告警。
 - 測試用 Stripe CLI 轉發 webhook（`stripe listen --forward-to`）；上生產前打開 Stripe Dashboard 的 webhook 失敗告警。
 
@@ -396,7 +420,8 @@ AlipayHK／FPS（轉數快）／八達通（線上）等本地付款方式，在
 
 **生產級做法**（整條線最關鍵的一個 transaction）：
 1. `Orders::CreateFromCheckout.call(checkout_token:, payment_intent_id:)`——**以 checkout 唯一鍵冪等**：orders 表 `checkout_id` 唯一索引，重入直接回傳既有訂單。
-2. 單一 transaction 內：鎖 checkout（FOR UPDATE，狀態 active→completed 條件轉移）→ 逐行**條件式扣庫存**（13-F5：available−/committed+）→ 建 order + line_items（快照）+ transaction 列（kind=sale, gateway=stripe, 金額=PI 實收）→ 折扣 usage_count 原子 +1 → timeline event + outbox（orders/create、orders/paid）。
+2. 單一 transaction 內：鎖 checkout（FOR UPDATE，狀態 active→completed 條件轉移）→ 逐行**條件式扣庫存**（13-F5：available−/committed+）→ 建 order + line_items（快照）+ transaction 列（kind=sale, gateway=stripe, 金額＝**PI 實收經 `Money::PspMinor#to_storage` 轉回 R1 後**的 `amount_cents`）→ 折扣 usage_count 原子 +1 → timeline event + outbox（orders/create、orders/paid）。
+   🔴 **入向轉換不可省**（65 §B X8、§E.1-1）：PI／webhook 上的金額是 R5，`order_transactions.amount_cents` 是 R1。**直接 `update(amount_cents: event.amount)` ＝ JPY 少記 99%**（`1480` 落庫成 `1480`，實際應為 `148000`）。入向的錯不是 100 倍是 **1/100**，而且**更難發現**——金額只是「看起來小一點」，不會觸發任何金額上限告警，只會在對帳日整批對不起來。
 3. 庫存不足時的策略（寫進規格）：整單失敗 → transaction 回滾 → **自動全額退款 + 致歉頁 + 告警**（demo/初期最誠實的做法；超賣接受度是商業決策，預設不允許）。
 4. 訂單編號：**每店連號** `shops.order_counter` 一欄，transaction 內 `UPDATE shops SET order_counter = order_counter + 1` 後讀回（同鎖序）；顯示為 `#{prefix}{counter}{suffix}`。
 5. 成立後（transaction 外）：寄確認信 job、清 cart、棄單標記解除。
@@ -405,7 +430,15 @@ AlipayHK／FPS（轉數快）／八達通（線上）等本地付款方式，在
 - 訂單號用全域自增 = **向所有租戶洩漏平台總量**（經典多租戶錯誤）→ 必須每店計數。
 - counter 行鎖與庫存行鎖的順序全專案固定（先 shop counter 後 inventory），防死鎖。
 - outbox 必須與訂單同 transaction（11 §8），寄信必須在 transaction 外（job）。
-- PI 實收金額 vs Calculator 金額以 PI 為準入帳（來源真相是金流），不一致要標記 review。
+- PI 實收金額 vs Calculator 金額以 PI 為準入帳（來源真相是金流），不一致要標記 review。**但「不一致」必須在同一表示法下判定**——PI 是 R5、Calculator 是 R1，先 `to_storage` 再比（同 F4「⚠️坑」第 2 條）。**沒有這一步，JPY 訂單會 100% 命中「不一致 ⇒ 標記 review」，把 review 佇列淹掉。**
+  <!-- 依 65 §J M-1 修正（同根因的第二／第三形態在 F5 的落點），原文：
+       「2. …建 order + line_items（快照）+ transaction 列（kind=sale, gateway=stripe, 金額=PI 實收）…」
+       「- PI 實收金額 vs Calculator 金額以 PI 為準入帳（來源真相是金流），不一致要標記 review。」
+       原文兩句都把「PI 上的那個數」當成可以直接落庫／直接比對的值。在裁定二之後它是 R5，兩件事都會錯：
+         ①直接落庫 ⇒ JPY 少記 99%（65 §E 開頭）；②直接比對 ⇒ JPY 全部誤判不一致（65 §E.1-2）。
+       🔴 **防回退**：不得把「經 to_storage 轉回 R1」這幾個字刪掉當成贅述。
+       它在 HKD 下確實是贅述（divisor=1，轉不轉一樣），這正是它會被刪掉的原因，也正是它必須留著的原因。
+       直接斷言＝65 §H.2 的 T4（webhook 1480 → 儲存 148000）與 T5。 -->
 
 ## F6. Thank you / Order Status 頁
 
