@@ -5111,7 +5111,7 @@ function paymentsPage(){
    ${setRowInp('帳單敘述名','顧客信用卡帳單上看到的字樣——認不出來就會變成爭議款','payDescriptor','CHILLLOVE','2–19 個字元，建議直接用店名','set-descriptor',{min:2,max:19})}
    ${setRowSel('撥款排程','款項從金流商轉進銀行帳戶的頻率','payPayout',
      [['daily','每日（T+2 入帳）'],['weekly','每週一（T+2 入帳）'],['monthly','每月 1 日（T+2 入帳）'],['manual','手動撥款']],'daily','set-payout')}</div>
-  <div class="card card-pad"><h3>請款方式（三模式）</h3>
+  <div class="card card-pad"><h3>請款方式（四模式）</h3>
    ${['結帳後自動請款','全單出貨後自動請款','手動請款（授權期 7 天）'].map((m,i)=>`<label class="set-row" style="cursor:pointer"><div class="sr-t"><b>${m}</b>${i===2?'<span class="sub">逾期未請款則授權失效</span>':''}</div>
      <input type="radio" name="capmode" class="cl-radio set-ctl" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
   <div class="card card-pad"><h3>手動付款方式</h3>
@@ -5373,7 +5373,7 @@ Object.assign(DOCS,{
  "set-plan":{t:"設定・方案",f:"方案切換／Pause and Build／關店",l:"Pause and Build：停結帳/折扣/禮品卡，前台可看不可買；關店後資料保留 2 年可復原（22 §8）",i:"P2・[api:TBD-shopPlanUpdate]（28 待補） [tbl:shops]"},
  "set-billing":{t:"設定・帳單",f:"付款方式／週期／門檻／幣別",l:"累積達門檻或週期結束時請款；帳單幣別獨立於商店幣別",i:"P2・[api:TBD-shopBillingInvoices]（28 待補） [tbl:shops]"},
  "set-users":{t:"設定・使用者與角色",f:"成員、角色權限、2FA、協作者",l:"13 類顆粒權限（41 §12.4 全目錄）；邀請連結 72 小時單次；協作者 4 碼申請碼不佔名額；staff 角色映射 API scope",i:"P0 簡版→P1 全顆粒・[api:staffMemberInvite] [api:staffMemberUpdate] [tbl:staff_members,roles,role_permissions]"},
- "set-payments":{t:"設定・付款",f:"金流供應商／請款模式／手動付款",l:"請款三模式（結帳自動／出貨後自動／手動，授權期 7 天）——22 §9.1 修正舊文件的四模式；帳單敘述名 2–19 字元；測試模式上線前必關",i:"P0・[api:paymentProviderActivate] [api:checkoutSettingsUpdate] [tbl:shops,order_transactions]"},
+ "set-payments":{t:"設定・付款",f:"金流供應商／請款模式／手動付款",l:"請款【四】模式：結帳時自動／整單出貨後自動／【每次出貨各自請款（僅 Plus）】／手動——出處 46c:508–514，鍵見 limits.yml capture.modes。⚠防回退：本欄原寫「三模式，22 §9.1 修正舊文件的四模式」，方向寫反了，四模式才是官方值（50號 P0-12 已修正 22 §8／§9）。授權效期預設 7 天；Plus 依卡組不同（Visa/MC/Amex 30、Discover/JCB 10、Diners/CUP 7），見 limits.yml capture.authorization_days_*。帳單敘述名 2–19 字元；測試模式上線前必關",i:"P0・[api:paymentProviderActivate] [api:checkoutSettingsUpdate] [tbl:shops,order_transactions]"},
  "set-checkout":{t:"設定・結帳",f:"欄位三態／行銷同意／小費／訂單處理",l:"姓名/公司/地址2/電話 三態（不含/選填/必填）；Email 可預勾按地區、SMS 永不預勾；one-page 已統一（41 §12.6）",i:"P0・[api:checkoutSettingsUpdate] [api:checkoutBrandingUpsert] [tbl:shops]"},
  "set-accounts":{t:"設定・顧客帳號",f:"新版 OTP vs Legacy 密碼制",l:"新版：6 碼 OTP＋365 天 session＋託管帳號頁；B2B 強制新版；自助退貨開關連 return rules（41 §12.10）",i:"P1・[api:checkoutSettingsUpdate]（requireLogin）＋[api:TBD-customerAccountsUpdate]（28 待補） [tbl:shops,customers]"},
  "set-shipping":{t:"設定・運送與配送",f:"依市場的運送選項／本地配送／取貨／包裹",l:"新模型 Market→option→rates，子市場繼承可覆寫；rate 四型且 flat+order amount 並存取最高符合者；本地配送半徑 ≤160km 或郵遞區號 ≤3,000 字元、≤10 區/地點（41 §12.7）",i:"P0・[api:deliveryProfileCreate] [api:deliveryProfileUpdate] [api:TBD-shippingOptionsByMarketUpdate]（新模型 28 待補） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
