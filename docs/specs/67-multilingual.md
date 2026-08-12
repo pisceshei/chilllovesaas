@@ -58,10 +58,11 @@
 |---|---|---|
 | `ruling` | **使用者裁定**（本檔即 2026-08-12 多語言裁定的落地） | ✅ 可，且**優先於 `dev`**——裁定是產品決策，不是對 Shopify 的復刻 |
 
-### 0.4 本檔推翻／偏離的既有結論（4 條，逐條可追溯）
+### 0.4 本檔推翻／偏離的既有結論（5 條，逐條可追溯）
 
 | # | 既有寫法 | 本輪處置 | 誰改 |
 |---|---|---|---|
+| 🔴 **0** | **本檔自己的 §E.6 空白語義**（`i18n.import.blank_means_unchanged`） | **2026-08-12 同日反轉兩次**：原 `true`（我方原設計）→ 68 §B-3 依 **Matrixify（第三方，`press`）** 改 `false`（空白＝刪除）→ 🔴 **69 §V-182 查到本尊原生語義（Settings → Languages，`help`）後改回 `true`**，並改成 **overwrite 旗標 ＋ 空白＝不動作**。<br>**教訓（寫在最前面，因為它適用於全檔）**：`press` 級來源足以「登記為未知」，**不足以翻面一條已生效的資料安全預設**。沿革全文見 §E.6 檔頭註釋、§M-9 | ✅ **本輪已改** |
 | 1 | **62 §F.3**「handle 保留 CJK、URL 走 percent-encoding」（登記為 V-119） | **裁定推翻**：一律 ASCII。§F.3 已改寫並留追溯註釋。<br>🔴 **2026-08-12 二次修正（68 §B-1）**：V-119 的結案敘述原寫成「對齊問題消失」，實際是**本尊保留 CJK、裁定覆蓋 Shopify** ⇒ 已改寫為**明知偏離登記**（62 §F.3-1） | ✅ **本輪已改** |
 | 2 | **13 §F2-1**「中文標題不轉拼音，demo 選 unicode handle（`/products/棉質短T` 可用）」 | 同上被推翻。本檔**不改 13 號**（另有 agent 在改 13/63/65），登記於 §M-1 | 13 §F2 |
 | 3 | **29 §2.1** 把 `PRODUCT/COLLECTION/ARTICLE.handle` 列入可翻譯資源型別 | **我方刻意偏離**：handle **不可翻譯**，語言維度由 URL 前綴承載（§D.3）。登記於 §M-2 | 29 §2.1 |
@@ -388,6 +389,23 @@ pt-BR       → pt → ⛔停
 **(d) 觸發時機**：來源欄位寫入時，在**同一 transaction 內**重算 digest 並比對；不相等則 `UPDATE translations SET outdated=1, outdated_severity=? WHERE shop_id=? AND resource_type=? AND resource_id=? AND field_key=?`（一次更新該欄位的全部語言）。這是一個以 `(shop_id, resource_type, resource_id)` 為前綴的索引命中，成本可控。🔴 **不得**丟到非同步 job：來源已改、譯文未標記的視窗裡，商家會以為翻譯是最新的。
 
 **(e) token 保護**：範本類欄位（`EMAIL_TEMPLATE`、`PAYMENT_GATEWAY.instructions`）內含 `{{ … }}` 佔位符。digest 照全文算，但**譯文的驗證器必須檢查佔位符集合與來源一致**（缺少或新增一律 `userErrors{code: PLACEHOLDER_MISMATCH}`）。缺一個 `{{ order_number }}` 的訂單確認信是會真的寄出去的。
+
+**(f) 🔴 `outdated` 的對外出口＝翻譯 CSV 的 `status` 欄**（依 69 §V-182 新增，2026-08-12）
+
+本節原本只定義了 `outdated` 的三個**後台**用途（(c) 的清單、進度條、內部品質訊號），**沒有定義它怎麼交給譯者**——而譯者才是要處理過期譯文的那個人。
+
+69 號查到本尊的原生翻譯 CSV 有一個 `Status` 欄，三值 **`Translated` / `Outdated` / `Untranslated`**（`help` ＋ `vendor` 獨立佐證），其中 `Outdated` 的語義**正是本節的過期偵測**——也就是說**本尊把「過期」做成了匯出檔的一等公民欄位**。
+
+⇒ 我方對應：`i18n.export.status_values: [translated, outdated, untranslated]`，映射規則為
+
+```
+該 (resource, locale, field) 無譯文列                    ⇒ untranslated
+有譯文列 ∧ outdated = true（severity 不分 major/minor）  ⇒ outdated
+其餘                                                     ⇒ translated
+```
+
+- **severity 不進 CSV**：它是我方獨有的假陽性抑制機制（(b)），對外部譯者沒有意義，且多一個值就會與本尊的三值不對齊。要篩 `minor` 請用後台。
+- 🔴 **`status` 純輸出，匯入時忽略**（`status_is_export_only: true`）：⚠ **V-201** 未查明本尊匯入時是否讀取該欄。讓譯者能用一個欄位值把資源標成「已是最新」，等於把 digest 比對（§E.6(b)）繞過去——**過期狀態只能由來源 digest 決定，不能由檔案宣稱**。
 
 ### C.6 翻譯進度物化表（鐵律 7：進度數字只有一個來源）
 
@@ -752,72 +770,117 @@ Script::Convert(from: zh-Hant, to: zh-Hans)   ⇒ value_source = 'script_convers
 - 🔴 **兩個方向的品質不對稱，UI 必須說明**：繁→簡接近無損；**簡→繁是一對多**（`发`→`發`／`髮`、`干`→`干`／`乾`／`幹`、`后`→`后`／`後`），必然需要人工覆核。因此 `zh-Hans → zh-Hant` 的批次**預設把整批標為 `review_required` 並在完成報告中列出含歧義字的筆數**。
 - 🔴 **它不做詞彙在地化**：`软件/軟體`、`视频/影片`、`鼠标/滑鼠` 是**用詞**不是字形，查表不會處理。UI 文案必須寫「這是字形轉換，不是翻譯」——否則商家會以為簡體版已經可以上線。
 
-### E.6 匯入匯出：翻譯是**第三套**；空白語義與商品 CSV **同向**
+### E.6 匯入匯出：翻譯是**第三套**；🔴 空白＝不動作，覆寫走**顯式旗標**
 
-<!-- 依 68 號 §B-3 跟隨 Shopify 生態做法整節改寫（2026-08-12）。
-     原節標題：「### E.6 匯入匯出：翻譯是**第三套**，且與商品 CSV 的空白語義**相反**」
-     原理由 3（保留供追溯，🔴 任何人不得改回）：
-       「3. 🔴 **空白語義相反，而且相反的方向是資料毀損**：商品 CSV 的「以相同 handle 覆寫商品」
-           語義是「**空白儲存格會把既有資料洗掉**」（61 §6.1）。同樣的語義套到翻譯上 ＝
-           譯者交回一份只填了 20% 的檔案，其餘 80% 的既有譯文全被清空。」
-     原 CSV 契約行：「🔴 空白 = 不變更（與商品 CSV 相反）。清空譯文必須明確寫 __CLEAR__」
+<!-- 🔴🔴 **本節是二次修正（2026-08-12 同日兩次），沿革必須完整讀完再動手。**
 
-     🔴 **原理由擔心的誤刪風險是真的，這次翻面不是把它一筆勾銷。**
-        68 §B-3 查到的生態事實標準（matrixify.app/documentation/translations/，press）是：
-        翻譯匯入時 Translation Value 欄留空 ＝ **刪除該語言該欄的既有譯文**，與商品 CSV **同向**。
-        ⇒ 我方原設計的「空白＝不變更」在 Shopify 生態裡**沒有對應**。
-        而生態解決誤刪的方式**不是**把空白解釋成不變更，**而是讓「不變更」以「欄位／列缺席」表達**。
-     🔴 **所以本節翻的不是一個布林值，是換了一套表達機制**——三件事缺一不可，見 (a)。
-     ⚠ 本條的「跟隨」目前建立在 **Matrixify 這個第三方事實標準**上，等級只有 `press`，
-        **不是 Shopify 官方語義**（Shopify 原生是否提供翻譯 CSV 匯入匯出本輪無法確認 ⇒ 68 的 V-182，
-        併入本檔 V-163）。若日後查出官方原生行為與 Matrixify 不同，本條要重判。 -->
+     ① 原始設計（本檔初版）：`blank_means_unchanged: true`（空白＝不變更）。
+        原節標題：「### E.6 匯入匯出：翻譯是**第三套**，且與商品 CSV 的空白語義**相反**」
+        原理由 3（逐字保留）：
+          「3. 🔴 **空白語義相反，而且相反的方向是資料毀損**：商品 CSV 的「以相同 handle 覆寫商品」
+              語義是「**空白儲存格會把既有資料洗掉**」（61 §6.1）。同樣的語義套到翻譯上 ＝
+              譯者交回一份只填了 20% 的檔案，其餘 80% 的既有譯文全被清空。」
+        原 CSV 契約行：「🔴 空白 = 不變更（與商品 CSV 相反）。清空譯文必須明確寫 __CLEAR__」
 
-61 §6.1／§6.2 已確認商品 CSV 與庫存 CSV 是兩套（63 §L-8）。**翻譯必須是第三套**，理由三條：
+     ② 68 號 §B-3 翻面為 `false`（空白＝清空），並把本節改寫成「三件套」。
+        依據：**Matrixify（第三方 app，`press` 級）** 的翻譯匯入語義；
+        並研判「Shopify **原生**能力薄弱或不存在」（68 的 V-182）。
+        68 當時的節標題：「### E.6 匯入匯出：翻譯是**第三套**；空白語義與商品 CSV **同向**」
+
+     ③ 🔴 **69 號 §V-182 推翻了 ② 的前提 ⇒ 本節改回「空白＝不動作」，並改成 overwrite 旗標形態。**
+        69 號查到 Shopify **有完整的原生翻譯 CSV 匯出／匯入**——**不在 Translate & Adapt app 裡**，
+        而在 **Settings → Languages**（`help`；另有 `staff` 論壇回覆與 `vendor` 側獨立佐證欄位表）。
+        **這就是 68 號找不到它的原因：68 號找對了功能、找錯了地方。**
+        本尊的模型是：8 欄 ＋ `Status` 三值 ＋ 匯入時一個**「覆寫既有翻譯」勾選框**。
+        🔴 **本尊根本沒有對「空白」賦予刪除語義——它把這個決定做成使用者的一次明示動作。**
+        ⇒ 「全部跟隨 Shopify」的字面結論**不是翻面，是換成顯式旗標**。
+
+     🔴 **為什麼繞了這一圈（這一段比結論本身更有價值，不得刪）**：
+        68 與 69 是**同時**進行的兩份查證。68 拿不到原生行為，就以生態事實標準（`press`）當依據，
+        **翻掉了一條已生效的資料安全預設**；69 換一批來源後在**官方 help**（`help`）找到了原生行為。
+        ⇒ **`press` 級來源足以「登記為未知」，不足以「翻面一條資料安全預設」。**
+        來源分級（§0.3）不是學術潔癖——這次的成本就是一條規格改了兩次、三份文件要對齊。
+
+     🔴 **防回退**：任何人看到 68 §B-3 寫著「要改成 false」而本節寫著 `true`，
+        **不要照 68 改**。68 的該條已被 69 以更高等級的來源推翻；兩份 research 檔都不會再改
+        （docs/research/* 是證據，不是結論）。要動這條，必須先推翻 69 §V-182 的 `help` 級出處。
+
+     ✅ **68 號那一輪新增的東西，本次修正原樣保留**（它們解決的是真問題，與空白語義正交）：
+        缺席語義三鍵（absent_row／absent_column／absent_vs_blank_distinguished_by_header）
+        與匯入預覽四鍵（preview_required／preview_*_count_separate／*_ratio_confirm_threshold／
+        *_writes_audit_trail）。**要換掉的只有「空白＝刪除」這個語義本身。** 理由見 (a) 末段。 -->
+
+61 §6.1／§6.2 已確認商品 CSV 與庫存 CSV 是兩套（63 §L-8）。**翻譯必須是第三套**，理由四條（第 4 條是本輪新增的，它在 68 那一輪一度被刪掉）：
 
 1. **鍵不同**：商品 CSV 的鍵是 `handle` ＋ 變體行；翻譯的鍵是 `(resource_type, resource_id, locale, field_key, market)`。硬塞進商品 CSV 就要為每個語言加一組欄位（3 語 × 6 欄 = 18 欄），加第 4 個語言時整張表要改。
 2. **範圍不同**：翻譯涵蓋頁面、部落格、選單、主題字串、通知範本、政策——這些**根本不在商品 CSV 裡**。
-3. **生命週期不同**：翻譯檔會**出境**（交給外部譯者／TMS）再回來，因此需要 `source_digest` 這種商品 CSV 沒有的東西（見下）。**空白語義不再是分家的理由**——它現在與商品 CSV 同向。
+3. **生命週期不同**：翻譯檔會**出境**（交給外部譯者／TMS）再回來，因此需要 `source_digest` 這種商品 CSV 沒有的東西（見下）。
+4. 🔴 **空白語義不同，而且這一條現在有官方依據**（69 §V-182）：商品 CSV 的空白＝洗掉（`help`，61 §6.1）；**翻譯 CSV 的本尊不用空白表達刪除，改用一個顯式的覆寫勾選框**。⇒ 兩套 CSV 的破壞性語義**本來就不同源**，這不是我方的不一致。
 
-#### (a) 🔴 空白＝清空，而「不變更」用**缺席**表達（三件事一起才成立）
+#### (a) 🔴 空白＝不動作；「覆寫」是使用者的一次明示動作
 
-| # | 機制 | 鍵 | 沒有它會怎樣 |
+**跟隨本尊的四件事**（每一項都對應到 69 §V-182 已確認的行為）：
+
+| # | 機制 | 鍵 | 為什麼是這一條 |
 |---|---|---|---|
-| ① | **儲存格空白 ＝ 清空該譯文** | `i18n.import.blank_means_unchanged: false`（原 `true`） | 與商品 CSV 反向，且與生態工具反向：同一份檔案在 Matrixify 與我方得到相反結果 |
-| ② | **匯出可選語言與欄位**——不想動的**不要出現在檔案裡** | `i18n.export.selectable_locales` / `selectable_fields` / `omit_unselected_as_columns` | ①翻面後商家**沒有任何辦法**表達「只改標題、別動描述」⇒ ① 單獨存在就是一台誤刪產生器 |
-| ③ | **匯入預覽把「將被清空的儲存格數」單獨列成一個數字** | `i18n.import.preview_required` / `preview_clear_count_separate` / `clear_ratio_confirm_threshold: 0.2` | 商家在按下確認前看不到自己要刪掉多少東西。**Shopify 沒有這一條，但翻面之後我方必須有** |
+| ① | **儲存格空白 ＝ 本列本欄不做任何事**（**不**解讀成刪除） | `i18n.import.blank_means_unchanged: true`<!-- 二次修正：原 true → 68 改 false → 69 改回 true --> | 本尊沒有對空白賦予任何刪除語義。**且刪除是不可逆操作，不該由「儲存格是空的」這種易誤觸的狀態觸發**——譯者交回一份只填 20% 的檔案是**常態**，不是異常 |
+| ② | **`overwrite_existing` 顯式旗標**，預設 **false**（只補新的、不動既有） | `i18n.import.overwrite_existing_default: false` / `overwrite_scope` | 這是本尊模型的核心：**它不猜，它問**。預設不勾＝保守失效，與我方 56／58／65 三處「未宣告 ≠ 預設」同一條哲學 |
+| ③ | **清空必須是另一個明示動作** | `i18n.import.explicit_clear_token: "__CLEAR__"`；🔴 `explicit_clear_token_is_alias_of_blank` ⇒ **`false`** | `__CLEAR__` **回到唯一清空手段**的位置（68 那一輪把它降級成「空白的同義寫法」）。<!-- 🔴 這兩鍵是同一語義的兩面，必須一起改：若只把 blank_means_unchanged 改回 false 而漏了這一鍵，語義仍然自洽（兩者都清空）⇒ **漏改不會被任何測試抓到** --> |
+| ④ | **匯出欄位對齊本尊 8 欄，`Status` 三值落地** | `i18n.export.columns` / `status_values: [translated, outdated, untranslated]` / `status_is_export_only: true` | `Outdated` 在本尊是**匯出檔的一等公民欄位** ⇒ 它同時回答了 §C.5 過期偵測「要輸出到哪裡」這個問題。⚠ V-201：本尊匯入時是否讀 `Status` 未知 ⇒ 我方**純輸出** |
 
-**「不變更」的三種表達（本節的核心契約）**：
+**「不變更」的四種表達（本節的核心契約）**：
 
 ```
-列缺席   ⇒ 該 (resource, locale, field) 完全不處理
-欄位缺席 ⇒ 該欄位對檔案內所有列都不處理
-儲存格空 ⇒ 🔴 清空該譯文（本次翻面的內容）
+列缺席                 ⇒ 該 (resource, locale, field) 完全不處理
+欄位缺席               ⇒ 該欄位對檔案內所有列都不處理
+儲存格空白             ⇒ 🔴 本列本欄不做任何事（69 §V-182；**不是**刪除）
+有值 ∧ 未勾 overwrite  ⇒ 該譯文已存在時保持原值（只補新的）
 ```
 
-🔴 **缺席與空白必須在解析層就分開**（`i18n.import.absent_vs_blank_distinguished_by_header: true`）：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」在多數 CSV 函式庫裡都會塌成 `nil`。匯入器**必須以表頭判定欄位是否存在，不以值判定**——這一行寫錯，②③ 兩道護欄同時失效，而且測試很可能全綠（因為測試檔通常欄位齊全）。
+🔴 **缺席與空白仍然必須在解析層就分開**（`i18n.import.absent_vs_blank_distinguished_by_header: true`）——**這條在本次修正後不但沒有失效，反而更關鍵**：
+
+- **技術理由不變**：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」在多數 CSV 函式庫裡都會塌成 `nil`。匯入器**必須以表頭判定欄位是否存在，不以值判定**；這一行寫錯，測試很可能全綠（因為測試檔通常欄位齊全）。
+- 🔴 **新的理由**：**`overwrite_existing` 的作用範圍就是靠表頭界定的**（`overwrite_scope: non_blank_cells_in_present_columns`）。若解析層分不出缺席與空白，`overwrite: true` 會把「檔案裡根本沒有的欄位」也算進範圍——**一份只想改標題的檔案會把描述一起洗掉**。那正是 68 那一輪擔心的誤刪風險換了個入口回來。
+- ⇒ **68 號新增的缺席語義三鍵一個都不刪。** 它們當時是為了讓「不變更」有辦法表達；現在是為了讓「覆寫」有辦法收斂範圍。**同樣三個鍵，換了一個更硬的理由。**
+
+**匯入預覽四鍵同樣全部保留，但計數對象改了**（`preview_required` / `preview_clear_count_separate` / `preview_overwrite_count_separate` / `clear_ratio_confirm_threshold` / `overwrite_ratio_confirm_threshold` / `clear_writes_audit_trail` / `overwrite_writes_audit_trail`）：
+
+| 破壞性來源 | 68 那一輪 | 本次修正後 |
+|---|---|---|
+| 空白儲存格 | 🔴 清空 ⇒ 要計數 | ✅ 不動作 ⇒ 不再是破壞性來源 |
+| `__CLEAR__` | 同義寫法 | 🔴 **唯一的明示清空** ⇒ 要計數 |
+| `overwrite_existing: true` | 不存在 | 🔴 **新的破壞性來源** ⇒ **要單獨計數** |
+
+🔴 **`overwrite` 需要預覽數字的理由與清空一模一樣**：它雖然是使用者的明示動作，但**爆炸半徑仍然是整份檔案**——勾一個框而不知道會蓋掉多少既有譯文，與誤刪一樣不可接受。**「明示動作」只解決了『是不是故意的』，沒有解決『知不知道有多大』。**
 
 #### (b) 檔案契約
 
 ```
 翻譯 CSV（i18n.export.format: csv）
-  欄位：resource_type, resource_gid, field_key, locale, market_handle(選填),
-        source_text(唯讀參考), translated_text, source_digest, status
-  🔴 translated_text 空白 = **清空該譯文**（與商品 CSV 同向，61 §6.1）
-     「不變更」＝ 讓該列／該欄**不出現在檔案裡**（見 (a)）
-     __CLEAR__（i18n.import.explicit_clear_token）保留為空白的**同義寫法**，兩者都清空——
-       它現在的用途是「讓『我是故意清空的』在檔案裡看得出來」，不再是唯一的清空手段
+  欄位（對齊本尊 8 欄，69 §V-182；我方另加 source_digest）：
+        resource_type(≈Type), resource_gid(≈Identification), field_key(≈Field), locale,
+        market_handle(≈Market，選填), status(≈Status), source_text(≈Default content，唯讀參考),
+        translated_text(≈Translated content), source_digest(🔴 我方獨有)
+  status ∈ {translated, outdated, untranslated}（本尊三值）；**純輸出**，匯入時忽略 ⇒ ⚠ V-201
+  🔴 translated_text 空白 = **本列不做任何事**（69 §V-182；**不是**清空）
+     清空譯文 ＝ 明確寫 __CLEAR__（i18n.import.explicit_clear_token）——唯一手段
+     覆寫既有譯文 ＝ 匯入時勾選 overwrite_existing（預設不勾）
   🔴 匯入必比對 source_digest：
        相符   ⇒ 正常寫入，outdated=false
        不相符 ⇒ **仍然寫入**（譯者是照當時原文翻的，內容多半可用）
                 但 outdated=true, severity 依 §C.5(b) 計算, review_required=true
                 並在匯入報告單列出。**不得靜默當成最新**
        缺欄   ⇒ 整檔拒絕（沒有 digest 就無法安全回寫）
-  🔴 清空一律寫稽核軌（i18n.import.clear_writes_audit_trail）：誰、何時、哪一次匯入。
-     沒有它，「譯者交錯檔案」這件事在事後完全無法還原
+  🔴 清空**與覆寫**都寫稽核軌（clear_writes_audit_trail / overwrite_writes_audit_trail）：
+     誰、何時、哪一次匯入、舊值是什麼。沒有它，「譯者交錯檔案」在事後完全無法還原
   分檔：按 (locale, resource_type) 分檔；單檔上限沿用 csv.product_max_upload_mb(15MB)
+  匯出走**非同步 ＋ 通知／email 交付**（i18n.export.async_delivery，跟隨本尊；亦符合我方 outbox 形態）
 ```
 
-⚠ **舊格式檔案的語義已經反轉**：在翻面前寫的檔案裡，**空白儲存格**原本代表「不變更」，現在代表「清空」。這正是本次翻面的內容，**必須靠 ③ 的預覽數字讓商家在按下確認前看見**——不能靠 release note，因為檔案是譯者給的，商家不會知道它是什麼時候寫的。
+✅ **舊格式檔案不需要遷移**：本次修正把空白的語義**改回**原始設計（不變更），而 68 那一輪的翻面**只落在規格與 limits 鍵上、尚未實作**（M-8 登記的下游回寫也還沒發生）。⇒ **沒有任何已存在的商家檔案曾在「空白＝清空」的語義下被寫出來。**
+<!-- 🔴 68 那一輪在此處原有一段警告：「⚠ 舊格式檔案的語義已經反轉……必須靠 ③ 的預覽數字讓商家
+     在按下確認前看見」。本次修正後那段**不再適用**（語義回到原始值），故移除；
+     但保留這行說明，讓下一個人知道那段警告是被「二次修正」消掉的，不是被漏掉的。 -->
 
 - **匯出必含 `source_text`**（唯讀參考欄）：沒有原文的翻譯檔對譯者不可用。
 - **XLIFF 2.1 匯出**列為 P2〔ours〕：TMS 工作流的產業標準；⚠ 我方是否需要、以及 Shopify 是否提供對應格式**未查證 ⇒ V-163**。首發只做 CSV。
@@ -1096,15 +1159,20 @@ cache_stamp = MAX(
 | `csv.product_max_upload_mb` | 翻譯 CSV 沿用同一上限 | §E.6 |
 | `notification.non_toggleable_ui` | 唯讀欄位的 UI 形態（灰化＋tooltip） | §E.3 |
 
-**2026-08-12 依 68 號「全部跟隨 Shopify」裁定的鍵變更**（本檔範圍；每鍵在 `limits.yml` 內都有 `依 68 號 §X … 原值：…` 的追溯註釋）：
+**2026-08-12 依 68 號「全部跟隨 Shopify」裁定的鍵變更**（本檔範圍；每鍵在 `limits.yml` 內都有 `依 68 號 §X … 原值：…` 的追溯註釋）。
+🔴 **其中 `i18n.import`／`i18n.export` 一組已於同日再修一次**（69 號 §V-182 推翻了 68 §B-3 的前提）——下表已把兩次都寫進「原值 → 新值」欄，**沒有任何一列是單次改動的結果**，讀的時候不要只看箭頭的終點：
 
 | 鍵 | 原值 → 新值 | 依據 | 本檔落點 |
 |---|---|---|---|
-| `i18n.import.blank_means_unchanged` | `true` → **`false`**（空白＝清空） | 68 §B-3（`press`，Matrixify 事實標準；與商品 CSV 同向） | §E.6(a)① |
-| `i18n.import.absent_row_means_unchanged` / `absent_column_means_unchanged` / `absent_vs_blank_distinguished_by_header` | 新增 | 68 §B-3（「不變更」改以**缺席**表達） | §E.6(a) |
-| `i18n.export.selectable_locales` / `selectable_fields` / `omit_unselected_as_columns` | 新增 | 68 §B-3② | §E.6(a)② |
-| `i18n.import.preview_required` / `preview_clear_count_separate` / `clear_ratio_confirm_threshold` / `clear_writes_audit_trail` | 新增 | 68 §B-3③（Shopify 沒有，翻面後**必須**有） | §E.6(a)③ |
-| `i18n.import.explicit_clear_token_is_alias_of_blank` | 新增 `true` | 同上（`__CLEAR__` 降為同義寫法） | §E.6(b) |
+| 🔴 `i18n.import.blank_means_unchanged` | `true` → 68 改 **`false`** → 69 **改回 `true`**（空白＝不動作） | **二次修正**：68 §B-3 依 Matrixify（`press`）翻面；**69 §V-182 查到本尊原生語義（`help`）後改回** | §E.6(a)① |
+| `i18n.import.absent_row_means_unchanged` / `absent_column_means_unchanged` / `absent_vs_blank_distinguished_by_header` | 68 新增，**69 全數保留**（理由換成「界定 overwrite 範圍」） | 68 §B-3 ＋ 69 §V-182 | §E.6(a) |
+| `i18n.export.selectable_locales` / `selectable_fields` / `omit_unselected_as_columns` | 68 新增，**69 保留**（理由換成「縮小覆寫爆炸半徑」） | 68 §B-3② ＋ 69 §V-182 | §E.6(a) |
+| `i18n.import.preview_required` / `preview_clear_count_separate` / `clear_ratio_confirm_threshold` / `clear_writes_audit_trail` | 68 新增，**69 全數保留**（計數對象改為 `__CLEAR__` ＋ overwrite） | 68 §B-3③ ＋ 69 §V-182 | §E.6(a) |
+| 🔴 `i18n.import.explicit_clear_token_is_alias_of_blank` | 68 新增 `true` → 69 **改 `false`** | 69 §V-182（`__CLEAR__` 回到**唯一**清空手段） | §E.6(a)③ |
+| 🔴 `i18n.import.overwrite_existing_default` / `overwrite_scope` | **69 新增**（預設 `false`＝只補新的） | 69 §V-182（本尊＝「覆寫既有翻譯」勾選框，`help`） | §E.6(a)② |
+| 🔴 `i18n.import.preview_overwrite_count_separate` / `overwrite_ratio_confirm_threshold` / `overwrite_writes_audit_trail` | **69 新增** | 69 §V-182（overwrite 是新的破壞性來源，爆炸半徑同樣是整份檔案） | §E.6(a) |
+| `i18n.export.status_values` / `status_is_export_only` / `columns`（順序對齊本尊 8 欄） | **69 新增／調整** | 69 §V-182（`Status` 三值；`help` ＋ `vendor` 佐證）⚠ V-201 | §C.5(f)、§E.6(b) |
+| `i18n.export.async_delivery` / `delivery_channels` | **69 新增** | 69 §V-182（本尊匯出以 email 寄出；亦符合我方 outbox 形態） | §E.6(b) |
 | `handle.collision_strategy_generated` | `numeric_suffix_from_2` → **`numeric_suffix_from_1`** | 68 §C-4（`dev` `potion`／`potion-1` ＋ `test` ×4） | §D.4(b)、§M-1 |
 | `handle.liquid_filter_fallback_trigger` / `liquid_filter_fallback_on_non_ascii_result_forbidden` | 新增 | 68 §F-3（staff 復現：filter **保留**非 ASCII） | §D.5、V-161 |
 | `handle.ascii_only` / `expand_symbol_words` / `delete_chars` / `max_chars` | **值不變**，註釋補出處與偏離標記 | 68 §B-1／§C-4／§C-6 | §D.1 對照表、62 §F.3-1 |
@@ -1170,8 +1238,9 @@ cache_stamp = MAX(
 | AD-4 | 進度數字同源 | 列表徽章／翻譯後台／健康頁／GraphQL 四處數字相同（改一筆譯文後同時變） |
 | AD-5 | 機翻稽核 | MT 寫入的每一列 `value_source='machine'` ∧ `review_required=true`；批次超門檻需二次確認 |
 | AD-6 | 繁簡轉換 | 簡→繁批次的完成報告列出含歧義字的筆數；UI 明示「字形轉換不是翻譯」 |
-| AD-7 | **翻譯 CSV 空白＝清空；缺席＝不變更** | <!-- 依 68 §B-3 反轉，原文：「**翻譯 CSV 空白＝不變更** \| 匯入只填部分欄位的檔案，未填欄位的既有譯文**不變**」 -->三條一起測：①匯入含空白 `translated_text` 的列 ⇒ 該譯文**被清空**；②匯入**不含** `translated_text` 欄的檔案（表頭就沒有）⇒ 既有譯文**不變**（🔴 與 ① 用同一份資料對照，確認解析層真的分得出缺席與空白）；③dry-run 預覽的「將清空 N 筆」與實際清空筆數相等，且清空比例 > `clear_ratio_confirm_threshold` 時需二次確認 |
-| AD-7b | **清空可回溯** | 被清空的譯文在稽核軌可查到（誰、何時、哪一次匯入） |
+| AD-7 | 🔴 **翻譯 CSV 空白＝不動作；清空與覆寫都要明示** | <!-- 二次修正：原文「翻譯 CSV 空白＝不變更」→ 68 §B-3 反轉成「空白＝清空」（三條測項）→ 69 §V-182 查到本尊原生語義後**改回不動作**，並補上 overwrite 維度。68 那一版的測項②（缺席 vs 空白對照）**原樣保留**，因為它現在測的是 overwrite 的作用範圍。 -->**五條一起測**：①匯入含**空白** `translated_text` 的列 ⇒ 該譯文**維持原值**（🔴 不得被清空）；②匯入**不含** `translated_text` 欄的檔案（表頭就沒有）⇒ 既有譯文不變（🔴 與 ① 用同一份資料對照，確認解析層真的分得出缺席與空白）；③`overwrite_existing: false`（預設）匯入有值的列 ⇒ **既有譯文不變、缺的補上**；④`overwrite_existing: true` 同一份檔案 ⇒ **有值的儲存格覆寫既有譯文，空白儲存格仍不動作**（🔴 這一條擋的是「overwrite 被實作成整列取代」）；⑤寫 `__CLEAR__` 的儲存格 ⇒ 該譯文被清空 |
+| AD-7b | **清空與覆寫都可回溯** | 被清空**或被覆蓋**的舊譯文在稽核軌可查到（誰、何時、哪一次匯入、舊值）；dry-run 預覽的「將清空 N 筆」「將覆寫 M 筆」**分開兩個數字**且與實際筆數相等，任一比例 > 門檻時需二次確認 |
+| AD-7c | **匯出欄位與 status** | 匯出檔欄位集合與順序對齊本尊 8 欄 ＋ `source_digest`；`status` 只有 `translated`／`outdated`／`untranslated` 三值且與 `translations.outdated` 一致；🔴 **匯入時修改 `status` 欄的值不產生任何效果**（純輸出，過期狀態只能由 digest 決定，§C.5(f)） |
 | AD-8 | digest 不符不靜默 | digest 不符的列寫入後標 `outdated` ＋ `review_required`，並出現在匯入報告 |
 | AD-9 | 缺 digest 欄拒收 | 缺 `source_digest` 欄的檔案整檔拒絕 |
 
@@ -1206,7 +1275,9 @@ cache_stamp = MAX(
 | ~~**V-160**~~<br>✅ **後半已答，前半降級** | ~~Shopify handle 的字元數上限；以及 `handleize` 對 `.` 與撇號的實際處置（轉分隔／刪除）~~<br>**後半已答**（68 §C-4 `test`）：`.`→分隔（`A.P.C. → a-p-c`、`B.M.B BREWERY → b-m-b-brewery`）、`/`→分隔（`#AU/NZ → au-nz`）、撇號與引號**刪除**（`Women's → womens`、`16" Cash Drawer → 16-cash-drawer`）⇒ **逐條與我方相同**。<br>**前半（字元上限）**：255 已有二手佐證且**數值恰好相同**（`press`，matrixify）⇒ 從「未查證」降為「二手佐證」，**取得官方出處改由 68 的 V-183 承接** | shopify.dev 商品欄位頁；或以超長標題實測 | 維持 `handle.max_chars: 255`、`.`→分隔、撇號→刪除。**不因未查證而改動** | §D.1 |
 | ~~**V-161**~~<br>✅ **已縮小** | ~~Liquid `handleize` **filter** 對 CJK 的實際輸出（保留／落空／轉寫）~~ ⇒ **已答：保留**（`press`，community.shopify.dev 1060，2024-10，**staff 復現**：輸出保留 emoji、`ŭ`→`u`）。**殘留**：全形字元、以及空輸入／全分隔符輸入的輸出 ⇒ 併入 68 的 **V-181** | 實測（中文選項名的主題渲染）＋ Liquid 沙箱 | <!-- 依 68 §F-3 縮小，原處置：「filter 保留非 ASCII ＋ 空結果落 `h-{sha1}`；與 `Handles::Generate` **不共用實作**」 -->filter **保留非 ASCII**（✅ 已證與本尊一致）；`h-{sha1}` fallback 🔴 **只在空／全分隔符輸入時觸發，不得因結果非 ASCII 觸發**；與 `Handles::Generate` **不共用實作** | §D.5 |
 | **V-162** | Shopify 對帶 script subtag 語言（`zh-Hant`／`zh-Hans`）使用的 URL 子資料夾字串 | help.shopify.com/manual/markets；實測 | 我方用 `/zh-hant`／`/zh-hans`（理由見 §F.1(b)），**不用 `/zh-tw`** | §F.1 |
-| **V-163**<br>⚠ **處置已改** | Shopify **原生**是否提供翻譯 CSV 匯入匯出、格式與欄位、以及**空白語義**（68 §B-3 本輪亦無法確認原生能力是否存在 ⇒ 併入 68 的 **V-182**） | help.shopify.com Translate & Adapt 子頁逐頁；或 dev store 實測 | <!-- 依 68 §B-3 改寫，原處置：「我方 CSV ＋ 強制 `source_digest` ＋ **空白＝不變更**；XLIFF 列 P2」 -->我方 CSV ＋ 強制 `source_digest` ＋ 🔴 **空白＝清空、缺席＝不變更**（§E.6(a) 三件套）；XLIFF 列 P2。⚠ 本處置跟隨的是 **Matrixify 這個第三方事實標準**（`press`），**不是 Shopify 官方語義**——若查出官方原生行為不同，本條要**重判**（連 `blank_means_unchanged` 一起） | §E.6 |
+| ~~**V-163**~~<br>✅ **主體已結案**（69 §V-182） | ~~Shopify **原生**是否提供翻譯 CSV 匯入匯出、格式與欄位、以及**空白語義**~~<br>🔴 **已答（`help`，69 §V-182）**：**有**原生匯出／匯入，位置在 **Settings → Languages**（不在 Translate & Adapt app 裡——**68 號因此找不到，這正是它誤判「原生能力薄弱或不存在」的原因**）；**8 欄** ＋ `Status` 三值（`Translated`／`Outdated`／`Untranslated`）；匯入的核心是**「覆寫既有翻譯」勾選框**；匯出以 email 非同步寄出。**官方對「Translated content 留空會怎樣」完全沒寫** ⇒ 承接到 **V-200**。<br>**殘留**：XLIFF 官方格式是否存在（我方列 P2） | ~~help.shopify.com Translate & Adapt 子頁~~ ⇒ **已由 69 號在 `localization-and-translation` 頁查到**；XLIFF 殘留仍需 help 逐頁 | <!-- 二次修正。68 §B-3 的處置是：「🔴 空白＝清空、缺席＝不變更（§E.6(a) 三件套）」，依據是 Matrixify（`press`）；並註明「若查出官方原生行為不同，本條要重判（連 blank_means_unchanged 一起）」——**69 §V-182 正是那個觸發條件，本條依該註記重判**。 -->我方 CSV ＋ 強制 `source_digest` ＋ 🔴 **空白＝不動作、清空走 `__CLEAR__`、覆寫走顯式旗標**（§E.6(a)）；欄位對齊本尊 8 欄 ＋ `status` 三值；XLIFF 列 P2 | §E.6、§C.5(f) |
+| 🔴 **V-200**<br>（承 69 號登記） | 本尊的 `Translated content` **留空**時，在「勾選覆寫」與「不勾選」**兩種模式下分別**做什麼（官方 help 對此完全沉默——**這是本尊模型裡唯一沒寫清楚的一格**） | dev store 實測：匯出 → 清空一列 → 兩種模式各匯入一次 → 看譯文是否消失 | 🔴 我方**不**把空白解讀成刪除（`blank_means_unchanged: true`）；刪除必須是另一個明示動作（`__CLEAR__`）。**即使日後查出本尊在勾選覆寫時會刪，也不得自動跟隨**——不可逆操作由易誤觸狀態觸發，屬產品決定，需使用者裁定 | §E.6(a)① |
+| 🔴 **V-201**<br>（承 69 號登記） | 本尊的 `Status` 欄在**匯入**時是否被讀取（還是純輸出欄）；以及 `Market` 欄**留空**的語義 | 同 V-200（dev store 實測） | `status` **純輸出**，匯入時忽略（§C.5(f)：過期狀態只能由 digest 決定，不能由檔案宣稱）；`market_handle` 留空 ⇒ **拒絕匯入該列**（保守做法：留空可能是「套用到所有市場」也可能是「漏填」，兩者後果差很遠） | §C.5(f)、§E.6(b) |
 | **V-164** | `translationsRegister` 在 `translatableContentDigest` 不符時的官方行為（拒絕？寫入並標過期？） | shopify.dev mutation 頁的錯誤碼表 | 我方**寫入並標 outdated ＋ review_required**（§E.6）。不得靜默當成最新 | §C.5、§E.6 |
 | **V-165** | 商家可新增的語言集合是否封閉（Shopify 是否只允許其支援清單內的語言） | help.shopify.com 語言設定頁；`shopLocaleEnable` 的錯誤碼 | 我方**開放**（裁定明文「可自行添加任何語言」），只驗 BCP-47 格式與禁用碼 | §A.2、§C.1 |
 | **V-166** | MySQL 8 可用的中文排序 collation（是否有 `utf8mb4_zh_0900_as_cs`、其排序依據是拼音或筆畫） | MySQL 官方文檔；實機 `SHOW COLLATION` | 沿用預設 collation，UI 標「依系統順序」，**不宣稱拼音或筆畫排序** | §C.7 |
@@ -1224,7 +1295,8 @@ cache_stamp = MAX(
 |---|---|---|---|---|
 | **M-1** | **handle 允許 CJK** | 13 §F2-1：「中文標題不轉拼音，改用『允許 unicode handle（URL encode）』……demo 選 unicode handle（`/products/棉質短T` 可用）」；13 §F2-2「衝突自動 `-1` `-2` 後綴」 | 🔴 **前半：被 2026-08-12 裁定推翻**——一律 ASCII（§D.1）。⚠ 但要寫清楚這是**明知偏離 Shopify**（本尊保留 CJK，68 §B-1；登記於 62 §F.3-1），不是「13 寫錯了」。<br>✅ **後半：反向結案**——<!-- 依 68 §C-4 修正，原文：「另衝突尾碼自 `-2` 起算，且**手填衝突拒絕不加尾碼**（§D.4(b)）」 -->**13 §F2-2 的 `-1` 起算本來就是對的**（Shopify 官方例 `potion`／`potion-1` ＋ 實測），要改的是本檔，已改（§D.4(b)）。**手填衝突拒絕不加尾碼**維持（68 V-184 無一手證據 ⇒ 保守失效） | **13 §F2-1 仍待改**（ASCII 化）；**13 §F2-2 不必改**（它是對的） |
 | **M-2** | **handle 列為可翻譯資源** | 29 §2.1 把 `PRODUCT/COLLECTION/ARTICLE.handle` 列入 `TranslatableResourceType` 的欄位集。<br>🔴 **68 §F-1 補強了這條的份量**：這不只是 29 號的一張表——`shopify.dev/changelog/resource-url-handles-are-now-translatable`（**2023-06-26**）是**官方明文能力**，且實務上啟用多語言後同一商品在各語言**就是不同 handle**（AJAX API 必須用該語言的 handle） | 我方 handle **不可翻**（§D.3，**明知偏離**，依據＝「一律英文」裁定的下游後果，不是技術偏好）。29 §2.1 需加註「本專案不採用 handle 的可翻譯性，語言維度由 URL 前綴承載，見 67 §D.3」。⚠ **待使用者確認**：「handle 一律英文」是否**同時**意味著放棄 per-locale handle 能力（我方推定是） | 29 §2.1 |
-| **M-8** | **本輪跟隨 Shopify 的結論反轉，尚未回寫到下游檔案** | `docs/handoff/2026-08-12-open-decisions.md` 的 **B-3／C-1／C-2／C-3／D-3** 五條仍記著反轉前的結論；`63 §G.4`／`65 §A2·T11`／`55` 金額測試矩陣仍記著「exponent=3 於 market 建立時擋下」；`13 §F2-1` 仍是 unicode handle | 以 `config/limits.yml` 的鍵為準（每鍵都有 `依 68 號 §X` 追溯註釋）。🔴 **這些檔案本輪不得改**（另有 agent 在跑），必須由其擁有者回寫，否則會出現「規格說 A、鍵說 B」的分裂 | open-decisions／63／65／55／13 |
+| **M-8**<br>⚠ **部分已處理** | **跟隨 Shopify 的結論反轉，尚未全部回寫到下游檔案** | ✅ `docs/handoff/2026-08-12-open-decisions.md`：**B-3／B-6／C-1～C-3／D-3 已於 2026-08-12（69 號修正輪）更新並移入 §F**。<br>✅ `65 §A2·T11`：已更新為「market 可建立 ＋ 送款被擋」（同輪）。<br>❌ **仍未回寫**：`63 §G.4`（含其硬規則「一律依 ISO 4217 exponent 換算」——🔴 該句現已知**不完整**，見 65 §J **M-8**）、`55` 金額測試矩陣（仍記「market 建立時擋下」）、`13 §F2-1`（仍是 unicode handle） | 以 `config/limits.yml` 的鍵為準（每鍵都有 `依 68 號 §X`／`依 69 號 §V-XXX` 追溯註釋）。🔴 **63／55／13 本輪仍不得改**，必須由其擁有者回寫，否則會出現「規格說 A、鍵說 B」的分裂 | 63／55／13 |
+| 🔴 **M-9**<br>（2026-08-12 二次修正） | **B-3 的結論在同一天反轉了兩次** | 68 §B-3 依 Matrixify（`press`）把 `blank_means_unchanged` 翻成 `false`；69 §V-182 查到本尊原生語義（`help`）後**改回 `true`** ＋ 改成 overwrite 旗標形態 | 🔴 **`docs/research/68` 的 B-3 條不會被修正**（research 是證據不是結論）⇒ 任何人讀到 68 §B-3 要求翻面時，**必須同時讀 69 §V-182 與本檔 §E.6 的沿革註釋**。三處已互相交叉引用，但**只讀 68 就動手是可能發生的**——這是本輪最現實的回退風險 | 無（本列即防回退措施） |
 | **M-3** | ~~62 §M S2「`handle` 欄位＋可翻譯」~~ | — | ✅ **本輪已改**（改為標註不可翻並指向 67 §D.4） | — |
 | **M-4** | **頁級 cache key 無條件含 locale** | 63 §D.3 的 key 組成把 `locale` 寫死在列表裡 | 改為**依實際依賴降維**（§G.2），並沿用該節既有的 `touched_sources` 自檢做 fail-closed 判定。另 `catalog_flow.cache_stamp_sources` 必須加入 `translations` | 63 §D.3（本檔不改 63） |
 | **M-5** | **`translations` 表缺六個欄位** | 29 §2.2 的表定義只有 `source_digest` ＋ `outdated` | 需補 `outdated_severity`／`value_source`／`review_required`／`source_locale_tag`／`updated_by_staff_id`／`updated_at`（§C.2） | 29 §2.2 |

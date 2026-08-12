@@ -1192,7 +1192,7 @@ table.spec th{background:var(--cream);font-weight:600}
       <p>慢下來，好好穿。基本款服飾品牌，台灣設計製造。</p>
       <div class="f-sel" style="margin-top:18px" data-doc="footerloc">
         <select class="fsel-c" id="fMarketSel" aria-label="國家／地區" onchange="setMarket(this.value)"></select>
-        <select class="fsel-l" aria-label="語言" onchange="setLocale(this.value)"><option value="zh-Hant">繁體中文</option><option value="en">English</option></select>
+        <select class="fsel-l" id="fLocaleSel" aria-label="語言" onchange="setLocale(this.value)"></select>
       </div>
     </div>
     <div class="f-col" data-doc="footermenu"><b>選購</b><a href="#/collections/new">新品上市</a><a href="#/collections/tops">上衣・帽T</a><a href="#/collections/outer">襯衫・外套</a><a href="#/collections/accessories">包袋・配件</a><a href="#/collections/sale">特惠專區</a><a href="#/products/gift-card">禮品卡</a></div>
@@ -1911,7 +1911,9 @@ function normalizeCheckout(){
 function marketLabel(mk){return mk.name+" · "+CURRENCY_FORMATS[mk.currency].symbol+" · "+CURRENCY_FORMATS[mk.currency].code;}
 function renderMarketChrome(){
   const mk=marketOf(),pk=packOf();
-  const lb=$("#locBtnTxt");if(lb)lb.textContent=marketLabel(mk)+"（"+(STATE.locale==="en"?"EN":"繁中")+"）";
+  const lb=$("#locBtnTxt");if(lb)lb.textContent=marketLabel(mk)+"（"+sfLoc(STATE.locale).short+"）";
+  const ls=$("#fLocaleSel");if(ls)ls.innerHTML=sfLocaleOptions(STATE.locale);
+  document.documentElement.lang=STATE.locale;
   const ms=$("#fMarketSel");
   if(ms)ms.innerHTML=Object.values(MARKETS).map(m=>'<option value="'+m.code+'" '+(m.code===mk.code?"selected":"")+'>'+esc(m.name)+" ("+esc(CURRENCY_FORMATS[m.currency].symbol)+")</option>").join("");
   const pi=$("#payicons");
@@ -4102,7 +4104,13 @@ function openLoc(){
      .map(m=>'<option value="'+m.code+'" '+(STATE.market===m.code?"selected":"")+'>'+esc(m.name)+"（"+esc(CURRENCY_FORMATS[m.currency].code)+" "+esc(CURRENCY_FORMATS[m.currency].symbol)+"）"+
        (m.jurisdiction?"":" — 法域未宣告")+'</option>').join("")+'</select></div>'+
    '<div class="field"><label>語言</label><select class="inp" onchange="setLocale(this.value)">'+
-     [["zh-Hant","繁體中文"],["en","English"]].map(([v,t])=>'<option value="'+v+'" '+(STATE.locale===v?"selected":"")+'>'+t+'</option>').join("")+'</select></div>'+
+     sfLocaleOptions(STATE.locale)+'</select></div>'+
+   '<div class="hint">🔴 <b>語言與地區是兩個維度</b>（67 §A.1）：切語言只換文字與 URL 前綴（'+
+     esc(sfLoc(STATE.locale).prefix||"（無，來源語言）")+'），<b>不換幣別</b>——英文版的香港店仍然顯示港幣。'+
+     '缺譯文時回落到來源語言原文並在大段文字上標 <span class="mono">lang</span>，不留空白（67 §C.4）。</div>'+
+   '<div class="hint">本店的<b>地區自動重導：'+(GEO_CFG.autoRedirect?"啟用（預設）":"停用")+'</b>（62 §K.2 依 68 號跟隨 Shopify 翻面）。'+
+     '三條<b>不可關閉</b>的護欄：①已驗證的搜尋引擎爬蟲不重導 ②hreflang／sitemap 的 URL 對任何人直接回 200 ③只重導一次。'+
+     '<b>語言</b>自動偵測維持停用——兩個預設值方向相反，不要一起翻。</div>'+
    '<div class="hint">切換地區會換掉三件事：<b>幣別格式</b>（符號／小數位／分組，見 CURRENCY_FORMATS）、'+
    '<b>金額換算</b>（demo 固定換算率，非即期匯率）、以及<b>整個 jurisdiction pack</b>'+
    '（配送方式／付款方式／單據制度／退貨依據）。法域永遠取市場本地，不繼承（56 §A.0）。</div>'+
@@ -4117,7 +4125,25 @@ function setMarket(v){
   route(true);
   toastf("已切換市場："+marketLabel(marketOf())+"／pack "+(packOf().code||"未宣告"));
 }
-function setLocale(v){STATE.locale=v;closeDr2();renderMarketChrome();toastf("已切換語言："+(v==="en"?"English（URL 前綴 /en）":"繁體中文"));}
+/* ── 67 號多語言：語言集合是**資料**（shop_locales 的前台投影），不是列舉 ──────────
+   首發三語（zh-Hant／zh-Hans／en）是種子資料；新增語言不需要改這一段程式碼。
+   🔴 語言 ≠ 幣別（67 §H.1、鐵律 10）：切語言**不動** STATE.market，金額仍走 fmt()／CURRENCY_FORMATS。
+   🔴 來源語言不帶前綴，其餘語言一律帶（67 §F.1）；前綴是語言維度的唯一承載處——
+      handle 全站只有一個、不隨語言變（67 §D.3）。 */
+const SF_SOURCE_LOCALE="zh-Hant";
+const SF_LOCALES=[
+ {tag:"zh-Hant",endonym:"繁體中文",short:"繁中",prefix:""},
+ {tag:"zh-Hans",endonym:"简体中文",short:"简中",prefix:"/zh-hans"},
+ {tag:"en",     endonym:"English", short:"EN",  prefix:"/en"}];
+const sfLoc=t=>SF_LOCALES.find(x=>x.tag===t)||SF_LOCALES[0];
+const sfLocaleOptions=cur=>SF_LOCALES.map(l=>'<option value="'+l.tag+'" '+(cur===l.tag?"selected":"")+'>'+esc(l.endonym)+'</option>').join("");
+function setLocale(v){
+  if(!sfLoc(v))return;
+  STATE.locale=v;closeDr2();renderMarketChrome();
+  document.documentElement.lang=v;                       /* 回落標記與螢幕閱讀器都靠它 */
+  const L=sfLoc(v);
+  toastf("已切換語言："+L.endonym+"（URL 前綴 "+(L.prefix||"（無，來源語言）")+"；市場與幣別不變："+marketOf().name+"）");
+}
 /* --- lightbox --- */
 function openLB(h,i){const p=PH[h];STATE.lb={h,i};remember();
   $("#lbStage").innerHTML=artHTML(mediaOf(p)[i].g,p.garment,"#6b5138");
@@ -4247,8 +4273,49 @@ function openCookiePrefs(){
 function ckTog(b,k){const on=b.classList.toggle("on");b.setAttribute("aria-checked",on);STATE.ck[k]=on;}
 function ckSave(){STATE.cookie="custom";closeModal();$("#cookie").classList.remove("show");
   document.body.classList.remove("cookie-on");toastf("Cookie 偏好已儲存");setTimeout(showGeo,900);}
-function showGeo(){if(STATE.geoDone)return;$("#geo").classList.add("show");}
-function geoSwitch(){STATE.geoDone=true;$("#geo").classList.remove("show");setMarket("JP");}
+/* ── 62 §K 地區重導（2026-08-12 依 68 號「全部跟隨 Shopify」裁定翻面）───────────────
+   🔴 預設**啟用**自動重導（limits.yml seo.redirect_geo.enabled_default: true，原 false）。
+      Google 至今仍建議避免自動重導、且未對「排除爬蟲」表態——這條事實沒有被推翻，
+      翻面是在明知它成立的前提下做的，代價由下面三條**不可關閉**的護欄承擔。
+   🔴 三條護欄不是選配：Shopify 敢預設開靠的是「爬蟲不重導 ＋ hreflang 完整」。
+      少了它們，預設開就是真的傷索引，而且傷的是**每一個新租戶**。
+   🔴 一律 302（地區偏好不是永久事實）；EU ccTLD ＋ EU 來源客戶是**法遵例外**，
+      由 jurisdiction pack 宣告 forbids_geo_auto_redirect，前台只讀該能力、不寫國別 if-else。 */
+const GEO_CFG={autoRedirect:true,statusCode:302,
+ excludeVerifiedCrawlers:true,   /* 🔒 不可關閉 */
+ hreflangUrlsReturn200:true,     /* 🔒 不可關閉 */
+ oncePerVisitor:true,            /* 🔒 不可關閉 */
+ langAutodetect:false};          /* 語言那一半維持停用——與地區那一半方向相反，是官方事實不是疏漏 */
+/* 原型用旗標模擬 pack 能力與爬蟲判定；正式版由 jurisdiction pack 與反向 DNS 驗證供給 */
+let GEO_ENV={detected:"JP",euCcTld:false,isVerifiedCrawler:false};
+function geoBannerHTML(auto){
+  const m=MARKETS[GEO_ENV.detected];
+  return (auto
+    ?'已依你的所在地自動切換到<b> '+esc(m.name)+' </b>市場（302，只會發生一次）。'
+    :'看起來你在<b> '+esc(m.name)+' </b>——要切換到 '+esc(m.name)+' 市場（'+esc(CURRENCY_FORMATS[m.currency].symbol)+'）嗎？')
+   +'<div style="display:flex;gap:8px;margin-top:12px">'
+   +(auto
+     ?'<button class="btn btn-sm" style="background:#efe9df;color:var(--ink)" onclick="geoDismiss()">留在 '+esc(m.name)+'</button>'
+      +'<button class="btn btn-sm" style="border:var(--hairline) solid rgba(231,223,211,.4);color:#efe9df" onclick="geoRevert()">切回原本的市場</button>'
+     :'<button class="btn btn-sm" style="background:#efe9df;color:var(--ink)" onclick="geoSwitch()">切換</button>'
+      +'<button class="btn btn-sm" style="border:var(--hairline) solid rgba(231,223,211,.4);color:#efe9df" onclick="geoDismiss()">留在目前市場</button>')
+   +'</div>';
+}
+function showGeo(){
+  if(STATE.geoDone)return;                                  /* 🔒 只重導／只提示一次 */
+  if(GEO_ENV.isVerifiedCrawler)return;                      /* 🔒 已驗證爬蟲：不重導也不打擾 */
+  const forbid=GEO_ENV.euCcTld;                             /* EU ccTLD ⇒ 法遵例外，只能建議 */
+  const auto=GEO_CFG.autoRedirect&&!forbid;
+  if(auto){STATE.geoPrev=STATE.market;setMarket(GEO_ENV.detected);}
+  $("#geo").innerHTML=geoBannerHTML(auto);
+  $("#geo").classList.add("show");
+}
+function geoSwitch(){STATE.geoDone=true;$("#geo").classList.remove("show");setMarket(GEO_ENV.detected);}
+function geoRevert(){
+  STATE.geoDone=true;$("#geo").classList.remove("show");
+  if(STATE.geoPrev)setMarket(STATE.geoPrev);
+  toastf("已切回 "+marketOf().name+"——手動切回後不再攔截（只重導一次）");
+}
 function geoDismiss(){STATE.geoDone=true;$("#geo").classList.remove("show");toastf("已記住你的選擇："+marketOf().name);}
 /* --- newsletter --- */
 function subNews(e,which){
@@ -4272,7 +4339,7 @@ function subNews(e,which){
 const DOCS={
 /* ---------- 全域 ---------- */
 announce:{t:"公告列 announcement bar",f:"促銷／免運訊息輪播",l:"blocks 逐則文字＋連結；多則時自動輪播（間隔 6s，Dawn 預設關閉可設 3–9s）；hover 與 prefers-reduced-motion 暫停；無內容不渲染（42 §1.1）",i:"header-group 的 announcement-bar section [liquid:section.blocks,settings.announcement_*] [tbl:themes,templates,theme_settings] [ep:n/a 純渲染]"},
-localization:{t:"國家／幣別・語言選擇器（header）",f:"切換市場與語言",l:"選項>1 才渲染；改國家→presentment 幣別與可售目錄切換、改語言→URL 前綴（/ → /en）；結帳中不可切幣；爬蟲永不重導（42 §11、29 §4）",i:"{% form 'localization' %}；Dawn 送 locale_code、Horizon 送 language_code 兩者都要接 [ep:POST /localization] [liquid:localization.available_countries,shop.published_locales] [tbl:markets,shops]"},
+localization:{t:"國家／幣別・語言選擇器（header）",f:"切換市場與語言",l:"選項>1 才渲染；改國家→presentment 幣別與可售目錄切換、改語言→URL 前綴（來源語言無前綴，其餘 /zh-hans、/en）；結帳中不可切幣；🔒已驗證爬蟲永不重導。<br>🔴 <b>語言與市場是兩個維度，永遠不綁死</b>（67 §A.1）：同一語言可跨市場、同一市場可多語言；綁死的第一個症狀就是「英文版的香港店顯示美元符號」（鐵律 10 ＋ 裁定二的直接違反）。語言集合是<b>資料</b>（shop_locales），首發三語只是種子——新增語言不改這支元件。<br>切換器必須是<b>真實連結</b>（<code>&lt;a href&gt;</code> 指向目標市場／語言 URL），不能純 JS：那是爬蟲發現其他版本的路徑之一（62 §K.2）",i:"{% form 'localization' %}；Dawn 送 locale_code、Horizon 送 language_code 兩者都要接 [ep:POST /localization] [liquid:localization.available_countries,shop.published_locales] [tbl:markets,shops]"},
 logo:{t:"Logo",f:"回首頁",l:"image_picker＋寬度 range 50–300px（預設 100）；未上傳→輸出 shop.name 文字；密碼頁沿用（42 §1.1）",i:"[ep:GET /] [liquid:shop.name,settings.logo] [tbl:theme_settings,files]"},
 mainmenu:{t:"主導航 menu",f:"一層選單＋下拉／抽屜",l:"來源 linklists[main-menu]，巢狀 ≤3 層；桌機 hover 或 click 展開（aria-expanded 切換）、Esc 收合；≤767 收成左側抽屜手風琴；空選單不渲染（42 §1.1）",i:"[liquid:linklists,linklist.links,link.child_active] [tbl:menus,menu_items] [ep:n/a 隨頁渲染]"},
 mega:{t:"Mega menu 面板",f:"二層以上大面板導航",l:"header 設定 menu_type_desktop=dropdown/mega/drawer；mega＝全寬面板，欄＝第二層、欄內連結＝第三層；僅 ≥1024 顯示，手機一律抽屜手風琴；焦點需可循環（42 §1.1）",i:"[liquid:linklist.links[].links] [tbl:menus,menu_items] [ep:n/a]"},
@@ -4290,7 +4357,7 @@ payicons:{t:"付款方式圖示列",f:"展示可用付款方式",l:"讀 shop.ena
 cookiebanner:{t:"Cookie 同意橫幅",f:"先同意後追蹤",l:"受規範地區未同意前不落非必要 cookie、不發 marketing/analytics pixel；接受＝三類全開、拒絕＝全關（essential 恆開）；選擇後寫 consent cookie 不再顯示；前置條件為已發布隱私政策（42 §1.3）",i:"平台注入非 theme section [ep:TBD 待確認 consent 寫入端點（規劃 POST /api/consent）] [tbl:sessions,shops] [liquid:shop.privacy_policy]"},
 cookieprefs:{t:"Cookie 偏好 modal",f:"分類細選",l:"四類：必要（鎖定開）／分析／行銷／偏好；逐類 toggle；之後可從 footer「Cookie 偏好」重開（42 §1.3）",i:"[ep:TBD 同上] [tbl:sessions]"},
 cookielink:{t:"Footer「Cookie 偏好」連結",f:"重開偏好 modal",l:"法規地區必須提供隨時撤回同意的入口；美加州另有「不出售我的個資」獨立頁（42 §1.3）",i:"[ep:TBD] [tbl:sessions]"},
-geobanner:{t:"地區建議 banner（GeoIP）",f:"建議切換市場",l:"GeoIP 只做建議、永不自動重導；使用者選擇後寫 cookie 記住；爬蟲不顯示（42 §11）",i:"[ep:TBD 待確認 GeoIP 供應與 header 傳遞方式] [ep:POST /localization] [tbl:markets]"},
+geobanner:{t:"地區自動重導／建議 banner",f:"依所在地自動切換市場，或在不能自動時建議",l:"🔴 <b>2026-08-12 翻面：預設啟用自動重導</b>（limits.yml <code>seo.redirect_geo.enabled_default: true</code>，原 false），依 68 號「全部跟隨 Shopify」裁定。<b>這是跟隨本尊與外部權威（Google）的直接衝突</b>——Google 至今仍建議避免自動重導、且未對「排除爬蟲」表態；翻面是在明知這條事實成立的前提下做的。<br>代價不得只翻布林值：原本「開啟時的選配護欄」三條<b>升格為不可關閉的不變量</b>——🔒①已驗證爬蟲不套用（UA ＋ 反向 DNS；未通過驗證的自稱爬蟲當一般使用者，否則就是偽裝繞過的漏洞）🔒②hreflang／sitemap 的 URL 對任何客戶端直接回 200 🔒③只重導一次（cookie 標記，手動切回後不再攔截）。少了它們，預設開就是真的傷索引，傷的是每一個新租戶。<br>一律 <b>302</b>——地區偏好不是永久事實。<b>EU ccTLD ＋ EU 來源客戶＝法遵例外</b>，只能顯示建議橫幅；判定由 jurisdiction pack 宣告 <code>forbids_geo_auto_redirect</code>，前台只讀該能力、<b>不寫國別 if-else</b>（鐵律 11）。⚠ 建議橫幅本身是我方超出本尊的一條（官方推給第三方 app）。<br>🔴 與快取的接縫：判定輸入含瀏覽器語言與地理位置 ⇒ 依請求而異 ⇒ 判定必須在快取之前、結果不得進頁面快取；頁面快取鍵<b>不新增 Accept-Language 維度</b>（被重導的請求根本沒進到頁面渲染）",i:"[ep:TBD 待確認 GeoIP 供應與 header 傳遞方式] [ep:POST /localization] [tbl:markets,shop_seo_settings]；三條護欄不進 shop_seo_settings（沒有欄位可以關）"},
 locpicker:{t:"地區與語言抽屜",f:"切市場與語言",l:"改國家→幣別／價格／可售目錄切換（302 至對應 web presence 或就地重載）；改語言→URL 前綴；fixed price 市場直接取 price list 值（29 §2、§5）",i:"[ep:POST /localization] [liquid:localization.available_countries,localization.available_languages] [tbl:markets,catalogs]"},
 statesw:{t:"列表狀態切換（原型專用）",f:"強制切換 skeleton／空／錯誤態",l:"對應 23 §4 條 7「空／錯／載三態」驗收：每個列表與表單都要有；正式站由真實請求狀態驅動",i:"[ep:n/a 原型專用開關]"},
 liststateerr:{t:"列表錯誤態",f:"請求失敗時的可行動錯誤",l:"錯誤 banner 必須提供動作（重試／回上頁）；不可只顯示空白（23 §4 條 7）",i:"[ep:n/a 由呼叫端的 5xx/網路錯誤觸發] [tbl:events]"},

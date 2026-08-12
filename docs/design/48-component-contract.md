@@ -5087,6 +5087,271 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 
 ---
 
+## §34 語言切換器 `cl-locale-switch`
+
+**來源**：67 §E.1（兩層語言＝**兩個切換器，不得連動**）、67 §E.2（內容語言切換器規格）、67 §C.6（進度徽章的資料來源）、64 §3／§4（高 28、圓角 8、13/20/500 的計算樣式真值）、47 §H2-2（popover z-index 高於 dialog）、48 §17（本元件的下拉層直接沿用 `cl-pop`，不另做一套）。
+**原型落地狀況（2026-08-12）**：`docs/design/chilllove-admin-v2.html`
+- **介面語言**（頂欄）：`renderUiLocaleMenu()` / `toggleUiLocale()` / `setUiLocale()` / `applyUiChrome()`；DOM 錨點 `#uiLocBtn` + `#uiLocMenu`。
+- **內容語言**（商品編輯頁標題列）：`contentLocaleCtl()` / `renderContentLocaleMenu()` / `toggleContentLocale()` / `setContentLocale()`；DOM 錨點 `#cLocBtn` + `#cLocMenu`。
+- **已實作**：§34.1–§34.4、§34.6 的建立態停用／未發布語言標示／來源語言不顯示進度徽章。
+- **尚未實作**（給正式 React 版的契約，不是原型現況）：內容語言進 URL query（`?content_locale=en`，67 §E.1 明文要求，形態沿用 52 號 P0-18）、`translations.market_id` 的 per-market 覆寫維度、切換器的 loading 態、介面語言寫回 `staff_members.ui_locale`（原型只存在記憶體）。
+
+> **🔴 這個元件存在的唯一理由，是防一種只會在前台被發現的資料毀損。**
+> 商家為了看懂 UI 把「語言」切成 English → 若兩層語言連動，系統同時把**內容語言**切到 `en` → 商品標題欄變空白（尚未翻譯）→ 商家以為資料掉了，把中文標題打進去 → **英文版商品的標題是中文，而中文版沒有變**。
+> 後台從頭到尾不會報錯，測試也不會紅。**所以「兩個切換器」不是版面偏好，是資料完整性需求。**
+>
+> **兩者外觀相同、狀態不同**（這是刻意的）：一致的外觀讓商家認得出「這是語言」；獨立的狀態讓兩件事分開。實作上共用 `cl-locale-switch` 的樣式與下拉層，**但綁在兩個不同的 store 欄位上，且沒有任何一支函式同時寫兩者**。
+
+| | `cl-locale-switch--ui`（介面語言） | `cl-locale-switch--content`（內容語言） |
+|---|---|---|
+| 位置 | 頂欄右側，通知鈕左邊 | **資源編輯頁的標題列**，與狀態選單同一列 |
+| 誰的屬性 | 員工（`staff_members.ui_locale`） | 編輯工作階段（URL query） |
+| 值域 | 平台支援的 admin 語言 | 該 shop **已啟用**的語言（`shop_locales`） |
+| 字串來源 | **平台 i18n bundle**（部署時載入記憶體） | **租戶 `translations` 表**（隨請求查 DB） |
+| 選項附帶 | 語言自稱 `endonym` ＋ 標籤 | `endonym` ＋ 來源／已發布／未發布 ＋ **翻譯進度徽章** |
+| 切換後重繪 | 導航、頂欄、列表頁首（帶 `data-cl-i18n` 的節點） | 目前資源的所有可翻欄位 ＋ 唯讀鎖 |
+
+### 34.1 解剖
+
+```
+cl-locale-switch                     data-cl-locale-switch="ui|content"；position: relative
+├─ button.cl-locale-switch__btn      高 --ctl-28；padding 0 --sp-200；圓角 --r-200；
+│                                    框 --hairline；字級 --t-xs；aria-haspopup="menu"
+│  ├─ svg.cl-locale-switch__icon     地球（ui）／文字（content）；--icon-sm
+│  ├─ span.cl-locale-switch__tag     目前語言的 endonym；--fw-title
+│  ├─ cl-badge（僅 content 變體）     來源語言顯示「來源語言」；其餘顯示進度徽章 §34.2
+│  └─ span.cl-locale-switch__caret   ▾；--t-2xs；aria-hidden
+└─ div.cl-pop（§17）                  role="menu"；min-width 比按鈕寬（避免徽章換行）
+   ├─ div.cl-pop__section-label      「介面語言（只影響後台按鈕與標籤）」
+   ├─ button[role=menuitemradio] × N aria-checked；✓ 佔位恆在（不用 visibility 跳動）
+   │  ├─ span.cl-pop__title          endonym
+   │  ├─ span.cl-pop__sub            標籤／來源語言／已發布／未發布提示
+   │  └─ cl-badge                    僅 content 變體
+   └─ div.cl-pop__section-label      🔴 **對照句**：指出另一個切換器在哪、且兩者獨立
+```
+
+🔴 **最後那行 `cl-pop__section-label` 不是裝飾。** 它是這個元件唯一一處「主動告訴商家還有另一個語言概念」的地方。拿掉它，商家永遠不會發現頂欄那顆和商品頁那顆是兩回事——而發現的方式就是上面那段資料毀損。
+
+### 34.2 完整態表
+
+| 態 | 按鈕 | 下拉 |
+|---|---|---|
+| default | 底 --surface；框 --hairline --border；字 --text-2 | 隱藏 |
+| hover | 底 --surface-2；字 --text | — |
+| focus-visible | §A.5 焦點環 | — |
+| expanded | 底 --surface-sunken；字 --text；`aria-expanded="true"` | `cl-pop` 展開（§17 動效） |
+| disabled（僅 content 變體，**建立資源時**） | 走 §A.4：只降文字色到 --text-disabled，底色不動；`aria-disabled="true"` ＋ tooltip | 不可開啟 |
+| 進度徽章 · 完整 | `cl-badge--neutral`，文字「完整」 | — |
+| 進度徽章 · 缺 N | `cl-badge--caution`，文字「缺 N」 | — |
+| 進度徽章 · 過期 N | `cl-badge--attention`，文字「過期 N」 | — |
+| 進度徽章 · 機翻 N | `cl-badge--info`，文字「機翻 N」 | — |
+
+🔴 **徽章的嚴重度優先序是固定的**：`缺 > 過期 > 機翻未覆核 > 完整`。四種同時存在時只顯示最嚴重的一種，完整明細放 `title`。理由：一顆按鈕上塞四個數字沒有人會讀，而「缺」是唯一會讓頁面回落到別的語言的狀態。
+🔴 **N 的分母必須來自物化的 `translation_status.translatable_fields`，不得現算**（鐵律 7）：同一個數字同時出現在列表徽章、這顆按鈕、翻譯後台與內容健康頁，任一處自己 `GROUP BY` 就是下一個對不上的數字。可翻欄位數會隨 metafield 定義變動，所以它是「該時點計算並物化的」，不是常數。
+
+### 34.3 動效
+
+沿用 §17 `cl-pop`（M5：`--dur-slow` `--ease-decelerate` 的 pop-in，`prefers-reduced-motion` 下退成純淡入）。按鈕自身只做 `background-color` 與 `color` 的 `--dur-fast`／`--ease-standard`。
+🔴 **切換語言後的重繪不做過場動畫**：整頁文字換掉時的淡入淡出會讓人以為頁面重載失敗。直接換。
+
+### 34.4 鍵盤與焦點
+
+- `Enter`／`Space` 開啟；`Esc` 關閉並把焦點還給按鈕。
+- 開啟後 `↑`／`↓` 在 `menuitemradio` 之間移動，`Home`／`End` 跳頭尾。
+- 選定後焦點回按鈕，並以 `aria-live` 播報**兩個語言的現值**：「介面語言已切換為 English；內容語言仍為繁體中文」。
+  🔴 **播報必須同時說出另一個語言沒變**——這是螢幕閱讀器使用者唯一能察覺兩者獨立的管道。
+
+### 34.5 響應式
+
+- ≤767：按鈕只留圖示 ＋ 語言標籤縮寫（`endonym` 的短碼），徽章保留（它是唯一的進度訊號）；下拉走 §18 `cl-sheet`。
+- content 變體在窄版會與狀態選單換行到第二列——**不得改成收進「更多動作」**：67 §E.2 明文要求它與狀態同一列可見，藏進選單等於商家不知道自己在編哪個語言。
+
+### 34.6 邊界情況
+
+- **只有一個語言**：整個元件**不渲染**（沿用前台選擇器「選項 >1 才渲染」的同一條）。
+- **切到未發布語言**：允許編輯，選項副標與頁面 banner 都要寫「僅預覽連結可見」。
+- **建立資源時**：content 變體 disabled ＋ tooltip「一律在來源語言下建立」。base row 還不存在，沒有東西可翻。
+- **來源語言本身**：不顯示進度徽章（它恆為 100%，顯示等於噪音），改顯示「來源語言」標記。
+- **語言被移除**：若目前內容語言被移除，回退到來源語言並 toast 說明；**不得留在一個已不存在的語言上**。
+- **RTL 語言**：切到 `direction: rtl` 的介面語言時整份 admin 的 `dir` 要跟著換（`platform_locales.direction`，不是寫死清單）。
+
+### 34.7 實作備註
+
+- 🔴 **平台字串不得進租戶 `translations` 表**：①每租戶存一份平台字串副本（幾千 key × N 租戶 × N 語言）②租戶能改平台文案、平台改版蓋不掉 ③兩種 key 命名空間混進同一個唯一索引。兩者**連查詢路徑都不同**。
+- 🔴 **禁止 `switch (locale)`**：語言相依行為一律查 `platform_locales` 的欄位（方向／複數規則／日期格式 ID／排序 collation）。語言集合是資料，`if (locale === 'zh-Hant')` 在新增語言那天就會漏。
+- 原型的平台 bundle **只收錄框架字串**（導航、頂欄、儲存列、產品列表頁首），未收錄者沿用來源字串顯示——這是原型邊界，寫在這裡以免本節被讀成「後台已全站國際化」。
+- **class 名對照（原型 → 正式版）**：`loc-chip→cl-locale-switch__btn`、`lc-tag→cl-locale-switch__tag`、`lc-c→cl-locale-switch__caret`、`view-menu.wide→cl-pop--wide`、`vm-h→cl-pop__section-label`、`vm-sub→cl-pop__sub`。
+
+---
+
+## §35 譯文雙欄欄位 `cl-trpair`
+
+**來源**：67 §E.2（來源語言以外的語言，欄位形態改變成上下兩段）、67 §B.1（欄位三分類與缺譯行為）、67 §C.4（fallback 鏈）、67 §E.3（非來源語言下必須唯讀的欄位）、29 §2.4（翻譯後台的逐 key 雙欄——**與本元件是同一個東西**）、64 §3／§4。
+**原型落地狀況**：`trField()` / `trEdit()` / `trCopySource()` / `pdLocaleLock()`；商品編輯頁與翻譯後台共用。
+- **已實作**：§35.1–§35.2、§35.4 的複製鍵、§35.6 的清空語義與可選欄位差異、§35.7 的唯讀鎖。
+- **尚未實作**：富文本譯文的 RTE（原型的譯文欄是純 textarea）、`{{ }}` 佔位符對稱性驗證的即時提示、逐欄位的 `outdated` 差異高亮。
+
+> **一個元件、兩個宿主**：單資源編輯頁與翻譯後台**共用這一個元件**。做成兩套的後果不是多寫一次程式，是**兩邊的缺譯行為會漂移**——而缺譯行為是規格（原則 2：不得靜默空白），漂移就等於其中一邊違規。
+
+### 35.1 解剖
+
+```
+cl-trpair                            框 --hairline --border-2；圓角 --r-300；overflow: hidden
+├─ div.cl-trpair__source             底 --surface-3；padding --sp-200 --sp-300；下框 --hairline
+│  ├─ div.cl-trpair__label           「<來源語言 endonym>（來源，唯讀）」；--t-2xs --text-3
+│  │  └─ button.cl-btn--ghost        「複製到譯文」（右對齊）
+│  └─ div.cl-trpair__text            來源原文；--t-xs --text-2；white-space: pre-wrap
+└─ div.cl-trpair__target             padding --sp-200 --sp-300
+   ├─ div.cl-trpair__label           「<目標語言 endonym>（譯文）」
+   │  └─ cl-badge                    §35.2 的狀態徽章（右對齊）
+   └─ input | textarea               data-cl-tr="<field_key>"；寬 100%
+```
+
+🔴 **來源原文必須是可見的純文字，不是 placeholder。** placeholder 在輸入框有值時會消失——而譯者最需要對照原文的時刻，正是他已經打了一半的時候。
+
+### 35.2 完整態表
+
+| 狀態 | 徽章 | 判定 | 缺譯時前台行為 |
+|---|---|---|---|
+| 已翻譯 | `cl-badge--neutral`「已翻譯」 | `translations` 有非空值 | — |
+| 未翻譯（必翻欄位） | `cl-badge--caution`「未翻譯・前台回落來源語言原文」 | 無值 ＋ 欄位類別 `required` | **顯示來源語言原文**，大段文字加 `lang` 屬性 |
+| 未翻譯（可選欄位） | `cl-badge--caution`「未翻譯・此欄位不輸出」 | 無值 ＋ 欄位類別 `optional` | **整個欄位不輸出**（不是空字串） |
+| 來源已變更 | `cl-badge--attention`「來源已變更・待更新」 | `outdated_severity = major` | **照常顯示舊譯文**（`outdated` 不影響渲染） |
+| 輕微變更 | `cl-badge--attention`「輕微變更」 | `outdated_severity = minor` | 同上；且**不進「待翻譯」預設篩選** |
+| 機翻未覆核 | `cl-badge--info`「機翻未覆核」 | `value_source ∈ {machine, script_conversion}` ∧ `review_required` | 照常渲染（可由商家改成不對外） |
+
+🔴 **「未翻譯」的兩種文案不可合併。** 必翻與可選的缺譯行為**方向相反**（一個顯示原文、一個整欄消失），用同一句話描述會讓商家對可選欄位產生錯誤預期——他會以為 SEO 描述也會回落到中文，於是不填。
+🔴 **`outdated` 不影響前台渲染**：一個錯字修正若讓整個語言版本退回來源語言，那是把小問題放大成事故。它是**後台狀態**。
+
+### 35.3 動效
+
+只有徽章的 `background-color`／`color` 走 `--dur-fast`／`--ease-standard`。
+🔴 **輸入時不重繪整個元件**：狀態徽章就地更新（改 class 與文字），**不是重新 render 父層**——重繪會把焦點從輸入框拔走，商家連打兩個欄位就會發現。
+
+### 35.4 鍵盤與焦點
+
+- Tab 序：複製鍵 → 譯文輸入框。來源文字是純文字，不進 Tab 序。
+- 複製鍵按下後焦點**移到譯文輸入框並全選**，讓「複製後直接改寫」是一個連續動作。
+- 徽章變化以 `aria-live="polite"` 播報（例如「已翻譯」）。
+
+### 35.5 響應式
+
+- ≤767：上下兩段維持上下堆疊（本來就是），標籤列的徽章換行到第二列。
+- 來源文字超過 6 行時收成「顯示全部」——但**預設展開的行數不得少於譯文輸入框的行數**，否則對照不起來。
+
+### 35.6 邊界情況
+
+- **清空譯文**＝真的清空（`NULL`／空字串／只含空白／`<p></p>` 這類**語義空 HTML** 四者等價），前台回落來源語言原文。🔴 語義空 HTML 這一條不能省：少了它，富文本編輯器的初始值會讓 fallback 永遠不觸發，商家看到的是空白區塊而不是原文。
+- **來源語言此欄本身為空**：上段顯示「（來源語言此欄為空）」而不是空白區塊。
+- **範本類欄位**（通知信、付款說明）：譯文的 `{{ }}` 佔位符集合必須與來源一致，缺少或新增一律 `PLACEHOLDER_MISMATCH`。缺一個 `{{ order_number }}` 的訂單確認信是會真的寄出去的。
+- **長度上限**沿用來源欄位的上限，不另立一套（英文 255／中文 500 會讓匯出匯入炸掉）。
+
+### 35.7 實作備註（含**唯讀鎖**，本節最貴的一條）
+
+非來源語言下，下列欄位**必須唯讀並附說明「此欄位不隨語言變動」**：價格／比較價格／每品項成本／利潤率、SKU／條碼／追蹤庫存／各地點庫存數、商品狀態／銷售管道發布／變體級發布、handle、標籤、分類法類別／選項的數量與順序。
+
+> 🔴 **不做唯讀，商家會在英文頁面把價格從 1,480 改成 148（以為只影響英文版），而實際上改的是唯一的那筆變體價格。這不是顯示問題，是真的收錯錢。**
+>
+> - 形態＝**灰化＋tooltip**（`notification.non_toggleable_ui: disabled_with_tooltip`），**不是隱藏**——隱藏會讓商家以為英文版沒有價格。
+> - 走 §A.4：只降文字色，不降 opacity。
+> - 鎖與解鎖都是**每次重繪後推回 DOM 的宣告式狀態**。忘了解鎖那一半，切回來源語言時價格欄會維持 disabled，商家會以為系統壞了。
+> - 譯文輸入框（`data-cl-tr`）**永遠不鎖**，即使它落在被鎖的卡片裡（例如商品類型在「商品組織分類」卡內）。所以鎖要逐欄位判定，不是整卡判定。
+
+- **class 名對照**：`tr-pair→cl-trpair`、`tp-src→cl-trpair__source`、`tp-in→cl-trpair__target`、`tp-lab→cl-trpair__label`、`tp-txt→cl-trpair__text`、`tr-b→cl-badge`（併入 §11，不另立徽章元件）。
+
+---
+
+## §36 商品系列來源卡 `cl-srccard`
+
+**來源**：13 §F4.1（四型來源 × include/exclude × 選法）、§F4.2（求值管線與三層優先序）、§F4.3（標籤是集合運算）、§F4.5（巢狀的環與深度）、§F4.7（條件欄位與運算子值域）、§F4.9（坑）、60 §6（實站建立頁的 `新增條件`／`新增商品`／**`排除`** 三顆鈕）。
+**原型落地狀況**：`colSourceCard()` / `colSrcAddMenu()` / `colSrcAdd()` / `colSrcDel()` / `colSrcSet()` / `colSrcRule()` / `colSrcPick()` / `colEval()` / `colReaches()` / `tagKey()`。
+- **已實作**：§36.1–§36.2、§36.4 的移除鍵、§36.6 的空排除來源不隱藏／環偵測 `CYCLIC_REFERENCE`／一元運算子不顯示值欄／標籤集合語義。
+- **尚未實作**：來源之間的拖曳排序（`position`）、per-source 的成員預覽、rebuild 進度與 `rebuild_status = ERROR` 的顯示。
+- **原型邊界**：成員列以**商品**為粒度，所以 `variants` 來源在原型會影響整個商品。
+
+> **這個元件取代了什麼**：舊模型是「一個 `type: 智慧型|手動` ＋ 一個 `rules` 陣列」。官方已把 manual／smart 標為 **legacy**，新模型是**四型來源 × include/exclude**——舊形狀**表達不了**變體來源、巢狀系列來源、app 來源與排除。這不是加欄位能補的落差，所以整個換掉。
+>
+> **🔴 任何人看到「智慧型／手動」二選一的 segmented control，都不要改回去。** 那個控件的存在本身就意味著「一個系列只能有一種來源」，而新模型的前提正好相反。
+
+### 36.1 解剖
+
+```
+cl-srccard                           框 --hairline --border-2；圓角 --r-300；padding --sp-300
+                                     modifier: cl-srccard--exclude（框 --border-critical、底 --critical-bg）
+├─ header.cl-srccard__head           flex；gap --sp-200；wrap
+│  ├─ cl-badge                       「納入」／「排除」（排除用 caution 族）
+│  ├─ span.cl-srccard__type          來源型別名；--t-sm --fw-title
+│  ├─ cl-seg（選法，僅 products/variants）  「手動挑選」｜「依條件」
+│  │                                 🔴 collections／apps **沒有這個切換**，改顯示唯讀說明
+│  └─ button.cl-srccard__remove      移除整個來源（右對齊）
+├─ [selection = conditions]
+│  ├─ cl-seg（邏輯）                  「所有條件 all」｜「任一條件 any」
+│  │                                 🔴 只有這兩個。官方**未提供**混合 AND/OR 或括號分組
+│  ├─ div.cl-rule × N                欄位 select ／ 運算子 select ／ 值 ／ 移除
+│  └─ button.cl-btn--secondary       「＋ 新增條件」
+└─ [selection = manual]
+   └─ div.cl-srccard__members        成員 chip（可移除）＋「＋ 挑選…」
+```
+
+### 36.2 完整態表
+
+| 維度 | 值 | 說明 |
+|---|---|---|
+| 型別 | `products`／`variants`／`collections`／`apps` | 後三型是舊模型完全表達不了的 |
+| 模式 | `include`／`exclude` | exclude 變體改框色與底色，**一眼看得出這張卡是在減東西** |
+| 選法 | `manual`／`conditions` | `collections`／`apps` 恆為 manual（沒有條件可下） |
+| 邏輯 | `all`／`any` | 僅 conditions；作用範圍是**這個來源內部**，不跨來源 |
+| 條件列 | 欄位 × 運算子 × 值 | 運算子集合**依欄位型別切換**；換欄位時運算子自動落到該型別的第一個 |
+| 一元運算子 | 「未設定」／「已設定」（僅比較價格） | 選中時**值欄消失**並顯示說明，不留一個沒有作用的輸入框 |
+
+**運算子值域（13 §F4.7）**
+
+| 欄位型別 | 運算子 |
+|---|---|
+| 字串（標題／變體標題／類型／廠商） | 等於／不等於／開頭為／結尾為／**包含**／不包含 |
+| 列舉（商品類別／商品狀態／Metaobject 參照） | 等於／不等於 |
+| **標籤** | **包括／不包括** |
+| 數值（價格／重量／庫存數量） | 等於／不等於／大於／小於 |
+| 比較價格 | 上列四個 ＋ **未設定／已設定** |
+
+🔴 **標籤的「包括」與字串的「包含」是兩個不同的運算子，UI 上必須用不同的字。** 實作成 `LIKE '%red%'` 會讓條件 `red` 誤中 `red-new`、`bright-red`、`tired`。正確形態是對**正規化後的 tag_key 等值比對**（`EXISTS`），而且多個標籤條件**各自一個 `EXISTS`，不得合併成 `IN (...)`**——那是 OR，當邏輯是 all 時是錯的答案，而且在多數資料上看起來還很像對的。
+🔴 字串的「包含」才用 `LIKE`，且 `%` 與 `_` **必須跳脫**：商家輸入 `50%` 不跳脫就變成萬用字元。
+
+### 36.3 動效
+
+新增／移除來源卡走 §15 的 M4 高度過場；條件列的新增移除只做 `opacity`＋`translateY` 的 `--dur-fast`。
+🔴 **成員數與求值結果的更新不做數字滾動動畫**：那個數字是商家判斷「我剛剛的改動對不對」的唯一依據，動畫只會延後他看到答案。
+
+### 36.4 鍵盤與焦點
+
+- 移除來源後焦點落到**下一張來源卡的移除鍵**；若已是最後一張，落到「＋ 新增納入來源」。
+- 移除條件列同理（落到下一列的移除鍵，或「＋ 新增條件」）。
+- 挑選器（商品／變體／系列／app）沿用 §16 `cl-modal` 的焦點陷阱。
+- 環偵測被擋下時以 `aria-live="assertive"` 播報錯誤——這是操作失敗，不是提示。
+
+### 36.5 響應式
+
+- ≤767：條件列從四欄格線改成單欄堆疊，移除鍵右對齊；來源卡的 header 允許換行。
+- 成員 chip 區維持 wrap，不橫捲——橫捲會把「還有幾個成員」藏起來。
+
+### 36.6 邊界情況
+
+- 🔴 **空的排除來源 ≠ 沒有排除**：`mode = exclude` 但成員為空時求值結果是空集合，減掉空集合等於不變——但**不要把它誤判成「不設限」而在 UI 上隱藏**，商家會以為排除設定不見了。
+- 🔴 **環**：把 A 加進 B 的來源、B 又（間接）引用 A ⇒ `CYCLIC_REFERENCE`，挑選器裡就要擋。**純檢查擋不住併發**（T1 加 A→B、T2 加 B→A，兩者的可達性檢查都會通過）——後端必須加 **shop 粒度的圖鎖**；求值器另帶 `visited` 與深度計數當第二道保險（圖鎖擋不住匯入與資料修復帶進來的環）。
+- **巢狀取的是被引用系列的「最終成員」**（它自己的 exclude 已套用），不是候選集。否則 B 的排除規則可以被 A 繞過。
+- **成員資格不過濾商品狀態**：`UNLISTED`／`DRAFT` 仍是成員，前台再套 `discoverable` scope。所以列表會出現「是成員但前台看不到」的商品——UI 要標注「（前台可見 N）」，否則那看起來像 bug。
+- **成員來源標記**：每一列成員要標明它是**手動加入／條件命中／巢狀系列／應用程式**。少了這一欄，商家沒有辦法回答「為什麼這件東西在這裡」，而那正是他打開這一頁的原因。
+
+### 36.7 實作備註
+
+- **求值優先序**（`collection.source_precedence`）：`exclude ＞ manual include ＞ conditions`。第 2 層是**官方明載**（手動加入的除非手動移除否則永遠留著）；**第 1 層是我方假設**（官方未定義交互次序），選它的理由是失效方向正確——排除多半出於下架／法遵／地區限制。做成一個 limits 鍵是刻意的：官方日後澄清為別的順序時，改的是那一個鍵 ＋ 求值器排序，**不動資料模型**。
+- **origin 由來源型別決定，不是由選法決定**：巢狀系列來源的選法也是 manual，照選法判會把整批巢狀成員標成「手動加入」，商家就看不出它其實來自另一個系列。
+- **只有 SQL 一套求值**：同一條件若在 rebuild 時用 Ruby 求值、在前台用 SQL 求值，兩套實作必然漂移。rebuild 也走 `INSERT ... SELECT`。
+- **上限一律引 `config/limits.yml`**：`max_rules_per_collection`／`max_containing_collection_per_shop`／`max_excluding_collection_per_shop`／`max_with_variants_per_shop`／`max_smart_collections_per_shop`／`source_nesting_max_depth`（後者官方未載明，我方推導）。
+- **class 名對照**：`src-card→cl-srccard`、`src-head→cl-srccard__head`、`sh-t→cl-srccard__type`、`sh-x→cl-srccard__remove`、`src-mem→cl-srccard__members`、`sm→cl-srccard__chip`、`rule→cl-rule`。
+
+---
+
 ## 附錄 A — 元件索引與來源對照
 
 | § | 元件 | class | 主要來源 |
@@ -5124,6 +5389,9 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 | 31 | 字元計數器 | `cl-counter` | 44 §19.6 |
 | 32 | 拖曳排序列 | `cl-dragrow` | 44 §19.7/§21.3 |
 | 33 | Pill 收合欄位組 | `cl-pillset` | **59 §2（實站商品頁核心交互）／§7（建立與詳情共用分組鍵）**、47 §5 M1/M4 |
+| 34 | 語言切換器（介面／內容兩變體） | `cl-locale-switch` | **67 §E.1（兩層語言＝兩個切換器，不得連動）／§E.2／§C.6（進度徽章同源）**、64 §3/§4、47 §H2-2 |
+| 35 | 譯文雙欄欄位（含唯讀鎖） | `cl-trpair` | **67 §E.2／§B.1（欄位三分類）／§C.4（fallback 鏈）／§E.3（非來源語言唯讀）**、29 §2.4 |
+| 36 | 商品系列來源卡 | `cl-srccard` | **13 §F4.1（四型來源 × include/exclude）／§F4.2（優先序）／§F4.3（標籤是集合運算）／§F4.5（環與深度）／§F4.7（運算子值域）**、60 §6 |
 
 ## 附錄 B — 實作順序建議
 

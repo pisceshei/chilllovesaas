@@ -1630,6 +1630,70 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     bottom:calc(var(--sp-200) + env(safe-area-inset-bottom))}
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   模組 F：多語言（67 號）與商品系列 sources（13 §F4）
+   規則同前——不新增 :root token，只組合既有變數；斷點一律 em（47 §F）；
+   髮絲線一律 var(--hairline)（64 §4 實測 0.66px）
+   ══════════════════════════════════════════════════════════════════════ */
+/* 語言切換器的外殼：**介面語言（頂欄）與內容語言（商品頁）共用外觀、不共用狀態**。
+   67 §E.1 的事故形態就是把兩者做成同一個下拉——外觀一致是對的，狀態一致是錯的。 */
+.dd-wrap{position:relative;display:inline-flex}
+.loc-chip{display:inline-flex;align-items:center;gap:var(--sp-100);height:var(--h-28);
+  padding:0 var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);
+  background:var(--surface);font-size:var(--t-xs);color:var(--text-2);white-space:nowrap;max-width:100%}
+.loc-chip:hover{background:var(--surface-2);color:var(--text)}
+.loc-chip[aria-expanded="true"]{background:var(--surface-sunken);color:var(--text)}
+.loc-chip .lc-tag{font-weight:600;color:var(--text)}
+.loc-chip .lc-c{color:var(--text-3);font-size:var(--t-2xs);line-height:1}
+.view-menu.wide{min-width:250px}
+.view-menu .vm-sub{display:block;font-size:var(--t-2xs);color:var(--text-3);font-weight:400}
+.view-menu .vm-h{padding:var(--sp-150) var(--sp-200) var(--sp-100);font-size:var(--t-2xs);
+  color:var(--text-3);text-transform:none}
+/* 翻譯狀態徽章：一份資料四個出口（67 §C.6 鐵律 7），樣式只有這一套 */
+.tr-b{display:inline-flex;align-items:center;gap:var(--sp-050);height:var(--h-24);padding:0 var(--sp-150);
+  border-radius:var(--r-pill);font-size:var(--t-2xs);font-variant-numeric:tabular-nums;
+  border:var(--hairline) solid var(--border-2);background:var(--surface-2);color:var(--text-2);white-space:nowrap}
+.tr-b b{font-weight:600;color:var(--text)}
+.tr-b.ok{background:var(--sem-success-surface,var(--surface-2));border-color:var(--border-2)}
+.tr-b.miss{background:var(--caution-bg);border-color:var(--sem-caution-border);color:var(--sem-caution-text)}
+.tr-b.old{background:var(--attention-bg);border-color:var(--border-2)}
+.tr-b.mt{background:var(--info-bg);border-color:var(--border-2)}
+.tr-cell{display:flex;flex-wrap:wrap;gap:var(--sp-050)}
+/* 譯文雙欄（67 §E.2）：上＝來源語言原文（唯讀＋一鍵複製），下＝譯文輸入。
+   與翻譯後台的逐 key 雙欄共用同一個元件，不做兩套。 */
+.tr-pair{border:var(--hairline) solid var(--border-2);border-radius:var(--r-300);overflow:hidden}
+.tr-pair .tp-src{background:var(--surface-3);padding:var(--sp-200) var(--sp-300);
+  border-bottom:var(--hairline) solid var(--border-2)}
+.tr-pair .tp-lab{display:flex;align-items:center;gap:var(--sp-150);font-size:var(--t-2xs);color:var(--text-3);
+  margin-bottom:var(--sp-050)}
+.tr-pair .tp-lab .sp{margin-left:auto}
+.tr-pair .tp-txt{font-size:var(--t-xs);color:var(--text-2);line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap}
+.tr-pair .tp-in{padding:var(--sp-200) var(--sp-300)}
+.tr-pair .tp-in .input{width:100%}
+/* 唯讀鎖（67 §E.3）：灰化＋tooltip，**不是隱藏**——隱藏會讓商家以為英文版沒有價格。
+   47 §E：只降文字色，不降 opacity。 */
+.loc-lock{position:relative}
+.loc-lock .lk-note{display:flex;align-items:center;gap:var(--sp-150);font-size:var(--t-2xs);
+  color:var(--text-3);margin-top:var(--sp-150)}
+[data-loc-locked="1"]{color:var(--text-disabled,var(--text-3))}
+/* 商品系列 sources（13 §F4.1）：一張卡＝一個來源 */
+.src-card{border:var(--hairline) solid var(--border-2);border-radius:var(--r-300);
+  padding:var(--sp-300);margin-bottom:var(--sp-200);background:var(--surface)}
+.src-card.ex{border-color:var(--sem-critical-border);background:var(--critical-bg)}
+.src-head{display:flex;align-items:center;gap:var(--sp-200);flex-wrap:wrap;margin-bottom:var(--sp-200)}
+.src-head .sh-t{font-weight:600;font-size:var(--t-sm)}
+.src-head .sh-x{margin-left:auto}
+.src-mem{display:flex;flex-wrap:wrap;gap:var(--sp-150)}
+.src-mem .sm{display:inline-flex;align-items:center;gap:var(--sp-100);height:var(--h-28);
+  padding:0 var(--sp-200);border-radius:var(--r-pill);background:var(--surface-2);
+  border:var(--hairline) solid var(--border-2);font-size:var(--t-xs)}
+.src-mem .sm button{color:var(--text-3);line-height:1}
+.src-mem .sm button:hover{color:var(--critical)}
+@media (max-width:47.9975em){
+  .rule{grid-template-columns:minmax(0,1fr)}
+  .rule .rm{justify-self:end}
+}
+
 </style>
 </head>
 <body data-palette="#2a78d6">
@@ -1646,15 +1710,23 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
   <button class="hamb" id="hambBtn" aria-label="開啟導航選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-txt">CHILL LOVE</span> <span class="ver">秋季 '26</span></div>
   <button class="searchbox" data-doc="search" aria-label="搜尋（CTRL K）" onclick="openPalette()">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text">搜尋</span><span class="kbd">CTRL K</span>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text" data-i18n="搜尋">搜尋</span><span class="kbd">CTRL K</span>
   </button>
   <!-- 44 §22.5：save bar 就在搜尋框的槽位上，dirty 時「取代」搜尋列而不是疊加（≤767 才退回底部浮動條） -->
   <div class="savebar" id="saveBar" role="region" aria-label="未儲存的變更" data-doc="savebar">
-    <span class="sb-t">未儲存的變更</span>
-    <button class="btn btn-sec btn-sm" onclick="formDiscard()">捨棄</button>
-    <button class="btn btn-pri btn-sm" id="sbSave" onclick="formSave()">儲存</button>
+    <span class="sb-t" data-i18n="未儲存的變更">未儲存的變更</span>
+    <button class="btn btn-sec btn-sm" data-i18n="捨棄" onclick="formDiscard()">捨棄</button>
+    <button class="btn btn-pri btn-sm" id="sbSave" data-i18n="儲存" onclick="formSave()">儲存</button>
   </div>
   <div class="top-right">
+    <!-- 67 §E.1 介面語言（admin UI locale）：**員工屬性**，字串來自平台 i18n bundle。
+         🔴 它與商品編輯頁的「內容語言」是兩個獨立控件，切這個**不會**動到正在編輯哪一份譯文。 -->
+    <span class="dd-wrap">
+      <button class="loc-chip" id="uiLocBtn" data-doc="ui-locale" title="介面語言" aria-haspopup="menu" aria-expanded="false" onclick="toggleUiLocale(event)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg>
+        <span class="lc-tag" id="uiLocTag">繁體中文</span><span class="lc-c" aria-hidden="true">▾</span></button>
+      <div class="view-menu wide" id="uiLocMenu" role="menu" aria-label="介面語言"></div>
+    </span>
     <button class="m-hover icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="m-hover icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
@@ -1759,11 +1831,11 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
   <!-- 產品 -->
   <section class="page" id="page-products">
     <div class="page-head">
-      <h1>產品</h1>
+      <h1 data-i18n="產品">產品</h1>
       <div class="head-actions">
-        <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出')">匯出</button>
-        <button class="btn btn-ghost btn-sm" data-doc="import" onclick="toast('Demo：匯入')">匯入</button>
-        <button class="btn btn-pri" data-doc="newproduct" onclick="newProduct()">新增商品</button>
+        <button class="btn btn-ter btn-sm" data-doc="export" data-i18n="匯出" onclick="prodExport()">匯出</button>
+        <button class="btn btn-ghost btn-sm" data-doc="import" data-i18n="匯入" onclick="prodImport()">匯入</button>
+        <button class="btn btn-pri" data-doc="newproduct" data-i18n="新增商品" onclick="newProduct()">新增商品</button>
       </div>
     </div>
     <div class="card">
@@ -1773,10 +1845,17 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="prodSearch" placeholder="搜尋商品、SKU…">
         </div>
+        <!-- 60 §5 排序選單：七個維度 × 兩個方向，其中 `發布錯誤` 是實站有、我方原本沒想到的維度 -->
+        <span class="dd-wrap">
+          <button class="loc-chip" id="prodSortBtn" data-doc="prod-sort" aria-haspopup="menu" aria-expanded="false" onclick="toggleProdSort(event)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h13M3 12h9M3 18h5M17 8l4-4 4 4" transform="translate(-2,0)"/></svg>
+            排序：<span class="lc-tag" id="prodSortLabel">商品名稱</span><span class="lc-c" aria-hidden="true">▾</span></button>
+          <div class="view-menu wide" id="prodSortMenu" role="menu" aria-label="排序"></div>
+        </span>
         <button class="m-hover icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
       <table class="idx" id="prodTable" data-doc="prodtable">
-        <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th>類型</th><th>供應商</th></tr></thead>
+        <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th data-doc="prod-tr-col">翻譯</th><th>類型</th><th>供應商</th></tr></thead>
         <tbody></tbody>
       </table>
       <div class="pagination"><button class="pg" disabled aria-disabled="true" aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
@@ -1859,6 +1938,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
       <button class="set-item" data-set="notifications">通知</button>
       <button class="set-item" data-set="customdata">自訂資料</button>
       <button class="set-item" data-set="languages">語言</button>
+      <button class="set-item" data-set="seo">SEO 與 AI 檢索</button>
       <button class="set-item" data-set="policies">政策</button>
       <button class="set-item" data-set="brand">品牌</button>
       <button class="set-item" data-set="privacy">顧客隱私</button>
@@ -2092,36 +2172,39 @@ const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders"
  "d-discount":"m-discounts","d-menu":"m-metaobjects","d-article":"m-metaobjects",
  "d-market":"m-markets","d-report":"analytics"};
 let current="home";
+/* 導航標籤走**介面語言**的平台 bundle（uiT）——它是後台 chrome，不是租戶內容，
+   所以查的是 UI_STRINGS 而不是 translations 表（67 §E.1 的分工）。
+   uiT 未收錄的字串原樣回傳，不會變成空白或 key 名。 */
 function renderSidebar(){
   const grp=GROUP_OF[current]||current;
   let h=NAV.map(n=>{
     const on=grp===n.id;
-    let s=`<button class="nav-item ${on&&current===n.id?'on':''}" onclick="go('${n.id}')">${icon(n.icon)}${n.name}${n.count?`<span class="nav-count num">${n.count}</span>`:''}</button>`;
+    let s=`<button class="nav-item ${on&&current===n.id?'on':''}" onclick="go('${n.id}')">${icon(n.icon)}${H(uiT(n.name))}${n.count?`<span class="nav-count num">${n.count}</span>`:''}</button>`;
     /* 47 §5 M4：子項群組用 max-height 摺疊（不用 height，避免 reflow）*/
     if((n.kids||[]).length){
       s+=`<div class="nav-subs m-accordion ${on?'open':''}">`;
       (n.kids||[]).forEach(([target,label])=>{
-        s+=`<button class="nav-sub ${on?'show':''} ${current===target?'on':''}" onclick="go('${target}')">${label}</button>`;
+        s+=`<button class="nav-sub ${on?'show':''} ${current===target?'on':''}" onclick="go('${target}')">${H(uiT(label))}</button>`;
       });
       s+=`</div>`;
     }
     return s;
   }).join('');
-  h+=`<div class="nav-group">銷售管道</div>
-  <button class="nav-item ${current==='m-themes'?'on':''}" onclick="go('m-themes')">${icon('store')}線上商店</button>
+  h+=`<div class="nav-group">${H(uiT('銷售管道'))}</div>
+  <button class="nav-item ${current==='m-themes'?'on':''}" onclick="go('m-themes')">${icon('store')}${H(uiT('線上商店'))}</button>
   <div class="nav-subs m-accordion ${grp==='m-themes'?'open':''}">
-  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-pages'?'on':''}" onclick="go('m-pages')">頁面</button>
-  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-redirects'?'on':''}" onclick="go('m-redirects')">網址重新導向</button>
-  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-prefs'?'on':''}" onclick="go('m-prefs')">偏好設定</button>
+  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-pages'?'on':''}" onclick="go('m-pages')">${H(uiT('頁面'))}</button>
+  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-redirects'?'on':''}" onclick="go('m-redirects')">${H(uiT('網址重新導向'))}</button>
+  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-prefs'?'on':''}" onclick="go('m-prefs')">${H(uiT('偏好設定'))}</button>
   </div>
-  <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}AI 代理</button>
-  <button class="nav-item" onclick="toast('Demo：門市 POS 屬第三階段')">${icon('pos')}門市 POS</button>
-  <div class="nav-group">應用程式</div>
-  <button class="nav-item" onclick="toast('App 生態系屬第三階段')">${icon('apps')}新增應用程式</button>
+  <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}${H(uiT('AI 代理'))}</button>
+  <button class="nav-item" onclick="toast('Demo：門市 POS 屬第三階段')">${icon('pos')}${H(uiT('門市 POS'))}</button>
+  <div class="nav-group">${H(uiT('應用程式'))}</div>
+  <button class="nav-item" onclick="toast('App 生態系屬第三階段')">${icon('apps')}${H(uiT('新增應用程式'))}</button>
   <div class="spacer"></div>
   <div class="nav-foot">
-  <button class="nav-item" onclick="go('home');setTimeout(()=>aiInput.focus(),200)">${icon('ai')}AI 助理對話</button>
-  <button class="nav-item" onclick="openSettings('general')">${icon('settings')}設定</button>
+  <button class="nav-item" onclick="go('home');setTimeout(()=>aiInput.focus(),200)">${icon('ai')}${H(uiT('AI 助理對話'))}</button>
+  <button class="nav-item" onclick="openSettings('general')">${icon('settings')}${H(uiT('設定'))}</button>
   </div>`;
   document.getElementById('sidebar').innerHTML=h;
 }
@@ -2809,18 +2892,104 @@ const P_STATUS_OF=k=>P_STATUS.find(s=>s.k===String(k||'').toUpperCase())||P_STAT
 const S_BADGE={};
 P_STATUS.forEach(s=>{S_BADGE[s.k.toLowerCase()]=
   `<span class="badge ${s.badge}"><span class="pip ${s.pip}"></span>${s.bt}</span>`;});
+/* 60 §5 的排序維度（七個 × 兩個方向）。`發布錯誤` 是實站有、我方原本沒想到的一維：
+   把發布失敗的商品排前面，商家才找得到「上架了卻沒出現在某管道」的那幾件。 */
+const PROD_SORTS=[['name','商品名稱'],['inv','庫存'],['type','產品類型'],['vendor','廠商'],
+ ['created','建立時間'],['updated','更新時間'],['puberr','發布錯誤']];
+let PSORT={k:'name',dir:1};
+function toggleProdSort(e){
+  document.getElementById('prodSortMenu').innerHTML=
+   `<div class="vm-h">排序依據</div>`
+   +PROD_SORTS.map(([k,l])=>`<button role="menuitemradio" aria-checked="${PSORT.k===k?'true':'false'}" class="${PSORT.k===k?'cur':''}" onclick="setProdSort('${k}',${PSORT.dir})">
+      <span class="chk">✓</span>${l}${k==='puberr'?'<span class="vm-sub">把發布失敗的商品排到最前面</span>':''}</button>`).join('')
+   +`<div class="vm-h">方向</div>`
+   +[[1,'從舊到新／由小到大'],[-1,'從新到舊／由大到小']].map(([d,l])=>
+     `<button role="menuitemradio" aria-checked="${PSORT.dir===d?'true':'false'}" class="${PSORT.dir===d?'cur':''}" onclick="setProdSort('${PSORT.k}',${d})"><span class="chk">✓</span>${l}</button>`).join('');
+  ddToggle(e,'prodSortMenu');
+  document.getElementById('prodSortBtn').setAttribute('aria-expanded',
+    document.getElementById('prodSortMenu').classList.contains('show')?'true':'false');
+}
+function setProdSort(k,dir){
+  PSORT={k,dir};
+  document.querySelectorAll('.view-menu.show').forEach(x=>x.classList.remove('show'));
+  document.getElementById('prodSortLabel').textContent=(PROD_SORTS.find(s=>s[0]===k)||['','' ])[1];
+  renderProducts();
+  announce('排序已改為 '+(PROD_SORTS.find(s=>s[0]===k)||['',''])[1]);
+}
+function prodSortVal(p,k){
+  if(k==='name')return p.n;if(k==='inv')return p.inv;if(k==='type')return p.type;
+  if(k==='vendor')return p.vd;if(k==='puberr')return p.pubErr?0:1;
+  return p.i;                                   /* created／updated：原型以建立序代表 */
+}
 function renderProducts(){
   const q=(document.getElementById('prodSearch').value||'').trim();
-  document.querySelector('#prodTable tbody').innerHTML=PRODUCTS.filter(p=>!q||p.n.includes(q)).map(p=>`
+  const rows=PRODUCTS.filter(p=>!q||p.n.includes(q)).slice().sort((a,b)=>{
+    const x=prodSortVal(a,PSORT.k),y=prodSortVal(b,PSORT.k);
+    const c=typeof x==='string'?x.localeCompare(y,CONTENT_LOCALE):x-y;
+    return c*PSORT.dir;});
+  document.querySelector('#prodTable tbody').innerHTML=rows.map(p=>{
+   /* 標題依**內容語言**解析（67 §C.4 fallback 鏈）——列表也是內容，不是介面 */
+   const t=trResolve('PRODUCT',p.i,CONTENT_LOCALE,'title',p.n,'required');
+   const others=SHOP_LOCALES.filter(l=>!l.source).sort((a,b)=>a.pos-b.pos);
+   return `
    <tr onclick="openProduct(${PRODUCTS.indexOf(p)})">
-     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" aria-label="選取 ${p.n}"></td>
-     <td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>${p.n}</div></td>
-     <td>${S_BADGE[p.s]}</td>
+     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" aria-label="選取 ${H(p.n)}"></td>
+     <td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>
+       <span${t.state==='fallback'?` lang="${srcLocale()}" title="此語言尚無譯文，顯示來源語言原文（67 §C.4）"`:''}>${H(t.v)}</span></div></td>
+     <td>${S_BADGE[p.s]}${p.pubErr?` <span class="tr-b miss" title="${H(p.pubErr)}">發布錯誤</span>`:''}</td>
      <td class="right num" ${p.inv===0?'style="color:var(--critical)"':p.inv<10?'style="color:var(--warning)"':''}>${p.inv===0?'缺貨':p.inv+' 件'}<span class="mut3">・${p.v} 變體</span></td>
-     <td class="mut">${p.type}</td><td class="mut">${p.vd}</td>
-   </tr>`).join('')||`<tr><td colspan="6"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+     <td><div class="tr-cell">${others.map(l=>trBadge(prodTrStatus(p,l.tag))).join('')}</div></td>
+     <td class="mut">${H(p.type)}</td><td class="mut">${H(p.vd)}</td>
+   </tr>`;}).join('')||`<tr><td colspan="7"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
 }
 document.getElementById('prodSearch').addEventListener('input',renderProducts);
+/* 60 §5 匯出／匯入 modal。🔴 **商品 CSV 與庫存 CSV 是兩套**，實站在匯出對話框裡就明講了
+   （只改庫存數量請用庫存 CSV）——我方照做，並且**用自己的文案講同一件事**（鐵律 9：不抄本尊文案）。
+   翻譯 CSV 是**第三套**（67 §E.6），三者的鍵、範圍、生命週期都不同。 */
+function prodExport(){
+  openGen({title:'匯出商品',body:`<div class="stack">
+    <p class="help">這份 CSV 涵蓋商品的所有欄位（標題、說明、選項、變體、價格、SKU…），可改完再匯入回來覆寫。</p>
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span><b>只想改庫存數量的話請改用庫存 CSV。</b>商品 CSV 與庫存 CSV 是<b>兩套檔案</b>（61 §6.1／§6.2、63 §L-8）：
+      商品 CSV 的鍵是 handle ＋ 變體行，庫存 CSV 的鍵是「地點 × 變體」且只有 On hand 可寫回。
+      拿商品 CSV 改庫存會連同價格與說明一起覆寫。</span></div>
+    ${F('匯出範圍',SEL('_pex',[['current','目前檢視與篩選結果'],['all','全部商品'],['sel','已選取的商品']],'current'))}
+    ${F('檔案格式',SEL('_pfx',[['csv','CSV（Excel、Numbers、Google 試算表通用）'],['csv_excel','CSV（Excel 專用編碼）']],'csv'))}
+    <p class="help">單檔上限沿用 limits.yml <code>csv.product_max_upload_mb</code>；超過會分檔並以 email 寄出下載連結。
+      翻譯不在這份檔案裡——譯文走語言設定的<b>翻譯 CSV</b>（第三套，67 §E.6）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已排入匯出——完成後寄到 benny@chilllove.demo')">匯出商品</button>`});
+}
+function prodImport(){
+  openGen({title:'匯入商品（步驟 1／2）',body:`<div class="stack">
+    <p class="help">上傳 CSV 檔。第一次匯入建議先下載範本，欄位名稱要與範本一致才能對上。</p>
+    <div class="dropzone" style="text-align:center">
+      <div class="rowflex" style="justify-content:center">
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：選擇檔案')">選擇 CSV 檔</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('Demo：下載 CSV 範本')">下載範本</button></div>
+      <p class="help" style="margin-top:var(--sp-200)">或把檔案拖進這個區塊</p></div>
+    ${setRowTgl('以相同 handle 覆寫既有商品','🔴 覆寫模式下**空白儲存格會清空既有資料**（61 §6.1）——這與翻譯 CSV 同向，但與「不變更」不同：不想動的欄位請整欄不要出現在檔案裡','_pimpOv',false,'prod-import-overwrite')}
+    ${setRowTgl('把匯入的商品建成草稿','建成草稿可以先檢查再上架；關閉則沿用檔案裡的 status 欄','_pimpDraft',true,'prod-import-draft')}
+    <p class="help">從別的平台搬家？我方提供 <b>Shopify 匯入器</b>（讀官方匯出檔，含變體、系列與 301 對照表），
+      不需要第三方 app——這正是 60 §5 記下的反向路徑。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="prodImportStep2()">下一步</button>`});
+}
+function prodImportStep2(){
+  closeGen();
+  openGen({title:'匯入商品（步驟 2／2）：預覽',body:`<div class="stack">
+    <p class="help">先看清楚會發生什麼再按確認。逐行獨立 transaction，單行失敗不影響其他行（13 §F6.1）。</p>
+    <table class="idx"><tbody>
+      <tr class="norow"><td>新增商品</td><td class="right num">12</td></tr>
+      <tr class="norow"><td>更新既有商品（handle 相符）</td><td class="right num">31</td></tr>
+      <tr class="norow"><td><b>將被清空的儲存格</b></td><td class="right num" style="color:var(--critical)">0</td></tr>
+      <tr class="norow"><td>格式錯誤而略過的列</td><td class="right num">2</td></tr>
+    </tbody></table>
+    <p class="help">「將被清空的儲存格」單獨列成一個數字，是因為空白＝清空——商家在按下確認前必須看得到自己要刪掉多少東西
+      （limits.yml <code>i18n.import.preview_clear_count_separate</code> 的同一條紀律，翻譯 CSV 與商品 CSV 同向）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">返回</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已開始匯入——完成後在通知中心看逐行結果報告')">確認匯入</button>`});
+}
 
 /* ================= 通用模組頁（所有子分頁真頁面） ================= */
 /* 47 §D 徽章狀態圖示——形狀本身即編碼狀態，不以顏色單獨傳達（WCAG 1.4.1）：
@@ -3294,7 +3463,6 @@ const DOCS={
  filterbar:{t:"搜尋＋篩選一體欄",f:"關鍵字即時過濾＋加條件",l:"條件間 AND、同條件多值 OR；# 前綴與大小寫要正規化",i:"P0・白名單欄位編譯 SQL（防注入，規格 11 §1）"},
  columns:{t:"欄位設定",f:"自訂列表顯示欄位",l:"儲存在自訂檢視內",i:"P1・saved_views.columns_json"},
  bulkbar:{t:"批次操作列",f:"多選後的批次動作",l:">50 筆轉背景 job；逐筆獨立 transaction+結果報告；批次出貨不填追蹤碼",i:"P0・規格 16-F1；半選狀態 indeterminate 必做"},
- export:{t:"匯出",f:"CSV 匯出（範圍四選一）",l:">50 筆改寄 email 下載連結；交易史另有獨立匯出",i:"P1・streaming CSV + job + 簽名連結（規格 13-F6）"},
  bulkrecent:{t:"批次處理近期訂單",f:"一鍵處理近期未出貨單",l:"2026 版新入口；等同帶條件的批次出貨",i:"P1・重用批次管線"},
  createorder:{t:"建立訂單（草稿）",f:"商家代客建單",l:"草稿→寄發票/收款→轉正式單；可 Reserve 庫存、Lock 價格",i:"P1・M：draft_orders；金額引擎重用（規格 15-F2）；22 §1c"},
  refund:{t:"退款",f:"逐行退款+restock+退運費",l:"上限=實收−已退；免運單不可退運費；退款後不能再建退貨；手續費不退",i:"P0・規格 16-F5：先落 pending 再打金流；restock 冪等"},
@@ -3318,7 +3486,6 @@ const DOCS={
  "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
  "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
  "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
- import:{t:"匯入 CSV",f:"批次建立/更新資源",l:"15MB 上限；欄名區分大小寫；覆寫勾選以 handle/email 比對；欄留空=清空、缺欄=保留",i:"P1・逐行 job+錯誤報告（規格 13-F6）；22 §0"},
  newproduct:{t:"新增商品",f:"開啟商品建立表單（與詳情頁<b>同一個元件</b>）",
   l:"🔴 59 §7：建立頁與詳情頁的版面、卡片順序、pill 分組鍵完全相同，差異只有<b>預設值與空態</b>——所以我方只有一支 productPage()，用 <code>PV.isNew</code> 分流，<b>不做成兩個頁面</b>。建立態的四項差異：①收取稅金<b>預設是</b>；②庫存區只收一個起始數量（還沒有異動歷史，所以沒有四欄表與調整記錄）；③SEO 與多媒體顯示空態；④右欄只有「發布」。為什麼堅持同一支：本專案的頭號事故就是 billingPage／setBillingPage 分家後被同名函式靜默覆蓋，整頁功能消失且沒有任何錯誤訊息（53 號 N-01）。預設 Draft；標題必填→自動生成 handle；≤3 選項展開變體",
   i:"P0・Catalog::SaveProduct 單一 transaction（規格 13-F1）；22 §2"},
@@ -4092,6 +4259,409 @@ const PMETA=[
  {price:47000,cost:19800,sku:'CL-LN-BG',bar:'4712345678907',w:0.36,desc:'2026 秋季亞麻襯衫（打樣中）。',cat:'服飾 › 上衣 › 襯衫',tags:['打樣'],cols:[],media:1,
   opts:[{n:'尺寸',v:['M','L']}]}];
 PRODUCTS.forEach((p,i)=>Object.assign(p,PMETA[i],{i}));
+/* 60 §5 排序選單裡有 `發布錯誤` 這個維度 —— 要能排序就得先有這個事實可排。
+   發布錯誤＝某銷售管道拒絕了這個商品（缺必填欄位／類別不被該管道接受…），
+   它與商品狀態（13 §F1.2 四態）是**兩件事**：ACTIVE 的商品照樣可能有發布錯誤。 */
+PRODUCTS[4].pubErr='AI 代理：缺少商品類別，該管道拒絕收錄';
+PRODUCTS[6].pubErr='線上商店：草稿商品未指定價格，排程上線會失敗';
+/* 13 §F4.7：比較價格另有「未設定／已設定」兩個一元運算子 —— 沒有「未設定」的資料就驗證不了它。
+   金額一律 integer cents（鐵律 3）；null ＝真的沒設，不是 0。 */
+PRODUCTS.forEach(p=>{p.compareAt=null;});
+PRODUCTS[0].compareAt=45000;PRODUCTS[2].compareAt=25800;
+
+/* ==================================================================
+   多語言（67 號）—— 語言註冊 / fallback 鏈 / 翻譯狀態 / handle 生成
+   ------------------------------------------------------------------
+   🔴 **兩層語言＝兩個切換器，不得連動**（67 §E.1）：
+        介面語言 UI_LOCALE      ＝員工屬性，字串來自**平台 i18n bundle**（UI_STRINGS，跨租戶共用）
+        內容語言 CONTENT_LOCALE ＝編輯工作階段，值來自**租戶譯文**（TRANSLATIONS）
+      合成一個下拉的事故形態（67 §E.1 逐字）：商家為了看懂 UI 切成 English，系統同時把內容
+      語言切到 en ⇒ 標題欄空白 ⇒ 商家把中文標題打進去 ⇒ **英文版商品的標題是中文**，
+      而且只有在前台切語言時才會被發現。本檔兩個 let 各自獨立，沒有任何一行讓其中一個寫另一個。
+   🔴 **語言集合是資料不是列舉**（67 §A.2）：新增語言＝往 SHOP_LOCALES 推一列，
+      全檔沒有 `if(locale==='zh-Hant')` 這種分支；語言相依行為一律查 PLATFORM_LOCALES 的欄位。
+   🔴 **語言 ≠ 幣別**（67 §H.1、鐵律 10 ＋ 裁定二）：切內容語言不動 MARKET_CUR，
+      金額一律走 money()。英文版的香港店仍然顯示港幣、兩位小數。
+   ================================================================== */
+/* 平台級語言字典（67 §C.1 platform_locales，跨租戶共用、豁免 shop_id）。
+   region 通常為 NULL：語言註冊的是**語言**，地區來自市場——`zh-Hant-HK` 是
+   `zh-Hant` ＋ HK 市場兩個維度，由 62 §I.2 當場組出，不是存起來的。 */
+const PLATFORM_LOCALES=[
+ {tag:'zh-Hant',endonym:'繁體中文',short:'繁',script:'Hant',dir:'ltr',plural:'zh',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ {tag:'zh-Hans',endonym:'简体中文',short:'简',script:'Hans',dir:'ltr',plural:'zh',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ {tag:'en',     endonym:'English', short:'EN',script:'Latn',dir:'ltr',plural:'en_one_other',dateFmt:'mdy_long',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ {tag:'ja',     endonym:'日本語',  short:'日',script:'Jpan',dir:'ltr',plural:'ja',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_ja_0900_as_cs'},
+ {tag:'ko',     endonym:'한국어',  short:'한',script:'Kore',dir:'ltr',plural:'ko',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ {tag:'ms',     endonym:'Bahasa Melayu',short:'MS',script:'Latn',dir:'ltr',plural:'ms',dateFmt:'dmy',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ {tag:'ar',     endonym:'العربية', short:'AR',script:'Arab',dir:'rtl',plural:'ar_six',dateFmt:'dmy',numFmt:'grp3_arab',collation:'utf8mb4_0900_ai_ci'}];
+/* 租戶啟用的語言（67 §C.1 shop_locales）。首發三語是**種子資料**不是值域
+   （limits.yml i18n.launch_locales ＋ launch_locales_is_seed_not_enum: true）。 */
+let SHOP_LOCALES=[
+ {tag:'zh-Hant',source:true, published:true, pos:1},
+ {tag:'en',      source:false,published:true, pos:2},
+ {tag:'zh-Hans', source:false,published:false,pos:3}];
+/* 上限與硬規則一律引 config/limits.yml 的鍵名（鐵律 6），不在畫面上硬編數字 */
+const I18N={
+ maxShopLocales:20,                        /* limits.yml i18n.max_shop_locales（29 §1.2 help）*/
+ forbidden:['zh','EU','UK','es-419'],      /* limits.yml i18n.forbidden_locale_tags */
+ neverPair:[['zh-Hant','zh-Hans']],        /* limits.yml i18n.never_fallback_pairs */
+ tagFormat:/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2})?$/,   /* limits.yml i18n.locale_tag_format */
+ minorRatio:0.1,                           /* limits.yml i18n.outdated_minor_change_ratio */
+ blankMeansClear:true,                     /* limits.yml i18n.import.blank_means_unchanged: false ⇒ 空白＝清空 */
+ clearRatioConfirm:0.2,                    /* limits.yml i18n.import.clear_ratio_confirm_threshold */
+ mtProvider:null};                         /* limits.yml i18n.machine_translation.provider_pluggable：未設定 ⇒ 功能整個不出現 */
+const HANDLE={maxChars:255,minLatinAlpha:3,maxDroppedRatio:0.5,
+ collision:'numeric_suffix_from_1'};       /* limits.yml handle.*（68 §C-4：potion / potion-1）*/
+
+const locOf=t=>PLATFORM_LOCALES.find(x=>x.tag===t)||{tag:t,endonym:t,short:t,dir:'ltr'};
+const locName=t=>locOf(t).endonym;
+const shopLoc=t=>SHOP_LOCALES.find(x=>x.tag===t);
+const srcLocale=()=>(SHOP_LOCALES.find(x=>x.source)||SHOP_LOCALES[0]).tag;
+/* 67 §C.4(a)：只截尾、不跨枝；截到被禁用的裸碼（zh）即**縮短鏈**，不是加特例分支。
+   zh-Hant → ⛔（不得續截到 zh）｜zh-Hant-HK → zh-Hant → ⛔｜en-GB → en */
+function i18nChain(tag){
+  const out=[];let t=String(tag||'');
+  while(t.includes('-')){
+    t=t.slice(0,t.lastIndexOf('-'));
+    if(I18N.forbidden.includes(t))break;
+    out.push(t);
+  }
+  return out;
+}
+/* 把「繁簡永不互為 fallback」寫成**可執行斷言**而不是註釋——真值表是給人對照的，
+   斷言才會在有人改壞截尾邏輯時當場出聲（同 P_STATUS 的 discoverable ⊆ purchasable）。 */
+I18N.neverPair.forEach(([a,b])=>{
+  if(i18nChain(a).includes(b)||i18nChain(b).includes(a))
+    console.error('[i18n] 違反 never_fallback_pairs：'+a+' ⇄ '+b+'（67 §A.4）');});
+
+/* ---------- 平台 i18n bundle（介面語言）----------
+   🔴 **平台字串不得進租戶 translations 表**（67 §E.1）：①每租戶存一份平台字串副本；
+      ②租戶能改平台文案、平台改版蓋不掉；③兩種 key 命名空間混進同一個唯一索引。
+   原型的 bundle **只收錄框架字串**（導航、頂欄、儲存列、產品列表頁首）；
+   未收錄的字串沿用來源字串顯示——這是原型的邊界，不是「已經全站國際化」。 */
+let UI_LOCALE='zh-Hant';
+const UI_STRINGS={
+ 'en':{'首頁':'Home','訂單':'Orders','產品':'Products','顧客':'Customers','成長':'Growth','折扣':'Discounts',
+   '內容':'Content','市場':'Markets','財務':'Finance','分析':'Analytics','草稿':'Drafts','運送標籤':'Shipping labels',
+   '未完成結帳':'Abandoned checkouts','商品系列':'Collections','庫存':'Inventory','禮品卡':'Gift cards',
+   '分群':'Segments','公司':'Companies','歸因':'Attribution','行銷活動':'Campaigns','檔案':'Files','選單':'Menus',
+   '部落格貼文':'Blog posts','目錄':'Catalogs','帳單':'Billing','報告':'Reports','實況瀏覽':'Live view',
+   '銷售管道':'Sales channels','線上商店':'Online Store','頁面':'Pages','網址重新導向':'URL redirects',
+   '偏好設定':'Preferences','AI 代理':'AI agents','門市 POS':'Point of Sale','應用程式':'Apps',
+   '新增應用程式':'Add apps','AI 助理對話':'AI assistant','設定':'Settings','搜尋':'Search',
+   '未儲存的變更':'Unsaved changes','捨棄':'Discard','儲存':'Save','匯出':'Export','匯入':'Import','新增商品':'Add product'},
+ 'zh-Hans':{'首頁':'首页','訂單':'订单','產品':'产品','顧客':'顾客','成長':'成长','折扣':'折扣',
+   '內容':'内容','市場':'市场','財務':'财务','分析':'分析','草稿':'草稿','運送標籤':'运送标签',
+   '未完成結帳':'未完成结账','商品系列':'商品系列','庫存':'库存','禮品卡':'礼品卡',
+   '分群':'分群','公司':'公司','歸因':'归因','行銷活動':'营销活动','檔案':'文件','選單':'菜单',
+   '部落格貼文':'博客文章','目錄':'目录','帳單':'账单','報告':'报告','實況瀏覽':'实时浏览',
+   '銷售管道':'销售渠道','線上商店':'在线商店','頁面':'页面','網址重新導向':'网址重定向',
+   '偏好設定':'偏好设置','AI 代理':'AI 代理','門市 POS':'门店 POS','應用程式':'应用程序',
+   '新增應用程式':'添加应用程序','AI 助理對話':'AI 助理对话','設定':'设置','搜尋':'搜索',
+   '未儲存的變更':'未保存的更改','捨棄':'放弃','儲存':'保存','匯出':'导出','匯入':'导入','新增商品':'添加商品'}};
+const uiT=s=>((UI_STRINGS[UI_LOCALE]||{})[s])??s;
+
+/* ---------- 租戶譯文（內容語言）----------
+   67 §C.2 translations 表的原型投影：key = resource_type:resource_id:locale:field_key。
+   六欄唯一索引在此退化成物件鍵；value_source／review_required／outdated_severity 保留為欄位，
+   因為翻譯進度與缺漏的可視化（67 §E.4）就是靠它們算出來的，不是寫死的徽章。 */
+let CONTENT_LOCALE='zh-Hant';
+const TRANSLATIONS={};
+const trKey=(rt,id,loc,f)=>rt+':'+id+':'+loc+':'+f;
+/* 空值定義（67 §C.4(b)）：NULL／空字串／只含空白／**語義空 HTML** 四者等價視為無譯文。
+   少了最後一條，富文本編輯器的初始值會讓 fallback 永遠不觸發，商家看到空白區塊而不是原文。 */
+const i18nBlank=v=>{
+  const s=String(v??'').replace(/<p>\s*(<br\s*\/?>)?\s*<\/p>/gi,'').replace(/&nbsp;/g,' ');
+  return s.trim()==='';
+};
+function trPut(rt,id,loc,f,v,o){
+  o=o||{};
+  if(i18nBlank(v)){delete TRANSLATIONS[trKey(rt,id,loc,f)];return;}
+  TRANSLATIONS[trKey(rt,id,loc,f)]={v:String(v),src:o.src||'human',
+    outdated:o.outdated||'none',review:o.review!==undefined?o.review:(o.src==='machine'||o.src==='script_conversion'),
+    from:o.from||srcLocale()};
+}
+function trRaw(rt,id,loc,f){
+  const e=TRANSLATIONS[trKey(rt,id,loc,f)];
+  return e&&!i18nBlank(e.v)?e:null;
+}
+/* 67 §C.4 fallback 鏈（🔴 不得靜默空白）：
+   1 per-market 覆寫（原型不做 market 維度，見 DOCS content-locale）→ 2 語言層 → 3 截尾鏈
+   → 4 base row（來源語言原文）→ 5 依欄位類別：required 回原文／optional 整個欄位不輸出。
+   **沒有第四種**（禁止輸出空字串／key 名／nil）。 */
+function trResolve(rt,id,loc,f,srcText,cls){
+  const src=srcLocale();
+  if(loc===src)return{v:srcText,state:'source',from:src,depth:0};
+  const hit=trRaw(rt,id,loc,f);
+  if(hit)return{v:hit.v,from:loc,depth:0,
+    state:hit.review?'machine':hit.outdated==='major'?'outdated-major':hit.outdated==='minor'?'outdated-minor':'ok'};
+  const chain=i18nChain(loc);
+  for(let i=0;i<chain.length;i++){
+    const h=trRaw(rt,id,chain[i],f);
+    if(h)return{v:h.v,state:'fallback',from:chain[i],depth:i+1};
+  }
+  if(cls==='optional')return{v:'',state:'omit',from:null,depth:chain.length+1};
+  return{v:srcText,state:'fallback',from:src,depth:chain.length+1};
+}
+/* 67 §C.6 translation_status 的原型投影 —— **鐵律 7：一份資料四個出口**。
+   ①商品列表「翻譯」欄徽章 ②商品編輯頁切換器上的進度 ③翻譯後台資源樹 ④語言設定頁百分比，
+   四者全部呼叫這一支，任何一處自己現算 GROUP BY 就是下一個對不上的數字。 */
+function trStatus(rt,id,loc,fields){
+  const st={total:fields.length,done:0,missing:0,major:0,minor:0,mt:0,loc};
+  if(loc===srcLocale()){st.done=st.total;return st;}
+  fields.forEach(f=>{
+    const h=trRaw(rt,id,loc,f.k);
+    if(!h){st.missing++;return;}
+    st.done++;
+    if(h.outdated==='major')st.major++;else if(h.outdated==='minor')st.minor++;
+    if(h.review)st.mt++;
+  });
+  return st;
+}
+/* 67 §E.4 的徽章：一語言一顆，最嚴重的狀態勝出；完整明細掛 title（滑鼠停留可讀）。
+   🔴「缺 N」的 N 與翻譯後台的分母同源（trStatus.total），不是硬編常數。 */
+function trBadge(st){
+  const L=locOf(st.loc),d=`${L.endonym}：已翻 ${st.done}/${st.total}`
+    +(st.missing?`・缺 ${st.missing}`:'')+(st.major?`・過期 ${st.major}`:'')
+    +(st.minor?`・輕微變更 ${st.minor}`:'')+(st.mt?`・機翻未覆核 ${st.mt}`:'');
+  let cls='ok',txt='完整';
+  if(st.missing){cls='miss';txt='缺 '+st.missing;}
+  else if(st.major){cls='old';txt='過期 '+st.major;}
+  else if(st.mt){cls='mt';txt='機翻 '+st.mt;}
+  return `<span class="tr-b ${cls}" title="${H(d)}"><b>${H(L.short)}</b>${txt}</span>`;
+}
+/* 商品的可翻欄位（67 §B.2 商品線）。分類＝必翻／可選（§B.1），缺翻行為不同：
+   必翻回落來源原文並標「未翻譯」；可選整個欄位不輸出（承 62 §E.1「空描述不編造」）。
+   🔴 不在這張表裡的欄位就是**不可翻**（§B.3）：價格／SKU／條碼／標籤／handle／狀態／庫存。 */
+const PROD_TR=[
+ {k:'title',l:'標題',    cls:'required',get:p=>p.n},
+ {k:'body', l:'說明',    cls:'required',get:p=>p.desc},
+ {k:'type', l:'商品類型',cls:'optional',get:p=>p.type},
+ {k:'seoT', l:'頁面標題',cls:'optional',get:p=>p.n+' | CHILL LOVE'},
+ {k:'seoD', l:'中繼說明',cls:'optional',get:p=>p.desc}];
+const prodTrStatus=(p,loc)=>trStatus('PRODUCT',p.i,loc,PROD_TR);
+/* 種子譯文：**刻意留缺口／過期／機翻未覆核**——翻譯進度與缺漏的可視化必須反映真資料，
+   徽章寫死就等於沒做這個功能（67 §E.4）。 */
+[[0,{title:'Milk Tea Oversized Hoodie',body:'400gsm heavyweight cotton with a drop-shoulder oversized cut. Milk tea is this season’s hero colour.',type:'Hoodie',seoT:'Milk Tea Oversized Hoodie | CHILL LOVE',seoD:'Drop-shoulder oversized hoodie in 400gsm heavyweight cotton.'}],
+ [1,{title:'Washed Denim Shirt',body:'Washed denim that softens with every wash.',type:'Shirt'}],
+ [2,{title:'Organic Cotton Crew Tee (3-Pack)',body:'A three-pack of organic cotton crew tees.',type:'T-Shirt',seoT:'Organic Cotton Crew Tee 3-Pack | CHILL LOVE'}],
+ [3,{title:'Oat Knit Cardigan',type:'Knitwear'}],
+ [5,{title:'Canvas Tote — Natural',body:'12 oz heavyweight canvas tote.',type:'Accessories',seoT:'Canvas Tote Natural | CHILL LOVE',seoD:'A 12 oz heavyweight canvas tote bag.'}]
+].forEach(([i,o])=>Object.keys(o).forEach(f=>trPut('PRODUCT',i,'en',f,o[f])));
+/* 來源改過、譯文沒跟上 ⇒ major（67 §C.5(b)）；🔴 outdated **不影響前台渲染**，只是後台狀態 */
+if(TRANSLATIONS[trKey('PRODUCT',0,'en','body')])TRANSLATIONS[trKey('PRODUCT',0,'en','body')].outdated='major';
+if(TRANSLATIONS[trKey('PRODUCT',2,'en','body')]){const e=TRANSLATIONS[trKey('PRODUCT',2,'en','body')];e.src='machine';e.review=true;}
+if(TRANSLATIONS[trKey('PRODUCT',3,'en','title')]){const e=TRANSLATIONS[trKey('PRODUCT',3,'en','title')];e.src='machine';e.review=true;}
+
+/* ---------- 繁簡轉換：**獨立工具，不是 MT、也不是渲染期 fallback**（67 §E.5(c)）----------
+   確定性查表 ⇒ 與設計原則 3 相容；但**仍然寫成真實譯文列**（value_source='script_conversion'、
+   review_required=true），不做成渲染期偷偷換字——後者商家永遠看不到也改不掉。
+   🔴 兩個方向品質不對稱：繁→簡接近無損；簡→繁是一對多（发→發/髮、干→干/乾/幹、后→后/後），
+      必然需要人工覆核。🔴 它**不做詞彙在地化**（软件/軟體、视频/影片）——那是用詞不是字形。 */
+const SC_T2S={'寬':'宽','寧':'宁','襯':'衬','機':'机','圓':'圆','領':'领','組':'组','麥':'麦','針':'针',
+ '織':'织','開':'开','鯊':'鲨','魚':'鱼','裝':'装','長':'长','褲':'裤','亞':'亚','樣':'样','為':'为',
+ '紡':'纺','發':'发','髮':'发','乾':'干','幹':'干','後':'后','麵':'面','鐘':'钟','錶':'表','個':'个',
+ '這':'这','實':'实','棉':'棉','質':'质','短':'短','厚':'厚','季':'季','秋':'秋','件':'件','三':'三'};
+/* 簡→繁的一對多集合：轉換報告要能說出「這批有 N 筆含歧義字」，不能只說「已完成」 */
+const SC_AMBIG=['发','干','后','面','只','表','钟','制','复','历'];
+const toSimplified=s=>String(s||'').replace(/[\u4e00-\u9fff]/g,c=>SC_T2S[c]||c);
+const scAmbigCount=s=>(String(s||'').match(new RegExp('['+SC_AMBIG.join('')+']','g'))||[]).length;
+
+/* ---------- handle 生成（67 §D.1，全專案唯一實作 `Handles::Generate` 的原型投影）----------
+   🔴 **這是明知偏離 Shopify**（68 §B-1）：本尊對 CJK 原樣保留、不落代碼、不擋發布；
+      我方一律 ASCII 的唯一依據是 2026-08-12 使用者裁定「url handle 使用英文標題，禁止使用中文」。
+   🔴 步驟 4 的 `/` 與 `.` 轉分隔而**不是刪除**：刪掉 `.` 會讓 `4.2oz` 變成 `42oz`——規格數字被改寫。 */
+const HANDLE_TRANSLIT={'ß':'ss','ø':'o','Ø':'o','đ':'d','Đ':'d','ł':'l','Ł':'l','æ':'ae','Æ':'ae',
+ 'œ':'oe','Œ':'oe','þ':'th','Þ':'th','ð':'d','Ð':'d','ı':'i','ŋ':'ng'};
+function handleize(text){
+  const raw=String(text||'');
+  let s=raw.normalize('NFKC');                                  /* 1 全形→半形 */
+  s=s.replace(/['’‘ʼ"“”`´]/g,''); /* 2 撇號引號**刪除**：Bob's → bobs */
+  s=s.replace(/[\s\S]/g,c=>HANDLE_TRANSLIT[c]!==undefined?HANDLE_TRANSLIT[c]:c);  /* 3 不可分解拉丁字母查表：少這步 Straße → stra-e */
+  s=s.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').normalize('NFC');          /* 4 去 combining marks */
+  s=s.toLowerCase();                                            /* 5 */
+  s=s.replace(/[^a-z0-9]+/g,'-');                               /* 6 其餘一律收斂成單一分隔符 */
+  s=s.replace(/^-+|-+$/g,'');                                   /* 7 修剪首尾 */
+  if(s.length>HANDLE.maxChars){                                 /* 8 在分隔符邊界切，不從字元中間切 */
+    const cut=s.slice(0,HANDLE.maxChars),i=cut.lastIndexOf('-');
+    s=(i>0?cut.slice(0,i):cut).replace(/-+$/,'');
+  }
+  const alpha=(s.match(/[a-z]/g)||[]).length;                   /* 9 品質閘門 */
+  const srcLetters=(raw.match(/\p{L}/gu)||[]).length;
+  const dropped=srcLetters?Math.max(0,srcLetters-alpha)/srcLetters:0;
+  return{h:s,alpha,dropped,ok:alpha>=HANDLE.minLatinAlpha&&dropped<=HANDLE.maxDroppedRatio};
+}
+/* 落 fallback 時的確定性代碼（67 §D.2）：per-shop 隨機且不重用；原型以索引推導保持可重跑 */
+const handleFallback=i=>'product-'+('a7k3m2q9'.slice(0,4)+String(1000+i*37).slice(0,4));
+/* handle 來源優先序（limits.yml handle.source_field_priority）：
+   1 商家手填 → 2 en 譯文標題的 slug → 3 base title 的 slug → 4 確定性 fallback。
+   第 2 步是免費的——裁定要求英文本來就要填，多語言做對了 handle 的中文問題自動消失。 */
+function handleFor(p){
+  if(p.handleManual)return{h:p.handleManual,via:'manual',ok:true};
+  const en=trRaw('PRODUCT',p.i,'en','title');
+  if(en){const r=handleize(en.v);if(r.ok)return Object.assign(r,{via:'en'});}
+  const b=handleize(p.n);
+  if(b.ok)return Object.assign(b,{via:'source'});
+  return{h:handleFallback(p.i),via:'fallback',ok:false,alpha:0,dropped:1};
+}
+/* §D.1 的驗證樣本寫成**載入時的可執行斷言**——表格測試在規格裡，這裡是它的原型鏡像。
+   任何人改壞管線（例如把 `.` 從分隔改成刪除）會當場在 console 出聲，不必等有人用中文標題建商品。 */
+[['Kérastase Spécifique Stimuliste Nutri-Energising Daily Anti-Hairloss Spray 125ml/4.2oz',
+  'kerastase-specifique-stimuliste-nutri-energising-daily-anti-hairloss-spray-125ml-4-2oz'],
+ ["Bob's Burgers — 50% OFF!!",'bobs-burgers-50-off'],
+ ['Müller Straße Größe 10','muller-strasse-grosse-10'],
+ ['無印良品 MUJI 有機棉 T-Shirt','muji-t-shirt']].forEach(([i,o])=>{
+  const g=handleize(i).h;
+  if(g!==o)console.error('[handle] 管線輸出與 67 §D.1 驗證樣本不符：'+JSON.stringify(i)+' ⇒ '+g+'（應為 '+o+'）');});
+[['棉質短T',1],['香港手工曲奇禮盒',0]].forEach(([i,n])=>{
+  const r=handleize(i);
+  if(r.ok)console.error('[handle] 品質閘門失效：'+i+' 應落 fallback（字母數 '+r.alpha+'，期望 '+n+'）');});
+
+/* ---------- 兩個切換器的行為（🔴 各自獨立，互不寫入對方）---------- */
+function renderUiLocaleMenu(){
+  document.getElementById('uiLocMenu').innerHTML=
+   `<div class="vm-h">介面語言（只影響後台按鈕與標籤）</div>`
+   +PLATFORM_LOCALES.filter(l=>UI_STRINGS[l.tag]||l.tag==='zh-Hant').map(l=>
+    `<button role="menuitemradio" aria-checked="${UI_LOCALE===l.tag?'true':'false'}" class="${UI_LOCALE===l.tag?'cur':''}" onclick="setUiLocale('${l.tag}')">
+      <span class="chk">✓</span><span>${H(l.endonym)}<span class="vm-sub">${H(l.tag)}・平台 bundle</span></span></button>`).join('')
+   +`<div class="vm-h">內容語言在商品編輯頁的標題列，與這個切換器<b>各自獨立</b>（67 §E.1）</div>`;
+}
+function toggleUiLocale(e){
+  renderUiLocaleMenu();ddToggle(e,'uiLocMenu');
+  document.getElementById('uiLocBtn').setAttribute('aria-expanded',
+    document.getElementById('uiLocMenu').classList.contains('show')?'true':'false');
+}
+/* 🔴 這支函式**沒有一行**碰 CONTENT_LOCALE，setContentLocale 也沒有一行碰 UI_LOCALE。
+   兩個切換器的獨立性是靠這件事成立的，不是靠註釋。 */
+function setUiLocale(tag){
+  UI_LOCALE=tag;
+  document.querySelectorAll('.view-menu.show').forEach(x=>x.classList.remove('show'));
+  applyUiChrome();renderSidebar();
+  if(current==='products')renderProducts();
+  else if(current.startsWith('m-'))renderModule(current);
+  else if(current.startsWith('d-'))renderDetail(current);
+  announce('介面語言已切換為 '+locName(tag)+'；內容語言仍為 '+locName(CONTENT_LOCALE));
+  toast('介面語言：'+locName(tag)+'（內容語言不變，仍為 '+locName(CONTENT_LOCALE)+'）');
+}
+function applyUiChrome(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=uiT(el.dataset.i18n);});
+  document.documentElement.lang=UI_LOCALE;
+  document.documentElement.dir=locOf(UI_LOCALE).dir;
+  const t=document.getElementById('uiLocTag');if(t)t.textContent=locName(UI_LOCALE);
+}
+/* 內容語言（67 §E.2）：值域＝該 shop **已啟用**的語言；狀態進 URL 的形態沿用 52 號 P0-18，
+   原型以模組狀態承載並在切換器上標示，未做 query 參數（見 DOCS content-locale 的邊界說明）。 */
+function renderContentLocaleMenu(){
+  const p=(typeof PV!=='undefined'&&PV)?pdProduct():null;
+  document.getElementById('cLocMenu').innerHTML=
+   `<div class="vm-h">內容語言（正在讀寫哪一份譯文）</div>`
+   +SHOP_LOCALES.slice().sort((a,b)=>a.pos-b.pos).map(l=>{
+    const st=p?prodTrStatus(p,l.tag):null;
+    return `<button role="menuitemradio" aria-checked="${CONTENT_LOCALE===l.tag?'true':'false'}" class="${CONTENT_LOCALE===l.tag?'cur':''}" onclick="setContentLocale('${l.tag}')">
+      <span class="chk">✓</span><span>${H(locName(l.tag))}
+        <span class="vm-sub">${l.source?'來源語言・base row':l.published?'已發布':'未發布（僅預覽連結可見）'}</span></span>
+      ${st?`<span style="margin-left:auto">${trBadge(st)}</span>`:''}</button>`;}).join('')
+   +`<div class="vm-h">介面語言在頂欄，與這個切換器<b>各自獨立</b></div>`;
+}
+function toggleContentLocale(e){
+  renderContentLocaleMenu();ddToggle(e,'cLocMenu');
+  document.getElementById('cLocBtn').setAttribute('aria-expanded',
+    document.getElementById('cLocMenu').classList.contains('show')?'true':'false');
+}
+function setContentLocale(tag){
+  CONTENT_LOCALE=tag;
+  document.querySelectorAll('.view-menu.show').forEach(x=>x.classList.remove('show'));
+  if(current.startsWith('d-'))renderDetail(current);
+  else if(current==='products')renderProducts();
+  announce('內容語言已切換為 '+locName(tag)+'；介面語言仍為 '+locName(UI_LOCALE));
+  toast('內容語言：'+locName(tag)+(tag===srcLocale()?'（來源語言，欄位即 base row）':'（非來源語言：金額／SKU／庫存／狀態／handle／標籤唯讀）'));
+}
+/* 商品編輯頁標題列的內容語言切換器（67 §E.2：與四態選單同一列）。
+   🔴 建立態停用——base row 還不存在，沒有東西可翻。 */
+function contentLocaleCtl(p,isNew){
+  const st=prodTrStatus(p,CONTENT_LOCALE),src=CONTENT_LOCALE===srcLocale();
+  if(isNew)return `<span class="loc-chip" data-doc="content-locale" aria-disabled="true" data-loc-locked="1"
+    title="建立商品一律在來源語言下進行（67 §E.2）：base row 還不存在，沒有東西可翻">
+    內容語言：${H(locName(srcLocale()))}（建立時停用）</span>`;
+  return `<span class="dd-wrap"><button class="loc-chip" id="cLocBtn" data-doc="content-locale"
+      aria-haspopup="menu" aria-expanded="false" onclick="toggleContentLocale(event)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h10M9 3v2c0 5-3 8-6 9"/><path d="M6 11c2 3 5 5 8 6M13 20l4-9 4 9M14.5 17h5"/></svg>
+      內容語言：<span class="lc-tag">${H(locName(CONTENT_LOCALE))}</span>
+      ${src?'<span class="tr-b ok">來源語言</span>':trBadge(st)}<span class="lc-c" aria-hidden="true">▾</span></button>
+    <div class="view-menu wide" id="cLocMenu" role="menu" aria-label="內容語言"></div></span>`;
+}
+/* 譯文雙欄欄位（67 §E.2）：來源語言時就是原本的單一控件；非來源語言時上原文（唯讀＋複製）下譯文。
+   單資源頁與翻譯後台**共用這一個元件**，不做兩套。 */
+function trField(p,fk,label,inner,hint){
+  const F0=PROD_TR.find(x=>x.k===fk);
+  if(CONTENT_LOCALE===srcLocale()||!F0)return F(label,inner,hint);
+  const srcTxt=F0.get(p),r=trResolve('PRODUCT',p.i,CONTENT_LOCALE,fk,srcTxt,F0.cls);
+  const hit=trRaw('PRODUCT',p.i,CONTENT_LOCALE,fk);
+  const state=!hit?(F0.cls==='optional'?['miss','未翻譯・此欄位不輸出']:['miss','未翻譯・前台回落來源語言原文'])
+    :r.state==='outdated-major'?['old','來源已變更・待更新']
+    :r.state==='machine'?['mt','機翻未覆核']:['ok','已翻譯'];
+  const val=hit?hit.v:'';
+  const big=fk==='body'||fk==='seoD';
+  return `<div class="field"><label>${label}</label>
+    <div class="tr-pair">
+      <div class="tp-src"><div class="tp-lab">${H(locName(srcLocale()))}（來源，唯讀）
+        <span class="sp"><button type="button" class="btn btn-ghost btn-sm" style="padding:0 var(--sp-150)"
+          onclick="trCopySource(${p.i},'${fk}')">複製到譯文</button></span></div>
+        <div class="tp-txt">${H(srcTxt)||'<span class="mut3">（來源語言此欄為空）</span>'}</div></div>
+      <div class="tp-in"><div class="tp-lab">${H(locName(CONTENT_LOCALE))}（譯文）
+        <span class="sp"><span class="tr-b ${state[0]}">${state[1]}</span></span></div>
+        ${big?`<textarea class="input" data-f="tr-${fk}" rows="3" data-tr="${fk}" onchange="trEdit(${p.i},'${fk}',this.value)" placeholder="輸入 ${H(locName(CONTENT_LOCALE))} 譯文">${H(val)}</textarea>`
+             :`<input class="input" data-f="tr-${fk}" data-tr="${fk}" onchange="trEdit(${p.i},'${fk}',this.value)" value="${H(val)}" placeholder="輸入 ${H(locName(CONTENT_LOCALE))} 譯文">`}</div>
+    </div>${hint?`<span class="hint">${hint}</span>`:''}<span class="msg"></span></div>`;
+}
+function trCopySource(i,fk){
+  const F0=PROD_TR.find(x=>x.k===fk);if(!F0)return;
+  const el=document.querySelector(`[data-tr="${fk}"]`);if(!el)return;
+  el.value=F0.get(PRODUCTS[i]);
+  trEdit(i,fk,el.value);
+  toast('已把來源語言原文複製到譯文欄——記得改成 '+locName(CONTENT_LOCALE));
+}
+/* 譯文寫入：人編輯過 ⇒ value_source='human' 且不再是「機翻未覆核」（67 §E.5(b)：覆核＝人編輯過或按確認無誤）。
+   🔴 清空＝真的清空（空值定義見 i18nBlank），前台會回落來源語言原文——不是留一個空字串在那裡。
+   寫完只更新狀態徽章與切換器，**不整頁重繪**：重繪會把焦點從輸入框拔走，商家連打兩個欄位就會發現。 */
+function trEdit(i,fk,v){
+  trPut('PRODUCT',i,CONTENT_LOCALE,fk,v,{src:'human'});
+  const el=document.querySelector(`[data-tr="${fk}"]`);
+  const chipEl=el&&el.closest('.tr-pair')?el.closest('.tr-pair').querySelector('.tp-in .tr-b'):null;
+  if(chipEl){
+    const F0=PROD_TR.find(x=>x.k===fk),hit=trRaw('PRODUCT',i,CONTENT_LOCALE,fk);
+    chipEl.className='tr-b '+(hit?'ok':'miss');
+    chipEl.textContent=hit?'已翻譯':(F0&&F0.cls==='optional'?'未翻譯・此欄位不輸出':'未翻譯・前台回落來源語言原文');
+  }
+  const btn=document.getElementById('cLocBtn');
+  if(btn){const b=btn.querySelector('.tr-b');if(b)b.outerHTML=trBadge(prodTrStatus(PRODUCTS[i],CONTENT_LOCALE));}
+  formCheck();
+}
+/* 🔴 67 §E.3：非來源語言下**必須唯讀**的欄位。最貴的誤操作在這裡——
+   不做唯讀，商家會在 en 頁面把價格 1,480 改成 148（以為只影響英文版），
+   而實際上改的是**唯一的那筆** product_variants.price_cents，那不是顯示問題，是真的收錯錢。
+   形態：灰化＋tooltip（limits.yml notification.non_toggleable_ui: disabled_with_tooltip），
+   **不是隱藏**——隱藏會讓商家以為英文版沒有價格。 */
+const LOC_LOCK_CARDS=['pd-price','pd-inventory','pd-shipping','pd-status','pd-publish','pd-variants'];
+/* 逐欄鎖（不整卡鎖）：商品組織分類卡裡的「商品類型」是可翻欄位，整卡鎖會把它一起鎖死 */
+const LOC_LOCK_FIELDS=['phandle','ptags','pcols','pcat'];
+function pdLocaleLock(){
+  const box=document.querySelector('[data-form="prod"]');if(!box)return;
+  const lock=CONTENT_LOCALE!==srcLocale();
+  const why='此欄位不隨語言變動：'+locName(srcLocale())+'與'+locName(CONTENT_LOCALE)+'共用同一筆資料（67 §E.3）';
+  const targets=[];
+  LOC_LOCK_CARDS.forEach(d=>box.querySelectorAll(`[data-doc="${d}"]`).forEach(c=>targets.push(c)));
+  LOC_LOCK_FIELDS.forEach(f=>box.querySelectorAll(`[data-f="${f}"]`).forEach(x=>targets.push(x.closest('.field')||x)));
+  targets.forEach(c=>{
+    c.setAttribute('data-loc-locked',lock?'1':'0');
+    if(lock)c.setAttribute('title',why);else c.removeAttribute('title');
+    c.querySelectorAll('input,select,textarea,button').forEach(x=>{
+      if(x.dataset.tr)return;                      /* 譯文欄不鎖 */
+      x.disabled=lock;
+      if(lock)x.setAttribute('aria-disabled','true');else x.removeAttribute('aria-disabled');
+    });
+  });
+}
 
 const CUSTOMERS=[
  {id:'c1',n:'林芷妍',mail:'zhiyan.lin@example.com',ph:'+886 912 345 678',loc:'台北・台灣',ord:3,spent:203000,sub:'已訂閱',sms:'已訂閱',tags:['VIP','送禮'],rfm:'CHAMPIONS',tier:'HIGH',since:'2025-11-02',note:'偏好無包裝配送；生日 3/14。',tax:'課稅',lang:'繁體中文',credit:5000},
@@ -4102,11 +4672,27 @@ const CUSTOMERS=[
  {id:'c6',n:'黃郁婷',mail:'yuting.huang@example.com',ph:'—',loc:'台南・台灣',ord:1,spent:0,sub:'已取消訂閱',sms:'未訂閱',tags:['退貨'],rfm:'AT_RISK',tier:'LOW',since:'2026-05-21',note:'首單全額退款',tax:'課稅',lang:'繁體中文',credit:0},
  {id:'c7',n:'公司採購（大宗）',mail:'buyer@bulkco.example',ph:'+886 2 2700 0000',loc:'台北・台灣',ord:2,spent:1480000,sub:'未訂閱',sms:'未訂閱',tags:['B2B'],rfm:'LOYAL',tier:'HIGH',since:'2026-03-04',note:'Net 30；稅籍編號 12345678（格式依市場 pack 的 tax_id_format）',tax:'免稅（VAT 已驗證）',lang:'繁體中文',credit:0}];
 
+/* ── 商品系列：**sources 模型**（13 §F4.1）───────────────────────────────────
+   🔴 官方已把 manual／smart 標為 **legacy**。新模型是**四型來源**
+      （products／variants／**其他商品系列**／apps）× **include/exclude** × 選法（manual／conditions）。
+      舊的「一個 rules 陣列 ＋ 一個 type 字串」表達不了後三者，也表達不了排除——
+      這不是加欄位能補的落差，所以資料形狀整個換掉。
+   🔴 `type`（智慧型／手動）改為**衍生標籤**（colKind），只為了讓既有列表檢視與篩選還能用；
+      它不再是資料，任何求值都不得讀它。 */
+const COL_SRC_TYPES=[['products','商品'],['variants','變體'],['collections','其他商品系列'],['apps','應用程式']];
 const COLLECTIONS=[
- {id:'k1',t:'秋冬系列',type:'智慧型',n:12,ch:'線上商店',sort:'手動排序',rules:[['tag','等於','秋冬']],any:false,desc:'2026 秋冬主打選品。'},
- {id:'k2',t:'重磅棉',type:'智慧型',n:8,ch:'線上商店',sort:'best',rules:[['title','包含','重磅'],['price','大於','1000']],any:true,desc:''},
- {id:'k3',t:'首頁精選',type:'手動',n:4,ch:'線上商店・AI 代理',sort:'手動排序',rules:[],any:false,desc:'首頁輪播用。'},
- {id:'k4',t:'出清',type:'智慧型',n:0,ch:'線上商店',sort:'price-asc',rules:[['inventory','小於','5']],any:false,desc:''}];
+ {id:'k1',t:'秋冬系列',n:12,ch:'線上商店',sort:'手動排序',desc:'2026 秋冬主打選品。',
+  sources:[{type:'products',mode:'include',selection:'conditions',logic:'all',rules:[['tag','包括','秋冬']]},
+           /* 條件命中 ＋ 明確排除同一商品 ⇒ 不在系列內（13 §F4.2 rebuild 測試的第 ② 條，做成看得見的種子資料）*/
+           {type:'products',mode:'exclude',selection:'manual',members:[3]}]},
+ {id:'k2',t:'重磅棉',n:8,ch:'線上商店',sort:'best',desc:'',
+  sources:[{type:'products',mode:'include',selection:'conditions',logic:'any',rules:[['tag','包括','重磅棉'],['title','包含','棉']]}]},
+ {id:'k3',t:'首頁精選',n:4,ch:'線上商店・AI 代理',sort:'手動排序',desc:'首頁輪播用。',
+  sources:[{type:'products',mode:'include',selection:'manual',members:[0,2,5]},
+           {type:'collections',mode:'include',selection:'manual',members:['k4']}]},
+ {id:'k4',t:'出清',n:0,ch:'線上商店',sort:'price-asc',desc:'',
+  sources:[{type:'products',mode:'include',selection:'conditions',logic:'all',rules:[['inventory','小於','10']]},
+           {type:'variants',mode:'exclude',selection:'manual',members:['3/F・炭黑']}]}];
 
 const DRAFTS=[
  {id:'D12',d:'今天 10:20',c:'林芷妍',st:'開啟',amt:111000,items:3},
@@ -4831,12 +5417,17 @@ function pdStatusSet(k){
 function productPage(){
   const isNew=pdIsNew(),p=pdProduct();
   const hasV=pdHasVariants(),v=pdActiveVariant();
-  const handle=(p.sku||'').toLowerCase();
+  /* 67 §D.1／§D.2：handle 由**唯一一支**生成器推導（來源優先序見 handleFor），
+     不再拿 SKU 當網址——SKU 非必填、可重複，而且常含供應商代號，放進公開 URL 是營運資訊外洩。 */
+  const hd=handleFor(p);
   const prices=PV.vars.map(x=>x.price).filter(x=>x!=null);
   const seoPrice=prices.length?(hasV&&Math.min(...prices)!==Math.max(...prices)
     ?money(Math.min(...prices))+'–'+money(Math.max(...prices)):money(prices[0])):null;
+  /* 67 §E.2：內容語言切換器在**標題列**，與四態狀態同一列；標題本身依內容語言解析（§C.4 fallback 鏈）*/
+  const trTitle=trResolve('PRODUCT',p.i,CONTENT_LOCALE,'title',p.n,'required');
+  const notSrc=!isNew&&CONTENT_LOCALE!==srcLocale();
   /* 59 §7：建立頁與詳情頁的差異全部集中在這裡——預設值與空態，沒有第二個版面。 */
-  return detailHead(isNew?'新增商品':H(p.n),`<span id="pdHeadBadge">${S_BADGE[isNew?'draft':p.s]||''}</span>`,
+  return detailHead(isNew?'新增商品':H(trTitle.v),`<span id="pdHeadBadge">${S_BADGE[isNew?'draft':p.s]||''}</span>${contentLocaleCtl(p,isNew)}`,
     (isNew?'':
     `<button class="btn btn-sec btn-sm" data-doc="pd-preview" onclick="toast('Demo：在前台預覽（帶 market context）')">預覽</button>
      <button class="btn btn-sec btn-sm" data-doc="pd-share" onclick="pdShare()">分享</button>
@@ -4847,9 +5438,14 @@ function productPage(){
     +`<button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'products')
   +`<div class="od-grid" data-form="prod">
     <div class="col">
+      ${notSrc?`<div class="banner-caution" data-doc="pd-locale-banner"><span class="bc-ic" aria-hidden="true">🌐</span>
+        <span>你正在編輯<b>${H(locName(CONTENT_LOCALE))}</b>版本。只有<b>可翻欄位</b>能改；
+        價格／SKU／庫存／狀態／發布／handle／標籤<b>不隨語言變動</b>，已灰化並附說明（67 §E.3）。
+        ${shopLoc(CONTENT_LOCALE)&&!shopLoc(CONTENT_LOCALE).published?'此語言<b>尚未發布</b>，改動只有預覽連結看得到（29 §1.2）。':''}</span></div>`:''}
       <div class="card card-pad" data-doc="pd-title">
-        ${F('標題',TXT('ptitle',p.n,'例：奶茶色寬版帽T','req|max:255'),'≤255 字；儲存時自動生成 handle 並唯一化')}
+        ${trField(p,'title','標題',TXT('ptitle',p.n,'例：奶茶色寬版帽T','req|max:255'),'≤255 字；儲存時自動生成 handle 並唯一化')}
         <div class="card-sec">
+          ${notSrc?trField(p,'body','說明','','譯文沿用來源欄位的長度上限（limits.yml <code>i18n.per_field_limits_follow_source_field</code>）'):`
           <div class="rowflex" style="margin-bottom:var(--sp-150)"><label style="font-size:var(--t-xs);font-weight:var(--fw-body);color:var(--text-2)">說明</label>
             <span style="margin-left:auto" class="rowflex">
               <button class="btn btn-ghost btn-sm" data-doc="pd-ai" onclick="toast('Demo：✨ AI 生成商品說明（P2）')">${SPARK} AI 生成</button>
@@ -4858,7 +5454,7 @@ function productPage(){
             ${[['B','粗體'],['I','斜體'],['U','底線'],['H2','段落格式'],['A','文字顏色'],['≡','對齊方式'],['•','項目符號'],['1.','編號清單'],['🔗','連結'],['▣','插入圖片'],['▶','插入影片'],['⊞','插入表格'],['⌗','顯示 HTML']]
               .map(([t,n])=>`<button class="m-hover icon-btn" style="width:28px;height:26px;font-size:var(--t-xs)" aria-label="${n}" title="${n}" onclick="toast('Demo：富文本 ${n}')">${t}</button>`).join('')}</div>
           <textarea class="input" data-f="pdesc" rows="4" style="border-radius:0 0 var(--r-200) var(--r-200)" data-val="max:64000">${H(p.desc)}</textarea>
-          <span class="hint">富文本上限 64KB（22 §2 配額表）</span>
+          <span class="hint">富文本上限 64KB（22 §2 配額表）</span>`}
         </div>
       </div>
       <div class="card card-pad" data-doc="pd-media"><h3>多媒體<span class="h-act mut3" style="font-size:var(--t-xs)">首格＝精選圖・≤${LIMITS.productMaxMedia} 張</span></h3>
@@ -4899,14 +5495,28 @@ function productPage(){
       </div>
       <div class="card card-pad" data-doc="pd-seo"><h3>搜尋引擎產品資訊</h3>
         ${isNew?`<div class="empty-wrap" style="padding:var(--sp-600)"><b>尚無可預覽的內容</b>填入標題與說明後，這裡會顯示這個商品在搜尋結果中的樣子。</div>`
-        :`<div class="serp"><div class="s-t" id="seoT">${H(p.n)} | CHILL LOVE</div>
-          <div class="s-u">CHILL LOVE https://chilllove.demo › products › ${H(handle)}</div>
-          <div class="s-d" id="seoD">${H(p.desc)}</div>
+        :`<div class="serp"><div class="s-t" id="seoT">${H(trResolve('PRODUCT',p.i,CONTENT_LOCALE,'seoT',p.n+' | CHILL LOVE','optional').v)}</div>
+          <div class="s-u">CHILL LOVE https://chilllove.demo${CONTENT_LOCALE===srcLocale()?'':'/'+CONTENT_LOCALE.toLowerCase()} › products › ${H(hd.h)}</div>
+          <div class="s-d" id="seoD">${H(trResolve('PRODUCT',p.i,CONTENT_LOCALE,'seoD',p.desc,'optional').v)}</div>
           <div class="s-d num" style="margin-top:var(--sp-100);color:var(--text)">${seoPrice==null?'--':seoPrice+' '+marketLocale().default_currency}</div></div>`}
         <div class="card-sec stack">
-          ${F('頁面標題',`<input class="input" data-f="pseoT" value="${isNew?'':H(p.n)+' | CHILL LOVE'}" data-val="max:70" placeholder="留空時沿用商品標題" oninput="pdSeoSync()">`,'≤70 字；留空時 fallback 用商品標題')}
-          ${F('中繼說明',`<textarea class="input" data-f="pseoD" rows="2" data-val="max:320" placeholder="留空時沿用商品說明" oninput="pdSeoSync()">${H(p.desc)}</textarea>`,'≤320 字')}
-          ${F('網址 handle',TXT('phandle',handle,'儲存時由標題自動生成','handle'),'改 handle 建議同時建立 301 轉址')}
+          ${trField(p,'seoT','頁面標題',`<input class="input" data-f="pseoT" value="${isNew?'':H(p.n)+' | CHILL LOVE'}" data-val="max:70" placeholder="留空時沿用商品標題" oninput="pdSeoSync()">`,'≤70 字；留空時 fallback 用商品標題（limits.yml <code>content.seo_title_max_chars</code>）')}
+          ${trField(p,'seoD','中繼說明',`<textarea class="input" data-f="pseoD" rows="2" data-val="max:320" placeholder="留空時沿用商品說明" oninput="pdSeoSync()">${H(p.desc)}</textarea>`,'≤320 字；缺譯文時<b>整個欄位不輸出</b>（62 §E.1「空描述不編造」）')}
+          <div class="field" data-doc="pd-handle"><label>網址 handle</label>
+            <input class="input mono" data-f="phandle" data-val="handle" value="${H(hd.h)}" placeholder="儲存時由英文標題自動生成">
+            <span class="hint">🔴 <b>handle 全站只有一個，不隨語言變</b>——語言維度由 URL 前綴承載（67 §D.3）。
+              自動生成來源：${hd.via==='manual'?'商家手填':hd.via==='en'?'<b>English 譯文標題</b>':hd.via==='source'?'來源語言標題（已可轉成 ASCII）':'<b>確定性代碼</b>'}
+              （limits.yml <code>handle.source_field_priority</code>）。改 handle 會建立 301 轉址，舊 handle 永不回收。</span>
+            <span class="msg"></span></div>
+          <div class="derow" data-doc="pd-handle-preview">
+            <span class="de">生成預覽 <b class="mono">${H(hd.h)}</b></span>
+            <span class="de">ASCII 字母數 <b class="${hd.alpha>=HANDLE.minLatinAlpha?'':'unknown'}">${hd.alpha}</b></span>
+            <span class="de">丟棄字母比例 <b class="${hd.dropped<=HANDLE.maxDroppedRatio?'':'unknown'}">${(hd.dropped*100).toFixed(0)}%</b></span>
+          </div>
+          ${hd.via==='fallback'?`<div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+            <span>這個商品的網址是<b>自動代碼</b>（品質閘門未過：ASCII 字母數 &lt; <code>handle.min_latin_alpha_chars</code>
+            或丟棄比例 &gt; <code>handle.max_dropped_letter_ratio</code>）。建議補上 English 標題，handle 會從譯文重新推導。
+            <button class="btn btn-ghost btn-sm" style="padding:0" onclick="setContentLocale('en')">前往 English 版本 ›</button></span></div>`:''}
         </div>
       </div>
     </div>
@@ -4924,7 +5534,7 @@ function productPage(){
         <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="go('m-reports')">檢視詳情 ›</button>
       </div>
       <div class="card card-pad" data-doc="pd-organize"><h3>商品組織分類</h3>
-        <div class="stack">${F('商品類型',TXT('ptype',p.type))}${F('廠商',TXT('pvendor',p.vd))}
+        <div class="stack">${trField(p,'type','商品類型',TXT('ptype',p.type))}${F('廠商',TXT('pvendor',p.vd))}
           ${F('商品系列',`<input class="input" data-f="pcols" value="${H(p.cols.join('、'))}" placeholder="搜尋系列…">`,'手動系列可直接加入；智慧系列由規則決定')}
           ${F('標籤',`<input class="input" data-f="ptags" value="${H(p.tags.join('、'))}" placeholder="以逗號分隔">`,`每個商品 ≤${LIMITS.productMaxTags} 個標籤、單一標籤 ≤${LIMITS.productTagMaxChars} 字（limits.yml <code>product.max_tags</code> / <code>tag_max_chars</code>）`)}</div>
       </div>
@@ -5224,37 +5834,156 @@ function pvFilter(q){
 function collectionsPage(){
   return listPage({key:'cols',title:'商品系列',doc:'doc-m-collections',ph:'搜尋系列…',
     actions:[['新增商品系列','pri',"openCollection('new')",'col-new']],
-    views:[['全部',()=>true],['智慧型',r=>r.type==='智慧型'],['手動',r=>r.type==='手動']],
+    views:[['全部',()=>true],['有條件',r=>colKind(r)==='智慧型'],['只有手動',r=>colKind(r)==='手動']],
     filters:[{k:'ch',l:'銷售管道',opts:['線上商店','AI 代理'],test:(r,v)=>r.ch.includes(v)}],
-    cols:[{l:'標題',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'類型',c:r=>chip(r.type,r.type==='智慧型'?'ai':'default'),v:r=>r.type},
-      {l:'商品數',right:true,c:r=>N(r.n),v:r=>r.n},{l:'銷售管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch}],
+    /* 60 §6 實站列表欄位含「條件」欄 ⇒ 手動與自動系列在同一張表、靠該欄區分。
+       我方把它擴寫成「來源」欄——因為新模型不只有條件，還有變體／巢狀系列／app 與排除。 */
+    cols:[{l:'標題',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},
+      {l:'來源',c:r=>colSrcSummary(r),v:r=>(r.sources||[]).length},
+      {l:'商品數',right:true,c:r=>N(colEval(r).length),v:r=>colEval(r).length},
+      {l:'銷售管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch}],
     rows:COLLECTIONS,id:r=>r.id,onRow:r=>`openCollection('${r.id}')`,
     bulk:[['加入銷售管道'],['刪除',null,null,'danger']],
-    note:'2026 新集合模型：單一類型可同時有規則＋手動＋嵌套系列＋排除清單；legacy 手動/智慧並存不可互轉（41 §3.5）。'});
+    note:'13 §F4.1 sources 模型：四型來源（商品／變體／其他商品系列／應用程式）× include/exclude × 選法（手動／條件）。手動加入的除非手動移除否則永遠留著（官方明載），而 exclude 勝過一切（我方假設，limits.yml collection.source_precedence）。'});
+}
+/* legacy 標籤：**衍生值，不是資料**（13 §F4 已把 manual/smart 標為 legacy）。
+   只供既有檢視篩選使用；任何求值都不得讀它。 */
+const colKind=c=>(c.sources||[]).some(s=>s.selection==='conditions')?'智慧型':'手動';
+const colSrcLabel=t=>(COL_SRC_TYPES.find(x=>x[0]===t)||[t,t])[1];
+function colSrcSummary(c){
+  const src=c.sources||[];
+  if(!src.length)return '<span class="mut3">尚未設定來源</span>';
+  return src.map(s=>`<span class="tr-b ${s.mode==='exclude'?'miss':''}" title="${s.mode==='exclude'?'排除':'納入'}・${s.selection==='conditions'?'條件':'手動'}">${
+    s.mode==='exclude'?'－':'＋'}${colSrcLabel(s.type)}${s.selection==='conditions'?`（${(s.rules||[]).length} 條件）`:`（${(s.members||[]).length}）`}</span>`).join(' ');
 }
 let COL=null;
 function openCollection(id){
-  COL=id==='new'?{id:'new',t:'',type:'智慧型',n:0,ch:'線上商店',sort:'best',rules:[['tag','等於','']],any:false,desc:''}
+  COL=id==='new'
+    ?{id:'new',t:'',n:0,ch:'線上商店',sort:'best',desc:'',
+      sources:[{type:'products',mode:'include',selection:'conditions',logic:'all',rules:[['tag','包括','']]}]}
     :JSON.parse(JSON.stringify(COLLECTIONS.find(c=>c.id===id)));
   goDetail('d-collection',{id});
 }
-const RULE_COLS=['title','type','category','vendor','price','tag','compare_at_price','weight','inventory','variant_title','metafield'];
-const RULE_OPS={text:['等於','不等於','開頭是','結尾是','包含','不包含','不為空'],numb:['等於','不等於','大於','小於']};
-function colMatch(){
+/* ── 13 §F4.7 條件欄位與運算子值域（補齊 61 §4.2 的四處缺漏）────────────────
+   🔴 **商品標籤用「包括／不包括」（集合運算），與字串欄位的「包含」是不同的運算子**。
+      寫成 LIKE '%red%' 會讓條件 `red` 誤中 `red-new`、`bright-red`、`tired`（§F4.3）。
+   🔴 邏輯連接**只有 all／any**，官方未提供混合或括號分組
+      （limits.yml collection.condition_grouping_supported: false）——自作主張加了就不是 1:1。 */
+const RULE_FIELDS=[
+ ['title','商品標題','text'],['variant_title','變體標題','text'],['type','商品類型','text'],['vendor','廠商','text'],
+ ['category','商品類別','enum'],['status','商品狀態','enum'],
+ ['tag','商品標籤','set'],
+ ['price','價格','num'],['compare_at_price','比較價格','numset'],['weight','重量','num'],['inventory','庫存數量','num'],
+ ['metafield','中繼欄位','text'],['metaobject','Metaobject 參照','enum']];
+const RULE_OPS={
+ text:['等於','不等於','開頭為','結尾為','包含','不包含'],
+ enum:['等於','不等於'],
+ set:['包括','不包括'],                       /* 🔴 集合運算，不是子字串 */
+ num:['等於','不等於','大於','小於'],
+ numset:['等於','不等於','大於','小於','未設定','已設定']};   /* 比較價格另有兩個一元運算子 */
+const ruleKind=f=>(RULE_FIELDS.find(x=>x[0]===f)||['','','text'])[2];
+/* 13 §F4.4 標籤正規化（唯一實作 Tags::Normalize 的原型投影）：
+   官方明載 red_new／red+new／red&new／red-new 是**同一個標籤**；不正規化 ⇒ 條件比對與本尊不一致，
+   而且從 Shopify 匯入的資料一進來就分裂成兩列。查詢端與寫入端**共用這一支**，兩邊各寫一次必然漂移。 */
+function tagKey(s){
+  return String(s??'').normalize('NFKC').trim()
+    .replace(/\s+/g,'-').replace(/[_+&]/g,'-').replace(/-+/g,'-')
+    .replace(/^-|-$/g,'').toLowerCase();
+}
+function colRuleTest(p,f,op,v){
+  if(op!=='未設定'&&op!=='已設定'&&!String(v).trim())return true;      /* 空值條件視為未設定，不參與 */
+  if(f==='tag'){                                                       /* 集合運算：等值比對 tag_key，不是 LIKE */
+    const keys=p.tags.map(tagKey),k=tagKey(v);
+    return op==='包括'?keys.includes(k):!keys.includes(k);
+  }
+  if(f==='compare_at_price'){
+    const has=p.compareAt!=null;
+    if(op==='未設定')return !has;
+    if(op==='已設定')return has;
+    if(!has)return false;
+    return op==='等於'?p.compareAt===toCents(v):op==='不等於'?p.compareAt!==toCents(v)
+      :op==='大於'?p.compareAt>toCents(v):p.compareAt<toCents(v);
+  }
+  if(f==='variant_title'){                                             /* 變體標題：任一變體命中即命中 */
+    const titles=(p.opts||[]).flatMap(o=>o.v);
+    return titles.some(t=>colStrTest(t,op,v));
+  }
+  const raw={title:p.n,type:p.type,vendor:p.vd,category:p.cat,status:p.s,
+    price:p.price,weight:p.w,inventory:p.inv,metafield:'',metaobject:''}[f];
+  if(ruleKind(f)==='num'){
+    const n=f==='price'?p.price:Number(raw),c=f==='price'?toCents(v):Number(v);
+    return op==='等於'?n===c:op==='不等於'?n!==c:op==='大於'?n>c:n<c;
+  }
+  return colStrTest(String(raw??''),op,v);
+}
+/* 字串欄位的「包含」才是子字串（LIKE）；🔴 % 與 _ 必須跳脫，
+   否則商家輸入 `50%` 會變成萬用字元（limits.yml collection.string_contains_requires_wildcard_escape）。 */
+function colStrTest(val,op,v){
+  const a=String(val),b=String(v);
+  if(op==='等於')return a===b;if(op==='不等於')return a!==b;
+  if(op==='開頭為')return a.startsWith(b);if(op==='結尾為')return a.endsWith(b);
+  if(op==='包含')return a.includes(b);if(op==='不包含')return !a.includes(b);
+  return true;
+}
+/* 13 §F4.2 求值管線：
+     候選集 = ⋃ 各 include 來源     最終集 = 候選集 − ⋃ 各 exclude 來源
+   三層優先序：exclude ＞ manual include ＞ conditions（第 1 層是我方假設 V-57，做成 limits 鍵）。
+   🔴 §F4.5 巢狀：取被引用系列的**最終成員**（不是候選集），並帶 visited ＋ 深度上限——
+      圖鎖擋的是新產生的環，擋不住匯入／資料修復帶進來的環，所以求值期還要第二道保險。 */
+function colSrcEval(s,depth,visited){
+  if(s.type==='apps')return PRODUCTS.filter(p=>(p.tags||[]).map(tagKey).includes(tagKey(s.appTag||'agent')));
+  if(s.type==='collections'){
+    if(depth>=5)return[];                       /* limits.yml collection.source_nesting_max_depth */
+    let out=[];
+    (s.members||[]).forEach(id=>{
+      if(visited.has(id))return;                /* rebuild_cycle_guard：重訪即中止該支，不部分寫入 */
+      const c=COLLECTIONS.find(x=>x.id===id);if(!c)return;
+      /* 🔴 取被引用系列的**最終成員**（它自己的 exclude 已套用），並拆回商品物件——
+         colEval 回的是 {p,origin}，直接 concat 會把包裝物件當成商品，成員全變 undefined。 */
+      out=out.concat(colEval(c,depth+1,new Set([...visited,id])).map(x=>x.p));
+    });
+    return out;
+  }
+  if(s.selection==='manual'){
+    if(s.type==='variants')return (s.members||[]).map(m=>PRODUCTS[+String(m).split('/')[0]]).filter(Boolean);
+    return (s.members||[]).map(i=>PRODUCTS[i]).filter(Boolean);
+  }
+  const rules=(s.rules||[]).filter(r=>r[0]);
+  if(!rules.length)return[];
   return PRODUCTS.filter(p=>{
-    const tests=COL.rules.map(([c,o,v])=>{
-      if(!v)return true;
-      const val=({title:p.n,type:p.type,category:p.cat,vendor:p.vd,price:p.price,tag:p.tags.join(','),compare_at_price:p.price,weight:p.w,inventory:p.inv,variant_title:'',metafield:''})[c];
-      if(o==='等於')return String(val)===v;if(o==='不等於')return String(val)!==v;
-      if(o==='大於')return +val>+v;if(o==='小於')return +val<+v;
-      if(o==='開頭是')return String(val).startsWith(v);if(o==='結尾是')return String(val).endsWith(v);
-      if(o==='包含')return String(val).includes(v);if(o==='不包含')return !String(val).includes(v);
-      if(o==='不為空')return !!String(val);return true;});
-    return COL.any?tests.some(Boolean):tests.every(Boolean);});
+    const t=rules.map(([f,op,v])=>colRuleTest(p,f,op,v));
+    return s.logic==='any'?t.some(Boolean):t.every(Boolean);});
+}
+function colEval(c,depth,visited){
+  depth=depth||0;visited=visited||new Set([c.id]);
+  const src=c.sources||[];
+  const inc=new Map();
+  /* origin 由**來源型別**決定，不是由選法決定——巢狀系列來源的 selection 也是 manual，
+     照選法判會把整批巢狀成員標成「手動加入」，商家就看不出它其實來自另一個系列。 */
+  const originOf=s=>s.type==='collections'?'nested_collection':s.type==='apps'?'app'
+    :s.selection==='manual'?'manual':'conditions';
+  /* 第 2 層優先序：手動加入的 products／variants 勝過條件（官方明載，條件重算不得把它踢出去）*/
+  const manualWins=s=>s.selection==='manual'&&(s.type==='products'||s.type==='variants');
+  src.filter(s=>s.mode==='include').forEach(s=>colSrcEval(s,depth,visited).forEach(p=>{
+    if(!inc.has(p.i)||manualWins(s))inc.set(p.i,{p,origin:originOf(s)});}));
+  const ex=new Set();
+  src.filter(s=>s.mode==='exclude').forEach(s=>colSrcEval(s,depth,visited).forEach(p=>ex.add(p.i)));
+  return [...inc.values()].filter(x=>!ex.has(x.p.i));
+}
+/* §F4.5(b) 寫入期環偵測：自 target 出發能否走回 source。命中 ⇒ userErrors CYCLIC_REFERENCE。
+   （原型只有這一半；併發成環要靠 shop 粒度的圖鎖，那在後端，見 DOCS col-src-nested。） */
+function colReaches(fromId,targetId,depth){
+  if(fromId===targetId)return true;
+  if((depth||0)>=6)return false;
+  const c=COLLECTIONS.find(x=>x.id===fromId);if(!c)return false;
+  return (c.sources||[]).filter(s=>s.type==='collections')
+    .some(s=>(s.members||[]).some(m=>colReaches(m,targetId,(depth||0)+1)));
 }
 function collectionPage(){
-  const smart=COL.type==='智慧型',matched=smart?colMatch():PRODUCTS.filter(p=>p.cols.includes(COL.t));
-  return detailHead(COL.id==='new'?'新增商品系列':H(COL.t),chip(COL.type,smart?'ai':'default'),
+  const res=colEval(COL),kind=colKind(COL);
+  const nRules=(COL.sources||[]).reduce((a,s)=>a+((s.rules||[]).length),0);
+  const chandle=handleize(COL.t||'collection');
+  return detailHead(COL.id==='new'?'新增商品系列':H(COL.t),chip(kind,kind==='智慧型'?'ai':'default'),
     `<button class="btn btn-sec btn-sm" onclick="toast('Demo：在前台預覽系列頁')">預覽</button>
      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'m-collections')
   +`<div class="od-grid" data-form="col">
@@ -5263,50 +5992,151 @@ function collectionPage(){
         ${F('標題',TXT('ctitle',COL.t,'例：秋冬系列','req|max:255'))}
         <div class="card-sec">${F('說明',TA('cdesc',COL.desc,'系列頁上方的介紹文字',3))}</div>
       </div>
-      <div class="card card-pad" data-doc="col-type"><h3>商品來源</h3>
-        <div class="seg" role="tablist">
-          <button class="${smart?'on':''}" onclick="colType('智慧型')" role="tab" aria-selected="${smart}">智慧型（條件自動納入）</button>
-          <button class="${!smart?'on':''}" onclick="colType('手動')" role="tab" aria-selected="${!smart}">手動（自選商品）</button></div>
-        ${smart?`<div class="card-sec" data-doc="col-rules">
-          <div class="rowflex" style="margin-bottom:var(--sp-200)"><span class="help">商品必須符合</span>
-            <div class="seg"><button class="${!COL.any?'on':''}" onclick="colAny(false)">所有條件 all</button><button class="${COL.any?'on':''}" onclick="colAny(true)">任一條件 any</button></div></div>
-          ${COL.rules.map((r,i)=>`<div class="rule">
-            <select class="input" aria-label="條件欄位" onchange="colRule(${i},0,this.value)">${RULE_COLS.map(c=>`<option ${r[0]===c?'selected':''}>${c}</option>`).join('')}</select>
-            <select class="input" aria-label="運算子" onchange="colRule(${i},1,this.value)">${(['price','weight','inventory','compare_at_price'].includes(r[0])?RULE_OPS.numb:RULE_OPS.text).map(o=>`<option ${r[1]===o?'selected':''}>${o}</option>`).join('')}</select>
-            <input class="input" value="${H(r[2])}" placeholder="值" aria-label="條件值" onchange="colRule(${i},2,this.value)">
-            <button class="rm" aria-label="移除條件" onclick="colDelRule(${i})">${IC(IC_TRASH,14)}</button></div>`).join('')}
-          <button class="btn btn-sec btn-sm" ${COL.rules.length>=60?'disabled aria-disabled="true"':''} onclick="colAddRule()">＋ 新增條件</button>
-          <p class="help" style="margin-top:var(--sp-200)">≤60 條件、全店智慧系列 ≤5,000（22 §2 配額表）；規則變更後背景重算 membership。</p>
-        </div>`:`<div class="card-sec"><button class="btn btn-sec btn-sm" onclick="colAddProducts()">＋ 加入商品</button>
-          <p class="help" style="margin-top:var(--sp-200)">手動系列支援拖曳排序（position 欄）。</p></div>`}
+      <div class="card card-pad" data-doc="col-sources"><h3>商品系列品項
+        <span class="h-act num mut3" style="font-size:var(--t-xs)">${res.length} 件</span></h3>
+        <p class="help" style="margin-bottom:var(--sp-300)">一個系列由若干<b>來源</b>組成，每個來源有三個正交屬性：
+          型別（商品／變體／其他商品系列／應用程式）、模式（納入／排除）、選法（手動／條件）。</p>
+        ${(COL.sources||[]).map((s,i)=>colSourceCard(s,i)).join('')||
+          `<div class="empty-wrap"><b>還沒有任何來源</b>新增條件或商品，把項目加進這個系列。</div>`}
+        <div class="rowflex" style="margin-top:var(--sp-200)">
+          <button class="btn btn-sec btn-sm" data-doc="col-src-add" onclick="colSrcAddMenu('include')">＋ 新增納入來源</button>
+          <button class="btn btn-sec btn-sm" data-doc="col-src-exclude" onclick="colSrcAddMenu('exclude')">－ 新增排除來源</button></div>
+        <div class="derow card-sec" data-doc="col-src-limits">
+          <span class="de">條件總數 <b class="${nRules<=60?'':'unknown'}">${nRules} / 60</b></span>
+          <span class="de">巢狀深度上限 <b>5</b></span>
+          <span class="de">排除優先序 <b>exclude ＞ 手動 ＞ 條件</b></span>
+        </div>
+        <p class="help" style="margin-top:var(--sp-200)">上限一律引 limits.yml：<code>collection.max_rules_per_collection</code>（60）、
+          <code>max_containing_collection_per_shop</code>（50）、<code>max_excluding_collection_per_shop</code>（5）、
+          <code>max_with_variants_per_shop</code>（100）、<code>source_nesting_max_depth</code>（5，官方未載明⇒V-135）。
+          🔴 <b>空的排除來源 ≠ 沒有排除</b>——減掉空集合等於不變，但它仍然是一條設定，UI 不隱藏它（§F4.9）。</p>
       </div>
-      <div class="card" data-doc="col-products"><div class="card-pad" style="padding-bottom:var(--sp-200)"><h3>符合的商品<span class="h-act num mut3" style="font-size:var(--t-xs)">${matched.length} 件</span></h3></div>
-        ${matched.length?`<table class="idx"><thead><tr><th>商品</th><th>狀態</th><th class="right">庫存</th><th class="right">價格</th></tr></thead><tbody>
-          ${matched.map(p=>`<tr onclick="openProduct(${p.i})"><td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>${H(p.n)}</div></td>
+      <div class="card" data-doc="col-products"><div class="card-pad" style="padding-bottom:var(--sp-200)"><h3>成員<span class="h-act num mut3" style="font-size:var(--t-xs)">${res.length} 件・前台可見 ${res.filter(x=>P_STATUS.find(s=>s.k===x.p.s.toUpperCase())?.discoverable).length} 件</span></h3></div>
+        ${res.length?`<table class="idx"><thead><tr><th>商品</th><th>來源</th><th>狀態</th><th class="right">庫存</th><th class="right">價格</th></tr></thead><tbody>
+          ${res.map(({p,origin})=>`<tr onclick="openProduct(${p.i})"><td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>${H(p.n)}</div></td>
+            <td><span class="tr-b">${origin==='manual'?'手動加入':origin==='nested_collection'?'巢狀系列':origin==='app'?'應用程式':'條件命中'}</span></td>
             <td>${S_BADGE[p.s]}</td><td class="right num">${p.inv}</td><td class="right num">${money(p.price)}</td></tr>`).join('')}</tbody></table>`
-          :`<div class="empty-wrap"><b>目前沒有商品符合條件</b>放寬條件或改用「任一條件」再試一次。</div>`}
+          :`<div class="empty-wrap"><b>目前沒有項目符合</b>放寬條件、改用「任一條件」，或檢查是不是被某個排除來源擋掉了。</div>`}
+        <p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">
+          成員資格<b>不過濾商品狀態</b>（V-139：UNLISTED／DRAFT 仍是成員），前台再套 <code>discoverable</code> scope（13 §F1.2(f)）——
+          所以這裡會出現「是成員但前台看不到」的商品，那不是 bug。</p>
       </div>
       <div class="card card-pad" data-doc="col-seo"><h3>搜尋引擎列表</h3>
-        <div class="serp"><div class="s-t">${H(COL.t||'系列標題')} | CHILL LOVE</div><div class="s-u">chilllove.demo › collections › ${H((COL.t||'collection').toLowerCase())}</div><div class="s-d">${H(COL.desc||'系列說明')}</div></div>
-        <div class="card-sec grid2">${F('頁面標題',TXT('cseoT',COL.t,'','max:70'))}${F('網址 handle',TXT('chandle','autumn-winter','','handle'))}</div>
+        <div class="serp"><div class="s-t">${H(COL.t||'系列標題')} | CHILL LOVE</div><div class="s-u">chilllove.demo › collections › ${H(chandle.ok?chandle.h:'collection-'+(COL.id||'new'))}</div><div class="s-d">${H(COL.desc||'系列說明')}</div></div>
+        <div class="card-sec grid2">${F('頁面標題',TXT('cseoT',COL.t,'','max:70'))}${F('網址 handle',TXT('chandle',chandle.ok?chandle.h:'collection-'+(COL.id||'new'),'','handle'),'系列 handle 與商品 handle 走同一支生成器（67 §D），一樣不隨語言變')}</div>
       </div>
     </div>
     <div class="col">
-      <div class="card card-pad">${F('商品排序',SEL('csort',[['manual','手動排序'],['best','最佳銷售'],['title-asc','商品標題 A–Z'],['title-desc','商品標題 Z–A'],['price-asc','價格低到高'],['price-desc','價格高到低'],['new','最新'],['old','最舊']],COL.sort),smart?'智慧型系列不支援手動排序':'')}</div>
-      <div class="card card-pad"><h3>發布</h3>${['線上商店','AI 代理'].map((c,i)=>SWROW('cch'+i,i===0,c)).join('')}</div>
+      <div class="card card-pad" data-doc="col-sort">${F('商品排序',SEL('csort',[['manual','手動排序'],['relevant','最相關'],['best','最暢銷（全期訂單數）'],['title-asc','字母 A–Z'],['title-desc','字母 Z–A'],['price-asc','價格低到高'],['price-desc','價格高到低'],['new','日期由新到舊'],['old','日期由舊到新']],COL.sort),
+        kind==='智慧型'?'含條件的系列不支援手動排序；「最暢銷」＝<b>全期</b>訂單數（13 §F4.8，不是 90 天窗口——與分析頁同源才不會露餡）':'手動排序另有「移到最前／最後／指定位置」三個動作')}</div>
+      <div class="card card-pad"><h3>發布</h3>${['線上商店','AI 代理'].map((c,i)=>SWROW('cch'+i,i===0,c)).join('')}
+        <p class="help card-sec">系列的<b>前台可見性</b>與<b>掛不掛在選單上</b>是兩件事（60 §6／P26），這裡只管前者。</p></div>
       <div class="card card-pad"><h3>圖片</h3><div class="media-grid"><button class="media-add" onclick="toast('Demo：從檔案庫選圖')">${IC(IC_PLUS,16)}<span>新增</span></button></div></div>
       <div class="card card-pad">${F('佈景主題範本',SEL('ctpl',['預設系列範本','collection.grid','collection.lookbook'],'預設系列範本'))}</div>
-      ${COL.id!=='new'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除系列','刪除系列不會刪除其中的商品，但前台選單與連結會失效。','刪除系列',()=>{toast('已刪除系列');go('m-collections');})">刪除系列</button></div>`:''}
+      ${COL.id!=='new'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除系列','刪除系列不會刪除其中的商品，但前台選單與連結會失效；引用這個系列當來源的其他系列會少掉這一批成員。','刪除系列',()=>{toast('已刪除系列');go('m-collections');})">刪除系列</button></div>`:''}
     </div></div>`;
 }
-function colType(t){COL.type=t;renderDetail('d-collection');}
-function colAny(v){COL.any=v;renderDetail('d-collection');}
-function colRule(i,j,v){COL.rules[i][j]=v;renderDetail('d-collection');}
-function colAddRule(){COL.rules.push(['title','包含','']);renderDetail('d-collection');}
-function colDelRule(i){COL.rules.splice(i,1);if(!COL.rules.length)COL.rules.push(['title','包含','']);renderDetail('d-collection');}
-function colAddProducts(){
-  pickerModal('加入商品',PRODUCTS.map(p=>({t:p.n,s:`${money(p.price)}・庫存 ${p.inv}`,g:p.g,p})),
-    sel=>{sel.forEach(x=>{if(!x.p.cols.includes(COL.t))x.p.cols.push(COL.t);});renderDetail('d-collection');toast(`已加入 ${sel.length} 件商品`);},true);
+function colSourceCard(s,i){
+  const ex=s.mode==='exclude';
+  const canCond=s.type==='products'||s.type==='variants';
+  return `<div class="src-card ${ex?'ex':''}" data-doc="col-src">
+    <div class="src-head">
+      <span class="tr-b ${ex?'miss':'ok'}"><b>${ex?'排除':'納入'}</b></span>
+      <span class="sh-t">${colSrcLabel(s.type)}</span>
+      ${canCond?`<div class="seg" role="group" aria-label="選法">
+        <button class="${s.selection==='manual'?'on':''}" onclick="colSrcSet(${i},'selection','manual')">手動挑選</button>
+        <button class="${s.selection==='conditions'?'on':''}" onclick="colSrcSet(${i},'selection','conditions')">依條件</button></div>`
+       :`<span class="tr-b">${s.type==='collections'?'挑選其他系列':'由應用程式決定成員'}</span>`}
+      <span class="sh-x"><button class="rm" aria-label="移除這個來源" onclick="colSrcDel(${i})">${IC(IC_TRASH,14)}</button></span>
+    </div>
+    ${s.selection==='conditions'&&canCond?`
+      <div class="rowflex" style="margin-bottom:var(--sp-200)"><span class="help">項目必須符合</span>
+        <div class="seg"><button class="${s.logic!=='any'?'on':''}" onclick="colSrcSet(${i},'logic','all')">所有條件 all</button>
+          <button class="${s.logic==='any'?'on':''}" onclick="colSrcSet(${i},'logic','any')">任一條件 any</button></div></div>
+      ${(s.rules||[]).map((r,j)=>`<div class="rule">
+        <select class="input" aria-label="條件欄位" onchange="colSrcRule(${i},${j},0,this.value)">${RULE_FIELDS.map(([k,l])=>`<option value="${k}" ${r[0]===k?'selected':''}>${l}</option>`).join('')}</select>
+        <select class="input" aria-label="運算子" onchange="colSrcRule(${i},${j},1,this.value)">${RULE_OPS[ruleKind(r[0])].map(o=>`<option ${r[1]===o?'selected':''}>${o}</option>`).join('')}</select>
+        ${r[1]==='未設定'||r[1]==='已設定'
+          ?`<span class="mut3" style="font-size:var(--t-xs)">（一元運算子，不需要值）</span>`
+          :r[0]==='status'
+            ?`<select class="input" aria-label="條件值" onchange="colSrcRule(${i},${j},2,this.value)">${P_STATUS.map(x=>`<option value="${x.k.toLowerCase()}" ${r[2]===x.k.toLowerCase()?'selected':''}>${x.t}</option>`).join('')}</select>`
+            :`<input class="input" value="${H(r[2]||'')}" placeholder="${r[0]==='tag'?'標籤（正規化後比對，red_new＝red-new）':'值'}" aria-label="條件值" onchange="colSrcRule(${i},${j},2,this.value)">`}
+        <button class="rm" aria-label="移除條件" onclick="colSrcRuleDel(${i},${j})">${IC(IC_TRASH,14)}</button></div>`).join('')}
+      <button class="btn btn-sec btn-sm" onclick="colSrcRuleAdd(${i})">＋ 新增條件</button>
+      ${(s.rules||[]).some(r=>r[0]==='tag')?`<p class="help" style="margin-top:var(--sp-200)">🔴 標籤用<b>包括／不包括</b>（集合運算）：條件 <code>red</code> <b>不會</b>命中 <code>red-new</code>。字串欄位的「包含」才是子字串。</p>`:''}`
+    :`<div class="src-mem">
+      ${(s.members||[]).map((m,j)=>`<span class="sm">${H(colMemberLabel(s.type,m))}<button aria-label="移除" onclick="colSrcMemDel(${i},${j})">✕</button></span>`).join('')||'<span class="mut3" style="font-size:var(--t-xs)">尚未挑選任何項目</span>'}
+      <button class="btn btn-sec btn-sm" onclick="colSrcPick(${i})">＋ ${s.type==='collections'?'挑選商品系列':s.type==='variants'?'挑選變體':s.type==='apps'?'選擇應用程式':'挑選商品'}</button></div>
+      ${s.type==='collections'?`<p class="help" style="margin-top:var(--sp-200)">取被引用系列的<b>最終成員</b>（它自己的排除已經套用過，V-140）；寫入時做環偵測，命中回 <code>CYCLIC_REFERENCE</code>。</p>`:''}
+      ${s.selection==='manual'&&s.mode==='include'?`<p class="help" style="margin-top:var(--sp-200)">手動加入的項目<b>除非手動移除，否則永遠留在系列內</b>（官方明載）——條件重算不會把它踢出去。</p>`:''}`}
+  </div>`;
+}
+function colMemberLabel(type,m){
+  if(type==='collections')return (COLLECTIONS.find(c=>c.id===m)||{t:m}).t;
+  if(type==='variants'){const[i,v]=String(m).split('/');return (PRODUCTS[+i]||{n:'?'}).n+' / '+v;}
+  if(type==='apps')return String(m);
+  return (PRODUCTS[m]||{n:'?'}).n;
+}
+function colRefresh(){renderDetail('d-collection');formSetDirty(true);}
+function colSrcAddMenu(mode){
+  openGen({title:mode==='exclude'?'新增排除來源':'新增納入來源',pad:false,
+    body:COL_SRC_TYPES.map(([k,l])=>`<button class="pick" onclick="colSrcAdd('${k}','${mode}')">
+      <span class="pk-i"><b>${l}</b><span>${k==='products'?'依條件自動納入，或手動挑選商品'
+        :k==='variants'?'把個別變體當成員（例如只賣某個顏色）'
+        :k==='collections'?'把另一個商品系列的最終成員整批帶進來'
+        :'成員由 app 決定（例如選品 app、AI 代理目錄）'}</span></span><span class="chev">›</span></button>`).join('')});
+}
+function colSrcAdd(type,mode){
+  closeGen();
+  const s={type,mode,selection:(type==='products'||type==='variants')?'conditions':'manual',logic:'all',rules:[],members:[]};
+  if(s.selection==='conditions')s.rules=[[type==='variants'?'variant_title':'tag',type==='variants'?'包含':'包括','']];
+  if(type==='apps')s.appTag='agent';
+  COL.sources=COL.sources||[];COL.sources.push(s);
+  colRefresh();toast((mode==='exclude'?'已新增排除來源：':'已新增納入來源：')+colSrcLabel(type));
+}
+function colSrcDel(i){COL.sources.splice(i,1);colRefresh();toast('已移除來源');}
+function colSrcSet(i,k,v){
+  const s=COL.sources[i];s[k]=v;
+  s.rules=s.rules||[];s.members=s.members||[];   /* 兩個容器一律先存在——挑選器直接 push，undefined 會當場炸 */
+  if(k==='selection'&&v==='conditions'&&!s.rules.length)s.rules=[['tag','包括','']];
+  colRefresh();}
+function colSrcRule(i,j,k,v){
+  const r=COL.sources[i].rules[j];r[k]=v;
+  if(k===0&&!RULE_OPS[ruleKind(v)].includes(r[1]))r[1]=RULE_OPS[ruleKind(v)][0];   /* 換欄位就換運算子集合 */
+  colRefresh();}
+function colSrcRuleAdd(i){
+  const s=COL.sources[i];s.rules=s.rules||[];
+  const total=(COL.sources||[]).reduce((a,x)=>a+((x.rules||[]).length),0);
+  if(total>=60){toast('已達單一系列 60 條件上限（limits.yml collection.max_rules_per_collection）');return;}
+  s.rules.push(['title','包含','']);colRefresh();}
+function colSrcRuleDel(i,j){
+  const s=COL.sources[i];s.rules.splice(j,1);
+  if(!s.rules.length)s.rules.push(['title','包含','']);colRefresh();}
+function colSrcMemDel(i,j){COL.sources[i].members.splice(j,1);colRefresh();toast('已從來源移除');}
+function colSrcPick(i){
+  const s=COL.sources[i];
+  if(s.type==='collections'){
+    const items=COLLECTIONS.filter(c=>c.id!==COL.id).map(c=>({t:c.t,s:colEval(c).length+' 件・'+colKind(c),id:c.id}));
+    if(!items.length){toast('沒有其他可引用的系列');return;}
+    pickerModal('挑選商品系列',items,sel=>{
+      sel.forEach(x=>{
+        if(colReaches(x.id,COL.id)){toast('CYCLIC_REFERENCE：「'+x.t+'」已經（間接）引用了這個系列，加了會成環');return;}
+        if(!s.members.includes(x.id))s.members.push(x.id);});
+      colRefresh();},true);
+    return;
+  }
+  if(s.type==='apps'){
+    pickerModal('選擇應用程式',[{t:'AI 代理目錄',s:'以 agent 標籤決定成員',id:'agent'},{t:'選品 App（Simprosys）',s:'以 主打 標籤決定成員',id:'主打'}],
+      sel=>{s.appTag=sel[0].id;s.members=[sel[0].t];colRefresh();},false);
+    return;
+  }
+  if(s.type==='variants'){
+    const items=[];PRODUCTS.forEach(p=>(p.opts||[]).forEach(o=>o.v.forEach(v=>items.push({t:p.n+' / '+v,s:o.n,g:p.g,id:p.i+'/'+v}))));
+    pickerModal('挑選變體',items,sel=>{sel.forEach(x=>{if(!s.members.includes(x.id))s.members.push(x.id);});colRefresh();},true);
+    return;
+  }
+  pickerModal('挑選商品',PRODUCTS.map(p=>({t:p.n,s:`${money(p.price)}・庫存 ${p.inv}`,g:p.g,id:p.i})),
+    sel=>{sel.forEach(x=>{if(!s.members.includes(x.id))s.members.push(x.id);});colRefresh();},true);
 }
 
 /* ==================================================================
@@ -5387,6 +6217,8 @@ function xferNew(){
   openGen({title:'建立轉移',wide:true,body:`<div class="stack">
     <div class="grid2">${F('起點',SEL('_xf',['（外部供應商）','主倉（內湖）','台北門市','台中寄倉'],'主倉（內湖）'))}${F('目的地',SEL('_xt',['主倉（內湖）','台北門市','台中寄倉','（外部目的地）'],'台北門市'))}</div>
     <div class="grid2">${F('參考名稱',TXT('_xr','','例：門市補貨 8/13'))}${F('預計到達日','<input class="input" type="date" value="2026-08-15">')}</div>
+    ${F('連結採購單',SEL('_xpo',[['','（不連結）'],['PO-88','#PO-88・合作工坊'],['PO-87','#PO-87・亞麻供應商 A']],''),
+      '🔴 <b>只是關聯，不是流程串接</b>（60 §7 的 🔴 更正）：採購單＝商業協議（草稿／已訂購兩態，收貨根本不在它身上）；轉移＝實際貨物移動（五態狀態機＋收貨三動作）。<b>兩份紀錄各自獨立，改一邊不動另一邊</b>——照「採購單→轉移→入帳是一條鏈」實作會做出一個不存在的狀態機')}
     ${F('備註',TA('_xn','','內部備註',2))}
     <p class="help">建立後為「草稿」：不佔庫存、可改起訖點、是唯一可刪除的狀態。</p></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立轉移草稿 #T-119')">建立草稿</button>`});
@@ -5403,12 +6235,63 @@ function xferOpen(id){
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已全部收貨——目的地轉 Available')">全部收貨</button>
      <button class="btn btn-danger-o btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();confirmDanger('取消轉移','取消後起點的 reserved 數量會釋放回 Available。','取消轉移',()=>toast('已取消轉移'))">取消轉移</button>`});
 }
+/* 採購單（60 §7 ＋ 61 官方查核後的更正）：
+   🔴 **採購單只有草稿／已訂購兩態，收貨根本不在採購單上**——收貨是「轉移」那條線的事
+      （五態狀態機 ＋ 接受／拒收／取消三動作）。原本這裡列了「部分收貨／已收貨」，
+      那是把兩份各自獨立的紀錄誤接成一條流程鏈，照著做會實作出一個不存在的狀態機。
+   🔴 **採購單自帶幣別**：供應商可能用別的幣別結算，與商店 presentment 幣別無關。
+      對 integer cents 模型的意思是：PO 行的成本存的是**該 PO 幣別**的 cents，
+      不是商店基準幣別的 cents——兩者混用就是對帳日才會發現的錯。 */
+const POS=[
+ {id:'PO-88',sup:'合作工坊',dest:'主倉（內湖）',terms:'Net 30',n:120,st:'已訂購',eta:'8月20日',cur:'HKD',cost:4820000},
+ {id:'PO-87',sup:'亞麻供應商 A',dest:'主倉（內湖）',terms:'Net 15',n:40,st:'已訂購',eta:'8月14日',cur:'TWD',cost:1860000},
+ {id:'PO-86',sup:'Kansai Textile',dest:'主倉（內湖）',terms:'Net 30',n:60,st:'草稿',eta:'—',cur:'JPY',cost:9800000}];
 function invPO(){
-  return `<div class="card"><table class="idx"><thead><tr><th>採購單</th><th>供應商</th><th>目的地</th><th>付款條件</th><th class="right">件數</th><th>狀態</th><th>預計到貨</th></tr></thead><tbody>
-    <tr onclick="toast('Demo：採購單詳情——收貨介面同轉移（accept/reject）')"><td><b>#PO-88</b></td><td>合作工坊</td><td>主倉（內湖）</td><td>Net 30</td><td class="right num">120</td><td>${chip('已下單','warning')}</td><td>8月20日</td></tr>
-    <tr onclick="toast('Demo：採購單詳情')"><td><b>#PO-87</b></td><td>亞麻供應商 A</td><td>主倉（內湖）</td><td>Net 15</td><td class="right num">40</td><td>${chip('部分收貨','info','blocked')}</td><td>8月14日</td></tr>
-    <tr onclick="toast('Demo：採購單詳情')"><td><b>#PO-86</b></td><td>合作工坊</td><td>主倉（內湖）</td><td>Net 30</td><td class="right num">60</td><td>${chip('已收貨','success')}</td><td>8月1日</td></tr>
-    </tbody></table><p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">PO 行＝變體＋supplier SKU＋成本＋數量＋稅%；Mark as ordered 後記 Incoming（41 §3.8）。</p></div>`;
+  return `<div class="card">
+    <div class="listbar"><button class="btn btn-pri btn-sm" data-doc="po-new" onclick="poNew()">建立採購單</button>
+      <span class="help" style="margin-left:var(--sp-200)">狀態只有<b>草稿／已訂購</b>兩態——收貨在「轉移」那一頁，不在這裡</span></div>
+    <table class="idx" data-doc="po-table"><thead><tr><th>採購單</th><th>供應商</th><th>目的地</th><th>付款條件</th><th class="right">件數</th><th>幣別</th><th class="right">成本總計</th><th>狀態</th><th>預計到貨</th></tr></thead><tbody>
+    ${POS.map(o=>`<tr onclick="poOpen('${o.id}')"><td><b>#${o.id}</b></td><td>${H(o.sup)}</td><td>${H(o.dest)}</td><td>${H(o.terms)}</td>
+      <td class="right num">${o.n}</td><td><span class="tr-b"><b>${o.cur}</b></span></td>
+      <td class="right num">${money(o.cost,o.cur)}</td><td>${chip(o.st,o.st==='已訂購'?'warning':'info')}</td><td>${H(o.eta)}</td></tr>`).join('')}
+    </tbody></table><p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">
+      PO 行＝變體＋supplier SKU＋成本＋數量＋稅%；標記為已訂購後在目的地記 Incoming（41 §3.8）。
+      <b>成本總計以該採購單自己的幣別顯示</b>（不是報表幣別）——上面三張單分屬三種幣別，數字沒有可加性。</p></div>`;
+}
+function poNew(){
+  openGen({title:'建立採購單',wide:true,body:`<div class="stack">
+    <div class="grid2">${F('供應商',SEL('_posup',['合作工坊','亞麻供應商 A','Kansai Textile'],'合作工坊'))}${F('收件地',SEL('_podest',['主倉（內湖）','台北門市','台中寄倉'],'主倉（內湖）'))}</div>
+    <div class="grid2">${F('幣別',SEL('_pocur',curOptions(),MARKET_BASE),'🔴 <b>採購單自帶幣別</b>：供應商用什麼幣別結算，與商店 presentment 幣別無關。成本行以這個幣別的 integer cents 儲存')}
+      ${F('付款條件',SEL('_poterms',['無','Due on receipt','Net 15','Net 30','Net 60'],'無'))}</div>
+    ${F('給供應商的備註',TA('_ponote','','出現在寄給供應商的採購單上',2),'≤5,000 字')}
+    ${F('標籤',TXT('_potag','','以逗號分隔'),'單一標籤 ≤40 字（limits.yml <code>order.tag_max_chars</code>，與商品標籤的 255 <b>不是同一個常數</b>）')}
+    <p class="help">建立後為<b>草稿</b>；標記為<b>已訂購</b>後才在收件地記 Incoming。
+      🔴 收貨不在採購單上——貨到了要建一張<b>轉移</b>來收（可在轉移上連結這張採購單，但那只是關聯）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立採購單草稿 #PO-89')">建立草稿</button>`});
+}
+function poOpen(id){
+  const o=POS.find(x=>x.id===id);if(!o)return;
+  openGen({title:`採購單 #${o.id}`,wide:true,body:`<div class="stack">
+    <div class="rowflex">${['草稿','已訂購'].map(st=>chip(st,st===o.st?'success':'default')).join('')}
+      <span class="tr-b" style="margin-left:auto"><b>幣別 ${o.cur}</b></span></div>
+    <div class="kv"><span class="k">供應商 → 收件地</span><span>${H(o.sup)} → ${H(o.dest)}</span></div>
+    <div class="kv"><span class="k">付款條件</span><span>${H(o.terms)}</span></div>
+    <table class="idx"><thead><tr><th>變體</th><th>supplier SKU</th><th class="right">數量</th><th class="right">單位成本</th><th class="right">小計</th></tr></thead><tbody>
+      ${[['奶茶色寬版帽T / M / 奶茶','SUP-HD-M',60,Math.round(o.cost*0.5/60)],
+         ['燕麥色針織開衫 / F / 燕麥','SUP-KN-F',40,Math.round(o.cost*0.3/40)],
+         ['帆布托特包 / 單一規格','SUP-AC-1',20,Math.round(o.cost*0.2/20)]]
+        .map(r=>`<tr class="norow"><td>${r[0]}</td><td class="mono">${r[1]}</td><td class="right num">${r[2]}</td>
+          <td class="right num">${money(r[3],o.cur)}</td><td class="right num">${money(r[2]*r[3],o.cur)}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="kv"><span class="k">稅金（內含）</span><span class="num">${money(Math.round(o.cost*0.05),o.cur)}</span></div>
+    <div class="kv"><span class="k">總計</span><span class="num"><b>${money(o.cost,o.cur)}</b></span></div>
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>這張單上<b>沒有收貨動作</b>，那不是漏做：採購單是<b>商業協議</b>，貨物移動與收貨在「轉移」那條線
+        （五態 ＋ 接受／拒收／取消）。兩份紀錄各自獨立，改一邊不動另一邊（60 §7 更正、61 官方文檔）。</span></div></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button>
+     ${o.st==='草稿'?`<button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已標記為已訂購——收件地開始記 Incoming')">標記為已訂購</button>`
+       :`<button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();INVTAB='xfer';go('m-inventory');toast('建立一張轉移來收貨，並在上面連結這張採購單')">建立轉移來收貨</button>`}`});
 }
 
 /* ==================================================================
@@ -6765,6 +7648,9 @@ function afterRoute(p){
      否則 pvRefresh／renderDetail 之後 pill 會停在上一輪的值。
      變體詳情頁掛的是同一組卡與同一組 pill，所以走同一條路——不另開一支 pvdSync()。 */
   if(p==='d-product'||p==='d-variant')pdSync();
+  /* 67 §E.3：非來源語言下的唯讀鎖同樣是「宣告式狀態每次重繪後推回 DOM」——
+     忘了這一行，切回來源語言時價格欄會維持 disabled，商家會以為系統壞了。 */
+  if(p==='d-product')pdLocaleLock();
 }
 /* 列表引擎重繪：模組頁與詳情頁共用 */
 function lrender(){current.startsWith('d-')?renderDetail(current):renderModule(current);}
@@ -6867,15 +7753,34 @@ Object.assign(SET_PAGES,{
  domains:`<div class="card card-pad" data-doc="set-domains"><h3>網域</h3>
    <div class="set-row"><div class="sr-t"><b>chilllove.demo</b><span class="sub">主要網域・SSL 已簽發</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
    <div class="set-row"><div class="sr-t"><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="set-ctl">${chip('子網域','default','full')}</span></div>
-   <div class="set-row"><div class="sr-t"><b>chilllove.demo/int</b><span class="sub">International 市場・子資料夾</span></div><span class="set-ctl">${chip('國際','info','full')}</span></div>
    ${setRowTgl('將所有流量導向主網域','使用國際網域策略（子網域／子資料夾）時必須關閉','domRedirect',true,'set-dom-redirect')}
    <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：搜尋並購買網域（含年費與自動續約）')">購買網域</button>
-     <button class="btn btn-sec btn-sm" onclick="toast('Demo：連結既有網域——引導改 A/CNAME → 驗證輪詢 → 自動簽發 SSL')">連結既有網域</button></div></div>`,
- languages:`<div class="card card-pad" data-doc="set-languages"><h3>商店語言</h3>
-   ${[['繁體中文','預設語言',true],['English','已發布',true],['日本語','未發布',false]].map(([l,s2,on],i)=>`<div class="set-row"><div class="sr-t"><b>${l}</b><span class="sub">${s2}</span></div>
-     <input type="checkbox" class="tgl set-ctl" data-f="lang${i}" role="switch" aria-checked="${on?'true':'false'}" ${on?'checked':''} ${l==='繁體中文'?'disabled aria-disabled="true"':''} aria-label="發布 ${l}" onchange="toast(this.checked?'已發布「${l}」':'已取消發布「${l}」')"></div>`).join('')}
-   <button class="btn btn-sec btn-sm" style="margin-top:var(--sp-200)" onclick="toast('Demo：新增語言（≤20 種）→ 翻譯途徑 Translate & Adapt')">新增語言</button>
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">每個市場的可用語言子集在 Markets 設定；未發布語言只能用預覽連結查看。</p></div>`,
+     <button class="btn btn-sec btn-sm" onclick="toast('Demo：連結既有網域——引導改 A/CNAME → 驗證輪詢 → 自動簽發 SSL')">連結既有網域</button></div></div>
+  <div class="card card-pad" data-doc="set-mkt-url"><h3>各市場的網址結構</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     🔴 <b>「預設值」與「建議值」是兩件事</b>（62 §J.2，跟隨 Shopify 的做法把它們拆開）：
+     新市場<b>預設沿用主網域</b>，平台不替商家生任何 URL；<b>建議值</b>才是子資料夾，而它只出現在
+     商家主動點「設定網址結構」的時候。把兩者壓成一個值，商家每開一個市場就靜默多一份站點——
+     而他可能只是想針對該國調個價。</p>
+   ${setRow('新建市場的預設','<b>繼承主要 web presence 的網域與網址結構</b>——不自動配子資料夾。自動配＝一次新增一批可索引 URL ＋ 一批 hreflang 條目 ＋ 一批 sitemap 列',
+     '<span class="mono" style="font-size:var(--t-2xs)">market.web_presence.default_for_new_market = inherit_primary</span>','set-mkt-url-default')}
+   ${setRow('設定精靈裡的建議值','<b>子資料夾</b>：共享主網域權重、成本最低（一張憑證、一組 DNS）。這是「商家來問的時候給的建議」，不是「商家沒動作時系統做的事」',
+     '<span class="mono" style="font-size:var(--t-2xs)">market.web_presence.ui_recommended_strategy = subfolder</span>','set-mkt-url-rec')}
+   ${[['International','沿用主網域 chilllove.demo','inherit','en-hk・en-sg 兩個碼指向同一組 URL'],
+      ['日本','chilllove.demo/ja-jp','subfolder','商家手動改成子資料夾，那批 URL 才第一次出現']]
+     .map(([m,u,k,note])=>`<div class="set-row" data-doc="set-mkt-url-row"><div class="sr-t"><b>${m}</b><span class="sub"><span class="mono">${u}</span>・${note}</span></div>
+       <span class="set-ctl rowflex" style="gap:var(--sp-200)">${k==='inherit'?chip('沿用主網域','default','full'):chip('子資料夾','info','full')}
+         <button class="btn btn-ghost btn-sm" onclick="toast('Demo：網址結構精靈——沿用主網域 → 子資料夾是「新增」不是「搬遷」，不產生 301')">設定網址結構</button></span></div>`).join('')}
+   <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>🔴 <b>沿用主網域 → 子資料夾是「新增」，不是「搬遷」</b>：繼承狀態下該市場<b>沒有自己的 URL</b>，
+       所以沒有舊 URL 要 301——套 site move 流程只會產生一批 <span class="mono">from == to</span> 的重導列
+       （製造垃圾與重導鏈風險）。要做的是：新 URL 進 sitemap ＋ 進 hreflang 矩陣 ＋ 觸發失效管線。
+       <b>反向</b>（子資料夾 → 回到沿用主網域）才是搬遷，必須走精靈與 301。</span></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
+     選擇準則是<b>決策提示</b>不是硬性建議：需要在地法人／法遵（由 jurisdiction pack 宣告
+     <span class="mono">requires_local_domain</span>）或已有該 ccTLD 品牌 ⇒ 獨立網域；
+     需要獨立伺服器拓撲或獨立團隊 ⇒ 子網域；其餘 ⇒ 子資料夾。
+     <b>SEO 層不得出現任何國別清單</b>（鐵律 11）。網址參數（<span class="mono">?loc=de</span>）官方不建議，我方不提供。</p></div>`,
  brand:`<div class="card card-pad" data-doc="set-brand"><h3>品牌</h3>
    <div class="set-row"><div class="sr-t"><b>Logo</b><span class="sub">預設版＋方形版</span></div><span class="thumb set-ctl" style="background:linear-gradient(135deg,#e9b8a2,#a9502c)"></span></div>
    <div class="set-row"><div class="sr-t"><b>品牌色</b><span class="sub">主色 #A9502C・輔色 #F6F1E9（對比檢查通過）</span></div>
@@ -7283,8 +8188,321 @@ function evSubAll(on){
   setSubOpen('ev-pixel',evEditPage());
   toast(on?'已訂閱全部標準事件':'已取消全部訂閱——此 pixel 目前收不到任何事件');
 }
+/* ==================================================================
+   語言管理（67 §A.2、§C.1、§C.3、§E.4、§E.5、§E.6）
+   🔴 新增語言必須是「後台一次操作」——不得需要改程式碼／改 enum／跑 migration／重新部署。
+      本頁的「新增語言」就是往 SHOP_LOCALES 推一列，全檔沒有第二處要跟著改。
+   ================================================================== */
+const LANG_RESOURCES=[['PRODUCT','商品',()=>PRODUCTS.length*PROD_TR.length],
+ ['COLLECTION','商品系列',()=>COLLECTIONS.length*3],['PAGE','頁面',()=>4*3],
+ ['SHOP_POLICY','政策',()=>5],['THEME_LOCALE_CONTENT','佈景主題字串',()=>180],
+ ['EMAIL_TEMPLATE','通知範本',()=>12*2]];
+/* 全店百分比：只算原型真的有資料的 PRODUCT 一族（其餘資源型別在原型沒有譯文列，
+   把它們算進分母會產生一個「永遠 12%」的假數字——鐵律 7 要的是同源，不是好看）。 */
+function langProgress(tag){
+  if(tag===srcLocale())return{done:1,total:1,pct:100};
+  let done=0,total=0;
+  PRODUCTS.forEach(p=>{const st=prodTrStatus(p,tag);done+=st.done;total+=st.total;});
+  return{done,total,pct:total?Math.round(done/total*100):0};
+}
+function langPage(){
+  const list=SHOP_LOCALES.slice().sort((a,b)=>a.pos-b.pos);
+  const mtOff=!I18N.mtProvider;
+  return `<div class="card card-pad" data-doc="set-languages"><h3>商店語言
+    <span class="h-act num mut3" style="font-size:var(--t-xs)">${list.length} / ${I18N.maxShopLocales}</span></h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     語言集合是<b>資料</b>不是列舉（67 §A.2）：新增語言不需要改程式碼、不需要 migration。
+     首發三語只是種子資料（limits.yml <code>i18n.launch_locales</code>，該鍵另標
+     <code>launch_locales_is_seed_not_enum: true</code>——拿它當「支援的語言」判斷就是 bug）。</p>
+   ${list.map((l,i)=>{const pr=langProgress(l.tag),L=locOf(l.tag);return `
+   <div class="set-row" data-doc="set-lang-row">
+     <div class="sr-t"><b>${H(L.endonym)}</b><span class="sub"><span class="mono">${H(l.tag)}</span>
+       ・${l.source?'<b>來源語言</b>（base row 的文字就是這個語言）':l.published?'已發布':'未發布——只有預覽連結看得到'}
+       ・書寫方向 ${L.dir}・排序 collation <span class="mono">${H(L.collation||'—')}</span></span></div>
+     <span class="set-ctl rowflex" style="gap:var(--sp-200)">
+       ${l.source?`<span class="tr-b ok">來源・100%</span>`
+         :`<span class="tr-b ${pr.pct===100?'ok':'miss'}" title="商品線已翻 ${pr.done}/${pr.total} 欄">${pr.pct}%</span>`}
+       <input type="checkbox" class="tgl" data-f="langpub-${i}" role="switch" aria-checked="${l.published?'true':'false'}"
+         ${l.published?'checked':''} ${l.source?'disabled aria-disabled="true" title="來源語言的 published 恆為 true，不可取消發布（userErrors SOURCE_LOCALE_IMMUTABLE）"':''}
+         aria-label="發布 ${H(L.endonym)}" onchange="langPublish('${l.tag}',this.checked)">
+       ${l.source?'':`<button class="btn btn-ghost btn-sm" onclick="langSetSource('${l.tag}')">設為來源</button>
+       <button class="btn btn-ghost btn-sm" onclick="langRemove('${l.tag}')" aria-label="移除 ${H(L.endonym)}">移除</button>`}
+     </span></div>`;}).join('')}
+   <div class="rowflex" style="margin-top:var(--sp-200)">
+     <button class="btn btn-sec btn-sm" data-doc="set-lang-add" ${list.length>=I18N.maxShopLocales?'disabled aria-disabled="true"':''} onclick="langAddOpen()">新增語言</button>
+     <button class="btn btn-ghost btn-sm" data-doc="set-lang-bo" onclick="openTranslations()">翻譯後台 ›</button></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
+     每店上限 ${I18N.maxShopLocales} 種（limits.yml <code>i18n.max_shop_locales</code>，出處 29 §1.2）；
+     各市場的可用語言是這份全集的<b>子集</b>，在市場設定裡開（兩張表是全集與子集的關係，不是兩份清單）。</p></div>
+
+  <div class="card card-pad" data-doc="set-lang-fallback"><h3>缺翻譯時的行為</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     🔴 缺翻譯<b>必須有明確且可預測的行為，不得靜默空白</b>（67 §0.2 原則 2）。這條鏈是規格，不是實作細節。</p>
+   ${setRow('解析順序','per-market 覆寫 → 語言層譯文 → BCP-47 截尾鏈 → 來源語言 base row → 依欄位類別',
+     '<span class="mono" style="font-size:var(--t-2xs)">i18n.fallback_chain_mode = bcp47_truncation</span>','set-lang-chain')}
+   ${SHOP_LOCALES.map(l=>`<div class="set-row is-ro"><div class="sr-t"><b class="mono">${H(l.tag)}</b>
+     <span class="sub">截尾鏈：${i18nChain(l.tag).length?i18nChain(l.tag).map(x=>'<span class="mono">'+H(x)+'</span>').join(' → '):'<b>（空鏈）</b>'}
+       → base row（${H(locName(srcLocale()))}）</span></div>
+     <span class="sr-ro">${chip('唯讀','default','')}</span></div>`).join('')}
+   <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>🔴 <b>繁體與簡體之間永不互為 fallback</b>（limits.yml <code>i18n.never_fallback_pairs</code>）。
+       地區借用只是用詞略有差異，<b>字體借用是整頁文字都不對</b>；缺 <span class="mono">zh-Hans</span> 譯文時
+       正確行為是回落到<b>來源語言</b>，不是回落到 <span class="mono">zh-Hant</span>。
+       裸 <span class="mono">zh</span> 是禁用碼（<code>i18n.forbidden_locale_tags</code>），截尾鏈遇到它就<b>提前結束</b>。</span></div>
+   ${setRow('必翻欄位缺譯','標題、政策內文一類：<b>顯示來源語言原文</b>並在後台標「未翻譯」——顯示原文優於顯示空白','<span class="mono" style="font-size:var(--t-2xs)">required → source_text</span>','set-lang-req')}
+   ${setRow('可選欄位缺譯','SEO 描述、圖片 alt 一類：<b>整個欄位不輸出</b>（不是輸出空字串）','<span class="mono" style="font-size:var(--t-2xs)">optional → omit_field</span>','set-lang-opt')}
+   ${setRowTgl('大段回落文字加 lang 屬性','中文頁裡的英文段落標 <span class="mono">&lt;div lang="en"&gt;</span>：螢幕閱讀器才不會用錯的語音讀，hreflang 宣稱也才誠實。短欄位不加，避免 DOM 噪音','langMarkFallback',true,'set-lang-langattr')}</div>
+
+  <div class="card card-pad" data-doc="set-lang-tools"><h3>批次工具</h3>
+   ${setRowBtn('繁簡轉換','<b>字形轉換，不是翻譯</b>——不處理用詞在地化（软件／軟體、视频／影片）。結果寫成真實譯文列，可編輯、可稽核','<span class="chev" aria-hidden="true">›</span>','openScriptConvert()','set-lang-sc','漢')}
+   ${mtOff
+     ?`<div class="set-row is-ro"><div class="sr-t"><b>機器翻譯</b><span class="sub">尚未設定 provider ⇒ 整個功能不出現（不是出現後報錯）。設定頁必須明示<b>資料出境</b>：商家內容會送到第三方（67 §K.0 合規維度）</span></div>
+        <span class="sr-ro">${chip('未設定 provider','default','')}</span></div>`
+     :setRowBtn('機器翻譯','逐資源逐欄位，背景 job 可斷點續跑','<span class="chev" aria-hidden="true">›</span>','toast("Demo：機器翻譯批次")','set-lang-mt','✨')}
+   ${setRowBtn('翻譯匯出／匯入（第三套 CSV）','商品 CSV／庫存 CSV／翻譯 CSV 是<b>三套</b>：鍵不同、範圍不同、生命週期不同','<span class="chev" aria-hidden="true">›</span>','openTrIO()','set-lang-io','📄')}</div>`;
+}
+function langAddOpen(){
+  const have=SHOP_LOCALES.map(l=>l.tag);
+  const avail=PLATFORM_LOCALES.filter(l=>!have.includes(l.tag));
+  openGen({title:'新增語言',body:`<div class="stack">
+    <p class="help">從平台語言字典挑一個，或直接輸入 BCP-47 標籤。<b>不需要改程式碼、不需要 migration</b>（67 §A.2）。</p>
+    ${F('語言',SEL('_lgpick',avail.map(l=>[l.tag,l.endonym+'（'+l.tag+'）']).concat([['_custom','── 自行輸入標籤 ──']]),avail[0]?avail[0].tag:'_custom'))}
+    ${F('自行輸入 BCP-47 標籤',TXT('_lgtag','','例：pt-BR / de / th'),'格式＝ISO 639-1 (+ ISO 15924 script) (+ ISO 3166-1 alpha-2)，limits.yml <code>i18n.locale_tag_format</code>')}
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>禁用碼：<span class="mono">${I18N.forbidden.join(' / ')}</span>。
+        🔴 裸 <span class="mono">zh</span> 在字體上是歧義的——任何以它為 fallback 目標的鏈都會把繁體使用者送到簡體內容或反之。
+        繁體一律 <span class="mono">zh-Hant</span>、簡體一律 <span class="mono">zh-Hans</span>，不得借 <span class="mono">zh-TW</span>／<span class="mono">zh-CN</span> 表示字體。</span></div>
+    <p class="help">新增後預設<b>未發布</b>：可以先翻完再對外開，未發布語言只有預覽連結看得到（29 §1.2）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="langAdd()">新增語言</button>`});
+}
+function langAdd(){
+  const sel=document.querySelector('[data-f="_lgpick"]').value;
+  const raw=(document.querySelector('[data-f="_lgtag"]').value||'').trim();
+  const tag=sel==='_custom'?raw:sel;
+  if(!tag){toast('請選擇或輸入語言標籤');return;}
+  if(I18N.forbidden.includes(tag)){toast('userErrors FORBIDDEN_LOCALE_TAG：'+tag+' 是禁用碼（67 §A.4）');return;}
+  if(!I18N.tagFormat.test(tag)){toast('userErrors INVALID_LOCALE_TAG：'+tag+' 不符 BCP-47 格式（語言小寫／script Title／region 大寫）');return;}
+  if(SHOP_LOCALES.some(l=>l.tag===tag)){toast('這個語言已經啟用了');return;}
+  if(SHOP_LOCALES.length>=I18N.maxShopLocales){toast('userErrors LOCALE_LIMIT_EXCEEDED（limits.yml i18n.max_shop_locales）');return;}
+  SHOP_LOCALES.push({tag,source:false,published:false,pos:SHOP_LOCALES.length+1});
+  closeGen();setPage('languages');
+  toast('已新增語言：'+locName(tag)+'——沒有改任何一行程式碼，也沒有跑 migration');
+}
+function langPublish(tag,on){
+  const l=shopLoc(tag);if(!l)return;
+  if(l.source){toast('userErrors SOURCE_LOCALE_IMMUTABLE：來源語言不可取消發布');setPage('languages');return;}
+  l.published=on;setPage('languages');
+  toast(on?'已發布「'+locName(tag)+'」':'已取消發布——這個語言現在只有預覽連結看得到');
+}
+/* 67 §C.3(c)：改來源語言是**一次性資料遷移**，不是設定切換。走精靈＋dry-run。
+   🔴 目標語言缺譯時 base **保留原文**並落 gap 記錄——清空 base ＝商家在一次「切換預設語言」後
+      看到整店空白商品。 */
+function langSetSource(tag){
+  const from=srcLocale();
+  let gaps=0,move=0;
+  PRODUCTS.forEach(p=>{const st=prodTrStatus(p,tag);move+=st.done;gaps+=st.missing;});
+  openGen({title:'變更來源語言（dry-run）',wide:true,body:`<div class="stack">
+    <p class="help">來源語言＝<b>base 資料表裡的文字是哪一個語言</b>。改它會把整店的 base row 與 translations 對調，
+      是一次性的資料遷移（非同步 job、可回報進度），不是切一個設定。</p>
+    <table class="idx"><tbody>
+      <tr class="norow"><td>目前來源語言</td><td class="right"><b>${H(locName(from))}</b></td></tr>
+      <tr class="norow"><td>要改成</td><td class="right"><b>${H(locName(tag))}</b></td></tr>
+      <tr class="norow"><td>${H(locName(tag))} 已有譯文、可搬進 base 的欄位</td><td class="right num">${move}</td></tr>
+      <tr class="norow"><td><b>${H(locName(tag))} 缺譯文的欄位</b></td><td class="right num" style="color:var(--critical)">${gaps}</td></tr>
+    </tbody></table>
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>缺譯的那 ${gaps} 個欄位：<b>base 保留 ${H(locName(from))} 的原文</b>，並落一列
+        <span class="mono">source_locale_migration_gaps</span>（limits.yml
+        <code>i18n.source_locale_change_missing_translation: keep_source_text</code>）。</span></div>
+    <p class="help">遷移後全店 translations 的 <span class="mono">source_digest</span> 會重算（digest 綁的是來源文字，來源換了），
+      並 bump <span class="mono">shops.catalog_version</span> ⇒ 全店快取失效（63 §D.3）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="langSourceMigrate('${tag}')">開始遷移</button>`});
+}
+function langSourceMigrate(tag){
+  SHOP_LOCALES.forEach(l=>{l.source=l.tag===tag;if(l.source)l.published=true;});
+  if(CONTENT_LOCALE!==tag&&!shopLoc(CONTENT_LOCALE))CONTENT_LOCALE=tag;
+  closeGen();setPage('languages');
+  toast('來源語言已改為 '+locName(tag)+'——缺譯的欄位保留了原文，並記在 gap 清單裡');
+}
+function langRemove(tag){
+  const l=shopLoc(tag);if(!l||l.source){toast('userErrors SOURCE_LOCALE_IMMUTABLE：來源語言不可刪除');return;}
+  confirmDanger('移除語言','移除「'+locName(tag)+'」會一併刪除這個語言的所有譯文列，前台的該語言版本會立刻消失。'
+    +'引用它的 hreflang 條目與 sitemap 列也會一起移除。','移除語言',()=>{
+    SHOP_LOCALES=SHOP_LOCALES.filter(x=>x.tag!==tag);
+    if(CONTENT_LOCALE===tag)CONTENT_LOCALE=srcLocale();
+    setPage('languages');toast('已移除語言：'+locName(tag));});
+}
+/* ── 翻譯後台（29 §2.4 資源樹＋雙欄表；67 §E.4 的第三個出口）──────────────── */
+let TRBO={res:'PRODUCT',loc:'en',id:0};
+function openTranslations(){setSubOpen('translations',trBoPage());setAfterRender();}
+function trBoPage(){
+  const others=SHOP_LOCALES.filter(l=>!l.source).sort((a,b)=>a.pos-b.pos);
+  if(!others.some(l=>l.tag===TRBO.loc))TRBO.loc=others[0]?others[0].tag:srcLocale();
+  const p=PRODUCTS[TRBO.id]||PRODUCTS[0];
+  return `<div class="card card-pad" data-doc="sub-translations"><h3>翻譯後台</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+      左邊是資源樹（每型別的「已翻／總數」），右邊是逐 key 雙欄。
+      🔴「缺 N」的分母與商品列表徽章、與語言設定頁的百分比<b>同源</b>（<span class="mono">translation_status</span>，鐵律 7）。</p>
+    <div class="rowflex" style="margin-bottom:var(--sp-300)">
+      ${F('翻譯到',SEL('_trloc',others.map(l=>[l.tag,locName(l.tag)]),TRBO.loc,'onchange="TRBO.loc=this.value;openTranslations()"'))}
+      ${F('資源',SEL('_trres',LANG_RESOURCES.map(r=>[r[0],r[1]]),TRBO.res,'onchange="TRBO.res=this.value;openTranslations()"'))}
+    </div>
+    ${LANG_RESOURCES.map(([k,l,cnt])=>{
+      const isP=k==='PRODUCT';
+      const done=isP?PRODUCTS.reduce((a,x)=>a+prodTrStatus(x,TRBO.loc).done,0):0;
+      const total=isP?PRODUCTS.length*PROD_TR.length:cnt();
+      return `<div class="set-row"><div class="sr-t"><b>${l}</b><span class="sub"><span class="mono">${k}</span>
+        ${isP?'':'・原型未載入此型別的譯文列（分母來自可翻欄位數，不是假資料）'}</span></div>
+        <span class="set-ctl"><span class="tr-b ${done===total?'ok':'miss'}">${done} / ${total}</span></span></div>`;}).join('')}
+    ${TRBO.res==='PRODUCT'?`
+    <div class="card-sec">
+      ${F('商品',SEL('_trpid',PRODUCTS.map(x=>[String(x.i),x.n]),String(TRBO.id),'onchange="TRBO.id=+this.value;openTranslations()"'))}
+      <table class="idx"><thead><tr><th>欄位</th><th>${H(locName(srcLocale()))}（來源）</th><th>${H(locName(TRBO.loc))}（譯文）</th><th>狀態</th></tr></thead><tbody>
+      ${PROD_TR.map(f=>{const hit=trRaw('PRODUCT',p.i,TRBO.loc,f.k);
+        const st=!hit?['miss','未翻譯']:hit.review?['mt','機翻未覆核']:hit.outdated==='major'?['old','來源已變更']:hit.outdated==='minor'?['old','輕微變更']:['ok','已翻譯'];
+        return `<tr class="norow"><td><b>${f.l}</b><span class="mut3" style="display:block;font-size:var(--t-2xs)">${f.cls==='required'?'必翻':'可選'}・<span class="mono">${f.k}</span></span></td>
+          <td class="mut">${H(f.get(p))}</td>
+          <td><input class="input" value="${H(hit?hit.v:'')}" placeholder="輸入譯文" aria-label="${f.l} 譯文"
+            onchange="trBoSet('${f.k}',this.value)"></td>
+          <td><span class="tr-b ${st[0]}">${st[1]}</span></td></tr>`;}).join('')}
+      </tbody></table>
+      <p class="help" style="margin-top:var(--sp-200)">🔴 <b>outdated 不影響前台渲染</b>（limits.yml
+        <code>i18n.outdated_affects_storefront_render: false</code>）：一個錯字修正若讓整個語言版本退回來源語言，
+        那是把小問題放大成事故。它是<b>後台狀態</b>。</p>
+    </div>`:`<div class="empty-wrap"><b>原型只載入了商品線的譯文列</b>其餘資源型別的雙欄表在 M2／M4 接上真資料後開啟。</div>`}
+  </div>`;
+}
+function trBoSet(f,v){
+  const p=PRODUCTS[TRBO.id];
+  trPut('PRODUCT',p.i,TRBO.loc,f,v,{src:'human'});
+  openTranslations();
+  toast(i18nBlank(v)?'已清空這一欄的譯文（前台會回落來源語言原文）':'已更新譯文');
+}
+/* 67 §E.5(c)：繁簡轉換是**獨立工具**，不是 MT、也不是渲染期 fallback */
+function openScriptConvert(){
+  const pairs=[['zh-Hant','zh-Hans','繁體 → 簡體'],['zh-Hans','zh-Hant','簡體 → 繁體']]
+    .filter(([a,b])=>shopLoc(a)&&shopLoc(b));
+  openGen({title:'繁簡轉換',wide:true,body:`<div class="stack">
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span><b>這是字形轉換，不是翻譯。</b>它不做用詞在地化（软件／軟體、视频／影片、鼠标／滑鼠）——
+        轉完不等於簡體版可以上線。</span></div>
+    ${pairs.length?F('方向',SEL('_scdir',pairs.map(([a,b,l])=>[a+'>'+b,l]),pairs[0][0]+'>'+pairs[0][1]))
+      :'<p class="help">要先同時啟用 zh-Hant 與 zh-Hans 才能用這個工具。</p>'}
+    <p class="help">🔴 <b>兩個方向的品質不對稱</b>：繁→簡接近無損；<b>簡→繁是一對多</b>
+      （<span class="mono">发→發／髮</span>、<span class="mono">干→干／乾／幹</span>、<span class="mono">后→后／後</span>），
+      必然需要人工覆核 ⇒ 該方向的批次<b>整批標為待覆核</b>，並在完成報告列出含歧義字的筆數。</p>
+    <p class="help">結果寫成真實譯文列（<span class="mono">value_source = script_conversion</span>、
+      <span class="mono">review_required = true</span>），可編輯、可稽核；<b>不做成渲染期偷偷換字</b>——
+      那樣商家永遠看不到也改不掉。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     ${pairs.length?`<button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="scriptConvertRun()">開始轉換</button>`:''}`});
+}
+function scriptConvertRun(){
+  const dir=document.querySelector('[data-f="_scdir"]').value.split('>');
+  const [from,to]=dir;
+  let n=0,amb=0;
+  PRODUCTS.forEach(p=>PROD_TR.forEach(f=>{
+    const base=from===srcLocale()?f.get(p):(trRaw('PRODUCT',p.i,from,f.k)||{}).v;
+    if(!base)return;
+    const out=to==='zh-Hans'?toSimplified(base):base;      /* 簡→繁在原型不做猜測，只標待覆核 */
+    if(to==='zh-Hant')amb+=scAmbigCount(base);
+    trPut('PRODUCT',p.i,to,f.k,out,{src:'script_conversion',review:true,from});
+    n++;}));
+  closeGen();setPage('languages');
+  toast('已轉換 '+n+' 個欄位，全部標為待覆核'+(to==='zh-Hant'?'；其中含歧義字 '+amb+' 處，務必逐筆看過':''));
+}
+/* 67 §E.6：翻譯是**第三套** CSV。🔴 空白＝清空（與商品 CSV 同向，2026-08-12 依 68 §B-3 翻面），
+   「不變更」改以**缺席**表達；三件事缺一不可，缺了就是一台誤刪產生器。 */
+function openTrIO(){
+  openGen({title:'翻譯匯出／匯入（第三套 CSV）',wide:true,body:`<div class="stack">
+    <p class="help">鍵是 <span class="mono">(resource_type, resource_id, locale, field_key, market)</span>，
+      與商品 CSV（handle ＋ 變體行）、庫存 CSV（地點 × 變體）都不同 ⇒ 三套檔案，不硬塞成一套。</p>
+    ${F('語言',SEL('_tioLoc',SHOP_LOCALES.filter(l=>!l.source).map(l=>[l.tag,locName(l.tag)]),'en'),'匯出可選語言——不想動的語言<b>不要出現在檔案裡</b>')}
+    ${F('欄位',SEL('_tioFields',[['all','全部可翻欄位'],['title','只有標題'],['seo','只有 SEO 欄位']],'all'),'匯出可選欄位（<code>i18n.export.selectable_fields</code>）——未選的欄位<b>整欄不輸出</b>')}
+    <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span>🔴 <b>儲存格空白＝清空該譯文</b>（<code>i18n.import.blank_means_unchanged: false</code>）。
+        「不變更」的三種表達：<b>整列缺席</b>／<b>整欄缺席</b>／不要留空。
+        <span class="mono">__CLEAR__</span> 現在只是空白的<b>同義寫法</b>，用來讓「我是故意清空的」在檔案裡看得出來。</span></div>
+    <p class="help">匯出一律含 <span class="mono">source_text</span>（唯讀參考）與 <span class="mono">source_digest</span>：
+      沒有原文的翻譯檔對譯者不可用；沒有 digest 就無法安全回寫（缺欄一律整檔拒絕）。
+      digest 不符時<b>仍然寫入</b>但標 outdated＋待覆核，並列進匯入報告——不得靜默當成最新。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已排入翻譯 CSV 匯出——按 (locale, resource_type) 分檔')">匯出</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="trImportPreview()">匯入…</button>`});
+}
+function trImportPreview(){
+  closeGen();
+  const willClear=3,rows=128;
+  openGen({title:'匯入翻譯（預覽）',wide:true,body:`<div class="stack">
+    <table class="idx"><tbody>
+      <tr class="norow"><td>檔案列數</td><td class="right num">${rows}</td></tr>
+      <tr class="norow"><td>新增／更新譯文</td><td class="right num">${rows-willClear-4}</td></tr>
+      <tr class="norow"><td><b>將被清空的儲存格</b></td><td class="right num" style="color:var(--critical)">${willClear}</td></tr>
+      <tr class="norow"><td>digest 不符（照寫入，標為過期＋待覆核）</td><td class="right num">4</td></tr>
+    </tbody></table>
+    <p class="help">🔴「將被清空」單獨列成一個數字（<code>i18n.import.preview_clear_count_separate</code>）：
+      舊格式檔案裡的空白儲存格<b>原本代表「不變更」，現在代表「清空」</b>——
+      這件事不能靠 release note 通知，因為檔案是譯者給的，商家不會知道它是什麼時候寫的。
+      清空比例超過 <b>${Math.round(I18N.clearRatioConfirm*100)}%</b> 會再要一次確認，且一律寫稽核軌（誰、何時、哪一次匯入）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已開始匯入——逐行獨立 transaction，逐行結果報告在通知中心')">確認匯入</button>`});
+}
+
+/* ==================================================================
+   SEO 與 AI 檢索（62 §J 網域策略 / §K 地區重導 / §H llms.txt・agents.md）
+   ================================================================== */
+function seoGeoPage(){
+  const autoHandle=PRODUCTS.filter(p=>handleFor(p).via==='fallback').length;
+  return `<div class="card card-pad" data-doc="set-georedirect"><h3>地區自動重導</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     2026-08-12 依「全部跟隨 Shopify」裁定<b>翻面為預設啟用</b>（62 §K.2，原預設關閉）。
+     Google 至今仍建議避免自動重導，這條事實<b>沒有被推翻</b>——本設定是在明知它成立的前提下做的，
+     代價由下面三條<b>不可關閉</b>的護欄承擔。</p>
+   ${setRowTgl('依地區自動重導顧客','預設<b>啟用</b>（limits.yml <code>seo.redirect_geo.enabled_default: true</code>）。一律 302——地區偏好不是永久事實，用 301 會把它烙進瀏覽器快取','geoRedirect',true,'set-geo-enabled')}
+   ${setRowTgl('依瀏覽器語言自動切換語言','🔴 維持<b>停用</b>（limits.yml <code>i18n.storefront.auto_redirect_on_language: false</code>）。本尊也是預設停用——<b>不要因為地區那一半翻成啟用就把這一半一起翻</b>','geoLangDetect',false,'set-geo-langdetect')}
+   <div class="card-sec"><h3>不可關閉的護欄</h3>
+     <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+       Shopify 敢預設開，靠的是「爬蟲不重導 ＋ hreflang 完整」把 Google 的疑慮擋掉。
+       ⇒ 我方一旦預設開，原本「開啟時的選配護欄」三條就<b>升格為不變量</b>：不提供後台開關、不提供 API 欄位、
+       不提供環境變數，試圖關閉一律 reject。少了它們，預設開就是真的傷索引，而且傷的是<b>每一個新租戶</b>。</p>
+     ${[['對已驗證的搜尋引擎爬蟲不套用','UA 比對 ＋ <b>反向 DNS 驗證</b>；未通過驗證的自稱爬蟲當一般使用者處理（否則就是偽裝繞過的漏洞）','exclude_verified_crawlers'],
+        ['hreflang／sitemap 裡的 URL 對任何客戶端直接回 200','這是本節與 hreflang 矩陣的接縫，也是最容易做壞的地方','hreflang_urls_must_return_200'],
+        ['只重導一次','cookie 標記；使用者手動切回後不再攔截。無限重導＝使用者永遠回不到他想看的版本，那比不重導糟得多','once_per_visitor']]
+       .map(([t,s2,k],i)=>`<div class="set-row" data-doc="set-geo-guard"><div class="sr-t"><b>🔒 ${t}</b><span class="sub">${s2}<br><span class="mono" style="font-size:var(--t-2xs)">seo.redirect_geo.${k}</span></span></div>
+         <input type="checkbox" class="tgl set-ctl" data-f="geoGuard${i}" role="switch" aria-checked="true" checked disabled aria-disabled="true"
+           aria-label="${t}（不可關閉）" title="不可關閉的不變量（62 §K.2）：關掉自動重導時它自然不生效，但不存在「開著重導卻關掉護欄」的組合"></div>`).join('')}
+   </div>
+   ${setRow('歐盟例外','🔴 <b>法遵，不是偏好</b>：EU ccTLD 的在地化體驗 ＋ EU 來源客戶 ⇒ 不重導，改顯示建議橫幅。判定<b>不寫成 SEO 層的國別 if-else</b>（鐵律 11）——由 jurisdiction pack 宣告 <span class="mono">forbids_geo_auto_redirect</span>，SEO 層只讀該能力',
+     '<span class="mono" style="font-size:var(--t-2xs)">eu_exception_source = jurisdiction_pack_capability</span>','set-geo-eu')}
+   ${setRowTgl('建議切換橫幅','自動重導<b>關閉時</b>、以及 EU ccTLD 情境下的行為：顯示「建議切換到 {市場}」＋ cookie 記住選擇。⚠ 本尊沒有內建這個（官方推給第三方 app），這是我方超出本尊的一條','geoBanner',true,'set-geo-banner')}
+   ${setRow('切換器必須是真實連結','<span class="mono">&lt;a href&gt;</span> 指向目標市場 URL，不能是純 JS——那是爬蟲發現其他市場版本的路徑之一',
+     chip('硬規則','default','full'),'set-geo-switcher')}
+   <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span><b>與快取的接縫</b>（預設值翻面後才出現的新問題）：重導判定的輸入含瀏覽器語言與地理位置 ⇒ 依請求而異。
+       ①判定必須<b>在快取之前</b>，且判定結果本身<b>不得進頁面快取</b>；
+       ②頁面快取鍵<b>不因此新增 Accept-Language 維度</b>（被重導的請求根本沒進到頁面渲染）；
+       ③重導只發生在導覽層，<b>不改變任何 URL 的回應主體</b>。</span></div></div>
+
+  <div class="card card-pad" data-doc="set-aiaccess"><h3>AI 檢索與代理</h3>
+   ${setRowTgl('產生 llms.txt','預設<b>開</b>（limits.yml <code>seo.llms_txt_enabled: true</code>）：把商店的結構、政策與目錄入口整理成一份給大型語言模型讀的索引','aiLlms',true,'set-ai-llms')}
+   ${setRowTgl('產生 agents.md','預設<b>開</b>（limits.yml <code>seo.agents_md_enabled: true</code>）：給購物代理讀的操作說明（可用端點、目錄範圍、下單前必須確認的事項）','aiAgents',true,'set-ai-agents')}
+   ${setRowBtn('預覽 llms.txt','看目前會輸出什麼；內容由商店資料生成，不是手寫檔','<span class="chev" aria-hidden="true">›</span>',"toast('Demo：預覽 llms.txt（由商店資料生成）')",'set-ai-preview','📄')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
+     UNLISTED 商品<b>不進</b>任何一份（13 §F1.2 的 discoverable scope）——代理是新通路，
+     一般的 noindex 在代理面完全不生效，這一格最容易漏。</p></div>
+
+  <div class="card card-pad" data-doc="set-seohealth"><h3>SEO 健康</h3>
+   ${setRow('自動代碼 handle 佔比','品質閘門沒過、落到 <span class="mono">product-xxxx</span> 的商品數。補上 English 標題就會從譯文重新推導',
+     `<span class="tr-b ${autoHandle?'miss':'ok'}"><b>${autoHandle}</b> / ${PRODUCTS.length}</span>`,'set-seo-autohandle')}
+   ${setRow('hreflang 雙向性','同一 URL 對應多個 hreflang 碼＝<b>合法</b>（繼承主網域的市場就是這樣）；同一個碼對應多個 URL＝<b>非法</b>。兩者不要搞混，把前者拿去去重會把繼承市場的條目誤刪',
+     chip('通過','success','full'),'set-seo-hreflang')}</div>`;
+}
+
 Object.assign(SET_DYN,{payments:paymentsPage,taxes:taxesPage,locations:locationsPage,
-  notifications:notificationsPage,customdata:customdataPage,billing:setBillingPage,events:evPage});
+  notifications:notificationsPage,customdata:customdataPage,billing:setBillingPage,events:evPage,
+  languages:langPage,seo:seoGeoPage});
 
 function notifTpl(name){
   openGen({title:`通知模板：${name}`,wide:true,body:`<div class="stack">
@@ -7432,8 +8650,6 @@ Object.assign(DOCS,{
 /* ---------- 系列 ---------- */
  "col-new":{t:"新增商品系列",f:"開啟系列建立頁",l:"2026 新模型：單一類型可同時有規則＋手動＋嵌套＋排除；legacy 手動/智慧不可互轉（41 §3.5）",i:"P0・[api:collectionCreate] [tbl:collections]"},
  "col-basic":{t:"系列標題與說明",f:"名稱與富文本描述",l:"標題必填 ≤255；handle 自動生成可改",i:"P0・[api:collectionUpdate] [tbl:collections]"},
- "col-type":{t:"商品來源切換",f:"智慧型（規則）vs 手動（自選）",l:"legacy 模型不可互轉；新模型可並存（41 §3.5）",i:"P0・[api:collectionUpdate]（ruleSet） [tbl:collections,collection_rules,collection_products]"},
- "col-rules":{t:"智慧系列規則建構器",f:"欄位×運算子×值的條件列，all/any 切換",l:"≤60 條件、全店智慧系列 ≤5,000（22 §4 配額）；欄位＝Title/Type/Category/Vendor/Price/Tag/Compare-at/Weight/Inventory/Variant title/Metafield；運算子依欄位型別出現",i:"P0・[api:collectionUpdate]（ruleSet{appliedDisjunctively, rules[{column,relation,condition}]}） [tbl:collection_rules] [job:collection_reindex]"},
  "col-products":{t:"符合的商品",f:"即時顯示規則命中的商品",l:"規則變更後背景重算 membership（物化 join 表＋增量同步）；手動系列支援 position 拖曳排序",i:"P0・[api:collectionReorderProducts] [tbl:collection_products] [job:collection_reindex]"},
  "col-seo":{t:"系列 SEO",f:"SERP 預覽與 handle",l:"與商品 SEO 同規則（≤70／≤320）；系列頁進 sitemap（30 §）",i:"P0・[api:collectionUpdate]（seo, handle） [tbl:collections]"},
 /* ---------- 庫存 ---------- */
@@ -9872,6 +11088,158 @@ Object.assign(DOCS,{
  "sub-billcards-add":{t:"新增帳單付款方式",f:"再登記一張卡或 PayPal",
   l:"卡號走金流商 tokenization，平台只收 token 與末四碼，完整卡號永遠不進資料庫（11 §0 安全維度、PCI-DSS SAQ-A）",
   i:"P1・[api:TBD-billingPaymentMethodCreate]；前端直接對金流商 tokenize，token 才送我方 API"},
+});
+
+/* ---------- 多語言（67 號）：兩層語言、譯文欄位、進度可視化、handle ---------- */
+Object.assign(DOCS,{
+ "ui-locale":{t:"介面語言切換器（頂欄）",f:"切換後台 UI 的顯示語言（員工屬性）",
+  l:"🔴 <b>與商品編輯頁的「內容語言」是兩個切換器，不得連動</b>（67 §E.1）。合成一個下拉的事故形態：商家為了看懂 UI 切成 English，系統同時把內容語言切到 en ⇒ 標題欄空白 ⇒ 商家把中文標題打進去 ⇒ <b>英文版商品的標題是中文</b>，而且只有前台切語言時才會被發現。<br>字串來自<b>平台 i18n bundle</b>（跨租戶共用、隨版本部署），🔴 <b>不得進租戶 translations 表</b>：①每租戶存一份平台字串副本 ②租戶能改平台文案、平台改版蓋不掉 ③兩種 key 命名空間混進同一個唯一索引。兩者連查詢路徑都不同——平台字串在部署時載入記憶體，租戶譯文隨請求查 DB。<br><b>原型邊界</b>：bundle 只收錄框架字串（導航、頂欄、儲存列、產品列表頁首），未收錄者沿用來源字串顯示",
+  i:"P1・[api:TBD-staffMemberUpdate]（uiLocale） [tbl:staff_members.ui_locale]；平台 bundle 不進 DB"},
+ "content-locale":{t:"內容語言切換器（商品編輯頁）",f:"切換正在讀寫哪一份譯文",
+  l:"值域＝該 shop <b>已啟用</b>的語言（<code>shop_locales</code>），預設＝來源語言。位置在標題列、與四態狀態同一列（67 §E.2）。切到未發布語言：允許編輯並提示「僅預覽連結可見」（29 §1.2）；<b>建立商品時停用</b>——base row 還不存在，沒有東西可翻。<br>切換器上掛該語言的進度徽章，讀 <code>translation_status</code>（鐵律 7，與列表徽章同源）。<br><b>原型邊界</b>：規格要求狀態進 URL query（<code>?content_locale=en</code>，形態沿用 52 號 P0-18），原型以模組狀態承載，未做 query 參數；per-market 覆寫（<code>translations.market_id</code>）亦未做，原型只有語言層",
+  i:"P1・[api:translationsRegister/translationsRemove] [tbl:translations(shop_id,resource_type,resource_id,locale_tag,market_id,field_key)]"},
+ "pd-locale-banner":{t:"非來源語言的編輯提示",f:"說明目前在編輯哪個語言版本、哪些欄位鎖住",
+  l:"🔴 67 §E.3 是<b>最貴的一條</b>：不做唯讀，商家會在 en 頁面把價格從 1,480 改成 148（以為只影響英文版），而實際上改的是<b>唯一的那筆</b> <code>product_variants.price_cents</code>（63 §B.3：商品層沒有價格）。這不是顯示問題，是真的收錯錢。<br>形態＝<b>灰化＋tooltip</b>（limits.yml <code>notification.non_toggleable_ui: disabled_with_tooltip</code>），<b>不是隱藏</b>——隱藏會讓商家以為英文版沒有價格",
+  i:"P1・前端狀態；後端以 locale scope 拒絕非來源語言寫入不可翻欄位（userErrors FIELD_NOT_TRANSLATABLE）"},
+ "prod-tr-col":{t:"商品列表「翻譯」欄",f:"每語言一顆徽章：完整／缺 N／過期 N／機翻 N",
+  l:"🔴 資料源＝<code>translation_status</code> 物化表，<b>一份資料四個出口</b>（鐵律 7）：①這一欄 ②商品編輯頁切換器 ③翻譯後台資源樹 ④語言設定頁百分比。任一處自己現算 GROUP BY 就是下一個對不上的數字。<br>「缺 N」的分母是<b>該時點計算並物化的可翻欄位數</b>（會隨 metafield 定義變動），不是硬編常數",
+  i:"P1・[api:TBD-translationStatus] [tbl:translation_status(shop_id,resource_type,resource_id,locale_tag,translatable_fields,translated_fields,outdated_major_fields,machine_unreviewed_fields)] [job:translation_status_recompute]"},
+ "pd-handle":{t:"網址 handle",f:"公開網址的最後一段；可手填，否則自動生成",
+  l:"🔴 <b>全站一個 handle，不隨語言變</b>——語言維度由 URL 前綴承載（67 §D.3）。<br>來源優先序（limits.yml <code>handle.source_field_priority</code>）：①商家手填 ②<b>en 譯文標題</b>的 slug ③base title 的 slug ④確定性代碼 <code>product-{token}</code>。第 ② 步是免費的：裁定要求英文本來就要填，<b>多語言做對了 handle 的中文問題自動消失</b>。<br>🔴 <b>明知偏離 Shopify</b>（68 §B-1）：本尊對 CJK 原樣保留、不落代碼、不擋發布；我方一律 ASCII 的唯一依據是 2026-08-12 裁定。<br>handle 只在<b>建立時</b>自動生成一次；之後改標題不自動改 URL（改 URL 有代價：一條 301 ＋ 一個永不回收的舊 handle）",
+  i:"P0・[api:productUpdate]（handle） [tbl:resource_handles(shop_id,resource_type,resource_id,handle,retired_at)] [tbl:url_redirects]"},
+ "pd-handle-preview":{t:"handle 生成預覽與品質閘門",f:"顯示生成結果、ASCII 字母數、丟棄字母比例",
+  l:"生成管線九步（67 §D.1，全專案唯一實作 <code>Handles::Generate</code>）：NFKC → 刪撇號引號 → 不可分解拉丁字母查表 → 去變音符號 → 小寫 → 非 [a-z0-9] 收斂成分隔符 → 修剪 → 分隔符邊界截斷 → 品質閘門。<br>🔴 <b>`/` 與 `.` 轉分隔而不是刪除</b>：刪掉 `.` 會讓 <code>4.2oz</code> 變成 <code>42oz</code>——規格數字被改寫。<br>🔴 <b>查表那一步不可省</b>：NFKD 不分解 ß／ø／đ／ł／æ，少了它 <code>Straße</code> 會變成 <code>stra-e</code>。<br>閘門（<code>handle.min_latin_alpha_chars</code>=3、<code>max_dropped_letter_ratio</code>=0.5）存在的理由：<code>棉質短T → t</code> 這種殘渣 slug 比自動代碼<b>更糟</b>——它幾乎必然碰撞成 t-2、t-3，而且對誰都無語義。<br>原型把 §D.1 的驗證樣本寫成<b>載入時的可執行斷言</b>，改壞管線會當場在 console 出聲",
+  i:"P0・純函式，無 IO（設計原則 3：URL 是永久身分，生成器必須確定性）——這一條直接淘汰「MT 產生 handle」"},
+ "prod-sort":{t:"商品列表排序選單",f:"七個維度 × 兩個方向",
+  l:"60 §5 實站排序選單：產品名稱｜庫存｜產品類型｜廠商｜建立時間｜更新時間｜<b>發布錯誤</b>。<br>🔴 <b>「發布錯誤」是我方原本沒想到的一維</b>：把發布失敗的商品排到最前面，商家才找得到「上架了卻沒出現在某管道」的那幾件。它與商品狀態（13 §F1.2 四態）是兩件事——ACTIVE 的商品照樣可能有發布錯誤",
+  i:"P1・[api:products]（sortKey ＋ reverse；PUBLISHED_AT／INVENTORY_TOTAL／VENDOR／PRODUCT_TYPE…） [tbl:product_channel_publications.error_code]"},
+ "export":{t:"匯出 CSV（商品列表／庫存頁共用這個 doc key）",f:"把目前檢視匯出成 CSV；>50 筆改寄 email 下載連結",
+  l:"🔴 <b>商品 CSV 與庫存 CSV 是兩套</b>（61 §6.1／§6.2、63 §L-8，實站在匯出對話框裡就明講了）：商品 CSV 的鍵是 handle ＋ 變體行、涵蓋所有商品欄位；庫存 CSV 的鍵是「地點 × 變體」、<b>只有 On hand 可寫回</b>且帶防過期校驗欄。拿商品 CSV 改庫存會連價格與說明一起覆寫。<b>翻譯是第三套</b>（67 §E.6），鍵、範圍與生命週期都不同。<br>交易史另有獨立匯出。文案由我方自行撰寫，<b>不抄本尊</b>（鐵律 9）",
+  i:"P1・streaming CSV ＋ [job:export_csv] ＋ 簽名連結（規格 13-F6） [api:TBD-bulkOperationRunQuery]（JSONL → CSV） [tbl:exports]"},
+ "import":{t:"匯入 CSV（兩步；商品列表／庫存頁共用這個 doc key）",f:"上傳 → 預覽 → 確認",
+  l:"兩步是刻意的：第二步的預覽把<b>將被清空的儲存格數</b>單獨列成一個數字，商家在按下確認前必須看得到自己要刪掉多少東西。<br>覆寫模式（以 handle／email 比對）下<b>空白儲存格會清空既有資料、缺欄則保留</b>（61 §6.1）——所以「不變更」要用<b>整欄不出現在檔案裡</b>表達。單檔 15MB 上限（limits.yml <code>csv.product_max_upload_mb</code>）、欄名區分大小寫。<br>逐行獨立 transaction ＋ 逐行結果報告（13 §F6.1）。<br>從其他平台搬家：我方自製 Shopify 匯入器（60 §5 記下的反向路徑），<b>不外推給第三方 app</b>",
+  i:"P1・逐行 job ＋ 錯誤報告（規格 13-F6；22 §0） [api:TBD-productImportCreate] [job:import_csv] [tbl:imports,import_rows]"},
+ "prod-import-overwrite":{t:"以相同 handle 覆寫",f:"匯入時對既有商品的處置",
+  l:"開啟＝以 handle 對上既有商品並覆寫；🔴 覆寫模式下<b>空白＝清空</b>。這與翻譯 CSV 同向（68 §B-3 依生態事實標準翻面），但「不變更」的表達方式不同：靠<b>缺席</b>（整列／整欄不出現），不是靠留空",
+  i:"P1・[api:TBD-productImportCreate]（mode: create_only|upsert）"},
+ "prod-import-draft":{t:"匯入為草稿",f:"把匯入的商品一律建成草稿",
+  l:"草稿＝不可購買也不可被發現（13 §F1.2）；先檢查再上架，避免半成品資料直接對外。關閉則沿用檔案裡的 status 欄（值域＝四態）",
+  i:"P1・[tbl:products.status]"},
+});
+/* ---------- 商品系列 sources 模型（13 §F4）---------- */
+Object.assign(DOCS,{
+ "col-sources":{t:"商品系列品項（sources 模型）",f:"以「來源」組成系列：型別 × 模式 × 選法",
+  l:"🔴 官方已把 manual／smart 標為 <b>legacy</b>。新模型是<b>四型來源</b>（products／variants／<b>其他商品系列</b>／apps）× <b>include/exclude</b> × 選法（manual／conditions）——舊的「rules JSON ＋ 單一 join 表」<b>表達不了後三者</b>，也表達不了排除，這不是加欄位能補的落差。<br>求值管線：候選集 = ⋃ 各 include 來源；最終集 = 候選集 − ⋃ 各 exclude 來源。三層優先序（limits.yml <code>collection.source_precedence</code>）：<b>exclude ＞ manual include ＞ conditions</b>。第 2 層是官方明載（手動加入的除非手動移除否則永遠留著）；<b>第 1 層是我方假設</b>（V-57，官方未定義交互次序），選它的理由是失效方向正確——排除多半出於下架／法遵／地區限制，被一條條件覆蓋掉的代價遠高於少賣一件。<br>做成一個 limits 鍵是刻意的：官方日後澄清為別的順序時，改的是那一個鍵 ＋ 求值器排序，<b>不動資料模型</b>",
+  i:"P0・[api:collectionUpdate] [tbl:collection_sources(shop_id,collection_id,source_type,mode,selection,logic,app_id,position)] [tbl:collection_source_members] [tbl:collection_source_rules] [tbl:collection_memberships(...,variant_key AS COALESCE(variant_id,0) STORED)] [job:Collections::RebuildJob]"},
+ "col-src":{t:"單一來源卡",f:"設定這個來源的選法、條件或成員",
+  l:"條件求值：字串欄位的「包含」是子字串（LIKE，% 與 _ 必須跳脫，否則商家輸入 <code>50%</code> 就變成萬用字元）；🔴 <b>商品標籤用「包括／不包括」＝集合運算</b>，寫成 <code>LIKE '%red%'</code> 會讓 <code>red</code> 誤中 <code>red-new</code>、<code>bright-red</code>、<code>tired</code>（13 §F4.3）。多個標籤條件各自一個 EXISTS，<b>不得合併成 IN(...)</b>——那是 OR，當 logic=all 時是錯的答案，而且在多數資料上看起來還很像對的。<br>標籤先過正規化（13 §F4.4）：官方明載 <code>red_new／red+new／red&amp;new／red-new</code> 是同一個標籤；查詢端與寫入端<b>共用同一支正規化函式</b>，兩邊各寫一次必然漂移。<code>tag_key</code> 的 collation 明文宣告 <code>utf8mb4_bin</code>，不讓 DB 再加一套自己的等價規則。<br>比較價格另有<b>未設定／已設定</b>兩個一元運算子；商品類別與商品狀態原本缺（值域＝四態）。<br><b>原型邊界</b>：成員列以<b>商品</b>為粒度，所以 variants 來源在原型會影響整個商品；真實模型的 <code>collection_memberships</code> 帶 <code>variant_id</code>，且唯一索引必須用 <code>variant_key AS COALESCE(variant_id,0) STORED</code>——MySQL 把 NULL 視為彼此相異，直接把 variant_id 放進唯一索引<b>擋不住重複列</b>，同一個商品會被同一次 rebuild 寫進去很多次",
+  i:"P0・[tbl:product_tags(shop_id,product_id,tag_display,tag_key)]（索引 (shop_id,tag_key,product_id) ＋ (shop_id,product_id,tag_key)） [tbl:collection_source_rules]"},
+ "col-src-add":{t:"新增納入來源",f:"從四型來源挑一種加進系列",
+  l:"products＝商品（條件或手動）｜variants＝<b>個別變體</b>（例如只賣某個顏色）｜collections＝把<b>另一個系列的最終成員</b>整批帶進來｜apps＝成員由 app 決定。後三型是舊模型完全表達不了的",
+  i:"P0・[api:collectionUpdate]（sources[]） [tbl:collection_sources]"},
+ "col-src-exclude":{t:"新增排除來源",f:"從系列裡整批排掉某些項目",
+  l:"🔴 <b>空的排除來源 ≠ 沒有排除</b>：一個 mode=exclude 但成員為空的來源，求值結果是空集合，減掉空集合等於不變——但不要把它誤判成「不設限」而在 UI 上隱藏，商家會以為排除設定不見了（13 §F4.9）",
+  i:"P0・[tbl:collection_sources(mode='exclude')]"},
+ "col-src-limits":{t:"來源上限與優先序",f:"顯示條件總數、巢狀深度與優先序",
+  l:"全部引 limits.yml：<code>max_rules_per_collection</code>(60)、<code>max_containing_collection_per_shop</code>(50)、<code>max_excluding_collection_per_shop</code>(5)、<code>max_with_variants_per_shop</code>(100)、<code>max_smart_collections_per_shop</code>(5000)、<code>source_nesting_max_depth</code>(5)。<br>🔴 深度上限是<b>我方推導</b>（V-135）：官方只給 per-shop 的家數，家數擋不住深度——5 個系列就能串出深度 5 的鏈，每加一層 rebuild 的扇出與失效傳播成本乘一次。<br>🔴 <b>環偵測光靠檢查擋不住併發</b>：T1 加邊 A→B、T2 加邊 B→A，兩者各自的可達性檢查都會通過（檢查時對方的邊還沒 commit）。唯一擋得住的是 <b>shop 粒度的圖鎖</b>（<code>collection_graph_locks</code>，寫入前 SELECT ... FOR UPDATE）——鎖單一 collection 沒有用，因為環可以由任意兩條邊構成。原型只有寫入期可達性檢查那一半",
+  i:"P0・[tbl:collection_graph_locks(shop_id)] [job:Collections::RebuildJob]（visited 集合 ＋ 深度計數，重訪或超深 ⇒ rebuild_status='ERROR' 並告警，不得部分寫入）"},
+ "col-sort":{t:"商品系列排序",f:"九種排序方式",
+  l:"🔴 <b>「最暢銷」＝全期訂單數</b>（limits.yml <code>collection.best_selling_window: all_time</code>）。原本寫「90 天銷量 rollup」是我方自訂且與官方不同（61 §10 C-8）——鐵律 7 下，系列頁與分析頁用兩套窗口會直接露餡。<br>價格排序在<b>有 fixed price 的市場不能用物化欄</b>（63 §G.6），那是多市場的要害。手動排序另有「移到最前／移到最後／移到指定位置」三個動作",
+  i:"P1・[api:collectionUpdate]（sortOrder） [tbl:collections.sort_order,collection_memberships.position]"},
+});
+/* ---------- 語言設定頁與翻譯後台 ---------- */
+Object.assign(DOCS,{
+ "set-lang-row":{t:"單一商店語言",f:"發布開關、進度、設為來源、移除",
+  l:"來源語言（<code>shop_locales.is_source</code>，每店<b>恰一列</b>）的語義：base 資料表裡的文字一律是它的語言，其餘全部在 translations。它的 published 恆為 true、不可刪除（userErrors <code>SOURCE_LOCALE_IMMUTABLE</code>）。<br>未發布語言＝只能用預覽連結看（29 §1.2）",
+  i:"P1・[api:shopLocaleEnable/shopLocaleUpdate/shopLocaleDisable] [tbl:shop_locales(shop_id,locale_tag,is_source,published,position)]（is_source 部分唯一索引；MySQL 用生成欄位模擬）"},
+ "set-lang-add":{t:"新增語言",f:"從平台字典挑或自行輸入 BCP-47 標籤",
+  l:"🔴 <b>新增語言必須是「後台一次操作」</b>：不得需要改程式碼／改 enum／跑 migration／重新部署（67 §A.2，裁定「之後我可以自行添加任何語言」的直接落地）。因此語言在 <code>platform_locales</code> ＋ <code>shop_locales</code> 兩張表，不在 Ruby enum、不在 TS union、也不在 limits.yml 的清單裡。<br>格式驗證 <code>i18n.locale_tag_format</code>；禁用碼 <code>i18n.forbidden_locale_tags</code>（zh／EU／UK／es-419）。🔴 裸 <code>zh</code> 在字體上是歧義的——任何以它為 fallback 目標的鏈都會把繁體使用者送到簡體內容或反之。大小寫正規化在<b>寫入層</b>強制，不得依賴 MySQL collation 的大小寫不敏感（API 回傳與 URL 前綴需要確定的字面值）",
+  i:"P1・[api:shopLocaleEnable] [tbl:platform_locales]（平台級字典，豁免 shop_id ⇒ 登記進 config/tenancy_exempt_tables.yml）"},
+ "set-lang-fallback":{t:"缺翻譯時的行為",f:"fallback 鏈與欄位分類的說明",
+  l:"🔴 缺翻譯<b>必須有明確且可預測的行為，不得靜默空白</b>（67 §0.2 原則 2）——「translations[locale] 是 nil 就印空字串」會編譯通過、測試通過，上線後在某個語言版本留下一整頁空白。<br>鏈：per-market 覆寫 → 語言層 → BCP-47 截尾（<b>只截尾、不跨枝</b>）→ base row → 依欄位類別（required 回原文／optional 整欄不輸出）。<b>商家不可自訂鏈</b>——可自訂的鏈會產生 A→B→A 的環，環的偵測與診斷成本遠高於它的價值；要跨語言借內容的正確作法是<b>複製成真實譯文</b>。<br>空值定義含<b>語義空 HTML</b>（&lt;p&gt;&lt;/p&gt;）——少了這一條，富文本編輯器的初始值會讓 fallback 永遠不觸發",
+  i:"P0・渲染期批次載入（每頁 SQL ≤15 條，63 §D.1）；每次落到截尾鏈以後記一次 i18n.fallback_hit{shop,locale,resource_type,field,depth}"},
+ "set-lang-chain":{t:"解析順序（唯讀）",f:"顯示 fallback 鏈的定義",
+  l:"<code>i18n.fallback_chain_mode: bcp47_truncation</code>；<code>truncation_stops_at_forbidden: true</code>。zh-Hant → ⛔（不得續截到 zh）；zh-Hant-HK → zh-Hant → ⛔；en-GB → en。這是 <code>zh</code> 唯一被特別處理的地方，而處理方式是<b>縮短鏈</b>，不是特例分支",
+  i:"P0・純函式；原型把「繁簡永不互為 fallback」寫成載入時的可執行斷言"},
+ "set-lang-req":{t:"必翻欄位缺譯（唯讀）",f:"顯示 required 類別的行為",
+  l:"回落來源語言原文並在後台標「未翻譯」——<b>顯示原文優於顯示空白</b>。前台對<b>大段</b>回落文字加 lang 屬性（body_html／政策），短欄位不加",
+  i:"P0・limits.yml i18n.missing_translation_behavior.required = source_text"},
+ "set-lang-opt":{t:"可選欄位缺譯（唯讀）",f:"顯示 optional 類別的行為",
+  l:"<b>整個欄位不輸出</b>（不是輸出空字串），承 62 §E.1「空描述不編造」。輸出空的 meta description 比不輸出更糟——它會被搜尋引擎當成刻意的空描述",
+  i:"P0・limits.yml i18n.missing_translation_behavior.optional = omit_field"},
+ "set-lang-langattr":{t:"回落文字加 lang 屬性",f:"中文頁裡的英文段落標 lang 屬性",
+  l:"無障礙與搜尋引擎兩面：螢幕閱讀器會用錯的語音讀中文頁裡的英文段落；而 hreflang 宣稱該頁是 zh-Hant、頁內卻有英文大段——lang 屬性是唯一誠實的表達。短欄位不加，避免 DOM 噪音",
+  i:"P1・limits.yml i18n.mark_fallback_with_lang_attribute_on: [body_html, policy_body, article_body]"},
+ "set-lang-tools":{t:"批次工具",f:"繁簡轉換／機器翻譯／翻譯 CSV",
+  l:"三者是三種東西，不要混：語言 pack＝資料｜jurisdiction pack＝法律能力｜<b>MT provider＝服務</b>。MT 未設定 provider 時<b>整個功能不出現</b>（不是出現後報錯），且設定頁必須明示<b>資料出境</b>（商家內容送第三方，67 §K.0 合規維度）",
+  i:"P2・[job:machine_translate_batch]（背景 job：鐵律 5 transaction 內禁外部 IO；逐資源逐欄位、可斷點續跑）"},
+ "set-lang-sc":{t:"繁簡轉換工具",f:"以查表把一個語言的譯文轉成另一個字形",
+  l:"🔴 <b>是字形轉換，不是翻譯</b>：不處理用詞在地化（软件／軟體、视频／影片、鼠标／滑鼠）——UI 必須寫明，否則商家會以為簡體版可以上線了。<br>🔴 <b>兩個方向品質不對稱</b>：繁→簡接近無損；<b>簡→繁是一對多</b>（发→發／髮、干→干／乾／幹、后→后／後），必然需要人工覆核 ⇒ 該方向整批標為待覆核並在完成報告列出含歧義字的筆數。<br>它<b>寫成真實譯文列</b>（value_source='script_conversion'、review_required=true），可編輯可稽核；<b>不做成渲染期 fallback</b>——那樣每次渲染偷偷換一次字，商家永遠看不到也改不掉",
+  i:"P2・[job:script_convert_batch] [tbl:translations(value_source,review_required)]"},
+ "set-lang-mt":{t:"機器翻譯批次",f:"逐資源逐欄位產生譯文草稿",
+  l:"寫入紀律：<code>value_source='machine' ∧ review_required=true</code>，<b>一律，無例外</b>（同 62 §F.1 alt_source 與 §H.6-1 content_source 的紀律——無標記的大量自動內容日後無法回溯清理，而 Google 的 scaled content abuse 是整站級處罰）。<br>MT 結果<b>前台照常渲染</b>：不渲染等於整批沒效果，商家會改用外部工具貼進來，那樣連 value_source 都沒有了。大批量需二次確認",
+  i:"P2・[job:machine_translate_batch]；provider 金鑰走 Rails credentials"},
+ "set-lang-io":{t:"翻譯匯出／匯入（第三套 CSV）",f:"把譯文交給外部譯者再收回來",
+  l:"🔴 <b>翻譯是第三套</b>（67 §E.6）：①鍵不同（resource_type,resource_id,locale,field_key,market vs handle＋變體行）②範圍不同（涵蓋頁面、部落格、選單、主題字串、通知範本、政策——這些根本不在商品 CSV 裡）③生命週期不同（會出境給 TMS 再回來，因此需要 source_digest）。<br>🔴 <b>空白＝清空</b>（2026-08-12 依 68 §B-3 從「空白＝不變更」翻面，與商品 CSV 同向）。翻面不是把誤刪風險一筆勾銷，而是<b>換了一套表達機制</b>，三件事缺一不可：①空白＝清空 ②匯出可選語言與欄位（不想動的<b>不要出現在檔案裡</b>）③匯入預覽把「將被清空的儲存格數」<b>單獨列成一個數字</b>。缺了 ②，① 單獨存在就是一台誤刪產生器。<br>🔴 <b>缺席與空白必須在解析層就分開</b>：CSV 函式庫多半把兩者塌成 nil，匯入器必須<b>以表頭判定欄位是否存在</b>——這一行寫錯，②③ 兩道護欄同時失效，而且測試很可能全綠（測試檔通常欄位齊全）",
+  i:"P2・[job:translation_export/translation_import] [tbl:translations(source_digest,outdated,review_required)] [tbl:audit_logs]（清空一律寫稽核軌）"},
+ "set-lang-bo":{t:"翻譯後台入口",f:"進資源樹＋逐 key 雙欄表",
+  l:"29 §2.4 的形態；與商品編輯頁的譯文雙欄<b>共用同一個元件</b>，不做兩套",
+  i:"P1・[api:translatableResources] [tbl:translations]"},
+ "sub-translations":{t:"翻譯後台（次級視圖）",f:"依語言與資源型別逐 key 編輯譯文",
+  l:"側欄每個資源型別的「已翻／總數」與主體的逐 key 雙欄<b>讀同一張 translation_status</b>（鐵律 7）。<br>🔴 <b>outdated 不影響前台渲染</b>（limits.yml <code>i18n.outdated_affects_storefront_render: false</code>）：一個錯字修正若讓整個語言版本退回來源語言，那是把小問題放大成事故。它影響的是①這裡的清單與進度 ②feed／AI 端點的內部品質訊號（不外洩）③預覽模式的警示徽章。<br>過期偵測的價值<b>完全取決於假陽性率</b>：digest 前必須正規化（純文字 NFC+trim+摺疊空白；HTML 解析成 DOM+屬性排序+穩定序列化），否則富文本編輯器改一次換行就把全店全語言標成過期，商家隔天看到「48,000 筆待更新」然後永久忽略這個功能。<br><b>原型邊界</b>：只載入商品線的譯文列，其餘資源型別只顯示分母",
+  i:"P1・[api:translationsRegister] [tbl:translations,translation_status]；來源寫入時在<b>同一 transaction 內</b>重算 digest 並標記過期（丟 job ⇒ 有一段視窗商家以為翻譯是最新的）"},
+});
+/* ---------- SEO 與 AI 檢索（62 §J／§K／§H）---------- */
+Object.assign(DOCS,{
+ "set-georedirect":{t:"地區自動重導",f:"依地區把顧客送到對應市場的版本",
+  l:"🔴 2026-08-12 依「全部跟隨 Shopify」裁定<b>翻面為預設啟用</b>（limits.yml <code>seo.redirect_geo.enabled_default: true</code>，原 false）。<br><b>這是跟隨本尊與外部權威（Google）的直接衝突</b>：Google 至今仍建議避免自動重導、且<b>未對「排除爬蟲」表態</b>（既不認可也不否定）——這條事實沒有被推翻，翻面是在明知它成立的前提下做的。<br>代價必須明寫、不得只翻布林值：Shopify 敢預設開靠的是「爬蟲不重導 ＋ hreflang 完整」，⇒ 我方原本「開啟時的選配護欄」三條<b>升格為不可關閉的不變量</b>。少了它們，預設開就是真的傷索引，而且傷的是<b>每一個新租戶</b>，不是有意開啟的那些。<br>一律 <b>302</b>——地區偏好不是永久事實。若 Google 日後表態不可接受：要改的是 <code>enabled_default</code>，<b>不是拆掉三條護欄</b>",
+  i:"P1・[tbl:shop_seo_settings.geo_redirect_enabled]；判定在<b>快取之前</b>、判定結果不得進頁面快取"},
+ "set-geo-guard":{t:"不可關閉的護欄",f:"三條不變量，永遠開啟",
+  l:"①<b>對已驗證的搜尋引擎爬蟲不套用</b>：UA 比對 ＋ 反向 DNS 驗證；未通過驗證的自稱爬蟲當一般使用者處理（否則就是偽裝繞過的漏洞）。②<b>hreflang／sitemap 裡的 URL 對任何客戶端直接回 200</b>——這是與 hreflang 矩陣的接縫，最容易做壞。③<b>只重導一次</b>（cookie 標記）：無限重導＝使用者永遠回不到他想看的版本，那比不重導糟得多。<br>「不可關閉」的意思是<b>不提供後台開關、API 欄位或環境變數</b>，試圖關閉一律 reject（清單在 limits.yml <code>seo.redirect_geo.non_disableable_invariants</code>）。自動重導本身商家可以關（那是本尊也有的開關），但不存在「開著重導卻關掉護欄」的組合。<br>對 bot 與人回傳<b>完全相同的頁面內容</b>，唯一差異是人可能被建議／重導到另一個 URL，而該 URL 對 bot 同樣回 200 ⇒ <b>不是 cloaking 的形態</b>（cloaking 是給 bot 看不同內容），但我方無法代替 Google 宣稱它可接受（V-116）",
+  i:"P1・middleware 層；不進 shop_seo_settings（沒有欄位可以關）"},
+ "set-geo-enabled":{t:"依地區自動重導（開關）",f:"商家可關的那一半",
+  l:"判定依據＝瀏覽器語言 ＋ 地理位置（geoip 已被併入自動重導）。<b>依請求而異</b> ⇒ 判定必須在快取之前，且結果不得進頁面快取（一份被快取的 302 會把所有人送去同一個市場）",
+  i:"P1・[tbl:shop_seo_settings.geo_redirect_enabled]"},
+ "set-geo-langdetect":{t:"依瀏覽器語言自動切換語言",f:"語言那一半的預設值",
+  l:"🔴 <b>維持停用</b>（limits.yml <code>i18n.storefront.auto_redirect_on_language: false</code>）——本尊亦預設停用，<b>這一半本來就與 Shopify 一致</b>，我方之前沒意識到自己已經對齊了。🔴 不要因為地區那一半翻成啟用就把這一半一起翻：兩個預設值方向相反，而且那是官方查證到的事實，不是疏漏",
+  i:"P1・[tbl:shop_seo_settings.lang_autodetect]；頁面快取鍵<b>不新增 Accept-Language 維度</b>（i18n.storefront.emit_vary_accept_language: false）"},
+ "set-geo-eu":{t:"歐盟例外（唯讀）",f:"EU ccTLD ＋ EU 來源客戶不重導",
+  l:"🔴 <b>法遵，不是偏好</b>：使用 EU ccTLD 的在地化體驗，EU 客戶不會在 EU 內被自動重導；官方要商家改用第三方 app 提供「建議」而不是重導。市場用非國別網域（.com／.shop）時，EU 客戶照常重導。<br>判定<b>不得寫成 SEO 層的國別 if-else</b>（鐵律 11）——由 jurisdiction pack 宣告 <code>forbids_geo_auto_redirect</code>，SEO 層只讀該能力",
+  i:"P1・[limits:seo.redirect_geo.eu_exception_source = jurisdiction_pack_capability]；掛載點見 56 號 capability contract"},
+ "set-geo-banner":{t:"建議切換橫幅",f:"不重導時改用建議",
+  l:"自動重導<b>關閉時</b>、以及 EU ccTLD 情境下的行為：顯示「建議切換到 {市場}」＋ cookie 記住選擇。⚠ <b>本尊沒有內建這個</b>（官方推給第三方 app）⇒ 這是我方超出本尊的一條，標 ours；是否升為正式產品能力待裁定",
+  i:"P2・前台元件 ＋ [tbl:shop_seo_settings.suggest_banner]"},
+ "set-geo-switcher":{t:"切換器必須是真實連結（唯讀）",f:"硬規則，非設定",
+  l:"無論是否開啟自動重導，切換器都必須是 <code>&lt;a href&gt;</code> 指向目標市場 URL，不能是純 JS——那是爬蟲發現其他市場版本的路徑之一",
+  i:"P1・前台元件硬規則"},
+ "set-aiaccess":{t:"AI 檢索與代理",f:"llms.txt 與 agents.md 的產生",
+  l:"兩者<b>預設開</b>（62 §H.3）。llms.txt＝給大型語言模型讀的商店索引；agents.md＝給購物代理讀的操作說明。<br>🔴 <b>UNLISTED 商品不進任何一份</b>（13 §F1.2 discoverable scope）——代理是新通路，一般的 noindex 在代理面完全不生效，這一格最容易漏",
+  i:"P2・[job:generate_llms_txt] [ep:GET /llms.txt] [ep:GET /agents.md] [tbl:shop_seo_settings]"},
+ "set-ai-llms":{t:"產生 llms.txt",f:"開關",l:"預設開；內容由商店資料生成，不是手寫檔——手寫檔會與目錄脫節，而脫節的索引比沒有索引更糟",i:"P2・[job:generate_llms_txt]"},
+ "set-ai-agents":{t:"產生 agents.md",f:"開關",l:"預設開；內容含可用端點、目錄範圍與下單前必須確認的事項",i:"P2・[job:generate_agents_md]"},
+ "set-ai-preview":{t:"預覽 llms.txt",f:"看目前會輸出什麼",l:"預覽讀的是與正式輸出同一支生成器（鐵律 7：不做第二份實作）",i:"P2・[ep:GET /admin/seo/llms-preview]"},
+ "set-seohealth":{t:"SEO 健康",f:"自動代碼 handle 佔比與 hreflang 雙向性",
+  l:"自動代碼佔比：品質閘門沒過、落到 <code>product-xxxx</code> 的商品數（67 §D.2(a)-3）。這是<b>可觀測的摩擦</b>而不是硬擋——用硬擋換 URL 品質，換來的是商家亂打 <code>aaa-bbb</code>，那比自動代碼更糟（亂打無法偵測與修復，自動代碼可以）。<br>hreflang：<b>同一 URL 對應多個碼＝合法</b>（繼承主網域的市場就是這樣，en-hk 與 en-sg 同指一組 URL）；<b>同一個碼對應多個 URL＝非法</b>。兩者不要搞混——把前者也拿去 dedupe，會把繼承市場的條目誤刪，hreflang 的雙向性隨即破裂",
+  i:"P2・[tbl:resource_handles] [job:hreflang_matrix_build]"},
+ "set-seo-autohandle":{t:"自動代碼 handle 佔比（唯讀）",f:"顯示落 fallback 的商品數",l:"數字由 handleFor() 現場推導，與商品編輯頁的 handle 預覽同源",i:"P2・[tbl:resource_handles.auto_token]"},
+ "set-seo-hreflang":{t:"hreflang 雙向性（唯讀）",f:"顯示矩陣檢查結果",l:"雙向性＝A 指向 B 則 B 必須指回 A；缺一邊 Google 會忽略整組宣告。市場的可用語言沿 lineage <b>累加繼承</b>，用 m.web_presences 而不是 resolved_web_presences(m) 會漏語言 ⇒ 雙向性破裂",i:"P2・[job:hreflang_matrix_build]"},
+ "set-mkt-url":{t:"各市場的網址結構",f:"顯示與設定每個市場的網域策略",
+  l:"🔴 <b>「預設值」與「建議值」是兩件事</b>（62 §J.2，跟隨 Shopify 的做法把它們拆開）：<br>・<b>預設</b>＝<code>market.web_presence.default_for_new_market: inherit_primary</code>（dev，2023-05-23 changelog：在此之前新的單國市場會自動建立語言／國家子資料夾，此後改為沿用 primary market 的 URL 結構）。<b>平台不替商家新增任何 URL。</b><br>・<b>建議</b>＝<code>ui_recommended_strategy: subfolder</code>（help，首次設定國際銷售建議子資料夾；理由是共享網域權重、成本最低）。<br>為什麼這條不是雞毛蒜皮：自動配子資料夾＝一次新增<b>一批可索引 URL ＋ 一批 hreflang 條目 ＋ 一批 sitemap 列</b>。Shopify 在 2023 專門為此發了一則 changelog 把它關掉。我方若沿用「預設子資料夾」，商家每開一個市場就靜默多一份站點，而他可能只是想針對該國調個價。<br>硬約束（29 §1.2）：<code>domain</code> 與 <code>subfolderSuffix</code> <b>互斥（XOR）</b>；語言-only 子資料夾（/fr）<b>僅限 primary market</b>，次級市場一律語言-國家（/fr-ca）——這條寫進路由 constraint 層",
+  i:"P1・[api:marketWebPresenceCreate/Update] [tbl:market_web_presences(shop_id,market_id,domain,subfolder_suffix)]（XOR 以 CHECK 約束）"},
+ "set-mkt-url-default":{t:"新建市場的預設（唯讀）",f:"顯示預設策略",l:"繼承 primary web presence ⇒ 該市場<b>不產生新 URL</b>，只是讓同一個 URL 多掛一個 hreflang 碼",i:"P1・[limits:market.web_presence.default_for_new_market]"},
+ "set-mkt-url-rec":{t:"設定精靈裡的建議值（唯讀）",f:"顯示推薦策略",l:"這是「商家來問的時候給的建議」，不是「商家沒動作時系統做的事」",i:"P1・[limits:market.web_presence.ui_recommended_strategy]"},
+ "set-mkt-url-row":{t:"單一市場的網址結構",f:"顯示目前策略並進設定精靈",
+  l:"🔴 <b>沿用主網域 → 子資料夾是「新增」不是「搬遷」</b>：繼承狀態下該市場沒有自己的 URL，沒有舊 URL 要 301——套 site move 流程只會產生一批 <code>from == to</code> 的重導列（垃圾 ＋ 重導鏈風險）。要做的是新 URL 進 sitemap ＋ 進 hreflang 矩陣 ＋ 觸發失效管線。<b>反向</b>（子資料夾 → 回到繼承）才是搬遷：那些 URL 已被索引，必須 301 回主網域對應頁，走精靈 ＋ ≥1 年 301 ＋ 雙 sitemap ＋ GSC Change of Address",
+  i:"P1・[api:marketWebPresenceUpdate] [tbl:url_redirects] [job:seo_move_monitor]（90 天內常駐監控 404 與流量落差）"},
+});
+/* ---------- 採購單（60 §7 更正後）---------- */
+Object.assign(DOCS,{
+ "po-table":{t:"採購單列表",f:"供應商採購協議清單",
+  l:"🔴 <b>採購單只有草稿／已訂購兩態，收貨根本不在採購單上</b>（61 官方文檔，推翻 60 號初版把兩者寫成一條鏈的說法）。收貨是「轉移」那條線的事：五態狀態機（Draft／Ready to ship／In progress／Transferred／Canceled）＋ 收貨三動作（接受／拒收／取消）。兩份紀錄<b>各自獨立，改一邊不動另一邊</b>——照初版實作會做出一個不存在的狀態機。<br>🔴 <b>採購單自帶幣別</b>：供應商可能用別的幣別結算，與商店 presentment 幣別無關。對 integer cents 模型的意思是 PO 行的成本存的是<b>該 PO 幣別</b>的 cents；混用商店基準幣別的 cents 是對帳日才會發現的錯（鐵律 3、65 §A）。列表上三張單分屬三種幣別，<b>數字沒有可加性</b>，所以不做總計列",
+  i:"P2・[api:TBD-purchaseOrderCreate/MarkAsOrdered] [tbl:purchase_orders(shop_id,supplier_id,destination_location_id,currency,status)] [tbl:purchase_order_lines(...,unit_cost_cents)]"},
+ "po-new":{t:"建立採購單",f:"供應商、收件地、幣別、付款條件",
+  l:"幣別在建立時選定，之後成本行都以它為單位。標籤上限用 <code>order.tag_max_chars</code>(40) 而不是 <code>product.tag_max_chars</code>(255)——兩者共用一個常數會讓標籤寫得進本站、匯去 Shopify 時整批被拒（13 §F4.4）",
+  i:"P2・[api:TBD-purchaseOrderCreate] [tbl:purchase_orders]"},
 });
 
 /* init */

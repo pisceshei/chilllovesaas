@@ -1148,6 +1148,29 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
     <dt>平台後台</dt><dd>platform.chilllove.tw <span class="badge success"><span class="pip full"></span>正常</span><span class="badge info">robots noindex</span></dd>
     <dt>狀態頁</dt><dd>status.chilllove.tw <span class="badge success"><span class="pip full"></span>正常</span></dd>
   </dl></div></div>
+  <!-- 67 §C.1：語言字典是**平台級**資源（跨租戶共用、隨平台版本演進），
+       是 tenancy 的唯一例外 ⇒ 必須登記進 config/tenancy_exempt_tables.yml（比照 63 §L-2）。
+       租戶那一層是 shop_locales（全集與子集的關係，不是兩份清單）。 -->
+  <div class="card" data-doc="platformlocales">
+    <div class="card-head"><h3>平台語言字典 platform_locales</h3>
+      <span class="hint">跨租戶共用・豁免 shop_id・租戶啟用哪幾個在各店的「語言」設定</span></div>
+    <div class="card-body">
+      <div class="tscroll-wrap"><table class="tbl"><thead><tr>
+        <th>BCP-47</th><th>自稱 endonym</th><th>字集</th><th>方向</th><th>複數規則</th><th>排序 collation</th><th>狀態</th></tr></thead><tbody>
+        <tr><td class="num">zh-Hant</td><td>繁體中文</td><td class="num">Hant</td><td class="num">ltr</td><td class="num">zh</td><td class="num">utf8mb4_0900_ai_ci</td><td><span class="badge success"><span class="pip full"></span>可用</span></td></tr>
+        <tr><td class="num">zh-Hans</td><td>简体中文</td><td class="num">Hans</td><td class="num">ltr</td><td class="num">zh</td><td class="num">utf8mb4_0900_ai_ci</td><td><span class="badge success"><span class="pip full"></span>可用</span></td></tr>
+        <tr><td class="num">en</td><td>English</td><td class="num">Latn</td><td class="num">ltr</td><td class="num">one+other</td><td class="num">utf8mb4_0900_ai_ci</td><td><span class="badge success"><span class="pip full"></span>可用</span></td></tr>
+        <tr><td class="num">ja</td><td>日本語</td><td class="num">Jpan</td><td class="num">ltr</td><td class="num">ja</td><td class="num">utf8mb4_ja_0900_as_cs</td><td><span class="badge success"><span class="pip full"></span>可用</span></td></tr>
+        <tr><td class="num">ar</td><td>العربية</td><td class="num">Arab</td><td class="num">rtl</td><td class="num">六型</td><td class="num">utf8mb4_0900_ai_ci</td><td><span class="badge info"><span class="pip full"></span>可用・RTL 版面待驗收</span></td></tr>
+        <tr><td class="num">zh</td><td>—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="badge critical"><span class="pip blocked"></span>禁用碼</span></td></tr>
+      </tbody></table></div>
+      <p class="hint" style="margin-top:var(--sp-300)">🔴 <b>region 欄通常為 NULL</b>：語言註冊的是<b>語言</b>，地區來自市場——
+        <span class="num">zh-Hant-HK</span> 是「zh-Hant ＋ HK 市場」兩個維度，由 hreflang 產生器當場組出，不是存起來的。
+        🔴 <b>禁用裸 zh</b>：它在字集上是歧義的，任何以它為 fallback 目標的鏈都會把繁體使用者送到簡體內容或反之。
+        ⚠ MySQL 8 是否提供可用的中文拼音 collation 未查證（V-166）——結案前 admin 列表只標「依系統順序」，
+        <b>不宣稱是筆畫或拼音排序</b>。</p>
+    </div>
+  </div>
   <div class="card" data-doc="mailsender"><div class="card-head"><h3>信件寄送</h3></div><div class="card-body"><dl class="dl">
     <dt>寄件網域</dt><dd>mail.chilllove.tw <span class="badge success"><span class="pip full"></span>SPF</span><span class="badge success"><span class="pip full"></span>DKIM</span><span class="badge success"><span class="pip full"></span>DMARC</span></dd>
     <dt>退信率（7 天）</dt><dd class="num">0.3%</dd>
@@ -2277,6 +2300,7 @@ const DOCS={
  announcements:{t:"公告",f:"分眾／排程／已讀率",l:"分眾條件可用方案／地區／GMV／flag cohort",i:"W3"},
  deprecation:{t:"API 版本與棄用",f:"版本支援期與影響面",l:"季度發版、每版支援 12 個月、相鄰版重疊 9 個月；逐租戶 API health report 是唯一有效的推升級手段",i:"W3・Shopify 模型"},
  platformdomain:{t:"平台網域",f:"主域／子域萬用憑證／後台域／狀態頁",l:"憑證到期 30 天前告警；平台後台 robots noindex",i:"M7 交付"},
+ platformlocales:{t:"平台語言字典 platform_locales",f:"跨租戶共用的語言清單與語言相依屬性",l:"67 §C.1：語言集合是<b>資料</b>不是列舉——新增語言不需要改程式碼／改 enum／跑 migration／重新部署。本表是 tenancy 的<b>唯一例外</b>（無 shop_id），必須登記進 config/tenancy_exempt_tables.yml。語言相依行為（書寫方向、複數規則、日期與非金額數字格式、排序 collation）一律查本表欄位，任何 switch(locale) 都是 bug。🔴 語言 pack ⟂ jurisdiction pack：本表<b>絕不含</b>幣別符號／小數位／稅率／地址格式——混進來的第一個症狀就是「英文版的香港店顯示美元符號」，而且只有商家切到英文才會出現。🔴 禁用裸 zh（字集歧義）；繁簡一律 zh-Hant／zh-Hans，不得借 zh-TW／zh-CN 表示字集",i:"M7・[tbl:platform_locales(tag,language,script,region,endonym,direction,plural_rule,date_format_id,number_format_id,collation,status)]；租戶側是 shop_locales（全集與子集）"},
  mailsender:{t:"信件寄送",f:"SPF／DKIM／DMARC 狀態",l:"任一失效→通知信全停並告警",i:"M8"},
  defaultflags:{t:"新店預設 flags",f:"新商店的預設功能組合",l:"逐店可覆寫；變更落審計",i:"P0"},
  quotapolicy:{t:"配額 enforcement",f:"三段式政策",l:"log_only／warn 60%／error 100%（SFCC Quota Status 模型）",i:"W2"},

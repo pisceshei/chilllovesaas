@@ -145,6 +145,19 @@ currency_display:
   #         幣別代碼開放、金額當 2 位處理）。🔴 **本條（送款依 ISO exponent 換算、餘數 raise、
   #         禁四捨五入）不受影響，一個字都沒鬆**——exponent=3 幣別現在是「可選但送款須 PSP pack
   #         明文宣告，未宣告即 reject」，見 catalog_flow.exponent3_* 四鍵與 money_boundary R5。 -->
+  # 🔴 **本鍵自 2026-08-12（69 號 §V-188）起語義收窄，值不變。** 詳見 65 §J M-8。
+  #    本鍵成文時（63 §G.4）的世界觀是「所有 PSP 都收整數 minor unit，只是 exponent 各異」。
+  #    69 號查到的四家 PSP 是**四種算法**（`alt` ＝ PSP 官方文檔）：
+  #      Adyen＝整數 minor units，且**明文說 CLP／CVE／IDR／ISK 以自家表為準、與 ISO 4217 不同**；
+  #      Datatrans＝整數 minor units，自稱遵循 ISO；
+  #      Stripe＝整數 minor units ＋ `Special cases` 表覆蓋 ISO（ISK／HUF／TWD／UGX），
+  #              且 **HUF／TWD 的 payout 金額須整除 100**；
+  #      Airwallex＝🔴 **十進位主單位字串，根本不用 minor units**。
+  #    ⇒ 本鍵的正確讀法是「**`amount_format: minor_units` 的 pack 若選擇以 ISO 為底時，底表就是 ISO**」，
+  #      **不是**「所有 PSP 都跟 ISO」，更**不是**「沒宣告就套 ISO」。
+  #    🔴 換算基數的唯一來源是 `psp_packs.<code>` 的宣告（見 money_boundary.psp_pack_required_keys）。
+  #    🔴 **值刻意不動**：63 §G.4 與其 §9 鍵表是本鍵的擁有者，本輪不得改 63 ⇒ 改值會造成
+  #       「規格說 A、鍵說 B」的分裂。要動這個鍵，必須連 63 §G.4 一起改（65 §J M-8 已登記）。
   psp_minor_unit_follows_iso4217: true
   # 🔴 **本鍵不是 PSP 換算的資料來源**（65 §J M-4）：`iso4217_zero_decimal_overridden` 的用途是
   #    「哪些幣別的**顯示位數**被裁定二覆蓋」，鍵名裡的 `iso4217` 講的是被覆蓋的對象，不是宣告值。
@@ -202,6 +215,47 @@ money_boundary:
   # 換算餘數不為 0 ⇒ raise（代表上游湊整沒套用），**禁止四捨五入抹掉**。
   psp_non_integral_conversion_action: raise
   psp_rounding_forbidden: true
+
+  # --- 🔴 R6／A0／A5／A6：PSP 的金額**格式**（依 69 號 §V-188 新增，2026-08-12）-------
+  # 🔴 **上面所有 psp_* 鍵的隱含前提是「PSP 收整數 minor unit」——那個前提是錯的。**
+  #    69 號查到四家 PSP 四種算法（`alt` ＝ PSP 官方文檔，見 65 §D.4 實證表）：
+  #      Adyen／Datatrans／Stripe ＝ 整數 minor units（且 Adyen 明文覆蓋 ISO、Stripe 有 Special cases 表）
+  #      Airwallex               ＝ 🔴 **十進位主單位字串**（`9.99` 就是九元九角九分）
+  #    ⇒ `Money::PspMinor` 這個型別在 Airwallex 型 PSP 上**根本不適用**。這是**型別設計擋不住的形態**，
+  #      不是參數問題 ⇒ 65 §A 新增 **R6（`Money::PspDecimal`）**，本區塊是它的鍵。
+  # 🔴🔴 **不得把本區塊讀成「鐵律 3 放寬了」。** 反過來：外部證據正面證實了「PSP 單位必須逐家宣告、
+  #      不得套 ISO」是對的，只是**宣告的內容比原本想的多一個維度（格式）**。
+  #      `psp_undeclared_currency_action: reject` 與 `max_supported_iso_exponent: 2` 一個字都沒動。
+  psp_amount_formats: [minor_units, decimal_string]
+  # A0：pack 必須明文宣告 amount_format；未宣告 ⇒ reject，**且該 pack 不得 enable**。
+  psp_amount_format_must_be_declared_by_pack: true
+  psp_amount_format_undeclared_error_code: PSP_AMOUNT_FORMAT_UNDECLARED
+  # 🔴 **禁止預設**。預設 minor_units ⇒ 對 Airwallex 型 PSP 送出「主單位被當 minor unit 解讀」的金額，
+  #    而**該錯誤在所有幣別上都成立**（不像 exponent 的錯只在 zero-decimal 幣別現形）。
+  psp_amount_format_default_forbidden: true
+  # A6：decimal_string 格式的位數上限。我方儲存尺度 ×100 只能無損表達 2 位；
+  #     pack 宣告 > 2 ⇒ 不得 enable（宣告 3 位卻只給得出 2 位＝靜默的精度謊報）。
+  psp_decimal_max_places: 2
+  psp_decimal_string_regex: '^-?\d+\.\d{2}$'
+  # A5：divisibility_constraint。🔴 **不是虛構需求**——Stripe 明文要求 **HUF／TWD 的 payout 金額整除 100**
+  #     （`alt`，69 §V-188），而 **TWD 正好在下方 test_matrix_zero_decimal_required 裡**。
+  #     pack 必須宣告（空表＝已查證無此約束；缺鍵＝沒人查過 ⇒ 不得 enable）。
+  psp_divisibility_must_be_declared_by_pack: true
+  psp_divisibility_violation_action: raise
+  psp_divisibility_error_code: PSP_DIVISIBILITY_VIOLATION
+  # 🔴 基準＝**即將送出的值，用該 PSP 自己的單位**（minor_units 檢查 minor 整數；
+  #    decimal_string 以 BigDecimal 檢查主單位、禁 float）。**刻意不統一成以 cents 為基準**：
+  #    那會逼 pack 作者把來源文檔上的數字自己換算一次再填——**而那個手工換算正是本區塊在防的東西**。
+  #    宣告值必須能與來源文件逐字對照。
+  psp_divisibility_basis: outbound_value_in_psp_unit
+  # 🔴 **違反時不得自動湊整**（同 psp_rounding_forbidden 的理由）：湊整會讓「送出去的錢」與
+  #    「帳上記的錢」不同，而差額沒有任何一張表記得住。
+  psp_divisibility_rounding_forbidden: true
+  # pack 宣告的必填鍵（缺任一 ⇒ 不得 enable）。逐鍵語義見 65 §D.3。
+  psp_pack_required_keys: [amount_format, divisibility, divisibility_scope,
+                           storage_precision_shortfall, enable_gate]
+  psp_pack_required_keys_when_minor_units: [minor_unit_source, minor_unit_overrides]
+  psp_pack_required_keys_when_decimal_string: [decimal_places]
   # ISO 4217 minor unit 表的來源：進 repo、版本釘死，不用未釘版的 gem。⚠ V-131
   iso4217_table_source: config/iso4217_minor_units.yml
   iso4217_table_unpinned_gem_forbidden: true
@@ -210,28 +264,56 @@ money_boundary:
   # 三個值物件彼此不可隱式互換；PSP adapter 簽名只收 Money::PspMinor，傳裸 Integer 即 TypeError。
   value_objects:
     storage: Money::Storage          # R1
-    psp_minor: Money::PspMinor       # R5
-    decimal: Money::Decimal          # R4
+    psp_minor: Money::PspMinor       # R5  amount_format: minor_units
+    psp_decimal: Money::PspDecimal   # R6  amount_format: decimal_string（依 69 §V-188 新增）
+    decimal: Money::Decimal          # R4  🔴 無 :psp 欄位 ⇒ **不是**對 PSP 的表示法，傳進 adapter 即 TypeError
   # 🔴 值物件**不得**實作 to_i / to_int / coerce / 數值型 to_s——一旦有隱式轉換，防線等於不存在。
+  #    🔴 R6 的等價陷阱是 **to_s／to_str**：它內含字串，`"#{amount}"` 在組 JSON body 時到處都是，
+  #       一旦 to_s 回傳裸金額字串，R6 的型別防線就跟不存在一樣。
   value_object_implicit_coercion_forbidden: true
-  # Money::PspMinor 的唯一建構路徑是 Money::Storage#to_psp_minor(psp:)；.new 為 private_class_method。
+  # Money::PspMinor 與 Money::PspDecimal 的唯一建構路徑都是 Money::Storage#to_psp_amount(psp:)
+  # （依 pack 宣告的 amount_format 分流）；兩者的 .new 皆為 private_class_method。
+  # <!-- 依 69 §V-188 改：原方法名 to_psp_minor（單一分支）。🔴 舊名**不保留為別名**——
+  #      留著別名等於留著一條「不看 amount_format」的路徑。 -->
   psp_minor_single_construction_path: true
+  psp_amount_single_construction_path: to_psp_amount
   psp_adapter_rejects_bare_integer: true
+  psp_adapter_rejects_bare_string: true
+  # 🔴 adapter 只收「該 pack 宣告格式對應的那一個」值物件，並驗 psp 相符：
+  #    minor_units ⇒ Money::PspMinor／decimal_string ⇒ Money::PspDecimal；
+  #    **Money::Decimal（R4，物流商與 JSON-LD 用的那個）一律拒收**——它與 R6 的字串內容可能一模一樣，
+  #    但它不帶 psp、不跑 65 §D 的斷言（65 §A 末段第 3 點）。
+  psp_adapter_amount_class_from_pack_format: true
+  psp_adapter_rejects_money_decimal: true
   # 識別字後綴鐵律（人眼的編譯期）：看到 `_cents` 出現在送款呼叫點就是 bug。
   identifier_suffixes:
     storage: _cents
     psp_minor: _minor
+    # 🔴 R6 的後綴刻意**不是** `_decimal`：那個已被 R4 佔用，而兩者 wire form 相同 ⇒
+    #    共用後綴會讓本規則在 Airwallex 這條路徑上完全失效（65 §C.2）。
+    psp_decimal_string: _psp_decimal
     decimal_string: _decimal
     display_string: _display
   # CI 靜態檢查（命中即 fail；機器的編譯期）。逐條說明見 65 §C。
   ci_checks:
     - psp_dir_must_not_reference_cents      # app/services/psp/** 出現 `_cents`（白名單兩處除外）
-    - external_call_kwarg_must_be_minor     # 對 Psp::* 的呼叫傳入的金額 kwarg 名須為 *_minor
+    # 🔴 依 69 §V-188 擴充：原規則只允許 `_minor`，那會讓 Airwallex 型 adapter **無法在不違規的
+    #    情況下被呼叫** ⇒ 第一個實作它的人就會去改這條規則。放寬一條擋不住新形態的規則，
+    #    比一開始就寫對更難修回來。
+    - external_call_kwarg_must_be_minor     # 對 Psp::* 的呼叫，金額 kwarg 名須為 *_minor 或 *_psp_decimal
     - money_migration_must_be_bigint_cents  # 新增金額欄位須 bigint ＋ _cents 結尾
+    # 🔴 依 69 §V-188 新增：PSP 目錄裡出現 R4，唯一的可能就是有人拿 feed／物流商的值來送款。
+    - psp_dir_must_not_reference_money_decimal  # app/services/psp/** 出現 Money::Decimal 或 `_decimal`
+                                                # （`_psp_decimal` 除外）
 
   # --- 反方向（inbound；🔴 1/100 事故點）----------------------------------------
-  # PSP 回應／webhook 的金額是 R5，落庫前必須轉回 R1；直接存＝少記 99%。
+  # PSP 回應／webhook 的金額是 R5 **或 R6**，落庫前必須轉回 R1；直接存＝少記 99%。
+  # 🔴 依 69 §V-188 補：入向也要依 pack 的 amount_format 決定包成哪一個值物件；
+  #    **包不出來就不准進**（宣告 decimal_string 卻收到整數 ⇒ 要嘛 pack 宣告錯、要嘛對方改了 API，
+  #    兩者都必須進死信人工看，不得就地猜一個轉換）。
   inbound_psp_minor_must_convert: true
+  inbound_amount_format_must_match_pack: true
+  inbound_format_mismatch_action: dead_letter
   # 🔴 金額比對必須先化到同一表示法。15 §F4「PI 金額與 checkout 現值不符 ⇒ 不建單、自動退款」
   #    若拿 PI 的 R5 直接比 checkout 的 R1，**每一張 JPY 訂單都會被判成金額不一致而自動退款**。
   inbound_comparison_must_normalize_to_storage: true
@@ -252,16 +334,62 @@ money_boundary:
   #    exponent=2 的幣別下所有轉換的 divisor 都是 1，錯誤實作與正確實作**輸出完全相同**。
   test_matrix_zero_decimal_required: [JPY, TWD, KRW]
   test_matrix_two_decimal_required: [HKD, USD]
+  # 🔴 依 69 §V-188 新增：**格式也是一個測試維度，而且是目前零覆蓋的那一個。**
+  #    只測 minor_units 的矩陣，在 Airwallex 型 PSP 上等於沒有測試；而 decimal_string 的誤用
+  #    （把儲存值 148000 輸出成 "148000.00"）**在 HKD 上也會錯** ⇒ 它是唯一「基準法域測得到、
+  #    卻沒人在測」的送款事故形態。缺 decimal_string 的 fixture pack ⇒ CI fail。
+  test_matrix_amount_formats_required: [minor_units, decimal_string]
+  test_matrix_missing_amount_format_action: ci_fail
+  # 🔴 divisibility 至少要有一個 fixture pack（以 TWD／100 為原型，來源＝Stripe payout 的明文要求）。
+  #    斷言必須同時檢查「有 raise」與「**沒有靜默湊整**」——只測前者的話，
+  #    一個「先湊整再 raise」的實作也會綠（65 §H.2 T16）。
+  test_matrix_divisibility_required: {TWD: 100}
   # 🔴 「rejected」自 2026-08-12（68 §D-3）起指的是**送 PSP 時被 reject**，
   #    **不再**是「market 建立時被擋掉」——幣別本身已可選（catalog_flow.exponent3_currency_selectable）。
   #    斷言要測的是：KWD 市場可建立、金額以 2 位小數儲存與顯示、精度損失被登記，
-  #    **而 to_psp_minor 在 PSP pack 未宣告 minor unit 時 raise/reject**。
+  #    **而 to_psp_amount 在 PSP pack 未宣告 amount_format／minor unit 時 raise/reject**
+  #    （方法名依 69 §V-188 由 to_psp_minor 改為 to_psp_amount，見上方 R6 區塊）。
   test_matrix_three_decimal_rejected: [KWD]
   test_matrix_boundary_values: [0, 1, smallest_representable, non_representable_remainder, bigint_max]
   # 金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，CI fail。
   test_matrix_missing_zero_decimal_action: ci_fail
-  # 往返自檢：from_psp_minor(to_psp_minor(x)) == x，在非生產環境每次轉換都跑。
+  # 往返自檢：from_psp_amount(to_psp_amount(x)) == x（兩種 amount_format 各跑一次），
+  # 在非生產環境每次轉換都跑。<!-- 依 69 §V-188：原文只有 minor 一種 -->
   roundtrip_selfcheck_envs: [development, test, staging]
+
+# =============================================================================
+# 0c. PSP pack 宣告（規格見 docs/specs/65 §D.3；形態比照 58 的 carrier pack）
+# =============================================================================
+# 依 69 號 §V-188 新增（2026-08-12）。**本區塊在 65 §D.3／§L V-132 早已被引用，但一直沒有落鍵**
+# ——這次把宣告契約落下來，順便把 69 號查到的「格式」這個維度補進去。
+#
+# 🔴 **本區塊目前沒有任何 enabled 的 pack，也不得有。** 我方不自建支付系統（open-decisions §F），
+#    要接哪一家、該家對各幣別宣告什麼，一律等該家的官方文檔或合約文件到手才填（鐵律：未宣告 ⇒ reject）。
+# 🔴 **不得從 65 §D.4 的實證表把數值抄進來當宣告值。** 那張表記的是「外部世界長什麼樣」，
+#    用來證明 A0／A1／A5 三條斷言不是過度設計；**pack 的宣告值必須來自我方實際簽約那一家的一手文件**
+#    ——Adyen 明文說自家表覆蓋 ISO，就是「別家的表不能拿來推這一家」最好的反證。
+psp_packs:
+  # --- 宣告契約（每個 pack 的必填鍵見 money_boundary.psp_pack_required_keys）-------
+  # <psp_code>:
+  #   amount_format: minor_units | decimal_string   # 🔴 必填（A0）；未宣告 ⇒ 不得 enable，送款 reject
+  #   minor_unit_source: iso4217                    # minor_units 專用；「以 ISO 為底」也要明講
+  #   minor_unit_overrides: {}                      # minor_units 專用；空表＝已查證無例外（≠ 未宣告）
+  #   decimal_places: 2                             # decimal_string 專用；> 2 ⇒ 不得 enable（A6）
+  #   divisibility: {}                              # 幣別 → 倍數；空表＝已查證無此約束（≠ 未宣告）
+  #   divisibility_scope: []                        # charge／refund／payout ⚠ V-206
+  #   storage_precision_shortfall: reject           # 目前唯一合法值
+  #   enable_gate: []                               # 未結案的 V 編號；非空 ⇒ enabled 必為 false
+  #   enabled: false
+  #
+  # 🔴 空表 ≠ 缺鍵（三處都適用：minor_unit_overrides／divisibility／enable_gate）：
+  #    明文空表＝「已查證、無例外」；沒有這個鍵＝「沒人查過」⇒ 不得 enable。58 §A.3 已吃過一次虧。
+  #
+  # --- 已登記的閘門（pack 本體未建立，先把閘門記著，免得日後有人直接開）-------------
+  # airwallex：⚠ V-132。單位面已由 69 號答出＝**十進位主單位字串**（amount_format: decimal_string），
+  #            但 **per-currency 位數、幣別欄位名、webhook 金額形態**仍未取得一手文檔 ⇒ 不得 enable。
+  # ⚠ V-206：divisibility 的作用範圍（charge / refund / payout）未明 ⇒ `divisibility_scope`
+  #          缺鍵的 pack 一律不得 enable；已宣告者以**最嚴格**解讀（charge 亦套用）。
+  enable_gates_registered: {airwallex: [V-132]}
 
 # =============================================================================
 # 1. API 契約（GraphQL）
@@ -2320,6 +2448,11 @@ catalog_flow:
   #    且（因為 ISO 的 KWD exponent=3 與我方 ×100 的儲存尺度不同源）**必須同時宣告
   #    儲存精度不足時如何處理**；未宣告一律 reject（money_boundary.psp_undeclared_currency_action）。
   #    ⇒ 幣別可選 ≠ 可收款。這兩件事在 UI 上必須分開講，否則商家會開了店才發現不能結帳。
+  # ✅ 依 69 號 §V-188（2026-08-12）：上面這兩項要求現在有了落腳的鍵——
+  #    `psp_packs.<code>.amount_format`（先決條件，A0）＋ `minor_unit_overrides`＋
+  #    `storage_precision_shortfall: reject`（見 0c 區塊與 65 §D.3）。
+  #    🔴 並且 69 號證實 **Adyen／Datatrans 兩家都把這五個幣別宣告為 exponent 3**（`alt`）⇒
+  #       「宣告 3 位」不是假想情境，是接上任一家就會立刻遇到的 ⇒ A2 這道閘門會真的被觸發。
   exponent3_checkout_requires_psp_pack_declaration: true
   # ⚠ V-94 的處置**已改變**（原＝首發擋下）：現為「可選、2 位、PSP 未宣告即 reject」。
   #    ⚠ V-188（68 §I）：Shopify 對 exponent=3 幣別**有無官方立場**通篇沉默，本條全靠社群回報。
@@ -2415,11 +2548,27 @@ seo:
   # 依 68 號 §B-6(c) 跟隨 Shopify 做法修正（2026-08-12）：**模式 B 廢除**。
   # 原鍵 `variant_url_mode_b_requires_unique_content: true`，原註釋：「模式 b 開啟前的強制檢查：
   #   每個變體頁的標題／描述／主圖至少各自不同，否則拒絕開啟。（ours）」
-  # 🔴 「同一個商品的變體各自有 URL」正是 Shopify **刻意不做**的形態（會產生近似頁）。
-  #    官方等價物是 **Combined Listings**：在**資料模型層**就讓它們是不同商品，於是不存在重複內容問題。
-  #    ⇒ 模式 B 不是「Shopify 有而我方關掉」，是**一個本尊沒有的形態**，開關本身就不該存在。
+  #
+  # ❌ 68 號當時寫的理由（保留供追溯）：「🔴「同一個商品的變體各自有 URL」正是 Shopify **刻意不做**
+  #    的形態（會產生近似頁）。官方等價物是 Combined Listings……⇒ 模式 B 不是「Shopify 有而我方關掉」，
+  #    是**一個本尊沒有的形態**，開關本身就不該存在。」
+  # 🔴 **69 號 §B-6 證偽了上面那個理由（`std` ×2 ＝ Google Search Central），值不變、理由換掉：**
+  #    ① Google **明文建議**每個變體能被一個獨立 URL 識別 ⇒「變體可索引」是**官方推薦的目標**；
+  #    ② Google 定義 single-page（查詢參數 ＋ 去參數 canonical）與 multi-page（各頁對等、
+  #       單一 canonical 要求**不適用**）**兩種都合規**，且**不表偏好**；
+  #    ③ Shopify **兩種都做了**——預設＝single-page、Combined Listings＝multi-page，
+  #       只是把後者鎖在 Plus ⇒ **「本尊沒有這個形態」是錯的**。
+  #    ⇒ 廢除的是「**同一個 product 下 variant 各掛 URL**」這個**資料模型**（它同時違反兩種形態的規則：
+  #      對 single-page 而言多出 canonical 候選；對 multi-page 而言那些頁不是真的獨立商品），
+  #      **不是「變體可索引」這個目標**——那個目標我方 single-page 模式**已經達成**，
+  #      而且達成方式正是 Google 明文建議的那一種。
   variant_independent_urls_supported: false
-  # 我方的等價缺口登記在 62 §B.2；上限值見 §22 combined_listing（是否實作待裁定）。
+  # 🔴 依 69 §B-6 新增的兩條 Google 官方硬規則（62 §B.2 硬規則 2／3）：
+  #    fragment 切變體 ⇒ Google 索引**不使用** fragment，等於變體完全不可識別；
+  #    參數須 `?key=value`（不得 `?value`），canonical 白名單的剝除邏輯也依賴 key 存在。
+  variant_url_fragment_forbidden: true
+  variant_param_must_be_key_value: true
+  # 我方的等價缺口登記在 62 §B.2-1；上限值見 §22 combined_listing（是否實作待裁定）。
   combined_listing_is_the_official_equivalent: true
   # 🔴 **不得跨市場 canonical**（62 §B.4）：被 canonical 指走的 URL 不會被索引，
   #    也就無法作為 hreflang 的有效目標。兩者互斥，我方一律 self-canonical。⚠ V-120 未結案前不得改。
@@ -2791,62 +2940,121 @@ i18n:
     # 🔴 它不做詞彙在地化（软件/軟體、视频/影片）——UI 必須寫「這是字形轉換，不是翻譯」。
     ui_must_state_not_translation: true
 
-  # --- 匯入匯出（67 §E.6）—— 翻譯是**第三套**；空白語義與商品 CSV **同向** ------
-  # 依 68 號 §B-3 跟隨生態事實標準修正（2026-08-12）。詳細三件套見下方 import 區塊。
+  # --- 匯入匯出（67 §E.6）—— 翻譯是**第三套**；空白＝不動作，覆寫走顯式旗標 ------
+  # 🔴🔴 **本區塊是二次修正，讀之前先看下方 import.blank_means_unchanged 的完整沿革註釋。**
+  #      原值 true（我方原設計）→ 68 號依 Matrixify（第三方，press）翻成 false →
+  #      69 號查到 Shopify **原生**翻譯 CSV 的官方語義後**改回 true**（2026-08-12 同日）。
   export:
     format: csv
     # 匯出必含 source_text 唯讀參考欄（沒有原文的翻譯檔對譯者不可用）。
     include_source_text: true
+    # 🔴 依 69 號 §V-182 對齊 Shopify 原生翻譯 CSV 的 8 欄（`help`：Settings → Languages）：
+    #    Type／Identification／Field／Locale／Market／Status／Default content／Translated content。
+    #    我方欄名沿用既有命名（resource_type≈Type、resource_gid≈Identification、field_key≈Field、
+    #    market_handle≈Market、source_text≈Default content、translated_text≈Translated content），
+    #    **欄位集合與順序對齊**，另保留我方獨有的 source_digest（Shopify 沒有，但它是回匯安全的前提）。
     columns: [resource_type, resource_gid, field_key, locale, market_handle,
-              source_text, translated_text, source_digest, status]
+              status, source_text, translated_text, source_digest]
     split_by: [locale, resource_type]
-    # 🔴 **選擇性匯出是「空白＝清空」翻面後的必要配套，不是便利功能**（68 §B-3）：
-    #    翻面之後，「不變更」**唯一**的表達方式是「讓那個語言／那個欄位**不出現在檔案裡**」。
-    #    沒有這兩個鍵，商家就沒有任何辦法表達「只改標題、別動描述」⇒ 第 1 條就是誤刪產生器。
+    # 🔴 `status` 三值對齊本尊（69 §V-182，`help` ＋ `vendor` 獨立佐證）：
+    #    translated／outdated／untranslated。**outdated 是匯出檔的一等公民欄位**——
+    #    這同時解決了 67 §C.5 的過期偵測「要往哪裡輸出」這個問題。
+    status_values: [translated, outdated, untranslated]
+    # ⚠ V-201：本尊在**匯入**時是否讀取 Status 欄未知 ⇒ 我方 **status 純輸出**，匯入時忽略。
+    status_is_export_only: true
+    # 🔴 **選擇性匯出的理由已改（依 69 §V-182），鍵值不變、價值反而更高。**
+    #    68 號時它是「空白＝清空」翻面後的必要配套（不想動的不要出現在檔案裡）。
+    #    現在空白＝不動作，它不再是「避免誤刪」的唯一手段，但它決定了
+    #    **overwrite_existing: true 時的作用範圍**——匯入器以**表頭**判定哪些欄位在範圍內，
+    #    所以「匯出時就把不想動的欄位排除掉」是縮小覆寫爆炸半徑最直接的方式。
     selectable_locales: true            # 匯出時勾選要匯出哪些語言
     selectable_fields: true             # 匯出時勾選要匯出哪些 field_key
     # 匯出檔預設只含被勾選的語言與欄位；未勾選者**整欄／整批列不輸出**（不是輸出空值）。
     omit_unselected_as_columns: true
+    # 🔴 依 69 §V-182 跟隨本尊：匯出是**非同步**，完成後以通知／email 交付（本尊即如此，
+    #    也符合我方 outbox 形態）。大店的全語言匯出不可能在請求內完成。
+    async_delivery: true
+    delivery_channels: [notification, email]
     # 單檔上限沿用 csv.product_max_upload_mb（15MB，出處 61 §6.1/§6.2 help）。
     max_upload_mb_key: csv.product_max_upload_mb
     # XLIFF 2.1 列 P2；⚠ V-163 未查證官方格式。
     xliff_enabled: false
   import:
-    # 依 68 號 §B-3 跟隨 Shopify 生態做法修正（2026-08-12）。
-    # 原值 `true`，原註釋：「🔴 空白 ＝ **不變更**（與商品 CSV 相反：後者「空白儲存格會把既有資料
-    #   洗掉」，61 §6.1）。同樣語義套到翻譯上 ＝ 譯者交回只填 20% 的檔案，其餘 80% 既有譯文全被清空。」
-    # 生態事實標準（matrixify.app/documentation/translations/，press）：翻譯匯入時
-    #   Translation Value 欄留空 ＝ **刪除該語言該欄的既有譯文**，與商品 CSV（help，61 §6.1）**同向**。
-    # 🔴 **原註釋擔心的誤刪風險是真的，翻面不等於把它一筆勾銷。** Shopify 生態的解法不是把空白
-    #    解釋成「不變更」，而是**讓「不變更」以「欄位／列缺席」表達**。所以本條必須三件事一起才成立：
-    #      ① blank_means_unchanged: false（空白＝清空）
-    #      ② 選擇性匯出（export.selectable_locales / selectable_fields）——不想動的不要出現在檔案裡
-    #      ③ 匯入預覽把「將被清空的儲存格數」單獨列成一個數字（Shopify 沒有，但翻面後**必須**有）
-    #    🔴 只做 ① 不做 ②③ ＝ 誤刪產生器。任何人若要拆掉 ② 或 ③，必須連 ① 一起改回去。
-    blank_means_unchanged: false
-    # 「不變更」的三種表達（**這是本區塊的核心契約**）：
-    #   列缺席   ⇒ 該 (resource, locale, field) 完全不處理
-    #   欄位缺席 ⇒ 該欄位對檔案內所有列都不處理（匯入器**不得**把缺席欄當成空字串）
-    #   儲存格空 ⇒ 🔴 **清空該譯文**（本次翻面的內容）
+    # =========================================================================
+    # 🔴🔴 **本鍵是二次修正。沿革完整寫在這裡，否則下一個人會以為是有人手滑改回去。**
+    # =========================================================================
+    #   ① 原值 `true`（我方原設計，67 §E.6）——理由：「翻譯檔常常只填部分語言，
+    #      空白＝清空會造成大規模誤刪」。原註釋逐字：「🔴 空白 ＝ **不變更**（與商品 CSV 相反：
+    #      後者『空白儲存格會把既有資料洗掉』，61 §6.1）。同樣語義套到翻譯上 ＝ 譯者交回只填 20%
+    #      的檔案，其餘 80% 既有譯文全被清空。」
+    #   ② 68 號 §B-3 翻成 `false`（空白＝清空）——依據是 **Matrixify（第三方 app，`press` 級）**
+    #      的翻譯匯入語義，並研判「Shopify **原生**能力薄弱或不存在」（68 的 V-182）。
+    #   ③ 🔴 **69 號 §V-182 推翻了 ② 的前提，本鍵改回 `true`。**
+    #      Shopify **有完整的原生翻譯 CSV 匯出／匯入**，只是**不在 Translate & Adapt app 裡**，
+    #      而在 **Settings → Languages**（`help` ＋ `staff` 佐證）——這就是 68 號找不到它的原因。
+    #      其模型是 **8 欄 ＋ Status 三值 ＋ 匯入時一個「覆寫既有翻譯」的勾選框**：
+    #      🔴 **本尊根本沒有對「空白」賦予刪除語義，它把這個決定做成使用者的一次明示動作。**
+    #      ⇒ 「全部跟隨 Shopify」的字面結論**不是翻面，是改成顯式 overwrite 旗標**。
+    #
+    # 🔴 **為什麼繞了這一圈（這一段比結論本身更重要）**：68 與 69 是**同時**進行的兩份查證，
+    #    68 拿不到原生行為，就以生態事實標準（`press` 級）當依據翻了規格；69 換一批來源後
+    #    在**官方 help**（`help` 級）找到了原生行為。**教訓：`press` 級來源足以「登記為未知」，
+    #    不足以「翻面一條已生效的資料安全預設」。** 來源分級不是學術潔癖，它就是這次的成本。
+    #
+    # 🔴 **防回退**：任何人看到本鍵是 `true` 又看到 68 §B-3 寫著「要改成 false」，
+    #    **不要照 68 改**——68 的那一條已被 69 以更高等級的來源推翻，兩份文件都不會再改
+    #    （docs/research/* 是證據不是結論）。要改本鍵，必須先推翻 69 §V-182 的 `help` 級出處。
+    blank_means_unchanged: true
+    # ⚠ V-200：本尊在「勾選覆寫」與「不勾選」兩種模式下，對**空白** Translated content
+    #    分別做什麼，官方 help 完全沒寫 ⇒ 我方**不**把空白解讀成刪除（保守失效：
+    #    刪除是不可逆操作，不該由「儲存格是空的」這種易誤觸的狀態觸發）。
+    #
+    # --- 🔴 顯式覆寫旗標（69 §V-182 建議的形態；取代「空白＝刪除」這個隱式語義）---------
+    # 不勾（預設）⇒ 只匯入新譯文，既有譯文一律不動；勾 ⇒ 檔案內有值的儲存格覆寫既有譯文。
+    # 🔴 **預設 false**：跟隨本尊（其勾選框預設不勾），且與「保守失效」一致。
+    overwrite_existing_default: false
+    # 覆寫的作用範圍＝**表頭出現的欄位 × 檔案內有值的儲存格**。
+    # 🔴 空白儲存格**永遠不在覆寫範圍內**（否則 overwrite=true 就變回「空白＝刪除」，繞回 ② 那條路）。
+    overwrite_scope: non_blank_cells_in_present_columns
+    # 清空譯文的**唯一**明示手段（不再是空白的同義寫法）。
+    explicit_clear_token: "__CLEAR__"
+    # <!-- 依 69 §V-182 由 true 改為 false。68 號把 `__CLEAR__` 降級成「空白的同義寫法」，
+    #      是因為當時空白本身就會清空；現在空白＝不動作 ⇒ `__CLEAR__` **回到唯一清空手段**的位置。
+    #      🔴 這一鍵與 blank_means_unchanged 是**同一個語義的兩面，必須一起改**：
+    #         若有人只把 blank_means_unchanged 改回 false 而漏了這一鍵，語義仍然自洽（兩者都清空），
+    #         **所以這個漏改不會被任何測試抓到** —— 這正是把兩者寫在同一段註釋裡的理由。 -->
+    explicit_clear_token_is_alias_of_blank: false
+    # 「不變更」的四種表達（**這是本區塊的核心契約**）：
+    #   列缺席     ⇒ 該 (resource, locale, field) 完全不處理
+    #   欄位缺席   ⇒ 該欄位對檔案內所有列都不處理（匯入器**不得**把缺席欄當成空字串）
+    #   儲存格空白 ⇒ 🔴 **本列本欄不做任何事**（69 §V-182；**不是**刪除）
+    #   有值但未勾 overwrite ⇒ 該譯文已存在時保持原值（只補新的）
     absent_row_means_unchanged: true
     absent_column_means_unchanged: true
-    # 🔴 缺席與空白必須在解析層就分開：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」
-    #    在多數 CSV 函式庫裡都會塌成 nil ⇒ 匯入器必須以**表頭**判定欄位是否存在，不以值判定。
+    # 🔴 **缺席與空白仍然必須在解析層就分開——這條在本次二次修正後不但沒有失效，反而更關鍵。**
+    #    技術理由不變：CSV 讀進來的「沒有這一欄」與「這一欄是空字串」在多數 CSV 函式庫裡都會塌成 nil，
+    #    ⇒ 匯入器必須以**表頭**判定欄位是否存在，不以值判定。
+    #    🔴 新的理由（69 §V-182）：**overwrite_existing 的作用範圍就是靠表頭界定的**。
+    #       若解析層分不出缺席與空白，overwrite=true 會把「檔案裡沒有的欄位」也算進範圍，
+    #       於是一份只想改標題的檔案會把描述一起洗掉——**那就是 ② 的誤刪風險換了個入口回來**。
     absent_vs_blank_distinguished_by_header: true
-    # `__CLEAR__` 保留為空白的**同義寫法**（兩者都清空），理由：讓「我是故意清空的」在檔案裡看得出來，
-    # 且舊格式檔案裡寫 `__CLEAR__` 的那些儲存格語義不變。
-    # ⚠ 舊格式檔案裡**空白**儲存格的語義**已經反轉**（原本不變更、現在清空）——這正是本次翻面的內容，
-    #   必須靠 ③ 的預覽數字讓商家在按下確認前看見。
-    explicit_clear_token: "__CLEAR__"
-    explicit_clear_token_is_alias_of_blank: true
-    # ③ 匯入預覽（dry-run）必須把清空數單獨列出，不得混進「將更新 N 筆」。
+    # --- 匯入預覽四鍵（68 號新增，🔴 本次修正**全部保留**，但計數對象改了）-------------
+    # 🔴 它們解決的是真問題，不隨空白語義改變而失效：破壞性操作在按下確認前必須有一個數字。
+    #    68 號時計的是「將被清空的儲存格數」；現在破壞性來源有兩個，**兩個都要單獨列出**：
+    #      ①`__CLEAR__` 的明示清空數  ②overwrite=true 時「將被覆寫的既有譯文數」
+    #    🔴 ② 是本次修正**新增**的風險面：overwrite 是使用者的一次明示動作，但它的**爆炸半徑**
+    #       仍然是整份檔案 —— 勾一個框而不知道會蓋掉多少既有譯文，跟誤刪一樣不可接受。
     preview_required: true
     preview_clear_count_separate: true
-    # 清空筆數佔該檔案總列數超過此比例 ⇒ 二次確認（形態同 machine_translation.batch_confirm_above_resources）。
+    preview_overwrite_count_separate: true
+    # 清空／覆寫筆數佔該檔案總列數超過此比例 ⇒ 二次確認
+    # （形態同 machine_translation.batch_confirm_above_resources）。
     clear_ratio_confirm_threshold: 0.2
-    # 🔴 清空是可回溯的：被清空的譯文進 translations 的稽核軌（誰、何時、由哪一次匯入），
-    #    否則「譯者交錯檔案」這件事在事後完全無法還原。
+    overwrite_ratio_confirm_threshold: 0.2
+    # 🔴 清空**與覆寫**都是可回溯的：被清空／被覆蓋的舊譯文進 translations 的稽核軌
+    #    （誰、何時、由哪一次匯入），否則「譯者交錯檔案」這件事在事後完全無法還原。
     clear_writes_audit_trail: true
+    overwrite_writes_audit_trail: true
     # 缺 source_digest 欄 ⇒ 整檔拒絕（沒有 digest 就無法安全回寫）。
     require_source_digest_column: true
     # digest 不符 ⇒ **仍然寫入**（譯者是照當時原文翻的，內容多半可用）但標過期＋待覆核，
@@ -3170,11 +3378,16 @@ handle:
 # 依 68 號 §B-6(c) 新增（2026-08-12）。出處：help.shopify.com/en/manual/products/
 #   combined-listings-app（help）。
 # 🔴 **本區塊是「已登記的缺口」，不是「已決定要做的功能」。**
-#    背景：我方 62 §B.2 原有「模式 B＝變體獨立 URL」——那正是 Shopify **刻意不做**的形態。
-#    官方要「每個變體一個獨立可索引 URL」時給的是 Combined Listings：
+#    背景：我方 62 §B.2 原有「模式 B＝變體獨立 URL」，形態不對（見 seo.variant_independent_urls_supported
+#    的完整註釋）。官方要「每個變體一個獨立可索引 URL」時給的是 Combined Listings：
 #      形態不是「給變體加 URL」，而是**把數個真實商品串成一個前台商品列表**；
 #      每個子商品保有自己的 title／description／URL／圖片／價格／庫存，在 feed 裡是獨立項目。
 #    ⇒ 這在架構上是不同的東西（parent/child 的商品關係），**不是一個開關**。
+# 🔴 **依 69 號 §B-6 補一句定性（2026-08-12）**：Combined Listings **就是 Google 官方定義的
+#    multi-page 形態**（各變體頁地位對等、「單一 canonical」的要求**明文不適用**，`std`），
+#    不是 Shopify 私有的變通做法。⇒ 本區塊登記的是「**我方只做了 Google 兩種合規形態中的
+#    single-page 那一種**」，而不是「本尊有個奇怪功能我方沒抄」。
+#    這個差別會直接影響「要不要做」的裁定，所以不能省。
 # 🔴 **未實作前這些鍵不得被任何程式碼讀取**（承 62 §0.2 原則 3「未宣告 ≠ 支援」）：
 #    它們的用途是把上限值先落鍵（鐵律 6），避免日後實作時散落硬編碼。
 combined_listing:
@@ -3193,7 +3406,18 @@ combined_listing:
   # --- 我方定案（先寫下來，避免實作時猜）--------------------------------------
   # 🔴 子商品一律 **self-canonical**（與 62 §B.4「一律 self-canonical，不跨市場 canonical」同一條），
   #    **不指向 parent**——指向 parent 等於宣告子商品不該被索引，那就失去做這件事的意義。
+  # ✅ 依據升級（69 §B-6／§V-187）：本條現在有 **Google 官方**支撐，不只是我方推論——
+  #    multi-page 形態下「整個 ProductGroup 只有一個 canonical」的要求**明文不適用**，各頁對等。
   child_canonical: self
-  # ⚠ V-187（68 §I）：Combined Listings 子商品的 canonical **實際輸出**官方 help 未述，
-  #    第三方文章只講「Google 分別索引」⇒ 我方按上一條定案，**不猜 Shopify**。
+  # ⚠ V-187：子商品 canonical 的**實際輸出**仍未一手驗證。69 號把 dev docs 也讀完了
+  #    （combined-listings 與 build-for-combined-listings 兩頁**對 URL／canonical／SEO 完全沉默**），
+  #    🔴 且唯一的第三方說法是**同一作者、同一 app 廠商的兩個網域**（算 1 個 `blog` 來源、
+  #    無測試數據）⇒ **不得採信、不得引用**。我方按上一條定案，**不猜 Shopify**。
   verify_child_canonical: true
+  # ⚠ V-203（69 號新登記）：**parent 商品本身**在 online store 上是什麼——有無可索引 URL、
+  #    是否進 sitemap、canonical 指向哪裡。官方只說 parent 不可購買／無庫存／無銷售數據，
+  #    **沒說它在前台是什麼**，而這對我方 sitemap／canonical 規則是必答題。
+  #    我方若做等價物的預設：parent **不進 sitemap**；若有 URL 則 self-canonical。
+  parent_in_sitemap: false
+  parent_canonical: self
+  verify_parent_url_semantics: true

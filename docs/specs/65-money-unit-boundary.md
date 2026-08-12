@@ -1,6 +1,13 @@
 # 65 — 金額單位邊界契約（money unit boundary）
 
-> **一句話**：系統裡有**五種**金額表示法，它們的單位互不相同；每一個跨界點都必須顯式轉換，而**在 HKD／USD／MYR 這些 exponent=2 的幣別下，錯的實作與對的實作輸出完全一樣**——所以這件事不能靠測試發現，只能靠型別與 CI 擋住。
+> **一句話**：系統裡有**六種**金額表示法，它們的單位互不相同；每一個跨界點都必須顯式轉換，而**在 HKD／USD／MYR 這些 exponent=2 的幣別下，錯的實作與對的實作輸出完全一樣**——所以這件事不能靠測試發現，只能靠型別與 CI 擋住。
+> <!-- 依 69 號 §V-188 修正（2026-08-12），原文：「系統裡有**五種**金額表示法」。
+>      新增的第六種是 **R6（PSP 十進位字串）**：69 號查到 **Airwallex 根本不用 minor units，
+>      而是十進位主單位字串**（`alt`，airwallex.com/docs/api/data_types）。原本的五種表示法裡
+>      **沒有任何一種能承載這個形態**——R4 雖然也是十進位字串，但它不帶 `psp` 綁定、不跑 §D 的斷言，
+>      拿 R4 送 PSP 等於把 JSON-LD／物流商用的值直接送進收款通道（§A 末段第 3 點）。
+>      🔴 **這不是鐵律 3 放寬**：反過來，四家 PSP 四種算法正面證實了「PSP 單位必須逐家宣告、
+>         不得套 ISO」是對的，只是**宣告的內容比原本想的多一個維度（格式）**。任何人不得刪回五種。 -->
 >
 > 覆蓋範圍：內部儲存／顯示／PSP 送出與回收／會計分錄與對帳／CSV 匯出入／結構化資料與 feed／物流商／平台 rollup。
 > 本篇是 **63 §G.4**（救命條款）、**58 §G.3**（物流商金額）、**62 §A.4／§L**（`Offer.price`）三處既有裁定的**共同上位契約**——那三處都對，但各自只覆蓋自己那一段邊界，沒有人負責「一共有幾段邊界」這個問題。本篇負責。
@@ -47,7 +54,7 @@
 
 ## A. 系統裡有幾種金額表示法
 
-**五種對外可見 ＋ 一種只存在於解析器內部。** 任何金額值在任何時刻都**恰好屬於其中一種**；不知道自己屬於哪一種的值，就是 bug。
+**六種對外可見 ＋ 一種只存在於解析器內部。** 任何金額值在任何時刻都**恰好屬於其中一種**；不知道自己屬於哪一種的值，就是 bug。
 
 | # | 名稱 | Ruby 型別 | 單位 | 尺度 | 出現在哪 | 定義出處 |
 |---|---|---|---|---|---|---|
@@ -55,12 +62,29 @@
 | **R2** | micro-cents | `Integer`（裸值） | cents × 10⁶ | ×10⁸ 相對主單位 | **只在 `Pricing::PresentmentResolver` 的方法內部**；不得跨方法邊界、不得落庫、不得序列化 | 63 §G.3 |
 | **R3** | 顯示字串 | `String` | — | 恆兩位小數 ＋ market locale 的符號與千分位 | Liquid `money` filter、admin UI、通知信、PDF、面單 | 裁定二 ＋ 鐵律 10 |
 | **R4** | 十進位字串 | `Money::Decimal`（內含 `String`） | **主單位**（major unit） | 恆兩位小數、**無符號、無千分位**、小數點為 `.` | JSON-LD `Offer.price`、GMC/Meta feed、CSV 價格欄、GraphQL `MoneyV2.amount`、**物流商** | 62 §A.4 ＋ 58 §G.3 |
-| **R5** | PSP minor unit | `Money::PspMinor`（內含 `Integer`） | **該 PSP 為該幣別宣告的 minor unit**（正常值＝ISO 4217 exponent） | 依幣別（JPY 0／HKD 2） | **只在 PSP adapter 的請求與回應 payload 內** | 本篇 §D |
+| **R5** | PSP minor unit | `Money::PspMinor`（內含 `Integer`） | **該 PSP 為該幣別宣告的 minor unit**（正常值＝ISO 4217 exponent，**但不保證**——見 §D.4） | 依幣別（JPY 0／HKD 2） | **只在 `amount_format: minor_units` 的 PSP adapter payload 內** | 本篇 §D |
+| **R6** | **PSP 十進位字串** | `Money::PspDecimal`（內含 `String`） | **主單位**（major unit），位數由 pack 宣告 | 恆兩位小數（我方儲存尺度的上限）、**無符號、無千分位**、小數點為 `.` | **只在 `amount_format: decimal_string` 的 PSP adapter payload 內**（Airwallex 型） | 本篇 §D、⚠ V-132 |
 
-**兩件最容易被「順手統一」而搞爛的事**：
+<!-- R6 依 69 號 §V-188 新增（2026-08-12）。原表只有五列，**R5 是唯一的對 PSP 出向表示法**，
+     其隱含前提是「所有 PSP 都收整數 minor unit」。69 號查到的四家 PSP 是**四種算法**：
+       Adyen（`alt`）＝整數 minor units，KWD/BHD/JOD/OMR/TND exponent 3，
+                       且**明文說 CLP／CVE／IDR／ISK 以自家表為準、與 ISO 4217 不同**；
+       Datatrans（`alt`）＝整數 minor units，三位小數幣別 ×1000，自稱遵循 ISO 4217；
+       Stripe（`alt`）＝整數 minor units ＋ `Special cases` 表覆蓋 ISO（ISK／HUF／TWD／UGX），
+                       且 **HUF／TWD 的 payout 金額必須整除 100**；
+       Airwallex（`alt`）＝🔴 **十進位主單位字串**（`9.99` 就是九元九角九分），**完全不是 minor units**。
+     ⇒ `Money::PspMinor` 這個型別在 Airwallex 型 PSP 上**根本不適用**，這是型別設計擋不住的形態，
+        不是一個參數問題。🔴 **任何人不得以「Airwallex 也能用 R4」為由刪掉 R6**——理由見下方第 3 點。 -->
 
-1. **R4 ≠ R5。** 物流商走 R4（十進位字串，58 §G.3 已定），PSP 走 R5（整數 minor unit）。兩者都是「對外」，但**慣例不同**。有人把它們合成一個 `to_external_amount()` 就是下一次事故。
+**三件最容易被「順手統一」而搞爛的事**：
+
+1. **R4 ≠ R5。** 物流商走 R4（十進位字串，58 §G.3 已定），`minor_units` 型 PSP 走 R5（整數 minor unit）。兩者都是「對外」，但**慣例不同**。有人把它們合成一個 `to_external_amount()` 就是下一次事故。
 2. **R1 的 ×100 與 R5 的 exponent 沒有關係。** `100` 不是「因為大多數幣別是 2 位」，它是**我方選定的固定儲存尺度**。日後要支援 exponent=3，改的是 `storage_scale_multiplier`（全庫 migration），**不是**轉換函式（63 §G.4 已定）。
+3. 🔴 **R6 ≠ R4，即使兩者的線上形態（wire form）一模一樣。** 兩者都是 `"1480.00"` 這種字串，所以「R4 已經是十進位字串了，直接拿去送 Airwallex 就好」看起來完全合理——**而這正是要擋的那一步**：
+   - R4 **不帶 `psp` 綁定**。§C L3 的 adapter 斷言靠 `psp` 欄位擋「A 家的值送去 B 家」；R4 沒有這個欄位，等於把該防線關掉。
+   - R4 **不跑 §D 的斷言**。它的建構路徑是 `X2/X3/X4`（GraphQL／JSON-LD／CSV），**不經過 pack 宣告檢查、不經過整除檢查**。放行 R4 ⇒ 一個沒有任何 PSP 檢查的值直接進收款通道。
+   - R4 的**消費者包含物流商與 feed**。一旦 adapter 收 R4，`carrier_declared_value_decimal` 這種變數就能一路傳到 charge 呼叫，而它在型別上完全合法。
+   ⇒ **R6 是獨立型別，唯一建構路徑是 `Money::Storage#to_psp_amount(psp:)`（§D.1）。R4 傳進任何 PSP adapter 一律 `TypeError`。**
 
 > 🔴 **`limits.currency_display.iso4217_zero_decimal_overridden` 不是 R5 的資料來源。** 那個鍵的語義是「哪些幣別的**顯示位數**被裁定二覆蓋」，鍵名裡的 `iso4217` 指的是被覆蓋的對象。拿它推導 PSP 單位＝下一個 100 倍。已在 `limits.yml` 該鍵旁加 `not_a_psp_unit_source: true` 反引用。（§J M-4）
 
@@ -79,13 +103,17 @@
 | **X4** | 出 | R1 → R4（CSV 匯出） | 同 X2；價格欄一律主單位 | 兩位小數；**不得輸出 cents** | 匯出中止 | §G |
 | **X5** | 出 | R1 → R4（物流商：COD 代收額、報關申報價值） | **由 carrier pack 宣告**；未宣告 ⇒ reject | pack 宣告存在 | `CARRIER_CAPABILITY_UNDECLARED` | 🔴 **58 §G.3 只定義了入向，出向是缺口**（§J M-3） |
 | **X6** | 入 | R4 → R1（物流商回傳、CSV 匯入） | `BigDecimal(raw) * 100`；小數 >2 位 ⇒ raise | 全程 `BigDecimal`；結果 `Integer`；**不得 round** | raise／該行失敗 | 58 §G.3 規則 1–2 |
-| **X7** | 出 | **R1 → R5（送 PSP）** | `Money::Storage#to_psp_minor(psp:)` | **§D 四條斷言，全部 raise** | raise，**不送出** | 🔴 本篇 §D、63 §G.4 |
-| **X8** | 入 | **R5 → R1（PSP 回應／webhook）** | `Money::PspMinor#to_storage` | 同 §D 的反向；型別必須是 `Money::PspMinor` 才准進來 | raise，webhook 進死信 | 🔴 本篇 §E |
+| **X7** | 出 | **R1 → R5／R6（送 PSP）** | 🔴 **依該 pack 宣告的 `amount_format` 分流**，唯一入口 `Money::Storage#to_psp_amount(psp:)`；`amount_format` 未宣告 ⇒ reject（連分流都不做） | **§D.2 的斷言全部 raise**（A0／A4／A5 兩種格式都跑；A1–A3 僅 `minor_units`；A6 僅 `decimal_string`） | raise，**不送出** | 🔴 本篇 §D、63 §G.4、69 §V-188 |
+| **X7a** | 出 | R1 → **R5**（`amount_format: minor_units`：Stripe／Adyen／Datatrans 型） | `cents / 10**(2 − exponent)` ⇒ `Money::PspMinor` | A0–A5 | raise | §D.1 |
+| **X7b** | 出 | R1 → **R6**（`amount_format: decimal_string`：Airwallex 型） | `cents / 100` 的**兩位十進位字串** ⇒ `Money::PspDecimal`；🔴 **全程 `BigDecimal`／字串組裝，不得經 float** | A0、A4、A5、A6 | raise | §D.1、⚠ V-132 |
+| **X8** | 入 | **R5／R6 → R1（PSP 回應／webhook）** | `Money::PspMinor#to_storage`／`Money::PspDecimal#to_storage`；**進來的原始值先依 pack 的 `amount_format` 包成對應型別**，包不出來就不准進 | 同 §D 的反向；型別必須是 `Money::PspMinor` 或 `Money::PspDecimal` 才准進來，且 `psp` 相符 | raise，webhook 進死信 | 🔴 本篇 §E |
+| **X8a** | 入 | R5 → R1 | `minor * 10**(2 − exponent)` | 型別＋`psp`＋exponent 來源同 X7a | raise | §E |
+| **X8b** | 入 | R6 → R1 | `BigDecimal(str) * 100`；小數 >2 位 ⇒ raise（**不得 round**，同 X6） | 型別＋`psp`＋§D.2 A6 的字串格式 | raise | §E、⚠ V-132 |
 | **X9** | 內 | R1 → R2 → R1（presentment 解析） | 放大 ×10⁶、最後一步取整一次 | R2 **不得**離開解析器 | — | 63 §G.3 |
 | **X10** | 內 | R1 → 會計分錄 | **不轉換**（分錄就是 R1） | 分錄禁用 R5；雙幣別走 MoneyBag，兩欄都是 R1 | 拒絕入帳 | §F |
 | **X11** | 內 | R1 → 平台 rollup | 不轉換 | **跨幣別不得直接相加** | 拒絕彙總 | §F.3、⚠ V-134 |
 
-**這張表的完整性檢查（CI 可跑）**：對 `app/` 全庫搜尋「金額離開/進入行程邊界」的呼叫點（HTTP client、序列化器、CSV writer、view helper），每一處都必須對應到 X1–X11 的其中一列；對應不上的一律 fail。這條把「有沒有漏掉一個邊界」從人工紀律變成可執行斷言（同 63 §D.3 對 `cache_stamp` 的做法）。
+**這張表的完整性檢查（CI 可跑）**：對 `app/` 全庫搜尋「金額離開/進入行程邊界」的呼叫點（HTTP client、序列化器、CSV writer、view helper），每一處都必須對應到 X1–X11（PSP 兩向再細分 X7a／X7b／X8a／X8b）的其中一列；對應不上的一律 fail。這條把「有沒有漏掉一個邊界」從人工紀律變成可執行斷言（同 63 §D.3 對 `cache_stamp` 的做法）。
 
 ---
 
@@ -96,31 +124,42 @@
 Ruby 沒有編譯期型別，所以「編譯期就看得出來」在本專案的等價物是**三件事**：**人眼的編譯期（命名）**、**機器的編譯期（CI）**、**執行期的第一次呼叫（值物件）**。四層合起來才擋得住。
 
 ```ruby
-# app/models/money.rb —— 三個值物件，彼此不可隱式互換
+# app/models/money.rb —— 四個值物件，彼此不可隱式互換
 module Money
-  Storage  = Data.define(:cents,    :currency)          # R1
-  PspMinor = Data.define(:minor,    :currency, :psp)    # R5
-  Decimal  = Data.define(:string,   :currency)          # R4
+  Storage    = Data.define(:cents,  :currency)          # R1
+  PspMinor   = Data.define(:minor,  :currency, :psp)    # R5  amount_format: minor_units
+  PspDecimal = Data.define(:string, :currency, :psp)    # R6  amount_format: decimal_string
+  Decimal    = Data.define(:string, :currency)          # R4  ← 🔴 無 :psp 欄位，**不是**對 PSP 的表示法
 end
 ```
 
+<!-- `PspDecimal` 依 69 號 §V-188 新增（2026-08-12）。原本只有三個值物件，其中 R5 是唯一的
+     對 PSP 出向型別。🔴 **`Money::Decimal` 與 `Money::PspDecimal` 的欄位差別只有 `:psp` 一個，
+     這不是冗餘**——沒有 `:psp` 就無法在 adapter 端斷言「這個值是為這一家算的」，
+     而那正是 L3 存在的全部理由（§A 末段第 3 點）。任何人不得把兩者合併成一個型別。 -->
+
 | 層 | 做什麼 | 擋住哪一種繞過方式 |
 |---|---|---|
-| **L1 值物件無隱式轉換** | `Money::Storage` **不實作** `to_i` / `to_int` / `coerce` / 數值型 `to_s` | `stripe.create(amount: order.total)` 直接 `TypeError`。**若實作了 `to_i`，`Integer()`、多數序列化器、字串插值都會自動呼叫它，前三層全部失效**——這是本節最關鍵的一條 |
-| **L2 單一建構路徑** | `Money::PspMinor.new` 為 `private_class_method`；唯一建構路徑是 `Money::Storage#to_psp_minor(psp:)` | 不存在「手工湊一個 PspMinor」的路徑 ⇒ §D 的斷言**無法被繞過** |
-| **L3 adapter 簽名只收值物件** | PSP adapter 每個帶金額的方法第一行 `raise TypeError unless amount.is_a?(Money::PspMinor)`；`#to_payload` 是唯一變回 `Integer` 的地方，且斷言 `psp` 相符 | 傳裸 Integer 立刻炸；**把 Stripe 的 minor 拿去送 Airwallex 也會炸**（兩家對同一幣別可能宣告不同單位 ⇒ 那是下一個 100 倍） |
-| **L4 命名 ＋ CI 靜態檢查** | 識別字後綴鐵律 ＋ 三條 CI 掃描（下表） | 擋住「新寫的程式碼繞過值物件」——L1–L3 只約束已經用了值物件的路徑，L4 約束**還沒寫出來的**路徑 |
+| **L1 值物件無隱式轉換** | `Money::Storage` **不實作** `to_i` / `to_int` / `coerce` / 數值型 `to_s`；🔴 `Money::PspDecimal` **不實作** `to_s`／`to_str`（它內含字串，最容易被字串插值靜默展開） | `stripe.create(amount: order.total)` 直接 `TypeError`。**若實作了 `to_i`，`Integer()`、多數序列化器、字串插值都會自動呼叫它，前三層全部失效**——這是本節最關鍵的一條。**R6 的等價陷阱是 `to_s`**：`"#{amount}"` 在 JSON body 組裝時到處都是，一旦 `to_s` 回傳裸金額字串，R6 的型別防線就跟不存在一樣 |
+| **L2 單一建構路徑** | `Money::PspMinor.new` 與 `Money::PspDecimal.new` 皆為 `private_class_method`；**兩者唯一的建構路徑都是 `Money::Storage#to_psp_amount(psp:)`**（它依 pack 的 `amount_format` 決定產出哪一個） | 不存在「手工湊一個 PspMinor／PspDecimal」的路徑 ⇒ §D 的斷言**無法被繞過**。🔴 **也不存在「先做一個 R4 再改型」的路徑**——`Money::Decimal` 沒有任何轉成 `PspDecimal` 的方法 |
+| **L3 adapter 簽名只收值物件，且只收「該 pack 宣告的那一種」** | PSP adapter 基類第一行斷言 `amount.is_a?(Psp.registry.fetch(psp).amount_value_class)`（`minor_units` ⇒ `Money::PspMinor`／`decimal_string` ⇒ `Money::PspDecimal`），再斷言 `amount.psp == psp`；`#to_payload` 是唯一變回 `Integer`／`String` 的地方 | 傳裸 Integer／裸 String 立刻炸；**把 Stripe 的 minor 拿去送 Airwallex 也會炸**（型別不符）；**把 Airwallex 的十進位字串送去 Stripe 也會炸**（Stripe 收的是 `PspMinor`）；**把 JSON-LD／物流商用的 `Money::Decimal` 送去任何一家都會炸**（那個類別不在任何 pack 的 `amount_value_class` 值域裡） |
+| **L4 命名 ＋ CI 靜態檢查** | 識別字後綴鐵律 ＋ 四條 CI 掃描（下表） | 擋住「新寫的程式碼繞過值物件」——L1–L3 只約束已經用了值物件的路徑，L4 約束**還沒寫出來的**路徑 |
+
+> 🔴 **為什麼 Airwallex 型必須靠型別擋，而不是靠 adapter 內部自己轉**：`decimal_string` 的錯誤形態**不是 100 倍**，是**「送出去的字串長得很像對的」**。`148000` 這個儲存值若被誤當主單位輸出成 `"148000.00"`，Airwallex 會收下並收款十四萬八千元——**而它在 HKD 上也錯**（不像 R5 的 bug 只在 zero-decimal 幣別現形）。也就是說 R6 的誤用**比 R5 更容易被基準法域的測試抓到**，但**代價更大**（任何幣別都會錯），所以防線只能更緊，不能更鬆。
 
 ### C.2 識別字後綴鐵律（人眼的編譯期）
 
 | 表示法 | 後綴 | 用在 |
 |---|---|---|
 | R1 | `_cents` | DB 欄位、業務層變數、冪等鍵、分錄 |
-| R5 | `_minor` | PSP payload 的鍵與區域變數 |
-| R4 | `_decimal` | 十進位字串 |
+| R5 | `_minor` | `minor_units` 型 PSP payload 的鍵與區域變數 |
+| R6 | `_psp_decimal` | 🔴 `decimal_string` 型 PSP payload 的鍵與區域變數（**不是** `_decimal`） |
+| R4 | `_decimal` | 十進位字串（JSON-LD／feed／CSV／MoneyV2／物流商）|
 | R3 | `_display` | 顯示字串 |
 
 **這條規則的全部價值在一件事上**：看到 `_cents` 出現在**送款呼叫點**，reviewer 不需要理解上下文就知道那是 bug。`amount: total_cents` 在 diff 裡是紅的，`amount: total_minor` 是綠的——這是純文字層面的判斷，不需要追型別。
+
+🔴 **R6 的後綴刻意不是 `_decimal`**（依 69 §V-188 新增）：`_decimal` 已經被 R4 佔用，而 R4 與 R6 的**線上形態完全相同**——如果兩者共用後綴，§C.2 這條規則在 Airwallex 這條路徑上就**完全失效**（`amount: total_decimal` 看起來是綠的，但它可能是給物流商算的那個值）。**兩種表示法只要 wire form 相同，就必須靠後綴把它們在純文字層面分開。**
 
 🔴 **DB 金額欄位一律 `bigint` ＋ `_cents` 結尾，不得用 `decimal`／`float`。** 這順便把鐵律 3 的「float 即 bug」從口號變成 migration 期的機械檢查。
 
@@ -128,9 +167,10 @@ end
 
 | # | 鍵（`money_boundary.ci_checks`） | 規則 | 為什麼是這一條 |
 |---|---|---|---|
-| C1 | `psp_dir_must_not_reference_cents` | `app/services/psp/**` 內出現識別字 `_cents` ⇒ fail（白名單：`Money::Storage` 的型別註記與 `#to_psp_minor` 的實作兩處） | PSP 目錄裡本來就不該有 storage 尺度的東西。這是 58 §K 15「transaction 內不得出現 adapter 呼叫」的同構做法 |
-| C2 | `external_call_kwarg_must_be_minor` | 對 `Psp::*` 的呼叫，金額 kwarg 名必須以 `_minor` 結尾 ⇒ 否則 fail | 擋住「不經 adapter、直接組 HTTP body」的繞過 |
+| C1 | `psp_dir_must_not_reference_cents` | `app/services/psp/**` 內出現識別字 `_cents` ⇒ fail（白名單：`Money::Storage` 的型別註記與 `#to_psp_amount` 的實作兩處） | PSP 目錄裡本來就不該有 storage 尺度的東西。這是 58 §K 15「transaction 內不得出現 adapter 呼叫」的同構做法 |
+| C2 | `external_call_kwarg_must_be_minor` | 對 `Psp::*` 的呼叫，金額 kwarg 名必須以 `_minor` **或** `_psp_decimal` 結尾 ⇒ 否則 fail。<!-- 依 69 §V-188 擴充，原規則只允許 `_minor`：那會讓 Airwallex 型 adapter **無法在不違規的情況下被呼叫**，於是第一個實作它的人就會去改這條 CI 規則——**放寬一條擋不住新形態的規則，比一開始就寫對更難修回來** --> | 擋住「不經 adapter、直接組 HTTP body」的繞過 |
 | C3 | `money_migration_must_be_bigint_cents` | 新增的金額欄位必須 `bigint` ＋ `_cents` 結尾；出現 `decimal`／`float` ⇒ fail | 鐵律 3 的 migration 期執法點 |
+| C4 | `psp_dir_must_not_reference_money_decimal` | 🔴 `app/services/psp/**` 內出現 `Money::Decimal`（R4）或識別字 `_decimal`（不含 `_psp_decimal`）⇒ fail | 依 69 §V-188 新增。R4 與 R6 的 wire form 相同 ⇒ **在 PSP 目錄裡看到 R4，唯一的可能就是有人拿 feed／物流商的值來送款**（§A 末段第 3 點）。這條是 §A 那段論述的機械執法點 |
 
 ### C.4 為什麼註釋擋不住這個 bug（三個理由，都不是風格問題）
 
@@ -138,7 +178,7 @@ end
 2. **註釋不在事故現場。** 寫在 `money.rb` 的警告救不了三個月後在 `app/services/psp/airwallex/charge.rb` 新寫一行的人——他不會先去讀 `money.rb`。
 3. **🔴 最致命的一條：這個 bug 在 exponent=2 幣別下測試全綠**（§0.2）。註釋唯一能起作用的時機是「有人心裡有疑問而去查」，但這個 bug **不會讓任何人產生疑問**——本地跑 HKD，一切正常。
 
-> **不等 Sorbet／RBS。** 若日後導入，這三個值物件就是天然的 `sig` 邊界；但 L1–L4 在純 Ruby 下已經成立，不把防呆押在一個還沒發生的技術決策上。
+> **不等 Sorbet／RBS。** 若日後導入，這四個值物件就是天然的 `sig` 邊界；但 L1–L4 在純 Ruby 下已經成立，不把防呆押在一個還沒發生的技術決策上。
 
 ---
 
@@ -148,44 +188,110 @@ end
 
 ```ruby
 # app/models/money.rb —— 送 PSP／任何外部收款系統前的唯一出口
+#
+# <!-- 依 69 號 §V-188 改寫（2026-08-12）。原方法名 `to_psp_minor(psp:)`，內文為單一分支
+#      （只產出 Money::PspMinor）。🔴 **原設計的隱含前提是「所有 PSP 都收整數 minor unit」，
+#      而 Airwallex 收的是十進位主單位字串**（`alt`）⇒ 原簽名在該類 PSP 上**沒有正確的用法**，
+#      實作者只能繞過它（自己組字串），於是 §C 的四層防呆全部失效。
+#      改法**不是**讓 `to_psp_minor` 回傳兩種型別（那會讓呼叫端不知道自己拿到什麼），
+#      而是**上移一層**：`to_psp_amount` 依 pack 宣告的 `amount_format` 分流。
+#      🔴 舊名 `to_psp_minor` **不保留為別名**——留著別名等於留著一條「不看 amount_format」的路徑。 -->
 class Money::Storage
-  # 儲存尺度（一律 ×100）與該 PSP 的 minor unit 是兩件事：
+  # 儲存尺度（一律 ×100）與該 PSP 要的單位是兩件事，而**「單位」本身又有兩個維度**：
   #   顯示 → limits.currency_display.force_minor_unit_digits = 2   （裁定二）
   #   儲存 → limits.money_boundary.storage_scale_multiplier = 100  （不看幣別）
-  #   對外 → 該 PSP pack 宣告的 minor unit（正常值＝ISO 4217 exponent）
-  def to_psp_minor(psp:)
-    exponent = Psp.registry.fetch(psp).minor_unit_exponent(currency)   # A1
-    raise Money::PspMinorUnitUndeclared.new(psp:, currency:) if exponent.nil?
+  #   對外 → ① 格式 amount_format（minor_units | decimal_string）② 該格式下的參數
+  def to_psp_amount(psp:)
+    pack = Psp.registry.fetch(psp)
+    case pack.amount_format                                    # A0：未宣告 ⇒ fetch 就 raise
+    when :minor_units    then to_psp_minor(pack)
+    when :decimal_string then to_psp_decimal(pack)
+    end
+  end
+
+  private
+
+  def to_psp_minor(pack)                                       # X7a
+    exponent = pack.minor_unit_exponent(currency)              # A1
+    raise Money::PspMinorUnitUndeclared.new(psp: pack.code, currency:) if exponent.nil?
     raise Money::UnsupportedCurrencyExponent if exponent > LIMITS.money_boundary.max_supported_iso_exponent  # A2
     divisor = 10**(LIMITS.money_boundary.max_supported_iso_exponent - exponent)   # JPY⇒100、HKD⇒1
     raise Money::NonIntegralPspConversion unless (cents % divisor).zero?          # A3
-    Money::PspMinor.__build(minor: cents / divisor, currency:, psp:)              # A4（private 建構）
+    minor = cents / divisor
+    check_divisibility!(pack, minor)                           # A5（基準＝送出值本身，見下）
+    Money::PspMinor.__build(minor:, currency:, psp: pack.code) # A4（private 建構）
+  end
+
+  def to_psp_decimal(pack)                                     # X7b
+    # 位數必須由 pack 宣告；我方儲存尺度只能無損表達 2 位 ⇒ 宣告 >2 位時見 A6。
+    major = BigDecimal(cents).div(BigDecimal(100), 20)         # 🔴 全程 BigDecimal，禁 float
+    check_divisibility!(pack, major)                           # A5（基準＝送出值本身，見下）
+    str = format_fixed(major.to_s("F"), pack.decimal_places)   # A6：定位數、無符號、無千分位
+    Money::PspDecimal.__build(string: str, currency:, psp: pack.code)      # A4
   end
 end
 ```
 
-### D.2 四條斷言
+🔴 **`check_divisibility!` 的基準一律是「即將送出去的那個值，用該 PSP 自己的單位」**——`minor_units` 就檢查 minor 整數，`decimal_string` 就檢查主單位的 `BigDecimal`（用 `BigDecimal#modulo`，**不得轉 float**）。
+**為什麼不統一成「一律以 R1（cents）為基準」**：那樣 pack 作者就得把 PSP 文檔上的數字**自己換算一次**再填進 pack（例如某零小數幣別的「minor 須整除 100」要填成「cents 須整除 10000」）——**而那個換算就是本篇從頭到尾在防的那一類手工換算**。宣告值必須能與來源文件**逐字對照**，否則 pack 就成了下一個出錯的地方。
 
-| # | 斷言 | 違反時 | 為什麼不能寬鬆 |
-|---|---|---|---|
-| **A1** | 該幣別的 minor unit **必須由該 PSP pack 明文宣告**；`nil` ⇒ raise `PSP_MINOR_UNIT_UNDECLARED` | 拒絕送出 | **未宣告 ≠ 預設 ISO**（比照 56 §A.3、58 §A.3）。業界存在「ISO 為 2 位、但該 PSP 要求金額為 100 的倍數」的特例幣別，靜默套 ISO 會在那些幣別上直接算錯 ⇒ ⚠ **V-130** |
-| **A2** | `exponent ≤ money_boundary.max_supported_iso_exponent`（＝2） | 拒絕送出 | exponent=3（KWD/BHD/JOD）的最小單位，×100 的儲存尺度**表達不了**（`divisor` 會是 0.1）。首發擋在 market 建立期（`catalog_flow.unsupported_currency_exponents: [3]`，回 `INCLUSION`），本條是第二道 ⇒ 63 §G.4、⚠ V-94 |
-| **A3** | `cents % divisor == 0`；**餘數不為 0 ⇒ raise，不四捨五入** | 拒絕送出 | JPY 的 `148050`（¥1,480.50）在 ISO 下不可表達 ⇒ **是上游算錯了**（湊整規則沒套用，29 §3.3）。悄悄抹掉 50 會讓對帳永遠差幾分錢卻查不出來——同 58 §G.3 規則 2 的理由 |
-| **A4** | 回傳型別必為 `Money::PspMinor`，且送出前再驗 `psp` 相符 | `TypeError` | 擋住「A 家的 minor 送去 B 家」（§C.1 L3） |
+### D.2 送出前的必跑斷言
 
-**額外一條（非生產環境每次轉換都跑）**：往返自檢 `from_psp_minor(to_psp_minor(x)) == x`。在 A3 成立時它恆真——**它擋的不是今天的 bug，是日後有人改了 divisor 公式**。鍵：`money_boundary.roundtrip_selfcheck_envs`。
+> **讀法**：「適用」欄標明該斷言在哪一種 `amount_format` 下跑。**A0／A4／A5 兩種格式都跑**——它們約束的是「有沒有宣告」「是不是給這一家的」「金額本身合不合該家的規矩」，與格式無關。
+
+| # | 斷言 | 適用 | 違反時 | 為什麼不能寬鬆 |
+|---|---|---|---|---|
+| **A0** | 🔴 該 pack **必須明文宣告 `amount_format`**（`minor_units` \| `decimal_string`）；未宣告 ⇒ raise `PSP_AMOUNT_FORMAT_UNDECLARED`，**不得預設 `minor_units`** | 兩者 | 拒絕送出，且該 pack 不得 enable | 依 69 §V-188 新增。**四家 PSP 三種形態**（Adyen／Datatrans／Stripe＝整數 minor units、Airwallex＝十進位主單位字串）⇒ 「大家都用 minor unit」是**經驗證為假**的假設。預設 `minor_units` ＝ 對 Airwallex 型 PSP 送出**主單位被當 minor unit 解讀**的金額，**且該錯誤在所有幣別上都成立**（不像 A1 只在 zero-decimal 幣別現形） |
+| **A1** | 該幣別的 minor unit **必須由該 PSP pack 明文宣告**；`nil` ⇒ raise `PSP_MINOR_UNIT_UNDECLARED` | `minor_units` | 拒絕送出 | **未宣告 ≠ 預設 ISO**（比照 56 §A.3、58 §A.3）。🔴 **本條原本標「業界存在特例（V-130 未取得出處）」，69 號把它證實了**：Adyen 官方文檔**明文**說 CLP／CVE／IDR／ISK 的小數位與 ISO 4217 不同、以自家表為準；Stripe 的 `Special cases` 表覆蓋 ISK／HUF／TWD／UGX（`alt` ×2）。⇒ **「拿 ISO 4217 exponent 當 PSP 換算基數」是已知會錯的實作**，不是保守假設 |
+| **A2** | `exponent ≤ money_boundary.max_supported_iso_exponent`（＝2） | `minor_units` | 拒絕送出 | exponent=3（KWD/BHD/JOD）的最小單位，×100 的儲存尺度**表達不了**（`divisor` 會是 0.1）。<!-- 依 68 §D-3：market 建立期的閘門已移除（幣別可選），本條成為**唯一**執法點，比改動前更重要 -->⇒ 63 §G.4、⚠ V-94。Adyen／Datatrans 兩家都宣告這五個幣別為 exponent 3（`alt`）⇒ **這不是假想情境**，是接上任一家就會立刻遇到的 |
+| **A3** | `cents % divisor == 0`；**餘數不為 0 ⇒ raise，不四捨五入** | `minor_units` | 拒絕送出 | JPY 的 `148050`（¥1,480.50）在 ISO 下不可表達 ⇒ **是上游算錯了**（湊整規則沒套用，29 §3.3）。悄悄抹掉 50 會讓對帳永遠差幾分錢卻查不出來——同 58 §G.3 規則 2 的理由 |
+| **A4** | 回傳型別必為該 pack 的 `amount_value_class`（`Money::PspMinor`／`Money::PspDecimal`），且送出前再驗 `psp` 相符 | 兩者 | `TypeError` | 擋住「A 家的值送去 B 家」與「R4 混進來」（§C.1 L3、§A 末段第 3 點） |
+| **A5** | 🔴 **`divisibility_constraint`**：pack 若宣告某幣別的金額必須為 N 的倍數，違反 ⇒ raise `PSP_DIVISIBILITY_VIOLATION`，**不得四捨五入湊整**。**基準＝即將送出的值，用該 PSP 自己的單位**（`minor_units` 檢查 minor 整數；`decimal_string` 以 `BigDecimal` 檢查主單位，禁 float） | 兩者 | 拒絕送出 | 依 69 §V-188 新增。**這不是虛構需求**：Stripe 官方文檔明文要求 **HUF／TWD 的 payout 金額必須整除 100**（`alt`）。而 **TWD 正好在 §H.1 的測試矩陣裡**。🔴 **自動湊整是最壞的處置**——它會讓「送出去的錢」與「帳上記的錢」不同，而差額沒有任何一張表記得住（同 A3 的理由）。⚠ 該約束在 charge 與 payout 上是否同時成立 ⇒ **V-206** |
+| **A6** | `decimal_string` 專用：輸出字串必須匹配 pack 宣告位數的正則、無符號、無千分位、小數點為 `.`；**pack 宣告位數 > 2 ⇒ 該 pack 不得 enable** | `decimal_string` | 拒絕送出／pack 不得 enable | 我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只能給到 2 位＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `2.900`）。**這與 A2 是同一條規則在另一種格式下的形態**，不是新規則 |
+
+**額外一條（非生產環境每次轉換都跑）**：往返自檢 `from_psp_amount(to_psp_amount(x)) == x`（兩種格式各跑一次）。在 A3／A6 成立時它恆真——**它擋的不是今天的 bug，是日後有人改了 divisor 公式或字串格式化**。鍵：`money_boundary.roundtrip_selfcheck_envs`。
 
 ### D.3 PSP pack 的宣告形態（比照 58 的 carrier pack）
 
 ```
 psp_packs:
   <psp_code>:
-    minor_unit_source: iso4217          # 必填；沒有這一行 ⇒ 該 pack 不得 enable
+    amount_format: minor_units | decimal_string   # 🔴 必填（A0）；沒有這一行 ⇒ 該 pack 不得 enable
+    # --- amount_format: minor_units 時 -----------------------------------------
+    minor_unit_source: iso4217          # 必填；「以 ISO 為底」也必須明講，不得靠預設
     minor_unit_overrides: { }           # 幣別 → exponent 的例外表；空表代表「無例外」（≠ 未宣告）
+    # --- amount_format: decimal_string 時 --------------------------------------
+    decimal_places: 2                   # 必填；> 2 ⇒ 不得 enable（A6）
+    # --- 兩種格式都必填 ---------------------------------------------------------
+    divisibility: { }                   # 幣別 → 倍數（例：某家要求某幣別金額整除 100）。
+                                        # 空表＝「已查證、無此約束」；缺鍵＝「沒人查過」⇒ 不得 enable
+    divisibility_scope: [ ]             # 該約束作用在哪些操作（charge／refund／payout）⚠ V-206
+    storage_precision_shortfall: reject # 幣別的 PSP 最小單位比我方儲存尺度細時怎麼辦
+                                        # （目前唯一合法值＝reject；見 A2／A6 與 catalog_flow.exponent3_*）
     enable_gate: [ ]                    # 未結案的 V 編號填這裡；非空 ⇒ enabled 必為 false
 ```
 
-`minor_unit_overrides: {}`（明文空表）與**沒有這個鍵**是兩件不同的事——前者是「已查證、無例外」，後者是「沒人查過」。這個區分在 58 §A.3 已經吃過一次虧，此處沿用。
+🔴 **空表 ≠ 缺鍵，這條在本節出現三次**（`minor_unit_overrides`／`divisibility`／`enable_gate`）：明文空表是「已查證、無例外」，沒有這個鍵是「沒人查過」。這個區分在 58 §A.3 已經吃過一次虧，此處沿用。
+<!-- `amount_format`／`decimal_places`／`divisibility`／`divisibility_scope`／`storage_precision_shortfall`
+     五個鍵依 69 號 §V-188 新增（2026-08-12）。原宣告形態只有 minor_unit_source／minor_unit_overrides／
+     enable_gate 三鍵，🔴 **其中沒有任何一個鍵能表達「這家不用 minor unit」**——也就是說
+     Airwallex 型 PSP 在原形態下**無法被合法宣告**，第一個接它的人只能改宣告形態或繞過它。
+     🔴 任何人不得以「Airwallex 一家而已」為由把 amount_format 收回去：69 號查到的是
+     **四家四種算法**，這個維度是外部世界的性質，不是我方的抽象偏好。 -->
+
+### D.4 四家 PSP 的實證表（69 號查證，`alt` 級＝PSP 官方文檔）
+
+> 🔴 **本表是「外部世界長什麼樣」的紀錄，不是我方的預設值。** 任何 pack 的實際值一律以該 pack 自己的宣告為準（A0／A1）；本表的用途是**證明 A0／A1／A5 三條斷言不是過度設計**，以及讓下一個人知道接哪一家會遇到什麼。
+> 鐵律 9：本表只記**數值行為**，不引用任何一家的條文文字、程式碼或文案。
+
+| PSP | `amount_format` | 三位小數幣別（KWD/BHD/JOD/OMR/TND） | 是否自認可覆蓋 ISO 4217 | 對我方的意義 |
+|---|---|---|---|---|
+| **Adyen** | `minor_units` | exponent **3** | 🔴 **是**——官方明文列出 CLP／CVE／IDR／ISK 與 ISO 4217 不同，以自家表為準 | A1「未宣告 ≠ 預設 ISO」的**直接證據** |
+| **Datatrans** | `minor_units` | exponent **3**（×1000） | 自稱**遵循** ISO | 「遵循」也必須寫進 pack（A1）——兩家都自稱遵循時，只有明文宣告能讓差異在 diff 裡看得見 |
+| **Stripe** | `minor_units` | 現行文檔幣別清單為動態渲染，⚠ **V-204** 未取得 | 🔴 **實質是**——`Special cases` 表涵蓋 **ISK／HUF／TWD／UGX**；**HUF／TWD 的 payout 須整除 100** | 🔴 **A5 的直接證據，且命中 §H.1 矩陣裡的 TWD** |
+| **Airwallex** | 🔴 **`decimal_string`** | 未給 per-currency 位數 ⇒ ⚠ **V-132** | 引用 ISO 4217 定義主單位 | 🔴 **R6 與 A0 存在的唯一理由**；`psp_packs.airwallex.enable_gate: [V-132]` 維持 |
+
+**這張表要記住的一句話**：**四家四種算法，而且每一家都知道自己不統一，所以都把小數位寫成一張自家的表。**「業界有共識、跟著 ISO 走就對了」這個假設在本專案已經被外部證據正面否定——**鐵律 3 的「逐家宣告」不是保守，是唯一正確的做法。**
 
 ---
 
@@ -194,12 +300,18 @@ psp_packs:
 **入向的錯不是 100 倍，是 1/100，而且更難發現**——訂單金額看起來「只是小一點」，不會觸發任何金額上限告警。
 
 ```
-storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
+amount_format: minor_units     ⇒ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
+amount_format: decimal_string  ⇒ storage_cents = BigDecimal(psp_decimal) * 100     （小數 >2 位 ⇒ raise）
 ```
+
+<!-- 第二行依 69 號 §V-188 新增（2026-08-12）。原文只有 minor_units 一行 ⇒ Airwallex 型 PSP 的
+     webhook 金額**在原契約下沒有合法的入向路徑**。🔴 注意兩者的錯誤形態不同：
+     minor_units 入向錯 ＝ 少記 99%（只在 zero-decimal 幣別）；
+     decimal_string 入向錯（把 "14.80" 當 cents 直接落庫）＝ **少記 99%，且在所有幣別上都成立**。 -->
 
 ### E.1 三條硬規則
 
-1. **PSP 回應／webhook 的金額欄位一律先包成 `Money::PspMinor` 再轉 R1**，不得直接 `update(amount_cents: event.amount)`。
+1. **PSP 回應／webhook 的金額欄位一律先包成該 pack 的 `amount_value_class`（`Money::PspMinor`／`Money::PspDecimal`）再轉 R1**，不得直接 `update(amount_cents: event.amount)`。🔴 **包不出來就不准進**——webhook 收到的形態與 pack 宣告的 `amount_format` 不符（例如宣告 `decimal_string` 卻收到整數），代表**要嘛 pack 宣告錯了、要嘛對方改了 API**，兩者都必須進死信人工看，不得就地猜一個轉換。
 2. 🔴 **金額比對必須先化到同一表示法。** 15 §F4「⚠️坑」第 2 條：「PI 金額與 checkout 現值必須在建單時比對，不符 → 不建單、自動退款、告警」。
    **若拿 PI 的 R5（`1480`）直接比 checkout 的 R1（`148000`）**：
    - HKD ⇒ 兩者相等 ⇒ 正常 ✅
@@ -252,13 +364,20 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 | 幣別 | ISO exponent | 為什麼必須在矩陣裡 |
 |---|---:|---|
 | **JPY** | 0 | `divisor = 100` 的主案例；100 倍事故的原型 |
-| **TWD** | ⚠ 見下 | **本矩陣最危險的一格**（§H.3） |
+| **TWD** | ⚠ 見下 | **本矩陣最危險的一格**（§H.3）。🔴 **自 69 §V-188 起再多一條**：Stripe 對 TWD 有**整除 100** 的要求（`alt`）⇒ TWD 同時是 A1（單位未宣告）與 **A5（整除約束）** 的測試載體 |
 | **KRW** | 0 | 第二個 zero-decimal，防止「只對 JPY 特判」的錯誤實作 |
 | HKD | 2 | 基準法域；回歸案例——確保修正沒把 `divisor = 1` 的路徑弄壞 |
 | USD | 2 | 第二個 exponent=2 |
 | KWD | 3 | 斷言**被擋下**（A2），不是斷言算對 |
 
-🔴 **CI 規則**：金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，**CI fail**（`money_boundary.test_matrix_missing_zero_decimal_action: ci_fail`）。這條是本節唯一的機械化保證——其餘都是清單，清單會被忘記。
+**另外兩個維度也必須進矩陣**（依 69 §V-188 新增；它們不是幣別，是 pack 形態）：
+
+| 維度 | 必測形態 | 為什麼 |
+|---|---|---|
+| **`amount_format`** | `minor_units` **與** `decimal_string` 各至少一個 fixture pack | 🔴 **只測 `minor_units` 的矩陣，在 Airwallex 型 PSP 上等於零覆蓋**——而那條路徑的錯誤**在 HKD 上也會錯**（§C.1 末段），是本專案目前唯一「基準法域測得到、但沒人在測」的金額事故形態 |
+| **`divisibility`** | 至少一個宣告了整除約束的 fixture pack（以 TWD／100 為原型） | A5 若沒有測試，它與註釋無異（§C.4）。**且這條約束的真實來源是 Stripe 的 payout**，不是假想 ⇒ 一旦做 payout／對帳就會生效 |
+
+🔴 **CI 規則**：金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，**CI fail**（`money_boundary.test_matrix_missing_zero_decimal_action: ci_fail`）。**同一條規則套用到 `amount_format`**：測試檔若沒有任何 `decimal_string` 型 pack 的案例 ⇒ CI fail（`test_matrix_amount_formats_required`）。這兩條是本節唯二的機械化保證——其餘都是清單，清單會被忘記。
 
 ### H.2 必測案例（每一條都是一個具體斷言）
 
@@ -266,27 +385,41 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 |---|---|---|---|---|
 | T1 | JPY | 儲存 `148000` | 顯示 `¥1,480.00` | 裁定二 |
 | T2 | JPY | 儲存 `148000` | `Offer.price == "1480.00"` | 62 §A.4 |
-| T3 | **JPY** | 儲存 `148000` → `to_psp_minor` | **`1480`** | 🔴 **100 倍** |
+| T3 | **JPY** | 儲存 `148000` → `to_psp_amount`（`minor_units` pack） | **`1480`** | 🔴 **100 倍** |
 | T4 | **JPY** | webhook `amount: 1480` → `to_storage` | **`148000`** | 🔴 **1/100** |
 | T5 | **JPY** | PI `amount 1480` vs checkout `148000` 的比對 | **判定為相符** | 🔴 每張 JPY 訂單被自動退款（§E.1-2） |
 | T6 | JPY | 儲存 `148050`（¥1,480.50） | **raise `NonIntegralPspConversion`** | 悄悄抹掉 50 分 |
 | T7 | KRW | 儲存 `1200000`（₩12,000） | psp minor `12000` | 只對 JPY 特判的實作 |
-| T8 | **TWD** | 任意值 → `to_psp_minor(psp:)` | **pack 未宣告 ⇒ raise `PSP_MINOR_UNIT_UNDECLARED`**（不是斷言某個 exponent） | §H.3、V-130 |
+| T8 | **TWD** | 任意值 → `to_psp_amount(psp:)` | **pack 未宣告 ⇒ raise `PSP_MINOR_UNIT_UNDECLARED`**（不是斷言某個 exponent） | §H.3、V-130 |
 | T9 | HKD | 儲存 `148000` | psp minor `148000`（`divisor = 1`） | 修正把 exponent=2 弄壞 |
 | T10 | USD | 邊界值 `0` / `1` / `BIGINT max` | 往返一致 | 溢位與零值 |
-| T11 | KWD | market 建立 | `userErrors{code: INCLUSION}`，且 `to_psp_minor` 亦 raise（A2） | exponent=3 漏網 |
-| T12 | 全部 | `from_psp_minor(to_psp_minor(x)) == x` | 恆真 | 日後有人改 divisor 公式 |
+| T11 | KWD | market 建立 | <!-- 依 68 §D-3：market 建立已不再回 INCLUSION（幣別可選），斷言改為「可建立 ＋ 送款被擋」 -->market **可建立**（`exponent3_currency_selectable`）、以 2 位小數儲存顯示、精度損失被登記；且 `to_psp_amount` **raise**（A2） | exponent=3 漏網 |
+| T12 | 全部 | `from_psp_amount(to_psp_amount(x)) == x`（兩種 `amount_format` 各跑） | 恆真 | 日後有人改 divisor 公式或字串格式化 |
 | T13 | JPY | CSV 匯出 → 再匯入 | 儲存值不變（`148000`） | §G 的來回失真 |
 | T14 | 任一 | 對 PSP adapter 傳裸 `Integer` | `TypeError` | §C L3 |
+| **T15** | **JPY** | 儲存 `148000` → `to_psp_amount`（**`decimal_string`** pack） | **`"1480.00"`**（字串，兩位，無符號無千分位） | 🔴 依 69 §V-188 新增。**Airwallex 型的主案例**——`"148000.00"` 就是收款 100 倍，而**這一條在 HKD 上也會錯**，所以它是矩陣裡唯一不需要 zero-decimal 幣別就能抓到的送款事故 |
+| **T16** | **TWD** | 宣告 `divisibility: {TWD: 100}` 的 fixture pack；金額 `148050` | **raise `PSP_DIVISIBILITY_VIOLATION`**，且**不得**回傳被湊整後的值 | 🔴 A5。Stripe 對 TWD／HUF payout 的整除要求（`alt`）。**斷言要同時檢查「有 raise」與「沒有靜默湊整」**——只測前者的話，一個「先湊整再 raise」的實作也會綠 |
+| **T17** | 任一 | 把 `Money::Decimal`（R4，物流商／JSON-LD 用的那個）傳進任何 PSP adapter | **`TypeError`** | 🔴 §A 末段第 3 點。R4 與 R6 的字串內容可能一模一樣 ⇒ **這條是唯一能證明「型別而非字串」真的在守門的測試** |
+| **T18** | 任一 | 把 `Money::PspMinor(psp: :stripe)` 傳進 `decimal_string` 型 adapter（反之亦然） | **`TypeError`** | A4 的格式維度：擋住「格式對了但家別錯了」與「家別對了但格式錯了」兩種交叉誤用 |
+| **T19** | 任一 | pack **未宣告** `amount_format` | `to_psp_amount` **raise `PSP_AMOUNT_FORMAT_UNDECLARED`**，且該 pack **不得 enable** | 🔴 A0。**不得預設 `minor_units`**——這條測的是「沉默時系統拒絕，而不是猜」 |
 
 ### H.3 🔴 TWD 是這張表最危險的一格（必讀）
 
 `limits.currency_display.iso4217_zero_decimal_overridden: [JPY, TWD]` 把 TWD 與 JPY 並列，而 `jurisdictions.tw.currency_format.exponent` 已被裁定二從 `0` 改成 `2`（＝顯示位數）。於是同一個幣別在 limits 裡有**兩個看起來都像 exponent 的數字，而且都不是 PSP 該用的那個**。
 
-- **ISO 4217 對 TWD 的 minor unit，本專案至今沒有任何一手出處。** 業界普遍以 2 位處理，且部分 PSP 對 TWD 另有「金額須為 100 的倍數」的特例規則——⚠ **V-130**，未取得官方明文。
-- **結案前的處置**：TWD **一律走 A1 的 pack 宣告路徑**。pack 沒宣告 ⇒ `reject`。
+- **ISO 4217 對 TWD 的 minor unit，本專案至今沒有任何一手出處。**
+- 🔴 **「部分 PSP 對 TWD 另有『金額須為 100 的倍數』的特例規則」——這句話原本是傳聞，69 號把它證實了。**
+  <!-- 依 69 號 §V-188 修正（2026-08-12），原文：「業界普遍以 2 位處理，且部分 PSP 對 TWD 另有
+       「金額須為 100 的倍數」的特例規則——⚠ **V-130**，未取得官方明文。」
+       🔴 **這不是措辭升級，是需求性質的改變**：原文把它寫成「傳聞中的特例」⇒ A5 讀起來像防禦性設計；
+       現在它是 **Stripe 官方文檔明文的 payout 條件**（`alt`）⇒ **A5 是必須實作與測試的功能**，
+       不是「以防萬一」。任何人不得把 A5 降級成選配。 -->
+  Stripe 的 `Special cases` 表把 **ISK／HUF／TWD／UGX** 訂成與 ISO 4217 不同的處理方式，並明文要求 **HUF／TWD 的 payout 金額整除 100**（`alt`，69 §V-188）。⇒ **TWD 在本矩陣裡同時承載兩條斷言**：A1（單位必須宣告）與 **A5（整除約束必須實作，見 T16）**。
+  ⚠ 該整除約束在 **charge** 上是否同樣成立（69 號讀到的是「付款時可兩位小數、payout 時須整除 100」）⇒ **V-206**。**在 V-206 結案前，pack 的 `divisibility_scope` 缺鍵 ⇒ 不得 enable**（§D.3）。
+- **結案前的處置**：TWD **一律走 A0／A1 的 pack 宣告路徑**。pack 沒宣告 ⇒ `reject`。
   **不得**從 `iso4217_zero_decimal_overridden` 或 `currency_format.exponent` 任何一個推導 TWD 的 PSP 單位。
 - 因此 T8 斷言的是**「未宣告時正確地拒絕」**，而不是某個具體 exponent 值——**這正是 §D.2 A1「未宣告 ≠ 預設」設計的價值所在**：在事實不明的幣別上，系統的行為是「拒絕送出」而不是「猜一個數送出去」。
+- 🔴 **69 號在這一格上給出的最終判斷**：Adyen 明文覆蓋 ISO、Stripe 實質覆蓋 ISO ⇒ **「以 ISO 4217 exponent 當 PSP 換算基數」是已知會在真實 PSP 上算錯的實作**。A1 因此不再是「保守失效」，而是**唯一正確的做法**；`money_boundary.psp_minor_unit_source_default: iso4217` 這個鍵的語義是「pack 若宣告以 ISO 為底時的底表來源」，**不是**「沒宣告時的預設值」。
 
 ---
 
@@ -299,6 +432,7 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 | `storage_scale_multiplier` / `storage_scale_ignores_currency` / `storage_column_suffix` / `storage_column_sql_type` / `storage_column_decimal_or_float_forbidden` | §A R1、§C.2 |
 | `decimal_string_digits` / `decimal_string_regex` / `decimal_string_divisor` / `decimal_parse_*` | §A R4、§B X2/X4/X6、§G |
 | `psp_minor_unit_source_default` / `psp_minor_unit_must_be_declared_by_pack` / `psp_undeclared_currency_action` / `psp_undeclared_error_code` / `max_supported_iso_exponent` / `psp_non_integral_conversion_action` / `psp_rounding_forbidden` | §D.2 A1–A3 |
+| 🔴 `psp_amount_formats` / `psp_amount_format_must_be_declared_by_pack` / `psp_amount_format_undeclared_error_code` / `psp_amount_format_default_forbidden` / `psp_decimal_max_places` / `psp_divisibility_must_be_declared_by_pack` / `psp_divisibility_violation_action` / `psp_divisibility_error_code` / `psp_divisibility_rounding_forbidden` / `psp_pack_required_keys` | §D.2 **A0／A5／A6**、§D.3（依 69 §V-188 新增） |
 | `iso4217_table_source` / `iso4217_table_unpinned_gem_forbidden` | ⚠ V-131 |
 | `value_objects` / `value_object_implicit_coercion_forbidden` / `psp_minor_single_construction_path` / `psp_adapter_rejects_bare_integer` / `identifier_suffixes` / `ci_checks` | §C |
 | `inbound_psp_minor_must_convert` / `inbound_comparison_must_normalize_to_storage` / `idempotency_key_amount_representation` | §E |
@@ -321,6 +455,8 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 | **M-4** | 鍵名誤導 | `limits.currency_display.iso4217_zero_decimal_overridden: [JPY, TWD]` | 該鍵是「顯示位數被覆蓋的幣別」，**不是 PSP 單位來源**。已在 limits.yml 加 `not_a_psp_unit_source: true` 反引用 | ✅ 本輪已處理（limits.yml） |
 | **M-5** | — | 62 §A.4／§L 的 `Offer.price` ＝ `cents/100` 固定兩位 | **無衝突**，登記為 R4 的一個消費者。本篇不改 62，只確保兩處的表一致 | — |
 | **M-6** | — | 37 §6.2 `platform_absorption_journals.amount_cents BIGINT` | **無衝突**，已是 R1。列出來是為了防止日後被「順手」改成 PSP 單位 | — |
+| 🔴 **M-9**<br>（依 69 §V-188 新增，2026-08-12） | **15 號的落地文字用的是舊方法名與單一型別** | **15 §F4-5／§F4-6／§F5-2** 是 M-1 結案時依本篇 §D 改寫的，逐字寫著 `Money::Storage#to_psp_minor(psp:)` 與「adapter 簽名只收 `Money::PspMinor`」——**那在當時是對的**（本篇當時只有 R5） | 本篇 §D.1 的唯一出口已改名 `to_psp_amount(psp:)` 並依 `amount_format` 分流；adapter 收的是**該 pack 宣告格式對應的值物件**。⇒ 15 的三處需同步改名 ＋ 補 R6 分支。<br>⚠ **危害等級低但不可不改**：照 15 現行文字實作，Airwallex 型 PSP **沒有合法的呼叫方式**，實作者只能自己組字串 ⇒ **繞過整個 §C 防呆**。<br>🔴 **不做別名**（§D.1 註釋已明寫）：留 `to_psp_minor` 當別名等於留一條不看 `amount_format` 的路徑 | **15 §F4／§F5**（本輪不得改 15；比照 M-1 的處置，需要一次授權範圍的裁定，見 open-decisions A-1 的形態） |
+| 🔴 **M-8**<br>（依 69 §V-188 新增，2026-08-12） | **「對外一律依 ISO 4217 exponent 換算」這句話現在是不完整的** | **63 §G.4** 的硬規則逐字寫「送 PSP／物流商／任何外部系統的金額一律依 ISO 4217 exponent 換算」，並落成 `limits.currency_display.psp_minor_unit_follows_iso4217: true`（63 §G.4／§9 鍵表）。**63 §G.4 的方向完全正確**（它是本篇的來源之一），但它成文時的世界觀是「PSP＝整數 minor unit，只是 exponent 各異」 | 69 號查到的四家 PSP 是**四種算法**：Adyen 明文覆蓋 ISO、Stripe 實質覆蓋 ISO ＋ 對 HUF／TWD 有整除約束、**Airwallex 根本不用 minor unit**（`alt` ×4）。⇒ 該句應改為「**依該 PSP pack 明文宣告的 `amount_format` 與其參數換算；ISO 4217 只是 `minor_units` 格式下 pack 可以選擇的底表之一**」。<br>🔴 **這不是放寬**：63 §G.4 要擋的 100 倍事故一個字都沒鬆，本條只是指出它擋的形態比原本以為的多一種 | **63 §G.4 與 §9 鍵表**（本輪不得改 63）。`limits.yml` 側已在 `currency_display.psp_minor_unit_follows_iso4217` 加追溯註釋指向本條；**鍵值未動**，以免出現「規格說 A、鍵說 B」的分裂 |
 
 ### J.1 M-1／M-2 的結案紀錄（2026-08-12，使用者裁定 A-1「現在修」）
 
@@ -357,8 +493,8 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 
 ### 2 資料完整
 
-1. §H.2 的 T1–T14 全綠；T3／T4／T5／T6 任一紅 ⇒ **不得上線**（這四條是三種事故形態的直接斷言）。
-2. 對 `app/` 全庫掃描，每一個金額跨界點都對應到 §B 的 X1–X11 其中一列；對應不上即 fail。
+1. §H.2 的 T1–T19 全綠；T3／T4／T5／T6 任一紅 ⇒ **不得上線**（這四條是三種事故形態的直接斷言）。<!-- 依 69 §V-188 擴充，原文：「T1–T14 全綠」 -->🔴 **T15／T17／T19 亦為不得上線條件**——它們是 Airwallex 型（`decimal_string`）的三個事故形態，而**該類型的錯誤在基準法域 HKD 上同樣會發生**（§C.1 末段），不像 T3–T6 只在 zero-decimal 幣別現形。
+2. 對 `app/` 全庫掃描，每一個金額跨界點都對應到 §B 的 X1–X11（PSP 兩向細分 X7a/X7b/X8a/X8b）其中一列；對應不上即 fail。
 
 ### 4 效能
 
@@ -367,14 +503,15 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 ### 6 測試
 
 4. **`money_boundary.test_matrix_zero_decimal_required` 的每個幣別都出現在金額測試檔中**；缺任一 ⇒ CI fail。
+4b. 🔴 **`money_boundary.test_matrix_amount_formats_required` 的每一種格式都有 fixture pack**（依 69 §V-188 新增）；缺 `decimal_string` ⇒ CI fail。理由與第 4 條同構：**沒有這條，Airwallex 型路徑的零覆蓋不會被任何人發現**。
 5. 金額路徑 100% 覆蓋（11 §0 維度 6）。
 6. `app/` 下 grep `to_f` 在金額相關檔案命中數為 0（沿用 58 §K 24）。
-7. §C.3 的三條 CI 檢查各有一個「故意違反」的 fixture，證明檢查真的會 fail（**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有）。
+7. §C.3 的**四條** CI 檢查各有一個「故意違反」的 fixture，證明檢查真的會 fail（**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有）。
 
 ### 5 可觀測
 
-8. 每一次 X7／X8 轉換落結構化日誌：`psp`、`currency`、`exponent`、`divisor`、`storage_cents`、`psp_minor`。對帳事故時這六個欄位就是完整的還原資訊。
-9. `NonIntegralPspConversion` 與 `PspMinorUnitUndeclared` 兩個例外 ⇒ **P1 告警**（它們代表上游算錯或 pack 沒宣告，不是使用者輸入錯誤）。
+8. 每一次 X7／X8 轉換落結構化日誌：`psp`、**`amount_format`**、`currency`、`exponent`（僅 `minor_units`）、`divisor`／`decimal_places`、`divisibility`、`storage_cents`、送出值。對帳事故時這些欄位就是完整的還原資訊。<!-- 依 69 §V-188 補 amount_format／decimal_places／divisibility 三欄：沒有 amount_format，事故日誌無法回答「這筆到底是以哪一種格式送出去的」 -->
+9. `NonIntegralPspConversion`／`PspMinorUnitUndeclared`／**`PspAmountFormatUndeclared`**／**`PspDivisibilityViolation`** 四個例外 ⇒ **P1 告警**（它們代表上游算錯或 pack 沒宣告，不是使用者輸入錯誤）。
 
 ---
 
@@ -384,9 +521,10 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 
 | # | 待查證項目 | 去哪查 | 當前處置 | 阻塞什麼 |
 |---|---|---|---|---|
-| **V-130** | **各 PSP 對各幣別實際採用的 minor unit 是否等同 ISO 4217**——特別是 TWD，以及業界傳聞中「ISO 為 2 位但該 PSP 要求金額為 100 的倍數」的那一類幣別 | Stripe／Airwallex 的官方 API 參考（幣別與最小金額頁）；沙箱實測 | **pack 必須明文宣告 minor unit，未宣告 ⇒ reject**（§D.2 A1）。TWD 在宣告前不得送款 | §D、§H.3 |
+| **V-130**<br>🔴 **前提已由 69 號證實，範圍縮小** | ~~各 PSP 對各幣別實際採用的 minor unit 是否等同 ISO 4217——特別是 TWD，以及**業界傳聞中**「ISO 為 2 位但該 PSP 要求金額為 100 的倍數」的那一類幣別~~<br>**已答（`alt` ×4，69 §V-188）**：**不等同**，且四家四種算法（§D.4）。「傳聞中的整除規則」＝ **Stripe 對 HUF／TWD payout 的明文要求**。<br>**殘留**：我方**實際要接的那一家**對 TWD 的宣告值（單位＋整除＋作用範圍）——那必須來自該家的合約文件或沙箱實測，**不能從別家的表推**（Adyen 明文說自家表覆蓋 ISO 就是這條的反證） | 我方選定 PSP 的官方 API 參考（幣別與最小金額頁）；沙箱實測；或業務要一句書面（open-decisions A-3） | **pack 必須明文宣告 `amount_format` ＋ minor unit ＋ `divisibility`，未宣告 ⇒ reject**（§D.2 A0／A1／A5）。TWD 在宣告前不得送款 | §D、§H.3 |
+| 🔴 **V-206**<br>（依 69 §V-188 新增） | **`divisibility_constraint` 的作用範圍**：Stripe 對 HUF／TWD 的「整除 100」是**只在 payout**，還是 charge／refund 也適用？（69 號讀到的敘述是「付款時可兩位小數、payout 時須整除 100」⇒ **兩個階段的規則不同**，而我方目前只有一個 `divisibility` 表） | Stripe 官方幣別頁的 `Special cases` 表 ＋ payouts 章節；沙箱以非整除金額實測 charge 與 payout 各一次 | pack 的 **`divisibility_scope` 缺鍵 ⇒ 不得 enable**（§D.3）。已宣告者以**最嚴格**解讀（charge 亦套用）——寧可拒絕送出，不可送出後才在 payout 卡住（那時錢已經收了，卡的是我方提款） | §D.2 A5、§D.3、§H.3 |
 | **V-131** | **ISO 4217 minor unit 表的一手來源與落地形式**：進 repo 還是用 gem？用 gem 的話哪一個、如何釘版？ | ISO 4217 官方維護機構（SIX）發布的 `list-one` 資料；候選 gem 的維護狀態 | 表進 repo（`config/iso4217_minor_units.yml`）＋ 版本註記；**禁止未釘版的 gem**——一張會自己更新的表就是一顆定時炸彈 | §D.1 |
-| **V-132** | **Airwallex 的金額欄位語義**（單位、幣別欄位名、webhook 金額形態）——本輪未取得一手文檔 | developer.airwallex.com | `psp_packs.airwallex.enable_gate: [V-132]` ⇒ 不得 enable | §D.3 |
+| **V-132**<br>⚠ **部分已答** | ~~Airwallex 的金額欄位語義（**單位**、幣別欄位名、webhook 金額形態）~~<br>**單位已答（`alt`，69 §V-188）**：🔴 **十進位主單位字串，不是 minor units** ⇒ 已落成本篇 R6／`amount_format: decimal_string`。<br>**殘留**：**per-currency 小數位數**（其文檔未給）、幣別欄位名、**webhook 金額形態**（回來的是不是同一種格式） | developer.airwallex.com；沙箱實測一筆 zero-decimal 幣別的 charge ＋ 其 webhook | `psp_packs.airwallex.enable_gate: [V-132]` ⇒ **不得 enable**。`decimal_places` 未查明前不得填（缺鍵 ⇒ 不得 enable，§D.3） | §A R6、§D.3 |
 | **V-133** | **PSP 結算檔（非 API 回應）的金額單位**是否與 API 一致；手續費與爭議扣款的單位 | 各 PSP 的結算報表規格頁；實際下載一份對照 | 對帳器對結算檔一律先做 §F.2 的顯式轉換，並在轉換前後各記一次日誌 | §F.2 |
 | **V-134** | **平台 rollup 跨幣別彙總的換算時點**：交易日匯率還是報表日匯率？ | 使用者裁定（會計政策問題，非技術問題） | `cross_currency_sum_forbidden: true` ⇒ 平台側**分幣別呈現**，不給單一合計數 | §F.3 |
 
@@ -398,10 +536,17 @@ storage_cents = psp_minor * 10 ** (max_supported_iso_exponent - exponent)
 JPY ¥1,480
   R1 儲存      148000        ← DB、業務層、分錄、冪等鍵      （×100，不看幣別）
   R3 顯示      "¥1,480.00"   ← Liquid money、admin、通知信   （恆兩位）
-  R4 十進位    "1480.00"     ← JSON-LD、feed、CSV、MoneyV2、物流商
-  R5 PSP       1480          ← 只在 PSP adapter payload      （÷ 10^(2-exponent)）
+  R4 十進位    "1480.00"     ← JSON-LD、feed、CSV、MoneyV2、物流商   🔴 不得送 PSP
+  R5 PSP minor 1480          ← amount_format: minor_units 的 adapter （÷ 10^(2-exponent)）
+  R6 PSP 十進位 "1480.00"     ← amount_format: decimal_string 的 adapter（Airwallex 型）
+                               🔴 與 R4 長得一樣、型別不同、後綴不同（_psp_decimal）
 
-送出前：pack 有宣告嗎？exponent ≤ 2 嗎？整除嗎？型別對嗎？——四條都過才准送。
-收進來：先包成 Money::PspMinor，再 to_storage，再比對。比對前兩邊都要是 R1。
-測試裡有 JPY／TWD／KRW 嗎？沒有的話，你的測試全綠也證明不了任何事。
+送出前（唯一出口 Money::Storage#to_psp_amount(psp:)）：
+  A0 pack 宣告 amount_format 了嗎？（沒宣告 ⇒ reject，不得預設 minor_units）
+  A1 該幣別的單位宣告了嗎？ A2 exponent ≤ 2 嗎？ A3 整除嗎？
+  A4 型別是這一家的那一種嗎？ A5 過 divisibility 了嗎（TWD/HUF 可能要整除 100）？
+  A6 decimal_string 的位數與格式對嗎？ ——全過才准送。
+收進來：先包成該 pack 的 amount_value_class，再 to_storage，再比對。比對前兩邊都要是 R1。
+測試裡有 JPY／TWD／KRW 嗎？有 decimal_string 型的 pack 嗎？
+  沒有的話，你的測試全綠也證明不了任何事。
 ```

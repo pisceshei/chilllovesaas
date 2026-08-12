@@ -59,7 +59,7 @@
 | 1 | 26:523 把 `llms.txt`／`agents.md` 列為 T2 模板類型（只記存在） | shopify.dev changelog **2026-05-28**：`/llms.txt` 與 `/llms-full.txt` **預設就指向 `agents.md` 的內容**；三者各有 `.liquid` 模板可覆寫，fallback 鏈為「專屬模板 → `agents.md` 模板 → 平台預設」 | §H.3 補完整機制；T2 保持不變（不急做），但**路由與 fallback 鏈要一次做對** |
 | 2 | 30 §9-4「JSON-LD 注入分工」未涵蓋代理協定 | `agents.md.liquid` 的 Liquid context **只有兩個物件**（`request`、`agents`），且 `agents` 內含 `ucp_discovery_url`／`mcp_endpoint_url`／`ucp_versions`／`sitemap_url`／`currency`／`store_name`／`store_url`；`shop`／`collections` 等全域物件**不可用**（避免快取問題）；該檔**不可在地化**、走裸主網域無 locale 前綴 | §H.3、§H.6 衝突 5（多市場只有一個代理幣別） |
 | 3 | 29 §4「hreflang 對每個 market×locale 輸出」未定義**碼的粒度規則** | help.shopify.com/markets/seo ＋ shopify.dev/themes/seo/hreflang：**單國市場 → 區域限定碼（`fr-ca`）；多國市場 → 語言碼（`fr`）**；`x-default` 指主網域；自動 hreflang 可在後台關閉；官方警告自訂與自動並存會產生重複／衝突標註 | §I.2 寫成演算法；§I.3 加**碼衝突解析**（官方未載明 ⇒ V-111） |
-| 4 | 30 §2.3「單頁 PDP：canonical URL 不預選變體」 | google 官方 product-variants 頁確認：單頁站**整個 ProductGroup 只能有一個 canonical**，通常是不預選變體的基底 URL；多頁站則每頁自帶完整 self-contained 標記 | §B.2 補「兩種模式二選一，不可混用」＋開關設計 |
+| 4 | 30 §2.3「單頁 PDP：canonical URL 不預選變體」 | google 官方 product-variants 頁確認：單頁站**整個 ProductGroup 只能有一個 canonical**，通常是不預選變體的基底 URL；多頁站則每頁自帶完整 self-contained 標記 | ~~§B.2 補「兩種模式二選一，不可混用」＋開關設計~~ ⇒ 🔴 **已於 2026-08-12 兩度修正**：68 §B-6 **廢除模式 B**（開關取消）；**69 §B-6 再修正廢除的理由**——Google **明文建議**每個變體有可識別的獨立 URL，single-page／multi-page **兩種都合規且不表偏好**，Shopify **兩種都做了**（後者鎖 Plus）⇒ 我方廢的是「同一 product 下 variant 各掛 URL」這個**資料模型**，**不是「變體可索引」這個目標**（該目標我方 single-page 模式已達成）。詳見 §B.2 |
 | 5 | 我方無 hreflang 語言碼的 script subtag 規則（HK 基準法域是繁中，這是硬缺口） | google 官方 localized-versions 頁：**ISO 639-1 ＋ 可選 ISO 15924 script ＋ 可選 ISO 3166-1 alpha-2**，並明確舉例 `zh-Hant` 為合法值 | §I.4 定案：HK 預設 `zh-Hant-HK`，繁中不得寫成 `zh-TW` 借用 |
 | 6 | 30 §2.4「FAQPage 已死（2026-05 完全停顯）——不投資」 | 本輪覆核一致（多家二手來源指向 2026-05 移除）。**但**：Shopify 另有 Knowledge Base（商家 FAQ）供 AI 平台取用，且 Storefront MCP 有 `search_shop_policies_and_faqs` 工具 | §H.5：**FAQ 內容要做，FAQPage JSON-LD 不做**——通路換了，不是需求沒了 |
 | 7 | 30 §9-2 robots 預設規則未涵蓋 AI 爬蟲 | OpenAI 官方 bots 文檔：`OAI-SearchBot`（ChatGPT 搜尋收錄，**封鎖＝不出現在 ChatGPT 搜尋答案**）／`GPTBot`（訓練）／`OAI-AdsBot`／`ChatGPT-User`（**使用者觸發，robots.txt 規則可能不適用**）；google 官方：`Google-Extended` **不影響 Google 搜尋收錄與排名** | §D.3 AI 爬蟲策略表＋預設值裁定請求 |
@@ -195,7 +195,7 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
 
 **共通規則**：canonical 一律**絕對 URL**、含 scheme 與最終網域、**每頁自引**（30 §1.3 三訊號）。大小寫正規化、尾斜線正規化在 canonical 之前先做（路由層 301），不要靠 canonical 收拾。
 
-### B.2 變體 URL：單頁多變體（唯一模式）；「每變體一個 URL」不做
+### B.2 變體 URL：單頁多變體（唯一模式）＝ Google 官方的 single-page 形態
 
 <!-- 依 google 官方 product-variants 頁補寫；30 §2.3 只寫了模式 A 的一半 -->
 <!-- 依 68 號 §B-6 跟隨 Shopify 做法改寫（2026-08-12）：**模式 B 廢除**。
@@ -211,21 +211,54 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
         **決策**：預設模式 A。模式 B 做成**商品級開關**（`product.seo.variant_urls_enabled`），
         開啟時平台強制檢查「每個變體頁的標題／描述／主圖至少各自不同」，不通過則拒絕開啟
         （避免商家一鍵生出 500 個近似頁）。」
-     🔴 **廢除理由不是「風險太高」，是「形態根本不對」**：「同一個商品的變體各自有 URL」正是
-        Shopify **刻意不做**的東西。官方要達成同樣目的時，做的是 **Combined Listings**——
-        在**資料模型層**就讓它們是不同商品，於是不存在重複內容問題。
-        我方原本的「模式 B ＋ 內容差異檢查」是在**用檢查去補一個錯的形態**：
-        檢查通過只證明三個欄位不同，不改變「它們是同一個商品」這件事。 -->
+     ❌ 68 號當時寫的廢除理由（**已被 69 號修正，保留供追溯**）：
+       「🔴 **廢除理由不是「風險太高」，是「形態根本不對」**：「同一個商品的變體各自有 URL」正是
+          Shopify **刻意不做**的東西。官方要達成同樣目的時，做的是 **Combined Listings**——
+          在**資料模型層**就讓它們是不同商品，於是不存在重複內容問題。
+          我方原本的「模式 B ＋ 內容差異檢查」是在**用檢查去補一個錯的形態**：
+          檢查通過只證明三個欄位不同，不改變「它們是同一個商品」這件事。」
 
-**唯一模式：單頁多變體。**
+     🔴 **69 號 §B-6 修正了上面這段的定性（2026-08-12，`std` ×2 ＝ Google Search Central）**：
+        ① Google **明文建議「讓每個變體能被一個獨立的 URL 識別」**（路徑段或查詢參數皆可）
+           ⇒ **「變體可索引」是 Google 官方推薦的目標，不是應該被廢掉的東西。**
+        ② Google 定義**兩種都合規**的站台形態：
+             single-page：查詢參數切變體 ⇒ 🔴 **官方建議 canonical ＝去掉該參數的基底 URL**；
+             multi-page ：各變體自己一頁 ⇒ 🔴 **「單一 canonical」這條要求明文不適用**，各頁對等。
+           **Google 對兩種形態不表偏好。**
+        ③ ⇒ Shopify 的預設**就是** Google 的 single-page（含官方建議的去參數 canonical），
+           Combined Listings **就是** Google 的 multi-page。**Shopify 兩種都做了**，
+           只是把 multi-page 鎖在 Plus 方案後面 ⇒ **「Shopify 刻意不做」這個定性是錯的。**
+
+     🔴 **所以廢除的到底是什麼（本次修正的核心，一句話）**：
+        廢除的是「**同一個 product 底下的 variant 各掛一個 URL**」這個**資料模型**——
+        因為它會讓同一個資源有多個 canonical 候選，而 Google 對 single-page 形態的要求正好是
+        「整個 ProductGroup 只能有一個 canonical」⇒ **模式 B 是 single-page 資料模型硬套
+        multi-page URL 形態**，兩邊的規則都不滿足。
+        **廢除的不是「變體可索引」這個目標**——那個目標是 Google 官方建議的，
+        而**我方的 single-page 模式（`?variant=` ＋ 去參數 canonical）已經達成它**，
+        且達成方式正是 Google 明文建議的那一種。
+        ⚠ **這兩句話在日後回頭看時意義完全不同**：前者是「我們選了另一條合規的路」，
+           後者會被讀成「我們放棄了一個 Google 想要的東西」。 -->
+
+**唯一模式：單頁多變體 ＝ Google 官方定義的 single-page 形態。**
 
 | | 規則 |
 |---|---|
-| URL | `/products/{handle}` ＋ `?variant=` 預選 |
-| canonical | 整個 ProductGroup **只有一個** canonical ＝ **不預選變體的基底 URL**（`?variant=` 去參數） |
-| JSON-LD | `ProductGroup` ＋ `hasVariant[]`（靜態全量，不隨 DOM 變） |
+| URL | `/products/{handle}` ＋ `?variant=` 預選。✅ **每個變體都能被一個獨立 URL 識別**——這正是 Google 官方建議的目標（`std`，69 §B-6），我方以查詢參數達成 |
+| canonical | 整個 ProductGroup **只有一個** canonical ＝ **不預選變體的基底 URL**（`?variant=` 去參數）。✅ **這是 Google 對 single-page 形態的明文建議**，不只是我方的取捨 |
+| JSON-LD | `ProductGroup` ＋ `hasVariant[]`（靜態全量，不隨 DOM 變）；`variesBy`／`productGroupID` 依 30 §2.3 輸出，每個 variant 的 `offers.url` 指向**能直接預選該變體的 URL** |
 | 適用 | 全部情形。顏色／尺寸等純屬性變體如此，不同型號／容量的變體**也如此** |
-| 已知代價 | 單一 URL 難以針對「紅色 XX」做標題最佳化。**這是 Shopify 也有的代價，不是我方的缺陷**；官方的出路是把它們建成不同商品（見下） |
+| 已知代價 | 單一 URL 難以針對「紅色 XX」做標題最佳化。**這是 Shopify 也有的代價，不是我方的缺陷**；官方的出路是把它們建成不同商品（見 §B.2-1） |
+
+**🔴 三條硬規則（依 Google 官方，69 §B-6；違反即 lint 紅燈）**
+
+| # | 規則 | 為什麼 |
+|---|---|---|
+| 1 | **single-page 模式下，整個 `ProductGroup` 只能有一個 canonical**（＝去參數的基底 URL） | Google 對該形態的明文要求。我方既有實作已符合（V-110 已由實測結案） |
+| 2 | 🔴 **禁止用 fragment（`#…`）切換變體** | Google 索引**不使用** fragment ⇒ 用 fragment 等於變體完全不可識別，**連 single-page 的目標都達不到**。主題若這樣做，是主題的 bug，不是選項 |
+| 3 | **變體參數一律 `?key=value`，不得用 `?value`** | Google 明文要求的參數格式；`canonical_query_allowlist` 的剝除邏輯也依賴 key 存在才能正確判定 |
+
+> 🔴 **multi-page 形態的對應規則寫在 §B.2-1**（Combined Listings 等價物）：那裡的 canonical 規則**與本節相反**——各頁對等、**禁止** child 指向 parent。兩套規則不得互相搬用；搬錯的方向是「把 multi-page 的 child 全部 canonical 到 parent」，那會把它們從索引裡整批拿掉。
 
 > ✅ **V-110 結案**（2026-08-12，依 68 §B-6(b)／§F-2）：Shopify 自身 `canonical_url` 在 `?variant=` 下的實際輸出**已由一手實測確認＝不含該參數**（`test`，兩店主題不同、輸出形態一致：`thesill.com/products/monstera?variant=…` → `…/products/monstera-deliciosa`；`otherland.com/products/…?variant=…` → 去參數的基底 URL）。
 > <!-- 原條目：「⚠️ **V-110**：Shopify 自身 `canonical_url` 在 `?variant=` 下的**實際輸出**
@@ -233,9 +266,19 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
 >      我方**按 Google 規則實作**（去參數），不按傳聞對齊 Shopify。」 -->
 > ⇒ 我方原本「按 Google 規則實作（去參數）、不對齊傳聞」的處置，**現在證實與 Shopify 一致**。出處等級由 `press` 升為 `test`。
 
-#### B.2-1 🔴 缺口登記：Combined Listings（我方目前沒有等價物）
+#### B.2-1 🔴 缺口登記：Combined Listings ＝ Google 的 multi-page 形態（我方目前沒有等價物）
 
-**Shopify 對「每個變體要有獨立可索引 URL」這個需求的官方答案是 Combined Listings（合併商品）**（`help`）——**它不是「給變體加 URL」，是另一個東西**：
+<!-- 依 69 號 §B-6 補寫定性（2026-08-12）。本節原本把 Combined Listings 描述成
+     「Shopify 對這個需求的官方答案」，那是對的但不完整——**它同時是 Google 官方定義的
+     兩種合規形態之一**（multi-page），而不是 Shopify 私有的變通做法。
+     🔴 這個差別影響的是**我方要不要做**這個判斷本身：
+        若它只是「Shopify 的做法」，不做＝與 Shopify 有一個功能差距；
+        若它是「Google 定義的兩種合規形態之一」，不做＝**我方只支援兩種合規形態中的一種**。
+        後者仍然可以是正確的產品決策（single-page 已達成「變體可索引」的目標），
+        但它必須被寫成「我方只做一種形態」，不能被寫成「那種形態不對」。 -->
+
+**Shopify 對「每個變體要有獨立可索引 URL」這個需求的官方答案是 Combined Listings（合併商品）**（`help`）——**它不是「給變體加 URL」，是另一個東西**。
+🔴 **而依 Google 官方（`std`，69 §B-6），它正是 multi-page 形態**：各變體頁**地位對等**，「整個 ProductGroup 只有一個 canonical」這條要求**明文不適用**。⇒ **本節登記的是「我方只做了 Google 兩種合規形態中的 single-page 那一種」，不是「Shopify 有個奇怪功能我方沒抄」。**
 
 | 面向 | Combined Listings 的形態 |
 |---|---|
@@ -244,9 +287,21 @@ Google：`priceValidUntil` 為過去日期時**可能不顯示**。多市場自�
 | 方案閘門 | **Plus／enterprise**；需 Online Store 通路；免費主題 15.0.0+ 支援，其他主題要改碼 |
 | 約束 | 商品必須已存在；**同時只能屬於一個 combined listing** |
 | 上限 | 每個 listing ≤ **60** 個商品、**3** 個自訂選項、**2000** 個選項值（`limits.combined_listing.*`，鐵律 6） |
-| 我方 canonical 定案 | 🔴 **子商品一律 self-canonical**（與 §B.4「一律 self-canonical」同一條），**不指向 parent**——指向 parent 等於宣告子商品不該被索引，那就失去做這件事的意義。⚠ **V-187**（68 §I）：官方 help 未述子商品 canonical 的實際輸出，第三方文章只講「Google 分別索引」⇒ 我方按此定案，**不猜 Shopify** |
+| 我方 canonical 定案 | 🔴 **子商品一律 self-canonical**（與 §B.4「一律 self-canonical」同一條），**不指向 parent**——指向 parent 等於宣告子商品不該被索引，那就失去做這件事的意義。<br>✅ **依據升級（69 §B-6／§V-187）**：這條現在有 **Google 官方**支撐，不只是我方推論——multi-page 形態下「單一 canonical」的要求**明文不適用**，各變體頁地位對等。<br>⚠ **V-187**：Shopify 子商品 canonical 的**實際輸出**仍未一手驗證（69 號查了 dev docs，兩頁對 URL／canonical／SEO **完全沉默**；唯一的第三方說法是**同一作者的兩個網域**，算 1 個 `blog` 來源、無測試數據 ⇒ **不可採信**）⇒ 我方按 Google 官方定案，**不猜 Shopify、不引那兩篇** |
+| ⚠ 未答 | **V-203**（69 號新登記）：**parent 商品本身**在 online store 上是什麼——有無可索引 URL、是否進 sitemap、canonical 指向哪裡。官方只說 parent 不可購買、無庫存、無銷售數據，**沒說它在前台是什麼**。我方若做等價物：**parent 不進 sitemap**、若有 URL 則 self-canonical |
 
-🔴 **狀態：已登記的缺口，不是已排程的功能。** 這在架構上是 parent/child 的商品關係（資料模型在 13 號），**不是一個開關**，因此不能靠 §B.2 的一行設定補上。**是否實作、是否照 Shopify 做成方案閘門，待使用者裁定**（68 §H）；`limits.combined_listing.implemented: false` ＋ `pending_user_decision: true`。在裁定前，**任何人不得以「補回模式 B」的形式繞過本條**——那會把 Shopify 刻意避開的重複內容問題重新引進來。
+🔴 **狀態：已登記的缺口，不是已排程的功能。** 這在架構上是 parent/child 的商品關係（資料模型在 13 號），**不是一個開關**，因此不能靠 §B.2 的一行設定補上。**是否實作、是否照 Shopify 做成方案閘門，待使用者裁定**（68 §H）；`limits.combined_listing.implemented: false` ＋ `pending_user_decision: true`。
+
+🔴 **在裁定前，任何人不得以「補回模式 B」的形式繞過本條。**
+<!-- 依 69 §B-6 修正本句的理由（2026-08-12），原文：「——那會把 Shopify 刻意避開的重複內容
+     問題重新引進來。」🔴 該理由的前提（「Shopify 刻意避開」）已被 69 號證偽：Shopify 兩種形態
+     都做了，只是把 multi-page 鎖在 Plus。正確的理由如下，**它比原理由更硬**，因為它不依賴
+     「Shopify 怎麼想」，只依賴 Google 明文的兩套規則彼此互斥。 -->
+理由**不是**「Shopify 刻意避開重複內容」（69 號已證偽：本尊兩種形態都做了），而是：**模式 B 會同時違反 Google 兩種形態的規則**——它用 single-page 的資料模型（一個 product、多個 variant）去產出 multi-page 的 URL 形態，於是
+- 對 single-page 的規則而言：同一個 `ProductGroup` 出現了**多個 canonical 候選**（§B.2 硬規則 1 違反）；
+- 對 multi-page 的規則而言：那些頁**不是各自獨立的商品**，沒有各自的 title／description／庫存／feed 項目，只是同一筆資料的不同渲染 ⇒ 拿不到 multi-page 形態的任何好處，只拿到它的成本。
+
+⇒ **要 multi-page，就要 Combined Listings 等價物那種資料層的分家；沒有中間形態。**
 
 ### B.3 分頁
 
@@ -960,14 +1015,16 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | `seo.redirect_geo.non_disableable_invariants` | 新增（三條護欄升格） | 68 §C-3 | §K.2 🔒 三列 |
 | `seo.redirect_geo.eu_cctld_no_redirect` / `eu_exception_source` | 新增 | 68 §C-3（`help`，法遵） | §K.2 |
 | `market.web_presence.*` | 新增（`default_for_new_market: inherit_primary` 等） | 68 §C-2（`dev` 2023-05-23 changelog） | §J.2 |
-| `seo.variant_url_mode_b_requires_unique_content` | **刪除** → `variant_independent_urls_supported: false` | 68 §B-6（模式 B 廢除） | §B.2、§B.2-1 |
+| `seo.variant_url_mode_b_requires_unique_content` | **刪除** → `variant_independent_urls_supported: false`（**值不變**，🔴 **理由已於同日換掉**） | 68 §B-6（模式 B 廢除）→ 🔴 **69 §B-6 修正定性**（`std` ×2）：廢除的是**資料模型**，不是「變體可索引」這個目標；後者是 Google 官方建議，我方 single-page 模式**已達成** | §B.2（含三條 Google 硬規則）、§B.2-1 |
+| 🔴 `seo.variant_url_fragment_forbidden` / `variant_param_must_be_key_value` | **69 新增** | 69 §B-6（`std`：Google 索引不使用 fragment；參數須 `?key=value`） | §B.2 硬規則 2／3 |
 | `combined_listing.*`（§22 新區塊） | 新增（`implemented: false`、60／3／2000） | 68 §B-6(c)（`help`） | §B.2-1 |
 | `catalog_flow.unsupported_currency_exponents` | `[3]` → **`[]`** ＋ `exponent3_*` 四鍵 | 68 §D-3（`dev` enum ＋ `press` 四捨五入） | §L.5 |
 | `handle.collision_strategy_generated` | `numeric_suffix_from_2` → **`numeric_suffix_from_1`** | 68 §C-4（`dev` `potion`/`potion-1` ＋ `test`） | 67 §D.4(b)（本檔 §F.3 引用） |
 | `handle.liquid_filter_fallback_trigger` | 新增 `empty_or_all_separator_input_only` | 68 §F-3（staff 復現：filter 保留非 ASCII） | §F.3 註 ＋ 67 §D.5 |
-| `i18n.import.blank_means_unchanged` | `true` → **`false`** ＋ 缺席語義三鍵 ＋ 預覽三鍵 | 68 §B-3（Matrixify 事實標準，`press`） | 67 §E.6 |
+| 🔴 `i18n.import.blank_means_unchanged` | `true` → 68 改 **`false`** → **69 改回 `true`**（二次修正）；缺席語義三鍵與預覽四鍵**全數保留**，另加 overwrite 旗標四鍵 | 68 §B-3（Matrixify，`press`）→ 🔴 **69 §V-182 推翻其前提**（本尊原生 CSV 在 Settings → Languages，`help`：**8 欄 ＋ Status 三值 ＋ 覆寫勾選框**，**沒有把空白解讀成刪除**） | 67 §E.6（沿革全文）、67 §0.4-0、67 §M-9 |
 
-🔴 **`money_boundary.*` 一個鍵都沒動**（鐵律 3／65 號）。D-3 改的是幣別清單，不是金額模型；`max_supported_iso_exponent: 2` 的**註釋**有更新（說明它已成為唯一執法點），**值不變**。
+🔴 **`money_boundary.*` 在 68 那一輪一個鍵都沒動**（鐵律 3／65 號）。D-3 改的是幣別清單，不是金額模型；`max_supported_iso_exponent: 2` 的**註釋**有更新（說明它已成為唯一執法點），**值不變**。
+⚠ **但 69 §V-188 那一輪動了 `money_boundary`**——新增 `psp_amount_formats`／`psp_divisibility_*` 等鍵（PSP 的金額**格式**是一個原本不存在的維度：Airwallex 用十進位主單位字串）。🔴 **那同樣不是放寬**：`psp_undeclared_currency_action: reject` 與 `max_supported_iso_exponent: 2` 一個字都沒動，全文見 **65 §A R6／§D**。
 
 ---
 
@@ -982,6 +1039,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | SEO-3 | `Offer.price` 格式 | 正則 `^\d+\.\d{2}$`；無符號無逗號；`priceCurrency` 為三碼 |
 | SEO-4 | availability 對映 | 已佔用不得計入 InStock；未發佈市場不得輸出 Offer |
 | SEO-5 | canonical 八變形 | §B.1 逐列 request → 斷言 canonical |
+| **SEO-5b** | 🔴 **變體 URL 的三條 Google 硬規則**（依 69 §B-6 新增） | ①同一 `ProductGroup` 的所有變體 URL，canonical **全部指向同一個去參數基底 URL**（single-page 只能有一個 canonical）；②全站渲染輸出中**不得出現以 fragment 切變體的連結**（`#variant`／`#color=` 之類，Google 索引不使用 fragment）；③變體參數一律 `?key=value` 形態，掃到 `?value` 即紅燈 |
 | SEO-6 | 分頁 self-canonical | 第 2 頁 canonical ≠ 第 1 頁 |
 | SEO-7 | sitemap 純淨度 | 抽樣全部回 200 且 self-canonical；無 draft market URL |
 | SEO-8 | robots 保底 | 主題覆寫後 `Sitemap:` 行與 checkout/cart/account disallow 仍在 |
