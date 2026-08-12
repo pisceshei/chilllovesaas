@@ -1341,7 +1341,12 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
       TWD 的 ISO exponent 是 0 但儲存仍是 ×100。
       ⇒ exponent 只決定**顯示**幾位小數，不決定儲存單位。
       鐵律 3：金額全程 integer cents，出現 float 即 bug（fmtMoney 對非整數 console.warn）。
-   ⚠️ exponent 差異（HKD 2／TWD 0／JPY 0）正是硬編符號抓不到的那類 bug。
+   🔴 **exponent 目前五個市場全部是 2——這是產品決策，不是 ISO 4217 慣例。**
+      2026-08-12 使用者裁定逐字：「金額數字可以顯示兩位小數．這個適用於所有國家的貨幣金額」。
+      ISO 4217 給 JPY 與 TWD 的 minor unit 是 **0**；我們刻意統一顯示兩位。
+      ⇒ 看到 `JPY exponent 2` **不要當成 bug 改回 0**；日後要恢復依 ISO 就改這一欄的值，
+        **不是刪掉 exponent 欄位**（位數仍然是市場資料，欄位是對的抽象）。
+      核心宣告：config/limits.yml `currency_display.force_minor_unit_digits: 2`。
    基準市場＝香港（鐵律 11 基準法域）。PLATFORM_CUR 是平台**報表幣別**。
    ⚠️ demo **不做匯率換算**——切換市場只換格式不換金額，目的是驗證格式真的由表驅動。
    ================================================================== */
@@ -1352,13 +1357,13 @@ body.nav-open .nav-veil{opacity:1;pointer-events:auto}
 const MARKET_LOCALES={
  HKD:{default_currency:'HKD',name:'港幣',  symbol:'HK$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[1000000,'M'],[1000,'K']]},
- TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+ TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[100000000,'億'],[10000,'萬']]},
  MYR:{default_currency:'MYR',name:'令吉',  symbol:'RM', symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:' ',
       abbr:[[1000000,'M'],[1000,'K']]},
  USD:{default_currency:'USD',name:'美元',  symbol:'US$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[1000000,'M'],[1000,'K']]},
- JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+ JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[100000000,'億'],[10000,'万']]}};
 /* /CURRENCY-TABLE */
 const MARKET_BASE='HKD';                 /* 鐵律 11：基準法域＝香港，開站預設就是它 */
@@ -1384,7 +1389,11 @@ function fmtMoney(cents,code){
   const body=groupDigits(d<0?fixed:fixed.slice(0,d),L.grouping,L.sep)+(d<0?'':L.dec+fixed.slice(d+1));
   return (raw<0?'−':'')+(L.symbol_position==='suffix'?body+L.gap+L.symbol:L.symbol+L.gap+body);
 }
-/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡 */
+/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡。
+   🔴 **縮寫不套用「一律兩位小數」的裁定**（limits.yml
+      `currency_display.applies_to_compact_abbreviations: false`）：`485K` 的小數位不是幣別的
+      minor unit，而是壓縮後的有效位數，補成 `485.00K` 只會讓圖表軸更難讀。
+      裁定要解決的是「JPY／TWD 0 位、其餘 2 位」的跨市場不一致，那個問題在 fmtMoney 已修。 */
 function fmtMoneyCompact(cents,code){
   const L=marketLocale(code),raw=Number(cents)||0,major=Math.abs(raw)/100;
   const step=(L.abbr||[]).find(a=>major>=a[0]);
@@ -2243,7 +2252,7 @@ const DOCS={
  dsr:{t:"資料主體請求",f:"access／erasure／portability",l:"GDPR 30 天、CCPA 45 天硬時限；商家是 controller、平台是 processor；erasure 與 legal hold 衝突時 hold 優先",i:"W3・33 §2.13"},
  pdpa:{t:"個資事件與稽核",f:"72 小時通報／年度稽核／守則簽署",l:"台灣辦法：外洩 72 小時內依附表二通報數位部；軌跡保存 5 年；平台須要求租戶簽署個資保護守則",i:"W3・法規強制"},
  taxdoc:{t:"稅務憑證管線（平台級）",f:"核心稅務事件量／落地憑證數／capability skip 數",l:"56 §A.2：核心只發稅務事件，落不落地成憑證由各租戶法域 pack 的 tax_invoice 決定。目前沒有任何啟用中的 pack 提供 tax_invoice（tw 未啟用、hk 為 none），所以顯示「本法域不適用」空態＋原因，底下掛保留的 tw pack 素材預覽。skip 要記錄不得靜默（C1）",i:"W3・limits.yml jurisdictions.{code}.tax_invoice；CI-3：非 tw pack 啟用時 app/services 下不得存在 einvoice/* 呼叫路徑"},
- platcur:{t:"平台報表幣別切換",f:"切換平台報表金額的顯示 locale（HKD／TWD／JPY／USD）",l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。切換器存在的理由是讓「格式真的由表驅動」可被肉眼驗證——HKD exponent 2 顯示兩位小數、TWD／JPY exponent 0 不顯示小數，縮寫級距也不同（K／M vs 萬／億）。⚠️ <b>原型只換格式不換匯率</b>",i:"P1・MARKET_LOCALES 對應 limits.yml jurisdictions.{code}.currency_format，與 admin 原型同源（56 §D.3 硬要求 3）"},
+ platcur:{t:"平台報表幣別切換",f:"切換平台報表金額的顯示 locale（HKD／TWD／JPY／USD）",l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。切換器存在的理由是讓「格式真的由表驅動」可被肉眼驗證——切換時符號、千分位分組與縮寫級距（K／M vs 萬／億）都會跟著換。🔴 <b>小數位目前所有市場都是 2 位</b>（含 JPY／TWD）：那是 2026-08-12 使用者裁定的<b>產品決策</b>，<b>不是</b> ISO 4217（ISO 給 JPY／TWD 的 minor unit 是 0）。看到 JPY 兩位小數不要當 bug 改回 0；核心宣告在 limits.yml currency_display.force_minor_unit_digits。⚠️ <b>原型只換格式不換匯率</b>",i:"P1・MARKET_LOCALES 對應 limits.yml jurisdictions.{code}.currency_format，與 admin 原型同源（56 §D.3 硬要求 3）"},
 /* TW-PACK */
  einvoice:{t:"電子發票管線（jurisdiction/tw pack 素材）",f:"字軌餘量／憑證到期／開立統計",l:"15% 門檻主動通知；字軌耗盡＝無法開立（台灣最常見事故）。整個模組已依鐵律 11 降級為 tw pack 素材",i:"W3・僅在 jurisdictions.tw.enabled=true 時載入"},
 /* /TW-PACK */

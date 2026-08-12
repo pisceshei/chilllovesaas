@@ -393,6 +393,9 @@ footer p{max-width:34ch;line-height:1.8}
 .field{margin-bottom:var(--sp-14);min-width:0}
 .field>label,.flabel{display:block;font-size:11.5px;letter-spacing:.08em;color:var(--ink-2);margin-bottom:var(--sp-6)}
 .req{color:var(--clay)}
+/* 選填標記：三態的 optional 要看得出來「有這一欄但可以不填」，不能只是「沒有 *」——
+   否則 optional 與 required 在畫面上長得一樣，商家改了設定卻看不出差別。 */
+.opt-tag{color:var(--ink-3);font-weight:400}
 .inp,select.inp,textarea.inp{width:100%;height:46px;border:var(--hairline) solid var(--line);background:var(--paper);border-radius:var(--r-2);padding:0 var(--sp-14);font:inherit;font-size:var(--t-14);color:var(--ink);transition:border-color var(--dur-fast) var(--ease-decelerate),border-width var(--dur-fast) var(--ease-decelerate),box-shadow var(--dur-fast) var(--ease-decelerate)}
 textarea.inp{height:auto;min-height:96px;padding:var(--sp-12) var(--sp-14);line-height:1.6;resize:vertical}
 .inp::placeholder{color:var(--ink-3)}
@@ -405,6 +408,9 @@ select.inp{appearance:none;-webkit-appearance:none;padding-right:var(--sp-34);cu
 .field.good .inp{border-color:var(--sage)}
 .msg{font-size:11.5px;margin-top:var(--sp-5);color:var(--clay-dark);display:none;line-height:1.5}
 .field.bad .msg{display:block}
+/* 軟提示（不阻擋送出）：格式規則尚未查證的市場只提示不擋（limits address.phone_enforcement=warn）。
+   刻意不用紅框紅字——那是「你錯了」，這裡的語義是「我們不確定，但先幫你看一眼」。 */
+.field.warn .msg{display:block;color:var(--ink-3)}
 .hint{font-size:11.5px;color:var(--ink-3);margin-top:var(--sp-5);line-height:1.55}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-12)}
 .frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-12)}
@@ -1309,10 +1315,16 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
    為什麼是一張表、而不是「把 NT$ 換成 HK$」：56 §D.3 硬要求 1 —— 換成 HK$
    只是把同一個錯誤搬到另一個國家。符號、符號位置、小數位、千分位分組全部是
    **市場資料**；fmt() 只是讀表的函式，函式體內不得出現任何幣別符號或位數。
-   exponent 差異正是硬編符號抓不到的那類 bug：TWD／JPY 0 位、HKD／USD／MYR 2 位，
-   同一個 integer cents 值在兩個市場顯示的位數不同（56 §E.3 R8）。
-   值的出處：config/limits.yml `jurisdictions.hk.currency_format`（HKD／exponent 2）、
-             `jurisdictions.tw.currency_format`（TWD／exponent 0）；其餘三個為 ISO 4217。
+   值的出處：config/limits.yml `jurisdictions.hk.currency_format`（HKD）、
+             `jurisdictions.tw.currency_format`（TWD）；其餘三個的符號／位置／分組為 ISO 4217。
+   ------------------------------------------------------------------
+   🔴 exponent 目前**五個市場全部是 2**——這是 2026-08-12 使用者裁定的**產品決策**，
+      不是 ISO 4217 慣例（逐字：「金額數字可以顯示兩位小數．這個適用於所有國家的貨幣金額」）。
+      ISO 4217 給 JPY 與 TWD 的 minor unit 是 **0**；我們刻意統一顯示兩位。
+      ⇒ 看到 `JPY exponent 2` **不要當成 bug 改回 0**。日後若要恢復依 ISO，改的是這一欄的值，
+        **不是刪掉 exponent 欄位**：位數是市場資料這件事仍然成立（欄位是對的抽象，
+        只是現在所有市場的值一樣），刪掉欄位等於把這個事實從程式碼裡抹掉。
+      核心宣告在 config/limits.yml `currency_display.force_minor_unit_digits: 2`。
    ================================================================== */
 /* CURRENCY-TABLE */
 /* 這是全檔唯一允許出現幣別符號字面量的區段（lint r_hardcoded_currency 的宣告式豁免）。
@@ -1320,10 +1332,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
    在這個區段之外寫任何 'HK$'／'NT$'／'¥' 都是硬編，鐵律 10。 */
 const CURRENCY_FORMATS={
  HKD:{code:"HKD",symbol:"HK$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
- TWD:{code:"TWD",symbol:"NT$",exponent:0,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
+ TWD:{code:"TWD",symbol:"NT$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
  MYR:{code:"MYR",symbol:"RM", exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
  USD:{code:"USD",symbol:"US$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
- JPY:{code:"JPY",symbol:"¥",  exponent:0,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."}
+ JPY:{code:"JPY",symbol:"¥",  exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."}
 };
 /* /CURRENCY-TABLE */
 /* position 目前五個市場都是 prefix；欄位仍然存在並被 fmtLocal() 讀取，因為後綴幣別
@@ -1374,7 +1386,9 @@ function grp(s,n,sep){
   while(i>n){out.unshift(s.slice(i-n,i));i-=n;}
   out.unshift(s.slice(0,i));return out.join(sep);
 }
-/* 已經是「該幣別最小單位」的金額 → 顯示字串。符號／位置／小數位／分組全部讀 §0-a 的表。 */
+/* 已經是「該幣別最小單位」的金額 → 顯示字串。符號／位置／小數位／分組全部讀 §0-a 的表。
+   `exponent===0` 那一支目前**不會**被走到（五個市場都是 2，見 §0-a 的產品決策），
+   保留是因為它是「位數由表決定」的另一半：把它刪掉，改回 ISO 位數時就要重寫捨入邏輯。 */
 function fmtLocal(minor,ccy){
   const f=CURRENCY_FORMATS[ccy]||curOf();
   const neg=minor<0,n=Math.abs(Math.round(minor));
@@ -1580,16 +1594,25 @@ const PACKS={
      {k:"point",t:"順豐站／智能櫃自取",s:"順豐站・EF Locker・合作便利店",eta:[1,3],fee:1500},
      {k:"store",t:"門市自取",         s:"Chill Room 中環・備貨 2 小時",  eta:[0,0],fee:0}],
     express:{k:"exp",t:"急件派送（翌日）",s:"今日 15:00 前下單，明日送達",fee:4000}},
-  /* 付款方式：使用者裁定「我們不做自己的支付系統，是整合 Airwallex／Stripe／PayPal
-     等電子支付工具」（56 附錄 Z）⇒ **這份清單是「PSP 支援什麼」，不是「我們實作什麼」**。
-     ⚠ 哪一家 PSP 實際受理哪一種方式（尤其 FPS 與八達通線上）未經本專案查證。 */
+  /* 付款方式（2026-08-12 使用者裁定，是既有裁定「不做自己的支付系統，整合 Airwallex／
+     Stripe／PayPal 等電子支付工具」的延伸）：
+       「AlipayHK／FPS／八達通都是由 Airwallex／Stripe 等不同的支付服務商提供．
+         等平台達到一定規模，才會聯繫這些公司做直接對接。」
+     ⇒ 🔴 **這份清單是 PSP capability 查詢的結果，不是我方逐一實作的功能列表。**
+        某個方式出不出現，取決於①商家接了哪一家 PSP ②那家 PSP 在這個市場支援什麼
+        ③商家在 PSP 後台開了哪幾種。三個條件任一不成立，該方式就不該出現在結帳頁。
+     ⇒ 🔴 **直連（我方直接對接 AlipayHK／FPS／八達通）是後期路線圖，不在 M0–M6 範圍。**
+        規模到了才會去談直連；在那之前不得有任何「接八達通 API」的工項或 schema 假設。
+     下面 provider 欄寫的是「由誰提供」，不是「我們做了什麼」。規格見 docs/specs/15 §F4.2。 */
+  psp:{connected:["Airwallex","Stripe"],
+    note:"可用的付款方式由已連接的支付服務商回報，不是平台逐一實作；直連為後期路線圖（15 §F4.2）。"},
   payments:[
-   ["card","信用卡／金融卡","Visa・Mastercard（實際受理品牌由 PSP 決定），支援 3-D Secure"],
-   ["applepay","Apple Pay","裝置支援時由 PSP 的錢包 sheet 接手"],
-   ["googlepay","Google Pay","裝置支援時由 PSP 的錢包 sheet 接手"],
-   ["alipayhk","AlipayHK","導向 AlipayHK App 完成付款"],
-   ["fps","FPS 轉數快","以轉數快 QR／識別碼付款，回拋後確認"],
-   ["octopus","八達通（線上）","以八達通 App 完成線上付款"]],
+   ["card","信用卡／金融卡","Visa・Mastercard（實際受理品牌由 PSP 決定），支援 3-D Secure","Airwallex／Stripe"],
+   ["applepay","Apple Pay","裝置支援時由 PSP 的錢包 sheet 接手","Airwallex／Stripe"],
+   ["googlepay","Google Pay","裝置支援時由 PSP 的錢包 sheet 接手","Airwallex／Stripe"],
+   ["alipayhk","AlipayHK","導向 AlipayHK App 完成付款","由 PSP 提供"],
+   ["fps","FPS 轉數快","以轉數快 QR／識別碼付款，回拋後確認","由 PSP 提供"],
+   ["octopus","八達通（線上）","以八達通 App 完成線上付款","由 PSP 提供"]],
   carrier_label:"順豐速運",
   /* 準據法：鐵律 11「基準法域＝香港」的直接後果（營運主體在香港）；
      ⚠ 管轄法院／爭議解決條款屬法務決定，本專案未取得，因此不自補。 */
@@ -1601,10 +1624,19 @@ const PACKS={
   wallets:[["Apple Pay","Demo：Apple Pay sheet（由 PSP 的錢包 sheet 接手）","apple"],
            ["Google Pay","Demo：Google Pay sheet（由 PSP 的錢包 sheet 接手）","neutral"],
            ["PayPal","Demo：導向 PayPal 完成付款","pp"]],
-  /* 地址模型：⚠ 「香港不使用郵遞區號」與「本地電話為 8 碼」是本原型的**假設**，
-     本專案尚未覆核（登記在交接報告的待查證段）。三區十八分區為行政區劃 demo 清單。 */
-  address:{region_label:"地區",sub_label:"分區",zip:false,
-    phone_rx:/^[2-9]\d{7}$/,phone_hint:"請輸入 8 碼本地電話號碼",phone_ph:"91234567",
+  /* 地址模型：以下每一鍵都是**法域預設值**，不是寫死的行為——商家可在後台
+     「設定 › 結帳 › 地址表單欄位（依國家／市場）」逐國覆寫（limits.yml checkout.address_field_*）。
+     🔴 上一輪的做法是把 HK 的郵遞區號欄**整欄拿掉**，理由是一條未查證的「香港不使用郵遞區號」。
+        那是把商家的設定權變成硬行為——商家連「我要收」都做不到。本輪改為三態預設 `optional`：
+        顯示、可空、不驗證；要強制收就在後台改 `required`，確定用不到就改 `hidden`。
+     ⚠ postal_code_rx／phone_rx 皆 null（limits V-34／V-35 未查證）——未查證的格式規則**不得擋輸入**，
+        所以 phone_enforcement 是 `warn`（提示但放行），不是 `block`。上一輪那條
+        `^[2-9]\d{7}$`（香港 8 碼）同樣是未查證的假設卻直接阻擋送出，已移除。
+     三區十二分區為行政區劃 demo 清單（非窮舉）。 */
+  address:{region_label:"地區",sub_label:"分區",
+    postal_code:"optional",zip_rx:null,zip_hint:"",zip_ph:"",
+    phone_rx:null,phone_enforcement:"warn",phone_min_digits:6,
+    phone_hint:"請留一組可以聯絡到你的電話號碼（本市場未設定格式規則）",phone_ph:"91234567",
     addr_ph:"皇后大道中 88 號 12 樓 A 室",
     regions:{"香港島":{"中西區":"","灣仔區":"","東區":"","南區":""},
              "九龍":{"油尖旺區":"","深水埗區":"","九龍城區":"","觀塘區":""},
@@ -1676,12 +1708,16 @@ const PACKS={
      {k:"point",t:"超商取貨",  s:"7-11／全家／萊爾富／OK",        eta:[2,4],fee:1500},
      {k:"store",t:"門市自取",  s:"Chill Room 大安・備貨 2 小時",  eta:[0,0],fee:0}],
     express:{k:"exp",t:"急件宅配（隔日到）",s:"今日 15:00 前下單，明日送達",fee:4000}},
+  /* 同 hk：清單＝PSP capability 查詢結果，不是我方逐一實作（15 §F4.2）。
+     台灣本地方式（LINE Pay／街口／ATM／代碼繳費）在正式版一樣由當地 PSP 或金流聚合商提供。 */
+  psp:{connected:["（台灣市場尚未選定 PSP）"],
+    note:"tw pack 未啟用；可用方式待該市場的 PSP 連接後由 capability 查詢決定（15 §F4.2）。"},
   payments:[
-   ["card","信用卡／金融卡","Visa・Mastercard・JCB，支援 3D 驗證"],
-   ["linepay","LINE Pay","導向 LINE Pay 完成付款"],
-   ["jkopay","街口支付","導向街口 App 完成付款"],
-   ["atm","ATM 虛擬帳號","取號後 3 日內轉帳，逾期自動取消"],
-   ["cvscode","超商代碼繳費","取得繳費代碼後至四大超商繳費"]],
+   ["card","信用卡／金融卡","Visa・Mastercard・JCB，支援 3D 驗證","由 PSP 提供"],
+   ["linepay","LINE Pay","導向 LINE Pay 完成付款","由 PSP 提供"],
+   ["jkopay","街口支付","導向街口 App 完成付款","由 PSP 提供"],
+   ["atm","ATM 虛擬帳號","取號後 3 日內轉帳，逾期自動取消","由 PSP 提供"],
+   ["cvscode","超商代碼繳費","取得繳費代碼後至四大超商繳費","由 PSP 提供"]],
   carrier_label:"黑貓宅急便",
   /* 原 POLICIES["terms-of-service"] 與刪除帳戶說明的台灣段落，原文搬入 pack（不刪只標） */
   governing_law:"本條款以中華民國法律為準據法，管轄法院為台灣台北地方法院。",
@@ -1691,8 +1727,13 @@ const PACKS={
   wallets:[["Shop Pay","Demo：Shop Pay 已識別買家 → 6 碼簡訊驗證快付","shop"],
            ["LINE Pay","Demo：LINE Pay 付款 sheet","line"],
            ["Apple Pay","Demo：Apple Pay sheet（依裝置自動出現）","apple"]],
-  address:{region_label:"縣市",sub_label:"鄉鎮市區",zip:true,
-    phone_rx:/^09\d{8}$/,phone_hint:"請輸入 09 開頭的 10 碼手機號碼",phone_ph:"0912345678",
+  /* 同樣是**法域預設值**（limits `jurisdictions.tw.address`），商家可逐國覆寫。
+     ⚠ phone_rx 只涵蓋行動門號，市話（02-…）會被判為不符 ⇒ enforcement 降為 `warn`：
+        規則留著當提示，但不阻擋送出（與 hk 同一條裁定精神）。 */
+  address:{region_label:"縣市",sub_label:"鄉鎮市區",
+    postal_code:"required",
+    phone_rx:/^09\d{8}$/,phone_enforcement:"warn",phone_min_digits:6,
+    phone_hint:"行動門號為 09 開頭 10 碼；市話請含區碼",phone_ph:"0912345678",
     addr_ph:"信義路四段 100 號",
     zip_rx:/^\d{3}(\d{2}|\d{3})?$/,zip_hint:"台灣郵遞區號為 3 碼或 3+2／3+3 碼",zip_ph:"106 或 10684",
     regions:{"台北市":{"中正區":"100","大安區":"106","信義區":"110","松山區":"105","中山區":"104"},
@@ -1741,7 +1782,12 @@ const PACK_UNDECLARED={
  carrier_label:"—",governing_law:"",governing_law_pending:"本市場的法域尚未宣告，準據法條款不得自行填寫（56 §A.3）。",
  record_retention_note:"本市場的紀錄保留規則尚未宣告。",
  payments:[],payment_icons:[],wallets:[],
- address:{region_label:"地區",sub_label:"分區",zip:false,phone_rx:/^.{6,}$/,phone_hint:"請輸入聯絡電話",phone_ph:"",addr_ph:"",regions:{}},
+ /* 未宣告 pack ⇒ 地址欄位取 limits `checkout.address_field_fallback`（已宣告的核心 fallback，
+    不是靜默預設）：郵遞區號 optional、電話只做防呆下限。結帳本來就已由 jurGate() 擋下。 */
+ address:{region_label:"地區",sub_label:"分區",
+   postal_code:"optional",zip_rx:null,zip_hint:"",zip_ph:"",
+   phone_rx:null,phone_enforcement:"warn",phone_min_digits:6,
+   phone_hint:"請輸入聯絡電話",phone_ph:"",addr_ph:"",regions:{}},
  stores:[],store_pickup:null,store_credit:0,addresses:[],orders:[],
  ann:["全館滿 <b>{{FREE}}</b> 免運・新會員首購 95 折（碼 <b>HELLOCHILL</b>）",
       "本市場的法域 pack 尚未宣告，結帳暫不開放（56 §A.3 reject）",
@@ -1749,6 +1795,60 @@ const PACK_UNDECLARED={
 };
 /* 解析當前 pack。56 §A.0：法域永遠取市場本地，不繼承、不猜。 */
 function packOf(){const j=marketOf().jurisdiction;return (j&&PACKS[j])||PACK_UNDECLARED;}
+
+/* ==================================================================
+   §0-e 地址欄位形態：**商家設定 → 法域預設 → 核心 fallback**（三層）
+   ------------------------------------------------------------------
+   2026-08-12 使用者裁定：「郵遞區號可以在後台設定是否需要強制．可以針對不同國家進行
+   強制開啟．香港地區沒有就可以設定為不用填寫。」
+   ⇒ 前台**不得**自己決定某個國家有沒有郵遞區號欄，只能照設定渲染：
+        hidden   欄位不出現、不收集
+        optional 出現、可空；有值且該市場有格式規則時才驗，失敗只提示不阻擋
+        required 出現、不可空；有格式規則時格式錯即阻擋
+   🔴 法域預設值**只是預設值**（limits.yml `checkout.address_field_merchant_override_allowed`）。
+   原型的「後台設定下發通道」＝ localStorage：chilllove-admin-v2.html 的
+   「設定 › 結帳 › 地址表單欄位（依國家／市場）」寫入同一把 key，兩份原型同源開啟時可互通。
+   正式版走 [api:shop settings]（19-F4 的 shops.settings JSON key 註冊表），不是 localStorage。
+   ================================================================== */
+const ADDR_CFG_KEY="chilllove.checkout.address_field";
+/* 已宣告的核心 fallback（limits `checkout.address_field_fallback`）——不是靜默預設值：
+   兩鍵都取「不擋使用者」那一邊，因為未查證的格式規則不該擋人輸入。 */
+const ADDR_FALLBACK={postal_code:"optional",phone_enforcement:"warn",phone_min_digits:6};
+const ADDR_MODES=["hidden","optional","required"];          /* limits checkout.field_visibility_modes */
+function readAddrCfg(){
+  try{const o=JSON.parse(localStorage.getItem(ADDR_CFG_KEY)||"{}");return (o&&typeof o==="object")?o:{};}
+  catch(e){return {};}                                       /* file:// 或無痕模式讀不到 ⇒ 一律回空覆寫 */
+}
+let SHOP_ADDR_CFG=readAddrCfg();
+/* 覆寫以**國家碼**為鍵（裁定原文是「針對不同國家」）；本原型的 market code 即國家碼 */
+function addrCfgOf(cc){return SHOP_ADDR_CFG[cc||(marketOf().code)]||{};}
+/* 郵遞區號三態：商家覆寫 → pack 預設 → 核心 fallback */
+function postalMode(){
+  const o=addrCfgOf().postal_code;
+  if(ADDR_MODES.indexOf(o)>=0)return o;
+  const d=packOf().address.postal_code;
+  return ADDR_MODES.indexOf(d)>=0?d:ADDR_FALLBACK.postal_code;
+}
+const postalShown=()=>postalMode()!=="hidden";
+const postalRequired=()=>postalMode()==="required";
+const postalLabel=()=>esc(packOf().address.postal_code_label||"郵遞區號");
+/* 郵遞區號的驗證結果：""＝通過。🔴 只有 required 會回「必填」；optional 有值才驗格式，
+   且該市場沒有 zip_rx（未查證）時**完全不驗**——不得用臆造的格式擋輸入。 */
+function postalCheck(v){
+  const s=(v||"").trim(),rx=packOf().address.zip_rx;
+  if(!postalShown())return "";
+  if(!s)return postalRequired()?(postalLabel()+"為必填（商家已在本市場設為必填）"):"";
+  return (rx&&!rx.test(s))?(packOf().address.zip_hint||"格式不正確"):"";
+}
+/* 電話規則同三層。enforcement: off／warn（提示不擋）／block（擋）。
+   🔴 regex 為 null 時就算設成 block 也擋不了格式——沒有規則可執行，只做 min_digits 防呆。 */
+function phoneRule(){
+  const a=packOf().address,o=addrCfgOf();
+  return {rx:a.phone_rx||null,
+    enforce:o.phone_enforcement||a.phone_enforcement||ADDR_FALLBACK.phone_enforcement,
+    min:a.phone_min_digits||ADDR_FALLBACK.phone_min_digits,
+    hint:a.phone_hint||""};
+}
 
 /* 隨市場切換重新綁定的示範資料（讓 pack 切換在畫面上真的看得見） */
 let ORDERS=PACKS[MARKETS[DEFAULT_MARKET].jurisdiction].orders;
@@ -2620,9 +2720,11 @@ function viewCart(){
           '<div class="field"><label>國家／地區</label><select class="inp" id="estC" onchange="setMarket(this.value)">'+
             Object.values(MARKETS).map(m=>'<option value="'+m.code+'" '+(m.code===STATE.market?"selected":"")+'>'+esc(m.name)+'</option>').join("")+'</select></div>'+
           '<div class="field"><label>'+esc(packOf().address.region_label)+'</label><select class="inp" id="estP">'+Object.keys(REGIONS).map(c=>'<option>'+esc(c)+'</option>').join("")+'</select></div>'+
-          (packOf().address.zip
-            ?'<div class="field"><label>郵遞區號</label><input class="inp" id="estZ" inputmode="numeric" placeholder="'+esc(packOf().address.zip_ph||"")+'"></div>'
-            :'<div class="field"><label>備註</label><input class="inp" id="estZ" placeholder="本市場不使用郵遞區號" disabled aria-disabled="true"></div>')+
+          /* 郵遞區號欄依商家設定的三態渲染（§0-e）：hidden 就整欄不出現——那是**商家設的**，
+             不是前台認定「這個國家沒有郵遞區號」。 */
+          (postalShown()
+            ?'<div class="field"><label>'+postalLabel()+'</label><input class="inp" id="estZ" inputmode="numeric" placeholder="'+esc(packOf().address.zip_ph||"")+'"></div>'
+            :"")+
         '</div><button class="btn btn-line btn-sm" onclick="estRates(this)"><span class="spin"></span>估算運費</button>'+
         '<div id="estOut" class="mt16"></div></div></div>'+
      '</div>'+
@@ -2649,8 +2751,9 @@ function viewCart(){
 function estRates(btn){
   btn.classList.add("loading");
   setTimeout(()=>{btn.classList.remove("loading");
-    const pk=packOf(),ad=pk.address,z=(($("#estZ")||{}).value||"").trim();
-    if(ad.zip&&z&&!ad.zip_rx.test(z)){$("#estOut").innerHTML='<div class="banner err">'+esc(ad.zip_hint)+'</div>';return;}
+    const pk=packOf(),z=(($("#estZ")||{}).value||"").trim();
+    const zerr=z?postalCheck(z):"";      /* 估算器只驗格式，空值不擋（估運費不需要完整地址） */
+    if(zerr){$("#estOut").innerHTML='<div class="banner err">'+esc(zerr)+'</div>';return;}
     if(!pk.delivery.methods.length){
       $("#estOut").innerHTML='<div class="banner err">'+esc(pk.error_code||"UNAVAILABLE")+'：本市場的法域 pack 尚未宣告配送方式，無法估算（56 §A.2 C6）。</div>';return;}
     const free=cartSubtotal()-discountAmount()>=FREE_SHIP;
@@ -2670,18 +2773,28 @@ function estRates(btn){
 const co=STATE.co;
 function coSet(k,v){STATE.co[k]=v;}
 function coErrs(){return STATE.coErr||(STATE.coErr={});}
+/* 軟提示與硬錯誤分兩本帳：只有 coErrs 會擋 coNext()，coWarns 只影響畫面。
+   兩者混在一起就會回到「未查證的格式規則擋住使用者」——本輪要修掉的正是那個。 */
+function coWarns(){return STATE.coWarn||(STATE.coWarn={});}
 function fld(name,label,attrs,extra){
-  const err=coErrs()[name];
-  return '<div class="field'+(err?" bad":"")+'" data-f="'+name+'"><label for="co_'+name+'">'+label+'</label>'+
+  const err=coErrs()[name],warn=!err&&coWarns()[name];
+  return '<div class="field'+(err?" bad":(warn?" warn":""))+'" data-f="'+name+'"><label for="co_'+name+'">'+label+'</label>'+
    '<input class="inp" id="co_'+name+'" '+(attrs||"")+' value="'+esc(STATE.co[name]||"")+'" oninput="coSet(\''+name+'\',this.value)" onblur="coValidate(\''+name+'\')">'+
-   (extra||"")+'<div class="msg">'+(err||"")+'</div></div>';
+   (extra||"")+'<div class="msg">'+(err||warn||"")+'</div></div>';
 }
-/* email 是法域無關的；phone／zip 一律走 pack 的 address 規則（不得在核心寫死台灣格式）。
+/* email 是法域無關的；phone／郵遞區號一律走 §0-e 的三層解析（不得在核心寫死任何國家的格式）。
    carrier／cert／donate 是 tw pack 專屬的欄位格式，留在這裡但只有 tw pack 會用到。 */
 const RX={email:/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/,
  /* TW-PACK */ carrier:/^\/[0-9A-Z.+-]{7}$/,cert:/^[A-Z]{2}\d{14}$/,donate:/^\d{3,7}$/ /* /TW-PACK */};
-function phoneRX(){return packOf().address.phone_rx;}
-function zipRX(){return packOf().address.zip_rx||/^.*$/;}
+/* 電話檢查回 {err,warn}：enforcement=block 才進 err，warn 只提示。
+   🔴 沒有 rx（格式未查證）時任何 enforcement 都只做 min_digits 防呆——不能執行一條不存在的規則。 */
+function phoneCheck(v){
+  const s=(v||"").trim(),r=phoneRule();
+  if(!s)return {err:"請輸入聯絡電話"};
+  if((s.replace(/\D/g,"").length)<r.min)return {err:"電話號碼太短，至少 "+r.min+" 碼"};
+  if(!r.rx||r.enforce==="off"||r.rx.test(s))return {};
+  return r.enforce==="block"?{err:r.hint}:{warn:r.hint+"（格式看起來不太一樣，仍可繼續）"};
+}
 /* TW-PACK */
 function taxIdOK(s){
   if(!/^\d{8}$/.test(s))return false;
@@ -2691,11 +2804,12 @@ function taxIdOK(s){
 }
 /* /TW-PACK */
 function coValidate(name,silent){
-  const v=(STATE.co[name]||"").trim(),E=coErrs();delete E[name];
+  const v=(STATE.co[name]||"").trim(),E=coErrs(),W=coWarns();delete E[name];delete W[name];
   const need=m=>{E[name]=m;};
   if(name==="email"&&!RX.email.test(v))need("請輸入有效的電子郵件，例如 you@example.com");
-  if(name==="phone"&&!phoneRX().test(v))need(packOf().address.phone_hint);
-  if(name==="zip"&&packOf().address.zip&&!zipRX().test(v))need(packOf().address.zip_hint);
+  if(name==="phone"){const r=phoneCheck(v);if(r.err)need(r.err);else if(r.warn)W[name]=r.warn;}
+  /* 郵遞區號：三態全部走 postalCheck（hidden 直接回空、optional 空值不擋、required 才必填） */
+  if(name==="zip"){const m=postalCheck(v);if(m)need(m);}
   if(name==="first"&&!v)need("請輸入名字");
   if(name==="last"&&!v)need("請輸入姓氏");
   if(name==="addr1"&&!v)need("請輸入地址");
@@ -2713,14 +2827,17 @@ function paintFieldErr(name){
   const el=document.getElementById("co_"+name);
   const wrap=document.querySelector('[data-f="'+name+'"]')||(el&&el.closest(".field"));
   if(!wrap)return;
-  const msg=coErrs()[name];
+  const msg=coErrs()[name],warn=coWarns()[name];
   wrap.classList.toggle("bad",!!msg);
-  const m=wrap.querySelector(".msg");if(m)m.textContent=msg||"";
+  wrap.classList.toggle("warn",!msg&&!!warn);
+  const m=wrap.querySelector(".msg");if(m)m.textContent=msg||warn||"";
 }
+/* 要驗哪些欄位：郵遞區號只在**顯示**時進清單（hidden 時它根本不在畫面上，
+   放進來會產生「看不到卻擋住你」的死路）。optional 也進清單——postalCheck 對空值回空字串。 */
 function coStepFields(s){
   if(s===1){const f=["email","first","last","phone"];
     if(STATE.co.method!=="home")return f;                 /* 取貨點／門市自取不需地址 */
-    return packOf().address.zip?[...f,"zip","addr1"]:[...f,"addr1"];}
+    return postalShown()?[...f,"zip","addr1"]:[...f,"addr1"];}
   return [];
 }
 function coNext(){
@@ -2822,8 +2939,12 @@ function coStep1(){
        '<div class="field"><label for="co_dist">'+esc(ad.sub_label)+'</label><select class="inp" id="co_dist" onchange="setDist(this.value)">'+
          Object.keys(REGIONS[STATE.co.city]||REGIONS[Object.keys(REGIONS)[0]]||{}).map(d=>'<option '+(STATE.co.dist===d?"selected":"")+'>'+esc(d)+'</option>').join("")+'</select></div>'+
      '</div>'+
-     /* 郵遞區號是**法域本地**的欄位：pack 說沒有就整欄不出現，不是留一個永遠填不對的空格 */
-     '<div class="frow">'+(ad.zip?fld("zip","郵遞區號 <span class=\"req\">*</span>","inputmode=\"numeric\" autocomplete=\"postal-code\" placeholder=\""+esc(ad.zip_ph||"")+"\""):"")+
+     /* 郵遞區號三態（§0-e）：hidden 整欄不出現；optional 出現但不加 *、空值放行；
+        required 才加 * 並擋送出。三者都是**商家設定**的結果，不是前台對某個國家的認定。 */
+     '<div class="frow">'+(postalShown()
+        ?fld("zip",postalLabel()+(postalRequired()?' <span class="req">*</span>':'<span class="opt-tag">（選填）</span>'),
+             "inputmode=\"numeric\" autocomplete=\"postal-code\" placeholder=\""+esc(ad.zip_ph||"")+"\"")
+        :"")+
        '<div class="field"><label>公司（選填）</label><input class="inp" value="'+esc(STATE.co.company||"")+'" oninput="coSet(\'company\',this.value)" autocomplete="organization"></div></div>'+
      fld("addr1","地址 <span class=\"req\">*</span>","autocomplete=\"address-line1\" placeholder=\""+esc(ad.addr_ph)+"\"",'<div class="hint">輸入時會出現地址自動完成建議（demo 未接 API）。</div>')+
      '<div class="field"><label>樓層／房號（選填）</label><input class="inp" value="'+esc(STATE.co.addr2||"")+'" oninput="coSet(\'addr2\',this.value)" autocomplete="address-line2"></div>'
@@ -2891,7 +3012,8 @@ function coAddrText(){
   const pk=packOf();
   if(STATE.co.method==="point")return STATE.co.cvs?(STATE.co.cvs.b+" "+STATE.co.cvs.n+"（"+STATE.co.cvs.id+"）"+STATE.co.cvs.a):"尚未選擇取貨點";
   if(STATE.co.method==="store")return pk.store_pickup?(pk.store_pickup.n+"・"+pk.store_pickup.a):"未設定自取門市";
-  return (pk.address.zip?(STATE.co.zip||"")+" ":"")+(STATE.co.city||"")+(STATE.co.dist||"")+(STATE.co.addr1||"")+" "+(STATE.co.addr2||"");
+  /* hidden 時不把郵遞區號寫進地址字串——沒收集的東西不該出現在訂單摘要上 */
+  return (postalShown()&&STATE.co.zip?STATE.co.zip+" ":"")+(STATE.co.city||"")+(STATE.co.dist||"")+(STATE.co.addr1||"")+" "+(STATE.co.addr2||"");
 }
 function coStep3(){
   const pk=packOf(),tot=cartTotal(),m=dmOf();
@@ -2907,14 +3029,18 @@ function coStep3(){
    '<dt>運送方式</dt><dd>'+esc(STATE.co.rate==="exp"&&pk.delivery.express?pk.delivery.express.t:(m?m.t:"—"))+'　'+
      (shippingFee()?'<span class="m">'+fmt(shippingFee())+'</span>':"免運")+'</dd></dl></div></div>'+
 
-  /* 付款方式：使用者裁定「不做自己的支付系統，整合 Airwallex／Stripe／PayPal 等」
-     ⇒ 這份清單的語義是「**PSP 支援什麼**」，不是「我們實作了什麼」（56 附錄 Z）。 */
+  /* 付款方式（2026-08-12 裁定，見 §0-d hk.psp 與 docs/specs/15 §F4.2）：
+     清單＝**PSP capability 查詢的結果**。哪些方式可用取決於商家接了哪家 PSP、
+     以及該 PSP 在這個市場支援什麼——不是我方逐一實作。直連是後期路線圖，不在 M0–M6。 */
   '<div class="co-sec" data-doc="copayment"><div class="co-sec-h"><h2>付款方式</h2>'+
    '<span class="mut3 fs12 sp"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 118 0v3"/></svg> 由第三方支付服務商處理與加密</span></div>'+
+   (pk.psp?'<div class="hint mb8">可用方式由已連接的支付服務商（'+esc(pk.psp.connected.join("、"))+'）回報，'+
+     '不同 PSP 支援的本地付款方式不同。'+esc(pk.psp.note)+'</div>':"")+
    (pays.length?'<div class="rgroup">'+pays.map(p=>{
      const on=STATE.co.pay===p[0];
      return '<label class="rcard'+(on?" on":"")+'"><input type="radio" name="pay" '+(on?"checked":"")+' onchange="setPay(\''+p[0]+'\')">'+
-      '<div class="rc-main"><div class="rc-t">'+esc(p[1])+'</div><div class="rc-s">'+esc(p[2])+'</div></div></label>'+
+      '<div class="rc-main"><div class="rc-t">'+esc(p[1])+'</div><div class="rc-s">'+esc(p[2])+'</div></div>'+
+      (p[3]?'<div class="rc-p mut3 fs12">'+esc(p[3])+'</div>':"")+'</label>'+
       (on?'<div class="rcard-body">'+payBody(p[0])+'</div>':"");}).join("")+'</div>'
     :'<div class="banner err">本市場尚未宣告可用的付款方式。</div>')+
    (hasCod&&!codOK?'<div class="hint">訂單金額超過 '+codCapText()+'，已自動隱藏貨到付款選項（'+esc(pk.cod.limits_key)+'）。</div>':"")+'</div>'+
@@ -2956,8 +3082,11 @@ function payBody(k){
   /* /TW-PACK */
   if(k==="cod")return '<div class="fs12 mut">'+(STATE.co.method==="point"?"取件時以現金付款；上限 "+codCapText()+"。":"物流士到府收款，代收手續費 "+fmt(codFee())+"。")+
     '<br>付款狀態於出貨前為「待付款」，物流回款後自動轉為「已付款」。</div>';
-  if(k==="fps")return '<div class="fs12 mut">按下付款後顯示 QR／識別碼，於銀行 App 完成轉帳後自動回拋確認。實際受理與回拋契約由 PSP 提供。</div>';
-  if(k==="octopus")return '<div class="fs12 mut">按下付款後導向八達通線上付款流程。⚠ 是否由現行 PSP 直接支援，尚未由本專案查證。</div>';
+  /* FPS／AlipayHK／八達通：三者都是**由 PSP（Airwallex／Stripe 等）提供的能力**，
+     不是我方各接一條 API。我方直連是後期路線圖（規模到了才會去談），不在 M0–M6。 */
+  if(k==="fps")return '<div class="fs12 mut">按下付款後顯示 QR／識別碼，於銀行 App 完成轉帳後自動回拋確認。<br>由支付服務商提供；實際受理範圍與回拋契約以該 PSP 為準。</div>';
+  if(k==="alipayhk")return '<div class="fs12 mut">按下付款後導向 AlipayHK App 完成付款。<br>由支付服務商提供；我方不直接對接錢包業者（直連為後期路線圖）。</div>';
+  if(k==="octopus")return '<div class="fs12 mut">按下付款後導向八達通線上付款流程。<br>由支付服務商提供；我方不直接對接八達通（直連為後期路線圖，見 15 §F4.2）。</div>';
   return '<div class="fs12 mut">按下付款後將導向該支付服務完成驗證，成功後自動返回訂單完成頁。</div>';
 }
 function ccBrand(v){const n=v.replace(/\s/g,"");let b=null;
@@ -3400,7 +3529,7 @@ function viewAddresses(){
     '<button class="btn btn-ink btn-sm sp" data-doc="addrnew" onclick="openAddr()">新增地址</button></div>'+
    (ADDRS.length?'<div class="addr-grid" data-doc="addrlist">'+ADDRS.map(a=>'<div class="addr">'+
      (a.def?'<span class="badge b-ok" style="position:absolute;top:14px;right:14px"><span class="pip full"></span>預設</span>':"")+
-     '<b>'+esc(a.name)+'</b><br>'+esc(a.phone)+'<br><span class="m">'+a.zip+'</span> '+esc(a.city+a.dist+a.addr1)+
+     '<b>'+esc(a.name)+'</b><br>'+esc(a.phone)+'<br>'+(postalShown()&&a.zip?'<span class="m">'+esc(a.zip)+'</span> ':"")+esc(a.city+a.dist+a.addr1)+
      '<div class="act"><button class="lnk-q" onclick="openAddr('+a.id+')">編輯</button>'+
       (a.def?"":'<button class="lnk-q" onclick="setDefaultAddr('+a.id+')">設為預設</button>')+
       '<button class="lnk-q" onclick="confirmDelAddr('+a.id+')">刪除</button></div></div>').join("")+'</div>'
@@ -3425,8 +3554,10 @@ function openAddr(id){
      Object.keys(REGIONS).map(c=>'<option '+(a.city===c?"selected":"")+'>'+esc(c)+'</option>').join("")+'</select></div>'+
    '<div class="field"><label>'+esc(ad.sub_label)+'</label><select class="inp" id="adDist" onchange="adDistChange()">'+
      Object.keys(regionOf(a.city)).map(d=>'<option '+(a.dist===d?"selected":"")+'>'+esc(d)+'</option>').join("")+'</select></div></div>'+
-   (ad.zip?'<div class="field"><label>郵遞區號</label><input class="inp" id="adZip" value="'+esc(a.zip)+'" inputmode="numeric"><div class="msg">'+esc(ad.zip_hint||"")+'</div></div>'
-          :'<input type="hidden" id="adZip" value="">')+
+   (postalShown()
+     ?'<div class="field"><label>'+postalLabel()+(postalRequired()?' <span class="req">*</span>':'<span class="opt-tag">（選填）</span>')+'</label>'+
+      '<input class="inp" id="adZip" value="'+esc(a.zip)+'" inputmode="numeric" placeholder="'+esc(ad.zip_ph||"")+'"><div class="msg">'+esc(ad.zip_hint||postalLabel()+"為必填")+'</div></div>'
+     :'<input type="hidden" id="adZip" value="">')+
    '<div class="field"><label>地址 <span class="req">*</span></label><input class="inp" id="adAddr" value="'+esc(a.addr1)+'"><div class="msg">請輸入地址</div></div>'+
    '<label class="cb"><input type="checkbox" id="adDef" '+(a.def?"checked":"")+'>設為預設地址</label>',
    '<button class="btn btn-line btn-sm" onclick="closeModal()">取消</button>'+
@@ -3437,10 +3568,12 @@ function adCityChange(){const c=$("#adCity").value,ds=Object.keys(regionOf(c));
 function adDistChange(){$("#adZip").value=regionOf($("#adCity").value)[$("#adDist").value]||"";}
 function saveAddr(id,btn){
   const ad=packOf().address;
-  const F=[["adName",v=>v.trim()],["adPhone",v=>phoneRX().test(v.trim())],
-           ["adZip",v=>!ad.zip||zipRX().test(v.trim())],["adAddr",v=>v.trim()]];
-  /* pack 說沒有郵遞區號時，該欄位是 hidden input（沒有 .field 外框）——
-     驗證迴圈不得假設每個欄位都有外框，否則 HK 的地址表單一送出就炸 */
+  /* 電話：只有 enforcement=block 才擋（phoneCheck 已把 warn 與 err 分開）。
+     郵遞區號：走同一支 postalCheck ⇒ hidden 不驗、optional 空值放行、required 才擋。 */
+  const F=[["adName",v=>v.trim()],["adPhone",v=>!phoneCheck(v).err],
+           ["adZip",v=>!postalCheck(v)],["adAddr",v=>v.trim()]];
+  /* 郵遞區號設為 hidden 時，該欄位是 hidden input（沒有 .field 外框）——
+     驗證迴圈不得假設每個欄位都有外框，否則地址表單一送出就炸 */
   let ok=true;F.forEach(([i,fn])=>{const el=$("#"+i);if(!el)return;
     const bad=!fn(el.value||""),w=el.closest(".field");
     if(w)w.classList.toggle("bad",bad);
@@ -3460,7 +3593,9 @@ function viewProfile(){
    '<h2 class="st">個人資料</h2>'+
    '<div class="box" data-doc="profileform">'+
     '<div class="frow"><div class="field"><label>姓名</label><input class="inp" id="pfName" value="'+esc(STATE.customer.name)+'"><div class="msg">請輸入姓名</div></div>'+
-    '<div class="field"><label>手機</label><input class="inp" id="pfPhone" inputmode="numeric" value="'+esc(STATE.customer.phone||"")+'"><div class="msg">請輸入 09 開頭的 10 碼手機號碼</div></div></div>'+
+    /* 電話提示文字取自當前 pack（§0-e）：這裡原本硬寫一句台灣手機格式，
+       在香港市場也照樣顯示——同一類「未查證／別的法域的規則被寫死」的錯。 */
+    '<div class="field"><label>手機</label><input class="inp" id="pfPhone" inputmode="numeric" value="'+esc(STATE.customer.phone||"")+'"><div class="msg">'+esc(phoneRule().hint||"請輸入聯絡電話")+'</div></div></div>'+
     '<div class="field"><label>電子郵件</label><input class="inp" id="pfMail" type="email" value="'+esc(STATE.customer.email)+'">'+
      '<div class="msg">請輸入有效的電子郵件</div><div class="hint">變更 email 需要對新信箱重新驗證，驗證完成前仍使用舊信箱接收通知。</div></div>'+
     '<button class="btn btn-ink" onclick="saveProfile(this)"><span class="spin"></span>儲存變更</button></div>'+
@@ -3490,7 +3625,8 @@ function docPrefBox(){
 }
 function tog(b){const on=b.classList.toggle("on");b.setAttribute("aria-checked",on);toastf(on?"已開啟":"已關閉");}
 function saveProfile(btn){
-  const F=[["pfName",v=>v.trim()],["pfPhone",v=>!v||phoneRX().test(v.trim())],["pfMail",v=>RX.email.test(v.trim())]];
+  /* 電話一律走 phoneCheck：只有 enforcement=block 才擋（§0-e） */
+  const F=[["pfName",v=>v.trim()],["pfPhone",v=>!v||!phoneCheck(v).err],["pfMail",v=>RX.email.test(v.trim())]];
   let ok=true;F.forEach(([i,fn])=>{const el=$("#"+i),bad=!fn(el.value||"");el.closest(".field").classList.toggle("bad",bad);if(bad)ok=false;});
   if(!ok){toastf("請修正紅框欄位");return;}
   btn.classList.add("loading");
@@ -3717,7 +3853,7 @@ function contactForm(){
 }
 function sendContact(btn){
   const F=[["ctName",v=>v.trim()],["ctMail",v=>RX.email.test(v.trim())],["ctBody",v=>v.trim()],
-    ["ctPhone",v=>!v.trim()||phoneRX().test(v.trim())]];
+    ["ctPhone",v=>!v.trim()||!phoneCheck(v).err]];
   let ok=true;F.forEach(([i,fn])=>{const el=$("#"+i),bad=!fn(el.value||"");el.closest(".field").classList.toggle("bad",bad);if(bad)ok=false;});
   if(!ok){$("#ctOut").innerHTML='<div class="banner err mt16">有 '+$$(".box .field.bad").length+' 個欄位需要修正，請看紅框說明。</div>';return;}
   btn.classList.add("loading");
@@ -4229,7 +4365,7 @@ cartremove:{t:"移除行項",f:"刪除一行",l:"等同 quantity=0；行淡出�
 cartnote:{t:"訂單備註 cart note",f:"給商家的留言",l:"textarea 失焦即 POST /cart/update.js {note}；≤5,000 字（進 limits.yml）；隨訂單寫入 admin（42 §5.2）",i:"[ep:POST /cart/update.js] [liquid:cart.note] [tbl:carts,orders]"},
 freeshipbar:{t:"免運進度條（購物車頁）",f:"湊單激勵",l:"同 drawer 版本：門檻取 FREE_SHIP（base cents），以折後小計計算；門檻與實際運費規則的一致性由商家自負（慣例）（42 §5.3）",i:"[liquid:cart.total_price] [tbl:carts,shipping_rates] [ep:GET /cart.js]"},
 discountcode:{t:"折扣碼／禮品卡輸入",f:"提前套用折扣",l:"2025 夏起購物車原生支援；成功＝chip（碼＋金額＋×移除），失敗＝inline「折扣碼無效」；禮品卡顯示卡號末 4 碼與已折餘額；一單多碼依 combinations 設定；折扣碼嘗試限流 10 次/分（防枚舉，15-F3）（42 §5.3、§6.6）",i:"[ep:POST /cart/update.js（discount）] [ep:POST /checkout（discount_code）] [liquid:cart.discount_applications,discount_application.title] [tbl:discounts,discount_applications,gift_cards]"},
-shipest:{t:"運費估算器",f:"結帳前預估運費",l:"國家／地區／郵遞區號三欄→回各費率（名稱＋金額＋備註）；郵遞區號是否存在與其格式由 pack 的 address 決定（沒有就整欄不出現，不是留一個填不對的空格）；未宣告 pack 時直接回 JURISDICTION_CAPABILITY_UNDECLARED；無可用費率→「此地址無可用運送方式」（42 §5.3、56 §A.2 C6）",i:"[ep:GET /cart/shipping_rates.json?shipping_address[zip]=&country=&province=] [liquid:cart.requires_shipping] [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
+shipest:{t:"運費估算器",f:"結帳前預估運費",l:"國家／地區／郵遞區號三欄→回各費率（名稱＋金額＋備註）；郵遞區號欄依<b>商家設定的三態</b>渲染（hidden 整欄不出現／optional 顯示不擋／required 顯示且驗），三態的來源是「商家覆寫 → 法域預設 → 核心 fallback」三層（§0-e、limits.yml checkout.address_field_*）——前台<b>不自行認定</b>某個國家有沒有郵遞區號；估算器只驗格式、空值不擋（估運費不需要完整地址）；未宣告 pack 時直接回 JURISDICTION_CAPABILITY_UNDECLARED；無可用費率→「此地址無可用運送方式」（42 §5.3、56 §A.2 C6）",i:"[ep:GET /cart/shipping_rates.json?shipping_address[zip]=&country=&province=] [liquid:cart.requires_shipping] [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
 cartupsell:{t:"購物車頁加購推薦",f:"頁尾 upsell",l:"排除已在車內與售罄商品；點卡進商品頁、點快速加購直接加車（42 §5.1）",i:"[ep:GET /recommendations/products.json?intent=complementary] [tbl:products]"},
 terms:{t:"條款同意勾選",f:"結帳前置條件",l:"非 Shopify 原生：未勾選→Checkout 鈕禁用；狀態寫 cart attribute terms_accepted；動態結帳鈕會繞過此攔截，慣例是同步隱藏或攔截（42 §5.3）",i:"[ep:POST /cart/update.js（attributes[terms_accepted]）] [liquid:cart.attributes] [tbl:carts]"},
 checkoutbtn:{t:"結帳按鈕",f:"進入結帳",l:"帶總額慣例「結帳 · <總額>」（金額走 fmt()）；空車禁用；POST /cart → 302 /checkouts/{token}；require_login 時先導登入（42 §5.3）",i:"[ep:POST /checkout] [liquid:cart.total_price] [tbl:carts,checkouts]"},
@@ -4241,7 +4377,7 @@ costeps:{t:"結帳步驟麵包屑",f:"三步流程導航",l:"Cart > 資訊 > 運
 coexpress:{t:"Express checkout 錢包牆",f:"錢包快付",l:"表單最上方，錢包鈕依買家裝置與啟用金流組合，下接分隔線 OR；Shop Pay 已識別買家可整頁跳快速流（6 碼簡訊驗證）（42 §6.2）",i:"[ep:POST /checkout/complete] [tbl:checkouts,order_transactions] [api:paymentSessionResolve]"},
 cocontact:{t:"聯絡資訊區",f:"收 email（或手機）",l:"依設定 email only 或 email/手機二擇一；blur 即時格式驗證；已登入預填唯讀可換帳號；行銷勾選預設值僅限商家設定的地區，SMS 恆不可預勾（24 §5）（42 §6.3）",i:"[ep:POST /checkout] [tbl:checkouts,customers] [liquid:customer.email]"},
 codelivery:{t:"配送方式選擇",f:"宅配／取貨點／門市自取",l:"整組選項來自 jurisdiction pack 的 C6 pickup_networks ＋商家運費設定：hk＝宅配到府／順豐站・智能櫃自取／門市自取；tw pack＝宅配／取貨門市／門市自取。pack 未宣告 pickup_networks 時該方式**不出現**（不是出現但選不了，56 §A.2 C6）；切換時下方表單與費率整組切換（42 §6.4）",i:"[ep:POST /checkout] [ep:GET /cart/shipping_rates.json] [tbl:checkouts,shipping_zones,shipping_rates,locations]"},
-coaddress:{t:"收件地址表單",f:"收集地址",l:"欄位組依國家本地化排列，欄位集由 jurisdiction pack 的 address 提供：region_label／sub_label／是否有郵遞區號／電話與郵遞區號格式。hk 不顯示郵遞區號欄（⚠ 本原型假設，待查證）、電話驗 8 碼（⚠ 待查證）；tw pack 為郵遞區號 3/3+2/3+3 → 縣市 → 鄉鎮市區連動 → 路街門牌、電話 09 開頭 10 碼。Company 可設 hidden/optional/required（required 時 Apple Pay 不可用）；地址自動完成可關（42 §6.4）",i:"[ep:POST /checkout] autocomplete 屬性須齊（shipping address-line1 等） [tbl:checkouts,customer_addresses]"},
+coaddress:{t:"收件地址表單",f:"收集地址",l:"欄位組依國家本地化排列。region_label／sub_label／地址佔位詞由 jurisdiction pack 提供；<b>郵遞區號與電話格式是「商家設定」不是寫死的行為</b>——解析順序為①商家逐國覆寫（後台 設定›結帳›地址表單欄位）②該市場法域 pack 的 address 預設值③核心 fallback（limits.yml checkout.address_field_fallback），三態＝hidden 不出現且不收集／optional 出現可空／required 出現且擋。🔴 <b>法域預設值只是預設值</b>：hk 預設 optional、tw 預設 required，兩者商家都能改，實作時不得做成不可改。⚠ 香港郵遞區號用不用（V-34）與本地電話格式（V-35）皆未查證 ⇒ 不臆造 regex、phone_enforcement 預設 warn（提示但放行）；上一輪那條 hk 8 碼電話正則直接阻擋送出，已移除。tw pack 郵遞區號 3/3+2/3+3 → 縣市 → 鄉鎮市區連動，電話 regex 只涵蓋行動門號（市話會被判不符）故同樣降為 warn。Company 可設 hidden/optional/required（required 時 Apple Pay 不可用）；地址自動完成可關（42 §6.4）",i:"[ep:POST /checkout] autocomplete 屬性須齊（shipping address-line1 等） [tbl:checkouts,customer_addresses]"},
 cosave:{t:"儲存資訊勾選",f:"下次結帳更快",l:"guest 存瀏覽器、已登入存帳戶；旁註 Shop Pay 說明（42 §6.4）",i:"[ep:POST /checkout] [tbl:customer_addresses,sessions]"},
 /* TW-PACK */
 cvspicker:{t:"超商門市選擇器（tw pack）",f:"選取貨門市",l:"未選門市前結帳鈕禁用並提示；通路對應 ECPay LogisticsSubType：UNIMART(C2C)/FAMI(C2C)/HILIFE(C2C)/OKMARTC2C，7-11 另有 UNIMARTFREEZE；材積三邊和 ≤105cm、≤5kg；取貨付款上限取 limits jurisdictions.tw.pickup_networks.cod_max_cents；外島門市（CVSOutSide=1）常排除（42 §12.2）",i:"[ep:POST https://logistics.ecpay.com.tw/Express/map] 回拋 [ep:TBD ServerReplyURL（我方待定 /checkout/cvs_callback）] [tbl:checkouts,order_invoice_info,shipping_rates]"},
@@ -4252,7 +4388,7 @@ hkpickupmap:{t:"取貨點清單 modal（hk pack）",f:"地區／關鍵字找取�
 conext:{t:"「前往運送方式」按鈕",f:"步驟 1→2",l:"送出前逐欄驗證，失敗時捲到第一個紅框並 toast；選了取貨點卻未挑點位直接擋；法域未宣告時本鈕 disabled（56 §A.3 reject）（42 §6.1）",i:"[ep:POST /checkout]（PATCH 式更新 checkout 後重算金額） [tbl:checkouts]"},
 corates:{t:"運送方式費率卡",f:"選擇費率",l:"地址齊全後載入 radio 列表（名稱＋說明＋預估到貨或日期區間＋右側價格，免費顯示 Free）；預設選最便宜；改選即時重算摘要；無費率→「無法運送至此地址」阻擋（42 §6.4）",i:"[ep:POST /checkout/shipping_rates] [ep:GET /cart/shipping_rates.json] [tbl:shipping_profiles,shipping_zones,shipping_rates,checkouts]"},
 conext2:{t:"「前往付款」按鈕",f:"步驟 2→3",l:"提交付款時 server 會重驗所選 rate 仍屬可用集合且價格一致（15-F3 條 3）",i:"[ep:POST /checkout] [tbl:checkouts,shipping_rates]"},
-copayment:{t:"付款方式手風琴",f:"單選展開付款方式",l:"順序：卡片（預設展開）→錢包→本地付款方式；清單來自 jurisdiction pack，語義是「PSP 支援什麼」不是「我們實作什麼」（使用者裁定：整合 Airwallex／Stripe／PayPal，56 附錄 Z）。貨到付款只有在 pack 宣告 cod 能力時才追加，且金額超過 pack 的法規上限時整個選項移除；卡號欄為金流 iframe（PCI SAQ-A），Luhn＋到期即時驗證，失敗訊息不洩漏細節（42 §6.5）",i:"[ep:POST /checkout/complete] [tbl:checkouts,order_transactions,tax_settings] [api:paymentSessionResolve]"},
+copayment:{t:"付款方式手風琴",f:"單選展開付款方式",l:"順序：卡片（預設展開）→錢包→本地付款方式。🔴 <b>這份清單是 PSP capability 查詢的結果，不是我方逐一實作的功能列表</b>（使用者 2026-08-12 裁定：「AlipayHK／FPS／八達通都是由 Airwallex／Stripe 等不同的支付服務商提供」，延續既有裁定「不做自己的支付系統，整合 Airwallex／Stripe／PayPal」56 附錄 Z）。某方式出不出現＝①商家接了哪家 PSP ②該 PSP 在此市場支援什麼 ③商家在 PSP 後台開了哪幾種，三者的交集。🔴 <b>我方直連（直接對接 AlipayHK／FPS／八達通）是後期路線圖，不在 M0–M6</b>：規模到了才會聯繫這些公司談直連，在那之前不得有「接八達通 API」的工項或 schema 假設（規格見 docs/specs/15 §F4.2）。貨到付款不是 PSP 能力（承運商代收），只有在 pack 宣告 cod 時才追加，金額超過 pack 的法規上限時整個選項移除；卡號欄為金流 iframe（PCI SAQ-A），Luhn＋到期即時驗證，失敗訊息不洩漏細節（42 §6.5）",i:"[ep:POST /checkout/complete] [tbl:checkouts,order_transactions,tax_settings] [api:paymentSessionResolve]"},
 cobilling:{t:"帳單地址",f:"同收件或另填",l:"radio：Same as shipping（預設）／Use a different billing address；純數位商品單（無運送）直接收 billing（42 §6.5）",i:"[ep:POST /checkout] [tbl:checkouts,orders]"},
 /* TW-PACK */
 coinvoice:{t:"電子發票資訊（tw pack）",f:"四種發票類型與載具",l:"個人雲端（預設）／捐贈／公司戶統編／紙本二聯，逐類可由商家開關；手機條碼 ^/[0-9A-Z.+-]{7}$；自然人憑證 2 大寫字母+14 數字；統編 8 碼權重 1,2,1,2,1,2,4,1 檢核（第 7 碼為 7 有特例）；捐贈碼 3–7 碼數字；出貨後 2 日內開立（42 §12.1）",i:"隨結帳提交，欄位為我方台灣擴充 [ep:POST /checkout] [tbl:order_invoice_info,orders] [ep:TBD 加值中心（綠界/ezPay）開立與作廢 API 待接]"},

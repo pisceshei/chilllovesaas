@@ -792,6 +792,16 @@
         把（台幣符號）換成 `HK$` 只是把同一個錯誤搬到另一個國家。」 -->
 
 **金額顯示是 locale 的輸出，不是常數（CLAUDE.md 鐵律 10）**：本文件所有 `HK$1,480` 只是**範例**。實際的**幣別符號、符號位置（前綴／後綴）、小數位數（exponent）、千分位分組**一律由**市場的 locale** 決定，**不得硬編在元件**。元件只負責：① 拿到已格式化的字串；② 套 `.cl-money`（`nowrap` ＋ `tabular-nums`）。儲存值一律 integer cents（CLAUDE.md 鐵律 3）。
+
+**小數位：目前所有市場一律 2 位（2026-08-12 使用者裁定）**
+
+> 使用者原話：「金額數字可以顯示兩位小數．這個適用於所有國家的貨幣金額。」
+
+🔴 **這是產品決策，不是 ISO 4217 慣例。** ISO 4217 給 **JPY／TWD**（以及 KRW／VND 等）的 minor unit 是 **0**——不顯示小數。本專案刻意統一顯示兩位，理由有二：①多市場金額併排在同一張表時，位數不一致會讓 `tabular-nums` 的直行對齊失效；②「1,480」與「1,480.00」在對帳語境下可信度不同，統一位數少一類人工誤判。
+
+- **落地位置**：核心宣告在 `config/limits.yml` 的 `currency_display.force_minor_unit_digits: 2`；各法域的值在 `jurisdictions.<code>.currency_format.exponent`（三份原型的 locale 表逐欄同名同義）。
+- 🔴 **下一個人請不要把 `JPY exponent 2` 當成 bug 改回 0。** 若日後要恢復依 ISO 顯示，改的是**那一欄的值**——**不是刪掉 `exponent` 欄位**。位數是市場資料這件事仍然成立（欄位是對的抽象，只是現在所有市場的值剛好一樣）；刪掉欄位等於把這個事實從程式碼裡抹掉，第一個要用 ISO 位數的市場進來時就得重做一次抽象。
+- **顯示位數 ≠ 儲存尺度**：儲存永遠是 integer cents（×100），`exponent` 只決定顯示幾位。29 §3.3 的 rounding 設定管的是**金額本身**怎麼進位，與顯示位數是兩件事，不要混。
 - CJK 截斷一律 `text-overflow: ellipsis` ＋ `title` 屬性給完整值；**多行截斷用 `-webkit-line-clamp`**，不要用固定高度裁切。
 - 中文標題 `letter-spacing: 0`（47 §3：字距一律 normal）。**23 §1 的「中文標題字距 0」保留，其餘元素也一律 normal**，原型 `body{letter-spacing:.01em}` 要移除。
 

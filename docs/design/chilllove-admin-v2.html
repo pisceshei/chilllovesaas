@@ -1809,9 +1809,14 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
       TWD 的 ISO exponent 是 0 但儲存仍是 ×100。
       ⇒ exponent 只決定**顯示**幾位小數，不決定儲存單位。
       鐵律 3：金額全程 integer cents，出現 float 即 bug（fmtMoney 會對非整數 console.warn）。
-   ⚠️ exponent 差異（HKD 2／TWD 0／JPY 0）正是硬編符號抓不到的那類 bug：
-      同一個 cents 值 148000：HKD 顯示 1,480.00（exponent 2）、TWD 與 JPY 顯示 1,480（exponent 0），
-      前綴符號則各自來自 symbol 欄位。
+   🔴 **exponent 目前五個市場全部是 2——這是產品決策，不是 ISO 4217 慣例。**
+      2026-08-12 使用者裁定逐字：「金額數字可以顯示兩位小數．這個適用於所有國家的貨幣金額」。
+      ISO 4217 給 JPY 與 TWD 的 minor unit 是 **0**；我們刻意統一顯示兩位（多市場併排時
+      位數不一致會讓 tabular-nums 對齊失效，且「1,480」與「1,480.00」在對帳時可信度不同）。
+      ⇒ 看到 `JPY exponent 2` **不要當成 bug 改回 0**。日後若要恢復依 ISO，改的是這一欄的值，
+        **不是刪掉 exponent 欄位**——「位數是市場資料」這件事仍然成立，欄位是對的抽象，
+        只是現在所有市場的值剛好一樣；刪掉欄位等於把這個事實從程式碼裡抹掉。
+      核心宣告：config/limits.yml `currency_display.force_minor_unit_digits: 2`。
    基準市場＝香港（鐵律 11 基準法域）。MARKET_CUR 是「報表顯示幣別」；
       個別訂單另帶 presentment currency（ORDERS[].cur），不隨報表幣別變動。
    ⚠️ demo **不做匯率換算**——切換市場只換格式不換金額，目的是驗證格式真的由表驅動。
@@ -1824,13 +1829,13 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 const MARKET_LOCALES={
  HKD:{default_currency:'HKD',name:'港幣',  symbol:'HK$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[1000000,'M'],[1000,'K']]},
- TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+ TWD:{default_currency:'TWD',name:'新台幣',symbol:'NT$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[100000000,'億'],[10000,'萬']]},
  MYR:{default_currency:'MYR',name:'令吉',  symbol:'RM', symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:' ',
       abbr:[[1000000,'M'],[1000,'K']]},
  USD:{default_currency:'USD',name:'美元',  symbol:'US$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[1000000,'M'],[1000,'K']]},
- JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:0,grouping:[3],sep:',',dec:'.',gap:'',
+ JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[100000000,'億'],[10000,'万']]}};
 /* /CURRENCY-TABLE */
 /* 上限值一律引 config/limits.yml 的鍵名，不在畫面上硬編數字（CLAUDE.md 鐵律 6）。
@@ -1861,7 +1866,11 @@ function fmtMoney(cents,code){
   const body=groupDigits(d<0?fixed:fixed.slice(0,d),L.grouping,L.sep)+(d<0?'':L.dec+fixed.slice(d+1));
   return (raw<0?'−':'')+(L.symbol_position==='suffix'?body+L.gap+L.symbol:L.symbol+L.gap+body);
 }
-/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡 */
+/* 縮寫級距（K／M vs 萬／億）同樣是 locale 資料，不寫死在函式裡。
+   🔴 **縮寫不套用「一律兩位小數」的裁定**（limits.yml
+      `currency_display.applies_to_compact_abbreviations: false`）：`485K` 的小數位不是幣別的
+      minor unit，而是壓縮後的有效位數，補成 `485.00K` 只會讓圖表軸更難讀。
+      裁定要解決的是「JPY／TWD 0 位、其餘 2 位」的跨市場不一致，那個問題在 fmtMoney 已修。 */
 function fmtMoneyCompact(cents,code){
   const L=marketLocale(code),raw=Number(cents)||0,major=Math.abs(raw)/100;
   const step=(L.abbr||[]).find(a=>major>=a[0]);
@@ -3133,7 +3142,7 @@ const DOCS={
  risk:{t:"訂單風險",f:"詐欺風險等級與指標",l:"綠=正常/紅=可疑/灰=補充；中高風險列表示警；可配自動 hold",i:"P0 欄位、P2 模型（規格 15-F4）"},
  anafilters:{t:"分析篩選列",f:"日期範圍/幣別切換",l:"按店時區切日；比較期=等長前期",i:"P0・rollup 查詢（規格 19-F1/F2；MySQL 先灌時區表）"},
  "ana-currency":{t:"報表顯示幣別切換",f:"切換報表金額的顯示 locale（HKD／TWD／JPY／MYR／USD）",
-  l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。此切換器存在的理由就是讓「格式真的由表驅動」可被肉眼驗證——HKD exponent 2 顯示兩位小數、TWD／JPY exponent 0 不顯示小數。⚠️ <b>原型只換格式不換匯率</b>：金額本身不做 presentment 換算，正式版的換算走 29 §3 的匯率快照，不在原型範圍",
+  l:"CLAUDE.md 鐵律 10：符號、符號位置、小數位、千分位分組全部由市場 locale 決定，不得硬編。此切換器存在的理由就是讓「格式真的由表驅動」可被肉眼驗證——切換時符號、千分位分組與縮寫級距（K／M vs 萬／億）都會跟著換。🔴 <b>小數位目前所有市場都是 2 位</b>（含 JPY／TWD）：那是 2026-08-12 使用者裁定的<b>產品決策</b>「金額數字可以顯示兩位小數，適用於所有國家的貨幣金額」，<b>不是</b> ISO 4217——ISO 給 JPY／TWD 的 minor unit 是 0。看到 JPY 顯示兩位小數不要當成 bug 改回 0；要恢復依 ISO 就改 MARKET_LOCALES 的 exponent 值，不是刪掉這個欄位（核心宣告在 limits.yml currency_display.force_minor_unit_digits）。⚠️ <b>原型只換格式不換匯率</b>：金額本身不做 presentment 換算，正式版的換算走 29 §3 的匯率快照，不在原型範圍",
   i:"P1・MARKET_LOCALES 對應 limits.yml jurisdictions.{code}.currency_format（symbol／symbol_position／exponent／grouping 同名同義）；正式版由 [api:markets] 回傳 presentment currency"},
  anachart:{t:"銷售曲線",f:"單系列折線+面積+hover 十字",l:"dataviz 規格：2px 線/10% 面積/髮絲網格/無圖例/附數據表格",i:"P0・色板已過驗證器（#2a78d6 on #fff）"},
  funnel:{t:"轉換漏斗",f:"工作階段→加購→結帳→成交",l:"分母口徑寫進指標辭典；與 pulse 轉換率同源",i:"P1・sessions 事件（規格 19-F3）"},
@@ -6166,6 +6175,7 @@ Object.assign(SET_PAGES,{
      [['email','僅 email'],['phone_or_email','電話號碼或 email']],'email','set-ck-contact')}
    ${setRowSel('姓名格式','影響地址表單欄位數與物流單列印','ckName',[['last_first','要求姓氏與名字'],['last_only','只需要姓氏']],'last_first','set-ck-name')}
    ${setRowBtn('表單欄位（公司名稱／地址第二行／電話）','逐欄三態：不顯示／選填／必填','<span class="chev" aria-hidden="true">›</span>','openCkFields()','set-ck-fields','🧾')}
+   ${setRowBtn('地址表單欄位（依國家／市場）','郵遞區號三態與電話格式驗證，可針對不同國家分別設定','<span class="chev" aria-hidden="true">›</span>','openAddrFields()','set-ck-addrfields','📮')}
    ${setRowTgl('Email 行銷同意預先勾選','依地區法規決定能不能預勾；SMS 永不可預勾（硬規則，無開關）','ckOptin',false,'set-ck-optin',
      {dep:'ckOptinScope',note:'SMS 同意永不預勾（limits.yml checkout.sms_consent_never_prechecked）'})}
    <div id="ckOptinScope" hidden>${setRowSel('預先勾選的適用地區','GDPR／PIPL 管轄地一律不可預勾，這裡只能再縮小範圍','ckOptinScopeSel',
@@ -7315,6 +7325,109 @@ function ckFieldsPage(){
     ③ 姓名格式與這三欄分開存：姓名是 <span class="mono">name_format</span>，這三欄是 <span class="mono">checkout_field_config</span>。</p></div>`;
 }
 
+/* ---------- E1b 地址表單欄位（依國家／市場）——郵遞區號三態與電話格式 ----------
+   2026-08-12 使用者裁定逐字：「郵遞區號可以在後台設定是否需要強制．可以針對不同國家進行
+   強制開啟．香港地區沒有就可以設定為不用填寫。」
+   🔴 這一頁存在的理由：上一輪把香港的郵遞區號欄**整欄拿掉**（理由是一條未查證的
+      「香港不使用郵遞區號」），等於把商家的設定權變成寫死的行為——商家連「我要收」
+      都做不到。**法域預設值只是預設值**（limits.yml
+      `checkout.address_field_merchant_override_allowed: true`），實作時不得做成不可改。
+   同一條裁定精神也套用到電話格式：規則是 per-jurisdiction 設定而非寫死的行為，
+      而**未查證的格式規則不得阻擋使用者輸入** ⇒ 預設 warn（提示但放行）。 */
+const ADDR_TRI=[['hidden','不顯示（不收集）'],['optional','選填（顯示但不擋）'],['required','必填（顯示且擋）']];
+const PHONE_ENF=[['off','不驗證'],['warn','提示但放行'],['block','格式錯就擋']];
+/* 國家碼 → 法域 pack。未列者＝尚未建立 pack，走 limits `checkout.address_field_fallback` */
+const ADDR_JUR_OF={HK:'hk',TW:'tw'};
+const ADDR_CC_NAME={HK:'香港',TW:'台灣',MY:'馬來西亞',JP:'日本',SG:'新加坡'};
+/* 法域 pack 的**預設值**（唯一真相在 config/limits.yml `jurisdictions.<code>.address`）*/
+const ADDR_JUR_DEFAULT={
+ hk:{postal_code:'optional',phone_enforcement:'warn',
+     why:'⚠ 香港是否使用郵遞區號（V-34）與本地電話格式（V-35）皆未查證 ⇒ 預設 optional／warn，兩邊都不賭'},
+ tw:{postal_code:'required',phone_enforcement:'warn',
+     why:'台灣地址實務會收郵遞區號；電話 regex 只涵蓋行動門號（市話會被判不符）⇒ enforcement 降為 warn'},
+ _fallback:{postal_code:'optional',phone_enforcement:'warn',
+     why:'尚未建立 pack ⇒ 取 limits checkout.address_field_fallback（已宣告的核心 fallback，不是靜默預設）'}};
+/* 商家覆寫：以**國家碼**為鍵（裁定原文是「針對不同國家」）。null／缺鍵＝沿用法域預設。
+   ⚠ 原型的「下發通道」＝ localStorage，兩份原型同源開啟時前台會即時吃到；
+      正式版是 19-F4 的 shops.settings JSON ＋ checkoutSettingsUpdate mutation，不是 localStorage。 */
+const ADDR_CFG_KEY='chilllove.checkout.address_field';
+let ADDR_CFG=(function(){try{return JSON.parse(localStorage.getItem(ADDR_CFG_KEY)||'{}')||{};}catch(e){return {};}})();
+function addrCfgSave(){try{localStorage.setItem(ADDR_CFG_KEY,JSON.stringify(ADDR_CFG));}catch(e){}}
+/* 國家清單由 MARKETS 的 regions 去重推導——不另建一份名單，否則新增市場時這頁會漏 */
+function addrCountries(){
+  const seen={},out=[];
+  MARKETS.forEach(m=>(m.regions||[]).forEach(cc=>{
+    if(!seen[cc]){seen[cc]={cc,mkts:[],jur:ADDR_JUR_OF[cc]||null};out.push(seen[cc]);}
+    seen[cc].mkts.push(m.t);}));
+  return out;
+}
+function addrJurDefault(cc){return ADDR_JUR_DEFAULT[ADDR_JUR_OF[cc]]||ADDR_JUR_DEFAULT._fallback;}
+/* 生效值＝商家覆寫 → 法域預設（→ 核心 fallback，已在 addrJurDefault 內收斂） */
+function addrEff(cc,key){const o=ADDR_CFG[cc]||{};return o[key]||addrJurDefault(cc)[key];}
+function addrFieldSet(cc,key,v){
+  ADDR_CFG[cc]=ADDR_CFG[cc]||{};
+  if(v)ADDR_CFG[cc][key]=v;else delete ADDR_CFG[cc][key];
+  if(!Object.keys(ADDR_CFG[cc]).length)delete ADDR_CFG[cc];
+  addrCfgSave();setSubOpen('addr-fields',addrFieldsPage());
+  toast(v?`已為「${ADDR_CC_NAME[cc]||cc}」設定 ${key}＝${v}（已下發到前台）`
+         :`「${ADDR_CC_NAME[cc]||cc}」的 ${key} 已還原為法域預設`);
+}
+function addrFieldReset(cc){
+  delete ADDR_CFG[cc];addrCfgSave();setSubOpen('addr-fields',addrFieldsPage());
+  toast(`已還原「${ADDR_CC_NAME[cc]||cc}」的地址欄位設定為法域預設`);
+}
+function addrFieldResetAll(){
+  ADDR_CFG={};addrCfgSave();setSubOpen('addr-fields',addrFieldsPage());
+  toast('已還原全部國家的地址欄位設定為法域預設');
+}
+function openAddrFields(){setSubOpen('addr-fields',addrFieldsPage());setAfterRender();}
+/* 一列＝一個國家的一個設定。刻意不用 setRowSel：那支是 save bar 快照式（data-f），
+   這一頁的每次改動要立刻下發到前台才看得出三態差異，所以走即時 onchange。 */
+function addrSelRow(t,sub,cur,opts,onch,doc,inherited){
+  return `<div class="set-row"${doc?` data-doc="${doc}"`:''}>
+  <div class="sr-t"><b>${t}</b><span class="sub">${sub}</span></div>
+  <span class="set-ctl set-fld">${inherited?chip('沿用法域預設','default',''):chip('已覆寫','info','full')}
+   <select class="input" aria-label="${t}" onchange="${onch}">${
+    [['','沿用法域預設']].concat(opts).map(([v,l])=>
+      `<option value="${v}"${String(v)===String(cur)?' selected':''}>${l}</option>`).join('')
+   }</select></span></div>`;
+}
+function addrFieldsPage(){
+  const rows=addrCountries().map(c=>{
+    const o=ADDR_CFG[c.cc]||{},d=addrJurDefault(c.cc),nm=ADDR_CC_NAME[c.cc]||c.cc;
+    const dl=k=>(ADDR_TRI.concat(PHONE_ENF).find(x=>x[0]===d[k])||['','—'])[1];
+    return `<div class="card"><div class="card-pad">
+      <h3>${H(nm)}　<span class="mono" style="font-size:var(--t-xs)">${H(c.cc)}</span></h3>
+      <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+        所屬市場：${H(c.mkts.join('、'))}　·　法域 pack：<b>${c.jur?H(c.jur):'尚未建立'}</b></p>
+      ${addrSelRow('郵遞區號',`法域預設：<b>${dl('postal_code')}</b>　·　目前生效：<b>${(ADDR_TRI.find(x=>x[0]===addrEff(c.cc,'postal_code'))||['','—'])[1]}</b>`,
+        o.postal_code||'',ADDR_TRI,`addrFieldSet('${c.cc}','postal_code',this.value)`,'sub-addr-postal',!o.postal_code)}
+      ${addrSelRow('電話格式驗證',`法域預設：<b>${dl('phone_enforcement')}</b>　·　目前生效：<b>${(PHONE_ENF.find(x=>x[0]===addrEff(c.cc,'phone_enforcement'))||['','—'])[1]}</b>`,
+        o.phone_enforcement||'',PHONE_ENF,`addrFieldSet('${c.cc}','phone_enforcement',this.value)`,'sub-addr-phone',!o.phone_enforcement)}
+      <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">${H(d.why)}</p>
+      ${Object.keys(o).length?`<div class="card-sec"><button class="btn btn-ghost btn-sm" onclick="addrFieldReset('${c.cc}')">還原本國設定為法域預設</button></div>`:''}
+      </div></div>`;}).join('');
+  return setCrumb('📮','地址表單欄位（依國家／市場）','checkout')
+  +`<div class="card card-pad" data-doc="sub-addr-fields"><h3>為什麼這是設定，不是寫死的行為</h3>
+    <p class="help">郵遞區號要不要強制，是<b>商家對每個國家各自決定</b>的事。系統只提供三態
+    （不顯示／選填／必填）與各法域的<b>預設值</b>；預設值只是預設值，這一頁的每一列都能覆寫。<br>
+    🔴 反面教材：上一輪把香港的郵遞區號欄整欄拿掉，理由是一條<b>未查證</b>的「香港不使用郵遞區號」——
+    那不是「做了設定」，是把商家的選擇權變成寫死的行為，商家連「我要收」都做不到。<br>
+    值域與覆寫規則見 <span class="mono">limits.yml checkout.address_field_*</span>；
+    各法域預設值見 <span class="mono">jurisdictions.&lt;code&gt;.address</span>。</p></div>
+   ${rows}
+   <div class="card card-pad" data-doc="sub-addr-fallback"><h3>解析順序與下發</h3>
+    <p class="help">① 本頁的商家覆寫（逐國）→ ② 該市場法域 pack 的 <span class="mono">address</span> 預設值
+    → ③ 核心 fallback <span class="mono">checkout.address_field_fallback</span>（郵遞區號 optional、電話 warn）。<br>
+    ③ 是<b>寫出來的</b> fallback 不是靜默預設：地址欄位形態屬表單形態、不是法域能力閘門，
+    所以不列入 <span class="mono">jurisdiction.required_capabilities</span>；相對地，fallback 一律取
+    「不擋使用者」那一邊——未查證的格式規則不該擋人輸入。<br>
+    ⚠ 本原型的下發通道是瀏覽器 <span class="mono">localStorage</span>（key
+    <span class="mono">${ADDR_CFG_KEY}</span>），改完即時生效，同源開啟前台原型就看得到三態差異；
+    正式版走 <span class="mono">shops.settings</span> JSON ＋ mutation，不是 localStorage。</p>
+    <div class="card-sec"><button class="btn btn-ghost btn-sm" onclick="addrFieldResetAll()">全部還原為法域預設</button></div></div>`;
+}
+
 /* ---------- E2 手動付款方式 ---------- */
 let MP_ID=0;
 function openManualPay(i){MP_ID=i;setSubOpen('manual-pay',manualPayPage());setAfterRender();}
@@ -7836,23 +7949,39 @@ function coPickContact(){
     formCheck();
   });
 }
+/* 🔴 後台自己的地址表單也吃同一份「地址表單欄位（依國家／市場）」設定——
+   否則會出現「商家設了本國不收郵遞區號，前台不問、後台還在問」的兩套行為。
+   國家預設值改為基準法域香港（鐵律 11），原本寫死的台灣預設與台北範例地址一併更正。 */
 function coAddAddr(){
+  const d=addrCountries()[0]||{cc:'HK'};
   openGen({title:'新增運送地址',body:`<div class="stack">
-    ${F('國家／地區',SEL('_ac',['台灣','香港','馬來西亞','United States'],'台灣'),'國家決定市場、稅務登記與可用運送區域')}
-    ${F('地址',TXT('_a1','','例：台北市信義區松智路 100 號 12 樓','req|max:255'))}
-    ${F('郵遞區號',TXT('_az','','110'))}</div>`,
+    ${F('國家／地區',SEL('_ac',addrCountries().map(c=>[c.cc,ADDR_CC_NAME[c.cc]||c.cc]),d.cc,'onchange="coAddrCountry(this.value)"'),'國家決定市場、稅務登記、可用運送區域，以及這張表單要不要收郵遞區號')}
+    ${F('地址',TXT('_a1','','例：香港中西區皇后大道中 88 號 12 樓','req|max:255'))}
+    <div id="coAddrZipBox">${coAddrZipHTML(d.cc)}</div></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
      <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="coAddrDone()">新增地址</button>`});
 }
+/* 三態同前台：hidden 不渲染也不收集、optional 渲染不驗、required 渲染且驗 */
+function coAddrZipHTML(cc){
+  const m=addrEff(cc,'postal_code');
+  if(m==='hidden')return `<p class="mut3" style="font-size:var(--t-xs)">「${H(ADDR_CC_NAME[cc]||cc)}」的郵遞區號設為<b>不顯示</b>，本表單不收集（設定 › 結帳 › 地址表單欄位）。</p>`;
+  return F(`郵遞區號${m==='required'?'':'（選填）'}`,TXT('_az','','',m==='required'?'req':''),
+    `目前設定：${m==='required'?'必填':'選填'}——可在「設定 › 結帳 › 地址表單欄位（依國家／市場）」逐國調整`);
+}
+function coAddrCountry(cc){const el=document.getElementById('coAddrZipBox');if(el)el.innerHTML=coAddrZipHTML(cc);}
 function coAddrDone(){
-  const c=(document.querySelector('#genBody [data-f="_ac"]')||{}).value||'台灣';
+  const cc=(document.querySelector('#genBody [data-f="_ac"]')||{}).value||(addrCountries()[0]||{cc:'HK'}).cc;
+  const c=ADDR_CC_NAME[cc]||cc;
   const a=((document.querySelector('#genBody [data-f="_a1"]')||{}).value||'').trim();
   if(!a){toast('請先填寫地址');return;}
+  const zEl=document.querySelector('#genBody [data-f="_az"]');
+  if(addrEff(cc,'postal_code')==='required'&&!((zEl||{}).value||'').trim()){
+    toast('這個國家的郵遞區號設為必填，請先填寫');if(zEl)zEl.closest('.field').classList.add('bad');return;}
   closeGen();
   document.getElementById('loAddrVal').value=c+'｜'+a;
   document.getElementById('coAddrBox').innerHTML=`<p class="addr">${H(a)}<br>${H(c)}</p>`;
   document.getElementById('coMarket').innerHTML=
-    `<span class="tagchip" style="margin:0">🌐 ${H(c==='台灣'?'台灣':'International')}</span>
+    `<span class="tagchip" style="margin:0">🌐 ${H(ADDR_JUR_OF[cc]?c:'International')}</span>
      <span class="mut3" style="font-size:var(--t-2xs)">依「${H(c)}」推導</span>`;
   formCheck();
   toast('已填入運送地址——市場依國家自動推導，不可手動指定');
@@ -8900,6 +9029,21 @@ Object.assign(DOCS,{
  "sub-ck-field":{t:"單一欄位三態",f:"設定該欄不顯示／選填／必填",
   l:"改成「不顯示」不會刪除既有訂單上的值——訂單存的是下單當下的地址快照，設定只影響之後的結帳表單",
   i:"P0・[tbl:checkout_field_config(shop_id,field_key,visibility)]；訂單側 [tbl:order_addresses] 為快照"},
+ "set-ck-addrfields":{t:"地址表單欄位（依國家／市場）入口",f:"進次級視圖逐國設定郵遞區號與電話格式",
+  l:"與上一列的差別：那三欄是<b>全店一份</b>的結帳欄位配置，這一頁是<b>逐國</b>——同一家店賣到香港與台灣，郵遞區號的必要性本來就不一樣（使用者 2026-08-12 裁定：「可以針對不同國家進行強制開啟」）",
+  i:"P1・[api:checkoutSettingsUpdate]（per-market payload）[tbl:shops.settings JSON key `checkout.address_field.<market>.*`，19-F4 key 註冊表]"},
+ "sub-addr-fields":{t:"地址表單欄位・依國家／市場",f:"逐國設定郵遞區號三態與電話格式驗證強度",
+  l:"🔴 <b>法域預設值只是預設值，商家一定能覆寫</b>（limits.yml checkout.address_field_merchant_override_allowed＝true）——上一輪把香港的郵遞區號欄整欄拿掉，那是把商家的設定權變成寫死的行為。三態語義：hidden＝不渲染且不收集（既有訂單快照的舊值仍保留）／optional＝渲染、可空、有值才驗格式／required＝渲染、不可空、格式錯即擋。同一條裁定精神套用到電話格式：規則是 per-jurisdiction 設定不是寫死的行為，且<b>未查證的規則不得阻擋輸入</b>（hk V-35／tw 只涵蓋行動門號 ⇒ 兩者預設都是 warn）",
+  i:"P1・[api:checkoutSettingsUpdate] [tbl:shops.settings JSON]；原型下發通道＝localStorage（同源時前台原型即時吃到），正式版不是 localStorage"},
+ "sub-addr-postal":{t:"郵遞區號三態（單一國家）",f:"設定該國郵遞區號不顯示／選填／必填",
+  l:"值域取自 limits.yml checkout.field_visibility_modes，不硬編；空值＝沿用該國法域 pack 的 jurisdictions.&lt;code&gt;.address.postal_code。⚠ 香港預設是 optional 而不是 hidden：「香港不使用郵遞區號」是上一輪未查證就下的結論，用 hidden 當預設等於把同一條未查證假設換個位置繼續寫死；optional 兩邊都不賭——要收就改 required，確定用不到就改 hidden（V-34 查證後再調整預設）",
+  i:"P1・[tbl:shops.settings `checkout.address_field.<cc>.postal_code`] enum(hidden,optional,required)；前台 storefront 依此渲染與驗證"},
+ "sub-addr-phone":{t:"電話格式驗證強度（單一國家）",f:"設定該國電話格式不驗證／提示但放行／格式錯就擋",
+  l:"🔴 <b>沒有格式規則時，就算設成「格式錯就擋」也擋不了格式</b>——該法域的 phone_regex 為 null（未查證）時只做 min_digits 防呆。這是刻意的：不得執行一條不存在的規則，更不得為了「有驗證」而臆造一條。上一輪香港寫死 <span class=\"mono\">^[2-9]\\d{7}$</span> 並直接阻擋送出，那條式子本身未經查證",
+  i:"P1・[tbl:shops.settings `checkout.address_field.<cc>.phone_enforcement`] enum(off,warn,block)；regex 來自 limits jurisdictions.&lt;code&gt;.address.phone_regex"},
+ "sub-addr-fallback":{t:"解析順序與下發說明",f:"說明三層解析與原型的下發通道",
+  l:"①商家逐國覆寫 →②法域 pack 預設 →③核心 fallback。③ 是<b>寫出來的</b> fallback 不是靜默預設（56 §0.2 原則 2「未宣告 ≠ none」）：地址欄位形態屬表單形態不是法域能力閘門，所以不列入 jurisdiction.required_capabilities；fallback 一律取「不擋使用者」那一邊",
+  i:"P1・limits.yml checkout.address_field_fallback；原型下發＝localStorage key chilllove.checkout.address_field"},
  "sub-ck-fieldrule":{t:"跨欄硬規則說明",f:"列出三條不可由 UI 破壞的約束",
   l:"① require_login ⇒ email（limits.yml checkout.require_login_forces_email_contact）② SMS 同意永不預勾（同檔 sms_consent_never_prechecked）③ 姓名格式與三欄分表存（44 §18.2 姓名有自己的變體）",
   i:"P0・三條都在後端 validator 落地，不能只做前端 disabled [tbl:checkout_settings,checkout_field_config]"},

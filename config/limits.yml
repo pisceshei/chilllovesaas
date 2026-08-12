@@ -104,6 +104,38 @@ jurisdiction:
     dispute.tax_event_on_lost: jurisdictions.<code>.accounting.chargeback_lost_treatment
 
 # =============================================================================
+# 0b. 金額顯示位數（2026-08-12 使用者裁定）
+# =============================================================================
+# 使用者原話：「金額數字可以顯示兩位小數．這個適用於所有國家的貨幣金額。」
+#
+# 🔴 **這是產品決策，不是 ISO 4217 慣例。** ISO 4217 給 JPY／TWD／KRW／VND 等幣別的
+#    minor unit 是 **0**（不顯示小數）；本專案刻意**統一顯示兩位**，因為：
+#    ①同一張報表併排多市場金額時，位數不一致會讓對齊（tabular-nums）失效；
+#    ②「1,480」與「1,480.00」在對帳時是兩種可信度不同的字串，統一位數少一類人工誤判。
+#
+# 🔴 **下一個人請先讀這段再動手**：看到 `jurisdictions.jp.currency_format.exponent: 2`
+#    不要當成 bug 修回 0。若日後要恢復依 ISO 顯示，**改的是各 pack 的 exponent 這一欄**，
+#    不是刪掉 exponent 欄位——欄位結構（符號／位置／位數／分組全部是市場資料）是對的抽象，
+#    只是目前所有市場的值都一樣。刪掉欄位＝把「顯示位數是市場資料」這個事實從程式碼裡抹掉，
+#    等到第一個要用 ISO 位數的市場進來時就要重做一次抽象。
+currency_display:
+  force_minor_unit_digits: 2
+  applies_to: all_markets
+  # 被本決策覆蓋的 ISO 4217 zero-decimal 幣別（只列本專案原型／limits 現有的；非窮舉）
+  iso4217_zero_decimal_overridden: [JPY, TWD]
+  # 顯示位數 ≠ 儲存尺度：儲存一律 integer cents（×100，鐵律 3），本鍵只影響顯示。
+  storage_scale_unchanged: true
+  # 範圍＝**完整金額顯示**（fmtMoney／fmt）。KPI 磚與圖表軸的**縮寫**（2.06M／485K／1.2 億）
+  # 不在本規則內：那是位數壓縮的近似值，`M`／`K` 後面的小數不是幣別的 minor unit，
+  # 補成 `485.00K` 只會讓軸標籤更難讀。裁定原文強調的是「適用於所有國家」——
+  # 要解決的是「JPY／TWD 0 位、其餘 2 位」的跨市場不一致，不是縮寫顯示。
+  # 🔴 若日後要連縮寫也統一兩位，改的是 fmtMoneyCompact 的尾隨零裁切，**不是** exponent。
+  applies_to_compact_abbreviations: false
+  # 恢復 ISO 行為的方式（保留在這裡，免得日後靠考古）
+  restore_iso_behaviour_by: set jurisdictions.<code>.currency_format.exponent to ISO minor unit
+  source: 使用者 2026-08-12 裁定（ours；**非** ISO 4217）
+
+# =============================================================================
 # 1. API 契約（GraphQL）
 # =============================================================================
 api:
@@ -175,6 +207,14 @@ idempotency:
     - giftCardDeactivate         # 天然冪等，列入以統一契約（55 §A M31）
     - storeCreditAccountCredit   # 重複發放（55 §A M23）
     - storeCreditAccountDebit    # 重複扣抵 ⇒ 顧客資損（55 §A M24）
+    # --- 以下 4 支為 58 號（物流商對接）補齊，判定標準同上：不可重試的外部副作用。
+    #     與前面 22 支的差別：前者的副作用在**我方 DB 內**（可用條件式 UPDATE 兜底），
+    #     這 4 支的副作用在**物流商那邊**（我方無法回滾）。重試一次＝多一張運單、多一筆運費，
+    #     而且多出來的那張沒有人會去銷號 ⇒ 直接漏錢。見 docs/specs/58 §E.1。
+    - shipmentIntentCreate       # 觸發取號（K2）；重試 ⇒ 多一張運單（58 §A.2 K2）
+    - shipmentVoid               # 銷號為破壞性動作；號碼若已被物流商回收再發，二次 void 可能誤傷（58 §D.5）
+    - shipmentCancel             # 重覆取消污染錯誤率指標與熔斷器（58 §F.5）
+    - carrierPickupSchedule      # 重試 ⇒ 多一次上門取件，部分物流商對空跑計費（58 §C.5）
   # 平台域強制清單（與租戶 GraphQL 層解耦；兩者不得混用同一個 resolver 檢查點）。
   # 這兩支的簽名本就有 idempotencyKey!（38:1061–1062），列入使「唯一真相」成立。
   # 🔴 **本清單與上面的 `required_for` 不同：它是 pack-scoped 的**（57 §G-08 發現，56 §E 未涵蓋）。
@@ -195,6 +235,12 @@ idempotency:
     draftOrderComplete:        [draft_order_id]
     giftCardDebit:             [checkout_token, gift_card_id]
     storeCreditAccountDebit:   [checkout_token, store_credit_account_id]
+    # 58 號補：`package_fingerprint` ＝ packages[] 正規化 JSON 的 SHA-256。
+    # 必須套用上面的 `fingerprint_normalize_field_order`，否則同一批包裹換欄位順序會被誤判成不同請求。
+    shipmentIntentCreate:      [fulfillment_order_id, carrier_account_id, service_code, package_fingerprint]
+    shipmentVoid:              [waybill_id]
+    shipmentCancel:            [waybill_id]
+    carrierPickupSchedule:     [carrier_account_id, location_id, pickup_window_start, pickup_window_end]
 
 # =============================================================================
 # 3. 訂單／取消／編輯
@@ -463,6 +509,30 @@ abandoned_checkout:
 checkout:
   # 表單欄位三態。出處：46c:756–768（help）、44:369–371（live）
   field_visibility_modes: [hidden, optional, required]
+  # --- 地址欄位形態：法域給**預設值**，商家逐市場覆寫（2026-08-12 使用者裁定）---
+  # 使用者原話：「郵遞區號可以在後台設定是否需要強制．可以針對不同國家進行強制開啟．
+  #              香港地區沒有就可以設定為不用填寫。」
+  # 🔴 反面教材（本輪修正的就是它）：2026-08-12 上一輪把 HK 的郵遞區號欄**整欄拿掉**，
+  #    理由是一條未查證的「香港不使用郵遞區號」。那等於把商家的設定權變成寫死的行為——
+  #    商家連「我要收」都做不到。**法域預設值只是預設值**，商家一定要能覆寫。
+  address_field_defaults_ref: jurisdictions.<code>.address
+  address_field_modes_ref: checkout.field_visibility_modes      # 同一組三態，不另立值域
+  address_field_merchant_override_allowed: true                 # 🔴 不得做成不可改
+  address_field_override_scope: per_market                      # 「針對不同國家分別設定」
+  address_field_override_storage: shops.settings JSON key `checkout.address_field.<market>.*`（19-F4 key 註冊表）
+  # 商家未覆寫 ⇒ 取該市場法域 pack 的 `address.*`；pack 也沒宣告 ⇒ 取下方**已宣告的**核心 fallback。
+  # 🔴 這個 fallback 是**寫出來的**，不是靜默預設（56 §0.2 原則 2）：地址欄位形態是表單形態
+  #    不是法域能力閘門，所以它**不列入** `jurisdiction.required_capabilities`；相對地，
+  #    fallback 一律取「不擋使用者」那一邊——未查證的格式規則不該擋人輸入。
+  address_field_fallback:
+    postal_code: optional          # 顯示、但不驗證、不阻擋
+    postal_code_regex: null
+    phone_enforcement: warn        # off | warn | block
+    phone_regex: null
+  # `hidden` 的語義：欄位不渲染且**不收集**，既有訂單快照裡的舊值仍保留（同 field_visibility_modes）。
+  # `optional`：渲染、可空；有值且該市場有 regex 時才驗格式，失敗只提示不阻擋。
+  # `required`：渲染、不可空；有 regex 時格式錯即阻擋送出。
+  address_field_hidden_means_not_collected: true
   # 「要求登入」⇒ 強制 email 通道（欄位聯動硬規則）。出處：46c:756–768（help）、44:369（live）
   require_login_forces_email_contact: true
   # SMS 行銷同意永不可預先勾選。出處：46c:756–768（help）
@@ -541,6 +611,238 @@ cod:
   settlement_idempotency_key: [carrier, statement_id, row_no]
   # 金額不符時**不得**自動回寫 paid（現金流入口，差 1 元也不放行）。
   settlement_mismatch_action: hold_for_manual_review
+
+# =============================================================================
+# 11b. 物流商對接（carrier）——規格見 docs/specs/58-carrier-integration.md
+# -----------------------------------------------------------------------------
+# 🔴 **本區塊法域無關**。物流商「能做什麼」是廠商的 API 決定的，與法域無關；
+#    物流商「在哪裡可用」才是法域的函數，那部分走 `carrier.packs.*.serviceable_lanes`
+#    與 `jurisdictions.<code>.pickup_networks` 的交集（58 §H）。
+#    **carrier pack 與 jurisdiction pack 正交，不得互相繼承、不得合併成一層。**
+# =============================================================================
+carrier:
+  # --- 能力宣告的 fallback 契約（與 56 §A.3 同構；理由見 58 §A.3）---------------
+  # 「未宣告」與「宣告不支援」在程式上長得一樣，但風險完全相反：
+  #   supported: false ⇒ 有人想過，並決定了降級行為
+  #   沒填            ⇒ 沒人想過 —— 靜默當成 false 就是把「還沒設計」偽裝成「已設計好的降級」
+  undeclared_capability_action: reject
+  allowed_fallback_actions: [reject, manual_queue, documented_no_op]
+  silent_fallback_forbidden: true
+  # 走了降級路徑一律落一列（「什麼都沒做」必須看得見）。與 jurisdiction_capability_skips 同理由。
+  capability_skips_table: carrier_capability_skips
+
+  # --- 十三項能力（58 §A.1）-----------------------------------------------------
+  # required：對照組四家物流商全部具備、且形態一致的操作。
+  #   「必宣告」不等於「必須支援」——寫 supported: false 也算宣告，但必須附 reason。
+  #   K4 shipment_void 之所以在 required 裡：缺席它的後果是**財務性**的（背著「取了沒用的號要付錢」
+  #   這個負債卻不自知），不是功能性的。
+  required_capabilities:
+    - rate_quote            # K1 運費試算
+    - shipment_create       # K2 建立運單並取號
+    - label_render          # K3 面單檔案產出
+    - shipment_void         # K4 銷號（把號還回去）
+    - shipment_cancel       # K5 取消運送安排
+    - tracking_pull         # K6 主動查詢路由
+    - tracking_push         # K7 路由推送（webhook）
+  optional_capabilities:
+    - pickup_schedule       # K8
+    - cod                   # K9
+    - customs_doc           # K10
+    - service_point         # K11
+    - address_validate      # K12
+    - billing_reconciliation # K13
+
+  # --- 每項能力的宣告欄位（CI-1 就是拿這張表去驗每個 pack）----------------------
+  # 通則：每一項至少要有 `supported`（true/false，**不得為 null**）；
+  #       supported: false 時 `reason` 必填非空（reason 會原樣顯示在 carrier 設定頁與降級處的 UI 文案，
+  #       所以不得在前端硬編說明文字 —— 58 §B.2 通則 3）。
+  capability_schema:
+    _common: [supported, reason]
+    rate_quote:      [currency_scope, includes_surcharges]
+    # allocates_number：下單是否同時發號（多數如此）；
+    # lookup_by_client_reference：能否用我方帶過去的識別回查 —— 為 false 時 unknown 一律進人工佇列，
+    #   **不得假設查得到**（58 §F.4 前提 2）。
+    shipment_create: [allocates_number, lookup_by_client_reference, max_packages_per_shipment]
+    # formats/sizes 為離散值域：商家選了 pack 沒宣告的格式 ⇒ 設定期就擋（LABEL_FORMAT_UNSUPPORTED），
+    # 不是等到列印時才失敗。billable_per_render 為 true 的 pack 需改走帶冪等 key 的批次作業（58 §E.3）。
+    label_render:    [formats, sizes, reprint_allowed, billable_per_render]
+    # 🔴 四欄缺一不可（58 §A.2 K4）：
+    #    window_hours    —— 過期不是「還沒做」而是「做不到了」，人工處置不同
+    #    frees_number    —— unknown 時一律不重用號碼
+    #    billed_if_unused—— **這一欄決定逾期未銷的告警等級**：true ⇒ P1 財務事故；false ⇒ P3 資料清理
+    shipment_void:   [window_hours, frees_number, billed_if_unused]
+    shipment_cancel: [window_hours, refunds_freight]
+    tracking_pull:   [supports_batch, max_numbers_per_call]
+    tracking_push:   [push_verification, event_code_vocabulary]
+    pickup_schedule: [min_lead_time_minutes, cancellable, charges_for_no_show]
+    # effective_cod_max = min(carrier.cod.max_cents, jurisdictions.<buyer>.pickup_networks.cod_max_cents)
+    # 任一為 null ⇒ reject，**不得當作無上限**（58 §A.2 K9）。
+    cod:             [max_cents, currency, settlement_file_available, settlement_cycle_days]
+    customs_doc:     [document_types, electronic_submission]
+    service_point:   [network_brands, supports_locker]
+    address_validate: [granularity]
+    billing_reconciliation: [file_format, delivery_channel, cycle_days]
+
+  # --- 金額（鐵律 3）------------------------------------------------------------
+  money:
+    storage: integer_cents
+    # 物流商回的是十進位字串或 JSON number；一律 BigDecimal 解析，全程不經 Float。
+    parse_from_carrier: decimal_string_only
+    float_parsing_forbidden: true
+    # 小數位超出 storage_multiplier 能表示的位數（＝2）⇒ raise，**不得 round**。
+    # 吞掉它會讓對帳永遠差幾分錢卻查不出來（58 §G.3 規則 2）。
+    round_forbidden: true
+    # 🔴 換算尺度**一律 ×100，不看幣別**。依 `currency_display.storage_scale_unchanged`
+    #    （2026-08-12 裁定）：儲存一律 integer cents ×100，ISO 4217 的 zero-decimal 幣別
+    #    （JPY／TWD）同樣 ×100。物流商回 JPY "1000" ⇒ 100000。
+    #    ⚠️ **不要**用 `jurisdictions.<code>.currency_format.exponent` 來換算——那一欄在同日的
+    #    裁定後已改為**顯示位數**（TWD 由 0 改為 2），不再是 ISO minor unit。拿它當換算基數
+    #    會在 zero-decimal 幣別上算出 100 倍誤差。
+    storage_multiplier: 100
+    storage_scale_source: currency_display.storage_scale_unchanged
+    # 顯示位數同樣恆為 2（currency_display.force_minor_unit_digits），符號由市場 locale 決定。
+    display_decimals: 2
+    display_digits_source: currency_display.force_minor_unit_digits
+
+  # --- 運單號＝有成本的資源（58 §D.5，本檔最容易被漏掉的一節）--------------------
+  waybill:
+    # 取號＝向物流商借了一個有價的資源。借了不用要還；不還，物流商照樣計費。
+    number_is_billable_resource: true
+    # 逾此時數仍在 ALLOCATED 且未交寄 ⇒ 自動銷號（有 K4）或入人工佇列（無 K4）。
+    unused_void_after_hours: 24
+    void_attempt_max: 3
+    void_ledger_table: waybill_void_ledger
+    reconcile_cron: daily
+    # 閉環不變量：Σ ALLOCATED == Σ HANDED_OVER + Σ VOIDED + Σ 寬限期內 + Σ ABANDONED_UNRESOLVED
+    # 且 Σ ABANDONED_UNRESOLVED 必須為 0；超過此門檻即告警（財務事故）。
+    unaccounted_alert_threshold: 1
+    # 同一張 FO 同時最多一張非終態運單。MySQL 8 無部分索引 ⇒ 以產生欄位 active_waybill_key
+    # （非終態時＝fulfillment_order_id、終態時＝NULL）＋唯一索引實作（58 §D.5(b) 場景 4）。
+    one_active_waybill_per_fulfillment_order: true
+    non_terminal_statuses: [ALLOCATED, LABEL_RENDERED]
+    terminal_statuses: [HANDED_OVER, VOIDED, ABANDONED_UNRESOLVED]
+
+  # --- 面單（58 §D.2–§D.4）-----------------------------------------------------
+  label:
+    formats_allowed: [pdf, zpl, png]
+    # ZPL 是**指令流**不是圖片：原樣位元組保存，禁止任何轉碼或字串正規化，改一個位元組就印歪。
+    zpl_byte_exact: true
+    batch_max_per_call: 50
+    batch_max_per_job: 500
+    render_timeout_ms: 15000
+    # 重印是內控關注點；沒有原因就無法查「為什麼這個倉庫每天重印 200 張」。
+    reprint_requires_reason: true
+    # 面單含收件人姓名／地址／電話 ⇒ PII。私有儲存 ＋ 簽名連結 ＋ 到期 purge（11 §0 維度 7）。
+    signed_url_ttl_seconds: 900
+    retention_days: 90
+
+  # --- 運費試算（58 §A.1 K1、§I）-----------------------------------------------
+  rate_quote:
+    # 結帳期預算遠緊於後台：超時寧可降級也不能拖垮結帳 p95（11 §0 維度 4）。
+    checkout_timeout_ms: 2000
+    admin_timeout_ms: 8000
+    # 降級是**已宣告**的行為，且必須落一列 carrier_capability_skips —— 不是靜默 fallback。
+    on_timeout: fallback_to_static_rates
+    cache_ttl_seconds: 300
+
+  # --- 追蹤（58 §C.4）-----------------------------------------------------------
+  tracking:
+    poll_interval_seconds: 3600
+    # 運單進終態後停止輪詢，否則每張歷史運單永久佔用配額。
+    stop_polling_on_terminal: true
+    # 物流商重送同一事件是常態，唯一索引去重，不得產生兩列時間軸。
+    push_dedupe_key: [shop_id, carrier_code, waybill_number, carrier_event_code, carrier_event_at]
+    # 驗簽失敗一律 401 且不落庫；未宣告驗簽方式的 pack 不得 enable（58 §C.4 第 2 點）。
+    push_verification_required: true
+
+  # --- 出貨編排（58 §F）---------------------------------------------------------
+  shipment_intent:
+    settle_timeout_ms: 20000
+    unknown_reconcile_after_seconds: 60
+    unknown_reconcile_max_attempts: 10
+    poll_backoff_seconds: [5, 15, 60, 300, 900]
+    # 🔴 本檔最重要的一條：逾時／連線中斷（unknown）**禁止自動重試**。
+    #    逾時不代表沒發生 —— 順豐官方自己就把查單介面定位成回應遺失時的補救手段（58 §0.4 SF-6）。
+    #    自動重試一個可能已成功的取號請求 ⇒ 兩張運單、兩筆運費，其中一張永遠不會被使用也不會被銷號。
+    auto_retry_on_unknown_forbidden: true
+    # unknown 只能靠回查解開；回查需要下單時帶我方唯一識別（＝shipment_intent id，不是 order name
+    # 也不是 FO id —— 同一張 FO 可能有多個 intent，用 FO id 回查會撈到舊的）。
+    reconcile_reference_source: shipment_intent_id
+
+  # --- 節流與熔斷（58 §F.5）-----------------------------------------------------
+  # 順豐官方兩份 PDF 均未載明限流／QPS（58 §0.4 SF-7 → V-46）⇒ 客戶端自我節流取保守值，
+  # **不假設物流商端無限制**。各 pack 可在 packs.<code>.client_qps 覆寫。
+  client_qps_default: 5
+  circuit_breaker:
+    # 熔斷粒度為 (shop_id, carrier_account_id) —— 不是 per carrier_code。
+    # 一個租戶的憑證失效不該影響其他租戶。
+    scope: [shop_id, carrier_account_id]
+    error_rate_threshold_bp: 5000
+    window_seconds: 60
+    open_seconds: 120
+    half_open_probes: 3
+    # 🔴 熔斷時**不得**自動改用另一家物流商 —— 那是靜默 fallback，會產生商家沒同意的運費。
+    auto_failover_to_other_carrier_forbidden: true
+
+  # --- 憑證（鐵律 2 ＋ 11 §1；58 §G.2）------------------------------------------
+  credentials:
+    storage: active_record_encryption
+    plaintext_forbidden: true
+    # 秘密欄位一律 non-deterministic 加密；需查詢的識別另存不敏感 label 供顯示（只顯示末四碼）。
+    secret_fields_deterministic_forbidden: true
+    # 單一事實來源：config.filter_parameters、錯誤上報過濾、CI grep 三處共用這份清單。
+    log_filter_keys:
+      - checkword
+      - check_word
+      - msg_digest
+      - msgDigest
+      - client_secret
+      - api_secret
+      - access_token
+      - refresh_token
+      - partner_id
+    # 🔴 Solid Queue 的 job 參數會落 DB 明文 ⇒ job 只帶 carrier_account_id，
+    #    由 adapter 執行時自行解密取用。把憑證塞進 job payload 等於在 solid_queue_jobs 存明文憑證。
+    job_payload_forbidden_keys: [checkword, check_word, client_secret, api_secret, access_token, refresh_token]
+    environment_enum: [sandbox, production]
+    cross_environment_use_forbidden: true
+
+  # --- pack 註冊表與 enable gate（58 §H.4）--------------------------------------
+  # enabled ⟺ ① K1–K7 全部有非 null 的 supported ∧ ② supported:false 者有非空 reason
+  #          ∧ ③ enable_gate 為空 ∧ ④ credential_schema 非空且已通過 carrierAccountTest
+  # 🔴 enable_gate 非空 ⇒ enabled 必須為 false（CI-2）。
+  #    本輪唯一可 enable 的是 manual —— 這是規格刻意的結果，不是缺漏：沒查證完就上線才是缺漏。
+  packs:
+    manual:
+      display_name: 手動出貨
+      enabled: true
+      enable_gate: []
+      # 十三項全部宣告 supported: false ＋ reason ⇒ 通過 gate。
+      # 它不是玩具：是所有 carrier 尚未接通時的正式營運路徑，也是任何 carrier 故障時的降級目的地。
+    sf_express:
+      display_name: 順豐速運
+      enabled: false
+      # 出處：docs/specs/58 附錄 A。V-39 面單格式／V-40 ZPL／V-42 銷號與計費／
+      #       V-43 香港站是否同一套 API／V-44 香港與國際服務代碼／V-47 推送驗簽／V-48 COD
+      enable_gate: [V-39, V-40, V-42, V-43, V-44, V-47, V-48]
+      # 官方 PDF 確認的端點（58 §0.4 SF-1）。網域寫法有 sfexpress.com / sf-express.com 兩說 ⇒ V-38。
+      endpoints_verified: false
+      serviceable_lanes: []   # V-43／V-44 未結案 ⇒ 空陣列＝無任何服務可用（正確的失效方向）
+    dhl_express:
+      display_name: DHL Express
+      enabled: false
+      enable_gate: [V-45]
+      serviceable_lanes: []
+    ups:
+      display_name: UPS
+      enabled: false
+      enable_gate: [V-45]
+      serviceable_lanes: []
+    fedex:
+      display_name: FedEx
+      enabled: false
+      enable_gate: [V-45]
+      serviceable_lanes: []
 
 # =============================================================================
 # 12. 商店抵用金（store credit）
@@ -838,15 +1140,35 @@ jurisdictions:
       outlying_island_rule: null
       verify_hk_pickup_contract_values: true
 
-    # 【currency_format】HKD；exponent 2（ISO 4217，hk-secondary）。
+    # 【address】地址表單的**預設形態**（不是法域能力閘門，見 checkout.address_field_*）。
+    # 🔴 每一鍵都只是**預設值**，商家可在後台逐市場覆寫（2026-08-12 裁定）。
+    address:
+      # 郵遞區號預設 `optional`（顯示、可空、不阻擋），**刻意不用 `hidden`**：
+      #   「香港不使用郵遞區號」是上一輪未查證就下的結論。用 `hidden` 當預設，等於把同一條
+      #   未查證假設換個位置繼續寫死；用 `optional` 則兩邊都不賭——想收的商家改 `required`、
+      #   確定用不到的商家改 `hidden`，兩個方向都只是改設定，不用改程式。
+      #   （若日後 V-34 查證確認香港確實無郵遞區號制度，再把預設改成 hidden 即可。）
+      postal_code: optional
+      postal_code_regex: null                  # ⚠ V-34 未查證 ⇒ 不得臆造格式來擋輸入
+      postal_code_label: null
+      verify_hk_postal_code_usage: true        # ⚠ V-34
+      # 電話：上一輪寫死 `^[2-9]\d{7}$`（香港 8 碼）**且直接阻擋送出**——同樣是未查證的假設
+      # 被寫成硬行為。規則本身應該是 per-jurisdiction 設定，而未查證的規則不得阻擋使用者。
+      phone_regex: null                        # ⚠ V-35 未查證（8 碼／首位數字域／固網與流動是否同式）
+      phone_enforcement: warn                  # off | warn | block（商家可覆寫）
+      phone_min_digits: 6                      # 法域無關的防呆下限，**不是**格式主張
+      verify_hk_phone_format: true             # ⚠ V-35
+
+    # 【currency_format】HKD；symbol／position／grouping 為 ISO 4217 慣例（hk-secondary）。
     #   CLAUDE.md 鐵律 10 的示例 `HK$1,480` 是整數金額的顯示樣態，不代表 exponent 為 0。
     currency_format:
       default_currency: HKD
       symbol: "HK$"
-      exponent: 2
+      exponent: 2               # ＝ISO 4217 值，同時符合 currency_display.force_minor_unit_digits
       symbol_position: prefix
       grouping: [3]
-      # 是否隱藏 .00 由 29 §3.3 的 rounding 設定決定，不在此寫死。
+      # 是否隱藏 .00：**不隱藏**（`currency_display.force_minor_unit_digits: 2` 一律顯示兩位）。
+      # 29 §3.3 的 rounding 設定管的是**金額本身**怎麼進位，不是顯示位數，兩者不要混。
       verify_hkd_display_convention: true
 
     # 【consumer_rights】香港**無**通訊交易的法定鑑賞期；適用 TDO（不公平營商手法）與
@@ -1053,11 +1375,27 @@ jurisdictions:
       fee_taxable: false
       verify_fee_taxable: true
 
+    # 【address】地址表單的**預設形態**（同 hk：只是預設值，商家可逐市場覆寫）。
+    address:
+      postal_code: required                    # 台灣地址實務上會收；商家仍可改 optional/hidden
+      postal_code_regex: '^\d{3}(\d{2}|\d{3})?$'
+      postal_code_label: 郵遞區號
+      verify_tw_postal_code_format: true       # ⚠ 3+2／3+3 的並行狀態未由本專案覆核
+      # ⚠ 原型原本用 `^09\d{8}$` **阻擋**送出——那條式子只涵蓋行動門號，市話（02-…）一律被擋。
+      #   規則保留為 pack 資料，但 enforcement 降為 warn，與 hk 同一條裁定精神。
+      phone_regex: '^09\d{8}$'
+      phone_enforcement: warn                  # off | warn | block（商家可覆寫）
+      phone_min_digits: 6
+      verify_tw_phone_format: true             # ⚠ 市話／預付卡／境外門號未涵蓋
+
     # 【currency_format】TWD。
     currency_format:
       default_currency: TWD
       symbol: "NT$"
-      exponent: 0                              # 42:508「TWD exponent=0 實務顯示整數」
+      # 🔴 exponent 2 是**產品決策**（`currency_display`，2026-08-12 裁定「所有國家的貨幣金額
+      #    都顯示兩位小數」），**不是** ISO 4217——ISO 給 TWD 的 minor unit 是 0，
+      #    42:508 也記著「TWD exponent=0 實務顯示整數」。看到 2 不要當 bug 改回 0。
+      exponent: 2
       symbol_position: prefix
       grouping: [3]
 
