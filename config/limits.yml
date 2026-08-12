@@ -1005,14 +1005,32 @@ carrier:
 
   # --- 面單（58 §D.2–§D.4）-----------------------------------------------------
   label:
-    # 🔴 `zpl` 留在值域裡，但**不是因為順豐支援**（順豐不支援，且我方首發不建 ZPL 路徑，58 §D.2）。
-    #    它留著是因為 DHL／UPS／FedEx 原生支援 —— 為了一家不支援就把值從抽象層拿掉，等於讓抽象層
-    #    遷就單一 pack，正是 58 §0.2 原則 1 要防的事。
-    #    ⚠️ 值域裡有 `zpl` **不等於**任何 pack 宣告了 `zpl`：pack 級的 label_render.formats 才是權威。
-    formats_allowed: [pdf, zpl, png]
+    # 🔴 2026-08-12 第三輪（裁定二）：值域新增 `html`。原值域為 [pdf, zpl, png]，寫於「順豐面單格式未知」
+    #    的時期。使用者選定的兩支面單介面是 COM_RECE_CLOUD_PRINT_WAYBILLS（→PDF，關聯 2024）與
+    #    COM_RECE_CLOUD_PRINT_HTML（→HTML，關聯 2026，新介面）—— 順豐是**一種輸出一支介面**，
+    #    不是同一支介面用參數切格式。html 因此成為第一個真的會被 pack 宣告的非 PDF 格式。
+    #
+    # 🔴 `zpl` 留在值域裡的理由也在同一輪被改寫（結論不變、理由整段換掉，58 §D.2）：
+    #    ❌ 二輪的理由「順豐不支援 ZPL」是**錯的** —— 順豐有 COM_RECE_CLOUD_PRINT_COMMAND
+    #       （雲打印面單轉指令接口，SF-27）。
+    #    ✅ 現行理由：DHL／UPS／FedEx 原生支援，屬抽象層值域；而我方**首發不接指令流是範圍決策**，
+    #       不是技術限制 —— 差別在於前者隨時可以加（加一支服務代碼），後者會讓人以為做不到。
+    #    ⚠️ 順豐的「指令」未載明是 ZPL 還是 TSPL／CPCL（V-54）—— 要接之前先確認方言，不得假設。
+    #    ⚠️ 值域裡有某個格式 **不等於** 任何 pack 宣告了它：pack 級的 label_render.formats 才是權威。
+    formats_allowed: [pdf, html, zpl, png]
     # ZPL 是**指令流**不是圖片：原樣位元組保存，禁止任何轉碼或字串正規化，改一個位元組就印歪。
-    # 規格先寫好、程式後做 —— 等第一個原生輸出 ZPL 的 pack 真的要上線時再實作（58 §D.2 V-40 結案）。
+    # 規格先寫好、程式後做 —— 等第一個真的要用熱感標籤機的 pack 上線時再實作（58 §D.2 V-40）。
     zpl_byte_exact: true
+    # --- html 面單的三條專屬規則（58 §D.2、§D.3；三輪新增）------------------------
+    # 🔴 原樣保存、不得改寫 DOM／注入樣式或腳本。與 zpl_byte_exact 同一個理由，只是載體不同：
+    #    ZPL 改一個位元組印歪，HTML 改一個節點就是**竄改面單內容**。
+    html_dom_rewrite_forbidden: true
+    # 🔴 HTML 面單來自外部系統，直接塞進 admin 的 DOM 等於把第三方 HTML 當自己的頁面執行。
+    #    一律 sandbox iframe ＋ 不繼承 admin session。這是 pdf 沒有的風險，新增格式就要新增防線。
+    html_render_sandboxed: true
+    # 🔴 批次不得合併成單一 HTML：DOM 合併會破壞分頁與樣式 ⇒ 印出來的與物流商產出的不同 ＝ 等同竄改。
+    #    要單檔就走 pdf；要 html 就逐張輸出。
+    html_batch_merge_forbidden: true
     batch_max_per_call: 50
     batch_max_per_job: 500
     render_timeout_ms: 15000
@@ -1054,6 +1072,16 @@ carrier:
     #    這不是強驗證，但它把攻擊面從「任何人可對任意租戶灌任意事件」縮到「必須先知道一個真實
     #    運單號才能對該運單灌事件」。必須寫成常數，否則實作者在沒有簽章可用時只會直接放行。
     push_source_ip_allowlist_required: true
+    # 🔴 2026-08-12 第三輪新增（58 §C.4）：未知事件碼的 fail-safe。
+    #    背景：順豐本輪宣告 tracking_push: false（6 支不含推送）⇒ V-47 的「驗簽」一問移出 gate。
+    #    ⚠️ 但**事件碼值域的問題並沒有消失，它換到 K6 去了** —— EXP_RECE_SEARCH_ROUTES 拉回來的
+    #       路由事件同樣帶操作碼，同樣要映射到我方的 fulfillment event 值域，而順豐官方**未列舉**
+    #       操作碼（SF-17，只給示例 50／922，不得當值域）。
+    #    處置：未在 pack 映射表內的事件碼 ⇒ ①照樣入時間軸（顯示原始文字，不丟事件）；
+    #          ②不得映到任何終態；③**絕對不得**推導出 DELIVERED 或 READY_FOR_PICKUP
+    #          （「到店領取 ≠ 已送達」在未知碼上更危險，因為猜錯的方向通常是「看起來像送達」）；
+    #          ④未知碼比例進 dashboard —— 比例上升代表物流商改了值域。
+    unknown_event_code_action: timeline_only_no_state_change
 
   # --- 出貨編排（58 §F）---------------------------------------------------------
   shipment_intent:
@@ -1131,15 +1159,29 @@ carrier:
     sf_express:
       display_name: 順豐速運
       enabled: false
-      # 出處：docs/specs/58 附錄 A（2026-08-12 第二輪查證後更新）。
-      #   V-39 面單欄位與格式／V-41 完整介面目錄／V-42 銷號與計費／V-43 香港能否為寄件地／
-      #   V-44 服務代碼數值／V-47 推送驗簽與事件碼／V-48 COD／V-51 msgDigest 演算法
-      # 變動：移除 V-40（已由我方架構決策結案，58 §D.2：zpl 留在抽象層值域，順豐 pack 不建 ZPL 路徑）。
-      #       新增 V-41 與 V-51。
-      # 🔴 V-51 是本輪才補進來的，而它是**第一號阻塞項** —— 簽章演算法不明＝一個請求都送不出去。
-      #    它原本因為在 58 §0.4(b) 被誤標成 V-40（ZPL）而完全不在 gate 裡。
-      #    教訓：gate 要定期對照「實作者第一天會卡在哪」重新檢查，不能只累加。
-      enable_gate: [V-39, V-41, V-42, V-43, V-44, V-47, V-48, V-51]
+      # 出處：docs/specs/58 附錄 A（2026-08-12 **第三輪**使用者裁定後更新）。
+      #   V-39 面單欄位／模板／尺寸（**格式已定案為 [pdf, html]，不再是缺口**）
+      #   V-41 逐介面欄位表（**目錄層已取得**，剩欄位表 —— 沒有它組不出任何請求）
+      #   V-42 銷號計費／時間窗／mailno 是否回收（**合約問題，不會由任何文檔回答**）
+      #   V-51 msgDigest 簽章演算法（🔴 **第一號阻塞項：算不出簽章＝一個請求都送不出去**）
+      #
+      # 🔴 第二輪值為 [V-39, V-41, V-42, V-43, V-44, V-47, V-48, V-51]（8 項），本輪移出 4 項：
+      #   移出 V-43／V-44 —— **裁定一**：使用者已實際以香港為發貨地開發過（58 §0.4 SF-25）。
+      #     二輪從「丰橋公開文檔全篇以內地為寄件地」推出「香港不能當 origin」，那是**從文檔缺席
+      #     推得的否定結論**，權威性低於一手實作經驗。缺的只剩 express_type **數值** ⇒ 閘門**下移到
+      #     lane 級**（service_code: null ⇒ 該 lane 不可選），不再鎖整個 pack。**用最小的鎖，鎖最小的範圍。**
+      #   移出 V-47／V-48 —— **裁定二**（範圍決策）：6 支不含路由推送、不含 COD ⇒ K7／K9 宣告
+      #     supported: false ＋ reason。V 編號是用來擋「**不知道**會做錯事」的，不是用來擋
+      #     「**我們決定不做**這件事」；宣告完整就通過 58 §A.3。
+      #     ⚠️ 但移出時要檢查問題有沒有換一個入口回來 —— V-47 的「事件碼值域」就換到 K6 去了，
+      #        以 carrier.tracking.unknown_event_code_action 的 fail-safe 接住。
+      #
+      # 🔴 **本輪的新資訊完全沒有觸及 V-51 與 V-42** —— gate 從 8 項減到 4 項，第一號阻塞項一動也沒動。
+      #    **gate 的長度不代表嚴謹度**，內容才是。
+      # 🔴 **V-42 是唯一不會自己結的一項**，它的出口只有兩條（58 §H.4）：①順豐月結／商務窗口的**書面**
+      #    回覆；②一個**明示接受人工銷號營運成本的營運裁定**（工程不得自決 —— 那換來的不是技術風險，
+      #    是每天要有人去看待銷號佇列的人力承諾）。
+      enable_gate: [V-39, V-41, V-42, V-51]
       # ✅ V-38 已結案（2026-08-12，DNS）：官方 SDK PDF 印的 sfexpress.com（無連字號）**無 A 記錄**，
       #    連 apex 都沒有；sf-express.com（有連字號）才正確。官方 PDF 這一處是錯的或已過期。
       endpoints_verified: true
@@ -1148,10 +1190,182 @@ carrier:
         production: https://sfapi.sf-express.com/std/service
       # 🔴 仍不讓商家自填 base_url —— 設定期由下拉選單選，避免打錯字打到別人的主機。
       base_url_freeform_allowed: false
-      # 🔴 空陣列的理由**不是**「不知道服務代碼」，而是更根本的一條：連「香港商戶能不能用丰橋」
-      #    都還沒確認（V-43）。已確認的只有「香港作為**目的地**」（內地寄出，SF-19），
-      #    而我方香港首發需要的是「香港作為**寄件地**」—— 兩者互補，不能互相替代。（58 §H.5）
-      serviceable_lanes: []
+      # --- 對接範圍：使用者裁定的 6 支服務代碼（58 §0.4(e) SF-26；三輪新增）--------
+      # 🔴 這是**範圍裁定**，不是順豐能力的全集。順豐還有很多介面（見 SF-28 的目錄），
+      #    但我方這一輪只接這 6 支 —— 能力矩陣（58 §B.1）的每一個 supported: true 都必須
+      #    在這張表裡找得到支撐它的服務代碼，找不到的一律宣告 supported: false ＋ reason。
+      # 🔴 CI-8：①supported: true 的能力，其實作只能呼叫 api_scope 內的服務代碼；
+      #          ②api_scope 內的每一支都必須被至少一項能力（或 §F.4 回查）引用。
+      #          「宣告了一個沒接的能力」與「接了一支沒人用的介面」都是 build fail。
+      # ⚠️ 報文格式全部 JSON ⇒ 走新世代 /std/service 信封（SF-2 六欄），**不是**舊世代 XML（SF-5）。
+      #    舊世代欄位名（orderid／mailno／dealtype／express_type）只作語義說明，**不得**當成新世代
+      #    JSON 的欄位名寫進實作 —— 新世代欄位表仍未取得（V-41）。
+      api_scope:
+        - service_code: EXP_RECE_CREATE_ORDER
+          name: 下訂單接口
+          category: 速運API
+          payload_format: json
+          status: 已上線
+          capability: shipment_create        # K2
+        - service_code: EXP_RECE_SEARCH_ORDER_RESP
+          name: 訂單結果查詢接口
+          category: 速運API
+          payload_format: json
+          status: 已上線
+          capability: shipment_create_reconcile  # 非獨立能力鍵：58 §F.4 的 UNKNOWN 回查
+        - service_code: EXP_RECE_UPDATE_ORDER
+          name: 訂單取消接口
+          category: 速運API
+          payload_format: json
+          status: 已上線
+          capability: shipment_cancel        # K5
+          # 🔴 官方目錄頁的名稱是「訂單確認/取消接口」，使用者截圖的名稱是「訂單取消接口」——
+          #    同一支多用途，兩者不衝突（舊世代對應 OrderConfirmService 的 dealtype ∈ {1 確認, 2 取消}）。
+          #    **我方只用「取消」用途，不使用「確認」用途**（58 §0.4 SF-29、§D.5(h)）。
+          usage: cancel_only
+          confirm_usage_forbidden: true
+        - service_code: EXP_RECE_SEARCH_ROUTES
+          name: 路由查詢接口
+          category: 速運API
+          payload_format: json
+          status: 已上線
+          capability: tracking_pull          # K6
+        - service_code: COM_RECE_CLOUD_PRINT_WAYBILLS
+          name: 雲打印面單轉PDF接口
+          category: 基礎通用API
+          payload_format: json
+          status: 已上線
+          associated_year: 2024
+          capability: label_render           # K3（pdf）
+          label_format: pdf
+        - service_code: COM_RECE_CLOUD_PRINT_HTML
+          name: 雲打印面單轉HTML接口
+          category: 基礎通用API
+          payload_format: json
+          status: 已上線
+          # 🔴 關聯日期 2026 ⇒ **新介面**。不得假設它與 2024 的 PDF 那支同構（欄位表、模板代碼、
+          #    錯誤碼都要各自覆核）；沙箱開通狀態常晚於目錄的「已上線」標示 ⇒ carrierAccountTest
+          #    必須逐格式各測一次。若實作期發現未開通 ⇒ formats 縮回 [pdf]（宣告變更，不是靜默降級）。
+          associated_year: 2026
+          capability: label_render           # K3（html）
+          label_format: html
+      # --- 十三項能力宣告的鏡像（權威在 pack 程式碼的 self.capabilities；此處供 CI-1／CI-8 對照）---
+      # 🔴 兩處必須一致，drift 即 build fail —— 這張鏡像的用途是讓「規格說接 6 支」與「程式碼真的
+      #    只接 6 支」對得起來，不是第二個事實來源。
+      # 值域說明：supported: true ＝ 由 api_scope 內的服務代碼支撐；
+      #           supported: false ＋ reason ＝ **我方決定不做**（範圍決策／合約未確認），
+      #           **不代表順豐沒有這個能力** —— 58 §B.1 的 ⛔ 與 ❌ 必須分開，混用會讓後人以為做不到。
+      capability_declarations:
+        rate_quote:                       # K1
+          supported: false
+          reason: "對接範圍不含 EXP_RECE_QUERY_SFWAYBILL；且其官方名稱為「清單運費查詢」（對已產生的運單清單查費），語義本就不等於下單前試算。降級走 15 的靜態運費表，結帳頁不得出現「即時運費」字樣"
+        shipment_create:                  # K2
+          supported: true
+          service_code: EXP_RECE_CREATE_ORDER
+          # 下單同時發號：舊世代語義如此（回應帶 mailno，SF-14），新世代欄位表待覆核（V-41）。
+          allocates_number: true
+          # ✅ 可用我方帶過去的識別回查（58 §F.4 前提 2）：回查介面 EXP_RECE_SEARCH_ORDER_RESP 在
+          #    api_scope 內，且順豐的去重鍵就是 orderid＝我方 client_reference＝shipment_intents.id
+          #    （V-49 已結案）。⇒ UNKNOWN 可自動回查，不必一律進人工佇列。
+          lookup_by_client_reference: true
+          # ⚠️ null：單張運單的最大包裹數未取得（V-41）。**不得**拿 documented_limits 的
+          #    sub_waybill_max_parcel_quantity（子母件子單號上限 20）來充數 —— 那是子單號申請的上限，
+          #    語義不同，混用會在邊界上錯得很安靜。
+          max_packages_per_shipment:
+        label_render:                     # K3
+          supported: true
+          # 🔴 formats 本輪由 null 改為 [pdf, html] —— 兩支專屬介面，一種輸出一支（SF-26）。
+          formats: [pdf, html]
+          # ⚠️ sizes 仍是 null：模板代碼與尺寸值域**官方未取得**（V-39）。第三方 1.0 版的疑似值
+          #    （100×150／100×180／100×210／76×130 等）**不得**寫進來 —— 面單尺寸不對，物流商可拒收。
+          sizes:
+          # ⚠️ 兩者皆 null（V-39）。保守處置（58 §D.4、§E.3）：
+          #    reprint_allowed 未知 ⇒ 重印一律留痕 ＋ 必填原因（全域 reprint_requires_reason 已為 true）；
+          #    billable_per_render 未知 ⇒ **比照 true 處置**：渲染一律走帶冪等 key 的批次作業，
+          #    不得做無節制的自動重渲染。沉默不是否認。
+          reprint_allowed:
+          billable_per_render:
+        shipment_void:                    # K4
+          supported: false
+          reason: "順豐的取消介面取消的是**訂單**，其對運單號（mailno）的回收與計費效果官方通篇沉默（V-42，屬月結合約）。我方不宣稱線上銷號能力：逾期未交寄一律進 VOID_MANUAL_REQUIRED 人工佇列（58 §D.5(g)(h)）"
+          window_hours:
+          frees_number:
+          billed_if_unused:
+          # 🔴 supported: false ＋ billed_if_unused: null 的告警等級（58 §D.5(d) 三輪新增列）：
+          #    等級取**保守側 P1**（沉默不是否認），但**僅通知平台營運、不通知店主** ——
+          #    我方尚未提供線上銷號，店主收到也無從處置，而無法行動的告警只會訓練人忽略告警。
+          unbilled_overdue_alert: p1_platform_ops_only
+        shipment_cancel:                  # K5
+          supported: true
+          service_code: EXP_RECE_UPDATE_ORDER
+          # ⚠️ 兩者皆 null：可取消的時間窗與取消是否退運費，官方未載明（與 V-42 同一片沉默）。
+          #    window_hours 為 null ⇒ **不得**在 UI 上宣稱「N 小時內可取消」；一律試了才知道，
+          #    回 8019 即視為 too_late。
+          window_hours:
+          refunds_freight:
+          # 二次取消回 8019 ⇒ too_late（狀態衝突，非拒絕），見 error_code_outcome_map。
+          # 🔴 取消成功**不得**把運單標成 VOIDED —— 那是用技術事實冒充財務事實（58 §D.5(h) 規則 1）。
+          on_success_waybill_status: VOID_MANUAL_REQUIRED
+        tracking_pull:                    # K6
+          supported: true
+          service_code: EXP_RECE_SEARCH_ROUTES
+          supports_batch: true
+          # 舊世代 RouteService 明載 ≤10（SF-18）；新世代上限未確認 ⇒ 取舊世代的保守值。
+          max_numbers_per_call: 10
+        tracking_push:                    # K7
+          supported: false
+          reason: "對接範圍不含路由註冊／推送介面 ⇒ 追蹤一律走 K6 輪詢（carrier.tracking.poll_interval_seconds）。⚠️ 輪詢的代價：追蹤延遲上限＝輪詢間隔，且每張未終態運單都在消耗未知的配額（V-46）⇒ stop_polling_on_terminal 從最佳化升級為必要條件"
+        pickup_schedule:                  # K8
+          supported: false
+          reason: "對接範圍不含取件相關介面"
+        cod:                              # K9
+          supported: false
+          reason: "對接範圍不含任何 COD 介面；且香港 COD 的可用性與上限屬合約（V-48，仍登記但不擋 gate）。COD × 順豐的組合在結帳頁不出現，不是出現後才在提交時報錯"
+        customs_doc:                      # K10
+          supported: false
+          reason: "對接範圍不含報關文件介面；且新平台把「國際件」列為獨立頂層分類，與舊世代「國際件與國內件同用 OrderService」的敘述未對齊（V-53）。⇒ 依 58 §H.2 關卡 1，跨境 lane 判不可服務"
+        service_point:                    # K11
+          supported: false
+          reason: "對接範圍不含網點查詢（EXP_RECE_QUERY_GIS_DEPARTMENT）"
+        address_validate:                 # K12
+          supported: false
+          reason: "對接範圍不含地址驗證。⚠️ COM_RECE_QUERY_ADDRESS_BOOK_NEW 是「地址簿查詢」不是「地址驗證」，語義不同，不得拿來充數"
+        billing_reconciliation:           # K13
+          supported: false
+          reason: "對接範圍不含對帳檔介面 ⇒ 58 §D.5(c) 的外部閉環驗證改為人工（待銷號佇列的人工登記不是可選步驟）"
+      # --- 可服務航線（58 §H.2、§H.5）----------------------------------------------
+      # 🔴 2026-08-12 第三輪（裁定一）：本鍵原為空陣列 []，理由是「連香港商戶能不能用丰橋都還沒
+      #    確認（V-43）」。**該理由已作廢** —— 使用者逐字：「香港地區可以作為發貨地。已經成功開發過。」
+      #    我方二輪是從「公開文檔沒寫」推出「做不到」，那是**從缺席推得的否定結論**，權威性低於
+      #    使用者的一手實作經驗（58 §0.3 的 user-ruling 等級）。**文檔取樣的缺口不等於產品的缺口。**
+      #
+      # 🔴 但界線必須守住：**被推翻的是可行性，不是參數值。** 我方仍未親眼見到香港 origin 的服務
+      #    代碼數值（V-44）⇒ 每條 lane 的 service_code 一律 null，**不得憑空編一個數值**。
+      #    憑空編的代價不是被拒單（那是好的情況），是**下成別的產品類別、按別的費率計費，
+      #    而且看起來一切正常**。
+      serviceable_lanes:
+        # ① 香港本地。首發要點亮的就是這一條。
+        - origin_country: HK
+          destination_country: HK
+          display_name: 香港本地
+          cross_border: false
+          requires_customs_doc: false
+          service_code:                   # ⚠️ null：express_type 數值待實作期以帳號實測填入（V-44）
+        # ② 香港出境。**目的地尚未逐一登錄**（B-19 稱 40＋ 目的地含澳門、台灣，我方未取得完整清單）。
+        #    🔴 destination_country: null **不是萬用字元** —— 它不命中任何目的地，因此這條 lane
+        #       目前不會讓任何跨境服務出現在結帳頁。這是**正確的失效方向**（58 §H.2 ①）。
+        #    另有兩道獨立閘門同時擋著：customs_doc 宣告 false（§H.2 關卡 1）、service_code 為 null。
+        - origin_country: HK
+          destination_country:
+          display_name: 香港出境（目的地清單待登錄）
+          cross_border: true
+          requires_customs_doc: true
+          service_code:
+      # 🔴 CI-9：service_code 為 null 的 lane **不得對外可選**（結帳頁不出現、後台下拉不出現），
+      #    觸及時回 CARRIER_LANE_NOT_SERVICEABLE。
+      #    這條規則就是「可行性已確認、參數未確認」的正確表達方式：事實照寫（HK 可作 origin），
+      #    但**閘門開在最小的範圍**（單一 lane），而不是把整個 pack 鎖死。
+      lane_requires_service_code: true
       # --- 官方明載的分批上限（58 §0.4 SF-18；鐵律 6：不得硬編）------------------
       # ⚠️ 這些是**分批上限**，不是**速率上限**。順豐官方兩份 PDF 對 QPS／日配額通篇未載明
       #    （SF-7，V-46 仍開）⇒ 速率仍走 carrier.client_qps_default 的保守自我節流。
@@ -2260,3 +2474,429 @@ agents:
     # ⚠ V-126：ClaudeBot／PerplexityBot 等的官方 UA 字串與語義本輪未逐一取得 ⇒
     #    清單做成**可設定資料**（DB seed），不得寫死在程式碼。
     extensible_agent_list: true
+
+# =============================================================================
+# 20. 多語言（內容 i18n）——規格見 docs/specs/67-multilingual.md
+# =============================================================================
+# 出處等級在本區塊另加一級（定義見 67 §0.3）：
+#   ruling ＝ **使用者裁定**（2026-08-12 多語言裁定）。優先於 dev——它是產品決策，不是對 Shopify 的復刻。
+#
+# 🔴 **本區塊不含任何語言清單。** 裁定逐字：「先開始時繁體中文、簡體中文、英文。之後我可以自行添加
+#    任何語言。」⇒ 語言集合是**資料**（`platform_locales` ＋ `shop_locales` 兩張表，67 §C.1），
+#    不是 enum、不是 YAML 清單。下面的 `launch_locales` 是**種子資料的指標**，不是值域——
+#    任何程式碼拿它當「支援的語言」判斷都是 bug（67 §A.2）。
+#
+# 🔴 **語言 ≠ 幣別**（鐵律 10 ＋ 2026-08-12 裁定二）：英文版的香港商店仍顯示 HK$1,480.00。
+#    金額格式的每一個部分由 market locale 決定（jurisdictions.<code>.currency_format），
+#    **不隨內容語言變**。本區塊沒有任何幣別鍵，這是刻意的（67 §H.1）。
+#
+# 🔴 既有鍵不重複定義：譯文長度上限沿用來源欄位的上限（product.title_max_chars /
+#    content.seo_title_max_chars …）；hreflang 碼規則在 seo.hreflang；市場繼承在 market.*。
+i18n:
+  # --- 語言註冊（67 §A.2、§C.1）-----------------------------------------------
+  # 首發三語＝**種子資料**，不是值域。（ruling）
+  launch_locales: [zh-Hant, zh-Hans, en]
+  launch_locales_is_seed_not_enum: true
+  # 每店語言數上限。出處：docs/research/29-markets-i18n.md:21（help，「全店最多 20 種語言」）
+  max_shop_locales: 20
+  # 標籤格式：ISO 639-1 (+ 可選 ISO 15924 script) (+ 可選 ISO 3166-1 alpha-2)。
+  # 與 seo.hreflang.code_format 同一族規則，但用途不同（這是語言註冊，那是標註輸出）。
+  locale_tag_format: "iso639_1[-iso15924][-iso3166_1_alpha2]"
+  # 🔴 裸 zh 禁用：它在字體上是歧義的，任何以 zh 為 fallback 目標的鏈都會把繁體使用者
+  #    送到簡體內容或反之。EU/UK/es-419 沿用 seo.hreflang.forbidden_codes 的理由（google）。
+  forbidden_locale_tags: [zh, EU, UK, es-419]
+  # 🔴 繁體一律 zh-Hant、簡體一律 zh-Hans；不得借 zh-TW / zh-CN 表示字體。
+  #    出處：62 §I.4（google，官方明確舉例 zh-Hant 為合法值）＋ 本檔 §A.4。
+  script_subtag_required_for: [zh]
+  # 寫入層強制正規化大小寫（語言小寫 / script Title / region 大寫）。
+  # 🔴 不得依賴 MySQL utf8mb4_0900_ai_ci 的大小寫不敏感做正規化（11 §2-4）。
+  normalize_tag_case_on_write: true
+  # 語言集合是否封閉（Shopify 是否只允許其支援清單）⇒ ⚠ V-165 未查證。
+  # 我方**開放**（裁定明文），只驗格式與禁用碼。
+  allow_arbitrary_locales: true
+
+  # --- 來源語言（67 §C.3）-----------------------------------------------------
+  # 每店恰一個 source locale；base 資料表的文字一律是它的語言。
+  source_locale_per_shop: 1
+  # 🔴 不做 per-resource 來源語言：base row 的語言若逐列不同，就沒有消費者能回答
+  #    「products.title 是什麼語言」——而搜尋分析器／feed／代理端點／匯出全都需要這個答案。（ours）
+  source_locale_per_resource: false
+  # 改來源語言是一次性資料遷移，走精靈＋dry-run，不是設定切換。
+  source_locale_change_requires_migration: true
+  # 🔴 遷移時目標語言缺譯 ⇒ base 保留原文並落 gap 記錄。清空 base ＝ 整店空白商品。（ours）
+  source_locale_change_missing_translation: keep_source_text
+  # 來源語言不可取消發布、不可刪除 ⇒ userErrors SOURCE_LOCALE_IMMUTABLE。
+  source_locale_immutable_publish: true
+
+  # --- Fallback 鏈（67 §C.4）—— 🔴 不得靜默空白 -------------------------------
+  # 解析順序：(locale,market) → (locale,NULL) → 截尾鏈 → base row → 依欄位類別。
+  fallback_chain_mode: bcp47_truncation
+  # 🔴 繁簡之間永不互為 fallback。地區借用只是用詞差異，**字體借用是整頁文字都不對**。
+  never_fallback_pairs: [[zh-Hant, zh-Hans]]
+  # 截尾不得落到被禁用的裸語言碼（zh）⇒ 鏈提前結束，不是特例分支。
+  truncation_stops_at_forbidden: true
+  # 🔴 商家不可自訂 fallback 鏈：可自訂的鏈會產生 A→B→A 的環。（ours）
+  merchant_configurable_chain: false
+  # 最終仍為空時的行為（依 67 §B.1 的欄位三分類）。🔴 沒有第四種（禁止靜默空字串／輸出 key 名）。
+  missing_translation_behavior:
+    required: source_text        # 標題等：顯示原文優於顯示空白
+    optional: omit_field         # SEO 描述／alt：整個欄位不輸出（承 62 §E.1「空描述不編造」）
+    never: source_value          # 不可翻欄位：永遠取原值
+  # 空值定義：NULL / "" / 只含空白 / 語義空 HTML（<p></p>、<p><br></p>）四者等價。
+  empty_includes_semantically_empty_html: true
+  # 回落到來源語言的**大段文字**在前台加 lang 屬性（無障礙＋誠實）。短欄位不加。
+  mark_fallback_with_lang_attribute_on: [body_html, policy_body, article_body]
+
+  # --- 過期偵測（67 §C.5）—— 假陽性率決定這個功能有沒有用 ----------------------
+  digest_algorithm: sha256
+  # 🔴 不正規化就算 digest ⇒ 富文本編輯器改一次換行就把全店全語言標成過期，
+  #    商家隔天看到「48,000 筆待更新」，然後這個功能被永久忽略。（ours）
+  digest_normalization:
+    text: [nfc, trim, collapse_whitespace]
+    html: [parse_dom, sort_attributes, drop_whitespace_only_nodes, collapse_whitespace, stable_serialize]
+    json: [sort_keys, drop_format_whitespace, stable_serialize]
+  # 分級門檻：編輯距離／原長度 ≤ 此值 ⇒ minor（不進「待翻譯」預設篩選）。
+  outdated_minor_change_ratio: 0.1
+  # 🔴 outdated 是**後台狀態**，不影響前台渲染：一個錯字修正不該讓整個語言版本退回英文。
+  outdated_affects_storefront_render: false
+  # 標記必須在來源寫入的**同一 transaction** 內完成（丟 job ⇒ 有一段視窗商家以為翻譯是最新的）。
+  outdated_marking_in_same_transaction: true
+  # 範本欄位的佔位符集合必須與來源一致，否則 userErrors PLACEHOLDER_MISMATCH。
+  # （缺一個 {{ order_number }} 的訂單確認信是會真的寄出去的。）
+  validate_placeholder_parity: true
+
+  # --- 欄位與長度（67 §B）-----------------------------------------------------
+  # 🔴 譯文長度上限**沿用來源欄位的上限**，不另立一套（英文 255／中文 500 會讓匯出匯入炸掉）。
+  per_field_limits_follow_source_field: true
+  # 硬天花板（任何欄位的譯文都不得超過），對齊 product.description_max_bytes。
+  translation_value_hard_max_bytes: 65536
+  # metafield 只有文字型可翻，且是**白名單**不是黑名單。
+  # 🔴 money 型絕不進 translations 表——它會開出一條「金額寫成字串再讀回來」的路徑（鐵律 3、65 號）。
+  translatable_metafield_types:
+    [single_line_text_field, multi_line_text_field, rich_text_field,
+     "list.single_line_text_field", "list.multi_line_text_field"]
+  # 不可翻清單（理由逐條見 67 §B.3）。tags 是集合運算的鍵（13 §F4.3）；
+  # Default Title 是硬相容契約（63 §B.2，catalog_flow.default_variant_liquid_title）。
+  never_translatable: [sku, barcode, gid, tags, handle, currency_code, country_code,
+                       default_variant_title, money_amounts, order_history_text]
+
+  # --- 機器翻譯與繁簡轉換（67 §E.5）-------------------------------------------
+  machine_translation:
+    # provider 是**服務**，與語言 pack（資料）和 jurisdiction pack（法律能力）都正交（67 §A.3）。
+    provider_pluggable: true
+    # 未設定 provider ⇒ 整個功能**不出現**（不是出現後報錯）。承 62 §0.2 原則 3「未宣告 ≠ 支援」。
+    hide_when_provider_unset: true
+    # 🔴 一律非同步（鐵律 5：transaction 內禁外部 IO；63 §A.2）。
+    async_only: true
+    # 🔴 稽核欄一律寫入（形態同 62 §F.1 alt_source／§H.6-1 content_source）。
+    value_source_marked: machine
+    review_required: true
+    # 未覆核的機翻**預設對外可見**：不可見等於整批沒有效果，商家會改用外部工具貼進來，
+    # 那樣連 value_source 都沒有了。商家可切 hidden（走 fallback）。（ours）
+    publish_default: visible
+    # 大量生成的摩擦（62 §H.6-1：對 Google 是 scaled content abuse，可能整站受罰）。
+    max_resources_per_batch: 500
+    batch_confirm_above_resources: 100
+    # ⚠ V-169：官方機翻「限 2 種語言」（29 §2.4 記載）現況未覆核 ⇒ 以鍵表達，不寫死。
+    max_target_locales_per_batch: null
+  script_conversion:
+    # 繁簡轉換是**確定性查表工具**，不是 MT，也**不是渲染期 fallback**（67 §A.4）。
+    enabled: true
+    value_source_marked: script_conversion
+    review_required: true
+    # 🔴 兩個方向品質不對稱：繁→簡接近無損；簡→繁一對多（发→發/髮、干→干/乾/幹、后→后/後）
+    #    ⇒ 完成報告必須列出含歧義字的筆數。
+    ambiguous_direction: [zh-Hans, zh-Hant]
+    report_ambiguous_count: true
+    # 🔴 它不做詞彙在地化（软件/軟體、视频/影片）——UI 必須寫「這是字形轉換，不是翻譯」。
+    ui_must_state_not_translation: true
+
+  # --- 匯入匯出（67 §E.6）—— 翻譯是**第三套**，且空白語義與商品 CSV 相反 --------
+  export:
+    format: csv
+    # 匯出必含 source_text 唯讀參考欄（沒有原文的翻譯檔對譯者不可用）。
+    include_source_text: true
+    columns: [resource_type, resource_gid, field_key, locale, market_handle,
+              source_text, translated_text, source_digest, status]
+    split_by: [locale, resource_type]
+    # 單檔上限沿用 csv.product_max_upload_mb（15MB，出處 61 §6.1/§6.2 help）。
+    max_upload_mb_key: csv.product_max_upload_mb
+    # XLIFF 2.1 列 P2；⚠ V-163 未查證官方格式。
+    xliff_enabled: false
+  import:
+    # 🔴 空白 ＝ **不變更**（與商品 CSV 相反：後者「空白儲存格會把既有資料洗掉」，61 §6.1）。
+    #    同樣語義套到翻譯上 ＝ 譯者交回只填 20% 的檔案，其餘 80% 既有譯文全被清空。
+    blank_means_unchanged: true
+    explicit_clear_token: "__CLEAR__"
+    # 缺 source_digest 欄 ⇒ 整檔拒絕（沒有 digest 就無法安全回寫）。
+    require_source_digest_column: true
+    # digest 不符 ⇒ **仍然寫入**（譯者是照當時原文翻的，內容多半可用）但標過期＋待覆核，
+    # 並列入匯入報告。🔴 不得靜默當成最新。⚠ 官方行為未查證 ⇒ V-164。
+    digest_mismatch_action: write_and_mark_outdated
+    # 逐行獨立 transaction ＋ 逐行結果報告（沿用 13 §F6.1 既有形態）。
+    per_row_transaction: true
+
+  # --- 快取維度（67 §G；承 63 §D.3）------------------------------------------
+  cache:
+    # 🔴 63 §D.3 把 locale 無條件放進頁級 key；本檔改為**依實際依賴降維**。
+    #    降維判定必須 fail-closed：漏偵測＝跨語言污染（英文使用者看到中文），
+    #    比多存幾份嚴重得多。
+    dimension_reduction_enabled: true
+    fail_closed: true
+    # 只有「本次渲染完全沒有 touch 任何 locale 來源」才允許移除 locale 維度。
+    # 🔴 {{ '…' | t }} 命中主題 locale 檔同樣算 locale 依賴（容易漏，因為它不經 translations 表）。
+    locale_sources: [translations_table, theme_locale_file, platform_string_bundle]
+    # dev/staging 的雙渲染驗證：同一 section 以兩個 locale 渲染，輸出逐位元組相同才可標為
+    # locale-invariant，結果存 section_dimension_profile；生產只讀該表，不現場判定。
+    dimension_probe_enabled: true
+    # 🔴 cache_stamp 必須加入 translations（否則 63 §D.3 紀律 2 的自檢會 raise——那是好事）。
+    additional_cache_stamp_sources: [translations_updated_at, shop_locales_version]
+    # translations 的 stamp 是**資源 × 語言**級；shop_locales_version 是全店級（罕見動作）。
+    translations_stamp_granularity: resource_locale
+    # 預熱只針對 published 且有實際流量的 (market, locale) 對；
+    # 🔴 不得用 |locales| × |markets| 的笛卡兒積預熱（語言是市場的子集，會生出永不命中的 entry）。
+    warm_only_published_with_traffic: true
+    # 單店參與快取鍵的語言數超過此值即告警（**告警不是擋**——擋住新增語言違反裁定）。
+    max_locale_dimensions_warn: 8
+
+  # --- 格式化分界（67 §H.2）—— 判準：這個字串會不會進對帳／結構化資料／對外系統 --
+  formatting:
+    # 🔴 金額的符號／位置／小數位／千分位分組／小數點，五者全部由 market locale 決定，
+    #    **不隨內容語言變**。英文版的 HK 店仍顯示 HK$1,480.00。（鐵律 10 ＋ 裁定二）
+    money_follows: market_locale
+    # 🔴 數字系統固定拉丁數字：金額字串會進 JSON-LD／feed／對帳，
+    #    ١٬٤٨٠٫٠٠ 與 1,480.00 是同一個數的兩種字串 ⇒ 違反鐵律 7；
+    #    且 62 §A.4 已定 JSON-LD 不套用任何 locale 格式化。
+    numbering_system: latn
+    # 日期／時間／非金額數字／複數／排序 ⇒ 跟著**內容語言**（鐵律 3／65 號的既有要求）。
+    date_follows: content_locale
+    time_follows: content_locale
+    non_money_number_follows: content_locale
+    plural_follows: content_locale
+    collation_follows: content_locale
+    # 時區是事實不是呈現 ⇒ 不隨語言。
+    timezone_follows: shop_or_market
+    # 🔴 機器讀的字串沒有 locale：JSON-LD／feed／API／匯出／webhook 一律 locale-invariant
+    #    （ISO 8601 日期、"." 小數點、無千分位）。
+    machine_readable_locale_invariant: true
+
+  # --- 前台（67 §F）-----------------------------------------------------------
+  storefront:
+    # 🔴 語言只由 URL 決定。Accept-Language 只影響「要不要顯示建議橫幅」與切換器預設高亮，
+    #    不得改變同一 URL 的輸出內容；cookie 同理。
+    #    否則爬蟲會索引到隨機語言版本，且 62 §I.1 的自指／雙向不變量失去意義。
+    language_determined_by: url_only
+    accept_language_affects_content: false
+    cookie_affects_content: false
+    # 🔴 內容不隨 Accept-Language 變 ⇒ **不得輸出 Vary: Accept-Language**
+    #    （輸出它等於把快取切成 N 份卻沒有任何內容差異）。
+    emit_vary_accept_language: false
+    # 建議橫幅必須是 locale-invariant 片段（否則把 Accept-Language 拉回快取鍵）。
+    suggestion_banner_locale_invariant: true
+    # 語言自動重導：**不做**（地區重導已由 seo.redirect_geo.enabled_default: false 定案，62 §K）。
+    auto_redirect_on_language: false
+    # 切換器必須是真實 <a href>（62 §K.2 已定：爬蟲發現其他版本的路徑之一）。
+    switcher_must_be_anchor: true
+    # 未發布語言：URL 立即 404，且不進 hreflang／sitemap
+    # （62 §0.2 原則 4 要求矩陣內每個 URL 對任何客戶端回 200）。出處：29 §1.2（help）
+    unpublished_locale_status: 404
+    # 主題 locale 檔是 JSONC（/* */ 註解、CRLF、BOM、尾隨逗號）⇒ tolerant parser 是硬需求。
+    # 出處：docs/research/66 §A.9（fixture，Ella 7.2.0 實證）
+    theme_locale_tolerant_parser: true
+    # 前台字串（xx.json）與編輯器字串（xx.schema.json）是兩套，混用是靜默錯誤；
+    # 且兩套語言清單不對稱 ⇒ 🔴 fallback 必須**逐檔獨立解析**，
+    # 不能有「本主題支援語言 X」這個單一布林。（fixture，66 §A.9 坑 2/3）
+    theme_locale_fallback_per_file: true
+    # 主題硬編字串：解析器「以 t: 開頭才查表，否則原樣顯示」（66 §A.7 既有結論）。
+    theme_translate_only_t_prefixed: true
+    # 結帳鎖語言（對稱於 29 §5「結帳鎖定進入時的 presentment currency」）＋訂單快照 locale
+    # （同 56 §0.2「訂單成立即快照法域碼」的紀律）。
+    checkout_locale_locked_on_entry: true
+    order_locale_snapshot_required: true
+    # 通知信語言解析鏈。⚠ 官方優先序未查證 ⇒ V-170。
+    notification_locale_chain: [customer_locale, order_locale_snapshot, shop_source_locale]
+
+  # --- 搜尋與排序（67 §C.7）---------------------------------------------------
+  search:
+    # 索引鍵含 locale，且分析器 per-script：ngram 對中文正確、對英文產生大量噪音詞元；
+    # 詞界分析器反之。D6（DECISIONS.md）只定了「MySQL ngram」，不足以涵蓋多語言。（ours）
+    index_key_includes_locale: true
+    analyzer_by_script: { Hant: ngram, Hans: ngram, Jpan: ngram, default: word_boundary }
+    # 只搜當前語言；無結果時**提示**跨語言搜尋，不自動跨（中文查詢回英文結果看起來像壞掉）。
+    cross_locale_search: suggest_only
+    # 索引一律套 discoverable scope（13 §F1.2(e) 第 5 項）；多語言不改變這條。
+    scope: discoverable
+    # ⚠ V-168：官方多語言搜尋行為未查證。
+  # 排序 collation 由 platform_locales.collation 提供。
+  # ⚠ V-166：MySQL 8 可用的中文 collation 與其排序依據未查證 ⇒
+  #    沿用預設，UI 標「依系統順序」，**不宣稱拼音或筆畫排序**。
+  collation_source: platform_locales.collation
+
+  # --- 後台兩層語言（67 §E.1）-------------------------------------------------
+  admin:
+    # 🔴 介面語言與內容語言是**兩個切換器**，不得連動。合成一個下拉的事故：
+    #    商家切成 English 想看懂 UI ⇒ 內容語言也切到 en ⇒ 標題欄空白（尚未翻譯）
+    #    ⇒ 商家以為資料掉了，把中文打進英文版標題。只有前台切語言時才會被發現。
+    ui_locale_and_content_locale_are_separate: true
+    # 介面語言是**員工**屬性（同一家店可能有講不同語言的員工）。
+    ui_locale_scope: staff_member
+    # 🔴 平台 UI 字串在**平台 bundle**，不進租戶 translations 表：
+    #    否則每租戶存一份副本、租戶能改平台文案、平台改版無法覆蓋。
+    ui_strings_storage: platform_bundle
+    # 內容語言進 URL（可分享、可回退、重整不丟失）。形態沿用 52 號 P0-18「路由進 URL」。
+    content_locale_in_url: true
+    content_locale_default: source_locale
+    # 建立新資源一律在 source locale 下（base row 還不存在，沒有東西可翻）。
+    create_only_in_source_locale: true
+    # 🔴 非來源語言下必須唯讀的欄位——最貴的誤操作在這裡：
+    #    不做唯讀，商家會在 en 頁面把價格 1,480 改成 148（以為只影響英文版），
+    #    而實際上改的是唯一的那筆 product_variants.price_cents（63 §B.3：商品層沒有價格）。
+    #    這不是顯示問題，是真的收錯錢。
+    readonly_fields_in_non_source_locale:
+      [price, compare_at_price, unit_cost, margin, sku, barcode, inventory_tracked,
+       inventory_quantity, status, publications, variant_publications, handle, tags,
+       taxonomy_category, option_structure]
+    # UI 形態：灰化＋tooltip，不是隱藏（隱藏會讓商家以為英文版沒有價格）。
+    # 沿用 notification.non_toggleable_ui 的既有形態。
+    readonly_ui: disabled_with_tooltip
+    # 唯讀必須雙層（前端灰化 ＋ 後端拒絕）。
+    readonly_enforced_server_side: true
+    # 翻譯進度四個出口（列表徽章／翻譯後台／健康頁／GraphQL）讀**同一張** translation_status
+    # 物化表（鐵律 7）；任一處不得現算 GROUP BY。
+    progress_single_source: translation_status
+
+# =============================================================================
+# 21. Handle 政策——規格見 docs/specs/67-multilingual.md §D（並取代 62 §F.3 的舊規則）
+# =============================================================================
+# 🔴 使用者 2026-08-12 裁定逐字：「url hand 使用英文標題，**禁止使用中文**。」
+#    範例：kerastase-specifique-stimuliste-nutri-energising-daily-anti-hairloss-spray-125ml-4-2oz
+#    這**推翻**了 62 §F.3 原本的「保留 CJK ＋ percent-encoding」（原登記為 V-119，已結案）
+#    與 13 §F2-1 的「demo 選 unicode handle（/products/棉質短T 可用）」（13 待改，67 §M-1）。
+#
+# 🔴 **下一個人請先讀這段再動手**：看到 handle 規則不允許中文，不要當成國際化沒做好而「修回去」。
+#    多語言是**做在別的地方**——語言維度由 URL 前綴承載（/en/products/x），handle 本身
+#    全站單一且恆為 ASCII（67 §D.3）。把 CJK 加回 handle 會同時打破 URL 前綴的唯一性推論、
+#    301 的正規路徑比對、以及裁定本身。
+#
+# 🔴 **本區塊獨立於 i18n 與 seo**：handle 政策同時被 62（SEO／301／canonical）、
+#    67（語言維度）、13（商品欄位）引用。放進任一方都會讓另外兩方跨區塊引用「別人的鍵」。
+handle:
+  # --- 字元規則（67 §D.1，由裁定範例逆推；已用該範例做過可重跑驗證，逐字元相同）------
+  charset: "a-z0-9-"
+  ascii_only: true                       # （ruling）
+  separator: "-"
+  lowercase: true
+  nfkc_normalize: true                   # 全形 → 半形：ＳＫ－ＩＩ　230ｍL → sk-ii-230ml
+  # 撇號與引號類**刪除**（不是分隔）：Bob's → bobs，不是 bob-s。
+  # ⚠ Shopify 的實際處置未查證 ⇒ V-160；我方由範例形態與可讀性定案。
+  delete_chars: ["'", "’", "‘", "ʼ", "\"", "“", "”", "`", "´"]
+  # 🔴 不可分解的拉丁字母必須先查表轉寫——NFKD **不分解**這些字母，
+  #    少了這一步 Straße 會變成 stra-e（HDL-4）。
+  transliterate_table:
+    { "ß": ss, "ø": o, "đ": d, "ł": l, "æ": ae, "œ": oe, "þ": th, "ð": d, "ı": i, "ŋ": ng }
+  fold_diacritics: true                  # Kérastase → kerastase（NFKD → 去 combining marks）
+  # 🔴 其餘標點一律轉分隔符，**不是刪除**：125ml/4.2oz → 125ml-4-2oz。
+  #    刪除小數點會得到 42oz —— **規格數字被改寫**，這是本區塊最重要的一條（HDL-3）。
+  punctuation_to_separator: true
+  decimal_point_to_separator: true
+  # 不做詞彙展開（& → and、% → percent）：那是英文特定的，開了頭就要為每個語言維護一張表，
+  # 而它換來的 SEO 收益沒有任何證據支持。（ours）
+  expand_symbol_words: false
+  collapse_separators: true
+  trim_separators: true
+  # 長度上限。裁定範例本身 86 字元未被截斷 ⇒ 上限遠大於 86。
+  # ⚠ Shopify 實際上限未查證 ⇒ V-160。
+  max_chars: 255
+  # 🔴 截斷必須在分隔符邊界，不得從字元中間切（會產生半個詞）。
+  truncate_on_separator_boundary: true
+
+  # --- 品質閘門（67 §D.2(b)）--------------------------------------------------
+  # 「殘渣 slug」比自動代碼更糟：棉質短T → "t" 幾乎必然碰撞（變成 t-2、t-3），且對任何人無語義。
+  min_latin_alpha_chars: 3
+  # 被丟棄的字母比例上限。0.5 讓「無印良品 MUJI 有機棉 T-Shirt → muji-t-shirt」通過，
+  # 讓「棉質短T」與純中文標題落 fallback。
+  max_dropped_letter_ratio: 0.5
+  # 有任何字母被丟棄（ratio > 0）⇒ 標記「handle 可能不完整」，供後台篩選與提示。不得靜默。
+  flag_when_letters_dropped: true
+
+  # --- 來源優先序（67 §D.2，🔴 我方決策 D-67-H1）------------------------------
+  # 為什麼「英文標題」這一步是免費的：裁定同時要求「商品所有數據都要多語言，首發含英文」
+  # ⇒ 英文標題**本來就要填**。只要多語言做對了，handle 的中文問題自動消失。
+  source_field_priority: [manual, en_title, base_title, deterministic_fallback]
+  # 🔴 不做拼音：對粵語圈是錯的（基準法域＝香港，鐵律 11）、多音字讓確定性也不成立、
+  #    產生的字串沒有任何搜尋價值。
+  transliteration_pinyin_forbidden: true
+  # 🔴 MT 不得直接產生 handle：URL 是永久身分，生成器必須確定性（同輸入同輸出、
+  #    不依賴當日模型版本）；且它會在寫入路徑引入外部 IO（63 §A.2、鐵律 5）。
+  #    MT 只能產生 **en 標題的草稿**，人確認後才成為譯文，handle 再由該譯文推導。
+  machine_translation_as_direct_source_forbidden: true
+  # 不用 SKU：非必填、軟唯一（61 §1.5）、常含供應商內部編碼 ⇒ 放進公開 URL 是營運資訊外洩。
+  sku_as_source_forbidden: true
+  # 確定性 fallback：8 字元 Crockford base32，per-shop 隨機且不重用
+  # （不用流水號——那會洩漏商品數與建立順序）。
+  fallback_pattern: "{resource}-{token8}"
+  fallback_token_alphabet: crockford_base32
+  # 🔴 不擋發布：用硬擋換 URL 品質，換來的是商家亂打英文字母——那比自動代碼更糟，
+  #    因為亂打無法被偵測與修復，自動代碼可以（可篩選、可統計、可提示）。（ours）
+  require_meaningful_on_publish: false
+  # 取而代之的四條可觀測摩擦（67 §D.2(a)）。
+  surface_auto_token_ratio_in_seo_health: true
+  # handle 只在建立時自動生成一次；之後標題變更**不自動改 handle**，
+  # 只在 SEO 卡提供「同步更新網址（會建立 301）」的可選動作。
+  regenerate_on_title_change: false
+
+  # --- 語言維度（67 §D.3，🔴 我方決策 D-67-H2）-------------------------------
+  # handle 是 per-shop-per-resource 的**單一值**，不隨語言變；語言由 URL 路徑前綴承載。
+  #   ✅ /products/x  ・ /en/products/x  ・ /zh-hans/products/x
+  #   ❌ /products/x-en（語言寫進尾綴：與衝突尾綴 -2 字面無法區分）
+  #   ❌ 每語言不同 handle（handle 一律英文 ⇒ 三個英文 handle ＝ 同義詞增生，在地化收益為零）
+  # 這也讓 62 §I.1 的 absolute_url() 變成純字串拼接，不必對每個 (wp, locale) 查 DB。
+  per_locale_enabled: false
+  # 逃生口：resource_handles 表已預留 locale_tag 欄（首發恆 NULL），開鍵即可，不需 migration。
+  per_locale_schema_reserved: true
+  # 🔴 handle 不是可翻譯欄位——刻意偏離 29 §2.1 的 TranslatableResourceType（67 §M-2）。
+  translatable: false
+
+  # --- 唯一性與衝突（67 §D.4）------------------------------------------------
+  # 鐵律 2：複合索引以 shop_id 開頭。per resource_type（/products/summer 與
+  # /collections/summer 可並存），**不乘 locale**。
+  uniqueness_scope: [shop_id, resource_type]
+  # 🔴 檢查對象 ＝ 現用 handle ∪ **已退役 handle**。退役集合直接讀 url_redirects
+  #    （source='handle_change'），**不另建第二張表**——62 §F.3 允許商家刪除該重導來釋放
+  #    handle，兩張表會立刻不同步。
+  never_reuse_retired_handles: true
+  retired_handle_source: url_redirects
+  # 生成衝突 ⇒ 自動尾碼，自 -2 起算（「第二個」的直覺）。
+  # ⚠ 13 §F2-2 寫的是 -1 起算 ⇒ 不一致，登記於 67 §M-1。
+  collision_strategy_generated: numeric_suffix_from_2
+  # 🔴 手填衝突 ⇒ **拒絕**（userErrors HANDLE_TAKEN），不得靜默加尾碼——
+  #    那是把商家明確輸入的值偷偷改掉。
+  collision_strategy_explicit: reject
+  # 保留字：至少含平台路由段與**全部啟用中的 locale 前綴／市場 subfolder suffix**。
+  # 新增語言時必須檢查其前綴不與既有第一路徑段衝突，衝突則拒絕新增語言。
+  reserved: [all, new, index]
+  reserved_first_segments: [products, collections, pages, blogs, cart, checkout, account,
+                            search, apps, admin, ".well-known", "agents.md", "llms.txt",
+                            "llms-full.txt", sitemap.xml, robots.txt]
+
+  # --- 改名 301（承 62 §F.3／§B.5，本區塊只補多語言面）------------------------
+  # 登記與比對一律用**不帶前綴的正規路徑**（否則一次改名要為每個語言寫一列，
+  # 刪語言時那些列變成孤兒）。
+  redirect_path_is_prefix_stripped: true
+  # 🔴 路由層命中 404 前先剝 locale 前綴 → 查表 → **命中後把前綴加回去再 301**：
+  #    /en/products/舊 ⇒ /en/products/新（不得丟回 /products/新，那會把英文使用者踢回預設語言）。
+  redirect_preserves_locale_prefix: true
+  # 鏈長沿用 seo.redirect_max_chain(10)。
+
+  # --- 🔴 Liquid handleize filter 不是 URL handle 生成器（67 §D.5）------------
+  # Ella 用 handle/handleize **91 處**（27 §5，fixture），幾乎都在產生 CSS class／DOM id／JS 鍵，
+  # 不是 URL：data-option="{{ option.name | handleize }}"。
+  # 若把上面的 ASCII-only 管線套上這個 filter：{{ '顏色' | handleize }} → "" ⇒ 多個選項的
+  # 選擇器全部相同 ⇒ **變體選擇器選錯選項，不報錯、不空白，只是選錯**。
+  liquid_filter_ascii_only: false
+  # 空結果必須有值（空字串會造成選擇器碰撞）。
+  liquid_filter_empty_fallback: "h-{sha1_8}"
+  # 🔴 兩個獨立實作，不得共用；filter 的文檔註釋必須寫明「這不是 URL 生成器」。
+  liquid_filter_shares_implementation: false
+  # ⚠ V-161：Shopify handleize filter 對 CJK 的實際輸出未查證
+  #    （這是原 V-119 的主題相容殘留；V-119 的政策面已由裁定結案）。

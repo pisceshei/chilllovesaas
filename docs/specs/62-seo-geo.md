@@ -332,20 +332,54 @@ Shopify 的機制：平台自動產生預設 `robots.txt`，主題可加 `templa
 
 ### F.3 handle 規則與改名 301
 
-```
-handleize(title, locale):
-  1. Unicode NFKC 正規化
-  2. 空白與底線 → "-"；連續 "-" 收斂；首尾 "-" 去除
-  3. 保留：a-z 0-9 - 以及**非 ASCII 字母**（CJK 等）
-  4. 全部大寫 → 小寫（ASCII 範圍）
-  5. 結果為空 → fallback "{resource}-{id}"
-  6. 唯一性衝突 → 追加 "-2"、"-3"…
-```
-**為什麼保留 CJK**：基準法域是香港（鐵律 11），商家會用中文標題。強制轉羅馬字要嘛需要拼音表（品質差、粵語/國語不一致），要嘛落成 `product-123`（對使用者與 AI 都無語義）。URL 層以 percent-encoding 傳輸，`<link rel="canonical">` 與 hreflang 一律輸出 **percent-encoded 形式**（避免不同客戶端正規化不一致）。
+<!-- 🔴 2026-08-12 使用者裁定推翻本節原有的「保留 CJK」定案。裁定逐字：
+     「url hand 使用英文標題，**禁止使用中文**。例如 https://chill.deals › products ›
+      kerastase-specifique-stimuliste-nutri-energising-daily-anti-hairloss-spray-125ml-4-2oz
+      所以你要做多語言。商品所有數據，前台，後台，都要做多語言。」
 
-> ⚠️ **V-119**：Shopify `handleize` 對 CJK 的實際行為（保留／轉寫／落 id）本輪未取得官方明文。我方按上述定案，不對齊未查證的行為。
+     本節原文（保留供追溯，**任何人不得改回**）：
+       handleize(title, locale):
+         1. Unicode NFKC 正規化
+         2. 空白與底線 → "-"；連續 "-" 收斂；首尾 "-" 去除
+         3. 保留：a-z 0-9 - 以及**非 ASCII 字母**（CJK 等）
+         4. 全部大寫 → 小寫（ASCII 範圍）
+         5. 結果為空 → fallback "{resource}-{id}"
+         6. 唯一性衝突 → 追加 "-2"、"-3"…
+       「**為什麼保留 CJK**：基準法域是香港（鐵律 11），商家會用中文標題。強制轉羅馬字要嘛需要
+        拼音表（品質差、粵語/國語不一致），要嘛落成 `product-123`（對使用者與 AI 都無語義）。
+        URL 層以 percent-encoding 傳輸，`<link rel="canonical">` 與 hreflang 一律輸出
+        **percent-encoded 形式**（避免不同客戶端正規化不一致）。」
 
-**改名 301**：handle 變更時，於同一 transaction 插入 `url_redirects(from=舊, to=新, 301, source=handle_change)`。**舊 handle 永不回收**（除非商家手動刪除該重導）。下架商品：預設 **410**，可選 301 至最相關頁（30 §9-5）。**禁止 soft-404**。
+     原文的推理**在當時是對的，前提被裁定換掉了**：它假設「商家用中文標題 ⇒ handle 只能中文或無語義」。
+     裁定同時要求「商品所有數據都要多語言，首發含英文」⇒ **英文標題本來就是必填欄位**，
+     handle 從英文標題產生因此是零額外輸入。前提一換，結論就反過來。
+     完整推理與 slug 規則見 `docs/specs/67-multilingual.md` §D（含以裁定範例做的可重跑驗證）。 -->
+
+**🔴 handle 一律 ASCII（`[a-z0-9-]`），禁止 CJK 與任何非 ASCII 字元。**（`ruling`，2026-08-12）
+
+```
+handleize_url(title):            # 完整九步管線與驗證樣本見 67 §D.1；鍵在 limits.yml §21 handle:
+  1. Unicode NFKC 正規化          # 全形 → 半形
+  2. 撇號與引號類**刪除**（不是分隔）        Bob's → bobs
+  3. 不可分解拉丁字母查表轉寫                ß→ss ø→o ł→l æ→ae …（NFKD 不分解這些）
+  4. NFKD → 去除 combining marks             Kérastase → kerastase
+  5. 轉小寫（ASCII 範圍）
+  6. 其餘非 [a-z0-9] 的連續字元 → 單一 "-"   🔴 含 "." 與 "/"：125ml/4.2oz → 125ml-4-2oz
+                                              （刪除 "." 會得到 42oz —— 規格數字被改寫）
+  7. 連續 "-" 收斂；首尾 "-" 去除
+  8. 超過 limits.handle.max_chars ⇒ 在**分隔符邊界**截斷（不得從字元中間切）
+  9. 品質閘門：ASCII 字母數 < 3 ∨ 丟棄字母比例 > 0.5 ⇒ 落確定性 fallback（67 §D.2）
+```
+
+**中文標題怎麼辦**（67 §D.2 的完整論證，此處只記結論）：來源優先序 ＝ **商家手填 → `en` 標題的 slug → base 標題 → 確定性 fallback `{resource}-{token8}`**。🔴 **不做拼音**（對粵語圈是錯的、多音字讓確定性不成立、無搜尋價值）、🔴 **不做機器翻譯直接落庫**（URL 是永久身分，生成器必須確定性；且會在寫入路徑引入外部 IO，違反 63 §A.2）。**不擋發布**，改用可觀測的摩擦（自動代碼佔比進 SEO 健康頁）。
+
+**語言維度不在 handle 裡**（67 §D.3）：handle 是 per-shop-per-resource 的單一值，語言由 **URL 路徑前綴**承載（`/en/products/x`），因此 §I.1 的 `absolute_url(resource, wp, loc)` 是純字串拼接，不需對每個 (wp, locale) 查 handle。handle **不可翻譯**（刻意偏離 29 §2.1，登記於 67 §M-2）。
+
+> 🔴 **Liquid `handleize` filter 不適用本節規則**：它產生的是 CSS class／DOM id／JS 鍵（Ella 用 91 處，27 §5），不是 URL。套上 ASCII-only 會讓 `{{ '顏色' | handleize }}` 回空字串 ⇒ 選擇器碰撞 ⇒ 變體選錯而不報錯。兩者**不得共用實作**，見 67 §D.5（`limits.handle.liquid_filter_ascii_only: false`）與 **V-161**。
+
+> ✅ **V-119 結案**（2026-08-12）：原問題是「Shopify `handleize` 對 CJK 的實際行為」，用途是決定我方要不要對齊。裁定已直接定死我方行為（一律 ASCII），**對齊問題消失**，故結案。其**主題相容殘留**（filter 面）改由 **V-161** 承接（67 §L）。
+
+**改名 301**：handle 變更時，於同一 transaction 插入 `url_redirects(from=舊, to=新, 301, source=handle_change)`。**舊 handle 永不回收**（除非商家手動刪除該重導；唯一性檢查因此要比對 `url_redirects`，67 §D.4(a)）。**多語言補充**：登記與比對一律用**不帶前綴的正規路徑**，路由層命中 404 前先剝 locale 前綴 → 查表 → **命中後把前綴加回去再 301**（`/en/products/舊` → `/en/products/新`，不得丟回 `/products/新`）。下架商品：預設 **410**，可選 301 至最相關頁（30 §9-5）。**禁止 soft-404**。
 
 ---
 
@@ -680,7 +714,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | # | 項目 | 里程碑 | 需要的 schema／欄位 | 驗收 |
 |---|---|---|---|---|
 | S1 | `url_redirects` 表＋handle 變更掛鉤＋410 紀律 | **M0**（表）/ **M1**（掛鉤） | §B.5 | 改 handle 後舊 URL 301；下架回 410；鏈長 ≤ `limits.seo.redirect_max_chain` |
-| S2 | 商品／系列／頁面／文章的 `seo_title`／`seo_description`／`handle` 欄位＋可翻譯 | **M1** | 29 §2.1 對應 key | 翻譯後台可見；digest 機制生效 |
+| S2 | 商品／系列／頁面／文章的 `seo_title`／`seo_description`（**可翻譯**）＋ `handle`（🔴 **不可翻譯**，全站單一值、語言走 URL 前綴，67 §D.3） | **M1** | 29 §2.1 對應 key；handle 見 `limits.handle` | 翻譯後台可見；digest 機制生效；handle 不出現在可翻欄位清單 |
 | S3 | media `alt` 一級欄位＋`alt_source` 稽核＋缺 alt 計數 | **M1** | `media.alt`, `media.alt_source` | 商品列表顯示缺 alt 數 |
 | S4 | Admin SEO 預覽卡（五列，含價格） | **M1** | 讀 `PriceView` | 與前台渲染價格逐位相同（§O SEO-2） |
 | S5 | `resolve_price_view()` ＋ `SeoPriceParityTest` | **M2**（feed 消費者在 M5 接入） | §A.3 | 四方全等；任一不等紅燈 |
@@ -787,7 +821,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | **V-116** | 「對爬蟲不套用地區自動重導」是否被 Google 視為可接受（非 cloaking） | Google Search Central 官方明文或官方人員表態 | **自動重導預設關閉**；開啟時 bot 與人取得相同頁面內容 | §K |
 | **V-117** | 是否有**任何** AI 供應商官方文檔宣稱消費 `llms.txt`（本輪只查到 Google 明確否定 ＋ OpenAI 文檔未提及） | 各家開發者文檔逐一覆核（Anthropic／Perplexity／Microsoft） | `llms.txt` 僅做零成本別名；不投入內容策展 | §H.2 |
 | **V-118** | `agents.md`／`llms.txt`／`.well-known/ucp` **是否真被代理抓取**（伺服器日誌級證據） | **我方自己量**（§H.7 端點命中率儀表板） | 端點照做，但不據此宣稱效果 | §H.2、§H.7 |
-| **V-119** | Shopify `handleize` 對 CJK 標題的實際行為（保留／轉寫／落 id） | 實測（中文標題建商品） | 我方保留 Unicode handle ＋ percent-encoding | §F.3 |
+| ~~**V-119**~~ | ~~Shopify `handleize` 對 CJK 標題的實際行為（保留／轉寫／落 id）~~ | — | ✅ **2026-08-12 結案**：使用者裁定「url hand 使用英文標題，禁止使用中文」⇒ 我方一律 ASCII，**不再需要對齊 Shopify**，原問題失去用途。主題相容殘留（Liquid `handleize` filter 面）改由 **V-161** 承接（67 §L） | §F.3（已改寫） |
 | **V-120** | Google 兩份官方文檔的張力：多地區重複內容建議 canonical 到偏好版本 vs 在地化頁需可索引才能被 hreflang 服務 | 實測（同語言雙地區，觀察 GSC 收錄） | **一律 self-canonical**，不跨市場 canonical | §B.4 |
 | **V-121** | Shopify Catalog 的商品「符合資格」條件具體清單 | help.shopify.com Catalog 子頁逐頁；或 dev store 觀察拒登原因 | 我方以 GMC 規格為完整度門檻（超集策略） | §H.4 |
 | **V-122** | 各 AI 通路（ChatGPT／Copilot／Gemini／Meta）對商品欄位的硬性要求與拒登原因碼 | 各通路官方文檔；或代理管道後台的錯誤清單 | 同上 | §H.4 |
