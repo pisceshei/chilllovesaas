@@ -4852,6 +4852,152 @@ ul.cl-draglist
 
 # 附錄
 
+## §33 Pill 收合欄位組 `cl-pillset`
+
+**來源**：59 §2（實站商品詳情頁的核心交互，light DOM 抽取；**只取行為與結構事實，樣式與 class 名一律自有**，CLAUDE.md 鐵律 9）、59 §7（建立頁與詳情頁的 pill 分組鍵一字不差 ⇒ 這是元件不是頁面裝飾）、47 §5 M1／M4、48 §15（摘要行的靈魂論在此升級成「pill 上的值」）。
+**原型落地狀況（2026-08-12，寫清楚以免本節被讀成「全都做完了」）**：`docs/design/chilllove-admin-v2.html` 的 `pillSet()` / `pillToggle()` / `pillValue()` / `pillKey()` / `pillAnim()` / `pillAfter()`，首批三個實例＝商品頁的 `pillgrp-pricing` / `pillgrp-inventory` / `pillgrp-shipping`（詳情態與建立態共用）。
+- **已實作**：§33.1 解剖、§33.2 的 default（空值／有值）／hover／active／focus-visible／expanded 五態、§33.3 全部（含 M4 兩個陷阱的收尾）、§33.4 全部、§33.5 的換行與 `pointer: coarse` 命中區、§33.6 的值 ellipsis／金額／布林／預設 enum 視為空值／多組同時展開／區域內表格。
+- **尚未實作**（本節是給正式 React 版的契約，不是原型現況）：disabled／loading／error 三態、值的 skeleton、sessionStorage 持久化（原型用記憶體物件 `PILL_OPEN`）。
+- **class 名對照**：原型沿用自己的既有命名（`.pillset` / `.pills` / `.pill` / `.pl-l` / `.pl-v` / `.pl-c` / `.pillpanel` / `.pp-in`），正式版依 §A.7 一律 `cl-` 前綴，對照如下：`pillset→cl-pillset`、`pills→cl-pillset__row`、`pill→cl-pill`、`pl-l→cl-pill__label`、`pl-v→cl-pill__value`、`pl-c→cl-pill__caret`、`pillpanel→cl-pillset__panel`、`pp-in→cl-pillset__panel-in`。
+
+> **這個元件在解什麼問題**：商品頁的欄位太多。主要欄位（價格／數量／重量）常駐可見，次要欄位（成本／條碼／HS 代碼）收成一排 pill，**但 pill 上仍然顯示目前值**——所以不必展開就知道有沒有填。這比「全部展開」（版面爆炸）與「摺疊成一個標題」（要展開才知道填沒填）都省視覺成本。
+>
+> **與 §14 CEC、§15 Accordion 的差別（別搞混）**
+>
+> | | `cl-pillset` | CollapsedEditCard §14 | Accordion §15 |
+> |---|---|---|---|
+> | 觸發器數量 | **一組 N 顆 pill 對一個區域** | 1 顆 trigger 對 1 個區域 | 1 顆 trigger 對 1 個區域 |
+> | 收合態顯示 | 每顆 pill＝**一個欄位的標籤＋目前值** | 一句固定說明 | 整區的當前值摘要 |
+> | 語意 | 「這張卡還有這些欄位，各自填成這樣」 | 「這一區可以編輯」 | 「這一區現在是這樣」 |
+> | 展開後 | 摘要 pill **保留顯示**且變成展開態外觀 | hint 淡出 | 摘要保留 |
+> | 典型位置 | 卡片主欄位**下方**一整排 | 卡片本身 | 設定頁分區 |
+
+### 33.1 解剖
+
+```
+cl-pillset                          data-cl-pillset="<groupId>"；margin-block-start: --sp-300
+├─ cl-pillset__row                  role="group" aria-label="<卡片名>"；flex-wrap; gap --sp-150
+│   └─ button.cl-pill  × N          高 --ctl-28；padding --sp-050 --sp-200；圓角 --r-200
+│       ├─ cl-pill__label           --t-xs, --text-2（**恆在**）
+│       ├─ cl-pill__value           --t-sm/600, --text（**只在有值時存在**；金額加 .cl-money）
+│       └─ cl-pill__caret           --t-2xs, --text-3；展開時 rotate(180deg)
+└─ cl-pillset__panel                id="<groupId>"；**整組共用這一個**
+    └─ cl-pillset__panel-in         border-block-start: var(--hairline) solid var(--border-2)
+                                    padding-block-start / margin-block-start: --sp-300
+```
+
+| 屬性 | 值 |
+|---|---|
+| pill 高 | `--ctl-28`（用 `min-height`，值長時允許長高，不裁字） |
+| pill 圓角 | `--r-200`（**不是 `--r-pill`**——47 §D：全圓藥丸是 tag 專用，可點的控件一律 8） |
+| pill 底 | idle `--surface`／hover `--surface-2`／**展開 `--surface-sunken`** |
+| 值的最大寬 | `19ch` 級的固定上限 ＋ ellipsis（超長 SKU 不能把一排 pill 撐成三行） |
+| panel 內距 | 上緣一條 `--hairline` 分隔線；其餘沿用卡片內距 |
+
+**三條硬性規則**（少一條就不是這個元件）：
+
+1. **主要欄位不進 pill。** 進 pill 的是次要欄位。哪些是主要欄位由該卡片決定（定價卡＝價格、庫存卡＝追蹤開關與逐地點表、運送卡＝實體商品／包材／重量）。
+2. **pill 有值顯示「標籤＋值」、空值只顯示標籤。** 不要為了整齊而顯示「未設定」——空白本身就是訊息，多一個佔位字反而要讀。
+3. **N 顆 pill 的 `aria-controls` 指向同一個 `id`，展開時 N 顆的 `aria-expanded` 一起翻。** 它們描述的是同一個區域的狀態；只翻被點的那一顆，SR 會讀到「同一個區域同時是展開和收合」。
+
+### 33.2 完整態表
+
+| 態 | 變什麼 → 變成什麼 |
+|---|---|
+| **default（收合／空值）** | 只有標籤；底 `--surface`，框 `--hairline solid --border`，字 `--text-2` |
+| **default（收合／有值）** | 標籤 ＋ 值；值 `--text` / 600 字重。**有值與空值的差別必須靠「有沒有那段文字」，不是靠顏色**（WCAG 1.4.1） |
+| **hover** | 底 `--surface-2`（M1） |
+| **active** | 底 `--surface-sunken-active` |
+| **focus-visible** | §A.2 的雙層環；`overflow` 用 `clip` ＋ `overflow-clip-margin: var(--focus-ring-w)`，否則環會被收合容器切掉 |
+| **disabled** | 只降文字色到 `--text-disabled`（47 §E，**不降 opacity**）＋ `aria-disabled`；值仍顯示（唯讀情境要看得到值） |
+| **loading** | 值未就緒 → 值的位置放 skeleton 條，**標籤照常顯示**；pill 本身仍可點展開 |
+| **error** | 該區域內有欄位驗證失敗 → 出錯欄位對應的 pill 左緣 `box-shadow: inset var(--bw-150) 0 0 var(--critical)`，且**整組自動展開**並把焦點送到第一個錯誤欄位。收合態藏住錯誤是最糟的做法（同 §14.2） |
+| **selected** | N/A（pill 不是選取器；要選取請用 §9 filter chip） |
+| **read-only** | pill 可點展開；區域內控件 read-only；caret 保留 |
+| **expanded** | N 顆 pill 全部 `aria-expanded="true"`；底 `--surface-sunken`；caret 轉 180°；**值保留顯示**（與 §14 CEC 相反） |
+
+### 33.3 動效
+
+| 屬性 | 規則 | 為什麼 |
+|---|---|---|
+| pill 底色 | **M1**（`background-color var(--dur-base) ease`） | 與站內其他可點列一致 |
+| panel 展開／收合 | **M4**（`max-height var(--dur-fast) var(--ease-decelerate)`） | 47 實測摺疊就是 max-height + 100ms + decelerate；**不是 `height`** |
+| caret | `rotate var(--dur-fast) var(--ease-decelerate)`（用 `rotate` 屬性不用 `transform`） | 與 §15.3 一致；`transform` 會跟位移動畫互相覆寫 |
+| **禁止** | panel 內欄位的逐項延遲進場（stagger）；pill 的位移或縮放 | |
+
+**M4 的兩個陷阱**（§14.3 已列，這裡再強調，因為本元件更容易踩到）：
+- 展開動畫結束後必須把 `max-height` 改成 `none`，否則區域內容變高（例如新增一列表格）會被裁掉。
+- 收合動畫結束後必須加 `hidden`（或 `inert`），**不能只留 `max-height: 0`**——內容仍在 Tab 序裡，焦點會消失在畫面外。
+
+### 33.4 鍵盤與焦點
+
+- 每顆 pill 是真 `<button type="button" aria-expanded aria-controls>`，**不是 `<div onclick>`**。
+- `Enter` / `Space`：切換整組的展開狀態（原生 button 行為，不必自己實作）。
+- `←` / `→`：在**同一組**的 pill 之間移動焦點（環繞）；`Home` / `End` 移到首末。這是 toolbar 式的群組移動，不改變展開狀態。
+- `Esc`：焦點在 pill 上時收合該組。
+- **展開後焦點留在 pill**，不自動跳進區域——使用者可能只是想看一眼。
+  - 例外：因驗證錯誤自動展開時，焦點跳到第一個錯誤欄位。
+- **收合時若焦點在區域內，先把焦點送回觸發收合的那顆 pill**，再加 `hidden`。
+- 每次展開／收合都寫 `aria-live="polite"` 播報：`已展開「{群組名}」的其他欄位，共 {N} 個欄位` ／ `已收合「{群組名}」的其他欄位`。連續兩次相同字串要先清空再寫（否則 SR 不重讀）。
+- 展開狀態存**記憶體或 sessionStorage**，不要存 DOM——詳情頁是整段重繪的，狀態掛在 DOM 上會在每次重繪時被清掉。
+
+### 33.5 響應式
+
+| 斷點 | 變化 |
+|---|---|
+| ≥64em | 基準：一排 pill 自然換行 |
+| ≤47.9975em | pill 允許換行成兩三排；值的 ellipsis 上限降到約 `12ch` |
+| ≤26.8125em | 值仍保留（**不要在窄螢幕把值藏掉**——那正好殺死這個元件的價值）；改為標籤與值同一行但更早 ellipsis |
+| `pointer: coarse` | pill `min-height: var(--hit-min)`；橫向 gap 提到 `--sp-200` |
+
+### 33.6 邊界情況
+
+| 情況 | 處置 |
+|---|---|
+| **值超長**（GTIN-14、長 SKU、多段分類路徑） | 單行 ellipsis ＋ `title` 顯示完整值；**不換行**（會把 pill 撐成方塊） |
+| **值是金額** | 拆 span，金額用 `.cl-money`（tabular-nums）；符號與小數位由 market locale 表決定，**元件內不得出現任何幣別符號**（鐵律 10） |
+| **值是布林**（收取稅金／無庫存時繼續銷售） | 一律有值（`是`／`否`、`開啟`／`關閉`），**永遠不是空值**——布林沒有「未填」 |
+| **值是「不啟用」這種預設 enum** | 視為空值，只顯示標籤。否則每張卡都掛一排「不啟用」的雜訊 |
+| **N = 1** | 仍然用本元件（不要退化成 CEC）——語意是「這是一個欄位的摘要」不是「這一區可以編輯」 |
+| **N > 6** | 先問「這張卡是不是該拆兩張」。真的需要就允許換行，**不要做橫向捲動**（捲動會把 pill 藏起來，等於沒有摘要） |
+| **值需要非同步取得** | 標籤先渲染、值放 skeleton；不要延遲整排 pill |
+| **同頁多組同時展開** | 允許。這不是手風琴 |
+| **區域內是表格** | 表格自己包 `tscroll`；`max-height` 動畫量的是包好之後的高度 |
+
+### 33.7 實作備註
+
+```html
+<div class="cl-pillset" data-cl-pillset="pricing">
+  <div class="cl-pillset__row" role="group" aria-label="定價">
+    <button type="button" class="cl-pill" id="pricing-p0"
+            aria-expanded="false" aria-controls="pricing">
+      <span class="cl-pill__label">比較價格</span>
+      <span class="cl-pill__value cl-money">…</span>
+      <span class="cl-pill__caret" aria-hidden="true">⌄</span>
+    </button>
+    <button type="button" class="cl-pill" id="pricing-p1"
+            aria-expanded="false" aria-controls="pricing">
+      <span class="cl-pill__label">單價</span><!-- 空值：沒有 __value -->
+      <span class="cl-pill__caret" aria-hidden="true">⌄</span>
+    </button>
+  </div>
+  <div class="cl-pillset__panel" id="pricing" hidden>
+    <div class="cl-pillset__panel-in">…</div>
+  </div>
+</div>
+```
+
+**常見錯誤做法**：
+- ❌ 每顆 pill 各自展開一個區域 → 版面會像手風琴一樣跳動，而且違反實站形態。
+- ❌ 展開時只翻被點那顆的 `aria-expanded` → SR 讀到互相矛盾的按鈕。
+- ❌ 空值時顯示「未設定」「—」之類的佔位 → 讀者要多讀一個字才知道「沒填」。
+- ❌ 用 `--r-pill` 當圓角 → 那是 tag 的形狀（47 §D）。
+- ❌ 收合只設 `max-height: 0` 不加 `hidden` → 焦點掉進看不見的欄位。
+- ❌ 把展開狀態寫進 DOM class 就當成持久化 → 父層一重繪就沒了。
+- ❌ 值直接寫死在渲染當下的快照、之後不同步 → 使用者改完欄位、收合、pill 還顯示舊值。
+
+---
+
 ## 附錄 A — 元件索引與來源對照
 
 | § | 元件 | class | 主要來源 |
@@ -4888,13 +5034,14 @@ ul.cl-draglist
 | 30 | 分頁器 | `cl-pagination` | 44 §3.1/§19.4/§19.5 |
 | 31 | 字元計數器 | `cl-counter` | 44 §19.6 |
 | 32 | 拖曳排序列 | `cl-dragrow` | 44 §19.7/§21.3 |
+| 33 | Pill 收合欄位組 | `cl-pillset` | **59 §2（實站商品頁核心交互）／§7（建立與詳情共用分組鍵）**、47 §5 M1/M4 |
 
 ## 附錄 B — 實作順序建議
 
 1. **`tokens.css`**：§00 全部 ＋ 47 §1–§5 的原生 token。**先寫斷點常數**（PostCSS custom-media）。
 2. **`base.css`**：§A.2 焦點環、§A.3 的 M1–M7 utility class ＋ reduced-motion 區塊、§A.6 的 `.cl-text`／`.cl-money`。
 3. **原子元件**：§1–§7、§11（按鈕／表單／badge）。每個配 storybook 的九態 story。
-4. **組合元件**：§8–§10、§13–§15、§29、§31。
+4. **組合元件**：§8–§10、§13–§15、**§33**、§29、§31。（§33 依賴 §A.2 焦點環與 M4，排在 §15 之後）
 5. **浮層**：§16–§20（focus trap 要抽成共用 hook）。
 6. **資料展示**：§12（表格是最大的）、§30、§32。
 7. **提示層**：§21–§25。
