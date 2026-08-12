@@ -244,7 +244,12 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 | 出貨 | 不變 | fulfillment 帶物流商代收單號；`orders.cod_expected_cents` 落庫 |
 | 物流商撥款對帳 | `PENDING → PAID` | 匯入物流商對帳檔 → 逐筆比對 `(carrier, cod_tracking_no, amount_cents)`；**完全相符才**條件式 UPDATE transaction `pending → success` |
 | 金額不符 | 停在 `PENDING` ＋ 標 `review` | **不得自動回寫**；進「COD 對帳差異」佇列由人工處置（差 1 元也不放行——這是現金流入口） |
-| 買家未取件退回 | `PENDING → VOIDED`（或取消訂單） | 走 F4 取消流程；庫存依 `restock` 回補；**觸發 F5.5 的發票 router** |
+| 買家未取件退回 | `PENDING → VOIDED`（或取消訂單） | 走 F4 取消流程；庫存依 `restock` 回補；🔴 **直接發 `einvoice/void_requested`（訂單層作廢），不走 F5.5 的退款 router** |
+
+<!-- 依 docs/specs/55 §B.1 T17、§D G-05 修正，原文：「**觸發 F5.5 的發票 router**」。
+     🔴 此處原本寫錯：未取件退回時**款項從未收到**，退款金額為 0 → router 的三分支（== 作廢／< 折讓／> 作廢）
+     會全部落到「折讓 0 元」：開一張 0 元折讓、原發票仍然有效 ⇒ 一筆從未成立的銷售留著全額發票。
+     必須由訂單層事件直接作廢。任何人翻舊版都不要改回走 router。 -->
 
 **硬要求**：對帳匯入是**冪等**的（以 `(carrier, statement_id, row_no)` 唯一索引去重，重覆匯入同一份對帳檔不得產生兩筆 paid）；回寫一律走 `Orders::MarkAsPaid` 同一支 service（不得在匯入器裡直接 `update(financial_status:)`）。
 **⚠ 待查證（來源未載明）**：各物流商對帳檔格式與撥款週期為合約值，非官方文檔（同 V-11 的 `verify_tw_carrier_limits`）。
@@ -467,16 +472,84 @@ if remaining > 0:
 | 退款（不論走 `refundCreate` 或 `returnProcess`） | F5 執行順序第 3 步之後 | `einvoice/refund_routed` | `Platform::Einvoice::RefundRouter`（38:1341）→ VoidJob 或 AllowanceJob |
 | 出貨（`issue_timing = on_fulfillment` 時的開立） | F3 出貨 transaction 的 outbox | `einvoice/issue_requested` | `Platform::Einvoice::IssueJob`（38:1103） |
 | **訂單編輯 commit 造成總額變動**（NP1-H，本輪新發現） | F8.1(c) 的 commit transaction | `einvoice/refund_routed`（同 router） | 總額**下降**⇒ 折讓；總額**上升**⇒ 補開一張發票（不是改原發票） |
+| **換貨：買家補差額**（`net < 0`，F7.3 規則 7） | 補款成功後（M17 同一路徑） | `einvoice/issue_requested` | **補開一張**，金額＝`balance_to_collect` |
+| **換貨：退差額**（`net > 0`） | F5 執行順序第 3 步之後（同退款） | `einvoice/refund_routed` | 折讓，金額＝實際金流退款額 |
+| **換貨：等值互換**（`net == 0`） | — | **無事件** | ⚠ **待查證 V-23 同組**：等值換貨是否須「折讓原發票＋重開」台灣實務未覆核；暫定 **no-op**（無金額變動＝無折讓基數） |
+| **COD 買家未取件退回**（F4.4 第 5 列） | F4 取消流程的 outbox | **`einvoice/void_requested`**（🔴 **不是** `refund_routed`） | 直接作廢；作廢窗已關 ⇒ 全額折讓 |
 
-**⚠ 待查證（來源未載明，NP1-G）**：退款分配到**禮品卡**的部分是否計入發票折讓基數——F5.4 會把退款優先分配給禮品卡，但 38:1341 的 router 只比較「退款金額 vs 發票金額」。台灣實務上商品禮券退回未必等同現金退款，兩份規格的交界**皆未定義**。在覆核前，router 的輸入一律傳「**扣除禮品卡分配後**的實際金流退款額」並標旗標，見 §待查證 V-20。
+<!-- 依 docs/specs/55 §B.1 T13–T15、T17 與 §D G-05、G-09 補寫。
+     ①**換貨三列原本完全不存在**：F7.3 有八條換貨規則，**無一條提發票** → 補差額不補開、退差額不折讓 ＝ 稅務金額與實收對不上（55 §D G-09）。
+     ②🔴 **COD 未取件退回原本寫「觸發 F5.5 的發票 router」，但 router 的入參語義在此不成立**：
+        該情境的退款金額為 **0**（款項從未收到），router 的三分支（== 作廢／< 折讓／> 作廢）會全部落到「折讓 0 元」——
+        開一張 0 元折讓、原發票仍然有效 ⇒ 一筆從未成立的銷售留著全額發票。
+        改為由**訂單層事件**直接發 `einvoice/void_requested`，不經退款路徑。任何人翻舊版都不要改回走 router。（55 §D G-05） -->
 
-**(b) 路由判定（照 38:1341 的既有規則，本節只負責「一定要呼叫它」）**：退款金額 `== 發票金額` → 作廢；`<` → 折讓；`>`（超額退款）→ 作廢。**金額比較全程 integer cents**（傳入 float 即 raise）。
+**⚠ 待查證（來源未載明，V-23）**：`issue_timing = on_fulfillment` 在**部分出貨**時的開立粒度（每次出貨各開一張／全部出完才開一張）——38:876 只寫「出貨（建議）」，未定義多次出貨；Shopify 不開立台灣發票，三份官方文檔皆不可能有答案。**定案前，`on_fulfillment` ＋ 多次出貨的組合一律擋下並轉人工佇列，不得靜默選一邊**（`limits.einvoice.partial_fulfillment_issue_granularity: null`）。
+
+**⚠ 待查證（來源未載明，NP1-G ／ V-20，55 號盤點**擴大至商店抵用金**）**：退款分配到**禮品卡**或**商店抵用金**的部分是否計入發票折讓基數——F5.4 會把退款優先分配給禮品卡（且 `refundMethods` 支援退至 store credit，46a:743），但 38:1341 的 router 只比較「退款金額 vs 發票金額」。台灣實務上商品禮券／購物金退回未必等同現金退款，兩份規格的交界**皆未定義**。在覆核前，router 的輸入一律傳「**扣除禮品卡與商店抵用金分配後**的實際金流退款額」並標旗標（`limits.einvoice.allowance_base_excludes`），見 §待查證 V-20／V-22。
+
+**(b) 路由判定（55 號盤點收斂版，取代 38:1341 的「單張發票 × 單次退款」判定）**
+
+> <!-- 依 docs/specs/55 §B.2、§D G-02／G-03／G-04／G-10 修正。
+>      🔴 此處原本寫錯：本節原文為「退款金額 `== 發票金額` → 作廢；`<` → 折讓；`>` → 作廢」，直接照抄 38:1341 的
+>      `if refund.amount_cents >= invoice.total_cents`。該判定**只看本次退款額、只看一張發票**，有四個破口：
+>        ①**無累計上限**：兩次各退 60% ⇒ 開出兩張各 60% 的折讓 ⇒ 折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆。
+>        ②**作廢窗已關時無 fallback**：38:1356 留了 `EinvoiceVoidPolicy.window_open?` 掛勾但 router **從不呼叫**
+>          ⇒ 跨期別的全額退款會嘗試作廢、被加值中心拒絕、該筆銷售永遠沒有沖銷憑證。
+>        ③**假設一訂單一發票**（38:1346 逐字 `refund.order.einvoice` 單數）⇒ 與本節 (a) 的「總額上升補開一張」直接矛盾。
+>        ④**開立在途（`state='issuing'`）判為 no_invoice 而 no-op** ⇒ 加值中心 p95 數秒（38:1303）的窗口內退款會永久遺失稅務動作。
+>      任何人翻舊版看到 `refund.amount_cents >= invoice.total_cents` 都不要改回去。 -->
+
+```
+route(order, refund_cash_cents):        # refund_cash_cents 定義見 (a) 的 V-20/V-22 註記
+  # 0. 在途保護：開立中的發票不得被當成「沒有發票」
+  if order.einvoices.exists?(state: 'issuing'): return :defer     # 🔴 延後重試，不得 no-op
+
+  invoices = order.einvoices.where(state: 'issued')
+  return :no_invoice if invoices.empty?                            # 尚未開立 ⇒ no-op（不產生孤兒作廢）
+
+  # 1. 沖銷順序：能追溯到品項的先沖該張；不能追溯者 LIFO（後開的先沖，離作廢窗關閉最遠）
+  #    ⚠ 無官方來源，本專案決策（limits.einvoice.allowance_offset_order: traceable_then_lifo）
+  remaining = refund_cash_cents
+  for inv in ordered_invoices(invoices):
+      allowed = inv.total_cents - Σ inv.allowances.amount_cents    # 該張剩餘可沖額＝累計上限
+      take    = min(remaining, allowed)
+      next if take == 0
+      if take == inv.total_cents and inv.allowances.empty? and EinvoiceVoidPolicy.window_open?(inv):
+          → VoidJob(inv)                                           # 全額 + 未折讓過 + 作廢窗未關 ⇒ 作廢
+      else:
+          → AllowanceJob(inv, amount_cents: take)                  # 其餘一律折讓（含「本該作廢但窗已關」）
+      remaining -= take
+
+  # 2. 超額退款：沒有稅務憑證可沖，🔴 不得憑空產生折讓
+  enqueue_manual_review(order, remaining) if remaining > 0
+```
+
+**金額比較全程 integer cents**（傳入 float 即 raise，38:1508 既有測試）。累計上限一律以**條件式 UPDATE** 實作（`limits.einvoice.allowance_cap_enforcement: conditional_update`），**禁止先 SELECT 再 INSERT**。
+
+**折讓單的未稅／稅額拆分（含稅定價，台灣預設）**——唯一捨入點是 `floor`，稅額用差額法保證精確相加：
+
+```
+allowance_untaxed_cents = floor( take * 10000 / (10000 + limits.einvoice.business_tax_rate_bp) )
+allowance_tax_cents     = take - allowance_untaxed_cents        # 差額法 ⇒ 未稅 + 稅 == 含稅（無 1 分錢漂移）
+```
+未稅定價（`taxes_included = false`）時改走 F5.1 的 X2／X3（最大餘數法、餘數歸最後一次）。
+**⚠ 待查證**：折讓單金額拆分的**法定捨入方向**尚未由本專案覆核，上式為本專案決策的機械規則。
 
 **(c) 硬要求**
 1. outbox 寫入與退款／取消**同一個 transaction**（18-F1 的「事件必達」保證）；provider 呼叫一律在 transaction 外。
 2. 發票 job 失敗**不得**回滾退款——退款已對顧客生效，發票補開由 38 的重試與「開立失敗待重試」告警承擔（38:909）。
-3. 尚未開立發票的訂單被退款 → router 直接 no-op（不產生孤兒作廢）。
+3. 尚未開立發票的訂單被退款 → router 直接 no-op（不產生孤兒作廢）；**但「開立在途」不算「尚未開立」**，見 (b) 第 0 步。
 4. 18-F1 的 topic 清單與 28 §15 的 webhook topics 必須同步新增這三個 `einvoice/*`。
+5. **一張訂單可以有多張發票**（編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）——🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引（`limits.einvoice.multiple_invoices_per_order_allowed: true`）。
+
+**(d) 四條不變量（nightly 對帳斷言，55 §B.2）**
+1. `Σ einvoice_allowances.amount_cents`（per invoice）`≤ einvoices.total_cents`——**任何時刻**成立。
+2. `Σ 該訂單所有 issued 發票的 total_cents ≥ Σ 該訂單實收金流`（不得少開）。
+3. 每一筆 `refunds` 都能對應到 0 或 1 筆 `void` ＋ N 筆 `allowance`，**不得對應到 0 個稅務動作**（除非 `:no_invoice`）。
+4. 全程 integer cents。
+
+**必測**：①同一發票連退 60%＋60% → 第二張折讓**只有 40%**，第三次退款轉人工佇列；②`window_open? == false` 的全額退款 → 產生**全額折讓**而非失敗；③`state = 'issuing'` 時退款 → `:defer` 並重試，最終仍產生折讓；④編輯加收補開後該訂單 `einvoices` 有 2 列；⑤COD 未取件退回 → 產生 `einvoice/void_requested`（**不是** 0 元折讓）；⑥含稅 105 折讓 → 未稅 100 ＋ 稅 5，且 `未稅 + 稅 == 含稅` 對 1～1,000,000 cents 全域成立。
 
 ## F6. 顧客管理
 

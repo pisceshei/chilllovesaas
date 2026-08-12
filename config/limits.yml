@@ -68,6 +68,33 @@ idempotency:
     - inventoryTransferCreate
     - locationActivate
     - locationDeactivate
+    # --- 以下 9 支為 55 號盤點（docs/specs/55 §A / §D G-08）反向補齊：
+    #     官方 17 個強制清單是「Shopify 自己的金流寫入點」，**不涵蓋我方自己的**。
+    #     50/52/54 三輪都只抄了官方清單，從未反向盤點「我方哪些路徑會動錢」。
+    #     判定標準沿用 NP1-D（orderEditCommit）的既有決策：**凡金流寫入一律強制冪等，不論 Shopify 有無強制**。
+    - orderCapture               # 支援部分請款且可多次（46c:526）；重試 ⇒ 重複扣款（55 §A M05–M08）
+    - orderMarkAsPaid            # 兩個 staff 同時標記 ⇒ 兩筆 sale（55 §A M21）
+    - draftOrderComplete         # 重複 complete ⇒ 兩張訂單（55 §A M22）
+    - giftCardCreate             # 重複發卡 ⇒ 憑空多出負債（55 §A M27/M28）
+    - giftCardCredit             # 重複儲值（55 §A M29）
+    - giftCardDebit              # 重複扣抵 ⇒ 顧客資損（55 §A M30）
+    - giftCardDeactivate         # 天然冪等，列入以統一契約（55 §A M31）
+    - storeCreditAccountCredit   # 重複發放（55 §A M23）
+    - storeCreditAccountDebit    # 重複扣抵 ⇒ 顧客資損（55 §A M24）
+  # 平台域強制清單（與租戶 GraphQL 層解耦；兩者不得混用同一個 resolver 檢查點）。
+  # 這兩支的簽名本就有 idempotencyKey!（38:1061–1062），列入使「唯一真相」成立。
+  required_for_platform:
+    - platformEinvoiceVoid
+    - platformEinvoiceAllowanceCreate
+  # 🔴 第二層業務唯一鍵（**不取代**冪等 key，只做重覆偵測）。
+  # 為什麼需要：ttl_hours = 24（46a:789 逐字「24 小時後同 key 視為全新操作」），
+  # 但「同一張 fulfillment 只能請款一次」是**永久**約束，24 小時的冪等窗擋不住。見 docs/specs/55 §A.3。
+  business_unique_keys:
+    orderCapture:              [order_id, parent_transaction_id, amount_cents, seq]
+    orderMarkAsPaid:           [order_id]
+    draftOrderComplete:        [draft_order_id]
+    giftCardDebit:             [checkout_token, gift_card_id]
+    storeCreditAccountDebit:   [checkout_token, store_credit_account_id]
 
 # =============================================================================
 # 3. 訂單／取消／編輯
@@ -168,6 +195,12 @@ refund:
   tax_allocation_remainder_owner: last_refund
   return_fees_taxable: false
   verify_tax_allocation_rule: true
+  # F5.4 的 Refunds::Allocator 是純函式、輸出原本不落庫 → 無法對帳「退到哪張卡」，
+  # 也無法支撐發票折讓基數的計算（55 §B.3）。建議表 `refund_transaction_allocations`
+  # （唯一鍵 `(refund_id, order_transaction_id)`）。見 docs/specs/55 §D G-16。
+  allocation_persistence_required: true
+  # 退款分配到禮品卡的部分**必須回補卡片餘額**——F5.4 只寫了「分配」沒寫「回補寫入點」（55 §D G-17）。
+  gift_card_refund_credits_balance: true
 
 # =============================================================================
 # 6. 請款／授權（P0-12）
@@ -206,6 +239,15 @@ capture:
   authorization_days_source: psp_and_card_network   # 非 shop.plan
   # 授權到期示警提前天數。出處：docs/research/22:40（ours，對應 46c:536「即將到期 badge」）
   expiry_warning_days_before: 2
+  # --- 部分請款的累計上限與併發（55 號盤點 §A.2／§D G-13、G-14；規格見 docs/specs/15 F4.1(d)）---
+  # 46c:526 逐字「支援部分請款；金流商或 Plus 可**多次**部分請款」→ 這是「同一筆金流的多次寫入」，
+  # 只做冪等不夠（冪等擋同一把 key 重送，擋不住兩把合法 key 加起來超額）。
+  partial_capture_allowed: true
+  cumulative_cap_source: authorization_amount        # Σ captured_cents ≤ authorization.amount_cents
+  cumulative_cap_enforcement: conditional_update     # 🔴 禁止先 SELECT 再 UPDATE
+  # 開放 automatic_per_fulfillment 前必須探測 PSP 能力，**不是只看 shop.plan**（15-F4.1(a)）
+  multi_partial_capture_requires_psp_probe: true
+  idempotency_key_template: "capture-{order_id}-{fulfillment_id|checkout|fulfilled|seq}"
 
 # =============================================================================
 # 7. 庫存（P0-15）
@@ -313,6 +355,11 @@ checkout:
   require_login_forces_email_contact: true
   # SMS 行銷同意永不可預先勾選。出處：46c:756–768（help）
   sms_consent_never_prechecked: true
+  # 小費（tip）。出處：docs/research/22:180（live，「小費三檔%」）——**檔位的實際數值三方文檔皆未載明**。
+  # 55 號盤點發現 15-F2 的 Result 結構沒有小費欄位（G-19）；小費是否計入發票金額亦未定義。
+  tip_enabled_default: false
+  tip_percent_options: null
+  verify_tip_options: true
 
 # =============================================================================
 # 11. 地點／運送
@@ -404,6 +451,48 @@ store_credit:
   consumption_order: earliest_expiry_first
   expiry_boundary: shop_timezone_end_of_day
   unsupported_contexts: [draft_order, edited_order, third_party_channel]
+  # --- 併發與稅務（55 號盤點 §A M23–M26／§B T22–T23／§D G-07）---
+  # 抵用金是金流寫入點但**專案內完全沒有規格章節**：只有本區塊 5 個常數。
+  # 兩分頁同時結帳用同一帳戶 ⇒ 超額扣抵；累計上限（< USD 15,000）在併發下也會被突破。
+  concurrent_debit_strategy: conditional_update      # UPDATE … WHERE balance_cents >= ?
+  balance_floor_cents: 0
+  # ⚠ 待查證 V-22（**我方依台灣法規自訂，Shopify 無此概念**）：
+  #   ①發放抵用金是否為應稅事件 ②使用時屬「付款方式」（發票金額＝商品總額）或「折扣」（發票金額＝扣抵後實收）
+  #   二選一直接決定發票金額，差額等於抵用金全額。定案前不得預設任一邊。
+  tax_event_on_issue: null
+  tax_event_on_use: null
+  verify_tw_tax_treatment: true
+
+# =============================================================================
+# 12b. 禮品卡（55 號盤點新增；金流寫入點 M27–M32、稅務事件點 T19–T21）
+# =============================================================================
+# 🔴 本區塊在 55 號盤點前**完全不存在**——禮品卡在專案內只有 22:116 一行按鈕描述與 28 §8 的四支 mutation，
+#    卻同時是 6 個金流寫入點與 3 個稅務事件點的交會處（docs/specs/55 §D G-06、G-12）。
+gift_card:
+  # 面額上限。出處：docs/research/41:426、docs/research/22:116（live，後台發卡表單「面額 ≤ $2,000」）
+  max_initial_value_cents: 200000
+  # 停用＝**永久**（22:116 逐字）；停用不歸零餘額（保留供對帳）
+  deactivate_is_permanent: true
+  deactivate_zeroes_balance: false
+  # 後台只見末 4 碼，完整卡號僅顧客可見（22:116）；code 以 digest 存（同 api_tokens，S19-F5）
+  admin_sees_last4_only: true
+  # 排程寄送最多 90 天後。出處：docs/research/42:494（ours，前台收件人表單實測值）
+  scheduled_send_max_days: 90
+  # 併發：同一張卡兩張訂單同時結帳 ⇒ 超額扣抵（最典型的併發資損，55 §A.2）
+  balance_floor_cents: 0
+  concurrent_debit_strategy: conditional_update      # UPDATE … WHERE balance_cents >= ?
+  # ⚠ 待查證 V-21（**我方依台灣法規自訂，Shopify 不開立台灣統一發票 → 46a/46b/46c 不可能有答案**）：
+  #   台灣「商品禮券」的開立時點為二選一，**互斥**——
+  #     模式 A：發行時開立、兌換時不再開立
+  #     模式 B：發行時不開立、兌換時開立
+  #   兩邊都開 ⇒ 同一筆銷售兩張發票（重複課稅）；兩邊都不開 ⇒ 漏開。財政部函釋原文尚未由本專案覆核。
+  tax_event_on_issue: null
+  tax_event_on_redeem: null
+  tax_event_on_expire: null
+  verify_tw_voucher_tax_treatment: true
+  # 比照 limits.market.shipping_inherits 的既有處置（54 號 V-02）：**未定案時解析器拒絕啟動**，
+  # 不讓它靜默取一個預設值。這是唯一能保證「不會悄悄開錯發票」的做法。
+  resolver_refuses_start_when_undecided: true
 
 # =============================================================================
 # 13. 顧客帳號／內容
@@ -451,6 +540,102 @@ notification:
   phase1_implemented_count: 12
   # ⚠ 44 的 45+ 範本清單為 UI 實測，官方文檔未提供完整 event_key 列表；本專案 event_key 命名為自定（V-18）。
   verify_event_key_catalog: true
+
+# =============================================================================
+# 14b. 台灣電子發票（55 號盤點新增；稅務事件點 T01–T30，規格見 docs/specs/38 §3B 與 docs/specs/16 F5.5）
+# =============================================================================
+# 🔴 **本區塊在 55 號盤點前完全不存在**，但 `docs/specs/38:1467` 逐字要求
+#    「建 5 張表；`config/limits.yml` 加 `einvoice.track_low_ratio: 0.15`、`einvoice.cert_warn_days: 60`」
+#    ——38 自己把 0.15 寫成程式碼常數 `LOW_RATIO = 0.15`（38:1265），違反 CLAUDE.md 鐵律 6。（55 §D G-11）
+#
+# 🔴 **官方層級全部是 ours**：Shopify **不開立台灣統一發票**，46a/46b/46c 三份官方文檔中沒有任何一條
+#    關於字軌／折讓／作廢／載具／統編的規則。本區塊一律是「**我方依台灣法規自訂**」，
+#    **不得**在任何文件中把它們寫成 Shopify 行為。法規原文未覆核者一律 null ＋ verify 旗標。
+einvoice:
+  # --- 字軌與憑證監控（出處：docs/specs/38:1467、38:1265、38:910，ours 轉述 33 §2.14）---
+  track_low_ratio: 0.15            # 餘量低於 15% 開 track_low 告警（38 明言「台灣營運最常見的事故來源」）
+  cert_warn_days: 60               # 工商憑證到期前 60 天示警
+
+  # --- 開立時機（出處：docs/specs/38:876，ours，逐字「付款／**出貨（建議）**／收貨」三選一）---
+  issue_timing_options: [on_payment, on_fulfillment, on_delivery]
+  issue_timing_default: on_fulfillment
+  # ⚠ 待查證 V-23：`on_fulfillment` 在**部分出貨**（一張訂單分多次出貨）時的開立粒度——
+  #   「每次出貨各開一張」與「全部出完才開一張」互斥；38:876／33 §2.14 只寫「出貨」，未定義多次出貨。
+  #   🔴 定案前：`on_fulfillment` ＋ 多次出貨的組合**一律擋下並轉人工佇列**，不得靜默選一邊。（55 §D G-01）
+  partial_fulfillment_issue_granularity: null
+  verify_partial_fulfillment_granularity: true
+
+  # --- 上傳／作廢／折讓的法定期限（全部未覆核）---
+  # ⚠ V-06（52 號既有）：38:885 逐字「『48 小時上傳』來自媒體整理，建議以財政部《電子發票實施作業要點》
+  #   原文複核——**不得寫死**」；作廢是否受「該期別申報前」限制 33 未載。
+  upload_deadline_hours: null
+  verify_upload_deadline: true
+  void_window_policy: null                 # 對應 38:1356 的 EinvoiceVoidPolicy.window_open? 掛勾
+  verify_void_window: true
+  allowance_deadline_days: null            # ⚠ V-06 延伸：折讓證明單的開立期限，38 未載
+  verify_allowance_deadline: true
+
+  # --- 折讓／作廢的路由不變量（55 §B.2 收斂版，修正 38:1341 的單張單次判定）---
+  # 🔴 38:1341 原本用 `refund.amount_cents >= invoice.total_cents` 只看**本次**退款額：
+  #    兩次各退 60% 會開出兩張各 60% 的折讓 ⇒ 折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆。
+  allowance_cumulative_cap: invoice_total          # Σ allowances(per invoice) ≤ einvoices.total_cents
+  allowance_cap_enforcement: conditional_update
+  # 作廢窗已關時**降級為全額折讓**（不是失敗）——38:1356 的掛勾原本從未被 router 呼叫。（55 §D G-03）
+  void_window_closed_fallback: full_allowance
+  # 開立在途（state='issuing'）時發生退款 ⇒ **延後重試**，🔴 不得判為 no_invoice 而 no-op。（55 §D G-10）
+  defer_when_issuing: true
+  # 一張訂單可有多張發票（訂單編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）。
+  # 🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引——38:1346 的 `refund.order.einvoice`（單數）
+  #    與 16-F5.5 的「補開一張」直接矛盾，此鍵為裁決結果。（55 §D G-04）
+  multiple_invoices_per_order_allowed: true
+  # 多張發票的沖銷順序：能追溯到品項的先沖該張；不能追溯者 LIFO（後開的先沖，離作廢窗關閉最遠）。
+  # ⚠ 無官方來源，本專案決策。
+  allowance_offset_order: traceable_then_lifo
+
+  # --- 折讓基數（55 §B.3 的收斂定義）---
+  # 基數＝**實際金流退款額**（Σ F5.4 的 allocation），不是 suggested_refund 名目值、不是退貨品項價值。
+  # 退貨費用不需再扣一次（它們在 F5.1 的 net 階段就沒被退出去；重複扣 ⇒ 短報銷貨退回）。
+  allowance_base: actual_cash_refund
+  # ⚠ V-20（54 號，本輪**擴大至商店抵用金**）＋ V-22：兩者是否計入折讓基數皆未定案，暫扣除。
+  allowance_base_excludes: [gift_card_allocation, store_credit_allocation]
+  verify_allowance_base: true
+  # 稅額拆分：未稅 floor、稅額用差額法 ⇒ 保證 `未稅 + 稅 == 含稅` 精確相等（無 1 分錢漂移）。
+  # ⚠ 法定捨入方向未覆核；此為本專案決策的機械規則。
+  allowance_tax_split: floor_untaxed_then_difference
+
+  # --- 買方與載具（出處：docs/research/42:518–523，ours，我方依台灣法規自訂）---
+  buyer_types: [b2c, b2b]
+  carrier_types: [member, mobile_barcode, natural_person_cert]
+  mobile_barcode_regex: '^/[0-9A-Z.+-]{7}$'
+  natural_person_cert_regex: '^[A-Z]{2}[0-9]{14}$'
+  donation_code_length_range: [3, 7]
+  tax_id_length: 8
+  # ⚠ V-04（52 號既有）：42:520 的統編檢核為舊規則（權重 1,2,1,2,1,2,4,1）；
+  #   財政部是否已放寬（新增「可被 5 整除」）**須以原文覆核**，不得臆測。
+  verify_tax_id_checksum_rule: true
+  # 營業稅率（basis points）。**我方依台灣法規自訂**；專案內既有假設見 docs/specs/16:360 算例 2「TW 5% 內含」。
+  # 法規原文未由本專案覆核 → 保留 verify 旗標（含稅反推公式在 16-F5.1 X1／55 §B.3）。
+  business_tax_rate_bp: 500
+  verify_tax_rate_source: true
+
+  # --- 對帳（55 §B.2 不變量 2／§D G-24）---
+  # nightly 斷言：Σ 該訂單 issued 發票金額 − Σ 折讓 == Σ 實收金流。38:1509 的 ReconcileJob 只對字軌，不對金額。
+  reconcile_invoice_vs_cash: true
+
+# =============================================================================
+# 14c. 爭議與退單（租戶側；55 號盤點新增。平台側完整規格見 docs/specs/37 §爭議與風控）
+# =============================================================================
+# 🔴 平台側 `disputes` 表齊備（37:986）但**租戶側完全無模型**：`order_transactions.kind` 沒有 chargeback，
+#    `OrderDisplayFinancialStatus` 8 值也沒有爭議態 ⇒ 訂單頁看不到「這筆被爭議了」，仍顯示 PAID。（55 §D G-18）
+dispute:
+  tenant_transaction_kinds: [chargeback, chargeback_reversal]   # ours
+  # 負餘額 180 天由平台承擔。出處：docs/specs/37:531（ours，33 §2.6）
+  negative_balance_deadline_days: 180
+  # ⚠ 待查證 V-24（**我方依台灣法規自訂**）：爭議敗訴時資金被扣回但**商品未退回**、買賣關係未解除，
+  #   與一般退款的稅務性質不同 → 是否構成銷貨退回而應開立折讓，法規與實務作法皆未覆核。
+  #   定案前：**不自動折讓**，開人工工單由合規窗口判定。
+  tax_event_on_lost: null
+  verify_chargeback_tax_treatment: true
 
 # =============================================================================
 # 15. Markets 繼承（P1-32）

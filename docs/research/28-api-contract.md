@@ -30,7 +30,14 @@
 契約保留 `bulkOperationRunQuery/RunMutation`＋狀態機 `CREATED→RUNNING→COMPLETED|FAILED|CANCELED`＋JSONL `__parentId` 格式＋`bulk_operations/finish` topic；demo 以同步分批實作，介面不變。
 
 ### 0.6 冪等
-寫入型 mutation 一律收 `idempotencyKey`；**強制清單見 `config/limits.yml` 的 `idempotency.required_for`**（含 Shopify 自 2026-04 起強制的 17 個 mutation，以 refund／inventory 為主，缺 key **執行期報錯**；另加本專案強制的 `returnProcess` 與 `orderCancel`）。
+寫入型 mutation 一律收 `idempotencyKey`；**強制清單見 `config/limits.yml` 的 `idempotency.required_for`**（含 Shopify 自 2026-04 起強制的 17 個 mutation，以 refund／inventory 為主，缺 key **執行期報錯**；另加本專案強制的 `returnProcess`、`orderCancel`、`orderEditCommit`）。
+
+**本專案另強制的 9 支金流 mutation（55 號盤點補齊）**：`orderCapture`、`orderMarkAsPaid`、`draftOrderComplete`、`giftCardCreate/Credit/Debit/Deactivate`、`storeCreditAccountCredit/Debit`。平台域另有 `required_for_platform`（`platformEinvoiceVoid`、`platformEinvoiceAllowanceCreate`）。
+**第二層業務唯一鍵**（`limits.idempotency.business_unique_keys`）：冪等 key 的 TTL 只有 24 小時（46a:789），但「同一張 fulfillment 只能請款一次」是**永久**約束——凡列於該表者，除冪等 key 外還要有業務唯一索引兜底。
+<!-- 依 docs/specs/55 §A（金流寫入點總表 41 條）、§D G-08 補寫。原文只列了「官方 17 個 ＋ 我方 2 個」——
+     官方清單是「Shopify 自己的金流寫入點」，**不涵蓋我方自己的**（禮品卡、抵用金、手動請款、標記已付、草稿轉單）。
+     50/52/54 三輪都只抄官方清單，從未反向盤點「我方哪些路徑會動錢」；54 號的 NP1-D（orderEditCommit）
+     只補了其中一支，這裡是同一個系統性缺口的其餘 9 支。判定標準沿用 NP1-D：**凡金流寫入一律強制冪等**。 -->
 
 | 項 | 規定 | 出處 |
 |---|---|---|

@@ -1001,7 +1001,15 @@ add_index :einvoice_tracks, [:shop_id, :state, :remaining_local], name: "idx_tra
 | 表 | 關鍵欄位 | 說明 |
 |---|---|---|
 | `einvoices` | `shop_id`, `order_id`, `track_id`, `invoice_number`, `invoice_date`, `total_cents`, `tax_cents`, `buyer_type`(b2c / b2b), `buyer_tax_id`, `carrier_type`, `carrier_id`, `love_code`, `state`(reserved / issuing / issued / failed / voided / number_burned), `provider_ref`, `issued_at`, `void_at`, `void_reason`, `attempts`, `last_error_code`, `idempotency_key` | 金額 **integer cents**（CLAUDE.md 鐵律 3）。`number_burned` = 號碼已耗用但開立永久失敗，供字軌對帳 |
-| `einvoice_allowances` | `shop_id`, `einvoice_id`, `refund_id`, `allowance_number`, `amount_cents`, `tax_cents`, `state`, `provider_ref`, `issued_at`, `idempotency_key` | 部分退貨自動折讓（33 §2.14） |
+| `einvoice_allowances` | `shop_id`, `einvoice_id`, `refund_id`, `allowance_number`, `amount_cents`, `tax_cents`, `state`, `provider_ref`, `issued_at`, `idempotency_key` | 部分退貨自動折讓（33 §2.14）。🔴 **累計上限**：`Σ amount_cents(per einvoice_id) ≤ einvoices.total_cents`，以**條件式 UPDATE** 保證（`limits.einvoice.allowance_cumulative_cap`）——見下方註 |
+
+<!-- 依 docs/specs/55 §B.2、§D G-02／G-04 補寫（2026-08-12）：
+     ① `einvoice_allowances` 原本**沒有任何累計約束**：同一張發票連續兩次各退 60% 會開出兩張各 60% 的折讓，
+        折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆。與 55 §A.2「同一筆金流的多次寫入必須有累計上限」同類。
+     ② 🔴 `einvoices` **不得**對 `(shop_id, order_id)` 建唯一索引：
+        16-F5.5 明寫「訂單編輯造成總額上升 ⇒ **補開一張**發票」，且 V-23（部分出貨開立粒度）若定案為
+        「每次出貨各開一張」也會產生多張。§6-3 原本的 `refund.order.einvoice`（**單數**）與此直接矛盾，已一併重寫。
+        對照鍵：`limits.einvoice.multiple_invoices_per_order_allowed: true`。 -->
 | `einvoice_events` | `shop_id`, `einvoice_id`, `kind`, `request_digest`, `response_digest`, `http_status`, `occurred_at` | 與加值中心往返的留痕；不存完整 payload（含買家 PII），只存摘要＋必要欄位 |
 | `einvoice_alerts` | `shop_id`, `kind`(track_low / track_exhausted / cert_expiring / issue_failure_spike), `threshold_value`, `observed_value`, `state`(open / acknowledged / resolved), `notified_at`, `ticket_id` | 去重鍵 `[shop_id, kind, state='open']` 唯一——避免每小時重複開單 |
 
@@ -1342,19 +1350,55 @@ end
 # 全額取消 → 自動作廢；部分退貨 → 自動折讓。
 # 判定必須用「金額」而非「是否有剩餘品項」——部分品項退貨但金額等於全額（例如另有運費折抵）
 # 的情況要走作廢；反之亦然。金額一律 integer cents 比較（CLAUDE.md 鐵律 3）。
-def route(refund)
-  invoice = refund.order.einvoice
-  return :no_invoice if invoice.nil? || invoice.state != "issued"
-  if refund.amount_cents >= invoice.total_cents
-    Platform::Einvoice::VoidJob.perform_later(invoice.id, reason: "order_fully_refunded")
-    :void
-  else
-    Platform::Einvoice::AllowanceJob.perform_later(invoice.id, refund.id)
-    :allowance
+#
+# 🔴 本方法於 2026-08-12 由 55 號盤點重寫（docs/specs/55 §B.2、§D G-02/G-03/G-04/G-10）。
+#    原版本為 `invoice = refund.order.einvoice；if refund.amount_cents >= invoice.total_cents`，
+#    「單張發票 × 單次退款」判定，有四個破口：
+#      ① 無累計上限 → 兩次各退 60% 開出兩張各 60% 的折讓 ⇒ 折讓總額 120% > 發票金額 ⇒ 稅務申報錯誤且不可逆
+#      ② 下方留了 window_open? 掛勾卻**從不呼叫** ⇒ 跨期別全額退款嘗試作廢被拒 ⇒ 該筆銷售永遠無沖銷憑證
+#      ③ `refund.order.einvoice`（單數）假設一訂單一發票 ⇒ 與 16-F5.5「編輯加收補開一張」直接矛盾
+#      ④ `state != "issued"` 把**開立在途**（issuing）當成沒有發票 ⇒ 加值中心 p95 數秒的窗口內退款永久遺失稅務動作
+#    任何人翻舊版看到 `refund.amount_cents >= invoice.total_cents` 都不要改回去。
+#
+# 入參 refund_cash_cents ＝「**扣除禮品卡與商店抵用金分配後**的實際金流退款額」（16-F5.5(a)、⚠ V-20/V-22）
+# ——不是 refund.amount_cents，也不是 suggested_refund 名目值。
+def route(order, refund_cash_cents)
+  raise ArgumentError unless refund_cash_cents.is_a?(Integer)   # 傳入 float 即 raise（既有測試 38:1508）
+
+  # ① 在途保護：開立中的發票不得被當成「沒有發票」
+  return :defer if order.einvoices.exists?(state: "issuing")    # limits.einvoice.defer_when_issuing
+
+  invoices = order.einvoices.where(state: "issued")
+  return :no_invoice if invoices.empty?                         # 尚未開立 ⇒ no-op，不產生孤兒作廢
+
+  # ② 沖銷順序：能追溯到退款品項的先沖該張；不能追溯者 LIFO（後開的先沖，離作廢窗關閉最遠）
+  #    ⚠ 無官方來源，本專案決策（limits.einvoice.allowance_offset_order: traceable_then_lifo）
+  remaining = refund_cash_cents
+  ordered_invoices(order, invoices).each do |inv|
+    allowed = inv.total_cents - inv.allowances.sum(:amount_cents)   # 該張剩餘可沖額＝累計上限
+    take    = [remaining, allowed].min
+    next if take.zero?
+
+    if take == inv.total_cents && inv.allowances.empty? && EinvoiceVoidPolicy.window_open?(inv)
+      Platform::Einvoice::VoidJob.perform_later(inv.id, reason: "order_fully_refunded")
+    else
+      # 「本該作廢但作廢窗已關」也落在這裡 ⇒ 降級為全額折讓，**不是失敗**
+      # （limits.einvoice.void_window_closed_fallback: full_allowance）
+      Platform::Einvoice::AllowanceJob.perform_later(inv.id, amount_cents: take)
+    end
+    remaining -= take
   end
+
+  # ③ 超額退款：沒有稅務憑證可沖，🔴 不得憑空產生折讓
+  enqueue_manual_review!(order, remaining) if remaining.positive?
+  remaining.positive? ? :partial_with_manual_review : :routed
 end
-# 【待定，需使用者確認】作廢是否受「該期別申報前」的時間窗限制（33 未載）。
-# 實作留 EinvoiceVoidPolicy.window_open?(invoice) 掛勾，預設回 true，待法規確認後填實。
+# 累計上限一律以條件式 UPDATE 落地於 AllowanceJob（limits.einvoice.allowance_cap_enforcement），
+# 禁止先 SELECT 再 INSERT——兩筆併發退款會各自算出「還可以折讓」而雙雙寫入。
+#
+# 【待定，需使用者確認】作廢是否受「該期別申報前」的時間窗限制（33 未載，⚠ V-06）。
+# EinvoiceVoidPolicy.window_open?(invoice) 掛勾預設回 true，待法規確認後填實
+# （limits.einvoice.void_window_policy: null / verify_void_window: true）。
 ```
 
 #### 6-4 前台合規巡檢器：爬取策略、規則結構、誤判申訴

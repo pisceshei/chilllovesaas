@@ -301,6 +301,50 @@ total_cents = subtotal - discount_total + shipping_cents + cod_fee_cents + tax_c
 處置：`limits.capture.late_capture_surcharge_rate_informational_only`（鍵名即宣告用途）**不參與任何計算**，僅供「若未來自營收單」時的參考；22 §8 的敘述同步標註。**不得**在帳單或訂單金額引擎產生 1.75% 行項。
 > 這是「本尊有、我方刻意不做」的一條，依 46a §6⑦-33 的先例明文標註，避免下一輪稽核把它當成遺漏重新開單。
 
+### F4.1(d) 部分請款的累計上限、併發鎖與冪等鍵（55 號盤點／G-08・G-13・G-14）
+
+> <!-- 依 46c:526 逐字「支援**部分請款**；金流商或 Plus 可**多次**部分請款」＋ docs/specs/55 §A.2 補寫。
+>      原本 (a) 只寫「每次 capture 各自帶冪等鍵（`capture-{fulfillment_id}`），防重複請款」——三個破口：
+>        ①**沒有累計上限式**：`Σ captured ≤ authorized` 這條在 16-F4.3 也沒有（只寫了 `AUTHORIZED → PARTIALLY_PAID → PAID` 的狀態推導）
+>          ⇒ 多次部分請款可請超過授權額，Stripe 拒絕但我方本地帳已寫入 ⇒ 帳實不符。
+>        ②**沒有併發鎖**：兩次出貨同時完成 ⇒ 兩筆 capture 同時寫入，各自檢查都通過、合計超額。
+>        ③**手動請款沒有 `fulfillment_id`**，`capture-{fulfillment_id}` 的鍵模板在手動路徑上根本無法生成 → 實作者只能自創或乾脆不做冪等。
+>      另：`orderCapture` **原本不在** `limits.idempotency.required_for`（55 §D G-08，與 NP1-D 完全同性質）。 -->
+
+**(1) 累計上限式（integer cents，無捨入）**
+
+```
+authorized_cents        = 該 PaymentIntent／authorization transaction 的授權額
+captured_total_cents    = Σ order_transactions(kind='capture', status='success').amount_cents
+可再請款額 capturable   = authorized_cents - captured_total_cents        # 恆 ≥ 0
+硬約束                  : captured_total_cents + this_capture ≤ authorized_cents
+```
+
+**(2) 併發鎖：一律條件式 UPDATE，🔴 禁止先 SELECT 再 UPDATE**
+
+```sql
+UPDATE order_transactions
+   SET captured_total = captured_total + :amount
+ WHERE id = :authorization_id
+   AND captured_total + :amount <= amount_cents;
+-- affected 0 ⇒ 回 userErrors（不得部分寫入，不得靜默截斷成 capturable）
+```
+
+**(3) 兩層冪等鍵**（`limits.capture.idempotency_key_template`、`limits.idempotency.business_unique_keys`）
+
+| 路徑 | 呼叫端冪等鍵（`idempotencyKey`，24h TTL） | 服務端第二層業務唯一鍵（**永久**） |
+|---|---|---|
+| `automatic_at_checkout` | 服務端自產 UUID v5 | `capture-{order_id}-checkout` |
+| `automatic_after_fulfilled` | 同上 | `capture-{order_id}-fulfilled` |
+| `automatic_per_fulfillment`（Plus） | 同上 | `capture-{fulfillment_id}` |
+| **手動 `orderCapture`** | **呼叫端必填 UUID v4/v7**（`orderCapture` 已列入 `limits.idempotency.required_for`） | `(order_id, parent_transaction_id, amount_cents, seq)` |
+
+> **為什麼要第二層鍵**：`limits.idempotency.ttl_hours: 24`——24 小時後同一把 key 視為全新操作（46a:789 逐字）。但「同一張 fulfillment 只能請款一次」是**永久**約束，24 小時的冪等窗擋不住隔天的重放。這一點 52 號 P0-11 未涵蓋，見 `docs/specs/55` §A.3。
+
+**(4) 與 void 的互斥**：`orderCapture` 與作廢授權（`orderCancel` 未請款路徑）對同一 authorization 只能有一個成功——兩者共用同一條條件式 UPDATE 的 guard（`WHERE status = 'success' AND kind = 'authorization'`）。授權到期（`EXPIRED`）的排程 job 亦同（見 16-F4.3）。
+
+**必測**：①對同一授權併發送 5 筆各 30% 的 capture → 恰 3 筆成功、2 筆回 `userErrors`，`captured_total` 精確等於 90%；②不帶 `idempotencyKey` 呼叫 `orderCapture` → 執行期報錯；③同一 `fulfillment_id` 隔 25 小時重放（冪等窗已過）→ 被第二層唯一鍵擋下；④capture 與 void 併發 → 恰一個成功。
+
 ## F5. 訂單成立（付款成功 → Order）
 
 **生產級做法**（整條線最關鍵的一個 transaction）：
