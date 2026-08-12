@@ -46,6 +46,43 @@ jurisdiction:
   # 🔴 schema 級決定一律取**所有 pack 的聯集**，不得只按 default pack 建表
   #    （例：`einvoices(shop_id, order_id)` 仍**不得**建唯一索引——55 §D G-04 的結論在 HK 雖 N/A 但要保留）。
   schema_is_union_of_all_packs: true
+  # 🔴 上一鍵只是「原則」，以下是**列舉**。原則不可執行，列舉才可以做成 migration 測試。
+  #    56 §0.2 原則 3 只寫了原則，把 G-04 的裁決值（`multiple_invoices_per_order_allowed`）留在
+  #    `jurisdictions.tw.tax_invoice` 底下——但 `tw.enabled: false`，**建表時沒有人會去讀一個未啟用的 pack**。
+  #    schema 級決定必須在**核心**層可見，否則 HK 首發上線建表時就會把索引建錯，屆時要停機 migration。
+  #    （57 §G-04；原 55 §D G-04 的結論一字未改，只是把它從 pack 內提到核心層）
+  schema_union_rules:
+    # 建表時**禁止**建立的索引（migration 測試逐條斷言其不存在）
+    forbidden_unique_indexes:
+      - table: einvoices
+        columns: [shop_id, order_id]
+        reason: >-
+          一訂單多發票：訂單編輯加收補開、TW V-23 若定案為「每次出貨各開一張」皆會產生多張。
+          HK 下該表恆空（tax_invoice: none），但索引一旦建錯，啟用 tw pack 時要停機 migration。
+        source: 55 §D G-04 / 57 §G-04
+    # 建表時**必須**存在的表（即使當前 pack 不會寫入任何一列）
+    required_tables:
+      - name: jurisdiction_capability_skips
+        columns: [shop_id, jurisdiction, capability, event_kind, source_write_point, reason, occurred_at]
+        reason: documented_no_op 的落地處；沒有這張表，「什麼都沒做」就看不見（56 §A.3）
+      - name: contract_liability_entries
+        columns: [shop_id, source_type, source_id, direction, amount_cents, recognised_at, basis]
+        unique_key: [shop_id, source_type, source_id, direction]
+        reason: HKFRS 15 合約負債分錄落點（56 §B.3.1 J-01）；HK 為 default 法域即**首發就要有**
+      - name: einvoices
+        reason: tw pack 素材；HK 下恆空，但 schema 取聯集（見上方 forbidden_unique_indexes）
+      - name: einvoice_allowances
+        reason: 同上
+    # 建表時的欄位級硬要求
+    required_columns:
+      - table: orders
+        columns: [seller_jurisdiction, buyer_jurisdiction]
+        reason: "訂單成立即快照法域碼（snapshot_on_order: true）；商家日後改市場不得回溯舊單"
+      - table: gift_card_transactions
+        composite_foreign_key: [shop_id, gift_card_id]
+        reason: >-
+          單欄 gift_card_id 在應用層漏檢時擋不住跨店扣抵。理由自 2026-08-12 起
+          從「SVF 法遵」改為「多租戶資料隔離」（鐵律 2），**技術動作不變**（56 附錄 Z）。
   # 舊鍵路徑 → 新鍵路徑（本輪搬移；引用舊路徑的文件清單與修改計畫見 56 §D.1／§D.2）
   _moved_keys:
     einvoice: jurisdictions.tw.tax_invoice
@@ -86,6 +123,10 @@ api:
 # 2. 冪等（P0-11）
 # =============================================================================
 idempotency:
+  # 🔴 **本區塊法域無關**（57 §G-08）。金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；
+  #    55 §D G-08 的 9 支強制冪等在 hk／tw／任何未來 pack 下**完全相同**，不得放進 `jurisdictions.*`。
+  #    唯一的例外是下方 `required_for_platform`（見該鍵註解）。
+  jurisdiction_scope: core_all_packs
   # 冪等鍵保留期。逾期後同一把 key 的重試「視為全新操作」。
   # 出處：docs/research/46a-shopify-docs-orders-returns.md:789、46a:1006（dev，逐字
   #       「The retention window is 24 hours from the original request.」）
@@ -136,6 +177,12 @@ idempotency:
     - storeCreditAccountDebit    # 重複扣抵 ⇒ 顧客資損（55 §A M24）
   # 平台域強制清單（與租戶 GraphQL 層解耦；兩者不得混用同一個 resolver 檢查點）。
   # 這兩支的簽名本就有 idempotencyKey!（38:1061–1062），列入使「唯一真相」成立。
+  # 🔴 **本清單與上面的 `required_for` 不同：它是 pack-scoped 的**（57 §G-08 發現，56 §E 未涵蓋）。
+  #    兩支都是台灣統一發票的專屬 mutation——HK 為 default 時它們**根本不存在於 schema**
+  #    （56 §A.4 CI-3：非 tw pack 啟用時 `app/services` 下不得有 einvoice/* 呼叫路徑）。
+  #    CI 檢查必須跟著 pack 走：對未啟用 tw 的部署，斷言的是「這兩支不存在」而**不是**「這兩支要帶 key」。
+  #    若照 `required_for` 的方式做成無條件斷言，HK 首發的 schema 快照測試會直接紅掉。
+  required_for_platform_pack_scope: jurisdictions.tw.tax_invoice
   required_for_platform:
     - platformEinvoiceVoid
     - platformEinvoiceAllowanceCreate
@@ -233,6 +280,20 @@ refund:
   over_refund_requires_permission: "orders.over_refund"
   over_refund_requires_confirm: true
   verify_maximum_refundable_formula: true
+  # --- 金流側累計上限的**執行方式**（57 §G-02；55 §A.2 M09/M10 只給了式子，沒給落地契約）---
+  # 🔴 **本組鍵法域無關**。55 §D G-02 的「折讓累計上限 Σ allowances ≤ invoice.total_cents」在 HK 是 N/A
+  #    （無憑證 ⇒ 無折讓），但**金流側的 `Σ refunded_cents ≤ maximumRefundable` 必須留著**。
+  #    56 §E.1 已明文標為「高（容易誤刪）」——把稅務側與金流側一起拿掉是本輪最容易犯的錯。
+  #    完整可測式子（條件式 UPDATE 樣式／併發情境／回應碼）見 docs/specs/16 F5.1「退款上限」段。
+  cumulative_cap_formula: "Σ refunded_cents ≤ orders.captured_total_cents"   # ＝ netPayment 的展開式
+  cumulative_cap_enforcement: conditional_update      # 🔴 禁止先 SELECT 再 INSERT／UPDATE
+  cumulative_cap_column: orders.refunded_total_cents  # 物化欄位，與 refunds 明細 nightly 對帳
+  # 條件式 UPDATE 的 affected rows == 0 時的兩種語義**必須分開回**，否則前端無從判斷要不要顯示二次確認：
+  cap_exceeded_error_code: REFUND_EXCEEDS_MAXIMUM_REFUNDABLE   # 超過軟上限 → 走 over_refund 權限路徑
+  concurrent_conflict_error_code: REFUND_CONCURRENT_MODIFIED   # 併發競爭失敗 → 呼叫端可原樣重試
+  # 超額退款是**合法情境**（46c:223）：帶權限與二次確認後，同一條 SQL 改走 `allow_over_refund` 分支，
+  # **不是**繞過條件式 UPDATE——繞過就等於在超額路徑上失去併發保護。
+  over_refund_uses_same_conditional_update: true
   # 混合付款的退款分配順序（P1-05／H-83）：**禮品卡永遠第一順位**，逐筆吃滿再進下一筆（不按比例攤）。
   # 出處：46c:221（help，H05 zh-TW 逐字「混合付款時，系統先把退款金額套用到禮品卡，直到禮品卡達可退全額，餘額才用其他付款方式」）
   # 🔴 這是硬規則，**不得做成商家可調整的順序設定**。演算法與三個算例見 docs/specs/16 F5.4。
@@ -625,6 +686,10 @@ jurisdictions:
       event_handling: accounting_only
       # 🔴 55 §D G-01 的「未定案前擋下多次出貨並轉人工佇列」**不得**在本法域生效——
       #    HK 沒有憑證可開，照搬會把所有多次出貨的訂單卡死。（56 §E.1）
+      # 🔴 **本鍵的唯一呼叫端＝`docs/specs/16` F5.5(a) 的 V-23 擋單註記**（57 §G-01 補上）。
+      #    56 §E.1 只把值落進 limits，規格檔的擋單規則當時**沒有任何法域條件**——
+      #    這正是 55 §D G-03 的病根（「掛勾寫了卻沒接上」）換到法域層：旗標寫了但沒有人讀，
+      #    照 16-F5.5 實作的人仍會在 HK 擋下所有多次出貨的訂單。
       block_multi_fulfillment_when_undecided: false
 
     # 【consumption_tax】無 VAT／GST／SST／營業稅。（hk-user，已查證）
@@ -683,14 +748,47 @@ jurisdictions:
       gift_card_on_sale: contract_liability
       gift_card_on_redeem: recognise_revenue
       gift_card_breakage_method: expected_redemption_pattern_or_remote
+      # --- 以下為 57 §G-07 落地：分錄方向、落庫表與觸發點（原 56 §B.3.1 只有五列對照表）---
+      # 🔴 方向是**唯一真相**，不是科目名稱。科目名稱各家帳務系統不同，方向錯了帳就反了。
+      #    落庫表 `contract_liability_entries`（jurisdiction.schema_union_rules.required_tables），
+      #    唯一鍵 `(shop_id, source_type, source_id, direction)` ⇒ 同一筆金流只能落一次分錄。
+      gift_card_entry_points:
+        M27: { on: gift_card_issued_by_admin, direction: liability_increase, revenue: 0 }
+        M28: { on: gift_card_product_sold,    direction: liability_increase, revenue: 0 }
+        M29: { on: gift_card_credited,        direction: liability_increase, revenue: 0 }
+        M30: { on: gift_card_redeemed,        direction: liability_decrease, revenue: recognise }
+        M31: { on: gift_card_expired_or_deactivated, direction: breakage, revenue: see_breakage }
+        M32: { on: refund_credited_to_card,   direction: liability_increase, revenue: 0 }
+      # 🔴 M32 是最容易做反的一條：退款回補到卡片是**負債增加**，不是收入沖銷。
+      #    做成收入沖銷會同時少計負債與少計收入，兩邊都錯，且 nightly 恆等式抓不到（兩個錯誤互相抵銷）。
+      refund_to_instrument_is_liability_increase: true
+      # 恆等式（property test，integer cents）：任一時點皆成立
+      invariant: "Σ liability_increase − Σ liability_decrease − Σ breakage_recognised == Σ outstanding_balance_cents"
+      # 🔴 **明確宣告的 false，不是「沒填」**（56 §0.2 原則 2：未宣告 ≠ none）。
+      #    原 `limits.gift_card.resolver_refuses_start_when_undecided: true` 已移入 `tw.accounting`；
+      #    但「tw 有、hk 沒有」在程式上長得像「hk 忘了填」。實作者讀到 nil 時若沿用預設 true，
+      #    禮品卡在香港就**永遠無法啟用**（HK 的 tax_event_* 本來就不存在 ⇒ 條件永遠成立）。
+      #    56 §E.1 把此列為危險等級**最高**（功能永久不可用）——所以這裡要寫出來。（57 §G-06）
+      gift_card_resolver_refuses_start: false
       # ⚠ V-28：breakage 的估計方法與**首年無歷史兌換資料**時的處置未覆核。
       #   定案前保守側錯：**不認列 breakage**（負債留著），不得為了帳面好看提前認列。
       breakage_recognition_when_undecided: defer_all
+      # breakage 需要「預期兌換模式」的估計 ⇒ 需要歷史兌換率 rollup；專案內無此 rollup（56 §B.3.1 J-02）。
+      # 🔴 `defer_all` 是**行為**不是**藉口**：仍要建 rollup 並累積資料，否則永遠湊不出估計基礎。
+      breakage_requires_redemption_rate_rollup: true
+      breakage_rollup_min_history_months: null        # ⚠ 待查證，與估計方法同屬 V-28，不得自訂
       verify_breakage_method: true
       # ⚠ V-29（＝55 號 V-22 的 HK 版）：商店抵用金是合約負債還是退款負債（refund liability）未覆核。
       #   問題**沒有消失，只是從稅務變成會計**——影響收入認列金額，不影響任何憑證。
+      #   TW 的二選一（付款方式／折扣）決定**發票金額**；HK 的二選一決定**收入認列金額**，差額同樣等於
+      #   抵用金全額。🔴 兩者答案**不可互相套用**：TW 定案了不代表 HK 定案。（57 §G-07）
       store_credit_on_issue: null
       store_credit_on_use: null
+      # 定案前的行為：**不阻擋發放與使用**（金流照走），但每一筆落一列 `contract_liability_entries`
+      # 且 `basis: 'undetermined_v29'` ＋ 開人工覆核工單。🔴 **不得**比照 tw 的
+      # `resolver_refuses_start_when_undecided`——那會讓抵用金在香港永遠無法啟用（同 G-06 的病根）。
+      store_credit_when_undecided: record_with_undetermined_basis
+      store_credit_resolver_refuses_start: false
       verify_store_credit_liability_class: true
       # ⚠ V-30（＝55 號 V-24 的 HK 版）：chargeback lost 的會計處理未覆核 → 不自動沖銷，開人工工單。
       chargeback_lost_treatment: null
@@ -801,6 +899,7 @@ jurisdictions:
       reissue_mechanism: additional_invoice
       event_handling: issue_documents
       # 55 §D G-01 的既有處置——🔴 **只在本法域生效**（HK 為 false，見 hk.tax_invoice）。
+      # 呼叫端：`docs/specs/16` F5.5(a) 的 V-23 擋單註記（57 §G-01 補上法域條件）。
       block_multi_fulfillment_when_undecided: true
       # --- 字軌與憑證監控（出處：docs/specs/38:1467、38:1265、38:910，ours 轉述 33 §2.14）---
       track_low_ratio: 0.15            # 餘量低於 15% 開 track_low 告警（38 明言「台灣營運最常見的事故來源」）

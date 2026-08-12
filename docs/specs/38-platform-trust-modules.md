@@ -1009,7 +1009,17 @@ add_index :einvoice_tracks, [:shop_id, :state, :remaining_local], name: "idx_tra
      ② 🔴 `einvoices` **不得**對 `(shop_id, order_id)` 建唯一索引：
         16-F5.5 明寫「訂單編輯造成總額上升 ⇒ **補開一張**發票」，且 V-23（部分出貨開立粒度）若定案為
         「每次出貨各開一張」也會產生多張。§6-3 原本的 `refund.order.einvoice`（**單數**）與此直接矛盾，已一併重寫。
-        對照鍵：`limits.einvoice.multiple_invoices_per_order_allowed: true`。 -->
+        對照鍵：`limits.jurisdictions.tw.tax_invoice.multiple_invoices_per_order_allowed: true`
+        （原 `limits.einvoice.*`，56 §D.2 整段搬移；對照表見 `limits.jurisdiction._moved_keys`）。 -->
+
+<!-- 依 56 §E 分流，原 55 §D 結論：G-04「一訂單多發票；不得建 `einvoices(shop_id, order_id)` 唯一索引」。
+     **本節整體為 `jurisdiction/tw` pack 專屬實作**（`tax_invoice: gui`），基準法域 HK 下 `tax_invoice: none`，
+     本節兩張表**恆空**、`einvoice/*` outbox topic **不註冊**（56 §A.2 C1、§A.4 CI-3）。
+     🔴 但**索引結論在 HK 仍然要遵守**：schema 取所有 pack 的聯集，行為才取當前 pack
+     （`limits.jurisdiction.schema_is_union_of_all_packs: true` ＋ `schema_union_rules.forbidden_unique_indexes`）。
+     HK 首發時這兩張表一列資料都不會有，建表的人沒有動機去想索引——**這正是它危險的地方**：
+     等到啟用 tw pack 才發現建錯，就要停機 migration。清單已提到核心層，見 `docs/research/06` §7.1。
+     🔴 防回退：任何人日後看到 HK 上線後 `einvoices` 長期空表，**不得**「順手」加上唯一索引或刪表。 -->
 | `einvoice_events` | `shop_id`, `einvoice_id`, `kind`, `request_digest`, `response_digest`, `http_status`, `occurred_at` | 與加值中心往返的留痕；不存完整 payload（含買家 PII），只存摘要＋必要欄位 |
 | `einvoice_alerts` | `shop_id`, `kind`(track_low / track_exhausted / cert_expiring / issue_failure_spike), `threshold_value`, `observed_value`, `state`(open / acknowledged / resolved), `notified_at`, `ticket_id` | 去重鍵 `[shop_id, kind, state='open']` 唯一——避免每小時重複開單 |
 
@@ -1362,6 +1372,16 @@ end
 #
 # 入參 refund_cash_cents ＝「**扣除禮品卡與商店抵用金分配後**的實際金流退款額」（16-F5.5(a)、⚠ V-20/V-22）
 # ——不是 refund.amount_cents，也不是 suggested_refund 名目值。
+#
+# 🔴 【法域】依 56 §E 分流，原 55 §D 結論：G-02（折讓累計上限）／G-03（作廢窗 fallback）在 HK 為 **N/A**。
+#    本 router **整體是 `jurisdiction/tw` pack 的實作**（`tax_invoice: gui`）。基準法域 HK 的 `tax_invoice: none`
+#    沒有折讓單、沒有作廢重開、沒有作廢窗 ⇒ 本方法**不執行**。
+#    ⚠ 但「不執行」必須是**明確宣告的 no-op**：呼叫端改為 `Jurisdiction::TaxInvoice.handle(TaxEvent)`，
+#      HK pack 回 `no_document` 並落一列 `jurisdiction_capability_skips`。
+#      🔴 **不得**把它做成「這個類別在 HK 沒有呼叫端」——那正是 G-03 的病根（掛勾寫了卻沒接上，
+#      比沒寫更糟，因為會讓人以為已處理）。56 §A.3 已把「禁止靜默略過」升格為法域層通則。
+#    ⚠ 同時：G-02 的**金流側**對應物（`Σ refunded ≤ maximumRefundable`）**法域無關，必須留著**，
+#      它在 16-F5.1 不在這裡。清理本 router 時不得連帶清掉那一段（56 §E.1 標「容易誤刪」）。（57 §G-02／§G-03）
 def route(order, refund_cash_cents)
   raise ArgumentError unless refund_cash_cents.is_a?(Integer)   # 傳入 float 即 raise（既有測試 38:1508）
 

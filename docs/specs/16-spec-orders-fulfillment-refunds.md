@@ -244,12 +244,21 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 | 出貨 | 不變 | fulfillment 帶物流商代收單號；`orders.cod_expected_cents` 落庫 |
 | 物流商撥款對帳 | `PENDING → PAID` | 匯入物流商對帳檔 → 逐筆比對 `(carrier, cod_tracking_no, amount_cents)`；**完全相符才**條件式 UPDATE transaction `pending → success` |
 | 金額不符 | 停在 `PENDING` ＋ 標 `review` | **不得自動回寫**；進「COD 對帳差異」佇列由人工處置（差 1 元也不放行——這是現金流入口） |
-| 買家未取件退回 | `PENDING → VOIDED`（或取消訂單） | 走 F4 取消流程；庫存依 `restock` 回補；🔴 **直接發 `einvoice/void_requested`（訂單層作廢），不走 F5.5 的退款 router** |
+| 買家未取件退回 | `PENDING → VOIDED`（或取消訂單） | 走 F4 取消流程；庫存依 `restock` 回補；🔴 **由訂單層直接發 `TaxEvent(kind: sale_uncollected)`，不走 F5.5 的退款 router**。憑證動作由法域 pack 決定：`tax_invoice: gui`（TW）⇒ `einvoice/void_requested`；`tax_invoice: none`（HK）⇒ `no_document` ＋ 落一列 `jurisdiction_capability_skips` |
 
 <!-- 依 docs/specs/55 §B.1 T17、§D G-05 修正，原文：「**觸發 F5.5 的發票 router**」。
      🔴 此處原本寫錯：未取件退回時**款項從未收到**，退款金額為 0 → router 的三分支（== 作廢／< 折讓／> 作廢）
      會全部落到「折讓 0 元」：開一張 0 元折讓、原發票仍然有效 ⇒ 一筆從未成立的銷售留著全額發票。
      必須由訂單層事件直接作廢。任何人翻舊版都不要改回走 router。 -->
+
+<!-- 依 56 §E 分流，原 55 §D 結論：G-05「COD 未取件退回走**訂單層**作廢，不走退款 router」。
+     依 56 §E.1，**憑證面在 HK 為 N/A**（無作廢機制），但**訂單層 `PENDING → VOIDED` 的金流與庫存處理原樣保留**。
+     本輪的實質改動只有一處：事件名稱從 TW 專屬的 `einvoice/void_requested` 改為法域中性的
+     `TaxEvent(kind: sale_uncollected)`（56 §A.2 C1 的五個 kind 之一），由 pack dispatch 成憑證動作或 no_document。
+     🔴 G-05 的原始教訓在 HK **完全不變**：那是「router 的入參語義不成立」，不是「憑證怎麼開」——
+        `refund_cash_cents == 0` 走退款路徑會靜默產生一個看起來成功的錯誤結果，這與有沒有稅制無關。
+        HK 下若照舊走 router，症狀會從「開一張 0 元折讓」變成「落一列 refund 金額 0 的假退款」，一樣是髒資料。
+     🔴 防回退：任何人日後因為「HK 沒有發票」而清掉本列，會連帶清掉訂單層 VOIDED 的處置——那是金流與庫存動作。 -->
 
 **硬要求**：對帳匯入是**冪等**的（以 `(carrier, statement_id, row_no)` 唯一索引去重，重覆匯入同一份對帳檔不得產生兩筆 paid）；回寫一律走 `Orders::MarkAsPaid` 同一支 service（不得在匯入器裡直接 `update(financial_status:)`）。
 **⚠ 待查證（來源未載明）**：各物流商對帳檔格式與撥款週期為合約值，非官方文檔（同 V-11 的 `verify_tw_carrier_limits`）。
@@ -335,6 +344,72 @@ balance_to_collect = max(0, -net)                                      # 見下�
   **⚠ 待查證（來源未載明）**：`maximumRefundable` 的官方公式 Shopify **未公開**（46a:606、46a:770、46a:819）——上式為**本專案定義**。
 - 超過軟上限 → 需 `orders.over_refund` 權限 ＋ 二次確認 ＋ 寫 audit log；**不是 DB 層硬擋**。
 - 併發要求不變：**兩個並發退款請求的總額不得突破軟上限**（條件式 UPDATE ＋ request spec，CLAUDE.md 驗收要求）。
+
+**(a) 累計上限式（integer cents，法域無關）**
+
+```
+maximumRefundable_cents = orders.captured_total_cents − orders.refunded_total_cents
+不變量（任何時刻）      : Σ refunds.amount_cents ≤ orders.captured_total_cents
+                          ⟺ orders.refunded_total_cents ≤ orders.captured_total_cents
+```
+
+`refunded_total_cents` 是**物化欄位**（`limits.refund.cumulative_cap_column`），與 `refunds` 明細 nightly 對帳。**沒有捨入點**——這裡全是加減法，本節不引入任何 floor/ceil（唯一的三個捨入點仍在 F5.1 的分攤與 F5.5 的稅額拆分）。
+
+**(b) 條件式 UPDATE 樣式（🔴 禁止先 SELECT 再 INSERT）**
+
+```sql
+-- 正常路徑：上限檢查與寫入在同一條 SQL，依 affected rows 判定成敗
+UPDATE orders
+   SET refunded_total_cents = refunded_total_cents + :amount_cents,
+       updated_at = :now
+ WHERE id = :order_id
+   AND shop_id = :shop_id                                    -- 鐵律 2：複合索引以 shop_id 開頭
+   AND refunded_total_cents + :amount_cents <= captured_total_cents;
+-- affected == 1 ⇒ 在同一個 transaction 內 INSERT refunds ＋ refund_line_items ＋ outbox
+-- affected == 0 ⇒ 見 (c)，**不得**改成先 SELECT 再判斷後重試
+```
+
+```sql
+-- 超額路徑（46c:223 明載的合法情境）：帶權限與二次確認後走這條
+-- 🔴 **仍然是條件式 UPDATE**，只是上界換成「本次核准的超額額度」，不是拿掉 WHERE 條件。
+--    繞過條件式 UPDATE ＝ 在超額路徑上失去併發保護（`limits.refund.over_refund_uses_same_conditional_update: true`）
+UPDATE orders
+   SET refunded_total_cents = refunded_total_cents + :amount_cents
+ WHERE id = :order_id
+   AND shop_id = :shop_id
+   AND refunded_total_cents + :amount_cents <= captured_total_cents + :approved_over_refund_cents;
+```
+
+**(c) `affected == 0` 的兩種語義必須分開回**（合成一個錯誤碼，前端就無從判斷要不要顯示二次確認）
+
+| 判別 | 錯誤碼 | 前端行為 | HTTP |
+|---|---|---|---|
+| 重讀後 `refunded_total + amount > captured_total` | `REFUND_EXCEEDS_MAXIMUM_REFUNDABLE` | 顯示超額退款二次確認；有 `orders.over_refund` 權限才可續行 | 200（鐵律 4） |
+| 重讀後上限其實還夠（`lock_version`／`updated_at` 已變） | `REFUND_CONCURRENT_MODIFIED` | 退避後**原樣重試**（同一把 `idempotencyKey`） | 200 |
+
+判別方式：`affected == 0` 後**重讀一次**做**分類**（只用於決定回哪個錯誤碼），**不得**用重讀的值去做第二次寫入決策。
+
+**(d) 三個併發情境（各一個 request spec）**
+
+| # | 情境 | 期望 |
+|---|---|---|
+| C1 | 已收 100000、已退 0，兩個分頁同時退 60000 | 恰 1 筆成功；另一筆回 `REFUND_EXCEEDS_MAXIMUM_REFUNDABLE`；`refunded_total_cents == 60000` |
+| C2 | 已收 100000，100 執行緒各退 1000 | 恰 100 筆成功、`refunded_total_cents == 100000`；第 101 筆失敗。**成功數 ＋ 失敗數 ＝ 請求數** |
+| C3 | 退款與 `orderCapture` 併發（capture 使 `captured_total` 上升） | 不得出現 `refunded_total > captured_total` 的中間態；兩者對同一列競爭，後到者重試後成功 |
+
+**(e) 為什麼 `refunded_total_cents` 不做成 DB CHECK**：`CHECK (refunded_total_cents <= captured_total_cents)` 會擋掉 46c:223 明載的合法超額退款（先前發過商店抵用金者可對原付款方式 over-refund）。**軟上限＝應用層條件式 UPDATE，硬約束只有 `refunded_total_cents >= 0`。**
+
+<!-- 依 56 §E 分流，原 55 §D 結論：G-02「折讓沒有累計上限檢查 ⇒ 兩次各退 60% 會開出折讓總額 120%」。
+     依 56 §E.1，該結論的**稅務側**（`Σ allowances ≤ invoice.total_cents`）在 HK 為 **N/A**——`tax_invoice: none`，
+     沒有折讓單這種東西，整條規則移入 tw pack（見 F5.5(b)(d)，本節不動）。
+     🔴 但**金流側的 `Σ refunded ≤ maximumRefundable` 是 55 §A.2 M09/M10 的不變量，法域無關，必須留著**。
+     56 §E.1 把這條的危險等級標為「高（**容易誤刪**）」——把稅務側與金流側一起拿掉是本輪最容易犯的錯：
+     兩者長得很像（都是「同一個對象的多次寫入有累計上界」），但一個是憑證面、一個是錢面。
+     本輪的實質補充：55 §A.2 只給了式子與一句「條件式 UPDATE」，**沒有 SQL 樣式、沒有錯誤碼、沒有併發情境**，
+     實作者無從判斷 `affected == 0` 要回哪個錯誤碼（而這直接決定前端要不要彈二次確認）。以上 (a)–(e) 補齊。
+     鍵：`limits.refund.cumulative_cap_formula` / `cumulative_cap_enforcement` / `cap_exceeded_error_code`
+         / `concurrent_conflict_error_code` / `over_refund_uses_same_conditional_update`。
+     🔴 防回退：任何人日後因為「HK 沒有折讓」而清理 G-02 相關內容時，**不得**把本節一起刪掉。 -->
 
 **運費退款規則**：`amount`（指定金額）或 `fullRefund`（全退）二選一；退運費**不得超過可退運費**；**訂單套用了訂單層級免運折扣 → 完全不可退運費**（46c:218–221、46c:238）。
 **⚠ 待查證（來源未載明）**：`RefundShippingInput` 同時給 `amount` 與 `fullRefund` 的行為（46a §6② 明列為未載明）。
@@ -457,7 +532,22 @@ if remaining > 0:
 
 **(d) 必測性質**：①分配總和恆等於 `R`；②禮品卡永遠排在第一位（改成可設定即為 bug）；③同類多筆按 `created_at, id` 穩定排序（結果可重現）；④併發兩筆退款同時分配時，`refundable` 以條件式 UPDATE 取得（不可先讀後寫）。
 
-### F5.5 退款／取消必須觸發電子發票 router（P1-09／TW-5，稅務正確性）
+### F5.5 退款／取消必須觸發稅務事件（P1-09／TW-5，稅務正確性）
+
+> **法域分流（依 56 §E，2026-08-12）**——**本節整體降級為 `jurisdiction/tw` pack 的實作**，核心流程只負責**發稅務事件**，不生產憑證。
+>
+> | 層 | 誰負責 | 法域相關？ |
+> |---|---|---|
+> | **掛鉤點**（何時發事件）＝ (a) 表左兩欄 | 核心 | ❌ 法域無關，**全部保留** |
+> | **事件 kind**＝`sale_recognised` / `sale_reversed` / `sale_reduced` / `sale_increased` / `sale_uncollected` | 核心 | ❌ 法域無關（56 §A.2 C1） |
+> | **憑證動作**（開立／作廢／折讓／補開）＝ (a) 表右兩欄、(b) 判定樹、(d) 不變量 1–3 | `tax_invoice` pack | ✅ **TW only** |
+>
+> **HK（`tax_invoice: none`，基準法域）**：(b) 的 `route()` **不執行**，全部事件回 `no_document` ＋ 落一列 `jurisdiction_capability_skips`。🔴 它必須是**明確宣告的 no-op**，不是「沒有呼叫端」——後者正是 55 §D G-03 的病根（56 §B.2.1 末段）。55 §B 的 30 條事件點在 HK 的去向：**20 條轉純會計事件**（57 §G-07）／8 條消失／1 條轉移至 `tax_id_format`／1 條不受影響。
+>
+> <!-- 依 56 §E 分流，原 55 §D 結論：G-02（折讓累計上限）／G-03（作廢窗 fallback）／G-04（一訂單多發票）
+>      三條的**稅務側**在 HK 皆為 N/A，移入 tw pack；G-01 的擋單處置**有害**（見 (a) 的 V-23 段）；
+>      G-05 的訂單層處置**保留**（見 F4.4）；G-04 的 **schema 結論保留**（見 (c) 第 5 點）。
+>      🔴 台灣內容**一行未刪**（56 §C.3 不刪除聲明）——本節仍然滿是統一發票內容是**刻意保留**，不是漏改。 -->
 
 > <!-- 依 38:876–877（33 §2.14）補寫，原文：開立時機三選一「付款／**出貨（建議）**／收貨」；「全額取消**自動作廢**、部分退貨**自動折讓**」；
 >      落地物在 38:1338–1356 `Platform::Einvoice::RefundRouter`（== 作廢／< 折讓／> 作廢，金額全程 integer cents）與 38:1104 的 `VoidJob` / `AllowanceJob`。
@@ -475,7 +565,7 @@ if remaining > 0:
 | **換貨：買家補差額**（`net < 0`，F7.3 規則 7） | 補款成功後（M17 同一路徑） | `einvoice/issue_requested` | **補開一張**，金額＝`balance_to_collect` |
 | **換貨：退差額**（`net > 0`） | F5 執行順序第 3 步之後（同退款） | `einvoice/refund_routed` | 折讓，金額＝實際金流退款額 |
 | **換貨：等值互換**（`net == 0`） | — | **無事件** | ⚠ **待查證 V-23 同組**：等值換貨是否須「折讓原發票＋重開」台灣實務未覆核；暫定 **no-op**（無金額變動＝無折讓基數） |
-| **COD 買家未取件退回**（F4.4 第 5 列） | F4 取消流程的 outbox | **`einvoice/void_requested`**（🔴 **不是** `refund_routed`） | 直接作廢；作廢窗已關 ⇒ 全額折讓 |
+| **COD 買家未取件退回**（F4.4 第 5 列） | F4 取消流程的 outbox | `TaxEvent(sale_uncollected)` ⇒ TW 落地為 **`einvoice/void_requested`**（🔴 **不是** `refund_routed`）；HK 為 `no_document` | 直接作廢；作廢窗已關 ⇒ 全額折讓 |
 
 <!-- 依 docs/specs/55 §B.1 T13–T15、T17 與 §D G-05、G-09 補寫。
      ①**換貨三列原本完全不存在**：F7.3 有八條換貨規則，**無一條提發票** → 補差額不補開、退差額不折讓 ＝ 稅務金額與實收對不上（55 §D G-09）。
@@ -484,7 +574,35 @@ if remaining > 0:
         開一張 0 元折讓、原發票仍然有效 ⇒ 一筆從未成立的銷售留著全額發票。
         改為由**訂單層事件**直接發 `einvoice/void_requested`，不經退款路徑。任何人翻舊版都不要改回走 router。（55 §D G-05） -->
 
-**⚠ 待查證（來源未載明，V-23）**：`issue_timing = on_fulfillment` 在**部分出貨**時的開立粒度（每次出貨各開一張／全部出完才開一張）——38:876 只寫「出貨（建議）」，未定義多次出貨；Shopify 不開立台灣發票，三份官方文檔皆不可能有答案。**定案前，`on_fulfillment` ＋ 多次出貨的組合一律擋下並轉人工佇列，不得靜默選一邊**（`limits.einvoice.partial_fulfillment_issue_granularity: null`）。
+**⚠ 待查證（來源未載明，V-23）**：`issue_timing = on_fulfillment` 在**部分出貨**時的開立粒度（每次出貨各開一張／全部出完才開一張）——38:876 只寫「出貨（建議）」，未定義多次出貨；Shopify 不開立台灣發票，三份官方文檔皆不可能有答案。
+
+**擋單規則（🔴 有法域條件，不是無條件）**：
+
+```
+# 依 56 §E 分流補上 pack 條件。判斷順序不可顛倒——先問法域，再問未定案。
+pack = Jurisdiction.resolve(order).seller          # 取 orders.seller_jurisdiction 快照
+if pack.tax_invoice.kind == :none:
+    → 照常出貨。落一列 jurisdiction_capability_skips(capability: tax_invoice,
+        event_kind: sale_recognised, source_write_point: 'F3 fulfillment', reason: 'no_document_regime')
+    #   documented_no_op，**不是**靜默 return（56 §A.3）
+elif pack.tax_invoice.block_multi_fulfillment_when_undecided
+     and pack.tax_invoice.partial_fulfillment_issue_granularity.nil?
+     and order.fulfillments.count > 1:
+    → 擋下並轉人工佇列（不得靜默選一邊）
+else:
+    → 依 partial_fulfillment_issue_granularity 開立
+```
+
+<!-- 依 56 §E 分流，原 55 §D 結論：G-01「⚠ V-23 未定案；**定案前該組合擋下並轉人工佇列**」。
+     🔴 此處原本寫錯（漏了法域條件）：原文為「定案前，`on_fulfillment` ＋ 多次出貨的組合**一律**擋下並轉人工佇列」——
+        **無條件**。在基準法域 HK（`tax_invoice: none`）下照此實作，會把**所有多次出貨的訂單卡進人工佇列**：
+        HK 根本沒有憑證可開，`partial_fulfillment_issue_granularity` 永遠是 `null`，擋單條件永遠成立。
+        56 §E.1 已把此列為危險等級**最高**（會造成營運中斷）並落了 `block_multi_fulfillment_when_undecided: false`，
+        但那只是 limits 的一個值——**本節（唯一的呼叫端）當時沒有讀它**。旗標寫了卻沒有人讀，
+        病根與 55 §D G-03（`EinvoiceVoidPolicy.window_open?` 掛勾寫了但 router 從不呼叫）**完全相同**，只是換到法域層。
+     鍵路徑：`limits.jurisdictions.<code>.tax_invoice.partial_fulfillment_issue_granularity`（原 `limits.einvoice.*`）
+             ＋ `.block_multi_fulfillment_when_undecided`（hk: false／tw: true）。
+     🔴 防回退：任何人翻舊版看到「一律擋下」都不要改回無條件版本。HK 分三次出貨必須三次全部正常完成（56 §F 驗收 9）。 -->
 
 **⚠ 待查證（來源未載明，NP1-G ／ V-20，55 號盤點**擴大至商店抵用金**）**：退款分配到**禮品卡**或**商店抵用金**的部分是否計入發票折讓基數——F5.4 會把退款優先分配給禮品卡（且 `refundMethods` 支援退至 store credit，46a:743），但 38:1341 的 router 只比較「退款金額 vs 發票金額」。台灣實務上商品禮券／購物金退回未必等同現金退款，兩份規格的交界**皆未定義**。在覆核前，router 的輸入一律傳「**扣除禮品卡與商店抵用金分配後**的實際金流退款額」並標旗標（`limits.einvoice.allowance_base_excludes`），見 §待查證 V-20／V-22。
 
@@ -541,7 +659,14 @@ allowance_tax_cents     = take - allowance_untaxed_cents        # 差額法 ⇒ 
 2. 發票 job 失敗**不得**回滾退款——退款已對顧客生效，發票補開由 38 的重試與「開立失敗待重試」告警承擔（38:909）。
 3. 尚未開立發票的訂單被退款 → router 直接 no-op（不產生孤兒作廢）；**但「開立在途」不算「尚未開立」**，見 (b) 第 0 步。
 4. 18-F1 的 topic 清單與 28 §15 的 webhook topics 必須同步新增這三個 `einvoice/*`。
-5. **一張訂單可以有多張發票**（編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）——🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引（`limits.einvoice.multiple_invoices_per_order_allowed: true`）。
+5. **一張訂單可以有多張發票**（編輯加收補開、以及 V-23 若定案為「每次出貨各開一張」）——🔴 **不得**對 `einvoices(shop_id, order_id)` 建唯一索引（`limits.jurisdictions.tw.tax_invoice.multiple_invoices_per_order_allowed: true`）。
+   <!-- 依 56 §E 分流，原 55 §D 結論：G-04「schema 級裁決，上線後改不得」。
+        **稅務理由在 HK 為 N/A**（`tax_invoice: none` ⇒ `einvoices` 恆空），但 🔴 **結論保留**：
+        schema 取所有 pack 的聯集，行為才取當前 pack（`limits.jurisdiction.schema_is_union_of_all_packs: true`）。
+        本條在核心層的可執行列舉已補在 `limits.jurisdiction.schema_union_rules.forbidden_unique_indexes`
+        ＋ `docs/research/06` §7.1——因為 `tw.enabled: false`，**建表的人不會去讀一個未啟用的 pack**，
+        裁決值只留在 pack 內等於沒有落地。（57 §G-04）
+        🔴 防回退：HK 上線後 `einvoices` 會是長期空表，任何人**不得**因此加唯一索引或刪表。 -->
 
 **(d) 四條不變量（nightly 對帳斷言，55 §B.2）**
 1. `Σ einvoice_allowances.amount_cents`（per invoice）`≤ einvoices.total_cents`——**任何時刻**成立。

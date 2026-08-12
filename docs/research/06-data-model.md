@@ -220,7 +220,33 @@ shops, staff_members, roles, role_permissions；products, product_options, optio
 | `market_settings` | `(market_id, key, value JSON)`，**`value IS NULL` ＝ 繼承**；取代原本權威的 `parent_market_id` | P1-32（29 §1.5） |
 | `cod_settlement_rows` | COD 對帳檔匯入（`carrier, statement_id, row_no` 唯一索引 ⇒ 重覆匯入冪等） | P1-08（16-F4.4） |
 
+### 7.1 法域 schema（**取所有 pack 的聯集**，不是取當前 pack）
+
+<!-- 依 docs/specs/57 §G-04 補寫（原 55 §D G-04 的結論一字未改，只是加上法域維度）。
+     依 56 §E 分流，原 55 §D 結論：「一訂單多發票；**不得**對 `einvoices(shop_id, order_id)` 建唯一索引」
+     ——該結論的**稅務理由**在 HK 為 N/A（`tax_invoice: none`，該表恆空），但**結論保留**。
+     🔴 這是本輪唯一「schema 級、上線後改不得」的一條，與 P0-08（`return_line_items` 外鍵）同性質：
+        HK 首發上線時 `einvoices` 一列資料都不會有，建表的人**沒有任何動機**去想索引怎麼建；
+        等到日後啟用 tw pack 才發現索引建錯，就要停機做 migration。
+     56 §0.2 原則 3 只寫了「schema 取聯集」的原則，裁決值 `multiple_invoices_per_order_allowed: true`
+     留在 `jurisdictions.tw.tax_invoice` 底下——但 `tw.enabled: false`，**建表時沒有人會去讀一個未啟用的 pack**。
+     已在 `limits.jurisdiction.schema_union_rules` 補上核心層的列舉（57 §G-04 的 limits 改動）。 -->
+
+**建表鐵律**：schema 決定一律取**所有 pack 的聯集**（`limits.jurisdiction.schema_is_union_of_all_packs: true`），**行為**才取當前 pack。基準法域是 HK，但 HK 首發的 migration **必須**把下列 tw pack 的表一起建出來。
+
+| 表 | 當前（HK）狀態 | 建表要求 | 出處 |
+|---|---|---|---|
+| `einvoices` | **恆空**（`tax_invoice: none`，全部事件回 `no_document`） | 🔴 **不得**對 `(shop_id, order_id)` 建唯一索引 | 55 §D G-04；`limits.jurisdiction.schema_union_rules.forbidden_unique_indexes` |
+| `einvoice_allowances` | 恆空 | `Σ amount_cents(per einvoice_id) ≤ einvoices.total_cents`，條件式 UPDATE | 55 §D G-02（tw only） |
+| `jurisdiction_capability_skips` | **HK 首發即大量寫入** | `(shop_id, jurisdiction, capability, event_kind, source_write_point, reason, occurred_at)`。每一次 `documented_no_op` 落一列 | 56 §A.3 |
+| `contract_liability_entries` | **HK 首發即使用** | `(shop_id, source_type, source_id, direction, amount_cents, recognised_at, basis)`；唯一鍵 `(shop_id, source_type, source_id, direction)` | 56 §B.3.1 J-01；57 §G-07 |
+
+**`jurisdiction_capability_skips` 為什麼是表不是 log**：它的唯一目的是讓「什麼都沒做」變成**看得見的一列資料**（56 §A.3）。寫進 log 就只是「可以 grep 的字串」，做不出 nightly 斷言——而 HK 下 20 條稅務事件全部走這條路（56 §B.2.1），沒有斷言就等於沒有覆蓋。
+
 **既有表的欄位變更（P1）**：
+- `orders`：補 **`seller_jurisdiction` / `buyer_jurisdiction`**（訂單成立即快照；`limits.jurisdiction.snapshot_on_order: true`）。🔴 **一筆交易有兩個法域**——賣方決定稅制／憑證／儲值監管，買方決定隱私／取貨／幣別／消費者權利；混成一個 `country` 欄位，跨境單必錯（56 §A.0）。
+- `gift_card_transactions`：外鍵改為**複合外鍵 `(shop_id, gift_card_id)`**，不是單欄 `gift_card_id`。單欄外鍵在應用層漏檢時完全擋不住跨店扣抵。理由自 2026-08-12 起從「SVF 法遵」改為**多租戶資料隔離**（CLAUDE.md 鐵律 2）——**技術動作不變，只是理由換了**（56 附錄 Z）。
+- `gift_cards`：補 `redeemable_scope`（列舉只有 `issuing_shop_only`）；`shop_id NOT NULL`。
 - `markets`：`parent_market_id` → **`derived_parent_market_id`（推導快取，非權威）**；conditions 變更時同 transaction 重算子樹。
 - `notification_templates`：補 `event_key` / `group_key` / `channel` / **`toggleable`（種子決定、唯讀）** / `enabled` / `locale` / `implemented`（18-F2.1）。
 - `discount_combines_with`：唯一鍵 `(discount_id, target_class)`，且**寫入 `(shipping 類折扣, shipping)` 一律拒絕**（17-F1 第 4 點）。

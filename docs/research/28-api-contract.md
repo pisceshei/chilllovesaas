@@ -33,6 +33,13 @@
 寫入型 mutation 一律收 `idempotencyKey`；**強制清單見 `config/limits.yml` 的 `idempotency.required_for`**（含 Shopify 自 2026-04 起強制的 17 個 mutation，以 refund／inventory 為主，缺 key **執行期報錯**；另加本專案強制的 `returnProcess`、`orderCancel`、`orderEditCommit`）。
 
 **本專案另強制的 9 支金流 mutation（55 號盤點補齊）**：`orderCapture`、`orderMarkAsPaid`、`draftOrderComplete`、`giftCardCreate/Credit/Debit/Deactivate`、`storeCreditAccountCredit/Debit`。平台域另有 `required_for_platform`（`platformEinvoiceVoid`、`platformEinvoiceAllowanceCreate`）。
+
+**🔴 這 9 支的強制冪等是「法域無關」的**（`limits.idempotency.jurisdiction_scope: core_all_packs`）——金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；在 hk／tw／任何未來 pack 下**完全相同**，**不得**搬進 `jurisdictions.*`。
+**⚠ 但平台域那 2 支相反：它們是 pack-scoped 的**（`required_for_platform_pack_scope: jurisdictions.tw.tax_invoice`）。兩者都是台灣統一發票的專屬 mutation，基準法域 HK 下**根本不存在於 schema**（56 §A.4 CI-3）。CI 對未啟用 tw 的部署要斷言的是「這兩支不存在」，**不是**「這兩支要帶 key」——照 `required_for` 的方式做成無條件斷言，HK 首發的 schema 快照測試會直接紅掉。
+<!-- 依 56 §E 分流，原 55 §D 結論：G-08「9 支金流 mutation 未列強制冪等」。
+     依 56 §E，G-08 標為「**與法域無關，完整適用**」——本輪複核**確認此分流正確**，9 支一條不減。
+     57 §G-08 補上的是 56 未涵蓋的一點：`required_for_platform` 的 2 支**不是**法域無關的，
+     它們隨 tw pack 存廢。這一點在 56 §E.1 的 G-08 列與 §A.4 的 CI-3 之間掉了縫。 -->
 **第二層業務唯一鍵**（`limits.idempotency.business_unique_keys`）：冪等 key 的 TTL 只有 24 小時（46a:789），但「同一張 fulfillment 只能請款一次」是**永久**約束——凡列於該表者，除冪等 key 外還要有業務唯一索引兜底。
 <!-- 依 docs/specs/55 §A（金流寫入點總表 41 條）、§D G-08 補寫。原文只列了「官方 17 個 ＋ 我方 2 個」——
      官方清單是「Shopify 自己的金流寫入點」，**不涵蓋我方自己的**（禮品卡、抵用金、手動請款、標記已付、草稿轉單）。
@@ -97,9 +104,9 @@
 
 | 類別 | Queries | Mutations |
 |---|---|---|
-| 訂單 | `orders(first, query, sortKey, **return_status 可篩**)`, `order(id)`（金額全 MoneyBag；timeline events connection） | `orderUpdate(note, tags, email, shippingAddress)`, `orderClose/Open`, **`orderCancel(orderId: ID!, reason: OrderCancelReason!, restock: Boolean!, notifyCustomer: Boolean, staffNote: String, refundMethod: OrderCancelRefundMethodInput) → { job{id,done}, orderCancelUserErrors }`**（**非同步**）, `orderMarkAsPaid`, `orderCapture(amount, parentTransactionId)` |
+| 訂單 | `orders(first, query, sortKey, **return_status 可篩**)`, `order(id)`（金額全 MoneyBag；timeline events connection） | `orderUpdate(note, tags, email, shippingAddress)`, `orderClose/Open`, **`orderCancel(orderId: ID!, reason: OrderCancelReason!, restock: Boolean!, notifyCustomer: Boolean, staffNote: String, refundMethod: OrderCancelRefundMethodInput) → { job{id,done}, orderCancelUserErrors }`**（**非同步**）, **`orderMarkAsPaid(idempotencyKey!)`**, **`orderCapture(amount, parentTransactionId, idempotencyKey!)`** |
 | 訂單編輯 | **`order.editSession`**、**`calculatedOrder(id)`**（暫存區：`lineItems`／`addedLineItems`／`shippingLines{stagedStatus}`＋即時重算後的金額） | `orderEditBegin(id!) → { calculatedOrder, orderEditSession, userErrors }`；`orderEditAddVariant(id!, variantId!, quantity!, allowDuplicates=false, locationId)`／`orderEditAddCustomItem`／`orderEditSetQuantity(id!, lineItemId!, quantity!, restock=false)`／`orderEditAddLineItemDiscount`／**`orderEditUpdateDiscount`**／`orderEditRemoveDiscount`／**`orderEditAddShippingLine`**／**`orderEditUpdateShippingLine`（僅限新加入的行）**／**`orderEditRemoveShippingLine`**；`orderEditCommit(id!, notifyCustomer, staffNote)` |
-| 草稿單 | `draftOrders`, `draftOrder(id)` | `draftOrderCreate(input{lineItems[{variantId\|custom{title,price}, quantity, appliedDiscount}], customerId, shippingAddress, appliedDiscount, shippingLine, note, email})`, `draftOrderUpdate`, `draftOrderDelete`, `draftOrderComplete(paymentPending: Boolean)` → 轉正式單, `draftOrderInvoiceSend(email 主旨/內文)` |
+| 草稿單 | `draftOrders`, `draftOrder(id)` | `draftOrderCreate(input{lineItems[{variantId\|custom{title,price}, quantity, appliedDiscount}], customerId, shippingAddress, appliedDiscount, shippingLine, note, email})`, `draftOrderUpdate`, `draftOrderDelete`, **`draftOrderComplete(paymentPending: Boolean, idempotencyKey!)`** → 轉正式單（第二層業務唯一鍵 `(draft_order_id)`）, `draftOrderInvoiceSend(email 主旨/內文)` |
 | 棄單 | `abandonedCheckouts(first, query)` | `abandonedCheckoutSendRecovery`（15 §棄單信規則） |
 
 規則：訂單號 `#1001` 起連號 per shop；60 天窗口概念佔位；search 語法 `financial_status/fulfillment_status/return_status/email/name`（**不含 `status`——Order 沒有單一 status 欄位**）。
@@ -198,8 +205,21 @@
 | 顧客 | `customers(first, query)`, `customer(id)`（ordersCount/amountSpent/lastOrder/addresses/taxExempt/marketing consent） | `customerCreate(input{firstName, lastName, email, phone, addresses, tags, note, taxExempt})`, `customerUpdate`, `customerDelete`（有訂單→匿名化，16 §）, `customerAddressCreate/Update/Delete/SetDefault`, `customerMerge(customerOneId, customerTwoId)` |
 | 行銷同意 | customer.emailMarketingConsent/smsMarketingConsent | `customerEmailMarketingConsentUpdate(input{marketingState: SUBSCRIBED\|UNSUBSCRIBED, marketingOptInLevel, consentUpdatedAt})`、`customerSmsMarketingConsentUpdate` |
 | 分群 | `segments`, `customerSegmentMembers(segmentId)` | `segmentCreate(name, query)`, `segmentUpdate`, `segmentDelete`——query 語法＝分群 DSL（01 §顧客） |
+| **商店抵用金** | `customer.storeCreditAccounts`, `storeCreditAccount(id){balance, expiresAt, transactions}` | **`storeCreditAccountCredit(id, creditInput{creditAmount, expiresAt}, idempotencyKey!)`**、**`storeCreditAccountDebit(id, debitInput{debitAmount}, idempotencyKey!)`** |
 
 規則：email/phone 唯一 per shop；consent 帶時間戳與來源（GDPR 稽核）；merge 保留訂單歸屬。
+
+**商店抵用金兩支的硬要求**（55 §A M23–M26／§D G-07・G-08；契約原本只有 `limits.store_credit` 的 5 個常數，**無任何 mutation 契約**）：
+- `idempotencyKey!` **必填**；`storeCreditAccountDebit` 另有第二層業務唯一鍵 `(checkout_token, store_credit_account_id)`。
+- 一律走**條件式 UPDATE**（`UPDATE store_credit_accounts SET balance_cents = balance_cents − ? WHERE id = ? AND shop_id = ? AND balance_cents >= ?`），🔴 **禁止先讀後寫**；`balance_cents` 恆 `>= 0`。累計上限 `max_balance_usd: 15000` 在**併發下同樣要靠條件式 UPDATE**，不是靠寫入前的 SELECT 檢查。
+- `storeCreditAccountDebit` 先驗 `account.shop_id == checkout.shop_id`，不符回 `CROSS_SHOP_REDEMPTION_FORBIDDEN`（與餘額不足分開回）。
+- 帳戶到期扣減走排程 job，冪等鍵 `UUID v5(scexpire, (store_credit_account_id, expiry_date))`（55 §A.3）。
+<!-- 依 56 §E 分流，原 55 §D 結論：G-07「抵用金的稅務定位與併發安全皆未定義」＋ G-08。
+     依 56 §E，G-07「**不消失，只改性質**」：TW＝決定**發票金額**（V-22），HK＝決定**收入認列金額**（V-29）。
+     上面四點是 G-07 的**併發安全**那一半——那一半 56 §E 沒有提到，因為它法域無關：
+     兩分頁同時結帳超額扣抵，與賣方在哪個法域完全無關。**不得**因為「G-07 移到會計層」而漏掉它。
+     稅務／會計那一半見 `limits.jurisdictions.<code>.accounting.store_credit_on_issue|on_use`（兩邊皆 null，
+     定案前 HK 走 `record_with_undetermined_basis`，🔴 **不擋發放與使用**）。 -->
 
 ## 8. 折扣與禮品卡（read/write_discounts）
 
@@ -207,9 +227,20 @@
 |---|---|---|
 | 自動折扣 | `automaticDiscountNodes` | `discountAutomaticBasicCreate/Update`（金額/百分比）、`discountAutomaticBxgyCreate/Update`、`discountAutomaticFreeShippingCreate/Update`、`discountAutomaticDelete/Activate/Deactivate` |
 | 折扣碼 | `codeDiscountNodes`, `codeDiscountNodeByCode` | `discountCodeBasicCreate/Update`、`discountCodeBxgyCreate`、`discountCodeFreeShippingCreate`、`discountCodeDelete/Activate/Deactivate`、`discountCodeBulkCreate(codes[]，2000 萬配額)`、`discountRedeemCodeBulkAdd` |
-| 禮品卡 | `giftCards`, `giftCard(id)` | `giftCardCreate(initialValue, code?, customerId?, expiresOn, note)`, `giftCardUpdate`, `giftCardDeactivate`, `giftCardCredit/Debit(amount)` |
+| 禮品卡 | `giftCards`, `giftCard(id)` | **`giftCardCreate(initialValue, code?, customerId?, expiresOn, note, idempotencyKey!)`**, `giftCardUpdate`, **`giftCardDeactivate(idempotencyKey!)`**, **`giftCardCredit/Debit(amount, idempotencyKey!)`** |
 
 規則：求值管線與組合裁決（17 號：allocation/combination matrix）；**用量併發硬保證**（usage_count CAS＋唯一索引）；input 統一 `{title, startsAt, endsAt, combinesWith{orderDiscounts, productDiscounts, shippingDiscounts}, minimumRequirement, **context{customerSegments | markets}**, usageLimit, appliesOncePerCustomer}`。
+
+**禮品卡四支的額外硬要求**（55 §A M27–M32／§D G-06・G-08；法域無關）：
+- `idempotencyKey!` **必填**（`limits.idempotency.required_for`）；`giftCardDebit` 另有第二層業務唯一鍵 `(checkout_token, gift_card_id)`——冪等窗只有 24 小時，「同一次結帳只能扣一次」是永久約束。
+- `giftCardCredit/Debit` 一律走**條件式 UPDATE**（`UPDATE … WHERE balance_cents >= ?`），🔴 **禁止先讀後寫**；`balance_cents` 恆 `>= 0`。
+- `giftCardDebit` 在條件式 UPDATE **之前**先驗 `gift_card.shop_id == checkout.shop_id`，不符回 `userErrors{code: CROSS_SHOP_REDEMPTION_FORBIDDEN}`。這與餘額不足是**兩個不同的失敗模式**，錯誤碼不得合併。
+- 每一支在成功後於**同一個 transaction** 內落一列 `contract_liability_entries`（方向見 `limits.jurisdictions.hk.accounting.gift_card_entry_points`）。
+<!-- 依 56 §E 分流，原 55 §D 結論：G-06「禮品卡稅務處理未定義」＋ G-08「四支 giftCard 未列強制冪等」。
+     依 56 §E，G-06 在 HK **性質改變**（HKFRS 15 合約負債，已有答案，不是「開立時點二選一」），
+     G-08 **與法域無關完整適用**。上面四點中，前三點法域無關、第四點是 HK 基準法域的落地（57 §G-07）。
+     🔴 原 `limits.gift_card.resolver_refuses_start_when_undecided: true` 已移入 `jurisdictions.tw.accounting`
+        並限定 TW——照搬到 HK 會讓禮品卡**永遠無法啟用**（HK 的 tax_event_* 本來就不存在）。 -->
 
 <!-- 依 46b:248–257、46b:375 修正，原文：`customerSelection` **已 deprecated（2025-10）**，改用 `context{customerSegments | markets}`，且 **markets 與 customerSegments 互斥（XOR）**。
      🔴 此處原本寫錯：input 原列 `customerSelection` 且無 `context`、無 XOR 檢查。任何人翻舊版都不要改回去。 -->

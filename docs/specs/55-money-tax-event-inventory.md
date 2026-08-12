@@ -104,10 +104,16 @@ GMV 抽成 `gmv_cents * bps / 10_000` 為**整數除法（截斷＝floor）**，
 
 以下 **11 條**（表中標 🔁）的共同特徵：**同一個帳務對象會被寫入 N 次，且 N 次的總和有一個不可突破的上界**。這類路徑只做冪等是不夠的——冪等只擋「同一把 key 重送」，擋不住「兩把不同 key 的合法請求加起來超額」。
 
+> 🔴 **本節 11 條全部法域無關，一條都不得因法域改動而削弱**（56 §F 驗收 21）。
+> <!-- 依 56 §E 分流補寫。§B（稅務事件）整節在 HK 大幅降階，但**本節是金流側**：錢動了幾次、加起來有沒有超過上界，
+>      與賣方有沒有稅務憑證制度完全無關。56 §E.1 已把「G-02 連金流不變量一起拿掉」標為危險等級**高（容易誤刪）**。
+>      唯一的例外方向是**新增**而非刪減：HK 基準法域下，M27–M32（禮品卡）與 M23–M26（抵用金）除了餘額上限之外，
+>      還要在同一個 transaction 內落一列 `contract_liability_entries`（HKFRS 15，57 §G-07）。 -->
+
 | # | 多次寫入的對象 | 累計上限式（integer cents） | 併發鎖做法 |
 |---|---|---|---|
 | M07／M08 | 同一筆授權的多次部分請款 | `Σ captured_cents ≤ authorization.amount_cents` | `UPDATE order_transactions SET captured_total = captured_total + ? WHERE id = ? AND captured_total + ? <= amount_cents`；affected 0 ⇒ `userErrors` |
-| M09／M10 | 同一訂單的多次部分退款 | `Σ refunded_cents ≤ maximumRefundable`（軟上限，**不得做成 DB CHECK**——NP0-A） | 條件式 UPDATE 取得 `refundable`；超過 ⇒ 走 `orders.over_refund` 權限＋二次確認路徑 |
+| M09／M10 | 同一訂單的多次部分退款 | `Σ refunded_cents ≤ maximumRefundable`（軟上限，**不得做成 DB CHECK**——NP0-A） | 條件式 UPDATE 取得 `refundable`；超過 ⇒ 走 `orders.over_refund` 權限＋二次確認路徑。**完整 SQL 樣式／併發情境／兩個錯誤碼見 `16-F5.1(a)–(e)`（57 §G-02 補齊）** |
 | M11 | 同一張退貨的費用覆寫 | `Σ restocking_fee_cents ≤ Σ line_net`；`return_shipping_fee_cents ≥ 0` | `returns.lock_version` 樂觀鎖 |
 | M19 | 同一張 COD 訂單的多次對帳匯入 | `Σ settled_cents == cod_expected_cents`（**完全相符才回寫**） | `(carrier, statement_id, row_no)` 唯一索引 |
 | M24 | 同一顧客抵用金帳戶的多次扣抵 | `Σ debit ≤ balance_cents` 且逐筆 `balance_cents ≥ 0` | `UPDATE store_credit_accounts SET balance_cents = balance_cents - ? WHERE id = ? AND balance_cents >= ?` |
@@ -335,17 +341,20 @@ allowance_total_cents   = allowance_untaxed_cents + allowance_tax_cents
 
 ### D.1 P0（8 條）
 
-| # | 缺口 | 錯誤後果 | 為什麼是 P0 | 本輪處置 |
-|---|---|---|---|---|
-| **G-01** | **部分出貨時 `issue_timing = on_fulfillment` 的開立粒度未定義** | 一張訂單分三次出貨：可能開三張（總額 3 倍）、可能一張都沒開（漏開）、可能開一張全額（提前開立未出貨部分）。三種實作都「看起來合理」 | 38:876 只寫「出貨（建議）」，沒有定義多次出貨；這是台灣最常見的出貨型態（超商取貨常拆單），錯了就是**系統性重複開立或系統性漏開** | ⚠ **V-23**；✅ 已在 `limits.einvoice.partial_fulfillment_issue_granularity: null` ＋ **定案前該組合擋下轉人工佇列**（不得靜默選一邊） |
-| **G-02** | **折讓沒有累計上限檢查**——`38:1341` 用 `refund.amount_cents >= invoice.total_cents` 判定，只看**本次**退款額 | 兩次各退 60% ⇒ 開出兩張各 60% 的折讓 ⇒ **折讓總額 120% > 發票金額**，稅務申報直接錯誤且不可逆 | 與 A.2 的「多次寫入必須有累計上限」同一類錯誤，只是落在稅務側；`einvoice_allowances` 表存在但無任何累計約束 | ✅ 已修 `38 §6-3` router ＋ `16-F5.5(b)`；新增不變量 `Σ allowances ≤ invoice.total_cents` |
-| **G-03** | **作廢窗已關時沒有 fallback**——`EinvoiceVoidPolicy.window_open?` 掛勾存在（38:1356）但 router **從不呼叫它** | 跨期別的全額退款會嘗試作廢 → 加值中心拒絕 → 發票卡在 `issued`、退款已生效、**該筆銷售永遠沒有沖銷憑證** | 掛勾寫了卻沒接上＝比沒寫更糟（會讓人以為已處理）；與 54 號 P1-09「模組完整實作但沒有呼叫端」是同一種缺陷 | ✅ 已修：`window_open? == false` ⇒ **降級為全額折讓**（不是失敗） |
-| **G-04** | **一張訂單多張發票的資料模型未支援**——`38:1346` 逐字 `refund.order.einvoice`（**單數**），暗示 `(shop_id, order_id)` 唯一 | 但 `16-F5.5` 第 4 列明寫「總額上升 ⇒ **補開一張**」，且 G-01 定案若為「每次出貨各開一張」也會產生多張。兩份規格**直接矛盾**，照 38 實作則補開必定失敗 | 這是 schema 級決定（是否對 `(shop_id, order_id)` 建唯一索引），**上線後改不得**，與 P0-08（`return_line_items` 外鍵）同性質 | ✅ 已修 `38 §3B` 表註釋 ＋ `limits.einvoice.multiple_invoices_per_order_allowed: true`（明寫**不得**建該唯一索引） |
-| **G-05** | **COD 未取件退回的作廢無法經由退款 router 觸發**——退款金額為 0（款項從未收到），router 的三分支（`==`／`<`／`>`）全部落到「折讓 0 元」 | 開了一張 0 元折讓，原發票仍有效 ⇒ 一筆從未成立的銷售留著全額發票 | 16-F4.4 第 5 列已寫「觸發 F5.5 的發票 router」，但 router 的入參語義不成立——**規格之間對接錯誤，不是遺漏** | ✅ 已修 `16-F4.4` ＋ `16-F5.5(a)`：COD 退回走**訂單層 `einvoice/void_requested`**，不走退款路徑 |
-| **G-06** | **禮品卡的稅務處理完全未定義**（T19/T20/T21） | 「發行時開立」與「兌換時開立」兩制若混用 ⇒ **同一筆銷售開兩張發票（重複課稅）**；若兩邊都不開 ⇒ 漏開 | 禮品卡在專案內只有 22:116 一行按鈕描述與 28 §8 的 4 支 mutation，**沒有任何規格檔**；而它同時是金流（M27–M32，6 條）與稅務（T19–T21，3 條）的交會點 | ⚠ **V-21**；✅ 已建 `limits.gift_card` 區塊（含 `tax_event_on_issue` / `on_redeem` 皆 `null` ＋ **解析器在未定案時拒絕啟動**，比照 V-02 的處置） |
-| **G-07** | **商店抵用金的稅務定位與併發安全皆未定義**（T22/T23 ＋ M23/M24） | ①抵用金是「付款方式」或「折扣」直接決定發票金額（差額＝抵用金全額）②`storeCreditAccountDebit` 無冪等、無條件式 UPDATE ⇒ 兩分頁同時結帳可**超額扣抵** | `limits.store_credit` 有 5 個鍵但**沒有任何規格章節**；金額路徑與稅務路徑雙缺 | ⚠ **V-22**；✅ 已補 `limits.store_credit` 併發與稅務鍵、`idempotency.required_for` 加兩支 mutation |
-| **G-08** | **`orderCapture` / `orderMarkAsPaid` / `draftOrderComplete` / 4 支 giftCard / 2 支 storeCredit 共 **9 支金流 mutation 未列強制冪等** | 重試 ⇒ **重複請款／重複標記已付／重複發卡／重複扣抵**。`orderCapture` 尤甚：支援部分多次請款，重試會直接多扣顧客的錢 | 與 NP1-D（`orderEditCommit`）**完全同性質**——54 號只補了一支，這是同一個系統性缺口的其餘 9 支。`limits.idempotency.required_for` 原本 13 條全部來自「抄官方 17 個清單」，**從未反向盤點我方自己的金流寫入點** | ✅ 已補進 `limits.idempotency.required_for`（+9）＋ 新增 `required_for_platform`（+2） |
+> **⚠ 法域分流（2026-08-12 後補，見下表最右欄）**——本檔成文時的預設法域是**台灣**；使用者已裁定基準法域為**香港**（`CLAUDE.md` 鐵律 11、56 號）。
+> **本檔的方法與發現一條未推翻**，但下列 8 條 P0 中有 **4 條的處置在 HK 不成立、其中 2 條照搬會出事**。分流結論見 56 §E.1，逐條落地見 **57 號**。
+> <!-- 依 56 §E 分流補寫「法域適用性」欄。原 §D.1 六欄，右起新增第 7 欄。既有六欄一字未改（56 §C.3 不刪除聲明）。 -->
 
+| # | 缺口 | 錯誤後果 | 為什麼是 P0 | 本輪處置 | **法域適用性（56 §E／57）** |
+|---|---|---|---|---|---|
+| **G-01** | **部分出貨時 `issue_timing = on_fulfillment` 的開立粒度未定義** | 一張訂單分三次出貨：可能開三張（總額 3 倍）、可能一張都沒開（漏開）、可能開一張全額（提前開立未出貨部分）。三種實作都「看起來合理」 | 38:876 只寫「出貨（建議）」，沒有定義多次出貨；這是台灣最常見的出貨型態（超商取貨常拆單），錯了就是**系統性重複開立或系統性漏開** | ⚠ **V-23**；✅ 已在 `limits.einvoice.partial_fulfillment_issue_granularity: null` ＋ **定案前該組合擋下轉人工佇列**（不得靜默選一邊） | 🔴 **HK：N/A 且處置有害**。`tax_invoice: none` ⇒ 無粒度問題；「擋下轉人工佇列」照搬會卡死**所有多次出貨的訂單**。已加法域條件（`block_multi_fulfillment_when_undecided`，hk:false／tw:true），呼叫端 `16-F5.5(a)`。**57 §G-01** |
+| **G-02** | **折讓沒有累計上限檢查**——`38:1341` 用 `refund.amount_cents >= invoice.total_cents` 判定，只看**本次**退款額 | 兩次各退 60% ⇒ 開出兩張各 60% 的折讓 ⇒ **折讓總額 120% > 發票金額**，稅務申報直接錯誤且不可逆 | 與 A.2 的「多次寫入必須有累計上限」同一類錯誤，只是落在稅務側；`einvoice_allowances` 表存在但無任何累計約束 | ✅ 已修 `38 §6-3` router ＋ `16-F5.5(b)`；新增不變量 `Σ allowances ≤ invoice.total_cents` | **稅務側 HK N/A**（無折讓）⇒ 移入 tw pack。🔴 **金流側 `Σ refunded ≤ maximumRefundable` 法域無關，必須留著**（§A.2 M09/M10）——56 §E.1 標「容易誤刪」。可測式子（條件式 UPDATE／併發情境／錯誤碼）已補 `16-F5.1`。**57 §G-02** |
+| **G-03** | **作廢窗已關時沒有 fallback**——`EinvoiceVoidPolicy.window_open?` 掛勾存在（38:1356）但 router **從不呼叫它** | 跨期別的全額退款會嘗試作廢 → 加值中心拒絕 → 發票卡在 `issued`、退款已生效、**該筆銷售永遠沒有沖銷憑證** | 掛勾寫了卻沒接上＝比沒寫更糟（會讓人以為已處理）；與 54 號 P1-09「模組完整實作但沒有呼叫端」是同一種缺陷 | ✅ 已修：`window_open? == false` ⇒ **降級為全額折讓**（不是失敗） | **HK：N/A**（無作廢機制 ⇒ 無作廢窗）。整條移入 tw pack。🔴 但「掛勾寫了卻沒接上＝比沒寫更糟」的**教訓**升格為法域層通則（56 §A.3 禁止靜默略過），G-01 的旗標無人讀正是同一病根。**57 §G-03** |
+| **G-04** | **一張訂單多張發票的資料模型未支援**——`38:1346` 逐字 `refund.order.einvoice`（**單數**），暗示 `(shop_id, order_id)` 唯一 | 但 `16-F5.5` 第 4 列明寫「總額上升 ⇒ **補開一張**」，且 G-01 定案若為「每次出貨各開一張」也會產生多張。兩份規格**直接矛盾**，照 38 實作則補開必定失敗 | 這是 schema 級決定（是否對 `(shop_id, order_id)` 建唯一索引），**上線後改不得**，與 P0-08（`return_line_items` 外鍵）同性質 | ✅ 已修 `38 §3B` 表註釋 ＋ `limits.einvoice.multiple_invoices_per_order_allowed: true`（明寫**不得**建該唯一索引） | **稅務理由 HK N/A**（該表恆空）；🔴 **結論保留**——schema 取所有 pack 的聯集。裁決值原本只在 `jurisdictions.tw.*`（`enabled: false`），已提到核心層 `limits.jurisdiction.schema_union_rules` ＋ `06 §7.1`。**schema 級，優先做。57 §G-04** |
+| **G-05** | **COD 未取件退回的作廢無法經由退款 router 觸發**——退款金額為 0（款項從未收到），router 的三分支（`==`／`<`／`>`）全部落到「折讓 0 元」 | 開了一張 0 元折讓，原發票仍有效 ⇒ 一筆從未成立的銷售留著全額發票 | 16-F4.4 第 5 列已寫「觸發 F5.5 的發票 router」，但 router 的入參語義不成立——**規格之間對接錯誤，不是遺漏** | ✅ 已修 `16-F4.4` ＋ `16-F5.5(a)`：COD 退回走**訂單層 `einvoice/void_requested`**，不走退款路徑 | **憑證面 HK N/A**；🔴 **訂單層 `PENDING → VOIDED` 的金流與庫存處理原樣保留**。事件改為法域中性的 `TaxEvent(sale_uncollected)`。原始教訓（router 入參語義不成立）在 HK 完全不變。**57 §G-05** |
+| **G-06** | **禮品卡的稅務處理完全未定義**（T19/T20/T21） | 「發行時開立」與「兌換時開立」兩制若混用 ⇒ **同一筆銷售開兩張發票（重複課稅）**；若兩邊都不開 ⇒ 漏開 | 禮品卡在專案內只有 22:116 一行按鈕描述與 28 §8 的 4 支 mutation，**沒有任何規格檔**；而它同時是金流（M27–M32，6 條）與稅務（T19–T21，3 條）的交會點 | ⚠ **V-21**；✅ 已建 `limits.gift_card` 區塊（含 `tax_event_on_issue` / `on_redeem` 皆 `null` ＋ **解析器在未定案時拒絕啟動**，比照 V-02 的處置） | 🔴 **HK：問題性質改變且已有答案**（HKFRS 15 合約負債，非「開立時點二選一」）。`resolver_refuses_start_when_undecided` 已移入 `jurisdictions.tw.accounting` 限定 TW——照搬會讓**禮品卡在香港永遠無法啟用**。**57 §G-06** |
+| **G-07** | **商店抵用金的稅務定位與併發安全皆未定義**（T22/T23 ＋ M23/M24） | ①抵用金是「付款方式」或「折扣」直接決定發票金額（差額＝抵用金全額）②`storeCreditAccountDebit` 無冪等、無條件式 UPDATE ⇒ 兩分頁同時結帳可**超額扣抵** | `limits.store_credit` 有 5 個鍵但**沒有任何規格章節**；金額路徑與稅務路徑雙缺 | ⚠ **V-22**；✅ 已補 `limits.store_credit` 併發與稅務鍵、`idempotency.required_for` 加兩支 mutation | **不消失，只改性質**：TW＝決定**發票金額**（V-22）；HK＝決定**收入認列金額**（V-29，HKFRS 15）。🔴 **併發安全那一半法域無關**，不得因「移到會計層」而漏掉。HK 定案前 `record_with_undetermined_basis`，**不擋發放與使用**。**57 §G-07** |
+| **G-08** | **`orderCapture` / `orderMarkAsPaid` / `draftOrderComplete` / 4 支 giftCard / 2 支 storeCredit 共 **9 支金流 mutation 未列強制冪等** | 重試 ⇒ **重複請款／重複標記已付／重複發卡／重複扣抵**。`orderCapture` 尤甚：支援部分多次請款，重試會直接多扣顧客的錢 | 與 NP1-D（`orderEditCommit`）**完全同性質**——54 號只補了一支，這是同一個系統性缺口的其餘 9 支。`limits.idempotency.required_for` 原本 13 條全部來自「抄官方 17 個清單」，**從未反向盤點我方自己的金流寫入點** | ✅ 已補進 `limits.idempotency.required_for`（+9）＋ 新增 `required_for_platform`（+2） | ✅ **與法域無關，完整適用**，9 支一條不減（`idempotency.jurisdiction_scope: core_all_packs`）。⚠ 但 `required_for_platform` 那 2 支**是 pack-scoped 的**（統一發票專屬，HK 下不存在於 schema）——56 §E 未涵蓋此點。**57 §G-08** |
 ### D.2 P1（11 條）
 
 | # | 缺口 | 錯誤後果 | 本輪處置 |
@@ -436,7 +445,7 @@ allowance_total_cents   = allowance_untaxed_cents + allowance_tax_cents
 |---|---|---|
 | `capture` | `cumulative_cap_source: authorization_amount`、`partial_capture_allowed: true`、`multi_partial_capture_requires_psp_probe: true`、`idempotency_key_template` | G-13／G-14；`multi_partial_capture_requires_psp_probe` 呼應 15-F4.1(a)「必須先探測 PSP 能力，不是只看方案旗標」 |
 | `store_credit` | `concurrent_debit_strategy: conditional_update`、`balance_floor_cents: 0`、`tax_event_on_issue: null`、`tax_event_on_use: null`、`verify_tw_tax_treatment: true` | G-07／V-22 |
-| `gift_card`（新） | `max_initial_value_cents: 200000`、`deactivate_is_permanent: true`、`balance_floor_cents: 0`、`concurrent_debit_strategy: conditional_update`、`scheduled_send_max_days: 90`、`tax_event_on_issue: null`、`tax_event_on_redeem: null`、`verify_tw_voucher_tax_treatment: true`、`resolver_refuses_start_when_undecided: true` | G-06／G-12／V-21；最後一鍵比照 V-02 的「未定案時解析器拒絕啟動」處置 |
+| `gift_card`（新） | `max_initial_value_cents: 200000`、`deactivate_is_permanent: true`、`balance_floor_cents: 0`、`concurrent_debit_strategy: conditional_update`、`scheduled_send_max_days: 90`、`tax_event_on_issue: null`、`tax_event_on_redeem: null`、`verify_tw_voucher_tax_treatment: true`、`resolver_refuses_start_when_undecided: true` | G-06／G-12／V-21；最後一鍵比照 V-02 的「未定案時解析器拒絕啟動」處置。<br>🔴 **2026-08-12 後已改路徑**：後四鍵（`tax_event_*` ＋ `verify_*` ＋ `resolver_refuses_*`）已移入 `jurisdictions.tw.accounting` 並**限定 TW**；前五鍵（面額／併發／餘額）留在核心 `gift_card`（法域無關）。詳見下方註 |
 | `dispute`（新） | `tenant_transaction_kinds: [chargeback, chargeback_reversal]`、`tax_event_on_lost: null`、`verify_chargeback_tax_treatment: true`、`negative_balance_deadline_days: 180` | G-18／V-24；180 天出處 37:531 |
 | `refund` | `allocation_persistence_required: true`、`gift_card_refund_credits_balance: true` | G-16／G-17 |
 | `checkout` | `tip_enabled_default: false`、`tip_percent_options: null`、`verify_tip_options: true` | G-19；22 §8 只寫「三檔%」未載明檔位值 |
@@ -456,6 +465,20 @@ allowance_total_cents   = allowance_untaxed_cents + allowance_tax_cents
 | **V-23**（新增） | **`issue_timing = on_fulfillment` 在部分出貨情境下的開立粒度** | 38:876／33 §2.14 只寫「出貨（建議）」，未定義多次出貨；Shopify 無此概念（不開台灣發票）故三份官方文檔皆不可能有答案 | `limits.einvoice.partial_fulfillment_issue_granularity: null`；本檔 §B.1 T03、§D G-01 |
 | **V-24**（新增） | **爭議敗訴（chargeback lost）是否構成銷貨退回而應開立折讓** | 資金被扣回但**商品未退回**、買賣關係未解除，與一般退款的稅務性質不同；法規與實務作法皆未由本專案覆核 | `limits.dispute.tax_event_on_lost: null`；本檔 §B.1 T18、§D G-18 |
 
+**⚠ V-20 ～ V-24 的法域歸屬（2026-08-12 後補）**
+
+<!-- 依 56 §E 分流補寫。五條全部是**台灣稅務**問題，一律隨 tw pack 走；`jurisdictions.tw.enable_gate`
+     已把 V-20/V-21/V-22/V-23/V-24 中的四條（V-20/21/22/23/24 取其在 gate 內者）列為「未結案不得啟用 tw pack」。
+     🔴 **但其中三條在 HK 有「同題不同答」的對應項，不是消失**——把它們讀成「HK 沒這個問題」會漏掉整個會計面。 -->
+
+| TW 待查證 | 在 HK 的對應 | 差別 |
+|---|---|---|
+| **V-21**（禮品卡開立時點二選一） | **無對應——HK 已有答案**（HKFRS 15：售出＝合約負債、兌換＝認列收入）。⚠ 只剩 breakage 估計方法未定（**V-28**） | TW 是「兩制互斥、選錯就重複課稅」；HK 是「方向已定、只差估計參數」。🔴 `resolver_refuses_start_when_undecided` **不得**在 HK 生效——HK 的 `tax_event_*` 本來就永遠是 `null`，照搬會讓禮品卡永遠無法啟用（56 §E.1 G-06，危險等級最高） |
+| **V-22**（抵用金：付款方式 vs 折扣） | **V-29**（合約負債 vs 退款負債） | TW 決定**發票金額**；HK 決定**收入認列金額**。差額都等於抵用金全額，但一個錯在稅、一個錯在帳。**答案不可互相套用** |
+| **V-24**（爭議敗訴是否開折讓） | **V-30**（HKFRS 下如何沖銷） | 兩邊定案前的處置**相同**：不自動沖銷、開人工工單 |
+| **V-20**（禮品卡／抵用金是否計入折讓基數） | **N/A**（無折讓基數這個概念） | 純 TW。但**退款回補至禮品卡 ＝ 合約負債增加**的會計面在 HK 仍在（55 T24／57 §G-07） |
+| **V-23**（部分出貨開立粒度） | **N/A** 且處置有害 | 見 §D.1 G-01 最右欄 |
+
 ---
 
 ## G. 本篇驗收（對照 11 §0）
@@ -466,7 +489,18 @@ allowance_total_cents   = allowance_untaxed_cents + allowance_tax_cents
 3. 同一張禮品卡在兩個 checkout 同時扣抵全額 ⇒ 恰 1 筆成功，`balance_cents` 不為負。
 4. 抵用金累計上限：併發入帳至 USD 15,000 邊界 ⇒ 不得突破（`limits.store_credit.max_balance_usd`）。
 
-**稅務正確性**
+**稅務正確性（🔴 5–11 全部為 `jurisdiction/tw` only）**
+
+<!-- 依 56 §E 分流，原 55 §D 結論：本組七條驗收皆以「有政府強制憑證」為前提。
+     基準法域 HK 的 `tax_invoice: none` ⇒ 折讓／作廢／在途／多發票／稅額拆分**全部不存在**，七條在 HK **一條都跑不起來**。
+     🔴 標「TW only」而**不是刪除**——理由沿用 54 §P1-06：「不標註的『沒做』下一輪稽核會重新開單」。
+     HK 的等價驗收是**會計正確性**（合約負債方向、breakage 不提前認列、退款回補是負債增加），見 56 §F 18–20 與 57 §G-07。
+     ⚠ 兩條例外，**在 HK 仍然必須通過**：
+       ① 第 5 條的**金流側**對應物（`Σ refunded ≤ maximumRefundable` 的併發上限）——那是 §A.2 M09/M10，法域無關，
+          可測式子見 `16-F5.1(a)–(e)`；本條列在此處講的是稅務側的 `Σ 折讓 ≤ 發票金額`，兩者不可混為一談（56 §E.1「容易誤刪」）。
+       ② 第 11 條的**後半**（多次出貨擋單）在 HK 必須**反向斷言**：HK 訂單分三次出貨 ⇒ 三次全部正常完成、不進人工佇列
+          （56 §F 驗收 9、57 §G-01）。前半（禮品卡解析器拒絕啟動）在 HK **不得生效**，否則禮品卡永遠無法啟用（57 §G-06）。 -->
+
 5. **折讓累計上限**：對同一張發票連續退款 60% ＋ 60% ⇒ 第一張折讓 60%、第二張折讓**只有 40%**（不是 60%），且 `Σ 折讓 == 發票金額` 後第三次退款轉人工佇列。
 6. **作廢窗 fallback**：`window_open? == false` 時的全額退款 ⇒ 產生**全額折讓**而非失敗。
 7. **在途保護**：發票 `state = 'issuing'` 時發生退款 ⇒ router 回 `:defer` 並重試，最終仍產生折讓（**不得** no-op）。
