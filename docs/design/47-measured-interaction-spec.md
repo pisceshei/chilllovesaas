@@ -373,7 +373,88 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 → 我方採用：`--z-base:1 / --z-sticky:100 / --z-overlay-base:510`，浮層以 `510 + n` 命名，**上限 520**，超過即代表設計有問題。
 → 仍未解：`popover 是否高於 modal`（518/519/520 三層的具體歸屬）——需開啟 modal 後再測。
 
-## H. focus 環：未解（封閉 shadow DOM）
+## H2. 三項待解全部收斂（第四輪）
+
+### H2-1 語意色系統 —— **結構已解**（只取結構與關係，不引用其色值）
+
+`:root` 共 539 個自訂屬性，其中語意色 **75 個**，結構為 **5 族 × 5 層 × 3 態**：
+
+| 維度 | 內容 |
+|---|---|
+| **族（5）** | `info` / `success` / `caution` / `warning` / `critical` |
+| **層（5）** | `bg-surface`（淺色底）／`bg-fill`（實色底）／`border`／`icon`／`text` |
+| **態（3）** | base / hover / active（另有 `secondary`、`selected` 供部分層使用） |
+| **例外** | **只有 `critical` 多出 `button-bg-fill` 與 `button-gradient-bg-fill`** → 破壞性按鈕有專屬填色，其他族沒有 |
+
+**推導規則（我方據此生成自有色階，不套用其色值）**——量到的相對明度關係：
+
+| 族 | surface base L% | hover Δ | active Δ |
+|---|---:|---:|---:|
+| info | 95.2 | −2.0 | −6.6 |
+| success | 94.3 | −3.1 | −6.6 |
+| caution | 97.0 | −1.9 | −4.3 |
+| warning | 95.3 | −2.1 | −4.5 |
+
+→ **規則：`surface` 底色一律落在 L ≈ 94–97%（極淺染色），hover 降 2–3，active 降 4–7。**
+→ 我方做法：取 CHILL LOVE 自有 5 個語意色相，套上這條明度公式生成 `surface / fill / border / icon / text` 五層 × 三態，共 **75 個 token**。色相是我們的，階梯關係來自量測。
+→ **`caution` 與 `warning` 是兩個不同的族**（黃 vs 橘），我們現有 token 只有一個「warning」，**少一族**。
+
+### H2-2 浮層堆疊順序 —— **已解**
+
+開啟 popover 與 modal 實測：
+
+```
+520  popover / 下拉選單            ← 最高
+519  modal 對話框本體
+518  modal 遮罩 scrim              bg = rgba(0, 0, 0, 0.5)
+518  nav drawer、Skip-to-content
+517  頂欄 topbar、側欄寬度調整把手
+510  表格批次操作 sticky 列
+400  中層雜項
+100  表格 sticky 表頭／儲存格
+  1  卡片內基礎堆疊
+```
+
+→ **`popover(520) > dialog(519)` 確認成立**：modal 內的下拉選單會正確蓋在對話框之上。這正是先前標為「猜錯就是肉眼可見 bug」的那條，現在有實測背書。
+→ **遮罩不透明度 = 0.5**（先前未知）。
+→ modal 內按鈕實測：`取消 48×28`、`匯出交易記錄 96×28`、`匯出訂單 88×28` —— **全部高 28**，與列表頁控件同階。
+
+### H2-3 focus 環 —— **結構已解，色值待定**
+
+`<s-choice-list>` 這層才是 focus 承載者（封閉 shadow），但可確認：
+
+| 觀察 | 值 |
+|---|---|
+| `outline-style` | **`none`** → **不是用 outline 畫的** |
+| `outline-width`（雖 style=none 仍有計算值） | **2.667px** = dpr 1.5 下的 **4 個實體像素** |
+| 目視（高倍率） | **外層深色環 ＋ 環與控件之間有淺色間隙** → 典型雙層 `box-shadow` |
+
+→ **實作方式（我方自寫）**：
+```css
+.cl-focusable:focus-visible{
+  outline: none;                       /* 與實站一致，不用 outline */
+  box-shadow: 0 0 0 2px var(--cl-bg),  /* 內層間隙：用底色做出「留白」 */
+              0 0 0 4px var(--cl-focus-ring);
+}
+```
+→ 待定：環的**確切顏色**（目視為深中性，非品牌藍）。列為唯一殘留缺口。
+
+### H2-4 額外收穫：表單控件的環是 **inset box-shadow，不是 border**
+
+單選鈕（`<input type=radio>`，light DOM，可完整讀取）：
+
+| 狀態 | 實測 |
+|---|---|
+| 尺寸 | **16 × 16**，`appearance: none`，`border-radius: 50%` |
+| **未選 idle** | `background: transparent`；**`box-shadow: inset 0 0 0 0.66px #8A8A8A`** ← **用 inset 陰影當外框** |
+| **已選** | `background: #303030`（＝主要文字色）；`::after` content=""、`background: #FDFDFD`（白色內點） |
+| 停用 | 文字轉 `#B5B5B5`（見 §E） |
+
+→ **兩條可直接落地的技法**：
+1. **表單控件的 1px 框一律用 `inset box-shadow` 而非 `border`** —— 不佔 box model、可做次像素、與 §C 的髮絲線同一套（`0.66px` 又出現，再次確認「1 個實體像素」原則）。
+2. **已選狀態不是用品牌色，是用主要文字色 `#303030` 填滿 + 白色內點** —— 克制、與整體中性調一致。我們原型用品牌青色填滿，**與實站的克制感不同**，需要一併決定要不要跟。
+
+## H. focus 環（第三輪原始記錄，已被 H2-3 取代）
 
 原生 `<button>` 實測 `outline-style: none`，focus 前後無差異 → **focus 環不是用 `outline` 實作**，而是畫在 `s-` 元件的封閉 shadow 內部。
 → `outline-width` 的 computed 值為 `2.66667px`（= dpr 1.5 下的 4 個實體像素）雖然 style 為 none，可作為**環寬的參考值**，但不足以定案。
