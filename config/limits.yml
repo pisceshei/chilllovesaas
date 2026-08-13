@@ -1695,6 +1695,34 @@ content:
   comment_edit_window_minutes: 5
 
 # =============================================================================
+# 13b. 自訂資料（metafield／metaobject）與網域（71-R3，2026-08-13）
+# =============================================================================
+custom_data:
+  # 中繼欄位定義上限（全店口徑；help 未明說全店 vs 每資源——71-R3 unknown，落地前複驗）。
+  # 出處：help.shopify.com/zh-TW/manual/custom-data/metafields/metafield-definitions/metafield-definition-parts（help）
+  max_definitions: 250
+  # 每個 owner（商店部分）最多釘選數；釘選順序＝管理介面顯示順序。
+  # 出處：help …/pinning-metafield-definitions（help）
+  max_pinned_per_owner: 50
+  # POS 顧客詳細畫面最多顯示的已釘選顧客中繼欄位數。出處：同上（help）
+  pos_customer_pinned_display_max: 20
+  # owner 類型數（2026 實測 /settings/custom_data 全 15 類：產品/子類/商品系列/顧客/訂單/訂單草稿/
+  # 公司/公司地點/地點/轉移/頁面/網誌/部落格貼文/市場/商店）。出處：71-R3 實測（test）
+  owner_type_count: 15
+domains:
+  # 自訂網域＋子網域上限（不含平台預設子網域）。出處：help …/domains/add-a-domain/add-subdomains（help）
+  max_custom_domains: 20
+  max_custom_domains_plus: 1000
+  # 轉移鎖（ICANN）：購買／轉入／變更聯絡資訊後不得轉出的天數。出處：help …/transferring-shopify-domains（help）
+  transfer_lock_days: 60
+  # 轉出解鎖後未完成自動重新上鎖的天數。出處：同上（help）
+  transfer_unlock_window_days: 30
+  # ICANN 電郵驗證期限（天）；逾期網域可能被停用。出處：help …/buying-domains（help）
+  icann_email_verification_days: 15
+  # 連線／TLS 簽發／購買生效的等待上限（小時）。出處：help 多頁一致口徑（help）
+  activation_max_hours: 48
+
+# =============================================================================
 # 14. 通知範本（P1-28）
 # =============================================================================
 notification:

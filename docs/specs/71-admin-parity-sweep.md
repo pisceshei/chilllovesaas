@@ -150,7 +150,7 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | R1 | 成長（growth/歸因/行銷活動/Autopilot） | 薄① | ✅ 2026-08-13（V1＋7 fix＋4 V 遞延，見 §F R1） |
 | R2 | 首頁指標系統（4 槽×16 池＋挑選器＋口徑 tooltip＋雙期圖卡）＋口徑目錄 72 號 | 薄②＋使用者截圖增補 | ✅ 2026-08-13 |
 | R2b | 全域 chrome＋首頁全頁收尾（搜尋 CtrlK 升級/快訊 popover/AI 對話釘選/期間控制正式版/管道下拉/問候語時段制/ai-box 對齊/即時訪客連結） | MISS2＋R1-V4 | ✅ 2026-08-13 |
-| R3 | 設定·應用程式＋銷售管道＋網域＋顧客隱私＋custom_data | 薄③⑥ | ⬜ |
+| R3 | 設定·應用程式＋銷售管道＋網域＋顧客隱私＋custom_data | 薄③⑥ | ✅ 2026-08-13（2 STRUCT＋4 MISS 全修＋RTE 考證＋limits 2 節；4 V 遞延，見 §F R3） |
 | R4 | 財務＋帳單（含 help 補閘門後形態；G15 邊界） | 薄④ | ⬜ |
 | R5 | 顧客線（分群建立器/B2B 公司/顧客詳情） | 薄⑤⑧ | ⬜ |
 | R6 | 折扣（四型建立流內層/詳情/組合規則） | 薄⑦ | ⬜ |
@@ -194,3 +194,15 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R2-DOC1 | DOC | 16 指標的計算口徑無任何文檔——已建 docs/research/72（實測 tooltip 原文＋help 公式逐條、交互規則 10 條、unknowns 4 條） | ✅ |
 | 71-R2-V1 | V | 指標 tooltip 樣式化浮層（指標詞底色高亮）原型以 title 屬性近似；分析頁（R11）做正式 tooltip 元件時回頭替換 | ⬜ R11 |
 | 71-R2-V2 | V | 本店 pinned 第 3 槽=總銷售額拆解，help 記載預設=總訂單數——per-user 狀態 vs 出廠預設，出廠值以 help 為準（總訂單數），原型 demo 沿用實測店組合並在 DOCS 註記 | ⬜ 低 |
+| 71-R3-STRUCT1 | STRUCT | 設定導覽「應用程式與銷售管道」合併頁 vs 本尊 2026 兩個獨立設定頁（/settings/apps?tab=installed、/settings/sales_channels）。已拆兩頁＋導覽位置對齊（地點之後）；「自訂資料」同輪改本尊標籤「中繼欄位與 metaobject」 | ✅ |
+| 71-R3-MISS1 | MISS | 應用程式頁形態缺：開發應用程式／App Store 鈕、已安裝 tab、列 ⋯ 選單（實測 3 動作、help 5 動作＋解除安裝）、詳情六區段（帳單與用量收費／活動與權限含未使用存取權／隱私權／擴充功能／Functions 分享記錄／像素）、解除安裝對話框（原因下拉＋資料保留與當期費用條款）、用量上限單向調高、釘選規則。已補齊（appDetail／appUninstall） | ✅ |
+| 71-R3-MISS2 | MISS | 銷售管道頁缺：新增銷售管道（App Store 入口＋副作用 opt-out）、列 ⋯ 解除安裝＋必勾風險確認框「我瞭解解除安裝此銷售管道的風險」。已補（chUninstall）；53號 N-04（不做管道設定層）不變 | ✅ |
+| 71-R3-MISS3 | MISS | 網域頁缺：樹狀列表（主要＋縮排子項）、連結現有網域分裂鈕（輸入／轉移）、網域詳情（DNS checklist／全球六地區點陣＋上次檢查／TLS／指向與類型＋變更鈕／網域設定▾ 三項）。已補（domainDetail）；help 補齊行為規則（60 天轉移鎖／15 天 ICANN 驗證／48 小時生效口徑／DNS 判準與警告文案全量） | ✅ |
+| 71-R3-STRUCT2 | STRUCT | 顧客隱私頁 IA 不符：本尊＝隱私權設定卡（三列各帶自動化 badge＋子編輯器：政策 modal／Cookie 橫幅子頁（雙 tab＋顏色三檔＋位置五選＋結帳頁開關）／退出頁面子頁 /dns（導覽選單掛載））＋Network Intelligence 卡＋行銷設定兩條跨頁錨點深連結（結帳#marketingconsentoptions、通知 customer#optin）＋資料儲存託管地點。已改建；舊四 toggle 語義遷入子頁（GPC＋連結文字→退出頁；橫幅開關→橫幅子頁）；生成器補 HK PDPO 選項（G21） | ✅ |
+| 71-R3-MISS4 | MISS | custom_data 缺：owner 分組入口（15 類含螢幕會漏的地點／轉移）、per-owner 列表（搜尋＋釘選）、編輯器缺單一/清單前綴＋類別指派（taxonomy 驅動，僅產品）＋owner 全 15 類、metaobject 選項五開關（啟用與草稿／翻譯／發布為網頁／Storefront API／顧客帳號 API）。已建三層結構＋編輯器升級＋metaobjDefNew；上限入 limits.yml custom_data.*（250／50／20，help 明載） | ✅ |
+| 71-R3-DOC1 | DOC | RTE 考證（使用者指令）：本尊隱私政策編輯器引擎＝**TinyMCE 6.8.3**（DOM 實證：id `rte-uplift-PRIVACY_POLICY-*`、iframe `tox-edit-area__iframe`、plugins autoresize/lists/table、autoresize 150–300、valid_elements `*[*]`、原生 toolbar 停用＝工具列自繪驅動）。6.8.3＝最後 MIT 版（7.x 起 GPLv2+/商業雙授權）——本尊釘住 MIT 尾版。我方引擎選型屬鐵律 1 未討論依賴：候選 A 釘 TinyMCE 6.8.3（MIT、與本尊行為同源）／候選 B TipTap 2（MIT、ProseMirror 系）——**待使用者裁定（開放決策 B-8）** | ✅ 考證；⬜ 選型 |
+| 71-R3-V1 | V | Cookie 橫幅「Cookie 偏好設定」tab 內容未逐控件展開（實測只拆了 Cookie 橫幅 tab）；GPC 開關在本尊 2026 主頁未見（可能在偏好設定 tab 或已併入自動化）——複驗後定 GPC 的最終落點 | ⬜ |
+| 71-R3-V2 | V | metaobject「顧客帳號 API 存取權」選項 help 全站未載（實測獨有，2026 新）——語義與權限面需 dev 文件補證後才能落 API 契約 | ⬜ 低 |
+| 71-R3-V3 | V | 網域模型：本尊 2026＝per-domain 網域類型（主要／別名／重新導向，一目標一主要；「導向主網域」全域開關的 help 頁已消失）vs 我方 62 §J 全域開關＋市場網址結構。含別名網域 SEO 語義（同內容多網域降排名警告）。R10 市場輪對齊裁定 | ⬜ R10 |
+| 71-R3-V4 | V | 用語盤點：custom_data owner 已改「產品」，但全站「商品／產品」混用（本尊：模組＝產品、個體常用商品）——R12 設定映射輪做全站用語對照表一次收 | ⬜ R12 |
+| 71-R3-DOC2 | DOC | 意外收割：本尊**完整鍵盤快捷鍵表**（? 開鍵盤說明；單鍵 S 儲存列／F 篩選列／OA OC OS ME BYE；A* 新增系 8 條；G* 兩鍵導航 ~40 條含設定子頁 GS*）——R2b 全域 chrome 補遺素材，原型快捷鍵系統落地時對表實作 | ⬜ R14 |

@@ -1935,16 +1935,20 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
       <button class="set-item" data-set="shipping">運送與配送</button>
       <button class="set-item" data-set="taxes">稅額與關稅</button>
       <button class="set-item" data-set="locations">地點</button>
+      <!-- 71-R3-STRUCT1（2026-08-13 實測）：2026 版把舊合併頁「應用程式與銷售管道」拆成
+           /settings/apps 與 /settings/sales_channels 兩個獨立設定頁——導覽跟拆、位置對齊本尊（地點之後）。
+           「自訂資料」同輪改為本尊現行標籤「中繼欄位與 metaobject」。 -->
+      <button class="set-item" data-set="apps">應用程式</button>
+      <button class="set-item" data-set="channels">銷售管道</button>
       <button class="set-item" data-set="domains">網域</button>
-      <button class="set-item" data-set="notifications">通知</button>
-      <button class="set-item" data-set="customdata">自訂資料</button>
-      <button class="set-item" data-set="languages">語言</button>
-      <button class="set-item" data-set="seo">SEO 與 AI 檢索</button>
-      <button class="set-item" data-set="policies">政策</button>
-      <button class="set-item" data-set="brand">品牌</button>
-      <button class="set-item" data-set="privacy">顧客隱私</button>
       <button class="set-item" data-set="events">顧客事件</button>
-      <button class="set-item" data-set="apps">應用程式與銷售管道</button>
+      <button class="set-item" data-set="notifications">通知</button>
+      <button class="set-item" data-set="customdata">中繼欄位與 metaobject</button>
+      <button class="set-item" data-set="languages">語言</button>
+      <button class="set-item" data-set="privacy">顧客隱私</button>
+      <button class="set-item" data-set="policies">政策</button>
+      <button class="set-item" data-set="seo">SEO 與 AI 檢索</button>
+      <button class="set-item" data-set="brand">品牌</button>
       <button class="set-item" data-set="giftcards">禮品卡</button>
     </div>
     <div class="set-content" id="setContent"></div>
@@ -3298,6 +3302,19 @@ const setRowBtn=(t,sub,right,onclick,doc,ic)=>`<button class="set-rowbtn" ${doc?
   <span class="rb-t"><b>${t}</b>${sub?`<span>${sub}</span>`:''}</span>${right||''}</button>`;
 const setRowAdd=(t,sub,onclick,doc)=>`<button class="set-rowbtn rb-add" ${doc?`data-doc="${doc}"`:''} onclick="${onclick}">
   <span class="rb-t"><b>⊕ ${t}</b>${sub?`<span>${sub}</span>`:''}</span></button>`;
+
+/* 71-R3 資料（2026-08-13 實測+help 雙源）：應用程式列表與網域樹。
+   放在 SET_PAGES 之前是因為靜態分頁字串在載入期就要展開它們；詳情 modal（appDetail／domainDetail）
+   在點擊期讀同一份，資料不重複維護。 */
+const APPS_INSTALLED=[
+ {n:'Messaging（行銷自動化）',dev:'CHILL LOVE Labs',at:'2026-05-02 安裝',scopes:'read_customers, write_marketing',
+  bill:'訂閱制・30 天週期・另有用量收費（上限只能調高，調低須聯絡開發者）',unused:['write_marketing（過去 30 天未使用）']},
+ {n:'Simprosys Feed',dev:'Simprosys',at:'2026-03-18 安裝',scopes:'read_products, read_orders',
+  bill:'免費方案',unused:[]}];
+const DOMAINS_DATA=[
+ {d:'chilllove.demo',type:'主要網域',point:'線上商店',tls:'已簽發（自動續期）'},
+ {d:'chilllove.myplatform.app',type:'平台子網域（不可移除，終身僅可改名 1 次）',point:'重新導向至主要網域',tls:'平台涵蓋'},
+ {d:'www.chilllove.demo',type:'重新導向網域',point:'重新導向至主要網域',tls:'已簽發（自動續期）'}];
 
 const SET_PAGES={
  /* plan／accounts 是這一層唯一沒被後面 Object.assign 覆蓋的兩個鍵（其餘 12 鍵原本整份被覆蓋＝死碼，已刪）*/
@@ -8197,11 +8214,13 @@ const WEBHOOKS=[{topic:'orders/create',url:'https://feed.chilllove.demo/hook',fm
                 {topic:'products/update',url:'https://feed.chilllove.demo/hook',fmt:'json',ver:'2026-08'}];
 const METAOBJ=[{n:'設計師檔案',k:'designer',c:4},{n:'材質說明',k:'material_note',c:5},{n:'門市據點',k:'store_location',c:2}];
 /* 53號 N-04：原本是四條寫死的假可點列，改成真的資料 ＋ metafieldDef(i) 編輯 */
+/* owner label 對齊本尊 2026 zh-TW（71-R3）：商品→產品（custom_data owner 用語；模組級用語盤點另
+   登記 71-R3-V4，R12 統一）。 */
 const METAFIELD_DEFS=[
- {n:'材質成分',own:'商品',key:'custom.material',type:'single_line_text',val:'max:120',pin:true,sf:true},
- {n:'洗滌方式',own:'商品',key:'custom.care',type:'rich_text',val:'',pin:false,sf:true},
- {n:'生日',own:'顧客',key:'custom.birthday',type:'date',val:'',pin:false,sf:false},
- {n:'禮物訊息',own:'訂單',key:'custom.gift_note',type:'multi_line_text',val:'max:200',pin:true,sf:false}];
+ {n:'材質成分',own:'產品',key:'custom.material',type:'single_line_text',val:'max:120',pin:true,sf:true,list:false},
+ {n:'洗滌方式',own:'產品',key:'custom.care',type:'rich_text',val:'',pin:false,sf:true,list:false},
+ {n:'生日',own:'顧客',key:'custom.birthday',type:'date',val:'',pin:false,sf:false,list:false},
+ {n:'禮物訊息',own:'訂單',key:'custom.gift_note',type:'multi_line_text',val:'max:200',pin:true,sf:false,list:false}];
 const BILL_CARDS=[{n:'VISA •• 4242',s:'到期 08/29',primary:true}];
 
 Object.assign(SET_PAGES,{
@@ -8260,12 +8279,21 @@ Object.assign(SET_PAGES,{
        [['1','1 小時後'],['6','6 小時後'],['10','10 小時後（建議）'],['24','24 小時後']],'10','set-ck-aband-delay')}
      ${setRowSel('寄送對象','limits.yml abandoned_checkout.recovery_audience_options 二選一','ckAbandAud',
        [['any_incomplete_checkout','所有未完成結帳的顧客'],['email_subscribers_only','僅 email 訂閱者']],'any_incomplete_checkout','set-ck-aband-aud')}</div></div>`,
+ /* 71-R3-MISS3（2026-08-13 實測）：本尊網域頁＝樹狀列表（主網域＋縮排子項）＋每列可進詳情
+    （DNS checklist／全球上線六地區點陣／TLS／指向與類型）；「連結現有網域」是帶下拉的分裂鈕。 */
  domains:`<div class="card card-pad" data-doc="set-domains"><h3>網域</h3>
-   <div class="set-row"><div class="sr-t"><b>chilllove.demo</b><span class="sub">主要網域・SSL 已簽發</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
-   <div class="set-row"><div class="sr-t"><b>chilllove.myplatform.app</b><span class="sub">平台子網域・終身僅可改名 1 次</span></div><span class="set-ctl">${chip('子網域','default','full')}</span></div>
-   ${setRowTgl('將所有流量導向主網域','使用國際網域策略（子網域／子資料夾）時必須關閉','domRedirect',true,'set-dom-redirect')}
-   <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：搜尋並購買網域（含年費與自動續約）')">購買網域</button>
-     <button class="btn btn-sec btn-sm" onclick="toast('Demo：連結既有網域——引導改 A/CNAME → 驗證輪詢 → 自動簽發 SSL')">連結既有網域</button></div></div>
+   <div class="rowflex" style="margin-bottom:var(--sp-200)">
+     <span style="position:relative">
+       <button class="btn btn-sec btn-sm" onclick="ddToggle(event,'domLinkMenu')">連結現有網域 ▾</button>
+       <div class="view-menu" id="domLinkMenu" role="menu" aria-label="連結現有網域">
+         <button role="menuitem" onclick="toast('Demo：輸入現有網域——引導改 A／CNAME 記錄 → 驗證輪詢 → 自動簽發 TLS 憑證')">輸入現有網域</button>
+         <button role="menuitem" onclick="toast('Demo：從其他供應商轉移網域——解鎖 → 取得授權碼 → 轉入（年費併入帳單）')">從其他供應商轉移</button></div></span>
+     <button class="btn btn-sec btn-sm" onclick="toast('Demo：購買新網域——搜尋可用性 → 年費與自動續約 → WHOIS／ICANN 驗證信')">購買新網域</button></div>
+   ${setRowBtn('chilllove.demo','主要網域・TLS 憑證已簽發','<span class="chev" aria-hidden="true">›</span>','domainDetail(0)','set-domain-row','🌐')}
+   <div style="padding-left:var(--sp-500)">
+   ${setRowBtn('chilllove.myplatform.app','平台子網域・終身僅可改名 1 次','<span class="chev" aria-hidden="true">›</span>','domainDetail(1)','set-domain-row','↳')}
+   ${setRowBtn('www.chilllove.demo','重新導向至主要網域','<span class="chev" aria-hidden="true">›</span>','domainDetail(2)','set-domain-row','↳')}</div>
+   ${setRowTgl('將所有流量導向主網域','使用國際網域策略（子網域／子資料夾）時必須關閉','domRedirect',true,'set-dom-redirect')}</div>
   <div class="card card-pad" data-doc="set-mkt-url"><h3>各市場的網址結構</h3>
    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
      🔴 <b>「預設值」與「建議值」是兩件事</b>（62 §J.2，跟隨 Shopify 的做法把它們拆開）：
@@ -8299,23 +8327,58 @@ Object.assign(SET_PAGES,{
    ${setRowInp('簡短描述','Shop app 與社群分享卡的描述文字','brandDesc','台灣製造的日常基本款','例：台灣製造的日常基本款','set-brand-desc')}
    ${setRowBtn('社群連結','IG／LINE／YouTube…前台頁尾與 Shop app 都會取用','<span class="chev" aria-hidden="true">›</span>','openBrandSocial()','set-brand-social','🔗')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">供銷售管道與 app（Shop app、社群卡）與結帳預設取用；Liquid 以 shop.brand 讀取。</p></div>`,
- privacy:`<div class="card card-pad" data-doc="set-privacy"><h3>顧客隱私</h3>
-   ${setRowTgl('Cookie 同意橫幅','依地區顯示（歐盟／英國／加州）；關閉後分析類 pixel 在管轄地不載入','pvBanner',true,'set-pv-banner')}
-   ${setRowTgl('全球隱私控制 GPC','自動遵循瀏覽器送出的 Sec-GPC 訊號，視同顧客已選擇退出','pvGpc',true,'set-pv-gpc')}
-   ${setRowTgl('資料銷售退出','前台頁尾顯示「不要出售或分享我的個人資訊」連結','pvOptout',true,'set-pv-optout',{dep:'pvOptoutFields',depMode:'dim'})}
-   <div id="pvOptoutFields">${setRowInp('連結文字','CCPA/CPRA 對字樣有要求，改寫前先過法務','pvOptoutLabel','不要出售或分享我的個人資訊','不要出售或分享我的個人資訊','set-pv-optout-label',{val:'req'})}</div>
-   ${setRowBtn('隱私政策生成器','依你實際收集的資料類型產生政策草稿','<span class="chev" aria-hidden="true">›</span>','openPrivacyGen()','set-pv-gen','📝')}</div>`,
+ /* 71-R3-STRUCT2（2026-08-13 實測+help）：本尊顧客隱私頁 IA＝隱私權設定卡（政策／Cookie 橫幅／
+    資料共用退出頁面三列，各帶「自動化」badge 與子編輯器）＋跨店資料智慧卡（開關）＋行銷設定
+    （兩條「跨頁深連結」——本尊分別錨到 結帳#marketingconsentoptions 與 通知/customer#optin）＋
+    資料儲存託管地點＋免責 footer。原本四顆 toggle 未刪語義：橫幅開關→Cookie 橫幅子頁；
+    GPC＋退出連結文字→退出頁面子頁（pvOptoutPage）。 */
+ privacy:`<div class="card card-pad" data-doc="set-privacy"><h3>隱私權設定</h3>
+   ${setRowBtn('隱私權政策','已在您的網路商店發布',chip('自動化','success','full')+'<span class="chev" aria-hidden="true">›</span>','pvPolicyOpen()','set-pv-policy','📄')}
+   ${setRowBtn('Cookie 橫幅','依市場需求顯示——您銷售商品所在的市場並無此要求',chip('自動化','success','full')+'<span class="chev" aria-hidden="true">›</span>','pvBannerOpen()','set-pv-banner','🍪')}
+   ${setRowBtn('資料共用退出頁面','適用於美國多州（CCPA／CPRA 等州法）',chip('自動化','success','full')+'<span class="chev" aria-hidden="true">›</span>','pvOptoutOpen()','set-pv-optout','🚫')}</div>
+  <div class="card card-pad" data-doc="set-pv-intel"><h3>跨店資料智慧</h3>
+   <div class="set-row"><div class="sr-t"><b>匿名資料共同運用</b><span class="sub">用於改善商品推薦、廣告目標設定與商店個人化；任何其他商家均無法查看您的資料。經 GPC 或退出頁面表達退出的顧客，其資料一律不參與。</span></div>
+     <span class="set-ctl rowflex" style="gap:var(--sp-200)">${chip('已啟用','success','full')}<button class="btn btn-sec btn-sm" onclick="confirmDanger('停用跨店資料智慧','停用後，依賴跨店智慧的功能（推薦強化／廣告受眾／相似顧客）會一併失效。可隨時重新啟用。','停用',function(){toast('已停用跨店資料智慧')},false)">停用</button></span></div></div>
+  <div class="card card-pad" data-doc="set-pv-marketing"><h3>行銷設定</h3>
+   ${setRowBtn('結帳頁面的電子郵件和 SMS 行銷','詢問您的顧客其行銷偏好設定——入口在「結帳」頁（跨頁深連結）','<span class="chev" aria-hidden="true">›</span>',"setPage('checkout');toast('已跳往「結帳」——對應「接受行銷資訊」區段（本尊為錨點深連結）')",'set-pv-mkt-checkout','✉️')}
+   ${setRowBtn('行銷雙重確認加入','要求您的顧客確認其聯絡詳細資訊——入口在「通知」頁（跨頁深連結）','<span class="chev" aria-hidden="true">›</span>',"setPage('notifications');toast('已跳往「通知」——對應「顧客行銷訂閱確認」（本尊為錨點深連結）')",'set-pv-mkt-optin','☑️')}</div>
+  <div class="card card-pad" data-doc="set-pv-hosting"><h3>資料儲存託管地點</h3>
+   ${setRow('香港','由平台部署區域決定，商家不可改；跨境傳輸揭露載於隱私權政策','<span class="tagchip" style="margin:0">HK</span>','set-pv-hosting-loc')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作，您仍有責任遵守適用法律與規範。</p></div>`,
  /* events 分頁改成 SET_DYN（新增／刪除／訂閱勾選都要隨狀態重算）——見下方 evPage()。
     53號 N-05：這一頁是「58 條佔位列轉真控件」那一輪的漏網，原本整頁只有兩個唯讀 chip ＋ 一顆 demo toast。 */
- apps:`<div class="card card-pad" data-doc="set-apps"><h3>已安裝的應用程式</h3>
-   ${[['Messaging（行銷自動化）','已授權：read_customers, write_marketing'],['Simprosys Feed','已授權：read_products, read_orders']]
-     .map(([n,s2])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
-       <button class="btn btn-ghost btn-sm sr-act" onclick="confirmDanger('解除安裝','解除安裝後這個 app 寫入的資料（selling plan／自動化流程）會停止運作。','解除安裝',function(){toast('已解除安裝')})">解除安裝</button></div>`).join('')}</div>
-  <div class="card card-pad" data-doc="set-channels"><h3>銷售管道</h3>
+ /* 71-R3-STRUCT1＋MISS1（2026-08-13 實測+help）：2026 版是兩個獨立設定頁。應用程式頁＝
+    開發應用程式／應用程式市集兩鈕＋「已安裝」tab＋列 ⋯ 選單（help 載明五動作＋解除安裝）＋
+    詳情六區段（appDetail）。 */
+ apps:`<div class="card card-pad" data-doc="set-apps"><h3>應用程式</h3>
+   <div class="rowflex" style="margin-bottom:var(--sp-200)">
+     <button class="btn btn-sec btn-sm" onclick="toast('Demo：開發應用程式——新自訂 app 僅能在開發者主控台建立；此處只列既有項目（本尊 2026-01-01 起同規則）')">開發應用程式</button>
+     <button class="btn btn-sec btn-sm" onclick="toast('Demo：應用程式市集——搜尋 → 安裝 → 授權畫面固定兩類權限（檢視個人資料／檢視並編輯商店資料）＋開發者隱私權政策連結')">應用程式市集</button></div>
+   <div class="tabs" role="tablist" style="margin-bottom:var(--sp-200)"><button class="tab on" role="tab" aria-selected="true" onclick="toast('Demo：已安裝分頁（含最近解除安裝的 app）')">已安裝</button></div>
+   ${APPS_INSTALLED.map((a,i)=>`<div class="set-row"><div class="sr-t"><b>${a.n}</b><span class="sub">${a.at}・已授權：${a.scopes}</span></div>
+     <span class="set-ctl" style="position:relative">
+       <button class="btn btn-ghost btn-sm" aria-label="更多動作" onclick="ddToggle(event,'appMenu${i}')">⋯</button>
+       <div class="view-menu" id="appMenu${i}" role="menu" aria-label="應用程式動作">
+         <button role="menuitem" onclick="toast('Demo：開啟應用程式（embedded iframe 或新視窗）')">開啟應用程式</button>
+         <button role="menuitem" onclick="appDetail(${i})">檢視詳情</button>
+         <button role="menuitem" onclick="toast('Demo：在應用程式市集中檢視')">在市集中檢視</button>
+         <button role="menuitem" onclick="toast('Demo：取得應用程式支援——轉開發者支援信箱')">取得支援</button>
+         <button role="menuitem" onclick="toast('Demo：為應用程式撰寫評論')">撰寫評論</button>
+         <button role="menuitem" style="color:var(--critical)" onclick="appUninstall(${i})">解除安裝</button></div></span></div>`).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">釘選到側欄：在 app 頁首按釘選圖示，釘選項附加在側欄「應用程式」清單底部、可拖曳排序；私人／自訂 app 與開新視窗的 app 不可釘選。</p></div>`,
+ /* 71-R3-MISS2：獨立「銷售管道」頁——列 ⋯ 選單（解除安裝＝高風險動作，必勾風險確認框）＋
+    新增銷售管道（App Store 入口；副作用＝所有既有商品自動對新管道可用，opt-out 而非 opt-in）。
+    53號 N-04 裁定不變：各管道的設定頁屬該管道自己的 app，原型不做那一層。 */
+ channels:`<div class="card card-pad" data-doc="set-channels"><h3>銷售管道</h3>
+   <div class="rowflex" style="margin-bottom:var(--sp-200)">
+     <button class="btn btn-sec btn-sm" onclick="toast('Demo：新增銷售管道——開應用程式市集；新增後所有既有商品自動對該管道可用（opt-out）')">新增銷售管道</button></div>
    ${[['線上商店','商品發布範圍由目錄決定',true],['AI 代理','目錄開放中',true],['門市 POS','需 POS 訂閱',false],['Shop','需先通過商店審核',false]]
-     .map(([n,s2,on])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
-       <span class="set-ctl">${on?chip('已啟用','success','full'):chip('未啟用','default','')}</span></div>`).join('')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：這四列原本帶 <b>›</b> 卻沒有 handler。各管道的設定頁<b>屬該管道自己的 app</b>（不是平台設定的一部分），原型不做這一層，因此只顯示啟用狀態、<b>不掛 ›</b>。商品要出現在某管道，是在商品／目錄側設定發布範圍。</p></div>`,
+     .map(([n,s2,on],i)=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${s2}</span></div>
+       <span class="set-ctl rowflex" style="gap:var(--sp-200);position:relative">${on?chip('已啟用','success','full'):chip('未啟用','default','')}
+         <button class="btn btn-ghost btn-sm" aria-label="更多動作" onclick="ddToggle(event,'chMenu${i}')">⋯</button>
+         <div class="view-menu" id="chMenu${i}" role="menu" aria-label="銷售管道動作">
+           <button role="menuitem" style="color:var(--critical)" onclick="chUninstall('${n}')">解除安裝</button></div></span></div>`).join('')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：各管道的設定頁<b>屬該管道自己的 app</b>（不是平台設定的一部分），原型不做這一層；商品要出現在某管道，是在商品／目錄側設定發布範圍。</p></div>`,
  giftcards:`<div class="card card-pad" data-doc="set-giftcards"><h3>禮品卡</h3>
    ${setRowSel('到期政策','多數地區法規禁止設到期日；設了就必須能證明合規','gcExpiry',
      [['never','不設到期日'],['12','發卡後 12 個月'],['24','發卡後 24 個月'],['custom','自訂月數']],'never','set-gc-expiry',{dep:'gcExpiryCustom',depVal:'custom'})}
@@ -8558,17 +8621,178 @@ function notificationsPage(){
    ${setRowAdd('建立 webhook','topic ＋ URL ＋ 格式（JSON／XML）＋ API 版本','webhookAdd()','set-webhook-add')}</div>`;
 }
 function customdataPage(){
- /* 53號 N-04：這四列原本帶 › 卻沒有 handler。中繼欄位定義**本來就該有下一層**（改型別／驗證／pin／
-    storefront 可讀性），而且站內已有「新增定義」的 modal——把同一支加上編輯模式即可，不另立函式。 */
+ /* 71-R3-MISS4（2026-08-13 實測+help）：本尊 custom_data＝owner 分組入口（15 類各帶定義數）→
+    per-owner 定義列表（搜尋＋釘選）→ 編輯器。53號 N-04「定義要有下一層」在這一輪落成
+    owner → 列表 → 編輯器三層。上限值引 limits.yml custom_data.*（定義 250／每部分釘選 50／
+    POS 顧客畫面顯示 20——help 明載，不硬編）。 */
  return `<div class="card card-pad" data-doc="set-customdata"><h3>中繼欄位定義</h3>
-   ${METAFIELD_DEFS.map((d,i)=>setRowBtn(`${H(d.own)}・${H(d.n)}`,
-     `${H(d.type)}・${d.sf?'前台可讀':'僅 Admin API'}・${d.pin?'已 pin':'未 pin'}・<span class="mono">${H(d.key)}</span>`,
-     '<span class="chev" aria-hidden="true">›</span>',`metafieldDef(${i})`,'set-metafield-def','🏷')).join('')}
-   ${setRowAdd('新增定義','適用資源 ＋ namespace.key ＋ 型別 ＋ 驗證 ＋ pin','metafieldDef()','set-metafield-add')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">pin 了才會出現在資源頁卡片與列表篩選；型別 30+ 種（含 list.* 變體）。</p></div>
-  <div class="card card-pad"><h3>元物件定義</h3>
-   ${setRowBtn('元物件定義',`${METAOBJ.length} 個定義・${METAOBJ.reduce((a,b)=>a+b.c,0)} 筆條目`,'<span class="chev" aria-hidden="true">›</span>','openMetaobjects()','set-metaobj','🧩')}
-   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往元物件 ›</button></div>`;
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">將自訂資料新增至您商店的特定部分。</p>
+   ${CD_OWNERS.map(o=>{const c=METAFIELD_DEFS.filter(d=>d.own===o).length;
+     return setRowBtn(o,'',`<span class="mut num" style="margin-right:var(--sp-100)">${c}</span><span class="chev" aria-hidden="true">›</span>`,`cdOwnerOpen('${o}')`,'set-cd-owner','🏷');}).join('')}</div>
+  <div class="card card-pad" data-doc="set-metaobj"><h3>metaobject 定義</h3>
+   ${setRowBtn('metaobject 定義',`${METAOBJ.length} 個定義・${METAOBJ.reduce((a,b)=>a+b.c,0)} 筆條目`,'<span class="chev" aria-hidden="true">›</span>','openMetaobjects()','set-metaobj','🧩')}
+   ${setRowAdd('新增 metaobject 定義','名稱＋類型（自動生成可改）＋欄位＋選項五開關','metaobjDefNew()','set-metaobj-add')}
+   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-metaobjects')">前往 metaobject 條目 ›</button></div>`;
+}
+/* ===== 71-R3 次級視圖與詳情（設定・應用程式／銷售管道／網域／顧客隱私／custom_data）===== */
+/* owner 清單＝本尊 2026 全 15 類（實測 /settings/custom_data 連結列舉；螢幕捲動會漏「地點／轉移」，
+   已用 DOM 連結掃描補全）。 */
+const CD_OWNERS=['產品','子類','商品系列','顧客','訂單','訂單草稿','公司','公司地點','地點','轉移','頁面','網誌','部落格貼文','市場','商店'];
+let CD_OWNER=null,CD_Q='';
+function cdOwnerOpen(o){CD_OWNER=o;CD_Q='';setSubOpen('cd-owner',cdOwnerPage());setAfterRender();}
+function cdOwnerRowsHtml(){
+  const rows=METAFIELD_DEFS.map((d,i)=>({d,i})).filter(x=>x.d.own===CD_OWNER&&(!CD_Q||x.d.n.toLowerCase().includes(CD_Q)||x.d.key.toLowerCase().includes(CD_Q)));
+  if(!rows.length)return `<p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-300) 0">尚無定義${CD_Q?'（無符合搜尋的結果）':''}。</p>`;
+  return rows.map(({d,i})=>`<div class="set-row"><div class="sr-t"><b>${H(d.n)}</b><span class="sub">${H(d.type)}${d.list?'（清單）':''}・${d.sf?'前台可讀':'僅 Admin API'}・<span class="mono">${H(d.key)}</span></span></div>
+    <span class="set-ctl rowflex" style="gap:var(--sp-100)">
+      <button class="btn btn-ghost btn-sm" aria-pressed="${!!d.pin}" title="${d.pin?'取消釘選':'釘選'}" onclick="cdPinToggle(${i})">${d.pin?'📌':'📍'}</button>
+      <button class="btn btn-ghost btn-sm" data-doc="set-metafield-def" onclick="metafieldDef(${i})">編輯 ›</button></span></div>`).join('');
+}
+function cdOwnerPage(){
+  return setCrumb('🏷',`${CD_OWNER}中繼欄位定義`,'customdata')
+  +`<div class="card"><div class="card-pad" data-doc="sub-cd-owner"><h3>${CD_OWNER}中繼欄位定義</h3>
+    <input class="input" placeholder="搜尋" value="${H(CD_Q)}" oninput="CD_Q=this.value.toLowerCase();cdOwnerRefresh()" aria-label="搜尋定義" style="margin-bottom:var(--sp-200)">
+    <div id="cdOwnerRows">${cdOwnerRowsHtml()}</div>
+    ${setRowAdd('新增定義','名稱 → namespace.key 自動生成（字母／數字／_／-，唯一）→ 型別（單一或清單）→ 驗證 → 釘選','metafieldDefFor()','set-metafield-add')}
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">釘選順序＝資源頁顯示順序；預設僅顯示已釘選定義。上限：limits.yml custom_data.max_definitions／max_pinned_per_owner。</p></div></div>`;
+}
+function cdOwnerRefresh(){const el=document.getElementById('cdOwnerRows');if(el)el.innerHTML=cdOwnerRowsHtml();}
+function cdPinToggle(i){const d=METAFIELD_DEFS[i];if(!d)return;d.pin=!d.pin;cdOwnerRefresh();toast(d.pin?`已釘選「${d.n}」`:`已取消釘選「${d.n}」`);}
+function metafieldDefFor(){metafieldDef(undefined,CD_OWNER);}
+/* metaobject 定義建立——選項五開關＝實測 /settings/custom_data/metaobjects/create（2026-08-13）：
+   啟用與草稿狀態 ON／翻譯 ON／將條目發布為網頁 OFF／Storefront API 存取權限 ON／顧客帳號 API 存取權 OFF。
+   「顧客帳號 API」help 未載（實測獨有）——登記 71-R3-V2。 */
+function metaobjDefNew(){
+  openGen({title:'新增 metaobject 定義',wide:true,body:`<div class="stack">
+    ${F('名稱',`<input class="input" data-f="_mon" data-val="req|max:60" placeholder="範例：購物車追加銷售、布料顏色、商品搭售">`,'類型識別碼由名稱自動生成，可於建立前修改')}
+    ${F('欄位',`<div class="set-row is-ro"><div class="sr-t"><b>欄位標籤（必填 *）</b><span class="sub">每個欄位＝標籤＋型別（單一／清單）＋驗證＋說明；可指派「顯示名稱」欄位識別單一條目</span></div></div>`,'建立後在此新增多個欄位（demo 略欄位 repeater）')}
+    <h4 style="margin:var(--sp-200) 0 0">metaobject 選項</h4>
+    ${SWROW('_mo1',true,'啟用與草稿狀態','新條目預設「啟用」（發布前顧客不可見）；草稿不可發布')}
+    ${SWROW('_mo2',true,'翻譯','條目可經翻譯流程在地化')}
+    ${SWROW('_mo3',false,'將條目發布為網頁','需先開啟 Storefront 存取；含 SEO 欄位對應與 URL handle 設定')}
+    ${SWROW('_mo4',true,'Storefront API 存取權限','關閉則前台（Liquid／動態來源／自訂前台）不可讀')}
+    ${SWROW('_mo5',false,'顧客帳號 API 存取權','開放顧客帳號情境讀取（實測 2026 新選項，help 未載）')}</div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立 metaobject 定義（demo）——刪除定義不可逆且連帶刪除所有條目')">建立定義</button>`});
+}
+/* 應用程式詳情——六區段＝help managing-apps＋實測 app_installations 詳情頁。 */
+function appDetail(i){
+  const a=APPS_INSTALLED[i];if(!a)return;
+  openGen({title:`應用程式：${a.n}`,wide:true,tall:true,body:`<div class="stack">
+    ${setRow('開發者',a.dev,'','')}${setRow('安裝時間',a.at,'','')}
+    <h4>帳單與用量收費</h4><p class="mut" style="font-size:var(--t-xs)">${H(a.bill)}。用量上限在 admin 只能調高、不能調低（調低須聯絡開發者）；變更需勾選確認框。</p>
+    <h4>活動與權限</h4><p class="mut" style="font-size:var(--t-xs)">已授權：<span class="mono">${H(a.scopes)}</span>${a.unused.length?`；未使用存取權：${a.unused.map(H).join('、')}`:''}</p>
+    <h4>隱私權</h4><p class="mut" style="font-size:var(--t-xs)">依對象（顧客／員工與協作者）列出個人資料存取類型；附開發者隱私權政策連結。</p>
+    <h4>擴充功能</h4><p class="mut" style="font-size:var(--t-xs)">作用中的佈景主題／admin 擴充與所在區域。</p>
+    <h4>Functions</h4><p class="mut" style="font-size:var(--t-xs)">作用中數量與錯誤警告；「分享記錄」→ 確認後把過去 24 小時記錄交給開發人員（可能含敏感 PII）。</p>
+    <h4>像素</h4><p class="mut" style="font-size:var(--t-xs)">連線狀態與資料存取權設定（顧客事件頁同源）。</p></div>`,
+   foot:`<button class="btn btn-danger-o btn-sm" onclick="closeGen();appUninstall(${i})">解除安裝</button>
+     <button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="closeGen()">關閉</button>`});
+}
+/* 解除安裝 app——原因下拉（選填）＋資料保留與收費條款＝help uninstalling-apps。 */
+function appUninstall(i){
+  const a=APPS_INSTALLED[i];if(!a)return;
+  openGen({title:`解除安裝「${a.n}」`,body:`<div class="stack">
+    ${F('解除安裝原因（選填）',SEL('_unr',['不再需要','費用過高','找到替代方案','功能不符','效能問題','其他'],'不再需要'))}
+    <div class="help">有些應用程式存放的資料在解除安裝後便無法復原，建議先匯出。重新安裝不保證還原先前設定或資料。
+      解除安裝會取消未來定期收費，但目前帳單週期的費用仍可能收取；退款須在解除安裝前聯絡開發者。
+      這個 app 寫入的資料（selling plan／自動化流程）會停止運作。</div></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已解除安裝（demo）——列表移至「最近解除安裝」')">解除安裝</button>`});
+}
+/* 解除安裝銷售管道——高風險：必勾風險確認框才能按（help 原文勾選字樣）。 */
+function chUninstall(n){
+  openGen({title:`解除安裝銷售管道「${n}」`,body:`<div class="stack">
+    <div class="help">解除安裝後，商品在該管道的刊登會全部下架；官方不承諾移除後管道側資料的處置細節。</div>
+    <label class="rowflex" style="gap:var(--sp-200);cursor:pointer"><input type="checkbox" onchange="const b=document.getElementById('chRiskBtn');if(b)b.disabled=!this.checked">
+      <span>我瞭解解除安裝此銷售管道的風險</span></label></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-danger btn-sm" id="chRiskBtn" disabled style="margin-left:var(--sp-200)" onclick="closeGen();toast('已解除安裝銷售管道（demo）')">解除安裝</button>`});
+}
+/* 網域詳情——卡片組＝實測網域詳情頁（DNS checklist／全球上線六地區點陣／TLS／指向與類型）。
+   本尊 2026 已是 per-domain 網域類型模型（主要／別名／重新導向，help domain-type 三型）；
+   我方 62 §J 仍有全域「導向主網域」開關——差異登記 71-R3-V3，R10 市場輪對齊裁定。 */
+function domainDetail(i){
+  const d=DOMAINS_DATA[i];if(!d)return;
+  const regions=['香港','新加坡','東京','法蘭克福','維吉尼亞','雪梨'];
+  openGen({title:`網域：${d.d}`,wide:true,body:`<div class="stack">
+    <div class="rowflex" style="gap:var(--sp-200)">
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：檢視——開前台')">檢視</button>
+      <span style="position:relative"><button class="btn btn-sec btn-sm" onclick="ddToggle(event,'domSetMenu')">網域設定 ▾</button>
+        <div class="view-menu" id="domSetMenu" role="menu" aria-label="網域設定">
+          <button role="menuitem" onclick="toast('Demo：轉移至其他商店——傳送轉移連結')">轉移至其他商店</button>
+          <button role="menuitem" onclick="toast('Demo：轉移至其他供應商——自動解鎖＋授權碼；30 天未完成自動重新上鎖；購買／轉入／改聯絡資訊後 60 天內不得轉出')">轉移至其他供應商</button>
+          <button role="menuitem" onclick="toast('Demo：DNS 設定——新增自訂記錄（A/CNAME/MX/TXT/AAAA/SRV）；每筆可編輯／移除／重設')">DNS 設定</button></div></span></div>
+    <h4>DNS 記錄</h4>
+    <div class="set-row is-ro"><div class="sr-t"><b>DNS 記錄已指向</b><span class="sub">A／AAAA／CNAME 皆指向平台（判準值引 config，不硬編）</span></div><span class="set-ctl">${chip('已連線','success','full')}</span></div>
+    <h4>全球狀態</h4>
+    <div class="set-row is-ro"><div class="sr-t"><b>網域已於全球所有地區上線</b><span class="sub">${regions.map(r=>`● ${r}`).join('　')}</span></div><span class="set-ctl mut" style="font-size:var(--t-xs)">上次檢查：剛剛</span></div>
+    ${setRow('TLS 憑證',d.tls,'','')}
+    <h4>網域指向與類型</h4>
+    ${setRow('指向',d.point,'','')}
+    <div class="set-row is-ro"><div class="sr-t"><b>類型</b><span class="sub">${H(d.type)}</span></div>
+      <span class="set-ctl"><button class="btn btn-ghost btn-sm" onclick="toast('Demo：變更網域類型——主要／別名／重新導向三選一；每個目標僅一個主要網域，變更後舊主要自動轉為重新導向')">變更</button></span></div></div>`});
+}
+/* 隱私權政策 modal——形態＝實測 /settings/privacy/policy：自動化 toggle＋富文本編輯器＋免責＋取消/儲存。
+   🔴 RTE 考證（2026-08-13 使用者指令）：本尊編輯器引擎＝TinyMCE 6.8.3（classic iframe 模式，
+   editor id「rte-uplift-*」，iframe class tox-edit-area__iframe，plugins=autoresize,lists,table，
+   autoresize 150–300px，valid_elements=*[*]，原生 toolbar 停用——工具列是本尊自繪元件驅動 execCommand）。
+   6.8.3＝TinyMCE 最後一個 MIT 版（7.x 起 GPLv2+／商業雙授權）。我方引擎選型屬鐵律 1 未討論依賴
+   ——候選（釘 TinyMCE 6.8.3 MIT vs TipTap/ProseMirror MIT）待使用者裁定，登記 71-R3-DOC1；
+   原型先以 textarea＋工具列殼示意，不綁引擎。 */
+function pvPolicyOpen(){
+  openGen({title:'隱私權政策',wide:true,tall:true,body:`<div class="stack">
+    ${SWROW('_pvAuto',true,'使用自動化政策','讓政策內容與商店設定和最新的平台範本保持同步；停用後可完全手動改寫（支援動態變數與條件段落）')}
+    <div class="rowflex" style="gap:var(--sp-100);padding:var(--sp-100) var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200) var(--r-200) 0 0;border-bottom:0">
+      <span class="mut" style="font-size:var(--t-xs)">段落 ▾　B　I　U　A▾　☰▾　🔗　🖼　⊞▾　⋯　&lt;/&gt;</span></div>
+    <textarea class="input" rows="9" readonly style="border-radius:0 0 var(--r-200) var(--r-200)" aria-label="政策內容">最後更新：2026-08-13
+
+CHILL LOVE 示範店經營本商店與網站…（自動化開啟時唯讀；內容由商店設定推導：收集的資料類型、
+第三方服務、跨境傳輸與您的市場組合。停用自動化即可編輯，或用生成器重出草稿。）</textarea>
+    <button class="btn btn-ghost btn-sm" style="padding:0" onclick="closeGen();openPrivacyGen()">用生成器重出草稿 ›</button>
+    <p class="mut3" style="font-size:var(--t-xs)">此隱私權政策並非法律建議，您有責任確保政策準確並遵守適用法律。使用即表示您已詳閱並同意免責聲明。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存隱私權政策')">儲存</button>`});
+}
+/* Cookie 橫幅子頁——形態＝實測 /settings/privacy/consent-banner（整頁）：自動化卡＋雙 tab 預覽＋
+   顏色三檔＋位置五選＋結帳頁 toggle（附轉換率警告）。 */
+let PVB_TAB='banner';
+function pvBannerOpen(){PVB_TAB='banner';setSubOpen('pv-banner',pvBannerPage());setAfterRender();}
+function pvBannerPage(){
+  const pos=['置中','底部全幅','底部置中','左下角','右下角'];
+  return setCrumb('🍪','Cookie 橫幅','privacy')
+  +`<div class="card"><div class="card-pad" data-doc="sub-pv-banner"><h3>地區和內容</h3>
+    ${SWROW('_cbAuto',true,'使用自動化設定','讓地區和內容與平台的最新建議保持同步；當您新增需要此橫幅的市場時，橫幅就會顯示')}
+    <div class="tabs" role="tablist" style="margin:var(--sp-200) 0">
+      <button class="tab ${PVB_TAB==='banner'?'on':''}" role="tab" aria-selected="${PVB_TAB==='banner'}" onclick="PVB_TAB='banner';setSubOpen('pv-banner',pvBannerPage());setAfterRender()">Cookie 橫幅</button>
+      <button class="tab ${PVB_TAB==='prefs'?'on':''}" role="tab" aria-selected="${PVB_TAB==='prefs'}" onclick="PVB_TAB='prefs';setSubOpen('pv-banner',pvBannerPage());setAfterRender()">Cookie 偏好設定</button></div>
+    ${PVB_TAB==='banner'
+      ?`<div class="help"><b>Cookie 同意</b><br>本店與合作夥伴使用 cookie 與類似技術提供個人化體驗、廣告與分析；未經您同意不會將其用於上述用途。
+        <div class="rowflex" style="gap:var(--sp-200);margin-top:var(--sp-200)"><u>管理偏好</u><button class="btn btn-sec btn-sm">接受</button><button class="btn btn-sec btn-sm">拒絕</button></div></div>`
+      :`<div class="help"><b>Cookie 偏好設定</b><br>分類同意面板（必要／分析／行銷／個人化各一開關）——本尊此 tab 內容未逐控件展開，登記 71-R3-V1 待複驗。</div>`}
+    <h4 style="margin-top:var(--sp-300)">顏色</h4>
+    ${[['淺色',true],['深色',false],['自訂',false]].map(([l,on])=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbColor" ${on?'checked':''}><span>${l}</span></label>`).join('')}
+    <h4 style="margin-top:var(--sp-300)">位置</h4>
+    <p class="mut" style="font-size:var(--t-xs)">選擇 Cookie 橫幅在網路商店中的顯示位置。</p>
+    ${pos.map((p,i)=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbPos" ${i===2?'checked':''}><span>${p}</span></label>`).join('')}
+    <h4 style="margin-top:var(--sp-300)">結帳頁面</h4>
+    ${SWROW('_cbCk',false,'在結帳頁面顯示 Cookie 橫幅','⚠ 這可能會降低結帳轉換率')}
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作。您有責任遵守法律和規範。</p></div></div>`;
+}
+/* 資料共用退出頁面子頁——形態＝實測 /settings/privacy/dns（Do-Not-Sell）：自動化卡＋適用州提示＋
+   導覽選單掛載。GPC 與退出連結文字兩控件自舊版主頁遷入（語義不刪）。 */
+function pvOptoutOpen(){setSubOpen('pv-optout',pvOptoutPage());setAfterRender();}
+function pvOptoutPage(){
+  return setCrumb('🚫','資料共用退出頁面','privacy')
+  +`<div class="card"><div class="card-pad" data-doc="sub-pv-optout"><h3>地區和內容</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">資料共用退出選項可讓特定地區的顧客選擇退出資料共用。</p>
+    ${SWROW('_dnsAuto',true,'使用自動化設定','讓地區和內容與平台的最新建議保持同步；退出頁面適用於 California、Colorado 等美國多州')}
+    ${SWROW('_dnsGpc',true,'全球隱私控制 GPC','自動遵循瀏覽器送出的 Sec-GPC 訊號，視同顧客已選擇退出')}
+    ${setRowInp('連結文字','CCPA／CPRA 對字樣有要求，改寫前先過法務','pvOptoutLabel','不要出售或分享我的個人資訊','不要出售或分享我的個人資訊','set-pv-optout-label',{val:'req'})}
+    <h4 style="margin-top:var(--sp-300)">導覽</h4>
+    <p class="mut" style="font-size:var(--t-xs)">將此頁面連結至您的商店選單，方便訪客輕鬆存取。</p>
+    ${F('選單位置',SEL('_dnsMenu',[['footer','Footer menu（建議）'],['main','主選單'],['none','不加入選單']],'footer'))}
+    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作。您有責任遵守法律和規範。</p></div></div>`;
 }
 function setBillingPage(){
  const pri=BILL_CARDS.find(c=>c.primary)||BILL_CARDS[0];
@@ -9174,15 +9398,21 @@ function notifTpl(name){
      <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存通知模板')">儲存</button>`});
 }
 /* i 有值＝編輯既有定義（53號 N-04 的次級視圖）；i 省略＝新增。同一支表單兩種模式，不另立函式。 */
-function metafieldDef(i){
-  const edit=typeof i==='number'&&METAFIELD_DEFS[i],d=edit||{n:'',own:'商品',key:'custom.',type:'single_line_text',pin:true,sf:true,val:''};
+/* 71-R3-MISS4：編輯器對齊本尊建立頁（/settings/custom_data/{owner}/metafields/create）——
+   ①owner 全 15 類（補 公司地點/轉移；label 對齊本尊 zh-TW：產品/子類/訂單草稿/網誌/部落格貼文）
+   ②「單一/清單」前綴選擇器（help lists：勾選接受值清單）③類別指派（僅產品 owner，taxonomy 驅動，
+   help category-metafields）④釘選預設開（本尊建立頁頁首「定義已釘選」預設釘選）。
+   presetOwn＝從 owner 列表「新增定義」帶入該 owner。 */
+function metafieldDef(i,presetOwn){
+  const edit=typeof i==='number'&&METAFIELD_DEFS[i],d=edit||{n:'',own:presetOwn||'產品',key:'custom.',type:'single_line_text',pin:true,sf:true,val:'',list:false};
   openGen({title:edit?`編輯中繼欄位定義：${d.own}・${d.n}`:'新增中繼欄位定義',wide:true,body:`<div class="stack">
-    <div class="grid2">${F('名稱',`<input class="input" data-f="_mfn" value="${H(d.n)}" data-val="req|max:60" placeholder="例：材質成分">`)}${F('namespace.key',`<input class="input mono" data-f="_mfk" value="${H(d.key)}" data-val="req">`,edit?'已建立的 key 改動會讓既有資料失聯——正式版鎖定不可改':'')}</div>
-    <div class="grid2">${F('適用資源',SEL('_mo',['商品','變體','商品系列','顧客','訂單','草稿訂單','公司','地點','頁面','部落格','文章','市場','商店'],d.own))}
-      ${F('型別',SEL('_mt2',['single_line_text','multi_line_text','rich_text','number_integer','number_decimal','money','date','date_time','url','json','boolean','color','weight','volume','dimension','rating','id','link','language','file_reference','product_reference','variant_reference','collection_reference','page_reference','customer_reference','metaobject_reference','list.single_line_text','list.product_reference'],d.type))}</div>
+    <div class="grid2">${F('名稱',`<input class="input" data-f="_mfn" value="${H(d.n)}" data-val="req|max:60" placeholder="例：材質成分">`)}${F('namespace.key',`<input class="input mono" data-f="_mfk" value="${H(d.key)}" data-val="req">`,edit?'已建立的 key 改動會讓既有資料失聯——正式版鎖定不可改':'自動由名稱生成，可改；限字母／數字／_／-，組合須唯一')}</div>
+    <div class="grid2">${F('適用資源',SEL('_mo',CD_OWNERS,d.own))}
+      ${F('型別',`<div class="rowflex" style="gap:var(--sp-100)">${SEL('_ml',[['single','單一'],['list','清單']],d.list?'list':'single')}${SEL('_mt2',['single_line_text','multi_line_text','rich_text','number_integer','number_decimal','money','date','date_time','url','json','boolean','color','weight','volume','dimension','rating','id','link','language','file_reference','product_reference','variant_reference','collection_reference','page_reference','customer_reference','metaobject_reference','mixed_reference'],d.type)}</div>`,'本尊型別選單分 9 組 26 型（推薦/文字/多媒體檔案/參考資料/數字/連結/日期和時間/其他/進階）；「清單」＝help 的接受值清單')}</div>
     ${F('驗證',`<input class="input" data-f="_mfv" value="${H(d.val||'')}" placeholder="例：max:120｜min-max｜regex">`)}
-    ${SWROW('_mp',!!d.pin,'釘選 pin','pin 了才出現在資源頁卡片與列表篩選')}
-    ${SWROW('_ms',!!d.sf,'Storefront 可讀取','關閉則只有 Admin API 讀得到')}</div>`,
+    ${d.own==='產品'||(!edit&&(presetOwn||'產品')==='產品')?F('類別指派',`<button class="btn btn-sec btn-sm" onclick="toast('Demo：選取類別——定義只在該分類（Standard Product Taxonomy）的商品出現；類別中繼欄位另由分類自動建議')">⊕ 選取類別</button>`,'僅產品定義有；不選＝全部產品適用'):''}
+    ${SWROW('_mp',!!d.pin,'釘選 pin','pin 了才出現在資源頁卡片與列表篩選；本尊建立頁預設釘選')}
+    ${SWROW('_ms',!!d.sf,'Storefront API 存取權','關閉則只有 Admin API 讀得到（本尊預設不開放）')}</div>`,
    foot:(edit?`<button class="btn btn-danger-o btn-sm" onclick="closeGen();metafieldDel(${i})">刪除定義</button>`:'')
      +`<button class="btn btn-sec btn-sm" style="margin-left:auto" onclick="closeGen()">取消</button>
        <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="metafieldSave(${edit?i:-1})">${edit?'儲存定義':'建立定義'}</button>`});
@@ -9190,12 +9420,14 @@ function metafieldDef(i){
 function metafieldSave(i){
   const g=f=>(document.querySelector(`[data-f="${f}"]`)||{}).value||'';
   const ck=f=>{const e=document.querySelector(`[data-f="${f}"]`);return !!(e&&e.checked);};
-  const rec={n:g('_mfn').trim(),own:g('_mo')||'商品',key:g('_mfk').trim(),type:g('_mt2')||'single_line_text',
-    val:g('_mfv').trim(),pin:ck('_mp'),sf:ck('_ms')};
+  const rec={n:g('_mfn').trim(),own:g('_mo')||'產品',key:g('_mfk').trim(),type:g('_mt2')||'single_line_text',
+    val:g('_mfv').trim(),pin:ck('_mp'),sf:ck('_ms'),list:g('_ml')==='list'};
   closeGen();
   if(!rec.n||!rec.key)return toast('名稱與 namespace.key 必填，已取消');
   if(i>=0)METAFIELD_DEFS[i]=rec;else METAFIELD_DEFS.push(rec);
-  setPage('customdata');
+  /* 儲存後回 owner 列表（若正處於該次級視圖）而非設定主頁——三層結構下的自然返回點。
+     用 SETSUB 判斷不用 CD_OWNER：後者在離開次級視圖後仍殘留上次值。 */
+  if(SETSUB==='cd-owner'){CD_OWNER=rec.own;setSubOpen('cd-owner',cdOwnerPage());setAfterRender();}else setPage('customdata');
   toast(i>=0?`已儲存定義「${rec.n}」`:`已建立定義「${rec.n}」`);
 }
 function metafieldDel(i){
@@ -9454,13 +9686,26 @@ Object.assign(DOCS,{
  "set-shipping":{t:"設定・運送與配送",f:"依市場的運送選項／本地配送／取貨／包裹",l:"新模型 Market→option→rates，子市場繼承可覆寫；rate 四型且 flat+order amount 並存取最高符合者；本地配送半徑 ≤160km 或郵遞區號 ≤3,000 字元、≤10 區/地點（41 §12.7）",i:"P0・[api:deliveryProfileCreate] [api:deliveryProfileUpdate] [api:TBD-shippingOptionsByMarketUpdate]（新模型 28 待補） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
  "set-taxes":{t:"設定・稅務服務與稅區",f:"稅區清單／服務層級三檔／含稅／覆寫／DDP",l:"53號 P0-07：service_tier 三檔 managed／basic／manual（44:387），manual 才出現自訂稅率編輯器；稅區由運送區域推導（44:385）。引擎讀取順序：顧客免稅 > 覆寫 > 登記稅率；覆寫以商品系列為單位（可用未發布系列）（22 §8）。法域中性見 set-tax-jur",i:"P0・[api:taxSettingsUpdate] [api:TBD-taxRegionUpdate] [tbl:tax_settings,tax_regions,tax_rates,collections]"},
  "set-locations":{t:"設定・地點",f:"地點清單／出貨開關／優先序",l:"停用前須移走庫存與待出貨單；出貨優先序拖曳＝自動分單 routing；app 地點唯讀不佔配額（41 §12.9）",i:"P1・[api:locationAdd] [api:locationEdit] [api:locationDeactivate] [tbl:locations,inventory_levels]"},
- "set-domains":{t:"設定・網域",f:"主網域／子網域／國際網域與 SSL",l:"myshopify 型子網域終身僅可改名 1 次；使用國際網域策略時須關閉「導向主網域」（41 §12.11）",i:"P1・[api:domainCreate] [api:domainSetPrimary] [api:domainDelete] [tbl:shops]"},
+ "set-domains":{t:"設定・網域",f:"樹狀網域列表（主網域＋縮排子項）＋連結現有網域（分裂鈕：輸入／轉移）＋購買新網域",l:"71-R3 對齊本尊：每列進詳情（DNS checklist／全球六地區點陣／TLS／指向與類型）；本尊為 per-domain 類型模型（主要／別名／重新導向），我方 62 §J 全域「導向主網域」開關暫留（71-R3-V3，R10 裁定）；上限引 limits.yml domains.max_custom_domains（本尊 20／Plus 1000）；myshopify 型子網域終身僅可改名 1 次、不可移除；購買不可退款、ICANN 驗證 15 天、轉移鎖 60 天",i:"P1・[api:domainCreate] [api:domainSetPrimary] [api:domainDelete] [tbl:shops]"},
+ "set-domain-row":{t:"網域列（進詳情）",f:"開單一網域的詳情視圖",l:"詳情卡片組＝實測：動作列（檢視／網域設定▾：轉移商店／轉移供應商／DNS 設定）＋DNS 記錄已指向 checklist＋「網域已於全球所有地區上線」六地區點陣＋上次檢查時間＋TLS 憑證＋指向與類型（變更鈕）",i:"P1・[api:TBD-domainStatusQuery]（28 待補；DNS 檢查判準值引 config 不硬編） [tbl:shops]"},
  "set-notifications":{t:"設定・通知",f:"顧客通知模板／員工通知／webhooks",l:"訂單確認信不可停用；出貨家族可停用；棄單信已遷行銷自動化；模板走 Liquid 沙箱（18 §）",i:"P1・[api:notificationTemplateUpdate] [api:webhookSubscriptionCreate] [tbl:notification_templates,event_outbox]"},
- "set-customdata":{t:"設定・自訂資料",f:"metafield／metaobject 定義管理",l:"pin 了才出現在資源頁與列表篩選；型別 30+ 種含 list.* 變體（41 §12.13 全表）；access.storefront 決定前台可讀性",i:"P1・[api:metafieldDefinitionCreate] [api:metafieldDefinitionUpdate] [tbl:metafield_definitions,metafields]"},
+ "set-customdata":{t:"設定・中繼欄位與 metaobject",f:"owner 分組入口（15 類各帶定義數）→ per-owner 列表 → 編輯器",l:"71-R3 對齊本尊三層結構；owner 全 15 類（產品/子類/商品系列/顧客/訂單/訂單草稿/公司/公司地點/地點/轉移/頁面/網誌/部落格貼文/市場/商店）；pin 了才出現在資源頁與列表篩選；上限引 limits.yml custom_data.*（定義 250／每部分釘選 50／POS 顧客畫面 20，help 明載）",i:"P1・[api:metafieldDefinitionCreate] [api:metafieldDefinitionUpdate] [tbl:metafield_definitions,metafields]"},
+ "set-cd-owner":{t:"owner 分組列",f:"進該資源類型的定義列表",l:"列尾數字＝該 owner 的定義數；順序照本尊固定排列不按數量",i:"P1・[tbl:metafield_definitions(shop_id,owner_type)] 聚合計數"},
+ "sub-cd-owner":{t:"per-owner 定義列表（次級視圖）",f:"搜尋＋釘選切換＋編輯＋新增定義",l:"本尊此頁有拖曳排序（釘選順序＝資源頁顯示順序）——原型以釘選鈕近似、排序 demo 略；搜尋過濾名稱與 key",i:"P1・[api:metafieldDefinitionPin/Unpin（TBD-28）] [tbl:metafield_definitions.pinned_position]"},
+ "set-metaobj-add":{t:"新增 metaobject 定義",f:"名稱＋類型（自動生成）＋欄位＋選項五開關",l:"選項五開關＝實測建立頁：啟用與草稿／翻譯／發布為網頁（需先開 Storefront）／Storefront API／顧客帳號 API（help 未載，71-R3-V2）；刪除定義不可逆且連帶刪除條目",i:"P1・[api:TBD-metaobjectDefinitionCreate]（28 待補） [tbl:metaobject_definitions]"},
  "set-languages":{t:"設定・語言",f:"商店語言清單與發布",l:"≤20 種語言；預設語言不可取消發布；每市場語言子集在 Markets 配（29 §2）",i:"P2・[api:shopLocaleEnable] [api:shopLocaleUpdate] [api:translationsRegister] [tbl:shops]"},
  "set-policies":{t:"設定・政策",f:"六類政策文案",l:"固定 URL /policies/*；政策是文案、return rules 是機器規則（41 §12.15）；範本生成器產草稿",i:"P0・[api:TBD-shopPolicyUpdate]（28 待補） [tbl:shops,pages]"},
  "set-brand":{t:"設定・品牌",f:"Logo／色彩／標語／社群連結",l:"供銷售管道、app 與結帳預設取用；Liquid 以 shop.brand 讀取；色彩需通過對比檢查（41 §12.16）",i:"P2・[api:TBD-brandSettingsUpdate]（28 待補） [tbl:shops,files]"},
- "set-privacy":{t:"設定・顧客隱私",f:"Cookie 橫幅／GPC／資料銷售退出",l:"依地區顯示（歐盟／英國／加州）；自動遵循 GPC 訊號（41 §12.17）",i:"P2・[api:TBD-privacySettingsUpdate]（28 待補） [tbl:shops,customers]"},
+ "set-privacy":{t:"設定・顧客隱私（隱私權設定卡）",f:"政策／Cookie 橫幅／退出頁面三列（各帶自動化 badge）進子編輯器",l:"71-R3 對齊本尊 IA：自動化＝新店預設開、由平台依地區維護三件套（help privacy-settings）；停用自動化才可全手動。舊版四 toggle 語義遷入子頁（GPC＋連結文字→退出頁面；橫幅開關→Cookie 橫幅）。依 G21 隱私法 per-jurisdiction pack（HK PDPO 基準）",i:"P2・[api:TBD-privacySettingsUpdate]（28 待補） [tbl:shops,customers]"},
+ "set-pv-policy":{t:"隱私權政策（modal）",f:"自動化 toggle＋富文本編輯器＋免責聲明＋儲存",l:"本尊 modal 實測：自動化開＝內容唯讀跟隨商店設定；編輯器引擎考證＝TinyMCE 6.8.3（iframe 模式、rte-uplift-*、plugins autoresize/lists/table、原生 toolbar 停用改自繪）——6.8.3 是最後 MIT 版（7.x 起 GPL2+/商業），我方引擎選型待裁定（71-R3-DOC1，鐵律 1）",i:"P2・[api:TBD-privacyPolicyUpdate]（28 待補） [tbl:shops]；編輯器引擎＝open decision"},
+ "set-pv-intel":{t:"跨店資料智慧",f:"匿名資料共同運用開關（已啟用＋停用鈕）",l:"對標本尊同位置卡片（名稱用我方，品牌紅線）：停用會連帶失效依賴功能；顧客經 GPC／退出頁面退出者資料一律不參與（help：退出訊號統一處理）；本尊停用移除 9 項功能且清單可變",i:"P3・[api:TBD-dataIntelOptOut]（28 待補） [tbl:shops]"},
+ "set-pv-marketing":{t:"行銷設定（跨頁深連結）",f:"兩列跳轉到結帳／通知的對應區段",l:"本尊此二列是錨點深連結（結帳#marketingconsentoptions／通知 customer#optin）並帶返回 chip——原型以 setPage 跳頁＋toast 說明近似；Email 同意框可依地區預選、SMS 一律不得預選（help）",i:"P2・入口不落表；目標控件見 set-checkout／set-notifications"},
+ "set-pv-mkt-checkout":{t:"結帳頁行銷同意（深連結）",f:"跳「結帳」設定的接受行銷資訊區段",l:"Email：顯示於結帳與登入；預選模式二選（平台建議地區／自選地區／不選）；SMS：僅結帳頁且不得預選",i:"P2・[api:TBD-checkoutMarketingConsentUpdate]（28 待補） [tbl:shops]"},
+ "set-pv-mkt-optin":{t:"雙重確認加入（深連結）",f:"跳「通知」設定的顧客行銷訂閱確認",l:"啟用後顧客須點信確認訂閱；既有訂閱者不受影響；確認信依法不得含行銷內容；需線上商店管道",i:"P2・[api:TBD-marketingDoubleOptInUpdate]（28 待補） [tbl:shops,customers]"},
+ "set-pv-hosting":{t:"資料儲存託管地點",f:"顯示平台資料託管區域（唯讀）",l:"值＝平台部署區域（demo：香港）；商家不可改；跨境傳輸揭露載於隱私權政策（G21）",i:"P3・平台常數，不落 shop 表"},
+ "set-pv-hosting-loc":{t:"託管地點列",f:"唯讀顯示",l:"同 set-pv-hosting",i:"P3・同上"},
+ "sub-pv-banner":{t:"Cookie 橫幅（次級視圖）",f:"自動化＋雙 tab 預覽＋顏色三檔＋位置五選＋結帳頁開關",l:"位置五選＝實測（置中/底部全幅/底部置中/左下角/右下角，help 未列舉）；結帳頁開關附「可能降低結帳轉換率」警告（實測原文）；「Cookie 偏好設定」tab 內容未逐控件展開（71-R3-V1）；已設橫幅地區的分析數據可能下降（help：同意後才收集）",i:"P2・[api:TBD-consentBannerUpdate]（28 待補） [tbl:shops]"},
+ "sub-pv-optout":{t:"資料共用退出頁面（次級視圖）",f:"自動化＋GPC＋連結文字＋選單位置",l:"本尊 URL /settings/privacy/dns（Do-Not-Sell）；適用美國多州；導覽卡掛 Footer menu（建議）；GPC 與連結文字自舊版主頁遷入（語義不刪）",i:"P2・[api:TBD-optOutPageUpdate]（28 待補） [tbl:shops,pages]"},
  "set-events":{t:"設定・顧客事件",f:"自訂 pixel 的新增／編輯／刪除／啟用與事件訂閱",l:"53號 N-05：這一頁是「58 條佔位列轉真控件」那輪的漏網（原本整頁只有兩個唯讀 chip ＋ 一顆 demo toast）。pixel＝名稱＋JS 沙箱代碼＋訂閱事件清單；在沙箱 iframe 執行不接觸 DOM（41 §12.18）。<b>訂閱清單是白名單不是提示</b>：沒勾的事件連 payload 都不產生",i:"P2・[api:TBD-webPixelCreate/Update/Delete]（28 待補）[tbl:web_pixels(shop_id,name,enabled,code,subscriptions_json)]"},
  "set-ev-row":{t:"單一 pixel 列",f:"狀態、訂閱數、啟用開關、編輯、刪除",
   l:"訂閱 0 個事件的 pixel 等同不會被呼叫——列上直接寫明，避免商家以為「建了就會收」。停用是 enabled=false（沙箱不載入），與刪除分開",
@@ -9477,9 +9722,8 @@ Object.assign(DOCS,{
  "sub-ev-sandbox":{t:"沙箱說明",f:"四條執行環境約束",
   l:"① 同源隔離 iframe，取不到 DOM/cookie/window.top ② 事件是推給沙箱的，未訂閱不產生 payload ③ 沙箱 throw 不影響結帳，連續失敗自動停用並通知 ④ Cookie 同意／GPC 會先過濾一次（見 set-pv-gpc）",
   i:"P2・[tbl:web_pixels] ＋ [tbl:web_pixel_failures(pixel_id,occurred_at,message)]；自動停用門檻進 config"},
- "set-apps":{t:"設定・應用程式與管道",f:"已安裝 app 權限與銷售管道",l:"解除安裝會停掉該 app 寫入的資料（selling plan／自動化）；管道 pin 到側欄（41 §12.19）",i:"P3・[api:TBD-appUninstall]（28 待補）＋[api:publishablePublish] [tbl:shops]"},
- "set-channels":{t:"銷售管道清單",f:"顯示各管道的啟用狀態",
-  l:"53號 N-04：這四列原本帶 › 卻沒有 handler。<b>處置＝移除 ›、改狀態 chip ＋ 說明文字</b>，理由：各管道的設定頁屬<b>該管道自己的 app</b>（線上商店走主題編輯器、POS 走 POS app、Shop 走 Shop 管理台），不是平台設定的一部分——原型不做這一層。商品要出現在某管道是在商品／目錄側設定發布範圍（publication），不在這裡",
+ "set-apps":{t:"設定・應用程式（獨立頁）",f:"開發應用程式／應用程式市集鈕＋已安裝 tab＋列 ⋯ 選單六動作＋詳情",l:"71-R3-STRUCT1：2026 版與銷售管道拆成兩頁。⋯ 選單＝help 五動作＋解除安裝；詳情六區段（帳單與用量收費／活動與權限含未使用存取權／隱私權／擴充功能／Functions 分享記錄／像素）；解除安裝對話框＝原因下拉＋資料保留與當期費用條款；用量上限只能調高；新自訂 app 僅開發者主控台可建（本尊 2026-01-01 同規則）；私人／自訂／開新視窗 app 不可釘選",i:"P3・[api:TBD-appUninstall]（28 待補） [tbl:app_installations]"},
+ "set-channels":{t:"設定・銷售管道（獨立頁）",f:"新增銷售管道鈕＋各管道狀態＋列 ⋯ 解除安裝",l:"71-R3-MISS2：解除安裝＝高風險動作，<b>必勾</b>「我瞭解解除安裝此銷售管道的風險」才能按（help 原文勾選字樣）；新增管道副作用＝所有既有商品自動對新管道可用（opt-out 而非 opt-in）。53號 N-04 裁定不變：各管道的設定頁屬<b>該管道自己的 app</b>（線上商店走主題編輯器、POS 走 POS app、Shop 走 Shop 管理台），原型不做那一層；商品要出現在某管道是在商品／目錄側設定發布範圍（publication）",
   i:"P3・[api:publishablePublish]／[api:publishableUnpublish] [tbl:publications,product_publications]；管道啟用狀態來自 [tbl:app_installations]"},
  "set-giftcards":{t:"設定・禮品卡",f:"到期政策與 Apple Wallet",l:"多數地區法規禁止設到期日；Wallet passes 開關為店級（41 §12.20）",i:"P2・[api:TBD-giftCardSettingsUpdate]（28 待補） [tbl:gift_cards,shops]"},
 });
@@ -10265,8 +10509,8 @@ function privacyGenPage(){
     <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">勾選項目會決定草稿裡出現哪些段落；勾錯比不勾更危險</p>
     ${types.map(([f,n,sub2,on])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${sub2}</span></div>
       <input type="checkbox" class="tgl set-ctl" data-f="${f}" role="switch" aria-checked="${on?'true':'false'}" ${on?'checked':''} aria-label="${n}"></div>`).join('')}
-    ${setRowSel('適用法規基準','會決定草稿的用語與必備段落','pgLaw',
-      [['tw','台灣個資法'],['gdpr','GDPR（歐盟／英國）'],['ccpa','CCPA/CPRA（加州）'],['multi','以上全部（最嚴格取交集）']],'multi','sub-privacygen-law')}
+    ${setRowSel('適用法規基準','會決定草稿的用語與必備段落；清單順序＝jurisdiction pack 優先序（G21 基準法域 HK）','pgLaw',
+      [['hk','香港 PDPO'],['tw','台灣個資法'],['gdpr','GDPR（歐盟／英國）'],['ccpa','CCPA/CPRA（加州）'],['multi','以上全部（最嚴格取交集）']],'multi','sub-privacygen-law')}
     <div class="card-sec rowflex">
       <button class="btn btn-pri btn-sm" onclick="toast('已產生草稿——存為「隱私權政策」並標記為「● 自動」，商家改寫後轉「已設定」')">產生草稿</button>
       <button class="btn btn-ghost btn-sm" onclick="closeSettings();openSettings('policies')">前往政策分頁 ›</button></div></div>
@@ -11522,8 +11766,8 @@ Object.assign(DOCS,{
  "set-metafield-add":{t:"新增中繼欄位定義",f:"建立一個新的 metafield 定義",
   l:"型別 30+ 種（含 list.* 變體）；pin 了才會出現在資源頁卡片與列表篩選；access.storefront 決定前台 Liquid 讀不讀得到",
   i:"P1・[api:metafieldDefinitionCreate] [tbl:metafield_definitions]"},
- "set-metaobj":{t:"元物件定義（進次級視圖）",f:"管理自訂資源型別的定義",
-  l:"44 §11.1：元物件＝自己定義的資源型別，條目可被商品／頁面以 reference 型中繼欄位引用；刪除定義會連帶刪條目並讓引用變成 dangling reference，所以刪除必須二次確認",
+ "set-metaobj":{t:"metaobject 定義（進次級視圖）",f:"管理自訂資源型別的定義",
+  l:"44 §11.1：metaobject＝自己定義的資源型別，條目可被商品／頁面以 reference 型中繼欄位引用；刪除定義會連帶刪條目並讓引用變成 dangling reference，所以刪除必須二次確認（help 明文：不可還原）。71-R3 用語對齊本尊「metaobject」（原「元物件」）",
   i:"P2・[api:metaobjectDefinitionCreate]／[api:metaobjectDefinitionDelete] [tbl:metaobject_definitions,metaobjects,metaobject_fields]"},
 /* ---------- 品牌 ---------- */
  "set-brand-slogan":{t:"標語 slogan",f:"一句話的品牌標語",
@@ -11536,14 +11780,14 @@ Object.assign(DOCS,{
   l:"同一組值同時餵給前台頁尾、Shop app 商店檔案與結構化資料的 sameAs（30 §）；留空的平台不輸出圖示也不輸出 sameAs 項，避免產生死連結",
   i:"P1・[tbl:shop_brand_socials(shop_id,platform,url)]；Liquid 以 shop.brand.social 讀取（26 號）"},
 /* ---------- 顧客隱私 ---------- */
- "set-pv-banner":{t:"Cookie 同意橫幅",f:"開關依地區顯示的同意橫幅",
-  l:"38 號信任模組：關閉後分析類 pixel 在歐盟／英國／加州不得載入（不是「不顯示橫幅但照樣追蹤」）；橫幅顯示與否由訪客 IP 對應的管轄地決定",
+ "set-pv-banner":{t:"Cookie 橫幅（列，進次級視圖）",f:"開 Cookie 橫幅子頁（sub-pv-banner）",
+  l:"71-R3 改列＋自動化 badge（原為單顆 toggle，語義併入子頁自動化開關）。38 號信任模組不變：同意前分析類 pixel 在管轄地不得載入（不是「不顯示橫幅但照樣追蹤」）；橫幅顯示與否由訪客管轄地決定，美國預設不啟用",
   i:"P1・[api:TBD-privacySettingsUpdate]（28 待補）[tbl:privacy_settings.cookie_banner_enabled]；pixel 載入判斷在邊緣層做，不進 Rails"},
- "set-pv-gpc":{t:"全球隱私控制 GPC",f:"自動遵循瀏覽器的 Sec-GPC 訊號",
-  l:"38 號：GPC 是法定訊號不是偏好——收到 Sec-GPC:1 即視同顧客已選擇退出資料銷售／分享，必須立刻生效且不得再詢問。在加州屬強制遵循",
+ "set-pv-gpc":{t:"全球隱私控制 GPC（已遷入退出頁面子頁）",f:"自動遵循瀏覽器的 Sec-GPC 訊號",
+  l:"71-R3 追溯：控件自隱私主頁遷入 sub-pv-optout（本尊主頁無獨立 GPC 列）。38 號不變：GPC 是法定訊號不是偏好——收到 Sec-GPC:1 即視同顧客已選擇退出資料銷售／分享，必須立刻生效且不得再詢問。在加州屬強制遵循",
   i:"P1・[tbl:privacy_settings.honor_gpc]；請求進來時解析 Sec-GPC header → 寫入 [tbl:customer_consents]（來源標 gpc）"},
- "set-pv-optout":{t:"資料銷售退出",f:"前台是否顯示退出連結",
-  l:"CCPA/CPRA：只要有向第三方「出售或分享」個資（含廣告 pixel），就必須提供顯著的退出連結；關閉這顆等於宣告本店不出售個資，與已啟用的第三方 pixel 互相矛盾時要示警",
+ "set-pv-optout":{t:"資料共用退出頁面（列，進次級視圖）",f:"開退出頁面子頁（sub-pv-optout）",
+  l:"71-R3 改列＋自動化 badge；本尊語義＝託管退出「頁面」（掛選單）而非單純頁尾連結。CCPA/CPRA 不變：只要有向第三方「出售或分享」個資（含廣告 pixel），就必須提供顯著的退出入口；關閉等於宣告不出售個資，與已啟用的第三方 pixel 矛盾時要示警",
   i:"P1・[tbl:privacy_settings.data_sale_optout_enabled]；退出紀錄寫 [tbl:customer_consents]（append-only）"},
  "set-pv-optout-label":{t:"退出連結文字",f:"自訂連結的顯示文字",
   l:"CCPA/CPRA 對字樣有明文要求（Do Not Sell or Share My Personal Information 的在地化版本），改寫前必須過法務；這是合規文案不是行銷文案",
