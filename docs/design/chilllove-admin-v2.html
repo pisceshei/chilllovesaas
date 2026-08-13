@@ -1790,8 +1790,10 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <div class="page-head">
       <h1>訂單</h1>
       <div class="head-actions">
-        <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出訂單')">匯出</button>
-        <button class="btn btn-sec btn-sm" data-doc="bulkrecent" onclick="go('m-shiplabels')">批次處理近期訂單</button>
+        <!-- 71-R7（2026-08-13 實測）：本尊頁首＝匯出/更多動作(顯示分析列)/建立訂單——原「批次處理
+             近期訂單」鈕為我方發明入口，語義併入導航「運送標籤」子項（本尊同位）。 -->
+        <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出訂單 CSV——範圍與欄位組見 76 號')">匯出</button>
+        <button class="btn btn-sec btn-sm" data-doc="ord-more-head" onclick="toast('Demo：更多動作——顯示分析列（列表頂部嵌入迷你指標條）')">更多動作 ▾</button>
         <button class="btn btn-pri" data-doc="createorder" onclick="openDraft('new')">建立訂單</button>
       </div>
     </div>
@@ -1806,7 +1808,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="orderSearch" placeholder="搜尋單號、顧客…">
         </div>
-        <button class="m-hover icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
+        <button class="m-hover icon-btn" data-doc="columns" title="欄位設定" aria-label="欄位設定" onclick="orderColumns()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
       <div class="idx-wrap">
         <div class="bulkbar" id="bulkbar" data-doc="bulkbar">
@@ -1818,7 +1820,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
         <table class="idx" id="orderTable" data-doc="ordertable">
           <thead><tr>
             <th style="width:36px"><input type="checkbox" class="cb" id="cbAllOrders" onclick="toggleAll(this)" aria-label="全選"></th>
-            <th>訂單</th><th>日期</th><th>顧客</th><th>管道</th><th class="right">總計</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th><th>標籤</th>
+            <th>訂單</th><th>日期</th><th>顧客</th><th>出貨期限</th><th>管道</th><th class="right">總計</th><th>付款狀態</th><th>出貨狀態</th><th class="right">品項</th><th>標籤</th>
           </tr></thead><tbody></tbody>
         </table>
       </div>
@@ -2495,13 +2497,38 @@ function renderOrders(){
    <tr class="${o.cancelled?'cancelled':''}" onclick="openOrder('${o.id}')">
      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb rowcb" onchange="bulk()" aria-label="選取 #${o.id}"></td>
      <td><b>#${o.id}</b>${o.risk?riskSvg:''}</td>
-     <td class="mut">${o.d}</td><td>${o.c}</td><td class="mut">${o.ch}</td>
+     <td class="mut">${o.d}</td>
+     <td><span style="cursor:pointer;color:var(--link)" onclick="event.stopPropagation();custHover('${H(o.c)}')">${o.c}</span></td>
+     <td class="mut">${o.ful==='unful'&&!o.cancelled?'今天結束前':'—'}</td><td class="mut">${o.ch}</td>
      <td class="right num" style="font-weight:600">${money(o.amt,o.cur)}${o.cur&&o.cur!==MARKET_BASE?` <span class="mut3">${o.cur}</span>`:''}</td>
      <td>${PAY[o.pay]}</td><td>${FUL[foOrderStatus(o.id)]}</td><td class="right num mut">${o.items}</td>
      <td>${o.tags.map(t=>`<span class="tagchip" style="margin:0 var(--sp-050) 0 0">${t}</span>`).join('')}</td>
    </tr>`).join('');
-  document.querySelector('#orderTable tbody').innerHTML=rows||`<tr><td colspan="10"><div class="empty-wrap"><b>${raw?`找不到符合「${raw}」的訂單`:'此檢視沒有訂單'}</b>${raw?'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'orderSearch\').value=\'\';renderOrders()">清除搜尋</button>':'<button class="btn btn-sec btn-sm" onclick="setView(\'all\')">回到全部</button>'}</div></td></tr>`;
+  document.querySelector('#orderTable tbody').innerHTML=rows||`<tr><td colspan="11"><div class="empty-wrap"><b>${raw?`找不到符合「${raw}」的訂單`:'此檢視沒有訂單'}</b>${raw?'<button class="btn btn-sec btn-sm" onclick="document.getElementById(\'orderSearch\').value=\'\';renderOrders()">清除搜尋</button>':'<button class="btn btn-sec btn-sm" onclick="setView(\'all\')">回到全部</button>'}</div></td></tr>`;
   bulk();
+}
+/* 71-R7（2026-08-13 實測）：欄位選擇器＝排序依據＋隱藏已封存 toggle＋可拖曳欄清單（眼睛顯隱）。
+   本尊全欄集：日期/顧客/出貨期限/管道/總計/付款狀態/出貨狀態/品項/配送狀態/配送方式/標籤/收件地/
+   採購單號/託運單標籤狀態（訂單欄恆第一）。顧客欄=hover card（姓名/地址/N 筆訂單/email/檢視顧客），
+   非列導航。 */
+function orderColumns(){
+  const vis=['日期','顧客','出貨期限','管道','總計','付款狀態','出貨狀態','品項','標籤'];
+  const hid=['配送狀態','配送方式','收件地','採購單號','託運單標籤狀態'];
+  openGen({title:'欄位',body:`<div class="stack">
+    ${F('排序依據',SEL('_osort',['日期','訂單號','顧客','總計'],'日期'),'方向：由新到舊（預設）／由舊到新')}
+    ${SWROW('_ohidearch',true,'隱藏已封存','開啟＝預設檢視不含已封存訂單（本尊 toggle 原文）')}
+    <h4>欄（可拖曳排序；眼睛切換顯隱；「訂單」恆第一欄）</h4>
+    <div class="valchips">${vis.map(c=>`<button class="tokchip" onclick="toast('Demo：隱藏欄「${c}」')">👁 ${c}</button>`).join('')}</div>
+    <div class="valchips" style="opacity:.6">${hid.map(c=>`<button class="tokchip" onclick="toast('Demo：顯示欄「${c}」')">🚫 ${c}</button>`).join('')}</div></div>`});
+}
+/* 顧客 hover card（本尊：點顧客名開浮卡，非導航）。 */
+function custHover(name){
+  const c=CUSTOMERS.find(x=>x.n===name);
+  openGen({title:name,body:`<div class="stack">
+    <p class="mut" style="font-size:var(--t-xs)">${c?H(c.loc):'—'}<br>${c?c.ord:0} 筆訂單</p>
+    <p style="color:var(--link);font-size:var(--t-sm)">${c?H(c.mail):''}</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();${c?`openCustomer('${c.id}')`:''}">檢視顧客</button>
+     <button class="btn btn-ghost btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen()">關閉</button>`});
 }
 document.getElementById('orderSearch').addEventListener('input',renderOrders);
 function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=cb.checked);bulk();}
@@ -2816,7 +2843,7 @@ function renderOrderDetail(){
     <span class="mut3" style="font-size:var(--t-xs)">${o.d}・${o.ch}</span>
     <div class="head-actions">
       <button class="btn btn-sec btn-sm" data-doc="refund" ${o.pay!=='paid'?'disabled aria-disabled="true"':''} onclick="orderRefund()">退款</button>
-      <button class="btn btn-sec btn-sm" data-doc="editorder" ${o.cancelled?'disabled aria-disabled="true"':''} onclick="toast('Demo：訂單編輯於 M4 後段')">編輯</button>
+      <button class="btn btn-sec btn-sm" data-doc="editorder" ${o.cancelled?'disabled aria-disabled="true"':''} onclick="orderEditGate()">編輯</button>
       <button class="btn btn-sec btn-sm" data-doc="moreactions" onclick="orderMore()">更多動作 ▾</button>
       <button class="pg" onclick="toast('上一筆')" aria-label="上一筆">‹</button><button class="pg" onclick="toast('下一筆')" aria-label="下一筆">›</button>
     </div>
@@ -2860,6 +2887,14 @@ function renderOrderDetail(){
         <div class="side-kv"><span class="k">運送地址</span><span class="addr">${o.cust.addr}</span></div>
         <div class="side-kv"><span class="k">帳單地址</span>同運送地址</div>
       </div>
+      <!-- 71-R7（2026-08-13 實測）：右欄補 管道資訊/轉換摘要 兩卡；app 管道訂單的「編輯」被閘
+           （本尊 modal「此 app 無法編輯此訂單」）——編輯鈕依管道歸屬 gate。 -->
+      <div class="card card-pad" data-doc="od-channel"><h3>管道資訊</h3>
+        <div class="side-kv"><span class="k">管道</span>${H(o.ch)}</div>
+        <div class="side-kv"><span class="k">訂單 ID</span><span class="mono">${o.ch==='線上商店'?('cl:'+o.id):(H(o.ch.toLowerCase())+':'+o.id)}</span></div></div>
+      <div class="card card-pad" data-doc="od-conversion"><h3>轉換摘要</h3>
+        <p class="mut" style="font-size:var(--t-sm)">${o.ch==='線上商店'?'此顧客工作階段 3 次・首次來源 自然搜尋':'此訂單無轉換詳細資訊。'}</p>
+        <button class="btn btn-ghost btn-sm" style="padding:0" onclick="toast('Demo：瞭解詳情——轉換摘要=歸因工作階段鏈（71-R1 歸因報表同源）')">瞭解詳情</button></div>
       <div class="card card-pad" data-doc="risk"><h3>訂單風險</h3>
         ${o.risk
          ?'<div style="display:flex;align-items:center;gap:var(--sp-200);font-size:var(--t-sm)"><span class="badge b-warning"><span class="pip blocked"></span>中</span><span class="mut">IP 與帳單地址不一致</span></div>'
@@ -3637,7 +3672,11 @@ const DOCS={
  setup:{t:"開店設定指南",f:"任務進度卡引導完成開店",l:"進度圈=已完成任務比例；完成後卡片收合",i:"P1・M：setup_tasks 表 + 完成偵測（事件驅動）"},
  views:{t:"檢視切換器（saved views）",f:"預設+自訂檢視（儲存篩選/排序/欄位）",l:"預設檢視唯讀；自訂可改名/複製/刪除",i:"P0・M：saved_views(filters_json, sort, columns_json)；22 §0"},
  filterbar:{t:"搜尋＋篩選一體欄",f:"關鍵字即時過濾＋加條件",l:"條件間 AND、同條件多值 OR；# 前綴與大小寫要正規化",i:"P0・白名單欄位編譯 SQL（防注入，規格 11 §1）"},
- columns:{t:"欄位設定",f:"自訂列表顯示欄位",l:"儲存在自訂檢視內",i:"P1・saved_views.columns_json"},
+ columns:{t:"欄位設定",f:"排序依據＋隱藏已封存 toggle＋可拖曳欄清單（眼睛顯隱）",l:"71-R7 實測：本尊全欄集 14 欄（日期/顧客/出貨期限/管道/總計/付款狀態/出貨狀態/品項/配送狀態/配送方式/標籤/收件地/採購單號/託運單標籤狀態；訂單欄恆第一）；儲存在自訂檢視內",i:"P1・saved_views.columns_json"},
+ "ord-more-head":{t:"訂單列表更多動作",f:"顯示分析列",l:"71-R7 實測：唯一項＝顯示分析列（列表頂嵌迷你指標條，數字同源鐵律 7）",i:"P2・[api:report] 迷你卡三指標"},
+ "od-channel":{t:"管道資訊卡",f:"管道名＋管道側訂單 ID",l:"71-R7 實測：app 管道訂單顯示來源（如 fecify:14）；管道歸屬決定編輯權（app 訂單不可編輯——editorder 閘）",i:"P1・[tbl:orders.channel,external_id]"},
+ "od-conversion":{t:"轉換摘要卡",f:"歸因工作階段鏈摘要＋瞭解詳情",l:"71-R7 實測：匯入/無追蹤訂單顯示「此訂單無轉換詳細資訊。」；有追蹤時列工作階段次數與首次來源（71-R1 歸因同源）",i:"P2・[tbl:attribution_sessions] [api:report]"},
+ "aband-upgrade":{t:"棄單自動化升級 banner",f:"檢視自動化功能 CTA＋可關閉",l:"71-R7 實測原文「升級至全新的未完成結帳作業自動化功能」——新版=email 編輯+工作流程自訂；我方=挽回信遷行銷自動化的入口",i:"P2・行銷自動化（15-F7）"},
  bulkbar:{t:"批次操作列",f:"多選後的批次動作",l:">50 筆轉背景 job；逐筆獨立 transaction+結果報告；批次出貨不填追蹤碼",i:"P0・規格 16-F1；半選狀態 indeterminate 必做"},
  bulkrecent:{t:"批次處理近期訂單",f:"一鍵處理近期未出貨單",l:"2026 版新入口；等同帶條件的批次出貨",i:"P1・重用批次管線"},
  createorder:{t:"建立訂單（草稿）",f:"商家代客建單",l:"草稿→寄發票/收款→轉正式單；可 Reserve 庫存、Lock 價格",i:"P1・M：draft_orders；金額引擎重用（規格 15-F2）；22 §1c"},
@@ -5343,7 +5382,14 @@ function draftComplete(){
 }
 /* ---- 棄單 ---- */
 function abandonedPage(){
-  return listPage({key:'aband',title:'未完成結帳',doc:'doc-m-abandoned',ph:'搜尋結帳號、email…',
+  /* 71-R7 實測：本尊頁頂有「升級至全新的未完成結帳作業自動化功能」info banner（檢視自動化功能 CTA
+     ＋×）——新版=email 編輯與工作流程自訂。banner 位置本尊在標題下、此處在標題上（listPage 引擎
+     限制，M1 引擎化時歸位）。空態文案=本尊原文。 */
+  return `<div class="banner-caution" data-doc="aband-upgrade" style="margin-bottom:var(--sp-300)"><span class="bc-ic" aria-hidden="true">ⓘ</span>
+    <span><b>升級至全新的未完成結帳作業自動化流程</b>——新版提供電子郵件編輯與工作流程自訂。
+    <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="toast('Demo：檢視自動化功能——挽回信改走行銷自動化（Messaging）')">檢視自動化功能</button></span>
+    <span class="x" onclick="this.closest('.banner-caution').remove()" aria-label="關閉" style="cursor:pointer">✕</span></div>`
+  +listPage({key:'aband',title:'未完成結帳',doc:'doc-m-abandoned',ph:'搜尋結帳號、email…',
     actions:[['匯出','ghost',"toast('Demo：棄單可與訂單一起匯出')",'export'],['挽回信設定','sec','abandonSettings()','aband-auto']],
     views:[['全部',()=>true],['未恢復',r=>r.rec==='未恢復'],['已恢復',r=>r.rec!=='未恢復']],
     filters:[{k:'mail',l:'挽回信',opts:['已寄出','已排程','不適用'],test:(r,v)=>r.mail===v},
@@ -10020,13 +10066,26 @@ Object.assign(DOCS,{
 });
 
 /* ================= 訂單詳情：更多動作／退款面板（接上既有按鈕） ================= */
+/* 71-R7 實測：app 管道（匯入/第三方）訂單不可編輯——本尊彈 modal「無法編輯訂單：此 app 無法
+   編輯此訂單。瞭解詳情」。閘門依管道歸屬，非權限。 */
+function orderEditGate(){
+  const o=curOrder;
+  if(o.ch!=='線上商店'&&o.ch!=='訂單草稿'&&o.ch!=='門市 POS'){
+    openGen({title:'無法編輯訂單',body:`<div class="help">此 app（${H(o.ch)}）無法編輯此訂單。<a style="color:var(--link);cursor:pointer" onclick="toast('Demo：說明——管道歸屬訂單由來源 app 管理品項')">瞭解詳情</a></div>`,
+     foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button>`});
+    return;
+  }
+  toast('Demo：訂單編輯（加品項/調數量/補收退差）於 M4 後段');
+}
 function orderMore(){
   const o=curOrder;
   openGen({title:'更多動作',pad:false,body:`
     ${[['複製訂單','已複製為草稿訂單（不帶折扣與運費）'],['列印裝箱單','已產生裝箱單 PDF（Liquid 模板）'],['列印訂單','已產生訂單 PDF'],['查看訂單狀態頁','Demo：開啟顧客端訂單狀態頁']]
       .map(([t,m])=>`<button class="pick" onclick="closeGen();toast('${m}')"><span class="pk-i"><b>${t}</b></span><span class="chev">›</span></button>`).join('')}
     <button class="pick" onclick="closeGen();toast('已封存訂單')"><span class="pk-i"><b>封存</b><span>從預設檢視移除，不影響金額與出貨</span></span><span class="chev">›</span></button>
-    <button class="pick" onclick="closeGen();orderCancel()"><span class="pk-i"><b style="color:var(--critical)">取消訂單</b><span>需選原因；預設回補庫存</span></span><span class="chev">›</span></button>`});
+    <button class="pick" onclick="closeGen();orderCancel()"><span class="pk-i"><b style="color:var(--critical)">取消訂單</b><span>需選原因；預設回補庫存</span></span><span class="chev">›</span></button>
+    <p class="mut3" style="font-size:var(--t-2xs);padding:var(--sp-150) var(--sp-300) var(--sp-100)">App</p>
+    <button class="pick" onclick="closeGen();toast('Demo：物流 app 動作（本尊此組列已安裝 app 提供的訂單動作，如建立託運標籤）')"><span class="pk-i"><b>建立託運標籤（物流 pack）</b></span><span class="chev">›</span></button>`});
 }
 function orderCancel(){
   openGen({title:'取消訂單 #'+curOrder.id,body:`<div class="stack">

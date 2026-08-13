@@ -533,6 +533,22 @@ order:
   bulk_cancel_max_orders: 250
   # 匯出/批次動作轉背景 job 的門檻。出處：docs/research/22:160（ours）
   bulk_async_threshold: 50
+  # ===== 71-R7（2026-08-13，help）=====
+  # 匯出直接下載上限（超過或依日期→email 寄操作者+店主）。出處：help exporting-orders（help）
+  export_direct_download_max: 50
+  # 行動版 bulk 一次可選上限。出處：help bulk-actions（help）
+  bulk_select_mobile_max: 25
+  # 平台收款授權請款窗（天；逾期可能無法請款）；「即將到期」badge=截止前 2 天。出處：help capturing-payments（help）
+  payment_auth_capture_window_days: 7
+  payment_capture_due_badge_days: 2
+  # 延遲付款自動提醒上限（則；購買選項訂單不寄）。出處：help deferred-payments（help）
+  payment_reminders_max: 5
+  # 付款條款 net 值域。出處：help deferred-payments（help）
+  payment_terms_net_days: [7, 15, 30, 45, 60, 90]
+  # 運送標籤批次列印上限（張）。出處：71-R7 實測 shipping_labels promo＋sl-auto 既有值（test）
+  shipping_label_batch_max: 250
+  # 轉換摘要資料延遲上限（小時；cookie 封鎖時區塊空白）。出處：help conversion-summary（help）
+  conversion_summary_delay_max_hours: 48
   # 訂單編輯 session TTL 與並發鎖。
   # ⚠ Shopify 文檔未載明鎖/TTL/並發行為（46a:961、46a:988–989、46a:1061）→ 本專案決策。
   edit_session_ttl_hours: 24
