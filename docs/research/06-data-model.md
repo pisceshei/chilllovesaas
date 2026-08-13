@@ -181,7 +181,12 @@ subtotal(line items Σ)
 
 實作成純函式模組（輸入 cart/order + 設定，輸出金額明細與分攤），checkout、draft order、訂單編輯、退款計算全部重用同一個引擎——這是 Shopify「到處金額都對得上」的關鍵。
 
-## 7. 建議的表清單（demo 範圍，Postgres）
+## 7. 建議的表清單（demo 範圍）
+
+<!-- 依 D1（MySQL 8）批註修正標題，原文：「## 7. 建議的表清單（demo 範圍，Postgres）」。本節成文早於 D1 定案。 -->
+> ⚠ 本節草擬時假設 Postgres；**D1 已定 MySQL 8**——型別與索引語法一律以 MySQL 8 為準。
+> 特別注意 MySQL 特有陷阱：nullable 欄位進 UNIQUE 索引等於沒約束（NULL≠NULL，見 SESSION-EXPORT §5.8）、
+> 部分唯一要用生成欄位（`COALESCE`/`IF` 形態，m0/rails-skeleton 已有先例）。
 
 shops, staff_members, roles, role_permissions；products, product_options, option_values, product_variants, media, collections, collection_products, collection_rules；inventory_items, locations, inventory_levels, inventory_adjustments；customers, customer_addresses；checkouts, orders, line_items, order_transactions, fulfillment_orders, fulfillments, refunds, refund_line_items, events(timeline)；discounts, discount_applications；themes, templates, theme_settings, menus, menu_items, pages, files；shipping_profiles, shipping_zones, shipping_rates；tax_settings；notification_templates；metafield_definitions, metafields；segments；event_outbox；sessions/api_tokens。約 40 張表——這就是「早期 Shopify 骨幹」的實際大小。
 

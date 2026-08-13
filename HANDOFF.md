@@ -110,7 +110,9 @@ docs/design/critique-*    ← 設計評審紀錄
 3. **每完成一段**：跑測試 → 對照 specs 驗收清單 → commit（訊息格式 `M1: products CRUD with variant diff`）→ push。
 4. **註釋與文檔強制**：public 介面文檔註釋＋複雜邏輯「為什麼」註釋（引用規格出處）＋每個功能一篇 `docs/dev/m{N}-{功能}.md`（規範見 `AGENTS.md`、模板見 `docs/dev/README.md`）；驗收逐項檢查，缺了打回。
 4. **不確定時**：查 docs 對應章節；仍不確定 → 在 PR/commit 註明假設，不要靜默猜。
-5. 文案語言：繁體中文為主，技術名詞保留英文；金額顯示 `NT$1,480`（tabular-nums）。
+5. 文案語言：繁體中文為主，技術名詞保留英文；金額顯示 `HK$1,480`（tabular-nums），實際符號與小數位由市場的 locale 決定，不得硬編。
+   <!-- 依 2026-08-12「基準法域＝香港」裁定（CLAUDE.md 鐵律 10/11）修正，原文：「金額顯示 `NT$1,480`（tabular-nums）。」
+        🔴 本檔開頭已聲明以 SESSION-EXPORT 為準，但這種殘句正是「翻舊版改回去」事故的火種，故一併修掉。 -->
 
 ## 8. 目前倉庫狀態
 

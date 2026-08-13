@@ -10,7 +10,7 @@
 | 框架 | **Rails 8.1**（8.1.3 現行穩定版） | rails gem 8.1.x | Solid Queue/Cache/Cable 內建，**不需要 Redis** |
 | DB | MySQL | 8.4 LTS | 與本尊一致；`mysql2` gem |
 | 後台前端 | React 19 + Vite | `vite_rails` gem | SPA 掛在 Rails layout 下 |
-| 前台 | Rails SSR + **Hotwire**（Turbo + Stimulus）+ ViewComponent | rails 內建 | Turbo ≈ Section Rendering API 的天然等價物 |
+| 前台 | ~~Rails SSR + **Hotwire**（Turbo + Stimulus）+ ViewComponent~~ **→ Liquid 相容主題引擎（D4，見 `docs/research/25`）** | `liquid` gem（MIT）＋自實作平台層 | 本列原文早於 D4；ViewComponent 簡化案已被取代<!-- 依 D4（docs/research/25）批註，原文：「Rails SSR + Hotwire（Turbo + Stimulus）+ ViewComponent」 --> |
 | 佇列/快取 | Solid Queue / Solid Cache（DB-backed） | rails 內建 | 對齊 08 的「用 DB 佇列」結論 |
 | 金流 | Stripe test mode | `stripe` gem + Stripe.js Elements | |
 | 模板語言 | **Liquid gem（Shopify 官方開源、MIT）** | `liquid` | 通知信模板直接用真 Liquid，完全合法 |
@@ -43,6 +43,11 @@ namespace :admin do                        # 平台後台（React SPA）
   namespace :api do resources :products, :orders, :customers end
 end
 ```
+
+> ⚠ **本草稿早於 D5，不得照抄**（2026-08-13 批註）：上面 `namespace :api do resources ... end` 是 REST 形態，
+> 與 D5「admin SPA 只打 `/admin/api/{version}/graphql.json`」直接衝突——admin API 一律以 `docs/research/28` 的
+> GraphQL 契約為準。本草稿僅 subdomain 前台路由與 SPA catch-all 兩段仍可參考。
+> （m0/rails-skeleton 骨架的實際路由已是 GraphQL 單端點，可對照。）
 
 ```ruby
 # app/controllers/concerns/set_current_shop.rb
