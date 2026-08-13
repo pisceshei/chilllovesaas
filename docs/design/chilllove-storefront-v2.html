@@ -328,6 +328,17 @@ footer p{max-width:34ch;line-height:1.8}
 .f-sel{display:flex;gap:var(--sp-10);flex-wrap:wrap}
 .f-sel select{height:38px;background:transparent;border:var(--hairline) solid rgba(var(--sand-rgb),.3);color:var(--dust);border-radius:var(--r-2);padding:0 30px 0 var(--sp-12);font:inherit;font-size:var(--t-12);
   appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23b7ab9b' stroke-width='1.4'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+/* 語言切換器（67 §F.2）：必須是真實 <a href>，不是 select——那是爬蟲發現其他語言版本的路徑之一。
+   頁尾（深底）與抽屜（淺底）共用同一支產生器，配色靠 .loc-sw 落在哪一個容器裡決定。 */
+.loc-sw{display:flex;gap:var(--sp-6);flex-wrap:wrap;align-items:center}
+.loc-sw a{display:inline-flex;align-items:baseline;gap:var(--sp-5);height:38px;padding:0 var(--sp-12);
+  border:var(--hairline) solid rgba(var(--sand-rgb),.3);border-radius:var(--r-2);
+  color:var(--dust);font-size:var(--t-12);text-decoration:none;line-height:36px}
+.loc-sw a i{font-style:normal;font-size:var(--t-10);opacity:.62;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.loc-sw a:hover{color:var(--sand-2)}
+.loc-sw a[aria-current="true"]{color:var(--cream);border-color:rgba(var(--sand-rgb),.7)}
+.dr-body .loc-sw a{border-color:var(--line);color:var(--ink-2);height:40px;line-height:38px}
+.dr-body .loc-sw a[aria-current="true"]{color:var(--ink);border-color:var(--ink);background:var(--cream)}
 .f-bottom{border-top:var(--hairline) solid rgba(var(--sand-rgb),.14);padding-top:var(--sp-22);display:flex;gap:var(--sp-18);flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-mute)}
 .f-bottom a{color:inherit;text-decoration:none}
 .f-bottom a:hover{color:var(--sand-2)}
@@ -1192,7 +1203,7 @@ table.spec th{background:var(--cream);font-weight:600}
       <p>慢下來，好好穿。基本款服飾品牌，台灣設計製造。</p>
       <div class="f-sel" style="margin-top:18px" data-doc="footerloc">
         <select class="fsel-c" id="fMarketSel" aria-label="國家／地區" onchange="setMarket(this.value)"></select>
-        <select class="fsel-l" id="fLocaleSel" aria-label="語言" onchange="setLocale(this.value)"></select>
+        <span class="fsel-l" id="fLocaleSw"></span>
       </div>
     </div>
     <div class="f-col" data-doc="footermenu"><b>選購</b><a href="#/collections/new">新品上市</a><a href="#/collections/tops">上衣・帽T</a><a href="#/collections/outer">襯衫・外套</a><a href="#/collections/accessories">包袋・配件</a><a href="#/collections/sale">特惠專區</a><a href="#/products/gift-card">禮品卡</a></div>
@@ -1336,7 +1347,14 @@ const CURRENCY_FORMATS={
  TWD:{code:"TWD",symbol:"NT$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
  MYR:{code:"MYR",symbol:"RM", exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
  USD:{code:"USD",symbol:"US$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
- JPY:{code:"JPY",symbol:"¥",  exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."}
+ JPY:{code:"JPY",symbol:"¥",  exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."},
+ /* CAD 的符號取 `CA$` 不取 `C$`（查證日 2026-08-13）：
+    ① CLDR `en` locale 的 currencies.json：CAD `symbol` = `CA$`、`symbol-alt-narrow` = `$`
+       （unicode-org/cldr-json · cldr-numbers-full/main/en/currencies.json）。
+       裸 `$` 只在 en-CA 自己的 locale 內無歧義，跨 locale 一律用 `CA$`。
+    ② 同一份檔案裡 NIO（尼加拉瓜科多巴）的 `symbol-alt-narrow` 正是 `C$` ⇒ 用 `C$` 表示加幣
+       會與另一個 ISO 4217 幣別撞符號。做全球市場（鐵律 11）不採撞符號的寫法。 */
+ CAD:{code:"CAD",symbol:"CA$",exponent:2,position:"prefix",grouping:3,group_sep:",",decimal_sep:"."}
 };
 /* /CURRENCY-TABLE */
 /* position 目前五個市場都是 prefix；欄位仍然存在並被 fmtLocal() 讀取，因為後綴幣別
@@ -1354,14 +1372,155 @@ const CURRENCY_FORMATS={
    刻意取整到好記的比例（TWD ≈ 4×HKD），**不是即期匯率、不代表精確**；
    正式版走 29 §2／§5 的 presentment 幣別與 price list，rounding 由 market 設定決定。
    ================================================================== */
+/* 🔴 `locales` ＝ **③ market_locales（此市場對買家開放的語言白名單）**，67 §A.5 的前台投影；
+   `defaultLocale` ＝ 29 §1.4 的 `default_shop_locale`（地區重導的落點、切國家後的回落目標）。
+   ⇒ 這兩個欄位是**市場資料**，不是語言資料。它們決定「切換器列什麼」，
+     **不決定**譯文內容——同一個 `zh-Hant` 在香港與加拿大是**同一格資料**（見 §0-d SF_TR）。
+   2026-08-13 裁定逐字：香港＝繁中／簡中／英（預設繁中）；加拿大＝英／法／繁中／簡中（預設英）。
+   `regions` 是 ISO 3166-1 alpha-2 清單：URL 前綴與 hreflang 碼的地區位都從它來（62 §I.2）。 */
 const DEFAULT_MARKET="HK";
 const MARKETS={
- HK:{code:"HK",name:"香港",    currency:"HKD",jurisdiction:"hk", rate_ppm:1000000},
- TW:{code:"TW",name:"台灣",    currency:"TWD",jurisdiction:"tw", rate_ppm:4000000},
- MY:{code:"MY",name:"馬來西亞",currency:"MYR",jurisdiction:null, rate_ppm:540000},
- US:{code:"US",name:"美國",    currency:"USD",jurisdiction:null, rate_ppm:128000},
- JP:{code:"JP",name:"日本",    currency:"JPY",jurisdiction:null, rate_ppm:19000000}
+ HK:{code:"HK",name:"香港",    regions:["HK"],currency:"HKD",jurisdiction:"hk", rate_ppm:1000000,
+     locales:["zh-Hant","zh-Hans","en"],       defaultLocale:"zh-Hant",
+     free_ship_base_cents:50000, not_for_sale:[]},
+ /* 加拿大：與香港**共用同一份譯文**，但幣別（CAD）／免運門檻／可售品項各自獨立。
+    rate_ppm＝demo 固定換算率（1 HKD ≈ 0.18 CAD，取整到好記的比例），**不是即期匯率**。 */
+ CA:{code:"CA",name:"加拿大",  regions:["CA"],currency:"CAD",jurisdiction:null, rate_ppm:180000,
+     locales:["en","fr","zh-Hant","zh-Hans"],  defaultLocale:"en",
+     /* 可售性也是市場資料：加拿大不販售禮品卡（儲值屬法域監管能力，56 §B；pack 未建立 ⇒ 不開放）
+        與短襪（該市場沒有進貨）。🔴 這是**資料**不是 if 分支——沒有任何一行寫 `if (market === 'CA')`。 */
+     free_ship_base_cents:80000, not_for_sale:["gift-card","cotton-socks"]},
+ TW:{code:"TW",name:"台灣",    regions:["TW"],currency:"TWD",jurisdiction:"tw", rate_ppm:4000000,
+     locales:["zh-Hant","zh-Hans","en"],       defaultLocale:"zh-Hant",
+     free_ship_base_cents:60000, not_for_sale:[]},
+ MY:{code:"MY",name:"馬來西亞",regions:["MY"],currency:"MYR",jurisdiction:null, rate_ppm:540000,
+     locales:["en","zh-Hans"],                 defaultLocale:"en",
+     free_ship_base_cents:70000, not_for_sale:["gift-card"]},
+ US:{code:"US",name:"美國",    regions:["US"],currency:"USD",jurisdiction:null, rate_ppm:128000,
+     locales:["en"],                           defaultLocale:"en",
+     free_ship_base_cents:90000, not_for_sale:["gift-card"]},
+ JP:{code:"JP",name:"日本",    regions:["JP"],currency:"JPY",jurisdiction:null, rate_ppm:19000000,
+     locales:["en","zh-Hant"],                 defaultLocale:"en",
+     free_ship_base_cents:70000, not_for_sale:["gift-card"]}
 };
+
+/* ==================================================================
+   §0-b2 語言：② shop_locales 的前台投影 ＋ 前綴／碼的推導（67 §A.5・§F.1／62 §I.2）
+   ------------------------------------------------------------------
+   🔴 **三層真包含**（67 §A.5(a)）：① 平台字典 ⊇ ② 本表（商店啟用集）⊇ ③ MARKETS[].locales。
+      前台只吃 ②∩③∩published，其餘一律不列、不連結、不進矩陣。
+   🔴 **語言 ≠ 市場**（67 §A.1）：切語言只換文字與 URL 前綴，**不換幣別、不換運費、不換可售性**；
+      切市場只換市場資料，**不換一個字的譯文**。兩件事各自獨立到「同一格譯文被兩個市場共用」
+      的程度——這正是下面 SF_TR 的鍵裡**沒有 market 這一維**的原因。
+   🔴 `published` 是**曝光決策**不是品質分數：法文有譯文（覆蓋率刻意不完整），
+      切成未發布之後它的 URL 立刻 404、從切換器消失（67 §A.5(c) 情形 4）。
+      本檔的示範起點是**已發布**（才看得到「加拿大 4 個選項」這個裁定要的畫面）；
+      admin 那一份的示範起點是**未發布**（才看得到 hreflang 閘門把它擋掉）。
+      🔴 兩邊是**同一個旗標的兩個示範時點**，不是兩份資料——「地區與語言」抽屜裡有開關可以來回切。 */
+const SF_SOURCE_LOCALE="zh-Hant";
+let SF_LOCALES=[
+ {tag:"zh-Hant",endonym:"繁體中文",short:"繁中",source:true, published:true},
+ {tag:"zh-Hans",endonym:"简体中文",short:"简中",source:false,published:true},
+ {tag:"en",     endonym:"English", short:"EN",  source:false,published:true},
+ {tag:"fr",     endonym:"Français",short:"FR",  source:false,published:true}];
+const sfLoc=t=>SF_LOCALES.find(x=>x.tag===t)||SF_LOCALES[0];
+const sfPublished=t=>!!(SF_LOCALES.find(x=>x.tag===t)||{}).published;
+/* ③ ∩ published ——🔴 切換器的**唯一**值域（67 §F.2）。列出未發布語言＝產生一條 404 連結，
+   而站內任何一條 404 的語言連結都是 bug。 */
+function sfOpenLocales(mk){
+  return ((mk||marketOf()).locales||[]).filter(t=>SF_LOCALES.some(l=>l.tag===t)&&sfPublished(t));
+}
+/* 🔴 `sfPrefix()` 回**一個字串**（路由用，全小寫）；`sfHreflangCodes()` 回**一組碼**（標註用，大寫地區）。
+   基數 1 : N ⇒ **型別不同，不得合併**（67 §F.1(a)）：合併後路由層只能取 `.first`，
+   而那一行 `.first` 會在第一個多國市場上選到一個看起來對的國家。共用原料，不共用出口。 */
+const sfPrefix=(mk,tag)=>("/"+tag+"-"+(mk.regions[0]||mk.code)).toLowerCase();
+const sfHreflangCodes=(mk,tag)=>(mk.regions||[mk.code]).map(c=>tag+"-"+c.toUpperCase());
+/* 前綴 ≡ (market, locale) 身分（67 §F.1(c)）⇒ 路由解析就是一行查表。
+   🔴 表**只收 open ∩ published**：所以「該市場沒開的語言」與「未發布的語言」自動落到未命中，
+      而未命中的處置是 **404**，不是 302（§A.5(c) 三條連帶紀律的第二條明文禁止 302）。 */
+function sfPrefixMap(){
+  const map={};
+  Object.values(MARKETS).forEach(mk=>sfOpenLocales(mk).forEach(tag=>{
+    const k=sfPrefix(mk,tag).slice(1);
+    if(map[k])console.error("[route] 前綴衝突「"+k+"」——UNIQUE (shop_id, domain_id, url_prefix) 被違反（67 §F.1(c)）");
+    map[k]={market:mk.code,locale:tag};
+  }));
+  return map;
+}
+/* 看起來像 locale 前綴的第一路徑段（67 §F.1(b) 的形狀約束）。
+   認得出形狀、但查不到 ⇒ 情形 1／3／4 ⇒ 404；形狀就不像 ⇒ 這條路徑沒有語言身分 ⇒ 補前綴。 */
+const SF_PREFIX_SHAPE=/^[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}$/;
+
+/* ==================================================================
+   §0-d 內容譯文（67 §B 可翻欄位／§C.2 translations／§C.4 fallback 鏈）
+   ------------------------------------------------------------------
+   🔴 **鍵裡沒有 market 這一維**：`locale : handle : field`。這是本輪最重要的一條不變量——
+      加拿大的繁中與香港的繁中是**同一格資料**。把 market 加進鍵裡（或把譯文掛到市場底下）
+      的後果是：商家在香港改了一次標題，加拿大版沒有變，而且**沒有任何錯誤訊息**，
+      要等到有人同時開兩個市場的頁面對照才會發現。
+      （29 §2 的 per-market 覆寫是**另一層**、且是**選配的覆寫**，不是譯文的儲存粒度；
+        本原型不做那一層，所以這裡是純語言維度。）
+   🔴 **法文刻意不完整**：只有兩個商品有譯文。缺譯時走 67 §C.4 的鏈：
+      語言層 → BCP-47 截尾（fr 沒有可截的父層 ⇒ 空鏈）→ **來源語言原文**。
+      🔴 不得靜默空白，也不得回落到「另一個看起來很近的語言」。
+   🔴 `zh-Hant ⇄ zh-Hans` **永不互為 fallback**（67 §A.4）：字體借用是整頁文字都不對。 */
+const SF_TR={
+ en:{
+  "oat-hoodie":{n:"Milk Tea Oversized Hoodie",desc:"400gsm heavyweight organic cotton, drop-shoulder oversized cut, triple-needle stitched in Taiwan. Holds its shape after washing — it took us 14 samples to lock this pattern."},
+  "denim-shirt":{n:"Washed Denim Shirt",desc:"Stone-washed mid-weight denim that feels three years old on day one. Shell buttons, single chest pocket."},
+  "cotton-tee":{n:"Organic Cotton Crew Tee (3-Pack)",desc:"Three everyday white tees. Ribbed collar reinforcement keeps the neckline from sagging after a hundred washes."},
+  "oat-cardigan":{n:"Oat Knit Cardigan",desc:"Mid-weight wool blend knit with a drop shoulder and straight hem. Wear it alone in spring, layer it in winter."},
+  "wide-pants":{n:"Floor-Length Wide Trousers",desc:"Drapey Tencel blend with an elastic back waist and front pleats. At 165cm, size S grazes the floor."},
+  "canvas-tote":{n:"Canvas Tote — Natural",desc:"16 oz undyed canvas with a two-layer inner pocket. Fits a 15-inch laptop and your lunch box."},
+  "wool-scarf":{n:"Long Wool Scarf",desc:"100% merino wool, 200 × 32 cm. Never itchy, never pills."},
+  "linen-shirt":{n:"Long-Sleeve Linen Shirt",desc:"European linen yarn that softens with every wash. All sizes are restocking — back-in-stock alerts are open."},
+  "cotton-socks":{n:"Organic Cotton Ankle Socks (2 Pairs)",desc:"Cushioned sole, no-dig cuff. Two pairs per set."},
+  "gift-card":{n:"CHILL LOVE Gift Card",desc:"A digital gift card. The redemption code is emailed after payment and you can schedule the delivery date. No expiry, non-refundable."}},
+ "zh-Hans":{
+  "oat-hoodie":{n:"奶茶色宽版帽T",desc:"400g 重磅有机棉、落肩宽版，台湾三本针缝制。水洗后不变形，是我们打样了 14 次才定案的版型。"},
+  "denim-shirt":{n:"水洗丹宁衬衫",desc:"石洗处理的中磅丹宁，第一次穿就有穿了三年的柔软度。贝壳扣、单边口袋。"},
+  "cotton-tee":{n:"有机棉圆领白T（三件组）",desc:"一次三件的日常白T。领口加了罗纹补强，洗一百次也不会松垮。"},
+  "oat-cardigan":{n:"燕麦色针织开衫",desc:"羊毛混纺中厚针织，落肩＋直筒下摆。春秋单穿、冬天当中层都刚好。"},
+  "wide-pants":{n:"落地宽裤",desc:"垂坠感天丝混纺，腰后松紧、前方打褶。165cm 穿 S 刚好落地。"},
+  "canvas-tote":{n:"厚磅帆布托特包",desc:"16 oz 未染帆布，内袋两层，装得下 15 吋笔电与便当。"},
+  "wool-scarf":{n:"羊毛长围巾",desc:"100% 美丽诺羊毛，200 × 32 cm 长版，不刺、不起球。"},
+  "linen-shirt":{n:"亚麻长袖衬衫",desc:"欧洲亚麻纱，越洗越软。全尺寸目前补货中，开放到货通知。"},
+  "cotton-socks":{n:"有机棉短袜（双入）",desc:"厚底、无勒痕束口。一次两双。"},
+  "gift-card":{n:"CHILL LOVE 礼品卡",desc:"数位礼品卡，付款后以 email 寄送兑换码，可指定寄送日期。无使用期限、不可退款。"}},
+ fr:{
+  /* 🔴 只有兩筆。其餘商品在法文版會回落到來源語言原文（繁中）並標 lang 屬性——
+     那是 67 §C.4「必翻欄位缺譯 ⇒ 顯示來源語言原文」的正確行為，**不是畫面壞了**。 */
+  "oat-hoodie":{n:"Sweat à capuche oversize Milk Tea",desc:"Coton lourd 400 g/m², coupe oversize à épaules tombantes. Le coloris milk tea est la pièce maîtresse de la saison."},
+  "cotton-tee":{n:"T-shirt col rond en coton bio (lot de 3)"}}
+};
+/* 67 §C.4 的鏈：語言層 → BCP-47 截尾（只截尾、不跨枝）→ 來源語言 base row。
+   回傳 {v, from}：`from !== 當前 locale` ⇒ 這段文字**不是**當前語言，大段文字要標 lang 屬性
+   （67 §C.4／§B.1：螢幕閱讀器才不會用錯的語音讀，hreflang 宣稱也才誠實）。 */
+function sfTr(handle,field,src){
+  const loc=STATE.locale;
+  if(loc===SF_SOURCE_LOCALE)return{v:src,from:loc};
+  const hit=((SF_TR[loc]||{})[handle]||{})[field];
+  if(hit)return{v:hit,from:loc};
+  let t=loc;
+  while(t.includes("-")){                       /* 截尾鏈；裸 zh 是禁用碼，這裡不會產生 */
+    t=t.slice(0,t.lastIndexOf("-"));
+    const h2=((SF_TR[t]||{})[handle]||{})[field];
+    if(h2)return{v:h2,from:t};
+  }
+  return{v:src,from:SF_SOURCE_LOCALE};
+}
+/* 全站商品文字的**唯一**入口（鐵律 7）：任何地方直接讀 p.n 就是一個切語言不會變的地方。 */
+const pName=p=>sfTr(p.h,"n",p.n).v;
+const pDesc=p=>sfTr(p.h,"desc",p.desc).v;
+/* 大段回落文字加 lang（短欄位不加，避免 DOM 噪音）——67 §C.4 的 mark_fallback_with_lang_attribute_on */
+function pDescHTML(p){
+  const r=sfTr(p.h,"desc",p.desc);
+  return r.from===STATE.locale?"<p>"+esc(r.v)+"</p>"
+    :'<p lang="'+esc(r.from)+'">'+esc(r.v)+'</p>'
+     +'<p class="mut fs12">↖ 這一段還沒有'+esc(sfLoc(STATE.locale).endonym)+'譯文，顯示的是來源語言原文（67 §C.4：顯示原文優於顯示空白）。</p>';
+}
+/* 可售性是**市場資料**（29 §1.3 catalog 的前台投影），不是商品屬性 */
+const sellableHere=p=>!((marketOf().not_for_sale)||[]).includes(p.h);
 
 /* ==================================================================
    §0-c 金額：全程 integer（鐵律 3 —— 出現 float 即 bug）
@@ -1401,7 +1560,10 @@ function fmtLocal(minor,ccy){
 /* 全站金額入口：base cents → 當前市場的顯示字串 */
 function fmt(baseCents){return fmtLocal(toMinor(baseCents),curOf().code);}
 const M=n=>'<span class="m">'+fmt(n)+'</span>';
-const FREE_SHIP=50000;   /* 免運門檻＝港幣 500 元（base cents）；正式版為 per-market 設定（29 §5 price list） */
+/* 🔴 免運門檻是**市場資料**不是全域常數（29 §5 price list）：加拿大與香港各有各的門檻。
+   值是 base cents（基準幣別 HKD 的 1/100），顯示時經 fmt() 換算＋格式化 ⇒ 同一個門檻
+   在香港顯示港幣、在加拿大顯示加幣。🔴 切語言**不會**動到它，切市場才會（67 §A.1）。 */
+const freeShip=()=>marketOf().free_ship_base_cents;
 
 const GARMENTS={
  hoodie:'<path d="M70 38l-38 22 14 34 18-8v96h72v-96l18 8 14-34-38-22a30 18 0 01-60 0z"/><path d="M70 38c0 16 13 26 30 26s30-10 30-26M85 20c2-8 28-8 30 0" opacity=".7"/>',
@@ -1860,7 +2022,7 @@ function rebindPackData(){const pk=packOf();ORDERS=pk.orders;ADDRS=pk.addresses;
 /* 公告列：文案含金額與取貨方式 ⇒ 由 pack 提供樣板，金額走 fmt() 填入 */
 function annList(){
   const pk=packOf(),pt=(pk.delivery.methods||[]).find(m=>m.k==="point");
-  return pk.ann.map(t=>t.replace("{{FREE}}",fmt(FREE_SHIP)).replace("{{POINT}}",pt?fmt(pt.fee):"—"));
+  return pk.ann.map(t=>t.replace("{{FREE}}",fmt(freeShip())).replace("{{POINT}}",pt?fmt(pt.fee):"—"));
 }
 /* 首頁 FAQ：出貨時效／單據制度／門市全部是法域素材，所以逐條由 pack 決定 */
 function faqList(){
@@ -1912,7 +2074,9 @@ function marketLabel(mk){return mk.name+" · "+CURRENCY_FORMATS[mk.currency].sym
 function renderMarketChrome(){
   const mk=marketOf(),pk=packOf();
   const lb=$("#locBtnTxt");if(lb)lb.textContent=marketLabel(mk)+"（"+sfLoc(STATE.locale).short+"）";
-  const ls=$("#fLocaleSel");if(ls)ls.innerHTML=sfLocaleOptions(STATE.locale);
+  /* 🔴 頁尾的語言切換器是**常駐在 DOM 裡的真實連結**（67 §F.2）：抽屜裡那一組要點開才存在，
+     爬蟲看不到；頁尾這一組是它們發現其他語言版本的路徑。兩組共用同一支 sfLocaleLinks()。 */
+  const ls=$("#fLocaleSw");if(ls)ls.innerHTML=sfLocaleLinks("footer");
   document.documentElement.lang=STATE.locale;
   const ms=$("#fMarketSel");
   if(ms)ms.innerHTML=Object.values(MARKETS).map(m=>'<option value="'+m.code+'" '+(m.code===mk.code?"selected":"")+'>'+esc(m.name)+" ("+esc(CURRENCY_FORMATS[m.currency].symbol)+")</option>").join("");
@@ -1938,7 +2102,9 @@ function helpLinks(){
 const STATE={
   cart:[], note:"", discount:null, terms:false,
   customer:null, listState:"ok", recent:[], cookie:null, ck:{analytics:true,marketing:true,pref:true},
-  market:DEFAULT_MARKET, locale:"zh-Hant",
+  /* 🔴 這兩個值是 URL 解析的結果，不是狀態的來源（67 §F.1(c)：market_determined_by = url_only）。
+     初值只是第一次 route() 之前的佔位；route() 一跑就會被 URL 前綴覆蓋。 */
+  market:DEFAULT_MARKET, locale:MARKETS[DEFAULT_MARKET].defaultLocale,
   co:{step:1,email:"",subscribe:true,method:"home",rate:"std",cvs:null,pay:"card",
       receipt:"email",
       inv:"personal",carrier:"member",carrierCode:"",taxId:"",title:"",donate:"25885",tip:0,
@@ -2012,7 +2178,7 @@ function shippingFee(method){
   if(!cartRequiresShipping())return 0;
   const after=cartSubtotal()-discountAmount();
   if(STATE.discount&&STATE.discount.type==="ship")return 0;
-  if(after>=FREE_SHIP)return 0;
+  if(after>=freeShip())return 0;
   const ex=packOf().delivery.express;
   if(STATE.co.rate==="exp"&&ex)return ex.fee;
   const m=dmOf(method);return m?m.fee:0;
@@ -2061,6 +2227,64 @@ function parseHash(){
   const i=raw.indexOf("?");
   return {path:i<0?raw:raw.slice(0,i),q:new URLSearchParams(i<0?"":raw.slice(i+1)),raw};
 }
+/* ==================================================================
+   locale 前綴路由（67 §F.1(b)(c)・§A.5(c)；62 §I 的 V-221 根路徑定案）
+   ------------------------------------------------------------------
+   🔴 **前綴 ≡ (market, locale) 身分**（§F.1(c)）⇒ 路由解析就是一行查表：
+        剝第一路徑段 → 查 (prefix) → 命中 ⇒ (market, locale)，繼續
+                                  → 未命中 ⇒ 404（§A.5(c) 情形 1／3／4 全部走這裡）
+      在舊規則（`/en` 這種裸語言前綴）下這件事做不到：前綴不帶市場資訊 ⇒ 市場要另外從
+      GeoIP／cookie 推 ⇒ **同一條 URL 對不同人是不同市場 ⇒ 不同幣別、不同價格、不同 hreflang**。
+      恆帶地區順手修掉了這個洞，所以 `market_determined_by: url_only`。
+   🔴 **未命中不得用 302 導到該市場的預設語言**（§A.5(c) 三條連帶紀律之二），三個理由：
+      ①重導的 URL 不能進 hreflang（62 §0.2 原則 4）而它看起來很像該進去；
+      ②Google 會把重導來源與目標視為同一頁 ⇒ 用重導製造了裁定要避免的那種混淆；
+      ③商家改白名單時，一批 URL 從 200 變 302 再變 404，索引狀態抖三次。**404 一次到位。**
+   🔴 **根路徑 `/` 一律 302 到預設前綴**（limits.yml `i18n.locale_prefix.root_path_behavior:
+      redirect_to_default_prefix`，⚠ 我方推導 V-221）：根路徑**不是內容頁**——不進 sitemap、
+      不進 hreflang、不作為 x-default 的目標。若對爬蟲回 200，爬蟲會索引一個與
+      `/{預設前綴}/` 逐位元組相同的頁面，那就是自製重複。
+      🔴 爬蟲**不豁免**這個重導：它與 62 §K.2 的地區重導是兩件事——地區重導是「依訪客推測市場」
+         （爬蟲豁免，因為它會讓不同客戶端看到不同內容）；根重導是「這條路徑沒有內容」
+         （對所有客戶端相同）⇒ 不套用爬蟲豁免是正確的，而且必須如此。
+      用 302 不是 301：預設市場會變。
+   ⚠ **原型邊界**：本檔是 hash 路由，所以「302」以 `location.replace()` 表達（不留歷史紀錄，
+      這是 302 在 SPA 裡最接近的形態）。正式版是伺服器端 302。 */
+let SF_REDIRECTS=[],SF_BOOTED=false;
+function sfResolvePrefix(path){
+  const seg=(path.split("/")[1]||"");
+  const hit=sfPrefixMap()[seg];
+  if(hit)return{market:hit.market,locale:hit.locale,rest:path.slice(seg.length+1)||"/"};
+  if(SF_PREFIX_SHAPE.test(seg))                     /* 形狀像前綴但查不到 ⇒ 這條路由不存在 */
+    return{notFound:seg};
+  /* 形狀不像前綴 ⇒ 這條路徑沒有語言身分。根路徑走「預設前綴」，其餘保留當前 context。
+     🔴 後者是**原型的補綴 shim**，對應 67 §F.4 的 lint：站內硬編的 `href="#/products/…"`
+        沒有經過 routes 過前綴。正式版那是 theme-check 的 warning ＋ 匯入 degradation report，
+        不是路由層的責任；這裡補綴是為了不必改動數百條既有連結。 */
+  /* 🔴 這裡把「根路徑」與「站內連結掉了前綴」分成**兩種情形**，因為它們是兩條不同的規格：
+       ① 真正的根請求（本 session 的第一次解析，＝直接輸入網域進來）⇒ 67 §F.1(b)／V-221：
+          302 到**預設市場的預設前綴**。根路徑不是內容頁，這一條對所有客戶端相同、爬蟲不豁免。
+       ② session 中途出現的無前綴路徑（含 `href="#/"` 這種硬編首頁連結）⇒ 67 §F.4：
+          那是「主題沒有經 routes 過前綴」的形態，正確處置是**補上當前 context 的前綴**，
+          而不是把買家踢回預設市場——後者正是 §F.4 說的「切語言功能看起來壞了」的最常見症狀。
+     🔴 原型的邊界：hash 路由分不出「使用者在網址列貼上 #/」與「點到一條沒前綴的站內連結」，
+        所以用「是不是第一次解析」來區分。正式版分得出來（前者是一個新的 HTTP 請求）。 */
+  const root=path==="/"||path==="";
+  const fresh=root&&!SF_BOOTED;
+  const mk=fresh?MARKETS[DEFAULT_MARKET]:marketOf();
+  const loc=fresh?MARKETS[DEFAULT_MARKET].defaultLocale
+    :(sfOpenLocales(mk).includes(STATE.locale)?STATE.locale:mk.defaultLocale);
+  return{redirect:sfPrefix(mk,loc)+(root?"/":path),root:fresh};
+}
+function sfDo302(to,root){
+  const from=location.hash||"#/";
+  if(from==="#"+to)return false;                    /* 自我重導的保險絲：不得形成重導鏈 */
+  SF_REDIRECTS.push({from,to:"#"+to,root:!!root});
+  console.info("[route] 302 "+from+" → #"+to+(root?"（根路徑不是內容頁：67 §F.1(b)／V-221）":"（站內連結未經 routes 前綴：67 §F.4 的 lint 形態，原型於路由層補綴）"));
+  if(root&&typeof toastf==="function")setTimeout(()=>toastf("302 "+from+" → #"+to+"　根路徑不是內容頁（67 §F.1(b)／V-221）：不進 sitemap、不進 hreflang、不是 x-default 的目標"),80);
+  location.replace(location.pathname+location.search+"#"+to);
+  return true;
+}
 /* 47 §D 徽章狀態圖示：形狀本身即編碼狀態，色相只是輔助（WCAG 1.4.1 Use of Color）。
    ● full = 已完結（已付款／已送達／已退款／已退貨）｜⊘ blocked = 進行中或受阻（運送中／退貨處理中）｜○ = 未開始。 */
 const DONE_STATES=["已付款","已送達","已退款","已退貨","已完成"];
@@ -2093,6 +2317,21 @@ const ROUTES=[
 ];
 function route(silent){
   CUR=parseHash();
+  /* 語言前綴先解析：它決定 (market, locale)，而市場決定幣別／運費／可售性／pack。
+     必須在 view 之前——否則第一次繪製會用上一個 context 的金額。 */
+  const lr=sfResolvePrefix(CUR.path);
+  if(lr.redirect){if(sfDo302(lr.redirect,lr.root))return;}
+  else if(lr.notFound){
+    CUR.path="/404";
+    paint(view404(lr.notFound));document.title="404 — CHILL LOVE";return;
+  }else{
+    /* 🔴 順序有意義：先把 CUR.path 換成**剝掉前綴後**的路徑，再套 context。
+       反過來的話 sfApplyContext → renderMarketChrome → sfLocaleLinks 會拿到還帶前綴的
+       CUR.path，於是切換器產生 `#/en-ca/en-ca/` 這種疊了兩層前綴的死連結。 */
+    CUR.path=lr.rest;
+    if(lr.market!==STATE.market||lr.locale!==STATE.locale)sfApplyContext(lr.market,lr.locale);
+  }
+  SF_BOOTED=true;
   const seq=++SEQ;
   let hit=null,mm=null;
   for(const r of ROUTES){const m=CUR.path.match(r[0]);if(m){hit=r;mm=m;break;}}
@@ -2116,6 +2355,18 @@ function afterPaint(){
 }
 function go(h){if(location.hash===h)route();else location.hash=h;}
 window.addEventListener("hashchange",()=>route());
+/* 套用 URL 帶來的 (market, locale)。🔴 **URL 是唯一來源**——不是 cookie、不是 Accept-Language
+   （67 §F.2：同一 URL 對不同人回不同語言是本節要防的唯一事故；`SF-2` 就是在測這件事）。
+   市場變了才重綁 pack 資料；語言變了只重繪文字——兩者各自獨立，這一點靠下面兩個 if 成立。 */
+function sfApplyContext(marketCode,tag){
+  const mchanged=STATE.market!==marketCode;
+  STATE.market=marketCode;STATE.locale=tag;
+  if(mchanged)applyMarket();          /* 幣別／運費／可售性／pack ⇒ 市場維度 */
+  else renderMarketChrome();          /* 只換文字與前綴 ⇒ 語言維度，金額一個字都不動 */
+}
+/* 站內連結的前綴補綴（67 §F.4）：把不帶前綴的路徑補成當前 context 的完整 URL。
+   正式版由 `routes` drop／`url_for` 產生，主題硬編 `href="/products/…"` 會被 theme-check 標 warning。 */
+const L=path=>sfPrefix(marketOf(),STATE.locale)+(path&&path!=="/"?path:"/");
 
 /* --- skeleton 四態之「載入」--- */
 const skCard='<div><div class="sk sk-ph"></div><div class="sk sk-l" style="width:70%"></div><div class="sk sk-l" style="width:40%"></div></div>';
@@ -2153,7 +2404,7 @@ function pcard(p,ctx){
    '</div>'+
    '<div class="pinfo">'+
      '<div class="pvendor">'+esc(p.v)+'</div>'+
-     '<a class="plink pname" href="#/products/'+p.h+'">'+esc(p.n)+'</a>'+
+     '<a class="plink pname" href="#/products/'+p.h+'">'+esc(pName(p))+'</a>'+
      '<div class="pprice">'+price+'</div>'+
      '<div class="prate">'+stars(p.rate)+'<span class="m">'+p.rate.toFixed(1)+'</span><span>('+p.rc+')</span></div>'+
      (sw.length?'<div class="pswatches" data-doc="cardswatch">'+sw.slice(0,4).map(v=>'<button class="psw" style="background:'+v.sw+'" title="'+esc(v.v)+'" aria-label="以 '+esc(v.v)+' 檢視" onclick="go(\'#/products/'+p.h+'?variant='+encodeURIComponent(v.v)+'\')"></button>').join("")+
@@ -2196,7 +2447,7 @@ function viewHome(){
 </section>
 
 <div class="marquee" data-doc="marquee"><div class="marquee-track">${
- ("<span>Organic Cotton</span><span>·</span><span>台灣製造</span><span>·</span><span>滿 "+fmt(FREE_SHIP)+" 免運</span><span>·</span><span>30 天無條件退換</span><span>·</span><span>Slow Wear, Chill Life</span><span>·</span>").repeat(2)
+ ("<span>Organic Cotton</span><span>·</span><span>台灣製造</span><span>·</span><span>滿 "+fmt(freeShip())+" 免運</span><span>·</span><span>30 天無條件退換</span><span>·</span><span>Slow Wear, Chill Life</span><span>·</span>").repeat(2)
 }</div></div>
 
 <section class="section" data-doc="featuredcoll">
@@ -2234,7 +2485,7 @@ function viewHome(){
 </section>
 
 <div class="promises" data-doc="promises"><div class="wrap promise-grid">
-  <div class="promise"><b>滿 ${fmt(FREE_SHIP)} 免運</b><span>${esc(packOf().delivery.note||"依市場運費規則")}到貨</span></div>
+  <div class="promise"><b>滿 ${fmt(freeShip())} 免運</b><span>${esc(packOf().delivery.note||"依市場運費規則")}到貨</span></div>
   <div class="promise"><b>30 天退換</b><span>不合穿就退，免費退貨標籤</span></div>
   <div class="promise"><b>有機棉認證</b><span>GOTS 認證棉料・台灣縫製</span></div>
 </div></div>
@@ -2315,18 +2566,21 @@ function countFor(list,q,key,val){
 function sortList(l,s){const a=l.slice();
   if(s==="price-ascending")a.sort((x,y)=>pMinPrice(x)-pMinPrice(y));
   else if(s==="price-descending")a.sort((x,y)=>pMinPrice(y)-pMinPrice(x));
-  else if(s==="title-ascending")a.sort((x,y)=>x.n.localeCompare(y.n,"zh-Hant"));
-  else if(s==="title-descending")a.sort((x,y)=>y.n.localeCompare(x.n,"zh-Hant"));
+  /* 🔴 排序是**語言相依**的（67 §C.7）：比較的是當前語言的譯文，collation 也跟著當前 locale
+     （`localeCompare(…, STATE.locale)`）。寫死 "zh-Hant" 的後果是英文版按中文筆畫排序。
+     🔴 排序與搜尋是兩件事，不共用實作——搜尋要跨語言命中，排序只看當前語言。 */
+  else if(s==="title-ascending")a.sort((x,y)=>pName(x).localeCompare(pName(y),STATE.locale));
+  else if(s==="title-descending")a.sort((x,y)=>pName(y).localeCompare(pName(x),STATE.locale));
   else if(s==="best-selling")a.sort((x,y)=>y.rc-x.rc);
   else if(s==="created-descending")a.sort((x,y)=>(y.coll.includes("new")?1:0)-(x.coll.includes("new")?1:0));
   else if(s==="created-ascending")a.sort((x,y)=>(x.coll.includes("new")?1:0)-(y.coll.includes("new")?1:0));
   return a;}
 function urlWith(mut,keepPage){const q=new URLSearchParams(CUR.q.toString());mut(q);if(!keepPage)q.delete("page");
-  const s=q.toString();return "#"+CUR.path+(s?"?"+s:"");}
+  const s=q.toString();return "#"+L(CUR.path)+(s?"?"+s:"");}   /* 🔴 帶前綴：篩選／排序不得把買家踢回預設語言（67 §F.4） */
 function toggleF(key,val){location.hash=urlWith(q=>{const vs=q.getAll(key);q.delete(key);
   (vs.includes(val)?vs.filter(v=>v!==val):[...vs,val]).forEach(v=>q.append(key,v));});closeDr2();}
 function setSort(v){location.hash=urlWith(q=>{v==="manual"?q.delete("sort_by"):q.set("sort_by",v);});}
-function clearF(){location.hash="#"+CUR.path;closeDr2();}
+function clearF(){location.hash="#"+L(CUR.path);closeDr2();}
 function setMode(m){location.hash=urlWith(q=>{m==="more"?q.set("view","more"):q.delete("view");});}
 function loadMore(){const n=+(CUR.q.get("page")||1)+1;location.hash=urlWith(q=>q.set("page",n),true);}
 
@@ -2462,7 +2716,7 @@ function selectOpt(h,i,val){
   }else STATE.sel[h]=sel;
   STATE.qty=1;
   const v=STATE.sel[h];
-  say(p.n+" "+optsText(p,v)+"，"+(vStock(p,v)>0?fmt(vPrice(p,v)):"售罄"));
+  say(pName(p)+" "+optsText(p,v)+"，"+(vStock(p,v)>0?fmt(vPrice(p,v)):"售罄"));
   route(true);
 }
 function stockLine(p,sel){
@@ -2476,14 +2730,17 @@ function eta(a,b){const d1=new Date(),d2=new Date();d1.setDate(d1.getDate()+a);d
   const f=d=>(d.getMonth()+1)+"/"+d.getDate();return f(d1)+"–"+f(d2);}
 function viewProduct(h){
   const p=PH[h];if(!p)return view404();
-  document.title=p.n+" — CHILL LOVE";
+  document.title=pName(p)+" — CHILL LOVE";
   const sel=selOf(p),media=mediaOf(p),gi=Math.min(STATE.gal,media.length-1);
-  const price=vPrice(p,sel),cmp=vCmp(p,sel),ok=vExists(p,sel)&&vStock(p,sel)>0;
+  /* 🔴 可售性是**市場資料**（catalog，29 §1.3）不是商品屬性：同一件商品在香港可買、在加拿大不可買，
+     而**譯文一個字都不會變**。這是「切市場只換市場資料」那條不變量在購買路徑上的落點。 */
+  const sellable=sellableHere(p);
+  const price=vPrice(p,sel),cmp=vCmp(p,sel),ok=sellable&&vExists(p,sel)&&vStock(p,sel)>0;
   pushRecent(h);
   const inCart=STATE.cart.filter(l=>l.h===h).reduce((s,l)=>s+l.q,0);
   const plan=p.plan;
   return '<div class="wrap"><div class="page-head" style="padding-bottom:10px">'+
-    crumb([["首頁","#/"],["所有系列","#/collections"],[CH[p.coll[1]||p.coll[0]].n,"#/collections/"+(p.coll[1]||p.coll[0])],[p.n]])+'</div>'+
+    crumb([["首頁","#/"],["所有系列","#/collections"],[CH[p.coll[1]||p.coll[0]].n,"#/collections/"+(p.coll[1]||p.coll[0])],[pName(p)]])+'</div>'+
   '<div class="pdp">'+
    '<div class="gal" data-doc="gallery">'+
      '<div class="thumbs" role="tablist" aria-label="商品媒體縮圖" data-doc="thumbs">'+media.map((m,i)=>
@@ -2497,12 +2754,12 @@ function viewProduct(h){
    '</div>'+
    '<div class="pdp-info">'+
      '<div class="p-vendor">'+esc(p.v)+'</div>'+
-     '<h1 class="p-title">'+esc(p.n)+'</h1>'+
+     '<h1 class="p-title">'+esc(pName(p))+'</h1>'+
      '<div class="p-rate"><a class="lnk" href="#reviews" onclick="jump(\'reviews\')">'+stars(p.rate)+' <span class="m">'+p.rate.toFixed(1)+'</span> · '+p.rc+' 則評價</a>'+
        (p.tag==="sale"?'<span class="badge b-warn">限時特惠</span>':"")+'</div>'+
      '<div class="p-price" data-doc="priceblock" aria-live="polite">'+
        '<span class="now '+(cmp?"sale":"")+' m">'+fmt(price)+'</span>'+(cmp?'<s class="m">'+fmt(cmp)+'</s><span class="badge b-warn">省 '+fmt(cmp-price)+'</span>':"")+'</div>'+
-     '<div class="p-tax">含稅價・'+(p.giftcard?"數位商品不需運送":"滿 "+fmt(FREE_SHIP)+" 免運")+'</div>'+
+     '<div class="p-tax">含稅價・'+(p.giftcard?"數位商品不需運送":"滿 "+fmt(freeShip())+" 免運")+'</div>'+
      (p.h==="cotton-tee"?'<div class="p-unit">單件約 '+fmt(Math.round(price/3))+' / 件</div>':"")+
      '<div class="mut fs12 mt8">SKU '+vSku(p,sel)+'</div>'+
      p.opts.map((o,i)=>'<fieldset class="opt-grp" data-doc="variantpicker">'+
@@ -2530,18 +2787,21 @@ function viewProduct(h){
         '<button aria-label="增加數量" onclick="setPdpQty(1)">＋</button></div>'+
        (inCart?'<span class="mut fs12">購物袋已有 '+inCart+' 件</span>':'')+
      '</div>'+
-     (ok?"":'<div class="banner err mt16" data-doc="notify">此變體目前無庫存。'+
+     (!sellable?'<div class="banner err mt16" data-doc="notsold"><b>'+esc(marketOf().name)+'市場不販售這件商品。</b>'+
+        '它不在本市場的 catalog 裡（29 §1.3）。🔴 這是<b>市場資料</b>的差異，不是語言差異——'+
+        '切語言不會讓它變成可買，切市場才會。</div>':"")+
+     (ok||!sellable?"":'<div class="banner err mt16" data-doc="notify">此變體目前無庫存。'+
         '<button class="lnk" onclick="openNotify(\''+h+'\')">到貨通知我</button></div>')+
      '<div class="buybox">'+
        '<button class="btn btn-ink btn-full '+(ok?"":"dis")+'" data-doc="addtocart" '+(ok?"":'disabled aria-disabled="true"')+' onclick="pdpAdd(\''+h+'\',this)">'+
-         '<span class="spin"></span>'+(ok?"加入購物袋 · "+fmt(price*STATE.qty):"已售完")+'</button>'+
+         '<span class="spin"></span>'+(ok?"加入購物袋 · "+fmt(price*STATE.qty):sellable?"已售完":"本市場不販售")+'</button>'+
        (ok?'<button class="btn btn-line btn-full" data-doc="buynow" onclick="buyNow(\''+h+'\')">立即購買</button>'+
         (packOf().wallets.length?'<div class="express" data-doc="expressbtn">'+packOf().wallets.slice(0,2).map(w=>
           '<button class="xbtn '+w[2]+'" onclick="toastf(\''+w[1]+'\')">'+w[0]+'</button>').join("")+'</div>':""):"")+
      '</div>'+
      pickupHTML(p,sel)+
      '<div class="icon-row" data-doc="trustbadges">'+
-       '<div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto"><path d="M3 8h13v9H3zM16 11h4l1 3v3h-5z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><b>滿 '+fmt(FREE_SHIP)+' 免運</b>預估到貨 '+eta(1,3)+'</div>'+
+       '<div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto"><path d="M3 8h13v9H3zM16 11h4l1 3v3h-5z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg><b>滿 '+fmt(freeShip())+' 免運</b>預估到貨 '+eta(1,3)+'</div>'+
        '<div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto"><path d="M3 12a9 9 0 019-9 9 9 0 019 9 9 9 0 01-9 9"/><path d="M3 12H1m2 0l3-3m-3 3l3 3"/></svg><b>30 天退換</b>免費退貨標籤</div>'+
        '<div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="margin:0 auto"><path d="M12 3l7 3v6c0 5-3 7.5-7 9-4-1.5-7-4-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg><b>GOTS 有機棉</b>台灣縫製</div>'+
      '</div>'+
@@ -2574,13 +2834,13 @@ function compHTML(p){
     '<button class="btn btn-line btn-sm" onclick="quickAdd(\''+h+'\',this)">加入</button></div>';}).join("")+'</div>';
 }
 function productAccordion(p){
-  const items=[["商品描述",'<p>'+esc(p.desc)+'</p>'],
+  const items=[["商品描述",pDescHTML(p)],
    ["規格與材質",'<ul>'+p.spec.map(s=>'<li>'+esc(s.split(":").slice(1).join(":"))+'</li>').join("")+'</ul>'],
    ...(p.size&&p.size.length?[["尺寸表",'<div class="tbl-wrap"><table class="spec"><thead><tr><th>尺寸</th><th>胸圍</th><th>衣長/褲長</th><th>肩寬/腰圍</th></tr></thead><tbody>'+
      p.size.map(r=>'<tr><th>'+r[0]+'</th><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>').join("")+'</tbody></table></div><div class="hint">單位 cm，平量誤差 ±2cm。</div>']]:[]),
    ["運送與退貨",'<p>'+(packOf().delivery.methods.length
        ?packOf().delivery.methods.map(m=>m.t+' '+(m.fee?fmt(m.fee):'免費')+'・'+(m.eta[1]?eta(m.eta[0],m.eta[1]):'備貨完成後通知')).join('；')
-       :'本市場尚未宣告配送方式')+'（滿 '+fmt(FREE_SHIP)+' 免運）。</p>'+
+       :'本市場尚未宣告配送方式')+'（滿 '+fmt(freeShip())+' 免運）。</p>'+
      '<p>收到後 '+(packOf().consumer_rights.voluntary_days||30)+' 天內可退換，吊牌需完整。<a class="lnk" href="#/policies/refund-policy">詳見退款政策</a></p>']];
   return '<div class="acc" data-doc="producttabs">'+items.map((it,i)=>'<div class="acc-item'+(i===0?" open":"")+'">'+
     '<button data-acc aria-expanded="'+(i===0)+'">'+it[0]+'<svg class="caret" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg></button>'+
@@ -2653,16 +2913,16 @@ function lineHTML(l,ctx){
   const p=PH[l.h],price=vPrice(p,l.o),cap=vStock(p,l.o);
   const props=Object.entries(l.props||{}).filter(([k])=>!k.startsWith("_"));
   return '<div class="cl">'+
-   '<a class="cl-ph" href="#/products/'+l.h+'" aria-label="'+esc(p.n)+'">'+artHTML(p.g[0],p.garment,"#6b5138")+'</a>'+
+   '<a class="cl-ph" href="#/products/'+l.h+'" aria-label="'+esc(pName(p))+'">'+artHTML(p.g[0],p.garment,"#6b5138")+'</a>'+
    '<div class="cl-main">'+
-     '<a class="cl-name" href="#/products/'+l.h+'">'+esc(p.n)+'</a>'+
+     '<a class="cl-name" href="#/products/'+l.h+'">'+esc(pName(p))+'</a>'+
      '<div class="cl-var">'+p.opts.map((o,i)=>esc(o.n)+": "+esc(optText(p,i,l.o[i]))).join(" / ")+'</div>'+
      (props.length?'<div class="cl-props">'+props.map(([k,v])=>esc(k)+"："+esc(v)).join("<br>")+'</div>':"")+
      (cap>0&&cap<=LOW_STOCK?'<div class="cl-props" style="color:var(--clay)">僅剩 '+cap+' 件</div>':"")+
      (cap<=0?'<div class="cl-props" style="color:var(--clay-dark)">此變體已售完，結帳前請移除</div>':"")+
      '<div class="rowb mt8">'+
        '<div class="qty" data-doc="cartqty"><button aria-label="減少數量" onclick="setQty(\''+l.k+'\','+(l.q-1)+')">−</button>'+
-        '<input value="'+l.q+'" inputmode="numeric" aria-label="'+esc(p.n)+' 數量" onchange="setQty(\''+l.k+'\',parseInt(this.value,10)||0)">'+
+        '<input value="'+l.q+'" inputmode="numeric" aria-label="'+esc(pName(p))+' 數量" onchange="setQty(\''+l.k+'\',parseInt(this.value,10)||0)">'+
         '<button aria-label="增加數量" onclick="setQty(\''+l.k+'\','+(l.q+1)+')">＋</button></div>'+
        '<button class="dr-remove" data-doc="cartremove" onclick="setQty(\''+l.k+'\',0)">移除</button>'+
      '</div>'+
@@ -2674,12 +2934,12 @@ function lineHTML(l,ctx){
   '</div>';
 }
 function shipBarHTML(){
-  const t=cartSubtotal()-discountAmount(),left=FREE_SHIP-t;
+  const t=cartSubtotal()-discountAmount(),left=freeShip()-t;
   return '<div class="box" data-doc="freeshipbar"><div class="rowb" style="justify-content:space-between">'+
     (left>0?'<span>再買 <b class="m" style="color:var(--clay)">'+fmt(left)+'</b> 即可享全站免運</span>'
            :'<span>✓ 已達 <b style="color:var(--clay)">免運</b> 門檻</span>')+
-    '<span class="mut3 fs12 m">門檻 '+fmt(FREE_SHIP)+'</span></div>'+
-   '<div class="ship-track mt8"><div class="ship-fill" style="width:'+Math.min(100,Math.round(t/FREE_SHIP*100))+'%"></div></div></div>';
+    '<span class="mut3 fs12 m">門檻 '+fmt(freeShip())+'</span></div>'+
+   '<div class="ship-track mt8"><div class="ship-fill" style="width:'+Math.min(100,Math.round(t/freeShip()*100))+'%"></div></div></div>';
 }
 function discountRowHTML(){
   const d=STATE.discount;
@@ -2738,7 +2998,7 @@ function viewCart(){
      '<h3 class="s3">訂單摘要</h3>'+
      '<div class="sumrow"><span>小計（'+cartCount()+' 件）</span><span class="m">'+fmt(sub)+'</span></div>'+
      (dis?'<div class="sumrow disc"><span>折扣 '+esc(STATE.discount.label)+'</span><span class="m">−'+fmt(dis)+'</span></div>':"")+
-     '<div class="sumrow"><span>運費</span><span>'+(sub-dis>=FREE_SHIP?'免運':'結帳時計算')+'</span></div>'+
+     '<div class="sumrow"><span>運費</span><span>'+(sub-dis>=freeShip()?'免運':'結帳時計算')+'</span></div>'+
      '<div class="sumrow tot"><span>預估總計</span><span class="m">'+fmt(sub-dis)+'</span></div>'+
      '<div class="hint">稅金已含於售價；運費於結帳選擇配送方式後計算。</div>'+
      discountRowHTML()+
@@ -2759,7 +3019,7 @@ function estRates(btn){
     if(zerr){$("#estOut").innerHTML='<div class="banner err">'+esc(zerr)+'</div>';return;}
     if(!pk.delivery.methods.length){
       $("#estOut").innerHTML='<div class="banner err">'+esc(pk.error_code||"UNAVAILABLE")+'：本市場的法域 pack 尚未宣告配送方式，無法估算（56 §A.2 C6）。</div>';return;}
-    const free=cartSubtotal()-discountAmount()>=FREE_SHIP;
+    const free=cartSubtotal()-discountAmount()>=freeShip();
     $("#estOut").innerHTML=pk.delivery.methods.map(m=>
       '<div class="rate-line"><span>'+esc(m.t)+(m.eta[1]?'・'+eta(m.eta[0],m.eta[1]):"")+'</span><span class="m">'+(free||!m.fee?"免費":fmt(m.fee))+'</span></div>').join("")+
      '<div class="hint">實際費率以結帳頁為準（運費規則來自後台 shipping_zones／shipping_rates）。</div>';
@@ -2888,7 +3148,7 @@ function sumInner(){
   const ct=packOf().consumption_tax;
   return '<h3 class="s3">訂單摘要</h3>'+
    STATE.cart.map(l=>{const p=PH[l.h];return '<div class="co-line"><div class="thw"><div class="th">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div><span class="qb">'+l.q+'</span></div>'+
-     '<div class="nm">'+esc(p.n)+'<i>'+optsText(p,l.o)+(l.props&&l.props["配送方案"]?"・"+esc(l.props["配送方案"]):"")+'</i></div>'+
+     '<div class="nm">'+esc(pName(p))+'<i>'+optsText(p,l.o)+(l.props&&l.props["配送方案"]?"・"+esc(l.props["配送方案"]):"")+'</i></div>'+
      '<div class="pr m">'+fmt(vPrice(p,l.o)*l.q)+'</div></div>';}).join("")+
    '<div class="hr"></div>'+discountRowHTML()+'<div class="hr"></div>'+
    '<div class="sumrow"><span>小計</span><span class="m">'+fmt(sub)+'</span></div>'+
@@ -2929,7 +3189,7 @@ function coStep1(){
    (pk.delivery.methods.length
     ?'<div class="rgroup">'+pk.delivery.methods.map(m=>
       rc(m.t,m.s+(m.eta[1]?"・"+eta(m.eta[0],m.eta[1]):""),STATE.co.method===m.k,m.k,
-         m.fee?fmt(m.fee)+(m.k==="home"?"（滿 "+fmt(FREE_SHIP)+" 免運）":""):"免費")+
+         m.fee?fmt(m.fee)+(m.k==="home"?"（滿 "+fmt(freeShip())+" 免運）":""):"免費")+
       (m.k==="point"&&STATE.co.method==="point"?'<div class="rcard-body">'+pickupPicker()+'</div>':"")).join("")+'</div>'
     :'<div class="banner err">本市場尚未宣告配送方式，取貨點與宅配選項都不會出現。</div>')+'</div>'+
 
@@ -2994,7 +3254,7 @@ function pickupPicker(){
 function setCity(c){STATE.co.city=c;const ds=Object.keys(REGIONS[c]);STATE.co.dist=ds[0];STATE.co.zip=REGIONS[c][ds[0]];route(true);}
 function setDist(d){STATE.co.dist=d;STATE.co.zip=(REGIONS[STATE.co.city]||REGIONS[Object.keys(REGIONS)[0]]||{})[d];route(true);}
 function coStep2(){
-  const pk=packOf(),free=cartSubtotal()-discountAmount()>=FREE_SHIP;
+  const pk=packOf(),free=cartSubtotal()-discountAmount()>=freeShip();
   const m=dmOf()||{k:"home",t:"宅配",s:"",eta:[1,2],fee:0},ex=pk.delivery.express;
   const rates=m.k==="home"
    ?[["std",m.t,"預估到貨 "+eta(m.eta[0],m.eta[1]),free?0:m.fee]].concat(
@@ -3237,7 +3497,7 @@ function viewThanks(){
    '</div>'+
    '<aside class="sumbox"><h3 class="s3">訂單明細</h3>'+
      o.items.map(l=>{const p=PH[l.h];return '<div class="co-line"><div class="thw"><div class="th">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div><span class="qb">'+l.q+'</span></div>'+
-      '<div class="nm">'+esc(p.n)+'<i>'+optsText(p,l.o)+'</i></div><div class="pr m">'+fmt(vPrice(p,l.o)*l.q)+'</div></div>';}).join("")+
+      '<div class="nm">'+esc(pName(p))+'<i>'+optsText(p,l.o)+'</i></div><div class="pr m">'+fmt(vPrice(p,l.o)*l.q)+'</div></div>';}).join("")+
      '<div class="hr"></div>'+
      '<div class="sumrow"><span>小計</span><span class="m">'+fmt(o.sub)+'</span></div>'+
      (o.dis?'<div class="sumrow disc"><span>折扣</span><span class="m">−'+fmt(o.dis)+'</span></div>':"")+
@@ -3250,6 +3510,15 @@ function viewThanks(){
 function viewOrderStatus(){
   if(CUR.q.get("verify")==="1")return verifyForm();
   const o=ORDERS[0];
+  /* 🔴 未宣告 pack 的市場沒有示範訂單（PACK_UNDECLARED.orders = []）⇒ 這裡會拿到 undefined。
+     這是**既有缺口**（切到美國／馬來西亞／日本再開訂單狀態頁就會炸），加拿大只是又踩到一次。
+     處置沿用 jurGate() 的同一條紀律（56 §A.3）：擋在門口、講清楚原因、給出路，
+     🔴 **不得**靜默套用基準法域的示範訂單——那等於讓買家看到別的法域的單據形態。 */
+  if(!o)return '<div class="wrap section">'+
+   '<div class="banner err" data-doc="jurgate"><b>'+esc(packOf().error_code||"JURISDICTION_CAPABILITY_UNDECLARED")+'</b><br>'+
+   esc(marketOf().name)+' 尚未宣告 jurisdiction pack，因此沒有這個市場的訂單與單據形態可以顯示。</div>'+
+   '<div class="rowb mt16">'+Object.values(MARKETS).filter(m=>m.jurisdiction).map(m=>
+     '<button class="btn btn-line btn-sm" onclick="setMarket(\''+m.code+'\')">切到'+esc(m.name)+'市場</button>').join("")+'</div></div>';
   return '<div class="wrap"><div class="page-head">'+crumb([["首頁","#/"],["訂單狀態"]])+
    '<h1 class="pt">訂單 #'+o.id+'</h1><p class="lead2">下單於 '+o.date+'・'+esc(o.method)+'　'+
    '<a class="lnk" href="#/order-status?verify=1">（示範：逾時回訪需驗證）</a></p></div>'+
@@ -3279,7 +3548,7 @@ function viewOrderStatus(){
 }
 function orderLines(o){
   return o.items.map(([h,ov,q])=>{const p=PH[h];return '<div class="co-line"><div class="thw"><div class="th">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div><span class="qb">'+q+'</span></div>'+
-   '<div class="nm">'+esc(p.n)+'<i>'+optsText(p,ov)+'</i></div><div class="pr m">'+fmt(vPrice(p,ov)*q)+'</div></div>';}).join("")+
+   '<div class="nm">'+esc(pName(p))+'<i>'+optsText(p,ov)+'</i></div><div class="pr m">'+fmt(vPrice(p,ov)*q)+'</div></div>';}).join("")+
    '<div class="hr"></div><div class="sumrow tot"><span>總計</span><span class="m">'+fmt(o.total)+'</span></div>';
 }
 function verifyForm(){
@@ -3483,7 +3752,7 @@ function returnFlow(o){
    (step===1?
      o.items.map(([h,ov,q],i)=>{const p=PH[h],fs=finalSale(h);
       return '<div class="ret-line'+(fs?" dis":"")+'"'+(fs?' aria-disabled="true"':"")+'><div class="ret-ph">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div>'+
-       '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">'+esc(p.n)+'</div>'+
+       '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">'+esc(pName(p))+'</div>'+
        '<div class="mut3 fs12">'+optsText(PH[h],ov)+'・已購 '+q+' 件</div>'+
        (fs?'<div class="badge mt8">最終特賣・不可退貨</div>'
          :'<label class="cb mt8"><input type="checkbox" '+(R.items[i]?"checked":"")+' onchange="retPick('+i+',this.checked,'+q+')">申請退貨</label>'+
@@ -3492,7 +3761,7 @@ function returnFlow(o){
      '<div class="rowb mt24"><button class="btn btn-ink sp" data-doc="retnext" onclick="retNext()">下一步：選擇原因</button></div>'
    :step===2?
      Object.keys(R.items).map(i=>{const [h,ov]=o.items[i];const p=PH[h];
-      return '<div class="mb16"><b class="fs12">'+esc(p.n)+' · '+optsText(p,ov)+' × '+R.items[i]+'</b>'+
+      return '<div class="mb16"><b class="fs12">'+esc(pName(p))+' · '+optsText(p,ov)+' × '+R.items[i]+'</b>'+
        '<div class="field mt8"><label>退貨原因 <span class="req">*</span></label>'+
        '<select class="inp" onchange="R_setReason('+i+',this.value)"><option value="">請選擇…</option>'+
         REASONS.map(r=>'<option '+(R.reasons[i]===r?"selected":"")+'>'+r+'</option>').join("")+'</select></div>'+
@@ -3664,7 +3933,7 @@ function buildContent(){
   (pk.delivery.methods.length?pk.delivery.methods.map(m=>'<li>'+esc(m.t)+' '+(m.fee?fmt(m.fee):"免費")+
     (m.eta[1]?'，'+m.eta[0]+'–'+m.eta[1]+' 個工作天':'，備貨完成後通知')+'</li>').join("")
    :'<li>本市場尚未宣告配送方式</li>')+
-  '<li>單筆滿 '+fmt(FREE_SHIP)+' 免運</li></ul>'+
+  '<li>單筆滿 '+fmt(freeShip())+' 免運</li></ul>'+
   (pk.pickup?'<h2>取貨點注意事項</h2><ul>'+
     (pk.pickup.max_dimension_sum_cm?'<li>材積限制：三邊和 ≤'+pk.pickup.max_dimension_sum_cm+'cm、單件 ≤'+pk.pickup.max_weight_kg+'kg</li>':"")+
     (pk.cod&&pk.cod.supported?'<li>取貨付款上限 '+codCapText()+'</li>':"")+
@@ -3725,7 +3994,7 @@ function buildContent(){
   (pk.governing_law?'<h2>準據法</h2><p>'+esc(pk.governing_law)+'</p>':"")+
   (pk.governing_law_pending?'<div class="hint">'+esc(pk.governing_law_pending)+'</div>':"")},
  "shipping-policy":{t:"運送政策",body:'<p>最後更新：2026-07-01</p><h2>出貨時間</h2><p>訂單成立後 1 個工作天內出貨（例假日順延）。預購商品依商品頁標示。</p>'+
-  '<h2>運費</h2><p>'+(pk.delivery.methods.length?pk.delivery.methods.map(m=>esc(m.t)+" "+(m.fee?fmt(m.fee):"免費")).join("、"):"本市場尚未宣告配送方式")+'；滿 '+fmt(FREE_SHIP)+' 免運。</p>'+
+  '<h2>運費</h2><p>'+(pk.delivery.methods.length?pk.delivery.methods.map(m=>esc(m.t)+" "+(m.fee?fmt(m.fee):"免費")).join("、"):"本市場尚未宣告配送方式")+'；滿 '+fmt(freeShip())+' 免運。</p>'+
   '<h2>包裹遺失</h2><p>若追蹤停滯超過 7 天，請聯絡客服，我們會向物流商申訴並在必要時補寄。</p>'}
  };
 }
@@ -3734,7 +4003,9 @@ function searchAll(q){
   if(!s)return {p:[],a:[],g:[],c:[]};
   const hit=(t)=>String(t).toLowerCase().includes(s);
   return {
-    p:P.filter(x=>hit(x.n)||hit(x.type)||hit(x.v)||hit(x.desc)||hit(x.h)),
+    /* 🔴 搜尋要吃**當前語言的譯文**，也保留來源語言原文（買家可能記得的是英文品名，
+       但站在中文版上）——67 §C.7：搜尋與排序是兩件事，這裡刻意比排序寬。 */
+    p:P.filter(x=>hit(x.n)||hit(x.type)||hit(x.v)||hit(x.desc)||hit(x.h)||hit(pName(x))||hit(pDesc(x))),
     a:ARTICLES.filter(x=>hit(x.t)||hit(x.ex)||x.tags.some(hit)),
     g:Object.entries(PAGES).filter(([h,p])=>hit(p.t)||hit(p.body||"")).map(([h,p])=>({h,t:p.t})),
     c:COLLS.filter(x=>hit(x.n)||hit(x.d))
@@ -3873,10 +4144,19 @@ function viewPolicy(h){
      '<a class="tagpill'+(k===h?" on":"")+'" href="#/policies/'+k+'">'+esc(v.t)+'</a>').join("")+'</nav>'+
    '<article class="prose">'+p.body+'</article><div style="height:80px"></div></div>';
 }
-function view404(){
+/* `badPrefix` 有值 ＝ 第一路徑段長得像 locale 前綴、但不在路由表裡（67 §A.5(c) 情形 1／3／4）。
+   🔴 這一支**必須是 404 而不是 302**：把它導到該市場的預設語言，會讓一條看起來該進 hreflang
+      的 URL 變成重導，而重導的 URL 不能進 hreflang（62 §0.2 原則 4）。 */
+function view404(badPrefix){
   document.title="404 — CHILL LOVE";
   return '<div class="wrap section" style="text-align:center">'+
    '<div class="eyebrow">Error 404</div><h1 class="pt" style="font-size:44px">找不到這個頁面</h1>'+
+   (badPrefix?'<div class="banner err" data-doc="badprefix" style="max-width:640px;margin:0 auto 22px;text-align:left">'+
+     '<b>語言前綴 <span class="mono">/'+esc(badPrefix)+'</span> 不存在。</b><br>'+
+     '前綴 ≡ (市場, 語言) 身分（67 §F.1(c)）：這不是「有頁面但不給看」，是<b>沒有這條路由</b>——'+
+     '該市場沒有開放這個語言、或這個語言尚未發布，兩種情形都是 404（§A.5(c) 情形 1／3／4）。'+
+     '🔴 我們<b>不用 302 把它導到預設語言</b>：重導的 URL 不能進 hreflang，而它看起來很像該進去。'+
+     '<br>目前可用的前綴：'+Object.keys(sfPrefixMap()).map(k=>'<span class="mono">/'+esc(k)+'</span>').join("、")+'</div>':'')+
    '<p class="lead2" style="margin:0 auto 26px">網址可能打錯了，或這件商品已經下架（我們會回 410）。試試搜尋：</p>'+
    '<div class="rowb" style="max-width:420px;margin:0 auto" data-doc="notfoundsearch">'+
     '<input class="inp" id="nfInput" placeholder="搜尋商品…" aria-label="搜尋" onkeydown="if(event.key===\'Enter\')nfSearch()">'+
@@ -3956,14 +4236,14 @@ function renderDrawer(){
   const it=$("#drItems"),n=cartCount(),sub=cartSubtotal(),dis=discountAmount();
   $("#drCount").textContent=n+" 件";
   $("#drSub").innerHTML=fmt(sub-dis);
-  const left=FREE_SHIP-(sub-dis);
-  $("#shipMsg").innerHTML=n===0?'滿 <b class="m">'+fmt(FREE_SHIP)+'</b> 免運'
+  const left=freeShip()-(sub-dis);
+  $("#shipMsg").innerHTML=n===0?'滿 <b class="m">'+fmt(freeShip())+'</b> 免運'
     :left>0?'再買 <b class="m">'+fmt(left)+'</b> 即可享免運':'✓ 已達 <b>免運</b> 門檻';
-  requestAnimationFrame(()=>{$("#shipFill").style.width=Math.min(100,(sub-dis)/FREE_SHIP*100)+"%";});
+  requestAnimationFrame(()=>{$("#shipFill").style.width=Math.min(100,(sub-dis)/freeShip()*100)+"%";});
   const btn=$("#drCheckoutBtn");btn.classList.toggle("dis",n===0);btn.setAttribute("aria-disabled",n===0);
   it.innerHTML=n?STATE.cart.map(l=>{const p=PH[l.h];return '<div class="dr-item">'+
-     '<a class="dr-ph" href="#/products/'+l.h+'" onclick="closeCart()" aria-label="'+esc(p.n)+'">'+artHTML(p.g[0],p.garment,"#6b5138")+'</a>'+
-     '<div class="dr-info"><div class="dr-name">'+esc(p.n)+'</div>'+
+     '<a class="dr-ph" href="#/products/'+l.h+'" onclick="closeCart()" aria-label="'+esc(pName(p))+'">'+artHTML(p.g[0],p.garment,"#6b5138")+'</a>'+
+     '<div class="dr-info"><div class="dr-name">'+esc(pName(p))+'</div>'+
        '<div class="dr-var">'+optsText(PH[l.h],l.o)+(l.props&&l.props["配送方案"]?"・"+esc(l.props["配送方案"]):"")+'</div>'+
        '<div class="qty" data-doc="cartqty"><button aria-label="減少數量" onclick="setQty(\''+l.k+'\','+(l.q-1)+')">−</button>'+
         '<span>'+l.q+'</span><button aria-label="增加數量" onclick="setQty(\''+l.k+'\','+(l.q+1)+')">＋</button></div>'+
@@ -3976,7 +4256,7 @@ function renderDrawer(){
   const up=P.filter(p=>!STATE.cart.some(l=>l.h===p.h)&&!pSoldOut(p)).slice(0,2);
   $("#drUpsell").innerHTML=n?'<div data-doc="drupsell" style="border-bottom:var(--hairline) solid var(--line);padding-bottom:12px;margin-bottom:14px">'+
     '<div class="flabel">加購推薦</div>'+up.map(p=>'<div class="co-line"><div class="thw"><div class="th">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div></div>'+
-      '<div class="nm">'+esc(p.n)+'<i class="m">'+fmt(pMinPrice(p))+'</i></div>'+
+      '<div class="nm">'+esc(pName(p))+'<i class="m">'+fmt(pMinPrice(p))+'</i></div>'+
       '<button class="btn btn-line btn-sm" onclick="quickAdd(\''+p.h+'\',this,1)">加入</button></div>').join("")+'</div>':"";
 }
 /* --- 通用右抽屜 --- */
@@ -4008,7 +4288,7 @@ function quickAdd(h,btn,silent){
 function qaBody(h){
   const p=PH[h],sel=STATE.qa,ok=vExists(p,sel)&&vStock(p,sel)>0;
   return '<div class="co-line" style="align-items:flex-start"><div class="thw"><div class="th" style="width:84px">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div></div>'+
-   '<div class="nm"><b style="font-size:14px">'+esc(p.n)+'</b><i class="m">'+fmt(vPrice(p,sel))+'</i></div></div>'+
+   '<div class="nm"><b style="font-size:14px">'+esc(pName(p))+'</b><i class="m">'+fmt(vPrice(p,sel))+'</i></div></div>'+
    '<div data-doc="quickaddmodal">'+p.opts.map((o,i)=>'<fieldset class="opt-grp"><legend>'+esc(o.n)+'：<b>'+esc(optText(p,i,sel[i]))+'</b></legend>'+
      '<div class="pills" role="radiogroup" aria-label="'+esc(o.n)+'">'+o.vals.map(v=>{
        const st=optState(p,i,v.v,sel);
@@ -4033,7 +4313,7 @@ function openPickup(h){
   const stores=[["Chill Room 大安","台北市大安區四維路 12 號","02-2701-1200",vStock(p,sel)>0],
    ["Chill Room 台中西區","台中市西區向上路一段 79 巷 20 號","04-2301-8890",vStock(p,sel)>3],
    ["寄倉・新北五股","不開放取貨（僅出貨）","—",false]];
-  dr2("門市取貨狀況",'<div data-doc="pickupdrawer"><div class="mut fs12 mb16">'+esc(p.n)+'・'+optsText(p,sel)+'</div>'+
+  dr2("門市取貨狀況",'<div data-doc="pickupdrawer"><div class="mut fs12 mb16">'+esc(pName(p))+'・'+optsText(p,sel)+'</div>'+
    stores.map(s=>'<div class="ret-line" style="align-items:flex-start"><span style="color:'+(s[3]?"var(--sage)":"var(--ink-3)")+';flex:none">'+(s[3]?"✓":"✗")+'</span>'+
      '<div><b class="fs12">'+s[0]+'</b><div class="mut3 fs12">'+(s[3]?"有現貨・通常 2 小時內可取":"目前無現貨")+'</div>'+
      '<div class="mut fs12 mt8">'+s[1]+'<br>'+s[2]+'</div></div></div>').join("")+
@@ -4042,7 +4322,7 @@ function openPickup(h){
 /* --- 到貨通知 --- */
 function openNotify(h){
   const p=PH[h],sel=selOf(p);
-  md("到貨通知我",'<div data-doc="notifymodal"><p class="mut fs12 mb16">'+esc(p.n)+'・'+optsText(p,sel)+' 補貨時第一時間通知你（每個組合只會通知一次）。</p>'+
+  md("到貨通知我",'<div data-doc="notifymodal"><p class="mut fs12 mb16">'+esc(pName(p))+'・'+optsText(p,sel)+' 補貨時第一時間通知你（每個組合只會通知一次）。</p>'+
    '<div class="field"><label>電子郵件</label><input class="inp" id="nfMail" type="email" value="'+esc(STATE.customer?STATE.customer.email:"")+'" placeholder="you@example.com"><div class="msg">請輸入有效的電子郵件</div></div>'+
    '<label class="cb"><input type="checkbox">同時以簡訊通知我</label></div>',
    '<button class="btn btn-line btn-sm" onclick="closeModal()">取消</button>'+
@@ -4098,51 +4378,105 @@ function pickupFilter(v){const pu=packOf().pickup;if(pu)$("#cvsGrid").innerHTML=
 function pickPoint(id){const pu=packOf().pickup;if(!pu)return;
   STATE.co.cvs=pu.points.find(x=>x.id===id);delete coErrs().cvs;closeModal();route(true);toastf("已選擇取貨點");}
 /* --- 地區/語言 --- */
+/* 🔴 **語言切換器與地區切換器是兩個控件，不得合成一個**（67 §F.2，2026-08-13 定案）。
+   `alt` 對照（strawberrynet）header 上只有一個合併的 Country/Region 控件，**我方不採用**：
+   換語言只換文字，換地區換的是幣別、稅、運費、可購品項、法域——合成一個 ⇒ 買家想看英文，
+   結果連幣別一起變了。恆帶地區的前綴（`en-hk`）字面上就是「語言＋地區」，很容易讓人想合併，
+   所以這一條要明文擋住：**前綴的形態是 URL 的事實，不是 UI 的規格**。
+   ✅ 允許的形態：兩個控件放在同一個抽屜／同一個 form（視覺一組、語義兩個欄位，
+      對應 `{% form 'localization' %}` 的 `country_code` 與 `language_code` 兩個欄位名）。 */
 function openLoc(){
-  dr2("地區與語言",'<div data-doc="locpicker"><div class="field"><label>國家／地區（決定幣別與法域 pack）</label>'+
+  const mk=marketOf(),open=sfOpenLocales(mk),hidden=(mk.locales||[]).filter(t=>!open.includes(t));
+  dr2("地區與語言",'<div data-doc="locpicker"><div class="field"><label>國家／地區（決定幣別、運費、可售性與法域 pack）</label>'+
    '<select class="inp" onchange="setMarket(this.value)">'+Object.values(MARKETS)
      .map(m=>'<option value="'+m.code+'" '+(STATE.market===m.code?"selected":"")+'>'+esc(m.name)+"（"+esc(CURRENCY_FORMATS[m.currency].code)+" "+esc(CURRENCY_FORMATS[m.currency].symbol)+"）"+
        (m.jurisdiction?"":" — 法域未宣告")+'</option>').join("")+'</select></div>'+
-   '<div class="field"><label>語言</label><select class="inp" onchange="setLocale(this.value)">'+
-     sfLocaleOptions(STATE.locale)+'</select></div>'+
-   '<div class="hint">🔴 <b>語言與地區是兩個維度</b>（67 §A.1）：切語言只換文字與 URL 前綴（'+
-     esc(sfLoc(STATE.locale).prefix||"（無，來源語言）")+'），<b>不換幣別</b>——英文版的香港店仍然顯示港幣。'+
+   '<div class="field"><label>語言（本市場開放 '+open.length+' 種）</label>'+sfLocaleLinks("dr")+'</div>'+
+   '<div class="hint">🔴 <b>切換器只列「本市場開放且已發布」的語言</b>（67 §F.2／§A.5：裁定逐字「前台不用全部顯示出來」）。'+
+     '全店啟用 '+SF_LOCALES.length+' 種，'+esc(mk.name)+' 開放 '+open.length+' 種'+
+     (hidden.length?'，其中 '+hidden.map(t=>esc(sfLoc(t).endonym)).join("、")+' <b>未發布</b>⇒ 不列、其 URL 回 404':'')+'。'+
+     '🔴 切換器是真實 <span class="mono">&lt;a href&gt;</span>，不是純 JS——那是爬蟲發現其他語言版本的路徑之一。</div>'+
+   '<div class="hint">🔴 <b>語言與地區是兩個維度</b>（67 §A.1）：切語言只換文字與 URL 前綴（目前 <span class="mono">'+
+     esc(sfPrefix(mk,STATE.locale))+'</span>），<b>不換幣別、不換運費、不換可售性</b>——英文版的香港店仍然顯示港幣。'+
      '缺譯文時回落到來源語言原文並在大段文字上標 <span class="mono">lang</span>，不留空白（67 §C.4）。</div>'+
+   '<div class="hint">🔴 <b>同一份譯文跨市場共用</b>：<span class="mono">'+esc(sfPrefix(MARKETS.HK,"zh-Hant"))+
+     '</span> 與 <span class="mono">'+esc(sfPrefix(MARKETS.CA,"zh-Hant"))+
+     '</span> 的商品文字<b>逐字相同</b>（譯文的鍵裡沒有 market 這一維），變的只有幣別、運費與可售性。'+
+     '把 market 加進譯文的鍵 ⇒ 商家在一個市場改了標題，另一個市場沒變，而且不會有任何錯誤訊息。</div>'+
    '<div class="hint">本店的<b>地區自動重導：'+(GEO_CFG.autoRedirect?"啟用（預設）":"停用")+'</b>（62 §K.2 依 68 號跟隨 Shopify 翻面）。'+
      '三條<b>不可關閉</b>的護欄：①已驗證的搜尋引擎爬蟲不重導 ②hreflang／sitemap 的 URL 對任何人直接回 200 ③只重導一次。'+
      '<b>語言</b>自動偵測維持停用——兩個預設值方向相反，不要一起翻。</div>'+
-   '<div class="hint">切換地區會換掉三件事：<b>幣別格式</b>（符號／小數位／分組，見 CURRENCY_FORMATS）、'+
-   '<b>金額換算</b>（demo 固定換算率，非即期匯率）、以及<b>整個 jurisdiction pack</b>'+
+   '<div class="hint">切換地區會換掉：<b>幣別格式</b>（符號／小數位／分組，見 CURRENCY_FORMATS）、<b>金額換算</b>'+
+   '（demo 固定換算率，非即期匯率）、<b>免運門檻</b>、<b>可售品項</b>，以及<b>整個 jurisdiction pack</b>'+
    '（配送方式／付款方式／單據制度／退貨依據）。法域永遠取市場本地，不繼承（56 §A.0）。</div>'+
-   '<div class="hint">目前：'+esc(marketLabel(marketOf()))+'　pack＝'+esc(packOf().label)+
-   '　小數位 '+curOf().exponent+' 位　示例 '+fmt(37000)+'</div></div>');
+   '<div class="hint">目前：'+esc(marketLabel(mk))+'　pack＝'+esc(packOf().label)+
+   '　小數位 '+curOf().exponent+' 位　示例 '+fmt(37000)+'　免運門檻 '+fmt(freeShip())+
+   '　本市場不販售 '+((mk.not_for_sale||[]).length)+' 項</div>'+
+   sfLocalePublishDemo()+'</div>');
 }
 /* 56 §D.3：可插拔不能只寫在文件裡。setMarket 是那個「呼叫端」——它必須真的把
-   資料、內容頁、結帳狀態與外框全部換掉，否則就是第九個 H-1～H-8 形態的缺口。 */
+   資料、內容頁、結帳狀態與外框全部換掉，否則就是第九個 H-1～H-8 形態的缺口。
+   🔴 2026-08-13 起它多做一件事：**語言的和解**。切到的新市場若沒開放當前語言，
+      落到該市場的 `defaultLocale`（29 §4，本輪只補上「開放集」這個限定詞）。
+      不做這件事的症狀：從加拿大（法文）切到香港，URL 變成 `/fr-hk/…` ⇒ 那條前綴不存在 ⇒ 404。 */
 function setMarket(v){
-  if(!MARKETS[v])return;
-  STATE.market=v;applyMarket();closeDr2();closeModal();
-  route(true);
-  toastf("已切換市場："+marketLabel(marketOf())+"／pack "+(packOf().code||"未宣告"));
+  const mk=MARKETS[v];if(!mk)return;
+  const open=sfOpenLocales(mk);
+  const loc=open.includes(STATE.locale)?STATE.locale:(open.includes(mk.defaultLocale)?mk.defaultLocale:open[0]);
+  const fell=loc!==STATE.locale;
+  closeDr2();closeModal();
+  sfGoto(v,loc,CUR.path,CUR.q);
+  toastf("已切換市場："+marketLabel(mk)+"／pack "+((mk.jurisdiction&&PACKS[mk.jurisdiction]||{}).code||"未宣告")
+    +(fell?"；本市場未開放"+sfLoc(STATE.locale).endonym+"，語言落到預設 "+sfLoc(loc).endonym+"（29 §4）":"")
+    +"　譯文不變，變的是幣別／運費／可售性");
 }
-/* ── 67 號多語言：語言集合是**資料**（shop_locales 的前台投影），不是列舉 ──────────
-   首發三語（zh-Hant／zh-Hans／en）是種子資料；新增語言不需要改這一段程式碼。
-   🔴 語言 ≠ 幣別（67 §H.1、鐵律 10）：切語言**不動** STATE.market，金額仍走 fmt()／CURRENCY_FORMATS。
-   🔴 來源語言不帶前綴，其餘語言一律帶（67 §F.1）；前綴是語言維度的唯一承載處——
-      handle 全站只有一個、不隨語言變（67 §D.3）。 */
-const SF_SOURCE_LOCALE="zh-Hant";
-const SF_LOCALES=[
- {tag:"zh-Hant",endonym:"繁體中文",short:"繁中",prefix:""},
- {tag:"zh-Hans",endonym:"简体中文",short:"简中",prefix:"/zh-hans"},
- {tag:"en",     endonym:"English", short:"EN",  prefix:"/en"}];
-const sfLoc=t=>SF_LOCALES.find(x=>x.tag===t)||SF_LOCALES[0];
-const sfLocaleOptions=cur=>SF_LOCALES.map(l=>'<option value="'+l.tag+'" '+(cur===l.tag?"selected":"")+'>'+esc(l.endonym)+'</option>').join("");
+/* ── 67 §F.2 語言切換器：**真實 `<a href>`**，值域＝ open ∩ published ────────────────
+   🔴 它在定義上不可能產生 404 連結——因為它只列在路由表裡的前綴（sfPrefixMap 同一個來源）。
+      站內任何一條 404 的語言連結都是 bug，所以這裡**不得**改成「列全部語言再擋下來」。 */
+function sfLocaleLinks(where){
+  const mk=marketOf(),open=sfOpenLocales(mk);
+  if(open.length<2)return '<div class="hint">此市場只開放一種語言，切換器不渲染。</div>';
+  return '<nav class="loc-sw" aria-label="語言" data-sw="'+esc(where)+'">'+open.map(t=>{
+    const cur=t===STATE.locale;
+    return '<a href="#'+sfPrefix(mk,t)+(CUR.path==="/"?"/":CUR.path)+(CUR.q&&CUR.q.toString()?"?"+CUR.q.toString():"")+'"'+
+      ' hreflang="'+esc(sfHreflangCodes(mk,t)[0])+'" lang="'+esc(t)+'"'+
+      (cur?' aria-current="true"':'')+' onclick="closeDr2()">'+esc(sfLoc(t).endonym)+
+      '<i>'+esc(sfPrefix(mk,t))+'</i></a>';}).join("")+'</nav>';
+}
+/* 示範開關：把「已發布 → 未發布」這個狀態轉換做成可以當場點的東西。
+   🔴 這不是把 published 當成偏好設定——它在正式版是 admin 的 `shop_locales.published`。
+      放在前台只是為了讓 §A.5(c) 情形 4（未發布 ⇒ 切換器不列 ＋ URL 404）被肉眼驗證。 */
+function sfLocalePublishDemo(){
+  return '<div class="hint" data-doc="locpublish"><b>示範：語言發布狀態（正式版在 admin）</b><br>'+
+    SF_LOCALES.filter(l=>!l.source).map(l=>
+      '<label class="cb" style="display:inline-flex;margin-right:14px"><input type="checkbox" '+(l.published?"checked":"")+
+      ' onchange="sfSetPublished(\''+l.tag+'\',this.checked)"> '+esc(l.endonym)+'</label>').join("")+
+    '<br>取消發布 ⇒ 該語言從<b>每一個</b>市場的切換器消失，其 URL 前綴一律 <b>404</b>，也不進 hreflang／sitemap'+
+    '（67 §A.5(c) 情形 4）。<b>譯文一列都不會刪</b>——曝光是決策，譯文是資產。</div>';
+}
+function sfSetPublished(tag,on){
+  const l=SF_LOCALES.find(x=>x.tag===tag);if(!l||l.source)return;
+  l.published=on;
+  const mk=marketOf();
+  if(!sfOpenLocales(mk).includes(STATE.locale)){     /* 取消發布的正好是當前語言 ⇒ 落到市場預設 */
+    sfGoto(mk.code,mk.defaultLocale,CUR.path,CUR.q);
+  }else{
+    renderMarketChrome();openLoc();
+  }
+  toastf((on?"已發布「":"已取消發布「")+l.endonym+"」——"+(on?"其 URL 現在回 200，並回到切換器與 hreflang 矩陣":"其 URL 現在回 404，並從切換器與 hreflang 矩陣移除"));
+}
+/* 導向一個 (market, locale) ＋ 保留路徑與查詢字串。🔴 前綴是身分，所以「換語言」＝「換 URL」，
+   不是改一個全域變數——後者會讓同一條 URL 對不同人回不同語言（67 §F.2 要防的唯一事故）。 */
+function sfGoto(marketCode,tag,path,q){
+  const mk=MARKETS[marketCode]||marketOf();
+  const s=q&&q.toString?q.toString():"";
+  location.hash=sfPrefix(mk,tag)+(path&&path!=="/"?path:"/")+(s?"?"+s:"");
+}
+/* 保留給程式化呼叫（例如結帳流程結束後回到某個語言）；UI 一律走上面的真實連結。 */
 function setLocale(v){
-  if(!sfLoc(v))return;
-  STATE.locale=v;closeDr2();renderMarketChrome();
-  document.documentElement.lang=v;                       /* 回落標記與螢幕閱讀器都靠它 */
-  const L=sfLoc(v);
-  toastf("已切換語言："+L.endonym+"（URL 前綴 "+(L.prefix||"（無，來源語言）")+"；市場與幣別不變："+marketOf().name+"）");
+  const mk=marketOf();
+  if(!sfOpenLocales(mk).includes(v))return toastf("此市場未開放這個語言");
+  sfGoto(mk.code,v,CUR.path,CUR.q);
 }
 /* --- lightbox --- */
 function openLB(h,i){const p=PH[h];STATE.lb={h,i};remember();
@@ -4181,7 +4515,7 @@ function psRender(mode){
   const bold=t=>esc(t).replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","ig"),"<b>$1</b>");
   box.innerHTML=
    (r.p.length?'<div class="ps-grp" data-doc="psqueries"><h4>建議關鍵字</h4>'+
-     [...new Set(r.p.map(p=>p.type).concat(r.p.slice(0,2).map(p=>p.n)))].slice(0,4).map(t=>
+     [...new Set(r.p.map(p=>p.type).concat(r.p.slice(0,2).map(p=>pName(p))))].slice(0,4).map(t=>
       '<button class="ps-q" onclick="psGo(\''+t.replace(/'/g,"")+'\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'+bold(t)+'</button>').join("")+'</div>':"")+
    (r.p.length?'<div class="ps-grp" data-doc="psproducts"><h4>商品（'+r.p.length+'）</h4>'+r.p.slice(0,6).map(p=>psProd(p,bold)).join("")+'</div>':"")+
    (r.c.length?'<div class="ps-grp"><h4>系列</h4>'+r.c.map(c=>'<a class="ps-q" href="#/collections/'+c.h+'" onclick="closePS()">'+bold(c.n)+'</a>').join("")+'</div>':"")+
@@ -4191,7 +4525,7 @@ function psRender(mode){
 }
 function psProd(p,bold){
   return '<a class="ps-p" href="#/products/'+p.h+'" onclick="closePS()"><div class="th">'+artHTML(p.g[0],p.garment,"#6b5138")+'</div>'+
-   '<div class="nm">'+(bold?bold(p.n):esc(p.n))+(pSoldOut(p)?'<div class="mut3 fs12">已售完</div>':"")+'</div>'+
+   '<div class="nm">'+(bold?bold(pName(p)):esc(pName(p)))+(pSoldOut(p)?'<div class="mut3 fs12">已售完</div>':"")+'</div>'+
    '<div class="pr m">'+fmt(pMinPrice(p))+'</div></a>';
 }
 function psGo(t){closePS();location.hash="#/search?q="+encodeURIComponent(t);}
@@ -4340,19 +4674,23 @@ const DOCS={
 /* ---------- 全域 ---------- */
 announce:{t:"公告列 announcement bar",f:"促銷／免運訊息輪播",l:"blocks 逐則文字＋連結；多則時自動輪播（間隔 6s，Dawn 預設關閉可設 3–9s）；hover 與 prefers-reduced-motion 暫停；無內容不渲染（42 §1.1）",i:"header-group 的 announcement-bar section [liquid:section.blocks,settings.announcement_*] [tbl:themes,templates,theme_settings] [ep:n/a 純渲染]"},
 localization:{t:"國家／幣別・語言選擇器（header）",f:"切換市場與語言",l:"選項>1 才渲染；改國家→presentment 幣別與可售目錄切換、改語言→URL 前綴（來源語言無前綴，其餘 /zh-hans、/en）；結帳中不可切幣；🔒已驗證爬蟲永不重導。<br>🔴 <b>語言與市場是兩個維度，永遠不綁死</b>（67 §A.1）：同一語言可跨市場、同一市場可多語言；綁死的第一個症狀就是「英文版的香港店顯示美元符號」（鐵律 10 ＋ 裁定二的直接違反）。語言集合是<b>資料</b>（shop_locales），首發三語只是種子——新增語言不改這支元件。<br>切換器必須是<b>真實連結</b>（<code>&lt;a href&gt;</code> 指向目標市場／語言 URL），不能純 JS：那是爬蟲發現其他版本的路徑之一（62 §K.2）",i:"{% form 'localization' %}；Dawn 送 locale_code、Horizon 送 language_code 兩者都要接 [ep:POST /localization] [liquid:localization.available_countries,shop.published_locales] [tbl:markets,shops]"},
+locpicker:{t:"地區與語言抽屜",f:"兩個控件：國家／地區（幣別・運費・可售性・法域 pack）＋語言（本市場開放的）",l:"🔴 <b>兩個控件，一個 form，不得合成一個</b>（67 §F.2，2026-08-13 定案）：換語言只換文字，換地區換的是幣別、稅、運費、可購品項、法域——合成一個 ⇒ 買家想看英文，結果連幣別一起變了。恆帶地區的前綴（<code>en-hk</code>）字面上就是「語言＋地區」，很容易被實作成一個下拉列出所有前綴，所以要明文擋住：<b>前綴的形態是 URL 的事實，不是 UI 的規格</b>（<code>i18n.market_locales.switcher_is_two_controls: true</code>）。<br>🔴 <b>語言清單＝ ③ 市場開放集 ∩ published</b>（67 §A.5／§F.2，裁定逐字「前台不用全部顯示出來」）：不列全店啟用語言。它在定義上不可能產生 404 連結，因為它與路由表同一個來源。<br>🔴 切地區時若當前語言不在新市場的開放集 ⇒ 落到新市場的 <code>defaultLocale</code>（29 §4，本輪補上「開放集」這個限定詞）。<br>`alt` 對照：strawberrynet header 只有一個合併的 Country/Region 控件——<b>我方不採用</b>，理由如上。",i:"{% form 'localization' %} 的 country_code ＋ language_code 兩個欄位名都要收（25 號坑 #4、29 §4）[ep:POST /localization] [tbl:markets,market_web_presence_locales,shop_locales]"},
+locpublish:{t:"示範：語言發布狀態",f:"就地切換某個語言的 published，觀察切換器與路由的變化",l:"這是把 <code>shop_locales.published</code> 搬到前台的<b>示範開關</b>——正式版它在 admin，前台沒有這個控件。放在這裡的唯一理由是讓 67 §A.5(c) <b>情形 4</b> 可以被肉眼驗證：未發布 ⇒ 該語言從<b>每一個</b>市場的切換器消失、其 URL 前綴一律 <b>404</b>、也不進 hreflang 與 sitemap。<br>🔴 <b>取消發布不刪任何一列譯文</b>：曝光是決策，譯文是資產（67 §A.5(a)／§C.8(d)-4）。重新發布之後譯文原封不動還在——這正是「② 與 ③ 必須分離」的產品理由。",i:"P1・[api:shopLocaleUpdate]（published） [tbl:shop_locales] [job:hreflang_matrix_build]（去抖 5 分鐘）"},
+badprefix:{t:"不存在的語言前綴（404）",f:"說明為什麼是 404 而不是重導，並列出目前可用的前綴",l:"🔴 <b>前綴 ≡ (市場, 語言) 身分</b>（67 §F.1(c)）：不存在的組合<b>不是「有頁面但不給看」，是沒有這條路由</b>——與路由表同一張表，不是另一套權限檢查。三種情形都走這裡：①該市場沒開放這個語言 ②曾經開放後來被移除 ③語言未發布（§A.5(c) 情形 1／3／4）。<br>🔴 <b>不得用 302／301 導到該市場的預設語言</b>：①重導的 URL 不能進 hreflang（62 §0.2 原則 4）而它看起來很像該進去；②Google 會把重導來源與目標視為同一頁，於是 <code>/zh-hant-ca/</code> 與 <code>/en-ca/</code> 被合併，<b>等於用重導製造了裁定要避免的那種混淆</b>；③商家改白名單時一批 URL 從 200 變 302 再變 404，索引狀態抖三次。<b>404 一次到位。</b><br>🔴 相對地，<b>別的市場的前綴一律 200</b>（情形 2）：加拿大買家開 <code>/en-hk/…</code> 必須回 200——那條 URL 屬於香港市場，「加拿大沒開放」對它是無意義的判斷，而且爬蟲沒有市場身分，回 404 會讓整組 hreflang 失效。",i:"路由層查表（<code>UNIQUE (shop_id, domain_id, url_prefix)</code>）；⚠ 410 是否比 404 更正確未查證 ⇒ V-224，結案前用 404（跟隨本尊）"},
+notsold:{t:"本市場不販售",f:"商品不在此市場 catalog 內時的購買區狀態",l:"可售性是<b>市場資料</b>（29 §1.3 catalog：發布範圍＋價格）不是商品屬性。🔴 這一格與譯文<b>正交</b>：切語言不會讓它變成可買，切市場才會——同一件商品在香港可買、在加拿大不可買，而<b>兩邊的文字逐字相同</b>。<br>🔴 不得用「售罄」文案代替：售罄是庫存狀態（可以到貨通知），不販售是目錄狀態（通知也沒有意義）。兩者混用會讓買家一直等一個永遠不會來的補貨通知。",i:"P1・[liquid:product.selected_or_first_available_variant,product.published_scopes] [tbl:catalogs,publications,price_lists]"},
 logo:{t:"Logo",f:"回首頁",l:"image_picker＋寬度 range 50–300px（預設 100）；未上傳→輸出 shop.name 文字；密碼頁沿用（42 §1.1）",i:"[ep:GET /] [liquid:shop.name,settings.logo] [tbl:theme_settings,files]"},
 mainmenu:{t:"主導航 menu",f:"一層選單＋下拉／抽屜",l:"來源 linklists[main-menu]，巢狀 ≤3 層；桌機 hover 或 click 展開（aria-expanded 切換）、Esc 收合；≤767 收成左側抽屜手風琴；空選單不渲染（42 §1.1）",i:"[liquid:linklists,linklist.links,link.child_active] [tbl:menus,menu_items] [ep:n/a 隨頁渲染]"},
 mega:{t:"Mega menu 面板",f:"二層以上大面板導航",l:"header 設定 menu_type_desktop=dropdown/mega/drawer；mega＝全寬面板，欄＝第二層、欄內連結＝第三層；僅 ≥1024 顯示，手機一律抽屜手風琴；焦點需可循環（42 §1.1）",i:"[liquid:linklist.links[].links] [tbl:menus,menu_items] [ep:n/a]"},
 searchicon:{t:"搜尋 icon",f:"開啟 predictive search 覆蓋層",l:"點擊→整頁層＋輸入框自動聚焦；無 JS 時 fallback 為 GET /search 表單（42 §1.1、§8.1）",i:"[ep:GET /search/suggest.json] [ep:GET /search] [liquid:routes.predictive_search_url,routes.search_url]"},
 accounticon:{t:"帳戶 icon",f:"進帳戶或登入",l:"customer 存在→/account；否則 /account/login；商店關閉帳戶功能時整顆隱藏（42 §1.1）",i:"[ep:GET /account] [liquid:customer,routes.account_url,routes.account_login_url] [tbl:customers,sessions]"},
 carticon:{t:"購物袋 icon＋數量 badge",f:"開 cart drawer（或 /cart）",l:"badge＝cart.item_count，>99 顯示 99+，0 時隱藏；cart type 設定決定點擊行為 drawer/page/notification；加購後以 Section Rendering 局部替換 cart-icon-bubble（42 §1.1、§5.1）",i:"[ep:GET /cart.js] [ep:POST /cart/add.js?sections=cart-icon-bubble,cart-drawer] [liquid:cart.item_count,cart.total_price] [tbl:carts,cart_line_items]"},
-freeship:{t:"免運進度條（drawer）",f:"湊單激勵",l:"門檻 T 為 theme 設定（本原型 FREE_SHIP，base cents，需與運費規則同步）；未達標顯示「再買 Δ」＋進度 %，達標顯示已享免運；每次 cart 變動重算並過場動畫；門檻與差額一律走 fmt()，多幣別按市場 locale 換算與格式化（42 §5.3、鐵律 10）",i:"[liquid:cart.total_price,settings.free_shipping_threshold] [tbl:carts,cart_line_items,shipping_rates] [ep:GET /cart.js]"},
+freeship:{t:"免運進度條（drawer）",f:"湊單激勵",l:"門檻 T 為 theme 設定（本原型 freeShip()，base cents，需與運費規則同步）；未達標顯示「再買 Δ」＋進度 %，達標顯示已享免運；每次 cart 變動重算並過場動畫；門檻與差額一律走 fmt()，多幣別按市場 locale 換算與格式化（42 §5.3、鐵律 10）",i:"[liquid:cart.total_price,settings.free_shipping_threshold] [tbl:carts,cart_line_items,shipping_rates] [ep:GET /cart.js]"},
 drcheckout:{t:"drawer 結帳鈕",f:"進入結帳",l:"空車禁用；POST /cart → 302 /checkouts/{token}；require_login 開啟時未登入先導登入（42 §5.3）",i:"[ep:POST /checkout] [ep:GET /checkouts/{token}] [liquid:cart,routes.cart_url] [tbl:carts,checkouts]"},
 drupsell:{t:"drawer 加購推薦",f:"結帳前最後一次加購",l:"排除購物袋內已有商品與售罄品，取 2 筆；點加入＝單變體直接 add、多變體開 quick add（42 §5.1）",i:"[ep:GET /recommendations/products.json?intent=complementary] [ep:POST /cart/add.js] [tbl:products,product_variants]"},
 footermenu:{t:"Footer 選單欄 blocks",f:"多欄連結導航",l:"block 型別 link_list／text／image，欄數自適應；手機可摺疊為手風琴（42 §1.2）",i:"[liquid:linklists,section.blocks] [tbl:menus,menu_items] [ep:n/a]"},
 newsletter:{t:"電子報訂閱表單",f:"收 email 行銷名單",l:"{% form 'customer' %}＋contact[tags]=newsletter；single opt-in（可設 double）；重複訂閱回相同成功訊息（不洩漏帳戶是否存在）；hCaptcha 保護（42 §1.2）",i:"[ep:POST /contact] [liquid:form.posted_successfully?,form.errors] [tbl:customers,segments,event_outbox]"},
 footerhelp:{t:"Footer 協助連結欄",f:"說明頁導航",l:"連結清單由 jurisdiction pack 決定：tax_invoice=gui 出「電子發票說明」、tax_invoice=none 出「收據說明」；有 pickup_networks 才出取貨教學。切市場時整欄重繪——說明頁本身就是法域素材，不能在核心寫死一組（鐵律 11）",i:"[liquid:linklists,section.blocks] [tbl:menus,menu_items] [ep:n/a]"},
-footerloc:{t:"Footer 幣別／語言選擇器",f:"同 header 選擇器，慣例放頁尾",l:"選項>1 才渲染；改幣別後全站 money filter 以 presentment 幣別輸出（含 rounding；JPY 等零小數幣不出小數，29 §2）",i:"[ep:POST /localization] [liquid:localization,shop.enabled_currencies] [tbl:markets]"},
+footerloc:{t:"Footer 地區／語言選擇器",f:"地區＝<select>；語言＝常駐在 DOM 裡的真實 <a href> 清單",l:"選項>1 才渲染；改地區後全站 money filter 以 presentment 幣別輸出（含 rounding；JPY 等零小數幣不出小數，29 §2），並連帶換掉免運門檻與可售品項。<br>🔴 <b>語言那一半是連結不是 select</b>（67 §F.2）：抽屜裡那一組要點開才存在，爬蟲看不到；頁尾這一組是它們發現其他語言版本的路徑。兩組共用同一支產生器（<code>sfLocaleLinks()</code>），值域都是 <b>③ 市場開放集 ∩ published</b>——它<b>在定義上</b>不可能產生 404 連結，因為它與路由表同一個來源。<br>🔴 <b>兩個控件不得合成一個</b>（<code>i18n.market_locales.switcher_is_two_controls</code>）：換語言只換文字，換地區換幣別／運費／可售性／法域。",i:"[ep:POST /localization]（country_code ＋ language_code 兩個欄位）[liquid:localization,shop.published_locales] [tbl:markets,market_web_presence_locales]"},
 payicons:{t:"付款方式圖示列",f:"展示可用付款方式",l:"讀 shop.enabled_payment_types 自動輸出；本原型改讀 jurisdiction pack 的 payment_icons，切市場即整列換掉。清單語義是「PSP（Airwallex／Stripe／PayPal…）支援什麼」，不是我們實作了什麼；純展示（42 §1.2、56 附錄 Z）",i:"[liquid:shop.enabled_payment_types] [tbl:tax_settings,shops] [ep:n/a]"},
 cookiebanner:{t:"Cookie 同意橫幅",f:"先同意後追蹤",l:"受規範地區未同意前不落非必要 cookie、不發 marketing/analytics pixel；接受＝三類全開、拒絕＝全關（essential 恆開）；選擇後寫 consent cookie 不再顯示；前置條件為已發布隱私政策（42 §1.3）",i:"平台注入非 theme section [ep:TBD 待確認 consent 寫入端點（規劃 POST /api/consent）] [tbl:sessions,shops] [liquid:shop.privacy_policy]"},
 cookieprefs:{t:"Cookie 偏好 modal",f:"分類細選",l:"四類：必要（鎖定開）／分析／行銷／偏好；逐類 toggle；之後可從 footer「Cookie 偏好」重開（42 §1.3）",i:"[ep:TBD 同上] [tbl:sessions]"},
@@ -4431,7 +4769,7 @@ cartlines:{t:"購物車行項列表",f:"顯示與編輯車內商品",l:"標題�
 cartqty:{t:"行數量 −/＋/輸入",f:"改變行數量",l:"POST /cart/change.js（line 或 key ＋ quantity，0＝移除）；300ms debounce；回應帶 sections 一次取回 drawer/badge HTML 局部替換；超庫存回 422＋行內錯誤「僅剩 N 件」並回彈；每行上限 999、行數上限 100（42 §5.2、15-F1）",i:"[ep:POST /cart/change.js] [liquid:line_item.key,line_item.quantity] [tbl:carts,cart_line_items,inventory_levels]"},
 cartremove:{t:"移除行項",f:"刪除一行",l:"等同 quantity=0；行淡出後重算；最後一行刪除→轉空狀態；焦點移至下一行或標題（42 §5.2）",i:"[ep:POST /cart/change.js（quantity=0）] [liquid:line_item.url_to_remove] [tbl:cart_line_items]"},
 cartnote:{t:"訂單備註 cart note",f:"給商家的留言",l:"textarea 失焦即 POST /cart/update.js {note}；≤5,000 字（進 limits.yml）；隨訂單寫入 admin（42 §5.2）",i:"[ep:POST /cart/update.js] [liquid:cart.note] [tbl:carts,orders]"},
-freeshipbar:{t:"免運進度條（購物車頁）",f:"湊單激勵",l:"同 drawer 版本：門檻取 FREE_SHIP（base cents），以折後小計計算；門檻與實際運費規則的一致性由商家自負（慣例）（42 §5.3）",i:"[liquid:cart.total_price] [tbl:carts,shipping_rates] [ep:GET /cart.js]"},
+freeshipbar:{t:"免運進度條（購物車頁）",f:"湊單激勵",l:"同 drawer 版本：門檻取 freeShip()（base cents），以折後小計計算；門檻與實際運費規則的一致性由商家自負（慣例）（42 §5.3）",i:"[liquid:cart.total_price] [tbl:carts,shipping_rates] [ep:GET /cart.js]"},
 discountcode:{t:"折扣碼／禮品卡輸入",f:"提前套用折扣",l:"2025 夏起購物車原生支援；成功＝chip（碼＋金額＋×移除），失敗＝inline「折扣碼無效」；禮品卡顯示卡號末 4 碼與已折餘額；一單多碼依 combinations 設定；折扣碼嘗試限流 10 次/分（防枚舉，15-F3）（42 §5.3、§6.6）",i:"[ep:POST /cart/update.js（discount）] [ep:POST /checkout（discount_code）] [liquid:cart.discount_applications,discount_application.title] [tbl:discounts,discount_applications,gift_cards]"},
 shipest:{t:"運費估算器",f:"結帳前預估運費",l:"國家／地區／郵遞區號三欄→回各費率（名稱＋金額＋備註）；郵遞區號欄依<b>商家設定的三態</b>渲染（hidden 整欄不出現／optional 顯示不擋／required 顯示且驗），三態的來源是「商家覆寫 → 法域預設 → 核心 fallback」三層（§0-e、limits.yml checkout.address_field_*）——前台<b>不自行認定</b>某個國家有沒有郵遞區號；估算器只驗格式、空值不擋（估運費不需要完整地址）；未宣告 pack 時直接回 JURISDICTION_CAPABILITY_UNDECLARED；無可用費率→「此地址無可用運送方式」（42 §5.3、56 §A.2 C6）",i:"[ep:GET /cart/shipping_rates.json?shipping_address[zip]=&country=&province=] [liquid:cart.requires_shipping] [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
 cartupsell:{t:"購物車頁加購推薦",f:"頁尾 upsell",l:"排除已在車內與售罄商品；點卡進商品頁、點快速加購直接加車（42 §5.1）",i:"[ep:GET /recommendations/products.json?intent=complementary] [tbl:products]"},

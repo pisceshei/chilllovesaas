@@ -3462,9 +3462,12 @@ csv:
   inventory_max_upload_mb: 15
   # 🔴 ours（非官方）：官方未載明列數上限（61 §9.5 V-64 已登記）。沿用 13 §F6.2 的 5 萬行。
   product_max_rows: 50000
-  # 🔴 ours：欄數硬上限。推導＝base_columns(43) + translatable(12) × (max_locales_per_file(5) − 1)
-  #    = 43 + 48 = 91，取 512 作結構性護欄（留給日後 metafield 欄與 Google 屬性欄的空間）。
-  #    它**不是**多語言的實際約束——實際先撞到的一定是 product_max_upload_mb（見 §E.2 的估算）。
+  # 🔴 ours：欄數硬上限。推導＝base_columns(43) + translatable(12) × (max_locales_per_file(4) − 1)
+  #    = 43 + 36 = **79**，取 512 作結構性護欄（留給日後 metafield 欄與 Google 屬性欄的空間）。
+  #    它**不是**多語言的實際約束——實際先撞到的一定是 product_max_upload_mb（15 MB）。
+  # 🔴 實測補充（70 §E.2.1）：15 MB 在 **1 個語言時就已經是約束**（43 欄 ⇒ ~40,600 列 < product_max_rows
+  #    的 50,000）⇒ 15 MB 是這個功能的常態約束，**不是多語言引進的**。
+  # <!-- 🔴 初版推導用 max_locales_per_file(5) ⇒ 91 欄。該上限本輪改為 4（見 multilingual 區塊的推導）。 -->
   product_max_columns: 512
   # 任一商品的變體數 > 100 ⇒ 匯出改 email 寄送。出處：61 §6.1（help，P53）。
   export_email_threshold_variants: 100
@@ -3473,27 +3476,89 @@ csv:
 
   # --- 多語言欄名契約（70 §D）—— 🔴 本區塊是 70 號的核心 ----------------------
   multilingual:
-    # 欄名形態：`{基礎欄名}␣[{BCP-47 標籤}]`。例：`Title [zh-Hant-HK]`。
-    # 🔴 **不抄 Shopline 的 `Product Name (English)`**，五條理由見 70 §D.1，其中兩條是硬的：
-    #    ① 裁定「locale 一律語言＋地區」⇒ en-HK 與 en-SG 都叫「English」，成對欄名會撞名；
-    #    ② 語言的**顯示名本身是文案**（English／英文／英語），把文案當解析鍵 ⇒ 新增語言要改對照表，
-    #       違反 i18n.launch_locales_is_seed_not_enum（語言集合是資料不是列舉，67 §A.2）。
+    # 🔴🔴 **CSV 的語言維度＝語言（shop_locales.tag），不帶地區。** 全文＝70 §D.0／§D.5。
+    #
+    #    內容維度（本區塊）  shop_locales      en / fr / zh-Hant / zh-Hans   ⇒ 4 份內容 ⇒ 4 組欄
+    #    呈現維度（62 §I.2） market × locale   /en-hk /en-ca /zh-hant-hk …   ⇒ 7 條 URL 前綴
+    #    🔴 /en-hk 與 /en-ca 讀的是**同一格** `Title [en]`。7 條前綴只要 4 個語言欄。
+    #
+    # <!-- 🔴 沿革：commit c2c1355 的初版訂 `locale_tag_requires_region: true`（欄名 `Title [en-HK]`），
+    #      那是把使用者「URL 一律帶地區碼」的裁定誤讀成「內容也按語言＋地區鍵」。
+    #      使用者 2026-08-13 澄清（ruling，逐字）：「英文都是同一組英文，不同國家只要是使用英文，
+    #      都是調用 Product Name (English)。**區別只是國家在後台設定的時候，會添加國家區分碼**。」
+    #      🔴 62 §I.2 行 921 早就點名過這個錯：「恆帶地區改的是**輸出的碼**，不是語言註冊表。
+    #         把 zh-Hant-HK 存進 platform_locales 是本次修改最容易犯的錯。」——初版犯的就是這條，
+    #         只是犯在 CSV 表頭。**不得因為 62／67 寫著「恆帶地區」就把本鍵改回去**：那兩份講輸出碼，本區塊講內容鍵。 -->
+    #
+    # 欄名形態：`{基礎欄名}␣[{BCP-47 語言標籤}]`。例：`Title [zh-Hant]`、`Body (HTML) [fr]`。
+    # 🔴 **輸出**不抄 Shopline 的 `Product Name (English)`（三條理由見 70 §D.1）；
+    #    **匯入**兩種都認（accept_locale_header_dialects），因為那換到 Shopline 商家零轉檔。
     locale_column_pattern: "{base_column} [{bcp47_tag}]"
     locale_column_open: "["
     locale_column_close: "]"
-    # observed：`[` 與 `]` 在 E1(44欄)＋E2(57欄)＋E3(62欄) 共 163 個表頭中出現 **0 次**；
-    #   而 `(` `)` 出現 33 次（`Body (HTML)`／`Weight value (grams)`／`X (product.metafields.…)`）
-    #   ⇒ 括號在 Shopify 表頭裡**已經有兩種意思**（單位註記、metafield 路徑），
-    #      再加第三種（語言）只能靠寫死清單消歧義——那正是我們不要的 enum。
-    bracket_choice_evidence: "0 hits of [ ] across 163 header cells in E1+E2+E3"
+    # observed（2026-08-13 **第二輪重新驗證，數字全部重現**）：
+    #   `[` 與 `]` 在 E1(44欄)＋E2(57欄)＋E3(62欄) 共 163 個表頭中出現 **0 次**；
+    #   而 `(` `)` 出現 **33** 次（`Body (HTML)`／`Weight value (grams)`／`X (product.metafields.…)`
+    #   ／`Product Name (English)`／`Quantity (DO NOT EDIT)`），`/` 出現 13 次。
+    #   ⇒ 圓括號在 Shopify 表頭裡**已經有兩種意思**（單位註記、metafield 路徑），Shopline 又是第三種（語言）。
+    # 🔴 **輸出用圓括號的具體壞法**：`Body (HTML)` 的英文譯文欄會變成 `Body (HTML) (English)`
+    #    ——兩層圓括號，外層與內層無法靠語法區分，解析器只能靠寫死清單消歧義，
+    #    那正是 i18n.launch_locales_is_seed_not_enum 要避免的 enum。
+    #    方括號零出現 ⇒ `Body (HTML) [en]` 一眼可解析：`[…]` 一定是語言，`(…)` 一定不是。
+    bracket_choice_evidence: "re-verified 2026-08-13: 0 hits of [ ] and 33 hits of ( ) across 163 header cells in E1+E2+E3"
     # 語言標籤格式沿用語言註冊的同一條規則，**不另立**。
     locale_tag_format_key: i18n.locale_tag_format
-    # 🔴 表頭裡一律寫 BCP-47 標籤，禁止寫語言顯示名（English／英文／繁體中文）。
+    # 🔴 表頭裡一律寫 BCP-47 標籤，禁止寫語言**顯示名**——這條只約束輸出，匯入見 accept_locale_header_dialects。
     locale_display_name_in_header_forbidden: true
-    # 🔴 表頭語言標籤必須是**語言＋地區**（ruling 2026-08-13）。裸語言碼（en／zh-Hant）
-    #    在本檔的欄名裡一律拒絕——它在兩個以上市場共用同一語言時無法定位。
-    #    ⚠ 這與 67 §A.4／§C.1 現行文字衝突（那裡說 region 通常為 NULL）⇒ 70 §M-1 已登記。
-    locale_tag_requires_region: true
+    # 🔴🔴 **表頭語言標籤不得帶地區**（取代初版的 locale_tag_requires_region: true，理由見上方沿革）。
+    #    `Title [en-HK]`／`Title [zh-Hant-TW]` 一律拒絕——不論是匯入進來的，還是我方自己產生的。
+    #    ⚠ 想加 `Title [en-HK]` ⇒ 那是**市場級覆寫**（translations.market_id 非 NULL），
+    #      是**資料模型變更**不是格式變更。先改 67，再回頭改這裡。詳見 70 §D.5(b)。
+    locale_tag_forbids_region: true
+    locale_tag_regex: "^[a-z]{2,3}(-[A-Z][a-z]{3})?$"
+    region_bearing_tag_action: reject_file
+    # 🔴 本檔假設「無市場級覆寫」——同一語言在所有市場的商品內容完全一致。
+    #    依據＝2026-08-13 使用者裁定（逐字：「不必考慮香港英文和加拿大英文的揭露事項因法規必須不同，
+    #    所有的都會保持一致」）。⇒ [locale] 欄一律對應 translations.market_id IS NULL。
+    #    ⚠ **這是「不使用」不是「不該存在」**：translations.market_id 是 67 的範圍，本區塊不動它。
+    assumes_no_market_level_override: true
+    market_override_ruling_date: "2026-08-13"
+    locale_columns_map_to_market_id: "NULL"
+
+    # --- 🔴 匯入的欄名方言（70 §D.2b）—— Shopline 商家零轉檔 -------------------
+    # 與 shopify_import.accept_header_dialects（**基礎欄名**的方言）是**兩張獨立的表**，
+    # 可自由組合：`Product Name (English)` ＝ Shopline 基礎欄名 ＋ Shopline 語言後綴。
+    accept_locale_header_dialects: [bracket_tag, paren_display_name]
+    canonical_locale_dialect: bracket_tag
+    # 🔴 這張對照表是**封閉的、且只用於匯入**：商家拿來匯入的舊檔案只會出現 Shopline 支援過的
+    #    語言名——新增我方語言**不會**讓別人的舊檔案多出一個語言名。⇒ 不違反 67 §A.2
+    #    （那條講的是「**組出**欄名需要全集」；「**認得**欄名只需要對方用過的那些」）。
+    locale_display_name_aliases_import_only: true
+    locale_display_name_aliases:
+      English: en
+      Traditional Chinese: zh-Hant
+      Simplified Chinese: zh-Hans
+      Japanese: ja
+      Korean: ko
+      French: fr
+      German: de
+      Spanish: es
+      Thai: th
+      Vietnamese: vi
+      Indonesian: id
+      Malay: ms
+    locale_display_name_match_case_sensitive: false
+    # 🔴 表裡沒有的顯示名 ⇒ **不猜**，照 unknown_column_action 進報告。
+    #    絕不做 startswith／Levenshtein 之類的近似匹配：`Product Summary (English)` 與
+    #    `Product Name (English)` 差三個字，猜錯就是把摘要寫進標題。
+    locale_display_name_fuzzy_match_forbidden: true
+    # 🔴 顯示名解析出的標籤仍要過 unknown_locale_column_action：`(Japanese)` 解析成 ja，
+    #    但店鋪沒啟用 ja ⇒ 整檔拒絕，與 `Title [ja]` 完全同路。
+    #    方言只影響「怎麼讀懂欄名」，不影響「這個語言能不能寫」。
+    dialect_does_not_bypass_locale_validation: true
+    # 同一個 (欄, 語言) 被兩種方言各寫一次（`Title [en]` ＋ `Title (English)`）⇒ 同一格資料
+    # 兩個真相 ⇒ 整檔拒絕。與 source_locale_duplicate_column_action 是同一個問題，處置相同：**不仲裁**。
+    duplicate_locale_column_action: reject_file
     # 基礎欄（無後綴）＝**來源語言**的值，不是「預設值」也不是「所有語言共用」。
     # 🔴 這條是 Shopify 匯出檔能被原檔吃進來的唯一理由：一份沒有任何 [locale] 欄的檔案
     #    ＝ 一份純來源語言的檔案 ＝ Shopify 匯出檔。
@@ -3529,13 +3594,82 @@ csv:
     # 🔴 **匯入器一律與欄序無關**（以表頭名定位），所以佈局純粹是匯出端的人因選擇。
     export_column_layout: adjacent_to_base
     importer_is_column_order_independent: true
-    # 🔴 單檔語言數上限（ours）。推導：12 個可翻譯欄 × 5 語 ⇒ 48 個譯文欄，
-    #    已與 43 個基礎欄同量級——超過這裡，這份檔案就不再是「商品 CSV」而是攤平的翻譯表。
-    max_locales_per_file: 5
+    # --- 🔴 寬表／長表的門檻（70 §E.2）—— 判準不是欄數，是「這份檔案由幾個人填」-----
+    #
+    # 🔴 **先說一件反直覺的事：欄數與檔案大小都定不出門檻。** 四個候選判準的實測：
+    #   A 欄數硬上限（product_max_columns: 512）⇒ L=40 才撞到，訂在這裡等於沒訂。
+    #   B 檔案大小 ⇒ **平滑退化，沒有懸崖**。實測（範本檔基準，含富文本）：
+    #       L=1 43欄 388 B/列 → 15MB 容 ~40,600 列
+    #       L=4 79欄 817 B/列 → 15MB 容 ~19,300 列
+    #       L=8 127欄 ~1242 B/列 → 15MB 容 ~12,700 列
+    #     邊際＝每多一語 +12 欄／表頭 +205 B／資料 +106 B/列 ⇒ **是加法不是乘法**
+    #     <!-- 🔴 初版寫「語言數對檔案大小的影響是乘法的」，實測是加法。前半錯、後半（對列數是零）對。 -->
+    #     ⇒ 檔案大小產生的是「列數 × 語言數」的乘積約束，**不可能產生語言數門檻**。
+    #   C Excel／人的可用性 ⇒ 43 個基礎欄本身就超過任何「舒適」欄數；Shopify 官方範本 57 欄 0 語言。
+    #   D 🔴 **這份檔案由幾個人填** ⇒ **這才是判準**（wide_vs_long_criterion）。
+    #
+    # 寬表一列 = 一個變體 × 全部欄位 × 全部語言 ⇒ 適合「一個人把一個商品填完」
+    # 長表一列 = 一個 (資源, 欄位, 語言)      ⇒ 適合「一個人把一個語言填完」，9 欄固定不隨語言成長
+    wide_vs_long_criterion: single_editor_vs_divided_editing
+    long_form_is_translation_csv: true
+    long_form_spec_key: "67 §E.6(b)"
+    long_form_column_count: 9
+    long_form_column_count_is_locale_invariant: true
+    # 🔴 「多人分工」有兩條硬後果，都不是美學問題：
+    #   ① 寬表的 43 個基礎欄裡有 Cost per item（成本）／Variant Inventory Qty（庫存）／
+    #      Variant Barcode・Variant SKU（供應鏈識別碼）。長表的 9 欄一個都沒有。
+    #      ⇒ 檔案一旦**出境**給外部譯者，寬表在合規上就是錯的工具，**與它有幾欄無關**。
+    #   ② 寬表在結構上無法分工：4 個譯者改同一份檔案的不同欄 ⇒ 只能序列化或手工合併。
+    #      長表可按 (locale, resource_type) 分檔（67 §E.6(b) 既有）。
+    wide_form_forbidden_for_external_translators: true
+    commercially_sensitive_base_columns:
+      - "Cost per item"
+      - "Variant Inventory Qty"
+      - "Variant Barcode"
+      - "Variant SKU"
+    long_form_must_exclude_sensitive_columns: true
+    #
+    # 🔴 單檔語言數上限（ours）。**判準：R = 譯文欄數 / 基礎欄數 < 1**（譯文欄不得多過基礎欄）。
+    #    R = 12 × (L−1) / 43 ⇒ L=2:0.28  L=3:0.56  **L=4:0.84**  L=5:1.12  L=6:1.40
+    #    R<1 ⇒ 檔案主體仍是商品資料，「商品 CSV」這個名字還成立；
+    #    R≥1 ⇒ 譯文欄多過商品欄，這份檔案已經是一張攤平的翻譯表，而那已有專用格式（長表）。
+    #    ⇒ max_locales_per_file = R 首次 ≥1 的前一個整數 = **4**
+    # <!-- 🔴 初版值為 5，原註解：「12 個可翻譯欄 × 5 語 ⇒ 48 個譯文欄，已與 43 個基礎欄同量級」。
+    #      **判準沒換，只是把「同量級」算清楚了**：48 > 43，R = 1.12 ——它不是「同量級所以可以」，
+    #      它是「已經越線」。初版把 R≥1 的那一格算進了允許範圍。 -->
+    # 🔴 **這個數字剛好等於使用者的配置（4 語言），這件事本身要標出來**：使用者卡在最後一格，
+    #    現在合法、開第 5 個語言就會撞上 ⇒ UI 不能只在超過時才講話（見 locale_picker_warn_at_max）。
+    #    也**不得**因為「使用者剛好是 4」就以為這條規則被驗證過——它只是還沒被觸發。
+    # 🔴 這是 ours，是判斷不是量測。兩個對照平台把答案夾在中間：
+    #    Shopline 的寬表是 **2** 語言就停住（E3，alt）；Shopify 語言最多，它的商品 CSV 是
+    #    **0** 語言、翻譯 100% 走長表（help）。⇒ 4 已經比任何一個對照平台的寬表都寬。
+    max_locales_per_file: 4
+    max_locales_derivation: translation_columns_must_not_outnumber_base_columns
+    translation_to_base_ratio_at_max: 0.84
+    translation_to_base_ratio_limit: 1.0
     # 超過上限**不是錯誤**，是把商家導去正確的工具（70 §H 的分工）。
+    # 🔴 上限是「一份檔案能帶幾個語言」，**不是「店裡能有幾個語言」**——8 個語言的店照樣
+    #    可以匯出商品 CSV，只是一次帶 ≤4 個。
     over_max_locales_action: redirect_to_translation_csv
     # 欄數公式（供 UI 在勾選語言時即時顯示欄數與檔案大小估算）。
     column_count_formula: "base_columns + translatable_columns * (selected_locales - 1)"
+    # 實測列寬（餵給上面的大小估算；範本檔基準，含富文本描述）。
+    measured_header_bytes_at_4_locales: 1341
+    measured_row_bytes_at_4_locales: 817
+    measured_marginal_row_bytes_per_locale: 106
+    # --- 🔴 後台語言勾選器（匯出 modal）的四條行為（70 §E.2.4）------------------
+    locale_picker_live_estimate: true          # 勾一個變一次；誤差 < 10%（CSV-16）
+    # 🔴 勾到**第 4 個**（＝上限）時就預告，不是等到第 5 個才擋。等商家把工作流建立在寬表上，
+    #    第 5 個語言才告訴他要換工具，換工具的成本已從「選一個選項」變成「改流程」。
+    locale_picker_warn_at_max: true
+    # 🔴 擋下時同時給出口，文案要說明**為什麼**而不只是「超過上限」。
+    locale_picker_block_message_must_explain_why: true
+    # 🔴 偵測到「要交給外部譯者」的意圖時，**即使未超過門檻**也推薦長表——
+    #    出境是與語言數無關的獨立理由（2 語的寬表一樣洩漏全部商品成本）。
+    suggest_long_form_for_external_translation: true
+    # 🔴 寬表／長表在 UI 上是**同一次匯出的兩種輸出形狀**，不是兩個埋在不同選單裡的功能。
+    #    否則商家根本不會知道長表存在——而上面那兩條硬後果，是他不知道就會踩的那種。
+    export_form_choice_is_single_control: true
     # 🔴 商品 CSV 的多語言欄**只准出現在商品 CSV**。庫存 CSV 的 Title／Option Name 是
     #    「僅供閱讀、不會更新」欄（61 §6.2）⇒ 在那裡放譯文欄是雙重無意義，且會讓
     #    「庫存 CSV 只寫 on_hand」這條不變量出現例外。

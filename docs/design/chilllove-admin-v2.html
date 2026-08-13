@@ -2043,7 +2043,17 @@ const MARKET_LOCALES={
  USD:{default_currency:'USD',name:'美元',  symbol:'US$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
       abbr:[[1000000,'M'],[1000,'K']]},
  JPY:{default_currency:'JPY',name:'日圓',  symbol:'¥',  symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
-      abbr:[[100000000,'億'],[10000,'万']]}};
+      abbr:[[100000000,'億'],[10000,'万']]},
+ /* CAD 的符號取 `CA$`，不取 `C$`。出處與理由（查證日 2026-08-13）：
+    ① CLDR `en` locale 的 currencies.json：CAD `symbol` = `CA$`、`symbol-alt-narrow` = `$`
+       （unicode-org/cldr-json · cldr-numbers-full/main/en/currencies.json）。
+       `CA$` 是「跨 locale 通用寫法」，`$` 只在 en-CA 自己的 locale 裡才無歧義。
+    ② 同一份檔案裡 NIO（尼加拉瓜科多巴）的 `symbol-alt-narrow` 正是 `C$` ⇒ 用 `C$` 表示加幣
+       會與另一個 ISO 4217 幣別撞符號。我方是全球市場（鐵律 11），撞符號的寫法一律不採。
+    exponent 2 同其餘市場——那是 2026-08-12 裁定二的產品決策（顯示位數），CAD 的 ISO 4217
+    minor unit 剛好也是 2，但**兩者仍然不是同一件事**（鐵律 3：顯示位數 ≠ 對外單位）。 */
+ CAD:{default_currency:'CAD',name:'加幣',  symbol:'CA$',symbol_position:'prefix',exponent:2,grouping:[3],sep:',',dec:'.',gap:'',
+      abbr:[[1000000,'M'],[1000,'K']]}};
 /* /CURRENCY-TABLE */
 /* 上限值一律引 config/limits.yml 的鍵名，不在畫面上硬編數字（CLAUDE.md 鐵律 6）。
    值本身是 integer cents，顯示時交給 money() 依市場 locale 格式化。 */
@@ -4290,16 +4300,33 @@ const PLATFORM_LOCALES=[
  {tag:'zh-Hant',endonym:'繁體中文',short:'繁',script:'Hant',dir:'ltr',plural:'zh',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
  {tag:'zh-Hans',endonym:'简体中文',short:'简',script:'Hans',dir:'ltr',plural:'zh',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
  {tag:'en',     endonym:'English', short:'EN',script:'Latn',dir:'ltr',plural:'en_one_other',dateFmt:'mdy_long',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
+ /* 🔴 法文三個欄位刻意與 en **不同值**，因為它們是「語言相依行為的資料來源」（67 §A.2）：
+      plural  fr 的 one 涵蓋 0 與 1（`0 jour`／`1 jour` 都是單數，英文是 `0 days`）＋ 另有 many
+              （CLDR 複數規則 fr：one / many / other）⇒ 直接抄 en_one_other 會在「0 件商品」上出錯。
+      numFmt  fr 的千分位是窄不斷行空格、小數點是逗號（`1 234,50`）⇒ 與 grp3_dot 不同。
+              🔴 這一欄**只管非金額數字**（67 §H.2）——金額的符號／位數／分組一律由市場的
+                 CURRENCY-TABLE 決定（鐵律 10），語言不得參與，法文版的香港店仍然是 HK$1,480.00。
+      collation MySQL 8 沒有 fr 專屬 collation（語言專屬只到 cs/da/es/hu/ja/pl/sv/tr/zh… 那一組），
+              法文的重音排序由 utf8mb4_0900_ai_ci 覆蓋 ⇒ 這裡填通用值是正確答案，不是偷懶。 */
+ {tag:'fr',     endonym:'Français',short:'FR',script:'Latn',dir:'ltr',plural:'fr_one_many_other',dateFmt:'dmy',numFmt:'grp3_nnbsp_comma',collation:'utf8mb4_0900_ai_ci'},
  {tag:'ja',     endonym:'日本語',  short:'日',script:'Jpan',dir:'ltr',plural:'ja',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_ja_0900_as_cs'},
  {tag:'ko',     endonym:'한국어',  short:'한',script:'Kore',dir:'ltr',plural:'ko',dateFmt:'ymd_cjk',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
  {tag:'ms',     endonym:'Bahasa Melayu',short:'MS',script:'Latn',dir:'ltr',plural:'ms',dateFmt:'dmy',numFmt:'grp3_dot',collation:'utf8mb4_0900_ai_ci'},
  {tag:'ar',     endonym:'العربية', short:'AR',script:'Arab',dir:'rtl',plural:'ar_six',dateFmt:'dmy',numFmt:'grp3_arab',collation:'utf8mb4_0900_ai_ci'}];
-/* 租戶啟用的語言（67 §C.1 shop_locales）。首發三語是**種子資料**不是值域
-   （limits.yml i18n.launch_locales ＋ launch_locales_is_seed_not_enum: true）。 */
+/* 租戶啟用的語言（67 §C.1 shop_locales）＝**②商店啟用集**。首發語言是**種子資料**不是值域
+   （limits.yml i18n.launch_locales ＋ launch_locales_is_seed_not_enum: true）。
+   🔴 這是三層真包含的中間那一層（67 §A.5(a)）：
+        ① platform_locales（平台字典）⊇ ② shop_locales（本表）⊇ ③ market_locales（市場開放集）
+      ③ 掛在市場的 web presence 上（MARKETS[].cust.langs，見市場模組），**不是第三張表**（§C.8(a)）。
+   🔴 示範狀態（2026-08-13 裁定的配置）：4 種啟用，其中 **fr 停在「已啟用但未發布」**。
+      那個狀態是刻意的——它是 §A.5(c) 情形 4 的載體：未發布語言即使被開給市場，
+      前台仍 404、不進 hreflang／sitemap。SEO 頁的 hreflang 矩陣就是拿它來示範閘門的。
+      🔴 未發布 ≠ 沒有譯文：fr 有譯文（覆蓋率刻意不完整），published 是**曝光決策**。 */
 let SHOP_LOCALES=[
  {tag:'zh-Hant',source:true, published:true, pos:1},
  {tag:'en',      source:false,published:true, pos:2},
- {tag:'zh-Hans', source:false,published:false,pos:3}];
+ {tag:'zh-Hans', source:false,published:true, pos:3},
+ {tag:'fr',      source:false,published:false,pos:4}];
 /* 上限與硬規則一律引 config/limits.yml 的鍵名（鐵律 6），不在畫面上硬編數字 */
 const I18N={
  maxShopLocales:20,                        /* limits.yml i18n.max_shop_locales（29 §1.2 help）*/
@@ -4452,6 +4479,15 @@ const prodTrStatus=(p,loc)=>trStatus('PRODUCT',p.i,loc,PROD_TR);
 if(TRANSLATIONS[trKey('PRODUCT',0,'en','body')])TRANSLATIONS[trKey('PRODUCT',0,'en','body')].outdated='major';
 if(TRANSLATIONS[trKey('PRODUCT',2,'en','body')]){const e=TRANSLATIONS[trKey('PRODUCT',2,'en','body')];e.src='machine';e.review=true;}
 if(TRANSLATIONS[trKey('PRODUCT',3,'en','title')]){const e=TRANSLATIONS[trKey('PRODUCT',3,'en','title')];e.src='machine';e.review=true;}
+/* 🔴 法文的種子譯文**刻意只有三格**（10 個商品 × 5 欄 ＝ 50 格）。
+   這不是「還沒做完」，是本輪要示範的那個狀態差異（67 §A.5(c) 情形 4 ＋ §C.8(c)）：
+     覆蓋率低 ≠ 不能發布（發布與否是**曝光決策**，不是品質分數）；
+     但**未發布** ⇒ 這個語言不進 hreflang／sitemap、對應的 URL 一律 404。
+   兩件事各自獨立，UI 上必須看得出來是兩個欄位——合成一個「準備好了嗎」的布林，
+   商家就再也分不清「我沒翻完」與「我還沒開給買家」。 */
+[[0,{title:'Sweat à capuche oversize Milk Tea',body:'Coton lourd 400 g/m², coupe oversize à épaules tombantes. Le coloris milk tea est la pièce maîtresse de la saison.'}],
+ [2,{title:'T-shirt col rond en coton bio (lot de 3)'}]
+].forEach(([i,o])=>Object.keys(o).forEach(f=>trPut('PRODUCT',i,'fr',f,o[f])));
 
 /* ---------- 繁簡轉換：**獨立工具，不是 MT、也不是渲染期 fallback**（67 §E.5(c)）----------
    確定性查表 ⇒ 與設計原則 3 相容；但**仍然寫成真實譯文列**（value_source='script_conversion'、
@@ -4466,6 +4502,16 @@ const SC_T2S={'寬':'宽','寧':'宁','襯':'衬','機':'机','圓':'圆','領':
 const SC_AMBIG=['发','干','后','面','只','表','钟','制','复','历'];
 const toSimplified=s=>String(s||'').replace(/[\u4e00-\u9fff]/g,c=>SC_T2S[c]||c);
 const scAmbigCount=s=>(String(s||'').match(new RegExp('['+SC_AMBIG.join('')+']','g'))||[]).length;
+/* zh-Hans 的種子譯文：**用上面那支 toSimplified() 現場產生**，不另外手打一份字串。
+   理由是鐵律 7 的形態——手打的種子與工具的輸出一旦有一個字不同，商家按下「繁簡轉換」
+   會看到畫面上的字突然變了，卻找不到是誰改的。種子與工具同源，這個問題就不存在。
+   value_source='script_conversion' ＋ review_required=true：字形轉換的結果**是真實譯文列**
+   （可編輯、可稽核），不是渲染期偷偷換字（67 §E.5(c)）。 */
+[0,1,2,5,6].forEach(i=>['title','body','type'].forEach(f=>{
+  const p=PRODUCTS[i];if(!p)return;
+  const F0=PROD_TR.find(x=>x.k===f),base=F0?F0.get(p):'';
+  if(base)trPut('PRODUCT',i,'zh-Hans',f,toSimplified(base),{src:'script_conversion',review:true,from:'zh-Hant'});
+}));
 
 /* ---------- handle 生成（67 §D.1，全專案唯一實作 `Handles::Generate` 的原型投影）----------
    🔴 **這是明知偏離 Shopify**（68 §B-1）：本尊對 CJK 原樣保留、不落代碼、不擋發布；
@@ -4808,37 +4854,61 @@ const THEMES=[
    ⚠ 法域 jurisdiction：56 §A.0 硬要求 2「永遠市場本地，不可繼承」——否則會出現
      「香港母市場下掛台灣子市場卻套用香港稅制」。UI 標「不可繼承」且無覆寫／還原動作。
    ================================================================== */
-/* lineage 都沒有定義時的最後回退（46b:634「or the store defaults」）*/
+/* lineage 都沒有定義時的最後回退（46b:634「or the store defaults」）
+   🔴 `langs` 的最後回退是**空陣列**，不是「繁體中文」（2026-08-13 白名單裁定的直接後果）：
+      `langs` 現在承載的是 ③ market_locales（該市場對買家開放的語言，67 §C.8），它掛在
+      **web presence** 上。一個市場如果自己與整條 lineage 都沒有 presence，正確語義是
+      `inherit_primary`（62 §J.2：新市場預設沿用主市場的 URL，**不產生新前綴**），
+      不是「悄悄拿到一個商店預設語言」。回退成非空 ⇒ 每開一個市場就靜默多出一批可索引 URL，
+      那正是 62 §J.2 引 Shopify 2023 changelog 要關掉的那件事。 */
 const MKT_STORE_DEFAULT={currency:curLabel(MARKET_BASE),priceAdj:'0%',domain:'chilllove.demo',
   duty:'DDU（顧客承擔）',taxIncl:'價格未含稅（HK 無銷售稅，結帳不另加）',shipping:'一般設定檔（本地／國際）',
-  returnRule:'預設規則（30 天）',langs:['繁體中文'],catalogs:['香港（預設）']};
+  returnRule:'預設規則（30 天）',langs:[],catalogs:['香港（預設）']};
 /* cust 的每個鍵：null ＝ 未定義 ⇒ 繼承；有值 ＝ 此市場自己定義（已覆寫）。
-   示範資料刻意做出三層鏈：hk-b2b ← hk ← intl ←（商店預設值），否則「繼承鏈不只一層」看不出來。 */
+   示範資料刻意做出三層鏈：hk-b2b ← hk ← intl ←（商店預設值），否則「繼承鏈不只一層」看不出來。
+   ------------------------------------------------------------------
+   🔴 `cust.langs` ＝ **③ market_locales（此 presence 對買家開放的語言）**，值是 **BCP-47 標籤**，
+      不是顯示名稱。改成標籤是必要的，不是潔癖：URL 前綴（67 §F.1(b)）與 hreflang 碼
+      （62 §I.2）都要從標籤 ＋ 市場地區當場組出來，存顯示名稱就組不出 `zh-hant-hk`。
+   🔴 `cust.defLoc` ＝ 該 presence 的預設 locale（29 §1.4 `default_shop_locale`／67 §C.8(b)）。
+      每個 presence **恰一個**，且必須在開放集內；它決定地區重導的落點（62 §K.2）與
+      切國家後語言不支援時的回落（29 §4）。
+   🔴 2026-08-13 裁定的配置就寫在下面兩列（hk／ca），逐字對應：
+        香港   = zh-Hant, zh-Hans, en      預設 zh-Hant
+        加拿大 = en, fr, zh-Hant, zh-Hans  預設 en
+      ⇒ URL 前綴共 7 條。**fr 只出現在加拿大**（香港沒開法文），所以 fr 只產生一條前綴。 */
 const MARKETS=[
  {id:'hk',t:'香港（預設）',st:'啟用中',type:'region',regions:['HK'],inc:'香港',jur:'hk（基準法域）',
   perf:{s:'7,120',o:'218',rev:8480000},
   cust:{currency:curLabel('HKD'),priceAdj:null,domain:'chilllove.demo',duty:null,taxIncl:null,
-        shipping:null,returnRule:null,langs:['繁體中文'],catalogs:['香港（預設）']}},
+        shipping:null,returnRule:null,langs:['zh-Hant','zh-Hans','en'],defLoc:'zh-Hant',catalogs:['香港（預設）']}},
+ /* 加拿大：與香港**共用同一份譯文**，但幣別／運費／可售性各自獨立——這正是 67 §A.1
+    「語言 ≠ 市場」那張表要的反例防線。切市場只換市場資料，不換一個字的譯文。 */
+ {id:'ca',t:'加拿大',st:'啟用中',type:'region',regions:['CA'],inc:'加拿大',jur:'ca（未建立 pack）',
+  perf:{s:'1,940',o:'37',rev:1876000},
+  cust:{currency:curLabel('CAD'),priceAdj:'+12%',domain:'chilllove.demo',duty:'DDP（結帳預收）',taxIncl:null,
+        shipping:'國際費率表',returnRule:null,langs:['en','fr','zh-Hant','zh-Hans'],defLoc:'en',catalogs:['加拿大（+12%）']}},
  {id:'intl',t:'International（亞太）',st:'啟用中',type:'region',regions:['TW','MY','JP','SG'],
   inc:'台灣・馬來西亞・日本・新加坡',jur:'依收貨地逐國解析',perf:{s:'1,480',o:'22',rev:1132000},
   cust:{currency:'當地幣別（自動）',priceAdj:'+8%',domain:'chilllove.demo/int',duty:'DDU（顧客承擔）',
-        taxIncl:null,shipping:'國際費率表',returnRule:null,langs:['繁體中文','English'],catalogs:['亞太（+8%）']}},
+        taxIncl:null,shipping:'國際費率表',returnRule:null,langs:null,defLoc:null,catalogs:['亞太（+8%）']}},
  {id:'tw',t:'台灣',st:'啟用中',type:'region',regions:['TW'],inc:'台灣',jur:'tw（pack 未啟用）',
   perf:{s:'860',o:'14',rev:456000},
   cust:{currency:curLabel('TWD'),priceAdj:null,domain:null,duty:null,taxIncl:null,
-        shipping:null,returnRule:null,langs:null,catalogs:null}},
+        shipping:null,returnRule:null,langs:null,defLoc:null,catalogs:null}},
  {id:'hk-b2b',t:'香港・B2B 批發',st:'草稿',type:'company_location',regions:['HK'],
   inc:'公司地點：BulkCo 香港（2 個地點）',jur:'hk（基準法域）',perf:{s:'—',o:'0',rev:0},
   cust:{currency:null,priceAdj:'−15%',domain:null,duty:null,taxIncl:null,
-        shipping:null,returnRule:'B2B 規則（14 天・不收補貨費）',langs:null,catalogs:['大宗採購（B2B）']}},
+        shipping:null,returnRule:'B2B 規則（14 天・不收補貨費）',langs:null,defLoc:null,catalogs:['大宗採購（B2B）']}},
  {id:'jp',t:'日本',st:'草稿',type:'region',regions:['JP'],inc:'日本',jur:'jp（未建立 pack）',
   perf:{s:'214',o:'0',rev:0},
   cust:{currency:curLabel('JPY'),priceAdj:'+12%',domain:null,duty:'DDP（結帳預收）',taxIncl:null,
-        shipping:null,returnRule:null,langs:['日本語'],catalogs:null}}];
+        shipping:null,returnRule:null,langs:null,defLoc:null,catalogs:null}}];
 mktDerive();                        /* 由 conditions 推導 pid（函式宣告提升，定義在市場模組那一節）*/
 
 const CATALOGS=[
  {t:'香港（預設）',aim:'商店預設值',n:7,adj:'—',st:'啟用中'},
+ {t:'加拿大（+12%）',aim:'加拿大市場',n:6,adj:'+12%',st:'啟用中'},
  {t:'台灣・馬來西亞',aim:'International 市場',n:6,adj:'+8%',st:'啟用中'},
  {t:'AI 代理目錄',aim:'AI 代理通路',n:5,adj:'—',st:'啟用中'},
  {t:'大宗採購（B2B）',aim:'公司地點：BulkCo 台北',n:7,adj:'−15%',st:'草稿'}];
@@ -7122,6 +7192,11 @@ function marketsPage(){
       {l:'包含',c:r=>`<span class="mut">${H(r.inc)}</span>`,v:r=>r.inc},
       {l:'幣別',c:r=>mktCell(r,'currency'),v:r=>mktRes(r,'currency').v},
       {l:'價格調整',right:true,c:r=>mktCell(r,'priceAdj'),v:r=>mktRes(r,'priceAdj').v},
+      /* ③ market_locales 在清單就要看得見（67 §C.8(c)）：不然商家要點進去才知道哪個市場開了幾種語言，
+         而「開了幾種」直接等於「多了幾條可索引 URL」。0 種 ＝ inherit_primary，不產生新前綴。 */
+      {l:'開放語言',c:r=>{const o=mktOpenLocales(r);return o.length
+          ?`<span class="mut">${o.map(x=>H(locOf(x.tag).short)).join('・')}</span><span class="mut3" style="font-size:var(--t-2xs);display:block">預設 ${H(locName(mktDefaultLocale(r))||'—')}</span>`
+          :`<span class="mut3">—（inherit_primary）</span>`;},v:r=>mktOpenLocales(r).length},
       {l:'網域',c:r=>mktCell(r,'domain',true),v:r=>mktRes(r,'domain').v}],
     rows:MARKETS,id:r=>r.id,onRow:r=>`openMarket('${r.id}')`,
     note:'一個國家只能屬於一個市場，加入時自動從原市場移出；空市場自動刪除；兜底 backup region 在設定→一般（29 §6）。父子關係由 conditions 推導，不是可寫欄位（46b:636）。'});
@@ -7248,6 +7323,223 @@ function mktDelVal(k,v){
   if(!MKT.cust[k].length)MKT.cust[k]=null;   /* 空陣列＝仍是「有定義」，改回 null 才是真的回到繼承 */
   mktRefresh('已移除本市場新增的項目');
 }
+
+/* ==================================================================
+   ③ market_locales —— per-market 語言白名單（67 §A.5 概念／§C.8 資料模型與 admin 契約）
+   ------------------------------------------------------------------
+   🔴 **粒度是 web presence，不是 market**（§C.8(a) 明文要求寫進程式碼註釋）：
+      一個市場可以有多個 resolved presence（自身 ∪ 沿 lineage 上溯），所以「市場的開放語言」
+      是**聯集的結果**，不是一個可以直接 UPDATE 的欄位。任何
+      `UPDATE market_locales WHERE market_id = ?` 形態的寫入都是 bug。
+      原型把 presence 收斂成「每個市場最多一個自有 presence」（cust.langs），
+      聯集那一半仍然照 lineage 真的算（mktOpenLocales），因為那才是會出錯的一半。
+   🔴 **③ ⊆ ② ⊆ ①**（§A.5(a)）：白名單的成員必須是 shop_locales 的成員。
+      正式版靠 FK 指向 shop_locales（**不是** platform_locales）執法；原型靠 mktLocAddOK 的檢查
+      ＋ mktOpenLocales 的過濾兩道。指錯目標的後果：商家可以把一個沒啟用的語言開給市場，
+      前台切換器就會出現一個沒有任何譯文、也沒有 published 狀態的語言。
+   🔴 **只能加，不能減**（§A.5(d)）：子市場繼承父市場的開放語言（web_presences 累加，29 §1.5），
+      可以在自己這一層再加，**不得減**。理由不是潔癖：減法會讓 resolved 從「聯集」變成
+      「聯集 − 例外」，62 §I.1 不變量 2（雙向性）原本靠「同一個函式產生同一個集合」天然成立，
+      加入例外集合後就只能逐對驗證。而且**減法減不掉 URL**——被減掉的語言其 URL 屬於父市場的
+      presence，照樣 200。一個做不到它字面意思的開關，比沒有這個開關更糟。
+   🔴 白名單是**呈現決策**不是**存取控制**（§A.5(b)）：它決定切換器列什麼、hreflang 列什麼、
+      sitemap 列什麼、地區重導落在哪；它**不**決定一條已存在的 URL 誰能打開。
+   ================================================================== */
+/* 白名單掛在 presence 上 ⇒ 解析＝自身 ∪ 沿 lineage 上溯（與 mktResAdd 同一條語義，
+   但**不回退商店預設值**：沒有任何 presence 的市場是 inherit_primary，不是「有一個預設語言」）。
+   回傳保留每一項的來源市場，admin 才分得出「本市場開放」與「繼承自 {父市場}」兩區。 */
+function mktOpenLocales(m){
+  const out=[],push=(arr,src)=>(arr||[]).forEach(t=>{
+    if(!shopLoc(t))return;                    /* ③ ⊆ ② 的執法點：不在 shop_locales 就不是合法成員 */
+    if(!out.some(o=>o.tag===t))out.push({tag:t,from:src});
+  });
+  push(m.cust.langs,m);
+  mktChain(m).forEach(p=>push(p.cust.langs,p));
+  return out;
+}
+const mktHasOwnPresence=m=>Array.isArray(m.cust.langs)&&m.cust.langs.length>0;
+/* 該 presence 的預設 locale（29 §1.4 default_shop_locale／67 §C.8(b)）：自身有值就用自身，
+   否則沿 lineage 取第一個有值的（因為 presence 也是繼承來的），再否則取開放集第一項。
+   🔴 預設 locale 恆為開放（§C.8(b) 的應用層 CHECK）——關掉它，地區重導就沒有落點。 */
+function mktDefaultLocale(m){
+  const own=[m,...mktChain(m)].find(x=>x.cust.defLoc);
+  const list=mktOpenLocales(m);
+  if(own&&list.some(o=>o.tag===own.cust.defLoc))return own.cust.defLoc;
+  return list.length?list[0].tag:null;
+}
+/* 🔴 `url_prefix()` 與 `hreflang_codes()` 是**兩支函式，不得合併**（67 §F.1(a)）。
+   決定性的理由是**基數不同**：前者恰回一個字串（一條路由不可能是一個集合），
+   後者回 N 個碼（多國市場逐國展開，62 §I.2）。合併後路由層只能取 `.first`，
+   而那一行 `.first` 就是 bug 的全部——它會在第一個多國市場上選到一個看起來對的國家。
+   共用的只有「組字串的原料」：同一個 (market, locale) ＋ 同一支 mktRegionToken()。 */
+/* 前綴用的地區字串：單國市場＝ISO 3166-1 alpha-2；多國市場＝presence 的 subfolderSuffix
+   （67 §F.1(b-2) 暫採選項 C，⚠ V-225 待裁定）。🔴 後者**不是國碼**，不得當 hreflang 值用
+   （limits.yml i18n.locale_prefix.never_reused_as_hreflang_code: true）。 */
+function mktRegionToken(m){
+  if(m.regions.length===1)return{token:m.regions[0],isCountry:true};
+  const sfx=String((mktRes(m,'domain')||{}).v||'').split('/')[1]||m.id;
+  return{token:sfx,isCountry:false};
+}
+/* 67 §F.1(b)：恆帶地區、恆有前綴、無例外。與市場是不是 primary 無關、與語言是不是預設無關。
+   全小寫（URL 路徑大小寫敏感，混用會造成同一頁兩條 URL）。 */
+function urlPrefixOf(m,tag){return('/'+tag+'-'+mktRegionToken(m).token).toLowerCase();}
+/* 62 §I.2：🔴 回傳型別是**一組碼**不是一個碼。單國 ⇒ 1 個；多國 ⇒ N 個，全部指向同一 URL。
+   小寫語言、Title case script、**大寫地區**——與 URL 前綴的大小寫規則不同，兩者不得互相借用。 */
+function hreflangCodesOf(m,tag){
+  if(!m.regions||!m.regions.length){console.error('[hreflang] 市場沒有地區 ⇒ 不得退回裸語言碼（62 §I.2）：'+m.id);return[];}
+  return m.regions.map(c=>tag+'-'+c.toUpperCase());
+}
+/* 🔴 **URL 來自 presence，碼來自 market**——這兩者的來源不同，是 62 §I.3(a)① 與 §I.3(c) 情形 2
+   的直接後果：一個沒有自有 presence 的子市場走的是父市場那條 URL（所以前綴取 `o.from`），
+   但它的 hreflang 碼仍由它**自己的地區**決定（所以碼取 `m`）。兩邊都取 m ⇒ 子市場憑空多出
+   一條與父市場逐字相同的前綴；兩邊都取 from ⇒ 子市場的地區永遠不會出現在標註裡。 */
+const mktPrefixFor=(m,tag)=>{const o=mktOpenLocales(m).find(x=>x.tag===tag);return urlPrefixOf(o?o.from:m,tag);};
+/* 進度徽章與語言設定頁的百分比**同源**（鐵律 7：langProgress 是唯一出口，這裡不另算 GROUP BY）*/
+function mktLocPct(tag){
+  const pr=langProgress(tag);
+  return `<span class="tr-b ${pr.pct===100?'ok':'miss'}" title="商品線已翻 ${pr.done}/${pr.total} 欄">${pr.pct}%</span>`;
+}
+/* 關閉一個語言會 404 掉多少 URL：該市場 × 該語言 × 可索引資源數。原型的可索引資源＝
+   商品＋系列＋頁面＋政策（與 LANG_RESOURCES 同一份清單，不另編一個數字）。 */
+const mktIndexableCount=()=>PRODUCTS.length+COLLECTIONS.length+4+5;
+function mktLocaleCard(m){
+  const list=mktOpenLocales(m),own=list.filter(o=>o.from===m),inh=list.filter(o=>o.from!==m);
+  const def=mktDefaultLocale(m),par=mktParent(m);
+  const multi=m.regions.length>1,tok=mktRegionToken(m);
+  const row=(o,editable)=>{
+    const L=locOf(o.tag),sl=shopLoc(o.tag),codes=hreflangCodesOf(m,o.tag);
+    const i=own.findIndex(x=>x.tag===o.tag);
+    return `<div class="set-row" style="align-items:flex-start" data-doc="mk-loc-row" data-loc="${H(o.tag)}">
+      <div class="sr-t" style="min-width:0"><b>${H(L.endonym)}</b>
+        <span class="sub"><span class="mono">${H(o.tag)}</span>
+          ・前綴 <span class="mono">${H(mktPrefixFor(m,o.tag))}</span>
+          ・hreflang ${multi?`<b>${codes.length} 個碼</b>（<span class="mono">${codes.map(H).join('</span>／<span class="mono">')}</span>）`
+            :`<span class="mono">${H(codes[0]||'—')}</span>`}
+          ${o.tag===def?'・<b>本市場預設語言</b>':''}
+          ${sl&&!sl.published?'<br><b style="color:var(--critical)">此語言未發布</b>——這一格在前台是 <b>404</b>、不進 hreflang／sitemap（67 §A.5(c) 情形 4）。發布後才會出現在前台切換器':''}
+        </span></div>
+      <span class="sr-act" style="margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:var(--sp-200);flex-wrap:wrap;justify-content:flex-end">
+        ${mktLocPct(o.tag)}
+        ${editable?`<label class="rowflex" style="gap:var(--sp-100);font-size:var(--t-xs)">
+          <input type="radio" name="mktDefLoc" ${o.tag===def?'checked':''} aria-label="設為 ${H(L.endonym)} 為本市場預設語言"
+            onchange="mktLocDefault('${o.tag}')"><span>預設</span></label>`
+          :chip('繼承自 '+H(o.from.t),'info','')}
+        ${editable?`<span class="rowflex" style="gap:var(--sp-100)">
+          <button class="btn btn-ghost btn-sm" ${i<=0?'disabled aria-disabled="true"':''} aria-label="把 ${H(L.endonym)} 上移一位" onclick="mktLocMove('${o.tag}',-1)">↑</button>
+          <button class="btn btn-ghost btn-sm" ${i<0||i>=own.length-1?'disabled aria-disabled="true"':''} aria-label="把 ${H(L.endonym)} 下移一位" onclick="mktLocMove('${o.tag}',1)">↓</button></span>
+        <button class="btn btn-ghost btn-sm" onclick="mktLocClose('${o.tag}')" aria-label="關閉 ${H(L.endonym)}">關閉</button>`
+          :`<button class="btn btn-ghost btn-sm" onclick="openMarket('${o.from.id}')">到 ${H(o.from.t)} 調整 ›</button>`}
+      </span></div>`;
+  };
+  const unpub=SHOP_LOCALES.filter(l=>!l.published).length;
+  return `<div class="card card-pad" data-doc="mk-locales"><h3>網域與語言 · 開放語言（買家可選）
+    <span class="h-act num mut3" style="font-size:var(--t-xs)">${list.length} / ${I18N.maxShopLocales}</span></h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     這是<b>③ 市場開放集</b>——這個市場的買家「能選」哪些語言（67 §A.5）。它是
+     <b>② 商店啟用集</b>（設定 → 語言，目前 ${SHOP_LOCALES.length} 種）的子集。
+     🔴 它決定的是<b>切換器列什麼、hreflang 列什麼、sitemap 列什麼、地區重導落在哪</b>；
+     它<b>不決定</b>一條已經存在的 URL 誰能打開——那條 URL 是公開的物理事實，
+     加拿大買家把 <span class="mono">/en-hk/…</span> 貼進瀏覽器照樣會打開它，而且<b>必須</b>回 200
+     （62 §0.2 原則 4：進 hreflang 的 URL 對任何客戶端都要回 200，爬蟲也沒有市場身分）。</p>
+   ${multi?`<div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span><b>多國市場</b>（${m.regions.length} 個地區）：hreflang <b>逐國展開</b>成
+       ${m.regions.length} 個碼指向同一條 URL（62 §I.2，2026-08-13 裁定覆蓋 Shopify 的「多國 ⇒ 裸語言碼」）；
+       但 URL 前綴只有一條，它的地區位取 presence 的 subfolderSuffix
+       <span class="mono">${H(tok.token)}</span>。🔴 <span class="mono">${H(tok.token)}</span> <b>不是 ISO 3166-1 國碼</b>，
+       只是這個市場的識別字，<b>不得</b>被當成 hreflang 值使用（⚠ 67 §F.1(b-2) V-225 待裁定）。</span></div>`:''}
+   ${own.length?`<div class="card-sec"><h3 style="font-size:var(--t-xs)">本市場開放（可增刪、可排序）</h3>
+     <p class="mut3" style="font-size:var(--t-xs);margin:0 0 var(--sp-150)">順序 ＝ <span class="mono">position</span> ＝
+       <b>前台切換器的顯示順序</b>。🔴 這是商家唯一能控制切換器順序的地方，前台<b>不得</b>另加一套排序規則（鐵律 7）。</p>
+     ${own.map(o=>row(o,true)).join('')}</div>`
+    :`<div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span>此市場<b>沒有自己的 web presence</b> ⇒ <span class="mono">inherit_primary</span>（62 §J.2 新市場預設）：
+       它<b>不產生任何新的 URL 前綴</b>，買家走主市場的 URL。平台<b>不會</b>替商家自動配子資料夾——
+       自動配＝一次新增一批可索引 URL ＋ 一批 hreflang 條目 ＋ 一批 sitemap 列。
+       要給這個市場自己的語言版本，按下面的「開放語言」。</span></div>`}
+   ${inh.length?`<div class="card-sec"><h3 style="font-size:var(--t-xs)">繼承自 ${H(inh[0].from.t)}（唯讀）</h3>
+     <p class="mut3" style="font-size:var(--t-xs);margin:0 0 var(--sp-150)">
+       🔴 <b>子市場不得減掉父市場開放的語言</b>（limits.yml
+       <code>i18n.market_locales.subtractive_override_forbidden: true</code>）。想要窄，正確做法是
+       <b>不要把那個語言開在父市場</b>，改為在需要它的每個子市場各自開——這比較笨，但它是誠實的：
+       減法只能減掉切換器上的一個選項，<b>減不掉那條 URL</b>（它屬於父市場的 presence，照樣回 200）。</p>
+     ${inh.map(o=>row(o,false)).join('')}</div>`:''}
+   <div class="rowflex" style="margin-top:var(--sp-200)">
+     <button class="btn btn-sec btn-sm" data-doc="mk-loc-add" onclick="mktLocAddOpen()">開放語言</button>
+     <button class="btn btn-ghost btn-sm" onclick="openSettings('languages')">商店語言設定 ›</button></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
+     可選值域＝<b>已發布</b>的商店語言${unpub?`（目前有 ${unpub} 種未發布，不出現在選單裡——把未發布語言開給市場沒有任何效果，前台仍 404）`:''}。
+     上限沿用 <code>i18n.max_shop_locales</code>（③ ⊆ ② 已經保證了，這個鍵只是讓錯誤訊息說得出話）。</p></div>`;
+}
+function mktLocAddOpen(){
+  const have=mktOpenLocales(MKT).map(o=>o.tag);
+  const avail=SHOP_LOCALES.filter(l=>l.published&&!have.includes(l.tag)).sort((a,b)=>a.pos-b.pos);
+  const unpub=SHOP_LOCALES.filter(l=>!l.published&&!have.includes(l.tag));
+  openGen({title:'開放語言給「'+MKT.t+'」的買家',body:`<div class="stack">
+    <p class="help">從<b>已發布</b>的商店語言挑一個。開放後它會出現在這個市場的前台切換器、hreflang 矩陣與 sitemap。</p>
+    ${avail.length?F('語言',SEL('_mkloc',avail.map(l=>[l.tag,locName(l.tag)+'（'+l.tag+'）']),avail[0].tag),
+        `會新增 <b>${mktIndexableCount()}</b> 個可索引 URL（本市場 × 該語言 × 可索引資源數）`)
+      :'<p class="help">已發布的語言都開放了。要再開就先到「設定 → 語言」新增或發布語言。</p>'}
+    ${unpub.length?`<div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span><b>未發布的語言不在選單裡</b>（${unpub.map(l=>H(locName(l.tag))).join('、')}）：
+        把未發布語言開給市場<b>沒有任何效果</b>——前台仍然 404（67 §A.5(c) 情形 4），
+        只會製造「我開了為什麼沒用」。先到「設定 → 語言」發布它。</span></div>`:''}
+    <p class="help">🔴 開放語言<b>不需要</b>破壞性確認，但關閉需要——關閉會讓一批已被索引的 URL 變成 404。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     ${avail.length?`<button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="mktLocAddOK()">開放</button>`:''}`});
+}
+function mktLocAddOK(){
+  const tag=(document.querySelector('[data-f="_mkloc"]')||{}).value;
+  closeGen();
+  if(!tag)return;
+  const sl=shopLoc(tag);
+  if(!sl)return toast('userErrors LOCALE_NOT_ENABLED：'+tag+' 不在商店啟用集（③ ⊆ ② 破了，67 §A.5(a)）');
+  if(!sl.published)return toast('userErrors LOCALE_NOT_PUBLISHED：未發布語言開給市場沒有效果，前台仍 404');
+  if(mktOpenLocales(MKT).some(o=>o.tag===tag))return toast('這個語言已經開放給本市場了');
+  MKT.cust.langs=(MKT.cust.langs||[]).concat(tag);
+  if(!MKT.cust.defLoc)MKT.cust.defLoc=tag;    /* 每個 presence 恰一個預設 locale（§C.8(b)）*/
+  mktI18nInvalidate();
+  mktRefresh('已開放「'+locName(tag)+'」：新增 '+mktIndexableCount()+' 個可索引 URL，並觸發 hreflang／sitemap 失效（去抖 5 分鐘）');
+}
+/* 🔴 破壞性操作在按下確認前必須有一個數字（§C.8(c)，形態同 67 §E.6(a) 的匯入預覽）。
+   三個數字缺一不可，第三個專門回答商家的「我的翻譯會不會不見」。 */
+function mktLocClose(tag){
+  if(tag===mktDefaultLocale(MKT))
+    return toast('userErrors MARKET_DEFAULT_LOCALE_CANNOT_BE_CLOSED：這是本市場的預設語言，請先改預設再關閉');
+  const urls=mktIndexableCount(),codes=hreflangCodesOf(MKT,tag).length;
+  let rows=0;PRODUCTS.forEach(p=>{rows+=prodTrStatus(p,tag).done;});
+  confirmDanger('關閉「'+locName(tag)+'」',
+    `<b>${urls}</b> 條 URL 會變成 404（本市場 × 該語言 × 可索引資源數）；`
+    +`<b>${codes}</b> 個 hreflang 條目會被移除，sitemap 同步重生。`
+    +`<br>🔴 <b>這個語言在本市場的 ${rows} 筆既有譯文不會被刪</b>——譯文是資產，曝光是決策，兩件事。`
+    +`重新開放時它們原封不動還在。`,
+    '關閉語言',()=>{
+      MKT.cust.langs=(MKT.cust.langs||[]).filter(t=>t!==tag);
+      if(!MKT.cust.langs.length)MKT.cust.langs=null;   /* 空陣列 ⇒ 回到「沒有自己的 presence」 */
+      mktI18nInvalidate();
+      mktRefresh('已關閉「'+locName(tag)+'」——'+urls+' 條 URL 現在回 404，譯文列一列都沒有刪');
+    });
+}
+function mktLocDefault(tag){
+  const before=mktDefaultLocale(MKT);
+  MKT.cust.defLoc=tag;mktI18nInvalidate();
+  mktRefresh('本市場預設語言：'+locName(before)+' → '+locName(tag)
+    +'——這會改變本市場自動重導的落點（62 §K.2），以及切國家後語言不支援時的回落目標（29 §4）');
+}
+function mktLocMove(tag,d){
+  const a=MKT.cust.langs||[],i=a.indexOf(tag),j=i+d;
+  if(i<0||j<0||j>=a.length)return;
+  a.splice(j,0,a.splice(i,1)[0]);mktI18nInvalidate();
+  mktRefresh('已調整順序——前台切換器會照這個順序列（position）');
+}
+/* §C.8(d)：開啟／關閉／改順序／改預設 locale 的**連帶動作**，缺一個就是一個看得見的 bug。
+   原型只能示範它被呼叫到；正式版這四步在同一個 transaction 內。 */
+let I18N_VERSION=1;
+function mktI18nInvalidate(){
+  I18N_VERSION++;                       /* 1. bump shop_locales_version ⇒ 全店快取失效（切換器在每一頁）*/
+  console.info('[i18n] market_web_presence_locales 變更 ⇒ bump shop_locales_version='+I18N_VERSION
+    +'；觸發 62 §I.3(b) 失效管線（hreflang 矩陣 ＋ sitemap 重生，去抖 5 分鐘）；'
+    +'關閉者寫 closed_at 並把該 (market, locale) 路由標記為 404；🔴 不刪任何 translations 列');
+}
 function marketPage(){
   const m=MKT,par=mktParent(m),kids=MARKETS.filter(x=>x.pid===m.id);
   return detailHead(H(m.t),chip(m.st,m.st==='啟用中'?'success':'info')
@@ -7271,7 +7563,11 @@ function marketPage(){
       ${mktRow(m,'duty','關稅模式','覆寫型；DDP 需要每個品項都有 HS code 與原產地','mk-duty')}
       ${mktRow(m,'taxIncl','稅金行為（price inclusions）','覆寫型（46b:657 PriceInclusions are overridden）')}
       ${mktRow(m,'returnRule','退貨規則','覆寫型——⚠ Shopify 公開 API 未載明繼承語意，本專案自定（46b:796）')}
-      ${mktRowAdd(m,'langs','語言（web presences）','累加型（46b:654 Inherited WebPresences are added to the child）——父市場的語言不可在子市場移除')}
+      <div class="set-row is-ro"><div class="sr-t"><b>語言（web presences）</b>
+        <span class="sub">累加型（46b:654 Inherited WebPresences are added to the child）——父市場的語言不可在子市場移除。
+          <b>本市場開放 ${mktOpenLocales(m).length} 種</b>，逐項設定在下面「開放語言」那張卡（67 §C.8(c)：
+          白名單是市場設定的一部分，<b>不另開一頁</b>——放到「設定 → 語言」那頁商家會找不到，因為那頁的心智模型是全店）</span></div>
+        <span class="sr-ro">${chip('見下方卡片','default','full')}</span></div>
       ${mktRowAdd(m,'catalogs','目錄','累加型（46b:654 Inherited Catalogs are added to the child）')}
       <div class="set-row" data-doc="mk-shipping"><div class="sr-t"><b>運送</b><span class="sub">此市場的運送選項與費率</span></div>
         <span class="sr-act" style="margin-left:auto;display:inline-flex;align-items:center;gap:var(--sp-200)">
@@ -7280,6 +7576,7 @@ function marketPage(){
       <div class="set-row is-ro"><div class="sr-t"><b>司法管轄區 jurisdiction</b><span class="sub">${H(m.jur)}</span></div>
         <span class="sr-ro">${chip('不可繼承','default','full')}</span></div>
       <p class="mut3" style="font-size:var(--t-xs)">法域<b>永遠市場本地</b>（56 §A.0 硬要求 2）——子市場若繼承父市場的法域，會出現「香港母市場下掛台灣子市場卻套用香港稅制」。</p></div>
+    ${mktLocaleCard(m)}
     <div class="card card-pad" data-doc="mk-catalog"><h3>翻譯覆寫</h3>
       <table class="idx"><thead><tr><th>資源</th><th>原文</th><th>此市場覆寫</th></tr></thead><tbody>
         <tr class="norow"><td>商品標題</td><td class="mut">奶茶色寬版帽T</td><td><input class="cellin" value="Milk Tea Oversized Hoodie" aria-label="覆寫商品標題"></td></tr>
@@ -8205,6 +8502,12 @@ function langProgress(tag){
   PRODUCTS.forEach(p=>{const st=prodTrStatus(p,tag);done+=st.done;total+=st.total;});
   return{done,total,pct:total?Math.round(done/total*100):0};
 }
+/* 「這個語言開給了哪些市場」——正式版就是 `INDEX (shop_id, locale_tag)` 那條索引的用途
+   （67 §C.8(a)）：關語言之前的影響評估。🔴 讀的是市場那一份資料（③），不是另一份清單，
+   否則兩邊會漂移，而漂移的症狀是「我明明關了，前台還在」。 */
+function langOpenMarkets(tag){
+  return MARKETS.filter(m=>mktOpenLocales(m).some(o=>o.tag===tag));
+}
 function langPage(){
   const list=SHOP_LOCALES.slice().sort((a,b)=>a.pos-b.pos);
   const mtOff=!I18N.mtProvider;
@@ -8214,11 +8517,13 @@ function langPage(){
      語言集合是<b>資料</b>不是列舉（67 §A.2）：新增語言不需要改程式碼、不需要 migration。
      首發三語只是種子資料（limits.yml <code>i18n.launch_locales</code>，該鍵另標
      <code>launch_locales_is_seed_not_enum: true</code>——拿它當「支援的語言」判斷就是 bug）。</p>
-   ${list.map((l,i)=>{const pr=langProgress(l.tag),L=locOf(l.tag);return `
+   ${list.map((l,i)=>{const pr=langProgress(l.tag),L=locOf(l.tag),om=langOpenMarkets(l.tag);return `
    <div class="set-row" data-doc="set-lang-row">
      <div class="sr-t"><b>${H(L.endonym)}</b><span class="sub"><span class="mono">${H(l.tag)}</span>
        ・${l.source?'<b>來源語言</b>（base row 的文字就是這個語言）':l.published?'已發布':'未發布——只有預覽連結看得到'}
-       ・書寫方向 ${L.dir}・排序 collation <span class="mono">${H(L.collation||'—')}</span></span></div>
+       ・書寫方向 ${L.dir}・排序 collation <span class="mono">${H(L.collation||'—')}</span>
+       <br>開放給買家的市場（③）：${om.length?om.map(m=>'<b>'+H(m.t)+'</b>（<span class="mono">'+H(mktPrefixFor(m,l.tag))+'</span>）').join('、'):'<span class="mut3">尚未開給任何市場——啟用 ≠ 曝光，要到市場設定裡開</span>'}
+       ${!l.published&&om.length?'<br><b style="color:var(--critical)">未發布卻已開給 '+om.length+' 個市場</b>：那些前綴目前一律 404、不進 hreflang／sitemap（67 §A.5(c) 情形 4）':''}</span></div>
      <span class="set-ctl rowflex" style="gap:var(--sp-200)">
        ${l.source?`<span class="tr-b ok">來源・100%</span>`
          :`<span class="tr-b ${pr.pct===100?'ok':'miss'}" title="商品線已翻 ${pr.done}/${pr.total} 欄">${pr.pct}%</span>`}
@@ -8233,7 +8538,11 @@ function langPage(){
      <button class="btn btn-ghost btn-sm" data-doc="set-lang-bo" onclick="openTranslations()">翻譯後台 ›</button></div>
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
      每店上限 ${I18N.maxShopLocales} 種（limits.yml <code>i18n.max_shop_locales</code>，出處 29 §1.2）；
-     各市場的可用語言是這份全集的<b>子集</b>，在市場設定裡開（兩張表是全集與子集的關係，不是兩份清單）。</p></div>
+     各市場的可用語言是這份全集的<b>子集</b>，在市場設定裡開（兩張表是全集與子集的關係，不是兩份清單）。
+     <br>🔴 <b>啟用 ≠ 開給買家 ≠ 已發布</b>，三件事三個欄位（67 §A.5(a)）：
+     <b>啟用</b>（本頁，② shop_locales）讓譯文有地方放；<b>開給買家</b>（市場設定，③ market_locales）
+     決定前台切換器與 hreflang 列不列它；<b>發布</b>（本頁的開關）決定它的 URL 回 200 還是 404。
+     壓成一個布林的後果：商家一啟用日文，全世界所有市場的切換器立刻多一個日文選項。</p></div>
 
   <div class="card card-pad" data-doc="set-lang-fallback"><h3>缺翻譯時的行為</h3>
    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
@@ -8292,8 +8601,14 @@ function langAdd(){
 function langPublish(tag,on){
   const l=shopLoc(tag);if(!l)return;
   if(l.source){toast('userErrors SOURCE_LOCALE_IMMUTABLE：來源語言不可取消發布');setPage('languages');return;}
-  l.published=on;setPage('languages');
-  toast(on?'已發布「'+locName(tag)+'」':'已取消發布——這個語言現在只有預覽連結看得到');
+  l.published=on;
+  /* 發布狀態變更 ⇒ 走 62 §I.3(b) 的**同一條**失效管線（67 §F.1 最後一句：觸發條件要含 shop_locales）。
+     漏掉這個掛鉤的症狀：商家發布了新語言，hreflang 停在舊值好幾天。 */
+  const n=langOpenMarkets(tag).length;mktI18nInvalidate();
+  setPage('languages');
+  toast((on?'已發布「'+locName(tag)+'」':'已取消發布「'+locName(tag)+'」')
+    +(n?'——連帶影響 '+n+' 個市場的 hreflang 與 sitemap（'+(on?'那些前綴現在回 200 並進矩陣':'那些前綴現在回 404 並從矩陣移除')+'）'
+       :'——目前沒有市場開放這個語言，前台不受影響'));
 }
 /* 67 §C.3(c)：改來源語言是**一次性資料遷移**，不是設定切換。走精靈＋dry-run。
    🔴 目標語言缺譯時 base **保留原文**並落 gap 記錄——清空 base ＝商家在一次「切換預設語言」後
@@ -8328,11 +8643,27 @@ function langSourceMigrate(tag){
 }
 function langRemove(tag){
   const l=shopLoc(tag);if(!l||l.source){toast('userErrors SOURCE_LOCALE_IMMUTABLE：來源語言不可刪除');return;}
+  /* 🔴 從 ② 移除 ⇒ ③ 也必須跟著清（三層真包含 ③ ⊆ ② ⊆ ①，67 §A.5(a)）。
+     不清的後果是市場白名單指向一個不存在的語言 —— 正式版那是 FK 違反，原型會在
+     mktOpenLocales 被靜默過濾掉，於是「切換器少一個選項但市場頁還列著它」。
+     🔴 這與「關閉語言」是兩件事：關閉只動曝光（譯文留著），移除是真的刪掉譯文。 */
+  const oms=langOpenMarkets(tag);
   confirmDanger('移除語言','移除「'+locName(tag)+'」會一併刪除這個語言的所有譯文列，前台的該語言版本會立刻消失。'
-    +'引用它的 hreflang 條目與 sitemap 列也會一起移除。','移除語言',()=>{
+    +'引用它的 hreflang 條目與 sitemap 列也會一起移除。'
+    +(oms.length?'<br>🔴 目前有 <b>'+oms.length+'</b> 個市場開放了它（'+oms.map(m=>H(m.t)).join('、')
+      +'），這些市場的開放清單會同步移除該語言，<b>'+(oms.length*mktIndexableCount())+'</b> 條 URL 變成 404。'
+      +'<br>要保留譯文只是不對外，請改用市場設定裡的「關閉」——那不刪任何一列譯文。':''),
+    '移除語言',()=>{
     SHOP_LOCALES=SHOP_LOCALES.filter(x=>x.tag!==tag);
+    MARKETS.forEach(m=>{
+      if(!Array.isArray(m.cust.langs))return;
+      m.cust.langs=m.cust.langs.filter(t=>t!==tag);
+      if(!m.cust.langs.length)m.cust.langs=null;
+      if(m.cust.defLoc===tag)m.cust.defLoc=null;
+    });
     if(CONTENT_LOCALE===tag)CONTENT_LOCALE=srcLocale();
-    setPage('languages');toast('已移除語言：'+locName(tag));});
+    mktI18nInvalidate();
+    setPage('languages');toast('已移除語言：'+locName(tag)+(oms.length?'——並從 '+oms.length+' 個市場的開放清單移除':''));});
 }
 /* ── 翻譯後台（29 §2.4 資源樹＋雙欄表；67 §E.4 的第三個出口）──────────────── */
 let TRBO={res:'PRODUCT',loc:'en',id:0};
@@ -8451,6 +8782,115 @@ function trImportPreview(){
 }
 
 /* ==================================================================
+   hreflang 矩陣（62 §I.1 生成演算法 / §I.2 碼粒度 / 67 §F.1(d) 三樣輸入）
+   ------------------------------------------------------------------
+   🔴 這裡是 62 §I.1 那段 pseudo code 的**可執行鏡像**，不是另一份實作：
+        presences = active_markets(shop).flat_map { resolved_web_presences(m) }
+        entries   = presences.flat_map { open_locales(wp) × hreflang_codes(wp.market, loc) }
+        entries  += x-default
+   三個閘門缺一個就是一個看得見的 SEO 事故：
+     ① **草稿市場不進**（§C 規則 1）——草稿市場的頁面根本不對外。
+     ② **未開放不進**（67 §A.5：`open_locales(wp)`，不是「這個 presence 上掛的全部語言」）。
+     ③ **未發布不進**（67 §F.1(d)-3：`shop_locales.published = true`）。
+   ②③ 漏掉任何一個，矩陣裡就會出現一條 **404 的 URL** ⇒ 直接違反 62 §I.1 不變量 4
+   （矩陣內每個 URL 必須對任何客戶端回 200），而 Google 對「hreflang 指到 404」的處置是
+   **忽略整組宣告**——不是忽略那一條。這就是本卡片要讓商家親眼看到的東西。
+   ⚠ **本原型的邊界**（誠實登記，不要讀成已完成）：矩陣只涵蓋**有自有 presence 的市場**。
+     62 §I.3(a)① 的另一半——`inherit_primary` 市場把自己的地區碼掛到主市場 URL 上——
+     原型**沒有展開**；那些市場在下表以「inherit_primary ⇒ 不產生前綴」單列呈現。 */
+/* 🔴 **迭代的單位是 presence，不是 market**（62 §I.1 第 2–3 行）。
+   這一行寫錯的症狀非常具體：hk-b2b 是 hk 的子市場、regions 也是 ['HK']，
+   若照 market 迭代，它會產生第二組 `/zh-hant-hk`／`/en-hk`——與香港市場**逐字相同的前綴**，
+   於是 `UNIQUE (shop_id, domain_id, url_prefix)` 被違反、「前綴 ≡ (market, locale) 身分」
+   （67 §F.1(c)）也跟著破裂。子市場沒有自己的 presence 時它**不產生新 URL**，
+   它只是走父市場那條 URL（62 §I.3(a)①）。 */
+function activePresences(){
+  const seen=new Set(),out=[];
+  MARKETS.filter(m=>m.st==='啟用中').forEach(m=>{
+    [m,...mktChain(m)].forEach(x=>{
+      if(!mktHasOwnPresence(x)||seen.has(x.id))return;
+      seen.add(x.id);out.push(x);
+    });
+  });
+  return out;
+}
+function hreflangMatrix(){
+  const rows=[],pres=activePresences();
+  pres.forEach(wp=>{
+    (wp.cust.langs||[]).forEach(tag=>{
+      if(!shopLoc(tag))return;                                   /* ③ ⊆ ② */
+      const sl=shopLoc(tag);
+      const why=!sl.published?'語言未發布（67 §F.1(d)-3 ⇒ 此 URL 回 404）':null;
+      rows.push({m:wp,tag,from:wp,prefix:urlPrefixOf(wp,tag),codes:hreflangCodesOf(wp,tag),
+        inMatrix:!why,why});
+    });
+  });
+  MARKETS.filter(m=>!pres.includes(m)).forEach(m=>rows.push({m,skip:m.st!=='啟用中'?'draft':'inherit_primary'}));
+  const live=rows.filter(r=>r.inMatrix);
+  /* 62 §I.3(c) 步驟 0 的前置斷言：裸碼在恆帶地區規則下是**上游 bug**，不是本函式該吸收的輸入。 */
+  live.forEach(r=>r.codes.forEach(c=>{
+    if(!/-[A-Z]{2}$/.test(c))console.error('[hreflang] 輸出了不帶 ISO 3166-1 地區的裸碼「'+c+'」——62 §I.2 禁止（limits.yml seo.hreflang.bare_language_code_forbidden）');
+  }));
+  /* 62 §I.3(c) 步驟 2：同碼多 URL ＝ 殘留衝突（同一 (market, locale) 對到多個 presence）。
+     🔴 同一 URL 多個碼是**合法**的（inherit_primary 的常態），不得拿去 dedupe。 */
+  const byCode={};live.forEach(r=>r.codes.forEach(c=>{(byCode[c]=byCode[c]||[]).push(r.prefix);}));
+  const dupes=Object.keys(byCode).filter(c=>new Set(byCode[c]).size>1);
+  /* x-default：主網域上、primary market 的預設語言。🔴 恆帶地區之後它**不再是無前綴的根路徑**
+     ——根路徑已不是內容頁（67 §F.1(b)：`/` 一律 302 到預設前綴），指過去會破壞不變量 4。 */
+  const pm=MARKETS.find(m=>m.id==='hk')||MARKETS[0];
+  const pmDef=mktDefaultLocale(pm);
+  return{rows,live,dupes,codes:live.reduce((a,r)=>a+r.codes.length,0),
+    xdefault:pmDef?urlPrefixOf(pm,pmDef)+'/':null};
+}
+function seoHreflangCard(){
+  const mx=hreflangMatrix(),blocked=mx.rows.filter(r=>r.tag&&!r.inMatrix);
+  const unpub=SHOP_LOCALES.filter(l=>!l.published);
+  return `<div class="card card-pad" data-doc="set-seo-matrix"><h3>hreflang 矩陣（實算）
+    <span class="h-act num mut3" style="font-size:var(--t-xs)">前綴 ${mx.rows.filter(r=>r.tag).length} 條・進矩陣 ${mx.live.length} 條・碼 ${mx.codes} 個</span></h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
+     下表由 <span class="mono">hreflangMatrix()</span> 依 62 §I.1 的演算法<b>當場算出來</b>，不是寫死的示意圖：
+     市場的開放語言（③）× 該市場的地區 ⇒ 前綴與碼。改上面任何一個設定，這張表立刻跟著變。</p>
+   <table class="idx" data-doc="set-seo-matrix-tbl"><thead><tr><th>市場</th><th>語言</th><th>URL 前綴</th><th>hreflang 碼</th><th>進矩陣</th></tr></thead><tbody>
+   ${mx.rows.map(r=>r.skip
+     ?`<tr class="norow"><td><b>${H(r.m.t)}</b><span class="mut3" style="display:block;font-size:var(--t-2xs)">${H(r.m.regions.join('・'))}${r.m.st!=='啟用中'?'・'+H(r.m.st):''}</span></td>
+        <td colspan="3" class="mut3">${r.skip==='draft'
+          ?'草稿市場 ⇒ 不進 sitemap 與 hreflang（62 §C 規則 1）'
+          :'沒有自有 web presence ⇒ <span class="mono">inherit_primary</span>：<b>不產生新的 URL 前綴</b>，其頁面走主市場的 URL（62 §J.2）'}</td>
+        <td><span class="tr-b">—</span></td></tr>`
+     :`<tr class="norow"><td><b>${H(r.m.t)}</b><span class="mut3" style="display:block;font-size:var(--t-2xs)">${H(r.m.regions.join('・'))}${r.m.st!=='啟用中'?'・'+H(r.m.st):''}</span></td>
+        <td>${H(locName(r.tag))}<span class="mut3" style="display:block;font-size:var(--t-2xs)"><span class="mono">${H(r.tag)}</span>${r.from!==r.m?'・繼承自 '+H(r.from.t):''}</span></td>
+        <td class="mono">${H(r.prefix)}/</td>
+        <td class="mono">${r.codes.map(H).join('<br>')}</td>
+        <td>${r.inMatrix?chip('是','success','full'):`<span class="tr-b miss">否</span><span class="mut3" style="display:block;font-size:var(--t-2xs)">${H(r.why)}</span>`}</td></tr>`).join('')}
+   <tr class="norow"><td><b>x-default</b></td><td class="mut3">主市場的預設語言</td><td class="mono">${H(mx.xdefault||'—')}</td><td class="mono">x-default</td><td>${chip('是','success','full')}</td></tr>
+   </tbody></table>
+   ${blocked.length?`<div class="banner-caution" style="margin-top:var(--sp-300)"><span class="bc-ic" aria-hidden="true">⚠</span>
+     <span><b>${blocked.length} 條前綴目前不在矩陣裡</b>：${blocked.map(r=>'<span class="mono">'+H(r.prefix)+'</span>（'+H(r.why)+'）').join('、')}。
+       🔴 這不是 bug，是閘門在運作：那些 URL 現在回 <b>404</b>，把它們放進 hreflang 會讓
+       <b>整組宣告被忽略</b>（62 §I.1 不變量 4）。
+       ${unpub.length?`要讓它進矩陣，先發布該語言 ⇒
+         ${unpub.map(l=>`<button class="btn btn-sec btn-sm" onclick="seoPublishLocale('${l.tag}')">發布「${H(locName(l.tag))}」</button>`).join(' ')}`:''}</span></div>`
+    :`<div class="banner-caution" style="margin-top:var(--sp-300)"><span class="bc-ic" aria-hidden="true">✓</span>
+      <span>目前所有開放語言都已發布 ⇒ <b>${mx.live.length} 條 URL 全部進矩陣</b>，沒有任何一條指向 404。</span></div>`}
+   ${mx.dupes.length?`<div class="banner-err" style="margin-top:var(--sp-200)"><b>同一個碼指向多條 URL：${mx.dupes.map(H).join('、')}</b>——非法標註（62 §I.3(c) 步驟 2 的殘留衝突），需以 canonical presence 規則解析</div>`:''}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
+     🔴 <b>恆帶地區、永不輸出裸語言碼</b>（<code>seo.hreflang.always_region_qualified</code>／<code>bare_language_code_forbidden</code>，
+     2026-08-13 裁定<b>覆蓋 Shopify 行為</b>——本尊在多國市場下輸出裸 <span class="mono">en</span>／<span class="mono">fr</span>，我方逐國展開）。
+     🔴 URL 前綴<b>全小寫</b>、hreflang 碼<b>大寫地區</b>：兩套大小寫規則<b>不得互相借用</b>，
+     而且 <span class="mono">url_prefix()</span> 回一個字串、<span class="mono">hreflang_codes()</span> 回一組碼——
+     <b>基數不同就是型別不同</b>，合併後路由層只能取 <span class="mono">.first</span>，那一行就是 bug 的全部（67 §F.1(a)）。
+     ⚠ 本原型的矩陣只涵蓋有自有 presence 的市場；<span class="mono">inherit_primary</span> 市場把地區碼掛到主市場 URL 上的那一半（62 §I.3(a)①）<b>未展開</b>。</p></div>`;
+}
+/* 從 SEO 頁直接發布語言：閘門要有出路，不能只告訴商家「這條不在矩陣裡」卻不給按鈕。
+   🔴 走的是與語言設定頁**同一支** langPublish()（鐵律 7：一個寫入點），不另寫一份。 */
+function seoPublishLocale(tag){
+  const l=shopLoc(tag);if(!l||l.published)return;
+  l.published=true;mktI18nInvalidate();
+  setPage('seo');
+  toast('已發布「'+locName(tag)+'」——它的 URL 現在回 200，已進 hreflang 矩陣與 sitemap');
+}
+
+/* ==================================================================
    SEO 與 AI 檢索（62 §J 網域策略 / §K 地區重導 / §H llms.txt・agents.md）
    ================================================================== */
 function seoGeoPage(){
@@ -8492,6 +8932,8 @@ function seoGeoPage(){
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">
      UNLISTED 商品<b>不進</b>任何一份（13 §F1.2 的 discoverable scope）——代理是新通路，
      一般的 noindex 在代理面完全不生效，這一格最容易漏。</p></div>
+
+  ${seoHreflangCard()}
 
   <div class="card card-pad" data-doc="set-seohealth"><h3>SEO 健康</h3>
    ${setRow('自動代碼 handle 佔比','品質閘門沒過、落到 <span class="mono">product-xxxx</span> 的商品數。補上 English 標題就會從譯文重新推導',
@@ -8726,6 +9168,15 @@ Object.assign(DOCS,{
  "mk-duty":{t:"關稅模式",f:"DDU vs DDP",l:"DDP 需商品有 HS code 與原產地，缺漏時退回 DDU（22 §8）",i:"P3・[api:marketUpdate] [tbl:markets,inventory_items]"},
  "mk-shipping":{t:"市場運送入口",f:"跳到此市場的運送選項設定",l:"新模型 Shipping options by market：Market → option → rates，子市場繼承父市場（41 §12.7）",i:"P2・[api:TBD-shippingOptionsByMarketUpdate]（28 僅有 deliveryProfile*） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
  "mk-catalog":{t:"目錄與翻譯覆寫",f:"此市場的商品範圍、價格與文案覆寫",l:"市場層覆寫優先於語言層翻譯，未覆寫回退語言翻譯再回退原文（29 §2）",i:"P2・[api:catalogUpdate] [api:translationsRegister] [tbl:catalogs,price_lists]（06 §7 待補）"},
+ "mk-locales":{t:"開放語言（③ market_locales）",f:"這個市場的買家能選哪些語言：勾選、排序、設預設，並顯示各自的 URL 前綴與 hreflang 碼",
+  l:"67 §A.5（概念）＋ §C.8（資料模型與 admin 契約），2026-08-13 裁定「我們可以在 admin 後台給不同地區指定客戶只能選擇哪些語言，前台不用全部顯示出來」的落地。<br>🔴 <b>三個集合不是兩個</b>：① platform_locales（平台字典）⊇ ② shop_locales（商店啟用集）⊇ ③ 本卡片。② 與 ③ 分離的產品理由是商家可能為了 SEO 或內部預覽而啟用一個語言，但還不想讓某個市場的買家看到它；合成一個 ⇒ 一啟用日文，全世界所有市場的切換器立刻多一個選項。技術理由是<b>譯文掛在 ②、曝光決策掛在 ③</b>——合一之後「關掉某市場的日文」就得刪掉日文譯文。<br>🔴 <b>白名單是呈現決策，不是存取控制</b>：它決定切換器／hreflang／sitemap／地區重導落點；它<b>不</b>決定一條已存在的 URL 誰能打開。做成存取控制是不可能的——URL 是公開的物理事實，而且 62 §0.2 原則 4 要求矩陣內每個 URL 對<b>任何</b>客戶端回 200（爬蟲沒有市場身分，回 404 就是整組 hreflang 失效）。<br>🔴 <b>粒度是 web presence 不是 market</b>：一個市場可以有多個 resolved presence（自身 ∪ 祖先），所以「市場的開放語言」是聯集的結果，任何 <code>UPDATE … WHERE market_id = ?</code> 形態的寫入都是 bug。<br>🔴 <b>子市場只能加不能減</b>（<code>i18n.market_locales.subtractive_override_forbidden</code>）：減法會讓 resolved 從「聯集」變成「聯集 − 例外」，62 §I.1 的雙向性就不能再靠「同一個函式同一個集合」保證；而且減法<b>減不掉 URL</b>（那條 URL 屬於父市場的 presence，照樣 200）。<br>寫入的連帶動作四件（§C.8(d)）：bump <code>shop_locales_version</code> ／ 觸發 hreflang＋sitemap 失效（去抖 5 分鐘）／ 關閉時寫 <code>closed_at</code> 並把該 (market, locale) 路由標為 404 ／ <b>不刪任何 translations 列</b>",
+  i:"P1(M4)・[api:marketWebPresenceUpdate]（alternateLocales, defaultLocale）[api:marketLocalizationsRegister] [tbl:market_web_presence_locales(shop_id, market_web_presence_id, locale_tag, position, is_market_default, open_to_buyers, closed_at)]（<b>不新建 market_locales 表</b>，<code>i18n.market_locales.separate_table_forbidden: true</code>；FK 指向 shop_locales 而非 platform_locales，那條 FK 就是 ③ ⊆ ② 的執法點）[job:hreflang_matrix_build] [job:sitemap_rebuild]"},
+ "mk-loc-row":{t:"單一開放語言",f:"顯示前綴／hreflang 碼／翻譯進度，可設預設、可排序、可關閉",
+  l:"每列四樣資訊都是<b>算出來的</b>不是存起來的：<code>url_prefix(wp, loc)</code>（67 §F.1(b)：恆帶地區、恆有前綴、全小寫）、<code>hreflang_codes(market, loc)</code>（62 §I.2：大寫地區，多國市場逐國展開成 N 個碼）、翻譯進度（<code>translation_status</code>，與語言設定頁百分比同源，鐵律 7）、以及該語言的 published 狀態。<br>🔴 <b>排序＝position＝前台切換器順序</b>，這是商家唯一能控制順序的地方，前台不得另加一套排序規則。<br>🔴 <b>預設語言恆為開放且不可關閉</b>（userErrors <code>MARKET_DEFAULT_LOCALE_CANNOT_BE_CLOSED</code>）：關掉它，地區重導沒有落點（62 §K.2）、切國家後語言不支援時也沒有回落目標（29 §4）。<br>🔴 <b>關閉的確認對話必須有三個數字</b>：將 404 的 URL 數／將從 hreflang 移除的條目數／<b>該語言在該市場的既有譯文筆數（不會被刪）</b>。第三個專門回答商家的「我的翻譯會不會不見」——破壞性操作在按下確認前必須有一個數字",
+  i:"P1(M4)・[api:marketWebPresenceUpdate] [tbl:market_web_presence_locales]（<code>open_to_buyers</code> 是欄位不是刪列——刪列會讓 position 與 closed_at 一起消失，而「曾經開過」是決定 404 範圍與失效範圍的必要資訊）"},
+ "mk-loc-add":{t:"開放語言",f:"把一個已發布的商店語言開給這個市場的買家",
+  l:"可選值域＝<code>shop_locales</code> 中 <b>published = true</b> 的語言。🔴 <b>未發布語言不出現在這個選單裡</b>——把未發布語言開給市場沒有任何效果（前台仍 404，67 §A.5(c) 情形 4），只會製造「我開了為什麼沒用」。<br>開啟<b>不需要</b>破壞性確認，但要顯示「將新增 N 個可索引 URL」（形態同 62 §J.3）；關閉才需要確認，因為它讓一批已被索引的 URL 變成 404",
+  i:"P1(M4)・[api:marketWebPresenceUpdate] [tbl:market_web_presence_locales] [limits:i18n.market_locales.max_per_market]"},
  "cat-new":{t:"建立目錄",f:"名稱／對象／價格調整",l:"目錄＝發布範圍＋價格；適用市場或 B2B company location（≤25 catalogs/location）",i:"P2・[api:catalogCreate] [api:priceListCreate] [tbl:catalogs,price_lists]"},
 /* ---------- 財務 ---------- */
  "fin-export":{t:"匯出對帳報表",f:"撥款與訂單的對帳 CSV",l:"拆解＝charges − refunds − fees + adjustments；>50 筆改寄 email 下載連結（22 §0）",i:"P1・[api:TBD-payoutList]（28 待補）＋[api:orders] [tbl:order_transactions,orders] [job:csv_export]"},
@@ -11222,6 +11673,12 @@ Object.assign(DOCS,{
   l:"自動代碼佔比：品質閘門沒過、落到 <code>product-xxxx</code> 的商品數（67 §D.2(a)-3）。這是<b>可觀測的摩擦</b>而不是硬擋——用硬擋換 URL 品質，換來的是商家亂打 <code>aaa-bbb</code>，那比自動代碼更糟（亂打無法偵測與修復，自動代碼可以）。<br>hreflang：<b>同一 URL 對應多個碼＝合法</b>（繼承主網域的市場就是這樣，en-hk 與 en-sg 同指一組 URL）；<b>同一個碼對應多個 URL＝非法</b>。兩者不要搞混——把前者也拿去 dedupe，會把繼承市場的條目誤刪，hreflang 的雙向性隨即破裂",
   i:"P2・[tbl:resource_handles] [job:hreflang_matrix_build]"},
  "set-seo-autohandle":{t:"自動代碼 handle 佔比（唯讀）",f:"顯示落 fallback 的商品數",l:"數字由 handleFor() 現場推導，與商品編輯頁的 handle 預覽同源",i:"P2・[tbl:resource_handles.auto_token]"},
+ "set-seo-matrix":{t:"hreflang 矩陣（實算）",f:"把每個（市場 × 開放語言）算成一條 URL 前綴與一組 hreflang 碼，並標明哪些進矩陣、哪些被閘門擋下",
+  l:"62 §I.1 生成演算法的可執行鏡像：<code>active_markets → resolved_web_presences → open_locales(wp) → hreflang_codes(market, loc)</code>，最後補一條 <code>x-default</code>。<br>🔴 <b>三個閘門缺一個就是一個 SEO 事故</b>：①草稿市場不進（62 §C 規則 1）②<b>未開放不進</b>（67 §A.5：用 <code>open_locales(wp)</code>，不是「presence 上掛的全部語言」）③<b>未發布不進</b>（67 §F.1(d)-3）。②③ 漏掉任何一個，矩陣裡就會出現一條 <b>404 的 URL</b>，而 Google 對「hreflang 指到 404」的處置是<b>忽略整組宣告</b>，不是忽略那一條（62 §I.1 不變量 4）。<br>🔴 <b>恆帶地區、永不輸出裸語言碼</b>（<code>seo.hreflang.always_region_qualified</code>／<code>bare_language_code_forbidden</code>）——2026-08-13 裁定<b>覆蓋 Shopify 行為</b>（本尊多國市場輸出裸 <code>en</code>，我方逐國展開成 N 個碼指向同一 URL）。這是<b>裁定 > Shopify</b>，不是我方發現本尊寫錯。<br>🔴 <b>x-default 不再是無前綴的根路徑</b>：根路徑已不是內容頁（67 §F.1(b)：<code>/</code> 一律 302 到預設前綴），指過去會讓不變量 4 破裂。<br>🔴 同一 URL 掛多個碼＝<b>合法</b>；同一個碼指向多條 URL＝<b>非法</b>——後者才是 <code>dedupe_codes</code> 要處理的殘留衝突，把前者拿去去重會誤刪繼承市場的條目、雙向性隨即破裂。<br>⚠ <b>本原型的邊界</b>：矩陣只涵蓋有自有 presence 的市場；<code>inherit_primary</code> 市場把自己的地區碼掛到主市場 URL 上的那一半（62 §I.3(a)①）未展開",
+  i:"P2・[job:hreflang_matrix_build]（去抖 ≥5 分鐘，觸發條件含 market conditions／<code>shop_locales</code>／<code>market_web_presence_locales</code> 三者變更）[tbl:market_web_presences,market_web_presence_locales,shop_locales] [limits:seo.hreflang.max_expanded_countries_per_market=40, over_limit_action=emit_partial_and_lint]"},
+ "set-seo-matrix-tbl":{t:"矩陣明細表",f:"逐列列出（市場, 語言）⇒ 前綴 ＋ 碼 ＋ 是否進矩陣",
+  l:"🔴 <b>前綴與碼是兩支函式算出來的，不是同一個字串換大小寫</b>（67 §F.1(a)）：<code>url_prefix()</code> 恰回<b>一個</b>字串（一條路由不可能是一個集合）、<code>hreflang_codes()</code> 回<b>一組</b>碼。<b>基數不同就是型別不同</b>——合併之後路由層只能取 <code>.first</code>，而那一行 <code>.first</code> 就是 bug 的全部（它會在第一個多國市場上選到一個看起來對的國家）。大小寫也是兩套：URL 前綴全小寫（路徑大小寫敏感，混用＝同一頁兩條 URL）、hreflang 碼是小寫語言＋Title case script＋<b>大寫地區</b>。<br>「進矩陣＝否」的那幾列<b>不是垃圾</b>：它們照樣是合法設定，只是目前不該被宣告——被擋的原因逐列寫出來，商家才知道要去改哪一個開關",
+  i:"P2・[job:hreflang_matrix_build]；渲染期 <code>&lt;head&gt;</code> 與 sitemap <b>共用同一份</b>集合（不做第二份實作）"},
  "set-seo-hreflang":{t:"hreflang 雙向性（唯讀）",f:"顯示矩陣檢查結果",l:"雙向性＝A 指向 B 則 B 必須指回 A；缺一邊 Google 會忽略整組宣告。市場的可用語言沿 lineage <b>累加繼承</b>，用 m.web_presences 而不是 resolved_web_presences(m) 會漏語言 ⇒ 雙向性破裂",i:"P2・[job:hreflang_matrix_build]"},
  "set-mkt-url":{t:"各市場的網址結構",f:"顯示與設定每個市場的網域策略",
   l:"🔴 <b>「預設值」與「建議值」是兩件事</b>（62 §J.2，跟隨 Shopify 的做法把它們拆開）：<br>・<b>預設</b>＝<code>market.web_presence.default_for_new_market: inherit_primary</code>（dev，2023-05-23 changelog：在此之前新的單國市場會自動建立語言／國家子資料夾，此後改為沿用 primary market 的 URL 結構）。<b>平台不替商家新增任何 URL。</b><br>・<b>建議</b>＝<code>ui_recommended_strategy: subfolder</code>（help，首次設定國際銷售建議子資料夾；理由是共享網域權重、成本最低）。<br>為什麼這條不是雞毛蒜皮：自動配子資料夾＝一次新增<b>一批可索引 URL ＋ 一批 hreflang 條目 ＋ 一批 sitemap 列</b>。Shopify 在 2023 專門為此發了一則 changelog 把它關掉。我方若沿用「預設子資料夾」，商家每開一個市場就靜默多一份站點，而他可能只是想針對該國調個價。<br>硬約束（29 §1.2）：<code>domain</code> 與 <code>subfolderSuffix</code> <b>互斥（XOR）</b>；語言-only 子資料夾（/fr）<b>僅限 primary market</b>，次級市場一律語言-國家（/fr-ca）——這條寫進路由 constraint 層",
