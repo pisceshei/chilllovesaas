@@ -218,7 +218,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.datetime "created_at", null: false
     t.string "currency", limit: 3, default: "HKD", null: false
     t.bigint "einvoice_id", null: false
-    t.string "reason", limit: 255
+    t.string "reason"
     t.bigint "shop_id", null: false
     t.datetime "updated_at", null: false
     t.index ["shop_id", "einvoice_id"], name: "ix_einvoice_allowances_einvoice_id"
@@ -415,7 +415,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.string "event_kind", limit: 64, null: false
     t.string "jurisdiction", limit: 8, null: false
     t.datetime "occurred_at", null: false
-    t.string "reason", limit: 255, null: false
+    t.string "reason", null: false
     t.bigint "shop_id", null: false
     t.string "source_write_point", limit: 128, null: false
     t.datetime "updated_at", null: false
