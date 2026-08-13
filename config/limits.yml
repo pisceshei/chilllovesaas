@@ -1713,6 +1713,25 @@ content:
   # 主題庫與試用。出處：docs/research/22:160（live）
   theme_library_max: 20
   theme_trial_max: 19
+  # ===== 71-R9（2026-08-13，help）佈景主題結構上限 =====
+  # 商品/系列/頁面/網誌/文章的範本總數上限。出處：help themes/theme-structure/templates（help）
+  theme_templates_max: 1000
+  # 每範本區段上限／每範本跨區段區塊上限／區塊巢狀層數上限。出處：help sections-and-blocks（help）
+  theme_sections_per_template_max: 25
+  theme_blocks_per_template_max: 1250
+  theme_block_nesting_depth_max: 8
+  # 佈景主題可做市場層覆寫的市場數上限（Advanced/Plus 專屬功能）。出處：help customizing-themes-for-markets（help）
+  theme_market_overrides_max: 250
+  # 檔案庫：單次上傳檔數與各類型大小上限。出處：help file-uploads（help）
+  files_upload_batch_max: 20
+  files_image_max_mb: 20
+  files_image_max_megapixels: 20
+  files_video_max_gb: 1
+  files_video_max_minutes: 10
+  files_generic_max_mb: 20
+  # 效能報表資料延遲與保留。出處：help web-performance-reports（help）
+  web_performance_data_delay_max_hours: 36
+  web_performance_retention_days: 90
   # 留言可編輯窗（分鐘）。出處：docs/research/22:160（live）
   comment_edit_window_minutes: 5
 

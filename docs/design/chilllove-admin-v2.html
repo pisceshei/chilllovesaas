@@ -2188,6 +2188,8 @@ const NAV=[
  {id:"m-customers",name:"顧客",icon:"customers",kids:[["m-segments","分群"],["m-companies","公司"]]},
  {id:"m-growth",name:"成長",icon:"growth",kids:[["m-attribution","歸因"],["m-campaigns","行銷活動"]]},
  {id:"m-discounts",name:"折扣",icon:"discounts"},
+ /* 71-R9（實測）：本尊內容子項＝元物件/檔案/選單/部落格貼文（四項，根＝/content/metaobjects）；
+    網址重新導向掛在選單頁的頁首鈕（內容區），非線上商店。 */
  {id:"m-metaobjects",name:"內容",icon:"content",kids:[["m-files","檔案"],["m-menus","選單"],["m-blog","部落格貼文"]]},
  {id:"m-markets",name:"市場",icon:"markets",kids:[["m-catalogs","目錄"]]},
  /* 71-R4-STRUCT1（2026-08-13 實測＋help 修正）：本尊財務導航子項是**狀態函數**——未啟收款＝無子項
@@ -2202,7 +2204,7 @@ const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders"
  "m-segments":"m-customers","m-companies":"m-customers","m-attribution":"m-growth","m-campaigns":"m-growth",
  "m-files":"m-metaobjects","m-menus":"m-metaobjects","m-blog":"m-metaobjects",
  "m-catalogs":"m-markets","m-reports":"analytics","m-live":"analytics",
- "m-billing":"m-finance","m-pages":"m-themes","m-redirects":"m-themes","m-prefs":"m-themes",
+ "m-billing":"m-finance","m-pages":"m-themes","m-redirects":"m-metaobjects","m-prefs":"m-themes",
  "d-draft":"orders","d-product":"products","d-collection":"products","d-customer":"m-customers",
  "d-segment":"m-customers","d-company":"m-customers","d-company-new":"m-customers",
  "d-discount":"m-discounts","d-menu":"m-metaobjects","d-article":"m-metaobjects",
@@ -2229,8 +2231,10 @@ function renderSidebar(){
   h+=`<div class="nav-group">${H(uiT('銷售管道'))}</div>
   <button class="nav-item ${current==='m-themes'?'on':''}" onclick="go('m-themes')">${icon('store')}${H(uiT('線上商店'))}</button>
   <div class="nav-subs m-accordion ${grp==='m-themes'?'open':''}">
+  <!-- 71-R9-STRUCT1（2026-08-13 實測）：本尊線上商店子項只有**頁面／偏好設定**兩項
+       （/pages、/online_store/preferences；根＝/themes）。「網址重新導向」在**內容**區
+       （內容→選單頁的「網址重新導向」鈕，路由 /content/menus 家族），不在線上商店。已移位。 -->
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-pages'?'on':''}" onclick="go('m-pages')">${H(uiT('頁面'))}</button>
-  <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-redirects'?'on':''}" onclick="go('m-redirects')">${H(uiT('網址重新導向'))}</button>
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-prefs'?'on':''}" onclick="go('m-prefs')">${H(uiT('偏好設定'))}</button>
   </div>
   <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}${H(uiT('AI 代理'))}</button>
@@ -7285,8 +7289,12 @@ function mobjEntries(name){
 }
 function filesPage(){
   const F_ICON={'影像':'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-6 6"/>','文件':'<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>','影片':'<rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 10l4-3v10l-4-3"/>'};
+  /* 71-R9（實測 /content/files）：頁首雙鈕「從網址上傳／上傳檔案」；列表欄七＝縮圖/檔案名稱/
+     替代文字/新增日期/大小/參照/操作（我方格狀檢視為超集，清單檢視對應本尊）；檢視選擇器與
+     Ctrl+S／Ctrl⇧S 儲存檢視快捷鍵屬全域 saved views 元件家族（76 §1 同源）。 */
   return `<div class="page-head"><h1>內容・檔案</h1><div class="head-actions">
-      <div class="seg" role="group" aria-label="檢視方式"><button class="on" onclick="toast('Demo：格狀檢視')">格狀</button><button onclick="toast('Demo：清單檢視')">清單</button></div>
+      <div class="seg" role="group" aria-label="檢視方式"><button class="on" onclick="toast('Demo：格狀檢視')">格狀</button><button onclick="toast('Demo：清單檢視——欄：縮圖/檔案名稱/替代文字/新增日期/大小/參照/操作')">清單</button></div>
+      <button class="btn btn-sec btn-sm" data-doc="file-upload-url" onclick="toast('Demo：從網址上傳——貼外部 URL，平台抓檔入庫（本尊頁首第一鈕）')">從網址上傳</button>
       <button class="btn btn-pri btn-sm" data-doc="file-upload" onclick="fileUpload()">上傳檔案</button></div></div>
     <div class="card" data-doc="doc-m-files">
       <div class="listbar wrap">
@@ -7338,12 +7346,16 @@ function menusPage(){
     </tbody></table><p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">巢狀 ≤3 層；儲存時整棵樹一次提交（41 §5.3）。</p></div>`;
 }
 function openMenu(id){MENU=JSON.parse(JSON.stringify(MENUS.find(m=>m.id===id)));goDetail('d-menu',{id});}
+/* 71-R9（實測 /content/menus/{id}）：欄位＝名稱＋控制代碼（zh-TW 官方詞，非 handle）；
+   頁首＝儲存＋「更多動作」（複製）；本尊預設三選單：Main menu／Footer menu／
+   Customer account main menu（顧客帳號主選單——我方原無此第三張，V 登記）。 */
 function menuPage(){
   return detailHead(H(MENU.t),chip(MENU.pos,'default'),
-    `<button class="btn btn-pri btn-sm" onclick="formSave()">儲存選單</button>`,'m-menus')
+    `<button class="btn btn-sec btn-sm" data-doc="menu-more" onclick="openGen({title:'更多動作',pad:false,body:'<button class=\\'pick\\' onclick=\\'closeGen();toast(&quot;已複製選單（含所有項目）&quot;)\\'><span class=\\'pk-i\\'><b>複製</b></span><span class=\\'chev\\'>›</span></button>'})">更多動作 ▾</button>
+     <button class="btn btn-pri btn-sm" onclick="formSave()">儲存選單</button>`,'m-menus')
   +`<div class="od-grid" data-form="menu"><div class="col">
     <div class="card card-pad" data-doc="menu-basic">
-      <div class="grid2">${F('標題',TXT('mt',MENU.t,'','req|max:60'))}${F('handle',TXT('mh',MENU.id,'','handle'),'前台以 handle 引用此選單')}</div></div>
+      <div class="grid2">${F('名稱',TXT('mt',MENU.t,'','req|max:60'))}${F('控制代碼',TXT('mh',MENU.id,'','handle'),'前台以控制代碼引用此選單（本尊 zh-TW 用詞）')}</div></div>
     <div class="card card-pad" data-doc="menu-tree"><h3>選單項目<span class="h-act"><button class="btn btn-sec btn-sm" onclick="menuAdd()">＋ 新增項目</button></span></h3>
       <div class="mtree" id="mtree">
       ${MENU.items.map((it,i)=>`<div class="mi" draggable="true" style="--d:${it.d}"
@@ -9956,6 +9968,8 @@ Object.assign(DOCS,{
  "doc-m-metaobjects":{t:"元物件定義列表",f:"自訂資料模型的定義清單",l:"每定義四能力開關；type 存檔後鎖定；條目可被 metafield 引用或生成前台頁面（41 §5.1）",i:"P1・[api:metaobjectDefinitionCreate] [api:metaobjects] [tbl:metaobjects]（06 §7 待補）"},
  "mobj-entries":{t:"元物件條目",f:"依定義動態渲染的條目列表與表單",l:"狀態 Active/Draft；handle 唯一；顯示被引用處（刪除前警告）",i:"P1・[api:metaobjectCreate] [api:metaobjectUpdate] [api:metaobjectDelete] [tbl:metaobjects]"},
  "mobj-new":{t:"新增元物件定義",f:"名稱／type／欄位／能力開關",l:"欄位型別＝metafield 同池 30+ 種；Display name 預設取第一個 text 欄；Web pages 能力會生成 /pages 型路由＋SEO 欄",i:"P1・[api:metaobjectDefinitionCreate]（type, fieldDefinitions） [tbl:metaobjects,metafield_definitions]"},
+ "file-upload-url":{t:"從網址上傳",f:"貼外部 URL 由平台抓檔入庫",l:"71-R9 實測：本尊檔案頁首雙鈕之一（在「上傳檔案」左側）；用於外部圖庫/CDN 搬遷；抓檔失敗態與大小限制同一般上傳",i:"P2・[api:TBD-fileCreateFromUrl]（28 待補）→[tbl:files]"},
+ "menu-more":{t:"選單更多動作",f:"複製選單",l:"71-R9 實測：本尊選單詳情頁首「更多動作」唯一項＝複製（含所有項目）；刪除在列表層",i:"P2・[api:TBD-menuDuplicate]（28 待補） [tbl:menus,menu_items]"},
  "file-upload":{t:"上傳檔案",f:"拖曳或選檔上傳到檔案庫",l:"一次 ≤20 檔；圖 ≤20MB／25MP、影片 ≤1GB、其他 ≤20MB（41 §5.2）；兩段式上傳",i:"P1・[api:stagedUploadsCreate]→[api:fileCreate] [tbl:files]"},
  "menu-redirects":{t:"網址轉址入口",f:"從選單頁跳到轉址管理",l:"轉址與選單同區管理（41 §5.3）",i:"P0・[api:urlRedirects] [tbl:url_redirects]（06 §7 待補）"},
  "menu-new":{t:"新增選單",f:"建立導航選單",l:"每個選單有 handle，前台以 handle 引用",i:"P0・[api:menuCreate] [tbl:menus,menu_items]"},
