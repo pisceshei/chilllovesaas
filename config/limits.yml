@@ -1723,6 +1723,39 @@ domains:
   activation_max_hours: 48
 
 # =============================================================================
+# 13d. 顧客線（71-R5，2026-08-13；跟隨 help）
+# =============================================================================
+customers:
+  # 列表欄位總數（4 預設顯示＋14 隱藏；顧客姓名恆第一欄不可調）。出處：71-R5 實測＋help customer-search（test+help）
+  list_column_count: 18
+  # 排序鍵數（×2 方向；預設 顧客更新日期・由新到舊）。出處：71-R5 實測（test）
+  list_sort_key_count: 7
+  # 匯入 CSV 上限。出處：help import-export-customers（help）
+  import_csv_max_mb: 15
+  # 匯出超過此人數改 email 寄送 CSV。出處：同上（help）
+  export_email_threshold: 50
+  # 備註上限（字元）。出處：help manage-customers（help）
+  note_max_chars: 5000
+  # 時間軸留言可編輯窗（分鐘）；刪除不可復原。出處：help productivity-tools（help）
+  timeline_comment_edit_window_minutes: 5
+  # 單一顧客商店抵用金總額上限（USD 等值；平台合規值，非鐵律 3 儲存單位——落表時轉 integer cents）。
+  # 出處：help store-credit（help）；HK SVF 單一用途豁免（G21）另有 pack 級約束
+  store_credit_max_usd: 15000
+  # 清除個人資料（redact）提交後可取消天數。出處：help processing-customer-data-requests（help）
+  redact_cancel_window_days: 10
+  # predicted_spend_tier 啟用門檻（商店累計銷售筆數）。出處：help predicted-spend-tier（help）
+  predicted_spend_tier_min_sales: 100
+  # 分群 metafield 條件允許型別。出處：help metafield-segments（help）
+  segment_metafield_types: [date_time, number, text, boolean]
+b2b:
+  # 非 Plus 級方案全部 B2B 市場合計啟用中目錄上限；Plus 無限且可直掛公司地址。出處：help b2b（help）
+  active_catalogs_max_non_plus: 3
+  # 每個公司地址可指派目錄上限；多目錄顯示最低價。出處：help catalogs（help）
+  catalogs_per_company_location_max: 25
+  # 每商品按量定價級距上限；門檻須 > 最低訂購量且為遞增單位倍數。出處：help quantity-pricing（help）
+  quantity_price_breaks_per_product_max: 10
+
+# =============================================================================
 # 13c. 平台帳單（71-R4，2026-08-13；政策值跟隨 Shopify help，68 號「跟隨」原則）
 # =============================================================================
 billing:

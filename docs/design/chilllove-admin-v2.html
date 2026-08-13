@@ -3658,7 +3658,7 @@ const DOCS={
  "doc-m-inventory":{t:"庫存五欄帳",f:"不可用/已佔用/可用/現有/在途",l:"Adjust by vs Set to 兩模式；原因 7 種；歷史 180 天；匯入僅 on hand 可寫＋防過期校驗",i:"P0・ledger 唯一入口（規格 13-F5）；恆等式 nightly 對帳"},
  "doc-m-abandoned":{t:"棄單列表",f:"未完成結帳＋挽回",l:"留 email＋≥10 分鐘才列入；3 個月自動刪；挽回信手動/自動",i:"P0 列表・P1 自動信（規格 15-F7）；90 天 purge job"},
  "doc-m-drafts":{t:"草稿訂單",f:"代客建單流程",l:"自訂品項不入目錄；Reserve 佔庫存；寄發票=簽名結帳連結",i:"P1・22 §1c 全表"},
- "doc-m-segments":{t:"顧客分群",f:"條件語法動態名單",l:"filter+運算子+相對日期；MATCHES 複合查詢；成員自動進出",i:"P1・語法白名單編譯 SQL；先做 5 個核心 filter（22 §3）"},
+ "doc-m-segments":{t:"顧客分群",f:"條件語法動態名單；列表欄=名稱/顧客百分比/上次活動/建立者＋列 ⋯ 五動作",l:"71-R5：系統預設 5 群開店即有（名稱保留英文＝本尊事實）；⋯=使用分群/複製/匯出/重新命名/刪除（系統群不可刪）；filter+運算子+相對日期；MATCHES 複合查詢；成員自動進出",i:"P1・語法白名單編譯 SQL；目錄=SEG_FILTERS 全量（22 §3→71-R5 增補）"},
  "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
  "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
  "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
@@ -4936,11 +4936,18 @@ const GIFTCARDS=[
  {id:'g3',last4:'77AB',c:'陳柏睿',bal:0,init:12500,st:'已用罄',d:'2026-03-02',exp:'—'},
  {id:'g4',last4:'M31X',c:'測試',bal:12500,init:12500,st:'已停用',d:'2026-01-09',exp:'—'}];
 
+/* 71-R5（2026-08-13 實測）：本尊開店即帶 5 個系統預設分群（建立者=平台、名稱保留英文未在地化——
+   照抄本尊事實）；列表欄=名稱/顧客百分比/上次活動/建立者。pct=顧客百分比（本尊欄），by=建立者。 */
 const SEGMENTS=[
- {id:'s1',t:'VIP 熟客',q:"amount_spent > 5000 AND number_of_orders > 2",n:18,use:'折扣 VIP10',d:'2026-05-02'},
- {id:'s2',t:'90 天未回購',q:"last_order_date < -90d",n:126,use:'挽回 email',d:'2026-06-11'},
- {id:'s3',t:'訂閱未購買',q:"email_subscription_status = 'SUBSCRIBED' AND number_of_orders = 0",n:342,use:'—',d:'2026-07-01'},
- {id:'s4',t:'台北 10 公里內',q:"customer_within_distance(coordinates: (25.03, 121.56), distance_km: 10)",n:64,use:'本地配送推廣',d:'2026-08-01'}];
+ {id:'sys1',t:'Customers who have purchased at least once',q:"number_of_orders > 0",n:3,pct:100,use:'—',d:'2026-07-14',by:'系統'},
+ {id:'sys2',t:'Email subscribers',q:"email_subscription_status = 'SUBSCRIBED'",n:0,pct:0,use:'—',d:'2026-07-14',by:'系統'},
+ {id:'sys3',t:'Abandoned checkouts in the last 30 days',q:"abandoned_checkout_date > -30d",n:0,pct:0,use:'—',d:'2026-07-14',by:'系統'},
+ {id:'sys4',t:'Customers who have purchased more than once',q:"number_of_orders > 1",n:1,pct:33,use:'—',d:'2026-07-14',by:'系統'},
+ {id:'sys5',t:"Customers who haven't purchased",q:"number_of_orders = 0",n:0,pct:0,use:'—',d:'2026-07-14',by:'系統'},
+ {id:'s1',t:'VIP 熟客',q:"amount_spent > 5000 AND number_of_orders > 2",n:18,pct:12,use:'折扣 VIP10',d:'2026-05-02',by:'KEN'},
+ {id:'s2',t:'90 天未回購',q:"last_order_date < -90d",n:126,pct:38,use:'挽回 email',d:'2026-06-11',by:'KEN'},
+ {id:'s3',t:'訂閱未購買',q:"email_subscription_status = 'SUBSCRIBED' AND number_of_orders = 0",n:342,pct:54,use:'—',d:'2026-07-01',by:'HILDA'},
+ {id:'s4',t:'台北 10 公里內',q:"customer_within_distance(coordinates: (25.03, 121.56), distance_km: 10)",n:64,pct:9,use:'本地配送推廣',d:'2026-08-01',by:'KEN'}];
 
 const DISCOUNTS=[
  {id:'d1',t:'WELCOME5',type:'扣減訂單金額',method:'折扣碼',st:'啟用中',used:128,cap:'—',dates:'2026-01-01 起',comb:'商品・運費'},
@@ -6581,23 +6588,37 @@ function giftOpen(id){
 /* ==================================================================
    顧客模組：列表／詳情／分群（條件建構器）
    ================================================================== */
+/* 71-R5（2026-08-13 實測）：本尊顧客列表＝ShopifyQL 查詢視圖——AI 分群列展開即五行查詢編輯器，
+   欄位選擇器＝SHOW 子句 UI 化（4 顯示＋14 隱藏共 18 欄，可拖曳排序），排序鍵 7×2（預設 顧客更新日期
+   由新到舊）。本尊列表無 view tabs（我方 tabs 保留＝tabbed views 家族慣例，71-R5-V 複驗「更多檢視」
+   歸屬）。預設欄=顧客名稱/電子郵件訂閱/地點/訂單/消費金額；CLV 欄為我方額外（複驗中）。 */
+function custColumns(){
+  const vis=['電子郵件訂閱','地點','訂單','消費金額'];
+  const hid=['電子郵件','電話','名字','姓氏','郵遞區號','顧客語言','ID','新增顧客日期','顧客更新日期','SMS 訂閱','WhatsApp 訂閱','稅額豁免','可刪除','可合併'];
+  openGen({title:'欄位',body:`<div class="stack">
+    ${F('排序依據',SEL('_csort',['顧客更新日期','消費金額','訂單','新增顧客日期','最新訂單日期','首次訂單日期','最新放棄訂單日期'],'顧客更新日期'),'方向：由新到舊（預設）／由舊到新')}
+    <h4>欄（可拖曳排序；眼睛切換顯示）</h4>
+    <div class="valchips">${vis.map(c=>`<button class="tokchip" onclick="toast('Demo：隱藏欄「${c}」')">👁 ${c}</button>`).join('')}</div>
+    <div class="valchips" style="opacity:.6">${hid.map(c=>`<button class="tokchip" onclick="toast('Demo：顯示欄「${c}」')">🚫 ${c}</button>`).join('')}</div>
+    <p class="mut3" style="font-size:var(--t-xs)">欄清單＝查詢 SHOW 子句的 UI 化（列表即查詢視圖）；全 18 欄＝本尊實測。</p></div>`});
+}
 function customersPage(){
   return listPage({key:'cust',title:'顧客',doc:'doc-m-customers',ph:'搜尋姓名、email、電話、卡末四碼…',
-    actions:[['匯出','ghost',"toast('Demo：匯出顧客 CSV（訂單數／消費額為唯讀欄）')",'export'],['匯入','ghost',"toast('Demo：匯入顧客 CSV')",'import'],['新增顧客','pri',"openCustomer('new')",'cust-new']],
-    ai:'描述你想找的分群：例如「90 天內買過帽T、消費超過 3,000 的顧客」',aiDoc:'cust-ai',aiFn:"customerAI()",
+    actions:[['匯出','ghost',"toast('Demo：匯出顧客 CSV——範圍四選一（目前頁面/所有顧客/已選/符合篩選）＋可含標籤與中繼欄位＋格式二選一；>50 位改 email 寄送；Total Spent/Orders 為唯讀欄')",'export'],['匯入','ghost',"toast('Demo：匯入顧客 CSV——UTF-8・≤15MB・標頭白名單；勾選：覆寫現有顧客（以 email/電話為鍵）／建立區段與標籤；完成或失敗 email 通知')",'import'],['欄位','ghost',"custColumns()",'cust-cols'],['新增顧客','pri',"openCustomer('new')",'cust-new']],
+    ai:'描述您的分群：例如「90 天內買過帽T、消費超過 3,000 的顧客」',aiDoc:'cust-ai',aiFn:"customerAI()",
     views:[['全部',()=>true],['已訂閱電子報',r=>r.sub==='已訂閱'],['VIP',r=>r.tags.includes('VIP')],['B2B',r=>r.tags.includes('B2B')]],
     filters:[{k:'sub',l:'Email 訂閱',opts:['已訂閱','未訂閱','已取消訂閱'],test:(r,v)=>r.sub===v},
       {k:'rfm',l:'RFM 分組',opts:['CHAMPIONS','LOYAL','ACTIVE','NEW','PROMISING','AT_RISK'],test:(r,v)=>r.rfm===v},
       {k:'tier',l:'預測消費層級',opts:['HIGH','MEDIUM','LOW'],test:(r,v)=>r.tier===v}],
-    cols:[{l:'顧客',c:r=>`<b>${H(r.n)}</b>${r.tags.map(t=>` <span class="tagchip" style="margin:0">${H(t)}</span>`).join('')}`,v:r=>r.n},
-      {l:'Email 訂閱',c:r=>chip(r.sub,r.sub==='已訂閱'?'success':r.sub==='已取消訂閱'?'critical':'default'),v:r=>r.sub},
-      {l:'地區',c:r=>`<span class="mut">${r.loc}</span>`,v:r=>r.loc},
+    cols:[{l:'顧客名稱',c:r=>`<b>${H(r.n)}</b>${r.tags.map(t=>` <span class="tagchip" style="margin:0">${H(t)}</span>`).join('')}`,v:r=>r.n},
+      {l:'電子郵件訂閱',c:r=>chip(r.sub,r.sub==='已訂閱'?'success':r.sub==='已取消訂閱'?'critical':'default'),v:r=>r.sub},
+      {l:'地點',c:r=>`<span class="mut">${r.loc}</span>`,v:r=>r.loc},
       {l:'訂單',right:true,c:r=>N(r.ord),v:r=>r.ord},
       {l:'消費金額',right:true,c:r=>N(money(r.spent)),v:r=>r.spent},
       {l:'CLV 預測',c:r=>chip(r.tier,r.tier==='HIGH'?'success':r.tier==='MEDIUM'?'info':'default'),v:r=>r.tier}],
     rows:CUSTOMERS,id:r=>r.id,onRow:r=>`openCustomer('${r.id}')`,
     bulk:[['加標籤'],['更新行銷同意'],['合併顧客'],['刪除',null,null,'danger']],
-    note:'email／SMS／WhatsApp 三通道同意各自獨立；刪除有訂單的顧客→匿名化；合併有排除清單（41 §4.1/4.2）。'});
+    note:'列表＝查詢視圖（AI 列展開即編輯器）；email／SMS／WhatsApp 三通道同意各自獨立；刪除有訂單的顧客→匿名化；合併有排除清單（41 §4.1/4.2）。'});
 }
 function customerAI(){
   openGen({title:'AI 分群草稿',body:`<div class="stack">
@@ -6621,21 +6642,36 @@ function customerPage(){
      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存</button>`,'m-customers')
   +`<div class="od-grid" data-form="cus">
     <div class="col">
+      <!-- 71-R5（2026-08-13 實測）：KPI 條四格＝消費總額/訂單/成為顧客日期/RFM 群組（本尊無 AOV 格；
+           AOV 移入 DOCS 備查）。訂單卡＝「最近一筆已下訂單」單卡形態＋檢視所有訂單/建立訂單兩鈕，
+           非全訂單表。時間軸標題＝「交易時間軸」，composer 帶 😊@#🔗 工具列與員工可見注記。 -->
       <div class="card card-pad" data-doc="cd-stats"><div class="ledger">
-        <div><b class="num">${money(c.spent)}</b><span>總消費金額</span></div>
-        <div><b class="num">${c.ord}</b><span>訂單數</span></div>
-        <div><b class="num">${c.ord?money(Math.round(c.spent/c.ord)):'—'}</b><span>平均訂單價值</span></div>
-        <div><b>${c.since}</b><span>成為顧客</span></div></div></div>
-      <div class="card" data-doc="cd-orders"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>訂單紀錄<span class="h-act"><button class="btn btn-ghost btn-sm" onclick="openDraft('new')">代客建單</button></span></h3></div>
-        ${orders.length?`<table class="idx"><thead><tr><th>訂單</th><th>日期</th><th class="right">總計</th><th>付款</th><th>出貨</th></tr></thead><tbody>
-          ${orders.map(o=>`<tr onclick="openOrder('${o.id}')"><td><b>#${o.id}</b></td><td class="mut">${o.d}</td><td class="right num">${money(o.amt,o.cur)}</td><td>${PAY[o.pay]}</td><td>${FUL[o.ful]}</td></tr>`).join('')}
-          </tbody></table>`:'<div class="empty-wrap"><b>還沒有訂單</b>代客建單或寄出折扣邀請，把這位顧客帶進第一筆交易。</div>'}</div>
-      <div class="card card-pad" data-doc="cd-timeline"><h3>時間軸</h3>
+        <div><b class="num">${money(c.spent)}</b><span>消費總額</span></div>
+        <div><b class="num">${c.ord}</b><span>訂單</span></div>
+        <div><b>${c.since}</b><span>成為顧客日期</span></div>
+        <div><b>${H(c.rfm)}</b><span>RFM 群組</span></div></div></div>
+      <div class="card" data-doc="cd-orders"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>最近一筆已下訂單</h3></div>
+        ${orders.length?`<div style="padding:0 var(--sp-300) var(--sp-300)">
+          ${orders.slice(0,1).map(o=>`<div class="subcard" style="cursor:pointer" onclick="openOrder('${o.id}')">
+            <div class="rowflex" style="justify-content:space-between;gap:var(--sp-200);flex-wrap:wrap"><b>#${o.id}</b>
+              <span class="rowflex" style="gap:var(--sp-150)">${PAY[o.pay]}${FUL[o.ful]}</span><span class="num"><b>${money(o.amt,o.cur)}</b></span></div>
+            <p class="mut" style="font-size:var(--t-xs);margin-top:var(--sp-100)">${o.d}・來自 線上商店</p></div>`).join('')}
+          <div class="rowflex" style="justify-content:flex-end;gap:var(--sp-200);margin-top:var(--sp-300)">
+            <button class="btn btn-sec btn-sm" onclick="toast('Demo：檢視所有訂單——跳訂單列表並帶 customer 篩選')">檢視所有訂單</button>
+            <button class="btn btn-pri btn-sm" onclick="openDraft('new')">建立訂單</button></div></div>`
+        :'<div class="empty-wrap"><b>還沒有訂單</b>建立訂單或寄出折扣邀請，把這位顧客帶進第一筆交易。</div>'}</div>
+      <div class="card card-pad" data-doc="cd-timeline"><h3>交易時間軸</h3>
         <div class="tl-compose"><span class="avatar">BW</span><div class="tc-main">
-          <textarea rows="1" placeholder="撰寫備註…（僅員工可見）" aria-label="顧客備註"></textarea>
-          <div class="tc-tools"><button class="btn btn-sec btn-sm" onclick="toast('已發佈備註（@提及會寄通知）')">發佈</button></div></div></div>
-        <div style="margin-top:var(--sp-300)">${ev.map(e=>`<div class="tl-ev"><span class="tl-dot"></span><div class="tl-body"><span>${e[0]}</span><span class="tl-time">${e[1]}</span></div></div>`).join('')}</div>
-        <p class="help card-sec">通知寄送顯示送達狀態；自動信可重寄、手動信不可（41 §4.2）。</p></div>
+          <textarea rows="1" placeholder="撰寫備註…" aria-label="顧客備註"></textarea>
+          <div class="tc-tools rowflex" style="gap:var(--sp-100)">
+            <button class="btn btn-ghost btn-sm" aria-label="表情符號" onclick="toast('Demo：插入表情符號')">😊</button>
+            <button class="btn btn-ghost btn-sm" aria-label="提及員工" onclick="toast('Demo：@ 提及員工（會寄通知）')">@</button>
+            <button class="btn btn-ghost btn-sm" aria-label="加上標籤" onclick="toast('Demo：# 引用資源（訂單/商品）')">#</button>
+            <button class="btn btn-ghost btn-sm" aria-label="附加連結" onclick="toast('Demo：附加連結')">🔗</button>
+            <span style="margin-left:auto"></span><button class="btn btn-sec btn-sm" onclick="toast('已發佈備註（@提及會寄通知）')">發佈</button></div></div></div>
+        <p class="mut3" style="font-size:var(--t-2xs);text-align:right;margin-top:var(--sp-100)">只有您和其他員工可以看見備註</p>
+        <div style="margin-top:var(--sp-200)">${ev.map(e=>`<div class="tl-ev"><span class="tl-dot"></span><div class="tl-body"><span>${e[0]}</span><span class="tl-time">${e[1]}</span></div></div>`).join('')}</div>
+        <p class="help card-sec">事件依日期分組；通知寄送顯示送達狀態；自動信可重寄、手動信不可（41 §4.2）。</p></div>
     </div>
     <div class="col">
       <div class="card card-pad" data-doc="cd-contact"><h3>顧客<span class="h-act"><button class="btn btn-ghost btn-sm" onclick="custContact()">編輯</button></span></h3>
@@ -6663,10 +6699,18 @@ function customerPage(){
         <button class="btn btn-danger-o btn-sm" onclick="custDelete()">刪除顧客</button></div></div>
     </div></div>`;
 }
+/* 71-R5（2026-08-13 實測）：更多動作＝本尊五項（發放商店抵用金/合併顧客/要求顧客資料/清除個人資料/
+   刪除顧客〔紅〕）。原「寄送帳號邀請/重設密碼」帳號動作保留——本尊在顧客有帳號時於帳號卡提供，
+   dev 店顧客無帳號故未見（條件性控件，71-R5-V 登記）。「清除個人資料」＝原「匿名化個資」的本尊用詞。 */
 function custMore(){
   openGen({title:'更多動作',pad:false,body:`
-    ${[['合併顧客','Demo：合併——阻擋清單含 multipass 登入與待遮蔽帳號'],['寄送帳號邀請','已寄出帳號邀請信'],['重設密碼','已寄出密碼重設連結'],['匿名化個資','Demo：匿名化保留訂單歸屬（16 §）']]
-      .map(([t,m])=>`<button class="pick" onclick="closeGen();toast('${m}')"><span class="pk-i"><b>${t}</b></span><span class="chev">›</span></button>`).join('')}`});
+    ${[['發放商店抵用金','Demo：發放商店抵用金（金額＋到期日＋原因；同 cd-credit 卡）'],
+       ['合併顧客','Demo：合併——阻擋清單含 multipass 登入與待遮蔽帳號'],
+       ['要求顧客資料','Demo：要求顧客資料——產生個資報告（GDPR 資料可攜）'],
+       ['清除個人資料','Demo：清除個人資料——提交後 10 天內可取消（個檔出現「已提交刪除要求」區塊）；遮蓋個資但保留個檔與訂單歷史；進行中訂閱取消、未請款預授權不請款（16 §）'],
+       ['寄送帳號邀請','已寄出帳號邀請信'],['重設密碼','已寄出密碼重設連結']]
+      .map(([t,m])=>`<button class="pick" onclick="closeGen();toast('${m}')"><span class="pk-i"><b>${t}</b></span><span class="chev">›</span></button>`).join('')}
+    <button class="pick" onclick="closeGen();custDelete()"><span class="pk-i"><b style="color:var(--critical)">刪除顧客</b></span><span class="chev">›</span></button>`});
 }
 function custContact(){
   openGen({title:'變更聯絡資訊',body:`<div class="stack">${F('Email',`<input class="input" value="${H(CUS.mail)}" data-val="req|email">`,'email／電話在同一商店內唯一')}
@@ -6679,10 +6723,19 @@ function custAddr(){
     <button class="pick"><span class="pk-i"><b>公司</b><span>台北市信義區松智路 100 號</span></span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toast('已設為預設地址')">設為預設</button></button>
     <div style="padding:var(--sp-300) var(--sp-300)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：新增地址表單')">＋ 新增地址</button></div>`});
 }
+/* 71-R5 help：抵用金表單＝調整（入帳/扣帳）＋金額＋幣別＋通知顧客勾選；到期＝無到期日或日曆選擇
+   （依商店時區當日結束）；多筆時優先用最早到期並標示即將到期；單一顧客總額上限引
+   limits.yml customers.store_credit_max_usd（本尊 <US$15,000）；不可用於草稿單/編輯訂單/訂閱扣款；
+   B2B 個檔發放僅限 D2C 用。 */
 function custCredit(kind){
-  openGen({title:kind+'店內額度',body:`<div class="stack">${F(`金額（${CURSYM()}）`,`<input class="input num" data-val="req|money" placeholder="0">`)}
-    ${F('到期日','<input class="input" type="date">','留空＝不過期')}${F('原因',TXT('_cr','','例：客訴補償'))}</div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已${kind}店內額度')">${kind}</button>`});
+  openGen({title:kind==='發放'?'發放商店抵用金':'調整商店抵用金',body:`<div class="stack">
+    ${kind!=='發放'?F('調整',SEL('_ck',[['credit','入帳'],['debit','扣帳']],'credit')):''}
+    <div class="grid2">${F(`金額（${CURSYM()}）`,`<input class="input num" data-val="req|money" placeholder="0">`)}${F('幣別',SEL('_ccur',[MARKET_BASE],MARKET_BASE),'結帳只顯示與結帳幣別相符的餘額')}</div>
+    ${F('到期日','<input class="input" type="date">','留空＝無到期日；到期以商店時區當日結束為準；多筆時優先用最早到期')}
+    ${F('原因',TXT('_cr','','例：客訴補償'))}
+    ${CHK('_cn',true,'通知顧客')}
+    <p class="mut3" style="font-size:var(--t-xs)">單一顧客總額上限：limits.yml customers.store_credit_max_usd；不可用於草稿訂單／編輯訂單／訂閱扣款。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已${kind}商店抵用金')">${kind}</button>`});
 }
 function custDelete(){
   const blocked=CUS.ord>0;
@@ -6692,28 +6745,70 @@ function custDelete(){
 }
 
 /* ---------- 分群 ---------- */
+/* 71-R5（2026-08-13 實測）：列表欄對齊本尊（名稱/顧客百分比/上次活動/建立者）＋每列 ⋯ 五動作
+   （使用分群/複製/匯出/重新命名/刪除）。系統預設分群不可刪（本尊 ⋯ 有刪除但系統列會擋——demo 以
+   toast 說明）。條件字串自欄位移除（本尊列表不露 query，點入才見）。 */
+function segRowMenu(id){
+  const s=SEGMENTS.find(x=>x.id===id);if(!s)return;
+  openGen({title:s.t,pad:false,body:[
+    ['⊕ 使用分群','Demo：使用分群——出口選單（Email 行銷受眾／折扣資格／匯出）'],
+    ['⧉ 複製','Demo：已複製為「'+s.t+' copy」——可再改條件'],
+    ['↥ 匯出','Demo：匯出分群成員 CSV（email 寄送）'],
+    ['✏ 重新命名','Demo：重新命名'],
+    [s.by==='系統'?'🗑 刪除（系統預設不可刪）':'🗑 刪除',s.by==='系統'?'系統預設分群不可刪除':'Demo：刪除分群——使用中的折扣資格與受眾會失去名單']]
+    .map(([t,m])=>`<button class="pick" onclick="closeGen();toast(${JQ(m)})"><span class="pk-i"><b>${t}</b></span><span class="chev">›</span></button>`).join('')});
+}
 function segmentsPage(){
   return listPage({key:'seg',title:'分群',doc:'doc-m-segments',ph:'搜尋分群…',
     actions:[['範本庫','sec',"segTemplates()",'seg-tpl'],['建立分群','pri',"openSegment('new')",'seg-new']],
-    cols:[{l:'分群名稱',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'條件',c:r=>`<span class="mut mono">${H(r.q)}</span>`,v:r=>r.q},
-      {l:'成員',right:true,c:r=>N(r.n),v:r=>r.n},{l:'上次使用',c:r=>`<span class="mut">${r.use}</span>`,v:r=>r.use},
-      {l:'建立日',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d}],
+    cols:[{l:'名稱',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},
+      {l:'顧客百分比',right:true,c:r=>`<span class="num">${r.pct}%</span>`,v:r=>r.pct},
+      {l:'上次活動',c:r=>`<span class="mut">${r.use!=='—'?('用於 '+H(r.use)):('建立於 '+r.d)}</span>`,v:r=>r.d},
+      {l:'建立者',c:r=>`<span class="mut">${H(r.by)}</span>`,v:r=>r.by},
+      {l:'',c:r=>`<button class="btn btn-ghost btn-sm" aria-label="更多動作" onclick="event.stopPropagation();segRowMenu('${r.id}')">⋯</button>`,v:()=>''}],
     rows:SEGMENTS,id:r=>r.id,onRow:r=>`openSegment('${r.id}')`,
     bulk:[['刪除',null,null,'danger']],
-    note:'分群＝動態名單（即時計算非快照）；出口：Shopify Email 受眾／折扣資格／顧客列表篩選（41 §4.3）。'});
+    note:'分群＝動態名單（即時計算非快照）；系統預設 5 群開店即有（名稱依本尊保留英文）；出口：Email 受眾／折扣資格／匯出（41 §4.3）。'});
 }
+/* 71-R5（2026-08-13 實測）：條件目錄對齊本尊查詢編輯器 autocomplete 全量（DOM 收割，含官方描述）——
+   18 屬性＋anniversary()＋11 事件族（shopify_email 六事件/storefront 兩事件/orders_placed/
+   products_purchased/customer_within_distance/store_credit_accounts）。
+   ⚠ predicted_spend_tier／product_subscription_status 本輪實測目錄未見（71-R5-V 複驗後定去留）。 */
 const SEG_FILTERS=[
- ['amount_spent','消費金額','= != < <= > >= BETWEEN'],['number_of_orders','訂單數','= != < <= > >= BETWEEN'],
- ['last_order_date','最後下單日','= != < > BETWEEN IS NULL'],['first_order_date','首次下單日','= != < >'],
- ['customer_added_date','加入日期','= != < >'],['abandoned_checkout_date','棄單日期','= != < >'],
- ['customer_tags','顧客標籤','CONTAINS NOT CONTAINS'],['customer_cities','城市','CONTAINS'],
- ['customer_countries','國家','CONTAINS'],['customer_email_domain','Email 網域','= !='],
- ['email_subscription_status','Email 訂閱狀態','= !='],['sms_subscription_status','SMS 訂閱狀態','= !='],
- ['rfm_group','RFM 分組','= !='],['predicted_spend_tier','預測消費層級','= !='],
- ['products_purchased()','買過的商品','MATCHES NOT_MATCHES'],['orders_placed()','下過的訂單','MATCHES'],
- ['storefront.product_viewed()','瀏覽過的商品','MATCHES'],['shopify_email.opened()','開過的信','MATCHES'],
- ['customer_within_distance()','距離範圍','MATCHES'],['store_credit_accounts()','店內額度','MATCHES'],
- ['anniversary()','紀念日（忽略年份）','= != BETWEEN'],['product_subscription_status','訂閱狀態','= !=']];
+ ['abandoned_checkout_date','顧客最近一次未完成結帳作業的日期','= != < > BETWEEN'],
+ ['amount_spent','顧客至今累計消費金額','= != < <= > >= BETWEEN'],
+ ['companies','與顧客相關聯的 B2B 公司','CONTAINS NOT CONTAINS'],
+ ['created_by_app_id','建立顧客的應用程式','= !='],
+ ['customer_account_status','顧客帳號狀態','= !='],
+ ['customer_added_date','顧客資料建立日期','= != < >'],
+ ['customer_cities','顧客地址記錄中的所有城市','CONTAINS'],
+ ['customer_countries','顧客地址記錄中的所有國家/地區','CONTAINS'],
+ ['customer_email_domain','顧客電子郵件的網域','= !='],
+ ['customer_language','顧客使用的語言','= !='],
+ ['customer_regions','顧客地址記錄中的所有州/省','CONTAINS'],
+ ['customer_tags','與顧客關聯的一組標籤','CONTAINS NOT CONTAINS'],
+ ['email_subscription_status','顧客的電子郵件行銷訂閱狀態','= !='],
+ ['first_order_date','顧客首筆訂單日期','= != < >'],
+ ['last_order_date','顧客最後一筆訂單日期','= != < > BETWEEN IS NULL'],
+ ['number_of_orders','顧客至今累計下單次數','= != < <= > >= BETWEEN'],
+ ['rfm_group','依新近度/頻率/金額的顧客分群','= !='],
+ ['sms_subscription_status','顧客的 SMS 行銷訂閱狀態','= !='],
+ ['anniversary()','日期的年度重現（僅比對月與日）','= != BETWEEN'],
+ ['customer_within_distance()','地址距特定地點一定範圍內（座標＋半徑）','MATCHES'],
+ ['orders_placed()','顧客下的訂單（訂單日期/來源 app/地點/數量/消費金額）','MATCHES'],
+ ['products_purchased()','顧客購買的商品（產品 ID/購買日期/每筆數量/總數量）','MATCHES NOT_MATCHES'],
+ ['shopify_email.bounced()','遭退回的電子郵件（行銷活動/退回日期/次數）','MATCHES'],
+ ['shopify_email.clicked()','顧客點擊的電子郵件（行銷活動/點擊日期/次數）','MATCHES'],
+ ['shopify_email.delivered()','送達顧客的電子郵件（行銷活動/送達日期/次數）','MATCHES'],
+ ['shopify_email.marked_as_spam()','標示為垃圾郵件（行銷活動/回報日期/次數）','MATCHES'],
+ ['shopify_email.opened()','顧客開啟的電子郵件（行銷活動/開啟日期/次數）','MATCHES'],
+ ['shopify_email.unsubscribed()','取消訂閱事件（行銷活動/取消日期/次數）','MATCHES'],
+ ['storefront.collection_viewed()','瀏覽的商品系列頁（系列 ID/瀏覽日期/次數）','MATCHES'],
+ ['storefront.product_viewed()','瀏覽的產品頁（產品 ID/瀏覽日期/次數）','MATCHES'],
+ ['store_credit_accounts()','商店抵用金帳戶（餘額/幣別/到期日/最新抵用金日期）','MATCHES'],
+ ['predicted_spend_tier','預測消費層級 HIGH/MEDIUM/LOW（help 坐實；需商店累計 >100 筆銷售才啟用）','= !='],
+ ['product_subscription_status','訂閱商品狀態（help reference-guide 坐實）','= !='],
+ ['metafield 條件','customer.[namespace]_[key]（需先建顧客中繼欄位定義；限 日期時間/數值/文字/是或否 四型）','依型別']];
 let SEG=null;
 function openSegment(id){
   SEG=id==='new'?{id:'new',t:'',q:'',n:0}:JSON.parse(JSON.stringify(SEGMENTS.find(s=>s.id===id)));
@@ -6736,10 +6831,22 @@ function segmentPage(){
   +`<div class="od-grid" data-form="seg">
     <div class="col">
       <div class="card card-pad" data-doc="seg-name">${F('分群名稱',TXT('sname',SEG.t,'例：VIP 熟客','req|max:60'))}</div>
-      <div class="card card-pad" data-doc="seg-editor"><h3>條件<span class="h-act"><button class="btn btn-sec btn-sm" onclick="segApply()">套用條件</button></span></h3>
-        <textarea class="codebox" id="segQ" data-f="squery" oninput="segLive()" placeholder="例：amount_spent > 5000 AND number_of_orders > 2">${H(SEG.q)}</textarea>
-        <p class="help" style="margin-top:var(--sp-200)">支援 <b>AND / OR / ()</b> 巢狀；相對日期 <span class="mono">-7d / -4w / -10y</span>；函式型 filter 用 <span class="mono">MATCHES</span>。</p>
-        <div class="card-sec"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">點擊插入 filter</label>
+      <!-- 71-R5（2026-08-13 實測）：本尊分群編輯器＝ShopifyQL 五行查詢模型（FROM customers／SHOW 欄位
+           ／WHERE 條件／GROUP／ORDER）＋icon 條（範本/鍵盤說明/說明/復原/重做/執行）＋autocomplete
+           （目錄=SEG_FILTERS）＋AI 調整列＋即時人數含佔客群 %。顧客「列表」本身就是同一查詢視圖
+           （SHOW 子句＝欄位選擇器）。原型：FROM/SHOW 唯讀示意、WHERE 可編輯；復原/重做 demo 略。 -->
+      <div class="card card-pad" data-doc="seg-editor"><h3>查詢
+        <span class="h-act rowflex" style="gap:var(--sp-100)">
+          <button class="btn btn-ghost btn-sm" title="範本" onclick="segTemplates()">🗔</button>
+          <button class="btn btn-ghost btn-sm" title="語法說明" onclick="toast('Demo：語法說明——AND/OR/() 巢狀；相對日期 -7d/-4w/-10y；函式型 filter 用 MATCHES')">？</button>
+          <button class="btn btn-ghost btn-sm" title="復原" onclick="toast('Demo：復原（編輯歷史棧）')">↶</button>
+          <button class="btn btn-ghost btn-sm" title="重做" onclick="toast('Demo：重做')">↷</button>
+          <button class="btn btn-sec btn-sm" onclick="segApply()">▷ 執行</button></span></h3>
+        <div class="codebox mono" style="min-height:0;color:var(--text-3);user-select:none">1  FROM customers<br>2  SHOW customer_name, email_subscription_status, location, number_of_orders, amount_spent</div>
+        <div class="rowflex" style="gap:var(--sp-100);align-items:flex-start"><span class="mono mut3" style="padding-top:var(--sp-150)">3  WHERE</span>
+        <textarea class="codebox" id="segQ" data-f="squery" oninput="segLive()" style="flex:1" placeholder="例：amount_spent > 5000 AND number_of_orders > 2">${H(SEG.q)}</textarea></div>
+        <p class="help" style="margin-top:var(--sp-200)">SHOW 子句＝列表的欄位選擇器（同一查詢視圖）；支援 <b>AND / OR / ()</b> 巢狀；相對日期 <span class="mono">-7d / -4w / -10y</span>；函式型 filter 用 <span class="mono">MATCHES</span>。</p>
+        <div class="card-sec"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">點擊插入 filter（＝本尊 autocomplete 目錄）</label>
           <div class="valchips" style="margin-top:var(--sp-150)">${SEG_FILTERS.map(f=>`<button class="tokchip" title="${f[1]}｜運算子：${f[2]}" onclick="segIns(${JQ(f[0])})">${f[0]}</button>`).join('')}</div></div>
       </div>
       <div class="card" data-doc="seg-preview"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>成員預覽<span class="h-act num mut3" style="font-size:var(--t-xs)">${n} 位顧客</span></h3></div>
@@ -6749,7 +6856,8 @@ function segmentPage(){
     </div>
     <div class="col">
       <div class="card card-pad"><h3>即時人數</h3><div class="t-value num" style="font-size:24px;font-weight:700">${n}</div>
-        <p class="help">成員自動進出，不需要重新整理名單。</p></div>
+        <p class="mut" style="font-size:var(--t-xs)">佔客群的 ${CUSTOMERS.length?Math.round(n/CUSTOMERS.length*100):0}%</p>
+        <p class="help">成員自動進出，不需要重新整理名單（本尊：人數列隨編輯即時重估）。</p></div>
       <div class="card card-pad"><h3>常用範本</h3>
         ${[['高消費顧客',"amount_spent > 5000"],['90 天未回購',"last_order_date < -90d"],['訂閱未購買',"email_subscription_status = 'SUBSCRIBED' AND number_of_orders = 0"],['生日當月',"anniversary(date: metafields.facts.birth_date)"]]
           .map(([t,q])=>`<button class="btn btn-ghost btn-sm" style="display:block;text-align:left;padding:var(--sp-150) 0" onclick="segSet(${JQ(q)})">${t}</button>`).join('')}</div>
@@ -9688,8 +9796,9 @@ Object.assign(DOCS,{
  "gift-issue":{t:"發行禮品卡",f:"面額／卡號／顧客／到期日",l:"面額上限引 limits.yml gift_card.max_initial_value_cents（22 §4 配額），顯示值由市場 locale 格式化、不硬編符號；必填 email 或電話；多數地區法規禁止設到期日；CSV 不能建新禮品卡商品",i:"P1・[api:giftCardCreate] [tbl:gift_cards]（06 §7 待補）"},
 /* ---------- 顧客 ---------- */
  "cust-new":{t:"新增顧客",f:"建立顧客檔案",l:"email／電話在同一商店唯一；行銷同意需帶時間戳與來源（GDPR）",i:"P0・[api:customerCreate] [tbl:customers,customer_addresses]"},
- "cust-ai":{t:"AI 分群輸入列",f:"自然語言 → 分群 DSL 草稿",l:"2026 版顧客列表頂部入口（21 §1.6）；產生的是草稿，需人工確認後存為分群",i:"P2・[api:TBD-segmentSuggest]（28 待補 AI 端點）→[api:segmentCreate] [tbl:segments]"},
- "cd-stats":{t:"顧客指標列",f:"總消費／訂單數／AOV／顧客時長",l:"與報告同源（19 號 rollup）；消費額為唯讀不可匯入（41 §4.1）",i:"P0・[api:customer]（ordersCount, amountSpent） [tbl:customers,orders]"},
+ "cust-ai":{t:"AI 分群輸入列（展開即查詢編輯器）",f:"自然語言 → 分群查詢草稿；⌄ 展開＝五行 ShopifyQL 編輯器",l:"71-R5 實測：本尊顧客列表本體＝查詢視圖（FROM customers/SHOW/WHERE/GROUP/ORDER），AI 列展開即編輯器（icon 條：範本/鍵盤/說明/復原/重做/執行＋autocomplete 目錄=SEG_FILTERS＋即時「N 位顧客・佔客群的 %」）；產生的是草稿，需人工確認後存為分群",i:"P2・[api:TBD-segmentSuggest]（28 待補 AI 端點）→[api:segmentCreate] [tbl:segments]"},
+ "cust-cols":{t:"欄位選擇器＋排序",f:"18 欄顯示/隱藏＋拖曳排序＋排序鍵 7×2",l:"71-R5 實測：預設顯示 顧客名稱/電子郵件訂閱/地點/訂單/消費金額；隱藏 14 欄（電子郵件/電話/名字/姓氏/郵遞區號/顧客語言/ID/新增顧客日期/顧客更新日期/SMS 訂閱/WhatsApp 訂閱/稅額豁免/可刪除/可合併）；排序預設 顧客更新日期・由新到舊；欄清單＝查詢 SHOW 子句 UI 化",i:"P1・[api:TBD-customerListView]（28 待補；per-user 欄偏好） [tbl:staff_preferences]"},
+ "cd-stats":{t:"顧客指標列",f:"消費總額／訂單／成為顧客日期／RFM 群組",l:"71-R5 對齊本尊四格（AOV 非本尊格，由報表提供）；與報告同源（19 號 rollup）；消費額為唯讀不可匯入（41 §4.1）；RFM=新近度/頻率/金額分群",i:"P0・[api:customer]（ordersCount, amountSpent, rfmGroup） [tbl:customers,orders]"},
  "cd-orders":{t:"顧客訂單紀錄",f:"此顧客的所有訂單",l:"點列進訂單詳情；可直接代客建草稿單",i:"P0・[api:orders]（query customer_id:） [tbl:orders,line_items]"},
  "cd-timeline":{t:"顧客時間軸",f:"事件流＋內部留言",l:"通知寄送顯示送達狀態；自動信可重寄、手動信不可（41 §4.2）；事件 append-only",i:"P1・[api:customer]（events）＋[api:TBD-timelineCommentCreate] [tbl:events,event_outbox]"},
  "cd-contact":{t:"顧客聯絡資訊",f:"姓名／email／電話／語言",l:"email 與電話唯一 per shop；語言決定通知信與帳號頁語系",i:"P0・[api:customerUpdate] [tbl:customers]"},
@@ -9701,7 +9810,7 @@ Object.assign(DOCS,{
  "seg-new":{t:"建立分群",f:"開啟分群編輯器",l:"存檔後成員動態計算（非快照）；出口＝Email 受眾／折扣資格／列表篩選",i:"P1・[api:segmentCreate]（name, query） [tbl:segments]"},
  "seg-tpl":{t:"分群範本庫",f:"預製條件一鍵套用",l:"套用後仍可微調；範本對應 41 §4.3 的常用 filter 組合",i:"P1・[api:segmentCreate] [tbl:segments]"},
  "seg-name":{t:"分群名稱",f:"名稱（供受眾與折扣引用）",l:"名稱在折扣資格與 Email 受眾下拉中顯示",i:"P1・[api:segmentUpdate] [tbl:segments]"},
- "seg-editor":{t:"分群條件編輯器",f:"DSL 輸入＋filter chips 插入",l:"支援 AND/OR/() 巢狀；相對日期 -7d/-4w/-10y；函式型 filter 用 MATCHES；products_purchased id ≤500 個（41 §4.3 全表）",i:"P1・語法白名單編譯 SQL（防注入，11 §1）・[api:segmentUpdate] [tbl:segments,customers,orders]"},
+ "seg-editor":{t:"分群查詢編輯器",f:"五行查詢模型（FROM/SHOW 唯讀＋WHERE 可編輯）＋icon 條＋filter chips",l:"71-R5 對齊本尊 ShopifyQL 編輯器：icon 條=範本/說明/復原/重做/執行；目錄=實測 autocomplete 全量（18 屬性＋anniversary()＋11 事件族，含官方描述）；支援 AND/OR/() 巢狀；相對日期 -7d/-4w/-10y；函式型 filter 用 MATCHES；products_purchased id ≤500 個（41 §4.3 全表）",i:"P1・語法白名單編譯 SQL（防注入，11 §1）・[api:segmentUpdate] [tbl:segments,customers,orders]"},
  "seg-preview":{t:"成員預覽與即時人數",f:"套用條件後立即算出符合顧客",l:"人數與名單即時計算；大分群走分頁 cursor（每頁 ≤250）",i:"P1・[api:customerSegmentMembers] [tbl:customers,segments]"},
 /* ---------- 行銷 ---------- */
  /* 71-R1（2026-08-13）：成長區條目依實測（test）＋help 雙源全面改寫；出處 URL 記在 l 欄。
@@ -10921,6 +11030,8 @@ function companyNewPage(){
       <p class="help" style="margin-bottom:var(--sp-200)">唯讀——依運送地址的國家自動推導，決定幣別與可用目錄。</p>
       <div id="coMarket"><span class="tagchip" style="margin:0">🌐 尚未推導</span></div>
     </div>
+    <!-- 71-R5 註：本尊建立式無「目錄／付款條件」二卡（於建立後的地點詳情設定）；我方前置擺出
+         ＝單地點建立流的簡化，登記於 71-R5（差異已知，非漏對）。 -->
     <div class="card card-pad" data-doc="b2b-catalog"><h3>目錄</h3>
       <input type="hidden" data-f="loCatalog" id="loCatalogVal" value="">
       <div id="coCatalogBox"><p class="mut3" style="font-size:var(--t-xs)">未指派目錄時，此地點看到的是商店預設價目。</p></div>
@@ -10928,6 +11039,10 @@ function companyNewPage(){
     </div>
     <div class="card card-pad" data-doc="b2b-terms"><h3>付款條件</h3>
       ${F('付款條件',SEL('loTerms',PAY_TERMS,'none','onchange="toast(\'付款條件：\'+this.options[this.selectedIndex].text)"'),'到期日＝發票日 ＋ N 天；逾期單在後台走催款流程')}
+    </div>
+    <div class="card card-pad" data-doc="b2b-anyaddr"><h3>運送地址</h3>
+      <label class="inline-lbl"><input type="checkbox" class="cb" data-f="loAnyAddr"><span>允許顧客運送至任何一次性地址</span></label>
+      <p class="help card-sec">未勾＝買家只能選公司地點的登記地址（B2B 常態）；勾了＝結帳可填一次性地址（本尊 2026 建立式選項）。</p>
     </div>
     <div class="card card-pad" data-doc="b2b-ordersubmit"><h3>訂單提交</h3>
       <input type="hidden" data-f="loSubmit" id="loSubmitVal" value="auto">
@@ -11600,6 +11715,9 @@ Object.assign(DOCS,{
  "b2b-terms":{t:"付款條件（淨付款條款）",f:"Net 15／30／60 與預付",
   l:"44 §22.5：預設「沒有付款條件」＝即時付款；掛在地點。到期日＝發票日＋N 天，逾期單要能列表與催收——這是 B2B 與 B2C 最大的金流差異（B2C 沒有應收帳款）",
   i:"P2・[api:paymentTermsCreate]（PaymentTermsTemplate） [tbl:payment_terms_templates,company_locations.payment_terms_id,orders.payment_due_at]"},
+ "b2b-anyaddr":{t:"運送地址（一次性地址開關）",f:"允許顧客運送至任何一次性地址",
+  l:"71-R5 實測本尊建立式選項：未勾＝買家只能選公司地點登記地址（B2B 常態）；勾了＝結帳可填一次性地址",
+  i:"P2・[tbl:company_locations.allow_one_time_addresses]；結帳層讀取決定地址欄可編輯性"},
  "b2b-ordersubmit":{t:"訂單提交（B2B 訂單審核流）",f:"自動提交／全部作為草稿提交以供審核",
   l:"44 §22.5 逐字兩態：自動提交（副標「沒有運送地址的訂單將作為訂單草稿提交」＝即使選自動，缺地址仍落草稿）／全部草稿審核。掛在地點，因此同公司可以只讓分公司走審核",
   i:"P2・[api:companyLocationUpdate]（checkoutToDraft） [tbl:company_locations.orders_to_draft] ＋ 前台結帳分流到 [tbl:draft_orders(source='b2b')]"},
