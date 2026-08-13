@@ -6599,86 +6599,135 @@ function segTemplates(){
 /* ==================================================================
    行銷／成長
    ================================================================== */
+/* 依 71-R1 實測改造（2026-08-13）：①頁名對齊本尊「業務拓展」語境仍用側欄「成長」，h1 維持；
+   ②期間選擇器補齊本尊預設集（原僅 7/30/90 天三檔）；③「歸因設定」鈕改「查看詳情」（歸因已改報表頁）；
+   ④KPI 口徑對齊 help 定義（歸因銷售額顯示佔總銷售額比；第三卡改「歸因於行銷的訂單數」——原「行銷轉換率」
+   非本尊主頁卡）；⑤依管道成效由表格改管道卡片（本尊主頁形態）；⑥新增 Autopilot 設定區塊
+   （help setting-up-autopilot：四管道連結/每月預算/防護措施/權限/策略狀態機）。 */
 function growthPage(){
+  const CHS=[['直接',2476,362400],['IG 廣告',2140,21400],['LINE 官方帳號',1820,11200],['電子報',960,5600],['自然搜尋',1204,3200]];
   return `<div class="page-head"><h1>成長</h1><div class="head-actions">
-      <select class="fsel" aria-label="期間" onchange="toast('Demo：切換期間並重算歸因')"><option>過去 30 天</option><option>過去 7 天</option><option>過去 90 天</option></select>
-      <button class="btn btn-sec btn-sm" data-doc="gr-attr" onclick="go('m-attribution')">歸因設定</button>
+      <select class="fsel" aria-label="期間" onchange="toast('Demo：切換期間並重算（預設過去 30 天，對比前 30 天）')"><option>今天</option><option>昨天</option><option>過去 7 天</option><option selected>過去 30 天</option><option>過去 90 天</option><option>期初至今</option><option>黑色星期五與網購星期一</option><option>季度</option><option>自訂範圍…</option></select>
+      <button class="btn btn-sec btn-sm" data-doc="gr-attr" onclick="go('m-attribution')">查看詳情</button>
       <button class="btn btn-pri btn-sm" data-doc="gr-new" onclick="campaignNew()">建立行銷活動</button></div></div>
-    <div class="ai-row" data-doc="gr-autopilot" onclick="toast('Demo：Campaign Autopilot 搶先體驗（21 §2）')">${SPARK}Campaign Autopilot 搶先體驗——讓 AI 依成效自動調整投放組合<span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
+    <div class="ai-row" data-doc="gr-autopilot">${SPARK}<b>自動執行行銷活動</b>——Campaign Autopilot 會在各大熱門管道推廣您的商品，並持續改善策略（搶先體驗）
+      <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-300)" onclick="event.stopPropagation();toast('Demo：加入等候名單')">加入等候名單</button>
+      <button class="btn btn-sec btn-sm" onclick="event.stopPropagation();toast('Demo：瞭解詳情')">瞭解詳情</button>
+      <span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
     <div style="height:12px"></div>
     <div class="ana-grid g3" data-doc="gr-kpi">
-      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta up">↑ 24% <span class="t-vs">vs 前期</span></span></div>
-      <div class="card stat-card"><div class="t-label">依流量類型的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs">直接 62%・社群 24%・搜尋 14%</span></span></div>
-      <div class="card stat-card"><div class="t-label">行銷轉換率</div><div class="t-value num">1.9%</div><span class="t-delta up">↑ 0.4pt <span class="t-vs">vs 前期</span></span></div></div>
+      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta"><span class="t-vs">佔商店總銷售額 ${money(3980000)} 的 24%</span></span></div>
+      <div class="card stat-card"><div class="t-label">依流量類型區分的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs"><a style="cursor:pointer" onclick="toast('Demo：篩選 直接流量')">直接 5,340</a>・<a style="cursor:pointer" onclick="toast('Demo：篩選 自然流量')">自然 2,060</a>・付費 1,200</span></span></div>
+      <div class="card stat-card"><div class="t-label">歸因於行銷的訂單數</div><div class="t-value num">140</div><span class="t-delta up">↑ 18% <span class="t-vs">vs 前期</span></span></div></div>
     <div style="height:16px"></div>
-    <div class="card chart-card" data-doc="gr-channels"><div class="chart-head"><h3>依管道的成效</h3></div>
-      <table class="idx"><thead><tr><th>管道</th><th class="right">工作階段</th><th class="right">訂單</th><th class="right">歸因銷售額</th><th class="right">轉換率</th></tr></thead><tbody>
-        ${[['IG 廣告',2140,42,21400,'1.96%'],['LINE 官方帳號',1820,31,11200,'1.70%'],['電子報',960,18,5600,'1.88%'],['自然搜尋',1204,9,3200,'0.75%'],['直接流量',2476,140,362400,'5.65%']]
-          .map(r=>`<tr onclick="go('m-attribution')"><td><b>${r[0]}</b></td><td class="right num">${r[1].toLocaleString()}</td><td class="right num">${r[2]}</td><td class="right num">${money(r[3])}</td><td class="right num">${r[4]}</td></tr>`).join('')}
-      </tbody></table></div>
+    <div class="ana-grid g3" data-doc="gr-channels">
+      ${CHS.map(r=>`<div class="card stat-card" style="cursor:pointer" onclick="go('m-attribution')"><div class="t-label">${r[0]}</div><div class="t-value num" style="font-size:var(--t-lg)">${r[1].toLocaleString()} <span class="t-vs">個工作階段</span></div><span class="t-delta"><span class="t-vs num">${money(r[2])}</span></span></div>`).join('')}
+    </div>
+    <div style="height:16px"></div>
+    <div class="card card-pad" data-doc="gr-autopilot-settings"><h3>Campaign Autopilot</h3>
+      <p class="help">連結管道後，Autopilot 依每月預算與防護措施自動建立並優化投放；策略狀態：待處理 → 使用中 → 已完成／已停止。</p>
+      ${[['Shopify Messaging','電子報與訊息'],['Shop Campaigns','Shop＋Product Network 廣告'],['Meta Ads','需在 Meta 完成付款與政策同意'],['Microsoft Advertising','需確認非政治廣告']]
+        .map(([n,d])=>`<div class="set-row"><div class="sr-t"><b>${n}</b><span class="sub">${d}</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：連結 ${n}（第三方端完成驗證後生效）')">連結</button></div>`).join('')}
+      <div class="set-row"><div class="sr-t"><b>每月預算</b><span class="sub">所有已連結付費廣告管道的每月最高總支出</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：編輯每月預算')">編輯</button></div>
+      <div class="set-row"><div class="sr-t"><b>防護措施</b><span class="sub">目標 ROAS／目標地區／目標語言</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：編輯防護措施')">編輯</button></div>
+      <div class="set-row"><div class="sr-t"><b>權限</b><span class="sub">自動執行電子郵件與廣告活動 ／ 建立活動前需經核准（二選一）</span></div><button class="btn btn-sec btn-sm" onclick="toast('Demo：編輯權限')">編輯</button></div>
+      <p class="mut card-sec" style="font-size:var(--t-xs)">前置：啟用金流、至少一項商品、無密碼保護、已設運費與政策。「更多動作 › 暫停所有管道」立即停止使用中策略，設定全部保留。Autopilot 免費；核准的活動依各管道計費。</p></div>
     <div style="height:16px"></div>
     ${listPage({key:'camp0',noHead:true,title:'',doc:'gr-recent',ph:'搜尋活動…',
       cols:[{l:'最近活動',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'狀態',c:r=>chip(r.st,r.st==='進行中'?'success':r.st==='已排程'?'info':'default'),v:r=>r.st},
         {l:'管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch},{l:'銷售額',right:true,c:r=>N(money(r.sales)),v:r=>r.sales}],
       rows:CAMPAIGNS,id:r=>r.id,onRow:r=>`campaignOpen('${r.id}')`,per:4})}`;
 }
+/* 依 71-R1 實測改寫（2026-08-13）。原版把「歸因」做成設定表單（歸因模型 3 選項＋回溯窗 7/14/30 天
+   select＋儲存設定 save bar）——實測本尊（test）＋help 雙源證實三處都錯：
+   ①歸因是**報表頁**：模型/期間/粒度/維度是報表參數，隨選即重算並寫進 URL query，無 save bar；
+   ②模型是**五**個（最終非直接點擊〔預設〕/最終點擊/首次點擊/任何點擊/線性），各附功勞分配描述；
+   ③「回溯窗」設定項是無中生有——本尊為**固定 30 天歸因期間**（下拉 footer 明文），商家不可設。
+   原 UTM 對照卡（static）併入行銷活動編輯器的自動比對規則（camp-match）。🔴 防回退：不得改回設定表單。 */
 function attributionPage(){
-  return `<div class="page-head"><h1>歸因</h1><div class="head-actions">
-      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存設定</button></div></div>
-    <div class="od-grid" data-form="attr"><div class="col">
-      <div class="card card-pad" data-doc="doc-m-attribution"><h3>歸因模型</h3>
-        ${F('模型',SEL('amodel',['最後非直接點擊（預設）','首次點擊','最後點擊'],'最後非直接點擊（預設）'),'切換後所有歸因數字重算；報告會標示使用的模型')}
-        ${F('回溯窗',SEL('await',['7 天','14 天','30 天'],'30 天'),'41 §9.1：官方未公開實際預設值，此為原型佔位')}
-        <p class="help card-sec">UTM 自動掛在活動連結上（utm_campaign＝活動名）；歸因銷售額與分析頁同源（19 號 rollup）。</p></div>
-      <div class="card chart-card" data-doc="attr-table"><div class="chart-head"><h3>依模型比較的歸因銷售額</h3></div>
-        <div class="hbar-row"><span class="hl wide">最後非直接</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">${money(955000)}</span></div>
-        <div class="hbar-row"><span class="hl wide">首次點擊</span><div class="hbar-track"><div class="hbar" style="width:78%"></div></div><span class="hv num">${money(745000)}</span></div>
-        <div class="hbar-row"><span class="hl wide">最後點擊</span><div class="hbar-track"><div class="hbar" style="width:64%"></div></div><span class="hv num">${money(611000)}</span></div></div>
-    </div><div class="col">
-      <div class="card card-pad"><h3>UTM 對照</h3>
-        <div class="kv"><span class="k">utm_source</span><span class="mono">ig / line / newsletter</span></div>
-        <div class="kv"><span class="k">utm_medium</span><span class="mono">paid / social / email</span></div>
-        <div class="kv"><span class="k">utm_campaign</span><span class="mono">活動名稱（自動）</span></div></div>
-    </div></div>`;
+  const CH=[['直接','直接',2476,362400,140,'5.65%','—','—','—','—','—',96,44],
+    ['IG 廣告','付費',2140,21400,42,'1.96%',money(8000),'2.7',money(19000),'1.2%',money(5100),30,12],
+    ['LINE 官方帳號','社群',1820,11200,31,'1.70%','—','—','—','—','—',22,9],
+    ['電子報','電子郵件',960,5600,18,'1.88%','—','—','—','—','—',7,11],
+    ['自然搜尋','自然',1204,3200,9,'0.75%','—','—','—','—','—',6,3]];
+  return `<div class="page-head"><h1>歸因</h1>
+      <select class="fsel" data-doc="attr-dim" aria-label="維度" onchange="toast('Demo：切換維度（管道↔Campaign 活動）並重載報表')"><option>管道</option><option>Campaign 活動</option></select>
+    <div class="head-actions">
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：列印本報表')">列印</button>
+      <button class="btn btn-sec btn-sm" data-doc="attr-export" onclick="toast('Demo：匯出 CSV')">匯出</button></div></div>
+    <div class="rowflex" style="gap:var(--sp-200);margin-bottom:var(--sp-300)">
+      <select class="fsel" aria-label="期間" onchange="toast('Demo：切換期間並重算')"><option>今天</option><option>昨天</option><option>過去 7 天</option><option selected>最近 30 天</option><option>過去 90 天</option><option>期初至今</option><option>黑色星期五與網購星期一</option><option>季度</option><option>自訂範圍…</option></select>
+      <select class="fsel" aria-label="粒度" onchange="toast('Demo：切換時間粒度')"><option>每分鐘</option><option>每小時</option><option selected>每天</option><option>每週</option><option>每月</option><option>每季</option><option>每年</option></select>
+      <span style="flex:1"></span>
+      <select class="fsel" data-doc="attr-model" aria-label="歸因模型" onchange="toast('Demo：切換歸因模型，全部數字即時重算（不落任何設定）')">
+        <option selected>最終非直接點擊</option><option>最終點擊</option><option>首次點擊</option><option>任何點擊</option><option>線性</option></select></div>
+    <div class="card chart-card" data-doc="attr-trend"><div class="chart-head"><h3>前 5 大管道的工作階段時間趨勢</h3></div>
+      ${CH.map(r=>`<div class="hbar-row"><span class="hl wide">${r[0]}</span><div class="hbar-track"><div class="hbar" style="width:${Math.round(r[2]/2476*100)}%"></div></div><span class="hv num">${r[2].toLocaleString()}</span></div>`).join('')}
+      <p class="help card-sec">正式版為時間序列線圖（每管道一條線，legend 可切）；此處以長條摘要示意。</p></div>
+    <div style="height:12px"></div>
+    <div class="banner-err" data-doc="attr-appmetrics" style="background:var(--info-bg);border-color:#cfe3f2;color:var(--info)">支援的行銷應用程式現已提供成本、點擊次數和曝光次數指標。<a style="cursor:pointer;font-weight:600" onclick="toast('Demo：瞭解詳情')">瞭解詳情</a></div>
+    <div style="height:12px"></div>
+    <div class="card chart-card" data-doc="attr-report"><div class="chart-head"><h3>依管道</h3><div class="rowflex" style="gap:var(--sp-100)">
+        <button class="btn btn-ghost btn-sm" aria-label="篩選" onclick="toast('Demo：報表列篩選')">篩選</button>
+        <button class="btn btn-ghost btn-sm" aria-label="欄位" onclick="toast('Demo：欄位挑選器（顯示/隱藏 13 欄）')">欄位</button></div></div>
+      <div style="overflow-x:auto"><table class="idx"><thead><tr><th>管道</th><th>類型</th><th class="right">工作階段</th><th class="right">銷售額</th><th class="right">訂單</th><th class="right">轉換率</th><th class="right">成本</th><th class="right">ROAS</th><th class="right">CPA</th><th class="right">連結點閱率 (CTR)</th><th class="right">AOV</th><th class="right">新顧客訂單</th><th class="right">回頭客訂單</th></tr></thead><tbody>
+        ${CH.map(r=>`<tr><td><b>${r[0]}</b></td><td><span class="mut">${r[1]}</span></td><td class="right num">${r[2].toLocaleString()}</td><td class="right num">${money(r[3])}</td><td class="right num">${r[4]}</td><td class="right num">${r[5]}</td><td class="right num">${r[6]}</td><td class="right num">${r[7]}</td><td class="right num">${r[8]}</td><td class="right num">${r[9]}</td><td class="right num">${r[10]}</td><td class="right num">${r[11]}</td><td class="right num">${r[12]}</td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="help card-sec">適用 30 天的歸因期間（本尊固定值，非商家設定）；資料延遲最多 24 小時。成本/ROAS/CPA/CTR 僅支援的行銷應用程式提供（自然/直接顯示 —）。</p></div>`;
 }
+/* 依 71-R1 實測＋help 雙源改寫（2026-08-13）。原版把 campaign 做成「內容編輯器」（選 Email/社群/廣告
+   四型 → 填主旨/受眾/內容/排程）——本尊 2026 的 campaign 是**歸因容器**：唯一必填欄位＝名稱，建立即
+   產生草稿＋短碼 ID＋預設可分享連結（完整網址/短連結 /s/{id}/QR 碼），配「自動比對規則」（5 個 UTM＋
+   管道＋類型，空欄忽略、非空全部 AND）與「行銷活動項目」（指派既有行銷企劃；內容製作在各行銷應用程式）。
+   出處：實測 test＋help creating-campaigns/understanding-campaigns。原內容編輯器語義（受眾/主旨/模板）
+   屬 Shopify Email app 的 activity 層，非 campaign 層——移除，不是刪功能而是歸位。🔴 防回退。 */
 function campaignsPage(){
   return listPage({key:'camp',title:'行銷活動',doc:'doc-m-campaigns',ph:'搜尋活動…',
     actions:[['自動化','sec',"automationsModal()",'camp-auto'],['建立行銷活動','pri','campaignNew()','camp-new']],
-    views:[['全部',()=>true],['進行中',r=>r.st==='進行中'],['已排程',r=>r.st==='已排程'],['已結束',r=>r.st==='已結束']],
+    views:[['全部',()=>true]],
     cols:[{l:'名稱',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},{l:'狀態',c:r=>chip(r.st,r.st==='進行中'?'success':r.st==='已排程'?'info':'default'),v:r=>r.st},
-      {l:'管道',c:r=>`<span class="mut">${r.ch}</span>`,v:r=>r.ch},{l:'期間',c:r=>`<span class="mut">${r.d}</span>`,v:r=>r.d},
-      {l:'工作階段',right:true,c:r=>N(r.ses.toLocaleString()),v:r=>r.ses},{l:'訂單',right:true,c:r=>N(r.ord),v:r=>r.ord},
-      {l:'歸因銷售額',right:true,c:r=>N(money(r.sales)),v:r=>r.sales}],
+      {l:'工作階段',right:true,c:r=>N(r.ses.toLocaleString()),v:r=>r.ses},{l:'銷售額',right:true,c:r=>N(money(r.sales)),v:r=>r.sales},
+      {l:'訂單',right:true,c:r=>N(r.ord),v:r=>r.ord},{l:'AOV',right:true,c:r=>N(money(r.ord?Math.round(r.sales/r.ord):0)),v:r=>r.ord?r.sales/r.ord:0}],
     rows:CAMPAIGNS,id:r=>r.id,onRow:r=>`campaignOpen('${r.id}')`,
-    bulk:[['結束活動',null,null,'danger']],
-    note:'Campaign＝多活動容器（目標＋期間）；activity＝單一投放（Email／社群／廣告，由對應 app 提供）。'});
+    note:'Campaign＝歸因容器（分享連結＋UTM 比對規則＋指派項目）；內容製作（Email/貼文/廣告）在各行銷應用程式。指標不含退貨；資料延遲最多 24 小時。'});
 }
 function campaignNew(){
-  openGen({title:'建立行銷活動',pad:false,body:`
-    ${[['Shopify Email','寄給指定分群的電子報'],['社群貼文','IG／FB 貼文排程'],['廣告','Google／Meta 廣告活動'],['自動化流程','以事件觸發的長期流程']]
-      .map(([t,d])=>`<button class="pick" onclick="closeGen();campaignEditor('${t}')"><span class="pk-i"><b>${t}</b><span>${d}</span></span><span class="chev">›</span></button>`).join('')}`});
-}
-function campaignEditor(kind){
-  openGen({title:kind+'：編輯內容',wide:true,body:`<div class="stack">
-    ${F('活動名稱','<input class="input" data-val="req|max:60" placeholder="例：秋冬新品上市">')}
-    ${F('受眾（分群）',SEL('_cs',SEGMENTS.map(s=>`${s.t}（${s.n} 人）`),''),'受眾＝顧客分群；未訂閱者自動排除')}
-    ${F('主旨','<input class="input" data-val="req|max:120" placeholder="例：秋冬新品上架，會員先買">')}
-    ${F('內容',TA('_cb','','用模板編輯器排版；可插入商品卡與折扣碼',3))}
-    <div class="grid2">${F('排程寄出','<input class="input" type="datetime-local">')}${F('UTM campaign','<input class="input mono" value="autumn-launch">')}</div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已寄出測試信到 hello@chilllove.demo')">寄測試信</button>
-     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已排程寄出——UTM 已自動掛上')">排程發布</button>`});
+  campaignContainerEditor({id:'c'+Math.random().toString(16).slice(2,8),t:'',st:'草稿',ses:0,sales:0,ord:0,draft:true});
 }
 function campaignOpen(id){
-  const c=CAMPAIGNS.find(x=>x.id===id);
-  openGen({title:H(c.t),wide:true,body:`<div class="stack">
-    <div class="ledger"><div><b class="num">${c.ses.toLocaleString()}</b><span>工作階段</span></div><div><b class="num">${c.ord}</b><span>訂單</span></div>
-      <div><b class="num">${money(c.sales)}</b><span>歸因銷售額</span></div><div><b>${c.st}</b><span>狀態</span></div></div>
-    <div class="hbar-row"><span class="hl">觸及</span><div class="hbar-track"><div class="hbar" style="width:100%"></div></div><span class="hv num">4,820</span></div>
-    <div class="hbar-row"><span class="hl">開信</span><div class="hbar-track"><div class="hbar" style="width:38%"></div></div><span class="hv num">1,832</span></div>
-    <div class="hbar-row"><span class="hl">點擊</span><div class="hbar-track"><div class="hbar" style="width:11%"></div></div><span class="hv num">530</span></div>
-    <div class="hbar-row"><span class="hl">訂單</span><div class="hbar-track"><div class="hbar" style="width:2%"></div></div><span class="hv num">${c.ord}</span></div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('Demo：複製活動')">複製</button>
-     <button class="btn btn-danger-o btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();confirmDanger('結束活動','結束後不再累積歸因數據，已寄出的內容不受影響。','結束活動',function(){toast('已結束活動')})">結束活動</button>`});
+  campaignContainerEditor(CAMPAIGNS.find(x=>x.id===id));
+}
+/* campaign 容器編輯器（本尊為全頁編輯器＋contextual save bar；原型以 modal 承載同一資訊架構，
+   save bar 交互見 foot 捨棄/儲存——正式版須用 d-* 詳情頁 + FORMSEL 掛 save bar）。 */
+function campaignContainerEditor(c){
+  const code=H(c.id);
+  openGen({title:c.draft?'建立行銷活動':H(c.t),wide:true,tall:true,body:`<div class="stack">
+    ${c.draft?`<span class="badge b-default">草稿</span>`:''}
+    <div class="ledger" data-doc="camp-metrics"><div><b class="num">${c.ses.toLocaleString()}</b><span>工作階段</span></div>
+      <div><b class="num">${money(c.sales)}</b><span>總銷售額</span></div><div><b class="num">${c.ord}</b><span>訂單</span></div>
+      <div><b class="num">${money(c.ord?Math.round(c.sales/c.ord):0)}</b><span>平均訂單價值</span></div></div>
+    ${F('行銷活動名稱','<input class="input" data-val="req|max:255" value="'+H(c.t)+'" placeholder="唯一必填欄位——儲存即完成建立">','ID：<span class="mono">'+code+'</span>')}
+    <div class="card card-pad" data-doc="camp-link"><h3>可分享的連結</h3>
+      <div class="kv"><span class="k">短連結</span><span class="mono">/s/${code}</span></div>
+      <div class="kv"><span class="k">完整網址</span><span class="mono">/?utm_campaign=${code}&amp;utm_source=…</span></div>
+      <div class="rowflex card-sec" style="gap:var(--sp-200)">
+        <button class="btn btn-sec btn-sm" onclick="toast('已複製短連結')">複製短連結</button>
+        <button class="btn btn-sec btn-sm" onclick="toast('已複製完整網址（帶唯一追蹤 ID）')">複製完整網址</button>
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：下載 QR 碼')">下載 QR 碼</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('Demo：新增額外連結——欄位：短連結代稱／目的地（下拉）／UTM 參數（選填）')">新增連結</button></div></div>
+    <div class="card card-pad" data-doc="camp-match"><h3>自動比對規則</h3>
+      <p class="help">符合下方<b>所有</b>指定參數的流量，將自動納入本活動報告；系統會忽略任何空白欄位。</p>
+      <div class="grid2">${F('utm_campaign','<input class="input mono" placeholder="例如：特賣活動">')}${F('utm_source','<input class="input mono" placeholder="例如：facebook">')}</div>
+      <div class="grid2">${F('utm_medium','<input class="input mono" placeholder="例如：社群">')}${F('utm_term','<input class="input mono" placeholder="付費關鍵字">')}</div>
+      <div class="grid2">${F('utm_content','<input class="input mono" placeholder="內容類型">')}${F('管道','<input class="input" placeholder="例如：Google">')}</div>
+      ${F('類型','<input class="input" placeholder="例如：付費">')}</div>
+    <div class="card card-pad" data-doc="camp-items"><h3>行銷活動項目</h3>
+      <p class="help">手動指派現有的行銷企劃（例如 Shopify Messaging 電子報、社群廣告）。需「管理及安裝應用程式與管道」權限。</p>
+      <div class="rowflex" style="gap:var(--sp-100)"><input class="input" placeholder="搜尋行銷企劃" style="flex:1">
+        <span class="badge b-default">管道 ▾</span><span class="badge b-default">媒介 ▾</span><span class="badge b-default">類型：paid、organic +2 ▾</span></div>
+      <p class="mut" style="font-size:var(--t-xs);margin-top:var(--sp-200)">找不到任何結果。請嘗試變更篩選條件或搜尋字詞。（類型值域：paid／organic／unknown／unattributed）</p></div></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已捨棄${c.draft?'草稿':'變更'}')">捨棄</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存行銷活動（名稱為唯一必填）')">儲存</button>`});
 }
 function automationsModal(){
   const T=[['Recover site visitors',['棄結帳挽回','棄購物車挽回','瀏覽未加購']],['Welcome new subscribers',['歡迎折扣（單封）','歡迎系列（1+2 封）']],
@@ -7929,7 +7978,10 @@ const DETAILS={'d-draft':draftPage,'d-product':productPage,'d-variant':variantDe
    換一組選擇器反而要把 pdCents／pdPillSync 全部改成兩路查詢，那才是分家的第一步。 */
 const FORMSEL={'d-product':'[data-form="prod"]','d-variant':'[data-form="prod"]','d-collection':'[data-form="col"]','d-customer':'[data-form="cus"]',
  'd-segment':'[data-form="seg"]','d-discount':'[data-form="disc"]','d-menu':'[data-form="menu"]',
- 'd-article':'[data-form="art"]','d-market':'[data-form="mkt"]','m-prefs':'[data-form="prefs"]','m-attribution':'[data-form="attr"]'};
+ 'd-article':'[data-form="art"]','d-market':'[data-form="mkt"]','m-prefs':'[data-form="prefs"]'};
+ /* 依 71-R1 實測修正（2026-08-13）：m-attribution 自 FORMSEL 移除——本尊的「歸因」是報表頁
+    （模型/期間/維度是報表參數、隨選即重算、URL 參數化），不是設定表單，沒有 save bar。
+    原型先前把它做成 data-form="attr" 設定頁屬誤判（回溯窗設定項為無中生有，本尊為固定 30 天期窗）。 */
 function renderDetail(route){
   const was=formDirty();
   const el=document.getElementById('page-detail');
@@ -9120,15 +9172,27 @@ Object.assign(DOCS,{
  "seg-editor":{t:"分群條件編輯器",f:"DSL 輸入＋filter chips 插入",l:"支援 AND/OR/() 巢狀；相對日期 -7d/-4w/-10y；函式型 filter 用 MATCHES；products_purchased id ≤500 個（41 §4.3 全表）",i:"P1・語法白名單編譯 SQL（防注入，11 §1）・[api:segmentUpdate] [tbl:segments,customers,orders]"},
  "seg-preview":{t:"成員預覽與即時人數",f:"套用條件後立即算出符合顧客",l:"人數與名單即時計算；大分群走分頁 cursor（每頁 ≤250）",i:"P1・[api:customerSegmentMembers] [tbl:customers,segments]"},
 /* ---------- 行銷 ---------- */
- "gr-attr":{t:"歸因設定入口",f:"跳往歸因模型設定",l:"預設 last non-direct click；切換後所有歸因數字重算（41 §9.1）",i:"P2・[api:TBD-attributionSettingsUpdate]（28 待補） [tbl:sessions]（06 §7 待補）"},
- "gr-new":{t:"建立行銷活動",f:"選擇投放型別並編內容",l:"Campaign＝多活動容器；activity＝單一投放；UTM 自動掛 utm_campaign=活動名",i:"P2・[api:TBD-marketingActivityCreate]（28 待補） [tbl:marketing_campaigns]（06 §7 待補）"},
- "gr-autopilot":{t:"Campaign Autopilot banner",f:"AI 自動調整投放組合的搶先體驗入口",l:"21 §2 實測 2026 版新 banner；可關閉（本機記憶）",i:"P3・[api:TBD-marketingAutopilot]（28 待補）"},
- "gr-kpi":{t:"成長指標卡",f:"歸因銷售額／工作階段／行銷轉換率",l:"與分析頁同源（19 號 rollup）；工作階段依流量類型細分",i:"P2・[api:analyticsOverview] [tbl:orders,sessions]"},
- "gr-channels":{t:"依管道成效表",f:"每管道 sessions／orders／sales／轉換率",l:"歸因口徑＝目前選定的歸因模型；點列跳歸因細節",i:"P2・[api:report]（by_channel） [tbl:orders,sessions]"},
- "gr-recent":{t:"最近活動列表",f:"近期行銷活動與成效",l:"與行銷活動頁同資料源，僅顯示前 4 筆",i:"P2・[api:TBD-marketingActivityCreate] [tbl:marketing_campaigns]"},
- "attr-table":{t:"歸因模型比較",f:"三種模型下的歸因銷售額對照",l:"first-click／last-click／last non-direct click；回溯窗設定影響全部三者",i:"P2・[api:report] [tbl:sessions,orders]"},
+ /* 71-R1（2026-08-13）：成長區條目依實測（test）＋help 雙源全面改寫；出處 URL 記在 l 欄。
+    原 attr-table（三模型比較卡）已隨歸因頁改報表形態而移除——該卡是原型自創，非本尊控件。 */
+ "gr-attr":{t:"查看詳情（成效）",f:"跳往歸因報表頁",l:"本尊成效區右上的入口；歸因是報表頁非設定頁（71-R1）",i:"P2・[api:report] [tbl:sessions]（06 §7 待補）"},
+ "gr-new":{t:"建立行銷活動",f:"建立 campaign 歸因容器（唯一必填＝名稱）",l:"建立即生成草稿＋短碼 ID＋預設分享連結；前置：Basic+、線上商店銷售、電腦端、Marketing 權限（help creating-campaigns）",i:"P2・[api:TBD-marketingCampaignCreate]（28 待補） [tbl:marketing_campaigns]（06 §7 待補）"},
+ "gr-autopilot":{t:"Campaign Autopilot banner",f:"搶先體驗：加入等候名單／瞭解詳情／關閉",l:"實測 2026-08-13（test）：主 CTA＝加入等候名單；可關閉（本機記憶）",i:"P3・[api:TBD-marketingAutopilot]（28 待補）"},
+ "gr-kpi":{t:"成效指標卡",f:"歸因銷售額（佔總銷售額比）／依流量類型工作階段（可點篩選）／歸因訂單數",l:"口徑＝help marketing-performance：工作階段=間隔<30 分的連續活動；AOV=(銷售總額−折扣)÷訂單數；預設過去 30 天對比前 30 天；資料延遲≤24h；與分析頁同源（鐵律 7）",i:"P2・[api:analyticsOverview] [tbl:orders,sessions]"},
+ "gr-channels":{t:"依管道成效卡",f:"每管道工作階段數＋歸因金額（卡片形態）",l:"本尊主頁為管道卡片非表格（71-R1 實測）；點卡進歸因報表；完整 13 欄在歸因頁",i:"P2・[api:report]（by_channel） [tbl:orders,sessions]"},
+ "gr-autopilot-settings":{t:"Autopilot 設定區塊",f:"四管道連結／每月預算／防護措施／權限",l:"help setting-up-autopilot：管道=Shopify Messaging/Shop Campaigns/Meta Ads/Microsoft Advertising（第三方端驗證）；防護=目標 ROAS/地區/語言；權限=自動執行 vs 需核准；策略狀態機 待處理→使用中→已完成/已停止；暫停保留全部設定；資格=金流+商品+無密碼+運費政策",i:"P2・[api:TBD-marketingAutopilot]（28 待補） [tbl:marketing_autopilot_settings]（06 §7 待補）"},
+ "gr-recent":{t:"最近活動列表",f:"近期行銷活動與成效",l:"與行銷活動頁同資料源，僅顯示前 4 筆",i:"P2・[api:TBD-marketingCampaignCreate] [tbl:marketing_campaigns]"},
+ "attr-dim":{t:"歸因維度切換",f:"管道 ↔ Campaign 活動",l:"實測（test）：報表維度二選一，切換重載表格與趨勢圖",i:"P2・[api:report]（dimension 參數）"},
+ "attr-model":{t:"歸因模型選擇器",f:"五模型隨選即重算（報表參數，非設定）",l:"最終非直接點擊（預設，忽略直接流量）/最終點擊/首次點擊/任何點擊（每個被點管道各得 100%）/線性（平均分配）；固定 30 天歸因期間（本尊 footer 明文，商家不可設）；模型寫進 URL query（attributionModel=last_click_non_direct）",i:"P2・[api:report]（attribution_model 參數） [tbl:sessions,orders]"},
+ "attr-trend":{t:"前 5 大管道趨勢",f:"工作階段時間序列（正式版線圖）",l:"metric 可切換；粒度跟隨工具列（每分鐘～每年）",i:"P2・[api:report]（timeseries）"},
+ "attr-appmetrics":{t:"行銷 app 指標 banner",f:"宣告成本/點擊/曝光指標可用",l:"實測（test）：info banner 可關閉；指標僅支援的行銷應用程式提供",i:"P3"},
+ "attr-report":{t:"歸因 13 欄報表",f:"管道/類型/工作階段/銷售額/訂單/轉換率/成本/ROAS/CPA/CTR/AOV/新顧客訂單/回頭客訂單",l:"實測（test）13 欄＋列篩選＋欄位挑選器；自然/直接的廣告指標顯示 —；列印/匯出在頁首",i:"P2・[api:report]（by_channel full） [tbl:orders,sessions]"},
+ "attr-export":{t:"歸因報表匯出",f:"匯出目前維度/期間/模型下的報表 CSV",l:"與列印並列頁首（實測 test）",i:"P2・[api:bulkOperationRunQuery]"},
+ "camp-metrics":{t:"campaign 指標卡",f:"工作階段/總銷售額/訂單/AOV",l:"help understanding-campaigns：退貨不納入；同步期間顯示「資料同步處理中」徽章並自動重新整理；另有依管道×2＋依 UTM×2 四張圖",i:"P2・[api:report]（by_campaign）"},
+ "camp-link":{t:"可分享的連結",f:"預設連結：完整網址（帶追蹤 ID）/短連結 /s/{id}/QR 碼",l:"建立活動時自動產生；動作=複製短連結/複製完整網址/下載 QR/編輯/新增額外連結（欄位：短連結代稱/目的地下拉/UTM 選填）——help creating-campaigns",i:"P2・[api:TBD-marketingCampaignLinkCreate]（28 待補） [tbl:marketing_campaign_links]（06 §7 待補）"},
+ "camp-match":{t:"自動比對規則",f:"UTM×5＋管道＋類型的流量自動歸戶",l:"非空欄位全部 AND、空欄忽略（實測 modal 原文）；取代原型舊「UTM 對照」靜態卡",i:"P2・[api:TBD-marketingCampaignRuleUpsert]（28 待補） [tbl:marketing_campaign_rules]（06 §7 待補）"},
+ "camp-items":{t:"行銷活動項目",f:"指派既有行銷企劃到本活動",l:"篩選=管道/媒介/類型（值域 paid/organic/unknown/unattributed，實測 URL 參數）；需「管理及安裝應用程式與管道」權限（help）",i:"P2・[api:TBD-marketingActivityAssign]（28 待補） [tbl:marketing_activities]（06 §7 待補）"},
  "camp-auto":{t:"行銷自動化",f:"四類模板的開關與工作流",l:"模板＝預製 Flow workflow：Recover site visitors／Welcome／Post-purchase／Customer appreciation（41 §9.3）；住在 Messaging app，admin 為鏡像入口",i:"P2・[api:TBD-marketingAutomationUpdate]（28 待補） [tbl:event_outbox] [job:automation_dispatch]"},
- "camp-new":{t:"建立活動（選 app）",f:"Email／社群／廣告／自動化入口",l:"受眾＝顧客分群；未訂閱者自動排除；可寄測試信後排程",i:"P2・[api:TBD-marketingActivityCreate] [tbl:marketing_campaigns,segments]"},
+ "camp-new":{t:"建立行銷活動（列表入口）",f:"同 gr-new：開 campaign 容器編輯器",l:"71-R1：原「選 app 四型」內容編輯器已移除——內容製作屬各行銷應用程式的 activity 層，campaign 只是歸因容器",i:"P2・[api:TBD-marketingCampaignCreate] [tbl:marketing_campaigns]"},
 /* ---------- 折扣 ---------- */
  "doc-m-discounts":{t:"折扣列表",f:"四型折扣的統一列表",l:"配額：自動折扣 25 個、折扣碼 2,000 萬組（22 §4）；狀態由起訖時間推導（scheduled→active→expired）",i:"P0・[api:automaticDiscountNodes] [api:codeDiscountNodes] [tbl:discounts,discount_applications]"},
  "disc-method":{t:"折扣方式",f:"折扣碼 vs 自動折扣",l:"折扣碼需顧客輸入（可產生隨機碼）；自動折扣的 Title 顧客在結帳看得到（41 §10）",i:"P0・[api:discountCodeBasicCreate] / [api:discountAutomaticBasicCreate] [tbl:discounts]"},
