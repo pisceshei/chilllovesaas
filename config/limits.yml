@@ -4029,3 +4029,104 @@ csv:
     # 🔴 一次性搬家的順序：商品 CSV（含譯文）→ 庫存 CSV → 翻譯 CSV（非商品線資源）。
     #    倒過來做，翻譯 CSV 的 resource_gid 還不存在（見 70 §H 的結構性理由）。
     migration_order: [product_csv, inventory_csv, translation_csv]
+
+# ── 銷售管道 / POS / 代理式 / app（R13，2026-08-14 實測＋help 雙源；全文＝docs/research/82）──
+sales_channels:
+  # 🔴 管道全部是 app（路由 /apps/{handle}），只有線上商店是第一方特例（/themes）。
+  #    ⇒ 資料模型是 App 之下的 Channel（帶 channel capability），不是兩張平行表。
+  channels_are_apps: true
+  first_party_exception_routes: {online_store: "/themes"}
+  # 管道 app 比一般 app 多三項強制功能。
+  channel_required_capabilities: [account_connection_onboarding, product_publishing, marketplace_navigation]
+  row_actions: [open_app, view_details, uninstall]
+  max_channels: null              # 文檔未載
+  # 🔴 發布模型三層 AND：Publishable × Publication × Catalog，缺一不可上架。
+  publication_model: [publishable, publication, catalog]
+  catalog_types: [app, company_location, market]
+  new_channel_publishes_existing_products_by_default: true
+  publication_bulk_products_max: 50
+  future_publishing_requires_active_status: true
+  future_publishing_supported_resources: [product, collection, blog_post, page]
+  future_publishing_unsupported: [variant, shop_channel]
+agentic:
+  # 🔴 唯一「符合資格即預設啟用、不需安裝」的管道；且 Markets 明文排除（不能加入 channel market）。
+  enabled_by_default_for_eligible: true
+  excluded_from_channel_markets: true
+  channels: [chatgpt, microsoft_copilot, other_ai_platforms, shop, google_ai_mode, gemini, meta]
+  early_access_channels: [google_ai_mode, gemini]
+  # 每個管道兩件獨立的事：發現來源（catalog 存取）與結帳位置（代理內 vs 導回商店）。
+  per_channel_axes: [catalog_discovery, checkout_location]
+  direct_checkout_supported: [microsoft_copilot]
+  discovery_only: [chatgpt]
+  sources: [shopify_catalog, knowledge_base]
+  # 🔴 只支援 D2C；B2B-only 商品自動排除（但自訂第三方設定可能繞過保護）。
+  d2c_only: true
+  requires_supplemental_terms: true
+  # UCP（B-7 的答案）：開放標準，規格在 ucp.dev，Shopify+Google 共同開發。
+  ucp:
+    versions_supported: ["2026-04-08", "2026-01-23", "draft"]
+    capabilities: [catalog, cart, checkout, orders]
+    profile_meta_key: "meta.ucp-agent.profile"
+    extension_namespacing: reverse_domain   # 「Own the domain, own the namespace」，無中央審批
+    mcp_endpoints: [global_catalog, storefront_catalog, cart, checkout, order]
+    # 🔴 update_cart / update_checkout 是 PUT 語義——省略的欄位會被移除（與 patch 相反）。
+    update_semantics: put_replace_full_state
+    checkout_states: [incomplete, requires_escalation, ready_for_complete, completed]
+    # agent 只能查它自己促成的訂單。
+    order_scope: facilitated_by_agent_only
+    rate_limit: null              # 文檔未載
+    merchant_opt_out_mechanism: null  # 文檔未載
+    # 🔴 受限 Liquid context：只有 request 與 agents 兩個物件；不可為 JSON template。
+    liquid_templates: [agents.md.liquid, llms.txt.liquid, llms-full.txt.liquid]
+    liquid_context_objects: [request, agents]
+    liquid_json_template_allowed: false
+pos:
+  # 🔴 範圍未定（71-R13-V1）：本輪只做管道殼與分析，POS 本體未做。
+  tiers: [lite, pro]
+  lite_included_in_all_paid_plans: true
+  pro_billing: per_location
+  pro_price_usd_per_location_month: 89
+  pro_included_locations_on_plus: 20
+  pro_trial_days: 3
+  pro_bulk_location_update_max: 250
+  refund_window_days: {monthly: 7, annual: 30}
+  # Pro 專屬能力（Lite 沒有）——這條界線＝收銀機 vs 門市營運系統。
+  pro_only: [custom_printed_receipts, automatic_discounts, retail_staff_permissions,
+    unlimited_pos_only_staff, add_staff_to_sale, order_cancellations, exchanges,
+    save_retrieve_cart, email_carts, ship_to_home, ship_and_carry_out, pickup_in_store,
+    local_delivery_fulfillment, inventory_tracking_and_adjusting, receiving_stock_transfers,
+    fulfilling_and_receiving_transfers, daily_sales_reports, in_app_retail_analytics,
+    required_checkout_information]
+  hardware_warranty_years: {lite: 1, pro: 2}
+  # 🔴 POS 權限模型與 admin 完全不同：organization role 而非 store permission；
+  #    只能指派角色不能指派單一權限；粒度以「裝置所在地點」為軸。
+  permissions_via_organization_roles: true
+  individual_permissions_assignable: false
+  permission_axis: device_location
+  permission_groups: [manager_approval, checkout, discounts, orders, customers, apps, analytics, register, store_settings]
+  default_pos_role: associate
+  pos_only_staff_requires_pro: true
+  pos_only_staff_login: pin
+  lite_locations_ignore_role_restrictions: true
+  tips_preset_max: 3
+  tips_credit_only: true
+  unsupported_regions: [CN]
+  ui_extension_targets: [tiles, actions, blocks]
+apps:
+  types: [public_listed, public_unlisted, custom, legacy_custom]
+  # 🔴 2026-01-01 是分界點：之後建立的 custom app 走 Dev Dashboard，之前的留在後台管理。
+  legacy_custom_cutoff_date: "2026-01-01"
+  custom_level2_pii_min_plan: grow
+  # 安裝畫面把 scope 呈現成兩類。
+  scope_presentation_groups: [view_personal_data, view_and_edit_store_data]
+  billing_models: [one_time, free, monthly_recurring, annual_recurring, usage_based]
+  billing_on_shopify_invoice: true
+  protected_customer_data_levels: [0, 1, 2]
+  level2_sensitive_fields: [name, address, email, phone]
+  # 🔴 預設不允許自訂 app 開發（需「啟用開發作業」權限）。
+  custom_app_development_default_enabled: false
+  max_apps: null                  # 文檔未載
+  max_custom_apps: null           # 文檔未載
+  theme_extension_types: [app_block, app_embed_block]
+  app_embed_scope: global_liquid_only
+  app_embed_supported_in_all_themes: true

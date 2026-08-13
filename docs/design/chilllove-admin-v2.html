@@ -2240,10 +2240,14 @@ function renderSidebar(){
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-pages'?'on':''}" onclick="go('m-pages')">${H(uiT('頁面'))}</button>
   <button class="nav-sub ${grp==='m-themes'?'show':''} ${current==='m-prefs'?'on':''}" onclick="go('m-prefs')">${H(uiT('偏好設定'))}</button>
   </div>
-  <button class="nav-item" onclick="toast('Demo：AI 代理通路——把目錄開放給 AI 購物助理（P3）')">${icon('agent')}${H(uiT('AI 代理'))}</button>
-  <button class="nav-item" onclick="toast('Demo：門市 POS 屬第三階段')">${icon('pos')}${H(uiT('門市 POS'))}</button>
+  <!-- 71-R0-STUB1 結案（R13）：三顆純 toast 佔位轉為真頁面。
+       🔴 本尊架構：銷售管道**全部是 app**，路由 /apps/{handle}（代理式=/apps/agentic、
+       銷售點=/apps/point-of-sale-channel），只有線上商店是第一方特例走 /themes。
+       ⇒ 資料模型應是 App 之下的 Channel（帶 channel capability），不是兩張平行表。 -->
+  <button class="nav-item ${current==='m-agentic'?'on':''}" onclick="go('m-agentic')">${icon('agent')}${H(uiT('代理式'))}</button>
+  <button class="nav-item ${current==='m-pos'?'on':''}" onclick="go('m-pos')">${icon('pos')}${H(uiT('門市 POS'))}</button>
   <div class="nav-group">${H(uiT('應用程式'))}</div>
-  <button class="nav-item" onclick="toast('App 生態系屬第三階段')">${icon('apps')}${H(uiT('新增應用程式'))}</button>
+  <button class="nav-item ${current==='m-apps'?'on':''}" onclick="go('m-apps')">${icon('apps')}${H(uiT('應用程式'))}</button>
   <div class="spacer"></div>
   <div class="nav-foot">
   <button class="nav-item" onclick="go('home');setTimeout(()=>aiInput.focus(),200)">${icon('ai')}${H(uiT('AI 助理對話'))}</button>
@@ -3174,6 +3178,9 @@ const MODULES={
    [`<b>稅額摘要</b>`,"財務","7月31日"]],
   note:"預設報告庫 + 可另存自訂（規格 04 §5）"},
  "m-live":{title:"實況瀏覽",custom:"live"},
+ "m-agentic":{title:"代理式",full:true,custom:agenticPage},
+ "m-pos":{title:"門市 POS",full:true,custom:posPage},
+ "m-apps":{title:"應用程式",full:true,custom:appsChannelPage},
 };
 let moduleTimer=null;
 function renderModule(key){
@@ -8276,6 +8283,108 @@ function reportQL(){
     <p class="help">新版以「探索 exploration」視覺化編輯為主、QL 為進階模式；查詢結果可另存為自訂報告與 dashboard 指標卡。</p></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已執行查詢')">執行</button>`});
 }
+/* ==================================================================
+   銷售管道（R13／82 號）：代理式 AI 管道／門市 POS／應用程式
+   🔴 架構事實：本尊的銷售管道**全部是 app**，路由 `/apps/{handle}`
+      （代理式=/apps/agentic、銷售點=/apps/point-of-sale-channel），
+      只有線上商店是第一方特例走 /themes。管道與一般 app 的差別只有
+      「有沒有 channel capability」——UI 是同一族（同樣的 ⋯ 選單三項）。
+   ================================================================== */
+/* AI 代理管道【實測窮舉 4】。狀態一律「未啟用」（本店未上線）。
+   每個管道有兩件獨立的事：**發現來源**（商品目錄）與**結帳位置**（網路商店 or 代理內）。 */
+const AGENT_CHANNELS=[
+ {n:'ChatGPT',ic:'◎',disc:'顧客無法透過商品目錄發掘您的商品。但商品可能仍會透過其他來源顯示在 ChatGPT 中',co:'顧客透過您的網路商店結帳'},
+ {n:'Microsoft Copilot',ic:'◈',disc:'顧客無法透過商品目錄發掘您的商品',co:'顧客透過您的網路商店結帳'},
+ {n:'其他管道',ic:'◍',tip:'其他如 Perplexity 等由 AI 提供支援的平台',disc:'顧客無法透過商品目錄發掘您的商品',co:'顧客透過您的網路商店結帳'},
+ {n:'Shop',ic:'◐',disc:'顧客無法透過商品目錄發掘您的商品',co:'顧客透過您的網路商店結帳'}];
+function agenticPage(){
+  return `<div class="page-head"><h1>代理式</h1><div class="head-actions">
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：更多動作')">⋯</button></div></div>
+    <p class="mut3" style="margin:0 0 var(--sp-200)">○ 代理式店面尚未開放使用</p>
+    <h2 style="font-size:var(--t-2xl);line-height:1.25;margin:0 0 var(--sp-500);max-width:34ch">代理式店面未上線，但您的商品可能仍會顯示在人工智慧 (AI) 代理程式中。</h2>
+    <div class="card card-pad" data-doc="ag-ready"><h3>準備好使用代理式店面</h3>
+      <div class="set-row"><div class="sr-t"><b>確保已啟用目錄存取權限</b><span class="sub">允許 AI 代理搜尋您的商品</span></div><span class="set-ctl">${chip('已完成','success','full')}</span></div>
+      <div class="set-row"><div class="sr-t"><b>更新政策</b><span class="sub">更新您的政策，讓人工智慧 (AI) 代理程式能夠讀取</span></div>
+        <button class="btn btn-sec btn-sm sr-act" onclick="openSettings('policies')">檢閱</button></div></div>
+    <div style="height:16px"></div>
+    <div class="card" data-doc="ag-channels">
+      ${setRowTgl('允許平台為我管理','由平台代為開關各 AI 代理管道並套用建議設定','agAuto',true,'ag-auto')}
+      ${AGENT_CHANNELS.map((c,i)=>`<div class="set-row"><span class="ch-ic" aria-hidden="true">${c.ic}</span>
+        <div class="sr-t"><b>${H(c.n)}</b>${c.tip?`<span class="sub">${H(c.tip)}</span>`:''}</div>
+        <button class="btn btn-ghost btn-sm sr-act" onclick="agentChannel(${i})" aria-label="${H(c.n)} 管道詳情，狀態：未啟用">未啟用 ›</button></div>`).join('')}</div>
+    <div style="height:16px"></div>
+    <div class="card card-pad" data-doc="ag-sources"><h3>來源</h3>
+      <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">供 AI 代理程式用來推薦您的商品</p>
+      <div class="set-row"><span class="ch-ic" aria-hidden="true">▤</span><div class="sr-t"><b>商品目錄</b><span class="sub">目錄中有 0 項商品</span></div></div>
+      <div class="set-row"><span class="ch-ic" aria-hidden="true">◇</span><div class="sr-t"><b>知識庫</b><span class="sub">讓代理讀得懂你的政策、尺寸表與常見問題</span></div>
+        <button class="btn btn-sec btn-sm sr-act" onclick="toast('Demo：安裝知識庫來源')">安裝</button></div></div>
+    <p class="mut3" style="text-align:center;margin-top:var(--sp-500);font-size:var(--t-xs)">透過這些銷售管道進行銷售，即表示您同意代理式店面補充條款</p>`;
+}
+/* 管道詳情浮卡：狀態＋發現來源＋結帳位置＋四格指標（與 R11 的代理式銷售管道維度同源）。 */
+function agentChannel(i){
+  const c=AGENT_CHANNELS[i];
+  openGen({title:H(c.n),body:`<div class="stack">
+    <div>${chip('非使用中','default','full')}</div>
+    <div class="set-row"><span class="ch-ic" aria-hidden="true">▤</span><div class="sr-t"><span class="sub">${H(c.disc)}</span></div></div>
+    <div class="set-row"><span class="ch-ic" aria-hidden="true">▥</span><div class="sr-t"><span class="sub">${H(c.co)}</span></div></div>
+    <div class="grid2">
+      <div class="card stat-card"><div class="t-label">工作階段</div><div class="t-value num">0</div><span class="t-vs">—</span></div>
+      <div class="card stat-card"><div class="t-label">銷售額</div><div class="t-value num">${money(0)}</div><span class="t-vs">—</span></div>
+      <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">0</div><span class="t-vs">—</span></div>
+      <div class="card stat-card"><div class="t-label">轉換</div><div class="t-value num">0%</div><span class="t-vs">—</span></div></div></div>`});
+}
+/* 門市 POS 管道頁。🔴 範圍未定（71-R13-V1）：本輪只做管道殼與分析，不做 POS 本體。 */
+function posPage(){
+  return `<div class="page-head"><h1>門市 POS</h1><div class="head-actions">
+      <button class="btn btn-sec btn-sm" onclick="openSettings('locations')">管理地點</button>
+      <button class="btn btn-sec btn-sm" onclick="openSettings('users')">管理員工</button>
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：更多動作')">⋯</button></div></div>
+    <div class="card card-pad" data-doc="pos-hero"><div class="stack" style="align-items:center;text-align:center">
+      <b style="font-size:var(--t-xl)">登入並開始使用 POS 銷售</b>
+      <span class="mut3">掃描 QR 碼下載 app</span></div></div>
+    <div style="height:16px"></div>
+    <div class="rowflex" style="justify-content:space-between;align-items:center">
+      <h3 style="margin:0">分析</h3>
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：期間選擇器（與分析模組同一元件，改一處要同步兩邊）')">過去 30 天 ▾</button></div>
+    <div style="height:8px"></div>
+    <div class="card chart-card" data-doc="pos-analytics"><div class="chart-head"><h3>銷售總額</h3><span class="big num">${money(0)}</span></div>
+      <div class="chart-wrap"><svg width="100%" height="120"></svg></div></div>
+    <div style="height:12px"></div>
+    <div class="grid2">
+      <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">0</div><span class="t-vs">—</span></div>
+      <div class="card stat-card"><div class="t-label">折扣</div><div class="t-value num">${money(0)}</div><span class="t-vs">—</span></div></div>
+    <div style="height:12px"></div>
+    <div class="card stat-card"><div class="t-label">退貨</div><div class="t-value num">${money(0)}</div><span class="t-vs">—</span></div>
+    <div style="height:16px"></div>
+    <div class="card card-pad" data-doc="pos-reco"><h3>為您推薦</h3>
+      <div class="set-row"><span class="ch-ic" aria-hidden="true">◫</span><div class="sr-t"><b>透過以零售為主的顧客群，提升商店忠實度</b><span class="sub">利用顧客群的力量，針對忠實的店內顧客打造專屬優惠或活動。</span></div>
+        <button class="btn btn-sec btn-sm sr-act" onclick="go('m-segments')">建立顧客群</button></div></div>`;
+}
+/* 應用程式頁：本尊把「已安裝 app」與「已安裝管道」拆成兩個設定頁，但 ⋯ 選單相同。 */
+function appsChannelPage(){
+  const rows=APPS_INSTALLED.map(a=>`<div class="set-row"><span class="ch-ic" aria-hidden="true">◱</span>
+     <div class="sr-t"><b>${H(a.n)}</b><span class="sub">${H(a.dev)}・${H(a.at)}</span></div>
+     <button class="btn btn-ghost btn-sm sr-act" onclick="appRowMenu(${JQ(a.n)})">⋯</button></div>`).join('');
+  return `<div class="page-head"><h1>應用程式</h1><div class="head-actions">
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：開發應用程式（自訂 app 建立流程）')">開發應用程式</button>
+      <button class="btn btn-pri btn-sm" onclick="toast('Demo：前往應用程式商店')">應用程式商店</button></div></div>
+    <div class="card" data-doc="app-installed">
+      <div class="listbar"><button class="view-chip">已安裝 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button></div>
+      ${rows}</div>
+    <div style="height:16px"></div>
+    <div class="card card-pad" data-doc="app-channels"><h3>銷售管道</h3>
+      <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">🔴 管道就是帶 channel capability 的 app——本尊把它們列在另一個設定頁，但動作選單完全相同</p>
+      ${[['線上商店','m-themes'],['門市 POS','m-pos'],['代理式','m-agentic']].map(([n,k])=>
+        `<div class="set-row"><span class="ch-ic" aria-hidden="true">◰</span><div class="sr-t"><b>${H(n)}</b></div>
+         <button class="btn btn-ghost btn-sm sr-act" onclick="go('${k}')">開啟 ›</button></div>`).join('')}</div>`;
+}
+/* app 列的 ⋯【實測窮舉 3】：開啟應用程式／檢視詳情／解除安裝（破壞性紅字）。 */
+function appRowMenu(n){
+  openGen({title:H(n),body:`<div class="stack">
+    ${[['開啟應用程式',"toast('Demo：開啟 app 內嵌畫面')"],['檢視詳情',"toast('Demo：app 詳情——權限 scope／計費／隱私／最近活動')"]]
+      .map(([l,fn])=>`<button class="btn btn-sec btn-sm" style="justify-content:flex-start" onclick="closeGen();${fn}">${l}</button>`).join('')}
+    <button class="btn btn-danger-o btn-sm" style="justify-content:flex-start" onclick="closeGen();toast('Demo：解除安裝——會撤銷該 app 的所有 scope 並停止其 webhook')">解除安裝</button></div>`});
+}
 let LIVEMODE='3d';
 function livePage(){
   const dots=[...Array(26)].map((_,i)=>{const buy=i%7===0;
@@ -12035,6 +12144,15 @@ Object.assign(DOCS,{
   l:"**為什麼不可改**：44 §8.3 逐字「決定適用於您市場以外顧客的設定」——這個值是由「哪些國家還留在 active market」推導出來的（29 §1.2），不是可挑的欄位。要換就得去 Markets 調整 active market，這裡改只會與市場設定互相矛盾",
   i:"P1・唯讀衍生值，由 [tbl:markets] 即時推導（無獨立欄位）；[api:markets] 讀取後於序列化層計算"},
 /* ---------- 使用者與安全 ---------- */
+ "ag-ready":{t:"代理式店面準備清單",f:"兩項待辦：目錄存取權限（已完成）／更新政策（未開始，帶檢閱鈕）",l:"🔴 本尊此頁的主標原文是「**代理式店面未上線，但您的商品可能仍會顯示在人工智慧 (AI) 代理程式中**」——這句話是整個模組的語義核心：**未啟用管道 ≠ 商品不會被 AI 看到**（仍可能被 web crawling 抓到）。政策那一項連到設定›政策，因為 AI 代理需要能讀懂退款/運送政策才敢推薦",i:"P3・[api:TBD-agenticReadiness]｜🔴 跨頁：政策待辦直通 設定›政策（R12 §7.9 六份政策）；目錄存取權限直通商品的發布模型"},
+ "ag-auto":{t:"允許平台為我管理",f:"開關（預設開）：由平台代為開關各 AI 代理管道並套用建議設定",l:"本尊原文「Allow Shopify to manage for me」。關掉後改為逐管道手動開關 Catalog 存取與 direct checkout，並可決定是否自動加入新出現的 AI 管道",i:"P3・[api:TBD-agenticAutoManage]｜跨功能：開啟時新管道會自動納入，等於把上架決策授權給平台——法遵上要留下同意軌跡"},
+ "ag-channels":{t:"AI 代理管道清單",f:"實測 4 個：ChatGPT／Microsoft Copilot／其他管道（Perplexity 等）／Shop",l:"🔴 每個管道有**兩件互相獨立的事**：①**發現來源**（商品目錄 catalog 有沒有開放給它）②**結帳位置**（在代理內直接結帳 vs 導回網路商店）。實測本店全部「未啟用」。官方文檔另載：**Microsoft Copilot 支援 direct checkout**（顧客按 Buy → 平台代管的結帳 → Pay now），ChatGPT 僅支援 product discovery。點列開管道詳情浮卡（狀態＋兩行語義＋四格指標）",i:"P3・[api:TBD-agenticChannelUpdate]｜🔴 跨功能：per-channel 指標與 R11 分析的代理式銷售管道維度必須同源（鐵律 7）；🔴 **Markets 明文排除代理式管道**（不能加入 channel market，R10）"},
+ "ag-sources":{t:"AI 代理資料來源",f:"商品目錄（目錄中有 N 項商品）／知識庫（可安裝）",l:"來源是「供 AI 代理程式用來推薦您的商品」的資料面。商品目錄＝結構化商品資料；知識庫＝政策/尺寸表/常見問答等非商品內容。官方另有 `agents.md` / `llms.txt` 兩個 Liquid template 作為 agent discovery 檔案",i:"P3・[api:TBD-agenticCatalogSync] [tbl:products,shop_policies]｜🔴 跨頁：`agents.md.liquid` 是**受限 Liquid context**（只有 request 與 agents 兩個物件、不可用 JSON template）——與我方主題引擎現有的 render context 不是同一套，M6 前必須確認（71-R13-V3）"},
+ "pos-hero":{t:"POS 下載引導",f:"登入並開始使用 POS 銷售＋下載 app 的 QR 碼",l:"本尊此區是純引導（未連結裝置時的空態）。POS 本體是行動裝置 app，後台這一頁只是管道殼",i:"P3・靜態｜🔴 範圍未定（71-R13-V1）：POS 要做到哪一層需使用者裁定"},
+ "pos-analytics":{t:"POS 分析",f:"期間選擇器＋銷售總額圖表＋訂單/折扣/退貨三卡",l:"期間選擇器與分析模組**共用同一元件**（改一處要同步兩個掛載點）。官方分層：**日報表與店內分析是 POS Pro 專屬**，Lite 沒有",i:"P3・[api:TBD-shopifyqlQuery]（銷售點 schema） [tbl:rollup_*]｜🔴 跨功能：數字必須與分析模組的零售銷售類報告同源（鐵律 7）"},
+ "pos-reco":{t:"POS 推薦卡",f:"以零售為主的顧客群 CTA",l:"本尊在 POS 頁推銷「零售顧客群」——把店內顧客做成分群後投放專屬優惠。可關閉（✕）",i:"P3・跳顧客›分群（R5 分群建立器）"},
+ "app-installed":{t:"已安裝應用程式清單",f:"檢視 chip（已安裝）＋逐列 ⋯",l:"⋯【實測窮舉 3】開啟應用程式／檢視詳情／**解除安裝**（破壞性紅字）。本尊另有「最近解除安裝」清單可還原。app 詳情頁含：計費與用量費用／活動與權限（存取區域·近期活動）／隱私（可存取的個資類別）／擴充功能",i:"P2・[api:TBD-appUninstall] [tbl:app_installations]｜🔴 跨功能：解除安裝要撤銷該 app 全部 scope 並停止其 webhook；權限「管理和安裝應用程式與管道」可授權全部或逐一勾選特定 app"},
+ "app-channels":{t:"銷售管道清單（應用程式頁內）",f:"線上商店／門市 POS／代理式",l:"🔴 **管道就是帶 channel capability 的 app**——本尊把兩者列在**兩個設定頁**（設定›應用程式 vs 設定›銷售管道），但 ⋯ 動作選單完全相同。管道 app 比一般 app 多三項強制功能：帳號連接 onboarding／商品發布 product publishing／市集導航。發布模型是**三層 AND**：Publishable(商品/系列/子類選項) × Publication(綁管道) × Catalog(APP/COMPANY_LOCATION/MARKET)——「已發布到管道」與「在該管道市場的目錄內」是兩個獨立條件，缺一不可上架",i:"P2・[api:publications] [tbl:publications,product_publications]｜🔴 跨頁：這條發布模型同時牽動商品頁的上架區塊、目錄（R10）、市場（R10）與代理式目錄——改一處要同步四處"},
  "set-perm-cats":{t:"顆粒權限目錄",f:"列出 13 類顆粒權限的完整清單",
   l:"53號 N-04：這六列原本帶 › 卻沒有 handler（比 setRow 佔位更誤導，因為 setRow 至少有唯讀 chip 明示）。<b>處置＝移除 ›、改明示唯讀</b>，理由：原型沒有角色 CRUD，沒有可編輯的角色物件——做一個勾不到任何角色的權限勾選頁只是換一種假控件。逐項勾選屬 M5 角色編輯器，入口屆時掛在角色列上",
   i:"P1(M5)・[tbl:roles,role_permissions(role_id,permission_key)]；權限鍵對照 Pundit policy，staff 角色映射 API scope（28 §0.2）"},
