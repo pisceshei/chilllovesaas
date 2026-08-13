@@ -1723,6 +1723,39 @@ domains:
   activation_max_hours: 48
 
 # =============================================================================
+# 13c. 平台帳單（71-R4，2026-08-13；政策值跟隨 Shopify help，68 號「跟隨」原則）
+# =============================================================================
+billing:
+  # 帳單週期天數（月繳；起日=方案開通日；31 天月可能收到兩張）。出處：help billing-cycles（help）
+  cycle_days: 30
+  # 帳單開立時區。出處：help upcoming-past-bills（help）
+  invoice_timezone: UTC
+  # 帳單編號位數（#前綴）；銀行帳單顯示 <平台代碼> * <號碼>。出處：help upcoming-past-bills（help）
+  invoice_number_digits: 9
+  # 付款狀態 enum（過去的帳單 filter tabs 全值域）。出處：71-R4 實測（test）
+  payment_statuses: [paid, unpaid, failed, processing, refunded, cancelled]
+  # 付費明細「檢視摘要」的日期範圍上限（天）。出處：help exporting-your-bills（help）
+  summary_export_max_days: 90
+  # 停用商店後抵用金保留天數。出處：help billing credits（help）
+  credit_expiry_after_deactivation_days: 60
+  # 抵用金類別（互不流用；僅能抵未來週期）。出處：help（help）
+  credit_categories: [subscription, app, shipping, transaction]
+  # 訂閱退款申請窗（天）。出處：help ToS §5.10 摘述（help）
+  refund_request_window_days:
+    monthly: 7
+    annual: 30
+  # 帳單幣別兌換手續費（%；第三方交易費除外）；幣別選項依組織所在國家/地區而定，下一週期生效。
+  # 出處：help paying-your-bills/local-currency（help）
+  currency_conversion_fee_percent: 1.5
+  # 凍結逾此天數須重新選擇方案。出處：help frozen-store（help）
+  frozen_replan_after_days: 30
+  # 撥款狀態 enum（PSP pack 對應面；zh-TW 官方詞：已排程/已存入/失敗/已提款）。
+  # 出處：help payouts/view-details（help，en 交叉驗證）
+  payout_statuses: [scheduled, deposited, failed, withdrawn]
+  # 負向撥款自動重試次數。出處：help failed-payouts（help）
+  negative_payout_retry_count: 2
+
+# =============================================================================
 # 14. 通知範本（P1-28）
 # =============================================================================
 notification:

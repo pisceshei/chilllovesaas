@@ -2185,7 +2185,11 @@ const NAV=[
  {id:"m-discounts",name:"折扣",icon:"discounts"},
  {id:"m-metaobjects",name:"內容",icon:"content",kids:[["m-files","檔案"],["m-menus","選單"],["m-blog","部落格貼文"]]},
  {id:"m-markets",name:"市場",icon:"markets",kids:[["m-catalogs","目錄"]]},
- {id:"m-finance",name:"財務",icon:"finance",kids:[["m-billing","帳單"]]},
+ /* 71-R4-STRUCT1（2026-08-13 實測＋help 修正）：本尊財務導航子項是**狀態函數**——未啟收款＝無子項
+    （本店實測）；啟用後出現「支付款項」子項（help finance/overview 明文「前往財務 > 支付款項」）。
+    帳單無論如何只活在 設定 → 帳單。我方：m-billing 自導航移除（路由留給深連結，內容改指路卡）；
+    撥款面併於財務頁內呈現，子項動態化留待 M1 導航資料驅動時實作（71-R4-V4）。 */
+ {id:"m-finance",name:"財務",icon:"finance",kids:[]},
  {id:"analytics",name:"分析",icon:"analytics",kids:[["m-reports","報告"],["m-live","實況瀏覽"]]},
 ];
 const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders","m-abandoned":"orders",
@@ -5076,9 +5080,12 @@ const CATALOGS=[
  {t:'AI 代理目錄',aim:'AI 代理通路',n:5,adj:'—',st:'啟用中'},
  {t:'大宗採購（B2B）',aim:'公司地點：BulkCo 台北',n:7,adj:'−15%',st:'草稿'}];
 
+/* 71-R4：撥款狀態 enum 對齊本尊四值（help payouts/view-details，en 交叉驗證）：
+   已排程 Scheduled／已存入 Deposited／失敗 Failed／已提款 Withdrawn（負向撥款）。
+   原「在途/已入帳」為我方自創詞——改用本尊 zh-TW 官方詞。 */
 const PAYOUTS=[
- {d:'2026-08-11',amt:960000,st:'在途',n:22},{d:'2026-08-08',amt:1282000,st:'已入帳',n:31},
- {d:'2026-08-05',amt:747000,st:'已入帳',n:18},{d:'2026-08-01',amt:1103000,st:'已入帳',n:27},
+ {d:'2026-08-11',amt:960000,st:'已排程',n:22},{d:'2026-08-08',amt:1282000,st:'已存入',n:31},
+ {d:'2026-08-05',amt:747000,st:'已存入',n:18},{d:'2026-08-01',amt:1103000,st:'已存入',n:27},
  {d:'2026-07-29',amt:310000,st:'失敗',n:8}];
 
 const REPORTS=[
@@ -7857,6 +7864,19 @@ function finToggle2fa(){
   toast(FIN_2FA?'示範：2FA 已啟用——金流數字現在才進 DOM'
                :'示範：2FA 已停用——金流數字已從 DOM 移除（不是隱藏）');
 }
+/* 71-R4（2026-08-13 實測）：財務頁是**三態**不是兩態——
+   ①PSP 未接＝推銷空態（本尊 dev 店實測形態：2FA banner＋空態卡＋稅務列＋右上「文件」下拉）。
+     此態沒有金流數字，2FA 用 banner 形態即可；
+   ②PSP 已接＋2FA 未啟＝閘門（53號 P0-19 我方加固**不變**：金流數字不進 DOM）；
+   ③PSP 已接＋2FA 啟＝active 形態（KPI＋撥款排程＋撥款紀錄）。
+   「文件」下拉＝法域 pack 能力（鐵律 11）：US pack＝1099-K／處理方活動報表；HK pack＝無稅務
+   年度文件——清單由 pack 宣告，不硬編。 */
+let FIN_PSP=false;                 /* demo 初值＝未接，預設對齊本尊 dev 店可見形態 */
+function finTogglePsp(){
+  FIN_PSP=!FIN_PSP;
+  renderModule('m-finance');
+  toast(FIN_PSP?'示範：PSP 已接——進入財務數據形態（2FA 閘門接手）':'示範：PSP 未接——推銷空態');
+}
 /* 閘門畫面：要有出路，不能是死路（明確的「前往啟用兩步驟驗證」動作）*/
 function finGate(){
   return `<div class="card" data-doc="fin-gate"><div class="empty-wrap" style="max-width:520px;margin:0 auto">
@@ -7872,9 +7892,26 @@ function finGate(){
 }
 function financePage(){
   const head=`<div class="page-head"><h1>財務</h1><div class="head-actions">
-      ${FIN_2FA?`<button class="btn btn-sec btn-sm" data-doc="fin-export" onclick="toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')">匯出對帳報表</button>`:''}
-      <button class="btn btn-sec btn-sm" onclick="go('m-billing')">帳單</button>
+      ${FIN_PSP&&FIN_2FA?`<button class="btn btn-sec btn-sm" data-doc="fin-export" onclick="toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')">匯出對帳報表</button>`:''}
+      <span style="position:relative">
+        <button class="btn btn-sec btn-sm" data-doc="fin-docs" onclick="ddToggle(event,'finDocsMenu')">文件 ▾</button>
+        <div class="view-menu" id="finDocsMenu" role="menu" aria-label="財務文件">
+          <button role="menuitem" onclick="toast('Demo：文件清單由 jurisdiction pack 宣告——HK pack 無稅務年度文件；US pack＝1099-K 表格／處理方活動報表')">（依法域 pack）</button></div></span>
+      <button class="btn btn-sec btn-sm" onclick="openSettings('billing')">帳單</button>
+      <button class="btn btn-ghost btn-sm" data-doc="fin-psp-demo" onclick="finTogglePsp()">示範：PSP ${FIN_PSP?'已接':'未接'}</button>
       <button class="btn btn-ghost btn-sm" data-doc="fin-2fa-demo" onclick="finToggle2fa()">示範：2FA ${FIN_2FA?'已啟用':'未啟用'}</button></div></div>`;
+  if(!FIN_PSP)return head
+   +(FIN_2FA?'':`<div class="banner-caution" data-doc="fin-2fa-banner" style="margin-bottom:var(--sp-400)"><span class="bc-ic" aria-hidden="true">ⓘ</span>
+      <span><b>新增多一層安全防護</b>——啟用兩步驟驗證，才能使用收款帳戶。
+      <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="openSettings('users')">設定兩步驟驗證</button></span></div>`)
+   +`<div class="card" data-doc="fin-empty"><div class="empty-wrap" style="max-width:520px;margin:0 auto">
+      <span class="rb-ic" aria-hidden="true" style="font-size:28px">🏦</span>
+      <b>在 CHILL LOVE 中管理您的財務</b>
+      接上支付服務商（PSP）即可收款，並在此查看餘額、待入帳與撥款。平台不自建支付（G15）——收款走 PSP capability。
+      <div class="rowflex" style="justify-content:center;margin-top:var(--sp-400)">
+        <button class="btn btn-pri btn-sm" onclick="openSettings('payments')">前往付款設定</button></div></div></div>
+    <div class="card card-pad" data-doc="fin-tax" style="margin-top:var(--sp-400)"><h3>稅務</h3>
+      ${setRowBtn('設定稅金代收','按市場與法域設定徵稅（jurisdiction pack）','<span class="chev" aria-hidden="true">›</span>',"openSettings('taxes')",'fin-taxlink','⚖️')}</div>`;
   if(!FIN_2FA)return head+finGate();
   return head
    +`<div class="banner-caution" data-doc="fin-2fa" style="margin-bottom:var(--sp-400)"><span class="bc-ic" aria-hidden="true">✓</span>
@@ -7887,16 +7924,20 @@ function financePage(){
     <div class="chart2 c14">
       <div class="col">
         <div class="card card-pad" data-doc="fin-payout-sched"><h3>撥款排程</h3>
-          ${F('排程',SEL('_fp',['每日','每週（週一）','每月（1 日）'],'每日'))}
-          <p class="help card-sec">撥款＝charges − refunds − fees + adjustments；失敗會退回可用餘額並寄通知。</p></div>
+          ${F('排程',`<select class="input" data-f="_fp" onchange="const w=document.getElementById('fpWeek'),m=document.getElementById('fpMonth');if(w)w.hidden=this.value!=='每週';if(m)m.hidden=this.value!=='每月'"><option>每日</option><option>每週</option><option>每月</option></select>`,'二段式：每週選星期幾、每月選日期（超過月末自動調整至月末）；改排程後待處理款延至新排程下一適用日')}
+          <div id="fpWeek" hidden>${F('星期幾',SEL('_fpw',['週一','週二','週三','週四','週五','週六','週日'],'週一'))}</div>
+          <div id="fpMonth" hidden>${F('日期',SEL('_fpm',['1 日','15 日','28 日','月末'],'1 日'))}</div>
+          ${SWROW('_fpMail',true,'每次收到撥款時，以電子郵件通知我','入帳與失敗都通知；失敗另有 admin 快訊與推播')}
+          <p class="help card-sec">撥款＝charges − refunds − fees + adjustments；失敗會退回可用餘額並寄通知（更新收款帳戶後自動重新啟用）。</p></div>
         <div class="card card-pad"><h3>工具</h3>
           ${setRowBtn('對帳報表','撥款與訂單的對帳明細——產生 CSV','',"toast('Demo：匯出對帳 CSV（交易＋費用＋撥款拆解）')",'fin-recon','📑')}
+          ${setRowBtn('匯出餘額交易','CSV 以 email 寄送——11 欄（交易日/類型/訂單/卡別/來源/撥款狀態/撥款日/可用日/金額/費用/淨額）','',"toast('Demo：匯出餘額交易 CSV——email 寄送；篩選 7 鍵（類型/狀態/付款方式/卡別/交易日/撥款日/幣別）可儲存檢視')",'fin-balance-export','📤')}
           ${setRowBtn('稅務設定','稅區服務層級三檔與稅率','',"openSettings('taxes')",'fin-taxlink','⚖️')}</div>
       </div>
       <div class="card" data-doc="fin-payouts"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>撥款紀錄</h3></div>
         <table class="idx"><thead><tr><th>日期</th><th class="right">金額</th><th>狀態</th><th class="right">訂單數</th></tr></thead><tbody>
         ${PAYOUTS.map(p=>`<tr onclick="payoutOpen(${JQ(p.d)})"><td class="mut">${p.d}</td><td class="right num">${money(p.amt)}</td>
-          <td>${chip(p.st,p.st==='已入帳'?'success':p.st==='在途'?'info':'critical',p.st==='在途'?'blocked':undefined)}</td><td class="right num">${p.n}</td></tr>`).join('')}</tbody></table></div>
+          <td>${chip(p.st,p.st==='已存入'?'success':p.st==='已排程'?'info':p.st==='已提款'?'default':'critical',p.st==='已排程'?'blocked':undefined)}</td><td class="right num">${p.n}</td></tr>`).join('')}</tbody></table></div>
     </div>`;
 }
 function payoutOpen(d){
@@ -7904,6 +7945,9 @@ function payoutOpen(d){
      正式版這裡是伺服器端 resolver 的授權檢查，不是這個 if。 */
   if(!FIN_2FA)return toast('需要兩步驟驗證才能查看撥款明細——請先到「設定 → 使用者」啟用');
   openGen({title:`撥款 ${d}`,body:`<div class="stack">
+    <div class="kv"><span class="k">狀態</span><span>${H((PAYOUTS.find(p=>p.d===d)||{}).st||'已排程')}（enum：已排程/已存入/失敗/已提款）</span></div>
+    <div class="kv"><span class="k">收款帳戶</span><span>恒生 •• 8021（經 PSP pack）</span></div>
+    <div class="kv"><span class="k">轉移參考編號</span><span class="mono">TRF-2026-081321</span></div>
     <div class="kv"><span class="k">交易總額 charges</span><span class="num">${money(1030000)}</span></div>
     <div class="kv"><span class="k">退款 refunds</span><span class="num">−${money(24000)}</span></div>
     <div class="kv"><span class="k">手續費 fees</span><span class="num">−${money(46000)}</span></div>
@@ -7912,19 +7956,15 @@ function payoutOpen(d){
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已匯出此撥款的對帳 CSV')">匯出 CSV</button>`});
 }
 function billingPage(){
-  return `<div class="page-head"><h1>帳單</h1><div class="head-actions">
-      <button class="btn btn-sec btn-sm" onclick="openSettings('billing')">帳單設定</button></div></div>
-    <div class="ana-grid g3" data-doc="bill-kpi">
-      <div class="card stat-card"><div class="t-label">本期應付</div><div class="t-value num">${money(81500)}</div><span class="t-vs">結算日 2026-08-14</span></div>
-      <div class="card stat-card"><div class="t-label">方案費用</div><div class="t-value num">${money(62000)}</div><span class="t-vs">成長方案・月繳</span></div>
-      <div class="card stat-card"><div class="t-label">運送標籤費</div><div class="t-value num">${money(19500)}</div><span class="t-vs">本期 6 張</span></div></div>
-    <div style="height:16px"></div>
-    <div class="card" data-doc="bill-invoices"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>發票紀錄</h3></div>
-      <table class="idx"><thead><tr><th>期間</th><th>項目</th><th class="right">金額</th><th>狀態</th><th class="right">動作</th></tr></thead><tbody>
-      ${[['2026-07','方案 + app + 標籤',78000,'已付款'],['2026-06','方案 + 網域',69800,'已付款'],['2026-05','方案',62000,'已付款']]
-        .map(r=>`<tr class="norow"><td class="mut">${r[0]}</td><td>${r[1]}</td><td class="right num">${money(r[2])}</td><td>${chip(r[3],'success')}</td>
-        <td class="right"><button class="btn btn-ghost btn-sm" onclick="toast('已下載發票 PDF')">下載</button></td></tr>`).join('')}</tbody></table>
-      <p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">帳單週期 30 天；含訂閱費、app 費用、運送標籤費與網域費（41 §7）。</p></div>`;
+  /* 71-R4-STRUCT1：本尊沒有「財務 → 帳單」模組頁——帳單只活在 設定 → 帳單（組織級）。
+     此路由保留給深連結，內容改指路卡；原本的 KPI 卡與發票表已併入 setBillingPage（設定・帳單）。 */
+  return `<div class="page-head"><h1>帳單</h1></div>
+    <div class="card" data-doc="bill-moved"><div class="empty-wrap" style="max-width:520px;margin:0 auto">
+      <span class="rb-ic" aria-hidden="true">🧾</span>
+      <b>帳單已移至「設定 → 帳單」</b>
+      對齊本尊 2026 結構：帳單（週期、付款方式、過去的帳單）屬設定層，財務導航無子項。
+      <div class="rowflex" style="justify-content:center;margin-top:var(--sp-400)">
+        <button class="btn btn-pri btn-sm" onclick="openSettings('billing')">前往 設定 → 帳單</button></div></div></div>`;
 }
 
 /* ==================================================================
@@ -8794,15 +8834,116 @@ function pvOptoutPage(){
     ${F('選單位置',SEL('_dnsMenu',[['footer','Footer menu（建議）'],['main','主選單'],['none','不加入選單']],'footer'))}
     <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作。您有責任遵守法律和規範。</p></div></div>`;
 }
+/* 71-R4（2026-08-13 實測 /settings/organization-billing）：設定・帳單重建為本尊 IA——
+   目前帳單週期卡（週期日期範圍＋查看目前費用＋累積總計大數字＋⊕新增付款方式）＋
+   過去的帳單卡（7 態 filter tabs＋排序＋五欄表＋⋯匯出/費用報告）＋右上「帳單資料」子頁。
+   兩個舊控件的處置：①帳單門檻 select ⇒ 唯讀列（71-R4-BUG2：本尊無此使用者控件，門檻由平台
+   隨帳齡自動調整；原 select＝發明控件）；②帳單幣別 select ⇒ 唯讀列（71-R4-BUG1：本尊明文
+   「依組織設定中的公司所在國家/地區而定」，不可自選）。 */
+const BILL_INVOICES=[
+ {d:'2026-07-15',no:'#558817009',type:'帳單週期',st:'已付款',amt:78000},
+ {d:'2026-06-15',no:'#552103442',type:'帳單週期',st:'已付款',amt:69800},
+ {d:'2026-05-15',no:'#547781205',type:'帳單週期',st:'已退款',amt:62000}];
+let BILL_TAB='全部';
+const BILL_STATES=['全部','已付款','未付款','付款失敗','處理中','已退款','已取消'];
+function billTabSet(s){BILL_TAB=s;setPage('billing');}
 function setBillingPage(){
  const pri=BILL_CARDS.find(c=>c.primary)||BILL_CARDS[0];
- return `<div class="card card-pad" data-doc="set-billing"><h3>帳單</h3>
-   ${setRowBtn('付款方式',`${BILL_CARDS.length} 張・主要：${H(pri?pri.n:'未設定')}`,'<span class="chev" aria-hidden="true">›</span>','openBillCards()','set-bill-method','💳')}
-   ${setRow('帳單週期','由方案開通日推導的 30 天週期，平台鎖定','<span class="tagchip num" style="margin:0">每月 14 日</span>','set-bill-cycle')}
-   ${setRowSel('帳單門檻','累積到門檻或週期結束（先到者）就請款一次','billThreshold',
-     [['25000',money(25000)],['75000',money(75000)],['250000',money(250000)],['cycle','只在週期結束時請款']],'75000','set-bill-threshold')}
-   ${setRowSel('帳單幣別','平台向你收費的幣別，與商店的銷售幣別互不相干','billCurrency',[[MARKET_BASE,curLabel(MARKET_BASE)],['USD',curLabel('USD')]],MARKET_BASE,'set-bill-currency')}
-   <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="closeSettings();go('m-billing')">查看發票紀錄 ›</button></div>`;
+ const rows=BILL_INVOICES.filter(v=>BILL_TAB==='全部'||v.st===BILL_TAB);
+ return `<div class="rowflex" style="justify-content:flex-end;margin-bottom:var(--sp-300)">
+    <button class="btn btn-sec btn-sm" data-doc="set-bill-profile" onclick="billProfileOpen()">🧾 帳單資料</button></div>
+  <div class="card card-pad" data-doc="set-billing"><h3>目前帳單週期</h3>
+   <div class="rowflex" style="justify-content:space-between;align-items:flex-start">
+     <div><span class="mut" style="font-size:var(--t-xs)">2026-07-15 – 2026-08-15（30 天，由方案開通日推導，平台鎖定）</span><br>
+       <button class="btn btn-ghost btn-sm" style="padding:0" data-doc="set-bill-upcoming" onclick="billUpcomingOpen()">查看目前費用 ›</button></div>
+     <div style="text-align:right"><span class="mut" style="font-size:var(--t-xs)">累積總計</span><br>
+       <span class="num" style="font-size:var(--t-2xl);font-weight:600">${money(81500)}</span></div></div>
+   ${setRowBtn('新增付款方式',`已登記 ${BILL_CARDS.length} 張・主要：${H(pri?pri.n:'未設定')}`,'<span class="chev" aria-hidden="true">›</span>','openBillCards()','set-bill-method','💳')}
+   ${setRow('距離計費門檻','門檻＝平台定義的金額（非商家設定）：帳戶活動費用（交易費＋app 費＋未付費用）達標即先開帳單立即請款，未達則等週期結帳日','<span class="tagchip num" style="margin:0">尚餘 ${money(168500)}</span>','set-bill-threshold')}
+   ${setRow('帳單幣別','選項依組織所在國家/地區而定（HK＝單一選項故無「管理」鈕）；下一週期生效、換匯含兌換手續費','<span class="tagchip" style="margin:0">${curLabel(MARKET_BASE)}</span>','set-bill-currency')}
+   <button class="btn btn-ghost btn-sm" style="padding:0" data-doc="set-bill-credits" onclick="toast('Demo：檢視剩餘抵用金——四類（訂閱/app/運送/交易）互不流用，僅能抵未來週期；停用商店後保留 60 天（limits.yml billing.credit_expiry_after_deactivation_days）')">檢視剩餘抵用金 ›</button></div>
+  <div class="card" data-doc="bill-invoices"><div class="card-pad" style="padding-bottom:var(--sp-150)">
+    <div class="rowflex" style="justify-content:space-between"><h3>過去的帳單</h3>
+      <span style="position:relative">
+        <button class="btn btn-ghost btn-sm" aria-label="更多動作" onclick="ddToggle(event,'billMoreMenu')">⋯</button>
+        <div class="view-menu" id="billMoreMenu" role="menu" aria-label="帳單動作">
+          <button role="menuitem" onclick="toast('Demo：匯出帳單——選「目前頁面」或「依日期」（最早可至開帳號日）→ CSV 寄送至帳戶 email')">匯出帳單</button>
+          <button role="menuitem" onclick="toast('Demo：建立費用報告（期間＋分類彙總 PDF）')">建立費用報告</button></div></span></div>
+    <div class="tabs" role="tablist" style="margin:var(--sp-150) 0 0">
+      ${BILL_STATES.map(s=>`<button class="tab ${BILL_TAB===s?'on':''}" role="tab" aria-selected="${BILL_TAB===s}" onclick="billTabSet('${s}')">${s}</button>`).join('')}
+      <span style="margin-left:auto" class="rowflex">
+        <button class="btn btn-ghost btn-sm" aria-label="搜尋與篩選" onclick="toast('Demo：搜尋帳單號碼／篩選（tabbed views 家族）')">🔍</button>
+        <span style="position:relative"><button class="btn btn-ghost btn-sm" aria-label="排序" onclick="ddToggle(event,'billSortMenu')">⇅</button>
+          <div class="view-menu" id="billSortMenu" role="menu" aria-label="排序">
+            <button role="menuitem" class="cur" onclick="toast('Demo：排序依據＝開立日期（唯一鍵）')">開立日期</button>
+            <button role="menuitem" onclick="toast('Demo：由舊到新')">↑ 由舊到新</button>
+            <button role="menuitem" class="cur" onclick="toast('Demo：由新到舊（預設）')">↓ 由新到舊</button></div></span></span></div></div>
+   <table class="idx"><thead><tr><th>開立日期</th><th>帳單號碼</th><th>帳單類型</th><th>付款狀態</th><th class="right">金額</th></tr></thead><tbody>
+   ${rows.length?rows.map((v,i)=>`<tr onclick="billInvoiceOpen(${i})"><td class="mut num">${v.d}</td><td class="mono">${v.no}</td><td>${v.type}</td>
+     <td>${chip(v.st,v.st==='已付款'?'success':v.st==='付款失敗'?'critical':v.st==='處理中'?'info':'default')}</td><td class="right num">${money(v.amt)}</td></tr>`).join('')
+    :`<tr class="norow"><td colspan="5" class="mut" style="text-align:center;padding:var(--sp-500)">此狀態沒有帳單</td></tr>`}</tbody></table>
+   <p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">帳單含訂閱費、app 費用、運送標籤費與網域費（41 §7）；狀態值域＝本尊 7 態。</p></div>
+  <div class="card card-pad" data-doc="bill-summary"><h3>付費明細</h3>
+   ${setRowBtn('檢視摘要','選日期範圍（限過去 90 天內，limits.yml billing.summary_export_max_days）→ 套用 → 匯出或列印；含訂閱費／app 費用／運費／交易費用','<span class="chev" aria-hidden="true">›</span>',"toast('Demo：付費明細摘要——日期範圍（≤90 天）＋匯出/列印')",'bill-summary-view','📊')}</div>`;
+}
+/* 目前帳單週期明細（本尊 /invoice/upcoming＋help 四類費用區塊）：訂閱／App／運送／交易費用＋
+   小計・稅費・總計。HK org：帳單稅額依法域 pack（HK 無銷售稅 ⇒ 0）。 */
+function billUpcomingOpen(){
+  openGen({title:'目前帳單週期',body:`<div class="stack">
+    <p class="mut" style="font-size:var(--t-xs)">2026-07-15 – 2026-08-15・累積總計 <b class="num">${money(81500)}</b>・含計費門檻觸發費用</p>
+    <h4>明細（四類費用區塊）</h4>
+    <div class="kv"><span class="k">訂閱（成長方案・月繳；週期內降級套折抵）</span><span class="num">${money(62000)}</span></div>
+    <div class="kv"><span class="k">App（定期・用量・一次性收費）</span><span class="num">${money(0)}</span></div>
+    <div class="kv"><span class="k">運送（標籤費 6 張＋標籤調整）</span><span class="num">${money(19500)}</span></div>
+    <div class="kv"><span class="k">交易費用（第三方 PSP 交易費）</span><span class="num">${money(0)}</span></div>
+    <div class="kv"><span class="k">小計</span><span class="num">${money(81500)}</span></div>
+    <div class="kv"><span class="k">稅費（HK pack：無銷售稅）</span><span class="num">${money(0)}</span></div>
+    <div class="kv" style="border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>累積總計</b></span><span class="num"><b>${money(81500)}</b></span></div></div>`});
+}
+/* 單張帳單明細（本尊 /invoice/{id}；dev 店 404——結構依 help：四類區塊＋付款時間軸＋
+   匯出（CSV/PDF）＋有折讓單時「下載折讓單」。 */
+function billInvoiceOpen(i){
+  const v=BILL_INVOICES.filter(x=>BILL_TAB==='全部'||x.st===BILL_TAB)[i];if(!v)return;
+  openGen({title:`帳單 ${v.no}`,wide:true,body:`<div class="stack">
+    <p class="mut" style="font-size:var(--t-xs)">開立日期 ${v.d}（UTC）・${v.type}・${chip(v.st,v.st==='已付款'?'success':'default')}</p>
+    <h4>明細</h4>
+    <div class="kv"><span class="k">訂閱</span><span class="num">${money(62000)}</span></div>
+    <div class="kv"><span class="k">App／運送／交易費用</span><span class="num">${money(v.amt-62000)}</span></div>
+    <div class="kv"><span class="k">稅費（HK pack：無銷售稅）</span><span class="num">${money(0)}</span></div>
+    <div class="kv" style="border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-150);padding-top:var(--sp-200)"><span class="k"><b>總計</b></span><span class="num"><b>${money(v.amt)}</b></span></div>
+    <h4>付款時間軸</h4>
+    <p class="mut" style="font-size:var(--t-xs)">${v.d} 開立 → 主要付款方式請款${v.st==='已退款'?' → 折讓單沖銷（可下載）':' → 成功'}；銀行帳單顯示 CHILLLOVE * ${H(v.no.slice(1))}</p></div>`,
+   foot:(v.st==='已退款'?`<button class="btn btn-sec btn-sm" onclick="closeGen();toast('已下載折讓單 PDF（credit note——未付款自動沖減、已付款退款）')">下載折讓單</button>`:'')
+     +`<button class="btn btn-sec btn-sm" ${v.st==='已退款'?'style="margin-left:var(--sp-200)"':''} onclick="closeGen();toast('Demo：匯出帳單——對話框選 CSV（試算表）或 PDF（費用總覽＋逐筆拆解）')">匯出帳單</button>
+     <button class="btn btn-sec btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen()">關閉</button>`});
+}
+/* 帳務資料次級視圖（本尊 /organization-billing/profile）：付款方式＋幣別（唯讀）＋稅務 ID／地址
+   （dev 店未現，形態依 help——71-R4-V1）。 */
+function billProfileOpen(){setSubOpen('bill-profile',billProfilePage());setAfterRender();}
+function billProfilePage(){
+  return setCrumb('🧾','帳務資料','billing')
+  +`<div class="card"><div class="card-pad" data-doc="sub-bill-profile"><h3>付款方式</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於平台上的購買與帳單</p>
+    ${setRowAdd('新增付款方式','類型（信用卡…）＋卡片資訊（hosted fields）＋帳單地址（依法域 schema：HK＝行政區＋地區）','billPayMethodNew()','set-bill-method-add')}</div>
+   <div class="card-pad" data-doc="sub-bill-currency"><h3>幣別</h3>
+    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">您的帳單幣別選項依組織設定中的公司所在國家/地區而定。</p>
+    ${setRow('幣別',curLabel(MARKET_BASE),'','')}</div></div>`;
+}
+/* 新增付款方式 modal——欄位組＝實測（HK 地址 schema）；卡片欄位為 hosted fields（PCI iframe），
+   demo 以停用 input 示意、不收值。 */
+function billPayMethodNew(){
+  openGen({title:'新增付款方式',wide:true,body:`<div class="stack">
+    ${F('付款方式類型',SEL('_pmType',['信用卡'],'信用卡'),'其他類型（如銀行扣款）依地區開放——完整選項待驗（71-R4-V2）')}
+    <h4>信用卡資訊</h4>
+    <div class="grid2">${F('卡號',`<input class="input" disabled placeholder="hosted field（PCI iframe，正式版不經我方伺服器）">`)}
+      ${F('到期日／CVV',`<input class="input" disabled placeholder="MM / YY・CVV">`)}</div>
+    <h4>帳單地址</h4>
+    <div class="grid2">${F('國家/地區',SEL('_pmC',['香港特別行政區'],'香港特別行政區'))}${F('名字／姓氏',`<input class="input" value="KEN LEE" disabled>`)}</div>
+    <div class="grid2">${F('地址',`<input class="input" placeholder="搜尋地址（自動補全）">`)}${F('公寓、套房等',`<input class="input" placeholder="例：UNIT 6 9/F">`)}</div>
+    <div class="grid2">${F('行政區',`<input class="input" placeholder="例：九龍灣">`)}${F('地區',SEL('_pmD',['香港島','九龍','新界'],'九龍'))}</div>
+    <p class="mut3" style="font-size:var(--t-xs)">地址欄位組依法域 pack（鐵律 11）：HK＝行政區＋地區三選一；卡片資料走 PSP hosted fields，不落我方 DB。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" disabled>新增信用卡</button>`});
 }
 /* ==================================================================
    53號 N-05：顧客事件（自訂 pixel）——真的 CRUD，不是兩個唯讀 chip
@@ -9649,8 +9790,14 @@ Object.assign(DOCS,{
  "fin-taxlink":{t:"稅務設定入口",f:"跳到設定 → 稅務服務與稅區",l:"53號 N-04：原本已是按鈕但與上一列形態不一致，統一成 setRowBtn。稅區服務層級三檔見 set-tax-region",i:"—（導航，無 API）"},
  "fin-payout-sched":{t:"撥款排程",f:"每日／每週／每月",l:"撥款失敗會退回可用餘額並寄通知；狀態 scheduled→in_transit→paid/failed（06 §4）",i:"P2・[api:TBD-payoutScheduleUpdate]（28 待補） [tbl:payouts]（06 §7 待補）"},
  "fin-payouts":{t:"撥款紀錄",f:"撥款清單與單筆拆解",l:"單筆拆解＝charges/refunds/fees/adjustments；對帳連訂單 transactions（41 §7）",i:"P2・[api:TBD-payoutList]（28 待補） [tbl:payouts,order_transactions]"},
- "bill-kpi":{t:"帳單指標",f:"本期應付／方案費／標籤費",l:"帳單週期 30 天；含訂閱費、app 費、運送標籤費與網域費（41 §7）",i:"P2・[api:TBD-shopBillingInvoices]（28 待補） [tbl:shops]"},
- "bill-invoices":{t:"發票紀錄",f:"歷史帳單與 PDF 下載",l:"發票不可修改；退款以 credit note 呈現",i:"P2・[api:TBD-shopBillingInvoices]（28 待補） [tbl:shops] [job:invoice_pdf]"},
+ "bill-kpi":{t:"帳單指標（71-R4 已裁撤）",f:"追溯：原 m-billing 模組的三張 KPI 卡",l:"71-R4-STRUCT1：本尊無帳單模組頁——KPI 語義併入 setBillingPage 目前帳單週期卡（累積總計）；此 key 無 markup 引用，留作追溯",i:"P3・追溯條目"},
+ "bill-invoices":{t:"過去的帳單",f:"7 態 filter tabs＋排序＋五欄表＋⋯匯出／費用報告",l:"71-R4 對齊本尊：欄=開立日期/帳單號碼(9 位 #開頭)/帳單類型/付款狀態/金額；狀態 enum 7 值（全部/已付款/未付款/付款失敗/處理中/已退款/已取消）；列點入詳情（四類費用區塊＋付款時間軸＋匯出 CSV/PDF＋折讓單）；批次匯出=目前頁面或依日期（最早至開帳號日）CSV 寄 email；銀行帳單顯示 CHILLLOVE * <9位號碼>；帳單以 UTC 開立",i:"P2・[api:TBD-shopBillingInvoices]（28 待補） [tbl:shops] [job:invoice_pdf]"},
+ "bill-summary":{t:"付費明細",f:"檢視摘要（日期範圍 ≤90 天＋匯出/列印）",l:"71-R4 help：範圍限過去 90 天內（limits.yml billing.summary_export_max_days）；含訂閱費/app 費用/運費/交易費用",i:"P3・[api:TBD-billingSummary]（28 待補）"},
+ "sub-bill-profile":{t:"帳務資料・付款方式（次級視圖）",f:"新增付款方式入口",l:"71-R4 實測 /organization-billing/profile：付款方式卡「用於平台上的購買與帳單」；卡片 ⋯ 動作（設為主要/取代/刪除）在 sub-billcards；稅務 ID／地址段 dev 店未現（71-R4-V1）",i:"P2・[api:TBD-billingProfile]（28 待補） [tbl:billing_payment_methods]"},
+ "sub-bill-currency":{t:"帳務資料・幣別（次級視圖）",f:"帳單幣別唯讀顯示",l:"71-R4：本尊原文「您的帳單幣別選項依組織設定中的公司所在國家/地區而定」；選項>1 時出現「管理」→「切換帳單幣別」對話框（下一週期生效、未付費用維持原幣別、換匯含 1.5% 手續費——limits.yml billing.currency_conversion_fee_percent）；HK org 單一選項故唯讀",i:"P2・[tbl:subscriptions.currency]（由 org 所在地推導）"},
+ "bill-summary-view":{t:"檢視摘要",f:"開日期範圍選擇與匯出",l:"同 bill-summary",i:"P3・同上"},
+ "set-bill-credits":{t:"檢視剩餘抵用金",f:"四類抵用金餘額",l:"71-R4 help：訂閱/app/運送/交易四類**互不流用**，僅能抵未來週期；停用商店後保留 60 天（limits.yml billing.credit_expiry_after_deactivation_days）；折讓單（credit note）沖單張帳單、抵用金是帳戶餘額——兩個機制不同",i:"P2・[api:TBD-billingCredits]（28 待補） [tbl:billing_credits(org_id,category,amount_cents)]"},
+ "fin-balance-export":{t:"匯出餘額交易",f:"CSV email 寄送（11 欄）",l:"71-R4 help：欄=交易日/類型/訂單/卡別/來源/撥款狀態/撥款日/可用日/金額/費用/淨額；篩選 7 鍵（類型/狀態/付款方式/卡別/交易日/撥款日/幣別）＋可儲存檢視——PSP pack 對應面（G15）",i:"P2・[api:TBD-balanceTransactionsExport]（28 待補） [job:csv_email]"},
 /* ---------- 分析 ---------- */
  "rep-ql":{t:"ShopifyQL 進階模式",f:"以查詢語言直接寫報告",l:"形態 FROM sales SHOW total_sales BY month SINCE -12m；新版以視覺化探索為主、QL 為進階（41 §8.2）",i:"P2・[api:report]（ShopifyQL 字串） [tbl:orders,line_items,sessions]"},
  "rep-new":{t:"建立自訂報告",f:"從探索建立並存檔",l:"另存後同時生成可放上 dashboard 的指標卡（41 §8.2）",i:"P2・[api:TBD-reportCreate]（28 §14 僅有 report query） [tbl:saved_views]（06 §7 待補）"},
@@ -10525,7 +10672,8 @@ function billCardsPage(){
     <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">主要方式扣款失敗時會自動改用備援方式，連續失敗 3 次即暫停商店</p>
     ${BILL_CARDS.map((c,i)=>`<div class="set-row"><div class="sr-t"><b>${H(c.n)}</b><span class="sub">${H(c.s)}</span></div>
       <span class="sr-act rowflex">${c.primary?chip('主要','success','full'):`<button class="btn btn-ghost btn-sm" onclick="billSetPrimary(${i})">設為主要</button>`}
-      <button class="btn btn-ghost btn-sm" ${BILL_CARDS.length<2?'disabled aria-disabled="true" title="至少要保留一張"':''} onclick="billCardDel(${i})" aria-label="移除 ${H(c.n)}">移除</button></span></div>`).join('')}
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：取代——輸入新卡與新帳單地址 → 「取代信用卡」；地址變更僅反映在之後開立的帳單（help 取代流程）')">取代</button>
+      <button class="btn btn-ghost btn-sm" ${BILL_CARDS.length<2?'disabled aria-disabled="true" title="僅剩一種付款方式時不可刪除"':''} onclick="billCardDel(${i})" aria-label="移除 ${H(c.n)}">移除</button></span></div>`).join('')}
     ${setRowAdd('新增付款方式','信用卡或 PayPal；卡號走金流商 tokenization，平台不落庫','billCardAdd()','sub-billcards-add')}</div>
     <div class="card-note">平台只保存 token 與末四碼，完整卡號永遠不進我們的資料庫（規格 11 §0 安全維度）。</div></div>`;
 }
@@ -11814,17 +11962,43 @@ Object.assign(DOCS,{
   i:"P2・[api:TBD-shopClose]（28 待補）[tbl:shops.status,shops.closed_at] [job:shop_purge]（2 年後）；未結清帳款先請款"},
 /* ---------- 帳單 ---------- */
  "set-bill-method":{t:"帳單付款方式（進次級視圖）",f:"管理向平台付款的卡片",
-  l:"44 §19.4：帳單頁有虛線列「⊕ 新增付款方式」；主要方式扣款失敗時改用備援，連續失敗會暫停商店。平台只保存 token 與末四碼（11 §0 安全維度）",
+  l:"44 §19.4：帳單頁有虛線列「⊕ 新增付款方式」；主要方式扣款失敗時改用備援，連續失敗會暫停商店。平台只保存 token 與末四碼（11 §0 安全維度）；表單欄位組見 set-bill-method-add",
   i:"P1・[api:TBD-billingPaymentMethodCreate]（28 待補）[tbl:billing_payment_methods(org_id,gateway_token,brand,last4,is_primary)]；完整卡號永不落庫"},
- "set-bill-cycle":{t:"帳單週期（唯讀）",f:"顯示目前的請款日",
-  l:"**為什麼不可改**：44 §19.4 的「目前帳單週期」是一段固定 30 天區間，起點由方案開通日決定；商家自選請款日會讓比例計費（proration）與已開立發票的區間重疊，因此平台鎖定。要換週期只能換方案",
+ "set-bill-method-add":{t:"新增付款方式（modal）",f:"類型＋卡片 hosted fields＋帳單地址",
+  l:"71-R4 實測：類型 select（信用卡；其他類型依地區——71-R4-V2）；卡號/到期/CVV＝PSP hosted fields（PCI iframe，不經我方伺服器）；帳單地址依法域 pack schema（HK＝行政區文字＋地區三選一香港島/九龍/新界），自組織資料預填；未填完整前送出鈕 disabled",
+  i:"P1・[api:TBD-billingPaymentMethodCreate] hosted-fields token 交換；地址 schema 引 jurisdiction pack（鐵律 11）"},
+ "set-bill-cycle":{t:"帳單週期（唯讀，已併入目前帳單週期卡）",f:"顯示目前的請款區間",
+  l:"71-R4 追溯：獨立列併入「目前帳單週期」卡（本尊形態＝卡標題下直接寫日期範圍）。**為什麼不可改**：週期是固定 30 天區間，起點由方案開通日決定；商家自選請款日會讓比例計費（proration）與已開立發票的區間重疊，因此平台鎖定。要換週期只能換方案",
   i:"P1・唯讀衍生值，由 [tbl:subscriptions.started_at] 推導；[api:TBD-billingCycle] 只讀不寫"},
- "set-bill-threshold":{t:"帳單門檻",f:"累積多少金額就先請款一次",
-  l:"門檻與週期是「先到者觸發」的雙條件，不是二選一；門檻請款後週期不重置，這一點要在 UI 講清楚以免商家誤解為提前結算",
-  i:"P1・[tbl:subscriptions.billing_threshold_cents]（integer cents）[job:billing_threshold_check]"},
- "set-bill-currency":{t:"帳單幣別",f:"平台向你收費的幣別",
-  l:"與商店的銷售幣別互不相干（後者見「幣別顯示」）；帳單幣別一經開立發票即不可回溯變更，改動只影響下一期",
-  i:"P1・[tbl:subscriptions.currency]；金額 integer cents，跨幣別以開票當下匯率固定"},
+ "set-bill-threshold":{t:"帳單門檻（唯讀）",f:"顯示累積多少金額就先請款一次",
+  l:"71-R4-BUG2 修正：原為可選 select＝發明控件——本尊帳單頁**沒有門檻設定**，門檻由平台依帳齡自動調升。語義不變：門檻與週期是「先到者觸發」的雙條件；門檻請款後週期不重置",
+  i:"P1・[tbl:subscriptions.billing_threshold_cents]（integer cents，平台管理）[job:billing_threshold_check]"},
+ "set-bill-currency":{t:"帳單幣別（唯讀）",f:"平台向你收費的幣別",
+  l:"71-R4-BUG1 修正：原為可選 select——本尊明文「依組織設定中的公司所在國家/地區而定」，商家不可自選。與商店銷售幣別互不相干；一經開立發票即不可回溯變更",
+  i:"P1・[tbl:subscriptions.currency]（由 org 所在地推導）；金額 integer cents，跨幣別以開票當下匯率固定"},
+ "set-bill-profile":{t:"帳單資料（進次級視圖）",f:"開帳務資料子頁（付款方式／幣別／稅務 ID／地址）",
+  l:"71-R4 實測 /organization-billing/profile：副標「編輯您的付款方式與稅務 ID，並檢視您的幣別與地址」；dev 店僅見付款方式＋幣別兩卡，稅務 ID／地址段為資料閘門（71-R4-V1）",
+  i:"P2・[api:TBD-billingProfile]（28 待補） [tbl:billing_payment_methods,orgs]"},
+ "set-bill-upcoming":{t:"查看目前費用",f:"開目前帳單週期明細",
+  l:"71-R4 實測 /invoice/upcoming：明細卡＝各費用區塊列＋小計＋累積總計 highlight 列（bg surface-secondary）",
+  i:"P2・[api:TBD-shopBillingInvoices]（upcoming 參數） [tbl:shops]"},
+ "bill-moved":{t:"帳單模組指路卡",f:"m-billing 深連結相容",
+  l:"71-R4-STRUCT1：本尊財務導航無子項、帳單只活在設定層——模組路由保留給舊深連結，內容改指路；原 KPI 卡與發票表已併入 setBillingPage",
+  i:"P3・純前端路由相容"},
+ "fin-docs":{t:"財務文件下拉",f:"法域年度稅務文件下載",
+  l:"71-R4 實測：本尊＝1099-K 表格／處理方活動報表（美稅）——文件清單是 jurisdiction pack 能力（鐵律 11）：HK pack 無稅務年度文件；不硬編",
+  i:"P3・[api:TBD-financeDocuments]（pack 宣告） [tbl:jurisdiction_capability_skips]"},
+ "fin-psp-demo":{t:"示範：PSP 接通切換",f:"demo 專用，切換財務頁三態",
+  i:"P3・demo only；正式版由 PSP 連線狀態決定"},
+ "fin-2fa-banner":{t:"2FA 提示（banner 形態）",f:"PSP 未接時的 2FA 提醒",
+  l:"71-R4：此態沒有金流數字，2FA 用 banner 即可；PSP 已接後升級為閘門（fin-gate，53號 P0-19 加固不變）",
+  i:"P1・[tbl:staff_members.two_factor_enabled]"},
+ "fin-empty":{t:"財務推銷空態",f:"未接 PSP 時的引導卡",
+  l:"71-R4 實測本尊 dev 店形態；我方文案不推自有支付（G15）——引導到付款設定接 PSP",
+  i:"P2・依 PSP 連線狀態渲染"},
+ "fin-tax":{t:"財務・稅務區",f:"設定稅金代收入口",
+  l:"71-R4 實測：空態與 active 態都有稅務列；徵稅設定按市場與法域（jurisdiction pack）",
+  i:"P2・入口→ 設定・稅額與關稅"},
 /* ---------- 組織 ---------- */
  "set-org-name":{t:"組織名稱",f:"改組織的顯示名",
   l:"44 §8.1：組織層標題顯示法人名＋副標「組織」，這個名字會出現在組織導航與帳單發票抬頭；與各商店的商店名是不同層級的欄位",
