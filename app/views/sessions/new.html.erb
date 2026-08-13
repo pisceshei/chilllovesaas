@@ -1,0 +1,62 @@
+<% brand_name = Rails.configuration.x.brand.name %>
+<% error_messages = Array(flash[:alert]) %>
+<% error_messages.concat(@staff.errors.full_messages) if defined?(@staff) && @staff&.errors&.any? %>
+<% error_messages = error_messages.compact_blank.uniq %>
+<% content_for :title, "登入 — #{brand_name}" %>
+
+<main class="cl-login-page">
+  <div class="cl-login-panel">
+    <div class="cl-login-brand">
+      <span aria-hidden="true" class="cl-brand__mark"><%= brand_name.each_grapheme_cluster.first %></span>
+      <span><%= brand_name %></span>
+    </div>
+
+    <section aria-labelledby="login-title" class="cl-card cl-login-card">
+      <h1 id="login-title">員工登入</h1>
+      <p class="cl-login-card__intro">登入後管理商品與商店設定。</p>
+
+      <% if error_messages.any? %>
+        <div class="cl-login-alert" id="login-error" role="alert">
+          <strong>無法登入</strong>
+          <ul>
+            <% error_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with url: login_path, method: :post, class: "cl-login-form", data: { turbo: false } do |form| %>
+        <div class="cl-field">
+          <%= form.label :email, "電子郵件", class: "cl-field__label" %>
+          <%= form.email_field :email,
+            value: params[:email],
+            autocomplete: "username",
+            autofocus: true,
+            required: true,
+            class: "cl-field__input#{' cl-field__input--error' if error_messages.any?}",
+            aria: {
+              describedby: ("login-error" if error_messages.any?),
+              invalid: (true if error_messages.any?)
+            } %>
+        </div>
+
+        <div class="cl-field">
+          <%= form.label :password, "密碼", class: "cl-field__label" %>
+          <%= form.password_field :password,
+            autocomplete: "current-password",
+            required: true,
+            class: "cl-field__input#{' cl-field__input--error' if error_messages.any?}",
+            aria: {
+              describedby: ("login-error" if error_messages.any?),
+              invalid: (true if error_messages.any?)
+            } %>
+        </div>
+
+        <%= form.submit "登入", class: "cl-button cl-button--primary cl-login-submit" %>
+      <% end %>
+
+      <p class="cl-login-help">若無法登入，請聯絡商店管理員。</p>
+    </section>
+  </div>
+</main>
