@@ -36,7 +36,7 @@
 | **原本錯在哪** | `16:44` 只有「行退款金額 = 行單價×數量 −（該行折扣分攤 × 退貨比例）；稅同理按比例」。**沒有退貨費用扣減、沒有換貨扣抵、沒有下限鉗制**。有換貨或退貨費的訂單退款金額必錯（可能多退，或算出負數）。 |
 | **依據什麼改** | `46a:595–601`（S50，2024-07 起變更，官方標 Action required）逐字：「The refund amount considers **exchange line items and fees on the return**, as well as any **outstanding amount owed by the buyer** on an order.」下限逐字：「the suggested amount cannot be lower than $0 CAD」。文檔範例 $50.99 − $5.00 = $45.99。 |
 | **改了哪裡** | `16-F5.1`（16:250–309）新增完整公式；`16-F5.2`（16:310–353）三個算例；`16-F5`（16:236–249）主流程改為「一律走 F5.1」；`22:32` Refund 列改寫；`28 §6`（28:140–158）規則行改寫。 |
-| **公式** | `net = returned_value − return_fees − exchange_value − outstanding`；`suggested_refund = max(0, net)`；`balance_to_collect = max(0, −net)`。三個捨入點：折扣/稅比例分攤走**最大餘數法**、重新上架費百分比 `floor` 到分、零小數幣別只在序列化層處理。全程 integer cents。 |
+| **公式** | `net = returned_value − return_fees − exchange_value − outstanding`；`suggested_refund = max(0, net)`；`balance_to_collect = max(0, −net)`。三個捨入點：折扣/稅比例分攤走**最大餘數法**、重新上架費百分比 `floor` 到分、零小數幣別業務層不感知——跨界點唯一出口 `Money::Storage#to_psp_amount(psp:)`（65 §D），**且該點不是捨入點：`minor_units` 餘數 raise 不 round（65 §D.2 A3）**。全程 integer cents。<!-- 依 65 §J M-7 修正（2026-08-13），原文：「零小數幣別只在序列化層處理」——它轉述的 16-F5.1 ③ 定義已兩度改寫（M-2 → V-188），且「序列化層處理」的暗示（會捨入）本身誤導。危害低（無「不乘 100」字樣），但指向已廢定義。 --> |
 | **怎麼測** | ① 算例 1：`returned_value=5099, fee=500` → `refund=4599`（對齊官方範例）。② 算例 1 變體：`fee=6000` → `refund=0` 且**不產生應收**。③ **算例 3（換貨＋退貨費同時存在）**：退 220000、restocking 10%＝22000、運費 6000、換貨 250000 → `refund=0` ＋ `balance_to_collect=58000`；用舊公式會算出 220000（誤差 NT$2,780/筆）。④ property test：任何中間值出現 float 即失敗。⑤ `returnCalculate` 與 `returnProcess` 同輸入必須同輸出。 |
 
 ### P0-02 · 退貨費用模型完全缺失

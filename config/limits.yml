@@ -153,12 +153,15 @@ currency_display:
   #      Stripe＝整數 minor units ＋ `Special cases` 表覆蓋 ISO（ISK／HUF／TWD／UGX），
   #              且 **HUF／TWD 的 payout 金額須整除 100**；
   #      Airwallex＝🔴 **十進位主單位字串，根本不用 minor units**。
-  #    ⇒ 本鍵的正確讀法是「**`amount_format: minor_units` 的 pack 若選擇以 ISO 為底時，底表就是 ISO**」，
+  #    ⇒ 正確讀法是「**`amount_format: minor_units` 的 pack 若選擇以 ISO 為底時，底表就是 ISO**」，
   #      **不是**「所有 PSP 都跟 ISO」，更**不是**「沒宣告就套 ISO」。
   #    🔴 換算基數的唯一來源是 `psp_packs.<code>` 的宣告（見 money_boundary.psp_pack_required_keys）。
-  #    🔴 **值刻意不動**：63 §G.4 與其 §9 鍵表是本鍵的擁有者，本輪不得改 63 ⇒ 改值會造成
-  #       「規格說 A、鍵說 B」的分裂。要動這個鍵，必須連 63 §G.4 一起改（65 §J M-8 已登記）。
-  psp_minor_unit_follows_iso4217: true
+  # 🔴 DEPRECATED（2026-08-13，65 §J M-8 結案輪）：原鍵 `psp_minor_unit_follows_iso4217: true` 已改名如下。
+  #    舊鍵名把「minor unit」與「follows ISO」寫進名字，兩者在 V-188 之後都不成立
+  #    （Airwallex 型 pack 根本沒有 minor unit；ISO 只是 minor_units 格式可選的底表）。
+  #    比照 D-2 前例：**不做別名**——別名會讓兩個鍵同時存在。63 §G.4 與其 §9 鍵表已同輪改寫，
+  #    「規格說 A、鍵說 B」的分裂條件已解除。
+  psp_amount_format_declared_per_pack: true
   # 🔴 **本鍵不是 PSP 換算的資料來源**（65 §J M-4）：`iso4217_zero_decimal_overridden` 的用途是
   #    「哪些幣別的**顯示位數**被裁定二覆蓋」，鍵名裡的 `iso4217` 講的是被覆蓋的對象，不是宣告值。
   #    拿它去推導 PSP minor unit＝下一個 100 倍事故。PSP 單位一律走 `money_boundary`（見下一區塊）。

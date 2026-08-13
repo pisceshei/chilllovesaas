@@ -1110,11 +1110,16 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | 顯示 | `KD 2.90`（兩位小數） | 與裁定二**天然吻合**，不需要例外邏輯 |
 | `Offer.price` | `"2.90"` | §A.4 的 `amount_cents / 100` 一律適用、**不看幣別** ⇒ 本節**不需要**在序列化層新增任何分支 |
 | feed `price` | `"2.90 KWD"` | 同一生成器 |
-| **收款** | 🔴 **PSP pack 未明文宣告 minor unit ⇒ reject** | 鐵律 3 ／ 65 §R5 **原封不動** |
+| **收款** | 🔴 **PSP pack 未明文宣告 `amount_format` 與該格式參數 ⇒ reject**（A0；`minor_units` 另需逐幣別 minor unit＝A1；`decimal_string` 位數 >2 ⇒ A6 使 pack 不得 enable） | 鐵律 3 ／ 65 §D **原封不動**<!-- 依 65 §J M-9（69 §V-188）修正（2026-08-13），原文：「PSP pack 未明文宣告 minor unit ⇒ reject｜鐵律 3／65 §R5 原封不動」——宣告的維度多了 amount_format 一層，R5 不再是唯一對外表示法。 --> |
 
-> 🔴🔴 **不得把本節讀成「鐵律 3 放寬了」。** 跟隨 Shopify 改的是**幣別清單**，不是**金額邊界**。KWD 的 milli-unit 問題**依然無解**：ISO 4217 的 KWD exponent=3，若某 PSP pack 宣告 3，`Money::PspMinor` 的基數就是 1000，而我方儲存是 ×100 ⇒ **儲存尺度與 PSP 單位在此幣別下不同源**。跟隨 Shopify **不解決這個問題，只是允許幣別存在**。⇒ **幣別可選、收款要等 PSP pack 明文宣告，且該 pack 必須同時宣告如何處理儲存精度不足。** `money_boundary.max_supported_iso_exponent: 2` 一個字都不動——它從「兩個執法點之一」變成**唯一的執法點**，比改動前更重要。
+> 🔴🔴 **不得把本節讀成「鐵律 3 放寬了」。** 跟隨 Shopify 改的是**幣別清單**，不是**金額邊界**。KWD 的 milli-unit 問題**依然無解**：ISO 4217 的 KWD exponent=3，若某 `minor_units` pack 宣告 3，`Money::PspMinor` 的基數就是 1000，而我方儲存是 ×100 ⇒ **儲存尺度與 PSP 單位在此幣別下不同源**。跟隨 Shopify **不解決這個問題，只是允許幣別存在**。⇒ **幣別可選、收款要等 PSP pack 明文宣告，且該 pack 必須同時宣告如何處理儲存精度不足。** `money_boundary.max_supported_iso_exponent: 2` 一個字都不動——它是 **`minor_units` 分支唯一的執法點**；`decimal_string` 分支的對應執法點是 **A6**（宣告位數 >2 ⇒ pack 不得 enable，65 明言 A6 與 A2 是同一條規則在另一種格式下的形態）。
+> <!-- 依 65 §J M-9（69 §V-188）修正（2026-08-13），原文：「它從『兩個執法點之一』變成唯一的執法點」——
+>      成文於 minor-units-only 世界觀；A6 出現後「唯一」對 decimal_string pack（如 KWD 走 Airwallex 型）不成立。 -->
 >
-> 🔴 **交叉引用待修（本輪不得改那三份檔案）**：`63 §G.4`、`65 §A2／T11`、`55` 的金額測試矩陣目前仍寫著「exponent=3 於 **market 建立時**擋下、回 `INCLUSION`」——**那個執法點已被本次跟隨移除**。實作前必須以 `limits.catalog_flow.exponent3_*` 為準並回頭修那三處，否則會出現「規格說擋、鍵說不擋」的分裂。⚠ 另見 68 §I **V-188**（Shopify 對 exponent=3 有無官方立場，通篇沉默，本條全靠社群回報）。
+> ✅ **交叉引用待修清單（原三項）已全數結案（2026-08-13 核）**：`63 §G.4` 的「market 建立時擋、回 `INCLUSION`」已依 68 §D-3 改寫（執法點移到 A2／A6 轉換點）；`65 §A2／T11` 與 `55` 的金額測試矩陣**經逐檔 grep 已無** INCLUSION／market-建立時擋的殘留（65 T11 早在其自身輪次已附註修正——本清單成文時點的判斷對 65/55 已過時）。⚠ 68 §I **V-188** 的登記（Shopify 對 exponent=3 無官方立場）保留。
+> <!-- 原文：「🔴 交叉引用待修（本輪不得改那三份檔案）：63 §G.4、65 §A2／T11、55 的金額測試矩陣目前仍寫著
+>      『exponent=3 於 market 建立時擋下、回 INCLUSION』——那個執法點已被本次跟隨移除。實作前必須以
+>      limits.catalog_flow.exponent3_* 為準並回頭修那三處…」。63 已於 2026-08-13 修（M-8 結案輪）；65/55 查無殘留。 -->
 
 ---
 

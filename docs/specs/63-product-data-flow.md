@@ -172,7 +172,8 @@
 # app/models/money.rb —— 全專案唯一的「字串 → cents」入口
 # 為什麼尺度固定 ×100 而不看幣別：limits.currency_display.force_minor_unit_digits = 2
 # ＋ storage_scale_unchanged = true（2026-08-12 裁定二）。JPY 的 ¥1,480 存 148_000。
-# 🔴 送 PSP 前必須另外換算回 ISO minor unit，見 §G.4——這兩件事不是同一件。
+# 🔴 送 PSP 前必須另外依該 pack 宣告的 amount_format 換算（65 §D，落地見 §G.4）——這兩件事不是同一件。
+#    （依 65 §J M-8 修正，原文：「必須另外換算回 ISO minor unit」——ISO 不是換算基數，格式也不只 minor unit 一種。）
 # 寫法比照 docs/specs/58 §G.3（物流商回傳的十進位字串），同一條紀律。
 def self.parse_to_cents(str, currency)
   raise ArgumentError, "float forbidden" if str.is_a?(Float)      # 鐵律 3：出現 float 即 bug
@@ -872,27 +873,30 @@ cents  = Rounding.apply(cents, currency, market)           # 湊整規則（29 �
 
 裁定二（2026-08-12）＋ `limits.currency_display`：**所有國家一律顯示兩位小數，儲存一律 ×100**。所以 JPY 的 ¥1,480 顯示 `¥1,480.00`、儲存 `148000`。
 
-**但 PSP 的金額單位依 ISO 4217**：Stripe 收 JPY 時 `amount: 1480` 代表 ¥1,480（JPY exponent = 0）。**若把儲存的 `148000` 直接送出去，收款金額是 ¥148,000——100 倍。**
+**但 PSP 的金額格式與參數由該 PSP pack 明文宣告**（`amount_format: minor_units | decimal_string`，65 §A R6／§D）：Stripe 收 JPY 時 `amount: 1480` 代表 ¥1,480（Stripe pack＝minor_units、JPY minor unit=1480 形態）；**Airwallex 根本不用 minor unit，收十進位主單位字串 `"1480"`**。**若把儲存的 `148000` 直接送出去，收款金額是 ¥148,000——100 倍**（兩種格式都會錯，只是字面不同）。**ISO 4217 只是 `minor_units` 格式下 pack 可以選擇的底表，不是換算基數**——Adyen 明文覆蓋 ISO、Stripe 對 HUF／TWD 另有整除約束（69 §V-188，`alt`×4＝PSP 官方文檔）。
 
-**硬規則**〔ours，新增 `limits.currency_display.psp_minor_unit_follows_iso4217: true`〕：
+**硬規則**：跨界轉換的唯一出口＝`Money::Storage#to_psp_amount(psp:)`，**契約全文與參考實作見 65 §D.1，本檔不再自帶代碼**——依 pack 宣告的 `amount_format` 分流為 `Money::PspMinor`（R5）或 `Money::PspDecimal`（R6），斷言 A0–A6 逐條見 65 §D.2。
 
-```ruby
-# app/models/money.rb —— 送 PSP／物流商／任何外部系統前的唯一出口
-# 儲存尺度（一律 ×100）與 ISO minor unit 是兩件事：
-#   顯示   → limits.currency_display.force_minor_unit_digits = 2      （裁定二）
-#   儲存   → limits.currency_display.storage_scale_unchanged = true   （×100）
-#   對外   → ISO 4217 exponent                                        （本鍵）
-def self.to_psp_minor_unit(storage_cents, currency)
-  exponent = Iso4217.exponent(currency)          # JPY=0, HKD=2, KWD=3
-  divisor  = 10 ** (2 - exponent)                # JPY ⇒ 100；HKD ⇒ 1；KWD ⇒ 0.1 ⚠
-  raise "non-integral PSP conversion" unless (storage_cents % divisor).zero?
-  storage_cents / divisor
-end
-```
+<!-- 依 65 §J M-8（69 §V-188）修正（2026-08-13），原文三塊：
+     ① 「但 PSP 的金額單位依 ISO 4217：Stripe 收 JPY 時 amount: 1480 代表 ¥1,480（JPY exponent = 0）。」
+     ② 硬規則〔ours，新增 limits.currency_display.psp_minor_unit_follows_iso4217: true〕＋
+        def self.to_psp_minor_unit(storage_cents, currency) 的完整代碼塊
+        （exponent = Iso4217.exponent(currency)；divisor = 10 ** (2 - exponent)；餘數 raise；storage_cents / divisor）。
+     修正理由：本節的**方向完全正確**（它是 65 號的來源之一，「儲存≠對外」的洞見不變），但成文時的世界觀是
+     「PSP＝整數 minor unit，只是 exponent 各異」——69 號查到四家 PSP 四種算法後，該世界觀不完整。
+     代碼塊**整個刪除、不留簡化版**：裸 (Integer, String) 簽名正是 65 §C L1–L3 要禁的形態
+     （無 psp 綁定、無值物件、可被任何呼叫方拿 ISO 當基數重現 100 倍）。
+     🔴 這不是放寬：本節要擋的 100 倍事故一個字都沒鬆，只是它擋的形態比原本以為的多一種（R6）。
+     limits 鍵處置：psp_minor_unit_follows_iso4217 同輪改名 psp_amount_format_declared_per_pack（見 §9 鍵表與 limits.yml）。 -->
 
-- **三位小數幣別（KWD/BHD/JOD，exponent = 3）** ⇒ `divisor = 0.1` ⇒ **儲存尺度不足以表達最小單位**。本篇裁定：**首發不支援 exponent > 2 的幣別**（`limits.catalog_flow.unsupported_currency_exponents: [3]`），market 建立時擋下並回 `userErrors{code: INCLUSION}`。日後要支援，改的是 `storage_multiplier`（全庫 migration），不是這個轉換函式。⚠ V-94
-- **餘數不為 0 ⇒ 直接 raise**，不四捨五入。JPY 的 `148050`（¥1,480.50）在 ISO 下不可表達 ⇒ 這是上游算錯了（湊整規則沒套用），要炸出來而不是悄悄抹掉 50。
-- **驗收**：一支表格驅動測試涵蓋 JPY/HKD/TWD/USD/KWD × 邊界值（0、1、最小可表達、極大值），斷言往返一致（§J-6）。
+- **三位小數幣別（KWD/BHD/JOD，exponent = 3）**：**市場可建立、幣別可選**；儲存與顯示一律 2 位、精度損失明文登記（62 §L.5 的 KWD 全鏈路表）；**收款在轉換點被擋**——`minor_units` pack 宣告 exponent 3 ⇒ A2 reject；`decimal_string` pack 宣告位數 >2 ⇒ A6 使 pack 不得 enable。日後要真支援，改的是 `storage_multiplier`（全庫 migration），不是轉換函式。⚠ V-94
+  <!-- 本條的修正出處是 68 §D-3（跟隨 Shopify：不擋幣別），與上方 V-188（格式維度）是兩個不同根因，故留兩條註釋。
+       原文：「本篇裁定：首發不支援 exponent > 2 的幣別（limits.catalog_flow.unsupported_currency_exponents: [3]），
+       market 建立時擋下並回 userErrors{code: INCLUSION}。」——「market 建立時擋」這個執法點已被 68 §D-3 移除
+       （62 §L.5 已先落地，本檔至今殘留，正是 62 §L.5 警告的「規格說擋、鍵說不擋」分裂的規格側）。
+       🔴 不是鐵律 3 放寬：改的是幣別清單，金額邊界的執法點（A2／A6）反而更清楚。 -->
+- **餘數不為 0 ⇒ 直接 raise**，不四捨五入〔`minor_units` 分支，65 §D.2 A3；`decimal_string` 分支的對應是 A6 位數檢查〕。JPY 的 `148050`（¥1,480.50）不可表達 ⇒ 這是上游算錯了（湊整規則沒套用），要炸出來而不是悄悄抹掉 50。
+- **驗收**：一支表格驅動測試涵蓋 JPY/HKD/TWD/USD/KWD × 邊界值（0、1、最小可表達、極大值）× **兩種 `amount_format` 各一個 fixture pack**（65 §H.1），斷言往返一致（§J-6）。
 
 ### G.5 與 P0-02 市場父子繼承的接縫
 
@@ -1021,7 +1025,7 @@ variant_publications(                            -- 🆕 我方原本完全沒�
 |---|---|---|---|
 | `idempotency` | `required_for_catalog_create` | 6 支 B 類 mutation | 63 §A.3（ours） |
 | `idempotency` | `catalog_create_merge_pending` | `true` | 63 §A.3（合併進 `required_for` 需同步改 CI 斷言） |
-| `currency_display` | `psp_minor_unit_follows_iso4217` | `true` | 63 §G.4（ours，🔴 救命條款） |
+| `currency_display` | `psp_amount_format_declared_per_pack` | `true` | 63 §G.4（ours，🔴 救命條款）<!-- 依 65 §J M-8 修正（2026-08-13），原鍵名 psp_minor_unit_follows_iso4217——minor unit 與 follows ISO 兩個字面在 V-188 後都不成立，limits.yml 同輪改名（deprecation 註釋在鍵位原處） --> |
 | `catalog_flow`（新頂層區塊） | 見下 | — | 63 全篇 |
 
 `catalog_flow` 的內容（實際已寫入 `config/limits.yml`）：
@@ -1100,7 +1104,7 @@ F 平台      platform_product_access(rollup_only) / platform_rollup_staleness_w
 - [ ] **投影一致性**：每個投影跑「增量 vs 全量重建」結果相同（§H.3）。
 - [ ] **cache_stamp 覆蓋自檢**：staging 開啟 `touched_sources` 追蹤，商品頁／集合頁／搜尋頁全綠（§D.3）。
 - [ ] **golden theme**：Ella 7.2.0 的無變體商品渲染正確（`Default Title` 契約，§B.2），商品卡不出現空變體選擇器。
-- [ ] 金額代碼 100% 覆蓋（11 §0 維度 6）——`Money.parse_to_cents`／`PresentmentResolver`／`to_psp_minor_unit` 三支尤其。
+- [ ] 金額代碼 100% 覆蓋（11 §0 維度 6）——`Money.parse_to_cents`／`PresentmentResolver`／`Money::Storage#to_psp_amount` 三支尤其。<!-- 依 65 §J M-8 修正（2026-08-13），原文點名 to_psp_minor_unit——該裸簽名函式已隨 §G.4 改寫刪除；驗收清單點名不存在的函式會反向鎖死舊實作。 -->
 
 ### 7 合規／隱私
 
