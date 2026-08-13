@@ -170,7 +170,7 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | R5 | 顧客線（分群建立器/B2B 公司/顧客詳情） | 薄⑤⑧ | ✅ 2026-08-13（1 STRUCT＋5 MISS 全修＋74 號 teardown＋limits 13 鍵；5 V 遞延，見 §F R5） |
 | R6 | 折扣（四型建立流內層/詳情/組合規則） | 薄⑦ | ✅ 2026-08-13（1 BUG＋4 MISS 全修＋組合規則 2026 改版對齊＋75 號 teardown＋limits 3 鍵；4 V 遞延，見 §F R6） |
 | R7 | 訂單線（列表佔位轉真/詳情補齊/草稿建單器/運送標籤批次流/棄單） | 深蓋複核＋STUB 多 | ✅ 2026-08-13（1 BUG＋4 MISS 全修＋R5-V1 結案＋撤銷術語裁定＋76 號＋limits 9 鍵；5 V 遞延，見 §F R7） |
-| R8 | 產品線子頁（庫存四 tab、STRUCT1 採購單/轉移、禮品卡、系列） | STRUCT1 | ⬜ |
+| R8 | 產品線子頁（庫存四 tab、STRUCT1 採購單/轉移、禮品卡、系列） | STRUCT1 | ✅ 2026-08-13（R0-STRUCT1 結案＋77 號 teardown；5 V 遞延，見 §F R8） |
 | R9 | 內容（metaobjects/files/menus/blog）＋線上商店（themes/pages/prefs/redirects 歸屬） | | ⬜ |
 | R10 | 市場（markets/catalogs/**rollouts MISS1**/裁定邊界 G13） | MISS1 | ⬜ |
 | R11 | 分析（analytics/live/reports；鐵律 7 同源） | | ⬜ |
@@ -184,7 +184,7 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 |---|---|---|---|
 | 71-R0-MISS1 | MISS | 市場>推出 `/rollouts` 頁我方無（分階段推出機制） | ⬜ R10 |
 | 71-R0-MISS2 | MISS | 側欄底「API 相關需求搜尋結果」入口——實測揭曉**形態＝釘選的 Sidekick 對話**（點開=對話完整檢視：markdown 回答+追問建議+讚/倒讚+輸入框），非獨立功能。已以「AI 對話釘選」形態實作（我方命名，G12） | ✅ R2b |
-| 71-R0-STRUCT1 | STRUCT | 採購單/轉移：本尊獨立側欄頁 vs 我方庫存頁 tab | ⬜ R8 |
+| 71-R0-STRUCT1 | STRUCT | 採購單/轉移：本尊獨立側欄頁 vs 我方庫存頁 tab | ✅ R8（產品導航子項五項對齊：商品系列/庫存/採購單/轉移/禮品卡；poPage/transfersPage 兩頁殼＋空態原文；庫存頁 tab 4→2；舊 INVTAB 深連結轉導） |
 | 71-R0-STUB1 | STUB | 「AI 代理」「門市 POS」「新增應用程式」三導航項純 toast、無 page 容器（最大顆佔位） | ⬜ R13 |
 | 71-R0-DEAD1 | DEAD | 舊 MODULES/renderModule/legacy helper（L3010-3230）整區死碼，內含 ~20 不可達 toast | ⬜ R14 |
 | 71-R0-DEAD2 | DEAD | 死註釋 2 條：`ck-acct-credit`/`ck-announce`（X-07 超前實作形態） | ⬜ R14 |
@@ -266,3 +266,9 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R7-V3 | V | saved views 建立/重命名/刪除交互（另存為/＋/全部不可編輯）——我方 viewMenu 內容對 6 預設檢視補（含條件性「當地配送」） | ⬜ |
 | 71-R7-V4 | V | 詐騙完整分析頁（方案分層：Grow+）＋Flow 高風險範本×4＋Protect 邊界（US only） | ⬜ R11/R13 |
 | 71-R7-V5 | V | 多幣別詳情雙幣顯示 UI（help 未載版面）；65 號 T 案例：退款不得由下單換算值反推 | ⬜ M2 前 |
+| 71-R8-DOC1 | DOC | 77 號 teardown：庫存欄 8＋檢視三（All/Incoming/Not Fulfillable，本尊無 tab）＋狀態公式（On hand=Committed+Unavailable+Available，Incoming 不在內）＋不可用手動子狀態 4＋調整原因 7＋歷史 8 欄 180 天＋CSV 19 欄僅 4 可寫＋PO/轉移建立式全欄＋系列 2026「來源卡＋排除」＋禮品卡雙鈕與兩套負債邊界 | ✅ |
+| 71-R8-V1 | V | 庫存「箱名稱」欄與「Not Fulfillable」檢視我方未實作——M1 庫存頁實作時補 | ⬜ M1 |
+| 71-R8-V2 | V | 🔴 批量編輯器**不建立稽核歷程**（help 明文：設絕對值、無來源/原因）vs 我方 13-F5「ledger 唯一入口」——需裁定我方是否照抄此例外，或要求批量也寫 ledger（偏離則入 §A） | ⬜ M1 前 |
+| 71-R8-V3 | V | 轉移建立式「連結採購單」欄（PO↔轉移關聯）我方無——資料模型要不要建關聯待定 | ⬜ |
+| 71-R8-V4 | V | 2026 系列建立式＝「來源」卡（新增條件/新增商品同卡混用＋排除 negative 條件＋多來源組）vs 我方手動/智慧二分不可互轉（13-F4）——概念差待裁定 | ⬜ R9/M1 |
+| 71-R8-V5 | V | 庫存 CSV 19 欄與 4 可寫欄（On hand new/Bin name/HS Code/COO）＋防誤覆寫機制——我方匯入器僅 on hand，欄位面待補 | ⬜ M1 |

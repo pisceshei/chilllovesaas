@@ -2181,7 +2181,10 @@ function icon(n,s=15){return `<svg width="${s}" height="${s}" viewBox="0 0 24 24
 const NAV=[
  {id:"home",name:"首頁",icon:"home"},
  {id:"orders",name:"訂單",icon:"orders",count:5,kids:[["m-drafts","草稿"],["m-shiplabels","運送標籤"],["m-abandoned","未完成結帳"]]},
- {id:"products",name:"產品",icon:"products",kids:[["m-collections","商品系列"],["m-inventory","庫存"],["m-giftcards","禮品卡"]]},
+ /* 71-R8-STRUCT1 修復（2026-08-13 實測）：本尊產品導航子項＝商品系列/庫存/採購單/轉移/禮品卡
+    （五項，採購單與轉移是**獨立頁**不是庫存頁的 tab）。我方原把兩者做成 inventoryPage 的 tab
+    ——升為導航子項；INVTAB 的 'po'/'xfer' 分支保留給既有深連結（invPO/invTransfers 復用）。 */
+ {id:"products",name:"產品",icon:"products",kids:[["m-collections","商品系列"],["m-inventory","庫存"],["m-po","採購單"],["m-transfers","轉移"],["m-giftcards","禮品卡"]]},
  {id:"m-customers",name:"顧客",icon:"customers",kids:[["m-segments","分群"],["m-companies","公司"]]},
  {id:"m-growth",name:"成長",icon:"growth",kids:[["m-attribution","歸因"],["m-campaigns","行銷活動"]]},
  {id:"m-discounts",name:"折扣",icon:"discounts"},
@@ -2195,7 +2198,7 @@ const NAV=[
  {id:"analytics",name:"分析",icon:"analytics",kids:[["m-reports","報告"],["m-live","實況瀏覽"]]},
 ];
 const GROUP_OF={orderdetail:"orders","m-drafts":"orders","m-shiplabels":"orders","m-abandoned":"orders",
- "m-collections":"products","m-inventory":"products","m-giftcards":"products",
+ "m-collections":"products","m-inventory":"products","m-giftcards":"products","m-po":"products","m-transfers":"products",
  "m-segments":"m-customers","m-companies":"m-customers","m-attribution":"m-growth","m-campaigns":"m-growth",
  "m-files":"m-metaobjects","m-menus":"m-metaobjects","m-blog":"m-metaobjects",
  "m-catalogs":"m-markets","m-reports":"analytics","m-live":"analytics",
@@ -3694,11 +3697,14 @@ const DOCS={
  funnel:{t:"轉換漏斗",f:"工作階段→加購→結帳→成交",l:"分母口徑寫進指標辭典；與 pulse 轉換率同源",i:"P1・sessions 事件（規格 19-F3）"},
  setnav:{t:"設定導航（組織層+商店層）",f:"組織（組織/使用者）在上、商店 14 分頁在下",l:"使用者管理上移組織層（2026 實測）；每分頁對應獨立 service",i:"P0 八分頁・M：settings 各域表＋shops.settings JSON（規格 19-F4 逐鍵驗證）"},
  disctypes:{t:"折扣類型選擇",f:"四類型入口",l:"商品/訂單/BxGy/免運；建立後 class 決定組合規則",i:"P0・M：discounts(class, combines_with)；引擎規格 17-F2"},
- "doc-m-inventory":{t:"庫存五欄帳",f:"不可用/已佔用/可用/現有/在途",l:"Adjust by vs Set to 兩模式；原因 7 種；歷史 180 天；匯入僅 on hand 可寫＋防過期校驗",i:"P0・ledger 唯一入口（規格 13-F5）；恆等式 nightly 對帳"},
+ "doc-m-inventory":{t:"庫存五欄帳",f:"不可用/已佔用/可用/現有/在途",l:"71-R8 實測欄集：商品/存貨單位 (SKU)/現有庫存/可用/已佔用/在途/不可用＋箱名稱（8 欄，含遞增遞減兩排序鍵）；檢視三：All／Incoming／Not Fulfillable（本尊庫存頁**無 tab**，我方「調整歷史」tab 為超集保留）；採購單與轉移是**獨立頁**不是本頁 tab（71-R8-STRUCT1 已修）。Adjust by vs Set to 兩模式；原因 7 種；歷史 180 天；匯入僅 on hand 可寫＋防過期校驗",i:"P0・ledger 唯一入口（規格 13-F5）；恆等式 nightly 對帳"},
  "doc-m-abandoned":{t:"棄單列表",f:"未完成結帳＋挽回",l:"留 email＋≥10 分鐘才列入；3 個月自動刪；挽回信手動/自動",i:"P0 列表・P1 自動信（規格 15-F7）；90 天 purge job"},
  "doc-m-drafts":{t:"草稿訂單",f:"代客建單流程",l:"自訂品項不入目錄；Reserve 佔庫存；寄發票=簽名結帳連結",i:"P1・22 §1c 全表"},
  "doc-m-segments":{t:"顧客分群",f:"條件語法動態名單；列表欄=名稱/顧客百分比/上次活動/建立者＋列 ⋯ 五動作",l:"71-R5：系統預設 5 群開店即有（名稱保留英文＝本尊事實）；⋯=使用分群/複製/匯出/重新命名/刪除（系統群不可刪）；filter+運算子+相對日期；MATCHES 複合查詢；成員自動進出",i:"P1・語法白名單編譯 SQL；目錄=SEG_FILTERS 全量（22 §3→71-R5 增補）"},
- "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
+ "po-empty":{t:"採購單空態",f:"管理您的採購單＋建立採購單",l:"71-R8 實測原文「管理您的採購單／追蹤並接收向供應商訂購的庫存。」；建立式＝選取供應商→選取收件地＋商品搜尋（含匯入 CSV 與條碼掃描鈕）＋成本摘要（子類數/稅金內含/總計）＋參考編號 ≤255＋給供應商的備註 ≤5000＋付款條件＋幣別＋標籤",i:"P1・[api:TBD-purchaseOrderCreate]（28 待補） [tbl:purchase_orders,purchase_order_line_items,suppliers]"},
+ "xfer-new":{t:"建立轉移",f:"開轉移建立式",l:"71-R8 實測建立式：選取出貨地 →🚚→ 選取收件地（頂列三段式）＋商品搜尋（匯入 CSV/條碼掃描）＋日期＋新增參考名稱/備註/標籤＋連結採購單；狀態機：草稿→待出貨（起點 reserved）→進行中（目的地 Incoming）→已轉移／已取消",i:"P1・[api:TBD-inventoryTransferCreate]（28 待補） [tbl:inventory_transfers]"},
+ "xfer-empty":{t:"轉移空態",f:"在地點之間轉移庫存＋建立轉移",l:"71-R8 實測原文「在地點之間轉移庫存／在您的商家地點之間轉移並追蹤庫存。」；建立式＝選取出貨地 →🚚→ 選取收件地＋商品＋日期＋新增參考名稱/備註/標籤＋**連結採購單**（PO↔轉移關聯）",i:"P1・[api:TBD-inventoryTransferCreate]（28 待補） [tbl:inventory_transfers,transfer_line_items]"},
+ "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出。71-R8 實測列表欄：標題/商品（數）/條件/銷售管道",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
  "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
  "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
  newproduct:{t:"新增商品",f:"開啟商品建立表單（與詳情頁<b>同一個元件</b>）",
@@ -3708,7 +3714,7 @@ const DOCS={
  ordertable:{t:"訂單列表",f:"訂單清單（雙狀態機）",l:"付款/出貨兩條獨立狀態；多幣別顯示原幣+代碼；取消單劃線；風險 icon",i:"P0・狀態物化欄位（規格 16-F1）；金額 MoneyBag 雙幣（06 §6）"},
  storechip:{t:"商店切換器",f:"顯示當前店＋多店切換",l:"多店同帳號；demo 標籤=測試環境警示",i:"P2 多店；M：shops + org（05 §2）"},
  "doc-m-shiplabels":{t:"運送標籤",f:"購買/列印宅配標籤",l:"買標→費用記平台帳單→自動標出貨+回填追蹤；void 可退",i:"P2・Labels::Quote/Purchase adapter（22 §1b）"},
- "doc-m-giftcards":{t:"禮品卡",f:"發卡與餘額管理",l:"面額=變體；後台發卡 ≤$2,000；停用=永久；完整卡號僅顧客可見",i:"P1・M：gift_cards（code digest；22 §2）"},
+ "doc-m-giftcards":{t:"禮品卡",f:"發卡與餘額管理",l:"71-R8 實測空態＝雙鈕「建立禮品卡」（後台直接簽發寄顧客）＋「新增禮品卡商品」（可販售商品，面額=變體）＋匯出（停用態）＋服務條款連結；後台發卡 ≤$2,000／商品 ≤$10,000 等值；停用=永久；完整卡號僅顧客可見；與商店抵用金為兩套負債（R5 §4）",i:"P1・M：gift_cards（code digest；22 §2）"},
  "doc-m-catalogs":{t:"目錄",f:"市場×商品×價格組合",l:"固定價覆蓋 % 調整；也用於 B2B/AI 代理通路",i:"P2・M：catalogs（05 §1e）"},
  "doc-m-menus":{t:"選單",f:"前台導航樹",l:"巢狀 ≤3 層；八種連結資源型；轉址同區管理",i:"P0(M2)・M：menus/menu_items + url_redirects（22 §6）"},
  "doc-m-files":{t:"檔案庫",f:"全站資產",l:"一次 ≤20 檔；刪除警告引用斷裂；CDN 連結",i:"P1・M：file_assets + 引用計數（22 §6）"},
@@ -6437,8 +6443,11 @@ function colSrcPick(i){
    ================================================================== */
 let INVTAB='levels',INVLOC='主倉（內湖）',INVMODE='adjust';
 const INV_REASONS=['Correction（預設）','Cycle count','Damaged','Promotion or donation','Quality control','Received','Theft or loss'];
+/* 71-R8：採購單/轉移改導航子項後，庫存頁只剩「庫存／調整歷史」兩 tab（本尊庫存頁無 tab，只有
+   檢視選擇器 All/Incoming/Not Fulfillable——我方調整歷史 tab 為超集保留，DOCS 註記）。
+   po/xfer 分支保留給既有深連結，由 m-po/m-transfers 兩個模組頁復用同一組渲染函式。 */
 function inventoryPage(){
-  const tabs=[['levels','庫存'],['hist','調整歷史'],['xfer','轉移'],['po','採購單']];
+  const tabs=[['levels','庫存'],['hist','調整歷史']];
   const head=`<div class="page-head"><h1>庫存</h1><div class="head-actions">
       <select class="fsel" aria-label="地點" onchange="INVLOC=this.value;renderModule('m-inventory')">${['主倉（內湖）','台北門市','台中寄倉'].map(l=>`<option ${INVLOC===l?'selected':''}>${l}</option>`).join('')}</select>
       <button class="btn btn-ter btn-sm" data-doc="export" onclick="toast('Demo：匯出庫存 CSV（僅 On hand 可寫回＋防過期校驗欄）')">匯出</button>
@@ -6446,8 +6455,8 @@ function inventoryPage(){
       <button class="btn btn-pri btn-sm" data-doc="inv-adjust" onclick="invAdjust()">調整庫存</button></div></div>
     <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button class="tab ${INVTAB===k?'on':''}" role="tab" aria-selected="${INVTAB===k}" onclick="INVTAB='${k}';renderModule('m-inventory')">${l}</button>`).join('')}</div>`;
   if(INVTAB==='hist')return head+invHistory();
-  if(INVTAB==='xfer')return head+invTransfers();
-  if(INVTAB==='po')return head+invPO();
+  if(INVTAB==='xfer'){INVTAB='levels';go('m-transfers');return head;}   /* 深連結相容：轉導新頁 */
+  if(INVTAB==='po'){INVTAB='levels';go('m-po');return head;}
   const act=PRODUCTS.filter(p=>p.s==='active');
   return head+listPage({key:'invl',noHead:true,title:'庫存',doc:'doc-m-inventory',ph:'搜尋商品、SKU…',
     banner:`<div class="rowflex" style="margin-bottom:var(--sp-300)"><div class="seg" role="group" aria-label="編輯模式">
@@ -6494,6 +6503,24 @@ function invHistory(){
       <td class="right num" style="color:${r[3].startsWith('-')||r[3].startsWith('−')?'var(--critical)':'var(--success)'};font-weight:600">${r[3]}</td>
       <td>${chip(r[4],'default')}</td><td class="mut">${r[5]}</td></tr>`).join('')}</tbody></table>
     <p class="mut3" style="font-size:var(--t-xs);padding:var(--sp-200) var(--sp-300)">調整歷史保留 180 天；每筆 ledger 記 delta＋reason＋ledgerDocumentUri（41 §3.6）。</p></div>`;
+}
+/* 71-R8-STRUCT1：獨立頁殼——採購單／轉移各自成頁（本尊產品導航子項），內容復用 invPO/invTransfers。
+   空態文案＝本尊實測原文；建立式欄位組見 poNew/xferNew（本輪對齊）。 */
+function poPage(){
+  return `<div class="page-head"><h1>採購單</h1><div class="head-actions">
+      <button class="btn btn-pri btn-sm" data-doc="po-new" onclick="poNew()">建立採購單</button></div></div>`
+   +(POS.length?invPO():`<div class="card" data-doc="po-empty"><div class="empty-wrap">
+      <span class="rb-ic" aria-hidden="true" style="font-size:28px">📄</span>
+      <b>管理您的採購單</b>追蹤並接收向供應商訂購的庫存。
+      <div style="margin-top:var(--sp-400)"><button class="btn btn-pri btn-sm" onclick="poNew()">建立採購單</button></div></div></div>`);
+}
+function transfersPage(){
+  return `<div class="page-head"><h1>轉移</h1><div class="head-actions">
+      <button class="btn btn-pri btn-sm" data-doc="xfer-new" onclick="xferNew()">建立轉移</button></div></div>`
+   +(TRANSFERS.length?invTransfers():`<div class="card" data-doc="xfer-empty"><div class="empty-wrap">
+      <span class="rb-ic" aria-hidden="true" style="font-size:28px">↔</span>
+      <b>在地點之間轉移庫存</b>在您的商家地點之間轉移並追蹤庫存。
+      <div style="margin-top:var(--sp-400)"><button class="btn btn-pri btn-sm" onclick="xferNew()">建立轉移</button></div></div></div>`);
 }
 function invTransfers(){
   return listPage({key:'xfer',noHead:true,title:'轉移',doc:'inv-transfer',ph:'搜尋轉移單…',
@@ -8349,6 +8376,8 @@ Object.assign(MODULES,{
  "m-shiplabels":{title:"運送標籤",full:true,custom:shipLabelsPage},
  "m-collections":{title:"商品系列",full:true,custom:collectionsPage},
  "m-inventory":{title:"庫存",full:true,custom:inventoryPage},
+ "m-po":{title:"採購單",full:true,custom:poPage},
+ "m-transfers":{title:"轉移",full:true,custom:transfersPage},
  "m-giftcards":{title:"禮品卡",full:true,custom:giftPage},
  "m-customers":{title:"顧客",full:true,custom:customersPage},
  "m-segments":{title:"分群",full:true,custom:segmentsPage},
