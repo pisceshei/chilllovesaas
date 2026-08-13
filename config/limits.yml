@@ -3421,3 +3421,311 @@ combined_listing:
   parent_in_sitemap: false
   parent_canonical: self
   verify_parent_url_semantics: true
+
+# =============================================================================
+# 23. 商品 CSV 匯出入（多語言）——規格見 docs/specs/70-product-csv-io.md
+# =============================================================================
+# 出處等級沿用 67 §0.3：
+#   ruling ＝ 使用者裁定｜help ＝ Shopify 官方說明中心｜alt ＝ 對照平台官方產物
+#   observed ＝ 本輪對一手檔案的實測｜ours ＝ 本專案決策（無外部依據）
+#
+# 🔴 **本區塊在本輪之前不存在，但已經被兩個地方引用了**：
+#    ① 67 §E.6 / i18n.export.max_upload_mb_key: csv.product_max_upload_mb
+#    ② 61 §9.5 把 csv.product_max_upload_mb 標成「✅ 已有」，實際指的是 media.csv_max_upload_mb
+#    ⇒ 兩處都是**懸空引用**（yaml.safe_load 取不到 csv 這個頂層鍵）。本輪補上真鍵。
+#    media.csv_max_upload_mb（15）**不動**：它是媒體匯入的上限，數值相同但用途不同；
+#    61 §9.5 把商品 CSV 的上限映到它身上是當時的權宜，自本區塊起以本區塊為準。
+#
+# 一手證據（本輪實測，observed）：
+#   E1 = 使用者真實商店的 Shopify 商品匯出檔（44 欄、LF、無 BOM、Body (HTML) 含換行）
+#   E2 = Shopify 官方商品匯入範本（57 欄、CRLF、無 BOM、17 列含多變體與數位商品範例）
+#   E3 = Shopline 商品範本 xlsx（62 欄、雙語表頭兩列、成對語言欄、(DO NOT EDIT) 標記）
+csv:
+  # --- 檔案格式（70 §B）-------------------------------------------------------
+  # E1 與 E2 都是 UTF-8 無 BOM，但換行不同（E1=LF、E2=CRLF）⇒ 匯入兩種都收，匯出固定 LF。
+  encoding: utf-8
+  accept_bom_on_import: true        # Excel 存出來的檔常帶 BOM（13 §F6 坑既有）
+  emit_bom_on_export: false         # observed：E1／E2 皆無 BOM
+  accept_newline_on_import: [lf, crlf]
+  emit_newline_on_export: lf        # observed：E1（真實匯出）＝LF
+  delimiter: ","
+  quote_char: '"'
+  escape_style: rfc4180_double_quote
+  # 🔴 儲存格內允許換行（E1 的 Body (HTML) 實測含 \n）⇒ 解析器**必須**是有狀態的 CSV 解析器，
+  #    不得以「一行一列」切割。這條寫在這裡是因為它被寫錯過的成本是整檔錯位而非單列失敗。
+  multiline_cell_allowed: true
+  streaming_parse_required: true    # 13 §F6-2：CSV.foreach，不整檔載入
+
+  # --- 尺寸上限（70 §B.2）-----------------------------------------------------
+  # 出處：61 §6.1／§6.2（help）——商品 CSV 與庫存 CSV 都是 15 MB。
+  product_max_upload_mb: 15
+  inventory_max_upload_mb: 15
+  # 🔴 ours（非官方）：官方未載明列數上限（61 §9.5 V-64 已登記）。沿用 13 §F6.2 的 5 萬行。
+  product_max_rows: 50000
+  # 🔴 ours：欄數硬上限。推導＝base_columns(43) + translatable(12) × (max_locales_per_file(5) − 1)
+  #    = 43 + 48 = 91，取 512 作結構性護欄（留給日後 metafield 欄與 Google 屬性欄的空間）。
+  #    它**不是**多語言的實際約束——實際先撞到的一定是 product_max_upload_mb（見 §E.2 的估算）。
+  product_max_columns: 512
+  # 任一商品的變體數 > 100 ⇒ 匯出改 email 寄送。出處：61 §6.1（help，P53）。
+  export_email_threshold_variants: 100
+  # 匯入專用的 Collection 欄字元上限。出處：61 §9.5（help，P51）。
+  collection_column_max_chars: 255
+
+  # --- 多語言欄名契約（70 §D）—— 🔴 本區塊是 70 號的核心 ----------------------
+  multilingual:
+    # 欄名形態：`{基礎欄名}␣[{BCP-47 標籤}]`。例：`Title [zh-Hant-HK]`。
+    # 🔴 **不抄 Shopline 的 `Product Name (English)`**，五條理由見 70 §D.1，其中兩條是硬的：
+    #    ① 裁定「locale 一律語言＋地區」⇒ en-HK 與 en-SG 都叫「English」，成對欄名會撞名；
+    #    ② 語言的**顯示名本身是文案**（English／英文／英語），把文案當解析鍵 ⇒ 新增語言要改對照表，
+    #       違反 i18n.launch_locales_is_seed_not_enum（語言集合是資料不是列舉，67 §A.2）。
+    locale_column_pattern: "{base_column} [{bcp47_tag}]"
+    locale_column_open: "["
+    locale_column_close: "]"
+    # observed：`[` 與 `]` 在 E1(44欄)＋E2(57欄)＋E3(62欄) 共 163 個表頭中出現 **0 次**；
+    #   而 `(` `)` 出現 33 次（`Body (HTML)`／`Weight value (grams)`／`X (product.metafields.…)`）
+    #   ⇒ 括號在 Shopify 表頭裡**已經有兩種意思**（單位註記、metafield 路徑），
+    #      再加第三種（語言）只能靠寫死清單消歧義——那正是我們不要的 enum。
+    bracket_choice_evidence: "0 hits of [ ] across 163 header cells in E1+E2+E3"
+    # 語言標籤格式沿用語言註冊的同一條規則，**不另立**。
+    locale_tag_format_key: i18n.locale_tag_format
+    # 🔴 表頭裡一律寫 BCP-47 標籤，禁止寫語言顯示名（English／英文／繁體中文）。
+    locale_display_name_in_header_forbidden: true
+    # 🔴 表頭語言標籤必須是**語言＋地區**（ruling 2026-08-13）。裸語言碼（en／zh-Hant）
+    #    在本檔的欄名裡一律拒絕——它在兩個以上市場共用同一語言時無法定位。
+    #    ⚠ 這與 67 §A.4／§C.1 現行文字衝突（那裡說 region 通常為 NULL）⇒ 70 §M-1 已登記。
+    locale_tag_requires_region: true
+    # 基礎欄（無後綴）＝**來源語言**的值，不是「預設值」也不是「所有語言共用」。
+    # 🔴 這條是 Shopify 匯出檔能被原檔吃進來的唯一理由：一份沒有任何 [locale] 欄的檔案
+    #    ＝ 一份純來源語言的檔案 ＝ Shopify 匯出檔。
+    base_column_is_source_locale: true
+    # 同一基礎欄同時出現「無後綴」與「[來源語言]」兩欄 ⇒ 同一格資料兩個真相 ⇒ 整檔拒絕。
+    # 🔴 不做「取其一」的仲裁：任何仲裁規則都會在某個商家的檔案上選錯，而且不會報錯。
+    source_locale_duplicate_column_action: reject_file
+    # 表頭出現店鋪未啟用的語言 ⇒ 整檔拒絕（不靜默忽略：商家以為翻譯進去了）。
+    unknown_locale_column_action: reject_file
+    # 可掛 [locale] 後綴的基礎欄白名單（**白名單，不是黑名單**；同 67 §B.4 對 metafield 的做法）。
+    translatable_columns:
+      - "Title"
+      - "Body (HTML)"
+      - "Type"
+      - "Option1 Name"
+      - "Option1 Value"
+      - "Option2 Name"
+      - "Option2 Value"
+      - "Option3 Name"
+      - "Option3 Value"
+      - "Image Alt Text"
+      - "SEO Title"
+      - "SEO Description"
+    # 🔴 名單上沒有的欄出現 [locale] 後綴 ⇒ 整檔拒絕，並在錯誤訊息裡指出理由分類。
+    #    Handle（67 §D.3 不可翻）／Tags（67 §B.3-2 集合運算的鍵）／SKU・Barcode（識別碼）／
+    #    所有金額欄（鐵律 3）是最常被誤加後綴的四類。
+    non_translatable_locale_column_action: reject_file
+    # 🔴 Default Title 的譯文一律拒絕（63 §B.2 硬相容契約、67 §B.3-3）。
+    #    翻成「預設標題」⇒ Ella 的 variants.first.title != 'Default Title' 判定翻轉。
+    default_title_translation_action: reject_row
+    # 欄位佈局：譯文欄緊接其基礎欄（E3 的做法，人工編輯時原文與譯文同屏）。
+    # 另一個合法值 grouped_by_locale（同語言的欄集中在一起，適合機器 diff）。
+    # 🔴 **匯入器一律與欄序無關**（以表頭名定位），所以佈局純粹是匯出端的人因選擇。
+    export_column_layout: adjacent_to_base
+    importer_is_column_order_independent: true
+    # 🔴 單檔語言數上限（ours）。推導：12 個可翻譯欄 × 5 語 ⇒ 48 個譯文欄，
+    #    已與 43 個基礎欄同量級——超過這裡，這份檔案就不再是「商品 CSV」而是攤平的翻譯表。
+    max_locales_per_file: 5
+    # 超過上限**不是錯誤**，是把商家導去正確的工具（70 §H 的分工）。
+    over_max_locales_action: redirect_to_translation_csv
+    # 欄數公式（供 UI 在勾選語言時即時顯示欄數與檔案大小估算）。
+    column_count_formula: "base_columns + translatable_columns * (selected_locales - 1)"
+    # 🔴 商品 CSV 的多語言欄**只准出現在商品 CSV**。庫存 CSV 的 Title／Option Name 是
+    #    「僅供閱讀、不會更新」欄（61 §6.2）⇒ 在那裡放譯文欄是雙重無意義，且會讓
+    #    「庫存 CSV 只寫 on_hand」這條不變量出現例外。
+    allowed_on: [product_csv]
+    forbidden_on: [inventory_csv]
+    forbidden_on_action: reject_file
+
+  # --- 匯入語義（70 §F）—— 🔴 同一份檔案裡有**兩套**空白語義 ------------------
+  product_import:
+    key: handle                       # 13 §F6.4：以 handle upsert
+    # 🔴 **這是本區塊最容易誤解的一條**：基礎欄與 [locale] 欄的破壞性語義**不同**，
+    #    而且分界線就寫在表頭上（有沒有 [locale] 後綴）。
+    #      基礎欄   ⇒ 61 §6.1（help）：勾了覆寫，**空白儲存格會把既有資料洗掉**
+    #      [locale] ⇒ 67 §E.6①（69 §V-182，help）：空白 ＝ **本列本欄不做任何事**
+    #    兩者都是**已生效的既有契約**，本檔不改任何一條，只把分界線做成可讀的（欄名後綴）。
+    #    ⚠ 為什麼不統一：統一到「空白＝洗掉」會推翻 67 §E.6（那條同日已被翻面兩次，
+    #      最終依據是 help 級的本尊原生行為）；統一到「空白＝不動作」會讓從 Shopify
+    #      搬過來的商家在同一個勾選框下拿到不同結果。⇒ 保留兩套，但**分別計數、分別確認**。
+    semantics_differ_by_column_class: true
+    base_column_blank_semantics_key: "61 §6.1 (help): overwrite ⇒ blank wipes"
+    locale_column_blank_semantics_key: i18n.import.blank_means_unchanged
+    # --- 兩個獨立的覆寫旗標，🔴 不得連動（同 67 §E.1「兩個切換器不得連動」的理由）------
+    # 一個旗標控兩件事 ⇒ 只想改價的商家勾下去，順手蓋掉整店譯文。
+    overwrite_products_default: false          # 基礎欄；對應 Shopify「以相同 handle 覆寫商品」
+    overwrite_translations_default_key: i18n.import.overwrite_existing_default   # = false
+    overwrite_flags_must_be_independent: true
+    # 清空：基礎欄用「勾覆寫＋留空」（Shopify 語義）；[locale] 欄用 __CLEAR__（唯一手段）。
+    # 🔴 __CLEAR__ 在基礎欄裡是**字面字串**，不是 token——一欄一種機制，機制由後綴決定。
+    clear_token_key: i18n.import.explicit_clear_token          # "__CLEAR__"
+    clear_token_scope: locale_columns_only
+    # ⚠ 已知窟窿（自 67 §E.6 繼承，本檔不自創逃逸語法）：譯文的字面值若剛好是 __CLEAR__，
+    #    無法以 CSV 表達 ⇒ V-311。
+    clear_token_not_escapable: true
+    # --- 缺席語義：三鍵沿用 67，不重新定義 -------------------------------------
+    absent_row_means_unchanged_key: i18n.import.absent_row_means_unchanged
+    absent_column_means_unchanged_key: i18n.import.absent_column_means_unchanged
+    absent_vs_blank_distinguished_by_header_key: i18n.import.absent_vs_blank_distinguished_by_header
+    # --- 預覽：🔴 三類破壞性操作**分開計數**（67 只有兩類，本檔多一類）-----------
+    #    ① 基礎欄被洗掉的格數（overwrite_products）
+    #    ② [locale] 欄的 __CLEAR__ 明示清空數
+    #    ③ [locale] 欄被覆寫的既有譯文數（overwrite_translations）
+    #    合成一個數字 ＝ 商家無法判斷風險落在商品資料還是譯文上。
+    preview_required: true
+    preview_counts_separate: [base_wipe, translation_clear, translation_overwrite]
+    preview_ratio_confirm_threshold: 0.2      # 形態同 i18n.import.clear_ratio_confirm_threshold
+    writes_audit_trail: true
+    per_row_transaction: true                 # 13 §F6.1 既有形態
+    # --- 必填與致命錯誤 --------------------------------------------------------
+    # Title 在**每個 handle 的第一列**必填（61 §6.1／P54：有 handle 就必須有 title）。
+    # 🔴 續列的 Title **必須留白**——這是同一條規則的另一面，不是兩條規則。
+    required_on_first_row: ["Handle", "Title"]
+    blank_required_field_action: fail_row
+    # 價格留白在 Shopify 是常見失敗（61 §6.1，P54）⇒ 建立新變體時必填，更新既有變體時可留白。
+    price_required_on_create: true
+    # --- 金額（🔴 鐵律 3 ＋ 65 §B X6）------------------------------------------
+    # 🔴 匯入是 X6：BigDecimal(raw) × 100 ⇒ Integer cents。**不得先轉 float**。
+    money_crossing_point: X6
+    money_parse_type_key: money_boundary.decimal_parse_type          # BigDecimal
+    money_excess_precision_action_key: money_boundary.decimal_parse_excess_precision_action  # raise
+    # 🔴 **接受**的格式比**輸出**的格式寬：輸出恆兩位（money_boundary.decimal_string_regex），
+    #    但 E2（Shopify 官方範本）裡 `Compare-at price` 實測有 `80` 這種零位小數的值
+    #    ⇒ 若匯入端直接套 ^-?\d+\.\d{2}$，**Shopify 自己的官方範本會被我方拒收**。
+    money_accept_regex: '^-?\d+(\.\d{1,2})?$'
+    # 千分位：只在**無歧義**時清洗。^\d{1,3}(,\d{3})+(\.\d{1,2})?$ 不可能是小數逗號寫法
+    #   （小數逗號後面是 1–2 位，不是 3 位）⇒ 這個 pattern 命中才清洗，其餘含 `,` 一律該列失敗。
+    # 🔴 **不做 locale 猜測**：de-DE 的 `1,29`（＝1.29）與 en 的 `1,290`（＝1290）
+    #    只能靠猜，猜錯就是十倍價差且測試全綠。
+    money_thousands_separator_strict_pattern: '^\d{1,3}(,\d{3})+(\.\d{1,2})?$'
+    money_ambiguous_separator_action: fail_row
+    # 全形數字：NFKC 正規化後再解析（13 §F6 坑既有）。
+    fullwidth_digit_normalize: nfkc
+    # 🔴 單位價格的四個欄位（Unit Price Total/Base Measure）**不是金額**，是數量。
+    #    E2 實測值 `500.00`／`50.00` 與價格欄長得一模一樣 ⇒ 型別必須不同
+    #    （Money::Decimal vs 一般 BigDecimal），否則它們會走進 X6 被 ×100。
+    unit_price_measure_columns_are_not_money: true
+    # --- 識別碼欄的清洗 --------------------------------------------------------
+    # observed（E1，使用者真實商店）：Variant SKU 與 Variant Barcode 的值都是 `'7340032875324`
+    #   —— 開頭多一個單引號，那是 Excel 的「強制文字」前綴漏進 CSV。
+    # ⇒ 只對識別碼欄剝除**單一個**開頭 U+0027，並在報告裡計數。
+    # 🔴 **不得**對文字欄做同樣的事：商品標題合法地可以用單引號開頭。
+    strip_leading_apostrophe_columns: ["Variant SKU", "Variant Barcode", "Product ID", "Variant ID"]
+    strip_leading_apostrophe_reports_count: true
+    # --- 來源語言的檔級不變量（70 §D.3）----------------------------------------
+    # Source Locale 欄的角色與庫存 CSV 的 `On hand (current)` 相同：**逐列攜帶、只用來驗證**
+    #   （61 §6.2：官方明載那兩欄一起用是為了安全驗證）。CSV 沒有檔頭 metadata 的地方放它。
+    source_locale_column: "Source Locale"
+    source_locale_must_be_uniform_in_file: true
+    source_locale_mismatch_action: reject_file        # 與目標店鋪的來源語言不符 ⇒ 整檔拒絕
+    # 缺這一欄**不是錯誤**（否則 Shopify 匯出檔無法直接匯入）⇒ 假定為目標店鋪的來源語言並告警。
+    source_locale_absent_action: assume_shop_source_and_warn
+    # 🔴 這一欄**不建立** per-resource 來源語言（i18n.source_locale_per_resource: false）。
+    #    它是斷言，不是設定；逐列不同 ⇒ 整檔拒絕，不是「這一列用別的語言」。
+    source_locale_is_assertion_not_setting: true
+    # --- 變體身分（70 §E.4）----------------------------------------------------
+    # 🔴 Shopify 語義：改動 Option{n} Value ⇒ 刪除既有變體 ID、產生新 ID（61 §6.1）。
+    #    我方**必須複製**（61 明載，否則搬家後訂單歷史對不上）——但只在沒有 Variant ID 時。
+    variant_identity_without_id: option_value_combination
+    variant_identity_with_id: variant_gid
+    variant_identity_id_wins: true
+    # 🔴 多語言讓這條變得更貴：選項值一改，變體重建，掛在舊 option_value_id 上的**譯文一起消失**
+    #    （67 §B.3-4：譯文掛 id 不掛字串）⇒ 匯出必填 Variant ID，UI 必須警告「無 ID 的改名會丟譯文」。
+    warn_on_option_value_rename_without_variant_id: true
+    # --- 選項值譯文：product-scoped 映射，不是列值 -----------------------------
+    # 同一個選項值在多列重複出現（4 個變體 × 2 個選項 ⇒ 每個值出現 2 次）。
+    # 🔴 重複出現的譯文**必須一致**；不一致 ⇒ **整個商品失敗**，不做 last-wins。
+    #    理由：61 §6.1 官方警告「在試算表裡排序 CSV 會讓變體脫鉤」⇒ **列序不是穩定的**，
+    #    以列序決定勝負 ＝ 結果不可重現。
+    option_value_translation_scope: product
+    option_value_translation_conflict_action: fail_product
+    option_value_translation_repeat_allowed: true     # 重複填相同值合法；只有「不同值」才失敗
+    # --- 重量 ------------------------------------------------------------------
+    # Variant Grams 恆為公克，Variant Weight Unit 只影響**顯示**（61 §6.1 欄位語義）。
+    # observed（E1）：真實商店裡一支 100ml 香水的 Variant Grams = 100000.0（＝100 公斤），
+    #   Variant Weight Unit = kg ⇒ 商家把「100」當成 kg 填進了 grams 欄，系統照收不誤。
+    # ⇒ 不設硬上限（重貨合法），但超過門檻要進匯入報告的覆核清單。
+    weight_review_threshold_grams: 50000
+    # --- 未知欄位：🔴 一律進報告，永不靜默 --------------------------------------
+    unknown_column_action: report_never_silent
+    # `X (product.metafields.ns.key)` 形態的表頭（E1／E2 都實測有）⇒ 依 metafield 定義寫入；
+    #   型別不在 i18n.translatable_metafield_types 白名單者不得帶 [locale] 後綴（67 §B.4）。
+    metafield_column_pattern: '^(?P<label>.+) \(product\.metafields\.(?P<ns>[^.]+)\.(?P<key>[^)]+)\)$'
+    metafield_column_action: upsert_by_definition
+
+  # --- 匯出語義（70 §G）-------------------------------------------------------
+  product_export:
+    # 🔴 匯出是 X4（65 §B／§G）：價格欄一律主單位兩位小數，**不得輸出 cents**。
+    #    JPY ¥1,480 儲存 148000 ⇒ 匯出 `1480.00`。輸出 148000 的話回匯會被 X6 收成 ¥148,000。
+    money_crossing_point: X4
+    money_emit_regex_key: money_boundary.decimal_string_regex        # ^-?\d+\.\d{2}$
+    # 預設**不含**任何 [locale] 欄 ⇒ 匯出檔就是一份純來源語言的、欄序對齊 Shopify 匯出的檔案。
+    # 🔴 這個預設同時服務兩件事：搬家友好，以及「不勾就不會多出 48 欄」。
+    default_locales: [source_only]
+    selectable_locales: true          # 形態同 i18n.export.selectable_locales
+    # 系統欄一律填值（匯出檔要能原檔回灌，且回灌時走 variant_gid 這條安全路徑）。
+    always_emit_system_columns: ["Source Locale", "Product ID", "Variant ID"]
+    # 🔴 分檔一律落在 handle 邊界上：一個商品的續列離開它的首列就失去商品層欄位，
+    #    整組變成孤兒列。**這條比檔案大小重要**。
+    split_when_exceeds_mb: true
+    split_strategy: handle_boundary
+    split_mid_product_forbidden: true
+    # 大檔改 email 交付（沿用 export_email_threshold_variants；形態同 i18n.export.async_delivery）。
+    async_delivery: true
+    delivery_channels: [notification, email]
+    signed_url_ttl_hours: 24          # 13 §F6.3 既有
+    # 匯出時**不做**任何 locale 的 fallback 填值：該語言沒有譯文就是空格。
+    # 🔴 填入回落值 ⇒ 商家原檔回灌後，回落值變成真的譯文，缺譯狀態被永久洗掉。
+    emit_fallback_values_forbidden: true
+
+  # --- Shopify 匯入器（70 §I）—— 自製，因為官方把跨平台搬家導向第三方 app -------
+  # 出處：60 §5 匯入 modal 逐字（observed）：「使用我們推薦的其中一款應用程式，從其他平台
+  #   匯入您的資料副本〔Matrixify〕」⇒ 反向路徑（Shopify → 我方）沒有官方工具，必須自製。
+  shopify_import:
+    # 🔴 E1（匯出檔）與 E2（匯入範本）**不是同一套欄名**（實測）：
+    #    Handle/URL handle、Body (HTML)/Description、Variant Price/Price、
+    #    Variant Taxable/Charge tax、Variant Grams/Weight value (grams)、Published/Published on online store…
+    #    ⇒ 匯入器必須同時認得兩套，且**不得**要求商家先改表頭。
+    accept_header_dialects: [shopify_export, shopify_import_template, chilllove_canonical]
+    canonical_dialect: chilllove_canonical
+    # 我方正規欄名在名稱衝突時取 **Shopify 匯出**那一套。理由（tiebreak，非偏好）：
+    #   ① 商家手上實際有的檔案是匯出檔，不是空白範本；
+    #   ② `Handle` 這個名字同時出現在 Shopify 的**庫存 CSV**（61 §6.2）⇒ 三份文件裡有兩份用它。
+    canonical_name_tiebreak: shopify_export_wins
+    # Shopify 有、我方沒有的欄位：逐欄宣告處置，🔴 **沒有「靜默丟棄」這個選項**。
+    unmapped_column_dispositions:
+      "Option1 Linked To": drop_with_report      # taxonomy 連動選項，我方未實作
+      "Option2 Linked To": drop_with_report
+      "Option3 Linked To": drop_with_report
+      "Google Shopping / *": map_to_marketing_attributes   # 30 §9-8 的 feed 欄位組
+      "Included / *": drop_with_report           # market 別的上架旗標，改由我方 market 設定
+      "Price / *": drop_with_report              # market 別價格，改由我方 market 價格表
+      "Compare-at price / *": drop_with_report
+      "Variant Inventory Tracker=shipwire|amazon_marketplace_web": drop_with_report
+      "Fulfillment service=<third_party>": map_to_manual_with_report
+    unmapped_column_report_required: true
+    # 我方有、Shopify 沒有的欄位：建立時的預設值一律**宣告在這裡**，不散在程式碼裡。
+    defaults_on_create:
+      "Source Locale": shop_source_locale        # 見 product_import.source_locale_absent_action
+      "Status": from_shopify_status              # active→ACTIVE / draft→DRAFT / archived→ARCHIVED
+      locale_columns: absent_means_unchanged     # 沒有譯文欄 ⇒ 不建立任何譯文（不是建立空譯文）
+    # 🔴 UNLISTED 永遠不會從 Shopify 檔案裡進來（本尊只有三態）——這是我方多出來的第四態
+    #    （product.status_values，13 §F1.2）。匯入器**不得**用 Published=FALSE 推導成 UNLISTED：
+    #    Published 管的是「上不上架到線上商店這個管道」，UNLISTED 管的是「可購買但不可被發現」。
+    never_infer_unlisted: true
+    # 值域映射（大小寫不敏感比對，輸出一律我方 enum 的大寫形態）。
+    value_maps:
+      status: {active: ACTIVE, draft: DRAFT, archived: ARCHIVED}
+      inventory_policy: {deny: DENY, continue: CONTINUE}
+      inventory_tracker: {shopify: chilllove}
+      boolean_true: ["TRUE", "true", "True", "1", "yes"]
+      boolean_false: ["FALSE", "false", "False", "0", "no", ""]
+    # 🔴 一次性搬家的順序：商品 CSV（含譯文）→ 庫存 CSV → 翻譯 CSV（非商品線資源）。
+    #    倒過來做，翻譯 CSV 的 resource_gid 還不存在（見 70 §H 的結構性理由）。
+    migration_order: [product_csv, inventory_csv, translation_csv]
