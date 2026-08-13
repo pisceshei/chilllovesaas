@@ -2613,9 +2613,29 @@ seo:
     #    **不得**借用 zh-TW 表示繁體（那是地區碼不是字體）；TW 若啟用是 zh-Hant-TW，由 market 推導。
     #    本鍵是**格式範例**不是市場清單——SEO 層不得出現任何寫死的國別清單。
     script_subtag_example: zh-Hant
-    # 碼粒度：單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼。
-    # 出處：help.shopify.com/manual/markets/seo ＋ shopify.dev/docs/storefronts/themes/seo/hreflang（help/dev）
-    region_qualified_when_single_country_market: true
+    # 🔴 碼粒度（2026-08-13 裁定，62 §I.2／§I.2-1 明知偏離登記）：**恆帶 ISO 3166-1 地區**，
+    #    多國市場**逐國展開**成 N 個碼、全部指向同一 URL；全站輸出不得出現裸語言碼（x-default 除外，
+    #    驗證＝62 §O REG-4 的 CI 紅燈掃描）。
+    # 依 62 §L 處方修正（2026-08-13，71-R0-V1 結案）：原鍵
+    #   `region_qualified_when_single_country_market: true`（註釋「單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼」）
+    # ＝裁定前語義——鍵名把「單國市場」寫進去，留著會讓人以為多國市場還有另一種行為。
+    # 比照 D-2：改名不留別名。原出處（help/dev 的 Shopify 行為）降為被偏離對象，見 §I.2-1。
+    always_region_qualified: true
+    multi_country_market_expands_per_country: true
+    # 裸碼出現在我方輸出 ⇒ CI 紅燈（62 §O REG-4 掃描 <head> 與 sitemap；x-default 除外）。
+    bare_language_code_forbidden: true
+    # 殘留衝突（同一市場多 presence 掛同碼）解析：先自身 presence、再祖先（62 §I.3(c) 步驟 2——
+    # 原 specificity_stack 比市場，恆帶地區後衝突兩邊是同一市場 ⇒ 比不出東西，換這把尺）。
+    multi_presence_resolution: nearest_own_then_ancestor
+    # 丟棄決定必須逐頁相同，否則 hreflang 雙向性破裂（62 §O REG-2b）。
+    dedupe_must_be_page_independent: true
+    # 逐國展開超上限時：部分標註＋blocking lint。🔴 不得退回裸碼（裸碼已被禁）。
+    over_limit_action: emit_partial_and_lint
+    # 🔴 認得 ≠ 允許輸出：驗證器巡檢外部標註要能認裸碼（報 seo_lint_findings）；
+    #    我方自己產生裸碼是 CI 紅燈。兩個檢查點、兩種嚴重度，不得合併成一個布林（62 §I.4）。
+    validator_accepts_bare_code_for_audit_only: true
+    # x-default 指「預設 (market, locale) 的帶前綴 URL」——根路徑已非內容頁（67 §F.1(b)），不得指 /。
+    x_default_target: default_market_locale_prefixed_url
     # x-default 恰一個，指主網域上 primary market 預設語言的對應 URL。（help）
     x_default_required: true
     # 碼衝突（兩個多國市場同語言）的解析：先展開為逐國碼，超過此上限則依 market.specificity_stack 取捨。

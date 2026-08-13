@@ -174,4 +174,4 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R0-DEAD2 | DEAD | 死註釋 2 條：`ck-acct-credit`/`ck-announce`（X-07 超前實作形態） | ⬜ R14 |
 | 71-R0-DOC1 | DOC | 17 條 DOCS i 欄無 P0/P1/P2 標記 | ⬜ R14 |
 | 71-R0-DOC2 | DOC | 74 個 `[api:TBD-*]` 待逐輪落 28 號契約命名 | ⬜ 各輪 |
-| 71-R0-V1 | V | limits.yml hreflang 相關鍵疑未同步 2026-08-13 恆帶地區裁定（guard 工作流警告）——查證後修 | ⬜ 優先 |
+| 71-R0-V1 | V | limits.yml hreflang 鍵未同步恆帶地區裁定——查證坐實：`region_qualified_when_single_country_market` 為裁定前化石鍵。已照 62 §L 處方落齊 8 鍵（改名＋7 新增，D-2 形態） | ✅ R1 結案 |
