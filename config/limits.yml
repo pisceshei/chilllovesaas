@@ -4029,3 +4029,58 @@ csv:
     # 🔴 一次性搬家的順序：商品 CSV（含譯文）→ 庫存 CSV → 翻譯 CSV（非商品線資源）。
     #    倒過來做，翻譯 CSV 的 resource_gid 還不存在（見 70 §H 的結構性理由）。
     migration_order: [product_csv, inventory_csv, translation_csv]
+
+# ── 分析 / 報告（R11，2026-08-14 實測＋help/shopify.dev 雙源；全文＝docs/research/80）────────
+analytics:
+  # 🔴 報表顯示上限：表格最多 1,000 列，但**總計列反映全部資料**（不只這 1,000 列）。
+  #    資料量更大時走匯出。抄漏「總計含全部」這半句會做出錯的 footer。（80 §4.1）
+  report_table_display_rows_max: 1000
+  report_totals_reflect_all_rows: true
+  # 報告頁一次最多列出的自訂報告數；可建更多，超出者需自存 URL 才能存取。
+  custom_reports_displayed_max: 250
+  # 🔴 匯出格式與範圍（實測彈窗值域，非推測）。預設值＝本尊預設值。
+  export_formats: [csv, xml, jsonl, parquet]
+  export_format_default: csv
+  export_scopes: [all_query_results, displayed_only]
+  export_scope_default: all_query_results
+  # 資料新鮮度（help 明載）。auto_refresh 僅在所選期間**包含今天**時生效。
+  overview_freshness_seconds: 60
+  auto_refresh_interval_seconds: 60
+  auto_refresh_requires_period_including_today: true
+  # 🔴 歷史資料起算日：平台級硬限制，**與方案無關**（各方案差異＝文檔未載）。
+  #    我方若自建 rollup 沒有這個限制，但對照本尊數字時必須知道差異來源。
+  history_floor:
+    sessions_based: "2022-10-01"
+    inventory_based: "2023-10-01"
+    attribution: "2021-10-01"
+  # 即時層口徑（Live View；help 明載的三個窗）。
+  live_view:
+    visitors_window_minutes: 5
+    customer_behaviour_window_minutes: 10
+    day_boundary: shop_local_midnight
+  # 歸因：官方唯一數字＝session 後 N 天未購買則 first interaction referrer 重置。
+  # 🔴 這不是「歸因視窗」——五種模型各自的視窗長度＝文檔未載，不得拿這個數字當視窗用。
+  attribution_first_referrer_reset_days: 30
+  attribution_models: [first_click, last_click, last_non_direct_click, linear, any_click]
+  # 🔴 any_click 各通路加總會超過 metric 本身（官方明列）⇒「小計＝總計」一致性測試必須白名單。
+  attribution_models_excluded_from_sum_checks: [any_click]
+  # 探索器槽位（自由形式 4 / 組別 5）——兩套不同槽位集合，切換會清空查詢。
+  exploration_modes: [freeform, cohorts]
+  cohort_intervals: [week, month, quarter]
+  cohort_interval_default: month
+  # 🔴 組別預設期間＝過去 12 個月且**排除當月**（SINCE startOfMonth(-12m) UNTIL endOfMonth(-1m)）。
+  cohort_default_period: last_12_months_excluding_current
+  # 期間選擇器的兩個**滾動窗**（不是固定清單，須以當前日期推導）。
+  date_range_bfcm_years_shown: 4
+  date_range_quarters_shown: 4
+  # ShopifyQL 對照（我方查詢層若做等價物則引此節；上限數字＝文檔未載，不得臆造）。
+  shopifyql:
+    date_offset_units: [s, min, h, d, w, m, q, y]   # 🔴 min=分鐘、m=月，不是慣例的 m=分鐘
+    time_dimensions_interval: [second, minute, hour, day, week, month, quarter, year]
+    time_dimensions_cyclic: [hour_of_day, day_of_week, week_of_year, month_of_year]
+    # 🔴 NOT 系運算子不排除 NULL 列（官方明列陷阱）；AND 優先於 OR。
+    negation_excludes_null: false
+    and_binds_tighter_than_or: true
+    # 未載：LIMIT 最大值／OFFSET 語法／HAVING 彙總函式／rate limit 數字／最大回傳列數。
+    limit_max: null
+    api_max_rows: null
