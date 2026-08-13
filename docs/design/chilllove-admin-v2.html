@@ -2191,7 +2191,10 @@ const NAV=[
  /* 71-R9（實測）：本尊內容子項＝元物件/檔案/選單/部落格貼文（四項，根＝/content/metaobjects）；
     網址重新導向掛在選單頁的頁首鈕（內容區），非線上商店。 */
  {id:"m-metaobjects",name:"內容",icon:"content",kids:[["m-files","檔案"],["m-menus","選單"],["m-blog","部落格貼文"]]},
- {id:"m-markets",name:"市場",icon:"markets",kids:[["m-catalogs","目錄"]]},
+ /* 71-R10（2026-08-13 實測）：市場子項二＝目錄／推出。本尊路由 /catalogs 與 /rollouts
+    （🔴 推出是**頂層路徑**，不是 /markets/rollouts——我方沿用同構命名）。
+    R0-MISS1 結案：推出＝排程與 A/B 測試，非分階段推出市場。 */
+ {id:"m-markets",name:"市場",icon:"markets",kids:[["m-catalogs","目錄"],["m-rollouts","推出"]]},
  /* 71-R4-STRUCT1（2026-08-13 實測＋help 修正）：本尊財務導航子項是**狀態函數**——未啟收款＝無子項
     （本店實測）；啟用後出現「支付款項」子項（help finance/overview 明文「前往財務 > 支付款項」）。
     帳單無論如何只活在 設定 → 帳單。我方：m-billing 自導航移除（路由留給深連結，內容改指路卡）；
@@ -3719,7 +3722,9 @@ const DOCS={
  storechip:{t:"商店切換器",f:"顯示當前店＋多店切換",l:"多店同帳號；demo 標籤=測試環境警示",i:"P2 多店；M：shops + org（05 §2）"},
  "doc-m-shiplabels":{t:"運送標籤",f:"購買/列印宅配標籤",l:"買標→費用記平台帳單→自動標出貨+回填追蹤；void 可退",i:"P2・Labels::Quote/Purchase adapter（22 §1b）"},
  "doc-m-giftcards":{t:"禮品卡",f:"發卡與餘額管理",l:"71-R8 實測空態＝雙鈕「建立禮品卡」（後台直接簽發寄顧客）＋「新增禮品卡商品」（可販售商品，面額=變體）＋匯出（停用態）＋服務條款連結；後台發卡 ≤$2,000／商品 ≤$10,000 等值；停用=永久；完整卡號僅顧客可見；與商店抵用金為兩套負債（R5 §4）",i:"P1・M：gift_cards（code digest；22 §2）"},
- "doc-m-catalogs":{t:"目錄",f:"市場×商品×價格組合",l:"固定價覆蓋 % 調整；也用於 B2B/AI 代理通路",i:"P2・M：catalogs（05 §1e）"},
+ "doc-m-catalogs":{t:"目錄",f:"市場×商品×價格組合",l:"固定價覆蓋 % 調整；也用於 B2B/AI 代理通路。71-R10 實測空態：「使用目錄打造個人化購物體驗／使用目錄為顧客建立自訂商品和定價方案」＋頁首 匯出/匯入（空態禁用）/建立目錄",i:"P2・M：catalogs（05 §1e）"},
+ "rollout-empty":{t:"推出空態",f:"測試並安排發布時間＋建立推出計畫",l:"🔴 71-R0-MISS1 結案：「推出」＝**排程與 A/B 測試商店更新**，不是分階段推出市場（我方 R0 憑名稱誤推）。實測原文「為即將到來的銷售活動排程一組變更，或嘗試不同設計以查看何者成效最佳」；路由＝**頂層 /rollouts**（非 /markets/rollouts）但導航掛在市場區下",i:"P3・[api:TBD-rolloutCreate]（28 待補）；依賴 M2 主題引擎與結帳擴充"},
+ "rollout-new":{t:"建立推出計畫",f:"名稱 ≤255＋草稿＋新增任何變更（二型）",l:"71-R10 實測建立式：名稱計數器 0/255＋草稿 badge＋「排程、測試並推出商店更新」卡；變更類型**二選**：網路商店佈景主題／結帳頁面和帳號（各帶 › 進第二層，第二層值域未取得＝71-R10-V2）",i:"P3・[api:TBD-rolloutCreate] [tbl:rollouts,rollout_changes]"},
  "doc-m-menus":{t:"選單",f:"前台導航樹",l:"巢狀 ≤3 層；八種連結資源型；轉址同區管理",i:"P0(M2)・M：menus/menu_items + url_redirects（22 §6）"},
  "doc-m-files":{t:"檔案庫",f:"全站資產",l:"一次 ≤20 檔；刪除警告引用斷裂；CDN 連結",i:"P1・M：file_assets + 引用計數（22 §6）"},
  "doc-m-blog":{t:"部落格",f:"內容行銷",l:"排程發佈；作者限員工；SEO 同商品規則",i:"P1・M：blogs/articles（22 §6）"},
@@ -8040,6 +8045,35 @@ function marketPage(){
       ${m.id!=='tw'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除市場','此市場的國家會退回兜底 backup region；${kids.length?'其下層市場會改為繼承更上層，':''}該區的固定價將一併移除。','刪除市場',function(){toast('已刪除市場');go('m-markets');})">刪除市場</button></div>`:''}
     </div></div>`;
 }
+/* 71-R0-MISS1 結案（71-R10，2026-08-13 實測 /rollouts）：「推出」**不是分階段推出市場**——
+   而是**排程與 A/B 測試商店更新**：空態原文「測試並安排發布時間／為即將到來的銷售活動排程一組
+   變更，或嘗試不同設計以查看何者成效最佳」。建立式：名稱 ≤255＋草稿 badge＋「排程、測試並推出
+   商店更新」卡＋「新增任何變更」（推出新的佈景主題、更新結帳頁面、執行實驗…），變更類型二選：
+   **網路商店佈景主題／結帳頁面和帳號**（各帶 › 進第二層）。
+   ⚠ 我方 M2 前無主題引擎與結帳擴充，此頁先做結構殼＋語義說明，實作排 M2 後（71-R10-V1）。 */
+const ROLLOUTS=[];
+function rolloutsPage(){
+  return `<div class="page-head"><h1>推出</h1><div class="head-actions">
+      <button class="btn btn-pri btn-sm" data-doc="rollout-new" onclick="rolloutNew()">建立推出計畫</button></div></div>`
+   +(ROLLOUTS.length?'':`<div class="card" data-doc="rollout-empty"><div class="empty-wrap" style="max-width:520px;margin:0 auto">
+      <span class="rb-ic" aria-hidden="true" style="font-size:28px">🚀</span>
+      <b>測試並安排發布時間</b>
+      為即將到來的銷售活動排程一組變更，或嘗試不同設計以查看何者成效最佳。
+      <div style="margin-top:var(--sp-400)"><button class="btn btn-pri btn-sm" onclick="rolloutNew()">建立推出計畫</button></div></div></div>`);
+}
+function rolloutNew(){
+  openGen({title:'新增推出作業',wide:true,body:`<div class="stack">
+    ${F('名稱',`<input class="input" data-f="_rn" data-val="req|max:255" placeholder="例：雙 11 首頁改版">`,'上限 255 字（本尊計數器 0/255）；建立時狀態＝草稿')}
+    <h4>排程、測試並推出商店更新</h4>
+    <div class="subcard" style="border-style:dashed;text-align:center;padding:var(--sp-500)">
+      <b>新增任何變更</b><p class="mut" style="font-size:var(--t-xs)">推出新的佈景主題、更新結帳頁面、執行實驗…</p>
+      <div class="rowflex" style="justify-content:center;gap:var(--sp-200);margin-top:var(--sp-300)">
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：網路商店佈景主題——選草稿主題排程發布或做 A/B 實驗（我方 M2 主題引擎後實作）')">🎨 網路商店佈景主題 ›</button>
+        <button class="btn btn-sec btn-sm" onclick="toast('Demo：結帳頁面和帳號——結帳版本排程/實驗（我方 M2 結帳擴充後實作）')">🛒 結帳頁面和帳號 ›</button></div></div>
+    <p class="mut3" style="font-size:var(--t-xs)">狀態機：草稿 → 已排程 → 進行中 → 已完成／已停止（值域待 help 補證，71-R10-V2）。</p></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">捨棄</button>
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存推出作業（草稿）')">儲存</button>`});
+}
 function catalogsPage(){
   return listPage({key:'cat',title:'市場・目錄',doc:'doc-m-catalogs',ph:'搜尋目錄…',
     actions:[['建立目錄','pri','catalogNew()','cat-new']],
@@ -8404,6 +8438,7 @@ Object.assign(MODULES,{
  "m-blog":{title:"內容・部落格貼文",full:true,custom:blogPage},
  "m-markets":{title:"市場",full:true,custom:marketsPage},
  "m-catalogs":{title:"市場・目錄",full:true,custom:catalogsPage},
+ "m-rollouts":{title:"推出",full:true,custom:rolloutsPage},
  "m-finance":{title:"財務",full:true,custom:financePage},
  "m-billing":{title:"帳單",full:true,custom:billingPage},
  "m-reports":{title:"報告",full:true,custom:reportsPage},
