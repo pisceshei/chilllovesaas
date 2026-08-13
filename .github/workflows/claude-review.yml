@@ -29,7 +29,13 @@ concurrency:
 
 env:
   MAX_FIX_ROUNDS: "3"
-  AUTO_MERGE: "true"
+  # 依 2026-08-13 使用者裁定改 "false"（原值 "true"）：合併 main 的唯一閘門是 LLM 留言的一行
+  # 【驗收結論】文字，存在兩個已確認的風險形態——
+  #   ① diff／PR 描述內的 prompt injection 可誘導「通過」直接落地 main（本檔無程式層防禦）；
+  #   ② 驗收留言未綁 commit SHA，且解析步驟 if: !cancelled() 在 Claude 步驟失敗時照跑
+  #      ⇒「上輪通過但 merge 失敗 → 新 push → 本輪 Claude 失敗 → 沿用舊通過合併未審核 commit」。
+  # 🔴 要改回 "true" 必須先修掉②（留言內嵌 head SHA 並在解析時比對），並接受①的風險。
+  AUTO_MERGE: "false"
 
 jobs:
   review:
