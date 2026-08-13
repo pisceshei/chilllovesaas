@@ -3392,6 +3392,22 @@ const SET_PAGES={
 /* 有「新增／排序」動作的分頁：內容隨狀態變動，改成每次進頁重算（沿用 policies 的既有做法）。
    靜態分頁維持字串常數，不進這張表。 */
 const SET_DYN={};
+/* 商店活動記錄（R12／81 §7.11）。🔴 本尊的硬約束三條，做 UI 時不可自作主張加功能：
+   ①**最多顯示 250 筆**——保留範圍由筆數上限決定，不是天數（保留天數＝官方文檔未載）；
+   ②**view-only**：不可展開、不可點擊個別事件、**不可匯出、不可篩選**；
+   ③執行者可以是**人員／app／銷售管道**三種，顯示為「Shopify」通常代表商家自己觸發的背景工作。
+   跨頁影響：這是設定層的全店記錄，與訂單/顧客/庫存各自的 Timeline 是**兩套東西**，不要合併。 */
+function storeActivityLog(){
+  const rows=[['今天 14:32','變更商店設定','設定 › 一般 — 訂單 ID 前綴','Benny W.'],
+   ['今天 09:05','授予 app 存取商店權限','Simprosys Feed','Benny W.'],
+   ['昨天 22:10','刪除商品','奶茶色寬版帽T（草稿）','Shopify'],
+   ['昨天 18:44','變更商店設定','設定 › 通知 — 寄件者 email','Yuki T.']];
+  openGen({title:'商店活動記錄',body:`<div class="stack">
+    <table class="idx"><thead><tr><th>日期</th><th>事件</th><th>資源</th><th>使用者</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td class="mut">${H(r[0])}</td><td>${H(r[1])}</td><td>${H(r[2])}</td><td>${H(r[3])}</td></tr>`).join('')}
+    </tbody></table>
+    <p class="help">最多顯示 250 筆（limits.store_activity_log.max_entries_displayed）；本頁唯讀，不可展開、篩選或匯出。</p></div>`});
+}
 function openSettings(page='general'){
   const back=document.activeElement;          /* closeNav 可能先把焦點搬走，先存起來當還原目標 */
   closeNav(false);
@@ -8497,12 +8513,35 @@ function openDiscModal(){
 /* ==================================================================
    設定：補齊 41 §12 全分頁（原 14 項 → 21 項）
    ================================================================== */
-const permCats=[['訂單','View／Manage order info／Edit／Apply discounts／Set payment terms／Charge card／Record payments／Capture／Fulfill and ship／Buy labels／Return／Refund to original／Refund to store credit／Cancel／Export／Delete／Abandoned checkouts／Disputes'],
- ['草稿訂單','View／Create-edit／Apply discounts／Set payment terms／Charge card／Mark as paid／Export／Delete'],
- ['商品與庫存','View／View cost／Create-edit／Edit cost／Edit price／Export／Delete；Inventory：Manage／View transfers／Manage transfers／Manage shipments'],
- ['顧客','View／Create-edit／Erase personal data／Request data／Export／Merge／View store credit／Edit store credit／Delete'],
- ['內容與線上商店','Menus／Metaobject definitions×3／Entries×3／Files×4／Themes／Edit code／Blog posts and pages'],
- ['商店設定與財務','Manage settings／View billing／Manage plan／Payments／Shipping／Taxes／Locations／Domains／Custom pixels／Policies；Finance：View payouts／Balance activity']];
+/* 🔴 權限目錄＝2026 實測全量（R12／81 §1.4）：**17 群組／115 個權限／3 層**。
+   原本這裡只有 6 類彙總，與本尊的分組邊界對不上（例如本尊把「商品」與「庫存」放同一組但庫存是子標題、
+   「內容」與「網路商店」是**兩個獨立群組**、Markets 自成一組且底下含「推出」）。
+   逐項全文見 docs/research/81 §1.4；括號內數字＝該組權限數，與本尊的 `0/n` 計數器同源。 */
+const permCats=[
+ ['首頁 (1)','首頁'],
+ ['訂單 (20)','檢視／管理訂單資訊／編輯訂單 ↳套用折扣／設定付款條件／使用信用卡收款／使用存放在保存庫中的付款方式扣款／記錄付款／請款／出貨與運送 ↳購買託運單標籤／取消／匯出／刪除｜【退貨與退款】退貨／退款至原始付款方式 ↳超額退款至原始付款方式／退款至商店抵用金｜【未完成結帳作業】管理｜【爭議】管理'],
+ ['草稿 (9)','檢視／建立和編輯 ↳套用折扣／設定付款條件／使用信用卡收款／使用存放在保存庫中的付款方式扣款／標示為已付款並記錄付款／匯出／刪除'],
+ ['產品 (11)','檢視 ↳檢視成本／建立和編輯 ↳編輯成本 ↳編輯價格／匯出／刪除｜【庫存】管理庫存 (不含轉移)／檢視轉移 ↳管理轉移 ↳管理貨件'],
+ ['禮品卡 (4)','檢視／建立和編輯／匯出／停用'],
+ ['顧客 (15)','檢視／建立和編輯／清除個人資料／要求資料／匯出／合併／檢視商店抵用金交易 ↳編輯商店抵用金／刪除｜【公司】檢視／建立和編輯／指派員工至公司地點／刪除／檢視商店抵用金交易 ↳編輯商店抵用金'],
+ ['行銷 (4)','檢視、建立和刪除行銷活動與自動化作業｜【行銷活動】檢視／建立和編輯／刪除'],
+ ['折扣 (1)','檢視、建立和刪除'],
+ ['內容 (11)','選單｜【metaobject 定義】檢視／建立和編輯／刪除｜【項目】檢視／建立和編輯／刪除｜【檔案】檢視／建立／編輯／刪除'],
+ ['Markets (9)','檢視／建立和編輯／刪除｜【目錄】檢視／建立和編輯／刪除｜【推出】檢視／建立和編輯／刪除'],
+ ['結帳和顧客帳號 (3)','檢視和編輯 ↳管理商店抵用金可見性 ↳管理身分識別提供者'],
+ ['快速銷售 (1)','在行動版上使用「快速銷售」'],
+ ['財務 (4)','檢視稅務文件／檢視餘額帳戶活動／檢視所有信用帳戶活動／檢視支付款項'],
+ ['分析 (2)','報告／控制面板'],
+ ['網路商店 (3)','佈景主題 ↳編輯程式碼 (包含產生佈景主題區塊)／部落格貼文和頁面'],
+ ['應用程式開發 (3)','檢視由員工和協作者開發的應用程式 ↳開發 ↳啟用開發作業'],
+ ['設定 (14)','管理設定／檢視帳單並接收帳單電子郵件 ↳編輯帳單付款方式並支付帳單 ↳管理方案／管理應用程式帳單／管理付款設定／管理運送和配送／管理稅額和關稅／管理地點／管理網域 ↳將網域轉移至其他商店／檢視顧客事件 ↳管理和新增自訂像素／管理商店政策／管理和安裝應用程式與管道 ↳核准應用程式費用']];
+/* 預設角色目錄【實測窮舉 10 個／4 類別】。🔴「組織擁有人／商店擁有人」是內建擁有人角色，
+   不出現在可管理的角色清單裡（81 §1.2）。角色類別決定可用的權限集合。 */
+const ROLE_CATALOG=[
+ ['組織','應用程式開發人員／組織管理員／組織 POS 管理員／組織使用者管理員'],
+ ['商店','商店管理員／商店使用者管理員'],
+ ['銷售點 (POS)','POS 完整權限／POS 裝置設定／POS 使用者管理員'],
+ ['合作夥伴','協作者存取權限']];
 /* ---------- 設定分頁的可變狀態：新增／排序在 demo 也要真的生效 ---------- */
 const MANUAL_PAY=[{n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記已收款',ins:'請匯款至 台灣銀行 (004) 123-456-789012，戶名 CHILL LOVE，並於備註填單號。'}];
 const CARRIER_ACCTS=[];
@@ -8532,24 +8571,39 @@ Object.assign(SET_PAGES,{
   <div class="card card-pad"><h3>商家詳細資訊（法律實體）</h3><p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">用於金流、市場與稅務；不對顧客顯示</p>
    <div class="set-row"><span class="flag"></span><div class="sr-t"><b>CHILL LOVE — 主體</b><span class="sub">香港・稅籍編號 12345678-000（tax_id_format.label＝BR number，limits.yml jurisdictions.hk.tax_id_format）</span></div><button class="btn btn-ghost btn-sm sr-act" onclick="toast('Demo：商業實體是組織層資源，商店層只能引用（44 §8.3）')">管理</button></div></div>
   <div class="card card-pad"><h3>商店預設值</h3>
-   ${setRowSel('幣別顯示','商店基準幣別；顧客實際看到的幣別由各市場的 presentment 設定決定','shopCurrency',
+   ${setRowSel('幣別顯示','商店基準幣別；🔴 顧客看到的幣別由 Markets 決定（本尊原文：「若要管理顧客看到的幣別，請前往 Markets」）','shopCurrency',
      curOptions(),MARKET_BASE,'set-currency')}
    ${setRowSel('單位制','影響重量／尺寸欄位與運費級距的單位','shopUnit',[['metric','公制（kg／cm）'],['imperial','英制（lb／in）']],'metric','set-unitsystem')}
-   ${setRowSel('時區','報表日界線、排程發布與到期判定都以此為準','shopTz',
+   ${/* 🔴 R12-V3：本尊的時區與語言是**使用者層級**（一般設定明文「若要變更您的使用者層級時區和語言，
+        請前往您的帳號設定」），我方目前做成商店級單一值——差異已登記，M1 前裁定要不要改成 per-user。 */''}
+   ${setRowSel('時區','報表日界線、排程發布與到期判定都以此為準（🔴 本尊為使用者層級設定，見 71-R12-V3）','shopTz',
      [['Asia/Taipei','(GMT+08:00) 台北'],['Asia/Hong_Kong','(GMT+08:00) 香港'],['Asia/Singapore','(GMT+08:00) 新加坡'],['Asia/Tokyo','(GMT+09:00) 東京'],['America/Los_Angeles','(GMT-08:00) 太平洋時間'],['UTC','(GMT+00:00) UTC']],'Asia/Taipei','set-timezone')}
    ${setRow('訂單編號','流水號由平台配發、單店連號，不可改也不可重設','<span class="tagchip num" style="margin:0">#1042</span>','set-ordernumber')}
-   ${setRow('兜底地區 backup region','由「還留在 active market 的國家」推導，不是可挑的欄位','<span class="tagchip" style="margin:0">台灣</span>','set-backup-region')}</div>`,
+   ${setRow('兜底地區 backup region','由「還留在 active market 的國家」推導，不是可挑的欄位','<span class="tagchip" style="margin:0">台灣</span>','set-backup-region')}</div>
+  <div class="card card-pad" data-doc="set-store-assets"><h3>商店資產</h3>
+   ${setRowBtn('中繼欄位','可用於佈景主題，並可針對 Storefront API 進行設定','<span class="chev" aria-hidden="true">›</span>',"setPage('customdata')",'set-asset-metafields','🏷')}
+   ${setRowBtn('品牌','跨銷售管道、佈景主題和 app 整合品牌資產','<span class="chev" aria-hidden="true">›</span>',"setPage('brand')",'set-asset-brand','🎨')}
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">🔴 71-R12-STRUCT2：本尊的<b>品牌是「一般」的子頁</b>（<code>/settings/general/branding</code>），不是頂層設定分頁。我方保留獨立分頁但從這裡建立正確的進入路徑，歸屬對齊排 M1。</p></div>
+  <div class="card card-pad" data-doc="set-resources"><h3>資源</h3>
+   ${setRowBtn('商店活動記錄','誰在什麼時候改了什麼；執行者可以是人員、app 或銷售管道','<span class="chev" aria-hidden="true">›</span>','storeActivityLog()','set-activity-log','📜')}
+   ${setRowBtn('鍵盤快捷鍵','後台全域快捷鍵一覽','<span class="chev" aria-hidden="true">›</span>',"toast('Demo：快捷鍵一覽')",'set-shortcuts','⌨')}</div>`,
  users:`<div class="card card-pad" data-doc="set-users"><h3>使用者與角色（組織層）</h3>
    <div class="set-row"><span class="avatar">BW</span><div class="sr-t"><b>Benny W.（你）</b><span class="sub">店主・2FA 已啟用・最後登入：今天</span></div><span class="set-ctl">${chip('店主','default','full')}</span></div>
    <div class="set-row"><span class="avatar" style="background:linear-gradient(135deg,#c9a2e9,#7c4dab)">YT</span><div class="sr-t"><b>Yuki T.</b><span class="sub">出貨與客服・2FA 未啟用・最後登入：昨天</span></div><span class="set-ctl">${chip('員工','info','full')}</span></div>
-   <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：邀請使用者（單發或 CSV 批量，72 小時單次連結）')">邀請使用者</button>
-     <button class="btn btn-ghost btn-sm" onclick="toast('Demo：協作者申請碼（4 碼，不佔名額）')">協作者</button></div></div>
+   <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：新增使用者（Admin and POS／POS only 兩種；邀請有效期 7 天，過期須移除後重新新增——本尊無「重寄邀請」操作）')">新增使用者</button>
+     <button class="btn btn-ghost btn-sm" onclick="toast('Demo：協作者請求代碼（4 位數，可重新產生）——協作者不計入座位上限，但仍須從使用者頁審核並核准')">協作者</button></div></div>
+  <div class="card card-pad" data-doc="set-roles"><h3>角色目錄</h3>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">實測 10 個可管理角色／4 類別。🔴 一個角色<b>不得混用不同類別的權限</b>，但一個使用者可同時持有多個類別的角色（實測店主＝「組織擁有人, 商店擁有人」）。擁有人角色不出現在此清單。</p>
+   ${ROLE_CATALOG.map(([c,rs])=>setRow(H(c),H(rs),'','set-role-cat')).join('')}</div>
   <div class="card card-pad" data-doc="set-perm-cats"><h3>顆粒權限目錄</h3>
-   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">13 類顆粒權限對照 Pundit policy；staff 角色映射為 API scope 集合（28 §0.2）</p>
+   <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">實測 17 群組／115 個權限／3 層（群組→子標題→權限→縮排子權限）。🔴 依賴是<b>圖不是樹</b>：授予要往上補齊祖先鏈、撤銷要往下連動移除，且「庫存／目錄任一權限 → 產品·檢視」這兩條<b>不可取消</b>。對照 Pundit policy 與 API scope 集合（28 §0.2）</p>
    ${permCats.map(([c,pm])=>setRow(H(c),H(pm),'','set-perm-cat')).join('')}
-   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：這六列原本帶 <b>›</b> 卻沒有 handler。原型<b>沒有角色 CRUD</b>（沒有可編輯的角色物件），做一個勾不到任何角色的權限勾選頁只是換一種假控件——因此改為明示唯讀的<b>權限目錄</b>。逐項勾選屬 M5 的角色編輯器，屆時入口掛在角色列上，不是掛在這裡。</p></div>
+   <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：這些列原本帶 <b>›</b> 卻沒有 handler。原型<b>沒有角色 CRUD</b>（沒有可編輯的角色物件），做一個勾不到任何角色的權限勾選頁只是換一種假控件——因此改為明示唯讀的<b>權限目錄</b>。逐項勾選屬 M5 的角色編輯器，屆時入口掛在角色列上，不是掛在這裡。</p></div>
   <div class="card card-pad"><h3>安全</h3>
+   ${setRowSel('安全登入規定','本尊值域二選：全體強制則所有人須用密碼金鑰或兩步驟驗證（不適用 POS）；預設是逐一管理','secSignin',
+     [['specific','特定使用者（預設）'],['all','所有使用者皆必要']],'specific','set-sec-signin')}
    ${setRowTgl('強制兩步驟驗證','所有成員下次登入時必須設定；未設定者被擋在登入頁','sec2fa',false,'set-sec-2fa')}
+   ${setRowBtn('使用者活動記錄','監控並檢視使用者活動（角色建立/編輯/刪除等事件）','<span class="chev" aria-hidden="true">›</span>',"toast('Demo：使用者活動記錄——四欄 事件/資源/日期/使用者，可點入細節')",'set-user-activity','🛡')}
    ${setRowDanger('登出所有裝置','立即撤銷所有成員的 session（含你自己）','登出所有裝置',
      '登出所有裝置','所有成員（包含你自己）的 session 會立即失效，正在進行的後台操作會中斷，未儲存的表單內容不會保留。','全部登出',
      "toast('已撤銷全部 session——所有成員需重新登入')",'set-signout-all')}</div>`,
@@ -8681,6 +8735,7 @@ Object.assign(SET_PAGES,{
            <button role="menuitem" style="color:var(--critical)" onclick="chUninstall('${n}')">解除安裝</button></div></span></div>`).join('')}
    <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">53號 N-04：各管道的設定頁<b>屬該管道自己的 app</b>（不是平台設定的一部分），原型不做這一層；商品要出現在某管道，是在商品／目錄側設定發布範圍。</p></div>`,
  giftcards:`<div class="card card-pad" data-doc="set-giftcards"><h3>禮品卡</h3>
+   <p class="mut3" style="font-size:var(--t-xs);margin:0 0 var(--sp-200)">🔴 71-R12-V1：本尊<b>設定樹沒有這一頁</b>——到期日與 Apple Wallet 在<b>設定 › 付款</b>，自動出貨在<b>設定 › 一般</b>；但 help 的權限對照表又把「Gift cards」列為 Settings 項目（兩份官方文檔互相矛盾）。我方暫留獨立頁，歸屬待 M1 前裁定。</p>
    ${setRowSel('到期政策','多數地區法規禁止設到期日；設了就必須能證明合規','gcExpiry',
      [['never','不設到期日'],['12','發卡後 12 個月'],['24','發卡後 24 個月'],['custom','自訂月數']],'never','set-gc-expiry',{dep:'gcExpiryCustom',depVal:'custom'})}
    <div id="gcExpiryCustom" hidden>${setRowInp('自訂有效月數','到期以商店時區的當日結束為準（同 store credit）','gcExpiryMonths','36','例：36','set-gc-expiry-months',{val:'req|int'})}</div>
@@ -12035,6 +12090,16 @@ Object.assign(DOCS,{
   l:"**為什麼不可改**：44 §8.3 逐字「決定適用於您市場以外顧客的設定」——這個值是由「哪些國家還留在 active market」推導出來的（29 §1.2），不是可挑的欄位。要換就得去 Markets 調整 active market，這裡改只會與市場設定互相矛盾",
   i:"P1・唯讀衍生值，由 [tbl:markets] 即時推導（無獨立欄位）；[api:markets] 讀取後於序列化層計算"},
 /* ---------- 使用者與安全 ---------- */
+ "set-roles":{t:"角色目錄",f:"10 個可管理角色／4 類別（組織 4・商店 2・POS 3・合作夥伴 1）",l:"🔴 **一個角色不得混用不同類別的權限**（help 原文），但**一個使用者可同時持有多個類別的角色**（實測店主＝「組織擁有人, 商店擁有人」）。擁有人角色（組織擁有人／商店擁有人）是內建的，**不出現在可管理清單**。help 另列 7 個 predefined roles（線上商店編輯／客服／商品企劃／行銷＋POS×3）實測未出現，顯示條件待查（71-R12-V7）。建立角色：名稱≤255／說明≤255／類別下拉決定可用權限／至少一項權限",i:"P2・[api:TBD-roleCreate/roleUpdate/roleDelete] [tbl:roles,role_permissions]（06 §7 待補）｜🔴 跨功能：角色是**組織層**資源可跨店，與我方全表帶 shop_id 的鐵律 2 直接衝突——M1 前必答（71-R12-STRUCT1）；建立角色需 step-up auth（重新輸入密碼），與移除使用者同一機制"},
+ "set-role-cat":{t:"角色類別列",f:"該類別下的預設角色清單",l:"類別可用條件：組織自訂角色限 Plus／Partner 組織；商店需 Basic·Starter 以上；POS 需 POS 管道＋至少一個 POS Pro 地點；合作夥伴僅 Partner 組織",i:"P2・唯讀展示（角色 CRUD 在 M5 角色編輯器）"},
+ "set-sec-signin":{t:"安全登入規定",f:"二選：所有使用者皆必要／特定使用者（預設）",l:"「所有使用者皆必要」＝全組織須用密碼金鑰或兩步驟驗證，🔴 **此規定不適用於 POS**；「特定使用者」＝從個別使用者頁逐一管理。help 補充：把某人從 not required 改成 required 會**立刻把該使用者登出**",i:"P2・[api:TBD-orgSecurityPolicyUpdate] [tbl:organizations]｜🔴 跨功能：組織強制 2FA／代員工重設 2FA／SAML／SCIM 皆為 Plus 專屬（limits.users_and_roles）"},
+ "set-user-activity":{t:"使用者活動記錄",f:"角色與使用者的建立/編輯/刪除事件",l:"四欄 事件／資源／日期／使用者，可點入細節。🔴 與「商店活動記錄」是**兩套不同的記錄**：這一套在 使用者›安全性 底下、只記使用者與角色異動；那一套在 一般›資源 底下、記全店設定與資源異動。保留期／篩選／匯出＝官方文檔未載",i:"P2・[api:TBD-userActivityLog] [tbl:audit_events]｜跨功能：Plus 的組織層使用者活動記錄共用同一入口，不是另一套"},
+ "set-store-assets":{t:"商店資產卡",f:"中繼欄位／品牌 兩個進入點",l:"🔴 **71-R12-STRUCT2**：本尊的品牌是「一般」的**子頁**（/settings/general/branding），不是頂層設定分頁；我方保留獨立分頁但從這裡建立正確路徑，歸屬對齊排 M1。品牌欄位限制：logo 最小寬 512px／方形 logo 512×512／封面 1920×1080 僅一張／標語 ≤80 字／簡短描述 ≤150 字（limits.brand_assets）",i:"P2・[api:TBD-brandUpdate] [tbl:shop_brand]｜🔴 跨功能：品牌資產被結帳 logo、通知信 logo、佈景主題 header 共用；**primary/secondary 顏色都是陣列且每元素是 background/foreground 配對**，不是「一主色一副色」（71-R12-V10）；🔴 **品牌資產不可依市場或語言本地化**（可引為 G13 佐證）"},
+ "set-asset-metafields":{t:"中繼欄位（一般›商店資產）",f:"跳設定›中繼欄位與 metaobject",l:"本尊同一份資源有兩個入口：一般›商店資產、與側欄的中繼欄位與 metaobject——共用元件家族，改一處要同步兩個掛載點",i:"P1・同 set-customdata"},
+ "set-asset-brand":{t:"品牌（一般›商店資產）",f:"跳設定›品牌",l:"見 set-store-assets 的歸屬說明",i:"P2・同 set-brand"},
+ "set-resources":{t:"資源卡",f:"商店活動記錄／鍵盤快捷鍵",l:"本尊此卡另有 變更記錄／說明中心／聘僱合作夥伴 三個外連（我方不做外連）。商店活動記錄的三條硬約束：**最多 250 筆**（保留由筆數決定不是天數）、**唯讀不可展開/篩選/匯出**、執行者可以是人員/app/銷售管道",i:"P2・[api:TBD-storeActivityLog] [tbl:audit_events]"},
+ "set-activity-log":{t:"商店活動記錄",f:"全店設定與資源異動的唯讀記錄",l:"🔴 三條硬約束一條都不能自作主張放寬：①最多顯示 **250 筆**（limits.store_activity_log.max_entries_displayed）②**唯讀**——不可展開、不可點擊個別事件、不可匯出、不可篩選 ③執行者三型：人員／app／銷售管道（顯示「Shopify」通常代表商家自己觸發的背景工作，不是未授權存取）。完整事件型錄與保留天數＝官方文檔未載，我方自訂時要在規格標假設",i:"P2・[api:TBD-storeActivityLog] [tbl:audit_events]｜🔴 跨功能：與訂單/顧客/庫存各自的 Timeline 是**兩套東西不要合併**——Timeline 是資源級、這裡是店級；權限需 首頁 ＋ 設定›管理設定 兩項"},
+ "set-shortcuts":{t:"鍵盤快捷鍵",f:"後台全域快捷鍵一覽",l:"本尊掛在 一般›資源 卡內",i:"P3・純前端"},
  "set-perm-cats":{t:"顆粒權限目錄",f:"列出 13 類顆粒權限的完整清單",
   l:"53號 N-04：這六列原本帶 › 卻沒有 handler（比 setRow 佔位更誤導，因為 setRow 至少有唯讀 chip 明示）。<b>處置＝移除 ›、改明示唯讀</b>，理由：原型沒有角色 CRUD，沒有可編輯的角色物件——做一個勾不到任何角色的權限勾選頁只是換一種假控件。逐項勾選屬 M5 角色編輯器，入口屆時掛在角色列上",
   i:"P1(M5)・[tbl:roles,role_permissions(role_id,permission_key)]；權限鍵對照 Pundit policy，staff 角色映射 API scope（28 §0.2）"},
