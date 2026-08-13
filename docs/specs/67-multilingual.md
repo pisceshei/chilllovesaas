@@ -64,7 +64,8 @@
 - 🔴 **不可用**：他家的**程式碼、樣式表、文案**。Shopline 的 ng-model 字串（`product.title_translations[lang]`）在本檔出現時，**是被當成「他家的資料模型長這樣」的證據引用，不是被當成「我方要照抄的識別字」**——我方的欄位名一律走 §C.2 的 `translations(resource_type, resource_id, locale_tag, field_key)`，**不是** `*_translations` 這種以欄位後綴表達語言的形態（理由見 §E.2-1(c)）。
 - ⚠ **`press` 與 `alt` 的差別**（69 §V-182 那次教訓的延伸）：`press` 錯在轉述失真、找到一手就能修；**`alt` 找到一手也沒用**——他家的取捨不是我家的取捨。⇒ **`alt` 足以支持「這個形態存在」，不足以支持「所以我們也要這樣」**。本檔每一處引用 `alt` 都必須另外給我方自己的理由。
 
-### 0.4 本檔推翻／偏離的既有結論（5 條，逐條可追溯）
+### 0.4 本檔推翻／偏離的既有結論（逐條可追溯）
+<!-- 2026-08-13 修正表頭：原「（5 條，…）」。前輪加第 5/6 列時計數已過時，本輪再加第 7 列——改為不寫死數字，防止三度過時。 -->
 
 | # | 既有寫法 | 本輪處置 | 誰改 |
 |---|---|---|---|
@@ -75,6 +76,7 @@
 | 4 | **63 §D.3** 頁級 fragment key **無條件**含 `locale` | 改為**依實際依賴降維**（§G.2），並沿用 63 §D.3 既有的 `touched_sources` 自檢把降維做成可執行斷言。登記於 §M-4 | 63 §D.3 |
 | 🔴 **5**<br>（**2026-08-13 新增**） | **本檔 §F.1(b) 的 URL 前綴表**：「primary market ＋ shop 預設語言 ⇒ 無前綴；primary market ＋ 其他語言 ⇒ `/en`、`/zh-hans`」（承 29 §2.5 的既有約束）<br>**以及 62 §I.2**「單國市場 → `fr-ca`；多國市場 → `fr`」 | 🔴 **2026-08-13 裁定推翻兩者**：一律 `語言[-字體]-地區`，**永不出現裸語言碼／裸語言前綴**（`en-HK`／`en-CA`／`zh-Hant-HK`／`zh-Hant-TW`）。§F.1 已改寫；62 §I.2 已改寫並在 **62 §I.2-1** 留明知偏離登記。<br>**動機句的誠實拆解在 62 §I.2-2**（🔴 該節明寫「加地區碼就不會被判重複」**不成立**，真正有效的是「每個 (市場,語言) 一條專屬 URL ＋ 一個明確的碼」） | ✅ **本輪已改**（62／67 兩檔同輪改完，**不得只改一邊**——只改碼不改前綴 ⇒ 自指不變量破裂） |
 | 🔴 **6**<br>（**2026-08-13 新增**） | **本檔 §A.1**「市場的可用語言掛在 `market_web_presence_locales`」只寫了**存在**，沒有寫**它是對買家的白名單**，也沒有定義未開放 locale 被直接存取的行為 | 🔴 **2026-08-13 裁定補上語義**：商店啟用的語言集合 ≠ 某市場對買家開放的語言集合（strawberrynet 模型）。新增 §A.5（概念與邊界）＋ §C.8（資料模型與 admin 契約）。🔴 **不新建 `market_locales` 表**，理由見 §C.8(a) | ✅ **本輪已改** |
+| 🔴 **7**<br>（**2026-08-13 新增，明知偏離 Shopify**） | **本檔 §C.2 的 `translations.market_id` 欄**（承 29 §2.2 的 Adapt 覆寫；本尊官方能力＝Translate & Adapt 的 `marketLocalizationsRegister`，28:343） | 🔴 **裁定 10 推翻**：不做市場級內容覆寫（HK 英文＝CA 英文）⇒ 欄位**已刪**、UNIQUE 縮五欄（連帶修 MySQL nullable-UNIQUE 失效問題，SESSION-EXPORT §5.8）。resolve() 縮 4 層、L15 取消、I18N-6 反轉、V-201 翻轉、翻譯 CSV `market_handle` 降為純格式相容欄。**這是明知偏離**（形態比照 62 §F.3-1）：本尊有此能力、我方裁定不做；復活條件見 §C.2 沿革註釋。下游登記 §M M-5a | ✅ **本輪已改**（67＋70＋limits.yml＋原型同輪，不得只改一邊） |
 
 ---
 
@@ -362,7 +364,7 @@ shop_locales(
    >
    > | | 若把 `zh-Hant-HK` 存進 `platform_locales`（❌） | 正確做法（✅ 當場組出） |
    > |---|---|---|
-   > | 翻譯資料 | 🔴 **同一份繁中譯文要存兩次**（`zh-Hant-HK` 一份、`zh-Hant-TW` 一份）。商家改 HK 的商品標題，TW 不變——這正是 §A.1 第一列的反例欄已經寫過的事故 | 一份 `zh-Hant` 譯文，兩個市場共用；市場差異走 `translations.market_id`（Adapt 覆寫，§C.2） |
+   > | 翻譯資料 | 🔴 **同一份繁中譯文要存兩次**（`zh-Hant-HK` 一份、`zh-Hant-TW` 一份）。商家改 HK 的商品標題，TW 不變——這正是 §A.1 第一列的反例欄已經寫過的事故 | 一份 `zh-Hant` 譯文，兩個市場共用（裁定 10：**內容不隨市場變**，`translations` 已無市場維度，§C.2<!-- 依裁定 10（2026-08-13 執行）修正，原文：「市場差異走 translations.market_id（Adapt 覆寫，§C.2）」 -->） |
    > | 新增市場 | 🔴 每開一個繁中市場就要**新增一個語言**（並為它把整套譯文再翻一次） | 開市場只動 `market_web_presence_locales` 一列 |
    > | fallback 鏈 | 🔴 `zh-Hant-HK` 缺譯時會截尾到 `zh-Hant`——但 `zh-Hant` 這一列**不存在譯文**（譯文都在兩個帶地區的列裡）⇒ 鏈走到底落回來源語言 ⇒ **繁中使用者看到英文** | 鏈只有一層，`zh-Hant` 直接命中 |
    > | 語言上限 | 🔴 `i18n.max_shop_locales: 20` 會被市場數吃掉 | 20 是語言數，與市場數無關 |
@@ -380,7 +382,6 @@ translations(
   resource_type   VARCHAR(48),   -- PRODUCT / COLLECTION / THEME_LOCALE_CONTENT / …
   resource_id     BIGINT,        -- 動態鍵資源（THEME_*）以 theme_file_id 當 resource_id
   locale_tag      VARCHAR(35),
-  market_id       BIGINT NULL,   -- NULL=語言層；非 NULL=per-market 覆寫（29 §2.2 的 Adapt）
   field_key       VARCHAR(255),  -- 'title' / 'body_html' / 'sections.hero.settings.heading'
   value           MEDIUMTEXT,
 
@@ -396,16 +397,35 @@ translations(
   updated_by_staff_id BIGINT NULL,
   updated_at,
 
-  UNIQUE (shop_id, resource_type, resource_id, locale_tag, market_id, field_key),
+  -- 🔴 五欄全 NOT NULL，唯一約束才真正生效（MySQL：nullable 欄進 UNIQUE ⇒ NULL≠NULL ⇒ 形同虛設）
+  UNIQUE (shop_id, resource_type, resource_id, locale_tag, field_key),
   INDEX  (shop_id, locale_tag, outdated, resource_type),        -- 「列出某語言全部過期」
   INDEX  (shop_id, resource_type, resource_id, locale_tag),     -- 渲染期批次載入
   INDEX  (shop_id, locale_tag, review_required)                 -- 「列出未覆核機翻」
 )
 ```
 
+<!-- 🔴 依裁定 10（2026-08-12 裁定「不做市場級內容覆寫」；2026-08-13 執行刪欄）修正。
+     原文兩處：
+       欄位「market_id BIGINT NULL,   ‑- NULL=語言層；非 NULL=per-market 覆寫（29 §2.2 的 Adapt）」
+       索引「UNIQUE (shop_id, resource_type, resource_id, locale_tag, market_id, field_key)」
+     刪欄理由（兩條，缺一不足以刪）：
+       ① 裁定 10 之後 market_id 永遠是 NULL——功能上死欄；
+       ② MySQL 下 nullable 欄進 UNIQUE 索引等於沒約束（NULL≠NULL），同一 (resource, locale, field)
+         可插多列語言層譯文，resolve() 變成不確定（SESSION-EXPORT §5.8）。
+     🔴 防回退：Shopify 官方確實有此能力（Translate & Adapt 的 marketLocalizations*，29 §2.2、28:343）。
+       這是「明知偏離」（唯一依據＝裁定 10，裁定 > Shopify），已登記於 §0.4 第 7 列與 §M M-5a。
+       任何人拿 28/29 對照稽核想把欄位補回來之前，必須先推翻裁定 10。
+     🔴 復活條件（日後真要做 Adapt 時，不是「加回一欄」就好）：
+       ① market_id 不得以 nullable 形態回到 UNIQUE——必須 NOT NULL＋sentinel 0，或生成欄位
+         IFNULL(market_id,0) 進唯一索引（m0 骨架 discount_applications 已有 COALESCE 先例），
+         否則 ② 的 NULL≠NULL 問題原樣回來；
+       ② 70 §D.5(b) 列的三條後果（[locale] 欄語義、欄數爆炸、單一 writer 驗證）要全部重做；
+       ③ 翻譯 CSV 的 market_handle 匯入語義（V-201，§E.6(b)）要同步翻回。 -->
+
 **三條說明**：
 
-- `market_id` 的語義**不變**（29 §2.2 已定）：per-market 覆寫優先於語言層翻譯。原型 `chilllove-admin-v2.html:6405` 已有這句文案，本檔不改語義。
+- ~~`market_id` 的語義不變~~ **`market_id` 欄已依裁定 10 移除**（沿革見上方註釋）。原型 `chilllove-admin-v2.html` 原「市場層覆寫優先於語言層翻譯」文案已同輪移除。
 - `value_source` 是稽核欄，形態對齊 62 §F.1 的 `alt_source`（`ai|human|imported`）與 62 §H.6-1 的 `content_source`——**同一條紀律**：無標記的大量自動內容日後無法回溯清理，而 Google 的 scaled content abuse（30 §1.2）是整站級處罰。
 - `source_locale_tag` 不是冗餘：改來源語言（§C.3）時，需要知道哪些譯文是「從舊來源語言翻的」才能正確標記過期。
 
@@ -440,14 +460,24 @@ ChangeSourceLocale(from: A, to: B)  —— 走精靈，非同步 job，全程可
 ### C.4 fallback 鏈（🔴 必須明確定義，不得靜默空白）
 
 ```
-resolve(resource, field, locale L, market M):
-  1. translations[(L, M)]                       # per-market 覆寫（Adapt）
-  2. translations[(L, NULL)]                    # 語言層翻譯
-  3. for A in fallback_chain(L):                # §(a)，可能為空鏈
-       translations[(A, M)] → translations[(A, NULL)]
-  4. base row                                   # ＝ source locale 原文
-  5. 仍為空 ⇒ 依 §B.1 的欄位類別決定：required→回 4 的值；optional→**不輸出整個欄位**
+resolve(resource, field, locale L):
+  1. translations[L]                            # 語言層翻譯
+  2. for A in fallback_chain(L):                # §(a)，可能為空鏈
+       translations[A]
+  3. base row                                   # ＝ source locale 原文
+  4. 仍為空 ⇒ 依 §B.1 的欄位類別決定：required→回 3 的值；optional→**不輸出整個欄位**
 ```
+
+<!-- 依裁定 10（2026-08-13 執行刪欄）修正，原文：
+     「resolve(resource, field, locale L, market M):
+        1. translations[(L, M)]      # per-market 覆寫（Adapt）
+        2. translations[(L, NULL)]   # 語言層翻譯
+        3. for A in fallback_chain(L): translations[(A, M)] → translations[(A, NULL)]
+        4. base row
+        5. 仍為空 ⇒ …」
+     鏈由 5 步縮為 4 步：market 維度整層消失（不是「M 恆為 NULL」——欄位已刪，§C.2）。
+     🔴 resolve() 不收 market 參數。市場影響的是「曝光」（§A.5 的白名單）與「錢」（幣別/價格），
+     不影響「內容」。任何人想把 M 加回簽名，先讀 §C.2 的沿革註釋。 -->
 
 **(a) `fallback_chain(L)` 的規則**（`i18n.fallback_chain_mode: bcp47_truncation`）
 
@@ -925,7 +955,7 @@ Shopline 的畫面只告訴我們**哪些欄位用了哪一種**，**沒有告�
 
 🔴 **兩條硬規則，任一違反都是回退**：
 
-1. **模式是 UI 的事，🔴 不影響資料模型**（`mode_does_not_affect_schema: true`）。兩種模式寫進去的都是 §C.2 的 `translations(resource_type, resource_id, locale_tag, market_id, field_key, value)` 列。**分頁式最容易被實作成「一個語言一份 JSON blob」**（因為 tab 天然對應「一份文件」）——那會同時破壞：欄位級的 `source_digest`（§C.5）、欄位級的 `outdated`、`translation_status.translated_fields` 的分子、以及翻譯 CSV 的逐欄位列（§E.6(b)）。**四樣東西一起壞，而且要到匯出的時候才會發現。**
+1. **模式是 UI 的事，🔴 不影響資料模型**（`mode_does_not_affect_schema: true`）。兩種模式寫進去的都是 §C.2 的 `translations(resource_type, resource_id, locale_tag, field_key, value)` 列。<!-- 依裁定 10（2026-08-13 刪欄）修正，原文五元組含 market_id -->**分頁式最容易被實作成「一個語言一份 JSON blob」**（因為 tab 天然對應「一份文件」）——那會同時破壞：欄位級的 `source_digest`（§C.5）、欄位級的 `outdated`、`translation_status.translated_fields` 的分子、以及翻譯 CSV 的逐欄位列（§E.6(b)）。**四樣東西一起壞，而且要到匯出的時候才會發現。**
 2. **堆疊式的每個輸入框必須標語言**（`stacked_label_suffix: endonym`）：`商品名稱 (English)`／`商品名稱 (繁體中文)`，用 `platform_locales.endonym`（§C.1）**不是**用語言碼、**不是**用國旗（國旗 ≠ 語言，鐵律 11 的同一條精神——`en` 不屬於任何一個國家）。
 
 **(c) 🔴 兩種模式共用一個元件契約，且與 §E.2 的「上原文／下譯文」雙段形態相容**
@@ -939,7 +969,7 @@ Shopline 的畫面只告訴我們**哪些欄位用了哪一種**，**沒有告�
    ——本節只是為它加了第二種佈局，不是加了第二個元件
 ```
 
-🔴 **不採用 Shopline 的欄位命名形態**（`*_translations[lang]` 這種「以欄位後綴 ＋ 語言索引」表達譯文）。理由不是鐵律 9，是資料模型：以欄位為單位的 map 表示法無法承載我方 `translations` 表的六個稽核欄（`outdated_severity`／`value_source`／`review_required`／`source_locale_tag`／`updated_by_staff_id`／`updated_at`，§C.2），也無法承載 `market_id` 這一維（per-market Adapt 覆寫）。**他家的形態對他家的模型是自洽的；照抄形態會把我方的模型壓扁。**
+🔴 **不採用 Shopline 的欄位命名形態**（`*_translations[lang]` 這種「以欄位後綴 ＋ 語言索引」表達譯文）。理由不是鐵律 9，是資料模型：以欄位為單位的 map 表示法無法承載我方 `translations` 表的六個稽核欄（`outdated_severity`／`value_source`／`review_required`／`source_locale_tag`／`updated_by_staff_id`／`updated_at`，§C.2）。<!-- 依裁定 10（2026-08-13 刪欄）修正，原文尚有一句「也無法承載 market_id 這一維（per-market Adapt 覆寫）」——該維度已隨刪欄消失，六稽核欄的論證獨立成立，結論不變。 -->**他家的形態對他家的模型是自洽的；照抄形態會把我方的模型壓扁。**
 
 **(d) `seo_keywords` 沒有 `_translations` ⇒ 這是「哪些欄位可翻譯」的一手級佐證，與 §B 對照**
 
@@ -1103,9 +1133,12 @@ Script::Convert(from: zh-Hant, to: zh-Hans)   ⇒ value_source = 'script_convers
 翻譯 CSV（i18n.export.format: csv）
   欄位（對齊本尊 8 欄，69 §V-182；我方另加 source_digest）：
         resource_type(≈Type), resource_gid(≈Identification), field_key(≈Field), locale,
-        market_handle(≈Market，選填), status(≈Status), source_text(≈Default content，唯讀參考),
+        market_handle(≈Market，純格式相容欄), status(≈Status), source_text(≈Default content，唯讀參考),
         translated_text(≈Translated content), source_digest(🔴 我方獨有)
   status ∈ {translated, outdated, untranslated}（本尊三值）；**純輸出**，匯入時忽略 ⇒ ⚠ V-201
+  🔴 market_handle：匯出**恆空白**；匯入時**空白＝唯一合法值**，非空白 ⇒ 拒絕該列並明示
+     「本平台不做市場級內容覆寫（裁定 10）」。欄位保留只為對齊本尊 8 欄的檔案格式。
+     （依裁定 10 於 2026-08-13 定；原「留空⇒拒絕」的保守處置已翻轉，沿革見 §M V-201 列）
   🔴 translated_text 空白 = **本列不做任何事**（69 §V-182；**不是**清空）
      清空譯文 ＝ 明確寫 __CLEAR__（i18n.import.explicit_clear_token）——唯一手段
      覆寫既有譯文 ＝ 匯入時勾選 overwrite_existing（預設不勾）
@@ -1549,10 +1582,10 @@ cache_stamp = MAX(
 | L9 | 快取維度降維 ＋ `touched_dimensions` 斷言 ＋ 新 `cache_stamp` 來源 | **M2** | 63 §D.3 | I18N-10／I18N-11 |
 | L10 | hreflang 的語言維度接入（餵 62 §I.1）＋ 語言變更的失效掛鉤 | **M2**（單市場多語言，62 S11 已列） | L7 | 62 §O REG-1／REG-2／REG-7 |
 | L11 | 翻譯後台（資源樹 ＋ 雙欄 ＋ outdated 標示） | **M2** | L3～L5 | 29 §2.4 形態 |
-| L12 | 翻譯 CSV 匯入匯出（digest 比對、🔴 **空白＝清空／缺席＝不變更** ＋ 選擇性匯出 ＋ 匯入預覽清空計數）<!-- 依 68 §B-3 修正，原文：「翻譯 CSV 匯入匯出（digest 比對、空白＝不變更）」。🔴 選擇性匯出與清空計數**不是加分項，是翻面後的必要配套**，不得拆到後面的里程碑。 --> | **M5** | L3 | AD-7、AD-7b、AD-8、AD-9 |
+| L12 | 翻譯 CSV 匯入匯出（digest 比對、🔴 **空白＝不動作、清空走 `__CLEAR__`、覆寫走 `overwrite_existing` 顯式旗標** ＋ 選擇性匯出 ＋ 匯入預覽四鍵）<!-- 依 69 §V-182（B-3 二次反轉，§E.6 定案）修正，原文：「空白＝清空／缺席＝不變更」——那是 68 輪的中間態，B-3 反轉回 true 時本列漏改，與 §E.6(b) 直接矛盾（2026-08-13 grep 補出）。上一層 68 註釋保留：「選擇性匯出與清空計數不是加分項」的結論仍成立，它們現在的用途是界定 overwrite 的爆炸半徑。 --> | **M5** | L3 | AD-7、AD-7b、AD-8、AD-9 |
 | L13 | 機器翻譯 provider ＋ 批次 ＋ 稽核欄 | **M5** | L3 | AD-5／AD-6 |
 | L14 | 繁簡轉換工具（含歧義報告） | **M5** | L13 的批次骨架 | AD-6 |
-| L15 | per-market 翻譯覆寫（Adapt，`market_id` 非 NULL） | **M5**（Markets P1，29 §8 已列） | 29 markets 全表 | I18N-6 |
+| ~~L15~~ | ~~per-market 翻譯覆寫（Adapt，`market_id` 非 NULL）~~ **已依裁定 10 取消**（不做市場級內容覆寫；欄位已刪，§C.2 沿革）。🔴 **29 §8 的 P1 清單仍列著它——那是 research 檔（證據）不改，不代表要做**；要復活先推翻裁定 10，見 §C.2 復活條件 | ~~M5~~ | — | ~~I18N-6~~ |
 | L16 | 站內搜尋 per-locale 索引與分析器 | **M5** | L4 | I18N-12 |
 | L17 | 改來源語言精靈（dry-run ＋ 缺譯保留原文） | **M6** | L3 | I18N-7 |
 | L18 | RTL 支援（`direction` 欄位已在 L1 就位，主題層落地） | **M6** | 主題引擎 | ⚠ V-167 |
@@ -1620,7 +1653,7 @@ cache_stamp = MAX(
 | 維度 | 本模組的最低標準 |
 |---|---|
 | **1 安全** | 翻譯寫入需 `staff` 權限且過 shop scope；🔴 **匯入的譯文一律當不可信輸入**——富文本走與商品描述同一條淨化管線（譯文是最容易被當成「已經是自家內容」而漏掉淨化的入口）；MT provider 金鑰走 Rails credentials；公開端點（語言切換）無狀態 |
-| **2 資料完整** | `translations` 六欄唯一索引；`shop_locales` 的 `is_source` 部分唯一；handle 唯一索引 ＋ 退役集合比對；來源語言遷移全程 transaction 且缺譯保留原文；FK 到 `platform_locales` |
+| **2 資料完整** | `translations` **五欄唯一索引（五欄全 NOT NULL——nullable 欄不得進 UNIQUE，SESSION-EXPORT §5.8）**<!-- 依裁定 10（2026-08-13 刪 market_id）修正，原文：「六欄唯一索引」 -->；`shop_locales` 的 `is_source` 部分唯一；handle 唯一索引 ＋ 退役集合比對；來源語言遷移全程 transaction 且缺譯保留原文；FK 到 `platform_locales` |
 | **3 併發** | 同一 (resource, locale, field) 併發寫入 ⇒ 唯一索引兜底 ＋ `updated_at` 樂觀鎖；來源寫入與翻譯寫入的交錯 ⇒ digest 在**同一 transaction** 內比對（§C.5(d)）；handle 配號用唯一索引重試，不用 SELECT-then-INSERT |
 | **4 效能** | 渲染期翻譯**一次批次載入**（每頁 SQL ≤15 條，63 §D.1）；進度數字讀物化表不現算；快取維度降維（§G.2）；`translation_status` 的批次建列可斷點續跑 |
 | **5 可觀測** | `i18n.fallback_hit`（帶 depth）／`i18n.translation_missing`（Liquid `t` 未命中）／`i18n.cache_key_cardinality`／`i18n.machine_translation_batch`／`handle.auto_token_ratio`；全部帶 `shop_id`＋`locale` |
@@ -1635,10 +1668,10 @@ cache_stamp = MAX(
 |---|---|---|
 | I18N-1 | 語言集是資料 | `limits.yml` 與原始碼中不存在語言值列舉（lint 規則掃 `zh-Hant`／`zh-Hans` 字面量；白名單只有種子檔、註解與 `limits.i18n.launch_locales` 這個明標為「種子指標非值域」的鍵） |
 | I18N-2 | 新增語言零改碼 | 測試新增 `ja` 並完成一次前台渲染、一次 admin 編輯、一次 hreflang 產出，過程無原始碼變更、無 migration |
-| I18N-3 | **fallback 鏈** | 逐分支：per-market → 語言 → 截尾鏈 → 來源原文 → 依欄位類別；🔴 `zh-Hant` 缺譯**不得**取到 `zh-Hans`；🔴 `zh-Hant-HK` 不得截到 `zh` |
+| I18N-3 | **fallback 鏈** | 逐分支：語言 → 截尾鏈 → 來源原文 → 依欄位類別<!-- 依裁定 10（2026-08-13 刪欄）修正，原文首分支「per-market →」已隨欄位消失 -->；🔴 `zh-Hant` 缺譯**不得**取到 `zh-Hans`；🔴 `zh-Hant-HK` 不得截到 `zh` |
 | I18N-4 | 過期偵測不誤報 | 對來源做「僅空白／僅屬性順序」變更 ⇒ `severity = none`，零筆被標記 |
 | I18N-5 | 過期不影響渲染 | 標記 outdated 後前台輸出不變 |
-| I18N-6 | per-market 覆寫優先 | 同一 (resource, locale) 有市場覆寫時，該市場取覆寫、其餘取語言層 |
+| I18N-6 | **translations 無市場維度**（反向斷言） | schema 斷言：`translations` 表不存在 `market_id` 欄；resolve() 簽名不收 market 參數；同一 (resource, locale, field) 在**所有市場**輸出逐位元組相同<!-- 依裁定 10（2026-08-13）反轉本條，原文：「per-market 覆寫優先：同一 (resource, locale) 有市場覆寫時，該市場取覆寫、其餘取語言層」。原正向驗收已無受測物，改為防回歸斷言。 --> |
 | I18N-7 | 改來源語言 | 目標語言缺譯的資源，遷移後 base row **仍是原文**，且落一列 gap 記錄 |
 | I18N-8 | 不可翻欄位 | 對 `sku`／`tags`／money metafield／`handle` 呼叫翻譯 API ⇒ `FIELD_NOT_TRANSLATABLE` |
 | I18N-9 | **金額不隨語言** | 同一 variant × 同一 market，三個 locale 渲染的 `money` 輸出**逐位元組相同** |
@@ -1719,7 +1752,7 @@ cache_stamp = MAX(
 | **V-227**<br>（2026-08-13 新增） | **商品層是否要有短摘要（`summary`）與預購說明（`preorder_note`）欄位**——Shopline 兩者都有且都可翻（`alt`），我方兩者都沒有 | **13／63 的欄位決策**，不是 i18n 的決策 | 🔴 **本檔不新增商品欄位**（13／63 有別的 owner，鐵律：不改別人的檔）。**但 i18n 面的答案先寫下來**：若日後加了，`summary` ＝ 必翻 ＋ 堆疊式；`preorder_note` ＝ 必翻（買家據以決定要不要下單）＋ 堆疊式。登記於 §M-10 | §E.2-1(d)、§B.2 |
 | ~~**V-163**~~<br>✅ **主體已結案**（69 §V-182） | ~~Shopify **原生**是否提供翻譯 CSV 匯入匯出、格式與欄位、以及**空白語義**~~<br>🔴 **已答（`help`，69 §V-182）**：**有**原生匯出／匯入，位置在 **Settings → Languages**（不在 Translate & Adapt app 裡——**68 號因此找不到，這正是它誤判「原生能力薄弱或不存在」的原因**）；**8 欄** ＋ `Status` 三值（`Translated`／`Outdated`／`Untranslated`）；匯入的核心是**「覆寫既有翻譯」勾選框**；匯出以 email 非同步寄出。**官方對「Translated content 留空會怎樣」完全沒寫** ⇒ 承接到 **V-200**。<br>**殘留**：XLIFF 官方格式是否存在（我方列 P2） | ~~help.shopify.com Translate & Adapt 子頁~~ ⇒ **已由 69 號在 `localization-and-translation` 頁查到**；XLIFF 殘留仍需 help 逐頁 | <!-- 二次修正。68 §B-3 的處置是：「🔴 空白＝清空、缺席＝不變更（§E.6(a) 三件套）」，依據是 Matrixify（`press`）；並註明「若查出官方原生行為不同，本條要重判（連 blank_means_unchanged 一起）」——**69 §V-182 正是那個觸發條件，本條依該註記重判**。 -->我方 CSV ＋ 強制 `source_digest` ＋ 🔴 **空白＝不動作、清空走 `__CLEAR__`、覆寫走顯式旗標**（§E.6(a)）；欄位對齊本尊 8 欄 ＋ `status` 三值；XLIFF 列 P2 | §E.6、§C.5(f) |
 | 🔴 **V-200**<br>（承 69 號登記） | 本尊的 `Translated content` **留空**時，在「勾選覆寫」與「不勾選」**兩種模式下分別**做什麼（官方 help 對此完全沉默——**這是本尊模型裡唯一沒寫清楚的一格**） | dev store 實測：匯出 → 清空一列 → 兩種模式各匯入一次 → 看譯文是否消失 | 🔴 我方**不**把空白解讀成刪除（`blank_means_unchanged: true`）；刪除必須是另一個明示動作（`__CLEAR__`）。**即使日後查出本尊在勾選覆寫時會刪，也不得自動跟隨**——不可逆操作由易誤觸狀態觸發，屬產品決定，需使用者裁定 | §E.6(a)① |
-| 🔴 **V-201**<br>（承 69 號登記） | 本尊的 `Status` 欄在**匯入**時是否被讀取（還是純輸出欄）；以及 `Market` 欄**留空**的語義 | 同 V-200（dev store 實測） | `status` **純輸出**，匯入時忽略（§C.5(f)：過期狀態只能由 digest 決定，不能由檔案宣稱）；`market_handle` 留空 ⇒ **拒絕匯入該列**（保守做法：留空可能是「套用到所有市場」也可能是「漏填」，兩者後果差很遠） | §C.5(f)、§E.6(b) |
+| 🔴 **V-201**<br>（承 69 號登記） | 本尊的 `Status` 欄在**匯入**時是否被讀取（還是純輸出欄）；以及 `Market` 欄**留空**的語義 | 同 V-200（dev store 實測） | `status` **純輸出**，匯入時忽略（§C.5(f)：過期狀態只能由 digest 決定，不能由檔案宣稱）；`market_handle` **空白＝唯一合法值**（我方無市場覆寫，匯出恆空白）；**非空白 ⇒ 拒絕匯入該列**，訊息明示「本平台不做市場級內容覆寫（裁定 10）」<!-- 依裁定 10（2026-08-13 刪欄）翻轉，原處置：「market_handle 留空 ⇒ 拒絕匯入該列（保守做法：留空可能是『套用到所有市場』也可能是『漏填』）」。🔴 翻轉理由：刪欄後所有匯出檔的 Market 欄恆空白，維持原處置＝每一列都被拒＝匯入功能整個失效。原處置的兩難（所有市場 vs 漏填）在無市場維度後不存在。本尊語義的實測問題（Status 欄）保留待查。 --> | §C.5(f)、§E.6(b) |
 | **V-164** | `translationsRegister` 在 `translatableContentDigest` 不符時的官方行為（拒絕？寫入並標過期？） | shopify.dev mutation 頁的錯誤碼表 | 我方**寫入並標 outdated ＋ review_required**（§E.6）。不得靜默當成最新 | §C.5、§E.6 |
 | **V-165** | 商家可新增的語言集合是否封閉（Shopify 是否只允許其支援清單內的語言） | help.shopify.com 語言設定頁；`shopLocaleEnable` 的錯誤碼 | 我方**開放**（裁定明文「可自行添加任何語言」），只驗 BCP-47 格式與禁用碼 | §A.2、§C.1 |
 | **V-166** | MySQL 8 可用的中文排序 collation（是否有 `utf8mb4_zh_0900_as_cs`、其排序依據是拼音或筆畫） | MySQL 官方文檔；實機 `SHOW COLLATION` | 沿用預設 collation，UI 標「依系統順序」，**不宣稱拼音或筆畫排序** | §C.7 |
@@ -1752,6 +1785,7 @@ cache_stamp = MAX(
 | **M-3** | ~~62 §M S2「`handle` 欄位＋可翻譯」~~ | — | ✅ **本輪已改**（改為標註不可翻並指向 67 §D.4） | — |
 | **M-4** | **頁級 cache key 無條件含 locale** | 63 §D.3 的 key 組成把 `locale` 寫死在列表裡 | 改為**依實際依賴降維**（§G.2），並沿用該節既有的 `touched_sources` 自檢做 fail-closed 判定。另 `catalog_flow.cache_stamp_sources` 必須加入 `translations` | 63 §D.3（本檔不改 63） |
 | **M-5** | **`translations` 表缺六個欄位** | 29 §2.2 的表定義只有 `source_digest` ＋ `outdated` | 需補 `outdated_severity`／`value_source`／`review_required`／`source_locale_tag`／`updated_by_staff_id`／`updated_at`（§C.2） | 29 §2.2 |
+| 🔴 **M-5a**<br>（2026-08-13 新增） | **29／28／50 仍描述 per-market 內容覆寫（Adapt）為我方能力** | 29 §2.2 表定義含 `market` 引用與六欄唯一索引、§2.2 讀取 fallback「(locale, market) → (locale, 全域)」、§2.4「同語言選其他市場＝Adapt 模式」、§8 P1 清單列 `translations.market_id（Adapt）`；28:343 mutation 清單含 `marketLocalizations*`；50:313 的 API→UI 對照 | `translations.market_id` 已依**裁定 10** 於 2026-08-13 移除（§0.4 第 7 列、§C.2 沿革）。research 檔是證據不改正文，但**各檔 owner 應加批註**「per-market 內容覆寫已依裁定 10 取消，欄位已移除，見 67 §C.2」，防止 1:1 對照稽核把欄位補回來。28 的 `marketLocalizations*` 在我方 API 面**不實作**，對外文檔不得列出 | 29 §2.2/§2.4/§8、28 §契約、50:313 |
 | **M-6**<br>✅ **本輪已改** | **hreflang 失效掛鉤只綁 market conditions** | 62 §I.3(b)：market conditions 變更 ⇒ 矩陣與 sitemap 失效 | 觸發條件需**加上** `shop_locales` 與 `market_web_presence_locales` 的變更（§F.1(d)）。否則發布新語言後 hreflang 停在舊值 | ~~62 §I.3(b)（小幅補充，本輪未改以免擴大改動面）~~ ⇒ ✅ **2026-08-13 已補在 62 §I.3(e)**（白名單裁定讓這條從「小幅補充」變成必要條件：白名單開關的頻率遠高於改 market conditions） |
 | 🔴 **M-10**<br>（2026-08-13 新增） | **Shopline 有、我方沒有的三個商品欄位面** | `alt`（Shopline 商品新增頁 ng-model，§E.2-1）：`summary_translations`（短摘要，可翻）／`preorder_note_translations`（預購說明，可翻）／`seo_keywords`（**無** `_translations` ⇒ 不可翻）。我方：前兩者**沒有這個欄位**，第三者**沒有這個欄位** | 🔴 **三者本檔一律不新增**（欄位歸 13／63，本檔只寫 i18n 語義）。<br>**`seo_keywords`：🔴 建議永遠不要加**——meta keywords 對搜尋引擎早已無效，加了就要回答「要不要翻」，而正確答案是「不要」⇒ **一個不翻的 SEO 欄位是純負債**。<br>**`summary`／`preorder_note`：⇒ V-227**，i18n 面的答案已預先寫好（必翻 ＋ 堆疊式），欄位是否要有由 13／63 裁定 | 13／63（欄位）；本檔（i18n 語義，已寫） |
 | 🔴 **M-11**<br>（2026-08-13 新增） | **29 §2.5 的 URL 前綴模型被裁定推翻** | 29 §2.5：「primary market 預設語言在根、其他語言 `/{lang}`」；29 §1.2：「語言-only 子資料夾僅限 primary market」 | 🔴 **裁定推翻「語言-only 子資料夾」與「預設語言在根」兩條**（§F.1(b)）。**XOR（`domain` 與 `subfolderSuffix` 互斥）不受影響，照抄**。62 §J.1 已於本輪改寫並留追溯註釋；**29 §2.5／§1.2 需加註指向 67 §F.1(b) 與 62 §I.2-1** | **29 §2.5／§1.2 仍待改**（本檔不改 29） |

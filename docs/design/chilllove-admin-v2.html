@@ -4413,9 +4413,10 @@ function trRaw(rt,id,loc,f){
   return e&&!i18nBlank(e.v)?e:null;
 }
 /* 67 §C.4 fallback 鏈（🔴 不得靜默空白）：
-   1 per-market 覆寫（原型不做 market 維度，見 DOCS content-locale）→ 2 語言層 → 3 截尾鏈
-   → 4 base row（來源語言原文）→ 5 依欄位類別：required 回原文／optional 整個欄位不輸出。
-   **沒有第四種**（禁止輸出空字串／key 名／nil）。 */
+   1 語言層 → 2 截尾鏈 → 3 base row（來源語言原文）→ 4 依欄位類別：required 回原文／optional 整個欄位不輸出。
+   **沒有第四種**（禁止輸出空字串／key 名／nil）。
+   依裁定 10（2026-08-13）修正，原文首層：「1 per-market 覆寫（原型不做 market 維度，見 DOCS content-locale）」
+   ——market 維度已從資料模型刪除（67 §C.2），「原型不做」升格為「規格不存在」。 */
 function trResolve(rt,id,loc,f,srcText,cls){
   const src=srcLocale();
   if(loc===src)return{v:srcText,state:'source',from:src,depth:0};
@@ -7577,12 +7578,13 @@ function marketPage(){
         <span class="sr-ro">${chip('不可繼承','default','full')}</span></div>
       <p class="mut3" style="font-size:var(--t-xs)">法域<b>永遠市場本地</b>（56 §A.0 硬要求 2）——子市場若繼承父市場的法域，會出現「香港母市場下掛台灣子市場卻套用香港稅制」。</p></div>
     ${mktLocaleCard(m)}
-    <div class="card card-pad" data-doc="mk-catalog"><h3>翻譯覆寫</h3>
-      <table class="idx"><thead><tr><th>資源</th><th>原文</th><th>此市場覆寫</th></tr></thead><tbody>
-        <tr class="norow"><td>商品標題</td><td class="mut">奶茶色寬版帽T</td><td><input class="cellin" value="Milk Tea Oversized Hoodie" aria-label="覆寫商品標題"></td></tr>
-        <tr class="norow"><td>運送政策</td><td class="mut">香港本地滿 ${money(50000)} 免運</td><td><input class="cellin" value="Free shipping over ${money(50000)}" aria-label="覆寫運送政策"></td></tr>
-      </tbody></table>
-      <p class="help" style="margin-top:var(--sp-200)">市場層覆寫優先於語言層翻譯（29 §2）；未覆寫的欄位回退到語言翻譯，再回退原文。</p></div>
+    <!-- 依裁定 10（2026-08-13）改造本卡：原「翻譯覆寫」卡含兩列覆寫輸入框（商品標題／運送政策）與
+         help 文案「市場層覆寫優先於語言層翻譯（29 §2）；未覆寫的欄位回退到語言翻譯，再回退原文。」
+         ——那是一個展示已被裁定取消功能的活 UI。translations.market_id 已刪（67 §C.2），
+         市場能改的是「錢與曝光」（目錄定價 P2、語言白名單 67 §A.5），不是「內容」。
+         下方 7596 行刪除市場的確認文案原文「該區的固定價與翻譯覆寫將一併移除」亦同步去掉翻譯覆寫。 -->
+    <div class="card card-pad" data-doc="mk-catalog"><h3>內容與翻譯</h3>
+      <p class="help">此市場的商品內容與譯文<b>與所有市場完全一致</b>（裁定 10：不做市場級內容覆寫，67 §C.2）。要改文案請至商品編輯頁的「內容語言」；本頁僅控制曝光語言（上方語言卡）與市場定價（目錄，P2）。</p></div>
     </div><div class="col">
       <div class="card card-pad"><h3>此市場成效</h3>
         <div class="kv"><span class="k">工作階段</span><span class="num">${H(m.perf.s)}</span></div>
@@ -7593,7 +7595,7 @@ function marketPage(){
         <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="marketNew()">管理國家清單</button></div>
         <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">改動條件會重算父子鏈，連帶改變此頁所有「繼承自 …」的來源。</p></div>
       <div class="card card-pad"><h3>佈景主題內容</h3><button class="btn btn-sec btn-sm" onclick="toast('Demo：以此市場 context 開啟主題編輯器')">編輯此市場的主題內容</button></div>
-      ${m.id!=='tw'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除市場','此市場的國家會退回兜底 backup region；${kids.length?'其下層市場會改為繼承更上層，':''}該區的固定價與翻譯覆寫將一併移除。','刪除市場',function(){toast('已刪除市場');go('m-markets');})">刪除市場</button></div>`:''}
+      ${m.id!=='tw'?`<div class="card card-pad"><button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除市場','此市場的國家會退回兜底 backup region；${kids.length?'其下層市場會改為繼承更上層，':''}該區的固定價將一併移除。','刪除市場',function(){toast('已刪除市場');go('m-markets');})">刪除市場</button></div>`:''}
     </div></div>`;
 }
 function catalogsPage(){
@@ -8547,7 +8549,8 @@ function langPage(){
   <div class="card card-pad" data-doc="set-lang-fallback"><h3>缺翻譯時的行為</h3>
    <p class="mut" style="font-size:var(--t-xs);margin:calc(var(--sp-150) * -1) 0 var(--sp-200)">
      🔴 缺翻譯<b>必須有明確且可預測的行為，不得靜默空白</b>（67 §0.2 原則 2）。這條鏈是規格，不是實作細節。</p>
-   ${setRow('解析順序','per-market 覆寫 → 語言層譯文 → BCP-47 截尾鏈 → 來源語言 base row → 依欄位類別',
+   <!-- 依裁定 10（2026-08-13）修正，原文鏈頭：「per-market 覆寫 → 」（market 維度已刪，67 §C.2/§C.4） -->
+   ${setRow('解析順序','語言層譯文 → BCP-47 截尾鏈 → 來源語言 base row → 依欄位類別',
      '<span class="mono" style="font-size:var(--t-2xs)">i18n.fallback_chain_mode = bcp47_truncation</span>','set-lang-chain')}
    ${SHOP_LOCALES.map(l=>`<div class="set-row is-ro"><div class="sr-t"><b class="mono">${H(l.tag)}</b>
      <span class="sub">截尾鏈：${i18nChain(l.tag).length?i18nChain(l.tag).map(x=>'<span class="mono">'+H(x)+'</span>').join(' → '):'<b>（空鏈）</b>'}
@@ -9167,7 +9170,7 @@ Object.assign(DOCS,{
  "mk-currency":{t:"幣別與定價",f:"結帳幣別／自動匯率／±% 調整／捨入",l:"價格調整與捨入規則作用於 presentment 價；固定價（目錄）優先於 % 調整（29 §1.3）",i:"P2・[api:marketCurrencySettingsUpdate] [api:priceListUpdate] [tbl:price_lists]（06 §7 待補）"},
  "mk-duty":{t:"關稅模式",f:"DDU vs DDP",l:"DDP 需商品有 HS code 與原產地，缺漏時退回 DDU（22 §8）",i:"P3・[api:marketUpdate] [tbl:markets,inventory_items]"},
  "mk-shipping":{t:"市場運送入口",f:"跳到此市場的運送選項設定",l:"新模型 Shipping options by market：Market → option → rates，子市場繼承父市場（41 §12.7）",i:"P2・[api:TBD-shippingOptionsByMarketUpdate]（28 僅有 deliveryProfile*） [tbl:shipping_profiles,shipping_zones,shipping_rates]"},
- "mk-catalog":{t:"目錄與翻譯覆寫",f:"此市場的商品範圍、價格與文案覆寫",l:"市場層覆寫優先於語言層翻譯，未覆寫回退語言翻譯再回退原文（29 §2）",i:"P2・[api:catalogUpdate] [api:translationsRegister] [tbl:catalogs,price_lists]（06 §7 待補）"},
+ "mk-catalog":{t:"目錄（定價）與內容一致性",f:"此市場的商品範圍與價格；內容與譯文不隨市場變",l:"依裁定 10 不做市場級內容覆寫（translations.market_id 已刪，67 §C.2 沿革含復活條件）；市場只影響定價（目錄 P2）與曝光語言（67 §A.5 白名單）。原文案「市場層覆寫優先於語言層翻譯（29 §2）」已隨裁定移除",i:"P2・[api:catalogUpdate] [tbl:catalogs,price_lists]（06 §7 待補）"},
  "mk-locales":{t:"開放語言（③ market_locales）",f:"這個市場的買家能選哪些語言：勾選、排序、設預設，並顯示各自的 URL 前綴與 hreflang 碼",
   l:"67 §A.5（概念）＋ §C.8（資料模型與 admin 契約），2026-08-13 裁定「我們可以在 admin 後台給不同地區指定客戶只能選擇哪些語言，前台不用全部顯示出來」的落地。<br>🔴 <b>三個集合不是兩個</b>：① platform_locales（平台字典）⊇ ② shop_locales（商店啟用集）⊇ ③ 本卡片。② 與 ③ 分離的產品理由是商家可能為了 SEO 或內部預覽而啟用一個語言，但還不想讓某個市場的買家看到它；合成一個 ⇒ 一啟用日文，全世界所有市場的切換器立刻多一個選項。技術理由是<b>譯文掛在 ②、曝光決策掛在 ③</b>——合一之後「關掉某市場的日文」就得刪掉日文譯文。<br>🔴 <b>白名單是呈現決策，不是存取控制</b>：它決定切換器／hreflang／sitemap／地區重導落點；它<b>不</b>決定一條已存在的 URL 誰能打開。做成存取控制是不可能的——URL 是公開的物理事實，而且 62 §0.2 原則 4 要求矩陣內每個 URL 對<b>任何</b>客戶端回 200（爬蟲沒有市場身分，回 404 就是整組 hreflang 失效）。<br>🔴 <b>粒度是 web presence 不是 market</b>：一個市場可以有多個 resolved presence（自身 ∪ 祖先），所以「市場的開放語言」是聯集的結果，任何 <code>UPDATE … WHERE market_id = ?</code> 形態的寫入都是 bug。<br>🔴 <b>子市場只能加不能減</b>（<code>i18n.market_locales.subtractive_override_forbidden</code>）：減法會讓 resolved 從「聯集」變成「聯集 − 例外」，62 §I.1 的雙向性就不能再靠「同一個函式同一個集合」保證；而且減法<b>減不掉 URL</b>（那條 URL 屬於父市場的 presence，照樣 200）。<br>寫入的連帶動作四件（§C.8(d)）：bump <code>shop_locales_version</code> ／ 觸發 hreflang＋sitemap 失效（去抖 5 分鐘）／ 關閉時寫 <code>closed_at</code> 並把該 (market, locale) 路由標為 404 ／ <b>不刪任何 translations 列</b>",
   i:"P1(M4)・[api:marketWebPresenceUpdate]（alternateLocales, defaultLocale）[api:marketLocalizationsRegister] [tbl:market_web_presence_locales(shop_id, market_web_presence_id, locale_tag, position, is_market_default, open_to_buyers, closed_at)]（<b>不新建 market_locales 表</b>，<code>i18n.market_locales.separate_table_forbidden: true</code>；FK 指向 shop_locales 而非 platform_locales，那條 FK 就是 ③ ⊆ ② 的執法點）[job:hreflang_matrix_build] [job:sitemap_rebuild]"},
@@ -11547,8 +11550,8 @@ Object.assign(DOCS,{
   l:"🔴 <b>與商品編輯頁的「內容語言」是兩個切換器，不得連動</b>（67 §E.1）。合成一個下拉的事故形態：商家為了看懂 UI 切成 English，系統同時把內容語言切到 en ⇒ 標題欄空白 ⇒ 商家把中文標題打進去 ⇒ <b>英文版商品的標題是中文</b>，而且只有前台切語言時才會被發現。<br>字串來自<b>平台 i18n bundle</b>（跨租戶共用、隨版本部署），🔴 <b>不得進租戶 translations 表</b>：①每租戶存一份平台字串副本 ②租戶能改平台文案、平台改版蓋不掉 ③兩種 key 命名空間混進同一個唯一索引。兩者連查詢路徑都不同——平台字串在部署時載入記憶體，租戶譯文隨請求查 DB。<br><b>原型邊界</b>：bundle 只收錄框架字串（導航、頂欄、儲存列、產品列表頁首），未收錄者沿用來源字串顯示",
   i:"P1・[api:TBD-staffMemberUpdate]（uiLocale） [tbl:staff_members.ui_locale]；平台 bundle 不進 DB"},
  "content-locale":{t:"內容語言切換器（商品編輯頁）",f:"切換正在讀寫哪一份譯文",
-  l:"值域＝該 shop <b>已啟用</b>的語言（<code>shop_locales</code>），預設＝來源語言。位置在標題列、與四態狀態同一列（67 §E.2）。切到未發布語言：允許編輯並提示「僅預覽連結可見」（29 §1.2）；<b>建立商品時停用</b>——base row 還不存在，沒有東西可翻。<br>切換器上掛該語言的進度徽章，讀 <code>translation_status</code>（鐵律 7，與列表徽章同源）。<br><b>原型邊界</b>：規格要求狀態進 URL query（<code>?content_locale=en</code>，形態沿用 52 號 P0-18），原型以模組狀態承載，未做 query 參數；per-market 覆寫（<code>translations.market_id</code>）亦未做，原型只有語言層",
-  i:"P1・[api:translationsRegister/translationsRemove] [tbl:translations(shop_id,resource_type,resource_id,locale_tag,market_id,field_key)]"},
+  l:"值域＝該 shop <b>已啟用</b>的語言（<code>shop_locales</code>），預設＝來源語言。位置在標題列、與四態狀態同一列（67 §E.2）。切到未發布語言：允許編輯並提示「僅預覽連結可見」（29 §1.2）；<b>建立商品時停用</b>——base row 還不存在，沒有東西可翻。<br>切換器上掛該語言的進度徽章，讀 <code>translation_status</code>（鐵律 7，與列表徽章同源）。<br><b>原型邊界</b>：規格要求狀態進 URL query（<code>?content_locale=en</code>，形態沿用 52 號 P0-18），原型以模組狀態承載，未做 query 參數。市場級覆寫已依裁定 10 取消（<code>translations.market_id</code> 已刪，67 §C.2）——「只有語言層」如今是規格本身，不再是原型邊界",
+  i:"P1・[api:translationsRegister/translationsRemove] [tbl:translations(shop_id,resource_type,resource_id,locale_tag,field_key)]"},
  "pd-locale-banner":{t:"非來源語言的編輯提示",f:"說明目前在編輯哪個語言版本、哪些欄位鎖住",
   l:"🔴 67 §E.3 是<b>最貴的一條</b>：不做唯讀，商家會在 en 頁面把價格從 1,480 改成 148（以為只影響英文版），而實際上改的是<b>唯一的那筆</b> <code>product_variants.price_cents</code>（63 §B.3：商品層沒有價格）。這不是顯示問題，是真的收錯錢。<br>形態＝<b>灰化＋tooltip</b>（limits.yml <code>notification.non_toggleable_ui: disabled_with_tooltip</code>），<b>不是隱藏</b>——隱藏會讓商家以為英文版沒有價格",
   i:"P1・前端狀態；後端以 locale scope 拒絕非來源語言寫入不可翻欄位（userErrors FIELD_NOT_TRANSLATABLE）"},
@@ -11607,7 +11610,7 @@ Object.assign(DOCS,{
   l:"🔴 <b>新增語言必須是「後台一次操作」</b>：不得需要改程式碼／改 enum／跑 migration／重新部署（67 §A.2，裁定「之後我可以自行添加任何語言」的直接落地）。因此語言在 <code>platform_locales</code> ＋ <code>shop_locales</code> 兩張表，不在 Ruby enum、不在 TS union、也不在 limits.yml 的清單裡。<br>格式驗證 <code>i18n.locale_tag_format</code>；禁用碼 <code>i18n.forbidden_locale_tags</code>（zh／EU／UK／es-419）。🔴 裸 <code>zh</code> 在字體上是歧義的——任何以它為 fallback 目標的鏈都會把繁體使用者送到簡體內容或反之。大小寫正規化在<b>寫入層</b>強制，不得依賴 MySQL collation 的大小寫不敏感（API 回傳與 URL 前綴需要確定的字面值）",
   i:"P1・[api:shopLocaleEnable] [tbl:platform_locales]（平台級字典，豁免 shop_id ⇒ 登記進 config/tenancy_exempt_tables.yml）"},
  "set-lang-fallback":{t:"缺翻譯時的行為",f:"fallback 鏈與欄位分類的說明",
-  l:"🔴 缺翻譯<b>必須有明確且可預測的行為，不得靜默空白</b>（67 §0.2 原則 2）——「translations[locale] 是 nil 就印空字串」會編譯通過、測試通過，上線後在某個語言版本留下一整頁空白。<br>鏈：per-market 覆寫 → 語言層 → BCP-47 截尾（<b>只截尾、不跨枝</b>）→ base row → 依欄位類別（required 回原文／optional 整欄不輸出）。<b>商家不可自訂鏈</b>——可自訂的鏈會產生 A→B→A 的環，環的偵測與診斷成本遠高於它的價值；要跨語言借內容的正確作法是<b>複製成真實譯文</b>。<br>空值定義含<b>語義空 HTML</b>（&lt;p&gt;&lt;/p&gt;）——少了這一條，富文本編輯器的初始值會讓 fallback 永遠不觸發",
+  l:"🔴 缺翻譯<b>必須有明確且可預測的行為，不得靜默空白</b>（67 §0.2 原則 2）——「translations[locale] 是 nil 就印空字串」會編譯通過、測試通過，上線後在某個語言版本留下一整頁空白。<br>鏈：語言層 → BCP-47 截尾（<b>只截尾、不跨枝</b>）→ base row → 依欄位類別（required 回原文／optional 整欄不輸出）。（鏈頭的 per-market 覆寫已依裁定 10 移除，67 §C.4）<b>商家不可自訂鏈</b>——可自訂的鏈會產生 A→B→A 的環，環的偵測與診斷成本遠高於它的價值；要跨語言借內容的正確作法是<b>複製成真實譯文</b>。<br>空值定義含<b>語義空 HTML</b>（&lt;p&gt;&lt;/p&gt;）——少了這一條，富文本編輯器的初始值會讓 fallback 永遠不觸發",
   i:"P0・渲染期批次載入（每頁 SQL ≤15 條，63 §D.1）；每次落到截尾鏈以後記一次 i18n.fallback_hit{shop,locale,resource_type,field,depth}"},
  "set-lang-chain":{t:"解析順序（唯讀）",f:"顯示 fallback 鏈的定義",
   l:"<code>i18n.fallback_chain_mode: bcp47_truncation</code>；<code>truncation_stops_at_forbidden: true</code>。zh-Hant → ⛔（不得續截到 zh）；zh-Hant-HK → zh-Hant → ⛔；en-GB → en。這是 <code>zh</code> 唯一被特別處理的地方，而處理方式是<b>縮短鏈</b>，不是特例分支",

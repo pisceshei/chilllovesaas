@@ -2858,7 +2858,9 @@ i18n:
   source_locale_immutable_publish: true
 
   # --- Fallback 鏈（67 §C.4）—— 🔴 不得靜默空白 -------------------------------
-  # 解析順序：(locale,market) → (locale,NULL) → 截尾鏈 → base row → 依欄位類別。
+  # 解析順序：locale → 截尾鏈 → base row → 依欄位類別。
+  # （依裁定 10 於 2026-08-13 修正，原文：「(locale,market) → (locale,NULL) → 截尾鏈 → …」——
+  #   translations.market_id 已刪，market 維度整層消失，見 67 §C.2 沿革。）
   fallback_chain_mode: bcp47_truncation
   # 🔴 繁簡之間永不互為 fallback。地區借用只是用詞差異，**字體借用是整頁文字都不對**。
   never_fallback_pairs: [[zh-Hant, zh-Hans]]
@@ -2953,6 +2955,9 @@ i18n:
     #    我方欄名沿用既有命名（resource_type≈Type、resource_gid≈Identification、field_key≈Field、
     #    market_handle≈Market、source_text≈Default content、translated_text≈Translated content），
     #    **欄位集合與順序對齊**，另保留我方獨有的 source_digest（Shopify 沒有，但它是回匯安全的前提）。
+    # 🔴 market_handle 是純格式相容欄（依裁定 10，2026-08-13）：匯出恆空白；
+    #    匯入時空白＝唯一合法值，非空白 ⇒ 拒絕該列（本平台不做市場級內容覆寫，67 §E.6(b)／V-201）。
+    #    保留它只為對齊本尊 8 欄——刪欄會讓「拿本尊檔案直接匯入」多一步手工改檔。
     columns: [resource_type, resource_gid, field_key, locale, market_handle,
               status, source_text, translated_text, source_digest]
     split_by: [locale, resource_type]
@@ -3512,18 +3517,21 @@ csv:
     locale_display_name_in_header_forbidden: true
     # 🔴🔴 **表頭語言標籤不得帶地區**（取代初版的 locale_tag_requires_region: true，理由見上方沿革）。
     #    `Title [en-HK]`／`Title [zh-Hant-TW]` 一律拒絕——不論是匯入進來的，還是我方自己產生的。
-    #    ⚠ 想加 `Title [en-HK]` ⇒ 那是**市場級覆寫**（translations.market_id 非 NULL），
-    #      是**資料模型變更**不是格式變更。先改 67，再回頭改這裡。詳見 70 §D.5(b)。
+    #    ⚠ 想加 `Title [en-HK]` ⇒ 那是**市場級覆寫**，是**資料模型變更**不是格式變更——
+    #      且該維度已依裁定 10 刪除，要先依 67 §C.2 復活條件恢復資料模型。詳見 70 §D.5(b)。
     locale_tag_forbids_region: true
     locale_tag_regex: "^[a-z]{2,3}(-[A-Z][a-z]{3})?$"
     region_bearing_tag_action: reject_file
     # 🔴 本檔假設「無市場級覆寫」——同一語言在所有市場的商品內容完全一致。
     #    依據＝2026-08-13 使用者裁定（逐字：「不必考慮香港英文和加拿大英文的揭露事項因法規必須不同，
-    #    所有的都會保持一致」）。⇒ [locale] 欄一律對應 translations.market_id IS NULL。
-    #    ⚠ **這是「不使用」不是「不該存在」**：translations.market_id 是 67 的範圍，本區塊不動它。
+    #    所有的都會保持一致」）。⇒ [locale] 欄唯一對應 translations(locale)——無市場維度。
     assumes_no_market_level_override: true
     market_override_ruling_date: "2026-08-13"
-    locale_columns_map_to_market_id: "NULL"
+    # 依裁定 10（2026-08-13）修正：translations.market_id 欄已刪（67 §C.2 沿革），
+    # 原鍵 locale_columns_map_to_market_id: "NULL" 的受指涉物消失 ⇒ 改為刪欄記錄。
+    # （原註釋尚有一句「這是『不使用』不是『不該存在』：translations.market_id 是 67 的範圍，
+    #   本區塊不動它」——成文時欄位還在，現已由 67 依裁定執行刪除。）
+    market_id_column_removed: "2026-08-13"
 
     # --- 🔴 匯入的欄名方言（70 §D.2b）—— Shopline 商家零轉檔 -------------------
     # 與 shopify_import.accept_header_dialects（**基礎欄名**的方言）是**兩張獨立的表**，

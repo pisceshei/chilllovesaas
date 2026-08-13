@@ -5094,7 +5094,8 @@ cl-pillset                          data-cl-pillset="<groupId>"；margin-block-s
 - **介面語言**（頂欄）：`renderUiLocaleMenu()` / `toggleUiLocale()` / `setUiLocale()` / `applyUiChrome()`；DOM 錨點 `#uiLocBtn` + `#uiLocMenu`。
 - **內容語言**（商品編輯頁標題列）：`contentLocaleCtl()` / `renderContentLocaleMenu()` / `toggleContentLocale()` / `setContentLocale()`；DOM 錨點 `#cLocBtn` + `#cLocMenu`。
 - **已實作**：§34.1–§34.4、§34.6 的建立態停用／未發布語言標示／來源語言不顯示進度徽章。
-- **尚未實作**（給正式 React 版的契約，不是原型現況）：內容語言進 URL query（`?content_locale=en`，67 §E.1 明文要求，形態沿用 52 號 P0-18）、`translations.market_id` 的 per-market 覆寫維度、切換器的 loading 態、介面語言寫回 `staff_members.ui_locale`（原型只存在記憶體）。
+- **尚未實作**（給正式 React 版的契約，不是原型現況）：內容語言進 URL query（`?content_locale=en`，67 §E.1 明文要求，形態沿用 52 號 P0-18）、切換器的 loading 態、介面語言寫回 `staff_members.ui_locale`（原型只存在記憶體）。
+- **不做**（不是「尚未」）：~~`translations.market_id` 的 per-market 覆寫維度~~——已依裁定 10 於 2026-08-13 從資料模型刪除（67 §C.2 沿革含復活條件）。<!-- 依裁定 10 修正：原文把它列在「尚未實作」清單內，會誤導 React 版把它當成待辦。 -->
 
 > **🔴 這個元件存在的唯一理由，是防一種只會在前台被發現的資料毀損。**
 > 商家為了看懂 UI 把「語言」切成 English → 若兩層語言連動，系統同時把**內容語言**切到 `en` → 商品標題欄變空白（尚未翻譯）→ 商家以為資料掉了，把中文標題打進去 → **英文版商品的標題是中文，而中文版沒有變**。
