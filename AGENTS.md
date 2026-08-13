@@ -5,8 +5,14 @@
 ## 開工前（每個任務都要）
 
 1. 先讀 `HANDOFF.md`（15 分鐘上手路徑、決策 D1–D7、法律紅線、里程碑 M0–M6）。
-2. 開發某畫面/功能前，讀對應章節：`docs/research/22`（按鈕級驗收清單）、`docs/specs/11–19`（生產級做法與坑）、`docs/research/28`（API 契約——**admin 一切走 GraphQL**）、`docs/research/31`（主題引擎工作包）。
+2. 開發某畫面/功能前，讀對應章節：`docs/research/22`（按鈕級驗收清單）、`docs/research/71`（parity 總登記簿：§A 保護清單＋§F 差異登記）、`docs/research/7x` 該模組 teardown（72 首頁指標/73 財務帳單/74 顧客線/75 折扣…逐輪增補）、`docs/specs/11–19`（生產級做法與坑）、`docs/research/28`（API 契約——**admin 一切走 GraphQL**）、`docs/research/31`（主題引擎工作包）。
 3. UI 一律以 `docs/design/23-interaction-css-spec.md` 的 tokens 為準；對照 `docs/design/chilllove-admin-v2.html` 原型（開「⌗ 註釋模式」看每個控件的規格）。
+4. 🔴 **階段對齊標準（2026-08-13 使用者裁定，硬性）**：每個階段的實作必須與 Shopify 本尊保持一致性——
+   **按鈕級完全複製功能邏輯與交互邏輯**（每個按鈕/欄位/值域/空態/錯誤態/狀態機）＋**對照 CSS 量測**
+   （7x 檔 §CSS 三段式：本尊量測值 → 我方 token 映射；實作只用我方 tokens，鐵律 8/9）＋
+   **結合 help.shopify.com 說明文檔**（實測＋help 雙源；上限值引 `config/limits.yml` 不硬編）。
+   與本尊的差異只有兩種合法形態：71 §A 保護清單（使用者裁定）或 §F 登記的 V——其餘一律做到一致；
+   拿不準是否「本尊如此」時查對應 7x teardown，7x 沒寫的在 PR 標假設，不要靜默猜。
 
 ## 工作流
 

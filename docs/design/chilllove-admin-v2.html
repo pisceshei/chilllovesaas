@@ -7045,73 +7045,99 @@ function newDiscount(type){
   DISC={id:'new',type,method:'code',title:'',comb:{p:false,o:false,s:false}};
   closeDiscModal();goDetail('d-discount',{id:'new'});
 }
+/* 71-R6：舊 discSummary（kv 三列）併入頁內「詳情」bullet 形態；此函式改回傳組合句給 #discSum li。 */
 function discSummary(){
-  const T={product:'商品折扣',order:'訂單折扣',bxgy:'買 X 送 Y（商品折扣類）',ship:'運費折扣'}[DISC.type];
   const c=[];if(DISC.comb.p)c.push('商品折扣');if(DISC.comb.o)c.push('訂單折扣');if(DISC.comb.s)c.push('運費折扣');
-  return `<div class="kv"><span class="k">類型</span><span>${T}</span></div>
-    <div class="kv"><span class="k">方式</span><span>${DISC.method==='code'?'折扣碼':'自動折扣'}</span></div>
-    <div class="kv"><span class="k">可組合</span><span>${c.join('、')||'不可與其他折扣併用'}</span></div>`;
+  return c.length?('可與 '+c.join('、')+' 合併使用'):'無法與其他折扣合併使用';
 }
+/* 71-R6（2026-08-13 實測四型建立式 /discounts/new/{amount-off-product|buy-x-get-y|amount-off-order|
+   free-shipping}）：①卡標題＝型名（商品金額折扣…），方式 segmented 在卡內；②「適用於」只有
+   特定商品系列/特定商品 兩選項——原「所有商品」為發明選項已移除（全品折扣走訂單型）；
+   ③最低購買要求＝radio 三選（無/最低購買金額 (HK$)/最低品項數量）獨立卡；④使用量限制選項＝
+   兩勾選（限制此折扣的總使用次數上限/每位顧客限用一次）；⑤🔴組合規則 2026 版：三勾選全開放
+   ——商品×商品可組（「商品折扣：每筆訂單可套用多項折扣」原文），僅運費限一項取最優惠；
+   原「同類互斥＋disabled」為過時規則已移除；⑥有效日期時區標示 (HKT)（商店時區，G21）；
+   ⑦新增右欄「銷售管道存取權」卡與「標籤」卡；⑧摘要改本尊「詳情」bullet 形態。 */
 function discountPage(){
   const t=DISC.type,code=DISC.method==='code';
+  const typeName={product:'商品金額折扣',order:'訂單金額折扣',bxgy:'買 X 送 Y',ship:'免運費'}[t];
   const valueBlock={
-    product:`<div class="grid2">${F('折扣值類型',SEL('dvt',['百分比','固定金額'],'百分比'))}${F('值',TXT('dv','20','','req|num'))}</div>
-      ${F('套用範圍',SEL('dap',['指定商品系列','指定商品','所有商品'],'指定商品系列'))}
-      <div class="rowflex card-sec"><button class="btn btn-sec btn-sm" onclick="discPick('collection')">瀏覽商品系列</button><button class="btn btn-ghost btn-sm" onclick="discPick('product')">瀏覽商品</button>
-        <span class="help">適用清單上限 100 項（22 §4）</span></div>
+    product:`<div class="grid2">${F('折扣值',SEL('dvt',['百分比','固定金額'],'百分比'))}${F('值',TXT('dv','20','','req|num'))}</div>
+      ${F('適用於',SEL('dap',['特定商品系列','特定商品'],'特定商品系列'))}
+      <div class="rowflex card-sec"><input class="input" placeholder="搜尋商品系列" style="flex:1" aria-label="搜尋適用清單" onfocus="this.blur();discPick(document.querySelector('[data-f=dap]').value==='特定商品'?'product':'collection')"><button class="btn btn-sec btn-sm" onclick="discPick(document.querySelector('[data-f=dap]').value==='特定商品'?'product':'collection')">瀏覽</button></div>
+      <p class="help">適用清單上限引 limits.yml discount.applies_to_max（22 §4）</p>
       <div class="card-sec">${CHK('donce',false,'每張訂單只折抵一次','不勾選＝每個合格品項都折（固定金額 + 指定品項時才出現）')}</div>`,
-    order:`<div class="grid2">${F('折扣值類型',SEL('dvt',['百分比','固定金額'],'百分比'))}${F('值',TXT('dv','10','','req|num'))}</div>
+    order:`<div class="grid2">${F('折扣值',SEL('dvt',['百分比','固定金額'],'百分比'))}${F('值',TXT('dv','10','','req|num'))}</div>
       <p class="help">作用於訂單小計；不影響運費與稅。</p>`,
-    bxgy:`<div class="card-sec"><b style="font-size:var(--t-sm)">顧客購買（Buy X）</b>
-      <div class="grid2" style="margin-top:var(--sp-200)">${F('條件',SEL('dbx',['最少商品數量','最低消費金額'],'最少商品數量'))}${F('數量／金額',TXT('dbv','2','','req|num'))}</div>
-      <div class="rowflex"><button class="btn btn-sec btn-sm" onclick="discPick('product')">選擇「任一件來自」的商品</button></div></div>
-      <div class="card-sec"><b style="font-size:var(--t-sm)">顧客獲得（Get Y）</b>
-      <div class="grid3" style="margin-top:var(--sp-200)">${F('數量',TXT('dgq','1','','req|int'))}${F('折扣深度',SEL('dgd',['免費','百分比','每件折抵金額'],'免費'))}${F('值',TXT('dgv','100','','num'))}</div>
-      <div class="rowflex"><button class="btn btn-sec btn-sm" onclick="discPick('product')">選擇 Y 商品</button></div>
-      <div style="margin-top:var(--sp-200)">${CHK('dgmax',true,'設定每張訂單的使用次數上限','X 與 Y 同品項時，折抵顧客所選較低價的那件')}</div></div>`,
-    ship:`${F('國家範圍',SEL('dsc',['所有國家','指定國家'],'所有國家'))}
+    bxgy:`<div class="card-sec"><b style="font-size:var(--t-sm)">顧客購買</b>
+      <div style="margin-top:var(--sp-200)">${F('條件',SEL('dbx',['最低品項數量','最低購買金額'],'最低品項數量'))}</div>
+      <div class="grid2">${F('數量',TXT('dbv','2','','req|num'))}${F('任何品項選自',SEL('dbxs',['特定商品','特定商品系列'],'特定商品'))}</div>
+      <div class="rowflex"><input class="input" placeholder="搜尋商品" style="flex:1" aria-label="搜尋 X 商品" onfocus="this.blur();discPick('product')"><button class="btn btn-sec btn-sm" onclick="discPick('product')">瀏覽</button></div></div>
+      <div class="card-sec"><b style="font-size:var(--t-sm)">顧客獲得</b>
+      <p class="help" style="margin:var(--sp-100) 0 var(--sp-200)">顧客必須將指定數量的品項加入購物車。</p>
+      <div class="grid2">${F('數量',TXT('dgq','1','','req|int'))}${F('任何品項選自',SEL('dgys',['特定商品','特定商品系列'],'特定商品'))}</div>
+      <div class="rowflex"><button class="btn btn-sec btn-sm" onclick="discPick('product')">瀏覽 Y 商品</button></div>
+      <div style="margin-top:var(--sp-200)">${F('以折扣價',SEL('dgd',['百分比','每件折抵金額','免費'],'免費'))}${F('顧客獲得的折扣值',TXT('dgv','100','','num'))}</div>
+      <div style="margin-top:var(--sp-200)">${CHK('dgmax',true,'設定每筆訂單的最高使用次數','X 與 Y 同品項時，折抵顧客所選較低價的那件')}</div></div>`,
+    ship:`${F('國家/地區',SEL('dsc',['所有國家/地區','選定國家/地區'],'所有國家/地區'))}
       <div class="card-sec">${CHK('dsx',false,'排除超過特定金額的運費費率')}
         ${F(`排除門檻（${CURSYM()}）`,TXT('dsv','','例：500','money'))}</div>`}[t];
   return detailHead(DISC.id==='new'?'建立折扣':H(DISC.title),
-    chip({product:'商品折扣',order:'訂單折扣',bxgy:'買 X 送 Y',ship:'免運費'}[t],'info'),
+    chip(typeName,'info'),
     `${DISC.id!=='new'?`<button class="btn btn-sec btn-sm" onclick="discPromote()">推廣</button>`:''}
      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存折扣</button>`,'m-discounts')
   +`<div class="od-grid" data-form="disc">
     <div class="col">
-      <div class="card card-pad" data-doc="disc-method"><h3>方式</h3>
-        <div class="seg"><button class="${code?'on':''}" onclick="discMethod('code')">折扣碼</button><button class="${!code?'on':''}" onclick="discMethod('auto')">自動折扣</button></div>
+      <div class="card card-pad" data-doc="disc-method"><h3>${typeName}</h3>
+        <label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">方式</label>
+        <div class="seg" style="margin-top:var(--sp-100)"><button class="${code?'on':''}" onclick="discMethod('code')">折扣代碼</button><button class="${!code?'on':''}" onclick="discMethod('auto')">自動折扣</button></div>
         <div class="card-sec">${code
-          ?`${F('折扣碼',`<input class="input mono" data-f="dcode" value="${H(DISC.title)}" data-val="req|code|max:64">`,'顧客在結帳時輸入；區分大小寫的統一為大寫')}
-             <button class="btn btn-ghost btn-sm" style="padding:0;margin-top:var(--sp-150)" onclick="discGen()">產生隨機碼</button>`
-          :F('標題',`<input class="input" data-f="dtitle" value="${H(DISC.title)}" data-val="req|max:64">`,'顧客在結帳與購物車看得到這個標題')}</div>
+          ?`<div class="rowflex" style="justify-content:space-between"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">折扣代碼</label>
+              <button class="btn btn-ghost btn-sm" style="padding:0" onclick="discGen()">產生隨機代碼</button></div>
+             <input class="input mono" data-f="dcode" value="${H(DISC.title)}" data-val="req|code|max:64" aria-label="折扣代碼">
+             <span class="hint">顧客必須在結帳頁面輸入此代碼。</span>`
+          :F('標題',`<input class="input" data-f="dtitle" value="${H(DISC.title)}" data-val="req|max:64">`,'顧客會在購物車和結帳頁面中看到此名稱。')}</div>
       </div>
-      <div class="card card-pad" data-doc="disc-value"><h3>折扣值與範圍</h3>${valueBlock}</div>
-      <div class="card card-pad" data-doc="disc-eligibility"><h3>資格與條件</h3>
-        ${F('購買類型',SEL('dpt',['一次性購買','訂閱','兩者皆可'],'一次性購買'),'啟用訂閱後才顯示；訂閱可限首期／限 N 期')}
-        <div class="card-sec">${F('最低需求',SEL('dmin',['無','最低消費金額','最少商品數量'],'無'),'指定品項折扣時，只有合格品項計入門檻')}
-          ${F('門檻值',TXT('dminv','','例：2000','money'))}</div>
-        <div class="card-sec">${F('顧客資格',SEL('dcust',['所有顧客','指定顧客分群','指定顧客','指定市場'],'所有顧客'),'自動折扣 ≤5 個分群、折扣碼 ≤100 個')}
-          <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="discPick('segment')">選擇分群</button></div></div>
-        ${code?`<div class="card-sec">${CHK('dlim',true,'限制總使用次數')}${F('總次數上限',TXT('dlimv','500','','int'))}
-          ${CHK('done',true,'每位顧客限用一次','以 email／電話判定')}</div>`:''}
+      <div class="card card-pad" data-doc="disc-value"><h3>${t==='bxgy'?'顧客購買與獲得':'折扣值'}</h3>${valueBlock}</div>
+      ${t!=='bxgy'?`<div class="card card-pad" data-doc="disc-minreq"><h3>最低購買要求</h3>
+        ${[['none','無最低要求'],['amt',`最低購買金額 (${CURSYM()})`],['qty','最低品項數量']].map(([v,l],i)=>`<label class="radio-row"><input type="radio" name="dminreq" class="cl-radio" ${i===0?'checked':''} value="${v}" onchange="const b=document.getElementById('dminBox');if(b)b.hidden=this.value==='none'"><span class="rr-t"><b>${l}</b>${v==='amt'?'<span>指定品項折扣時，只有合格品項計入門檻</span>':''}</span></label>`).join('')}
+        <div id="dminBox" hidden>${F('門檻值',TXT('dminv','','例：2000','money'))}</div></div>`:''}
+      <div class="card card-pad" data-doc="disc-eligibility"><h3>適用資格</h3>
+        ${F('顧客資格',SEL('dcust',['所有顧客','特定顧客','顧客群','市場'],'所有顧客'),'四選項＝help 坐實（「市場」限特定市場購物者，B2B 市場資格走此軸）；分群上限引 limits.yml discount.max_segments_per_automatic/per_code（46c 已源）')}
+        <div class="rowflex" style="margin-top:var(--sp-200)"><button class="btn btn-sec btn-sm" onclick="discPick('segment')">選擇分群</button></div>
+        <div class="card-sec">${F('購買類型',SEL('dpt',['一次性購買','訂閱','兩者皆可'],'一次性購買'),'啟用訂閱後才顯示；訂閱可限首期／限 N 期')}</div>
       </div>
-      <div class="card card-pad" data-doc="disc-combo"><h3>組合 Combinations</h3>
-        <p class="help" style="margin-bottom:var(--sp-200)">勾選這個折扣可以和哪些類別的折扣同時套用。同類別折扣通常互斥（同品項雙 product 折扣為 Plus 專屬）。</p>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcp" ${DISC.comb.p?'checked':''} ${t==='product'||t==='bxgy'?'disabled aria-disabled="true"':''} onchange="DISC.comb.p=this.checked;discSyncSummary()"> 商品折扣${t==='product'||t==='bxgy'?'<span class="hint">（本身即商品折扣，同類互斥）</span>':''}</label>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dco" ${DISC.comb.o?'checked':''} ${t==='order'?'disabled aria-disabled="true"':''} onchange="DISC.comb.o=this.checked;discSyncSummary()"> 訂單折扣${t==='order'?'<span class="hint">（本身即訂單折扣，同類互斥）</span>':''}</label>
-        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcs" ${DISC.comb.s?'checked':''} ${t==='ship'?'disabled aria-disabled="true"':''} onchange="DISC.comb.s=this.checked;discSyncSummary()"> 運費折扣${t==='ship'?'<span class="hint">（本身即運費折扣，同類互斥）</span>':''}</label>
+      ${code?`<div class="card card-pad" data-doc="disc-usage"><h3>使用量限制選項</h3>
+        ${CHK('dlim',true,'限制此折扣的總使用次數上限')}${F('總次數上限',TXT('dlimv','500','','int'))}
+        ${CHK('done',true,'每位顧客限用一次','以 email／電話判定')}</div>`:''}
+      <div class="card card-pad" data-doc="disc-combo"><h3>組合
+        <span class="h-act"><button class="btn btn-ghost btn-sm" aria-expanded="false" onclick="const b=document.getElementById('dcomboBox');b.hidden=!b.hidden;this.setAttribute('aria-expanded',String(!b.hidden))">⊕</button></span></h3>
+        <p class="help" id="dcomboNote">此折扣無法與顧客購物車內的其他商品、訂單或運送折扣合併使用。</p>
+        <div id="dcomboBox" hidden>
+        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcp" ${DISC.comb.p?'checked':''} onchange="DISC.comb.p=this.checked;discSyncSummary()"> <span><b>商品折扣</b><span class="hint" style="display:block">每筆訂單可套用多項折扣</span></span></label>
+        <label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dco" ${DISC.comb.o?'checked':''} onchange="DISC.comb.o=this.checked;discSyncSummary()"> <span><b>訂單折扣</b><span class="hint" style="display:block">每筆訂單可套用多項折扣</span></span></label>
+        ${t!=='ship'?`<label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" data-f="dcs" ${DISC.comb.s?'checked':''} onchange="DISC.comb.s=this.checked;discSyncSummary()"> <span><b>運費折扣</b><span class="hint" style="display:block">每筆訂單僅能套用一項折扣 (以最優惠者為準)</span></span></label>`:''}
+        </div>
       </div>
-      <div class="card card-pad" data-doc="disc-dates"><h3>有效期間</h3>
-        <div class="grid2">${F('開始日期','<input class="input" type="date" data-f="dsd" value="2026-08-11">')}${F('開始時間','<input class="input" type="time" data-f="dst" value="09:00">')}</div>
+      <div class="card card-pad" data-doc="disc-dates"><h3>有效日期</h3>
+        <div class="grid2">${F('開始日期','<input class="input" type="date" data-f="dsd" value="2026-08-13">')}${F('開始時間 (HKT)','<input class="input" type="time" data-f="dst" value="09:00">')}</div>
         <div class="card-sec">${CHK('ded',false,'設定結束日期')}
-          <div class="grid2" style="margin-top:var(--sp-200)">${F('結束日期','<input class="input" type="date" data-f="dedd">')}${F('結束時間','<input class="input" type="time" data-f="dedt">')}</div></div>
-        <p class="help card-sec">時區＝商店時區（GMT+08:00 台北）。狀態由起訖時間推導：已排程 → 啟用中 → 已過期。</p>
+          <div class="grid2" style="margin-top:var(--sp-200)">${F('結束日期','<input class="input" type="date" data-f="dedd">')}${F('結束時間 (HKT)','<input class="input" type="time" data-f="dedt">')}</div></div>
+        <p class="help card-sec">時區＝商店時區（HKT，鐵律 11 基準法域）。狀態由起訖時間推導：已排程 → 作用中 → 已過期。</p>
       </div>
-      ${DISC.type!=='ship'?`<div class="card card-pad">${F('標籤',TXT('dtags','','以逗號分隔'))}${DISC.method==='auto'?CHK('dpos',false,'同時在 POS 提供（POS Pro 地點）'):''}</div>`:''}
     </div>
     <div class="col">
+      <div class="card card-pad" data-doc="disc-channels"><h3>銷售管道存取權</h3>
+        ${CHK('dchan',false,'允許在選定的管道上推廣此折扣','2026 新卡：勾選後可挑管道（線上商店/POS/Shop）曝光此折扣')}</div>
       <div class="card card-pad sticky-side" data-doc="disc-summary"><h3>摘要</h3>
-        <div id="discSum">${discSummary()}</div>
+        <p class="mut" style="font-size:var(--t-xs)">${code?(DISC.title?`<span class="mono">${H(DISC.title)}</span>`:'尚無折扣代碼'):(DISC.title||'尚無標題')}</p>
+        <b style="font-size:var(--t-sm)">類型</b>
+        <p class="mut" style="font-size:var(--t-xs);margin-bottom:var(--sp-200)">${typeName}・${{product:'商品折扣',order:'訂單折扣',bxgy:'商品折扣',ship:'運費折扣'}[t]}</p>
+        <b style="font-size:var(--t-sm)">詳情</b>
+        <ul class="mut" style="font-size:var(--t-xs);padding-left:var(--sp-400);margin-top:var(--sp-100)">
+          <li>所有顧客</li><li>適用於網路商店</li><li>無最低購買要求</li><li>無使用量限制</li>
+          <li id="discSum" style="list-style:inherit">${DISC.comb.p||DISC.comb.o||DISC.comb.s?'可與部分折扣合併':'無法與其他折扣合併使用'}</li>
+          <li>自 今天 起生效</li></ul>
         <div class="card-sec"><b style="font-size:var(--t-sm)">效能</b>
           <div class="kv"><span class="k">使用次數</span><span class="num">${DISC.id==='new'?0:(DISCOUNTS.find(x=>x.id===DISC.id)||{}).used}</span></div>
           <div class="kv"><span class="k">歸因銷售額</span><span class="num">${DISC.id==='new'?money(0):money(710000)}</span></div></div>
@@ -7119,6 +7145,8 @@ function discountPage(){
           <button class="btn btn-ghost btn-sm" onclick="toast('已複製折扣')">複製</button>
           <button class="btn btn-danger-o btn-sm" onclick="confirmDanger('刪除折扣','刪除後既有的分享連結與 QR code 會失效；已完成的訂單不受影響。','刪除折扣',function(){toast('已刪除折扣');go('m-discounts');})">刪除</button></div>`:''}
       </div>
+      <div class="card card-pad" data-doc="disc-tags"><h3>標籤</h3>
+        ${TXT('dtags','','以逗號分隔')}${DISC.method==='auto'?CHK('dpos',false,'同時在 POS 提供（POS Pro 地點）'):''}</div>
     </div></div>`;
 }
 function discMethod(m){DISC.method=m;renderDetail('d-discount');}
@@ -7133,9 +7161,12 @@ function discPick(kind){
     segment:['選擇顧客分群',SEGMENTS.map(s=>({t:s.t,s:`${s.n} 位顧客`}))]}[kind];
   pickerModal(map[0],map[1],sel=>toast(`已選取 ${sel.length} 項（上限 100）`),true);
 }
+/* 71-R6 help：分享連結與 QR 共用配額（單一折扣僅能有一個）；可掛行銷活動帶 UTM；
+   /discount/{code} 深連結＋?discount= 參數（未完成結帳恢復信同機制，會取代車內原碼）。 */
 function discPromote(){
   openGen({title:'推廣折扣',body:`<div class="stack">
-    ${F('分享連結',`<input class="input mono" readonly value="https://chilllove.demo/discount/${H(DISC.title)}?redirect=/collections/all">`,'開啟即自動套用折扣碼')}
+    ${F('分享連結',`<input class="input mono" readonly value="https://chilllove.demo/discount/${H(DISC.title)}?redirect=/collections/all">`,'開啟即自動套用折扣碼；與 QR 共用配額——單一折扣僅能有一個連結或 QR')}
+    ${F('行銷活動（選填）',SEL('_dcamp',['不掛接','夏季回歸 SUMMER26','會員日 VIPDAY'],'不掛接'),'掛接後連結自動帶該活動的 UTM 參數（71-R1 歸因容器）')}
     ${F('導向頁面',SEL('_dp',['首頁','所有商品','指定系列','指定商品'],'所有商品'))}
     <div class="rowflex"><div style="width:88px;height:88px;border:var(--hairline) solid var(--border);border-radius:var(--r-300);display:grid;place-items:center;background:repeating-conic-gradient(#1a1b1d 0 25%,#fff 0 50%) 0 0/12px 12px" aria-label="QR code 示意"></div>
       <span class="help">QR code 可下載為 PNG，貼在包裝或線下物料。</span></div></div>`,
@@ -9837,9 +9868,13 @@ Object.assign(DOCS,{
 /* ---------- 折扣 ---------- */
  "doc-m-discounts":{t:"折扣列表",f:"四型折扣的統一列表",l:"配額：自動折扣 25 個、折扣碼 2,000 萬組（22 §4）；狀態由起訖時間推導（scheduled→active→expired）",i:"P0・[api:automaticDiscountNodes] [api:codeDiscountNodes] [tbl:discounts,discount_applications]"},
  "disc-method":{t:"折扣方式",f:"折扣碼 vs 自動折扣",l:"折扣碼需顧客輸入（可產生隨機碼）；自動折扣的 Title 顧客在結帳看得到（41 §10）",i:"P0・[api:discountCodeBasicCreate] / [api:discountAutomaticBasicCreate] [tbl:discounts]"},
- "disc-value":{t:"折扣值與範圍",f:"依四型呈現不同欄位組",l:"商品折扣：%/固定＋適用清單 ≤100 項＋「每單只折一次」；BxGy：Buy X（數量或金額）＋Get Y（數量＋免費/%/每件折抵）＋每單使用上限，X=Y 同品時折較低價那件；免運：國家範圍＋排除超過金額的費率（41 §10）",i:"P0・[api:discountCodeBxgyCreate] [api:discountCodeFreeShippingCreate] [api:discountAutomaticBxgyCreate] [tbl:discounts]"},
+ "disc-minreq":{t:"最低購買要求（獨立卡）",f:"radio 三選：無/最低購買金額 (幣別)/最低品項數量",l:"71-R6 實測：獨立卡非下拉；指定品項折扣時只有合格品項計入門檻；BxGy 型無此卡（購買條件即門檻）",i:"P0・[api:discountCodeBasicUpdate]（minimumRequirement） [tbl:discounts]"},
+ "disc-usage":{t:"使用量限制選項",f:"兩勾選：限制此折扣的總使用次數上限/每位顧客限用一次",l:"71-R6 實測原文措辭；僅折扣碼方式顯示；每人一次以 email 或電話判定；用量併發用 CAS＋唯一索引硬保證（22 §4）",i:"P0・[api:discountCodeBasicUpdate]（usageLimit, appliesOncePerCustomer） [tbl:discounts]"},
+ "disc-channels":{t:"銷售管道存取權",f:"允許在選定的管道上推廣此折扣",l:"71-R6 實測 2026 新卡：勾選後可挑管道（線上商店/POS/Shop）曝光折扣；與「折扣可用性」不同——不勾仍可用，只是不主動曝光",i:"P1・[api:TBD-discountChannelAccess]（28 待補） [tbl:discounts,publications]"},
+ "disc-tags":{t:"折扣標籤",f:"逗號分隔＋（自動折扣）POS 提供勾選",l:"71-R6：標籤卡移右欄（本尊位置）；供列表篩選與報表分組",i:"P2・[tbl:discounts.tags]"},
+ "disc-value":{t:"折扣值（71-R6 對齊：適用於僅 特定商品系列/特定商品 兩選項，原「所有商品」為發明選項已除；BxGy＝購買 radio＋任何品項選自＋以折扣價三選）",f:"依四型呈現不同欄位組",l:"商品折扣：%/固定＋適用清單 ≤100 項＋「每單只折一次」；BxGy：Buy X（數量或金額）＋Get Y（數量＋免費/%/每件折抵）＋每單使用上限，X=Y 同品時折較低價那件；免運：國家範圍＋排除超過金額的費率（41 §10）",i:"P0・[api:discountCodeBxgyCreate] [api:discountCodeFreeShippingCreate] [api:discountAutomaticBxgyCreate] [tbl:discounts]"},
  "disc-eligibility":{t:"資格與條件",f:"購買類型／最低需求／顧客資格／使用上限",l:"指定品項折扣時只有合格品項計入門檻；分群上限自動 5／碼 100；每人一次以 email 或電話判定；用量併發用 CAS＋唯一索引硬保證（22 §4）",i:"P0・[api:discountCodeBasicUpdate]（minimumRequirement, customerSelection, usageLimit, appliesOncePerCustomer） [tbl:discounts,segments,customers]"},
- "disc-combo":{t:"折扣組合 Combinations",f:"可疊加的折扣類別勾選",l:"同類別互斥（同品項雙 product 折扣為 Plus 專屬）；每單 ≤5 個 product+order 碼 +1 shipping；POS/草稿手動折扣無視組合（22 §9.3）",i:"P0・[api:discountCodeBasicUpdate]（combinesWith{orderDiscounts,productDiscounts,shippingDiscounts}）；求值管線與裁決矩陣見 17 號 [tbl:discounts,discount_applications]"},
+ "disc-combo":{t:"折扣組合（🔴 71-R6 規則改版：商品×商品/訂單×訂單可組——本尊原文「每筆訂單可套用多項折扣」；運費僅一項取最優惠、免運型不出現運費勾選；舊「同類互斥」已移除；17 號裁決矩陣需照 2026 規則複核）",f:"⊕ 展開三勾選；收合態顯示「無法與…合併使用」句",l:"同類別互斥（同品項雙 product 折扣為 Plus 專屬）；每單 ≤5 個 product+order 碼 +1 shipping；POS/草稿手動折扣無視組合（22 §9.3）",i:"P0・[api:discountCodeBasicUpdate]（combinesWith{orderDiscounts,productDiscounts,shippingDiscounts}）；求值管線與裁決矩陣見 17 號 [tbl:discounts,discount_applications]"},
  "disc-dates":{t:"有效期間",f:"開始／結束日期時間",l:"時區＝商店時區；狀態由起訖推導不另存欄位（06 §4）",i:"P0・[api:discountCodeBasicUpdate]（startsAt, endsAt） [tbl:discounts]"},
  "disc-summary":{t:"折扣摘要卡",f:"即時彙總語意句＋效能",l:"表單改動即時反映到摘要（避免存檔後才發現組合錯）；效能＝使用次數與歸因銷售",i:"P0・前端純函式；效能數字 [api:report] [tbl:discount_applications,orders]"},
 /* ---------- 內容 ---------- */

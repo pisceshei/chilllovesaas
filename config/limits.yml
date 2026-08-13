@@ -890,6 +890,12 @@ discount:
   combines_with_default: false
   # 硬規則：運費折扣不可疊運費折扣（非 combinesWith 旗標可控）。出處：46b:285、46c:716（dev+help）
   shipping_plus_shipping_allowed: false
+  # 草稿訂單折扣（71-R6，2026-08-13）：單張草稿可輸入碼數；不支援的碼型（運費碼/買X送Y碼）。
+  # 自動折扣預設不套草稿、需明確勾選。出處：help create-orders/discounts（help）
+  max_codes_per_draft_order: 5
+  draft_order_unsupported_code_types: [free_shipping, bxgy]
+  # 重新啟用已停用折扣＝回「使用中」且**不保留原結束日期**（需重設）。出處：help managing-discounts（help）
+  reactivate_clears_end_date: true
 
 # =============================================================================
 # 10. 結帳／購物車／棄單
