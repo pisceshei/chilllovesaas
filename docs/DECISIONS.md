@@ -86,9 +86,18 @@
   **那是錯的**。M0 已建 `roles`／`role_permissions`／`staff_members`／`sessions` 四張表
   （命名用 `staff_members` 不是 `users`，我只查了 `users` 就下結論），
   全部 `shop_id NOT NULL` ＋ **複合外鍵** ＋ `acts_as_tenant` fail-closed。
-  ⇒ **D8 與現有 schema 直接衝突，尚未落地**。兩案影響評估與建議＝**`docs/specs/85`**，
-  待使用者裁定後才動 migration。在裁定前，**D8 是「已決定方向、未落地」狀態**，
-  不得據以修改 schema。
+  ⇒ 當時 **D8 與現有 schema 直接衝突**。兩案影響評估＝**`docs/specs/85`**。
+- ✅ **2026-08-14 使用者裁定：採 A 案（改 schema）＋把安全網補回去，已落地**。
+  - migration `20260814000000_identity_tables_to_organization_level`：四張身分表拆 shop_id 與
+    複合外鍵、新建 `user_store_assignments`（回填既有列）、email 唯一性改全平台、
+    順帶補 `staff_members.timezone`/`locale`（R12-V3 結案）。
+  - 🔴 **安全網兩道**（缺一則 G24 就是漏洞）：
+    ①`Current.accessible_shop_ids` / `can_access_shop?` / `role_for_current_shop`——fail-closed，
+      無法證明有權限一律回空集合；②`scripts/check-tenant-isolation.rb` 進 CI，
+      守住「白名單以外的表一律帶 shop_id」與「身分 model 不得再宣告 acts_as_tenant」。
+  - **業務資料表完全未動**（products/orders/inventory 的 shop_id 與複合外鍵照舊）。
+  - 驗證：rspec **52/52**（比原本多一條——新增孤兒帳號的 fail-closed 測試）；
+    兩道安全網皆做過反向測試（注入違規確實 exit 1）。
 
 ### D9. AOV 不與 `net_sales` 同源——鐵律 7 的具名例外（G25）
 

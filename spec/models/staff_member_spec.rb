@@ -6,7 +6,6 @@ RSpec.describe StaffMember, type: :model do
   it "requires a password of at least ten characters" do
     ActsAsTenant.with_tenant(shop) do
       staff = described_class.new(
-        shop:,
         email: "short@example.test",
         password: "short",
         password_confirmation: "short",

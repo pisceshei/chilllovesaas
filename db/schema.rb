@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_000000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -26,6 +26,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.index ["shop_id", "revoked_at", "expires_at"], name: "ix_api_tokens_revoked_at_expires_at"
     t.index ["shop_id", "staff_member_id"], name: "ix_api_tokens_staff_member_id"
     t.index ["shop_id", "token_digest"], name: "uq_api_tokens_token_digest", unique: true
+    t.index ["staff_member_id"], name: "fk_api_tokens_staff_member_id"
   end
 
   create_table "checkouts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "結帳快照及棄單來源", force: :cascade do |t|
@@ -281,6 +282,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.index ["shop_id", "order_id"], name: "ix_events_order_id"
     t.index ["shop_id", "staff_member_id"], name: "ix_events_staff_member_id"
     t.index ["shop_id", "subject_type", "subject_id"], name: "ix_events_subject_type_subject_id"
+    t.index ["staff_member_id"], name: "fk_events_staff_member_id"
   end
 
   create_table "files", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "上傳檔案 metadata", force: :cascade do |t|
@@ -753,22 +755,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.datetime "created_at", null: false
     t.string "permission_key", limit: 100, null: false
     t.bigint "role_id", null: false
-    t.bigint "shop_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["shop_id", "id"], name: "uq_role_permissions_tenant_id", unique: true
-    t.index ["shop_id", "role_id", "permission_key"], name: "uq_role_permissions_role_id_permission_key", unique: true
-    t.index ["shop_id", "role_id"], name: "ix_role_permissions_role_id"
+    t.index ["role_id", "permission_key"], name: "uq_role_permissions_key", unique: true
   end
 
   create_table "roles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "店內角色", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
     t.string "name", limit: 100, null: false
-    t.bigint "shop_id", null: false
     t.boolean "system", default: false, null: false
     t.datetime "updated_at", null: false
-    t.index ["shop_id", "id"], name: "uq_roles_tenant_id", unique: true
-    t.index ["shop_id", "name"], name: "uq_roles_name", unique: true
+    t.index ["name"], name: "uq_roles_name", unique: true
   end
 
   create_table "segments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "顧客分群查詢定義", force: :cascade do |t|
@@ -790,16 +787,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.string "ip_address", limit: 45
     t.datetime "last_active_at", null: false
     t.datetime "revoked_at"
-    t.bigint "shop_id", null: false
     t.bigint "staff_member_id", null: false
     t.string "token_digest", limit: 64, null: false
     t.datetime "updated_at", null: false
     t.string "user_agent", limit: 1024
-    t.index ["shop_id", "expires_at"], name: "ix_sessions_expires_at"
-    t.index ["shop_id", "id"], name: "uq_sessions_tenant_id", unique: true
-    t.index ["shop_id", "staff_member_id", "revoked_at"], name: "ix_sessions_staff_member_id_revoked_at"
-    t.index ["shop_id", "staff_member_id"], name: "ix_sessions_staff_member_id"
-    t.index ["shop_id", "token_digest"], name: "uq_sessions_token_digest", unique: true
+    t.index ["expires_at"], name: "ix_sessions_expires_at"
+    t.index ["staff_member_id", "revoked_at"], name: "ix_sessions_member_revoked"
+    t.index ["token_digest"], name: "uq_sessions_token_digest", unique: true
   end
 
   create_table "shipping_profiles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "一般與自訂運送設定檔", force: :cascade do |t|
@@ -866,16 +860,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.datetime "deactivated_at"
     t.string "email", limit: 320, null: false
     t.datetime "invited_at"
+    t.string "locale", limit: 16, default: "zh-Hant", null: false
     t.boolean "owner", default: false, null: false
     t.string "password_digest"
-    t.bigint "role_id"
-    t.bigint "shop_id", null: false
     t.string "status", limit: 32, default: "invited", null: false
+    t.string "timezone", limit: 64, default: "Asia/Hong_Kong", null: false
     t.datetime "updated_at", null: false
-    t.index ["shop_id", "email"], name: "uq_staff_members_email", unique: true
-    t.index ["shop_id", "id"], name: "uq_staff_members_tenant_id", unique: true
-    t.index ["shop_id", "role_id"], name: "ix_staff_members_role_id"
-    t.index ["shop_id", "status", "id"], name: "ix_staff_members_status_id"
+    t.index ["email"], name: "uq_staff_members_email", unique: true
+    t.index ["status"], name: "ix_staff_members_status"
   end
 
   create_table "tax_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "區域稅率與含稅價設定", force: :cascade do |t|
@@ -934,8 +926,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
     t.index ["shop_id", "role", "updated_at"], name: "ix_themes_role_updated_at"
   end
 
+  create_table "user_store_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "role_id"
+    t.bigint "shop_id", null: false
+    t.bigint "staff_member_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["role_id"], name: "ix_usa_role_id"
+    t.index ["shop_id", "staff_member_id"], name: "ix_usa_shop_member"
+    t.index ["staff_member_id", "shop_id"], name: "uq_usa_member_shop", unique: true
+  end
+
   add_foreign_key "api_tokens", "shops", name: "fk_api_tokens_shop"
-  add_foreign_key "api_tokens", "staff_members", column: ["shop_id", "staff_member_id"], primary_key: ["shop_id", "id"], name: "fk_api_tokens_staff_member_id"
+  add_foreign_key "api_tokens", "staff_members", name: "fk_api_tokens_staff_member_id"
   add_foreign_key "checkouts", "customers", column: ["shop_id", "customer_id"], primary_key: ["shop_id", "id"], name: "fk_checkouts_customer_id"
   add_foreign_key "checkouts", "shops", name: "fk_checkouts_shop"
   add_foreign_key "collection_products", "collections", column: ["shop_id", "collection_id"], primary_key: ["shop_id", "id"], name: "fk_collection_products_collection_id"
@@ -960,7 +963,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
   add_foreign_key "event_outbox", "shops", name: "fk_event_outbox_shop"
   add_foreign_key "events", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_events_order_id"
   add_foreign_key "events", "shops", name: "fk_events_shop"
-  add_foreign_key "events", "staff_members", column: ["shop_id", "staff_member_id"], primary_key: ["shop_id", "id"], name: "fk_events_staff_member_id"
+  add_foreign_key "events", "staff_members", name: "fk_events_staff_member_id"
   add_foreign_key "files", "shops", name: "fk_files_shop"
   add_foreign_key "fulfillment_orders", "locations", column: ["shop_id", "location_id"], primary_key: ["shop_id", "id"], name: "fk_fulfillment_orders_location_id"
   add_foreign_key "fulfillment_orders", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_fulfillment_orders_order_id"
@@ -1011,23 +1014,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000000) do
   add_foreign_key "refunds", "order_transactions", column: ["shop_id", "order_transaction_id"], primary_key: ["shop_id", "id"], name: "fk_refunds_order_transaction_id"
   add_foreign_key "refunds", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_refunds_order_id"
   add_foreign_key "refunds", "shops", name: "fk_refunds_shop"
-  add_foreign_key "role_permissions", "roles", column: ["shop_id", "role_id"], primary_key: ["shop_id", "id"], name: "fk_role_permissions_role_id"
-  add_foreign_key "role_permissions", "shops", name: "fk_role_permissions_shop"
-  add_foreign_key "roles", "shops", name: "fk_roles_shop"
+  add_foreign_key "role_permissions", "roles", name: "fk_role_permissions_role_id"
   add_foreign_key "segments", "shops", name: "fk_segments_shop"
-  add_foreign_key "sessions", "shops", name: "fk_sessions_shop"
-  add_foreign_key "sessions", "staff_members", column: ["shop_id", "staff_member_id"], primary_key: ["shop_id", "id"], name: "fk_sessions_staff_member_id"
+  add_foreign_key "sessions", "staff_members", name: "fk_sessions_staff_member_id"
   add_foreign_key "shipping_profiles", "shops", name: "fk_shipping_profiles_shop"
   add_foreign_key "shipping_rates", "shipping_zones", column: ["shop_id", "shipping_zone_id"], primary_key: ["shop_id", "id"], name: "fk_shipping_rates_shipping_zone_id"
   add_foreign_key "shipping_rates", "shops", name: "fk_shipping_rates_shop"
   add_foreign_key "shipping_zones", "shipping_profiles", column: ["shop_id", "shipping_profile_id"], primary_key: ["shop_id", "id"], name: "fk_shipping_zones_shipping_profile_id"
   add_foreign_key "shipping_zones", "shops", name: "fk_shipping_zones_shop"
-  add_foreign_key "staff_members", "roles", column: ["shop_id", "role_id"], primary_key: ["shop_id", "id"], name: "fk_staff_members_role_id"
-  add_foreign_key "staff_members", "shops", name: "fk_staff_members_shop"
   add_foreign_key "tax_settings", "shops", name: "fk_tax_settings_shop"
   add_foreign_key "templates", "shops", name: "fk_templates_shop"
   add_foreign_key "templates", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_templates_theme_id"
   add_foreign_key "theme_settings", "shops", name: "fk_theme_settings_shop"
   add_foreign_key "theme_settings", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_theme_settings_theme_id"
   add_foreign_key "themes", "shops", name: "fk_themes_shop"
+  add_foreign_key "user_store_assignments", "roles", name: "fk_usa_role_id"
+  add_foreign_key "user_store_assignments", "shops", name: "fk_usa_shop_id"
+  add_foreign_key "user_store_assignments", "staff_members", name: "fk_usa_staff_member_id"
 end

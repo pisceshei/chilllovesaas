@@ -166,3 +166,11 @@ jobs:
       # 那次事故是整頁功能靜默消失。退出碼 1=有 ERROR；WARN 不擋（目前基準線 WARN 13）。
       - name: Lint prototypes
         run: python3 scripts/lint-prototype.py
+
+      # 🔴 把裁定 D8／§A G24 的配套條款從「紀律」變成「機制」（docs/specs/85 §4）。
+      # 身分表升組織層後資料庫不再擋跨店引用，所以必須有東西守住兩件事：
+      #   ①白名單以外的表一律帶 shop_id（防新表漏掉、防偷偷擴充豁免）
+      #   ②身分表的 model 不得再宣告 acts_as_tenant
+      # 白名單是逐表列舉的常數，改它會出現在 diff 裡。
+      - name: Check tenant isolation
+        run: ruby scripts/check-tenant-isolation.rb
