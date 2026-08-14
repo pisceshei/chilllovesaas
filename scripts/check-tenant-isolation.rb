@@ -29,15 +29,34 @@ require "yaml"
 ROOT = File.expand_path("..", __dir__)
 SCHEMA = File.join(ROOT, "db", "schema.rb")
 
-# 🔴 組織層豁免白名單（＝CLAUDE.md 鐵律 2 註釋、docs/specs/71 §A G24 的那一份）。
-# 要新增必須同步改那兩處並在 PR 描述標明。
+# 🔴 組織層豁免白名單。**本清單必須逐字等於** CLAUDE.md 鐵律 2 註釋與 docs/specs/71 §A G24
+# 的「已建」那一列；要新增必須同步改那兩處並在 PR 描述標明（G24 配套條款③）。
+#
+# <!-- 2026-08-14 修正：原本 `shops` 也放在這個常數裡（下面第二個迴圈還特地 `next if table == "shops"`
+#      把它排除掉）——它不是「組織層身分表」，它是**租戶根**，是 shop_id 指向的那張表。
+#      混在一起的後果不是跑錯，是**清單失去可稽核性**：規則說白名單是身分表，
+#      常數裡卻有一張不是身分表的，於是「常數＝規則」這句話變成假的，
+#      對不上時沒人知道是誰錯。拆成兩個常數後，下面這一份可以逐字對照規則。 -->
 ORG_LEVEL_TABLES = %w[
-  shops
   staff_members
   roles
   role_permissions
   sessions
 ].freeze
+
+# 租戶根：`shops` 本身當然沒有 shop_id，它是被指向的那一端。這不是豁免。
+TENANT_ROOT_TABLES = %w[shops].freeze
+
+# 🔴 明確**不得**進白名單的表：它們必須帶 shop_id。
+# `user_store_assignments` 是 user × shop 的關聯本體——曾被誤列進鐵律 2 的豁免清單，
+# 那是反的（2026-08-14 修正）。這裡做成自檢，避免同一個錯再犯一次。
+MUST_HAVE_SHOP_ID = %w[user_store_assignments].freeze
+
+overlap = ORG_LEVEL_TABLES & MUST_HAVE_SHOP_ID
+unless overlap.empty?
+  warn "::error::白名單自檢失敗：#{overlap.join(', ')} 必須帶 shop_id，不得列入 ORG_LEVEL_TABLES。"
+  exit 1
+end
 
 # 非租戶資料：平台級或系統表，本來就不該有 shop_id。
 NON_TENANT_TABLES = %w[
@@ -79,6 +98,7 @@ tables = tables_with_shop_id(schema)
 # ── 規則 1 ────────────────────────────────────────────────────────────────
 tables.each do |table, has_shop_id|
   next if ORG_LEVEL_TABLES.include?(table)
+  next if TENANT_ROOT_TABLES.include?(table)
   next if NON_TENANT_TABLES.include?(table)
   next if has_shop_id
 
@@ -89,11 +109,19 @@ end
 
 # 反向：白名單裡的表不該還留著 shop_id（改到一半的狀態）
 ORG_LEVEL_TABLES.each do |table|
-  next if table == "shops" # shops 是 tenant root 本身
   next unless tables[table]
 
   violations << "表 `#{table}` 在組織層白名單中卻仍有 shop_id——" \
     "migration 可能只做了一半（docs/specs/85 §5）。"
+end
+
+# 正向：明列必須帶 shop_id 的表，真的帶了嗎（規則 1 已涵蓋，這裡給出更明確的訊息）
+MUST_HAVE_SHOP_ID.each do |table|
+  next unless tables.key?(table)
+  next if tables[table]
+
+  violations << "表 `#{table}` 缺少 shop_id，但它是 user × shop 的關聯本體，" \
+    "**必須**帶 shop_id（CLAUDE.md 鐵律 2 註釋、docs/specs/85 §3）。"
 end
 
 # ── 規則 2 ────────────────────────────────────────────────────────────────
@@ -111,7 +139,10 @@ end
 
 if violations.empty?
   puts "OK：租戶隔離檢查通過"
-  puts "  - 業務資料表皆帶 shop_id（白名單 #{ORG_LEVEL_TABLES.size} 張表除外）"
+  puts "  - 業務資料表皆帶 shop_id（組織層白名單 #{ORG_LEVEL_TABLES.size} 張 ＋ 租戶根 " \
+       "#{TENANT_ROOT_TABLES.size} 張除外）"
+  puts "  - 白名單：#{ORG_LEVEL_TABLES.join(' / ')}（須逐字等於 CLAUDE.md 鐵律 2 的「已建」列）"
+  puts "  - #{MUST_HAVE_SHOP_ID.join(' / ')} 確實帶 shop_id"
   puts "  - 身分表的 model 皆未宣告 acts_as_tenant"
   exit 0
 end

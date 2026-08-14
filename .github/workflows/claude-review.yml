@@ -119,11 +119,36 @@ jobs:
           PING="${CODEX_PING_TOKEN:-}"
 
           COMMENTS=$(gh api "repos/$REPO/issues/$PR/comments?per_page=100")
-          LATEST=$(printf '%s' "$COMMENTS" | jq -r '[.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("【驗收結論】"))] | (.[-1].body // "")')
-          ROUNDS=$(printf '%s' "$COMMENTS" | jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("【驗收結論】需修改"))] | length')
+
+          # 🔴 驗收留言的作者允許清單。2026-08-14 事故：本步驟原本只認 "github-actions[bot]"，
+          #    但 anthropics/claude-code-action@v1 是以自己的 GitHub App 身分留言——
+          #    PR #22／#23 實測，驗收留言的作者連結是 /apps/claude ⇒ login 為 "claude[bot]"。
+          #    結果 LATEST 恆為空，**每個 PR 都貼「⚠️ 自動驗收沒有產生結論」，而 Claude 其實
+          #    已經貼出了完整且正確的驗收意見**。
+          #    後果不只是誤報：ROUNDS 恆為 0、自動 approve 與自動派工從未觸發
+          #    ⇒ 本檔頂部畫的那個「乒乓閉環」**從上線起就沒有運作過**，只是沒人發現，
+          #    因為 AUTO_MERGE=false 讓它失效得很安靜（fail-safe 掩蓋了 fail-silent）。
+          # 🔴 這裡**必須維持作者允許清單**，不得放寬成「只要內文有【驗收結論】就算」：
+          #    那等於讓任何人、或 diff／PR 描述裡的 prompt injection 偽造通過結論，
+          #    正是本檔頂部 AUTO_MERGE 註解①所指的風險。新增審核者要改這一行。
+          REVIEWERS='["claude[bot]","github-actions[bot]"]'
+
+          LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" \
+            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | contains("【驗收結論】"))] | (.[-1].body // "")')
+          ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" \
+            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | contains("【驗收結論】需修改"))] | length')
 
           if [ -z "$LATEST" ]; then
-            gh pr comment "$PR" --body "⚠️ 自動驗收沒有產生結論（Claude 步驟可能失敗或逾時）。請到 Actions 分頁查 log；重新 push 即會重跑驗收。"
+            # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
+            #    而真正的原因是**作者身分不在清單內**——那句話把人指去看 Actions log，
+            #    log 裡卻一切正常，於是這個 bug 藏了下來。這裡直接把實際作者印出來。
+            OTHERS=$(printf '%s' "$COMMENTS" | jq -r \
+              '[.[] | select(.body | contains("【驗收結論】")) | .user.login] | unique | join(", ")')
+            if [ -n "$OTHERS" ]; then
+              gh pr comment "$PR" --body "⚠️ 找到含【驗收結論】的留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
+            else
+              gh pr comment "$PR" --body "⚠️ 自動驗收沒有產生結論（Claude 步驟可能失敗或逾時）。請到 Actions 分頁查 log；重新 push 即會重跑驗收。"
+            fi
             exit 0
           fi
 

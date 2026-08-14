@@ -15,10 +15,23 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
         🔴 **裁定＝窄範圍豁免**，理由不是「本尊這樣所以照抄」，而是**分層本來就不同**：
         鐵律 2 的目的是**業務資料的租戶隔離**；身分與權限是**授予租戶存取權的那一層**，
         它在邏輯上位於租戶之上——這也正是本尊把「使用者」放在組織區塊而非商店區塊的原因。
-        豁免範圍＝**組織層資料表白名單**（見 71 §A G24，逐表列舉，不得口頭擴充）：
-          organizations / users / roles / role_permissions / user_roles / user_groups /
-          user_group_roles / user_store_assignments
+        豁免範圍＝**組織層資料表白名單**（見 71 §A G24，逐表列舉，不得口頭擴充）。
+        🔴 白名單一律用**我方實際表名**，不用本尊的名字：
+          已建：staff_members（＝本尊的 users）/ roles / role_permissions / sessions
+          未建（M5 RBAC 展開時再加）：organizations / user_roles / user_groups / user_group_roles
+        🔴 **`user_store_assignments` 不在豁免內——它有且必須有 `shop_id`**，
+           因為它就是 user × shop 的關聯本體，不是「被隔離的業務資料」也不是「組織層身分」。
+        🔴 **`shops` 不是豁免項**，它是租戶根本身（shop_id 指向的那張表）。
         白名單以外**一律照舊**（含所有商品·訂單·顧客·庫存·折扣·內容·分析 rollup 表）。
+        <!-- 2026-08-14 修正（寫 docs/dev/m1-identity-tenancy.md 對照 db/schema.rb 時發現）。
+             原文清單抄自 R12 對本尊的觀察，用的是**本尊表名**，與我方實作三處對不上：
+             ①`organizations`/`users`/`user_roles`/`user_groups`/`user_group_roles` **我方尚未建**；
+             ②`user_store_assignments` 被列入豁免是**反的**，它必須帶 shop_id；
+             ③🔴 **`sessions` 漏列**——20260814000000 實際拆掉了它的 shop_id、
+               `scripts/check-tenant-isolation.rb` 也放行，但本條從未授權，
+               違反了下面配套條款③自己的規定。
+             🔴 教訓：**白名單是安全邊界，它必須寫實際存在的東西**。寫成願景清單時，
+             機制（CI 腳本）與規則（本條）會各跑各的，而 CI 是照機制跑的那一份。 -->
         🔴 三條配套約束，缺一條這個豁免就變成隔離漏洞：
           ① 白名單表**不得**存放任何業務資料欄位（只放身分、角色、指派關係）；
           ② 跨店存取一律經 `user_store_assignments` 解析出可及 shop_id 集合，
