@@ -31,3 +31,8 @@ yarn-error.log*
 
 # 承接自 main（Liquid PoC 輸出物）
 poc/liquid-engine/out/
+
+# Python 建置產物（2026-08-14：倉庫裡曾誤追蹤兩個 lint-prototype 的 .pyc——
+# 它們是 CI 與本機各自產生的中間檔，內容隨 Python 版本而異，追蹤它只會製造無意義的 diff）
+__pycache__/
+*.py[cod]

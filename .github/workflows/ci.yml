@@ -167,6 +167,26 @@ jobs:
       - name: Lint prototypes
         run: python3 scripts/lint-prototype.py
 
+      # r_dead_control 的 fixture 回歸測試。為什麼要單獨一步：那條規則在四輪內踩了
+      # 四種不同的「漏看」形態（註釋盲區／泛型 token 免死／選擇器來源沒剝註釋／跨行標籤），
+      # 每一種 CI 都是綠的。手動驗證抓不住這種東西——改一次正則就可能讓上一次的修正
+      # 靜默失效，而失效的方向是「少報」，不會有任何跡象。
+      - name: Regression-test lint rules
+        run: python3 scripts/test-lint-rules.py
+
+      # 🔴 死控件基準線只准因為「量表變準」而調高，不准因為「新增了死控件」而調高。
+      # 這件事原本只寫在 DEAD_CONTROL_BASELINE 的註釋裡，靠 review 肉眼看 diff 方向——
+      # 而 89 §7 這一節的標題就叫「把死控件從紀律變成機制」，它自己卻停在紀律層。
+      # 判準保守：調高 ＋ 掃描邏輯一行沒改 ⇒ fail；調降永遠放行。
+      # 🔴 actions/checkout 預設 fetch-depth: 1（淺 clone）⇒ `origin/main` 這個 ref
+      # 根本不存在，直接跑會每次都走「取不到基準 ⇒ 略過」，機制形同沒掛。必須先抓 base。
+      - name: Guard dead-control baseline
+        env:
+          BASE: ${{ github.base_ref || 'main' }}
+        run: |
+          git fetch --depth=1 origin "$BASE" || true
+          python3 scripts/check-baseline-raise.py FETCH_HEAD
+
       # 🔴 把裁定 D8／§A G24 的配套條款從「紀律」變成「機制」（docs/specs/85 §4）。
       # 身分表升組織層後資料庫不再擋跨店引用，所以必須有東西守住兩件事：
       #   ①白名單以外的表一律帶 shop_id（防新表漏掉、防偷偷擴充豁免）

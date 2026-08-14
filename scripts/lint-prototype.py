@@ -24,6 +24,7 @@ TARGETS = [
 ]
 
 ERROR, WARN = "ERROR", "WARN"
+_CURRENT_FILE = [""]   # lint(path) 會填入檔名，供 r_dead_control 查基準線
 
 
 def _style(src: str) -> str:
@@ -242,6 +243,280 @@ def r_fake_affordance(src, style, script):
     return out
 
 
+# 🔴 死控件的**存量基準線**（2026-08-14 建立）。
+# 為什麼要基準線：規則一上線就抓到 73 條存量，全部只報 WARN 的話，
+# lint 輸出會從 13 個警告暴增到 86 個——**沒有人會讀 86 個警告**，
+# 規則就等於白做（這正是「加了規則卻被忽略」的典型死法）。
+# ⇒ 存量報 WARN（可見、可逐輪清），**超過基準線一律 ERROR**（擋新增）。
+#   機制要咬得住的是「不要再長出新的」，不是「一次還清歷史債」。
+# 🔴 清掉存量之後**要順手把數字調降**，否則基準線會變成新的容忍額度。
+# 🔴🔴 2026-08-14 這三個數字動過三次，**原型一行沒改**：73 → 124 → 123。
+#   本檔的交接文件寫著「看到基準線被調高要當紅旗」，所以每一次變動都必須說清楚差別：
+#     73 → 124（調高，量表變準）：規則首版有兩個**會漏看**的 bug。
+#       ① `_strip_comments` 把 `accept="image/*"` 當成 JS 註釋開頭，一路吞到下一個 `*/`
+#          ——storefront 實測吞掉 86 行。🔴 這個 helper **同時被 `r_hardcoded_currency`
+#          （鐵律 10、ERROR 級）使用**，那 86 行等於從沒被掃過，而 CI 一直是綠的。
+#       ② 泛型 tag 選擇器變成免死金牌：admin 的 focus-trap 用了
+#          `'input,select,textarea,button'`，於是全站 `class="input"` 的控件因為 blob 裡
+#          有裸字 `input` 而全部放行（admin 14 → 44 的主因）。
+#       ⇒ 這不是新增了死控件，是先前**少數了 51 個**。
+#     124 → 123（調降，量表又變準一次）：選擇器字串抽取遇內層引號就截斷，
+#       `'.tgl[role="switch"]'` 只抽到 `.tgl[role=`，屬性條件形同不存在 ⇒ admin 44 → 43。
+#   🔴 **數字只有一個權威來源＝下面這個 dict**。上面這段是沿革，改數字時要一起改，
+#      否則沿革會變成新的誤導來源（Claude 在 #28 第三輪 review 抓到這件事）。
+# 🔴 判別方法留給下一個人：調高時**必須同時有量表本身的修正**（本檔或規則的 diff），
+#   只改這三個數字而沒動掃描邏輯的調高，就是把新增的死控件就地合法。
+#   ⇒ 這件事已由 `scripts/check-baseline-raise.py` 在 CI 硬擋（89 §7.4）。
+DEAD_CONTROL_BASELINE = {
+    "chilllove-admin-v2.html": 43,
+    "chilllove-platform-admin.html": 25,
+    "chilllove-storefront-v2.html": 55,
+}
+
+
+def _iter_control_tags(body: str):
+    """逐個吐出互動元素的開標籤 `(tag, attrs, start_index)`。
+
+    🔴 **手寫掃描器而不是單一正則**（2026-08-14，回應 PR #28 的 Codex 與 Claude review）。
+    正則版本前後踩了三種形態，每一種都是**漏看**而不是誤報：
+      - `[^>]*`  → 跨行吃掉整段 CSS／JS，回報行號完全對不上；
+      - `[^>\\n]` → 反過來讓**跨行寫的標籤整個掃不到**（不產生 WARN、不超基準線、CI 照過），
+        而 `<button\\n  class="...">` 這種寫法在本倉庫的原型裡很常見；
+      - 屬性值裡的 `>`（如 `title="a>b"`）與模板運算式裡的 `>=` 都會提前截斷。
+    ⇒ 改成逐字掃描，明確處理三種「`>` 不算結束」的情形：引號字串、`${...}`、以及
+      HTML 註釋（呼叫端已先剝掉）。
+
+    另設 `LIMIT`：單一開標籤超過這個長度就判定為未閉合／誤匹配並放棄，
+    避免任何一次失誤又演變成「吃掉整份檔案」。
+    """
+    LIMIT = 4000
+    for m in re.finditer(r"<(button|select|textarea|input)\b", body):
+        i = m.end()
+        end = min(len(body), i + LIMIT)
+        quote = None
+        depth = 0          # ${ } 巢狀深度
+        closed = -1
+        while i < end:
+            ch = body[i]
+            if quote:
+                if ch == quote:
+                    quote = None
+                i += 1
+                continue
+            if depth:
+                if ch == "}":
+                    depth -= 1
+                elif ch == "{":
+                    depth += 1
+                i += 1
+                continue
+            if ch in "\"'":
+                quote = ch
+                i += 1
+                continue
+            if ch == "$" and i + 1 < end and body[i + 1] == "{":
+                depth = 1
+                i += 2
+                continue
+            if ch == ">":
+                closed = i
+                break
+            if ch == "<":          # 撞到下一個標籤 ⇒ 本次是誤匹配
+                break
+            i += 1
+        if closed < 0:
+            continue
+        yield m.group(1), body[m.end():closed], m.start()
+
+
+def r_dead_control(src, style, script):
+    """互動元素必須有人讀得到——handler、data-f 綁定，或**真的被選擇器用到的把手**。
+
+    為什麼：89 §2 查出 25 條「控件畫出來卻沒接行為」，**全部 lint 綠燈**。
+    最糟的形態不是「沒反應」，是**回報成功但什麼都沒讀**——例如目錄的 5 個發布開關
+    全部關掉，照樣 toast「已儲存目錄價格」，使用者以為設定生效了。
+
+    🔴 **判準不是「必須有 onclick」**。89 §2 修好的控件多數**沒有 inline handler**：
+    `marketNewRun()` 讀 `querySelectorAll('.mkt-country')`、`rfSubmit()` 讀
+    `getElementById('rfOverOK')`、`repExportRun()` 讀 `input[name="expfmt"]:checked`；
+    設定側欄 36 顆鈕靠 `data-set` 走事件委派。天真規則會把這些全部誤報，
+    然後被人關掉——比沒有規則更糟。判準是「**有沒有一個真的被選擇器用到的把手**」。
+
+    🔴 **這條規則自己踩過四次「漏看」，每一次 CI 都是綠的**——判準沒錯，錯在取樣面：
+      1. `_strip_comments` 把 `accept="image/*"` 當註釋開頭，吞掉 86 行
+         （同一個 helper 也被鐵律 10 的 `r_hardcoded_currency` 使用 ⇒ ERROR 級檢查一起瞎）；
+      2. 泛型 tag 選擇器 `'input,select,textarea,button'` 讓所有 `class="input"` 免死；
+      3. 🔴 **選擇器來源沒剝註釋**——JS 註釋裡隨手提一句 `getElementById('xyz')`，
+         任何 id 為 `xyz` 的新死控件就永遠隱形（連 WARN 都不產生 ⇒ 基準線閘門看不到）；
+      4. `[^>\\n]` 讓跨行標籤整個掃不到。
+    以上四條**全部已修**，並由 `scripts/test-lint-rules.py` 的 fixture 固化。
+
+    放行條件（任一即可）：
+      1. inline handler（onclick/onchange/oninput/onsubmit/onkeydown）
+      2. `data-f`（走 formRead 髒狀態追蹤）或 `data-val`（走驗證器）
+      3. `disabled`（明示不可用）
+      4. id / name / class / `data-*` 之中，至少一個把手**以正確的形態**出現在選擇器裡
+         （id→`#x` 或 `getElementById('x')`；class→`.x`；name→`[name="x"]`；data→`dataset.x`），
+         且該選擇器的 `[attr=value]` 條件與控件相符
+      5. `data-read="<讀它的函式名>"`，且該函式存在（會自我說明的逃生口）
+    """
+    out = []
+    HANDLER = re.compile(r"\bon(?:click|change|input|submit|keydown)\s*=")
+    SKIP = re.compile(r"\bdata-f\s*=|\bdata-val\s*=|\bdisabled\b")
+
+    # 🔴 選擇器來源**必須先剝註釋**（漏看形態 3）。markup 那側早就剝了，
+    #    這側沒剝就形成不對稱：註釋裡一句 `getElementById('xyz')` 會讓真死控件永遠隱形。
+    code = _strip_comments(script)
+    defined_fns = set(re.findall(r"function\s+([A-Za-z0-9_$]+)\s*\(", code))
+    # 🔴 字串必須**依開頭引號種類**取到對應的閉合引號，不能用 `[^`\'"]*`。
+    #    JS 慣例是外層單引號、內層雙引號：`querySelectorAll('.tgl[role="switch"]')`。
+    #    用「不含任何引號」去抓，只會抓到 `.tgl[role=`——**屬性條件整段丟失**，
+    #    於是 `[role="switch"]` 這種限定條件形同不存在，控件被放行。
+    #    （2026-08-14：本檔的 fixture 測試 `scripts/test-lint-rules.py` 抓到這條。）
+    _STR = r"""(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`)"""
+
+    def _strings_after(fns):
+        out = []
+        for m in re.finditer(r"(?:" + fns + r")\(\s*" + _STR, code):
+            out.append(next(g for g in m.groups() if g is not None))
+        return out
+
+    exact_ids = set(_strings_after("getElementById|getElementsByName"))
+    sel_blobs = _strings_after("querySelectorAll|querySelector|closest|matches")
+    dataset_keys = set(re.findall(r"\bdataset\.([A-Za-z0-9_$]+)", code))
+
+    def _attr_ok(blob, attrs):
+        """選擇器的 `[attr]` / `[attr="v"]` 條件，控件是否滿足。
+
+        🔴 只驗屬性**存在**不夠（Codex／Claude 同時指出）：
+        `.tgl[role="switch"]` 不會選中 `class="tgl" role="button"`，
+        但只看「有沒有 role=」就會放行。要連**值**一起比。
+        """
+        for a, _, v in re.findall(r"\[([a-zA-Z-]+)(\s*=\s*[\"']?([^\]\"']*)[\"']?)?\]", blob):
+            m = re.search(r"\b" + re.escape(a) + r"=[\"']([^\"']*)[\"']", attrs)
+            if m is None:
+                return False
+            if v and m.group(1) != v:
+                return False
+        return True
+
+    def _split_selectors(blob):
+        """把選擇器字串依**頂層逗號**拆成獨立選擇器。
+
+        🔴 為什麼不能整串一起比（Claude #28 第二輪 review）：`_attr_ok` 掃的是傳進來的
+        整串文字，所以 `querySelectorAll('.mkt-country, .tgl[role="switch"]')` 會讓
+        **靠 `.mkt-country` 當把手的控件被要求也得有 `role="switch"`**——一個實際上
+        被讀取的控件因此被判成死控件。這個方向是**誤報**（前六種漏看都是少報），
+        而誤報比少報更會讓人把規則關掉。
+        🔴 逗號可以合法出現在 `[...]`（如 `[data-x="a,b"]`）與 `:not(...)`／`:is(...)` 裡，
+        那些不是選擇器分隔符 ⇒ 只在括號深度為 0 且不在引號內時才切。
+        """
+        out, buf, depth, quote = [], [], 0, None
+        for ch in blob:
+            if quote:
+                if ch == quote:
+                    quote = None
+            elif ch in "\"'":
+                quote = ch
+            elif ch in "([":
+                depth += 1
+            elif ch in ")]":
+                depth = max(0, depth - 1)
+            elif ch == "," and depth == 0:
+                out.append("".join(buf))
+                buf = []
+                continue
+            buf.append(ch)
+        out.append("".join(buf))
+        return out
+
+    def _compound(seg, at):
+        """從選擇器片段 `seg` 取出**位置 `at` 所在的那一個複合選擇器**。
+
+        🔴 為什麼不能拿整個 `seg` 去驗屬性（Claude #28 第三輪 review）：
+        後代選擇器 `'[data-form="prod"] [data-f="x"]'`（原型裡真的有這種寫法）
+        裡的 `[data-form="prod"]` 掛在**祖先**身上，不是把手自己的條件。
+        整段驗的話，靠後半當把手的控件會被要求連祖先的屬性都要有 ⇒ **誤報**。
+        ⇒ 只驗「token 所在的那一節」。祖先條件一律不驗——方向刻意偏向放行，
+          因為這條規則的誤報成本高於少報（誤報會讓人把規則關掉）。
+        """
+        depth, quote, start = 0, None, 0
+        for i, ch in enumerate(seg):
+            if quote:
+                if ch == quote:
+                    quote = None
+                continue
+            if ch in "\"'":
+                quote = ch
+            elif ch in "([":
+                depth += 1
+            elif ch in ")]":
+                depth = max(0, depth - 1)
+            elif depth == 0 and (ch.isspace() or ch in ">+~"):
+                if i > at:
+                    return seg[start:i]
+                start = i + 1
+        return seg[start:]
+
+    def _blob_hit(tok, prefix, attrs):
+        """token 以 `prefix` 的形態出現在某個選擇器裡，且**它所在的那一節**有機會命中這個控件。"""
+        needle = prefix + tok
+        for blob in sel_blobs:
+            for seg in _split_selectors(blob):
+                j = seg.find(needle)
+                while j >= 0:
+                    # 🔴 結尾邊界（Claude 指出的漏報）：`#rf` 不得命中 `#rfOverOK`。
+                    nxt = seg[j + len(needle):j + len(needle) + 1]
+                    if not re.match(r"[A-Za-z0-9_-]", nxt or " "):
+                        if _attr_ok(_compound(seg, j), attrs):
+                            return True
+                    j = seg.find(needle, j + 1)
+        return False
+
+    # markup 側也要剝註釋：防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。
+    # `_strip_comments` 以等長空白替換，行號不受影響。
+    body = _strip_comments(src)
+    for tag, attrs, start in _iter_control_tags(body):
+        if HANDLER.search(attrs) or SKIP.search(attrs):
+            continue
+        dr = re.search(r'\bdata-read="([A-Za-z0-9_$]+)"', attrs)
+        if dr and dr.group(1) in defined_fns:
+            continue
+        ok = False
+        for i in re.findall(r'\bid="([^"${}\s]+)"', attrs):
+            if i in exact_ids or _blob_hit(i, "#", attrs):
+                ok = True
+        for n in re.findall(r'\bname="([^"${}\s]+)"', attrs):
+            if n in exact_ids or _blob_hit(n, '[name="', attrs) or _blob_hit(n, "[name=", attrs):
+                ok = True
+        for cls in re.findall(r'\bclass="([^"]*)"', attrs):
+            for tok in re.split(r"\s+", re.sub(r"\$\{[^}]*\}", " ", cls)):
+                if len(tok) > 2 and _blob_hit(tok.rstrip("-"), ".", attrs):
+                    ok = True
+        for a in re.findall(r"\bdata-([a-z][a-z-]*)=", attrs):
+            if a in ("f", "val", "doc", "read"):
+                continue
+            camel = re.sub(r"-([a-z])", lambda m: m.group(1).upper(), a)
+            if camel in dataset_keys or a in dataset_keys or _blob_hit(a, "[data-", attrs):
+                ok = True
+        if ok:
+            continue
+        out.append((WARN,
+                    f"<{tag}> 無 handler、無 data-f/data-val，也沒有任何被選擇器用到的把手"
+                    " — 死控件（89 §2）。接上行為、加 disabled，"
+                    "或在把手是動態產生時標 data-read=\"<讀它的函式名>\"",
+                    _lineno(body, start)))
+    # 超過基準線 ⇒ 這一輪**新增**了死控件，升級為 ERROR 擋下
+    cap = DEAD_CONTROL_BASELINE.get(_CURRENT_FILE[0])
+    if cap is not None and len(out) > cap:
+        out.append((ERROR,
+                    f"死控件 {len(out)} 個，超過 `{_CURRENT_FILE[0]}` 的基準線 {cap} 個"
+                    " — 本次**新增**了死控件。修掉它；若是清了存量，"
+                    "請把 scripts/lint-prototype.py 的 DEAD_CONTROL_BASELINE 調降",
+                    None))
+    return out
+
+
 def r_dead_css(src, style, script):
     """CSS 定義了但 markup 從未套用的 class（死碼）。
 
@@ -387,8 +662,16 @@ def _strip_nested_attr(src: str, attr: str) -> str:
 
 
 def _strip_comments(src: str) -> str:
-    """挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。"""
-    src = re.sub(r"/\*.*?\*/", _blank, src, flags=re.S)
+    r"""挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。
+
+    🔴 `/*` 前面**不得是識別字元**（2026-08-14 事故）。原本的 `/\*.*?\*/` 會把
+    `accept="image/*"` 裡的 `/*` 當成註釋開頭，一路吞到下一個 `*/`——
+    storefront 實測**吞掉 75 行**。
+    後果不只是漏看死控件：`r_hardcoded_currency`（鐵律 10、**ERROR 級**）用的是同一個
+    helper，那 75 行等於**從沒被掃過**，而 CI 一直是綠的。
+    真註釋的 `/*` 前面是空白、`;`、`{`、`)` 或行首，不會是字母數字。
+    """
+    src = re.sub(r"(?<![A-Za-z0-9_])/\*.*?\*/", _blank, src, flags=re.S)
     src = re.sub(r"<!--.*?-->", _blank, src, flags=re.S)
     return src
 
@@ -415,11 +698,12 @@ def _cap(out, label, n=6):
 
 RULES = [r_dup_functions, r_dangling_onclick, r_hairline, r_naked_zindex, r_px_breakpoint,
          r_transition_all, r_disabled_opacity, r_brace_balance, r_single_script,
-         r_docs_coverage, r_fake_affordance, r_dead_css,
+         r_docs_coverage, r_fake_affordance, r_dead_control, r_dead_css,
          r_hardcoded_currency, r_tw_outside_pack]
 
 
 def lint(path: Path):
+    _CURRENT_FILE[0] = path.name
     src = path.read_text(encoding="utf-8")
     style, script = _style(src), _script(src)
     found = []
