@@ -17,6 +17,18 @@ name: Claude Review
 #                              Issues+Pull requests Read/Write）時，@codex 留言以本人身分發出，
 #                              Codex 必定視為有效請求；未設定則以 github-actions bot 留言，
 #                              Codex 對 bot 留言可能不回應。
+#
+# 🔴🔴 **改本檔的 PR，自己不會被驗收**（2026-08-14 實測，PR #25）
+#   `anthropics/claude-code-action` 有防竄改機制，annotation 原文：
+#     「Skipping action due to workflow validation: Workflow validation failed.
+#       The workflow file must exist and have **identical content to the version on the
+#       repository's default branch**.」
+#   ⇒ 只要 PR 動到本檔，驗收步驟**整個跳過**（run 只跑 16–20 秒，且 Job 顯示 success，
+#     不是 failure ——非常容易誤判成「Claude 逾時」）。
+#   ⇒ **本檔的任何修改都無法在它自己的 PR 上驗證**，只有合併進 main 之後才生效；
+#     真正的驗證機會是「合併後開的第一個 PR」。
+#   ⇒ 判別方法：Actions 頁的 run 時長。正常驗收 3–4 分鐘；被跳過只有十幾秒。
+#   （順帶：dependabot 的 PR 同樣拿不到驗收，但原因不同——dependabot 讀不到 secrets。）
 # ============================================================
 
 on:
@@ -133,19 +145,32 @@ jobs:
           #    正是本檔頂部 AUTO_MERGE 註解①所指的風險。新增審核者要改這一行。
           REVIEWERS='["claude[bot]","github-actions[bot]"]'
 
-          LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | contains("【驗收結論】"))] | (.[-1].body // "")')
-          ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | contains("【驗收結論】需修改"))] | length')
+          # 🔴 只認**第一行就是結論標記**的留言，不是「內文任何位置含標記」。
+          # 兩個理由：
+          #   ① 上面的 prompt 本來就規定「標記只能出現在第一行」——解析端照契約收，
+          #      比寬鬆比對更能及早發現產出走樣；
+          #   ② 🔴 **防止本步驟自己貼的診斷訊息被下一輪當成結論**：
+          #      診斷是由 github-actions[bot] 貼的、而它在 REVIEWERS 裡，
+          #      若診斷內文含標記，下一輪 synchronize 會選中它當 LATEST，
+          #      而它既不是通過也不是需修改 ⇒ 落到「無法判讀」分支，
+          #      **真正的作者身分問題反而再也報不出來**（PR #25 的 Codex review 指出）。
+          #      配套：下面所有本步驟產生的留言**一律不得包含結論標記字面值**。
+          MARKER='【驗收結論】'
+
+          LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
+            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
+          ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
+            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m + "需修改"))] | length')
 
           if [ -z "$LATEST" ]; then
             # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
             #    而真正的原因是**作者身分不在清單內**——那句話把人指去看 Actions log，
             #    log 裡卻一切正常，於是這個 bug 藏了下來。這裡直接把實際作者印出來。
-            OTHERS=$(printf '%s' "$COMMENTS" | jq -r \
-              '[.[] | select(.body | contains("【驗收結論】")) | .user.login] | unique | join(", ")')
+            OTHERS=$(printf '%s' "$COMMENTS" | jq -r --arg m "$MARKER" \
+              '[.[] | select(.body | split("\n")[0] | startswith($m)) | .user.login] | unique | join(", ")')
             if [ -n "$OTHERS" ]; then
-              gh pr comment "$PR" --body "⚠️ 找到含【驗收結論】的留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
+              # 🔴 本則訊息**刻意不寫出結論標記字面值**（理由見上方 MARKER 註解）。
+              gh pr comment "$PR" --body "⚠️ 找到了驗收結論留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
             else
               gh pr comment "$PR" --body "⚠️ 自動驗收沒有產生結論（Claude 步驟可能失敗或逾時）。請到 Actions 分頁查 log；重新 push 即會重跑驗收。"
             fi
