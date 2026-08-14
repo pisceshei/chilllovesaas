@@ -391,7 +391,7 @@ DEPENDENCIES
   factory_bot_rails
   foreman
   graphql
-  image_processing (~> 1.2)
+  image_processing (~> 1.14)
   jbuilder
   mysql2 (~> 0.5)
   propshaft
