@@ -571,6 +571,28 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .up{color:var(--success)}.down{color:var(--critical)}
 .t-vs{color:var(--text-3);font-weight:400}
 .chart2{display:grid;grid-template-columns:1.5fr 1fr;gap:var(--sp-400);margin-bottom:var(--sp-400)}
+/* 報告探索器版面（R11／80 §0.2）：主欄＝AI 提示＋QL 編輯器＋圖表＋資料表；側欄＝控制面板。
+   側欄寬 226px 對照本尊量測（80 §5-2）；窄視窗改為單欄堆疊，控制面板置頂。 */
+.rep-grid{display:grid;grid-template-columns:minmax(0,1fr) 226px;gap:var(--sp-400);align-items:start}
+.rep-main{min-width:0}
+.rep-side{display:flex;flex-direction:column;gap:var(--sp-300)}
+.rep-slot{border:var(--hairline) solid var(--border);border-radius:var(--r-300);background:var(--surface);overflow:hidden}
+.rep-slot-h{display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 var(--sp-300);
+  font-size:var(--t-sm);font-weight:600;background:var(--surface-2)}
+.rep-slot-v{padding:var(--sp-200) var(--sp-300);font-size:var(--t-sm);border-top:var(--hairline) solid var(--border-2)}
+.rep-add{width:20px;height:20px;border:0;background:transparent;cursor:pointer;color:var(--text-2);
+  font-size:var(--t-md);line-height:1;border-radius:var(--r-100)}
+.rep-add:hover{background:var(--surface-3);color:var(--text-1)}
+/* QL 編輯器：狀態列（綠點＋語法狀態）＋ 6 鈕工具列 ＋ 等寬程式碼區（80 §4.5／§5-5）。 */
+.ql-bar{display:flex;align-items:center;gap:var(--sp-200);height:40px;padding:0 var(--sp-300);
+  border-bottom:var(--hairline) solid var(--border-2);font-size:var(--t-sm)}
+.ql-ok{color:var(--success);font-size:10px}
+.ql-ic{width:24px;height:24px;border:0;background:transparent;cursor:pointer;color:var(--text-2);
+  border-radius:var(--r-100);font-size:var(--t-sm);line-height:1}
+.ql-ic:hover{background:var(--surface-3);color:var(--text-1)}
+.ql-code{margin:0;padding:var(--sp-300) var(--sp-400);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:var(--t-sm);line-height:18px;white-space:pre-wrap;overflow-x:auto;color:var(--text-1)}
+@media (max-width:56.25em){.rep-grid{grid-template-columns:minmax(0,1fr)}.rep-side{order:-1}}
 .chart-card{padding:var(--sp-400) var(--sp-400) var(--sp-200)}
 .chart-head{display:flex;align-items:baseline;gap:var(--sp-200);margin-bottom:var(--sp-150)}
 .chart-head h3{margin:0}
@@ -3713,7 +3735,7 @@ const DOCS={
  "xfer-empty":{t:"轉移空態",f:"在地點之間轉移庫存＋建立轉移",l:"71-R8 實測原文「在地點之間轉移庫存／在您的商家地點之間轉移並追蹤庫存。」；建立式＝選取出貨地 →🚚→ 選取收件地＋商品＋日期＋新增參考名稱/備註/標籤＋**連結採購單**（PO↔轉移關聯）",i:"P1・[api:TBD-inventoryTransferCreate]（28 待補） [tbl:inventory_transfers,transfer_line_items]"},
  "doc-m-collections":{t:"商品系列",f:"手動 vs 智慧",l:"不可互轉；智慧 ≤60 條件、全店 ≤5000；符合品自動進出。71-R8 實測列表欄：標題/商品（數）/條件/銷售管道",i:"P0・物化 join 表＋增量同步 job（規格 13-F4）"},
  "doc-m-customers":{t:"顧客列表",f:"檔案+訂閱狀態+統計",l:"email/SMS 同意分開；刪除有訂單者→匿名化；合併有排除清單",i:"P0・M：customers；規格 16-F6"},
- "doc-m-reports":{t:"報告庫",f:"預設報表+自訂",l:"表格上限 1,000 列但總計含全部；匯出取全部",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）"},
+ "doc-m-reports":{t:"報告清單",f:"搜尋列＋排序鈕＋建立者/類別兩篩選器＋四欄（名稱/類別/上次檢視時間/建立者）＋分頁 1-50",l:"🔴 本尊**無 tab 家族**——我方原自創 4 個 tab 已移除（71-R11-BUG2，G12 自創控件第四例）。類別【實測 13】利潤率/商店/庫存/成效/獲客/行為/行銷/訂單/詐騙/財務/銷售/零售銷售/顧客——比 help 英文版的 11 類多「商店」「成效」，層⑤規定實測優先（71-R11-MISS1）。建立者值＝Shopify 或員工名；任何有分析權限的員工都能看到並複製他人建立的報告",i:"P1 三張→P2 報表庫（規格 19-F2 rollup）・[api:TBD-savedReports] [tbl:saved_views]｜跨頁：總覽控制面板的每張指標卡標題都對應這裡的一份報告（一對一），鐵律 7 須同一 rollup"},
  newproduct:{t:"新增商品",f:"開啟商品建立表單（與詳情頁<b>同一個元件</b>）",
   l:"🔴 59 §7：建立頁與詳情頁的版面、卡片順序、pill 分組鍵完全相同，差異只有<b>預設值與空態</b>——所以我方只有一支 productPage()，用 <code>PV.isNew</code> 分流，<b>不做成兩個頁面</b>。建立態的四項差異：①收取稅金<b>預設是</b>；②庫存區只收一個起始數量（還沒有異動歷史，所以沒有四欄表與調整記錄）；③SEO 與多媒體顯示空態；④右欄只有「發布」。為什麼堅持同一支：本專案的頭號事故就是 billingPage／setBillingPage 分家後被同名函式靜默覆蓋，整頁功能消失且沒有任何錯誤訊息（53 號 N-01）。預設 Draft；標題必填→自動生成 handle；≤3 選項展開變體",
   i:"P0・Catalog::SaveProduct 單一 transaction（規格 13-F1）；22 §2"},
@@ -5156,9 +5178,12 @@ const REPORTS=[
  ['新客 vs 回頭客','顧客','8月8日'],['顧客隨時間變化','顧客','7月31日'],
  ['庫存水位','庫存','8月5日'],['月底庫存價值','庫存','7月31日'],
  ['撥款明細','財務','8月10日'],['稅額摘要','財務','7月31日'],
- ['行銷歸因銷售額','行銷','昨天'],['詐欺風險分佈','詐欺','8月2日'],
- ['依地點的銷售額','零售銷售','8月3日'],['毛利報告','利潤','8月6日'],
- ['加購行為漏斗','行為','昨天'],['訂單處理時效','訂單','8月9日']];
+ ['行銷歸因銷售額','行銷','昨天'],['詐騙風險分佈','詐騙','8月2日'],
+ ['依地點的銷售額','零售銷售','8月3日'],['毛利報告','利潤率','8月6日'],
+ ['加購行為漏斗','行為','昨天'],['訂單處理時效','訂單','8月9日'],
+ /* 🔴 實測多出的兩個類別（help 英文版沒有）：商店／成效。第 4 欄＝建立者（本尊列表欄之一）。 */
+ ['對話回覆時效','商店','8月11日'],['核心 Web 指標 (LCP/INP/CLS)','成效','今天'],
+ ['依訂單的總銷售額撤銷款項','銷售','今天','我']];
 
 const MOBJ=[
  {t:'設計師檔案',type:'designer_profile',fields:'姓名（單行文字）・照片（檔案）・簡介（富文本）',n:3,use:'商品頁「設計師」區塊',cap:['後台可見','Storefronts','Web pages']},
@@ -8228,39 +8253,119 @@ function billingPage(){
 /* ==================================================================
    分析：報告庫／單一報告／Live View
    ================================================================== */
-const REP_CATS=['全部','獲客','行為','顧客','財務','詐欺','庫存','行銷','訂單','利潤','零售銷售','銷售'];
+/* 報告類別【實測窮舉 13，2026-08-14】。
+   🔴 不是 help 英文版的 11 類——實測多出「商店」與「成效」；層⑤規定實測優先（80 §4.1／R11-MISS1）。 */
+const REP_CATS=['全部','利潤率','商店','庫存','成效','獲客','行為','行銷','訂單','詐騙','財務','銷售','零售銷售','顧客'];
 function reportsPage(){
+  /* 🔴 本尊無 tab 家族：只有「建立者」「類別」兩個篩選器＋右上排序鈕（R11-BUG2 已移除自創 tab）。
+     主按鈕文案是「新增探索」不是「建立自訂報告」——它導向 /analytics/reports/explore（未儲存態）。 */
   return `<div class="page-head"><h1>報告</h1><div class="head-actions">
-      <button class="btn btn-sec btn-sm" data-doc="rep-ql" onclick="reportQL()">ShopifyQL 進階模式</button>
-      <button class="btn btn-pri btn-sm" data-doc="rep-new" onclick="openReport('自訂探索')">建立自訂報告</button></div></div>
-    <div class="tabs" role="tablist">${['全部','我的報告','Shopify 報告','最近檢視'].map((t,i)=>`<button class="tab ${i===0?'on':''}" role="tab" aria-selected="${i===0}" onclick="toast('Demo：tabbed views 家族')">${t}</button>`).join('')}</div>
-    ${listPage({key:'rep',noHead:true,title:'',doc:'doc-m-reports',ph:'搜尋報告…',
-      filters:[{k:'cat',l:'分類',opts:REP_CATS.slice(1),test:(r,v)=>r[1]===v}],
-      cols:[{l:'報告',c:r=>`<b>${H(r[0])}</b>`,v:r=>r[0]},{l:'分類',c:r=>chip(r[1],'default'),v:r=>r[1]},
-        {l:'作者',c:r=>`<span class="mut">Shopify</span>`,sort:false},{l:'上次檢視',c:r=>`<span class="mut">${r[2]}</span>`,v:r=>r[2]}],
+      <button class="btn btn-pri btn-sm" data-doc="rep-new" onclick="openReport('新探索')">新增探索</button></div></div>
+    ${listPage({key:'rep',noHead:true,title:'',doc:'doc-m-reports',ph:'搜尋報告',
+      filters:[{k:'author',l:'建立者',opts:['Shopify','我'],test:(r,v)=>(v==='Shopify')===(r[3]!=='我')},
+               {k:'cat',l:'類別',opts:REP_CATS.slice(1),test:(r,v)=>r[1]===v}],
+      cols:[{l:'名稱',c:r=>`<b>${H(r[0])}</b>`,v:r=>r[0]},{l:'類別',c:r=>chip(r[1],'default'),v:r=>r[1]},
+        {l:'上次檢視時間',c:r=>`<span class="mut">${r[2]}</span>`,v:r=>r[2]},
+        {l:'建立者',c:r=>`<span class="mut">${H(r[3]||'Shopify')}</span>`,v:r=>r[3]||'Shopify'}],
       rows:REPORTS,id:r=>r[0],onRow:r=>`openReport(${JQ(r[0])})`,per:10,
-      note:'11 個分類；單一報告表格上限 1,000 列但總計含全部；匯出取全量（41 §8.2）。'})}`;
+      note:'13 個類別（實測）；表格顯示上限 1,000 列但總計反映全部資料；一次最多列出 250 份自訂報告（limits.analytics）。'})}`;
 }
-function openReport(name){DCTX={name};goDetail('d-report',{name});}
+function openReport(name){DCTX={name,mode:'freeform'};goDetail('d-report',{name});}
+/* 探索模式：自由形式 4 槽／組別 5 槽。🔴 兩套槽位集合不同，切換會清空查詢（80 §0.3）。 */
+let REPMODE='freeform';
+function repSetMode(m){REPMODE=m;goDetail('d-report',{name:DCTX.name});}
 function reportPage(){
   const name=DCTX.name||'隨時間的銷售額';
-  return detailHead(H(name),chip('Shopify 報告','default'),
-    `<button class="btn btn-sec btn-sm" onclick="toast('已匯出全量資料（不受 1,000 列顯示上限影響）')">匯出</button>
-     <button class="btn btn-pri btn-sm" onclick="toast('已另存為自訂報告，並產生可放上 dashboard 的指標卡')">另存為自訂報告</button>`,'m-reports')
+  const coh=REPMODE==='cohorts';
+  /* 🔴 QL 是這一頁的唯一真相：編輯器文字 ⇄ 右側控制面板 ⇄ URL ?ql= 三向同步（80 §0.2）。
+     組別模式走另一族 schema（customer_cohorts_{weekly|monthly|quarterly}）與專屬 TYPE。 */
+  const ql=coh
+    ? `FROM customer_cohorts_monthly\n  SHOW customer_retention_rate\n  WHERE periods_since_first_purchase BETWEEN -1 AND 11\n  GROUP BY month, periods_since_first_purchase\n  HAVING periods_since_first_purchase >= 0\n  SINCE startOfMonth(-12m) UNTIL endOfMonth(-1m)\nVISUALIZE customer_retention_rate TYPE retention_curve`
+    : `FROM sales\n  SHOW total_sales\n  TIMESERIES day\n  SINCE startOfDay(-30d) UNTIL today\nVISUALIZE total_sales`;
+  const slot=(t,val,doc)=>`<div class="rep-slot" data-doc="${doc}"><div class="rep-slot-h">${t}<button class="rep-add" aria-label="新增${t}" onclick="repSlot(${JQ(t)})">＋</button></div>${val?`<div class="rep-slot-v">${val}</div>`:''}</div>`;
+  return detailHead(H(name),chip(coh?'組別':'自由形式','default'),
+    `<button class="btn btn-ghost btn-sm" data-doc="rep-more" onclick="repMore()">⋯</button>`,'m-reports')
+  /* 快速篩選列：期間／比較基準／幣別 三個 chip ＋ 註解／控制項 兩個切換（本尊版面順序照抄）。 */
   +`<div class="card card-pad" data-doc="rep-toolbar"><div class="rowflex">
-      <select class="fsel" aria-label="日期範圍"><option>過去 30 天</option><option>過去 7 天</option><option>過去 12 個月</option><option>自訂…</option></select>
-      <select class="fsel" aria-label="比較期"><option>比較：前期</option><option>比較：去年同期</option><option>不比較</option></select>
-      <select class="fsel" aria-label="群組"><option>Group by：日</option><option>Group by：週</option><option>Group by：月</option><option>Group by：商品</option></select>
-      <button class="btn btn-sec btn-sm" onclick="toast('Demo：加入篩選條件（管道／地點／折扣…）')">＋ 篩選</button>
-      <button class="btn btn-sec btn-sm" onclick="toast('Demo：編輯欄位')">編輯欄位</button></div></div>
+      <button class="btn btn-sec btn-sm" onclick="repDate()">${coh?'過去 12 個月':'過去 30 天'} ▾</button>
+      <button class="btn btn-sec btn-sm" onclick="repCompare()">${coh?'比較：個別組別':'無比較基準'} ▾</button>
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：顯示幣別＝WITH CURRENCY，是換算/顯示宣告，非單位宣告（鐵律 3／80 §1.7）')">${marketLocale().default_currency} ${CURSYM()} ▾</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-ghost btn-sm" onclick="toast('Demo：註解 annotations——時間圖表上疊加情境事件（ShopifyQL ANNOTATE）')">註解</button>
+      <button class="btn btn-sec btn-sm" onclick="toast('Demo：摺疊／展開右側控制面板')">控制項</button></div></div>
     <div style="height:16px"></div>
+    <div class="rep-grid">
+     <div class="rep-main">
+      <div class="card card-pad" data-doc="rep-ai"><div class="rowflex"><span class="mut3">✦</span>
+        <input class="inp" style="flex:1" placeholder="您想探索哪些資料？" aria-label="AI 探索提示"
+          onkeydown="if(event.key==='Enter')toast('Demo：AI 產出三件套＝ShopifyQL ＋ 自然語言說明 ＋ quick filter 狀態（80 §4.4）')"></div></div>
+      <div style="height:12px"></div>
+      <div class="card" data-doc="rep-ql">
+        <div class="ql-bar"><span class="ql-ok">●</span><b>查詢語法正確</b><span style="flex:1"></span>
+          <button class="ql-ic" title="鍵盤快捷鍵" onclick="toast('Demo：快捷鍵清單')">⌨</button>
+          <button class="ql-ic" title="說明" onclick="toast('Demo：ShopifyQL 語法說明面板')">?</button>
+          <button class="ql-ic" title="復原" onclick="toast('Demo：復原')">↶</button>
+          <button class="ql-ic" title="重做" onclick="toast('Demo：重做')">↷</button>
+          <button class="ql-ic" title="執行" onclick="toast('已執行查詢')">▷</button>
+          <button class="ql-ic" title="摺疊編輯器" onclick="toast('Demo：摺疊編輯器')">^</button></div>
+        <pre class="ql-code">${H(ql)}</pre></div>
+      <div style="height:16px"></div>
+      <div class="card chart-card" data-doc="rep-chart"><div class="chart-head"><h3>${H(name)}</h3><span class="big num">${money(salesTotal)}</span></div>
+        <div class="chart-wrap"><svg id="repChart" width="100%" height="190"></svg></div></div>
+      <div style="height:16px"></div>
     <div class="card chart-card" data-doc="rep-chart"><div class="chart-head"><h3>${H(name)}</h3><span class="big num">${money(salesTotal)}</span></div>
       <div class="chart-wrap"><svg id="repChart" width="100%" height="190"></svg></div></div>
     <div style="height:16px"></div>
-    <div class="card" data-doc="rep-table"><table class="idx"><thead><tr><th>日期</th><th class="right">訂單</th><th class="right">總銷售額</th><th class="right">折扣</th><th class="right">淨銷售額</th></tr></thead><tbody>
-      ${days.slice(-12).map((d,i)=>{const s=sales[sales.length-12+i];return `<tr class="norow"><td>${d}</td><td class="right num">${Math.round(s/42471)}</td>
-        <td class="right num">${money(s)}</td><td class="right num">−${money(Math.round(s*0.04))}</td><td class="right num">${money(Math.round(s*0.96))}</td></tr>`;}).join('')}
-      </tbody><tfoot><tr><th>總計（含未顯示列）</th><th class="right num">240</th><th class="right num">${money(salesTotal)}</th><th class="right num">−${money(Math.round(salesTotal*0.04))}</th><th class="right num">${money(Math.round(salesTotal*0.96))}</th></tr></tfoot></table></div>`;
+      <div class="card" data-doc="rep-table"><table class="idx"><thead><tr><th>日期</th><th class="right">訂單</th><th class="right">總銷售額</th><th class="right">折扣</th><th class="right">銷貨淨額</th></tr></thead><tbody>
+        ${days.slice(-12).map((d,i)=>{const s=sales[sales.length-12+i];return `<tr class="norow"><td>${d}</td><td class="right num">${Math.round(s/42471)}</td>
+          <td class="right num">${money(s)}</td><td class="right num">−${money(Math.round(s*0.04))}</td><td class="right num">${money(Math.round(s*0.96))}</td></tr>`;}).join('')}
+        </tbody><tfoot><tr><th>總計（反映全部資料，不只顯示的 1,000 列）</th><th class="right num">240</th><th class="right num">${money(salesTotal)}</th><th class="right num">−${money(Math.round(salesTotal*0.04))}</th><th class="right num">${money(Math.round(salesTotal*0.96))}</th></tr></tfoot></table></div>
+     </div>
+     <div class="rep-side" data-doc="rep-panel">
+      <div class="tabs" role="tablist">
+        <button class="tab ${coh?'':'on'}" role="tab" aria-selected="${!coh}" onclick="repSetMode('freeform')">自由形式</button>
+        <button class="tab ${coh?'on':''}" role="tab" aria-selected="${coh}" onclick="repSetMode('cohorts')">組別</button></div>
+      ${coh
+        ? slot('指標','顧客保留率','rep-metric')+slot('組別定義','第一筆訂單','rep-cohortdef')
+          +slot('視覺化圖表','曲線','rep-viz')+slot('間隔','月','rep-interval')+slot('篩選條件','','rep-filter')
+        : slot('指標','總銷售額','rep-metric')+slot('維度','日','rep-dim')
+          +slot('視覺化圖表','曲線','rep-viz')+slot('篩選條件','','rep-filter')}
+     </div></div>`;
+}
+/* 槽位抽屜：本尊為「搜尋框＋類別列表→鑽入→checkbox 多選＋清除/套用」，
+   類別內不相容項不隱藏，改掛「根據現有選取項目無法使用」分組（層⑥條件閘控，80 §0.4）。 */
+function repSlot(t){
+  const cat={'指標':'365 個指標／10 類','維度':'299 個維度／16 類（FROM sales 下 3 類禁用）',
+    '視覺化圖表':'27 種（組別模式另有 2 種）','篩選條件':'15 類全可用；運算子 7：是/不是/介於/大於/小於/大於或等於/小於或等於',
+    '組別定義':'5：首購銷售管道/轉介管道/流量類型/包含訂閱/商品','間隔':'3：週/月（預設）/季'}[t]||'';
+  toast(`Demo：${t} 抽屜——${cat}（全窮舉見 docs/research/80 §1）`);
+}
+function repDate(){toast('Demo：期間選擇器 7 群組 25 值；BFCM 與季度是滾動窗，須依當前日期推導（80 §1.5）');}
+function repCompare(){toast('Demo：比較基準 4 值——不進行比較（預設）／前一期間／自訂／目標（COMPARE TO TARGETS）');}
+/* 具名報告動作選單【實測窮舉 4】。🔴 預設 Shopify 報告不可改名。 */
+function repMore(){
+  openGen({title:'報告動作',body:`<div class="stack">
+    ${[['重新命名','repRename()'],['匯出','repExport()'],['列印',"toast('Demo：列印報告')"],['刪除','repDelete()']]
+      .map(([l,fn])=>`<button class="btn btn-sec btn-sm" style="justify-content:flex-start" onclick="closeGen();${fn}">${l}</button>`).join('')}
+    <p class="help">預設 Shopify 報告不可重新命名（help 明載）；自訂報告四項皆可用。</p></div>`});
+}
+function repRename(){
+  openGen({title:'重新命名',body:`<div class="stack"><input class="inp" value="${H(DCTX.name||'')}" aria-label="報告名稱"></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已重新命名')">儲存</button>`});
+}
+/* 匯出彈窗：格式 4 選＋範圍 2 選，預設值＝本尊預設值（limits.analytics.export_*）。 */
+function repExport(){
+  const fmt=[['逗號分隔值 (CSV)','最適合匯入試算表'],['可延伸標記語言 (XML)',''],['JSON Lines (JSONL)',''],['Apache Parquet','']];
+  const sc=[['資料查詢的所有結果','可能超過 1,000 列'],['僅限報表中顯示的結果','']];
+  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
+  openGen({title:'匯出報告',body:`<div class="stack">
+    <div><p class="help" style="margin-bottom:var(--sp-200)">選取匯出格式：</p>${rad('expfmt',fmt)}</div>
+    <div><p class="help" style="margin-bottom:var(--sp-200)">指定您要匯出的結果：</p>${rad('expsc',sc)}</div></div>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已開始匯出——完成後在通知中心取得檔案')">匯出</button>`});
+}
+function repDelete(){
+  openGen({title:'刪除報告？',body:`<p>此動作無法復原</p>`,
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();go('analytics');renderModule('m-reports');toast('已刪除報告')">刪除</button>`});
 }
 function drawReport(){
   const svg=document.getElementById('repChart');if(!svg||!svg.clientWidth)return;
@@ -8270,12 +8375,8 @@ function drawReport(){
   d.forEach((v,i)=>{const bw=Math.max(6,(W-P.l-P.r)/d.length*.6);g+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${Hh-P.b-y(v)}" fill="#2a78d6" rx="2"><title>${days[days.length-12+i]}：${money(v)}</title></rect>`;});
   svg.innerHTML=g;
 }
-function reportQL(){
-  openGen({title:'ShopifyQL 進階模式',body:`<div class="stack">
-    <textarea class="codebox" rows="3">FROM sales SHOW total_sales, orders BY month SINCE -12m UNTIL today ORDER BY month ASC</textarea>
-    <p class="help">新版以「探索 exploration」視覺化編輯為主、QL 為進階模式；查詢結果可另存為自訂報告與 dashboard 指標卡。</p></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已執行查詢')">執行</button>`});
-}
+/* 🔴 舊 reportQL() 彈窗已移除（R11-BUG1）：本尊沒有「ShopifyQL 進階模式」這個模式——
+   QL 編輯器常駐報告主欄，與控制面板、URL ?ql= 三向同步。見 reportPage() 的 rep-ql 區塊。 */
 let LIVEMODE='3d';
 function livePage(){
   const dots=[...Array(26)].map((_,i)=>{const buy=i%7===0;
@@ -8293,18 +8394,23 @@ function livePage(){
         <div class="legend"><span><i style="background:#4a90e2"></i>近期工作階段</span><span><i style="background:#b28cf5"></i>訂單</span>
           <span>${LIVEMODE==='3d'?'可旋轉／縮放':LIVEMODE==='2d'?'平面投影':'Streamer 模式：隱藏數字'}</span></div></div>
       <div class="col">
-        <div class="card stat-card" data-doc="live-visitors"><div class="t-label">目前訪客</div><div class="t-value num">${v(7)}</div><span class="t-vs">近 5 分鐘活躍</span></div>
+        <!-- 🔴 卡片名稱與集合照實測八卡（80 §4.6）：即時訪客／總銷售額／工作階段／訂單／
+             顧客行為（三欄）／依地點分列的工作階段／新客與回頭客／依商品的總銷售額。
+             口徑：即時訪客近 5 分鐘、工作階段與訂單自店鋪當地時區午夜起、顧客行為窗 10 分鐘。 -->
+        <div class="card stat-card" data-doc="live-visitors"><div class="t-label">即時訪客</div><div class="t-value num">${v(7)}</div><span class="t-vs">近 5 分鐘活躍</span></div>
         <div class="grid2">
-          <div class="card stat-card"><div class="t-label">今日工作階段</div><div class="t-value num">${v('182')}</div><span class="t-vs">午夜起・店時區</span></div>
-          <div class="card stat-card"><div class="t-label">今日訂單</div><div class="t-value num">${v('3')}</div><span class="t-vs">全管道</span></div></div>
-        <div class="card stat-card"><div class="t-label">今日銷售額</div><div class="t-value num">${v(money(113000))}</div><span class="t-vs">gross − 折扣 − 沖銷 + 運費 + 稅</span></div>
-        <div class="card chart-card" data-doc="live-funnel"><div class="chart-head"><h3>顧客行為（近 10 分鐘）</h3></div>
-          ${[['瀏覽中',7,100],['購物車有商品',3,43],['結帳中',1,14],['已購買',1,14]].map(([l,n,w])=>
+          <div class="card stat-card"><div class="t-label">工作階段</div><div class="t-value num">${v('182')}</div><span class="t-vs">午夜起・店時區</span></div>
+          <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">${v('3')}</div><span class="t-vs">全管道・午夜起</span></div></div>
+        <div class="card stat-card"><div class="t-label">總銷售額</div><div class="t-value num">${v(money(113000))}</div><span class="t-vs">銷售總額 − 折扣 − 撤銷 + 運費 + 稅</span></div>
+        <div class="card chart-card" data-doc="live-funnel"><div class="chart-head"><h3>顧客行為</h3></div>
+          ${[['活躍購物車',3,43],['結帳中',1,14],['已購買',1,14]].map(([l,n,w])=>
             `<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(n)}</span></div>`).join('')}</div>
-        <div class="card chart-card"><div class="chart-head"><h3>熱門地點</h3></div>
-          ${[['台北',62],['台中',18],['香港',12],['Penang',8]].map(([l,w])=>`<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(w+'%')}</span></div>`).join('')}</div>
-        <div class="card chart-card"><div class="chart-head"><h3>熱門商品（近 30 分鐘）</h3></div>
-          ${[['奶茶色寬版帽T',100],['水洗丹寧襯衫',54],['帆布托特包',31]].map(([l,w])=>`<div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(Math.round(w/10))}</span></div>`).join('')}</div>
+        <div class="card chart-card"><div class="chart-head"><h3>依地點分列的工作階段</h3></div>
+          ${[['香港',62],['台北',18],['新加坡',12],['Penang',8]].map(([l,w])=>`<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(w+'%')}</span></div>`).join('')}</div>
+        <div class="card chart-card"><div class="chart-head"><h3>新客與回頭客</h3></div>
+          ${[['新客',5,71],['回頭客',2,29]].map(([l,n,w])=>`<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(n)}</span></div>`).join('')}</div>
+        <div class="card chart-card"><div class="chart-head"><h3>依商品的總銷售額</h3></div>
+          ${[['奶茶色寬版帽T',100],['水洗丹寧襯衫',54],['帆布托特包',31]].map(([l,w])=>`<div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(money(w*1130))}</span></div>`).join('')}</div>
       </div></div>`;
 }
 
@@ -10067,13 +10173,22 @@ Object.assign(DOCS,{
  "set-bill-credits":{t:"檢視剩餘抵用金",f:"四類抵用金餘額",l:"71-R4 help：訂閱/app/運送/交易四類**互不流用**，僅能抵未來週期；停用商店後保留 60 天（limits.yml billing.credit_expiry_after_deactivation_days）；折讓單（credit note）沖單張帳單、抵用金是帳戶餘額——兩個機制不同",i:"P2・[api:TBD-billingCredits]（28 待補） [tbl:billing_credits(org_id,category,amount_cents)]"},
  "fin-balance-export":{t:"匯出餘額交易",f:"CSV email 寄送（11 欄）",l:"71-R4 help：欄=交易日/類型/訂單/卡別/來源/撥款狀態/撥款日/可用日/金額/費用/淨額；篩選 7 鍵（類型/狀態/付款方式/卡別/交易日/撥款日/幣別）＋可儲存檢視——PSP pack 對應面（G15）",i:"P2・[api:TBD-balanceTransactionsExport]（28 待補） [job:csv_email]"},
 /* ---------- 分析 ---------- */
- "rep-ql":{t:"ShopifyQL 進階模式",f:"以查詢語言直接寫報告",l:"形態 FROM sales SHOW total_sales BY month SINCE -12m；新版以視覺化探索為主、QL 為進階（41 §8.2）",i:"P2・[api:report]（ShopifyQL 字串） [tbl:orders,line_items,sessions]"},
- "rep-new":{t:"建立自訂報告",f:"從探索建立並存檔",l:"另存後同時生成可放上 dashboard 的指標卡（41 §8.2）",i:"P2・[api:TBD-reportCreate]（28 §14 僅有 report query） [tbl:saved_views]（06 §7 待補）"},
- "rep-toolbar":{t:"報告工具列",f:"日期／比較期／群組／篩選／欄位",l:"日期用商店時區切日；比較期＝等長前期；group by 改變彙總粒度",i:"P1・[api:report]（range, compareRange, groupBy, filters） [tbl:orders,sessions]"},
- "rep-chart":{t:"報告圖表",f:"依 group by 呈現的視覺化",l:"單系列無圖例；hover 顯示數值（dataviz 規格）；與表格同一份資料",i:"P1・[api:report] [tbl:orders]"},
- "rep-table":{t:"報告表格",f:"明細列與總計列",l:"顯示上限 1,000 列但總計含全部；匯出取全量（22 §5）",i:"P1・[api:report]（cursor 分頁 ≤250/頁） [tbl:orders,line_items] [job:csv_export]"},
- "live-mode":{t:"Live View 顯示模式",f:"3D 地球／2D 地圖／Streamer",l:"Streamer 模式隱藏所有數字（直播用，桌面限定）；藍點＝近期 session、紫點＝訂單（41 §8.3）",i:"P1・[api:liveView] [tbl:sessions,orders]"},
- "live-visitors":{t:"目前訪客",f:"近 5 分鐘活躍工作階段",l:"Total sessions 從午夜起算（店時區）；Total sales＝gross−discounts−reversals+shipping+taxes（41 §8.3）",i:"P1・[api:liveView] [tbl:sessions]"},
+ "rep-ql":{t:"ShopifyQL 查詢編輯器（常駐）",f:"報告的唯一真相：狀態列（●查詢語法正確）＋6 鈕工具列（⌨快捷鍵／?說明／↶復原／↷重做／▷執行／^摺疊）＋行號等寬程式碼區",l:"🔴 本尊**沒有「進階模式」**——編輯器常駐主欄，與右側控制面板、URL ?ql= **三向雙向同步**（改任一處另兩處跟著變）。舊 reportQL() 彈窗已移除（71-R11-BUG1）。語法：子句序 FROM→SHOW→WHERE→GROUP BY→TIMESERIES→WITH→HAVING→SINCE/UNTIL→COMPARE TO→ORDER BY→LIMIT→VISUALIZE/TYPE；🔴 位移單位 min=分鐘而 m=月；🔴 NOT 系運算子不排除 NULL 列（80 §2）",i:"P2・[api:TBD-shopifyqlQuery]（回 columns/rows＋parseErrors；🔴 VISUALIZE 只影響前端圖表、API 一律只回表格 ⇒ 視覺化型別不進 API 回應，R11-V11） [tbl:rollup_*]｜跨頁：查詢字串同時是分享連結與報告儲存格式（R11-V1，M2 前必答）"},
+ "rep-ai":{t:"AI 探索提示列",f:"自然語言 →「您想探索哪些資料？」；送出後列位下移成追問列「調整搜尋範圍」",l:"🔴 產出**三件套**：ShopifyQL ＋ 一行自然語言說明 ＋ quick filter 狀態（期間/比較/幣別一併設好），不只是查詢字串（80 §4.4）",i:"P3・[api:TBD-analyticsAssist]（28 待補）｜跨頁：與 Sidekick 對話釘選（R0-MISS2）同屬 AI 入口家族，回答格式需一致"},
+ "rep-new":{t:"新增探索",f:"導向未儲存態探索器（標題「新探索」）",l:"🔴 文案是「新增探索」不是「建立自訂報告」；儲存彈窗預設名自動生成 `{指標} (依 {維度})`（實測「訂單數 (依 日)」，R11-DOC3）；儲存後路由 /explore → /reports/{numeric_id} 且 ?ql= 保留",i:"P2・[api:TBD-reportCreate]（28 §14 僅有 report query） [tbl:saved_views]（06 §7 待補）"},
+ "rep-toolbar":{t:"快速篩選列",f:"期間 chip／比較基準 chip／幣別 chip ＋ 註解／控制項",l:"期間【7 群組 25 值】：今天・昨天・過去(11)・期初至今(4)・BFCM(4)・季度(4)・自訂範圍；🔴 BFCM 與季度是**滾動窗**須依當前日期推導（R11-DOC2）。比較基準【4】不進行比較(預設)/前一期間/自訂/目標（=COMPARE TO TARGETS，僅該 schema 支援時可用）。🔴 幣別＝WITH CURRENCY，是**顯示/換算宣告非單位宣告**（鐵律 3 不放寬，R11-V9）",i:"P1・[api:TBD-shopifyqlQuery]（SINCE/UNTIL・COMPARE TO・WITH CURRENCY 三個子句）｜跨頁：幣別換算採**交易日期歷史匯率**逐筆計，與 76 §3 退款匯率快照同一條線"},
+ "rep-panel":{t:"控制面板（自由形式／組別）",f:"兩個 tab 對應兩套槽位集合",l:"🔴 自由形式 4 槽（指標/維度/視覺化圖表/篩選條件）vs 組別 5 槽（指標/組別定義/視覺化圖表/間隔/篩選條件）；**切換會清空查詢**且組別走另一族 schema customer_cohorts_{weekly|monthly|quarterly}。未選指標前其餘槽全禁用，空態「請您先新增一項指標」（80 §0.3/§0.4）",i:"P2・前端狀態機（mode 是一等維度，visualization_type 建模須帶 mode，R11-V2）"},
+ "rep-metric":{t:"指標槽",f:"自由形式 365 個/10 類（抽屜：搜尋＋類別鑽入＋checkbox 多選＋清除/套用）；組別 7 個平鋪",l:"10 類＝工作階段與行為(103)/行銷(26)/訂單(55)/庫存(39)/財務與付款(53)/商店(4)/產品(2)/詐騙預防(8)/銷售營收(69)/顧客(6)。🔴 產品層級銷售指標**不在「產品」類**而在「銷售營收」（本尊反直覺分類）。🔴 Web Vitals 40 個（CLS/FCP/INP/LCP/TTFB × 8 變體）我方 19 號 rollup 尚無（R11-V4）。全窮舉＝80 §1.1",i:"P2・[tbl:rollup_*]｜跨頁：🔴 AOV 是鐵律 7「數字同源」的**官方例外**（分子排除 post-order adjustments ⇒ AOV≠net_sales/orders，R11-V13）；🔴 總銷售額**可為負**（撤銷>銷售的日子）⇒ 金額元件與 badge 必須支援負值（R11-V12）"},
+ "rep-dim":{t:"維度槽",f:"299 個/16 類（FROM sales 下 3 類禁用）",l:"🔴 三種條件閘控：①未選指標前整槽禁用 ②類別依 dataset 禁用（工作階段與行為/庫存/財務與付款）③類別內不相容項掛「**根據現有選取項目無法使用**」分組——**降級展示不是過濾掉**。🔴 維度與篩選走不同可用性規則，不可共用 available_fields（R11-V3）。商品維度雙軌：「產品名稱」(當前) vs「售出時的產品名稱」(快照)（R11-V7）",i:"P2・[tbl:rollup_*] 的 GROUP BY 欄｜跨頁：「推出 ID／推出試驗變項 ID」是一等維度 ⇒ R10 的 rollouts 必須輸出這兩欄到分析層否則 A/B 測試無法評估（R11-V6）"},
+ "rep-viz":{t:"視覺化圖表槽",f:"自由形式 27 種／組別 2 種；附「排序方式」(最近新增/名稱)＋「建議」開關(預設開)＋曲線型附屬 顯示註解/累計 兩開關",l:"🔴 **三份清單不相等**：freeform UI 27／ShopifyQL TYPE 23／cohort 專屬 retention_curve＋組別網格 ⇒ visualization_type 必須帶 mode 維度（R11-V2）。「累計」=WITH CUMULATIVE_VALUES、「顯示註解」=ANNOTATE。全 27 種見 80 §1.3",i:"P2・前端狀態（不進 API 回應，見 rep-ql）"},
+ "rep-filter":{t:"篩選條件槽",f:"15 類全可用（無禁用）；欄位＋運算子＋新增值＋行尾 ⓘ/⧉複製/✕移除",l:"🔴 **指標也可當篩選對象**（對應 HAVING）、維度對應 WHERE ⇒ 一個槽位映到兩個子句。運算子【7】是/不是/介於/大於/小於/大於或等於/小於或等於。🔴 **未填值的篩選列不進入查詢**（UI 有列、ql 無 WHERE，且不得報錯）——須複製此「草稿篩選列」概念（R11-V8）",i:"P2・[api:TBD-shopifyqlQuery]（WHERE＋HAVING）"},
+ "rep-cohortdef":{t:"組別定義槽",f:"預設「第一筆訂單」；可加首筆訂單篩選【5】首購銷售管道/轉介管道/流量類型/包含訂閱/商品",l:"組別＝首單發生在同一期間的顧客歸為一組。實測生成的 ql 用 `BETWEEN -1 AND 11` ＋ `HAVING >= 0`——**取 13 期再濾掉第 -1 期**讓 _totals 算得出完整基期，照抄時不可簡化成 BETWEEN 0 AND 11（R11-V16）",i:"P2・[tbl:rollup_customer_cohorts]｜跨頁：與 74 號顧客線的 RFM/預測消費等級同屬顧客分析family"},
+ "rep-interval":{t:"間隔槽（組別限定）",f:"週／月（預設）／季",l:"🔴 三個值對應**三個不同 schema**（customer_cohorts_weekly/_monthly/_quarterly），不是同一張表的參數。組別預設期間＝過去 12 個月且**排除當月**（SINCE startOfMonth(-12m) UNTIL endOfMonth(-1m)）",i:"P2・[tbl:rollup_customer_cohorts]（三種粒度需分別預聚合）"},
+ "rep-more":{t:"報告動作選單 ⋯",f:"重新命名／匯出／列印／刪除",l:"🔴 預設 Shopify 報告**不可重新命名**（help 明載）。刪除＝彈窗「刪除報告？／此動作無法復原」＋紅色破壞鈕，刪後**導回 /analytics/reports**。匯出見獨立彈窗：格式【4】CSV(預設，「最適合匯入試算表」)/XML/JSONL/**Apache Parquet**；範圍【2】資料查詢的所有結果(預設，「可能超過 1,000 列」)/僅限報表中顯示的結果（limits.analytics.export_*）",i:"P2・[api:TBD-reportRename/reportDelete] [job:report_export]｜跨頁：匯出走通知中心取檔，與商品/訂單匯出同一條 job 線"},
+ "rep-chart":{t:"報告圖表",f:"依 VISUALIZE/TYPE 呈現的視覺化",l:"單系列無圖例；hover 顯示數值（dataviz 規格）；與下方資料表同一份資料（鐵律 7）",i:"P1・[api:TBD-shopifyqlQuery] [tbl:rollup_*]"},
+ "rep-table":{t:"報告資料表",f:"明細列＋總計列；flat table 與 nested table 兩型",l:"🔴 **顯示上限 1,000 列，但總計列反映全部資料**（不只這 1,000 列）——抄漏後半句會做出錯的 footer；匯出取全量。報告頁一次最多列出 250 份自訂報告（可建更多，需自存 URL）。均引 limits.analytics",i:"P1・[api:TBD-shopifyqlQuery]（cursor 分頁 ≤250/頁） [tbl:rollup_*] [job:report_export]"},
+ "live-mode":{t:"Live View 顯示模式",f:"3D 地球／2D 地圖／Streamer",l:"Streamer 模式隱藏所有數字（直播用，桌面限定）；藍點＝目前訪客、紫點＝訂單；另有「搜尋地點」輸入框；無法定位的美國訪客落在美國地理中心（Kansas）",i:"P1・[api:TBD-liveView] [tbl:sessions,orders]｜跨頁：地圖點=IP 國別（不落庫，PDPO/GDPR 邊界，鐵律 11）"},
+ "live-visitors":{t:"實況瀏覽卡片組（8）",f:"即時訪客／總銷售額／工作階段／訂單／顧客行為(活躍購物車·結帳中·已購買)／依地點分列的工作階段／新客與回頭客／依商品的總銷售額",l:"口徑：即時訪客＝近 5 分鐘；工作階段與訂單＝**店鋪當地時區午夜起**；顧客行為窗＝10 分鐘。🔴 Live View 的總銷售額公式＝銷售總額−折扣−撤銷+運費+稅，**少了關稅與費用**，與報告頁的總銷售額**不同**（官方三個版本，R11-DOC4）——我方須裁定用哪個，不得兩頁各算各的。空態文案「此日期範圍無資料」。🔴 本尊此頁幣別預設 USD 而報告頁預設 HKD（兩頁不同源）",i:"P1・[api:TBD-liveView]（即時層非 rollup） [tbl:sessions,orders]｜跨頁：首頁「即時訪客」卡點擊跳本頁（鐵律 7 須同源同口徑）"},
  "live-funnel":{t:"顧客行為漏斗",f:"近 10 分鐘：瀏覽→加購→結帳→購買",l:"分母口徑寫進指標辭典（19 號），與分析頁轉換率同源",i:"P1・[api:liveView] [tbl:sessions,checkouts,orders]"},
 /* ---------- 線上商店 ---------- */
  "th-upload":{t:"上傳主題 zip",f:"匯入自有主題",l:"走 25 §4 匯入管線：解壓→白名單與上限檢查→Liquid 靜態解析→授權 gate→建立未發佈主題；主題庫 ≤20（22 §4 配額）",i:"P2・[api:themeCreate]（source: staged upload） [tbl:themes,templates] [job:theme_import]"},
