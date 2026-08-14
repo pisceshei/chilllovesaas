@@ -36,7 +36,12 @@
 ## 技術鐵律（違反即打回）
 
 1. 技術棧：Rails 8.1 + MySQL 8 + Vite/React(TS) admin + Liquid 相容前台（D1/D4）；不引入未討論的重型依賴。
-2. 全表帶 `shop_id` 且複合索引開頭；金額全程 **integer cents**（出現 float 即 bug）；transaction 內禁外部 IO；上限引用 `config/limits.yml`。
+2. **業務資料**全表帶 `shop_id` 且複合索引開頭；金額全程 **integer cents**（出現 float 即 bug）；transaction 內禁外部 IO；上限引用 `config/limits.yml`。
+   <!-- 2026-08-14 裁定：身分與權限走**組織層白名單豁免**（71 §A G24 逐表列舉：organizations／
+        users／roles／role_permissions／user_roles／user_groups／user_group_roles／
+        user_store_assignments），白名單以外照舊。🔴 豁免的是「表有沒有 shop_id 欄」，
+        **不是「查詢可不可以不帶 shop_id」**——跨店存取仍須先解析出可及 shop_id 集合再逐表帶條件。
+        新增白名單表要改 CLAUDE.md 鐵律 2 與 71 §A G24，並在 PR 描述標明。 -->
 3. admin SPA 只打 `/admin/api/{version}/graphql.json`（28 號慣例：GID/cursor 分頁/userErrors/MoneyBag）；業務錯誤走 userErrors 不走 HTTP 4xx。
 4. 寫路徑冪等（訂單成立/退款/庫存調整必帶 idempotencyKey）；事件走 outbox。
 5. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify CSS/資產/文案；icon 用 Lucide；Liquid gem（MIT）可用。`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture——僅限測試，不得散布。

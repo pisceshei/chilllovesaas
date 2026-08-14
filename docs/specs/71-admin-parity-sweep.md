@@ -10,7 +10,7 @@
 > **視覺紅線**：對比作用於控件存在性、資訊架構、交互邏輯、狀態機；視覺值依鐵律 8 走我方 tokens，
 > 像素抄 Polaris＝鐵律 9 法律紅線。
 
-## §A 裁定偏離保護清單 🔴（對比前必讀，23 條）
+## §A 裁定偏離保護清單 🔴（對比前必讀，27 條）
 
 **凡在此表的「我方 ≠ Shopify」都是裁定或明文登記的結果，任何對比輪不得建議「改回與 Shopify 一致」。**
 要動表內任何一條，必須先推翻對應裁定（使用者本人）。逐條完整出處與原文＝parity-sweep-prep 工作流 guard 輸出
@@ -41,6 +41,10 @@
 | G21 | hk-baseline-jurisdiction-packs | 基準法域 HK；憑證/儲值/取貨/隱私 per-pack；台灣內容降級不刪 |
 | G22 | postal-code-backend-setting | 郵遞區號後台設定（HK 預設 optional），非寫死拿掉 |
 | G23 | per-market-language-whitelist ＋ url-prefix-hreflang-two-functions | 白名單=呈現決策；`url_prefix()`/`hreflang_codes()` 兩函式不得合併 |
+| G24 | org-level-identity-tables-exempt-from-shop-id | 🔴 **身分與權限表豁免鐵律 2 的 `shop_id`**（2026-08-14 裁定，R12-STRUCT1 的解）。白名單**逐表列舉，不得口頭擴充**：`organizations`／`users`／`roles`／`role_permissions`／`user_roles`／`user_groups`／`user_group_roles`／`user_store_assignments`。理由不是「本尊這樣」，而是**分層不同**：鐵律 2 保護的是業務資料的租戶隔離，身分與權限是**授予租戶存取權的那一層**，位於租戶之上。三條配套約束：①白名單表不得放業務資料欄位 ②🔴 **豁免的是「表有沒有 shop_id 欄」，不是「查詢可不可以不帶 shop_id」**——跨店存取須先由 `user_store_assignments` 解析出可及 shop_id 集合，查詢層仍逐表帶條件 ③新增白名單表要同步改 CLAUDE.md 鐵律 2 與本條，PR 描述標明 |
+| G25 | aov-numerator-not-shared-with-net-sales | 🔴 **AOV 不與 net_sales 同源**（2026-08-14 裁定，R11-V13 的解）：照抄本尊的官方例外——AOV 分子刻意排除 post-order adjustments，因此 `AOV ≠ net_sales / orders`，必須有自己的 rollup 分子。這是鐵律 7「數字同源」的**具名例外**，已於 CLAUDE.md 鐵律 7 加註。配套：總銷售額**允許負值**（撤銷 > 銷售的日子）；`any_click` 歸因加總會超過 metric 本身，一致性測試須白名單 |
+| G26 | pos-not-implemented-but-model-stays-pos-aware | 🔴 **不實作 POS，但資料模型保留 POS 活口**（2026-08-14 裁定，R13-V1 的解）。理由：POS 是**第二個產品**不是一個模組（硬體／離線／裝置管理／店員 PIN／班次／現金抽屜），且其權限模型與後台完全不同（organization role・角色制不可逐權限・以裝置地點為軸）。保留的活口＝訂單來源標記、地點、員工歸屬三個欄位面，之後要加不用改表。**任何輪次不得因「本尊有 POS」而建議補做**——要翻案須推翻本裁定 |
+| G27 | ucp-deferred-but-restricted-liquid-context-honoured | 🔴 **UCP 相容層延後（M6 後再評估），但 `agents.md.liquid` 的受限 render context 現在就要吃進主題引擎設計**（2026-08-14 裁定，R13-V7 的解）。理由：UCP 在有商店有商品之前實作沒有意義；但**受限 context 是架構約束**——只有 `request` 與 `agents` 兩個物件、且 `agents.md`／`llms.txt`／`llms-full.txt` 不可為 JSON template。M2 設計 render context 時若沒把它算進去，之後補會很痛（見 71-R13-V3，仍為 M2 前必答） |
 
 ⚠ guard 工作流另發現：**limits.yml 的 hreflang 相關鍵疑未同步 2026-08-13 裁定**（實質漂移警告）⇒ 已登記 §F 71-R0-V1，查證後修。
 
@@ -341,13 +345,13 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R11-V10 | V | ShopifyQL 官方明列陷阱：`!=` / `NOT IN` / `NOT CONTAINS` **不排除 NULL 列**——我方 parser 若照 SQL 三值邏輯直覺實作會與本尊不同；且 `AND` 優先於 `OR`、`min`＝分鐘而 `m`＝月 | ⬜ M2 前 |
 | 71-R11-V11 | V | `VISUALIZE`/`TYPE` **只影響編輯器圖表，API 一律只回 table data**——我方 28 號契約應把視覺化型別歸在前端狀態，不進 API 回應 | ⬜ M2 前 |
 | 71-R11-V12 | V | 🔴 **總銷售額可為負**（撤銷 > 銷售的日子，官方明列）——我方金額元件與 badge 必須支援負值顯示（tabular-nums 對齊），M1 前確認 | ⬜ M1 前 |
-| 71-R11-V13 | V | 🔴 **AOV 是鐵律 7「數字同源」的官方例外**：分子刻意排除 post-order adjustments ⇒ `AOV ≠ net_sales / orders`，必須有自己的 rollup 分子——**須在鐵律 7 條文加註此例外**，否則實作會「同源」到錯 | ⬜ M1 前 |
+| 71-R11-V13 | V | 🔴 **AOV 是鐵律 7「數字同源」的官方例外**：分子刻意排除 post-order adjustments ⇒ `AOV ≠ net_sales / orders`，必須有自己的 rollup 分子——**須在鐵律 7 條文加註此例外**，否則實作會「同源」到錯 | ✅ **2026-08-14 裁定：§A G25 照抄本尊例外**——AOV 有自己的 rollup 分子，不共用 net_sales；鐵律 7 已加註具名例外。配套：總銷售額允許負值、any_click 進一致性測試白名單 |
 | 71-R11-V14 | V | 🔴 **撤銷款項術語改造**：2026-03-05 生效、2026-07 移除舊欄，11 組欄名對照（returns→sales_reversals 等）——19/76 號欄名需改造，且**保留 `returns` 作為「實體退貨」獨立概念**（兩者不可合併） | ⬜ M1 前 |
 | 71-R11-V15 | V | 歸因模型**實測 4 種前綴 vs 官方 5 種**（多 `ANY_CLICK_ATTRIBUTION`，且其各通路加總會超過 metric 本身＝設計如此）——spec 應涵蓋 5 種，並把 any-click 列入「小計≠總計」白名單 | ⬜ |
 | 71-R11-V16 | V | 組別查詢的 `BETWEEN -1 AND 11` ＋ `HAVING >= 0` 組合（取 13 期再濾第 -1 期，讓 `_totals` 算得出完整基期）——照抄時不可簡化成 `BETWEEN 0 AND 11` | ⬜ M2 前 |
 | 71-R11-V17 | V | AI 提示列產出**三件套**（QL ＋ 自然語言說明 ＋ quick filter 狀態），不只查詢字串；追問態文案「調整搜尋範圍」——我方 AI 分析入口需比照 | ⬜ |
 | 71-R11-V18 | V | 實測未觸發項：QL **語法錯誤態**（狀態列/parseErrors 呈現）、`?` 說明面板內容、`⌨` 快捷鍵清單、註解 annotations 建立流、目標 targets 建立流、列印輸出形態——下輪或 M2 實作前補實測 | ⬜ |
-| 71-R12-STRUCT1 | STRUCT | 🔴 **權限模型整代落差**：本尊 2026 已改 **RBAC 且使用者掛組織層**（`/settings/organization-account`，底下有 角色／安全性 兩子頁；橫幅原文「以角色為基礎的存取控制現已啟用」）＝**使用者↔（群組）↔角色↔權限** 四段模型；我方是商店級 staff checkbox（舊模型）。已在原型補角色目錄卡（10 角色/4 類別）與安全登入規定，但**資料模型改造排 M1 前必答**——角色是組織層資源可跨店，與鐵律 2「全表帶 shop_id」直接衝突 | ⬜ M1 前（原型已補展示層） |
+| 71-R12-STRUCT1 | STRUCT | 🔴 **權限模型整代落差**：本尊 2026 已改 **RBAC 且使用者掛組織層**（`/settings/organization-account`，底下有 角色／安全性 兩子頁；橫幅原文「以角色為基礎的存取控制現已啟用」）＝**使用者↔（群組）↔角色↔權限** 四段模型；我方是商店級 staff checkbox（舊模型）。已在原型補角色目錄卡（10 角色/4 類別）與安全登入規定，但**資料模型改造排 M1 前必答**——角色是組織層資源可跨店，與鐵律 2「全表帶 shop_id」直接衝突 | ✅ **2026-08-14 裁定：§A G24 窄範圍豁免**——身分與權限表（8 張，逐表列舉）不帶 shop_id，白名單以外照舊；🔴 豁免的是「表有沒有 shop_id 欄」不是「查詢可不可以不帶」。展示層原型已補（角色目錄卡＋安全登入規定）。**RBAC 資料表實作仍在 M1**，但地基問題已解 |
 | 71-R12-STRUCT2 | STRUCT | 品牌歸屬錯位：本尊在 **`/settings/general/branding`（一般的子頁）**，我方是頂層設定分頁。已在一般設定補「商店資產」卡建立正確進入路徑（中繼欄位／品牌），完整歸屬對齊排 M1 | ⬜ M1（路徑已補） |
 | 71-R12-MISS1 | MISS | 商店活動記錄（`/settings/general/activity`）我方完全沒有。已補「資源」卡＋`storeActivityLog()` 彈窗，含三條硬約束（**最多 250 筆**／**唯讀不可展開·篩選·匯出**／執行者三型 人員·app·銷售管道） | ✅ |
 | 71-R12-DOC1 | DOC | 🔴 **權限分組 help 19 群 ≠ 實測 17 群**（同一批權限、不同分組邊界：Inventory/Catalogs/Files/Companies/Apps 在實測是子標題不是群組）⇒ 裁定：**UI 照實測樹、語義照 help 描述**。已把原型 permCats 由 6 類彙總換成實測 17 群 115 權限全量 | ✅ |
@@ -366,11 +370,11 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R12-V10 | V | 🔴 **品牌顏色的資料模型**：Liquid `shop.brand.colors.primary` 與 `secondary` **都是陣列，每個元素是 background/foreground 配對**（`primary[0].background`）——**不是「一主色一副色」**。另：品牌資產**不可依市場或語言本地化**（可引為 G13 佐證）；favicon 非獨立欄位（square logo 縮 32×32）；**字體欄位＝文檔未載** | ⬜ M2 前 |
 | 71-R13-DOC1 | DOC | 🔴 82 號 teardown（實測＋help/shopify.dev 雙源）：§0 架構（**管道全部是 app**，路由 /apps/{handle}，線上商店為第一方特例走 /themes；**發布模型三層 AND** Publishable×Publication×Catalog）／§1 代理式全頁（4 個 AI 管道＋詳情浮卡的「發現來源 vs 結帳位置」兩軸＋2 個資料來源＋補充條款）／§2 **UCP 全貌**／§3 POS（Lite/Pro 完整對照＋權限 9 群組＋計價）／§4 app（4 型＋2026-01-01 分界＋protected data 三級）／§5 第一方管道清單／§6 CSS 三段式 7 條。另：`agentic_sales_channel` 這個識別字**官方文檔查無**，R11 是從實測維度清單取得——以實測為準 | ✅ |
 | 71-R13-DOC2 | DOC | 🔴 **R12-V1 結案（實測直證）**：`/settings/gift_cards` **302 → `/settings/payments?hasMovedNavItem=true`**——query 參數自己講明「導航項目已搬家」。禮品卡設定（到期日／Apple Wallet）在**付款**底下，自動出貨在**一般**底下。我方 `giftcards` 設定分頁應拆併進付款（歸屬修正排 M1） | ✅ 結案 |
-| 71-R13-V1 | V | 🔴 **POS 範圍需使用者裁定**（本輪最需要決定的一條）：本輪只做管道殼與分析，**POS 本體完全沒做**（smart grid／register session 現金追蹤／員工 PIN／班次／換貨／收據範本／小費）。help 的 **Lite vs Pro 對照表**是現成的分層原型——**Lite ≈ 收銀機**（能收錢·退款·改庫存數量）**／Pro ≈ 門市營運系統**（換貨·取消·履行·庫存追蹤·日報表·零售角色）。裁定要回答：①做不做 POS ②若做，做到 Lite 還是 Pro ③per-location 計價要不要照抄 | ⬜ **使用者裁定** |
+| 71-R13-V1 | V | 🔴 **POS 範圍需使用者裁定**（本輪最需要決定的一條）：本輪只做管道殼與分析，**POS 本體完全沒做**（smart grid／register session 現金追蹤／員工 PIN／班次／換貨／收據範本／小費）。help 的 **Lite vs Pro 對照表**是現成的分層原型——**Lite ≈ 收銀機**（能收錢·退款·改庫存數量）**／Pro ≈ 門市營運系統**（換貨·取消·履行·庫存追蹤·日報表·零售角色）。裁定要回答：①做不做 POS ②若做，做到 Lite 還是 Pro ③per-location 計價要不要照抄 | ✅ **2026-08-14 裁定：§A G26 不實作 POS**——理由是 POS 是第二個產品不是模組（硬體/離線/裝置/PIN/班次/現金抽屜＋權限模型完全不同）。**保留活口**：訂單來源標記、地點、員工歸屬三個欄位面。任何輪次不得因「本尊有 POS」建議補做 |
 | 71-R13-V2 | V | 🔴 **資料模型：`App` 之下的 `Channel`**（帶 channel capability），不是兩張平行表。實測直證：管道與 app 的 `⋯` 選單完全相同【開啟應用程式／檢視詳情／解除安裝】，安裝流程同樣走 App Store，權限同樣是「管理和安裝應用程式與管道」一條。管道 app 只是多三項強制功能（帳號連接／商品發布／市集導航） | ⬜ M2 前 |
 | 71-R13-V3 | V | 🔴 **主題引擎必須支援「受限 render context」**：`agents.md.liquid` 只有 `request` 與 `agents` 兩個物件可用（`shop`／`collections` 等全域物件**不可用**），且 `agents.md`／`llms.txt`／`llms-full.txt` 三個 template **不可為 JSON template**。`agents` 物件屬性：store_url／ucp_discovery_url／mcp_endpoint_url／ucp_versions／currency／sitemap_url。與現有 template context 不是同一套——M2/M6 前必須確認引擎支援 | ⬜ M2 前 |
 | 71-R13-V4 | V | **發布模型三層 AND** 有四個掛載點要同步：商品頁的上架管道區塊／目錄（R10）／市場（R10）／代理式目錄。help 原文：商品必須**同時**「在該管道市場指派的目錄內」**且**「已發布到該管道」才會上架。另：新增管道時既有商品**預設全開**；排程發布需商品為 Active、不支援單一 variant、Shop 管道不支援；`publicationCreate/Update` 單次上限 50 個商品 | ⬜ M1 前 |
 | 71-R13-V5 | V | **POS 設定頁未驗證**：快捷鍵清單有「前往『設定：銷售點 (POS)』**GST**」，但我猜的 `/settings/point_of_sale` 得 404，設定搜尋「銷售點」只回 地點／POS 通知／新增地點／顧客通知。依鐵律 12.1 **不寫「本尊沒有這頁」**——判定為條件閘控（需 POS Pro 或已設定地點），待有 POS 的店補實測 | ⬜ |
 | 71-R13-V6 | V | 🔴 **POS 權限模型與 admin 完全不同**：①走 **organization role 而非 store permission** ②**只能指派角色，不能指派單一權限** ③粒度以**「裝置所在地點」為軸**（多條權限寫明 "for their location"）④POS Lite 地點 role 限制**不生效**（所有 admin user 皆 full access）。照 admin 的資源樹套 POS 會做不出「檢視裝置所在地點的分析」這種語義。補完 R12-STRUCT1 的權限模型全貌 | ⬜ M1 前 |
-| 71-R13-V7 | V | 🔴 **B-7／UCP 待決案有答案了**（技術面不再是未知）：UCP＝Shopify 與 Google 共同開發的開放標準，規格全文在 **ucp.dev**，開發者入口 shopify.dev/docs/agents。五個 MCP 端點（Global Catalog／Storefront Catalog／Cart／Checkout／Order）、能力協商用 platform profile（`meta.ucp-agent.profile`）、支援版本 2026-04-08·2026-01-23·draft、checkout 四態、**`update_cart`/`update_checkout` 是 PUT 語義（省略欄位會被移除）**、agent 只能查自己促成的訂單、擴充採 reverse-domain 命名無中央審批。**剩下的是產品決策**：我方要不要做 UCP 相容層 | ⬜ **使用者裁定** |
+| 71-R13-V7 | V | 🔴 **B-7／UCP 待決案有答案了**（技術面不再是未知）：UCP＝Shopify 與 Google 共同開發的開放標準，規格全文在 **ucp.dev**，開發者入口 shopify.dev/docs/agents。五個 MCP 端點（Global Catalog／Storefront Catalog／Cart／Checkout／Order）、能力協商用 platform profile（`meta.ucp-agent.profile`）、支援版本 2026-04-08·2026-01-23·draft、checkout 四態、**`update_cart`/`update_checkout` 是 PUT 語義（省略欄位會被移除）**、agent 只能查自己促成的訂單、擴充採 reverse-domain 命名無中央審批。**剩下的是產品決策**：我方要不要做 UCP 相容層 | ✅ **2026-08-14 裁定：§A G27 UCP 延後至 M6 後評估**——在有商店有商品前實作沒意義。但 `agents.md.liquid` 的**受限 render context 現在就要吃進主題引擎設計**（見 R13-V3，仍 M2 前必答） |
 | 71-R13-V8 | V | 第一方管道清單的兩條事實影響我方管道規劃：①**Amazon 與 Walmart 已併入 Shopify Marketplace Connect**，不再是獨立第一方管道 ②社群商務只有 Facebook/Instagram·TikTok Shop·**Roblox**（無 Pinterest、Snapchat）。另 **Handshake 的退場官方無公告**（僅第三方來源），**官方不維護「已下架管道清單」** | ⬜ |
