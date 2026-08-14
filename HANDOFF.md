@@ -94,6 +94,11 @@ docs/research/28          ← ★API 契約（D5：慣例＋逐模組操作表�
 docs/research/29          ← 多語言/多貨幣/多市場（Markets 全機制＋表結構＋P0-P2）
 docs/research/30          ← SEO/Merchant Center/社媒 feed/Simprosys（官方要求＋平台落地清單）
 docs/research/31          ← ★主題引擎與編輯器完整補齊計畫（R/E/ED/IN/D 五線工作包＋驗收矩陣＋排期）
+docs/research/90          ← ★★業務邏輯總綱（跨模組正典：主幹時序/狀態機總表/不變量與併發要害/
+                             事件耦合圖/98 條裁定登記/110 條未決問題/limits.yml 增補/實作排序與里程碑門檻）
+docs/research/90-blueprint/  ← 十五個領域章（01 商品 02 庫存 03 購物車結帳 04 訂單 05 支付 06 退貨退款
+                             07 折扣 08 顧客B2B 09 履約物流 10 稅務 11 Markets 12 線上商店 13 事件
+                             14 分析 15 平台核心），每章七節 A–G，含 487 條官方來源 URL
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）

@@ -121,7 +121,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 
 ## 文件地圖
 
-`docs/research/00-10` 模組研究｜`21/22` 實測與按鈕表｜`24` 編輯器與結帳 teardown｜`25/26/27/31` Liquid 引擎四件套｜`28` API 契約｜`29` Markets 國際化｜`30` SEO 與 feed｜`docs/specs/11-19` 生產級規格｜`docs/specs/65` **金額單位邊界契約（鐵律 3 全文）**｜`docs/design/20/23` UI 方案與 tokens｜`poc/liquid-engine` 引擎 PoC。
+`docs/research/00-10` 模組研究｜`21/22` 實測與按鈕表｜`24` 編輯器與結帳 teardown｜`25/26/27/31` Liquid 引擎四件套｜`28` API 契約｜`29` Markets 國際化｜`30` SEO 與 feed｜**`docs/research/90` 業務邏輯總綱＋`90-blueprint/01-15` 十五個領域章（跨模組正典：狀態機總表／不變量與併發要害／事件耦合／裁定與未決登記／實作排序）**｜`docs/specs/11-19` 生產級規格｜`docs/specs/65` **金額單位邊界契約（鐵律 3 全文）**｜`docs/design/20/23` UI 方案與 tokens｜`poc/liquid-engine` 引擎 PoC。
+
+> 🔴 **開工前的讀法**：`90` 的 §9 給實作排序與里程碑門檻、§7 給「未裁定不得動工」的清單、§4 給併發要害與必備測試。它**不取代** `22`（按鈕級 UI 對照）與 `7x`（admin 實測 teardown）——那兩者管「畫面長什麼樣」，`90` 管「規則是什麼」。三者衝突時：UI 以 `22`／`7x` 為準，業務規則以 `90` 為準，我方裁定以 `docs/specs` 與本檔鐵律為準。
 
 ## 工作方式
 
