@@ -39,7 +39,7 @@ gem "bootsnap", require: false
 # 方向其實與 vips 一致，但要不要現在把 vips 變成建置硬需求是另一回事）。
 # 目前程式碼**尚未用到** image_processing（grep 只命中本行），所以退回零成本。
 # ⇒ 升 2.x 的前置條件：①決定影像後端 ②本機與 CI 都裝好 libvips ③補影像處理的實際用例與測試。
-gem "image_processing", "~> 1.14"
+gem "image_processing", "~> 2.0"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
