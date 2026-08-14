@@ -1,7 +1,12 @@
-# 只屬於一間 Shop 的 authenticated administrator model。
+# 平台層的 authenticated administrator model（**一個 email 一個帳號，可進多間店**）。
+#
+# 🔴 2026-08-14（裁定 D8／§A G24）由商店級升為組織級：本表不再帶 `shop_id`，
+# 「這個人能進哪些店、在該店是什麼角色」改由 {UserStoreAssignment} 回答。
+# 原文是「只屬於一間 Shop 的 administrator model」——升級後那句話已經不成立，
+# 照它理解會以為 `can?` 不需要 shop context（實際上沒有 shop 一律 false）。
 #
 # 密碼以 bcrypt digest 保存，active status 與 server-side role policy 共同
-# 決定是否可登入／執行操作。見 docs/specs/12 F2/F3。
+# 決定是否可登入／執行操作。見 docs/specs/12 F2/F3、docs/specs/85 §2。
 class StaffMember < ApplicationRecord
   STATUSES = %w[invited active deactivated].freeze
   MINIMUM_PASSWORD_LENGTH = 10
@@ -32,15 +37,9 @@ class StaffMember < ApplicationRecord
     status == "active" && deactivated_at.nil?
   end
 
-  # 套用 server-authoritative role policy。
+  # 套用 server-authoritative role policy——判斷此 staff 在**目前 shop** 是否具備某權限。
   #
-  # owner 永遠通過；一般 staff 必須有持久化的 RolePermission。
-  #
-  # @param permission_key [String] canonical dotted permission key
-  # @return [Boolean] staff 是否有權限
-  # @note 副作用：一般 staff 可能執行 RolePermission existence SELECT，不寫入資料。
-  # @see docs/specs/12-spec-tenancy-auth-permissions.md F3
-  # 判斷此 staff 在**目前 shop** 是否具備某權限。
+  # owner 永遠通過；一般 staff 必須在該店有指派、且該指派的角色持有這個 RolePermission。
   #
   # 🔴 角色改為逐店指派（D8）之後，`can?` 必須看「在哪一間店」——
   # 沒有 shop context 時一律 false（fail-closed），不得退回「用任一角色判斷」。

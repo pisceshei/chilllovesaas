@@ -6,6 +6,10 @@
 # 🔴 **它自己保留 `shop_id`**，因為它就是 user × shop 的關聯本體，不是被隔離的業務資料。
 # 它**不在** G24 的豁免白名單裡的意義是：它必須帶 shop_id，而不是可以不帶。
 #
+# ⚠️ 鐵律 2 與 71 §A G24 的白名單原文**曾誤列本表**（2026-08-14 已修正）。
+# 若讀到舊版清單裡有 `user_store_assignments`，以本註釋與
+# `scripts/check-tenant-isolation.rb` 的 `MUST_HAVE_SHOP_ID` 自檢為準。
+#
 # 角色為何掛在這裡而不是 staff_members：同一個人在 A 店可以是店長、在 B 店只是客服，
 # 角色本質上是 (user, shop) 的屬性而非 user 的屬性（R12 實測本尊亦然）。
 #
