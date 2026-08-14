@@ -44,9 +44,15 @@ env:
   # 依 2026-08-13 使用者裁定改 "false"（原值 "true"）：合併 main 的唯一閘門是 LLM 留言的一行
   # 【驗收結論】文字，存在兩個已確認的風險形態——
   #   ① diff／PR 描述內的 prompt injection 可誘導「通過」直接落地 main（本檔無程式層防禦）；
-  #   ② 驗收留言未綁 commit SHA，且解析步驟 if: !cancelled() 在 Claude 步驟失敗時照跑
-  #      ⇒「上輪通過但 merge 失敗 → 新 push → 本輪 Claude 失敗 → 沿用舊通過合併未審核 commit」。
-  # 🔴 要改回 "true" 必須先修掉②（留言內嵌 head SHA 並在解析時比對），並接受①的風險。
+  #   ② ✅ **已於 2026-08-15 修掉**（PR #30，由 Codex review 指出）：舊結論會被當成本輪結論。
+  #      原文以為它只在「Claude 步驟失敗」時發生，實際上**每一輪都發生**且與 outcome 無關
+  #      ——因為 LATEST 取自 PR 的全部留言。修法＝在驗收前記錄留言 id 水位，
+  #      LATEST 只認水位之後產生的結論（見 `記錄驗收前的留言水位` 步驟）。
+  #      🔴 原本設想的修法是「留言內嵌 head SHA 並比對」，**沒有採用**：那要靠 prompt
+  #      叫模型自己寫對 SHA ＝ 賭模型配合；水位由 workflow 自己量，不需要模型配合。
+  # 🔴 **AUTO_MERGE 仍維持 "false"**：②雖已修，①（prompt injection 誘導「通過」）
+  #    仍然完全沒有程式層防禦 ⇒ 要改回 "true" 等於單獨接受①的風險，那是使用者的裁定，
+  #    不得由實作者順手改掉。
   AUTO_MERGE: "false"
 
 jobs:
@@ -64,6 +70,35 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      # 🔴 **本步驟必須在驗收之前跑**（2026-08-15，PR #30 的 Codex review 指出）。
+      #   它記下「驗收開始前，PR 上最大的留言 id」，讓下一步能分辨
+      #   **本輪產生的結論** 與 **前幾輪留下的舊結論**。
+      #
+      #   沒有它的話（原本的寫法）：`LATEST` 取自 PR 的**全部**留言 ⇒ 只要任何一輪
+      #   貼過結論，之後每一輪的 `LATEST` 都非空，於是
+      #     ①「成功但沒留言」的回收分支**永遠進不去**（它的守衛是 `[ -z "$LATEST" ]`）
+      #        ——那正是本 PR 要修的東西，它在第二輪起就是死碼；
+      #     ② 更嚴重：舊的「通過」會被當成本輪結論 ⇒ **自動 approve 一個沒被審過的新 head**；
+      #        舊的「需修改」會 ⇒ **拿過期意見再派一次 @codex**。
+      #   🔴 ② 就是本檔頂部 AUTO_MERGE 註解②描述的風險，但原文以為它只在
+      #      「Claude 步驟失敗」時發生——實際上**每一輪都發生**，與 outcome 無關。
+      #
+      #   為什麼用 id 水位而不是「把結論綁 head SHA」：綁 SHA 要靠 prompt 叫模型
+      #   自己寫對 SHA，那是**賭模型配合**；id 水位由 workflow 自己量，不需要模型配合。
+      - name: 記錄驗收前的留言水位
+        id: watermark
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          # 🔴 `--paginate`：留言超過 100 則時，單頁只會拿到**最舊**的 100 則，
+          #    水位會取得太低 ⇒ 舊結論又能混進來。乒乓 PR 累積破百並不罕見。
+          LAST_ID=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" \
+            | jq -s 'add // []' | jq -r '[.[].id] | max // 0')
+          echo "last_id=$LAST_ID" >> "$GITHUB_OUTPUT"
 
       - name: Claude 驗收
         id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
@@ -184,11 +219,25 @@ jobs:
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+          COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
         run: |
           set -uo pipefail
           PING="${CODEX_PING_TOKEN:-}"
 
-          COMMENTS=$(gh api "repos/$REPO/issues/$PR/comments?per_page=100")
+          # 🔴 **水位取不到就什麼都不做**（fail-safe，不是 fail-open）。
+          #    本步驟的 `if: !cancelled()` 表示即使水位那一步失敗，這裡照樣會跑。
+          #    若此時把水位當 0 處理，行為就**靜默退回**成修掉的那個漏洞
+          #    （舊結論被當本輪結論 ⇒ 自動 approve 未審過的 head）。
+          #    ⇒ 寧可停掉整個閉環並大聲說出來，也不要安靜地退回不安全的版本。
+          if [ -z "${COMMENT_WATERMARK:-}" ]; then
+            gh pr comment "$PR" --body "⚠️ 取不到本輪的留言水位（\`記錄驗收前的留言水位\` 步驟失敗或被跳過），**無法分辨本輪結論與前幾輪的舊結論**，因此本輪不驅動任何自動動作（不 approve、不派修、不合併）。請看 Actions log 後重新 push。"
+            exit 0
+          fi
+
+          # 🔴 `--paginate`：原本是單頁 100 則，而 GitHub 回的是**最舊**的一頁
+          #    ⇒ 留言破百的 PR，`LATEST`／`ROUNDS` 會完全看不到近期的留言。
+          #    乒乓 PR（每輪至少一則驗收＋一則派修）累積破百並不罕見。
+          COMMENTS=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" | jq -s 'add // []')
 
           # 🔴 驗收留言的作者允許清單。2026-08-14 事故：本步驟原本只認 "github-actions[bot]"，
           #    但 anthropics/claude-code-action@v1 是以自己的 GitHub App 身分留言——
@@ -215,8 +264,17 @@ jobs:
           #      配套：下面所有本步驟產生的留言**一律不得包含結論標記字面值**。
           MARKER='【驗收結論】'
 
+          # 🔴 **`LATEST` 只認本輪產生的結論**——`.id > $wm`（水位見上面那個步驟）。
+          #    這是 PR #30 的 Codex review 指出的缺陷：原本取全部留言 ⇒ 舊結論會被
+          #    當成本輪結果，於是「成功但沒留言」的回收分支永遠進不去，
+          #    而且**舊的通過會自動 approve 沒被審過的新 head**。
+          #    完整推導寫在 `記錄驗收前的留言水位` 步驟的註釋裡。
           LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
+            --argjson wm "${COMMENT_WATERMARK:-0}" \
+            '[.[] | select(.id > $wm) | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
+          # 🔴 `ROUNDS` **刻意不加水位過濾**：它是「這個 PR 至今被派修幾輪」的累計計數，
+          #    用來擋 MAX_FIX_ROUNDS。加了水位它每輪都會歸零，上限就永遠觸發不到。
+          #    ⇒ 兩個變數的時間範圍不同是**刻意的**，不是漏改。
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
             '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m + "需修改"))] | length')
 
@@ -258,7 +316,16 @@ jobs:
               FALLBACK=""
               if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
                 # 取最後一則 assistant 的文字內容；jq 失敗（格式不符預期）就退回原始檔尾。
-                FALLBACK=$(jq -r '[.. | objects | select(.type? == "text") | .text] | last // ""' \
+                # 🔴 **`-s`（slurp）不可省**（2026-08-15，PR #30 的 Codex review 指出）。
+                #    執行記錄若是 JSONL（一行一個 JSON），不加 `-s` 時 jq 會**對每一筆各跑一次**
+                #    filter，`last` 取的是「每筆記錄自己的最後一段文字」，
+                #    命令替換再把它們全部串起來 ⇒ 拿到的是**全部中間輸出**而不是最終那一段。
+                #    接著 `head -c 55000` 會從頭截斷 ⇒ **留下開頭的雜訊、丟掉要回收的審核意見**，
+                #    而且看起來還「有東西」，是最會騙人的失效形態。
+                #    加 `-s` 後所有記錄先合成一個陣列，`..` 依序遞迴 ⇒ `last` 才是全域最後一段。
+                #    ⚠️ 這個寫法對「單一 JSON 陣列」與「JSONL」**兩種格式都正確**——
+                #      因為 `..` 會穿過 slurp 多包的那一層。格式未經實測，故取兩者皆可的寫法。
+                FALLBACK=$(jq -s -r '[.. | objects | select(.type? == "text") | .text] | last // ""' \
                   "$EXECUTION_FILE" 2>/dev/null || true)
                 if [ -z "$FALLBACK" ]; then FALLBACK=$(tail -c 20000 "$EXECUTION_FILE"); fi
               fi
