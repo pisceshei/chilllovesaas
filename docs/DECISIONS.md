@@ -81,8 +81,14 @@
   2. 🔴 **豁免的是「表有沒有 `shop_id` 欄」，不是「查詢可不可以不帶 `shop_id`」**——
      跨店存取一律先由 `user_store_assignments` 解析出可及 shop_id 集合，查詢層仍逐表帶條件；
   3. 新增白名單表必須同步改 `CLAUDE.md` 鐵律 2 與 `71` §A G24，且 PR 描述標明。
-- **影響**：`CLAUDE.md` 鐵律 2 與 `AGENTS.md` §技術鐵律 2 已加註；71-R12-STRUCT1 結案；
-  RBAC 資料表本體的實作仍在 M1。
+- **影響**：`CLAUDE.md` 鐵律 2 與 `AGENTS.md` §技術鐵律 2 已加註；71-R12-STRUCT1 結案。
+- 🔴 **2026-08-14 當日更正**：本條原寫「RBAC 資料表本體的實作仍在 M1（＝白名單表還沒建）」——
+  **那是錯的**。M0 已建 `roles`／`role_permissions`／`staff_members`／`sessions` 四張表
+  （命名用 `staff_members` 不是 `users`，我只查了 `users` 就下結論），
+  全部 `shop_id NOT NULL` ＋ **複合外鍵** ＋ `acts_as_tenant` fail-closed。
+  ⇒ **D8 與現有 schema 直接衝突，尚未落地**。兩案影響評估與建議＝**`docs/specs/85`**，
+  待使用者裁定後才動 migration。在裁定前，**D8 是「已決定方向、未落地」狀態**，
+  不得據以修改 schema。
 
 ### D9. AOV 不與 `net_sales` 同源——鐵律 7 的具名例外（G25）
 
