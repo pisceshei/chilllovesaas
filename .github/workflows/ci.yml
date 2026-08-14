@@ -200,3 +200,11 @@ jobs:
       # 官方 2026-03-05 特地拆開；合併會導致總銷售額對不上或退貨資料無處可放。
       - name: Check reversal naming
         run: ruby scripts/check-reversal-naming.rb
+
+      # 🔴 YAML 1.1 的裸字 on/off/yes/no/y/n 會被 Psych 解析成布林——對「值」是常識，
+      # 但沒人預期它同樣適用於「鍵」。limits.yml 的 gift_card_entry_points 就中了這個陷阱
+      # （六個 `on` 鍵實際是 true），而 deep_symbolize_keys 對非字串鍵原樣保留 ⇒
+      # 取值端只看到 KeyError，看不出根因，最可能的誤修是改用 true 當鍵、把 bug 固化。
+      # 這一類只在「鍵名剛好是那幾個字」時出現，review 肉眼看不出來，必須由機制擋。
+      - name: Check limits.yml key types
+        run: ruby scripts/check-limits-keys.rb
