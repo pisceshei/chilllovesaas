@@ -44,9 +44,15 @@ env:
   # 依 2026-08-13 使用者裁定改 "false"（原值 "true"）：合併 main 的唯一閘門是 LLM 留言的一行
   # 【驗收結論】文字，存在兩個已確認的風險形態——
   #   ① diff／PR 描述內的 prompt injection 可誘導「通過」直接落地 main（本檔無程式層防禦）；
-  #   ② 驗收留言未綁 commit SHA，且解析步驟 if: !cancelled() 在 Claude 步驟失敗時照跑
-  #      ⇒「上輪通過但 merge 失敗 → 新 push → 本輪 Claude 失敗 → 沿用舊通過合併未審核 commit」。
-  # 🔴 要改回 "true" 必須先修掉②（留言內嵌 head SHA 並在解析時比對），並接受①的風險。
+  #   ② ✅ **已於 2026-08-15 修掉**（PR #30，由 Codex review 指出）：舊結論會被當成本輪結論。
+  #      原文以為它只在「Claude 步驟失敗」時發生，實際上**每一輪都發生**且與 outcome 無關
+  #      ——因為 LATEST 取自 PR 的全部留言。修法＝在驗收前記錄留言 id 水位，
+  #      LATEST 只認水位之後產生的結論（見 `記錄驗收前的留言水位` 步驟）。
+  #      🔴 原本設想的修法是「留言內嵌 head SHA 並比對」，**沒有採用**：那要靠 prompt
+  #      叫模型自己寫對 SHA ＝ 賭模型配合；水位由 workflow 自己量，不需要模型配合。
+  # 🔴 **AUTO_MERGE 仍維持 "false"**：②雖已修，①（prompt injection 誘導「通過」）
+  #    仍然完全沒有程式層防禦 ⇒ 要改回 "true" 等於單獨接受①的風險，那是使用者的裁定，
+  #    不得由實作者順手改掉。
   AUTO_MERGE: "false"
 
 jobs:
@@ -64,6 +70,35 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      # 🔴 **本步驟必須在驗收之前跑**（2026-08-15，PR #30 的 Codex review 指出）。
+      #   它記下「驗收開始前，PR 上最大的留言 id」，讓下一步能分辨
+      #   **本輪產生的結論** 與 **前幾輪留下的舊結論**。
+      #
+      #   沒有它的話（原本的寫法）：`LATEST` 取自 PR 的**全部**留言 ⇒ 只要任何一輪
+      #   貼過結論，之後每一輪的 `LATEST` 都非空，於是
+      #     ①「成功但沒留言」的回收分支**永遠進不去**（它的守衛是 `[ -z "$LATEST" ]`）
+      #        ——那正是本 PR 要修的東西，它在第二輪起就是死碼；
+      #     ② 更嚴重：舊的「通過」會被當成本輪結論 ⇒ **自動 approve 一個沒被審過的新 head**；
+      #        舊的「需修改」會 ⇒ **拿過期意見再派一次 @codex**。
+      #   🔴 ② 就是本檔頂部 AUTO_MERGE 註解②描述的風險，但原文以為它只在
+      #      「Claude 步驟失敗」時發生——實際上**每一輪都發生**，與 outcome 無關。
+      #
+      #   為什麼用 id 水位而不是「把結論綁 head SHA」：綁 SHA 要靠 prompt 叫模型
+      #   自己寫對 SHA，那是**賭模型配合**；id 水位由 workflow 自己量，不需要模型配合。
+      - name: 記錄驗收前的留言水位
+        id: watermark
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          # 🔴 `--paginate`：留言超過 100 則時，單頁只會拿到**最舊**的 100 則，
+          #    水位會取得太低 ⇒ 舊結論又能混進來。乒乓 PR 累積破百並不罕見。
+          LAST_ID=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" \
+            | jq -s 'add // []' | jq -r '[.[].id] | max // 0')
+          echo "last_id=$LAST_ID" >> "$GITHUB_OUTPUT"
 
       - name: Claude 驗收
         id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
@@ -115,6 +150,13 @@ jobs:
 
             具體、可執行、指到規格章節；不要泛泛稱讚。
             不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
+
+            🔴🔴 **你的最後一個動作必須是那個 `gh pr comment` 呼叫。**
+            **不要把審核意見寫在最終回覆裡**——最終回覆不會出現在 PR 上，整份審核會直接消失。
+            （2026-08-15 實測，PR #29 連續兩次：步驟 `outcome=success`、耗時 3m32s／3m58s、
+            PR 上零留言。這是本閉環的第四種失效形態，前三種是作者身分、反竄改跳過、max-turns 耗盡。）
+            **大型 diff 的正確做法是縮小審核範圍並在意見裡說明**（例如「本輪只逐行看了
+            `app/` 與 `spec/`，`docs/` 抽查」），**而不是省略掉那則留言**。
           # 🔴 `--max-turns` 由 40 提高到 200（2026-08-14 事故：PR #26 因此整份驗收作廢）。
           #   現象：run 跑滿 3m20s、**Job 標 Failure**、PR 上沒有任何 Claude 留言，
           #         只剩解析步驟貼的「⚠️ 自動驗收沒有產生結論」。
@@ -125,7 +167,44 @@ jobs:
           #   🔴 先前幾個 PR 沒事，是因為它們都是小幅的 Rails 改動（3–4 分鐘就跑完）——
           #      **回合數夠不夠取決於 diff 大小，不是取決於 workflow 有沒有寫對**。
           #      原型檔是本倉庫最大的單檔，任何碰它的 PR 都會壓到上限。
+          # 🔴 模型與推理強度（2026-08-15 使用者裁定：「用更高的能力去驗收得到更好的效果」）。
+          #   ⚠️ **只能寫在 `claude_args` 裡**——`anthropics/claude-code-action@v1` 的
+          #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
+          #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
+          #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
+          #   🔴 `--model claude-fable-5`（2026-08-15 使用者二次裁定，由 Opus 5 改成 Fable 5）。
+          #      改的理由：官方明文「Claude Fable 5 (`claude-fable-5`) is Anthropic's
+          #      **most capable widely released model**」——使用者要的是「最強的驗收」，
+          #      而不是「Opus 這條產品線的最新版」，兩者在 2026-08 不是同一個東西。
+          #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
+          #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
+          #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
+          #      解析到不同模型，而且是靜默的**：不報錯、log 看不出來，以為換好了其實沒有。
+          #      本 action 內建 CLI 的版號無從得知（官方未公布 SDK↔CLI 對應）⇒ 一律釘完整名。
+          #      代價：**之後出新模型不會自動跟上**（dateless ID 官方定義就是固定 snapshot），
+          #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
+          #      好處：**失效會叫**——帳號沒有該模型權限時第一次請求就報錯，不會靜默降級。
+          #      ⚠️ 若某天這一行開始報「模型不存在／無權限」，那是**帳號權限**問題，
+          #        不是 workflow 寫錯；先確認訂閱有沒有 Fable 5，再考慮回退 `claude-opus-5`。
+          #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
+          #      官方：「The default effort is `high` on every model that supports effort」
+          #      ⇒ 這一行**有實際作用**，不是裝飾。
+          #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
+          #        settings 不收）⇒ 只能走 `--effort`，本檔寫法是官方唯一支援的路徑。
+          #   ⚠️ 這兩個旗標由 action 依賴的 `@anthropic-ai/claude-agent-sdk`（`^0.3.232`，
+          #      caret ⇒ 安裝時取最新 0.3.x）內建的 CLI 解析。若某天 SDK 退版到不認得
+          #      `--effort`，本步驟會失敗——但 `continue-on-error: true` ⇒ 不會擋 CI，
+          #      會走下一步的「步驟失敗」分支貼出診斷留言。**不要因此把旗標拿掉再說**，
+          #      先看那則留言的 stderr。
+          #   ❌ 三條明確不要做的（都查過官方，做了只會製造假設定）：
+          #      ①`with: model:` —— v1 沒這個 input，GitHub 靜默忽略未知 input；
+          #      ②step `env:` 加 `CLAUDE_CODE_EFFORT_LEVEL`／`ANTHROPIC_MODEL` ——
+          #        action 的 env 白名單只轉發 `ANTHROPIC_DEFAULT_{SONNET,HAIKU,OPUS}_MODEL`；
+          #      ③同時加 `settings:` 設 model／effortLevel ——
+          #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
           claude_args: |
+            --model claude-fable-5
+            --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
 
@@ -139,11 +218,26 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+          COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
         run: |
           set -uo pipefail
           PING="${CODEX_PING_TOKEN:-}"
 
-          COMMENTS=$(gh api "repos/$REPO/issues/$PR/comments?per_page=100")
+          # 🔴 **水位取不到就什麼都不做**（fail-safe，不是 fail-open）。
+          #    本步驟的 `if: !cancelled()` 表示即使水位那一步失敗，這裡照樣會跑。
+          #    若此時把水位當 0 處理，行為就**靜默退回**成修掉的那個漏洞
+          #    （舊結論被當本輪結論 ⇒ 自動 approve 未審過的 head）。
+          #    ⇒ 寧可停掉整個閉環並大聲說出來，也不要安靜地退回不安全的版本。
+          if [ -z "${COMMENT_WATERMARK:-}" ]; then
+            gh pr comment "$PR" --body "⚠️ 取不到本輪的留言水位（\`記錄驗收前的留言水位\` 步驟失敗或被跳過），**無法分辨本輪結論與前幾輪的舊結論**，因此本輪不驅動任何自動動作（不 approve、不派修、不合併）。請看 Actions log 後重新 push。"
+            exit 0
+          fi
+
+          # 🔴 `--paginate`：原本是單頁 100 則，而 GitHub 回的是**最舊**的一頁
+          #    ⇒ 留言破百的 PR，`LATEST`／`ROUNDS` 會完全看不到近期的留言。
+          #    乒乓 PR（每輪至少一則驗收＋一則派修）累積破百並不罕見。
+          COMMENTS=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" | jq -s 'add // []')
 
           # 🔴 驗收留言的作者允許清單。2026-08-14 事故：本步驟原本只認 "github-actions[bot]"，
           #    但 anthropics/claude-code-action@v1 是以自己的 GitHub App 身分留言——
@@ -170,8 +264,17 @@ jobs:
           #      配套：下面所有本步驟產生的留言**一律不得包含結論標記字面值**。
           MARKER='【驗收結論】'
 
+          # 🔴 **`LATEST` 只認本輪產生的結論**——`.id > $wm`（水位見上面那個步驟）。
+          #    這是 PR #30 的 Codex review 指出的缺陷：原本取全部留言 ⇒ 舊結論會被
+          #    當成本輪結果，於是「成功但沒留言」的回收分支永遠進不去，
+          #    而且**舊的通過會自動 approve 沒被審過的新 head**。
+          #    完整推導寫在 `記錄驗收前的留言水位` 步驟的註釋裡。
           LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
+            --argjson wm "${COMMENT_WATERMARK:-0}" \
+            '[.[] | select(.id > $wm) | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
+          # 🔴 `ROUNDS` **刻意不加水位過濾**：它是「這個 PR 至今被派修幾輪」的累計計數，
+          #    用來擋 MAX_FIX_ROUNDS。加了水位它每輪都會歸零，上限就永遠觸發不到。
+          #    ⇒ 兩個變數的時間範圍不同是**刻意的**，不是漏改。
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
             '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m + "需修改"))] | length')
 
@@ -198,7 +301,50 @@ jobs:
                 "請到 Actions 分頁看該 run 的 annotation（會直接寫 \`Reached maximum number of turns\`）。重新 push 即會重跑。")
               gh pr comment "$PR" --body "$BODY"
             else
-              gh pr comment "$PR" --body "⚠️ Claude 驗收步驟**執行成功但沒有貼出結論**。請到 Actions 分頁查 log 確認它最後做了什麼；重新 push 即會重跑驗收。"
+              # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
+              #    run 37／39 都是 outcome=success、耗時 3m32s／3m58s、PR 上零留言）。
+              #    `outcome=success` 排除了 max-turns 耗盡（那會讓步驟 failure，見上一個分支）。
+              #    最可能的形態：agent 把審核結果當成**最終文字輸出**而沒有呼叫 `gh pr comment`。
+              #
+              # 🔴 **原本的處置只留一句「請到 Actions 分頁查 log」——那是不夠的**：
+              #    Actions 的 log 檢視器是虛擬捲動、原始 log 是 gzip，
+              #    實測用瀏覽器**拿不到那段文字**（2026-08-15 試過 UI 展開、raw endpoint、
+              #    未認證 API 三種路徑皆失敗）。⇒ 診斷資訊在事故當下等於不存在。
+              #
+              # ⇒ 改成：把 action 的執行輸出撈出來當**回收品**貼上來。
+              #    這一步同時解決兩件事：①審核內容不再整份消失；②它本身就是診斷。
+              FALLBACK=""
+              if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+                # 取最後一則 assistant 的文字內容；jq 失敗（格式不符預期）就退回原始檔尾。
+                # 🔴 **`-s`（slurp）不可省**（2026-08-15，PR #30 的 Codex review 指出）。
+                #    執行記錄若是 JSONL（一行一個 JSON），不加 `-s` 時 jq 會**對每一筆各跑一次**
+                #    filter，`last` 取的是「每筆記錄自己的最後一段文字」，
+                #    命令替換再把它們全部串起來 ⇒ 拿到的是**全部中間輸出**而不是最終那一段。
+                #    接著 `head -c 55000` 會從頭截斷 ⇒ **留下開頭的雜訊、丟掉要回收的審核意見**，
+                #    而且看起來還「有東西」，是最會騙人的失效形態。
+                #    加 `-s` 後所有記錄先合成一個陣列，`..` 依序遞迴 ⇒ `last` 才是全域最後一段。
+                #    ⚠️ 這個寫法對「單一 JSON 陣列」與「JSONL」**兩種格式都正確**——
+                #      因為 `..` 會穿過 slurp 多包的那一層。格式未經實測，故取兩者皆可的寫法。
+                FALLBACK=$(jq -s -r '[.. | objects | select(.type? == "text") | .text] | last // ""' \
+                  "$EXECUTION_FILE" 2>/dev/null || true)
+                if [ -z "$FALLBACK" ]; then FALLBACK=$(tail -c 20000 "$EXECUTION_FILE"); fi
+              fi
+
+              if [ -n "$FALLBACK" ]; then
+                # 🔴 **中和結論標記**（把【】換成〔〕）。本則留言是由 github-actions[bot] 貼的，
+                #    而它在 REVIEWERS 清單內 ⇒ 若原文第一行帶著標記，下一輪 synchronize
+                #    會把**這則回收品**當成正式結論，而它並非 Claude 親自貼出、
+                #    也沒有經過本輪的作者身分驗證。回收是為了讓人看到，不是為了驅動閉環。
+                SAFE=$(printf '%s' "$FALLBACK" | sed 's/【驗收結論】/〔驗收結論〕/g' | head -c 55000)
+                BODY=$(printf '%s\n\n%s\n\n%s\n\n---\n\n%s' \
+                  "⚠️ **Claude 驗收步驟執行成功，但它沒有呼叫 \`gh pr comment\`**——審核內容原本會整份消失。" \
+                  "以下是從 action 執行輸出回收的最終文字。**標記已中和成〔〕，因此不會被下一輪解析成正式結論**；請人工判讀。" \
+                  "（若這段看起來就是完整的驗收意見，代表 agent 只是漏了最後那一步 tool call；重新 push 可再試一次。）" \
+                  "$SAFE")
+                gh pr comment "$PR" --body "$BODY"
+              else
+                gh pr comment "$PR" --body "⚠️ Claude 驗收步驟**執行成功但沒有貼出結論**，且**執行輸出也取不到**（\`execution_file\` 為空或不存在）。這是目前最難診斷的形態：請用 \`gh run view --log\` 取完整 log（瀏覽器拿不到）。重新 push 即會重跑驗收。"
+              fi
             fi
             exit 0
           fi
