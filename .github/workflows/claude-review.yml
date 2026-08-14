@@ -137,16 +137,23 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-opus-5`：**刻意用完整名，不用 alias `opus`**。
-          #      官方明文「Opus 5 requires Claude Code v2.1.219 or later」，且
-          #      「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ 若 action 內建的 CLI
-          #      舊於該版，`--model opus` 會**靜默**跑 Opus 4.8：不報錯、log 看不出來，
-          #      而官方未公布 SDK↔CLI 的版號對應 ⇒ **我們無法事先知道拿到哪一個**。
-          #      釘完整名把「靜默降級」換成「會叫的失敗」——模型名不被接受時第一次請求就報錯。
-          #      代價：**之後出新 Opus 不會自動跟上**（dateless ID 官方定義就是固定 snapshot），
+          #   🔴 `--model claude-fable-5`（2026-08-15 使用者二次裁定，由 Opus 5 改成 Fable 5）。
+          #      改的理由：官方明文「Claude Fable 5 (`claude-fable-5`) is Anthropic's
+          #      **most capable widely released model**」——使用者要的是「最強的驗收」，
+          #      而不是「Opus 這條產品線的最新版」，兩者在 2026-08 不是同一個東西。
+          #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
+          #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
+          #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
+          #      解析到不同模型，而且是靜默的**：不報錯、log 看不出來，以為換好了其實沒有。
+          #      本 action 內建 CLI 的版號無從得知（官方未公布 SDK↔CLI 對應）⇒ 一律釘完整名。
+          #      代價：**之後出新模型不會自動跟上**（dateless ID 官方定義就是固定 snapshot），
           #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
+          #      好處：**失效會叫**——帳號沒有該模型權限時第一次請求就報錯，不會靜默降級。
+          #      ⚠️ 若某天這一行開始報「模型不存在／無權限」，那是**帳號權限**問題，
+          #        不是 workflow 寫錯；先確認訂閱有沒有 Fable 5，再考慮回退 `claude-opus-5`。
           #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
-          #      Opus 5 預設是 `high` ⇒ 這一行**有實際作用**，不是裝飾。
+          #      官方：「The default effort is `high` on every model that supports effort」
+          #      ⇒ 這一行**有實際作用**，不是裝飾。
           #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
           #        settings 不收）⇒ 只能走 `--effort`，本檔寫法是官方唯一支援的路徑。
           #   ⚠️ 這兩個旗標由 action 依賴的 `@anthropic-ai/claude-agent-sdk`（`^0.3.232`，
@@ -161,7 +168,7 @@ jobs:
           #      ③同時加 `settings:` 設 model／effortLevel ——
           #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
           claude_args: |
-            --model claude-opus-5
+            --model claude-fable-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
