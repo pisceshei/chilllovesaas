@@ -132,7 +132,21 @@ jobs:
           #   🔴 先前幾個 PR 沒事，是因為它們都是小幅的 Rails 改動（3–4 分鐘就跑完）——
           #      **回合數夠不夠取決於 diff 大小，不是取決於 workflow 有沒有寫對**。
           #      原型檔是本倉庫最大的單檔，任何碰它的 PR 都會壓到上限。
+          # 🔴 模型與推理強度（2026-08-15 使用者裁定：「用更高的能力去驗收得到更好的效果」）。
+          #   ⚠️ **只能寫在 `claude_args` 裡**——`anthropics/claude-code-action@v1` 的
+          #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
+          #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
+          #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
+          #   `--model opus`：用 alias 不寫死 `claude-opus-5`，之後升版自動跟上。
+          #   `--effort max`：CLI 的五級推理強度（low/high/xhigh/max…），max＝最高。
+          #   ⚠️ 這兩個旗標由 action 依賴的 `@anthropic-ai/claude-agent-sdk`（`^0.3.232`，
+          #      caret ⇒ 安裝時取最新 0.3.x）內建的 CLI 解析。若某天 SDK 退版到不認得
+          #      `--effort`，本步驟會失敗——但 `continue-on-error: true` ⇒ 不會擋 CI，
+          #      會走下一步的「步驟失敗」分支貼出診斷留言。**不要因此把旗標拿掉再說**，
+          #      先看那則留言的 stderr。
           claude_args: |
+            --model opus
+            --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
 
