@@ -263,88 +263,156 @@ def r_fake_affordance(src, style, script):
 # 🔴 判別方法留給下一個人：調高時**必須同時有量表本身的修正**（本檔或規則的 diff），
 #   只改這三個數字而沒動掃描邏輯的調高，就是把新增的死控件就地合法。
 DEAD_CONTROL_BASELINE = {
-    "chilllove-admin-v2.html": 44,
+    "chilllove-admin-v2.html": 43,
     "chilllove-platform-admin.html": 25,
     "chilllove-storefront-v2.html": 55,
 }
 
 
+def _iter_control_tags(body: str):
+    """逐個吐出互動元素的開標籤 `(tag, attrs, start_index)`。
+
+    🔴 **手寫掃描器而不是單一正則**（2026-08-14，回應 PR #28 的 Codex 與 Claude review）。
+    正則版本前後踩了三種形態，每一種都是**漏看**而不是誤報：
+      - `[^>]*`  → 跨行吃掉整段 CSS／JS，回報行號完全對不上；
+      - `[^>\\n]` → 反過來讓**跨行寫的標籤整個掃不到**（不產生 WARN、不超基準線、CI 照過），
+        而 `<button\\n  class="...">` 這種寫法在本倉庫的原型裡很常見；
+      - 屬性值裡的 `>`（如 `title="a>b"`）與模板運算式裡的 `>=` 都會提前截斷。
+    ⇒ 改成逐字掃描，明確處理三種「`>` 不算結束」的情形：引號字串、`${...}`、以及
+      HTML 註釋（呼叫端已先剝掉）。
+
+    另設 `LIMIT`：單一開標籤超過這個長度就判定為未閉合／誤匹配並放棄，
+    避免任何一次失誤又演變成「吃掉整份檔案」。
+    """
+    LIMIT = 4000
+    for m in re.finditer(r"<(button|select|textarea|input)\b", body):
+        i = m.end()
+        end = min(len(body), i + LIMIT)
+        quote = None
+        depth = 0          # ${ } 巢狀深度
+        closed = -1
+        while i < end:
+            ch = body[i]
+            if quote:
+                if ch == quote:
+                    quote = None
+                i += 1
+                continue
+            if depth:
+                if ch == "}":
+                    depth -= 1
+                elif ch == "{":
+                    depth += 1
+                i += 1
+                continue
+            if ch in "\"'":
+                quote = ch
+                i += 1
+                continue
+            if ch == "$" and i + 1 < end and body[i + 1] == "{":
+                depth = 1
+                i += 2
+                continue
+            if ch == ">":
+                closed = i
+                break
+            if ch == "<":          # 撞到下一個標籤 ⇒ 本次是誤匹配
+                break
+            i += 1
+        if closed < 0:
+            continue
+        yield m.group(1), body[m.end():closed], m.start()
+
+
 def r_dead_control(src, style, script):
     """互動元素必須有人讀得到——handler、data-f 綁定，或**真的被選擇器用到的把手**。
 
-    為什麼：89 號那一輪查出 25 條「控件畫出來卻沒接行為」，**全部 lint 綠燈**。
+    為什麼：89 §2 查出 25 條「控件畫出來卻沒接行為」，**全部 lint 綠燈**。
     最糟的形態不是「沒反應」，是**回報成功但什麼都沒讀**——例如目錄的 5 個發布開關
     全部關掉，照樣 toast「已儲存目錄價格」，使用者以為設定生效了。
 
-    🔴 **本規則不是「必須有 onclick」**。89 那一輪修好的控件多數**沒有 inline handler**：
+    🔴 **判準不是「必須有 onclick」**。89 §2 修好的控件多數**沒有 inline handler**：
     `marketNewRun()` 讀 `querySelectorAll('.mkt-country')`、`rfSubmit()` 讀
     `getElementById('rfOverOK')`、`repExportRun()` 讀 `input[name="expfmt"]:checked`；
-    設定側欄的 36 顆鈕靠 `data-set` 走事件委派。天真規則會把這些全部誤報，
+    設定側欄 36 顆鈕靠 `data-set` 走事件委派。天真規則會把這些全部誤報，
     然後被人關掉——比沒有規則更糟。判準是「**有沒有一個真的被選擇器用到的把手**」。
 
-    🔴 **把手只認 DOM API 上下文，不是「有在 script 出現過」**。
-    本原型的 markup 寫在 `<script>` 的模板字面量裡，所以任何屬性值**本來就**出現在
-    script 字串中——用「有沒有出現」判斷是**自我滿足**的，永遠成立。
-    （負面測試實證：把 Cookie 橫幅 radio 退回舊寫法，`name="cbColor"` 只存在於那行
-    markup，寬鬆版規則照樣放行。）
+    🔴 **這條規則自己踩過四次「漏看」，每一次 CI 都是綠的**——判準沒錯，錯在取樣面：
+      1. `_strip_comments` 把 `accept="image/*"` 當註釋開頭，吞掉 86 行
+         （同一個 helper 也被鐵律 10 的 `r_hardcoded_currency` 使用 ⇒ ERROR 級檢查一起瞎）；
+      2. 泛型 tag 選擇器 `'input,select,textarea,button'` 讓所有 `class="input"` 免死；
+      3. 🔴 **選擇器來源沒剝註釋**——JS 註釋裡隨手提一句 `getElementById('xyz')`，
+         任何 id 為 `xyz` 的新死控件就永遠隱形（連 WARN 都不產生 ⇒ 基準線閘門看不到）；
+      4. `[^>\\n]` 讓跨行標籤整個掃不到。
+    以上四條**全部已修**，並由 `scripts/test-lint-rules.py` 的 fixture 固化。
 
     放行條件（任一即可）：
       1. inline handler（onclick/onchange/oninput/onsubmit/onkeydown）
       2. `data-f`（走 formRead 髒狀態追蹤）或 `data-val`（走驗證器）
       3. `disabled`（明示不可用）
-      4. id / name / class / `data-*` 之中，至少一個 token 出現在**選擇器上下文**：
-         `getElementById(...)`／`getElementsByName(...)`／`querySelector(All)(...)`／
-         `closest(...)`／`matches(...)` 的字串引數，或 `dataset.<name>`
+      4. id / name / class / `data-*` 之中，至少一個把手**以正確的形態**出現在選擇器裡
+         （id→`#x` 或 `getElementById('x')`；class→`.x`；name→`[name="x"]`；data→`dataset.x`），
+         且該選擇器的 `[attr=value]` 條件與控件相符
+      5. `data-read="<讀它的函式名>"`，且該函式存在（會自我說明的逃生口）
     """
     out = []
     HANDLER = re.compile(r"\bon(?:click|change|input|submit|keydown)\s*=")
     SKIP = re.compile(r"\bdata-f\s*=|\bdata-val\s*=|\bdisabled\b")
-    # 🔴 逃生口 `data-read="<函式名>"`：把手是**動態產生**時用（例：
-    #    `<input type="radio" name="${nm}">` 由 repExportRun() 以 `input[name="expfmt"]`
-    #    讀取，靜態比對看不到 `${nm}` 展開後的值）。
-    #    🔴 刻意設計成「**會自我說明**」而不是單純靜音：它要寫出**誰**讀這個控件，
-    #    而且那個函式必須真的存在（否則本規則照樣報）。純靜音的逃生口會被拿來搪塞。
-    defined_fns = set(re.findall(r"function\s+([A-Za-z0-9_$]+)\s*\(", script))
 
+    # 🔴 選擇器來源**必須先剝註釋**（漏看形態 3）。markup 那側早就剝了，
+    #    這側沒剝就形成不對稱：註釋裡一句 `getElementById('xyz')` 會讓真死控件永遠隱形。
+    code = _strip_comments(script)
+    defined_fns = set(re.findall(r"function\s+([A-Za-z0-9_$]+)\s*\(", code))
+    # 🔴 字串必須**依開頭引號種類**取到對應的閉合引號，不能用 `[^`\'"]*`。
+    #    JS 慣例是外層單引號、內層雙引號：`querySelectorAll('.tgl[role="switch"]')`。
+    #    用「不含任何引號」去抓，只會抓到 `.tgl[role=`——**屬性條件整段丟失**，
+    #    於是 `[role="switch"]` 這種限定條件形同不存在，控件被放行。
+    #    （2026-08-14：本檔的 fixture 測試 `scripts/test-lint-rules.py` 抓到這條。）
+    _STR = r"""(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`)"""
 
-    # 選擇器上下文裡出現過的 token 集合 —— 這才是「有人讀得到」的證據
-    # 🔴 id 查找與選擇器字串要**分開收**，判準不同（2026-08-14 修正）。
-    #    原本混在一起用「token 有沒有出現在任一 blob」判斷，於是 admin 的 focus-trap
-    #    選擇器 `'input,select,textarea,button'` 變成**免死金牌**——
-    #    全站 89 個 `class="input"` 的控件因為 blob 裡有裸字 `input` 而全部放行。
-    #    ⇒ 裸 tag 名不是把手；class 必須以 `.` 出現、id 以 `#` 或 getElementById 出現。
-    exact_ids = set(re.findall(
-        r"(?:getElementById|getElementsByName)\(\s*[`'\"]([^`'\"]+)[`'\"]", script))
-    sel_blobs = re.findall(
-        r"(?:querySelectorAll|querySelector|closest|matches)"
-        r"\(\s*[`'\"]([^`'\"]*)[`'\"]",
-        script)
-    dataset_keys = set(re.findall(r"\bdataset\.([A-Za-z0-9_$]+)", script))
+    def _strings_after(fns):
+        out = []
+        for m in re.finditer(r"(?:" + fns + r")\(\s*" + _STR, code):
+            out.append(next(g for g in m.groups() if g is not None))
+        return out
+
+    exact_ids = set(_strings_after("getElementById|getElementsByName"))
+    sel_blobs = _strings_after("querySelectorAll|querySelector|closest|matches")
+    dataset_keys = set(re.findall(r"\bdataset\.([A-Za-z0-9_$]+)", code))
+
+    def _attr_ok(blob, attrs):
+        """選擇器的 `[attr]` / `[attr="v"]` 條件，控件是否滿足。
+
+        🔴 只驗屬性**存在**不夠（Codex／Claude 同時指出）：
+        `.tgl[role="switch"]` 不會選中 `class="tgl" role="button"`，
+        但只看「有沒有 role=」就會放行。要連**值**一起比。
+        """
+        for a, _, v in re.findall(r"\[([a-zA-Z-]+)(\s*=\s*[\"']?([^\]\"']*)[\"']?)?\]", blob):
+            m = re.search(r"\b" + re.escape(a) + r"=[\"']([^\"']*)[\"']", attrs)
+            if m is None:
+                return False
+            if v and m.group(1) != v:
+                return False
+        return True
 
     def _blob_hit(tok, prefix, attrs):
-        """token 以 `prefix` 的形態出現在某個選擇器裡，**且該選擇器有機會命中這個控件**。
-
-        🔴 只比對 token 出現與否不夠：`querySelectorAll('.tgl[role="switch"]')` 用到了
-        `tgl`，但它同時要求 `role` 屬性。一個只有 `class="tgl"`、沒有 `role` 的開關
-        **不會被那句選中**，卻會因為「tgl 有出現」而被放行。
-        ⇒ 選擇器帶 `[attr]` 條件時，控件必須也有那些屬性才算被命中。
-        """
+        """token 以 `prefix` 的形態出現在某個選擇器裡，且該選擇器有機會命中這個控件。"""
+        needle = prefix + tok
         for blob in sel_blobs:
-            if prefix + tok not in blob:
-                continue
-            need = re.findall(r"\[([a-zA-Z-]+)", blob)
-            if all(re.search(r"\b" + re.escape(a) + r"\s*=", attrs) for a in need):
-                return True
+            j = blob.find(needle)
+            while j >= 0:
+                # 🔴 結尾邊界（Claude 指出的漏報）：`#rf` 不得命中 `#rfOverOK`。
+                nxt = blob[j + len(needle):j + len(needle) + 1]
+                if not re.match(r"[A-Za-z0-9_-]", nxt or " "):
+                    if _attr_ok(blob, attrs):
+                        return True
+                j = blob.find(needle, j + 1)
         return False
 
-    # ① 剝掉註釋：本檔的防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。
-    #    `_strip_comments` 以等長空白替換，行號不受影響。
-    # ② 標籤比對不跨行，且 `${...}` 內的 `>` 不算結束——模板運算式常含 `>=`／`=>`。
-    #    🔴 交替順序要緊：`${...}` 必須排在 `[^>\n]` 前面，否則 `[^>\n]` 會先逐字吞掉
-    #    `$`、`{`…，等走到 `>=` 才失敗，`${...}` 分支永遠輪不到。
+    # markup 側也要剝註釋：防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。
+    # `_strip_comments` 以等長空白替換，行號不受影響。
     body = _strip_comments(src)
-    for m in re.finditer(r"<(button|select|textarea|input)\b((?:\$\{[^}\n]*\}|[^>\n])*)>", body):
-        tag, attrs = m.group(1), m.group(2)
+    for tag, attrs, start in _iter_control_tags(body):
         if HANDLER.search(attrs) or SKIP.search(attrs):
             continue
         dr = re.search(r'\bdata-read="([A-Za-z0-9_$]+)"', attrs)
@@ -362,7 +430,7 @@ def r_dead_control(src, style, script):
                 if len(tok) > 2 and _blob_hit(tok.rstrip("-"), ".", attrs):
                     ok = True
         for a in re.findall(r"\bdata-([a-z][a-z-]*)=", attrs):
-            if a in ("f", "val", "doc"):
+            if a in ("f", "val", "doc", "read"):
                 continue
             camel = re.sub(r"-([a-z])", lambda m: m.group(1).upper(), a)
             if camel in dataset_keys or a in dataset_keys or _blob_hit(a, "[data-", attrs):
@@ -371,8 +439,9 @@ def r_dead_control(src, style, script):
             continue
         out.append((WARN,
                     f"<{tag}> 無 handler、無 data-f/data-val，也沒有任何被選擇器用到的把手"
-                    " — 死控件（89 §2）。接上行為、加 disabled，或在把手是動態產生時標 data-read=\"<讀它的函式名>\"",
-                    _lineno(body, m.start())))
+                    " — 死控件（89 §2）。接上行為、加 disabled，"
+                    "或在把手是動態產生時標 data-read=\"<讀它的函式名>\"",
+                    _lineno(body, start)))
     # 超過基準線 ⇒ 這一輪**新增**了死控件，升級為 ERROR 擋下
     cap = DEAD_CONTROL_BASELINE.get(_CURRENT_FILE[0])
     if cap is not None and len(out) > cap:
@@ -529,7 +598,7 @@ def _strip_nested_attr(src: str, attr: str) -> str:
 
 
 def _strip_comments(src: str) -> str:
-    """挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。
+    r"""挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。
 
     🔴 `/*` 前面**不得是識別字元**（2026-08-14 事故）。原本的 `/\*.*?\*/` 會把
     `accept="image/*"` 裡的 `/*` 當成註釋開頭，一路吞到下一個 `*/`——

@@ -167,6 +167,13 @@ jobs:
       - name: Lint prototypes
         run: python3 scripts/lint-prototype.py
 
+      # r_dead_control 的 fixture 回歸測試。為什麼要單獨一步：那條規則在四輪內踩了
+      # 四種不同的「漏看」形態（註釋盲區／泛型 token 免死／選擇器來源沒剝註釋／跨行標籤），
+      # 每一種 CI 都是綠的。手動驗證抓不住這種東西——改一次正則就可能讓上一次的修正
+      # 靜默失效，而失效的方向是「少報」，不會有任何跡象。
+      - name: Regression-test lint rules
+        run: python3 scripts/test-lint-rules.py
+
       # 🔴 把裁定 D8／§A G24 的配套條款從「紀律」變成「機制」（docs/specs/85 §4）。
       # 身分表升組織層後資料庫不再擋跨店引用，所以必須有東西守住兩件事：
       #   ①白名單以外的表一律帶 shop_id（防新表漏掉、防偷偷擴充豁免）
