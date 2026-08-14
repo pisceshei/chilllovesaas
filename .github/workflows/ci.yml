@@ -174,3 +174,9 @@ jobs:
       # 白名單是逐表列舉的常數，改它會出現在 diff 裡。
       - name: Check tenant isolation
         run: ruby scripts/check-tenant-isolation.rb
+
+      # 🔴 把 docs/specs/86 的命名契約從「紀律」變成「機制」。
+      # returns（實體退貨）與 sales_reversals（撤銷款項聚合）是兩個概念，
+      # 官方 2026-03-05 特地拆開；合併會導致總銷售額對不上或退貨資料無處可放。
+      - name: Check reversal naming
+        run: ruby scripts/check-reversal-naming.rb
