@@ -206,7 +206,7 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | R10 | 市場（markets/catalogs/**rollouts MISS1**/裁定邊界 G13） | MISS1 | ✅ 2026-08-13（**R0-MISS1 結案**＋G13 複核維持＋79 號含四棵文檔樹與三套覆寫模型；5 V 遞延，見 §F R10） |
 | R11 | 分析（analytics/live/reports；鐵律 7 同源） | | ✅ 2026-08-14（**鐵律 12 首跑**：全流程寫入實測 建立→儲存→改名→切模式→刪除；80 號含 §0 架構圖＋365 指標/299 維度/27+2 視覺化全窮舉＋ShopifyQL 語言規格；4 MISS＋2 BUG 修＋limits analytics 節；17 V/9 DOC，見 §F R11） |
 | R12 | 設定逐頁映射 I+II（21+1 ↔ 22）＋使用者權限顆粒⑨＋Translate&Adapt 映射 | 薄⑨ | ✅ 2026-08-14（**RBAC 架構揭露**：使用者在組織層＋角色 10/4 類＋權限 115/17 群/3 層依賴圖；81 號含設定樹映射表＋通知 47 範本＋help 雙源 14 條矛盾；2 STRUCT＋1 MISS 修＋limits 7 節 63 鍵；10 V/3 DOC，見 §F R12） |
-| R13 | 管道（代理式/POS/新增應用程式 STUB1 轉真；agentic↔B-7/UCP） | STUB1 | ⬜ |
+| R13 | 管道（代理式/POS/新增應用程式 STUB1 轉真；agentic↔B-7/UCP） | STUB1 | ✅ 2026-08-14（**R0-STUB1 結案**：三顆 toast 佔位轉真頁；🔴**管道全部是 app**（/apps/{handle}）＋發布模型三層 AND；**B-7/UCP 有官方答案**（ucp.dev 規格＋5 個 MCP 端點）；82 號含 POS Lite/Pro 完整對照與 POS 權限 9 群組；limits 4 節 59 鍵；7 V/2 DOC，見 §F R13） |
 | R14 | 收斂：DEAD1/DEAD2 清理、DOC1/DOC2 補完、STUB 殘差總表、22 號回寫 | | ⬜ |
 
 ## §F 差異登記（編號 71-R{輪}-{類}{序}；先查 §C.5 去重）
@@ -216,7 +216,7 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R0-MISS1 | MISS | 市場>推出 `/rollouts` 頁我方無 | ✅ R10 結案：**推出＝排程與 A/B 測試商店更新**（非 R0 憑名稱推測的「分階段推出市場」）；路由＝**頂層 /rollouts**；建立式＝名稱 ≤255＋草稿＋變更類型二選（網路商店佈景主題／結帳頁面和帳號）；三入口。已補 rolloutsPage/rolloutNew＋導航子項 |
 | 71-R0-MISS2 | MISS | 側欄底「API 相關需求搜尋結果」入口——實測揭曉**形態＝釘選的 Sidekick 對話**（點開=對話完整檢視：markdown 回答+追問建議+讚/倒讚+輸入框），非獨立功能。已以「AI 對話釘選」形態實作（我方命名，G12） | ✅ R2b |
 | 71-R0-STRUCT1 | STRUCT | 採購單/轉移：本尊獨立側欄頁 vs 我方庫存頁 tab | ✅ R8（產品導航子項五項對齊：商品系列/庫存/採購單/轉移/禮品卡；poPage/transfersPage 兩頁殼＋空態原文；庫存頁 tab 4→2；舊 INVTAB 深連結轉導） |
-| 71-R0-STUB1 | STUB | 「AI 代理」「門市 POS」「新增應用程式」三導航項純 toast、無 page 容器（最大顆佔位） | ⬜ R13 |
+| 71-R0-STUB1 | STUB | 「AI 代理」「門市 POS」「新增應用程式」三導航項純 toast、無 page 容器（最大顆佔位） | ✅ R13 結案：三頁轉真（m-agentic／m-pos／m-apps，MODULES full:true＋自帶 page-head）；代理式含 4 個 AI 管道與詳情浮卡、POS 含管道殼與分析、應用程式含已安裝清單與管道區＋⋯ 三動作 |
 | 71-R0-DEAD1 | DEAD | 舊 MODULES/renderModule/legacy helper（L3010-3230）整區死碼，內含 ~20 不可達 toast | ⬜ R14 |
 | 71-R0-DEAD2 | DEAD | 死註釋 2 條：`ck-acct-credit`/`ck-announce`（X-07 超前實作形態） | ⬜ R14 |
 | 71-R0-DOC1 | DOC | 17 條 DOCS i 欄無 P0/P1/P2 標記 | ⬜ R14 |
@@ -364,3 +364,13 @@ R12 做本尊 21+1 ↔ 我方 22 的逐頁映射（合併/缺失/改名）。
 | 71-R12-V8 | V | **邀請有效期 7 天，且 help 未提供「重寄邀請」或「取消邀請」的獨立操作**（官方做法＝移除後重新新增）——我方要不要多做重寄鈕（多做即偏離，需入 §A） | ⬜ |
 | 71-R12-V9 | V | **使用者群組 Groups 是 Plus 專屬的第四段**（使用者↔群組↔角色↔權限）：指派 group 即獲得其全部角色、可屬多個 group、刪 group 會從所有成員收回角色與商店指派。實測未出現（本店無 group）——我方是否實作這一層 | ⬜ M1 前 |
 | 71-R12-V10 | V | 🔴 **品牌顏色的資料模型**：Liquid `shop.brand.colors.primary` 與 `secondary` **都是陣列，每個元素是 background/foreground 配對**（`primary[0].background`）——**不是「一主色一副色」**。另：品牌資產**不可依市場或語言本地化**（可引為 G13 佐證）；favicon 非獨立欄位（square logo 縮 32×32）；**字體欄位＝文檔未載** | ⬜ M2 前 |
+| 71-R13-DOC1 | DOC | 🔴 82 號 teardown（實測＋help/shopify.dev 雙源）：§0 架構（**管道全部是 app**，路由 /apps/{handle}，線上商店為第一方特例走 /themes；**發布模型三層 AND** Publishable×Publication×Catalog）／§1 代理式全頁（4 個 AI 管道＋詳情浮卡的「發現來源 vs 結帳位置」兩軸＋2 個資料來源＋補充條款）／§2 **UCP 全貌**／§3 POS（Lite/Pro 完整對照＋權限 9 群組＋計價）／§4 app（4 型＋2026-01-01 分界＋protected data 三級）／§5 第一方管道清單／§6 CSS 三段式 7 條。另：`agentic_sales_channel` 這個識別字**官方文檔查無**，R11 是從實測維度清單取得——以實測為準 | ✅ |
+| 71-R13-DOC2 | DOC | 🔴 **R12-V1 結案（實測直證）**：`/settings/gift_cards` **302 → `/settings/payments?hasMovedNavItem=true`**——query 參數自己講明「導航項目已搬家」。禮品卡設定（到期日／Apple Wallet）在**付款**底下，自動出貨在**一般**底下。我方 `giftcards` 設定分頁應拆併進付款（歸屬修正排 M1） | ✅ 結案 |
+| 71-R13-V1 | V | 🔴 **POS 範圍需使用者裁定**（本輪最需要決定的一條）：本輪只做管道殼與分析，**POS 本體完全沒做**（smart grid／register session 現金追蹤／員工 PIN／班次／換貨／收據範本／小費）。help 的 **Lite vs Pro 對照表**是現成的分層原型——**Lite ≈ 收銀機**（能收錢·退款·改庫存數量）**／Pro ≈ 門市營運系統**（換貨·取消·履行·庫存追蹤·日報表·零售角色）。裁定要回答：①做不做 POS ②若做，做到 Lite 還是 Pro ③per-location 計價要不要照抄 | ⬜ **使用者裁定** |
+| 71-R13-V2 | V | 🔴 **資料模型：`App` 之下的 `Channel`**（帶 channel capability），不是兩張平行表。實測直證：管道與 app 的 `⋯` 選單完全相同【開啟應用程式／檢視詳情／解除安裝】，安裝流程同樣走 App Store，權限同樣是「管理和安裝應用程式與管道」一條。管道 app 只是多三項強制功能（帳號連接／商品發布／市集導航） | ⬜ M2 前 |
+| 71-R13-V3 | V | 🔴 **主題引擎必須支援「受限 render context」**：`agents.md.liquid` 只有 `request` 與 `agents` 兩個物件可用（`shop`／`collections` 等全域物件**不可用**），且 `agents.md`／`llms.txt`／`llms-full.txt` 三個 template **不可為 JSON template**。`agents` 物件屬性：store_url／ucp_discovery_url／mcp_endpoint_url／ucp_versions／currency／sitemap_url。與現有 template context 不是同一套——M2/M6 前必須確認引擎支援 | ⬜ M2 前 |
+| 71-R13-V4 | V | **發布模型三層 AND** 有四個掛載點要同步：商品頁的上架管道區塊／目錄（R10）／市場（R10）／代理式目錄。help 原文：商品必須**同時**「在該管道市場指派的目錄內」**且**「已發布到該管道」才會上架。另：新增管道時既有商品**預設全開**；排程發布需商品為 Active、不支援單一 variant、Shop 管道不支援；`publicationCreate/Update` 單次上限 50 個商品 | ⬜ M1 前 |
+| 71-R13-V5 | V | **POS 設定頁未驗證**：快捷鍵清單有「前往『設定：銷售點 (POS)』**GST**」，但我猜的 `/settings/point_of_sale` 得 404，設定搜尋「銷售點」只回 地點／POS 通知／新增地點／顧客通知。依鐵律 12.1 **不寫「本尊沒有這頁」**——判定為條件閘控（需 POS Pro 或已設定地點），待有 POS 的店補實測 | ⬜ |
+| 71-R13-V6 | V | 🔴 **POS 權限模型與 admin 完全不同**：①走 **organization role 而非 store permission** ②**只能指派角色，不能指派單一權限** ③粒度以**「裝置所在地點」為軸**（多條權限寫明 "for their location"）④POS Lite 地點 role 限制**不生效**（所有 admin user 皆 full access）。照 admin 的資源樹套 POS 會做不出「檢視裝置所在地點的分析」這種語義。補完 R12-STRUCT1 的權限模型全貌 | ⬜ M1 前 |
+| 71-R13-V7 | V | 🔴 **B-7／UCP 待決案有答案了**（技術面不再是未知）：UCP＝Shopify 與 Google 共同開發的開放標準，規格全文在 **ucp.dev**，開發者入口 shopify.dev/docs/agents。五個 MCP 端點（Global Catalog／Storefront Catalog／Cart／Checkout／Order）、能力協商用 platform profile（`meta.ucp-agent.profile`）、支援版本 2026-04-08·2026-01-23·draft、checkout 四態、**`update_cart`/`update_checkout` 是 PUT 語義（省略欄位會被移除）**、agent 只能查自己促成的訂單、擴充採 reverse-domain 命名無中央審批。**剩下的是產品決策**：我方要不要做 UCP 相容層 | ⬜ **使用者裁定** |
+| 71-R13-V8 | V | 第一方管道清單的兩條事實影響我方管道規劃：①**Amazon 與 Walmart 已併入 Shopify Marketplace Connect**，不再是獨立第一方管道 ②社群商務只有 Facebook/Instagram·TikTok Shop·**Roblox**（無 Pinterest、Snapchat）。另 **Handshake 的退場官方無公告**（僅第三方來源），**官方不維護「已下架管道清單」** | ⬜ |
