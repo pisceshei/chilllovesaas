@@ -1752,7 +1752,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <button class="m-hover icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="m-hover icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
-    <button class="store-chip" data-doc="storechip" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
+    <button class="store-chip" data-doc="storechip" onclick="storeSwitch()" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
   </div>
 </header>
 
@@ -1865,7 +1865,10 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     </div>
     <div class="card">
       <div class="listbar">
-        <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="view-chip" data-doc="views" onclick="ddToggle(event,'prodViewMenu')">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="view-menu" id="prodViewMenu" role="menu" aria-label="檢視">
+          <button onclick="toast('Demo：檢視＝全部（本原型商品頁的 saved views 尚未展開，見 89 §2）')"><span class="chk">✓</span>全部</button>
+          <div class="sep"></div><button onclick="lsaveViewDemo()">＋ 將目前篩選另存為檢視</button></div>
         <div class="filterbar m-focus">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="prodSearch" placeholder="搜尋商品、SKU…">
@@ -2584,6 +2587,65 @@ function custHover(name){
 document.getElementById('orderSearch').addEventListener('input',renderOrders);
 function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=cb.checked);bulk();}
 
+/* ══════════ 89 §2 死控件補接（#5–#13）══════════════════════════════════
+   共同判準：**控件畫出來就要接上行為，或明說它是示意**。
+   最糟的形態不是「沒反應」，是**回報成功但什麼都沒讀**——使用者以為設定生效了。
+   下面每一支都真的把對應控件的值讀出來，並在 toast 裡把讀到的內容講出來，
+   這樣「有沒有真的讀到」在畫面上就看得見。 */
+
+/* #5 topbar 商店切換器（全站每一頁都在，原本完全沒有 onclick）。 */
+function storeSwitch(){
+  openGen({title:'切換商店／帳號',pad:false,body:`
+    <button class="pick" onclick="closeGen();toast('已在目前商店：CHILL LOVE（demo）')">
+      <span class="thumb" style="background:var(--brand)"></span>
+      <span class="pk-i"><b>CHILL LOVE</b><span>chill-love-demo.myshopify.com・目前</span></span>
+      <span class="badge b-success"><span class="pip full"></span>目前</span></button>
+    <div style="padding:var(--sp-300)">
+      <button class="btn btn-sec btn-sm" onclick="closeGen();toast('Demo：所有商店清單（組織層，見 71 §A G24）')">檢視所有商店</button>
+      <button class="btn btn-ghost btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();openSettings('account')">帳號設定</button></div>`});
+}
+
+/* #6 訂單時間軸的表情／提及——把字元插進備註輸入框並把游標留在後面。 */
+function tcInsert(kind){
+  const ta=document.querySelector('.tc-box textarea, #tcNote, .timeline textarea');
+  const txt=kind==='mention'?'@':'🙂';
+  if(!ta){toast('找不到備註輸入框');return;}
+  const at=ta.selectionStart??ta.value.length;
+  ta.value=ta.value.slice(0,at)+txt+ta.value.slice(ta.selectionEnd??at);
+  ta.focus();ta.selectionStart=ta.selectionEnd=at+txt.length;
+  if(kind==='mention')toast('輸入同事名字可提及對方（Demo：不寄通知）');
+}
+
+/* #7 商品列表的「另存檢視」——商品頁尚未接通用清單引擎，故明說是示意。 */
+function lsaveViewDemo(){toast('Demo：商品頁的 saved views 尚未接上通用清單引擎（89 §2 #7）');}
+
+/* #10 建立市場：**真的讀勾選的國家**（原本勾了哪些從頭到尾沒人讀）。 */
+function marketNewRun(){
+  const picked=[...document.querySelectorAll('#genBody .mkt-country')].filter(x=>x.checked).map(x=>x.value);
+  const name=(document.querySelector('#genBody input[data-val*="req"]')||{}).value||'';
+  if(!picked.length){toast('請至少勾選一個國家／地區');return;}
+  closeGen();
+  toast(`已建立市場（草稿）：${name||'未命名'}・${picked.length} 個國家（${picked.join('、')}）——設定網域與幣別後即可啟用`);
+}
+
+/* #11 目錄：**真的讀發布開關**（原本 5 個開關關掉也照樣說「已儲存」）。 */
+function catalogSaveRun(){
+  const tg=[...document.querySelectorAll('#genBody .cat-pub')];
+  const off=tg.filter(x=>!x.checked).map(x=>x.dataset.pn);
+  closeGen();
+  toast(off.length?`已儲存目錄：${tg.length-off.length} 項發布、${off.length} 項取消發布（${off.join('、')}）`
+                 :`已儲存目錄：${tg.length} 項全部發布`);
+}
+
+/* #12 匯出報告：**真的讀格式與範圍**（原本 12 顆 radio 選了會亮但沒人讀，
+   是「看起來活的死控件」——比完全沒反應更難被人工稽核抓到）。 */
+function repExportRun(){
+  const g=n=>(document.querySelector(`#genBody input[name="${n}"]:checked`)||{}).value||'—';
+  const fmt=g('expfmt'),sc=g('expsc');
+  closeGen();
+  toast(`已開始匯出：${fmt}・${sc}——完成後在通知中心取得檔案`);
+}
+
 /* ── 商品列表的批次選取（89 §1.4／83 PR-01）─────────────────────────────
    🔴 與訂單頁是**兩套**：本原型所有頁面同時在 DOM 裡，若共用 .rowcb／#bulkbar，
    bulk() 會把訂單列一起數進來。選取器一律限定在 #prodTable 內。
@@ -2955,8 +3017,8 @@ function renderOrderDetail(){
           <div class="tc-main">
             <textarea id="tlInput" rows="1" placeholder="撰寫備註…"></textarea>
             <div class="tc-tools">
-              <button class="m-hover icon-btn" title="表情" aria-label="表情">☺</button>
-              <button class="m-hover icon-btn" title="提及" aria-label="提及">@</button>
+              <button class="m-hover icon-btn" title="表情" aria-label="表情" onclick="tcInsert('emoji')">☺</button>
+              <button class="m-hover icon-btn" title="提及" aria-label="提及" onclick="tcInsert('mention')">@</button>
               <button class="btn btn-sec btn-sm" onclick="postComment()">發佈</button>
             </div>
           </div>
@@ -4299,7 +4361,13 @@ function confirmDanger(title,msg,okLabel,fn,irr=true){
 
 /* ---------- Save bar ＋ 表單 dirty／驗證 ---------- */
 let FORM=null,navWarn=0;
-function formRead(el){const o={};[...el.querySelectorAll('[data-f]')].forEach((x,i)=>{o[i+':'+x.dataset.f]=x.type==='checkbox'?x.checked:x.value;});return o;}
+/* 🔴 radio 必須讀 `.checked` 不是 `.value`——radio 的 value 是**固定的**，
+   變的是哪一顆被選中。原本只特判 checkbox，於是**任何帶 data-f 的 radio
+   在髒狀態追蹤裡都是隱形的**：快照前後比對永遠相同，save bar 永遠不跳。
+   這不是某一頁的問題，是 formRead 從來不支援 radio（89 §2 #13 追查出的根因——
+   原始發現只說「Cookie 橫幅的 radio 沒有 data-f」，補上 data-f 之後才發現
+   **補了也沒用**，機制本身就漏接這個型別）。 */
+function formRead(el){const o={};[...el.querySelectorAll('[data-f]')].forEach((x,i)=>{o[i+':'+x.dataset.f]=(x.type==='checkbox'||x.type==='radio')?x.checked:x.value;});return o;}
 function formInit(sel,opt){
   const el=document.querySelector(sel);if(!el)return;
   FORM={el,save:opt&&opt.save,discard:opt&&opt.discard,snap:formRead(el)};
@@ -4311,7 +4379,7 @@ function formSetDirty(d){document.getElementById('saveBar').classList.toggle('sh
 function formDirty(){return document.getElementById('saveBar').classList.contains('show');}
 function formDiscard(){
   if(!FORM)return;
-  [...FORM.el.querySelectorAll('[data-f]')].forEach((x,i)=>{const v=FORM.snap[i+':'+x.dataset.f];if(x.type==='checkbox')x.checked=v;else x.value=v;});
+  [...FORM.el.querySelectorAll('[data-f]')].forEach((x,i)=>{const v=FORM.snap[i+':'+x.dataset.f];if(x.type==='checkbox'||x.type==='radio')x.checked=v;else x.value=v;});
   FORM.el.querySelectorAll('.field.bad').forEach(f=>f.classList.remove('bad'));
   formSetDirty(false);if(FORM.discard)FORM.discard();
   toast('已捨棄變更，還原為上次儲存的內容');
@@ -6955,8 +7023,11 @@ function custContact(){
 }
 function custAddr(){
   openGen({title:'管理地址',pad:false,body:`
-    <button class="pick"><span class="pk-i"><b>${H(CUS.n)}・預設</b><span>${H(CUS.loc)}</span></span><span class="badge b-success"><span class="pip full"></span>預設</span></button>
-    <button class="pick"><span class="pk-i"><b>公司</b><span>台北市信義區松智路 100 號</span></span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toast('已設為預設地址')">設為預設</button></button>
+    <button class="pick" onclick="toast('Demo：編輯地址表單（89 §2 #9）')"><span class="pk-i"><b>${H(CUS.n)}・預設</b><span>${H(CUS.loc)}</span></span><span class="badge b-success"><span class="pip full"></span>預設</span></button>
+    <!-- 🔴 這一列原本寫成 <button class="pick"> 內再包一個 <button>——**HTML 不允許 button 巢狀**，
+         瀏覽器會提前閉合外層，「設為預設」被解析成地址卡的兄弟節點而不是子節點，版面與本尊不同
+         （89 §2 #9）。改成 div[role=button] 外殼，動作鈕才能合法地留在裡面。 -->
+    <div class="pick" role="button" tabindex="0" onclick="toast('Demo：編輯地址表單（89 §2 #9）')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"><span class="pk-i"><b>公司</b><span>台北市信義區松智路 100 號</span></span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toast('已設為預設地址')">設為預設</button></div>
     <div style="padding:var(--sp-300) var(--sp-300)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：新增地址表單')">＋ 新增地址</button></div>`});
 }
 /* 71-R5 help：抵用金表單＝調整（入帳/扣帳）＋金額＋幣別＋通知顧客勾選；到期＝無到期日或日曆選擇
@@ -7861,9 +7932,9 @@ function marketNew(){
     <div class="field"><label>包含的國家／地區</label>
       <div class="filterbar m-focus">${SEARCH_IC}<input placeholder="搜尋國家…" aria-label="搜尋國家"></div>
       <div style="max-height:150px;overflow:auto;border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-200);margin-top:var(--sp-150)">
-        ${['日本','韓國','新加坡','泰國','越南','澳洲'].map(c=>`<label class="inline-lbl" style="padding:var(--sp-100) 0"><input type="checkbox" class="cb"> ${c}</label>`).join('')}</div>
+        ${['日本','韓國','新加坡','泰國','越南','澳洲'].map(c=>`<label class="inline-lbl" style="padding:var(--sp-100) 0"><input type="checkbox" class="cb mkt-country" value="${c}"> ${c}</label>`).join('')}</div>
       <span class="hint">勾選的國家若已屬其他市場，會自動從原市場移出（需確認）</span></div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立市場（草稿）——設定網域與幣別後即可啟用')">建立市場</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="marketNewRun()">建立市場</button>`});
 }
 let MKT=null;
 function openMarket(id){MKT=MARKETS.find(m=>m.id===id);goDetail('d-market',{id});}
@@ -8300,9 +8371,9 @@ function catalogOpen(t){
     <div style="padding:var(--sp-300) var(--sp-400)" class="help">發布範圍＋價格。固定價優先於百分比調整；未列出的商品在此目錄不可售。</div>
     <table class="idx"><thead><tr><th>商品</th><th>發布</th><th class="right">基準價</th><th class="right">固定價</th></tr></thead><tbody>
     ${PRODUCTS.slice(0,5).map(p=>`<tr class="norow"><td>${H(p.n)}</td>
-      <td><input type="checkbox" class="tgl" checked aria-label="發布 ${H(p.n)}"></td>
+      <td><input type="checkbox" class="tgl cat-pub" data-pn="${H(p.n)}" checked aria-label="發布 ${H(p.n)}"></td>
       <td class="right num">${money(p.price)}</td><td class="right"><input class="cellin num" style="text-align:right" placeholder="—" aria-label="固定價"></td></tr>`).join('')}</tbody></table>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存目錄價格')">儲存</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="catalogSaveRun()">儲存</button>`});
 }
 
 /* ==================================================================
@@ -8537,11 +8608,11 @@ function repRename(){
 function repExport(){
   const fmt=[['逗號分隔值 (CSV)','最適合匯入試算表'],['可延伸標記語言 (XML)',''],['JSON Lines (JSONL)',''],['Apache Parquet','']];
   const sc=[['資料查詢的所有結果','可能超過 1,000 列'],['僅限報表中顯示的結果','']];
-  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
+  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" value="${H(l)}" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
   openGen({title:'匯出報告',body:`<div class="stack">
     <div><p class="help" style="margin-bottom:var(--sp-200)">選取匯出格式：</p>${rad('expfmt',fmt)}</div>
     <div><p class="help" style="margin-bottom:var(--sp-200)">指定您要匯出的結果：</p>${rad('expsc',sc)}</div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已開始匯出——完成後在通知中心取得檔案')">匯出</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="repExportRun()">匯出</button>`});
 }
 function repDelete(){
   openGen({title:'刪除報告？',body:`<p>此動作無法復原</p>`,
@@ -8643,7 +8714,7 @@ function appsChannelPage(){
       <button class="btn btn-sec btn-sm" onclick="toast('Demo：開發應用程式（自訂 app 建立流程）')">開發應用程式</button>
       <button class="btn btn-pri btn-sm" onclick="toast('Demo：前往應用程式商店')">應用程式商店</button></div></div>
     <div class="card" data-doc="app-installed">
-      <div class="listbar"><button class="view-chip">已安裝 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button></div>
+      <div class="listbar"><button class="view-chip" onclick="toast('Demo：應用程式檢視切換（已安裝／全部）——本原型未展開，見 89 §2')">已安裝 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button></div>
       ${rows}</div>
     <div style="height:16px"></div>
     <div class="card card-pad" data-doc="app-channels"><h3>銷售管道</h3>
@@ -9531,6 +9602,7 @@ CHILL LOVE 示範店經營本商店與網站…（自動化開啟時唯讀；內
 }
 /* Cookie 橫幅子頁——形態＝實測 /settings/privacy/consent-banner（整頁）：自動化卡＋雙 tab 預覽＋
    顏色三檔＋位置五選＋結帳頁 toggle（附轉換率警告）。 */
+let PVB_COLOR='淺色',PVB_POS='底部置中';   /* #13：Cookie 橫幅的顏色/位置，原本選了沒人讀 */
 let PVB_TAB='banner';
 function pvBannerOpen(){PVB_TAB='banner';setSubOpen('pv-banner',pvBannerPage());setAfterRender();}
 function pvBannerPage(){
@@ -9546,10 +9618,10 @@ function pvBannerPage(){
         <div class="rowflex" style="gap:var(--sp-200);margin-top:var(--sp-200)"><u>管理偏好</u><button class="btn btn-sec btn-sm">接受</button><button class="btn btn-sec btn-sm">拒絕</button></div></div>`
       :`<div class="help"><b>Cookie 偏好設定</b><br>分類同意面板（必要／分析／行銷／個人化各一開關）——本尊此 tab 內容未逐控件展開，登記 71-R3-V1 待複驗。</div>`}
     <h4 style="margin-top:var(--sp-300)">顏色</h4>
-    ${[['淺色',true],['深色',false],['自訂',false]].map(([l,on])=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbColor" ${on?'checked':''}><span>${l}</span></label>`).join('')}
+    ${[['淺色',true],['深色',false],['自訂',false]].map(([l,on])=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbColor" data-f="cbColor" value="${l}" ${on?'checked':''} onchange="PVB_COLOR=this.value;formCheck()"><span>${l}</span></label>`).join('')}
     <h4 style="margin-top:var(--sp-300)">位置</h4>
     <p class="mut" style="font-size:var(--t-xs)">選擇 Cookie 橫幅在網路商店中的顯示位置。</p>
-    ${pos.map((p,i)=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbPos" ${i===2?'checked':''}><span>${p}</span></label>`).join('')}
+    ${pos.map((p,i)=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbPos" data-f="cbPos" value="${p}" ${i===2?'checked':''} onchange="PVB_POS=this.value;formCheck()"><span>${p}</span></label>`).join('')}
     <h4 style="margin-top:var(--sp-300)">結帳頁面</h4>
     ${SWROW('_cbCk',false,'在結帳頁面顯示 Cookie 橫幅','⚠ 這可能會降低結帳轉換率')}
     <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作。您有責任遵守法律和規範。</p></div></div>`;
