@@ -59,3 +59,56 @@
 - 多語言/多貨幣/多市場按 29 號 P0（M2 隨行：locales＋translations＋多幣顯示）→ P1（M5/M6：markets 全模型＋市場定價＋hreflang 全量＋Adapt）→ P2（price lists/duties/B2B）。
 - SEO 合規（30 號 §1–5/§9）內建於 storefront 渲染層（M2）：self-canonical 引擎、JSON-LD 注入分工、sitemap 分片、robots.txt.liquid、410 紀律、CWV 預算。
 - 商品 feed（30 號 §6–8）：以 GMC 規格為 canonical schema 的生成器＋per-channel 轉換（M5+）；**Google 側直接實作 Merchant API**（Content API 2026-08-18 落日）；IndexNow 事件 ping；Simprosys 走「自建底座＋connector 加值」雙軌（30 §10.3），不做 Shopify 偽裝。
+
+## 2026-08-14 — parity R11–R13 收口四裁定
+
+> 背景：parity sweep 跑到 R13，§F 累積 86 條未結案，而實作仍停在 M0（PR #12 未合）。
+> 這四條是「擋住地基或會讓後續輪次反覆重提」的部分，先裁定再往下走。
+> 保護清單條目：`docs/specs/71` §A **G24–G27**（凡在 §A 者，任何對比輪不得建議改回與 Shopify 一致）。
+
+### D8. 身分與權限表豁免鐵律 2 的 `shop_id`（G24）
+
+- **問題**：R13 實測證實本尊 2026 已改 RBAC，且**身分與權限掛在組織層**（使用者↔群組↔角色↔權限，
+  角色可跨店）。這與鐵律 2「全表帶 `shop_id`」正面衝突，而 PR #12 的 schema 正是地基。
+- **選擇：窄範圍豁免**，而非硬套 shop_id（做不出跨店角色）或全面放寬（失去隔離保證）。
+- **理由不是「本尊這樣所以照抄」，而是分層本來就不同**：鐵律 2 保護的是**業務資料的租戶隔離**；
+  身分與權限是**授予租戶存取權的那一層**，邏輯上位於租戶之上。這也正是本尊把「使用者」
+  放在組織區塊而非商店區塊的原因。
+- **白名單（逐表列舉，不得口頭擴充）**：`organizations`／`users`／`roles`／`role_permissions`／
+  `user_roles`／`user_groups`／`user_group_roles`／`user_store_assignments`。白名單以外一律照舊。
+- **三條配套約束**（缺一條這個豁免就變成隔離漏洞）：
+  1. 白名單表**不得**存放任何業務資料欄位（只放身分、角色、指派關係）；
+  2. 🔴 **豁免的是「表有沒有 `shop_id` 欄」，不是「查詢可不可以不帶 `shop_id`」**——
+     跨店存取一律先由 `user_store_assignments` 解析出可及 shop_id 集合，查詢層仍逐表帶條件；
+  3. 新增白名單表必須同步改 `CLAUDE.md` 鐵律 2 與 `71` §A G24，且 PR 描述標明。
+- **影響**：`CLAUDE.md` 鐵律 2 與 `AGENTS.md` §技術鐵律 2 已加註；71-R12-STRUCT1 結案；
+  RBAC 資料表本體的實作仍在 M1。
+
+### D9. AOV 不與 `net_sales` 同源——鐵律 7 的具名例外（G25）
+
+- **問題**：本尊的 AOV 分子**刻意排除 post-order adjustments**，因此 `AOV ≠ net_sales / orders`。
+  照鐵律 7「同指標同一份 rollup」的直覺實作，數字會與本尊對不上。
+- **選擇：照抄本尊的例外**——AOV 有自己的 rollup 分子。專案前提是 1:1，且官方公式寫得很清楚。
+- **配套兩條**：①**總銷售額允許負值**（撤銷 > 銷售的日子，官方明列）⇒ 金額元件與 badge 要支援負值；
+  ②`any_click` 歸因各通路加總會超過 metric 本身（設計如此）⇒「小計＝總計」一致性測試須白名單。
+- **影響**：`CLAUDE.md` 鐵律 7 已加註（主文不改，例外以註釋掛在條文下）；71-R11-V13 結案。
+
+### D10. 不實作 POS，但資料模型保留 POS 活口（G26）
+
+- **問題**：R13 取得 POS Lite/Pro 完整對照與 9 群組權限；範圍需裁定。
+- **選擇：不做 POS**。理由：POS 是**第二個產品不是一個模組**——牽涉硬體、離線、裝置管理、
+  店員 PIN、班次、現金抽屜，且**權限模型與後台完全不同**（organization role・只能指派角色不可逐權限・
+  以裝置所在地點為軸）。以目前規模，把 POS Lite 做「對」的成本遠大於價值。
+- **保留活口**：訂單來源標記、地點、員工歸屬三個欄位面現在就留著，之後要加不用改表。
+- 🔴 **任何輪次不得因「本尊有 POS」而建議補做**——要翻案須推翻本裁定。
+- **影響**：71-R13-V1 結案；R13 已建的 POS 管道殼保留為展示層。
+
+### D11. UCP 延後至 M6 後評估，但受限 render context 現在就吃進主題引擎（G27）
+
+- **問題**：R13 查明 UCP 是 Shopify 與 Google 共同開發的開放標準（規格在 ucp.dev），
+  五個 MCP 端點、能力協商、checkout 四態都有官方文檔——技術面不再是未知，剩產品決策。
+- **選擇：UCP 相容層延後**（在有商店有商品之前實作沒有意義）。
+- 🔴 **但有一條現在就要吃**：`agents.md.liquid` 是**受限 render context**——
+  只有 `request` 與 `agents` 兩個物件可用，且 `agents.md`／`llms.txt`／`llms-full.txt`
+  **不可為 JSON template**。這是**架構約束不是功能**，M2 設計 render context 時沒算進去，之後補會很痛。
+- **影響**：71-R13-V7 結案；71-R13-V3（主題引擎支援受限 context）**維持 M2 前必答**。

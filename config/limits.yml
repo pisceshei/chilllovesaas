@@ -557,6 +557,22 @@ order:
   bulk_cancel_max_orders: 250
   # 匯出/批次動作轉背景 job 的門檻。出處：docs/research/22:160（ours）
   bulk_async_threshold: 50
+  # ===== 71-R7（2026-08-13，help）=====
+  # 匯出直接下載上限（超過或依日期→email 寄操作者+店主）。出處：help exporting-orders（help）
+  export_direct_download_max: 50
+  # 行動版 bulk 一次可選上限。出處：help bulk-actions（help）
+  bulk_select_mobile_max: 25
+  # 平台收款授權請款窗（天；逾期可能無法請款）；「即將到期」badge=截止前 2 天。出處：help capturing-payments（help）
+  payment_auth_capture_window_days: 7
+  payment_capture_due_badge_days: 2
+  # 延遲付款自動提醒上限（則；購買選項訂單不寄）。出處：help deferred-payments（help）
+  payment_reminders_max: 5
+  # 付款條款 net 值域。出處：help deferred-payments（help）
+  payment_terms_net_days: [7, 15, 30, 45, 60, 90]
+  # 運送標籤批次列印上限（張）。出處：71-R7 實測 shipping_labels promo＋sl-auto 既有值（test）
+  shipping_label_batch_max: 250
+  # 轉換摘要資料延遲上限（小時；cookie 封鎖時區塊空白）。出處：help conversion-summary（help）
+  conversion_summary_delay_max_hours: 48
   # 訂單編輯 session TTL 與並發鎖。
   # ⚠ Shopify 文檔未載明鎖/TTL/並發行為（46a:961、46a:988–989、46a:1061）→ 本專案決策。
   edit_session_ttl_hours: 24
@@ -914,6 +930,12 @@ discount:
   combines_with_default: false
   # 硬規則：運費折扣不可疊運費折扣（非 combinesWith 旗標可控）。出處：46b:285、46c:716（dev+help）
   shipping_plus_shipping_allowed: false
+  # 草稿訂單折扣（71-R6，2026-08-13）：單張草稿可輸入碼數；不支援的碼型（運費碼/買X送Y碼）。
+  # 自動折扣預設不套草稿、需明確勾選。出處：help create-orders/discounts（help）
+  max_codes_per_draft_order: 5
+  draft_order_unsupported_code_types: [free_shipping, bxgy]
+  # 重新啟用已停用折扣＝回「使用中」且**不保留原結束日期**（需重設）。出處：help managing-discounts（help）
+  reactivate_clears_end_date: true
 
 # =============================================================================
 # 10. 結帳／購物車／棄單
@@ -1715,8 +1737,121 @@ content:
   # 主題庫與試用。出處：docs/research/22:160（live）
   theme_library_max: 20
   theme_trial_max: 19
+  # ===== 71-R9（2026-08-13，help）佈景主題結構上限 =====
+  # 商品/系列/頁面/網誌/文章的範本總數上限。出處：help themes/theme-structure/templates（help）
+  theme_templates_max: 1000
+  # 每範本區段上限／每範本跨區段區塊上限／區塊巢狀層數上限。出處：help sections-and-blocks（help）
+  theme_sections_per_template_max: 25
+  theme_blocks_per_template_max: 1250
+  theme_block_nesting_depth_max: 8
+  # 佈景主題可做市場層覆寫的市場數上限（Advanced/Plus 專屬功能）。出處：help customizing-themes-for-markets（help）
+  theme_market_overrides_max: 250
+  # 檔案庫：單次上傳檔數與各類型大小上限。出處：help file-uploads（help）
+  files_upload_batch_max: 20
+  files_image_max_mb: 20
+  files_image_max_megapixels: 20
+  files_video_max_gb: 1
+  files_video_max_minutes: 10
+  files_generic_max_mb: 20
+  # 效能報表資料延遲與保留。出處：help web-performance-reports（help）
+  web_performance_data_delay_max_hours: 36
+  web_performance_retention_days: 90
   # 留言可編輯窗（分鐘）。出處：docs/research/22:160（live）
   comment_edit_window_minutes: 5
+
+# =============================================================================
+# 13b. 自訂資料（metafield／metaobject）與網域（71-R3，2026-08-13）
+# =============================================================================
+custom_data:
+  # 中繼欄位定義上限（全店口徑；help 未明說全店 vs 每資源——71-R3 unknown，落地前複驗）。
+  # 出處：help.shopify.com/zh-TW/manual/custom-data/metafields/metafield-definitions/metafield-definition-parts（help）
+  max_definitions: 250
+  # 每個 owner（商店部分）最多釘選數；釘選順序＝管理介面顯示順序。
+  # 出處：help …/pinning-metafield-definitions（help）
+  max_pinned_per_owner: 50
+  # POS 顧客詳細畫面最多顯示的已釘選顧客中繼欄位數。出處：同上（help）
+  pos_customer_pinned_display_max: 20
+  # owner 類型數（2026 實測 /settings/custom_data 全 15 類：產品/子類/商品系列/顧客/訂單/訂單草稿/
+  # 公司/公司地點/地點/轉移/頁面/網誌/部落格貼文/市場/商店）。出處：71-R3 實測（test）
+  owner_type_count: 15
+domains:
+  # 自訂網域＋子網域上限（不含平台預設子網域）。出處：help …/domains/add-a-domain/add-subdomains（help）
+  max_custom_domains: 20
+  max_custom_domains_plus: 1000
+  # 轉移鎖（ICANN）：購買／轉入／變更聯絡資訊後不得轉出的天數。出處：help …/transferring-shopify-domains（help）
+  transfer_lock_days: 60
+  # 轉出解鎖後未完成自動重新上鎖的天數。出處：同上（help）
+  transfer_unlock_window_days: 30
+  # ICANN 電郵驗證期限（天）；逾期網域可能被停用。出處：help …/buying-domains（help）
+  icann_email_verification_days: 15
+  # 連線／TLS 簽發／購買生效的等待上限（小時）。出處：help 多頁一致口徑（help）
+  activation_max_hours: 48
+
+# =============================================================================
+# 13d. 顧客線（71-R5，2026-08-13；跟隨 help）
+# =============================================================================
+customers:
+  # 列表欄位總數（4 預設顯示＋14 隱藏；顧客姓名恆第一欄不可調）。出處：71-R5 實測＋help customer-search（test+help）
+  list_column_count: 18
+  # 排序鍵數（×2 方向；預設 顧客更新日期・由新到舊）。出處：71-R5 實測（test）
+  list_sort_key_count: 7
+  # 匯入 CSV 上限。出處：help import-export-customers（help）
+  import_csv_max_mb: 15
+  # 匯出超過此人數改 email 寄送 CSV。出處：同上（help）
+  export_email_threshold: 50
+  # 備註上限（字元）。出處：help manage-customers（help）
+  note_max_chars: 5000
+  # 時間軸留言可編輯窗（分鐘）；刪除不可復原。出處：help productivity-tools（help）
+  timeline_comment_edit_window_minutes: 5
+  # 單一顧客商店抵用金總額上限（USD 等值；平台合規值，非鐵律 3 儲存單位——落表時轉 integer cents）。
+  # 出處：help store-credit（help）；HK SVF 單一用途豁免（G21）另有 pack 級約束
+  store_credit_max_usd: 15000
+  # 清除個人資料（redact）提交後可取消天數。出處：help processing-customer-data-requests（help）
+  redact_cancel_window_days: 10
+  # predicted_spend_tier 啟用門檻（商店累計銷售筆數）。出處：help predicted-spend-tier（help）
+  predicted_spend_tier_min_sales: 100
+  # 分群 metafield 條件允許型別。出處：help metafield-segments（help）
+  segment_metafield_types: [date_time, number, text, boolean]
+b2b:
+  # 非 Plus 級方案全部 B2B 市場合計啟用中目錄上限；Plus 無限且可直掛公司地址。出處：help b2b（help）
+  active_catalogs_max_non_plus: 3
+  # 每個公司地址可指派目錄上限；多目錄顯示最低價。出處：help catalogs（help）
+  catalogs_per_company_location_max: 25
+  # 每商品按量定價級距上限；門檻須 > 最低訂購量且為遞增單位倍數。出處：help quantity-pricing（help）
+  quantity_price_breaks_per_product_max: 10
+
+# =============================================================================
+# 13c. 平台帳單（71-R4，2026-08-13；政策值跟隨 Shopify help，68 號「跟隨」原則）
+# =============================================================================
+billing:
+  # 帳單週期天數（月繳；起日=方案開通日；31 天月可能收到兩張）。出處：help billing-cycles（help）
+  cycle_days: 30
+  # 帳單開立時區。出處：help upcoming-past-bills（help）
+  invoice_timezone: UTC
+  # 帳單編號位數（#前綴）；銀行帳單顯示 <平台代碼> * <號碼>。出處：help upcoming-past-bills（help）
+  invoice_number_digits: 9
+  # 付款狀態 enum（過去的帳單 filter tabs 全值域）。出處：71-R4 實測（test）
+  payment_statuses: [paid, unpaid, failed, processing, refunded, cancelled]
+  # 付費明細「檢視摘要」的日期範圍上限（天）。出處：help exporting-your-bills（help）
+  summary_export_max_days: 90
+  # 停用商店後抵用金保留天數。出處：help billing credits（help）
+  credit_expiry_after_deactivation_days: 60
+  # 抵用金類別（互不流用；僅能抵未來週期）。出處：help（help）
+  credit_categories: [subscription, app, shipping, transaction]
+  # 訂閱退款申請窗（天）。出處：help ToS §5.10 摘述（help）
+  refund_request_window_days:
+    monthly: 7
+    annual: 30
+  # 帳單幣別兌換手續費（%；第三方交易費除外）；幣別選項依組織所在國家/地區而定，下一週期生效。
+  # 出處：help paying-your-bills/local-currency（help）
+  currency_conversion_fee_percent: 1.5
+  # 凍結逾此天數須重新選擇方案。出處：help frozen-store（help）
+  frozen_replan_after_days: 30
+  # 撥款狀態 enum（PSP pack 對應面；zh-TW 官方詞：已排程/已存入/失敗/已提款）。
+  # 出處：help payouts/view-details（help，en 交叉驗證）
+  payout_statuses: [scheduled, deposited, failed, withdrawn]
+  # 負向撥款自動重試次數。出處：help failed-payouts（help）
+  negative_payout_retry_count: 2
 
 # =============================================================================
 # 14. 通知範本（P1-28）
@@ -2637,9 +2772,29 @@ seo:
     #    **不得**借用 zh-TW 表示繁體（那是地區碼不是字體）；TW 若啟用是 zh-Hant-TW，由 market 推導。
     #    本鍵是**格式範例**不是市場清單——SEO 層不得出現任何寫死的國別清單。
     script_subtag_example: zh-Hant
-    # 碼粒度：單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼。
-    # 出處：help.shopify.com/manual/markets/seo ＋ shopify.dev/docs/storefronts/themes/seo/hreflang（help/dev）
-    region_qualified_when_single_country_market: true
+    # 🔴 碼粒度（2026-08-13 裁定，62 §I.2／§I.2-1 明知偏離登記）：**恆帶 ISO 3166-1 地區**，
+    #    多國市場**逐國展開**成 N 個碼、全部指向同一 URL；全站輸出不得出現裸語言碼（x-default 除外，
+    #    驗證＝62 §O REG-4 的 CI 紅燈掃描）。
+    # 依 62 §L 處方修正（2026-08-13，71-R0-V1 結案）：原鍵
+    #   `region_qualified_when_single_country_market: true`（註釋「單國市場 ⇒ 語言-國家；多國市場 ⇒ 語言碼」）
+    # ＝裁定前語義——鍵名把「單國市場」寫進去，留著會讓人以為多國市場還有另一種行為。
+    # 比照 D-2：改名不留別名。原出處（help/dev 的 Shopify 行為）降為被偏離對象，見 §I.2-1。
+    always_region_qualified: true
+    multi_country_market_expands_per_country: true
+    # 裸碼出現在我方輸出 ⇒ CI 紅燈（62 §O REG-4 掃描 <head> 與 sitemap；x-default 除外）。
+    bare_language_code_forbidden: true
+    # 殘留衝突（同一市場多 presence 掛同碼）解析：先自身 presence、再祖先（62 §I.3(c) 步驟 2——
+    # 原 specificity_stack 比市場，恆帶地區後衝突兩邊是同一市場 ⇒ 比不出東西，換這把尺）。
+    multi_presence_resolution: nearest_own_then_ancestor
+    # 丟棄決定必須逐頁相同，否則 hreflang 雙向性破裂（62 §O REG-2b）。
+    dedupe_must_be_page_independent: true
+    # 逐國展開超上限時：部分標註＋blocking lint。🔴 不得退回裸碼（裸碼已被禁）。
+    over_limit_action: emit_partial_and_lint
+    # 🔴 認得 ≠ 允許輸出：驗證器巡檢外部標註要能認裸碼（報 seo_lint_findings）；
+    #    我方自己產生裸碼是 CI 紅燈。兩個檢查點、兩種嚴重度，不得合併成一個布林（62 §I.4）。
+    validator_accepts_bare_code_for_audit_only: true
+    # x-default 指「預設 (market, locale) 的帶前綴 URL」——根路徑已非內容頁（67 §F.1(b)），不得指 /。
+    x_default_target: default_market_locale_prefixed_url
     # x-default 恰一個，指主網域上 primary market 預設語言的對應 URL。（help）
     x_default_required: true
     # 碼衝突（兩個多國市場同語言）的解析：先展開為逐國碼，超過此上限則依 market.specificity_stack 取捨。
@@ -3898,3 +4053,273 @@ csv:
     # 🔴 一次性搬家的順序：商品 CSV（含譯文）→ 庫存 CSV → 翻譯 CSV（非商品線資源）。
     #    倒過來做，翻譯 CSV 的 resource_gid 還不存在（見 70 §H 的結構性理由）。
     migration_order: [product_csv, inventory_csv, translation_csv]
+
+# ── 分析 / 報告（R11，2026-08-14 實測＋help/shopify.dev 雙源；全文＝docs/research/80）────────
+analytics:
+  # 🔴 報表顯示上限：表格最多 1,000 列，但**總計列反映全部資料**（不只這 1,000 列）。
+  #    資料量更大時走匯出。抄漏「總計含全部」這半句會做出錯的 footer。（80 §4.1）
+  report_table_display_rows_max: 1000
+  report_totals_reflect_all_rows: true
+  # 報告頁一次最多列出的自訂報告數；可建更多，超出者需自存 URL 才能存取。
+  custom_reports_displayed_max: 250
+  # 🔴 匯出格式與範圍（實測彈窗值域，非推測）。預設值＝本尊預設值。
+  export_formats: [csv, xml, jsonl, parquet]
+  export_format_default: csv
+  export_scopes: [all_query_results, displayed_only]
+  export_scope_default: all_query_results
+  # 資料新鮮度（help 明載）。auto_refresh 僅在所選期間**包含今天**時生效。
+  overview_freshness_seconds: 60
+  auto_refresh_interval_seconds: 60
+  auto_refresh_requires_period_including_today: true
+  # 🔴 歷史資料起算日：平台級硬限制，**與方案無關**（各方案差異＝文檔未載）。
+  #    我方若自建 rollup 沒有這個限制，但對照本尊數字時必須知道差異來源。
+  history_floor:
+    sessions_based: "2022-10-01"
+    inventory_based: "2023-10-01"
+    attribution: "2021-10-01"
+  # 即時層口徑（Live View；help 明載的三個窗）。
+  live_view:
+    visitors_window_minutes: 5
+    customer_behaviour_window_minutes: 10
+    day_boundary: shop_local_midnight
+  # 歸因：官方唯一數字＝session 後 N 天未購買則 first interaction referrer 重置。
+  # 🔴 這不是「歸因視窗」——五種模型各自的視窗長度＝文檔未載，不得拿這個數字當視窗用。
+  attribution_first_referrer_reset_days: 30
+  attribution_models: [first_click, last_click, last_non_direct_click, linear, any_click]
+  # 🔴 any_click 各通路加總會超過 metric 本身（官方明列）⇒「小計＝總計」一致性測試必須白名單。
+  attribution_models_excluded_from_sum_checks: [any_click]
+  # 探索器槽位（自由形式 4 / 組別 5）——兩套不同槽位集合，切換會清空查詢。
+  exploration_modes: [freeform, cohorts]
+  cohort_intervals: [week, month, quarter]
+  cohort_interval_default: month
+  # 🔴 組別預設期間＝過去 12 個月且**排除當月**（SINCE startOfMonth(-12m) UNTIL endOfMonth(-1m)）。
+  cohort_default_period: last_12_months_excluding_current
+  # 期間選擇器的兩個**滾動窗**（不是固定清單，須以當前日期推導）。
+  date_range_bfcm_years_shown: 4
+  date_range_quarters_shown: 4
+  # ShopifyQL 對照（我方查詢層若做等價物則引此節；上限數字＝文檔未載，不得臆造）。
+  shopifyql:
+    date_offset_units: [s, min, h, d, w, m, q, y]   # 🔴 min=分鐘、m=月，不是慣例的 m=分鐘
+    time_dimensions_interval: [second, minute, hour, day, week, month, quarter, year]
+    time_dimensions_cyclic: [hour_of_day, day_of_week, week_of_year, month_of_year]
+    # 🔴 NOT 系運算子不排除 NULL 列（官方明列陷阱）；AND 優先於 OR。
+    negation_excludes_null: false
+    and_binds_tighter_than_or: true
+    # 未載：LIMIT 最大值／OFFSET 語法／HAVING 彙總函式／rate limit 數字／最大回傳列數。
+    limit_max: null
+    api_max_rows: null
+# ── 設定 / 使用者與權限（R12，2026-08-14 實測＋help 雙源；全文＝docs/research/81）────────
+settings:
+  # 🔴 設定樹＝組織層 2 ＋ 商店層 18。市場不在設定裡（頂層 /markets，R10）；檔案不在設定裡（內容區，R9）。
+  store_pages_count: 18
+  organization_pages_count: 2
+  # slug 對照（我方 key → 本尊 slug）；🔴 政策是 legal 不是 policies。
+  slug_map:
+    policies: legal
+    taxes: taxes                 # 非 taxes_and_duties
+    shipping: shipping           # 非 shipping_and_delivery
+    apps: apps                   # 非 apps_and_sales_channels
+    privacy: privacy             # 非 customer_privacy
+    customdata: custom_data
+    users: organization-account
+    activity: general/activity
+    brand: general/branding      # 🔴 品牌是「一般」的子頁，不是頂層設定分頁
+users_and_roles:
+  # 🔴 2026 模型＝使用者 ↔（群組）↔ 角色 ↔ 權限。群組是 Plus 專屬的第四段。
+  model: rbac
+  groups_supported_plans: [plus]
+  # 角色類別：一個角色**不得混用不同類別的權限**；但一個使用者可同時持有多個類別的角色。
+  role_categories: [organization, store, point_of_sale, partner]
+  role_cannot_mix_categories: true
+  user_can_hold_multiple_roles: true
+  role_name_max_chars: 255
+  role_description_max_chars: 255
+  role_min_permissions: 1        # 驗證錯誤原文：「至少必須授予一項權限」
+  # 權限目錄（商店類別）：實測巢狀 17 群／115 權限；help 是扁平 19 群（同一批權限、不同分組邊界）。
+  store_permission_groups_live: 17
+  store_permission_count_live: 115
+  store_permission_groups_help: 19
+  # 🔴 依賴圖不是樹：授予要往上補齊祖先、撤銷要往下連動移除，且有「不可取消」的邊。
+  dependency_propagation: [grant_ancestors_up, revoke_dependents_down]
+  non_deselectable_dependencies:
+    - {from: inventory_any, to: products_view}
+    - {from: catalogs_any,  to: products_view}
+  # help 明列的敏感權限（UI 未特別標示，我方應標）。
+  sensitive_permissions:
+    - customers_request_data
+    - finance_edit_billing_payment_methods
+    - finance_manage_other_payment_settings
+    - org_business_entities_view_sensitive_information
+    - partner_view_financials
+    - partner_manage_credits_and_refunds
+    - pos_manage_other_payment_settings
+  # 🔴 高敏動作需 step-up auth（重新輸入密碼）——help 未載，實測發現（建立角色、移除使用者）。
+  step_up_auth_required_for: [create_role, remove_user]
+  # 使用者座位上限（依方案）；🔴 Starter/Basic 是 0。
+  seats_by_plan:
+    pause_and_build: 1
+    starter: 0
+    basic: 0
+    grow: 5
+    advanced: 15
+    plus: null                   # 無限
+  # 不計入座位者。
+  seats_excluded: [store_owner, organization_owner, collaborators, pos_only_staff]
+  invitation_expiry_days: 7      # 過期官方做法＝移除再重新新增（無「重寄」操作）
+  user_states: [pending, active, suspended]
+  collaborator_request_code_digits: 4
+  # 安全登入規定【2】：all_users（🔴 不適用 POS）／specific_users（預設）
+  secure_signin_enforcement: [all_users, specific_users]
+  secure_signin_enforcement_default: specific_users
+  secure_signin_excludes_pos: true
+notifications:
+  # 顧客通知範本：實測 11 組 47 個（help 未窮舉，官方叫你去後台看 ⇒ 本輪實測補齊）。
+  customer_template_groups: 11
+  customer_template_count: 47
+  # 🔴 範本集合受法域閘控（實例：「已建立訂單層級退貨單（僅限美國）」）⇒ 清單要進 jurisdiction pack。
+  templates_jurisdiction_gated: true
+  subsections: [customer, staff, fulfillment_request, webhooks]
+  staff_notification_types: [store_order_summary, new_order, new_return_request, sales_attribution_ended, new_draft_order]
+  new_draft_order_owner_only: true
+  webhook_formats: [json, xml]
+  webhook_event_immutable_after_create: true
+  # 連續非 200 回應 ⇒ Shopify 自動刪除該 webhook 訂閱。
+  webhook_auto_delete_on_repeated_failure: true
+  webhook_max_count: null        # 文檔未載
+brand_assets:
+  logo_min_width_px: 512
+  square_logo_recommended_px: 512
+  cover_image_recommended: "1920x1080"
+  cover_image_max_count: 1
+  slogan_max_chars: 80
+  short_description_max_chars: 150
+  # 🔴 primary/secondary 都是**陣列**，每個元素是 background/foreground 配對——不是「一主色一副色」。
+  colors_are_arrays_of_pairs: true
+  favicon_derived_from_square_logo_px: 32
+  # 🔴 品牌資產**不可依市場或語言本地化**（可引為 G13 的佐證）。
+  localizable: false
+store_activity_log:
+  max_entries_displayed: 250     # 🔴 保留範圍由筆數決定，不是天數；保留天數＝文檔未載
+  retention_days: null
+  view_only: true                # 不可展開／不可點擊個別事件／不可匯出／不可篩選
+  actor_types: [user, app, sales_channel]
+languages:
+  # 🔴 語言上限除 Lite 外一律 20——沒有方案階梯。
+  max_languages: 20
+  max_languages_applies_to_all_plans_except: [lite]
+  language_states: [published, unpublished]
+  # 語言列 ⋯ 選單【5】；設為網域預設在未發布時禁用（條件控件）。
+  row_actions: [publish, preview, assign_to_domain, set_as_domain_default, remove_language]
+  set_as_domain_default_requires_published: true
+  auto_translate_free_language_count: 2
+  auto_translate_unsupported_languages_count: 14
+  policies_auto_translated: false
+  # Translate & Adapt 是官方 app（新增語言時自動安裝），可翻譯資源型別＝TranslatableResourceType 30 值。
+  translate_and_adapt_is_app: true
+  translatable_resource_type_count: 30
+  never_translatable: [collection_filters, shopify_forms, manual_payment_instructions, product_images, tags]
+policies:
+  # help 窮舉 6 份；🔴 是 Return policy 不是 Refund policy，且沒有 Contact information。
+  documents: [return, privacy, terms_of_service, shipping, legal_notice, subscription]
+  url_pattern: "/policies/{policy-type}"
+  auto_generate_template_locales: [en]
+# ── 銷售管道 / POS / 代理式 / app（R13，2026-08-14 實測＋help 雙源；全文＝docs/research/82）──
+sales_channels:
+  # 🔴 管道全部是 app（路由 /apps/{handle}），只有線上商店是第一方特例（/themes）。
+  #    ⇒ 資料模型是 App 之下的 Channel（帶 channel capability），不是兩張平行表。
+  channels_are_apps: true
+  first_party_exception_routes: {online_store: "/themes"}
+  # 管道 app 比一般 app 多三項強制功能。
+  channel_required_capabilities: [account_connection_onboarding, product_publishing, marketplace_navigation]
+  row_actions: [open_app, view_details, uninstall]
+  max_channels: null              # 文檔未載
+  # 🔴 發布模型三層 AND：Publishable × Publication × Catalog，缺一不可上架。
+  publication_model: [publishable, publication, catalog]
+  catalog_types: [app, company_location, market]
+  new_channel_publishes_existing_products_by_default: true
+  publication_bulk_products_max: 50
+  future_publishing_requires_active_status: true
+  future_publishing_supported_resources: [product, collection, blog_post, page]
+  future_publishing_unsupported: [variant, shop_channel]
+agentic:
+  # 🔴 唯一「符合資格即預設啟用、不需安裝」的管道；且 Markets 明文排除（不能加入 channel market）。
+  enabled_by_default_for_eligible: true
+  excluded_from_channel_markets: true
+  channels: [chatgpt, microsoft_copilot, other_ai_platforms, shop, google_ai_mode, gemini, meta]
+  early_access_channels: [google_ai_mode, gemini]
+  # 每個管道兩件獨立的事：發現來源（catalog 存取）與結帳位置（代理內 vs 導回商店）。
+  per_channel_axes: [catalog_discovery, checkout_location]
+  direct_checkout_supported: [microsoft_copilot]
+  discovery_only: [chatgpt]
+  sources: [shopify_catalog, knowledge_base]
+  # 🔴 只支援 D2C；B2B-only 商品自動排除（但自訂第三方設定可能繞過保護）。
+  d2c_only: true
+  requires_supplemental_terms: true
+  # UCP（B-7 的答案）：開放標準，規格在 ucp.dev，Shopify+Google 共同開發。
+  ucp:
+    versions_supported: ["2026-04-08", "2026-01-23", "draft"]
+    capabilities: [catalog, cart, checkout, orders]
+    profile_meta_key: "meta.ucp-agent.profile"
+    extension_namespacing: reverse_domain   # 「Own the domain, own the namespace」，無中央審批
+    mcp_endpoints: [global_catalog, storefront_catalog, cart, checkout, order]
+    # 🔴 update_cart / update_checkout 是 PUT 語義——省略的欄位會被移除（與 patch 相反）。
+    update_semantics: put_replace_full_state
+    checkout_states: [incomplete, requires_escalation, ready_for_complete, completed]
+    # agent 只能查它自己促成的訂單。
+    order_scope: facilitated_by_agent_only
+    rate_limit: null              # 文檔未載
+    merchant_opt_out_mechanism: null  # 文檔未載
+    # 🔴 受限 Liquid context：只有 request 與 agents 兩個物件；不可為 JSON template。
+    liquid_templates: [agents.md.liquid, llms.txt.liquid, llms-full.txt.liquid]
+    liquid_context_objects: [request, agents]
+    liquid_json_template_allowed: false
+pos:
+  # 🔴 範圍未定（71-R13-V1）：本輪只做管道殼與分析，POS 本體未做。
+  tiers: [lite, pro]
+  lite_included_in_all_paid_plans: true
+  pro_billing: per_location
+  pro_price_usd_per_location_month: 89
+  pro_included_locations_on_plus: 20
+  pro_trial_days: 3
+  pro_bulk_location_update_max: 250
+  refund_window_days: {monthly: 7, annual: 30}
+  # Pro 專屬能力（Lite 沒有）——這條界線＝收銀機 vs 門市營運系統。
+  pro_only: [custom_printed_receipts, automatic_discounts, retail_staff_permissions,
+    unlimited_pos_only_staff, add_staff_to_sale, order_cancellations, exchanges,
+    save_retrieve_cart, email_carts, ship_to_home, ship_and_carry_out, pickup_in_store,
+    local_delivery_fulfillment, inventory_tracking_and_adjusting, receiving_stock_transfers,
+    fulfilling_and_receiving_transfers, daily_sales_reports, in_app_retail_analytics,
+    required_checkout_information]
+  hardware_warranty_years: {lite: 1, pro: 2}
+  # 🔴 POS 權限模型與 admin 完全不同：organization role 而非 store permission；
+  #    只能指派角色不能指派單一權限；粒度以「裝置所在地點」為軸。
+  permissions_via_organization_roles: true
+  individual_permissions_assignable: false
+  permission_axis: device_location
+  permission_groups: [manager_approval, checkout, discounts, orders, customers, apps, analytics, register, store_settings]
+  default_pos_role: associate
+  pos_only_staff_requires_pro: true
+  pos_only_staff_login: pin
+  lite_locations_ignore_role_restrictions: true
+  tips_preset_max: 3
+  tips_credit_only: true
+  unsupported_regions: [CN]
+  ui_extension_targets: [tiles, actions, blocks]
+apps:
+  types: [public_listed, public_unlisted, custom, legacy_custom]
+  # 🔴 2026-01-01 是分界點：之後建立的 custom app 走 Dev Dashboard，之前的留在後台管理。
+  legacy_custom_cutoff_date: "2026-01-01"
+  custom_level2_pii_min_plan: grow
+  # 安裝畫面把 scope 呈現成兩類。
+  scope_presentation_groups: [view_personal_data, view_and_edit_store_data]
+  billing_models: [one_time, free, monthly_recurring, annual_recurring, usage_based]
+  billing_on_shopify_invoice: true
+  protected_customer_data_levels: [0, 1, 2]
+  level2_sensitive_fields: [name, address, email, phone]
+  # 🔴 預設不允許自訂 app 開發（需「啟用開發作業」權限）。
+  custom_app_development_default_enabled: false
+  max_apps: null                  # 文檔未載
+  max_custom_apps: null           # 文檔未載
+  theme_extension_types: [app_block, app_embed_block]
+  app_embed_scope: global_liquid_only
+  app_embed_supported_in_all_themes: true

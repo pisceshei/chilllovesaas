@@ -5,8 +5,26 @@
 ## 開工前（每個任務都要）
 
 1. 先讀 `HANDOFF.md`（15 分鐘上手路徑、決策 D1–D7、法律紅線、里程碑 M0–M6）。
-2. 開發某畫面/功能前，讀對應章節：`docs/research/22`（按鈕級驗收清單）、`docs/specs/11–19`（生產級做法與坑）、`docs/research/28`（API 契約——**admin 一切走 GraphQL**）、`docs/research/31`（主題引擎工作包）。
+2. 開發某畫面/功能前，讀對應章節：`docs/research/22`（按鈕級驗收清單）、`docs/research/71`（parity 總登記簿：§A 保護清單＋§F 差異登記）、`docs/research/7x` 該模組 teardown（72 首頁指標/73 財務帳單/74 顧客線/75 折扣…逐輪增補）、`docs/specs/11–19`（生產級做法與坑）、`docs/research/28`（API 契約——**admin 一切走 GraphQL**）、`docs/research/31`（主題引擎工作包）。
 3. UI 一律以 `docs/design/23-interaction-css-spec.md` 的 tokens 為準；對照 `docs/design/chilllove-admin-v2.html` 原型（開「⌗ 註釋模式」看每個控件的規格）。
+4. 🔴 **鐵律 12（Shopify 對齊鐵律，2026-08-13 使用者裁定）——實作方同樣受約束**：
+   - **親自點擊、禁止猜 URL**：每個頁面/按鈕/欄位/選單/下拉都要點過；導航一律用真實 `href`。
+   - **不存在「有問題的頁面」或 404**：只可能是①沒載完（等＋**重載 1–3 次**）或②你在猜路徑；
+     **不得寫「本尊沒有這頁/這功能」**。
+   - **測試店可寫入**：`chill-love-u5q5mnzq` 資料全假，使用者授權新增/編輯/刪除——**要走完整
+     操作流程**（建立→修改→刪除）才算拿到狀態機與副作用；避免真實費用與對外發信。
+   - **註釋四件事**（DOCS 與 `docs/dev/` 皆適用）：①這是什麼 ②具體功能與**完整值域** ③怎麼做出
+     這效果（邏輯/狀態機/出處/limits 引用）④🔴**跨功能・跨頁・前端影響（預先對接）**。
+5. 🔴 **階段對齊標準（2026-08-13 使用者裁定，硬性；六層）**：每個階段的實作必須與 Shopify 本尊保持一致性——
+   **按鈕級完全複製功能邏輯與交互邏輯**（每個按鈕/欄位/值域/空態/錯誤態/狀態機）＋
+   🔴 **值域窮舉**（所有下拉選單/下拉欄位/選擇器/autocomplete/⋯選單/分段控制的選項**全量**照抄，
+   含原文、預設值、條件顯示規則——**enum 不得自創、不得省略**；7x teardown 檔是唯一權威值域來源）＋
+   🔴 **依 7x 的架構圖實作**（URL 路由樹含 302 與 query 語義／頁面層級容器歸屬／跨頁共用元件家族——
+   共用元件改一處要同步所有掛載點）＋**對照 CSS 量測**（7x 檔 §CSS 三段式：本尊量測值 → 我方 token
+   映射；實作只用我方 tokens，鐵律 8/9）＋**結合 help.shopify.com 說明文檔**（實測＋help 雙源；
+   上限值引 `config/limits.yml` 不硬編）＋**條件性控件三源判定**。
+   與本尊的差異只有兩種合法形態：71 §A 保護清單（使用者裁定）或 §F 登記的 V——其餘一律做到一致；
+   拿不準是否「本尊如此」時查對應 7x teardown，7x 沒寫的在 PR 標假設，不要靜默猜。
 
 ## 工作流
 
@@ -18,7 +36,12 @@
 ## 技術鐵律（違反即打回）
 
 1. 技術棧：Rails 8.1 + MySQL 8 + Vite/React(TS) admin + Liquid 相容前台（D1/D4）；不引入未討論的重型依賴。
-2. 全表帶 `shop_id` 且複合索引開頭；金額全程 **integer cents**（出現 float 即 bug）；transaction 內禁外部 IO；上限引用 `config/limits.yml`。
+2. **業務資料**全表帶 `shop_id` 且複合索引開頭；金額全程 **integer cents**（出現 float 即 bug）；transaction 內禁外部 IO；上限引用 `config/limits.yml`。
+   <!-- 2026-08-14 裁定：身分與權限走**組織層白名單豁免**（71 §A G24 逐表列舉：organizations／
+        users／roles／role_permissions／user_roles／user_groups／user_group_roles／
+        user_store_assignments），白名單以外照舊。🔴 豁免的是「表有沒有 shop_id 欄」，
+        **不是「查詢可不可以不帶 shop_id」**——跨店存取仍須先解析出可及 shop_id 集合再逐表帶條件。
+        新增白名單表要改 CLAUDE.md 鐵律 2 與 71 §A G24，並在 PR 描述標明。 -->
 3. admin SPA 只打 `/admin/api/{version}/graphql.json`（28 號慣例：GID/cursor 分頁/userErrors/MoneyBag）；業務錯誤走 userErrors 不走 HTTP 4xx。
 4. 寫路徑冪等（訂單成立/退款/庫存調整必帶 idempotencyKey）；事件走 outbox。
 5. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify CSS/資產/文案；icon 用 Lucide；Liquid gem（MIT）可用。`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture——僅限測試，不得散布。
