@@ -137,15 +137,31 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   `--model opus`：用 alias 不寫死 `claude-opus-5`，之後升版自動跟上。
-          #   `--effort max`：CLI 的五級推理強度（low/high/xhigh/max…），max＝最高。
+          #   🔴 `--model claude-opus-5`：**刻意用完整名，不用 alias `opus`**。
+          #      官方明文「Opus 5 requires Claude Code v2.1.219 or later」，且
+          #      「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ 若 action 內建的 CLI
+          #      舊於該版，`--model opus` 會**靜默**跑 Opus 4.8：不報錯、log 看不出來，
+          #      而官方未公布 SDK↔CLI 的版號對應 ⇒ **我們無法事先知道拿到哪一個**。
+          #      釘完整名把「靜默降級」換成「會叫的失敗」——模型名不被接受時第一次請求就報錯。
+          #      代價：**之後出新 Opus 不會自動跟上**（dateless ID 官方定義就是固定 snapshot），
+          #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
+          #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
+          #      Opus 5 預設是 `high` ⇒ 這一行**有實際作用**，不是裝飾。
+          #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
+          #        settings 不收）⇒ 只能走 `--effort`，本檔寫法是官方唯一支援的路徑。
           #   ⚠️ 這兩個旗標由 action 依賴的 `@anthropic-ai/claude-agent-sdk`（`^0.3.232`，
           #      caret ⇒ 安裝時取最新 0.3.x）內建的 CLI 解析。若某天 SDK 退版到不認得
           #      `--effort`，本步驟會失敗——但 `continue-on-error: true` ⇒ 不會擋 CI，
           #      會走下一步的「步驟失敗」分支貼出診斷留言。**不要因此把旗標拿掉再說**，
           #      先看那則留言的 stderr。
+          #   ❌ 三條明確不要做的（都查過官方，做了只會製造假設定）：
+          #      ①`with: model:` —— v1 沒這個 input，GitHub 靜默忽略未知 input；
+          #      ②step `env:` 加 `CLAUDE_CODE_EFFORT_LEVEL`／`ANTHROPIC_MODEL` ——
+          #        action 的 env 白名單只轉發 `ANTHROPIC_DEFAULT_{SONNET,HAIKU,OPUS}_MODEL`；
+          #      ③同時加 `settings:` 設 model／effortLevel ——
+          #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
           claude_args: |
-            --model opus
+            --model claude-opus-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
