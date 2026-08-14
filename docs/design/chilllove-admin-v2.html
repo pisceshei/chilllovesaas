@@ -2589,14 +2589,35 @@ function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=
    bulk() 會把訂單列一起數進來。選取器一律限定在 #prodTable 內。
    選取集合由 prodSelected() 提供，匯出對話框的「已選取的商品」要讀它——
    原本那個選項是**空指向**（無任何讀取端），選了會 toast「已排入匯出」但實際 0 筆。 */
-function prodToggleAll(cb){document.querySelectorAll('#prodTable .prodcb').forEach(x=>x.checked=cb.checked);prodBulk();}
-function prodSelected(){return [...document.querySelectorAll('#prodTable .prodcb')].filter(x=>x.checked).map(x=>+x.dataset.pi);}
+/* 🔴 選取集合存在 DOM **之外**（PR #26 的 Codex review 指出，屬我方引入的 bug）。
+   原本只存在 checkbox 的 `.checked` 上——但搜尋輸入、換排序都會呼叫 renderProducts()
+   把整個 tbody 換掉 ⇒ 所有 .prodcb 節點被丟棄、選取消失，
+   而 bulkbar 還顯示著舊的計數（它不在 tbody 裡沒被重繪），`prodSelected()` 卻回 0。
+   ⇒ 「已選取 5 件」的橫條配上一個空的選取集合，比完全沒有批次選取更糟。
+   存 PRODUCTS 的索引；`prodSyncSel()` 在每次重繪後把 DOM 對回這個集合。 */
+const PROD_SEL=new Set();
+function prodToggleAll(cb){
+  document.querySelectorAll('#prodTable .prodcb').forEach(x=>{x.checked=cb.checked;
+    cb.checked?PROD_SEL.add(+x.dataset.pi):PROD_SEL.delete(+x.dataset.pi);});
+  prodBulk();
+}
+function prodSelected(){return [...PROD_SEL];}
+/* 重繪後呼叫：把 DOM 的勾選狀態對回 PROD_SEL，並清掉已被篩掉的列所留下的殘留計數。 */
+function prodSyncSel(){
+  document.querySelectorAll('#prodTable .prodcb').forEach(x=>{x.checked=PROD_SEL.has(+x.dataset.pi);});
+  prodBulk();
+}
 function prodBulk(){
-  const rows=[...document.querySelectorAll('#prodTable .prodcb')],n=rows.filter(x=>x.checked).length;
+  const rows=[...document.querySelectorAll('#prodTable .prodcb')];
+  rows.forEach(x=>{const i=+x.dataset.pi;x.checked?PROD_SEL.add(i):PROD_SEL.delete(i);});
+  const n=PROD_SEL.size,visN=rows.filter(x=>x.checked).length;
   const head=document.getElementById('cbAllProds');
-  /* 半選態 indeterminate 必做（DOCS bulkbar 條目自己寫的要求） */
-  if(head){head.checked=n>0&&n===rows.length;head.indeterminate=n>0&&n<rows.length;}
-  const c=document.getElementById('prodBulkCount');if(c)c.textContent=`已選取 ${n} 件商品`;
+  /* 半選態 indeterminate 必做（DOCS bulkbar 條目自己寫的要求）。
+     🔴 用「目前可見列」判斷全選/半選，但計數用 PROD_SEL.size——
+     篩選後仍選著的、看不見的那些也要算進總數，否則使用者會以為取消掉了。 */
+  if(head){head.checked=rows.length>0&&visN===rows.length;head.indeterminate=visN>0&&visN<rows.length;}
+  const c=document.getElementById('prodBulkCount');
+  if(c)c.textContent=n===visN?`已選取 ${n} 件商品`:`已選取 ${n} 件商品（${n-visN} 件不在目前篩選結果中）`;
   const bar=document.getElementById('prodBulkbar');if(bar)bar.classList.toggle('show',n>0);
   rows.forEach(x=>x.closest('tr').classList.toggle('selected',x.checked));
 }
@@ -3077,7 +3098,10 @@ function renderProducts(){
      <td class="right num" ${p.inv===0?'style="color:var(--critical)"':p.inv<10?'style="color:var(--warning)"':''}>${p.inv===0?'缺貨':p.inv+' 件'}<span class="mut3">・${p.v} 變體</span></td>
      <td><div class="tr-cell">${others.map(l=>trBadge(prodTrStatus(p,l.tag))).join('')}</div></td>
      <td class="mut">${H(p.type)}</td><td class="mut">${H(p.vd)}</td>
-   </tr>`;}).join('')||`<tr><td colspan="7"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+   </tr>`;}).join('')||`<tr class="norow"><td colspan="7"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+  /* 🔴 重繪後必須把選取狀態對回來，否則搜尋/排序一動選取就沒了（見 PROD_SEL 的註釋）。
+     空態列補上 class="norow"——匯出的「目前檢視」筆數要靠它排除掉空態列。 */
+  prodSyncSel();
 }
 document.getElementById('prodSearch').addEventListener('input',renderProducts);
 /* 60 §5 匯出／匯入 modal。🔴 **商品 CSV 與庫存 CSV 是兩套**，實站在匯出對話框裡就明講了
@@ -3105,7 +3129,13 @@ function prodExport(){
 /* 匯出範圍真的被讀——回報實際筆數而不是無條件「已排入匯出」。 */
 function prodExportRun(){
   const scope=(document.querySelector('#genBody [data-f="_pex"]')||{}).value||'current';
-  const n=scope==='sel'?prodSelected().length:scope==='all'?PRODUCTS.length:(document.querySelectorAll('#prodTable tbody tr.norow, #prodTable tbody tr').length||PRODUCTS.length);
+  /* 🔴 「目前檢視」只數**真的商品列**（`tr:not(.norow)`）。
+     原本用 `tbody tr` 全數，搜尋無結果時那一列空態 <tr> 會被算成 1 件，
+     報出「已排入匯出・1 件」而實際是 0（PR #26 的 Codex review 指出）；
+     且原本的 `|| PRODUCTS.length` 保底在 tbody 真的空的時候會謊報成全部商品。 */
+  const n=scope==='sel'?prodSelected().length
+        :scope==='all'?PRODUCTS.length
+        :document.querySelectorAll('#prodTable tbody tr:not(.norow)').length;
   closeGen();
   toast(`已排入匯出（${scope==='sel'?'已選取':scope==='all'?'全部商品':'目前檢視'}・${n} 件）——完成後寄到 benny@chilllove.demo`);
 }
@@ -8869,12 +8899,35 @@ const CAPTURE_MODES=[
  {k:'automatic_per_fulfillment',t:'每次出貨各自請款',   plus:true, s:'部分出貨即請該部分款項；未含此模式時多次出貨的訂單會「該逐次請款卻整單請款」'},
  {k:'manual',                  t:'手動請款',                          s:'逾期未請款則授權失效（預設授權期 7 天，見 limits.yml capture.authorization_days_default）'}
 ];
-/* 切換請款模式。Plus 專屬模式在非 Plus 方案應被 gating——原型不模擬方案狀態，
-   故以 toast 明示該限制，避免看起來像「所有方案都能選」。 */
+/* 🔴 本 demo 商店的方案與登入者權限——原型的最小模型。
+   沒有這兩個，任何「Plus 專屬」「需某某權限」的 gating 都只能做成提示文字，
+   而提示文字擋不住任何事（PR #26 的 Codex review 兩條都是這個形態）。
+   `PLAN` 影響 limits.yml 標了 plus_only 的功能；`PERMS` 對應設定›使用者的權限目錄。 */
+const SHOP_PLAN='growth';                       /* basic | growth | advanced | plus */
+const IS_PLUS=()=>SHOP_PLAN==='plus';
+/* demo 登入者刻意**不給** orders.over_refund，這樣超額退款的權限閘才看得到效果。
+   要看放行路徑，在 console 執行 `PERMS.add('orders.over_refund')`。 */
+const PERMS=new Set(['orders.read','orders.write','orders.refund','products.write']);
+const hasPerm=k=>PERMS.has(k);
+
+/* 切換請款模式。
+   🔴 Plus 專屬模式在非 Plus 方案要**真的擋下並還原選取**，不能只 toast 一句。
+   瀏覽器會在 onchange 之前就把 radio 打勾，所以這裡必須把選取撥回原本的模式
+   （PR #26 的 Codex review：原本只提示、選項仍留在被選中狀態，
+    與 limits.yml `capture.plus_only_modes` 的語義相反）。 */
+let CAP_MODE=(CAPTURE_MODES.find(m=>m.d)||CAPTURE_MODES[0]).k;
 function capModeSet(k){
   const m=CAPTURE_MODES.find(x=>x.k===k);
   if(!m)return;
-  toast(m.plus?`已切換為：${m.t}（🔴 此模式僅 Shopify Plus 方案可用）`:`已切換為：${m.t}`);
+  if(m.plus&&!IS_PLUS()){
+    /* 還原到上一個合法選取 */
+    const back=document.querySelector(`input[name="capmode"][aria-label="${CSS.escape((CAPTURE_MODES.find(x=>x.k===CAP_MODE)||{}).t||'')}"]`);
+    if(back)back.checked=true;
+    toast(`「${m.t}」僅 Shopify Plus 方案可用（目前方案：${SHOP_PLAN}），已還原為「${(CAPTURE_MODES.find(x=>x.k===CAP_MODE)||{}).t}」`);
+    return;
+  }
+  CAP_MODE=k;
+  toast(`已切換為：${m.t}`);
 }
 const MANUAL_PAY=[{n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記已收款',ins:'請匯款至 台灣銀行 (004) 123-456-789012，戶名 CHILL LOVE，並於備註填單號。'}];
 const CARRIER_ACCTS=[];
@@ -10620,12 +10673,20 @@ function rfOver(){
   if(over){const t=document.getElementById('rfOverAmt');if(t)t.textContent=money(cents-RF_NET,RF_CUR)+'（超出部分）';}
   return over;
 }
-/* 送出：超額時**必須**二次確認才放行——這是軟上限與硬擋的差別所在。 */
+/* 送出：超額時**必須**二次確認才放行——這是軟上限與硬擋的差別所在。
+   🔴 權限與二次確認是**兩道獨立的閘**（16 §F5.1:357 要求兩者皆備）。
+   PR #26 的 Codex review 指出：原本只檢查勾選框，沒有權限的人只要勾一下就過了，
+   等於把「未授權的超額退款」呈現成成功。權限先判，勾選後判，缺一不可。 */
 function rfSubmit(){
   const a=document.getElementById('rfAmt'),cents=toCents((a||{}).value||0);
   if(cents<=0){toast('請輸入退款金額');return;}
-  if(rfOver()&&!(document.getElementById('rfOverOK')||{}).checked){
-    toast('超額退款需勾選二次確認（需 orders.over_refund 權限）');return;
+  if(rfOver()){
+    if(!hasPerm('orders.over_refund')){
+      toast('你沒有「超額退款至原始付款方式」權限（orders.over_refund），無法送出超額退款');return;
+    }
+    if(!(document.getElementById('rfOverOK')||{}).checked){
+      toast('超額退款需勾選二次確認');return;
+    }
   }
   const over=cents>RF_NET;
   closeGen();
