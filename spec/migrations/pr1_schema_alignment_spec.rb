@@ -88,6 +88,29 @@ RSpec.describe "PR-1 schema alignment source invariants" do
     end
   end
 
+  describe "建店預設管道的回填 migration（88 §5 #1）" do
+    let(:path) { "db/migrate/20260815000010_backfill_missing_online_store_publication.rb" }
+    let(:source) { File.read(File.join(ROOT, path), encoding: "UTF-8") }
+
+    it "用 NOT EXISTS 讓回填天生冪等（重跑不得撞唯一索引）" do
+      expect(source).to include("NOT EXISTS")
+      expect(source).to include("channel_handle = 'online_store'")
+    end
+
+    it "包 safety_assured（strong_migrations 的 check_execute 是無條件 raise）" do
+      expect(source).to include("safety_assured")
+    end
+
+    it "宣告不可逆（回滾會連上一支 migration 的產物一起刪）" do
+      expect(source).to include("IrreversibleMigration")
+    end
+
+    it "🔴 不回填 resource_publications（那是 88 §5 #2 的 auto_publish 行為）" do
+      # 刻意的省略必須被釘住，否則下一輪有人會「順手補上」而發明語義。
+      expect(source).not_to include("INSERT INTO resource_publications")
+    end
+  end
+
   describe "docs/specs/11 的 SKU 例子已修（63 §L-1）" do
     let(:baseline) { File.read(File.join(ROOT, "docs/specs/11-production-baseline.md"), encoding: "UTF-8") }
 

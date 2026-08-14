@@ -110,8 +110,14 @@ M2 主題引擎的 Liquid `collection.products`、`product.available`、以及 M
 
 - 🔴 **第三層 catalog 完全沒做**，只留了欄位。88 標題寫「三層」但實作只有兩層——
   這是刻意分期，88 §6 有明說。
-- 🔴 **M1 承接五項**（88 §5）：①建店時自動建 `online_store` publication
-  （migration 只回填既有店，**漏了新店的商品無處可發布**）②`auto_publish` 的實際行為
+- 🔴 **M1 承接五項**（88 §5），其中 ① 已於 2026-08-15 結案：
+  ~~①建店時自動建 `online_store` publication~~
+  ✅ `Shop#after_create :create_default_publication` ＋ `20260815000010` 回填 migration。
+  **兩半缺一不可**：callback 修未來、migration 修歷史（`20260814200000` 只回填了它執行
+  當下既有的店，之後每一次 seeds／spec／手動建店都產生一間沒有管道的店，
+  **而且不拋任何錯**，只是那間店所有商品都上不了架）。
+  ⚠ 只建 `online_store` 一個；82 §0.1 實測本尊有三個已安裝管道，其餘無規格 ⇒ 不猜。
+  ②`auto_publish` 的實際行為
   （目前只是一個欄位，沒有行為掛在上面）③排程發布要求商品為 `Active`（跨表條件）
   ④商品表單的「上架管道」區塊 ⑤`ProductVariant`／`Collection` 主體展開。
 - **`ProductVariant` 與 `Collection` 是最小 model**——建它們的唯一理由是多型關聯需要類別存在。
