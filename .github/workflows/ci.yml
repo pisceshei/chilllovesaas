@@ -159,3 +159,10 @@ jobs:
 
       - name: Audit frontend dependencies
         run: pnpm audit --audit-level high
+
+      # 原型（三份高保真 HTML，admin 一份就 12,000+ 行）是本專案最大的產出物之一，
+      # 但先前只在本機跑 lint、CI 不擋。scripts/lint-prototype.py 把 49/51/53 號人工稽核
+      # 確立的不變量固化成可重跑檢查，每條規則都註明對應事故——例如「同檔頂層函式不得重名」，
+      # 那次事故是整頁功能靜默消失。退出碼 1=有 ERROR；WARN 不擋（目前基準線 WARN 13）。
+      - name: Lint prototypes
+        run: python3 scripts/lint-prototype.py
