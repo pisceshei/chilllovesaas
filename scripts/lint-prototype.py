@@ -24,6 +24,7 @@ TARGETS = [
 ]
 
 ERROR, WARN = "ERROR", "WARN"
+_CURRENT_FILE = [""]   # lint(path) 會填入檔名，供 r_dead_control 查基準線
 
 
 def _style(src: str) -> str:
@@ -242,6 +243,123 @@ def r_fake_affordance(src, style, script):
     return out
 
 
+# 🔴 死控件的**存量基準線**（2026-08-14 建立）。
+# 為什麼要基準線：規則一上線就抓到 73 條存量，全部只報 WARN 的話，
+# lint 輸出會從 13 個警告暴增到 86 個——**沒有人會讀 86 個警告**，
+# 規則就等於白做（這正是「加了規則卻被忽略」的典型死法）。
+# ⇒ 存量報 WARN（可見、可逐輪清），**超過基準線一律 ERROR**（擋新增）。
+#   機制要咬得住的是「不要再長出新的」，不是「一次還清歷史債」。
+# 🔴 清掉存量之後**要順手把數字調降**，否則基準線會變成新的容忍額度。
+DEAD_CONTROL_BASELINE = {
+    "chilllove-admin-v2.html": 14,
+    "chilllove-platform-admin.html": 12,
+    "chilllove-storefront-v2.html": 47,
+}
+
+
+def r_dead_control(src, style, script):
+    """互動元素必須有人讀得到——handler、data-f 綁定，或**真的被選擇器用到的把手**。
+
+    為什麼：89 號那一輪查出 25 條「控件畫出來卻沒接行為」，**全部 lint 綠燈**。
+    最糟的形態不是「沒反應」，是**回報成功但什麼都沒讀**——例如目錄的 5 個發布開關
+    全部關掉，照樣 toast「已儲存目錄價格」，使用者以為設定生效了。
+
+    🔴 **本規則不是「必須有 onclick」**。89 那一輪修好的控件多數**沒有 inline handler**：
+    `marketNewRun()` 讀 `querySelectorAll('.mkt-country')`、`rfSubmit()` 讀
+    `getElementById('rfOverOK')`、`repExportRun()` 讀 `input[name="expfmt"]:checked`；
+    設定側欄的 36 顆鈕靠 `data-set` 走事件委派。天真規則會把這些全部誤報，
+    然後被人關掉——比沒有規則更糟。判準是「**有沒有一個真的被選擇器用到的把手**」。
+
+    🔴 **把手只認 DOM API 上下文，不是「有在 script 出現過」**。
+    本原型的 markup 寫在 `<script>` 的模板字面量裡，所以任何屬性值**本來就**出現在
+    script 字串中——用「有沒有出現」判斷是**自我滿足**的，永遠成立。
+    （負面測試實證：把 Cookie 橫幅 radio 退回舊寫法，`name="cbColor"` 只存在於那行
+    markup，寬鬆版規則照樣放行。）
+
+    放行條件（任一即可）：
+      1. inline handler（onclick/onchange/oninput/onsubmit/onkeydown）
+      2. `data-f`（走 formRead 髒狀態追蹤）或 `data-val`（走驗證器）
+      3. `disabled`（明示不可用）
+      4. id / name / class / `data-*` 之中，至少一個 token 出現在**選擇器上下文**：
+         `getElementById(...)`／`getElementsByName(...)`／`querySelector(All)(...)`／
+         `closest(...)`／`matches(...)` 的字串引數，或 `dataset.<name>`
+    """
+    out = []
+    HANDLER = re.compile(r"\bon(?:click|change|input|submit|keydown)\s*=")
+    SKIP = re.compile(r"\bdata-f\s*=|\bdata-val\s*=|\bdisabled\b")
+    # 🔴 逃生口 `data-read="<函式名>"`：把手是**動態產生**時用（例：
+    #    `<input type="radio" name="${nm}">` 由 repExportRun() 以 `input[name="expfmt"]`
+    #    讀取，靜態比對看不到 `${nm}` 展開後的值）。
+    #    🔴 刻意設計成「**會自我說明**」而不是單純靜音：它要寫出**誰**讀這個控件，
+    #    而且那個函式必須真的存在（否則本規則照樣報）。純靜音的逃生口會被拿來搪塞。
+    defined_fns = set(re.findall(r"function\s+([A-Za-z0-9_$]+)\s*\(", script))
+
+
+    # 選擇器上下文裡出現過的 token 集合 —— 這才是「有人讀得到」的證據
+    sel_blobs = re.findall(
+        r"(?:getElementById|getElementsByName|querySelectorAll|querySelector|closest|matches)"
+        r"\(\s*[`'\"]([^`'\"]*)[`'\"]",
+        script)
+    sel_text = " ".join(sel_blobs)
+    dataset_keys = set(re.findall(r"\bdataset\.([A-Za-z0-9_$]+)", script))
+
+    def hooked(tok, attrs):
+        """token 是否真的被某個選擇器用到——**且那個選擇器有機會命中這個控件**。
+
+        🔴 只比對 token 出現與否不夠：`querySelectorAll('.tgl[role="switch"]')` 用到了
+        `tgl`，但它同時要求 `role` 屬性。一個只有 `class="tgl"`、沒有 `role` 的開關
+        **不會被那句選中**，卻會因為「tgl 有出現」而被放行。
+        （負面測試實證：把目錄發布開關退回 `class="tgl"` 舊寫法，寬鬆版規則抓不到。）
+        ⇒ 選擇器帶 `[attr]` 條件時，控件必須也有那些屬性才算被命中。
+        """
+        for blob in sel_blobs:
+            if not re.search(r"[.#\[\]=\"'\s]" + re.escape(tok) + r"\b", " " + blob):
+                continue
+            need = re.findall(r"\[([a-zA-Z-]+)", blob)
+            if all(re.search(r"\b" + re.escape(a) + r"\s*=", attrs) for a in need):
+                return True
+        camel = re.sub(r"-([a-z])", lambda m: m.group(1).upper(), tok)
+        return camel in dataset_keys or tok in dataset_keys
+
+    # ① 剝掉註釋：本檔的防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。
+    #    `_strip_comments` 以等長空白替換，行號不受影響。
+    # ② 標籤比對不跨行，且 `${...}` 內的 `>` 不算結束——模板運算式常含 `>=`／`=>`。
+    #    🔴 交替順序要緊：`${...}` 必須排在 `[^>\n]` 前面，否則 `[^>\n]` 會先逐字吞掉
+    #    `$`、`{`…，等走到 `>=` 才失敗，`${...}` 分支永遠輪不到。
+    body = _strip_comments(src)
+    for m in re.finditer(r"<(button|select|textarea|input)\b((?:\$\{[^}\n]*\}|[^>\n])*)>", body):
+        tag, attrs = m.group(1), m.group(2)
+        if HANDLER.search(attrs) or SKIP.search(attrs):
+            continue
+        dr = re.search(r'\bdata-read="([A-Za-z0-9_$]+)"', attrs)
+        if dr and dr.group(1) in defined_fns:
+            continue
+        hooks = []
+        hooks += re.findall(r'\bid="([^"${}\s]+)"', attrs)
+        hooks += re.findall(r'\bname="([^"${}\s]+)"', attrs)
+        for cls in re.findall(r'\bclass="([^"]*)"', attrs):
+            for tok in re.split(r"\s+", re.sub(r"\$\{[^}]*\}", " ", cls)):
+                if len(tok) > 2:
+                    hooks.append(tok.rstrip("-"))
+        hooks += [a for a in re.findall(r"\bdata-([a-z][a-z-]*)=", attrs)
+                  if a not in ("f", "val", "doc")]
+        if any(hooked(h, attrs) for h in hooks):
+            continue
+        out.append((WARN,
+                    f"<{tag}> 無 handler、無 data-f/data-val，也沒有任何被選擇器用到的把手"
+                    " — 死控件（89 §2）。接上行為、加 disabled，或在把手是動態產生時標 data-read=\"<讀它的函式名>\"",
+                    _lineno(body, m.start())))
+    # 超過基準線 ⇒ 這一輪**新增**了死控件，升級為 ERROR 擋下
+    cap = DEAD_CONTROL_BASELINE.get(_CURRENT_FILE[0])
+    if cap is not None and len(out) > cap:
+        out.append((ERROR,
+                    f"死控件 {len(out)} 個，超過 `{_CURRENT_FILE[0]}` 的基準線 {cap} 個"
+                    " — 本次**新增**了死控件。修掉它；若是清了存量，"
+                    "請把 scripts/lint-prototype.py 的 DEAD_CONTROL_BASELINE 調降",
+                    None))
+    return out
+
+
 def r_dead_css(src, style, script):
     """CSS 定義了但 markup 從未套用的 class（死碼）。
 
@@ -415,11 +533,12 @@ def _cap(out, label, n=6):
 
 RULES = [r_dup_functions, r_dangling_onclick, r_hairline, r_naked_zindex, r_px_breakpoint,
          r_transition_all, r_disabled_opacity, r_brace_balance, r_single_script,
-         r_docs_coverage, r_fake_affordance, r_dead_css,
+         r_docs_coverage, r_fake_affordance, r_dead_control, r_dead_css,
          r_hardcoded_currency, r_tw_outside_pack]
 
 
 def lint(path: Path):
+    _CURRENT_FILE[0] = path.name
     src = path.read_text(encoding="utf-8")
     style, script = _style(src), _script(src)
     found = []

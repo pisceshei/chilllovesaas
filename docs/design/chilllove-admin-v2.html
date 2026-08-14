@@ -8722,7 +8722,7 @@ function repRename(){
 function repExport(){
   const fmt=[['逗號分隔值 (CSV)','最適合匯入試算表'],['可延伸標記語言 (XML)',''],['JSON Lines (JSONL)',''],['Apache Parquet','']];
   const sc=[['資料查詢的所有結果','可能超過 1,000 列'],['僅限報表中顯示的結果','']];
-  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" value="${H(l)}" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
+  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" value="${H(l)}" data-read="repExportRun" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
   openGen({title:'匯出報告',body:`<div class="stack">
     <div><p class="help" style="margin-bottom:var(--sp-200)">選取匯出格式：</p>${rad('expfmt',fmt)}</div>
     <div><p class="help" style="margin-bottom:var(--sp-200)">指定您要匯出的結果：</p>${rad('expsc',sc)}</div></div>`,
