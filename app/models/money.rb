@@ -387,15 +387,25 @@ module Money
   #
   # `#with` 對金額特別危險：它讓「換一個幣別、保留同一個數字」變成一行程式碼，
   # 而那正是跨幣別事故的形狀。
+  # 🔴 **四個型別的 `.new` 全部設 private**，唯一入口是各自的 factory
+  # （`Storage.from_cents`／`Decimal.from_string`／R5・R6 的 `__build`）。
+  #
+  # ⚠️ **第一版只關了 R5／R6 的 `.new`**，理由是「R1／R4 是入口，要留著可建」
+  # ——那個理由是錯的：**入口是 `from_cents`，不是 `.new`**。
+  # Codex 在 PR #29 的 review 指出這個洞，實測比他描述的更嚴重：
+  #
+  #     Money::Storage.new(cents: 1.5, currency: "hkd")   # 建得起來
+  #       → currency 是 "hkd" 沒被正規化 ⇒ pack 的 minor_unit_overrides[:HKD] 查不到
+  #       → to_decimal 回 "0.02" ⇒ float 已經進了金額路徑
+  #       → minor_units 路徑被 A3 擋下（1.5 % 1 = 0.5 ≠ 0）✅
+  #       → 🔴 **decimal_string 路徑沒有那道閘門，"0.02" 一路送到 PSP**
+  #
+  # ⇒ `from_cents` 的 Integer 閘門與 `upcase` 正規化只有在 `.new` 也關掉之後才是**閘門**；
+  #   在那之前它只是「建議走的那條路」。
   [ Storage, Decimal, PspMinor, PspDecimal ].each do |klass|
+    klass.singleton_class.send(:private, :new)
     klass.singleton_class.send(:private, :[])
     klass.singleton_class.send(:private, :allocate)
     klass.send(:undef_method, :with)
   end
-
-  # 🔴 R5／R6 另外把 `.new` 也設 private（65 §C L2：**唯一建構路徑**）。
-  # R1／R4 的 `.new` 保持可用——它們是入口（從 DB／從外部字串建），
-  # 而 R5／R6 只能由 `Money::Storage#to_psp_amount` 產生，
-  # 因為那條路徑上掛著 A0–A5 五條斷言。
-  [ PspMinor, PspDecimal ].each { |klass| klass.singleton_class.send(:private, :new) }
 end

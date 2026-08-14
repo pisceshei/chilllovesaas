@@ -52,6 +52,31 @@ RSpec.describe Money do
       expect { described_class::Storage.allocate }.to raise_error(NoMethodError)
       expect { described_class::Decimal.allocate }.to raise_error(NoMethodError)
     end
+
+    # 🔴 **四個型別的 `.new` 全部關掉**（PR #29 的 Codex review）。
+    # 第一版只關 R5／R6，理由是「R1／R4 是入口」——那個理由是錯的：
+    # **入口是 `from_cents`／`from_string`，不是 `.new`。**
+    it "四個型別的 .new 全部是 private（唯一入口是各自的 factory）" do
+      [ described_class::Storage, described_class::Decimal,
+        described_class::PspMinor, described_class::PspDecimal ].each do |klass|
+        expect(klass).not_to respond_to(:new), "#{klass} 的 .new 必須是 private"
+      end
+    end
+
+    # 🔴 Codex 指出的**具體繞過路徑**，逐項釘住。
+    it "🔴 Money::Storage.new(cents: 1.5) 這條繞過路徑已封死" do
+      expect { described_class::Storage.new(cents: 1.5, currency: "hkd") }
+        .to raise_error(NoMethodError)
+    end
+
+    it "🔴 float 進不了金額路徑（from_cents 的 Integer 閘門現在真的是閘門）" do
+      expect { described_class::Storage.from_cents(1.5, "HKD") }.to raise_error(TypeError)
+    end
+
+    it "🔴 currency 一定被正規化成大寫（pack 查表靠它）" do
+      # 繞過 factory 就能留下 "hkd" ⇒ pack 的 minor_unit_overrides[:HKD] 查不到。
+      expect(described_class::Storage.from_cents(1, "hkd").currency).to eq("HKD")
+    end
   end
 
   # ── R1 Storage ────────────────────────────────────────────────────────────
