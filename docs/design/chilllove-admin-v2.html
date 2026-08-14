@@ -3678,15 +3678,41 @@ function hmChShare(){
 }
 /* 可依管道縮放的指標；其餘（比率、工作階段…）在單一管道下無資料。 */
 const HM_CH_SCALABLE=new Set(['total_sales','gross_sales','orders','by_product','rev_amount','rev_count']);
+
+/* 🔴 期間維度（89 §3 #6 的另一半）。
+   本輪先只做了管道就停手，結果是**兩顆外觀相同的下拉並排、一顆會動一顆不會**——
+   使用者試了管道看到數字變了，就會合理推論期間也會動。
+   那正是本輪一直在修的「假成功」形態，而且是**這次改動新造成的**：
+   兩顆都不動時，試過一顆的人會知道兩顆都是裝飾；一顆動了之後反而更容易被騙。
+   ⇒ 照管道那一套做完：能算的用序列真的算，**算不出來的顯示「—」，不拿全期值冒充**。
+
+   `HM_DATA[id].cur` 是 30 點的日序列、`v` 是 30 天總計。
+   以 `v / sum(cur)` 校準後取尾 N 點，得到該期間的值。 */
+const HM_RANGE_DAYS={'今天':1,'昨天':1,'過去 7 天':7,'過去 30 天':30};
+function hmRangeSlice(d,id){
+  const days=HM_RANGE_DAYS[HM_RANGE];
+  if(days===undefined)return null;                 /* 期初至今／季度／黑五…：無資料 */
+  if(days===30||!Array.isArray(d.cur)||!d.cur.length)return d.v;
+  const tot=d.cur.reduce((a,x)=>a+x,0)||1;
+  const seg=HM_RANGE==='昨天'?d.cur.slice(-2,-1):d.cur.slice(-days);
+  return Math.round(d.v*(seg.reduce((a,x)=>a+x,0)/tot));
+}
 function hmVal(id){
   const m=HM_METRICS.find(x=>x.id===id),d=HM_DATA[id]||{v:0};
+  let v=d.v;
+  /* ── 期間維度 ── 只對「可累加」的數值指標套用；比率/字串維持原值 */
+  if(HM_RANGE!=='過去 30 天'&&typeof v==='number'){
+    const r=hmRangeSlice(d,id);
+    if(r===null)return '—';                        /* 本原型無此期間的資料 */
+    v=r;
+  }
+  /* ── 管道維度 ── */
   if(HM_CH!=='所有管道'){
     if(id==='by_channel')return hmFmt(m,(HM_DATA.by_channel.rows.find(r=>r[0]===HM_CH)||[,0])[1]);
     if(!HM_CH_SCALABLE.has(id))return '—';
-    const raw=typeof d.v==='number'?Math.round(d.v*hmChShare()):d.v;
-    return hmFmt(m,raw);
+    if(typeof v==='number')v=Math.round(v*hmChShare());
   }
-  return hmFmt(m,d.v);
+  return hmFmt(m,v);
 }
 function hmSpark(id){const d=HM_DATA[id];if(!d||!d.cur)return '<svg width="56" height="20"></svg>';
   const s=d.cur.filter((_,i)=>i%3===0),min=Math.min(...s),max=Math.max(...s);
