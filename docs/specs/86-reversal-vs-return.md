@@ -1,0 +1,160 @@
+# 86 — 撤銷款項 vs 實體退貨：概念邊界與欄名契約（2026-08-14）
+
+> 裁定來源：**71-R11-V14**（84 §1 A-1）｜實測與官方對照＝`docs/research/80` §3.1｜
+> 前置裁定：**71-R7-DOC1**（UI 用詞分線）｜本檔管的是**資料模型層**，與 R7 管的 UI 層是兩件事。
+
+---
+
+## §0 一句話結論
+
+> **`returns`（實體退貨）沒有消失。它現在專指「東西真的被寄回來了」，
+> 而 `sales_reversals`（撤銷款項）是「訂單金額被往下調整」的**聚合**——
+> 退款、退貨、取消、訂單編輯**四種來源都算**。**
+
+🔴 **這兩個概念不可合併，也不可互相取代。** 合併的後果是：
+- 用 `returns` 當聚合 ⇒ 取消單與訂單編輯造成的減項**被漏掉**，總銷售額對不上；
+- 用 `sales_reversals` 取代實體退貨 ⇒ **退貨數量、退貨原因、補貨決策全部無處可放**，
+  而這三樣是履約線（M4）的核心資料。
+
+---
+
+## §1 兩個概念的定義（官方原文為準）
+
+### §1.1 `sales_reversals` — 撤銷款項（**指標**，不是資源）
+- ShopifyQL 定義：「Value removed from orders through **refunds, returns, cancellations, or edits**.」
+- 銷售報告頁定義：涵蓋**所有產生負值的調整**——退貨商品、取消、訂單編輯，
+  以及對**運費、稅、費用、折扣**的調整。
+- 🔴 **它是一個被減項，不是一張表**。出現在公式裡：
+  - `銷貨淨額 = 銷售總額 − 折扣 − 撤銷款項`
+  - `總銷售額 = 銷售總額 − 折扣 − 撤銷款項 + 稅 + 關稅 + 運費 + 費用`
+- 🔴 **`sales_reversals` 本身的加總公式＝官方文檔未載**（只給列舉式定義，沒給算式）。
+  ⇒ 我方必須自己定義聚合規則，並在 spec 標明這是**我方定義**而非照抄（見 §3）。
+
+### §1.2 `returns` — 實體退貨（**資源**，是一張表）
+- 改名 changelog 的官方理由（逐字）：新欄名是為了釐清
+  「**broad order adjustments (sales reversals)**」與「**physical returns**」的差別。
+- 同一次改版**新增**了專門表達實體退貨的欄位：`returned_quantity`、`return_line_item_reason`。
+- ⇒ 官方的動作是**拆概念**：把原本一個字扛的兩件事分成兩個字，各自配自己的欄位。
+
+### §1.3 為什麼容易搞錯
+`returns` 這個舊欄名被改成 `sales_reversals`，**同時** `returns` 這個字被留下來給實體退貨用。
+所以看到「returns 改名為 sales_reversals」時的直覺——「returns 沒了」——**是錯的**。
+真相是：**舊的 `returns` 指標改名為 `sales_reversals`；`returns` 這個詞被重新指派給實體退貨資源。**
+
+---
+
+## §2 欄名對照表（官方 11 組，逐字）
+
+| 舊指標欄名 | 新指標欄名 |
+|---|---|
+| `returns` | `sales_reversals` |
+| `net_returns` | `net_sales_reversals` |
+| `gross_returns` | `gross_sales_reversals` |
+| `total_returns` | `total_sales_reversals` |
+| `discounts_returned` | `discount_reversals` |
+| `shipping_returned` | `shipping_reversals` |
+| `taxes_returned` | `tax_reversals` |
+| `quantity_returned` | `reversed_quantity` |
+| `returned_quantity_rate` | `reversed_quantity_rate` |
+| `is_return_related` | `is_reversal` |
+| `order_or_return` | `order_or_sales_reversal` |
+
+**時程**：2026-03-05 生效 → 2026-04 標記 deprecated → **2026-07 移除** → 舊版 API 可用至 2027-04。
+
+🔴 **我方沒有歷史包袱**：這些舊欄名**一個都還沒建**（`db/schema.rb` 目前只有 `refunds` /
+`refund_line_items`，無 `returns` 表、無任何 rollup 指標欄）。
+⇒ **本檔的價值不在「改名」，在於讓我方一開始就用對的名字建，避免日後拆概念。**
+
+---
+
+## §3 我方的落地契約
+
+### §3.1 命名規則（🔴 M1 起一律遵守）
+
+| 語義 | 用字 | 出現的地方 |
+|---|---|---|
+| 「訂單金額被往下調整」的**聚合指標** | `sales_reversal*` / `*_reversals` / `reversed_*` | rollup 表、分析 API、報表 UI |
+| **實體退貨**這個資源與其屬性 | `return*`（`returns`、`return_line_items`、`return_reason`…） | 訂單/履約表、訂單頁 UI |
+| **退款**這個金流動作 | `refund*`（已存在） | `refunds`、`refund_line_items`、金流鏈 |
+
+- 🔴 **不得**用 `returns` 命名任何聚合指標欄；
+- 🔴 **不得**用 `sales_reversals` 命名任何資源表或其外鍵；
+- `refunds` 與 `returns` 是**兩張不同的表**：一筆退貨可能沒有退款（換貨），
+  一筆退款也可能沒有退貨（服務補償、取消）。**不得建成一對一或互相取代。**
+
+### §3.2 `sales_reversals` 的聚合定義（🔴 這是**我方定義**，官方未載）
+
+```
+sales_reversals(期間) =
+    Σ refunds.total_cents            (退款，計入退款發生日)
+  + Σ 取消訂單的訂單總計              (取消，計入取消發生日)
+  + Σ 訂單編輯造成的負向差額           (編輯，計入編輯發生日；正向差額不計入本項)
+```
+
+- **退貨本身不獨立計入**——實體退貨若伴隨退款，其金額已由 `refunds` 計入；
+  若是換貨（無退款），金額淨影響為零，只影響 `reversed_quantity`。
+  🔴 **這一條是最容易重複計算的地方**：把 returns 也加進金額聚合會**雙重扣除**。
+- **各項計入自己的發生日**——與 19 §F1.1 的現金流視角一致，不回頭改原訂單日。
+- **允許為負向以外的結果**：若某日取消/編輯的淨額為正（例如編輯加購），
+  該日 `sales_reversals` 可能較小甚至為 0，但**不會變成負的撤銷**（正向差額歸入銷售側）。
+
+### §3.3 `reversed_quantity` 與 `returned_quantity` 是兩個數
+
+| 欄 | 語義 | 來源 |
+|---|---|---|
+| `reversed_quantity` | 因**任何**原因從訂單移除的件數（退款＋退貨＋取消＋編輯減項） | 聚合指標 |
+| `returned_quantity` | **實際被寄回**的件數 | `return_line_items` |
+
+⇒ 換貨情境下兩者會不同：換一件同價商品，`returned_quantity = 1` 但金額 `sales_reversals = 0`。
+
+---
+
+## §4 對既有規格的修訂
+
+### §4.1 `docs/specs/19` F1 的 Total sales 公式
+現行寫法（**不完整**）：`Total sales = Σ(訂單總計) − Σ(退款) −（取消單全額）`
+
+🔴 兩個問題：①漏了**訂單編輯**這一項（19 §F1.1 自己又補了，但主公式沒同步）
+②用「退款」當被減項名稱，與 §3.1 的命名規則不一致。
+
+修訂為：
+```
+總銷售額 = 銷售總額 − 折扣 − 撤銷款項 + 稅額 + 關稅 + 運費 + 費用
+其中 撤銷款項(sales_reversals) 的組成見 docs/specs/86 §3.2
+```
+並保留 19 §F1.1 的**我方刻意偏離**（訂單編輯歸屬口徑）不變。
+
+### §4.2 UI 用詞維持 R7 裁定不變
+- **分析線**（首頁指標／報告／72 號口徑目錄）用「**撤銷款項**」；
+- **訂單管理線**（訂單頁、退貨流程）用「**退貨**」與「**退款**」。
+- 🔴 這兩線用詞不同**是本尊事實不是我方疏漏**（71-R7-DOC1 已裁定）。
+  本檔只補一件事：**資料欄名要跟語義走，不跟 UI 用詞走**——
+  訂單頁顯示「退貨」，底下的欄位仍可能叫 `reversed_quantity`（若它是聚合）。
+
+---
+
+## §5 M1 該做什麼、不該做什麼
+
+**M1 要做的**（商品線）：
+- 無。M1 不建 `returns` 也不建 rollup。**本檔對 M1 的作用是「不要用錯名字」**。
+
+**M3/M4 建訂單與履約時**：
+- 建 `returns` / `return_line_items` 表（實體退貨資源），欄位含 `returned_quantity`、
+  `return_reason`、補貨決策；
+- **不要**在這兩張表裡放任何叫 `sales_reversal*` 的欄位。
+
+**M5 建 analytics rollup 時**：
+- 指標欄一律用 §2 的**新欄名**；
+- `sales_reversals` 依 §3.2 聚合，**且務必不要把 returns 的金額再加一次**；
+- 一致性測試要涵蓋「換貨（有退貨無退款）」這個案例——它是唯一能抓到雙重扣除的形態。
+
+---
+
+## §6 未決與誠實聲明
+
+- 🔴 **`sales_reversals` 的官方加總公式未載**，§3.2 是**我方定義**。日後若官方補了文檔，
+  要回頭對照；差異若存在，屬 71 §F 的新登記項而非本檔的錯。
+- **「訂單編輯造成的負向差額」的精確界定**（例如改運費算不算、改稅額算不算）本檔未窮舉，
+  留待 M5 建 rollup 時對照 19 §F1.1 一併定案。
+- 本檔**未涵蓋**換貨（exchange）的完整資料模型——那是 M4 的事，本檔只規定了它在
+  金額與件數兩側的**計入原則**（金額 0、件數計入）。
