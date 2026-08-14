@@ -156,3 +156,45 @@
   「手動/智慧二分不可互轉」與「多來源組可混用」是**兩種不同的表結構**，不是同一張表的兩種畫法。
 - **影響**：71-R8-V4 結案方向確定；M1 建 collections 相關表或 mutation **前**要先改 schema
   （現行 `collections`／`collection_products`／`collection_rules` 三張是 legacy 形態）。
+
+### D14. userErrors 契約全面對齊本尊（2026-08-15，Admin API 2026-07 逐頁考掘）
+
+- **問題**：`docs/research/28` §0.3 的 mutation 契約有四處與本尊不符，而第一支 mutation
+  定下的形態會被全專案抄。使用者裁定：「深度分析和研究 shopify 的架構，然後我們和 shopify 一樣」。
+- **方法**：四路平行考掘 shopify.dev（field 路徑／code enum／金額正負／payload 慣例）
+  ＋ 三路對抗式覆核（找反例／查版本差異／檢查我方誤讀）。覆核逐頁複核 24 條 load-bearing 事實。
+
+**照抄本尊的（無偏離）**：
+
+| # | 裁定 | 依據 |
+|---|---|---|
+| 1 | `userErrors.field` 型別＝**`[String!]`**（list 可 null、元素非 null），不是 `[String]` | `/interfaces/DisplayableError` 的 SDL 逐字 |
+| 2 | **`input:` 這層外殼要剝掉**：`productDelete(input:{id})` 的錯誤回 `["id"]` 不是 `["input","id"]` ⇒ 63 §A.4 的 `["lockVersion"]` **本來就對** | `/mutations/productDelete` 官方錯誤範例 |
+| 3 | 陣列索引＝**十進位裸字串段**平鋪（`["variants","0","optionValues","0"]`），不用括號／JSONPath | 兩個官方 payload 實例 |
+| 4 | 無法歸屬 ⇒ `field` 回 **`null`** 不是 `[]` | `/mutations/draftOrderComplete` 官方範例 |
+| 5 | **沒有 `clientMutationId`** ⇒ BaseMutation 繼承 `GraphQL::Schema::Mutation`，**不得**用 `RelayClassicMutation` | schema 抽樣 ＋ 404 |
+| 6 | payload 的 **resource 欄位 0..N**，唯一必備是 `userErrors: [X!]!` ⇒ 不得寫死「一個 resource ＋ userErrors」 | 多個官方 payload |
+| 7 | **`CONFLICT` 只屬折扣線**（語義＝折扣屬性互斥的輸入驗證）⇒ 樂觀鎖改 **`STALE_OBJECT`**、庫存 CAS 改 **`CHANGE_FROM_QUANTITY_STALE`**。63 §L-3 以**相反方向**結案 | `DiscountErrorCode` 頁 |
+| 8 | 金額**型別層一律不驗正負**；退款在交易層是**正數**、方向由 `kind` 承載；送 PSP 正數；訂單編輯減項用**獨立型別 ＋ 正 delta**。唯一負數例外是 tender 層 | `Decimal` scalar signed ＋ Stripe「A positive integer」 |
+| 9 | `compareQuantity` **自 2026-04 已移除**，改 `changeFromQuantity`（型別 `Int` **nullable**——「必填」是行為層要求，做成 `Int!` 會拿掉官方明文的「傳 null＝關閉 CAS」逃生門） | schema diff |
+| 10 | input object 命名規則 `{Mutation}Input` **已落後兩年**：本尊 2024-10 起拆成 `ProductCreateInput`／`ProductUpdateInput`，參數改具名 | `/mutations/productCreate` |
+| 11 | 對齊基準版＝**2026-07**（Spring '26 發布日 2026-06-17），不是 2026-04 | 版本頁 |
+
+**刻意偏離（每條都標 ours）**：
+
+| # | 偏離 | 型態 | 為什麼非偏不可 |
+|---|---|---|---|
+| A | **所有 mutation 的 userErrors 一律帶 `code`** | 加嚴 | 本尊泛用 `UserError` **沒有 code**（`/enums/UserErrorCode` 回 404，無共用 base enum）。我方 admin SPA 是唯一客戶端，錯誤分支必須機器可判別；本尊留著無 code 的舊型別是**相容包袱**，它自己也在逐支遷往 typed error ⇒ 這是「往本尊正在走的方向走完」 |
+| B | **各 enum 的值從共用池取** | 加嚴 | GraphQL **形狀照抄**（一個 UserError type 一個專屬 enum，`PageDeleteUserErrorCode` 只有 1 值、`PageCreate` 8 值、`PageUpdate` 9 值）；偏離的只有值域紀律。本尊自己就有 `PRESENT`／`PRESENCE`（語義相反）、`NOT_FOUND`／`RECORD_NOT_FOUND`／`*_DOES_NOT_EXIST` 三種拼法——那是二十年演進的產物，我方沒有相容包袱 |
+| C | **不採用 `elementIndex`** | 收斂 | 本尊對陣列元素錯誤有**兩種**做法，而它自己沒把任一種做成全域鐵律（`ProductSetUserError` 就沒有）。`elementIndex` 與 `field` 的並存語義官方**從未定義** ⇒ 照抄等於抄一個語義未定的欄位。此偏離**只減不加**，客戶端照本尊的另一種寫一律相容 |
+| D | **Admin 側新增 `warnings`** | 新增 | Admin GraphQL 沒有 warnings（`/objects/CartWarning` 在 Admin 命名空間 404），唯一先例在 Storefront Cart。63 §L-9 的「重複 SKU 放行但提醒」在本尊是**靜默行為**，我方判定靜默合併是可用性缺陷。形狀 **100% 照抄 Storefront**（`{code, target, message}` 三欄全非空），所以不是自創語義 |
+| E | **冪等擴充到 33 支** | 加嚴 | 本尊 2026-04 起強制的是 **17 支**，全部是 refund／inventory／location——**Shopify 自己的金流寫入點**，不涵蓋我方自有的。`orderCreate` 至 unstable 都**沒有任何冪等機制**。判準沿用 NP1-D「凡金流寫入一律強制冪等」。🔴 **不會因升版變成 parity**，升版時不得併進官方段 |
+| F | **冪等用 mutation 參數而非 directive** | 形態不同 | 本尊主流是 `@idempotent(key:)` **directive**（少數走 input 欄位）。⚠ 該 directive 的 SDL 定義 shopify.dev **沒有獨立頁面**（無 directives 索引），我方寫的 `directive @idempotent(key: String!) on FIELD` 是從用法反推 ⇒ 登記為假設 |
+
+- **同批修正的檔案**：`CLAUDE.md` 鐵律 4（「HTTP 恆 200」改成三層）、`docs/research/28`
+  §0.1／§0.3.1–§0.3.6、`docs/specs/63` §A.4／§E.5／§L-3／驗收清單、
+  `docs/specs/65` §A.7 ＋ 五處「無符號」措辭、`config/limits.yml` 冪等區塊。
+- 🔴 **仍未查到、不得硬寫的**：具名參數形下的多段 path（只有單段官方範例）；
+  `UserError` 是否 `implements DisplayableError`；`OrderAdjustment.amountSet` 個別項的正負；
+  ShopifyQL MONEY measure 的 **API 回傳**符號（報表 UI 明文「reversal 顯示為負」，
+  但沒有頁面把 UI 符號與 API 符號連起來）⇒ **鐵律 7 的一致性測試不得斷言 `sales_reversals` 的符號**。

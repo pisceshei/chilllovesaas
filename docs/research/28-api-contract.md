@@ -6,6 +6,21 @@
 
 ### 0.1 端點與版本
 - Admin GraphQL：`POST /admin/api/{version}/graphql.json`，version＝日期制 `YYYY-MM`（首版 `2026-08`）。回應 header `X-CL-API-Version` 標實際服務版本（fall-forward 語義佔位）。schema 演進用 `@deprecated(reason:)`。
+
+> 🔴 **對齊基準版＝Shopify Admin API `2026-07`**（2026-08-15 釘死）。
+> 「2026 春季版」＝ Spring '26 Edition，官方發布日 **2026-06-17**，其 API 面落地版本是
+> **2026-07（＝目前 latest）**，**不是 2026-04**——兩者確有實質差異
+> （例：ShopifyQL 的 `returns*` 系列 2026-04 仍在、2026-07 已移除）。
+> 本文的 **enum 值清單**與**冪等白名單**是**版本綁定**的，升版時必須逐項 diff。
+>
+> 🔴 **查證方法的陷阱（踩過一次，寫下來）**：shopify.dev **只保留最近四個 stable 版**的
+> schema 文檔，而 `/2024-01/`、`/2025-01/` 這類舊路徑會**靜默回傳 latest 內容且不報錯**
+> （實證：`/2024-01/mutations/productCreate` 自報 `api_version 2026-07`，
+> 並顯示 2024-10 才引入的 `product: ProductCreateInput`）。
+> ⇒ 任何「2022-01／2024-01／2025-01 逐字相同 ⇒ 跨版本一致」的結論**都是假證據**，
+> 一律降級為「查不到」。可查證窗口目前是 **2025-10／2026-01／2026-04／2026-07／unstable**。
+> 另：官方自 **2025-04 起停發 API release notes**（最後一份是 2025-01），
+> 版本差異只能靠 schema 頁逐項比對。
 - demo 期單版本；版本窗口目標（12 個月支援、9 個月重疊）寫入規格待商業化執行。
 
 ### 0.2 認證與授權
@@ -16,7 +31,109 @@
 ### 0.3 GraphQL 核心慣例（全部照抄）
 - **GID**：`gid://chilllove/{Type}/{id}`；主要物件實作 `Node`，支援 `node(id:)/nodes(ids:)`；物件帶 `legacyResourceId`。
 - **分頁**：connection `first/after/last/before`＋`pageInfo{hasNextPage,hasPreviousPage,startCursor,endCursor}`；**每頁上限 250**；優先查 `nodes` 而非 `edges`；cursor＝base64(排序鍵+id) 不透明。
-- **Mutation**：命名 `resourceVerb`（productCreate/orderCancel）；input object `{Mutation}Input`；payload＝`{ resource, userErrors: [{field: [String], message: String!, code: Enum}] }`——**業務錯誤走 userErrors（HTTP 200）**，top-level errors 只承載 syntax/THROTTLED/ACCESS_DENIED/INTERNAL（附 requestId）。**一開始就上 typed code enum**。宣告式 upsert 用 `*Set`（metafieldsSet/productSet）。
+- **Mutation**：命名 `resourceVerb`（productCreate/orderCancel）；payload＝`{ <0..N 個 resource 欄位>, userErrors: [X!]! }`——**業務錯誤走 userErrors（HTTP 200）**，top-level errors 只承載 syntax/THROTTLED/ACCESS_DENIED/INTERNAL（附 requestId）。宣告式 upsert 用 `*Set`（metafieldsSet/productSet）。
+
+<!-- 🔴 2026-08-15 本尊考掘（Admin API 2026-07 逐頁查證）：本行原文有**四處**與本尊不符，
+     全部改寫於下方 §0.3.1–§0.3.4。原文：
+     「input object `{Mutation}Input`；payload＝`{ resource, userErrors: [{field: [String],
+       message: String!, code: Enum}] }`……**一開始就上 typed code enum**。」
+     四處分別是：①`field` 的 nullability 寫反 ②`{Mutation}Input` 命名規則已落後本尊兩年
+     ③payload 寫死「一個 resource」 ④「typed code enum」被寫成慣例，實際上是我方加嚴。 -->
+
+#### §0.3.1 `userErrors.field` 的型別與路徑（🔴 全部照抄本尊）
+
+- **型別＝`[String!]`**（list 可為 null、元素非 null）。
+  出處：`shopify.dev/docs/api/admin-graphql/latest/interfaces/DisplayableError` 的 SDL
+  逐字 `interface DisplayableError { field: [String!]  message: String! }`。
+  ⚠️ 本文原本寫 `[String]`（元素可空）是**寫反了**。graphql-ruby 的對應寫法是
+  `field :field, [String], null: true`——寫成 `[String, null: true]` 才會渲染成 `[String]`。
+- **`input:` 這層外殼要剝掉**：mutation 參數是單一 `input: XInput!` 時，
+  path 從 input object 的內層欄位名起算。
+  出處：`/mutations/productDelete` 的官方錯誤範例逐字
+  `{"field": ["id"], "message": "Product does not exist"}`——參數是 `input: ProductDeleteInput!`、
+  id 住在 `input.id`，回的是 `["id"]` **不是** `["input","id"]`。
+  ⇒ `docs/specs/63` §A.4 的 `field: ["lockVersion"]` **與本尊一致，不需要改**。
+- **具名參數會進 path**：`productVariantsBulkCreate(productId:, variants:)` 的錯誤回
+  `["productId"]`、`["variants","0","optionValues","0"]` ⇒ 參數名是第一段。
+  ⚠️ **只有名為 `input` 的參數被剝殼**這條規則，是由上述三個官方實例歸納的；
+  「`productCreate(product: {title: ""})` 回 `["product","title"]` 還是 `["title"]`」
+  **沒有官方範例可證**，登記為假設（見 §0.3.5）。
+- **陣列索引＝十進位裸字串段**，與其他段平鋪在同一個一維陣列，
+  不用括號、不用 JSONPath、不用 `$` 前綴；path 也允許**終止於索引段**。
+  出處：`["variants","0","metafields","0","value"]`、`["variants","0","optionValues","0"]`。
+  🔴 **不得**與 Checkout Validation Function 的 `target: "$.cart.deliveryGroups[0]..."` 混用，
+  那是另一個介面的另一套語法。
+  ⇒ `docs/specs/63` 第 717 行的 `field: ["compareQuantity"]` **要改**——單段寫法同時丟了
+  層級與索引，多筆一起送時前端無法定位是第幾筆。
+- **無法歸屬到任何欄位時 `field` 回 `null`**，不回 `[]`。
+  出處：`/mutations/draftOrderComplete` 的官方錯誤範例逐字 `"field": null`；
+  全站查不到任何 `"field": []` 的官方範例。
+
+#### §0.3.2 `userErrors.code`（🔴 **ours：加嚴，非照抄**）
+
+- **本尊的泛用 `UserError` 沒有 code**，只有 `field`／`message`；
+  `DisplayableError` interface 也沒有。`/enums/UserErrorCode` 回 **404** ⇒ 無共用 base enum。
+  官方 build guide 教的選取形狀逐字只有 `userErrors { field message }`。
+- **我方一律有 code**，理由：admin SPA 是唯一客戶端，錯誤分支必須機器可判別；
+  且本尊自己也在逐支遷往 typed error（留著無 code 的舊型別是相容包袱，不是設計偏好）。
+  ⇒ 這是「往本尊正在走的方向走完」，但**必須標為 ours**。
+- **enum 的 GraphQL 形狀照抄本尊：一個 UserError object type 對應一個專屬 enum**
+  （`PageDeleteUserErrorCode` 只有 1 個值、`PageCreateUserErrorCode` 8 值、
+  `PageUpdateUserErrorCode` 9 值——同資源三支 mutation 三個獨立 enum）。
+  **偏離的只有值域紀律**：我方強制各 enum 的值從共用池取（見 §6），
+  因為本尊自己就有 `PRESENT`／`PRESENCE`（語義甚至相反）、
+  `NOT_FOUND`／`RECORD_NOT_FOUND`／`*_DOES_NOT_EXIST` 三種拼法的分歧——
+  那是二十年演進的產物，我方沒有相容包袱不需要繼承。
+- 🔴 **`CONFLICT` 不得泛用化成樂觀鎖碼**：本尊的 `CONFLICT` 只存在於 `DiscountErrorCode`，
+  語義是「折扣屬性選擇互相衝突」的**輸入驗證**，與樂觀鎖無關。
+  樂觀鎖用 **`STALE_OBJECT`**、庫存 CAS 用 **`CHANGE_FROM_QUANTITY_STALE`**。
+- **不採用 `elementIndex`**：本尊對陣列元素錯誤有兩種做法（索引編進 field ／ 另立
+  `elementIndex: Int`，見 `MetafieldsSetUserError`），而**本尊自己沒把任一種做成全域鐵律**
+  （`ProductSetUserError` 就只有 code/field/message）。②的並存語義官方從未定義，
+  照抄等於抄一個語義未定的欄位 ⇒ 我方統一走索引編進 field。**此偏離只減不加**。
+
+#### §0.3.3 payload 形狀
+
+- **`userErrors: [X!]!` 是唯一必備欄位**（非空 list of 非空；成功時 `[]` 而非 `null`）。
+- **resource 欄位數量下限是 0**（純副作用 mutation 只有 userErrors），上限是 N
+  （多資源 ＋ `Shop!` ＋ `Job` ＋ async operation）。
+  ⇒ BaseMutation **不得**把「一個 resource 欄位 ＋ userErrors」寫死成契約。
+- **資源參數的 nullability 逐 mutation 決定**，BaseMutation 不得寫死：
+  `productSet(input: ProductSetInput!)` 必填，但 **`productCreate(product: ProductCreateInput)` 是 nullable**
+  （因為 deprecated 的 `input: ProductInput` 仍在 schema 裡共存，兩個互斥參數不可能同時 non-null）。
+- **沒有 `clientMutationId`**（payload 與 input object 兩側都沒有）
+  ⇒ 我方 BaseMutation 必須繼承 `GraphQL::Schema::Mutation`，
+  **不得**用 `GraphQL::Schema::RelayClassicMutation`（後者會自動注入該欄位）。
+- **棄用遷移形態**：本尊把 mutation 遷往 typed error 的手法是
+  **在 payload 加一個新名字的欄位、把舊的標 deprecated 並保留**，不是改 `userErrors` 的型別
+  （改型別會破 schema 相容）。例：`orderCancel` 的 `orderCancelUserErrors` 與 deprecated 的 `userErrors` 並存。
+
+#### §0.3.4 input object 命名與參數風格（🔴 本文原規則已落後本尊兩年）
+
+- 原文「input object 一律 `{Mutation}Input`」已不成立。本尊自 **2024-10** 起把
+  `ProductInput` 拆成 `ProductCreateInput`／`ProductUpdateInput`，
+  參數名改為 `product:`／`identifier:`＋`product:`，舊 `input:` 標 deprecated 保留。
+- **新寫的 mutation 走具名參數**：資料本體 → input object；目標 → 獨立 ID scalar；
+  行為策略 → options/strategy；附屬資源 → 獨立 list。
+
+#### §0.3.5 `warnings`（成功但要提醒）——🔴 **ours：Admin 側新增，形狀照抄 Storefront**
+
+- **Admin GraphQL 沒有 warnings 欄位**（`/objects/CartWarning` 在 Admin 命名空間回 **404**；
+  抽樣 7 個 payload ＋ 3 輪站內搜尋皆無）。本尊唯一的先例在 **Storefront Cart**。
+- 我方 `docs/specs/63` §L-9 需要一個「成功但要提醒」的位置（重複 SKU 放行但提醒），
+  而**塞進 `userErrors` 會被前端當成失敗**（違反鐵律 4）。
+- ⇒ 形狀 **100% 照抄 Storefront `CartWarning`**：`{ code: Enum!, target: ID!, message: String! }`
+  ——三欄全非空，空時回 `[]`。
+  🔴 **不得自創 `field` 欄位、不得丟掉 `target`**：那樣就變成自創語義而不是搬用既有機制。
+- 本尊對重複 SKU 是**靜默行為**（無錯誤也無提醒）；我方判定靜默合併是可用性缺陷 ⇒ 這是加嚴。
+
+#### §0.3.6 假設清單（本節唯一沒有官方範例的一條）
+
+- ⚠️ **具名參數形下的多段 path**：官方只有單段 `["productId"]`、剝殼後的 `["id"]`、
+  以及 `["variants","0",...]`。「剝殼規則只針對名為 `input` 的參數，還是針對所有單一資料本體參數」
+  沒有官方範例可證。我方採**只剝 `input`**（三個官方實例都相容）。
+  補證方式＝拿真實 Admin API token 打三發（productDelete 壞 id／productCreate 空 title／
+  productVariantsBulkCreate 多筆其一壞），把 field 陣列原樣抄回本節。
 - **標量**：`DateTime`（ISO8601 UTC）、`Date`、`Decimal`（字串）、`URL`、`HTML`、`JSON`；金額一律 **`MoneyV2{amount: Decimal, currencyCode}`**，多幣雙記 **`MoneyBag{shopMoney, presentmentMoney}`**（29 §3）。內部儲存仍 integer cents，序列化層轉 Decimal 字串。
 - **陣列型 input 上限 250**。
 

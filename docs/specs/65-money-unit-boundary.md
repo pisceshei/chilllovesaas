@@ -61,9 +61,41 @@
 | **R1** | 儲存 cents | `Money::Storage`（內含 `Integer`） | storage cent | **一律 ×100，不看幣別** | 所有 DB 金額欄位（後綴 `_cents`）、全部業務層運算、冪等鍵、會計分錄 | 鐵律 3 ＋ `currency_display.storage_scale_unchanged` |
 | **R2** | micro-cents | `Integer`（裸值） | cents × 10⁶ | ×10⁸ 相對主單位 | **只在 `Pricing::PresentmentResolver` 的方法內部**；不得跨方法邊界、不得落庫、不得序列化 | 63 §G.3 |
 | **R3** | 顯示字串 | `String` | — | 恆兩位小數 ＋ market locale 的符號與千分位 | Liquid `money` filter、admin UI、通知信、PDF、面單 | 裁定二 ＋ 鐵律 10 |
-| **R4** | 十進位字串 | `Money::Decimal`（內含 `String`） | **主單位**（major unit） | 恆兩位小數、**無符號、無千分位**、小數點為 `.` | JSON-LD `Offer.price`、GMC/Meta feed、CSV 價格欄、GraphQL `MoneyV2.amount`、**物流商** | 62 §A.4 ＋ 58 §G.3 |
+| **R4** | 十進位字串 | `Money::Decimal`（內含 `String`） | **主單位**（major unit） | 恆兩位小數、**無幣別符號、無千分位**、小數點為 `.` | JSON-LD `Offer.price`、GMC/Meta feed、CSV 價格欄、GraphQL `MoneyV2.amount`、**物流商** | 62 §A.4 ＋ 58 §G.3 |
 | **R5** | PSP minor unit | `Money::PspMinor`（內含 `Integer`） | **該 PSP 為該幣別宣告的 minor unit**（正常值＝ISO 4217 exponent，**但不保證**——見 §D.4） | 依幣別（JPY 0／HKD 2） | **只在 `amount_format: minor_units` 的 PSP adapter payload 內** | 本篇 §D |
-| **R6** | **PSP 十進位字串** | `Money::PspDecimal`（內含 `String`） | **主單位**（major unit），位數由 pack 宣告 | 恆兩位小數（我方儲存尺度的上限）、**無符號、無千分位**、小數點為 `.` | **只在 `amount_format: decimal_string` 的 PSP adapter payload 內**（Airwallex 型） | 本篇 §D、⚠ V-132 |
+| **R6** | **PSP 十進位字串** | `Money::PspDecimal`（內含 `String`） | **主單位**（major unit），位數由 pack 宣告 | 恆兩位小數（我方儲存尺度的上限）、**無幣別符號、無千分位**、小數點為 `.` | **只在 `amount_format: decimal_string` 的 PSP adapter payload 內**（Airwallex 型） | 本篇 §D、⚠ V-132 |
+
+<!-- 2026-08-15 措辭修正（本尊考掘）。R4／R6 的尺度欄原文寫「無**符號**、無千分位」。
+     🔴 那句話有歧義，而兩種讀法差很多：
+       ①「無幣別符號」（不寫 HK$）——這是本意，`config/limits.yml:189` 逐字就是這樣寫的；
+       ②「無正負號」（不許負數）——照這個讀法實作出 `^\d+\.\d{2}$`，就會**擋掉退款差額**。
+     `money_boundary.decimal_string_regex` 原文是 `^-?\d+\.\d{2}$`（**明文允許前置負號**），
+     所以規格內部本來就是 ①，只是中文寫得不夠死。五處全部改為「無幣別符號」。 -->
+
+### §A.7 正負號：值物件層**不驗**，驗在寫入端與 PSP adapter
+
+🔴 **本篇原本從頭到尾沒提過負數**，而鐵律 7 的註釋明說「總銷售額可以是負數」——
+這個缺口會讓實作者在 `Money::Storage` 上加一條 `cents >= 0` 的驗證，然後退款流程整條卡死。
+
+本尊考掘結論（Admin API 2026-07 逐頁查證）：
+
+| 層 | 本尊行為 | 我方 |
+|---|---|---|
+| **scalar／型別層** | `Decimal` 官方明文是 **signed**；`MoneyV2`／`MoneyInput` 允許負數 | `Money::Storage`／`Money::Decimal` **一律不驗正負** |
+| **業務讀取面** | 官方點名可為負的只有 `Order.totalOutstandingSet`、`Order.refundDiscrepancySet`、`TenderTransaction.amount` | 同 |
+| **交易層（退款）** | 一律**正數**，方向由 `kind`（SALE／CAPTURE／REFUND／VOID）承載 | 同——**退款金額不是負數** |
+| **送 PSP** | 正數（Stripe `POST /v1/refunds` 的 amount 官方逐字「A positive integer…」） | PSP adapter **驗正數**，負值一律 raise |
+| **訂單編輯的減項** | 用**獨立型別 ＋ 正整數 delta**（Increment／Decrement、Add／Remove 成對），不用負數 | 同——輸入端一律禁負 |
+| **tender 層** | 🔴 **相反**：`tenderTransactions` 明文「負數＝退款」 | 若日後做這個查詢面，**必須照抄這個相反的慣例並在此處寫明** |
+
+⇒ **驗證放在邊界不是放在型別**：值物件負責單位，不負責業務方向。
+在 `Money::Storage` 上驗非負，等於用型別系統表達一個**只在某些路徑成立**的業務規則。
+
+⚠️ **仍未查到**：`OrderAdjustment.amountSet` 個別項的正負（官方只在其加總
+`Order.refundDiscrepancySet` 上有負數語義）；`CalculatedOrder.totalOutstandingSet` 是否與
+`Order.` 同語義；ShopifyQL 各 MONEY measure 的 **API 回傳**符號（報表 UI 明文
+「reversal 顯示為負」，但沒有頁面把 UI 符號與 API 符號連起來）。
+⇒ **鐵律 7 的一致性測試若要斷言 `sales_reversals` 的符號，目前沒有官方依據**，不得硬寫。
 
 <!-- R6 依 69 號 §V-188 新增（2026-08-12）。原表只有五列，**R5 是唯一的對 PSP 出向表示法**，
      其隱含前提是「所有 PSP 都收整數 minor unit」。69 號查到的四家 PSP 是**四種算法**：
@@ -226,7 +258,7 @@ class Money::Storage
     # 位數必須由 pack 宣告；我方儲存尺度只能無損表達 2 位 ⇒ 宣告 >2 位時見 A6。
     major = BigDecimal(cents).div(BigDecimal(100), 20)         # 🔴 全程 BigDecimal，禁 float
     check_divisibility!(pack, major)                           # A5（基準＝送出值本身，見下）
-    str = format_fixed(major.to_s("F"), pack.decimal_places)   # A6：定位數、無符號、無千分位
+    str = format_fixed(major.to_s("F"), pack.decimal_places)   # A6：定位數、**無幣別符號**、無千分位
     Money::PspDecimal.__build(string: str, currency:, psp: pack.code)      # A4
   end
 end
@@ -247,7 +279,7 @@ end
 | **A3** | `cents % divisor == 0`；**餘數不為 0 ⇒ raise，不四捨五入** | `minor_units` | 拒絕送出 | JPY 的 `148050`（¥1,480.50）在 ISO 下不可表達 ⇒ **是上游算錯了**（湊整規則沒套用，29 §3.3）。悄悄抹掉 50 會讓對帳永遠差幾分錢卻查不出來——同 58 §G.3 規則 2 的理由 |
 | **A4** | 回傳型別必為該 pack 的 `amount_value_class`（`Money::PspMinor`／`Money::PspDecimal`），且送出前再驗 `psp` 相符 | 兩者 | `TypeError` | 擋住「A 家的值送去 B 家」與「R4 混進來」（§C.1 L3、§A 末段第 3 點） |
 | **A5** | 🔴 **`divisibility_constraint`**：pack 若宣告某幣別的金額必須為 N 的倍數，違反 ⇒ raise `PSP_DIVISIBILITY_VIOLATION`，**不得四捨五入湊整**。**基準＝即將送出的值，用該 PSP 自己的單位**（`minor_units` 檢查 minor 整數；`decimal_string` 以 `BigDecimal` 檢查主單位，禁 float） | 兩者 | 拒絕送出 | 依 69 §V-188 新增。**這不是虛構需求**：Stripe 官方文檔明文要求 **HUF／TWD 的 payout 金額必須整除 100**（`alt`）。而 **TWD 正好在 §H.1 的測試矩陣裡**。🔴 **自動湊整是最壞的處置**——它會讓「送出去的錢」與「帳上記的錢」不同，而差額沒有任何一張表記得住（同 A3 的理由）。⚠ 該約束在 charge 與 payout 上是否同時成立 ⇒ **V-206** |
-| **A6** | `decimal_string` 專用：輸出字串必須匹配 pack 宣告位數的正則、無符號、無千分位、小數點為 `.`；**pack 宣告位數 > 2 ⇒ 該 pack 不得 enable** | `decimal_string` | 拒絕送出／pack 不得 enable | 我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只能給到 2 位＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `2.900`）。**這與 A2 是同一條規則在另一種格式下的形態**，不是新規則 |
+| **A6** | `decimal_string` 專用：輸出字串必須匹配 pack 宣告位數的正則、**無幣別符號**、無千分位、小數點為 `.`；**pack 宣告位數 > 2 ⇒ 該 pack 不得 enable** | `decimal_string` | 拒絕送出／pack 不得 enable | 我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只能給到 2 位＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `2.900`）。**這與 A2 是同一條規則在另一種格式下的形態**，不是新規則 |
 
 **額外一條（非生產環境每次轉換都跑）**：往返自檢 `from_psp_amount(to_psp_amount(x)) == x`（兩種格式各跑一次）。在 A3／A6 成立時它恆真——**它擋的不是今天的 bug，是日後有人改了 divisor 公式或字串格式化**。鍵：`money_boundary.roundtrip_selfcheck_envs`。
 
@@ -397,7 +429,7 @@ amount_format: decimal_string  ⇒ storage_cents = BigDecimal(psp_decimal) * 100
 | T12 | 全部 | `from_psp_amount(to_psp_amount(x)) == x`（兩種 `amount_format` 各跑） | 恆真 | 日後有人改 divisor 公式或字串格式化 |
 | T13 | JPY | CSV 匯出 → 再匯入 | 儲存值不變（`148000`） | §G 的來回失真 |
 | T14 | 任一 | 對 PSP adapter 傳裸 `Integer` | `TypeError` | §C L3 |
-| **T15** | **JPY** | 儲存 `148000` → `to_psp_amount`（**`decimal_string`** pack） | **`"1480.00"`**（字串，兩位，無符號無千分位） | 🔴 依 69 §V-188 新增。**Airwallex 型的主案例**——`"148000.00"` 就是收款 100 倍，而**這一條在 HKD 上也會錯**，所以它是矩陣裡唯一不需要 zero-decimal 幣別就能抓到的送款事故 |
+| **T15** | **JPY** | 儲存 `148000` → `to_psp_amount`（**`decimal_string`** pack） | **`"1480.00"`**（字串，兩位，無幣別符號、無千分位） | 🔴 依 69 §V-188 新增。**Airwallex 型的主案例**——`"148000.00"` 就是收款 100 倍，而**這一條在 HKD 上也會錯**，所以它是矩陣裡唯一不需要 zero-decimal 幣別就能抓到的送款事故 |
 | **T16** | **TWD** | 宣告 `divisibility: {TWD: 100}` 的 fixture pack；金額 `148050` | **raise `PSP_DIVISIBILITY_VIOLATION`**，且**不得**回傳被湊整後的值 | 🔴 A5。Stripe 對 TWD／HUF payout 的整除要求（`alt`）。**斷言要同時檢查「有 raise」與「沒有靜默湊整」**——只測前者的話，一個「先湊整再 raise」的實作也會綠 |
 | **T17** | 任一 | 把 `Money::Decimal`（R4，物流商／JSON-LD 用的那個）傳進任何 PSP adapter | **`TypeError`** | 🔴 §A 末段第 3 點。R4 與 R6 的字串內容可能一模一樣 ⇒ **這條是唯一能證明「型別而非字串」真的在守門的測試** |
 | **T18** | 任一 | 把 `Money::PspMinor(psp: :stripe)` 傳進 `decimal_string` 型 adapter（反之亦然） | **`TypeError`** | A4 的格式維度：擋住「格式對了但家別錯了」與「家別對了但格式錯了」兩種交叉誤用 |

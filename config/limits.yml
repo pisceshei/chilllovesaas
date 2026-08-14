@@ -459,7 +459,21 @@ idempotency:
   key_format_scheduled: uuid_v5
   # Bulk 操作每個 JSONL row 一把獨立 key，絕不共用。出處：46a:1015（dev）
   bulk_key_per_row: true
-  # 強制帶 key 的 mutation 家族（Shopify 自 2026-04 起強制，共 17 個，以 refund/inventory 為主）。
+  # 🔴 **本尊的冪等是 GraphQL directive 形，不是 input 欄位**（2026-08-15 考掘）：
+  #    `mutation { refundCreate(...) @idempotent(key: "…") { … } }`
+  #    少數走 input 欄位（`SubscriptionBillingAttemptInput.idempotencyKey: String!`）。
+  #    ⚠ `@idempotent` 的 SDL 定義（directive location、key 可空性）shopify.dev 上**沒有獨立頁面**
+  #      （該站無 directives 索引），`directive @idempotent(key: String!) on FIELD` 是從用法範例
+  #      反推的 ⇒ 我方實作時登記為假設。
+  #    ⇒ 我方 28 §0.6 原本寫成 mutation 參數，**那是我方形態不是本尊形態**，已於 28 §0.6 標明。
+  #
+  # 🔴 **下面這份清單分兩段，混在一起讀會誤以為全部有官方背書**：
+  #    段一＝本尊 2026-04 起強制的官方清單（公告日 2025-12-12，共 **17 支**，全部是
+  #          refund／inventory／location 三類，也就是 **Shopify 自己的金流寫入點**）；
+  #    段二＝我方擴充（ours），判準沿用 NP1-D「凡金流寫入一律強制冪等」。
+  # 🔴 **`orderCreate` 至 unstable 版都沒有任何冪等機制**——我方對它強制冪等是**加嚴**，
+  #    而且**不會因為升版變成 parity**，升版時不得把它併進官方段。
+  #
   # 出處：46a:781–787（dev，公告日 2025-12-12）
   required_for:
     - refundCreate
@@ -477,6 +491,17 @@ idempotency:
     - inventoryTransferCreate
     - locationActivate
     - locationDeactivate
+    # 🔴 2026-08-15 補齊：上面只收了官方 17 支裡的 10 支，註解卻寫「共 17 個」——
+    #    數字與清單對不上，而**對不上的方向是少收**（漏掉的 7 支會在沒有冪等的情況下被實作）。
+    #    以下 7 支同屬官方強制清單，我方**尚未實作**；先列著是刻意的：
+    #    這是「要求清單」不是「存在清單」，列在這裡的作用是讓第一個實作它的人被 CI 擋下來。
+    - inventoryActivate
+    - inventorySetScheduledChanges
+    - inventoryShipmentAddItems
+    - inventoryShipmentCreateInTransit
+    - inventoryTransferCreateAsReadyToShip
+    - inventoryTransferDuplicate
+    - inventoryTransferSetItems
     # --- 以下 9 支為 55 號盤點（docs/specs/55 §A / §D G-08）反向補齊：
     #     官方 17 個強制清單是「Shopify 自己的金流寫入點」，**不涵蓋我方自己的**。
     #     50/52/54 三輪都只抄了官方清單，從未反向盤點「我方哪些路徑會動錢」。
