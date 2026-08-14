@@ -15,4 +15,8 @@ class Collection < ApplicationRecord
   has_many :resource_publications, as: :publishable, dependent: :destroy
 
   validates :title, :handle, presence: true
+  # DB 已有 uq_collections_handle (shop_id, handle) 唯一索引；沒有 model validation
+  # 的話重複 handle 會拋 RecordNotUnique 而不是乾淨的驗證錯誤，
+  # 與 Product 的處理不一致（PR #24 的 Claude 驗收 🟡 建議）。
+  validates :handle, uniqueness: { scope: :shop_id, case_sensitive: false }
 end

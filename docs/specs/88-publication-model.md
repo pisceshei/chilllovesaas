@@ -89,7 +89,7 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 
 ---
 
-## §4 `products.published_at` 已移除
+## §4 `products.published_at` 與 `collections.published_at` 皆已移除
 
 🔴 **同一件事不留兩個事實來源**——這正是鐵律 7 要防的形態：兩處都能寫，遲早不一致。
 
@@ -97,6 +97,31 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 - 排程發布的語義**沒有消失**，它搬到了 `resource_publications.published_at`，且變成 **per channel**；
 - 每間店在 migration 中已建一個 `online_store` publication。
   🔴 **建立商店的流程必須連帶建立它**（M1 待辦，§5）。
+- `collections` 的索引由 `(shop_id, collection_type, published_at)` 改為
+  `(shop_id, collection_type)`——列表仍要照類型篩，只是不再篩上架狀態。
+
+<!-- 2026-08-14 補（PR #24 的 Claude 驗收「🔴 必須修」第 1 條）。本節原文只寫 products。
+     🔴 `collections` 本來就有一個語義完全相同的扁平 `published_at`，而本次又把 Collection
+     接進 `resource_publications`（`has_many ... as: :publishable`）
+     ⇒ **Collection 同時有兩個上架事實來源**，正是本節自己要防的形態。
+     我把移除 products 的理由寫得很清楚，卻沒有把同一條理由套用到同批接進來的 Collection——
+     而且 §5／§6 也沒有登記成刻意分期，所以它是**漏掉不是分期**。
+     教訓：**「同一件事不留兩個來源」要對這一批接進來的每一個型別各檢查一次**，
+     不能只檢查觸發這次改動的那一個。 -->
+
+### §4.1 多型的代價：跨租戶只能靠 model validation
+
+🔴 `acts_as_tenant` **不驗證多型外鍵的租戶歸屬**（gem 原始碼
+`acts_as_tenant-1.0.1/lib/acts_as_tenant/model_extensions.rb:57-62` 明確排除），
+且 MySQL **無法對多型欄位建外鍵** ⇒ `publication` 有複合外鍵、`publishable` 沒有
+⇒ **gem 層與 DB 層都沒有人擋**。
+
+保護只有一道：`ResourcePublication#publishable_belongs_to_same_shop`。
+
+常規請求下 `belongs_to` 的存在性驗證 ＋ `default_scope` 會**順帶**擋住跨店 id，
+但那是偶然的副作用，在 `ActsAsTenant.without_tenant`（資料遷移／seeds／維運腳本）、
+明確指定 `shop_id`、或 `insert_all`／`upsert_all` 之下全部失效。
+⚠️ **本驗證擋不住 `insert_all`／`upsert_all`**（Rails 一律跳過 validation）。
 
 ---
 
@@ -119,4 +144,7 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 - **`ProductVariant` 與 `Collection` 是最小 model**（只有租戶隔離、關聯、基本驗證）。
   建它們的唯一理由是多型關聯需要類別存在；主體工作在 M1。
 - **`auto_publish` 目前只是一個欄位**，沒有任何行為掛在上面。
+- 🔴 **多型關聯拿不到 DB 層外鍵**（§4.1）。要有底線防護只能改成「逐型別各一張關聯表」，
+  代價是三張近乎相同的表。本次選多型，**並把這個取捨明寫出來**而不是假裝沒有。
+  `insert_all`／`upsert_all` 這條路徑目前**沒有任何防護**。
 - 本檔**不涵蓋** 71-R8-V4（系列建立式的概念差，本尊 2026 改為「來源」卡）——那條仍未裁定。

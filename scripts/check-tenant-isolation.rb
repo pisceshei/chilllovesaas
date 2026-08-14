@@ -118,7 +118,12 @@ if File.exist?(SCHEMA)
     next unless line.match?(/t\.\w+\s+"[a-z_]*cents"/)
     next unless line.include?("unsigned")
 
-    violations << "db/schema.rb:#{lineno} 金額欄被宣告為 unsigned。"       "🔴 總銷售額可以是負數（撤銷 > 銷售的日子）——unsigned 會讓那些日子寫不進去，"       "且在正常銷售的測試資料上測不出來。見 §A G25／docs/research/80 §3。"
+    # 三段字串用 `\` 續行拼接。原本寫成同一行三個相鄰字面值中間夾巨量空白，
+    # 語法正確（omakase 未開行長限制）但讀起來像被壓壞的續行，
+    # 之後有人插逗號就會誤讀成方法呼叫（PR #24 的 Claude 驗收 🟡 建議）。
+    violations << "db/schema.rb:#{lineno} 金額欄被宣告為 unsigned。" \
+      "🔴 總銷售額可以是負數（撤銷 > 銷售的日子）——unsigned 會讓那些日子寫不進去，" \
+      "且在正常銷售的測試資料上測不出來。見 §A G25／docs/research/80 §3。"
   end
 end
 

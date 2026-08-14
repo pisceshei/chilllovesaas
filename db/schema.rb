@@ -93,7 +93,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_200000) do
     t.datetime "created_at", null: false
     t.text "description_html", size: :medium, null: false
     t.string "handle", null: false
-    t.datetime "published_at"
     t.string "rules_match", limit: 16, default: "all", null: false
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
@@ -101,7 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_200000) do
     t.string "sort_order", limit: 32, default: "manual", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["shop_id", "collection_type", "published_at"], name: "ix_collections_collection_type_published_at"
+    t.index ["shop_id", "collection_type"], name: "ix_collections_collection_type"
     t.index ["shop_id", "handle"], name: "uq_collections_handle", unique: true
     t.index ["shop_id", "id"], name: "uq_collections_tenant_id", unique: true
   end

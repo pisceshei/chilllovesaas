@@ -10,6 +10,15 @@
 # 本 migration 建**前兩層**；第三層 catalog 留 `publications.catalog_id`（暫不加外鍵），
 # 待 M5 建 markets/catalogs 時補。理由見 docs/specs/88 §3.2：
 # catalog 是**讀取時的過濾條件**，加它不需要改動本次兩張表的結構。
+#
+# 表定義出處（AGENTS.md §註釋與文檔 第 2 條）：
+#   - 被改動的 `products`／`collections` → `docs/research/06` §7 骨幹表清單。
+#   - 🔴 新建的 `publications`／`resource_publications` → **06 §7 沒有這兩張表**。
+#     這不是漏引：06 是 Shopify 的**研究**檔（訂單與履約線），發布模型的實測出處是
+#     `docs/research/82` §0.2，我方的表定義出處是 `docs/specs/88` §2。
+#     🔴 **刻意不把我方新表補寫進 `docs/research/06`**——research 記錄的是本尊的事實，
+#     specs 記錄的是我方要建的東西，把自創表寫進研究檔會污染這條界線
+#     （Codex review 建議「把表定義加進 06 §7」，此處不採納，理由如上）。
 class CreatePublicationModel < ActiveRecord::Migration[8.1]
   def up
     # ── publications：一個銷售管道在一間店的發布容器 ─────────────────────────
@@ -87,11 +96,35 @@ class CreatePublicationModel < ActiveRecord::Migration[8.1]
           ON pub.shop_id = p.shop_id AND pub.channel_handle = 'online_store'
       SQL
 
-      # 🔴 移除 products.published_at：**同一件事不留兩個事實來源**。
-      #    這正是鐵律 7 要防的形態——兩處都能寫，遲早不一致。
+      # 🔴 `collections` 有**一模一樣**的扁平欄位，同樣要搬。
+      #    <!-- 2026-08-14 補（PR #24 的 Claude 驗收「🔴 必須修」第 1 條）。
+      #         本 migration 原本只處理 products，但 Collection 這次也被接進
+      #         resource_publications（`has_many :resource_publications, as: :publishable`）
+      #         ⇒ 它同時有 `collections.published_at` 與 per-publication 的 published_at，
+      #         **正是本檔下面那段自己要防的雙重事實來源**。
+      #         我把移除 products.published_at 的理由寫得很清楚，卻沒有把同一條理由
+      #         套用到同批接進來的 Collection 上——而且 88 §5／§6 也沒登記成刻意分期，
+      #         所以它是漏掉不是分期。 -->
+      execute <<~SQL.squish
+        INSERT INTO resource_publications (shop_id, publication_id, publishable_type,
+                                           publishable_id, published_at, created_at, updated_at)
+        SELECT c.shop_id, pub.id, 'Collection', c.id, c.published_at, NOW(), NOW()
+        FROM collections c
+        JOIN publications pub
+          ON pub.shop_id = c.shop_id AND pub.channel_handle = 'online_store'
+      SQL
+
+      # 🔴 移除 products.published_at 與 collections.published_at：
+      #    **同一件事不留兩個事實來源**。這正是鐵律 7 要防的形態——兩處都能寫，遲早不一致。
       #    排程發布的語義沒有消失，它搬到了 resource_publications.published_at（per channel）。
       remove_index :products, name: "ix_products_published_at_id"
       remove_column :products, :published_at
+
+      # collections 的索引是 (shop_id, collection_type, published_at) 複合索引，
+      # 拆掉 published_at 之後改建 (shop_id, collection_type)——列表仍要照類型篩。
+      remove_index :collections, name: "ix_collections_collection_type_published_at"
+      remove_column :collections, :published_at
+      add_index :collections, %i[shop_id collection_type], name: "ix_collections_collection_type"
     end
   end
 
@@ -108,6 +141,20 @@ class CreatePublicationModel < ActiveRecord::Migration[8.1]
          AND rp.publishable_type = 'Product' AND rp.publishable_id = p.id
         SET p.published_at = rp.published_at
       SQL
+
+      add_column :collections, :published_at, :datetime
+      execute <<~SQL.squish
+        UPDATE collections c
+        JOIN publications pub
+          ON pub.shop_id = c.shop_id AND pub.channel_handle = 'online_store'
+        JOIN resource_publications rp
+          ON rp.shop_id = c.shop_id AND rp.publication_id = pub.id
+         AND rp.publishable_type = 'Collection' AND rp.publishable_id = c.id
+        SET c.published_at = rp.published_at
+      SQL
+      remove_index :collections, name: "ix_collections_collection_type"
+      add_index :collections, %i[shop_id collection_type published_at],
+        name: "ix_collections_collection_type_published_at"
     end
     drop_table :resource_publications
     drop_table :publications
