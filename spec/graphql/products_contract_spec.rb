@@ -131,6 +131,34 @@ RSpec.describe "Admin GraphQL products contract", type: :request do
     expect(response.body).not_to include("secret database detail")
   end
 
+  # 🔴 UNLISTED 走完整的 request → schema → JSON 路徑。
+  # `spec/models/product_spec.rb` 已經斷言 enum 的值域，但那是**類別層**的斷言——
+  # 它證明不了「第四個值真的能穿過 GraphQL 序列化出去」。
+  # 本輪之前 enum 只有三值，任何 status 為 unlisted 的商品查詢都會拿到序列化錯誤，
+  # 而**沒有任何測試會發現**（既有 7 條全部只用 draft 的商品）。
+  it "serialises the fourth product status (UNLISTED) end to end" do
+    create_product(shop, title: "未列出品", status: "unlisted")
+    login!
+
+    post_graphql("{ products(first: 1) { nodes { title status } } }")
+
+    payload = response.parsed_body
+    expect(response).to have_http_status(:ok)
+    expect(payload["errors"]).to be_nil
+    expect(payload.dig("data", "products", "nodes", 0, "status")).to eq("UNLISTED")
+  end
+
+  it "exposes all four ProductStatus values in the introspected schema" do
+    login!
+
+    post_graphql(<<~GRAPHQL)
+      query { __type(name: "ProductStatus") { enumValues { name } } }
+    GRAPHQL
+
+    names = response.parsed_body.dig("data", "__type", "enumValues").map { |value| value.fetch("name") }
+    expect(names).to match_array(%w[ACTIVE DRAFT ARCHIVED UNLISTED])
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

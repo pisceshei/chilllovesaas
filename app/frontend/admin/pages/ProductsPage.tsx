@@ -55,11 +55,34 @@ interface StatusPresentation {
   tone: BadgeTone;
 }
 
+/**
+ * 商品狀態的徽章呈現。
+ *
+ * 🔴 正典表＝原型 `docs/design/chilllove-admin-v2.html` 的 `P_STATUS`（約 3105 行），
+ * 每一欄逐項對照，不自創（鐵律 8／12）：
+ *
+ * | 狀態 | 原型 `bt`（徽章文案） | 原型 `badge` | 原型 `pip` | 本檔 |
+ * |---|---|---|---|---|
+ * | ACTIVE | 啟用中 | b-success | full | success / full |
+ * | UNLISTED | 未列出 | b-caution | `''`（裸圈） | attention / empty |
+ * | DRAFT | 草稿 | b-info | `''`（裸圈） | info / empty |
+ * | ARCHIVED | 已封存 | b-default | **blocked** | default / full ⚠ |
+ *
+ * ⚠️ **ARCHIVED 的 pip 尚未對齊，這是刻意留下的登記項不是遺漏**：
+ * 原型用 `pip:'blocked'`（透明底＋斜線），而 `docs/design/23-interaction-css-spec.md`
+ * §1 的 Badge 規格只定義**三種** pip（空圈=未開始／半圈=進行中／實圈=完成），
+ * **沒有 `blocked`**。⇒ 原型與 CSS 規格本身不一致，補第四種 pip 是視覺語言的變更，
+ * 不該夾在「加一個商品狀態」的改動裡靜默做掉。登記於 worklog Pending。
+ *
+ * 🔴 `label` 用「啟用中」不是「使用中」：原型 `bt:'啟用中'`（3106 行）。
+ * 「使用中」是本檔原本自創的文案——它讀起來像「正在被某個東西使用」，
+ * 而這個欄位講的是商家有沒有把商品**啟用**。
+ */
 const statusPresentation: Record<string, StatusPresentation> = {
-  ACTIVE: { label: "使用中", progress: "full", tone: "success" },
+  ACTIVE: { label: "啟用中", progress: "full", tone: "success" },
   ARCHIVED: { label: "已封存", progress: "full", tone: "default" },
   DRAFT: { label: "草稿", progress: "empty", tone: "info" },
-  UNLISTED: { label: "未列出", progress: "half", tone: "attention" },
+  UNLISTED: { label: "未列出", progress: "empty", tone: "attention" },
 };
 
 /**
