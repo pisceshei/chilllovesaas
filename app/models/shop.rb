@@ -30,10 +30,14 @@ class Shop < ApplicationRecord
   # 要「這間店的 session」請走 `user_store_assignments → staff_member → sessions`。
 
   # 🔴 `:destroy` 而**不是** `:restrict_with_error`。
-  # 本檔另外三個關聯都用 `restrict_with_error`，照抄看起來合慣例——但下面的
-  # `after_create` 之後**每一間店恆有一列 publication**，於是連一間空店都永遠刪不掉，
+  # 本檔**另外兩個**直接關聯（`user_store_assignments`／`products`）都用
+  # `restrict_with_error`，照抄看起來合慣例——但下面的 `after_create` 之後
+  # **每一間店恆有一列 publication**，於是連一間空店都永遠刪不掉，
   # 而且沒有任何既有測試會因此變紅。publication 是店的**附屬設定**不是業務資料，
-  # 店沒了它就沒有意義；擋刪店的責任屬於 products／staff_members 那三個。
+  # 店沒了它就沒有意義；擋刪店的責任屬於那兩個。
+  # ⚠️ 原文寫「另外**三**個」並把 `staff_members` 算進去——它是
+  # `has_many :through`，**沒有也不能有 `dependent:`**（擋刪店的是它底下的
+  # `user_store_assignments`）。數錯不影響本條的裁定，但會讓人去找一個不存在的第三個。
   has_many :publications, dependent: :destroy
 
   normalizes :subdomain, with: ->(value) { value.to_s.strip.downcase }
@@ -83,8 +87,10 @@ class Shop < ApplicationRecord
   #   ① 商品的上架區塊沒有任何管道可勾（88 §1 的三層 AND 第二層永遠不成立）；
   #   ② `resource_publications` 建不起來（`publication_id` 是 `null: false`）；
   #   ③ **而這一切不會拋任何錯**——新店看起來一切正常，只是所有商品都上不了架。
-  # 這正是 88 §5 #1 那條待辦的實質內容：migration 只回填了**當時既有**的店，
+  # 這正是 88 §5 #1 的實質內容：migration 只回填了**當時既有**的店，
   # 之後每一間新店都靜默拿到 nil。
+  # ℹ️ 88 §5 #1 **已由本次改動結案**（該列在規格裡已劃掉並標 ✅）——
+  # 原文稱它為「那條**待辦**」是寫作當下的狀態，現在讀起來會誤導。
   #
   # 🔴 為什麼包 `ActsAsTenant.with_tenant(self)`：
   # `config/initializers/acts_as_tenant.rb` 設 `require_tenant = true`，

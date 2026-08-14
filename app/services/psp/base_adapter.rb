@@ -29,7 +29,14 @@ class Psp::BaseAdapter
     @pack = Psp.registry.fetch(@psp)
   end
 
-  # 把金額值物件變回線上形態——**這是唯一變回 `Integer`／`String` 的地方**。
+  # 把金額值物件變回線上形態——**這裡應該是唯一變回 `Integer`／`String` 的地方**。
+  #
+  # ⚠️ **「唯一」是設計意圖，不是被機制保障的事實**（2026-08-15 修；原文寫成斷言）。
+  # 任何人都可以在別處直接讀 `amount.minor` / `amount.string` 繞過本方法，
+  # 而**沒有任何 CI 規則在擋**——`check-money-boundary.rb` 的 C5 守的是
+  # `__build`（建構側），出向這一側目前沒有對應的執法點。
+  # 🔴 要讓「唯一」成真，該加的是一條「`.minor`／`.string` 的讀取只准出現在本檔」
+  # 的掃描（比照 C5 的形態）。**在那之前，讀到「唯一」請理解成「請只從這裡走」。**
   #
   # @param amount [Money::PspMinor, Money::PspDecimal] 該 pack 宣告格式對應的值物件
   # @return [Integer, String] 線上形態

@@ -29,6 +29,11 @@ CASES = [
     "migration 用 `t.decimal` 建金額欄位——鐵律 3「出現 float 即 bug」的 migration 期執法點" ],
   [ "c3_integer_cents", "[C3]",
     "`_cents` 欄位用 `t.integer`（會溢位；須 bigint）" ],
+  # 🔴 2026-08-15 新增。本輪之前 C3 只列舉三種錯誤寫法（decimal／float／integer）
+  #    ⇒ `t.string :price_cents` **完全通過**，而成功訊息卻宣告「`_cents` 皆為 bigint」。
+  #    C3 已改成白名單式（型別不是 bigint 就違規），這個 fixture 守住那個改動。
+  [ "c3_string_cents", "[C3]",
+    "`_cents` 欄位用 `t.string`——列舉式檢查抓不到，白名單式才抓得到" ],
   [ "c4_money_decimal", "[C4]",
     "🔴 PSP 目錄裡出現 R4——唯一的可能就是有人拿 feed／物流商的值來送款" ],
   [ "c4_bare_decimal_suffix", "[C4]",

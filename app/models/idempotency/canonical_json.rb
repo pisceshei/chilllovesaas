@@ -39,7 +39,10 @@ module Idempotency
   #
   # @see docs/specs/11-production-baseline.md §2.1(d)
   module CanonicalJson
-    # 指紋裡一律不含的鍵（規則⑤）。比對時走 camelCase 與 snake_case 兩種寫法。
+    # 🔴 **只在頂層**被排除的鍵（規則⑤）。比對時走 camelCase 與 snake_case 兩種寫法。
+    # ⚠️ 原文寫「指紋裡**一律**不含的鍵」——那與實作相反（見 `normalize_hash` 的
+    # `root &&` 守衛與其上方註釋）。**巢狀的同名欄位必須留在指紋裡**，
+    # 否則兩個實際上不同的請求會算出同一個指紋。
     EXCLUDED_KEYS = %w[idempotencyKey idempotency_key].freeze
 
     class << self
