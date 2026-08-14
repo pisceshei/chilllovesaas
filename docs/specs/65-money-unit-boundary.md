@@ -281,7 +281,27 @@ end
 | **A5** | 🔴 **`divisibility_constraint`**：pack 若宣告某幣別的金額必須為 N 的倍數，違反 ⇒ raise `PSP_DIVISIBILITY_VIOLATION`，**不得四捨五入湊整**。**基準＝即將送出的值，用該 PSP 自己的單位**（`minor_units` 檢查 minor 整數；`decimal_string` 以 `BigDecimal` 檢查主單位，禁 float） | 兩者 | 拒絕送出 | 依 69 §V-188 新增。**這不是虛構需求**：Stripe 官方文檔明文要求 **HUF／TWD 的 payout 金額必須整除 100**（`alt`）。而 **TWD 正好在 §H.1 的測試矩陣裡**。🔴 **自動湊整是最壞的處置**——它會讓「送出去的錢」與「帳上記的錢」不同，而差額沒有任何一張表記得住（同 A3 的理由）。⚠ 該約束在 charge 與 payout 上是否同時成立 ⇒ **V-206** |
 | **A6** | `decimal_string` 專用：輸出字串必須匹配 pack 宣告位數的正則、**無幣別符號**、無千分位、小數點為 `.`；**pack 宣告位數 > 2 ⇒ 該 pack 不得 enable** | `decimal_string` | 拒絕送出／pack 不得 enable | 我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只能給到 2 位＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `2.900`）。**這與 A2 是同一條規則在另一種格式下的形態**，不是新規則 |
 
+| **A6b** | `decimal_string` 專用：**pack 宣告位數 < 2 ⇒ 該 pack 不得 enable**（鍵：`money_boundary.psp_decimal_min_places`） | `decimal_string` | pack 不得 enable | 🔴 **2026-08-15 新增（PR #29 驗收指出的缺口）**。A6 原本只有上限 ⇒ 宣告 `0` 或 `1` **完全合法**，而 `to_psp_decimal` 走 `Money.fixed_string(major, decimal_places)`，內部 `value.round(digits)` **靜默四捨五入**：`decimal_places: 1` ＋ HKD 14.85（儲存 `1485`）**送出 `"14.9"`** ＝帳上 14.85、送款 14.90，**差額 0.05 沒有任何一張表記得住**——正是 A5 逐字說的「自動湊整是最壞的處置」。🔴 **與 `minor_units` 側不對稱**：那一側有 A3 的餘數 raise 順手擋住，`decimal_string` 側**沒有等價物**（A3 是 minor_units 專用）。⚠️ 且它**在 HKD 這個基準法域上就會發生**，不像 A1／A2 只在 zero-decimal 幣別現形 ⇒ §H 矩陣（全部宣告 2 位）**證明不了它**。裁定見 §D.5 |
+
 **額外一條（非生產環境每次轉換都跑）**：往返自檢 `from_psp_amount(to_psp_amount(x)) == x`（兩種格式各跑一次）。在 A3／A6 成立時它恆真——**它擋的不是今天的 bug，是日後有人改了 divisor 公式或字串格式化**。鍵：`money_boundary.roundtrip_selfcheck_envs`。
+
+#### D.5 為什麼是「拒絕 sub-2 位」而不是「支援 sub-2 位」（2026-08-15 裁定）
+
+發現 A6b 的缺口時有兩條修法，**選了拒絕**：
+
+| 修法 | 內容 | 為什麼沒選／選了 |
+|---|---|---|
+| **(a) fail-closed** ✅ **採用** | `validate_decimal_string!` 一併 reject `decimal_places < 2` | 我方至今**沒有任何一家真的用 sub-2 位的 PSP**（本節 §D.4 四家實證表：Airwallex 是 2 位）。fail-closed 的代價是「真出現時第一次呼叫就 raise」——**看得見**的失敗 |
+| (b) 補齊語義 | `to_psp_decimal` 加 A3 等價的位數餘數檢查 ＋ §H 補 0／1 位案例 | 要「支援」就得先發明湊整規則：**誰決定進位方向？差額記到哪張表？** 本規格全篇沒有出處可依 ⇒ 那是憑空造規則，而且造出來的規則第一次接真 PSP 時很可能就是錯的 |
+
+🔴 **sub-2 位的語義刻意留白，等第一家真的這樣要求的 PSP 出現時再裁定。**
+到那時要改的是**這一節 ＋ `psp_decimal_min_places`**，不是繞過閘門。
+
+⚠️ **配套（已落地）**：`Money.fixed_string` 在 `digits = 0` 時原本輸出 `"1480.0"`
+（`"0".rjust(0, "0")` 回 `"0"`，而小數點是無條件接上的）——**連它自己「定位數」的契約都不符**。
+該 bug 已獨立修掉並加測試。🔴 **分層刻意如此**：格式化器管「怎麼 render」（對任意 `digits` 都要正確），
+政策層（A6／A6b）管「准不准 render」；把政策塞進格式化器會讓 `Money::Decimal`
+（恆 2 位、與 PSP 無關）也被 PSP 規則綁住。
 
 ### D.3 PSP pack 的宣告形態（比照 58 的 carrier pack）
 

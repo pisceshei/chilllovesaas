@@ -239,6 +239,23 @@ money_boundary:
   # A6：decimal_string 格式的位數上限。我方儲存尺度 ×100 只能無損表達 2 位；
   #     pack 宣告 > 2 ⇒ 不得 enable（宣告 3 位卻只給得出 2 位＝靜默的精度謊報）。
   psp_decimal_max_places: 2
+  # A6b：**位數下限**（2026-08-15 新增，PR #29 驗收指出的缺口）。
+  #      🔴 原本只有上限 ⇒ 宣告 `decimal_places: 0` 或 `1` 的 pack **完全合法**，
+  #      而 `to_psp_decimal` 走的是 `Money.fixed_string(major, decimal_places)`，
+  #      它會 `value.round(digits)` **靜默四捨五入**：
+  #        decimal_places=1 ＋ HKD 14.85（儲存 1485）⇒ 送出 "14.9"
+  #        ＝帳上 14.85、送款 14.90，**差額 0.05 沒有任何一張表記得住**。
+  #      這正是 65 §D.2 A5 逐字說的「自動湊整是最壞的處置」，
+  #      而 `minor_units` 側有 A3 餘數 raise 擋住，`decimal_string` 側**沒有等價物**。
+  #      ⚠️ **上下限相等（都是 2）不是冗餘**：兩個鍵擋的是兩種相反的謊報
+  #      （宣告太多＝精度謊報／宣告太少＝金額被改），日後若儲存尺度改成 ×1000，
+  #      兩者會一起變成 3 而**仍然要分別存在**。
+  # 🔴 為什麼是「拒絕」而不是「支援 sub-2 位」：我方至今**沒有任何一家真的用
+  #    sub-2 位的 PSP**（65 §D 無出處），要「支援」就得先發明湊整規則
+  #    （誰決定進位方向？差額記到哪張表？）——那是憑空造規則。
+  #    fail-closed 的代價是「真出現時第一次呼叫就 raise」，那是**看得見**的失敗；
+  #    現狀的代價是**靜默送錯金額**。裁定：擋掉，留到第一家真 PSP 出現時再裁。
+  psp_decimal_min_places: 2
   psp_decimal_string_regex: '^-?\d+\.\d{2}$'
   # A5：divisibility_constraint。🔴 **不是虛構需求**——Stripe 明文要求 **HUF／TWD 的 payout 金額整除 100**
   #     （`alt`，69 §V-188），而 **TWD 正好在下方 test_matrix_zero_decimal_required 裡**。

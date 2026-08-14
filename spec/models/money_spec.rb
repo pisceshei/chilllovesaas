@@ -107,6 +107,34 @@ RSpec.describe Money do
       a = described_class.from_cents(100, "HKD")
       b = described_class.from_cents(100, "JPY")
       expect { a < b }.to raise_error(Money::CurrencyMismatch)
+      expect { a == b }.to raise_error(Money::CurrencyMismatch)
+    end
+
+    # 🔴 以下三條是 PR #29 驗收 🟡 指出的缺口（2026-08-15）。
+    # 既有測試只用 `a < b` 與同幣別 `eq`，**這些邊一條都沒釘**。
+    it "🔴 `<=>` 必須是 public（原本落在 private 區塊 ⇒ NoMethodError）" do
+      a = described_class.from_cents(100, "HKD")
+      b = described_class.from_cents(200, "HKD")
+      expect(a <=> b).to eq(-1)
+      expect(a.respond_to?(:<=>)).to be(true)
+    end
+
+    # 🔴 `==` 回 false 是 Ruby 全域約定（Array#include?／uniq／Hash 查找都靠它）。
+    # 原本它會 raise TypeError ⇒ 在完全無關的地方炸開，堆疊還指向 money.rb。
+    it "🔴 與非 Storage 比較：`==` 回 false，不是 raise" do
+      a = described_class.from_cents(100, "HKD")
+      expect(a == nil).to be(false)
+      expect(a == 100).to be(false)
+      expect(a == "100").to be(false)
+      expect([ a ].include?(nil)).to be(false)
+      expect(a <=> nil).to be_nil
+    end
+
+    # 型別不可比走 Ruby 慣例的 ArgumentError（由 Comparable 依 `<=>` 回 nil 產生），
+    # 幣別不可比才走我方的 CurrencyMismatch——**兩者不得混為一談**。
+    it "與非 Storage 做大小比較 ⇒ ArgumentError（不是 CurrencyMismatch）" do
+      a = described_class.from_cents(100, "HKD")
+      expect { a < 100 }.to raise_error(ArgumentError)
     end
   end
 
@@ -143,6 +171,36 @@ RSpec.describe Money do
         storage = Money::Storage.from_cents(cents, "JPY")
         expect(storage.to_decimal.to_storage).to eq(storage), "cents=#{cents} 往返不一致"
       end
+    end
+  end
+
+  # ── fixed_string 的位數契約（2026-08-15，PR #29 驗收指出）─────────────────────
+  #
+  # 🔴 這裡測的是**低階格式化器本身**，不是 PSP 政策。
+  # 政策（幾位才准宣告）在 `Psp::Pack` 的 A6／A6b，有自己的違反 fixture；
+  # 本組證明的是「不論政策放行幾位，render 出來的位數都與宣告一致」。
+  describe ".fixed_string 的位數契約" do
+    it "🔴 digits=0 不得吐出小數點（本輪之前是 \"1480.0\"）" do
+      expect(Money.fixed_string(BigDecimal(1480), 0)).to eq("1480")
+      expect(Money.fixed_string(BigDecimal(-1480), 0)).to eq("-1480")
+    end
+
+    it "digits=1／2／4 各自吐出對應位數" do
+      value = BigDecimal("14.85")
+      expect(Money.fixed_string(value, 1)).to eq("14.9")     # 有捨入，但那是呼叫端的決定
+      expect(Money.fixed_string(value, 2)).to eq("14.85")
+      expect(Money.fixed_string(value, 4)).to eq("14.8500")
+    end
+
+    it "digits 為負 ⇒ ArgumentError（不是回一個看起來正常的字串）" do
+      expect { Money.fixed_string(BigDecimal(1480), -1) }.to raise_error(ArgumentError, /不得為負/)
+    end
+
+    # 🔴 這一條把「為什麼 A6b 是必要的」釘在測試裡：
+    # 格式化器**照宣告的位數捨入是它的正確行為**，所以擋湊整的責任
+    # 一定得在政策層（pack 驗證），不能指望這裡。
+    it "digits 不足時它會捨入——所以擋湊整的責任在 Psp::Pack 的 A6b，不在這裡" do
+      expect(Money.fixed_string(BigDecimal("14.85"), 1)).to eq("14.9")
     end
   end
 

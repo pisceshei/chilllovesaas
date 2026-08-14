@@ -229,3 +229,47 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 沒有子類、`ProductType` 連價格欄位都沒有）。正確性靠三件事：規格逐行寫死的欄位形狀、
 六幣別 × 兩種格式的測試矩陣、六條帶「故意違反 fixture」的 CI 檢查。
 **這一點必須在 PR 描述誠實揭露，不得假裝已被使用。**
+
+---
+
+## 2026-08-15 — PR #29 驗收發現的送款缺口
+
+### D16. `decimal_string` 位數下限：拒絕 sub-2 位，不發明湊整規則
+
+> 來源：PR #29 的 Claude 驗收（🔴 必須修 第 1 條）。**規格全文＝`docs/specs/65` §D.2 A6b ／ §D.5。**
+
+**缺口**：A6 原本只擋位數**上限**（> 2 ⇒ 精度謊報）。宣告 `decimal_places: 0` 或 `1`
+**是完全合法的 pack**，而 `Money::Storage#to_psp_decimal` 走
+`Money.fixed_string(major, pack.decimal_places)`，內部 `value.round(digits)`
+**靜默四捨五入**：
+
+| pack 宣告 | 帳上（儲存 cents） | 送出 | 差額 |
+|---|---|---|---|
+| `decimal_places: 1` | HKD 14.85（`1485`） | `"14.9"` | **0.05，沒有任何一張表記得住** |
+| `decimal_places: 0` | HKD 1480.00（`148000`） | `"1480.0"` | 格式本身就不符它自己宣告的 0 位 |
+
+🔴 **三件事讓這個缺口特別難發現**：
+1. **與 `minor_units` 側不對稱**——那一側有 A3 的餘數 `raise` 順手擋住 float 與非整除，
+   `decimal_string` 側**沒有等價物**（A3 是 minor_units 專用）；
+2. **在 HKD 這個基準法域上就會發生**，不像 A1／A2 只在 zero-decimal 幣別現形；
+3. **§H 矩陣證明不了它**——矩陣裡每個 pack 都宣告 2 位，那條路徑從沒被走過。
+
+**裁定＝(a) fail-closed**：`psp_decimal_min_places: 2`，`validate_decimal_string!`
+一併 reject `< min`。
+
+**為什麼不選 (b) 補齊語義**（加 A3 等價檢查 ＋ §H 補 0／1 位案例）：
+要「支援」sub-2 位就得先發明湊整規則——**誰決定進位方向？差額記到哪張表？**
+`65` §D.4 的四家 PSP 實證表裡沒有任何一家這樣要求（Airwallex 是 2 位），
+本規格全篇沒有出處可依 ⇒ 那是憑空造規則，而且很可能在第一次接真 PSP 時就是錯的。
+🔴 **語義刻意留白**，等第一家真的這樣要求的 PSP 出現時再裁定；到時要改的是
+`65` §D.5 ＋ `psp_decimal_min_places`，**不是繞過閘門**。
+
+**配套（獨立的一個 bug，一併修）**：`Money.fixed_string` 在 `digits = 0` 時輸出 `"1480.0"`
+——`"0".rjust(0, "0")` 回 `"0"`，而小數點是無條件接上去的。
+🔴 **分層刻意如此**：格式化器管「怎麼 render」（對任意 `digits` 都要正確，因此修的是
+格式化邏輯而不是在裡面加政策），政策層（A6／A6b）管「准不准 render」。
+把政策塞進格式化器會讓 `Money::Decimal`（恆 2 位、與 PSP 無關）也被 PSP 規則綁住。
+
+**負面驗證**（兩道防線各拆一次，確認測試真的會紅）：
+- 拆掉 A6b 的下限檢查 ⇒ `registry_spec` 的兩條（`decimal_places` 1／0）紅；
+- 還原 `fixed_string` 的 `digits=0` bug ⇒ `money_spec` 的位數契約那條紅。

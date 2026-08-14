@@ -105,6 +105,16 @@ RSpec.describe Psp::Pack do
       expect { build("too_many_places") }.to raise_error(Psp::PackInvalid, /decimal_places=3/)
     end
 
+    # 🔴 A6b（2026-08-15，PR #29 驗收指出）。本輪之前這兩個宣告是**合法**的，
+    # 而它們會讓 `to_psp_decimal` 靜默四捨五入 ⇒ 送款金額 ≠ 帳上金額。
+    it "A6b decimal_places = 1 ⇒ raise（會靜默湊整：14.85 送成 14.9）" do
+      expect { build("too_few_places") }.to raise_error(Psp::PackInvalid, /decimal_places=1 < 2/)
+    end
+
+    it "A6b decimal_places = 0 ⇒ raise" do
+      expect { build("zero_places") }.to raise_error(Psp::PackInvalid, /decimal_places=0 < 2/)
+    end
+
     it "🔴 空表 ≠ 缺鍵：divisibility 整個鍵不見 ⇒ raise" do
       expect { build("missing_divisibility") }.to raise_error(Psp::PackInvalid, /divisibility/)
     end

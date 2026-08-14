@@ -148,7 +148,20 @@ bundle exec rspec spec/models/money_spec.rb spec/models/psp_amount_matrix_spec.r
 - ⚠️ **`Psp::Registry`／`Pack`／`BaseAdapter` 是 65 號只有呼叫端、沒有定義端的三個類別**
   ——它們有真實的設計自由度。刻意做得極薄。**第一家真 PSP 進來時預期會被改寫。**
 - ⚠️ **65 §C.3 的 C1 白名單描述是空的**（掃描範圍與白名單路徑不重疊），規格待修。
+- 🔴 **65 §K.8–9 的可觀測性完全沒實作，也沒揭露過**（2026-08-15 補列，PR #29 驗收指出）：
+  X7／X8 每次轉換要落結構化日誌，四種例外要發 P1 告警（`65:574-575`）。
+  現況是**一行日誌都沒有**——送款金額換算是 P1 事故點，沒有日誌就等於出事後**查不到當時送了什麼**。
+  ⚠️ **M4 接第一家 PSP 之前必須落地**，不能與 adapter 同一個 PR 才想起來。
+  （這一條漏列的原因值得記：上面那條「往返自檢沒掛上轉換路徑」也出自 §K，
+  我列了它卻漏了同一節的 §K.8–9 ⇒ **逐條對規格清單打勾，不要憑印象列**。）
+- ⚠️ **sub-2 位的 `decimal_string` PSP 語義刻意留白**（2026-08-15，D16／65 §D.5）：
+  A6b 現在把 `decimal_places < 2` 的 pack 擋在建構期。真出現這種 PSP 時
+  要改的是 `65` §D.5 與 `psp_decimal_min_places`，**不是繞過閘門**。
 
 ## 變更記錄
 
 - 2026-08-15 PR-1：建立（R1／R4／R3 ＋ R5／R6 ＋ registry ＋ adapter ＋ 矩陣 ＋ CI 執法）
+- 2026-08-15 PR-1 驗收修正：**A6b 位數下限**（`decimal_places < 2` ⇒ pack 不得 enable，
+  否則 `fixed_string` 會靜默四捨五入，HKD 14.85 送成 14.9）＋ `fixed_string` 的 `digits=0`
+  格式 bug ＋ `Money::Storage#<=>` 改 public 且對非 `Storage` 回 `nil`（原本 `== nil` 會 raise）。
+  規格出處：`65` §D.2 A6b／§D.5、`DECISIONS.md` D16。
