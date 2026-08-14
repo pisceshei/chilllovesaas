@@ -295,8 +295,25 @@ jobs:
             # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
             #    而真正的原因是**作者身分不在清單內**——那句話把人指去看 Actions log，
             #    log 裡卻一切正常，於是這個 bug 藏了下來。這裡直接把實際作者印出來。
-            OTHERS=$(printf '%s' "$COMMENTS" | jq -r --arg m "$MARKER" \
-              '[.[] | select(.body | split("\n")[0] | startswith($m)) | .user.login] | unique | join(", ")')
+            #
+            # 🔴🔴 **本行在 2026-08-15 修過一次，那是加水位時漏改造成的 regression**
+            #    （PR #29 實測命中）。原本它**既沒有水位過濾、也沒有排除清單內的作者**：
+            #      `[.[] | select(.body|...startswith($m)) | .user.login]`
+            #    ⇒ 它列的是**這個 PR 歷來所有**結論留言的作者。於是當本輪沒產生結論時，
+            #      它會撈到**前幾輪** `claude[bot]` 貼的舊結論，貼出
+            #      「作者（`claude[bot]`）**不在允許清單內**」——而 `claude[bot]`
+            #      **就在 `REVIEWERS` 裡**。訊息是**假的**，而且指向一個不存在的問題。
+            #    ⚠️ 後果實測：驗收方讀到這則診斷，以為自己的意見被忽略而**重貼了一次**。
+            #      結果正確只是因為重試碰巧成功。
+            #    ⇒ 兩個條件缺一不可：①`.id > $wm`（只看本輪）②`index($l) | not`（只列**不在**清單的）。
+            #
+            # 🔴 **教訓（比這個修正本身重要）**：加水位那一輪我改了 `LATEST`、
+            #    也想清楚了 `ROUNDS` 為什麼**不能**加，卻**沒有把第三個消費者 `OTHERS` 一起檢查**。
+            #    引入一個新的過濾維度時，要逐一走過**每一個讀同一份資料的地方**，
+            #    而不是只改觸發這次改動的那一個。
+            OTHERS=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
+              --argjson wm "${COMMENT_WATERMARK:-0}" \
+              '[.[] | select(.id > $wm) | select(.user.login as $l | $who | index($l) | not) | select(.body | split("\n")[0] | startswith($m)) | .user.login] | unique | join(", ")')
             if [ -n "$OTHERS" ]; then
               # 🔴 本則訊息**刻意不寫出結論標記字面值**（理由見上方 MARKER 註解）。
               gh pr comment "$PR" --body "⚠️ 找到了驗收結論留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
