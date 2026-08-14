@@ -115,6 +115,13 @@ jobs:
 
             具體、可執行、指到規格章節；不要泛泛稱讚。
             不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
+
+            🔴🔴 **你的最後一個動作必須是那個 `gh pr comment` 呼叫。**
+            **不要把審核意見寫在最終回覆裡**——最終回覆不會出現在 PR 上，整份審核會直接消失。
+            （2026-08-15 實測，PR #29 連續兩次：步驟 `outcome=success`、耗時 3m32s／3m58s、
+            PR 上零留言。這是本閉環的第四種失效形態，前三種是作者身分、反竄改跳過、max-turns 耗盡。）
+            **大型 diff 的正確做法是縮小審核範圍並在意見裡說明**（例如「本輪只逐行看了
+            `app/` 與 `spec/`，`docs/` 抽查」），**而不是省略掉那則留言**。
           # 🔴 `--max-turns` 由 40 提高到 200（2026-08-14 事故：PR #26 因此整份驗收作廢）。
           #   現象：run 跑滿 3m20s、**Job 標 Failure**、PR 上沒有任何 Claude 留言，
           #         只剩解析步驟貼的「⚠️ 自動驗收沒有產生結論」。
@@ -139,6 +146,7 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
         run: |
           set -uo pipefail
           PING="${CODEX_PING_TOKEN:-}"
@@ -198,7 +206,41 @@ jobs:
                 "請到 Actions 分頁看該 run 的 annotation（會直接寫 \`Reached maximum number of turns\`）。重新 push 即會重跑。")
               gh pr comment "$PR" --body "$BODY"
             else
-              gh pr comment "$PR" --body "⚠️ Claude 驗收步驟**執行成功但沒有貼出結論**。請到 Actions 分頁查 log 確認它最後做了什麼；重新 push 即會重跑驗收。"
+              # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
+              #    run 37／39 都是 outcome=success、耗時 3m32s／3m58s、PR 上零留言）。
+              #    `outcome=success` 排除了 max-turns 耗盡（那會讓步驟 failure，見上一個分支）。
+              #    最可能的形態：agent 把審核結果當成**最終文字輸出**而沒有呼叫 `gh pr comment`。
+              #
+              # 🔴 **原本的處置只留一句「請到 Actions 分頁查 log」——那是不夠的**：
+              #    Actions 的 log 檢視器是虛擬捲動、原始 log 是 gzip，
+              #    實測用瀏覽器**拿不到那段文字**（2026-08-15 試過 UI 展開、raw endpoint、
+              #    未認證 API 三種路徑皆失敗）。⇒ 診斷資訊在事故當下等於不存在。
+              #
+              # ⇒ 改成：把 action 的執行輸出撈出來當**回收品**貼上來。
+              #    這一步同時解決兩件事：①審核內容不再整份消失；②它本身就是診斷。
+              FALLBACK=""
+              if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+                # 取最後一則 assistant 的文字內容；jq 失敗（格式不符預期）就退回原始檔尾。
+                FALLBACK=$(jq -r '[.. | objects | select(.type? == "text") | .text] | last // ""' \
+                  "$EXECUTION_FILE" 2>/dev/null || true)
+                if [ -z "$FALLBACK" ]; then FALLBACK=$(tail -c 20000 "$EXECUTION_FILE"); fi
+              fi
+
+              if [ -n "$FALLBACK" ]; then
+                # 🔴 **中和結論標記**（把【】換成〔〕）。本則留言是由 github-actions[bot] 貼的，
+                #    而它在 REVIEWERS 清單內 ⇒ 若原文第一行帶著標記，下一輪 synchronize
+                #    會把**這則回收品**當成正式結論，而它並非 Claude 親自貼出、
+                #    也沒有經過本輪的作者身分驗證。回收是為了讓人看到，不是為了驅動閉環。
+                SAFE=$(printf '%s' "$FALLBACK" | sed 's/【驗收結論】/〔驗收結論〕/g' | head -c 55000)
+                BODY=$(printf '%s\n\n%s\n\n%s\n\n---\n\n%s' \
+                  "⚠️ **Claude 驗收步驟執行成功，但它沒有呼叫 \`gh pr comment\`**——審核內容原本會整份消失。" \
+                  "以下是從 action 執行輸出回收的最終文字。**標記已中和成〔〕，因此不會被下一輪解析成正式結論**；請人工判讀。" \
+                  "（若這段看起來就是完整的驗收意見，代表 agent 只是漏了最後那一步 tool call；重新 push 可再試一次。）" \
+                  "$SAFE")
+                gh pr comment "$PR" --body "$BODY"
+              else
+                gh pr comment "$PR" --body "⚠️ Claude 驗收步驟**執行成功但沒有貼出結論**，且**執行輸出也取不到**（\`execution_file\` 為空或不存在）。這是目前最難診斷的形態：請用 \`gh run view --log\` 取完整 log（瀏覽器拿不到）。重新 push 即會重跑驗收。"
+              fi
             fi
             exit 0
           fi
