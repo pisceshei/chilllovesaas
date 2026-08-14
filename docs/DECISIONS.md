@@ -198,3 +198,34 @@
   `UserError` 是否 `implements DisplayableError`；`OrderAdjustment.amountSet` 個別項的正負；
   ShopifyQL MONEY measure 的 **API 回傳**符號（報表 UI 明文「reversal 顯示為負」，
   但沒有頁面把 UI 符號與 API 符號連起來）⇒ **鐵律 7 的一致性測試不得斷言 `sales_reversals` 的符號**。
+
+### D15. PR-1 落地時的實作級裁定（2026-08-15）
+
+D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須自己決定、而規格沒寫**的部分。
+每一條都附「為什麼不能不決定」。
+
+| # | 裁定 | 為什麼規格沒寫也得決定 |
+|---|---|---|
+| 1 | **`Data` 的 `.[]`／`#with`／`allocate` 三條後門全關** | `65` §C L2 只說關 `.new`。**`allocate` 產出的物件 `is_a?` 為真、欄位全 nil ⇒ 直接穿過 L3 的 adapter 斷言**，而只斷言 `.new` 的測試會全綠交付 |
+| 2 | **`__build` 是 public，靠命名 ＋ CI C5 守** | Ruby 表達不了「friend class」——`Money::Storage` 與 `Money::PspMinor` 是兩個類別。**這是四層防線裡唯一一處型別擋不住的地方**，必須明說而不是假裝完整 |
+| 3 | **`Money.fixed_string` 不用 `format("%.2f", …)`** | `Kernel#format` 的 `%f` 內部轉 Float，BIGINT max 上失真 2 分錢。**只在極大值現形**，一般測試全綠 |
+| 4 | **型別層不驗正負** | `65` 從頭到尾沒提負數。在值物件上驗非負會讓退款差額與撤銷整條卡死；正負是**業務規則**不是**單位規則** |
+| 5 | **`Money::Storage` 不定義算術** | `65` §F.3 只講 SQL rollup。現在猜一個實作，第一個使用者就會繞過它寫 `a.cents + b.cents` ⇒ 留給第一個需要小計／折扣的 PR |
+| 6 | **`Psp::Registry` 入口統一鍵型別** | 生產 Symbol／fixture String，而「空表 ≠ 缺鍵」逼實作用 `Hash#key?`。不收斂 ⇒ **整份 §H 矩陣證明不了生產路徑** |
+| 7 | **幣別鍵 upcase 收在 `Pack` 不是 `Registry`** | 後者是泛型的、不知道哪些鍵是幣別（做了會把 `amount_format` 變成 `:AMOUNT_FORMAT`） |
+| 8 | **`config/iso4217_minor_units.yml` 的 TWD 刻意缺席** | `65` §H.3：本專案至今沒有 TWD minor unit 的一手出處。`limits` 裡兩個看起來像 exponent 的 TWD 數字**都不是 PSP 該用的那個**，填進底表就是從它們推導 |
+| 9 | **`divisibility_scope` 目前被忽略（一律檢查）** | V-206 未結案；`65` §L 的當前處置是「最嚴格解讀」。scope 只進錯誤訊息 |
+| 10 | **`enforce_idempotency_contract!` 不做去重** | claim/replay 有**五個**未決點（表形狀缺 `mutation_name`／transaction 邊界／缺 key 的 code／兩份清單待合併／業務失敗算不算成功而被快取）。五個未決點 × 零支真 mutation ＝ 五次盲猜 |
+| 11 | **`Types::MutationType` 建了但不掛 schema** | 承上：**本 PR 一支 mutation 都不出，所以沒有任何東西獲得虛假的安全感**；掛上 root 的那一刻這個保護就沒了。guard spec 把解鎖條件寫進斷言 |
+| 12 | **不交付 `purchasable`／`discoverable` 具名 scope** | `13` §F1.2(d) 的 SQL 指向兩張不存在的表。照做 ⇒ 全站商品靜默不可購買；省略變體層 ⇒ **名字在說謊** |
+| 13 | **回填 migration 不補 `resource_publications`** | `published_at` 欄位已被上一支 migration 移除，「原樣搬」無值可搬。填 `NOW()` ＝實作 `auto_publish`（`88` §5 #2，明確延後）；填 `NULL` 與該 publication 的 `auto_publish: true` 自相矛盾 |
+| 14 | **`Shop` 的 `publications` 用 `dependent: :destroy`** | 本 model 另外三個關聯都用 `restrict_with_error`，照抄會讓**每一間店（含空店）永遠刪不掉**，而沒有任何既有測試會紅 |
+| 15 | **`around_destroy :within_own_tenant, prepend: true`** | 沒有它時，在別間店的租戶 context 下刪店會把 publication 過濾成 0 列、**一列沒刪卻回報成功**。`prepend` 不可省——`has_many dependent` 是在關聯宣告當下註冊成 `before_destroy` 的 |
+| 16 | **CI 檢查跳過整行註釋、不跳行尾註釋** | 不跳整行 ⇒ **唯一正確實作 C4 的檔案被 C4 判違規**；要精確剝行尾就得處理字串內的 `#` 與 `#{}`，那正是 `lint-prototype.py` 踩過六次「漏看」的解析。取捨方向是**寧可誤擋** |
+| 17 | **「0 examples 不是通過」守衛，判準＝ARGV 沒有路徑也沒有 `-e`／`--tag`** | fixture 曾讓整個套件從 233 變 0。判準改過兩次：無條件檢查會誤擋單跑一個檔；「載入檔數 < 5 ⇒ 跳過」**判斷反了**（那正是要抓的 bug 的症狀） |
+| 18 | **「金額路徑的測試檔」用具名常數 `MONEY_TEST_GLOBS`** | `65` §H.1 以它為判準卻沒有定義它。**它的失效方向是「少掃」** ⇒ 新增金額 spec 時要記得加進去 |
+
+🔴 **本 PR 全層沒有生產呼叫端**（`app/` 的 `Money::` 只出現在自己、`Psp::BaseAdapter`
+沒有子類、`ProductType` 連價格欄位都沒有）。正確性靠三件事：規格逐行寫死的欄位形狀、
+六幣別 × 兩種格式的測試矩陣、六條帶「故意違反 fixture」的 CI 檢查。
+**這一點必須在 PR 描述誠實揭露，不得假裝已被使用。**
