@@ -44,8 +44,7 @@ jobs:
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
             echo "$bad"
-            echo "修法：git update-index --chmod=+x $(echo $bad | tr '
-' ' ')"
+            echo "修法：git update-index --chmod=+x <上列檔案>"
             exit 1
           fi
           echo "OK：bin/ 與 scripts/*.sh 全部可執行"
@@ -124,8 +123,7 @@ jobs:
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
             echo "$bad"
-            echo "修法：git update-index --chmod=+x $(echo $bad | tr '
-' ' ')"
+            echo "修法：git update-index --chmod=+x <上列檔案>"
             exit 1
           fi
           echo "OK：bin/ 與 scripts/*.sh 全部可執行"
