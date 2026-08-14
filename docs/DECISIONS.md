@@ -127,3 +127,32 @@
   只有 `request` 與 `agents` 兩個物件可用，且 `agents.md`／`llms.txt`／`llms-full.txt`
   **不可為 JSON template**。這是**架構約束不是功能**，M2 設計 render context 時沒算進去，之後補會很痛。
 - **影響**：71-R13-V7 結案；71-R13-V3（主題引擎支援受限 context）**維持 M2 前必答**。
+
+### D12. 變體×選項用 join 表 ＋ `option_values_digest` 物化欄（M1 前裁定）
+
+- **問題**：`HANDOFF` §5 的 M1 第二項是「**變體 diff 更新**」，而 diff 的 match key 就是選項組合。
+  但 55 張表裡**沒有 variant × option_value 的關聯**，`product_variants` 也沒有 digest 欄。
+  `docs/specs/13` §F1-2 要求唯一索引 `(product_id, option_values_digest)`，
+  🔴 **卻從沒定義 digest 的來源資料存哪**——這是全倉庫唯一一個「查了確實沒有規格」的洞。
+- 🔴 **為什麼 84 號沒抓到**：84 只分流了 `71` §F 的 parity 條目，
+  **從未做「spec 要求 vs 現行 schema」的對帳**。⇒「A 桶五條全結案」**不等於**「M1 無閘門」。
+  同型的漏網另有 SKU 唯一索引（見 D13 註）。
+- **選擇：`product_variant_option_values` join 表 ＋ `product_variants.option_values_digest`**
+  （digest ＝ 排序後 join 的 SHA1，唯一索引 `(shop_id, product_id, option_values_digest)` 兜底）。
+- **為什麼不選 `option1/2/3` 冗餘欄**：`docs/research/26` 明載 `variant.option1/2/3` 在 Liquid 是
+  **DEP（已淘汰）屬性** ⇒ 等於把本尊已標記淘汰的形態焊進 M2 主題引擎；且天生只支援 3 個選項。
+- **為什麼不選「只存 digest」**：無法反查「這個變體在某個選項上的值是什麼」，
+  `docs/research/63` §B.5 的變體身分保持演算法（補上新選項的第一個值）跑不了，商品表單也畫不出選項矩陣。
+- **影響**：擋 `productCreate` 的 input shape，必須在第一支商品 mutation 之前落地。
+
+### D13. 系列採 61/13 的 sources 模型，`84` §2 B-4 作廢
+
+- **問題**：兩份內部裁定互相矛盾——`84` §2 B-4 判「collections 表兩種都撐得住、可延後」，
+  而 `docs/research/61` §10 C-4 與 `docs/specs/13` §F4.1 判「資料模型層級 P0」，
+  且 13 §F4.1 **已經寫成五張表**。
+- **選擇：採 61/13 的 sources 模型**（本尊 2026 改為「來源」卡：新增條件與新增商品同卡混用
+  ＋排除 negative 條件＋多來源組），**`84` §2 B-4 作廢**。
+- **理由**：鐵律 12 是最高強制（1:1 對齊本尊），而 B-4 把它當成 UI 問題判斷是錯的分類——
+  「手動/智慧二分不可互轉」與「多來源組可混用」是**兩種不同的表結構**，不是同一張表的兩種畫法。
+- **影響**：71-R8-V4 結案方向確定；M1 建 collections 相關表或 mutation **前**要先改 schema
+  （現行 `collections`／`collection_products`／`collection_rules` 三張是 legacy 形態）。
