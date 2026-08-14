@@ -66,6 +66,8 @@ jobs:
           fetch-depth: 0
 
       - name: Claude 驗收
+        id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
+        continue-on-error: true   # 失敗也要讓解析步驟跑完並貼出可讀的診斷
         uses: anthropics/claude-code-action@v1
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,8 +115,18 @@ jobs:
 
             具體、可執行、指到規格章節；不要泛泛稱讚。
             不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
+          # 🔴 `--max-turns` 由 40 提高到 200（2026-08-14 事故：PR #26 因此整份驗收作廢）。
+          #   現象：run 跑滿 3m20s、**Job 標 Failure**、PR 上沒有任何 Claude 留言，
+          #         只剩解析步驟貼的「⚠️ 自動驗收沒有產生結論」。
+          #   annotation 原文：`Claude execution failed: Reached maximum number of turns (40)`。
+          #   根因：該 PR 動到 `docs/design/chilllove-admin-v2.html`——**單檔 12,943 行**，
+          #         驗收要讀 diff ＋ 對照多份規格，光讀檔就把 40 回合燒光，
+          #         **根本沒走到 `gh pr comment` 那一步**。
+          #   🔴 先前幾個 PR 沒事，是因為它們都是小幅的 Rails 改動（3–4 分鐘就跑完）——
+          #      **回合數夠不夠取決於 diff 大小，不是取決於 workflow 有沒有寫對**。
+          #      原型檔是本倉庫最大的單檔，任何碰它的 PR 都會壓到上限。
           claude_args: |
-            --max-turns 40
+            --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
 
       - name: 解析結論並驅動閉環
@@ -126,6 +138,7 @@ jobs:
           REPO: ${{ github.repository }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          REVIEW_OUTCOME: ${{ steps.review.outcome }}
         run: |
           set -uo pipefail
           PING="${CODEX_PING_TOKEN:-}"
@@ -171,8 +184,21 @@ jobs:
             if [ -n "$OTHERS" ]; then
               # 🔴 本則訊息**刻意不寫出結論標記字面值**（理由見上方 MARKER 註解）。
               gh pr comment "$PR" --body "⚠️ 找到了驗收結論留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
+            elif [ "$REVIEW_OUTCOME" != "success" ]; then
+              # 🔴 分開報「Claude 步驟自己失敗」與「跑完但沒貼結論」。
+              #    2026-08-14 事故：原本兩者都印同一句「可能失敗或逾時」，
+              #    而真正的原因是 --max-turns 用盡（PR #26）。那句話把人指去看 log，
+              #    但沒說要看哪一行，診斷因此多繞了一圈。現在直接寫出最可能的原因。
+              # 🔴 用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
+              #    續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
+              #    （2026-08-14 寫這段時踩過一次；同型事故另見本檔 heredoc 那次。）
+              BODY=$(printf '%s\n\n%s\n%s' \
+                "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
+                "最常見原因：**\`--max-turns\` 用盡**——大型 diff（尤其動到 \`docs/design/chilllove-admin-v2.html\`，單檔逾 1.2 萬行）會把回合數燒光，且**失敗前不會留下任何驗收留言**。" \
+                "請到 Actions 分頁看該 run 的 annotation（會直接寫 \`Reached maximum number of turns\`）。重新 push 即會重跑。")
+              gh pr comment "$PR" --body "$BODY"
             else
-              gh pr comment "$PR" --body "⚠️ 自動驗收沒有產生結論（Claude 步驟可能失敗或逾時）。請到 Actions 分頁查 log；重新 push 即會重跑驗收。"
+              gh pr comment "$PR" --body "⚠️ Claude 驗收步驟**執行成功但沒有貼出結論**。請到 Actions 分頁查 log 確認它最後做了什麼；重新 push 即會重跑驗收。"
             fi
             exit 0
           fi
