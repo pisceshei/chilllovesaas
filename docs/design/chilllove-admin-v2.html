@@ -1879,10 +1879,25 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
         </span>
         <button class="m-hover icon-btn" title="欄位設定" aria-label="欄位設定" onclick="toast('Demo：欄位顯示設定')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg></button>
       </div>
-      <table class="idx" id="prodTable" data-doc="prodtable">
-        <thead><tr><th style="width:36px"><input type="checkbox" class="cb" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th data-doc="prod-tr-col">翻譯</th><th>類型</th><th>供應商</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <!-- 🔴 商品列表的批次選取鏈（2026-08-14 依 89 §1.4／83 PR-01 補建，複驗確認整鏈是死的）。
+           結構照訂單頁（.idx-wrap 包 bulkbar＋table）——.bulkbar 是 position:absolute，
+           少了 position:relative 的 .idx-wrap 會定位到整頁而不是表格上緣。
+           🔴 **class 刻意用 prodcb 而非訂單頁的 rowcb**：本原型是 SPA，所有頁面同時存在於 DOM，
+           共用 class 會讓 bulk() 的 querySelectorAll('.rowcb') 把訂單列一起數進來。 -->
+      <div class="idx-wrap">
+        <div class="bulkbar" id="prodBulkbar" data-doc="bulkbar">
+          <span id="prodBulkCount" class="num"></span><span class="bb-gap" style="flex:1"></span>
+          <button class="b-act m-hover" onclick="toast('Demo：批次設為啟用中')">設為啟用中</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次設為草稿')">設為草稿</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次加標籤')">加標籤</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次加入銷售管道')">加入銷售管道</button>
+          <button class="b-act m-hover" onclick="toast('Demo：批次封存')">封存</button>
+        </div>
+        <table class="idx" id="prodTable" data-doc="prodtable">
+          <thead><tr><th style="width:36px"><input type="checkbox" class="cb" id="cbAllProds" onclick="prodToggleAll(this)" aria-label="全選"></th><th>商品</th><th>狀態</th><th class="right">庫存</th><th data-doc="prod-tr-col">翻譯</th><th>類型</th><th>供應商</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <div class="pagination"><button class="pg" disabled aria-disabled="true" aria-label="上一頁">‹</button><button class="pg" onclick="toast('Demo：下一頁')" aria-label="下一頁">›</button></div>
     </div>
   </section>
@@ -2568,6 +2583,44 @@ function custHover(name){
 }
 document.getElementById('orderSearch').addEventListener('input',renderOrders);
 function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=cb.checked);bulk();}
+
+/* ── 商品列表的批次選取（89 §1.4／83 PR-01）─────────────────────────────
+   🔴 與訂單頁是**兩套**：本原型所有頁面同時在 DOM 裡，若共用 .rowcb／#bulkbar，
+   bulk() 會把訂單列一起數進來。選取器一律限定在 #prodTable 內。
+   選取集合由 prodSelected() 提供，匯出對話框的「已選取的商品」要讀它——
+   原本那個選項是**空指向**（無任何讀取端），選了會 toast「已排入匯出」但實際 0 筆。 */
+/* 🔴 選取集合存在 DOM **之外**（PR #26 的 Codex review 指出，屬我方引入的 bug）。
+   原本只存在 checkbox 的 `.checked` 上——但搜尋輸入、換排序都會呼叫 renderProducts()
+   把整個 tbody 換掉 ⇒ 所有 .prodcb 節點被丟棄、選取消失，
+   而 bulkbar 還顯示著舊的計數（它不在 tbody 裡沒被重繪），`prodSelected()` 卻回 0。
+   ⇒ 「已選取 5 件」的橫條配上一個空的選取集合，比完全沒有批次選取更糟。
+   存 PRODUCTS 的索引；`prodSyncSel()` 在每次重繪後把 DOM 對回這個集合。 */
+const PROD_SEL=new Set();
+function prodToggleAll(cb){
+  document.querySelectorAll('#prodTable .prodcb').forEach(x=>{x.checked=cb.checked;
+    cb.checked?PROD_SEL.add(+x.dataset.pi):PROD_SEL.delete(+x.dataset.pi);});
+  prodBulk();
+}
+function prodSelected(){return [...PROD_SEL];}
+/* 重繪後呼叫：把 DOM 的勾選狀態對回 PROD_SEL，並清掉已被篩掉的列所留下的殘留計數。 */
+function prodSyncSel(){
+  document.querySelectorAll('#prodTable .prodcb').forEach(x=>{x.checked=PROD_SEL.has(+x.dataset.pi);});
+  prodBulk();
+}
+function prodBulk(){
+  const rows=[...document.querySelectorAll('#prodTable .prodcb')];
+  rows.forEach(x=>{const i=+x.dataset.pi;x.checked?PROD_SEL.add(i):PROD_SEL.delete(i);});
+  const n=PROD_SEL.size,visN=rows.filter(x=>x.checked).length;
+  const head=document.getElementById('cbAllProds');
+  /* 半選態 indeterminate 必做（DOCS bulkbar 條目自己寫的要求）。
+     🔴 用「目前可見列」判斷全選/半選，但計數用 PROD_SEL.size——
+     篩選後仍選著的、看不見的那些也要算進總數，否則使用者會以為取消掉了。 */
+  if(head){head.checked=rows.length>0&&visN===rows.length;head.indeterminate=visN>0&&visN<rows.length;}
+  const c=document.getElementById('prodBulkCount');
+  if(c)c.textContent=n===visN?`已選取 ${n} 件商品`:`已選取 ${n} 件商品（${n-visN} 件不在目前篩選結果中）`;
+  const bar=document.getElementById('prodBulkbar');if(bar)bar.classList.toggle('show',n>0);
+  rows.forEach(x=>x.closest('tr').classList.toggle('selected',x.checked));
+}
 function bulk(){
   const rows=[...document.querySelectorAll('.rowcb')],n=rows.filter(x=>x.checked).length;
   const head=document.getElementById('cbAllOrders');
@@ -3038,32 +3091,53 @@ function renderProducts(){
    const others=SHOP_LOCALES.filter(l=>!l.source).sort((a,b)=>a.pos-b.pos);
    return `
    <tr onclick="openProduct(${PRODUCTS.indexOf(p)})">
-     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" aria-label="選取 ${H(p.n)}"></td>
+     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb prodcb" onchange="prodBulk()" data-pi="${PRODUCTS.indexOf(p)}" aria-label="選取 ${H(p.n)}"></td>
      <td><div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="background:${p.g}"></span>
        <span${t.state==='fallback'?` lang="${srcLocale()}" title="此語言尚無譯文，顯示來源語言原文（67 §C.4）"`:''}>${H(t.v)}</span></div></td>
      <td>${S_BADGE[p.s]}${p.pubErr?` <span class="tr-b miss" title="${H(p.pubErr)}">發布錯誤</span>`:''}</td>
      <td class="right num" ${p.inv===0?'style="color:var(--critical)"':p.inv<10?'style="color:var(--warning)"':''}>${p.inv===0?'缺貨':p.inv+' 件'}<span class="mut3">・${p.v} 變體</span></td>
      <td><div class="tr-cell">${others.map(l=>trBadge(prodTrStatus(p,l.tag))).join('')}</div></td>
      <td class="mut">${H(p.type)}</td><td class="mut">${H(p.vd)}</td>
-   </tr>`;}).join('')||`<tr><td colspan="7"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+   </tr>`;}).join('')||`<tr class="norow"><td colspan="7"><div class="empty-wrap"><b>找不到符合的商品</b><button class="btn btn-sec btn-sm" onclick="document.getElementById('prodSearch').value='';renderProducts()">清除搜尋</button></div></td></tr>`;
+  /* 🔴 重繪後必須把選取狀態對回來，否則搜尋/排序一動選取就沒了（見 PROD_SEL 的註釋）。
+     空態列補上 class="norow"——匯出的「目前檢視」筆數要靠它排除掉空態列。 */
+  prodSyncSel();
 }
 document.getElementById('prodSearch').addEventListener('input',renderProducts);
 /* 60 §5 匯出／匯入 modal。🔴 **商品 CSV 與庫存 CSV 是兩套**，實站在匯出對話框裡就明講了
    （只改庫存數量請用庫存 CSV）——我方照做，並且**用自己的文案講同一件事**（鐵律 9：不抄本尊文案）。
    翻譯 CSV 是**第三套**（67 §E.6），三者的鍵、範圍、生命週期都不同。 */
 function prodExport(){
+  /* 🔴 進來時就把選取數算好——「已選取的商品」這個選項原本是**空指向**
+     （`_pex` 全檔沒有讀取端），選了會 toast「已排入匯出」但實際 0 筆（89 §1.4）。
+     沒有選取時直接把該選項 disabled，而不是讓人選一個保證空的範圍。 */
+  const sel=prodSelected().length;
   openGen({title:'匯出商品',body:`<div class="stack">
     <p class="help">這份 CSV 涵蓋商品的所有欄位（標題、說明、選項、變體、價格、SKU…），可改完再匯入回來覆寫。</p>
     <div class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
       <span><b>只想改庫存數量的話請改用庫存 CSV。</b>商品 CSV 與庫存 CSV 是<b>兩套檔案</b>（61 §6.1／§6.2、63 §L-8）：
       商品 CSV 的鍵是 handle ＋ 變體行，庫存 CSV 的鍵是「地點 × 變體」且只有 On hand 可寫回。
       拿商品 CSV 改庫存會連同價格與說明一起覆寫。</span></div>
-    ${F('匯出範圍',SEL('_pex',[['current','目前檢視與篩選結果'],['all','全部商品'],['sel','已選取的商品']],'current'))}
+    ${F('匯出範圍',SEL('_pex',[['current','目前檢視與篩選結果'],['all','全部商品'],...(sel?[['sel',`已選取的商品（${sel} 件）`]]:[])],sel?'sel':'current'),
+      sel?`已選取 ${sel} 件；未選取時本選項不會出現`:'目前沒有選取任何商品，因此不提供「已選取的商品」範圍')}
     ${F('檔案格式',SEL('_pfx',[['csv','CSV（Excel、Numbers、Google 試算表通用）'],['csv_excel','CSV（Excel 專用編碼）']],'csv'))}
     <p class="help">單檔上限沿用 limits.yml <code>csv.product_max_upload_mb</code>；超過會分檔並以 email 寄出下載連結。
       翻譯不在這份檔案裡——譯文走語言設定的<b>翻譯 CSV</b>（第三套，67 §E.6）。</p></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
-     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已排入匯出——完成後寄到 benny@chilllove.demo')">匯出商品</button>`});
+     <button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="prodExportRun()">匯出商品</button>`});
+}
+/* 匯出範圍真的被讀——回報實際筆數而不是無條件「已排入匯出」。 */
+function prodExportRun(){
+  const scope=(document.querySelector('#genBody [data-f="_pex"]')||{}).value||'current';
+  /* 🔴 「目前檢視」只數**真的商品列**（`tr:not(.norow)`）。
+     原本用 `tbody tr` 全數，搜尋無結果時那一列空態 <tr> 會被算成 1 件，
+     報出「已排入匯出・1 件」而實際是 0（PR #26 的 Codex review 指出）；
+     且原本的 `|| PRODUCTS.length` 保底在 tbody 真的空的時候會謊報成全部商品。 */
+  const n=scope==='sel'?prodSelected().length
+        :scope==='all'?PRODUCTS.length
+        :document.querySelectorAll('#prodTable tbody tr:not(.norow)').length;
+  closeGen();
+  toast(`已排入匯出（${scope==='sel'?'已選取':scope==='all'?'全部商品':'目前檢視'}・${n} 件）——完成後寄到 benny@chilllove.demo`);
 }
 function prodImport(){
   openGen({title:'匯入商品（步驟 1／2）',body:`<div class="stack">
@@ -3735,7 +3809,7 @@ const DOCS={
  bulkbar:{t:"批次操作列",f:"多選後的批次動作",l:">50 筆轉背景 job；逐筆獨立 transaction+結果報告；批次出貨不填追蹤碼",i:"P0・規格 16-F1；半選狀態 indeterminate 必做"},
  bulkrecent:{t:"批次處理近期訂單",f:"一鍵處理近期未出貨單",l:"2026 版新入口；等同帶條件的批次出貨",i:"P1・重用批次管線"},
  createorder:{t:"建立訂單（草稿）",f:"商家代客建單",l:"草稿→寄發票/收款→轉正式單；可 Reserve 庫存、Lock 價格",i:"P1・M：draft_orders；金額引擎重用（規格 15-F2）；22 §1c"},
- refund:{t:"退款",f:"逐行退款+restock+退運費",l:"上限=實收−已退；免運單不可退運費；退款後不能再建退貨；手續費不退",i:"P0・規格 16-F5：先落 pending 再打金流；restock 冪等"},
+ refund:{t:"退款",f:"逐行退款+restock+退運費；超額退款走 caution banner ＋二次確認",l:"🔴 <b>軟上限</b>＝netPayment（實收−已退），<b>不是 DB 硬鎖</b>：可以超過，超額需 <code>orders.over_refund</code> 權限＋二次確認＋audit log。⚠防回退：本欄原寫「上限=實收−已退」且 UI help 寫「硬保證 Σrefunds ≤ captured（DB 層鎖）」，那是 22 §1b:35–37 紅字「任何人翻舊版都不要改回硬擋」點名的形態，會擋掉「先發店內額度再原路超額退款」的合法情境（46c:223/241）；16 §F5.1(e):412 說明為什麼不得做成 DB CHECK。免運單不可退運費；退款後不能再建退貨；手續費不退",i:"P0・規格 16-F5：先落 pending 再打金流；restock 冪等｜🔴 跨功能：權限鍵 orders.over_refund 見設定›使用者權限目錄；超額路徑必寫 audit log"},
  editorder:{t:"編輯訂單",f:"加減品項後算差額（補收/退）",l:"不能改訂單層折扣；已出貨項不可移除；稅重算、運費不重算；分期單不可編",i:"P1・金額引擎重算＋差額發票流；guard 清單見 22 §1b"},
  moreactions:{t:"更多動作",f:"複製/取消/封存/列印裝箱單",l:"取消：原因必選、restock 預設勾、未捕獲→Voided；複製不帶折扣運費；裝箱單=Liquid 模板",i:"P0 取消/封存；P1 複製/列印（規格 16-F4）"},
  fulfill:{t:"標記為已出貨（split button）",f:"出貨：數量+追蹤碼+通知顧客",l:"on hold 須先解除；部分出貨=數量制；追蹤碼自動辨識物流商；待付款單禁出貨",i:"P0・M：fulfillment_orders 條件累加（規格 16-F3）；庫存 committed−/on_hand−"},
@@ -6944,17 +7018,66 @@ function openSegment(id){
   SEG=id==='new'?{id:'new',t:'',q:'',n:0}:JSON.parse(JSON.stringify(SEGMENTS.find(s=>s.id===id)));
   goDetail('d-segment',{id});
 }
+/* ══════════ 分群條件求值器（89 §1.3／83 C-01）════════════════════════════
+   🔴 取代原本的三條 regex 假解析器。原本的形態是：三個 pattern 都不中就
+      `n = CUSTOMERS.length`（**全部顧客**），於是——
+        · `number_of_orders > 1` → 顯示 7（真值 4）
+        · `amount_spent > 5000 AND number_of_orders > 2` → regex 只吃左半，
+          **AND 右半被靜默丟棄**，顯示 6（真值 2）
+        · `last_order_date < -90d`（我方無此欄位）→ 顯示 7（100%）
+      這**不是佔位符，是錯誤數字**，而且長得像模像樣，比空白更難發現。
+
+   🔴 本次的設計原則：**算不出來就明說算不出來，絕不退回「全部顧客」**。
+      無法求值的條件（我方種子資料沒有該欄位、或函式型 filter）回 ok:false，
+      UI 顯示「—」與原因，不顯示任何數字。
+
+   🔴 單位邊界（鐵律 3）：查詢字面量 `amount_spent > 5000` 是**主單位**（HK$5,000），
+      而 `c.spent` 是 **cents**。原本直接 `c.spent > 5000` 等於在問「> HK$50」——
+      查詢層的單位邊界也要轉換，這正是 65 號契約說的「跨界點才換算」。
+
+   支援：`field OP value`，以 AND / OR 連接（不支援括號巢狀——UI 說明有寫，
+   但本原型不實作，故列入 SEG_UNSUPPORTED 的判斷）。 */
+const SEG_FIELDS={
+  amount_spent:            {get:c=>c.spent, lit:v=>toCents(v)},   /* 🔴 主單位 → cents */
+  number_of_orders:        {get:c=>c.ord,   lit:v=>+v},
+  email_subscription_status:{get:c=>c.sub==='已訂閱'?'SUBSCRIBED':'NOT_SUBSCRIBED',
+                            lit:v=>String(v).replace(/^['"]|['"]$/g,'')}
+};
+/* 我方種子資料沒有的欄位／函式型 filter——**能列舉就列舉，不要用「其餘一律」兜底**。 */
+const SEG_UNSUPPORTED=/last_order_date|abandoned_checkout_date|customer_within_distance|predicted_|customer_tags|location|MATCHES|\(/;
+const SEG_OPS={'>':(a,b)=>a>b,'<':(a,b)=>a<b,'>=':(a,b)=>a>=b,'<=':(a,b)=>a<=b,'=':(a,b)=>a==b,'!=':(a,b)=>a!=b};
+
+/* @return {{ok:boolean, list:Array, reason:string}} ok:false 時 list 不可採信 */
+function segMatch(q){
+  q=(q||'').trim();
+  if(!q)return {ok:true,list:CUSTOMERS.slice(),reason:''};
+  if(SEG_UNSUPPORTED.test(q))
+    return {ok:false,list:[],reason:'此條件用到本原型種子資料沒有的欄位或函式型 filter（如 last_order_date／customer_within_distance／括號巢狀），無法在前端求值'};
+  /* OR 的優先權低於 AND：先切 OR，每段再切 AND */
+  const ors=q.split(/\s+OR\s+/i);
+  let bad='';
+  const pred=c=>ors.some(orPart=>orPart.split(/\s+AND\s+/i).every(term=>{
+    const m=term.trim().match(/^([a-z_]+)\s*(>=|<=|!=|>|<|=)\s*(.+)$/i);
+    if(!m){bad=bad||`無法解析的條件片段：${term.trim()}`;return false;}
+    const f=SEG_FIELDS[m[1]];
+    if(!f){bad=bad||`未知欄位：${m[1]}`;return false;}
+    return SEG_OPS[m[2]](f.get(c),f.lit(m[3].trim()));
+  }));
+  const list=CUSTOMERS.filter(pred);
+  return bad?{ok:false,list:[],reason:bad}:{ok:true,list,reason:''};
+}
+/* 舊介面保留給既有呼叫端；🔴 無法求值時回 null 而不是 CUSTOMERS.length。 */
 function segCount(){
-  const q=(document.getElementById('segQ')||{}).value||SEG.q;
-  let n=CUSTOMERS.length;
-  const m=q.match(/amount_spent\s*>\s*(\d+)/);if(m)n=CUSTOMERS.filter(c=>c.spent>+m[1]).length;
-  else if(/number_of_orders\s*=\s*0/.test(q))n=CUSTOMERS.filter(c=>c.ord===0).length;
-  else if(/SUBSCRIBED/.test(q))n=CUSTOMERS.filter(c=>c.sub==='已訂閱').length;
-  else if(q.trim()==='')n=CUSTOMERS.length;
-  return n;
+  const r=segMatch((document.getElementById('segQ')||{}).value||SEG.q);
+  return r.ok?r.list.length:null;
 }
 function segmentPage(){
-  const n=segCount();
+  /* 🔴 人數與名單**同源**：兩者都取自同一次 segMatch()。
+     原本人數走 segCount()、名單走 CUSTOMERS.slice(0,n)——「拿前 n 筆當成員」，
+     於是出現「數字對、名單錯」（sys2 數字 3 正確，名單卻列出未訂閱的人）。
+     這比純佔位更難發現，也違反鐵律 7（同一指標必須同源）。 */
+  const R=segMatch((document.getElementById('segQ')||{}).value||SEG.q);
+  const n=R.ok?R.list.length:null;
   return detailHead(SEG.id==='new'?'建立分群':H(SEG.t),chip('動態名單','ai'),
     `<button class="btn btn-sec btn-sm" onclick="toast('Demo：用此分群建立 Email 活動')">用於行銷活動</button>
      <button class="btn btn-pri btn-sm" onclick="formSave()">儲存分群</button>`,'m-segments')
@@ -6979,14 +7102,16 @@ function segmentPage(){
         <div class="card-sec"><label style="font-size:var(--t-xs);font-weight:500;color:var(--text-2)">點擊插入 filter（＝本尊 autocomplete 目錄）</label>
           <div class="valchips" style="margin-top:var(--sp-150)">${SEG_FILTERS.map(f=>`<button class="tokchip" title="${f[1]}｜運算子：${f[2]}" onclick="segIns(${JQ(f[0])})">${f[0]}</button>`).join('')}</div></div>
       </div>
-      <div class="card" data-doc="seg-preview"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>成員預覽<span class="h-act num mut3" style="font-size:var(--t-xs)">${n} 位顧客</span></h3></div>
+      <div class="card" data-doc="seg-preview"><div class="card-pad" style="padding-bottom:var(--sp-150)"><h3>成員預覽<span class="h-act num mut3" style="font-size:var(--t-xs)">${R.ok?n+' 位顧客':'—'}</span></h3></div>
         <table class="idx"><thead><tr><th>顧客</th><th>Email</th><th class="right">訂單</th><th class="right">消費金額</th></tr></thead><tbody>
-        ${CUSTOMERS.slice(0,n||0).map(c=>`<tr onclick="openCustomer('${c.id}')"><td><b>${H(c.n)}</b></td><td class="mut">${H(c.mail)}</td><td class="right num">${c.ord}</td><td class="right num">${money(c.spent)}</td></tr>`).join('')
+        ${!R.ok?`<tr class="norow"><td colspan="4"><div class="empty-wrap"><b>此條件無法在前端求值</b>${H(R.reason)}。<span class="mut3">實作後由後端 ShopifyQL 執行。</span></div></td></tr>`
+          :R.list.map(c=>`<tr onclick="openCustomer('${c.id}')"><td><b>${H(c.n)}</b></td><td class="mut">${H(c.mail)}</td><td class="right num">${c.ord}</td><td class="right num">${money(c.spent)}</td></tr>`).join('')
           ||'<tr class="norow"><td colspan="4"><div class="empty-wrap"><b>目前沒有符合的顧客</b>放寬條件再試一次。</div></td></tr>'}</tbody></table></div>
     </div>
     <div class="col">
-      <div class="card card-pad"><h3>即時人數</h3><div class="t-value num" style="font-size:24px;font-weight:700">${n}</div>
-        <p class="mut" style="font-size:var(--t-xs)">佔客群的 ${CUSTOMERS.length?Math.round(n/CUSTOMERS.length*100):0}%</p>
+      <div class="card card-pad"><h3>即時人數</h3><div class="t-value num" style="font-size:24px;font-weight:700">${R.ok?n:'—'}</div>
+        <p class="mut" style="font-size:var(--t-xs)">${R.ok?`佔客群的 ${CUSTOMERS.length?Math.round(n/CUSTOMERS.length*100):0}%`:'無法求值'}</p>
+        ${R.ok?'':`<div class="banner-caution" style="margin-top:var(--sp-200)"><span class="bc-ic" aria-hidden="true">⚠</span><span>${H(R.reason)}。<b>刻意不顯示數字</b>——顯示一個算錯的人數比顯示「—」危險得多。</span></div>`}
         <p class="help">成員自動進出，不需要重新整理名單（本尊：人數列隨編輯即時重估）。</p></div>
       <div class="card card-pad"><h3>常用範本</h3>
         ${[['高消費顧客',"amount_spent > 5000"],['90 天未回購',"last_order_date < -90d"],['訂閱未購買',"email_subscription_status = 'SUBSCRIBED' AND number_of_orders = 0"],['生日當月',"anniversary(date: metafields.facts.birth_date)"]]
@@ -8758,6 +8883,52 @@ const ROLE_CATALOG=[
  ['銷售點 (POS)','POS 完整權限／POS 裝置設定／POS 使用者管理員'],
  ['合作夥伴','協作者存取權限']];
 /* ---------- 設定分頁的可變狀態：新增／排序在 demo 也要真的生效 ---------- */
+/* 🔴 請款四模式——**逐字對應 config/limits.yml 的 capture.modes**（鐵律 6：不得硬編）。
+   出處 46c:508–514（help，H33 zh-TW）；DOCS 條目 set-payments 有防回退註釋。
+
+   ⚠ 本區原本硬編三個字串（'結帳後自動請款'／'全單出貨後自動請款'／'手動請款（授權期 7 天）'），
+   缺 Plus 專屬的 automatic_per_fulfillment——**卡片標題卻寫著「四模式」**，
+   標題與內容自我矛盾，而 DOCS 的「⚠防回退」註釋正在描述一個畫面上不存在的選項
+   （89 §1.2／83 T-01；2026-08-14 複驗仍成立，故本次修復）。
+   🔴 任何人要改這個陣列，先改 limits.yml，不要只改這裡。
+
+   k 對應 limits.yml 的 enum 鍵；d=預設（capture.default_mode）；plus=僅 Plus（capture.plus_only_modes）。 */
+const CAPTURE_MODES=[
+ {k:'automatic_at_checkout',   t:'結帳時自動請款',            d:true,  s:'顧客完成結帳當下即請款'},
+ {k:'automatic_after_fulfilled',t:'整張訂單出貨完成後自動請款',        s:'全部品項都出貨後才請款'},
+ {k:'automatic_per_fulfillment',t:'每次出貨各自請款',   plus:true, s:'部分出貨即請該部分款項；未含此模式時多次出貨的訂單會「該逐次請款卻整單請款」'},
+ {k:'manual',                  t:'手動請款',                          s:'逾期未請款則授權失效（預設授權期 7 天，見 limits.yml capture.authorization_days_default）'}
+];
+/* 🔴 本 demo 商店的方案與登入者權限——原型的最小模型。
+   沒有這兩個，任何「Plus 專屬」「需某某權限」的 gating 都只能做成提示文字，
+   而提示文字擋不住任何事（PR #26 的 Codex review 兩條都是這個形態）。
+   `PLAN` 影響 limits.yml 標了 plus_only 的功能；`PERMS` 對應設定›使用者的權限目錄。 */
+const SHOP_PLAN='growth';                       /* basic | growth | advanced | plus */
+const IS_PLUS=()=>SHOP_PLAN==='plus';
+/* demo 登入者刻意**不給** orders.over_refund，這樣超額退款的權限閘才看得到效果。
+   要看放行路徑，在 console 執行 `PERMS.add('orders.over_refund')`。 */
+const PERMS=new Set(['orders.read','orders.write','orders.refund','products.write']);
+const hasPerm=k=>PERMS.has(k);
+
+/* 切換請款模式。
+   🔴 Plus 專屬模式在非 Plus 方案要**真的擋下並還原選取**，不能只 toast 一句。
+   瀏覽器會在 onchange 之前就把 radio 打勾，所以這裡必須把選取撥回原本的模式
+   （PR #26 的 Codex review：原本只提示、選項仍留在被選中狀態，
+    與 limits.yml `capture.plus_only_modes` 的語義相反）。 */
+let CAP_MODE=(CAPTURE_MODES.find(m=>m.d)||CAPTURE_MODES[0]).k;
+function capModeSet(k){
+  const m=CAPTURE_MODES.find(x=>x.k===k);
+  if(!m)return;
+  if(m.plus&&!IS_PLUS()){
+    /* 還原到上一個合法選取 */
+    const back=document.querySelector(`input[name="capmode"][aria-label="${CSS.escape((CAPTURE_MODES.find(x=>x.k===CAP_MODE)||{}).t||'')}"]`);
+    if(back)back.checked=true;
+    toast(`「${m.t}」僅 Shopify Plus 方案可用（目前方案：${SHOP_PLAN}），已還原為「${(CAPTURE_MODES.find(x=>x.k===CAP_MODE)||{}).t}」`);
+    return;
+  }
+  CAP_MODE=k;
+  toast(`已切換為：${m.t}`);
+}
 const MANUAL_PAY=[{n:'銀行轉帳',s:'下單後 3 日內轉帳，後台標記已收款',ins:'請匯款至 台灣銀行 (004) 123-456-789012，戶名 CHILL LOVE，並於備註填單號。'}];
 const CARRIER_ACCTS=[];
 const PKG_LIST=[{n:'標準紙箱 S',s:'20 × 15 × 10 cm・120 g'},{n:'標準紙箱 M',s:'30 × 22 × 16 cm・210 g'},{n:'自訂信封袋',s:'25 × 18 cm・25 g'}];
@@ -8979,8 +9150,9 @@ function paymentsPage(){
    ${setRowSel('撥款排程','款項從金流商轉進銀行帳戶的頻率','payPayout',
      [['daily','每日（T+2 入帳）'],['weekly','每週一（T+2 入帳）'],['monthly','每月 1 日（T+2 入帳）'],['manual','手動撥款']],'daily','set-payout')}</div>
   <div class="card card-pad"><h3>請款方式（四模式）</h3>
-   ${['結帳後自動請款','全單出貨後自動請款','手動請款（授權期 7 天）'].map((m,i)=>`<label class="set-row" style="cursor:pointer"><div class="sr-t"><b>${m}</b>${i===2?'<span class="sub">逾期未請款則授權失效</span>':''}</div>
-     <input type="radio" name="capmode" class="cl-radio set-ctl" ${i===0?'checked':''} aria-label="${m}" onchange="toast('已切換為：${m}')"></label>`).join('')}</div>
+   ${CAPTURE_MODES.map(m=>`<label class="set-row" style="cursor:pointer"${m.plus?' title="需 Shopify Plus 方案"':''}><div class="sr-t">
+     <b>${m.t}</b>${m.plus?' '+chip('Plus','info'):''}${m.d?' '+chip('預設','default'):''}${m.s?`<span class="sub">${m.s}</span>`:''}</div>
+     <input type="radio" name="capmode" class="cl-radio set-ctl" ${m.d?'checked':''} aria-label="${m.t}" onchange="capModeSet(${JQ(m.k)})"></label>`).join('')}</div>
   <div class="card card-pad"><h3>手動付款方式</h3>
    ${MANUAL_PAY.map((m,i)=>setRowBtn(H(m.n),H(m.s),'<span class="chev" aria-hidden="true">›</span>',`openManualPay(${i})`,'set-manualpay','🏦')).join('')}
    ${setRowAdd('新增手動付款方式','貨到付款、面交、郵局匯款…（自訂名不得使用保留字）','manualPayAdd()','set-manualpay-add')}</div>`;
@@ -10452,25 +10624,74 @@ function orderCancel(){
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">返回</button>
      <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('訂單已取消——庫存已回補、款項已退回')">取消訂單（無法復原）</button>`});
 }
+/* 本次退款的**軟上限**（netPayment，cents）。rfCalc()／rfSubmit() 都要讀，故提到模組層。 */
+let RF_NET=0,RF_CUR='HKD';
 function orderRefund(){
-  const o=curOrder,maxAmt=o.total|0;                 /* 資料已是 integer cents，不再從顯示字串挖數字 */
+  const o=curOrder;
+  /* 🔴 軟上限＝netPayment（實收 − 已退），**不是訂單總計**。
+     o.paid 是實收；本原型沒有逐單退款歷史，真實實作要再扣掉 Σ已退（refunded_total_cents）。
+     原本寫 maxAmt=o.total|0，那是訂單總計——與同一行 help 宣稱的「實收 − 已退」不同定義，
+     未付款單（paid:0）會顯示一個完全不存在的可退額度。 */
+  RF_NET=o.paid|0;RF_CUR=o.cur;
   openGen({title:'退款 #'+o.id,wide:true,body:`<div class="stack">
     <table class="idx"><thead><tr><th>品項</th><th class="right">已購買</th><th class="right">退貨數量</th></tr></thead><tbody>
       ${o.lines.map((l,i)=>`<tr class="norow"><td>${H(l.n)}<span class="mut3"> ・${H(l.v)}</span></td><td class="right num">${l.q}</td>
         <td class="right"><input class="cellin num" style="text-align:right" value="0" max="${l.q}" aria-label="退貨數量" oninput="rfCalc()" data-p="${l.p|0}"></td></tr>`).join('')}</tbody></table>
     <div class="grid2">${F(`退運費（${CURSYM(o.cur)}）`,'<input class="input num" id="rfShip" value="0" data-val="money" oninput="rfCalc()">','免運單不可退運費')}
-      ${F(`退款金額（${CURSYM(o.cur)}）`,'<input class="input num" id="rfAmt" value="0" data-val="req|money">','上限＝實收 − 已退：'+money(maxAmt,o.cur))}</div>
+      ${F(`退款金額（${CURSYM(o.cur)}）`,'<input class="input num" id="rfAmt" value="0" data-val="req|money" oninput="rfOver()">','建議上限（軟上限）＝實收 − 已退：'+money(RF_NET,o.cur)+'——可超過，需額外權限')}</div>
+    <div id="rfOverBox" hidden class="banner-caution"><span class="bc-ic" aria-hidden="true">⚠</span>
+      <span><b>超額退款</b>：本次金額高於 netPayment（${money(RF_NET,o.cur)}）。這是<b>允許的</b>（例：先發店內額度、再對原付款方式超額退款），
+      但需要 ${chip('orders.over_refund','info')} 權限並二次確認，且會寫入 audit log。
+      <label class="inline-lbl" style="margin-top:var(--sp-150)"><input type="checkbox" class="cb" id="rfOverOK"><span>我確認要超額退款 <b id="rfOverAmt"></b></span></label></span></div>
     ${CHK('_rr',true,'回補庫存到主倉')}${CHK('_rn',true,'通知顧客')}
     ${F('原因（僅內部）',TXT('_rz','','例：尺寸不合'))}
-    <p class="help">退款上限硬保證：Σrefunds ≤ captured（DB 層鎖）；手續費不退；退款後不能再建退貨。</p></div>`,
+    <p class="help">🔴 退款上限是<b>軟上限</b>（預設 netPayment），<b>不是 DB 硬鎖</b>——超額需 <code>orders.over_refund</code> 權限＋二次確認（22 §1b、16 §F5.1(e)、28 §API）。手續費不退；退款後不能再建退貨。</p></div>`,
    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button>
-     <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已送出退款——先落 pending 再打金流，restock 冪等')">退款</button>`});
+     <button class="btn btn-danger btn-sm" style="margin-left:var(--sp-200)" onclick="rfSubmit()">退款</button>`});
 }
+/* <!-- 🔴 防回退（2026-08-14 依 89 §1.1／83 O-01 修復，複驗確認仍為回歸態）：
+     本區原本的 help 逐字寫「退款上限硬保證：Σrefunds ≤ captured（DB 層鎖）」，
+     那正是 docs/research/22 :35–37 紅字「任何人翻舊版都不要改回硬擋」點名的形態，
+     也是 docs/specs/16 §F5.1(e):412 說明「為什麼不做成 DB CHECK」的那個實作。
+     硬擋會擋掉「先發店內額度、再對原付款方式超額退款」這個 46c:223/241 明載的合法情境。
+     🔴 而且原本連它自己宣告的硬擋都沒實作——退款鈕是 onclick="closeGen();toast(…)"，
+        輸入 999999 也會「成功」。錯的規則寫在文案、正確的規則一行都沒有。
+     任何人不得把 help 改回「硬保證／DB 層鎖」，也不得把 rfSubmit() 換成無條件 closeGen()。 --> */
 function rfCalc(){
   /* data-p 是 integer cents、輸入框是主單位——換算只在邊界做一次，內部一律 cents（鐵律 3）*/
   let cents=0;document.querySelectorAll('#genBody input[data-p]').forEach(i=>cents+=(+i.value||0)*(+i.dataset.p||0));
   cents+=toCents((document.getElementById('rfShip')||{}).value||0);
   const a=document.getElementById('rfAmt');if(a)a.value=fromCents(cents);
+  rfOver();
+}
+/* 超額偵測：只切換 caution banner，不阻擋輸入（軟上限的定義就是「可以超過」）。 */
+function rfOver(){
+  const a=document.getElementById('rfAmt'),box=document.getElementById('rfOverBox');
+  if(!a||!box)return false;
+  const cents=toCents(a.value),over=cents>RF_NET;
+  box.hidden=!over;
+  if(over){const t=document.getElementById('rfOverAmt');if(t)t.textContent=money(cents-RF_NET,RF_CUR)+'（超出部分）';}
+  return over;
+}
+/* 送出：超額時**必須**二次確認才放行——這是軟上限與硬擋的差別所在。
+   🔴 權限與二次確認是**兩道獨立的閘**（16 §F5.1:357 要求兩者皆備）。
+   PR #26 的 Codex review 指出：原本只檢查勾選框，沒有權限的人只要勾一下就過了，
+   等於把「未授權的超額退款」呈現成成功。權限先判，勾選後判，缺一不可。 */
+function rfSubmit(){
+  const a=document.getElementById('rfAmt'),cents=toCents((a||{}).value||0);
+  if(cents<=0){toast('請輸入退款金額');return;}
+  if(rfOver()){
+    if(!hasPerm('orders.over_refund')){
+      toast('你沒有「超額退款至原始付款方式」權限（orders.over_refund），無法送出超額退款');return;
+    }
+    if(!(document.getElementById('rfOverOK')||{}).checked){
+      toast('超額退款需勾選二次確認');return;
+    }
+  }
+  const over=cents>RF_NET;
+  closeGen();
+  toast(over?`已送出超額退款 ${money(cents,RF_CUR)}——已記 audit log；先落 pending 再打金流，restock 冪等`
+            :'已送出退款——先落 pending 再打金流，restock 冪等');
 }
 
 /* ==================================================================
