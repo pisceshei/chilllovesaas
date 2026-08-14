@@ -1,0 +1,31 @@
+:root{
+  /* 表面與文字 */
+  --bg:#f4f4f5;            /* 頁面底 */
+  --surface:#fff;          /* 卡片 */
+  --surface-2:#f7f7f8;     /* 次層（側欄、輸入底、hover）*/
+  --surface-3:#fafafb;     /* 表頭 */
+  --text:#1a1c1e;          /* 主文字（白底 16.1:1）*/
+  --text-2:#6b6d71;        /* 次要（5.2:1）*/
+  --text-3:#67696e;        /* 弱化（5.5:1；≥4.5 AA 為底線）*/
+  --border:#e3e3e6; --border-2:#ececef;   /* 卡框 / 分隔線 */
+  /* 品牌與互動 */
+  --brand:#2b2c2e; --brand-hover:#1f2022; /* 主按鈕近黑 */
+  --link:#2a5bd7; --focus:#2a78d6;
+  /* 語意色（bg 配 text 成對使用）*/
+  --success:#0a7a5c; --success-bg:#e2f1ea;
+  --warning:#8a6116; --warning-bg:#fdf3dc;
+  --critical:#b3172c; --critical-bg:#fdecee;
+  --attention:#6d5f00; --attention-bg:#f9f1bc;
+  --info:#155e8f; --info-bg:#e8f2fa;
+  --ai:#6d28d9; --ai-bg:#f3efff;          /* AI 專用紫 */
+  /* 圖表（已過對比/CVD 驗證）*/
+  --chart:#2a78d6; --grid:#ececef;
+  /* 形狀與陰影 */
+  --r-card:12px; --r-btn:8px; --r-pill:999px;
+  --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  --sh-pop:0 12px 32px rgba(26,28,30,.16);
+  --sh-modal:0 24px 64px rgba(26,28,30,.35);
+  /* 動效 */
+  --tr:150ms cubic-bezier(.2,.6,.3,1);      /* hover/focus/小狀態 */
+  --tr-big:240ms cubic-bezier(.2,.8,.2,1);  /* drawer/savebar/toast */
+}

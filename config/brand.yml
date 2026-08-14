@@ -1,0 +1,12 @@
+shared: &shared
+  # D3：平台品牌只能從此值讀取，避免 shell、郵件與 API 各自硬編碼。
+  name: CHILL LOVE
+
+development:
+  <<: *shared
+
+test:
+  <<: *shared
+
+production:
+  <<: *shared

@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      RAILS_ENV: test
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USERNAME: root
+      DB_PASSWORD: password
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.17.1
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 跑 migration（不是 db:prepare 載 schema.rb）：migration 才是 DDL 的
+      # source of truth，這一步同時驗證 migration 本身可執行。
+      - name: Run migrations
+        run: bin/rails db:create db:migrate
+
+      # migration 跑完 Rails 會重新 dump schema.rb——若與版控內的手寫版有任何
+      # 漂移，這裡直接紅燈（2026-08-13 移植輪新增：schema.rb 是在無本機 MySQL
+      # 環境下手工同步的，本步驟就是它的機械驗證）。
+      - name: Verify schema.rb has no drift
+        run: git diff --exit-code db/schema.rb
+
+      - name: Run Rails specs
+        env:
+          M0_SCREENSHOT_PATH: ${{ github.workspace }}/tmp/m0-admin-shell.png
+        run: bundle exec rspec
+
+      - name: Upload M0 acceptance screenshot
+        uses: actions/upload-artifact@v6
+        with:
+          name: m0-admin-shell
+          path: tmp/m0-admin-shell.png
+          if-no-files-found: error
+
+      - name: Run frontend tests
+        run: pnpm test
+
+      - name: Type-check frontend
+        run: pnpm typecheck
+
+      - name: Build frontend
+        env:
+          CHILLLOVE_BASE_HOST: ci.example.test
+          RAILS_ENV: production
+        run: pnpm build
+
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RUBOCOP_CACHE_ROOT: tmp/rubocop
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.17.1
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Ruby
+        run: bin/rubocop -f github
+
+      - name: Scan Rails security
+        run: bin/brakeman --no-pager --exit-on-warn --exit-on-error
+
+      - name: Audit Ruby dependencies
+        run: bin/bundler-audit
+
+      - name: Audit frontend dependencies
+        run: pnpm audit --audit-level high

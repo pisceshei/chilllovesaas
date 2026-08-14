@@ -409,6 +409,30 @@ api:
   cost_restore_points_per_sec: 100
   # metafieldsSet 單次原子上限。出處：docs/research/28-api-contract.md:159（ours，對齊 Shopify）
   metafields_set_max_items: 25
+  # --- 以下四鍵 2026-08-13 隨 M0 骨架移植新增（28 §0.3–0.4 的 cost 模型與預設頁量）。
+  #     原骨架把它們放在自己的 58 行 limits.yml 的 `api.graphql.*` 底下——該檔已廢棄，
+  #     本檔是唯一來源（鐵律 6）；GraphqlLimits 讀的就是本區塊的鍵名。
+  # 未指定 first/last 時的預設頁量。出處：docs/research/28-api-contract.md §0.3（ours，對齊 Shopify 慣例）
+  # ⚠ 前端鏡像：app/frontend/admin/api/pagination.ts（前端讀不到 YAML，改本鍵要同步改它）。
+  pagination_default_page_size: 50
+  # cost 模型權重。出處：docs/research/28-api-contract.md §0.4（ours，對齊 Shopify cost 模型）
+  object_cost_points: 1
+  scalar_cost_points: 0
+  mutation_base_cost_points: 10
+
+# =============================================================================
+# 1b. 認證與登入限流（M0；docs/specs/12 F2）
+# =============================================================================
+auth:
+  # 雙鍵限流（12 F2）：單一攻擊 IP 與「針對已知帳號的分散式攻擊」是兩種形態，
+  # 一把鍵擋不住另一種。帳號鍵＝SHA-256(shop_id + email)，PII 不落 cache。
+  # 出處：docs/specs/12-spec-tenancy-auth-permissions.md F2（每 IP 10 次/分；每帳號 10 次/10 分）
+  admin_login_throttle_per_ip:
+    limit: 10
+    period_seconds: 60
+  admin_login_throttle_per_account:
+    limit: 10
+    period_seconds: 600
 
 # =============================================================================
 # 2. 冪等（P0-11）
