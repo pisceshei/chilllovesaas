@@ -72,7 +72,7 @@ jobs:
         run: bundle exec rspec
 
       - name: Upload M0 acceptance screenshot
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: m0-admin-shell
           path: tmp/m0-admin-shell.png
