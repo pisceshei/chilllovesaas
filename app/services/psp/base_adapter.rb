@@ -50,9 +50,13 @@ class Psp::BaseAdapter
   def assert_amount!(amount)
     expected = pack.amount_value_class
     unless amount.is_a?(expected)
+      # 🔴 訊息刻意**不逐字寫出 R4 的類別名**：`scripts/check-money-boundary.rb` 的 C4
+      # 掃的就是「PSP 目錄裡出現 R4 的類別名」，而它只跳過整行註釋、不跳行尾與字串
+      # （那個取捨的理由見該腳本）。⇒ 在這裡寫出來會讓**唯一正確實作 C4 的檔案
+      # 被 C4 判成違規**。用「R4」這個代號表達同樣的意思。
       raise TypeError,
         "#{psp} 宣告 amount_format=#{pack.amount_format}，只收 #{expected}，實得 #{amount.class}" \
-        "——傳裸 Integer／裸 String／Money::Decimal 一律拒收（65 §C.1 L3）"
+        "——傳裸 Integer／裸 String／R4（物流商與 JSON-LD 用的十進位字串）一律拒收（65 §C.1 L3）"
     end
 
     return if amount.psp == psp

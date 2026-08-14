@@ -1,0 +1,4 @@
+# fixture 的最小腳手架 —— 讓矩陣那兩條檢查通過，只留目標那一條違規。
+money_boundary:
+  test_matrix_zero_decimal_required: [JPY, TWD, KRW]
+  test_matrix_amount_formats_required: [minor_units, decimal_string]

@@ -200,3 +200,21 @@ jobs:
       # 官方 2026-03-05 特地拆開；合併會導致總銷售額對不上或退貨資料無處可放。
       - name: Check reversal naming
         run: ruby scripts/check-reversal-naming.rb
+
+      # 🔴 鐵律 3 的 L4（機器的編譯期）。L1–L3 的型別層只約束**已經用了值物件的路徑**；
+      # 本檢查約束的是「還沒寫出來的路徑」——三個月後有人在 app/services/psp/<某家>/
+      # 新寫一行、不經 adapter 直接組 HTTP body 時，擋得住他的只有這個腳本
+      # （他不會先去讀 app/models/money.rb 的註釋）。
+      # 而這個 bug 在 HKD／USD 下測試全綠：exponent=2 時 divisor 是 1，
+      # 錯誤實作與正確實作的輸出完全相同。
+      - name: Check money unit boundary
+        run: ruby scripts/check-money-boundary.rb
+
+      # 🔴 為什麼要單獨一步：65 §K 第 7 條逐字「只有前者綠不算交付」——
+      # 一個什麼都不檢查的腳本在乾淨倉庫上也是綠的。本步證明**每一條規則
+      # 各自被一個故意違反的 fixture 打紅**，外加一條反向斷言（乾淨倉庫必須 exit 0），
+      # 免得一個「永遠 fail」的檢查器讓九條全過。
+      # 形態比照 scripts/test-lint-rules.py —— 那個形態是被上一輪打出來的
+      # （r_dead_control 在四輪內踩了六種漏看，每一種 CI 都是綠的）。
+      - name: Regression-test money boundary rules
+        run: ruby scripts/test-money-rules.rb
