@@ -32,7 +32,14 @@ gem "solid_cable"
 gem "bootsnap", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 2.0"
+# 🔴 2026-08-14：dependabot 提出 1.14 → 2.0.3，已測後**退回 1.x**並登記理由。
+# image_processing 2.0 拿掉 MiniMagick 後端、**硬依賴 libvips（ruby-vips）**，
+# 本機與 CI 都沒裝 ⇒ 整組 rspec 在 require 階段就 LoadError（cannot load such file -- vips）。
+# 這不是普通升版而是**換影像處理引擎**，屬基建決策（DECISIONS D6 的「自建圖片 CDN → imgproxy」
+# 方向其實與 vips 一致，但要不要現在把 vips 變成建置硬需求是另一回事）。
+# 目前程式碼**尚未用到** image_processing（grep 只命中本行），所以退回零成本。
+# ⇒ 升 2.x 的前置條件：①決定影像後端 ②本機與 CI 都裝好 libvips ③補影像處理的實際用例與測試。
+gem "image_processing", "~> 1.14"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
