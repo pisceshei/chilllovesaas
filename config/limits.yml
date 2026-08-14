@@ -4084,3 +4084,118 @@ analytics:
     # 未載：LIMIT 最大值／OFFSET 語法／HAVING 彙總函式／rate limit 數字／最大回傳列數。
     limit_max: null
     api_max_rows: null
+# ── 設定 / 使用者與權限（R12，2026-08-14 實測＋help 雙源；全文＝docs/research/81）────────
+settings:
+  # 🔴 設定樹＝組織層 2 ＋ 商店層 18。市場不在設定裡（頂層 /markets，R10）；檔案不在設定裡（內容區，R9）。
+  store_pages_count: 18
+  organization_pages_count: 2
+  # slug 對照（我方 key → 本尊 slug）；🔴 政策是 legal 不是 policies。
+  slug_map:
+    policies: legal
+    taxes: taxes                 # 非 taxes_and_duties
+    shipping: shipping           # 非 shipping_and_delivery
+    apps: apps                   # 非 apps_and_sales_channels
+    privacy: privacy             # 非 customer_privacy
+    customdata: custom_data
+    users: organization-account
+    activity: general/activity
+    brand: general/branding      # 🔴 品牌是「一般」的子頁，不是頂層設定分頁
+users_and_roles:
+  # 🔴 2026 模型＝使用者 ↔（群組）↔ 角色 ↔ 權限。群組是 Plus 專屬的第四段。
+  model: rbac
+  groups_supported_plans: [plus]
+  # 角色類別：一個角色**不得混用不同類別的權限**；但一個使用者可同時持有多個類別的角色。
+  role_categories: [organization, store, point_of_sale, partner]
+  role_cannot_mix_categories: true
+  user_can_hold_multiple_roles: true
+  role_name_max_chars: 255
+  role_description_max_chars: 255
+  role_min_permissions: 1        # 驗證錯誤原文：「至少必須授予一項權限」
+  # 權限目錄（商店類別）：實測巢狀 17 群／115 權限；help 是扁平 19 群（同一批權限、不同分組邊界）。
+  store_permission_groups_live: 17
+  store_permission_count_live: 115
+  store_permission_groups_help: 19
+  # 🔴 依賴圖不是樹：授予要往上補齊祖先、撤銷要往下連動移除，且有「不可取消」的邊。
+  dependency_propagation: [grant_ancestors_up, revoke_dependents_down]
+  non_deselectable_dependencies:
+    - {from: inventory_any, to: products_view}
+    - {from: catalogs_any,  to: products_view}
+  # help 明列的敏感權限（UI 未特別標示，我方應標）。
+  sensitive_permissions:
+    - customers_request_data
+    - finance_edit_billing_payment_methods
+    - finance_manage_other_payment_settings
+    - org_business_entities_view_sensitive_information
+    - partner_view_financials
+    - partner_manage_credits_and_refunds
+    - pos_manage_other_payment_settings
+  # 🔴 高敏動作需 step-up auth（重新輸入密碼）——help 未載，實測發現（建立角色、移除使用者）。
+  step_up_auth_required_for: [create_role, remove_user]
+  # 使用者座位上限（依方案）；🔴 Starter/Basic 是 0。
+  seats_by_plan:
+    pause_and_build: 1
+    starter: 0
+    basic: 0
+    grow: 5
+    advanced: 15
+    plus: null                   # 無限
+  # 不計入座位者。
+  seats_excluded: [store_owner, organization_owner, collaborators, pos_only_staff]
+  invitation_expiry_days: 7      # 過期官方做法＝移除再重新新增（無「重寄」操作）
+  user_states: [pending, active, suspended]
+  collaborator_request_code_digits: 4
+  # 安全登入規定【2】：all_users（🔴 不適用 POS）／specific_users（預設）
+  secure_signin_enforcement: [all_users, specific_users]
+  secure_signin_enforcement_default: specific_users
+  secure_signin_excludes_pos: true
+notifications:
+  # 顧客通知範本：實測 11 組 47 個（help 未窮舉，官方叫你去後台看 ⇒ 本輪實測補齊）。
+  customer_template_groups: 11
+  customer_template_count: 47
+  # 🔴 範本集合受法域閘控（實例：「已建立訂單層級退貨單（僅限美國）」）⇒ 清單要進 jurisdiction pack。
+  templates_jurisdiction_gated: true
+  subsections: [customer, staff, fulfillment_request, webhooks]
+  staff_notification_types: [store_order_summary, new_order, new_return_request, sales_attribution_ended, new_draft_order]
+  new_draft_order_owner_only: true
+  webhook_formats: [json, xml]
+  webhook_event_immutable_after_create: true
+  # 連續非 200 回應 ⇒ Shopify 自動刪除該 webhook 訂閱。
+  webhook_auto_delete_on_repeated_failure: true
+  webhook_max_count: null        # 文檔未載
+brand_assets:
+  logo_min_width_px: 512
+  square_logo_recommended_px: 512
+  cover_image_recommended: "1920x1080"
+  cover_image_max_count: 1
+  slogan_max_chars: 80
+  short_description_max_chars: 150
+  # 🔴 primary/secondary 都是**陣列**，每個元素是 background/foreground 配對——不是「一主色一副色」。
+  colors_are_arrays_of_pairs: true
+  favicon_derived_from_square_logo_px: 32
+  # 🔴 品牌資產**不可依市場或語言本地化**（可引為 G13 的佐證）。
+  localizable: false
+store_activity_log:
+  max_entries_displayed: 250     # 🔴 保留範圍由筆數決定，不是天數；保留天數＝文檔未載
+  retention_days: null
+  view_only: true                # 不可展開／不可點擊個別事件／不可匯出／不可篩選
+  actor_types: [user, app, sales_channel]
+languages:
+  # 🔴 語言上限除 Lite 外一律 20——沒有方案階梯。
+  max_languages: 20
+  max_languages_applies_to_all_plans_except: [lite]
+  language_states: [published, unpublished]
+  # 語言列 ⋯ 選單【5】；設為網域預設在未發布時禁用（條件控件）。
+  row_actions: [publish, preview, assign_to_domain, set_as_domain_default, remove_language]
+  set_as_domain_default_requires_published: true
+  auto_translate_free_language_count: 2
+  auto_translate_unsupported_languages_count: 14
+  policies_auto_translated: false
+  # Translate & Adapt 是官方 app（新增語言時自動安裝），可翻譯資源型別＝TranslatableResourceType 30 值。
+  translate_and_adapt_is_app: true
+  translatable_resource_type_count: 30
+  never_translatable: [collection_filters, shopify_forms, manual_payment_instructions, product_images, tags]
+policies:
+  # help 窮舉 6 份；🔴 是 Return policy 不是 Refund policy，且沒有 Contact information。
+  documents: [return, privacy, terms_of_service, shipping, legal_notice, subscription]
+  url_pattern: "/policies/{policy-type}"
+  auto_generate_template_locales: [en]
