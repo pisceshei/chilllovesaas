@@ -4438,7 +4438,13 @@ const LS={};
 /* `hidden`＝這個檢視隱藏了哪些欄（存的是 cfg.cols 的**原始索引**）。
    🔴 存索引不存欄名：s.sort 也是原始索引，兩者必須指向同一套座標，
    否則隱藏一欄之後排序會錯位到別欄。 */
-function lstate(k){return LS[k]??={q:'',view:0,sort:-1,dir:1,page:1,sel:new Set(),phase:'load',f:{},hidden:new Set()};}
+function lstate(k){return LS[k]??={q:'',view:0,sort:-1,dir:1,page:1,sel:new Set(),phase:'load',f:{},hiddenByView:{}};}
+/* 🔴 隱藏欄是**逐檢視**的，不是逐清單。
+   41 §1.3 逐字：「欄位設定存在檢視上、不影響其他檢視」，modal 的說明文字也這樣寫。
+   原本存成 `s.hidden`（掛在 LS[k] 上）⇒ 在「全部」檢視隱藏兩欄，切到「已訂閱」
+   檢視那兩欄也不見了，**與畫面上自己寫的說明相反**（PR #27 的 Codex review 指出）。
+   `lsetView()` 只改 s.view，所以只要把集合按 view 分開存，切檢視自然就各自獨立。 */
+function lHidden(s){return (s.hiddenByView[s.view]??=new Set());}
 function listPage(cfg){
   const s=lstate(cfg.key);s.cfg=cfg;
   URLQ.lk[current]=cfg.key;      /* 53號 P0-18：登記「這一頁的清單狀態要進 URL」*/
@@ -4455,7 +4461,7 @@ function listPage(cfg){
   const th=(cfg.bulk?'<th style="width:36px"><input type="checkbox" class="cb" id="cba-'+cfg.key+'" onclick="lall(\''+cfg.key+'\',this)" aria-label="全選"></th>':'')
    /* 🔴 用 map 後判斷 hidden 回空字串，**不用 filter**——filter 會重排索引，
       而 lsort(key,i) 傳的必須是 cfg.cols 的原始索引（見 lstate 的註釋）。 */
-   +cols.map((c,i)=>s.hidden.has(i)?'':`<th class="${c.right?'right ':''}${c.sort!==false?'sortable ':''}${s.sort===i?'sorted':''}"${c.sort!==false?` onclick="lsort('${cfg.key}',${i})" role="columnheader"`:''}><span class="th-l">${c.l}</span>${c.sort!==false?`<span class="sar" aria-hidden="true">${s.sort===i?(s.dir>0?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('');
+   +cols.map((c,i)=>lHidden(s).has(i)?'':`<th class="${c.right?'right ':''}${c.sort!==false?'sortable ':''}${s.sort===i?'sorted':''}"${c.sort!==false?` onclick="lsort('${cfg.key}',${i})" role="columnheader"`:''}><span class="th-l">${c.l}</span>${c.sort!==false?`<span class="sar" aria-hidden="true">${s.sort===i?(s.dir>0?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('');
   const out=`${cfg.noHead?'':`<div class="page-head"><h1>${cfg.title}</h1>${cfg.sub?`<span class="mut3" style="font-size:var(--t-xs)">${cfg.sub}</span>`:''}<div class="head-actions">${acts}</div></div>`}
   ${cfg.banner||''}
   <div class="card" data-doc="${cfg.doc||''}">
@@ -4495,7 +4501,7 @@ function lrows(k){
 }
 function lbody(k){
   const s=lstate(k),c=s.cfg,tb=document.getElementById('tby-'+k);if(!tb)return;
-  const span=(c.cols.length-s.hidden.size)+(c.bulk?1:0);   /* 空態/骨架的 colspan 要跟著隱藏欄變 */
+  const span=(c.cols.length-lHidden(s).size)+(c.bulk?1:0);   /* 空態/骨架的 colspan 要跟著隱藏欄變 */
   if(s.phase==='load'){tb.innerHTML=[...Array(Math.min(5,c.rows.length||3))].map(()=>
     `<tr class="norow"><td colspan="${span}"><div class="skeleton" style="width:${55+Math.floor(Math.random()*30)}%"></div></td></tr>`).join('');
     document.getElementById('pg-'+k).innerHTML='';return;}
@@ -4514,7 +4520,7 @@ function lbody(k){
     const id=c.id?c.id(r):String((s.page-1)*per+i);
     return `<tr${c.onRow?` onclick="${c.onRow(r)}"`:''}${c.rowClass?` class="${c.rowClass(r)}"`:''}>
       ${c.bulk?`<td onclick="event.stopPropagation()"><input type="checkbox" class="cb" data-id="${H(id)}" ${s.sel.has(id)?'checked':''} onchange="lsel('${k}','${H(id)}',this.checked)" aria-label="選取"></td>`:''}
-      ${c.cols.map((col,i)=>s.hidden.has(i)?'':`<td class="${col.right?'right':''}">${col.c(r)}</td>`).join('')}</tr>`;}).join('');
+      ${c.cols.map((col,i)=>lHidden(s).has(i)?'':`<td class="${col.right?'right':''}">${col.c(r)}</td>`).join('')}</tr>`;}).join('');
   document.getElementById('pg-'+k).innerHTML=all.length>per
     ?`<div class="pagination"><button class="pg" ${s.page===1?'disabled aria-disabled="true"':''} onclick="lpage('${k}',-1)" aria-label="上一頁">‹</button>
       <span class="mut3 num" style="align-self:center;padding:0 var(--sp-200);font-size:var(--t-xs)">第 ${s.page} / ${pages} 頁・共 ${all.length} 筆</span>
@@ -4563,7 +4569,7 @@ function lbulkAct(k,i){
 function lcolumns(k){
   const s=lstate(k),c=s.cfg;
   openGen({title:'欄位設定',body:`<p class="help" style="margin-bottom:var(--sp-200)">勾選要顯示的欄位。欄位設定儲存在目前檢視上，不影響其他檢視（41 §1.3：僅訂單／庫存／轉移／元物件四頁支援）。</p>
-    ${c.cols.map((col,i)=>`<label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb lcol-${k}" data-ci="${i}" ${s.hidden.has(i)?'':'checked'}> ${col.l}</label>`).join('')}
+    ${c.cols.map((col,i)=>`<label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb lcol-${k}" data-ci="${i}" ${lHidden(s).has(i)?'':'checked'}> ${col.l}</label>`).join('')}
     <p class="help" id="lcolWarn" hidden style="color:var(--sem-caution-text)">至少要保留一欄。</p>`,
     foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="lcolumnsApply(${JQ(k)})">套用</button>`});
 }
@@ -4573,12 +4579,12 @@ function lcolumnsApply(k){
   const keep=boxes.filter(b=>b.checked);
   if(!keep.length){const w=document.getElementById('lcolWarn');if(w)w.hidden=false;return;}
   const s=lstate(k);
-  s.hidden=new Set(boxes.filter(b=>!b.checked).map(b=>+b.dataset.ci));
+  s.hiddenByView[s.view]=new Set(boxes.filter(b=>!b.checked).map(b=>+b.dataset.ci));
   /* 隱藏了正在排序的那一欄 ⇒ 取消排序，否則會出現「看不到的欄在決定順序」 */
-  if(s.sort>=0&&s.hidden.has(s.sort)){s.sort=-1;s.dir=1;}
+  if(s.sort>=0&&lHidden(s).has(s.sort)){s.sort=-1;s.dir=1;}
   closeGen();
   lrender();
-  toast(s.hidden.size?`已套用欄位設定（顯示 ${keep.length} 欄、隱藏 ${s.hidden.size} 欄）`:'已顯示全部欄位');
+  toast(lHidden(s).size?`已套用欄位設定（顯示 ${keep.length} 欄、隱藏 ${lHidden(s).size} 欄）——僅影響目前檢視`:'已顯示全部欄位');
 }
 function lsaveView(k){
   openGen({title:'另存為檢視',body:F('檢視名稱','<input class="input" id="nvName" placeholder="例：本週未出貨" data-val="req|max:40">','沿用目前的搜尋、篩選與欄位設定；排序不隨檢視保存（41 §1.3）'),
