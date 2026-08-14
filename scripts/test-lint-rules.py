@@ -115,6 +115,16 @@ CASES = [
      "document.querySelectorAll('.mkt-country, .tgl[role=\"switch\"]')", 1,
      "拆段後不得反過來把該驗的條件也丟掉"),
 
+    ("🔴 後代選擇器：祖先的 [attr] 不得加到把手頭上",
+     '<input type="checkbox" class="cb zz-desc">',
+     "document.querySelector('[data-form=\"prod\"] .zz-desc')", 0,
+     "原型裡真的有 '[data-form=\"prod\"] [data-f=…]' 這種寫法（Claude #28 三輪）"),
+
+    ("後代選擇器：把手自己那一節的 [attr] 仍要驗",
+     '<input type="checkbox" class="zz-own" role="button">',
+     "document.querySelector('[data-form=\"prod\"] .zz-own[role=\"switch\"]')", 1,
+     "只驗自己那一節，不代表自己那一節可以不驗"),
+
     ("🔴 `accept=\"image/*\"` 不得讓掃描失明（漏看形態 ①）",
      '<input type="file" accept="image/*" class="zz-file">\n<button class="zz-after">x</button>', "", 2,
      "`/*` 曾被當註釋開頭吞掉後續 86 行；兩個控件都必須被看到"),

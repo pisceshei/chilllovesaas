@@ -250,18 +250,23 @@ def r_fake_affordance(src, style, script):
 # ⇒ 存量報 WARN（可見、可逐輪清），**超過基準線一律 ERROR**（擋新增）。
 #   機制要咬得住的是「不要再長出新的」，不是「一次還清歷史債」。
 # 🔴 清掉存量之後**要順手把數字調降**，否則基準線會變成新的容忍額度。
-# 🔴🔴 2026-08-14 調高（14/12/47 → 44/25/55）——**這是「量表變準」不是「就地合法」**。
-#   本檔的交接文件寫著「看到基準線被調高要當紅旗」，所以這次調高必須說清楚差別：
-#   規則首版有兩個**會漏看**的 bug，修掉之後同一份原型量出來的數字自然變大。
-#     ① `_strip_comments` 把 `accept="image/*"` 當成 JS 註釋開頭，一路吞到下一個 `*/`
-#        ——storefront 實測吞掉 86 行。🔴 這個 helper **同時被 `r_hardcoded_currency`
-#        （鐵律 10、ERROR 級）使用**，那 86 行等於從沒被掃過，而 CI 一直是綠的。
-#     ② 泛型 tag 選擇器變成免死金牌：admin 的 focus-trap 用了
-#        `'input,select,textarea,button'`，於是全站 `class="input"` 的控件因為 blob 裡
-#        有裸字 `input` 而全部放行（admin 14 → 44 的主因）。
-#   ⇒ **原型一行沒改，數字從 73 變成 124**。這不是新增了死控件，是先前少數了 51 個。
+# 🔴🔴 2026-08-14 這三個數字動過三次，**原型一行沒改**：73 → 124 → 123。
+#   本檔的交接文件寫著「看到基準線被調高要當紅旗」，所以每一次變動都必須說清楚差別：
+#     73 → 124（調高，量表變準）：規則首版有兩個**會漏看**的 bug。
+#       ① `_strip_comments` 把 `accept="image/*"` 當成 JS 註釋開頭，一路吞到下一個 `*/`
+#          ——storefront 實測吞掉 86 行。🔴 這個 helper **同時被 `r_hardcoded_currency`
+#          （鐵律 10、ERROR 級）使用**，那 86 行等於從沒被掃過，而 CI 一直是綠的。
+#       ② 泛型 tag 選擇器變成免死金牌：admin 的 focus-trap 用了
+#          `'input,select,textarea,button'`，於是全站 `class="input"` 的控件因為 blob 裡
+#          有裸字 `input` 而全部放行（admin 14 → 44 的主因）。
+#       ⇒ 這不是新增了死控件，是先前**少數了 51 個**。
+#     124 → 123（調降，量表又變準一次）：選擇器字串抽取遇內層引號就截斷，
+#       `'.tgl[role="switch"]'` 只抽到 `.tgl[role=`，屬性條件形同不存在 ⇒ admin 44 → 43。
+#   🔴 **數字只有一個權威來源＝下面這個 dict**。上面這段是沿革，改數字時要一起改，
+#      否則沿革會變成新的誤導來源（Claude 在 #28 第三輪 review 抓到這件事）。
 # 🔴 判別方法留給下一個人：調高時**必須同時有量表本身的修正**（本檔或規則的 diff），
 #   只改這三個數字而沒動掃描邏輯的調高，就是把新增的死控件就地合法。
+#   ⇒ 這件事已由 `scripts/check-baseline-raise.py` 在 CI 硬擋（89 §7.4）。
 DEAD_CONTROL_BASELINE = {
     "chilllove-admin-v2.html": 43,
     "chilllove-platform-admin.html": 25,
@@ -425,8 +430,36 @@ def r_dead_control(src, style, script):
         out.append("".join(buf))
         return out
 
+    def _compound(seg, at):
+        """從選擇器片段 `seg` 取出**位置 `at` 所在的那一個複合選擇器**。
+
+        🔴 為什麼不能拿整個 `seg` 去驗屬性（Claude #28 第三輪 review）：
+        後代選擇器 `'[data-form="prod"] [data-f="x"]'`（原型裡真的有這種寫法）
+        裡的 `[data-form="prod"]` 掛在**祖先**身上，不是把手自己的條件。
+        整段驗的話，靠後半當把手的控件會被要求連祖先的屬性都要有 ⇒ **誤報**。
+        ⇒ 只驗「token 所在的那一節」。祖先條件一律不驗——方向刻意偏向放行，
+          因為這條規則的誤報成本高於少報（誤報會讓人把規則關掉）。
+        """
+        depth, quote, start = 0, None, 0
+        for i, ch in enumerate(seg):
+            if quote:
+                if ch == quote:
+                    quote = None
+                continue
+            if ch in "\"'":
+                quote = ch
+            elif ch in "([":
+                depth += 1
+            elif ch in ")]":
+                depth = max(0, depth - 1)
+            elif depth == 0 and (ch.isspace() or ch in ">+~"):
+                if i > at:
+                    return seg[start:i]
+                start = i + 1
+        return seg[start:]
+
     def _blob_hit(tok, prefix, attrs):
-        """token 以 `prefix` 的形態出現在某個選擇器裡，且**該段**選擇器有機會命中這個控件。"""
+        """token 以 `prefix` 的形態出現在某個選擇器裡，且**它所在的那一節**有機會命中這個控件。"""
         needle = prefix + tok
         for blob in sel_blobs:
             for seg in _split_selectors(blob):
@@ -435,7 +468,7 @@ def r_dead_control(src, style, script):
                     # 🔴 結尾邊界（Claude 指出的漏報）：`#rf` 不得命中 `#rfOverOK`。
                     nxt = seg[j + len(needle):j + len(needle) + 1]
                     if not re.match(r"[A-Za-z0-9_-]", nxt or " "):
-                        if _attr_ok(seg, attrs):
+                        if _attr_ok(_compound(seg, j), attrs):
                             return True
                     j = seg.find(needle, j + 1)
         return False
