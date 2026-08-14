@@ -2,6 +2,16 @@
 require "rubygems"
 require "bundler/setup"
 
-ARGV.unshift("--ensure-latest")
+# 🔴 2026-08-14 移除 Rails 產生器預設塞入的 `--ensure-latest`。
+#
+# 原因：`--ensure-latest` 會在「本機 brakeman 版本 ≠ RubyGems 上的最新版」時**以 exit 5 失敗**，
+# 訊息只有一行「Brakeman X is not the latest version Y」，看起來像掃描失敗但其實與程式碼無關。
+# 2026-08-14 的 CI quality job 全紅就是這樣來的（8.0.5 vs 8.0.6）。
+#
+# 為什麼是設計錯誤而不是「照著升就好」：它把 CI 的綠燈綁在**第三方發版時程**上——
+# 上游任何時候發版，我們的 CI 就會無預警變紅，而且紅的原因跟這次提交毫無關係。
+# 版本更新該由 dependabot 走 PR 流程（本倉庫已啟用），不該由 CI 失敗來通知。
+#
+# ⇒ 保留 `--exit-on-warn` 與 `--exit-on-error`（那兩個才是真正該擋的），拿掉版本檢查。
 
 load Gem.bin_path("brakeman", "brakeman")
