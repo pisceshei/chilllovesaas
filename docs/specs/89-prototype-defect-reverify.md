@@ -384,12 +384,18 @@ class 必須以 `.` 出現、id 以 `#` 或 `getElementById` 出現，**裸 tag 
 ⇒ 那四項已**全部固化進 fixture**，本節不再另立一份手動測試表——
 兩份紀錄各說各話的話，過期的那份會變成新的誤導來源。
 
-**19 條 fixture，每條註明它在防哪一種回歸**：
+**23 條 fixture，每條註明它在防哪一種回歸**：
 
 | 類別 | 條數 | 內容 |
 |---|---|---|
-| 必須被抓到 | 8 | 裸控件／上表第 3–6 種漏看形態的最小重現／泛型 tag 清單／逃生口指向不存在的函式／屬性值裡的 `>` |
-| 不得誤報 | 11 | 89 §2 修好的每一種寫法各一條（inline handler／`data-f`／`data-val`／`disabled`／class 把手／id 把手／name 把手／事件委派／`data-read`／屬性值相符） |
+| 必須被抓到 | 11 | 裸控件／上表第 3–6 種漏看形態的最小重現／泛型 tag 清單／逃生口指向不存在的函式／屬性值裡的 `>`／第 7、8 種**自己那一節**的條件仍要驗 |
+| 不得誤報 | 12 | 89 §2 修好的每一種寫法各一條（inline handler／`data-f`／`data-val`／`disabled`／class 把手／id 把手／name 把手／事件委派／`data-read`／屬性值相符）＋第 7、8 種誤報的最小重現 |
+
+🔴 **本節這三個數字由 `scripts/test-lint-rules.py` 在 CI 反查**（`_check_doc_counts()`）。
+為什麼要反查：本 PR 的四輪 review 裡，**同一份文件的數字漂移被抓到三次**
+（PR 描述的 WARN 86、§7.4 沿革的 124、本節的 19）——每一次都是「改了程式忘了改文件」，
+而每一次都要靠 reviewer 逐行比對才發現。判準與基準線那條一樣：
+**紀律靠人記得，機制不用。**
 
 🔴 **它立刻證明了自己的價值**：寫完第一版就抓到 v3 的兩個 bug（上表第 6 種），
 而那兩個 bug 用「總數有沒有爆」是看不出來的——**修正前後 admin 都是 43**。
@@ -399,5 +405,5 @@ class 必須以 `.` 出現、id 以 `#` 或 `getElementById` 出現，**裸 tag 
 | 測試 | 結果 |
 |---|---|
 | `python scripts/lint-prototype.py` | ERROR 0 / WARN 136，exit 0 |
-| `python scripts/test-lint-rules.py` | 19/19 全過，exit 0 |
+| `python scripts/test-lint-rules.py` | 23/23 全過，exit 0 |
 | 新增一個**跨行**死控件 | ERROR 1、exit 1（CI 會擋）；還原後回到基準 |

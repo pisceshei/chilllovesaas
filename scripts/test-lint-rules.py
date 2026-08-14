@@ -15,6 +15,7 @@ CI：掛在 quality job，與 lint-prototype 同一步之後。
 """
 import importlib.util
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -131,6 +132,39 @@ CASES = [
 ]
 
 
+SPEC = ROOT / "docs" / "specs" / "89-prototype-defect-reverify.md"
+
+
+def _check_doc_counts() -> list:
+    """反查 `docs/specs/89` §7.5 寫的 fixture 條數，與本檔實際條數不符即失敗。
+
+    🔴 為什麼要這一段：PR #28 的四輪 review 裡，**同一份文件的數字漂移被抓到三次**
+    （PR 描述的 `WARN 86`、§7.4 沿革的 `124`、§7.5 的 `19/19`）——
+    每一次都是「改了程式忘了改文件」，每一次都要靠 reviewer 逐行比對才發現。
+    判準與 `DEAD_CONTROL_BASELINE` 那條一樣：**紀律靠人記得，機制不用。**
+
+    🔴 找不到 pattern 一律**失敗**，不是略過。靜默略過正是這一整條規則在防的死法
+    （「回報成功但什麼都沒讀」）；文件改版就順手改這裡，那是本來就該做的事。
+    """
+    want_flag = sum(1 for c in CASES if c[3] > 0)
+    want_ok = sum(1 for c in CASES if c[3] == 0)
+    text = SPEC.read_text(encoding="utf-8")
+    checks = [
+        (rf"\*\*(\d+) 條 fixture", len(CASES), "§7.5 開頭的「N 條 fixture」"),
+        (r"\|\s*必須被抓到\s*\|\s*(\d+)\s*\|", want_flag, "§7.5 表格「必須被抓到」"),
+        (r"\|\s*不得誤報\s*\|\s*(\d+)\s*\|", want_ok, "§7.5 表格「不得誤報」"),
+        (r"test-lint-rules\.py`?\s*\|\s*(\d+)/\d+ 全過", len(CASES), "§7.5 自測表的 N/N"),
+    ]
+    bad = []
+    for pat, want, label in checks:
+        m = re.search(pat, text)
+        if m is None:
+            bad.append(f"{label}：在 {SPEC.name} 裡找不到，pattern 需同步更新")
+        elif int(m.group(1)) != want:
+            bad.append(f"{label}：文件寫 {m.group(1)}，實際是 {want}")
+    return bad
+
+
 def main() -> int:
     bad = []
     for name, markup, script, want, why in CASES:
@@ -145,7 +179,16 @@ def main() -> int:
         for b in bad:
             print(f"  - {b}")
         return 1
-    print(f"OK：r_dead_control 回歸測試 {len(CASES)} 項全過")
+
+    drift = _check_doc_counts()
+    if drift:
+        print(f"::error::docs/specs/89 §7.5 的 fixture 數字與本檔不符（{len(drift)} 項）：")
+        for d in drift:
+            print(f"  - {d}")
+        return 1
+
+    print(f"OK：r_dead_control 回歸測試 {len(CASES)} 項全過，"
+          f"docs/specs/89 §7.5 的條數與本檔一致")
     return 0
 
 
