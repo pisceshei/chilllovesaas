@@ -305,9 +305,26 @@ agent 原話：「肉眼掃 grep 很容易誤判成已修好」。
 
 | 檔案 | 基準線 |
 |---|---|
-| `chilllove-admin-v2.html` | 14 |
-| `chilllove-platform-admin.html` | 12 |
-| `chilllove-storefront-v2.html` | **47**（此檔從未被稽核過） |
+| `chilllove-admin-v2.html` | **44** |
+| `chilllove-platform-admin.html` | **25** |
+| `chilllove-storefront-v2.html` | **55**（此檔從未被稽核過） |
+
+#### 🔴 首版的兩個「會漏看」的 bug（同日修正，73 → 124）
+
+規則首版報 73，**修掉兩個 bug 後同一份原型量出 124**——原型一行沒改，
+先前是**少數了 51 個**。
+
+| # | bug | 後果 |
+|---|---|---|
+| 1 | `_strip_comments` 把 `accept="image/*"` 的 `/*` 當成 JS 註釋開頭，一路吞到下一個 `*/` | storefront **吞掉 86 行**。🔴 **這個 helper 同時被 `r_hardcoded_currency`（鐵律 10、ERROR 級）使用** ⇒ 那 86 行等於從沒被掃過，**而 CI 一直是綠的**。比死控件本身嚴重 |
+| 2 | 泛型 tag 選擇器成為免死金牌 | admin 的 focus-trap 用 `'input,select,textarea,button'`，於是全站 `class="input"` 的控件因為 blob 裡有裸字 `input` 而全部放行（admin 14 → 44 的主因） |
+
+修法：①`/*` 前面不得是識別字元；②id 查找與選擇器字串**分開收**，
+class 必須以 `.` 出現、id 以 `#` 或 `getElementById` 出現，**裸 tag 名不算把手**。
+
+🔴 **這次調高基準線是「量表變準」不是「就地合法」**。判別方法留給下一個人：
+**調高時必須同時有量表本身的修正**（規則或 helper 的 diff）；
+只改數字而沒動掃描邏輯的調高，就是把新增的死控件就地合法。
 
 🔴 **清掉存量後要順手調降數字**，否則基準線會變成新的容忍額度。
 

@@ -250,10 +250,22 @@ def r_fake_affordance(src, style, script):
 # ⇒ 存量報 WARN（可見、可逐輪清），**超過基準線一律 ERROR**（擋新增）。
 #   機制要咬得住的是「不要再長出新的」，不是「一次還清歷史債」。
 # 🔴 清掉存量之後**要順手把數字調降**，否則基準線會變成新的容忍額度。
+# 🔴🔴 2026-08-14 調高（14/12/47 → 44/25/55）——**這是「量表變準」不是「就地合法」**。
+#   本檔的交接文件寫著「看到基準線被調高要當紅旗」，所以這次調高必須說清楚差別：
+#   規則首版有兩個**會漏看**的 bug，修掉之後同一份原型量出來的數字自然變大。
+#     ① `_strip_comments` 把 `accept="image/*"` 當成 JS 註釋開頭，一路吞到下一個 `*/`
+#        ——storefront 實測吞掉 86 行。🔴 這個 helper **同時被 `r_hardcoded_currency`
+#        （鐵律 10、ERROR 級）使用**，那 86 行等於從沒被掃過，而 CI 一直是綠的。
+#     ② 泛型 tag 選擇器變成免死金牌：admin 的 focus-trap 用了
+#        `'input,select,textarea,button'`，於是全站 `class="input"` 的控件因為 blob 裡
+#        有裸字 `input` 而全部放行（admin 14 → 44 的主因）。
+#   ⇒ **原型一行沒改，數字從 73 變成 124**。這不是新增了死控件，是先前少數了 51 個。
+# 🔴 判別方法留給下一個人：調高時**必須同時有量表本身的修正**（本檔或規則的 diff），
+#   只改這三個數字而沒動掃描邏輯的調高，就是把新增的死控件就地合法。
 DEAD_CONTROL_BASELINE = {
-    "chilllove-admin-v2.html": 14,
-    "chilllove-platform-admin.html": 12,
-    "chilllove-storefront-v2.html": 47,
+    "chilllove-admin-v2.html": 44,
+    "chilllove-platform-admin.html": 25,
+    "chilllove-storefront-v2.html": 55,
 }
 
 
@@ -296,30 +308,34 @@ def r_dead_control(src, style, script):
 
 
     # 選擇器上下文裡出現過的 token 集合 —— 這才是「有人讀得到」的證據
+    # 🔴 id 查找與選擇器字串要**分開收**，判準不同（2026-08-14 修正）。
+    #    原本混在一起用「token 有沒有出現在任一 blob」判斷，於是 admin 的 focus-trap
+    #    選擇器 `'input,select,textarea,button'` 變成**免死金牌**——
+    #    全站 89 個 `class="input"` 的控件因為 blob 裡有裸字 `input` 而全部放行。
+    #    ⇒ 裸 tag 名不是把手；class 必須以 `.` 出現、id 以 `#` 或 getElementById 出現。
+    exact_ids = set(re.findall(
+        r"(?:getElementById|getElementsByName)\(\s*[`'\"]([^`'\"]+)[`'\"]", script))
     sel_blobs = re.findall(
-        r"(?:getElementById|getElementsByName|querySelectorAll|querySelector|closest|matches)"
+        r"(?:querySelectorAll|querySelector|closest|matches)"
         r"\(\s*[`'\"]([^`'\"]*)[`'\"]",
         script)
-    sel_text = " ".join(sel_blobs)
     dataset_keys = set(re.findall(r"\bdataset\.([A-Za-z0-9_$]+)", script))
 
-    def hooked(tok, attrs):
-        """token 是否真的被某個選擇器用到——**且那個選擇器有機會命中這個控件**。
+    def _blob_hit(tok, prefix, attrs):
+        """token 以 `prefix` 的形態出現在某個選擇器裡，**且該選擇器有機會命中這個控件**。
 
         🔴 只比對 token 出現與否不夠：`querySelectorAll('.tgl[role="switch"]')` 用到了
         `tgl`，但它同時要求 `role` 屬性。一個只有 `class="tgl"`、沒有 `role` 的開關
         **不會被那句選中**，卻會因為「tgl 有出現」而被放行。
-        （負面測試實證：把目錄發布開關退回 `class="tgl"` 舊寫法，寬鬆版規則抓不到。）
         ⇒ 選擇器帶 `[attr]` 條件時，控件必須也有那些屬性才算被命中。
         """
         for blob in sel_blobs:
-            if not re.search(r"[.#\[\]=\"'\s]" + re.escape(tok) + r"\b", " " + blob):
+            if prefix + tok not in blob:
                 continue
             need = re.findall(r"\[([a-zA-Z-]+)", blob)
             if all(re.search(r"\b" + re.escape(a) + r"\s*=", attrs) for a in need):
                 return True
-        camel = re.sub(r"-([a-z])", lambda m: m.group(1).upper(), tok)
-        return camel in dataset_keys or tok in dataset_keys
+        return False
 
     # ① 剝掉註釋：本檔的防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。
     #    `_strip_comments` 以等長空白替換，行號不受影響。
@@ -334,16 +350,24 @@ def r_dead_control(src, style, script):
         dr = re.search(r'\bdata-read="([A-Za-z0-9_$]+)"', attrs)
         if dr and dr.group(1) in defined_fns:
             continue
-        hooks = []
-        hooks += re.findall(r'\bid="([^"${}\s]+)"', attrs)
-        hooks += re.findall(r'\bname="([^"${}\s]+)"', attrs)
+        ok = False
+        for i in re.findall(r'\bid="([^"${}\s]+)"', attrs):
+            if i in exact_ids or _blob_hit(i, "#", attrs):
+                ok = True
+        for n in re.findall(r'\bname="([^"${}\s]+)"', attrs):
+            if n in exact_ids or _blob_hit(n, '[name="', attrs) or _blob_hit(n, "[name=", attrs):
+                ok = True
         for cls in re.findall(r'\bclass="([^"]*)"', attrs):
             for tok in re.split(r"\s+", re.sub(r"\$\{[^}]*\}", " ", cls)):
-                if len(tok) > 2:
-                    hooks.append(tok.rstrip("-"))
-        hooks += [a for a in re.findall(r"\bdata-([a-z][a-z-]*)=", attrs)
-                  if a not in ("f", "val", "doc")]
-        if any(hooked(h, attrs) for h in hooks):
+                if len(tok) > 2 and _blob_hit(tok.rstrip("-"), ".", attrs):
+                    ok = True
+        for a in re.findall(r"\bdata-([a-z][a-z-]*)=", attrs):
+            if a in ("f", "val", "doc"):
+                continue
+            camel = re.sub(r"-([a-z])", lambda m: m.group(1).upper(), a)
+            if camel in dataset_keys or a in dataset_keys or _blob_hit(a, "[data-", attrs):
+                ok = True
+        if ok:
             continue
         out.append((WARN,
                     f"<{tag}> 無 handler、無 data-f/data-val，也沒有任何被選擇器用到的把手"
@@ -505,8 +529,16 @@ def _strip_nested_attr(src: str, attr: str) -> str:
 
 
 def _strip_comments(src: str) -> str:
-    """挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。"""
-    src = re.sub(r"/\*.*?\*/", _blank, src, flags=re.S)
+    """挖掉 JS 區塊註釋與 HTML 註釋。註釋不會被渲染，因此不是「硬編」。
+
+    🔴 `/*` 前面**不得是識別字元**（2026-08-14 事故）。原本的 `/\*.*?\*/` 會把
+    `accept="image/*"` 裡的 `/*` 當成註釋開頭，一路吞到下一個 `*/`——
+    storefront 實測**吞掉 75 行**。
+    後果不只是漏看死控件：`r_hardcoded_currency`（鐵律 10、**ERROR 級**）用的是同一個
+    helper，那 75 行等於**從沒被掃過**，而 CI 一直是綠的。
+    真註釋的 `/*` 前面是空白、`;`、`{`、`)` 或行首，不會是字母數字。
+    """
+    src = re.sub(r"(?<![A-Za-z0-9_])/\*.*?\*/", _blank, src, flags=re.S)
     src = re.sub(r"<!--.*?-->", _blank, src, flags=re.S)
     return src
 
