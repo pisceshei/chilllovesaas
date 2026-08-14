@@ -89,7 +89,7 @@ module Money
     # @return [String] 定位數、無幣別符號、無千分位、小數點為 `.`
     # @raise [ArgumentError] `digits` 為負
     # @note 副作用：無。
-    # @see docs/specs/65-money-unit-boundary.md §H.2 T10、§D.4
+    # @see docs/specs/65-money-unit-boundary.md §H.2 T10、§D.5
     def fixed_string(value, digits)
       raise ArgumentError, "digits 不得為負（實得 #{digits}）" if digits.negative?
 

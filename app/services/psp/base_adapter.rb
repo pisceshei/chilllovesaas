@@ -38,6 +38,7 @@ class Psp::BaseAdapter
   # @see docs/specs/65-money-unit-boundary.md §C.1 L3
   def to_payload(amount)
     assert_amount!(amount)
+    assert_sign!(amount)
     amount.is_a?(Money::PspMinor) ? amount.minor : amount.string
   end
 
@@ -63,5 +64,36 @@ class Psp::BaseAdapter
 
     raise TypeError,
       "這個金額是為 #{amount.psp} 算的，不是 #{psp}（A4：擋住「A 家的值送去 B 家」）"
+  end
+
+  # 🔴 **負值一律拒收**（`docs/specs/65` §A.7「送 PSP」列，2026-08-15 補實作）。
+  #
+  # §A.7 的表格逐字寫「PSP adapter **驗正數**，負值一律 raise」，
+  # 本尊依據是 Stripe `POST /v1/refunds` 的 amount 官方逐字「A positive integer…」。
+  # ⚠️ **本條在 2026-08-15 之前是「規格有、代碼零落點」**：
+  # 型別層（`Money::Storage`）依 §A.7 **刻意不驗**正負（退款差額與撤銷需要負值），
+  # 而「寫入端與 PSP adapter」這兩個該驗的地方**一個都沒實作**
+  # ⇒ `Money::Storage.from_cents(-50_000, "HKD")` 可以一路走到線上形態
+  # （`minor_units` 得 `-50000`、`decimal_string` 得 `"-500.00"`）。
+  # 🔴 **退款方向由 `kind` 承載，不由符號承載**——送一個負的 charge 金額，
+  # 各家 PSP 的行為從「400」到「當成正數收款」都有，而後者是靜默事故。
+  #
+  # ⚠️ **`== 0` 刻意放行**：§A.7 引到的官方證據只證明「負值不可送」，
+  # 而 $0 auth（卡片驗證）是真實形態。§A.7 末段自己的紀律就是「沒有官方依據，不得硬寫」
+  # ⇒ 零值留給第一家真 PSP 的 pack 裁定，**不在這裡發明規則**。
+  #
+  # @param amount [Money::PspMinor, Money::PspDecimal]
+  # @return [void]
+  # @raise [TypeError] 金額為負
+  # @note 副作用：無。
+  # @see docs/specs/65-money-unit-boundary.md §A.7
+  def assert_sign!(amount)
+    # 🔴 用數值判，不看字串前置的 `-`：`decimal_string` 側拿到的是字串，
+    # 而 `"-0.00"` 這種形態（極小負值捨入到零）**不是負值**，看前綴會誤擋。
+    value = amount.is_a?(Money::PspMinor) ? amount.minor : BigDecimal(amount.string)
+    return unless value.negative?
+
+    raise TypeError,
+      "送 PSP 的金額不得為負（實得 #{value}）——退款方向走 kind 不走負號（65 §A.7）"
   end
 end

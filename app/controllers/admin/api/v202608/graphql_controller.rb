@@ -66,7 +66,28 @@ module Admin
           render_graphql_error(code: "BAD_USER_INPUT", message: "variables 必須是有效的 JSON 物件。")
         rescue Pundit::NotAuthorizedError
           render_access_denied
-        rescue ActiveRecord::ActiveRecordError => error
+        # 🔴 **`RecordNotUnique` 必須排在下一條之前**——實測
+        #    `ActiveRecord::RecordNotUnique <= ActiveRecord::StatementInvalid` 為 **true**。
+        #    少了這個子句，`63` §A.1 ④ 最在意的那個例外會被下一條原封不動再吞一次。
+        rescue ActiveRecord::RecordNotUnique
+          # 業務錯誤：`63` §A.1 ④ 要求在 mutation 層轉成 userErrors，「**不得漏成 500**」。
+          # 落到這裡代表那一層漏了 ⇒ **刻意不吞**，讓它爆出來。
+          raise
+        # 🔴 **本 rescue 由 `ActiveRecord::ActiveRecordError` 收窄而來**（2026-08-15）。
+        #    原本那條是**方法層** rescue，而 `ChillloveSchema.execute` 就在方法體裡
+        #    ⇒ resolver 內部拋出的**任何** AR 例外都被渲染成 `INTERNAL`／HTTP 200，
+        #    而 `render_internal_error` 只 log `error_class`，訊息一個字都不留。
+        #    ⚠️ 這與本檔上方那個 `TypeError` 事故**是同一種病**，只是型別換了一個。
+        #    被錯誤吞掉的具體例子：`RecordInvalid`、`StaleObjectError`
+        #    （`28` §0.3.2 明定樂觀鎖走 `STALE_OBJECT` userErrors）、`RecordNotFound`
+        #    ——實測這三個**都不是** `StatementInvalid` 的子類，收窄後不再被吞。
+        #    ℹ️ 今天還不可達（`ChillloveSchema.mutation` 為 `nil`，唯讀 schema），
+        #    但**第一支 mutation 掛上 root 當天就引爆**。
+        rescue ActiveRecord::StatementInvalid,
+               ActiveRecord::ConnectionNotEstablished => error
+          # 只有基礎設施錯誤走去敏 INTERNAL。實測涵蓋關係：
+          #   QueryCanceled／LockWaitTimeout／Deadlocked ⊂ StatementInvalid
+          #   ConnectionTimeoutError ⊂ ConnectionNotEstablished
           render_internal_error(error)
         end
 

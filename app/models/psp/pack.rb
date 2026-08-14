@@ -180,7 +180,7 @@ class Psp::Pack
     # （65 §D 無出處），要「支援」得先發明湊整規則（進位方向？差額記哪張表？）
     # ——那是憑空造規則。fail-closed 的代價是「真出現時第一次呼叫就 raise」，
     # 那是**看得見**的失敗；不擋的代價是**靜默送錯金額**。
-    # 全文與裁定：`docs/specs/65` §D.4、`docs/DECISIONS.md` D16。
+    # 全文與裁定：`docs/specs/65` §D.5、`docs/DECISIONS.md` D16。
     min = Limits.fetch(:money_boundary, :psp_decimal_min_places)
     return if decimal_places >= min
 

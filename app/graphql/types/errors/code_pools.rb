@@ -82,7 +82,7 @@ module Types
       # `scripts/check-money-boundary.rb` 之外會另有一條 CI 斷言守住它。
       DISCOUNT_ONLY = %i[CONFLICT].freeze
 
-      # 兩個共用池的聯集，供 `BaseCodeEnum.values_from_pools` 使用。
+      # 兩個共用池的聯集，供 `BaseCodeEnum.from_pools` 使用。
       #
       # @return [Array<Symbol>] 去重後的值清單
       # @note 副作用：無。
