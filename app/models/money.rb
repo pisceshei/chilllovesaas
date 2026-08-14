@@ -85,6 +85,39 @@ module Money
       frac = ((abs - whole) * (10**digits)).round.to_i
       "#{sign}#{whole}.#{frac.to_s.rjust(digits, '0')}"
     end
+
+    # A5：pack 宣告的整除約束。
+    #
+    # 🔴 **基準一律是「即將送出去的那個值，用該 PSP 自己的單位」**——
+    # `minor_units` 檢查 minor 整數，`decimal_string` 檢查主單位的 `BigDecimal`。
+    # **為什麼不統一成以 cents 為基準**：那樣 pack 作者就得把 PSP 文檔上的數字
+    # **自己換算一次**再填進 pack（「minor 須整除 100」要填成「cents 須整除 10000」）
+    # ——**而那個換算就是本篇從頭到尾在防的那一類手工換算**。
+    # 宣告值必須能與來源文件**逐字對照**，否則 pack 就成了下一個出錯的地方。
+    #
+    # 🔴 **違反時不得自動湊整**：湊整會讓「送出去的錢」與「帳上記的錢」不同，
+    # 而差額沒有任何一張表記得住。
+    #
+    # ⚠️ **`divisibility_scope` 目前被忽略**：V-206（該約束在 charge／refund／payout
+    # 哪些操作上成立）未結案，65 §L 的當前處置是「已宣告者以**最嚴格**解讀
+    # （charge 亦套用）」⇒ 一律檢查。scope 現在只用於錯誤訊息。
+    #
+    # @param pack [Psp::Pack]
+    # @param currency [String]
+    # @param value [Integer, BigDecimal] 即將送出的值，用該 PSP 自己的單位
+    # @return [void]
+    # @raise [Psp::DivisibilityViolation]
+    # @note 副作用：無。
+    # @see docs/specs/65-money-unit-boundary.md §D.2 A5、§H.2 T16
+    def check_divisibility!(pack, currency, value)
+      multiple = pack.divisibility_for(currency)
+      return if multiple.nil?
+      return if (value % multiple).zero?
+
+      raise Psp::DivisibilityViolation,
+        "#{currency} 金額 #{value} 不是 #{multiple} 的倍數（pack #{pack.code}，" \
+        "scope=#{pack.raw[:divisibility_scope].inspect}）——🔴 不得自動湊整"
+    end
   end
 
   # ── R1：儲存 cents ─────────────────────────────────────────────────────────
@@ -127,6 +160,69 @@ module Money
     def to_decimal
       major = BigDecimal(cents).div(BigDecimal(Money.storage_scale), 40)
       Decimal.from_string(Money.fixed_string(major, Money.decimal_digits), currency)
+    end
+
+    # 🔴 **送 PSP／任何外部收款系統前的唯一出口**（65 §D.1，X7）。
+    #
+    # 儲存尺度與該 PSP 要的單位是兩件事，而**「單位」本身又有兩個維度**：
+    #   顯示 → `currency_display.force_minor_unit_digits` = 2（裁定二）
+    #   儲存 → `money_boundary.storage_scale_multiplier` = 100（不看幣別）
+    #   對外 → ①格式 `amount_format` ②該格式下的參數
+    #
+    # 🔴 **舊名 `to_psp_minor` 不保留為別名**——留著別名等於留著一條
+    # 「不看 `amount_format`」的路徑，而那正是 Airwallex 型 PSP 出事的形狀。
+    #
+    # @param psp [String, Symbol] pack 代碼
+    # @return [Money::PspMinor, Money::PspDecimal] 依 pack 宣告的格式
+    # @raise [Psp::AmountFormatUndeclared] pack 未宣告格式（A0；不得預設）
+    # @raise [Psp::MinorUnitUndeclared] 該幣別的 minor unit 未宣告（A1）
+    # @raise [Psp::UnsupportedCurrencyExponent] exponent > 2（A2）
+    # @raise [Money::NonIntegralConversion] 換算有餘數（A3；不四捨五入）
+    # @raise [Psp::DivisibilityViolation] 違反整除約束（A5；不自動湊整）
+    # @note 副作用：無；只讀 pack 宣告。
+    # @see docs/specs/65-money-unit-boundary.md §D.1、§D.2
+    def to_psp_amount(psp:)
+      pack = Psp.registry.fetch(psp)
+      case pack.amount_format
+      when :minor_units    then to_psp_minor(pack)
+      when :decimal_string then to_psp_decimal(pack)
+      end
+    end
+
+    private
+
+    # X7a：整數 minor unit（Stripe／Adyen／Datatrans 型）。
+    def to_psp_minor(pack)
+      exponent = pack.minor_unit_exponent(currency)                                    # A1
+      if exponent.nil?
+        raise Psp::MinorUnitUndeclared,
+          "pack #{pack.code} 未宣告 #{currency} 的 minor unit（A1：未宣告 ≠ 預設 ISO）"
+      end
+
+      max = Limits.fetch(:money_boundary, :max_supported_iso_exponent)                 # A2
+      if exponent > max
+        raise Psp::UnsupportedCurrencyExponent,
+          "#{currency} exponent=#{exponent} > #{max}——我方儲存尺度（×#{Money.storage_scale}）表達不了"
+      end
+
+      divisor = 10**(max - exponent)                                                   # JPY⇒100、HKD⇒1
+      unless (cents % divisor).zero?                                                   # A3
+        raise Money::NonIntegralConversion,
+          "#{cents} 無法無損換成 #{currency} 的 minor unit（餘 #{cents % divisor}）——" \
+          "🔴 上游的湊整規則沒套用，不得四捨五入抹掉"
+      end
+
+      minor = cents / divisor
+      Money.check_divisibility!(pack, currency, minor)                                 # A5
+      PspMinor.__build(minor:, currency:, psp: pack.code)                              # A4
+    end
+
+    # X7b：十進位主單位字串（Airwallex 型）。
+    def to_psp_decimal(pack)
+      major = BigDecimal(cents).div(BigDecimal(Money.storage_scale), 40)               # 🔴 全程 BigDecimal
+      Money.check_divisibility!(pack, currency, major)                                 # A5
+      string = Money.fixed_string(major, pack.decimal_places)                          # A6
+      PspDecimal.__build(string:, currency:, psp: pack.code)                           # A4
     end
 
     # 🔴 **相同幣別才可比較**。跨幣別比較恆為 false 會讓「兩筆金額不同」
@@ -185,6 +281,76 @@ module Money
     end
   end
 
+  # ── R5：PSP minor unit（`amount_format: minor_units`）──────────────────────
+  #
+  # 🔴 **唯一建構路徑是 `Money::Storage#to_psp_amount`**（65 §C L2）。
+  # 不存在「手工湊一個 PspMinor」的路徑 ⇒ §D 的 A0–A5 斷言**無法被繞過**。
+  #
+  # ⚠️ **`__build` 是 public——Ruby 表達不了「friend class」**。
+  # `Money::Storage` 與本類別是兩個不同的類別，private class method 呼叫不到。
+  # ⇒ 這條限制靠**命名（`__` 前綴）＋ CI 檢查**執行：
+  # `scripts/check-money-boundary.rb` 的 C5 斷言 `app/` 下除了 `app/models/money.rb`
+  # 以外**不得出現 `__build`**。這是本檔唯一一處「型別擋不住、只能靠 CI 擋」的地方，
+  # 寫在這裡以免被誤讀成防線完整。
+  PspMinor = Data.define(:minor, :currency, :psp) do
+    # @api private 只給 `Money::Storage#to_psp_amount` 用（見類別註釋）
+    def self.__build(minor:, currency:, psp:)
+      new(minor:, currency:, psp:)
+    end
+
+    # 轉回 R1（入向 X8）。
+    #
+    # 🔴 **入向的錯不是 100 倍，是 1/100，而且更難發現**——
+    # 訂單金額看起來「只是小一點」，不會觸發任何金額上限告警。
+    #
+    # @return [Money::Storage]
+    # @raise [Psp::MinorUnitUndeclared] 該幣別未宣告
+    # @note 副作用：無。
+    # @see docs/specs/65-money-unit-boundary.md §E
+    def to_storage
+      pack = Psp.registry.fetch(psp)
+      exponent = pack.minor_unit_exponent(currency)
+      raise Psp::MinorUnitUndeclared, "pack #{psp} 未宣告 #{currency} 的 minor unit" if exponent.nil?
+
+      max = Limits.fetch(:money_boundary, :max_supported_iso_exponent)
+      Storage.from_cents(minor * (10**(max - exponent)), currency)
+    end
+  end
+
+  # ── R6：PSP 十進位主單位字串（`amount_format: decimal_string`）─────────────
+  #
+  # 🔴 **與 R4（`Money::Decimal`）的線上形態完全相同**，差別只有 `:psp` 欄位。
+  # 那不是冗餘：沒有 `:psp` 就無法在 adapter 端斷言「這個值是為這一家算的」。
+  #
+  # 🔴 **R6 的等價陷阱是 `to_s`／`to_str`**（不是 `to_i`）：它內含字串，
+  # `"#{amount}"` 在組 JSON body 時到處都是——一旦 `to_s` 回傳裸金額字串，
+  # R6 的型別防線就跟不存在一樣。`Data` 預設的 `to_s` 回傳 inspect 形式，
+  # **本檔不得覆寫它**，`money_spec` 有斷言守住。
+  PspDecimal = Data.define(:string, :currency, :psp) do
+    # @api private 只給 `Money::Storage#to_psp_amount` 用
+    def self.__build(string:, currency:, psp:)
+      new(string:, currency:, psp:)
+    end
+
+    # 轉回 R1（入向 X8）。
+    #
+    # 🔴 `decimal_string` 入向錯（把 `"14.80"` 當 cents 直接落庫）＝
+    # **少記 99%，且在所有幣別上都成立**——不像 minor_units 只在 zero-decimal 幣別現形。
+    #
+    # @return [Money::Storage]
+    # @raise [Money::ExcessPrecision] 小數超過 pack 宣告位數（不 round）
+    # @note 副作用：無。
+    def to_storage
+      pack = Psp.registry.fetch(psp)
+      decimals = string.split(".").last.to_s.length
+      if decimals > pack.decimal_places
+        raise ExcessPrecision, "#{string} 小數 #{decimals} 位 > pack 宣告的 #{pack.decimal_places}（不得 round）"
+      end
+
+      Storage.from_cents((BigDecimal(string) * Money.storage_scale).to_i, currency)
+    end
+  end
+
   # ── R3：顯示字串 ───────────────────────────────────────────────────────────
   #
   # ⚠️ **本輪只做骨架**：恆兩位小數（2026-08-12 裁定二）。
@@ -221,9 +387,15 @@ module Money
   #
   # `#with` 對金額特別危險：它讓「換一個幣別、保留同一個數字」變成一行程式碼，
   # 而那正是跨幣別事故的形狀。
-  [ Storage, Decimal ].each do |klass|
+  [ Storage, Decimal, PspMinor, PspDecimal ].each do |klass|
     klass.singleton_class.send(:private, :[])
     klass.singleton_class.send(:private, :allocate)
     klass.send(:undef_method, :with)
   end
+
+  # 🔴 R5／R6 另外把 `.new` 也設 private（65 §C L2：**唯一建構路徑**）。
+  # R1／R4 的 `.new` 保持可用——它們是入口（從 DB／從外部字串建），
+  # 而 R5／R6 只能由 `Money::Storage#to_psp_amount` 產生，
+  # 因為那條路徑上掛著 A0–A5 五條斷言。
+  [ PspMinor, PspDecimal ].each { |klass| klass.singleton_class.send(:private, :new) }
 end

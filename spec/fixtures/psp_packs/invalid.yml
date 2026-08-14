@@ -1,0 +1,56 @@
+# 故意不合法的 pack —— 每一個都必須讓 `Psp::Pack` 在**建構期**就 raise。
+#
+# 🔴 這些不是「壞資料」，是**斷言的載體**。65 §K 第 7 條的判準是
+# 「檢查綠不算交付，要證明每個違反 fixture 各自被擋下」。
+
+# T19：未宣告 amount_format ⇒ 🔴 **不得預設 minor_units**。
+# 預設 minor_units 會對 Airwallex 型 PSP 送出「主單位被當 minor unit 解讀」的金額，
+# 而**該錯誤在所有幣別上都成立**（不像 exponent 的錯只在 zero-decimal 幣別現形）。
+no_format:
+  minor_unit_source: iso4217
+  minor_unit_overrides: {}
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# A6：decimal_places > 2 ⇒ 不得 enable。
+# 我方儲存尺度 ×100 只能無損表達 2 位；宣告 3 位卻只給得出 2 位
+# ＝**靜默的精度謊報**（我方送 "2.90"，PSP 以為那是 "2.900"）。
+too_many_places:
+  amount_format: decimal_string
+  decimal_places: 3
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# 🔴 空表 ≠ 缺鍵：`divisibility` 整個鍵不見了＝「沒人查過」⇒ 不得 enable。
+# （若寫成 `divisibility: {}` 則是「已查證、無此約束」，合法。）
+missing_divisibility:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# 缺 divisibility_scope ⇒ V-206 未結案，不得 enable（65 §D.3）。
+missing_scope:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides: {}
+  divisibility: {}
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# enable_gate 非空卻 enabled: true ⇒ 把「V 編號還沒結案」從備忘變成機械限制。
+gated_but_enabled:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides: {}
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: [V-999]
+  enabled: true
