@@ -395,18 +395,49 @@ def r_dead_control(src, style, script):
                 return False
         return True
 
+    def _split_selectors(blob):
+        """把選擇器字串依**頂層逗號**拆成獨立選擇器。
+
+        🔴 為什麼不能整串一起比（Claude #28 第二輪 review）：`_attr_ok` 掃的是傳進來的
+        整串文字，所以 `querySelectorAll('.mkt-country, .tgl[role="switch"]')` 會讓
+        **靠 `.mkt-country` 當把手的控件被要求也得有 `role="switch"`**——一個實際上
+        被讀取的控件因此被判成死控件。這個方向是**誤報**（前六種漏看都是少報），
+        而誤報比少報更會讓人把規則關掉。
+        🔴 逗號可以合法出現在 `[...]`（如 `[data-x="a,b"]`）與 `:not(...)`／`:is(...)` 裡，
+        那些不是選擇器分隔符 ⇒ 只在括號深度為 0 且不在引號內時才切。
+        """
+        out, buf, depth, quote = [], [], 0, None
+        for ch in blob:
+            if quote:
+                if ch == quote:
+                    quote = None
+            elif ch in "\"'":
+                quote = ch
+            elif ch in "([":
+                depth += 1
+            elif ch in ")]":
+                depth = max(0, depth - 1)
+            elif ch == "," and depth == 0:
+                out.append("".join(buf))
+                buf = []
+                continue
+            buf.append(ch)
+        out.append("".join(buf))
+        return out
+
     def _blob_hit(tok, prefix, attrs):
-        """token 以 `prefix` 的形態出現在某個選擇器裡，且該選擇器有機會命中這個控件。"""
+        """token 以 `prefix` 的形態出現在某個選擇器裡，且**該段**選擇器有機會命中這個控件。"""
         needle = prefix + tok
         for blob in sel_blobs:
-            j = blob.find(needle)
-            while j >= 0:
-                # 🔴 結尾邊界（Claude 指出的漏報）：`#rf` 不得命中 `#rfOverOK`。
-                nxt = blob[j + len(needle):j + len(needle) + 1]
-                if not re.match(r"[A-Za-z0-9_-]", nxt or " "):
-                    if _attr_ok(blob, attrs):
-                        return True
-                j = blob.find(needle, j + 1)
+            for seg in _split_selectors(blob):
+                j = seg.find(needle)
+                while j >= 0:
+                    # 🔴 結尾邊界（Claude 指出的漏報）：`#rf` 不得命中 `#rfOverOK`。
+                    nxt = seg[j + len(needle):j + len(needle) + 1]
+                    if not re.match(r"[A-Za-z0-9_-]", nxt or " "):
+                        if _attr_ok(seg, attrs):
+                            return True
+                    j = seg.find(needle, j + 1)
         return False
 
     # markup 側也要剝註釋：防回退註釋會逐字引用壞掉的 markup，不剝會抓到自己的說明文字。

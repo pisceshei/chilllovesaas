@@ -105,6 +105,16 @@ CASES = [
      "document.querySelectorAll('.tgl[role=\"switch\"]')", 0,
      "attr value 相符就該放行——不得因為加了值比對而誤報"),
 
+    ("🔴 逗號複合選擇器：另一段的 [attr] 不得加到我頭上",
+     '<input type="checkbox" class="cb mkt-country" value="JP">',
+     "document.querySelectorAll('.mkt-country, .tgl[role=\"switch\"]')", 0,
+     "整串比對會要求 .mkt-country 的控件也有 role=switch ⇒ 誤報（Claude #28 二輪）"),
+
+    ("逗號複合選擇器：我這一段的 [attr] 仍要驗",
+     '<input type="checkbox" class="tgl" role="button">',
+     "document.querySelectorAll('.mkt-country, .tgl[role=\"switch\"]')", 1,
+     "拆段後不得反過來把該驗的條件也丟掉"),
+
     ("🔴 `accept=\"image/*\"` 不得讓掃描失明（漏看形態 ①）",
      '<input type="file" accept="image/*" class="zz-file">\n<button class="zz-after">x</button>', "", 2,
      "`/*` 曾被當註釋開頭吞掉後續 86 行；兩個控件都必須被看到"),
