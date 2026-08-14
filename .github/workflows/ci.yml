@@ -35,6 +35,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      - name: Verify bin/ scripts are executable
+        run: |
+          # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
+          #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
+          #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
+          bad=$(git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755" { print $4 }')
+          if [ -n "$bad" ]; then
+            echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
+            echo "$bad"
+            echo "修法：git update-index --chmod=+x $(echo $bad | tr '
+' ' ')"
+            exit 1
+          fi
+          echo "OK：bin/ 與 scripts/*.sh 全部可執行"
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -99,6 +114,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+
+      - name: Verify bin/ scripts are executable
+        run: |
+          # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
+          #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
+          #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
+          bad=$(git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755" { print $4 }')
+          if [ -n "$bad" ]; then
+            echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
+            echo "$bad"
+            echo "修法：git update-index --chmod=+x $(echo $bad | tr '
+' ' ')"
+            exit 1
+          fi
+          echo "OK：bin/ 與 scripts/*.sh 全部可執行"
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

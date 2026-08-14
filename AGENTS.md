@@ -58,6 +58,18 @@
 3. **功能文檔**：每個新增功能的 PR 必須同時新增 `docs/dev/m{N}-{功能}.md`（模板與規則見 `docs/dev/README.md`）：概述、規格出處、架構與資料流、API 對應、資料表、關鍵取捨、測試、已知限制。修 bug／重構的 PR 則更新受影響的既有篇章。
 4. PR 描述加一欄「文檔」：列出本 PR 的 docs/dev 變更；沒有變更要寫明理由（例：純 CI 修改）。
 
+## 🔴 Windows 開發者必讀：檔案執行位元
+
+在 Windows 上 git 預設 `core.filemode=false`，**新增 `bin/*` 或 `*.sh` 時不會帶執行位元**
+（以 `100644` 提交），本機完全正常，但到 Linux CI 上執行就是 `exit 126: Permission denied`
+——錯誤訊息完全看不出根因。2026-08-14 的 CI 全紅就是這個原因（`bin/rails` 等 10 個檔 ＋
+`scripts/cloud-setup.sh` 全部缺 +x）。
+
+- **提交前檢查**：`git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755"'`（有輸出就是有問題）
+- **修法**：`git update-index --chmod=+x <檔案>`
+- CI 已加防呆（兩個 job 的 checkout 之後各有一步 `Verify bin/ scripts are executable`），
+  現在會早失敗並印出修法，但**不要依賴它**——本機提交前自己看一眼比較快。
+
 ## 測試與驗收基準
 
 - 每功能過 `docs/specs/11` §0 七維度；併發場景（超賣/折扣用量/退款上限）必須有測試。
