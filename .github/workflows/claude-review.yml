@@ -1,22 +1,31 @@
 name: Claude Review
 
 # ============================================================
-# 自動驗收閉環（Codex 實作 × Claude 驗收）
+# 自動驗收閉環（雙驗收方，2026-08-15 使用者裁定改制）
 #
-#   Codex 開 PR / push
+# 🔴 **本 workflow 不再派工給任何代理去實作或修復。**
+#    舊制是「Codex 實作 × Claude 驗收」，需修改時自動留言 @codex 派修，形成乒乓。
+#    新制＝**Codex 只做驗收**（與 Claude 並列為兩個獨立驗收方），
+#    實作由人主導的工作階段負責。理由：派修等於把「誰來改」的決定權交給
+#    一個看不到本輪對話脈絡的代理，而修法選擇（例如 fail-closed 最小修
+#    vs 補齊語義）往往需要裁定，不是機械修復。
+#
+#   開 PR / push
+#     ├→ Codex（chatgpt-codex-connector App）自動審查 → inline review
 #     └→ Claude 依 docs 規格驗收，貼出【驗收結論】
-#          ├─ 需修改 → 自動留言 @codex 派修 → Codex push → synchronize 觸發重審（乒乓）
-#          │            └─ 超過 MAX_FIX_ROUNDS 輪 → 停止自動派修，改請人工介入
+#          ├─ 需修改 → **只通知，不派工**；修好 push 本分支即自動重審
+#          │            └─ 累計 > MAX_FIX_ROUNDS 輪 → 升級提示（可能是結構問題，該拆 PR 或回頭改規格）
 #          └─ 通過   → 自動 approve；AUTO_MERGE=true 時 squash 合併
-#                       └→ 關閉本階段 issue，並在下一個里程碑 issue 留言 @codex 自動派工
+#                       └→ 關閉本階段 issue，並指出下一個里程碑 issue（**不 @ 任何人**）
 #
 # 開關：
-#   MAX_FIX_ROUNDS             同一 PR 自動派修輪數上限（超過即停）
-#   AUTO_MERGE                 通過後是否自動合併＋派工下一階段（"false"＝只 approve）
-#   secrets.CODEX_PING_TOKEN   可選。設為 pisceshei 的 fine-grained PAT（僅本 repo、
-#                              Issues+Pull requests Read/Write）時，@codex 留言以本人身分發出，
-#                              Codex 必定視為有效請求；未設定則以 github-actions bot 留言，
-#                              Codex 對 bot 留言可能不回應。
+#   MAX_FIX_ROUNDS             同一 PR 累計「需修改」幾輪後升級提示（不再是派修上限）
+#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve）
+#
+# 🔴 `secrets.CODEX_PING_TOKEN` **已不再使用**（2026-08-15）。
+#    它存在的唯一理由是「讓 @codex 留言以本人身分發出，Codex 才視為有效請求」——
+#    新制不再自動 @codex ⇒ 該 secret 可以刪除。**留著不會有作用，但也不會有害。**
+#    要恢復自動派修的人：這是要一併恢復的東西，不要只改留言文字。
 #
 # 🔴🔴 **改本檔的 PR，自己不會被驗收**（2026-08-14 實測，PR #25）
 #   `anthropics/claude-code-action` 有防竄改機制，annotation 原文：
@@ -149,7 +158,9 @@ jobs:
             - 只要存在任何一條 🔴，結論必須是需修改；沒有 🔴 就下通過（🟡 不擋通過）。
 
             具體、可執行、指到規格章節；不要泛泛稱讚。
-            不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
+            不要 approve、不要 merge——那些由後續自動化步驟處理。
+            🔴 **不要 @ 任何代理（@codex 等）派修**：本專案已改制，Codex 與你並列為兩個**獨立驗收方**，
+            實作與修復一律由人主導的工作階段負責。你的產出是意見，不是工單。
 
             🔴🔴 **你的最後一個動作必須是那個 `gh pr comment` 呼叫。**
             **不要把審核意見寫在最終回覆裡**——最終回覆不會出現在 PR 上，整份審核會直接消失。
@@ -212,7 +223,10 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
-          CODEX_PING_TOKEN: ${{ secrets.CODEX_PING_TOKEN }}
+          # 🔴 `CODEX_PING_TOKEN` 已移除（2026-08-15，見檔頭）：它唯一的用途是讓
+          #    自動 @codex 留言以本人身分發出；新制不派工 ⇒ 沒有留著的理由。
+          #    **不要因為「留著也不會怎樣」就把它加回來**——一個沒有用途的
+          #    write 權限 token 出現在 workflow env 裡，讀的人會以為它有用途。
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -222,7 +236,6 @@ jobs:
           COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
         run: |
           set -uo pipefail
-          PING="${CODEX_PING_TOKEN:-}"
 
           # 🔴 **水位取不到就什麼都不做**（fail-safe，不是 fail-open）。
           #    本步驟的 `if: !cancelled()` 表示即使水位那一步失敗，這裡照樣會跑。
@@ -349,12 +362,19 @@ jobs:
             exit 0
           fi
 
+          # 🔴 **需修改＝只通知，不派工**（2026-08-15 使用者裁定）。
+          #    舊制在這裡自動留言 `@codex 請…逐條修復…`。**已移除。**
+          #    ⚠️ 本則留言**不得**包含 `@` 開頭的代理呼叫——Codex 對 @ 提及會接單，
+          #      在新制下那等於繞過裁定直接改代碼。要人改就寫給人看。
+          #    （本則留言同樣不得含結論標記字面值，理由見上方 MARKER 註解。）
           if printf '%s' "$LATEST" | grep -q "【驗收結論】需修改"; then
             if [ "$ROUNDS" -le "$MAX_FIX_ROUNDS" ]; then
-              FIXBODY="@codex 請依本 PR 最新一則 Claude 驗收意見，逐條修復 🔴 必須修 的項目（🟡 建議 視情況採納），直接 push 到本分支（$PR_BRANCH），不要開新 PR。push 後會自動重新驗收。（自動派修第 $ROUNDS 輪／上限 $MAX_FIX_ROUNDS 輪）"
-              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh pr comment "$PR" --body "$FIXBODY"; else gh pr comment "$PR" --body "$FIXBODY"; fi
+              gh pr comment "$PR" --body "🔴 **驗收未通過**（本 PR 累計第 $ROUNDS 輪）。請依上一則驗收意見逐條處理 🔴 必須修（🟡 建議 視情況採納），修好後 **push 到本分支（\`$PR_BRANCH\`）即會自動重新驗收**，不要開新 PR。"
             else
-              gh pr comment "$PR" --body "⛔ 已達自動派修上限（$MAX_FIX_ROUNDS 輪），停止自動 @codex，請人工介入：直接修好 push 本分支會自動重審；或自行留言 @codex 再派一輪。"
+              # 🔴 這裡不再是「派修上限」，是**結構問題的警示線**。
+              #    同一個 PR 被打回超過 MAX_FIX_ROUNDS 輪，通常不是「再修一次就好」，
+              #    而是 PR 太大、或規格本身沒定案 ⇒ 提示往那兩個方向處理，而不是繼續修。
+              gh pr comment "$PR" --body "⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（警示線 $MAX_FIX_ROUNDS 輪）。到這個次數通常不是「再修一次就好」——請先判斷是不是 **PR 範圍太大該拆**，或 **規格本身還沒定案**（若是後者，裁定要落進 spec／DECISIONS，不能只留在 PR 留言）。"
             fi
             exit 0
           fi
@@ -364,7 +384,7 @@ jobs:
               || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
 
             if [ "$AUTO_MERGE" != "true" ]; then
-              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併；合併後如需派工下一階段，到下一個里程碑 issue 留言 @codex。"
+              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併。"
               exit 0
             fi
 
@@ -391,9 +411,12 @@ jobs:
             if [ -n "$NEXT_NUM" ]; then
               NEXT_STAGE=$(printf '%s' "$NEXT_TITLE" | grep -oE '^M[0-9]+')
               NEXT_BRANCH=$(printf '%s' "$NEXT_STAGE" | tr 'A-Z' 'a-z')
-              DISPATCH="@codex 上一階段已通過驗收並合併（PR #$PR）。請開始 $NEXT_TITLE — 範圍見本 issue 描述與 HANDOFF.md §5；規約見 AGENTS.md（分支命名 $NEXT_BRANCH/{功能}、不直接推 main、PR 標題以「$NEXT_STAGE:」開頭、描述附規格對照＋自測結果＋假設清單）。完成後開 PR，Claude 會自動驗收。"
-              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh issue comment "$NEXT_NUM" --body "$DISPATCH"; else gh issue comment "$NEXT_NUM" --body "$DISPATCH"; fi
-              gh pr comment "$PR" --body "🚀 已自動派工下一階段 → issue #$NEXT_NUM（$NEXT_TITLE）"
+              # 🔴 **只登記，不派工**（2026-08-15 使用者裁定）。
+              #    舊制在這裡 `@codex 請開始 $NEXT_TITLE`。**已移除**——理由同需修改分支：
+              #    開一個新里程碑是裁定，不是可以自動觸發的事。
+              #    留言仍然貼在該 issue 上，因為「上一階段何時合併」是這個 issue 需要的事實。
+              gh issue comment "$NEXT_NUM" --body "ℹ️ 上一階段已通過驗收並合併（PR #$PR）。本階段（$NEXT_TITLE）的範圍見本 issue 描述與 \`HANDOFF.md\` §5；規約見 \`AGENTS.md\`（分支 \`$NEXT_BRANCH/{功能}\`、不直接推 main、PR 標題以「$NEXT_STAGE:」開頭、描述附規格對照＋自測結果＋假設清單）。**本則為登記，不是派工。**"
+              gh pr comment "$PR" --body "📌 已在下一階段 issue #$NEXT_NUM（$NEXT_TITLE）登記本次合併。**未派工**——開始下一階段是人的裁定。"
             else
               gh pr comment "$PR" --body "🏁 沒有待辦的里程碑 issue——所有階段已完成，或下一階段 issue 尚未建立。"
             fi
