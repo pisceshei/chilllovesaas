@@ -59,7 +59,9 @@ RSpec.describe "Staff authentication", type: :request do
 
   it "uses the dummy bcrypt path for an invited account without a password" do
     ActsAsTenant.with_tenant(shop) do
-      StaffMember.create!(shop:, email: "invited@example.test", status: "invited", owner: false)
+      invited = StaffMember.create!(email: "invited@example.test", status: "invited", owner: false)
+      UserStoreAssignment.create!(staff_member: invited, shop:)
+      invited
     end
     expect(BCrypt::Password).to receive(:new)
       .with(SessionsController::DUMMY_PASSWORD_DIGEST)

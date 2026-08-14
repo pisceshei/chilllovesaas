@@ -6,17 +6,20 @@ require "securerandom"
 # browser cookie 只保存 raw opaque token；資料庫只保存其 SHA-256 digest，
 # 並在每次 request 驗證 expiry、revocation 與 staff status。見
 # docs/specs/11 §1、docs/specs/12 F2。
+#
+# 🔴 session 已由商店級升為**組織層**（裁定 D8／§A G24）：一次登入對應一個人，
+# 不再對應「這個人在這間店的帳號」。原本的 `staff_member_belongs_to_shop` 驗證
+# 與 `acts_as_tenant` 隨之移除——**「這個人能不能進這間店」改由
+# `Current.can_access_shop?` 在每個 request 判定（fail-closed）**，
+# 見 docs/specs/85 §4。token_digest 的唯一性也由 (shop_id, digest) 改為全平台唯一。
 class Session < ApplicationRecord
   TOKEN_BYTES = 32
   LIFETIME = 30.days
   ACTIVITY_WRITE_INTERVAL = 5.minutes
 
-  acts_as_tenant :shop
-
   belongs_to :staff_member
 
   validates :token_digest, :last_active_at, :expires_at, presence: true
-  validate :staff_member_belongs_to_shop
 
   class << self
     # 建立可撤銷 session，並回傳只交付一次的 raw token。
@@ -34,7 +37,6 @@ class Session < ApplicationRecord
       raw_token = SecureRandom.urlsafe_base64(TOKEN_BYTES)
       now = Time.current
       record = create!(
-        shop: staff_member.shop,
         staff_member: staff_member,
         token_digest: digest(raw_token),
         ip_address: request.remote_ip,
@@ -100,13 +102,5 @@ class Session < ApplicationRecord
     return if last_active_at && last_active_at > ACTIVITY_WRITE_INTERVAL.ago
 
     update_column(:last_active_at, Time.current)
-  end
-
-  private
-
-  def staff_member_belongs_to_shop
-    return if staff_member.nil? || staff_member.shop_id == shop_id
-
-    errors.add(:staff_member, "必須屬於同一間商店")
   end
 end
