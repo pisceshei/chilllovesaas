@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -432,6 +432,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_000000) do
     t.boolean "custom", default: false, null: false
     t.integer "fulfillable_quantity", default: 0, null: false
     t.bigint "order_id", null: false
+    t.string "product_type", comment: "售出時的產品類型（快照，不隨商品編輯而變）"
     t.bigint "product_variant_id"
     t.json "properties", default: -> { "(json_object())" }, null: false
     t.integer "quantity", null: false
@@ -446,6 +447,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_000000) do
     t.bigint "unit_price_cents", null: false
     t.datetime "updated_at", null: false
     t.string "variant_title"
+    t.string "vendor", comment: "售出時的產品廠商（快照，不隨商品編輯而變）"
     t.index ["shop_id", "id"], name: "uq_line_items_tenant_id", unique: true
     t.index ["shop_id", "order_id", "id"], name: "ix_line_items_order_id_id"
     t.index ["shop_id", "order_id"], name: "ix_line_items_order_id"
