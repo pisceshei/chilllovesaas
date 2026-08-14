@@ -159,6 +159,45 @@ RSpec.describe "Admin GraphQL products contract", type: :request do
     expect(names).to match_array(%w[ACTIVE DRAFT ARCHIVED UNLISTED])
   end
 
+  # ── controller 的 rescue 收窄（2026-08-15）────────────────────────────────
+  #
+  # 🔴 原本 `execute` 的 rescue 子句是 `rescue JSON::ParserError, TypeError`，
+  # 而它是**方法層 rescue**——`ChillloveSchema.execute` 就在方法體裡面。
+  # ⇒ 任何 resolver 內部拋出的 `TypeError` 都會被渲染成 `BAD_USER_INPUT`。
+  # 鐵律 3 的金額型別閘門（65 §C L3）正是靠 `raise TypeError` 擋住
+  # 「把儲存值直接送 PSP」——那是 P1 級送款事故，卻會顯示成
+  # 「variables 必須是有效的 JSON 物件」。
+  it "still returns BAD_USER_INPUT when variables is not a JSON object" do
+    login!
+
+    post admin_graphql_path,
+      params: { query: "{ products(first: 1) { nodes { id } } }", variables: "[]" }.to_json,
+      headers: { "CONTENT_TYPE" => "application/json" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+  end
+
+  it "still returns BAD_USER_INPUT when variables is malformed JSON" do
+    login!
+
+    post admin_graphql_path,
+      params: { query: "{ products(first: 1) { nodes { id } } }", variables: "{not json" }.to_json,
+      headers: { "CONTENT_TYPE" => "application/json" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+  end
+
+  it "does not disguise a resolver TypeError as BAD_USER_INPUT" do
+    login!
+    allow(ChillloveSchema).to receive(:execute).and_raise(TypeError, "金額型別閘門")
+
+    expect {
+      post_graphql("{ products(first: 1) { nodes { id } } }")
+    }.to raise_error(TypeError, "金額型別閘門")
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

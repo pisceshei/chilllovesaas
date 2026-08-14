@@ -471,8 +471,15 @@ idempotency:
   #    段一＝本尊 2026-04 起強制的官方清單（公告日 2025-12-12，共 **17 支**，全部是
   #          refund／inventory／location 三類，也就是 **Shopify 自己的金流寫入點**）；
   #    段二＝我方擴充（ours），判準沿用 NP1-D「凡金流寫入一律強制冪等」。
-  # 🔴 **`orderCreate` 至 unstable 版都沒有任何冪等機制**——我方對它強制冪等是**加嚴**，
-  #    而且**不會因為升版變成 parity**，升版時不得把它併進官方段。
+  # 🔴 **本尊的 `orderCreate` 至 unstable 版都沒有任何冪等機制**。
+  #    ⚠ 我方目前**沒有** `orderCreate` 這支 mutation——訂單成立走 `draftOrderComplete`
+  #      （已在下方 ours 段）與結帳流程。CLAUDE.md 鐵律 5 的「訂單成立必帶 idempotencyKey」
+  #      由 `draftOrderComplete` 承載，不是由一支叫 orderCreate 的 mutation 承載。
+  #    ⇒ 日後若真的加 `orderCreate`，它**必須進 ours 段**（本尊沒有 ⇒ 不是 parity），
+  #      且**不會因為升版變成官方段**。
+  #    <!-- 2026-08-15 自我修正：本註解第一版寫「我方對它強制冪等是加嚴」，
+  #         但全庫 grep `orderCreate` **只命中這一行註解本身** —— 我方從來沒有這支 mutation。
+  #         🔴 對自己的清單做斷言之前要先 grep 自己的倉庫，不要照抄考掘報告的措辭。 -->
   #
   # 出處：46a:781–787（dev，公告日 2025-12-12）
   required_for:

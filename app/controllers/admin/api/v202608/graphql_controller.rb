@@ -12,6 +12,19 @@ module Admin
       class GraphqlController < Admin::BaseController
         API_VERSION = "2026-08"
 
+        # `variables` 不是合法 JSON 物件。
+        #
+        # 🔴 **為什麼要專屬例外，不能沿用 `TypeError`**（2026-08-15 收窄）：
+        # 原本 `execute` 的 rescue 子句是 `rescue JSON::ParserError, TypeError`，
+        # 而它是**方法層 rescue**——它包住整個方法體，`ChillloveSchema.execute` 就在裡面。
+        # ⇒ **任何 resolver 內部拋出的 `TypeError` 都會被渲染成 `BAD_USER_INPUT`**。
+        # 這不是假設：鐵律 3 的金額型別閘門（65 §C L3）就是靠 `raise TypeError` 擋住
+        # 「把儲存值直接送 PSP」——那是 P1 級送款事故，卻會被這裡渲染成
+        # 「variables 必須是有效的 JSON 物件」，前端顯示一個與事實無關的訊息，
+        # 而真正的事故訊息**一個字都不會出現在 log 以外的地方**。
+        # ⇒ 只 rescue 我方自己在 `normalized_variables` 裡拋出的這一個型別。
+        InvalidVariables = Class.new(StandardError)
+
         rescue_from ActionController::InvalidAuthenticityToken, with: :render_access_denied
 
         prepend_before_action :set_api_version_header
@@ -49,7 +62,7 @@ module Admin
           )
 
           render json: payload, status: :ok
-        rescue JSON::ParserError, TypeError
+        rescue InvalidVariables
           render_graphql_error(code: "BAD_USER_INPUT", message: "variables 必須是有效的 JSON 物件。")
         rescue Pundit::NotAuthorizedError
           render_access_denied
@@ -75,7 +88,7 @@ module Admin
           case raw_variables
           when String
             parsed = raw_variables.blank? ? {} : JSON.parse(raw_variables)
-            raise TypeError unless parsed.is_a?(Hash)
+            raise InvalidVariables unless parsed.is_a?(Hash)
 
             parsed
           when ActionController::Parameters
@@ -85,8 +98,12 @@ module Admin
           when nil
             {}
           else
-            raise TypeError
+            raise InvalidVariables
           end
+        rescue JSON::ParserError
+          # 🔴 在**這裡**轉型別而不是在 `execute` 的方法層 rescue——
+          # 方法層 rescue 會連 `ChillloveSchema.execute` 內部的解析錯誤一起吞掉。
+          raise InvalidVariables
         end
 
         def normalize_top_level_errors!(payload)
