@@ -31,7 +31,18 @@
 ## 2. 資料完整性基線
 
 **做法**：
-1. 每個外鍵都建 DB 級 FK 約束；業務唯一性（handle、討code、SKU per shop）用**唯一索引**兜底，不能只靠 model validation（validation 有競態）。
+1. 每個外鍵都建 DB 級 FK 約束；業務唯一性（handle per shop、折扣碼 per shop）用**唯一索引**兜底，不能只靠 model validation（validation 有競態）。
+   <!-- 2026-08-15 修正（63 §L-1），原文：「業務唯一性（handle、討code、SKU per shop）」。
+        🔴 **SKU 不是業務唯一性**，它是**軟唯一**：本尊偵測到重複顯示警告但**不阻擋**
+        （`docs/research/61` §1.5，help 原文；`config/limits.yml:2504` `sku_unique_per_shop: false`）。
+        把它列進唯一索引的例子，會讓讀這一節的人照做，然後擋掉兩種官方允許的情境——
+        同款不同包裝共用 SKU、CSV 批次匯入。M0 建表時就是照這個例子建成 unique 的
+        （`20260811000000` 第 272 行），由 `20260815000000_relax_product_variant_sku_index.rb` 降級。
+        🔴 **本條的判準沒有放寬**：真正的業務唯一性仍然必須用唯一索引兜底，
+        錯的是「SKU 屬於那一類」這個分類。順帶把原文的錯字「討code」改為「折扣碼」。 -->
+   ⚠️ **軟唯一不走唯一索引**：偵測重複但不阻擋的欄位（SKU 是唯一實例）建一般索引，
+   重複時回 payload 的 `warnings`——不是 `userErrors`，後者代表操作失敗（鐵律 4）。
+   `warnings` 慣例目前不存在於 `docs/research/28` §0.3，待補（63 §L-9）。
 2. 交易邊界收在 service 物件內：一個業務動作 = 一個 transaction；**transaction 內絕不呼叫外部 API**（Stripe/寄信/HTTP）——這是最常見的生產事故源（外部慢 → 鎖持有 → 連線池耗盡 → 全站掛）。外部呼叫放 transaction 前後或丟 job。
 3. 冪等：見 §2.1 完整規格（表結構、TTL、回放語義、錯誤碼、參數指紋）；checkout 提交、webhook 接收、金流回調、**退款、庫存調整、訂單取消**必掛。
 4. MySQL 全庫 `utf8mb4` + `utf8mb4_0900_ai_ci`（商品標題會有 emoji 與中文）。
@@ -119,7 +130,11 @@ end
 **做法**（三板斧，按優先序）：
 1. **條件式 UPDATE**（首選，無鎖等待）：`UPDATE ... SET x = x - n WHERE x >= n`，看 affected rows 判成敗——庫存、折扣使用次數、餘額全用這招。
 2. **行鎖**（需要讀-算-寫的複合操作）：`SELECT ... FOR UPDATE`，鎖的順序全專案統一（先 shop 級資源再明細，避免死鎖）；鎖內不做任何 IO。
-3. **唯一索引**（最後防線）：即使代碼有 bug，DB 也擋住重複（訂單號、redemption、SKU）。
+3. **唯一索引**（最後防線）：即使代碼有 bug，DB 也擋住重複（訂單號、redemption、handle per shop）。
+   <!-- 2026-08-15 修正（63 §L-1），原文結尾是「訂單號、redemption、SKU」。
+        SKU 是**軟唯一**（`docs/research/61` §1.5：偵測重複顯示警告但不阻擋），
+        用它當「最後防線」的例子會把一條防線架在不該有防線的地方。詳見 §2 第 1 點的批註。
+        🔴 **三板斧本身沒有改**——錯的只是第 3 板斧的舉例，不是它的適用性。 -->
 
 **坑**：
 - MySQL REPEATABLE READ 下的 gap lock 容易造成插入死鎖——高併發插入的表（events、line_items）考慮把該連線改 READ COMMITTED（Shopify 也是這麼做的，見 08）。
