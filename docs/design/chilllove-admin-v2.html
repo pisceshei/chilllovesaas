@@ -1752,7 +1752,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <button class="m-hover icon-btn top-ai" title="AI 助理" aria-label="AI 助理" onclick="go('home');setTimeout(()=>aiInput.focus(),200)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M18 15l.9 2.4L21 18.3l-2.1.9L18 21.6l-.9-2.4-2.1-.9 2.1-.9z"/></svg></button>
     <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="m-hover icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
-    <button class="store-chip" data-doc="storechip" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
+    <button class="store-chip" data-doc="storechip" onclick="storeSwitch()" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
   </div>
 </header>
 
@@ -1782,8 +1782,12 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     </div>
     <div class="ai-reply" id="aiReply"></div>
     <div class="task-chips" data-doc="taskchips">
-      <button class="task-chip" onclick="go('orders')">為訂單出貨 <span class="n num">5</span></button>
-      <button class="task-chip" onclick="go('products')">補貨低庫存商品 <span class="n num">2</span></button>
+      <!-- 🔴 數字由列表的**同一個 predicate** 算出，不寫死（89 §3 #1）。
+           該卡自己的 DOCS 條目寫著「數字必須與對應列表實際筆數一致（對帳原則）」，
+           而原本 chip 是靜態 HTML：訂單寫死 5（真值 4——5 是連已取消的那筆一起算，
+           正是列表刻意排除的），商品寫死 2（今天恰好對，PRODUCTS 一改就飄）。 -->
+      <button class="task-chip" onclick="go('orders')">為訂單出貨 <span class="n num" id="taskUnful">—</span></button>
+      <button class="task-chip" onclick="go('products')">補貨低庫存商品 <span class="n num" id="taskLowStock">—</span></button>
     </div>
     <div class="setup-grid" data-doc="setup">
       <div class="card setup-card">
@@ -1865,7 +1869,10 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     </div>
     <div class="card">
       <div class="listbar">
-        <button class="view-chip">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="view-chip" data-doc="views" onclick="ddToggle(event,'prodViewMenu')">全部 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="view-menu" id="prodViewMenu" role="menu" aria-label="檢視">
+          <button onclick="toast('Demo：檢視＝全部（本原型商品頁的 saved views 尚未展開，見 89 §2）')"><span class="chk">✓</span>全部</button>
+          <div class="sep"></div><button onclick="lsaveViewDemo()">＋ 將目前篩選另存為檢視</button></div>
         <div class="filterbar m-focus">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#67696e" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
           <input id="prodSearch" placeholder="搜尋商品、SKU…">
@@ -1934,8 +1941,8 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <div class="ana-grid">
       <div class="card stat-card"><div class="t-label">總銷售額</div><div class="t-value num" data-money="10193000"></div><span class="t-delta up">↑ 18.2% <span class="t-vs">vs 前期</span></span></div>
       <div class="card stat-card"><div class="t-label">訂單</div><div class="t-value num">240</div><span class="t-delta up">↑ 6.1% <span class="t-vs">vs 前期</span></span></div>
-      <div class="card stat-card"><div class="t-label">回頭客比率</div><div class="t-value num">18.3%</div><span class="t-delta up">↑ 2.1pt <span class="t-vs">vs 前期</span></span></div>
-      <div class="card stat-card"><div class="t-label">平均訂單價值</div><div class="t-value num" data-money="42471"></div><span class="t-delta up">↑ 11.4% <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">回頭客比率</div><div class="t-value num" id="anaReturning">—</div><span class="t-delta up">↑ 2.1pt <span class="t-vs">vs 前期</span></span></div>
+      <div class="card stat-card"><div class="t-label">平均訂單價值</div><div class="t-value num" id="anaAov">—</div><span class="t-delta up">↑ 11.4% <span class="t-vs">vs 前期</span></span></div>
     </div>
     <div class="chart2">
       <div class="card chart-card">
@@ -2584,6 +2591,65 @@ function custHover(name){
 document.getElementById('orderSearch').addEventListener('input',renderOrders);
 function toggleAll(cb){document.querySelectorAll('.rowcb').forEach(x=>x.checked=cb.checked);bulk();}
 
+/* ══════════ 89 §2 死控件補接（#5–#13）══════════════════════════════════
+   共同判準：**控件畫出來就要接上行為，或明說它是示意**。
+   最糟的形態不是「沒反應」，是**回報成功但什麼都沒讀**——使用者以為設定生效了。
+   下面每一支都真的把對應控件的值讀出來，並在 toast 裡把讀到的內容講出來，
+   這樣「有沒有真的讀到」在畫面上就看得見。 */
+
+/* #5 topbar 商店切換器（全站每一頁都在，原本完全沒有 onclick）。 */
+function storeSwitch(){
+  openGen({title:'切換商店／帳號',pad:false,body:`
+    <button class="pick" onclick="closeGen();toast('已在目前商店：CHILL LOVE（demo）')">
+      <span class="thumb" style="background:var(--brand)"></span>
+      <span class="pk-i"><b>CHILL LOVE</b><span>chill-love-demo.myshopify.com・目前</span></span>
+      <span class="badge b-success"><span class="pip full"></span>目前</span></button>
+    <div style="padding:var(--sp-300)">
+      <button class="btn btn-sec btn-sm" onclick="closeGen();toast('Demo：所有商店清單（組織層，見 71 §A G24）')">檢視所有商店</button>
+      <button class="btn btn-ghost btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();openSettings('account')">帳號設定</button></div>`});
+}
+
+/* #6 訂單時間軸的表情／提及——把字元插進備註輸入框並把游標留在後面。 */
+function tcInsert(kind){
+  const ta=document.querySelector('.tc-box textarea, #tcNote, .timeline textarea');
+  const txt=kind==='mention'?'@':'🙂';
+  if(!ta){toast('找不到備註輸入框');return;}
+  const at=ta.selectionStart??ta.value.length;
+  ta.value=ta.value.slice(0,at)+txt+ta.value.slice(ta.selectionEnd??at);
+  ta.focus();ta.selectionStart=ta.selectionEnd=at+txt.length;
+  if(kind==='mention')toast('輸入同事名字可提及對方（Demo：不寄通知）');
+}
+
+/* #7 商品列表的「另存檢視」——商品頁尚未接通用清單引擎，故明說是示意。 */
+function lsaveViewDemo(){toast('Demo：商品頁的 saved views 尚未接上通用清單引擎（89 §2 #7）');}
+
+/* #10 建立市場：**真的讀勾選的國家**（原本勾了哪些從頭到尾沒人讀）。 */
+function marketNewRun(){
+  const picked=[...document.querySelectorAll('#genBody .mkt-country')].filter(x=>x.checked).map(x=>x.value);
+  const name=(document.querySelector('#genBody input[data-val*="req"]')||{}).value||'';
+  if(!picked.length){toast('請至少勾選一個國家／地區');return;}
+  closeGen();
+  toast(`已建立市場（草稿）：${name||'未命名'}・${picked.length} 個國家（${picked.join('、')}）——設定網域與幣別後即可啟用`);
+}
+
+/* #11 目錄：**真的讀發布開關**（原本 5 個開關關掉也照樣說「已儲存」）。 */
+function catalogSaveRun(){
+  const tg=[...document.querySelectorAll('#genBody .cat-pub')];
+  const off=tg.filter(x=>!x.checked).map(x=>x.dataset.pn);
+  closeGen();
+  toast(off.length?`已儲存目錄：${tg.length-off.length} 項發布、${off.length} 項取消發布（${off.join('、')}）`
+                 :`已儲存目錄：${tg.length} 項全部發布`);
+}
+
+/* #12 匯出報告：**真的讀格式與範圍**（原本 12 顆 radio 選了會亮但沒人讀，
+   是「看起來活的死控件」——比完全沒反應更難被人工稽核抓到）。 */
+function repExportRun(){
+  const g=n=>(document.querySelector(`#genBody input[name="${n}"]:checked`)||{}).value||'—';
+  const fmt=g('expfmt'),sc=g('expsc');
+  closeGen();
+  toast(`已開始匯出：${fmt}・${sc}——完成後在通知中心取得檔案`);
+}
+
 /* ── 商品列表的批次選取（89 §1.4／83 PR-01）─────────────────────────────
    🔴 與訂單頁是**兩套**：本原型所有頁面同時在 DOM 裡，若共用 .rowcb／#bulkbar，
    bulk() 會把訂單列一起數進來。選取器一律限定在 #prodTable 內。
@@ -2835,6 +2901,12 @@ function foFulfillOK(orderId,foId){
   const fo=foFind(orderId,foId);
   /* 全部剩餘品項一次出完 → T9：CLOSED。部分出貨（數量制）狀態不變，本原型只做全出。 */
   fo.status='CLOSED';fo.tracking={carrier:c.value.trim(),no:t.value.trim()};
+  /* 🔴 出貨後**必須把訂單層狀態物化回 o.ful**（89 §3 #5）。
+     「未出貨」檢視讀的是 `o.ful`（A:2546），而出貨狀態 badge 讀的是 `foOrderStatus()`——
+     原本這裡只改 FO 的 status、從不回寫 `o.ful` ⇒ 出貨完成後該列**還留在「未出貨」檢視裡**，
+     但同一橫列的 badge 已經顯示「已出貨」。同一列自相矛盾，是最容易被當成「看錯了」的形態。
+     物化來源只有一個：`foOrderStatus()`。 */
+  const _o=ORDERS.find(x=>x.id===orderId); if(_o)_o.ful=foOrderStatus(orderId);
   foLog(orderId,`已對 #${fo.id}（${fo.assignedLocation}）建立出貨：${c.value.trim()} ${t.value.trim()}`);
   closeGen();foRepaint(orderId);
   toast(`履行單 #${fo.id} 已出貨——訂單層狀態物化為「${{unful:'未出貨',partial:'部分出貨',ful:'已出貨'}[foOrderStatus(orderId)]}」`);
@@ -2955,8 +3027,8 @@ function renderOrderDetail(){
           <div class="tc-main">
             <textarea id="tlInput" rows="1" placeholder="撰寫備註…"></textarea>
             <div class="tc-tools">
-              <button class="m-hover icon-btn" title="表情" aria-label="表情">☺</button>
-              <button class="m-hover icon-btn" title="提及" aria-label="提及">@</button>
+              <button class="m-hover icon-btn" title="表情" aria-label="表情" onclick="tcInsert('emoji')">☺</button>
+              <button class="m-hover icon-btn" title="提及" aria-label="提及" onclick="tcInsert('mention')">@</button>
               <button class="btn btn-sec btn-sm" onclick="postComment()">發佈</button>
             </div>
           </div>
@@ -3575,17 +3647,73 @@ const HM_METRICS=[
  {id:'orders',ic:'∿',name:'隨時間的訂單數',type:'line',fmt:'int',calc:'期間內成立的訂單數'},
  {id:'conv_rate',ic:'∿',name:'隨時間的轉換率',type:'line',fmt:'pct',calc:'完成結帳的工作階段 ÷ 全部工作階段。漏斗三階段：加入購物車 → 到達結帳（checkout 開始載入即計入；排除草稿單/換貨/POS）→ 完成結帳'},
  {id:'gross_sales',ic:'∿',name:'隨時間變化的銷售總額',type:'line',fmt:'money',calc:'商品價格 × 數量（扣除稅額、運費、折扣和撤銷款項前）＝毛銷售額'}];
+/* 折扣總額——AOV 與 sales_breakdown **共用同一個常數**（鐵律 7）。 */
+const HM_DISCOUNTS=428000;
 const HM_DATA={sessions:{v:8600,cur:HM_SERIES(1,280,90),prev:HM_SERIES(2,240,70)},total_sales:{v:10193000,cur:HM_SERIES(3,330000,120000),prev:HM_SERIES(4,300000,90000)},
  conv_rate:{v:'2.8%',cur:HM_SERIES(5,28,9),prev:HM_SERIES(6,25,7)},orders:{v:240,cur:HM_SERIES(7,8,4),prev:HM_SERIES(8,7,3)},
- aov:{v:42470,cur:HM_SERIES(9,42000,6000),prev:HM_SERIES(10,40000,5000)},gross_sales:{v:10764000,cur:HM_SERIES(11,350000,110000),prev:HM_SERIES(12,320000,90000)},
+ /* 🔴 AOV 由公式導出，不寫死（89 §3 #9）。原本寫死 42470＝total_sales/orders，
+    但同一份資料的 HM_METRICS.aov.calc 寫的是「（銷售總額 − 折扣）÷ 訂單數」——
+    **它違反了它自己的 tooltip**。而且方向正好是 G25／R11-V13 點名的那個坑：
+    本尊的 AOV 分子刻意排除 post-order adjustments，**不與 net_sales 同源**。
+    寫死的那個值等於「拿 total_sales 當分子」，正是規格說不可以的做法。 */
+ aov:{get v(){return Math.round((HM_DATA.gross_sales.v-HM_DISCOUNTS)/HM_DATA.orders.v);},cur:HM_SERIES(9,42000,6000),prev:HM_SERIES(10,40000,5000)},gross_sales:{v:10764000,cur:HM_SERIES(11,350000,110000),prev:HM_SERIES(12,320000,90000)},
  returning:{v:'31%',cur:HM_SERIES(13,31,6),prev:HM_SERIES(14,28,5)},search_conv:{v:'4.1%',cur:HM_SERIES(15,41,8),prev:HM_SERIES(16,37,7)},
  rev_count:{v:12,cur:HM_SERIES(17,1,2),prev:HM_SERIES(18,1,1)},rev_rate:{v:'1.2%',cur:HM_SERIES(19,12,4),prev:HM_SERIES(20,10,3)},rev_amount:{v:239000,cur:HM_SERIES(21,8000,5000),prev:HM_SERIES(22,7000,4000)},
  pos_loc:{v:0,rows:[['旗艦店（銅鑼灣）',0],['快閃店（尖沙咀）',0]]},pos_staff:{v:0,rows:[['KEN',0],['MIA',0]]},
  by_channel:{v:10193000,rows:[['線上商店',9737000],['購買按鈕',456000]]},by_product:{v:240,rows:[['奶茶色寬版帽T',96,3],['羅紋針織背心',54,1],['寬鬆直筒牛仔褲',42,2]]},
- sales_breakdown:{v:10193000,rows:[['小計（銷售總額）',10764000],['折扣',-428000],['銷售撤銷款項',-239000],['運費',96000],['稅額（HK 無銷售稅）',0],['費用',0],['關稅',0],['總銷售額',10193000]]}};
+ sales_breakdown:{v:10193000,rows:[['小計（銷售總額）',10764000],['折扣',-HM_DISCOUNTS],['銷售撤銷款項',-239000],['運費',96000],['稅額（HK 無銷售稅）',0],['費用',0],['關稅',0],['總銷售額',10193000]]}};
 let HM_SLOTS=['sessions','total_sales','sales_breakdown','conv_rate'],HM_SEL=-1,HM_PICK=-1;
 function hmFmt(m,v){return m.fmt==='money'?money(v):m.fmt==='pct'?(typeof v==='string'?v:v+'%'):Number(v).toLocaleString();}
-function hmVal(id){const m=HM_METRICS.find(x=>x.id===id),d=HM_DATA[id]||{v:0};return hmFmt(m,d.v);}
+/* 🔴 指標值**真的受「管道」下拉影響**（89 §3 #6）。
+   原本 HM_CH／HM_RANGE 只出現在標籤與高亮，`HM_DATA` 不帶這兩個維度 ⇒
+   把管道切到門市 POS，總銷售額仍顯示全店額，而同一份資料自己說 POS = 0。
+   而該卡的 DOCS 明寫「受 管道×期間 兩全域下拉過濾」——**DOCS 超前於實作**。
+   現在：選定單一管道時，金額與訂單數依 by_channel 的佔比縮放；
+   **無法歸因到單一管道的指標一律顯示「—」**，不拿全店值冒充。
+   ⚠️ 期間（HM_RANGE）仍未實作，見 89 §6.4 的誠實聲明。 */
+function hmChShare(){
+  if(HM_CH==='所有管道')return 1;
+  const row=HM_DATA.by_channel.rows.find(r=>r[0]===HM_CH);
+  return row?row[1]/HM_DATA.by_channel.v:0;
+}
+/* 可依管道縮放的指標；其餘（比率、工作階段…）在單一管道下無資料。 */
+const HM_CH_SCALABLE=new Set(['total_sales','gross_sales','orders','by_product','rev_amount','rev_count']);
+
+/* 🔴 期間維度（89 §3 #6 的另一半）。
+   本輪先只做了管道就停手，結果是**兩顆外觀相同的下拉並排、一顆會動一顆不會**——
+   使用者試了管道看到數字變了，就會合理推論期間也會動。
+   那正是本輪一直在修的「假成功」形態，而且是**這次改動新造成的**：
+   兩顆都不動時，試過一顆的人會知道兩顆都是裝飾；一顆動了之後反而更容易被騙。
+   ⇒ 照管道那一套做完：能算的用序列真的算，**算不出來的顯示「—」，不拿全期值冒充**。
+
+   `HM_DATA[id].cur` 是 30 點的日序列、`v` 是 30 天總計。
+   以 `v / sum(cur)` 校準後取尾 N 點，得到該期間的值。 */
+const HM_RANGE_DAYS={'今天':1,'昨天':1,'過去 7 天':7,'過去 30 天':30};
+function hmRangeSlice(d,id){
+  const days=HM_RANGE_DAYS[HM_RANGE];
+  if(days===undefined)return null;                 /* 期初至今／季度／黑五…：無資料 */
+  if(days===30||!Array.isArray(d.cur)||!d.cur.length)return d.v;
+  const tot=d.cur.reduce((a,x)=>a+x,0)||1;
+  const seg=HM_RANGE==='昨天'?d.cur.slice(-2,-1):d.cur.slice(-days);
+  return Math.round(d.v*(seg.reduce((a,x)=>a+x,0)/tot));
+}
+function hmVal(id){
+  const m=HM_METRICS.find(x=>x.id===id),d=HM_DATA[id]||{v:0};
+  let v=d.v;
+  /* ── 期間維度 ── 只對「可累加」的數值指標套用；比率/字串維持原值 */
+  if(HM_RANGE!=='過去 30 天'&&typeof v==='number'){
+    const r=hmRangeSlice(d,id);
+    if(r===null)return '—';                        /* 本原型無此期間的資料 */
+    v=r;
+  }
+  /* ── 管道維度 ── */
+  if(HM_CH!=='所有管道'){
+    if(id==='by_channel')return hmFmt(m,(HM_DATA.by_channel.rows.find(r=>r[0]===HM_CH)||[,0])[1]);
+    if(!HM_CH_SCALABLE.has(id))return '—';
+    if(typeof v==='number')v=Math.round(v*hmChShare());
+  }
+  return hmFmt(m,v);
+}
 function hmSpark(id){const d=HM_DATA[id];if(!d||!d.cur)return '<svg width="56" height="20"></svg>';
   const s=d.cur.filter((_,i)=>i%3===0),min=Math.min(...s),max=Math.max(...s);
   const pts=s.map((v,i)=>[i*(56/(s.length-1)),17-((v-min)/(max-min||1))*13+1.5]);
@@ -3608,7 +3736,10 @@ function hmScopeDate(){
 }
 function hmScopeChannel(){
   const wrap=document.getElementById('pulseCardWrap');HM_PICK=-1;
-  const C=['所有管道','線上商店','AI 代理','門市 POS'];
+  /* 🔴 管道清單由 by_channel **導出**，不硬編（89 §3 #6／#8）。
+     原本硬編「線上商店／AI 代理／門市 POS」，但同一份資料的 by_channel 只有
+     線上商店與購買按鈕，且 `pos_loc.v = 0`——選單裡有兩個資料裡不存在的管道。 */
+  const C=['所有管道',...HM_DATA.by_channel.rows.map(r=>r[0])];
   wrap.innerHTML=`<div class="card card-pad" data-doc="hm-scope-channel" style="max-width:280px;margin-bottom:var(--sp-500)">
     <div role="listbox" aria-label="銷售管道">${C.map(c=>`<div role="option" aria-selected="${HM_CH===c}" onclick="HM_CH='${c}';renderPulse()" style="padding:var(--sp-100) var(--sp-200);cursor:pointer;border-radius:var(--r-200)${HM_CH===c?';background:rgba(26,28,30,.05);font-weight:600':''}">${c}</div>`).join('')}</div></div>`;
 }
@@ -3679,6 +3810,20 @@ function toggleAnaTable(){
   const t=document.getElementById('anaTable');t.classList.toggle('show');
   document.getElementById('anaToggle').textContent=t.classList.contains('show')?'隱藏數據表格':'檢視數據表格';
 }
+/* ══════════ 89 §3：把寫死的數字改成由來源導出（鐵律 7 數字同源）══════════
+   判準：**同一個指標只能有一個計算處**。畫面上任何一個數字，
+   要嘛來自資料、要嘛來自另一個數字——不得再出現第三份「看起來也對」的常數。 */
+function paintDerivedNumbers(){
+  /* #1 首頁任務 chip：用**列表自己的 predicate**，不是另外數一次 */
+  const unful=ORDERS.filter(o=>o.ful==='unful'&&!o.cancelled).length;
+  const low=PRODUCTS.filter(p=>p.s==='active'&&p.inv<10).length;
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('taskUnful',unful); set('taskLowStock',low);
+
+  /* #7／#9 分析頁統計卡：回頭客比率與 AOV 一律引用 HM_DATA，不再各寫一份 */
+  set('anaReturning',HM_DATA.returning.v);
+  set('anaAov',money(HM_DATA.aov.v));
+}
 function drawAnalytics(){
   const svg=document.getElementById('anaChart');
   if(!svg||!svg.clientWidth)return;
@@ -3710,7 +3855,13 @@ function drawAnalytics(){
   };
   svg.onmouseleave=()=>{tip.style.opacity=0;svg.querySelector('#anaX').setAttribute('opacity',0);svg.querySelector('#anaDot').setAttribute('opacity',0);};
   document.getElementById('anaTableBody').innerHTML=days.map((d,i)=>`<tr><td>${d}</td><td class="num">${money(sales[i])}</td></tr>`).join('');
-  const chan=[["線上商店",9060000],["AI 代理",955000],["門市 POS",178000]];   /* HKD cents，合計≈salesTotal */
+  /* 🔴 管道拆解**只有一份**，取自 HM_DATA.by_channel（89 §3 #8）。
+     原本分析頁自帶一份 [線上商店 9,060,000／AI 代理 955,000／門市 POS 178,000]，
+     與 pulse 的 [線上商店 9,737,000／購買按鈕 456,000] **管道集合不同、線上商店差 677,000**，
+     而且那份的「門市 POS 178,000」與同一份資料裡的 `pos_loc.v = 0` 直接對撞。
+     兩份都內部自洽、加總都等於 salesTotal——**這正是同源鐵律要防的形態：
+     各自算得通，合起來對不上**。 */
+  const chan=HM_DATA.by_channel.rows.map(r=>[r[0],r[1]]);
   document.getElementById('chanBars').innerHTML=chan.map(([l,v])=>`
    <div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${v/chan[0][1]*100}%"></div></div><span class="hv num">${moneyC(v)}</span></div>`).join('');
   const prods=[["奶茶色寬版帽T",2405000],["水洗丹寧襯衫",1795000],["有機棉白T三件組",1372000],["燕麥色針織開衫",1030000],["帆布托特包",565000]];
@@ -4299,7 +4450,13 @@ function confirmDanger(title,msg,okLabel,fn,irr=true){
 
 /* ---------- Save bar ＋ 表單 dirty／驗證 ---------- */
 let FORM=null,navWarn=0;
-function formRead(el){const o={};[...el.querySelectorAll('[data-f]')].forEach((x,i)=>{o[i+':'+x.dataset.f]=x.type==='checkbox'?x.checked:x.value;});return o;}
+/* 🔴 radio 必須讀 `.checked` 不是 `.value`——radio 的 value 是**固定的**，
+   變的是哪一顆被選中。原本只特判 checkbox，於是**任何帶 data-f 的 radio
+   在髒狀態追蹤裡都是隱形的**：快照前後比對永遠相同，save bar 永遠不跳。
+   這不是某一頁的問題，是 formRead 從來不支援 radio（89 §2 #13 追查出的根因——
+   原始發現只說「Cookie 橫幅的 radio 沒有 data-f」，補上 data-f 之後才發現
+   **補了也沒用**，機制本身就漏接這個型別）。 */
+function formRead(el){const o={};[...el.querySelectorAll('[data-f]')].forEach((x,i)=>{o[i+':'+x.dataset.f]=(x.type==='checkbox'||x.type==='radio')?x.checked:x.value;});return o;}
 function formInit(sel,opt){
   const el=document.querySelector(sel);if(!el)return;
   FORM={el,save:opt&&opt.save,discard:opt&&opt.discard,snap:formRead(el)};
@@ -4311,7 +4468,7 @@ function formSetDirty(d){document.getElementById('saveBar').classList.toggle('sh
 function formDirty(){return document.getElementById('saveBar').classList.contains('show');}
 function formDiscard(){
   if(!FORM)return;
-  [...FORM.el.querySelectorAll('[data-f]')].forEach((x,i)=>{const v=FORM.snap[i+':'+x.dataset.f];if(x.type==='checkbox')x.checked=v;else x.value=v;});
+  [...FORM.el.querySelectorAll('[data-f]')].forEach((x,i)=>{const v=FORM.snap[i+':'+x.dataset.f];if(x.type==='checkbox'||x.type==='radio')x.checked=v;else x.value=v;});
   FORM.el.querySelectorAll('.field.bad').forEach(f=>f.classList.remove('bad'));
   formSetDirty(false);if(FORM.discard)FORM.discard();
   toast('已捨棄變更，還原為上次儲存的內容');
@@ -4435,7 +4592,16 @@ function setAfterRender(){
    （skeleton 350ms → 成功；可切換 空／錯誤 兩態展示）
    ================================================================== */
 const LS={};
-function lstate(k){return LS[k]??={q:'',view:0,sort:-1,dir:1,page:1,sel:new Set(),phase:'load',f:{}};}
+/* `hidden`＝這個檢視隱藏了哪些欄（存的是 cfg.cols 的**原始索引**）。
+   🔴 存索引不存欄名：s.sort 也是原始索引，兩者必須指向同一套座標，
+   否則隱藏一欄之後排序會錯位到別欄。 */
+function lstate(k){return LS[k]??={q:'',view:0,sort:-1,dir:1,page:1,sel:new Set(),phase:'load',f:{},hiddenByView:{}};}
+/* 🔴 隱藏欄是**逐檢視**的，不是逐清單。
+   41 §1.3 逐字：「欄位設定存在檢視上、不影響其他檢視」，modal 的說明文字也這樣寫。
+   原本存成 `s.hidden`（掛在 LS[k] 上）⇒ 在「全部」檢視隱藏兩欄，切到「已訂閱」
+   檢視那兩欄也不見了，**與畫面上自己寫的說明相反**（PR #27 的 Codex review 指出）。
+   `lsetView()` 只改 s.view，所以只要把集合按 view 分開存，切檢視自然就各自獨立。 */
+function lHidden(s){return (s.hiddenByView[s.view]??=new Set());}
 function listPage(cfg){
   const s=lstate(cfg.key);s.cfg=cfg;
   URLQ.lk[current]=cfg.key;      /* 53號 P0-18：登記「這一頁的清單狀態要進 URL」*/
@@ -4450,7 +4616,9 @@ function listPage(cfg){
      </select>`).join('');
   const cols=cfg.cols;
   const th=(cfg.bulk?'<th style="width:36px"><input type="checkbox" class="cb" id="cba-'+cfg.key+'" onclick="lall(\''+cfg.key+'\',this)" aria-label="全選"></th>':'')
-   +cols.map((c,i)=>`<th class="${c.right?'right ':''}${c.sort!==false?'sortable ':''}${s.sort===i?'sorted':''}"${c.sort!==false?` onclick="lsort('${cfg.key}',${i})" role="columnheader"`:''}><span class="th-l">${c.l}</span>${c.sort!==false?`<span class="sar" aria-hidden="true">${s.sort===i?(s.dir>0?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('');
+   /* 🔴 用 map 後判斷 hidden 回空字串，**不用 filter**——filter 會重排索引，
+      而 lsort(key,i) 傳的必須是 cfg.cols 的原始索引（見 lstate 的註釋）。 */
+   +cols.map((c,i)=>lHidden(s).has(i)?'':`<th class="${c.right?'right ':''}${c.sort!==false?'sortable ':''}${s.sort===i?'sorted':''}"${c.sort!==false?` onclick="lsort('${cfg.key}',${i})" role="columnheader"`:''}><span class="th-l">${c.l}</span>${c.sort!==false?`<span class="sar" aria-hidden="true">${s.sort===i?(s.dir>0?'▲':'▼'):'⇅'}</span>`:''}</th>`).join('');
   const out=`${cfg.noHead?'':`<div class="page-head"><h1>${cfg.title}</h1>${cfg.sub?`<span class="mut3" style="font-size:var(--t-xs)">${cfg.sub}</span>`:''}<div class="head-actions">${acts}</div></div>`}
   ${cfg.banner||''}
   <div class="card" data-doc="${cfg.doc||''}">
@@ -4490,7 +4658,7 @@ function lrows(k){
 }
 function lbody(k){
   const s=lstate(k),c=s.cfg,tb=document.getElementById('tby-'+k);if(!tb)return;
-  const span=c.cols.length+(c.bulk?1:0);
+  const span=(c.cols.length-lHidden(s).size)+(c.bulk?1:0);   /* 空態/骨架的 colspan 要跟著隱藏欄變 */
   if(s.phase==='load'){tb.innerHTML=[...Array(Math.min(5,c.rows.length||3))].map(()=>
     `<tr class="norow"><td colspan="${span}"><div class="skeleton" style="width:${55+Math.floor(Math.random()*30)}%"></div></td></tr>`).join('');
     document.getElementById('pg-'+k).innerHTML='';return;}
@@ -4509,7 +4677,7 @@ function lbody(k){
     const id=c.id?c.id(r):String((s.page-1)*per+i);
     return `<tr${c.onRow?` onclick="${c.onRow(r)}"`:''}${c.rowClass?` class="${c.rowClass(r)}"`:''}>
       ${c.bulk?`<td onclick="event.stopPropagation()"><input type="checkbox" class="cb" data-id="${H(id)}" ${s.sel.has(id)?'checked':''} onchange="lsel('${k}','${H(id)}',this.checked)" aria-label="選取"></td>`:''}
-      ${c.cols.map(col=>`<td class="${col.right?'right':''}">${col.c(r)}</td>`).join('')}</tr>`;}).join('');
+      ${c.cols.map((col,i)=>lHidden(s).has(i)?'':`<td class="${col.right?'right':''}">${col.c(r)}</td>`).join('')}</tr>`;}).join('');
   document.getElementById('pg-'+k).innerHTML=all.length>per
     ?`<div class="pagination"><button class="pg" ${s.page===1?'disabled aria-disabled="true"':''} onclick="lpage('${k}',-1)" aria-label="上一頁">‹</button>
       <span class="mut3 num" style="align-self:center;padding:0 var(--sp-200);font-size:var(--t-xs)">第 ${s.page} / ${pages} 頁・共 ${all.length} 筆</span>
@@ -4548,11 +4716,32 @@ function lbulkAct(k,i){
   const run=()=>{if(b[2])b[2](n,[...s.sel]);else toast(`Demo：對 ${n} 筆執行「${b[0]}」${n>50?'（>50 筆轉背景任務並寄結果通知）':''}`);s.sel.clear();lrender();};
   if(b[3]==='danger')confirmDanger(b[0],`將對已選取的 <b class="num">${n}</b> 筆資料執行「${b[0]}」。`,b[0],run);else run();
 }
+/* 欄位設定（89 §2 #4）。
+   🔴 原本：checkbox 一律 `checked`、**沒有 onchange**、`c.cols` 不回寫，
+      按「套用」卻 toast「Demo：欄位設定已存回目前檢視」——**假的成功訊息**。
+      實測影響 **17 個清單頁**（drafts/cols/cust/seg/disc/gift/mobj/blog/mkt/cat/rep/
+      xfer/pages/aband/slab/camp/camp0），因為它們共用這一支。
+   🔴 假成功訊息比「沒反應」更糟：沒反應時使用者知道要回報，
+      回報成功時使用者以為設定生效了，之後看到的每一張表都在騙他。 */
 function lcolumns(k){
-  const c=lstate(k).cfg;
+  const s=lstate(k),c=s.cfg;
   openGen({title:'欄位設定',body:`<p class="help" style="margin-bottom:var(--sp-200)">勾選要顯示的欄位。欄位設定儲存在目前檢視上，不影響其他檢視（41 §1.3：僅訂單／庫存／轉移／元物件四頁支援）。</p>
-    ${c.cols.map(col=>`<label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb" checked> ${col.l}</label>`).join('')}`,
-    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('Demo：欄位設定已存回目前檢視')">套用</button>`});
+    ${c.cols.map((col,i)=>`<label class="inline-lbl" style="padding:var(--sp-150) 0"><input type="checkbox" class="cb lcol-${k}" data-ci="${i}" ${lHidden(s).has(i)?'':'checked'}> ${col.l}</label>`).join('')}
+    <p class="help" id="lcolWarn" hidden style="color:var(--sem-caution-text)">至少要保留一欄。</p>`,
+    foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="lcolumnsApply(${JQ(k)})">套用</button>`});
+}
+/* 真的回寫並重繪；全部取消勾選時擋下（不能有零欄的表）。 */
+function lcolumnsApply(k){
+  const boxes=[...document.querySelectorAll('#genBody .lcol-'+k)];
+  const keep=boxes.filter(b=>b.checked);
+  if(!keep.length){const w=document.getElementById('lcolWarn');if(w)w.hidden=false;return;}
+  const s=lstate(k);
+  s.hiddenByView[s.view]=new Set(boxes.filter(b=>!b.checked).map(b=>+b.dataset.ci));
+  /* 隱藏了正在排序的那一欄 ⇒ 取消排序，否則會出現「看不到的欄在決定順序」 */
+  if(s.sort>=0&&lHidden(s).has(s.sort)){s.sort=-1;s.dir=1;}
+  closeGen();
+  lrender();
+  toast(lHidden(s).size?`已套用欄位設定（顯示 ${keep.length} 欄、隱藏 ${lHidden(s).size} 欄）——僅影響目前檢視`:'已顯示全部欄位');
 }
 function lsaveView(k){
   openGen({title:'另存為檢視',body:F('檢視名稱','<input class="input" id="nvName" placeholder="例：本週未出貨" data-val="req|max:40">','沿用目前的搜尋、篩選與欄位設定；排序不隨檢視保存（41 §1.3）'),
@@ -6597,22 +6786,34 @@ function inventoryPage(){
     filters:[{k:'low',l:'庫存量',opts:['低於 10','已售罄'],test:(r,v)=>v==='低於 10'?r.inv<10:r.inv===0}],
     cols:[{l:'商品',c:r=>`<div style="display:flex;align-items:center;gap:var(--sp-200);font-weight:500"><span class="thumb" style="width:30px;height:30px;background:${r.g}"></span>${H(r.n)}</div>`,v:r=>r.n},
       {l:'SKU',c:r=>`<span class="mut mono">${r.sku}</span>`,v:r=>r.sku},
-      {l:'不可用',right:true,c:r=>`<button class="btn btn-ghost btn-sm" style="padding:0" onclick="event.stopPropagation();invUnavail('${H(r.n)}')">${r.i===0?2:0}</button>`,v:r=>0},
-      {l:'已佔用',right:true,c:r=>N(r.n.includes('帽T')?3:r.n.includes('針織')?1:0),v:r=>0},
+      /* 🔴 三個分量各自只有一個定義處，「現有」由它們相加導出（89 §3 #12）。
+         原本「不可用」「已佔用」「現有」各寫各的 inline 三元式，而「現有」只加了已佔用、
+         **漏掉不可用** ⇒ 六列有兩列直接違反橫幅上那行「現有 = 可用 + 已佔用 + 不可用」。
+         恆等式寫在畫面上就是規格，不能讓欄位自己破壞它。 */
+      {l:'不可用',right:true,c:r=>`<button class="btn btn-ghost btn-sm" style="padding:0" onclick="event.stopPropagation();invUnavail('${H(r.n)}')">${invUnavailN(r)}</button>`,v:r=>invUnavailN(r)},
+      {l:'已佔用',right:true,c:r=>N(invCommitN(r)),v:r=>invCommitN(r)},
       {l:'可用',right:true,c:r=>`<span style="display:inline-flex;align-items:center;gap:var(--sp-150);justify-content:flex-end"><input class="cellin num" style="text-align:right;max-width:64px" value="${INVMODE==='set'?r.inv:0}" aria-label="可用量" onclick="event.stopPropagation()" onchange="invEdit('${H(r.n)}',this.value)">${INVMODE==='set'?'':`<span class="mut3 num">→ ${r.inv}</span>`}</span>`,v:r=>r.inv},
-      {l:'現有',right:true,c:r=>N(r.inv+(r.n.includes('帽T')?3:0)),v:r=>r.inv},
+      {l:'現有',right:true,c:r=>N(r.inv+invCommitN(r)+invUnavailN(r)),v:r=>r.inv+invCommitN(r)+invUnavailN(r)},
       {l:'在途',right:true,c:r=>N(r.n.includes('亞麻')?40:0),v:r=>0}],
     rows:act,id:r=>r.sku,onRow:r=>`openProduct(${r.i})`,
     bulk:[['批次調整'],['轉移到其他地點']],
     note:'一切變動走 ledger（06 §5 恆等式）；原因枚舉 7 種；調整歷史保留 180 天。盤點無獨立頁——匯出 CSV 盤點後以 Set to + Cycle count 回寫。'});
 }
+/* 庫存三分量的**唯一定義處**——欄位、恆等式、明細彈窗全部由這裡導出。 */
+function invUnavailN(r){return r.i===0?2:0;}
+function invCommitN(r){return r.n.includes('帽T')?3:r.n.includes('針織')?1:0;}
+/* 🔴 明細必須與「不可用」欄的數字對得起來（89 §3 #12）。
+   原本寫死 draft reserve 1 ＋ return 1（合計 2），**連顯示 0 的那五列點開也跳「合計 2」**。
+   現在先取該列的 `invUnavailN()`，為 0 就顯示全 0 並明說原因。 */
 function invUnavail(n){
+  const r=(PRODUCTS||[]).find(x=>x.n===n)||{i:-1,n};
+  const total=invUnavailN(r);
+  const parts=total?[['草稿訂單預留 draft reserve',1],['退貨處理中 return in progress',1]]:[];
+  const rest=[['損壞 damaged',0],['品管保留 quality control',0],['App 保留',0]];
   openGen({title:'不可用庫存明細',body:`<div class="stack"><p class="help">${H(n)}・${INVLOC}</p>
-    <div class="kv"><span class="k">草稿訂單預留 draft reserve</span><span class="num">1</span></div>
-    <div class="kv"><span class="k">退貨處理中 return in progress</span><span class="num">1</span></div>
-    <div class="kv"><span class="k">損壞 damaged</span><span class="num">0</span></div>
-    <div class="kv"><span class="k">品管保留 quality control</span><span class="num">0</span></div>
-    <div class="kv"><span class="k">App 保留</span><span class="num">0</span></div></div>`});
+    ${[...parts,...rest].map(([k,v])=>`<div class="kv"><span class="k">${k}</span><span class="num">${v}</span></div>`).join('')}
+    <div class="kv" style="font-weight:600"><span class="k">合計</span><span class="num">${total}</span></div>
+    ${total?'':'<p class="help">此品項目前沒有不可用庫存。</p>'}</div>`});
 }
 function invEdit(n,v){toast(`${INVMODE==='set'?'將':'調整'}「${n}」在 ${INVLOC} 的可用量${INVMODE==='set'?'設為':''} ${v}——送出前需選原因`);}
 function invAdjust(){
@@ -6923,8 +7124,11 @@ function custContact(){
 }
 function custAddr(){
   openGen({title:'管理地址',pad:false,body:`
-    <button class="pick"><span class="pk-i"><b>${H(CUS.n)}・預設</b><span>${H(CUS.loc)}</span></span><span class="badge b-success"><span class="pip full"></span>預設</span></button>
-    <button class="pick"><span class="pk-i"><b>公司</b><span>台北市信義區松智路 100 號</span></span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toast('已設為預設地址')">設為預設</button></button>
+    <button class="pick" onclick="toast('Demo：編輯地址表單（89 §2 #9）')"><span class="pk-i"><b>${H(CUS.n)}・預設</b><span>${H(CUS.loc)}</span></span><span class="badge b-success"><span class="pip full"></span>預設</span></button>
+    <!-- 🔴 這一列原本寫成 <button class="pick"> 內再包一個 <button>——**HTML 不允許 button 巢狀**，
+         瀏覽器會提前閉合外層，「設為預設」被解析成地址卡的兄弟節點而不是子節點，版面與本尊不同
+         （89 §2 #9）。改成 div[role=button] 外殼，動作鈕才能合法地留在裡面。 -->
+    <div class="pick" role="button" tabindex="0" onclick="toast('Demo：編輯地址表單（89 §2 #9）')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"><span class="pk-i"><b>公司</b><span>台北市信義區松智路 100 號</span></span><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();toast('已設為預設地址')">設為預設</button></div>
     <div style="padding:var(--sp-300) var(--sp-300)"><button class="btn btn-sec btn-sm" onclick="toast('Demo：新增地址表單')">＋ 新增地址</button></div>`});
 }
 /* 71-R5 help：抵用金表單＝調整（入帳/扣帳）＋金額＋幣別＋通知顧客勾選；到期＝無到期日或日曆選擇
@@ -6966,7 +7170,13 @@ function segmentsPage(){
   return listPage({key:'seg',title:'分群',doc:'doc-m-segments',ph:'搜尋分群…',
     actions:[['範本庫','sec',"segTemplates()",'seg-tpl'],['建立分群','pri',"openSegment('new')",'seg-new']],
     cols:[{l:'名稱',c:r=>`<b>${H(r.t)}</b>`,v:r=>r.t},
-      {l:'顧客百分比',right:true,c:r=>`<span class="num">${r.pct}%</span>`,v:r=>r.pct},
+      /* 🔴 與詳情頁**同源**：都走 segMatch()（89 §3 #2–#4）。
+         原本列表讀寫死的 `r.pct`、詳情頁現算，同一個分群兩個數字
+         （sys2 列表 0% vs 詳情 43%、sys4 列表 33% vs 詳情 100%）。
+         另有第三份 `SEGMENTS[].n` **全檔無人讀**——死欄位，最容易被下一個人誤引用。
+         條件算不出來時顯示「—」，不退回一個看起來合理的數字。 */
+      {l:'顧客百分比',right:true,c:r=>{const m=segMatch(r.q);return `<span class="num">${m.ok?Math.round(m.list.length/CUSTOMERS.length*100)+'%':'—'}</span>`;},
+        v:r=>{const m=segMatch(r.q);return m.ok?m.list.length:-1;}},
       {l:'上次活動',c:r=>`<span class="mut">${r.use!=='—'?('用於 '+H(r.use)):('建立於 '+r.d)}</span>`,v:r=>r.d},
       {l:'建立者',c:r=>`<span class="mut">${H(r.by)}</span>`,v:r=>r.by},
       {l:'',c:r=>`<button class="btn btn-ghost btn-sm" aria-label="更多動作" onclick="event.stopPropagation();segRowMenu('${r.id}')">⋯</button>`,v:()=>''}],
@@ -7148,8 +7358,15 @@ function growthPage(){
       <span class="x" onclick="event.stopPropagation();this.closest('.ai-row').remove()" aria-label="關閉">✕</span></div>
     <div style="height:12px"></div>
     <div class="ana-grid g3" data-doc="gr-kpi">
-      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta"><span class="t-vs">佔商店總銷售額 ${money(3980000)} 的 24%</span></span></div>
-      <div class="card stat-card"><div class="t-label">依流量類型區分的工作階段</div><div class="t-value num">8,600</div><span class="t-delta"><span class="t-vs"><a style="cursor:pointer" onclick="toast('Demo：篩選 直接流量')">直接 5,340</a>・<a style="cursor:pointer" onclick="toast('Demo：篩選 自然流量')">自然 2,060</a>・付費 1,200</span></span></div>
+      <div class="card stat-card"><div class="t-label">歸因於行銷的銷售額</div><div class="t-value num">${money(955000)}</div><span class="t-delta"><span class="t-vs">佔商店總銷售額 ${money(salesTotal)} 的 ${Math.round(955000/salesTotal*100)}%</span></span></div>
+      <div class="card stat-card"><div class="t-label">依流量類型區分的工作階段</div><div class="t-value num">${CHS.reduce((a,c)=>a+c[1],0).toLocaleString()}</div><span class="t-delta"><span class="t-vs">${
+        /* 🔴 這一行的三個數字**必須由下面的管道卡導出**（89 §3 #10）。
+           原本副行寫死「直接 5,340・自然 2,060・付費 1,200」，而同一畫面下方的
+           管道卡（CHS）寫的是「直接 2,476」「自然搜尋 1,204」——
+           同一個「直接」在同一個畫面上有兩個數。兩組加總都是 8,600，
+           所以**各自看都對，合起來對不上**，正是鐵律 7 要防的形態。 */
+        CHS.map(c=>`<a style="cursor:pointer" onclick="toast('Demo：篩選 ${c[0]} 流量')">${c[0]} ${c[1].toLocaleString()}</a>`).join('・')
+      }</span></span></div>
       <div class="card stat-card"><div class="t-label">歸因於行銷的訂單數</div><div class="t-value num">140</div><span class="t-delta up">↑ 18% <span class="t-vs">vs 前期</span></span></div></div>
     <div style="height:16px"></div>
     <div class="ana-grid g3" data-doc="gr-channels">
@@ -7829,9 +8046,9 @@ function marketNew(){
     <div class="field"><label>包含的國家／地區</label>
       <div class="filterbar m-focus">${SEARCH_IC}<input placeholder="搜尋國家…" aria-label="搜尋國家"></div>
       <div style="max-height:150px;overflow:auto;border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-200);margin-top:var(--sp-150)">
-        ${['日本','韓國','新加坡','泰國','越南','澳洲'].map(c=>`<label class="inline-lbl" style="padding:var(--sp-100) 0"><input type="checkbox" class="cb"> ${c}</label>`).join('')}</div>
+        ${['日本','韓國','新加坡','泰國','越南','澳洲'].map(c=>`<label class="inline-lbl" style="padding:var(--sp-100) 0"><input type="checkbox" class="cb mkt-country" value="${c}"> ${c}</label>`).join('')}</div>
       <span class="hint">勾選的國家若已屬其他市場，會自動從原市場移出（需確認）</span></div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已建立市場（草稿）——設定網域與幣別後即可啟用')">建立市場</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="marketNewRun()">建立市場</button>`});
 }
 let MKT=null;
 function openMarket(id){MKT=MARKETS.find(m=>m.id===id);goDetail('d-market',{id});}
@@ -8268,9 +8485,9 @@ function catalogOpen(t){
     <div style="padding:var(--sp-300) var(--sp-400)" class="help">發布範圍＋價格。固定價優先於百分比調整；未列出的商品在此目錄不可售。</div>
     <table class="idx"><thead><tr><th>商品</th><th>發布</th><th class="right">基準價</th><th class="right">固定價</th></tr></thead><tbody>
     ${PRODUCTS.slice(0,5).map(p=>`<tr class="norow"><td>${H(p.n)}</td>
-      <td><input type="checkbox" class="tgl" checked aria-label="發布 ${H(p.n)}"></td>
+      <td><input type="checkbox" class="tgl cat-pub" data-pn="${H(p.n)}" checked aria-label="發布 ${H(p.n)}"></td>
       <td class="right num">${money(p.price)}</td><td class="right"><input class="cellin num" style="text-align:right" placeholder="—" aria-label="固定價"></td></tr>`).join('')}</tbody></table>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已儲存目錄價格')">儲存</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">關閉</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="catalogSaveRun()">儲存</button>`});
 }
 
 /* ==================================================================
@@ -8505,11 +8722,11 @@ function repRename(){
 function repExport(){
   const fmt=[['逗號分隔值 (CSV)','最適合匯入試算表'],['可延伸標記語言 (XML)',''],['JSON Lines (JSONL)',''],['Apache Parquet','']];
   const sc=[['資料查詢的所有結果','可能超過 1,000 列'],['僅限報表中顯示的結果','']];
-  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
+  const rad=(nm,arr)=>arr.map(([l,h],i)=>`<label class="radio-row"><input type="radio" name="${nm}" class="cl-radio" value="${H(l)}" ${i?'':'checked'}><span class="rr-t"><b>${l}</b>${h?`<span>${h}</span>`:''}</span></label>`).join('');
   openGen({title:'匯出報告',body:`<div class="stack">
     <div><p class="help" style="margin-bottom:var(--sp-200)">選取匯出格式：</p>${rad('expfmt',fmt)}</div>
     <div><p class="help" style="margin-bottom:var(--sp-200)">指定您要匯出的結果：</p>${rad('expsc',sc)}</div></div>`,
-   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="closeGen();toast('已開始匯出——完成後在通知中心取得檔案')">匯出</button>`});
+   foot:`<button class="btn btn-sec btn-sm" onclick="closeGen()">取消</button><button class="btn btn-pri btn-sm" style="margin-left:var(--sp-200)" onclick="repExportRun()">匯出</button>`});
 }
 function repDelete(){
   openGen({title:'刪除報告？',body:`<p>此動作無法復原</p>`,
@@ -8611,7 +8828,7 @@ function appsChannelPage(){
       <button class="btn btn-sec btn-sm" onclick="toast('Demo：開發應用程式（自訂 app 建立流程）')">開發應用程式</button>
       <button class="btn btn-pri btn-sm" onclick="toast('Demo：前往應用程式商店')">應用程式商店</button></div></div>
     <div class="card" data-doc="app-installed">
-      <div class="listbar"><button class="view-chip">已安裝 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button></div>
+      <div class="listbar"><button class="view-chip" onclick="toast('Demo：應用程式檢視切換（已安裝／全部）——本原型未展開，見 89 §2')">已安裝 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button></div>
       ${rows}</div>
     <div style="height:16px"></div>
     <div class="card card-pad" data-doc="app-channels"><h3>銷售管道</h3>
@@ -8660,7 +8877,15 @@ function livePage(){
         <div class="card chart-card"><div class="chart-head"><h3>新客與回頭客</h3></div>
           ${[['新客',5,71],['回頭客',2,29]].map(([l,n,w])=>`<div class="hbar-row"><span class="hl">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(n)}</span></div>`).join('')}</div>
         <div class="card chart-card"><div class="chart-head"><h3>依商品的總銷售額</h3></div>
-          ${[['奶茶色寬版帽T',100],['水洗丹寧襯衫',54],['帆布托特包',31]].map(([l,w])=>`<div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${w}%"></div></div><span class="hv num">${v(money(w*1130))}</span></div>`).join('')}</div>
+          ${(()=>{
+            /* 🔴 金額是資料，寬度是**由金額導出的顯示**——原本反過來把寬度百分比當成
+               金額乘數（`w*1130`），於是前三名商品加總 209,050 比同頁「總銷售額」113,000
+               還多 85%（89 §3 #11）。該卡的 DOCS 自己紅字寫著「不得兩頁各算各的」。
+               現在金額先給定、且三項加總**不得超過**同頁的 LIVE_TOTAL。 */
+            const rows=[['奶茶色寬版帽T',56000],['水洗丹寧襯衫',34000],['帆布托特包',23000]];
+            const max=Math.max(...rows.map(r=>r[1]));
+            return rows.map(([l,amt])=>`<div class="hbar-row"><span class="hl wide">${l}</span><div class="hbar-track"><div class="hbar" style="width:${Math.round(amt/max*100)}%"></div></div><span class="hv num">${v(money(amt))}</span></div>`).join('');
+          })()}</div>
       </div></div>`;
 }
 
@@ -9499,6 +9724,7 @@ CHILL LOVE 示範店經營本商店與網站…（自動化開啟時唯讀；內
 }
 /* Cookie 橫幅子頁——形態＝實測 /settings/privacy/consent-banner（整頁）：自動化卡＋雙 tab 預覽＋
    顏色三檔＋位置五選＋結帳頁 toggle（附轉換率警告）。 */
+let PVB_COLOR='淺色',PVB_POS='底部置中';   /* #13：Cookie 橫幅的顏色/位置，原本選了沒人讀 */
 let PVB_TAB='banner';
 function pvBannerOpen(){PVB_TAB='banner';setSubOpen('pv-banner',pvBannerPage());setAfterRender();}
 function pvBannerPage(){
@@ -9514,10 +9740,10 @@ function pvBannerPage(){
         <div class="rowflex" style="gap:var(--sp-200);margin-top:var(--sp-200)"><u>管理偏好</u><button class="btn btn-sec btn-sm">接受</button><button class="btn btn-sec btn-sm">拒絕</button></div></div>`
       :`<div class="help"><b>Cookie 偏好設定</b><br>分類同意面板（必要／分析／行銷／個人化各一開關）——本尊此 tab 內容未逐控件展開，登記 71-R3-V1 待複驗。</div>`}
     <h4 style="margin-top:var(--sp-300)">顏色</h4>
-    ${[['淺色',true],['深色',false],['自訂',false]].map(([l,on])=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbColor" ${on?'checked':''}><span>${l}</span></label>`).join('')}
+    ${[['淺色',true],['深色',false],['自訂',false]].map(([l,on])=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbColor" data-f="cbColor" value="${l}" ${on?'checked':''} onchange="PVB_COLOR=this.value;formCheck()"><span>${l}</span></label>`).join('')}
     <h4 style="margin-top:var(--sp-300)">位置</h4>
     <p class="mut" style="font-size:var(--t-xs)">選擇 Cookie 橫幅在網路商店中的顯示位置。</p>
-    ${pos.map((p,i)=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbPos" ${i===2?'checked':''}><span>${p}</span></label>`).join('')}
+    ${pos.map((p,i)=>`<label class="rowflex" style="gap:var(--sp-200);padding:var(--sp-100) 0;cursor:pointer"><input type="radio" name="cbPos" data-f="cbPos" value="${p}" ${i===2?'checked':''} onchange="PVB_POS=this.value;formCheck()"><span>${p}</span></label>`).join('')}
     <h4 style="margin-top:var(--sp-300)">結帳頁面</h4>
     ${SWROW('_cbCk',false,'在結帳頁面顯示 Cookie 橫幅','⚠ 這可能會降低結帳轉換率')}
     <p class="mut3" style="font-size:var(--t-xs);margin-top:var(--sp-200)">建議的隱私設定是為了方便您操作。您有責任遵守法律和規範。</p></div></div>`;
@@ -13153,7 +13379,7 @@ Object.assign(DOCS,{
 });
 
 /* init */
-renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();paintMoney();
+renderSidebar();renderViewMenu();renderOrders();renderProducts();drawSparks();enhanceTables();paintMoney();paintDerivedNumbers();
 urlBoot();   /* 53號 P0-18：最後才掛路由——MODULES／DETAILS 到這裡才全部登記完 */
 let rzT=0;
 function onResize(){drawSparks();drawAnalytics();refreshScrollHints();}
