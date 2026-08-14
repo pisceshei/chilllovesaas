@@ -137,6 +137,24 @@ IDENTITY_MODELS.each do |file, klass|
   violations << "`#{klass}` 仍宣告 acts_as_tenant，但該表已無 shop_id（裁定 D8）。"
 end
 
+# ── 規則 3｜金額欄不得為 unsigned（§A G25） ──────────────────────────────
+# 🔴 **總銷售額可以是負數**（撤銷 > 銷售的日子，官方明列，docs/research/80 §3）。
+# 金額欄若被宣告成 unsigned，那些日子的資料**寫不進去**——而且在只有正常銷售的
+# 測試資料上完全測不出來。這條擋的是「未來有人為了省空間或防呆而加 unsigned」。
+if File.exist?(SCHEMA)
+  File.read(SCHEMA).each_line.with_index(1) do |line, lineno|
+    next unless line.match?(/t\.\w+\s+"[a-z_]*cents"/)
+    next unless line.include?("unsigned")
+
+    # 三段字串用 `\` 續行拼接。原本寫成同一行三個相鄰字面值中間夾巨量空白，
+    # 語法正確（omakase 未開行長限制）但讀起來像被壓壞的續行，
+    # 之後有人插逗號就會誤讀成方法呼叫（PR #24 的 Claude 驗收 🟡 建議）。
+    violations << "db/schema.rb:#{lineno} 金額欄被宣告為 unsigned。" \
+      "🔴 總銷售額可以是負數（撤銷 > 銷售的日子）——unsigned 會讓那些日子寫不進去，" \
+      "且在正常銷售的測試資料上測不出來。見 §A G25／docs/research/80 §3。"
+  end
+end
+
 if violations.empty?
   puts "OK：租戶隔離檢查通過"
   puts "  - 業務資料表皆帶 shop_id（組織層白名單 #{ORG_LEVEL_TABLES.size} 張 ＋ 租戶根 " \
@@ -144,6 +162,7 @@ if violations.empty?
   puts "  - 白名單：#{ORG_LEVEL_TABLES.join(' / ')}（須逐字等於 CLAUDE.md 鐵律 2 的「已建」列）"
   puts "  - #{MUST_HAVE_SHOP_ID.join(' / ')} 確實帶 shop_id"
   puts "  - 身分表的 model 皆未宣告 acts_as_tenant"
+  puts "  - 金額欄皆未宣告 unsigned（總銷售額可為負，G25）"
   exit 0
 end
 

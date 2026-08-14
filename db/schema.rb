@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_14_200000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -93,7 +93,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
     t.datetime "created_at", null: false
     t.text "description_html", size: :medium, null: false
     t.string "handle", null: false
-    t.datetime "published_at"
     t.string "rules_match", limit: 16, default: "all", null: false
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
@@ -101,7 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
     t.string "sort_order", limit: 32, default: "manual", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["shop_id", "collection_type", "published_at"], name: "ix_collections_collection_type_published_at"
+    t.index ["shop_id", "collection_type"], name: "ix_collections_collection_type"
     t.index ["shop_id", "handle"], name: "uq_collections_handle", unique: true
     t.index ["shop_id", "id"], name: "uq_collections_tenant_id", unique: true
   end
@@ -699,7 +698,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
     t.string "handle", null: false
     t.integer "lock_version", default: 0, null: false
     t.string "product_type"
-    t.datetime "published_at"
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
     t.bigint "shop_id", null: false
@@ -711,8 +709,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
     t.index ["shop_id", "created_at", "id"], name: "ix_products_created_at_id"
     t.index ["shop_id", "handle"], name: "uq_products_handle", unique: true
     t.index ["shop_id", "id"], name: "uq_products_tenant_id", unique: true
-    t.index ["shop_id", "published_at", "id"], name: "ix_products_published_at_id"
     t.index ["shop_id", "status", "created_at"], name: "ix_products_status_created_at"
+  end
+
+  create_table "publications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "銷售管道在本店的發布容器（Publication）", force: :cascade do |t|
+    t.boolean "auto_publish", default: true, null: false, comment: "新建的 publishable 是否自動納入本管道"
+    t.bigint "catalog_id", comment: "三層 AND 的第三層；M5 建 catalogs 時補外鍵"
+    t.string "channel_handle", limit: 64, null: false, comment: "管道識別（online_store／point_of_sale／agentic…）"
+    t.datetime "created_at", null: false
+    t.string "name", null: false, comment: "顯示名（線上商店／門市 POS／代理式）"
+    t.bigint "shop_id", null: false
+    t.boolean "supports_future_publishing", default: true, null: false, comment: "本管道是否支援排程發布"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "channel_handle"], name: "uq_publications_channel", unique: true
+    t.index ["shop_id", "id"], name: "uq_publications_tenant_id", unique: true
   end
 
   create_table "refund_line_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "退款逐行數量、金額與 restock 決策", force: :cascade do |t|
@@ -751,6 +761,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
     t.index ["shop_id", "order_id", "created_at"], name: "ix_refunds_order_id_created_at"
     t.index ["shop_id", "order_id"], name: "ix_refunds_order_id"
     t.index ["shop_id", "order_transaction_id"], name: "ix_refunds_order_transaction_id"
+  end
+
+  create_table "resource_publications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "Publishable × Publication 的發布關聯", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "publication_id", null: false
+    t.bigint "publishable_id", null: false
+    t.string "publishable_type", limit: 32, null: false, comment: "Product／Collection／ProductVariant"
+    t.datetime "published_at", comment: "NULL=未發布；未來時間=排程發布"
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_res_pub_tenant_id", unique: true
+    t.index ["shop_id", "publication_id", "publishable_type", "publishable_id"], name: "uq_res_pub_target", unique: true
+    t.index ["shop_id", "publication_id", "published_at"], name: "ix_res_pub_published_at"
+    t.index ["shop_id", "publishable_type", "publishable_id"], name: "ix_res_pub_publishable"
   end
 
   create_table "role_permissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "角色的 permission key", force: :cascade do |t|
@@ -1010,12 +1034,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_100000) do
   add_foreign_key "product_variants", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_product_variants_product_id"
   add_foreign_key "product_variants", "shops", name: "fk_product_variants_shop"
   add_foreign_key "products", "shops", name: "fk_products_shop"
+  add_foreign_key "publications", "shops", name: "fk_publications_shop"
   add_foreign_key "refund_line_items", "line_items", column: ["shop_id", "line_item_id"], primary_key: ["shop_id", "id"], name: "fk_refund_line_items_line_item_id"
   add_foreign_key "refund_line_items", "refunds", column: ["shop_id", "refund_id"], primary_key: ["shop_id", "id"], name: "fk_refund_line_items_refund_id"
   add_foreign_key "refund_line_items", "shops", name: "fk_refund_line_items_shop"
   add_foreign_key "refunds", "order_transactions", column: ["shop_id", "order_transaction_id"], primary_key: ["shop_id", "id"], name: "fk_refunds_order_transaction_id"
   add_foreign_key "refunds", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_refunds_order_id"
   add_foreign_key "refunds", "shops", name: "fk_refunds_shop"
+  add_foreign_key "resource_publications", "publications", column: ["shop_id", "publication_id"], primary_key: ["shop_id", "id"], name: "fk_res_pub_publication_id"
+  add_foreign_key "resource_publications", "shops", name: "fk_res_pub_shop"
   add_foreign_key "role_permissions", "roles", name: "fk_role_permissions_role_id"
   add_foreign_key "segments", "shops", name: "fk_segments_shop"
   add_foreign_key "sessions", "staff_members", name: "fk_sessions_staff_member_id"
