@@ -109,10 +109,24 @@ IDENTITY_MODELS.each do |file, klass|
   violations << "`#{klass}` 仍宣告 acts_as_tenant，但該表已無 shop_id（裁定 D8）。"
 end
 
+# ── 規則 3｜金額欄不得為 unsigned（§A G25） ──────────────────────────────
+# 🔴 **總銷售額可以是負數**（撤銷 > 銷售的日子，官方明列，docs/research/80 §3）。
+# 金額欄若被宣告成 unsigned，那些日子的資料**寫不進去**——而且在只有正常銷售的
+# 測試資料上完全測不出來。這條擋的是「未來有人為了省空間或防呆而加 unsigned」。
+if File.exist?(SCHEMA)
+  File.read(SCHEMA).each_line.with_index(1) do |line, lineno|
+    next unless line.match?(/t\.\w+\s+"[a-z_]*cents"/)
+    next unless line.include?("unsigned")
+
+    violations << "db/schema.rb:#{lineno} 金額欄被宣告為 unsigned。"       "🔴 總銷售額可以是負數（撤銷 > 銷售的日子）——unsigned 會讓那些日子寫不進去，"       "且在正常銷售的測試資料上測不出來。見 §A G25／docs/research/80 §3。"
+  end
+end
+
 if violations.empty?
   puts "OK：租戶隔離檢查通過"
   puts "  - 業務資料表皆帶 shop_id（白名單 #{ORG_LEVEL_TABLES.size} 張表除外）"
   puts "  - 身分表的 model 皆未宣告 acts_as_tenant"
+  puts "  - 金額欄皆未宣告 unsigned（總銷售額可為負，G25）"
   exit 0
 end
 

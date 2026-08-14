@@ -7,6 +7,10 @@ class Product < ApplicationRecord
 
   acts_as_tenant :shop
 
+  has_many :product_variants, dependent: :destroy
+  # 多型：商品可獨立發布到各管道（docs/specs/88）。
+  has_many :resource_publications, as: :publishable, dependent: :destroy
+
   validates :title, :handle, :status, presence: true
   validates :handle, uniqueness: { scope: :shop_id, case_sensitive: false }
   validates :status, inclusion: { in: STATUSES }
