@@ -183,10 +183,26 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（2026-08-15 使用者二次裁定，由 Opus 5 改成 Fable 5）。
-          #      改的理由：官方明文「Claude Fable 5 (`claude-fable-5`) is Anthropic's
-          #      **most capable widely released model**」——使用者要的是「最強的驗收」，
-          #      而不是「Opus 這條產品線的最新版」，兩者在 2026-08 不是同一個東西。
+          #   🔴 `--model claude-opus-5`（2026-08-15 使用者**三次裁定**，由 Fable 5 改回 Opus 5）。
+          #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
+          #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
+          #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
+          #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
+          #          「Claude Fable 5 is Anthropic's **most capable widely released model**」，
+          #          使用者要的是「最強的驗收」而非「Opus 產品線的最新版」。
+          #        ④本次 10:xx 改回 `claude-opus-5`（使用者指示）。
+          #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
+          #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
+          #      請先確認是不是又要繞一圈。
+          #
+          #      ⚠️ **本次換模型與驗收機器人的連續失敗有關，但不要當成已確認的修復**：
+          #      2026-08-15 PR #33/#35 的驗收連續失敗，簽名是
+          #      `num_turns:1`／`total_cost_usd:0`／`duration_ms` 次秒級（第一個 API 請求就被拒）。
+          #      🔴 **但「無 Fable 5 權限」已被證偽**：同一份設定在 01:41 與 01:54 兩次
+          #      **成功**貼出驗收結論（模型自 00:14 起就是 fable-5），失敗是 01:55 之後才開始
+          #      ⇒ 比較像額度／配額或服務端問題，不是權限。
+          #      換成 Opus 5 **可能**繞過（不同模型可能不同額度池），但**沒有證據保證**。
+          #      若換完仍是同一個簽名，請往帳號側查，不要再換模型。
           #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
           #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
           #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
@@ -196,7 +212,10 @@ jobs:
           #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
           #      好處：**失效會叫**——帳號沒有該模型權限時第一次請求就報錯，不會靜默降級。
           #      ⚠️ 若某天這一行開始報「模型不存在／無權限」，那是**帳號權限**問題，
-          #        不是 workflow 寫錯；先確認訂閱有沒有 Fable 5，再考慮回退 `claude-opus-5`。
+          #        不是 workflow 寫錯；先確認訂閱有沒有 Opus 5。
+          #        🔴 **但不要一看到失敗就歸因成權限**——2026-08-15 的連續失敗長得很像權限問題
+          #        （第一個請求就被拒、零花費），實際上同一份設定稍早才成功過兩次。
+          #        判準看下一步「解析結論並驅動閉環」貼出的 result payload。
           #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
           #      官方：「The default effort is `high` on every model that supports effort」
           #      ⇒ 這一行**有實際作用**，不是裝飾。
@@ -214,7 +233,7 @@ jobs:
           #      ③同時加 `settings:` 設 model／effortLevel ——
           #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
           claude_args: |
-            --model claude-fable-5
+            --model claude-opus-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
