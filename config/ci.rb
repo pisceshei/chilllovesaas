@@ -6,6 +6,11 @@ CI.run do
   step "Style: Ruby", "bin/rubocop"
 
   step "Security: Gem audit", "bin/bundler-audit"
+  # 🔴 2026-08-15 補（PR #39 的 Codex review 指出）：ci.yml 的 quality job 跑
+  #    `pnpm audit --audit-level high`，而本檔沒有等價步驟——**本機全綠但 CI 會紅**，
+  #    正是本檔那條同步條款要防的落差。而當時的 check-ci-parity.rb **結構上看不到它**
+  #    （只比對 `scripts/*`）⇒ 該檢查同輪已擴充為也比對 bin/*／pnpm 這類指令。
+  step "Security: Frontend audit", "pnpm audit --audit-level high"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
 
   step "Test: Rails", "bundle exec rspec"
