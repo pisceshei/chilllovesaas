@@ -117,6 +117,33 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 🔴 **診斷用，2026-08-15 開啟**：預設 false 時 action 只印
+          #   `Running Claude Code via SDK (full output hidden for security)`，
+          #   且 result 物件是**白名單式**輸出——只留 6 個欄位，
+          #   **錯誤原因所在的 `result` 欄被整個砍掉**。
+          #   ⇒ 這正是 08-15 驗收全滅跨四個工作階段的直接原因：
+          #     每個人拿到的都是同一組**去掉了原因的數字**，只能靠指紋猜，而且猜錯了
+          #     （先猜「無 Fable 5 權限」，被證偽——同一份設定一路成功到 **09:30**）。
+          #   ⚠️ action 的 README 說「debug mode 會自動開啟 show_full_output」，
+          #     但**在 `@v1` 上實測不成立**（PR #41 run 31863797988→attempt #2 勾了
+          #     Enable debug logging：raw log 11,704 行、`##[debug]` 一堆，
+          #     那句「full output hidden」照樣印、`result` 欄照樣被砍）。
+          #     ⇒ 不要相信那句話，**要開就明文開這個 input**。
+          #   ✅ 已驗證這**不是**會被靜默忽略的未知 input（本檔上方 `--model` 那段記的形態）：
+          #     `anthropics/claude-code-action@v1` 的 `action.yml` **156 行宣告**、
+          #     **325 行 `INPUT_SHOW_FULL_OUTPUT: ${{ inputs.show_full_output }}` 明文映射**。
+          #     🔴 這一步非做不可——composite action **不會**把 `with:` 自動傳給內層步驟，
+          #       少了 325 行那個映射，寫了也等於沒寫。
+          #     ⚠️ 查證方法本身也踩過坑：GitHub 的 blob 檢視是**虛擬捲動**，
+          #       只渲染前約 150 行 ⇒ 在頁面上搜「找不到」是**渲染結果**不是事實。
+          #       要用 `raw.githubusercontent.com` 的純文字，或 code search。
+          #   宣告型別是**字串**（`default: "false"`）⇒ 這裡照字串寫，不寫 YAML 布林。
+          #   安全性：本倉庫是 **private**，Actions log 只有協作者看得到；
+          #   GitHub 仍會遮罩 secrets。代價是每輪 log 會多出完整審核串流（噪音）。
+          #   🔴 **移除條件**：等驗收環境恢復、且失敗留言能穩定貼出「錯誤原文」之後可關掉。
+          #   關掉之前先確認上面那段 `ERRTEXT` 真的撈得到 `result` 欄——
+          #   若撈不到（存檔與 console 一樣被砍），這個 input 就是唯一手段，**不得關**。
+          show_full_output: "true"
           prompt: |
             你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
 
@@ -183,10 +210,65 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（2026-08-15 使用者二次裁定，由 Opus 5 改成 Fable 5）。
-          #      改的理由：官方明文「Claude Fable 5 (`claude-fable-5`) is Anthropic's
-          #      **most capable widely released model**」——使用者要的是「最強的驗收」，
-          #      而不是「Opus 這條產品線的最新版」，兩者在 2026-08 不是同一個東西。
+          #   🔴 `--model claude-opus-5`（2026-08-15 使用者**三次裁定**，由 Fable 5 改回 Opus 5）。
+          #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
+          #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
+          #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
+          #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
+          #          「Claude Fable 5 is Anthropic's **most capable widely released model**」，
+          #          使用者要的是「最強的驗收」而非「Opus 產品線的最新版」。
+          #        ④本次 10:xx 改回 `claude-opus-5`（使用者指示）。
+          #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
+          #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
+          #      請先確認是不是又要繞一圈。
+          #
+          #      ⚠️ **本次換模型與驗收機器人的連續失敗有關，但不要當成已確認的修復**：
+          #      2026-08-15 PR #33/#35 的驗收連續失敗，簽名是
+          #      `num_turns:1`／`total_cost_usd:0`／`duration_ms` 次秒級（第一個 API 請求就被拒）。
+          #      🔴 已被證偽的，**精確地說只有這一條**：「從一開始就沒有 Fable 5 權限」。
+          #      依據：模型自 00:14 起就是 fable-5，而之後**一路都有成功的長驗收**——
+          #      00:27(18m21s)／01:27(12m15s)／02:11(9m23s)／03:53(12m42s)／
+          #      07:21(14m39s)／**09:30(10m47s)**。
+          #      <!-- 2026-08-15 更正時間軸。原文寫「失敗是 01:55 之後才開始」，
+          #           那是從 PR #33 單一 PR 的留言推出來的，**錯了**：Actions 的 run 列表顯示
+          #           驗收一路正常到 09:30，10:14 起才全部變成 30–47 秒的失敗。
+          #           🔴 教訓：**故障邊界要從 workflow 的 run 列表量，不是從某一個 PR 的留言推。**
+          #           一個 PR 的留言只涵蓋它自己被觸發的那幾次。 -->
+          #      🔴 **真正的故障邊界＝09:30 最後一次成功 → 10:14 第一次失敗，中間 44 分鐘。**
+          #      <!-- 2026-08-15 依 PR #37 的 Codex review 收窄。原文寫「⇒ 比較像額度／配額或
+          #           服務端問題，**不是權限**」。那句話講得太滿：曾經成功只能證明**當時**具備權限，
+          #           不能證明 01:55 之後 entitlement／OAuth token／帳號狀態沒有改變。
+          #           把後續失敗定性成「不是權限」，會把排障導向錯誤方向，
+          #           也與本檔刻意讓判準表保持診斷中立的立場自相矛盾。 -->
+          #      ⇒ **仍在候選內**：用量／配額上限、OAuth token 在 CI 這條路徑上的獨立額度、
+          #        10:14 之前那 44 分鐘內發生的權限或帳號狀態變更、服務端問題。**逐一排除，不要先挑一個。**
+          #
+          #      🔴 **不要靠換模型來排障。** 2026-08-15 已用時間戳逐項排除 repo 側的**全部**變數：
+          #        模型自 00:14 未變（且之後一路成功到 09:30）／`--effort` 00:10 之後未動／
+          #        `CLAUDE_CODE_OAUTH_TOKEN` 最後更新 Aug 14 ⇒ 觸發點不在這個倉庫裡。
+          #      <!-- 2026-08-15 更正證據。原文寫「本檔最後一次改動 01:00（最後成功與第一次
+          #           失敗之間一個字都沒改）」——**那是假的**：本檔在 10:12（7234afd）與
+          #           10:25（4321ba0）各改過一次，**正落在故障邊界上**。
+          #           結論仍然成立，但理由要換成經過查證的那一個：兩個 commit 的改動
+          #           **全部落在下方「解析結論」步驟的診斷文字裡**，
+          #           `with:`／`claude_args`／`prompt`／`uses:` 一行未動（逐行 grep 確認）。
+          #           🔴 原本那句話是「挑一個看起來吻合的時間點」得來的，不是量出來的。 -->
+          #      ⚠️ **5 小時滾動用量視窗已被實測排除**：09:30+5h=14:30，
+          #        於 **14:38** 重跑（PR #41 run 31865047628 attempt #3）→ 仍然 35 秒失敗。
+          #      🔴 **OAuth token 失效／過期也已被實測排除**（2026-08-15）：
+          #        使用者重新產生 token 並更新 secret（Last updated 由 Aug 14 → Aug 15，
+          #        已於 Settings 頁確認），重跑 attempt #4 →
+          #        `is_error=true duration_ms=605 num_turns=1 total_cost_usd=0`
+          #        ——**與換 token 之前逐字相同**。
+          #      ⇒ 到此為止，可以從外部觀察到的候選幾乎都排完了。剩下的是
+          #        **帳號層的用量／方案限制**，或**這條使用路徑本身被限制**——
+          #        而這兩者都只能靠 `result` 欄的錯誤原文分辨。
+          #        🔴 **不要再靠重跑、換模型、換 token 來試**：這三種都已各自實測過一輪。
+          #      <!-- 原文寫「換成 Opus 5 **可能**繞過（不同模型可能不同額度池）」。
+          #           留著會與下方判準表貼進 PR 留言的那句「也不要靠換模型來試」直接打架，
+          #           而讀 workflow 的人與讀 PR 留言的人會得到相反的指示。已刪。 -->
+          #      若換完仍是同一個簽名，請往帳號側查——並且**先看留言裡的「錯誤原文」**
+          #      （本檔上方已開 `show_full_output`，那才是分辨額度／認證／模型的唯一依據）。
           #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
           #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
           #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
@@ -196,8 +278,24 @@ jobs:
           #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
           #      好處：**失效會叫**——帳號沒有該模型權限時第一次請求就報錯，不會靜默降級。
           #      ⚠️ 若某天這一行開始報「模型不存在／無權限」，那是**帳號權限**問題，
-          #        不是 workflow 寫錯；先確認訂閱有沒有 Fable 5，再考慮回退 `claude-opus-5`。
-          #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
+          #        不是 workflow 寫錯；先確認訂閱有沒有 Opus 5。
+          #        🔴 **但不要一看到失敗就歸因成權限**——2026-08-15 的連續失敗長得很像權限問題
+          #        （第一個請求就被拒、零花費），實際上同一份設定稍早才成功過兩次。
+          #        判準看下一步「解析結論並驅動閉環」貼出的 result payload。
+          #   `--effort max`：CLI 推理強度共**六級** low/medium/high/xhigh/max/**ultracode**。
+          #      <!-- 🔴 2026-08-15 更正：本行原本寫「**五級** low/medium/high/xhigh/max，
+          #           max＝最高」——**漏了 ultracode，而且「max＝最高」的說法會誤導**。
+          #           官方 CLI reference 逐字：「Options: `low`, `medium`, `high`, `xhigh`,
+          #           `max`, or `ultracode`. Available levels depend on the model.
+          #           **`ultracode` starts the session at `xhigh` effort** with ultracode
+          #           turned on, and requires Claude Code v2.1.203 or later.」
+          #           （https://code.claude.com/docs/en/cli-reference，2026-08-15 取證） -->
+          #      🔴 **`ultracode` 不是「比 max 更高一級」**：它把單點推理強度**從 max 降到 xhigh**，
+          #        換來的是多代理自主編排（廣度）。**深度換廣度，不是升級。**
+          #        ⇒ 使用者 2026-08-15 的裁定原文是「用更高的能力去驗收得到更好的效果」，
+          #          `--effort max` 就是為那條加的。**改用 ultracode 等於推翻那條裁定的前提，
+          #          是一次新的裁定，不得由實作者順手改掉。**
+          #      ⇒ 在「單點推理深度」這個軸上，`max` 仍是最高。
           #      官方：「The default effort is `high` on every model that supports effort」
           #      ⇒ 這一行**有實際作用**，不是裝飾。
           #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
@@ -214,7 +312,7 @@ jobs:
           #      ③同時加 `settings:` 設 model／effortLevel ——
           #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
           claude_args: |
-            --model claude-fable-5
+            --model claude-opus-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
@@ -355,29 +453,133 @@ jobs:
               # 🔴 用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
               #    續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
               #    （2026-08-14 寫這段時踩過一次；同型事故另見本檔 heredoc 那次。）
+              # 🔴 **分報四種「取不到」的原因**（2026-08-15，多代理驗收 Y7 指出）。
+              #    原本四條路徑全部收斂成同一句「取不到 execution_file」：
+              #      ①env 空 ②檔不存在 ③**檔在且可解析，但裡面沒有 result 物件**
+              #      ④**檔在但 JSON 壞掉**
+              #    其中③④**檔案明明在** ⇒ 那句話本身就是假歸因，
+              #    而它就印在一段**承認③存在**的註釋下面幾行（「`select(. != null)` 讓
+              #    『找不到 result』落空成空字串」）——註釋與訊息互相矛盾。
+              #    🔴 這正是本分支上一輪才修掉的那個錯（寫死的猜測當診斷），換個位置又犯一次。
+              #    姊妹分支（下方回收品）有 `tail -c` 的 fallback，所以它那句「為空或不存在」
+              #    是可信的；失敗分支缺的就是這道分辨。
               DIAG=""
-              if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+              DIAG_WHY=""
+              # 🔴 `ERRTEXT`／`HAVE_RESULT` **必須在這裡初始化**（2026-08-15 事故修正）。
+              #    本步驟是 `set -uo pipefail`，而 `ERRTEXT` 只在下面「檔案存在」那個分支
+              #    才被賦值，卻在後面**無條件被讀**（`if [ -n "$ERRTEXT" ]`）⇒
+              #    「EXECUTION_FILE 為空」與「檔案不存在」這兩條路徑會以
+              #    `line …: ERRTEXT: unbound variable` 中止，**PR 上一則留言都貼不出來**。
+              #    ⚠️ 那正好是本 PR（Y7 四路分辨）要救的四條路徑裡的兩條，
+              #      也正是本檔花大篇幅在防的「審核整份消失」形態——修診斷的改動自己弄壞了診斷。
+              #    ⚠️ 引入這個 bug 的自測只跑了「檔案存在」的兩種輸入就收工。
+              #      教訓：**新增一個變數時，要走過每一個讀它的地方**，
+              #      而不是只測你新寫的那條路徑。
+              ERRTEXT=""
+              ERRSTATE=""
+              HAVE_RESULT=0
+              if [ -z "${EXECUTION_FILE:-}" ]; then
+                DIAG_WHY="action 沒有輸出 execution_file——步驟可能在產生它之前就失敗了"
+              elif [ ! -f "$EXECUTION_FILE" ]; then
+                DIAG_WHY="execution_file 指向 $EXECUTION_FILE，但該檔不存在"
+              else
+                JQ_ERR="$(mktemp)"
                 # `-s`（slurp）＋ `..` 的理由同下方回收品那段：對「單一 JSON 陣列」與
-                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串，
-                # 才會走下面的 fallback；少了它，jq 會印出一整行 `is_error=null`，
-                # 看起來像有診斷、實際上什麼都沒撈到。
-                DIAG=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | select(. != null)
-                  | "is_error=\(.is_error) num_turns=\(.num_turns) total_cost_usd=\(.total_cost_usd) duration_ms=\(.duration_ms)"' \
-                  "$EXECUTION_FILE" 2>/dev/null || true)
+                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串。
+                # 🔴 `g()` 逐欄位用 `has()` 判斷（Y8）：`select(. != null)` 只擋**整個物件**不存在，
+                #    擋不住**欄位被上游改名** ⇒ 會印出一行 `num_turns=null total_cost_usd=null`，
+                #    那行對不上下面判準表的任何一列，而讀的人會拿它去對號入座。
+                #    ⚠️ 不能用 `// "缺欄位"`：jq 的 `//` 對 `false` 也會取右邊，
+                #      而 `is_error: false` 是**完全正常的值**，會被誤報成缺欄位。
+                DIAG=$(jq -s -r 'def g(k): if has(k) then (.[k] | tostring) else "缺欄位" end;
+                  [.. | objects | select(.type? == "result")] | last | select(. != null)
+                  | "is_error=\(g("is_error")) num_turns=\(g("num_turns")) total_cost_usd=\(g("total_cost_usd")) duration_ms=\(g("duration_ms"))"' \
+                  "$EXECUTION_FILE" 2>"$JQ_ERR" || true)
+                # 🔴 撈**錯誤原文**（2026-08-15 追加）。上面那四個數字是「症狀」，
+                #    真正的原因（額度用盡／認證失效／模型不可用⋯）在 result 物件的
+                #    `result` 欄裡，而 action 的 console 是**白名單式**印出——只印 6 個欄位，
+                #    `result` 被整個砍掉。⚠️ 這一行是在賭「存檔比 console 完整」，
+                #    **沒有實測過**：若印出「無 result 欄」，代表存檔同樣被砍，
+                #    那時就只能靠本步驟上方開啟的 `show_full_output: true`。
+                # 🔴 **三態，不是兩態**（2026-08-15 修正）。原本 `has("result")` 後直接
+                #    `tostring`，把「沒有這個欄」「欄位是 null」「欄位是空字串」壓成一態：
+                #    `"result": null` 會**貼出一個內容就是 `null` 的程式碼區塊**——那正是
+                #    上面 10 行的 Y8 註釋（:437-441）特地擋掉的「null 垃圾」，同一份檔案原地復發。
+                #    ⇒ 先取狀態，再依狀態決定訊息；ERRTEXT 只在「真的有非空文字」時才有值。
+                ERRSTATE=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
+                  | if (type != "object") then "noobj"
+                    elif (has("result") | not) then "nofield"
+                    elif (.result == null) then "null"
+                    elif ((.result | tostring) == "") then "empty"
+                    else "text" end' "$EXECUTION_FILE" 2>/dev/null || echo noobj)
+                if [ "$ERRSTATE" = "text" ]; then
+                  RAW=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | .result | tostring' \
+                    "$EXECUTION_FILE" 2>/dev/null || true)
+                  # 🔴 三道處理，缺一則這則留言會反過來害人：
+                  #  ①**中和結論標記**——與下方回收品那段（:552-556）同一個理由，也是同一個做法：
+                  #    本則留言由 github-actions[bot] 貼出，而它在 REVIEWERS 清單內；
+                  #    錯誤原文是**外部文字**，裡面完全可能出現【驗收結論】。
+                  #    🔴 這份檔案已經為姊妹路徑立了這條不變量，新路徑不照做就是把它戳個洞。
+                  #  ②**打散 ``` 柵欄**——原文含程式碼區塊時會提前關閉下面那個 fence，
+                  #    留言後半段變成 Markdown 渲染。改成全形反引號，肉眼看得出來但不會破版。
+                  #  ③**截斷要切在字元邊界**——`head -c` 是**位元組**截斷，中文錯誤訊息
+                  #    會從三位元組字中間切開，產生非法 UTF-8。`iconv -c` 丟掉殘缺序列；
+                  #    沒有 iconv 的環境退回原值（GitHub runner 都有）。
+                  SAFE_ERR=$(printf '%s' "$RAW" | sed 's/【驗收結論】/〔驗收結論〕/g; s/```/｀｀｀/g' | head -c 1500)
+                  # 🔴 **不能寫成 `... | iconv -c || printf '%s' "$SAFE_ERR"`**（實測踩過）：
+                  #    `iconv -c` 丟掉殘缺序列之後**仍然回傳 1**，於是 `||` 會觸發，
+                  #    把原始（非法）內容**再接在清乾淨的內容後面** ⇒ 清完又貼回去，等於沒清，
+                  #    而且內容還變成兩份。改成先收下輸出、再判斷。
+                  #    （iconv 不存在時輸出為空 ⇒ 退回未清理的原值，總比沒有訊息好。）
+                  CLEANED=$(printf '%s' "$SAFE_ERR" | iconv -f UTF-8 -t UTF-8 -c 2>/dev/null) || true
+                  if [ -n "$CLEANED" ]; then ERRTEXT="$CLEANED"; else ERRTEXT="$SAFE_ERR"; fi
+                fi
+                # 有沒有真的解析到 result 物件——決定下面「撈不到原文」該歸因成哪一種。
+                [ -n "$DIAG" ] && HAVE_RESULT=1
+                if [ -z "$DIAG" ]; then
+                  SIZE=$(wc -c < "$EXECUTION_FILE" | tr -d ' ')
+                  if [ -s "$JQ_ERR" ]; then
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）但 **jq 解析失敗**：$(head -c 300 "$JQ_ERR" | tr '\n' ' ')"
+                  else
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）且可解析，但裡面**沒有 type==\"result\" 的物件**——action 可能在產生總結前就中止了"
+                  fi
+                fi
+                rm -f "$JQ_ERR"
               fi
               if [ -z "$DIAG" ]; then
-                DIAG="（取不到 execution_file，請用下方指令自行撈 result payload）"
+                DIAG="取不到 —— $DIAG_WHY"
               fi
-              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
+              # 🔴 三分支，不是兩分支。原本的 else 把**兩種完全不同的原因**收斂成
+              #    同一句「result 物件裡沒有 result 欄（被白名單砍掉了）」——但只要
+              #    execution_file 根本取不到（為空／不存在／解析失敗／沒有 result 物件），
+              #    這句歸因就是**假的**：那時我們連 result 物件都沒有，談不上「欄位被砍」。
+              #    ⚠️ 這正是 Y7 修掉的形態（四條路徑一句假歸因），差點在同一個 PR 裡復發。
+              # 🔴 依 ERRSTATE 分五種，各報各的。**不要收斂**——這個步驟存在的全部理由
+              #    就是 Y7「四條路徑一句假歸因」，在同一段裡復發過一次已經夠了。
+              if [ -n "$ERRTEXT" ]; then
+                # ⚠️ 這行說明**不得**寫出半形反引號柵欄的字面——寫了會在段落中開一個
+                #    行內 code span，把後面的字吃掉。用文字描述。
+                ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄；結論標記已中和成〔〕、原文裡的反引號柵欄已改全形）：\n\n```\n%s\n```' "$ERRTEXT")
+              elif [ "$HAVE_RESULT" != "1" ]; then
+                ERRBLOCK="**錯誤原文：無從撈起** —— 連 result 物件都沒有（原因見上一行的「本次執行結果」）。這一則**不是**「欄位被砍」，不要照那個方向查。"
+              elif [ "$ERRSTATE" = "nofield" ]; then
+                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**沒有 \`result\` 這個欄位**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+              elif [ "$ERRSTATE" = "null" ]; then
+                ERRBLOCK="**錯誤原文：欄位在但值是 \`null\`** —— 這與「欄位被砍掉」**不是同一件事**：上游有給這個欄，只是沒有填內容。⇒ 先看 log 的完整串流；若那裡也沒有，就是 SDK 沒有產生錯誤敘述。"
+              else
+                ERRBLOCK="**錯誤原文：欄位在但值是空字串** —— 同樣不是「欄位被砍掉」。⇒ 看 log 的完整串流。"
+              fi
+              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
                 "本次執行結果：\`$DIAG\`" \
+                "$ERRBLOCK" \
                 "**判準——請照上面的數據對號入座，不要預設是哪一種**：" \
                 "- \`num_turns\` 接近 \`--max-turns\` 上限、\`total_cost_usd\` > 0、耗時數分鐘 ⇒ **回合數用盡**（大型 diff 會燒光，尤其動到 \`docs/design/chilllove-admin-v2.html\`）。重新 push 前先想辦法縮小 diff。" \
                 "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**。🔴 **光憑這組數據分不出是哪一種**，下面兩者長得一模一樣：" \
                 "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
                 "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
                 "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
-                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`（Actions 的瀏覽器檢視器是虛擬捲動＋gzip，拿不到）。")
+                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`，或 Actions 頁面 ⚙ → **View raw logs**（瀏覽器的分步檢視器是虛擬捲動，只渲染幾百行，拿不到；raw logs 是純文字，拿得到）。🔴 **不要勾「Enable debug logging」重跑**——2026-08-15 於 PR #41 實測無效：11,704 行 raw log 裡 action 照樣印「full output hidden for security」，\`result\` 欄一樣被砍。action 那句提示的兩條路只有 \`show_full_output: true\` 是真的。🔴 **也不要靠換模型來試**：08-15 的全滅期間已逐項排除 repo 這一側的所有變數（模型自 00:14 未變且一路成功到 09:30、`--effort` 00:10 後未動、邊界上那兩次 workflow 改動只碰解析步驟的文字、secret 最後更新 Aug 14），換模型不會修好帳號側的問題。")
               gh pr comment "$PR" --body "$BODY"
             else
               # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
