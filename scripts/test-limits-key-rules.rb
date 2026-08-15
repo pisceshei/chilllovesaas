@@ -50,25 +50,53 @@ FIXTURES = File.join(ROOT, "spec/fixtures/ci_violations")
 #    改壞了不會有人知道。下面五條就是為了把那三個缺口關掉。
 #    ⇒ 加新規則到 checker 時，**先想「改壞它的哪一種寫法不會被抓」**，
 #      那個答案就是你要補的 fixture。
+# 🔴 **第二輪突變測試（2026-08-15）：型別字串當 needle 不夠，行號完全沒被守。**
+#    上面那三條缺口關掉之後再突變一次，又有三種存活：
+#      M9  行號改成 `node.start_line`（少 1，Psych 是 0-based）      → 測試全綠
+#      M10 行號固定寫死 `1`                                          → 測試全綠
+#      M13 診斷不印 `#{rel}:#{line}` 前綴（只留型別與路徑）          → 測試全綠
+#    原因是 needle 只有 `TrueClass`／`Date` 這種型別名，**行號怎麼算都不影響它命中**。
+#    而行號正是這支 checker 的實用價值所在——真實 limits.yml 一千多行，
+#    報「有一個鍵是 TrueClass」而不指到行，人得自己二分搜尋。
+#    ⇒ 五條純型別斷言一律改成 **`config/limits.yml:<行號>` ＋ 型別** 的複合 needle。
+#    ⚠️ 行號寫死在下表 ⇒ **改動任一 fixture 的行數就必須同步改這裡**，這是刻意的耦合：
+#      fixture 一動，斷言就該重新確認，不該靜默沿用。
 CASES = [
+  [ "limits_bool_key", 1, "config/limits.yml:8 鍵 `on`",
+    "裸字 `on` 鍵被 Psych 解析成 true——config/limits.yml 的 M27–M32 踩過的原形態。" \
+    "needle 含行號：見 CASES 上方 M9／M10／M13" ],
   [ "limits_bool_key", 1, "TrueClass",
-    "裸字 `on` 鍵被 Psych 解析成 true——config/limits.yml 的 M27–M32 踩過的原形態" ],
-  [ "limits_false_key", 1, "FalseClass",
+    "同一 fixture 的型別斷言（與上一條分開列，壞掉時看得出是行號錯還是型別判定錯）" ],
+  [ "limits_false_key", 1, "config/limits.yml:13 鍵 `no`",
     "🔴 裸字 `no` ＝ **挪威的 ISO 3166 代碼**，鐵律 11 的法域 pack 最可能踩到的一種" ],
-  [ "limits_nil_key", 1, "NilClass",
+  [ "limits_false_key", 1, "FalseClass",
+    "同上，型別分支（FalseClass 與 TrueClass 在 checker 裡是不同的 is_a? 判定）" ],
+  [ "limits_nil_key", 1, "config/limits.yml:5 鍵 `~`",
     "裸字 `~` 被解析成 nil——與布林是不同分支，之前完全沒被測到" ],
-  [ "limits_date_key", 1, "Date",
+  [ "limits_nil_key", 1, "NilClass",
+    "同上，型別分支" ],
+  [ "limits_date_key", 1, "config/limits.yml:6 鍵 `2026-08-15`",
     "看起來像日期的鍵被解析成 Date（生效日／匯率日結那類表會踩到）" ],
-  [ "limits_seq_key", 1, "rules.0.on",
+  [ "limits_date_key", 1, "Date",
+    "同上，型別分支" ],
+  [ "limits_seq_key", 1, "config/limits.yml:9 鍵 `on`（路徑 rules.0.on",
     "🔴 布林鍵藏在 **sequence 裡的 mapping**——守的是 Sequence 遞迴分支，" \
     "真實 limits.yml 有 17 處這種結構。" \
-    "斷言用**帶索引的路徑**而不是 `TrueClass`：只斷言型別的話，把走訪從 " \
-    "`key_path + [i.to_s]` 改成 `key_path`（診斷退化成 `rules.on`）仍會全綠" ],
+    "needle 含**帶索引的路徑**而不只是 `TrueClass`：只斷言型別的話，把走訪從 " \
+    "`key_path + [i.to_s]` 改成 `key_path`（診斷退化成 `rules.on`）仍會全綠。" \
+    "🔴 尾端刻意不含右括號——`（路徑 rules.0.on` 之後接的是 `）解析結果⋯`，" \
+    "多打一個 `）` 會讓這條永遠不命中" ],
   [ "limits_erb", 1, "ERB",
     "🔴 ERB fail-closed（輸出型標籤）：原始檔的 AST 看起來乾淨，loader render 後是 true 鍵" ],
   [ "limits_erb_tag", 1, "ERB",
     "🔴 ERB fail-closed（**非輸出型**控制流標籤）：與上一條是不同寫法，" \
     "少了它，把 ERB_TAG 收窄成單一字面值不會被抓到" ],
+  [ "limits_missing_target", 1, "TARGETS",
+    "🔴 **fail-closed：TARGETS 列的檔不存在時必須 exit 1**。" \
+    "本倉庫的 config/limits.yml 一直都在 ⇒ 這個分支在 CI 上永遠走不到，" \
+    "把 `unless File.exist?` 整段刪掉、或把 `exit 1` 改成 `next`，" \
+    "在真倉庫上完全看不出差別，而 checker 已退化成「檔案被改名／誤刪也報通過」。" \
+    "fixture＝一個**只有 README、沒有 config/limits.yml** 的目錄" ],
   [ "limits_clean", 0, "OK",
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
@@ -96,8 +124,10 @@ CASES.each do |dir, want_status, want_output, why|
 end
 
 if failures.empty?
-  puts "OK：limits 鍵型別檢查器的回歸測試通過（#{CASES.size} 條）"
-  CASES.each { |dir, want_status, _, why| puts "  - #{dir} → exit #{want_status}：#{why}" }
+  puts "OK：limits 鍵型別檢查器的回歸測試通過（#{CASES.size} 條 / #{CASES.map(&:first).uniq.size} 個 fixture）"
+  # 🔴 印出 needle：同一個 fixture 現在有多條斷言（行號一條、型別一條），
+  #    只印 fixture 名的話兩行長得一模一樣，看不出是哪一條在守什麼。
+  CASES.each { |dir, want_status, needle, why| puts "  - #{dir} → exit #{want_status}，含 `#{needle}`：#{why}" }
   exit 0
 end
 

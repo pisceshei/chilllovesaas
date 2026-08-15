@@ -150,9 +150,22 @@ TARGETS.each do |rel|
   walk.call(Psych.parse_file(path), rel, [])
 end
 
+# 🔴 canary：**「沒有違規」與「沒有檢查」在輸出上長得一模一樣。**
+#    `TARGETS` 被清空（或被誤改成一個 glob 展不出東西的寫法）時，
+#    上面的迴圈一次都不會執行，`violations` 自然是空的，於是這支腳本會**印「OK：通過」並 exit 0**——
+#    鐵律 6 的唯一上限值來源根本沒被讀過，而 CI 是綠的。
+#    這與 `scripts/check-workflow-syntax.rb`（PR #42）掃到 0 個 run 區塊的形態是同一個。
+#    ⚠️ 這一條**無法用 fixture 覆蓋**：`TARGETS` 是腳本內的常數，fixture 目錄改不了它。
+#      canary 本身就是唯一的守衛 ⇒ 不得因為「沒有測試在守」而把它刪掉。
+if scanned.empty?
+  warn "::error::TARGETS 掃了 **0 個檔案**——這不是通過，是檢查沒有生效。" \
+       "請確認 scripts/check-limits-keys.rb 的 TARGETS 常數不是空的。"
+  exit 1
+end
+
 if violations.empty?
   puts "OK：limits.yml 鍵型別檢查通過"
-  puts "  - 掃描檔案：#{scanned.join(', ')}"
+  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.join(', ')}）"
   puts "  - 所有 mapping 鍵皆解析為 String（不會被 Psych 轉成布林／nil／Date）"
   puts "  - 檔內無 ERB tag（有的話本腳本會 fail，不會靜默放行）"
   puts "  - 不檢查值的型別，理由見檔頭誠實聲明"
