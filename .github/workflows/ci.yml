@@ -47,11 +47,19 @@ jobs:
           #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
           #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
           #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
+          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
+          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
+          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
+          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
+          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
+          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
           bad=$(
-            git ls-files -s bin/ | awk '$1 != "100755" { print $4 }'
-            git ls-files -s scripts/ | awk '$1 != "100755" { print $4 }' | while read -r f; do
-              if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
-            done
+            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
+            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
+              | while IFS= read -r f; do
+                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
+                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
+                done
           )
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
@@ -138,11 +146,19 @@ jobs:
           #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
           #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
           #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
+          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
+          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
+          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
+          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
+          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
+          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
           bad=$(
-            git ls-files -s bin/ | awk '$1 != "100755" { print $4 }'
-            git ls-files -s scripts/ | awk '$1 != "100755" { print $4 }' | while read -r f; do
-              if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
-            done
+            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
+            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
+              | while IFS= read -r f; do
+                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
+                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
+                done
           )
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
