@@ -27,6 +27,54 @@ class CreateProductVariantOptionValues < ActiveRecord::Migration[8.1]
   EMPTY_DIGEST = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
 
   def up
+    # 🔴🔴 **先擋住「無法遷移的既有資料」，再動任何欄位**（2026-08-16，PR #38 Codex review）。
+    #
+    # 回填一律填 `EMPTY_DIGEST`（因為 join 表這一刻還不存在，**沒有座標可以算**）
+    # ⇒ 同一個商品底下的**每一個**既有變體都會拿到同一個 digest
+    # ⇒ 下面那支唯一索引在**任何有 2 個以上變體的既有商品**上直接
+    #    `Duplicate entry ... for key 'uq_product_variants_option_values_digest'`，migration 中斷。
+    # ⚠️ **實測會發生**（2026-08-16 在 test 庫造一個兩變體的舊商品，migration 就掛了）。
+    #    我原本沒發現，是因為跑的時候 `product_variants` 是空的——
+    #    🔴 **「在空庫上跑得過」證明不了 migration 對既有資料是安全的。**
+    #
+    # 🔴 **為什麼不自動修而是拒絕**：D12 之前**沒有任何地方記錄「哪個變體對應哪個選項值」**
+    #    （這張 join 表就是要來記它的）。所以那些變體的座標**不是遺失，是從來不存在**
+    #    ——重建不出來。可選的「自動修」只有：
+    #      ①給每列塞一個假 digest（＝寫進一個不是真座標的值，正是本檔到處在防的事）；
+    #      ②留著 NULL（＝唯一索引對 NULL 不去重，兜底靜默失效）。
+    #    兩個都比「停下來講清楚」糟。
+    #
+    # ℹ️ 本專案是 greenfield，正式環境目前**沒有**這種資料；這道閘門是給
+    #    「別人的 dev 庫」「舊 seeds」「日後回頭重跑」用的。
+    conflicting = select_all(<<~SQL).to_a
+      SELECT shop_id, product_id, COUNT(*) AS variant_count
+      FROM product_variants
+      GROUP BY shop_id, product_id
+      HAVING COUNT(*) > 1
+      ORDER BY shop_id, product_id
+    SQL
+
+    if conflicting.any?
+      listed = conflicting.first(20)
+        .map { |row| "shop_id=#{row['shop_id']} product_id=#{row['product_id']}（#{row['variant_count']} 個變體）" }
+      more = conflicting.size > 20 ? "\n  …等共 #{conflicting.size} 個商品" : ""
+      raise <<~MESSAGE
+        D12 無法自動遷移：有 #{conflicting.size} 個商品擁有 2 個以上變體，
+        而 D12 之前**沒有記錄過任何變體的選項座標** ⇒ 它們的 digest 無法重建。
+
+        #{listed.join("\n  ")}#{more}
+
+        🔴 這不是「資料損壞」，是那份資訊從來不存在（join 表就是要來記它的）。
+        ⇒ 請先擇一處理，再重跑本 migration：
+          (a) 刪掉多餘的變體（每個商品只留一個），遷移後再用新的寫入路徑重建；
+          (b) 若那是測試資料，直接清掉該商品。
+
+        ⚠️ **不要**改本 migration 讓它「自動塞一個 digest」——那會寫進一個不是真座標的值，
+        而唯一索引只認 digest，之後就再也分不出哪些是真的。
+      MESSAGE
+    end
+
+
     # ── 1. 父表補「可被複合外鍵指向」的唯一鍵 ──────────────────────────────────
     #
     # 🔴 **MySQL 8.4 的硬限制**（8.4.9 實測，非設定值而是編譯預設）：

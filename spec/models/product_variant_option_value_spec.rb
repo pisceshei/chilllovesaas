@@ -55,9 +55,14 @@ RSpec.describe ProductVariantOptionValue, type: :model do
     it "③ 說謊的 product_option_id（值不屬於該選項）⇒ 擋下" do
       within_shop do
         product = create(:product, shop:)
-        size  = create(:product_option, product:, values: %w[S])
+        size = create(:product_option, product:, values: %w[S])
+        # 🔴 變體必須先有**完整**座標才存得進去（`option_coordinates_cover_every_product_option`）
+        variant = create(:product_variant, product:, option_values: [ size.option_values.first ])
+        # 🔴 第二個選項刻意在變體存檔**之後**才建 ——
+        #    這樣變體上就有一個「它沒有值的選項」，才做得出下面那個說謊的 insert。
+        #    （這也是 63 §B.5「加選項」的真實中間狀態：既有變體暫時缺一維，
+        #      要由寫入 service 在同一 transaction 內補上。）
         color = create(:product_option, product:, values: %w[Red])
-        variant = create(:product_variant, product:)
 
         # 宣告「這是 color 的值」但實際塞 size 的值。
         # 🔴 少了 fk_pvov_value 這支三欄歸屬外鍵，這一列會寫進去，
@@ -139,6 +144,81 @@ RSpec.describe ProductVariantOptionValue, type: :model do
           create(:product_variant, product: create(:product, shop: other_shop))
         end
       }.not_to raise_error
+    end
+  end
+
+  # ── PR #38 Codex review 的三條（2026-08-16）─────────────────────────────────
+  describe "🔴 座標必須覆蓋商品的每一個選項" do
+    it "有選項的商品上，完全不給座標 ⇒ 不合法（不得被當成 NO_OPTIONS）" do
+      within_shop do
+        product = create(:product, shop:)
+        create(:product_option, product:, values: %w[S M])
+
+        variant = build(:product_variant, product:)
+        expect(variant).not_to be_valid
+        expect(variant.errors[:product_variant_option_values]).to be_present
+      end
+    end
+
+    it "只給一部分選項 ⇒ 不合法（前台矩陣會出現點不到的組合）" do
+      within_shop do
+        product = create(:product, shop:)
+        size = create(:product_option, product:, values: %w[S])
+        create(:product_option, product:, values: %w[Red])
+
+        variant = build(:product_variant, product:, option_values: [ size.option_values.first ])
+        expect(variant).not_to be_valid
+      end
+    end
+
+    it "無選項商品給空座標 ⇒ 合法（那是 Default Title 變體）" do
+      within_shop do
+        expect(build(:product_variant, product: create(:product, shop:))).to be_valid
+      end
+    end
+  end
+
+  describe "🔴 digest 必須反映 DB 現況，不吃關聯快取" do
+    # 寫入 service 的典型形態：先讀變體（關聯被快取）→ 直接動 join 列 → 再存變體。
+    # 不 reset 的話，digest 算的是**載入當下**的快照 ⇒ 與 join 列不一致，
+    # 而唯一索引只認 digest。
+    it "先載入關聯、再從外部改 join 列、然後存檔 ⇒ digest 追得上" do
+      within_shop do
+        product = create(:product, shop:)
+        size = create(:product_option, product:, values: %w[S M])
+        small, medium = size.option_values.order(:position).to_a
+        variant = create(:product_variant, product:, option_values: [ small ])
+
+        variant.product_variant_option_values.load # 刻意把舊狀態灌進快取
+        before_digest = variant.option_values_digest
+
+        # 從外部改座標（不透過 variant 的關聯物件）
+        ProductVariantOptionValue.where(product_variant_id: variant.id)
+          .update_all(option_value_id: medium.id)
+        variant.save!
+
+        expect(variant.option_values_digest).not_to eq(before_digest)
+        expect(variant.option_values_digest)
+          .to eq(Catalog::OptionValuesDigest.call([ [ size.id, medium.id ] ]))
+      end
+    end
+  end
+
+  describe "🔴 商品刪除要能穿過選項圖" do
+    # 建了 ProductOption 卻沒在 Product 宣告關聯的話，
+    # `fk_product_options_product_id` 會讓**任何有選項的商品永遠刪不掉**。
+    it "有選項與變體的商品可以刪除" do
+      within_shop do
+        product = create(:product, shop:)
+        size = create(:product_option, product:, values: %w[S M])
+        size.option_values.order(:position).each_with_index do |value, index|
+          create(:product_variant, product:, position: index + 1, option_values: [ value ])
+        end
+
+        expect { product.destroy! }.not_to raise_error
+        expect(ProductOption.where(product_id: product.id)).to be_empty
+        expect(ProductVariantOptionValue.where(product_id: product.id)).to be_empty
+      end
     end
   end
 

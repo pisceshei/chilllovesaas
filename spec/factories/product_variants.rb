@@ -23,15 +23,20 @@ FactoryBot.define do
       option_values { [] }
     end
 
-    after(:create) do |variant, evaluator|
-      next if evaluator.option_values.empty?
-
+    # 🔴 **座標必須在存檔**之前**掛上去，不能事後補**（2026-08-16 改，PR #38 Codex review）。
+    #    `ProductVariant` 現在驗「商品的每個選項恰好一個值」——在一個已經有選項的商品上，
+    #    先存一個沒有座標的變體是**不合法的中間狀態**，存不進去。
+    # ⚠️ 這不是 factory 的權宜，是**真實約束**：寫入 service 也必須把變體與它的座標
+    #    在同一次寫入裡建好。factory 照著同樣的形狀走，測試才代表得了生產路徑。
+    after(:build) do |variant, evaluator|
       evaluator.option_values.each do |value|
-        create(:product_variant_option_value, product_variant: variant, option_value: value)
+        variant.product_variant_option_values.build(
+          shop: variant.shop,
+          product: variant.product,
+          product_option: value.product_option,
+          option_value: value
+        )
       end
-      # 🔴 join 列是在變體存檔**之後**才建的 ⇒ 必須再存一次讓 digest 追上。
-      # 這正是 model 註釋裡那條「直接操作 join 表之後必須自己再存一次」的實例。
-      variant.reload.save!
     end
   end
 end
