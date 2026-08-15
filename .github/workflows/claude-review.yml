@@ -376,6 +376,25 @@ jobs:
           #      這裡明文列出只是把它從「預設剛好可用」變成「明文授權」。
           #   ⚠️ **複合指令要每一段都被允許**：`sed …; echo …` 被擋的原因是 `;` 後半段
           #     不在清單裡，不是 `sed` 本身。要它跑多步，請它分開呼叫。
+          #   🔴🔴 **語法：`scripts/` 這四條必須用`*`而不是`:*`**（2026-08-15 實測＋官方文件）。
+          #     第一版寫成 `Bash(ruby scripts/:*)`，**完全沒有生效**：
+          #     四個 PR（#39／#40／#41／#42）的驗收各自實測到
+          #     `ruby scripts/…`／`bash scripts/…`／`python3 scripts/…` 全被擋，
+          #     原文一律是 `This command requires approval`，四份驗收都寫「零實跑證據」。
+          #     官方文件逐字（code.claude.com/docs/en/permissions）：
+          #       「The `:*` suffix is an equivalent way to write a trailing wildcard,
+          #         so `Bash(ls:*)` matches the same commands as `Bash(ls *)`.」
+          #       「When `*` appears at the end **with a space before it** … it enforces a
+          #         **word boundary**, requiring the prefix to be followed by a space or end-of-string.」
+          #     ⇒ `Bash(ruby scripts/:*)` 等同 `Bash(ruby scripts/ *)`，要求 `ruby scripts/`
+          #       後面接**一個空格** ⇒ `ruby scripts/check-limits-keys.rb` 永遠不匹配。
+          #     ✅ 而 `Bash(gh pr view:*)` 這種之所以有效，是因為 `view` 後面本來就有空格。
+          #     ⇒ 正解是**不留空格**的 `Bash(ruby scripts/*)`：
+          #       「In contrast, `Bash(ls*)` without a space matches both `ls -la` and `lsof`
+          #         because there's no word boundary constraint.」
+          #     ⚠️ 這也是為什麼不能懶得改成 `Bash(ruby:*)`：那會連 `ruby -e '…'` 一起放行。
+          #     ⚠️ 複合指令仍然要每一段各自匹配（文件：「A rule must match each
+          #       subcommand independently.」，分隔符 `&&`、`||`、`;`、`|` 等）。
           #   🔴 **安全取捨（刻意留在這裡讓下一個人看見）**：這等於讓驗收方**執行被審 PR 帶進來的代碼**，
           #     而本 job 握有 `contents: write`／`pull-requests: write` 與 OAuth token。
           #     ⇒ 因此**只授權 `scripts/` 底下**（`bash scripts/` / `ruby scripts/` / `python scripts/`），
@@ -385,7 +404,7 @@ jobs:
             --model claude-opus-5
             --effort max
             --max-turns 200
-            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/:*),Bash(ruby scripts/:*),Bash(python scripts/:*),Bash(python3 scripts/:*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
 
       - name: 解析結論並驅動閉環
         if: ${{ !cancelled() }}
