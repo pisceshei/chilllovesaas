@@ -69,8 +69,30 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # 🔴🔴 **最小權限（2026-08-15 收緊，依 PR #44 的 Codex review）**
+    #
+    #   起因：本 job 現在**會執行被審 PR 帶進來的 `scripts/` 代碼**
+    #   （`--allowedTools` 的 `Bash(bash scripts/*)` 等四條）。Codex 逐字：
+    #     「Restricting the prefix to `scripts/` **does not establish trust** because the
+    #       checked-out script itself comes from the reviewed PR… the process inherits
+    #       `GH_TOKEN` while this job grants `contents: write`…」
+    #   🔴 **它是對的**：範圍限制不等於信任——`scripts/` 底下的東西正是被審的那些。
+    #
+    #   ⇒ 逐項稽核實際用到什麼（`grep` 全檔的 gh／git 動作）：
+    #     `contents: write`  → **只有 `gh pr merge --squash` 用得到**，而 `AUTO_MERGE` 是 `"false"`
+    #                          ⇒ **目前完全用不到，卻是攻擊面最大的一項** ⇒ 降成 `read`。
+    #     `pull-requests: write` → `gh pr comment`／`gh pr review --approve`。**核心功能，不能拿掉。**
+    #     `issues: write`    → 通過後關階段 issue／在下一階段 issue 登記（`gh issue close/comment`）。
+    #                          風險等級遠低於 contents（改不了代碼），保留。
+    #     `id-token: write`  → action 換 app token 的 OIDC 流程（log 有 `Requesting OIDC token`）。
+    #     `actions: read`    → 本檔沒有直接用，保留（唯讀、無害）。
+    #
+    #   🔴🔴 **要把 `AUTO_MERGE` 改回 `"true"` 的人注意**：那時 `gh pr merge` 會因為
+    #      `contents: read` 而失敗。**不要只改 AUTO_MERGE**——你要同時面對
+    #      「讓一個執行過 PR 代碼的 job 重新拿到 contents: write」這個決定。
+    #      本檔頂部 AUTO_MERGE 註解已寫明它為什麼是 false，這裡是第二道提醒。
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
       issues: write
       id-token: write
@@ -376,6 +398,34 @@ jobs:
           #      這裡明文列出只是把它從「預設剛好可用」變成「明文授權」。
           #   ⚠️ **複合指令要每一段都被允許**：`sed …; echo …` 被擋的原因是 `;` 後半段
           #     不在清單裡，不是 `sed` 本身。要它跑多步，請它分開呼叫。
+          #   🔴🔴 **語法：`scripts/` 這四條必須用`*`而不是`:*`**（2026-08-15 實測＋官方文件）。
+          #     第一版寫成 `Bash(ruby scripts/:*)`，**完全沒有生效**：
+          #     四個 PR（#39／#40／#41／#42）的驗收各自實測到
+          #     `ruby scripts/…`／`bash scripts/…`／`python3 scripts/…` 全被擋，
+          #     原文一律是 `This command requires approval`，四份驗收都寫「零實跑證據」。
+          #     官方文件逐字（code.claude.com/docs/en/permissions）：
+          #       「The `:*` suffix is an equivalent way to write a trailing wildcard,
+          #         so `Bash(ls:*)` matches the same commands as `Bash(ls *)`.」
+          #       「When `*` appears at the end **with a space before it** … it enforces a
+          #         **word boundary**, requiring the prefix to be followed by a space or end-of-string.」
+          #     ⇒ `Bash(ruby scripts/:*)` 等同 `Bash(ruby scripts/ *)`，要求 `ruby scripts/`
+          #       後面接**一個空格** ⇒ `ruby scripts/check-limits-keys.rb` 永遠不匹配。
+          #     ✅ 而 `Bash(gh pr view:*)` 這種之所以有效，是因為 `view` 後面本來就有空格。
+          #     ⇒ 正解是**不留空格**的 `Bash(ruby scripts/*)`：
+          #       「In contrast, `Bash(ls*)` without a space matches both `ls -la` and `lsof`
+          #         because there's no word boundary constraint.」
+          #     ⚠️ 這也是為什麼不能懶得改成 `Bash(ruby:*)`：那會連 `ruby -e '…'` 一起放行。
+          #     ⚠️ 複合指令仍然要每一段各自匹配（文件：「A rule must match each
+          #       subcommand independently.」，分隔符 `&&`、`||`、`;`、`|` 等）。
+          #   🔴🔴 **重要更正（PR #44 的 Codex review）**：下面那句「只授權 `scripts/` 底下所以夠緊」
+          #     **推理是錯的**——`scripts/` 底下的東西**正是被審 PR 帶進來的**，
+          #     範圍限制不等於信任。而且因為舊語法根本沒生效，**修正語法的那個 PR 才是真正把洞打開的那一個**。
+          #     ✅ 配套緩解已做：上方 job 的 `permissions` 已把 **`contents: write` 降成 `read`**
+          #       （實查後確認它只被 `gh pr merge` 用到，而 AUTO_MERGE 是 false）。
+          #     ⚠️ 這只是**降低爆炸半徑**，不是消除風險：被注入的驗收方仍能貼留言、approve、動 issue。
+          #     ⚠️ 更彻底的两條路（已考慮、本輪未採）：①只跑 base commit 的可信版本
+          #       （但那樣修改檢查腳本的 PR 就無法用實跑驗證，而那正是最需要的場合）；
+          #       ②拆成獨立的唯讀 job。日後若開放外部貢獻者或轉 public，**必須改成 ①或 ②**。
           #   🔴 **安全取捨（刻意留在這裡讓下一個人看見）**：這等於讓驗收方**執行被審 PR 帶進來的代碼**，
           #     而本 job 握有 `contents: write`／`pull-requests: write` 與 OAuth token。
           #     ⇒ 因此**只授權 `scripts/` 底下**（`bash scripts/` / `ruby scripts/` / `python scripts/`），
@@ -385,7 +435,7 @@ jobs:
             --model claude-opus-5
             --effort max
             --max-turns 200
-            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/:*),Bash(ruby scripts/:*),Bash(python scripts/:*),Bash(python3 scripts/:*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
 
       - name: 解析結論並驅動閉環
         if: ${{ !cancelled() }}
