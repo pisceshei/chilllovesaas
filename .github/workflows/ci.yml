@@ -218,3 +218,18 @@ jobs:
       # （r_dead_control 在四輪內踩了六種漏看，每一種 CI 都是綠的）。
       - name: Regression-test money boundary rules
         run: ruby scripts/test-money-rules.rb
+
+      # 🔴 YAML 1.1 的裸字 on/off/yes/no/true/false（含大小寫變體）會被 Psych 解析成布林——對「值」是常識，
+      # 但沒人預期它同樣適用於「鍵」。limits.yml 的 gift_card_entry_points 就中了這個陷阱
+      # （六個 `on` 鍵實際是 true），而 deep_symbolize_keys 對非字串鍵原樣保留 ⇒
+      # `Limits.fetch` 只看到 KeyError，看不出根因，最可能的誤修是改用 true 當鍵、把 bug 固化。
+      # 這一類只在「鍵名剛好是那幾個字」時出現，review 肉眼看不出來，必須由機制擋。
+      - name: Check limits.yml key types
+        run: ruby scripts/check-limits-keys.rb
+
+      # 🔴 同 65 §K.7 的理由（見上面 money 那一組）：檢查器自己要有反向證明。
+      # 本步用故意違反的 fixture 證明「非 String 鍵會被打紅」與「ERB 會被擋」，
+      # 並反向斷言乾淨 fixture 必須 exit 0——否則一個永遠 fail 或永遠 pass 的
+      # 檢查器在 CI 上看起來與正常的一模一樣。
+      - name: Regression-test limits key rules
+        run: ruby scripts/test-limits-key-rules.rb
