@@ -102,6 +102,10 @@ YAML11_COERCED_WORDS = {
 ERB_TAG = /<%/
 
 violations = []
+# 🔴 鍵計數（2026-08-16，PR #40 第 6 輪驗收指出）：canary 原本只數「檔案」不數「鍵」，
+#    一份只有註釋、0 個鍵的 limits.yml 照樣 exit 0 報「通過」——
+#    「沒有違規」與「沒有東西可查」又一次長得一模一樣，只是又降了一層（檔案層 → 內容層）。
+stats = { keys: 0 }
 
 # 走 Psych AST（不是走 load 出來的 Hash）的理由：AST 的 scalar node 帶 `start_line`，
 # 能把違規指到**確切行號**；load 出來的 Hash 只剩值，報不出位置。
@@ -111,6 +115,7 @@ walk = lambda do |node, rel_path, key_path|
   case node
   when Psych::Nodes::Mapping
     node.children.each_slice(2) do |key_node, value_node|
+      stats[:keys] += 1
       resolved = key_node.to_ruby
       label = key_node.respond_to?(:value) ? key_node.value : resolved.inspect
 
@@ -213,9 +218,15 @@ end
 #    這與 `scripts/check-workflow-syntax.rb`（PR #42）掃到 0 個 run 區塊的形態是同一個。
 #    ⚠️ 這一條**無法用 fixture 覆蓋**：`TARGETS` 是腳本內的常數，fixture 目錄改不了它。
 #      canary 本身就是唯一的守衛 ⇒ 不得因為「沒有測試在守」而把它刪掉。
-if scanned.empty?
-  warn "::error::TARGETS 掃了 **0 個檔案**——這不是通過，是檢查沒有生效。" \
-       "請確認 scripts/check-limits-keys.rb 的 TARGETS 常數不是空的。"
+# 🔴 0 個**鍵**也算沒生效（不只 0 個檔，2026-08-16 擴充）：limits.yml 被清空成只剩註釋時，
+#    掃描檔數是 1、violations 是空的，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。
+#    fixture＝limits_empty（這一條與 TARGETS 不同，fixture 蓋得到）。
+if scanned.empty? || stats[:keys].zero?
+  what = scanned.empty? ? "0 個檔案" : "#{scanned.size} 個檔案但 **0 個 mapping 鍵**"
+  warn "::error::TARGETS 掃了 **#{what}**——這不是通過，是檢查沒有生效。" \
+       "檔案為 0 請查 scripts/check-limits-keys.rb 的 TARGETS 常數；" \
+       "鍵為 0 代表 limits.yml 是空的或只剩註釋，而它是鐵律 6 的唯一上限值來源，" \
+       "不可能合法地沒有任何鍵。"
   # 🔴 3＝「完全沒生效」。與上面那條 fail-closed 的 2 **刻意不同碼**——
   #    否則把 `exit 2` 改成 `next` 之後，控制流會落到這裡，
   #    兩條路徑的退出碼與訊息關鍵字都一樣，那個突變在測試裡就是存活的。
@@ -224,7 +235,7 @@ end
 
 if violations.empty?
   puts "OK：limits.yml 鍵型別檢查通過"
-  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.join(', ')}）"
+  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.join(', ')}）、mapping 鍵 #{stats[:keys]} 個"
   puts "  - 所有 mapping 鍵皆解析為 String（不會被 Psych 轉成布林／nil／Date）"
   puts "  - 檔內無 ERB tag（有的話本腳本會 fail，不會靜默放行）"
   puts "  - 不檢查值的型別，理由見檔頭誠實聲明"
