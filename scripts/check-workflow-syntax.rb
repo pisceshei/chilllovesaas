@@ -158,6 +158,21 @@ files.each do |path|
 end
 
 if violations.empty?
+  # 🔴 **第二層 canary：run 區塊掃到 0 個也是「什麼都沒驗到」**
+  #    （2026-08-15，PR #42 的 Claude 驗收指出）。
+  #    上面已經對「一份 workflow 都沒找到」做了 canary，但**同一個判準在下一層缺席**：
+  #    若所有 run 區塊都被 `interpreter_for` 跳過（這正是本檔第三條修正在修的
+  #    回歸形態），舊寫法會印「**0 個 run 區塊皆通過 bash -n**」並 exit 0。
+  #    ⇒ **這道閘門對它自己剛修好的那類故障，會綠著通過。**
+  #    出處：docs/specs/65 §K 第 7 條＋本檔上方 files.empty? 那段的同一個理由。
+  if checked_runs.zero?
+    warn "::error::掃到 #{checked_files} 份 workflow，但 **0 個 run 區塊**被檢查——這不是通過，是檢查沒有生效。"
+    warn "  常見原因：interpreter_for 回歸（全部 shell 被判成不認得）、或 workflow 真的只有 uses: 步驟。"
+    warn "  若確實是後者，請在這裡放寬判準並寫明理由；不要默默印 OK。"
+    warn "  ROOT=#{ROOT}"
+    exit 1
+  end
+
   puts "OK：workflow 語法檢查通過"
   puts "  - #{checked_files} 份 workflow 皆為合法 YAML"
   puts "  - #{checked_runs} 個 run 區塊皆通過 bash -n（GitHub 表達式已換成佔位符）"

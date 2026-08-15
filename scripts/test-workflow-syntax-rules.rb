@@ -5,18 +5,32 @@
 #
 # 65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」。
 #
-# ## 四條各自守什麼
+# ## 🔴 這八條各自守什麼（改條數時，**這裡、handoff、worklog 三處要一起改**）
 #
-# 前兩條**直接對應 `claude-review.yml` 註釋裡記載的兩次真實事故**，不是想像出來的：
-#   - `wf_bad_yaml`：block scalar 續行掉到第 0 欄 ⇒ 整份不再是合法 YAML（2026-08-14 踩過）
-#   - `wf_bad_bash`：YAML 合法但 bash 語法壞掉 ⇒ **只驗 YAML 的檢查會放行**，
-#     要到 CI 真的跑那一步才炸。這是最陰險的一種。
+# **對應 `claude-review.yml` 註釋記載的兩次真實事故**
+#   - `wf_bad_yaml`：block scalar 續行掉到第 0 欄 ⇒ 整份不再是合法 YAML（2026-08-14）
+#   - `wf_bad_heredoc`：未閉合 heredoc——`bash -n` 對它 **exit 0**、只在 stderr 印警告
+#     ⇒ 只判退出碼的檢查器完全放行
+#     🔴 **該 fixture 的 `shell: bash --noprofile --norc -eo pipefail {0}` 那一行是承重的**，
+#       不得因為「看起來跟 heredoc 無關」而刪掉（見該檔檔頭註釋）。
 #
-# 後兩條守檢查器本身：
-#   - `wf_clean`：反向斷言。**刻意含 GitHub 表達式與 heredoc**——
-#     `${{ }}` 直接送 bash 會是 bad substitution，heredoc 在 block scalar 裡合法，
-#     兩者都是容易誤報的形態。這條同時證明「佔位符替換有效」與「不誤傷 heredoc」。
-#   - `wf_empty`：一份 workflow 都找不到時必須 fail 而不是印 OK（空值長得像資料）。
+# **判準本身**
+#   - `wf_bad_bash`：YAML 合法但 bash 語法壞掉 ⇒ 只驗 YAML 的檢查會放行
+#   - `wf_custom_shell`：🔴 `interpreter_for` 的**正向**斷言——自訂 shell 模板下的壞 bash 必須被抓到
+#
+# **反向斷言（不得誤報）**
+#   - `wf_clean`：刻意含 `${{ }}` 與 heredoc——前者直接送 bash 會是 bad substitution，
+#     後者在 block scalar 裡合法。同時證明「佔位符替換有效」
+#   - `wf_date_scalar`：裸日期是合法 YAML，但 `load_file` 預設不許 Date
+#     ⇒ 原本會丟 `Psych::DisallowedClass` 讓腳本帶著 backtrace 崩掉
+#
+# **「什麼都沒驗到」的兩層**
+#   - `wf_empty`：一份 workflow 都找不到 ⇒ fail（空值長得像資料）
+#   - `wf_no_runs`：🔴 找到了檔、卻 **0 個 run 區塊**被檢查 ⇒ 也必須 fail
+#
+# <!-- 2026-08-15 依 PR #42 的 Claude 驗收改寫。原文寫「四條」而 CASES 實際有六條，
+#      `wf_bad_heredoc` 與 `wf_date_scalar` 完全沒進清單；且反向斷言已不是「後兩條」。
+#      本輪又新增兩條 ⇒ 現為八條。 -->
 #
 # 用法：ruby scripts/test-workflow-syntax-rules.rb
 # 退出碼：0=全過，1=有失敗
@@ -41,7 +55,16 @@ CASES = [
   [ "wf_date_scalar", 0, "OK",
     "🔴 反向斷言之二：**合法但容易讓檢查器崩掉**。裸日期是合法 YAML，但 load_file 預設不許 " \
     "Date ⇒ 原本會丟 Psych::DisallowedClass 讓腳本帶著 backtrace 崩掉。" \
-    "本份同時覆蓋自訂 shell 模板 `bash -e {0}`——原白名單不匹配它 ⇒ 該 run 區塊被靜默跳過不檢查" ],
+    "⚠️ 本份**不**覆蓋自訂 shell 模板：它期望 exit 0，而「該區塊被靜默跳過」也是 exit 0 " \
+    "⇒ 分不出來。那一條的正向斷言在 wf_custom_shell（PR #42 驗收指出）" ],
+  [ "wf_custom_shell", 1, "bash -n",
+    "🔴 **`interpreter_for` 的正向斷言**：官方文件化的自訂 shell 模板 " \
+    "`bash --noprofile --norc -eo pipefail {0}` 下的壞 bash **必須被抓到**。" \
+    "舊白名單不匹配它 ⇒ 靜默跳過；而期望 exit 0 的 fixture 分不出這件事" ],
+  [ "wf_no_runs", 1, "0 個 run 區塊",
+    "🔴 **第二層零掃描**：掃到了檔但 0 個 run 區塊被檢查，同樣是「什麼都沒驗到」。" \
+    "舊寫法印「0 個 run 區塊皆通過 bash -n」並 exit 0——" \
+    "而那正是 interpreter_for 回歸會產生的形態，閘門對自己剛修好的故障綠著通過" ],
   [ "wf_empty", 1, "一份 workflow 都沒找到",
     "🔴 掃不到檔案時必須 fail，不能印 OK（空值長得像資料）" ]
 ].freeze

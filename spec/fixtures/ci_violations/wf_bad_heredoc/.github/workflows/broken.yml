@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Unterminated heredoc
+        # 🔴 **這一行是承重的，不得改成預設 shell**（2026-08-15，PR #42 驗收指出）。
+        #    它看起來「跟 heredoc 無關」，但它同時是 `interpreter_for` 的斷言：
+        #    舊白名單（精確成員比對）不匹配這種官方文件化的模板 ⇒ 該區塊被靜默跳過
+        #    ⇒ 本 fixture 會從 exit 1 掉成 exit 0，而測試只看得到「綠」。
+        #    ⚠️ 那個斷言現在已另有 `wf_custom_shell` 正向守著，但這一行仍是一道額外的網。
         shell: bash --noprofile --norc -eo pipefail {0}
         run: |
           cat <<EOF
