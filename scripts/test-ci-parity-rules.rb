@@ -5,10 +5,17 @@
 #
 # ## 🔴 這支測試為什麼晚到
 #
-# `check-ci-parity.rb` 送審時（PR #39）**沒有回歸測試**，而本倉庫**已合併的**檢查器
-# 都各有一支反向證明：`check-limits-keys.rb` → `test-limits-key-rules.rb`、
-# `check-money-boundary.rb` → `test-money-rules.rb`、`lint-prototype.py` → `test-lint-rules.py`。
-# 只有它沒有。
+# `check-ci-parity.rb` 送審時（PR #39）**沒有回歸測試**。
+#
+# ⚠️ **但「只有它沒有」是假的**，別把它當成本節的論證（第 4 輪驗收指出，實查成立）：
+# 本倉庫已合併的檢查器共 **7 支**，只有**三組**配了反向證明——
+# `check-limits-keys.rb` → `test-limits-key-rules.rb`、
+# `check-money-boundary.rb` → `test-money-rules.rb`、
+# `lint-prototype.py` → `test-lint-rules.py`。
+# 🔴 **另外三支至今零反向證明**：`check-tenant-isolation.rb`（守鐵律 2！）／
+# `check-reversal-naming.rb`／`check-baseline-raise.py`。已登記待補。
+#
+# ⇒ 真正的理由不是「別人都有」，而是 **65 §K.7 要求**，而這一支**寫不出來**。
 #
 # <!-- 🔴 2026-08-15 更正（PR #39 第 3 輪驗收指出）。本段初稿逐字寫著
 #      「同批新增的檢查器中唯一沒有的一支——check-limits-keys.rb、check-money-boundary.rb、
