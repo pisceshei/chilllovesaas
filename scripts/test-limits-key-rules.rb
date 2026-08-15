@@ -59,9 +59,11 @@ CASES = [
     "裸字 `~` 被解析成 nil——與布林是不同分支，之前完全沒被測到" ],
   [ "limits_date_key", 1, "Date",
     "看起來像日期的鍵被解析成 Date（生效日／匯率日結那類表會踩到）" ],
-  [ "limits_seq_key", 1, "TrueClass",
+  [ "limits_seq_key", 1, "rules.0.on",
     "🔴 布林鍵藏在 **sequence 裡的 mapping**——守的是 Sequence 遞迴分支，" \
-    "真實 limits.yml 有 17 處這種結構" ],
+    "真實 limits.yml 有 17 處這種結構。" \
+    "斷言用**帶索引的路徑**而不是 `TrueClass`：只斷言型別的話，把走訪從 " \
+    "`key_path + [i.to_s]` 改成 `key_path`（診斷退化成 `rules.on`）仍會全綠" ],
   [ "limits_erb", 1, "ERB",
     "🔴 ERB fail-closed（輸出型標籤）：原始檔的 AST 看起來乾淨，loader render 後是 true 鍵" ],
   [ "limits_erb_tag", 1, "ERB",
