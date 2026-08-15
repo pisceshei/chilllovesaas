@@ -62,6 +62,13 @@ make_repo() {
   git -C "$repo" config user.name t
   # fixture repo 關掉 autocrlf：否則每個檔都印一行 LF→CRLF 警告，把測試輸出淹掉。
   git -C "$repo" config core.autocrlf false
+  # 🔴 **強制 core.filemode=true**（2026-08-15，PR #41 第二輪驗收）。
+  #    Linux runner 上 git 會自動偵測成 true，Windows 上是 false。
+  #    兩者差別很大：filemode=true 時，`git add -A` 會**重新以磁碟 mode 覆蓋 index**，
+  #    把先前 `update-index --chmod=+x` 設好的 100755 打回 100644。
+  #    ⇒ 不固定這個設定的話，**本機全綠但 CI 會紅**——
+  #      而那正是這支閘門本身要防的落差，在它自己的測試裡復發。
+  git -C "$repo" config core.filemode true
   printf '%s' "$repo"
 }
 
@@ -83,7 +90,20 @@ echo baseline
 # $1=名稱 $2=期望 exit $3=輸出須含 $4=在防什麼
 assert_case() {
   local name="$1" want="$2" want_out="$3" why="$4" repo="$WORK/$1"
-  local out status
+  local out status f
+  # 🔴 **基線檔的 mode 在這裡「最後一次」設定**，不是在 seed_repo 里。
+  #    理由：`core.filemode=true`（Linux CI）時，**各 case 自己的 `git add -A`
+  #    會以磁碟 mode 覆蓋 index**，把 seed_repo 設好的 100755 打回 100644
+  #    ⇒ clean／no_shebang／bin_ok 三條正向斷言在 CI 上會紅（實測重現過）。
+  #    ⚠️ `chmod +x` 救不了：Windows 的檔案系統沒有真的執行位元。
+  #    🔴 **放在 assert_case 而不是各 case 末尾，是刻意的**：
+  #       這是唯一保證在「所有佈置都做完之後」跑的地方，
+  #       新增 case 的人不可能忘記。（機制 > 紀律，同本 PR 的主旨。）
+  for f in bin/baseline scripts/baseline.sh; do
+    if git -C "$repo" ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+      git -C "$repo" update-index --chmod=+x "$f"
+    fi
+  done
   out="$(bash "$CHECKER" "$repo" 2>&1)"
   status=$?
   if [ "$status" -ne "$want" ]; then
