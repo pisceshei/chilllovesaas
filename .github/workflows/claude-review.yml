@@ -387,18 +387,47 @@ jobs:
               # 🔴 用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
               #    續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
               #    （2026-08-14 寫這段時踩過一次；同型事故另見本檔 heredoc 那次。）
+              # 🔴 **分報四種「取不到」的原因**（2026-08-15，多代理驗收 Y7 指出）。
+              #    原本四條路徑全部收斂成同一句「取不到 execution_file」：
+              #      ①env 空 ②檔不存在 ③**檔在且可解析，但裡面沒有 result 物件**
+              #      ④**檔在但 JSON 壞掉**
+              #    其中③④**檔案明明在** ⇒ 那句話本身就是假歸因，
+              #    而它就印在一段**承認③存在**的註釋下面幾行（「`select(. != null)` 讓
+              #    『找不到 result』落空成空字串」）——註釋與訊息互相矛盾。
+              #    🔴 這正是本分支上一輪才修掉的那個錯（寫死的猜測當診斷），換個位置又犯一次。
+              #    姊妹分支（下方回收品）有 `tail -c` 的 fallback，所以它那句「為空或不存在」
+              #    是可信的；失敗分支缺的就是這道分辨。
               DIAG=""
-              if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+              DIAG_WHY=""
+              if [ -z "${EXECUTION_FILE:-}" ]; then
+                DIAG_WHY="action 沒有輸出 execution_file——步驟可能在產生它之前就失敗了"
+              elif [ ! -f "$EXECUTION_FILE" ]; then
+                DIAG_WHY="execution_file 指向 $EXECUTION_FILE，但該檔不存在"
+              else
+                JQ_ERR="$(mktemp)"
                 # `-s`（slurp）＋ `..` 的理由同下方回收品那段：對「單一 JSON 陣列」與
-                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串，
-                # 才會走下面的 fallback；少了它，jq 會印出一整行 `is_error=null`，
-                # 看起來像有診斷、實際上什麼都沒撈到。
-                DIAG=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | select(. != null)
-                  | "is_error=\(.is_error) num_turns=\(.num_turns) total_cost_usd=\(.total_cost_usd) duration_ms=\(.duration_ms)"' \
-                  "$EXECUTION_FILE" 2>/dev/null || true)
+                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串。
+                # 🔴 `g()` 逐欄位用 `has()` 判斷（Y8）：`select(. != null)` 只擋**整個物件**不存在，
+                #    擋不住**欄位被上游改名** ⇒ 會印出一行 `num_turns=null total_cost_usd=null`，
+                #    那行對不上下面判準表的任何一列，而讀的人會拿它去對號入座。
+                #    ⚠️ 不能用 `// "缺欄位"`：jq 的 `//` 對 `false` 也會取右邊，
+                #      而 `is_error: false` 是**完全正常的值**，會被誤報成缺欄位。
+                DIAG=$(jq -s -r 'def g(k): if has(k) then (.[k] | tostring) else "缺欄位" end;
+                  [.. | objects | select(.type? == "result")] | last | select(. != null)
+                  | "is_error=\(g("is_error")) num_turns=\(g("num_turns")) total_cost_usd=\(g("total_cost_usd")) duration_ms=\(g("duration_ms"))"' \
+                  "$EXECUTION_FILE" 2>"$JQ_ERR" || true)
+                if [ -z "$DIAG" ]; then
+                  SIZE=$(wc -c < "$EXECUTION_FILE" | tr -d ' ')
+                  if [ -s "$JQ_ERR" ]; then
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）但 **jq 解析失敗**：$(head -c 300 "$JQ_ERR" | tr '\n' ' ')"
+                  else
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）且可解析，但裡面**沒有 type==\"result\" 的物件**——action 可能在產生總結前就中止了"
+                  fi
+                fi
+                rm -f "$JQ_ERR"
               fi
               if [ -z "$DIAG" ]; then
-                DIAG="（取不到 execution_file，請用下方指令自行撈 result payload）"
+                DIAG="取不到 —— $DIAG_WHY"
               fi
               BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
