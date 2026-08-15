@@ -158,7 +158,8 @@ GitHub 建不出 merge ref ⇒ `pull_request` 事件不產生 run。
    `scripts/test-limits-key-rules.rb` ＋ 三份 fixture，已掛 CI。
    🔴 原本不補的理由是「既有兩支 `check-*.rb` 都沒有，比照辦理」——
    那個理由在 main 合入 PR #29 之後**不成立**了（`scripts/test-money-rules.rb` 立了慣例，
-   65 §K.7 更逐字寫「只有前者綠不算交付」）。**理由會過期，過期就要重判。**
+   65 §K.7 更逐字寫「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）。
+   **理由會過期，過期就要重判。**
 
 4. ⚠️ **其他 config YAML 未納管**（`config/brand.yml` 等）。`config_for` 同樣會 symbolize，
    同一個陷阱在那些檔上一樣成立，只是目前沒有踩到。加進 `TARGETS` 即可，但**我沒有擅自擴大範圍**——
