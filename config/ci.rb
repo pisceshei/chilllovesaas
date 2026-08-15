@@ -25,6 +25,10 @@ CI.run do
   # 鐵律 3 的 L4。與下一步是一組：檢查器自己綠不算交付（65 §K 第 7 條）。
   step "Invariants: Money unit boundary", "ruby scripts/check-money-boundary.rb"
   step "Invariants: Money rules regression", "ruby scripts/test-money-rules.rb"
+  # workflow 的語法閘門。本機跑得到特別有價值：改 claude-review.yml 的 PR
+  # 拿不到 Claude 驗收（反竄改），本機這一步是它上線前唯一的機械檢查。
+  step "Invariants: Workflow syntax", "ruby scripts/check-workflow-syntax.rb"
+  step "Invariants: Workflow syntax rules regression", "ruby scripts/test-workflow-syntax-rules.rb"
 
 
   # Optional: set a green GitHub commit status to unblock PR merge.

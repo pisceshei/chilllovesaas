@@ -261,6 +261,19 @@ jobs:
       - name: Regression-test money boundary rules
         run: ruby scripts/test-money-rules.rb
 
+      # 🔴 workflow 自己的語法閘門。存在理由是一個**保護真空**：
+      # `.github/workflows/claude-review.yml` 有一支 240+ 行的閉環 shell，
+      # 而動該檔的 PR **拿不到 Claude 驗收**（反竄改機制，見該檔檔頭 31–40 行），
+      # 同時本 CI 先前**沒有任何一步**解析 workflow YAML 或跑 bash -n。
+      # 該檔註釋自己記載被同型語法錯誤咬過兩次（block scalar 續行、heredoc）。
+      # ⇒ 這是全倉庫最需要機械語法檢查、卻最沒有保護的地方。
+      # ⚠️ 這不是 actionlint：不驗 action inputs、不驗 ${{ }} 語義、不驗執行期行為。
+      - name: Check workflow syntax
+        run: ruby scripts/check-workflow-syntax.rb
+
+      - name: Regression-test workflow syntax rules
+        run: ruby scripts/test-workflow-syntax-rules.rb
+
       # 🔴 YAML 1.1 的裸字 on/off/yes/no/true/false（含大小寫變體）會被 Psych 解析成布林——對「值」是常識，
       # 但沒人預期它同樣適用於「鍵」。limits.yml 的 gift_card_entry_points 就中了這個陷阱
       # （六個 `on` 鍵實際是 true），而 deep_symbolize_keys 對非字串鍵原樣保留 ⇒
