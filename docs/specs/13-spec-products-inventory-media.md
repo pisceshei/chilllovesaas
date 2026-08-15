@@ -59,7 +59,17 @@
         ⚠️ **前置條件（尚未做）**：`fk_line_items_product_variant_id` 目前**沒有 `on_delete`**
            ⇒ MySQL 預設 RESTRICT ⇒ **DB 層現在根本刪不掉變體**。要改成 `ON DELETE SET NULL`
            （欄位已是 nullable）。**這一條沒做完之前不得開放刪除路徑。**
-        同批修正：`docs/specs/63` §B.4 硬規則 2 的同一條敘述。 -->
+        同批修正：`docs/specs/63` §B.4 硬規則 2 的同一條敘述。
+
+        ✅ **2026-08-16 測試店實測確認（T-1 結案）**，`docs/worklog/2026-08-16-T1實測-變體刪除語義.md`：
+           建含變體 A 的正式訂單 #1006（A 的可售數量變 −1，引用關係成立）
+           → 刪除變體 A → **成功，無任何錯誤**。
+           確認 modal 逐字：「選項值為「A」的子類將從您的商店中刪除。此動作無法復原。」
+           ——**完全沒有提到訂單**。
+           刪除後訂單 #1006：商品名、**變體標題「A」照常顯示**、金額與狀態全不變
+           ⇒ **line item 是快照**，證實上面第②項的官方說法。
+           🔴 上面那些官方文檔本來只是**證據方向**（mutation 頁對此完全沉默）；
+              現在是**親自跑過**。這條前置條件解除，可以往下走。 -->
 5. `position` 排序欄位用整數 gap 法（100,200,300…重排時重編）；拖曳排序 endpoint 冪等。
 6. status **四態**（`ACTIVE` / `DRAFT` / `ARCHIVED` / **`UNLISTED`**，值域＝`limits.product.status_values`）＋ 前台可見性拆成**兩個獨立維度**：`Product.purchasable` 與 `Product.discoverable`（**不再有 `Product.published` 這個 scope**）。四個狀態是這兩維的組合，真值表、變體層 AND 規則與全站影響面見 **§F1.2**。
 
