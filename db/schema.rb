@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_16_000000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -570,6 +570,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
     t.datetime "updated_at", null: false
     t.string "value", null: false
     t.index ["shop_id", "id"], name: "uq_option_values_tenant_id", unique: true
+    t.index ["shop_id", "product_option_id", "id"], name: "uq_option_values_option_scoped_id", unique: true
     t.index ["shop_id", "product_option_id", "position"], name: "uq_option_values_product_option_id_position", unique: true
     t.index ["shop_id", "product_option_id", "value"], name: "uq_option_values_product_option_id_value", unique: true
     t.index ["shop_id", "product_option_id"], name: "ix_option_values_product_option_id"
@@ -661,9 +662,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
     t.bigint "shop_id", null: false
     t.datetime "updated_at", null: false
     t.index ["shop_id", "id"], name: "uq_product_options_tenant_id", unique: true
+    t.index ["shop_id", "product_id", "id"], name: "uq_product_options_product_scoped_id", unique: true
     t.index ["shop_id", "product_id", "name"], name: "uq_product_options_product_id_name", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_product_options_product_id_position", unique: true
     t.index ["shop_id", "product_id"], name: "ix_product_options_product_id"
+  end
+
+  create_table "product_variant_option_values", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "變體 × 選項的座標（每個變體對每個選項恰好一列）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "option_value_id", null: false
+    t.bigint "product_id", null: false
+    t.bigint "product_option_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_pvov_tenant_id", unique: true
+    t.index ["shop_id", "product_id", "product_option_id"], name: "ix_pvov_product_option"
+    t.index ["shop_id", "product_id", "product_variant_id"], name: "ix_pvov_product_variant"
+    t.index ["shop_id", "product_option_id", "option_value_id"], name: "ix_pvov_option_value"
+    t.index ["shop_id", "product_variant_id", "product_option_id"], name: "uq_pvov_variant_option", unique: true
   end
 
   create_table "product_variants", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品變體與 integer-cents 定價", force: :cascade do |t|
@@ -674,6 +691,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
     t.string "currency", limit: 3, default: "HKD", null: false
     t.string "inventory_policy", limit: 16, default: "deny", null: false
     t.integer "lock_version", default: 0, null: false
+    t.string "option_values_digest", limit: 40, null: false, comment: "選項值組合的 SHA1（13 §F1-2／D12）；輸入是 option_value_id 不是字串；我方內部欄，不得對外曝露"
     t.integer "position", null: false
     t.bigint "price_cents", default: 0, null: false
     t.bigint "product_id", null: false
@@ -686,6 +704,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
     t.integer "weight_grams", default: 0, null: false
     t.index ["shop_id", "barcode"], name: "ix_product_variants_barcode"
     t.index ["shop_id", "id"], name: "uq_product_variants_tenant_id", unique: true
+    t.index ["shop_id", "product_id", "id"], name: "uq_product_variants_product_scoped_id", unique: true
+    t.index ["shop_id", "product_id", "option_values_digest"], name: "uq_product_variants_option_values_digest", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_product_variants_product_id_position", unique: true
     t.index ["shop_id", "product_id"], name: "ix_product_variants_product_id"
     t.index ["shop_id", "sku"], name: "ix_product_variants_sku"
@@ -1031,6 +1051,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
   add_foreign_key "pages", "shops", name: "fk_pages_shop"
   add_foreign_key "product_options", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_product_options_product_id"
   add_foreign_key "product_options", "shops", name: "fk_product_options_shop"
+  add_foreign_key "product_variant_option_values", "option_values", column: ["shop_id", "product_option_id", "option_value_id"], primary_key: ["shop_id", "product_option_id", "id"], name: "fk_pvov_value"
+  add_foreign_key "product_variant_option_values", "product_options", column: ["shop_id", "product_id", "product_option_id"], primary_key: ["shop_id", "product_id", "id"], name: "fk_pvov_option"
+  add_foreign_key "product_variant_option_values", "product_variants", column: ["shop_id", "product_id", "product_variant_id"], primary_key: ["shop_id", "product_id", "id"], name: "fk_pvov_variant"
+  add_foreign_key "product_variant_option_values", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_pvov_product"
+  add_foreign_key "product_variant_option_values", "shops", name: "fk_pvov_shop"
   add_foreign_key "product_variants", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_product_variants_product_id"
   add_foreign_key "product_variants", "shops", name: "fk_product_variants_shop"
   add_foreign_key "products", "shops", name: "fk_products_shop"

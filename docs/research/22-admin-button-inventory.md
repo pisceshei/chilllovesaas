@@ -103,7 +103,22 @@
 | 類別 taxonomy | 標準分類 1 個；解鎖類別 metafields、影響稅則 | P2。M：products.category_id + 標準分類表 |
 | 定價 | compare-at > price 才顯示特價；**系列頁 Sale 標籤需全變體 compare-at 一致**；cost 算毛利不對外 | P0。展示規則進 storefront helper（S14） |
 | 庫存卡 | SKU/條碼（真實 GTIN 供通路）/track 開關/繼續銷售/五狀態量 | P0。M：inventory_*（S13-F5） |
-| 變體 | ≤3 選項/≤2048 變體；選項與值可重排改名；**改選項會重建變體**（斷外部引用）；批改價格/圖片/庫存；依選項分組 | P0。S13-F1 diff 更新（不重建）——我們刻意優於本尊的點，註明差異 |
+| 變體 | ≤3 選項/≤2048 變體；選項與值可重排改名；**改名／重排＝原地更新保留 variant id**；增刪值／刪 option **依策略 enum**，破壞性為 opt-in；批改價格/圖片/庫存；依選項分組 | P0。**修到一致**（不再是刻意偏離） |
+
+<!-- 2026-08-15 依 parity 查證修正，原文：
+     「**改選項會重建變體**（斷外部引用）」＋「S13-F1 diff 更新（不重建）——
+       **我們刻意優於本尊的點**，註明差異」
+     🔴 **兩處都要改**：
+     ① 「改選項會重建變體」**描述過期**。本尊 `productOptionUpdate` 的
+        `optionValuesToUpdate` 以 `id: ID!` 定位改名 ⇒ 原地更新、variant id 不變；
+        `ProductOptionCreateVariantStrategy` 的**預設是 `LEAVE_AS_IS`**，官方逐字
+        「Existing variants are updated with the first option value of each option added.」
+        ——**本尊預設就是 diff 更新，不是重建。**
+     ② 🔴 **「我們刻意優於本尊的點」撤銷**：我們宣稱優於一個本尊已經有的行為。
+        偏離登記（71 §A 保護清單的對應條目）一併撤回，改為「修到一致」。
+     ⚠️ 真正會刪變體的是**明文 opt-in 的策略**：`ProductOptionUpdateVariantStrategy: MANAGE`
+        （官方逐字「all variants referencing that option value will be deleted」）、
+        `ProductOptionDeleteStrategy: POSITION`、以及 `productSet` 的全量覆寫。 -->
 | SEO 編輯 | 標題 ≤70、描述 ≤320、handle 改時「建立轉址」勾選 | P0。S13-F2 redirect 表 |
 | 狀態 | Active/Draft/Archived + **Unlisted**（可直連買、不可被發現 noindex） | P0 三態；Unlisted P1（publishing 加 flag） |
 | 發布 | 管道與市場清單、**排程上線日期**、變體層級可單獨發布 | P0 管道；排程 P1（publish_at + job） |

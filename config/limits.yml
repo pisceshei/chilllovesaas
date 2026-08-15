@@ -2543,9 +2543,17 @@ catalog_flow:
   #   snippets/card-product-flex.liquid:195 / snippets/product-card-compare.liquid:195
   # 不做 ⇒ 無變體商品在 Ella 渲染出空的變體選擇器（M6 golden theme 驗收直接失敗，27 §8）。
   default_variant_liquid_title: "Default Title"
-  # sku/barcode 的權威表＝inventory_items（單一權威欄位，避免雙寫漂移）。（ours，63 §B.6）
+  # **sku** 的權威表＝inventory_items（單一權威欄位，避免雙寫漂移）。63 §B.6
   # 佐證：docs/research/60:122（live）——庫存頁 checkbox value 為 gid://shopify/InventoryItem/…
+  # 本尊佐證：InventoryItemInput.sku 是官方寫入面（2024-07 起）。
   sku_owner: inventory_item
+  # 🔴 **barcode 不跟著搬**（2026-08-15 parity 查證修正）。
+  #    本尊的 `InventoryItem` 型別**根本沒有 barcode 欄位**，`InventoryItemInput` 也沒有
+  #    ⇒ barcode 就在 `ProductVariant` 上。
+  #    ⚠️ 原註釋寫「sku/barcode 的權威表＝inventory_items」，那是 bug——兩個欄位不同命。
+  #    🔴 **db/schema.rb 目前是對的**（product_variants.barcode 存在）——
+  #       任何人「照舊規格修 schema」都會把它改壞。
+  barcode_owner: product_variant
   # SKU 是**軟唯一**：官方要求唯一、偵測到重複顯示警告但**不阻擋**。
   # 出處：docs/research/61 §1.5（help P10）。⇒ DB 建**一般索引** (shop_id, sku)，不是唯一索引；
   #      唯一索引會讓「同款不同包裝共用 SKU」與 CSV 批次匯入（合法情境）直接失敗，與官方相反。
