@@ -117,6 +117,33 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 🔴 **診斷用，2026-08-15 開啟**：預設 false 時 action 只印
+          #   `Running Claude Code via SDK (full output hidden for security)`，
+          #   且 result 物件是**白名單式**輸出——只留 6 個欄位，
+          #   **錯誤原因所在的 `result` 欄被整個砍掉**。
+          #   ⇒ 這正是 08-15 驗收全滅卡了 11 小時、跨四個工作階段的直接原因：
+          #     每個人拿到的都是同一組**去掉了原因的數字**，只能靠指紋猜，而且猜錯了
+          #     （先猜「無 Fable 5 權限」，被 `git log` 證偽——同一份設定 01:41／01:54 才成功兩次）。
+          #   ⚠️ action 的 README 說「debug mode 會自動開啟 show_full_output」，
+          #     但**在 `@v1` 上實測不成立**（PR #41 run 31863797988→attempt #2 勾了
+          #     Enable debug logging：raw log 11,704 行、`##[debug]` 一堆，
+          #     那句「full output hidden」照樣印、`result` 欄照樣被砍）。
+          #     ⇒ 不要相信那句話，**要開就明文開這個 input**。
+          #   ✅ 已驗證這**不是**會被靜默忽略的未知 input（本檔上方 `--model` 那段記的形態）：
+          #     `anthropics/claude-code-action@v1` 的 `action.yml` **156 行宣告**、
+          #     **325 行 `INPUT_SHOW_FULL_OUTPUT: ${{ inputs.show_full_output }}` 明文映射**。
+          #     🔴 這一步非做不可——composite action **不會**把 `with:` 自動傳給內層步驟，
+          #       少了 325 行那個映射，寫了也等於沒寫。
+          #     ⚠️ 查證方法本身也踩過坑：GitHub 的 blob 檢視是**虛擬捲動**，
+          #       只渲染前約 150 行 ⇒ 在頁面上搜「找不到」是**渲染結果**不是事實。
+          #       要用 `raw.githubusercontent.com` 的純文字，或 code search。
+          #   宣告型別是**字串**（`default: "false"`）⇒ 這裡照字串寫，不寫 YAML 布林。
+          #   安全性：本倉庫是 **private**，Actions log 只有協作者看得到；
+          #   GitHub 仍會遮罩 secrets。代價是每輪 log 會多出完整審核串流（噪音）。
+          #   🔴 **移除條件**：等驗收環境恢復、且失敗留言能穩定貼出「錯誤原文」之後可關掉。
+          #   關掉之前先確認上面那段 `ERRTEXT` 真的撈得到 `result` 欄——
+          #   若撈不到（存檔與 console 一樣被砍），這個 input 就是唯一手段，**不得關**。
+          show_full_output: "true"
           prompt: |
             你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
 
@@ -416,6 +443,15 @@ jobs:
                   [.. | objects | select(.type? == "result")] | last | select(. != null)
                   | "is_error=\(g("is_error")) num_turns=\(g("num_turns")) total_cost_usd=\(g("total_cost_usd")) duration_ms=\(g("duration_ms"))"' \
                   "$EXECUTION_FILE" 2>"$JQ_ERR" || true)
+                # 🔴 撈**錯誤原文**（2026-08-15 追加）。上面那四個數字是「症狀」，
+                #    真正的原因（額度用盡／認證失效／模型不可用⋯）在 result 物件的
+                #    `result` 欄裡，而 action 的 console 是**白名單式**印出——只印 6 個欄位，
+                #    `result` 被整個砍掉。⚠️ 這一行是在賭「存檔比 console 完整」，
+                #    **沒有實測過**：若印出「無 result 欄」，代表存檔同樣被砍，
+                #    那時就只能靠本步驟上方開啟的 `show_full_output: true`。
+                ERRTEXT=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
+                  | if type == "object" and has("result") then (.result | tostring) else "" end' \
+                  "$EXECUTION_FILE" 2>/dev/null | head -c 1500 || true)
                 if [ -z "$DIAG" ]; then
                   SIZE=$(wc -c < "$EXECUTION_FILE" | tr -d ' ')
                   if [ -s "$JQ_ERR" ]; then
@@ -429,16 +465,22 @@ jobs:
               if [ -z "$DIAG" ]; then
                 DIAG="取不到 —— $DIAG_WHY"
               fi
-              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
+              if [ -n "$ERRTEXT" ]; then
+                ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄）：\n\n```\n%s\n```' "$ERRTEXT")
+              else
+                ERRBLOCK="**錯誤原文：取不到** —— execution_file 的 result 物件裡沒有 \`result\` 欄（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+              fi
+              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
                 "本次執行結果：\`$DIAG\`" \
+                "$ERRBLOCK" \
                 "**判準——請照上面的數據對號入座，不要預設是哪一種**：" \
                 "- \`num_turns\` 接近 \`--max-turns\` 上限、\`total_cost_usd\` > 0、耗時數分鐘 ⇒ **回合數用盡**（大型 diff 會燒光，尤其動到 \`docs/design/chilllove-admin-v2.html\`）。重新 push 前先想辦法縮小 diff。" \
                 "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**。🔴 **光憑這組數據分不出是哪一種**，下面兩者長得一模一樣：" \
                 "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
                 "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
                 "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
-                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`（Actions 的瀏覽器檢視器是虛擬捲動＋gzip，拿不到）。")
+                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`，或 Actions 頁面 ⚙ → **View raw logs**（瀏覽器的分步檢視器是虛擬捲動，只渲染幾百行，拿不到；raw logs 是純文字，拿得到）。🔴 **不要勾「Enable debug logging」重跑**——2026-08-15 於 PR #41 實測無效：11,704 行 raw log 裡 action 照樣印「full output hidden for security」，\`result\` 欄一樣被砍。action 那句提示的兩條路只有 \`show_full_output: true\` 是真的。🔴 **也不要靠換模型來試**：08-15 的全滅期間已用時間戳逐項排除 repo 這一側的所有變數（workflow 最後改動 01:00、01:41／01:54 兩次成功、secret 最後更新 Aug 14），換模型不會修好帳號側的問題。")
               gh pr comment "$PR" --body "$BODY"
             else
               # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
