@@ -121,7 +121,7 @@ RECHECK_CMD = /`[^`\n]*\b(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]
 SNAPSHOT = /快照|實跑輸出|輸出如下|取證/
 
 # R5：全稱句（只警告）。
-UNIVERSALS = [/唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從來沒有/, /一律都/].freeze
+UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從來沒有/, /一律都/ ].freeze
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 violations = []
