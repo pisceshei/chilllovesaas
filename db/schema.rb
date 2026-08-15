@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_14_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_15_000010) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -688,7 +688,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_14_200000) do
     t.index ["shop_id", "id"], name: "uq_product_variants_tenant_id", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_product_variants_product_id_position", unique: true
     t.index ["shop_id", "product_id"], name: "ix_product_variants_product_id"
-    t.index ["shop_id", "sku"], name: "uq_product_variants_sku", unique: true
+    t.index ["shop_id", "sku"], name: "ix_product_variants_sku"
   end
 
   create_table "products", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品主檔", force: :cascade do |t|

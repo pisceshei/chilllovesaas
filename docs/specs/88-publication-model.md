@@ -129,11 +129,31 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 
 | # | 事項 | 為什麼不在本次做 |
 |---|---|---|
-| 1 | **建店時自動建 online_store publication** | 建店流程本身是 M1/M8 的事；migration 只回填了既有店 |
+| ~~1~~ | ~~**建店時自動建 online_store publication**~~ | ✅ **2026-08-15 結案**，見下方批註 |
 | 2 | **`auto_publish` 的實際行為**（新商品自動納入 auto_publish 的管道） | 需要 Product 的 after_create 回呼，屬商品 CRUD |
 | 3 | **排程發布要求商品為 Active** | 跨表條件，隨商品狀態機一起做 |
 | 4 | **商品表單的「上架管道」區塊** | UI，M1 |
 | 5 | **`ProductVariant` / `Collection` 展開** | 本次只建了最小 model（多型關聯需要類別存在），主體是 M1 |
+
+<!-- 2026-08-15 結案（#1）：`Shop#after_create :create_default_publication`
+     ＋ `20260815000010_backfill_missing_online_store_publication`。
+     🔴 **這個缺陷有兩半，缺一半就等於沒修**：callback 修未來、migration 修歷史。
+     `20260814200000` 只回填了它執行當下既有的店，之後每一次 seeds／spec／手動建店
+     都產生一間沒有管道的店——而且**不拋任何錯**，只是那間店所有商品都上不了架。
+
+     掛在 model callback 而不是 service：本倉庫目前沒有 service 層也沒有 shops
+     controller，而 callback 的好處是**每一條建店路徑都涵蓋**（seeds／factory／rake／
+     未來的 M8 平台後台），不會有人新開一條路徑而忘了建管道。
+
+     🔴 **刻意不順便回填 `resource_publications`**：`20260814200000` 當時是把
+     `products.published_at` 原樣搬過去，但那個欄位已被同一支 migration 移除，
+     時間窗裡的商品從來沒有過它 ⇒ 只剩兩個都要靠猜的選項：填 `NOW()` 等於實作
+     `auto_publish` 行為（＝下面的 #2，明確延後），填 `NULL` 又與該 publication 自己的
+     `auto_publish: true` 自相矛盾。⇒ 整包留給 #2 一次做對。
+
+     ⚠️ **只建 `online_store` 一個管道**。`docs/research/82` §0.1 實測本尊的「已安裝管道」
+     有三個（銷售點／線上商店／Shop），但本規格全篇只規範 online_store，
+     其他管道由誰在什麼時候建**沒有規格** ⇒ 不猜，登記於此。 -->
 
 ---
 

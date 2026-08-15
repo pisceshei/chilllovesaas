@@ -14,10 +14,11 @@ class GraphqlRequestCost
     # @see docs/research/28-api-contract.md §0.4
     def calculate(query:, variables:)
       document = query.to_s
+      base = mutation?(document) ? GraphqlLimits.fetch(:mutation_base_cost_points) : 0
       product_fields = document.scan(/\bproducts\b\s*(?:\(([^)]*)\))?/)
-      return GraphqlLimits.fetch(:object_cost_points) if product_fields.empty?
+      return base + GraphqlLimits.fetch(:object_cost_points) if product_fields.empty?
 
-      product_fields.sum do |arguments|
+      base + product_fields.sum do |arguments|
         GraphqlLimits.fetch(:object_cost_points) + requested_page_size(arguments.first.to_s, variables)
       end
     end
@@ -43,6 +44,21 @@ class GraphqlRequestCost
     end
 
     private
+
+    # document 是不是 mutation。
+    #
+    # ⚠️ **這是刻意的低精度實作，限度寫在這裡以免被當成完整解**：
+    # 它掃的是「有沒有一個 `mutation` 關鍵字出現在 operation 位置」，
+    # 因此在 ①一份 document 含多個 operation（只有部分是 mutation）
+    # ②`mutation` 出現在註釋或字串裡 ③fragment 內
+    # 這三種情形下會**高估或低估**。
+    # 精確做法是解析 AST 取 `operation_name` 對應的 operation type——
+    # 那要等 M8 的完整 cost analyzer（本檔檔頭已登記）。
+    # 🔴 現階段的取捨方向是**寧可高估**（多扣點數比放行超額請求安全），
+    # 所以用「出現即算」而不是「只算第一個」。
+    def mutation?(document)
+      document.match?(/(\A|[}\s])mutation\b/)
+    end
 
     # 未指定 first/last 時的預設頁大小；一律讀 limits.yml（鐵律 6，
     # 原骨架硬編碼 50 於 2026-08-13 移植時外移，與 KeysetConnection 同源）。

@@ -127,3 +127,149 @@
   只有 `request` 與 `agents` 兩個物件可用，且 `agents.md`／`llms.txt`／`llms-full.txt`
   **不可為 JSON template**。這是**架構約束不是功能**，M2 設計 render context 時沒算進去，之後補會很痛。
 - **影響**：71-R13-V7 結案；71-R13-V3（主題引擎支援受限 context）**維持 M2 前必答**。
+
+### D12. 變體×選項用 join 表 ＋ `option_values_digest` 物化欄（M1 前裁定）
+
+- **問題**：`HANDOFF` §5 的 M1 第二項是「**變體 diff 更新**」，而 diff 的 match key 就是選項組合。
+  但 55 張表裡**沒有 variant × option_value 的關聯**，`product_variants` 也沒有 digest 欄。
+  `docs/specs/13` §F1-2 要求唯一索引 `(product_id, option_values_digest)`，
+  🔴 **卻從沒定義 digest 的來源資料存哪**——這是全倉庫唯一一個「查了確實沒有規格」的洞。
+- 🔴 **為什麼 84 號沒抓到**：84 只分流了 `71` §F 的 parity 條目，
+  **從未做「spec 要求 vs 現行 schema」的對帳**。⇒「A 桶五條全結案」**不等於**「M1 無閘門」。
+  同型的漏網另有 SKU 唯一索引（見 D13 註）。
+- **選擇：`product_variant_option_values` join 表 ＋ `product_variants.option_values_digest`**
+  （digest ＝ 排序後 join 的 SHA1，唯一索引 `(shop_id, product_id, option_values_digest)` 兜底）。
+- **為什麼不選 `option1/2/3` 冗餘欄**：`docs/research/26` 明載 `variant.option1/2/3` 在 Liquid 是
+  **DEP（已淘汰）屬性** ⇒ 等於把本尊已標記淘汰的形態焊進 M2 主題引擎；且天生只支援 3 個選項。
+- **為什麼不選「只存 digest」**：無法反查「這個變體在某個選項上的值是什麼」，
+  `docs/research/63` §B.5 的變體身分保持演算法（補上新選項的第一個值）跑不了，商品表單也畫不出選項矩陣。
+- **影響**：擋 `productCreate` 的 input shape，必須在第一支商品 mutation 之前落地。
+
+### D13. 系列採 61/13 的 sources 模型，`84` §2 B-4 作廢
+
+- **問題**：兩份內部裁定互相矛盾——`84` §2 B-4 判「collections 表兩種都撐得住、可延後」，
+  而 `docs/research/61` §10 C-4 與 `docs/specs/13` §F4.1 判「資料模型層級 P0」，
+  且 13 §F4.1 **已經寫成五張表**。
+- **選擇：採 61/13 的 sources 模型**（本尊 2026 改為「來源」卡：新增條件與新增商品同卡混用
+  ＋排除 negative 條件＋多來源組），**`84` §2 B-4 作廢**。
+- **理由**：鐵律 12 是最高強制（1:1 對齊本尊），而 B-4 把它當成 UI 問題判斷是錯的分類——
+  「手動/智慧二分不可互轉」與「多來源組可混用」是**兩種不同的表結構**，不是同一張表的兩種畫法。
+- **影響**：71-R8-V4 結案方向確定；M1 建 collections 相關表或 mutation **前**要先改 schema
+  （現行 `collections`／`collection_products`／`collection_rules` 三張是 legacy 形態）。
+
+### D14. userErrors 契約全面對齊本尊（2026-08-15，Admin API 2026-07 逐頁考掘）
+
+- **問題**：`docs/research/28` §0.3 的 mutation 契約有四處與本尊不符，而第一支 mutation
+  定下的形態會被全專案抄。使用者裁定：「深度分析和研究 shopify 的架構，然後我們和 shopify 一樣」。
+- **方法**：四路平行考掘 shopify.dev（field 路徑／code enum／金額正負／payload 慣例）
+  ＋ 三路對抗式覆核（找反例／查版本差異／檢查我方誤讀）。覆核逐頁複核 24 條 load-bearing 事實。
+
+**照抄本尊的（無偏離）**：
+
+| # | 裁定 | 依據 |
+|---|---|---|
+| 1 | `userErrors.field` 型別＝**`[String!]`**（list 可 null、元素非 null），不是 `[String]` | `/interfaces/DisplayableError` 的 SDL 逐字 |
+| 2 | **`input:` 這層外殼要剝掉**：`productDelete(input:{id})` 的錯誤回 `["id"]` 不是 `["input","id"]` ⇒ 63 §A.4 的 `["lockVersion"]` **本來就對** | `/mutations/productDelete` 官方錯誤範例 |
+| 3 | 陣列索引＝**十進位裸字串段**平鋪（`["variants","0","optionValues","0"]`），不用括號／JSONPath | 兩個官方 payload 實例 |
+| 4 | 無法歸屬 ⇒ `field` 回 **`null`** 不是 `[]` | `/mutations/draftOrderComplete` 官方範例 |
+| 5 | **沒有 `clientMutationId`** ⇒ BaseMutation 繼承 `GraphQL::Schema::Mutation`，**不得**用 `RelayClassicMutation` | schema 抽樣 ＋ 404 |
+| 6 | payload 的 **resource 欄位 0..N**，唯一必備是 `userErrors: [X!]!` ⇒ 不得寫死「一個 resource ＋ userErrors」 | 多個官方 payload |
+| 7 | **`CONFLICT` 只屬折扣線**（語義＝折扣屬性互斥的輸入驗證）⇒ 樂觀鎖改 **`STALE_OBJECT`**、庫存 CAS 改 **`CHANGE_FROM_QUANTITY_STALE`**。63 §L-3 以**相反方向**結案 | `DiscountErrorCode` 頁 |
+| 8 | 金額**型別層一律不驗正負**；退款在交易層是**正數**、方向由 `kind` 承載；送 PSP 正數；訂單編輯減項用**獨立型別 ＋ 正 delta**。唯一負數例外是 tender 層 | `Decimal` scalar signed ＋ Stripe「A positive integer」 |
+| 9 | `compareQuantity` **自 2026-04 已移除**，改 `changeFromQuantity`（型別 `Int` **nullable**——「必填」是行為層要求，做成 `Int!` 會拿掉官方明文的「傳 null＝關閉 CAS」逃生門） | schema diff |
+| 10 | input object 命名規則 `{Mutation}Input` **已落後兩年**：本尊 2024-10 起拆成 `ProductCreateInput`／`ProductUpdateInput`，參數改具名 | `/mutations/productCreate` |
+| 11 | 對齊基準版＝**2026-07**（Spring '26 發布日 2026-06-17），不是 2026-04 | 版本頁 |
+
+**刻意偏離（每條都標 ours）**：
+
+| # | 偏離 | 型態 | 為什麼非偏不可 |
+|---|---|---|---|
+| A | **所有 mutation 的 userErrors 一律帶 `code`** | 加嚴 | 本尊泛用 `UserError` **沒有 code**（`/enums/UserErrorCode` 回 404，無共用 base enum）。我方 admin SPA 是唯一客戶端，錯誤分支必須機器可判別；本尊留著無 code 的舊型別是**相容包袱**，它自己也在逐支遷往 typed error ⇒ 這是「往本尊正在走的方向走完」 |
+| B | **各 enum 的值從共用池取** | 加嚴 | GraphQL **形狀照抄**（一個 UserError type 一個專屬 enum，`PageDeleteUserErrorCode` 只有 1 值、`PageCreate` 8 值、`PageUpdate` 9 值）；偏離的只有值域紀律。本尊自己就有 `PRESENT`／`PRESENCE`（語義相反）、`NOT_FOUND`／`RECORD_NOT_FOUND`／`*_DOES_NOT_EXIST` 三種拼法——那是二十年演進的產物，我方沒有相容包袱 |
+| C | **不採用 `elementIndex`** | 收斂 | 本尊對陣列元素錯誤有**兩種**做法，而它自己沒把任一種做成全域鐵律（`ProductSetUserError` 就沒有）。`elementIndex` 與 `field` 的並存語義官方**從未定義** ⇒ 照抄等於抄一個語義未定的欄位。此偏離**只減不加**，客戶端照本尊的另一種寫一律相容 |
+| D | **Admin 側新增 `warnings`** | 新增 | Admin GraphQL 沒有 warnings（`/objects/CartWarning` 在 Admin 命名空間 404），唯一先例在 Storefront Cart。63 §L-9 的「重複 SKU 放行但提醒」在本尊是**靜默行為**，我方判定靜默合併是可用性缺陷。形狀 **100% 照抄 Storefront**（`{code, target, message}` 三欄全非空），所以不是自創語義 |
+| E | **冪等擴充到 33 支** | 加嚴 | 本尊 2026-04 起強制的是 **17 支**，全部是 refund／inventory／location——**Shopify 自己的金流寫入點**，不涵蓋我方自有的。`orderCreate` 至 unstable 都**沒有任何冪等機制**。判準沿用 NP1-D「凡金流寫入一律強制冪等」。🔴 **不會因升版變成 parity**，升版時不得併進官方段 |
+| F | **冪等用 mutation 參數而非 directive** | 形態不同 | 本尊主流是 `@idempotent(key:)` **directive**（少數走 input 欄位）。⚠ 該 directive 的 SDL 定義 shopify.dev **沒有獨立頁面**（無 directives 索引），我方寫的 `directive @idempotent(key: String!) on FIELD` 是從用法反推 ⇒ 登記為假設 |
+
+- **同批修正的檔案**：`CLAUDE.md` 鐵律 4（「HTTP 恆 200」改成三層）、`docs/research/28`
+  §0.1／§0.3.1–§0.3.6、`docs/specs/63` §A.4／§E.5／§L-3／驗收清單、
+  `docs/specs/65` §A.7 ＋ 五處「無符號」措辭、`config/limits.yml` 冪等區塊。
+- 🔴 **仍未查到、不得硬寫的**：具名參數形下的多段 path（只有單段官方範例）；
+  `UserError` 是否 `implements DisplayableError`；`OrderAdjustment.amountSet` 個別項的正負；
+  ShopifyQL MONEY measure 的 **API 回傳**符號（報表 UI 明文「reversal 顯示為負」，
+  但沒有頁面把 UI 符號與 API 符號連起來）⇒ **鐵律 7 的一致性測試不得斷言 `sales_reversals` 的符號**。
+
+### D15. PR-1 落地時的實作級裁定（2026-08-15）
+
+D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須自己決定、而規格沒寫**的部分。
+每一條都附「為什麼不能不決定」。
+
+| # | 裁定 | 為什麼規格沒寫也得決定 |
+|---|---|---|
+| 1 | **`Data` 的 `.[]`／`#with`／`allocate` 三條後門全關** | `65` §C L2 只說關 `.new`。**`allocate` 產出的物件 `is_a?` 為真、欄位全 nil ⇒ 直接穿過 L3 的 adapter 斷言**，而只斷言 `.new` 的測試會全綠交付 |
+| 2 | **`__build` 是 public，靠命名 ＋ CI C5 守** | Ruby 表達不了「friend class」——`Money::Storage` 與 `Money::PspMinor` 是兩個類別。**這是四層防線裡唯一一處型別擋不住的地方**，必須明說而不是假裝完整 |
+| 3 | **`Money.fixed_string` 不用 `format("%.2f", …)`** | `Kernel#format` 的 `%f` 內部轉 Float，BIGINT max 上失真 2 分錢。**只在極大值現形**，一般測試全綠 |
+| 4 | **型別層不驗正負** | `65` 從頭到尾沒提負數。在值物件上驗非負會讓退款差額與撤銷整條卡死；正負是**業務規則**不是**單位規則** |
+| 5 | **`Money::Storage` 不定義算術** | `65` §F.3 只講 SQL rollup。現在猜一個實作，第一個使用者就會繞過它寫 `a.cents + b.cents` ⇒ 留給第一個需要小計／折扣的 PR |
+| 6 | **`Psp::Registry` 入口統一鍵型別** | 生產 Symbol／fixture String，而「空表 ≠ 缺鍵」逼實作用 `Hash#key?`。不收斂 ⇒ **整份 §H 矩陣證明不了生產路徑** |
+| 7 | **幣別鍵 upcase 收在 `Pack` 不是 `Registry`** | 後者是泛型的、不知道哪些鍵是幣別（做了會把 `amount_format` 變成 `:AMOUNT_FORMAT`） |
+| 8 | **`config/iso4217_minor_units.yml` 的 TWD 刻意缺席** | `65` §H.3：本專案至今沒有 TWD minor unit 的一手出處。`limits` 裡兩個看起來像 exponent 的 TWD 數字**都不是 PSP 該用的那個**，填進底表就是從它們推導 |
+| 9 | **`divisibility_scope` 目前被忽略（一律檢查）** | V-206 未結案；`65` §L 的當前處置是「最嚴格解讀」。scope 只進錯誤訊息 |
+| 10 | **`enforce_idempotency_contract!` 不做去重** | claim/replay 有**五個**未決點（表形狀缺 `mutation_name`／transaction 邊界／缺 key 的 code／兩份清單待合併／業務失敗算不算成功而被快取）。五個未決點 × 零支真 mutation ＝ 五次盲猜 |
+| 11 | **`Types::MutationType` 建了但不掛 schema** | 承上：**本 PR 一支 mutation 都不出，所以沒有任何東西獲得虛假的安全感**；掛上 root 的那一刻這個保護就沒了。guard spec 把解鎖條件寫進斷言 |
+| 12 | **不交付 `purchasable`／`discoverable` 具名 scope** | `13` §F1.2(d) 的 SQL 指向兩張不存在的表。照做 ⇒ 全站商品靜默不可購買；省略變體層 ⇒ **名字在說謊** |
+| 13 | **回填 migration 不補 `resource_publications`** | `published_at` 欄位已被上一支 migration 移除，「原樣搬」無值可搬。填 `NOW()` ＝實作 `auto_publish`（`88` §5 #2，明確延後）；填 `NULL` 與該 publication 的 `auto_publish: true` 自相矛盾 |
+| 14 | **`Shop` 的 `publications` 用 `dependent: :destroy`** | 本 model 另外三個關聯都用 `restrict_with_error`，照抄會讓**每一間店（含空店）永遠刪不掉**，而沒有任何既有測試會紅 |
+| 15 | **`around_destroy :within_own_tenant, prepend: true`** | 沒有它時，在別間店的租戶 context 下刪店會把 publication 過濾成 0 列、**一列沒刪卻回報成功**。`prepend` 不可省——`has_many dependent` 是在關聯宣告當下註冊成 `before_destroy` 的 |
+| 16 | **CI 檢查跳過整行註釋、不跳行尾註釋** | 不跳整行 ⇒ **唯一正確實作 C4 的檔案被 C4 判違規**；要精確剝行尾就得處理字串內的 `#` 與 `#{}`，那正是 `lint-prototype.py` 踩過六次「漏看」的解析。取捨方向是**寧可誤擋** |
+| 17 | **「0 examples 不是通過」守衛，判準＝ARGV 沒有路徑也沒有 `-e`／`--tag`** | fixture 曾讓整個套件從 233 變 0。判準改過兩次：無條件檢查會誤擋單跑一個檔；「載入檔數 < 5 ⇒ 跳過」**判斷反了**（那正是要抓的 bug 的症狀） |
+| 18 | **「金額路徑的測試檔」用具名常數 `MONEY_TEST_GLOBS`** | `65` §H.1 以它為判準卻沒有定義它。**它的失效方向是「少掃」** ⇒ 新增金額 spec 時要記得加進去 |
+
+🔴 **本 PR 全層沒有生產呼叫端**（`app/` 的 `Money::` 只出現在自己、`Psp::BaseAdapter`
+沒有子類、`ProductType` 連價格欄位都沒有）。正確性靠三件事：規格逐行寫死的欄位形狀、
+六幣別 × 兩種格式的測試矩陣、六條帶「故意違反 fixture」的 CI 檢查。
+**這一點必須在 PR 描述誠實揭露，不得假裝已被使用。**
+
+---
+
+## 2026-08-15 — PR #29 驗收發現的送款缺口
+
+### D16. `decimal_string` 位數下限：拒絕 sub-2 位，不發明湊整規則
+
+> 來源：PR #29 的 Claude 驗收（🔴 必須修 第 1 條）。**規格全文＝`docs/specs/65` §D.2 A6b ／ §D.5。**
+
+**缺口**：A6 原本只擋位數**上限**（> 2 ⇒ 精度謊報）。宣告 `decimal_places: 0` 或 `1`
+**是完全合法的 pack**，而 `Money::Storage#to_psp_decimal` 走
+`Money.fixed_string(major, pack.decimal_places)`，內部 `value.round(digits)`
+**靜默四捨五入**：
+
+| pack 宣告 | 帳上（儲存 cents） | 送出 | 差額 |
+|---|---|---|---|
+| `decimal_places: 1` | HKD 14.85（`1485`） | `"14.9"` | **0.05，沒有任何一張表記得住** |
+| `decimal_places: 0` | HKD 1480.00（`148000`） | `"1480.0"` | 格式本身就不符它自己宣告的 0 位 |
+
+🔴 **三件事讓這個缺口特別難發現**：
+1. **與 `minor_units` 側不對稱**——那一側有 A3 的餘數 `raise` 順手擋住 float 與非整除，
+   `decimal_string` 側**沒有等價物**（A3 是 minor_units 專用）；
+2. **在 HKD 這個基準法域上就會發生**，不像 A1／A2 只在 zero-decimal 幣別現形；
+3. **§H 矩陣證明不了它**——矩陣裡每個 pack 都宣告 2 位，那條路徑從沒被走過。
+
+**裁定＝(a) fail-closed**：`psp_decimal_min_places: 2`，`validate_decimal_string!`
+一併 reject `< min`。
+
+**為什麼不選 (b) 補齊語義**（加 A3 等價檢查 ＋ §H 補 0／1 位案例）：
+要「支援」sub-2 位就得先發明湊整規則——**誰決定進位方向？差額記到哪張表？**
+`65` §D.4 的四家 PSP 實證表裡沒有任何一家這樣要求（Airwallex 是 2 位），
+本規格全篇沒有出處可依 ⇒ 那是憑空造規則，而且很可能在第一次接真 PSP 時就是錯的。
+🔴 **語義刻意留白**，等第一家真的這樣要求的 PSP 出現時再裁定；到時要改的是
+`65` §D.5 ＋ `psp_decimal_min_places`，**不是繞過閘門**。
+
+**配套（獨立的一個 bug，一併修）**：`Money.fixed_string` 在 `digits = 0` 時輸出 `"1480.0"`
+——`"0".rjust(0, "0")` 回 `"0"`，而小數點是無條件接上去的。
+🔴 **分層刻意如此**：格式化器管「怎麼 render」（對任意 `digits` 都要正確，因此修的是
+格式化邏輯而不是在裡面加政策），政策層（A6／A6b）管「准不准 render」。
+把政策塞進格式化器會讓 `Money::Decimal`（恆 2 位、與 PSP 無關）也被 PSP 規則綁住。
+
+**負面驗證**（兩道防線各拆一次，確認測試真的會紅）：
+- 拆掉 A6b 的下限檢查 ⇒ `registry_spec` 的兩條（`decimal_places` 1／0）紅；
+- 還原 `fixed_string` 的 `digits=0` bug ⇒ `money_spec` 的位數契約那條紅。

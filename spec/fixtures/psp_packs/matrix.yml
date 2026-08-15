@@ -1,0 +1,79 @@
+# `docs/specs/65` §H 測試矩陣用的 fixture pack。
+#
+# 🔴 **這些是合成 pack，不是任何一家真 PSP 的宣告。**
+# 65 §D.4 的實證表逐字寫著：那張表記的是「外部世界長什麼樣」，用來證明
+# A0／A1／A5 三條斷言不是過度設計；**pack 的宣告值必須來自我方實際簽約那一家的一手文件**。
+# ⇒ 本檔的 pack 代碼刻意**不用**真實 PSP 名稱（不叫 stripe／adyen／airwallex），
+# 免得日後有人把 fixture 的值當成那一家的宣告抄進 `config/limits.yml`。
+#
+# 每個 pack 承載的斷言見下方註釋。
+
+# ① minor_units ＋ 純 ISO 底表、無 override。
+#    承載：T3（JPY 100 倍）／T4（入向 1/100）／T7（KRW）／T9（HKD divisor=1）／
+#          T10（邊界值）／T11（KWD 被 A2 擋下）／T8（🔴 TWD 不在 ISO 底表 ⇒ A1 raise）
+iso_minor:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides: {}      # 空表＝已查證無例外（≠ 未宣告）
+  divisibility: {}              # 空表＝已查證無此約束
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ② minor_units ＋ override ＋ 整除約束。
+#    承載：T16（🔴 A5：TWD 整除 100，違反 ⇒ raise 且不得靜默湊整）
+#    🔴 TWD 在這裡有 exponent 是**因為 pack 明文宣告了**，不是從 ISO 推導的
+#       ——65 §H.3 明文禁止從 `iso4217_zero_decimal_overridden` 或
+#       `currency_format.exponent` 任何一個推導 TWD 的 PSP 單位。
+override_minor:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides:
+    TWD: 2
+  divisibility:
+    TWD: 100
+  divisibility_scope: [payout]  # ⚠ V-206 未結案 ⇒ 實作以最嚴格解讀（charge 亦套用）
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ③ decimal_string（Airwallex 型）。
+#    承載：T15（🔴 JPY 148000 ⇒ "1480.00"；"148000.00" 就是收款 100 倍，
+#              而**這一條在 HKD 上也會錯**）／T12 的 decimal 那一半
+decimal_two:
+  amount_format: decimal_string
+  decimal_places: 2
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ④ decimal_string ＋ 整除約束。
+#    承載：A5 在 decimal_string 格式下的分支（基準＝主單位的 BigDecimal，不是 minor）
+decimal_divisible:
+  amount_format: decimal_string
+  decimal_places: 2
+  divisibility:
+    TWD: 100
+  divisibility_scope: [payout]
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ⑤ 大小寫不一致的幣別鍵——**故意的**。
+#    承載：pack 是人手寫的 YAML，`twd:` 與 `TWD:` 遲早同時出現；
+#          不在 Pack 入口收斂的話，這個宣告會被靜默忽略，
+#          然後對 TWD raise「未宣告」——**而 pack 裡逐字寫著 twd: 2**。
+lowercase_keys:
+  amount_format: minor_units
+  minor_unit_source: iso4217
+  minor_unit_overrides:
+    twd: 2
+  divisibility:
+    twd: 100
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false

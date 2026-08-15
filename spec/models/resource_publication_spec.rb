@@ -11,10 +11,14 @@ RSpec.describe ResourcePublication, type: :model do
   let(:product) do
     ActsAsTenant.with_tenant(shop) { create(:product, shop:) }
   end
+  # 🔴 **取用**建店時自動建立的那一個，不再自己 `create!`。
+  # `Shop#after_create` 落地後（88 §5 #1），每一間店建立時就已經有一列
+  # `online_store` publication ⇒ 這裡再 create 一次會撞
+  # `uq_publications_channel`（`(shop_id, channel_handle)` 唯一索引），整檔紅。
+  # 這正是「加一個 callback 會不會弄壞既有測試」要逐檔查的形態——
+  # 本檔是全庫**唯一**受影響處（其他兩處用的是 `shop` 與 `agentic` 兩個不同 handle）。
   let(:publication) do
-    ActsAsTenant.with_tenant(shop) do
-      Publication.create!(shop:, name: "線上商店", channel_handle: "online_store")
-    end
+    ActsAsTenant.with_tenant(shop) { Publication.online_store }
   end
 
   it "treats published_at as three states: nil, past, and scheduled future" do
