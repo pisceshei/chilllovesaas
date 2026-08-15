@@ -90,10 +90,42 @@ YAML 1.1 **規格**的 bool 全集確實含 `y`/`n`，但 **Psych 5 的實作不
 
 **ERB fail-closed**（同輪另一條）：見上一節第三點。
 
-### 4. 掛進 CI（`.github/workflows/ci.yml`）
+### 4. 第 3 輪：合併 main ＋ 補回歸測試
 
-在 `quality` job 的 `Check reversal naming` 之後加 `Check limits.yml key types`，
-附註釋說明為什麼這一類必須由機制擋（鍵名剛好是那幾個字時才出現，review 肉眼看不出來）。
+**觸發點**：第 2 輪推送後**完全沒有觸發任何 CI run**（不是失敗，是沒跑）。
+查因＝main 合入 PR #29 後與本分支衝突，PR 變 `mergeable_state: dirty` ⇒
+GitHub 建不出 merge ref ⇒ `pull_request` 事件不產生 run。
+🔴 **監看腳本第一版只依 branch 過濾，把上一輪已完成的 run 當成本輪結果回報**——
+已改為依 `head_sha` 過濾並要求 ≥2 個 run。
+教訓與本 PR 主題同形：**綠燈來自一個沒真正驗到目標的檢查**。
+
+**衝突只有一處**：`ci.yml` 的 quality job，雙方都在尾端追加步驟 ⇒ 兩邊都保留。
+`config/limits.yml` 自動合併且語義正確（main 動 money_boundary／idempotency，
+本分支動 jurisdictions.hk.accounting，位置不重疊），合併後重跑仍 exit 0。
+
+**三件連帶改動**：
+
+1. 🔴 **`Limits.fetch` 現在真的存在**（`app/models/limits.rb`，隨 PR #29 進 main）。
+   第 2 輪把註釋裡的 `Limits.fetch` 改成 `Rails.configuration.x.limits`——
+   那在當時是對的（main 沒有這個類別），現在要改回去。已全部改回 `Limits.fetch`。
+   ⚠️ 順帶記一件事：`Limits` 缺鍵一律 raise，這是好事，但它的訊息是
+   「缺少 limits.….M27.on 設定」——讀起來像**設定沒寫**，而檔案裡明明寫著 `on:`。
+   根因仍然看不出來，本腳本補的正是這段落差。
+2. **補回歸測試**：`scripts/test-limits-key-rules.rb` ＋ 三份 fixture
+   （`spec/fixtures/ci_violations/limits_{bool_key,erb,clean}`），已掛 CI。
+   `check-limits-keys.rb` 加一個**選用的 ROOT 參數**讓 fixture 可被指到（形態比照
+   `check-money-boundary.rb`）。
+   🔴 `limits_clean` 這份反向 fixture 刻意放了 `y:` / `n:` 鍵——它同時守住
+   「不得反過來加一條禁止裸字 y/n 的字面規則」，真有人加了這裡會紅。
+3. **meta 驗證**：把判定改壞（`unless resolved.is_a?(String)` → `if false`）後，
+   `check-limits-keys.rb` 對乾淨倉庫**仍然 exit 0**（CI 全綠、什麼都不擋了），
+   而 `test-limits-key-rules.rb` **exit 1 抓到**。改壞的版本已還原。
+
+### 5. 掛進 CI（`.github/workflows/ci.yml`）
+
+`quality` job 加兩步：`Check limits.yml key types` 與 `Regression-test limits key rules`，
+排在 main 的 money 兩步之後，附註釋說明為什麼這一類必須由機制擋
+（鍵名剛好是那幾個字時才出現，review 肉眼看不出來）。
 已實測 `ci.yml` 仍可解析，且步驟落在 `quality` job 內（與其他 check 同 job，該 job 已有 ruby）。
 
 ---
@@ -103,8 +135,10 @@ YAML 1.1 **規格**的 bool 全集確實含 `y`/`n`，但 **Psych 5 的實作不
 | 檔案 | 改動 |
 |---|---|
 | `config/limits.yml` | M27–M32 六行 `on:` → `"on":`；區塊上方加註釋（YAML 1.1 成因、實測鍵值、誤修警告、指向本次的 CI 腳本） |
-| `scripts/check-limits-keys.rb` | **新增**。Psych AST 遞迴走訪，對每個 mapping key 以 `to_ruby` 取實際型別，非 String 即違規並報 `檔:行` 與修法；`ERB_TAG` 偵測到 `<%` 即 fail-closed |
-| `.github/workflows/ci.yml` | `quality` job 新增 `Check limits.yml key types` 步驟 |
+| `scripts/check-limits-keys.rb` | **新增**。Psych AST 遞迴走訪，對每個 mapping key 以 `to_ruby` 取實際型別，非 String 即違規並報 `檔:行` 與修法；`ERB_TAG` 偵測到 `<%` 即 fail-closed；選用 ROOT 參數供 fixture 測試 |
+| `scripts/test-limits-key-rules.rb` | **新增**。上一支的回歸測試（fixture 驅動，含反向斷言），形態比照 `test-money-rules.rb` |
+| `spec/fixtures/ci_violations/limits_{bool_key,erb,clean}/config/limits.yml` | **新增**。故意違反 ×2 ＋ 乾淨 ×1（後者刻意含 `y`/`n` 鍵，守住「不得加禁止 y/n 的字面規則」） |
+| `.github/workflows/ci.yml` | `quality` job 新增 `Check limits.yml key types` 與 `Regression-test limits key rules` 兩步 |
 | `docs/dev/m0-rails-skeleton.md` | 依 `AGENTS.md` 註釋與文檔節第 3 條（修 bug PR 更新受影響既有篇章）更新三處：「關鍵取捨與假設」#6 補鍵契約、「自動驗證」補本腳本、「變更記錄」補本輪 |
 | `docs/worklog/2026-08-15-limits-yaml布林鍵陷阱.md` | 本檔 |
 
@@ -120,11 +154,11 @@ YAML 1.1 **規格**的 bool 全集確實含 `y`/`n`，但 **Psych 5 的實作不
    沒有問「entry point 的觸發事件欄位該不該叫 `on`」。若日後改名為 `trigger`/`event`，
    YAML 1.1 陷阱自然消失，但**那是規格決定，不是這次該做的**——我沒有代為改名。
 
-3. ⚠️ **本腳本沒有自己的回歸測試**。`lint-prototype.py` 有 `test-lint-rules.py` 配對，
-   但既有兩支 `check-*.rb` 都沒有，本支比照辦理。本輪的反向測試是**手動**跑的
-   （鏡像目錄 ＋ `git show HEAD:config/limits.yml`），沒有固化成 CI 會重跑的東西。
-   ⇒ 日後若有人改壞判定邏輯（例如把 `is_a?(String)` 寫反），CI 會靜默放行。
-   要補的話，做法與 `test-lint-rules.py` 同形：準備一份「已知有違規」的 fixture YAML 斷言 exit 1。
+3. ✅ **回歸測試已補**（原本列為未完成，第 3 輪合併 main 後改判——見「已完成」第 5 節）。
+   `scripts/test-limits-key-rules.rb` ＋ 三份 fixture，已掛 CI。
+   🔴 原本不補的理由是「既有兩支 `check-*.rb` 都沒有，比照辦理」——
+   那個理由在 main 合入 PR #29 之後**不成立**了（`scripts/test-money-rules.rb` 立了慣例，
+   65 §K.7 更逐字寫「只有前者綠不算交付」）。**理由會過期，過期就要重判。**
 
 4. ⚠️ **其他 config YAML 未納管**（`config/brand.yml` 等）。`config_for` 同樣會 symbolize，
    同一個陷阱在那些檔上一樣成立，只是目前沒有踩到。加進 `TARGETS` 即可，但**我沒有擅自擴大範圍**——

@@ -226,3 +226,10 @@ jobs:
       # 這一類只在「鍵名剛好是那幾個字」時出現，review 肉眼看不出來，必須由機制擋。
       - name: Check limits.yml key types
         run: ruby scripts/check-limits-keys.rb
+
+      # 🔴 同 65 §K.7 的理由（見上面 money 那一組）：檢查器自己要有反向證明。
+      # 本步用故意違反的 fixture 證明「非 String 鍵會被打紅」與「ERB 會被擋」，
+      # 並反向斷言乾淨 fixture 必須 exit 0——否則一個永遠 fail 或永遠 pass 的
+      # 檢查器在 CI 上看起來與正常的一模一樣。
+      - name: Regression-test limits key rules
+        run: ruby scripts/test-limits-key-rules.rb

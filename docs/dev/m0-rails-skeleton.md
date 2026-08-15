@@ -163,6 +163,9 @@ Solid 元件使用 Rails 產生的獨立 schema 檔：
      （`true` 不能 `to_sym`）⇒ 載入不會炸，錯誤延到取值端才變成看不出根因的 `KeyError`。
      ⇒ **鍵名是這些字時必須加引號**（`"on":`）。實例：`gift_card_entry_points` 的 M27–M32 曾寫成
      `{ on: ... }`，六個鍵實際是 `true`。機制＝`scripts/check-limits-keys.rb`（見「測試與驗證」）。
+     ⚠️ `Limits.fetch`（`app/models/limits.rb`）**缺鍵一律 raise**，這讓錯誤一定會炸而不是靜默拿 nil；
+     但它的訊息是「缺少 limits.….M27.on 設定」，讀起來像**設定沒寫**，而檔案裡明明寫著 `on:`
+     ⇒ 根因仍看不出來，這正是上述 CI 檢查存在的理由。
      ⚠️ `y`/`n` **不在此列**——YAML 1.1 規格含它們，但 Psych 5.2.2 實測不轉（Ruby 3.4.10，2026-08-15 取證）。
 7. **Solid 基建與 business schema 分離。** development／production 都把 primary、cache、queue、cable 分開；test 則使用 deterministic test adapter。durable cache／queue／cable 不需要 Redis，基建表也不混入 business schema。
 8. **法律與視覺。** UI 僅用 CHILL LOVE 自有 CSS tokens 與 Lucide；不使用 Polaris、Dawn/Horizon、Shopify CSS、資產或文案。
@@ -219,6 +222,7 @@ bin/rails db:seed
 - `spec/migrations/m0_core_schema_spec.rb`：47 個具名表＋冪等表＋4 張法域聯集表（含 🔴 einvoices 非唯一索引防回歸斷言）、`shop_id` 第一欄、tenant-prefixed indexes、composite FK（45 條）、integer cents、HK 基準預設值防回退。
 - `spec/config/m0_configuration_spec.rb`：品牌單一來源、limits.yml 扁平結構、M0 代碼實際消費的 api／auth 鍵存在且型別正確（2026-08-13 由逐值複製斷言改寫）。
 - `scripts/check-limits-keys.rb`（2026-08-15 新增，CI `quality` job）：斷言 `config/limits.yml` **每一層 mapping 的鍵都解析成 String**，擋住上面「關鍵取捨」#6 的 YAML 1.1 鍵陷阱。走 Psych AST 以報出**確切行號**；判定用 `node.to_ruby` 的實際型別（不自寫 YAML 1.1 字表）。**不檢查值的型別**、**偵測到 ERB 即 fail**（loader 會先 render ERB，本腳本讀原始檔，不擋就會 CI 綠燈而 runtime KeyError）——兩項限制寫在腳本檔頭的誠實聲明。
+- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，fixture 在 `spec/fixtures/ci_violations/limits_{bool_key,erb,clean}`。形態與理由同 `test-money-rules.rb`（65 §K.7：**只有前者綠不算交付**）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。`limits_clean` 刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」。
 - `spec/lib/chilllove/tenant_resolver_spec.rb`：subdomain／custom domain、未知 Host 404、5 分鐘 cache、ensure cleanup。
 - `spec/requests/staff_authentication_spec.rb`：登入、統一錯誤、cookie、digest-only DB session、撤銷與第 11 次嘗試 429。
 - `spec/models/staff_member_spec.rb`、`spec/models/session_spec.rb`：password／狀態、session 有效性與同租戶限制。

@@ -1,0 +1,8 @@
+# 故意違反：`on` 是裸字 ⇒ Psych（YAML 1.1）解析成布林 true，鍵不是 String。
+# 這正是 config/limits.yml 的 gift_card_entry_points M27–M32 踩過的形態。
+# 期望：scripts/check-limits-keys.rb 打紅並指出行號。
+jurisdictions:
+  hk:
+    accounting:
+      gift_card_entry_points:
+        M27: { on: gift_card_issued_by_admin, direction: liability_increase }

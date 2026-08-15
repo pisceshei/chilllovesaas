@@ -14,11 +14,17 @@
 # 為什麼要 CI 擋而不是靠 review：
 #   config/application.rb 用 `deep_symbolize_keys` 載入 limits.yml，而非字串鍵**原樣保留**
 #   （`true` 不能 `to_sym`）⇒ 該筆的鍵實測是 `[true, :direction, :revenue]`，
-#   `Rails.configuration.x.limits.dig(..., :M27).fetch(:on)` 得到 KeyError，
-#   而 KeyError 的訊息看不出根因是 YAML 1.1。實作者最可能的反應是「那就改用 `true` 當鍵」，
+#   `Limits.fetch(:jurisdictions, :hk, :accounting, :gift_card_entry_points, :M27, :on)`
+#   得到 KeyError，而 KeyError 的訊息看不出根因是 YAML 1.1。
+#   實作者最可能的反應是「那就改用 `true` 當鍵」，
 #   那會把 bug 固化成契約——鍵名從此不是它在檔案裡看起來的樣子。
 #   這種錯誤只在**鍵名剛好是那幾個字**時出現，寫的人與 review 的人都不會特地去想，
 #   所以它屬於「必須由機制擋」的那一類。
+#
+#   🔴 `Limits`（`app/models/limits.rb`，PR #29 隨 main 進來）**缺鍵一律 raise**，
+#      這是好事——它讓這個 bug 一定會炸而不是靜默拿到 nil。但它炸出來的訊息是
+#      「缺少 limits.….M27.on 設定（斷在 on）」，看起來像**設定沒寫**，
+#      而檔案裡明明寫著 `on:` ⇒ 根因仍然看不出來。本腳本補的就是這一段落差。
 #
 # 檢查什麼：
 #   規則 1｜TARGETS 列出的 YAML 檔中，**每一層 mapping 的鍵都必須解析成 String**。
@@ -34,14 +40,18 @@
 #   4. **不支援 ERB**：偵測到 `<%` 一律 fail（理由見 ERB_TAG 註釋）。這是**擋下來**，
 #      不是「檢查過了」——若哪天 limits.yml 要用 ERB，本腳本必須先擴充。
 #
-# 用法：ruby scripts/check-limits-keys.rb
+# 用法：ruby scripts/check-limits-keys.rb [ROOT]
+#   ROOT 省略時＝本倉庫根目錄。傳入時掃描該目錄下的 TARGETS——這是給
+#   `scripts/test-limits-key-rules.rb` 用故意違反的 fixture 打紅本腳本用的
+#   （形態比照 scripts/check-money-boundary.rb）。
 # 退出碼：0=通過，1=有違規
 #
-# 相關：CLAUDE.md 鐵律 6（limits.yml 是唯一上限值來源）、config/application.rb 的載入段。
+# 相關：CLAUDE.md 鐵律 6（limits.yml 是唯一上限值來源）、config/application.rb 的載入段、
+#      app/models/limits.rb（`Limits.fetch` 的取值入口）。
 
 require "yaml"
 
-ROOT = File.expand_path("..", __dir__)
+ROOT = ARGV[0] ? File.expand_path(ARGV[0]) : File.expand_path("..", __dir__)
 
 # 納管的 YAML 檔（相對 ROOT）。要加檔案只改這個清單。
 TARGETS = %w[
@@ -107,7 +117,7 @@ walk = lambda do |node, rel_path, key_path|
           "#{location} 鍵 `#{label}`（路徑 #{full_key}）解析結果是 #{klass} 而不是 String——#{hint}。" \
           "修法：**把鍵加引號**寫成 `\"#{label}\":`。" \
           "🔴 不要改成用 #{resolved.inspect} 當鍵——config/application.rb 的 deep_symbolize_keys " \
-          "對非字串鍵原樣保留，之後 Rails.configuration.x.limits 那一路 fetch(:#{label}) 會 KeyError。"
+          "對非字串鍵原樣保留，之後 Limits.fetch(..., :#{label}) 會 KeyError。"
       end
 
       walk.call(value_node, rel_path, key_path + [ label ])
