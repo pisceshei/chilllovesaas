@@ -8,5 +8,7 @@ jobs:
         run: ruby scripts/check-ci-parity.rb
       - name: Self guard regression
         run: ruby scripts/test-ci-parity-rules.rb
-      - name: Limits key types
-        run: ruby scripts/check-limits-keys.rb
+      - name: Nested path
+        run: ruby scripts/ci/check.rb
+      - name: Path with space
+        run: ruby "scripts/check parity.rb"

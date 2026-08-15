@@ -6,5 +6,7 @@ jobs:
     steps:
       - name: Self guard
         run: ruby scripts/check-ci-parity.rb
+      - name: Self guard regression
+        run: ruby scripts/test-ci-parity-rules.rb
       - name: Tenant isolation
         run: ruby scripts/check-tenant-isolation.rb

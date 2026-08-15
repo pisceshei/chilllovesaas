@@ -8,7 +8,10 @@
 # `check-ci-parity.rb` 送審時（PR #39）**沒有回歸測試**。
 #
 # ⚠️ **但「只有它沒有」是假的**，別把它當成本節的論證（第 4 輪驗收指出，實查成立）：
-# 本倉庫已合併的檢查器共 **7 支**，只有**三組**配了反向證明——
+# 本倉庫**已合併**的檢查器裡（`git ls-files scripts/` 對 main 可列全；
+# 🔴 不寫死支數——「共 7 支」是同一句話**第三次**寫錯的數字，實際 6 支，
+#    第 7 支 check-ci-parity.rb 是本 PR 自己新增的，不算「已合併」），
+# 只有**三組**配了反向證明——
 # `check-limits-keys.rb` → `test-limits-key-rules.rb`、
 # `check-money-boundary.rb` → `test-money-rules.rb`、
 # `lint-prototype.py` → `test-lint-rules.py`。
@@ -81,7 +84,13 @@ CASES = [
     "`step` 的簽名是 `step \"名稱\", \"指令\"`，兩段在**同一行** ⇒ 掃整行的話，" \
     "腳本名寫在**名稱**裡就算「有跑」。修法＝只取第二個引號字串" ],
 
-  [ "parity_guard_disabled", 1, "本檢查自己不在 ci.yml 的 quality job 裡",
+  [ "parity_exec_collapse", 1, "`bundle exec erb_lint`",
+    "🔴 **`exec` 是轉接詞不是目標**（PR #39 第 5 輪驗收指出，修前 exit 0）："     "`bundle exec rspec` 與 `bundle exec erb_lint` 舊算法算出同一個 key `bundle exec`，"     "而 config/ci.rb 本來就有 `bundle exec rspec` ⇒ ci.yml 加任何 `bundle exec Y` "     "都被判「已涵蓋」。與 runner_collapse（npm 命中 pnpm）同類：識別字塌陷 ⇒ 假性涵蓋。"     "needle 用完整三段 key，證明修後 key 真的吃到了 exec 後面的目標" ],
+  [ "parity_path_forms", 1, "scripts/check parity.rb",
+    "🔴 **SCRIPT_REF 的兩個擴充分支終於有斷言在守**（第 3／5 輪連續指出零覆蓋）："     "ci.yml 同時用『帶引號含空白』與『不帶引號含子目錄』兩種路徑，ci.rb 只放子目錄那支"     "⇒ 必須點名帶空白那支。把 SCRIPT_REF 退回舊字元類 `[A-Za-z0-9_.\-]+`，"     "兩種路徑都掃不到 ⇒ 差集空 ⇒ 本條轉綠被抓" ],
+  [ "parity_regression_dropped", 1, "scripts/test-ci-parity-rules.rb",
+    "🔴 **規則 3 護兩支，不只自己**（第 5 輪指出）：ci.yml 只留 check-ci-parity、"     "刪掉回歸測試那步 ⇒ 反向證明被靜默移出 CI，而規則 1 的單向差集與舊規則 3 都看不到。"     "「單向差集擋不住把這一步刪掉」正是規則 3 自己的立論，只是升了一層" ],
+  [ "parity_guard_disabled", 1, "不在 ci.yml 的 quality job 裡",
     "規則 3：有人把 `Check CI parity` 那一步從 ci.yml 刪掉時，" \
     "規則 1／2 的差集仍然是空的、本機呼叫仍然成功——同步保護會**靜默關掉**" ],
 
@@ -99,7 +108,7 @@ CASES = [
     "但若同時 ci.yml 也空了就會靜默全綠。把「掃到 0 行」明講出來，" \
     "才分得出「沒有違規」與「沒有檢查」" ],
 
-  [ "parity_comment_only", 0, "用到 1 支腳本",
+  [ "parity_comment_only", 0, "用到 2 支腳本",
     "🔴 反向斷言：`# 之後要加 ruby scripts/check-schema-drift.rb（還沒寫）` 這種" \
     "**整行註釋**不得被當成「有執行」，否則純文件的 workflow 改動會弄紅 CI。" \
     "斷言用**腳本計數**而不是 exit 0：只看 exit code 的話，" \

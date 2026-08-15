@@ -87,6 +87,14 @@ SCRIPT_REF = %r{"scripts/[^"]+?\.(?:rb|py|sh)"|scripts/[^\s"';|&]+\.(?:rb|py|sh)
 # 規則 2 的取樣面：只認這些開頭的行。刻意窄，理由見檔頭。
 KNOWN_RUNNERS = %w[pnpm npm bundle rake].freeze
 
+# 「執行器 ＋ 這個子指令」還不是完整識別——子指令是**轉接詞**，真正的目標在下一個 token。
+# 🔴 逐項列舉、不得口頭擴充（理由見 command_key 內的註釋）。
+WRAPPER_SUBCOMMANDS = {
+  "bundle" => %w[exec],
+  "pnpm"   => %w[exec dlx],
+  "npm"    => %w[exec]
+}.freeze
+
 # 規則 2 的豁免：CI 專屬的環境準備，不該要求 bin/ci 也跑。
 # 🔴 逐項列舉、不得口頭擴充；加項目要在 PR 描述說明理由。
 RUNNER_EXEMPT = [
@@ -146,6 +154,22 @@ command_key = lambda do |line|
   #    實例：`bin/rubocop -f github` 會被讀成子指令 `github`，
   #    於是要求 ci.rb 有一個叫 `bin/rubocop github` 的步驟——**假警報**。
   arg = KNOWN_RUNNERS.include?(runner) ? tokens[1..].to_a.find { |t| !t.start_with?("-") } : nil
+
+  # 🔴 **`exec` 是轉接詞，不是目標**（2026-08-16，PR #39 第 5 輪驗收指出，實測復現）：
+  #    `bundle exec rspec`／`bundle exec rubocop`／`bundle exec erb_lint` 在上面那行
+  #    全部算出同一個 key `bundle exec` ⇒ 只要 ci.rb 有**任何一個** `bundle exec X`，
+  #    ci.yml 加**任何別的** `bundle exec Y` 都會被判「已涵蓋」而 exit 0——
+  #    而 `config/ci.rb` 本來就有 `bundle exec rspec`，所以這條 false-green **當時就是活的**。
+  #    與本 PR 修掉的 bug ①（`"pnpm audit".include?("npm")`）同類：識別字塌陷 ⇒ 假性涵蓋。
+  #    ⇒ 命中轉接詞就再吃下一個非旗標 token（`bundle exec rspec` 整組當 key）。
+  #    清單刻意逐項列舉（bundle/pnpm/npm 的 exec、pnpm dlx、npx 不在 KNOWN_RUNNERS 故不列），
+  #    不做通用遞迴——「哪個詞是轉接詞」是各工具自己的語義，猜錯會把參數當目標。
+  if arg && WRAPPER_SUBCOMMANDS.fetch(runner, []).include?(arg)
+    idx = tokens.index(arg)
+    target = tokens[(idx + 1)..].to_a.find { |t| !t.start_with?("-") }
+    return [ runner, arg, target ].compact.join(" ") if target
+  end
+
   [ runner, arg ].compact.join(" ")
 end
 
@@ -214,8 +238,14 @@ ci_rb_command_keys = ci_rb_commands.filter_map { |cmd| command_key.call(cmd) }.u
 missing_commands = workflow_commands.keys - ci_rb_command_keys
 
 # 規則 3：本檢查自己必須被 ci.yml 呼叫（否則同步保護會被靜默關掉）。
-self_ref = "scripts/check-ci-parity.rb"
-guard_disabled = !workflow_scripts.key?(self_ref)
+# 🔴 規則 3 護**兩支**，不只自己（2026-08-16，PR #39 第 5 輪驗收指出）：
+#    原本 self_ref 只有 check-ci-parity.rb 一支 ⇒ 把 `Check CI parity rules regression`
+#    那一步從 ci.yml 刪掉時，規則 1 的單向差集仍是空的、規則 3 也不看它
+#    ⇒ **反向證明被靜默移出 CI**——而「單向差集擋不住把這一步刪掉」正是規則 3 自己的立論，
+#    只是升了一層。fixture＝parity_regression_dropped。
+SELF_REFS = %w[scripts/check-ci-parity.rb scripts/test-ci-parity-rules.rb].freeze
+missing_self = SELF_REFS.reject { |ref| workflow_scripts.key?(ref) }
+guard_disabled = !missing_self.empty?
 
 if missing.empty? && missing_commands.empty? && !guard_disabled
   puts "OK：CI 對等性檢查通過"
@@ -230,7 +260,7 @@ end
 warn "::error::CI 對等性檢查失敗："
 
 if guard_disabled
-  warn "  🔴 **本檢查自己不在 ci.yml 的 quality job 裡**（找不到 #{self_ref}）。"
+  warn "  🔴 **本檢查（或它的反向證明）不在 ci.yml 的 quality job 裡**（找不到 #{missing_self.join('、')}）。"
   warn "     規則 1／2 是單向差集 ⇒ 把 `Check CI parity` 那一步刪掉時，差集仍然是空的、"
   warn "     本機呼叫仍然成功，**同步保護就這樣靜默關掉了**。這是它必須自我約束的理由。"
   warn "     修法：把 `- name: Check CI parity` 那一步加回 ci.yml 的 quality job。"

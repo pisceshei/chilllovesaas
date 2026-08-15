@@ -6,6 +6,8 @@ jobs:
     steps:
       - name: Self guard
         run: ruby scripts/check-ci-parity.rb
+      - name: Self guard regression
+        run: ruby scripts/test-ci-parity-rules.rb
       - name: Style
         run: bin/rubocop -f github
       - name: Frontend audit
