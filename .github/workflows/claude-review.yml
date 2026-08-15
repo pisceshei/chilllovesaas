@@ -170,6 +170,20 @@ jobs:
             - 新增的 public class/module/方法缺文檔註釋（用途/參數/回傳/副作用）；複雜邏輯（金額/併發/冪等/Liquid 相容）缺「為什麼」註釋與規格出處（規範見 `AGENTS.md` 註釋與文檔節）
             - 新增功能的 PR 缺 `docs/dev/m{N}-{功能}.md` 功能文檔（模板見 `docs/dev/README.md`）；修復/重構 PR 未更新受影響的既有文檔且未在 PR 描述說明理由
 
+            ## 🔴 你可以實跑本倉庫的檢查腳本——請盡量跑，不要只做靜態審查
+            `scripts/` 底下的檢查與回歸測試你**有權限直接執行**：
+            `bash scripts/…` / `ruby scripts/…` / `python3 scripts/…`（也可用 `git ls-files -s`、`git show`）。
+
+            - 🔴 本專案的判準是「**破壞那一步本身也要有斷言**」：一個什麼都不檢查的腳本在乾淨倉庫上也是綠的。
+              審核新增或改動的檢查腳本時，**故意違反它一次**，看它會不會紅——這是最有價值的一種驗證。
+              （PR 自稱「六條 fixture 全過」不算證據；你自己跑一次才算。）
+            - ⚠️ **複合指令要每一段都在授權清單裡**。`sed …; echo …` 這種會被整條擋掉，
+              請分開呼叫，不要因為被擋一次就放棄實跑。
+            - ⚠️ 你**不能**寫檔、不能 commit、不能 push。要做突變測試就在 `$TMPDIR` 造 fixture，
+              不要改倉庫裡的檔。
+            - 🔴 **跑不動的時候要明說**（哪一條指令、被擋的原因），並在「未覆蓋」段登記
+              「本輪沒有實跑證據」。**不得把沒跑過的東西寫成跑過的。**
+
             ## 輸出（格式必須嚴格遵守，後續自動化步驟會機器解析）
             用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼**恰好一則**審核意見：
 
@@ -240,35 +254,55 @@ jobs:
           #           不能證明 01:55 之後 entitlement／OAuth token／帳號狀態沒有改變。
           #           把後續失敗定性成「不是權限」，會把排障導向錯誤方向，
           #           也與本檔刻意讓判準表保持診斷中立的立場自相矛盾。 -->
-          #      ⇒ **仍在候選內**：用量／配額上限、OAuth token 在 CI 這條路徑上的獨立額度、
-          #        10:14 之前那 44 分鐘內發生的權限或帳號狀態變更、服務端問題。**逐一排除，不要先挑一個。**
+          #      ══════════════════════════════════════════════════════════════
+          #      ✅ **2026-08-15 已解決：根因就是這一行的模型。**
+          #         `claude-fable-5` 在 09:30–10:14 之間對本帳號變成不可用；
+          #         改成 `claude-opus-5` 之後驗收立刻恢復（完整結論、十幾分鐘的正常 run）。
           #
-          #      🔴 **不要靠換模型來排障。** 2026-08-15 已用時間戳逐項排除 repo 側的**全部**變數：
-          #        模型自 00:14 未變（且之後一路成功到 09:30）／`--effort` 00:10 之後未動／
-          #        `CLAUDE_CODE_OAUTH_TOKEN` 最後更新 Aug 14 ⇒ 觸發點不在這個倉庫裡。
-          #      <!-- 2026-08-15 更正證據。原文寫「本檔最後一次改動 01:00（最後成功與第一次
-          #           失敗之間一個字都沒改）」——**那是假的**：本檔在 10:12（7234afd）與
-          #           10:25（4321ba0）各改過一次，**正落在故障邊界上**。
-          #           結論仍然成立，但理由要換成經過查證的那一個：兩個 commit 的改動
-          #           **全部落在下方「解析結論」步驟的診斷文字裡**，
-          #           `with:`／`claude_args`／`prompt`／`uses:` 一行未動（逐行 grep 確認）。
-          #           🔴 原本那句話是「挑一個看起來吻合的時間點」得來的，不是量出來的。 -->
-          #      ⚠️ **5 小時滾動用量視窗已被實測排除**：09:30+5h=14:30，
-          #        於 **14:38** 重跑（PR #41 run 31865047628 attempt #3）→ 仍然 35 秒失敗。
-          #      🔴 **OAuth token 失效／過期也已被實測排除**（2026-08-15）：
-          #        使用者重新產生 token 並更新 secret（Last updated 由 Aug 14 → Aug 15，
-          #        已於 Settings 頁確認），重跑 attempt #4 →
+          #      **決定性的對照組**（Claude 步驟的輸入只差模型一項）：
+          #        | 時間 | 模型 | token | 結果 |
+          #        | attempt #4 | `claude-fable-5` | 剛換的新 token | 605ms 秒殺 |
+          #        | run 31870676748 | **`claude-opus-5`** | 同一個新 token | 完整驗收結論 |
+          #
+          #      🔴🔴 **這裡有一個推理錯誤，值得比結論本身更用力記住。**
+          #        最早的假設是「帳號沒有 Fable 5 權限」。它被證偽了——因為同一份設定
+          #        一路成功到 09:30。於是我把**整個權限／可用性方向**都劃掉了，
+          #        轉去查額度、token、視窗、workflow 內容，全部落空。
+          #        **錯在把「這個版本的假設錯了」讀成「這個方向錯了」。**
+          #        被證偽的只是「**從一開始**就沒有權限」，而「**中途**變成不可用」
+          #        從頭到尾沒有被檢驗過——它才是答案。
+          #      ✅ **PR #37 的 Codex review 當時就指出了這一點**，逐字：
+          #        「曾成功只能證明當時具備權限，不能證明後續 entitlement／OAuth token／
+          #          帳號狀態沒有改變……建議只寫成『排除從一開始就沒有 Fable 5 權限』，
+          #          並繼續把後續權限變更列為候選原因。」
+          #        當時只當成措辭收窄照做，沒有據此回頭排查。**下次遇到「某個方向被證偽」，
+          #        先問這句被證偽的話到底涵蓋了那個方向的多少。**
+          #      ══════════════════════════════════════════════════════════════
+          #
+          #      🔴 **下次再看到 `num_turns=1／cost=0／次秒級` 這組指紋，第一個查的就是這一行。**
+          #        分辨手段（依成本排序）：
+          #          ① 讀失敗留言裡的「**錯誤原文**」——`show_full_output` 已開，這是最快的；
+          #          ② 把 `--model` 換成一個**已知可用**的完整名再跑一次（本次的決定性對照組）；
+          #          ③ 才輪到帳號側（用量、方案、token）。
+          #      <!-- 2026-08-15 重寫。原文逐字寫「🔴 **不要靠換模型來排障**」與
+          #           「換模型不會修好帳號側的問題」，並把同一句放進了判準表、貼上每一則失敗留言。
+          #           🔴 **那句話是錯的，而且是本次故障中最昂貴的一條錯誤指示**——
+          #           換模型正是最後解決它的手段。已刪除，改成上面的分辨順序。 -->
+          #
+          #      ⬇️ 以下排除項**仍然成立**，留著是因為它們幫忙縮小了範圍（歷史紀錄，勿刪）：
+          #      ⚠️ **5 小時滾動用量視窗**：09:30+5h=14:30，於 **14:38** 重跑
+          #        （PR #41 run 31865047628 attempt #3）→ 仍然 35 秒失敗 ⇒ 排除。
+          #      ⚠️ **OAuth token 失效／過期**：使用者重新產生 token 並更新 secret
+          #        （Last updated 由 Aug 14 → Aug 15，Settings 頁確認），attempt #4 仍是
           #        `is_error=true duration_ms=605 num_turns=1 total_cost_usd=0`
-          #        ——**與換 token 之前逐字相同**。
-          #      ⇒ 到此為止，可以從外部觀察到的候選幾乎都排完了。剩下的是
-          #        **帳號層的用量／方案限制**，或**這條使用路徑本身被限制**——
-          #        而這兩者都只能靠 `result` 欄的錯誤原文分辨。
-          #        🔴 **不要再靠重跑、換模型、換 token 來試**：這三種都已各自實測過一輪。
-          #      <!-- 原文寫「換成 Opus 5 **可能**繞過（不同模型可能不同額度池）」。
-          #           留著會與下方判準表貼進 PR 留言的那句「也不要靠換模型來試」直接打架，
-          #           而讀 workflow 的人與讀 PR 留言的人會得到相反的指示。已刪。 -->
-          #      若換完仍是同一個簽名，請往帳號側查——並且**先看留言裡的「錯誤原文」**
-          #      （本檔上方已開 `show_full_output`，那才是分辨額度／認證／模型的唯一依據）。
+          #        ——與換 token 之前逐字相同 ⇒ 排除。
+          #        ✅ 但它不是白換的：**正因為 token 已經先被換掉，後來那次對照組才只剩模型一個變數。**
+          #      ⚠️ **workflow 內容**：邊界上的 10:12（7234afd）與 10:25（4321ba0）兩次改動
+          #        **全部落在下方「解析結論」步驟的診斷文字裡**，
+          #        `with:`／`claude_args`／`prompt`／`uses:` 一行未動（逐行 grep 確認）⇒ 排除。
+          #        <!-- 更正：原文寫「本檔最後一次改動 01:00」，那是假的——是「01:55 之前的
+          #             最後一次」。挑一個看起來吻合的時間點，不是量出來的。 -->
+          #      ⚠️ **SDK settingSources**：本倉庫沒有 `.claude/settings.json` ⇒ 排除。
           #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
           #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
           #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
@@ -311,11 +345,27 @@ jobs:
           #        action 的 env 白名單只轉發 `ANTHROPIC_DEFAULT_{SONNET,HAIKU,OPUS}_MODEL`；
           #      ③同時加 `settings:` 設 model／effortLevel ——
           #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
+          # 🔴 `--allowedTools`：2026-08-15 加上「跑得動本倉庫的檢查腳本」這一組。
+          #   起因是恢復後的第一次驗收（PR #41，run 31870676748）。它**主動想做實測**，
+          #   log 裡有 8 次 `permission_denied`，被擋掉的逐字是：
+          #     `bash scripts/check-exec-bits.sh` / `bash scripts/test-exec-bits-rules.sh`
+          #   於是它只能在留言開頭聲明「本輪沒有實跑證據……兩者皆未執行」。
+          #   ⇒ **這是我方設定造成的能力缺口，不是它偷懶。** 本專案的驗收文化是
+          #     「破壞那一步本身也要有斷言」，而驗收方連跑一次都不行。
+          #   ✅ `git ls-files -s` 當時是通的（同一份 log 有 44 行真實輸出），
+          #      這裡明文列出只是把它從「預設剛好可用」變成「明文授權」。
+          #   ⚠️ **複合指令要每一段都被允許**：`sed …; echo …` 被擋的原因是 `;` 後半段
+          #     不在清單裡，不是 `sed` 本身。要它跑多步，請它分開呼叫。
+          #   🔴 **安全取捨（刻意留在這裡讓下一個人看見）**：這等於讓驗收方**執行被審 PR 帶進來的代碼**，
+          #     而本 job 握有 `contents: write`／`pull-requests: write` 與 OAuth token。
+          #     ⇒ 因此**只授權 `scripts/` 底下**（`bash scripts/` / `ruby scripts/` / `python scripts/`），
+          #       不給裸的 `Bash(bash:*)`。本倉庫是 private、單一作者，威脅模型有限；
+          #       **若日後開放外部貢獻者或轉 public，這一組必須先撤掉再說。**
           claude_args: |
             --model claude-opus-5
             --effort max
             --max-turns 200
-            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/:*),Bash(ruby scripts/:*),Bash(python scripts/:*),Bash(python3 scripts/:*)"
 
       - name: 解析結論並驅動閉環
         if: ${{ !cancelled() }}
@@ -579,7 +629,7 @@ jobs:
                 "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
                 "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
                 "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
-                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`，或 Actions 頁面 ⚙ → **View raw logs**（瀏覽器的分步檢視器是虛擬捲動，只渲染幾百行，拿不到；raw logs 是純文字，拿得到）。🔴 **不要勾「Enable debug logging」重跑**——2026-08-15 於 PR #41 實測無效：11,704 行 raw log 裡 action 照樣印「full output hidden for security」，\`result\` 欄一樣被砍。action 那句提示的兩條路只有 \`show_full_output: true\` 是真的。🔴 **也不要靠換模型來試**：08-15 的全滅期間已逐項排除 repo 這一側的所有變數（模型自 00:14 未變且一路成功到 09:30、`--effort` 00:10 後未動、邊界上那兩次 workflow 改動只碰解析步驟的文字、secret 最後更新 Aug 14），換模型不會修好帳號側的問題。")
+                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`，或 Actions 頁面 ⚙ → **View raw logs**（瀏覽器的分步檢視器是虛擬捲動，只渲染幾百行，拿不到；raw logs 是純文字，拿得到）。🔴 **不要勾「Enable debug logging」重跑**——2026-08-15 於 PR #41 實測無效：11,704 行 raw log 裡 action 照樣印「full output hidden for security」，\`result\` 欄一樣被砍。action 那句提示的兩條路只有 \`show_full_output: true\` 是真的。🔴 **`num_turns: 1`＋零花費這一種，第一個該查的是 `--model` 那一行**：2026-08-15 的全滅（09:30→10:14 起連續失敗）根因就是它——`claude-fable-5` 中途對本帳號變成不可用，換成 `claude-opus-5` 立刻恢復。分辨順序：①先讀上面的「錯誤原文」②把 `--model` 換成一個已知可用的完整名再跑一次 ③才輪到帳號側（用量／方案／token）。⚠️ 本段先前寫的是「不要靠換模型來試」，**那是錯的、已刪**——換模型正是最後解決它的手段。")
               gh pr comment "$PR" --body "$BODY"
             else
               # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
