@@ -19,10 +19,21 @@ CI.run do
   step "Build: Frontend", "pnpm build"
 
   # 🔴 **`bin/ci` 通過 ≠ CI 綠**（2026-08-15 補齊，理由寫下來免得又被漏掉）。
-  # 本檔原本只有上面八步，而 `.github/workflows/ci.yml` 的 quality job 另外跑
-  # 一批專案自訂檢查 ＋ schema drift。落差的後果是：本機全綠 → 推上去被擋，
-  # 而擋下來的理由是本機**沒有機會發現**的。
+  # 本檔原本只有上面那批通用步驟（bin/setup／rubocop／audit／rspec／pnpm 等；
+  # 2026-08-15 建檔時 8 步，現為 9 步 ⇒ 🔴 **不要在敘述裡寫死步數**，它會過時），
+  # 而 `.github/workflows/ci.yml` 的 quality job 另外跑一批專案自訂檢查。
+  # 落差的後果是：本機全綠 → 推上去被擋，而擋下來的理由是本機**沒有機會發現**的。
   # ⇒ 兩邊要同步。以下逐一對應 ci.yml 的 quality job。
+  #
+  # 🔴 **原文在這裡多寫了「＋ schema drift」，2026-08-15 刪除——那句話是錯的，**
+  #    **而且錯得會誘導出一個有害的修法。** 事實：
+  #    `Verify schema.rb has no drift`（`git diff --exit-code db/schema.rb`）在
+  #    **`test` job**（ci.yml:100），不在 quality job；`services: mysql` 也只掛在 test job 上。
+  #    照原文去理解的人會想「那 parity 檢查應該也要涵蓋 schema drift」，
+  #    於是往 quality job 加一支 `check-schema-drift.rb`——**而 quality job 連不上資料庫**，
+  #    那支腳本的「連不上就 exit 0」分支會**每次都命中** ⇒ 得到一個
+  #    **結構上不可能失敗的步驟**，比沒有這一步更糟（它看起來像有在守）。
+  #    ⇒ schema drift 的正確歸屬就是 test job，本檔不對等它（同「不檢查 test job」的理由）。
   #
   # 🔴 **這條「兩邊要同步」的條款，在寫下它的隔天就被違反了**（2026-08-15）：
   #    PR #33 往 ci.yml 加了 `check-limits-keys.rb` 與 `test-limits-key-rules.rb` 兩步，
@@ -52,6 +63,10 @@ CI.run do
   #    「方向是單向的：**ci.yml ⊆ ci.rb**。ci.rb 可以多跑東西，不能少跑。」
   #    ⇒ 步驟名寫反了，而這行就印在 `bin/ci` 的輸出上，是多數人唯一會看到的方向說明。
   step "Invariants: CI parity (ci.yml ⊆ config/ci.rb)", "ruby scripts/check-ci-parity.rb"
+  # 🔴 上一步的反向證明——**沒有它，上一步壞掉不會有人知道**。
+  #    它補上的當天就抓到兩個讓對等性檢查靜默 exit 0 的活 bug，
+  #    形態與其餘 test-*.rb 相同（65 §K.7：檢查本身也要被測試）。
+  step "Invariants: CI parity rules regression", "ruby scripts/test-ci-parity-rules.rb"
 
 
   # Optional: set a green GitHub commit status to unblock PR merge.

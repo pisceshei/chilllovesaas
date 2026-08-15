@@ -1,0 +1,10 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: ruby scripts/check-ci-parity.rb
+      - name: Tenant isolation
+        run: ruby scripts/check-tenant-isolation.rb

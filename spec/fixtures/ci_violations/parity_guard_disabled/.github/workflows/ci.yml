@@ -1,0 +1,8 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Style
+        run: bin/rubocop

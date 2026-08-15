@@ -50,7 +50,10 @@
 #      要補的話正解是把它抽成 `scripts/check-exec-bits.sh`，那樣它就自動落入規則 1。
 #   2. **不檢查步驟順序或名稱**，只檢查「有沒有跑到」。
 #   3. **不檢查 `test` job**（migration／rspec／前端那些），那些本來就由 ci.rb 的
-#      前八步以不同形式涵蓋，逐項對應會製造假精確。本腳本只管 quality job 的自訂檢查。
+#      前面那批**通用步驟**（bin/setup／rubocop／audit／rspec／pnpm 等）以不同形式涵蓋，
+#      逐項對應會製造假精確。本腳本只管 quality job 的自訂檢查。
+#      🔴 原文寫「前八步」，2026-08-15 更正：該區塊實際是 **9 步**（`step` 行實數），
+#         寫死步數的敘述會隨著有人加一步而靜默變成假的。
 #   4. **不反向檢查**（ci.rb 有而 ci.yml 沒有不算違規）——本機多跑東西是好事。
 #
 # 用法：ruby scripts/check-ci-parity.rb
@@ -60,7 +63,13 @@
 
 require "yaml"
 
-ROOT = File.expand_path("..", __dir__)
+# 🔴 接受 ARGV[0] 當 ROOT，理由**不是彈性，是可測性**（2026-08-15 多代理驗收指出）：
+#    本腳本原本把 ROOT 寫死成倉庫根目錄 ⇒ **無法用故意違反的 fixture 打紅它**，
+#    於是它成了本批新增檢查器中**唯一沒有回歸測試**的一支。
+#    而本專案的判準（65 §K.7）是「檢查本身也要被測試」——
+#    一支改壞了不會有人知道的檢查器，與沒有檢查器的差別只在 CI 上多一行綠字。
+#    形態比照 `scripts/check-limits-keys.rb` / `scripts/check-money-boundary.rb`。
+ROOT = ARGV[0] ? File.expand_path(ARGV[0]) : File.expand_path("..", __dir__)
 WORKFLOW = File.join(ROOT, ".github/workflows/ci.yml")
 CI_RB = File.join(ROOT, "config/ci.rb")
 
@@ -116,6 +125,30 @@ workflow_scripts = {}
 # 規則 2：非 scripts/ 的「執行器 ＋ 第一個非旗標參數」。
 workflow_commands = {}
 
+# 🔴 **兩側共用的識別字抽取**（2026-08-15 修）。
+#    原本 ci.yml 那側算出 `key`，ci.rb 那側卻用 `line.include?(runner)` ＋ 一條正則去「找找看」，
+#    **兩套邏輯** ⇒ 只要其中一套比較寬鬆，差集就會假性歸零。實際踩到的兩種：
+#      ① `"pnpm audit".include?("npm")` ＝ **true** ⇒ ci.yml 跑 `npm audit`、
+#         ci.rb 只有 `pnpm audit`，檢查照樣綠（實測 exit 0）。
+#         正則 `/npm\s+(?:-\S+\s+)*audit\b/` 同樣命中 `pnpm audit` 的後半段，兩道防線一起失效。
+#      ② 子字串比對認不出 token 邊界，`bundle` 也會命中 `bundler-audit`。
+#    ⇒ 改成**同一個 lambda 算兩邊的 key，再比對 key**。這樣「寬鬆」不可能只發生在一側。
+command_key = lambda do |line|
+  tokens = line.strip.split(/\s+/)
+  runner = tokens.first.to_s
+  return nil unless KNOWN_RUNNERS.include?(runner) || runner.start_with?("bin/")
+  return nil if line.include?("scripts/") # 已由規則 1 涵蓋
+
+  # 🔴 只有 `KNOWN_RUNNERS`（pnpm／npm／bundle／rake）才看子指令——
+  #    它們的第一個非旗標參數確實是子指令（`pnpm audit`／`bundle exec`）。
+  #    `bin/*` 一律**只看執行器本身**：它們是單一用途的包裝腳本，
+  #    而它們的參數常是旗標的**值** ⇒ 取「第一個非旗標 token」會抓錯。
+  #    實例：`bin/rubocop -f github` 會被讀成子指令 `github`，
+  #    於是要求 ci.rb 有一個叫 `bin/rubocop github` 的步驟——**假警報**。
+  arg = KNOWN_RUNNERS.include?(runner) ? tokens[1..].to_a.find { |t| !t.start_with?("-") } : nil
+  [ runner, arg ].compact.join(" ")
+end
+
 quality.each do |step|
   name = step["name"].to_s
   lines = command_lines(step["run"])
@@ -125,45 +158,60 @@ quality.each do |step|
   end
 
   lines.each do |line|
-    tokens = line.strip.split(/\s+/)
-    runner = tokens.first.to_s
-    next unless KNOWN_RUNNERS.include?(runner) || runner.start_with?("bin/")
-    next if line.include?("scripts/") # 已由規則 1 涵蓋
-
-    # 🔴 只有 `KNOWN_RUNNERS`（pnpm／npm／bundle／rake）才看子指令——
-    #    它們的第一個非旗標參數確實是子指令（`pnpm audit`／`bundle exec`）。
-    #    `bin/*` 一律**只看執行器本身**：它們是單一用途的包裝腳本，
-    #    而它們的參數常是旗標的**值** ⇒ 取「第一個非旗標 token」會抓錯。
-    #    實例：`bin/rubocop -f github` 會被讀成子指令 `github`，
-    #    於是要求 ci.rb 有一個叫 `bin/rubocop github` 的步驟——**假警報**。
-    arg = KNOWN_RUNNERS.include?(runner) ? tokens[1..].to_a.find { |t| !t.start_with?("-") } : nil
-    key = [ runner, arg ].compact.join(" ")
-    next if RUNNER_EXEMPT.include?(key)
+    key = command_key.call(line)
+    next if key.nil? || RUNNER_EXEMPT.include?(key)
 
     workflow_commands[key] ||= name
   end
 end
 
 ci_rb_source = File.read(CI_RB, encoding: "UTF-8")
+
 # 只看 `step "...", "..."` 那一行的指令部分——註釋裡提到腳本名不算「有跑」。
 # 🔴 這個區別很重要：本腳本自己的檔頭就大量提到腳本名，若連註釋都算數，
 #    任何人只要在 ci.rb 寫一句「以後要加 xxx.rb」就能讓檢查變綠。
-ci_rb_commands = ci_rb_source
-                 .each_line
-                 .select { |line| line =~ /^\s*step\s+/ }
-                 .join("\n")
-ci_rb_scripts = ci_rb_commands.to_enum(:scan, SCRIPT_REF).map { Regexp.last_match(0) }.map { |s| s.delete('"') }.uniq
+#
+# 🔴 **而且只取第二個引號字串（指令），不要整行**（2026-08-15 修）。
+#    `step` 的簽名是 `step "名稱", "指令"`，**名稱與指令在同一行** ⇒ 掃整行的話，
+#    腳本名出現在**名稱**裡就算數。實測的冒充寫法：
+#      step "TODO: 之後要加 ruby scripts/check-limits-keys.rb", "true"
+#    ↑ 這一步什麼都沒跑，但本檢查在修之前對它 **exit 0 通過**。
+#    ⚠️ 這不是假想：ci.rb 現存就有一步叫
+#      `step "Invariants: CI parity (ci.yml ⊆ config/ci.rb)", "..."`，
+#      名稱裡真的帶著檔案路徑。今天沒中只是因為它不含 `scripts/`。
+STEP_LINE = /^\s*step\s+/
+# 名稱與指令都是雙引號字串，容許內部的 \" 轉義。
+STEP_CALL = /^\s*step\s+"((?:[^"\\]|\\.)*)"\s*,\s*"((?:[^"\\]|\\.)*)"/
+
+step_lines = ci_rb_source.each_line.select { |line| line =~ STEP_LINE }
+
+# 🔴 fail-closed：解析不出「名稱, 指令」的 `step` 行一律報錯，**不得靜默跳過**。
+#    靜默跳過＝那一步從對等性比對中消失，而症狀是「檢查通過」。
+unparsed = step_lines.reject { |line| line =~ STEP_CALL }
+if unparsed.any?
+  warn "::error::config/ci.rb 有 #{unparsed.size} 行 `step` 解析不出 `step \"名稱\", \"指令\"` 兩段引號字串，" \
+       "本腳本無法判斷它實際跑什麼 ⇒ **fail-closed**（靜默跳過會讓那一步從對等性比對中消失，" \
+       "而症狀是「檢查通過」）。請改回兩段雙引號寫法，或先擴充 scripts/check-ci-parity.rb 的 STEP_CALL："
+  unparsed.each { |line| warn "  - #{line.rstrip}" }
+  exit 1
+end
+
+if step_lines.empty?
+  warn "::error::config/ci.rb 掃到 **0 行 `step`**——這不是通過，是檢查沒有生效。" \
+       "請確認 config/ci.rb 的步驟仍是 `step \"名稱\", \"指令\"` 的形式。"
+  exit 1
+end
+
+ci_rb_commands = step_lines.map { |line| line.match(STEP_CALL)[2] }
+ci_rb_scripts = ci_rb_commands.join("\n").to_enum(:scan, SCRIPT_REF)
+                              .map { Regexp.last_match(0) }.map { |s| s.delete('"') }.uniq
 
 missing = workflow_scripts.keys - ci_rb_scripts
 
-# 規則 2：非 scripts/ 的指令對等。ci.rb 那側同樣只看 `step` 行。
-missing_commands = workflow_commands.keys.reject do |key|
-  runner, arg = key.split(" ", 2)
-  ci_rb_commands.lines.any? do |line|
-    next false unless line.include?(runner)
-    arg.nil? || line.match?(/#{Regexp.escape(runner)}\s+(?:-\S+\s+)*#{Regexp.escape(arg)}\b/)
-  end
-end
+# 規則 2：非 scripts/ 的指令對等。**用同一個 command_key 算 ci.rb 那側的 key**，
+# 再做集合差 ⇒ 兩側的寬鬆度一致（見 command_key 上方的註釋）。
+ci_rb_command_keys = ci_rb_commands.filter_map { |cmd| command_key.call(cmd) }.uniq
+missing_commands = workflow_commands.keys - ci_rb_command_keys
 
 # 規則 3：本檢查自己必須被 ci.yml 呼叫（否則同步保護會被靜默關掉）。
 self_ref = "scripts/check-ci-parity.rb"

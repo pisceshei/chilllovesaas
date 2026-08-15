@@ -284,3 +284,10 @@ jobs:
       #    寫在腳本檔頭的誠實聲明裡，正解是把那段抽成 scripts/check-exec-bits.sh。
       - name: Check CI parity
         run: ruby scripts/check-ci-parity.rb
+
+      # 上一步自己的反向證明。它送審時是同批新增檢查器中唯一沒有回歸測試的一支，
+      # 直接原因是 ROOT 曾被寫死 ⇒ 餵不進故意違反的 fixture。改成吃 ARGV[0] 之後補上。
+      # 🔴 它在被寫出來的當天就抓到兩個活的 bug（`npm` 子字串命中 `pnpm`、
+      #    腳本名寫在 step「名稱」裡就算有跑），兩者當時都讓對等性檢查 exit 0。
+      - name: Check CI parity rules regression
+        run: ruby scripts/test-ci-parity-rules.rb

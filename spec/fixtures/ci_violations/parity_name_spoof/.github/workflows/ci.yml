@@ -1,0 +1,10 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: ruby scripts/check-ci-parity.rb
+      - name: Limits key types
+        run: ruby scripts/check-limits-keys.rb

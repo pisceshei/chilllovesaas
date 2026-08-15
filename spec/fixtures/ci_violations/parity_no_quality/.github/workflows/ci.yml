@@ -1,0 +1,8 @@
+name: CI
+on: [push]
+jobs:
+  qualitycheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: ruby scripts/check-ci-parity.rb
