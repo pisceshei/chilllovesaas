@@ -47,7 +47,11 @@ CI.run do
   step "Invariants: Limits key rules regression", "ruby scripts/test-limits-key-rules.rb"
   # 🔴 本步驟守的就是上面那條同步條款本身。它必須同時出現在本檔與 ci.yml——
   #    只掛在 ci.yml 上的話，本機跑不到；只寫在本檔的話，CI 擋不住。
-  step "Invariants: CI parity (ci.yml ⊇ config/ci.rb)", "ruby scripts/check-ci-parity.rb"
+  # 🔴 方向別寫反（2026-08-15 依 PR #39 的 Claude 驗收更正，原文寫 `ci.yml ⊇ config/ci.rb`）：
+  #    腳本自己的契約在 `scripts/check-ci-parity.rb:25` 逐字是
+  #    「方向是單向的：**ci.yml ⊆ ci.rb**。ci.rb 可以多跑東西，不能少跑。」
+  #    ⇒ 步驟名寫反了，而這行就印在 `bin/ci` 的輸出上，是多數人唯一會看到的方向說明。
+  step "Invariants: CI parity (ci.yml ⊆ config/ci.rb)", "ruby scripts/check-ci-parity.rb"
 
 
   # Optional: set a green GitHub commit status to unblock PR merge.
