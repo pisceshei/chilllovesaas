@@ -44,7 +44,22 @@
 #   ROOT 省略時＝本倉庫根目錄。傳入時掃描該目錄下的 TARGETS——這是給
 #   `scripts/test-limits-key-rules.rb` 用故意違反的 fixture 打紅本腳本用的
 #   （形態比照 scripts/check-money-boundary.rb）。
-# 退出碼：0=通過，1=有違規
+#
+# 退出碼（🔴 **三種失敗必須用不同的碼，理由是可分辨性，不是美觀**）：
+#   0＝通過
+#   1＝**檢查跑了，發現違規**
+#   2＝**檢查跑不了**：TARGETS 指定的輸入不可用（檔不存在／檔內含 ERB）
+#   3＝**檢查根本沒有生效**：掃了 0 個檔（canary）
+#
+# 🔴 為什麼不能全都用 1（2026-08-15，PR #40 第 2 輪驗收指出，我實測複驗成立）：
+#    `limits_missing_target` fixture 是為了守「檔不存在 ⇒ exit」那一段而生的。
+#    但把該段的 `exit` 改成 `next`（＝「檔案不在就跳過」）之後，控制流會變成
+#    「印一句含 TARGETS 的警告 → next → 迴圈結束 → scanned 為空 → canary 也印一句
+#    含 TARGETS 的警告 → 非零退出」。**兩條路徑的退出碼與訊息關鍵字都一樣** ⇒
+#    只斷言「非零 ＋ 含 TARGETS」的測試**分不出來**，那個突變在測試裡是存活的。
+#    ⚠️ 只改測試的 needle 沒有用：第一句 warn 在 `next` 之前就印出去了。
+#    ⇒ 唯一結構性的解是**讓兩條路徑的退出碼不同**。
+#    🔴 任何人要把這三個碼合併回 1 之前，請先回答「那 M14 那個突變靠什麼抓」。
 #
 # 相關：CLAUDE.md 鐵律 6（limits.yml 是唯一上限值來源）、config/application.rb 的載入段、
 #      app/models/limits.rb（`Limits.fetch` 的取值入口）。
@@ -135,7 +150,9 @@ TARGETS.each do |rel|
   path = File.join(ROOT, rel)
   unless File.exist?(path)
     warn "::error::#{rel} 不存在——TARGETS 列了一個不在倉庫裡的檔案，請修正 scripts/check-limits-keys.rb。"
-    exit 1
+    # 🔴 2＝「跑不了」，見檔頭退出碼表。**不得改回 1**：下面的 canary 用 3，
+    #    兩者訊息都含 `TARGETS`，只有退出碼分得出「fail-closed 擋下來」與「檢查沒生效」。
+    exit 2
   end
 
   if File.read(path, encoding: "UTF-8").match?(ERB_TAG)
@@ -143,7 +160,8 @@ TARGETS.each do |rel|
          "ActiveSupport::ConfigurationFile.parse 會先 render ERB 再解析，兩者輸入不同即失去保證" \
          "（`<%= \"on\" %>:` 在原始檔是 String 鍵，render 後是 true 鍵）。" \
          "請先擴充 scripts/check-limits-keys.rb（render 後解析＋行號映射）再於本檔引入 ERB。"
-    exit 1
+    # 2＝「跑不了」：檔在，但本腳本讀的原始檔與 loader 的實際輸入不同，無法保證。
+    exit 2
   end
 
   scanned << rel
@@ -160,7 +178,10 @@ end
 if scanned.empty?
   warn "::error::TARGETS 掃了 **0 個檔案**——這不是通過，是檢查沒有生效。" \
        "請確認 scripts/check-limits-keys.rb 的 TARGETS 常數不是空的。"
-  exit 1
+  # 🔴 3＝「完全沒生效」。與上面那條 fail-closed 的 2 **刻意不同碼**——
+  #    否則把 `exit 2` 改成 `next` 之後，控制流會落到這裡，
+  #    兩條路徑的退出碼與訊息關鍵字都一樣，那個突變在測試裡就是存活的。
+  exit 3
 end
 
 if violations.empty?

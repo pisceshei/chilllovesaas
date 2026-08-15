@@ -71,10 +71,17 @@ CASES = [
     "🔴 裸字 `no` ＝ **挪威的 ISO 3166 代碼**，鐵律 11 的法域 pack 最可能踩到的一種" ],
   [ "limits_false_key", 1, "FalseClass",
     "同上，型別分支（FalseClass 與 TrueClass 在 checker 裡是不同的 is_a? 判定）" ],
-  [ "limits_nil_key", 1, "config/limits.yml:5 鍵 `~`",
+  [ "limits_nil_key", 1, "config/limits.yml:9 鍵 `~`",
     "裸字 `~` 被解析成 nil——與布林是不同分支，之前完全沒被測到" ],
   [ "limits_nil_key", 1, "NilClass",
     "同上，型別分支" ],
+  [ "limits_nil_key", 1, "config/limits.yml:10 鍵 `null`",
+    "🔴 fixture 註釋長期斷言「`null:` 同理」卻**只放了 `~`**——未實測的斷言，" \
+    "與本倉庫剛被燒過的 y/n 那次同型（規格說會轉，Psych 5 實測不轉）。" \
+    "現已實際放進 fixture 並斷言：實測 Ruby 3.4.10 / Psych 5.2.2 下 " \
+    "`null` / `Null` / `NULL` / `~` 全部 → NilClass" ],
+  [ "limits_nil_key", 1, "config/limits.yml:11 鍵 `NULL`",
+    "同上，**大小寫變體**——診斷訊息宣稱「含大小寫變體」，這條讓那句話有測試在守" ],
   [ "limits_date_key", 1, "config/limits.yml:6 鍵 `2026-08-15`",
     "看起來像日期的鍵被解析成 Date（生效日／匯率日結那類表會踩到）" ],
   [ "limits_date_key", 1, "Date",
@@ -86,20 +93,32 @@ CASES = [
     "`key_path + [i.to_s]` 改成 `key_path`（診斷退化成 `rules.on`）仍會全綠。" \
     "🔴 尾端刻意不含右括號——`（路徑 rules.0.on` 之後接的是 `）解析結果⋯`，" \
     "多打一個 `）` 會讓這條永遠不命中" ],
-  [ "limits_erb", 1, "ERB",
+  [ "limits_erb", 2, "ERB",
     "🔴 ERB fail-closed（輸出型標籤）：原始檔的 AST 看起來乾淨，loader render 後是 true 鍵" ],
-  [ "limits_erb_tag", 1, "ERB",
+  [ "limits_erb_tag", 2, "ERB",
     "🔴 ERB fail-closed（**非輸出型**控制流標籤）：與上一條是不同寫法，" \
     "少了它，把 ERB_TAG 收窄成單一字面值不會被抓到" ],
-  [ "limits_missing_target", 1, "TARGETS",
-    "🔴 **fail-closed：TARGETS 列的檔不存在時必須 exit 1**。" \
+  [ "limits_missing_target", 2, "TARGETS",
+    "🔴 **fail-closed：TARGETS 列的檔不存在時必須 exit 2**。" \
     "本倉庫的 config/limits.yml 一直都在 ⇒ 這個分支在 CI 上永遠走不到，" \
-    "把 `unless File.exist?` 整段刪掉、或把 `exit 1` 改成 `next`，" \
+    "把 `unless File.exist?` 整段刪掉、或把 `exit` 改成 `next`，" \
     "在真倉庫上完全看不出差別，而 checker 已退化成「檔案被改名／誤刪也報通過」。" \
-    "fixture＝一個**只有 README、沒有 config/limits.yml** 的目錄" ],
+    "fixture＝一個**只有 README、沒有 config/limits.yml** 的目錄。" \
+    "🔴 **期望碼是 2 不是 1，這是本條能不能守住的關鍵**（PR #40 第 2 輪驗收指出，複驗成立）：" \
+    "改成 `next` 之後控制流會落到 scanned.empty? canary，而 canary 的訊息**也含 `TARGETS`**、" \
+    "原本也 exit 1 ⇒ 兩條路徑完全無法分辨，該突變存活。" \
+    "只改 needle 沒有用（第一句 warn 在 next 之前就印了）⇒ 唯一的解是不同退出碼" ],
   [ "limits_clean", 0, "OK",
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
+
+# 🔴 斷言失敗時印**完整輸出**，不是只印第一行（PR #40 第 2 輪驗收指出）。
+#    checker 違規輸出的第一行是抬頭（`::error::… 檢查失敗（N 項）：`），
+#    行號與型別都在第二行起 ⇒ 行號斷言失配時，只印第一行的訊息會說
+#    「輸出不含 config/limits.yml:6」再附上一行看不出實際行號的抬頭，
+#    人得自己重跑一次才知道實際報了第幾行。
+#    這正是 worklog Pending 5 擔心的「紅得對，但訊息看不出原因」。
+indent = ->(text) { text.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n") }
 
 failures = []
 
@@ -114,13 +133,13 @@ CASES.each do |dir, want_status, want_output, why|
   status = $?.exitstatus
 
   if status != want_status
-    failures << "#{dir}：期望 exit #{want_status}，實得 #{status}（#{why}）\n      輸出：#{output.lines.first.to_s.strip}"
+    failures << "#{dir}：期望 exit #{want_status}，實得 #{status}（#{why}）\n      完整輸出：\n#{indent.call(output)}"
     next
   end
 
   next if output.include?(want_output)
 
-  failures << "#{dir}：exit code 對，但輸出不含 `#{want_output}`（#{why}）\n      輸出：#{output.lines.first.to_s.strip}"
+  failures << "#{dir}：exit code 對，但輸出不含 `#{want_output}`（#{why}）\n      完整輸出：\n#{indent.call(output)}"
 end
 
 if failures.empty?
