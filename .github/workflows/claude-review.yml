@@ -339,6 +339,14 @@ jobs:
               #    ⇒ **不要猜**：把 execution_file 裡的 result payload 直接撈出來貼上，
               #      再附一張判準表讓讀的人自己對號入座。
               #
+              # 🔴 **判準表本身也差點犯同一個錯**（PR #36 的 Codex review 指出，已修）：
+              #    初版把 `num_turns: 1` ＋ 零花費直接判成「配額／額度／認證 ⇒ 重跑通常無效」，
+              #    但**暫時性服務中斷、runner 網路失敗、上游一次性拒絕**會產生**一模一樣**的數據。
+              #    ⇒ 光憑這組數據**分不出**是暫時性還是持續性，
+              #      判準改成「兩種都列出來 ＋ 用**重跑一次**當分辨手段」：
+              #      重跑就過＝暫時性；重跑得到逐字相同的結果＝持續性，那時才往帳號側查。
+              #      （PR #33 那次正是靠「連續兩次 attempt 完全相同」才排除暫時性的。）
+              #
               # ⚠️ 已知副作用（本輪未處理，見本 PR 的 worklog Pending）：驗收步驟失敗時
               #    job 層 conclusion 仍是 `success`（失敗被下游 `exit 0` 吞掉）⇒
               #    `POST /actions/runs/{id}/rerun-failed-jobs` 會回 403「cannot be retried」，
@@ -360,12 +368,15 @@ jobs:
               if [ -z "$DIAG" ]; then
                 DIAG="（取不到 execution_file，請用下方指令自行撈 result payload）"
               fi
-              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n\n%s' \
+              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
                 "本次執行結果：\`$DIAG\`" \
                 "**判準——請照上面的數據對號入座，不要預設是哪一種**：" \
                 "- \`num_turns\` 接近 \`--max-turns\` 上限、\`total_cost_usd\` > 0、耗時數分鐘 ⇒ **回合數用盡**（大型 diff 會燒光，尤其動到 \`docs/design/chilllove-admin-v2.html\`）。重新 push 前先想辦法縮小 diff。" \
-                "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**（配額／額度／認證／模型可用性）。**重跑通常無效**，要先處理帳號側。" \
+                "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**。🔴 **光憑這組數據分不出是哪一種**，下面兩者長得一模一樣：" \
+                "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
+                "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
+                "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
                 "完整 log：\`gh run view $GITHUB_RUN_ID --log\`（Actions 的瀏覽器檢視器是虛擬捲動＋gzip，拿不到）。")
               gh pr comment "$PR" --body "$BODY"
             else
