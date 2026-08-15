@@ -105,7 +105,39 @@ git -C "$repo" add -A
 git -C "$repo" update-index --chmod=-x "scripts/檢查.rb"
 assert_case non_ascii 1 "檢查.rb" "🔴 core.quotePath 會把非 ASCII 路徑加引號跳脫 ⇒ 舊寫法完全抓不到"
 
-# ── 6. 🔴 零掃描 ⇒ 必須 fail，不能印 OK（本輪驗收 Y5）────────────
+# ── 6. 🔴 部分暫存：index 有 shebang、工作區沒有 ⇒ 必須抓到 ──────
+#    （PR #41 的 Codex review）本檢查判的是 index 的 mode，
+#    shebang 若從工作區讀就前後不一致，會被這個流程騙過：
+#      git add x && git update-index --chmod=-x x && 把工作區的 shebang 刪掉
+#    ⇒ 舊寫法印 OK exit 0，而即將提交的是一支帶 shebang 的 100644 腳本。
+repo="$(make_repo staged_only)"
+mkdir -p "$repo/scripts"
+printf '#!/bin/sh\necho x\n' > "$repo/scripts/staged.sh"
+git -C "$repo" add -A
+git -C "$repo" update-index --chmod=-x scripts/staged.sh
+printf 'shebang removed from worktree\n' > "$repo/scripts/staged.sh"
+assert_case staged_only 1 "staged.sh" "🔴 部分暫存：index 有 shebang 但工作區沒有——從工作區讀 shebang 會放行即將提交的違規內容"
+
+# ── 7. 🔴 bin/ 規則：該目錄下的檔一律必須 755 ────────────────────
+#    （PR #41 的 Codex review）前六條 fixture 全部只佈置 scripts/，
+#    ⇒ 把 checker 裡處理 bin/ 的那段整個刪掉，這支回歸測試**仍然全綠**。
+#    契約的另一半完全沒被測到。
+repo="$(make_repo bin_bad)"
+mkdir -p "$repo/bin"
+printf '#!/usr/bin/env ruby\nputs 1\n' > "$repo/bin/rails"
+git -C "$repo" add -A
+git -C "$repo" update-index --chmod=-x bin/rails
+assert_case bin_bad 1 "bin/rails" "🔴 bin/ 的檔缺執行位元——2026-08-14 CI 全紅就是這個原因（bin/rails 等 10 個檔）"
+
+# ── 8. bin/ 正向：全部 755 ⇒ 通過（避免把 bin/ 規則寫成永遠紅）──
+repo="$(make_repo bin_ok)"
+mkdir -p "$repo/bin"
+printf '#!/usr/bin/env ruby\nputs 1\n' > "$repo/bin/rails"
+git -C "$repo" add -A
+git -C "$repo" update-index --chmod=+x bin/rails
+assert_case bin_ok 0 "OK" "bin/ 全部可執行時必須通過——否則 bin/ 規則會變成永遠紅"
+
+# ── 9. 🔴 零掃描 ⇒ 必須 fail，不能印 OK（本輪驗收 Y5）────────────
 repo="$(make_repo empty)"
 printf 'x\n' > "$repo/README"
 git -C "$repo" add -A

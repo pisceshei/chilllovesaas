@@ -64,8 +64,16 @@ while IFS= read -r -d '' rec; do
   mode="${rec%% *}"
   path="${rec#*$'\t'}"
   [ "$mode" = "100755" ] && continue
-  # 讀前兩個位元組判斷 shebang；讀不到（空檔／不存在）就不算違規。
-  if [ -f "$path" ] && [ "$(head -c 2 "$path" 2>/dev/null)" = '#!' ]; then
+  # 🔴 **從 index 讀，不是從工作區讀**（PR #41 的 Codex review 指出，已實測）。
+  #    本檢查判的是 `git ls-files -s` 的 mode——那是 **index** 的狀態；
+  #    若 shebang 也從 index 讀才前後一致。從工作區讀會被**部分暫存**騙過：
+  #      git add scripts/x.sh          # index：有 shebang
+  #      git update-index --chmod=-x … # index：100644
+  #      （接著把工作區的 shebang 刪掉）
+  #    ⇒ 工作區沒 shebang ⇒ 條件為假 ⇒ 印「OK」exit 0，
+  #      而**即將提交的內容**是一支帶 shebang 的 100644 腳本。實測重現過。
+  #    `git show :"$path"` 取的就是 index 版本，且對含空白／非 ASCII 的路徑同樣正確。
+  if [ "$(git show ":$path" 2>/dev/null | head -c 2)" = '#!' ]; then
     bad="${bad}${path}"$'\n'
   fi
 done < <(git ls-files -sz scripts/ 2>/dev/null)
