@@ -40,7 +40,7 @@ jobs:
       #   ①**`bin/ci` 跑得到**——inline shell 進不了 `config/ci.rb`，
       #     `scripts/check-ci-parity.rb` 也看不到它（那是它誠實聲明裡登記的已知缺口）。
       #   ②**可以寫回歸測試**（65 §K.7）——抽出前它是全 ci.yml 唯一「判準才剛被大改、
-      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` 六條守著。
+      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` **11 條**守著。
       #   ③**兩個 job 不會分岔**——原本 test 與 quality 各有一份 inline 複製。
       # 抽出時一併修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
       # 以及「掃到 0 個檔卻印 OK」。細節見該腳本檔頭。
@@ -117,7 +117,7 @@ jobs:
       #   ①**`bin/ci` 跑得到**——inline shell 進不了 `config/ci.rb`，
       #     `scripts/check-ci-parity.rb` 也看不到它（那是它誠實聲明裡登記的已知缺口）。
       #   ②**可以寫回歸測試**（65 §K.7）——抽出前它是全 ci.yml 唯一「判準才剛被大改、
-      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` 六條守著。
+      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` **11 條**守著。
       #   ③**兩個 job 不會分岔**——原本 test 與 quality 各有一份 inline 複製。
       # 抽出時一併修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
       # 以及「掃到 0 個檔卻印 OK」。細節見該腳本檔頭。
@@ -217,9 +217,9 @@ jobs:
       - name: Regression-test money boundary rules
         run: ruby scripts/test-money-rules.rb
 
-      # 執行位元閘門的 fixture 回歸測試（65 §K.7）。六條 case 在 $TMPDIR 現場建小 git repo——
+      # 執行位元閘門的 fixture 回歸測試（65 §K.7）。**11 條** case 在 $TMPDIR 現場建小 git repo——
       # 這個檢查讀的是 git index 的 mode 不是檔案系統權限，所以 fixture 必須是真的 repo，
-      # 而巢狀 .git 沒辦法提交進本倉庫。後三條（含空白／非 ASCII 檔名／零掃描）
+      # 而巢狀 .git 沒辦法提交進本倉庫。最後三條（only_bin／only_scripts／empty）
       # 全部是實測抓到的漏洞，不是想像出來的。
       - name: Regression-test exec-bit rules
         run: bash scripts/test-exec-bits-rules.sh

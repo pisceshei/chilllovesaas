@@ -112,7 +112,7 @@
        （PR #35 的 Codex review 就是抓到本節沒跟上 CI）。
        抽成單一腳本之後，「同步」這個問題本身消失了——這比「記得同步」可靠。
        它同時修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
-       以及掃到 0 個檔卻印 OK。六條回歸測試在 scripts/test-exec-bits-rules.sh。 -->
+       以及掃到 0 個檔卻印 OK。**11 條**回歸測試在 scripts/test-exec-bits-rules.sh。 -->
 
 ## 測試與驗收基準
 

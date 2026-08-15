@@ -20,7 +20,7 @@
 #      判準被大改卻沒有反向自測的檢查。抽出來之後才有 `scripts/test-exec-bits-rules.sh`。
 #   3. 兩份 inline 複製容易分岔（改一份忘了另一份）。現在兩個 job 都呼叫同一支。
 #
-# ## 🔴 兩個實測踩過的坑（不要改回去）
+# ## 🔴 三個實測踩過的坑（不要改回去）
 #
 # **① `-z`（NUL 分隔）不是可有可無。**
 #    `git ls-files -s` 預設 `core.quotePath=true` ⇒ 含非 ASCII 的路徑會被**加引號並跳脫**
@@ -30,11 +30,22 @@
 #    `-z` 輸出的是**原始未跳脫路徑**，這是唯一對任何檔名都正確的讀法
 #    （含空白的檔名舊寫法用 `-F'\t'` 已修好，但非 ASCII 那一類沒有）。
 #
-# **② 掃到 0 個檔必須 fail，不能印 OK。**
+# **② 掃到 0 個檔必須 fail，不能印 OK——而且要「逐 pathspec」判，不是判總和。**
 #    若 pathspec 匹配不到任何東西（跑錯目錄、不是 git repo、目錄改名），
 #    `bad` 會是空的 ⇒ 舊寫法印「OK：全部可執行」且 exit 0。
 #    **那是「空值長得像資料」**：一個什麼都沒掃的檢查，看起來與全部通過一模一樣。
-#    ⇒ 下面的 canary 把它變成明確的失敗。
+#    🔴 **初版的 canary 只判總和，所以只擋住「兩邊同時為 0」這一個特例**
+#       （PR #41 的 Claude 驗收指出，已實測重現）：只要 `bin/` 有檔，
+#       `scripts/` 掃到 0 個也不會響，而成功訊息照樣逐字宣告「scripts/ 帶 shebang 者
+#       全部可執行」——它一個 scripts/ 檔都沒看過。把 `scripts/` 改名或搬走，
+#       這道閘門對那十幾支腳本靜默失效，輸出與全綠一模一樣。
+#       ⇒ 現在**兩個 pathspec 各自計數、任一為 0 即 fail**，並指出是哪一個。
+#
+# **③ shebang 要從 index 讀，不是從工作區讀。**
+#    本檢查判的是 `git ls-files -s` 的 mode——那是 **index** 的狀態。
+#    shebang 若從工作區讀，`git add x && git update-index --chmod=-x x`
+#    再把工作區的 shebang 刪掉，就會騙過它（PR #41 的 Codex review 指出）。
+#    ⇒ 用 `git show ":$path"` 讀 index 的內容，與 mode 同源。
 #
 # 用法：scripts/check-exec-bits.sh [ROOT]
 #   ROOT 省略時＝本倉庫根目錄。傳入時檢查該目錄——給 test-exec-bits-rules.sh 用。
@@ -48,11 +59,14 @@ ROOT="${1:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$ROOT" || { echo "::error::進不去 $ROOT"; exit 1; }
 
 bad=""
-scanned=0
+# 🔴 **逐 pathspec 計數，不得合併成一個 `scanned`**（見檔頭坑②）。
+#    合成總和之後，「只有一邊掃到 0」就不會被發現，而成功訊息照樣宣告兩邊都通過。
+bin_scanned=0
+scripts_scanned=0
 
 # bin/：該目錄下**所有**檔案都必須可執行（裡面本來就只放可執行檔，維持較嚴的判準）。
 while IFS= read -r -d '' rec; do
-  scanned=$((scanned + 1))
+  bin_scanned=$((bin_scanned + 1))
   mode="${rec%% *}"
   path="${rec#*$'\t'}"
   [ "$mode" = "100755" ] || bad="${bad}${path}"$'\n'
@@ -60,7 +74,7 @@ done < <(git ls-files -sz bin/ 2>/dev/null)
 
 # scripts/：只有**帶 shebang** 的檔案受約束。
 while IFS= read -r -d '' rec; do
-  scanned=$((scanned + 1))
+  scripts_scanned=$((scripts_scanned + 1))
   mode="${rec%% *}"
   path="${rec#*$'\t'}"
   [ "$mode" = "100755" ] && continue
@@ -78,10 +92,15 @@ while IFS= read -r -d '' rec; do
   fi
 done < <(git ls-files -sz scripts/ 2>/dev/null)
 
-# 🔴 canary：見檔頭坑②。掃到 0 個 ⇒ 這次檢查什麼都沒驗到，必須說出來。
-if [ "$scanned" -eq 0 ]; then
-  echo "::error::執行位元閘門**一個檔都沒掃到**（bin/ 與 scripts/ 的 pathspec 皆無匹配）。"
-  echo "  這不是「通過」，是檢查沒有生效——常見原因：跑錯目錄、不是 git repo、目錄被改名。"
+# 🔴 canary：見檔頭坑②。**逐 pathspec 判**——任一邊掃到 0 個，
+#    就代表下面那句「⋯全部可執行」對那一半是空話，必須說出來。
+empty_specs=""
+[ "$bin_scanned" -eq 0 ] && empty_specs="${empty_specs}bin/ "
+[ "$scripts_scanned" -eq 0 ] && empty_specs="${empty_specs}scripts/ "
+if [ -n "$empty_specs" ]; then
+  echo "::error::執行位元閘門有 pathspec **一個檔都沒掃到**：${empty_specs}"
+  echo "  這不是「通過」，是檢查對那一半沒有生效——常見原因：跑錯目錄、不是 git repo、目錄被改名。"
+  echo "  實得：bin/ ${bin_scanned} 個、scripts/ ${scripts_scanned} 個"
   echo "  ROOT=$ROOT"
   exit 1
 fi
@@ -93,7 +112,9 @@ if [ -n "$bad" ]; then
   exit 1
 fi
 
-echo "OK：執行位元閘門通過（掃描 $scanned 個檔）"
+# 🔴 成功訊息**逐 pathspec 報數**：宣告「全部可執行」的同時要說出各自看了幾個檔，
+#    否則「掃了 0 個」與「全部通過」在訊息上分不出來（那正是坑②的形態）。
+echo "OK：執行位元閘門通過（bin/ ${bin_scanned} 個、scripts/ ${scripts_scanned} 個）"
 echo "  - bin/ 全部可執行；scripts/ 帶 shebang 者全部可執行"
 echo "  - 用 git ls-files -z 讀路徑，含空白與非 ASCII 的檔名都不會被跳過"
 exit 0
