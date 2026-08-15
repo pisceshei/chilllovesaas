@@ -2031,13 +2031,24 @@ jurisdictions:
       # 🔴 方向是**唯一真相**，不是科目名稱。科目名稱各家帳務系統不同，方向錯了帳就反了。
       #    落庫表 `contract_liability_entries`（jurisdiction.schema_union_rules.required_tables），
       #    唯一鍵 `(shop_id, source_type, source_id, direction)` ⇒ 同一筆金流只能落一次分錄。
+      # 🔴 `"on"` 的引號是**必要的，不是風格**（2026-08-15 修）：Psych 走 YAML 1.1，
+      #    裸字 `on`/`off`/`yes`/`no`/`true`/`false`（含大小寫變體）一律解析成布林
+      #    （`y`/`n` 不在此列——YAML 1.1 規格含它們，但 Psych 5.2.2 實測不轉）。
+      #    原文寫成 `{ on: ... }` 時，
+      #    這六筆的鍵是 `true`（TrueClass）而不是字串 `"on"`；config/application.rb 的
+      #    `deep_symbolize_keys` 對非字串鍵原樣保留（`true` 不能 `to_sym`）⇒ M27 的鍵實測是
+      #    `[true, :direction, :revenue]`，取值端
+      #    `Rails.configuration.x.limits.dig(..., :gift_card_entry_points, :M27).fetch(:on)`
+      #    會 KeyError，而錯誤訊息看不出根因。
+      #    最可能的誤修是「那就改用 `true` 當鍵」——那會把 bug 固化成契約。
+      #    機制化：`scripts/check-limits-keys.rb` 斷言本檔所有鍵皆為 String（CI 跑）。
       gift_card_entry_points:
-        M27: { on: gift_card_issued_by_admin, direction: liability_increase, revenue: 0 }
-        M28: { on: gift_card_product_sold,    direction: liability_increase, revenue: 0 }
-        M29: { on: gift_card_credited,        direction: liability_increase, revenue: 0 }
-        M30: { on: gift_card_redeemed,        direction: liability_decrease, revenue: recognise }
-        M31: { on: gift_card_expired_or_deactivated, direction: breakage, revenue: see_breakage }
-        M32: { on: refund_credited_to_card,   direction: liability_increase, revenue: 0 }
+        M27: { "on": gift_card_issued_by_admin, direction: liability_increase, revenue: 0 }
+        M28: { "on": gift_card_product_sold,    direction: liability_increase, revenue: 0 }
+        M29: { "on": gift_card_credited,        direction: liability_increase, revenue: 0 }
+        M30: { "on": gift_card_redeemed,        direction: liability_decrease, revenue: recognise }
+        M31: { "on": gift_card_expired_or_deactivated, direction: breakage, revenue: see_breakage }
+        M32: { "on": refund_credited_to_card,   direction: liability_increase, revenue: 0 }
       # 🔴 M32 是最容易做反的一條：退款回補到卡片是**負債增加**，不是收入沖銷。
       #    做成收入沖銷會同時少計負債與少計收入，兩邊都錯，且 nightly 恆等式抓不到（兩個錯誤互相抵銷）。
       refund_to_instrument_is_liability_increase: true

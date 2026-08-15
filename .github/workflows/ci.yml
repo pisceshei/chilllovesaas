@@ -35,19 +35,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Verify bin/ scripts are executable
+      - name: Verify bin/ and scripts/ are executable
         run: |
           # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
           #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
           #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
-          bad=$(git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755" { print $4 }')
+          # 🔴 2026-08-15 擴大範圍：原本只掃 `bin/` 與 `scripts/*.sh`，`scripts/*.rb`／`*.py`
+          #    漏在網外——實測當時 scripts/ 的 10 支腳本有 4 支是 100644
+          #    （check-baseline-raise.py／check-money-boundary.rb／test-lint-rules.py／
+          #     test-money-rules.rb），而 CI 一路全綠，因為它們都以 `ruby`／`python3` 前綴呼叫。
+          #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
+          #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
+          #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
+          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
+          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
+          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
+          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
+          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
+          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
+          bad=$(
+            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
+            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
+              | while IFS= read -r f; do
+                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
+                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
+                done
+          )
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
             echo "$bad"
             echo "修法：git update-index --chmod=+x <上列檔案>"
             exit 1
           fi
-          echo "OK：bin/ 與 scripts/*.sh 全部可執行"
+          echo "OK：bin/ 全部可執行；scripts/ 帶 shebang 者全部可執行"
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -114,19 +134,39 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Verify bin/ scripts are executable
+      - name: Verify bin/ and scripts/ are executable
         run: |
           # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
           #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
           #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
-          bad=$(git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755" { print $4 }')
+          # 🔴 2026-08-15 擴大範圍：原本只掃 `bin/` 與 `scripts/*.sh`，`scripts/*.rb`／`*.py`
+          #    漏在網外——實測當時 scripts/ 的 10 支腳本有 4 支是 100644
+          #    （check-baseline-raise.py／check-money-boundary.rb／test-lint-rules.py／
+          #     test-money-rules.rb），而 CI 一路全綠，因為它們都以 `ruby`／`python3` 前綴呼叫。
+          #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
+          #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
+          #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
+          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
+          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
+          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
+          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
+          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
+          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
+          bad=$(
+            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
+            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
+              | while IFS= read -r f; do
+                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
+                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
+                done
+          )
           if [ -n "$bad" ]; then
             echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
             echo "$bad"
             echo "修法：git update-index --chmod=+x <上列檔案>"
             exit 1
           fi
-          echo "OK：bin/ 與 scripts/*.sh 全部可執行"
+          echo "OK：bin/ 全部可執行；scripts/ 帶 shebang 者全部可執行"
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -210,7 +250,9 @@ jobs:
       - name: Check money unit boundary
         run: ruby scripts/check-money-boundary.rb
 
-      # 🔴 為什麼要單獨一步：65 §K 第 7 條逐字「只有前者綠不算交付」——
+      # 🔴 為什麼要單獨一步：65 §K 第 7 條逐字「**檢查本身也要被測試**——
+      # 一條永遠不會紅的 CI 規則等於沒有」。
+      # （2026-08-15 更正：原文寫成逐字「只有前者綠不算交付」，該句不在 65 號裡。）
       # 一個什麼都不檢查的腳本在乾淨倉庫上也是綠的。本步證明**每一條規則
       # 各自被一個故意違反的 fixture 打紅**，外加一條反向斷言（乾淨倉庫必須 exit 0），
       # 免得一個「永遠 fail」的檢查器讓九條全過。
@@ -218,3 +260,18 @@ jobs:
       # （r_dead_control 在四輪內踩了六種漏看，每一種 CI 都是綠的）。
       - name: Regression-test money boundary rules
         run: ruby scripts/test-money-rules.rb
+
+      # 🔴 YAML 1.1 的裸字 on/off/yes/no/true/false（含大小寫變體）會被 Psych 解析成布林——對「值」是常識，
+      # 但沒人預期它同樣適用於「鍵」。limits.yml 的 gift_card_entry_points 就中了這個陷阱
+      # （六個 `on` 鍵實際是 true），而 deep_symbolize_keys 對非字串鍵原樣保留 ⇒
+      # `Limits.fetch` 只看到 KeyError，看不出根因，最可能的誤修是改用 true 當鍵、把 bug 固化。
+      # 這一類只在「鍵名剛好是那幾個字」時出現，review 肉眼看不出來，必須由機制擋。
+      - name: Check limits.yml key types
+        run: ruby scripts/check-limits-keys.rb
+
+      # 🔴 同 65 §K.7 的理由（見上面 money 那一組）：檢查器自己要有反向證明。
+      # 本步用故意違反的 fixture 證明「非 String 鍵會被打紅」與「ERB 會被擋」，
+      # 並反向斷言乾淨 fixture 必須 exit 0——否則一個永遠 fail 或永遠 pass 的
+      # 檢查器在 CI 上看起來與正常的一模一樣。
+      - name: Regression-test limits key rules
+        run: ruby scripts/test-limits-key-rules.rb

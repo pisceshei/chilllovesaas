@@ -1,0 +1,6 @@
+# 故意違反：ERB。本腳本讀原始檔，而 ActiveSupport::ConfigurationFile.parse 會先 render——
+# `<%= "on" %>:` 在原始檔的 AST 裡是合法 String 鍵（看起來乾淨），
+# render 後卻是 `true` 鍵 ⇒ 不擋就是「CI 綠燈但 runtime KeyError」。
+# 期望：scripts/check-limits-keys.rb 打紅（fail-closed，而不是假裝檢查過了）。
+foo:
+  <%= "on" %>: value

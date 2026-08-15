@@ -86,15 +86,31 @@
 
 ## 🔴 Windows 開發者必讀：檔案執行位元
 
-在 Windows 上 git 預設 `core.filemode=false`，**新增 `bin/*` 或 `*.sh` 時不會帶執行位元**
+在 Windows 上 git 預設 `core.filemode=false`，**新增 `bin/*` 或腳本時不會帶執行位元**
 （以 `100644` 提交），本機完全正常，但到 Linux CI 上執行就是 `exit 126: Permission denied`
 ——錯誤訊息完全看不出根因。2026-08-14 的 CI 全紅就是這個原因（`bin/rails` 等 10 個檔 ＋
 `scripts/cloud-setup.sh` 全部缺 +x）。
 
-- **提交前檢查**：`git ls-files -s bin/ scripts/*.sh | awk '$1 != "100755"'`（有輸出就是有問題）
+**規則（2026-08-15 擴大，與 CI 判準逐字一致）**：
+`bin/` 下**全部**檔案，以及 `scripts/` 下**帶 shebang 的**檔案，git mode 一律必須是 `100755`。
+帶 shebang 是宣告「我可以直接跑」，宣告了卻沒有執行位元就是自相矛盾；
+`scripts/` 下無 shebang 的資料檔不受此規則約束。
+
+- **提交前檢查**（與 CI 同一份邏輯；`-F'\t'` 是為了路徑含空白時不被截斷）：
+
+  ```bash
+  git ls-files -s bin/ | awk -F'\t' 'substr($1,1,6) != "100755" { print $2 }'
+  git ls-files -s scripts/ | awk -F'\t' 'substr($1,1,6) != "100755" { print $2 }' \
+    | while IFS= read -r f; do if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi; done
+  ```
+
+  （有輸出就是有問題）
 - **修法**：`git update-index --chmod=+x <檔案>`
-- CI 已加防呆（兩個 job 的 checkout 之後各有一步 `Verify bin/ scripts are executable`），
-  現在會早失敗並印出修法，但**不要依賴它**——本機提交前自己看一眼比較快。
+- CI 兩個 job 的 checkout 之後各有一步 `Verify bin/ and scripts/ are executable` 會擋下來
+  並印出修法。**但仍建議本機提交前自己跑一次**——本機一秒，CI 一輪要好幾分鐘。
+  🔴 **改這條規則時，`.github/workflows/ci.yml` 的那兩份與本節必須同步改**
+  （2026-08-15 擴大範圍時，本節一度沒跟上，PR #35 的 Codex review 指出：
+  文件說「只掃 `scripts/*.sh`」而 CI 已改成 shebang 判準，讀文件的人會以為 `.rb`／`.py` 不受管）。
 
 ## 測試與驗收基準
 
