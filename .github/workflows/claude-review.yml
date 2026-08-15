@@ -321,14 +321,63 @@ jobs:
               # 🔴 分開報「Claude 步驟自己失敗」與「跑完但沒貼結論」。
               #    2026-08-14 事故：原本兩者都印同一句「可能失敗或逾時」，
               #    而真正的原因是 --max-turns 用盡（PR #26）。那句話把人指去看 log，
-              #    但沒說要看哪一行，診斷因此多繞了一圈。現在直接寫出最可能的原因。
+              #    但沒說要看哪一行，診斷因此多繞了一圈。
+              #
+              # 🔴 **2026-08-15 再修：上一版矯枉過正。** 它把「最常見原因＝`--max-turns` 用盡」
+              #    寫死成留言，還斷言「annotation 會直接寫 `Reached maximum number of turns`」。
+              #    **PR #33 實測證偽**（連續兩次 attempt 完全相同）：
+              #      execution result payload＝`{ is_error: true, num_turns: 1,
+              #                                  total_cost_usd: 0, duration_ms: 654 }`
+              #      annotation 只有 `Claude execution failed: result is_error:true`，
+              #      **完全沒有**它叫人去找的那句話。
+              #    ⇒ 真因是「**第一個 API 請求就失敗**」（配額／額度／認證／模型可用性），
+              #      與 max-turns 用盡（跑滿回合、耗時數分鐘、有花費）在數據上**完全相反**。
+              #    ⇒ 那則留言把人指向錯誤方向，並要他去找一句不存在的 annotation。
+              #
+              #    教訓與本檔上面 OTHERS 那次同型：**寫死的猜測會變成自信的假診斷**，
+              #    而假診斷比「沒有診斷」更貴——它讓人先花時間去否證一個錯的方向。
+              #    ⇒ **不要猜**：把 execution_file 裡的 result payload 直接撈出來貼上，
+              #      再附一張判準表讓讀的人自己對號入座。
+              #
+              # 🔴 **判準表本身也差點犯同一個錯**（PR #36 的 Codex review 指出，已修）：
+              #    初版把 `num_turns: 1` ＋ 零花費直接判成「配額／額度／認證 ⇒ 重跑通常無效」，
+              #    但**暫時性服務中斷、runner 網路失敗、上游一次性拒絕**會產生**一模一樣**的數據。
+              #    ⇒ 光憑這組數據**分不出**是暫時性還是持續性，
+              #      判準改成「兩種都列出來 ＋ 用**重跑一次**當分辨手段」：
+              #      重跑就過＝暫時性；重跑得到逐字相同的結果＝持續性，那時才往帳號側查。
+              #      （PR #33 那次正是靠「連續兩次 attempt 完全相同」才排除暫時性的。）
+              #
+              # ⚠️ 已知副作用（本輪未處理，見本 PR 的 worklog Pending）：驗收步驟失敗時
+              #    job 層 conclusion 仍是 `success`（失敗被下游 `exit 0` 吞掉）⇒
+              #    `POST /actions/runs/{id}/rerun-failed-jobs` 會回 403「cannot be retried」，
+              #    只能整個 workflow rerun。
+              #
               # 🔴 用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
               #    續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
               #    （2026-08-14 寫這段時踩過一次；同型事故另見本檔 heredoc 那次。）
-              BODY=$(printf '%s\n\n%s\n%s' \
+              DIAG=""
+              if [ -n "${EXECUTION_FILE:-}" ] && [ -f "$EXECUTION_FILE" ]; then
+                # `-s`（slurp）＋ `..` 的理由同下方回收品那段：對「單一 JSON 陣列」與
+                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串，
+                # 才會走下面的 fallback；少了它，jq 會印出一整行 `is_error=null`，
+                # 看起來像有診斷、實際上什麼都沒撈到。
+                DIAG=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | select(. != null)
+                  | "is_error=\(.is_error) num_turns=\(.num_turns) total_cost_usd=\(.total_cost_usd) duration_ms=\(.duration_ms)"' \
+                  "$EXECUTION_FILE" 2>/dev/null || true)
+              fi
+              if [ -z "$DIAG" ]; then
+                DIAG="（取不到 execution_file，請用下方指令自行撈 result payload）"
+              fi
+              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
-                "最常見原因：**\`--max-turns\` 用盡**——大型 diff（尤其動到 \`docs/design/chilllove-admin-v2.html\`，單檔逾 1.2 萬行）會把回合數燒光，且**失敗前不會留下任何驗收留言**。" \
-                "請到 Actions 分頁看該 run 的 annotation（會直接寫 \`Reached maximum number of turns\`）。重新 push 即會重跑。")
+                "本次執行結果：\`$DIAG\`" \
+                "**判準——請照上面的數據對號入座，不要預設是哪一種**：" \
+                "- \`num_turns\` 接近 \`--max-turns\` 上限、\`total_cost_usd\` > 0、耗時數分鐘 ⇒ **回合數用盡**（大型 diff 會燒光，尤其動到 \`docs/design/chilllove-admin-v2.html\`）。重新 push 前先想辦法縮小 diff。" \
+                "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**。🔴 **光憑這組數據分不出是哪一種**，下面兩者長得一模一樣：" \
+                "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
+                "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
+                "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
+                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`（Actions 的瀏覽器檢視器是虛擬捲動＋gzip，拿不到）。")
               gh pr comment "$PR" --body "$BODY"
             else
               # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
