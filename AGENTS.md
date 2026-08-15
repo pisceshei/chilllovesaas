@@ -96,21 +96,23 @@
 帶 shebang 是宣告「我可以直接跑」，宣告了卻沒有執行位元就是自相矛盾；
 `scripts/` 下無 shebang 的資料檔不受此規則約束。
 
-- **提交前檢查**（與 CI 同一份邏輯；`-F'\t'` 是為了路徑含空白時不被截斷）：
+- **提交前檢查**——直接跑那支腳本，**與 CI 是同一份實作**（2026-08-15 起）：
 
   ```bash
-  git ls-files -s bin/ | awk -F'\t' 'substr($1,1,6) != "100755" { print $2 }'
-  git ls-files -s scripts/ | awk -F'\t' 'substr($1,1,6) != "100755" { print $2 }' \
-    | while IFS= read -r f; do if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi; done
+  bash scripts/check-exec-bits.sh
   ```
 
-  （有輸出就是有問題）
+  （`bin/ci` 也會跑它；有違規會逐檔列出並印修法）
 - **修法**：`git update-index --chmod=+x <檔案>`
-- CI 兩個 job 的 checkout 之後各有一步 `Verify bin/ and scripts/ are executable` 會擋下來
-  並印出修法。**但仍建議本機提交前自己跑一次**——本機一秒，CI 一輪要好幾分鐘。
-  🔴 **改這條規則時，`.github/workflows/ci.yml` 的那兩份與本節必須同步改**
-  （2026-08-15 擴大範圍時，本節一度沒跟上，PR #35 的 Codex review 指出：
-  文件說「只掃 `scripts/*.sh`」而 CI 已改成 shebang 判準，讀文件的人會以為 `.rb`／`.py` 不受管）。
+  🔴 在 Windows 上 `chmod +x` **不會**改到 git mode，一定要用 `git update-index`。
+- 🔴 **判準只有一份實作**：`scripts/check-exec-bits.sh`。
+  ci.yml 的兩個 job 與 `config/ci.rb` 都只是呼叫它，本節也不再重複貼指令。
+  <!-- 2026-08-15：原本這裡貼著一份與 ci.yml inline shell「逐字一致」的指令，
+       而 ci.yml 有兩份 inline 複製 ⇒ 同一段邏輯散在三處，改一處忘兩處是遲早的事
+       （PR #35 的 Codex review 就是抓到本節沒跟上 CI）。
+       抽成單一腳本之後，「同步」這個問題本身消失了——這比「記得同步」可靠。
+       它同時修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
+       以及掃到 0 個檔卻印 OK。六條回歸測試在 scripts/test-exec-bits-rules.sh。 -->
 
 ## 測試與驗收基準
 

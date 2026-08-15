@@ -18,6 +18,11 @@ CI.run do
   # **五個**專案自訂檢查 ＋ schema drift。落差的後果是：本機全綠 → 推上去被擋，
   # 而擋下來的理由是本機**沒有機會發現**的。
   # ⇒ 兩邊要同步。以下逐一對應 ci.yml 的 quality job。
+  # 🔴 2026-08-15 抽出：原本是 ci.yml 的 inline shell，**本機完全跑不到**。
+  #    抽成腳本之後 bin/ci 才守得住「Windows 提交的檔案缺執行位元」這一類——
+  #    那正是 2026-08-14 CI 全紅的原因，而它在本機一直是綠的。
+  step "Invariants: Exec bits", "bash scripts/check-exec-bits.sh"
+  step "Invariants: Exec bit rules regression", "bash scripts/test-exec-bits-rules.sh"
   step "Invariants: Prototype lint", "python3 scripts/lint-prototype.py"
   step "Invariants: Lint rules regression", "python3 scripts/test-lint-rules.py"
   step "Invariants: Tenant isolation", "ruby scripts/check-tenant-isolation.rb"
