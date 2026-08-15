@@ -155,7 +155,17 @@ TARGETS.each do |rel|
     exit 2
   end
 
-  if File.read(path, encoding: "UTF-8").match?(ERB_TAG)
+  # 🔴 讀檔本身也會失敗（權限、符號連結斷掉、`File.exist?` 之後被刪的競態、
+  #    非 UTF-8 位元組序列）。這些**全都是「檢查跑不了」**，不是「發現違規」。
+  #    沒有這個 rescue 時，`Errno::EACCES` 之類會裸奔出去，Ruby 以 exit 1 ＋ backtrace 結束。
+  begin
+    raw = File.read(path, encoding: "UTF-8")
+  rescue SystemCallError, IOError => e
+    warn "::error::#{rel} 讀不到（#{e.class}）⇒ **檢查跑不了**（exit 2，不是 1）。原始錯誤：#{e.message}"
+    exit 2
+  end
+
+  if raw.match?(ERB_TAG)
     warn "::error::#{rel} 含 ERB tag（`<%`）——本腳本讀原始檔，而 config/application.rb 用的 " \
          "ActiveSupport::ConfigurationFile.parse 會先 render ERB 再解析，兩者輸入不同即失去保證" \
          "（`<%= \"on\" %>:` 在原始檔是 String 鍵，render 後是 true 鍵）。" \
@@ -172,15 +182,28 @@ TARGETS.each do |rel|
   #    定義成「**檢查跑了，發現違規**」⇒ 退出碼會說謊，
   #    自動化只看碼的話會把「解析不了」讀成「有鍵型別違規」。
   #    （PR #40 第 3 輪驗收指出；退出碼三分一旦立了，就得把所有非零出口都歸位。）
+  #    🔴 **攔 `StandardError`，不是只攔 `Psych::SyntaxError`**（第 4 輪只攔了後者，
+  #      第 5 輪驗收指出同一個坑還開著；我照著找，果然還有一條**活的**）：
+  #        `*nope: 1`（用一個不存在的錨點當**鍵**）→ `Psych.parse_file` **解析成功**，
+  #        炸在 `key_node.to_ruby`，也就是 `walk` 裡面、原本 rescue 的**外面**
+  #        ⇒ 裸 exit 1 ＋ 一整片 backtrace。fixture＝`limits_alias_key`。
+  #      ⚠️ 教訓：逐一列舉例外類別是**列不完**的——第 4 輪列了 `SyntaxError`，
+  #        第 5 輪發現 `to_ruby` 走的是別的類別，而且位置也不在原本攔的地方。
+  #      ⇒ 判準改成語義的：**只要 checker 自己炸了，它就沒有「發現違規」，它是沒檢查完**
+  #        ⇒ 一律 2。這才是碼表能成立的寫法。
+  #      ✅ `exit 2` / `exit 3` 不會被吃掉：`SystemExit` 不是 `StandardError`。
+  #      ⚠️ 代價：`walk` 裡真有 bug 時也會報成 2 而不是噴 backtrace。
+  #        訊息因此明講「也可能是本腳本的 bug」，並印出例外類別與位置。
   begin
     doc = Psych.parse_file(path)
-  rescue Psych::SyntaxError => e
-    warn "::error::#{rel} 不是合法的 YAML，本腳本無法解析 ⇒ **檢查跑不了**（exit 2，不是 1）。" \
-         "原始錯誤：#{e.message}"
+    walk.call(doc, rel, [])
+  rescue StandardError => e
+    warn "::error::#{rel} 解析／走訪失敗（#{e.class}）⇒ **檢查跑不了**（exit 2，不是 1）——" \
+         "退出碼 1 的意思是「檢查跑了，發現違規」，這裡沒有跑完，不得混用。" \
+         "可能是該檔不是合法 YAML，**也可能是 scripts/check-limits-keys.rb 自己的 bug**。" \
+         "原始錯誤：#{e.message}（#{e.backtrace&.first}）"
     exit 2
   end
-
-  walk.call(doc, rel, [])
 end
 
 # 🔴 canary：**「沒有違規」與「沒有檢查」在輸出上長得一模一樣。**

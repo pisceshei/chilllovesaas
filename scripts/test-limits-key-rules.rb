@@ -108,12 +108,20 @@ CASES = [
     "改成 `next` 之後控制流會落到 scanned.empty? canary，而 canary 的訊息**也含 `TARGETS`**、" \
     "原本也 exit 1 ⇒ 兩條路徑完全無法分辨，該突變存活。" \
     "只改 needle 沒有用（第一句 warn 在 next 之前就印了）⇒ 唯一的解是不同退出碼" ],
-  [ "limits_bad_yaml", 2, "不是合法的 YAML",
+  [ "limits_bad_yaml", 2, "Psych::SyntaxError",
     "🔴 **YAML 壞掉也是「檢查跑不了」，必須回 2**（PR #40 第 3 輪驗收指出）。" \
     "沒有 rescue 時 Psych::SyntaxError 直接冒出去，Ruby 以 **exit 1 ＋ backtrace** 結束——" \
     "而 1 的定義是「檢查跑了，發現違規」⇒ **退出碼會說謊**，" \
     "自動化只看碼會把「解析不了」讀成「有鍵型別違規」。" \
     "教訓：退出碼三分一旦立了，就得把**所有非零出口**都歸位" ],
+  [ "limits_alias_key", 2, "Psych::AnchorNotDefined",
+    "🔴 **第 5 輪照著「例外類別列不完」的懷疑找出來的活缺口**：`*nope: 1`（不存在的錨點當鍵）。" \
+    "三件事同時繞過第 4 輪的修法——①`Psych.parse_file` **解析成功**（別名是合法語法）；" \
+    "②炸點在 `key_node.to_ruby`，即 `walk` 裡面、第 4 輪那個 rescue 的**外面**；" \
+    "③類別是 `Psych::AnchorNotDefined`，不是 `Psych::SyntaxError`。結果是裸 exit 1。" \
+    "⇒ 判準因此改成語義的：**checker 自己炸了就是沒檢查完，一律 2**，不再逐一列舉類別。" \
+    "needle 用類別名，讓「攔到的是哪一種」也留下紀錄（與 limits_bad_yaml 對照，" \
+    "兩份走的是同一個 rescue 但類別不同——這正是「列舉列不完」的證據）" ],
   [ "limits_clean", 0, "OK",
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
@@ -125,6 +133,20 @@ CASES = [
 #    人得自己重跑一次才知道實際報了第幾行。
 #    這正是 worklog Pending 5 擔心的「紅得對，但訊息看不出原因」。
 indent = ->(text) { text.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n") }
+
+# 🔴 canary：**本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣**
+#    （PR #40 第 5 輪驗收指出——形態與這支測試剛在 checker 補的那個一模一樣，只是升了一層）。
+#    把 `CASES` 清空或砍剩兩條，這支會印「OK：⋯（0 條 / 0 個 fixture）」並 exit 0。
+#    上面迴圈裡的 `Dir.exist?` 只守「fixture 目錄被刪」，**守不住「case 被刪」**。
+#    ⚠️ 而這條退化路徑是**現實的**，不是理論：`CASES` 的行號與 fixture 行數是硬耦合
+#    （Pending 5／7 自承），改 fixture 就得手改斷言 —— 被嫌煩時最省事的做法就是刪 case。
+#    🔴 數字只准往上調。要調低必須在 PR 描述說明刪了哪一條、為什麼那條不再需要。
+MIN_CASES = 17
+if CASES.size < MIN_CASES
+  warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。" \
+       "若確實要移除某條，請一併調低 MIN_CASES 並在 PR 描述說明理由。"
+  exit 1
+end
 
 failures = []
 
