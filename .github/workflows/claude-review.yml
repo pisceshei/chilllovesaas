@@ -216,7 +216,20 @@ jobs:
           #        🔴 **但不要一看到失敗就歸因成權限**——2026-08-15 的連續失敗長得很像權限問題
           #        （第一個請求就被拒、零花費），實際上同一份設定稍早才成功過兩次。
           #        判準看下一步「解析結論並驅動閉環」貼出的 result payload。
-          #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
+          #   `--effort max`：CLI 推理強度共**六級** low/medium/high/xhigh/max/**ultracode**。
+          #      <!-- 🔴 2026-08-15 更正：本行原本寫「**五級** low/medium/high/xhigh/max，
+          #           max＝最高」——**漏了 ultracode，而且「max＝最高」的說法會誤導**。
+          #           官方 CLI reference 逐字：「Options: `low`, `medium`, `high`, `xhigh`,
+          #           `max`, or `ultracode`. Available levels depend on the model.
+          #           **`ultracode` starts the session at `xhigh` effort** with ultracode
+          #           turned on, and requires Claude Code v2.1.203 or later.」
+          #           （https://code.claude.com/docs/en/cli-reference，2026-08-15 取證） -->
+          #      🔴 **`ultracode` 不是「比 max 更高一級」**：它把單點推理強度**從 max 降到 xhigh**，
+          #        換來的是多代理自主編排（廣度）。**深度換廣度，不是升級。**
+          #        ⇒ 使用者 2026-08-15 的裁定原文是「用更高的能力去驗收得到更好的效果」，
+          #          `--effort max` 就是為那條加的。**改用 ultracode 等於推翻那條裁定的前提，
+          #          是一次新的裁定，不得由實作者順手改掉。**
+          #      ⇒ 在「單點推理深度」這個軸上，`max` 仍是最高。
           #      官方：「The default effort is `high` on every model that supports effort」
           #      ⇒ 這一行**有實際作用**，不是裝飾。
           #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
