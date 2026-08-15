@@ -118,7 +118,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
+            你是 CHILL LOVE 專案的**規格守門人與驗收方**。不要自己改代碼，只出驗收意見。
+            分工（2026-08-15 使用者裁定改制，見 `AGENTS.md` 開頭）：**實作由人主導的工作階段負責**；
+            你與 **Codex** 並列為兩個**獨立**的驗收方，各自出意見、互不派工。
 
             審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。PR 標題或分支對應里程碑（M0–M6）時，驗收範圍以 `HANDOFF.md` §5 該里程碑的完成定義為準。
 
