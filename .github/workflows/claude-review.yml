@@ -225,11 +225,26 @@ jobs:
           #      ⚠️ **本次換模型與驗收機器人的連續失敗有關，但不要當成已確認的修復**：
           #      2026-08-15 PR #33/#35 的驗收連續失敗，簽名是
           #      `num_turns:1`／`total_cost_usd:0`／`duration_ms` 次秒級（第一個 API 請求就被拒）。
-          #      🔴 **但「無 Fable 5 權限」已被證偽**：同一份設定在 01:41 與 01:54 兩次
-          #      **成功**貼出驗收結論（模型自 00:14 起就是 fable-5），失敗是 01:55 之後才開始
-          #      ⇒ 比較像額度／配額或服務端問題，不是權限。
-          #      換成 Opus 5 **可能**繞過（不同模型可能不同額度池），但**沒有證據保證**。
-          #      若換完仍是同一個簽名，請往帳號側查，不要再換模型。
+          #      🔴 已被證偽的，**精確地說只有這一條**：「從一開始就沒有 Fable 5 權限」。
+          #      依據：同一份設定在 01:41 與 01:54 兩次**成功**貼出驗收結論
+          #      （模型自 00:14 起就是 fable-5），失敗是 01:55 之後才開始。
+          #      <!-- 2026-08-15 依 PR #37 的 Codex review 收窄。原文寫「⇒ 比較像額度／配額或
+          #           服務端問題，**不是權限**」。那句話講得太滿：曾經成功只能證明**當時**具備權限，
+          #           不能證明 01:55 之後 entitlement／OAuth token／帳號狀態沒有改變。
+          #           把後續失敗定性成「不是權限」，會把排障導向錯誤方向，
+          #           也與本檔刻意讓判準表保持診斷中立的立場自相矛盾。 -->
+          #      ⇒ **仍在候選內**：用量／配額上限、OAuth token 在 CI 這條路徑上的獨立額度、
+          #        01:55 之後才發生的權限或帳號狀態變更、服務端問題。**逐一排除，不要先挑一個。**
+          #
+          #      🔴 **不要靠換模型來排障。** 2026-08-15 已用時間戳逐項排除 repo 側的**全部**變數：
+          #        模型自 00:14 未變（且曾成功兩次）／`--effort` 00:10 之後未動／
+          #        本檔最後一次改動 01:00（**最後成功與第一次失敗之間一個字都沒改**）／
+          #        `CLAUDE_CODE_OAUTH_TOKEN` 最後更新 Aug 14 ⇒ 觸發點不在這個倉庫裡。
+          #      <!-- 原文寫「換成 Opus 5 **可能**繞過（不同模型可能不同額度池）」。
+          #           留著會與下方判準表貼進 PR 留言的那句「也不要靠換模型來試」直接打架，
+          #           而讀 workflow 的人與讀 PR 留言的人會得到相反的指示。已刪。 -->
+          #      若換完仍是同一個簽名，請往帳號側查——並且**先看留言裡的「錯誤原文」**
+          #      （本檔上方已開 `show_full_output`，那才是分辨額度／認證／模型的唯一依據）。
           #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
           #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
           #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
@@ -426,6 +441,18 @@ jobs:
               #    是可信的；失敗分支缺的就是這道分辨。
               DIAG=""
               DIAG_WHY=""
+              # 🔴 `ERRTEXT`／`HAVE_RESULT` **必須在這裡初始化**（2026-08-15 事故修正）。
+              #    本步驟是 `set -uo pipefail`，而 `ERRTEXT` 只在下面「檔案存在」那個分支
+              #    才被賦值，卻在後面**無條件被讀**（`if [ -n "$ERRTEXT" ]`）⇒
+              #    「EXECUTION_FILE 為空」與「檔案不存在」這兩條路徑會以
+              #    `line …: ERRTEXT: unbound variable` 中止，**PR 上一則留言都貼不出來**。
+              #    ⚠️ 那正好是本 PR（Y7 四路分辨）要救的四條路徑裡的兩條，
+              #      也正是本檔花大篇幅在防的「審核整份消失」形態——修診斷的改動自己弄壞了診斷。
+              #    ⚠️ 引入這個 bug 的自測只跑了「檔案存在」的兩種輸入就收工。
+              #      教訓：**新增一個變數時，要走過每一個讀它的地方**，
+              #      而不是只測你新寫的那條路徑。
+              ERRTEXT=""
+              HAVE_RESULT=0
               if [ -z "${EXECUTION_FILE:-}" ]; then
                 DIAG_WHY="action 沒有輸出 execution_file——步驟可能在產生它之前就失敗了"
               elif [ ! -f "$EXECUTION_FILE" ]; then
@@ -452,6 +479,8 @@ jobs:
                 ERRTEXT=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
                   | if type == "object" and has("result") then (.result | tostring) else "" end' \
                   "$EXECUTION_FILE" 2>/dev/null | head -c 1500 || true)
+                # 有沒有真的解析到 result 物件——決定下面「撈不到原文」該歸因成哪一種。
+                [ -n "$DIAG" ] && HAVE_RESULT=1
                 if [ -z "$DIAG" ]; then
                   SIZE=$(wc -c < "$EXECUTION_FILE" | tr -d ' ')
                   if [ -s "$JQ_ERR" ]; then
@@ -465,10 +494,17 @@ jobs:
               if [ -z "$DIAG" ]; then
                 DIAG="取不到 —— $DIAG_WHY"
               fi
+              # 🔴 三分支，不是兩分支。原本的 else 把**兩種完全不同的原因**收斂成
+              #    同一句「result 物件裡沒有 result 欄（被白名單砍掉了）」——但只要
+              #    execution_file 根本取不到（為空／不存在／解析失敗／沒有 result 物件），
+              #    這句歸因就是**假的**：那時我們連 result 物件都沒有，談不上「欄位被砍」。
+              #    ⚠️ 這正是 Y7 修掉的形態（四條路徑一句假歸因），差點在同一個 PR 裡復發。
               if [ -n "$ERRTEXT" ]; then
                 ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄）：\n\n```\n%s\n```' "$ERRTEXT")
+              elif [ "$HAVE_RESULT" = "1" ]; then
+                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**裡面沒有 \`result\` 欄**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
               else
-                ERRBLOCK="**錯誤原文：取不到** —— execution_file 的 result 物件裡沒有 \`result\` 欄（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+                ERRBLOCK="**錯誤原文：無從撈起** —— 連 result 物件都沒有（原因見上一行的「本次執行結果」）。這一則**不是**「欄位被砍」，不要照那個方向查。"
               fi
               BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
