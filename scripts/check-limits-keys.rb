@@ -165,7 +165,22 @@ TARGETS.each do |rel|
   end
 
   scanned << rel
-  walk.call(Psych.parse_file(path), rel, [])
+
+  # 🔴 YAML 本身壞掉（截斷／縮排錯）也是「檢查跑不了」，必須回 2。
+  #    沒有這個 rescue 的話，Psych::SyntaxError 會直接冒出去，
+  #    Ruby 以 **exit 1 ＋ 一整片 backtrace** 結束——而 1 在本腳本的碼表裡
+  #    定義成「**檢查跑了，發現違規**」⇒ 退出碼會說謊，
+  #    自動化只看碼的話會把「解析不了」讀成「有鍵型別違規」。
+  #    （PR #40 第 3 輪驗收指出；退出碼三分一旦立了，就得把所有非零出口都歸位。）
+  begin
+    doc = Psych.parse_file(path)
+  rescue Psych::SyntaxError => e
+    warn "::error::#{rel} 不是合法的 YAML，本腳本無法解析 ⇒ **檢查跑不了**（exit 2，不是 1）。" \
+         "原始錯誤：#{e.message}"
+    exit 2
+  end
+
+  walk.call(doc, rel, [])
 end
 
 # 🔴 canary：**「沒有違規」與「沒有檢查」在輸出上長得一模一樣。**

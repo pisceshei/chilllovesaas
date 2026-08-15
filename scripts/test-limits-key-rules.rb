@@ -108,6 +108,12 @@ CASES = [
     "改成 `next` 之後控制流會落到 scanned.empty? canary，而 canary 的訊息**也含 `TARGETS`**、" \
     "原本也 exit 1 ⇒ 兩條路徑完全無法分辨，該突變存活。" \
     "只改 needle 沒有用（第一句 warn 在 next 之前就印了）⇒ 唯一的解是不同退出碼" ],
+  [ "limits_bad_yaml", 2, "不是合法的 YAML",
+    "🔴 **YAML 壞掉也是「檢查跑不了」，必須回 2**（PR #40 第 3 輪驗收指出）。" \
+    "沒有 rescue 時 Psych::SyntaxError 直接冒出去，Ruby 以 **exit 1 ＋ backtrace** 結束——" \
+    "而 1 的定義是「檢查跑了，發現違規」⇒ **退出碼會說謊**，" \
+    "自動化只看碼會把「解析不了」讀成「有鍵型別違規」。" \
+    "教訓：退出碼三分一旦立了，就得把**所有非零出口**都歸位" ],
   [ "limits_clean", 0, "OK",
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
