@@ -452,6 +452,7 @@ jobs:
               #      教訓：**新增一個變數時，要走過每一個讀它的地方**，
               #      而不是只測你新寫的那條路徑。
               ERRTEXT=""
+              ERRSTATE=""
               HAVE_RESULT=0
               if [ -z "${EXECUTION_FILE:-}" ]; then
                 DIAG_WHY="action 沒有輸出 execution_file——步驟可能在產生它之前就失敗了"
@@ -476,9 +477,39 @@ jobs:
                 #    `result` 被整個砍掉。⚠️ 這一行是在賭「存檔比 console 完整」，
                 #    **沒有實測過**：若印出「無 result 欄」，代表存檔同樣被砍，
                 #    那時就只能靠本步驟上方開啟的 `show_full_output: true`。
-                ERRTEXT=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
-                  | if type == "object" and has("result") then (.result | tostring) else "" end' \
-                  "$EXECUTION_FILE" 2>/dev/null | head -c 1500 || true)
+                # 🔴 **三態，不是兩態**（2026-08-15 修正）。原本 `has("result")` 後直接
+                #    `tostring`，把「沒有這個欄」「欄位是 null」「欄位是空字串」壓成一態：
+                #    `"result": null` 會**貼出一個內容就是 `null` 的程式碼區塊**——那正是
+                #    上面 10 行的 Y8 註釋（:437-441）特地擋掉的「null 垃圾」，同一份檔案原地復發。
+                #    ⇒ 先取狀態，再依狀態決定訊息；ERRTEXT 只在「真的有非空文字」時才有值。
+                ERRSTATE=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
+                  | if (type != "object") then "noobj"
+                    elif (has("result") | not) then "nofield"
+                    elif (.result == null) then "null"
+                    elif ((.result | tostring) == "") then "empty"
+                    else "text" end' "$EXECUTION_FILE" 2>/dev/null || echo noobj)
+                if [ "$ERRSTATE" = "text" ]; then
+                  RAW=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | .result | tostring' \
+                    "$EXECUTION_FILE" 2>/dev/null || true)
+                  # 🔴 三道處理，缺一則這則留言會反過來害人：
+                  #  ①**中和結論標記**——與下方回收品那段（:552-556）同一個理由，也是同一個做法：
+                  #    本則留言由 github-actions[bot] 貼出，而它在 REVIEWERS 清單內；
+                  #    錯誤原文是**外部文字**，裡面完全可能出現【驗收結論】。
+                  #    🔴 這份檔案已經為姊妹路徑立了這條不變量，新路徑不照做就是把它戳個洞。
+                  #  ②**打散 ``` 柵欄**——原文含程式碼區塊時會提前關閉下面那個 fence，
+                  #    留言後半段變成 Markdown 渲染。改成全形反引號，肉眼看得出來但不會破版。
+                  #  ③**截斷要切在字元邊界**——`head -c` 是**位元組**截斷，中文錯誤訊息
+                  #    會從三位元組字中間切開，產生非法 UTF-8。`iconv -c` 丟掉殘缺序列；
+                  #    沒有 iconv 的環境退回原值（GitHub runner 都有）。
+                  SAFE_ERR=$(printf '%s' "$RAW" | sed 's/【驗收結論】/〔驗收結論〕/g; s/```/｀｀｀/g' | head -c 1500)
+                  # 🔴 **不能寫成 `... | iconv -c || printf '%s' "$SAFE_ERR"`**（實測踩過）：
+                  #    `iconv -c` 丟掉殘缺序列之後**仍然回傳 1**，於是 `||` 會觸發，
+                  #    把原始（非法）內容**再接在清乾淨的內容後面** ⇒ 清完又貼回去，等於沒清，
+                  #    而且內容還變成兩份。改成先收下輸出、再判斷。
+                  #    （iconv 不存在時輸出為空 ⇒ 退回未清理的原值，總比沒有訊息好。）
+                  CLEANED=$(printf '%s' "$SAFE_ERR" | iconv -f UTF-8 -t UTF-8 -c 2>/dev/null) || true
+                  if [ -n "$CLEANED" ]; then ERRTEXT="$CLEANED"; else ERRTEXT="$SAFE_ERR"; fi
+                fi
                 # 有沒有真的解析到 result 物件——決定下面「撈不到原文」該歸因成哪一種。
                 [ -n "$DIAG" ] && HAVE_RESULT=1
                 if [ -z "$DIAG" ]; then
@@ -499,12 +530,20 @@ jobs:
               #    execution_file 根本取不到（為空／不存在／解析失敗／沒有 result 物件），
               #    這句歸因就是**假的**：那時我們連 result 物件都沒有，談不上「欄位被砍」。
               #    ⚠️ 這正是 Y7 修掉的形態（四條路徑一句假歸因），差點在同一個 PR 裡復發。
+              # 🔴 依 ERRSTATE 分五種，各報各的。**不要收斂**——這個步驟存在的全部理由
+              #    就是 Y7「四條路徑一句假歸因」，在同一段裡復發過一次已經夠了。
               if [ -n "$ERRTEXT" ]; then
-                ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄）：\n\n```\n%s\n```' "$ERRTEXT")
-              elif [ "$HAVE_RESULT" = "1" ]; then
-                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**裡面沒有 \`result\` 欄**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
-              else
+                # ⚠️ 這行說明**不得**寫出半形反引號柵欄的字面——寫了會在段落中開一個
+                #    行內 code span，把後面的字吃掉。用文字描述。
+                ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄；結論標記已中和成〔〕、原文裡的反引號柵欄已改全形）：\n\n```\n%s\n```' "$ERRTEXT")
+              elif [ "$HAVE_RESULT" != "1" ]; then
                 ERRBLOCK="**錯誤原文：無從撈起** —— 連 result 物件都沒有（原因見上一行的「本次執行結果」）。這一則**不是**「欄位被砍」，不要照那個方向查。"
+              elif [ "$ERRSTATE" = "nofield" ]; then
+                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**沒有 \`result\` 這個欄位**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+              elif [ "$ERRSTATE" = "null" ]; then
+                ERRBLOCK="**錯誤原文：欄位在但值是 \`null\`** —— 這與「欄位被砍掉」**不是同一件事**：上游有給這個欄，只是沒有填內容。⇒ 先看 log 的完整串流；若那裡也沒有，就是 SDK 沒有產生錯誤敘述。"
+              else
+                ERRBLOCK="**錯誤原文：欄位在但值是空字串** —— 同樣不是「欄位被砍掉」。⇒ 看 log 的完整串流。"
               fi
               BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
