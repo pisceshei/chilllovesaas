@@ -5,9 +5,26 @@
 #
 # ## 🔴 這支測試為什麼晚到
 #
-# `check-ci-parity.rb` 送審時（PR #39）**沒有回歸測試**，而它是同批新增的檢查器中
-# 唯一沒有的一支——`check-limits-keys.rb`、`check-money-boundary.rb`、
-# `check-exec-bits.sh`、`check-workflow-syntax.rb` 都有。
+# `check-ci-parity.rb` 送審時（PR #39）**沒有回歸測試**，而本倉庫**已合併的**檢查器
+# 都各有一支反向證明：`check-limits-keys.rb` → `test-limits-key-rules.rb`、
+# `check-money-boundary.rb` → `test-money-rules.rb`、`lint-prototype.py` → `test-lint-rules.py`。
+# 只有它沒有。
+#
+# <!-- 🔴 2026-08-15 更正（PR #39 第 3 輪驗收指出）。本段初稿逐字寫著
+#      「同批新增的檢查器中唯一沒有的一支——check-limits-keys.rb、check-money-boundary.rb、
+#      **check-exec-bits.sh、check-workflow-syntax.rb** 都有」。
+#      實查 `git ls-files scripts/`（12 檔）：後兩支**根本不存在於樹上**——
+#      `check-exec-bits.sh` 在 PR #41、`check-workflow-syntax.rb` 在 PR #42，兩者當時都還 OPEN。
+#      ⇒ 四支裡只有兩支成立，而這句話是整段論證的**前提**
+#      （同批都有 → 只有它沒有 → 一定有結構性原因 → ROOT 寫死）。前提虛構了一半。
+#      🔴 更難看的是它與本檔同一個 PR 的誠實聲明**直接牴觸**：
+#      `check-ci-parity.rb` 的「不檢查什麼」第 1 條當時還寫著
+#      「正解是把它抽成 `scripts/check-exec-bits.sh`」——**用未來式講同一個檔**。
+#      同一份 PR 裡，一處當它不存在、一處當它已存在。
+#      這是同一批工作內第四次指錯出處，教訓仍是那一句：**指出處之前要打開來看一眼**
+#      （`docs/worklog/2026-08-15-引用保真與執行位元.md`）。 -->
+#
+# ⚠️ **PR #41／#42 合併後請回來把上面那兩支加進清單**（那時它們才真的存在）。
 #
 # 直接原因很具體：它把 `ROOT` **寫死**成倉庫根目錄，於是**沒有辦法**餵給它一個
 # 故意違反的 fixture ⇒ 想寫測試的人會發現寫不了，然後就不寫了。
