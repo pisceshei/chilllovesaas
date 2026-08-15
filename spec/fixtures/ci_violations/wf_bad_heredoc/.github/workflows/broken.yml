@@ -1,0 +1,21 @@
+# 故意違反：**未閉合的 heredoc**。
+#
+# 🔴 這一條守的是一個 `bash -n` 自己抓不到的缺口：
+#    未閉合 heredoc 讓 `bash -n` **exit 0**，只在 stderr 印
+#    `warning: here-document at line N delimited by end-of-file (wanted 'EOF')`。
+#    ⇒ 只判退出碼的檢查器**完全放行**。
+#    而 claude-review.yml 記載的兩次語法事故**其中一次正是 heredoc**——
+#    也就是說這道閘門原本擋不住它宣稱要守的兩件事之一。
+#    （PR #42 的 Codex review 指出，已實測重現。）
+# 期望：scripts/check-workflow-syntax.rb 打紅（exit 0 但有警告 ⇒ 仍算違規）。
+name: BadHeredoc
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unterminated heredoc
+        shell: bash --noprofile --norc -eo pipefail {0}
+        run: |
+          cat <<EOF
+          this heredoc is never closed

@@ -34,6 +34,14 @@ CASES = [
     "block scalar 續行掉到第 0 欄——claude-review.yml 註釋記載的 2026-08-14 真實事故" ],
   [ "wf_bad_bash", 1, "bash -n",
     "🔴 YAML 合法但 bash 語法壞掉——只驗 YAML 的檢查會放行，要到 CI 跑那一步才炸" ],
+  [ "wf_bad_heredoc", 1, "但有警告",
+    "🔴 **未閉合 heredoc**——`bash -n` 對它 **exit 0**、只在 stderr 印警告 ⇒ " \
+    "只判退出碼的檢查器完全放行。而 claude-review.yml 記載的兩次語法事故，" \
+    "**其中一次正是 heredoc** ⇒ 這道閘門原本擋不住它宣稱要守的兩件事之一" ],
+  [ "wf_date_scalar", 0, "OK",
+    "🔴 反向斷言之二：**合法但容易讓檢查器崩掉**。裸日期是合法 YAML，但 load_file 預設不許 " \
+    "Date ⇒ 原本會丟 Psych::DisallowedClass 讓腳本帶著 backtrace 崩掉。" \
+    "本份同時覆蓋自訂 shell 模板 `bash -e {0}`——原白名單不匹配它 ⇒ 該 run 區塊被靜默跳過不檢查" ],
   [ "wf_empty", 1, "一份 workflow 都沒找到",
     "🔴 掃不到檔案時必須 fail，不能印 OK（空值長得像資料）" ]
 ].freeze

@@ -44,6 +44,7 @@
 # 相關：`.github/workflows/claude-review.yml` 檔頭（反竄改與兩次語法事故的記錄）。
 
 require "yaml"
+require "date"
 require "tempfile"
 require "open3"
 
@@ -51,9 +52,34 @@ ROOT = ARGV[0] ? File.expand_path(ARGV[0]) : File.expand_path("..", __dir__)
 WORKFLOW_DIR = File.join(ROOT, ".github", "workflows")
 
 # GitHub 表達式換成一個合法的 bash token，避免 `${{` 被當成 bad substitution。
+# ⚠️ 非貪婪 ⇒ 表達式內若含 `}}` 字面（例如 `fromJSON('{"a":{}}')`）會截錯。
+#    目前倉庫 0 個表達式，暫不處理；真出現時會是 bash -n 誤報（**吵而不是靜默**），
+#    那是可接受的失效方向。
 GH_EXPR = /\$\{\{.*?\}\}/m
-# 只有這些 shell（或未宣告＝預設 bash）才送去 bash -n。
-BASH_SHELLS = [ nil, "bash", "sh" ].freeze
+
+# 🔴 YAML 允許裸日期（`2026-08-15`），而 `YAML.load_file` 預設不許 Date
+#    ⇒ 會丟 `Psych::DisallowedClass`。本腳本原本只 rescue `Psych::SyntaxError`，
+#    那條路徑會讓腳本**帶著 Ruby backtrace 崩掉**，而不是報告違規。
+#    （PR #42 的 Codex review 指出，已實測重現。）
+PERMITTED = [ Date, Time, Symbol ].freeze
+
+# 判斷一個 `shell:` 宣告該不該送去語法檢查、以及用哪個直譯器。
+#
+# 🔴 GitHub 的 `shell:` **可以是自訂模板**，例如 `bash -e {0}`、
+#    `bash --noprofile --norc -eo pipefail {0}`（後者正是 `run:` 的預設）。
+#    原本用 `[nil, "bash", "sh"].include?(shell)` 判斷 ⇒ 這些寫法**一個都不匹配**，
+#    那些 run 區塊會被**靜默跳過不檢查**——又是「檢查沒驗到目標」。
+#    （PR #42 的 Codex review 指出。）
+# 回傳：要用的直譯器字串，或 nil＝不檢查（pwsh／python 等）。
+def interpreter_for(shell)
+  return "bash" if shell.nil?
+
+  head = shell.to_s.strip.split(/\s+/).first.to_s
+  case File.basename(head)
+  when "bash" then "bash"
+  when "sh"   then "sh"   # 宣告 sh 就用 sh -n 檢查，不要用 bash 的寬鬆語法放行
+  end
+end
 
 violations = []
 checked_files = 0
@@ -73,11 +99,16 @@ files.each do |path|
   checked_files += 1
 
   begin
-    doc = YAML.load_file(path, aliases: true)
+    doc = YAML.load_file(path, aliases: true, permitted_classes: PERMITTED)
   rescue Psych::SyntaxError => e
     violations << "#{rel}:#{e.line} YAML 解析失敗——#{e.problem}。" \
       "🔴 最常見原因：block scalar（`run: |`）的續行縮排掉到第 0 欄，" \
       "或 heredoc 內容與 YAML 縮排打架。"
+    next
+  rescue Psych::Exception => e
+    # 例如 DisallowedClass。仍然報成違規，**不要讓腳本崩掉**——
+    # 崩掉的話 CI 只看得到 Ruby backtrace，讀的人不知道是哪份 workflow 的問題。
+    violations << "#{rel} YAML 載入失敗（#{e.class}）：#{e.message}"
     next
   end
 
@@ -96,7 +127,8 @@ files.each do |path|
       next unless script
 
       shell = step["shell"] || job.dig("defaults", "run", "shell") || doc.dig("defaults", "run", "shell")
-      next unless BASH_SHELLS.include?(shell)
+      interpreter = interpreter_for(shell)
+      next unless interpreter
 
       checked_runs += 1
       label = step["name"] || "第 #{idx + 1} 步"
@@ -104,12 +136,22 @@ files.each do |path|
       Tempfile.create([ "wf-run-", ".sh" ]) do |f|
         f.write(script.gsub(GH_EXPR, "GHEXPR"))
         f.flush
-        _out, err, status = Open3.capture3("bash", "-n", f.path)
-        next if status.success?
+        _out, err, status = Open3.capture3(interpreter, "-n", f.path)
+        noise = err.lines.map(&:strip).reject(&:empty?)
 
-        detail = err.lines.map(&:strip).reject(&:empty?).first.to_s
-        violations << "#{rel} 的 job `#{job_name}` / 步驟「#{label}」的 run 區塊 " \
-          "**bash -n 不通過**：#{detail}"
+        # 🔴 **只看退出碼是不夠的**（PR #42 的 Codex review 指出，已實測）：
+        #    `bash -n` 對**未閉合的 heredoc** 會 **exit 0**，只在 stderr 印一句
+        #    `warning: here-document at line N delimited by end-of-file (wanted 'EOF')`。
+        #    ⇒ 只判 `status.success?` 的話，這一類**完全放行**。
+        #    而 `claude-review.yml` 記載的兩次語法事故，**其中一次正是 heredoc**——
+        #    也就是說這道閘門原本擋不住它宣稱要守的兩件事之一。
+        #    修法：**stderr 有任何輸出就算違規**。實測本倉庫 27 個 run 區塊 stderr 全空，
+        #    所以這條不會製造誤報；而它的失效方向是「吵」不是「靜默」，那是對的方向。
+        next if status.success? && noise.empty?
+
+        detail = noise.first.to_s
+        kind = status.success? ? "#{interpreter} -n 雖然 exit 0，但有警告" : "#{interpreter} -n 不通過"
+        violations << "#{rel} 的 job `#{job_name}` / 步驟「#{label}」的 run 區塊 **#{kind}**：#{detail}"
       end
     end
   end
