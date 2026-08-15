@@ -46,8 +46,12 @@ Psych 走 **YAML 1.1**，裸字 `on` 解析成布林 `true`ᅠ⇒ 這六筆的�
   能把違規指到**確切行號**；load 出來的 Hash 只剩值，報不出位置。
 - **判定用 `key_node.to_ruby` 的實際型別，不是自己重寫一份 YAML 1.1 字表**。
   檔內那張 `YAML11_COERCED_WORDS` **只用於產生提示文字**——表漏字不會讓違規逃掉。
-  ⇒ 順帶也擋住 `off/no/y/n`、`~/null`（→ nil）、`2026-08-15`（→ Date）等同類鍵，
-  不是只擋 `on`（已實測三種：Date / NilClass / FalseClass 均判出）。
+  ⇒ 順帶也擋住 `off/no/true/false`（含 `On`/`YES` 這類**大小寫變體**）、`~/null`（→ nil）、
+  `2026-08-15`（→ Date）等同類鍵，不是只擋 `on`（已實測三種：Date / NilClass / FalseClass 均判出）。
+- **偵測到 ERB 一律 fail**（fail-closed）：loader 走
+  `ActiveSupport::ConfigurationFile.parse`，它**先 render ERB 再解析 YAML**，
+  本腳本讀的是原始檔 ⇒ 不擋就會出現「CI 綠燈但 runtime KeyError」。
+  已實測 `<%= "on" %>: v` 在原始檔的 AST 裡是合法 String 鍵，但真正的 loader 產出 `[true]`。
 - **`TARGETS` 是清單常數**：目前只有 `config/limits.yml`（鐵律 6 的唯一上限值來源）。
   要納管其他 config YAML 只加路徑，不必改邏輯。
 
@@ -55,10 +59,38 @@ Psych 走 **YAML 1.1**，裸字 `on` 解析成布林 `true`ᅠ⇒ 這六筆的�
 - 正向：對修好的檔跑 → exit 0。
 - 反向：把 `git show HEAD:config/limits.yml`（修前版）放進鏡像目錄跑 →
   **exit 1，抓到全部 6 筆**，行號 1986–1991 與原檔逐行對得上。
+- 邊界（驗收後補）：`y: 1 / n: 2` → **exit 0**（是 String，正確放行）；
+  `foo: { Off: 3 }` → **exit 1**（大小寫變體確實會轉，正確攔下）。
+- ERB（驗收後補）：`<%= "on" %>: value` → **exit 1**；
+  同一份檔給真正的 loader（`ActiveSupport::ConfigurationFile.parse`）產出 `[true]`，
+  證實不擋就是 CI 綠燈而 runtime KeyError。
 - `bundle exec rubocop scripts/check-limits-keys.rb` → no offenses。
-- 既有兩支 check 腳本重跑仍全綠。
+- 既有兩支 check 腳本重跑仍全綠；GitHub Actions 上 `Check limits.yml key types` 步驟實跑 **success**。
 
-### 3. 掛進 CI（`.github/workflows/ci.yml`）
+### 3. 驗收後修正（PR #33 第 1 輪，兩個驗收方獨立指出同一條 🔴）
+
+**🔴 `y`/`n` 的斷言是錯的**——初稿把 `y`/`n` 寫進 `YAML11_COERCED_WORDS` 與五處敘述，
+宣稱它們會被轉布林。複驗（**Ruby 3.4.10 / Psych 5.2.2**，本專案鎖定版本）：
+
+```
+YAML.load("y: 1\nn: 2\nY: 3\nN: 4").keys  →  ["y", "n", "Y", "N"]   # 全是 String
+```
+
+YAML 1.1 **規格**的 bool 全集確實含 `y`/`n`，但 **Psych 5 的實作不轉**。
+判定邏輯無恙（它比對型別、不比對字面，所以 `y`/`n` 鍵本來就正確地放行），
+壞的是**錯誤訊息與文檔**：鍵解析成 TrueClass 時字面只可能是 `on`/`yes`/`true` 的大小寫變體，
+訊息裡的 `y` 永遠是假訊息。
+
+🔴 **這正是本 PR 要修的那一類錯誤**（註釋↔行為矛盾），出現在修它的 PR 自己身上。
+⇒ 字表移除 `y`/`n`，五處敘述改為「on/off/yes/no/true/false（含大小寫變體）」，
+並在字表上方寫明**為什麼刻意不含**、以及**不要反過來加一條「禁止裸字 y/n」的字面規則**
+（那會擋掉 Psych 能安全 symbolize 的合法鍵，比假訊息更糟）。
+
+順帶補到的：初稿也漏了**大小寫變體**（`Off`→FalseClass、`TRUE`→TrueClass），已一併寫入。
+
+**ERB fail-closed**（同輪另一條）：見上一節第三點。
+
+### 4. 掛進 CI（`.github/workflows/ci.yml`）
 
 在 `quality` job 的 `Check reversal naming` 之後加 `Check limits.yml key types`，
 附註釋說明為什麼這一類必須由機制擋（鍵名剛好是那幾個字時才出現，review 肉眼看不出來）。
@@ -71,8 +103,9 @@ Psych 走 **YAML 1.1**，裸字 `on` 解析成布林 `true`ᅠ⇒ 這六筆的�
 | 檔案 | 改動 |
 |---|---|
 | `config/limits.yml` | M27–M32 六行 `on:` → `"on":`；區塊上方加註釋（YAML 1.1 成因、實測鍵值、誤修警告、指向本次的 CI 腳本） |
-| `scripts/check-limits-keys.rb` | **新增**。Psych AST 遞迴走訪，對每個 mapping key 以 `to_ruby` 取實際型別，非 String 即違規並報 `檔:行` 與修法 |
+| `scripts/check-limits-keys.rb` | **新增**。Psych AST 遞迴走訪，對每個 mapping key 以 `to_ruby` 取實際型別，非 String 即違規並報 `檔:行` 與修法；`ERB_TAG` 偵測到 `<%` 即 fail-closed |
 | `.github/workflows/ci.yml` | `quality` job 新增 `Check limits.yml key types` 步驟 |
+| `docs/dev/m0-rails-skeleton.md` | 依 `AGENTS.md` 註釋與文檔節第 3 條（修 bug PR 更新受影響既有篇章）更新三處：「關鍵取捨與假設」#6 補鍵契約、「自動驗證」補本腳本、「變更記錄」補本輪 |
 | `docs/worklog/2026-08-15-limits-yaml布林鍵陷阱.md` | 本檔 |
 
 ---
@@ -97,5 +130,14 @@ Psych 走 **YAML 1.1**，裸字 `on` 解析成布林 `true`ᅠ⇒ 這六筆的�
    同一個陷阱在那些檔上一樣成立，只是目前沒有踩到。加進 `TARGETS` 即可，但**我沒有擅自擴大範圍**——
    本輪的授權範圍是 limits.yml。
 
-5. ✅ **全檔掃描已做，沒有其他同類鍵**。修後遍歷 `config/limits.yml` 全部鍵，
+5. ⚠️ **ERB 是「擋下來」不是「檢查過了」**。`limits.yml` 目前零個 ERB tag，
+   本腳本偵測到 `<%` 直接 fail。日後真要用 ERB，必須先擴充腳本
+   （render 後解析＋行號映射），**不要把閘門拿掉**——拿掉就回到「CI 綠燈但 runtime KeyError」。
+
+6. ⚠️ **`y`/`n` 的結論綁在 Psych 版本上**（Ruby 3.4.10 / Psych 5.2.2，2026-08-15 取證）。
+   YAML 1.1 規格含 y/n、Psych 5 不轉——這是**實作行為**不是規格保證。
+   升級 Psych 時若行為變回去，字表與五處敘述要一起重驗。
+   （比照專案「規則性斷言標註取證日期」慣例登記。）
+
+7. ✅ **全檔掃描已做，沒有其他同類鍵**。修後遍歷 `config/limits.yml` 全部鍵，
    非 String 鍵為 0（不只是那 6 個被修好，是整檔確認乾淨），登記以免下一個人重掃。

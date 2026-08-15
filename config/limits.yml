@@ -1983,7 +1983,9 @@ jurisdictions:
       #    落庫表 `contract_liability_entries`（jurisdiction.schema_union_rules.required_tables），
       #    唯一鍵 `(shop_id, source_type, source_id, direction)` ⇒ 同一筆金流只能落一次分錄。
       # 🔴 `"on"` 的引號是**必要的，不是風格**（2026-08-15 修）：Psych 走 YAML 1.1，
-      #    裸字 `on`/`off`/`yes`/`no`/`y`/`n` 一律解析成布林。原文寫成 `{ on: ... }` 時，
+      #    裸字 `on`/`off`/`yes`/`no`/`true`/`false`（含大小寫變體）一律解析成布林
+      #    （`y`/`n` 不在此列——YAML 1.1 規格含它們，但 Psych 5.2.2 實測不轉）。
+      #    原文寫成 `{ on: ... }` 時，
       #    這六筆的鍵是 `true`（TrueClass）而不是字串 `"on"`；config/application.rb 的
       #    `deep_symbolize_keys` 對非字串鍵原樣保留（`true` 不能 `to_sym`）⇒ M27 的鍵實測是
       #    `[true, :direction, :revenue]`，取值端
