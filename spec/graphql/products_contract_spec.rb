@@ -131,6 +131,125 @@ RSpec.describe "Admin GraphQL products contract", type: :request do
     expect(response.body).not_to include("secret database detail")
   end
 
+  # 🔴 UNLISTED 走完整的 request → schema → JSON 路徑。
+  # `spec/models/product_spec.rb` 已經斷言 enum 的值域，但那是**類別層**的斷言——
+  # 它證明不了「第四個值真的能穿過 GraphQL 序列化出去」。
+  # 本輪之前 enum 只有三值，任何 status 為 unlisted 的商品查詢都會拿到序列化錯誤，
+  # 而**沒有任何測試會發現**（既有 7 條全部只用 draft 的商品）。
+  it "serialises the fourth product status (UNLISTED) end to end" do
+    create_product(shop, title: "未列出品", status: "unlisted")
+    login!
+
+    post_graphql("{ products(first: 1) { nodes { title status } } }")
+
+    payload = response.parsed_body
+    expect(response).to have_http_status(:ok)
+    expect(payload["errors"]).to be_nil
+    expect(payload.dig("data", "products", "nodes", 0, "status")).to eq("UNLISTED")
+  end
+
+  it "exposes all four ProductStatus values in the introspected schema" do
+    login!
+
+    post_graphql(<<~GRAPHQL)
+      query { __type(name: "ProductStatus") { enumValues { name } } }
+    GRAPHQL
+
+    names = response.parsed_body.dig("data", "__type", "enumValues").map { |value| value.fetch("name") }
+    expect(names).to match_array(%w[ACTIVE DRAFT ARCHIVED UNLISTED])
+  end
+
+  # ── controller 的 rescue 收窄（2026-08-15）────────────────────────────────
+  #
+  # 🔴 原本 `execute` 的 rescue 子句是 `rescue JSON::ParserError, TypeError`，
+  # 而它是**方法層 rescue**——`ChillloveSchema.execute` 就在方法體裡面。
+  # ⇒ 任何 resolver 內部拋出的 `TypeError` 都會被渲染成 `BAD_USER_INPUT`。
+  # 鐵律 3 的金額型別閘門（65 §C L3）正是靠 `raise TypeError` 擋住
+  # 「把儲存值直接送 PSP」——那是 P1 級送款事故，卻會顯示成
+  # 「variables 必須是有效的 JSON 物件」。
+  it "still returns BAD_USER_INPUT when variables is not a JSON object" do
+    login!
+
+    post admin_graphql_path,
+      params: { query: "{ products(first: 1) { nodes { id } } }", variables: "[]" }.to_json,
+      headers: { "CONTENT_TYPE" => "application/json" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+  end
+
+  it "still returns BAD_USER_INPUT when variables is malformed JSON" do
+    login!
+
+    post admin_graphql_path,
+      params: { query: "{ products(first: 1) { nodes { id } } }", variables: "{not json" }.to_json,
+      headers: { "CONTENT_TYPE" => "application/json" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+  end
+
+  it "does not disguise a resolver TypeError as BAD_USER_INPUT" do
+    login!
+    allow(ChillloveSchema).to receive(:execute).and_raise(TypeError, "金額型別閘門")
+
+    expect {
+      post_graphql("{ products(first: 1) { nodes { id } } }")
+    }.to raise_error(TypeError, "金額型別閘門")
+  end
+
+  # ── AR rescue 的收窄（2026-08-15）─────────────────────────────────────────
+  #
+  # 🔴 原本是 `rescue ActiveRecord::ActiveRecordError`，而它是**方法層** rescue
+  # ⇒ resolver 內部拋出的**任何** AR 例外都被渲染成 `INTERNAL`／HTTP 200，
+  # 而 `render_internal_error` 只 log `error_class`，訊息一個字都不留。
+  # 這與上面那條 `TypeError` 是同一種病，只是型別換了一個。
+  #
+  # ℹ️ 這些例外今天還不可達（`ChillloveSchema.mutation` 為 `nil`，唯讀 schema），
+  # 但**第一支 mutation 掛上 root 當天就引爆** ⇒ 現在就把契約釘住。
+  # 🔴 斷言直接陳述「有沒有被吞」，**不假設它會往外拋**——
+  # Rails 在 test 環境對部分 AR 例外有自己的 `rescue_responses` 對映
+  # （`RecordNotFound` → 404 等），會由框架 render 而不是往外拋。
+  # 那**同樣不是「被吞成 INTERNAL」**，本檔在意的是後者。
+  def swallowed_as_internal?
+    post_graphql("{ products(first: 1) { nodes { id } } }")
+    response.status == 200 &&
+      response.parsed_body.dig("errors", 0, "extensions", "code") == "INTERNAL"
+  rescue ActiveRecord::ActiveRecordError
+    false # 往外拋 ＝ 沒被吞
+  end
+
+  {
+    "RecordInvalid（業務驗證失敗）" => -> { ActiveRecord::RecordInvalid.new },
+    "StaleObjectError（樂觀鎖，28 §0.3.2 應走 STALE_OBJECT userErrors）" =>
+      -> { ActiveRecord::StaleObjectError.new(nil, "update") },
+    "RecordNotFound" => -> { ActiveRecord::RecordNotFound.new("nope") },
+    # 🔴 `RecordNotUnique <= StatementInvalid` 為 **true**（實測）⇒ 它需要**專屬子句**，
+    # 否則會被基礎設施那條原封不動再吞一次，而 `63` §A.1 ④ 明文要求它轉成
+    # userErrors、「不得漏成 500」。
+    "RecordNotUnique（63 §A.1 ④；它是 StatementInvalid 的子類）" =>
+      -> { ActiveRecord::RecordNotUnique.new("Duplicate entry") }
+  }.each do |label, build|
+    it "不把 #{label} 吞成 INTERNAL" do
+      login!
+      allow(ChillloveSchema).to receive(:execute).and_raise(build.call)
+
+      expect(swallowed_as_internal?).to be(false)
+    end
+  end
+
+  it "仍然把基礎設施錯誤轉成去敏 INTERNAL（ConnectionNotEstablished）" do
+    login!
+    allow(ChillloveSchema).to receive(:execute)
+      .and_raise(ActiveRecord::ConnectionNotEstablished, "secret host detail")
+
+    post_graphql("{ products(first: 1) { nodes { id } } }")
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("INTERNAL")
+    expect(response.body).not_to include("secret host detail")
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

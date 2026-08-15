@@ -1,0 +1,2 @@
+a: { amount_format: minor_units }
+b: { amount_format: decimal_string }

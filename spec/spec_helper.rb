@@ -95,4 +95,53 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+
+  # 🔴 **「0 examples」不是通過。**
+  #
+  # 2026-08-15 實例：`spec/fixtures/ci_violations/**` 底下為了餵 CI 檢查器而放的
+  # 腳手架檔案叫 `money_spec.rb`，被 rspec 的預設 pattern 撿走，
+  # **整個套件從 233 examples 變成 0**。當時它是 exit 非零（載入期炸了）所以看得出來，
+  # 但只要那些檔案是「合法但什麼都不做的 Ruby」，就會是 **0 examples ＋ exit 0**
+  # ——CI 全綠，而**一條測試都沒跑**。
+  #
+  # 這與本專案反覆踩到的形態是同一個：**回報成功但什麼都沒做**
+  # （lint 規則的六種漏看、跨租戶 destroy 刪 0 列、建店缺 publication）。
+  # ⇒ 用一個下限守住。數字刻意設得很低（只防「整包沒跑」，不防「少跑幾條」），
+  #   這樣它不需要隨著新增測試而維護。
+  MINIMUM_EXAMPLES = 50
+
+  # 「這次是不是在跑全套」的判準＝**命令列完全沒帶參數**（`bundle exec rspec`）。
+  #
+  # 🔴 第一版拿「載入的 spec 檔數 < 5」當「使用者在跑子集」——**判斷反了**：
+  # 「載入的檔案很少」正是我要抓的那個 bug 的**症狀**，不是它的反例。
+  # 結果就是 pattern 壞掉時檔案數變 0，守衛反而被自己的條件跳過。
+  # （實測：把 exclude-pattern 改成排除全部 ⇒ 0 examples 而守衛沒開火。）
+  #
+  # `RSpec.configuration.files_or_directories_to_run` 在 rspec-core 3.13 上是 private，
+  # 所以改用 **ARGV**：跑子集一定會帶路徑或 `-e`／`--tag`。
+  #
+  # ⚠️ 判準**不是** `ARGV.empty?`——`ARGV` 含 RSpec 自己的 flag
+  # （實測：`bundle exec rspec --no-color` 的 ARGV 是 `["--no-color"]`），
+  # 用 `empty?` 會讓「帶任何 flag 的全套執行」都跳過守衛，而那是我驗證時的常用形態。
+  SUBSET_MARKERS = %w[-e --example -t --tag].freeze
+  FULL_SUITE_RUN = ARGV.none? do |arg|
+    arg.start_with?("spec/", "./spec/", "spec\\") || SUBSET_MARKERS.include?(arg)
+  end
+
+  config.after(:suite) do
+    # 🔴 **只在「跑全套」時生效**。第一版沒有這個條件，於是
+    # `bundle exec rspec spec/models/money_spec.rb`（22 examples）也被擋下來
+    # ——一個讓「單跑一個檔案」永遠失敗的守衛，會在第一天就被人拿掉。
+    # 守衛要活得下來，它就不能妨礙日常操作。
+    next unless FULL_SUITE_RUN
+
+    count = RSpec.world.example_count
+    next if count >= MINIMUM_EXAMPLES
+
+    abort <<~MESSAGE
+      ::error::只跑了 #{count} 個 example（下限 #{MINIMUM_EXAMPLES}）——這不是通過，是套件根本沒載入。
+        最可能的原因：spec 檔案的 pattern 被改壞，或有非 spec 的檔案叫 `*_spec.rb`
+        而讓 rspec 在載入期就停下來（見 .rspec 的 --exclude-pattern）。
+    MESSAGE
+  end
 end

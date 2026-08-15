@@ -63,7 +63,24 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
    - 不同單位用**不同型別**（`Money::Storage` / `Money::PspMinor` / **`Money::PspDecimal`** / `Money::Decimal`，無隱式 `to_i`／`to_s`）與**不同識別字後綴**（`*_cents` / `*_minor` / `*_psp_decimal` / `*_decimal`）；PSP adapter 簽名**只收該 pack 宣告格式對應的那一個值物件**，傳裸 Integer／裸 String／**或傳 `Money::Decimal`（物流商與 JSON-LD 用的那個，字串長得一模一樣）**一律 `TypeError`。**註釋不算防呆**（65 §C）。
    - **zero-decimal 幣別必須進金額測試矩陣**（至少 **JPY／TWD／KRW**），缺者 CI fail（65 §H）。沒有這一條，這個 bug 只會在上線後的對帳日出現。**`amount_format` 兩種格式也各必須有 fixture pack**，且 **TWD 要測「整除 100 違反 ⇒ raise 且不得自動湊整」**（65 §H.1／T16／T19，依 69 號）——`decimal_string` 型的誤用**在 HKD 上也會錯**，它是唯一基準法域測得到卻沒人在測的送款事故形態。
    - **不得**用 `jurisdictions.<code>.currency_format.exponent` 或 `currency_display.iso4217_zero_decimal_overridden` 當換算基數——前者自 2026-08-12 起語義是**顯示位數**（58 §G.3），後者是**被覆蓋的顯示清單**，兩者都不是 PSP 單位來源。
-4. **API-first（D5）**：admin SPA 只打 `/admin/api/{version}/graphql.json`；命名 `resourceVerb`；業務錯誤走 `userErrors{field,message,code}`（HTTP 恆 200）；分頁用 cursor＋`pageInfo`（≤250）；GID 格式 `gid://chilllove/{Type}/{id}`。契約見 `docs/research/28`。
+4. **API-first（D5）**：admin SPA 只打 `/admin/api/{version}/graphql.json`；命名 `resourceVerb`；分頁用 cursor＋`pageInfo`（≤250）；GID 格式 `gid://chilllove/{Type}/{id}`。契約見 `docs/research/28`。
+   - **錯誤分三層，不是「HTTP 恆 200」**：
+     ①**業務錯誤**走 `userErrors{field,message,code}`，HTTP **200**；
+     ②**限流／成本超限**走 top-level `errors` ＋ `extensions.code`（`THROTTLED`／`MAX_COST_EXCEEDED`），HTTP 仍 **200**；
+     ③**認證失敗、租戶停用、payload 格式錯誤**回**非 200**（401／402／403／423／400）。
+   <!-- 2026-08-15 修正（本尊考掘 §16）。原文：「業務錯誤走 `userErrors{field,message,code}`（HTTP 恆 200）」。
+        🔴 「HTTP 恆 200」與本尊不符——它只對第 ①②層成立。照原文實作的前端 client 會**只檢查
+        `data.errors` 與 `userErrors` 而不檢查 `res.ok`**，於是 401／423 這類回應會被當成
+        「沒有錯誤的空回應」，使用者看到的是一個什麼都沒發生的畫面。
+        🔴 **本條的判準沒有放寬**：業務錯誤仍然一律 200、仍然一律走 userErrors。
+        改的是「恆」這個字涵蓋的範圍。前端錯誤處理必須三層都有。 -->
+   - `userErrors.field` 型別是 **`[String!]`**（list 可 null、元素非 null），不是 `[String]`；
+     無法歸屬到欄位的錯誤 `field` 回 **`null`**（不是 `[]`）。路徑規則見 `docs/research/28` §0.3。
+   - 🔴 **`code` 一律有值是我方的刻意加嚴（ours）**：本尊的泛用 `UserError` **沒有 code**
+     （只有 `field`／`message`），code 只存在於各 mutation 專屬的 typed error。
+     我方全部 mutation 一開始就上 typed code enum——理由是 admin SPA 是唯一客戶端、
+     錯誤分支必須機器可判別，且本尊自己也在逐支遷往 typed error。
+     **不得把這條寫成「照抄本尊」。**
 5. **冪等與事件**：訂單成立／退款／庫存調整必帶 `idempotencyKey`；transaction 內禁外部 IO；事件走 outbox。
 6. **上限值**：一律引用 `config/limits.yml`（常數表見 `docs/research/22` §9.4），不得硬編碼。
 7. **數字同源**：同一指標在 pulse／列表 badge／分析頁必須來自同一 rollup 查詢。

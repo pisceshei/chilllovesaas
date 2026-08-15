@@ -1,0 +1,46 @@
+# ISO 4217 minor unit exponent 的**底表**（`limits.money_boundary.iso4217_table_source` 指向本檔）。
+#
+# 🔴 **這張表不是「PSP 該用的單位」**。它的唯一用途是：某個 PSP pack 明文宣告
+# `minor_unit_source: iso4217` 時，作為該 pack 的**底表**。
+# `docs/specs/65` §H.3 的結論逐字是：
+#   「以 ISO 4217 exponent 當 PSP 換算基數」是**已知會在真實 PSP 上算錯**的實作
+#   ——Adyen 官方明文說自家表覆蓋 ISO，Stripe 的 `Special cases` 表實質覆蓋 ISO。
+# ⇒ pack 一律要自己宣告 `minor_unit_overrides`；本表只是「宣告以 ISO 為底時」的來源。
+#
+# 🔴 **本表是手工輸入的最小子集**，只涵蓋 `docs/specs/65` §H.1 測試矩陣需要的幣別。
+#    ⚠ **V-131 未結案**：一手來源與落地形式（哪一版 ISO 4217 修訂、以什麼形式進 repo）
+#      尚未取得。`limits.yml` 已明文禁止用未釘版的 gem 取代本檔。
+# 🔴 **不在本表、且 pack 未 override 的幣別一律 raise `PSP_MINOR_UNIT_UNDECLARED`**
+#    ——fail-closed。這正是 A1「未宣告 ≠ 預設」的落點。
+#
+# 🔴 **TWD 刻意不在本表**（65 §H.3）：
+#    「ISO 4217 對 TWD 的 minor unit，本專案至今沒有任何一手出處。」
+#    而 `limits.currency_display.iso4217_zero_decimal_overridden` 把 TWD 與 JPY 並列、
+#    `jurisdictions.tw.currency_format.exponent` 又是**顯示位數**——同一個幣別在 limits 裡
+#    有兩個看起來都像 exponent 的數字，**而且都不是 PSP 該用的那個**。
+#    把 TWD 填進本表就是從那兩個數字之一推導它，那正是 §H.3 明文禁止的事。
+#    ⇒ TWD 走 pack 的 `minor_unit_overrides`；pack 沒宣告就 reject（測試矩陣 T8）。
+#
+# @see docs/specs/65-money-unit-boundary.md §D.4、§H.3
+# @see config/limits.yml money_boundary.iso4217_table_source
+
+# 幣別 → minor unit exponent
+exponents:
+  # zero-decimal
+  JPY: 0
+  KRW: 0
+  # two-decimal（基準法域 ＋ 回歸案例）
+  HKD: 2
+  USD: 2
+  EUR: 2
+  GBP: 2
+  CNY: 2
+  SGD: 2
+  # three-decimal —— 🔴 我方儲存尺度（×100）表達不了，`to_psp_amount` 會被 A2 擋下。
+  #    列在這裡**不是**為了支援它，而是為了讓 A2 有東西可擋：
+  #    表裡沒有它的話會先撞 A1（未宣告），測不到 A2 那條路徑。
+  KWD: 3
+  BHD: 3
+  JOD: 3
+  OMR: 3
+  TND: 3

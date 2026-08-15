@@ -157,12 +157,31 @@
 **規定**〔ours，落地 11 §3-3 的既有工具〕：
 
 - `products` 與 `product_variants` 皆帶 `lock_version`（樂觀鎖）。
-- A 類 mutation 的 input **必須帶 `lockVersion`**；不符回 `userErrors{code: CONFLICT, field: ["lockVersion"]}`，訊息帶**持有者姓名與其儲存時間**（比照 16 §F8.2 C1 對 edit session 的既有做法）。
-- 前端收到 `CONFLICT` → SaveBar 轉為「此商品已被 {name} 修改，〔重新載入〕〔覆蓋儲存〕」；**覆蓋是顯式動作**，不是預設。
+- A 類 mutation 的 input **必須帶 `lockVersion`**；不符回 `userErrors{code: STALE_OBJECT, field: ["lockVersion"]}`，訊息帶**持有者姓名與其儲存時間**（比照 16 §F8.2 C1 對 edit session 的既有做法）。
+- 前端收到 `STALE_OBJECT` → SaveBar 轉為「此商品已被 {name} 修改，〔重新載入〕〔覆蓋儲存〕」；**覆蓋是顯式動作**，不是預設。
+  <!-- 2026-08-15 修正（本尊考掘，Admin API 2026-07 逐頁查證）。原文用 `CONFLICT`。
+       🔴 本尊的 `CONFLICT` **只存在於 `DiscountErrorCode`，語義是「折扣屬性選擇互相衝突」的
+       輸入驗證**，與樂觀鎖無關。把它泛用化成樂觀鎖碼會讓同一個 token 在折扣線與商品線
+       表達兩件不相干的事，前端無法用 code 分支。⇒ 改用 `STALE_OBJECT`。
+       🔴 **`field: ["lockVersion"]` 不改**——考掘一度判它「傾向衝突、應改成
+       `["input","lockVersion"]`」，但覆核以官方 `/mutations/productDelete` 的錯誤範例
+       `"field": ["id"]`（參數就叫 `input`、id 住在 `input.id`）正面推翻：
+       **本尊會把 `input` 這層外殼剝掉**。我方原本就是對的。 -->
 - `productSet`（全樹）的 `lockVersion` 檢查涵蓋**商品與其所有變體**：任一 variant 的 `lock_version` 不符即整筆拒絕。
 - **例外**：庫存數量寫入**不使用 lock_version**，改用條件式 UPDATE ＋ `compareQuantity`（§E.4/§E.6）——樂觀鎖在高頻扣減下會退化成互相踩踏。
 
-> `CONFLICT` 目前在 28 §8 的 `DiscountErrorCode` 39 值表中被歸類為「折扣專屬」。本篇**將其提升為泛用碼**（語義本就通用），需回頭改 28 §6 的通用碼複用鐵律那一段——登記於 §L-3。
+> ~~`CONFLICT` 目前在 28 §8 的 `DiscountErrorCode` 39 值表中被歸類為「折扣專屬」。本篇**將其提升為泛用碼**（語義本就通用），需回頭改 28 §6 的通用碼複用鐵律那一段——登記於 §L-3。~~
+>
+> 🔴 **§L-3 於 2026-08-15 以相反方向結案**（本尊考掘，Admin API 2026-07）：
+> 本尊的 `CONFLICT` **只存在於 `DiscountErrorCode`**，語義是「折扣屬性選擇互相衝突」的
+> **輸入驗證**——它從來不是樂觀鎖碼。⇒ **28 §8 的現行分類是對的，要改的是本篇**。
+> 樂觀鎖改用 **`STALE_OBJECT`**（本篇 §A.4 已改）、庫存 CAS 用 **`CHANGE_FROM_QUANTITY_STALE`**。
+> 兩者都進 `Types::Errors::ConcurrencyCode` 池——那是本輪新開的類別，
+> 因為 28 §6 的 20 個泛用驗證碼**結構上容不下併發語義**（它們全是欄位級輸入驗證）。
+>
+> 🔴 **教訓**：把一個碼「提升為泛用」之前要先查它在本尊那裡是什麼意思。
+> `CONFLICT` 這個英文詞看起來當然像樂觀鎖，但本尊用它表達的是**折扣條件互斥**。
+> 光看名字推語義，是本輪四題裡最容易犯的錯。
 
 ### A.5 金額入口的唯一轉換點（鐵律 3）
 
@@ -714,7 +733,22 @@ UPDATE inventory_levels
 
 `inventorySetQuantities(compareQuantity:)`（28 §3；22 §2 實測「on hand(current) 防過期校驗」）——這是**樂觀併發控制**，語義是「我看到的是 X，如果現在還是 X 就設成 Y」。
 
-- 不符 ⇒ `userErrors{code: CONFLICT, field: ["compareQuantity"]}`，訊息帶**當前值**（讓 UI 直接顯示「現值已變為 7」）。
+- 不符 ⇒ `userErrors{code: CHANGE_FROM_QUANTITY_STALE, field: ["quantities", "<i>", "changeFromQuantity"]}`，
+  訊息帶**當前值**（讓 UI 直接顯示「現值已變為 7」）。
+  <!-- 2026-08-15 兩處修正（本尊考掘，Admin API 2026-07）。原文：
+       `userErrors{code: CONFLICT, field: ["compareQuantity"]}`。
+       ① **`CONFLICT` 是折扣專屬的輸入驗證碼**（見 §A.4 的批註），庫存 CAS 用
+          `CHANGE_FROM_QUANTITY_STALE`。
+       ② 🔴 **`compareQuantity` 自 2026-04 起已從本尊 schema 移除**，改名
+          `changeFromQuantity`（型別是 `Int` **nullable**，不是 `Int!`——changelog 說的
+          「必填」是行為層要求「key 必須明確出現」，型別層做成 `Int!` 會讓官方明文的
+          「傳 null＝關閉 CAS」逃生門消失）。
+          ⚠ 但 enum 值**沒有**被換掉：`COMPARE_QUANTITY_STALE`／`COMPARE_QUANTITY_REQUIRED`
+          在 2026-07 與 unstable 仍與 `CHANGE_FROM_QUANTITY_STALE` 並存。
+       ③ **field 改成三段含索引**：單段 `["compareQuantity"]` 同時丟了層級與索引，
+          `quantities` 是陣列，多筆一起送時前端無法定位是第幾筆
+          （本尊實例：`["variants","0","metafields","0","value"]`）。
+       🔴 本節其餘內容（CAS 不是驗證、不得先讀後寫、CSV 必須帶該欄）**完全不變**。 -->
 - **不得**做成「先 SELECT 再比較再 UPDATE」——那是先讀後寫，與 28 §7 對抵用金／禮品卡的既有禁令（🔴 禁止先讀後寫）同一條紀律。正確寫法是把 compareQuantity 放進 `WHERE`。
 - 庫存 CSV 匯入（60 §5 實測：**商品 CSV 與庫存 CSV 是兩套，官方明確要求分流**）**只准寫 on_hand 且必須帶 compareQuantity 欄**（22 §2 既有）。這使得「拿三天前匯出的檔案回灌」會逐行失敗而不是靜默覆蓋。
 
@@ -930,7 +964,7 @@ P0-02 剛做的市場繼承（29 §1.5）對商品價格的影響有三處：
 | # | 環節 | 失敗表現 | 商家看得見嗎 | 偵測 | 補救 |
 |---|---|---|---|---|---|
 | 1 | GraphQL 驗證 | `userErrors`，HTTP 200，表單欄位標紅 | ✅ 即時 | — | 改正重送 |
-| 2 | 樂觀鎖衝突 | `CONFLICT` ＋ 持有者姓名（§A.4） | ✅ 即時 | — | 重載或顯式覆蓋 |
+| 2 | 樂觀鎖衝突 | `STALE_OBJECT` ＋ 持有者姓名（§A.4） | ✅ 即時 | — | 重載或顯式覆蓋 |
 | 3 | transaction | 整筆 rollback，`INTERNAL_ERROR` ＋ requestId | ✅ 即時 | Sentry | 重送（B 類有 idempotencyKey 保護） |
 | 4 | outbox 寫入 | **不可能單獨失敗**（同交易） | — | — | — |
 | 5 | dispatcher | 事件停 `pending`；`attempts ≥ 8` ⇒ `dead` | ❌ **商家看不見** | 佇列深度告警（11 §5-3）＋ dead 事件告警 | 後台重推（18 §F1-5） |
@@ -1077,10 +1111,10 @@ F 平台      platform_product_access(rollup_only) / platform_rollup_staleness_w
 
 ### 3 併發
 
-- [ ] 兩個 staff 同時儲存同一商品 ⇒ 後者收 `CONFLICT` ＋ 持有者資訊，**不是靜默覆蓋**（§A.4）。
+- [ ] 兩個 staff 同時儲存同一商品 ⇒ 後者收 `STALE_OBJECT` ＋ 持有者資訊，**不是靜默覆蓋**（§A.4）。
 - [ ] 單地點超賣測試：100 執行緒（13 號既有）。
 - [ ] **多地點超賣測試（新增）**：2 地點各 1 件、10 執行緒下單 2 件 ⇒ 恰好 1 單成功，恆等式成立（§E.4）。
-- [ ] `compareQuantity` 不符回 `CONFLICT` ＋ 當前值；**代碼中無「先 SELECT 再 UPDATE」**（rubocop cop）。
+- [ ] `changeFromQuantity` 不符回 `CHANGE_FROM_QUANTITY_STALE` ＋ 當前值；**代碼中無「先 SELECT 再 UPDATE」**（rubocop cop）。
 - [ ] 事件亂序測試：把兩個 `product.variant.updated` 反序投遞給搜尋索引消費者 ⇒ 最終索引值為**新版本**（§C.3 ③）。
 
 ### 4 效能
@@ -1142,7 +1176,7 @@ F 平台      platform_product_access(rollup_only) / platform_rollup_staleness_w
 |---|---|---|---|---|
 | **L-1** | SKU 唯一性 | 11 §2-1 舉例「SKU per shop 用唯一索引兜底」 | **該例子錯了**：官方是軟唯一（警告不阻擋，61 §1.5／help P10）。DB 用一般索引，重複時回 `warnings`（§B.6） | 11 §2-1 換一個例子（handle 與折扣碼仍是好例子，SKU 不是） |
 | **L-2** | `platform_daily_rollups` 的形狀矛盾 | 36 §3 定義為**無 shop_id、唯一鍵 (date)**；39:2225 卻 join 它並讀 `gmv_30d_cents`（需要每店一列，且該欄不在 36 的欄位表） | 兩張表：`platform_daily_rollups`（平台日總計，豁免表）＋ `platform_shop_daily_rollups`（**帶 shop_id**，不需豁免） | 36 §3 與 39 §2225 二選一改，並更新 `config/tenancy_exempt_tables.yml` |
-| **L-3** | `CONFLICT` 錯誤碼的分類 | 28 §8 把 `CONFLICT` 歸為「折扣專屬」 | 提升為泛用碼（樂觀鎖衝突、compareQuantity 不符都用它） | 28 §6 通用碼複用鐵律那一段 |
+| ~~**L-3**~~ | ~~`CONFLICT` 錯誤碼的分類~~ | 28 §8 把 `CONFLICT` 歸為「折扣專屬」 | ✅ **2026-08-15 以相反方向結案**：本尊的 `CONFLICT` 只存在於 `DiscountErrorCode`、語義是折扣屬性互斥的**輸入驗證**，與樂觀鎖無關 ⇒ **28 §8 是對的，改的是本篇**。樂觀鎖用 `STALE_OBJECT`、庫存 CAS 用 `CHANGE_FROM_QUANTITY_STALE`，兩者進本輪新開的 `ConcurrencyCode` 池（28 §6 的 20 個泛用碼全是欄位級輸入驗證，結構上容不下併發語義）。 | 本篇 §A.4／§E.5／驗收清單皆已改 |
 | **L-4** | outbox 的投遞狀態粒度 | 18 §F1-2「逐筆路由給訂閱者 → 成功標 done」——單一 `status` 欄位 | 需要**逐消費者**的投遞狀態表，否則一個消費者失敗會連累其他消費者重放（§C.4） | 18 §F1（加 `event_deliveries` 表） |
 | **L-5** | 匯率的儲存型別 | 29 §1.4 `currency_exchange_rates(base/quote/**rate**/fetched_at)` 未指定型別 | `rate_ppm BIGINT`（鐵律 3：float 即 bug） | 29 §1.4 |
 | **L-6** | 零小數貨幣的顯示 | 29 §3.3「零小數貨幣顯示與收款一律整數；money filter 格式化**不得出現小數**」 | 被 2026-08-12 裁定二覆蓋：**顯示一律兩位小數**（`limits.currency_display`）。但 29 §3.3 講的「**收款**」那一半仍然成立且更重要（§G.4） | 29 §3.3 拆成「顯示（已被覆蓋）」與「收款（仍有效）」兩句 |

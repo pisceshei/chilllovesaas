@@ -1,1 +1,8 @@
 --require spec_helper
+# 🔴 `spec/fixtures/ci_violations/**` 底下有**故意違反規則**的檔案，其中包含
+# 為了讓 `scripts/check-money-boundary.rb` 的矩陣檢查有東西可讀而放的
+# `spec/models/money_spec.rb` 腳手架——它們**不是真的 spec**。
+# 不排除的話 rspec 會把它們撿走，然後在載入期就炸（那些檔案裡沒有 require、
+# 內容也不是可執行的測試），而**整個測試套件變成 0 examples**——
+# 綠不綠都看不出來，因為根本沒跑。
+--exclude-pattern "fixtures/**/*_spec.rb"

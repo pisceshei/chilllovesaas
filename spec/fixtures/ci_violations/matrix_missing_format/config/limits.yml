@@ -1,0 +1,3 @@
+money_boundary:
+  test_matrix_zero_decimal_required: [JPY, TWD, KRW]
+  test_matrix_amount_formats_required: [minor_units, decimal_string]
