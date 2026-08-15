@@ -1,0 +1,10 @@
+# 故意違反：布林鍵藏在 **sequence 裡的 mapping**（不是頂層 mapping）。
+#
+# 🔴 這個 fixture 守的是 check-limits-keys.rb 的 `when Psych::Nodes::Sequence` 遞迴分支。
+#    補它之前，突變測試證實：**把那兩行刪掉，回歸測試仍然全綠**——
+#    而真實的 config/limits.yml 有 17 處 sequence 內的 mapping，
+#    也就是說當時「陣列裡的鍵」這一整片是沒有被掃到的。
+# 期望：scripts/check-limits-keys.rb 打紅，路徑要顯示成 `rules.0.on` 這種帶索引的形式。
+rules:
+  - on: gift_card_issued
+    direction: increase

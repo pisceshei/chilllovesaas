@@ -40,13 +40,35 @@ CHECKER = File.join(ROOT, "scripts/check-limits-keys.rb")
 FIXTURES = File.join(ROOT, "spec/fixtures/ci_violations")
 
 # (fixture 目錄, 期望 exit code, 輸出須包含的字串, 這條在防什麼)
+#
+# 🔴 **這張表是被突變測試打出來的**（2026-08-15）。初版只有三條，
+#    而把 check-limits-keys.rb 改壞成六種形態後實測，**三種存活**：
+#      M2 只認 TrueClass（放行 FalseClass／NilClass／Date） → 測試全綠
+#      M3 刪掉 Sequence 遞迴（陣列裡的鍵不掃）             → 測試全綠
+#      M4 ERB 閘門收窄成只認某一個字面                      → 測試全綠
+#    也就是說：checker 實際擋得住的東西，有一大半**沒有任何測試在守**，
+#    改壞了不會有人知道。下面五條就是為了把那三個缺口關掉。
+#    ⇒ 加新規則到 checker 時，**先想「改壞它的哪一種寫法不會被抓」**，
+#      那個答案就是你要補的 fixture。
 CASES = [
   [ "limits_bool_key", 1, "TrueClass",
     "裸字 `on` 鍵被 Psych 解析成 true——config/limits.yml 的 M27–M32 踩過的原形態" ],
+  [ "limits_false_key", 1, "FalseClass",
+    "🔴 裸字 `no` ＝ **挪威的 ISO 3166 代碼**，鐵律 11 的法域 pack 最可能踩到的一種" ],
+  [ "limits_nil_key", 1, "NilClass",
+    "裸字 `~` 被解析成 nil——與布林是不同分支，之前完全沒被測到" ],
+  [ "limits_date_key", 1, "Date",
+    "看起來像日期的鍵被解析成 Date（生效日／匯率日結那類表會踩到）" ],
+  [ "limits_seq_key", 1, "TrueClass",
+    "🔴 布林鍵藏在 **sequence 裡的 mapping**——守的是 Sequence 遞迴分支，" \
+    "真實 limits.yml 有 17 處這種結構" ],
   [ "limits_erb", 1, "ERB",
-    "🔴 ERB fail-closed：原始檔的 AST 看起來乾淨，但 loader 先 render 後會得到 true 鍵" ],
+    "🔴 ERB fail-closed（輸出型標籤）：原始檔的 AST 看起來乾淨，loader render 後是 true 鍵" ],
+  [ "limits_erb_tag", 1, "ERB",
+    "🔴 ERB fail-closed（**非輸出型**控制流標籤）：與上一條是不同寫法，" \
+    "少了它，把 ERB_TAG 收窄成單一字面值不會被抓到" ],
   [ "limits_clean", 0, "OK",
-    "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面兩條都「通過」" ]
+    "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
 
 failures = []

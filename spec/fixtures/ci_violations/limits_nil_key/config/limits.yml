@@ -1,0 +1,5 @@
+# 故意違反：裸字 `~` ⇒ Psych 解析成 nil，鍵不是 String。
+# `null:` 同理（YAML 1.1 的 null 全集）。
+# 期望：scripts/check-limits-keys.rb 打紅，且訊息點名 NilClass。
+flags:
+  ~: placeholder

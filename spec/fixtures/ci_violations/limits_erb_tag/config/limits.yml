@@ -1,0 +1,12 @@
+# 故意違反：非輸出型 ERB 標籤（控制流），與 limits_erb 的輸出型標籤是不同寫法。
+#
+# 🔴 兩個 ERB fixture 缺一不可。補這一個之前，突變測試證實：
+#    把 ERB_TAG 從 /<%/ 收窄成只認 limits_erb 那一個字面值，
+#    回歸測試**仍然全綠**——閘門實際上已經放行了其他所有 ERB 寫法。
+#    有了這一份，收窄 ERB_TAG 就會被打紅。
+# 期望：scripts/check-limits-keys.rb 打紅（ERB fail-closed）。
+foo:
+  bar: baz
+  <% if false %>
+  extra: 1
+  <% end %>
