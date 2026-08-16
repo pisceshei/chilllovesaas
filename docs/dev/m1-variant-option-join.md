@@ -58,7 +58,7 @@ products
 
 索引與外鍵逐條理由見 migration 檔頭與 inline 註釋（支數不寫死，以 migration 為準；
 2026-08-16 補 `ix_pvov_by_value [shop_id, option_value_id]`——`OptionValue` 刪除前
-`restrict_with_error` 的存在性反查，三支既有索引對此查詢都只能用到 shop 前綴）。
+`restrict_with_error` 的存在性反查，既有索引（含 `ix_pvov_coordinate`／`ix_pvov_option_value`／`ix_pvov_variant` 等，見 schema）對此查詢都只能用到 shop 前綴）。
 
 ## 關鍵取捨
 
@@ -129,6 +129,7 @@ primary match key 是 `variants[].id`。`63` §B.5 的身分保持會讓 digest 
 | **前台 Liquid**（M2） | `variant.option1/2/3` 由 join 表推導；**不得**回頭加冗餘欄 |
 | **feed／SEO**（M5） | digest **不得**外洩成 feed id 或 URL |
 | **既有測試** | `product_variant_spec` 三條改過形態（理由見該檔註釋）——🔴 **與 SKU 軟唯一無關** |
+| **未來所有寫入路徑**（`productSet`／`productVariantsBulkUpdate`…） | `variant.save!` 因 `autosave: true` 會把 dirty 的 join 子列一起寫回 DB——寫入 service 不得假設「只有自己在寫 join 表」 |
 
 ## 測試
 
