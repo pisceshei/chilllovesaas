@@ -183,7 +183,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | ledger：`InventoryAdjustmentGroup`＋`referenceDocumentUri`＝order GID（ledger 是唯一入口，批量路徑也不例外） | §02 C.3／F.2#9 |
 | 建 `OrderTransaction` 列（`PENDING`，或 PSP 已回終局時直接落 `SUCCESS`） | §05 B.1 |
 | outbox 寫入：`orders/create`、`fulfillment_orders/order_routing_complete`、`inventory_levels/update`、（付清時）`orders/paid` | §03 E.1／§04 E.1／§09 E |
-| **draft 轉正路徑另加**：`draft.status=COMPLETED`＋`completedAt`＋`order` 回填＋metafields 單向複製＋`reserved → committed` 原子遷移 | §04 B.4／D3-5；§02 C.1 |
+| **draft 轉正路徑另加**：`draft.status=COMPLETED`＋`completedAt`＋`order` 回填＋metafields 單向複製＋庫存遷移**分支**（曾設 `reserveInventoryUntil` 者 `reserved → committed` 原子遷移；未保留者走本表標準條件式 `available → committed`——`reserveInventoryUntil` 可選，無條件 reserved→committed 對未保留草稿會把 reserved 打負 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->，與 A4 對齊） | §04 B.4／D3-5；§02 C.1 |
 
 | 必須排到 transaction **外** | 理由／落法 |
 |---|---|
@@ -308,7 +308,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | M2 | **checkout 路徑下「付款成功＝訂單成立」是否可寫進通則** | §03 D.3-2：付款成功 ⇒ 訂單成立、cart 刪除、庫存 commit（同刻） | §02 B.1／§03 C.7-3：commit 的一般化觸發是訂單成立 | **同刻只是 checkout 路徑的特例，不得上升為通則** | 這是 M1 的孿生誤解。程式碼裡 commit 的呼叫點必須掛在「訂單成立」事件上，不得掛在「付款 SUCCESS」回呼上 |
 | M3 | **API 匯入單扣不扣庫存** | §02 B.1 通則：訂單成立即 commit | §04 C.2／[S34]：`orderCreate` 省略 `options.inventoryBehaviour` ⇒ 預設 **`BYPASS` 完全不扣** | **乙——這是通則的官方明文例外，照抄** | 官方在 `OrderCreateOptionsInput` 明標預設值，屬 1:1 對齊義務。我方**加嚴一層**：admin／內建匯入工具呼叫時一律顯式帶 `DECREMENT_*`，並加 lint／測試防「以為匯入有扣庫存」的靜默超賣（§04 F.2#17） |
 | M4 | **deferred purchase 的 commit 時點** | §02 B.1：訂單成立 | §03 D.7-5：selling plan inventory policy `ON_FULFILLMENT` ⇒ 建單時**不進 committed**，等 `fulfillAt` 到點 FO 轉 `OPEN` 才 commit | **兩者並存：commit 觸發必須參數化，不得硬編** | 庫存服務對外只認「commit 事件」，由訂單／FO 兩處按 selling plan 政策決定何時發。M0–M6 不實作訂閱，但**參數化的介面現在就要留**，否則 D.6 餘額後收一實作就得改核心。⚠️ `ON_SALE` 與 `SCHEDULED` FO 並存（收全款但延後出貨）的交集時點**官方未明文**（§03 D.7-5） |
-| M5 | **草稿單保留的量化態落點** | §02 C.1／§03：draft 保留＝**Unavailable／`reserved`**，官方明文「draft 轉正式單前不算 committed」 | §04 B.4 轉正副作用寫「**為品項保留/扣庫存**」（語焉不詳，可讀成 committed） | **甲**：draft 期＝`reserved`（我方 bucket `draft_reserved`）；轉正瞬間 `reserved → committed` **原子遷移** | §02 C.1 有官方逐字支持（「放入 Unavailable 狀態」）；§04 的措辭是 help 頁的口語彙總。⚠️ 保留落在**哪個 location**、以及轉正瞬間的原子語義**官方均未明文**（§02 D.3-2／D.3-3），列 parity 實測項；我方推定＝routing 預演首選地點，轉正時 routing 實際結果不同則保留須原子遷移 |
+| M5 | **草稿單保留的量化態落點** | §02 C.1／§03：draft 保留＝**Unavailable／`reserved`**，官方明文「draft 轉正式單前不算 committed」 | §04 B.4 轉正副作用寫「**為品項保留/扣庫存**」（語焉不詳，可讀成 committed） | **甲**：draft 期（**曾保留者**）＝`reserved`（我方 bucket `draft_reserved`）；轉正瞬間 `reserved → committed` **原子遷移**（未保留草稿走 T1 條件式 available→committed，見 A4） | §02 C.1 有官方逐字支持（「放入 Unavailable 狀態」）；§04 的措辭是 help 頁的口語彙總。⚠️ 保留落在**哪個 location**、以及轉正瞬間的原子語義**官方均未明文**（§02 D.3-2／D.3-3），列 parity 實測項；我方推定＝routing 預演首選地點，轉正時 routing 實際結果不同則保留須原子遷移 |
 | M6 | **`committed` 的變動路徑是否只有兩條** | §02 C.5 引官方句：committed「只受訂單成立與履行影響」 | §09 B.1-4：`fulfillmentOrderMove` 改派 ⇒ committed 跨地點遷移；§02 B.1／§04 C.3：取消／退款回補也改 committed | **§02 C.5 的裁定**：官方句是「**API 不可直調**」的說明，**不是變動路徑的窮舉** | 照字面實作「僅兩條路徑」，move 後**兩個地點的 committed 都會錯**，而且全店加總仍平 ⇒ 錯誤不可見。因此對帳必須做到**單一地點層級**，且 ledger 重放要含 `fulfillmentOrderMove` 事件（§02 F.3-1）。⚠️ move 的**數量機制**官方未寫（§02 B.1），origin 是否同步 `available +` 為推定 |
 | M7 | **退款上限是硬約束還是軟約束** | §05 C.4／C.13-3：`Σ refunds ≤ Σ captured`（通道側上限 `maximumRefundableV2`），讀起來是硬上限 | §06 C.2：**over-refund 是官方明載的合法情境**（已退 store credit 後買家改要退原卡）；API 有 `allowOverRefunding`（default `false`） | **乙（軟上限）** | 做成 DB CHECK 會擋掉官方合法流程。落法：條件式 UPDATE ＋ `orders.over_refund` 權限 ＋ 二次確認；**唯一硬約束＝`refunded_total_cents >= 0`**（§06 F.2#12）。⚠️ `maximumRefundable` 的**官方公式未公開**，`= captured − refunded` 是我方定義，須標註為本專案定義 |
 | M8 | **`refunds/create` 事件的發出時點** | §05 D.4-2：退款送通道**成功後** ⇒ 發 `refunds/create` | §06 E.1：官方逐字「independent from the movement of money」——**金流未必已動** | **乙** | Refund 物件**無 status**（§06 B.4），「存在」不等於錢已退到。把事件綁在 PSP 成功上，退款失敗的訂單會**完全沒有 outbox 紀錄**，對帳與重試都失去輸入。落法＝T3 的 transaction 內即寫 outbox，金流進度另由 `order_transactions/create` 承載 |
@@ -503,7 +503,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | `orderCancel` | 全部 FulfillmentOrder 關閉；`restock` 為真時庫存回補；金流終態映射（未請款→VOIDED／已退款→REFUNDED） | 連動 | §04 D／§09 |
 | 訂單存在 **active return**（REQUESTED 或 OPEN） | `orderCancel` 一律拒絕 | 🔒鎖 | §04 B.1／§06 |
 | 存在「不可履行的未結出貨」／pending authorization／部分履行後／三方履行服務編輯過 | `orderCancel` 拒絕（不可取消聯集） | 🔒鎖 | §04 B.1 |
-| `fulfillmentCancel` | FO 若因整單出貨完畢而 CLOSED ⇒ **自動重開**；部分出貨 ⇒ 為被取消數量建新 FO（多地點可能一次生多張） | 連動 | §09 B |
+| `fulfillmentCancel` | FO 若因整單出貨完畢而 CLOSED ⇒ **自動重開**；部分出貨 ⇒ 為被取消數量建新 FO（多地點可能一次生多張）；**同 transaction 原子回補 `committed +q`／`on_hand +q`**（T2 已扣量；不回補則再出貨二次扣減 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->，詳 §09 B.3 註） | 連動 | §09 B |
 | 3PL `reject` 履約請求 | FO.status 退回 **OPEN**，requestStatus=REJECTED | 連動 | §09 B |
 | 3PL `fulfillmentOrderClose` | FO.status→INCOMPLETE，requestStatus→CLOSED；商家重新提交會產生**新 FO** | 連動 | §09 B |
 | 新增任一 hold | `COUNT(active holds) > 0` ⇒ FO.status = ON_HOLD | 連動（derived） | §09 B |
@@ -730,7 +730,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | A-4 | 🔴 `__any_click` 各通路 credit **加總可 > orders**（官方設計如此）⇒ 任何「小計＝總計」檢查必須把 any-click 欄列白名單 | §14 C |
 | A-5 | 事實列日期歸屬：`kind=sale` 記**訂單成立日**、`kind=reversal` 記**撤銷處理日**；rollup 重算與事件重放後，歷史日的每一個聚合值**不得改變**（冪等） | §14 C |
 | A-6 | 漏斗四階段轉換率分母**一律 `total_sessions`**，不得逐級相除；`conversion_rate = completed_checkout_sessions / sessions`；且 `completed_checkout_sessions ≠ orders`（一 session 可含多單，測試須覆蓋 `<` 的案例） | §14 C |
-| A-7 | `cost_cents` 必須在事實列生成當下由 `InventoryItem.unitCost` **快照寫入**並設 `cost_recorded`；事後補填或修改 cost **一律不回溯**歷史列。`cost_cents NULL`（售時未填 ⇒ 排除於 COGS）**≠ 0**（真實零成本 ⇒ 計入） | §14 C／§02 |
+| A-7 | `cost_cents` 快照**在 T1（訂單成立）當下**由 `InventoryItem.unitCost` 凍結進訂單行／outbox payload，事實列生成（事件展開）時**只讀該快照、不得再讀現值**——事件滯留佇列期間 cost 變更會污染歷史毛利 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原寫「事實列生成當下讀」與售時快照語義互斥。設 `cost_recorded`；事後補填或修改 cost **一律不回溯**歷史列。`cost_cents NULL`（售時未填 ⇒ 排除於 COGS）**≠ 0**（真實零成本 ⇒ 計入） | §14 C／§02 |
 | A-8 | `gross_margin = gross_profit / net_sales_with_cost_recorded × 100`——**分母不得誤用全量 net_sales**（存在未填成本商品時兩者必不等） | §14 C |
 | A-9 | Customer 恆屬且僅屬 1 個 cohort（依首筆訂單日期）；回頭客＝**生涯**訂單數 ≥ 2（非期間口徑） | §14 C |
 | A-10 | 同一指標在 pulse／列表 badge／分析頁必須來自**同一 rollup 查詢**（鐵律 7），**除** A-3／A-4 兩條登記例外 | 鐵律 7 |
@@ -785,7 +785,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-30 | **主題雙 MAIN／零 MAIN** | 兩人同時 publish | 單一 transaction 內原子雙寫（新→MAIN、舊→UNPUBLISHED） | 併發 publish 兩個主題 ⇒ 恆 `count(MAIN) == 1` | §12 C |
 | X-31 | theme template / settings 併發覆寫 | 無版本控制 | `lock_version` 樂觀鎖，後存者收衝突提示；`themeFilesUpsert` 為非同步 job，client 必須輪詢完成才算寫入成功 | 兩編輯器同時儲存 ⇒ 後者收衝突，不得靜默覆蓋 | §12 C |
 | X-32 | `metafieldsSet` 併發覆寫 | 讀改寫 | 單次 ≤25 筆且 **atomic（全成或全敗）**，以 `compareDigest` 樂觀鎖，digest 不符即拒寫 | 併發 set 同一 metafield ⇒ 恰 1 成功 | §15 C |
-| X-33 | metafield 定義／值重複 | 只做應用層檢查 | DB 唯一索引：定義 `(owner_type, namespace, key)`、值 `(owner_id, namespace, key)` | 併發建立同 key ⇒ 恰 1 成功 | §15 C |
+| X-33 | metafield 定義／值重複 | 只做應用層檢查 | DB 唯一索引：定義 `(shop_id, owner_type, namespace, key)`、值 `(shop_id, owner_id, namespace, key)`——定義/值皆租戶所有，無 shop_id 前綴的全域唯一會讓一家店佔用 key 即封鎖全平台，且違反鐵律 2 複合索引 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 5 輪） --> | 併發建立同 key ⇒ 恰 1 成功 | §15 C |
 | X-34 | `priceListFixedPricesAdd` 併發批次（**整筆取代語義**） | 後寫者勝且無感知 | 以 `fixed_prices_count` 供對帳；幣別不符回 `PRICE_LIST_CURRENCY_MISMATCH` | 併發兩批次 ⇒ 計數可對帳、無半套資料 | §11 C |
 | X-35 | `translationsRegister` 併發覆寫 | 原文已變仍寫入舊譯 | 必帶 `translatable_content_digest`，不符即 reject（`INVALID_TRANSLATABLE_CONTENT`）；**批次匯入必須逐列 CAS，不得整批末端寫入** | 匯入期間改原文 ⇒ 該列被拒、其餘列成功 | §11 C |
 | X-36 | staff 名額併發撞頂 | 邀請與啟用兩路徑 | 名額檢查在 transaction 內以 DB 計數為準（owner／collaborator／POS-only 不計入） | 併發接受最後 1 個名額的兩份邀請 ⇒ 恰 1 成功 | §15 C |
@@ -1853,7 +1853,7 @@ b2b:
   max_locations_per_company: 10000          # §08 A.4
   max_contacts_per_company: 10000           # §08 A.4
   max_contacts_per_location: 50             # §08 A.4
-  max_catalogs_per_location: 25             # §08 A.4（多 catalog 取最低價）
+  max_catalogs_per_location: 25             # §08 A.4（同 specificity 層內取最低價，層序見 08 章價格解析公式）
   max_volume_pricing_tiers: 10              # §08 C.7（門檻須遞增）
 
 shipping:
@@ -1905,7 +1905,7 @@ taxes:
   uk_pos_vat_order_cap_cents: 13500         # §10 C.6（£135）
   uk_vat_registration_threshold_cents: 9000000  # §10 C.6（£90,000）
   ca_small_supplier_threshold_cents: 3000000    # §10 C.6（CAD $30,000）
-  ca_tax_rates_bp: { GST: 500, HST_ON: 1300, HST_NS: 1400, HST_NB: 1500, PST_BC: 700, RST_MB: 700, QST_QC: 997.5, PST_SK: 600 }  # §10 C.6（QST 為 9.975%）
+  ca_tax_rates_ppm: { GST: 50000, HST_ON: 130000, HST_NS: 140000, HST_NB: 150000, PST_BC: 70000, RST_MB: 70000, QST_QC: 99750, PST_SK: 60000 }  # §10 C.6；ppm＝百萬分率整數（tax = amount × rate_ppm / 1_000_000）——QST 9.975% 在 bp 尺度是 997.5 非整數，違反「rate 一律整數」鐵律，全表升 ppm <!-- 2026-08-17 更正（PR #52 第 5 輪） -->
   de_minimis_cents: { CA: 2000, MX_duty: 5000, MX_tax: 11700, AU_duty: 100000, EU: 15000, JP: 1000000, US: null }  # §10 C.7（US 自 2025-08-29 起無 de minimis）
   duties_transaction_fee_bp: { shopify_payments: 85, other: 150 }  # ⚠️ §10 C.7：另有 0.5% 限時價需複核；M4 不做 duties
   clothing_exemption_thresholds_cents: { NY: 11000, MA: 17500, RI: 25000 }  # §10 C.5（另 NJ 全免；PA/VT/MN 適用）
@@ -2128,7 +2128,7 @@ analytics:
 
 | 順位 | 單元 | 硬 in-degree | 理由（回溯） |
 |---|---|---|---|
-| **1** | **§15 platform-core** | 13 章 | 它提供的不是某個功能，而是**每一張表的前置條件**：`shop_id` 與複合索引（鐵律 2）、GID `gid://chilllove/{Type}/{id}`、`userErrors{field,message,code}`、cursor 分頁 ≤250、`config/limits.yml`、idempotencyKey 基建、metafield／metaobject 定義（`(owner_type, namespace, key)` 唯一索引）。**這些全部是 migration 級**，事後補等於全庫改索引＋全查詢改寫 |
+| **1** | **§15 platform-core** | 13 章 | 它提供的不是某個功能，而是**每一張表的前置條件**：`shop_id` 與複合索引（鐵律 2）、GID `gid://chilllove/{Type}/{id}`、`userErrors{field,message,code}`、cursor 分頁 ≤250、`config/limits.yml`、idempotencyKey 基建、metafield／metaobject 定義（`(shop_id, owner_type, namespace, key)` 唯一索引，2026-08-17 更正（PR #52 第 5 輪）：同 X-33）。**這些全部是 migration 級**，事後補等於全庫改索引＋全查詢改寫 |
 | **2** | **§13 platform-events** | 11 章 | 與 §15 互鎖，**必須同批做**。理由不是「本尊有 webhook」，而是鐵律 5「transaction 內禁外部 IO」在架構上只有一個解：outbox。11 個章的跨章耦合全部走它（§02 26 topic／§09 26 topic／§06 11 topic）。先把業務寫成同步呼叫、事後改 outbox＝所有跨章邊界重寫 |
 | **3** | **§01 products ＋ §02 inventory（不可拆對）** | 9 ＋ 6 章 | 這是唯一一組**真正的 schema 級互鎖對**：§01 dependencies 記「每 variant 1:1 建立 InventoryItem（建立商品流程的必經步驟）」，§02 dependencies 記「`InventoryItem!` non-null」。⇒ 兩章共用同一批 migration，**任何「先做商品、之後再補庫存」的排法都會產生一次資料回填**（既有 variant 補建 InventoryItem＋補建 ledger 期初列，而 ledger 是 append-only、期初列無法追認） |
 

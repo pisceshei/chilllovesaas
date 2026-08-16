@@ -72,7 +72,7 @@ Company 1 ─── N CompanyLocation（≤10,000/company）
 | company : locations | ≤10,000 | 46b §6③ |
 | company : contacts | ≤10,000 | help（取證 2026-08-14） |
 | location : contacts | ≤50 | 46b §6③ |
-| location : catalogs | ≤25（多 catalog 取最低價） | 46b §6③ |
+| location : catalogs | ≤25（**同 specificity 層內**取最低價，層序見價格解析公式） | 46b §6③ |
 | 非 Plus 全店啟用中 B2B catalogs | 3 | help b2b/catalogs（取證 2026-08-14 再證） |
 
 ## B. 狀態機
@@ -202,7 +202,7 @@ Company 1 ─── N CompanyLocation（≤10,000/company）
 
 ### C.7 B2B 商務規則
 
-- **價格解析公式**：`effective_price(variant, location) = min(price in 各 applicable catalog)`，前提「商品至少在一個 applicable publication 發佈」否則不可見（46b §6③）。volume pricing 級距 ≤10、門檻遞增；套用後固定、不疊 catalog 折扣；折扣（discount）可疊在 catalog 價上（74 §6）。
+- **價格解析公式**：先依 **catalog 解析優先序**取最高 specificity 層（company-location 直連 ＞ company-location market（SPECIFIED＞ALL）＞ region market（SPECIFIED＞ALL）＞ App Catalog——11 章 §C 目錄層優先序，兩章同一張表），`effective_price = min(price in 該層 catalogs)`——**min 只在同層內取** <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原式對「各 applicable catalog」全域取 min，B2B 議價 $100 會被通用零售 $80 蓋掉、繞過合約價。前提「商品至少在一個 applicable publication 發佈」否則不可見（46b §6③）。volume pricing 級距 ≤10、門檻遞增；套用後固定、不疊 catalog 折扣；折扣（discount）可疊在 catalog 價上（74 §6）。
 - 數量規則三欄：遞增倍數／最低／最高（74 §6）。
 - Payment terms 值域（help，取證 2026-08-14）：**無（預設，立即付款）／Net 7、15、30、45、60、90／Due on fulfillment／Fixed date（僅 draft order 可用）**。API 型別 `PaymentTermsType`：`FIXED`/`FULFILLMENT`/`NET`(+`dueInDays`)/`RECEIPT`/`UNKNOWN`（46b §6②）。Deposit＝百分比、**Plus 限定**。
 - **到期不自動請款**：overdue 只是顯示態；vaulted 卡要商家手動 charge（取證 2026-08-14）。
@@ -291,7 +291,7 @@ staff 於編輯器寫 WHERE（autocomplete＋紅底線錯誤提示＋即時人�
 3. **merge**：11 阻擋條件各一 fixture；merge 中再 merge 擋；job 冪等（同 idempotencyKey 重放不重複合併）；合併後備註 >5,000／標籤 >250 擋。
 4. **erasure**：10 天窗內 cancel 可復原；窗過後個檔匿名化但訂單金額 rollup 不變。
 5. **分群**：AND/OR 優先序、括號、日期位移、`IS NULL`；測試訂單/已刪訂單不入計算；`products_purchased` >500 id 擋。
-6. **B2B**：多 catalog 取最低價（含同 variant 三 catalog case）；`checkoutToDraft` 轉向（不是擋）；Net+deposit 的 Partially paid 金額走 integer cents（**JPY/TWD/KRW 進矩陣**，65 §H）；contact 一 company 硬限；role 是 contact×location 指派（**不是 contact 全域屬性**——46b §6⑥ 點名易錯）。
+6. **B2B**：多 catalog **同層取最低價、跨層 specificity 優先**（含同 variant 三 catalog case，其中一 catalog 更特定的分支必測）；`checkoutToDraft` 轉向（不是擋）；Net+deposit 的 Partially paid 金額走 integer cents（**JPY/TWD/KRW 進矩陣**，65 §H）；contact 一 company 硬限；role 是 contact×location 指派（**不是 contact 全域屬性**——46b §6⑥ 點名易錯）。
 7. **webhook/outbox**：E.1 全表 topic 經 outbox 發出，orders 域事件不得在 transaction 內直發。
 
 ## G. 來源

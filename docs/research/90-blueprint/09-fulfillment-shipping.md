@@ -111,7 +111,7 @@ min/max 條件的表達：一條 rate 的「最小值」＝一條 `GREATER_THAN_
 
 ### B.3 Fulfillment.status（4 現行＋2 deprecated）
 
-46a §3 已考掘：現行 `SUCCESS` / `CANCELLED` / `ERROR` / `FAILURE`；`OPEN` / `PENDING` 為 deprecated（legacy API 世代的「pending fulfillment」概念，遷移文檔明言新世代直接建 successful fulfillment，取證 2026-08-14）。Fulfillment 無復活轉移：`SUCCESS → CANCELLED`（`fulfillmentCancel`）為唯一後續轉移，取消後要重出貨＝在（自動重開或新建的）FO 上再建一張新 Fulfillment。**`fulfillmentCancel` 的副作用**（取證 2026-08-14）：FO 若已整單出貨完畢而被關閉→自動重開處理；部分出貨→為被取消數量**建新 FO**；多地點庫存情境可能一次生多張新 FO。
+46a §3 已考掘：現行 `SUCCESS` / `CANCELLED` / `ERROR` / `FAILURE`；`OPEN` / `PENDING` 為 deprecated（legacy API 世代的「pending fulfillment」概念，遷移文檔明言新世代直接建 successful fulfillment，取證 2026-08-14）。Fulfillment 無復活轉移：`SUCCESS → CANCELLED`（`fulfillmentCancel`）為唯一後續轉移，取消後要重出貨＝在（自動重開或新建的）FO 上再建一張新 Fulfillment。**`fulfillmentCancel` 的副作用**（取證 2026-08-14）：FO 若已整單出貨完畢而被關閉→自動重開處理；部分出貨→為被取消數量**建新 FO**；多地點庫存情境可能一次生多張新 FO。🔴 **庫存語義**（<!-- 2026-08-17 更正（PR #52 第 5 輪） -->，原文未定義）：取消時**同一 transaction 原子回補 `committed +q`／`on_hand +q`**（T2 出貨已扣的量；不回補則替代 FO 再出貨會二次扣減、或因無 committed 而失敗）；貨已實體寄出但記錄取消的案例以人工調整對帳（官方未明文，列 parity 實測 V）。
 
 ### B.4 FulfillmentEventStatus（11 值全，shipment 事件流）
 
@@ -133,7 +133,7 @@ min/max 條件的表達：一條 rate 的「最小值」＝一條 `GREATER_THAN_
 
 `FulfillmentEventInput`：`fulfillmentId!`、`status!`、`happenedAt`、`estimatedDeliveryAt`、`message`、`address1`、`city`、`province`、`country`、`zip`、`latitude`、`longitude`。事件是 append-only 流；fulfillment 的 `inTransitAt`／`deliveredAt`／`estimatedDeliveryAt` 與 `displayStatus` 由事件流推導。
 
-**狀態機（我方落地裁定）**：事件流本身**不設全序**（DELAYED／ATTEMPTED_DELIVERY 可穿插；官方未定義事件間合法順序）⚠️——但 displayStatus 推導取**最新一筆事件**映射；`DELIVERED` 寫入時同步落 `deliveredAt`，`IN_TRANSIT` 首次寫入落 `inTransitAt`。
+**狀態機（我方落地裁定）**：事件流本身**不設全序**（DELAYED／ATTEMPTED_DELIVERY 可穿插；官方未定義事件間合法順序）⚠️——但 displayStatus 為**三軸合成**（`Fulfillment.status` 優先、終態如 CANCELLED **覆蓋**較舊事件 → 事件流最新一筆 → label/pickup 態，B.5 合成序；取消已送達/在途的 fulfillment 不產生新事件，latest-event-only 會永遠顯示 DELIVERED/IN_TRANSIT <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原句「取最新一筆事件映射」與 B.5/總綱 S9 修正互斥）；`DELIVERED` 寫入時同步落 `deliveredAt`，`IN_TRANSIT` 首次寫入落 `inTransitAt`。
 
 ### B.5 FulfillmentDisplayStatus（18 值全，UI 顯示層）
 

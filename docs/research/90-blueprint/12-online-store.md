@@ -360,7 +360,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 - 同步義務：14 §F3 需按本裁定修訂，**期限＝editor 儲存管線動工前（對應里程碑見 HANDOFF §5），由該線首個 PR 一併攜帶修訂**；修訂落地前以本章裁定為準。§B.2／§D.3 據此解除阻塞。
 
 **開發驗收要點**：
-1. 狀態機測試：publish 原子切換（併發兩人同時 publish 不得出現雙 MAIN／零 MAIN）；comment 全 5 態可達且 PUBLISHED 無退回轉移；page 排程發布到期自動可見。
+1. 狀態機測試：publish 原子切換（併發兩人同時 publish 不得出現雙 MAIN／零 MAIN）；comment **4 態由動作可達**（PENDING/PUBLISHED/SPAM/REMOVED）＋ **UNAPPROVED 僅入向**（唯一入徑＝匯入/外部遷移寫入；斷言「無任何 UI/API 動作以 UNAPPROVED 為目標」而非其可達性 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原「全 5 態可達」與 B.4 轉移表/入向狀態自述互斥，測試不可能通過）；PUBLISHED 無退回轉移；page 排程發布到期自動可見。
 2. 值域測試：MenuItemType 13 值、filter type 3 值、CommentPolicy 3 值、predictive resources[type] 5 值全部入 enum，禁自創。
 3. 上限全部引 `config/limits.yml`（§C.1 表逐項），缺一 CI fail。
 4. 隔離測試：section 設定引用他店資源 ID 必須被拒；redirect/menu/page 查詢全帶 shop_id。

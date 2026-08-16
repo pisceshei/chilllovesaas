@@ -271,7 +271,7 @@ net_sales_without_cost_recorded + net_sales_with_cost_recorded = net_sales
 ### D.1 訂單事件 → 銷售事實 → 報表
 
 1. 【訂單域】訂單成立（含 pending/unpaid；draft 須先轉正式）→ 發事件。
-2. 【分析域】展開為 `SalesFactLine(kind=sale, occurred_on=成立日)`，逐 line item 帶 gross/discount/tax/duty/shipping/fee 分量；**同時讀當下 `InventoryItem.unitCost` 快照進 `cost_cents`＋`cost_recorded`（C.13，未填則 NULL）**；test 訂單標記排除。
+2. 【分析域】展開為 `SalesFactLine(kind=sale, occurred_on=成立日)`，逐 line item 帶 gross/discount/tax/duty/shipping/fee 分量；**讀 T1（訂單成立）當下凍結進訂單行／outbox payload 的 `unitCost` 快照進 `cost_cents`＋`cost_recorded`（C.13，未填則 NULL）——展開時不得讀 `InventoryItem.unitCost` 現值：事件滯留佇列期間 cost 變更會污染歷史毛利** <!-- 2026-08-17 更正（PR #52 第 5 輪） -->；test 訂單標記排除。
 3. 退款／取消（帶 refund）／訂單編輯（負向）／退貨 → `SalesFactLine(kind=reversal, occurred_on=處理日)`。互斥拆分依 86 §3.2（refunds 擁有「真的動了的錢」全部，其餘只補未走退款的部分）。
 4. 訂單編輯正向增量：計入編輯日（我方口徑，19 §F1.1；本尊為幽靈訂單）。
 5. rollup 依 shop 時區日界聚合；查詢層永遠打 rollup。
