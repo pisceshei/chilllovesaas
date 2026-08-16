@@ -111,7 +111,7 @@ Order.risk : OrderRiskSummary!
 |---|---|
 | `OPEN` | 未付款、未寄發票 |
 | `INVOICE_SENT` | 已寄發票給顧客 |
-| `COMPLETED` | 已付款（＝已轉正式單） |
+| `COMPLETED` | **已轉正式單**（＝conversion；付款態留在轉出訂單的獨立金流軸——payment terms 單轉正時金流態非 PAID，定義若綁「已付款」會擋合法的付款條款轉正 （2026-08-17 更正，PR #52 第 8 輪）） |
 
 | 轉移 | 觸發 | 前置 | 副作用 |
 |---|---|---|---|

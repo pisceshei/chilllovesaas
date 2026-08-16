@@ -152,7 +152,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 
 | 現態 | 動作 | 前置條件 | 副作用 | 次態 |
 |---|---|---|---|---|
-| （無） | fileCreate（外部 URL 或 staged resourceUrl） | 格式/大小過門檻（§C.7）；≤250 檔/次；🔴 **外部 URL 抓取走平台 SSRF 防護**：scheme 僅 http/https、DNS 解析後拒 loopback/private/link-local/metadata IP、redirect 每跳重驗、response 大小上限＝§C.7 門檻＋逾時；staged resourceUrl 僅限自家 bucket host（2026-08-17 更正（PR #52 第 7 輪）：原契約允許租戶指向內網/雲 metadata 任意抓取落檔） | 非同步抓取來源 | UPLOADED |
+| （無） | fileCreate（外部 URL 或 staged resourceUrl） | 格式/大小過門檻（§C.7）；≤250 檔/次；🔴 **外部 URL 抓取走平台 SSRF 防護**：scheme 僅 http/https、DNS 解析後拒 loopback/private/link-local/metadata IP **且連線時釘選已驗 IP（或 connect 時重驗）——僅驗 DNS 結果擋不住 DNS rebinding：驗證時回公網 IP、worker 二次解析時換私網 IP** （2026-08-17 更正，PR #52 第 8 輪）、redirect 每跳重驗、response 大小上限＝§C.7 門檻＋逾時；staged resourceUrl 僅限自家 bucket host（2026-08-17 更正（PR #52 第 7 輪）：原契約允許租戶指向內網/雲 metadata 任意抓取落檔） | 非同步抓取來源 | UPLOADED |
 | UPLOADED | 系統開始處理 | — | 圖片轉檔/影片多碼率轉碼 | PROCESSING |
 | PROCESSING | 處理完成 | — | 產出 CDN URL（Video 產出 sources＋preview） | READY |
 | PROCESSING | 處理失敗 | — | `fileErrors` 填入原因；不可用 | FAILED |
