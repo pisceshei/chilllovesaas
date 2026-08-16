@@ -12,6 +12,11 @@
 
 ## 0. 怎麼用這份文件
 
+> 🔴 **D- 識別字命名空間規則（2026-08-17 補，PR #52 首輪 🟡）**：本檔有三套形近編號——
+> §3 狀態機列用**無連字號**（D7／G2）；§4 不變量用 **D-1..D-19**；§6 裁定用 **D-01..D-102**
+> （各章 F 節另有章內 F-D-n）。D-10～D-15 在 §4 與 §6.1 完全同形 ⇒ 跨節引用**必須帶節號**
+> （「§3 D7」「§4 D-7」「§6 D-07」），裸寫 D-n 視為 §6 裁定。
+
 | 你要做什麼 | 先讀 |
 |---|---|
 | 排整體實作順序 | §9 實作排序 → §2 端到端主幹 |
@@ -831,7 +836,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | ⚠️ carrier markup 的取整方向 | M-15、docs/specs/65 捨入點登錄表 | 實測本尊 | §09 |
 | ⚠️ `round_currency` 的捨入模式與 per-currency 定價量子表 | M-16／M-5b、docs/specs/65 §H fixture | 實測本尊 | §11 |
 | ⚠️ 最後一個 hold 釋放時 FO 回 SCHEDULED 還是 OPEN | §3.3 履約聯動、E1 轉移表 | 實測本尊 | §09 |
-| ⚠️ INVALID consent 的進出條件 | D-7 值域與 §08 consent 轉移 reject 清單 | 實測本尊 | §08 |
+| ⚠️ INVALID consent 的進出條件 | §3 D7（無連字號，consent 六值狀態機）值域與 §08 consent 轉移 reject 清單 <!-- 2026-08-17 更正：原寫「D-7」落進 §4 不變量命名空間（該處 D-7＝BXGY） --> | 實測本尊 | §08 |
 | ⚠️ session 切日跟 UTC 午夜還是 shop 時區 | A-5／A-6 的日界函式（**未裁定前 rollup 日界不得動工**） | 使用者裁定 | §14 F.4#1 |
 | ⚠️ Live View `total_sales` 用縮水版還是完整公式 | A-11 | 使用者裁定 | §14 F.4#2 |
 | ⚠️ 「open purchase order」的定義（擋地點停用） | §3.3 `locationDeactivate` 互鎖 | 實測本尊 | §02 |
@@ -1293,7 +1298,7 @@ flowchart TD
 | **④ 法域 pack 化** | 本尊把稅務憑證、儲值監管、取貨網路、豁免值域、隱私法硬編在平台；我方**核心只發事件**，落不落地由 jurisdiction pack 決定，基準法域＝香港（鐵律 11） | §01 §05 §06 §07 §08 §09 §10 §11 §13 §15 |
 | **⑤ 生態系與商業條款不做** | Shop Pay／六錢包、Shopify Shipping／Shop Promise、Shopify Payments 自營收單、Shopify Flow、REST Admin API、checkout.liquid、Multipass、POS、Managed Markets、Shopify Tax 計費、方案定價數字一律不復刻；功能面照抄、商業面自訂（feature flag 化） | §03 §05 §09 §10 §11 §13 §14 §15 |
 
-> 讀法：**類型欄的「照抄」不等於「沒事」**——照抄條多半是「照抄了才不會壞」的反直覺點（例如 D-31 UNLISTED 讀取層必須放行、D-52 CANCELED/CANCELLED 雙拼寫不得統一）。「待裁定」條一律進 §7。
+> 讀法：**類型欄的「照抄」不等於「沒事」**——照抄條多半是「照抄了才不會壞」的反直覺點（例如 D-21 UNLISTED 讀取層必須放行 <!-- 2026-08-17 更正：原誤寫 D-31（SKU 不設 unique），§6.2 表內 UNLISTED＝D-21 -->、D-52 CANCELED/CANCELLED 雙拼寫不得統一）。「待裁定」條一律進 §7。
 
 ### 6.1 跨章共用裁定（全域生效，各章不得自行推翻）
 
@@ -1301,7 +1306,7 @@ flowchart TD
 |---|---|---|---|---|---|
 | D-01 | 金額單位 | MoneyV2／MoneyBag decimal 字串；Ajax cart 為 subunits；carrier 回呼 ×100 不看 ISO exponent | 內部一律 `Money::Storage` integer cents（×100），序列化層才轉；PSP 依 pack 宣告 `minor_units`／`decimal_string`；物流走十進位字串，三者型別互斥 | 加嚴 | 全章；§01 §03 §05 §09 §11 §14 |
 | D-02 | 多租戶 | 單店語義，唯一性即全域 | 全業務表帶 `shop_id`；唯一鍵 per-shop（email/phone/handle/discount code/filename）；跨店引用一律 reject | 結構性不同 | 全章；§08 §12 §15 |
-| D-03 | 錯誤契約 | 泛用 `UserError`（部分新 mutation 才有 typed code） | 全 mutation `userErrors{field,message,code}` typed enum，HTTP 恆 200 | 加嚴 | 全章；§04 §06 §11 |
+| D-03 | 錯誤契約 | 泛用 `UserError`（部分新 mutation 才有 typed code） | 全 mutation `userErrors{field,message,code}` typed enum；HTTP 分**三層**（①業務錯誤 200 走 userErrors ②限流/成本超限 200 走 top-level errors ③認證失敗/租戶停用/payload 格式錯誤**非 200**）——鐵律 4/D14 <!-- 2026-08-17 更正（PR #52 首輪）：原寫「HTTP 恆 200」，是鐵律 4 於 2026-08-15 已廢的措辭，只對①②層成立 --> | 加嚴 | 全章；§04 §06 §11 |
 | D-04 | 資源識別 | `gid://shopify/{Type}/{id}` | `gid://chilllove/{Type}/{id}`；參數化 GID、`legacyResourceId`、Node 介面照抄 | 照抄（命名改） | §15 C.4 |
 | D-05 | 法域能力 | 稅務憑證／儲值監管／取貨網路／免稅豁免值域／隱私法硬編於平台 | 一律 jurisdiction pack 能力宣告；核心只發稅務事件與隱私事件，pack 決定落地（HK 基準：無銷售稅、SVF 單一用途豁免 ⇒ 禮品卡不得跨租戶） | 結構性不同 | §05 §06 §07 §08 §10 §11 §13 |
 | D-06 | 上限值 | 上限散在 help／enum，部分為 per-shop 動態值（`ShopResourceLimits`） | 一律引 `config/limits.yml`，禁硬編；架構允許 per-shop／per-plan 覆寫 | 加嚴 | §01 §02 §15；鐵律 6 |

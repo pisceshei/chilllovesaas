@@ -409,7 +409,7 @@ HTTP 狀態碼全集：200 成功／400 參數錯誤（含 `sections_url` 不以
 3. **limits.yml 條目**：本章 C.4 表逐條落檔並帶來源註釋；缺一即 🔴。
 4. **狀態機測試**：B.2 全轉移覆蓋；特別是 abandoned→completed（recovered）與付款失敗→hold 釋放→重付。
 5. **挽回信 job**：寄前重查 C.8 六條件；audience／delay 可配置；3 個月 purge job。
-6. **併發測試**：超賣（付款成功原子扣減）、同 token 併發加購 upsert、棄單 job 與完購競態（先到先贏，冪等）。
+6. **併發測試**：超賣（**訂單成立**原子扣減 <!-- 2026-08-17 更正：原寫「付款成功」，同 D-32 -->）、同 token 併發加購 upsert、棄單 job 與完購競態（先到先贏，冪等）。
 7. **金額**：cart→checkout→order 全程同一 Calculator；小費基數＝稅前運費前小計；zero-decimal 幣別進測試矩陣（65 §H）。
 8. **validation gate**：仿 validation function 語義——錯誤帶 target 路徑、cart 頁與 checkout 都要能顯示、express 路徑同樣阻擋。
 9. **訂閱 schema 預留（僅預留不實作）**：遷移檔含 `selling_plan` 引用欄位與契約／attempt 佔位設計（或明文推遲決議並記入 worklog Pending）；欄位命名與 enum 對照 A.7／B.6；預留 enum **不含 STALE**。

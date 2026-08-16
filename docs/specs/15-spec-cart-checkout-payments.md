@@ -17,7 +17,7 @@
 4. 過期：90 天未動的 cart purge job。
 5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 `(cart_id, variant_id)` + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`）。
 
-**⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（只在付款成功時扣，見 F5）。
+**⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（在**訂單成立**時扣——COD／銀行轉帳／B2B payment terms 的付款在成立之後，見 F5；2026-08-17 依 90 §2.4／D-32 更正，原文「只在付款成功時扣」）。
 
 ## F2. 金額引擎（Checkout::Calculator）
 
@@ -430,7 +430,12 @@ AlipayHK／FPS（轉數快）／八達通（線上）等本地付款方式，在
 
 **必測**：①PSP 回報清單移除某方式後，結帳頁該選項消失且已選中該方式的進行中 checkout 回退到第一個合法方式（不得停在不存在的方式上）；②未連接任何 PSP 的商店，結帳頁付款區顯示「尚無可用付款方式」而**不是**空白區塊；③COD 與手動付款在 PSP 全部斷線時仍可用（證明兩者不走 capability 查詢）。
 
-## F5. 訂單成立（付款成功 → Order）
+## F5. 訂單成立（訂單成立事件 → Order；扣庫存掛此事件）
+
+> 🔴 2026-08-17 更正（PR #52 首輪，依 90 §2.4／D-32／M1-M2 裁定）：原標題「付款成功 → Order」。
+> commit 呼叫點必須掛「**訂單成立**」事件、不得掛付款 SUCCESS 回呼——否則 COD／bank deposit／
+> B2B payment terms／orderCreate PENDING 單完全不占庫存＝超賣，且 checkout 路徑下兩時點同刻、
+> 測試全綠測不出。
 
 **生產級做法**（整條線最關鍵的一個 transaction）：
 1. `Orders::CreateFromCheckout.call(checkout_token:, payment_intent_id:)`——**以 checkout 唯一鍵冪等**：orders 表 `checkout_id` 唯一索引，重入直接回傳既有訂單。
