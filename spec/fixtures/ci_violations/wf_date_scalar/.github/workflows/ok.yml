@@ -1,0 +1,24 @@
+# 反向斷言之二：**合法但容易讓檢查器崩掉**的 workflow。
+#
+# 🔴 裸日期（`2026-08-15`）是合法 YAML，但 `YAML.load_file` 預設不許 Date
+#    ⇒ 丟 `Psych::DisallowedClass`。本腳本原本只 rescue `Psych::SyntaxError`，
+#    這條路徑會讓它**帶著 Ruby backtrace 崩掉**，而不是報告違規——
+#    CI 上只看得到 backtrace，讀的人不知道是哪份 workflow 的問題。
+#    （PR #42 的 Codex review 指出，已實測重現。）
+#
+# 這份也順帶覆蓋「自訂 shell 模板」：`bash -e {0}` 是 GitHub 官方寫法，
+# 原本的白名單 `[nil, "bash", "sh"]` 不匹配它 ⇒ 該 run 區塊會被**靜默跳過不檢查**。
+# 期望：exit 0（合法，且不得崩潰、不得跳過檢查）。
+name: DateScalar
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    env:
+      SINCE: 2026-08-15
+    steps:
+      - name: Custom shell template
+        shell: bash -e {0}
+        run: |
+          set -uo pipefail
+          echo "since=$SINCE"

@@ -44,10 +44,12 @@
 #
 # ## 不檢查什麼（🔴 誠實聲明，這段就是本腳本對外宣稱的契約，不得誇大）
 #
-#   1. **不檢查 inline shell 步驟的「腳本邏輯」**。ci.yml 的
-#      `Verify bin/ and scripts/ are executable` 是一段多行 shell（`bad=$(`、`while`⋯），
-#      本腳本不解析它 ⇒ `bin/ci` 也跑不到它。**這是已知缺口，不是已解決**。
-#      要補的話正解是把它抽成 `scripts/check-exec-bits.sh`，那樣它就自動落入規則 1。
+#   1. **不檢查多行 inline shell 的「腳本邏輯」**（單行指令由規則 2 涵蓋）。
+#      ✅ 2026-08-16 更新（PR #41，與抽出動作同一個 commit）：原本的實例
+#      `Verify bin/ and scripts/ are executable` **已抽成 `scripts/check-exec-bits.sh`**，
+#      自動落入規則 1 ⇒ 該實例的缺口已關。本條保留是因為**類別**仍成立：
+#      日後任何人再往 ci.yml 寫多行 inline shell 檢查，本腳本一樣看不到——
+#      正解從來不是擴充本腳本去解析 shell，是**把檢查寫成 scripts/ 下的腳本**。
 #      <!-- 🔴 2026-08-16 收窄（PR #39 第 6 輪驗收指出）：原文「不檢查 inline shell 步驟」
 #           是**過寬的全稱句**——規則 2 檢查的 `pnpm audit --audit-level high`（ci.yml:201）
 #           本身就是 inline shell 步驟。本腳本看不到的是「多行腳本邏輯」，

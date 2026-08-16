@@ -1,0 +1,23 @@
+# 反向斷言用：這一份**必須通過**（exit 0）。
+# 沒有這條，一個「永遠 fail」的檢查器會讓上面兩條 fixture 都「通過」，
+# 而 CI 看起來與正常無異（65 §K.7：檢查本身也要被測試）。
+#
+# 這份刻意包含一個 GitHub 表達式與一個 heredoc——兩者都是容易誤報的形態：
+#   - `${{ }}` 直接送給 bash 會是 bad substitution ⇒ 檢查器必須先換成佔位符
+#   - heredoc 在 YAML block scalar 裡是合法的，不該被誤判
+name: Clean
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: With expression and heredoc
+        env:
+          BASE: ${{ github.base_ref || 'main' }}
+        run: |
+          set -uo pipefail
+          echo "base=$BASE ref=${{ github.ref }}"
+          cat <<'EOF'
+          multi
+          line
+          EOF

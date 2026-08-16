@@ -103,12 +103,42 @@
 | 類別 taxonomy | 標準分類 1 個；解鎖類別 metafields、影響稅則 | P2。M：products.category_id + 標準分類表 |
 | 定價 | compare-at > price 才顯示特價；**系列頁 Sale 標籤需全變體 compare-at 一致**；cost 算毛利不對外 | P0。展示規則進 storefront helper（S14） |
 | 庫存卡 | SKU/條碼（真實 GTIN 供通路）/track 開關/繼續銷售/五狀態量 | P0。M：inventory_*（S13-F5） |
-| 變體 | ≤3 選項/≤2048 變體；選項與值可重排改名；**改選項會重建變體**（斷外部引用）；批改價格/圖片/庫存；依選項分組 | P0。S13-F1 diff 更新（不重建）——我們刻意優於本尊的點，註明差異 |
+| 變體 | ≤3 選項/≤2048 變體；選項與值可重排改名；**改名／重排＝原地更新保留 variant id**；增刪值／刪 option **依策略 enum**，破壞性為 opt-in；批改價格/圖片/庫存；依選項分組 | P0。**修到一致**（不再是刻意偏離） |
+
+<!-- 2026-08-15 依 parity 查證修正，原文：
+     「**改選項會重建變體**（斷外部引用）」＋「S13-F1 diff 更新（不重建）——
+       **我們刻意優於本尊的點**，註明差異」
+     🔴 **兩處都要改**：
+     ① 「改選項會重建變體」**描述過期**。本尊 `productOptionUpdate` 的
+        `optionValuesToUpdate` 以 `id: ID!` 定位改名 ⇒ 原地更新、variant id 不變；
+        `ProductOptionCreateVariantStrategy` 的**預設是 `LEAVE_AS_IS`**，官方逐字
+        「Existing variants are updated with the first option value of each option added.」
+        ——**本尊預設就是 diff 更新，不是重建。**
+     ② 🔴 **「我們刻意優於本尊的點」撤銷**：我們宣稱優於一個本尊已經有的行為。
+        偏離登記（71 §A 保護清單的對應條目）一併撤回，改為「修到一致」。
+     ⚠️ 真正會刪變體的是**明文 opt-in 的策略**：`ProductOptionUpdateVariantStrategy: MANAGE`
+        （官方逐字「all variants referencing that option value will be deleted」）、
+        `ProductOptionDeleteStrategy: POSITION`、以及 `productSet` 的全量覆寫。 -->
 | SEO 編輯 | 標題 ≤70、描述 ≤320、handle 改時「建立轉址」勾選 | P0。S13-F2 redirect 表 |
 | 狀態 | Active/Draft/Archived + **Unlisted**（可直連買、不可被發現 noindex） | P0 三態；Unlisted P1（publishing 加 flag） |
 | 發布 | 管道與市場清單、**排程上線日期**、變體層級可單獨發布 | P0 管道；排程 P1（publish_at + job） |
 | Duplicate | 對話框勾選複製範圍（圖/SKU/條碼/庫存量）+ 複本狀態；影片/3D 不複製 | P1。`Catalog::Duplicate` |
-| 封存 vs 刪除 | 封存=下架保留（可回復）；刪除=永久 | P0。被 line_items 引用禁止硬刪（S13-F1） |
+| 封存 vs 刪除 | 封存=下架保留（可回復）；刪除=永久且**不可復原** | P0。**允許硬刪，不論是否被 line_items 引用**（S13-F1，2026-08-16 修正） |
+
+<!-- 2026-08-16 依 parity 查證修正（PR #38 Codex review 指出本行與 13 §F1-4 的新契約互斥）。
+     原文：「P0。被 line_items 引用禁止硬刪（S13-F1）」。
+     🔴 **本檔是「按鈕級驗收清單」**——它與 `docs/specs/13` §F1-4 兩處都是實作者會照著做的
+     權威路徑。13 §F1-4 已於 2026-08-15 改成「允許硬刪」，本行沒有同步
+     ⇒ **兩份文件對 productDelete 的規定互斥，舊的阻擋行為隨時會被重新引入**。
+     實證：`productDelete` 官方逐字「Previously completed orders that included this product
+     aren't affected… existing refunds for this product remain valid and processable」；
+     「Consider archiving」是**建議**（Consider）不是強制。
+     ✅ 2026-08-16 測試店實測確認（T-1）：刪除已被訂單引用的變體**成功**，訂單完全不受影響。
+     ⇒ 封存與刪除是兩個並列的選項，**不是「有訂單就只能封存」**。 -->
+
+<!-- 🔴 教訓（與本輪 barcode 那條同型）：**同一件事寫在兩個地方時，改一處等於製造矛盾。**
+     本輪已知寫著刪除策略的地方有三處：`docs/specs/13` §F1-4、`docs/specs/63` §B.4、本行。
+     日後再改，三處要一起。 -->
 | 系列 | 手動 vs 智慧**不可互轉**；智慧：≤60 條件、全店智慧系列 ≤5,000、比對欄位+運算子枚舉（equals/greater/starts/contains/set…）；排序 8 種（手動才可拖曳）；每系列可選管道+排程+SEO | P0 手動+簡化智慧；S13-F4 物化策略；運算子枚舉照 API 清單 |
 | 庫存頁 | Available/On hand 可就地編；**Adjust by vs Set to** 兩模式；原因 7 種；調整歷史（180 天，更久用報表）；匯入僅 On hand 可寫 + 防過期校驗欄 | P0。ledger（S13-F5）+ 歷史頁；「on hand(current) 防過期校驗」是漂亮的併發防呆，抄 |
 | 轉移 | Draft→Ready（保留庫存）→In transit（記 Incoming）→收貨 accept/reject 可部分；Draft 才可刪 | P1。M：transfers；狀態機進 06 §4 |

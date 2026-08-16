@@ -12,9 +12,64 @@
 
 **生產級做法**：
 1. 寫入包成 `Catalog::SaveProduct` service：商品欄位 + options + variants + media 排序在**單一 transaction** 內原子更新（Shopify 的 `productSet` 宣告式思路）。
-2. Options ≤3 在 service 與 DB（CHECK 或驗證 + 測試）雙重限制；變體 = option values 笛卡兒積，**變體唯一性用唯一索引** `(product_id, option_values_digest)` 兜底（digest = 排序後 join 的 SHA1）。
+2. Options 上限走 `config/limits.yml`（鐵律 6，**不用 DB CHECK**）；變體是**選項組合的稀疏集合**，**變體唯一性用唯一索引** `(shop_id, product_id, option_values_digest)` 兜底（digest ＝ 排序後 join 的 SHA1）。
+   <!-- 2026-08-15 依 parity 查證修正三處，原文：
+        「Options ≤3 在 service 與 DB（CHECK 或驗證 + 測試）雙重限制；變體 = option values 笛卡兒積，
+          **變體唯一性用唯一索引** `(product_id, option_values_digest)` 兜底（digest = 排序後 join 的 SHA1）。」
+        ① 🔴 **「笛卡兒積」是錯的**。本尊 `productOptions` 的 `optionValues` 官方明載包含
+           "values not assigned to any variants" ⇒ **稀疏組合是合法狀態**；笛卡兒積展開只是
+           `ProductOptionCreateVariantStrategy: CREATE` 的**顯式 opt-in**，預設是 `LEAVE_AS_IS`
+           （官方逐字：「No additional variants are created in response to the added options.
+            Existing variants are updated with the first option value of each option added.」）。
+           照原文實作 ⇒ 每次加選項都強制展開全笛卡兒積，商家不要的組合也會被建出來。
+        ② **DB CHECK 移除**：上限值一律引 limits.yml（鐵律 6），且本尊的上限是
+           per-shop 可查詢的（`shop.resourceLimits`），焊進 DB CHECK 就改不動。
+        ③ 唯一索引補 `shop_id`（鐵律 2：複合索引一律以 shop_id 開頭）。原文是省略寫法。
+        🔴 **另補一句 D12 落地時才確立的事**：`option_values_digest` 是**我方內部實作，
+           本尊沒有這個概念**（本尊 `ProductVariant` 型別上只有 `title` 與 `selectedOptions`）
+           ⇒ **不得對外曝露**：不進 GraphQL 型別、不進 GID／feed／URL／CSV。
+           因為它不外露，任何時候都可以一句 UPDATE 全表重算 ⇒ 不需要版本前綴欄。
+           **這兩件事綁在一起，不得只留其一。**
+        🔴 **digest 的輸入是 `option_value_id` 不是選項值字串**（67 §B.3-4：譯文掛在 id 上，
+           用字串比對會讓切語言時找不到變體）。 -->
 3. 變體批量編輯（價格/庫存欄位表格）走一支 bulk endpoint，逐列驗證、回傳逐列錯誤（對齊後台表格編輯 UX）。
-4. 刪除策略：商品被 line_items 引用 → 不可硬刪，只能 Archive；未被引用才允許真刪。變體同理。
+4. 刪除策略：**商品與變體一律允許硬刪，不論是否被 line_items 引用**；刪除不可復原。line_item 對 variant／product 是**可空弱引用**，刪除後轉 NULL，訂單靠自己的快照欄位獨立成立。Archive 是**建議非強制**，不得實作成 userErrors 硬擋。
+   <!-- 2026-08-15 依 parity 查證**推翻重寫**，原文：
+        「刪除策略：商品被 line_items 引用 → 不可硬刪，只能 Archive；未被引用才允許真刪。變體同理。」
+        🔴 **這條是 bug——以為在照抄本尊，但抄錯了。** 三項官方證據：
+        ① `productVariantsBulkDelete` 的 userError enum **只有五個值**
+           （AT_LEAST_ONE_VARIANT_DOES_NOT_BELONG_TO_THE_PRODUCT／CANNOT_DELETE_LAST_VARIANT／
+            PRODUCT_DOES_NOT_EXIST／PRODUCT_SUSPENDED／UNSUPPORTED_COMBINED_LISTING_PARENT_OPERATION），
+           **沒有任何一個與訂單引用有關**。擋點是結構與狀態，不是引用關係。
+           https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductVariantsBulkDeleteUserErrorCode
+        ② `CalculatedLineItem.variant` 官方逐字：「The value is null for custom line items and
+           items where **the variant has been deleted**.」⇒ 本尊把「變體已被刪除」當成
+           line item 上的**正常狀態**，不是要防的事。
+           https://shopify.dev/docs/api/admin-graphql/latest/objects/CalculatedLineItem
+        ③ `productDelete` 官方逐字：「Previously completed orders that included this product
+           aren't affected. The product information in completed orders is preserved for
+           record-keeping, and **existing refunds for this product remain valid and processable**.」
+           並明說「Consider archiving」是**建議**（Consider），不是強制。
+           https://shopify.dev/docs/api/admin-graphql/latest/mutations/productDelete
+        🔴 **本尊的 `ProductVariant` 型別上沒有任何狀態欄位**（無 status／archived／archivedAt／
+           deletedAt，也沒有 ProductVariantStatus enum）⇒ **變體沒有軟刪除這個概念**。
+           「不想賣但想留著」的官方替代方案是 **publishing 控制**（help 逐字：「you can
+           **manage publishing** for your product variants instead of deleting variants」），
+           不是第三態。
+        ⚠️ **前置條件（尚未做）**：`fk_line_items_product_variant_id` 目前**沒有 `on_delete`**
+           ⇒ MySQL 預設 RESTRICT ⇒ **DB 層現在根本刪不掉變體**。要改成 `ON DELETE SET NULL`
+           （欄位已是 nullable）。**這一條沒做完之前不得開放刪除路徑。**
+        同批修正：`docs/specs/63` §B.4 硬規則 2 的同一條敘述。
+
+        ✅ **2026-08-16 測試店實測確認（T-1 結案）**，`docs/worklog/2026-08-16-T1實測-變體刪除語義.md`：
+           建含變體 A 的正式訂單 #1006（A 的可售數量變 −1，引用關係成立）
+           → 刪除變體 A → **成功，無任何錯誤**。
+           確認 modal 逐字：「選項值為「A」的子類將從您的商店中刪除。此動作無法復原。」
+           ——**完全沒有提到訂單**。
+           刪除後訂單 #1006：商品名、**變體標題「A」照常顯示**、金額與狀態全不變
+           ⇒ **line item 是快照**，證實上面第②項的官方說法。
+           🔴 上面那些官方文檔本來只是**證據方向**（mutation 頁對此完全沉默）；
+              現在是**親自跑過**。這條前置條件解除，可以往下走。 -->
 5. `position` 排序欄位用整數 gap 法（100,200,300…重排時重編）；拖曳排序 endpoint 冪等。
 6. status **四態**（`ACTIVE` / `DRAFT` / `ARCHIVED` / **`UNLISTED`**，值域＝`limits.product.status_values`）＋ 前台可見性拆成**兩個獨立維度**：`Product.purchasable` 與 `Product.discoverable`（**不再有 `Product.published` 這個 scope**）。四個狀態是這兩維的組合，真值表、變體層 AND 規則與全站影響面見 **§F1.2**。
 
@@ -32,9 +87,42 @@
 **工具**：Active Record、dnd-kit（前端拖曳）、TanStack Table（變體編輯表格）。
 
 **⚠️ 坑**：
-- 變體重生成時**不能砍掉重建**（會斷 line_items/inventory 外鍵與歷史）——diff 現有變體：match 的更新、多的軟移除、新的建立。
-- price 允許 0（免費商品合法），但 compare_at_price < price 時要嘛擋、要嘛不顯示折扣（選一致的規則，Shopify 是不顯示）。
-- `option_values` 順序敏感（Size/Color vs Color/Size 是不同變體識別）→ digest 前先按 option position 排序。
+- 變體重生成走 diff：match 的更新、**多的依策略刪除**、新的建立。破壞性一律是**明文 opt-in**。
+  <!-- 2026-08-15 依 parity 查證修正兩處，原文：
+       「變體重生成時**不能砍掉重建**（會斷 line_items/inventory 外鍵與歷史）——diff 現有變體：
+         match 的更新、多的**軟移除**、新的建立。」
+       ① 🔴 **「軟移除」刪掉**——本尊變體沒有第三態（見 §F1-4 的批註）。
+       ② 🔴 **理由句「會斷 line_items 外鍵」刪掉**：那是**我方 FK 設定**的問題，不是本尊的約束。
+          本尊 line item 是快照＋可空弱引用，刪變體不會斷歷史。
+          正確的理由是：**保住庫存帳與外部引用**（app／feed／推薦／購物車裡的 variant_id），
+          **不是因為 line_items 擋著**。
+       ③ 「不能砍掉重建」改為**策略參數化**，對齊本尊三個 enum：
+          `ProductOptionCreateVariantStrategy`：LEAVE_AS_IS（預設，既有變體補第一個值）／CREATE
+          `ProductOptionUpdateVariantStrategy`：LEAVE_AS_IS（需刪變體時**回 error**）／MANAGE（連帶刪）
+          `ProductOptionDeleteStrategy`：DEFAULT／NON_DESTRUCTIVE（只有不刪到變體才成功）／
+            POSITION（重複時**保留 position 較低者**，官方逐字「Remaining variants will be
+            deleted, **highest `position` first**」）
+          另：`productSet` 是**全量覆寫**（官方逐字「deletes existing entries that aren't
+          included in the mutation's input」）。 -->
+- price 允許 0（免費商品合法）；**`compare_at_price` 一律照存照回，核心層不得擋、不得改寫**。
+  <!-- 2026-08-15 依 parity 查證修正，原文：「但 compare_at_price < price 時要嘛擋、
+       要嘛不顯示折扣（選一致的規則，Shopify 是不顯示）」。
+       🔴 **本尊試過「擋」並主動全版本撤回**：2020-04 上線過這條 validation，
+       2021-01-27 changelog「Pricing validations removed from all API versions」**回溯撤除**。
+       ⇒ `< price`、`== price`、`= 0`（🔴 0 ≠ 空值）**全部合法可儲存**。
+       折扣判定是 **Liquid theme 層**的事（Dawn 用 `compare_at_price > price`），不是核心欄位；
+       **不得**提供 `on_sale` 衍生布林當唯一真相。
+       admin 可顯示**非阻斷提示**，但不得是 userErrors。
+       ⚠️ 與 `docs/research/22`:104「系列頁 Sale 標籤需全變體 compare-at 一致」互引。 -->
+- `option_values` 順序敏感（Size/Color vs Color/Size 是不同變體識別）→ digest 前先按 **`product_option_id`** 排序。
+  <!-- 2026-08-15 修正排序基準，原文：「digest 前先按 **option position** 排序」。
+       🔴 `position` 是使用者**拖曳就會改**的顯示順序（本尊有 `productOptionsReorder`），
+       **身分鍵不得由可變資料決定**。照 position 排序的話，每次重排選項都必須在同一
+       transaction 內重算該商品**所有**變體的 digest——任何一條路徑忘記重算就是靜默的
+       身分斷裂，而那正是 `63` §B.5 存在要防的事故形態。
+       ⚠️ **本條的原意（順序敏感 ⇒ 先正規化再 hash）完整保留**，只換排序基準。
+       🔴 **這不算偏離本尊**——本尊根本沒有 digest 這個概念（見 §F1-2 的批註），
+       排序鍵是我方內部實作的自由度。 -->
 - 富文本描述是租戶輸入、買家可見 → 存前 sanitize（rails-html-sanitizer 白名單：p/br/strong/em/ul/ol/li/a[href 限 http(s)]/img[src 限自家 CDN]），**前台輸出處再 sanitize 一次**（雙保險）。
 
 ### F1.1 最終銷售品項與退貨規則的商品側掛載（P0-10 的商品端）

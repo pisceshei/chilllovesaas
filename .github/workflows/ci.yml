@@ -35,39 +35,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # 🔴 判準與實作都在 `scripts/check-exec-bits.sh`（2026-08-15 由 inline shell 抽出）。
+      # 抽出的三個理由，全部是實測後果：
+      #   ①**`bin/ci` 跑得到**——inline shell 進不了 `config/ci.rb`，
+      #     `scripts/check-ci-parity.rb` 也看不到它（那是它誠實聲明裡登記的已知缺口）。
+      #   ②**可以寫回歸測試**（65 §K.7）——抽出前它是全 ci.yml 唯一「判準才剛被大改、
+      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` 整組回歸測試守著（條數不寫死，實跑為準）。
+      #   ③**兩個 job 不會分岔**——原本 test 與 quality 各有一份 inline 複製。
+      # 抽出時一併修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
+      # 以及「掃到 0 個檔卻印 OK」。細節見該腳本檔頭。
       - name: Verify bin/ and scripts/ are executable
-        run: |
-          # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
-          #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
-          #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
-          # 🔴 2026-08-15 擴大範圍：原本只掃 `bin/` 與 `scripts/*.sh`，`scripts/*.rb`／`*.py`
-          #    漏在網外——實測當時 scripts/ 的 10 支腳本有 4 支是 100644
-          #    （check-baseline-raise.py／check-money-boundary.rb／test-lint-rules.py／
-          #     test-money-rules.rb），而 CI 一路全綠，因為它們都以 `ruby`／`python3` 前綴呼叫。
-          #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
-          #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
-          #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
-          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
-          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
-          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
-          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
-          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
-          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
-          bad=$(
-            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
-            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
-              | while IFS= read -r f; do
-                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
-                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
-                done
-          )
-          if [ -n "$bad" ]; then
-            echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
-            echo "$bad"
-            echo "修法：git update-index --chmod=+x <上列檔案>"
-            exit 1
-          fi
-          echo "OK：bin/ 全部可執行；scripts/ 帶 shebang 者全部可執行"
+        run: bash scripts/check-exec-bits.sh
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -134,39 +112,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
+      # 🔴 判準與實作都在 `scripts/check-exec-bits.sh`（2026-08-15 由 inline shell 抽出）。
+      #    理由註釋只保留一份在 test job 的同名步驟上方（本 PR 主旨就是把兩份 inline
+      #    複製收成一份，理由不再第二次複製——腳本檔頭是規範版）。
       - name: Verify bin/ and scripts/ are executable
-        run: |
-          # 🔴 Windows 的 git 預設 core.filemode=false，bin/* 會以 100644 提交，
-          #    到 Linux runner 上執行就是 exit 126（Permission denied）——訊息很難懂。
-          #    這一步讓它早失敗且說人話。修法：git update-index --chmod=+x <檔>
-          # 🔴 2026-08-15 擴大範圍：原本只掃 `bin/` 與 `scripts/*.sh`，`scripts/*.rb`／`*.py`
-          #    漏在網外——實測當時 scripts/ 的 10 支腳本有 4 支是 100644
-          #    （check-baseline-raise.py／check-money-boundary.rb／test-lint-rules.py／
-          #     test-money-rules.rb），而 CI 一路全綠，因為它們都以 `ruby`／`python3` 前綴呼叫。
-          #    ⇒ 這道閘門原本擋不住它自己所在目錄裡的同一種錯。
-          #    新判準＝**帶 shebang 就必須可執行**：帶 shebang 是宣告「我可以直接跑」，
-          #    宣告了卻沒有執行位元就是自相矛盾。無 shebang 的檔（資料、fixture）不受影響。
-          # 🔴 `-F'\t'` 不是可有可無（PR #35 的 Codex review 指出）：
-          #    `git ls-files -s` 的格式是 `<mode> <sha> <stage>\t<path>`——**路徑在 TAB 之後**，
-          #    而路徑本身可以含空白。原本的 `awk '{ print $4 }'` 以空白切欄，
-          #    `scripts/a script.sh` 會被截成 `scripts/a` ⇒ 下面的 `head` 讀不到檔案，
-          #    條件為假 ⇒ **該檔靜默漏掉**。用 TAB 當分隔符才拿得到完整路徑。
-          #    mode 是 `$1` 的前 6 個字元（`$1` 此時是 "<mode> <sha> <stage>"）。
-          bad=$(
-            git ls-files -s bin/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }'
-            git ls-files -s scripts/ | awk -F'\t' 'substr($1, 1, 6) != "100755" { print $2 }' \
-              | while IFS= read -r f; do
-                  # IFS= 保留前後空白；head 讀前兩個位元組判斷 shebang。
-                  if head -c 2 "$f" | grep -q '#!'; then echo "$f"; fi
-                done
-          )
-          if [ -n "$bad" ]; then
-            echo "::error::以下檔案缺少執行位元（git mode 應為 100755）："
-            echo "$bad"
-            echo "修法：git update-index --chmod=+x <上列檔案>"
-            exit 1
-          fi
-          echo "OK：bin/ 全部可執行；scripts/ 帶 shebang 者全部可執行"
+        run: bash scripts/check-exec-bits.sh
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -280,6 +230,26 @@ jobs:
       - name: Regression-test money boundary rules
         run: ruby scripts/test-money-rules.rb
 
+      # 執行位元閘門的 fixture 回歸測試（65 §K.7）。每條 case 都在 $TMPDIR 現場建小 git repo（條數不寫死，實跑為準）——
+      # 這個檢查讀的是 git index 的 mode 不是檔案系統權限，所以 fixture 必須是真的 repo，
+      # 而巢狀 .git 沒辦法提交進本倉庫。最後三條（only_bin／only_scripts／empty）
+      # 全部是實測抓到的漏洞，不是想像出來的。
+      - name: Regression-test exec-bit rules
+        run: bash scripts/test-exec-bits-rules.sh
+
+      # 🔴 workflow 自己的語法閘門。存在理由是一個**保護真空**：
+      # `.github/workflows/claude-review.yml` 有一支 240+ 行的閉環 shell，
+      # 而動該檔的 PR **拿不到 Claude 驗收**（反竄改機制，見該檔檔頭 31–40 行），
+      # 同時本 CI 先前**沒有任何一步**解析 workflow YAML 或跑 bash -n。
+      # 該檔註釋自己記載被同型語法錯誤咬過兩次（block scalar 續行、heredoc）。
+      # ⇒ 這是全倉庫最需要機械語法檢查、卻最沒有保護的地方。
+      # ⚠️ 這不是 actionlint：不驗 action inputs、不驗 ${{ }} 語義、不驗執行期行為。
+      - name: Check workflow syntax
+        run: ruby scripts/check-workflow-syntax.rb
+
+      - name: Regression-test workflow syntax rules
+        run: ruby scripts/test-workflow-syntax-rules.rb
+
       # 🔴 YAML 1.1 的裸字 on/off/yes/no/true/false（含大小寫變體）會被 Psych 解析成布林——對「值」是常識，
       # 但沒人預期它同樣適用於「鍵」。limits.yml 的 gift_card_entry_points 就中了這個陷阱
       # （六個 `on` 鍵實際是 true），而 deep_symbolize_keys 對非字串鍵原樣保留 ⇒
@@ -299,9 +269,14 @@ jobs:
       # 那條條款寫下的隔天就被違反了：PR #33 往本 job 加了兩步、config/ci.rb 一行未動，
       # 於是本機 `bin/ci` 全綠但 CI 會紅——而擋下來的理由本機沒有機會發現。
       # 本步驟斷言「ci.yml 用到的每一支 scripts/* 都出現在 config/ci.rb」。
-      # ⚠️ 它看不到**多行 inline shell 的腳本邏輯**（例如上面的執行位元閘門）——已知缺口，
-      #    寫在腳本檔頭的誠實聲明裡，正解是把那段抽成 scripts/check-exec-bits.sh。
-      #    （精確地說：看不到的是**多行腳本邏輯**；單行指令由該腳本規則 2 涵蓋。）
+      # ✅ 「多行 inline shell 的腳本邏輯看不到」那個已知缺口，自 PR #41 起**已關**：
+      #    執行位元閘門抽成 scripts/check-exec-bits.sh 之後自動落入規則 1。
+      #    ⚠️ 精確地說（2026-08-16 收窄——初稿的全稱句「本 workflow 沒有多行
+      #    inline shell 檢查步驟」被同檔的「Guard dead-control baseline」步驟直接證偽；
+#    行號易漂移，指位置只寫步驟名）：
+      #    仍存在的多行 run 是「fetch base ＋ 呼叫 scripts/*」的**環境準備**形態，
+      #    檢查**邏輯**都在被呼叫的 scripts/* 裡、由規則 1 對等；
+      #    不得再新增「檢查邏輯寫在 run 區塊裡」的步驟。
       - name: Check CI parity
         run: ruby scripts/check-ci-parity.rb
 

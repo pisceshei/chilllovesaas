@@ -1,0 +1,23 @@
+# 故意違反：block scalar 之後的行縮排**縮回第 4 欄**（低於 run 區塊的縮排）
+# ⇒ mapping 結構被切斷，整份不再是合法 YAML。
+# ⚠️ claude-review.yml 那次真實事故是「續行掉到第 0 欄」——同一類（縮排跌出 scalar），
+#    但本 fixture 復刻的是第 4 欄形態，不是第 0 欄（2026-08-16 照實更正，
+#    原檔頭寫第 0 欄與內容不符；第 0 欄形態目前沒有 fixture）。
+#
+# 🔴 這不是假想的錯誤。`.github/workflows/claude-review.yml` 的註釋逐字記載：
+#    「用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
+#      續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
+#      （2026-08-14 寫這段時踩過一次⋯）」
+# 期望：scripts/check-workflow-syntax.rb 打紅（YAML 解析失敗）。
+name: Broken
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bad block scalar
+        run: |
+          echo "start"
+    bad_indent_kills_the_mapping: true
+      - name: never reached
+        run: echo hi
