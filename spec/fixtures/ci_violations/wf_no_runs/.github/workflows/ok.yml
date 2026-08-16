@@ -1,0 +1,15 @@
+# 故意違反：合法 YAML、但**一個 `run:` 區塊都沒有**。
+#
+# 🔴 守的是「第二層零掃描」：舊寫法只對「一份 workflow 都沒找到」做 canary，
+#    對「找到了檔、卻 0 個 run 區塊被檢查」會印
+#    「OK：workflow 語法檢查通過 / 0 個 run 區塊皆通過 bash -n」並 exit 0。
+#    而那正是 `interpreter_for` 回歸時會產生的形態——
+#    **閘門對它自己剛修好的故障綠著通過**。
+name: No run blocks
+on: push
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
