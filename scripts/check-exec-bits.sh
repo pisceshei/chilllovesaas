@@ -87,7 +87,13 @@ while IFS= read -r -d '' rec; do
   #    ⇒ 工作區沒 shebang ⇒ 條件為假 ⇒ 印「OK」exit 0，
   #      而**即將提交的內容**是一支帶 shebang 的 100644 腳本。實測重現過。
   #    `git show :"$path"` 取的就是 index 版本，且對含空白／非 ASCII 的路徑同樣正確。
-  if [ "$(git show ":$path" 2>/dev/null | head -c 2)" = '#!' ]; then
+  # 🔴 fail-closed（2026-08-16，本輪驗收 🟡 升級處理）：`git show` 失敗時 stdout 空
+  #    ⇒ 舊寫法判成「沒有 shebang」⇒ 靜默通過——與 Y4 修掉的「開檔失敗 ⇒ 通過」
+  #    同一形態，只是換成 index blob 讀不到。可達性窄（unmerged index），但方向必須對。
+  #    ⚠️ 取退出碼要在管線外：`git show | head` 的 $? 是 head 的。先落地再讀。
+  if ! blob="$(git show ":$path" 2>/dev/null)"; then
+    bad="${bad}${path}（git show 失敗，index blob 讀不到——fail-closed 列為違規）"$'\n'
+  elif [ "$(printf '%s' "$blob" | head -c 2)" = '#!' ]; then
     bad="${bad}${path}"$'\n'
   fi
 done < <(git ls-files -sz scripts/ 2>/dev/null)

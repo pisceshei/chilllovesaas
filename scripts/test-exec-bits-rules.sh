@@ -39,6 +39,9 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CHECKER="$ROOT/scripts/check-exec-bits.sh"
 WORK="$(mktemp -d)"
+# 🔴 mktemp 失敗時 WORK 是空字串（set -u 攔不住「有設但空」）⇒ 後面的
+#    mkdir -p "$WORK/$name" 會在檔案系統根建目錄、trap 清理對空字串也無效。
+[ -n "$WORK" ] && [ -d "$WORK" ] || { echo "mktemp -d 失敗" >&2; exit 1; }
 trap 'rm -rf "$WORK"' EXIT
 
 failures=0

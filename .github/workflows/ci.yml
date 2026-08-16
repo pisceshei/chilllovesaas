@@ -113,14 +113,8 @@ jobs:
         uses: actions/checkout@v7
 
       # 🔴 判準與實作都在 `scripts/check-exec-bits.sh`（2026-08-15 由 inline shell 抽出）。
-      # 抽出的三個理由，全部是實測後果：
-      #   ①**`bin/ci` 跑得到**——inline shell 進不了 `config/ci.rb`，
-      #     `scripts/check-ci-parity.rb` 也看不到它（那是它誠實聲明裡登記的已知缺口）。
-      #   ②**可以寫回歸測試**（65 §K.7）——抽出前它是全 ci.yml 唯一「判準才剛被大改、
-      #     卻沒有反向自測」的檢查；抽出後有 `scripts/test-exec-bits-rules.sh` **11 條**守著。
-      #   ③**兩個 job 不會分岔**——原本 test 與 quality 各有一份 inline 複製。
-      # 抽出時一併修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
-      # 以及「掃到 0 個檔卻印 OK」。細節見該腳本檔頭。
+      #    理由註釋只保留一份在 test job 的同名步驟上方（本 PR 主旨就是把兩份 inline
+      #    複製收成一份，理由不再第二次複製——腳本檔頭是規範版）。
       - name: Verify bin/ and scripts/ are executable
         run: bash scripts/check-exec-bits.sh
 
@@ -264,8 +258,11 @@ jobs:
       # 本步驟斷言「ci.yml 用到的每一支 scripts/* 都出現在 config/ci.rb」。
       # ✅ 「多行 inline shell 的腳本邏輯看不到」那個已知缺口，自 PR #41 起**已關**：
       #    執行位元閘門抽成 scripts/check-exec-bits.sh 之後自動落入規則 1。
-      #    本 workflow 目前**沒有**多行 inline shell 檢查步驟；再新增的話，
-      #    請一律寫成 scripts/ 下的腳本（規則 1 才看得到、bin/ci 才跑得到）。
+      #    ⚠️ 精確地說（2026-08-16 收窄——初稿的全稱句「本 workflow 沒有多行
+      #    inline shell 檢查步驟」被 :198-203 的 Guard dead-control baseline 直接證偽）：
+      #    仍存在的多行 run 是「fetch base ＋ 呼叫 scripts/*」的**環境準備**形態，
+      #    檢查**邏輯**都在被呼叫的 scripts/* 裡、由規則 1 對等；
+      #    不得再新增「檢查邏輯寫在 run 區塊裡」的步驟。
       - name: Check CI parity
         run: ruby scripts/check-ci-parity.rb
 
