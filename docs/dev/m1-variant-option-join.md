@@ -28,8 +28,10 @@ products
        └─ product_variant_option_values    ← 座標：一個變體對一個選項恰好一列
 ```
 
-`ProductVariant#before_validation` 依 join 列重算 digest，唯一產生處是
-`Catalog::OptionValuesDigest`。
+`ProductVariant#before_validation` 依 `effective_option_value_pairs` 重算 digest——
+那是「記憶體中的關聯狀態（新建／已編輯／標記刪除）＋ DB 既有列」的合成視圖，
+唯一產生處是 `Catalog::OptionValuesDigest`。（初版直接 pluck DB，驗收輪抓到
+兩層靜默資料遺失後改成現狀，見下方「驗收輪修正」。）
 
 ### digest 的定義
 
@@ -54,7 +56,9 @@ products
 `product_variant_option_values`：`shop_id` / `product_id` / `product_variant_id` /
 `product_option_id` / `option_value_id` ＋ timestamps。
 
-五支索引、五支外鍵，逐條理由見 migration 檔頭與 inline 註釋。
+索引與外鍵逐條理由見 migration 檔頭與 inline 註釋（支數不寫死，以 migration 為準；
+2026-08-16 補 `ix_pvov_by_value [shop_id, option_value_id]`——`OptionValue` 刪除前
+`restrict_with_error` 的存在性反查，三支既有索引對此查詢都只能用到 shop 前綴）。
 
 ## 關鍵取捨
 
@@ -90,6 +94,30 @@ products
 primary match key 是 `variants[].id`。`63` §B.5 的身分保持會讓 digest 變（加選項時
 既有變體補上第一個值）——**digest 變了、身分沒變**，這證明兩者是不同的東西。
 
+## 驗收輪修正（2026-08-16，ce83cdb 起）
+
+### 🔴 兩層靜默資料遺失（digest 與記憶體狀態脫節）
+
+初版 digest 直接 pluck DB ⇒ ①`assoc.build` 出來尚未落庫的列不進 digest；
+②已載入、改了座標但還沒 save 的列用舊值算。配套三個 Rails 邊界（都實測復現）：
+
+- **預設 `has_many` 不會自動存「已持久化但變髒」的子物件**——必須顯式 `autosave: true`；
+- **未載入關聯上 `.first` 回的是脫離的查詢物件**，改它不影響關聯快取；
+- **`assoc.build` 不會把 `loaded?` 變 true**——要讀記憶體狀態得走 `assoc.target`。
+
+修法＝`effective_option_value_pairs`：`target` 裡的新建列（排除標記刪除）＋已編輯列
+＋ DB 列（排除已刪／已編輯的 id），驗證與 digest 共用同一份視圖。
+
+### 🔴 digest 對 Float 靜默截斷
+
+`Integer(1.9)` 回 `1` ⇒ `[[1.9, 2.9]]` 與 `[[1, 2]]` 同 digest。改嚴格
+`is_a?(Integer)`，Float 與可轉字串（`"7"`）一律 `TypeError`——兜底對輸入寬鬆就不是兜底。
+
+### 🔴 `restrict_with_error` 反查無索引
+
+見上方資料表節：補 `ix_pvov_by_value`。migration 未合併，就地改（schema.rb 重生流程
+的坑登記在 worklog）。
+
 ## 🔴 跨功能／跨頁／前端影響
 
 | 受影響 | 影響 |
@@ -111,6 +139,10 @@ primary match key 是 `variants[].id`。`63` §B.5 的身分保持會讓 digest 
 
 **負面驗證**：拆掉 `fk_pvov_value` ⇒ 不變量③紅；拿掉 digest 的排序 ⇒ 順序無關那條紅。
 
+驗收輪回歸（2026-08-16）：`product_variant_spec` 頂層回歸塊三條（build 後 save 座標不失蹤／
+已載入編輯後 digest 用新值／繞過 model 直寫 DB 也反映）；`option_values_digest_spec`
+補 Float 與可轉字串兩組 `TypeError` 斷言。
+
 ## 已知限制
 
 - 🔴 **沒有任何寫入 service**。join 列與 digest 的「同一 transaction 內一起寫」目前
@@ -120,6 +152,8 @@ primary match key 是 `variants[].id`。`63` §B.5 的身分保持會讓 digest 
 - ⚠️ `product_variants.title` 的衍生規則仍未裁定（本尊 title 是選項值 join 而來，
   我方目前是獨立的 `null: false` 欄）。**不擋 D12，擋第一支 `productSet`。**
 - ⚠️ **部分**刪除選項時的塌縮 tie-break 沒有規格（`63` §B.5 只裁定「刪光所有選項」）。
+- ⚠️ `effective_option_value_pairs` 每次驗證兩次呼叫＝兩次 pluck（digest＋驗證各一）。
+  可記憶化到單次 save 週期，但要處理失效時機；量級（每變體 ≤ 選項數列）不值得先做。
 - ⚠️ `inventory_items.product_variant_id` 是 `NOT NULL + UNIQUE`，把 1:1 焊在
   inventory_item 這一側；本尊 changelog（2025-12-02）已宣告要支援
   「多個 variant 共用一個 inventory item」。**方向問題，尚未裁定。**
