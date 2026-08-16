@@ -1,0 +1,5 @@
+# 故意違反：本檔含**非 UTF-8 位元組**（下一行）。守的是編碼檢查（第 8 輪）——
+# File.read 不炸、炸在 raw.match?（ArgumentError），且那行在所有 rescue 之外 ⇒ 裸 exit 1。
+# 期望：exit 2，訊息含「不是合法的 UTF-8」。
+key: value
+��
