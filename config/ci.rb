@@ -45,6 +45,11 @@ CI.run do
   #    `scripts/check-ci-parity.rb` 會斷言 ci.yml 引用的每一支 `scripts/*` 都出現在本檔，
   #    對不上就 CI fail。⇒ 以後漏同步會被擋下來，不必靠人記得。
   #    （同型教訓：CLAUDE.md 鐵律 2 白名單、AGENTS.md 執行位元節，都是「規則與機制分岔」。）
+  # 🔴 2026-08-15 抽出：原本是 ci.yml 的 inline shell，**本機完全跑不到**。
+  #    抽成腳本之後 bin/ci 才守得住「Windows 提交的檔案缺執行位元」這一類——
+  #    那正是 2026-08-14 CI 全紅的原因，而它在本機一直是綠的。
+  step "Invariants: Exec bits", "bash scripts/check-exec-bits.sh"
+  step "Invariants: Exec bit rules regression", "bash scripts/test-exec-bits-rules.sh"
   step "Invariants: Prototype lint", "python3 scripts/lint-prototype.py"
   step "Invariants: Lint rules regression", "python3 scripts/test-lint-rules.py"
   # ci.yml 傳 FETCH_HEAD（它會先 `git fetch --depth=1`）；本機不傳，
@@ -75,6 +80,10 @@ CI.run do
   #    它補上的當天就抓到兩個讓對等性檢查靜默 exit 0 的活 bug，
   #    形態與其餘 test-*.rb 相同（65 §K.7：檢查本身也要被測試）。
   step "Invariants: CI parity rules regression", "ruby scripts/test-ci-parity-rules.rb"
+  # workflow 的語法閘門。本機跑得到特別有價值：改 claude-review.yml 的 PR
+  # 拿不到 Claude 驗收（反竄改），本機這一步是它上線前唯一的機械檢查。
+  step "Invariants: Workflow syntax", "ruby scripts/check-workflow-syntax.rb"
+  step "Invariants: Workflow syntax rules regression", "ruby scripts/test-workflow-syntax-rules.rb"
 
 
   # Optional: set a green GitHub commit status to unblock PR merge.

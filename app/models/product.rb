@@ -29,7 +29,21 @@ class Product < ApplicationRecord
 
   acts_as_tenant :shop
 
+  # 🔴 **宣告順序就是刪除順序**（`dependent` 是按宣告順序註冊成 `before_destroy` 的）。
+  #    `product_variants` 必須排在 `product_options` **之前**：join 表
+  #    (`product_variant_option_values`) 同時被兩者的 `dependent: :destroy` 涵蓋，
+  #    但 `option_values` 對 join 列是 `restrict_with_error`
+  #    ⇒ 先刪變體（連帶清掉它的 join 列），選項那一側才刪得動。
+  #    順序反過來 ⇒ `OptionValue` 的 restrict 會擋住，而錯誤訊息只會說
+  #    「無法刪除選項值」，看不出真正的原因是刪除順序。
   has_many :product_variants, dependent: :destroy
+  # D12：商品的選項。**2026-08-16 補**（PR #38 Codex review）——
+  # 🔴 建了 `ProductOption` 卻沒在這裡宣告關聯，`fk_product_options_product_id`
+  #    會讓**任何有選項的商品永遠刪不掉**，而且沒有任何既有測試會紅
+  #    （D12 之前 `product_options` 表根本沒有寫入路徑）。
+  #    ⚠️ 這與 `docs/specs/88` §4 那個 `Shop#publications` 的教訓是同一型：
+  #    **新增一張有外鍵指回來的表時，父表的關聯宣告要一起補**。
+  has_many :product_options, dependent: :destroy
   # 多型：商品可獨立發布到各管道（docs/specs/88）。
   has_many :resource_publications, as: :publishable, dependent: :destroy
 

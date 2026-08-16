@@ -13,23 +13,41 @@ RSpec.describe ProductVariant, type: :model do
   # 為併發而併發會寫出一條看起來嚴謹、實際上不多測任何東西的測試。
   # （真正需要執行緒的那一條在下面「唯一索引沒有被誤傷」——理由寫在那裡。）
   describe "SKU 軟唯一" do
+    # 🔴 **這一組在 D12（2026-08-15）改過形態，但要證明的事一個字都沒變。**
+    # 之前兩條都在**同一個 product** 底下建多個變體，而 D12 之後那會撞
+    # `uq_product_variants_option_values_digest`——多個無選項變體是同一個座標。
+    # ⚠️ **那個紅燈與 SKU 軟唯一完全無關**：任何人看到它紅，
+    # **不得**去動 `ix_product_variants_sku`，也不得把 SKU 索引改回唯一。
     it "同一間店允許重複 SKU（同款不同包裝共用庫存編號，61 §1.5）" do
       ActsAsTenant.with_tenant(shop) do
+        # 改成兩個 product：`ix_product_variants_sku` 是 `(shop_id, sku)`，
+        # shop-scoped 的斷言原封不動成立，而且更貼近「同款不同包裝」的原意。
+        other_product = create(:product, shop:)
         first = create(:product_variant, product:, sku: "LIP-001")
-        second = create(:product_variant, product:, sku: "LIP-001")
+        second = create(:product_variant, product: other_product, sku: "LIP-001")
 
         expect([ first, second ].map(&:persisted?)).to eq([ true, true ])
         expect(described_class.where(sku: "LIP-001").count).to eq(2)
       end
     end
 
+    # 改成「一個商品 ＋ 一個選項 ＋ 5 個選項值」的真實形態——這比換成 5 個商品
+    # 更貼合它的標題（CSV 匯入的就是同一個商品的多個變體），
+    # 而且順帶成為 join 表的第一條整合測試。
     it "CSV 批次匯入形態：同一批次多筆重複 SKU 全部寫入，不中途失敗" do
       ActsAsTenant.with_tenant(shop) do
+        option = create(:product_option, product:, values: %w[S M L XL XXL])
+
         expect {
-          5.times { create(:product_variant, product:, sku: "BULK-1") }
+          option.option_values.order(:position).each_with_index do |value, index|
+            create(:product_variant, product:, sku: "BULK-1", position: index + 1,
+                                     option_values: [ value ])
+          end
         }.not_to raise_error
 
         expect(described_class.where(sku: "BULK-1").count).to eq(5)
+        # 五個變體五個不同座標 ⇒ 五個不同 digest（唯一索引沒有誤擋合法資料）
+        expect(described_class.where(sku: "BULK-1").distinct.count(:option_values_digest)).to eq(5)
       end
     end
 
@@ -163,9 +181,16 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
       Thread.new do
         ActiveRecord::Base.connection_pool.with_connection do
           ActsAsTenant.with_tenant(shop) do
+            # 🔴 `insert!` 刻意繞過 model（本測試要驗的是 DB 索引不是 validation）
+            # ⇒ `before_validation` 的 digest 重算**不會跑**，必須自己給。
+            # ⚠️ 兩筆給**不同**的 digest：本測試驗的是「SKU 不再唯一」，
+            # 若兩筆同 digest 會撞 D12 的座標唯一索引，那就變成在驗另一件事了。
+            # 🔴 **不要為了讓它過而給 `option_values_digest` 一個 DB default**——
+            # 沒有 default 正是要讓繞過 model 的路徑大聲失敗（見 migration 註釋）。
             ProductVariant.insert!({
               shop_id: shop.id, product_id: product.id, title: "併發變體 #{i}",
               position: i + 1, sku: "RACE-SKU", price_cents: 0, currency: "HKD",
+              option_values_digest: Digest::SHA1.hexdigest("race-#{i}"),
               created_at: Time.current, updated_at: Time.current
             })
             ok << true
@@ -180,5 +205,57 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
     expect(errors.size).to eq(0)
     expect(ok.size).to eq(2)
     expect(ActsAsTenant.without_tenant { ProductVariant.where(sku: "RACE-SKU").count }).to eq(2)
+  end
+end
+
+RSpec.describe ProductVariant, "effective_option_value_pairs（2026-08-16 靜默資料遺失修正的回歸）" do
+  let(:shop) { create(:shop) }
+
+  around { |ex| ActsAsTenant.with_tenant(shop) { ex.run } }
+
+  let(:product) { create(:product, shop: shop) }
+  let!(:variant) { create(:product_variant, product: product, shop: shop) }
+  let(:option) { create(:product_option, product: product, shop: shop) }
+  let(:value_a) { create(:option_value, product_option: option, shop: shop) }
+  let(:value_b) { create(:option_value, product_option: option, shop: shop) }
+
+  it "🔴 build 在已持久化變體上的列必須進 DB（舊 reset 寫法會把它從 autosave 目標丟掉）" do
+    option; value_a
+    variant.product_variant_option_values.build(
+      shop: shop, product: product, product_option: option, option_value: value_a
+    )
+    expect(variant.save!).to be(true)
+    expect(ProductVariantOptionValue.where(product_variant_id: variant.id).count).to eq(1)
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_a.id ] ]))
+  end
+
+  it "🔴 修改已載入列必須落 DB 且 digest 用新值（舊寫法 save! 回 true、DB 與 digest 都是舊值）" do
+    option
+    variant.product_variant_option_values.build(
+      shop: shop, product: product, product_option: option, option_value: value_a
+    )
+    variant.save!
+    variant.reload
+
+    row = variant.product_variant_option_values.to_a.first
+    row.option_value_id = value_b.id
+    expect(variant.save!).to be(true)
+
+    expect(ProductVariantOptionValue.where(product_variant_id: variant.id).pick(:option_value_id))
+      .to eq(value_b.id)
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_b.id ] ]))
+  end
+
+  it "直接動 join 表（繞過關聯）之後存變體，digest 反映 DB 事實（reset 當初要修的形態）" do
+    option; value_a
+    ProductVariantOptionValue.create!(
+      shop: shop, product: product, product_variant: variant,
+      product_option: option, option_value: value_a
+    )
+    variant.save!
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_a.id ] ]))
   end
 end

@@ -1,0 +1,22 @@
+# 故意違反：**自訂 shell 模板**下的壞掉的 bash。
+#
+# 🔴 這一條是 `interpreter_for` 的**正向**斷言（2026-08-15，PR #42 的 Claude 驗收指出）。
+#    舊白名單 `[nil, "bash", "sh"].include?(shell)` 對
+#    `bash --noprofile --norc -eo pipefail {0}` 這種 GitHub 官方文件化的寫法**不匹配**
+#    ⇒ 該 run 區塊被**靜默跳過**不檢查。
+#
+# ⚠️ **為什麼不能用 `wf_date_scalar`（期望 exit 0）來守這件事**：
+#    exit 0 分不出「檢查過而且乾淨」與「根本沒檢查」。
+#    只有「檢查到了就會紅」的 fixture 才承重——也就是這一份。
+name: Custom shell template
+on: push
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Broken bash under a documented custom shell template
+        shell: bash --noprofile --norc -eo pipefail {0}
+        run: |
+          if [ -z "$FOO" ]
+            echo "missing then"
+          fi

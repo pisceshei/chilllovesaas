@@ -108,12 +108,25 @@ ANCHORS = [
 
 # R4：可由代碼算出、且本專案實際踩過的易腐數字。
 # 🔴 刻意窄——只列真的燒過的形態，不做泛用數字偵測（那會誤報整個 docs/）。
+# 🔴 數字字元類含**中文數字**（2026-08-16，PR #42 第 3 輪驗收指出）：
+#    本倉庫文檔的計數幾乎一律寫中文（「八條」「四條」「三處」），
+#    而初版五條 pattern 全以 `\d+` 開頭 ⇒ R4 對本專案最常見的寫法**結構上全盲**——
+#    「八條」在兩輪人工審查與本閘門首跑下全數存活，就是這個洞的直接後果。
+# ⚠️ **單獨的「一」刻意排除**（實測誤報：「一支 240+ 行的閉環 shell」「有一條路徑」——
+#    量詞單數是描述不是計數，不會腐）。「十一」「一百」這類複合數詞仍然涵蓋。
+NUM = /(?:[〇零二三四五六七八九十百][〇零一二三四五六七八九十百]*|一[〇零一二三四五六七八九十百]+|\d+)/
 VOLATILE_NUM = [
-  /\d+\s*支(?:檢查器|腳本)?(?=[，。、）)\s]|\z)/,
-  /\d+\s*條\s*(?:case|CASE|fixture)/,
-  /\d+\s*個\s*fixture/i,
-  /\d+\s*張\s*(?:突變)?表/,
-  /共\s*\d+\s*[支條個張份]/
+  /#{NUM}\s*支(?:檢查器|腳本)?(?=[，。、）)\s]|\z)/,
+  /#{NUM}\s*條\s*(?:case|fixture)/i,
+  # （原本這裡還有一支「NUM 條 fixture」的半支——PR #48 首輪指出它與上一支重疊、
+  #    正是下面自我警告說的「重複 pattern 遮蔽突變」形態，2026-08-16 收斂掉。
+  #    PR #49 首輪補刀：舊半支帶 /i 而上一支沒有 ⇒ 收斂會丟大小寫變體涵蓋，
+  #    修法＝把 /i 上移到上一支（case|CASE 因此合併）。）
+  /#{NUM}\s*個\s*fixture/i,
+  /#{NUM}\s*張\s*(?:突變)?表/,
+  /共\s*#{NUM}\s*[支條個張份]/
+  # 🔴 不要另加「獨立的中文數字 pattern」——NUM 已涵蓋，重複的 pattern 會讓
+  #    「NUM 退化回 \d+」的突變被它接住而測不出來（2026-08-16 突變實測抓到過一次）。
 ].freeze
 
 # R4 的豁免：鄰近有可複驗的指令，或明示是某時點的快照。
@@ -189,9 +202,30 @@ scope_note = nil
 if scan_all
   changed_docs = :all
 elsif (diff = git(ROOT, "diff", "--name-only", "-z", "#{base_ref}...HEAD"))
-  changed_docs = diff.split("\0").reject(&:empty?)
-                     .select { |p| p.start_with?("docs/worklog/", "docs/handoff/") }
-                     .to_set
+  # 🔴 R4／R5 只掃**本次新增的行**，不是「有改動的整份檔」（2026-08-16，PR #42 第 3 輪）。
+  #    掃整份檔的話，歷史層敘事段（「八條 case 是照⋯設計的」）也會被打——
+  #    而歷史層依裁定**不得回頭改**，等於逼人違規或讓閘門永遠紅著。
+  #    「新寫的散文守規矩、歷史不動」的機械對應就是：只看 diff 的 `+` 行。
+  #    行號集合由 `-U0` 的 hunk 頭（`@@ -a,b +c,d @@`）算出。
+  changed_docs = {}
+  diff.split("\0").reject(&:empty?)
+      .select { |p| p.start_with?("docs/worklog/", "docs/handoff/") }
+      .each do |rel|
+    hunks = git(ROOT, "diff", "-U0", "#{base_ref}...HEAD", "--", rel)
+    # 🔴 執行期 canary（PR #42 第 6 輪 🟡）：name-only diff 剛成功、逐檔 diff 才失敗
+    #    是環境問題不是「該檔沒有新增行」——原本 `.to_s` 把失敗吞成空集合，
+    #    R4/R5 對該檔靜默跳過。fail-closed：exit 2（檢查跑不了，不是通過也不是違規）。
+    if hunks.nil?
+      warn "::error::git diff -U0 對 #{rel} 失敗（name-only 卻成功）⇒ **檢查跑不了**（exit 2）。"
+      exit 2
+    end
+    added = Set.new
+    hunks.scan(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/) do |start, count|
+      st = start.to_i
+      (count.nil? ? 1 : count.to_i).times { |k| added << (st + k) }
+    end
+    changed_docs[rel] = added
+  end
 else
   scope_note = "⚠️ 取不到 base `#{base_ref}` 的差異 ⇒ **R4／R5 本次未執行**（R1／R3 仍為全樹）。" \
                "在 CI 上請確認有 fetch 到 base；本機請用 --base 指定一個存在的 ref。"
@@ -212,11 +246,11 @@ targets.each do |rel|
 
   scanned << rel
   lines = text.lines.map(&:chomp)
-  in_r45_scope =
+  added_line_set =
     if changed_docs == :all
-      rel.start_with?("docs/worklog/", "docs/handoff/")
-    else
-      changed_docs&.include?(rel)
+      rel.start_with?("docs/worklog/", "docs/handoff/") ? :all : nil
+    elsif changed_docs
+      changed_docs[rel]
     end
 
   lines.each_with_index do |line, idx|
@@ -265,7 +299,8 @@ targets.each do |rel|
                     "行號是最容易腐爛的引用；寫之前請跑 `grep -n`，或改成指章節名。"
     end
 
-    next unless in_r45_scope
+    next if added_line_set.nil?
+    next unless added_line_set == :all || added_line_set.include?(no)
 
     # --- R4 ---
     if VOLATILE_NUM.any? { |re| line.match?(re) } &&
@@ -305,7 +340,7 @@ if violations.empty?
     puts "  - R4 易腐數字／R5 全稱句：**全部** worklog／handoff（`--all`）"
   elsif changed_docs
     puts "  - R4 易腐數字／R5 全稱句：只掃相對 `#{base_ref}` 有改動的 worklog／handoff" \
-         "（本次 #{changed_docs.size} 份）——歷史紀錄不回頭改，見 AGENTS.md §文檔分層"
+         "（本次 #{changed_docs.size} 份、共 #{changed_docs.values.sum(&:size)} 個新增行——"          "**只掃新增的行**）——歷史紀錄不回頭改，見 AGENTS.md §文檔分層"
   else
     puts "  - #{scope_note}"
   end
