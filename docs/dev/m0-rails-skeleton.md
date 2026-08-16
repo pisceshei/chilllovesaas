@@ -222,7 +222,49 @@ bin/rails db:seed
 - `spec/migrations/m0_core_schema_spec.rb`：47 個具名表＋冪等表＋4 張法域聯集表（含 🔴 einvoices 非唯一索引防回歸斷言）、`shop_id` 第一欄、tenant-prefixed indexes、composite FK（45 條）、integer cents、HK 基準預設值防回退。
 - `spec/config/m0_configuration_spec.rb`：品牌單一來源、limits.yml 扁平結構、M0 代碼實際消費的 api／auth 鍵存在且型別正確（2026-08-13 由逐值複製斷言改寫）。
 - `scripts/check-limits-keys.rb`（2026-08-15 新增，CI `quality` job）：斷言 `config/limits.yml` **每一層 mapping 的鍵都解析成 String**，擋住上面「關鍵取捨」#6 的 YAML 1.1 鍵陷阱。走 Psych AST 以報出**確切行號**；判定用 `node.to_ruby` 的實際型別（不自寫 YAML 1.1 字表）。**不檢查值的型別**、**偵測到 ERB 即 fail**（loader 會先 render ERB，本腳本讀原始檔，不擋就會 CI 綠燈而 runtime KeyError）——兩項限制寫在腳本檔頭的誠實聲明。
-- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，fixture 在 `spec/fixtures/ci_violations/limits_{bool_key,erb,clean}`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。`limits_clean` 刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」。
+- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，**20 條 case / 13 個 fixture**（同一 fixture 可有多條斷言：行號一條、型別一條），fixture 在 `spec/fixtures/ci_violations/limits_*`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。
+
+  | fixture | 期望 | 守什麼 |
+  |---|---|---|
+  | `limits_bool_key` | exit 1 | 裸字 `on` → TrueClass（M27–M32 踩過的原形態） |
+  | `limits_false_key` | exit 1 | 🔴 裸字 `no` → FalseClass。**`no` 是挪威的 ISO 3166 代碼**，鐵律 11 的法域 pack 最可能踩到 |
+  | `limits_nil_key` | exit 1 | 裸字 `~` → NilClass。**`null:` / `NULL:` 也在同一份 fixture 裡**（原本只有註釋斷言「同理」而沒有實測——與 y/n 那次同型）；實測 Psych 5.2.2 下四種寫法全部 → NilClass |
+  | `limits_date_key` | exit 1 | 日期形鍵 → Date（生效日／匯率日結那類表） |
+  | `limits_seq_key` | exit 1 | 🔴 布林鍵藏在 **sequence 裡的 mapping**（真實 limits.yml 有 17 處這種結構）；斷言用**帶索引的路徑** `rules.0.on` |
+  | `limits_erb` | **exit 2** | ERB fail-closed（輸出型標籤） |
+  | `limits_erb_tag` | **exit 2** | ERB fail-closed（**非輸出型**控制流標籤——與上一條是不同寫法） |
+  | `limits_missing_target` | **exit 2** | 🔴 **fail-closed：TARGETS 列的檔不存在**。fixture 是一個**只有 README、沒有 `config/limits.yml`** 的目錄——本倉庫的 `config/limits.yml` 一直都在，這個分支在 CI 上永遠走不到，把 `exit` 改成 `next` 完全看不出差別 |
+  | `limits_bad_yaml` | **exit 2** | 🔴 **YAML 本身壞掉也是「檢查跑不了」**。沒有 `rescue Psych::SyntaxError` 時，例外直接冒出去、Ruby 以 **exit 1 ＋ backtrace** 結束——而 1 的定義是「檢查跑了，發現違規」⇒ **退出碼會說謊** |
+  | `limits_alias_key` | **exit 2** | 🔴 `*nope: 1`（不存在的錨點當**鍵**）。三件事同時繞過「只攔 `Psych::SyntaxError`」的寫法：解析**成功**、炸點在 `walk` 裡的 `to_ruby`（rescue 的外面）、類別是 `Psych::AnchorNotDefined`。⇒ 判準改成語義的：**checker 自己炸了就是沒檢查完，一律 2** |
+  | `limits_bad_encoding` | **exit 2** | 🔴 非 UTF-8 位元組：`File.read` 不炸、炸在 `raw.match?`——在讀檔 rescue 與總括 rescue **中間**的裸 exit 1（第 8 輪）。現由 `valid_encoding?` 明確驗 |
+  | `limits_empty` | **exit 3** | 🔴 **0 鍵 canary**：limits.yml 清空成只剩註釋時，檔數 1、violations 空，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。與 TARGETS canary 不同，這條 fixture 蓋得到 |
+  | `limits_clean` | exit 0 | 🔴 反向斷言。刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」；**另含一段字串鍵的 sequence**，守 Sequence 遞迴分支的**偽陽性**方向（`limits_seq_key` 只守真陽性） |
+
+  🔴 **退出碼是三分的，不是 0/1**（2026-08-15 第 3 輪；這不是風格問題，是本表能不能守住的關鍵）：
+
+  | 碼 | 意義 |
+  |---|---|
+  | 0 | 通過 |
+  | 1 | **檢查跑了，發現違規**（鍵型別違規） |
+  | 2 | **檢查跑不了**：TARGETS 列的檔不存在／檔內含 ERB／讀檔失敗／**YAML 解析或走訪時 checker 自己炸了**（一律 2，不逐一列舉例外類別） |
+  | 3 | **檢查根本沒生效**：掃了 0 個檔（檔案層，無 fixture 可蓋）**或 0 個 mapping 鍵**（內容層，`limits_empty` 有蓋） |
+
+  原因：`limits_missing_target` 守的 fail-closed 分支與 `scanned.empty?` canary
+  **訊息都含 `TARGETS`**。若兩者同碼，把 fail-closed 的 `exit` 改成 `next` 之後，
+  控制流會落到 canary，退出碼與關鍵字都一樣 ⇒ 該突變在測試裡是**存活的**（實測確認過）。
+  只改斷言字串沒有用——第一句 warn 在 `next` 之前就印出去了。
+  ⚠️ **`scanned.empty?`（TARGETS 被清空）那一半仍無 fixture 可蓋**（`TARGETS` 是腳本常數）。
+  ✅ 但 **`exit 3` 這個值本身自第 6 輪起由 `limits_empty` 守住了**：該 fixture 斷言 exit 3，
+  把 canary 改回 exit 2 它立刻紅 ⇒ M17 已死。
+  <!-- 🔴 2026-08-16 更正（第 7 輪驗收指出）：本兩行原寫「canary 的 3 沒有測試在守⋯
+       改回 2 會讓突變重新存活。已知且刻意的缺口」——第 6 輪加 limits_empty 之後已不成立，
+       而且是**反向**過期：文檔宣稱缺口存在，實際已被關掉。
+       讀到舊文的人會以為改 exit 3 是安全的、或只能靠註釋自律，於是繞過現成的機制。 -->
+
+  🔴 **`bool`/`false`/`nil`/`date`/`seq` 五個 fixture 各有兩條斷言**：一條斷言 `config/limits.yml:<行號> 鍵 \`…\``、一條斷言型別名。理由是第二輪突變測試（2026-08-15）發現**行號完全沒被守**——把 `start_line + 1` 改成 `start_line`、寫死 `1`、或不印 `rel:line` 前綴，三種改壞法在只斷言型別時全綠，而行號正是這支 checker 的實用價值（真實 limits.yml 一千多行）。
+  ⚠️ **行號寫死在 `CASES` 裡 ⇒ 改動任一 fixture 的行數就必須同步改斷言**，這是刻意的耦合。
+
+  🔴 **這張表是被突變測試打出來的**：初版只有 3 條（bool_key／erb／clean），把 checker 改壞成六種形態實測時**三種存活**（只認 TrueClass／刪掉 Sequence 遞迴／ERB 閘門收窄）。補完後 6/6 全抓到。**加新規則到 checker 時，先想「改壞它的哪一種寫法不會被抓」，那個答案就是要補的 fixture。**
 - `spec/lib/chilllove/tenant_resolver_spec.rb`：subdomain／custom domain、未知 Host 404、5 分鐘 cache、ensure cleanup。
 - `spec/requests/staff_authentication_spec.rb`：登入、統一錯誤、cookie、digest-only DB session、撤銷與第 11 次嘗試 429。
 - `spec/models/staff_member_spec.rb`、`spec/models/session_spec.rb`：password／狀態、session 有效性與同租戶限制。
