@@ -369,7 +369,7 @@ net_sales_without_cost_recorded + net_sales_with_cost_recorded = net_sales
 ### F.3 開發驗收要點
 
 1. **恆等式測試**：`total = net + taxes + duties + shipping + fees` 逐日成立；`net = gross − discounts − reversals`；允許 total < 0。
-2. **AOV 獨立分子**：`AOV ≠ net/orders`、`AOV × Orders ≠ Total sales` 兩條**反向斷言**入測試（斷言不等，防止誰「修好」它）。
+2. **AOV 獨立分子**：測試**直接斷言實際公式**（分子＝gross/discounts 皆 excl. adjustments，見總綱 A-3）；兩條不等式（`AOV ≠ net/orders`、`AOV × Orders ≠ Total sales`）只在 fixture 滿足前提時追加斷言——前提＝含至少一筆 reversal **且** reversal 金額 ≠ taxes+shipping+duties+fees 合計（否則兩式可能數值巧合相等，無條件不等式會把合法 rollup 打紅）。 <!-- 2026-08-17 更正（PR #52 第 4 輪）：同總綱 A-3；原無條件形是 Codex 指出的誤紅形態 -->
 3. **日期歸屬**：跨日退款/編輯後，原訂單日歷史數字不變；rollup 重算冪等。
 4. **zero-decimal 幣別**：JPY/TWD/KRW 進金額測試矩陣（65 §H）；報表顯示兩位小數與儲存 ×100 分離。
 5. **any_click 白名單**：小計=總計檢查排除 `__any_click` 欄。

@@ -121,7 +121,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 
 **裁定一（origin 扣減時點，2026-08-14 本章裁定，補 B.1 的 openQuestion）**：官方只寫 Ready to ship「origin 保留庫存」與收貨端效果，**從未明文 origin 何時出帳**。我方裁定：**shipment 標記 `IN_TRANSIT` 的同一 transaction 內，origin `reserved`−、`on_hand`−，destination `incoming`＋**（差額全整數，無 rounding——庫存無小數）。論證（皆由官方句反推）：
 1. on_hand 定義＝該地點實際持有的全部單位（S12）——在途單位實體已不在 origin，繼續掛帳違反定義；
-2. 收貨 reject＝「不改任何地點數量」（S10）——若 origin 仍持帳，reject 後 origin 帳上永久多出不存在的量；此句唯有 in-transit 已出帳才自洽；且該句僅對 on_hand／available 成立，**destination `incoming` 必須 −q**（見 D 節轉移表 2026-08-17 更正）；
+2. 收貨 reject＝「不改任何地點數量」（S10）——若 origin 仍持帳，reject 後 origin 帳上永久多出不存在的量；此句唯有 in-transit 已出帳才自洽；且該句僅對 on_hand／available 成立，**destination `incoming` 必須 −q**（見 B.3 收貨動作列 2026-08-17 更正）<!-- 2026-08-17 二次更正：原註記誤指「D 節轉移表」，被更正的收貨動作列在 B.3 -->；
 3. 收貨階段 cancel＝「退回 origin 並恢復可售」（S10）——「退回（returned to）」語義預設已離帳，否則只需解除保留、無所謂退回。
 
 ⚠️ 官方未逐字明文，本裁定列 parity 輪實測驗證項；若實測證偽（扣減在收貨時點），須同步改下方期望值表與 F.3-1。
@@ -135,7 +135,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 | IN_TRANSIT（裁定一） | 40 / 0 / 40 | 10 / 0 / 0 |
 | 收貨 accept 7／reject 2／cancel 1 | 41 / 0 / 41 | 0 / 7 / 7 |
 
-（cancel 1 件回 origin available（S10）；reject 2 件記入 transfer 的 `receivedQuantity` 並**沖回 destination `incoming −2`**、兩地點 **on_hand／available** 不記帳，實體損耗靠對帳吸收（C.9-3）。每一列每一地點皆須滿足 `on_hand = available + committed + Σunavailable`；incoming 永不入 on_hand。）
+（cancel 1 件回 origin available **並沖回 destination `incoming −1`**（S10＋B.3 更正）；reject 2 件記入 transfer 的 `receivedQuantity` 並**沖回 destination `incoming −2`**、兩地點 **on_hand／available** 不記帳，實體損耗靠對帳吸收（C.9-3）。每一列每一地點皆須滿足 `on_hand = available + committed + Σunavailable`；incoming 永不入 on_hand。）
 
 編輯限制：Draft 全可改；已處理（processed）後 **origin/destination 不可改**（S9）。Duplicate 任何狀態（含 Canceled）可複製成新 Draft（S9）。
 相關 mutations：`inventoryTransferCreate` / `inventoryTransferSetItems` / `inventoryTransferRemoveItems` / `inventoryTransferEdit` / `inventoryTransferMarkAsReadyToShip` / `inventoryTransferCancel`（S6）。
@@ -149,7 +149,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 | DRAFT → IN_TRANSIT | 標記在途（可附 tracking） | destination `incoming`＋（S10） |
 | IN_TRANSIT → PARTIALLY_RECEIVED | 收部分品項 | accepted：destination available＋；transfer 維持 In progress 直到收完（S10） |
 | PARTIALLY_RECEIVED → RECEIVED | 剩餘品項全收 | transfer 檢查是否可轉 TRANSFERRED |
-| （收貨動作三選）accept / reject / cancel | 逐列數量 | accept＝「目的地變可售」（`incoming −q`／`on_hand +q`／`available +q`）；reject＝記錄在轉移上＋**destination `incoming` −q**（出貨時已加入 incoming，拒收必須沖回，否則該量在 TRANSFERRED 後永久滯留在途；S10 原文「不改任何地點數量」僅對 **on_hand／available** 成立） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：照 S10 字面實作與本章 F.3-1 例證表（incoming 10→0）矛盾 -->；cancel（未出貨品項）＝「退回 origin 並恢復可售」（S10） |
+| （收貨動作三選）accept / reject / cancel | 逐列數量 | accept＝「目的地變可售」（`incoming −q`／`on_hand +q`／`available +q`）；reject＝記錄在轉移上＋**destination `incoming` −q**（出貨時已加入 incoming，拒收必須沖回，否則該量在 TRANSFERRED 後永久滯留在途；S10 原文「不改任何地點數量」僅對 **on_hand／available** 成立） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：照 S10 字面實作與本章 F.3-1 例證表（incoming 10→0）矛盾 -->；cancel＝退回 origin 並恢復可售（origin `on_hand +q`／`available +q`）＋**destination `incoming` −q**（收貨階段 cancel 的該件已在途、已入 incoming——F.3-1 例證表 incoming 10→0 需 accept 7＋reject 2＋cancel 1 三者各自沖回才成立；「未出貨品項」語境僅適用出貨前取消，該情境 incoming 尚未加、無需沖回） <!-- 2026-08-17 更正（PR #52 第 4 輪）：原僅寫「退回 origin」，cancel 分支漏 incoming 沖回，且「未出貨品項」標籤與收貨階段例證相抵 --> |
 
 - transfer 建立時**自動附一張 shipment**；Ready to ship／In progress 下可 More actions → Add products 開第二批（S10）。
 - 收錯可用 Manage received items 事後修改 accepted/rejected/canceled 數量（S10）。
@@ -267,7 +267,7 @@ Admin 層：On hand = Available + Committed + Unavailable                       
 
 1. untracked（tracked=false）：不擋售、報表與庫存頁無數字（01 §2）。
 2. CONTINUE＋退款回補：available 可能從負值回正，恆等式仍須成立。
-3. transfer 收貨 reject：「不改任何地點數量」⇒ total 與實體帳有落差，靠 `receivedQuantity` 對帳（S10）。
+3. transfer 收貨 reject：S10 字面「不改任何地點數量」**僅對 on_hand／available 成立**——destination `incoming` 必須 `−q`（見 B.3，2026-08-17 更正），否則拒收量永久滯留在途；on_hand 側的實體帳落差靠 `receivedQuantity` 對帳吸收（S10）。
 4. 停用地點仍可調整/轉移/退貨入庫（S13）——「地點停用」≠「庫存凍結」。
 5. 已付款訂單在停用地點取消且 restock=true ⇒ **失敗**；未付款成功但不回補（46a §7）。
 6. 同址多地點 routing 平手 ⇒ 取**較舊**的 location（S14）。

@@ -15,7 +15,7 @@
         且官方的 `cart_item_limit` 概念完全缺席。兩者是不同概念，必須並存。任何人翻舊版都不要刪掉 cart_item_limit。 -->
 3. **價格以當下為準**：cart 顯示即時價（查 variant），進 checkout 時重新快照；商品下架/售罄 → cart 行標記不可購並擋結帳。
 4. 過期：90 天未動的 cart purge job。
-5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 `(cart_id, variant_id)` + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`）。
+5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 **`(cart_id, merge_key_hash)`** + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`；`merge_key_hash`＝variant＋properties＋selling_plan＋單價四者的雜湊——90 §03 S0 行合併鍵，四者全同才併行；同 variant 不同屬性/訂閱方案/價格＝**合法多行** <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原 (cart_id, variant_id) 唯一索引把同 variant 客製屬性行靜默合併 -->）。
 
 **⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（在**訂單成立**時扣——COD／銀行轉帳／B2B payment terms 的付款在成立之後，見 F5；2026-08-17 依 90 §2.4／D-32 更正，原文「只在付款成功時扣」）。
 
