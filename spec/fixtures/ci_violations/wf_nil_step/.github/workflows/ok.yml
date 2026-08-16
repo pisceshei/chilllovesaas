@@ -1,0 +1,14 @@
+# 反向斷言之三：steps 底下**多打一個 `-`**（空元素）——合法 YAML，step 是 nil。
+#
+# 🔴 沒有 is_a?(Hash) 防護時，`nil["run"]` NoMethodError 帶 backtrace 崩掉：
+#    與裸日期（wf_date_scalar）同一形態——合法輸入讓檢查器崩，只是入口不同。
+# 期望：exit 0（合法，且不得崩潰；後面的正常 step 仍要被檢查到）。
+name: NilStep
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      -
+      - name: real step
+        run: echo ok

@@ -5,7 +5,7 @@
 #
 # 65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」。
 #
-# ## 🔴 這八條各自守什麼（改條數時，**這裡、handoff、worklog 三處要一起改**）
+# ## 🔴 這幾條各自守什麼（**不寫死條數**——已過期兩次；實跑輸出為準。改組成時這裡、handoff、worklog 三處要一起改）
 #
 # **對應 `claude-review.yml` 註釋記載的兩次真實事故**
 #   - `wf_bad_yaml`：block scalar 續行掉到第 0 欄 ⇒ 整份不再是合法 YAML（2026-08-14）
@@ -23,6 +23,8 @@
 #     後者在 block scalar 裡合法。同時證明「佔位符替換有效」
 #   - `wf_date_scalar`：裸日期是合法 YAML，但 `load_file` 預設不許 Date
 #     ⇒ 原本會丟 `Psych::DisallowedClass` 讓腳本帶著 backtrace 崩掉
+#   - `wf_nil_step`：steps 多打一個 `-`（空元素）——合法 YAML、step 是 nil，
+#     無 Hash 防護時 `nil["run"]` 崩掉（與裸日期同形態，入口不同；2026-08-16 加）
 #
 # **「什麼都沒驗到」的兩層**
 #   - `wf_empty`：一份 workflow 都找不到 ⇒ fail（空值長得像資料）
@@ -30,7 +32,7 @@
 #
 # <!-- 2026-08-15 依 PR #42 的 Claude 驗收改寫。原文寫「四條」而 CASES 實際有六條，
 #      `wf_bad_heredoc` 與 `wf_date_scalar` 完全沒進清單；且反向斷言已不是「後兩條」。
-#      本輪又新增兩條 ⇒ 現為八條。 -->
+#      本輪又新增兩條 ⇒ 當時八條；2026-08-16 加 wf_nil_step。條數不再寫死。 -->
 #
 # 用法：ruby scripts/test-workflow-syntax-rules.rb
 # 退出碼：0=全過，1=有失敗
@@ -55,8 +57,15 @@ CASES = [
   [ "wf_date_scalar", 0, "OK",
     "🔴 反向斷言之二：**合法但容易讓檢查器崩掉**。裸日期是合法 YAML，但 load_file 預設不許 " \
     "Date ⇒ 原本會丟 Psych::DisallowedClass 讓腳本帶著 backtrace 崩掉。" \
-    "⚠️ 本份**不**覆蓋自訂 shell 模板：它期望 exit 0，而「該區塊被靜默跳過」也是 exit 0 " \
-    "⇒ 分不出來。那一條的正向斷言在 wf_custom_shell（PR #42 驗收指出）" ],
+    "✅ 本份**同時覆蓋**自訂 shell 模板（`bash -e {0}`），而且是**承重的**：" \
+    "它只有一個 run 區塊，interpreter_for 回歸 ⇒ 該區塊被跳過 ⇒ checked_runs=0 " \
+    "⇒ 第二層 canary exit 1，而本條期望 0 ⇒ 變紅（2026-08-16 突變實測確認）。" \
+    "🔴 2026-08-16 更正（第 2 輪驗收指出，複驗成立）：本欄原寫「不覆蓋⋯跳過也是 exit 0，" \
+    "分不出來」——那在 checked_runs canary 加入後就不成立了：canary 正是讓" \
+    "「跳過」與「通過」分得出來的那一層。原敘述會讓人以為 ok.yml 的 shell 行只是裝飾。" \
+    "正向斷言（壞 bash 在自訂 shell 下被抓）仍在 wf_custom_shell，兩份守不同方向" ],
+  [ "wf_nil_step", 0, "1 個 run 區塊",
+    "🔴 反向斷言之三：steps 多打一個 `-`（空元素）——合法 YAML、step 是 nil。"     "無 is_a?(Hash) 防護時 `nil[\"run\"]` 崩掉（與裸日期同形態，入口不同）。"     "needle 用 run 計數：只斷言 exit 0 的話，「崩掉之前一個都沒檢查」與"     "「跳過 nil 後正常檢查」在有 rescue 的未來版本裡可能分不出來" ],
   [ "wf_custom_shell", 1, "bash -n",
     "🔴 **`interpreter_for` 的正向斷言**：官方文件化的自訂 shell 模板 " \
     "`bash --noprofile --norc -eo pipefail {0}` 下的壞 bash **必須被抓到**。" \

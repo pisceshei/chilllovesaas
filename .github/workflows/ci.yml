@@ -214,6 +214,25 @@ jobs:
       - name: Regression-test lint rules
         run: python3 scripts/test-lint-rules.py
 
+      # 🔴 文檔引用保真——把「指出處之前先打開來看一眼」從紀律變成機制。
+      #   立這一步的直接理由：2026-08-15 的 PR #39／#40 連續九輪驗收，
+      #   15 條 🔴 裡 12 條是文檔敘述與事實不符，**沒有一條是代碼缺陷**。
+      #   更關鍵的是「修的動作本身」就是新缺陷的主要產地——九輪之後用機械檢查
+      #   掃同一批檔案，30 分鐘內又找到三條，全部出自修正 commit。
+      #   ⇒ 這是紀律型條款的固有失效率，與 config/ci.rb 那條「兩邊要同步」
+      #     在寫下的隔天就被違反是同一形態。本專案對這種東西的處置是讓機器擋。
+      #   ⚠️ 需要 base 才能算 R4／R5 的範圍（見下一步的 fetch）。
+      - name: Fetch base for doc-claim scope
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}" || true
+
+      - name: Check doc claims
+        run: ruby scripts/check-doc-claims.rb --base "origin/${{ github.base_ref || 'main' }}"
+
+      # 上一步自己的反向證明（65 §K.7）。它守的是「防止文檔說謊」，
+      # 壞掉的話所有人會以為引用已經被守著——這種失效沒有任何外部跡象。
+      - name: Regression-test doc claim rules
+        run: ruby scripts/test-doc-claims-rules.rb
+
       # 🔴 死控件基準線只准因為「量表變準」而調高，不准因為「新增了死控件」而調高。
       # 這件事原本只寫在 DEAD_CONTROL_BASELINE 的註釋裡，靠 review 肉眼看 diff 方向——
       # 而 89 §7 這一節的標題就叫「把死控件從紀律變成機制」，它自己卻停在紀律層。
@@ -288,3 +307,20 @@ jobs:
       # 檢查器在 CI 上看起來與正常的一模一樣。
       - name: Regression-test limits key rules
         run: ruby scripts/test-limits-key-rules.rb
+
+      # 🔴 把 config/ci.rb 那條「兩邊要同步」的條款從紀律變成機制。
+      # 那條條款寫下的隔天就被違反了：PR #33 往本 job 加了兩步、config/ci.rb 一行未動，
+      # 於是本機 `bin/ci` 全綠但 CI 會紅——而擋下來的理由本機沒有機會發現。
+      # 本步驟斷言「ci.yml 用到的每一支 scripts/* 都出現在 config/ci.rb」。
+      # ⚠️ 它看不到**多行 inline shell 的腳本邏輯**（例如上面的執行位元閘門）——已知缺口，
+      #    寫在腳本檔頭的誠實聲明裡，正解是把那段抽成 scripts/check-exec-bits.sh。
+      #    （精確地說：看不到的是**多行腳本邏輯**；單行指令由該腳本規則 2 涵蓋。）
+      - name: Check CI parity
+        run: ruby scripts/check-ci-parity.rb
+
+      # 上一步自己的反向證明。它送審時是同批新增檢查器中唯一沒有回歸測試的一支，
+      # 直接原因是 ROOT 曾被寫死 ⇒ 餵不進故意違反的 fixture。改成吃 ARGV[0] 之後補上。
+      # 🔴 它在被寫出來的當天就抓到兩個活的 bug（`npm` 子字串命中 `pnpm`、
+      #    腳本名寫在 step「名稱」裡就算有跑），兩者當時都讓對等性檢查 exit 0。
+      - name: Check CI parity rules regression
+        run: ruby scripts/test-ci-parity-rules.rb

@@ -123,6 +123,12 @@ files.each do |path|
     next unless job.is_a?(Hash)
 
     (job["steps"] || []).each_with_index do |step, idx|
+      # 🔴 steps 底下多打一個 `-`（空元素）在 YAML 合法 ⇒ step 是 nil，
+      #    `nil["run"]` NoMethodError 帶 backtrace 崩掉——與裸日期（wf_date_scalar）
+      #    修掉的是同一形態（合法輸入讓檢查器崩），只是入口不同。
+      #    與上方 `next unless job.is_a?(Hash)` 對稱（第 2 輪驗收 🟡）。
+      next unless step.is_a?(Hash)
+
       script = step["run"]
       next unless script
 
@@ -136,7 +142,9 @@ files.each do |path|
       Tempfile.create([ "wf-run-", ".sh" ]) do |f|
         f.write(script.gsub(GH_EXPR, "GHEXPR"))
         f.flush
-        _out, err, status = Open3.capture3(interpreter, "-n", f.path)
+        # LC_ALL=C：stderr 非空即違規的判準下，locale 差異（某些 runner 對非 C locale
+        # 印告警）會一次把全部 run 區塊打紅、反而看不出根因（第 2 輪驗收 🟡）。
+        _out, err, status = Open3.capture3({ "LC_ALL" => "C" }, interpreter, "-n", f.path)
         noise = err.lines.map(&:strip).reject(&:empty?)
 
         # 🔴 **只看退出碼是不夠的**（PR #42 的 Codex review 指出，已實測）：
@@ -175,7 +183,7 @@ if violations.empty?
 
   puts "OK：workflow 語法檢查通過"
   puts "  - #{checked_files} 份 workflow 皆為合法 YAML"
-  puts "  - #{checked_runs} 個 run 區塊皆通過 bash -n（GitHub 表達式已換成佔位符）"
+  puts "  - #{checked_runs} 個 run 區塊皆通過 shell 語法檢查（bash/sh -n；GitHub 表達式已換成佔位符）"
   puts "  - 不驗證 action inputs／表達式語義／執行期行為，理由見檔頭誠實聲明"
   exit 0
 end

@@ -1,0 +1,14 @@
+# 故意違反：裸字 `no` ⇒ Psych 解析成布林 false，鍵不是 String。
+#
+# 🔴 這個 fixture 不是湊數的——它是**鐵律 11 最可能踩到的那一種**：
+#    法域 pack 以 ISO 3166 代碼當鍵，而挪威的代碼就是 `no`。
+#    新增挪威 pack 寫成 `no:` ⇒ 鍵變成 FalseClass，
+#    `Limits.fetch(:jurisdictions, :no, ...)` 從此 KeyError。
+#    在補這個 fixture 之前，突變測試證實：把判定改成「只認 TrueClass」
+#    可以讓回歸測試全綠通過——也就是這條路徑當時**完全沒有被守住**。
+# 期望：scripts/check-limits-keys.rb 打紅，且訊息點名 FalseClass。
+jurisdictions:
+  hk:
+    label: Hong Kong
+  no:
+    label: Norway
