@@ -1,0 +1,10 @@
+name: CI
+on: [push]
+jobs:
+  qualitycheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: ruby scripts/check-ci-parity.rb
+      - name: Self guard regression
+        run: ruby scripts/test-ci-parity-rules.rb

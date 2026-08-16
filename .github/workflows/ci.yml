@@ -294,3 +294,20 @@ jobs:
       # 檢查器在 CI 上看起來與正常的一模一樣。
       - name: Regression-test limits key rules
         run: ruby scripts/test-limits-key-rules.rb
+
+      # 🔴 把 config/ci.rb 那條「兩邊要同步」的條款從紀律變成機制。
+      # 那條條款寫下的隔天就被違反了：PR #33 往本 job 加了兩步、config/ci.rb 一行未動，
+      # 於是本機 `bin/ci` 全綠但 CI 會紅——而擋下來的理由本機沒有機會發現。
+      # 本步驟斷言「ci.yml 用到的每一支 scripts/* 都出現在 config/ci.rb」。
+      # ⚠️ 它看不到**多行 inline shell 的腳本邏輯**（例如上面的執行位元閘門）——已知缺口，
+      #    寫在腳本檔頭的誠實聲明裡，正解是把那段抽成 scripts/check-exec-bits.sh。
+      #    （精確地說：看不到的是**多行腳本邏輯**；單行指令由該腳本規則 2 涵蓋。）
+      - name: Check CI parity
+        run: ruby scripts/check-ci-parity.rb
+
+      # 上一步自己的反向證明。它送審時是同批新增檢查器中唯一沒有回歸測試的一支，
+      # 直接原因是 ROOT 曾被寫死 ⇒ 餵不進故意違反的 fixture。改成吃 ARGV[0] 之後補上。
+      # 🔴 它在被寫出來的當天就抓到兩個活的 bug（`npm` 子字串命中 `pnpm`、
+      #    腳本名寫在 step「名稱」裡就算有跑），兩者當時都讓對等性檢查 exit 0。
+      - name: Check CI parity rules regression
+        run: ruby scripts/test-ci-parity-rules.rb
