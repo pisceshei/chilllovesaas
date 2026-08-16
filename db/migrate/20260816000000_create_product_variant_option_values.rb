@@ -150,6 +150,12 @@ class CreateProductVariantOptionValues < ActiveRecord::Migration[8.1]
       t.index %i[shop_id product_id product_variant_id], name: "ix_pvov_product_variant"
       t.index %i[shop_id product_id product_option_id],  name: "ix_pvov_product_option"
       t.index %i[shop_id product_option_id option_value_id], name: "ix_pvov_option_value"
+      # 🔴 `OptionValue` 是 `dependent: :restrict_with_error` ⇒ 刪值前的 exists? 查詢是
+      #    **`shop_id + option_value_id`**（Rails 只用 FK ＋ 租戶條件，不帶 product_option_id）
+      #    ——上面那支 [shop, option, value] 對這條查詢**只能用到 shop 前綴**。
+      #    沒有本索引，刪一個選項值＝全租戶掃 join 表（2026-08-16，PR #38 驗收發現：
+      #    原註釋宣稱「反查哪些變體用了這個選項值」由上一支涵蓋，實際涵蓋不了）。
+      t.index %i[shop_id option_value_id], name: "ix_pvov_by_value"
       # 租戶慣例：讓別的表日後可以複合外鍵指向本表。
       t.index %i[shop_id id], unique: true, name: "uq_pvov_tenant_id"
     end

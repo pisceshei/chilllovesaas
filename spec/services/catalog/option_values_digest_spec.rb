@@ -24,9 +24,19 @@ RSpec.describe Catalog::OptionValuesDigest do
         .to raise_error(ArgumentError, /只能有一個值/)
     end
 
-    it "非整數輸入 ⇒ raise（不接受字串 id）" do
-      expect { described_class.call([ [ "7", "abc" ] ]) }.to raise_error(ArgumentError)
+    it "非整數輸入 ⇒ TypeError（不接受字串 id；含「看起來像數字」的字串）" do
+      expect { described_class.call([ [ "7", "abc" ] ]) }.to raise_error(TypeError)
+      # 🔴 "7" 這種可轉換字串**也要擋**：舊實作 Integer("7") 會放行成 7，
+      #    但這裡的契約是「id 就是 DB 來的 Integer」，任何轉換都是掩蓋呼叫端的型別錯。
+      expect { described_class.call([ [ "7", 12 ] ]) }.to raise_error(TypeError)
       expect { described_class.call([ [ nil, 1 ] ]) }.to raise_error(TypeError)
+    end
+
+    it "🔴 Float ⇒ TypeError（不得靜默截斷）" do
+      # 舊實作 Integer(1.9) 回 1 ⇒ [[1.9, 2.9]] 與 [[1, 2]] 算出**同一個 digest**，
+      # 而檔頭 @raise 一直宣稱非整數會 raise——Float 是唯一溜過去的類別（2026-08-16 修）。
+      expect { described_class.call([ [ 1.9, 2.9 ] ]) }.to raise_error(TypeError)
+      expect { described_class.call([ [ 1.0, 2 ] ]) }.to raise_error(TypeError)
     end
   end
 

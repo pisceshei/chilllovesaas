@@ -17,7 +17,13 @@ class ProductVariant < ApplicationRecord
   has_many :resource_publications, as: :publishable, dependent: :destroy
 
   # D12：變體的選項座標。`dependent: :destroy`——座標是變體的組成部分，變體沒了就沒有意義。
-  has_many :product_variant_option_values, dependent: :destroy
+  # 🔴 `autosave: true` 不是可有可無（2026-08-16，PR #38 靜默資料遺失第二層，實測復現）：
+  #    預設的 has_many autosave **只存新列、只刪標記列，不存被修改的持久列**。
+  #    於是 `row.option_value_id = 新值; variant.save!` ⇒ save! 回 true、
+  #    **digest 用了記憶體新值、DB 還是舊值**——digest 與 join 列不一致，
+  #    正是唯一索引防不了、查不出來的那種錯。autosave: true 讓 dirty 子列隨父存檔落地，
+  #    digest 算的「存檔後的樣子」才真的是存檔後的樣子。
+  has_many :product_variant_option_values, dependent: :destroy, autosave: true
   has_many :option_values, through: :product_variant_option_values
 
   validates :title, presence: true
@@ -49,7 +55,9 @@ class ProductVariant < ApplicationRecord
     return if product.nil?
 
     expected = product.product_options.pluck(:id).to_set
-    actual = product_variant_option_values.map(&:product_option_id).to_set
+    # 🔴 與 digest 共用同一份「存檔後的樣子」——驗證與 digest 若各讀各的
+    #    （一個讀快取、一個讀 DB），同一次存檔會出現「驗證過了但 digest 是另一組」。
+    actual = effective_option_value_pairs.map(&:first).to_set
     return if expected == actual
 
     missing = expected - actual
@@ -76,20 +84,66 @@ class ProductVariant < ApplicationRecord
   # @note 副作用：改寫 `option_values_digest` 屬性（不存檔）。
   # @see docs/DECISIONS.md D12
   def recompute_option_values_digest
-    # 🔴 **已持久化的變體一律重讀 DB，不吃關聯快取**（2026-08-16，PR #38 Codex review）。
-    #    寫入 service 的典型形態是：先讀變體（關聯被載入並快取）→ 直接
-    #    `ProductVariantOptionValue.create!`／`destroy` 動 join 列 → 再 `variant.save!`。
-    #    此時 `product_variant_option_values` 回的是**載入當下的快照**，不是現在的 DB 內容
-    #    ⇒ digest **算出來是舊的**，而唯一索引只認 digest
-    #    ⇒ 要嘛放進重複座標、要嘛擋掉合法座標，**兩種都不會有錯誤訊息指向真正的原因**。
-    # ⚠️ `reset` 的代價是每次存檔多一次查詢；相對於「digest 與 join 列不一致」這種
-    #    查不出來的錯，這個代價可以接受。
-    # 🔴 新建的變體（尚未有 id）**不能** reset——那會清掉呼叫端剛用
-    #    `variant.product_variant_option_values.build(...)` 掛上去、還沒存檔的列。
-    association = product_variant_option_values
-    association.reset if persisted?
+    self.option_values_digest = Catalog::OptionValuesDigest.call(effective_option_value_pairs)
+  end
 
-    pairs = association.map { |row| [ row.product_option_id, row.option_value_id ] }
-    self.option_values_digest = Catalog::OptionValuesDigest.call(pairs)
+  # 本次存檔完成後，join 列**將會是**的樣子：DB 事實 ＋ 記憶體中的待存增量。
+  #
+  # 🔴 **為什麼不能用 `association.reset`**（2026-08-16，PR #38 靜默資料遺失，實測復現）：
+  #    reset 會把關聯 target 換成 DB 重載的新物件 ⇒ 呼叫端已 build 未存的列、
+  #    對已載入列的屬性修改、`mark_for_destruction` 標記**全部從 autosave 目標消失**。
+  #    最毒的一型：`row.option_value_id = 新值; variant.save!` ⇒ **save! 回 true、
+  #    DB 還是舊值、digest 也是舊值、沒有任何錯誤**——修改被靜默丟棄。
+  #    （build 未存列那一型會在驗證段吵著失敗——錯誤訊息指錯方向，但至少是吵的；
+  #    屬性修改這一型完全靜默，是兩者中必須先堵的。）
+  #
+  # 🔴 **為什麼也不能只讀關聯快取**（reset 當初要修的問題，仍然成立）：
+  #    寫入 service 的典型形態是先讀變體（關聯已載入）→ 直接
+  #    `ProductVariantOptionValue.create!`／`destroy` 動 join 表 → `variant.save!`。
+  #    此時快取是載入當下的快照 ⇒ digest 算出來是舊的，而唯一索引只認 digest。
+  #
+  # ⇒ 兩個問題的共同解：**以 DB 為底、疊上記憶體中 autosave 將要落地的增量**——
+  #    新列（`new_record?`）加入、標記刪除的列剔除、屬性被改的持久列以記憶體值覆蓋。
+  #    這樣「直接動 DB」與「透過關聯改」兩條路徑都算得對，且不動 autosave 目標。
+  #
+  # ⚠️ 代價：已持久化變體每次驗證多一次 `pluck`（digest 與驗證各一次）。
+  #    相對於「digest 與 join 列不一致」這種查不出來的錯，可以接受。
+  #
+  # ⚠️ **已知邊界（Rails 全域語義，本 model 攔不了）**：在**未載入**的關聯上呼叫
+  #    `.first`／`.find` 會另發查詢、回傳**不在 target 裡**的獨立物件——改它的屬性
+  #    再 `variant.save!`，autosave 與本方法都看不見（物件根本不在關聯裡）。
+  #    要改既有列：①先載入（`to_a`／遍歷）再改，或 ②改完自己 `row.save!` 再存變體
+  #    （後者走 db_pairs 路徑，一樣正確）。
+  #
+  # @return [Array<Array(Integer, Integer)>] `[[product_option_id, option_value_id], ...]`
+  # @note 副作用：無（不觸發關聯載入、不動 autosave 目標）。
+  def effective_option_value_pairs
+    assoc = product_variant_option_values
+    # 🔴 讀 `target` 而不是先看 `loaded?`：`build` 只把新列放進 target，
+    #    **不會**把關聯標成 loaded ⇒ 用 loaded? 當閘門會把「未載入但有 build 列」
+    #    的情形整批漏掉（實測：save! 在驗證段誤報「缺」）。
+    #    target 的語義正好是我們要的：未載入時＝只有記憶體新列；已載入時＝DB 快照＋新列。
+    loaded = assoc.target
+
+    new_pairs = loaded.select(&:new_record?).reject(&:marked_for_destruction?)
+                      .map { |r| [ r.product_option_id, r.option_value_id ] }
+    gone_ids = loaded.select { |r| r.persisted? && r.marked_for_destruction? }.filter_map(&:id)
+    edited = loaded.select do |r|
+      r.persisted? && !r.marked_for_destruction? &&
+        (r.changed & %w[product_option_id option_value_id]).any?
+    end
+    edited_pairs = edited.map { |r| [ r.product_option_id, r.option_value_id ] }
+
+    db_pairs =
+      if persisted?
+        # acts_as_tenant 會自動補 shop_id 條件；索引＝uq_pvov_variant_option 的最左前綴。
+        ProductVariantOptionValue.where(product_variant_id: id)
+                                 .where.not(id: gone_ids + edited.map(&:id))
+                                 .pluck(:product_option_id, :option_value_id)
+      else
+        []
+      end
+
+    db_pairs + edited_pairs + new_pairs
   end
 end

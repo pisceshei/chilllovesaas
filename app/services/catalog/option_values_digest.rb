@@ -56,7 +56,17 @@ module Catalog
     # @raise [ArgumentError] 同一個選項出現一次以上
     # @note 副作用：無。
     def call(pairs)
-      normalized = pairs.map { |option_id, value_id| [ Integer(option_id), Integer(value_id) ] }
+      # 🔴 嚴格 `is_a?(Integer)`，**不是** `Integer()`（2026-08-16，PR #38 驗收發現）：
+      #    `Integer(1.9)` 回 **1**（靜默截斷）⇒ `[[1.9, 2.9]]` 與 `[[1, 2]]` 算出
+      #    **同一個 digest**——而檔頭 @raise 宣稱「非整數輸入」會 raise，Float 卻溜過去。
+      #    id 來自 DB bigint，正常路徑不會是 Float；但 digest 是唯一性兜底，
+      #    「兜底」對輸入寬鬆就不是兜底了。`Integer("3")` 的字串轉換同理拒絕。
+      normalized = pairs.map do |option_id, value_id|
+        [ option_id, value_id ].each do |v|
+          raise TypeError, "id 只收 Integer，實得 #{v.class}: #{v.inspect}" unless v.is_a?(Integer)
+        end
+        [ option_id, value_id ]
+      end
       if normalized.map(&:first).uniq.size != normalized.size
         raise ArgumentError,
           "一個變體在一個選項上只能有一個值（實得 #{normalized.inspect}）——" \

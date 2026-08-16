@@ -207,3 +207,55 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
     expect(ActsAsTenant.without_tenant { ProductVariant.where(sku: "RACE-SKU").count }).to eq(2)
   end
 end
+
+RSpec.describe ProductVariant, "effective_option_value_pairs（2026-08-16 靜默資料遺失修正的回歸）" do
+  let(:shop) { create(:shop) }
+
+  around { |ex| ActsAsTenant.with_tenant(shop) { ex.run } }
+
+  let(:product) { create(:product, shop: shop) }
+  let!(:variant) { create(:product_variant, product: product, shop: shop) }
+  let(:option) { create(:product_option, product: product, shop: shop) }
+  let(:value_a) { create(:option_value, product_option: option, shop: shop) }
+  let(:value_b) { create(:option_value, product_option: option, shop: shop) }
+
+  it "🔴 build 在已持久化變體上的列必須進 DB（舊 reset 寫法會把它從 autosave 目標丟掉）" do
+    option; value_a
+    variant.product_variant_option_values.build(
+      shop: shop, product: product, product_option: option, option_value: value_a
+    )
+    expect(variant.save!).to be(true)
+    expect(ProductVariantOptionValue.where(product_variant_id: variant.id).count).to eq(1)
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_a.id ] ]))
+  end
+
+  it "🔴 修改已載入列必須落 DB 且 digest 用新值（舊寫法 save! 回 true、DB 與 digest 都是舊值）" do
+    option
+    variant.product_variant_option_values.build(
+      shop: shop, product: product, product_option: option, option_value: value_a
+    )
+    variant.save!
+    variant.reload
+
+    row = variant.product_variant_option_values.to_a.first
+    row.option_value_id = value_b.id
+    expect(variant.save!).to be(true)
+
+    expect(ProductVariantOptionValue.where(product_variant_id: variant.id).pick(:option_value_id))
+      .to eq(value_b.id)
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_b.id ] ]))
+  end
+
+  it "直接動 join 表（繞過關聯）之後存變體，digest 反映 DB 事實（reset 當初要修的形態）" do
+    option; value_a
+    ProductVariantOptionValue.create!(
+      shop: shop, product: product, product_variant: variant,
+      product_option: option, option_value: value_a
+    )
+    variant.save!
+    expect(variant.reload.option_values_digest)
+      .to eq(Catalog::OptionValuesDigest.call([ [ option.id, value_a.id ] ]))
+  end
+end

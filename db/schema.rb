@@ -677,6 +677,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000000) do
     t.bigint "shop_id", null: false
     t.datetime "updated_at", null: false
     t.index ["shop_id", "id"], name: "uq_pvov_tenant_id", unique: true
+    t.index ["shop_id", "option_value_id"], name: "ix_pvov_by_value"
     t.index ["shop_id", "product_id", "product_option_id"], name: "ix_pvov_product_option"
     t.index ["shop_id", "product_id", "product_variant_id"], name: "ix_pvov_product_variant"
     t.index ["shop_id", "product_option_id", "option_value_id"], name: "ix_pvov_option_value"
