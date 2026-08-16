@@ -20,6 +20,11 @@ CI.run do
   # ⇒ 兩邊要同步。以下逐一對應 ci.yml 的 quality job。
   step "Invariants: Prototype lint", "python3 scripts/lint-prototype.py"
   step "Invariants: Lint rules regression", "python3 scripts/test-lint-rules.py"
+  # 🔴 文檔引用保真。理由見 ci.yml 對應步驟的註釋（九輪驗收裡 12/15 條 🔴 是文檔類）。
+  #    本機不傳 --base，腳本預設 `origin/main`；取不到 base 時 R4／R5 略過並明說，
+  #    R1／R3 仍為全樹 ⇒ 離線也不會誤擋。
+  step "Invariants: Doc claims", "ruby scripts/check-doc-claims.rb"
+  step "Invariants: Doc claim rules regression", "ruby scripts/test-doc-claims-rules.rb"
   step "Invariants: Tenant isolation", "ruby scripts/check-tenant-isolation.rb"
   step "Invariants: Reversal naming", "ruby scripts/check-reversal-naming.rb"
   # 鐵律 3 的 L4。與下一步是一組：檢查器自己綠不算交付（65 §K 第 7 條）。

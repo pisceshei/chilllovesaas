@@ -214,6 +214,25 @@ jobs:
       - name: Regression-test lint rules
         run: python3 scripts/test-lint-rules.py
 
+      # 🔴 文檔引用保真——把「指出處之前先打開來看一眼」從紀律變成機制。
+      #   立這一步的直接理由：2026-08-15 的 PR #39／#40 連續九輪驗收，
+      #   15 條 🔴 裡 12 條是文檔敘述與事實不符，**沒有一條是代碼缺陷**。
+      #   更關鍵的是「修的動作本身」就是新缺陷的主要產地——九輪之後用機械檢查
+      #   掃同一批檔案，30 分鐘內又找到三條，全部出自修正 commit。
+      #   ⇒ 這是紀律型條款的固有失效率，與 config/ci.rb 那條「兩邊要同步」
+      #     在寫下的隔天就被違反是同一形態。本專案對這種東西的處置是讓機器擋。
+      #   ⚠️ 需要 base 才能算 R4／R5 的範圍（見下一步的 fetch）。
+      - name: Fetch base for doc-claim scope
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}" || true
+
+      - name: Check doc claims
+        run: ruby scripts/check-doc-claims.rb --base "origin/${{ github.base_ref || 'main' }}"
+
+      # 上一步自己的反向證明（65 §K.7）。它守的是「防止文檔說謊」，
+      # 壞掉的話所有人會以為引用已經被守著——這種失效沒有任何外部跡象。
+      - name: Regression-test doc claim rules
+        run: ruby scripts/test-doc-claims-rules.rb
+
       # 🔴 死控件基準線只准因為「量表變準」而調高，不准因為「新增了死控件」而調高。
       # 這件事原本只寫在 DEAD_CONTROL_BASELINE 的註釋裡，靠 review 肉眼看 diff 方向——
       # 而 89 §7 這一節的標題就叫「把死控件從紀律變成機制」，它自己卻停在紀律層。
