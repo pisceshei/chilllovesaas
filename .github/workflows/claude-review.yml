@@ -309,14 +309,21 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-opus-5`（2026-08-15 使用者**三次裁定**，由 Fable 5 改回 Opus 5）。
+          #   🔴 `--model claude-fable-5`（2026-08-16 使用者裁定⑤，由 Opus 5 改回 Fable 5）。
           #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
           #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
           #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
           #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
           #          「Claude Fable 5 is Anthropic's **most capable widely released model**」，
           #          使用者要的是「最強的驗收」而非「Opus 產品線的最新版」。
-          #        ④本次 10:xx 改回 `claude-opus-5`（使用者指示）。
+          #        ④2026-08-15 10:xx 改回 `claude-opus-5`（使用者指示）——當時根因是
+          #          `claude-fable-5` 對本帳號**中途變成不可用**（09:30–10:14 之間），
+          #          不是模型名寫錯。詳見下方「模型不可用」診斷段。
+          #        ⑤2026-08-16 使用者指示改回 `claude-fable-5`（本次）——③的理由
+          #          （Fable 5 是官方標示的 most capable）從未被推翻，④只是可用性避險。
+          #          ⚠️ 若 Fable 5 再次對本帳號不可用，症狀是 num_turns:1／零花費／秒殺，
+          #          失敗留言（show_full_output ＋ ERRTEXT）現在會貼出錯誤原文——
+          #          看到那個形態就照 ④ 的先例換回 `claude-opus-5`，不要先查別的。
           #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
           #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
           #      請先確認是不是又要繞一圈。
@@ -488,7 +495,7 @@ jobs:
           #       不給裸的 `Bash(bash:*)`。本倉庫是 private、單一作者，威脅模型有限；
           #       **若日後開放外部貢獻者或轉 public，這一組必須先撤掉再說。**
           claude_args: |
-            --model claude-opus-5
+            --model claude-fable-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
