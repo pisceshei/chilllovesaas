@@ -1,0 +1,14 @@
+故意違反：這個目錄**沒有任何 .md 檔、也沒有 scripts/**。
+
+守的是 check-doc-claims.rb 的 canary（掃到 0 個檔 ⇒ exit 3）。
+
+🔴 為什麼非有不可：
+「沒有違規」與「沒有檢查」在輸出上長得一模一樣。
+納管清單（IN_SCOPE）寫壞、glob 打錯、或 git ls-files 在某個環境下回空時，
+這支腳本會印「OK：文檔引用保真檢查通過」並 exit 0——而它一個字都沒讀過。
+
+⚠️ 本檔刻意用 .txt 而不是 .md：改成 .md 就會被掃到，這條測試會靜默退化成
+   「又一個 clean case」。不要在這個目錄下建任何 .md 檔。
+
+退出碼用 3（不是 2），與 fail-closed 的 2 結構上可分辨——
+這是 check-limits-keys.rb 第 3 輪的教訓：同碼會讓 fail-closed 的突變被 canary 遮蔽。
