@@ -256,7 +256,7 @@ net_sales_without_cost_recorded + net_sales_with_cost_recorded = net_sales
 ```
 
 - 🔴 **成本快照鐵則（官方明文）**：利潤只對「售出當下已填 cost」的品項計算（profit-reports：profit is reported only for products/variants that had cost recorded **at the time they were sold**）。售時未填成本 ⇒ 該筆 net sales 落 `without_cost_recorded` 桶，**排除**於 COGS 與 gross profit——**不是以 0 計**；因此 sales 報表與 profit 報表的 net sales **本來就可以不等**（官方明言 discrepancy，profit-reports）。
-- 🔴 **事後補填/修改 cost per item 不回溯**：with/without 分桶依「at the time of the sale」判定（finances-report 原句），售時無成本的訂單**事後補填也永遠留在 without 桶** ⇒ 事實列生成時必須把當下 `InventoryItem.unitCost` 快照進 `cost_cents`＋`cost_recorded`，之後改 cost 只影響新銷售。⚠️「售時**有**成本、事後**改**成本」對歷史列的精確行為官方未逐字明文——我方裁定快照後不動（與快照語義一致），待實測本尊驗證。
+- 🔴 **事後補填/修改 cost per item 不回溯**：with/without 分桶依「at the time of the sale」判定（finances-report 原句），售時無成本的訂單**事後補填也永遠留在 without 桶** ⇒ 快照時點＝**T1（訂單成立）**：unitCost 當下凍結進訂單行／outbox payload，事實列生成（事件展開）**只讀該快照**——展開時讀現值會在事件滯留期間染到後改的成本 <!-- 2026-08-17 更正（PR #52 第 6 輪） -->，之後改 cost 只影響新銷售。⚠️「售時**有**成本、事後**改**成本」對歷史列的精確行為官方未逐字明文——我方裁定快照後不動（與快照語義一致），待實測本尊驗證。
 - 折扣與退款影響 net_sales ⇒ 報表 gross_margin ≠ 商品詳情頁 margin（官方明言兩者不同：商品頁以定價計、未含折扣退款；商品頁公式本頁未載 ⚠️）。
 - **rounding**：cost 快照與 COGS 全程 integer cents（鐵律 3），加總無捨入；gross_margin 顯示位數官方未載 ⚠️（19 §F1 定案前不硬編）。
 - **退貨回沖** ⚠️：退款/退貨是否把該單位 cost 自 COGS 回沖（即 `reversal` 事實列是否帶負 cost 分量）官方未載（僅言 discounts and refunds affect your profit margin）——待實測。我方 schema 依對稱原則**保留** reversal 列的 cost 欄位，行為開關等實測定案。

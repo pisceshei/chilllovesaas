@@ -101,7 +101,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 | `unavailable 子態互轉` | move（from/to 皆非 available 亦允許） | 合法 name 對＝{available, reserved, damaged, safety_stock, quality_control}（S2） | 同上 |
 | `(外) → incoming` | transfer shipment 標記 In transit（S10）；app/PO 在途 | 有 destination | destination incoming＋ |
 | `incoming → available` | 收貨 accept／「收到後**自動變 Available**」（S12） | shipment In transit | incoming－、available＋、on_hand＋ |
-| `reserved → (外)`（origin 出帳） | transfer shipment 標記 IN_TRANSIT | shipment 含該品項且 transfer **已保留（READY_TO_SHIP 段）** | origin reserved−、on_hand−；同一動作 destination incoming＋——**扣減時點＝IN_TRANSIT，我方裁定**，論證見 B.2 裁定一；**DRAFT 直轉**（未經保留段）＝origin `available −`／`on_hand −`（reserved 從未加過，扣它會下溢 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->）；origin 留空（外部供應商）＝無 origin 出帳；⚠️ 官方未逐字明文，列 parity 實測 |
+| `reserved → (外)`（origin 出帳） | transfer shipment 標記 IN_TRANSIT | shipment 含該品項且 transfer **已保留（READY_TO_SHIP 段）** | origin reserved−、on_hand−；同一動作 destination incoming＋（**destination 留空（外部目的地）＝無 incoming 記帳**，鏡像外部 origin 分支 2026-08-17 更正（PR #52 第 6 輪））——**扣減時點＝IN_TRANSIT，我方裁定**，論證見 B.2 裁定一；**DRAFT 直轉**（未經保留段）＝origin `available −`／`on_hand −`（reserved 從未加過，扣它會下溢 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->）；origin 留空（外部供應商）＝無 origin 出帳；⚠️ 官方未逐字明文，列 parity 實測 |
 | `available ⇄ (刪)` | adjust delta / set 絕對值 | reason 合法 | 寫入 adjustment history |
 
 孤兒檢查：8 態皆有進出路徑；`incoming`／`committed` 僅系統流程可進出（API 不可直調，S1/S2）。
@@ -114,7 +114,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 |---|---|---|---|
 | （建立）→ DRAFT | Create transfer＋Save（`inventoryTransferCreate`） | 商品＋Move 數量；origin/destination **可留空**（外部供應商/外部目的地）（S9） | 「draft 轉移的庫存**不保留**」（S9） |
 | DRAFT → READY_TO_SHIP | Mark as ready to ship（`inventoryTransferMarkAsReadyToShip`） | 有 origin | **origin 保留庫存**（reserved）（S9） |
-| DRAFT/READY_TO_SHIP → IN_PROGRESS | Move to in transit（自動建/啟用 shipment） | — | destination 記 **incoming**，可開始收貨（S9/S10）；origin 出帳**分支**：自 READY_TO_SHIP＝`reserved−`／`on_hand−`；**自 DRAFT 直轉＝`available−`／`on_hand−`**（未經保留段；origin 留空＝無出帳）（裁定一＋2026-08-17 更正（PR #52 第 5 輪）） |
+| DRAFT/READY_TO_SHIP → IN_PROGRESS | Move to in transit（自動建/啟用 shipment） | — | destination 記 **incoming**（**留空/外部目的地＝不記** 2026-08-17 更正（PR #52 第 6 輪）），可開始收貨（S9/S10）；origin 出帳**分支**：自 READY_TO_SHIP＝`reserved−`／`on_hand−`；**自 DRAFT 直轉＝`available−`／`on_hand−`**（未經保留段；origin 留空＝無出帳）（裁定一＋2026-08-17 更正（PR #52 第 5 輪）） |
 | IN_PROGRESS → TRANSFERRED | 全部品項收完（accept/reject/cancel 合計＝total） | 所有 shipment 收畢 | 「自動收貨並在目的地變可售」（Mark as transferred 直達）（S9/S10） |
 | DRAFT/READY_TO_SHIP → CANCELED | Cancel | **僅 Draft 或 Ready to ship 可取消**（S9） | 「保留品項在 origin 恢復可售」（S9） |
 | DRAFT →（刪除） | Delete | **僅 Draft 可刪**（S9） | 無庫存影響 |

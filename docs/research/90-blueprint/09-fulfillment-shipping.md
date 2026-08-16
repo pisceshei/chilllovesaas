@@ -133,7 +133,7 @@ min/max 條件的表達：一條 rate 的「最小值」＝一條 `GREATER_THAN_
 
 `FulfillmentEventInput`：`fulfillmentId!`、`status!`、`happenedAt`、`estimatedDeliveryAt`、`message`、`address1`、`city`、`province`、`country`、`zip`、`latitude`、`longitude`。事件是 append-only 流；fulfillment 的 `inTransitAt`／`deliveredAt`／`estimatedDeliveryAt` 與 `displayStatus` 由事件流推導。
 
-**狀態機（我方落地裁定）**：事件流本身**不設全序**（DELAYED／ATTEMPTED_DELIVERY 可穿插；官方未定義事件間合法順序）⚠️——但 displayStatus 為**三軸合成**（`Fulfillment.status` 優先、終態如 CANCELLED **覆蓋**較舊事件 → 事件流最新一筆 → label/pickup 態，B.5 合成序；取消已送達/在途的 fulfillment 不產生新事件，latest-event-only 會永遠顯示 DELIVERED/IN_TRANSIT <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原句「取最新一筆事件映射」與 B.5/總綱 S9 修正互斥）；`DELIVERED` 寫入時同步落 `deliveredAt`，`IN_TRANSIT` 首次寫入落 `inTransitAt`。
+**狀態機（我方落地裁定）**：事件流本身**不設全序**（DELAYED／ATTEMPTED_DELIVERY 可穿插；官方未定義事件間合法順序）⚠️——但 displayStatus 為**三軸合成**（優先序**逐狀態**：異常/終態 CANCELLED/ERROR/FAILURE 覆蓋陳舊事件 → 事件流最新一筆——普通 SUCCESS 不搶先，否則事件分支永不可達 → 無事件時 SUCCESS→FULFILLED → label/pickup 態，B.5 合成序；取消已送達/在途的 fulfillment 不產生新事件，latest-event-only 會永遠顯示 DELIVERED/IN_TRANSIT <!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原句「取最新一筆事件映射」與 B.5/總綱 S9 修正互斥）；`DELIVERED` 寫入時同步落 `deliveredAt`，`IN_TRANSIT` 首次寫入落 `inTransitAt`。
 
 ### B.5 FulfillmentDisplayStatus（18 值全，UI 顯示層）
 
