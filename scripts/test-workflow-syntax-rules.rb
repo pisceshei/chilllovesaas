@@ -74,6 +74,8 @@ CASES = [
     "🔴 反向斷言之四：`defaults:` 掛字串——合法 YAML、`dig` 對 String 丟 TypeError 崩掉。" \
     "與裸日期／nil step 同形態的第三個入口（第 4 輪驗收指出，實測復現）。" \
     "needle 用 run 計數：崩掉時一個都沒檢查，計數分得出來" ],
+  [ "wf_bad_run_defaults", 0, "1 個 run 區塊",
+    "🔴 反向斷言之五＋六（PR #42 第 6 輪）：`defaults.run:` 掛字串（dig 第四入口）與 "     "step `run:` 掛 sequence（gsub 第五入口）都不得崩潰。"     "needle 用 run 計數：sequence 形被跳過、真 run 被檢查，1 個才是對的" ],
   [ "wf_custom_shell", 1, "bash -n",
     "🔴 **`interpreter_for` 的正向斷言**：官方文件化的自訂 shell 模板 " \
     "`bash --noprofile --norc -eo pipefail {0}` 下的壞 bash **必須被抓到**。" \

@@ -132,13 +132,22 @@ files.each do |path|
 
       script = step["run"]
       next unless script
+      # 🔴 `run:` 掛 sequence／mapping 也是合法 YAML ⇒ `script.gsub` NoMethodError 崩掉
+      #    ——同族第五個入口（PR #42 第 6 輪驗收指出，2026-08-16 實測復現）。
+      #    照該輪建議跳過（少檢不是崩潰）；GH 端這種 workflow 本來就跑不起來。
+      next unless script.is_a?(String)
 
       # 🔴 `defaults:` 掛一個字串是合法 YAML ⇒ `dig` 對 String 丟 TypeError 帶 backtrace 崩掉
       #    ——與裸日期（wf_date_scalar）、nil step（wf_nil_step）同形態的**第三個入口**
       #    （第 4 輪驗收指出，實測復現）。fixture＝wf_bad_defaults。
+      #    🔴 且**每一層都要驗**：`defaults:` 是 Hash 但 `defaults.run:` 掛字串，
+      #    `dig("run","shell")` 仍會對 String 丟 TypeError——第四個入口
+      #    （PR #42 第 6 輪驗收指出，實測復現）。fixture＝wf_bad_run_defaults。
       job_defaults = job["defaults"].is_a?(Hash) ? job["defaults"] : {}
       doc_defaults = doc["defaults"].is_a?(Hash) ? doc["defaults"] : {}
-      shell = step["shell"] || job_defaults.dig("run", "shell") || doc_defaults.dig("run", "shell")
+      job_run_defaults = job_defaults["run"].is_a?(Hash) ? job_defaults["run"] : {}
+      doc_run_defaults = doc_defaults["run"].is_a?(Hash) ? doc_defaults["run"] : {}
+      shell = step["shell"] || job_run_defaults["shell"] || doc_run_defaults["shell"]
       interpreter = interpreter_for(shell)
       next unless interpreter
 

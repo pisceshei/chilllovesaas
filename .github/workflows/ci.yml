@@ -273,7 +273,7 @@ jobs:
       #    執行位元閘門抽成 scripts/check-exec-bits.sh 之後自動落入規則 1。
       #    ⚠️ 精確地說（2026-08-16 收窄——初稿的全稱句「本 workflow 沒有多行
       #    inline shell 檢查步驟」被同檔的「Guard dead-control baseline」步驟直接證偽；
-#    行號易漂移，指位置只寫步驟名）：
+      #    行號易漂移，指位置只寫步驟名）：
       #    仍存在的多行 run 是「fetch base ＋ 呼叫 scripts/*」的**環境準備**形態，
       #    檢查**邏輯**都在被呼叫的 scripts/* 裡、由規則 1 對等；
       #    不得再新增「檢查邏輯寫在 run 區塊裡」的步驟。
