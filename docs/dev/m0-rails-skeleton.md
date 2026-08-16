@@ -222,7 +222,49 @@ bin/rails db:seed
 - `spec/migrations/m0_core_schema_spec.rb`：47 個具名表＋冪等表＋4 張法域聯集表（含 🔴 einvoices 非唯一索引防回歸斷言）、`shop_id` 第一欄、tenant-prefixed indexes、composite FK（45 條）、integer cents、HK 基準預設值防回退。
 - `spec/config/m0_configuration_spec.rb`：品牌單一來源、limits.yml 扁平結構、M0 代碼實際消費的 api／auth 鍵存在且型別正確（2026-08-13 由逐值複製斷言改寫）。
 - `scripts/check-limits-keys.rb`（2026-08-15 新增，CI `quality` job）：斷言 `config/limits.yml` **每一層 mapping 的鍵都解析成 String**，擋住上面「關鍵取捨」#6 的 YAML 1.1 鍵陷阱。走 Psych AST 以報出**確切行號**；判定用 `node.to_ruby` 的實際型別（不自寫 YAML 1.1 字表）。**不檢查值的型別**、**偵測到 ERB 即 fail**（loader 會先 render ERB，本腳本讀原始檔，不擋就會 CI 綠燈而 runtime KeyError）——兩項限制寫在腳本檔頭的誠實聲明。
-- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，fixture 在 `spec/fixtures/ci_violations/limits_{bool_key,erb,clean}`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。`limits_clean` 刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」。
+- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，**20 條 case / 13 個 fixture**（同一 fixture 可有多條斷言：行號一條、型別一條），fixture 在 `spec/fixtures/ci_violations/limits_*`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。
+
+  | fixture | 期望 | 守什麼 |
+  |---|---|---|
+  | `limits_bool_key` | exit 1 | 裸字 `on` → TrueClass（M27–M32 踩過的原形態） |
+  | `limits_false_key` | exit 1 | 🔴 裸字 `no` → FalseClass。**`no` 是挪威的 ISO 3166 代碼**，鐵律 11 的法域 pack 最可能踩到 |
+  | `limits_nil_key` | exit 1 | 裸字 `~` → NilClass。**`null:` / `NULL:` 也在同一份 fixture 裡**（原本只有註釋斷言「同理」而沒有實測——與 y/n 那次同型）；實測 Psych 5.2.2 下四種寫法全部 → NilClass |
+  | `limits_date_key` | exit 1 | 日期形鍵 → Date（生效日／匯率日結那類表） |
+  | `limits_seq_key` | exit 1 | 🔴 布林鍵藏在 **sequence 裡的 mapping**（真實 limits.yml 有 17 處這種結構）；斷言用**帶索引的路徑** `rules.0.on` |
+  | `limits_erb` | **exit 2** | ERB fail-closed（輸出型標籤） |
+  | `limits_erb_tag` | **exit 2** | ERB fail-closed（**非輸出型**控制流標籤——與上一條是不同寫法） |
+  | `limits_missing_target` | **exit 2** | 🔴 **fail-closed：TARGETS 列的檔不存在**。fixture 是一個**只有 README、沒有 `config/limits.yml`** 的目錄——本倉庫的 `config/limits.yml` 一直都在，這個分支在 CI 上永遠走不到，把 `exit` 改成 `next` 完全看不出差別 |
+  | `limits_bad_yaml` | **exit 2** | 🔴 **YAML 本身壞掉也是「檢查跑不了」**。沒有 `rescue Psych::SyntaxError` 時，例外直接冒出去、Ruby 以 **exit 1 ＋ backtrace** 結束——而 1 的定義是「檢查跑了，發現違規」⇒ **退出碼會說謊** |
+  | `limits_alias_key` | **exit 2** | 🔴 `*nope: 1`（不存在的錨點當**鍵**）。三件事同時繞過「只攔 `Psych::SyntaxError`」的寫法：解析**成功**、炸點在 `walk` 裡的 `to_ruby`（rescue 的外面）、類別是 `Psych::AnchorNotDefined`。⇒ 判準改成語義的：**checker 自己炸了就是沒檢查完，一律 2** |
+  | `limits_bad_encoding` | **exit 2** | 🔴 非 UTF-8 位元組：`File.read` 不炸、炸在 `raw.match?`——在讀檔 rescue 與總括 rescue **中間**的裸 exit 1（第 8 輪）。現由 `valid_encoding?` 明確驗 |
+  | `limits_empty` | **exit 3** | 🔴 **0 鍵 canary**：limits.yml 清空成只剩註釋時，檔數 1、violations 空，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。與 TARGETS canary 不同，這條 fixture 蓋得到 |
+  | `limits_clean` | exit 0 | 🔴 反向斷言。刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」；**另含一段字串鍵的 sequence**，守 Sequence 遞迴分支的**偽陽性**方向（`limits_seq_key` 只守真陽性） |
+
+  🔴 **退出碼是三分的，不是 0/1**（2026-08-15 第 3 輪；這不是風格問題，是本表能不能守住的關鍵）：
+
+  | 碼 | 意義 |
+  |---|---|
+  | 0 | 通過 |
+  | 1 | **檢查跑了，發現違規**（鍵型別違規） |
+  | 2 | **檢查跑不了**：TARGETS 列的檔不存在／檔內含 ERB／讀檔失敗／**YAML 解析或走訪時 checker 自己炸了**（一律 2，不逐一列舉例外類別） |
+  | 3 | **檢查根本沒生效**：掃了 0 個檔（檔案層，無 fixture 可蓋）**或 0 個 mapping 鍵**（內容層，`limits_empty` 有蓋） |
+
+  原因：`limits_missing_target` 守的 fail-closed 分支與 `scanned.empty?` canary
+  **訊息都含 `TARGETS`**。若兩者同碼，把 fail-closed 的 `exit` 改成 `next` 之後，
+  控制流會落到 canary，退出碼與關鍵字都一樣 ⇒ 該突變在測試裡是**存活的**（實測確認過）。
+  只改斷言字串沒有用——第一句 warn 在 `next` 之前就印出去了。
+  ⚠️ **`scanned.empty?`（TARGETS 被清空）那一半仍無 fixture 可蓋**（`TARGETS` 是腳本常數）。
+  ✅ 但 **`exit 3` 這個值本身自第 6 輪起由 `limits_empty` 守住了**：該 fixture 斷言 exit 3，
+  把 canary 改回 exit 2 它立刻紅 ⇒ M17 已死。
+  <!-- 🔴 2026-08-16 更正（第 7 輪驗收指出）：本兩行原寫「canary 的 3 沒有測試在守⋯
+       改回 2 會讓突變重新存活。已知且刻意的缺口」——第 6 輪加 limits_empty 之後已不成立，
+       而且是**反向**過期：文檔宣稱缺口存在，實際已被關掉。
+       讀到舊文的人會以為改 exit 3 是安全的、或只能靠註釋自律，於是繞過現成的機制。 -->
+
+  🔴 **`bool`/`false`/`nil`/`date`/`seq` 五個 fixture 各有兩條斷言**：一條斷言 `config/limits.yml:<行號> 鍵 \`…\``、一條斷言型別名。理由是第二輪突變測試（2026-08-15）發現**行號完全沒被守**——把 `start_line + 1` 改成 `start_line`、寫死 `1`、或不印 `rel:line` 前綴，三種改壞法在只斷言型別時全綠，而行號正是這支 checker 的實用價值（真實 limits.yml 一千多行）。
+  ⚠️ **行號寫死在 `CASES` 裡 ⇒ 改動任一 fixture 的行數就必須同步改斷言**，這是刻意的耦合。
+
+  🔴 **這張表是被突變測試打出來的**：初版只有 3 條（bool_key／erb／clean），把 checker 改壞成六種形態實測時**三種存活**（只認 TrueClass／刪掉 Sequence 遞迴／ERB 閘門收窄）。補完後 6/6 全抓到。**加新規則到 checker 時，先想「改壞它的哪一種寫法不會被抓」，那個答案就是要補的 fixture。**
 - `spec/lib/chilllove/tenant_resolver_spec.rb`：subdomain／custom domain、未知 Host 404、5 分鐘 cache、ensure cleanup。
 - `spec/requests/staff_authentication_spec.rb`：登入、統一錯誤、cookie、digest-only DB session、撤銷與第 11 次嘗試 429。
 - `spec/models/staff_member_spec.rb`、`spec/models/session_spec.rb`：password／狀態、session 有效性與同租戶限制。
@@ -232,19 +274,9 @@ bin/rails db:seed
 - `scripts/check-exec-bits.sh` ＋ `scripts/test-exec-bits-rules.sh`（2026-08-15 由 `ci.yml` 的 inline shell 抽出，CI 兩個 job ＋ `bin/ci` 都跑）：判準＝**`bin/` 全部、`scripts/` 帶 shebang 者，git mode 必須是 100755**。Windows 的 `core.filemode=false` 會讓新增檔案以 100644 提交，到 Linux runner 上就是 `exit 126: Permission denied`——2026-08-14 的 CI 全紅即此。
   - 🔴 **抽出的理由不是整潔**：inline shell 進不了 `config/ci.rb`（本機跑不到）、**沒辦法寫回歸測試**、且兩個 job 各一份容易分岔。抽出後三者同時解決。
   - 🔴 **三個實測踩過的坑**（回歸測試各有一條守著，**共 11 條**）：①`git ls-files -s` 對非 ASCII 路徑會**加引號跳脫** ⇒ 必須用 `-z` 讀原始路徑，否則靜默漏掉；②pathspec 掃到 0 個檔時**必須 fail**，不能印 OK；③shebang 要從 **index** 讀（`git show :path`）不是工作區——本檢查判的是 index 的 mode，從工作區讀會被「部分暫存」騙過。
-<!-- 🔴 2026-08-15：下面兩條標 ⏳ 的項目，**在寫下的當下並不存在於本分支**
-     （`git ls-files scripts/` 實查：三支全部不在，ci.yml 與 config/ci.rb 也沒有呼叫）。
-     原本寫成既存事實，被 PR #41 的 Codex review 指出：
-     這一節的標題是「自動驗證」，讀的人會據此認為這些閘門已經生效。
-     🔴 同型教訓已經付過一次代價：CLAUDE.md 鐵律 2 的白名單曾經寫成願景清單，
-        於是「規則」與「機制」各跑各的。**安全邊界與閘門清單必須寫實際存在的東西。**
-     ✅ 合併順序上 #39／#42 都排在 #41 之前，所以本 PR 落地時它們**很可能已經在 main**。
-     ⏳ **合併前請實查一次**：
-         git ls-files scripts/ | grep -E 'ci-parity|workflow-syntax'
-       ─ 有輸出 ⇒ 把這兩行的 ⏳ 與本註釋一併拿掉；
-       ─ 無輸出 ⇒ **直接刪掉這兩行**，由 #39／#42 自己補（規約本來就要求各 PR 更新受影響篇章）。 -->
-- ⏳ **尚未進入本分支（來自 PR #42）**——`scripts/check-workflow-syntax.rb` ＋ `scripts/test-workflow-syntax-rules.rb`：workflow 必須是合法 YAML ＋ 每個 `run:` 區塊過 `bash -n`。存在理由是一個**保護真空**——`.github/workflows/claude-review.yml` 有 240+ 行閉環 shell，而**動它的 PR 拿不到 Claude 驗收**（反竄改機制）。🔴 只判 `bash -n` 的退出碼**不夠**：未閉合 heredoc 會 exit 0、只在 stderr 印警告 ⇒ 判準改成「stderr 有輸出即違規」。⚠️ **這不是 actionlint**（不驗 action inputs／表達式語義）。
-- ⏳ **尚未進入本分支（來自 PR #39）**——`scripts/check-ci-parity.rb`：斷言 `ci.yml` 用到的每一支 `scripts/*` 都出現在 `config/ci.rb`。🔴 `config/ci.rb` 那條「兩邊要同步」的條款**在寫下的隔天就被違反**，所以改成機器擋。
+<!-- 🔴 2026-08-16 實查（照下方原註釋的指令）：`check-ci-parity.rb` 已隨 PR #39 進 main
+     ⇒ 拿掉其 ⏳；`check-workflow-syntax.rb` 仍在 PR #42 ⇒ 照原處置刪行、由 #42 自己補。 -->
+- `scripts/check-ci-parity.rb`（PR #39，已進 main）：斷言 `ci.yml` 用到的每一支 `scripts/*` 都出現在 `config/ci.rb`。🔴 `config/ci.rb` 那條「兩邊要同步」的條款**在寫下的隔天就被違反**，所以改成機器擋。
 - `.github/workflows/ci.yml`：MySQL 8.4 service、RSpec、frontend test/typecheck/build，以及 Ruby lint／security audit。
 
 #### 已完成實測（2026-08-11）

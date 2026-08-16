@@ -1,0 +1,8 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI parity
+        run: ruby scripts/check-ci-parity.rb

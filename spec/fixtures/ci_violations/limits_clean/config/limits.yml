@@ -15,3 +15,13 @@ flags:
   y: 1
   n: 2
   "Off": 3
+
+# 🔴 sequence 內的 mapping，鍵全部是**合法 String** ⇒ 這一段守的是 Sequence 遞迴分支的
+#    **偽陽性方向**（PR #40 第 2 輪驗收指出，第 1 輪列為 🟡 未處理）。
+#    `limits_seq_key` 只守真陽性（陣列裡的裸字鍵要被抓到）；沒有這一段的話，
+#    有人把 Sequence 分支改成「一律報違規」也不會有任何測試變紅。
+rules:
+  - "on": allow
+    scope: admin
+  - "no": deny
+    scope: staff

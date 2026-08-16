@@ -44,7 +44,22 @@
 #   ROOT 省略時＝本倉庫根目錄。傳入時掃描該目錄下的 TARGETS——這是給
 #   `scripts/test-limits-key-rules.rb` 用故意違反的 fixture 打紅本腳本用的
 #   （形態比照 scripts/check-money-boundary.rb）。
-# 退出碼：0=通過，1=有違規
+#
+# 退出碼（🔴 **三種失敗必須用不同的碼，理由是可分辨性，不是美觀**）：
+#   0＝通過
+#   1＝**檢查跑了，發現違規**
+#   2＝**檢查跑不了**：TARGETS 指定的輸入不可用（檔不存在／檔內含 ERB）
+#   3＝**檢查根本沒有生效**：掃了 0 個檔（canary）
+#
+# 🔴 為什麼不能全都用 1（2026-08-15，PR #40 第 2 輪驗收指出，我實測複驗成立）：
+#    `limits_missing_target` fixture 是為了守「檔不存在 ⇒ exit」那一段而生的。
+#    但把該段的 `exit` 改成 `next`（＝「檔案不在就跳過」）之後，控制流會變成
+#    「印一句含 TARGETS 的警告 → next → 迴圈結束 → scanned 為空 → canary 也印一句
+#    含 TARGETS 的警告 → 非零退出」。**兩條路徑的退出碼與訊息關鍵字都一樣** ⇒
+#    只斷言「非零 ＋ 含 TARGETS」的測試**分不出來**，那個突變在測試裡是存活的。
+#    ⚠️ 只改測試的 needle 沒有用：第一句 warn 在 `next` 之前就印出去了。
+#    ⇒ 唯一結構性的解是**讓兩條路徑的退出碼不同**。
+#    🔴 任何人要把這三個碼合併回 1 之前，請先回答「那 M14 那個突變靠什麼抓」。
 #
 # 相關：CLAUDE.md 鐵律 6（limits.yml 是唯一上限值來源）、config/application.rb 的載入段、
 #      app/models/limits.rb（`Limits.fetch` 的取值入口）。
@@ -87,6 +102,10 @@ YAML11_COERCED_WORDS = {
 ERB_TAG = /<%/
 
 violations = []
+# 🔴 鍵計數（2026-08-16，PR #40 第 6 輪驗收指出）：canary 原本只數「檔案」不數「鍵」，
+#    一份只有註釋、0 個鍵的 limits.yml 照樣 exit 0 報「通過」——
+#    「沒有違規」與「沒有東西可查」又一次長得一模一樣，只是又降了一層（檔案層 → 內容層）。
+stats = { keys: 0 }
 
 # 走 Psych AST（不是走 load 出來的 Hash）的理由：AST 的 scalar node 帶 `start_line`，
 # 能把違規指到**確切行號**；load 出來的 Hash 只剩值，報不出位置。
@@ -96,6 +115,7 @@ walk = lambda do |node, rel_path, key_path|
   case node
   when Psych::Nodes::Mapping
     node.children.each_slice(2) do |key_node, value_node|
+      stats[:keys] += 1
       resolved = key_node.to_ruby
       label = key_node.respond_to?(:value) ? key_node.value : resolved.inspect
 
@@ -135,24 +155,104 @@ TARGETS.each do |rel|
   path = File.join(ROOT, rel)
   unless File.exist?(path)
     warn "::error::#{rel} 不存在——TARGETS 列了一個不在倉庫裡的檔案，請修正 scripts/check-limits-keys.rb。"
-    exit 1
+    # 🔴 2＝「跑不了」，見檔頭退出碼表。**不得改回 1**：下面的 canary 用 3，
+    #    兩者訊息都含 `TARGETS`，只有退出碼分得出「fail-closed 擋下來」與「檢查沒生效」。
+    exit 2
   end
 
-  if File.read(path, encoding: "UTF-8").match?(ERB_TAG)
+  # 🔴 讀檔本身也會失敗（權限、符號連結斷掉、`File.exist?` 之後被刪的競態、
+  #    非 UTF-8 位元組序列）。這些**全都是「檢查跑不了」**，不是「發現違規」。
+  #    沒有這個 rescue 時，`Errno::EACCES` 之類會裸奔出去，Ruby 以 exit 1 ＋ backtrace 結束。
+  begin
+    raw = File.read(path, encoding: "UTF-8")
+  rescue SystemCallError, IOError => e
+    warn "::error::#{rel} 讀不到（#{e.class}）⇒ **檢查跑不了**（exit 2，不是 1）。原始錯誤：#{e.message}"
+    exit 2
+  end
+
+  # 🔴 編碼檢查（2026-08-16，第 8 輪驗收指出，實測復現）：`File.read` 讀非 UTF-8 位元組
+  #    **不會**在讀取時炸——炸在下一行 `raw.match?`（ArgumentError），
+  #    而那一行在**所有 rescue 之外** ⇒ 裸 exit 1，退出碼又說謊了一次。
+  #    第 5 輪「所有非零出口都歸位」的清點漏了這一條：rescue 的座標對了（讀檔、解析），
+  #    但「讀進來的東西不合法」炸在兩者**中間**。⇒ 明確驗 encoding，fail-closed 到 2。
+  unless raw.valid_encoding?
+    warn "::error::#{rel} 不是合法的 UTF-8（含無效位元組序列）⇒ **檢查跑不了**（exit 2，不是 1）。" \
+         "本腳本與 config/application.rb 的 loader 都假設 UTF-8；請修檔案編碼。"
+    exit 2
+  end
+
+  if raw.match?(ERB_TAG)
     warn "::error::#{rel} 含 ERB tag（`<%`）——本腳本讀原始檔，而 config/application.rb 用的 " \
          "ActiveSupport::ConfigurationFile.parse 會先 render ERB 再解析，兩者輸入不同即失去保證" \
          "（`<%= \"on\" %>:` 在原始檔是 String 鍵，render 後是 true 鍵）。" \
          "請先擴充 scripts/check-limits-keys.rb（render 後解析＋行號映射）再於本檔引入 ERB。"
-    exit 1
+    # 2＝「跑不了」：檔在，但本腳本讀的原始檔與 loader 的實際輸入不同，無法保證。
+    exit 2
   end
 
-  scanned << rel
-  walk.call(Psych.parse_file(path), rel, [])
+  keys_before = stats[:keys]
+
+  # 🔴 YAML 本身壞掉（截斷／縮排錯）也是「檢查跑不了」，必須回 2。
+  #    沒有這個 rescue 的話，Psych::SyntaxError 會直接冒出去，
+  #    Ruby 以 **exit 1 ＋ 一整片 backtrace** 結束——而 1 在本腳本的碼表裡
+  #    定義成「**檢查跑了，發現違規**」⇒ 退出碼會說謊，
+  #    自動化只看碼的話會把「解析不了」讀成「有鍵型別違規」。
+  #    （PR #40 第 3 輪驗收指出；退出碼三分一旦立了，就得把所有非零出口都歸位。）
+  #    🔴 **攔 `StandardError`，不是只攔 `Psych::SyntaxError`**（第 4 輪只攔了後者，
+  #      第 5 輪驗收指出同一個坑還開著；我照著找，果然還有一條**活的**）：
+  #        `*nope: 1`（用一個不存在的錨點當**鍵**）→ `Psych.parse_file` **解析成功**，
+  #        炸在 `key_node.to_ruby`，也就是 `walk` 裡面、原本 rescue 的**外面**
+  #        ⇒ 裸 exit 1 ＋ 一整片 backtrace。fixture＝`limits_alias_key`。
+  #      ⚠️ 教訓：逐一列舉例外類別是**列不完**的——第 4 輪列了 `SyntaxError`，
+  #        第 5 輪發現 `to_ruby` 走的是別的類別，而且位置也不在原本攔的地方。
+  #      ⇒ 判準改成語義的：**只要 checker 自己炸了，它就沒有「發現違規」，它是沒檢查完**
+  #        ⇒ 一律 2。這才是碼表能成立的寫法。
+  #      ✅ `exit 2` / `exit 3` 不會被吃掉：`SystemExit` 不是 `StandardError`。
+  #      ⚠️ 代價：`walk` 裡真有 bug 時也會報成 2 而不是噴 backtrace。
+  #        訊息因此明講「也可能是本腳本的 bug」，並印出例外類別與位置。
+  begin
+    doc = Psych.parse_file(path)
+    walk.call(doc, rel, [])
+  rescue StandardError => e
+    warn "::error::#{rel} 解析／走訪失敗（#{e.class}）⇒ **檢查跑不了**（exit 2，不是 1）——" \
+         "退出碼 1 的意思是「檢查跑了，發現違規」，這裡沒有跑完，不得混用。" \
+         "可能是該檔不是合法 YAML，**也可能是 scripts/check-limits-keys.rb 自己的 bug**。" \
+         "原始錯誤：#{e.message}（#{e.backtrace&.first}）"
+    exit 2
+  end
+
+  # 🔴 per-file 計數（2026-08-16，第 7 輪驗收指出）：0 鍵 canary 若只看**全體總和**，
+  #    TARGETS 一長就退化——真實 limits.yml 的一千多個鍵會把「新加的那一檔被清空」
+  #    完全遮住，正是剛修掉的形態再降一層。⇒ scanned 存 [rel, 檔內鍵數]，canary 逐檔判 0。
+  scanned << [ rel, stats[:keys] - keys_before ]
+end
+
+# 🔴 canary：**「沒有違規」與「沒有檢查」在輸出上長得一模一樣。**
+#    `TARGETS` 被清空（或被誤改成一個 glob 展不出東西的寫法）時，
+#    上面的迴圈一次都不會執行，`violations` 自然是空的，於是這支腳本會**印「OK：通過」並 exit 0**——
+#    鐵律 6 的唯一上限值來源根本沒被讀過，而 CI 是綠的。
+#    這與 `scripts/check-workflow-syntax.rb`（PR #42）掃到 0 個 run 區塊的形態是同一個。
+#    ⚠️ 這一條**無法用 fixture 覆蓋**：`TARGETS` 是腳本內的常數，fixture 目錄改不了它。
+#      canary 本身就是唯一的守衛 ⇒ 不得因為「沒有測試在守」而把它刪掉。
+# 🔴 0 個**鍵**也算沒生效（不只 0 個檔，2026-08-16 擴充）：limits.yml 被清空成只剩註釋時，
+#    掃描檔數是 1、violations 是空的，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。
+#    fixture＝limits_empty（這一條與 TARGETS 不同，fixture 蓋得到）。
+empty_files = scanned.select { |_, k| k.zero? }.map(&:first)
+if scanned.empty? || !empty_files.empty?
+  what = scanned.empty? ? "0 個檔案" : "#{scanned.size} 個檔案，其中 **#{empty_files.join('、')} 是 0 個 mapping 鍵**"
+  warn "::error::TARGETS 掃了 **#{what}**——這不是通過，是檢查沒有生效。" \
+       "檔案為 0 請查 scripts/check-limits-keys.rb 的 TARGETS 常數；" \
+       "鍵為 0 代表 limits.yml 是空的或只剩註釋，而它是鐵律 6 的唯一上限值來源，" \
+       "不可能合法地沒有任何鍵。"
+  # 🔴 3＝「完全沒生效」。與上面那條 fail-closed 的 2 **刻意不同碼**——
+  #    否則把 `exit 2` 改成 `next` 之後，控制流會落到這裡，
+  #    兩條路徑的退出碼與訊息關鍵字都一樣，那個突變在測試裡就是存活的。
+  exit 3
 end
 
 if violations.empty?
   puts "OK：limits.yml 鍵型別檢查通過"
-  puts "  - 掃描檔案：#{scanned.join(', ')}"
+  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.map { |r, k| "#{r}=#{k} 鍵" }.join('、')}）"
   puts "  - 所有 mapping 鍵皆解析為 String（不會被 Psych 轉成布林／nil／Date）"
   puts "  - 檔內無 ERB tag（有的話本腳本會 fail，不會靜默放行）"
   puts "  - 不檢查值的型別，理由見檔頭誠實聲明"

@@ -1,0 +1,6 @@
+# 故意違反：看起來像日期的裸字 ⇒ Psych 解析成 Date，鍵不是 String。
+#
+# 真實情境：任何以日期當鍵的表（生效日、版本快照、匯率日結）都會踩到。
+# 期望：scripts/check-limits-keys.rb 打紅，且訊息點名 Date。
+rate_snapshots:
+  2026-08-15: 7.8

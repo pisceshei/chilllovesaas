@@ -1,0 +1,14 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: ruby scripts/check-ci-parity.rb
+      - name: Self guard regression
+        run: ruby scripts/test-ci-parity-rules.rb
+      - name: Nested path
+        run: ruby scripts/ci/check.rb
+      - name: Path with space
+        run: ruby "scripts/check parity.rb"

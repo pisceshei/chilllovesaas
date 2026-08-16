@@ -1,0 +1,12 @@
+name: CI
+on: [push]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Self guard
+        run: |
+          # 之後要加 ruby scripts/check-schema-drift.rb（還沒寫）
+          ruby scripts/check-ci-parity.rb
+      - name: Self guard regression
+        run: ruby scripts/test-ci-parity-rules.rb
