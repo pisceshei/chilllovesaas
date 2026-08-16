@@ -271,6 +271,12 @@ bin/rails db:seed
 - `spec/graphql/products_contract_spec.rb`：HTTP 200 error、版本 header、GID、keyset cursor、跨店隔離、page limit 與 session 撤銷。
 - `spec/system/m0_admin_shell_spec.rb`：staff 登入後看見 CHILL LOVE shell、商品空狀態與新增商品 CTA；可透過 `M0_SCREENSHOT_PATH` 選擇性輸出截圖。
 - `app/frontend/admin/pages/ProductsPage.test.tsx`：商品頁載入、錯誤、空狀態與資料狀態。
+- `scripts/check-exec-bits.sh` ＋ `scripts/test-exec-bits-rules.sh`（2026-08-15 由 `ci.yml` 的 inline shell 抽出，CI 兩個 job ＋ `bin/ci` 都跑）：判準＝**`bin/` 全部、`scripts/` 帶 shebang 者，git mode 必須是 100755**。Windows 的 `core.filemode=false` 會讓新增檔案以 100644 提交，到 Linux runner 上就是 `exit 126: Permission denied`——2026-08-14 的 CI 全紅即此。
+  - 🔴 **抽出的理由不是整潔**：inline shell 進不了 `config/ci.rb`（本機跑不到）、**沒辦法寫回歸測試**、且兩個 job 各一份容易分岔。抽出後三者同時解決。
+  - 🔴 **三個實測踩過的坑**（回歸測試各有一條守著；總條數不寫死，`bash scripts/test-exec-bits-rules.sh` 實跑為準）：①`git ls-files -s` 對非 ASCII 路徑會**加引號跳脫** ⇒ 必須用 `-z` 讀原始路徑，否則靜默漏掉；②pathspec 掃到 0 個檔時**必須 fail**，不能印 OK；③shebang 要從 **index** 讀（`git show :path`）不是工作區——本檢查判的是 index 的 mode，從工作區讀會被「部分暫存」騙過。
+<!-- 🔴 2026-08-16 實查（照下方原註釋的指令）：`check-ci-parity.rb` 已隨 PR #39 進 main
+     ⇒ 拿掉其 ⏳；`check-workflow-syntax.rb` 仍在 PR #42 ⇒ 照原處置刪行、由 #42 自己補。 -->
+- `scripts/check-ci-parity.rb`（PR #39，已進 main）：斷言 `ci.yml` 用到的每一支 `scripts/*` 都出現在 `config/ci.rb`。🔴 `config/ci.rb` 那條「兩邊要同步」的條款**在寫下的隔天就被違反**，所以改成機器擋。
 - `.github/workflows/ci.yml`：MySQL 8.4 service、RSpec、frontend test/typecheck/build，以及 Ruby lint／security audit。
 
 #### 已完成實測（2026-08-11）
