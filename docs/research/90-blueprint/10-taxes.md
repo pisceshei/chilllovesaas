@@ -189,7 +189,7 @@ base = listed_price / (1 + home_rate)              # $100、home 10% → base $9
 
 - **Registration-based 地區：banker's rounding（四捨六入五成雙），在 line-item 層**。官方原文：「tax amounts are rounded using banker's rounding rules at the line-item level」；halfway 值取偶（$2.5→$2、$3.5→$4）。
 - 官方數例：42 件 × $14.99、18% 稅。單件稅 $2.6982 → 捨入 $2.70；42 × $2.70 = **$113.40**。舊 invoice 層算法：42×14.99=629.58×0.18=113.3244 → **$113.32**。兩法相差 $0.08，**line 層捨入是官方現行**。
-  🔴 **捨入粒度已定（2026-08-14 補證，原 openQuestion 關閉）＝「單價×率 → banker's rounding → ×量」**。官方對同一數例的分步敘述（轉述）：先把**單件**稅 $2.6982 捨入成 $2.70，再乘以 42 件得到行稅 $113.40。「行小計×率再捨入」（629.58×0.18=113.3244→$113.32）被此分步**排除**。官方措辭「at the line-item level」指「捨入發生在行內、而非 invoice/訂單層」；行內實際粒度＝單件。公式（我方表示法，rate 用 basis points，見 F.2#10）：`line_tax_cents = bankers_round(taxable_unit_cents × tax_bp / 10_000) × quantity`；`taxable_unit_cents`＝行項**分攤折扣後**金額的單件基數（本章 C.2 稅基「行項折扣後」÷ quantity；分攤不整除 ⇒ 依 D-12① 最大餘數法定各件次基數）。官方數例的 $2.6982 即已是折扣後單價情境。 <!-- 2026-08-17 更正（PR #52 第 4 輪）：與總綱 M-11 同步——原式 unit_price_cents 未扣分攤折扣，與本章 C.2 稅基自述矛盾，照抄對折扣品多收稅 -->
+  🔴 **捨入粒度已定（2026-08-14 補證，原 openQuestion 關閉）＝「單價×率 → banker's rounding → ×量」**。官方對同一數例的分步敘述（轉述）：先把**單件**稅 $2.6982 捨入成 $2.70，再乘以 42 件得到行稅 $113.40。「行小計×率再捨入」（629.58×0.18=113.3244→$113.32）被此分步**排除**。官方措辭「at the line-item level」指「捨入發生在行內、而非 invoice/訂單層」；行內實際粒度＝單件。公式（我方表示法，rate 尺度由 limits 鍵後綴宣告，見 F.2#10）：`line_tax_cents = bankers_round(taxable_unit_cents × tax_rate / SCALE) × quantity`（`*_bp`＝10_000、`*_ppm`＝1_000_000，**禁止混讀**——CA 表因 QST 9.975% 非整數 bp 已升 ppm 2026-08-17 更正（PR #52 第 7 輪））；`taxable_unit_cents`＝行項**分攤折扣後**金額的單件基數（本章 C.2 稅基「行項折扣後」÷ quantity；分攤不整除 ⇒ 依 D-12① 最大餘數法定各件次基數）。官方數例的 $2.6982 即已是折扣後單價情境。 <!-- 2026-08-17 更正（PR #52 第 4 輪）：與總綱 M-11 同步——原式 unit_price_cents 未扣分攤折扣，與本章 C.2 稅基自述矛盾，照抄對折扣品多收稅 -->
   ⚠️ 殘餘未明文：行分攤訂單層折扣後「折後單價」除不盡（如 3 件均攤 $1.00 折扣 → 單件稅基非整數 cents）時，單件稅基如何取值官方未載——官方未明文，待實測（fixture 要求見 F.3#2）。
 - 總稅額＝各行（含 shipping line、duty tax line）捨入後求和；**不存在訂單層再捨入**。
 
@@ -351,7 +351,7 @@ base = listed_price / (1 + home_rate)              # $100、home 10% → base $9
 | 7 | US liability insights（80% monitoring／action required／四種分析期） | 作為 `jurisdiction/us` pack 能力（economic nexus 是美國特有概念），核心只提供 rollup 查詢介面；HK 基準法域無此物 | 鐵律 11 |
 | 8 | 顧客豁免 74+ 值 enum（US/CA/EU 硬編碼於平台） | 豁免值域應由 jurisdiction pack 宣告（HK pack：無銷售稅 ⇒ 豁免清單空）；enum 命名沿用本尊格式利於 1:1 | 56 §A |
 | 9 | 含稅顯示雙模式＋動態含稅（home rate 反推） | 對齊實作；但 HK 無銷售稅 ⇒ 基準法域下 `taxesIncluded` 無感；顯示位數走 58 §G.3（顯示≠儲存≠對外） | 鐵律 3/10 |
-| 10 | 稅率 float（rate 0.20） | 稅率內部用 **basis points integer**（`tax_bp`，55 §B.3 已用此表示法）；序列化層才轉 Float | 55 §B.3 |
+| 10 | 稅率 float（rate 0.20） | 稅率內部用**整數**，尺度由鍵後綴宣告（`*_bp` /10_000 或 `*_ppm` /1_000_000——QST 9.975% 在 bp 尺度非整數，該類率一律 ppm 2026-08-17 更正（PR #52 第 7 輪））；序列化層才轉 Float | 55 §B.3（該檔更新屬 ⚪ 範圍外） |
 | 11 | 本尊 tax app 降級＝fallback 到 admin 設定 | 我方無第三方 tax app（M 階段）；若做，降級行為要落 `jurisdiction_capability_skips` 等可觀測表，不得靜默 | 56 §A.3 |
 | 12 | `tax:clothing` 魔法 collection 命名觸發州豁免 | 魔法命名是隱式行為，與我方「靜默規則禁止」原則衝突——若復刻必須在 admin UI 顯式標示該 collection 已啟用豁免 ⚠ 待裁定 | 56 §A.3 精神 |
 

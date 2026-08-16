@@ -23,7 +23,7 @@
 | **AccessToken / App** | scopes（`read_*/write_*` 成對）、API 版本 | 1 Shop : N app 安裝；rate limit bucket 以 app×shop 為粒度 |
 | **WebhookSubscription** | topic、endpoint、filter | 1 Shop : N；metaobject 三 topic 自 2024-07 起**必帶 filter** |
 | **BulkOperation** | id、status（7 態）、url、partialDataUrl、objectCount、errorCode | 2026-01+ 每 app 每 shop 同時最多 **5 個 query 型**；舊版每型 1 個 |
-| **MetafieldDefinition** | name、namespace、key、type、description、validations、access、capabilities、pinned | 以 (ownerType, namespace, key) 唯一；ownerType 值域見 A.3 |
+| **MetafieldDefinition** | name、namespace、key、type、description、validations、access、capabilities、pinned | 以 (ownerType, namespace, key) 唯一（本尊單店語境；我方＝shop_id 前綴，見 F 節 2026-08-17 更正（PR #52 第 7 輪））；ownerType 值域見 A.3 |
 | **Metafield**（值） | namespace、key、type、value（一律字串存取） | 掛在 owner 資源上；(owner, namespace, key) 唯一 |
 | **MetaobjectDefinition** | type（`$app:xxx` 或自訂前綴）、fieldDefinitions ≤40、capabilities、access | 1 定義 : ≤1,000,000 entries |
 | **Metaobject**（entry） | handle（URL 友善、自動生成可改）、fields、status | 可被 metafield reference 引用；可經 online_store capability 生成前台頁 |
@@ -244,7 +244,7 @@ Collaborator：owner 產碼（4 位數）→ Partner 憑碼申請 → owner 審�
 `bulkOperationRunQuery(query)` → CREATED/RUNNING → 訂 `bulk_operations/finish`＋輪詢兜底 → COMPLETED 取 `url`（1 週失效）→ 逐行讀 JSONL、用 `__parentId` 重建父子。失敗分支：FAILED（10 天超時／ACCESS_DENIED／INTERNAL_SERVER_ERROR）→ 讀 `partialDataUrl` 決定重跑範圍；同時 >5 個 query 型 → userErrors 拒收。
 
 ### D.7 Metafield 定義與寫值
-`metafieldDefinitionCreate(ownerType, namespace, key, type, validations, access)` →（唯一性：ownerType+namespace+key）→ `metafieldsSet`（≤25 筆 atomic，支援 `compareDigest` 樂觀鎖）→ 值驗證按 type＋validations。失敗分支：超定義上限 256／值超型別大小上限／validations 不符 → userErrors；型別遷移不相容 → 既有值 invalidated。
+`metafieldDefinitionCreate(ownerType, namespace, key, type, validations, access)` →（唯一性：**shop_id**+ownerType+namespace+key——本尊單店語境隱含 per-shop，我方多租戶必須顯式，2026-08-17 更正（PR #52 第 7 輪））→ `metafieldsSet`（≤25 筆 atomic，支援 `compareDigest` 樂觀鎖）→ 值驗證按 type＋validations。失敗分支：超定義上限 256／值超型別大小上限／validations 不符 → userErrors；型別遷移不相容 → 既有值 invalidated。
 
 ### D.8 API 版本升級（商家側 app／我方 SDK）
 每季 diff 新版 schema → 檢查 API health report 的棄用清單 → 9 個月窗內完成遷移；retired 版呼叫被 fall-forward，以 `X-Shopify-API-Version` 回報實際版本（監控此 header 是升級失察的最後警報）。
@@ -311,7 +311,7 @@ Collaborator：owner 產碼（4 位數）→ Partner 憑碼申請 → owner 審�
 1. **店鋪狀態機**：B.1 的 10 條轉移各有測試；不得出現「凍結店可打 API」「pause 店可完成 checkout」；`trial_expired` 與 `frozen` 的差異（前者無欠款）要分開建模。
 2. **RBAC**：權限依賴圖（含 2 條不可取消邊）做成資料而非 if-else；勾子補祖先／撤父連鎖撤子各有單元測試；role 單類別約束在 DB constraint＋validation 雙層；step-up auth 覆蓋角色 CUD 與使用者移除。
 3. **限流**：cost 計算對 object/scalar/connection/mutation 各有測試；THROTTLED 回應含完整 `extensions.cost`；單請求 1,000 上限先於執行。
-4. **Custom Data**：C.5 每個上限進 `config/limits.yml`；值驗證按 type 矩陣測（含 64KB/128KB/2KB 邊界、list 128/256、choices 128）；(ownerType, namespace, key) 唯一索引；type 不可變更以 migration 級測試鎖住。
+4. **Custom Data**：C.5 每個上限進 `config/limits.yml`；值驗證按 type 矩陣測（含 64KB/128KB/2KB 邊界、list 128/256、choices 128）；**(shop_id, ownerType, namespace, key)** 唯一索引（值＝(shop_id, owner_id, namespace, key)；無 shop_id 前綴＝跨租戶全域唯一＋違反鐵律 2，2026-08-17 更正（PR #52 第 7 輪））；type 不可變更以 migration 級測試鎖住。
 5. **雙店隔離**：85 號 A 案落地後，身分表的跨店測試改斷言「A 店 session 不能解析出 B 店資源」，業務表仍走 12 F4 的 404 斷言。
 6. **稽核**：250 筆顯示上限是**本尊 UI 行為**，我方 append-only 表不設保留上限（法遵留存），僅列表分頁模仿。
 

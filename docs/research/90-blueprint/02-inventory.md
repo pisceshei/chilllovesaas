@@ -146,7 +146,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 
 | 轉移 | 觸發 | 副作用 |
 |---|---|---|
-| DRAFT → IN_TRANSIT | 標記在途（可附 tracking） | destination `incoming`＋（S10） |
+| DRAFT → IN_TRANSIT | 標記在途（可附 tracking） | destination `incoming`＋（**留空/外部目的地＝不記**，同 B.2 轉移列分支 2026-08-17 更正（PR #52 第 7 輪））（S10） |
 | IN_TRANSIT → PARTIALLY_RECEIVED | 收部分品項 | accepted：destination available＋；transfer 維持 In progress 直到收完（S10） |
 | PARTIALLY_RECEIVED → RECEIVED | 剩餘品項全收 | transfer 檢查是否可轉 TRANSFERRED |
 | （收貨動作三選）accept / reject / cancel | 逐列數量 | accept＝「目的地變可售」（`incoming −q`／`on_hand +q`／`available +q`）；reject＝記錄在轉移上＋**destination `incoming` −q**（出貨時已加入 incoming，拒收必須沖回，否則該量在 TRANSFERRED 後永久滯留在途；S10 原文「不改任何地點數量」僅對 **on_hand／available** 成立） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：照 S10 字面實作與本章 F.3-1 例證表（incoming 10→0）矛盾 -->；cancel＝退回 origin 並恢復可售（origin `on_hand +q`／`available +q`）＋**destination `incoming` −q**（收貨階段 cancel 的該件已在途、已入 incoming——F.3-1 例證表 incoming 10→0 需 accept 7＋reject 2＋cancel 1 三者各自沖回才成立；「未出貨品項」語境僅適用出貨前取消，該情境 incoming 尚未加、無需沖回） <!-- 2026-08-17 更正（PR #52 第 4 輪）：原僅寫「退回 origin」，cancel 分支漏 incoming 沖回，且「未出貨品項」標籤與收貨階段例證相抵 --> |

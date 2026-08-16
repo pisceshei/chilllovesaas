@@ -165,7 +165,7 @@ Refund 1 ──< N OrderTransaction(kind=REFUND) （退款單聚合退款交易�
 
 官方在 OrderTransactionStatus 層級**沒有**任何超時/收斂明文（G3 全頁僅六句 enum 描述）。可查得的相鄰錨點有兩個，皆非交易狀態本體：
 
-1. **訂單級 pending payment 有過期日**：「典型約一週」（"typically a week"），逾期 payment status → **EXPIRED**；付款失敗時官方行為＝寄「Pay now」重試信給買家、訂單續掛 pending；pending 期間**鎖單**（不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid）。（G23）
+1. **訂單級 pending payment 有過期日**：「典型約一週」（"typically a week"），逾期 payment status → **EXPIRED**；付款失敗時官方行為＝寄「Pay now」重試信給買家、訂單續掛 pending；pending 期間**鎖單**（不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid）。（G23）（🔴 鎖範圍＝**存在未決 PSP 交易**的 pending；manual 單（COD/轉帳/payment terms）不鎖 `orderMarkAsPaid`/收款——§05 C.12 靠它結清，2026-08-17 更正（PR #52 第 7 輪））
 2. **Payments Apps 的 pending 流程**：`paymentSessionPending.pendingExpiresAt` 官方建議設在 **3 天內**；pending 最終必須由 `paymentSessionResolve`／`paymentSessionReject` 終局化——**逾期後有無自動轉移，官方未載**。（G24）
 
 ⚠ AWAITING_RESPONSE 超時後轉 FAILURE 還是 UNKNOWN、超時多長，官方未明文，待實測（測試店造 offsite/3DS 中斷單觀察）。以下為**我方裁定**（防孤兒態；所有時間值引 `config/limits.yml`，鐵律 6，不得硬編）：
@@ -215,7 +215,7 @@ SALE (auth+capture 一步) ─────────────────�
 | PARTIALLY_REFUNDED | 退到全額 | REFUNDED（終態） |
 | PAID | 全額退款 | REFUNDED（終態） |
 
-註：PENDING 期間官方明文鎖單（不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid，G23）——我方 pending 單必須同鎖，否則 pending→EXPIRED 與訂單編修會產生金額競態。
+註：PENDING 期間官方明文鎖單（不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid，G23）——我方**未決 PSP 交易形**的 pending 單必須同鎖，否則 pending→EXPIRED 與訂單編修會產生金額競態；manual 單（COD/轉帳/payment terms）**不鎖** `orderMarkAsPaid`/收款（§05 C.12 靠它結清 2026-08-17 更正（PR #52 第 7 輪））。
 
 ### B.4 ShopifyPaymentsPayoutStatus（撥款）
 

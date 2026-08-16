@@ -147,7 +147,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | S6 | 風險評估 | 系統／第三方 app | 各 provider 產 assessment；整單 `recommendation` ＝最壞者勝純函數（§04 B.6，⚠️ 官方未載聚合函數） | riskLevel `PENDING` → `LOW/MEDIUM/HIGH/NONE` | 無 | 無 | `orders/risk_assessment_changed` | 建議 `CANCEL` ⇒ 走分支 C；高風險單**預設不自動履行**（§04 C.6） |
 | S7 | 履約整備 | staff／app | `fulfillmentOrderHold` / `ReleaseHold` / `Split` / `Move` / `Merge`（§09 D.4／D.5） | FO `OPEN` ⇄ `ON_HOLD`（判定＝active holds 計數 >0，非布林，§09 C.9-3）；move ⇒ `movedFulfillmentOrder`＋`originalFulfillmentOrder`（§09 B.1-4） | move ⇒ **committed 跨地點遷移**：origin `committed −`、destination `committed +`（§02 B.1）。⚠️ 官方只寫前置與失敗條件、**未寫數量機制**，origin 是否同步 `available +` 為推定，待實測 | 無 | `placed_on_hold`／`hold_released`／`fulfillment_holds/added`／`released`／`split`／`moved`／`merged`（§09 E，履約域共 26 支） | move 禁止條件：FO 已 closed／曾手動 report progress／目的地未備貨該 item／3PL 請求懸置（§09 B.1-4）。**已履約品項永遠留在原 location** |
 | **S8** | 🔴 **履行（原子點 T2）** | staff／3PL | `fulfillmentCreate`：條件式累加 `fulfilled_quantity`＋建 Fulfillment＋trackingInfo（見 2.2 T2） | Fulfillment ∅ → `SUCCESS`；FO 全量 ⇒ `CLOSED`，部分 ⇒ 狀態不變；Order `displayFulfillmentStatus` 重物化（derived） | **`committed −q` ／ `on_hand −q`**（§02 B.1／D.1-3） | capture 模式「出貨時」／「每次出貨」⇒ 觸發 capture（**必須排到 transaction 外**，見 2.2 T2）；`AUTHORIZED` → `PAID`／`PARTIALLY_PAID` | `fulfillments/create`、`inventory_levels/update` | 數量超剩餘 ⇒ userError；`ON_HOLD`／`SCHEDULED` ⇒ 不可出貨；逾 `authorizationExpiresAt` ⇒ `EXPIRED` 收不到款（§05 B.2） |
-| S9 | 運送事件流 | carrier／app | `fulfillmentEventCreate`（11 值，§09 B.4）；3PL 開 tracking 支援時平台每小時拉單號 | `displayStatus` 為**三軸合成**計算欄（18 值，不落 DB），優先序**逐狀態**：異常/終態 `CANCELLED`/`ERROR`/`FAILURE` **覆蓋**陳舊事件 → 事件流最新一筆（普通 `SUCCESS` **不**搶先——fulfillment 建立即 SUCCESS，若 status 一律優先，事件/label 分支永不可達、運送進度永不顯示 2026-08-17 更正（PR #52 第 6 輪））→ 無事件時 `SUCCESS`→`FULFILLED` → label/pickup 狀態（§09 B.5 合成序） <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原寫「由最新一筆事件推導」——取消已送達/在途的 fulfillment 不產生新事件，latest-event 實作會永遠顯示 DELIVERED/IN_TRANSIT -->；首次 `IN_TRANSIT` 落 `inTransitAt` | 無 | 無 | `fulfillment_events/create`／`delete` | ⚠️ 官方**未定義事件間合法順序**，`DELAYED`／`ATTEMPTED_DELIVERY` 可穿插（§09 B.4）；local delivery 無 carrier 事件、不觸發 out-for-delivery／delivered 通知（§09 B.7） |
+| S9 | 運送事件流 | carrier／app | `fulfillmentEventCreate`（11 值，§09 B.4）；3PL 開 tracking 支援時平台每小時拉單號 | `displayStatus` 為**三軸合成**計算欄（18 值，不落 DB），優先序**逐狀態**：異常/終態 `CANCELLED`/`ERROR`/`FAILURE` **覆蓋**陳舊事件 → 事件流最新一筆（普通 `SUCCESS` **不**搶先——fulfillment 建立即 SUCCESS，若 status 一律優先，事件/label 分支永不可達、運送進度永不顯示 2026-08-17 更正（PR #52 第 6 輪））→ **label/pickup 狀態** → 皆無時 `SUCCESS`→`FULFILLED`（2026-08-17 更正（PR #52 第 7 輪）：原序 FULFILLED 兜底在前會令 label/pickup 分支不可達）（§09 B.5 合成序） <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原寫「由最新一筆事件推導」——取消已送達/在途的 fulfillment 不產生新事件，latest-event 實作會永遠顯示 DELIVERED/IN_TRANSIT -->；首次 `IN_TRANSIT` 落 `inTransitAt` | 無 | 無 | `fulfillment_events/create`／`delete` | ⚠️ 官方**未定義事件間合法順序**，`DELAYED`／`ATTEMPTED_DELIVERY` 可穿插（§09 B.4）；local delivery 無 carrier 事件、不觸發 out-for-delivery／delivered 通知（§09 B.7） |
 | S10 | 送達 | carrier | `DELIVERED` 事件寫入同步落 `deliveredAt` | Fulfillment `displayStatus` = `DELIVERED` | 無 | 無 | `fulfillment_events/create` | 🔴 **退貨窗口自送達日起算**（無送達資料 ⇒ fallback 出貨日＋轉運 buffer，⚠️ buffer 天數官方未載，§06 C.5） |
 | S11 | 退貨請求／建立 | buyer／staff | `returnRequest`（自助）或 `returnCreate`（商家直建，跳過審核） | Return ∅ → `REQUESTED` 或 ∅ → `OPEN`；建 ReverseFulfillmentOrder；Order.returnStatus 重算；**已封存訂單自動解封存**（§06 B.1 T1／§04 B.1） | **無**——換貨品「庫存在退貨處理前不保留」（§06 C.8） | 無 | `returns/request`／`returns/approve`／`returns/decline` | final sale／窗口過期／單次 >250 行 ⇒ 擋（§06 C.6）；`REQUESTED` **不可直接取消**，只能 approve 或 decline（§06 B.1） |
 | S12 | 收貨與 disposition | staff | `returnProcess` 勾收品項 → 每項選 disposition（restock 需選 location）＋釋出換貨品項 | RFO disposition 寫入（`PROCESSING_REQUIRED` 為中間態可再 disposition）；換貨 FO 解 `ON_HOLD` | `RESTOCKED` ⇒ **`on_hand +` ／ `available +`**（reason=`restock`，§02 C.7）；`NOT_RESTOCKED`／`MISSING` 不動帳 | （財務段見 S13） | `reverse_fulfillment_orders/dispose`、`returns/process` | 狀態不符（如已 CLOSED）⇒ `INVALID_STATE` |
@@ -265,7 +265,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | B3 | staff | `orderEditCommit(notifyCustomer, staffNote)` | 🔴 同 transaction：品項差異落地＋FO line items 同步＋庫存增減（加品／增量 ⇒ **走 T1 同一條件式庫存服務** `WHERE available >= q`（DENY 下不足即拒絕 commit）——edit session 單開鎖只鎖同一張單，**跨單併發搶最後一件靠條件式 UPDATE 序列化**，並發測試須含兩張不同訂單同時加購同一末件 <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原寫裸 available−/committed+，跨單併發可雙雙成功而超賣 -->；減品 ⇒ 依 restock 決策回補）＋outbox |
 | B4 | 系統 | — | 事件：`orders/edited` **與** `orders/updated` 並發（§04 E.1） |
 | B5 | 系統 | 差額結算（**transaction 外**） | 總額增 ⇒ 寄更新發票收款；總額減 ⇒ 走退款流程（＝T3） |
-| 失敗 | — | 不可編輯聯集（九條 guard）：app 建立的單／Shop Pay Installments／local delivery 單／pending payment 中的品項與折扣／已履行品項不可移除或調量／order 層折扣／非手動折扣／改配送方式／封存單（§04 C.4）。**pending payment 期間官方明文鎖單**（§05 B.3） | |
+| 失敗 | — | 不可編輯聯集（九條 guard）：app 建立的單／Shop Pay Installments／local delivery 單／pending payment（未決 PSP 交易形2026-08-17 更正（PR #52 第 7 輪））中的品項與折扣／已履行品項不可移除或調量／order 層折扣／非手動折扣／改配送方式／封存單（§04 C.4）。**pending payment 期間官方明文鎖單**（§05 B.3） | |
 | 分析 | — | 編輯後訂單在報表以**獨立分錄**呈現；金額差異進 `sales_reversals`（§04 C.4／§06 C.10） | |
 
 #### 分支 C — 取消訂單
@@ -314,7 +314,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | M8 | **`refunds/create` 事件的發出時點** | §05 D.4-2：退款送通道**成功後** ⇒ 發 `refunds/create` | §06 E.1：官方逐字「independent from the movement of money」——**金流未必已動** | **乙** | Refund 物件**無 status**（§06 B.4），「存在」不等於錢已退到。把事件綁在 PSP 成功上，退款失敗的訂單會**完全沒有 outbox 紀錄**，對帳與重試都失去輸入。落法＝T3 的 transaction 內即寫 outbox，金流進度另由 `order_transactions/create` 承載 |
 | M9 | **restock 的值域** | §02 早期版本沿用 46a 的 3 值（含不存在的 `RESTOCK`） | §06 A.4／[G5] 2026-08-14 實抓：**4 值** `CANCEL`／`RETURN`／`NO_RESTOCK`／`LEGACY_RESTOCK`，**沒有 `RESTOCK`** | **乙（4 值）；已收斂**（§02 B.1／E 已回寫對齊，46a 待回寫） | `CANCEL`（未履行 ⇒ 自訂單移除＋回 available）與 `RETURN`（已履行 ⇒ 回 on_hand+available）的分野**同時決定庫存回補語義與報表歸類**，抄成 3 值會讓未履行退款的行留在訂單上可再履行 |
 | M10 | **履行時自動 capture 與「transaction 內禁外部 IO」** | §05 C.2：capture 模式 2／3 由**出貨事件**觸發 capture | 鐵律 5：transaction 內禁外部 IO | **兩者不衝突，但落法必須明寫**：T2 的 transaction 內只寫「capture 意圖」進 outbox，relay 後才打 PSP，回程再建 `CAPTURE` 交易列 | 把 capture 塞進出貨 transaction ⇒ PSP 超時會回滾整筆出貨（庫存已扣、面單已買）。⚠️ per-fulfillment capture 是 Plus 分層，且**手動 capture 或發生退貨後該單自動化即停止**（§05 C.2），狀態機需有這條退出邊 |
-| M11 | **`pending payment` 期間可否編輯／取消／restock** | §04 B.5／C.4：編輯 guard 聯集裡只寫「pending payment 中的品項/折扣**受限**」 | §05 B.3 註／[G23]：pending 期間官方**明文鎖單**——不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid | **乙（全鎖）** | §05 的來源是專頁逐字，§04 的措辭是散頁彙總。不全鎖的話，`pending → EXPIRED` 與訂單編修會產生金額競態（§05 B.3 已明點） |
+| M11 | **`pending payment`（未決 PSP 交易形；manual 單見 S5 判別）期間可否編輯／取消／restock** | §04 B.5／C.4：編輯 guard 聯集裡只寫「pending payment 中的品項/折扣**受限**」 | §05 B.3 註／[G23]：pending 期間官方**明文鎖單**——不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid | **乙（全鎖）** | §05 的來源是專頁逐字，§04 的措辭是散頁彙總。不全鎖的話，`pending → EXPIRED` 與訂單編修會產生金額競態（§05 B.3 已明點） |
 | M12 | **`CANCELLED` 的拼字** | §09 B.1：`FulfillmentOrderStatus.CANCELLED`（**雙 L**） | §06 B.1：`ReturnStatus.CANCELED`（**單 L**）；§09 B.5：`FulfillmentDisplayStatus.CANCELED`（單 L） | **兩種拼字都照抄，不統一** | 這是本尊的既成事實，統一即偏離 1:1 對齊。落法＝各 enum 獨立定義，**CI 加一條拼字快照測試**防有人「順手改成一致」 |
 | M13 | **履約域 webhook topic 的支數** | §09 E：fulfillment_orders **20 支**（前稿寫 15 支是漏列） | §09 E 註：13 章 A.3 表頭記「21 支」 | **20 支**（§09 E 兩次獨立點算），13 章表頭待修正；🔴 **最終數以 introspection 實測為準** | 漏列直接導致 §D.5 的 split／move／merge 三個流程**發不出事件**。驗收斷言＝三流程各自能發出 `split`／`moved`／`merged` |
 | M14 | **`fulfillment_holds/*` 與 `placed_on_hold` 的觸發粒度** | §09 E：holds 家族是 per-hold（"each time a hold is added"） | §09 E：FO 家族是狀態轉移（"transitions to ON_HOLD"） | **照描述字面落**：疊加第二個 hold 只發 `fulfillment_holds/added`，不再發 `placed_on_hold` | ⚠️ **官方未明文精確觸發次數**（§09 E），列 parity 實測項；測試先按字面斷言並註明待驗 |
@@ -529,7 +529,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 混合付款退款 | greedy 非比例攤：**先把 gift card 吃滿**再輪其他付款方式 | 連動 | §06 C |
 | Dispute 由 INQUIRY 升級為 CHARGEBACK | 同刻扣爭議額 ＋ CHARGEBACK_FEE，並設 `evidenceDueBy` | 連動 | §05 B.5 |
 | 負餘額（Σ退款＋爭議凍結 > Σ收款） | 不生成 payout，撥款暫停至未來銷售沖平 | 🔒鎖 | §05 C |
-| `financial_status = PENDING` | 鎖單：不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid | 🔒鎖 | §05 B.3 |
+| `financial_status = PENDING`（**未決 PSP 交易形**） | 鎖單：不可編修 items/折扣/地址、不可 restock、不可取消、不可手動收款、不可 mark as paid（🔴 鎖範圍＝**存在未決 PSP 交易**的 pending；manual 單（COD/轉帳/payment terms）不鎖 `orderMarkAsPaid`/收款——§05 C.12 靠它結清，2026-08-17 更正（PR #52 第 7 輪）） | 🔒鎖 | §05 B.3 |
 
 #### 商品 ⇄ 發布 ⇄ 市場 ⇄ 前台
 
@@ -805,7 +805,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 庫存／地點／轉移 | 官方明列的 **17 支**（`inventoryAdjustQuantities`／`inventorySetQuantities`／`inventoryMoveQuantities`／`inventoryBulkToggleActivation`／transfer 家族／shipment 家族／location 家族） | ✅ 2026-04 起硬性（`@idempotent` directive） | ✅ 照抄，改以 mutation 參數 `idempotencyKey` 表達 | 三種 `IDEMPOTENCY_*` 錯誤碼語義照收 | §02 C／F.2 |
 | 退款 | `refundCreate` | ✅ 2026-04 起強制，TTL 24h | ✅ | 重放不得產生第二筆 REFUND 交易；`refunds/create` 事件在 pending 階段即發 | §06 F.2 |
 | 退貨處理 | `returnProcess` | ❌ 官方未載明 | ✅ **加嚴**，TTL 對齊 24h | 重放不得重複 restock、重複釋出換貨 | §06 F.2#5 |
-| 退貨處理（子冪等） | restock 庫存調整 | — | ✅ 冪等 key ＝ `refund_line_item` 唯一鍵 | 與上一列不同層：即使退款重試，同一 line item 只進貨一次 | §06 C |
+| 退貨處理（子冪等） | restock 庫存調整 | — | ✅ 冪等 key 兩路：收貨路＝**disposition line**／退款路＝`refund_line_item`（互斥防雙回補 2026-08-17 更正（PR #52 第 7 輪）） | 與上一列不同層：重試/重放下同一單位只進貨一次 | §06 C |
 | 訂單取消 | `orderCancel` | ❌ 官方 async 但冪等未載 | ✅ **加嚴** | 同 order + 同 key 只執行一次；不得產生第二筆退款／第二次回補 | §04 F.2 |
 | 訂單成立 | `orderCreate`／`draftOrderComplete` | ❌ | ✅（鐵律 5「訂單成立必帶」） | draft 轉正為單一交易同生共死：建 Order＋庫存＋`status=COMPLETED`＋metafields 複製，任一失敗全 rollback | 鐵律 5／§04 D |
 | 訂單編輯 | `orderEditCommit` | ❌ | ✅ | 搭配 edit session 單開鎖（`unique index on order_id`）＋TTL 24h，重複 begin 回 `INVALID_STATE` | §04 C |
@@ -934,7 +934,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | `returns/update` | Return 任何更新（品項增刪、費用覆寫、標籤變更） | 06 | 04, 13 | ✅ | |
 | `refunds/create` | **Refund 物件建立時即發**，官方明載與金流移動無關 | 06 | 02, 04, 05, 10, 13, 14 | ✅ | 🔴 我方必須在 `transaction=pending` 階段就發，**不得等 PSP 成功**（§06 E.1） |
 | `reverse_deliveries/attach_deliverable` | 退貨標籤／追蹤碼掛上 ReverseDelivery | 06 | 09, 13 | ✅ | |
-| `reverse_fulfillment_orders/dispose` | 對 RFO line item 做 disposition（4 值） | 06 | 02, 13, 14 | ✅ | restock 者需帶 location；冪等 key＝`refund_line_item` 唯一鍵 |
+| `reverse_fulfillment_orders/dispose` | 對 RFO line item 做 disposition（4 值） | 06 | 02, 13, 14 | ✅ | restock 者需帶 location；冪等 key＝**disposition line 唯一鍵**（收貨路——財務段可選 Later、Refund 未必存在 2026-08-17 更正（PR #52 第 7 輪）） |
 | `analytics.sales_reversal.recorded`（`ours`，內部） | 退貨／取消／訂單編輯／運費稅費調整造成金額反轉 | 06 | 14 | ✅ | 以**處理日**記帳；等額換貨金額側淨 0 但 `returned_quantity +1` |
 | `tax.reversal_event.emitted`（`ours`，內部） | 退款／退貨造成稅額反轉 | 06 | 10, 11 | ✅ | 只發事件不落憑證，由 jurisdiction pack 決定（鐵律 11） |
 
