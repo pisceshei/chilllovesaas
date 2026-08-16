@@ -123,7 +123,13 @@ files.each do |path|
   jobs.each do |job_name, job|
     next unless job.is_a?(Hash)
 
-    (job["steps"] || []).each_with_index do |step, idx|
+    # 🔴 `steps:` 掛 scalar 也是合法 YAML（`steps: TODO`；block scalar 誤縮排會把整段
+    #    變成字串——正是 wf_bad_yaml 家族的事故形態；裸日期更會成 Date）⇒
+    #    String／Date 都沒有 each_with_index，NoMethodError 崩掉——同族**第六入口**
+    #    （PR #48 首輪驗收指出，2026-08-16 實測復現 String 與 Date 兩形態）。
+    #    照同款修法跳過（少檢不是崩潰，GH 端同樣起不來）。
+    steps = job["steps"].is_a?(Array) ? job["steps"] : []
+    steps.each_with_index do |step, idx|
       # 🔴 steps 底下多打一個 `-`（空元素）在 YAML 合法 ⇒ step 是 nil，
       #    `nil["run"]` NoMethodError 帶 backtrace 崩掉——與裸日期（wf_date_scalar）
       #    修掉的是同一形態（合法輸入讓檢查器崩），只是入口不同。

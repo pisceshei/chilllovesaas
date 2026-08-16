@@ -88,6 +88,16 @@ CASES = [
     "🔴 掃不到檔案時必須 fail，不能印 OK（空值長得像資料）" ]
 ].freeze
 
+# 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
+#    把 CASES 清空，這支會印「OK（0 條）」並 exit 0——姊妹檔 test-doc-claims-rules.rb
+#    一直有這一層而本檔漏了（PR #48 首輪驗收指出）。數字只准往上調；要調低必須在
+#    PR 描述說明刪了哪一條、為什麼不再需要。
+MIN_CASES = 11
+if CASES.size < MIN_CASES
+  warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
+  exit 1
+end
+
 failures = []
 
 CASES.each do |dir, want_status, want_output, why|

@@ -118,7 +118,9 @@ NUM = /(?:[〇零二三四五六七八九十百][〇零一二三四五六七八�
 VOLATILE_NUM = [
   /#{NUM}\s*支(?:檢查器|腳本)?(?=[，。、）)\s]|\z)/,
   /#{NUM}\s*條\s*(?:case|CASE|fixture)/,
-  /(?:#{NUM}\s*條\s*fixture|#{NUM}\s*個\s*fixture)/i,
+  # （原本這裡還有一支「NUM 條 fixture」的半支——與上一支完全重疊，PR #48 首輪驗收
+  #    指出它正是下面自我警告說的「重複 pattern 遮蔽突變」形態，2026-08-16 收斂掉。）
+  /#{NUM}\s*個\s*fixture/i,
   /#{NUM}\s*張\s*(?:突變)?表/,
   /共\s*#{NUM}\s*[支條個張份]/
   # 🔴 不要另加「獨立的中文數字 pattern」——NUM 已涵蓋，重複的 pattern 會讓
