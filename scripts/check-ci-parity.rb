@@ -263,7 +263,7 @@ if missing.empty? && missing_commands.empty? && !guard_disabled
   puts "  - 另比對 #{workflow_commands.size} 組非 scripts/ 指令（bin/*／pnpm／npm／bundle／rake）"
   puts "  - 本檢查自己有被 ci.yml 呼叫（規則 3：單向差集擋不住「把這一步刪掉」）"
   puts "  - 比對的是腳本路徑與指令識別，不是完整參數（參數本來就可以不同，理由見檔頭）"
-  puts "  - inline shell 步驟不在檢查範圍，理由見檔頭誠實聲明"
+  puts "  - 多行 inline shell 的**腳本邏輯**不在檢查範圍（單行指令由規則 2 涵蓋），理由見檔頭誠實聲明"
   exit 0
 end
 

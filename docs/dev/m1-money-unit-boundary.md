@@ -165,3 +165,4 @@ bundle exec rspec spec/models/money_spec.rb spec/models/psp_amount_matrix_spec.r
   否則 `fixed_string` 會靜默四捨五入，HKD 14.85 送成 14.9）＋ `fixed_string` 的 `digits=0`
   格式 bug ＋ `Money::Storage#<=>` 改 public 且對非 `Storage` 回 `nil`（原本 `== nil` 會 raise）。
   規格出處：`65` §D.2 A6b／§D.5、`DECISIONS.md` D16。
+- 2026-08-16 PR #39：跨功能影響表 `config/ci.rb 與 ci.yml` 一列由紀律敘述改為機制指向——該同步自 PR #39 起由 `scripts/check-ci-parity.rb` 機器擋（漏同步 CI fail 並逐支點名）。

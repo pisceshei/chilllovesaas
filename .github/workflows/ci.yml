@@ -280,8 +280,9 @@ jobs:
       # 那條條款寫下的隔天就被違反了：PR #33 往本 job 加了兩步、config/ci.rb 一行未動，
       # 於是本機 `bin/ci` 全綠但 CI 會紅——而擋下來的理由本機沒有機會發現。
       # 本步驟斷言「ci.yml 用到的每一支 scripts/* 都出現在 config/ci.rb」。
-      # ⚠️ 它看不到 inline shell 步驟（例如上面的執行位元閘門）——已知缺口，
+      # ⚠️ 它看不到**多行 inline shell 的腳本邏輯**（例如上面的執行位元閘門）——已知缺口，
       #    寫在腳本檔頭的誠實聲明裡，正解是把那段抽成 scripts/check-exec-bits.sh。
+      #    （精確地說：看不到的是**多行腳本邏輯**；單行指令由該腳本規則 2 涵蓋。）
       - name: Check CI parity
         run: ruby scripts/check-ci-parity.rb
 
