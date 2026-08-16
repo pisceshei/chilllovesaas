@@ -169,6 +169,9 @@
 帶 shebang 是宣告「我可以直接跑」，宣告了卻沒有執行位元就是自相矛盾；
 `scripts/` 下無 shebang 的資料檔不受此規則約束。
 
+另注意：這些檢查以 bash 腳本實作（`bin/ci`／`config/ci.rb` 內用 `bash scripts/…` 呼叫），
+Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接跑不動。
+
 - **提交前檢查**——直接跑那支腳本，**與 CI 是同一份實作**（2026-08-15 起）：
 
   ```bash
@@ -185,7 +188,7 @@
        （PR #35 的 Codex review 就是抓到本節沒跟上 CI）。
        抽成單一腳本之後，「同步」這個問題本身消失了——這比「記得同步」可靠。
        它同時修掉兩個實測漏洞：非 ASCII 檔名被 core.quotePath 跳脫後靜默漏掉、
-       以及掃到 0 個檔卻印 OK。**11 條**回歸測試在 scripts/test-exec-bits-rules.sh。 -->
+       以及掃到 0 個檔卻印 OK。回歸測試在 scripts/test-exec-bits-rules.sh（條數不寫死，實跑為準）。 -->
 
 ## 測試與驗收基準
 

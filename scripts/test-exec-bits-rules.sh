@@ -7,10 +7,11 @@
 #
 # 這個檢查讀的是 **git index 的 mode**（`git ls-files -s`），不是檔案系統權限
 # ⇒ fixture 必須是**真的 git repo**。巢狀 `.git` 沒辦法提交進本倉庫，
-# 所以每個 case 在 `$TMPDIR` 現場建一個小 repo。代價是慢一點（**11 個 repo**），
+# 所以每個 case 在 `$TMPDIR` 現場建一個小 repo。代價是慢一點（每條 case 各一個 repo），
 # 好處是 fixture 與判準永遠不會不同步。
 #
-# ## 🔴 這 11 條各自守什麼（改條數時**這裡、ci.yml、AGENTS.md、docs/dev 四處要一起改**）
+# ## 🔴 這些 case 各自守什麼（條數不寫死：以 `bash scripts/test-exec-bits-rules.sh` 實跑輸出為準；
+#      其他文檔一律引用實跑、不硬寫條數——「四處要一起同步」正是本 PR 反對的「記得同步」形態，已廢止）
 #
 # **判準本身（正反向）**
 #   1. `clean`        全部 755 ⇒ exit 0（🔴 反向斷言，沒它的話一個「永遠 fail」的檢查器會讓每條都「通過」）
@@ -51,7 +52,7 @@ passes=0
 #
 # 🔴 **預設兩個目錄各放一支合規的基線檔**（2026-08-15 新增）。
 #    理由：check-exec-bits.sh 的 canary 已改成**逐 pathspec** 判——
-#    任一邊掃到 0 個檔就 failm。若 fixture 只佈置其中一邊，
+#    任一邊掃到 0 個檔就 fail。若 fixture 只佈置其中一邊，
 #    每一條都會因為 canary 而紅，而不是因為它要測的那件事。
 #    ⇒ 基線一律兩邊都有，各 case 再在上面疊自己的違規。
 #    ⚠️ `empty`、`only_bin`、`only_scripts` 三條**刻意不呼叫** seed_repo——
@@ -207,7 +208,7 @@ git -C "$repo" add -A
 git -C "$repo" update-index --chmod=+x bin/rails
 assert_case bin_ok 0 "OK" "bin/ 全部可執行時必須通過——否則 bin/ 規則會變成永遠紅"
 
-# ── 10. 🔴 只有 bin/、scripts/ 掃到 0 個 ⇒ 必須 fail────────────
+# ── 9. 🔴 只有 bin/、scripts/ 掃到 0 個 ⇒ 必須 fail────────────
 #    （PR #41 的 Claude 驗收指出）初版 canary 只判**總和**，
 #    所以只擋住「兩邊同時為 0」這一個特例。實測重現過：
 #      只有 bin/rails（755）的 repo → 印「OK（掃描 1 個檔）」、
@@ -223,7 +224,7 @@ git -C "$repo" add -A
 git -C "$repo" update-index --chmod=+x bin/rails
 assert_case only_bin 1 "scripts/" "🔴 scripts/ 掃到 0 個卻印 OK——canary 判總和時的盲區"
 
-# ── 11. 🔴 只有 scripts/、bin/ 掃到 0 個 ⇒ 必須 fail──────────
+# ── 10. 🔴 只有 scripts/、bin/ 掃到 0 個 ⇒ 必須 fail──────────
 repo="$(make_repo only_scripts)"
 mkdir -p "$repo/scripts"
 printf '#!/bin/sh
@@ -233,7 +234,7 @@ git -C "$repo" add -A
 git -C "$repo" update-index --chmod=+x scripts/ok.sh
 assert_case only_scripts 1 "bin/" "🔴 反方向：bin/ 掃到 0 個同樣不得印 OK"
 
-# ── 9. 🔴 零掃描 ⇒ 必須 fail，不能印 OK（本輪驗收 Y5）────────────
+# ── 11. 🔴 零掃描 ⇒ 必須 fail，不能印 OK（本輪驗收 Y5）────────────
 repo="$(make_repo empty)"
 printf 'x\n' > "$repo/README"
 git -C "$repo" add -A
