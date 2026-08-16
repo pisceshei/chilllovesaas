@@ -272,7 +272,16 @@ mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
 **四條硬規則**：
 
 1. **`productSet` 是全樹宣告式**：未列出的變體視為刪除。**前端必須送完整樹**，不得送 dirty fields。部分更新一律走 `productUpdate` ＋ `productVariantsBulkUpdate`（兩支都是 A 類，天然冪等）。
-2. **刪除套用 13 §F1-4 的既有策略**：被 `order_line_items` 引用的變體不可硬刪 → 回 `userErrors`（不是靜默軟刪），提示商家改用封存商品。
+2. **刪除套用 13 §F1-4 的既有策略**：**允許硬刪，不論是否被 `order_line_items` 引用**；快照保留、關聯欄位轉 NULL。
+   <!-- 2026-08-15 依 parity 查證**推翻重寫**，原文：
+        「被 `order_line_items` 引用的變體不可硬刪 → 回 `userErrors`（不是靜默軟刪），
+          提示商家改用封存商品。」
+        🔴 本尊 `productVariantsBulkDelete` 的五個 userError code **沒有一個與訂單引用有關**；
+        `CalculatedLineItem.variant` 官方逐字把「the variant has been deleted」列為
+        **正常會回 null 的情形**。完整證據見 `docs/specs/13` §F1-4 的批註。
+        🔴 **任何宣稱「因為有訂單所以不能刪」的 userError 一律視為 parity 違反。**
+        ⚠️ 前置條件同 13 §F1-4：`fk_line_items_product_variant_id` 要先改成
+        `ON DELETE SET NULL`，否則 DB 層擋著，刪不掉。 -->
 3. **`productSet` 不寫庫存數量**（§B.7）。
 4. `lockVersion` 涵蓋整棵樹（§A.4）。
 
@@ -290,7 +299,21 @@ mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
 
 **為什麼**：變體 id 一換，`inventory_items` 換 id ⇒ **庫存 ledger 斷鏈**（13 §F5-3 的重放對帳永遠對不上）、`order_line_items` 外鍵斷、買家購物車裡的 `variant_id` 失效（cart line 存的是 variant_id）、第三方 feed 的 `id` 欄位（30 §9-8：`variant.sku → id`）全部變成新品項，Google Merchant 會判為「商品消失＋新商品出現」，歷史成效歸零。
 
-> 22 §2 已記「Shopify 改選項會重建變體（斷外部引用）」，並標「S13-F1 diff 更新（不重建）——**我們刻意優於本尊的點**」。本節是那一句話的具體演算法。
+> 本節是「選項變更時如何保住變體身分」的具體演算法。
+>
+> <!-- 2026-08-15 依 parity 查證改寫，原文：
+>      「22 §2 已記「Shopify 改選項會重建變體（斷外部引用）」，並標「S13-F1 diff 更新
+>        （不重建）——**我們刻意優於本尊的點**」。本節是那一句話的具體演算法。」
+>      🔴 **前提整個錯了**：本尊預設就是 diff 更新（`LEAVE_AS_IS`），不是重建
+>      ⇒ 本節不是「我們優於本尊」，而是**把本尊已有的行為寫清楚**。
+>      `docs/research/22`:106 的同一句已同批修正並撤銷偏離登記。 -->
+>
+> ⚠️ **本節的三列表格是兩階段 diff 的「階段 A（投影）」**，不是完整的 diff 演算法。
+> 階段 B（比對）必須在投影**之後**才跑：有 `id` 的列以 id 對應，沒有 `id` 的列才用
+> 投影後的 `option_values_digest` 對應。
+> 🔴 **跳過階段 A、直接拿新舊 digest 比對 ＝ 舊變體對不上任何新 digest ⇒ 全部 id 被換掉**
+> ——那正是本節存在要防的事故（庫存 ledger 斷鏈、購物車 `variant_id` 失效、
+> Google Merchant 判為商品消失＋新商品出現）。
 
 ### B.6 `InventoryItem` 是獨立實體，不是 variant 的欄位
 
@@ -301,7 +324,20 @@ mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
 | 欄位 | 掛哪 | 理由 |
 |---|---|---|
 | price / compare_at_price / option values / position / image | `product_variants` | 銷售面 |
-| **sku / barcode** | **`inventory_items`**〔ours〕 | 它們標識的是「實體庫存單位」不是「售賣選項」；**單一權威欄位，避免雙寫漂移**（同 `on_hand` derived 不落庫的處理，13 §F5.1(a)）。Liquid 的 `variant.sku`（26 §變體 38 屬性）由 drop 從 inventory_item 讀 |
+| **sku** | **`inventory_items`** | 它標識的是「實體庫存單位」不是「售賣選項」；**單一權威欄位，避免雙寫漂移**（同 `on_hand` derived 不落庫的處理，13 §F5.1(a)）。Liquid 的 `variant.sku`（26 §變體 38 屬性）由 drop 從 inventory_item 讀。**本尊 `InventoryItemInput.sku` 是官方寫入面（2024-07 起）** |
+| 🔴 **barcode** | 🔴 **`product_variants`（不搬）** | **2026-08-15 修正**：本尊的 `InventoryItem` 型別**根本沒有 barcode 欄位**，`InventoryItemInput` 也沒有；barcode 就在 `ProductVariant` 上 |
+
+<!-- 2026-08-15 依 parity 查證拆列，原文是一列：
+     「| **sku / barcode** | **`inventory_items`**〔ours〕 | …」
+     🔴 **這是 bug——把兩個欄位綁在一起搬，但它們在本尊身上不同命。**
+     sku 確實是 inventory item 的；**barcode 本尊從來沒搬過**。
+
+     🔴🔴 **最要小心的地方：我方 `db/schema.rb` 目前是對的**
+     （`product_variants.barcode` 存在、`inventory_items` 沒有 barcode）
+     ⇒ **任何人「照規格去修 schema」都會把它改壞。**
+
+     ⚠️ 這一條是本輪學到的方法論的樣本：**當「規格說 A、schema 已經是 B」時，
+     先查本尊再決定改哪一邊**——不要預設規格是對的。 -->
 | unit_cost（每品項成本）/ tracked / country_of_origin / harmonized_system_code | `inventory_items` | 對齊 `inventoryItemUpdate` 的既有簽名（28 §3） |
 | available / committed / unavailable / incoming | `inventory_levels`（per location） | 13 §F5.1 |
 
