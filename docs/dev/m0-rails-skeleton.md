@@ -222,7 +222,7 @@ bin/rails db:seed
 - `spec/migrations/m0_core_schema_spec.rb`：47 個具名表＋冪等表＋4 張法域聯集表（含 🔴 einvoices 非唯一索引防回歸斷言）、`shop_id` 第一欄、tenant-prefixed indexes、composite FK（45 條）、integer cents、HK 基準預設值防回退。
 - `spec/config/m0_configuration_spec.rb`：品牌單一來源、limits.yml 扁平結構、M0 代碼實際消費的 api／auth 鍵存在且型別正確（2026-08-13 由逐值複製斷言改寫）。
 - `scripts/check-limits-keys.rb`（2026-08-15 新增，CI `quality` job）：斷言 `config/limits.yml` **每一層 mapping 的鍵都解析成 String**，擋住上面「關鍵取捨」#6 的 YAML 1.1 鍵陷阱。走 Psych AST 以報出**確切行號**；判定用 `node.to_ruby` 的實際型別（不自寫 YAML 1.1 字表）。**不檢查值的型別**、**偵測到 ERB 即 fail**（loader 會先 render ERB，本腳本讀原始檔，不擋就會 CI 綠燈而 runtime KeyError）——兩項限制寫在腳本檔頭的誠實聲明。
-- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，**19 條 case / 12 個 fixture**（同一 fixture 可有多條斷言：行號一條、型別一條），fixture 在 `spec/fixtures/ci_violations/limits_*`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。
+- `scripts/test-limits-key-rules.rb`（2026-08-15 新增，CI `quality` job）：上一支的回歸測試，**20 條 case / 13 個 fixture**（同一 fixture 可有多條斷言：行號一條、型別一條），fixture 在 `spec/fixtures/ci_violations/limits_*`。形態與理由同 `test-money-rules.rb`（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）——判定邏輯被改壞時 `check-limits-keys.rb` 對乾淨倉庫仍會 exit 0，CI 全綠而它已什麼都不擋。
 
   | fixture | 期望 | 守什麼 |
   |---|---|---|
@@ -236,6 +236,7 @@ bin/rails db:seed
   | `limits_missing_target` | **exit 2** | 🔴 **fail-closed：TARGETS 列的檔不存在**。fixture 是一個**只有 README、沒有 `config/limits.yml`** 的目錄——本倉庫的 `config/limits.yml` 一直都在，這個分支在 CI 上永遠走不到，把 `exit` 改成 `next` 完全看不出差別 |
   | `limits_bad_yaml` | **exit 2** | 🔴 **YAML 本身壞掉也是「檢查跑不了」**。沒有 `rescue Psych::SyntaxError` 時，例外直接冒出去、Ruby 以 **exit 1 ＋ backtrace** 結束——而 1 的定義是「檢查跑了，發現違規」⇒ **退出碼會說謊** |
   | `limits_alias_key` | **exit 2** | 🔴 `*nope: 1`（不存在的錨點當**鍵**）。三件事同時繞過「只攔 `Psych::SyntaxError`」的寫法：解析**成功**、炸點在 `walk` 裡的 `to_ruby`（rescue 的外面）、類別是 `Psych::AnchorNotDefined`。⇒ 判準改成語義的：**checker 自己炸了就是沒檢查完，一律 2** |
+  | `limits_bad_encoding` | **exit 2** | 🔴 非 UTF-8 位元組：`File.read` 不炸、炸在 `raw.match?`——在讀檔 rescue 與總括 rescue **中間**的裸 exit 1（第 8 輪）。現由 `valid_encoding?` 明確驗 |
   | `limits_empty` | **exit 3** | 🔴 **0 鍵 canary**：limits.yml 清空成只剩註釋時，檔數 1、violations 空，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。與 TARGETS canary 不同，這條 fixture 蓋得到 |
   | `limits_clean` | exit 0 | 🔴 反向斷言。刻意含 `y`/`n` 鍵，同時守住「不得反過來加禁止裸字 y/n 的字面規則」；**另含一段字串鍵的 sequence**，守 Sequence 遞迴分支的**偽陽性**方向（`limits_seq_key` 只守真陽性） |
 

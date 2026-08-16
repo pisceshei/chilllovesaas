@@ -126,6 +126,8 @@ CASES = [
     "兩份走的是同一個 rescue 但類別不同——這正是「列舉列不完」的證據）" ],
   [ "limits_empty", 3, "0 個 mapping 鍵",
     "🔴 **0 鍵 canary**（第 6 輪驗收指出，實測復現）：canary 原本只數檔案不數鍵，"     "limits.yml 清空成只剩註釋時照樣 exit 0 報通過——而它是鐵律 6 的唯一上限值來源，"     "不可能合法地沒有任何鍵。「沒有違規」與「沒有東西可查」同形態第三次出現"     "（TARGETS 空＝檔案層、本條＝內容層）。與 TARGETS canary 不同，這條 fixture 蓋得到" ],
+  [ "limits_bad_encoding", 2, "不是合法的 UTF-8",
+    "🔴 第 8 輪：File.read 讀壞位元組不炸、炸在 raw.match?（ArgumentError）——"     "在讀檔 rescue 與總括 rescue **中間**，裸 exit 1。第 5 輪「所有非零出口歸位」"     "的清點漏了「讀進來的東西不合法」這一格 ⇒ 明確驗 valid_encoding?，fail-closed 到 2" ],
   [ "limits_clean", 0, "OK",
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
@@ -145,7 +147,7 @@ indent = ->(text) { text.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n")
 #    ⚠️ 而這條退化路徑是**現實的**，不是理論：`CASES` 的行號與 fixture 行數是硬耦合
 #    （Pending 5／7 自承），改 fixture 就得手改斷言 —— 被嫌煩時最省事的做法就是刪 case。
 #    🔴 數字只准往上調。要調低必須在 PR 描述說明刪了哪一條、為什麼那條不再需要。
-MIN_CASES = 19
+MIN_CASES = 20
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。" \
        "若確實要移除某條，請一併調低 MIN_CASES 並在 PR 描述說明理由。"

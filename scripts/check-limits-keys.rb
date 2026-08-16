@@ -170,6 +170,17 @@ TARGETS.each do |rel|
     exit 2
   end
 
+  # 🔴 編碼檢查（2026-08-16，第 8 輪驗收指出，實測復現）：`File.read` 讀非 UTF-8 位元組
+  #    **不會**在讀取時炸——炸在下一行 `raw.match?`（ArgumentError），
+  #    而那一行在**所有 rescue 之外** ⇒ 裸 exit 1，退出碼又說謊了一次。
+  #    第 5 輪「所有非零出口都歸位」的清點漏了這一條：rescue 的座標對了（讀檔、解析），
+  #    但「讀進來的東西不合法」炸在兩者**中間**。⇒ 明確驗 encoding，fail-closed 到 2。
+  unless raw.valid_encoding?
+    warn "::error::#{rel} 不是合法的 UTF-8（含無效位元組序列）⇒ **檢查跑不了**（exit 2，不是 1）。" \
+         "本腳本與 config/application.rb 的 loader 都假設 UTF-8；請修檔案編碼。"
+    exit 2
+  end
+
   if raw.match?(ERB_TAG)
     warn "::error::#{rel} 含 ERB tag（`<%`）——本腳本讀原始檔，而 config/application.rb 用的 " \
          "ActiveSupport::ConfigurationFile.parse 會先 render ERB 再解析，兩者輸入不同即失去保證" \
