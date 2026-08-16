@@ -195,3 +195,14 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
 - 每功能過 `docs/specs/11` §0 七維度；併發場景（超賣/折扣用量/退款上限）必須有測試。
 - 主題引擎相關：golden theme＝Ella（`docs/research/27` §8 十條、31 §6 矩陣）；Liquid API 面對照 `docs/research/26` 清單。
 - 跑 `bundle exec rspec`＋`npm test` 綠了才開 PR。
+- 🔴 **🔴＋🟡 全清驗收（2026-08-16 使用者裁定，取代「🟡 不擋通過」）**：通過＝🔴 為零
+  **且未清 🟡 為零**。🟡 三清法：①修復（diff 可驗證）②裁定不修（PR 描述或
+  `docs/DECISIONS.md` 明文條目，驗收方核對存在即清、不評裁定本身）③證偽（附證據，
+  驗收方複驗成立即清）。🔴 不適用②。範圍外既有問題走 **⚪**（登記不擋，作者搬進
+  `docs/specs/91-pit-register.md`——該檔尚未建立、排查階段 PR-E1 引入，建立前登記於
+  PR 描述）。全文＝CLAUDE.md §驗收基準。
+- 🔴 **響應式與網路層取證**（2026-08-16 新增鐵律 13/14，全文在 CLAUDE.md）：
+  三裝置（1280/768/390）逐頁與本尊並排實測才可登記形態；「N 寬 PASS」宣稱必須附
+  倉庫內可重跑腳本＋快照；payload／錯誤碼斷言必須來自測試店真實觸發的抓包
+  （五件套：URL 去 token／method／觸發步驟／形狀節錄／取證日期）；
+  不可觀測（persisted-query）與不可測（Plus 限定/safe-area）一律標 V，不得寫成已驗證。
