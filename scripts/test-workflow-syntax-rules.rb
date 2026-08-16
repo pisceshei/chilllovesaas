@@ -25,6 +25,9 @@
 #     ⇒ 原本會丟 `Psych::DisallowedClass` 讓腳本帶著 backtrace 崩掉
 #   - `wf_nil_step`：steps 多打一個 `-`（空元素）——合法 YAML、step 是 nil，
 #     無 Hash 防護時 `nil["run"]` 崩掉（與裸日期同形態，入口不同；2026-08-16 加）
+#   - `wf_bad_defaults`：`defaults:` 掛字串——`dig` 對 String 崩（第三入口；2026-08-16 加）
+#   - `wf_bad_run_defaults`：`defaults.run:` 掛字串／`run:` 掛 sequence／`steps:` 掛 scalar
+#     ——第四／五／六入口三形態合一份（2026-08-16 加；PR #49 首輪指出本清單漏列這兩條）
 #
 # **「什麼都沒驗到」的兩層**
 #   - `wf_empty`：一份 workflow 都找不到 ⇒ fail（空值長得像資料）
@@ -75,7 +78,10 @@ CASES = [
     "與裸日期／nil step 同形態的第三個入口（第 4 輪驗收指出，實測復現）。" \
     "needle 用 run 計數：崩掉時一個都沒檢查，計數分得出來" ],
   [ "wf_bad_run_defaults", 0, "1 個 run 區塊",
-    "🔴 反向斷言之五＋六（PR #42 第 6 輪）：`defaults.run:` 掛字串（dig 第四入口）與 "     "step `run:` 掛 sequence（gsub 第五入口）都不得崩潰。"     "needle 用 run 計數：sequence 形被跳過、真 run 被檢查，1 個才是對的" ],
+    "🔴 反向斷言之五＋六＋第六入口（PR #42 第 6 輪＋PR #48 首輪）：`defaults.run:` 掛字串" \
+    "（dig 第四入口）、step `run:` 掛 sequence（gsub 第五入口）、job `steps:` 掛 scalar" \
+    "（each_with_index 第六入口）都不得崩潰。" \
+    "needle 用 run 計數：sequence 形與 scalar 形被跳過、真 run 被檢查，1 個才是對的" ],
   [ "wf_custom_shell", 1, "bash -n",
     "🔴 **`interpreter_for` 的正向斷言**：官方文件化的自訂 shell 模板 " \
     "`bash --noprofile --norc -eo pipefail {0}` 下的壞 bash **必須被抓到**。" \
@@ -87,6 +93,16 @@ CASES = [
   [ "wf_empty", 1, "一份 workflow 都沒找到",
     "🔴 掃不到檔案時必須 fail，不能印 OK（空值長得像資料）" ]
 ].freeze
+
+# 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
+#    把 CASES 清空，這支會印「OK（0 條）」並 exit 0——姊妹檔 test-doc-claims-rules.rb
+#    一直有這一層而本檔漏了（PR #48 首輪驗收指出）。數字只准往上調；要調低必須在
+#    PR 描述說明刪了哪一條、為什麼不再需要。
+MIN_CASES = 11
+if CASES.size < MIN_CASES
+  warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
+  exit 1
+end
 
 failures = []
 

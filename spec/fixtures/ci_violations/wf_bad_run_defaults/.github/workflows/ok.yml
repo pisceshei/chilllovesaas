@@ -1,8 +1,9 @@
-# 反向斷言之五＋六（PR #42 第 6 輪驗收指出，2026-08-16 實測復現）：
+# 反向斷言之五＋六＋第六入口（PR #42 第 6 輪＋PR #48 首輪驗收指出，2026-08-16 實測復現）：
 # ①`defaults:` 是 Hash 但 `defaults.run:` 掛**字串**——dig("run","shell") 對 String 崩（第四入口）；
 # ②step 的 `run:` 掛 **sequence**——script.gsub 對 Array 崩（第五入口）。
-# 期望：exit 0 且「1 個 run 區塊」——sequence 形 run 被跳過（少檢不是崩潰）、
-# 字串形 defaults.run 當成沒有；只有最後那個真 run 被檢查。
+# ③（PR #48 首輪追加）job 的 `steps:` 掛 scalar——each_with_index 對 String 崩（第六入口）。
+# 期望：exit 0 且「1 個 run 區塊」——sequence 形 run 與 scalar 形 steps 都被跳過
+# （少檢不是崩潰）、字串形 defaults.run 當成沒有；只有最後那個真 run 被檢查。
 name: BadRunDefaults
 on: [push]
 defaults:
@@ -18,3 +19,6 @@ jobs:
           - echo list
       - name: real step
         run: echo ok
+  broken-steps:
+    runs-on: ubuntu-latest
+    steps: TODO
