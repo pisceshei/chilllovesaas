@@ -115,7 +115,7 @@ BIGINT max 上 `9223372036854775807` 會變成 `92233720368547760.00`（差 2 �
 | **JSON-LD／feed（M3 SEO）** | `Offer.price` | R4；`62` §A.4 |
 | **物流商（M4）** | 運費 payload | R4，**不是 R6**——`58` §G.3 與 PSP 的任何格式都不是同一件事 |
 | **DB migration** | 任何新增金額欄位 | `bigint` ＋ `_cents`；C3 會擋 `t.decimal`／`t.float`／`t.integer :*_cents` |
-| **`config/ci.rb` 與 `ci.yml`** | 改 CI 時 | 兩邊都要有 `check-money-boundary` 與 `test-money-rules` |
+| **`config/ci.rb` 與 `ci.yml`** | 改 CI 時 | 兩邊都要有 `check-money-boundary` 與 `test-money-rules`——**自 PR #39 起由 `scripts/check-ci-parity.rb` 機器擋**（漏同步 CI 會 fail 並逐支點名），本列從紀律變成機制的說明 |
 
 ## 測試
 

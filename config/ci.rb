@@ -10,6 +10,9 @@ CI.run do
   #    `pnpm audit --audit-level high`，而本檔沒有等價步驟——**本機全綠但 CI 會紅**，
   #    正是本檔那條同步條款要防的落差。而當時的 check-ci-parity.rb **結構上看不到它**
   #    （只比對 `scripts/*`）⇒ 該檢查同輪已擴充為也比對 bin/*／pnpm 這類指令。
+  # ⚠️ 需要網路（查 npm advisory DB）；離線跑 bin/ci 會紅在這一步，不是你弄壞的。
+  #    check-baseline-raise.py 那種「取不到基準優雅略過」**刻意不套用**在安全稽核上——
+  #    安全檢查靜默略過比紅燈更糟。
   step "Security: Frontend audit", "pnpm audit --audit-level high"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
 

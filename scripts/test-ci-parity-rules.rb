@@ -68,7 +68,10 @@ CASES = [
     "🔴 反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓下面每一條都「通過」" ],
   [ "parity_clean", 0, "另比對 2 組非 scripts/ 指令",
     "🔴 正向覆蓋數：規則 2 真的**認出**了 bin/rubocop 與 pnpm audit 兩組。" \
-    "只斷言 exit 0 的話，把 KNOWN_RUNNERS 清空（規則 2 全面停擺）仍然全綠" ],
+    "只斷言 exit 0 的話，把 KNOWN_RUNNERS 清空（規則 2 全面停擺）仍然全綠。" \
+    "🔴 本 fixture 的 ci.yml 另含 `pnpm install --frozen-lockfile` 而 ci.rb **沒有**——" \
+    "它走 RUNNER_EXEMPT 豁免：把豁免拿掉本條立刻紅（第 6 輪 🟡：豁免清單原本零 fixture）；" \
+    "「仍是 2 組不是 3 組」同時守住豁免只吃完整 key、不吃前綴" ],
 
   [ "parity_missing_script", 1, "scripts/check-tenant-isolation.rb",
     "規則 1：ci.yml 跑了、config/ci.rb 沒跑的腳本必須被點名" ],
@@ -111,8 +114,12 @@ CASES = [
   [ "parity_comment_only", 0, "用到 2 支腳本",
     "🔴 反向斷言：`# 之後要加 ruby scripts/check-schema-drift.rb（還沒寫）` 這種" \
     "**整行註釋**不得被當成「有執行」，否則純文件的 workflow 改動會弄紅 CI。" \
-    "斷言用**腳本計數**而不是 exit 0：只看 exit code 的話，" \
-    "把註釋剝除邏輯拿掉會讓 ci.rb 那側也一起多算，仍可能兩邊抵銷成綠" ]
+    "斷言用**腳本計數**而不是 exit 0——計數是更強的斷言，直接證明剝除邏輯" \
+    "把註釋裡那支排除掉了（而不是靠差集恰好為空）。" \
+    "🔴 2026-08-16 更正（第 6 輪驗收指出）：本欄原本的理由是「拿掉剝除邏輯會讓 ci.rb" \
+    "那側也一起多算、兩邊抵銷成綠」——**不成立**：command_lines 只作用在 ci.yml 的 run" \
+    "區塊，ci.rb 側走 STEP_LINE/STEP_CALL 不經過它，拿掉剝除邏輯光看 exit code 就會紅。" \
+    "斷言沒錯，錯的是「為什麼用計數」的理由" ]
 ].freeze
 
 failures = []

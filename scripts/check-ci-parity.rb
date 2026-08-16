@@ -44,10 +44,14 @@
 #
 # ## 不檢查什麼（🔴 誠實聲明，這段就是本腳本對外宣稱的契約，不得誇大）
 #
-#   1. **不檢查 inline shell 步驟**。ci.yml 的 `Verify bin/ and scripts/ are executable`
-#      是直接寫在 workflow 裡的 shell，不是 `scripts/` 下的檔 ⇒ 本腳本看不到它，
-#      `bin/ci` 也跑不到它。**這是已知缺口，不是已解決**。
+#   1. **不檢查 inline shell 步驟的「腳本邏輯」**。ci.yml 的
+#      `Verify bin/ and scripts/ are executable` 是一段多行 shell（`bad=$(`、`while`⋯），
+#      本腳本不解析它 ⇒ `bin/ci` 也跑不到它。**這是已知缺口，不是已解決**。
 #      要補的話正解是把它抽成 `scripts/check-exec-bits.sh`，那樣它就自動落入規則 1。
+#      <!-- 🔴 2026-08-16 收窄（PR #39 第 6 輪驗收指出）：原文「不檢查 inline shell 步驟」
+#           是**過寬的全稱句**——規則 2 檢查的 `pnpm audit --audit-level high`（ci.yml:201）
+#           本身就是 inline shell 步驟。本腳本看不到的是「多行腳本邏輯」，
+#           不是「所有 inline shell」；規則 2 就是為了看得到單行指令而存在的。 -->
 #   2. **不檢查步驟順序或名稱**，只檢查「有沒有跑到」。
 #   3. **不檢查 `test` job**（migration／rspec／前端那些），那些本來就由 ci.rb 的
 #      前面那批**通用步驟**（bin/setup／rubocop／audit／rspec／pnpm 等）以不同形式涵蓋，
@@ -55,6 +59,12 @@
 #      🔴 原文寫「前八步」，2026-08-15 更正：該區塊實際是 **9 步**（`step` 行實數），
 #         寫死步數的敘述會隨著有人加一步而靜默變成假的。
 #   4. **不反向檢查**（ci.rb 有而 ci.yml 沒有不算違規）——本機多跑東西是好事。
+#   5. **不拆複合行**（2026-08-16 補；第 3／5 輪驗收指出、第 5 輪 commit 宣稱補了
+#      **但實際沒進檔**，第 6 輪抓到——「宣稱交付而未交付」正是本段要防的形態）：
+#      `command_key` 只讀行首 token，`A && B`／`A | B` 的後段整段看不見；
+#      且行內含 `scripts/` 時整行回 nil（交給規則 1），連同行的 runner 指令一起跳過。
+#      ci.yml 目前無此寫法；要用複合行請拆成多行，否則規則 2 對後段**靜默失明**，
+#      症狀是「檢查通過」。
 #
 # 用法：ruby scripts/check-ci-parity.rb
 # 退出碼：0=通過，1=有落差

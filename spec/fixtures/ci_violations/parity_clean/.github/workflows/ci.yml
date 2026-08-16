@@ -12,3 +12,5 @@ jobs:
         run: bin/rubocop -f github
       - name: Frontend audit
         run: pnpm audit --audit-level high
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
