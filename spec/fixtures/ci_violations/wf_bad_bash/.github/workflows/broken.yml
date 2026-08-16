@@ -1,0 +1,16 @@
+# 故意違反：YAML 合法，但 run 區塊的 bash 語法壞掉（if 沒有 fi）。
+#
+# 🔴 這是最陰險的一種：**YAML 解析得過**，所以只驗 YAML 的檢查會放行，
+#    要到 CI 真的跑那一步才炸。claude-review.yml 的 240 行閉環腳本正是這種風險的集中地，
+#    而它因為反竄改機制連驗收都拿不到。
+# 期望：scripts/check-workflow-syntax.rb 打紅（bash -n 不通過）。
+name: BadBash
+on: [push]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unclosed if
+        run: |
+          if [ -n "$HOME" ]; then
+            echo yes

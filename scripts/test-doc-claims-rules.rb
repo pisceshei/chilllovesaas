@@ -41,6 +41,10 @@ CASES = [
     "缺這條，規則會逼人刪掉有用的交叉指引" ],
   [ "doc_stale_lineno", 1, "行號已失效",
     "R3：`config/short.yml:99` 但該檔只有 3 行。PR #40 第 5 輪的 `config/ci.rb:48-49` 即此形態" ],
+  [ "doc_volatile_cjk", 1, "八條 fixture",
+    "🔴 **中文數字也是易腐數字**（PR #42 第 3 輪驗收指出）：本倉庫文檔的計數幾乎一律" \
+    "寫中文（「八條」「四條」），初版 pattern 全以 \\d+ 開頭 ⇒ R4 對最常見寫法全盲——" \
+    "「八條」撐過兩輪人工審查＋本閘門首跑，就是這個洞的直接後果" ],
   [ "doc_volatile_num", 1, "可由代碼算出的數字",
     "🔴 R4：「共 7 支」這種手抄的易腐數字，鄰近沒有任何複驗方式。" \
     "PR #40 第 4／5 輪各踩一次，而且**兩次都是「修掉過期數字」的修正本身寫錯的**" ],
@@ -48,7 +52,10 @@ CASES = [
     "🔴 反向斷言：同樣寫數字但**附了複驗指令** ⇒ 放行。" \
     "缺這條，R4 會退化成「一律禁止寫數字」，那會逼人把有用的量化敘述都刪掉" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
-    "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。"     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。"     "fixture＝一個只有 `NOTE.txt`、沒有任何 .md 的目錄。"     "🔴 碼用 3 不是 2：與 fail-closed 的 2 結構上可分辨（check-limits-keys.rb 第 3 輪的教訓）" ],
+    "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
+    "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
+    "fixture＝一個只有 `NOTE.txt`、沒有任何 .md 的目錄。" \
+    "🔴 碼用 3 不是 2：與 fail-closed 的 2 結構上可分辨（check-limits-keys.rb 第 3 輪的教訓）" ],
   [ "doc_clean", 0, "OK：文檔引用保真檢查通過",
     "🔴 總反向斷言：乾淨 fixture 必須通過。缺這條，一個永遠 fail 的檢查器會讓上面每一條都「通過」" ]
 ].freeze
@@ -84,9 +91,72 @@ CASES.each do |dir, want_status, want_output, why|
   failures << "#{dir}：exit code 對，但輸出不含 `#{want_output}`（#{why}）\n      完整輸出：\n#{indent.call(output)}"
 end
 
+# ---- git 情境測試：R4「只掃新增行」的範圍語義（PR #42 第 4 輪 🔴：零覆蓋／零 canary）----
+#
+# 🔴 上面的 fixture 目錄**結構上測不到**這條路徑：CASES 一律帶 `--all`
+#    （fixture 不是 git 樹，算不出 diff）⇒ `-U0` hunk 行號集合那段代碼
+#    在九條 fixture 裡一次都沒執行過——改壞它，上面照樣全綠。
+#    照 test-exec-bits-rules.sh 的辦法：現場 `git init` 一個臨時倉庫，
+#    做出「歷史層有髒數字、新增行才受檢」的真實形態（就是本倉庫 worklog 的日常）。
+require "tmpdir"
+require "fileutils"
+require "open3"
+
+GIT_SCENARIOS = 2
+git_run = lambda do |work, *cmd|
+  out, st = Open3.capture2e({ "LC_ALL" => "C" }, "git", "-C", work,
+                            "-c", "user.email=t@example.com", "-c", "user.name=t", *cmd)
+  raise "git 情境建置失敗：git #{cmd.join(' ')}\n#{out}" unless st.success?
+  out
+end
+
+Dir.mktmpdir("doc-claims-git-") do |work|
+  doc_dir = File.join(work, "docs/worklog")
+  FileUtils.mkdir_p(doc_dir)
+  doc = File.join(doc_dir, "2026-08-15-case.md")
+  # 歷史層的髒數字：命中 R4 的「共 N 支」，且鄰近沒有複驗指令也沒有快照字樣。
+  hist = "歷史層敘事：初版共 7 支腳本，這行故意沒有附上覆核的方式。\n"
+  File.write(doc, hist)
+  git_run.call(work, "init", "-q")
+  git_run.call(work, "add", "-A")
+  git_run.call(work, "commit", "-qm", "base")
+  base = git_run.call(work, "rev-parse", "HEAD").strip
+
+  # 情境 G1（反向斷言）：本次只新增乾淨行 ⇒ 歷史髒數字**不得**被打，exit 0。
+  # 🔴 這是「只掃新增行」的 canary：把範圍退化回「掃整份有改動的檔」，這條立刻紅。
+  File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n")
+  git_run.call(work, "add", "-A")
+  git_run.call(work, "commit", "-qm", "clean-add")
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  if $?.exitstatus != 0 || !out.include?("OK：文檔引用保真檢查通過")
+    failures << "git-G1：歷史層髒數字＋乾淨新增行應 exit 0（只掃新增行），實得 #{$?.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
+  end
+
+  # 情境 G2：新增行寫**中文數字**易腐宣稱（「八條 fixture」）⇒ 必須抓到**那一行**，
+  # 且**不得**連帶打到第 1 行的歷史髒數字。兩個斷言合起來才等於「範圍語義對」。
+  # 🔴 中文數字在 diff 模式下的 canary 也在這：NUM 退化回 \d+，這條立刻紅。
+  File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n本輪補了八條 fixture，這行同樣沒有附覆核方式。\n")
+  git_run.call(work, "add", "-A")
+  git_run.call(work, "commit", "-qm", "cjk-add")
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  st = $?.exitstatus
+  if st != 1
+    failures << "git-G2：新增行的中文數字易腐宣稱應 exit 1，實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
+  elsif !out.include?("2026-08-15-case.md:3")
+    failures << "git-G2：exit 對但沒指到新增的第 3 行（中文數字沒被抓？）\n      完整輸出：\n#{indent.call(out)}"
+  elsif out.include?("2026-08-15-case.md:1")
+    failures << "git-G2：連歷史層第 1 行也被打了——「只掃新增行」的範圍語義壞了\n      完整輸出：\n#{indent.call(out)}"
+  end
+rescue StandardError => e
+  failures << "git 情境測試自身失敗（#{e.class}）：#{e.message}"
+end
+
 if failures.empty?
-  puts "OK：文檔引用保真檢查器的回歸測試通過（#{CASES.size} 條 / #{CASES.map(&:first).uniq.size} 個 fixture）"
+  puts "OK：文檔引用保真檢查器的回歸測試通過" \
+       "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ #{GIT_SCENARIOS} 條 git 情境）"
   CASES.each { |dir, st, needle, why| puts "  - #{dir} → exit #{st}，含 `#{needle}`：#{why}" }
+  puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
+  puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   exit 0
 end
 

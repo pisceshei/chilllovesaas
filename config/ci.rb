@@ -75,6 +75,10 @@ CI.run do
   #    它補上的當天就抓到兩個讓對等性檢查靜默 exit 0 的活 bug，
   #    形態與其餘 test-*.rb 相同（65 §K.7：檢查本身也要被測試）。
   step "Invariants: CI parity rules regression", "ruby scripts/test-ci-parity-rules.rb"
+  # workflow 的語法閘門。本機跑得到特別有價值：改 claude-review.yml 的 PR
+  # 拿不到 Claude 驗收（反竄改），本機這一步是它上線前唯一的機械檢查。
+  step "Invariants: Workflow syntax", "ruby scripts/check-workflow-syntax.rb"
+  step "Invariants: Workflow syntax rules regression", "ruby scripts/test-workflow-syntax-rules.rb"
 
 
   # Optional: set a green GitHub commit status to unblock PR merge.
