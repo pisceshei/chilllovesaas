@@ -82,6 +82,8 @@ CASES = [
     "`null` / `Null` / `NULL` / `~` 全部 → NilClass" ],
   [ "limits_nil_key", 1, "config/limits.yml:11 鍵 `NULL`",
     "同上，**大小寫變體**——診斷訊息宣稱「含大小寫變體」，這條讓那句話有測試在守" ],
+  [ "limits_nil_key", 1, "config/limits.yml:12 鍵 `Null`",
+    "第 7 輪補：fixture 註釋宣稱實測涵蓋 null/Null/NULL/~ 四種，檔內卻只有三種——"     "「宣稱四種、實放三種」與 y/n 假斷言同型，只是規模小。現已補齊第四種" ],
   [ "limits_date_key", 1, "config/limits.yml:6 鍵 `2026-08-15`",
     "看起來像日期的鍵被解析成 Date（生效日／匯率日結那類表會踩到）" ],
   [ "limits_date_key", 1, "Date",
@@ -95,9 +97,9 @@ CASES = [
     "多打一個 `）` 會讓這條永遠不命中" ],
   [ "limits_erb", 2, "ERB",
     "🔴 ERB fail-closed（輸出型標籤）：原始檔的 AST 看起來乾淨，loader render 後是 true 鍵" ],
-  [ "limits_erb_tag", 2, "ERB",
+  [ "limits_erb_tag", 2, "含 ERB tag（",
     "🔴 ERB fail-closed（**非輸出型**控制流標籤）：與上一條是不同寫法，" \
-    "少了它，把 ERB_TAG 收窄成單一字面值不會被抓到" ],
+    "少了它，把 ERB_TAG 收窄成單一字面值不會被抓到。"     "needle 用 checker 獨有片語「含 ERB tag（」而非裸 `ERB`（第 7 輪 🟡）："     "收窄 ERB_TAG 後這份 fixture 會落到總括 rescue、也是 exit 2，"     "裸 needle 只靠「rescue 訊息恰好不含 ERB 字樣」這條薄邊際分辨，換個措辭就誤判" ],
   [ "limits_missing_target", 2, "TARGETS",
     "🔴 **fail-closed：TARGETS 列的檔不存在時必須 exit 2**。" \
     "本倉庫的 config/limits.yml 一直都在 ⇒ 這個分支在 CI 上永遠走不到，" \
@@ -143,10 +145,23 @@ indent = ->(text) { text.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n")
 #    ⚠️ 而這條退化路徑是**現實的**，不是理論：`CASES` 的行號與 fixture 行數是硬耦合
 #    （Pending 5／7 自承），改 fixture 就得手改斷言 —— 被嫌煩時最省事的做法就是刪 case。
 #    🔴 數字只准往上調。要調低必須在 PR 描述說明刪了哪一條、為什麼那條不再需要。
-MIN_CASES = 18
+MIN_CASES = 19
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。" \
        "若確實要移除某條，請一併調低 MIN_CASES 並在 PR 描述說明理由。"
+  exit 1
+end
+
+# 🔴 第 7 輪補的兩條結構斷言（🟡：MIN_CASES 只擋條數，18 條全複製 limits_clean 也會過）：
+#    ①fixture 種類數也有下限——複製貼上撐條數會被抓；
+#    ②**四種退出碼都必須各有 case**——把某一類全刪（例如所有 exit 2 的 fail-closed），
+#      條數可能仍夠，但整個失敗類別從測試裡消失了。
+if CASES.map(&:first).uniq.size < 12
+  warn "::error::CASES 只覆蓋 #{CASES.map(&:first).uniq.size} 個 fixture（下限 12）——條數夠但種類被砍了。"
+  exit 1
+end
+unless CASES.map { |c| c[1] }.uniq.sort == [ 0, 1, 2, 3 ]
+  warn "::error::CASES 的期望退出碼只剩 #{CASES.map { |c| c[1] }.uniq.sort.inspect}——"        "四種碼（0 通過／1 違規／2 跑不了／3 沒生效）必須各有至少一條 case 在守。"
   exit 1
 end
 

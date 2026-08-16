@@ -179,7 +179,7 @@ TARGETS.each do |rel|
     exit 2
   end
 
-  scanned << rel
+  keys_before = stats[:keys]
 
   # 🔴 YAML 本身壞掉（截斷／縮排錯）也是「檢查跑不了」，必須回 2。
   #    沒有這個 rescue 的話，Psych::SyntaxError 會直接冒出去，
@@ -209,6 +209,11 @@ TARGETS.each do |rel|
          "原始錯誤：#{e.message}（#{e.backtrace&.first}）"
     exit 2
   end
+
+  # 🔴 per-file 計數（2026-08-16，第 7 輪驗收指出）：0 鍵 canary 若只看**全體總和**，
+  #    TARGETS 一長就退化——真實 limits.yml 的一千多個鍵會把「新加的那一檔被清空」
+  #    完全遮住，正是剛修掉的形態再降一層。⇒ scanned 存 [rel, 檔內鍵數]，canary 逐檔判 0。
+  scanned << [ rel, stats[:keys] - keys_before ]
 end
 
 # 🔴 canary：**「沒有違規」與「沒有檢查」在輸出上長得一模一樣。**
@@ -221,8 +226,9 @@ end
 # 🔴 0 個**鍵**也算沒生效（不只 0 個檔，2026-08-16 擴充）：limits.yml 被清空成只剩註釋時，
 #    掃描檔數是 1、violations 是空的，原 canary 放行 ⇒ 鐵律 6 的上限值全沒了而 CI 綠。
 #    fixture＝limits_empty（這一條與 TARGETS 不同，fixture 蓋得到）。
-if scanned.empty? || stats[:keys].zero?
-  what = scanned.empty? ? "0 個檔案" : "#{scanned.size} 個檔案但 **0 個 mapping 鍵**"
+empty_files = scanned.select { |_, k| k.zero? }.map(&:first)
+if scanned.empty? || !empty_files.empty?
+  what = scanned.empty? ? "0 個檔案" : "#{scanned.size} 個檔案，其中 **#{empty_files.join('、')} 是 0 個 mapping 鍵**"
   warn "::error::TARGETS 掃了 **#{what}**——這不是通過，是檢查沒有生效。" \
        "檔案為 0 請查 scripts/check-limits-keys.rb 的 TARGETS 常數；" \
        "鍵為 0 代表 limits.yml 是空的或只剩註釋，而它是鐵律 6 的唯一上限值來源，" \
@@ -235,7 +241,7 @@ end
 
 if violations.empty?
   puts "OK：limits.yml 鍵型別檢查通過"
-  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.join(', ')}）、mapping 鍵 #{stats[:keys]} 個"
+  puts "  - 掃描檔案：#{scanned.size} 個（#{scanned.map { |r, k| "#{r}=#{k} 鍵" }.join('、')}）"
   puts "  - 所有 mapping 鍵皆解析為 String（不會被 Psych 轉成布林／nil／Date）"
   puts "  - 檔內無 ERB tag（有的話本腳本會 fail，不會靜默放行）"
   puts "  - 不檢查值的型別，理由見檔頭誠實聲明"

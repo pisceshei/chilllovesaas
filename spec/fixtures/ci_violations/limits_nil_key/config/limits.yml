@@ -9,3 +9,4 @@ flags:
   ~: placeholder
   null: placeholder2
   NULL: placeholder3
+  Null: placeholder4
