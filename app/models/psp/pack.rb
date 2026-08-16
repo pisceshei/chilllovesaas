@@ -156,10 +156,37 @@ class Psp::Pack
     # A6：我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只給得出 2 位
     # ＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `"2.900"`）。
     max = Limits.fetch(:money_boundary, :psp_decimal_max_places)
-    return if decimal_places <= max
+    if decimal_places > max
+      raise Psp::PackInvalid,
+        "pack #{code} 宣告 decimal_places=#{decimal_places} > #{max}（A6：不得 enable）"
+    end
+
+    # A6b：**位數下限**（2026-08-15，PR #29 驗收指出的缺口）。
+    #
+    # 🔴 只有上限時，`decimal_places: 0` 或 `1` 是完全合法的宣告，而
+    # `Money::Storage#to_psp_decimal` 走 `Money.fixed_string(major, decimal_places)`，
+    # 它會 `value.round(digits)` **靜默四捨五入**：
+    #   decimal_places=1 ＋ HKD 14.85（儲存 `1485`）⇒ 送出 `"14.9"`
+    #   ＝**帳上 14.85、送款 14.90，差額 0.05 沒有任何一張表記得住**。
+    # 這正是 65 §D.2 A5 逐字說的「自動湊整是最壞的處置」。
+    #
+    # 🔴 **這條缺口與 `minor_units` 側不對稱**：那一側有 A3 的餘數 raise
+    # （`cents % divisor != 0` ⇒ `NonIntegralConversion`）順手擋住，
+    # `decimal_string` 側**沒有等價物**——A3 是 minor_units 專用。
+    # ⚠️ 而且它**在 HKD 這個基準法域上就會發生**，不像 exponent 的錯只在
+    # zero-decimal 幣別現形 ⇒ 現有 §H 矩陣（全部宣告 2 位）測不到。
+    #
+    # 🔴 **為什麼是 reject 而不是支援 sub-2 位**：至今沒有任何一家真的用 sub-2 位的 PSP
+    # （65 §D 無出處），要「支援」得先發明湊整規則（進位方向？差額記哪張表？）
+    # ——那是憑空造規則。fail-closed 的代價是「真出現時第一次呼叫就 raise」，
+    # 那是**看得見**的失敗；不擋的代價是**靜默送錯金額**。
+    # 全文與裁定：`docs/specs/65` §D.5、`docs/DECISIONS.md` D16。
+    min = Limits.fetch(:money_boundary, :psp_decimal_min_places)
+    return if decimal_places >= min
 
     raise Psp::PackInvalid,
-      "pack #{code} 宣告 decimal_places=#{decimal_places} > #{max}（A6：不得 enable）"
+      "pack #{code} 宣告 decimal_places=#{decimal_places} < #{min}（A6b：不得 enable）——" \
+      "位數不足會讓 `fixed_string` 靜默四捨五入，🔴 不得自動湊整（65 §D.2 A5）"
   end
 
   # 🔴 `enable_gate` 非空 ⇒ `enabled` 必為 false。

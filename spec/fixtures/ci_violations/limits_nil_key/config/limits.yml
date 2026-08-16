@@ -1,0 +1,12 @@
+# 故意違反：裸字 `~` ⇒ Psych 解析成 nil，鍵不是 String。
+# `null:` / `NULL:` 同理（YAML 1.1 的 null 全集）。
+# 🔴 三種寫法**都實際放進來了**（2026-08-15 補；第 1、2 輪驗收各指出一次）：
+#    原本只放 `~`，卻在註釋裡斷言「null 同理」——**未實測的斷言**，
+#    與本倉庫剛被燒過的 y/n 那次同型（規格說會轉，Psych 5 實測不轉）。
+#    實測結果：Ruby 3.4.10 / Psych 5.2.2 下 `null` / `Null` / `NULL` / `~` 全部 → NilClass。
+# 期望：scripts/check-limits-keys.rb 打紅，且訊息點名 NilClass。
+flags:
+  ~: placeholder
+  null: placeholder2
+  NULL: placeholder3
+  Null: placeholder4

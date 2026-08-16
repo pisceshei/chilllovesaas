@@ -66,7 +66,14 @@ module UserErrors
         camelize(token)
       end
 
-      # `lock_version` → `lockVersion`。已經是 camelCase 或全大寫的原樣保留。
+      # `lock_version` → `lockVersion`。
+      #
+      # 🔴 **判準是「有沒有底線」，不是大小寫**（2026-08-15 修；原文寫成
+      # 「已經是 camelCase 或全大寫的原樣保留」）。實際行為：
+      # `"lockVersion"` 無底線 ⇒ 原樣（碰巧與原文相符）；
+      # 但 `"FOO_BAR"` **有**底線 ⇒ 會被轉成 `"FOOBar"`，**不是原樣保留**。
+      # ⚠️ 差別在「全大寫帶底線」這一類 token 上會現形——把判準寫成大小寫，
+      # 讀的人會以為丟一個 SCREAMING_CASE 進來是安全的。
       def camelize(token)
         return token unless token.include?("_")
 

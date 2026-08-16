@@ -1,0 +1,14 @@
+# 故意違反：輸出型 ERB 標籤當鍵。
+#
+# 為什麼要擋：本腳本讀原始檔，而 ActiveSupport::ConfigurationFile.parse 會先 render 再解析。
+# 一個「render 後才變成布林鍵」的寫法，在原始檔的 AST 裡是合法 String 鍵（看起來乾淨），
+# render 後卻是 true 鍵 ⇒ 不擋就是「CI 綠燈但 runtime KeyError」。
+#
+# 🔴 本註釋刻意**不寫出 ERB 標籤的字面**（2026-08-15 修）。
+#    原本的註釋裡有一個完整的 ERB 標籤，結果是：把下面那行真正的違規刪掉、只留註釋，
+#    checker **仍然打紅**——因為它讀的是整份檔案的文字，註釋自己就命中了閘門。
+#    ⇒ 那份 fixture 分不出「擋 ERB 鍵」與「擋註釋裡的字串」，等於沒有證明它宣稱的事。
+#    這與本專案反覆出現的形態同型：**檢查器被自己的文字騙過**。
+# 期望：scripts/check-limits-keys.rb 打紅（ERB fail-closed）。
+foo:
+  <%= ENV["SOME_KEY"] %>: value

@@ -8,10 +8,16 @@
 # 若各寫一份，漂移不會有任何跡象——本 enum 的第四個值 `UNLISTED` 就是
 # 這樣漏掉的：limits.yml 從一開始就是四值，model 與 enum 停在三值。
 #
-# 🔴 **不做舊 API 版本降級**（`limits.yml:817` `unlisted_downgrade_on_old_api_version: false`，
-# 刻意偏離本尊，13 §F1.2(f)）。Shopify 對舊版 API 把 `UNLISTED` 回成 `ACTIVE`，
+# 🔴 **不做舊 API 版本降級**（`limits.yml` 的 `product.unlisted_downgrade_on_old_api_version: false`，
+# 刻意偏離本尊，13 **§F1.2(g)**）。Shopify 對舊版 API 把 `UNLISTED` 回成 `ACTIVE`，
 # 那會讓舊版整合把它當 ACTIVE 處理、再送進 feed 與索引，**等於 noindex 完全失效**。
 # 我方 enum 一次到位四值，任何版本一律照實回 `UNLISTED`。
+#
+# ⚠️ **兩處引用在 2026-08-15 修過**：原文引 `limits.yml:817`（那一行現在是
+# `title_max_chars`）與 `13 §F1.2(f)`（那一節其實是「成員資格 vs 前台可見性」，
+# 本條在 **(g)**）。🔴 **教訓：不要在註釋裡引行號**——`limits.yml` 每次增刪都會漂，
+# 而漂掉之後**沒有任何機制會發現**。改引鍵名（`product.unlisted_downgrade_on_old_api_version`），
+# 它改名時 `Limits.fetch` 會直接 raise。
 class Types::ProductStatusEnum < GraphQL::Schema::Enum
   graphql_name "ProductStatus"
   description "商品在 Admin API 中的生命週期狀態。"

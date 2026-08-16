@@ -25,6 +25,34 @@ too_many_places:
   storage_precision_shortfall: reject
   enable_gate: []
 
+# A6b：decimal_places < 2 ⇒ 不得 enable（2026-08-15 新增，PR #29 驗收指出的缺口）。
+#
+# 🔴 **這兩個 fixture 在本次修正之前是「合法」的**——A6 只擋上限。
+# 而 `to_psp_decimal` 會 `fixed_string(major, decimal_places)`，
+# 內部 `value.round(digits)` **靜默四捨五入**：
+#   one_place ＋ HKD 14.85（儲存 1485）⇒ 送出 "14.9"
+#   ＝帳上 14.85、送款 14.90，差額 0.05 沒有任何一張表記得住（65 §D.2 A5：不得自動湊整）。
+# ⚠️ 這條路徑**在 HKD 這個基準法域上就會發生**，不像 exponent 的錯只在 zero-decimal
+# 幣別現形 ⇒ 現有 §H 矩陣（全部宣告 2 位）證明不了它。
+too_few_places:
+  amount_format: decimal_string
+  decimal_places: 1
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# 🔴 `0` 要**單獨**有一個 fixture，不能只測 `1`：
+# 它額外觸發 `fixed_string` 的格式 bug（`"1480.0"`——一位小數，連宣告的 0 位都不符）。
+# 兩者根因不同（一個是湊整、一個是格式），只測其中一個會讓另一個留著。
+zero_places:
+  amount_format: decimal_string
+  decimal_places: 0
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
 # 🔴 空表 ≠ 缺鍵：`divisibility` 整個鍵不見了＝「沒人查過」⇒ 不得 enable。
 # （若寫成 `divisibility: {}` 則是「已查證、無此約束」，合法。）
 missing_divisibility:

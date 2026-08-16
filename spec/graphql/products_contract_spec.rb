@@ -198,6 +198,58 @@ RSpec.describe "Admin GraphQL products contract", type: :request do
     }.to raise_error(TypeError, "金額型別閘門")
   end
 
+  # ── AR rescue 的收窄（2026-08-15）─────────────────────────────────────────
+  #
+  # 🔴 原本是 `rescue ActiveRecord::ActiveRecordError`，而它是**方法層** rescue
+  # ⇒ resolver 內部拋出的**任何** AR 例外都被渲染成 `INTERNAL`／HTTP 200，
+  # 而 `render_internal_error` 只 log `error_class`，訊息一個字都不留。
+  # 這與上面那條 `TypeError` 是同一種病，只是型別換了一個。
+  #
+  # ℹ️ 這些例外今天還不可達（`ChillloveSchema.mutation` 為 `nil`，唯讀 schema），
+  # 但**第一支 mutation 掛上 root 當天就引爆** ⇒ 現在就把契約釘住。
+  # 🔴 斷言直接陳述「有沒有被吞」，**不假設它會往外拋**——
+  # Rails 在 test 環境對部分 AR 例外有自己的 `rescue_responses` 對映
+  # （`RecordNotFound` → 404 等），會由框架 render 而不是往外拋。
+  # 那**同樣不是「被吞成 INTERNAL」**，本檔在意的是後者。
+  def swallowed_as_internal?
+    post_graphql("{ products(first: 1) { nodes { id } } }")
+    response.status == 200 &&
+      response.parsed_body.dig("errors", 0, "extensions", "code") == "INTERNAL"
+  rescue ActiveRecord::ActiveRecordError
+    false # 往外拋 ＝ 沒被吞
+  end
+
+  {
+    "RecordInvalid（業務驗證失敗）" => -> { ActiveRecord::RecordInvalid.new },
+    "StaleObjectError（樂觀鎖，28 §0.3.2 應走 STALE_OBJECT userErrors）" =>
+      -> { ActiveRecord::StaleObjectError.new(nil, "update") },
+    "RecordNotFound" => -> { ActiveRecord::RecordNotFound.new("nope") },
+    # 🔴 `RecordNotUnique <= StatementInvalid` 為 **true**（實測）⇒ 它需要**專屬子句**，
+    # 否則會被基礎設施那條原封不動再吞一次，而 `63` §A.1 ④ 明文要求它轉成
+    # userErrors、「不得漏成 500」。
+    "RecordNotUnique（63 §A.1 ④；它是 StatementInvalid 的子類）" =>
+      -> { ActiveRecord::RecordNotUnique.new("Duplicate entry") }
+  }.each do |label, build|
+    it "不把 #{label} 吞成 INTERNAL" do
+      login!
+      allow(ChillloveSchema).to receive(:execute).and_raise(build.call)
+
+      expect(swallowed_as_internal?).to be(false)
+    end
+  end
+
+  it "仍然把基礎設施錯誤轉成去敏 INTERNAL（ConnectionNotEstablished）" do
+    login!
+    allow(ChillloveSchema).to receive(:execute)
+      .and_raise(ActiveRecord::ConnectionNotEstablished, "secret host detail")
+
+    post_graphql("{ products(first: 1) { nodes { id } } }")
+
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("INTERNAL")
+    expect(response.body).not_to include("secret host detail")
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

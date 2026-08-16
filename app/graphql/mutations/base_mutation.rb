@@ -27,8 +27,23 @@ module Mutations
   #       user_errors_type Types::Errors::ProductCreateUserErrorType
   #       argument :product, Types::ProductCreateInput, required: false
   #       field :product, Types::ProductType, null: true
-  #       def resolve(product:) ... end
+  #       def resolve(product: nil) ... end
   #     end
+  #
+  # 🔴 **`required: false` 的參數，`resolve` 簽名一律寫 `arg: nil`**（2026-08-15 修）。
+  # graphql-ruby 對「`required: false` 且無 default」的 argument，呼叫端**省略**時
+  # **不會把該 keyword 放進 kwargs**（明確傳 `null` 才會）⇒ 寫成 `def resolve(product:)`
+  # 得到的是 `ArgumentError: missing keyword: :product`。
+  # ⚠️ 而它**穿透 `ChillloveSchema.execute`**（本專案 schema 沒有 `rescue_from`）
+  # ⇒ 落到 Rails ⇒ **HTTP 500，不是 `userErrors`**，違反鐵律 4 ①。
+  #
+  # 🔴 **不要改成 `required: true` 來「修」它**：`docs/research/28` §0.3.3 明文
+  # `productCreate(product: ProductCreateInput)` 就是 nullable——因為 deprecated 的
+  # `input: ProductInput` 仍共存，兩個互斥參數不可能同時 non-null。
+  # ⇒ **省略是正常呼叫，不是邊角**；nullable 是規格要求，錯的是 resolve 簽名。
+  #
+  # ⚠️ 本樣板寫錯的代價特別高：`app/graphql/mutations/` 底下目前**一支具體 mutation 都沒有**，
+  # 它是下一位作者唯一的形狀來源。
   #
   # @see docs/research/28-api-contract.md §0.3.2–§0.3.4
   # @see docs/DECISIONS.md D14
@@ -73,7 +88,7 @@ module Mutations
     #
     # 🔴 **本方法不做去重**。它只檢查「該帶 key 的 mutation 有沒有帶 key」，
     # 不 claim、不查重、不回放。claim/replay 狀態機刻意延後（見
-    # `docs/worklog/2026-08-15-冪等清單與指紋.md` 的四個未決點）。
+    # `docs/worklog/2026-08-15-冪等指紋.md` 的四個未決點）。
     # 寫在這裡是因為**下一支 mutation 的作者最可能誤以為「冪等已經處理好了」**。
     #
     # @param idempotency_key [String, nil] 呼叫端傳入的冪等鍵

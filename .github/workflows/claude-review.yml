@@ -1,22 +1,31 @@
 name: Claude Review
 
 # ============================================================
-# 自動驗收閉環（Codex 實作 × Claude 驗收）
+# 自動驗收閉環（雙驗收方，2026-08-15 使用者裁定改制）
 #
-#   Codex 開 PR / push
+# 🔴 **本 workflow 不再派工給任何代理去實作或修復。**
+#    舊制是「Codex 實作 × Claude 驗收」，需修改時自動留言 @codex 派修，形成乒乓。
+#    新制＝**Codex 只做驗收**（與 Claude 並列為兩個獨立驗收方），
+#    實作由人主導的工作階段負責。理由：派修等於把「誰來改」的決定權交給
+#    一個看不到本輪對話脈絡的代理，而修法選擇（例如 fail-closed 最小修
+#    vs 補齊語義）往往需要裁定，不是機械修復。
+#
+#   開 PR / push
+#     ├→ Codex（chatgpt-codex-connector App）自動審查 → inline review
 #     └→ Claude 依 docs 規格驗收，貼出【驗收結論】
-#          ├─ 需修改 → 自動留言 @codex 派修 → Codex push → synchronize 觸發重審（乒乓）
-#          │            └─ 超過 MAX_FIX_ROUNDS 輪 → 停止自動派修，改請人工介入
+#          ├─ 需修改 → **只通知，不派工**；修好 push 本分支即自動重審
+#          │            └─ 累計 > MAX_FIX_ROUNDS 輪 → 升級提示（可能是結構問題，該拆 PR 或回頭改規格）
 #          └─ 通過   → 自動 approve；AUTO_MERGE=true 時 squash 合併
-#                       └→ 關閉本階段 issue，並在下一個里程碑 issue 留言 @codex 自動派工
+#                       └→ 關閉本階段 issue，並指出下一個里程碑 issue（**不 @ 任何人**）
 #
 # 開關：
-#   MAX_FIX_ROUNDS             同一 PR 自動派修輪數上限（超過即停）
-#   AUTO_MERGE                 通過後是否自動合併＋派工下一階段（"false"＝只 approve）
-#   secrets.CODEX_PING_TOKEN   可選。設為 pisceshei 的 fine-grained PAT（僅本 repo、
-#                              Issues+Pull requests Read/Write）時，@codex 留言以本人身分發出，
-#                              Codex 必定視為有效請求；未設定則以 github-actions bot 留言，
-#                              Codex 對 bot 留言可能不回應。
+#   MAX_FIX_ROUNDS             同一 PR 累計「需修改」幾輪後升級提示（不再是派修上限）
+#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve）
+#
+# 🔴 `secrets.CODEX_PING_TOKEN` **已不再使用**（2026-08-15）。
+#    它存在的唯一理由是「讓 @codex 留言以本人身分發出，Codex 才視為有效請求」——
+#    新制不再自動 @codex ⇒ 該 secret 可以刪除。**留著不會有作用，但也不會有害。**
+#    要恢復自動派修的人：這是要一併恢復的東西，不要只改留言文字。
 #
 # 🔴🔴 **改本檔的 PR，自己不會被驗收**（2026-08-14 實測，PR #25）
 #   `anthropics/claude-code-action` 有防竄改機制，annotation 原文：
@@ -57,11 +66,43 @@ env:
 
 jobs:
   review:
-    if: github.event.pull_request.draft == false
+    # 🔴 **C-4（2026-08-15 使用者裁定）：`MAX_FIX_ROUNDS` 由「換一句留言」升級成真閘門。**
+    #   舊行為：超過門檻只是把提示文字換掉，然後 `exit 0` ⇒ **下一輪照樣全量重審**，
+    #   閉環行為完全不變。PR #39／#40 分別跑到第 4／5 輪，兩者都早已越線而毫無作用。
+    #   新行為：越線時打上 `review:需人工裁定` label；本 job 見到該 label **直接不跑**，
+    #   直到人把 label 移除。
+    #   ⇒ 這是**唯一保證有限步終止**的機制；前面三項（C-1／C-2／C-5）都只降低發生率。
+    #   ⚠️ 代價寫明白：這等於承認自動驗收有它判不了的區間，把「什麼時候夠好」交回人手上。
+    #     這正是它該做的事——一個永遠不會說「夠了」的驗收方，與沒有驗收方一樣沒用。
+    if: >-
+      github.event.pull_request.draft == false
+      && !contains(github.event.pull_request.labels.*.name, 'review:需人工裁定')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # 🔴🔴 **最小權限（2026-08-15 收緊，依 PR #44 的 Codex review）**
+    #
+    #   起因：本 job 現在**會執行被審 PR 帶進來的 `scripts/` 代碼**
+    #   （`--allowedTools` 的 `Bash(bash scripts/*)` 等四條）。Codex 逐字：
+    #     「Restricting the prefix to `scripts/` **does not establish trust** because the
+    #       checked-out script itself comes from the reviewed PR… the process inherits
+    #       `GH_TOKEN` while this job grants `contents: write`…」
+    #   🔴 **它是對的**：範圍限制不等於信任——`scripts/` 底下的東西正是被審的那些。
+    #
+    #   ⇒ 逐項稽核實際用到什麼（`grep` 全檔的 gh／git 動作）：
+    #     `contents: write`  → **只有 `gh pr merge --squash` 用得到**，而 `AUTO_MERGE` 是 `"false"`
+    #                          ⇒ **目前完全用不到，卻是攻擊面最大的一項** ⇒ 降成 `read`。
+    #     `pull-requests: write` → `gh pr comment`／`gh pr review --approve`。**核心功能，不能拿掉。**
+    #     `issues: write`    → 通過後關階段 issue／在下一階段 issue 登記（`gh issue close/comment`）。
+    #                          風險等級遠低於 contents（改不了代碼），保留。
+    #     `id-token: write`  → action 換 app token 的 OIDC 流程（log 有 `Requesting OIDC token`）。
+    #     `actions: read`    → 本檔沒有直接用，保留（唯讀、無害）。
+    #
+    #   🔴🔴 **要把 `AUTO_MERGE` 改回 `"true"` 的人注意**：那時 `gh pr merge` 會因為
+    #      `contents: read` 而失敗。**不要只改 AUTO_MERGE**——你要同時面對
+    #      「讓一個執行過 PR 代碼的 job 重新拿到 contents: write」這個決定。
+    #      本檔頂部 AUTO_MERGE 註解已寫明它為什麼是 false，這裡是第二道提醒。
     permissions:
-      contents: write
+      contents: read
       pull-requests: write
       issues: write
       id-token: write
@@ -108,13 +149,52 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # 🔴 **診斷用，2026-08-15 開啟**：預設 false 時 action 只印
+          #   `Running Claude Code via SDK (full output hidden for security)`，
+          #   且 result 物件是**白名單式**輸出——只留 6 個欄位，
+          #   **錯誤原因所在的 `result` 欄被整個砍掉**。
+          #   ⇒ 這正是 08-15 驗收全滅跨四個工作階段的直接原因：
+          #     每個人拿到的都是同一組**去掉了原因的數字**，只能靠指紋猜，而且猜錯了
+          #     （先猜「無 Fable 5 權限」，被證偽——同一份設定一路成功到 **09:30**）。
+          #   ⚠️ action 的 README 說「debug mode 會自動開啟 show_full_output」，
+          #     但**在 `@v1` 上實測不成立**（PR #41 run 31863797988→attempt #2 勾了
+          #     Enable debug logging：raw log 11,704 行、`##[debug]` 一堆，
+          #     那句「full output hidden」照樣印、`result` 欄照樣被砍）。
+          #     ⇒ 不要相信那句話，**要開就明文開這個 input**。
+          #   ✅ 已驗證這**不是**會被靜默忽略的未知 input（本檔上方 `--model` 那段記的形態）：
+          #     `anthropics/claude-code-action@v1` 的 `action.yml` **156 行宣告**、
+          #     **325 行 `INPUT_SHOW_FULL_OUTPUT: ${{ inputs.show_full_output }}` 明文映射**。
+          #     🔴 這一步非做不可——composite action **不會**把 `with:` 自動傳給內層步驟，
+          #       少了 325 行那個映射，寫了也等於沒寫。
+          #     ⚠️ 查證方法本身也踩過坑：GitHub 的 blob 檢視是**虛擬捲動**，
+          #       只渲染前約 150 行 ⇒ 在頁面上搜「找不到」是**渲染結果**不是事實。
+          #       要用 `raw.githubusercontent.com` 的純文字，或 code search。
+          #   宣告型別是**字串**（`default: "false"`）⇒ 這裡照字串寫，不寫 YAML 布林。
+          #   安全性：本倉庫是 **private**，Actions log 只有協作者看得到；
+          #   GitHub 仍會遮罩 secrets。代價是每輪 log 會多出完整審核串流（噪音）。
+          #   🔴 **移除條件**：等驗收環境恢復、且失敗留言能穩定貼出「錯誤原文」之後可關掉。
+          #   關掉之前先確認上面那段 `ERRTEXT` 真的撈得到 `result` 欄——
+          #   若撈不到（存檔與 console 一樣被砍），這個 input 就是唯一手段，**不得關**。
+          show_full_output: "true"
           prompt: |
             你是 CHILL LOVE 專案的**規格守門人與驗收方**。Codex 負責實作，你負責審核——不要自己改代碼，只出驗收意見。
 
             審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。PR 標題或分支對應里程碑（M0–M6）時，驗收範圍以 `HANDOFF.md` §5 該里程碑的完成定義為準。
 
             ## 驗收依據（依序讀，變更碰到哪塊就讀哪塊）
-            1. `AGENTS.md` — 技術鐵律與工作規約（違反即打回）
+            0. `CLAUDE.md` — 專案共用規則與工作方式。🔴 **2026-08-15 補進本清單**：
+               它 §工作方式 規定 worklog／handoff **要不要寫、什麼時候寫、固定幾段**。
+               先前它不在本清單裡，而九輪驗收裡 12 條 🔴 打的正是它要求產生的產物
+               ⇒ 判準來源不在你被授權讀的清單內，那個類別**沒有寫下來的標準**。
+               <!-- 🔴 2026-08-16 更正（PR #46 的 Codex review 指出，我複驗成立）：
+                    初稿寫「格式與**分層規範**在 §工作方式」——**分層規範不在 CLAUDE.md**。
+                    實測 `grep -c '歷史層\|終態層\|契約層'`：CLAUDE.md **0**、AGENTS.md **8**。
+                    三層分類是 PR #46 加進 AGENTS.md 的，CLAUDE.md 只定義固定段落格式。
+                    ⇒ 指錯出處，正好復現了本 PR 要修的那個病（而且是在修它的那一行上）。 -->
+            1. `AGENTS.md` — 技術鐵律與工作規約（違反即打回）。
+               🔴 **worklog／handoff 的「怎麼寫」在這裡**：§工作記錄與交接文件的寫法
+               ——**歷史層／終態層／契約層**的三層分類、易腐數字、全稱句、跨 PR 錨定
+               都在該節。判定文檔類 🔴 時**以這一節為準**。
             2. `HANDOFF.md` §2 決策 D1–D7、§3 法律紅線、§5 里程碑驗收
             3. `docs/research/22-admin-button-inventory.md` — admin 畫面的按鈕級驗收清單
             4. `docs/specs/11-production-baseline.md` §0 — 七維度驗收表（安全/資料/併發/效能/可觀測/測試/合規）
@@ -134,6 +214,61 @@ jobs:
             - 新增的 public class/module/方法缺文檔註釋（用途/參數/回傳/副作用）；複雜邏輯（金額/併發/冪等/Liquid 相容）缺「為什麼」註釋與規格出處（規範見 `AGENTS.md` 註釋與文檔節）
             - 新增功能的 PR 缺 `docs/dev/m{N}-{功能}.md` 功能文檔（模板見 `docs/dev/README.md`）；修復/重構 PR 未更新受影響的既有文檔且未在 PR 描述說明理由
 
+            ## 🔴 你可以實跑本倉庫的檢查腳本——請盡量跑，不要只做靜態審查
+            `scripts/` 底下的檢查與回歸測試你**有權限直接執行**：
+            `bash scripts/…` / `ruby scripts/…` / `python3 scripts/…`（也可用 `git ls-files -s`、`git show`）。
+
+            - 🔴 本專案的判準是「**破壞那一步本身也要有斷言**」：一個什麼都不檢查的腳本在乾淨倉庫上也是綠的。
+              PR 自稱「N 條 fixture 全過」**不算證據**；你自己跑一次才算。
+            - ⚠️ **複合指令要每一段都在授權清單裡**。`sed …; echo …` 這種會被整條擋掉，
+              請分開呼叫，不要因為被擋一次就放棄實跑。
+            - 🔴 **你沒有寫檔權限**（沒有 `Write`，也沒有任何能建檔的指令），
+              所以**「改壞 checker 再跑一次」這種突變測試你做不到**。
+              ⇒ 遇到「只有突變測試才能證明」的情形（例如「這條 fixture 是不是承重的」），
+              **不要假裝驗過**：在「未覆蓋」段寫明「需要突變測試，本輪環境做不到」，
+              並具體說出**該怎麼突變**（改哪一行成什麼），讓人可以照著跑。
+              <!-- 2026-08-15 依 PR #43 的 Codex review 修正。原文寫「要做突變測試就在
+                   `$TMPDIR` 造 fixture」，同時又寫「你不能寫檔」——而 allowedTools 既沒有
+                   `Write` 也沒有任何建檔指令 ⇒ **這是一條不可能被遵守的指示**。
+                   🔴 沒有給寫檔權限是刻意的：本 job 有 contents: write 與 OAuth token，
+                      讓驗收方對被審 PR 的樹寫檔會擴大攻擊面。⇒ 改成「說清楚做不到」而不是假裝能做。 -->
+            - 🔴 **跑不動的時候要明說**（哪一條指令、被擋的原因），並在「未覆蓋」段登記
+              「本輪沒有實跑證據」。**不得把沒跑過的東西寫成跑過的。**
+
+            ## 🔴 文檔引用保真：由腳本判定，不由你判定（2026-08-15 新增）
+
+            路徑是否存在、行號是否失效、易腐數字有沒有複驗方式、跨 PR 引用有沒有錨定
+            ——這四類**一律以 `ruby scripts/check-doc-claims.rb` 的結果為準**：
+
+            - 請**實跑它**。非 0 才開 🔴，並把它的輸出貼進意見裡。
+            - 它 exit 0 時，你對散文措辭的疑慮**一律走 🟡**，不得開 🔴。
+            - **腳本沒抓到的引用問題，不是本輪的 🔴。**
+
+            🔴 為什麼把判定權交出去（這段是規則的理由，不要當成建議）：
+            2026-08-15 的 PR #39／#40 連續九輪判「需修改」，15 條 🔴 裡 **12 條是文檔敘述類、
+            0 條是代碼缺陷**——兩邊的檢查器與回歸測試從第 3 輪起一直是綠的。
+            而九輪之後用機械檢查掃同一批檔案，30 分鐘內又找到 3 條**全新的同型缺陷，
+            全部出自「修正 commit」**。⇒ 人眼逐輪重讀散文的失效率是常數，
+            而每輪修正還會再加約 120 行散文 ⇒ **這個閉環在結構上沒有終點**。
+            腳本讓「文檔正確」變成一個**可達成、可在 push 前本機驗證**的狀態。
+            ⚠️ 誠實講代價：腳本抓不到的語義錯誤（例如「假逐字引用」）會被降級成 🟡 而放行。
+            這是**真的鬆綁**，不是純贏。
+
+            ## 本輪與上一輪的關係（2026-08-15 新增）
+
+            先跑 `gh pr view ${{ github.event.pull_request.number }} --comments`，
+            找出**上一則**以【驗收結論】開頭的留言，然後：
+
+            - 上一輪列為 🔴、且本輪 diff **已改動對應位置**的：驗證是否真的修好。
+              修好了寫進 ✅ 段——**不得換一種措辭重新開一條 🔴 講同一件事**。
+            - 上一輪**沒有提到**、本輪也**沒有被改動**的既有段落：走 🟡，**不開 🔴**。
+              🔴 唯一例外：命中上面「必查的硬性紅線」那一節的，不受此限。
+
+            🔴 為什麼：實測證據是 PR #40 第 5 輪那條 🔴（handoff §① 陳舊）——
+            它是該 PR **第一個 commit** 帶進來的，而第 2／3／4 輪都聲稱「docs 全讀」卻沒標它。
+            ⇒ 缺陷不是被修出來的，是**每輪抽樣抽到不同切片**。
+            不切斷這一點，任何「修完再審」的迴圈都不會收斂。
+
             ## 輸出（格式必須嚴格遵守，後續自動化步驟會機器解析）
             用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼**恰好一則**審核意見：
 
@@ -149,7 +284,9 @@ jobs:
             - 只要存在任何一條 🔴，結論必須是需修改；沒有 🔴 就下通過（🟡 不擋通過）。
 
             具體、可執行、指到規格章節；不要泛泛稱讚。
-            不要自己 @codex、不要 approve、不要 merge——這些由後續自動化步驟處理。
+            不要 approve、不要 merge——那些由後續自動化步驟處理。
+            🔴 **不要 @ 任何代理（@codex 等）派修**：本專案已改制，Codex 與你並列為兩個**獨立驗收方**，
+            實作與修復一律由人主導的工作階段負責。你的產出是意見，不是工單。
 
             🔴🔴 **你的最後一個動作必須是那個 `gh pr comment` 呼叫。**
             **不要把審核意見寫在最終回覆裡**——最終回覆不會出現在 PR 上，整份審核會直接消失。
@@ -172,10 +309,108 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（2026-08-15 使用者二次裁定，由 Opus 5 改成 Fable 5）。
-          #      改的理由：官方明文「Claude Fable 5 (`claude-fable-5`) is Anthropic's
-          #      **most capable widely released model**」——使用者要的是「最強的驗收」，
-          #      而不是「Opus 這條產品線的最新版」，兩者在 2026-08 不是同一個東西。
+          #   🔴 `--model claude-fable-5`（2026-08-16 使用者裁定⑤，由 Opus 5 改回 Fable 5）。
+          #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
+          #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
+          #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
+          #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
+          #          「Claude Fable 5 is Anthropic's **most capable widely released model**」，
+          #          使用者要的是「最強的驗收」而非「Opus 產品線的最新版」。
+          #        ④2026-08-15 10:xx 改回 `claude-opus-5`（使用者指示）——當時的
+          #          🟡 **假說**是 `claude-fable-5` 對本帳號中途變成不可用（09:30–10:14）。
+          #          ⚠️ 它是**先後對照不是受控對照**（時間與模型一起變），至今未被
+          #          A/B/A 或模型專屬錯誤原文確認——詳見下方診斷段，該段的降級仍有效。
+          #        ⑤2026-08-16 使用者指示改回 `claude-fable-5`（本次）——③的理由
+          #          （Fable 5 是官方標示的 most capable）從未被推翻，④只是避險。
+          #          🔴 本次切換本身就是那個假說缺的 **A/B/A 的「A」**：若接下來的
+          #          驗收正常，假說被削弱；若復發同形態，假說第一次得到正向確認。
+          #          ⚠️ 若 Fable 5 再次對本帳號不可用，症狀是 num_turns:1／零花費／秒殺，
+          #          失敗留言（show_full_output ＋ ERRTEXT）現在會貼出錯誤原文——
+          #          看到那個形態就照 ④ 的先例換回 `claude-opus-5`，不要先查別的。
+          #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
+          #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
+          #      請先確認是不是又要繞一圈。
+          #
+          #      ⚠️ **本次換模型與驗收機器人的連續失敗有關，但不要當成已確認的修復**：
+          #      2026-08-15 PR #33/#35 的驗收連續失敗，簽名是
+          #      `num_turns:1`／`total_cost_usd:0`／`duration_ms` 次秒級（第一個 API 請求就被拒）。
+          #      🔴 已被證偽的，**精確地說只有這一條**：「從一開始就沒有 Fable 5 權限」。
+          #      依據：模型自 00:14 起就是 fable-5，而之後**一路都有成功的長驗收**——
+          #      00:27(18m21s)／01:27(12m15s)／02:11(9m23s)／03:53(12m42s)／
+          #      07:21(14m39s)／**09:30(10m47s)**。
+          #      <!-- 2026-08-15 更正時間軸。原文寫「失敗是 01:55 之後才開始」，
+          #           那是從 PR #33 單一 PR 的留言推出來的，**錯了**：Actions 的 run 列表顯示
+          #           驗收一路正常到 09:30，10:14 起才全部變成 30–47 秒的失敗。
+          #           🔴 教訓：**故障邊界要從 workflow 的 run 列表量，不是從某一個 PR 的留言推。**
+          #           一個 PR 的留言只涵蓋它自己被觸發的那幾次。 -->
+          #      🔴 **真正的故障邊界＝09:30 最後一次成功 → 10:14 第一次失敗，中間 44 分鐘。**
+          #      <!-- 2026-08-15 依 PR #37 的 Codex review 收窄。原文寫「⇒ 比較像額度／配額或
+          #           服務端問題，**不是權限**」。那句話講得太滿：曾經成功只能證明**當時**具備權限，
+          #           不能證明 01:55 之後 entitlement／OAuth token／帳號狀態沒有改變。
+          #           把後續失敗定性成「不是權限」，會把排障導向錯誤方向，
+          #           也與本檔刻意讓判準表保持診斷中立的立場自相矛盾。 -->
+          #      ══════════════════════════════════════════════════════════════
+          #      🟡 **2026-08-15 最可能的根因（假說，尚未確認）：就是這一行的模型。**
+          #         推測 `claude-fable-5` 在 09:30–10:14 之間對本帳號變成不可用；
+          #         改成 `claude-opus-5` 之後驗收立刻恢復（完整結論、9m52s 的正常 run）。
+          #
+          #      🔴 **為什麼只能算假說**（PR #43 的 Codex review 指出，成立）：
+          #         下面那張表是**先後對照，不是受控對照**——**時間與模型是一起變的**。
+          #         若上游故障剛好在這兩次之間結束，**即使模型無關也會得到一模一樣的結果**。
+          #         ⚠️ 這正是本專案自己的紀律：「觀察到 A 之後出現 B，先問沒有 A 的時候是不是也有 B」。
+          #         ⚠️ 而且我們**沒有拿到任何模型專屬的錯誤訊息**——`result` 欄當時還是被砍的。
+          #      ⏳ **要確認只有兩條路**（兩條都還沒做）：
+          #         ① **A/B/A**：把 `--model` 改回 `claude-fable-5` 重跑，確認它**再次**秒殺。
+          #            ⚠️ 代價：本檔改動必須進 main 才生效（反竄改）⇒ 會把所有分支再失效一輪。
+          #            ⇒ **不值得為了滿足好奇心而做**；下次真的再發生同形態失敗時再做。
+          #         ② **拿到錯誤原文**：`show_full_output` 已開，下一次失敗的留言會帶出 `result` 欄。
+          #            若那句話明講模型不可用，本假說就升格成事實。
+          #
+          #      **先後對照（不是受控對照，見上）**：
+          #        | 時間 | 模型 | token | 結果 |
+          #        | attempt #4（較早） | `claude-fable-5` | 剛換的新 token | 605ms 秒殺 |
+          #        | run 31870676748（較晚） | **`claude-opus-5`** | 同一個新 token | 完整驗收結論 |
+          #
+          #      🔴🔴 **這裡有一個推理錯誤，值得比結論本身更用力記住。**
+          #        最早的假設是「帳號沒有 Fable 5 權限」。它被證偽了——因為同一份設定
+          #        一路成功到 09:30。於是我把**整個權限／可用性方向**都劃掉了，
+          #        轉去查額度、token、視窗、workflow 內容，全部落空。
+          #        **錯在把「這個版本的假設錯了」讀成「這個方向錯了」。**
+          #        被證偽的只是「**從一開始**就沒有權限」，而「**中途**變成不可用」
+          #        從頭到尾沒有被檢驗過——它才是答案。
+          #      ✅ **PR #37 的 Codex review 當時就指出了這一點**，逐字：
+          #        「曾成功只能證明當時具備權限，不能證明後續 entitlement／OAuth token／
+          #          帳號狀態沒有改變……建議只寫成『排除從一開始就沒有 Fable 5 權限』，
+          #          並繼續把後續權限變更列為候選原因。」
+          #        當時只當成措辭收窄照做，沒有據此回頭排查。**下次遇到「某個方向被證偽」，
+          #        先問這句被證偽的話到底涵蓋了那個方向的多少。**
+          #      ══════════════════════════════════════════════════════════════
+          #
+          #      🔴 **下次再看到 `num_turns=1／cost=0／次秒級` 這組指紋，把這一行排進優先檢查項。**
+          #        （不是「一定是它」——上面那個假説尚未確認）
+          #        分辨手段（依成本排序）：
+          #          ① 讀失敗留言裡的「**錯誤原文**」——`show_full_output` 已開，這是最快的；
+          #          ② 把 `--model` 換成一個**已知可用**的完整名再跑一次（本次的決定性對照組）；
+          #          ③ 才輪到帳號側（用量、方案、token）。
+          #      <!-- 2026-08-15 重寫。原文逐字寫「🔴 **不要靠換模型來排障**」與
+          #           「換模型不會修好帳號側的問題」，並把同一句放進了判準表、貼上每一則失敗留言。
+          #           🔴 **那句話是錯的，而且是本次故障中最昂貴的一條錯誤指示**——
+          #           換模型正是最後解決它的手段。已刪除，改成上面的分辨順序。 -->
+          #
+          #      ⬇️ 以下排除項**仍然成立**，留著是因為它們幫忙縮小了範圍（歷史紀錄，勿刪）：
+          #      ⚠️ **5 小時滾動用量視窗**：09:30+5h=14:30，於 **14:38** 重跑
+          #        （PR #41 run 31865047628 attempt #3）→ 仍然 35 秒失敗 ⇒ 排除。
+          #      ⚠️ **OAuth token 失效／過期**：使用者重新產生 token 並更新 secret
+          #        （Last updated 由 Aug 14 → Aug 15，Settings 頁確認），attempt #4 仍是
+          #        `is_error=true duration_ms=605 num_turns=1 total_cost_usd=0`
+          #        ——與換 token 之前逐字相同 ⇒ 排除。
+          #        ✅ 但它不是白換的：**正因為 token 已經先被換掉，後來那次對照組才只剩模型一個變數。**
+          #      ⚠️ **workflow 內容**：邊界上的 10:12（7234afd）與 10:25（4321ba0）兩次改動
+          #        **全部落在下方「解析結論」步驟的診斷文字裡**，
+          #        `with:`／`claude_args`／`prompt`／`uses:` 一行未動（逐行 grep 確認）⇒ 排除。
+          #        <!-- 更正：原文寫「本檔最後一次改動 01:00」，那是假的——是「01:55 之前的
+          #             最後一次」。挑一個看起來吻合的時間點，不是量出來的。 -->
+          #      ⚠️ **SDK settingSources**：本倉庫沒有 `.claude/settings.json` ⇒ 排除。
           #   🔴 **刻意用完整名，不用 alias（`fable`／`opus`／`best`）**。
           #      官方對 Opus 5 有明文前例：「Opus 5 requires Claude Code v2.1.219 or later」，
           #      且「Before v2.1.219, `opus` resolved to Opus 4.8」⇒ **alias 會隨 CLI 版本
@@ -185,8 +420,24 @@ jobs:
           #      換模型要回來改這一行。這個代價是刻意付的，不是疏忽。
           #      好處：**失效會叫**——帳號沒有該模型權限時第一次請求就報錯，不會靜默降級。
           #      ⚠️ 若某天這一行開始報「模型不存在／無權限」，那是**帳號權限**問題，
-          #        不是 workflow 寫錯；先確認訂閱有沒有 Fable 5，再考慮回退 `claude-opus-5`。
-          #   `--effort max`：CLI 五級推理強度 low/medium/high/xhigh/max，max＝最高。
+          #        不是 workflow 寫錯；先確認訂閱有沒有 Opus 5。
+          #        🔴 **但不要一看到失敗就歸因成權限**——2026-08-15 的連續失敗長得很像權限問題
+          #        （第一個請求就被拒、零花費），實際上同一份設定稍早才成功過兩次。
+          #        判準看下一步「解析結論並驅動閉環」貼出的 result payload。
+          #   `--effort max`：CLI 推理強度共**六級** low/medium/high/xhigh/max/**ultracode**。
+          #      <!-- 🔴 2026-08-15 更正：本行原本寫「**五級** low/medium/high/xhigh/max，
+          #           max＝最高」——**漏了 ultracode，而且「max＝最高」的說法會誤導**。
+          #           官方 CLI reference 逐字：「Options: `low`, `medium`, `high`, `xhigh`,
+          #           `max`, or `ultracode`. Available levels depend on the model.
+          #           **`ultracode` starts the session at `xhigh` effort** with ultracode
+          #           turned on, and requires Claude Code v2.1.203 or later.」
+          #           （https://code.claude.com/docs/en/cli-reference，2026-08-15 取證） -->
+          #      🔴 **`ultracode` 不是「比 max 更高一級」**：它把單點推理強度**從 max 降到 xhigh**，
+          #        換來的是多代理自主編排（廣度）。**深度換廣度，不是升級。**
+          #        ⇒ 使用者 2026-08-15 的裁定原文是「用更高的能力去驗收得到更好的效果」，
+          #          `--effort max` 就是為那條加的。**改用 ultracode 等於推翻那條裁定的前提，
+          #          是一次新的裁定，不得由實作者順手改掉。**
+          #      ⇒ 在「單點推理深度」這個軸上，`max` 仍是最高。
           #      官方：「The default effort is `high` on every model that supports effort」
           #      ⇒ 這一行**有實際作用**，不是裝飾。
           #      ⚠️ `max` 不能寫進 settings 的 `effortLevel`（官方：max 為 session-only，
@@ -202,17 +453,64 @@ jobs:
           #        action 的 env 白名單只轉發 `ANTHROPIC_DEFAULT_{SONNET,HAIKU,OPUS}_MODEL`；
           #      ③同時加 `settings:` 設 model／effortLevel ——
           #        官方：`claude_args` takes precedence over settings ⇒ 永遠不生效。
+          # 🔴 `--allowedTools`：2026-08-15 加上「跑得動本倉庫的檢查腳本」這一組。
+          #   起因是恢復後的第一次驗收（PR #41，run 31870676748）。它**主動想做實測**，
+          #   log 裡有 8 次 `permission_denied`，被擋掉的逐字是：
+          #     `bash scripts/check-exec-bits.sh` / `bash scripts/test-exec-bits-rules.sh`
+          #   於是它只能在留言開頭聲明「本輪沒有實跑證據……兩者皆未執行」。
+          #   ⇒ **這是我方設定造成的能力缺口，不是它偷懶。** 本專案的驗收文化是
+          #     「破壞那一步本身也要有斷言」，而驗收方連跑一次都不行。
+          #   ✅ `git ls-files -s` 當時是通的（同一份 log 有 44 行真實輸出），
+          #      這裡明文列出只是把它從「預設剛好可用」變成「明文授權」。
+          #   ⚠️ **複合指令要每一段都被允許**：`sed …; echo …` 被擋的原因是 `;` 後半段
+          #     不在清單裡，不是 `sed` 本身。要它跑多步，請它分開呼叫。
+          #   🔴🔴 **語法：`scripts/` 這四條必須用`*`而不是`:*`**（2026-08-15 實測＋官方文件）。
+          #     第一版寫成 `Bash(ruby scripts/:*)`，**完全沒有生效**：
+          #     四個 PR（#39／#40／#41／#42）的驗收各自實測到
+          #     `ruby scripts/…`／`bash scripts/…`／`python3 scripts/…` 全被擋，
+          #     原文一律是 `This command requires approval`，四份驗收都寫「零實跑證據」。
+          #     官方文件逐字（code.claude.com/docs/en/permissions）：
+          #       「The `:*` suffix is an equivalent way to write a trailing wildcard,
+          #         so `Bash(ls:*)` matches the same commands as `Bash(ls *)`.」
+          #       「When `*` appears at the end **with a space before it** … it enforces a
+          #         **word boundary**, requiring the prefix to be followed by a space or end-of-string.」
+          #     ⇒ `Bash(ruby scripts/:*)` 等同 `Bash(ruby scripts/ *)`，要求 `ruby scripts/`
+          #       後面接**一個空格** ⇒ `ruby scripts/check-limits-keys.rb` 永遠不匹配。
+          #     ✅ 而 `Bash(gh pr view:*)` 這種之所以有效，是因為 `view` 後面本來就有空格。
+          #     ⇒ 正解是**不留空格**的 `Bash(ruby scripts/*)`：
+          #       「In contrast, `Bash(ls*)` without a space matches both `ls -la` and `lsof`
+          #         because there's no word boundary constraint.」
+          #     ⚠️ 這也是為什麼不能懶得改成 `Bash(ruby:*)`：那會連 `ruby -e '…'` 一起放行。
+          #     ⚠️ 複合指令仍然要每一段各自匹配（文件：「A rule must match each
+          #       subcommand independently.」，分隔符 `&&`、`||`、`;`、`|` 等）。
+          #   🔴🔴 **重要更正（PR #44 的 Codex review）**：下面那句「只授權 `scripts/` 底下所以夠緊」
+          #     **推理是錯的**——`scripts/` 底下的東西**正是被審 PR 帶進來的**，
+          #     範圍限制不等於信任。而且因為舊語法根本沒生效，**修正語法的那個 PR 才是真正把洞打開的那一個**。
+          #     ✅ 配套緩解已做：上方 job 的 `permissions` 已把 **`contents: write` 降成 `read`**
+          #       （實查後確認它只被 `gh pr merge` 用到，而 AUTO_MERGE 是 false）。
+          #     ⚠️ 這只是**降低爆炸半徑**，不是消除風險：被注入的驗收方仍能貼留言、approve、動 issue。
+          #     ⚠️ 更彻底的两條路（已考慮、本輪未採）：①只跑 base commit 的可信版本
+          #       （但那樣修改檢查腳本的 PR 就無法用實跑驗證，而那正是最需要的場合）；
+          #       ②拆成獨立的唯讀 job。日後若開放外部貢獻者或轉 public，**必須改成 ①或 ②**。
+          #   🔴 **安全取捨（刻意留在這裡讓下一個人看見）**：這等於讓驗收方**執行被審 PR 帶進來的代碼**，
+          #     而本 job 握有 `contents: write`／`pull-requests: write` 與 OAuth token。
+          #     ⇒ 因此**只授權 `scripts/` 底下**（`bash scripts/` / `ruby scripts/` / `python scripts/`），
+          #       不給裸的 `Bash(bash:*)`。本倉庫是 private、單一作者，威脅模型有限；
+          #       **若日後開放外部貢獻者或轉 public，這一組必須先撤掉再說。**
           claude_args: |
             --model claude-fable-5
             --effort max
             --max-turns 200
-            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(ls:*),Bash(cat:*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
 
       - name: 解析結論並驅動閉環
         if: ${{ !cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
-          CODEX_PING_TOKEN: ${{ secrets.CODEX_PING_TOKEN }}
+          # 🔴 `CODEX_PING_TOKEN` 已移除（2026-08-15，見檔頭）：它唯一的用途是讓
+          #    自動 @codex 留言以本人身分發出；新制不派工 ⇒ 沒有留著的理由。
+          #    **不要因為「留著也不會怎樣」就把它加回來**——一個沒有用途的
+          #    write 權限 token 出現在 workflow env 裡，讀的人會以為它有用途。
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -222,7 +520,6 @@ jobs:
           COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
         run: |
           set -uo pipefail
-          PING="${CODEX_PING_TOKEN:-}"
 
           # 🔴 **水位取不到就什麼都不做**（fail-safe，不是 fail-open）。
           #    本步驟的 `if: !cancelled()` 表示即使水位那一步失敗，這裡照樣會跑。
@@ -282,8 +579,25 @@ jobs:
             # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
             #    而真正的原因是**作者身分不在清單內**——那句話把人指去看 Actions log，
             #    log 裡卻一切正常，於是這個 bug 藏了下來。這裡直接把實際作者印出來。
-            OTHERS=$(printf '%s' "$COMMENTS" | jq -r --arg m "$MARKER" \
-              '[.[] | select(.body | split("\n")[0] | startswith($m)) | .user.login] | unique | join(", ")')
+            #
+            # 🔴🔴 **本行在 2026-08-15 修過一次，那是加水位時漏改造成的 regression**
+            #    （PR #29 實測命中）。原本它**既沒有水位過濾、也沒有排除清單內的作者**：
+            #      `[.[] | select(.body|...startswith($m)) | .user.login]`
+            #    ⇒ 它列的是**這個 PR 歷來所有**結論留言的作者。於是當本輪沒產生結論時，
+            #      它會撈到**前幾輪** `claude[bot]` 貼的舊結論，貼出
+            #      「作者（`claude[bot]`）**不在允許清單內**」——而 `claude[bot]`
+            #      **就在 `REVIEWERS` 裡**。訊息是**假的**，而且指向一個不存在的問題。
+            #    ⚠️ 後果實測：驗收方讀到這則診斷，以為自己的意見被忽略而**重貼了一次**。
+            #      結果正確只是因為重試碰巧成功。
+            #    ⇒ 兩個條件缺一不可：①`.id > $wm`（只看本輪）②`index($l) | not`（只列**不在**清單的）。
+            #
+            # 🔴 **教訓（比這個修正本身重要）**：加水位那一輪我改了 `LATEST`、
+            #    也想清楚了 `ROUNDS` 為什麼**不能**加，卻**沒有把第三個消費者 `OTHERS` 一起檢查**。
+            #    引入一個新的過濾維度時，要逐一走過**每一個讀同一份資料的地方**，
+            #    而不是只改觸發這次改動的那一個。
+            OTHERS=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
+              --argjson wm "${COMMENT_WATERMARK:-0}" \
+              '[.[] | select(.id > $wm) | select(.user.login as $l | $who | index($l) | not) | select(.body | split("\n")[0] | startswith($m)) | .user.login] | unique | join(", ")')
             if [ -n "$OTHERS" ]; then
               # 🔴 本則訊息**刻意不寫出結論標記字面值**（理由見上方 MARKER 註解）。
               gh pr comment "$PR" --body "⚠️ 找到了驗收結論留言，但作者（\`$OTHERS\`）不在允許清單內，已忽略。請把該身分加進 \`.github/workflows/claude-review.yml\` 的 \`REVIEWERS\`。"
@@ -291,14 +605,167 @@ jobs:
               # 🔴 分開報「Claude 步驟自己失敗」與「跑完但沒貼結論」。
               #    2026-08-14 事故：原本兩者都印同一句「可能失敗或逾時」，
               #    而真正的原因是 --max-turns 用盡（PR #26）。那句話把人指去看 log，
-              #    但沒說要看哪一行，診斷因此多繞了一圈。現在直接寫出最可能的原因。
+              #    但沒說要看哪一行，診斷因此多繞了一圈。
+              #
+              # 🔴 **2026-08-15 再修：上一版矯枉過正。** 它把「最常見原因＝`--max-turns` 用盡」
+              #    寫死成留言，還斷言「annotation 會直接寫 `Reached maximum number of turns`」。
+              #    **PR #33 實測證偽**（連續兩次 attempt 完全相同）：
+              #      execution result payload＝`{ is_error: true, num_turns: 1,
+              #                                  total_cost_usd: 0, duration_ms: 654 }`
+              #      annotation 只有 `Claude execution failed: result is_error:true`，
+              #      **完全沒有**它叫人去找的那句話。
+              #    ⇒ 真因是「**第一個 API 請求就失敗**」（配額／額度／認證／模型可用性），
+              #      與 max-turns 用盡（跑滿回合、耗時數分鐘、有花費）在數據上**完全相反**。
+              #    ⇒ 那則留言把人指向錯誤方向，並要他去找一句不存在的 annotation。
+              #
+              #    教訓與本檔上面 OTHERS 那次同型：**寫死的猜測會變成自信的假診斷**，
+              #    而假診斷比「沒有診斷」更貴——它讓人先花時間去否證一個錯的方向。
+              #    ⇒ **不要猜**：把 execution_file 裡的 result payload 直接撈出來貼上，
+              #      再附一張判準表讓讀的人自己對號入座。
+              #
+              # 🔴 **判準表本身也差點犯同一個錯**（PR #36 的 Codex review 指出，已修）：
+              #    初版把 `num_turns: 1` ＋ 零花費直接判成「配額／額度／認證 ⇒ 重跑通常無效」，
+              #    但**暫時性服務中斷、runner 網路失敗、上游一次性拒絕**會產生**一模一樣**的數據。
+              #    ⇒ 光憑這組數據**分不出**是暫時性還是持續性，
+              #      判準改成「兩種都列出來 ＋ 用**重跑一次**當分辨手段」：
+              #      重跑就過＝暫時性；重跑得到逐字相同的結果＝持續性，那時才往帳號側查。
+              #      （PR #33 那次正是靠「連續兩次 attempt 完全相同」才排除暫時性的。）
+              #
+              # ⚠️ 已知副作用（本輪未處理，見本 PR 的 worklog Pending）：驗收步驟失敗時
+              #    job 層 conclusion 仍是 `success`（失敗被下游 `exit 0` 吞掉）⇒
+              #    `POST /actions/runs/{id}/rerun-failed-jobs` 會回 403「cannot be retried」，
+              #    只能整個 workflow rerun。
+              #
               # 🔴 用 printf 組多行，**不要在 YAML block scalar 裡直接換行寫長字串**——
               #    續行會落在第 0 欄而終止 block scalar，整份 workflow 就不再是合法 YAML。
               #    （2026-08-14 寫這段時踩過一次；同型事故另見本檔 heredoc 那次。）
-              BODY=$(printf '%s\n\n%s\n%s' \
+              # 🔴 **分報四種「取不到」的原因**（2026-08-15，多代理驗收 Y7 指出）。
+              #    原本四條路徑全部收斂成同一句「取不到 execution_file」：
+              #      ①env 空 ②檔不存在 ③**檔在且可解析，但裡面沒有 result 物件**
+              #      ④**檔在但 JSON 壞掉**
+              #    其中③④**檔案明明在** ⇒ 那句話本身就是假歸因，
+              #    而它就印在一段**承認③存在**的註釋下面幾行（「`select(. != null)` 讓
+              #    『找不到 result』落空成空字串」）——註釋與訊息互相矛盾。
+              #    🔴 這正是本分支上一輪才修掉的那個錯（寫死的猜測當診斷），換個位置又犯一次。
+              #    姊妹分支（下方回收品）有 `tail -c` 的 fallback，所以它那句「為空或不存在」
+              #    是可信的；失敗分支缺的就是這道分辨。
+              DIAG=""
+              DIAG_WHY=""
+              # 🔴 `ERRTEXT`／`HAVE_RESULT` **必須在這裡初始化**（2026-08-15 事故修正）。
+              #    本步驟是 `set -uo pipefail`，而 `ERRTEXT` 只在下面「檔案存在」那個分支
+              #    才被賦值，卻在後面**無條件被讀**（`if [ -n "$ERRTEXT" ]`）⇒
+              #    「EXECUTION_FILE 為空」與「檔案不存在」這兩條路徑會以
+              #    `line …: ERRTEXT: unbound variable` 中止，**PR 上一則留言都貼不出來**。
+              #    ⚠️ 那正好是本 PR（Y7 四路分辨）要救的四條路徑裡的兩條，
+              #      也正是本檔花大篇幅在防的「審核整份消失」形態——修診斷的改動自己弄壞了診斷。
+              #    ⚠️ 引入這個 bug 的自測只跑了「檔案存在」的兩種輸入就收工。
+              #      教訓：**新增一個變數時，要走過每一個讀它的地方**，
+              #      而不是只測你新寫的那條路徑。
+              ERRTEXT=""
+              ERRSTATE=""
+              HAVE_RESULT=0
+              if [ -z "${EXECUTION_FILE:-}" ]; then
+                DIAG_WHY="action 沒有輸出 execution_file——步驟可能在產生它之前就失敗了"
+              elif [ ! -f "$EXECUTION_FILE" ]; then
+                DIAG_WHY="execution_file 指向 $EXECUTION_FILE，但該檔不存在"
+              else
+                JQ_ERR="$(mktemp)"
+                # `-s`（slurp）＋ `..` 的理由同下方回收品那段：對「單一 JSON 陣列」與
+                # 「JSONL」兩種格式都正確。`select(. != null)` 讓「找不到 result」落空成空字串。
+                # 🔴 `g()` 逐欄位用 `has()` 判斷（Y8）：`select(. != null)` 只擋**整個物件**不存在，
+                #    擋不住**欄位被上游改名** ⇒ 會印出一行 `num_turns=null total_cost_usd=null`，
+                #    那行對不上下面判準表的任何一列，而讀的人會拿它去對號入座。
+                #    ⚠️ 不能用 `// "缺欄位"`：jq 的 `//` 對 `false` 也會取右邊，
+                #      而 `is_error: false` 是**完全正常的值**，會被誤報成缺欄位。
+                DIAG=$(jq -s -r 'def g(k): if has(k) then (.[k] | tostring) else "缺欄位" end;
+                  [.. | objects | select(.type? == "result")] | last | select(. != null)
+                  | "is_error=\(g("is_error")) num_turns=\(g("num_turns")) total_cost_usd=\(g("total_cost_usd")) duration_ms=\(g("duration_ms"))"' \
+                  "$EXECUTION_FILE" 2>"$JQ_ERR" || true)
+                # 🔴 撈**錯誤原文**（2026-08-15 追加）。上面那四個數字是「症狀」，
+                #    真正的原因（額度用盡／認證失效／模型不可用⋯）在 result 物件的
+                #    `result` 欄裡，而 action 的 console 是**白名單式**印出——只印 6 個欄位，
+                #    `result` 被整個砍掉。⚠️ 這一行是在賭「存檔比 console 完整」，
+                #    **沒有實測過**：若印出「無 result 欄」，代表存檔同樣被砍，
+                #    那時就只能靠本步驟上方開啟的 `show_full_output: true`。
+                # 🔴 **三態，不是兩態**（2026-08-15 修正）。原本 `has("result")` 後直接
+                #    `tostring`，把「沒有這個欄」「欄位是 null」「欄位是空字串」壓成一態：
+                #    `"result": null` 會**貼出一個內容就是 `null` 的程式碼區塊**——那正是
+                #    上面 10 行的 Y8 註釋（:437-441）特地擋掉的「null 垃圾」，同一份檔案原地復發。
+                #    ⇒ 先取狀態，再依狀態決定訊息；ERRTEXT 只在「真的有非空文字」時才有值。
+                ERRSTATE=$(jq -s -r '[.. | objects | select(.type? == "result")] | last
+                  | if (type != "object") then "noobj"
+                    elif (has("result") | not) then "nofield"
+                    elif (.result == null) then "null"
+                    elif ((.result | tostring) == "") then "empty"
+                    else "text" end' "$EXECUTION_FILE" 2>/dev/null || echo noobj)
+                if [ "$ERRSTATE" = "text" ]; then
+                  RAW=$(jq -s -r '[.. | objects | select(.type? == "result")] | last | .result | tostring' \
+                    "$EXECUTION_FILE" 2>/dev/null || true)
+                  # 🔴 三道處理，缺一則這則留言會反過來害人：
+                  #  ①**中和結論標記**——與下方回收品那段（:552-556）同一個理由，也是同一個做法：
+                  #    本則留言由 github-actions[bot] 貼出，而它在 REVIEWERS 清單內；
+                  #    錯誤原文是**外部文字**，裡面完全可能出現【驗收結論】。
+                  #    🔴 這份檔案已經為姊妹路徑立了這條不變量，新路徑不照做就是把它戳個洞。
+                  #  ②**打散 ``` 柵欄**——原文含程式碼區塊時會提前關閉下面那個 fence，
+                  #    留言後半段變成 Markdown 渲染。改成全形反引號，肉眼看得出來但不會破版。
+                  #  ③**截斷要切在字元邊界**——`head -c` 是**位元組**截斷，中文錯誤訊息
+                  #    會從三位元組字中間切開，產生非法 UTF-8。`iconv -c` 丟掉殘缺序列；
+                  #    沒有 iconv 的環境退回原值（GitHub runner 都有）。
+                  SAFE_ERR=$(printf '%s' "$RAW" | sed 's/【驗收結論】/〔驗收結論〕/g; s/```/｀｀｀/g' | head -c 1500)
+                  # 🔴 **不能寫成 `... | iconv -c || printf '%s' "$SAFE_ERR"`**（實測踩過）：
+                  #    `iconv -c` 丟掉殘缺序列之後**仍然回傳 1**，於是 `||` 會觸發，
+                  #    把原始（非法）內容**再接在清乾淨的內容後面** ⇒ 清完又貼回去，等於沒清，
+                  #    而且內容還變成兩份。改成先收下輸出、再判斷。
+                  #    （iconv 不存在時輸出為空 ⇒ 退回未清理的原值，總比沒有訊息好。）
+                  CLEANED=$(printf '%s' "$SAFE_ERR" | iconv -f UTF-8 -t UTF-8 -c 2>/dev/null) || true
+                  if [ -n "$CLEANED" ]; then ERRTEXT="$CLEANED"; else ERRTEXT="$SAFE_ERR"; fi
+                fi
+                # 有沒有真的解析到 result 物件——決定下面「撈不到原文」該歸因成哪一種。
+                [ -n "$DIAG" ] && HAVE_RESULT=1
+                if [ -z "$DIAG" ]; then
+                  SIZE=$(wc -c < "$EXECUTION_FILE" | tr -d ' ')
+                  if [ -s "$JQ_ERR" ]; then
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）但 **jq 解析失敗**：$(head -c 300 "$JQ_ERR" | tr '\n' ' ')"
+                  else
+                    DIAG_WHY="execution_file 在（${SIZE} bytes）且可解析，但裡面**沒有 type==\"result\" 的物件**——action 可能在產生總結前就中止了"
+                  fi
+                fi
+                rm -f "$JQ_ERR"
+              fi
+              if [ -z "$DIAG" ]; then
+                DIAG="取不到 —— $DIAG_WHY"
+              fi
+              # 🔴 三分支，不是兩分支。原本的 else 把**兩種完全不同的原因**收斂成
+              #    同一句「result 物件裡沒有 result 欄（被白名單砍掉了）」——但只要
+              #    execution_file 根本取不到（為空／不存在／解析失敗／沒有 result 物件），
+              #    這句歸因就是**假的**：那時我們連 result 物件都沒有，談不上「欄位被砍」。
+              #    ⚠️ 這正是 Y7 修掉的形態（四條路徑一句假歸因），差點在同一個 PR 裡復發。
+              # 🔴 依 ERRSTATE 分五種，各報各的。**不要收斂**——這個步驟存在的全部理由
+              #    就是 Y7「四條路徑一句假歸因」，在同一段裡復發過一次已經夠了。
+              if [ -n "$ERRTEXT" ]; then
+                # ⚠️ 這行說明**不得**寫出半形反引號柵欄的字面——寫了會在段落中開一個
+                #    行內 code span，把後面的字吃掉。用文字描述。
+                ERRBLOCK=$(printf '**錯誤原文**（取自 execution_file 的 `result` 欄；結論標記已中和成〔〕、原文裡的反引號柵欄已改全形）：\n\n```\n%s\n```' "$ERRTEXT")
+              elif [ "$HAVE_RESULT" != "1" ]; then
+                ERRBLOCK="**錯誤原文：無從撈起** —— 連 result 物件都沒有（原因見上一行的「本次執行結果」）。這一則**不是**「欄位被砍」，不要照那個方向查。"
+              elif [ "$ERRSTATE" = "nofield" ]; then
+                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**沒有 \`result\` 這個欄位**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+              elif [ "$ERRSTATE" = "null" ]; then
+                ERRBLOCK="**錯誤原文：欄位在但值是 \`null\`** —— 這與「欄位被砍掉」**不是同一件事**：上游有給這個欄，只是沒有填內容。⇒ 先看 log 的完整串流；若那裡也沒有，就是 SDK 沒有產生錯誤敘述。"
+              else
+                ERRBLOCK="**錯誤原文：欄位在但值是空字串** —— 同樣不是「欄位被砍掉」。⇒ 看 log 的完整串流。"
+              fi
+              BODY=$(printf '%s\n\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s' \
                 "⚠️ **Claude 驗收步驟失敗**（outcome=\`$REVIEW_OUTCOME\`），因此沒有結論可解析。" \
-                "最常見原因：**\`--max-turns\` 用盡**——大型 diff（尤其動到 \`docs/design/chilllove-admin-v2.html\`，單檔逾 1.2 萬行）會把回合數燒光，且**失敗前不會留下任何驗收留言**。" \
-                "請到 Actions 分頁看該 run 的 annotation（會直接寫 \`Reached maximum number of turns\`）。重新 push 即會重跑。")
+                "本次執行結果：\`$DIAG\`" \
+                "$ERRBLOCK" \
+                "**判準——請照上面的數據對號入座，不要預設是哪一種**：" \
+                "- \`num_turns\` 接近 \`--max-turns\` 上限、\`total_cost_usd\` > 0、耗時數分鐘 ⇒ **回合數用盡**（大型 diff 會燒光，尤其動到 \`docs/design/chilllove-admin-v2.html\`）。重新 push 前先想辦法縮小 diff。" \
+                "- \`num_turns: 1\`、\`total_cost_usd: 0\`、耗時不到一秒 ⇒ **第一個 API 請求就失敗**。🔴 **光憑這組數據分不出是哪一種**，下面兩者長得一模一樣：" \
+                "    - ①**暫時性**（服務中斷、runner 網路、上游一次性拒絕）⇒ **重跑一次就會過**。" \
+                "    - ②**持續性**（配額／額度／認證／模型可用性）⇒ 重跑會得到**逐字相同**的結果。" \
+                "    ⇒ **先重跑一次當作分辨手段**（整個 workflow rerun；注意 \`rerun-failed-jobs\` 會回 403，因為 job 層 conclusion 是 success）。**兩次結果相同才往帳號側查。**" \
+                "完整 log：\`gh run view $GITHUB_RUN_ID --log\`，或 Actions 頁面 ⚙ → **View raw logs**（瀏覽器的分步檢視器是虛擬捲動，只渲染幾百行，拿不到；raw logs 是純文字，拿得到）。🔴 **不要勾「Enable debug logging」重跑**——2026-08-15 於 PR #41 實測無效：11,704 行 raw log 裡 action 照樣印「full output hidden for security」，\`result\` 欄一樣被砍。action 那句提示的兩條路只有 \`show_full_output: true\` 是真的。🔴 **`num_turns: 1`＋零花費這一種，把 `--model` 那一行排進優先檢查項**：2026-08-15 的全滅（09:30→10:14 起連續失敗）**最可能**是它——換成 `claude-opus-5` 後立刻恢復。⚠️ 但那是**先後對照、不是受控對照**（時間與模型一起變），**尚未確認**。分辨順序：①先讀上面的「錯誤原文」②把 `--model` 換成一個已知可用的完整名再跑一次 ③才輪到帳號側（用量／方案／token）。⚠️ 本段先前寫的是「不要靠換模型來試」，**那是錯的、已刪**——換模型正是最後解決它的手段。")
               gh pr comment "$PR" --body "$BODY"
             else
               # 🔴 **「步驟成功但沒有留言」＝整份審核直接消失**（2026-08-15，PR #29 連續兩次重現：
@@ -349,12 +816,42 @@ jobs:
             exit 0
           fi
 
+          # 🔴 **需修改＝只通知，不派工**（2026-08-15 使用者裁定）。
+          #    舊制在這裡自動留言 `@codex 請…逐條修復…`。**已移除。**
+          #    ⚠️ 本則留言**不得**包含 `@` 開頭的代理呼叫——Codex 對 @ 提及會接單，
+          #      在新制下那等於繞過裁定直接改代碼。要人改就寫給人看。
+          #    （本則留言同樣不得含結論標記字面值，理由見上方 MARKER 註解。）
           if printf '%s' "$LATEST" | grep -q "【驗收結論】需修改"; then
             if [ "$ROUNDS" -le "$MAX_FIX_ROUNDS" ]; then
-              FIXBODY="@codex 請依本 PR 最新一則 Claude 驗收意見，逐條修復 🔴 必須修 的項目（🟡 建議 視情況採納），直接 push 到本分支（$PR_BRANCH），不要開新 PR。push 後會自動重新驗收。（自動派修第 $ROUNDS 輪／上限 $MAX_FIX_ROUNDS 輪）"
-              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh pr comment "$PR" --body "$FIXBODY"; else gh pr comment "$PR" --body "$FIXBODY"; fi
+              gh pr comment "$PR" --body "🔴 **驗收未通過**（本 PR 累計第 $ROUNDS 輪）。請依上一則驗收意見逐條處理 🔴 必須修（🟡 建議 視情況採納），修好後 **push 到本分支（\`$PR_BRANCH\`）即會自動重新驗收**，不要開新 PR。"
             else
-              gh pr comment "$PR" --body "⛔ 已達自動派修上限（$MAX_FIX_ROUNDS 輪），停止自動 @codex，請人工介入：直接修好 push 本分支會自動重審；或自行留言 @codex 再派一輪。"
+              # 🔴 這裡不再是「派修上限」，是**結構問題的警示線**。
+              #    同一個 PR 被打回超過 MAX_FIX_ROUNDS 輪，通常不是「再修一次就好」，
+              #    而是 PR 太大、或規格本身沒定案 ⇒ 提示往那兩個方向處理，而不是繼續修。
+              # 🔴 C-4：打 label 讓 job 層的 `if:` 在下一次 push 時直接跳過本 workflow。
+              #    label 不存在時 `--add-label` 會自動建立它。失敗不擋（`|| true`）——
+              #    留言已經貼出去了，label 建不起來時人仍看得到，只是閘門沒生效。
+              gh pr edit "$PR" --add-label "review:需人工裁定" || true
+              # 🔴 用 printf 多參數寫檔、再 --body-file。兩個都不能用：
+              #   ①直接 `--body "多行…"` ⇒ 續行落到第 0 欄，YAML block scalar 解析失敗（實測過）；
+              #   ②heredoc ⇒ YAML 去縮排後分隔符仍帶殘餘縮排，而 `<<"EOF"` 要求頂格、
+              #     `<<-` 只吃 tab 不吃空白 ⇒ `bash -n` 報 "delimited by end-of-file"（也實測過）。
+              #   printf 的每一段都是獨立參數，完全不受縮排影響。
+              printf '%s\n' \
+                "⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（門檻 $MAX_FIX_ROUNDS 輪），**自動驗收就此停止**。" \
+                "" \
+                "已打上 \`review:需人工裁定\` label；在移除該 label 之前，push 到本分支**不會**再觸發驗收。" \
+                "" \
+                "到這個次數通常不是「再修一次就好」。請先判斷：" \
+                "" \
+                "1. **PR 範圍太大該拆**？" \
+                "2. **規格本身還沒定案**？（若是，裁定要落進 spec／DECISIONS，不能只留在 PR 留言）" \
+                "3. 🔴 **剩下的 🔴 是不是同一類反覆出現？** 2026-08-15 的實測：兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，而它們**不是被修出來的**——是每輪抽樣抽到不同切片。這一類請跑 \`ruby scripts/check-doc-claims.rb\` 確定性地清乾淨，不要靠再審一輪。" \
+                "" \
+                "要恢復自動驗收：移除 \`review:需人工裁定\` label 後再 push。" \
+                > "$RUNNER_TEMP/escalate.md"
+              gh pr comment "$PR" --body-file "$RUNNER_TEMP/escalate.md"
+
             fi
             exit 0
           fi
@@ -364,7 +861,7 @@ jobs:
               || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
 
             if [ "$AUTO_MERGE" != "true" ]; then
-              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併；合併後如需派工下一階段，到下一個里程碑 issue 留言 @codex。"
+              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併。"
               exit 0
             fi
 
@@ -391,9 +888,12 @@ jobs:
             if [ -n "$NEXT_NUM" ]; then
               NEXT_STAGE=$(printf '%s' "$NEXT_TITLE" | grep -oE '^M[0-9]+')
               NEXT_BRANCH=$(printf '%s' "$NEXT_STAGE" | tr 'A-Z' 'a-z')
-              DISPATCH="@codex 上一階段已通過驗收並合併（PR #$PR）。請開始 $NEXT_TITLE — 範圍見本 issue 描述與 HANDOFF.md §5；規約見 AGENTS.md（分支命名 $NEXT_BRANCH/{功能}、不直接推 main、PR 標題以「$NEXT_STAGE:」開頭、描述附規格對照＋自測結果＋假設清單）。完成後開 PR，Claude 會自動驗收。"
-              if [ -n "$PING" ]; then GH_TOKEN="$PING" gh issue comment "$NEXT_NUM" --body "$DISPATCH"; else gh issue comment "$NEXT_NUM" --body "$DISPATCH"; fi
-              gh pr comment "$PR" --body "🚀 已自動派工下一階段 → issue #$NEXT_NUM（$NEXT_TITLE）"
+              # 🔴 **只登記，不派工**（2026-08-15 使用者裁定）。
+              #    舊制在這裡 `@codex 請開始 $NEXT_TITLE`。**已移除**——理由同需修改分支：
+              #    開一個新里程碑是裁定，不是可以自動觸發的事。
+              #    留言仍然貼在該 issue 上，因為「上一階段何時合併」是這個 issue 需要的事實。
+              gh issue comment "$NEXT_NUM" --body "ℹ️ 上一階段已通過驗收並合併（PR #$PR）。本階段（$NEXT_TITLE）的範圍見本 issue 描述與 \`HANDOFF.md\` §5；規約見 \`AGENTS.md\`（分支 \`$NEXT_BRANCH/{功能}\`、不直接推 main、PR 標題以「$NEXT_STAGE:」開頭、描述附規格對照＋自測結果＋假設清單）。**本則為登記，不是派工。**"
+              gh pr comment "$PR" --body "📌 已在下一階段 issue #$NEXT_NUM（$NEXT_TITLE）登記本次合併。**未派工**——開始下一階段是人的裁定。"
             else
               gh pr comment "$PR" --body "🏁 沒有待辦的里程碑 issue——所有階段已完成，或下一階段 issue 尚未建立。"
             fi

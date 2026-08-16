@@ -239,6 +239,23 @@ money_boundary:
   # A6：decimal_string 格式的位數上限。我方儲存尺度 ×100 只能無損表達 2 位；
   #     pack 宣告 > 2 ⇒ 不得 enable（宣告 3 位卻只給得出 2 位＝靜默的精度謊報）。
   psp_decimal_max_places: 2
+  # A6b：**位數下限**（2026-08-15 新增，PR #29 驗收指出的缺口）。
+  #      🔴 原本只有上限 ⇒ 宣告 `decimal_places: 0` 或 `1` 的 pack **完全合法**，
+  #      而 `to_psp_decimal` 走的是 `Money.fixed_string(major, decimal_places)`，
+  #      它會 `value.round(digits)` **靜默四捨五入**：
+  #        decimal_places=1 ＋ HKD 14.85（儲存 1485）⇒ 送出 "14.9"
+  #        ＝帳上 14.85、送款 14.90，**差額 0.05 沒有任何一張表記得住**。
+  #      這正是 65 §D.2 A5 逐字說的「自動湊整是最壞的處置」，
+  #      而 `minor_units` 側有 A3 餘數 raise 擋住，`decimal_string` 側**沒有等價物**。
+  #      ⚠️ **上下限相等（都是 2）不是冗餘**：兩個鍵擋的是兩種相反的謊報
+  #      （宣告太多＝精度謊報／宣告太少＝金額被改），日後若儲存尺度改成 ×1000，
+  #      兩者會一起變成 3 而**仍然要分別存在**。
+  # 🔴 為什麼是「拒絕」而不是「支援 sub-2 位」：我方至今**沒有任何一家真的用
+  #    sub-2 位的 PSP**（65 §D 無出處），要「支援」就得先發明湊整規則
+  #    （誰決定進位方向？差額記到哪張表？）——那是憑空造規則。
+  #    fail-closed 的代價是「真出現時第一次呼叫就 raise」，那是**看得見**的失敗；
+  #    現狀的代價是**靜默送錯金額**。裁定：擋掉，留到第一家真 PSP 出現時再裁。
+  psp_decimal_min_places: 2
   psp_decimal_string_regex: '^-?\d+\.\d{2}$'
   # A5：divisibility_constraint。🔴 **不是虛構需求**——Stripe 明文要求 **HUF／TWD 的 payout 金額整除 100**
   #     （`alt`，69 §V-188），而 **TWD 正好在下方 test_matrix_zero_decimal_required 裡**。
@@ -2014,13 +2031,31 @@ jurisdictions:
       # 🔴 方向是**唯一真相**，不是科目名稱。科目名稱各家帳務系統不同，方向錯了帳就反了。
       #    落庫表 `contract_liability_entries`（jurisdiction.schema_union_rules.required_tables），
       #    唯一鍵 `(shop_id, source_type, source_id, direction)` ⇒ 同一筆金流只能落一次分錄。
+      # 🔴 `"on"` 的引號是**必要的，不是風格**（2026-08-15 修）：Psych 走 YAML 1.1，
+      #    裸字 `on`/`off`/`yes`/`no`/`true`/`false`（含大小寫變體）一律解析成布林
+      #    （`y`/`n` 不在此列——YAML 1.1 規格含它們，但 Psych 5.2.2 實測不轉）。
+      #    原文寫成 `{ on: ... }` 時，
+      #    這六筆的鍵是 `true`（TrueClass）而不是字串 `"on"`；config/application.rb 的
+      #    `deep_symbolize_keys` 對非字串鍵原樣保留（`true` 不能 `to_sym`）⇒ M27 的鍵實測是
+      #    `[true, :direction, :revenue]`，取值端
+      #    `Limits.fetch(:jurisdictions, :hk, :accounting, :gift_card_entry_points, :M27, :on)`
+      #    會 KeyError，而錯誤訊息看不出根因（它會說「缺少 limits.….M27.on 設定」，
+      #    讀起來像**設定沒寫**，而本檔明明寫著 `on:`）。
+      #    <!-- 2026-08-15 修正：本行原本示範的是
+      #         `Rails.configuration.x.limits.dig(...).fetch(:on)`。兩個問題：
+      #         ①`app/models/limits.rb` 才是正式取值入口（缺鍵一律 raise），
+      #           而該檔檔頭正好警告不要用 `.dig` 拿 nil——本行卻在示範 `.dig`；
+      #         ②PR #33 的 worklog 宣稱「已全部改回 Limits.fetch」，但本檔漏改，
+      #           那句宣稱因此是假的。修好代碼讓宣稱成真，而不是改宣稱。 -->
+      #    最可能的誤修是「那就改用 `true` 當鍵」——那會把 bug 固化成契約。
+      #    機制化：`scripts/check-limits-keys.rb` 斷言本檔所有鍵皆為 String（CI 跑）。
       gift_card_entry_points:
-        M27: { on: gift_card_issued_by_admin, direction: liability_increase, revenue: 0 }
-        M28: { on: gift_card_product_sold,    direction: liability_increase, revenue: 0 }
-        M29: { on: gift_card_credited,        direction: liability_increase, revenue: 0 }
-        M30: { on: gift_card_redeemed,        direction: liability_decrease, revenue: recognise }
-        M31: { on: gift_card_expired_or_deactivated, direction: breakage, revenue: see_breakage }
-        M32: { on: refund_credited_to_card,   direction: liability_increase, revenue: 0 }
+        M27: { "on": gift_card_issued_by_admin, direction: liability_increase, revenue: 0 }
+        M28: { "on": gift_card_product_sold,    direction: liability_increase, revenue: 0 }
+        M29: { "on": gift_card_credited,        direction: liability_increase, revenue: 0 }
+        M30: { "on": gift_card_redeemed,        direction: liability_decrease, revenue: recognise }
+        M31: { "on": gift_card_expired_or_deactivated, direction: breakage, revenue: see_breakage }
+        M32: { "on": refund_credited_to_card,   direction: liability_increase, revenue: 0 }
       # 🔴 M32 是最容易做反的一條：退款回補到卡片是**負債增加**，不是收入沖銷。
       #    做成收入沖銷會同時少計負債與少計收入，兩邊都錯，且 nightly 恆等式抓不到（兩個錯誤互相抵銷）。
       refund_to_instrument_is_liability_increase: true

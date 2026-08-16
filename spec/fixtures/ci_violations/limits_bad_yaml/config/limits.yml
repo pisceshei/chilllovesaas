@@ -1,0 +1,15 @@
+# 故意違反：這份**不是合法的 YAML**（縮排壞掉，block collection 對不上）。
+#
+# 守的是 scripts/check-limits-keys.rb 的總括 rescue（第 5 輪起攔 StandardError，
+# 不再逐一列舉例外類別——列舉列不完，limits_alias_key 就是證據）。
+# 期望：exit 2（「檢查跑不了」），訊息含例外類別 Psych::SyntaxError。
+#
+# 🔴 為什麼非有不可（PR #40 第 3 輪驗收指出）：
+#    沒有那個 rescue 時，Psych::SyntaxError 會直接冒出去，Ruby 以 exit 1 ＋ backtrace 結束。
+#    而 1 在本腳本的碼表裡定義成「檢查跑了，發現違規」⇒ **退出碼會說謊**：
+#    自動化只看碼的話，會把「這個檔根本解析不了」讀成「有鍵型別違規」，
+#    而人拿到的是一整片 Psych backtrace，看不出該修哪裡。
+#    ⇒ 退出碼三分一旦立了，就得把**所有非零出口**都歸位，不能只歸位想得到的那幾條。
+rules:
+  - allow: 1
+   bad_indent: 2

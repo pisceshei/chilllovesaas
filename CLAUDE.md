@@ -1,6 +1,15 @@
 # CLAUDE.md — 專案共用規則（Claude 在本倉庫的任何工作都遵守）
 
-> 分工：**Codex 實作**（守則見 `AGENTS.md`）、**Claude 審核驗收**（依本檔與 docs 規格）。完整上下文入口：`HANDOFF.md`。
+> 分工（**2026-08-15 使用者裁定改制**）：**實作由人主導的 Claude Code 工作階段負責**；
+> **Codex 與 Claude bot 並列為兩個獨立驗收方**（Codex＝`chatgpt-codex-connector` 的 PR 自動審查，
+> Claude bot＝`claude-review.yml`）。守則見 `AGENTS.md`；完整上下文入口：`HANDOFF.md`。
+>
+> 🔴 **舊制是「Codex 實作 × Claude 驗收」，需修改時由 workflow 自動 @codex 派修（乒乓）。已廢止。**
+> 廢止的理由不是 Codex 修得不好，而是**修法選擇往往是裁定而不是機械修復**——
+> 例如 PR #29 的 `decimal_string` 位數閘門缺口，驗收方自己就給了兩條方向
+> （fail-closed 最小修 vs 補齊語義），選哪一條要看規格要不要一併改。
+> 把這種選擇交給一個看不到本輪對話脈絡的代理，等於讓它替專案下裁定。
+> ⇒ **任何人不得在 workflow 裡加回自動 `@codex` 派修**；要恢復必須先推翻本段。
 
 ## 專案是什麼
 

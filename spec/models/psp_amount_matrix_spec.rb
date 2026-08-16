@@ -173,6 +173,40 @@ RSpec.describe "金額單位邊界測試矩陣（65 §H）" do
       expect { adapter.to_payload(other) }.to raise_error(TypeError, /是為 override_minor 算的/)
     end
 
+    # ── 正負號（65 §A.7，2026-08-15 補實作）────────────────────────────────
+    #
+    # 🔴 **這兩層的期望是相反的，必須分開寫清楚**：
+    #   型別層（`to_psp_amount`）**放行**負值——§A.7 明文型別層不驗正負，
+    #     因為退款差額與撤銷需要負的 `Money::Storage`；
+    #   adapter 層（`to_payload`）**拒收**負值——§A.7 表格「送 PSP」列逐字
+    #     「PSP adapter 驗正數，負值一律 raise」。
+    # ⚠️ 2026-08-15 之前，第二層**完全沒有實作**（規格有、代碼零落點）
+    # ⇒ 負值可以一路走到線上形態。
+    describe "🔴 負值不得送出（§A.7）" do
+      it "型別層放行負值（這是刻意的，不是漏擋）" do
+        expect(storage(-50_000, "HKD").to_psp_amount(psp: :iso_minor).minor).to eq(-50_000)
+        expect(storage(-50_000, "HKD").to_psp_amount(psp: :decimal_two).string).to eq("-500.00")
+      end
+
+      it "adapter 層拒收負值 ── minor_units" do
+        neg = storage(-50_000, "HKD").to_psp_amount(psp: :iso_minor)
+        expect { adapter.to_payload(neg) }.to raise_error(TypeError, /不得為負/)
+      end
+
+      it "adapter 層拒收負值 ── decimal_string" do
+        neg = storage(-50_000, "HKD").to_psp_amount(psp: :decimal_two)
+        expect { decimal_adapter.to_payload(neg) }.to raise_error(TypeError, /不得為負/)
+      end
+
+      # 🔴 零值**刻意放行**：§A.7 引到的官方證據只證明「負值不可送」，
+      # 而 $0 auth（卡片驗證）是真實形態 ⇒ 不在這裡發明規則。
+      it "零值放行（$0 auth 是真實形態，§A.7 未裁定 ⇒ 不發明規則）" do
+        expect(adapter.to_payload(storage(0, "HKD").to_psp_amount(psp: :iso_minor))).to eq(0)
+        expect(decimal_adapter.to_payload(storage(0, "HKD").to_psp_amount(psp: :decimal_two)))
+          .to eq("0.00")
+      end
+    end
+
     it "T18 家別對了但格式錯了 ⇒ TypeError" do
       minor = storage(148_000, "JPY").to_psp_amount(psp: :iso_minor)
       expect { decimal_adapter.to_payload(minor) }.to raise_error(TypeError, /只收/)

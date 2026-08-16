@@ -20,7 +20,10 @@
 #
 # ## 不檢查什麼（🔴 誠實聲明——這段是本腳本對外宣稱的契約，不得誇大）
 #
-# 1. **它是純文字掃描，不解析 AST**。`_cents` 出現在字串常數或註釋裡也會命中（寧可誤擋）。
+# 1. **它是純文字掃描，不解析 AST**。`_cents` 出現在**字串常數或行尾註釋**裡也會命中
+#    （寧可誤擋）。⚠️ **整行註釋不會命中**——`each_line` 會跳過它們，
+#    理由見該方法：不跳的話「唯一正確實作 C4 的檔案會被 C4 判違規」。
+#    原文寫「註釋裡也會命中」沒有區分這兩種，把涵蓋範圍講得比實際大。
 # 2. **它不驗證語義**：一個叫 `amount_minor` 但其實裝著 cents 的變數，本腳本看不出來。
 #    那要靠 L1–L3 的型別層。**四層是互補的，任何一層都不宣稱單獨足夠。**
 # 3. **C2 只掃「明顯的 kwarg 呼叫」**：`Psp::X.new(...).charge(amount_minor: ...)` 這種。
@@ -133,10 +136,20 @@ files("db/migrate/*.rb").each do |path|
       violations << "[C3] #{rel(path)}:#{no} migration 出現 `t.decimal`／`t.float`——" \
         "金額欄位一律 `bigint` ＋ `_cents`（鐵律 3／65 §C.2）"
     end
-    # `t.integer :xxx_cents` 也是錯的：cents 要 bigint（避免溢位）。
-    next unless line.match?(/t\.integer\s+:\w*_cents\b/)
+    # 🔴 **正面檢查：`_cents` 欄位的宣告型別必須是 `bigint`**（2026-08-15 補）。
+    #
+    # 原本這裡只擋 `t.integer :xxx_cents` 一種寫法 ⇒ `t.string :price_cents`、
+    # `t.bigint` 以外的**任何**型別都會靜默通過，而下方的成功訊息卻宣告
+    # 「`_cents` 皆為 bigint」——**訊息宣稱了一個沒有發生的檢查**。
+    # ⚠️ 這與本輪修掉的三條是同一種病：讓人對一道不存在的防線產生信心。
+    # ⇒ 改成白名單式：抓所有 `t.<型別> :xxx_cents`，型別不是 bigint 就是違規。
+    #   這樣新增一種錯誤寫法時**預設是被擋的**，不需要有人想到要加規則。
+    next unless (m = line.match(/t\.(\w+)\s+:(\w*_cents)\b/))
+    next if m[1] == "bigint"
 
-    violations << "[C3] #{rel(path)}:#{no} `_cents` 欄位用了 `t.integer`——須 `bigint`"
+    violations << "[C3] #{rel(path)}:#{no} `#{m[2]}` 宣告為 `t.#{m[1]}`——" \
+      "須 `bigint`（`limits.money_boundary.storage_column_sql_type`；" \
+      "integer 會在大額或高單價幣別上溢位，而溢位是靜默的）"
   end
 end
 

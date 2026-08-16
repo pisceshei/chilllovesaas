@@ -72,16 +72,33 @@ module Money
     # 「exponent=2 幣別下測試全綠」是同一種病：**測試選的樣本決定了看不看得到**。
     # T10（USD 邊界值 `0` / `1` / BIGINT max）就是為此存在的。
     #
+    # 🔴 **`digits` 為 0 時原本輸出 `"1480.0"`**（2026-08-15 修，PR #29 驗收指出）。
+    # `"0".rjust(0, "0")` 回 `"0"`，而小數點是無條件接上去的
+    # ⇒ 宣告 0 位卻吐出一位小數，**連它自己的 `@return` 契約（「定位數」）都不符**。
+    # ⚠️ 這個 bug 走不到生產路徑（唯二呼叫端一個傳 `Money.decimal_digits`＝2、
+    # 另一個傳 `pack.decimal_places` 而 pack 已被 A6b 擋在 2 位），
+    # 但**低階格式化函式對任意 `digits` 都該是對的**——留著就是下一個呼叫端的地雷。
+    #
+    # 🔴 **分層刻意如此**：本函式**不做**「幾位才合法」的政策判斷，
+    # 那是 `Psp::Pack#validate_decimal_string!`（A6／A6b）的事。
+    # 低階格式化器管「怎麼 render」，政策層管「准不准 render」——
+    # 把政策塞進這裡會讓 `Money::Decimal`（恆 2 位，與 PSP 無關）也被 PSP 規則綁住。
+    #
     # @param value [BigDecimal] 主單位金額
-    # @param digits [Integer] 小數位數
+    # @param digits [Integer] 小數位數（非負；0 表示不帶小數點）
     # @return [String] 定位數、無幣別符號、無千分位、小數點為 `.`
+    # @raise [ArgumentError] `digits` 為負
     # @note 副作用：無。
-    # @see docs/specs/65-money-unit-boundary.md §H.2 T10
+    # @see docs/specs/65-money-unit-boundary.md §H.2 T10、§D.5
     def fixed_string(value, digits)
+      raise ArgumentError, "digits 不得為負（實得 #{digits}）" if digits.negative?
+
       rounded = value.round(digits)
       sign = rounded.negative? ? "-" : ""
       abs = rounded.abs
       whole = abs.to_i
+      return "#{sign}#{whole}" if digits.zero?
+
       frac = ((abs - whole) * (10**digits)).round.to_i
       "#{sign}#{whole}.#{frac.to_s.rjust(digits, '0')}"
     end
@@ -228,18 +245,39 @@ module Money
     # 🔴 **相同幣別才可比較**。跨幣別比較恆為 false 會讓「兩筆金額不同」
     # 與「兩筆金額不可比」變成同一件事——而後者是必須讓呼叫端知道的。
     #
-    # @param other [Money::Storage]
-    # @return [Integer] -1／0／1
-    # @raise [Money::CurrencyMismatch] 幣別不同
-    # @raise [TypeError] 型別不同
+    # ## 兩種「不可比」要分開處置（2026-08-15 修，PR #29 驗收 🟡 指出）
+    #
+    # | 對象 | 回傳 | `==` 的結果 | `<` 的結果 |
+    # |---|---|---|---|
+    # | 不是 `Storage`（`nil`／`Integer`／字串…） | `nil` | `false` | `ArgumentError`（Comparable 給的） |
+    # | 是 `Storage` 但幣別不同 | — | 🔴 `CurrencyMismatch` | 🔴 `CurrencyMismatch` |
+    #
+    # 🔴 **原本對非 `Storage` 也 `raise TypeError`，那是 bug**：`include Comparable` 之後
+    # `==` 是由 `<=>` 實作的 ⇒ `money == nil` **會拋例外而不是回 `false`**。
+    # 而 `==` 回 false 是 Ruby 全域的約定，`Array#include?`／`uniq`／`-`／`Hash` 查找
+    # 全都靠它——一個會拋例外的 `==` 會在**完全無關的地方**炸開，
+    # 且堆疊指向 `money.rb`，看不出根因。實測：`a == nil` ⇒ `TypeError`。
+    # ⇒ 型別不同回 `nil`（Ruby 慣例，`1 <=> "a"` 就是 `nil`）；
+    #   **幣別不同仍然 raise**，因為那是本專案刻意加嚴的那一條，不是型別問題。
+    #
+    # 🔴 **必須是 public**：原本它落在 `private` 區塊裡 ⇒ 直接呼叫 `a <=> b`
+    # 得到 `NoMethodError`（而文檔註釋宣稱它 raise `TypeError`／`CurrencyMismatch`）。
+    # `a < b` 之所以還能動，是因為 `Comparable#<` 是**內部**呼叫，不受 private 限制
+    # ——所以既有測試（只用 `a < b`）**證明不了 `<=>` 本身可用**。
+    #
+    # @param other [Object]
+    # @return [Integer, nil] -1／0／1；`other` 不是 `Money::Storage` 時為 `nil`
+    # @raise [Money::CurrencyMismatch] 同為 `Storage` 但幣別不同
     # @note 副作用：無。
+    # @see docs/specs/65-money-unit-boundary.md §F.3
     def <=>(other)
-      raise TypeError, "只能與 Money::Storage 比較，實得 #{other.class}" unless other.is_a?(Storage)
+      return nil unless other.is_a?(Storage)
       raise CurrencyMismatch, "#{currency} vs #{other.currency}（65 §F.3）" unless currency == other.currency
 
       cents <=> other.cents
     end
     include Comparable
+    public :<=>
   end
 
   # ── R4：十進位字串 ─────────────────────────────────────────────────────────

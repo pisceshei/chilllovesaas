@@ -29,7 +29,14 @@ class Psp::BaseAdapter
     @pack = Psp.registry.fetch(@psp)
   end
 
-  # 把金額值物件變回線上形態——**這是唯一變回 `Integer`／`String` 的地方**。
+  # 把金額值物件變回線上形態——**這裡應該是唯一變回 `Integer`／`String` 的地方**。
+  #
+  # ⚠️ **「唯一」是設計意圖，不是被機制保障的事實**（2026-08-15 修；原文寫成斷言）。
+  # 任何人都可以在別處直接讀 `amount.minor` / `amount.string` 繞過本方法，
+  # 而**沒有任何 CI 規則在擋**——`check-money-boundary.rb` 的 C5 守的是
+  # `__build`（建構側），出向這一側目前沒有對應的執法點。
+  # 🔴 要讓「唯一」成真，該加的是一條「`.minor`／`.string` 的讀取只准出現在本檔」
+  # 的掃描（比照 C5 的形態）。**在那之前，讀到「唯一」請理解成「請只從這裡走」。**
   #
   # @param amount [Money::PspMinor, Money::PspDecimal] 該 pack 宣告格式對應的值物件
   # @return [Integer, String] 線上形態
@@ -38,6 +45,7 @@ class Psp::BaseAdapter
   # @see docs/specs/65-money-unit-boundary.md §C.1 L3
   def to_payload(amount)
     assert_amount!(amount)
+    assert_sign!(amount)
     amount.is_a?(Money::PspMinor) ? amount.minor : amount.string
   end
 
@@ -63,5 +71,36 @@ class Psp::BaseAdapter
 
     raise TypeError,
       "這個金額是為 #{amount.psp} 算的，不是 #{psp}（A4：擋住「A 家的值送去 B 家」）"
+  end
+
+  # 🔴 **負值一律拒收**（`docs/specs/65` §A.7「送 PSP」列，2026-08-15 補實作）。
+  #
+  # §A.7 的表格逐字寫「PSP adapter **驗正數**，負值一律 raise」，
+  # 本尊依據是 Stripe `POST /v1/refunds` 的 amount 官方逐字「A positive integer…」。
+  # ⚠️ **本條在 2026-08-15 之前是「規格有、代碼零落點」**：
+  # 型別層（`Money::Storage`）依 §A.7 **刻意不驗**正負（退款差額與撤銷需要負值），
+  # 而「寫入端與 PSP adapter」這兩個該驗的地方**一個都沒實作**
+  # ⇒ `Money::Storage.from_cents(-50_000, "HKD")` 可以一路走到線上形態
+  # （`minor_units` 得 `-50000`、`decimal_string` 得 `"-500.00"`）。
+  # 🔴 **退款方向由 `kind` 承載，不由符號承載**——送一個負的 charge 金額，
+  # 各家 PSP 的行為從「400」到「當成正數收款」都有，而後者是靜默事故。
+  #
+  # ⚠️ **`== 0` 刻意放行**：§A.7 引到的官方證據只證明「負值不可送」，
+  # 而 $0 auth（卡片驗證）是真實形態。§A.7 末段自己的紀律就是「沒有官方依據，不得硬寫」
+  # ⇒ 零值留給第一家真 PSP 的 pack 裁定，**不在這裡發明規則**。
+  #
+  # @param amount [Money::PspMinor, Money::PspDecimal]
+  # @return [void]
+  # @raise [TypeError] 金額為負
+  # @note 副作用：無。
+  # @see docs/specs/65-money-unit-boundary.md §A.7
+  def assert_sign!(amount)
+    # 🔴 用數值判，不看字串前置的 `-`：`decimal_string` 側拿到的是字串，
+    # 而 `"-0.00"` 這種形態（極小負值捨入到零）**不是負值**，看前綴會誤擋。
+    value = amount.is_a?(Money::PspMinor) ? amount.minor : BigDecimal(amount.string)
+    return unless value.negative?
+
+    raise TypeError,
+      "送 PSP 的金額不得為負（實得 #{value}）——退款方向走 kind 不走負號（65 §A.7）"
   end
 end

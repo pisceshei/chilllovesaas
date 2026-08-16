@@ -1,0 +1,27 @@
+# 反向斷言用：這一份**必須通過**（exit 0）。
+# 沒有這條，一個「永遠 fail」的檢查器會讓上面兩條 fixture 全部「通過」，
+# 而 CI 看起來與正常無異（65 §K.7 逐字：「**檢查本身也要被測試**——一條永遠不會紅的 CI 規則等於沒有」）。
+#
+# 🔴 `y` / `n` 刻意放在這裡：YAML 1.1 **規格**的 bool 全集含它們，
+#    但 Psych 5.2.2 實測**不轉**（Ruby 3.4.10，2026-08-15 取證）⇒ 它們是合法的 String 鍵。
+#    這條 fixture 同時守住「不得反過來加一條禁止裸字 y/n 的字面規則」——
+#    真有人加了，這裡會紅。
+jurisdictions:
+  hk:
+    accounting:
+      gift_card_entry_points:
+        M27: { "on": gift_card_issued_by_admin, direction: liability_increase }
+flags:
+  y: 1
+  n: 2
+  "Off": 3
+
+# 🔴 sequence 內的 mapping，鍵全部是**合法 String** ⇒ 這一段守的是 Sequence 遞迴分支的
+#    **偽陽性方向**（PR #40 第 2 輪驗收指出，第 1 輪列為 🟡 未處理）。
+#    `limits_seq_key` 只守真陽性（陣列裡的裸字鍵要被抓到）；沒有這一段的話，
+#    有人把 Sequence 分支改成「一律報違規」也不會有任何測試變紅。
+rules:
+  - "on": allow
+    scope: admin
+  - "no": deny
+    scope: staff
