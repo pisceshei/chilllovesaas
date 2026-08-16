@@ -22,7 +22,8 @@
 #
 # GitHub 表達式 `${{ ... }}` 在送給 bash 之前會被換成佔位符 `GHEXPR`——
 # bash 看到 `${{` 會當成 bad substitution 而誤報。目前倉庫的 run 區塊裡
-# 一個表達式都沒有（實測 25 個 run 區塊、0 個），但第一個用它的人不該撞到假警報。
+# （寫下當時的快照：25 個 run 區塊、0 個表達式；現值以本腳本實跑輸出為準——
+# 2026-08-16 起 ci.yml 的 doc-claims 步驟已含 `${{ }}`，佔位符替換**已實際生效**，不再只是預防。）
 #
 # ## 不檢查什麼（🔴 誠實聲明，這段就是本腳本對外宣稱的契約，不得誇大）
 #
@@ -53,7 +54,7 @@ WORKFLOW_DIR = File.join(ROOT, ".github", "workflows")
 
 # GitHub 表達式換成一個合法的 bash token，避免 `${{` 被當成 bad substitution。
 # ⚠️ 非貪婪 ⇒ 表達式內若含 `}}` 字面（例如 `fromJSON('{"a":{}}')`）會截錯。
-#    目前倉庫 0 個表達式，暫不處理；真出現時會是 bash -n 誤報（**吵而不是靜默**），
+#    （初版寫「目前倉庫 0 個表達式」——已過時，ci.yml 現有 `${{ }}`；本註釋改為：真出問題時是 bash -n 誤報（**吵而不是靜默**），
 #    那是可接受的失效方向。
 GH_EXPR = /\$\{\{.*?\}\}/m
 
@@ -132,7 +133,12 @@ files.each do |path|
       script = step["run"]
       next unless script
 
-      shell = step["shell"] || job.dig("defaults", "run", "shell") || doc.dig("defaults", "run", "shell")
+      # 🔴 `defaults:` 掛一個字串是合法 YAML ⇒ `dig` 對 String 丟 TypeError 帶 backtrace 崩掉
+      #    ——與裸日期（wf_date_scalar）、nil step（wf_nil_step）同形態的**第三個入口**
+      #    （第 4 輪驗收指出，實測復現）。fixture＝wf_bad_defaults。
+      job_defaults = job["defaults"].is_a?(Hash) ? job["defaults"] : {}
+      doc_defaults = doc["defaults"].is_a?(Hash) ? doc["defaults"] : {}
+      shell = step["shell"] || job_defaults.dig("run", "shell") || doc_defaults.dig("run", "shell")
       interpreter = interpreter_for(shell)
       next unless interpreter
 

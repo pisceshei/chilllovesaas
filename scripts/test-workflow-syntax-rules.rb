@@ -65,7 +65,15 @@ CASES = [
     "「跳過」與「通過」分得出來的那一層。原敘述會讓人以為 ok.yml 的 shell 行只是裝飾。" \
     "正向斷言（壞 bash 在自訂 shell 下被抓）仍在 wf_custom_shell，兩份守不同方向" ],
   [ "wf_nil_step", 0, "1 個 run 區塊",
-    "🔴 反向斷言之三：steps 多打一個 `-`（空元素）——合法 YAML、step 是 nil。"     "無 is_a?(Hash) 防護時 `nil[\"run\"]` 崩掉（與裸日期同形態，入口不同）。"     "needle 用 run 計數：只斷言 exit 0 的話，「崩掉之前一個都沒檢查」與"     "「跳過 nil 後正常檢查」在有 rescue 的未來版本裡可能分不出來。"     "⚠️ needle 依賴 fixture 恰好一個 run 區塊（該檔檔頭有承重註記）" ],
+    "🔴 反向斷言之三：steps 多打一個 `-`（空元素）——合法 YAML、step 是 nil。" \
+    "無 is_a?(Hash) 防護時 `nil[\"run\"]` 崩掉（與裸日期同形態，入口不同）。" \
+    "needle 用 run 計數：只斷言 exit 0 的話，「崩掉之前一個都沒檢查」與" \
+    "「跳過 nil 後正常檢查」在有 rescue 的未來版本裡可能分不出來。" \
+    "⚠️ needle 依賴 fixture 恰好一個 run 區塊（該檔檔頭有承重註記）" ],
+  [ "wf_bad_defaults", 0, "1 個 run 區塊",
+    "🔴 反向斷言之四：`defaults:` 掛字串——合法 YAML、`dig` 對 String 丟 TypeError 崩掉。" \
+    "與裸日期／nil step 同形態的第三個入口（第 4 輪驗收指出，實測復現）。" \
+    "needle 用 run 計數：崩掉時一個都沒檢查，計數分得出來" ],
   [ "wf_custom_shell", 1, "bash -n",
     "🔴 **`interpreter_for` 的正向斷言**：官方文件化的自訂 shell 模板 " \
     "`bash --noprofile --norc -eo pipefail {0}` 下的壞 bash **必須被抓到**。" \

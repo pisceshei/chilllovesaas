@@ -1,0 +1,13 @@
+# 反向斷言之四：`defaults:` 掛一個**字串**——合法 YAML，但 `dig` 對 String 崩掉。
+# 與裸日期（wf_date_scalar）、nil step（wf_nil_step）同形態的第三個入口。
+# 期望：exit 0（合法，不得崩潰；step 用預設 bash 檢查）。
+name: BadDefaults
+on: [push]
+defaults: broken-string
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    defaults: also-broken
+    steps:
+      - name: real step
+        run: echo ok
