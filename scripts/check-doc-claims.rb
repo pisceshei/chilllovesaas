@@ -207,7 +207,14 @@ elsif (diff = git(ROOT, "diff", "--name-only", "-z", "#{base_ref}...HEAD"))
   diff.split("\0").reject(&:empty?)
       .select { |p| p.start_with?("docs/worklog/", "docs/handoff/") }
       .each do |rel|
-    hunks = git(ROOT, "diff", "-U0", "#{base_ref}...HEAD", "--", rel).to_s
+    hunks = git(ROOT, "diff", "-U0", "#{base_ref}...HEAD", "--", rel)
+    # 🔴 執行期 canary（PR #42 第 6 輪 🟡）：name-only diff 剛成功、逐檔 diff 才失敗
+    #    是環境問題不是「該檔沒有新增行」——原本 `.to_s` 把失敗吞成空集合，
+    #    R4/R5 對該檔靜默跳過。fail-closed：exit 2（檢查跑不了，不是通過也不是違規）。
+    if hunks.nil?
+      warn "::error::git diff -U0 對 #{rel} 失敗（name-only 卻成功）⇒ **檢查跑不了**（exit 2）。"
+      exit 2
+    end
     added = Set.new
     hunks.scan(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/) do |start, count|
       st = start.to_i
@@ -329,7 +336,7 @@ if violations.empty?
     puts "  - R4 易腐數字／R5 全稱句：**全部** worklog／handoff（`--all`）"
   elsif changed_docs
     puts "  - R4 易腐數字／R5 全稱句：只掃相對 `#{base_ref}` 有改動的 worklog／handoff" \
-         "（本次 #{changed_docs.size} 份、**只掃新增的行**）——歷史紀錄不回頭改，見 AGENTS.md §文檔分層"
+         "（本次 #{changed_docs.size} 份、共 #{changed_docs.values.sum(&:size)} 個新增行——"          "**只掃新增的行**）——歷史紀錄不回頭改，見 AGENTS.md §文檔分層"
   else
     puts "  - #{scope_note}"
   end
