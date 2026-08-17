@@ -168,7 +168,7 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 ## F4. 取消與封存
 
 **生產級做法**：
-1. Cancel 前置檢查：見 F4.1 的**五條聯集** guard；動作 = 狀態條件轉移 + 庫存 committed 釋放（available+）+ 依選項退款（走 F5）+ **關閉／取消所有未結 FulfillmentOrder（走 F3.2 的替代單語義）** + 事件 + outbox（orders/cancelled）；`reason` 與 `restock` **皆為 non-null 必填**。
+1. Cancel 前置檢查：見 F4.1 的**五條聯集** guard；動作 = 狀態條件轉移 + 庫存 committed 釋放（available+；**僅限 T1 曾 commit 的行**——`ON_FULFILLMENT` deferred 行與 `tracked=false` 行未進 committed，無條件釋放會下溢或憑空生 available（總綱 S4/S13 例外的反向條件；測試須含「取消含 deferred 行的訂單 ⇒ 該行不動帳」）（2026-08-17 更正，PR #52 第 19 輪））+ 依選項退款（走 F5）+ **關閉／取消所有未結 FulfillmentOrder（走 F3.2 的替代單語義）** + 事件 + outbox（orders/cancelled）；`reason` 與 `restock` **皆為 non-null 必填**。
 2. Archive：純標記（closed_at），不影響金流庫存；**自動封存條件二選一：「已付款且已出貨」或「已全額退款」**，且**官方無延遲**（原本寫的「N 天後」是我方自加，改為預設 0 天、可設定）。P1 做成 nightly job。
    <!-- 依 46c:165、46c:572 修正，原文：自動封存條件為「已付款且已出貨」或「已全額退款」；我方原寫「付清且已出貨 N 天後」——缺「已全額退款」分支且多了官方沒有的延遲 -->
 3. 兩者語意分開（研究 01）：cancel 是業務反悔、archive 是收納——UI 文案明確。

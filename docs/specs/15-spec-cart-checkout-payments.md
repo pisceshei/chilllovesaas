@@ -5,7 +5,7 @@
 ## F1. Cart
 
 **生產級做法**：
-1. `carts`（token 簽名 cookie `_cl_buyer`，host-only 綁店網域）+ `cart_line_items`（variant_id、quantity、**properties／selling_plan_id／unit_price_cents（加入當下價）——四者皆為行合併鍵 `merge_key_hash` 的承重輸入**（見本節 #5），價格非「僅供顯示」<!-- 2026-08-17 更正（PR #52 第 5 輪） -->）。
+1. `carts`（token 簽名 cookie `_cl_buyer`，host-only 綁店網域）+ `cart_line_items`（variant_id、quantity、**properties／selling_plan_id／unit_price_cents（加入當下價）＋bundle `parent_id`（Q-44 未決前暫定）——皆為行合併鍵 `merge_key_hash` 的承重輸入**（見本節 #5），價格非「僅供顯示」<!-- 2026-08-17 更正（PR #52 第 5 輪） -->）。
 2. 寫入 API：add/change/update/clear（對齊 03 的 Ajax 慣例），全部回 turbo_stream 局部更新；**兩層數量限制並存**：
    - **`cart_item_limit`（官方概念）＝購物車「總件數」上限**，系統建議值 **50**，可由商家在「結帳 › 進階偏好設定 › 加入購物車數量上限」開關與調整；**例外：POS／草稿單／B2B／不追蹤庫存的品項不受限**。值取自 `limits.cart.item_limit_suggested`。
    - **本專案防呆上限**：每行 999、行數 100（`limits.cart.max_quantity_per_line` / `max_lines`）——這是防呆，**不是** `cart_item_limit`。
@@ -15,7 +15,7 @@
         且官方的 `cart_item_limit` 概念完全缺席。兩者是不同概念，必須並存。任何人翻舊版都不要刪掉 cart_item_limit。 -->
 3. **價格以當下為準**：cart 顯示即時價（查 variant），進 checkout 時重新快照；商品下架/售罄 → cart 行標記不可購並擋結帳。
 4. 過期：90 天未動的 cart purge job。
-5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 **`(shop_id, cart_id, merge_key_hash)`**（鐵律 2：複合索引以 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 11 輪）：原鍵首欄 cart_id --> ） + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`；`merge_key_hash`＝variant＋properties＋selling_plan＋單價四者的雜湊——90 §03 S0 行合併鍵，四者全同才併行；同 variant 不同屬性/訂閱方案/價格＝**合法多行** <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原 (cart_id, variant_id) 唯一索引把同 variant 客製屬性行靜默合併 -->）。
+5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 **`(shop_id, cart_id, merge_key_hash)`**（鐵律 2：複合索引以 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 11 輪）：原鍵首欄 cart_id --> ） + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`；`merge_key_hash`＝variant＋properties＋selling_plan＋單價＋bundle `parent_id`（Q-44 未決前暫定入鍵——兩個 bundle 父項的同 variant 子行不得誤併，2026-08-17 更正，PR #52 第 19 輪）的雜湊——90 §03 S0 行合併鍵，全同才併行；同 variant 不同屬性/訂閱方案/價格/父項＝**合法多行** <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原 (cart_id, variant_id) 唯一索引把同 variant 客製屬性行靜默合併 -->）。
 
 **⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（在**訂單成立**時扣——COD／銀行轉帳／B2B payment terms 的付款在成立之後，見 F5；2026-08-17 依 90 §2.4／D-32 更正，原文「只在付款成功時扣」）。
 

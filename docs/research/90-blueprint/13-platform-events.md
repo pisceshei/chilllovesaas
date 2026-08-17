@@ -271,7 +271,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### D.1 訂閱建立（操作者：app 開發者）
 
 1. 途徑 A：TOML 設定檔宣告 topics＋uri → 部署後對**所有安裝店**生效【官方 G-1】。途徑 B：`webhookSubscriptionCreate`（逐店、可帶 filter/includeFields）。
-2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。🔴 形態驗證只擋語法——目的地是 app 控制的出站端點，**每次投遞連線另過 SSRF 政策**（C.3「3xx 算失敗且禁 follow redirect」的完整化 （2026-08-17 更正，PR #52 第 18 輪））：scheme/port 白名單、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址（rebinding 防護＝連線 pin 已驗 IP——註冊時通過的 hostname 事後可改指內網）、禁 redirect、回應大小上限。
+2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。🔴 形態驗證只擋語法——目的地是 app 控制的出站端點，**每次投遞連線另過 SSRF 政策**（C.3「3xx 算失敗且禁 follow redirect」的完整化 （2026-08-17 更正，PR #52 第 18 輪））：scheme/port 白名單、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址（rebinding 防護＝連線 pin 已驗 IP——註冊時通過的 hostname 事後可改指內網）、禁 redirect、回應大小上限＝`outbound_http.webhook_response_bytes_max`（config/limits.yml，鐵律 6——三條出站契約共用鍵組，第 19 輪落鍵）。
 3. App Store app 另須申報合規三端點，缺 → 審核退件【官方 G-5】。
 
 ### D.2 事件投遞（操作者：平台）
@@ -339,7 +339,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### E.2 依賴方向
 
 - **Outbox（18-F1）是唯一事件源**：對外 webhooks、通知信、Flow 型自動化、rollup 全部掛在 outbox 消費側；業務模組只負責「與業務同 transaction 寫 outbox」，不直接呼叫任何通知/投遞（鐵律 5：transaction 內禁外部 IO）。
-- 通知信依賴訂單/履約/顧客的**現值查詢**（渲染時回查，不信 payload 快照）——與 C.1 eventual consistency 同理。
+- 通知信渲染依賴 **outbox payload 凍結的事件時點欄位**（品項/金額/收件人/tracking——D.6／總綱 A1）；訂單/履約/顧客**現值只用於顯式動態 guard**（退訂抑制、取消判定）。（2026-08-17 更正，PR #52 第 19 輪）：原「渲染時回查現值、不信 payload 快照」與 A1 第 18 輪凍結規則逐字互斥——延遲 job 下回查現值會把第二批出貨的 tracking 寫進第一封信、把寄送前的訂單編輯寫進成單確認。
 - 管道（channel=app）依賴 Publication/Catalog（商品域）＋ webhook（同步）＋ ResourceFeedback（回報）；方向是管道消費商品域，商品域不知道管道。
 - 合規事件依賴 jurisdiction pack：本尊的 GDPR 三 topic 在我方對應「隱私法 per-jurisdiction」（HK PDPO／TW 個資法／GDPR），核心只發事件、pack 決定落地動作（鐵律 11）。
 

@@ -244,7 +244,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 
 ### C.6 併發要害與邊界
 
-- **發布互斥**：任一時刻恰一個 MAIN——publish 必須是原子雙寫（新→MAIN、舊→UNPUBLISHED），我方 spec 14 §F2 已規劃單 transaction。
+- **發布互斥**：任一時刻恰一個 MAIN——publish 必須**先鎖店級序列化列（或對現任 MAIN 行 `FOR UPDATE` 條件式降級，影響列數 ≠1 即 abort 重試）**，再於同一 transaction 內原子雙寫（新→MAIN、舊→UNPUBLISHED）。「各自包 transaction 的原子雙寫」**不是**併發防線——兩交易同讀舊 MAIN、各自降級再自升，提交後雙 MAIN（總綱 X-30）；spec 14 §F2 的單 transaction 規劃須含此鎖（（2026-08-17 更正，PR #52 第 19 輪）：原文止於原子雙寫，正是 X-30 第 18 輪判為不足的機制）。
 - **編輯器併發**：本尊未見官方衝突機制明文（⚠️）；我方裁定＝`lock_version` 後存者收衝突（14 §F3），保留。
 - **themeFilesUpsert 非同步**：大批次回 `job`，client 必須輪詢完成才可視為寫入成功——我方 editor 儲存管線同理（先寫後渲染，失敗回滾）。
 - 邊界：order 引用不存在 section ID＝校驗失敗；section type 不存在於主題＝失敗；同名 .liquid/.json 並存＝失敗；redirect 指向仍可渲染的 URL＝靜默不生效（**不是錯誤**，落地要在 UI 提示）；刪頁面連動刪選單項（跨模組副作用）。
@@ -254,7 +254,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 - **格式門檻**：試用方案白名單【窮舉：10】JS／CSS／GIF／JPEG／PNG／JSON／CSV／PDF／WebP／HEIC；付費方案＝任何格式**除 HTML**。我方落地同樣必須擋 HTML（公開 CDN 上的 stored-XSS／phishing 面）；⚠️ SVG 是否受理、以 image 還是 generic 處理，官方未明文，待實測。
 - **檔名保留規則**：不得以 `.` 開頭；不得以下列字尾結束【窮舉：9】`pico`／`icon`／`thumb`／`testing`／`small`／`compact`／`medium`／`large`／`grande`——這組是本尊圖片尺寸變體 URL 後綴，佔用即衝突。我方若沿用尺寸後綴式 CDN URL，此保留清單必須同步落地。
 - **撞名解決**＝`duplicateResolutionMode` 三值（§A.4）；admin UI 上傳的行為對應哪一值 ⚠️ 官方未明文，待實測（實測店可驗）。
-- **兩段式上傳是大檔唯一路徑**：`fileSize` 對 VIDEO／MODEL_3D 為必填（stagedUploadsCreate 會據此預檢配額）；一般檔案可直接給外部 URL 由平台抓取——🔴 `originalSource` 是 tenant 控制的出站目的地，**平台抓取必過 SSRF 防線**（同 webhook 投遞政策，總綱 A2 的細化）：scheme 白名單（https）、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址、禁 redirect、下載大小/時間上限——否則已認證商家可讓 worker 抓 loopback／內網服務／cloud metadata 並把回應存成檔案（2026-08-17 更正，PR #52 第 18 輪）。
+- **兩段式上傳是大檔唯一路徑**：`fileSize` 對 VIDEO／MODEL_3D 為必填（stagedUploadsCreate 會據此預檢配額）；一般檔案可直接給外部 URL 由平台抓取——🔴 `originalSource` 是 tenant 控制的出站目的地，**平台抓取必過 SSRF 防線**（同 webhook 投遞政策，總綱 A2 的細化）：scheme 白名單（https）、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址、禁 redirect、下載大小/時間上限＝`outbound_http.file_fetch_download_bytes_max`（config/limits.yml，鐵律 6，第 19 輪落鍵）——否則已認證商家可讓 worker 抓 loopback／內網服務／cloud metadata 並把回應存成檔案（2026-08-17 更正，PR #52 第 18 輪）。
 - **刪除語義**：永久不可復原；商品引用自動解除（§B.6）；⚠️ 被 metafield `file_reference`／theme 設定（favicon、section 圖片）引用時是否阻擋或警示，官方未明文——admin 提供「Used in」篩選供刪前自查，我方落地必須做**引用計數表**（file_usages：file_id×引用者多型），刪除確認框列出引用清單。
 - **多租戶**：`files` 表帶 `shop_id`＋複合索引 `(shop_id, filename)`（filename 撞名解決以店為界）；CDN 路徑帶店識別，跨店引用檔案 ID 必須被拒（同 §C.6 隔離原則）。
 （來源：help file-uploads、Admin GraphQL fileCreate/stagedUploadsCreate，取證 2026-08-14）

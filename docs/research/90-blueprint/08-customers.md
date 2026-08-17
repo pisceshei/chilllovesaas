@@ -171,7 +171,7 @@ Company 1 ─── N CompanyLocation（≤10,000/company）
 ### C.3 刪除與清除
 
 - `canDelete=false` 的四阻擋（74 §4＋help，取證 2026-08-14）：①待清除（redaction pending）②是尚未送達的禮品卡排程收件人 ③曾有訂閱合約 ④有訂單。有訂單者只能走「清除個資」（§B.5）保留訂單記錄。
-- 匿名化範圍：profile 的 name/email/phone/address 移除，**且延伸到每一份持久化 PII 副本**——checkout 紀錄、domain event payload、訂單面快照（帳單/收件人欄）、全文搜尋索引與匯出投影一併匿名（16:700「匿名化要連 events payload 與 checkouts 一起處理，PII 清單驅動」；驗收＝匿名化後全文搜尋/匯出查無 PII，16:979）；只清 profile 會讓同一 PII 從 checkout/事件/搜尋原樣可查（2026-08-17 更正，PR #52 第 18 輪）。保留：非 PII 的訂單與財務事實（order history）。
+- 匿名化範圍：profile 的 name/email/phone/address 移除，**且延伸到每一份持久化 PII 副本**——checkout 紀錄、domain event payload、訂單面快照（帳單/收件人欄）、全文搜尋索引與匯出投影一併匿名（16:700「匿名化要連 events payload 與 checkouts 一起處理，PII 清單驅動」；驗收＝匿名化後全文搜尋/匯出查無 PII，16:979）；只清 profile 會讓同一 PII 從 checkout/事件/搜尋原樣可查（2026-08-17 更正，PR #52 第 18 輪）。保留：非 PII 的訂單與財務事實（order history）。**可實作機制（2026-08-17 裁定，PR #52 第 19 輪）＝crypto-shredding**：domain event／outbox payload 內的 PII 欄位（含 §13 A1 凍結進 payload 的收件人欄）一律以 per-customer 資料金鑰加密後入列，事件列本身**維持 append-only 不可變**（16:19「事件不可編輯刪除、刪除＝追加 redaction 事件」契約不破）；清除＝銷毀該 customer 金鑰＋追加 redaction 事件——密文即刻不可解＝實質移除；搜尋索引與匯出投影屬可重建衍生物，直接重建；讀取側解密失敗一律渲染匿名佔位。三個候選機制中它是唯一同時相容「A1 凍結欄位」與「16:19 不可變」的：不嵌 PII 只存參照＝渲染時回查現值、違反 A1；審計例外的就地改寫＝違反 16:19。
 
 ### C.4 行銷同意不變量
 

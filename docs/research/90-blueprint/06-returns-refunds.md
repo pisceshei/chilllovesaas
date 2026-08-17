@@ -97,7 +97,7 @@ Shop 1─1 ReturnRules                  （退貨規則設定：窗口/費用/fi
 | T2 | ∅ → OPEN | `returnCreate`（商家直建，跳過審核） | 品項已送達（returnableFulfillments） | 建 ReverseFulfillmentOrder [G2]；換貨品項行加入訂單＋換貨 FulfillmentOrder 進 ON_HOLD |
 | T3 | REQUESTED → OPEN | `returnApproveRequest`（商家審核通過） | status=REQUESTED | **不可逆**（permanent）[46a §4]；建 RFO；webhook `returns/approve`；寄核准信（可附標籤） |
 | T4 | REQUESTED → DECLINED | `returnDeclineRequest` | status=REQUESTED；**declineReason 必填** | **不可逆**；webhook `returns/decline`；寄拒絕信（自訂訊息；reason 僅內部可見 [G11]）；**被拒品項可再建新退貨** [G2] |
-| T5 | OPEN → CLOSED | `returnProcess` 處理完全部品項；或移除最後一個品項；或 `returnClose` 手動關 | status=OPEN | **自動關閉條件＝「每個品項都已處理且每個退貨品項都已 restock」**[G3]；webhook `returns/close` |
+| T5 | OPEN → CLOSED | `returnProcess` 處理完全部品項；或移除最後一個品項；或 `returnClose` 手動關 | status=OPEN | 官方轉述原文＝「每個品項都已處理且每個退貨品項都已 restock」[G3]；⚠️ 含 `NOT_RESTOCKED`／`MISSING` 終局處置的退貨，官方**未載**是否自動關——照 [G3] 字面它永不滿足條件、滯留 OPEN 等人工。**我方裁定（2026-08-17，PR #52 第 19 輪，隨總綱 D6）＝全行有終局 disposition 即自動關；restock 完成要求僅限選 `RESTOCKED` 的行**；本尊對此情境的實際行為標 **V 待實測**（實測店造一筆含 NOT_RESTOCKED 處置的退貨驗證）；webhook `returns/close` |
 | T6 | OPEN → CANCELED | `returnCancel` | status=OPEN 且五條全部成立：①未退款 ②未 restock ③未標記已退回 ④無 Shopify 產生的退貨標籤（手動上傳的可以）⑤fulfillment 未被取消 [G3][46a §4] | 「All sales records…will be reversed」；**換貨品項不受影響**；webhook `returns/cancel`；**取消後不可重開，只能另建新退貨** [G3] |
 | T7 | CLOSED → OPEN | `returnReopen` | status=CLOSED | webhook `returns/reopen` |
 
@@ -253,7 +253,7 @@ balance_to_collect= max(0, −net)         # 換貨/欠款造成的負值＝向�
 1. 商家在「Return items to receive」勾收到的品項 → 每項選 disposition（restock 則選 location）。
 2. 「Exchange items to release」勾要釋出的換貨品項（解 hold）。
 3. 財務段：`financialTransfer.issueRefund`（`orderTransactions[]` 必填＋`refundMethods[]` 可含 storeCreditRefund＋`allowOverRefunding`）[G14]；或選「Later」延後；買家欠款 ⇒ 寄 invoice/收款。可退運費。
-4. 副作用：restock 走庫存調整（冪等 key **兩路**：本流程（returnProcess 收貨、財務段可選 Later）＝**return/RFO disposition line id**；退款路徑的 restock 才用 refund_line_item——步 3 可選 Later 時 Refund 可能尚不存在，單路鍵無鍵可用；兩路對同 disposition 單位**原子 claim**（INSERT guard 唯一鍵、成功者才動庫存——pre-check 不互斥），正典見總綱 T3 步驟表 <!-- 2026-08-17 更正（PR #52 第 5 輪；claim 原子化第 12 輪） -->）；`returns/process`＋`refunds/create`＋`reverse_fulfillment_orders/dispose` webhook；**全部品項處理完且全部 restock ⇒ Return 自動 CLOSED**。
+4. 副作用：restock 走庫存調整（冪等 key **兩路**：本流程（returnProcess 收貨、財務段可選 Later）＝**return/RFO disposition line id**；退款路徑的 restock 才用 refund_line_item——步 3 可選 Later 時 Refund 可能尚不存在，單路鍵無鍵可用；兩路對同 disposition 單位**原子 claim**（INSERT guard 唯一鍵、成功者才動庫存——pre-check 不互斥），正典見總綱 T3 步驟表 <!-- 2026-08-17 更正（PR #52 第 5 輪；claim 原子化第 12 輪） -->）；`returns/process`＋`refunds/create`＋`reverse_fulfillment_orders/dispose` webhook；**全部品項處理完且全行有終局 disposition ⇒ Return 自動 CLOSED**（restock 完成要求僅限 `RESTOCKED` 行——B.1 T5 我方裁定形，第 19 輪同步）。
 5. 失敗分支：PSP 退款失敗 ⇒ 本地 pending 交易列＋告警＋可重試（同一把 idempotency key）；狀態不符（如已 CLOSED）⇒ `INVALID_STATE`。
 
 ### D.4 無退貨脈絡的退款（refundCreate）[46a §6][G8]
@@ -335,7 +335,7 @@ balance_to_collect= max(0, −net)         # 換貨/欠款造成的負值＝向�
 
 ### F.3 開發驗收要點（M4 測試清單增補）
 
-1. **狀態機測試**：B.1 七條轉移逐條＋「REQUESTED 不可 cancel」「DECLINED/CANCELED 無出邊」「CLOSED 可 reopen」「處理完＋全 restock 自動 CLOSED」。
+1. **狀態機測試**：B.1 七條轉移逐條＋「REQUESTED 不可 cancel」「DECLINED/CANCELED 無出邊」「CLOSED 可 reopen」「處理完＋全行終局 disposition 自動 CLOSED——**必測含 `NOT_RESTOCKED`／`MISSING` 行的退貨也自動關**、restock 斷言僅限 RESTOCKED 行（第 19 輪隨 T5 裁定形）」。
 2. **restockType 語義**：CANCEL（未履行→移除＋回庫存）／RETURN（已履行→回庫存）／NO_RESTOCK；`LEGACY_RESTOCK` 建立時 reject。退未履行品項後該行不可再履行。
 3. **金額矩陣**：JPY/TWD/KRW 必測（65 §H）；算例 1–3（16 F5.2）含換貨負值→`balance_to_collect`；restocking fee floor；退款 floor 0。
 4. **併發**：C1（雙分頁同退）/C2（100 執行緒）/C3（與 capture 併發）；restock 冪等（webhook 重放不重複進貨）。

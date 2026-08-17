@@ -96,7 +96,7 @@ enum 或把 on_hand 重複計數，與四聚合欄＋buckets 子表的 schema �
 | `available → committed` | 訂單成立（含 draft 轉正式單） | tracked=true；DENY 時 available>0 | committed＋、available－；on_hand 不變（S12） |
 | `committed → (出帳)` | fulfillment 建立 | 訂單已指派地點 | committed－、on_hand－（S12；46a） |
 | `committed → available` | 訂單取消（`orderCancel.restock=true`）／未履行品項退款 `restockType=CANCEL`（06 §A.4） | `orderCancel.restock` 必填（46a）；新建退款**無** `RESTOCK` 值（S31） | 回補 available；on_hand 不變 |
-| `committed 跨地點遷移` | `fulfillmentOrderMove`（FO 改派地點，09 §B.1-4） | 目的地必須備貨該 item（官方明文 move 失敗條件，S32）；已履約品項永遠留在原地點（S32） | origin committed−、destination committed＋；⚠️ 官方只寫前置與失敗條件，**未寫數量機制**——origin 是否同步 available＋、destination 是否 available− 為推定（committed 守恆＋C.1 恆等式反推），待實測 |
+| `committed 跨地點遷移` | `fulfillmentOrderMove`（FO 改派地點，09 §B.1-4） | 目的地必須備貨該 item（官方明文 move 失敗條件，S32）；已履約品項永遠留在原地點（S32） | origin committed−、destination committed＋；⚠️ 官方只寫前置與失敗條件，**未寫數量機制**——origin available＋／destination available− 是否同步為**未決對**（＝Q-23，M2 前置）；🔴 **Q-23 未裁前本列數量帳不得動工**——只遷 committed 而 on_hand 不動，兩地點的 C.1 恆等式即刻失衡（總綱 S7 第 18 輪封鎖，本列第 19 輪同步），待實測 |
 | `available ⇄ reserved/damaged/safety_stock/quality_control` | `inventoryMoveQuantities`（同一 location 內） | from/to 同 location；非 available 端須 `ledgerDocumentUri` | 兩態各±，on_hand 不變（S18） |
 | `unavailable 子態互轉` | move（from/to 皆非 available 亦允許） | 合法 name 對＝{available, reserved, damaged, safety_stock, quality_control}（S2） | 同上 |
 | `(外) → incoming` | transfer shipment 標記 In transit（S10）；app/PO 在途 | 有 destination | destination incoming＋ |
@@ -280,7 +280,7 @@ Admin 層：On hand = Available + Committed + Unavailable                       
 ### D.1 下單 → 履約（committed 的一生）
 
 1. 顧客/店員成立訂單（操作者：buyer/staff）→ 系統按 routing 指派地點（D.7）→ 該地點 available−、committed+（S12；僅 tracked 行（2026-08-17 更正，PR #52 第 11 輪））。失敗分支：DENY 且 available 不足 ⇒ 結帳擋單；CONTINUE ⇒ 照常成單、available 落負（S15/S24）。
-2. （可選）成單後改派：`fulfillmentOrderMove`（09 §B.1-4）⇒ committed 跨地點遷移（B.1 表對應列）；前置＝目的地備貨該 item（S32）；已履約品項不動。
+2. （可選）成單後改派：`fulfillmentOrderMove`（09 §B.1-4）⇒ committed 跨地點遷移（B.1 表對應列）；前置＝目的地備貨該 item（S32）；已履約品項不動。🔴 **數量帳實作封鎖於 Q-23**（available 同步對未裁——B.1 對應列，第 19 輪同步）。
 3. 履行（staff/3PL）：fulfillment 建立 ⇒ committed−、on_hand−（S12）。部分履行按數量分次。
 4. 取消/退款：`orderCancel` 的 `restock` 必填；refund 逐 line item 選 **4 值 `restockType`**——`CANCEL`（未履行→自訂單移除＋回補 available）/`RETURN`（已履行→回補 on_hand+available）/`NO_RESTOCK`/`LEGACY_RESTOCK`（deprecated，「新建退款不接受」）（S31；06 §A.4）；退貨走 disposition（RESTOCKED→指定 location 回補）（46a）。
 5. 事件：我方 outbox 發 `inventory.adjusted`（reason=系統值）＋數字同源 rollup 更新（鐵律 5/7）。
@@ -387,7 +387,7 @@ Admin 層：On hand = Available + Committed + Unavailable                       
 
 ### F.3 開發驗收要點
 
-1. **恆等式測試**：任意操作序列後 `on_hand = available+committed+Σunavailable_buckets`；`incoming` 永不入 on_hand；nightly ledger 重放 `SUM(delta)=現值`（13-F5.3）。**transfer 全流程按 B.2 期望值表逐階段斷言**（含裁定一的 IN_TRANSIT 出帳）；對帳必須做到**單一地點層級**且重放含 `fulfillmentOrderMove` 事件——只驗全店加總會漏掉 move 造成的兩地點 committed 對錯互抵（C.5）。
+1. **恆等式測試**：任意操作序列後 `on_hand = available+committed+Σunavailable_buckets`；`incoming` 永不入 on_hand；nightly ledger 重放 `SUM(delta)=現值`（13-F5.3）。**transfer 全流程按 B.2 期望值表逐階段斷言**（含裁定一的 IN_TRANSIT 出帳）；對帳必須做到**單一地點層級**且重放含 `fulfillmentOrderMove` 事件——只驗全店加總會漏掉 move 造成的兩地點 committed 對錯互抵（C.5）；🔴 move 段的期望值**待 Q-23 裁定後鎖定**（available 同步對未裁前，此測試的 move 期望值標 pending，不得先按推定寫死——第 19 輪同步 B.1 封鎖）。
 2. **併發三件套**：超賣（DENY 條件式 UPDATE 不落負）、CAS stale 重試、同 idempotency key 重放不重複入帳——各須有失敗路徑測試（驗收基準「併發要害」）。
 3. **committed 唯讀**：任何 public API/service 不得直改 committed/incoming；rubocop cop 掃 `update(available:)` 直寫（13-F5.2）。
 4. **狀態機無孤兒**：Transfer 6 態/Shipment 5 態/PO 2 態×archived 旗標（含 archive⇄unarchive 雙向與 open 判定式）轉移表全覆蓋；`OTHER` 佔位須能反序列化不炸。

@@ -194,7 +194,7 @@ SALE (auth+capture 一步) ─────────────────�
 | 再次 `orderCapture` | `multiCapturable=true`（SP 需 Plus；第三方需通道支援） | 第 2..n 筆 CAPTURE | 同上 |
 | `transactionVoid` | parent 為**未 capture** 的授權 | VOID | 圈存釋放；financial status → VOIDED |
 | 授權逾期 | 過 authorizationExpiresAt 未 capture | （無） | financial status → EXPIRED；款項收不到 |
-| `refundCreate` | 已有 CAPTURE/SALE；Σrefund ≤ maximumRefundable | REFUND（parent＝capture/sale） | financial status → PARTIALLY_REFUNDED／REFUNDED；退款**不可撤銷** |
+| `refundCreate` | 已有 CAPTURE/SALE；Σrefund ≤ maximumRefundable | REFUND（parent＝capture/sale，**建立時 pending**） | financial status 投影**待 REFUND 交易 SUCCESS（PSP webhook 確認）後**重算 → PARTIALLY_REFUNDED／REFUNDED（R-11／§06 D.4——本地建立即改投影＝PSP 拒絕時謊稱錢已退；總綱耦合列第 18 輪修、本列第 19 輪同步；`refunds/create` 於建立即發不變）；退款**不可撤銷** |
 | `orderMarkAsPaid` | `canMarkAsPaid=true`；有正的未收餘額；非已 PAID | 有待授權→CAPTURE；否則 SALE，`gateway=manual`、status SUCCESS | financial status → PAID |
 
 **無孤兒驗證**：AUTHORIZATION 的三個出口＝CAPTURE／VOID／逾期 EXPIRED；CAPTURE 與 SALE 的出口＝REFUND 或自然終結（全額保留）；VOID、REFUND、EXPIRED 為終態；CHANGE／EMV_AUTHORIZATION 為 POS 情境事件（CHANGE 是現金找零終態、EMV_AUTHORIZATION 等價 AUTHORIZATION 入口）；SUGGESTED_REFUND 不落庫、無狀態。
@@ -477,7 +477,7 @@ SALE (auth+capture 一步) ─────────────────�
 4. 授權逾期掃描 job：逾 `authorization_expires_at` ⇒ financial status EXPIRED＋通知；授權期值引 `config/limits.yml`。
 5. Dispute 狀態機以 §B.5 全轉移表實作，`evidence_due_by` 前可編修、送出後鎖定；逾時自動送。
 6. Payout 對帳：balance txn（amount/fee/net）與 payout 聚合數字同源（鐵律 7）；CSV 匯出 11 欄對齊 73 §7.3。
-7. AWAITING_RESPONSE／UNKNOWN 收斂測試（§B.1.1）：①超時且 PSP 查無 ⇒ FAILURE＋`PAYMENT_PROVIDER_ERROR`；②超時但 PSP 查得終局 ⇒ 照落；③UNKNOWN 退避輪詢收斂到 SUCCESS/FAILURE/ERROR；④逾放棄期限 ⇒ 維持 UNKNOWN＋alert（斷言不會被誤轉終局）；⑤收斂 job 與人工 capture/void 競態走同一行鎖。時間值全 stub `config/limits.yml`，不得硬編（鐵律 6）。
+7. AWAITING_RESPONSE／UNKNOWN 收斂測試（§B.1.1）：①超時且 PSP **明確拒絕** ⇒ FAILURE＋`PAYMENT_PROVIDER_ERROR`；①′超時且 PSP **查無／無終局** ⇒ 轉 UNKNOWN 進 R2（**斷言不落 FAILURE**——（2026-08-17 更正，PR #52 第 19 輪）：R1 反轉後原「查無 ⇒ FAILURE」斷言會把新行為判紅或反鎖舊行為）；②超時但 PSP 查得終局 ⇒ 照落；③UNKNOWN 退避輪詢收斂到 SUCCESS/FAILURE/ERROR；④逾放棄期限 ⇒ 維持 UNKNOWN＋alert（斷言不會被誤轉終局）；⑤收斂 job 與人工 capture/void 競態走同一行鎖。時間值全 stub `config/limits.yml`，不得硬編（鐵律 6）。
 
 ---
 

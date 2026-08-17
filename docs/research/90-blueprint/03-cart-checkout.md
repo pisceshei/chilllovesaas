@@ -121,7 +121,7 @@ D.6 的「付款方式 vault、餘額後收」不是懸空機制——本尊承�
 |---|---|---|---|
 | `open` | buyer 由 cart 進入 checkout | cart 非空 | 發 `checkouts/create` webhook；後續每次欄位更新發 `checkouts/update` |
 | `open`＋`abandoned` 旗標 | 留下 email 後 **10 分鐘**仍未完成（G-3） | 已留 email（僅留電話→不進挽回信流程）；**疑似盜卡測試／bot 的 checkout 不建棄單**（G-14） | `abandoned_at` 寫入；建 AbandonedCheckout（含 `abandonedCheckoutUrl`）；進入挽回信排程判定 |
-| `completed` | 付款成功、訂單成立 | 庫存 hold 成功＋付款成功 | `completedAt` 寫入；發 `orders/create`；**cart 刪除** |
+| `completed` | 付款成功、訂單成立 | **本尊：庫存 hold 成功＋付款成功（B.4 觀察）；我方：付款成功＋訂單成立時的原子庫存 commit 成功——無 hold 前置**（F.2#5／D.3；（2026-08-17 更正，PR #52 第 19 輪）：no-hold 設計下把 hold 留作 completed 前置＝所有結帳永不完成，或倒逼重新引入 D.3 已移除的保留路徑） | `completedAt` 寫入；發 `orders/create`；**cart 刪除** |
 | `completed`＋`recovered` 推導 | completed 且 `abandoned_at` 非空——經挽回連結**或自行**完購皆算（G-3） | — | 挽回報表計入；不另存狀態值，報表層以 `completed_at IS NOT NULL AND abandoned_at IS NOT NULL` 推導 |
 | `deleted` | abandoned 滿 **3 個月**自動刪除；admin **不可手動刪除單筆**棄單（G-3） | — | 發 `checkouts/delete` webhook |
 
@@ -135,7 +135,7 @@ D.6 的「付款方式 vault、餘額後收」不是懸空機制——本尊承�
 | `AbandonmentAbandonmentType`（＝`abandonmentType`／`mostRecentStep`） | `BROWSE`、`CART`、`CHECKOUT`（G-13a） |
 | `AbandonmentEmailState` | `NOT_SENT`、`SCHEDULED`、`SENT`（G-13b）；轉移：NOT_SENT→SCHEDULED（排程）→SENT（寄出）；NOT_SENT→SENT（手動立即寄）；mutation `abandonmentEmailStateUpdate` 可改 |
 
-### B.4 結帳期庫存 hold 子狀態機
+### B.4 結帳期庫存 hold 子狀態機（🔴 **本尊行為觀察，我方不實作**——CHILL LOVE 無 checkout hold：全程軟檢查＋訂單成立原子扣減（F.2#5／正典 S-13）；`held`／`released` 轉移不落地（2026-08-17 標注，PR #52 第 19 輪））
 
 | 狀態 | 轉移 | 官方原文依據 |
 |---|---|---|
@@ -173,7 +173,7 @@ D.6 的「付款方式 vault、餘額後收」不是懸空機制——本尊承�
 
 ### C.1 行合併規則（line merging）——add.js 語義
 
-加入品項時，與既有行**合併**（數量相加為新總量）的條件：`variant_id` 相同**且** `properties` 相同**且** `selling_plan` 相同**且**價格相同（自動折扣可使同 variant 價格不同）。官方轉述：同一品項若價格、properties 或 selling plan 任一不同，就會被拆成各自獨立的行（G-1）。⚠️ `parent_id`（bundle 組件）納入合併鍵屬合理推斷（文檔在請求參數列出 parent_id，但 split 條件原文未點名它）——標注待驗證。
+加入品項時，與既有行**合併**（數量相加為新總量）的條件：`variant_id` 相同**且** `properties` 相同**且** `selling_plan` 相同**且**價格相同（自動折扣可使同 variant 價格不同）。官方轉述：同一品項若價格、properties 或 selling plan 任一不同，就會被拆成各自獨立的行（G-1）。⚠️ `parent_id`（bundle 組件）**暫定納入合併鍵**（我方裁定，Q-44 未決前——兩個 bundle 父項含同 variant 子行（四欄全同）若合併即丟失父歸屬；文檔在請求參數列出 parent_id，但 split 條件原文未點名它，實測後回寫（2026-08-17 更正，PR #52 第 19 輪：原僅「合理推斷待驗證」，未定暫行值——四處合併鍵契約現統一暫定入鍵））。
 
 **推論不變量**：一個 cart 可有多行同 `variant_id`；因此**行的唯一識別是 `key` 不是 `variant_id`**；用 variant_id 操作 update/change 會誤中多行之一，官方建議一律用 key（G-1）。
 
@@ -404,7 +404,7 @@ HTTP 狀態碼全集：200 成功／400 參數錯誤（含 `sections_url` 不以
 
 ### F.3 開發驗收要點
 
-1. **行合併鍵測試**：同 variant＋不同 properties／selling_plan／價格 → 必須分行；相同 → 必須併行且數量相加。key 隨特徵變動的行為要有測試。
+1. **行合併鍵測試**：同 variant＋不同 properties／selling_plan／價格 → 必須分行；相同 → 必須併行且數量相加。key 隨特徵變動的行為要有測試。**跨父不併**：兩個 bundle 父項含同 variant 子行（四欄全同）→ 必須分行（`parent_id` 暫定入鍵，Q-44——第 19 輪同步）。
 2. **update.js 不驗庫存**的對齊決策要明文：我方 server 端結帳 gate 全量重驗（15-F3 第 4 點），cart 寫入 API 是否仿本尊放行需在 PR 標注假設。
 3. **limits.yml 條目**：本章 C.4 表逐條落檔並帶來源註釋；缺一即 🔴。
 4. **狀態機測試**：B.2 全轉移覆蓋；特別是 abandoned→completed（recovered）與付款失敗→hold 釋放→重付。

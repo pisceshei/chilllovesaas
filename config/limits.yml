@@ -4398,3 +4398,13 @@ apps:
   theme_extension_types: [app_block, app_embed_block]
   app_embed_scope: global_liquid_only
   app_embed_supported_in_all_themes: true
+
+# 出站 HTTP（SSRF 防線的回應／下載預算）。出處：我方裁定（2026-08-17，PR #52 第 19 輪，
+# Codex 意見「Define SSRF response limits in limits.yml」）——tenant 可控端點不設回應上限
+# ＝可打爆 worker 記憶體/磁碟；本尊無對應公開值。三條出站 HTTP 契約各自引用：
+#   webhook 投遞（90-blueprint/13 D.1/C.3）／3PL callback（90-blueprint/09 A.1）／
+#   檔案外部 URL 抓取（90-blueprint/12 §B files）。讀滿即斷線並計為該次投遞/抓取失敗。
+outbound_http:
+  webhook_response_bytes_max: 1048576        # 1 MiB——webhook 投遞回應體上限（僅需狀態碼，回應體本就不消費）
+  callback_response_bytes_max: 1048576       # 1 MiB——3PL fetch_stock/fetch_tracking_numbers 回應上限
+  file_fetch_download_bytes_max: 104857600   # 100 MiB——originalSource 抓檔上限（對齊 files 一般檔案尺寸級距）

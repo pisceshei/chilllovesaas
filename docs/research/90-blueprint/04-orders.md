@@ -246,7 +246,7 @@ Order.risk : OrderRiskSummary!
 `orderEditBegin`（guard：C.4 聯集）→ staged mutations 累積、稅與總額即時重算（46a §8）→ `orderEditCommit(notifyCustomer, staffNote)` → `orders/edited` webhook [S30] → 差額為正：寄更新發票；為負：退款流程 [S33]。放棄＝丟棄 CalculatedOrder，原單不變。我方另加：session 單開鎖＋TTL 24h（16 §F8.2，官方空白）。
 
 ### D6. 取消訂單
-admin「取消訂單」對話框（原因必選＋退款方式三選一＋restock/notify 預設勾 [S17]）→ `orderCancel`（async job，46a §7）→ job 完成：cancelledAt/reason/staffNote 落地、退款建立（走 F5）、庫存回補、FulfillmentOrder 全關、timeline 記明細 [S17] → `orders/cancelled`。失敗分支：C.3 不可取消聯集之一 → `orderCancelUserErrors`；停用地點＋已付款＋restock → 整體失敗（46a §7②）。
+admin「取消訂單」對話框（原因必選＋退款方式三選一＋restock/notify 預設勾 [S17]）→ `orderCancel`（async job，46a §7）→ job 完成：cancelledAt/reason/staffNote 落地、退款建立（走 F5）、庫存回補（**僅 T1 曾 commit 的行**——`ON_FULFILLMENT` 未進 committed 者不動帳，第 19 輪隨總綱 S13 同步）、FulfillmentOrder 全關、timeline 記明細 [S17] → `orders/cancelled`。失敗分支：C.3 不可取消聯集之一 → `orderCancelUserErrors`；停用地點＋已付款＋restock → 整體失敗（46a §7②）。
 
 ### D7. 封存／取消封存
 自動：付清＋履行完 或 全額退款 → 自動進封存（設定預設開 [S16]，76 §2 同）。手動：單筆「封存」/bulk（76 §1 bulk 13 動作含封存/取消封存）→ `orderClose`/`orderOpen` [S12][S13]。封存不動金流與庫存，只是清單歸類（[S17] 語義分界）。
