@@ -771,7 +771,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-16 | 商品編輯 **last-write-wins 靜默覆蓋**（不是超賣，但是商品域第一要害） | 全欄位覆寫式 update | 帶版本或欄位級 diff 比對；選項增刪時既有 `variant.id` 必須保持不變 | 兩人同時改不同欄位 ⇒ 兩邊修改都保留，或後者收衝突提示 | §01 C |
 | X-17 | 變體／選項數併發撞頂（笛卡兒積自動生成） | 信 UI 快照計數 | 上限檢查在 transaction 內**以 DB 計數為準** | 併發批量建變體 ⇒ 總數不得超過 `max_product_variants` | §01 C |
 | X-18 | 排程發布到點時商品已被改為 DRAFT | 套用排程當下的快照 | job 到點**重讀 `product.status`** 驗證仍為 ACTIVE | 排程期間改 status ⇒ 到點不發布 | §01 C |
-| X-19 | **同一 order 併發開兩個 edit session** | 無鎖 | `UNIQUE(shop_id, order_id)` 單開鎖 ＋ TTL 24h（鐵律 2：業務資料複合索引以 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪）：原鍵僅 order_id）；重複 begin 回 `INVALID_STATE` | 併發兩次 `orderEditBegin` ⇒ 恰 1 成功 | §04 C |
+| X-19 | **同一 order 併發開兩個 edit session** | 無鎖 | 單開鎖＝生成欄 `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)` ＋ TTL 24h（鐵律 2 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪；MySQL 8 可建形第 16 輪——無 partial index，唯一索引多筆 NULL 並存故歷史 session 不擋，58 §G.3 waybill 同法））；重複 begin 回 `INVALID_STATE` | 併發兩次 `orderEditBegin` ⇒ 恰 1 成功 | §04 C |
 | X-20 | 訂單序號重複／跳號 | per-shop 序列無鎖 | per-shop 序號產生器加鎖；取消／刪除不回收號碼 | N 執行緒併發建單 ⇒ 號碼連續且無重複 | §04 C／§15 |
 | X-21 | 同一 cart token 多分頁併發加購產生重複行 | 合併鍵判定在應用層 | 行級 upsert ＋ `(shop_id, cart_id, 合併鍵)` 唯一索引（鐵律 2（2026-08-17 更正，PR #52 第 12 輪）） | 兩分頁同時 add 同一 variant/properties ⇒ 恰一行、quantity 相加 | §03 C |
 | X-22 | 棄單挽回 job 與買家自行完購競態 | 六條不寄條件是時變的 | 寄出前**重查六條**；先到先贏且冪等 | 完購與寄信 job 併發 ⇒ 不得寄出 | §03 C |
@@ -808,7 +808,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 退貨處理（子冪等） | restock 庫存調整 | — | ✅ 冪等 key 兩路：收貨路＝**disposition line**／退款路＝`refund_line_item`（互斥防雙回補 2026-08-17 更正（PR #52 第 7 輪）） | 與上一列不同層：重試/重放下同一單位只進貨一次 | §06 C |
 | 訂單取消 | `orderCancel` | ❌ 官方 async 但冪等未載 | ✅ **加嚴** | 同 order + 同 key 只執行一次；不得產生第二筆退款／第二次回補 | §04 F.2 |
 | 訂單成立 | `orderCreate`／`draftOrderComplete` | ❌ | ✅（鐵律 5「訂單成立必帶」） | draft 轉正為單一交易同生共死：建 Order＋庫存＋`status=COMPLETED`＋metafields 複製，任一失敗全 rollback | 鐵律 5／§04 D |
-| 訂單編輯 | `orderEditCommit` | ❌ | ✅ | 搭配 edit session 單開鎖（`UNIQUE(shop_id, order_id)`（2026-08-17 更正，PR #52 第 11 輪））＋TTL 24h，重複 begin 回 `INVALID_STATE` | §04 C |
+| 訂單編輯 | `orderEditCommit` | ❌ | ✅ | 搭配 edit session 單開鎖（生成欄 open_flag＋`UNIQUE(shop_id, order_id, open_flag)`（2026-08-17 更正，PR #52 第 11 輪；同形化第 16 輪，X-19 為準））＋TTL 24h，重複 begin 回 `INVALID_STATE` | §04 C |
 | 履約 | `fulfillmentCreate` | ❌ | ✅（動庫存＋動金流觸發） | 與 X-14 的條件式 UPDATE 並存：冪等擋重放、條件 UPDATE 擋併發 | §09 E／鐵律 5 |
 | 金流 | 我方另強制的 **9 支金流 mutation**（capture／void／refund 相關） | ❌ 本尊無 | ✅ **加嚴**（§15 裁定） | 與 X-11 的授權列行鎖並存 | §15 F.2#8 |
 | 訂閱扣款 | `SubscriptionBillingAttempt` | ✅ `idempotencyKey` **必填**（client 生成） | ✅ 照抄 | attempt 成功 ⇒ 恰生成一張 Order | §03 C |
@@ -1342,7 +1342,7 @@ flowchart TD
 | D-35 | 結帳 | cart transform／validation 為 Wasm Functions（每店 25 validation、每 app 1 transform） | 復刻為同步 Ruby service objects，**沿用相同 input/output JSON 合約與 target 路徑語義** | 結構性不同 | §03 F |
 | D-36 | 結帳 | 訂閱／預購／TBYB＝selling plans 全家桶 | 未排 M0–M6 主線；**schema 以本尊模型為藍本預留**（契約 status 五值且無 STALE、`checkoutChargeAmount`、attempt 層 idempotency_key、cycle index 自 1）；cart 行合併鍵不得漏 `selling_plan` | 簡化不做 | §03 F（→Q-03） |
 | D-37 | 訂單 | 2019-01-01 前訂單不可編輯（歷史包袱） | 不復刻，spec 註明刻意不做 | 簡化不做 | §04 F |
-| D-38 | 訂單 | order edit session 的鎖／TTL／併發全空白 | 單開鎖（`UNIQUE(shop_id, order_id)`（2026-08-17 更正，PR #52 第 11 輪））＋TTL 24h，違者回 `INVALID_STATE` | 加嚴 | §04 F |
+| D-38 | 訂單 | order edit session 的鎖／TTL／併發全空白 | 單開鎖（生成欄 open_flag＋`UNIQUE(shop_id, order_id, open_flag)`（2026-08-17 更正，PR #52 第 11 輪；同形化第 16 輪，X-19 為準））＋TTL 24h，違者回 `INVALID_STATE` | 加嚴 | §04 F |
 | D-39 | 訂單 | `orderCreate` 省略 `options.inventoryBehaviour` 預設 BYPASS（完全不動存量） | API 預設照抄 BYPASS；**加嚴：admin／內建匯入工具呼叫一律顯式帶值**，防「以為匯入有扣庫存」的靜默超賣 | 加嚴 | §04 F |
 | D-40 | 訂單 | `OrderRiskSummary.recommendation` 的聚合函數官方完全未載 | 裁定 worst-of（NONE<LOW<MEDIUM<HIGH，PENDING 不參與、provider 平權、deterministic 純函數） | 待裁定 | §04 B.6（→Q-22） |
 | D-41 | 訂單 | 履行軸含 3 個被取代值 | 內部只落 7 現行值；GraphQL enum 保留 3 值標 deprecated | 簡化不做 | §04 F |
@@ -1748,7 +1748,7 @@ payments:
   authorization_window_days_default: 7      # §05 C.1（🔴 實際值由 PSP pack 宣告，此為 fallback）
   authorization_window_days_extended_visa_mc_amex: 30   # §05 C.1
   authorization_window_days_extended_discover_jcb: 10   # §05 C.1
-  late_capture_surcharge_bp: 175            # §05 C.1（1.75%，本尊商業條款，我方費率自訂）
+  # late_capture 附加費＝informational-only：本尊商業條款 1.75%（§05 C.1 取證層照錄），我方依 P1-06 裁定**不收費**——既有鍵 limits.yml `late_capture_surcharge_rate_informational_only` 已載「不參與任何計算」，本清單不得另立可操作費率鍵（2026-08-17 更正，PR #52 第 16 輪）：原行 late_capture_surcharge_bp: 175 與 P1-06／informational 鍵互斥，違 §8 規則⑤
   currency_conversion_fee_bp: null          # ⚠️ 本尊 US 150／其他 200bp；我方費率待 Q-91
   authorization_hold_days: 7                # §04 docs/research/76（Shopify Payments 手動請款）
   amazon_pay_max_captures_per_order: 10     # §05 A.5（另 max_refunds_per_order=10、order_stale_hours=3）
