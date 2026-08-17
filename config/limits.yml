@@ -4399,12 +4399,19 @@ apps:
   app_embed_scope: global_liquid_only
   app_embed_supported_in_all_themes: true
 
-# 出站 HTTP（SSRF 防線的回應／下載預算）。出處：我方裁定（2026-08-17，PR #52 第 19 輪，
-# Codex 意見「Define SSRF response limits in limits.yml」）——tenant 可控端點不設回應上限
-# ＝可打爆 worker 記憶體/磁碟；本尊無對應公開值。三條出站 HTTP 契約各自引用：
+# 出站 HTTP（SSRF 防線的回應／下載／逾時預算）。出處：bytes 三鍵＝我方裁定（2026-08-17，
+# PR #52 第 19 輪，Codex 意見「Define SSRF response limits in limits.yml」）——tenant 可控
+# 端點不設回應上限＝可打爆 worker 記憶體/磁碟；本尊無對應公開值。三條出站 HTTP 契約各自引用：
 #   webhook 投遞（90-blueprint/13 D.1/C.3）／3PL callback（90-blueprint/09 A.1）／
-#   檔案外部 URL 抓取（90-blueprint/12 §B files）。讀滿即斷線並計為該次投遞/抓取失敗。
+#   檔案外部 URL 抓取（90-blueprint/12 §C.7 內容檔案業務規則 <!-- 第 20 輪更正：原引 §B files，
+#   §B 是狀態機節；契約在 §C.7（12:252-257） -->）。讀滿即斷線並計為該次投遞/抓取失敗。
+# 逾時四鍵（第 20 輪落鍵——原第 19 輪只落 bytes、09/12 兩章把「時間上限」也等號綁到 bytes 鍵）：
+#   webhook 兩鍵＝官方明載值（90-blueprint/13 C.3 表，G-2）；callback/file_fetch＝我方裁定。
 outbound_http:
   webhook_response_bytes_max: 1048576        # 1 MiB——webhook 投遞回應體上限（僅需狀態碼，回應體本就不消費）
   callback_response_bytes_max: 1048576       # 1 MiB——3PL fetch_stock/fetch_tracking_numbers 回應上限
   file_fetch_download_bytes_max: 104857600   # 100 MiB——originalSource 抓檔上限（對齊 files 一般檔案尺寸級距）
+  webhook_connect_timeout_seconds: 1         # 官方明載（13 C.3：連線 timeout 1s，G-2）
+  webhook_response_timeout_seconds: 5        # 官方明載（13 C.3：回應 timeout 5s，G-2）
+  callback_timeout_seconds: 5                # 3PL callback 逾時——官方未載，我方裁定對齊 webhook 回應 5s
+  file_fetch_timeout_seconds: 30             # originalSource 抓檔逾時——我方裁定（100 MiB 預算的下載窗）

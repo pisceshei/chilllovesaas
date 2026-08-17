@@ -121,7 +121,7 @@ D.6 的「付款方式 vault、餘額後收」不是懸空機制——本尊承�
 |---|---|---|---|
 | `open` | buyer 由 cart 進入 checkout | cart 非空 | 發 `checkouts/create` webhook；後續每次欄位更新發 `checkouts/update` |
 | `open`＋`abandoned` 旗標 | 留下 email 後 **10 分鐘**仍未完成（G-3） | 已留 email（僅留電話→不進挽回信流程）；**疑似盜卡測試／bot 的 checkout 不建棄單**（G-14） | `abandoned_at` 寫入；建 AbandonedCheckout（含 `abandonedCheckoutUrl`）；進入挽回信排程判定 |
-| `completed` | 付款成功、訂單成立 | **本尊：庫存 hold 成功＋付款成功（B.4 觀察）；我方：付款成功＋訂單成立時的原子庫存 commit 成功——無 hold 前置**（F.2#5／D.3；（2026-08-17 更正，PR #52 第 19 輪）：no-hold 設計下把 hold 留作 completed 前置＝所有結帳永不完成，或倒逼重新引入 D.3 已移除的保留路徑） | `completedAt` 寫入；發 `orders/create`；**cart 刪除** |
+| `completed` | 訂單成立（checkout 路徑下與付款成功同刻，C.7-3；manual／payment terms 單＝成單即 completed、金流 PENDING） | **本尊：庫存 hold 成功＋付款成功（B.4 觀察）；我方：訂單成立（T1）的原子庫存 commit 成功——無 hold 前置，付款結果只決定 `displayFinancialStatus`（PAID／AUTHORIZED／PENDING），不作 completed 前置**（F.2#5／C.7-3／D.3；（2026-08-17 更正，PR #52 第 19 輪；第 20 輪去付款前置）：no-hold 設計下把 hold 留作前置＝結帳永不完成；把「付款成功」留作我方前置＝COD／bank deposit／B2B payment terms（05 C.12「下單即成單、金流 PENDING」）與 admin orderCreate PENDING 單永遠停在 `open`、cart 不刪、`orders/create` 不發） | `completedAt` 寫入；發 `orders/create`；**cart 刪除** |
 | `completed`＋`recovered` 推導 | completed 且 `abandoned_at` 非空——經挽回連結**或自行**完購皆算（G-3） | — | 挽回報表計入；不另存狀態值，報表層以 `completed_at IS NOT NULL AND abandoned_at IS NOT NULL` 推導 |
 | `deleted` | abandoned 滿 **3 個月**自動刪除；admin **不可手動刪除單筆**棄單（G-3） | — | 發 `checkouts/delete` webhook |
 

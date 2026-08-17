@@ -226,7 +226,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 禮品卡餘額回加／store credit `credit` 交易（**內部帳，不是外部 IO**，可同 transaction） | §06 D.5／C.7 |
 | 稅務事件（只發事件，不落憑證——憑證由 jurisdiction pack 決定：HK 無／TW 折讓／MY e-Invoice） | §06 F.2#6；鐵律 11 |
 | 分析回沖 outbox 事件（`sales_reversals` 記**處理日**，不回改原訂單日） | §06 C.10 |
-| `displayFinancialStatus` 重物化（由交易推導，不可獨立改寫） | §05 F.3-1 |
+| `displayFinancialStatus` 重物化（由交易推導，不可獨立改寫；**REFUND 為 PENDING 時投影不變——改投影待該交易 SUCCESS**（R-11；第 20 輪限定，杜絕「pending 也計入重算」的另一種讀法）） | §05 F.3-1 |
 | outbox：`refunds/create`（金流未動即發）、`returns/process`、`order_transactions/create` | §06 E.1 |
 
 | 必須排到 transaction **外** | 理由 |
