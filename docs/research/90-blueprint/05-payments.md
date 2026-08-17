@@ -194,7 +194,7 @@ SALE (auth+capture 一步) ─────────────────�
 | 再次 `orderCapture` | `multiCapturable=true`（SP 需 Plus；第三方需通道支援） | 第 2..n 筆 CAPTURE | 同上 |
 | `transactionVoid` | parent 為**未 capture** 的授權 | VOID | 圈存釋放；financial status → VOIDED |
 | 授權逾期 | 過 authorizationExpiresAt 未 capture | （無） | financial status → EXPIRED；款項收不到 |
-| `refundCreate` | 已有 CAPTURE/SALE；Σrefund ≤ maximumRefundable | REFUND（parent＝capture/sale，**建立時 pending**） | financial status 投影**待 REFUND 交易 SUCCESS 後**重算 → PARTIALLY_REFUNDED／REFUNDED——SUCCESS 出口分目的地：**外部金流形＝PSP webhook 確認；帳本內即時形（禮品卡餘額／store credit）＝同一本地 transaction 內即 SUCCESS；線下待確認形（manual 家族）＝停 pending 待 16 §F4.4 對帳式 UPDATE**（R-11；第 21 輪分支、第 22 輪拆型——單一 webhook 出口會讓無 PSP 的退款投影永卡；判準＝目的地是否即為帳本內餘額）（R-11／§06 D.4——本地建立即改投影＝PSP 拒絕時謊稱錢已退；總綱耦合列第 18 輪修、本列第 19 輪同步；`refunds/create` 於建立即發不變）；退款**不可撤銷** |
+| `refundCreate` | 已有 CAPTURE/SALE；Σrefund ≤ maximumRefundable | REFUND（parent＝capture/sale；**status 依出口分目的地定，不預設**——第 23 輪收「建立時 pending」寫死形） | financial status 投影**待 REFUND 交易 SUCCESS 後**重算 → PARTIALLY_REFUNDED／REFUNDED——SUCCESS 出口分目的地：**外部金流形＝建 pending → PSP webhook 確認；帳本內即時形（禮品卡餘額／store credit）＝同一本地 transaction 內即 SUCCESS；線下待確認形（manual 家族）＝建 pending，待 16 §F4.4 對帳式／人工確認式（第 23 輪補）UPDATE**（R-11；第 21 輪分支、第 22 輪拆型——單一 webhook 出口會讓無 PSP 的退款投影永卡；判準＝目的地是否即為帳本內餘額）（R-11／§06 D.4——本地建立即改投影＝PSP 拒絕時謊稱錢已退；總綱耦合列第 18 輪修、本列第 19 輪同步；`refunds/create` 於建立即發不變）；退款**不可撤銷** |
 | `orderMarkAsPaid` | `canMarkAsPaid=true`；有正的未收餘額；非已 PAID | 有待授權→CAPTURE；否則 SALE，`gateway=manual`、status SUCCESS | financial status → PAID |
 
 **無孤兒驗證**：AUTHORIZATION 的三個出口＝CAPTURE／VOID／逾期 EXPIRED；CAPTURE 與 SALE 的出口＝REFUND 或自然終結（全額保留）；VOID、REFUND、EXPIRED 為終態；CHANGE／EMV_AUTHORIZATION 為 POS 情境事件（CHANGE 是現金找零終態、EMV_AUTHORIZATION 等價 AUTHORIZATION 入口）；SUGGESTED_REFUND 不落庫、無狀態。

@@ -268,14 +268,14 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 **生產級做法**：
 1. 退款面板：逐行選數量（≤ 已購未退數）、restock 勾選（預設勾，**僅在該品項有追蹤庫存時可用**）、另退運費欄（≤ 可退運費）、原因、是否通知（預設勾）——完全對齊研究 01 的畫面。**數量設為 0 的品項不退款**；退款頁**可直接對商品項目套用折扣**（46c:218–221）。
 2. 計算：**一律走 F5.1 的公式**（不得在 UI 或 controller 另算一份）。
-3. 執行順序：本地 transaction（建 refund + refund_line_items + transaction 列 pending + restock via Inventory::Adjust 冪等 + 事件）→ **出口分目的地**（2026-08-17 更正，PR #52 第 21 輪——原單一 Stripe 出口會讓禮品卡/store credit/manual 退款的交易永停 pending、投影卡 PAID）：**外部金流分支**＝transaction 外呼叫 Stripe refund → webhook 確認 → transaction 列轉 success；**帳本內即時分支**（禮品卡餘額回加、store credit 寫入——餘額即錢本身）＝無 PSP 呼叫，transaction 列於**同一本地 transaction 內即建 success**；**線下待確認分支**（manual 家族：bank_deposit／COD 退匯——錢在系統外流動）＝建 pending，走 **F4.4 COD 對帳回寫**的條件式 UPDATE `pending → success` 形（:245 物流商撥款對帳列；（第 22 輪更正）：原引 §F5——§F5 即本節、無對帳列，「撥款」全檔僅命中 F4.4）。判準＝目的地是否即為平台帳本內餘額（拆型第 22 輪——bank_deposit 即判 success＝錢未匯出即宣稱已退）→ financial_status 重物化 → 通知信。
+3. 執行順序：本地 transaction（建 refund + refund_line_items + transaction 列（**status 依出口分支定，不預設 pending**——第 23 輪收寫死形：句首寫死與帳本內即時分支「即建 success」同句互斥）+ restock via Inventory::Adjust 冪等 + 事件）→ **出口分目的地**（2026-08-17 更正，PR #52 第 21 輪——原單一 Stripe 出口會讓禮品卡/store credit/manual 退款的交易永停 pending、投影卡 PAID）：**外部金流分支**＝transaction 列建 pending → transaction 外呼叫 Stripe refund → webhook 確認 → transaction 列轉 success；**帳本內即時分支**（禮品卡餘額回加、store credit 寫入——餘額即錢本身）＝無 PSP 呼叫，transaction 列於**同一本地 transaction 內即建 success**；**線下待確認分支**（manual 家族：bank_deposit／COD 退匯——錢在系統外流動）＝建 pending，確認二路（第 23 輪拆）：COD＝走 **F4.4 COD 對帳回寫**的條件式 UPDATE `pending → success` 形（:245 物流商撥款對帳列；（第 22 輪更正）：原引 §F5——§F5 即本節、無對帳列，「撥款」全檔僅命中 F4.4）；**bank_deposit 等無對帳檔者＝人工確認落地格**——觸發＝財務於退款詳情「標記已匯出」動作（admin 專屬權限）；寫入＝條件式 UPDATE `pending → success`（`WHERE status='pending'` 單次生效，重放無效果）＋操作帶 `idempotencyKey`（鐵律 5）；🔴 **不得**走 `Orders::MarkAsPaid`——那是**收款**服務（F4.4 硬要求所指），退款回寫方向相反，須為退款側獨立 service。判準＝目的地是否即為平台帳本內餘額（拆型第 22 輪——bank_deposit 即判 success＝錢未匯出即宣稱已退）→ financial_status 重物化 → 通知信。
 4. Stripe 失敗處理：pending 退款列 + 告警 + 後台可重試（冪等 key 不變）。
 5. **Refund 是不可變的帳務紀錄，`refunds` 表不建 `status` 欄位**——退款是否成功看底下 `order_transactions` 的狀態。這條要寫進 schema 註釋，否則後人一定會加 `refunds.status`。
    <!-- 依 46a:722–726 補寫，原文：「A Refund object's existence doesn't guarantee payment completion; check associated OrderTransaction statuses」 -->
 6. **退款一經發起絕對不可撤銷**（三方一致，46c:228、46c:1143）→ UI 強制二次確認彈窗，文案明示不可逆。
 7. `refundMethods` 支援「退回原付款方式」與 **store credit（商店購物金）**；`restockType` 與退款**解耦**（退款不一定補庫存）。
 
-**⚠️ 坑**：restock 冪等（13-F5：refund_line_item_id 唯一）防 webhook 重放重複進貨；「先打 Stripe 再落庫」順序錯誤會在本地失敗時退了錢沒紀錄——**永遠先落 pending 再打金流**；部分退款多次後的殘額計算用資料庫聚合而不是前端傳入。
+**⚠️ 坑**：restock 冪等（13-F5：refund_line_item_id 唯一）防 webhook 重放重複進貨；「先打 Stripe 再落庫」順序錯誤會在本地失敗時退了錢沒紀錄——**（外部金流分支）永遠先落 pending 再打金流**（帳本內即時分支無此序，見步 3 出口分支）；部分退款多次後的殘額計算用資料庫聚合而不是前端傳入。
 
 ### F5.1 退款金額公式（P0-01，可測式子）
 

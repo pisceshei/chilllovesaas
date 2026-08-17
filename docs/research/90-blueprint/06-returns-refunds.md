@@ -259,7 +259,7 @@ balance_to_collect= max(0, −net)         # 換貨/欠款造成的負值＝向�
 ### D.4 無退貨脈絡的退款（refundCreate）[46a §6][G8]
 
 1. 退款面板：逐行數量（≤已購未退）→ restockType（未履行行用 CANCEL；已履行用 RETURN；不回補用 NO_RESTOCK）→ 運費欄 → notify。
-2. **執行順序鐵則**：本地 transaction（refund＋lines＋transaction=pending＋restock＋outbox）→ **出口分目的地**（2026-08-17 更正，PR #52 第 21 輪；拆型第 22 輪）：外部金流分支＝transaction 外呼叫 PSP → webhook 確認 → pending→success；**帳本內即時分支（禮品卡餘額回加／store credit 寫入——餘額即錢本身）＝無外部 IO，同一本地 transaction 內即建 status=SUCCESS**；**線下待確認分支（manual 家族：bank_deposit／COD 退匯——錢在系統外流動）＝建 pending，走條件式 UPDATE 對帳形，同 16 §F4.4 COD 對帳回寫**。判準＝目的地是否即為帳本內餘額；每類目的地必有一條 SUCCESS 出口 → financial_status 重物化 → 通知信。先打 PSP 再落庫＝退了錢沒紀錄。
+2. **執行順序鐵則**：本地 transaction（refund＋lines＋transaction＋restock＋outbox；transaction 的 status **依出口分目的地定，不預設 pending**——第 23 輪收寫死形）→ **出口分目的地**（2026-08-17 更正，PR #52 第 21 輪；拆型第 22 輪）：外部金流分支＝transaction=pending → transaction 外呼叫 PSP → webhook 確認 → pending→success；**帳本內即時分支（禮品卡餘額回加／store credit 寫入——餘額即錢本身）＝無外部 IO，同一本地 transaction 內即建 status=SUCCESS**；**線下待確認分支（manual 家族：bank_deposit／COD 退匯——錢在系統外流動）＝建 pending，走條件式 UPDATE：對帳形（COD＝16 §F4.4 對帳回寫）／人工確認形（bank_deposit 等無對帳檔——第 23 輪補，落地格見 16 §F5 步 3）**。判準＝目的地是否即為帳本內餘額；每類目的地必有一條 SUCCESS 出口 → financial_status 重物化 → 通知信。先打 PSP 再落庫＝退了錢沒紀錄。
 3. **退未履行品項 ⇒ 該品項從訂單移除、不可再履行** [G8]。
 4. 分工：有 return 脈絡一律 `returnProcess`；無脈絡（取消補償、客訴）才 `refundCreate` [46a §6⑥]。
 
