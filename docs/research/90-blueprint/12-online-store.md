@@ -254,7 +254,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 - **格式門檻**：試用方案白名單【窮舉：10】JS／CSS／GIF／JPEG／PNG／JSON／CSV／PDF／WebP／HEIC；付費方案＝任何格式**除 HTML**。我方落地同樣必須擋 HTML（公開 CDN 上的 stored-XSS／phishing 面）；⚠️ SVG 是否受理、以 image 還是 generic 處理，官方未明文，待實測。
 - **檔名保留規則**：不得以 `.` 開頭；不得以下列字尾結束【窮舉：9】`pico`／`icon`／`thumb`／`testing`／`small`／`compact`／`medium`／`large`／`grande`——這組是本尊圖片尺寸變體 URL 後綴，佔用即衝突。我方若沿用尺寸後綴式 CDN URL，此保留清單必須同步落地。
 - **撞名解決**＝`duplicateResolutionMode` 三值（§A.4）；admin UI 上傳的行為對應哪一值 ⚠️ 官方未明文，待實測（實測店可驗）。
-- **兩段式上傳是大檔唯一路徑**：`fileSize` 對 VIDEO／MODEL_3D 為必填（stagedUploadsCreate 會據此預檢配額）；一般檔案可直接給外部 URL 由平台抓取。
+- **兩段式上傳是大檔唯一路徑**：`fileSize` 對 VIDEO／MODEL_3D 為必填（stagedUploadsCreate 會據此預檢配額）；一般檔案可直接給外部 URL 由平台抓取——🔴 `originalSource` 是 tenant 控制的出站目的地，**平台抓取必過 SSRF 防線**（同 webhook 投遞政策，總綱 A2 的細化）：scheme 白名單（https）、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址、禁 redirect、下載大小/時間上限——否則已認證商家可讓 worker 抓 loopback／內網服務／cloud metadata 並把回應存成檔案（2026-08-17 更正，PR #52 第 18 輪）。
 - **刪除語義**：永久不可復原；商品引用自動解除（§B.6）；⚠️ 被 metafield `file_reference`／theme 設定（favicon、section 圖片）引用時是否阻擋或警示，官方未明文——admin 提供「Used in」篩選供刪前自查，我方落地必須做**引用計數表**（file_usages：file_id×引用者多型），刪除確認框列出引用清單。
 - **多租戶**：`files` 表帶 `shop_id`＋複合索引 `(shop_id, filename)`（filename 撞名解決以店為界）；CDN 路徑帶店識別，跨店引用檔案 ID 必須被拒（同 §C.6 隔離原則）。
 （來源：help file-uploads、Admin GraphQL fileCreate/stagedUploadsCreate，取證 2026-08-14）
@@ -264,7 +264,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 ### D.1 主題安裝（zip 路徑，對應我方 IN 線）
 
 1. 商家上傳 zip（或 Theme Store／AI 生成 ≤3 個／GitHub／CLI）。
-2. 系統建 theme 記錄，`role=UNPUBLISHED`、`processing=true`，非同步解壓＋驗證。
+2. 系統建 theme 記錄，`role=UNPUBLISHED`、`processing=true`，非同步解壓＋驗證。🔴 解壓**前/中強制安全邊界**（2026-08-17 更正，PR #52 第 18 輪——商家可控 zip 不設限＝zip-slip 逃逸主題目錄、zip bomb 打爆 worker 磁碟/記憶體）：entry 路徑 canonical 化後必須落在主題目錄內（拒 `../` 穿越）、拒 symlink/hardlink entry、entry 數/單檔解壓大小/總解壓大小/壓縮比上限（上限值引 `config/limits.yml`，鐵律 6——theme_import 鍵組隨本管線落地時建，出處＝本條），**邊 streaming 邊計量**，任一超限即中止＝`processingFailed`。
 3. 成功→`processing=false`，入草稿區可預覽/自訂；失敗→`processingFailed=true`（檔案不完整，不可發布）。
 4. 失敗分支：主題數達上限（20/100）→拒收，要求先刪除；zip 非法→processingFailed。
 （我方對應：31 §4 IN 線加了 theme-check＋相容報告＋授權聲明 gate——本尊沒有授權 gate，這是我方因鐵律 9 加的。）

@@ -171,7 +171,7 @@ Company 1 ─── N CompanyLocation（≤10,000/company）
 ### C.3 刪除與清除
 
 - `canDelete=false` 的四阻擋（74 §4＋help，取證 2026-08-14）：①待清除（redaction pending）②是尚未送達的禮品卡排程收件人 ③曾有訂閱合約 ④有訂單。有訂單者只能走「清除個資」（§B.5）保留訂單記錄。
-- 匿名化範圍：name/email/phone/address 移除；profile 與 order history 保留。
+- 匿名化範圍：profile 的 name/email/phone/address 移除，**且延伸到每一份持久化 PII 副本**——checkout 紀錄、domain event payload、訂單面快照（帳單/收件人欄）、全文搜尋索引與匯出投影一併匿名（16:700「匿名化要連 events payload 與 checkouts 一起處理，PII 清單驅動」；驗收＝匿名化後全文搜尋/匯出查無 PII，16:979）；只清 profile 會讓同一 PII 從 checkout/事件/搜尋原樣可查（2026-08-17 更正，PR #52 第 18 輪）。保留：非 PII 的訂單與財務事實（order history）。
 
 ### C.4 行銷同意不變量
 

@@ -292,9 +292,9 @@ HTTP 狀態碼全集：200 成功／400 參數錯誤（含 `sections_url` 不以
 
 ### D.3 完成付款（含失敗分支）
 
-1. buyer 填完付款→ 按 Pay now 提交付款資訊 → **此刻庫存 hold**（G-5）。
+1. buyer 填完付款→ 按 Pay now 提交付款資訊 → **此刻庫存 hold（G-5）＝本尊行為觀察；我方不做 checkout hold**——本章 F.2#5 與正典 S-13 明定我方僅**庫存軟檢查**、庫存只在訂單成立時變動（（2026-08-17 更正，PR #52 第 18 輪）：照字面實作會引入一條時長與帳目語義皆未定義的 reserved 路徑——付款失敗滯留庫存、付款成功雙重轉移）。
 2. 付款成功 → 訂單成立（`orders/create`）、`completedAt` 寫入、cart 刪除、庫存 commit（此路徑下付款成功＝訂單成立同刻；commit 的一般化觸發是「訂單成立」，非 checkout 路徑的分支見 C.7-3）。
-3. 付款失敗 → **hold 釋放**；buyer 回到付款步驟時重新 hold（G-5）；checkout 留在 in_progress。
+3. 付款失敗 → **hold 釋放（本尊；我方無 hold 可釋，僅回付款步驟）**；buyer 回到付款步驟時重新 hold（G-5，本尊側）；checkout 留在 in_progress。
 4. buyer 離開且已留 email → 10 分鐘後轉 abandoned（D.4）。
 
 ### D.4 棄單建立與挽回

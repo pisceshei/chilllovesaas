@@ -392,7 +392,7 @@
 | 主題 | `themes`, `theme(id)`（role: MAIN\|UNPUBLISHED\|DEVELOPMENT；files connection） | `themeCreate(source: zip URL/staged upload, name)`（→ 25 §4 匯入管線＋授權 gate）, `themePublish`, `themeUpdate(name)`, `themeDelete`, `themeDuplicate` |
 | 主題檔 | `theme.files(filenames, first)` → body/contentType/size/checksumMd5 | `themeFilesUpsert(themeId, files[{filename, body{type: TEXT\|BASE64, value}}])`（**寫檔＝AST cache bust**）, `themeFilesDelete`, `themeFilesCopy(fromTheme)` |
 
-規則：主題檔上限與白名單（25 §4）；publish＝原 MAIN 降級＋快取整體失效；redirects 命中在 storefront router 404 前查表。
+規則：主題檔上限與白名單（25 §4）；publish＝原 MAIN 降級＋快取整體失效；redirects 命中在**資源不可用 handler 前**查表——404 與 unpublish 的 410 **兩個回應路徑皆查**（範圍同 90-blueprint/12 C.5／13-F2；（2026-08-17 更正，PR #52 第 18 輪）：原「404 前查表」會讓 410 路徑不查 `url_redirects`、無視商家設定的 301）。
 
 ## 10. 主題編輯器內部 API（31 號的 API 面；editor scope）
 

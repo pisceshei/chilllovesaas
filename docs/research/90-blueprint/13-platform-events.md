@@ -271,7 +271,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### D.1 訂閱建立（操作者：app 開發者）
 
 1. 途徑 A：TOML 設定檔宣告 topics＋uri → 部署後對**所有安裝店**生效【官方 G-1】。途徑 B：`webhookSubscriptionCreate`（逐店、可帶 filter/includeFields）。
-2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。
+2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。🔴 形態驗證只擋語法——目的地是 app 控制的出站端點，**每次投遞連線另過 SSRF 政策**（C.3「3xx 算失敗且禁 follow redirect」的完整化 （2026-08-17 更正，PR #52 第 18 輪））：scheme/port 白名單、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址（rebinding 防護＝連線 pin 已驗 IP——註冊時通過的 hostname 事後可改指內網）、禁 redirect、回應大小上限。
 3. App Store app 另須申報合規三端點，缺 → 審核退件【官方 G-5】。
 
 ### D.2 事件投遞（操作者：平台）

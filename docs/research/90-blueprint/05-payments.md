@@ -156,8 +156,8 @@ Refund 1 ──< N OrderTransaction(kind=REFUND) （退款單聚合退款交易�
 | PENDING | 技術錯誤 | ERROR | 寫 `errorCode` |
 | （建立） | 需外部認證/跳轉（offsite、3DS） | AWAITING_RESPONSE | 等待買家完成認證 ⚠（官方描述僅一句，見 A.4） |
 | AWAITING_RESPONSE | 買家完成認證，通道回終局 | SUCCESS／FAILURE | 正常出口 |
-| AWAITING_RESPONSE | 超時（我方裁定值，B.1.1-R1） | 先查 PSP 實況：有終局 ⇒ 照落 SUCCESS／FAILURE；查無 ⇒ FAILURE | ⚠ 本尊的超時次態與時長官方均未明文，待實測；相鄰官方錨點與我方裁定見 B.1.1 |
-| （任意） | 通道無法判定 | UNKNOWN | **非終態**；由 reconcile job 收斂（B.1.1-R2），官方無自動轉移 |
+| AWAITING_RESPONSE | 超時（我方裁定值，B.1.1-R1） | 先查 PSP 實況：有終局 ⇒ 照落 SUCCESS／FAILURE；明確拒絕 ⇒ FAILURE；查無／無終局 ⇒ UNKNOWN（進 R2 收斂）（本列＝R1 的表格投影，隨 R1 第 18 輪更正同改） | ⚠ 本尊的超時次態與時長官方均未明文，待實測；相鄰官方錨點與我方裁定見 B.1.1 |
+| PENDING／AWAITING_RESPONSE（僅非終態） | 通道無法判定 | UNKNOWN | **非終態**；由 reconcile job 收斂（B.1.1-R2），官方無自動轉移。（2026-08-17 更正，PR #52 第 18 輪）：原現態「（任意）」含 SUCCESS/FAILURE/ERROR——終態宣告即不可變，晚到的模糊 PSP 回應／對帳錯誤不得把已成功付款拉回 UNKNOWN（訂單投影會丟失已付結果）；終態寫入一律條件式（現態仍非終態才寫） |
 | UNKNOWN | reconcile job 查得 PSP 終局 | SUCCESS／FAILURE／ERROR | 收斂出口 |
 | UNKNOWN | 逾放棄期限仍無終局（B.1.1-R2） | （維持 UNKNOWN＋ops alert） | 轉人工對帳；訂單級 financial status 依 pending 過期規則 → EXPIRED（B.1.1） |
 
@@ -170,7 +170,7 @@ Refund 1 ──< N OrderTransaction(kind=REFUND) （退款單聚合退款交易�
 
 ⚠ AWAITING_RESPONSE 超時後轉 FAILURE 還是 UNKNOWN、超時多長，官方未明文，待實測（測試店造 offsite/3DS 中斷單觀察）。以下為**我方裁定**（防孤兒態；所有時間值引 `config/limits.yml`，鐵律 6，不得硬編）：
 
-- **R1（AWAITING_RESPONSE 超時）**：超時上限 `payment.awaiting_response_timeout`（預設 3 天，對齊 G24 官方建議值）。超時**先向 PSP 查詢實況**：查得終局 ⇒ 照落 SUCCESS/FAILURE；PSP 查無此交易或無終局 ⇒ 轉 **FAILURE**，`errorCode=PAYMENT_PROVIDER_ERROR`（§A.5 既有值，不新造）。**不轉 UNKNOWN**——UNKNOWN 保留給「PSP 有回應但無法對映終局」的形態，兩態語義不得混用。
+- **R1（AWAITING_RESPONSE 超時）**：超時上限 `payment.awaiting_response_timeout`（預設 3 天，對齊 G24 官方建議值）。超時**先向 PSP 查詢實況**：查得終局 ⇒ 照落 SUCCESS/FAILURE；**PSP 明確拒絕 ⇒ FAILURE**（`errorCode=PAYMENT_PROVIDER_ERROR`，§A.5 既有值，不新造）；**查無此交易或無終局 ⇒ 轉 UNKNOWN 進 R2 收斂**——僅明確拒絕可落終態 FAILURE，非終局不得落 FAILURE：PSP 之後仍可能結清成功，落 FAILURE 即離開對帳路徑，買家重試新 attempt＝雙收、晚到的成功扣款掛在被視為未付的訂單上（（2026-08-17 更正，PR #52 第 18 輪）：原文「查無 ⇒ FAILURE、不轉 UNKNOWN」即此形；孤兒防護由 R2 的放棄期限＋ops alert＋EXPIRED 投影承擔，不靠提前判死）。
 - **R2（UNKNOWN reconcile job）**：指數退避輪詢 PSP 查交易實況（首查間隔與退避曲線引 `payment.reconcile_backoff`，預設 15 分鐘起、退避至每日一次）；**收斂目標態＝SUCCESS／FAILURE／ERROR 三者之一**；放棄期限 `payment.reconcile_give_up`（預設 7 天，對齊 G23「典型約一週」口徑）——逾期仍無終局 ⇒ 維持 UNKNOWN＋發 ops alert 轉人工對帳，訂單級 financial status 依 G23 規則轉 EXPIRED。資金狀態不得永久懸置在無人看管的掛單。
 - **R3（併發約束）**：兩個收斂 job 必須冪等（鐵律 5），且與 capture/void 共用授權列行鎖（C.13-2 同鎖）——收斂寫入與人工操作競態時，後者以資料庫現況重讀為準。
 
@@ -372,7 +372,7 @@ SALE (auth+capture 一步) ─────────────────�
 
 1. **重複 capture**：同一授權併發兩筆 capture ⇒ 超收。防線＝`idempotencyKey`（鐵律 5）＋ DB 層 `Σ captures ≤ auth` 檢查在同一 transaction 內、行鎖授權列。
 2. **capture vs void 競態**：兩者互斥於「授權未消耗」前置條件，必須同鎖。
-3. **refund 上限**：`Σ refunds ≤ captured` 在併發退款下必須 DB констraint 兜底（11 §3 第三板斧慣例；CLAUDE.md 驗收基準明列退款上限併發測試）。
+3. **refund 上限**：併發退款下以**同交易行鎖＋條件式 UPDATE 計數器**兜底——`new_refund ≤ captured − refunded + approved_over_refund`（`approved_over_refund` 預設 0，僅授權分支寫入；式形同 §06 C.2）；**不得做成無條件 DB CHECK `Σ refunds ≤ captured`**——上限是**軟上限**（總綱 2.4 M7）：`allowOverRefunding=true` 的核准 over-refund（已退 store credit 改退原卡）是官方合法情境，硬約束會全數拒絕；唯一硬約束＝`refunded_total_cents ≥ 0`（§06 F.2#12）（2026-08-17 更正，PR #52 第 18 輪；CLAUDE.md 驗收基準明列退款上限併發測試）。
 4. **payout 對帳**：balance txn append-only、payout 只收 `issuedAt` 時點前 available 的 txn——rollup 不得把 pending txn 算進已撥款。
 5. **多幣別金額比對**：對 PSP 回報值比對一律走 65 §D 的單位轉換，**禁止**拿儲存 cents 直接比 PSP minor units（zero-decimal 幣別 100 倍事故，鐵律 3）。
 

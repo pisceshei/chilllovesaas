@@ -312,7 +312,7 @@ net_sales_without_cost_recorded + net_sales_with_cost_recorded = net_sales
 | 退款退貨（86） | refund 處理、return 立案/收貨 | reversal facts（處理日）；實體退貨量另計 `reversed_quantity` vs `quantity_returned` 兩軌 |
 | 金流（65/69） | 付款嘗試/成功/拒付/費用 | finance 面指標（payments 與 sales 分開，各記各的日期） |
 | 庫存 | 進出/調整/調撥/收貨 | 庫存 39 指標；28 天窗計算 |
-| 商品/庫存成本（02） | `InventoryItem.unitCost`（cost per item；PO 成本回寫＝02 §D.5） | COGS **售時快照**來源（C.13）——事實列生成時讀當下值，事後改值不回溯 |
+| 商品/庫存成本（02） | `InventoryItem.unitCost`（cost per item；PO 成本回寫＝02 §D.5） | COGS **售時快照**來源（C.13）——快照於 **T1 凍結進訂單行／outbox payload**，事實列生成**只讀該快照**、不讀 `unitCost` 現值（（2026-08-17 更正，PR #52 第 18 輪）：原「生成時讀當下值」與 C.13/D.1 的 T1 凍結矛盾——消費端滯留期間改成本會改寫歷史毛利，且重放 rebuild 結果隨 worker 時序漂移）；現值僅供新銷售；事後改值不回溯 |
 | Storefront/主題 | pageview/cart/checkout 事件、Web Vitals | sessions、漏斗、`web_performance` schema（40 指標，R11-V4） |
 | 行銷 | UTM、campaign、廣告平台回報 | 歸因維度與行銷 26 指標 |
 | 折扣 | 套用明細 | discounts 分量（line item + 訂單級分攤） |

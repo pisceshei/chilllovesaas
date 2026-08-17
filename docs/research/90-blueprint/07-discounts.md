@@ -167,7 +167,7 @@ Customer|CompanyLocation 1—N StoreCreditAccount（每幣別一個）1—N Stor
 
 | 現態 | 觸發 | 次態 / 副作用 |
 |---|---|---|
-| remainingAmount = 全額 | debit（結帳抵付 / 後台扣減） | 遞減；**永遠先吃 `expiresAt` 最早的 credit**（FIFO by soonest expiry，官方明文） |
+| remainingAmount = 全額 | debit（結帳抵付 / 後台扣減） | 遞減；**永遠先吃 `expiresAt` 最早的 credit**（FIFO by soonest expiry，官方明文）；**`expiresAt = NULL`（不過期）批次排最後**＋同值以 `(created_at, id)` 確定 tie-break，整段在同一 balance 行鎖內執行——MySQL `ORDER BY expiresAt ASC` 預設 NULL 在前，裸排序會先吃永久額度、放任將到期批次過期＝FEFO 反轉（需 `ORDER BY expiresAt IS NULL, expiresAt, created_at, id`）（2026-08-17 更正，PR #52 第 18 輪） |
 | 已被 debit 消耗 | debit_revert（PAYMENT_FAILURE / ORDER_CANCELLATION） | remainingAmount 回增 |
 | remainingAmount > 0 且到達 expiresAt | expiration transaction | 殘值沖銷歸零；「店家時區的當日結束」時刻生效 |
 
