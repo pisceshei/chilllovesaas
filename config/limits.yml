@@ -456,7 +456,8 @@ auth:
 # =============================================================================
 idempotency:
   # 🔴 **本區塊法域無關**（57 §G-08）。金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；
-  #    55 §D G-08 的 9 支強制冪等在 hk／tw／任何未來 pack 下**完全相同**，不得放進 `jurisdictions.*`。
+  #    55 §D G-08 系的 10 支強制冪等（含第 25 輪增列的 refundMarkAsSettled）在 hk／tw／任何
+  #    未來 pack 下**完全相同**，不得放進 `jurisdictions.*`。
   #    唯一的例外是下方 `required_for_platform`（見該鍵註解）。
   jurisdiction_scope: core_all_packs
   # 冪等鍵保留期。逾期後同一把 key 的重試「視為全新操作」。
@@ -526,7 +527,8 @@ idempotency:
     - inventoryTransferCreateAsReadyToShip
     - inventoryTransferDuplicate
     - inventoryTransferSetItems
-    # --- 以下 9 支為 55 號盤點（docs/specs/55 §A / §D G-08）反向補齊：
+    # --- 以下 10 支為 55 號盤點（docs/specs/55 §A / §D G-08）反向補齊（第 10 支 refundMarkAsSettled
+    #     為 PR #52 第 25 輪隨 16 §F5 落地格增列）：
     #     官方 17 個強制清單是「Shopify 自己的金流寫入點」，**不涵蓋我方自己的**。
     #     50/52/54 三輪都只抄了官方清單，從未反向盤點「我方哪些路徑會動錢」。
     #     判定標準沿用 NP1-D（orderEditCommit）的既有決策：**凡金流寫入一律強制冪等，不論 Shopify 有無強制**。
@@ -539,6 +541,8 @@ idempotency:
     - giftCardDeactivate         # 天然冪等，列入以統一契約（55 §A M31）
     - storeCreditAccountCredit   # 重複發放（55 §A M23）
     - storeCreditAccountDebit    # 重複扣抵 ⇒ 顧客資損（55 §A M24）
+    - refundMarkAsSettled        # 線下待確認退款的人工確認（16 §F5 步 3 落地格，PR #52 第 25 輪增列；
+                                 #   重試/雙擊不得二次翻列——55 §A 補列待該檔下次更新，登記於 PR #52 描述）
     # --- 以下 4 支為 58 號（物流商對接）補齊，判定標準同上：不可重試的外部副作用。
     #     與前面 22 支的差別：前者的副作用在**我方 DB 內**（可用條件式 UPDATE 兜底），
     #     這 4 支的副作用在**物流商那邊**（我方無法回滾）。重試一次＝多一張運單、多一筆運費，
@@ -564,6 +568,7 @@ idempotency:
   business_unique_keys:
     orderCapture:              [order_id, parent_transaction_id, amount_cents, seq]
     orderMarkAsPaid:           [order_id]
+    refundMarkAsSettled:       [transaction_id]   # 同一筆 REFUND 交易只能被標記結清一次（16 §F5 步 3，第 25 輪）
     draftOrderComplete:        [draft_order_id]
     giftCardDebit:             [checkout_token, gift_card_id]
     storeCreditAccountDebit:   [checkout_token, store_credit_account_id]
@@ -581,8 +586,9 @@ idempotency:
   #    publishablePublish…）**刻意不列入**：它們天然冪等且沒有錢動，強制帶 key 只會讓
   #    idempotency_keys 表在 CSV 匯入（5 萬行，13 §F6）下無謂膨脹；那一類的併發防線是
   #    `lock_version` 樂觀鎖（63 §A.4），要擋的是靜默覆蓋不是重放。
-  # ⚠ 刻意獨立成鍵而不併進上面的 `required_for`：後者的註解承載「官方 17 支／我方 9 支金流／
-  #    我方 4 支物流」的出處分層，本清單是第四類來源，混入會讓出處註解失真。
+  # ⚠ 刻意獨立成鍵而不併進上面的 `required_for`：後者的註解承載「官方 17 支／我方 10 支金流／
+  #    我方 4 支物流」的出處分層（金流支數第 25 輪隨 refundMarkAsSettled 增列同步），
+  #    本清單是第四類來源，混入會讓出處註解失真。
   required_for_catalog_create:
     - productCreate
     - productDuplicate
@@ -697,6 +703,10 @@ refund:
   soft_cap_strategy: net_payment
   over_refund_requires_permission: "orders.over_refund"
   over_refund_requires_confirm: true
+  # 線下待確認退款的人工確認（refundMarkAsSettled，16 §F5 步 3 落地格）——治理鍵與 over_refund
+  # 同形（PR #52 第 25 輪落鍵：原僅散文，實作只能硬編權限字串與 confirm 旗標＝鐵律 6 擋的形態）。
+  mark_refund_settled_requires_permission: "orders.mark_refund_settled"
+  mark_refund_settled_requires_confirm: true
   verify_maximum_refundable_formula: true
   # --- 金流側累計上限的**執行方式**（57 §G-02；55 §A.2 M09/M10 只給了式子，沒給落地契約）---
   # 🔴 **本組鍵法域無關**。55 §D G-02 的「折讓累計上限 Σ allowances ≤ invoice.total_cents」在 HK 是 N/A

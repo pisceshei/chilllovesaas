@@ -151,7 +151,7 @@
 
 **本專案另強制的 10 支金流 mutation（55 號盤點補齊；`refundMarkAsSettled` 第 24 輪隨 16 §F5 落地格增列）**：`orderCapture`、`orderMarkAsPaid`、`draftOrderComplete`、`giftCardCreate/Credit/Debit/Deactivate`、`storeCreditAccountCredit/Debit`、`refundMarkAsSettled`。平台域另有 `required_for_platform`（`platformEinvoiceVoid`、`platformEinvoiceAllowanceCreate`）。
 
-**🔴 這 9 支的強制冪等是「法域無關」的**（`limits.idempotency.jurisdiction_scope: core_all_packs`）——金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；在 hk／tw／任何未來 pack 下**完全相同**，**不得**搬進 `jurisdictions.*`。
+**🔴 這 10 支的強制冪等是「法域無關」的**（`limits.idempotency.jurisdiction_scope: core_all_packs`；含第 25 輪增列的 `refundMarkAsSettled`——線下退款確認是核心金流動作，COD 的法域素材（56 號 tw pack）不改變此鍵的 core 歸屬）——金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；在 hk／tw／任何未來 pack 下**完全相同**，**不得**搬進 `jurisdictions.*`。
 **⚠ 但平台域那 2 支相反：它們是 pack-scoped 的**（`required_for_platform_pack_scope: jurisdictions.tw.tax_invoice`）。兩者都是台灣統一發票的專屬 mutation，基準法域 HK 下**根本不存在於 schema**（56 §A.4 CI-3）。CI 對未啟用 tw 的部署要斷言的是「這兩支不存在」，**不是**「這兩支要帶 key」——照 `required_for` 的方式做成無條件斷言，HK 首發的 schema 快照測試會直接紅掉。
 <!-- 依 56 §E 分流，原 55 §D 結論：G-08「9 支金流 mutation 未列強制冪等」。
      依 56 §E，G-08 標為「**與法域無關，完整適用**」——本輪複核**確認此分流正確**，9 支一條不減。
