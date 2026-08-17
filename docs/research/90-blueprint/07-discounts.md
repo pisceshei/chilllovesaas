@@ -307,7 +307,7 @@ Customer|CompanyLocation 1—N StoreCreditAccount（每幣別一個）1—N Stor
 ### D.1 折扣建立與生命週期操作（操作者：商家）
 
 1. 選型（4 擇 1，建立後不可改）→ 填表（method、值、entitlements、門檻、資格、用量、組合、時窗）。
-2. 系統驗證：subtotal XOR quantity；markets XOR segments；automatic 型檢查 active ≤25（違者 `ACTIVE_PERIOD_OVERLAP`）；免運型 combinesWith 無 shipping 旗標。
+2. 系統驗證：subtotal XOR quantity；markets XOR segments；automatic 型檢查 **startsAt/endsAt 全區間重疊 ≤25**（建立/更新/重啟用皆原子驗證——僅查當前 active 數會讓 26 支同未來區間全過再一起生效；違者 `ACTIVE_PERIOD_OVERLAP` （2026-08-17 更正，PR #52 第 9 輪））；免運型 combinesWith 無 shipping 旗標。
 3. 寫入 → status 由時間推導 → 產 `summary`（描述產生器）。
 4. 後續操作：停用/重啟（🔴 重啟清 endsAt）/刪除/複製/批量；分享連結與 QR（單折扣共用一個配額）。
 5. 失敗分支：`DiscountErrorCode` 39 值之一落 `userErrors{field,code,message}`。

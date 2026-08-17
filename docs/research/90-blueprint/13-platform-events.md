@@ -260,7 +260,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### C.6 併發與邊界要害
 
 - 消費端「先 200 再處理」⇒ ack 與處理之間 crash 會丟事件：ack 前必須先把事件**持久化入 queue**（DB-backed），否則 at-least-once 在消費端被降級成 at-most-once。
-- 去重表要有 TTL 與唯一索引（`webhook_id` unique）；並發雙投同時 INSERT 靠唯一索引裁決。
+- 去重表要有 TTL 與唯一索引（**`(shop_id, webhook_id)` unique**——inbox 是租戶業務資料，鐵律 2；查重帶已解析租戶 （2026-08-17 更正，PR #52 第 9 輪））；並發雙投同時 INSERT 靠唯一索引裁決。
 - 亂序＋去重並存的陷阱：`products/delete` 先到、`products/update` 後到 ⇒ 消費端要能容忍「更新一個已刪資源」（tombstone 或 upsert-with-deleted-check）。
 - 金額欄位：webhook payload 中的金額是序列化層產物（MoneyV2／字串），**消費與生產兩側都不得把它當儲存值**（鐵律 3：儲存尺度≠對外單位）。
 

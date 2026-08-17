@@ -92,7 +92,7 @@ Order.risk : OrderRiskSummary!
 | cancelled→closed | 自動封存（全額退款單符合 [S16] 條件） | — | 已取消列在列表全列刪除線（76 §1） |
 
 - **無孤兒**：cancelled 是商業終態（無 uncancel）；closed 可逆（orderOpen）；open 是初態。
-- `closed` 判定式（closed 欄）＝所有 line item 已履行或已取消 **AND** 所有金流交易完成 [S1]——兩條件合取，46a §1⑦-4 已立為實作鐵則。
+- `closed` 判定式（closed 欄）＝所有 line item 已履行或已取消 **AND** 所有金流交易完成 [S1]——兩條件合取＝**自動封存資格判定式**（手動 orderClose 無前置、不受此限，見 B.1 （2026-08-17 更正，PR #52 第 9 輪）），46a §1⑦-4 已立為實作鐵則。
 - 封存 vs 取消的語義分界：取消＝中止處理中的訂單；封存＝處理完畢移出清單 [S17]。
 
 ### B.2 金流軸（`displayFinancialStatus`，8 值）
@@ -175,7 +175,7 @@ Order.risk : OrderRiskSummary!
 
 ### C.4 編輯規則（46a §8 之外的 help 補強）[S32][S33]
 
-- 不可編輯聯集（官方散落各頁，收斂）：app 建立的單｜Shop Pay Installments 付的單｜本地配送（local delivery）單｜pending payment 中的品項/折扣受限｜已履行品項不可移除/調量｜order 層折扣不可動｜非手動折扣（code/script/automatic）不可改｜不可改配送方式｜（46a）封存單、2019-01-01 前、非商店幣別（無升級）、多期預付訂閱調量。→ 對應 16 §F8.3 的九條聯集 guard。
+- 不可編輯聯集（官方散落各頁，收斂）：app 建立的單｜Shop Pay Installments 付的單｜本地配送（local delivery）單｜pending payment（**未決 PSP 交易形**；manual 單不在此列 （2026-08-17 更正，PR #52 第 9 輪））中的品項/折扣受限｜已履行品項不可移除/調量｜order 層折扣不可動｜非手動折扣（code/script/automatic）不可改｜不可改配送方式｜（46a）封存單、2019-01-01 前、非商店幣別（無升級）、多期預付訂閱調量。→ 對應 16 §F8.3 的九條聯集 guard。
 - 編輯後：總額增→寄更新發票收款；總額減→發退款 [S33]。
 - 運費不會因編輯自動重算 [S32]；稅會自動重算（46a §8④）。
 - 分析側：編輯後的訂單在報表以獨立分錄呈現 [S32]；部分 app 整合不識別編輯 [S32]。
@@ -330,7 +330,7 @@ admin「取消訂單」對話框（原因必選＋退款方式三選一＋restoc
 ### F.3 開發驗收要點（本章新增項；46a §12 清單之外）
 
 - [ ] `orders` 表：`name`/`number`（1001 起 per-shop 序列，含 prefix/suffix 快照）、`source_name`/`source_identifier`/`app_id`、`confirmation_number`（保留欄）、`po_number`。序號產生器須防併發跳號重複（per-shop 鎖或序列表）。
-- [ ] 生命週期軸三態＋B.1 轉移表全測；`closed` 判定式兩條件合取的反例測試（金流未完不得 close）。
+- [ ] 生命週期軸三態＋B.1 轉移表全測；`closed` 判定式兩條件合取的反例測試（**自動封存 job 路徑**：金流未完不得自動 close；手動 orderClose 不適用 （2026-08-17 更正，PR #52 第 9 輪））。
 - [ ] 自動封存 job：兩組條件（付清+履行完／全退）各一測；取消封存後不得被同一條件立即重新封存（需事件觸發，非輪詢重掃）。
 - [ ] `draft_orders` 表＋B.4 狀態機；轉正交易的原子性測試（庫存扣減與訂單建立同生共死）；invoice 先 mark-paid 的失效分支。
 - [ ] 付款條款：due 值域 C.5 全集入 enum；提醒 ≤5 則入 `limits.yml`。

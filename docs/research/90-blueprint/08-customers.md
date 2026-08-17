@@ -43,7 +43,7 @@
 | `creationDate` / `lastEditDate` | DateTime! | 建立／最後編輯 |
 
 - **membership 是動態求值，不落 membership 表**：「符合條件自動加入、不符自動移除」；人數計數在「開啟分群詳情頁」或「app（如 Shopify Messaging）使用該分群」時重估（取證 2026-08-14）。
-- 成員讀取：`customerSegmentMembers`（同步，單頁 ≤1,000）；`customerSegmentMembersQueryCreate`（非同步 job，供大分群）。`segments` 查詢 first/last ≤250。
+- 成員讀取：`customerSegmentMembers`（同步，單頁 ≤1,000——**平台 cursor ≤250 通則的顯式登記例外** （2026-08-17 更正，PR #52 第 9 輪））；`customerSegmentMembersQueryCreate`（非同步 job，供大分群）。`segments` 查詢 first/last ≤250。
 - 取代 SavedSearch（deprecated）；分群僅能含單店成員。
 
 ### A.3 B2B 三物件＋兩關聯
@@ -228,7 +228,7 @@ staff 於個檔「合併顧客」→ 選對象 → 系統 `customerMergePreview`
 staff「清除個人資料」→ `customerRequestDataErasure` → 個檔掛「已提交刪除要求」→ 10 天窗內可 `customerCancelDataErasure` → 窗過執行匿名化 → 行銷態 `REDACTED`、apps/通路收到轉發請求。此後不可合併/邀請。
 
 ### D.5 建立與使用分群
-staff 於編輯器寫 WHERE（autocomplete＋紅底線錯誤提示＋即時人數重估）→ 儲存（name+query）→ webhook `segments/create`。使用：Email 行銷活動受眾／折扣資格／Flow「顧客已加入區段」。成員數在詳情頁載入或 app 取用時重算；`customerSegmentMembers` 分頁讀取（≤1,000/頁）。
+staff 於編輯器寫 WHERE（autocomplete＋紅底線錯誤提示＋即時人數重估）→ 儲存（name+query）→ webhook `segments/create`。使用：Email 行銷活動受眾／折扣資格／Flow「顧客已加入區段」。成員數在詳情頁載入或 app 取用時重算；`customerSegmentMembers` 分頁讀取（≤1,000/頁，**≤250 通則登記例外** （2026-08-17 更正，PR #52 第 9 輪））。
 
 ### D.6 B2B 開通
 ①`companyCreate`（必填三塊：name＋首個 location＋主聯絡人）→ ②location 設 catalog/payment terms/tax/checkout（company 頁可批次落到每個 location）→ ③加 contact：選既有 customer 或新建 → 指派 role×location → 寄 B2B 開通信（可自訂；Flow 範本可自動化）→ ④顧客以新版帳號登入，見 B2B 價格與 location 切換。移除 contact：撤 location 權限或整體移除——**customer 個檔不刪，降回 D2C**（取證 2026-08-14）。

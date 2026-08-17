@@ -142,7 +142,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | S1 | 進入 checkout | buyer | 建 checkout；帶入品項／note／attributes／折扣碼 | Checkout ∅ → `open` | 無 | 無 | `checkouts/create` | cart 空 ⇒ 不可進入 |
 | S2 | 逐步填寫 | buyer | 每步欄位驗證＋**庫存軟檢查（不 hold）**（§03 B.4／D.2-4）；cart & checkout validation 失敗＝阻擋前進非警告（§03 C.9） | `open`（不變）；留 email 後 10 分鐘未完成 ⇒ 疊 `abandoned_at` 旗標（§03 B.2） | 無 | 無 | `checkouts/update` | 庫存不足 ⇒ 錯誤訊息；validation 阻擋；棄單 ⇒ 建 AbandonedCheckout（bot／盜卡測試**不建**，§03 C.8） |
 | S3 | 提交付款資訊 | buyer | 送 PSP authorize 或 authorize+capture | `open`（不變） | **我方：無變化**（本尊此刻 hold 庫存，我方不做 hold，§03 F.2#5） | **PSP 呼叫前**先持久化 checkout 級 payment attempt＋outbox 對帳 intent；OrderTransaction 列於 T1 建立並回連 attempt <!-- 2026-08-17 更正（PR #52 Codex）：原寫「OrderTransaction ∅→PENDING」——此刻尚無 order，且與 T1「PSP 回覆後才建列」及 persistence-before-PSP 原則矛盾；若 S4 rollback（庫存丟失/FO 建立失敗），已授權款項靠 attempt＋reconcile job 走補償（void/退款），不留無紀錄授權窗口 -->（kind＝`SALE` 或 `AUTHORIZATION`，§05 B.2） | 無（尚無 order） | 3DS ⇒ `AWAITING_RESPONSE`（§05 A.4）；拒付 ⇒ 47 值 errorCode 之一（§05 A.5），回付款步驟重試 |
-| **S4** | 🔴 **訂單成立（原子點 T1）** | 系統 | 取單號 → 建 Order＋LineItem 快照 → order routing → 建 1..N FulfillmentOrder → **庫存 commit** → 寫 ledger → outbox（全部同一 transaction，見 2.2 T1） | Checkout `open` → `completed`；Cart → `deleted`（§03 B.1/B.2）；Order ∅ → `open`；FO ∅ → `OPEN`（`fulfill_at` 未來 ⇒ `SCHEDULED`，§09 B.1-2） | **`available −q` ／ `committed +q`；`on_hand` 不變**（§02 B.1／C.1）。例外：selling plan `ON_FULFILLMENT` ⇒ 此刻**不進 committed**（§03 D.7-5） | `SALE` SUCCESS ⇒ `PAID`｜`AUTHORIZATION` SUCCESS ⇒ `AUTHORIZED`｜手動付款／payment terms ⇒ `PENDING`（§05 A.6／C.12） | `orders/create`、`fulfillment_orders/order_routing_complete`、`inventory_levels/update`、（付清時）`orders/paid` | `DENY` 且 available 不足 ⇒ 結帳擋單；`CONTINUE` ⇒ 照常成單、available 落負（§02 C.6）；FO 建立失敗 ⇒ 整筆 rollback（單號不回收，§04 C.1） |
+| **S4** | 🔴 **訂單成立（原子點 T1）** | 系統 | 取單號 → 建 Order＋LineItem 快照 → order routing → 建 1..N FulfillmentOrder → **庫存 commit** → 寫 ledger → outbox（全部同一 transaction，見 2.2 T1） | Checkout `open` → `completed`；Cart → `deleted`（§03 B.1/B.2）；Order ∅ → `open`；FO ∅ → `OPEN`（`fulfill_at` 未來 ⇒ `SCHEDULED`，§09 B.1-2） | **`available −q` ／ `committed +q`；`on_hand` 不變**（§02 B.1／C.1）。例外：selling plan `ON_FULFILLMENT` ⇒ 此刻**不進 committed**（§03 D.7-5） | `SALE` SUCCESS ⇒ `PAID`｜`AUTHORIZATION` SUCCESS ⇒ `AUTHORIZED`｜手動付款／payment terms ⇒ `PENDING`（§05 A.6／C.12） | `orders/create`、`fulfillment_orders/order_routing_complete`、`inventory_levels/update`、（付清時）`orders/paid` | `DENY` 且 available 不足 ⇒ 結帳擋單；`CONTINUE` ⇒ 照常成單、available 落負（§02 C.6）；FO 建立失敗 ⇒ 整筆 rollback（單號不回收——語義＝**成功取號後**的取消/刪單不回收；T1 失敗整筆 rollback 時 counter 同交易回滾＝該號**未被消耗**、下一單取得同號**不是重用** （2026-08-17 更正，PR #52 第 9 輪），§04 C.1） |
 | S5 | 付款結果非同步落地 | PSP／reconcile job | 收 PSP 回呼或退避輪詢收斂交易狀態；🔴 結清**跨越付清門檻**時，同一 transaction 重算訂單投影（`displayFinancialStatus` `PENDING → PAID`）並發 `orders/paid`＋`orders/updated`（§5.1 承諾的事件） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：原寫「Order 不變、僅發 order_transactions/create」——付款依賴的履約/通知/分析會永遠不知道訂單已付清 --> | 未付清：Order 不變；付清：`displayFinancialStatus → PAID` | 無 | `PENDING → SUCCESS/FAILURE/ERROR`；`AWAITING_RESPONSE` 超時 ⇒ 先查 PSP，查無 ⇒ `FAILURE`＋`PAYMENT_PROVIDER_ERROR`（§05 B.1.1 R1）；`UNKNOWN` 非終態、退避輪詢收斂（R2） | `order_transactions/create`（🔴 **update 也走這個 topic**，§04 E.1）；**付清時另發 `orders/paid`＋`orders/updated`** <!-- 2026-08-17 更正（PR #52 第 4 輪）：事件欄漏列，照此欄寫事件覆蓋測試會漏掉付清事件 --> | 逾 pending 過期日（官方口徑「典型約一週」）⇒ `EXPIRED`；**pending 期間官方明文鎖單**：不可編修品項／折扣／地址、不可 restock、不可取消、不可收款、不可 mark as paid（§05 B.3）——🔴 鎖範圍**僅限「存在未決 PSP 交易」的 pending**；manual 單（COD／bank deposit／payment terms）的 PENDING **不鎖** `orderMarkAsPaid`／收款——§05 C.12 明定 manual 單正靠它結清，無判別會讓全部 manual 單永久未付 <!-- 2026-08-17 更正（PR #52 第 6 輪） --> |
 | S6 | 風險評估 | 系統／第三方 app | 各 provider 產 assessment；整單 `recommendation` ＝最壞者勝純函數（§04 B.6，⚠️ 官方未載聚合函數） | riskLevel `PENDING` → `LOW/MEDIUM/HIGH/NONE` | 無 | 無 | `orders/risk_assessment_changed` | 建議 `CANCEL` ⇒ 走分支 C；高風險單**預設不自動履行**（§04 C.6） |
 | S7 | 履約整備 | staff／app | `fulfillmentOrderHold` / `ReleaseHold` / `Split` / `Move` / `Merge`（§09 D.4／D.5） | FO `OPEN` ⇄ `ON_HOLD`（判定＝active holds 計數 >0，非布林，§09 C.9-3）；move ⇒ `movedFulfillmentOrder`＋`originalFulfillmentOrder`（§09 B.1-4） | move ⇒ **committed 跨地點遷移**：origin `committed −`、destination `committed +`（§02 B.1）。⚠️ 官方只寫前置與失敗條件、**未寫數量機制**，origin 是否同步 `available +` 為推定，待實測 | 無 | `placed_on_hold`／`hold_released`／`fulfillment_holds/added`／`released`／`split`／`moved`／`merged`（§09 E，履約域共 26 支） | move 禁止條件：FO 已 closed／曾手動 report progress／目的地未備貨該 item／3PL 請求懸置（§09 B.1-4）。**已履約品項永遠留在原 location** |
@@ -371,7 +371,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | C8 | `OrderRiskAssessment.riskLevel` | 5 | PENDING／LOW／MEDIUM／HIGH／NONE | PENDING | 無（同 provider 可覆寫重評） | 持久化，每 provider 一筆 | §04 B.6 |
 | C9 | `OrderRiskSummary.recommendation` | 4 | ACCEPT／INVESTIGATE／CANCEL／NONE | NONE | 無 | derived 純函數＝f(現存 assessments)；聚合規則官方未載 ⚠️（我方裁定 worst-of） | §04 B.6 |
 | C10 | `OrderTransaction.status` | 6 | PENDING／SUCCESS／FAILURE／ERROR／AWAITING_RESPONSE／UNKNOWN | PENDING（offsite／3DS 路徑為 AWAITING_RESPONSE） | SUCCESS／FAILURE／ERROR（**UNKNOWN 明確非終態**） | 持久化 | §05 B.1 |
-| C11 | `OrderTransaction.kind` 付款鏈 | 8 | AUTHORIZATION／CAPTURE／SALE／VOID／REFUND／CHANGE／EMV_AUTHORIZATION／SUGGESTED_REFUND | AUTHORIZATION 或 SALE | VOID／REFUND／CHANGE | **append-only 事件鏈**（kind 建立後不可改）；**同一列的 `status` 就地收斂**（PENDING→SUCCESS/FAILURE/ERROR，§05 B.1/C5）——新增子交易表達的是**新的金流動作**（capture/void/refund），不是原交易的狀態推進；把 PSP 成功記成另一子列會讓原列永掛 pending、金額投影重複計 （2026-08-17 更正，PR #52 第 8 輪） | §05 B.2 |
+| C11 | `OrderTransaction.kind` 付款鏈 | 8 | AUTHORIZATION／CAPTURE／SALE／VOID／REFUND／CHANGE／EMV_AUTHORIZATION／SUGGESTED_REFUND | AUTHORIZATION 或 SALE | VOID／REFUND／CHANGE | **append-only 事件鏈**（kind 建立後不可改）；**同一列的 `status` 就地收斂**（PENDING→SUCCESS/FAILURE/ERROR，§05 B.1/C5）——新增子交易表達的是**新的金流動作**（capture/void/refund），不是原交易的狀態推進；把 PSP 成功記成另一子列會讓原列永掛 pending、金額投影重複計 （2026-08-17 更正，PR #52 第 8 輪） | §05 B.1；跨域邊表 C5 |
 | C12 | `ShopifyPaymentsPayoutStatus` | 5 | SCHEDULED／PAID／FAILED／CANCELED／IN_TRANSIT(deprecated) | SCHEDULED | PAID／CANCELED（FAILED 官方未標終態 ⚠️） | 持久化（我方為 PSP 回收再建模的鏡像） | §05 B.4 |
 | C13 | `Dispute.status` | 7 | NEEDS_RESPONSE／UNDER_REVIEW／ACCEPTED／WON／LOST／PREVENTED／CHARGE_REFUNDED(deprecated) | NEEDS_RESPONSE | ACCEPTED／WON／LOST／PREVENTED | 持久化 | §05 B.5 |
 | C14 | `Dispute.type` | 2 | INQUIRY／CHARGEBACK | INQUIRY（亦可由銀行直接立案為 CHARGEBACK） | CHARGEBACK（單向升級不可逆） | 持久化 | §05 B.5 |
@@ -555,7 +555,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 
 | 觸發（A） | 效果（B） | 類型 | 章節 |
 |---|---|---|---|
-| shipment 標記 IN_TRANSIT | 同一 transaction：origin `reserved−N`／`on_hand−N`，destination `incoming+N` ⚠️（**裁定一，官方未逐字明文，待實測**） | 連動 ⚠️ | §02 B.2／裁定一 |
+| shipment 標記 IN_TRANSIT | 同一 transaction（**分支見 §02 B.2**：本列僅「READY_TO_SHIP 段＋有目的地」形；DRAFT 直轉＝`available−`；origin/destination 留空＝該側不記帳 （2026-08-17 更正，PR #52 第 9 輪））：origin `reserved−N`／`on_hand−N`，destination `incoming+N` ⚠️（**裁定一，官方未逐字明文，待實測**） | 連動 ⚠️ | §02 B.2／裁定一 |
 | shipment 逐列 accept | destination `incoming−N`／`available+N`／`on_hand+N`（同一 transaction） | 連動 | §02 B.3 |
 | transfer 的 accept+reject+cancel ＝ total | transfer.status → TRANSFERRED | 連動 | §02 B.2 |
 | `locationDeactivate` | 需搬移庫存、待處理訂單、移動中轉移到 `destinationLocationId`；**存在 open PO 時拒絕**（open ≙ `ordered AND archived_at IS NULL`，我方裁定 ⚠️） | 連動／🔒鎖 | §02 B.5／D |
@@ -644,7 +644,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | D-11 | 折扣碼一律 upcase 正規化後寫入，`(shop_id, normalized_code)` 唯一索引；⚠️ 大小寫不敏感官方無正面陳述，僅第三方共識＋普遍實測 | §07 C |
 | D-12 | 折扣型別與 method 建立後**不可變更**；重新啟用（EXPIRED／DEACTIVATED → ACTIVE）**必定清空 `endsAt`**（重啟 ≠ 回復原狀） | §07 B.1 |
 | D-13 | 同一 shop 同時 active 的 automatic 折扣（含 Function 折扣）≤ 25，超出回 `ACTIVE_PERIOD_OVERLAP` | §07 C.1 |
-| D-14 | store credit debit **永遠先消耗 `expiresAt` 最早的批次**（FEFO）；`debit_revert` 必須回增到**原批次**；過期時點＝店家時區當日結束 | §07 C／§06 C |
+| D-14 | store credit debit **永遠先消耗 `expiresAt` 最早的批次**（FEFO；排序＝`ORDER BY expiresAt IS NULL, expiresAt ASC, id ASC`——MySQL 裸 ASC 把 NULL 排最前、永久額度會先被吃 （2026-08-17 更正，PR #52 第 9 輪）；同一把餘額鎖內執行）；`debit_revert` 必須回增到**原批次**；過期時點＝店家時區當日結束 | §07 C／§06 C |
 | D-15 | store credit 只能**整額抵付**；餘額 > 訂單總額時抵到訂單歸零、殘額留帳；每 `(owner, currency)` 恰一戶；結帳只顯示與結帳幣別相符的餘額，不可跨幣併用 | §07 C／§06 C |
 | D-16 | 每客 store credit 總額 < US$15,000 等值（以 integer cents 比較，嚴格小於）；可被 jurisdiction pack 覆蓋 | §07 C.1／§08 C |
 | D-17 | `GiftCard.balance ≥ 0`；Deactivated 為終態（不可再兌換／加值／重啟／刪除）；手動簽發卡不可退款只能停用 | §07 C |
@@ -670,7 +670,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | P-13 | `order.confirmation_number` 官方明言**不保證唯一** ⇒ 不得建唯一索引、不得當外部 key 或查詢鍵 | §04 C |
 | P-14 | `orderCreate` 省略 `options.inventoryBehaviour` 時預設 **BYPASS**（完全不動存量）；我方 admin／內建匯入工具呼叫層**一律顯式帶值、不吃預設** | §04 C |
 | P-15 | draft 有付款條款時：`amount_due_now + amount_due_later = total_price` | §04 C |
-| P-16 | `order.closed_at` 可設 ⇔ (所有 line_item 已履行或已取消) **AND** (所有金流交易完成)——合取，缺一不得 close | §04 C |
+| P-16 | `order.closed_at` **自動封存路徑**可設 ⇔ (所有 line_item 已履行或已取消) **AND** (所有金流交易完成)——合取為**自動封存資格**；手動 orderClose 無前置、不受此限（（2026-08-17 更正，PR #52 第 9 輪）） | §04 C／B.1 |
 | P-17 | `dispute_rate` 的分子**必須包含 `status = WON`** 的爭議；任何風控 KPI 不得剔除勝訴案 | §05 C |
 | P-18 | `order.source_name` 不得以自由字串入庫：收斂為 enum ＋ app handle 兩段式，未知值 reject ⚠️（官方未窮舉全值域） | §04 C |
 
@@ -779,7 +779,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-24 | `customerMerge` 併發合併 | 合併不可復原 | `mergeInProgress` 檢查 ＋ per-customer advisory lock（**兩方 id 排序取鎖避免死鎖**）＋ idempotencyKey | 併發 merge 同一對 ⇒ 恰 1 執行、另 1 回 `MERGE_IN_PROGRESS`；反向配對不得死鎖 | §08 C |
 | X-25 | consent 較舊事實覆蓋較新（多來源同步） | 無單調性檢查 | 若 `incoming.consentUpdatedAt < current` 則不覆蓋快取欄；事件表 append-only 永不 UPDATE | 亂序投遞兩筆 consent ⇒ 快取欄恆為較新者 | §08 C |
 | X-26 | store credit / gift card 併發超扣或超發 | 餘額讀寫分離 | CAS 或行鎖；FEFO 扣批次；`balance ≥ 0`；每客上限嚴格小於 US$15,000 | 併發 debit 同一帳戶 ⇒ 餘額不落負、批次 remainingAmount 一致 | §07 C／§06 C |
-| X-27 | **webhook 重複投遞**（at-least-once） | 平台重試 | 消費端 `webhook_id` **UNIQUE 索引 ＋ TTL** 去重表；並發雙投由唯一索引裁決 | 併發送同一 webhook_id 兩次 ⇒ 只處理一次 | §13 C |
+| X-27 | **webhook 重複投遞**（at-least-once） | 平台重試 | 消費端 **`(shop_id, webhook_id)` UNIQUE 索引 ＋ TTL** 去重表（2026-08-17 更正，PR #52 第 9 輪）；並發雙投由唯一索引裁決 | 併發送同一 webhook_id 兩次 ⇒ 只處理一次 | §13 C |
 | X-28 | webhook 亂序（delete 先於 update 到達） | 平台不保序 | `triggered_at` LWW／版本比較；tombstone 或 upsert-with-deleted-check | 反序投遞 create/update/delete 全排列 ⇒ 不 crash、不進錯誤終態 | §13 C |
 | X-29 | outbox 事件與業務資料不一致 | transaction 外寫事件 | 事件與業務資料**同一 transaction**；投遞在 transaction 外 | rollback 後不得有事件外洩；commit 後事件必存在 | 鐵律 5／§13 |
 | X-30 | **主題雙 MAIN／零 MAIN** | 兩人同時 publish | 單一 transaction 內原子雙寫（新→MAIN、舊→UNPUBLISHED） | 併發 publish 兩個主題 ⇒ 恆 `count(MAIN) == 1` | §12 C |
@@ -814,7 +814,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 訂閱扣款 | `SubscriptionBillingAttempt` | ✅ `idempotencyKey` **必填**（client 生成） | ✅ 照抄 | attempt 成功 ⇒ 恰生成一張 Order | §03 C |
 | 顧客合併 | `customerMerge` | ❌ | ✅ **加嚴** | 與 advisory lock（兩方 id 排序取鎖）並用 | §08 C |
 | 折扣用量 | 折扣扣減（非獨立 mutation，隨訂單成立 transaction） | ❌（本尊弱一致） | ✅ 由訂單成立的 idempotencyKey 覆蓋 ＋ 條件式 UPDATE | 重放不得重複扣用量；`appliesOncePerCustomer` 另由唯一索引兜底 | §07 C |
-| 事件消費側 | 所有 webhook 消費 | — | ✅ `webhook_id` 唯一索引去重表 ＋ TTL（**下限必須大於重試窗 4h** ⚠️ 具體值待裁定） | 這是**消費端冪等**，與生產端 mutation 冪等是兩件事 | §13 C |
+| 事件消費側 | 所有 webhook 消費 | — | ✅ `(shop_id, webhook_id)` 唯一索引去重表 ＋ TTL（2026-08-17 更正，PR #52 第 9 輪）（**下限必須大於重試窗 4h** ⚠️ 具體值待裁定） | 這是**消費端冪等**，與生產端 mutation 冪等是兩件事 | §13 C |
 
 **明確不需要 idempotencyKey 的類別**（避免過度施加）：純讀取查詢、`suggestedRefund` 這類不落庫的計算（§05 B.2）、以及 `themeFilesUpsert` 這類本身以 `lock_version` 樂觀鎖保護的覆寫式寫入（§12 C）——後者要的是**衝突提示**而非靜默重放。
 
@@ -849,7 +849,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 > 本節的三個規則性前提，先於全表成立：
 > 1. **事件寫入必與業務資料同一 transaction，且 transaction 內禁止任何外部 IO**（鐵律 5；§13 D「outbox 是唯一事件源」）。表中「進 outbox」欄為 ✅ 者，一律指「同交易寫 outbox、交易外投遞」。
 > 2. **payload 金額一律是序列化型別**（`MoneyV2` / 十進位字串），生產側不得外洩 `*_cents`，消費側不得把 payload 金額直接落庫或當儲存值比對（鐵律 3；§13 C.1 不變式末條）。
-> 3. **投遞至少一次、順序不保證**（§13 C.3）。任何消費者都必須具備去重（`webhook_id` UNIQUE）＋亂序容忍（`triggered_at` / `updated_at` 比較）＋週期性 reconciliation 對帳，不得以事件為唯一資料真相。
+> 3. **投遞至少一次、順序不保證**（§13 C.3）。任何消費者都必須具備去重（`(shop_id, webhook_id)` UNIQUE（2026-08-17 更正，PR #52 第 9 輪））＋亂序容忍（`triggered_at` / `updated_at` 比較）＋週期性 reconciliation 對帳，不得以事件為唯一資料真相。
 
 ---
 
@@ -1292,7 +1292,7 @@ flowchart TD
 
 | 類別 | 內容 | 影響章節 |
 |---|---|---|
-| **① 金額與數值單位** | 本尊對外一律 decimal/MoneyV2、百分比用 Float；我方內部全程 **integer cents（×100 不看幣別）**、百分比與稅率一律 **basis points 整數**，只在序列化層轉 MoneyV2/MoneyBag，送 PSP 依該 pack 宣告的 `amount_format` 再轉一次（鐵律 3／`docs/specs/65`） | 全 15 章 |
+| **① 金額與數值單位** | 本尊對外一律 decimal/MoneyV2、百分比用 Float；我方內部全程 **integer cents（×100 不看幣別）**、百分比與稅率一律**整數（尺度由鍵後綴宣告：`*_bp`/10_000、`*_ppm`/1_000_000——QST 類非整數 bp 率用 ppm （2026-08-17 更正，PR #52 第 9 輪））**，只在序列化層轉 MoneyV2/MoneyBag，送 PSP 依該 pack 宣告的 `amount_format` 再轉一次（鐵律 3／`docs/specs/65`） | 全 15 章 |
 | **② 多租戶與租戶隔離** | 本尊是單店語義（shop 隱含於 token）；我方全業務表帶 `shop_id`、複合索引以 `shop_id` 開頭、唯一性一律 per-shop，身分層走組織級 A 案並以 `Current.accessible_shop_ids` fail-closed 補償（鐵律 2、§15 F.2） | 全 15 章 |
 | **③ 錯誤與冪等契約加嚴** | 本尊多數 mutation 用泛用 `UserError`（無 code）、用量計數弱一致（`asyncUsageCount` 官方自承可能偏低）；我方**全 mutation typed code enum**、關鍵寫入強制 `idempotencyKey`（TTL 24h）、用量/退款上限一律條件式 UPDATE 強一致（鐵律 4/5） | 全 15 章 |
 | **④ 法域 pack 化** | 本尊把稅務憑證、儲值監管、取貨網路、豁免值域、隱私法硬編在平台；我方**核心只發事件**，落不落地由 jurisdiction pack 決定，基準法域＝香港（鐵律 11） | §01 §05 §06 §07 §08 §09 §10 §11 §13 §15 |
@@ -1314,7 +1314,7 @@ flowchart TD
 | D-08 | 冪等 | 官方 17 支庫存/轉移 mutation 強制 `@idempotent`（2026-04 起）；`refundCreate` 強制 | 照抄該 17 支＋**另加嚴 9 支金流 mutation、`returnProcess`、`orderCancel`**；TTL 24h，回放結果由 DB 重建不存快照 | 加嚴 | §02 §04 §06 §15 |
 | D-09 | 事件基礎設施 | webhook 由平台投遞，app 訂閱 | 一律 outbox：事件與業務資料同 transaction 寫入、transaction 內禁外部 IO，webhook/通知/自動化/rollup 全掛消費側 | 結構性不同 | §13 E；鐵律 5 |
 | D-10 | 投遞 header | `X-Shopify-Topic/Hmac-Sha256/Webhook-Id/Triggered-At/Shop-Domain/API-Version` | 改用 `X-CL-*` 同構命名，不沿用本尊字面（鐵律 9 法律紅線） | 結構性不同 | §13 D-4 |
-| D-11 | 百分比／比率 | Float（0–1 或 0–100）：折扣、restocking fee、稅率、carrier markup | 一律 basis points 整數（0–10000）；序列化層才除；>2 位小數的百分比在設定階段 reject 不捨入 | 加嚴 | §06 §07 §09 §10 |
+| D-11 | 百分比／比率 | Float（0–1 或 0–100）：折扣、restocking fee、稅率、carrier markup | 一律整數、尺度後綴宣告（`_bp` 0–10000 或 `_ppm` 0–1000000）；序列化層才除；**超出該鍵尺度精度者**在設定階段 reject 不捨入（（2026-08-17 更正，PR #52 第 9 輪）：原文限 bp 單軌會 reject QST） | 加嚴 | §06 §07 §09 §10 |
 | D-12 | 捨入點登錄 | 各處捨入規則散落、多處官方未明文 | 全平台捨入點集中登錄於 `docs/specs/65`：①折扣/稅分攤＝最大餘數法 ②restocking fee＝floor ③零小數幣別跨界＝raise 不 round ④**carrier markup＝floor（§09 新增第四點）** ⑤正向計稅＝banker's（單價粒度） | 加嚴 | §06 C.1／§09 C.4／§10 C.3 |
 | D-13 | 方案分層 | 功能綁 Shopify 方案（Plus/Advanced/Grow）與計費數字 | 功能本體全做，分層改 feature flag／capability；**方案名與定價數字一律不抄**，業務域只查 capability 不查方案名 | 結構性不同（部分待裁定，見 Q-06） | §05 §08 §09 §11 §14 §15 |
 | D-14 | API 面 | REST Admin API 與 GraphQL 並存；季度版本＋12 個月支援窗 | 不做 REST；admin SPA 只打 `/admin/api/{version}/graphql.json`；demo 期單版本 2026-08，版本窗制度只做規格佔位＋`X-CL-API-Version` header | 簡化不做 | §15 F.2 |
@@ -1545,7 +1545,7 @@ flowchart TD
 
 ## 8. config/limits.yml 增補清單
 
-> 規則：①所有上限一律從此檔讀取，禁硬編（鐵律 6）；②金額鍵一律以 **integer cents（×100）** 表示並以 `_cents` 結尾（鐵律 3）；③百分比一律 basis points 整數並以 `_bp` 結尾；④標 `⚠️` 者為官方未明文或兩源衝突，**值為暫定，不得寫進測試斷言當作事實**；⑤本尊值與我方值不同時，YAML 存我方值、註釋記本尊值。
+> 規則：①所有上限一律從此檔讀取，禁硬編（鐵律 6）；②金額鍵一律以 **integer cents（×100）** 表示並以 `_cents` 結尾（鐵律 3）；③百分比一律整數，**尺度由鍵後綴宣告**（`_bp` 或 `_ppm` 結尾，讀取端依後綴選除數——（2026-08-17 更正，PR #52 第 9 輪）：原規則令 ca_tax_rates_ppm 成非法鍵名）；④標 `⚠️` 者為官方未明文或兩源衝突，**值為暫定，不得寫進測試斷言當作事實**；⑤本尊值與我方值不同時，YAML 存我方值、註釋記本尊值。
 
 ```yaml
 # config/limits.yml —— 15 章彙總增補（來源標記格式：§章號 節）
@@ -2168,7 +2168,7 @@ analytics:
 
 | 項 | 內容 |
 |---|---|
-| **領域切片** | **§03 後半**：Checkout 三態＋abandoned／recovered **兩個正交旗標**（🔴 `recovered ⇔ completed_at ≠ null AND abandoned_at ≠ null`，儲存 enum 恆只有三值，§03 B.2）／結帳總額項次全集。**§04 建單軸**：Order 四軸建模（生命週期／金流／履行／退貨）與 `order.number` per-shop 序列（1001 起、只進不退）。**§05**：OrderTransaction 六態 status × 八值 kind 的 **append-only 事件鏈**（kind 建立後不可改，狀態靠新增子交易推進，§05 B.2）／displayFinancialStatus 八值 derived。**§09 部分**：運費引擎（profile × location group → zone → condition → rateProvider → 合併 R1–R4）與 FO 建立。**§10 核心**：TaxLine 掛載結構＋registration 總閘門（無 registration ⇒ 全單 0 稅）；⚠️ 我方 C2 未宣告＝reject，**不照搬本尊的靜默 0** |
+| **領域切片** | **§03 後半**：Checkout 三態＋abandoned／recovered **兩個正交旗標**（🔴 `recovered ⇔ completed_at ≠ null AND abandoned_at ≠ null`，儲存 enum 恆只有三值，§03 B.2）／結帳總額項次全集。**§04 建單軸**：Order 四軸建模（生命週期／金流／履行／退貨）與 `order.number` per-shop 序列（1001 起、只進不退）。**§05**：OrderTransaction 六態 status × 八值 kind 的 **append-only 事件鏈**（kind 建立後不可改；**status 就地收斂**、子交易＝新金流動作 （2026-08-17 更正，PR #52 第 9 輪），§05 B.1/B.2）／displayFinancialStatus 八值 derived。**§09 部分**：運費引擎（profile × location group → zone → condition → rateProvider → 合併 R1–R4）與 FO 建立。**§10 核心**：TaxLine 掛載結構＋registration 總閘門（無 registration ⇒ 全單 0 稅）；⚠️ 我方 C2 未宣告＝reject，**不照搬本尊的靜默 0** |
 | **前置未決** | §7 Q-21（`AWAITING_RESPONSE` 超時轉 FAILURE 還是 UNKNOWN、時長多久——官方全無明文，擋狀態機超時邊與 `payment.awaiting_response_timeout` 預設值）、§7 Q-91（checkout 顯示價與 capture 匯率差如何處理，**使用者裁定**）、§7 Q-91（轉換費率數字，**使用者裁定**）、§7 Q-51（draft 帶付款條款轉正後金流狀態精確值）、§7 Q-29（draft 轉正瞬間的庫存併發競態，官方無鎖語義）、§7 Q-112（`ON_SALE` inventory policy ＋ SCHEDULED FO 時 committed 時點）、§7 Q-09（**行分攤訂單層折扣後除不盡時單件稅基如何取值——官方未明文，不得腦補**）、§7 Q-69（無地址訂單的第三級 fallback）、§7 Q-01（session 切日 UTC vs shop 時區，**使用者裁定；未裁定前 rollup 日界函式不得動工**） |
 | **完成判準** | ① **併發 50 執行緒恰好 1 單**（HANDOFF 原判準）② 庫存 commit 的觸發是「**訂單成立**」而非「付款成功」——COD／bank deposit／B2B payment terms／admin `orderCreate` 的 PENDING 單皆須 commit（§03 invariants）；唯一例外＝selling plan policy `ON_FULFILLMENT` ③ cart 與 checkout 全程只做軟檢查、**永不扣減庫存**（我方不做 hold 機制，§03 decisions）④ `Σ(children CAPTURE.amount) ≤ authorization.amount`，檢查與寫入在同一 transaction 內對授權列持行鎖 ⑤ capture 與 void 互斥並搶同一把行鎖 ⑥ `order.number` 併發建單不重號、取消／刪除不回收號碼 ⑦ 金額全鏈路過 JPY／TWD／KRW 三幣矩陣；`orderCapture.currency` 必等於 `order.presentmentCurrency` ⑧ `docs/specs/15` 驗收清單全綠（HANDOFF 原判準） |
 
