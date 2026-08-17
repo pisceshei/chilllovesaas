@@ -396,7 +396,7 @@ resolve_price(variant, M, c):
 ### F.3 開發驗收要點（可直接抄進驗收清單）
 
 1. **價格解析順序測試**：FIXED > RELATIVE；FIXED 不換匯不 rounding；`NULLIFY` 下 compare-at 清空；多 catalog「更特定勝、同級取低」各一案。
-2. **零小數幣別矩陣**（65 §H）：JPY/TWD/KRW 過整條換算鏈＋rounding——含 `round_currency` 落位斷言：模式＝`HALF_UP`（官方例 €8.8053→€8.81 為 fixture）、JPY/TWD 結果存值必整除 100（quantum＝1 主單位）、中間值無 float；新增「多段乘法＋末端 ±2.5% 進位」案（79 §4）。
+2. **零小數幣別矩陣**（65 §H）：JPY/TWD/KRW 過整條換算鏈＋rounding——含 `round_currency` 落位斷言：模式＝配置值（候選 `HALF_UP`，Q-11 未裁；fixture 只釘官方例 €8.8053→€8.81——該例排除 truncate 但**不區分** half-up 與 banker's（非 half-tie）（2026-08-17 更正，PR #52 第 11 輪））、JPY/TWD 結果存值必整除 100（quantum＝1 主單位）、中間值無 float；新增「多段乘法＋末端 ±2.5% 進位」案（79 §4）。
 3. **退款匯率雙時點測試**：一般型退款用當下匯率（商家 FX 損益成立）；Managed 型 30 天內用訂單日匯率——兩案數字對到官方例（€85/$100/$110）。
 4. **digest CAS**：並發改原文後 register 舊 digest ⇒ 必 reject（對映 `INVALID_TRANSLATABLE_CONTENT`）；原文變更 ⇒ 全 locale 譯文批次 outdated。
 5. **市場狀態機**：backup region 所在市場停用 ⇒ 先改指否則 reject；subfolder 市場停用 ⇒ 該前綴 404＋提示建 redirect；主市場禁刪。

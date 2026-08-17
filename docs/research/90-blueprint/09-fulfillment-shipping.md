@@ -241,7 +241,7 @@ final_price_cents = carrier_rate_cents + markup_cents + fixed_fee_cents  # 其�
 
 ### C.9 併發要害與不變量
 
-1. **品項守恆**（16-F3.2 已規格化，本輪復核仍成立）：同一 order 的全部 FO（含 cancel 替代單、split 的兩半、move 的產物）對每個 line item 的數量總和 ≡ 訂單可履約數量。split「因狀態不可拆時**改建 replacement FO**」（官方行為，取證 2026-08-14）也必須維持此恆等式。
+1. **品項守恆**（16-F3.2 已規格化，本輪復核仍成立）：同一 order 的全部 FO（含 cancel 替代單、split 的兩半、move 的產物）對每個 line item 的數量總和 ≡ 訂單可履約數量——**取數排除已被替代的歷史段**（B.3：部分出貨遭 fulfillmentCancel 時被取消量建新 FO、原 FO 已出貨段留史；直接 Σ 全部 FO totalQuantity＝雙計；等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`（2026-08-17 更正，PR #52 第 11 輪））。split「因狀態不可拆時**改建 replacement FO**」（官方行為，取證 2026-08-14）也必須維持此恆等式。
 2. **fulfilled_quantity 條件式累加**：`fulfillmentCreate` 對 FO 剩餘量的扣減必須是 `WHERE fulfilled_quantity + ? <= quantity` 的條件 UPDATE，防兩 staff 同時全量出貨。
 3. **hold 多重性**：ON_HOLD 判定＝`COUNT(active holds) > 0`，不是布林欄位；釋放走 holdIds 精準匹配；每 app 計數上限 10。
 4. **運費快取鍵**：C.3 的 cache key 因子清單就是我方 rate cache 的 key 設計——少一個因子（如 origin）就會把 A 倉的報價給 B 倉用。

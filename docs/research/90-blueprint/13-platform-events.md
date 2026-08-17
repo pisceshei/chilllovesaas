@@ -372,7 +372,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 | D-8 | Shopify Flow（付費方案內建；extension 生態） | **無 Flow 等價物排program**；outbox topic 架構已預留（消費者可插拔）；若日後做，run 狀態機照 B.3、payload 上限照 C.3 | 18-F1；P2 待議 |
 | D-9 | 訂閱歸 app（app-owned） | 首發 webhook 訂閱歸**商家**（後台通知 IA 下建立，`clat_` token 生態未開放前無第三方 app） | 28 §15；44 實測本尊後台也有商家級 webhook 入口，兩形態並存 |
 | D-10 | 重試 8 次／4h、connect 1s／total 5s、僅 2xx 成功 | **照抄本尊數值**（18-F4 原「8 次/約 4 小時」與本尊一致；demo 3 次為過渡）；3xx 算失敗＋禁 redirect 同時服務 SSRF 防護 | 18-F4＋G-2 |
-| D-11 | reconciliation 由訂閱方自理 | 平台文件（消費端指南）必須明寫：驗 HMAC→去重→先 200→回查現值→對帳 job | 18-F4 第 4 點擴充 |
+| D-11 | reconciliation 由訂閱方自理 | 平台文件（消費端指南）必須明寫：驗 HMAC→**原子落庫（payload 與去重鍵同一寫入；duplicate ⇒ 直接 200）**→回 200→自 inbox 回查現值→對帳 job（舊序「去重→200→處理」在 200 後崩潰時 retry 被去重丟棄（2026-08-17 更正，PR #52 第 11 輪）） | 18-F4 第 4 點擴充 |
 | D-12 | 管道＝app、發布三層 AND | 同構落地：`App` 下掛 `Channel` capability、Publication/Catalog 四掛載點 | 82 §0.1/§0.2（R13-V2/V4） |
 | D-13 | `filter`：2024-07 起全 topic 可選配（search syntax 子集，A.2.1）；metaobject 三 topic **必帶** | **首發不支援 `filter`**（本輪補訂，非既有裁定的推翻而是其自然推論）：①28 §15 現行 `webhookSubscriptionCreate(topic, callbackUrl, format)` 簽名本就無 filter 參數，schema 不曝露此欄位（未知 input 欄位＝GraphQL 層驗證錯誤）；②metaobject 三 topic 不在首發 24 topic 內（D-5），「必帶 filter」的訂閱形態隨之**整體遞延**——遞延解除的前置條件＝metaobject topic 開放時 filter 必須同時落地（否則違反本尊必要欄位語義）；③日後開放 filter 時文法照 A.2.1 官方子集，不自創方言；「invalid field ⇒ 建立成功但投遞全抑制」的本尊語義屆時要麼照抄、要麼明文登記差異 | 28 §15＋G-18；本表即裁定登記處 |
 

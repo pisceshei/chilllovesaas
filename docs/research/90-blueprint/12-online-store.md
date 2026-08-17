@@ -236,7 +236,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 
 ### C.5 URL redirects
 
-- **只在原 URL 回 404 時觸發**——URL 仍能渲染出頁面（含 collection tag 篩選 URL）則 redirect 不生效。回應＝301（明文：被瀏覽器與搜尋引擎快取，刪除後不會立即失效）。
+- **觸發條件＝原 URL 渲染不出頁面**（help 原文措辭「404 時觸發」；**含 unpublish 資源的 410 形**——D.5 明文允許商家設 301 取代預設 410，「404」讀作「資源不可解析」而非排除 410（2026-08-17 更正，PR #52 第 11 輪）：原句「只在 404」與 D.5 互斥）；URL 仍能渲染出頁面（含 collection tag 篩選 URL）則 redirect 不生效。回應＝301（明文：被瀏覽器與搜尋引擎快取，刪除後不會立即失效）。
 - path 保留字首【窮舉，不可作為來源】：`/apps`、`/application`、`/cart`、`/carts`、`/orders`、`/shop`、`/services`、`/products`、`/collections`、`/collections/all`、`/collections/vendors`、`/collections/types`、`/a/`、`/community/`、`/tools/`。
 - target 可為相對路徑或完整外部 URL；`.html` 結尾與去 `.html` 版本視為同一 URL 不可互轉；query string 行為不保證；國際市場子資料夾：根路徑 redirect 自動套用到全部子資料夾，個別子資料夾差異需逐條建立。
 - 管理面：CSV 匯入/匯出、批次刪除、儲存篩選檢視。
@@ -344,7 +344,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 | 8 | 搜尋引擎 | 專有引擎＋容錯 | MySQL FULLTEXT ngram demo 級，介面照抄，`Search::Provider` 抽象留升級口 | 14 §F4 |
 | 9 | 線上商店邊界 | 內嵌 sales-channel app | 是否照抄＝遞延 71-R9-V1 | 78 §0.2 |
 | 10 | 選單巢狀 | 共 3 層（頂＋2）、1,000 選單、10,000 項 | 14 §F5 寫「巢狀 ≤3 層」＝對齊；上限三值需落 limits.yml | 本章 §C.1 |
-| 11 | redirect 觸發 | 僅 404 時 | 同本尊（掛 404 handler 前）；UI 加「來源仍可訪問則不生效」提示（本尊只寫在 help） | 14 §F5 |
+| 11 | redirect 觸發 | 資源不可渲染時（help 措辭「404」；unpublish 410 亦查，D.5（2026-08-17 更正，PR #52 第 11 輪）） | 同本尊（掛 404 handler 前）；UI 加「來源仍可訪問則不生效」提示（本尊只寫在 help） | 14 §F5 |
 | 12 | presets | 官方 ≤5 | 待裁定：golden theme Ella 有 16 組，安裝管線不得拒收（相容優先），新建主題按 ≤5 | 本章 openQuestion |
 | 13 | Files CDN | cdn.shopify.com 公開 URL、無存取控制、尺寸變體後綴保留字尾 | 我方 CDN 網域策略＝M0 基建裁定項；檔名保留字尾（§C.7 九值）同樣封鎖以保留尺寸後綴語義；儲存/檔數上限落 limits.yml 按方案分級；HTML 一律拒收 | 本章 §A.4/§C.7 |
 

@@ -157,7 +157,7 @@ requestedQueryCost = 預估上限（先預扣）；actualQueryCost = 執行後�
 - 等待公式（client 端自救）：`wait_seconds = (requestedQueryCost − currentlyAvailable) / restoreRate`，無 rounding 要求（浮點秒）。
 - ⚠ 官方 limits 頁只載 **restore rate**（100/200/1000/2000 pt/s 四級）；bucket 上限（`maximumAvailable`）官方頁未列表——標準店實回 2,000（＝restore×20），其他級距的 bucket 值本輪未逐級取證，列 openQuestions。
 - **REST（legacy，2024-10-01 起）**：leaky bucket 40 req/app/store、leak 2 rps；Plus 400／20 rps；header `X-Shopify-Shop-Api-Call-Limit: 32/40`；超限 HTTP 429＋`Retry-After` 秒數。
-- 通用：**輸入陣列一律 ≤250 items**；分頁 `first/last` ≤250（倉庫 28 已釘；**具名例外：`customerSegmentMembers` ≤1,000/頁，§08 A.2** （2026-08-17 更正，PR #52 第 10 輪））；連線式分頁越過 **25,000 物件**後 count 回報封頂為「25,001」。
+- 通用：**輸入陣列一律 ≤250 items**；分頁 `first/last` ≤250（倉庫 28 已釘；**具名例外**：connection 側 `customerSegmentMembers` ≤1,000/頁（§08 A.2）與 `product.variants` root connection 單商品一次 2048（§01 A／G1）；輸入陣列側 `productVariantsBulkCreate` ≤2048（§01 A／G7）（2026-08-17 更正，PR #52 第 10 輪；variants 兩例外補列第 11 輪））；連線式分頁越過 **25,000 物件**後 count 回報封頂為「25,001」。
 - Storefront API：對買家流量**無 rate limit**；bot 需 Web Bot Auth 簽名否則受限。〔G-2、G-3〕
 
 ### C.5 Custom Data 不變量（值域與上限窮舉）
@@ -166,7 +166,7 @@ requestedQueryCost = 預估上限（先預扣）；actualQueryCost = 執行後�
 
 | 項 | 上限 |
 |---|---|
-| 每 app 每 resource type 定義數 | 256 |
+| 每 app 每 resource type 定義數 | 256（⚠️ docs 頁 128 vs changelog 256 兩源矛盾未定案；另一判讀＝該 changelog 256 實為商家定義 Plus 檔位值（總綱 §8 矛盾表）——兩判讀並存待 Q-93（2026-08-17 更正，PR #52 第 11 輪）） |
 | 商家自建每 resource type 定義數 | 128（Basic/Grow/Advanced）／256（Plus+）——與本章 G-10 正表一致，全 256 為誤植（待 Q-93 （2026-08-17 更正，PR #52 第 9 輪）） |
 | Pinned 定義每 resource type | 50 |
 | 值大小（多數型別） | 64KB |
@@ -179,7 +179,7 @@ requestedQueryCost = 預估上限（先預扣）；actualQueryCost = 執行後�
 | Admin 列表篩選可用定義 | 50（Products/Companies/Company Locations/Metaobjects）；**Orders 僅 5** |
 | `metafieldsSet` 單次 | ≤25 筆，atomic（倉庫 28 §12） |
 
-**Metaobject 上限**〔G-10、G-11〕：每定義 **≤40 fields**、**≤1,000,000 entries**（舊制 64k/128k 已廢）；商家定義數 128（Basic/Grow/Advanced）／256（Plus/Enterprise）；app 定義數 docs 頁載 128、changelog（2025-10-20）載 256——**兩源矛盾，⚠ 以較新 changelog 為傾向但未定案**；標準（standard）定義與 entries 不計入上限。
+**Metaobject 上限**〔G-10、G-11〕：每定義 **≤40 fields**、**≤1,000,000 entries**（舊制 64k/128k 已廢）；商家定義數 128（Basic/Grow/Advanced）／256（Plus/Enterprise）；app 定義數 docs 頁載 128、changelog（2025-10-20）載 256——**兩源矛盾未定案**；另一判讀＝該 changelog 256 實為**商家定義的 Plus 檔位值**（總綱 §8 矛盾表同條），兩判讀並存待 Q-93（2026-08-17 更正，PR #52 第 11 輪）：原「以較新 changelog 為傾向」與檔位判讀互斥，撤傾向語；標準（standard）定義與 entries 不計入上限。
 
 **型別系統**：基礎＋計量型別共 53 種（boolean/color/date/date_time/json/language/link/money/multi_line_text_field/number_decimal/number_integer/rating/rich_text_field/single_line_text_field/url/id＋37 種帶單位計量型）；reference 12 種（article/collection/company/customer/file/metaobject/mixed/order/page/product/product_taxonomy_value/variant）；`list.` 變體 52 種（**不支援 list 的**：boolean、id、json、language、money、multi_line_text_field、rich_text_field）。單位 enum 逐型窮舉見來源頁〔G-7〕。要點：
 - GraphQL 讀寫時 **value 一律是字串**，型別只決定驗證與解析。

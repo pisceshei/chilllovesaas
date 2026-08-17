@@ -15,7 +15,7 @@
 |---|---|---|---|
 | `ProductVariant` | 售賣單位（價格/選項） | 1:1 `inventoryItem`（`InventoryItem!` non-null）（S24） | S24 |
 | `InventoryItem` | 變體的「庫存實體」：tracked、sku、unitCost、關務資料 | 1:N `InventoryLevel`（每個有庫存的 location 一筆） | S3 |
-| `InventoryLevel` | InventoryItem × Location 的量化狀態集合 | N:1 `item`、N:1 `location`；唯一鍵＝(item, location) | S4 |
+| `InventoryLevel` | InventoryItem × Location 的量化狀態集合 | N:1 `item`、N:1 `location`；唯一鍵＝`(shop_id, inventory_item_id, location_id)`（鐵律 2：業務資料複合索引以 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪）：原寫 (item, location)） | S4 |
 | `Location` | 實體或邏輯地點（含 fulfillment app 地點） | 1:N `InventoryLevel`；每 shop 有一個 default location | S13, S22 |
 | `InventoryAdjustmentGroup` | 一次 mutation 產生的調整批（ledger 群組） | 1:N changes（name/delta/quantityAfterChange） | S16 |
 | `InventoryScheduledChange` | 排程狀態轉換（預告，不動數字） | 掛在 `InventoryLevel` 下；欄位 expectedAt/fromName/toName/quantity/ledgerDocumentUri | S5 |
@@ -189,7 +189,7 @@ Admin 層：On hand = Available + Committed + Unavailable                       
 排除項：  incoming 不計入 on_hand；收貨後自動轉 Available（S12）
 ```
 
-- 訂單成立：available−、committed+（on_hand 不變）；履行：committed−、on_hand−（S12）。
+- 訂單成立：available−、committed+（on_hand 不變）；履行：committed−、on_hand−（S12）——兩式皆**僅 tracked 行**（untracked/digital 無 InventoryLevel，B.1 全域限定同源（2026-08-17 更正，PR #52 第 11 輪））。
 - **草稿單保留＝Unavailable 不是 Committed**：「放入 **Unavailable** 狀態」、不保留則「留在 **Available**」（S25）；「draft 轉正式單前不算 committed」（S12）。
 - ⚠️ 草稿保留在 API 8 態的落點推定為 `reserved`（reason 值 `reservation_*` 支持此推定），官方未逐字寫明。
 
@@ -279,7 +279,7 @@ Admin 層：On hand = Available + Committed + Unavailable                       
 
 ### D.1 下單 → 履約（committed 的一生）
 
-1. 顧客/店員成立訂單（操作者：buyer/staff）→ 系統按 routing 指派地點（D.7）→ 該地點 available−、committed+（S12）。失敗分支：DENY 且 available 不足 ⇒ 結帳擋單；CONTINUE ⇒ 照常成單、available 落負（S15/S24）。
+1. 顧客/店員成立訂單（操作者：buyer/staff）→ 系統按 routing 指派地點（D.7）→ 該地點 available−、committed+（S12；僅 tracked 行（2026-08-17 更正，PR #52 第 11 輪））。失敗分支：DENY 且 available 不足 ⇒ 結帳擋單；CONTINUE ⇒ 照常成單、available 落負（S15/S24）。
 2. （可選）成單後改派：`fulfillmentOrderMove`（09 §B.1-4）⇒ committed 跨地點遷移（B.1 表對應列）；前置＝目的地備貨該 item（S32）；已履約品項不動。
 3. 履行（staff/3PL）：fulfillment 建立 ⇒ committed−、on_hand−（S12）。部分履行按數量分次。
 4. 取消/退款：`orderCancel` 的 `restock` 必填；refund 逐 line item 選 **4 值 `restockType`**——`CANCEL`（未履行→自訂單移除＋回補 available）/`RETURN`（已履行→回補 on_hand+available）/`NO_RESTOCK`/`LEGACY_RESTOCK`（deprecated，「新建退款不接受」）（S31；06 §A.4）；退貨走 disposition（RESTOCKED→指定 location 回補）（46a）。

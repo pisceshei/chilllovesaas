@@ -96,7 +96,7 @@ total_sales  = gross_sales − discounts − sales_reversals + taxes + duties + 
              = net_sales + taxes + duties + shipping + fees      -- 兩式官方皆載，等價
 ```
 
-- `sales_reversals`＝refunds／returns／cancellations／order edits 造成的**全部負向調整**（含對運費·稅·費用·折扣的調整）。🔴 其**加總公式官方未載**（僅列舉式定義）——我方拆解＝86 §3.2（三項互斥），屬我方補完，須標注非官方。
+- `sales_reversals`＝refunds／returns／cancellations／order edits 對**商品段（gross−discounts）**的負向調整；對運費·稅·關稅·費用的調整**各自入該分量的淨值**（shipping 式已明示「−已退運費」，taxes/duties/fees 同理取淨）——四類調整再塞進 sales_reversals 會與已取淨分量**雙重扣減**（全額退 $100 商品＋$10 稅：reversal 記 $110 且 taxes 歸 0 ⇒ total_sales 多扣 $10）（2026-08-17 更正，PR #52 第 11 輪）：原句「含對運費·稅·費用·折扣的調整」即此雙扣形。🔴 其**加總公式官方未載**（僅列舉式定義）——我方拆解＝86 §3.2（三項互斥），屬我方補完，須標注非官方。
 - 🔴 **total_sales 可為負**（當日撤銷 > 銷售）。一致性測試不得假設非負。
 - 🔴 **Live View 的 total_sales 是另一個公式**：`gross − discounts − reversals + shipping + taxes`——**少 duties 與 fees**（取證 2026-08-14，live-view 頁）。與報表版本並存＝本尊自身不同源（R11-DOC7）。
 
@@ -195,7 +195,7 @@ percent_sold         = 期間售出數量 ÷ 期初數量 × 100
 | ShopifyQL `WITH TIMEZONE '<IANA>'` | 指定顯示時區；未指定時預設 shop 時區（⚠️ 另一處對「相對日期引數」寫預設 UTC——兩說並存，openQuestions） |
 | 報表整體使用的時區 | 🔴 sales-discrepancies 頁**明確未指明**；無單一官方明文 ⚠️ |
 
-我方裁定：一切按日聚合統一 shop 時區（19 §F1），與本尊差異列 F 節 #5。
+我方裁定：按日聚合統一 shop 時區（19 §F1），與本尊差異列 F 節 #5——**sessions 切日除外**：跟 UTC（本尊 C.5）還是 shop 時區＝F.4 #1／Q-01 待使用者裁定，未裁前 rollup 日界函式不得動工（2026-08-17 更正，PR #52 第 11 輪）：原「一切」把未裁項寫成已定。
 
 ### C.9 資料時效表（rollup 更新頻率；取證 2026-08-14）
 
@@ -274,7 +274,7 @@ net_sales_without_cost_recorded + net_sales_with_cost_recorded = net_sales
 2. 【分析域】展開為 `SalesFactLine(kind=sale, occurred_on=成立日)`，逐 line item 帶 gross/discount/tax/duty/shipping/fee 分量；**讀 T1（訂單成立）當下凍結進訂單行／outbox payload 的 `unitCost` 快照進 `cost_cents`＋`cost_recorded`（C.13，未填則 NULL）——展開時不得讀 `InventoryItem.unitCost` 現值：事件滯留佇列期間 cost 變更會污染歷史毛利** <!-- 2026-08-17 更正（PR #52 第 5 輪） -->；test 訂單標記排除。
 3. 退款／取消（帶 refund）／訂單編輯（負向）／退貨 → `SalesFactLine(kind=reversal, occurred_on=處理日)`。互斥拆分依 86 §3.2（refunds 擁有「真的動了的錢」全部，其餘只補未走退款的部分）。
 4. 訂單編輯正向增量：計入編輯日（我方口徑，19 §F1.1；本尊為幽靈訂單）。
-5. rollup 依 shop 時區日界聚合；查詢層永遠打 rollup。
+5. rollup 依 shop 時區日界聚合（sessions 切日待 Q-01，未裁前日界函式不得動工）；查詢層永遠打 rollup。
 6. 失敗分支：事件重放（outbox 冪等）；rollup 可重算（`rake analytics:rebuild`）且重算後歷史日數字不變（歸屬日固定是這條的前提）。
 
 ### D.2 探索 → 儲存報告（操作者＝商家員工）

@@ -141,7 +141,7 @@ Customer|CompanyLocation 1—N StoreCreditAccount（每幣別一個）1—N Stor
 | SCHEDULED | 時間到達 startsAt | — | ACTIVE | 求值期開始收錄為候選 |
 | ACTIVE | 時間到達 endsAt | endsAt 非 null | EXPIRED | 顧客輸碼回錯誤 |
 | ACTIVE | 停用（單筆或批量） | — | 已停用 | 顧客見「Unable to find a valid discount matching the code entered」（取證 2026-08-14） |
-| 已停用 / EXPIRED | 重新啟用 | — | ACTIVE | 🔴 **結束日期被清空**（官方行為：重啟後「no set end date」）——重啟 ≠ 回復原狀 |
+| 已停用 / EXPIRED | 重新啟用 | automatic 型同建立列：**全區間重疊 ≤25 原子驗證**（D.1；重啟清空 endsAt ⇒ 區間 [startsAt, ∞) 無界，與所有未來區間重疊，漏驗後果最大（2026-08-17 更正，PR #52 第 11 輪）：原前置欄「—」） | ACTIVE | 🔴 **結束日期被清空**（官方行為：重啟後「no set end date」）——重啟 ≠ 回復原狀 |
 | 任一態 | 刪除（單筆或批量） | — | 終結（自 admin 移除） | 一次性碼歷史消失；刪後重建同碼＝新折扣，once-per-customer 計數重來 |
 
 不變量：**型別與 method 建立後不可變**；status 由時間欄位推導（本尊語意），無孤兒態——「已停用」可經重新啟用回 ACTIVE，EXPIRED 也可重啟。
