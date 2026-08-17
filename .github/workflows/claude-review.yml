@@ -384,8 +384,9 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（2026-08-16 使用者裁定⑤，由 Opus 5 改回 Fable 5）。
-          #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
+          #   🔴 `--model claude-opus-5`（現行＝2026-08-17 沿革⑥，Fable 5 額度耗盡帶
+          #      錯誤原文復發後照④先例換回；上一任＝2026-08-16 使用者裁定⑤ claude-fable-5）。
+          #      裁定沿革（每次都保留，因為它們解釋了這一行為什麼會來回改）：
           #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
           #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
           #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
@@ -395,13 +396,22 @@ jobs:
           #          🟡 **假說**是 `claude-fable-5` 對本帳號中途變成不可用（09:30–10:14）。
           #          ⚠️ 它是**先後對照不是受控對照**（時間與模型一起變），至今未被
           #          A/B/A 或模型專屬錯誤原文確認——詳見下方診斷段，該段的降級仍有效。
-          #        ⑤2026-08-16 使用者指示改回 `claude-fable-5`（本次）——③的理由
+          #        ⑤2026-08-16 使用者指示改回 `claude-fable-5`——③的理由
           #          （Fable 5 是官方標示的 most capable）從未被推翻，④只是避險。
-          #          🔴 本次切換本身就是那個假說缺的 **A/B/A 的「A」**：若接下來的
+          #          🔴 該次切換本身就是那個假說缺的 **A/B/A 的「A」**：若接下來的
           #          驗收正常，假說被削弱；若復發同形態，假說第一次得到正向確認。
           #          ⚠️ 若 Fable 5 再次對本帳號不可用，症狀是 num_turns:1／零花費／秒殺，
           #          失敗留言（show_full_output ＋ ERRTEXT）現在會貼出錯誤原文——
           #          看到那個形態就照 ④ 的先例換回 `claude-opus-5`，不要先查別的。
+          #        ⑥2026-08-17 改回 `claude-opus-5`（PR #52 第 19 輪 push 後）——⑤預告的
+          #          復發形態**首次帶錯誤原文出現**：run 32020580984 兩次（原跑＋重跑）
+          #          逐字同死，ERRTEXT＝「You've reached your Fable 5 limit. Switch to
+          #          another model to continue.」（重跑 num_turns:1／cost 0／624ms）。
+          #          與④不同：這次**不是假說**——錯誤原文直接點名 Fable 5 用量額度，
+          #          且「兩跑逐字相同」滿足失敗留言自載的持續性判準。⑤的 A/B/A 至此
+          #          閉環：假說（Fable 5 對本帳號間歇不可用／額度受限）得到正向確認。
+          #          照④先例與 :404 的既定處置換回 opus；額度回復後要不要回 Fable 5
+          #          ＝使用者裁定（③的理由仍未被推翻）。
           #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
           #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
           #      請先確認是不是又要繞一圈。
@@ -573,7 +583,7 @@ jobs:
           #       不給裸的 `Bash(bash:*)`。本倉庫是 private、單一作者，威脅模型有限；
           #       **若日後開放外部貢獻者或轉 public，這一組必須先撤掉再說。**
           claude_args: |
-            --model claude-fable-5
+            --model claude-opus-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
