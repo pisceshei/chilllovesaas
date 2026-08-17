@@ -142,7 +142,7 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 
 **實作規格**：
 1. 資料表 `fulfillment_orders` 加 `parent_fulfillment_order_id`（自參照 FK）＋ `split_reason` enum（`cancel_replacement` / `partial_hold` / `partial_move` / `manual_split`）。
-2. 不變量（nightly 對帳 job 斷言）：**同一 order 的所有 FulfillmentOrder（含已取消者的替代單）對每個 line item 的 `quantity` 總和，恆等於 order line item 的可履行數量**。此斷言就是「品項憑空消失」的黑盒測試。
+2. 不變量（nightly 對帳 job 斷言）：**同一 order 的 FulfillmentOrder（含已取消者的替代單）對每個 line item 的 `quantity` 總和，恆等於 order line item 的可履行數量——取數排除已被替代的歷史段**（部分出貨遭 cancel 時原 FO 已出貨段留史；等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`，總綱 S-14 同式 <!-- 2026-08-17 更正（PR #52 第 12 輪）：原「所有 FO 總和」為雙計形 -->）。此斷言就是「品項憑空消失」的黑盒測試。
 3. 全部在**同一 DB transaction** 內完成（取消原單 ＋ 建替代單），中斷不得留下半套。
 4. 若原單「無剩餘工作」（全部已出貨），`fulfillmentOrderCancel` **不產生**替代單，回傳 `replacementFulfillmentOrder: null`。
 
@@ -168,7 +168,7 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 ## F4. 取消與封存
 
 **生產級做法**：
-1. Cancel 前置檢查：見 F4.1 的**五條聯集** guard；動作 = 狀態條件轉移 + 庫存 committed 釋放（available+）+ 依選項退款（走 F5）+ **關閉／取消所有未結 FulfillmentOrder（走 F3.2 的替代單語義）** + 事件 + outbox（orders/cancelled）；`reason` 與 `restock` **皆為 non-null 必填**。
+1. Cancel 前置檢查：見 F4.1 的**五條聯集** guard；動作 = 狀態條件轉移 + 庫存 committed 釋放（available+；**僅限 T1 曾 commit 的行**——`ON_FULFILLMENT` deferred 行與 `tracked=false` 行未進 committed，無條件釋放會下溢或憑空生 available（總綱 S4/S13 例外的反向條件；測試須含「取消含 deferred 行的訂單 ⇒ 該行不動帳」）（2026-08-17 更正，PR #52 第 19 輪））+ 依選項退款（走 F5）+ **關閉／取消所有未結 FulfillmentOrder（走 F3.2 的替代單語義）** + 事件 + outbox（orders/cancelled）；`reason` 與 `restock` **皆為 non-null 必填**。
 2. Archive：純標記（closed_at），不影響金流庫存；**自動封存條件二選一：「已付款且已出貨」或「已全額退款」**，且**官方無延遲**（原本寫的「N 天後」是我方自加，改為預設 0 天、可設定）。P1 做成 nightly job。
    <!-- 依 46c:165、46c:572 修正，原文：自動封存條件為「已付款且已出貨」或「已全額退款」；我方原寫「付清且已出貨 N 天後」——缺「已全額退款」分支且多了官方沒有的延遲 -->
 3. 兩者語意分開（研究 01）：cancel 是業務反悔、archive 是收納——UI 文案明確。
@@ -268,14 +268,23 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 **生產級做法**：
 1. 退款面板：逐行選數量（≤ 已購未退數）、restock 勾選（預設勾，**僅在該品項有追蹤庫存時可用**）、另退運費欄（≤ 可退運費）、原因、是否通知（預設勾）——完全對齊研究 01 的畫面。**數量設為 0 的品項不退款**；退款頁**可直接對商品項目套用折扣**（46c:218–221）。
 2. 計算：**一律走 F5.1 的公式**（不得在 UI 或 controller 另算一份）。
-3. 執行順序：本地 transaction（建 refund + refund_line_items + transaction 列 pending + restock via Inventory::Adjust 冪等 + 事件）→ **transaction 外**呼叫 Stripe refund → webhook 確認 → transaction 列轉 success → financial_status 重物化 → 通知信。
+3. 執行順序：本地 transaction（建 refund + refund_line_items + transaction 列（**status 依出口分支定，不預設 pending**——第 23 輪收寫死形：句首寫死與帳本內即時分支「即建 success」同句互斥）+ restock via Inventory::Adjust 冪等 + 事件）→ **出口分目的地**（2026-08-17 更正，PR #52 第 21 輪——原單一 Stripe 出口會讓禮品卡/store credit/manual 退款的交易永停 pending、投影卡 PAID）：**外部金流分支**＝transaction 列建 pending → transaction 外呼叫 Stripe refund → webhook 確認 → transaction 列轉 success；**帳本內即時分支**（禮品卡餘額回加、store credit 寫入——餘額即錢本身）＝無 PSP 呼叫，transaction 列於**同一本地 transaction 內即建 success**；**線下待確認分支**（manual 家族：bank_deposit／COD 退匯——錢在系統外流動）＝建 pending，**人工確認落地格（一路，第 24 輪併——COD 對帳形出口不可達：F4.4 對帳檔僅收款列（:245 比對鍵含 cod_tracking_no、方向＝物流商把代收撥給商家），退款不會出現在該檔（第 25 輪刪原第二理由「58 §K13 六家全 false」——誤讀：K13 為 5 個 carrier 欄、⛔／—／❌ 語義各異、— ＝未查證非否定；第一理由單獨成立）；F4.4 僅作條件式 UPDATE 的形狀先例，不作退款出口）**——mutation＝`refundMarkAsSettled(transactionId)`（resourceVerb，鐵律 4；28 號退款列已登）；權限＝`orders.mark_refund_settled`＋**二次確認**（治理形同 :357 over_refund；兩者皆落 `config/limits.yml` 機器可讀鍵，第 25 輪）；觸發＝財務於退款詳情「標記已匯出／已退」動作；寫入＝條件式 UPDATE `pending → success`，**謂詞全式（第 25 輪補資格條件——僅 `WHERE status='pending'` 會翻掉 Stripe 未確認退款列與 COD 收款列；第 26 輪補 `shop_id`——鐵律 2 配套②「查詢層仍逐表帶 shop_id 條件」，缺它＝A 店可用可猜的自增 id 翻 B 店退款列，形同 :378）＝`WHERE id = :transaction_id AND shop_id = :shop_id AND kind = 'refund' AND status = 'pending' AND gateway IN ('manual','cod','bank_deposit')`**（gateway 暫定值域＝15-F5 manual 形所列三值；⚠️ manual 家族正式值域欄未釘——`bank_deposit` 全樹無值域定義，落地前先釘 `(kind, gateway)` 值域表）＋冪等鍵 `refundsettle-{transaction_id}` 限定單一 service（形同 55 M21 `markpaid-{order_id}`；`limits.idempotency` 已增列）；**affected rows = 0 分流（typed code，鐵律 4）＝見下方本 mutation 專屬錯誤碼表**（第 26 輪自 :399 表拆出——該表屬 refundCreate 軟上限 UPDATE、標題明定「兩種」，不共用）——**非本家族／非 pending 一律 reject**，不得靜默 0-row 當成功；**audit log 必落**＝操作者／時刻／金額入 timeline 與審計（缺此＝任何 admin 可把未匯出的退款標成 success 且事後查不到誰標的）；🔴 **不得**走 `Orders::MarkAsPaid`——那是**收款**服務（F4.4 硬要求所指），退款回寫方向相反，須為退款側獨立 service。判準＝目的地是否即為平台帳本內餘額（拆型第 22 輪——bank_deposit 即判 success＝錢未匯出即宣稱已退）→ financial_status 重物化 → 通知信。
+   **`refundMarkAsSettled` 專屬錯誤碼表**（第 26 輪自 (c) 拆出——(c) 表屬 refundCreate 軟上限 UPDATE、標題明定「兩種」，混列會讓兩支 mutation 的分類都失真；表頭形式照 (c)；碼一律取 28:312 正典 26 值，通用碼複用鐵律）：
+
+   | 判別（`affected == 0` 後以 `shop_id` 限定重讀一次，僅作分類） | 錯誤碼 | 前端行為 | HTTP |
+   |---|---|---|---|
+   | 同 key 重放且列已 `success` | —（非錯誤：冪等回既有結果） | 顯示既有結清狀態 | 200 |
+   | 列存在但 `status ≠ pending`（已被他人標記／狀態不符） | `INVALID_STATE` | 刷新退款詳情顯示現況 | 200（鐵律 4） |
+   | 列存在但 `kind`／`gateway` 不屬 manual 家族 | `INCLUSION`（不在允許清單——正典碼，第 26 輪改：原自造 `INVALID_TRANSACTION_KIND` 違反通用碼複用鐵律） | 顯示「此交易不是線下退款」 | 200 |
+   | `shop_id` 限定下查無此列（含跨店 id——謂詞帶 `shop_id` 後跨店嘗試落此因，第 26 輪隨謂詞補列） | `NOT_FOUND` | 顯示「交易不存在」 | 200 |
+
 4. Stripe 失敗處理：pending 退款列 + 告警 + 後台可重試（冪等 key 不變）。
 5. **Refund 是不可變的帳務紀錄，`refunds` 表不建 `status` 欄位**——退款是否成功看底下 `order_transactions` 的狀態。這條要寫進 schema 註釋，否則後人一定會加 `refunds.status`。
    <!-- 依 46a:722–726 補寫，原文：「A Refund object's existence doesn't guarantee payment completion; check associated OrderTransaction statuses」 -->
 6. **退款一經發起絕對不可撤銷**（三方一致，46c:228、46c:1143）→ UI 強制二次確認彈窗，文案明示不可逆。
 7. `refundMethods` 支援「退回原付款方式」與 **store credit（商店購物金）**；`restockType` 與退款**解耦**（退款不一定補庫存）。
 
-**⚠️ 坑**：restock 冪等（13-F5：refund_line_item_id 唯一）防 webhook 重放重複進貨；「先打 Stripe 再落庫」順序錯誤會在本地失敗時退了錢沒紀錄——**永遠先落 pending 再打金流**；部分退款多次後的殘額計算用資料庫聚合而不是前端傳入。
+**⚠️ 坑**：restock 冪等（13-F5：refund_line_item_id 唯一）防 webhook 重放重複進貨；「先打 Stripe 再落庫」順序錯誤會在本地失敗時退了錢沒紀錄——**（外部金流分支）永遠先落 pending 再打金流**（帳本內即時分支無此序，見步 3 出口分支）；部分退款多次後的殘額計算用資料庫聚合而不是前端傳入。
 
 ### F5.1 退款金額公式（P0-01，可測式子）
 
@@ -930,13 +939,14 @@ returns ────────────────────────
 > <!-- 依 46a:959–963、46a:988–989 補寫，原文逐字：「**文檔未載明** OrderEditSession 的鎖機制、TTL、或同一訂單並發編輯的行為」；
 >      「唯一的併發線索：`orderEditBegin` 回傳 `orderEditSession`，暗示 session 是具名資源，**但文檔未說明兩個 session 同時開啟會發生什麼**」。
 >      46a §8⑦-42/43 逐字建議：「同一訂單同時只允許一個 open 的 edit session（DB unique index on `order_id where committed_at is null`），第二個 begin 回 `userErrors` 帶 `INVALID_STATE`。
+>      （我方落地鍵＝生成欄 open_flag＋`UNIQUE(shop_id, order_id, open_flag)`（同 C1；MySQL 8 可建），鐵律 2 shop_id 開頭——上句為 46a 原文引述，鍵形以總綱 X-19 為準 <!-- 2026-08-17 註（PR #52 第 15 輪；同形化第 16 輪） -->）
 >      要在程式碼註明『Shopify 未載明，此為本專案決策』」「Session TTL 自訂（建議 24h，與冪等 TTL 對齊），逾時自動丟棄，寫進 `config/limits.yml`」。 -->
 
 **⚠ 這整節是「Shopify 文檔未載明 → 本專案決策」**（46a 自己標的空白處，`limits.order.edit_session_*` 已於 P0 輪落地，本節是它的規格面）。
 
 | # | 規則 | 落地 |
 |---|---|---|
-| C1 | **同一訂單同時只允許一個 open session** | DB 部分唯一索引 `(order_id) WHERE committed_at IS NULL AND abandoned_at IS NULL`（`limits.order.edit_session_single_open_per_order: true`）；第二個 `orderEditBegin` 回 `userErrors{code: INVALID_STATE}` 並帶持有者 staff 名稱與開始時間 |
+| C1 | **同一訂單同時只允許一個 open session** | DB 唯一索引＝**生成欄** `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)`——MySQL 8 無 partial index、唯一索引多筆 NULL 並存故歷史 session 不擋（58 §D.5(b) waybill 生成欄同法（第 17 輪更正：原引 §G.3 錯節）；鐵律 2 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 16 輪）：原「部分唯一索引 (order_id) WHERE …」MySQL 8 建不出且無 shop_id -->）（`limits.order.edit_session_single_open_per_order: true`）；第二個 `orderEditBegin` 回 `userErrors{code: INVALID_STATE}` 並帶持有者 staff 名稱與開始時間 |
 | C2 | **TTL 24 小時**，與冪等 TTL 對齊 | `limits.order.edit_session_ttl_hours: 24`；`expires_at = started_at + TTL`；hourly job 把逾期 session 標 `abandoned_at` |
 | C3 | 逾期 session 的 commit | 一律拒絕（`INVALID_STATE`）——不可讓 24 小時前的暫存值套用到已被別人改過的訂單 |
 | C4 | commit 前**重驗訂單版本** | `orders.lock_version` 在 begin 時快照，commit 時比對；不一致 → 拒絕並要求重開 session（樂觀鎖） |
@@ -981,7 +991,7 @@ returns ────────────────────────
 - F5.1 公式的三個算例（F5.2）逐一斷言，**算例 3（換貨＋退貨費）必須產生 `refund=0` ＋ `balance_to_collect=58000`**；任何 float 出現在中間值即測試失敗。
 - `returnCalculate` 與 `returnProcess` 對同一輸入回傳**完全相同**的金額（數字同源測試）。
 - FulfillmentOrder 狀態機：(b) 的 16 條合法轉移全綠、(c) 的 8 條非法轉移全部回 `INVALID_STATE`。
-- **拆單不變量**：任意 cancel/hold/move 序列後，`Σ 所有 FO 的 line item quantity == order line item 可履行數量`（property test）。
+- **拆單不變量**：任意 cancel/hold/move 序列後，FO 對每個 line item 的 quantity 總和 == order line item 可履行數量——**取數排除已被替代的歷史段**（等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`，同 F3.2#2／總綱 S-14 <!-- 2026-08-17 更正（PR #52 第 13 輪）：原「Σ 所有 FO」為雙計形 -->）（property test）。
 - Return 狀態機：(c) 的 7 條非法轉移全部被擋；`REQUESTED → CANCELED` 必須失敗。
 - **F4.1 G3 互鎖**：存在 `REQUESTED`/`OPEN` 的 return 時 `orderCancel` 必失敗；反向亦然。
 - 換貨：建立帶 `exchangeLineItems` 的 return 後，該 FO 必為 `ON_HOLD` ＋ `AWAITING_RETURN_ITEMS`，且 `fulfillmentCreate` 必失敗。

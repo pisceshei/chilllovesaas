@@ -94,6 +94,11 @@ docs/research/28          ← ★API 契約（D5：慣例＋逐模組操作表�
 docs/research/29          ← 多語言/多貨幣/多市場（Markets 全機制＋表結構＋P0-P2）
 docs/research/30          ← SEO/Merchant Center/社媒 feed/Simprosys（官方要求＋平台落地清單）
 docs/research/31          ← ★主題引擎與編輯器完整補齊計畫（R/E/ED/IN/D 五線工作包＋驗收矩陣＋排期）
+docs/research/90          ← ★★業務邏輯總綱（跨模組正典：主幹時序/狀態機總表/不變量與併發要害/
+                             事件耦合圖/98 條裁定登記/112 條未決問題/limits.yml 增補/實作排序與里程碑門檻）
+docs/research/90-blueprint/  ← 十五個領域章（01 商品 02 庫存 03 購物車結帳 04 訂單 05 支付 06 退貨退款
+                             07 折扣 08 顧客B2B 09 履約物流 10 稅務 11 Markets 12 線上商店 13 事件
+                             14 分析 15 平台核心），每章七節 A–G，含官方來源 URL（考掘當時點算 487 條，快照；計法不同得 450–490）
 docs/specs/11–19          ← ★生產級規格（做法/代碼/坑/驗收）
 docs/design/20            ← UI 方案（診斷/參考對象/工藝清單）
 docs/design/23            ← ★tokens 與交互規格（CSS 單一真相）
@@ -118,6 +123,6 @@ docs/design/critique-*    ← 設計評審紀錄
 
 - Git 歷史：Phase 1 docs → teardown → v2 原型 → 按鈕對照+註釋模式 → 本交接包（見 `git log`）。
 - GitHub：`https://github.com/pisceshei/chilllovesaas`（private）。以倉庫內容為準；若你拿到的是 zip，解壓後即完整專案。
-- 尚未有任何應用程式代碼——M0 從零開始，這是刻意的：規格先行。
+- M0 骨架與部分 M1 地基代碼已存在（`app/`、`db/schema.rb`、`docs/dev/`）；依 2026-08-16 重啟裁定，應用代碼＋資料庫將於全面重排查完成後**從 0 重建**（規格先行原則不變）。
 
 有問題先查文件；文件沒有答案的，才是真正需要問使用者的問題。祝順利。

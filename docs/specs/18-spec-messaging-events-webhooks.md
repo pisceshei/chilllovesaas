@@ -78,7 +78,7 @@
 1. `webhook_subscriptions`（shop_id、topic、url、secret、status、failure_count）；URL 建立時驗證：HTTPS only + **SSRF 防護**——解析 DNS 後拒絕私網/loopback/link-local/雲 metadata（169.254.169.254）IP，**投遞時再驗一次**（DNS rebinding），且 HTTP client 禁 redirect。
 2. 投遞：outbox 事件 → 訂閱匹配 → DeliverWebhookJob；header：`X-CL-Topic`、`X-CL-Event-Id`、`X-CL-Hmac-Sha256`（secret 對 raw body HMAC，Base64）；timeout 5s；回應 body 讀取上限 64KB。
 3. 重試：指數退避 8 次/約 4 小時（照研究 09 規格）；24 小時窗口持續失敗 → 訂閱 disabled + 通知商家；投遞紀錄表（狀態碼、耗時、截斷回應）保留 7 天供除錯。
-4. 消費端指南文件：驗 HMAC（constant-time compare）、以 event_id 去重、5 秒內回 2xx（先 200 再處理）。
+4. 消費端指南文件：驗 HMAC（constant-time compare）→ **原子落庫（payload 與 event_id 去重鍵同一寫入；duplicate ⇒ 直接 2xx）** → 5 秒內回 2xx → 背景處理。「先 200 再處理」指**處理**在 ack 後；**落庫必在 ack 前**——先 200 後落庫時，200 與落庫之間崩潰 ⇒ retry 被去重丟棄、事件永久遺失 <!-- 2026-08-17 更正（PR #52 第 12 輪）：原句無持久化步且序反 -->。
 
 **⚠️ 坑**：SSRF 是這個功能的頭號安全風險（商家填 `http://169.254.169.254/` 偷雲憑證）——防護做在 resolve 層而不是字串黑名單；HMAC 比對用 `ActiveSupport::SecurityUtils.secure_compare`；重試風暴：對同一失效端點的多 topic 訂閱要共享熔斷（circuit breaker per host）。
 

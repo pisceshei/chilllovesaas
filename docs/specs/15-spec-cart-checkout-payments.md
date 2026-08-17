@@ -5,7 +5,7 @@
 ## F1. Cart
 
 **生產級做法**：
-1. `carts`（token 簽名 cookie `_cl_buyer`，host-only 綁店網域）+ `cart_line_items`（variant_id、quantity、加入當下價格僅供顯示）。
+1. `carts`（token 簽名 cookie `_cl_buyer`，host-only 綁店網域）+ `cart_line_items`（variant_id、quantity、**properties／selling_plan_id／unit_price_cents（加入當下價）＋bundle `parent_id`（Q-44 未決前暫定）——皆為行合併鍵 `merge_key_hash` 的承重輸入**（見本節 #5），價格非「僅供顯示」<!-- 2026-08-17 更正（PR #52 第 5 輪） -->）。
 2. 寫入 API：add/change/update/clear（對齊 03 的 Ajax 慣例），全部回 turbo_stream 局部更新；**兩層數量限制並存**：
    - **`cart_item_limit`（官方概念）＝購物車「總件數」上限**，系統建議值 **50**，可由商家在「結帳 › 進階偏好設定 › 加入購物車數量上限」開關與調整；**例外：POS／草稿單／B2B／不追蹤庫存的品項不受限**。值取自 `limits.cart.item_limit_suggested`。
    - **本專案防呆上限**：每行 999、行數 100（`limits.cart.max_quantity_per_line` / `max_lines`）——這是防呆，**不是** `cart_item_limit`。
@@ -15,9 +15,9 @@
         且官方的 `cart_item_limit` 概念完全缺席。兩者是不同概念，必須並存。任何人翻舊版都不要刪掉 cart_item_limit。 -->
 3. **價格以當下為準**：cart 顯示即時價（查 variant），進 checkout 時重新快照；商品下架/售罄 → cart 行標記不可購並擋結帳。
 4. 過期：90 天未動的 cart purge job。
-5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 `(cart_id, variant_id)` + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`）。
+5. 併發：同 token 兩個分頁同時加購 → 行級 upsert（唯一索引 **`(shop_id, cart_id, merge_key_hash)`**（鐵律 2：複合索引以 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 11 輪）：原鍵首欄 cart_id --> ） + `ON DUPLICATE KEY UPDATE quantity = quantity + ?`；`merge_key_hash`＝variant＋properties＋selling_plan＋單價＋bundle `parent_id`（Q-44 未決前暫定入鍵——兩個 bundle 父項的同 variant 子行不得誤併，2026-08-17 更正，PR #52 第 19 輪）的雜湊——90 §03 S0 行合併鍵，全同才併行；同 variant 不同屬性/訂閱方案/價格/父項＝**合法多行** <!-- 2026-08-17 更正（PR #52 第 4 輪，Codex）：原 (cart_id, variant_id) 唯一索引把同 variant 客製屬性行靜默合併 -->）。
 
-**⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（只在付款成功時扣，見 F5）。
+**⚠️ 坑**：cart cookie 設在 `.主網域` 會跨店共享——必須 host-only（11 §8）；變體被刪後 cart 行殘留 → FK `ON DELETE CASCADE` 或渲染時濾掉；別在 cart 階段扣庫存（在**訂單成立**時扣——COD／銀行轉帳／B2B payment terms 的付款在成立之後，見 F5；2026-08-17 依 90 §2.4／D-32 更正，原文「只在付款成功時扣」）。
 
 ## F2. 金額引擎（Checkout::Calculator）
 
@@ -223,7 +223,7 @@ total_cents = subtotal - discount_total + shipping_cents + cod_fee_cents + tax_c
 ## F3. Checkout 流程（one-page）
 
 **生產級做法**：
-1. 進入結帳 → 建 `checkouts` 列（token、line items **快照**、email、addresses、shipping 選擇、discount code、狀態 active）；URL `/checkouts/<token>`（簽名、不可枚舉）。
+1. 進入結帳 → 建 `checkouts` 列（token、line items **快照**、email、addresses、shipping 選擇、discount code、狀態 **open**（（第 21 輪更正）：原寫 active——Checkout 三值 enum open/completed/deleted 無 active，同 F5 步驟 2 更正））；URL `/checkouts/<token>`（簽名、不可枚舉）。
 2. 表單體驗照 04 §1.2 欄位順序；每步 PATCH 更新 checkout + 即時重算（Calculator）右欄摘要。
 3. shipping 選項：地址完整才計算（05 的 RateResolver）；**提交付款時 server 重驗**「所選 rate 仍屬於可用集合且價格一致」，不信任先前寫入。
 4. 提交前 server 端全量重驗：商品仍 active、價格未變（變了 → 提示並刷新快照）、折扣仍有效、庫存粗檢（軟檢查，硬保證在 F5）。
@@ -430,11 +430,16 @@ AlipayHK／FPS（轉數快）／八達通（線上）等本地付款方式，在
 
 **必測**：①PSP 回報清單移除某方式後，結帳頁該選項消失且已選中該方式的進行中 checkout 回退到第一個合法方式（不得停在不存在的方式上）；②未連接任何 PSP 的商店，結帳頁付款區顯示「尚無可用付款方式」而**不是**空白區塊；③COD 與手動付款在 PSP 全部斷線時仍可用（證明兩者不走 capability 查詢）。
 
-## F5. 訂單成立（付款成功 → Order）
+## F5. 訂單成立（訂單成立事件 → Order；扣庫存掛此事件）
+
+> 🔴 2026-08-17 更正（PR #52 首輪，依 90 §2.4／D-32／M1-M2 裁定）：原標題「付款成功 → Order」。
+> commit 呼叫點必須掛「**訂單成立**」事件、不得掛付款 SUCCESS 回呼——否則 COD／bank deposit／
+> B2B payment terms／orderCreate PENDING 單完全不占庫存＝超賣，且 checkout 路徑下兩時點同刻、
+> 測試全綠測不出。
 
 **生產級做法**（整條線最關鍵的一個 transaction）：
-1. `Orders::CreateFromCheckout.call(checkout_token:, payment_intent_id:)`——**以 checkout 唯一鍵冪等**：orders 表 `checkout_id` 唯一索引，重入直接回傳既有訂單。
-2. 單一 transaction 內：鎖 checkout（FOR UPDATE，狀態 active→completed 條件轉移）→ 逐行**條件式扣庫存**（13-F5：available−/committed+）→ 建 order + line_items（快照）+ transaction 列（kind=sale, gateway=stripe, 金額＝**PI 實收先包成該 pack 宣告格式的值物件（`Money::PspMinor`／`Money::PspDecimal`）再 `to_storage` 轉回 R1 後**的 `amount_cents`，65 §E.1-1）→ 折扣 usage_count 原子 +1 → timeline event + outbox（orders/create、orders/paid）。
+1. `Orders::CreateFromCheckout.call(checkout_token:, payment_source:, idempotency_key:)`——`payment_source` 二形：**PSP intent**（如 Stripe PI）或 **manual**（COD／bank deposit／B2B payment terms）<!-- 2026-08-17 更正（PR #52 第 5 輪） -->：F5 標題既已涵蓋非即付單，步驟不得硬依賴 payment_intent_id。**冪等兩層**（2026-08-17 更正，PR #52 第 18 輪——原僅 checkout 唯一鍵：同 checkout 換了付款參數的重試會被靜默回舊單，`IDEMPOTENCY_KEY_PARAMETER_MISMATCH`／併發中／失敗重試語義全表達不出）：①**顯式 `idempotency_key`**（鐵律 5「訂單成立必帶」）＋參數 digest——同 key 同 digest ⇒ 回既有結果；同 key 異 digest ⇒ `IDEMPOTENCY_KEY_PARAMETER_MISMATCH`；②orders 表 `checkout_id` 唯一索引仍為 DB 兜底（漏帶 key 的併發雙擊由它裁決）。
+2. 單一 transaction 內：鎖 checkout（FOR UPDATE，狀態 **open**→completed 條件轉移（（第 21 輪更正）：原寫 active——Checkout 恰 3 值 open/completed/deleted（90 B2／03:120），active 是 **cart** 的狀態名；照抄則條件式 UPDATE 對 open 列匹配 0 行、T1 永不成立，或倒逼建第四值違反 90:470））→ **取單號（`UPDATE shops SET order_counter=+1`，鎖序首位）** → 逐行**條件式扣庫存**（13-F5：available−/committed+）2026-08-17 更正（PR #52 第 7 輪）<!-- 第 7 輪更正註記（第 9 輪包成註釋，原為裸文插在鏈中）：原鏈「鎖 checkout→扣庫存→建 order（取號）」與全專案鎖序（先 counter 後 inventory）矛盾＝跨入口死鎖 -->→ 建 order + line_items（快照）+ transaction 列（**PSP capture 形**：kind=`SALE`, status=SUCCESS ⇒ financial_status `PAID`；**PSP authorize-only 形**（manual capture）：kind=`AUTHORIZATION`, status=SUCCESS ⇒ `AUTHORIZED`、金額＝**授權額（capturable）非實收**——實收此刻為 0，capture 契約 `capturable = authorization.amount − Σcaptures` 依此列（2026-08-17 更正（PR #52 第 7 輪））、**不發 orders/paid**（capture 時才發）——與總綱 S4「AUTHORIZATION SUCCESS ⇒ AUTHORIZED」對齊 <!-- 2026-08-17 更正（PR #52 第 6 輪） -->；金額**逐分支**：capture 形＝PI 實收、authorize-only 形＝**授權額**（共用「實收」指令會令 manual-capture 記 0 額授權 （2026-08-17 更正，PR #52 第 8 輪））；兩者（capture＝實收、authorize-only＝授權額 （2026-08-17 更正，PR #52 第 9 輪）：通則句原僅寫「PI 實收」，authorize 形照抄落 0 額）皆先包成該 pack 宣告格式的值物件（`Money::PspMinor`／`Money::PspDecimal`）再 `to_storage` 轉回 R1 後落 `amount_cents`，65 §E.1-1；**manual 形**：kind=sale, gateway=manual/cod/bank_deposit, status=**PENDING**，金額＝checkout 應收）→ 折扣 usage_count 原子 +1 → timeline event + outbox（orders/create；**僅 PSP capture 形發 orders/paid——authorize-only 與 manual/PENDING 不發**，付清由 capture／S5 結清路徑補發 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->）。
    🔴 **入向轉換不可省**（65 §B X8、§E.1-1）：PI／webhook 上的金額是**該 PSP 宣告格式的表示法**（Stripe＝R5；decimal_string 型＝R6），`order_transactions.amount_cents` 是 R1。**直接 `update(amount_cents: event.amount)` ＝ JPY 少記 99%**（`1480` 落庫成 `1480`，實際應為 `148000`）。入向的錯不是 100 倍是 **1/100**，而且**更難發現**——金額只是「看起來小一點」，不會觸發任何金額上限告警，只會在對帳日整批對不起來。
    <!-- 依 65 §J M-9（69 §V-188）修正（2026-08-13），原文：「金額＝PI 實收經 Money::PspMinor#to_storage 轉回 R1 後」
         「PI／webhook 上的金額是 R5」。F5 是**通用流程**（F4 才是 Stripe 專章）——照原文，decimal_string 型 PSP
@@ -442,7 +447,7 @@ AlipayHK／FPS（轉數快）／八達通（線上）等本地付款方式，在
         amount_value_class 再 to_storage」，本點改為逐字引它。🔴 防回退：不得改回單一型別。 -->
 3. 庫存不足時的策略（寫進規格）：整單失敗 → transaction 回滾 → **自動全額退款 + 致歉頁 + 告警**（demo/初期最誠實的做法；超賣接受度是商業決策，預設不允許）。
 4. 訂單編號：**每店連號** `shops.order_counter` 一欄，transaction 內 `UPDATE shops SET order_counter = order_counter + 1` 後讀回（同鎖序）；顯示為 `#{prefix}{counter}{suffix}`。
-5. 成立後（transaction 外）：寄確認信 job、清 cart、棄單標記解除。
+5. **cart 刪除＝T1 同 transaction**（總綱 S4「Cart → deleted」同交易契約——commit 後清理前崩潰＝買家帶已購件 cart 二次下單）；`abandoned_at` **保留不清**（§03 B.2：recovered ⇔ completed_at≠null AND abandoned_at≠null——清掉會把單移出棄單挽回分析 （2026-08-17 更正，PR #52 第 8 輪）），改為同交易**取消 pending 挽回信 job**；transaction 外僅留：寄確認信 job。
 
 **⚠️ 坑**：
 - 訂單號用全域自增 = **向所有租戶洩漏平台總量**（經典多租戶錯誤）→ 必須每店計數。
