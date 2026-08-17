@@ -169,12 +169,12 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       兩者都在核對完成前定稿）。宣稱前 N 必須等於 15.1 清單長度且逐項打勾。
     - **15.4 順序**：清單建立＋修復完成 → 全部閘門逐支**親眼看退出碼** → **commit** →
       15.1 逐項核對（此刻才有已提交差異可核；缺項 ⇒ 補修復、重跑閘門、再 commit）→
-      15.2 重拉留言（**push 前最後一個動作**——重拉不動檔；有新判詞 ⇒ 回 15.1 重來）→
+      15.2 重拉留言（**push 前最後一個動作**——重拉不動檔；有新判詞 ⇒ **回本款起點重來**）→
       push ＋ **自記本次 push 的 HEAD SHA 並將輕量基準 ref 推送至遠端**
       （`git tag -f pr{N}-last-push && git push -f origin pr{N}-last-push`；PR 合併後刪除
       遠端 tag）——重寫歷史或換 clone 後**僅 SHA 字串或僅本地 tag 都不保 object 可達**
       （`pull/{N}/head` 只指向 force-push 後的現任 head，取不回上一輪）；新環境接手
-      `git fetch origin tag pr{N}-last-push` 即得基準。**閘門後再動任何檔案＝回到本款起點重來**（重跑全部閘門、重新 commit，
+      `git fetch -f origin tag pr{N}-last-push` 即得基準（-f：本地已有同名 tag 時覆寫，否則 would clobber 失敗）。**閘門後再動任何檔案＝回到本款起點重來**（重跑全部閘門、重新 commit，
       再 15.1 核對——僅回 15.1 會讓未提交的新改動帶著舊 commit 的核對結果矇混過關）。
     - 條文沿革（本鐵律經 PR #53 多輪驗收修訂定形；含兩起立法事故與逐款修訂理由）
       ＝`docs/worklog/2026-08-17-鐵律15提交前復核.md`，行內不留輪次註記。
