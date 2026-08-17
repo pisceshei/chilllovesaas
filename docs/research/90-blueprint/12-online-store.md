@@ -295,7 +295,7 @@ FileStatus 值域【窮舉：4】：`UPLOADED`（已上傳未處理）／`PROCES
 
 1. 請求進入 storefront 路由；能解析出資源→正常渲染（**redirect 不參與**）。
 2. **資源不可用分支（404 與 unpublish 的 410 皆含）**→查 `url_redirects`（path 精確比對）→命中回 301 至 target；未命中依形態回 404 頁或 410（2026-08-17 更正（PR #52 第 7 輪）：原鏈只在 404 分支查 redirect，unpublish 資源先終止於 410、商家設的 301 永不生效——30 §1.3 明文允許以 301 取代預設 410（（2026-08-17 更正，PR #52 第 9 輪）：原引 §9-5 錯節——該節只有 410 紀律本身））。
-3. 我方落地：查詢掛在 404 handler 前（specs 13-F2/14-F5 已定），需帶 shop_id 複合索引 `(shop_id, path)`。
+3. 我方落地：查詢掛在**資源不可用（404／unpublish 410）handler 前**（specs 13-F2/14-F5 已定；範圍同 C.5 分支（2026-08-17 更正，PR #52 第 13 輪）），需帶 shop_id 複合索引 `(shop_id, path)`。
 
 ### D.6 Predictive search 請求
 

@@ -981,7 +981,7 @@ returns ────────────────────────
 - F5.1 公式的三個算例（F5.2）逐一斷言，**算例 3（換貨＋退貨費）必須產生 `refund=0` ＋ `balance_to_collect=58000`**；任何 float 出現在中間值即測試失敗。
 - `returnCalculate` 與 `returnProcess` 對同一輸入回傳**完全相同**的金額（數字同源測試）。
 - FulfillmentOrder 狀態機：(b) 的 16 條合法轉移全綠、(c) 的 8 條非法轉移全部回 `INVALID_STATE`。
-- **拆單不變量**：任意 cancel/hold/move 序列後，`Σ 所有 FO 的 line item quantity == order line item 可履行數量`（property test）。
+- **拆單不變量**：任意 cancel/hold/move 序列後，FO 對每個 line item 的 quantity 總和 == order line item 可履行數量——**取數排除已被替代的歷史段**（等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`，同 F3.2#2／總綱 S-14 <!-- 2026-08-17 更正（PR #52 第 13 輪）：原「Σ 所有 FO」為雙計形 -->）（property test）。
 - Return 狀態機：(c) 的 7 條非法轉移全部被擋；`REQUESTED → CANCELED` 必須失敗。
 - **F4.1 G3 互鎖**：存在 `REQUESTED`/`OPEN` 的 return 時 `orderCancel` 必失敗；反向亦然。
 - 換貨：建立帶 `exchangeLineItems` 的 return 後，該 FO 必為 `ON_HOLD` ＋ `AWAITING_RETURN_ITEMS`，且 `fulfillmentCreate` 必失敗。

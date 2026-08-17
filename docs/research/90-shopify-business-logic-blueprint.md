@@ -1017,7 +1017,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | `theme.processing_finished` \| `theme.files_upsert_job_completed`（`ours`） | 非同步解壓·驗證結束／`themeFilesUpsert` job 完成 | 12 | 12 | ✅ | 供編輯器解除「寫入中」；client **必須輪詢 job 完成**才算寫入成功 |
 | `page.published` \| `page.unpublished` \| `page.deleted`、`article.published` | `isPublished` 切換或排程 `publishedAt` 到期／硬刪 | 12 | 12 | ✅ | `page.deleted` 攜帶**被連動刪除的 menu_item 清單** |
 | `comment.status_changed` | 留言審核動作或 spam 偵測判定 | 12 | 12 | ✅ | ⚠️ `commentNotSpam` 目標態兩源矛盾（§12 openQuestions） |
-| `redirect.created` \| `redirect.deleted`、`menu.updated` | URL redirect 建立·刪除·CSV 匯入／選單樹變更或被 page 刪除連動 | 12 | 12 | ✅ | redirect 僅在原 URL 判定 404 時生效（§12 C） |
+| `redirect.created` \| `redirect.deleted`、`menu.updated` | URL redirect 建立·刪除·CSV 匯入／選單樹變更或被 page 刪除連動 | 12 | 12 | ✅ | redirect 在原 URL 資源不可渲染時生效——404 與 unpublish 410 皆查（§12 C.5／D.5（2026-08-17 更正，PR #52 第 13 輪）：原「僅 404」與已修引據互斥） |
 | `file.ready` \| `file.failed` \| `file.deleted` | File 離開 PROCESSING／永久刪除 | 12 | 01, 12, 15 | ✅ | ⚠️ `files/*` webhook topic 面未取證；`file.deleted` 攜帶被解除的商品引用與 media 重排結果 |
 | `seo.resource_hidden_changed` | `seo.hidden` metafield 設定／取消，或資源 unpublish | 12 | 01, 11, 12, 15 | ✅ | 對應 410 紀律（§12 E） |
 | storefront `/collect`（第一方追蹤，非 webhook） | pageview／cart add／checkout／Web Vitals | 12 | 14 | ⭕ | §14 E；cookie 同意者、bot 濾除、IP 不落庫 |
