@@ -149,7 +149,7 @@
 ### 0.6 冪等
 寫入型 mutation 一律收 `idempotencyKey`；**強制清單見 `config/limits.yml` 的 `idempotency.required_for`**（含 Shopify 自 2026-04 起強制的 17 個 mutation，以 refund／inventory 為主，缺 key **執行期報錯**；另加本專案強制的 `returnProcess`、`orderCancel`、`orderEditCommit`）。
 
-**本專案另強制的 9 支金流 mutation（55 號盤點補齊）**：`orderCapture`、`orderMarkAsPaid`、`draftOrderComplete`、`giftCardCreate/Credit/Debit/Deactivate`、`storeCreditAccountCredit/Debit`。平台域另有 `required_for_platform`（`platformEinvoiceVoid`、`platformEinvoiceAllowanceCreate`）。
+**本專案另強制的 10 支金流 mutation（55 號盤點補齊；`refundMarkAsSettled` 第 24 輪隨 16 §F5 落地格增列）**：`orderCapture`、`orderMarkAsPaid`、`draftOrderComplete`、`giftCardCreate/Credit/Debit/Deactivate`、`storeCreditAccountCredit/Debit`、`refundMarkAsSettled`。平台域另有 `required_for_platform`（`platformEinvoiceVoid`、`platformEinvoiceAllowanceCreate`）。
 
 **🔴 這 9 支的強制冪等是「法域無關」的**（`limits.idempotency.jurisdiction_scope: core_all_packs`）——金流寫入點是「錢動了」，與賣方有沒有稅務憑證制度無關；在 hk／tw／任何未來 pack 下**完全相同**，**不得**搬進 `jurisdictions.*`。
 **⚠ 但平台域那 2 支相反：它們是 pack-scoped 的**（`required_for_platform_pack_scope: jurisdictions.tw.tax_invoice`）。兩者都是台灣統一發票的專屬 mutation，基準法域 HK 下**根本不存在於 schema**（56 §A.4 CI-3）。CI 對未啟用 tw 的部署要斷言的是「這兩支不存在」，**不是**「這兩支要帶 key」——照 `required_for` 的方式做成無條件斷言，HK 首發的 schema 快照測試會直接紅掉。
@@ -288,7 +288,7 @@
 | 類別 | Queries | Mutations |
 |---|---|---|
 | 試算 | `order.suggestedRefund(refundLineItems, shippingAmount)` → maximumRefundable、按比例分攤結果；`return.suggestedRefund` → `SuggestedReturnRefund`；**`returnCalculate(input: CalculateReturnInput) → CalculatedReturn{returnLineItems, exchangeLineItems, returnShippingFee}`（不建立資料）**；`returnableFulfillments(orderId)` → **可退的 fulfillment line item ＋ 可退數量**（前提：已 delivered） | — |
-| 退款 | `order.refunds` | `refundCreate(input{orderId, refundLineItems[{lineItemId, quantity, restockType, locationId}], refundShipping{amount\|fullRefund}, refundDuties[], transactions[{parentId, amount, kind: REFUND, gateway}], refundMethods[]（原路／store credit）, note, notify}) @idempotent(key:)` |
+| 退款 | `order.refunds` | `refundCreate(input{orderId, refundLineItems[{lineItemId, quantity, restockType, locationId}], refundShipping{amount\|fullRefund}, refundDuties[], transactions[{parentId, amount, kind: REFUND, gateway}], refundMethods[]（原路／store credit）, note, notify}) @idempotent(key:)`, `refundMarkAsSettled(transactionId) @idempotent(key:)`（線下待確認型退款的人工確認——16 §F5 步 3 落地格：權限 `orders.mark_refund_settled`＋二次確認＋audit log，第 24 輪登） |
 | 退貨 | `returns`, `return(id)`（status/returnLineItems/exchangeLineItems/**returnShippingFees**/reverseFulfillmentOrders/refunds/decline） | `returnRequest(input)`→REQUESTED, `returnCreate(returnInput{orderId!, returnLineItems!, exchangeLineItems, returnShippingFee, requestedAt})`→OPEN, `returnApproveRequest`, `returnDeclineRequest(returnId, declineReason!)`, `returnLineItemRemoveFromReturn`, **`returnProcess(input: ReturnProcessInput)`**, `returnCancel(id)`, `returnClose(id)`, `returnReopen(id)`, `reverseFulfillmentOrderDispose`, `reverseDeliveryCreateWithShipping` |
 
 規則：**退款金額走 16-F5.1 的唯一公式**（`refund = max(0, 退貨品項價值 − 退貨費用 − 換貨扣抵 − 未付款額)`）；比例分攤折扣與稅（15 §引擎同源）；退款匯率＝當下（29 §3.4）。
