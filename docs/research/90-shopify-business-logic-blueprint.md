@@ -643,7 +643,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | D-10 | `appliesOncePerCustomer` 由唯一索引 `(shop_id, discount_id, customer_key)` 保證；`customer_key` ＝ email／phone 正規化（小寫化＋gmail 加點變體歸一）後 hash；redemption **綁折扣實體而非碼字串** | §07 C |
 | D-11 | 折扣碼一律 upcase 正規化後寫入，`(shop_id, normalized_code)` 唯一索引；⚠️ 大小寫不敏感官方無正面陳述，僅第三方共識＋普遍實測 | §07 C |
 | D-12 | 折扣型別與 method 建立後**不可變更**；重新啟用（EXPIRED／DEACTIVATED → ACTIVE）**必定清空 `endsAt`**（重啟 ≠ 回復原狀） | §07 B.1 |
-| D-13 | 同一 shop 同時 active 的 automatic 折扣（含 Function 折扣）≤ 25，超出回 `ACTIVE_PERIOD_OVERLAP` | §07 C.1 |
+| D-13 | 同一 shop 的 automatic 折扣（含 Function 折扣）**全區間重疊 ≤ 25**（含未來 startsAt/endsAt 區間；建立/更新/重啟用皆原子驗證（2026-08-17 更正，PR #52 第 15 輪·主動封閉掃）：原「同時 active」漏未來排程形——26 支同未來區間可全過），超出回 `ACTIVE_PERIOD_OVERLAP` | §07 C.1／D.1 |
 | D-14 | store credit debit **永遠先消耗 `expiresAt` 最早的批次**（FEFO；排序＝`ORDER BY expiresAt IS NULL, expiresAt ASC, id ASC`——MySQL 裸 ASC 把 NULL 排最前、永久額度會先被吃 （2026-08-17 更正，PR #52 第 9 輪）；同一把餘額鎖內執行）；`debit_revert` 必須回增到**原批次**；過期時點＝店家時區當日結束 | §07 C／§06 C |
 | D-15 | store credit 只能**整額抵付**；餘額 > 訂單總額時抵到訂單歸零、殘額留帳；每 `(owner, currency)` 恰一戶；結帳只顯示與結帳幣別相符的餘額，不可跨幣併用 | §07 C／§06 C |
 | D-16 | 每客 store credit 總額 < US$15,000 等值（以 integer cents 比較，嚴格小於）；可被 jurisdiction pack 覆蓋 | §07 C.1／§08 C |
@@ -791,7 +791,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-36 | staff 名額併發撞頂 | 邀請與啟用兩路徑 | 名額檢查在 transaction 內以 DB 計數為準（owner／collaborator／POS-only 不計入） | 併發接受最後 1 個名額的兩份邀請 ⇒ 恰 1 成功 | §15 C |
 | X-37 | 進行中的 checkout 被設定變更打斷 | 規則集非快照 | 進入 checkout 時鎖定 presentment 幣別、價格、匯率、稅務規則集；設定變更只影響新 session | checkout 中途改 adjustment_pct／稅設定 ⇒ 該 session 金額不變 | §11 C／§10 C |
 | X-38 | 分析 rollup 重算改動歷史數字 | 重算非冪等 | 事實列以 `occurred_on` 定位、事件重放冪等；nightly 抽最近 3 天全量對帳 | 重放全部事件 ⇒ 每個歷史日聚合值逐位不變 | §14 C／E.2 |
-| X-39 | shipment IN_TRANSIT 三邊帳（origin reserved−/on_hand−、destination incoming+）撕裂 ⚠️ | 跨 location 多列更新 | 同一 transaction 內完成三邊；⚠️ 出帳時點為**我方裁定一**，官方未逐字明文，待實測 | 併發 mark-in-transit 與 origin 調整 ⇒ 恆等式 S-1 在**兩個 location 各自**成立 | §02 B.2／裁定一 |
+| X-39 | shipment IN_TRANSIT 三邊帳（origin reserved−/on_hand−、destination incoming+；**分支同 §02 B.2**——DRAFT 直轉/留空側形另計（2026-08-17 更正，PR #52 第 15 輪·主動封閉掃））撕裂 ⚠️ | 跨 location 多列更新 | 同一 transaction 內完成三邊；⚠️ 出帳時點為**我方裁定一**，官方未逐字明文，待實測 | 併發 mark-in-transit 與 origin 調整 ⇒ 恆等式 S-1 在**兩個 location 各自**成立 | §02 B.2／裁定一 |
 | X-40 | 授權過期掃描 job 與 capture 競態 | 掃描與 capture 各自讀 `authorizationExpiresAt` | capture 前置守衛含 `now < authorizationExpiresAt`，與過期 job 搶同一把授權列行鎖 | 到期瞬間併發 capture ⇒ 不得既 EXPIRED 又 capture 成功 | §05 C／F.3-4 |
 
 ---
@@ -1201,7 +1201,7 @@ flowchart TD
 | T1 | 04 訂單 → 02 庫存 | `(inventory_item_id, location_id, qty)` | 訂單成立扣減：`available−N` / `committed+N`，`on_hand` 不變——**僅 tracked 品項行**（digital/untracked 行無 InventoryLevel，動帳下溢或失敗，跳過本列，§02 B.1（2026-08-17 更正，PR #52 第 11 輪））。`inventoryPolicy=DENY` 時必須條件式 `UPDATE ... WHERE available >= N`，結果不得落負 | affected rows = 0 ⇒ 整張訂單 reject（超賣防線唯一落點，cart/checkout 全程只軟檢查、不 hold） | §02 C.1、§03 C.13、§03 D |
 | T2 | 04 訂單 → 07 折扣 | `discount_id`、`customer_key` | 用量原子扣減：`UPDATE ... SET usage_count = usage_count + 1 WHERE usage_limit IS NULL OR usage_count < usage_limit`；`appliesOncePerCustomer` 靠 `(shop_id, discount_id, customer_key)` 唯一索引 | affected rows = 0 ⇒ 折扣失效並回報「已用完」（我方強一致，取代本尊弱一致的 `asyncUsageCount`） | §07 C、§07 D |
 | T3 | 09 履約 → 02 庫存 | `(fulfillment_order_id, line_items, location_id)` | `fulfillmentCreate`：`committed−N` / `on_hand−N`，`available` 不變；FO 累加必須條件式 `WHERE fulfilled_quantity + ? <= quantity` | 條件不成立 ⇒ reject（防兩名 staff 同時全量出貨成兩單） | §09 C.1、§02 C.1 |
-| T4 | 02 庫存（transfer）→ 02 庫存（两地點） | shipment 品項與數量 | shipment 標記 IN_TRANSIT 同一交易：origin `reserved−N`、origin `on_hand−N`、destination `incoming+N` | 差額全整數，任一步失敗整批 rollback | §02 裁定一 ⚠️ **官方未逐字明文，需 parity 實測** |
+| T4 | 02 庫存（transfer）→ 02 庫存（两地點） | shipment 品項與數量 | shipment 標記 IN_TRANSIT 同一交易（**分支見 §02 B.2**：本列僅 READY_TO_SHIP 段＋雙邊皆內部地點形；DRAFT 直轉＝`available−`／`on_hand−`；origin/destination 留空＝該側不記帳（2026-08-17 更正，PR #52 第 15 輪·主動封閉掃））：origin `reserved−N`、origin `on_hand−N`、destination `incoming+N` | 差額全整數，任一步失敗整批 rollback | §02 裁定一 ⚠️ **官方未逐字明文，需 parity 實測** |
 | T5 | 06 退款 → 05 金流 / 02 庫存 / 13 outbox | refund 明細、restock 指令 | 單一本地 transaction 內完成：`refund` + `refund_line_items` + `OrderTransaction(pending)` + restock + outbox；**PSP 呼叫必須在 transaction 之外** | 先打 PSP 再落庫 ＝ 退了錢沒紀錄；PSP 失敗以同一 `idempotencyKey` 重試 | §06 C（寫入順序鐵則）、鐵律 5 |
 | T6 | 04 草稿轉正 → 04 / 02 / 15 | draft id | 同生共死：建立 Order（取新訂單序號）＋庫存扣減／保留＋`draft.status=COMPLETED`＋`completed_at`/`order_id` 回填＋metafields 單向複製 | 任一步失敗全部 rollback；序號只進不退，取消／刪除不回收 | §04 D4、§04 C |
 | T7 | 06 退貨 → 04 訂單（互鎖） | `order_id` | 存在 active return（`REQUESTED`/`OPEN`）⇒ `orderCancel` 必須拒絕；判定與取消需同一交易內鎖定 | 否則會出現「取消訂單與建退貨同時成功」 | §06 C、§04 C |
@@ -1907,7 +1907,7 @@ taxes:
   ca_small_supplier_threshold_cents: 3000000    # §10 C.6（CAD $30,000）
   ca_tax_rates_ppm: { GST: 50000, HST_ON: 130000, HST_NS: 140000, HST_NB: 150000, PST_BC: 70000, RST_MB: 70000, QST_QC: 99750, PST_SK: 60000 }  # §10 C.6；ppm＝百萬分率整數（tax = amount × rate_ppm / 1_000_000）——QST 9.975% 在 bp 尺度是 997.5 非整數，違反「rate 一律整數」鐵律，全表升 ppm <!-- 2026-08-17 更正（PR #52 第 5 輪） -->
   de_minimis_cents: { CA: 2000, MX_duty: 5000, MX_tax: 11700, AU_duty: 100000, EU: 15000, JP: 1000000, US: null }  # §10 C.7（US 自 2025-08-29 起無 de minimis）
-  duties_transaction_fee_bp: { shopify_payments: 85, other: 150 }  # ⚠️ §10 C.7：另有 0.5% 限時價需複核；M4 不做 duties
+  duties_transaction_fee_bp: null           # §10 C.7 可配置商業參數（同 conversion_fee 原則（2026-08-17 更正，PR #52 第 15 輪·主動封閉掃）：本尊費率不作我方預設）；本尊參考值 shopify_payments 85／other 150 bp、另有 0.5% 限時價待複核；M4 不做 duties
   clothing_exemption_thresholds_cents: { NY: 11000, MA: 17500, RI: 25000 }  # §10 C.5（另 NJ 全免；PA/VT/MN 適用）
 
 markets:

@@ -930,6 +930,7 @@ returns ────────────────────────
 > <!-- 依 46a:959–963、46a:988–989 補寫，原文逐字：「**文檔未載明** OrderEditSession 的鎖機制、TTL、或同一訂單並發編輯的行為」；
 >      「唯一的併發線索：`orderEditBegin` 回傳 `orderEditSession`，暗示 session 是具名資源，**但文檔未說明兩個 session 同時開啟會發生什麼**」。
 >      46a §8⑦-42/43 逐字建議：「同一訂單同時只允許一個 open 的 edit session（DB unique index on `order_id where committed_at is null`），第二個 begin 回 `userErrors` 帶 `INVALID_STATE`。
+>      （我方落地鍵＝`UNIQUE(shop_id, order_id)`，鐵律 2 複合索引 shop_id 開頭——上句為 46a 原文引述，鍵形以總綱 X-19 為準 <!-- 2026-08-17 註（PR #52 第 15 輪） -->）
 >      要在程式碼註明『Shopify 未載明，此為本專案決策』」「Session TTL 自訂（建議 24h，與冪等 TTL 對齊），逾時自動丟棄，寫進 `config/limits.yml`」。 -->
 
 **⚠ 這整節是「Shopify 文檔未載明 → 本專案決策」**（46a 自己標的空白處，`limits.order.edit_session_*` 已於 P0 輪落地，本節是它的規格面）。
