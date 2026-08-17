@@ -771,7 +771,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-16 | 商品編輯 **last-write-wins 靜默覆蓋**（不是超賣，但是商品域第一要害） | 全欄位覆寫式 update | 帶版本或欄位級 diff 比對；選項增刪時既有 `variant.id` 必須保持不變 | 兩人同時改不同欄位 ⇒ 兩邊修改都保留，或後者收衝突提示 | §01 C |
 | X-17 | 變體／選項數併發撞頂（笛卡兒積自動生成） | 信 UI 快照計數 | 上限檢查在 transaction 內**以 DB 計數為準** | 併發批量建變體 ⇒ 總數不得超過 `max_product_variants` | §01 C |
 | X-18 | 排程發布到點時商品已被改為 DRAFT | 套用排程當下的快照 | job 到點**重讀 `product.status`** 驗證仍為 ACTIVE | 排程期間改 status ⇒ 到點不發布 | §01 C |
-| X-19 | **同一 order 併發開兩個 edit session** | 無鎖 | 單開鎖＝生成欄 `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)` ＋ TTL 24h（鐵律 2 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪；MySQL 8 可建形第 16 輪——無 partial index，唯一索引多筆 NULL 並存故歷史 session 不擋，58 §G.3 waybill 同法））；重複 begin 回 `INVALID_STATE` | 併發兩次 `orderEditBegin` ⇒ 恰 1 成功 | §04 C |
+| X-19 | **同一 order 併發開兩個 edit session** | 無鎖 | 單開鎖＝生成欄 `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)` ＋ TTL 24h（鐵律 2 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪；MySQL 8 可建形第 16 輪——無 partial index，唯一索引多筆 NULL 並存故歷史 session 不擋，58 §D.5(b) waybill 同法（2026-08-17 更正，PR #52 第 17 輪）：原引 §G.3 為金額轉換節、先例實在 §D.5(b)））；重複 begin 回 `INVALID_STATE` | 併發兩次 `orderEditBegin` ⇒ 恰 1 成功 | §04 C |
 | X-20 | 訂單序號重複／跳號 | per-shop 序列無鎖 | per-shop 序號產生器加鎖；取消／刪除不回收號碼 | N 執行緒併發建單 ⇒ 號碼連續且無重複 | §04 C／§15 |
 | X-21 | 同一 cart token 多分頁併發加購產生重複行 | 合併鍵判定在應用層 | 行級 upsert ＋ `(shop_id, cart_id, 合併鍵)` 唯一索引（鐵律 2（2026-08-17 更正，PR #52 第 12 輪）） | 兩分頁同時 add 同一 variant/properties ⇒ 恰一行、quantity 相加 | §03 C |
 | X-22 | 棄單挽回 job 與買家自行完購競態 | 六條不寄條件是時變的 | 寄出前**重查六條**；先到先贏且冪等 | 完購與寄信 job 併發 ⇒ 不得寄出 | §03 C |

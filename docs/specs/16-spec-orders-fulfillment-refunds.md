@@ -937,7 +937,7 @@ returns ────────────────────────
 
 | # | 規則 | 落地 |
 |---|---|---|
-| C1 | **同一訂單同時只允許一個 open session** | DB 唯一索引＝**生成欄** `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)`——MySQL 8 無 partial index、唯一索引多筆 NULL 並存故歷史 session 不擋（58 §G.3 waybill 生成欄同法；鐵律 2 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 16 輪）：原「部分唯一索引 (order_id) WHERE …」MySQL 8 建不出且無 shop_id -->）（`limits.order.edit_session_single_open_per_order: true`）；第二個 `orderEditBegin` 回 `userErrors{code: INVALID_STATE}` 並帶持有者 staff 名稱與開始時間 |
+| C1 | **同一訂單同時只允許一個 open session** | DB 唯一索引＝**生成欄** `open_flag`（open ⇒ 1；committed/abandoned ⇒ NULL）＋ `UNIQUE(shop_id, order_id, open_flag)`——MySQL 8 無 partial index、唯一索引多筆 NULL 並存故歷史 session 不擋（58 §D.5(b) waybill 生成欄同法（第 17 輪更正：原引 §G.3 錯節）；鐵律 2 shop_id 開頭 <!-- 2026-08-17 更正（PR #52 第 16 輪）：原「部分唯一索引 (order_id) WHERE …」MySQL 8 建不出且無 shop_id -->）（`limits.order.edit_session_single_open_per_order: true`）；第二個 `orderEditBegin` 回 `userErrors{code: INVALID_STATE}` 並帶持有者 staff 名稱與開始時間 |
 | C2 | **TTL 24 小時**，與冪等 TTL 對齊 | `limits.order.edit_session_ttl_hours: 24`；`expires_at = started_at + TTL`；hourly job 把逾期 session 標 `abandoned_at` |
 | C3 | 逾期 session 的 commit | 一律拒絕（`INVALID_STATE`）——不可讓 24 小時前的暫存值套用到已被別人改過的訂單 |
 | C4 | commit 前**重驗訂單版本** | `orders.lock_version` 在 begin 時快照，commit 時比對；不一致 → 拒絕並要求重開 session（樂觀鎖） |
