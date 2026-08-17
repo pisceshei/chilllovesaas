@@ -202,7 +202,7 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   `docs/specs/91-pit-register.md`——該檔尚未建立、排查階段 PR-E1 引入，建立前登記於
   PR 描述）。全文＝CLAUDE.md §驗收基準。
 - 🔴 **提交前復核（2026-08-17 新增鐵律 15，全文與沿革見 CLAUDE.md／該輪 worklog）**：
-  push 前逐項對照——宣稱已修復者對 `git diff origin/main...HEAD` 有 hunk、
+  push 前逐項對照——宣稱已修復者於已提交差異（首輪對 PR base、回應輪對上輪已審 HEAD）有對應 hunk、
   ②⚪ 核對登記存在、③核對證據或其可存取引用存在；順序＝修復→閘門→commit→
   逐項核對→**重拉兩種留言（push 前最後動作，首推豁免）**→push；
   全收定論只寫核對後 PR 留言；閘門後動檔＝重來。
