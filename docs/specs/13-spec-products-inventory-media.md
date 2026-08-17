@@ -274,7 +274,7 @@ WHERE p.shop_id = :shop_id
 **生產級做法**：
 1. handle 生成：標題 → transliterate 拉丁化；**中文標題不轉拼音**，改用「允許 unicode handle（URL encode）」或 fallback `product-{n}`——demo 選 unicode handle（`/products/棉質短T` 可用），SEO 欄位另存。
 2. 唯一性 `(shop_id, handle)` 唯一索引；衝突自動 `-1` `-2` 後綴。
-3. 改 handle → `url_redirects` 表自動寫 301（old_path → new_path），storefront 404 前先查 redirect 表。
+3. 改 handle → `url_redirects` 表自動寫 301（old_path → new_path），storefront **資源不可用回應（404 與 unpublish 410）前**先查 redirect 表（範圍同 90-blueprint/12 C.5 <!-- 2026-08-17 更正（PR #52 第 14 輪）：原「404 前」漏 410 形 -->）。
 4. SEO title/description 欄位留空時 fallback 到標題/描述截斷（view helper 一處實作）。
 
 **⚠️ 坑**：URL encode 後的 unicode handle 在部分分享場景很醜——給商家「編輯 handle」欄位即可自救；redirect 表要防循環（A→B→A），寫入時檢查目標是否也在表裡。

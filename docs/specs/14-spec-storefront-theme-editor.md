@@ -70,7 +70,7 @@ end
 **生產級做法**：
 1. 每頁 title/meta/canonical/og tags 由一個 `SeoTags` helper 統一輸出（規則照 03 §6）；商品頁加 JSON-LD（Product schema：名稱、價格、幣別、庫存狀態）。
 2. sitemap：nightly job 生成分頁 sitemap.xml（products/collections/pages）存 Active Storage，`/sitemap.xml` 302 過去；50k URL 分檔。
-3. `url_redirects` 查詢掛在 404 handler 前（13-F2）。
+3. `url_redirects` 查詢掛在**資源不可用（404／unpublish 410）handler 前**（13-F2；範圍同 90-blueprint/12 C.5 <!-- 2026-08-17 更正（PR #52 第 14 輪）：原「404 handler 前」漏 410 形 -->）。
 4. menus：巢狀 ≤3 層在存檔端強制；前台渲染遞迴 partial + 快取。
 
 **⚠️ 坑**：JSON-LD 價格要跟頁面顯示一致（同一個 money formatter）；sitemap 別即時生成（大店會被爬掛）；分頁頁（?page=2）canonical 指向自身而非第一頁，`rel=prev/next` 已棄用不用管。
