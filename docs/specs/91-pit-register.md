@@ -1,0 +1,263 @@
+# 91 — 坑登記簿（Pit Register）
+
+> 重啟計畫 E 軌主檔（PR-E1 立骨架，2026-08-17）。用途：把全部歷史事故（死控件／假數字／
+> 假成功／假憑證／文檔漂移⋯）收割成**按根因去重**的坑條目，每坑帶預防機制與複驗指令，
+> **禁止同一個坑踩第二次**。與鄰檔關係：92＝宣稱/假憑證清查（A 軌）、93＝響應式複驗
+> （C 軌）、94＝網路取證索引（D 軌）、95＝重做需求總綱（F 軌，反向連結本檔坑編號）。
+> 驗收方 ⚪（範圍外觀察）的法定去處＝本檔（CLAUDE.md 驗收基準）；本檔建立前的 ⚪
+> 積壓自 PR #52 描述轉入（§3）。
+
+## §0 使用規約
+
+### 0.1 單坑七欄 schema（缺一欄＝條目不完整，不得標結案）
+
+| 欄 | 內容 | 紀律 |
+|---|---|---|
+| ① 形態分類 | F1–F12 之一（§0.2；可擴，擴類須在本表加列） | 按**症狀形態**歸類 |
+| ② 嚴重度／狀態 | 嚴重度 `P0/P1/P2`；狀態 `open/機制已立/明文接受/結案` | 「結案」唯有複驗指令實跑通過 |
+| ③ 事故經過 | 何時、何處、怎麼發現（引 worklog/handoff/判詞出處） | 引文帶檔:行 |
+| ④ 根因 | **直接根因＋系統性根因**兩層都要 | 去重按根因不按症狀 |
+| ⑤ 預防機制 | 機制名（CI 閘門／schema 約束／流程步驟） | 🔴 **不接受「更小心」**類答案 |
+| ⑥ 對應 CI 閘門 | `既有：<腳本名>`｜`擬建：G-xx（入 §2）`｜`明文不可機制化＋理由` | 三選一必填 |
+| ⑦ 複驗指令 | 可重跑的命令或步驟（grep／腳本／頁面操作序列） | 「我確認過」不算 |
+
+### 0.2 形態分類 F1–F12（初版；可擴）
+
+| 代碼 | 形態 | 典型例（來源見各條目） |
+|---|---|---|
+| F1 | 死控件（onclick 缺失/被攔截/無 handler） | 原型死控件基準線 |
+| F2 | 假數字（顯示值與資料不同源或虛構） | pulse≠列表 count |
+| F3 | 假成功（無後端效果的成功 toast/狀態） | toast 綠但未寫入 |
+| F4 | 假憑證（驗證宣稱無可重跑腳本/快照） | 34 §7「120/120 PASS」腳本在 /tmp |
+| F5 | 副本漂移（同一規則多副本互斥/漏同步） | R-11 家族九份副本（PR #52 六輪） |
+| F6 | 引用失真（引節錯/出處錯/斷章） | waybill §G.3→§D.5(b)；F5↔F4.4 |
+| F7 | 值域缺陷（enum 自造/漏值/越界/狀態名誤用） | INVALID_TRANSACTION_KIND 自造碼；checkout `active` |
+| F8 | 狀態機缺陷（不可達出口/非法轉移/寫死狀態） | 無 PSP 退款的 SUCCESS 出口不可達 |
+| F9 | 租戶隔離缺陷（謂詞/索引缺 shop_id） | refundMarkAsSettled 謂詞初版 |
+| F10 | 回歸（修 A 壞 B；點修致家族互斥） | #53 四輪自傷；03:124 修一半 |
+| F11 | 計數腐化（裸數字/枚舉過期/全稱宣稱無查法） | 「487 條唯一 URL」；「9 支」清單 |
+| F12 | 閘門失效（CI 該擋沒擋/掃描盲區/反竄改誤傷） | doc-claims diff 制看不到未提交行 |
+
+### 0.3 登記與結案流程
+
+1. **來源**：驗收判詞 ⚪／歷史收割（附錄 A）／輪次中自報。先入 §3 暫存（原文＋來源＋日期），
+   收割輪展開成 §1 七欄條目；同根因者併條、症狀列於同條。
+2. **編號**：`K-###` 順序遞增，永不重用；被合併的條目留空殼指向存留條目。
+3. **結案**：⑦ 複驗指令實跑通過＋⑤ 機制已落地（或②標「明文接受」帶裁定出處）。
+4. **G-xx**：⑥ 選「擬建」者同步在 §2 開列；§2 每條必須寫「建的代價」，逐條裁定建/不建。
+
+## §1 坑條目
+
+> 骨架輪未展開條目。首批條目由附錄 A 收割輪產出；展開順序＝先 P0 家族
+> （假憑證/租戶隔離/金額），後敘事類。
+
+（待收割輪填入，`K-001` 起）
+
+## §2 閘門缺口表（G-xx）
+
+| 編號 | 擬建閘門 | 防的坑（K-###） | 建的代價 | 裁定（建/不建/待） |
+|---|---|---|---|---|
+| （待收割輪填入，`G-01` 起） | | | | |
+
+## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
+
+> 來源＝PR #52 描述 ⚪ 段全量轉入（2026-08-17，PR-E1；原文照錄、僅加轉入標頭）。
+> 展開時按根因併條；「已於 #52 輪內處理」者展開時直接標結案候選。
+
+### 3.1 自 PR #52 首輪起累積
+
+- 103 個狀態機／111 條事件：考掘當時點算之快照，固定計法未補（驗收方點算 §3 表 89＋19=108、§5.1 資料列 90）——轉入時屆補計法或修數【F11】
+- 487 條官方來源 URL：已於 #52 改快照標記（HANDOFF.md＋handoff §①）——結案候選【F11】
+- HANDOFF.md:126 過時「尚未有代碼」行：已於 #52 順手更新——結案候選【F5】
+- B2B「全域取最低價」舊式五處：46b:940／29:243／28:500／74:81／specs/54:428——重建 Phase R 收斂；specs/55 §B.3 tax_bp 表示法（尺度後綴宣告制回寫）；closed 判定式倉庫外三處：specs/16:232／research/06:111／specs/50:21（46a:152 為官方取證檔照錄不改）【F5】
+- Q-86×2 的 M0 前置列位 vs §7 時點欄 M1 的矛盾：處置＝§9.2 M0 前置未決欄該兩格屬「刻意提前問」——登記為刻意提前、§7 時點欄不改【F5·明文接受候選】
+- 15-F5 回寫完成後，總綱三處「該去改 15-F5」指示句成陳舊指示（§2.4 M1／§6.2 D-32／03 章 F.2#5）——複驗：`grep -rn "15-F5" docs/research/90*` 補「已回寫（PR #52）」註記【F5】
+- limits.yml:765 informational 鍵以 float 主單位率 0.0175 表示，與總綱 §8 規則③口徑不合（informational-only 鍵是否豁免無明文）——下次動 limits.yml 時釐清【F7】
+
+### 3.2 自 bot 第 17–24 輪判詞 ⚪
+
+- specs/14:27「publish＝單一 transaction 內兩筆 UPDATE 原子切換」與 X-30 序列化鎖同族——X-30 家族收斂時一併補鎖【F5】
+- specs/18:11「payload 只帶 ID 與必要摘要、消費時再查現值」與 A1 凍結規則張力——08 章已把 event payload 列入匿名化 PII 清單（crypto-shredding），18:11 措辭待 A1 家族收斂時同步【F5】
+- F8.2 逾期未掃窗口；redirect 掛點家族餘四處（62:515／67:844／limits.yml:3605／原型 :7941·:10681）；specs/52:68 拆單舊形；specs/19 F1 主公式；doc-claims 歷史層警告（條數見腳本輸出，第 4 條＝worklog 總綱合成 :510）【F5/F11】
+- 03-cart-checkout.md:124 更正註記把「admin orderCreate PENDING 單」列進「停在 open」後果——orderCreate 不經 Checkout、無 open 態可停；僅註記舉例越界（敘事層）【F6】
+- specs/50:45 S-28 仍寫「Checkout active → completed / abandoned」——與正典三值互斥，形態同 #52 第 21 輪修的 specs/15 兩處【F7】
+- specs/18:79／specs/39:598／39:167 三處硬編「64KB」與 `outbound_http.webhook_response_bytes_max` 同值四份持有——下次調值需四處同改【F5】
+- specs/55:79（M09 refundCreate）仍是拆型前單一出口形——R-11 家族出 PR 後收斂【F5·F8】
+- 12:308 staged 路徑豁免 20MB 抓取上限後，image/generic 走 staged 時預檢缺入參；12:312 未寫 presigned POST 帶 content-length-range——下次動 12 章時釘明【F8】
+- 「先落 pending 再打金流」未分支 pending 形三處（22:32 Refund 列、原型 chilllove-admin-v2.html:3963 與 :10919-20 toast 文案）；specs/50:33 S-16 單一出口舊形；16:278 枚舉待下次動 F5 補全【F5】
+- specs/55 §A 總表未含 refundMarkAsSettled 列（M42）——limits.yml required_for 增列處已互指，55 下次更新時補列【F5】
+- refundMarkAsSettled 名稱 resource 邊界案例（名為 refund、被改的列是 OrderTransaction）——改名與否待裁定；謂詞已補 kind 限定、實害已閉【F7·裁定候選】
+- limits.yml:547「與前面 22 支的差別」計數陳舊（main 既有 49ca498 引入）——下次動該註釋時改指標句【F11】
+- 15:213／:221／:428 三處「COD 走 manual gateway」與 15:442 把 cod 列獨立值互斥——(kind,gateway) 值域表釘時兩處對齊（16:271 已標待釘）【F7】
+- 16:399／:400 兩既有碼（REFUND_EXCEEDS_MAXIMUM_REFUNDABLE／REFUND_CONCURRENT_MODIFIED）不在 28:312 正典 26 值內——正典表增列或標領域碼歸屬待裁定【F7】
+- orders.mark_refund_settled 不適用 limits sensitive_permissions 清單（本尊 help 名單，over_refund 同形）——僅登記【F7】
+- 05:214-216 金流狀態轉移表觸發欄（「部分退款」／「全額退款」）未帶 SUCCESS 限定——R-11 家族下次收斂時一併看【F5】
+- 13 D.6（A1 引為出處的節）通篇未提「凍結 payload」——沉默非矛盾，A1 家族收斂時補【F5】
+
+## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
+
+> 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
+> 也要勾，代表「讀過、無新坑」）。**完成判準**＝全部勾完後，隨機抽 5 份 worklog
+> 復讀，漏抓率 0 才算收（抽樣記錄附於本節末）。
+> 名單複驗：`git ls-files docs/worklog docs/handoff | wc -l`（本清單生成於 PR-E1，
+> 之後新增檔案隨輪補列）。
+
+### A.1 worklog
+
+- [ ] `docs/worklog/2026-08-13-M0骨架移植改造.md`
+- [ ] `docs/worklog/2026-08-13-admin稽核第三輪.md`
+- [ ] `docs/worklog/2026-08-13-ci-auto-merge-gate.md`
+- [ ] `docs/worklog/2026-08-13-hreflang鍵漂移修正.md`
+- [ ] `docs/worklog/2026-08-13-parity-R10市場.md`
+- [ ] `docs/worklog/2026-08-13-parity-R1成長區.md`
+- [ ] `docs/worklog/2026-08-13-parity-R2b全域chrome首頁收尾.md`
+- [ ] `docs/worklog/2026-08-13-parity-R2首頁指標系統.md`
+- [ ] `docs/worklog/2026-08-13-parity-R3設定五頁.md`
+- [ ] `docs/worklog/2026-08-13-parity-R4財務帳單.md`
+- [ ] `docs/worklog/2026-08-13-parity-R5顧客線.md`
+- [ ] `docs/worklog/2026-08-13-parity-R6折扣.md`
+- [ ] `docs/worklog/2026-08-13-parity-R7訂單線.md`
+- [ ] `docs/worklog/2026-08-13-parity-R8產品線子頁.md`
+- [ ] `docs/worklog/2026-08-13-parity-R9內容與線上商店.md`
+- [ ] `docs/worklog/2026-08-13-parity-sweep-R0主清單.md`
+- [ ] `docs/worklog/2026-08-13-文檔債同步.md`
+- [ ] `docs/worklog/2026-08-13-本機環境部署與M0全套實測.md`
+- [ ] `docs/worklog/2026-08-13-移除translations-market-id.md`
+- [ ] `docs/worklog/2026-08-13-金額規格M7M8M9結案.md`
+- [ ] `docs/worklog/2026-08-14-89號剩餘缺陷清掃.md`
+- [ ] `docs/worklog/2026-08-14-A1撤銷術語.md`
+- [ ] `docs/worklog/2026-08-14-A3快照欄.md`
+- [ ] `docs/worklog/2026-08-14-A5發布模型.md`
+- [ ] `docs/worklog/2026-08-14-CI全紅修復.md`
+- [ ] `docs/worklog/2026-08-14-PR24驗收修復.md`
+- [ ] `docs/worklog/2026-08-14-merge-R11-R13.md`
+- [ ] `docs/worklog/2026-08-14-parity-R11分析.md`
+- [ ] `docs/worklog/2026-08-14-parity-R12設定.md`
+- [ ] `docs/worklog/2026-08-14-parity-R13管道.md`
+- [ ] `docs/worklog/2026-08-14-review回應.md`
+- [ ] `docs/worklog/2026-08-14-原型P0四條修復.md`
+- [ ] `docs/worklog/2026-08-14-欄位設定假成功訊息.md`
+- [ ] `docs/worklog/2026-08-14-死控件lint-review三輪.md`
+- [ ] `docs/worklog/2026-08-14-死控件lint-review二輪.md`
+- [ ] `docs/worklog/2026-08-14-死控件lint規則.md`
+- [ ] `docs/worklog/2026-08-14-白名單一致性.md`
+- [ ] `docs/worklog/2026-08-14-裁定D8-D11與PR12合併.md`
+- [ ] `docs/worklog/2026-08-14-驗收maxturns事故.md`
+- [ ] `docs/worklog/2026-08-15-CI對等性機制化.md`
+- [ ] `docs/worklog/2026-08-15-PR29-review修正.md`
+- [ ] `docs/worklog/2026-08-15-PR29驗收修正-送款位數閘門.md`
+- [ ] `docs/worklog/2026-08-15-PSP單位邊界.md`
+- [ ] `docs/worklog/2026-08-15-SKU索引降級.md`
+- [ ] `docs/worklog/2026-08-15-allowlist語法修正.md`
+- [ ] `docs/worklog/2026-08-15-codex改為只做驗收.md`
+- [ ] `docs/worklog/2026-08-15-effort等級敘述更正.md`
+- [ ] `docs/worklog/2026-08-15-limits-yaml布林鍵陷阱.md`
+- [ ] `docs/worklog/2026-08-15-limits回歸測試覆蓋缺口.md`
+- [ ] `docs/worklog/2026-08-15-mutation寫入地基.md`
+- [ ] `docs/worklog/2026-08-15-userErrors契約對齊本尊.md`
+- [ ] `docs/worklog/2026-08-15-workflow語法閘門.md`
+- [ ] `docs/worklog/2026-08-15-冪等指紋.md`
+- [ ] `docs/worklog/2026-08-15-商品四態UNLISTED.md`
+- [ ] `docs/worklog/2026-08-15-執行位元閘門抽出與補洞.md`
+- [ ] `docs/worklog/2026-08-15-對等性檢查器補上反向證明.md`
+- [ ] `docs/worklog/2026-08-15-建店預設管道.md`
+- [ ] `docs/worklog/2026-08-15-引用保真與執行位元.md`
+- [ ] `docs/worklog/2026-08-15-業務邏輯十五章考掘.md`
+- [ ] `docs/worklog/2026-08-15-業務邏輯總綱合成.md`
+- [ ] `docs/worklog/2026-08-15-水位漏改造成的假診斷.md`
+- [ ] `docs/worklog/2026-08-15-金額CI執法.md`
+- [ ] `docs/worklog/2026-08-15-金額值物件R1R4.md`
+- [ ] `docs/worklog/2026-08-15-驗收fallback四路分辨.md`
+- [ ] `docs/worklog/2026-08-15-驗收失敗的假歸因.md`
+- [ ] `docs/worklog/2026-08-15-驗收失敗看不到原因.md`
+- [ ] `docs/worklog/2026-08-15-驗收恢復後的兩項修正.md`
+- [ ] `docs/worklog/2026-08-15-驗收模型改回Opus5.md`
+- [ ] `docs/worklog/2026-08-15-驗收機器人推理強度.md`
+- [ ] `docs/worklog/2026-08-15-驗收閉環收斂機制.md`
+- [ ] `docs/worklog/2026-08-15-驗收閉環第四種失效.md`
+- [ ] `docs/worklog/2026-08-15-驗收閉環舊結論復用.md`
+- [ ] `docs/worklog/2026-08-16-T1實測-變體刪除語義.md`
+- [ ] `docs/worklog/2026-08-16-T4實測-最後一個變體.md`
+- [ ] `docs/worklog/2026-08-16-變體選項join表.md`
+- [ ] `docs/worklog/2026-08-16-鐵律13-14與驗收改制.md`
+- [ ] `docs/worklog/2026-08-16-驗收判詞改制.md`
+- [ ] `docs/worklog/2026-08-16-驗收只會通過的根因.md`
+- [ ] `docs/worklog/2026-08-16-驗收模型改回fable5.md`
+- [ ] `docs/worklog/2026-08-16-黃燈清理.md`
+- [ ] `docs/worklog/2026-08-17-鐵律15提交前復核.md`
+- [ ] `docs/worklog/README.md`
+
+### A.2 handoff
+
+- [ ] `docs/handoff/2026-08-12-carrier-integration.md`
+- [ ] `docs/handoff/2026-08-12-follow-shopify-and-prototype-sync.md`
+- [ ] `docs/handoff/2026-08-12-hk-baseline-p0-execution.md`
+- [ ] `docs/handoff/2026-08-12-jurisdiction-architecture.md`
+- [ ] `docs/handoff/2026-08-12-measurement-audit-p0p1-money-tax.md`
+- [ ] `docs/handoff/2026-08-12-open-decisions.md`
+- [ ] `docs/handoff/2026-08-12-product-1to1-and-money-boundary.md`
+- [ ] `docs/handoff/2026-08-12-rulings-carrier-product-alignment.md`
+- [ ] `docs/handoff/2026-08-12-ui-p0-batch-and-jurisdiction-sweep.md`
+- [ ] `docs/handoff/2026-08-13-SESSION-EXPORT.md`
+- [ ] `docs/handoff/2026-08-13-admin稽核第三輪與中止.md`
+- [ ] `docs/handoff/2026-08-13-parity-R10市場.md`
+- [ ] `docs/handoff/2026-08-13-parity-R3與RTE考證.md`
+- [ ] `docs/handoff/2026-08-13-parity-R4財務帳單.md`
+- [ ] `docs/handoff/2026-08-13-parity-R5顧客線.md`
+- [ ] `docs/handoff/2026-08-13-parity-R6折扣.md`
+- [ ] `docs/handoff/2026-08-13-parity-R7訂單線.md`
+- [ ] `docs/handoff/2026-08-13-parity-R8產品線子頁.md`
+- [ ] `docs/handoff/2026-08-13-parity-R9內容與線上商店.md`
+- [ ] `docs/handoff/2026-08-13-完整性清單.md`
+- [ ] `docs/handoff/2026-08-13-環境雲端與parity前四輪.md`
+- [ ] `docs/handoff/2026-08-13-還原上雲與三輪清債.md`
+- [ ] `docs/handoff/2026-08-13-開場白-給新的claude.md`
+- [ ] `docs/handoff/2026-08-13-雲端接手指南.md`
+- [ ] `docs/handoff/2026-08-14-A1撤銷術語.md`
+- [ ] `docs/handoff/2026-08-14-A3快照欄.md`
+- [ ] `docs/handoff/2026-08-14-A5發布模型.md`
+- [ ] `docs/handoff/2026-08-14-merge-R11-R13.md`
+- [ ] `docs/handoff/2026-08-14-parity-R11分析.md`
+- [ ] `docs/handoff/2026-08-14-parity-R12設定.md`
+- [ ] `docs/handoff/2026-08-14-parity-R13管道.md`
+- [ ] `docs/handoff/2026-08-14-review回應與白名單修正.md`
+- [ ] `docs/handoff/2026-08-14-原型P0修復與缺陷複驗.md`
+- [ ] `docs/handoff/2026-08-14-欄位設定與逐檢視隔離.md`
+- [ ] `docs/handoff/2026-08-14-死控件機制化.md`
+- [ ] `docs/handoff/2026-08-14-裁定D8-D11與PR12合併.md`
+- [ ] `docs/handoff/2026-08-15-CI對等性機制化.md`
+- [ ] `docs/handoff/2026-08-15-PR1-schema對齊.md`
+- [ ] `docs/handoff/2026-08-15-PR1寫入路徑地基.md`
+- [ ] `docs/handoff/2026-08-15-limits回歸測試覆蓋缺口.md`
+- [ ] `docs/handoff/2026-08-15-limits鍵型別機制化.md`
+- [ ] `docs/handoff/2026-08-15-shopify業務邏輯總綱.md`
+- [ ] `docs/handoff/2026-08-15-workflow語法閘門.md`
+- [ ] `docs/handoff/2026-08-15-執行位元閘門抽出與補洞.md`
+- [ ] `docs/handoff/2026-08-15-引用保真與執行位元.md`
+- [ ] `docs/handoff/2026-08-15-驗收九輪不收斂.md`
+- [ ] `docs/handoff/2026-08-15-驗收失敗的假歸因.md`
+- [ ] `docs/handoff/2026-08-15-驗收模型改回Opus5.md`
+- [ ] `docs/handoff/2026-08-15-驗收機器人全滅與復原.md`
+- [ ] `docs/handoff/2026-08-15-驗收閉環修復與分工改制.md`
+- [ ] `docs/handoff/2026-08-16-變體選項join表.md`
+- [ ] `docs/handoff/2026-08-16-鐵律13-14與驗收改制.md`
+- [ ] `docs/handoff/2026-08-16-驗收判詞改制.md`
+- [ ] `docs/handoff/2026-08-16-黃燈清理.md`
+- [ ] `docs/handoff/2026-08-17-鐵律15提交前復核.md`
+
+### A.3 事故密集檔（specs／機制檔）
+
+- [ ] `docs/specs/49-doc-audit.md`
+- [ ] `docs/specs/50-logic-gap-register.md`
+- [ ] `docs/specs/51-prototype-audit.md`
+- [ ] `docs/specs/53-prototype-recheck.md`
+- [ ] `docs/specs/84-prototype-death-audit.md`
+- [ ] `docs/specs/89-annotation-mode-audit.md`
+- [ ] `docs/specs/71-parity-register.md` §F（V 項全表）
+- [ ] `.github/workflows/claude-review.yml`（🔴 全檔註釋＝最密集事故檔之一）
+- [ ] `.github/workflows/ci.yml`（同上）
+- [ ] `scripts/*` 檔頭 docstring（複驗：`ls scripts/`，逐支）
+
+### A.4 抽樣復讀記錄（完成判準）
+
+（收割完成後填：抽樣檔名 ×5、復讀日、漏抓數——漏抓率非 0 ⇒ 全清單重讀）
