@@ -226,7 +226,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 禮品卡餘額回加／store credit `credit` 交易（**內部帳，不是外部 IO**，可同 transaction） | §06 D.5／C.7 |
 | 稅務事件（只發事件，不落憑證——憑證由 jurisdiction pack 決定：HK 無／TW 折讓／MY e-Invoice） | §06 F.2#6；鐵律 11 |
 | 分析回沖 outbox 事件（`sales_reversals` 記**處理日**，不回改原訂單日） | §06 C.10 |
-| `displayFinancialStatus` 重物化（由交易推導，不可獨立改寫；**REFUND 為 PENDING 時投影不變——改投影待該交易 SUCCESS**（R-11；第 20 輪限定，杜絕「pending 也計入重算」的另一種讀法）） | §05 F.3-1 |
+| `displayFinancialStatus` 重物化（由交易推導，不可獨立改寫；**REFUND 為 PENDING 時投影不變——改投影待該交易 SUCCESS**（R-11；第 20 輪限定）。SUCCESS 出口**分目的地**（第 21 輪分支）：外部金流（PSP 卡退）＝webhook 確認後轉；**內部目的地（禮品卡餘額回加／store credit 寫入／manual 線下退款）＝同一本地 transaction 內即建 status=SUCCESS**——無 PSP 可等，照單一 webhook 出口寫，這三類單的投影永卡 PAID） | §05 F.3-1 |
 | outbox：`refunds/create`（金流未動即發）、`returns/process`、`order_transactions/create` | §06 E.1 |
 
 | 必須排到 transaction **外** | 理由 |
@@ -523,7 +523,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | Return 五前置任一不成立（已退款／已 restock／已標記退回／有平台產生的退貨標籤／fulfillment 已取消） | `returnCancel` 拒絕 | 🔒鎖 | §06 B.1 |
 | `returnProcess` 處理完全部品項**且全行有終局 disposition**（restock 完成要求僅限 `RESTOCKED` 行——第 19 輪隨 D6／§06 T5 同步） | Return 自動 OPEN→CLOSED | 連動 | §06 E |
 | RFO line item disposition = RESTOCKED | 庫存依指定 location 回補；冪等 key＝**disposition line 唯一鍵**（收貨時路；退款時路才用 `refund_line_item`，兩路互斥防雙回補，見 T3 步驟表 2026-08-17 更正） | 連動 | §06／§02 |
-| `refundCreate` 成功 | 產生 **pending** `OrderTransaction(kind=REFUND)`；Order 金流軸投影**待該交易 SUCCESS（PSP webhook 確認）後**重算為 PARTIALLY_REFUNDED／REFUNDED（R-11／§06 D.4 順序鐵則——本地成功即改投影＝PSP 拒絕時對商家與買家謊稱錢已退、永久 PSP 失敗時投影卡死 （2026-08-17 更正，PR #52 第 18 輪））；`refunds/create` 於 Refund 建立即發（§06 E.1 語義不變） | 連動 | §06 B.4／§05 B.3 |
+| `refundCreate` 成功 | 產生 **pending** `OrderTransaction(kind=REFUND)`；Order 金流軸投影**待該交易 SUCCESS 後**重算為 PARTIALLY_REFUNDED／REFUNDED——SUCCESS 出口分目的地：**外部金流形＝PSP webhook 確認**；**內部目的地形（禮品卡餘額／store credit／manual 線下）＝同一本地 transaction 內即 status=SUCCESS，無 webhook 可等**（R-11／§06 D.4 順序鐵則——本地成功即改投影＝PSP 拒絕時對商家與買家謊稱錢已退、永久 PSP 失敗時投影卡死 （2026-08-17 更正，PR #52 第 18 輪；出口分支第 21 輪））；`refunds/create` 於 Refund 建立即發（§06 E.1 語義不變） | 連動 | §06 B.4／§05 B.3 |
 | 退掉「購買禮品卡」的那張訂單 | 該 GiftCard **自動 Deactivated**（終態，不可復原） | 連動 | §07 B／§06 |
 | 付款失敗（PAYMENT_FAILURE）／訂單取消（ORDER_CANCELLATION） | StoreCredit `debit_revert`：`remainingAmount` 回增**原批次** | 連動 | §07 B／§05 |
 | 混合付款退款 | greedy 非比例攤：**先把 gift card 吃滿**再輪其他付款方式 | 連動 | §06 C |
@@ -688,7 +688,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | R-8 | `return_shipping_fee` 為 **per-return 固定額**（每次退貨只收一次，非 per line），且其幣別必須 == `orders.presentment_currency`（DB 驗證） | §06 C |
 | R-9 | 訂單套用了訂單層級免運折扣 ⇒ **運費完全不可退**（`refundable_shipping = 0`） | §06 C |
 | R-10 | 換貨品項：不得為自訂品項；可套商品層折扣但**訂單層折扣一律禁止**；換貨庫存在退貨處理前**不保留**；換貨行加入**原訂單**而非另開新訂單 | §06 C |
-| R-11 | 退款寫入順序鐵則：單一本地 transaction（refund + refund_line_items + transaction=pending + restock + outbox）→ **transaction 外**呼叫 PSP → webhook 確認 → pending→success → financial_status 重物化 → 通知信。**transaction 內禁止任何外部 IO**（先打 PSP 再落庫＝退了錢沒紀錄） | §06 C／鐵律 5 |
+| R-11 | 退款寫入順序鐵則：單一本地 transaction（refund + refund_line_items + transaction=pending + restock + outbox）→ **出口分目的地**（第 21 輪分支）：**外部金流分支**＝transaction 外呼叫 PSP → webhook 確認 → pending→success；**內部目的地分支**（禮品卡餘額回加／store credit 寫入／manual 線下退款）＝無外部 IO，**同一本地 transaction 內交易即建 status=SUCCESS**（manual 需人工確認者比照 16 §F5 COD 對帳的條件式 UPDATE pending→success——每類目的地必須有一條 SUCCESS 出口，否則投影永卡）→ financial_status 重物化 → 通知信。**transaction 內禁止任何外部 IO**（先打 PSP 再落庫＝退了錢沒紀錄） | §06 C／鐵律 5 |
 | R-12 | `RefundLineItemRestockType` 值域恰 4 值：CANCEL／RETURN／NO_RESTOCK／LEGACY_RESTOCK；建立新退款時 LEGACY_RESTOCK **reject**（只讀） | §06 F.1 |
 | R-13 | 拼寫不得統一：`ReturnStatus.CANCELED`（單 L）與 `FulfillmentOrderStatus.CANCELLED`（雙 L）在 enum 層各自獨立 | §06 F.2／§09 |
 | R-14 | `ReturnLineItem` 外鍵指向 `FulfillmentLineItem`（只有已出貨且已送達的品項才能退）——schema 級決策，上線後改不得 | §06 F.2／16-F7.2 |

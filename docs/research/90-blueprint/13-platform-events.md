@@ -223,8 +223,8 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 
 | 項目 | 值 | 來源 |
 |---|---|---|
-| 連線 timeout | 1s | G-2 |
-| 回應 timeout | 5s | G-2 |
+| 連線 timeout | 1s（已落 `outbound_http.webhook_connect_timeout_seconds`，第 20 輪） | G-2 |
+| 回應 timeout | 5s（已落 `outbound_http.webhook_response_timeout_seconds`，第 20 輪） | G-2 |
 | 重試 | 8 次／約 4 小時，指數退避 | G-2 |
 | 成功判定 | 僅 2xx；3xx＝失敗 | G-2 |
 | 失敗告警 | 8 連敗寄 emergency developer email；API 建立的訂閱其後自動刪除 | G-2 |
@@ -271,7 +271,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### D.1 訂閱建立（操作者：app 開發者）
 
 1. 途徑 A：TOML 設定檔宣告 topics＋uri → 部署後對**所有安裝店**生效【官方 G-1】。途徑 B：`webhookSubscriptionCreate`（逐店、可帶 filter/includeFields）。
-2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。🔴 形態驗證只擋語法——目的地是 app 控制的出站端點，**每次投遞連線另過 SSRF 政策**（C.3「3xx 算失敗且禁 follow redirect」的完整化 （2026-08-17 更正，PR #52 第 18 輪））：scheme/port 白名單、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址（rebinding 防護＝連線 pin 已驗 IP——註冊時通過的 hostname 事後可改指內網）、禁 redirect、回應大小上限＝`outbound_http.webhook_response_bytes_max`（config/limits.yml，鐵律 6——三條出站契約共用鍵組，第 19 輪落鍵）。
+2. 系統驗證 uri 形態（HTTPS／pubsub://／ARN）。失敗分支：格式錯 → userErrors。🔴 形態驗證只擋語法——目的地是 app 控制的出站端點，**每次投遞連線另過 SSRF 政策**（C.3「3xx 算失敗且禁 follow redirect」的完整化 （2026-08-17 更正，PR #52 第 18 輪））：scheme/port 白名單、DNS 解析後**與連線時**雙重拒 private/link-local/metadata 位址（rebinding 防護＝連線 pin 已驗 IP——註冊時通過的 hostname 事後可改指內網）、禁 redirect、回應大小上限＝`outbound_http.webhook_response_bytes_max`、逾時＝`outbound_http.webhook_connect_timeout_seconds`／`webhook_response_timeout_seconds`（config/limits.yml，鐵律 6——三條出站契約共用鍵組，第 19 輪落鍵；第 21 輪補逾時鍵，與 09:53／12 §C.7 副本形態一致）。
 3. App Store app 另須申報合規三端點，缺 → 審核退件【官方 G-5】。
 
 ### D.2 事件投遞（操作者：平台）

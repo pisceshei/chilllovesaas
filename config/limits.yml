@@ -4408,10 +4408,10 @@ apps:
 # 逾時四鍵（第 20 輪落鍵——原第 19 輪只落 bytes、09/12 兩章把「時間上限」也等號綁到 bytes 鍵）：
 #   webhook 兩鍵＝官方明載值（90-blueprint/13 C.3 表，G-2）；callback/file_fetch＝我方裁定。
 outbound_http:
-  webhook_response_bytes_max: 1048576        # 1 MiB——webhook 投遞回應體上限（僅需狀態碼，回應體本就不消費）
-  callback_response_bytes_max: 1048576       # 1 MiB——3PL fetch_stock/fetch_tracking_numbers 回應上限
-  file_fetch_download_bytes_max: 104857600   # 100 MiB——originalSource 抓檔上限（對齊 files 一般檔案尺寸級距）
+  webhook_response_bytes_max: 65536          # 64 KiB——webhook 投遞回應體上限。權威＝specs/18 F4-2 既定 64KB（39:598/39:167 同）；僅需狀態碼、回應體不消費（第 21 輪由 1 MiB 改對齊——16 倍放寬與 18 既定值互斥且方向錯）
+  callback_response_bytes_max: 1048576       # 1 MiB——3PL fetch_stock/fetch_tracking_numbers 回應上限。與 webhook 不同：此回應**要被解析**（fetch_stock 回 SKU→qty map，尺寸隨 SKU 數成長，1 MiB ≈ 數萬行條目預算）——webhook 的 64KB 理由（不消費回應體）不適用（第 21 輪補各自理由）
+  file_fetch_download_bytes_max: 20971520    # 20 MiB——originalSource 抓檔上限＝12 §C.1 泛型檔案/圖片門檻（影片/3D 走兩段式 staged upload，不經外部 URL 抓取路徑。第 21 輪由 100 MiB 改對齊——原值在 20MB 業務門檻之前永不生效，純增攻擊面）
   webhook_connect_timeout_seconds: 1         # 官方明載（13 C.3：連線 timeout 1s，G-2）
   webhook_response_timeout_seconds: 5        # 官方明載（13 C.3：回應 timeout 5s，G-2）
   callback_timeout_seconds: 5                # 3PL callback 逾時——官方未載，我方裁定對齊 webhook 回應 5s
-  file_fetch_timeout_seconds: 30             # originalSource 抓檔逾時——我方裁定（100 MiB 預算的下載窗）
+  file_fetch_timeout_seconds: 30             # originalSource 抓檔逾時——我方裁定（20 MiB 預算的下載窗，≈5.6 Mbps 持續即讀滿；第 21 輪隨 bytes 上限對齊改註）
