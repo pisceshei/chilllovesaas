@@ -384,8 +384,9 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（2026-08-16 使用者裁定⑤，由 Opus 5 改回 Fable 5）。
-          #      裁定沿革（三次都保留，因為它們解釋了這一行為什麼會來回改）：
+          #   🔴 `--model claude-opus-5`（現行＝2026-08-17 沿革⑥，Fable 5 額度耗盡帶
+          #      錯誤原文復發後照④先例換回；上一任＝2026-08-16 使用者裁定⑤ claude-fable-5）。
+          #      裁定沿革（每次都保留，因為它們解釋了這一行為什麼會來回改）：
           #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
           #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
           #        ③9fadba9 00:14 改成 `claude-fable-5`——理由是官方明文
