@@ -157,7 +157,7 @@ requestedQueryCost = 預估上限（先預扣）；actualQueryCost = 執行後�
 - 等待公式（client 端自救）：`wait_seconds = (requestedQueryCost − currentlyAvailable) / restoreRate`，無 rounding 要求（浮點秒）。
 - ⚠ 官方 limits 頁只載 **restore rate**（100/200/1000/2000 pt/s 四級）；bucket 上限（`maximumAvailable`）官方頁未列表——標準店實回 2,000（＝restore×20），其他級距的 bucket 值本輪未逐級取證，列 openQuestions。
 - **REST（legacy，2024-10-01 起）**：leaky bucket 40 req/app/store、leak 2 rps；Plus 400／20 rps；header `X-Shopify-Shop-Api-Call-Limit: 32/40`；超限 HTTP 429＋`Retry-After` 秒數。
-- 通用：**輸入陣列一律 ≤250 items**；分頁 `first/last` ≤250（倉庫 28 已釘）；連線式分頁越過 **25,000 物件**後 count 回報封頂為「25,001」。
+- 通用：**輸入陣列一律 ≤250 items**；分頁 `first/last` ≤250（倉庫 28 已釘；**具名例外：`customerSegmentMembers` ≤1,000/頁，§08 A.2** （2026-08-17 更正，PR #52 第 10 輪））；連線式分頁越過 **25,000 物件**後 count 回報封頂為「25,001」。
 - Storefront API：對買家流量**無 rate limit**；bot 需 Web Bot Auth 簽名否則受限。〔G-2、G-3〕
 
 ### C.5 Custom Data 不變量（值域與上限窮舉）

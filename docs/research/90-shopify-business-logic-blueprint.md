@@ -202,7 +202,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 條件式累加：`UPDATE ... WHERE fulfilled_quantity + q <= quantity`（防兩個 staff 同時全量出貨） | §09 C.9-2 |
 | 建 `Fulfillment`(`SUCCESS`)＋`FulfillmentLineItem`＋`trackingInfo`（多包裹＝多 number/url，company 套全部） | §09 A.1／D.2 |
 | FO 推進：全量 ⇒ `CLOSED`；部分 ⇒ 狀態不變；3PL 情境同步 `requestStatus` | §09 B.1 |
-| 庫存：**同一 location** `committed −q`、`on_hand −q`＋ledger 同 transaction | §02 B.1／D.1-3 |
+| 庫存：**同一 location** `committed −q`、`on_hand −q`＋ledger 同 transaction——🔴 **僅 tracked 品項行**（digital/untracked 無 InventoryLevel，動帳下溢或失敗；§09 D.2 （2026-08-17 更正，PR #52 第 10 輪））。本限定為**全域**：本表與全文所有履約動帳列（含 S7/S8/移轉/退款 restock）皆同 | §02 B.1／D.1-3 |
 | Order `displayFulfillmentStatus` 重物化（derived cache，不可獨立改寫） | §04 B.3 |
 | outbox：`fulfillments/create`、`inventory_levels/update` | §09 E |
 
@@ -499,7 +499,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | 觸發（A） | 效果（B） | 類型 | 章節 |
 |---|---|---|---|
 | 訂單成立 | order routing 自動建 1..N 張 FulfillmentOrder（**不可手建**）；庫存 `available−N`／`committed+N`，`on_hand` 不變 | 連動 | §09 B／§02 B.1 |
-| `fulfillmentCreate` | FO 累加 `fulfilled_quantity`；庫存 `committed−N`／`on_hand−N`，`available` 不變；訂單履行軸重物化 | 連動 | §09 E／§02 B.1 |
+| `fulfillmentCreate` | FO 累加 `fulfilled_quantity`；庫存 `committed−N`／`on_hand−N`（僅 tracked 行，§09 D.2 （2026-08-17 更正，PR #52 第 10 輪）），`available` 不變；訂單履行軸重物化 | 連動 | §09 E／§02 B.1 |
 | `orderCancel` | 全部 FulfillmentOrder 關閉；`restock` 為真時庫存回補；金流終態映射（未請款→VOIDED／已退款→REFUNDED） | 連動 | §04 D／§09 |
 | 訂單存在 **active return**（REQUESTED 或 OPEN） | `orderCancel` 一律拒絕 | 🔒鎖 | §04 B.1／§06 |
 | 存在「不可履行的未結出貨」／pending authorization／部分履行後／三方履行服務編輯過 | `orderCancel` 拒絕（不可取消聯集） | 🔒鎖 | §04 B.1 |
@@ -555,7 +555,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 
 | 觸發（A） | 效果（B） | 類型 | 章節 |
 |---|---|---|---|
-| shipment 標記 IN_TRANSIT | 同一 transaction（**分支見 §02 B.2**：本列僅「READY_TO_SHIP 段＋有目的地」形；DRAFT 直轉＝`available−`；origin/destination 留空＝該側不記帳 （2026-08-17 更正，PR #52 第 9 輪））：origin `reserved−N`／`on_hand−N`，destination `incoming+N` ⚠️（**裁定一，官方未逐字明文，待實測**） | 連動 ⚠️ | §02 B.2／裁定一 |
+| shipment 標記 IN_TRANSIT | 同一 transaction（**分支見 §02 B.2**：本列僅「READY_TO_SHIP 段＋有目的地」形；DRAFT 直轉＝`available−`／`on_hand−`（（2026-08-17 更正，PR #52 第 10 輪）：漏 on_hand− 會破恆等式）；origin/destination 留空＝該側不記帳 （2026-08-17 更正，PR #52 第 9 輪））：origin `reserved−N`／`on_hand−N`，destination `incoming+N` ⚠️（**裁定一，官方未逐字明文，待實測**） | 連動 ⚠️ | §02 B.2／裁定一 |
 | shipment 逐列 accept | destination `incoming−N`／`available+N`／`on_hand+N`（同一 transaction） | 連動 | §02 B.3 |
 | transfer 的 accept+reject+cancel ＝ total | transfer.status → TRANSFERRED | 連動 | §02 B.2 |
 | `locationDeactivate` | 需搬移庫存、待處理訂單、移動中轉移到 `destinationLocationId`；**存在 open PO 時拒絕**（open ≙ `ordered AND archived_at IS NULL`，我方裁定 ⚠️） | 連動／🔒鎖 | §02 B.5／D |
@@ -594,7 +594,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | M-8 | checkout 階段：`total = (line_items_subtotal − discounts) + shipping + taxes_added + duties + tip`（項次全集由本節鎖定，逐項公式與 rounding 以 `docs/specs/15 F2 Calculator` 編號為唯一權威） | §03 C |
 | M-9 | 不含稅定價：`line_tax = taxable_base × rate`，`taxable_base` ＝行項**折扣後**金額（訂單層折扣先攤到行再計稅） | §10 C |
 | M-10 | 含稅定價：`tax = (rate × price) / (1 + rate)`，`net = price − tax`；且 `taxesIncluded ∧ customer_exempt ⇒ buyer_pays == listed_price`（豁免**不**把含稅價降回淨額） | §10 C |
-| M-11 | 整除時 `line_tax_cents = bankers_round(taxable_unit_cents × tax_rate / SCALE) × quantity`（**先單件捨入再乘量**，行小計法為錯）；**分攤不整除時＝逐件基數各自捨入後求和** `Σ_i bankers_round(base_i × rate / SCALE)`——單一基數×量對 2¢/1¢ 混合件會多收或少收 （2026-08-17 更正，PR #52 第 8 輪）；`SCALE` 由 limits 鍵後綴宣告：`*_bp`＝10_000、`*_ppm`＝1_000_000——**讀取端依後綴選除數，禁止混讀**（2026-08-17 更正（PR #52 第 6 輪）：CA 表因 QST 非整數 bp 已升 ppm，通用實作若仍除 10_000 會把 GST 50000 讀成 500%）；`taxable_unit_cents`＝行項**分攤折扣後**金額的單件基數（M-9 的 taxable_base ÷ quantity；分攤不整除 ⇒ 依 D-12① 最大餘數法定各件次基數） <!-- 2026-08-17 更正（PR #52 Codex）：原式用未扣折扣的 unit_price_cents，與緊鄰 M-9「稅基＝折扣後」矛盾，照抄會對折扣品多收稅 --> | §10 C |
+| M-11 | 整除時 `line_tax_cents = bankers_round(taxable_unit_cents × tax_rate / SCALE) × quantity`（**先單件捨入再乘量**，行小計法為錯）；**分攤不整除時＝逐件基數各自捨入後求和** `Σ_i bankers_round(base_i × rate / SCALE)`（**我方裁定 ⚠️** 官方未明文，parity 期望值依 10 章 F.3#2 實測後鎖定）——單一基數×量對 2¢/1¢ 混合件會多收或少收 （2026-08-17 更正，PR #52 第 8 輪）；`SCALE` 由 limits 鍵後綴宣告：`*_bp`＝10_000、`*_ppm`＝1_000_000——**讀取端依後綴選除數，禁止混讀**（2026-08-17 更正（PR #52 第 6 輪）：CA 表因 QST 非整數 bp 已升 ppm，通用實作若仍除 10_000 會把 GST 50000 讀成 500%）；`taxable_unit_cents`＝行項**分攤折扣後**金額的單件基數（M-9 的 taxable_base ÷ quantity；分攤不整除 ⇒ 依 D-12① 最大餘數法定各件次基數） <!-- 2026-08-17 更正（PR #52 Codex）：原式用未扣折扣的 unit_price_cents，與緊鄰 M-9「稅基＝折扣後」矛盾，照抄會對折扣品多收稅 --> | §10 C |
 | M-12 | `Σ(所有 line_tax_cents，含 shipping line 與 duty 上的 tax line) == order.total_tax_cents`；**不存在訂單層再捨入，也不得有校正尾差暗數** | §10 C |
 | M-13 | 稅率解析全序：`taxable == false` ＞ 顧客／CompanyLocation 豁免 ＞ TaxOverride；同一 line 不得同時套用 override 與豁免各算一次 | §10 C.1 |
 | M-14 | `destination` 無 TaxRegistration ⇒ 全單 `total_tax = 0` 且不產生任何 TaxLine（本尊靜默 0）；🔴 **我方 C2 未宣告 ⇒ reject（結帳擋下）**，宣告 `none` 才是 0 稅且必帶 `tax_basis: no_consumption_tax_regime` | §10 F.2#3／docs/specs/56 A.2 |
@@ -743,7 +743,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | A-17 | ⚠️ filter 引用不存在欄位或型別不符時，訂閱照樣建立成功但**所有投遞被靜默抑制**——症狀與端點故障不可區分，除錯手冊必須明列（我方首發不支援 filter，schema 不曝露該欄位） | §13 C／D-13 |
 | A-18 | outbox 是唯一事件源：事件記錄必須與業務資料在**同一 transaction** 內寫入，且 transaction 內禁止任何外部 IO | 鐵律 5／§13 C |
 | A-19 | GraphQL 成本：`requestedQueryCost ≤ 1000` 於**執行前**擋（`MAX_COST_EXCEEDED`，不得先執行再擋）；`currentlyAvailable < requestedQueryCost` ⇒ HTTP 200 ＋ `extensions.code = THROTTLED`；每個回應必附 `extensions.cost{...}` | §15 C |
-| A-20 | 所有輸入陣列 items ≤ 250、connection `first/last` ≤ 250；連線分頁越過 25,000 物件後 count 一律**封頂回報 25,001**（不得回真值） | §15 C／鐵律 4 |
+| A-20 | 所有輸入陣列 items ≤ 250、connection `first/last` ≤ 250（**具名例外：`customerSegmentMembers` ≤1,000/頁，§08 A.2** （2026-08-17 更正，PR #52 第 10 輪））；連線分頁越過 25,000 物件後 count 一律**封頂回報 25,001**（不得回真值） | §15 C／鐵律 4 |
 
 ---
 
@@ -758,7 +758,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-3 | **庫存 CAS 失效**：兩個 admin 同時 set 絕對值 | 後寫者覆蓋前寫者且無感知 | `inventorySetQuantities` 每筆必帶 `compareQuantity`（缺 ⇒ `COMPARE_QUANTITY_REQUIRED`，除非顯式 `ignoreCompareQuantity`）；不符 ⇒ `COMPARE_QUANTITY_STALE`；move 對應 `changeFromQuantity` ⇒ `CHANGE_FROM_QUANTITY_STALE` | 兩執行緒帶同一 compareQuantity ⇒ 恰 1 成功、另 1 回 STALE | §02 C |
 | X-4 | **折扣用量超發**：`usage_limit` 剩 1，兩張單同時用 | 本尊 `asyncUsageCount` 弱一致，官方自承可能偏低 | 訂單成立 transaction 內：`UPDATE ... SET usage_count = usage_count + 1 WHERE usage_limit IS NULL OR usage_count < usage_limit`；affected rows = 0 ⇒ 折扣失效 | N 執行緒搶 limit=1 ⇒ 恰 1 成功、`usage_count` 恆 ≤ limit | §07 C／17-F3 |
 | X-5 | once-per-customer 被同一顧客並發繞過 | 應用層預檢有 TOCTOU 窗口 | 唯一索引 `(shop_id, discount_id, customer_key)` 兜底 | 同一 customer_key 併發下 2 單 ⇒ 恰 1 成功 | §07 C |
-| X-6 | active automatic 折扣數併發撞 25 上限 | 建立/啟用兩路徑各自計數 | 鎖或條件寫入；超出回 `ACTIVE_PERIOD_OVERLAP` | 併發建立第 25、26 個 ⇒ 恰 1 個超額被拒 | §07 C |
+| X-6 | active automatic 折扣數併發撞 25 上限（**含未來重疊區間**，§07 D.1 （2026-08-17 更正，PR #52 第 10 輪）） | 建立/啟用兩路徑各自計數 | 鎖或條件寫入（對 startsAt/endsAt 全區間重疊驗證）；超出回 `ACTIVE_PERIOD_OVERLAP` | 併發建立第 25、26 個 ⇒ 恰 1 個超額被拒 | §07 C |
 | X-7 | **退款上限被兩筆並發退款合計突破** | 先查 maximumRefundable 再 INSERT | 條件式 UPDATE：`UPDATE ... WHERE refunded_total_cents + ? <= limit`；**禁止先 SELECT 再 INSERT**；DB 唯一硬約束為 `refunded_total_cents >= 0` | 兩筆各佔上限 60% 併發 ⇒ 恰 1 成功；over-refund 需權限 flag 才通過 | §06 C |
 | X-8 | restock 重複進貨（webhook 重放／退款重試） | 退款可重試但庫存調整非冪等 | 冪等 key ＝ `refund_line_item` 唯一鍵，同一 line item 只產生一次 inventory adjustment | 重放同一 `refunds/create` 3 次 ⇒ 庫存只 +N 一次 | §06 C |
 | X-9 | **取消訂單 vs 建立退貨同時成功** | 兩邊各自檢查對方不存在 | 判定與轉移在同一 transaction 內鎖定訂單；active return 存在 ⇒ `orderCancel` reject | 併發 `orderCancel` ＋ `returnCreate` ⇒ 恰 1 成功 | §04 C／§06 C |
@@ -2048,7 +2048,7 @@ analytics:
 |---|---|---|
 | `products.media.image_max_pixels` / `files.max_image_pixels` | §01 G23 = 5000×5000（25MP）vs §12 help = 20MP | 取**較嚴的 20,000,000**，兩鍵共用同一常數；⚠️ 待 parity 實測 |
 | `combined_listings.max_child_variant_option_values` | §01 G11 逐字＝option values 總數 vs G10 摘要＝variants 總數 | 以 **help 逐字（option values）** 為準，待 Q-34 |
-| `plans.merchant_metaobject_definitions` | §15 docs 頁 128 vs 2025-10-20 changelog 256 | 暫以 **changelog 256**，待 Q-93 |
+| `plans.merchant_metaobject_definitions` | §15 docs 頁 128 vs 2025-10-20 changelog 256 | **128（Basic/Grow/Advanced）／256（Plus+）**——15 章 G-10 正表檔位制；changelog 256 判讀為 Plus 檔位值（（2026-08-17 更正，PR #52 第 10 輪）），待 Q-93 覆核 |
 | `customers.tax_exemption_enum_count` | 官方頁摘要 112/129 vs 逐項清單 74 | 以**逐項 74** 為準＋CI 快照比對，待 Q-92 |
 | `webhooks.fulfillment_orders_topic_count` | §13 A.3 表頭 21 vs §09 兩次點算 20 | 以 **§09 的 20** 為準，回頭校正 §13 表頭，待 Q-68 |
 | `store_credit.max_balance_per_customer_cents` | §06 / §07 / §08 三章各自以 USD 或 cents 表述 | 統一為 **cents 單鍵 1,500,000**，三章引用同一鍵 |
@@ -2145,7 +2145,7 @@ analytics:
 | 項 | 內容 |
 |---|---|
 | **領域切片** | **§15**：Shop 七態生命週期（§15 B.1，`shops.status` 欄先建、轉移邏輯可分期）／StaffUser 四態＋Collaborator 六態（§15 B.2）／RBAC 權限依賴雙向傳播（§15 invariants：grant child ⇒ grant 全部 ancestor、revoke parent ⇒ revoke 全部 descendant）／GraphQL cost 預扣結算與 `extensions.cost`／metafield 定義 15 種型別首發（§15 F.2）／BulkOperation 七態骨架（§15 B.3）。**§13**：outbox 表＋投遞狀態機五態（§13 B.1）＋首發 24 對外 topic ＋3 內部 `einvoice/*`／HMAC 驗簽與 `X-CL-*` header 族／WebhookSubscription 三態（我方 D-3 版含 `disabled`，與本尊二態不同）。**橫切**：`Money::Storage`／`PspMinor`／`PspDecimal`／`Decimal` 四型別庫與 PSP pack `amount_format` 宣告器（鐵律 3、docs/specs/65 §D）／`config/limits.yml` 骨架／jurisdiction pack 介面（HK 基準） |
-| **前置未決** | §7 Q-86（試用期長度，**使用者裁定**）、§7 Q-86（frozen→deactivated 期限，**使用者裁定**）、§7 Q-02（訂閱 owner 欄位 shop_id vs app_id，**使用者裁定；改表成本高，M0 必答**）、§7 Q-03（訂閱 schema 是否在 M0 遷移檔預留，**使用者裁定**）。**延後項（§7.3 Tier C，不阻擋 M0）**：Q-93×2（metaobject 定義數暫以 changelog 256 落鍵、enum 值域留 §15 測試前驗證）、Q-94（topic 全集留 13/15 章事件目錄測試前驗證） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：原把 Q-93/Q-94 同列前置未決，與 §7.3「不阻擋 M0–M4」矛盾，排程器無法判定 M0 可否動工——改為明示延後 --> |
+| **前置未決** | §7 Q-86（試用期長度，**使用者裁定**）、§7 Q-86（frozen→deactivated 期限，**使用者裁定**）、§7 Q-02（訂閱 owner 欄位 shop_id vs app_id，**使用者裁定；改表成本高，M0 必答**）、§7 Q-03（訂閱 schema 是否在 M0 遷移檔預留，**使用者裁定**）。**延後項（§7.3 Tier C，不阻擋 M0）**：Q-93×2（metaobject 定義數以 **128/128/128/256 檔位制**落鍵（（2026-08-17 更正，PR #52 第 10 輪））、enum 值域留 §15 測試前驗證）、Q-94（topic 全集留 13/15 章事件目錄測試前驗證） <!-- 2026-08-17 更正（PR #52 Codex 第 2 輪）：原把 Q-93/Q-94 同列前置未決，與 §7.3「不阻擋 M0–M4」矛盾，排程器無法判定 M0 可否動工——改為明示延後 --> |
 | **完成判準** | ① 任一張新表若缺 `shop_id` 或複合索引非以 `shop_id` 開頭，CI fail（組織層白名單以 CLAUDE.md 鐵律 2 的實際表名清單為準，不得口頭擴充）② `Money::Storage` 傳入 PSP adapter 一律 `TypeError`；`Money::Decimal`（物流／JSON-LD 用）傳入 PSP adapter 亦 `TypeError`（兩者字串長得一樣，是 docs/specs/65 §C 點名的陷阱）③ PSP pack 未宣告 `amount_format` 或未宣告該格式參數 ⇒ reject，**不得預設 ISO 4217** ④ 業務 transaction 內出現任何外部 IO ⇒ 測試 fail（靜態檢查＋runtime guard 雙軌）⑤ 同一 `webhook_id` 併發雙投，去重表唯一索引裁決，恰一次處理 ⑥ metafield 定義建立後改 `type`／`namespace`／`key`／`owner_type` ⇒ migration 級測試擋下 ⑦ 登入看到 CHILL LOVE shell ＋ 商品空狀態（HANDOFF 原判準） |
 
 #### M1 商品線 — L1 全量
@@ -2186,7 +2186,7 @@ analytics:
 |---|---|
 | **領域切片** | **§07**：Discount 五態（🔴 status 由 `startsAt`／`endsAt` **推導不落庫**，另存 `deactivated_at` 才能區分自然過期與人為停用，§07 B.1）／percentage 一律 basis points 整數／求值順序 Product → Order → 配送選項生成 → Shipping／`combinesWith` 白名單雙向同意／BXGY 確定性配對定則／GiftCard 三態＋餘額正交軸／StoreCredit CreditTransaction FEFO。**§11 P1**：Market 三態＋Catalog 三態＋Market Precedence Stack 四層／CHANNEL 市場為**疊加非裁決**／匯率三時點快照。**§10 全量**：含稅定價公式、proportional shipping tax、單價粒度 banker's rounding。**§14**：兩層 rollup ＋ nightly 抽 3 天全量對帳。**§13**：45+ 顧客通知範本、toggleable 白名單 |
 | **前置未決** | §7 Q-24（固定金額 `items=all` 的官方分攤算法——官方例 $50 攤到 $50+$100 得 $16.50/$33.50，**非純比例**，算法未公布）、§7 Q-25（BXGY 三項：X 選件順序、amount 模式多組是否重新湊門檻、percentage 捨入方向）、§7 Q-60（退款／取消是否回沖 usage count——我方裁定不返還，本尊行為未證實）、§7 Q-15（禮品卡行是否放行「明確指定該禮品卡商品的 product 折扣」，**使用者裁定；17-F2 現行寫法比本尊嚴，需正式複核**）、§7 Q-11／Q-97（`round_currency` 捨入模式與 charm rounding target 表）、§7 Q-71（CHANNEL 市場與 LOCATION 同時命中的裁決、channel catalog 的解析層位——**兩種實作結果不同**）、§7 Q-06（Shopify Tax 計費模型是否復刻，**使用者裁定**）、§7 Q-16（`tax:clothing` 魔法命名是否復刻，**使用者裁定；與我方「靜默規則禁止」原則衝突**）、§7 Q-05（Live View `total_sales` 用本尊縮水公式還是完整公式，**使用者裁定；Live View 畫面動工前必答**）、§7 Q-28（退款是否把單位 cost 自 COGS 回沖） |
-| **完成判準** | ① 折扣用量扣減在訂單成立 transaction 內原子條件更新：`UPDATE … WHERE usage_limit IS NULL OR usage_count < usage_limit`；**affected rows = 0 ⇒ 折扣失效並明確回報「已用完」**（我方強一致，取代本尊弱一致的 `asyncUsageCount`）② `appliesOncePerCustomer` 由 `(shop_id, discount_id, customer_key)` 唯一索引保證，`customer_key` ＝ email/phone 正規化（含 gmail 加點變體歸一）後 hash ③ 同 shop 同時 active 的 automatic 折扣 ≤25，併發建立以鎖或條件寫入避免超額 ④ 任一 cart line 折後金額 ≥ 0（60%+60% 疊加須鉗制在 S0，付 0 但不得為負）⑤ **AOV 反向斷言入測試**：`AOV ≠ net_sales/orders` 且 `AOV × orders ≠ total_sales`（鐵律 7 的官方具名例外，§14 invariants）⑥ `total_sales` 可為負，一致性測試不得斷言非負 ⑦ `__any_click` 各通路加總可 > orders，「小計＝總計」檢查必須白名單此欄 ⑧ rollup 重算（`analytics:rebuild`）與事件重放後，歷史日每一個聚合值不變 ⑨ `round_currency` 輸出恆為 `Money::Storage` 且 JPY/TWD/KRW 結果必 `value % 100 == 0` ⑩ `docs/specs/17/19` 驗收＋GMC 測試 feed 零錯誤（HANDOFF 原判準） |
+| **完成判準** | ① 折扣用量扣減在訂單成立 transaction 內原子條件更新：`UPDATE … WHERE usage_limit IS NULL OR usage_count < usage_limit`；**affected rows = 0 ⇒ 折扣失效並明確回報「已用完」**（我方強一致，取代本尊弱一致的 `asyncUsageCount`）② `appliesOncePerCustomer` 由 `(shop_id, discount_id, customer_key)` 唯一索引保證，`customer_key` ＝ email/phone 正規化（含 gmail 加點變體歸一）後 hash ③ 同 shop 同時 active 的 automatic 折扣 ≤25（**含未來 startsAt/endsAt 重疊區間**，§07 D.1 （2026-08-17 更正，PR #52 第 10 輪）），建立/更新/重啟用皆以鎖或條件寫入對全區間原子驗證避免超額 ④ 任一 cart line 折後金額 ≥ 0（60%+60% 疊加須鉗制在 S0，付 0 但不得為負）⑤ **AOV 反向斷言入測試**：`AOV ≠ net_sales/orders` 且 `AOV × orders ≠ total_sales`（鐵律 7 的官方具名例外，§14 invariants）⑥ `total_sales` 可為負，一致性測試不得斷言非負 ⑦ `__any_click` 各通路加總可 > orders，「小計＝總計」檢查必須白名單此欄 ⑧ rollup 重算（`analytics:rebuild`）與事件重放後，歷史日每一個聚合值不變 ⑨ `round_currency` 輸出恆為 `Money::Storage` 且 JPY/TWD/KRW 結果必 `value % 100 == 0` ⑩ `docs/specs/17/19` 驗收＋GMC 測試 feed 零錯誤（HANDOFF 原判準） |
 
 #### M6 編輯器 — §12 編輯器線
 

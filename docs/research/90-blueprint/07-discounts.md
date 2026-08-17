@@ -137,7 +137,7 @@ Customer|CompanyLocation 1—N StoreCreditAccount（每幣別一個）1—N Stor
 
 | 現態 | 觸發 | 前置條件 | 次態 | 副作用 |
 |---|---|---|---|---|
-| —（不存在） | 建立（8 支 create mutation 之一） | 驗證通過；automatic 型同時 active ≤25 | SCHEDULED 或 ACTIVE（依 startsAt） | code 型建碼；automatic 型佔 25 額度 |
+| —（不存在） | 建立（8 支 create mutation 之一） | 驗證通過；automatic 型 **startsAt/endsAt 全區間重疊 ≤25**（見 D.1 （2026-08-17 更正，PR #52 第 10 輪）） | SCHEDULED 或 ACTIVE（依 startsAt） | code 型建碼；automatic 型佔 25 額度 |
 | SCHEDULED | 時間到達 startsAt | — | ACTIVE | 求值期開始收錄為候選 |
 | ACTIVE | 時間到達 endsAt | endsAt 非 null | EXPIRED | 顧客輸碼回錯誤 |
 | ACTIVE | 停用（單筆或批量） | — | 已停用 | 顧客見「Unable to find a valid discount matching the code entered」（取證 2026-08-14） |

@@ -217,7 +217,7 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 
 - HMAC 公式：`base64( HMAC-SHA256( raw_request_body, app_client_secret ) )`，與 `X-Shopify-Hmac-Sha256` 用 **timing-safe compare**；🔴 必須在任何 body-parsing middleware 之前抓 raw body。
 - 已確認 headers：`X-Shopify-Topic`、`X-Shopify-Hmac-Sha256`、`X-Shopify-Webhook-Id`、`X-Shopify-Triggered-At`；⚠ `X-Shopify-Shop-Domain`／`X-Shopify-API-Version` 為投遞結構標準欄，本輪未逐字重驗。
-- 驗簽失敗一律拒收；成功要在 **5 秒內回 2xx**——**順序＝先持久化（DB-backed inbox/queue 落庫）再回 2xx**：ack 與落庫之間崩潰＝已確認事件永久遺失；與本章併發節及總綱不變量一致。超載時寧可超時讓對端重試（`webhook_id` 唯一鍵冪等去重兜底）<!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原括號「先 ack 再入 queue」順序相反。
+- 驗簽失敗一律拒收；成功要在 **5 秒內回 2xx**——**順序＝先持久化（DB-backed inbox/queue 落庫）再回 2xx**：ack 與落庫之間崩潰＝已確認事件永久遺失；與本章併發節及總綱不變量一致。超載時寧可超時讓對端重試（`(shop_id, webhook_id)` 唯一鍵冪等去重兜底，同 C.6 （2026-08-17 更正，PR #52 第 10 輪））<!-- 2026-08-17 更正（PR #52 第 5 輪） -->：原括號「先 ack 再入 queue」順序相反。
 
 ### C.3 上限值與數字總表
 
