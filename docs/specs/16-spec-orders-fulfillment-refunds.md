@@ -142,7 +142,7 @@ CHILL LOVE 初期無 3PL，**欄位仍要建**並固定寫 `UNSUBMITTED`，否�
 
 **實作規格**：
 1. 資料表 `fulfillment_orders` 加 `parent_fulfillment_order_id`（自參照 FK）＋ `split_reason` enum（`cancel_replacement` / `partial_hold` / `partial_move` / `manual_split`）。
-2. 不變量（nightly 對帳 job 斷言）：**同一 order 的所有 FulfillmentOrder（含已取消者的替代單）對每個 line item 的 `quantity` 總和，恆等於 order line item 的可履行數量**。此斷言就是「品項憑空消失」的黑盒測試。
+2. 不變量（nightly 對帳 job 斷言）：**同一 order 的 FulfillmentOrder（含已取消者的替代單）對每個 line item 的 `quantity` 總和，恆等於 order line item 的可履行數量——取數排除已被替代的歷史段**（部分出貨遭 cancel 時原 FO 已出貨段留史；等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`，總綱 S-14 同式 <!-- 2026-08-17 更正（PR #52 第 12 輪）：原「所有 FO 總和」為雙計形 -->）。此斷言就是「品項憑空消失」的黑盒測試。
 3. 全部在**同一 DB transaction** 內完成（取消原單 ＋ 建替代單），中斷不得留下半套。
 4. 若原單「無剩餘工作」（全部已出貨），`fulfillmentOrderCancel` **不產生**替代單，回傳 `replacementFulfillmentOrder: null`。
 

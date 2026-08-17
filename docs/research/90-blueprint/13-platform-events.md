@@ -285,8 +285,8 @@ Functions API 家族（各 API 一個客製點；runtime＝WebAssembly，官方�
 ### D.3 消費端標準流程（操作者：訂閱方 app／我方文件要教的）
 
 1. 抓 raw body → 驗 HMAC（timing-safe）→ 失敗 401 結束。
-2. 以 `X-Shopify-Webhook-Id` 查去重表 → 重複則直接 200。
-3. 事件持久化入 queue → **回 200（5 秒內）**。
+2. **原子落庫**：payload 持久化入 DB-backed inbox/queue，**與 `(shop_id, webhook_id)` 去重鍵同一寫入**（INSERT 唯一索引；duplicate ⇒ 已落庫，直接 200）——去重「只查不寫」失去 X-27 唯一索引裁決；「先寫標記、200 前崩潰」則 retry 被丟（2026-08-17 更正，PR #52 第 12 輪）：原步 2/3 分離、去重鍵寫入時點未定。
+3. **回 200（5 秒內）**——落庫成功後才回。
 4. 背景處理：需要現值時回查 API（payload 可能已陳舊——eventual consistency）。
 5. 週期 reconciliation job：以 `updated_at` 窗口拉取變更補漏【官方 G-7】。
 

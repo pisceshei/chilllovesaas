@@ -253,7 +253,7 @@ balance_to_collect= max(0, −net)         # 換貨/欠款造成的負值＝向�
 1. 商家在「Return items to receive」勾收到的品項 → 每項選 disposition（restock 則選 location）。
 2. 「Exchange items to release」勾要釋出的換貨品項（解 hold）。
 3. 財務段：`financialTransfer.issueRefund`（`orderTransactions[]` 必填＋`refundMethods[]` 可含 storeCreditRefund＋`allowOverRefunding`）[G14]；或選「Later」延後；買家欠款 ⇒ 寄 invoice/收款。可退運費。
-4. 副作用：restock 走庫存調整（冪等 key **兩路**：本流程（returnProcess 收貨、財務段可選 Later）＝**return/RFO disposition line id**；退款路徑的 restock 才用 refund_line_item——步 3 可選 Later 時 Refund 可能尚不存在，單路鍵無鍵可用；兩路互斥防同批單位雙回補，正典見總綱 T3 步驟表 <!-- 2026-08-17 更正（PR #52 第 5 輪） -->）；`returns/process`＋`refunds/create`＋`reverse_fulfillment_orders/dispose` webhook；**全部品項處理完且全部 restock ⇒ Return 自動 CLOSED**。
+4. 副作用：restock 走庫存調整（冪等 key **兩路**：本流程（returnProcess 收貨、財務段可選 Later）＝**return/RFO disposition line id**；退款路徑的 restock 才用 refund_line_item——步 3 可選 Later 時 Refund 可能尚不存在，單路鍵無鍵可用；兩路對同 disposition 單位**原子 claim**（INSERT guard 唯一鍵、成功者才動庫存——pre-check 不互斥），正典見總綱 T3 步驟表 <!-- 2026-08-17 更正（PR #52 第 5 輪；claim 原子化第 12 輪） -->）；`returns/process`＋`refunds/create`＋`reverse_fulfillment_orders/dispose` webhook；**全部品項處理完且全部 restock ⇒ Return 自動 CLOSED**。
 5. 失敗分支：PSP 退款失敗 ⇒ 本地 pending 交易列＋告警＋可重試（同一把 idempotency key）；狀態不符（如已 CLOSED）⇒ `INVALID_STATE`。
 
 ### D.4 無退貨脈絡的退款（refundCreate）[46a §6][G8]

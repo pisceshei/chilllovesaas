@@ -107,7 +107,7 @@ gross_sales  = Σ(商品單價 × 數量)                              // 稅、
 net_sales    = gross_sales − discounts − sales_reversals       // 🔴 可以是負數
 total_sales  = net_sales + taxes + duties + shipping + fees
 ```
-🔴 `sales_reversals`（**撤銷**）不等於「退貨」——它是退款／退貨／取消／訂單編輯造成的負向調整統稱——**記帳口徑拆分量**：商品段（gross−discounts）調整入 sales_reversals 本欄；對運費·稅·關稅·費用的調整**各入該分量的淨值**，不重複塞進本欄（§14 C.1 更正式（2026-08-17 更正，PR #52 第 11 輪）：原「涵蓋對運費、稅、費用、折扣的調整」會與已取淨分量雙扣，同 §14 C.1）。分析線叫撤銷、訂單線叫退貨，**兩線用詞不同是本尊的事實，照抄**；資料欄名跟語義走、不跟 UI 走。
+🔴 `sales_reversals`（**撤銷**）不等於「退貨」——它是退款／退貨／取消／訂單編輯造成的負向調整統稱——**記帳口徑拆分量**：商品段（gross−discounts）調整入 sales_reversals 本欄；對運費·稅·關稅·費用的調整**各入該分量的淨值**，不重複塞進本欄（§14 C.1 更正式（2026-08-17 更正，PR #52 第 11 輪）：原「涵蓋對運費、稅、費用、折扣的調整」會與已取淨分量雙扣，同 §14 C.1）。`docs/specs/86` §3.2 管**來源互斥**（refunds／取消／編輯去重疊），金額段口徑＝商品段（86 已同步回寫（2026-08-17 更正，PR #52 第 12 輪））。分析線叫撤銷、訂單線叫退貨，**兩線用詞不同是本尊的事實，照抄**；資料欄名跟語義走、不跟 UI 走。
 
 三條公式必須是**同一份 rollup 的欄位**（鐵律 7 數字同源），已知三個官方例外：① **AOV 的分子刻意排除 post-order adjustments**（`AOV = (gross_sales − discounts) / orders`），因此 `AOV ≠ net_sales / orders`；② **Live View 的 total_sales 少算 duties 與 fees**，與報表版本並存——本尊自身不同源；③ `ANY_CLICK` 歸因各通路加總會超過 metric 本身。三條全在 §14 C.1–C.3。
 
@@ -587,7 +587,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | M-2 | 送 PSP 的金額必經單位轉換層，依該 PSP pack 宣告的 `amount_format`（`minor_units` ｜ `decimal_string`）與其參數轉換；**格式或參數任一未宣告 ⇒ reject，不得預設** | 鐵律 3／§05 C |
 | M-3 | 型別隔離：`Money::Storage`／`Money::PspMinor`／`Money::PspDecimal`／`Money::Decimal` 之間無隱式轉換；PSP adapter 簽名只收該 pack 宣告格式對應的值物件，傳裸 Integer／裸 String／或傳錯值物件一律 `TypeError` | docs/specs/65 §C |
 | M-4 | zero-decimal 幣別（至少 **JPY／TWD／KRW**）必進金額測試矩陣；`amount_format` 兩種格式各有 fixture pack；TWD 須測「整除 100 違反 ⇒ raise 且不得自動湊整」。缺者 CI fail | docs/specs/65 §H／H.1 |
-| M-5 | 全流程捨入點是**有限且登錄過**的集合：折扣／稅分攤（最大餘數法）、restocking fee（floor）、零小數幣別跨界（依 docs/specs/65 §D raise 不 round）、carrier markup（floor，§09 新增，須補進 docs/specs/65 登錄表）、多幣換算 `round_currency`（模式讀自設定不得硬編；候選 HALF_UP——官方明文句屬顯示脈絡、banker's 亦相容，Q-11 未裁前不得作 fixture 期望，§11 C.5（2026-08-17 更正，PR #52 第 11 輪））。**其餘任何位置出現 round／float 即 bug** | §06 C／§09 C／§11 C／docs/specs/65 |
+| M-5 | 全流程捨入點是**有限且登錄過**的集合：折扣／稅分攤（最大餘數法）、restocking fee（floor）、零小數幣別跨界（依 docs/specs/65 §D raise 不 round）、carrier markup（floor，§09 新增，須補進 docs/specs/65 登錄表）、多幣換算 `round_currency`（模式讀自設定不得硬編；候選 HALF_UP——官方明文句屬顯示脈絡、banker's 亦相容，Q-11 未裁前不得作 fixture 期望，§11 C.1（2026-08-17 更正，PR #52 第 11 輪；引節自 C.5 改 C.1 第 12 輪）)。**其餘任何位置出現 round／float 即 bug** | §06 C／§09 C／§11 C／docs/specs/65 |
 | M-5b | `pricing_quantum`（定價量子）、儲存尺度（恆 ×100）、顯示位數（`currency_format.exponent`）、PSP 單位（pack `amount_format`）是**四個互相獨立的旋鈕**，任一不得代用其他做換算基數 | §11 C／鐵律 3 |
 | M-6 | `line_price = price × quantity`（整數運算，不得先除後乘） | §03 C |
 | M-7 | cart 階段：`total_price = items_subtotal_price − Σ(cart_level_discount_applications)`；不含運費、外加稅、小費、關稅 | §03 C |
@@ -621,7 +621,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | S-11 | `InventoryTransfer.receivedQuantity = Σaccepted + Σrejected + Σcanceled`，等於 `totalQuantity` 時才可轉 TRANSFERRED | §02 C |
 | S-12 | 庫存 commit 的觸發是「**訂單成立**」而非「付款成功」：COD／bank deposit／B2B payment terms／admin `orderCreate` 的 PENDING 單都是訂單已成立、付款未成功而仍須 commit；唯一例外＝selling plan inventory policy 為 `ON_FULFILLMENT` | §03 C／F.2#5 |
 | S-13 | cart 與 checkout 全程只做軟檢查、**永不扣減庫存**；超賣的唯一防線是訂單成立那一刻的原子扣減（我方不做 hold） | §03 C |
-| S-14 | 同一 order 的全部 FulfillmentOrder（含 cancel 替代單、split 兩半、move 產物、replacement FO）對每個 line_item 的 quantity 總和 **≡ 該訂單該品項的可履約數量** | §09 C |
+| S-14 | 同一 order 的 FulfillmentOrder（含 cancel 替代單、split 兩半、move 產物、replacement FO）對每個 line_item 的 quantity 總和 **≡ 該訂單該品項的可履約數量**——**取數排除已被替代的歷史段**（部分出貨遭 fulfillmentCancel 時原 FO 已出貨段留史；等價式＝`Σ remainingQuantity ＋ Σ 非 CANCELLED fulfillment 量`，同 :215 不變量（2026-08-17 更正，PR #52 第 12 輪）：原「全部 FO 總和」為雙計形） | §09 C |
 | S-15 | 一張 Fulfillment 只能吃**同一 order ＋ 同一 location** 的多張 FO；跨 order 或跨 location 併單一律 reject | §09 C |
 | S-16 | 每個 app 的 active hold 數 ≤ 10（**計數維度是 app 不是全域**）；`releaseHold` 省略 `holdIds` ＝ 釋放全部 | §09 C |
 | S-17 | bundle 可售數 `= min_i ⌊component_available_i / quantity_i⌋`；未追蹤庫存或 `CONTINUE` 的組件不進計算；父 inventory_item **唯讀不可直寫** | §01 C |
@@ -715,7 +715,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | V-15 | 語言解析優先序三層全集：①顧客明確要求 ＞ ②顧客目前使用 ＞ ③web presence 的 `default_locale` | §11 C |
 | V-16 | 每 shop：`count(themes WHERE role='MAIN') == 1`；`count(domains WHERE primary) == 1` 且 `count(host LIKE '%.myshopify.com') == 1` | §12 C／§15 C |
 | V-17 | JSON template：`set(json.order) == keys(json.sections)` 且 order 無重複；每個 `sections[id].type` 必須對應主題內實際存在的檔案 | §12 C |
-| V-18 | UrlRedirect **只在 resolve 判定為 404 時生效**；path 仍能渲染出頁面則靜默不生效且不報錯（UI 須主動提示） | §12 C |
+| V-18 | UrlRedirect 在 resolve 判定**資源不可渲染**（404 與 unpublish 410 皆查，§12 D.5（2026-08-17 更正，PR #52 第 12 輪））時生效；path 仍能渲染出頁面則靜默不生效且不報錯（UI 須主動提示） | §12 C |
 | V-19 | `seo.hidden` metafield ＝ 同時自 sitemap／店面搜尋／對外索引消失但**直連 URL 仍可訪問**；主題層 `noindex` 只擋外部引擎、店面搜尋仍可見——**兩軌語義不得互相取代** | §12 C |
 | V-20 | 租戶解析只能由 `request.host → shop_id`；請求體／查詢參數自報的 shop 識別**一律不得作為授權依據**（fail-closed） | §15 C |
 | V-21 | 跨店引用一律拒：section settings／filter／menu item／metafield file_reference 所引用的資源 ID 必須驗 `shop_id` 歸屬 | §12 C／鐵律 2 |
@@ -760,7 +760,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-5 | once-per-customer 被同一顧客並發繞過 | 應用層預檢有 TOCTOU 窗口 | 唯一索引 `(shop_id, discount_id, customer_key)` 兜底 | 同一 customer_key 併發下 2 單 ⇒ 恰 1 成功 | §07 C |
 | X-6 | active automatic 折扣數併發撞 25 上限（**含未來重疊區間**，§07 D.1 （2026-08-17 更正，PR #52 第 10 輪）） | 建立/啟用兩路徑各自計數 | 鎖或條件寫入（對 startsAt/endsAt 全區間重疊驗證）；超出回 `ACTIVE_PERIOD_OVERLAP` | 併發建立第 25、26 個 ⇒ 恰 1 個超額被拒 | §07 C |
 | X-7 | **退款上限被兩筆並發退款合計突破** | 先查 maximumRefundable 再 INSERT | 條件式 UPDATE：`UPDATE ... WHERE refunded_total_cents + ? <= limit`；**禁止先 SELECT 再 INSERT**；DB 唯一硬約束為 `refunded_total_cents >= 0` | 兩筆各佔上限 60% 併發 ⇒ 恰 1 成功；over-refund 需權限 flag 才通過 | §06 C |
-| X-8 | restock 重複進貨（webhook 重放／退款重試） | 退款可重試但庫存調整非冪等 | 冪等 key ＝ `refund_line_item` 唯一鍵，同一 line item 只產生一次 inventory adjustment | 重放同一 `refunds/create` 3 次 ⇒ 庫存只 +N 一次 | §06 C |
+| X-8 | restock 重複進貨（webhook 重放／退款重試） | 退款可重試但庫存調整非冪等 | 冪等 key **兩路**（退款路＝`refund_line_item`；收貨路＝return/RFO disposition line）＋ disposition 單位級**原子 claim** guard——兩把鍵各自唯一仍可跨路雙回補，正典見 T3 restock 步驟列（2026-08-17 更正，PR #52 第 12 輪）：原單路鍵對「先收貨後退款」無鍵可用 | 重放同一 `refunds/create` 3 次 ⇒ 庫存只 +N 一次；跨路併發 ⇒ 恰一次回補 | §06 C／D.3-4 |
 | X-9 | **取消訂單 vs 建立退貨同時成功** | 兩邊各自檢查對方不存在 | 判定與轉移在同一 transaction 內鎖定訂單；active return 存在 ⇒ `orderCancel` reject | 併發 `orderCancel` ＋ `returnCreate` ⇒ 恰 1 成功 | §04 C／§06 C |
 | X-10 | `returnCancel` 的五前置 check-then-act | 檢查與轉移之間狀態改變（例如同時產生退款） | 條件式 UPDATE 或行鎖包住五前置檢查＋狀態轉移 | 併發 `returnCancel` ＋ `refundCreate` ⇒ 不得兩者皆成功 | §06 C |
 | X-11 | **capture 超額 / capture 與 void 互斥** | 多次 capture 各自讀 totalUnsettled | 同一 DB transaction 內對**授權列持行鎖**；capture 與 void 搶同一把鎖 | ①兩筆 capture 各佔 60% ⇒ 恰 1 成功 ②capture 與 void 併發 ⇒ 恰 1 成功 | §05 C |
@@ -773,7 +773,7 @@ total_sales  = net_sales + taxes + duties + shipping + fees
 | X-18 | 排程發布到點時商品已被改為 DRAFT | 套用排程當下的快照 | job 到點**重讀 `product.status`** 驗證仍為 ACTIVE | 排程期間改 status ⇒ 到點不發布 | §01 C |
 | X-19 | **同一 order 併發開兩個 edit session** | 無鎖 | `UNIQUE(shop_id, order_id)` 單開鎖 ＋ TTL 24h（鐵律 2：業務資料複合索引以 shop_id 開頭（2026-08-17 更正，PR #52 第 11 輪）：原鍵僅 order_id）；重複 begin 回 `INVALID_STATE` | 併發兩次 `orderEditBegin` ⇒ 恰 1 成功 | §04 C |
 | X-20 | 訂單序號重複／跳號 | per-shop 序列無鎖 | per-shop 序號產生器加鎖；取消／刪除不回收號碼 | N 執行緒併發建單 ⇒ 號碼連續且無重複 | §04 C／§15 |
-| X-21 | 同一 cart token 多分頁併發加購產生重複行 | 合併鍵判定在應用層 | 行級 upsert ＋ `(cart_id, 合併鍵)` 唯一索引 | 兩分頁同時 add 同一 variant/properties ⇒ 恰一行、quantity 相加 | §03 C |
+| X-21 | 同一 cart token 多分頁併發加購產生重複行 | 合併鍵判定在應用層 | 行級 upsert ＋ `(shop_id, cart_id, 合併鍵)` 唯一索引（鐵律 2（2026-08-17 更正，PR #52 第 12 輪）） | 兩分頁同時 add 同一 variant/properties ⇒ 恰一行、quantity 相加 | §03 C |
 | X-22 | 棄單挽回 job 與買家自行完購競態 | 六條不寄條件是時變的 | 寄出前**重查六條**；先到先贏且冪等 | 完購與寄信 job 併發 ⇒ 不得寄出 | §03 C |
 | X-23 | **email/phone 唯一性** 併發建立同 email 顧客 | 應用層預檢 | DB `UNIQUE(shop_id, email)`／`UNIQUE(shop_id, phone)` 兜底，回 `TAKEN` | 併發建立同 email ⇒ 恰 1 成功、另 1 回 TAKEN | §08 C |
 | X-24 | `customerMerge` 併發合併 | 合併不可復原 | `mergeInProgress` 檢查 ＋ per-customer advisory lock（**兩方 id 排序取鎖避免死鎖**）＋ idempotencyKey | 併發 merge 同一對 ⇒ 恰 1 執行、另 1 回 `MERGE_IN_PROGRESS`；反向配對不得死鎖 | §08 C |
@@ -1389,7 +1389,7 @@ flowchart TD
 | D-82 | 前台 | 主題編輯無官方併發衝突機制 | `lock_version` 樂觀鎖，後存者收衝突提示 | 加嚴 | §12 F |
 | D-83 | 前台 | 主題安裝無授權 gate | 上傳 zip 需授權聲明 gate＋theme-check＋相容報告（鐵律 9） | 加嚴 | §12 F |
 | D-84 | 前台 | 專有搜尋引擎＋拼字容錯 | MySQL FULLTEXT ngram demo 級；**介面／參數／值域照抄**，`Search::Provider` 抽象留升級口 | 簡化不做 | §12 F |
-| D-85 | 前台 | redirect 僅在原 URL 回 404 時生效，來源仍可渲染則靜默不生效 | 照抄；額外在 UI 主動提示「來源仍可訪問則不生效」 | 照抄 | §12 F |
+| D-85 | 前台 | redirect 在原 URL 渲染不出頁面時生效（help 措辭「404」；**unpublish 資源的 410 形亦查**——§12 D.5 官方明文允許 301 取代預設 410（2026-08-17 更正，PR #52 第 12 輪）：原「僅 404」與 D.5 互斥），來源仍可渲染則靜默不生效 | 照抄；額外在 UI 主動提示「來源仍可訪問則不生效」 | 照抄 | §12 F |
 | D-86 | 前台 | Files 走公開 CDN、無存取控制、保留九個尺寸字尾 | 九字尾同樣封鎖、**HTML 一律拒收**；額外建 `file_usages` 引用計數表支撐「Used in」與刪除確認；CDN 網域策略＝M0 基建裁定 | 加嚴 | §12 F |
 | D-87 | 事件 | `WebhookSubscription` 無 disabled 中間態，持續失敗直接自動刪除訂閱 | 24h 持續失敗 ⇒ 轉 `disabled`（保留資料）＋通知商家＋後台可重啟 | 結構性不同 | §13 F-D3 |
 | D-88 | 事件 | `format` 支援 JSON／XML；218 個 topic；filter 自 2024-07 全 topic 可選配 | 只做 JSON；首發 24 對外 topic＋3 內部 `einvoice/*`；**首發不支援 filter**（schema 不曝露該欄），metaobject 三 topic「必帶 filter」形態整體遞延 | 簡化不做 | §13 F-D2/D-5/D-13 |
@@ -1637,7 +1637,7 @@ selling_plans:
   billing_cycle_index_start: 1              # §03 G-29（契約編輯不重置）
 
 metafields:
-  max_definitions_per_owner_type: 256       # §15 C.5 每 app 每 resource type（⚠️ docs 128 vs changelog 256 待 Q-93）；🔴 商家自建**不同值**＝plans.merchant_metaobject_definitions 檔位制 128/128/128/256——原註「商家自建同值」為誤（2026-08-17 更正，PR #52 第 11 輪）
+  max_definitions_per_owner_type: 256       # §15 C.5 每 app 每 resource type（⚠️ docs 128 vs changelog 256 待 Q-93）；🔴 商家自建（metafield）**不同值**——檔位制**沿用 metaobject 檔位（plans.merchant_metaobject_definitions）屬我方推定**：metafield 自身來源（G-9/G-11）未載檔位；Q-93 若對兩者分別落定則兩鍵分立（2026-08-17 更正，PR #52 第 11 輪；跨概念引據標明第 12 輪）
   max_pinned_definitions_per_owner_type: 50 # §15 C.5
   max_value_bytes: 65536                    # §15 C.5／§01 G25（多數型別 64KB）
   max_json_value_bytes: 131072              # §15 C.5（128KB；2026-04-01 前既有 app 祖父條款 2MB）
@@ -2160,9 +2160,9 @@ analytics:
 
 | 項 | 內容 |
 |---|---|
-| **領域切片** | **§12**：Theme 四 role ＋ processing／processingFailed 正交軸（§12 B.1）／JSON template 校驗（`set(json.order) == keys(json.sections)`）／Page・Article 可見性（`isPublished + publishedAt` derived）／Comment 五態（🔴 `PUBLISHED` 無退回未核准的轉移，§12 B.4）／UrlRedirect（**僅在 404 時生效**，來源仍可渲染則靜默不生效）／canonical 與 `seo.hidden` metafield 雙軌隱藏／File 四態與 `file_usages` 引用計數。**§03 前半**：cart 模型與行合併鍵四要素（variant_id + properties + selling_plan + price）／`key = {variant_id}:{hash}` 且 key 非終身穩定／`/cart/*.js` 家族。**§11 P0**：ShopLocale 四態／Translation `outdated` 為 digest 比對的 derived 值／URL 前綴恆為「語言-地區」（`en-HK`，**永不出現裸語言碼**，§11 decisions） |
+| **領域切片** | **§12**：Theme 四 role ＋ processing／processingFailed 正交軸（§12 B.1）／JSON template 校驗（`set(json.order) == keys(json.sections)`）／Page・Article 可見性（`isPublished + publishedAt` derived）／Comment 五態（🔴 `PUBLISHED` 無退回未核准的轉移，§12 B.4）／UrlRedirect（**資源不可渲染時生效——404 與 unpublish 410 皆查（D.5（2026-08-17 更正，PR #52 第 12 輪））**，來源仍可渲染則靜默不生效）／canonical 與 `seo.hidden` metafield 雙軌隱藏／File 四態與 `file_usages` 引用計數。**§03 前半**：cart 模型與行合併鍵四要素（variant_id + properties + selling_plan + price）／`key = {variant_id}:{hash}` 且 key 非終身穩定／`/cart/*.js` 家族。**§11 P0**：ShopLocale 四態／Translation `outdated` 為 digest 比對的 derived 值／URL 前綴恆為「語言-地區」（`en-HK`，**永不出現裸語言碼**，§11 decisions） |
 | **前置未決** | §7 Q-18（settings_data presets 官方 ≤5 vs golden theme Ella 實測 16 組，**使用者裁定**；擋主題安裝管線驗證器）、§7 Q-76（processing 中可否 publish）、§7 Q-75（`commentNotSpam` 目標態：help 與 dev 文檔矛盾）、§7 Q-79（SVG 是否受理——已明確拒收 HTML，SVG 未定，擋 XSS 防線）、§7 Q-04（Ajax cart 存續期）、§7 Q-04（cart purge 30 天 vs 我方 90 天，**使用者裁定**）、§7 Q-07（前台 cart 寫入是否仿本尊放行超量，**使用者裁定**）、§7 Q-11（`round_currency` 捨入模式官方未逐字宣告）、§7 Q-12（per-currency pricing quantum 對照表未刊） |
-| **完成判準** | ① 任一時刻 `count(themes WHERE role='MAIN') == 1`；併發兩人同時 publish 不得出現雙 MAIN／零 MAIN ② redirect 的來源路徑若仍能渲染出頁面（含 collection tag 篩選 URL），redirect 不生效且**不回報錯誤**，UI 主動提示 ③ 刪除 Page 於同一 transaction 連帶刪除指向它的 menu_items，確認框逐條揭示 ④ `filter.v.price.gte` 入站立即轉 `Money::Storage`、出站經 `Money::Decimal`；JPY/TWD/KRW 三幣別的篩選與 JSON-LD 對得上 ⑤ cart 同 token 多分頁併發加購，行級 upsert ＋`(cart_id, 合併鍵)` 唯一索引，不產生重複行 ⑥ 語言 URL 一律 `en-HK` 形態；`translationsRegister` digest 不符即 reject（`INVALID_TRANSLATABLE_CONTENT`）⑦ Rich Results 測試通過、切語言雙層翻譯生效（HANDOFF 原判準） |
+| **完成判準** | ① 任一時刻 `count(themes WHERE role='MAIN') == 1`；併發兩人同時 publish 不得出現雙 MAIN／零 MAIN ② redirect 的來源路徑若仍能渲染出頁面（含 collection tag 篩選 URL），redirect 不生效且**不回報錯誤**，UI 主動提示 ③ 刪除 Page 於同一 transaction 連帶刪除指向它的 menu_items，確認框逐條揭示 ④ `filter.v.price.gte` 入站立即轉 `Money::Storage`、出站經 `Money::Decimal`；JPY/TWD/KRW 三幣別的篩選與 JSON-LD 對得上 ⑤ cart 同 token 多分頁併發加購，行級 upsert ＋`(shop_id, cart_id, 合併鍵)` 唯一索引（鐵律 2（2026-08-17 更正，PR #52 第 12 輪）），不產生重複行 ⑥ 語言 URL 一律 `en-HK` 形態；`translationsRegister` digest 不符即 reject（`INVALID_TRANSLATABLE_CONTENT`）⑦ Rich Results 測試通過、切語言雙層翻譯生效（HANDOFF 原判準） |
 
 #### M3 成交線 — L2 之 §04 建單軸＋§03 後半＋L3 之 §05、§09 費率、§10 核心
 

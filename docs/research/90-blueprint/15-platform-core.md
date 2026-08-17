@@ -167,7 +167,7 @@ requestedQueryCost = 預估上限（先預扣）；actualQueryCost = 執行後�
 | 項 | 上限 |
 |---|---|
 | 每 app 每 resource type 定義數 | 256（⚠️ docs 頁 128 vs changelog 256 兩源矛盾未定案；另一判讀＝該 changelog 256 實為商家定義 Plus 檔位值（總綱 §8 矛盾表）——兩判讀並存待 Q-93（2026-08-17 更正，PR #52 第 11 輪）） |
-| 商家自建每 resource type 定義數 | 128（Basic/Grow/Advanced）／256（Plus+）——與本章 G-10 正表一致，全 256 為誤植（待 Q-93 （2026-08-17 更正，PR #52 第 9 輪）） |
+| 商家自建每 resource type 定義數 | 128（Basic/Grow/Advanced）／256（Plus+）——檔位**沿用 metaobject 正表（G-10）屬我方推定**：metafield 表頭來源（G-9/G-11）未載檔位；全 256 為誤植判讀（待 Q-93，若對 metafield/metaobject 分別落定則兩鍵分立（2026-08-17 更正，PR #52 第 9 輪；跨概念引據標明第 12 輪）） |
 | Pinned 定義每 resource type | 50 |
 | 值大小（多數型別） | 64KB |
 | 值大小：`json` | 128KB（2026-04-01 前既有 app 祖父條款 2MB） |
