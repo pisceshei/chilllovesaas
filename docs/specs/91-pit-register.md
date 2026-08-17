@@ -2,8 +2,9 @@
 
 > 重啟計畫 E 軌主檔（PR-E1 立骨架，2026-08-17）。用途：把全部歷史事故（死控件／假數字／
 > 假成功／假憑證／文檔漂移⋯）收割成**按根因去重**的坑條目，每坑帶預防機制與複驗指令，
-> **禁止同一個坑踩第二次**。與鄰檔關係：92＝宣稱/假憑證清查（A 軌）、93＝響應式複驗
-> （C 軌）、94＝網路取證索引（D 軌）、95＝重做需求總綱（F 軌，反向連結本檔坑編號）。
+> **禁止同一個坑踩第二次**。與鄰檔關係（**四檔皆尚未建立**，屬未來文件——各由重啟計畫
+> 對應 PR 引入：92 宣稱/假憑證清查＝A 軌 PR-A1、93 響應式複驗＝C 軌 PR-C0 配套、
+> 94 網路取證索引＝D 軌 PR-D0、95 重做需求總綱＝F 軌收斂輪；建立後將反向連結本檔坑編號）。
 > 驗收方 ⚪（範圍外觀察）的法定去處＝本檔（CLAUDE.md 驗收基準）；本檔建立前的 ⚪
 > 積壓自 PR #52 描述轉入（§3）。
 
@@ -14,7 +15,7 @@
 | 欄 | 內容 | 紀律 |
 |---|---|---|
 | ① 形態分類 | F1–F12 之一（§0.2；可擴，擴類須在本表加列） | 按**症狀形態**歸類 |
-| ② 嚴重度／狀態 | 嚴重度 `P0/P1/P2`；狀態 `open/機制已立/明文接受/結案` | 「結案」唯有複驗指令實跑通過 |
+| ② 嚴重度／狀態 | 嚴重度 `P0/P1/P2/P3`（P3＝低危/一致性級——既有事故已用此級，如 58 號「逾期未銷＝P3 資料一致性事故」，無損映射）；狀態 `open/機制已立/明文接受/結案` | 「結案」唯有複驗指令實跑通過 |
 | ③ 事故經過 | 何時、何處、怎麼發現（引 worklog/handoff/判詞出處） | 引文帶檔:行 |
 | ④ 根因 | **直接根因＋系統性根因**兩層都要 | 去重按根因不按症狀 |
 | ⑤ 預防機制 | 機制名（CI 閘門／schema 約束／流程步驟） | 🔴 **不接受「更小心」**類答案 |
@@ -61,7 +62,8 @@
 
 ## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
 
-> 來源＝PR #52 描述 ⚪ 段全量轉入（2026-08-17，PR-E1；原文照錄、僅加轉入標頭）。
+> 來源＝**PR #52 描述 ⚪ 段＋bot 第 17–24 輪判詞 ⚪**兩源全量轉入（2026-08-17，PR-E1）。
+> 條目主文照錄原文；**各條末尾的【F#】／候選標記＝本輪轉入時另加的形態預標，非原文**。
 > 展開時按根因併條；「已於 #52 輪內處理」者展開時直接標結案候選。
 
 ### 3.1 自 PR #52 首輪起累積
@@ -72,7 +74,7 @@
 - B2B「全域取最低價」舊式五處：46b:940／29:243／28:500／74:81／specs/54:428——重建 Phase R 收斂；specs/55 §B.3 tax_bp 表示法（尺度後綴宣告制回寫）；closed 判定式倉庫外三處：specs/16:232／research/06:111／specs/50:21（46a:152 為官方取證檔照錄不改）【F5】
 - Q-86×2 的 M0 前置列位 vs §7 時點欄 M1 的矛盾：處置＝§9.2 M0 前置未決欄該兩格屬「刻意提前問」——登記為刻意提前、§7 時點欄不改【F5·明文接受候選】
 - 15-F5 回寫完成後，總綱三處「該去改 15-F5」指示句成陳舊指示（§2.4 M1／§6.2 D-32／03 章 F.2#5）——複驗：`grep -rn "15-F5" docs/research/90*` 補「已回寫（PR #52）」註記【F5】
-- limits.yml:765 informational 鍵以 float 主單位率 0.0175 表示，與總綱 §8 規則③口徑不合（informational-only 鍵是否豁免無明文）——下次動 limits.yml 時釐清【F7】
+- limits.yml `late_capture_surcharge_rate_informational_only` 鍵（鍵名錨；行號快照＝轉入時 :775，原登記 :765 已漂移）以 float 主單位率 0.0175 表示，與總綱 §8 規則③口徑不合（informational-only 鍵是否豁免無明文）——下次動 limits.yml 時釐清【F7】
 
 ### 3.2 自 bot 第 17–24 輪判詞 ⚪
 
@@ -99,8 +101,11 @@
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
 > 也要勾，代表「讀過、無新坑」）。**完成判準**＝全部勾完後，隨機抽 5 份 worklog
 > 復讀，漏抓率 0 才算收（抽樣記錄附於本節末）。
-> 名單複驗：`git ls-files docs/worklog docs/handoff | wc -l`（本清單生成於 PR-E1，
-> 之後新增檔案隨輪補列）。
+> 名單複驗：`git -c core.quotepath=false ls-files docs/worklog docs/handoff | wc -l`
+> 須等於 A.1＋A.2 勾選項總數（第 2 輪補 quotepath 旗標——中文檔名無此旗標輸出為
+> 八進位跳脫，逐檔比對不可讀）。🔴 **新增 worklog/handoff 的同一 commit 必須同步
+> 補列本清單**（第 2 輪改——原「之後隨輪補列」擋不住同 commit 新增檔漏列：本 PR
+> 首版即漏了自己的 3 檔，其中 phase0 交接檔正是最密集的收割源）。
 
 ### A.1 worklog
 
@@ -186,6 +191,7 @@
 - [ ] `docs/worklog/2026-08-16-黃燈清理.md`
 - [ ] `docs/worklog/2026-08-17-鐵律15提交前復核.md`
 - [ ] `docs/worklog/README.md`
+- [ ] `docs/worklog/2026-08-17-91坑登記簿骨架.md`（本 PR 新增，第 2 輪補列）
 
 ### A.2 handoff
 
@@ -244,15 +250,18 @@
 - [ ] `docs/handoff/2026-08-16-驗收判詞改制.md`
 - [ ] `docs/handoff/2026-08-16-黃燈清理.md`
 - [ ] `docs/handoff/2026-08-17-鐵律15提交前復核.md`
+- [ ] `docs/handoff/2026-08-17-phase0收官與codex59佇列交接.md`（本 PR 入庫；**59 條佇列＋47 條 live 清單來源檔，最密集收割源**，第 2 輪補列）
+- [ ] `docs/handoff/2026-08-17-phase1開工與91骨架.md`（本 PR 新增，第 2 輪補列）
+- [ ] `docs/handoff/2026-08-17-session交接-phase0收官與phase1首輪.md`（本 PR 第 2 輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
-- [ ] `docs/specs/49-doc-audit.md`
+- [ ] `docs/specs/49-ui-gap-register.md`
 - [ ] `docs/specs/50-logic-gap-register.md`
-- [ ] `docs/specs/51-prototype-audit.md`
-- [ ] `docs/specs/53-prototype-recheck.md`
-- [ ] `docs/specs/84-prototype-death-audit.md`
-- [ ] `docs/specs/89-annotation-mode-audit.md`
+- [ ] `docs/specs/51-token-conformance.md`
+- [ ] `docs/specs/53-ui-gap-recheck.md`
+- [ ] `docs/specs/84-m1-gate-triage.md`
+- [ ] `docs/specs/89-prototype-defect-reverify.md`
 - [ ] `docs/specs/71-parity-register.md` §F（V 項全表）
 - [ ] `.github/workflows/claude-review.yml`（🔴 全檔註釋＝最密集事故檔之一）
 - [ ] `.github/workflows/ci.yml`（同上）

@@ -199,8 +199,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   **且未清 🟡 為零**。🟡 三清法：①修復（diff 可驗證）②裁定不修（PR 描述或
   `docs/DECISIONS.md` 明文條目，驗收方核對存在即清、不評裁定本身）③證偽（附證據，
   驗收方複驗成立即清）。🔴 不適用②。範圍外既有問題走 **⚪**（登記不擋，作者搬進
-  `docs/specs/91-pit-register.md`——該檔尚未建立、排查階段 PR-E1 引入，建立前登記於
-  PR 描述）。全文＝CLAUDE.md §驗收基準。
+  `docs/specs/91-pit-register.md` §3 轉入暫存區——PR #55 已建立，「建立前登記於
+  PR 描述」的過渡辦法自此作廢）。全文＝CLAUDE.md §驗收基準。
 - 🔴 **提交前復核（2026-08-17 新增鐵律 15，全文與沿革見 CLAUDE.md／該輪 worklog）**：
   push 前逐項對照——宣稱已修復者於已提交差異（回應輪對**上輪 push 的 HEAD** 取兩點 diff、SHA 由 push 時自記、基準 ref 推送遠端；對 base 的累計 diff 僅作初始盤點）有對應 hunk、
   ②（僅 🟡）⚪ 核對登記存在、③核對證據或其可存取引用存在；順序＝修復→閘門→commit→
