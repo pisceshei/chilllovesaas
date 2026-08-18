@@ -392,10 +392,23 @@ wait_for_reset() {
 #    就容忍連續三次失敗。起跑比它更脆弱是說不過去的。
 BASELINE_LINE=""
 BASE_FAILS=0
-for _try in 1 2 3 4; do
+# 🔴 限流不得消耗**失敗**預算（Codex #59 r10）：舊版是 `for _try in 1 2 3 4`，限流分支的
+#    `continue` 照樣推進計數 ⇒ 連續四次限流就走到下面 exit 2，而檔頭契約明寫
+#    「限流是可恢復狀態，等到重置再續，**不計入失敗**」。
+# 🔴 但**限流必須有自己的上限**，否則就成了無界等待：只把限流排除在 BASE_FAILS 之外、
+#    不另設界，`continue` 會在「等完仍被限流」時無限打轉（本輪首版即如此，自檢時發現）。
+#    ⇒ 兩個獨立計數：`BASE_FAILS`（暫時性 API 失敗，上限 4）與 `RATE_WAITS`（限流等待，
+#    上限 6）。兩者任一耗盡就離開迴圈，由下方 case 分別報出正確原因。
+BASE_RATE_WAITS_MAX=6
+RATE_WAITS=0
+while [ "$BASE_FAILS" -lt 4 ] && [ "$RATE_WAITS" -lt "$BASE_RATE_WAITS_MAX" ]; do
   BASELINE_LINE=$(fetch_state) || BASELINE_LINE="APIERR"
   case "$BASELINE_LINE" in
-    RATELIMITED*) wait_for_reset "${BASELINE_LINE#* }"; continue;;
+    RATELIMITED*)
+      RATE_WAITS=$((RATE_WAITS + 1))
+      echo "起跑撞限額（第 $RATE_WAITS/$BASE_RATE_WAITS_MAX 次；**不計入失敗預算**）——等到重置再續"
+      wait_for_reset "${BASELINE_LINE#* }"
+      continue;;
     APIERR*)
       BASE_FAILS=$((BASE_FAILS + 1))
       echo "起跑抓取失敗（暫時性，累計 $BASE_FAILS）——10 秒後重試"
@@ -405,7 +418,7 @@ for _try in 1 2 3 4; do
   break
 done
 case "$BASELINE_LINE" in
-  RATELIMITED*) echo "🔴 起跑階段反覆撞限額，放棄" >&2; exit 2;;
+  RATELIMITED*) echo "🔴 起跑階段連續 $RATE_WAITS 次撞限額（上限 $BASE_RATE_WAITS_MAX），放棄" >&2; exit 2;;
   APIERR*|"") echo "🔴 起跑連續 $BASE_FAILS 次抓取失敗，API 持續不可用" >&2; exit 2;;
 esac
 echo "起跑（head $HEAD_SHORT）：判詞就緒=${BASELINE_LINE% *}／codex已審=${BASELINE_LINE#* }；" \

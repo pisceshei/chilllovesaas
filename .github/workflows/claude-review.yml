@@ -1032,8 +1032,12 @@ jobs:
           fi
 
           if printf '%s' "$LATEST" | grep -q "【驗收結論】通過"; then
-            gh pr review "$PR" --approve --body "Claude 驗收通過 ✅（自動核准）" \
-              || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
+            # 🔴 **approve 已移到四條件之後**（Codex #59 r10）：舊版在這裡就先送出 approving
+            #    review，然後才算 C1–C4、缺項時只留言「先不要合併」。但 approve 是**會被分支
+            #    保護規則消費的憑證**（`gh pr review --help`：`--approve` = Approve pull request）
+            #    ——在啟用 Actions approvals 的倉庫，它可能滿足「需要一則核准」而讓人工或外部
+            #    auto-merge 在閘門報 0 的情況下照樣合併 ⇒ 那是 fail-open，與本評估器整體的
+            #    fail-closed 立場矛盾。現值＝**四條件齊才 approve**，缺項只留言。
 
             # ── 18.1 四條件評估器（P-8 引入；fail-closed，1=成立）──────────────
             # 🔴 每一條都是**存在型判定**（沒跑≠零意見）：取值失敗、解析不到、狀態未完成
@@ -1137,6 +1141,8 @@ jobs:
             #    CI 未跑完正是最常見的狀態——操作者照著它按下去就是搶跑。
             if [ "$AUTO_MERGE" != "true" ]; then
               if [ "$C1$C2$C3$C4" = "1111" ]; then
+                gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+                  || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
                 gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
               else
                 gh pr comment "$PR" --body "✅ bot 側驗收通過，但 18.1 四條件**尚未齊**：$EVAL（1=成立、0=不成立或無法機械確認）⇒ **先不要合併**。待補：0 的那幾項——①＝Codex 尚未對本輪 head 出零意見 review（可在本 PR 留言 \`@codex review\` 觸發）；③＝機械 CI 未全綠或未跑完。齊了之後再人工合併。"
@@ -1148,6 +1154,8 @@ jobs:
               gh pr comment "$PR" --body "⛔ 18.1 四條件未齊：$EVAL ⇒ **不自動合併**（fail-closed；沒跑≠零意見）。請人工核對後處置。"
               exit 0
             fi
+            gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+              || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
 
             # 🔴 合併前 head 守衛（Codex #59 r2 引入、r3 改為原子）：評估與合併之間仍有
             #    時間窗，期間的 push 會讓「已驗證的 head」與「即將被合併的 head」分岔。

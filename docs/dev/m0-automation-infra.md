@@ -1,4 +1,10 @@
-# M0 — P-8 自動化基建（判詞格式驗證・四條件評估器・熔斷修復・倒計時腳本・CI 淺 clone 修洞）
+# M0 — P-8 自動化基建（判詞格式驗證・四條件評估器・倒計時腳本・CI 淺 clone 修洞）
+
+> 🔴 **2026-08-19 使用者裁定「取消熔斷機制，一律循環到雙清為止、不限次數」**：本包原有的
+> 第 3 項交付「熔斷 label 修復」**已廢止**，機制（`MAX_FIX_ROUNDS`／label 閘門／超輪分支）
+> 已自 `claude-review.yml` 整個移除。下文 §2.3 保留為**事故紀錄**（那個靜默失效形態仍有
+> 參考價值），但它描述的機制**不再存在**。複驗現值：
+> `grep -n "MAX_FIX_ROUNDS" .github/workflows/claude-review.yml`（應只剩廢止說明註釋）。
 
 > 出處：合併版總方案 §八 P-8（`docs/plans/2026-08-18-總方案.md`，隨 PR #58 落庫、
 > 2026-08-18 尚未進 main）。條文依據＝鐵律 17/18（CLAUDE.md，同在 PR #58 立法、
@@ -13,7 +19,7 @@
 |---|---|---|
 | 1 | 判詞格式機械驗證（18.1④） | `.github/workflows/claude-review.yml` 判詞處理步驟內 |
 | 2 | 18.1 四條件評估器（fail-closed） | 同上，「通過」分支內 |
-| 3 | 熔斷 label 修復（17.4 的閘門真正生效） | 同上，超輪分支內 |
+| 3 | ~~熔斷 label 修復~~ **已廢止（2026-08-19 裁定取消熔斷）**——機制連同超輪分支整段移除 | — |
 | 4 | 倒計時判詞輪詢腳本（17.1） | `scripts/await-verdict.sh` |
 | 5 | doc-claims CI 淺 clone 雙重洞修復 | `.github/workflows/ci.yml`＋`scripts/check-doc-claims.rb` `--require-base`＋`scripts/test-doc-claims-rules.rb` git-G3 |
 
@@ -36,10 +42,19 @@
   - **C1 Codex 零建議的正向證據**（r1 加嚴：光「內文沒有某句話」不算證據——同一
     connector 有多種措辭形；r2 再加嚴：身分與 commit 都走**權威欄位**）：存在一則
     review，其 `user.login` **精確等於** `chatgpt-codex-connector[bot]` ∧ 其 `commit_id`
-    **精確等於本輪 event head** ∧ 該 review 名下 inline 意見數＝0（以
-    `pull_request_review_id` 歸戶實查）。⚠️ 不再用「login 含 codex」與「內文含 9 位
+    **精確等於本輪 event head**。🔴 **意見數是「同 head 全部 review 的加總」不是單一 review**
+    （r7 改聚合制、r10 回寫本段）：收齊該 head 全部符合條件的 review id，再以
+    `pull_request_review_id` 歸戶加總其名下 inline 意見數，**總和為 0** 才算零建議
+    ——只看最後一則會讓「後到的零意見 review 遮蔽前一則未清發現」。
+    🔴 **取值失敗與「真的沒有」分開**（r9）：五態＝`apifail`（分頁中途失敗，fail-closed）／
+    `nohead`／`noreview`（該 head 真的沒有 Codex review，合法狀態）／`zero`／`has:N`，
+    狀態字串會印在評估留言裡。⚠️ 不再用「login 含 codex」與「內文含 9 位
     SHA」——前者任何含該字串的帳號都命中，後者會被引述舊 SHA 的散文騙過。
   - **C2 bot 通過**：＝進入本分支的條件（恆 1，寫出來是讓留言可讀）。
+  - 🔴 **approve 在四條件之後才送出**（r10）：舊版先 `gh pr review --approve` 再算
+    C1–C4，缺項時只留言「先不要合併」——但 approve 是**分支保護規則會消費的憑證**，
+    在啟用 Actions approvals 的倉庫可能滿足「需要一則核准」而讓人工或外部 auto-merge
+    在閘門報 0 時照樣合併 ⇒ fail-open，與評估器整體立場矛盾。現值＝四條件齊才 approve。
   - **C3 機械 CI 全綠**（🔴 job 需 `checks: read` 權限——顯式 permissions 區塊會關閉未列出的
     權限，缺它時 check-runs API 回權限錯誤 ⇒ C3 恆 0 ⇒ 四條件結構上永遠湊不齊，Codex r3）：
     head 的 check-runs 全部 `success`，**排除本 review job 自身**
@@ -68,7 +83,11 @@
   的 `workflow_run` 再評路徑收口）。兩條方向都是 fail-closed：代價是多等人工，
   不是誤合併——18.4 啟用裁定時必須重看。
 
-### 2.3 熔斷 label 修復
+### 2.3 熔斷 label 修復（**交付物已廢止，本節留作事故紀錄**）
+> 🔴 2026-08-19 裁定取消熔斷後，本節描述的機制已不存在（label 建立／add-label／超輪分支
+> 全部移除）。保留的理由是**那個失效形態**：「宣稱掛上了其實沒掛上、失敗被 `|| true` 吞掉」
+> ——任何新的 label／狀態類機制都要照它設防。
+
 - **事故**：舊註釋稱「label 不存在時 `--add-label` 會自動建立它」——**實測為假**
   （2026-08-18）。label 從未存在於 repo，add-label 每輪失敗又被 `|| true` 吞掉 ⇒
   PR #58 連續多輪 ⛔ 升級留言與照常驗收**並存**，熔斷從未真正生效；label 最終由
@@ -163,18 +182,21 @@
 - G3 突變：壞 → harness exit 1（失敗訊息含 git-G3）；還原 → exit 0。
 - W1 突變（第 2 輪）：拿掉 ci.yml 調用行的 `--require-base` → harness exit 1（訊息含
   W1）；還原 → exit 0。
-- **待真實 PR 取證**（本 PR 自身因反竄改自跳驗收，取證不到）：①格式驗證與評估器
-  留言要在下一個「通過」的常規 PR 上看到 ②熔斷 add-label 生效路徑要在下一次
-  超輪事件上看到。兩者列入本包 Pending，不宣稱已驗。
+- **待真實 PR 取證**（本 PR 自身因反竄改自跳驗收，取證不到）：格式驗證與評估器
+  留言要在下一個「通過」的常規 PR 上看到，列入本包 Pending，不宣稱已驗。
+  ⚠️ 原本還有第 ② 項「熔斷 add-label 生效路徑要在下一次超輪事件上看到」，
+  **隨 2026-08-19 取消熔斷刪除**——該證據的對象已不存在。
 
 ## 4. 跨功能／跨流程影響（預先對接）
 
 - **所有後續 PR 的 quality job**：base 拿不到會**當場紅**（先前靜默綠）——分支
   剛開、遠端 base 改名等情況會顯性失敗，這是刻意的；修法是把 base 餵對，不是拿掉旗標。
 - **判詞格式走樣＝review job 紅**（先前綠）：驗收方產出走樣會第一時間可見。
-- **熔斷真正生效**：`MAX_FIX_ROUNDS`（現值 "3"）超輪後 label 掛上，**下一次 push
-  不再觸發驗收**——先前歷輪其實都沒生效。要恢復：移除 label 再 push（workflow
-  尾註既有文案）。操作者要開始把「label 在不在」當成狀態的一部分。
+- 🔴 **驗收循環不再有輪數上限**（2026-08-19 裁定取代原「熔斷真正生效」段）：
+  `MAX_FIX_ROUNDS`、job 層 label 閘門、超輪分支皆已移除 ⇒ **`review:需人工裁定`
+  對機制完全無作用**，殘留在既有 PR 上的直接移除即可，不必再把「label 在不在」
+  當成狀態。終止條件只剩一個＝**雙清**（bot 🔴0🟡0 ∧ Codex 對當前 head inline 總和 0）。
+  ⚠️ 代價誠實寫明：沒有任何機制保證輪數收斂，配套＝把復發的意見類型固化成確定性腳本。
 - **`gh pr checks` 消費者**（驗收 bot prompt 的 CI-as-evidence 段）：不受影響，
   check 名稱與結論語義未動；評估器另走 check-runs API。
 - **18.4 啟用時**（未來裁定）：只翻 `AUTO_MERGE` 是不夠的——workflow 頂部與
