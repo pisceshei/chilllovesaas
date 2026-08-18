@@ -94,8 +94,11 @@
   failure／cancelled／timed_out；而 `conclusion == success` **仍不夠**——workflow 在
   「Claude 沒貼結論」「作者不在允許清單」等路徑是**貼診斷留言後 exit 0**（該檔註釋自己
   寫著「失敗被下游 exit 0 吞掉」）⇒ job success 卻零判詞。現行判準追加：存在一則作者在
-  允許清單 ∧ 首行整行匹配合法結論形 ∧ `created_at >= 該 check-run 的 started_at` 的留言
-  （留言無 commit 關聯，check-run 起跑時刻是唯一可靠的「該輪」關聯鍵）。
+  允許清單 ∧ 首行整行匹配合法結論形（理由不得全空白）∧ **落在該 check-run 的時間窗內**
+  ——`started_at ≤ created_at ≤ completed_at＋5 分鐘餘裕`（r6 修正：只設下界的話，
+  舊 commit 的 workflow 事後人工 rerun 貼出的判詞照樣通過；上界擋掉事後 rerun。
+  留言無 commit 關聯欄位，run 時間窗是現行唯一可用的關聯鍵；根治＝判詞契約帶 SHA，
+  屬 workflow 側待辦）。
   **正反實測**：有真判詞的 head 報 1；反竄改自跳（success 但無判詞）的 head 報 0。
 - **非 Windows 可用性**（Codex r5，P1）：gh 偵測用 `${PROGRAMFILES:-}`——`set -u` 下
   Linux／macOS 沒有該變數，直接展開會在**偵測階段就 unbound variable 退出**，兩條路都跑不到。

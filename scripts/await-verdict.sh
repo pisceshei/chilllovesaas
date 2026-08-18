@@ -95,10 +95,26 @@ fi
 HEAD_SHA=$(printf '%s' "$HEAD_SHA" | tr 'ABCDEF' 'abcdef')
 HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
 
+# 🔴 直譯器偵測（Codex #59 r7）：Debian/Ubuntu 與 macOS 常只有 `python3` 沒有 `python`
+#    ——寫死 `python` 會在發出任何 API 請求之前就 command-not-found，然後被重試邏輯
+#    誤報成「API 持續不可用」。順序：python3 → python（且驗證是 Python 3）→ 都沒有
+#    就 exit 2 講明缺什麼。內嵌程式用的是 Python 3 語法，倉庫其他腳本也一律 python3。
+PY_BIN=""
+for _py in python3 python; do
+  if command -v "$_py" >/dev/null 2>&1 && "$_py" -c 'import sys; sys.exit(0 if sys.version_info[0] == 3 else 1)' >/dev/null 2>&1; then
+    PY_BIN="$_py"
+    break
+  fi
+done
+if [ -z "$PY_BIN" ]; then
+  echo "🔴 找不到 Python 3 直譯器（python3／python 皆不可用）——本腳本的 API 解析需要它" >&2
+  exit 2
+fi
+
 # 回傳「判詞就緒 codex已審」兩個 0/1；限流回 `RATELIMITED <reset_epoch>`、
 # 其他不可解析回 `APIERR`（兩者由呼叫端分開處置）。
 fetch_state() {
-  python - "$API" "$PR" "$HEAD_SHA" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
+  "$PY_BIN" - "$API" "$PR" "$HEAD_SHA" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
 import io, json, os, subprocess, sys, urllib.error, urllib.request
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 api, pr, head_sha, check_name, codex_login = (
@@ -175,10 +191,28 @@ def pages(url):
 
 # ①判詞就緒＝該 head 的 review check-run 已 completed（掛在 commit 上，天然綁 head；
 #   且 completed 才出現 ⇒ 不會讀到還在串流編輯中的半截判詞）。
-checks = get(f"{api}/commits/{head_sha}/check-runs?per_page=100")
-if not isinstance(checks, dict) or "check_runs" not in checks:
+# 🔴 check-runs 也要分頁（Codex #59 r7）：回應是物件、清單在 .check_runs 裡，
+#    破百時 `review` run 可能落在後頁 ⇒ 只看第一頁會白等到逾時。與 pages() 同紀律：
+#    跟到短頁為止、理智上限觸頂＝APIERR。
+def check_run_pages(url):
+    out = []
+    page = 1
+    while True:
+        d = get(f"{url}&page={page}")
+        if not isinstance(d, dict) or "check_runs" not in d:
+            return None
+        out.extend(d["check_runs"])
+        if len(d["check_runs"]) < 100:
+            return out
+        page += 1
+        if page > 100:
+            return None
+
+all_runs = check_run_pages(f"{api}/commits/{head_sha}/check-runs?per_page=100")
+if all_runs is None:
     print("APIERR")
     raise SystemExit
+checks = {"check_runs": all_runs}
 # 🔴 判詞就緒＝**job 成功 ∧ 該輪真的產出了合法判詞**（Codex #59 r3 起、r5 補完）：
 #    ①`completed` 不等於通過——格式驗證失敗會 `exit 1`、conclusion 是 failure；
 #    ②但 `conclusion == success` **仍然不夠**：workflow 在「Claude 沒貼結論」「作者不在

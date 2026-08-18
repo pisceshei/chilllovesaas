@@ -702,7 +702,7 @@ jobs:
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
             '[.[]
               | select(.user.login as $l | $who | index($l))
-              | select(.body | split("\n")[0] | test("^" + $m + "需修改：[ \t]*[^ \t].*$"))
+              | select(.body | split("\n")[0] | test("^" + $m + "需修改：[ \t\r　]*[^ \t\r　].*$"))
               | select(((.body | split($m) | length) - 1) == 1)] | length')
 
           if [ -z "$LATEST" ]; then
@@ -963,7 +963,11 @@ jobs:
           FORMAT_OK=0
           # 🔴 理由不得全空白（Codex #59 r6）：`.+` 會把「需修改：　」的尾空白當理由吃掉
           #    ——空理由照樣綠、照樣計輪、可能觸發熔斷。要求冒號後至少一個非空白字元。
-          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：[[:space:]]*[^[:space:]].*)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
+          # 🔴 空白判準與 ROUNDS jq 完全一致（Codex #59 r7）：兩邊都顯式含**全形空白 U+3000
+          #    與 CR**——grep 的 [[:space:]] 對 U+3000 的歸類依 locale 實作而異、jq 的
+          #    [ \t] 又只認 ASCII ⇒ 各寫各的會出現「這邊拒絕、那邊照計輪」的縫，
+          #    足夠多的畸形留言會讓熔斷提早觸發。
+          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：[[:space:]　]*[^[:space:]　].*)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
             FORMAT_OK=1
           else
             gh pr comment "$PR" --body "🔴 判詞**格式驗證失敗**（18.1④，P-8 機制）：第一行必須恰為「標記＋通過」或「標記＋需修改：理由」兩形之一，且標記全文只准出現一次（實得 $MARKER_COUNT 次）。本輪判詞不採信、job 轉紅；請檢查產出端或人工判讀最新一則驗收意見。"
@@ -1064,19 +1068,21 @@ jobs:
             #    （`contains` 會被任何含 codex 的 login 命中）、commit 身分用 review 物件的
             #    `commit_id` 精確比對（用內文含 9 位 SHA 會被引述舊 SHA 的散文騙過，
             #    那正是「拿舊 review 當本輪證據」的路）。
-            CODEX_REVIEW=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+            # 🔴 聚合**同 head 的全部** Codex review（Codex #59 r7）：只取 `.[-1]` 的話，
+            #    自動審查發現了問題、之後又有一則零意見的 review 蓋在同一個 commit 上
+            #    ⇒ 後者把 C1 蓋成 1，前者的未清發現被遮蔽。改法：收齊該 head 全部
+            #    review id，加總其名下 inline 意見數——**總和為 0** 才算零建議
+            #    （意見的 resolved 狀態 API 拿不到，總和制是唯一不漏的聚合）。
+            CODEX_RIDS=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
               | jq -s -c --arg who "$CODEX_LOGIN" --arg head "$HEAD_SHA" \
-                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head)] | (.[-1] // null)')
+                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head) | .id]')
             C1=0
-            if [ "$CODEX_REVIEW" != "null" ] && [ -n "$HEAD_SHA" ]; then
-              CODEX_RID=$(printf '%s' "$CODEX_REVIEW" | jq -r '.id // 0')
-              if [ "$CODEX_RID" != "0" ]; then
-                CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
-                  | jq -s --argjson rid "$CODEX_RID" \
-                      'add // [] | [.[] | select(.pull_request_review_id == $rid)] | length' \
-                  || printf '%s' '-1')
-                [ "$CODEX_INLINE" = "0" ] && C1=1
-              fi
+            if [ "$CODEX_RIDS" != "[]" ] && [ -n "$HEAD_SHA" ]; then
+              CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
+                | jq -s --argjson rids "$CODEX_RIDS" \
+                    'add // [] | [.[] | select(.pull_request_review_id as $r | $rids | index($r))] | length' \
+                || printf '%s' '-1')
+              [ "$CODEX_INLINE" = "0" ] && C1=1
             fi
             C2=1  # ②bot 判詞通過＝本分支的進入條件，且上方格式驗證已過
             # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
