@@ -251,14 +251,15 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
-      job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門本體**——`ci.yml` 呼叫的
+      job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門判準**——`ci.yml` 呼叫的
       **全部 `scripts/` 腳本**（現值＝`check-*`／`test-*`／`lint-prototype.py`，
-      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`）
+      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`）、
+      **`config/ci.rb` 本身**（parity 名單——從名單刪一支閘門，parity 就不再對它斷言）、
       **及 ci.yml／`config/ci.rb` 的 step 所引用的其他判準檔**（舉例非窮舉：
       `.rubocop.yml`、`package.json` 的 test／lint scripts、`spec/` 測試本身——
-      只改 `.rubocop.yml` 或把 test script 改 no-op 的 PR 同樣讓 CI 綠失去意義）。
+      只改 `.rubocop.yml` 或把 test script 改 no-op 的 PR 同樣讓 CI 綠失去意義。
       理由：ci.yml 只是呼叫器、**判準在它引用的檔案裡**，只改判準檔的 PR 會讓
-      18.1③「機械 CI 綠」由被改的檔自己定義＝自我指涉，配對 test-* 同倉同 commit
+      18.1③「機械 CI 綠」由被改的檔自己定義＝自我指涉；配對 test-* 同倉同 commit
       可一起改、不構成獨立防線）、
       改 CLAUDE.md／AGENTS.md（規範本文）、涉及不可逆 schema 裁定或費用的 PR。
     - **18.4 啟用程序**：自動合併 workflow＋判詞格式機械驗證由 P-8 交付並在

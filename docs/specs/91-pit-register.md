@@ -159,6 +159,18 @@
   複驗法＝暫置一條壞引用 md 於 docs/plans/ 重跑應轉紅（或收割輪建 doc_plans fixture）
   【F12；來源＝#58 第 3 輪判詞 ⚪2；措辭經第 5 輪校正——見下條；**第 6 輪已建
   `doc_plans_scope` canary fixture 並經突變驗證（拿掉範圍→test 轉紅），結案候選**】
+- 🔴候選 doc-claims R4/R5 的 CI 生產調用疑似結構性未執行：ci.yml 淺 clone＋淺 base
+  fetch ⇒ 三點 diff 無 merge-base ⇒ 腳本印「R4/R5 本次未執行」warning 後 exit 0——
+  quality 綠不保證 R4 跑過（#58 第 7 輪判詞 ⚪1 機械跡象）；**本地互證同輪成立**：
+  閘門於 commit 前跑時 R4 對未提交行盲（diff 對 base→HEAD），同一行 pre-commit 綠、
+  post-commit 紅——雙重洞疊加＝該輪 R4 實質零執行。修法屬 P-8：CI fetch 深度足＋
+  「未執行」由 warning 升 canary 退出碼；操作紀律先行＝**commit 後必再跑一次
+  doc-claims**【F12；來源＝#58 第 7 輪判詞 ⚪1＋本地實測，G-xx 候選】
+- convergence :84 納管範圍表把 R4 寫成生效中——已於第 8 輪在已知限制補「CI 生產調用
+  疑似未執行」限定【F11；來源＝#58 第 7 輪判詞 ⚪2，登記即處置】
+- worklog 引述性數詞誤中 R4（「九條 fixture」為引述舊註釋原文非現況斷言，R4 機械比對
+  不分引述）——第 8 輪已改寫去數詞；教訓：引述含數詞時改寫或帶複驗式【F11；來源＝
+  #58 第 7 輪判詞 ⚪3，登記即處置】
 - m0-review-convergence fixture 表既有漏列 doc_volatile_cjk（PR #42 期引入時未補列）
   ——#58 第 7 輪隨 🔴1 同筆補齊並加「列數勿手寫」指標句，結案候選【F11；來源＝#58
   第 6 輪判詞 ⚪1】
