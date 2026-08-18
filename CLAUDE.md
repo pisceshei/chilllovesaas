@@ -94,7 +94,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
         🔴 本條主文不改（同源仍是預設），但實作 AOV／撤銷／any-click 前必須先讀上面這段。 -->
 8. **UI 值**：一律取自 `docs/design/23-interaction-css-spec.md` §1 的 tokens，不自創色值與尺寸；icon 用 Lucide（MIT）。
 9. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify 的 CSS/圖片/文案/商標；Liquid gem、theme-check、theme-liquid-docs 為 MIT 可用；`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture，僅供測試、不得隨平台散布。
-    - 🔴 **參考開源專案的授權紅線（2026-08-18 增補）**：**GPLv3 專案（Vendure 及其 admin dashboard 為已查證實例）的代碼一律禁讀、禁抄、禁引用其程式片段**——GPLv3 污染不可逆，讀過再寫同功能都有衍生風險，概念可從其公開文檔學、代碼不可看。MIT／BSD 可安全參考（保留 attribution）；Apache-2.0 可用但有專利授權與 NOTICE 保留義務，混入前法務面要知情。外部方案的採用／拒絕逐項登記於 `specs/107-external-adoption-register.md`（尚未建立，隨合併版總方案 R-8 引入）。
+    - 🔴 **參考開源專案的授權紅線（2026-08-18 增補）**：**GPLv3 專案（Vendure 及其 admin dashboard 為已查證實例）的代碼一律禁讀、禁抄、禁引用其程式片段**——GPLv3 污染不可逆，讀過再寫同功能都有衍生風險，概念可從其公開文檔學、代碼不可看。MIT／BSD 可安全參考（保留 attribution）；Apache-2.0 可用但有專利授權與 NOTICE 保留義務，混入前法務面要知情。外部方案的採用／拒絕逐項登記於 `docs/specs/107-external-adoption-register.md`（尚未建立，隨合併版總方案 R-8 引入）。
 10. **文案**：繁體中文為主、技術名詞保留英文；金額顯示 `HK$1,480`（tabular-nums），實際符號與小數位由市場的 locale 決定，不得硬編。
 11. **司法管轄區（2026-08-12 決議，取代先前的台灣預設）**：**基準法域＝香港**，並且**必須做成可插拔的 jurisdiction pack**，因為目標是全球市場。
     - 稅務憑證是**法域能力**不是核心功能：HK＝無銷售稅／無政府發票（收據僅為商業單據）；TW＝統一發票＋字軌＋折讓＋作廢；MY＝LHDN e-Invoice。核心流程只發「稅務事件」，由 pack 決定要不要落地成憑證。
@@ -213,7 +213,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       ⇒ 停該 PR 轉做他事。無第三種出口，也不得空轉。
     - **17.3 零未清意見即自動前進**：驗收與 CI 皆無問題 ⇒ **自動進入下一項任務，
       不需使用者確認，直到整個階段完成**（既有記憶 `full-automation-authorized` 升格於此）。
-      🔴 例外：命中 18.3 人工合併清單的 PR，雙零後**通知使用者等人工合併**——其依賴鏈上的
+      🔴 例外：命中 18.3 人工合併清單的 PR，**以及 18.4 自動合併啟用前的一切 PR**
+      （過渡期全部人工合併），雙零後**通知使用者等人工合併**——其依賴鏈上的
       後續任務**不得**在合併完成前自動開工（否則會從未含該 PR 的 main 建立依賴工作，
       P-8 這類基建包的下游直接缺依賴）；**無依賴關係**的其他任務可照常並行。
       例外仍須停下來問：憑證紅線、破壞性／不可逆操作、計畫外重大裁定
@@ -252,10 +253,13 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
       job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門本體**——`ci.yml` 呼叫的
       **全部 `scripts/` 腳本**（現值＝`check-*`／`test-*`／`lint-prototype.py`，
-      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`；
-      含 `config/ci.rb` 這類 parity 清單。理由：ci.yml 只是呼叫器、判準在 scripts/ 裡，
-      只改閘門腳本的 PR 會讓 18.1③「機械 CI 綠」由被改的腳本自己定義＝自我指涉，
-      配對 test-* 同倉同 commit 可一起改、不構成獨立防線）、
+      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`）
+      **及 ci.yml／`config/ci.rb` 的 step 所引用的其他判準檔**（舉例非窮舉：
+      `.rubocop.yml`、`package.json` 的 test／lint scripts、`spec/` 測試本身——
+      只改 `.rubocop.yml` 或把 test script 改 no-op 的 PR 同樣讓 CI 綠失去意義）。
+      理由：ci.yml 只是呼叫器、**判準在它引用的檔案裡**，只改判準檔的 PR 會讓
+      18.1③「機械 CI 綠」由被改的檔自己定義＝自我指涉，配對 test-* 同倉同 commit
+      可一起改、不構成獨立防線）、
       改 CLAUDE.md／AGENTS.md（規範本文）、涉及不可逆 schema 裁定或費用的 PR。
     - **18.4 啟用程序**：自動合併 workflow＋判詞格式機械驗證由 P-8 交付並在
       一個真實 PR 上實測全鏈路後才啟用；**啟用前 P-8 必須另立不依賴受審 LLM 判詞的
