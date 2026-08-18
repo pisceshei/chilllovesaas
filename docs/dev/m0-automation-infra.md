@@ -33,16 +33,27 @@
 
 ### 2.2 四條件評估器（18.1）
 - 位置：「通過」分支、approve 之後。四條件全部**存在型判定、fail-closed**（取不到＝0）：
-  - **C1 Codex 零建議的正向證據**（Codex #59 r1 加嚴：光「內文沒有某句話」不算證據——
-    同一 connector 有多種措辭形）：最新 Codex review 錨定當前 head（內文含前 9 位 SHA）
-    **∧ 該 review 名下 inline 意見數＝0**（以 `pull_request_review_id` 歸戶實查）。
+  - **C1 Codex 零建議的正向證據**（r1 加嚴：光「內文沒有某句話」不算證據——同一
+    connector 有多種措辭形；r2 再加嚴：身分與 commit 都走**權威欄位**）：存在一則
+    review，其 `user.login` **精確等於** `chatgpt-codex-connector[bot]` ∧ 其 `commit_id`
+    **精確等於本輪 event head** ∧ 該 review 名下 inline 意見數＝0（以
+    `pull_request_review_id` 歸戶實查）。⚠️ 不再用「login 含 codex」與「內文含 9 位
+    SHA」——前者任何含該字串的帳號都命中，後者會被引述舊 SHA 的散文騙過。
   - **C2 bot 通過**：＝進入本分支的條件（恆 1，寫出來是讓留言可讀）。
   - **C3 機械 CI 全綠**：head 的 check-runs 全部 `success`，**排除本 review job 自身**
     （名稱 `review`——它此刻必然 in_progress）；空集合＝0（沒跑≠綠）。
-    **有界等待**（Codex #59 r1）：pending 時每 30 秒重查、至多 20 次，仍未落定＝0。
+    **有界等待**（r1）：pending 時每 30 秒重查、至多 20 次，仍未落定＝0。
+    **全頁聚合**（r2）：`--paginate`＋`jq -s`——單頁上限 100，破百時後面幾頁的
+    pending／failed 會整批看不到而誤報 allgreen。
   - **C4 判詞格式**：§2.1 的結果（格式失敗根本走不到這裡）。
-- **行為分岔**：`AUTO_MERGE != "true"`（現況）⇒ 只貼評估留言存證、止於評估；
-  `"true"` ⇒ 四條件缺一即拒絕合併並留言，齊了才 `gh pr merge --squash`。
+- **行為分岔**：`AUTO_MERGE != "true"`（現況）⇒ 只貼評估留言存證、止於評估——
+  **留言文案依四條件分兩種**（r2）：齊了才說「可人工合併」，未齊則列出待補項並明說
+  「先不要合併」（舊版一律說「請人工合併」，與同一句的「缺任一即不得合併」互斥）；
+  `"true"` ⇒ 四條件缺一即拒絕合併並留言，齊了**再驗一次 head 未變**才
+  `gh pr merge --squash`（r2：評估與合併之間的 push 會讓兩個 head 分岔）。
+- **全程用 workflow event 的 head**（r2）：不用即時 `gh pr view`——判詞貼出後、
+  評估前若發生 synchronize，即時查詢會拿到新 head，而判詞描述的是舊 head，
+  併發取消抵達前可能合併一個沒有自己判詞的 commit。
 - 🔴 **C1/C3 的已知限制（誠實聲明）**：①Codex inline thread 的 **resolved 狀態**仍拿不到
   （API 權限）——C1 判的是「這輪 review 沒掛任何 inline 意見」，不是「掛過的意見已
   逐條解決」；有意見的輪要等 Codex 對修復後的 head 再發零意見 review 才能 C1=1，而
@@ -62,10 +73,12 @@
 
 ### 2.4 `scripts/await-verdict.sh`
 - `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900] [MAX_POLLS=8]`：
-  每輪查①判詞數是否**比起跑時增加**（判詞累積制，比絕對數會誤認上一輪；判詞認定
-  鏡射 claude-review.yml——作者允許清單 ∧ 第一行以標記開頭，Codex #59 r1 加嚴）
-  ②Codex review 是否錨定 head（前 9 位）。雙到 exit 0；等滿升級 exit 4；
-  API 連敗 3 次 exit 2。
+  每輪查**兩側是否都已對同一個 head 完成**（r2 重寫；原本兩側都只是 PR 全域條件）：
+  ①**判詞就緒**＝該 head 的 `review` check-run 已 `completed`——check-run 掛在 commit 上，
+  天然綁 head，且 `completed` 才出現 ⇒ 同時解掉「判詞留言是邊跑邊編輯、API 會回半截
+  內容」的坑（2026-08-18 實測：8532 字元的判詞讀到 2933 字元、🟡 段整段不在裡面）；
+  ②**Codex 已審該 head**＝有一則 review 其 `user.login` 精確等於 connector 身分
+  ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4；API 連敗 3 次 exit 2。
 - **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
   INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
 - **分頁**（Codex #59 r1）：留言破百的 PR 只看第一頁會永遠等不到新判詞——逐頁抓到

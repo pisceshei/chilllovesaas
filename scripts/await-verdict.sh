@@ -3,11 +3,17 @@
 # 於 PR #58 立法（2026-08-18）、尚未進 main 時本行以功能描述為準）。
 #
 # ## 做什麼
-# push 之後掛上這支，它每隔 INTERVAL 秒查一次 GitHub 公開 API：
-#   ①Claude bot 判詞數是否比起跑時多（= 本輪判詞已出）——判詞的認定與
-#     claude-review.yml 同一套收斂條件：作者在允許清單內 ∧ 第一行以結論標記開頭
-#     （Codex #59 r1：不限作者、不限首行的話，任何人引述標記就能讓本腳本提前 exit 0）
-#   ②Codex 是否已對指定 head SHA 發 review（Reviewed commit 錨定）
+# push 之後掛上這支，它每隔 INTERVAL 秒查一次 GitHub 公開 API，**兩側都綁定同一個
+# head SHA**（Codex #59 r2：兩側原本都只是「PR 全域」條件，任何延遲的舊輪產物都能
+# 讓它提前 exit 0，而那正好是「以為驗收完成、其實驗的是別的 commit」）：
+#   ①**Claude bot 判詞已就緒**＝該 head 的 `review` check-run 已 `completed`。
+#     🔴 為什麼不數判詞留言：留言計數是 PR 全域的，舊 commit 的延遲判詞會讓它 +1；
+#     而且**判詞留言是邊跑邊編輯的**——2026-08-18 實測，留言建立後 API 仍會回半截
+#     內容（8532 字元的判詞只讀到 2933 字元、🟡 段整段不在裡面），照樣被當成「判詞已出」。
+#     check-run 掛在 commit 上、且 `completed` 才出現 ⇒ 一次解決「綁 head」與「判詞完整」。
+#   ②**Codex 已審該 head**＝存在一則 review，其 `user.login` 精確等於 connector 身分
+#     ∧ 其 `commit_id` 精確等於該 head（原本比對「login 含 codex」＋「內文含 9 位 SHA」，
+#     前者可被任何含該字串的帳號滿足，後者會被引述舊 SHA 的散文騙過）。
 # 兩者都到 ⇒ exit 0。超過 MAX_POLLS 輪 ⇒ 印升級訊息、exit 4（逾時升級——
 # 依鐵律 17 的「逾時升級」語義：不是錯誤，是「該去人工看一眼」的信號）。
 #
@@ -66,67 +72,79 @@ HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
 
 # 起跑基準：現有判詞數（之後「變多」才算本輪判詞出了——判詞是累積的，
 # 比對絕對數會把上一輪的誤認成這一輪）。
-fetch_counts() {
-  python - "$API" "$PR" "$HEAD_SHORT" "$PAGES_MAX" <<'PYEOF'
+fetch_state() {
+  python - "$API" "$PR" "$HEAD_SHA" "$PAGES_MAX" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
 import io, json, sys, urllib.request
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-api, pr, head_short, pages_max = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
-# 允許清單與「第一行以標記開頭」皆鏡射 claude-review.yml 的收斂條件；
-# 清單變更時兩處要一起改（該檔 REVIEWERS 註釋有同樣的提醒）。
-ALLOWED = {"claude[bot]", "github-actions[bot]"}
-MARKER = "【驗收結論】"
+api, pr, head_sha, pages_max, check_name, codex_login = (
+    sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6]
+)
+
+def get(url):
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r:
+            return json.load(r)
+    except Exception:
+        return None
 
 def pages(url):
     out = []
     for p in range(1, pages_max + 1):
-        try:
-            with urllib.request.urlopen(f"{url}&page={p}", timeout=30) as r:
-                d = json.load(r)
-        except Exception:
-            print("APIERR")
-            raise SystemExit
+        d = get(f"{url}&page={p}")
         if not isinstance(d, list):
-            print("APIERR")
-            raise SystemExit
+            return None
         out.extend(d)
         if len(d) < 100:
             break
     return out
 
-comments = pages(f"{api}/issues/{pr}/comments?per_page=100")
-reviews = pages(f"{api}/pulls/{pr}/reviews?per_page=100")
-verdicts = sum(
-    1 for c in comments
-    if c.get("user", {}).get("login") in ALLOWED
-    and c.get("body", "").split("\n", 1)[0].startswith(MARKER)
+# ①判詞就緒＝該 head 的 review check-run 已 completed（掛在 commit 上，天然綁 head；
+#   且 completed 才出現 ⇒ 不會讀到還在串流編輯中的半截判詞）。
+checks = get(f"{api}/commits/{head_sha}/check-runs?per_page=100")
+if not isinstance(checks, dict) or "check_runs" not in checks:
+    print("APIERR")
+    raise SystemExit
+verdict_ready = any(
+    c.get("name") == check_name and c.get("status") == "completed"
+    for c in checks["check_runs"]
 )
-codex = any(
-    "codex" in (r.get("user", {}).get("login", "").lower())
-    and head_short in r.get("body", "")
+
+# ②Codex 已審該 head＝身分精確相等 ∧ commit_id 精確相等（兩者都用權威欄位，
+#   不用 login 子串或內文 SHA 子串）。
+reviews = pages(f"{api}/pulls/{pr}/reviews?per_page=100")
+if reviews is None:
+    print("APIERR")
+    raise SystemExit
+codex_done = any(
+    r.get("user", {}).get("login") == codex_login and r.get("commit_id") == head_sha
     for r in reviews
 )
-print(f"{verdicts} {1 if codex else 0}")
+print(f"{1 if verdict_ready else 0} {1 if codex_done else 0}")
 PYEOF
 }
 
-BASELINE_LINE=$(fetch_counts) || { echo "🔴 起跑抓取失敗（API 不可達或限額耗盡）" >&2; exit 2; }
+REVIEW_CHECK_NAME="review"
+CODEX_LOGIN="chatgpt-codex-connector[bot]"
+
+BASELINE_LINE=$(fetch_state) || { echo "🔴 起跑抓取失敗（API 不可達或限額耗盡）" >&2; exit 2; }
 case "$BASELINE_LINE" in APIERR*) echo "🔴 起跑回應非清單（可能被限流）" >&2; exit 2;; esac
-BASE_VERDICTS=${BASELINE_LINE% *}
-echo "起跑：既有判詞 $BASE_VERDICTS 則；等待①判詞數增加 ②Codex 錨定 $HEAD_SHORT；每 $INTERVAL 秒查一次、上限 $MAX_POLLS 輪"
+echo "起跑（head $HEAD_SHORT）：判詞就緒=${BASELINE_LINE% *}／codex已審=${BASELINE_LINE#* }；" \
+     "等待兩者皆為 1（判詞就緒＝該 head 的 \`$REVIEW_CHECK_NAME\` check-run completed）；" \
+     "每 $INTERVAL 秒查一次、上限 $MAX_POLLS 輪"
 
 i=0
 FAILS=0
 while [ "$i" -lt "$MAX_POLLS" ]; do
   i=$((i + 1))
   sleep "$INTERVAL"
-  LINE=$(fetch_counts) || { FAILS=$((FAILS + 1)); echo "poll#$i 抓取失敗（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && { echo "🔴 連續失敗達 3 次，檢查跑不了" >&2; exit 2; }; continue; }
+  LINE=$(fetch_state) || { FAILS=$((FAILS + 1)); echo "poll#$i 抓取失敗（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && { echo "🔴 連續失敗達 3 次，檢查跑不了" >&2; exit 2; }; continue; }
   case "$LINE" in APIERR*) FAILS=$((FAILS + 1)); echo "poll#$i 回應非清單（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && exit 2; continue;; esac
   FAILS=0
   V=${LINE% *}
   CX=${LINE#* }
-  echo "poll#$i 判詞 $V/$BASE_VERDICTS 起跑值；codex錨定=$CX"
-  if [ "$V" -gt "$BASE_VERDICTS" ] && [ "$CX" = "1" ]; then
-    echo "✅ 雙方已回應：判詞 +$((V - BASE_VERDICTS))、Codex 已錨定 $HEAD_SHORT"
+  echo "poll#$i 判詞就緒=$V；codex已審該 head=$CX"
+  if [ "$V" = "1" ] && [ "$CX" = "1" ]; then
+    echo "✅ 兩側皆已對 head $HEAD_SHORT 完成：判詞 check-run completed、Codex review 的 commit_id 相符"
     exit 0
   fi
 done

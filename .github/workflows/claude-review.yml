@@ -969,17 +969,35 @@ jobs:
               #    ②add-label 本身**不再吞錯**——掛不上就留言講明閘門沒生效，不許再靜默。
               gh label create "review:需人工裁定" --color B60205 \
                 --description "鐵律17.4熔斷：掛上=自動驗收停止等人工裁定；移除後push恢復" || true
-              gh pr edit "$PR" --add-label "review:需人工裁定" \
-                || gh pr comment "$PR" --body "⚠️ 熔斷 label 掛上失敗（add-label 回非零）——**閘門此刻沒有生效**，下一次 push 仍會觸發驗收。請人工到本 PR 補掛 \`review:需人工裁定\`。"
+              # 🔴 掛上與否決定後面那則升級留言怎麼寫（Codex #59 r2）：舊版在 add-label
+              #    失敗後仍無條件貼「已打上 label、之後 push 不會再驗收」，於是同一個 PR
+              #    同時收到「閘門沒生效」與「閘門已生效」兩則互斥指引，而操作者會依賴
+              #    一個實際不存在的熔斷。
+              LABEL_OK=1
+              gh pr edit "$PR" --add-label "review:需人工裁定" || LABEL_OK=0
+              if [ "$LABEL_OK" = "0" ]; then
+                gh pr comment "$PR" --body "⚠️ 熔斷 label 掛上失敗（add-label 回非零）——**閘門此刻沒有生效**，下一次 push 仍會觸發驗收。請人工到本 PR 補掛 \`review:需人工裁定\`；補掛前不要把「已熔斷」當成現況。"
+              fi
               # 🔴 用 printf 多參數寫檔、再 --body-file。兩個都不能用：
               #   ①直接 `--body "多行…"` ⇒ 續行落到第 0 欄，YAML block scalar 解析失敗（實測過）；
               #   ②heredoc ⇒ YAML 去縮排後分隔符仍帶殘餘縮排，而 `<<"EOF"` 要求頂格、
               #     `<<-` 只吃 tab 不吃空白 ⇒ `bash -n` 報 "delimited by end-of-file"（也實測過）。
               #   printf 的每一段都是獨立參數，完全不受縮排影響。
+              # 🔴 兩種文案二擇一（Codex #59 r2）：label 沒掛上時，自動驗收**並沒有**停止，
+              #    不得沿用「就此停止／不會再觸發」那組措辭。
+              if [ "$LABEL_OK" = "1" ]; then
+                FUSE_LINE1="⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（門檻 $MAX_FIX_ROUNDS 輪），**自動驗收就此停止**。"
+                FUSE_LINE2="已打上 \`review:需人工裁定\` label；在移除該 label 之前，push 到本分支**不會**再觸發驗收。"
+                FUSE_TAIL="要恢復自動驗收：移除 \`review:需人工裁定\` label 後再 push。"
+              else
+                FUSE_LINE1="⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（門檻 $MAX_FIX_ROUNDS 輪）——已達熔斷線。"
+                FUSE_LINE2="🔴 **但熔斷 label 掛上失敗（見上一則）⇒ 閘門沒有生效，push 仍會觸發驗收。** 請人工補掛 \`review:需人工裁定\` 才算真的停下。"
+                FUSE_TAIL="補掛之後要恢復自動驗收：移除該 label 再 push。"
+              fi
               printf '%s\n' \
-                "⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（門檻 $MAX_FIX_ROUNDS 輪），**自動驗收就此停止**。" \
+                "$FUSE_LINE1" \
                 "" \
-                "已打上 \`review:需人工裁定\` label；在移除該 label 之前，push 到本分支**不會**再觸發驗收。" \
+                "$FUSE_LINE2" \
                 "" \
                 "到這個次數通常不是「再修一次就好」。請先判斷：" \
                 "" \
@@ -987,7 +1005,7 @@ jobs:
                 "2. **規格本身還沒定案**？（若是，裁定要落進 spec／DECISIONS，不能只留在 PR 留言）" \
                 "3. 🔴 **剩下的 🔴 是不是同一類反覆出現？** 2026-08-15 的實測：兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，而它們**不是被修出來的**——是每輪抽樣抽到不同切片。這一類請跑 \`ruby scripts/check-doc-claims.rb\` 確定性地清乾淨，不要靠再審一輪。" \
                 "" \
-                "要恢復自動驗收：移除 \`review:需人工裁定\` label 後再 push。" \
+                "$FUSE_TAIL" \
                 > "$RUNNER_TEMP/escalate.md"
               gh pr comment "$PR" --body-file "$RUNNER_TEMP/escalate.md"
 
@@ -1004,26 +1022,33 @@ jobs:
             #    一律記 0，寧可不合併。AUTO_MERGE 關閉期它只留言存證（18.4 過渡期止於評估），
             #    開啟後它是合併前的最後一道硬閘。
             # 🔴 ① 的已知限制（誠實寫明，18.4 啟用裁定前不遮）：Codex「零未清」無法直接
-            #    機械讀取（inline thread 的 resolved 狀態拿不到）——代理判準＝最新 Codex
-            #    review 錨定當前 head 且內文不含建議聲明句。Codex「無建議輪」可能只按 👍
-            #    不發 review ⇒ 錨定不到 ⇒ C1=0 ⇒ 不合併：方向是 fail-closed，代價是可能
-            #    多等一輪人工，不是誤合併。
-            HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
-            HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
-            CODEX_LOGIN='chatgpt-codex-connector'
+            #    機械讀取（inline thread 的 resolved 狀態拿不到）——代理判準＝該 review
+            #    的 `commit_id` 等於本輪 head ∧ 其名下 inline 意見數＝0。Codex「無建議輪」
+            #    可能只按 👍 不發 review ⇒ 找不到該 head 的 review ⇒ C1=0 ⇒ 不合併：
+            #    方向是 fail-closed，代價是可能多等一輪人工，不是誤合併。
+            # 🔴 **一律用 workflow event 的 head，不用即時 `gh pr view`**（Codex #59 r2）：
+            #    判詞貼出後、本步驟查詢前若發生 synchronize，即時查詢會拿到**新** head，
+            #    而 LATEST／C2／C4 描述的是**舊** head ⇒ 併發取消抵達前，新 commit 可能
+            #    在沒有自己的判詞的情況下被合併。event head 是本輪 checkout 的那一個。
+            HEAD_SHA='${{ github.event.pull_request.head.sha }}'
+            if [ -z "$HEAD_SHA" ]; then
+              HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            fi
+            CODEX_LOGIN='chatgpt-codex-connector[bot]'
             # 🔴 C1 要**正向證據**（Codex #59 r1）：「內文沒有某句話」不算零建議——同一
             #    connector 有多種措辭（review suggestions／review comments），漏掉任一種就
-            #    誤判零建議。改查該 review 實際掛的 inline 意見數：最新 Codex review 錨定
-            #    當前 head ∧ 其 pull_request_review_id 名下 inline 意見數＝0，才算零建議。
-            #    查詢失敗、無 review、未錨定 head——一律 C1=0（沒查到≠零意見）。
+            #    誤判零建議。改查該 review 實際掛的 inline 意見數。
+            # 🔴 身分與 commit 都走**權威欄位**（Codex #59 r2）：`user.login` 精確比對
+            #    （`contains` 會被任何含 codex 的 login 命中）、commit 身分用 review 物件的
+            #    `commit_id` 精確比對（用內文含 9 位 SHA 會被引述舊 SHA 的散文騙過，
+            #    那正是「拿舊 review 當本輪證據」的路）。
             CODEX_REVIEW=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
-              | jq -s -c --arg who "$CODEX_LOGIN" \
-                  'add // [] | [.[] | select(.user.login | contains($who))] | (.[-1] // null)')
+              | jq -s -c --arg who "$CODEX_LOGIN" --arg head "$HEAD_SHA" \
+                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head)] | (.[-1] // null)')
             C1=0
-            if [ "$CODEX_REVIEW" != "null" ] && [ -n "$HEAD_SHORT" ]; then
-              CODEX_BODY=$(printf '%s' "$CODEX_REVIEW" | jq -r '.body // ""')
+            if [ "$CODEX_REVIEW" != "null" ] && [ -n "$HEAD_SHA" ]; then
               CODEX_RID=$(printf '%s' "$CODEX_REVIEW" | jq -r '.id // 0')
-              if printf '%s' "$CODEX_BODY" | grep -q "$HEAD_SHORT" && [ "$CODEX_RID" != "0" ]; then
+              if [ "$CODEX_RID" != "0" ]; then
                 CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
                   | jq -s --argjson rid "$CODEX_RID" \
                       'add // [] | [.[] | select(.pull_request_review_id == $rid)] | length' \
@@ -1040,11 +1065,13 @@ jobs:
             #   不會回頭重評——那屬 18.4 啟用時自動合併 workflow 的再評路徑
             #   （workflow_run 觸發），本步驟只負責「當下證據」，AUTO_MERGE 開啟前
             #   後果僅是評估留言偏保守。
+            # 🔴 `--paginate`＋`jq -s` 聚合全部頁（Codex #59 r2）：單頁上限 100，check-run
+            #    破百時後面幾頁的 pending／failed 會整批看不到，評估器就會誤報 allgreen。
             C3=0
             CHECKS_STATE="apifail"
             for _i in $(seq 1 20); do
-              CHECKS_STATE=$(gh api "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
-                | jq -r '[.check_runs[] | select(.name != "review")]
+              CHECKS_STATE=$(gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+                | jq -s -r '[.[].check_runs[] | select(.name != "review")]
                          | if length == 0 then "empty"
                            elif any(.status != "completed") then "pending"
                            elif all(.conclusion == "success") then "allgreen"
@@ -1056,13 +1083,29 @@ jobs:
             C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
             EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1 ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
 
+            # 🔴 指示文案必須跟著條件走（Codex #59 r2）：舊版在 EVAL 有 0 時照樣說
+            #    「請人工合併」，跟前一句「缺任一即不得合併」自相矛盾，而 C1 未確認／
+            #    CI 未跑完正是最常見的狀態——操作者照著它按下去就是搶跑。
             if [ "$AUTO_MERGE" != "true" ]; then
-              gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL——1=成立、0=不成立或無法機械確認，缺任一即不得合併。請人工合併。"
+              if [ "$C1$C2$C3$C4" = "1111" ]; then
+                gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
+              else
+                gh pr comment "$PR" --body "✅ bot 側驗收通過，但 18.1 四條件**尚未齊**：$EVAL（1=成立、0=不成立或無法機械確認）⇒ **先不要合併**。待補：0 的那幾項——①＝Codex 尚未對本輪 head 出零意見 review（可在本 PR 留言 \`@codex review\` 觸發）；③＝機械 CI 未全綠或未跑完。齊了之後再人工合併。"
+              fi
               exit 0
             fi
 
             if [ "$C1$C2$C3$C4" != "1111" ]; then
               gh pr comment "$PR" --body "⛔ 18.1 四條件未齊：$EVAL ⇒ **不自動合併**（fail-closed；沒跑≠零意見）。請人工核對後處置。"
+              exit 0
+            fi
+
+            # 🔴 合併前最後一道：head 必須仍等於本輪評估的那一個（Codex #59 r2）——
+            #    評估與合併之間仍有時間窗，期間的 push 會讓「已驗證的 head」與
+            #    「即將被合併的 head」分岔。不相等即放棄本輪自動合併。
+            HEAD_NOW=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            if [ "$HEAD_NOW" != "$HEAD_SHA" ]; then
+              gh pr comment "$PR" --body "⛔ 合併前複驗發現 head 已變動（評估時 \`$HEAD_SHA\`、現在 \`$HEAD_NOW\`）⇒ **放棄本輪自動合併**。新 head 會由它自己的驗收輪處理。"
               exit 0
             fi
 
