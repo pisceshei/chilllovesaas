@@ -90,9 +90,19 @@
 - **SHA 一律正規化成完整 40 位小寫**（Codex r3／r4）：API 回的 `commit_id` 是完整小寫，
   傳大寫或短前綴在精確比對下**永遠比不中**，症狀是白等整個輪詢窗後 exit 4（看起來像
   「審查方沒回應」）。短前綴以 API／`git rev-parse` 解析，解不出即 exit 2 不進輪詢。
-- **判詞就緒要 `conclusion == success`**（Codex r3）：`completed` 涵蓋 failure／cancelled／
-  timed_out——格式驗證失敗會讓 job exit 1 而 check-run 仍是 completed，只看 status 會把
-  「被判為不採信的判詞」當成就緒。
+- **判詞就緒＝job 成功 ∧ 該輪真有合法判詞**（Codex r3 起、r5 補完）：`completed` 涵蓋
+  failure／cancelled／timed_out；而 `conclusion == success` **仍不夠**——workflow 在
+  「Claude 沒貼結論」「作者不在允許清單」等路徑是**貼診斷留言後 exit 0**（該檔註釋自己
+  寫著「失敗被下游 exit 0 吞掉」）⇒ job success 卻零判詞。現行判準追加：存在一則作者在
+  允許清單 ∧ 首行整行匹配合法結論形 ∧ `created_at >= 該 check-run 的 started_at` 的留言
+  （留言無 commit 關聯，check-run 起跑時刻是唯一可靠的「該輪」關聯鍵）。
+  **正反實測**：有真判詞的 head 報 1；反竄改自跳（success 但無判詞）的 head 報 0。
+- **非 Windows 可用性**（Codex r5，P1）：gh 偵測用 `${PROGRAMFILES:-}`——`set -u` 下
+  Linux／macOS 沒有該變數，直接展開會在**偵測階段就 unbound variable 退出**，兩條路都跑不到。
+- **參數前導零**（Codex r5）：`00` 會通過非零檢查卻讓迴圈一次不跑（假逾時）、`08` 會被
+  bash 當八進位而算術報錯 ⇒ 兩者一律 exit 2（實測皆 2）。
+- **認證路徑被限流不得靜默回退**（Codex r5）：gh 被限流時偵測 stderr 並查 `rate_limit`
+  取 reset 後上報等待，不再退回只有 60 額度的匿名路徑（那會把「等一下就好」變成連續失敗）。
 - **起跑即齊備就立刻退出**（Codex r3）：主循環第一件事是 sleep，舊版會讓「掛上去時兩側
   早已完成」白等一個 INTERVAL。
 - **起跑也有重試預算**（Codex r4）：單次暫時性故障不再直接 exit 2（契約說 exit 2 是

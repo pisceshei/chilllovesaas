@@ -6,7 +6,9 @@
 # push 之後掛上這支，它每隔 INTERVAL 秒查一次 GitHub 公開 API，**兩側都綁定同一個
 # head SHA**（Codex #59 r2：兩側原本都只是「PR 全域」條件，任何延遲的舊輪產物都能
 # 讓它提前 exit 0，而那正好是「以為驗收完成、其實驗的是別的 commit」）：
-#   ①**Claude bot 判詞已就緒**＝該 head 的 `review` check-run 已 `completed`。
+#   ①**Claude bot 判詞已就緒**＝該 head 的 `review` check-run `conclusion == success`
+#     **∧ 該輪真的貼出了一則合法判詞**（作者在允許清單 ∧ 首行整行匹配合法結論形
+#     ∧ 留言時間不早於該 check-run 的 `started_at`）。
 #     🔴 為什麼不數判詞留言：留言計數是 PR 全域的，舊 commit 的延遲判詞會讓它 +1；
 #     而且**判詞留言是邊跑邊編輯的**——2026-08-18 實測，留言建立後 API 仍會回半截
 #     內容（8532 字元的判詞只讀到 2933 字元、🟡 段整段不在裡面），照樣被當成「判詞已出」。
@@ -70,6 +72,16 @@ if [ "${#HEAD_SHA}" -lt 9 ] || [ "${#HEAD_SHA}" -gt 40 ]; then
 fi
 case "$INTERVAL" in ''|*[!0-9]*) echo "🔴 INTERVAL 必須是十進位整數：$INTERVAL" >&2; exit 2;; esac
 case "$MAX_POLLS" in ''|0|*[!0-9]*) echo "🔴 MAX_POLLS 必須是正整數：$MAX_POLLS" >&2; exit 2;; esac
+# 🔴 前導零要擋（Codex #59 r5）：純數字檢查放行 `00` 與 `08` 兩種壞值——`00` 通過非零檢查
+#    卻讓迴圈一次都不跑、報成逾時（假 exit 4）；`08` 會在算術展開時被 bash 當**八進位**
+#    而報錯。兩者都該是參數錯誤（exit 2），不是逾時也不是 shell 錯誤。
+for _pair in "INTERVAL:$INTERVAL" "MAX_POLLS:$MAX_POLLS"; do
+  _name=${_pair%%:*}; _val=${_pair#*:}
+  case "$_val" in
+    0|[1-9]*) ;;
+    *) echo "🔴 $_name 不得有前導零（八進位歧義／假逾時）：$_val" >&2; exit 2;;
+  esac
+done
 if [ "$INTERVAL" -lt 300 ]; then
   echo "🔴 INTERVAL=$INTERVAL 低於下限 300 秒（未認證 API 限額 60 次/小時/IP、跨工具共用）" >&2
   exit 2
@@ -112,6 +124,24 @@ def get(url):
             out = subprocess.run([GH_BIN, "api", rel], capture_output=True, timeout=45)
             if out.returncode == 0:
                 return json.loads(out.stdout.decode("utf-8", errors="replace"))
+            # 🔴 認證路徑被限流時**不得靜默回退匿名**（Codex #59 r5）：匿名額度只有 60，
+            #    回退等於把一個「等一下就好」的狀態變成連續失敗；而且認證請求的
+            #    reset 資訊在回退時整個丟掉。偵測到限流就查 reset 並上報，讓呼叫端等。
+            err = out.stderr.decode("utf-8", errors="replace").lower()
+            if ("rate limit" in err) or ("secondary rate" in err) or ("403" in err and "limit" in err):
+                reset = "0"
+                try:
+                    rl = subprocess.run([GH_BIN, "api", "rate_limit",
+                                         "--jq", ".resources.core.reset"],
+                                        capture_output=True, timeout=30)
+                    if rl.returncode == 0:
+                        reset = rl.stdout.decode("utf-8", errors="replace").strip() or "0"
+                except Exception:
+                    pass
+                print(f"{RATE_LIMITED} {reset}")
+                raise SystemExit
+        except SystemExit:
+            raise
         except Exception:
             pass
     try:
@@ -143,16 +173,45 @@ checks = get(f"{api}/commits/{head_sha}/check-runs?per_page=100")
 if not isinstance(checks, dict) or "check_runs" not in checks:
     print("APIERR")
     raise SystemExit
-# 🔴 `completed` 不等於通過（Codex #59 r3）：格式驗證失敗會讓本 job `exit 1`，
-#    check-run 仍是 `completed` 但 conclusion＝`failure`；只看 status 的話，一則
-#    **被判為不採信的判詞**也會讓腳本報「判詞就緒」並 ✅ 退出。要求 conclusion 為
-#    success，才等於「有一則被接受的判詞」。
-verdict_ready = any(
-    c.get("name") == check_name
-    and c.get("status") == "completed"
-    and c.get("conclusion") == "success"
-    for c in checks["check_runs"]
+# 🔴 判詞就緒＝**job 成功 ∧ 該輪真的產出了合法判詞**（Codex #59 r3 起、r5 補完）：
+#    ①`completed` 不等於通過——格式驗證失敗會 `exit 1`、conclusion 是 failure；
+#    ②但 `conclusion == success` **仍然不夠**：workflow 在「Claude 沒貼結論」「作者不在
+#      允許清單」等路徑上是**貼診斷留言後 exit 0**（claude-review.yml 自己的註釋逐字寫著
+#      「失敗被下游 exit 0 吞掉」）⇒ job 照樣 success 而根本沒有判詞。只看 conclusion 的話，
+#      Codex 一審完本腳本就會宣告「兩側完成」，而 bot 那側其實什麼判詞都沒有。
+#    ⇒ 追加一條：存在一則**該輪的**合法判詞留言——作者在允許清單 ∧ 第一行整行匹配合法形
+#      ∧ `created_at >= 該 check-run 的 started_at`（用 check-run 的起跑時刻綁定「該輪」，
+#      留言本身沒有 commit 關聯，這是唯一可靠的關聯鍵）。
+ALLOWED_VERDICT_AUTHORS = {"claude[bot]", "github-actions[bot]"}
+MARKER = "【驗收結論】"
+
+def first_line_ok(body):
+    first = (body or "").splitlines()[0].rstrip() if (body or "").strip() else ""
+    if not first.startswith(MARKER):
+        return False
+    rest = first[len(MARKER):]
+    return rest == "通過" or (rest.startswith("需修改：") and len(rest) > len("需修改："))
+
+review_run = next(
+    (c for c in checks["check_runs"]
+     if c.get("name") == check_name
+     and c.get("status") == "completed"
+     and c.get("conclusion") == "success"),
+    None,
 )
+verdict_ready = False
+if review_run is not None:
+    started = review_run.get("started_at") or ""
+    comments = pages(f"{api}/issues/{pr}/comments?per_page=100")
+    if comments is None:
+        print("APIERR")
+        raise SystemExit
+    verdict_ready = any(
+        c.get("user", {}).get("login") in ALLOWED_VERDICT_AUTHORS
+        and first_line_ok(c.get("body", ""))
+        and (c.get("created_at") or "") >= started
+        for c in comments
+    )
 
 # ②Codex 已審該 head＝身分精確相等 ∧ commit_id 精確相等（兩者都用權威欄位，
 #   不用 login 子串或內文 SHA 子串）。
@@ -175,7 +234,10 @@ CODEX_LOGIN="chatgpt-codex-connector[bot]"
 #    失敗的子行程）。PATH 沒有時試 Windows 預設安裝路徑——MSI 裝的 gh 只進系統 PATH，
 #    **既有 shell 讀不到**（2026-08-18 實測）。
 GH_BIN=""
-for _cand in gh "/c/Program Files/GitHub CLI/gh.exe" "$PROGRAMFILES/GitHub CLI/gh.exe"; do
+# 🔴 `${PROGRAMFILES:-}`（Codex #59 r5）：`set -u` 下，Linux／macOS 沒有這個變數，
+#    直接展開會讓腳本在**偵測階段就 unbound variable 退出**——認證與匿名兩條路都還沒跑到，
+#    等於本工具在標準 Unix 環境完全不可用。空值展開後 candidate 變成無效路徑、自然略過。
+for _cand in gh "/c/Program Files/GitHub CLI/gh.exe" "${PROGRAMFILES:-}/GitHub CLI/gh.exe"; do
   command -v "$_cand" >/dev/null 2>&1 || [ -x "$_cand" ] || continue
   if "$_cand" auth status >/dev/null 2>&1; then GH_BIN="$_cand"; break; fi
 done
@@ -244,7 +306,7 @@ case "$BASELINE_LINE" in
   APIERR*|"") echo "🔴 起跑連續 $BASE_FAILS 次抓取失敗，API 持續不可用" >&2; exit 2;;
 esac
 echo "起跑（head $HEAD_SHORT）：判詞就緒=${BASELINE_LINE% *}／codex已審=${BASELINE_LINE#* }；" \
-     "等待兩者皆為 1（判詞就緒＝該 head 的 \`$REVIEW_CHECK_NAME\` check-run completed）；" \
+     "等待兩者皆為 1（判詞就緒＝\`$REVIEW_CHECK_NAME\` check-run success ∧ 該輪貼出合法判詞）；" \
      "每 $INTERVAL 秒查一次、上限 $MAX_POLLS 輪"
 
 # 🔴 起跑就已齊備時**立刻成功**（Codex #59 r3）：主循環第一件事是 sleep，
