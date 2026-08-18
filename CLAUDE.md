@@ -251,9 +251,10 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
-      job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門判準**——`ci.yml` 呼叫的
-      **全部 `scripts/` 腳本**（現值＝`check-*`／`test-*`／`lint-prototype.py`，
-      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`）、
+      job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門判準**——**`scripts/` 下全部腳本**
+      （保守側口徑，與 AGENTS.md 摘要同：不逐一判斷是否被 CI 引用——被 ci.yml 引用者
+      屬判準自我指涉必須人工，未被引用者〔如 `scripts/cloud-setup.sh`〕代價僅多一次
+      人工合併；CI 引用現值可複驗：`grep -n "scripts/" .github/workflows/ci.yml`）、
       **`config/ci.rb` 本身**（parity 名單——從名單刪一支閘門，parity 就不再對它斷言）、
       **及 ci.yml／`config/ci.rb` 的 step 所引用的其他判準檔**（舉例非窮舉：
       `.rubocop.yml`、`package.json` 的 test／lint scripts、`spec/` 測試本身——
