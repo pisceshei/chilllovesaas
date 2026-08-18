@@ -27,8 +27,11 @@
 #   逾時」而非明顯錯誤。短前綴解析不出完整值時 exit 2，不進輪詢。
 #
 # ## 退出碼
-#   0＝兩側都已**對該 head** 完成（review check-run completed ∧ Codex review 的
-#     `commit_id` 等於該 head）
+#   0＝兩側都已**對該 head** 完成：①`review` check-run `conclusion == success`
+#     **∧ 該 run 時間窗內**（started_at ≤ created_at ≤ completed_at+5min）存在一則
+#     合法判詞留言（允許清單作者＋首行合法形＋理由非空白）②存在 `commit_id` 等於
+#     該 head 的 Codex review。⚠️ 只有 completed 不夠——no-verdict 診斷路徑也是
+#     job success（r6 修正，詳見 fetch_state 內註釋）
 #   2＝參數錯誤／API 持續不可用（檢查跑不了）——含非數字的 INTERVAL/MAX_POLLS、
 #     非十六進位或過短過長的 HEAD_SHA（Codex #59 r1：爛參數不得滑進輪詢循環變 exit 4）；
 #     🔴 **限流不走這裡**——它會等到額度重置再續（見紀律 ③）
@@ -115,7 +118,7 @@ fi
 # 其他不可解析回 `APIERR`（兩者由呼叫端分開處置）。
 fetch_state() {
   "$PY_BIN" - "$API" "$PR" "$HEAD_SHA" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
-import io, json, os, subprocess, sys, urllib.error, urllib.request
+import io, json, os, subprocess, sys, time, urllib.error, urllib.request
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 api, pr, head_sha, check_name, codex_login = (
     sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
@@ -143,7 +146,15 @@ def get(url):
             #    回退等於把一個「等一下就好」的狀態變成連續失敗；而且認證請求的
             #    reset 資訊在回退時整個丟掉。偵測到限流就查 reset 並上報，讓呼叫端等。
             err = out.stderr.decode("utf-8", errors="replace").lower()
-            if ("rate limit" in err) or ("secondary rate" in err) or ("403" in err and "limit" in err):
+            # 🔴 primary 與 secondary 分開（Codex #59 r8）：secondary（abuse／突發）的冷卻
+            #    與 core 窗的 reset 無關——拿 .resources.core.reset 充數會睡到不相干的整點，
+            #    或五秒後重試四次就 exit 2 而 secondary 還在生效。gh 失敗路徑拿不到
+            #    Retry-After 標頭（--include 會把標頭混進 stdout 汙染 JSON 流），
+            #    secondary 用官方建議量級的固定退避（120s）。
+            if "secondary rate" in err:
+                print(f"{RATE_LIMITED} {int(time.time()) + 120}")
+                raise SystemExit
+            if ("rate limit" in err) or ("403" in err and "limit" in err):
                 reset = "0"
                 try:
                     rl = subprocess.run([GH_BIN, "api", "rate_limit",
@@ -171,11 +182,15 @@ def get(url):
     except Exception:
         return None
 
+# 🔴 分頁硬上限的**具名調整點**（Codex #59 r8：docs/dev 曾指向一個已被移除的
+#    PAGES_MAX——常數要嘛存在要嘛別在文檔裡指它；現在它存在且兩個 pager 共用）。
+#    語義＝「跟到短頁為止」之上的理智上限：觸頂回 None（APIERR、大聲失敗），
+#    不是裝作讀完。100 頁＝一萬則。
+HARD_PAGE_CAP = 100
+
 def pages(url):
     # 🔴 跟到 API 說沒有下一頁為止（Codex #59 r6）：原本固定 5 頁上限，破 500 則的
-    #    PR 會把新判詞留在第 6 頁而**靜默看不到**（白等到逾時）。仍留一個很高的
-    #    理智上限（100 頁＝一萬則），但觸頂時回 None（APIERR、大聲失敗），
-    #    不是裝作讀完了。
+    #    PR 會把新判詞留在第 6 頁而**靜默看不到**（白等到逾時）。
     out = []
     page = 1
     while True:
@@ -186,7 +201,7 @@ def pages(url):
         if len(d) < 100:
             return out
         page += 1
-        if page > 100:
+        if page > HARD_PAGE_CAP:
             return None
 
 # ①判詞就緒＝該 head 的 review check-run 已 completed（掛在 commit 上，天然綁 head；
@@ -205,7 +220,7 @@ def check_run_pages(url):
         if len(d["check_runs"]) < 100:
             return out
         page += 1
-        if page > 100:
+        if page > HARD_PAGE_CAP:
             return None
 
 all_runs = check_run_pages(f"{api}/commits/{head_sha}/check-runs?per_page=100")
@@ -388,7 +403,7 @@ while [ "$i" -lt "$MAX_POLLS" ]; do
   CX=${LINE#* }
   echo "poll#$i 判詞就緒=$V；codex已審該 head=$CX"
   if [ "$V" = "1" ] && [ "$CX" = "1" ]; then
-    echo "✅ 兩側皆已對 head $HEAD_SHORT 完成：判詞 check-run completed、Codex review 的 commit_id 相符"
+    echo "✅ 兩側皆已對 head $HEAD_SHORT 完成：review check success 且該輪時間窗內有合法判詞、Codex review 的 commit_id 相符"
     exit 0
   fi
 done

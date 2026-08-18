@@ -44,7 +44,9 @@
     權限，缺它時 check-runs API 回權限錯誤 ⇒ C3 恆 0 ⇒ 四條件結構上永遠湊不齊，Codex r3）：
     head 的 check-runs 全部 `success`，**排除本 review job 自身**
     （名稱 `review`——它此刻必然 in_progress）；空集合＝0（沒跑≠綠）。
-    **有界等待**（r1）：pending 時每 30 秒重查、至多 20 次，仍未落定＝0。
+    **有界等待**（r1）：pending 時每 30 秒重查，仍未落定＝0。
+    **末查不 sleep**（r8）：21 次查詢夾 20 段等待——舊版 query→sleep 收尾，CI 在最後
+    一段 sleep 中轉綠會帶著過期的 pending 收場、C3 誤記 0。
     **全頁聚合**（r2）：`--paginate`＋`jq -s`——單頁上限 100，破百時後面幾頁的
     pending／failed 會整批看不到而誤報 allgreen。
   - **C4 判詞格式**：§2.1 的結果（格式失敗根本走不到這裡）。
@@ -114,8 +116,12 @@
   `X-RateLimit-Reset` 等到重置再續，**不計入失敗也不消耗輪次**（上限 `RATE_WAIT_MAX`
   兜底）。舊版把它當解析失敗直接 exit 2——同日診斷查詢把額度用光後，poller 起跑即
   假性失敗。判別法＝HTTP 403/429 且 `X-RateLimit-Remaining: 0`。
+  **primary 與 secondary 分開**（r8）：secondary（突發／abuse）的冷卻與 core 窗 reset
+  無關——拿 `.resources.core.reset` 充數會睡到不相干的整點、或重試耗盡而 secondary
+  還在生效；gh 失敗路徑拿不到 `Retry-After` 標頭（`--include` 會把標頭混進 stdout
+  汙染 JSON 流）⇒ secondary 一律固定 120 秒退避。
 - **分頁**（Codex #59 r1）：留言破百的 PR 只看第一頁會永遠等不到新判詞——逐頁抓到
-  不足 100 則為止（上限見腳本 `PAGES_MAX`）。
+  不足 100 則為止（理智上限見腳本具名常數 `HARD_PAGE_CAP`＝100 頁，兩個 pager 共用；觸頂＝APIERR 大聲失敗，不裝作讀完）。
 - 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
   計數**（Windows cp950 管道解 CJK JSON 靜默出錯，同日兩次實測）；未認證 API
   **60 次/小時/IP 跨工具共用** ⇒ INTERVAL 下限 300 秒（腳本硬擋）。

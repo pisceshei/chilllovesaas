@@ -1072,7 +1072,9 @@ jobs:
             #    自動審查發現了問題、之後又有一則零意見的 review 蓋在同一個 commit 上
             #    ⇒ 後者把 C1 蓋成 1，前者的未清發現被遮蔽。改法：收齊該 head 全部
             #    review id，加總其名下 inline 意見數——**總和為 0** 才算零建議
-            #    （意見的 resolved 狀態 API 拿不到，總和制是唯一不漏的聚合）。
+            #    （resolved 狀態 REST 拿不到——GraphQL reviewThreads 拿得到但評估器全線
+            #    REST；總和制在 REST 面內不漏，代價是已解決未標 resolved 的意見也擋 C1，
+            #    方向 fail-closed，可接受）。
             CODEX_RIDS=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
               | jq -s -c --arg who "$CODEX_LOGIN" --arg head "$HEAD_SHA" \
                   'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head) | .id]')
@@ -1088,8 +1090,12 @@ jobs:
             # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
             #   in_progress）。任何非 success ⇒ 0。空集合⇒ 0（沒跑≠綠）。
             # 🔴 有界等待（Codex #59 r1）：一次性查詢會把「還在跑」永久記 0——判詞常比
-            #   test job 先出。改為 pending 時每 30 秒重查、至多 20 次（約 10 分鐘），
-            #   仍未落定＝維持 0（fail-closed）。⚠️ 誠實限制：本 job 結束後才完成的 check
+            #   test job 先出。改為 pending 時每 30 秒重查、至多 20 段等待（約 10 分鐘），
+            #   仍未落定＝維持 0（fail-closed）。🔴 最後一段 sleep 之後必須**再查一次**
+            #   （Codex #59 r8）：舊版 query→sleep 收尾，CI 在第 20 段 sleep 中轉綠時，
+            #   迴圈帶著過期的 pending 收場，C3 被誤記 0——十分鐘窗的最後 30 秒等於白等。
+            #   現值＝21 次查詢夾 20 段等待，末次查詢後不再 sleep（sleep 由 if 包住，
+            #   避免 && 短路在 set -e 下把整個 job 打死）。⚠️ 誠實限制：本 job 結束後才完成的 check
             #   不會回頭重評——那屬 18.4 啟用時自動合併 workflow 的再評路徑
             #   （workflow_run 觸發），本步驟只負責「當下證據」，AUTO_MERGE 開啟前
             #   後果僅是評估留言偏保守。
@@ -1097,7 +1103,7 @@ jobs:
             #    破百時後面幾頁的 pending／failed 會整批看不到，評估器就會誤報 allgreen。
             C3=0
             CHECKS_STATE="apifail"
-            for _i in $(seq 1 20); do
+            for _i in $(seq 1 21); do
               CHECKS_STATE=$(gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
                 | jq -s -r '[.[].check_runs[] | select(.name != "review")]
                          | if length == 0 then "empty"
@@ -1105,7 +1111,7 @@ jobs:
                            elif all(.conclusion == "success") then "allgreen"
                            else "notgreen" end' || printf 'apifail')
               [ "$CHECKS_STATE" = "pending" ] || break
-              sleep 30
+              if [ "$_i" -lt 21 ]; then sleep 30; fi
             done
             [ "$CHECKS_STATE" = "allgreen" ] && C3=1
             C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
