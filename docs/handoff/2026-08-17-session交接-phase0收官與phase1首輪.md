@@ -19,7 +19,8 @@
 
 **Phase 1 已開工**：
 - **PR #55（PR-E1）已開**：`docs/specs/91-pit-register.md` 骨架——七欄 schema、
-  F1–F12 形態分類、G-xx 缺口表骨架、§3 ⚪ 兩源全量轉入、附錄 A 收割清單
+  F1–F12 形態分類、G-xx 缺口表骨架、§3 ⚪ 轉入（**批次來源制，見 91 §3 各節標頭**
+  ——3.1/3.2 初始兩源＋3.3 本 PR 判詞 ⚪）、附錄 A 收割清單
   （worklog/handoff 逐檔 checkbox）；Phase 0 交接檔隨 PR 入庫。
 - **#55 驗收循環進行中（本檔隨輪回寫，現況＝第 4 輪 commit）**：首輪
   bot 🔴3🟡1＋Codex 9 則、第 2 輪 bot 🔴2🟡2、第 3 輪 bot 🔴1🟡5（Codex 自第 2 輪起
