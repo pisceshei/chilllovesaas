@@ -20,7 +20,8 @@ name: Claude Review
 #
 # 開關：
 #   MAX_FIX_ROUNDS             同一 PR 累計「需修改」幾輪後升級提示（不再是派修上限）
-#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve）
+#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve＋貼 18.1 四條件評估；
+#                              "true" 時評估器是合併前最後一道硬閘——P-8 引入，四條件缺一不合）
 #
 # 🔴 `secrets.CODEX_PING_TOKEN` **已不再使用**（2026-08-15）。
 #    它存在的唯一理由是「讓 @codex 留言以本人身分發出，Codex 才視為有效請求」——
@@ -925,6 +926,24 @@ jobs:
             exit 0
           fi
 
+          # ── 18.1④ 判詞格式機械驗證（P-8 引入）─────────────────────────────
+          # 🔴 這一步之前，格式契約只存在兩端：prompt 規定（供）與 LATEST 的 jq 過濾（收）。
+          #    jq 只保證「第一行以標記開頭」，沒人驗：①第一行是否恰為兩種合法結論形之一
+          #    ②標記是否全文只出現一次（prompt 的原文契約）。亂寫的第一行會一路落到
+          #    檔尾「無法判讀」留言、job 照綠——18.1④ 要堵的正是這種永真化。
+          # 🔴 失敗＝exit 1（job 轉紅），不是留言後 exit 0：格式走樣代表產出端出事或
+          #    注入面得手，綠燈會讓「判詞經格式機械驗證」變成寫在條文裡的擺設。
+          #    （本步驟留言不得含結論標記字面值——理由見上方 MARKER 註解；下面用「標記」代稱。）
+          FIRST_LINE=$(printf '%s' "$LATEST" | head -n 1)
+          MARKER_COUNT=$(printf '%s' "$LATEST" | grep -c -- "$MARKER" || true)
+          FORMAT_OK=0
+          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：.+)" && [ "$MARKER_COUNT" -eq 1 ]; then
+            FORMAT_OK=1
+          else
+            gh pr comment "$PR" --body "🔴 判詞**格式驗證失敗**（18.1④，P-8 機制）：第一行必須恰為「標記＋通過」或「標記＋需修改：理由」兩形之一，且標記全文只准出現一次（實得 $MARKER_COUNT 次）。本輪判詞不採信、job 轉紅；請檢查產出端或人工判讀最新一則驗收意見。"
+            exit 1
+          fi
+
           # 🔴 **需修改＝只通知，不派工**（2026-08-15 使用者裁定）。
           #    舊制在這裡自動留言 `@codex 請…逐條修復…`。**已移除。**
           #    ⚠️ 本則留言**不得**包含 `@` 開頭的代理呼叫——Codex 對 @ 提及會接單，
@@ -938,9 +957,16 @@ jobs:
               #    同一個 PR 被打回超過 MAX_FIX_ROUNDS 輪，通常不是「再修一次就好」，
               #    而是 PR 太大、或規格本身沒定案 ⇒ 提示往那兩個方向處理，而不是繼續修。
               # 🔴 C-4：打 label 讓 job 層的 `if:` 在下一次 push 時直接跳過本 workflow。
-              #    label 不存在時 `--add-label` 會自動建立它。失敗不擋（`|| true`）——
-              #    留言已經貼出去了，label 建不起來時人仍看得到，只是閘門沒生效。
-              gh pr edit "$PR" --add-label "review:需人工裁定" || true
+              # 🔴 P-8 更正（2026-08-18 實測）：舊註釋稱「label 不存在時 --add-label 會自動
+              #    建立它」——**是錯的**。`gh pr edit --add-label` 不建 label；label 不存在時
+              #    整條失敗、又被 `|| true` 吞掉 ⇒ 熔斷歷輪都「宣稱已掛」而從未掛上——
+              #    PR #58 連續多輪 ⛔ 留言與照常驗收並存就是實跡（label 最終由人工補建）。
+              #    修法：①先冪等確保 label 存在（已存在時 create 報錯，那是唯一可吞的失敗）
+              #    ②add-label 本身**不再吞錯**——掛不上就留言講明閘門沒生效，不許再靜默。
+              gh label create "review:需人工裁定" --color B60205 \
+                --description "鐵律17.4熔斷：掛上=自動驗收停止等人工裁定；移除後push恢復" || true
+              gh pr edit "$PR" --add-label "review:需人工裁定" \
+                || gh pr comment "$PR" --body "⚠️ 熔斷 label 掛上失敗（add-label 回非零）——**閘門此刻沒有生效**，下一次 push 仍會觸發驗收。請人工到本 PR 補掛 \`review:需人工裁定\`。"
               # 🔴 用 printf 多參數寫檔、再 --body-file。兩個都不能用：
               #   ①直接 `--body "多行…"` ⇒ 續行落到第 0 欄，YAML block scalar 解析失敗（實測過）；
               #   ②heredoc ⇒ YAML 去縮排後分隔符仍帶殘餘縮排，而 `<<"EOF"` 要求頂格、
@@ -969,8 +995,46 @@ jobs:
             gh pr review "$PR" --approve --body "Claude 驗收通過 ✅（自動核准）" \
               || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
 
+            # ── 18.1 四條件評估器（P-8 引入；fail-closed，1=成立）──────────────
+            # 🔴 每一條都是**存在型判定**（沒跑≠零意見）：取值失敗、解析不到、狀態未完成
+            #    一律記 0，寧可不合併。AUTO_MERGE 關閉期它只留言存證（18.4 過渡期止於評估），
+            #    開啟後它是合併前的最後一道硬閘。
+            # 🔴 ① 的已知限制（誠實寫明，18.4 啟用裁定前不遮）：Codex「零未清」無法直接
+            #    機械讀取（inline thread 的 resolved 狀態拿不到）——代理判準＝最新 Codex
+            #    review 錨定當前 head 且內文不含建議聲明句。Codex「無建議輪」可能只按 👍
+            #    不發 review ⇒ 錨定不到 ⇒ C1=0 ⇒ 不合併：方向是 fail-closed，代價是可能
+            #    多等一輪人工，不是誤合併。
+            HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
+            CODEX_LOGIN='chatgpt-codex-connector'
+            CODEX_BODY=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+              | jq -s -r --arg who "$CODEX_LOGIN" \
+                  'add // [] | [.[] | select(.user.login | contains($who))] | (.[-1].body // "")')
+            C1=0
+            if [ -n "$HEAD_SHORT" ] && printf '%s' "$CODEX_BODY" | grep -q "$HEAD_SHORT" \
+               && ! printf '%s' "$CODEX_BODY" | grep -qi "review suggestions"; then
+              C1=1
+            fi
+            C2=1  # ②bot 判詞通過＝本分支的進入條件，且上方格式驗證已過
+            # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
+            #   in_progress）。任何非 success（含 null＝進行中）⇒ 0。空集合⇒ 0（沒跑≠綠）。
+            C3=0
+            CHECKS_STATE=$(gh api "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+              | jq -r '[.check_runs[] | select(.name != "review")]
+                       | if length == 0 then "empty"
+                         elif all(.conclusion == "success") then "allgreen"
+                         else "notgreen" end' || printf 'apifail')
+            [ "$CHECKS_STATE" = "allgreen" ] && C3=1
+            C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
+            EVAL="①Codex 完成且零未清=$C1 ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
+
             if [ "$AUTO_MERGE" != "true" ]; then
-              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併。"
+              gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL——1=成立、0=不成立或無法機械確認，缺任一即不得合併。請人工合併。"
+              exit 0
+            fi
+
+            if [ "$C1$C2$C3$C4" != "1111" ]; then
+              gh pr comment "$PR" --body "⛔ 18.1 四條件未齊：$EVAL ⇒ **不自動合併**（fail-closed；沒跑≠零意見）。請人工核對後處置。"
               exit 0
             fi
 
@@ -1009,4 +1073,8 @@ jobs:
             exit 0
           fi
 
-          gh pr comment "$PR" --body "⚠️ 驗收意見含結論標記但無法判讀（既非通過也非需修改），請人工判讀最新一則驗收意見。"
+          # 🔴 P-8 後這一行**結構上不可達**：上方 18.1④ 格式驗證已保證第一行恰為兩種合法
+          #    結論形之一，兩個分支必中其一。保留當縱深防線；真走到＝上面的邏輯被改壞了
+          #    ⇒ exit 1（job 紅），不再是綠燈留言——那正是格式驗證要消滅的形態。
+          gh pr comment "$PR" --body "⚠️ 驗收意見含結論標記但無法判讀（既非通過也非需修改）——18.1④ 格式驗證後本分支不應可達，代表判讀邏輯被改壞。job 轉紅，請人工判讀最新一則驗收意見並檢查本檔。"
+          exit 1
