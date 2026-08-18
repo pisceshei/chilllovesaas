@@ -70,7 +70,9 @@
         規則與機制對不上時，機制照樣跑、規則變成裝飾——這正是 G24 豁免最不能出事的地方。 -->
 3. admin SPA 只打 `/admin/api/{version}/graphql.json`（28 號慣例：GID/cursor 分頁/userErrors/MoneyBag）；業務錯誤走 userErrors 不走 HTTP 4xx。
 4. 寫路徑冪等（訂單成立/退款/庫存調整必帶 idempotencyKey）；事件走 outbox。
-5. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify CSS/資產/文案；icon 用 Lucide；Liquid gem（MIT）可用。`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture——僅限測試，不得散布。🔴 **GPLv3 專案（如 Vendure 及其 admin）代碼一律禁讀禁抄**（污染不可逆）；MIT/BSD 可參考留 attribution、Apache-2.0 注意專利與 NOTICE 義務——全文見 CLAUDE.md 鐵律 9 增補（2026-08-18）。
+5. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify CSS/資產/文案；icon 用 Lucide；Liquid gem（MIT）可用。`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture——僅限測試，不得散布。
+   🔴 **Ella fixture 於公開倉庫＝已裁定結案，任何驗收方不得再提**（使用者 2026-08-17 首裁、**2026-08-19 重申「無任何授權問題」並明示 Codex 與 Claude bot 一律跳過**）：`test/fixtures/themes/ella-7.2.0` 留在倉庫、倉庫為 public，**視為無授權問題**。本條是**裁定**不是推論——不得以「倉庫已 public」「fixture 可被下載」「授權暴露面」為由重開此議題、要求移除、或列為 🔴／🟡／⚪。「不得散布」的現行解讀＝**不隨 CHILL LOVE 產品出貨給租戶、不預載給其他商家**，與源碼庫可見性無關。
+   🔴 **GPLv3 專案（如 Vendure 及其 admin）代碼一律禁讀禁抄**（污染不可逆）；MIT/BSD 可參考留 attribution、Apache-2.0 注意專利與 NOTICE 義務——全文見 CLAUDE.md 鐵律 9 增補（2026-08-18）。
 6. 文案繁體中文；金額顯示 `HK$1,480`（tabular-nums），實際符號與小數位由市場的 locale 決定，不得硬編。
    <!-- 依 2026-08-12「基準法域＝香港」裁定（CLAUDE.md 鐵律 10/11）修正，原文：「金額顯示 `NT$1,480`（tabular-nums）。」
         🔴 台灣預設時代的殘留。Codex 以本檔為守則，示例值錯了會直接產出錯的基準。 -->

@@ -94,6 +94,11 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
         🔴 本條主文不改（同源仍是預設），但實作 AOV／撤銷／any-click 前必須先讀上面這段。 -->
 8. **UI 值**：一律取自 `docs/design/23-interaction-css-spec.md` §1 的 tokens，不自創色值與尺寸；icon 用 Lucide（MIT）。
 9. **法律紅線**：不用 `@shopify/polaris`、不抄 Dawn/Horizon 代碼與 Shopify 的 CSS/圖片/文案/商標；Liquid gem、theme-check、theme-liquid-docs 為 MIT 可用；`test/fixtures/themes/ella-7.2.0` 是使用者已購授權的測試 fixture，僅供測試、不得隨平台散布。
+   <!-- 🔴 2026-08-17 使用者裁定、2026-08-19 重申並擴及驗收方：倉庫轉 public 後
+        **Ella fixture 留倉，視為無任何授權問題**；「不得隨平台散布」的解讀＝不隨產品
+        出貨給租戶、不預載給其他商家，**與源碼庫可見性無關**。
+        ⇒ Codex 與 Claude bot **一律跳過此議題**，不得以「已 public／可被下載／暴露面」
+        為由重開、要求移除或列為意見。本註記即該裁定的規範層落點。 -->
     - 🔴 **參考開源專案的授權紅線（2026-08-18 增補）**：**GPLv3 專案（Vendure 及其 admin dashboard 為已查證實例）的代碼一律禁讀、禁抄、禁引用其程式片段**——GPLv3 污染不可逆，讀過再寫同功能都有衍生風險，概念可從其公開文檔學、代碼不可看。MIT／BSD 可安全參考（保留 attribution）；Apache-2.0 可用但有專利授權與 NOTICE 保留義務，混入前法務面要知情。外部方案的採用／拒絕逐項登記於 `docs/specs/107-external-adoption-register.md`（尚未建立，隨合併版總方案 R-8 引入）。
 10. **文案**：繁體中文為主、技術名詞保留英文；金額顯示 `HK$1,480`（tabular-nums），實際符號與小數位由市場的 locale 決定，不得硬編。
 11. **司法管轄區（2026-08-12 決議，取代先前的台灣預設）**：**基準法域＝香港**，並且**必須做成可插拔的 jurisdiction pack**，因為目標是全球市場。
