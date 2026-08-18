@@ -935,9 +935,13 @@ jobs:
           #    注入面得手，綠燈會讓「判詞經格式機械驗證」變成寫在條文裡的擺設。
           #    （本步驟留言不得含結論標記字面值——理由見上方 MARKER 註解；下面用「標記」代稱。）
           FIRST_LINE=$(printf '%s' "$LATEST" | head -n 1)
-          MARKER_COUNT=$(printf '%s' "$LATEST" | grep -c -- "$MARKER" || true)
+          # 🔴 兩處都要「全量」語義（Codex #59 r1）：①regex 必須錨定行尾——不錨定的話
+          #    「標記＋通過＋垃圾尾巴」照樣過（允許行尾空白/CR，其餘不放）；②出現次數用
+          #    grep -o 數「每一次出現」——grep -c 數的是「有命中的行數」，同一行兩個標記
+          #    仍算 1，唯一性斷言等於沒驗。
+          MARKER_COUNT=$(printf '%s' "$LATEST" | grep -o -- "$MARKER" | wc -l | tr -d '[:space:]')
           FORMAT_OK=0
-          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：.+)" && [ "$MARKER_COUNT" -eq 1 ]; then
+          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：.+)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
             FORMAT_OK=1
           else
             gh pr comment "$PR" --body "🔴 判詞**格式驗證失敗**（18.1④，P-8 機制）：第一行必須恰為「標記＋通過」或「標記＋需修改：理由」兩形之一，且標記全文只准出現一次（實得 $MARKER_COUNT 次）。本輪判詞不採信、job 轉紅；請檢查產出端或人工判讀最新一則驗收意見。"
@@ -1007,26 +1011,50 @@ jobs:
             HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
             HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
             CODEX_LOGIN='chatgpt-codex-connector'
-            CODEX_BODY=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
-              | jq -s -r --arg who "$CODEX_LOGIN" \
-                  'add // [] | [.[] | select(.user.login | contains($who))] | (.[-1].body // "")')
+            # 🔴 C1 要**正向證據**（Codex #59 r1）：「內文沒有某句話」不算零建議——同一
+            #    connector 有多種措辭（review suggestions／review comments），漏掉任一種就
+            #    誤判零建議。改查該 review 實際掛的 inline 意見數：最新 Codex review 錨定
+            #    當前 head ∧ 其 pull_request_review_id 名下 inline 意見數＝0，才算零建議。
+            #    查詢失敗、無 review、未錨定 head——一律 C1=0（沒查到≠零意見）。
+            CODEX_REVIEW=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+              | jq -s -c --arg who "$CODEX_LOGIN" \
+                  'add // [] | [.[] | select(.user.login | contains($who))] | (.[-1] // null)')
             C1=0
-            if [ -n "$HEAD_SHORT" ] && printf '%s' "$CODEX_BODY" | grep -q "$HEAD_SHORT" \
-               && ! printf '%s' "$CODEX_BODY" | grep -qi "review suggestions"; then
-              C1=1
+            if [ "$CODEX_REVIEW" != "null" ] && [ -n "$HEAD_SHORT" ]; then
+              CODEX_BODY=$(printf '%s' "$CODEX_REVIEW" | jq -r '.body // ""')
+              CODEX_RID=$(printf '%s' "$CODEX_REVIEW" | jq -r '.id // 0')
+              if printf '%s' "$CODEX_BODY" | grep -q "$HEAD_SHORT" && [ "$CODEX_RID" != "0" ]; then
+                CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
+                  | jq -s --argjson rid "$CODEX_RID" \
+                      'add // [] | [.[] | select(.pull_request_review_id == $rid)] | length' \
+                  || printf '%s' '-1')
+                [ "$CODEX_INLINE" = "0" ] && C1=1
+              fi
             fi
             C2=1  # ②bot 判詞通過＝本分支的進入條件，且上方格式驗證已過
             # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
-            #   in_progress）。任何非 success（含 null＝進行中）⇒ 0。空集合⇒ 0（沒跑≠綠）。
+            #   in_progress）。任何非 success ⇒ 0。空集合⇒ 0（沒跑≠綠）。
+            # 🔴 有界等待（Codex #59 r1）：一次性查詢會把「還在跑」永久記 0——判詞常比
+            #   test job 先出。改為 pending 時每 30 秒重查、至多 20 次（約 10 分鐘），
+            #   仍未落定＝維持 0（fail-closed）。⚠️ 誠實限制：本 job 結束後才完成的 check
+            #   不會回頭重評——那屬 18.4 啟用時自動合併 workflow 的再評路徑
+            #   （workflow_run 觸發），本步驟只負責「當下證據」，AUTO_MERGE 開啟前
+            #   後果僅是評估留言偏保守。
             C3=0
-            CHECKS_STATE=$(gh api "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
-              | jq -r '[.check_runs[] | select(.name != "review")]
-                       | if length == 0 then "empty"
-                         elif all(.conclusion == "success") then "allgreen"
-                         else "notgreen" end' || printf 'apifail')
+            CHECKS_STATE="apifail"
+            for _i in $(seq 1 20); do
+              CHECKS_STATE=$(gh api "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+                | jq -r '[.check_runs[] | select(.name != "review")]
+                         | if length == 0 then "empty"
+                           elif any(.status != "completed") then "pending"
+                           elif all(.conclusion == "success") then "allgreen"
+                           else "notgreen" end' || printf 'apifail')
+              [ "$CHECKS_STATE" = "pending" ] || break
+              sleep 30
+            done
             [ "$CHECKS_STATE" = "allgreen" ] && C3=1
             C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
-            EVAL="①Codex 完成且零未清=$C1 ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
+            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1 ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
 
             if [ "$AUTO_MERGE" != "true" ]; then
               gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL——1=成立、0=不成立或無法機械確認，缺任一即不得合併。請人工合併。"

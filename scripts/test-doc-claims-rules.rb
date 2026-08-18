@@ -148,6 +148,16 @@ Dir.mktmpdir("doc-claims-git-") do |work|
     failures << "git-G2：連歷史層第 1 行也被打了——「只掃新增行」的範圍語義壞了\n      完整輸出：\n#{indent.call(out)}"
   end
 
+  # W1（workflow 供給斷言；Codex #59 r1）：G3 只測 checker 的旗標**分支**——把 ci.yml 的
+  # `--require-base` 拿掉，G3 照綠、淺 clone 靜默跳過洞原樣回歸（check-ci-parity 比的是
+  # 腳本路徑、不含參數）。契約在供給端就釘在供給端：直接斷言 ci.yml 的 doc-claims
+  # 調用行帶著旗標。
+  ci_yml_text = File.read(File.join(ROOT, ".github/workflows/ci.yml"), encoding: "UTF-8") rescue ""
+  unless ci_yml_text.match?(/check-doc-claims\.rb .*--require-base/)
+    failures << "W1：.github/workflows/ci.yml 的 check-doc-claims 調用行沒帶 --require-base——" \
+                "G3 守的退出分支在生產端沒被啟用，R4/R5 淺 clone 靜默跳過洞會無聲回歸"
+  end
+
   # 情境 G3（P-8）：`--require-base` 下取不到 base 差異 ⇒ 必須 exit 3，不得警告後照綠。
   # 🔴 這條釘的是 CI 淺 clone 雙重洞（PR #58 期考掘，2026-08-18）：quality job 的
   #    三點 diff 因淺 clone 無 merge-base，腳本印「R4/R5 本次未執行」warning 後 exit 0
@@ -171,6 +181,7 @@ if failures.empty?
   puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
+  puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
   exit 0
 end
 

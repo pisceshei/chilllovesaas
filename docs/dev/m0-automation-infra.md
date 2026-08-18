@@ -1,12 +1,13 @@
 # M0 — P-8 自動化基建（判詞格式驗證・四條件評估器・熔斷修復・倒計時腳本・CI 淺 clone 修洞）
 
-> 出處：合併版總方案 §八 P-8（`docs/plans/2026-08-18-總方案.md`，隨 PR #58 落庫、尚未進 main）。
-> 條文依據＝鐵律 17/18（CLAUDE.md，同在 PR #58 立法、尚未進 main；本篇按已批准條文語義實作，
-> 條文措辭以該 PR 收官版為準）。本篇＝終態層：必須等於 HEAD 行為。
+> 出處：合併版總方案 §八 P-8（`docs/plans/2026-08-18-總方案.md`，隨 PR #58 落庫、
+> 2026-08-18 尚未進 main）。條文依據＝鐵律 17/18（CLAUDE.md，同在 PR #58 立法、
+> 2026-08-18 尚未進 main；本篇按已批准條文語義實作，條文措辭以該 PR 收官版為準）。
+> 本篇＝終態層：必須等於 HEAD 行為。
 
 ## 1. 這是什麼
 
-鐵律 17（等待自動化）與 18（自動合併）的**機制面**首批交付，共五件：
+鐵律 17（等待自動化）與 18（自動合併）的**機制面**首批交付，逐件見下表（數量以表列為準）：
 
 | # | 交付物 | 檔案 |
 |---|---|---|
@@ -32,18 +33,23 @@
 
 ### 2.2 四條件評估器（18.1）
 - 位置：「通過」分支、approve 之後。四條件全部**存在型判定、fail-closed**（取不到＝0）：
-  - **C1 Codex 完成且零未清**：最新 Codex review 內文含當前 head 前 9 位 SHA（錨定）
-    且不含建議聲明句（`review suggestions`）。
+  - **C1 Codex 零建議的正向證據**（Codex #59 r1 加嚴：光「內文沒有某句話」不算證據——
+    同一 connector 有多種措辭形）：最新 Codex review 錨定當前 head（內文含前 9 位 SHA）
+    **∧ 該 review 名下 inline 意見數＝0**（以 `pull_request_review_id` 歸戶實查）。
   - **C2 bot 通過**：＝進入本分支的條件（恆 1，寫出來是讓留言可讀）。
   - **C3 機械 CI 全綠**：head 的 check-runs 全部 `success`，**排除本 review job 自身**
     （名稱 `review`——它此刻必然 in_progress）；空集合＝0（沒跑≠綠）。
+    **有界等待**（Codex #59 r1）：pending 時每 30 秒重查、至多 20 次，仍未落定＝0。
   - **C4 判詞格式**：§2.1 的結果（格式失敗根本走不到這裡）。
 - **行為分岔**：`AUTO_MERGE != "true"`（現況）⇒ 只貼評估留言存證、止於評估；
   `"true"` ⇒ 四條件缺一即拒絕合併並留言，齊了才 `gh pr merge --squash`。
-- 🔴 **C1 的已知限制（誠實聲明）**：Codex inline thread 的 resolved 狀態拿不到
-  （API 權限），「零未清」用**代理判準**；Codex 無建議輪可能只按 👍 不發 review ⇒
-  錨定不到 ⇒ C1=0 ⇒ 不合併。方向是 fail-closed：代價是多等一輪人工，不是誤合併。
-  這正是 18.4 要求信任邊界的原因之一，啟用裁定時必須重看這條。
+- 🔴 **C1/C3 的已知限制（誠實聲明）**：①Codex inline thread 的 **resolved 狀態**仍拿不到
+  （API 權限）——C1 判的是「這輪 review 沒掛任何 inline 意見」，不是「掛過的意見已
+  逐條解決」；有意見的輪要等 Codex 對修復後的 head 再發零意見 review 才能 C1=1，而
+  Codex 無建議時可能只按 👍 不發 review ⇒ 錨定不到 ⇒ C1=0。②C3 的有界等待只覆蓋
+  job 存活期，job 結束後才完成的 check 不會回頭重評（18.4 啟用時由自動合併 workflow
+  的 `workflow_run` 再評路徑收口）。兩條方向都是 fail-closed：代價是多等人工，
+  不是誤合併——18.4 啟用裁定時必須重看。
 
 ### 2.3 熔斷 label 修復
 - **事故**：舊註釋稱「label 不存在時 `--add-label` 會自動建立它」——**實測為假**
@@ -56,16 +62,21 @@
 
 ### 2.4 `scripts/await-verdict.sh`
 - `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900] [MAX_POLLS=8]`：
-  每輪查①判詞數是否**比起跑時增加**（判詞累積制，比絕對數會誤認上一輪）
+  每輪查①判詞數是否**比起跑時增加**（判詞累積制，比絕對數會誤認上一輪；判詞認定
+  鏡射 claude-review.yml——作者允許清單 ∧ 第一行以標記開頭，Codex #59 r1 加嚴）
   ②Codex review 是否錨定 head（前 9 位）。雙到 exit 0；等滿升級 exit 4；
   API 連敗 3 次 exit 2。
-- 🔴 兩條實作紀律寫在檔頭：JSON 一律**落檔後 python UTF-8 顯式解析**（Windows
-  cp950 管道直讀 CJK JSON 靜默解錯，同日兩次實測）；未認證 API **60 次/小時/IP
-  跨工具共用** ⇒ INTERVAL 下限 300 秒（腳本硬擋）。
+- **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
+  INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
+- **分頁**（Codex #59 r1）：留言破百的 PR 只看第一頁會永遠等不到新判詞——逐頁抓到
+  不足 100 則為止（上限見腳本 `PAGES_MAX`）。
+- 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
+  計數**（Windows cp950 管道解 CJK JSON 靜默出錯，同日兩次實測）；未認證 API
+  **60 次/小時/IP 跨工具共用** ⇒ INTERVAL 下限 300 秒（腳本硬擋）。
 - 不匹配閘門 selector（`^(check|test|lint)-`）：它是操作工具不是驗收閘門，刻意的。
 
 ### 2.5 doc-claims 淺 clone 雙重洞修復
-- **洞**（PR #58 期考掘、2026-08-18，詳錄於該 PR 的 91 §3.4 增補——尚未進 main）：
+- **洞**（PR #58 期考掘、詳錄於該 PR 的 91 §3.4 增補——2026-08-18 尚未進 main）：
   quality job 淺 clone＋base 淺 fetch ⇒ `base...HEAD` 三點 diff 無 merge-base ⇒
   腳本印「R4/R5 本次未執行」warning 後 exit 0，**連續多輪 quality 綠而 R4/R5 實質沒跑**。
   `--depth=1` 是為單點 ref 比對（baseline 步驟）設計的修法，誤套到三點 diff 消費者。
@@ -74,17 +85,22 @@
   diff 算不出來 ⇒ exit 3（檢查根本沒有生效），CI 帶上它。
 - **回歸測試**：`test-doc-claims-rules.rb` 新增 git-G3 情境（`--require-base`＋
   不存在的 base ⇒ 必須 exit 3 且訊息講明）。**突變已驗**：把 exit 3 分支改註釋 ⇒
-  整支轉紅（git-G3 段），還原後綠。
+  整支轉紅（git-G3 段），還原後綠。**W1 供給斷言**（Codex #59 r1：G3 只測消費端
+  分支——把 ci.yml 的旗標拿掉 G3 照綠）：harness 直接斷言 ci.yml 的 doc-claims
+  調用行帶 `--require-base`，拿掉即紅。
 - 本機日常**不帶** `--require-base`（fixture 目錄與離線環境合法地算不出 diff）；
   帶不帶的行為差異即是 CI canary 的全部內容。
 
 ## 3. 驗證紀錄（2026-08-18）
 
 - 全閘門一鍵（selector 全集）FAIL=0；`test-doc-claims-rules.rb` 報「9 條 fixture case
-  ＋ 3 條 git 情境」全綠。
-- 兩支 workflow：ruby YAML parse OK；全部 `run:` 區塊抽出後 `bash -n` OK。
-- `await-verdict.sh`：`bash -n` OK；參數驗證與 INTERVAL 下限實跑驗過。
+  ＋ 3 條 git 情境」全綠（快照，重跑腳本看現值）。
+- 兩支 workflow：ruby YAML parse OK；全部 `run:` 區塊抽出後 `bash -n` OK（第 2 輪重驗）。
+- `await-verdict.sh`：`bash -n` OK；第 2 輪參數驗證實跑——壞 INTERVAL／短 SHA／零
+  MAX_POLLS／非數字 PR 四形全 exit 2；urllib 分頁抓取以 PR #59 實測（起跑基準行輸出正常）。
 - G3 突變：壞 → harness exit 1（失敗訊息含 git-G3）；還原 → exit 0。
+- W1 突變（第 2 輪）：拿掉 ci.yml 調用行的 `--require-base` → harness exit 1（訊息含
+  W1）；還原 → exit 0。
 - **待真實 PR 取證**（本 PR 自身因反竄改自跳驗收，取證不到）：①格式驗證與評估器
   留言要在下一個「通過」的常規 PR 上看到 ②熔斷 add-label 生效路徑要在下一次
   超輪事件上看到。兩者列入本包 Pending，不宣稱已驗。
