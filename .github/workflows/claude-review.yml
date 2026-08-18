@@ -628,6 +628,13 @@ jobs:
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
           COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
+          # 🔴 **必須走 env，不得在 run: 內直接寫 `${{ }}`**（2026-08-18 實測事故）：
+          #    含 `${{ }}` 的 run 區塊會被整段當成**一個 expression** 求值，而本步驟的
+          #    run 有數百行 ⇒ 直接觸發 GitHub 的
+          #    `Exceeded max expression length 21000`，整個 workflow 檔變成 invalid、
+          #    **每次 push 立即 Failure 且完全不執行**（PR #59 的 e39a96f／c5de2bd 兩輪
+          #    連續失敗即此）。env 注入同時也是官方推薦的 script-injection 防護寫法。
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -uo pipefail
 
@@ -1030,7 +1037,7 @@ jobs:
             #    判詞貼出後、本步驟查詢前若發生 synchronize，即時查詢會拿到**新** head，
             #    而 LATEST／C2／C4 描述的是**舊** head ⇒ 併發取消抵達前，新 commit 可能
             #    在沒有自己的判詞的情況下被合併。event head 是本輪 checkout 的那一個。
-            HEAD_SHA='${{ github.event.pull_request.head.sha }}'
+            HEAD_SHA="${EVENT_HEAD_SHA:-}"
             if [ -z "$HEAD_SHA" ]; then
               HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
             fi
