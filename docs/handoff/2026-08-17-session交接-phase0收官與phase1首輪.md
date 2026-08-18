@@ -21,15 +21,15 @@
 - **PR #55（PR-E1）已開**：`docs/specs/91-pit-register.md` 骨架——七欄 schema、
   F1–F12 形態分類、G-xx 缺口表骨架、§3 ⚪ 兩源全量轉入、附錄 A 收割清單
   （worklog/handoff 逐檔 checkbox）；Phase 0 交接檔隨 PR 入庫。
-- **#55 首輪判詞（bot 🔴3🟡1＋Codex 9 則）已全數修復**＝本 commit：
-  附錄 A 補自身 3 檔＋quotepath 旗標＋同 commit 補列紀律；phase0 交接檔 §① 時點錨
-  ＋§④ 閘門一鍵 Python 缺口更正註記；CLAUDE.md／AGENTS.md「91 尚未建立」句改
-  「已建立、過渡作廢」；92–95 改未來式帶 PR 錨；嚴重度補 P3；§3 預標如實標示；
-  limits 錨改鍵名；A.3 憑印象寫錯的檔名改倉庫實名（第 2 輪改五格、第 3 輪補
-  71 一格——「五檔名⋯全數」原句計數不實，F6 現行犯 ×2）。
-- **PR #56 已開（in flight）**：claude-review.yml ⚪ 去處句同步（#55 🔴-3 的第三處）
-  ——workflow 檔受反竄改防線約束（必須與 main 一致），照 #37/#47/#54 先例走獨立
-  PR；**合併後須 cherry-pick `dd2c21a` 回 #55 分支**恢復 byte-identical。
+- **#55 驗收循環進行中（本檔隨輪回寫，現況＝第 4 輪 commit）**：首輪
+  bot 🔴3🟡1＋Codex 9 則、第 2 輪 bot 🔴2🟡2、第 3 輪 bot 🔴1🟡5（Codex 自第 2 輪起
+  連續零 inline）——逐輪修復內容見 worklog「驗收後修正」各節；累計要點＝附錄 A
+  同 commit 補列紀律＋quotepath、phase0 交接檔時點錨與閘門註記、CLAUDE.md／
+  AGENTS.md／claude-review.yml 三處「91 已建立、過渡作廢」、92–95 未來式、P3、
+  A.3 檔名實名化（第 2 輪五格＋第 3 輪 71 一格）、本檔 §①/§③ 終態逐輪回寫。
+- **PR #56 已合併**（2026-08-18T02:22Z，merge `236689e`；Codex 零 inline、Claude
+  驗收依反竄改設計跳過）；**`dd2c21a` 已 cherry-pick 回 #55 分支（`55ae815`）**——
+  `git diff origin/main -- .github/workflows/claude-review.yml` 為空、反竄改通過。
 
 ## ② 為什麼這樣改（關鍵裁定與被推翻的假設）
 
@@ -53,10 +53,9 @@
 
 ## ③ 還有什麼沒解決（按序做）
 
-1. **等 #56 Codex 判詞 → 零意見即合併 → 刪分支 → 在 #55 分支
-   `git cherry-pick dd2c21a` → 驗證 `git diff origin/main -- .github/workflows/claude-review.yml` 為空**
-   ——順序不可反：#56 合併後 #55 的 workflow 與新 main 不同、驗收會被反竄改跳過。
-2. **#55 第 2 輪已 push（本 commit）**：等雙判詞→依循環清到雙零→合併→刪分支與
+1. ~~#56 合併→cherry-pick~~ **已完成**（第 3 輪；merge `236689e`＋`55ae815`，
+   diff 對 main 為空——本項自待辦移出，留此線供沿革）。
+2. **#55 循環清到雙零**（現況＝第 4 輪已 push，等雙判詞）→合併→刪分支與
    `pr55-last-push` tag→拉 main 跑閘門。
 3. **收割輪開跑**（91 附錄 A 逐檔）＋A1（specs/92 宣稱索引）；隨後 C0/D0
    （**Playwright 依賴需使用者裁定**——階段一開工前裁定點①，連同②截圖存放紀律）。
