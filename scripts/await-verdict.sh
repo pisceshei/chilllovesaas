@@ -463,5 +463,5 @@ while [ "$i" -lt "$MAX_POLLS" ]; do
   fi
 done
 
-echo "⏰ 逾時升級（鐵律 17）：等滿 $MAX_POLLS 輪（$((MAX_POLLS * INTERVAL / 60)) 分鐘）仍缺至少一方——請人工看 PR #$PR：可能是 workflow 沒觸發、審查方積壓、或熔斷 label 在掛。"
+echo "⏰ 逾時升級（鐵律 17）：等滿 $MAX_POLLS 輪（$((MAX_POLLS * INTERVAL / 60)) 分鐘）仍缺至少一方——請人工看 PR #$PR：可能是 workflow 沒觸發、審查方積壓、或本輪 workflow 因反竄改（PR 動到 .github/workflows/）被整個跳過。"
 exit 4

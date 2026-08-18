@@ -17,7 +17,7 @@
 
 | # | 交付物 | 檔案 |
 |---|---|---|
-| 1 | 判詞格式機械驗證（18.1④） | `.github/workflows/claude-review.yml` 判詞處理步驟內 |
+| 1 | 判詞格式機械驗證（18.1④） | `解析結論並驅動閉環` 步驟內的 `FORMAT_OK` 區塊（複驗：`grep -n 'FORMAT_OK' .github/workflows/claude-review.yml`） |
 | 2 | 18.1 四條件評估器（fail-closed） | 同上，「通過」分支內 |
 | 3 | ~~熔斷 label 修復~~ **已廢止（2026-08-19 裁定取消熔斷）**——機制連同超輪分支整段移除 | — |
 | 4 | 倒計時判詞輪詢腳本（17.1） | `scripts/await-verdict.sh` |
@@ -115,7 +115,8 @@
   🔴 **只看 `completed` 不夠**（r6 修正；本摘要 r9 才補齊——終態文檔的開頭摘要與後段
   判準不同步，會讓人照摘要把已被否決的行為復原）：no-verdict 診斷路徑同樣是 job success；
   ②**Codex 已審該 head**＝**存在**一則 review 其 `user.login` 精確等於 connector 身分
-  ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4；API 連敗 3 次 exit 2。
+  ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4。
+  **exit 2 有三個獨立門檻**（r12 起不再是單一數字）：輪詢路徑連敗 **3** 次／起跑路徑連敗 **4** 次（`BASE_FAILS`）／起跑連續撞限額 **6** 次（`RATE_WAITS`）。
   🔴 **本腳本只做存在性判定、不數 inline 意見**（r9 澄清）：它回答「Codex 審完了沒」，
   不是「Codex 有沒有意見」。**意見數的聚合只存在於 `claude-review.yml` 的 C1**——
   兩者職責不同，不要把評估器的保證讀到這支腳本身上。
@@ -144,12 +145,17 @@
   取 reset 後上報等待，不再退回只有 60 額度的匿名路徑（那會把「等一下就好」變成連續失敗）。
 - **起跑即齊備就立刻退出**（Codex r3）：主循環第一件事是 sleep，舊版會讓「掛上去時兩側
   早已完成」白等一個 INTERVAL。
-- **起跑也有重試預算**（Codex r4）：單次暫時性故障不再直接 exit 2（契約說 exit 2 是
-  「持續不可用」），與輪詢路徑的容忍度一致。
+- **起跑也有重試預算**（Codex r4；r12 改雙計數）：單次暫時性故障不再直接 exit 2
+  （契約說 exit 2 是「持續不可用」）。🔴 **與輪詢路徑的數字不同、刻意的**：起跑路徑用
+  **兩個獨立計數**——`BASE_FAILS`（暫時性 API 失敗，上限 4）與 `RATE_WAITS`（限流等待，
+  上限 6）；限流**不消耗失敗預算**，但自己有界，否則「等完仍被限流」會無限打轉
+  （r12 首版即如此，自檢時抓到）。
 - **限流是可恢復狀態、不是故障**（第 4 輪自報實測）：撞 60/hr 未認證上限時，讀
   `X-RateLimit-Reset` 等到重置再續，**不計入失敗也不消耗輪次**（上限 `RATE_WAIT_MAX`
   兜底）。舊版把它當解析失敗直接 exit 2——同日診斷查詢把額度用光後，poller 起跑即
-  假性失敗。判別法＝HTTP 403/429 且 `X-RateLimit-Remaining: 0`。
+  假性失敗。**判別法兩段式**（r13 起）：先讀被拒回應的 `Retry-After`（秒數形）——它涵蓋
+  **secondary** 限流（該情況下 `X-RateLimit-Remaining` 可能仍為正數）；拿不到才退回
+  `X-RateLimit-Remaining: 0` ＋ `X-RateLimit-Reset` 的 **primary** 判準。
   **primary 與 secondary 分開**（r8）：secondary（突發／abuse）的冷卻與 core 窗 reset
   無關——拿 `.resources.core.reset` 充數會睡到不相干的整點、或重試耗盡而 secondary 還在生效。
   **冷卻讀被拒回應的 `Retry-After` 標頭**（r9）：**只在失敗路徑**重發一次同一請求並帶
@@ -162,7 +168,12 @@
 - 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
   計數**（Windows cp950 管道解 CJK JSON 靜默出錯，同日兩次實測）；未認證 API
   **60 次/小時/IP 跨工具共用** ⇒ INTERVAL 下限 300 秒（腳本硬擋）。
-- 不匹配閘門 selector（`^(check|test|lint)-`）：它是操作工具不是驗收閘門，刻意的。
+- **未登記進 `config/ci.rb` 的 `step` 清單，故不是驗收閘門**——它是操作工具，刻意的。
+  複驗：`grep -n await-verdict config/ci.rb .github/workflows/ci.yml`（應無命中）。
+  <!-- 🔴 2026-08-19 更正（#59 r12 掃描）：原文寫「不匹配閘門 selector（`^(check|test|lint)-`）」，
+       那是錯的——全樹唯一的該正則是 `scripts/check-doc-claims.rb` 的 `BARE_SCRIPT`，用途是
+       R1 的「裸檔名一律當成對 scripts/ 的斷言」偵測，**不是任何閘門的 selector**；
+       閘門是 `config/ci.rb` 逐條列舉的 `step`。 -->
 
 ### 2.5 doc-claims 淺 clone 雙重洞修復
 - **洞**（PR #58 期考掘、詳錄於該 PR 的 91 §3.4 增補——2026-08-18 尚未進 main）：
