@@ -219,7 +219,9 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   （例外：憑證紅線/破壞性操作/計畫外重大裁定）；熔斷輪數引 `claude-review.yml` 的
   `MAX_FIX_ROUNDS`（現值 "3"，不寫死）——超值機制**自動**掛 `review:需人工裁定` 停驗收，
   該 PR 暫停轉做他事不再重掛（計數只涵蓋 Claude bot 判詞；「bot 通過 ∧ Codex 未清」
-  走**人工熔斷**，機制化屬 P-8）；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
+  走**人工熔斷**，機制化屬 P-8；**恢復**＝使用者或其明示授權的工作階段移除 label 後
+  push、開啟新一輪循環——非第三出口，`ROUNDS` 不歸零、每次移除只換一輪，
+  全文 CLAUDE.md 17.4 恢復款）；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
   零未清（review 的 `Reviewed commit:` 須等於當前 head）∧ Claude bot 通過且零未清 ∧
   **機械 CI 全綠** ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
   改 `.github/workflows/` 任何檔／機械閘門判準（scripts/ 全部腳本、**`config/ci.rb` 本身**、
