@@ -160,7 +160,15 @@ jobs:
           # 🔴 `--paginate`：留言超過 100 則時，單頁只會拿到**最舊**的 100 則，
           #    水位會取得太低 ⇒ 舊結論又能混進來。乒乓 PR 累積破百並不罕見。
           LAST_ID=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" \
-            | jq -s 'add // []' | jq -r '[.[].id] | max // 0')
+            | jq -s 'add // []' | jq -r '[.[].id] | max // 0') \
+            || LAST_ID="APIERR"
+          # 🔴 分頁中途失敗一律 fail-closed（Codex #59 r12）：`--paginate` 會把已取得的頁
+          #    先寫進 stdout，後面某頁失敗時 jq 仍算得出一個**偏小**的 last_id；本步驟是
+          #    `set -uo pipefail` 沒有 -e、也沒檢查狀態 ⇒ 偏小的水位會被成功輸出。
+          #    下游用 `.id > $wm` 篩判詞候選 ⇒ 水位偏小＝**更多舊判詞被當成本輪候選**，
+          #    正是水位機制要擋的那件事。取不到就輸出空值，讓下游既有的「水位缺失」分支
+          #    接管（該分支會留言並停止一切自動動作）。
+          if [ "$LAST_ID" = "APIERR" ] || [ -z "$LAST_ID" ]; then LAST_ID=""; fi
           echo "last_id=$LAST_ID" >> "$GITHUB_OUTPUT"
           # 🔴 同時記時間戳（Codex #59 r11）：只有留言 ID 水位擋不住「舊 commit 的 workflow
           #    被人工 rerun、其判詞延遲貼出」——那則留言的 id 同樣大於本輪水位，會被當成
@@ -1178,10 +1186,14 @@ jobs:
                 if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
                   gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
                     || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+                  # 🔴 評估留言與核准同在 head 相符分支（Codex #59 r12）：head 不符時再貼「四條件齊、
+                  #    可人工合併」會與上一則「本輪評估不適用於新 head」直接互斥，而 PR UI 此刻指向的
+                  #    正是未被評估的新 head ⇒ 操作者照著按下去就是合併一個沒人審過的提交。
+                  gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
                 else
                   gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
+                  gh pr comment "$PR" --body "⚠️ 同一個 head 變動也使**本輪四條件評估失效**（$EVAL 是對 \`$HEAD_SHA\` 算的）⇒ **不要依本輪結果合併**。新的 push 會自動觸發新一輪驗收。"
                 fi
-                gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
               else
                 gh pr comment "$PR" --body "✅ bot 側驗收通過，但 18.1 四條件**尚未齊**：$EVAL（1=成立、0=不成立或無法機械確認）⇒ **先不要合併**。待補：0 的那幾項——①＝Codex 尚未對本輪 head 出零意見 review（可在本 PR 留言 \`@codex review\` 觸發）；③＝機械 CI 未全綠或未跑完。齊了之後再人工合併。"
               fi
