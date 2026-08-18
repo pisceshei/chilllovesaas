@@ -152,10 +152,16 @@
 - docs/plans/ 納管後實得覆蓋僅 R1／R3（R4／R5 範圍判斷硬綁 worklog／handoff 未動）
   ——契約層註釋已於第 4 輪補限定；要收窄落差改註釋已做、改 R4 範圍屬 G 級裁定
   【F12；來源＝#58 第 3 輪判詞 ⚪1】
-- doc-claims 新納管項（docs/plans/）無 fixture 釘住掃描範圍——既有形態（九個 doc_*
-  fixture 全在 docs/worklog/，七項裡也只有 worklog 真被 fixture 覆蓋）；「擴充承重」
-  證據＝擴入當輪抓到兩條（該輪已修）；複驗法＝暫置一條壞引用 md 於 docs/plans/ 重跑
-  應轉紅（或收割輪建 doc_plans fixture）【F12；來源＝#58 第 3 輪判詞 ⚪2】
+- doc-claims 新納管項（docs/plans/）無 fixture 釘住掃描範圍——既有形態（doc_* fixture
+  的 **md** 全部落在 docs/worklog/（fixture 數見 `ls spec/fixtures/ci_violations/`；
+  doc_no_files 是無檔 canary、doc_clean 另有 scripts 檔）；IN_SCOPE **既有項**裡也只有
+  worklog 真被 fixture 覆蓋）；「擴充承重」證據＝擴入當輪抓到兩條（該輪已修）；
+  複驗法＝暫置一條壞引用 md 於 docs/plans/ 重跑應轉紅（或收割輪建 doc_plans fixture）
+  【F12；來源＝#58 第 3 輪判詞 ⚪2；措辭經第 5 輪校正——見下條】
+- 本條上一版摘寫兩處失真（「九個…fixture 全在」漏「的 md」致與 doc_no_files/doc_clean
+  的非 md 檔矛盾；「七項」漏「既有」限定致與 HEAD 八項打架）——第 5 輪已就地校正並
+  去裸數字；91 §3 摘寫紀律的實例教訓：摘寫刪限定詞＝造假數字【F11；來源＝#58 第 4 輪
+  判詞 ⚪，登記即處置】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 

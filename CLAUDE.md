@@ -243,8 +243,11 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       等伺服器到位）合併即自動部署＋healthcheck，紅則自動 rollback。
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 `claude-review.yml`（反竄改機制使其**自身**驗收失效——job 顯示 success
-      但只跑十幾秒、無判詞）、改 `ci.yml`（驗收照常產生，但它是機械閘門本體，
-      閘門自身的變更保守人工）、改 CLAUDE.md／AGENTS.md（規範本文）、
+      但只跑十幾秒、無判詞）、**改機械閘門本體**——`ci.yml` **與它呼叫的
+      `scripts/check-*`／`test-*`（含 `config/ci.rb` 這類 parity 清單）**
+      （驗收照常產生，但 ci.yml 只是呼叫器、判準在 scripts/ 裡：只改閘門腳本的 PR
+      會讓 18.1③「機械 CI 綠」由被改的腳本自己定義＝自我指涉，配對 test-* 同倉
+      同 commit 可一起改、不構成獨立防線）、改 CLAUDE.md／AGENTS.md（規範本文）、
       涉及不可逆 schema 裁定或費用的 PR。
     - **18.4 啟用程序**：自動合併 workflow＋判詞格式機械驗證由 P-8 交付並在
       一個真實 PR 上實測全鏈路後才啟用；在那之前維持「雙方零**未清**意見後人工按合併」
