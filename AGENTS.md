@@ -218,7 +218,9 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   閘門⇒commit⇒push⇒重掛，零**未清**意見（⚪ 不擋）⇒**自動進下一任務不等確認**
   （例外：憑證紅線/破壞性操作/計畫外重大裁定）；熔斷輪數引 `claude-review.yml` 的
   `MAX_FIX_ROUNDS`（現值 "3"，不寫死）——超值機制**自動**掛 `review:需人工裁定` 停驗收，
-  該 PR 暫停轉做他事不再重掛；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
-  零未清 ∧ Claude bot 通過且零未清 ∧ **機械 CI 全綠** ∧ 判詞格式機械驗證
-  （每項存在型判定，沒跑≠零意見），改 workflow/CLAUDE.md/AGENTS.md 的 PR 一律人工；
+  該 PR 暫停轉做他事不再重掛（計數只涵蓋 Claude bot 判詞；「bot 通過 ∧ Codex 未清」
+  走**人工熔斷**，機制化屬 P-8）；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
+  零未清（review 的 `Reviewed commit:` 須等於當前 head）∧ Claude bot 通過且零未清 ∧
+  **機械 CI 全綠** ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
+  改 workflow/CLAUDE.md/AGENTS.md 的 PR 一律人工；
   自動合併機制（P-8）實測全鏈路前維持人工按鈕。

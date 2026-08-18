@@ -108,16 +108,6 @@
 - specs/18:79／specs/39:598／39:167 三處硬編「64KB」與 `outbound_http.webhook_response_bytes_max` 同值四份持有——下次調值需四處同改【F5】
 - specs/55:79（M09 refundCreate）仍是拆型前單一出口形——R-11 家族出 PR 後收斂【F5·F8】
 - 12:308 staged 路徑豁免 20MB 抓取上限後，image/generic 走 staged 時預檢缺入參；12:312 未寫 presigned POST 帶 content-length-range——下次動 12 章時釘明【F8】
-
-### 3.3 自 PR #58 bot 判詞 ⚪（2026-08-18，P-0 立法輪）
-
-- `review:需人工裁定` label 仍未在倉庫宣告——靠 `claude-review.yml` 的 `--add-label`
-  自動建立且失敗不擋（該行帶 `|| true`，建不起來時熔斷閘門靜默失效）；鐵律 17.4 現已把
-  該 label 寫進條文 ⇒ P-8 一併落成宣告式資源（既有問題，非 #58 引入）【F12】
-- 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
-  fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
-  無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
-  落 `docs/DECISIONS.md`【F11】
 - 「先落 pending 再打金流」未分支 pending 形三處（22:32 Refund 列、原型 chilllove-admin-v2.html:3963 與 :10919-20 toast 文案）；specs/50:33 S-16 單一出口舊形；16:278 枚舉待下次動 16 §F5 補全【F5】
 - specs/55 §A 總表未含 refundMarkAsSettled 列（M42）——limits.yml required_for 增列處已互指，55 下次更新時補列【F5】
 - refundMarkAsSettled 名稱 resource 邊界案例（名為 refund、被改的列是 OrderTransaction）——改名與否待裁定；謂詞已補 kind 限定、實害已閉【F7·裁定候選】
@@ -144,6 +134,16 @@
 - 第 9 輪判詞 ⚪ 新 3 條（2026-08-18；第 11 輪登記——第 10 輪漏搬＝G-01 現行犯，本條目即該事故的登記）：§3.3 條目不依輪次遞增（排序約定隨 G-01 裁定時定）；worklog「逐列核對僅此列缺」被證偽句無站點內更正註記（更正在十行外另節——AGENTS 歷史層形收割輪統一）；G-02 式子少「哪行算閉合行」定義＋CommonMark 長閉合柵欄／四反引號包三反引號邊界（裁定待、落地時定）【F11/F12；來源＝第 9 輪 ⚪3/⚪4/⚪6，餘四條沿掛已入】
 - 第 8 輪判詞 ⚪ 新條（2026-08-18；第 9 輪登記，僅登記不順手修）：phase1 檔新註記插於句中（CommonMark type-2 HTML block 中斷段落、bullet 斷句——與既有句末擺法不一，收割輪定形時統一）；附錄 A markdown 結構零機械檢查（**已落 §2 G-02 候選列**＝判詞給式，裁定待）；worklog「151 個 checkbox」裸計數（複驗屬實、doc-claims R4 刻意窄不管——歷史層）；「十條」與 §3.3 現行條數漂移＋標記位置與「條末」措辭不符（歷史層）【F5/F11/F12；來源＝第 8 輪 ⚪】
 - 第 7 輪判詞 ⚪ 群（2026-08-18；第 8 輪登記，**依使用者鐵律僅登記不順手修**）：worklog「全倉唯一」句缺查法（doc-claims 第 6 條歷史層警告）；§3.3「各條末」措辭與 4 條實際標記位置不符；worklog「十條」計數與現 11 條漂移（歷史層）；A.3 迴圈複驗漏第 10 格 scripts/*（glob 非路徑，結案候選前補判法）；G-01「防的坑」因果指向宜對第 3 輪 🟡4、格式屬骨架期權宜；phase1:16 空殼句陳舊（更正註記已加＝判詞明定處置）；session:78「含第 2 輪節」硬編輪數（同族待斷根）；⚪ 落籍閘門缺口仍在（G-01 裁定待）【F5/F11；來源＝第 7 輪 ⚪1–⚪9】
+
+### 3.4 自 PR #58 bot 判詞 ⚪（2026-08-18，P-0 立法輪）
+
+- `review:需人工裁定` label 仍未在倉庫宣告——靠 `claude-review.yml` 的 `--add-label`
+  自動建立且失敗不擋（該行帶 `|| true`，建不起來時熔斷閘門靜默失效）；鐵律 17.4 現已把
+  該 label 寫進條文 ⇒ P-8 一併落成宣告式資源（既有問題，非 #58 引入）【F12】
+- 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
+  fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
+  無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
+  落 `docs/DECISIONS.md`【F11】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
