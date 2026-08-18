@@ -5,6 +5,10 @@
 > 的舊節奏（該方案 §〇 有與舊路線的逐項交叉對照；應用代碼依 2026-08-16 裁定將從 0 重建）。
 > **接手順序：總方案 → 最新 `docs/handoff/` → `CLAUDE.md`（鐵律 1–18）**。
 > 本檔以下內容（含 §5 里程碑表）作為背景與里程碑定義仍有效，與總方案衝突處以總方案為準。
+> 🔴 **例外（2026-08-18 依 #58 Codex 更正）：下文所有「倉庫是 private／保持私有」的斷言
+> 皆已失效**——倉庫已轉 **public**（使用者裁定），P-00 正是因此收緊了驗收 workflow 的
+> 安全設定。接手者**不得**沿用 private 時代的威脅模型（例如以「非公開」為由放寬驗收能力，
+> 或低估已購授權 fixture 的暴露面）。兩處現值已於本檔就地更正（§法律紅線、§倉庫位置）。
 >
 > 🔴 **舊入口（背景脈絡用）：`docs/handoff/2026-08-13-SESSION-EXPORT.md`**
 > 那份是自足的脈絡匯出（專案定位／16 條使用者裁定／文件地圖／未完成／踩過的坑／工作方式／環境須知）。
@@ -48,7 +52,8 @@
 1. **不可使用** `@shopify/polaris`、Polaris icons/插圖、**Dawn/Horizon 主題代碼**——Polaris 授權限 Shopify 整合應用；Dawn/Horizon 的 LICENSE 明文「僅限與 Shopify 互通、其他用途一律禁止」（**非純 MIT**，2026-06 Shopify v. SHOPLINE 和解先例證明會執法；見 `docs/research/25` §8）。icon 用 **Lucide（MIT）**。
 2. 不可抄 Shopify 的 CSS 源碼、圖片資產、品牌與文案；**可以**實作相同的功能邏輯、佈局結構、交互行為（不受著作權保護），視覺值用我們自己的 token 表（23 號文件）。
 3. 例外：**Liquid gem、theme-check（TS）、theme-liquid-docs 是標準 MIT**——這是 D4 主題引擎的法律基礎，可自由使用。
-4. Theme Store 主題授權限「單一 Shopify 商店」：平台**不預載、不散布**任何 Shopify 主題；第一方預設主題從零自寫；商家匯入第三方主題必須通過**授權聲明 gate**（25 §8 產品義務）。**例外：Ella 7.2.0 使用者已購授權**——已入倉作 golden theme 測試 fixture（`test/fixtures/themes/ella-7.2.0`，倉庫保持私有），開發與測試放心用；仍不得散布給其他商家。
+4. Theme Store 主題授權限「單一 Shopify 商店」：平台**不預載、不散布**任何 Shopify 主題；第一方預設主題從零自寫；商家匯入第三方主題必須通過**授權聲明 gate**（25 §8 產品義務）。**例外：Ella 7.2.0 使用者已購授權**——已入倉作 golden theme 測試 fixture（`test/fixtures/themes/ella-7.2.0`），開發與測試放心用；仍不得散布給其他商家。
+   🔴 **2026-08-18 更正**：原文以「**倉庫保持私有**」作為本例外的保護前提，該前提**已不成立**（倉庫現為 public）。使用者已就此裁定：**fixture 留倉、視為無授權問題**（見記憶 `ella-public-repo-ruling`）。⇒ 保護前提改為「**不得散布、不得隨平台出貨**」這條產品義務本身，不再依賴倉庫可見性。
 5. 產品內不得出現 Shopify 字樣或其品牌視覺；行銷話術用「相容 Shopify 主題格式」。
 
 ## 4. UI 與交互的單一真相（你的 CSS 從哪來）
@@ -128,7 +133,7 @@ docs/design/critique-*    ← 設計評審紀錄
 ## 8. 目前倉庫狀態
 
 - Git 歷史：Phase 1 docs → teardown → v2 原型 → 按鈕對照+註釋模式 → 本交接包（見 `git log`）。
-- GitHub：`https://github.com/pisceshei/chilllovesaas`（private）。以倉庫內容為準；若你拿到的是 zip，解壓後即完整專案。
+- GitHub：`https://github.com/pisceshei/chilllovesaas`（**public**——2026-08-18 更正，原記 private；轉 public 是使用者裁定，P-00 因此收緊了 review workflow 的安全設定）。以倉庫內容為準；若你拿到的是 zip，解壓後即完整專案。
 - M0 骨架與部分 M1 地基代碼已存在（`app/`、`db/schema.rb`、`docs/dev/`）；依 2026-08-16 重啟裁定，應用代碼＋資料庫將於全面重排查完成後**從 0 重建**（規格先行原則不變）。
 
 有問題先查文件；文件沒有答案的，才是真正需要問使用者的問題。祝順利。
