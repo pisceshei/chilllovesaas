@@ -108,6 +108,16 @@
 - specs/18:79／specs/39:598／39:167 三處硬編「64KB」與 `outbound_http.webhook_response_bytes_max` 同值四份持有——下次調值需四處同改【F5】
 - specs/55:79（M09 refundCreate）仍是拆型前單一出口形——R-11 家族出 PR 後收斂【F5·F8】
 - 12:308 staged 路徑豁免 20MB 抓取上限後，image/generic 走 staged 時預檢缺入參；12:312 未寫 presigned POST 帶 content-length-range——下次動 12 章時釘明【F8】
+
+### 3.3 自 PR #58 bot 判詞 ⚪（2026-08-18，P-0 立法輪）
+
+- `review:需人工裁定` label 仍未在倉庫宣告——靠 `claude-review.yml` 的 `--add-label`
+  自動建立且失敗不擋（該行帶 `|| true`，建不起來時熔斷閘門靜默失效）；鐵律 17.4 現已把
+  該 label 寫進條文 ⇒ P-8 一併落成宣告式資源（既有問題，非 #58 引入）【F12】
+- 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
+  fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
+  無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
+  落 `docs/DECISIONS.md`【F11】
 - 「先落 pending 再打金流」未分支 pending 形三處（22:32 Refund 列、原型 chilllove-admin-v2.html:3963 與 :10919-20 toast 文案）；specs/50:33 S-16 單一出口舊形；16:278 枚舉待下次動 16 §F5 補全【F5】
 - specs/55 §A 總表未含 refundMarkAsSettled 列（M42）——limits.yml required_for 增列處已互指，55 下次更新時補列【F5】
 - refundMarkAsSettled 名稱 resource 邊界案例（名為 refund、被改的列是 OrderTransaction）——改名與否待裁定；謂詞已補 kind 限定、實害已閉【F7·裁定候選】
