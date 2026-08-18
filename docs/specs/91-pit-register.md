@@ -156,7 +156,7 @@
        ③不再需要。**本條目的歷史紀錄不改**（它記的是真實發生過的六輪靜默失效）。
        🔴 **要留下的是形態不是那個閘門**：「宣稱掛上了其實沒掛上、失敗被 `|| true` 吞掉」
        這個靜默失效形態仍然有效，任何新的 label／狀態類機制都要照它設防。
-       複驗現值：`grep -n "add-label" .github/workflows/claude-review.yml`（應無結果）。 -->
+       移除在 **PR #59、2026-08-19 尚未進 main** ⇒ **合併後**複驗：`grep -n "add-label" .github/workflows/claude-review.yml`（應無結果；合併前會回超輪分支那一行，那是預期的）。 -->
 - 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
   fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
   無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
