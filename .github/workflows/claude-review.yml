@@ -436,9 +436,13 @@ jobs:
           #          ⚠️ 這**不是推翻⑥**：⑥的觀察（08-17 該帳號 Fable 5 額度確實耗盡、
           #          錯誤原文點名）仍然成立；只是額度事件已過兩天，而③的理由
           #          （官方標示 most capable）從未被推翻 ⇒ 回到能力較強的那一側。
-          #          ✅ 本組合**不是沒驗證過的配置**：`claude-fable-5`＋`--effort max`
-          #          於 08-16→08-17 在位期間有大量成功的長驗收（run 列表可複驗：
-          #          `gh run list --workflow=claude-review.yml --limit 60`）。
+          #          ✅ 本組合**不是沒驗證過的配置**（2026-08-19 複驗，取證快照）：
+          #          `claude-fable-5`＋`--effort max` 在 main 上的在位區間＝
+          #          `8e70ced`(08-16 11:08)→`2b55a09`(08-17 18:39)，約 31.5 小時；
+          #          期間的驗收 run 全數 success（08-17 08:35–14:25 一段最密集）。
+          #          複驗：`git log -S "claude-fable-5" -- .github/workflows/claude-review.yml`
+          #          取區間，再 `gh run list --workflow=claude-review.yml --limit 60` 對時間。
+          #          ⇒ 08-17 的額度耗盡發生在 14:25 之後，**不是這個組合本身不能跑**。
           #          🔴 **復發處置不變**：再看到 ERRTEXT 出現「Fable 5 limit」字樣，
           #          照④／⑥先例換回 `claude-opus-5`，不必再問——那是已走過兩次的路。
           #          ⚠️ 切換當下 status.claude.com 有一則**未解除**的多模型 degraded 事故
