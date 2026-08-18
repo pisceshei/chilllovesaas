@@ -40,7 +40,9 @@
     `pull_request_review_id` 歸戶實查）。⚠️ 不再用「login 含 codex」與「內文含 9 位
     SHA」——前者任何含該字串的帳號都命中，後者會被引述舊 SHA 的散文騙過。
   - **C2 bot 通過**：＝進入本分支的條件（恆 1，寫出來是讓留言可讀）。
-  - **C3 機械 CI 全綠**：head 的 check-runs 全部 `success`，**排除本 review job 自身**
+  - **C3 機械 CI 全綠**（🔴 job 需 `checks: read` 權限——顯式 permissions 區塊會關閉未列出的
+    權限，缺它時 check-runs API 回權限錯誤 ⇒ C3 恆 0 ⇒ 四條件結構上永遠湊不齊，Codex r3）：
+    head 的 check-runs 全部 `success`，**排除本 review job 自身**
     （名稱 `review`——它此刻必然 in_progress）；空集合＝0（沒跑≠綠）。
     **有界等待**（r1）：pending 時每 30 秒重查、至多 20 次，仍未落定＝0。
     **全頁聚合**（r2）：`--paginate`＋`jq -s`——單頁上限 100，破百時後面幾頁的
@@ -49,8 +51,10 @@
 - **行為分岔**：`AUTO_MERGE != "true"`（現況）⇒ 只貼評估留言存證、止於評估——
   **留言文案依四條件分兩種**（r2）：齊了才說「可人工合併」，未齊則列出待補項並明說
   「先不要合併」（舊版一律說「請人工合併」，與同一句的「缺任一即不得合併」互斥）；
-  `"true"` ⇒ 四條件缺一即拒絕合併並留言，齊了**再驗一次 head 未變**才
-  `gh pr merge --squash`（r2：評估與合併之間的 push 會讓兩個 head 分岔）。
+  `"true"` ⇒ 四條件缺一即拒絕合併並留言，齊了才合併，且合併本身帶
+  **`--match-head-commit "$HEAD_SHA"`**——由 GitHub 服務端在合併前比對 head，不相等直接
+  拒絕（r2 的「查完再 merge」是 check-then-act，競態窗只變小沒消失；r3 改為原子。
+  前置的 `gh pr view` 查詢保留，只為產生可讀的診斷留言）。
 - **全程用 workflow event 的 head**（r2）：不用即時 `gh pr view`——判詞貼出後、
   評估前若發生 synchronize，即時查詢會拿到新 head，而判詞描述的是舊 head，
   併發取消抵達前可能合併一個沒有自己判詞的 commit。
@@ -81,6 +85,18 @@
   ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4；API 連敗 3 次 exit 2。
 - **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
   INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
+- **額度路徑雙軌**（第 6 輪）：偵測到**已認證的 `gh`** 就走它（5000/小時），否則回退匿名
+  urllib（60/小時）。回退分支必須留著——本腳本是本機工具，不保證每台機器都裝了 gh。
+- **SHA 一律正規化成完整 40 位小寫**（Codex r3／r4）：API 回的 `commit_id` 是完整小寫，
+  傳大寫或短前綴在精確比對下**永遠比不中**，症狀是白等整個輪詢窗後 exit 4（看起來像
+  「審查方沒回應」）。短前綴以 API／`git rev-parse` 解析，解不出即 exit 2 不進輪詢。
+- **判詞就緒要 `conclusion == success`**（Codex r3）：`completed` 涵蓋 failure／cancelled／
+  timed_out——格式驗證失敗會讓 job exit 1 而 check-run 仍是 completed，只看 status 會把
+  「被判為不採信的判詞」當成就緒。
+- **起跑即齊備就立刻退出**（Codex r3）：主循環第一件事是 sleep，舊版會讓「掛上去時兩側
+  早已完成」白等一個 INTERVAL。
+- **起跑也有重試預算**（Codex r4）：單次暫時性故障不再直接 exit 2（契約說 exit 2 是
+  「持續不可用」），與輪詢路徑的容忍度一致。
 - **限流是可恢復狀態、不是故障**（第 4 輪自報實測）：撞 60/hr 未認證上限時，讀
   `X-RateLimit-Reset` 等到重置再續，**不計入失敗也不消耗輪次**（上限 `RATE_WAIT_MAX`
   兜底）。舊版把它當解析失敗直接 exit 2——同日診斷查詢把額度用光後，poller 起跑即

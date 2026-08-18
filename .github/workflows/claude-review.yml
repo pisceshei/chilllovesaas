@@ -108,6 +108,11 @@ jobs:
       issues: write
       id-token: write
       actions: read
+      # 🔴 C3（機械 CI 全綠）要讀 head 的 check-runs（Codex #59 r3）：顯式 permissions
+      #    區塊會**關閉未列出的權限**，缺這一項時該 API 回權限錯誤 ⇒ `CHECKS_STATE=apifail`
+      #    ⇒ C3 恆為 0 ⇒ 四條件結構上永遠湊不齊。AUTO_MERGE 若已啟用，等於自動合併被
+      #    永久停用（fail-closed 方向正確，但那是「壞掉」不是「守住」）。
+      checks: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -689,8 +694,16 @@ jobs:
           # 🔴 `ROUNDS` **刻意不加水位過濾**：它是「這個 PR 至今被派修幾輪」的累計計數，
           #    用來擋 MAX_FIX_ROUNDS。加了水位它每輪都會歸零，上限就永遠觸發不到。
           #    ⇒ 兩個變數的時間範圍不同是**刻意的**，不是漏改。
+          # 🔴 只計**格式合法**的需修改判詞（Codex #59 r3）：下方 18.1④ 會把格式走樣的判詞
+          #    判為不採信（job 轉紅、不驅動任何動作），但舊式 ROUNDS 只看「第一行以標記＋
+          #    需修改開頭」，**被拒絕的那一則照樣被計入** ⇒ 熔斷可能提早觸發，而它對應的
+          #    那一輪其實沒有產生有效判詞。判準與 FORMAT_OK 對齊：第一行整行匹配合法形
+          #    ∧ 標記全文只出現一次。
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m + "需修改"))] | length')
+            '[.[]
+              | select(.user.login as $l | $who | index($l))
+              | select(.body | split("\n")[0] | test("^" + $m + "需修改：.+[ \t]*$"))
+              | select(((.body | split($m) | length) - 1) == 1)] | length')
 
           if [ -z "$LATEST" ]; then
             # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
@@ -1107,16 +1120,19 @@ jobs:
               exit 0
             fi
 
-            # 🔴 合併前最後一道：head 必須仍等於本輪評估的那一個（Codex #59 r2）——
-            #    評估與合併之間仍有時間窗，期間的 push 會讓「已驗證的 head」與
-            #    「即將被合併的 head」分岔。不相等即放棄本輪自動合併。
+            # 🔴 合併前 head 守衛（Codex #59 r2 引入、r3 改為原子）：評估與合併之間仍有
+            #    時間窗，期間的 push 會讓「已驗證的 head」與「即將被合併的 head」分岔。
+            #    r2 版是 `gh pr view` 查完再 merge ＝ **check-then-act**，競態窗只是變小
+            #    沒有消失；r3 改用 `gh pr merge --match-head-commit`（gh 2.97.0 實測有此
+            #    旗標），由 **GitHub 服務端**在合併前比對 head，不相等直接拒絕 ⇒ 原子。
+            #    先做一次前置查詢只為了**產生可讀的診斷留言**，真正的保證在下面那個旗標。
             HEAD_NOW=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
             if [ "$HEAD_NOW" != "$HEAD_SHA" ]; then
               gh pr comment "$PR" --body "⛔ 合併前複驗發現 head 已變動（評估時 \`$HEAD_SHA\`、現在 \`$HEAD_NOW\`）⇒ **放棄本輪自動合併**。新 head 會由它自己的驗收輪處理。"
               exit 0
             fi
 
-            if ! gh pr merge "$PR" --squash --delete-branch; then
+            if ! gh pr merge "$PR" --squash --delete-branch --match-head-commit "$HEAD_SHA"; then
               gh pr comment "$PR" --body "⚠️ 驗收通過但自動合併失敗（可能與 main 衝突或被保護規則擋下），請手動合併。"
               exit 0
             fi
