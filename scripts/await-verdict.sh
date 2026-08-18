@@ -133,6 +133,30 @@ API_PREFIX = "https://api.github.com/"  # gh api 收的是不含這段的相對�
 #    `X-RateLimit-Remaining: 0`；reset 時點讀 `X-RateLimit-Reset`（epoch 秒）。
 RATE_LIMITED = "RATELIMITED"
 
+def secondary_retry_after(rel):
+    # secondary rate limit 的冷卻只存在於**被拒回應的 `Retry-After` 標頭**裡：
+    # 它不在 /rate_limit（那支報的是 primary core 窗），也不在 gh 的 stderr 訊息。
+    # ⇒ 重發一次同一請求並帶 `--include` 取標頭；重發同樣會被拒，那正是我們要的回應。
+    # 拿不到就回 None，由呼叫端用固定退避兜底（拿不到時間也不能不等）。
+    if not GH_BIN:
+        return None
+    try:
+        out = subprocess.run([GH_BIN, "api", "--include", rel],
+                             capture_output=True, timeout=45)
+        for line in out.stdout.decode("utf-8", errors="replace").splitlines():
+            if not line.strip():
+                break  # 空行＝標頭區結束，後面是 body
+            key, sep, val = line.partition(":")
+            if sep and key.strip().lower() == "retry-after":
+                val = val.strip()
+                # 只收秒數形（GitHub 對 secondary limit 回的是秒數，非 HTTP-date）
+                if val.isdigit():
+                    return int(val)
+    except Exception:
+        pass
+    return None
+
+
 def get(url):
     # 🔴 有 gh 就走認證路徑（5000/hr）；gh 失敗時**不當成錯誤**，靜靜回退匿名——
     #    兩條路拿到的是同一份 JSON，判定邏輯完全不變。
@@ -148,11 +172,18 @@ def get(url):
             err = out.stderr.decode("utf-8", errors="replace").lower()
             # 🔴 primary 與 secondary 分開（Codex #59 r8）：secondary（abuse／突發）的冷卻
             #    與 core 窗的 reset 無關——拿 .resources.core.reset 充數會睡到不相干的整點，
-            #    或五秒後重試四次就 exit 2 而 secondary 還在生效。gh 失敗路徑拿不到
-            #    Retry-After 標頭（--include 會把標頭混進 stdout 汙染 JSON 流），
-            #    secondary 用官方建議量級的固定退避（120s）。
+            #    或五秒後重試四次就 exit 2 而 secondary 還在生效。
+            # 🔴 冷卻時間讀**被拒回應的 `Retry-After` 標頭**（Codex #59 r9）：固定 120s 在
+            #    GitHub 要求更長冷卻時仍會被連續拒絕、耗盡重試預算。
+            #    做法＝**只在失敗路徑**重發一次同一請求並帶 `--include`（成功路徑絕不加，
+            #    那會把標頭混進 stdout 汙染 JSON 流）。
+            #    ✅ 可行性已實測（2026-08-19，gh 2.97.0）：失敗回應（404）同樣把狀態行與
+            #    標頭印到 stdout、錯誤訊息走 stderr、exit 1 ⇒ 標頭拿得到。
+            #    複驗：`gh api --include repos/<owner>/<不存在的名字>` 看 stdout 首行是否為
+            #    `HTTP/2.0 404 Not Found` 且其後為標頭區。
             if "secondary rate" in err:
-                print(f"{RATE_LIMITED} {int(time.time()) + 120}")
+                wait = secondary_retry_after(rel)
+                print(f"{RATE_LIMITED} {int(time.time()) + (wait if wait is not None else 120)}")
                 raise SystemExit
             if ("rate limit" in err) or ("403" in err and "limit" in err):
                 reset = "0"

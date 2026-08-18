@@ -1067,16 +1067,39 @@ jobs:
             #    （resolved 狀態 REST 拿不到——GraphQL reviewThreads 拿得到但評估器全線
             #    REST；總和制在 REST 面內不漏，代價是已解決未標 resolved 的意見也擋 C1，
             #    方向 fail-closed，可接受）。
+            # 🔴 分頁中途失敗必須 fail-closed（Codex #59 r9）：`--paginate` 會把已取得的前幾頁
+            #    先寫進 stdout，後面某頁失敗時 jq 照樣用**部分資料**產出一個非空的 rids。
+            #    本步驟是 `set -uo pipefail`（**沒有 -e**）⇒ 賦值的非零狀態沒人看，評估照跑；
+            #    若漏掉的那頁正好是帶意見的 review，它的 id 不在 rids 裡、其 inline 意見也不會被
+            #    計入 ⇒ **一次暫時性 API 失敗就能產出「零意見」這個合併證據**。
+            # 🔴 「取不到」與「真的沒有」必須分開：兩者都得到空清單，但前者要 fail-closed、
+            #    後者是合法狀態（Codex 該輪沒發 review），評估留言要能講清楚是哪一種。
             CODEX_RIDS=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
               | jq -s -c --arg who "$CODEX_LOGIN" --arg head "$HEAD_SHA" \
-                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head) | .id]')
+                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head) | .id]') \
+              || CODEX_RIDS="APIERR"
             C1=0
-            if [ "$CODEX_RIDS" != "[]" ] && [ -n "$HEAD_SHA" ]; then
+            CODEX_STATE="unknown"
+            if [ "$CODEX_RIDS" = "APIERR" ] || [ -z "$CODEX_RIDS" ]; then
+              CODEX_STATE="apifail"
+            elif [ -z "$HEAD_SHA" ]; then
+              CODEX_STATE="nohead"
+            elif [ "$CODEX_RIDS" = "[]" ]; then
+              CODEX_STATE="noreview"
+            else
+              # 同一個道理：這條管線失敗也一律當成取不到，不得讓部分資料算出 0。
               CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
                 | jq -s --argjson rids "$CODEX_RIDS" \
-                    'add // [] | [.[] | select(.pull_request_review_id as $r | $rids | index($r))] | length' \
-                || printf '%s' '-1')
-              [ "$CODEX_INLINE" = "0" ] && C1=1
+                    'add // [] | [.[] | select(.pull_request_review_id as $r | $rids | index($r))] | length') \
+                || CODEX_INLINE="APIERR"
+              if [ "$CODEX_INLINE" = "APIERR" ]; then
+                CODEX_STATE="apifail"
+              elif [ "$CODEX_INLINE" = "0" ]; then
+                CODEX_STATE="zero"
+                C1=1
+              else
+                CODEX_STATE="has:$CODEX_INLINE"
+              fi
             fi
             C2=1  # ②bot 判詞通過＝本分支的進入條件，且上方格式驗證已過
             # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
@@ -1107,7 +1130,7 @@ jobs:
             done
             [ "$CHECKS_STATE" = "allgreen" ] && C3=1
             C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
-            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1 ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
+            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1（$CODEX_STATE） ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
 
             # 🔴 指示文案必須跟著條件走（Codex #59 r2）：舊版在 EVAL 有 0 時照樣說
             #    「請人工合併」，跟前一句「缺任一即不得合併」自相矛盾，而 C1 未確認／

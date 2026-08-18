@@ -80,11 +80,18 @@
 ### 2.4 `scripts/await-verdict.sh`
 - `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900] [MAX_POLLS=8]`：
   每輪查**兩側是否都已對同一個 head 完成**（r2 重寫；原本兩側都只是 PR 全域條件）：
-  ①**判詞就緒**＝該 head 的 `review` check-run 已 `completed`——check-run 掛在 commit 上，
-  天然綁 head，且 `completed` 才出現 ⇒ 同時解掉「判詞留言是邊跑邊編輯、API 會回半截
-  內容」的坑（2026-08-18 實測：8532 字元的判詞讀到 2933 字元、🟡 段整段不在裡面）；
-  ②**Codex 已審該 head**＝有一則 review 其 `user.login` 精確等於 connector 身分
+  ①**判詞就緒**＝該 head 的 `review` check-run `conclusion == success`
+  **∧ 該 run 時間窗內存在一則合法判詞留言**（完整判準見下方同節「現行判準追加」段）——
+  check-run 掛在 commit 上，天然綁 head，且完成後才出現 ⇒ 同時解掉「判詞留言是邊跑邊
+  編輯、API 會回半截內容」的坑（2026-08-18 實測：8532 字元的判詞讀到 2933 字元、
+  🟡 段整段不在裡面）。
+  🔴 **只看 `completed` 不夠**（r6 修正；本摘要 r9 才補齊——終態文檔的開頭摘要與後段
+  判準不同步，會讓人照摘要把已被否決的行為復原）：no-verdict 診斷路徑同樣是 job success；
+  ②**Codex 已審該 head**＝**存在**一則 review 其 `user.login` 精確等於 connector 身分
   ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4；API 連敗 3 次 exit 2。
+  🔴 **本腳本只做存在性判定、不數 inline 意見**（r9 澄清）：它回答「Codex 審完了沒」，
+  不是「Codex 有沒有意見」。**意見數的聚合只存在於 `claude-review.yml` 的 C1**——
+  兩者職責不同，不要把評估器的保證讀到這支腳本身上。
 - **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
   INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
 - **額度路徑雙軌**（第 6 輪）：偵測到**已認證的 `gh`** 就走它（5000/小時），否則回退匿名
@@ -117,9 +124,12 @@
   兜底）。舊版把它當解析失敗直接 exit 2——同日診斷查詢把額度用光後，poller 起跑即
   假性失敗。判別法＝HTTP 403/429 且 `X-RateLimit-Remaining: 0`。
   **primary 與 secondary 分開**（r8）：secondary（突發／abuse）的冷卻與 core 窗 reset
-  無關——拿 `.resources.core.reset` 充數會睡到不相干的整點、或重試耗盡而 secondary
-  還在生效；gh 失敗路徑拿不到 `Retry-After` 標頭（`--include` 會把標頭混進 stdout
-  汙染 JSON 流）⇒ secondary 一律固定 120 秒退避。
+  無關——拿 `.resources.core.reset` 充數會睡到不相干的整點、或重試耗盡而 secondary 還在生效。
+  **冷卻讀被拒回應的 `Retry-After` 標頭**（r9）：**只在失敗路徑**重發一次同一請求並帶
+  `--include`（成功路徑絕不加，會汙染 JSON 流），拿不到才退回固定 120 秒。
+  ✅ 可行性實測（2026-08-19，gh 2.97.0）：失敗回應同樣把狀態行與標頭印到 stdout、
+  錯誤訊息走 stderr、exit 1 ⇒ 標頭拿得到。複驗：
+  `gh api --include repos/<owner>/<不存在的名字>` 看 stdout 首行是否為 `HTTP/2.0 404 Not Found`。
 - **分頁**（Codex #59 r1）：留言破百的 PR 只看第一頁會永遠等不到新判詞——逐頁抓到
   不足 100 則為止（理智上限見腳本具名常數 `HARD_PAGE_CAP`＝100 頁，兩個 pager 共用；觸頂＝APIERR 大聲失敗，不裝作讀完）。
 - 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
