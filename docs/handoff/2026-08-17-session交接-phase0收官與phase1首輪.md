@@ -22,12 +22,12 @@
   F1–F12 形態分類、G-xx 缺口表骨架、§3 ⚪ 轉入（**批次來源制，見 91 §3 各節標頭**
   ——3.1/3.2 初始兩源＋3.3 本 PR 判詞 ⚪）、附錄 A 收割清單
   （worklog/handoff 逐檔 checkbox）；Phase 0 交接檔隨 PR 入庫。
-- **#55 驗收循環進行中（本檔隨輪回寫，現況＝第 4 輪 commit）**：首輪
-  bot 🔴3🟡1＋Codex 9 則、第 2 輪 bot 🔴2🟡2、第 3 輪 bot 🔴1🟡5（Codex 自第 2 輪起
-  連續零 inline）——逐輪修復內容見 worklog「驗收後修正」各節；累計要點＝附錄 A
-  同 commit 補列紀律＋quotepath、phase0 交接檔時點錨與閘門註記、CLAUDE.md／
+- **#55 驗收循環進行中（本檔隨輪回寫）**：🔴 **本檔不記輪數與逐輪清單**（第 6 輪
+  起指標句化——硬編輪數三度腐化被開單）；逐輪判詞與修復明細一律見
+  `docs/worklog/2026-08-17-91坑登記簿骨架.md` 的「驗收後修正」各節。累計要點＝
+  附錄 A 同 commit 補列紀律＋quotepath、phase0 交接檔時點錨與閘門註記、CLAUDE.md／
   AGENTS.md／claude-review.yml 三處「91 已建立、過渡作廢」、92–95 未來式、P3、
-  A.3 檔名實名化（第 2 輪五格＋第 3 輪 71 一格）、本檔 §①/§③ 終態逐輪回寫。
+  A.3 檔名實名化、§3 批次來源制、本檔 §①/§③ 終態隨輪回寫。
 - **PR #56 已合併**（2026-08-18T02:22Z，merge `236689e`；Codex 零 inline、Claude
   驗收依反竄改設計跳過）；**`dd2c21a` 已 cherry-pick 回 #55 分支（`55ae815`）**——
   `git diff origin/main -- .github/workflows/claude-review.yml` 為空、反竄改通過。
@@ -56,8 +56,8 @@
 
 1. ~~#56 合併→cherry-pick~~ **已完成**（第 3 輪；merge `236689e`＋`55ae815`，
    diff 對 main 為空——本項自待辦移出，留此線供沿革）。
-2. **#55 循環清到雙零**（現況＝第 4 輪已 push，等雙判詞）→合併→刪分支與
-   `pr55-last-push` tag→拉 main 跑閘門。
+2. **#55 循環清到雙零**（現況輪次見 worklog「驗收後修正」末節——本檔不記輪數）
+   →合併→刪分支與 `pr55-last-push` tag→拉 main 跑閘門。
 3. **收割輪開跑**（91 附錄 A 逐檔）＋A1（specs/92 宣稱索引）；隨後 C0/D0
    （**Playwright 依賴需使用者裁定**——階段一開工前裁定點①，連同②截圖存放紀律）。
 4. 懸而未決：驗收模型是否切回 Fable 5（額度已回復；③「most capable」理由未被
