@@ -702,7 +702,7 @@ jobs:
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
             '[.[]
               | select(.user.login as $l | $who | index($l))
-              | select(.body | split("\n")[0] | test("^" + $m + "需修改：.+[ \t]*$"))
+              | select(.body | split("\n")[0] | test("^" + $m + "需修改：[ \t]*[^ \t].*$"))
               | select(((.body | split($m) | length) - 1) == 1)] | length')
 
           if [ -z "$LATEST" ]; then
@@ -961,7 +961,9 @@ jobs:
           #    仍算 1，唯一性斷言等於沒驗。
           MARKER_COUNT=$(printf '%s' "$LATEST" | grep -o -- "$MARKER" | wc -l | tr -d '[:space:]')
           FORMAT_OK=0
-          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：.+)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
+          # 🔴 理由不得全空白（Codex #59 r6）：`.+` 會把「需修改：　」的尾空白當理由吃掉
+          #    ——空理由照樣綠、照樣計輪、可能觸發熔斷。要求冒號後至少一個非空白字元。
+          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：[[:space:]]*[^[:space:]].*)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
             FORMAT_OK=1
           else
             gh pr comment "$PR" --body "🔴 判詞**格式驗證失敗**（18.1④，P-8 機制）：第一行必須恰為「標記＋通過」或「標記＋需修改：理由」兩形之一，且標記全文只准出現一次（實得 $MARKER_COUNT 次）。本輪判詞不採信、job 轉紅；請檢查產出端或人工判讀最新一則驗收意見。"

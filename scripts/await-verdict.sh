@@ -40,7 +40,7 @@
 #     判詞計數顯示 0 而實際有 10 則、label 查詢誤報不存在）。
 #   ②**分頁**（Codex #59 r1）：未認證 API 一頁最多 100 則；留言破百的 PR（本倉庫
 #     實際發生過、claude-review.yml 為此上了 --paginate）只看第一頁會永遠等不到新判詞。
-#     逐頁抓到不足 100 則為止、上限 PAGES_MAX 頁。
+#     逐頁跟到 API 回短頁為止（理智上限 100 頁，觸頂＝APIERR 大聲失敗，不靜默截斷）。
 #   ③**額度**：有 `gh` 且已認證時走**認證路徑（5000 次/小時）**；否則回退匿名
 #     （**60 次/小時/IP、跨工具共用**）。每輪請求數＝實際頁數×2（單頁常態＝2 次），
 #     INTERVAL 下限 300 秒由參數驗證硬擋。**撞限時等到 `X-RateLimit-Reset` 再續**，
@@ -55,7 +55,6 @@ INTERVAL="${3:-900}"
 MAX_POLLS="${4:-8}"
 REPO="pisceshei/chilllovesaas"
 API="https://api.github.com/repos/$REPO"
-PAGES_MAX=5
 
 if [ -z "$PR" ] || [ -z "$HEAD_SHA" ]; then
   echo "用法：bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒=900] [MAX_POLLS=8]" >&2
@@ -99,11 +98,11 @@ HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
 # 回傳「判詞就緒 codex已審」兩個 0/1；限流回 `RATELIMITED <reset_epoch>`、
 # 其他不可解析回 `APIERR`（兩者由呼叫端分開處置）。
 fetch_state() {
-  python - "$API" "$PR" "$HEAD_SHA" "$PAGES_MAX" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
+  python - "$API" "$PR" "$HEAD_SHA" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
 import io, json, os, subprocess, sys, urllib.error, urllib.request
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-api, pr, head_sha, pages_max, check_name, codex_login = (
-    sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6]
+api, pr, head_sha, check_name, codex_login = (
+    sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
 )
 # `GH_BIN` 由呼叫端在偵測到「gh 存在且已認證」時傳入；空字串＝走匿名路徑。
 GH_BIN = os.environ.get("GH_BIN", "")
@@ -157,15 +156,22 @@ def get(url):
         return None
 
 def pages(url):
+    # 🔴 跟到 API 說沒有下一頁為止（Codex #59 r6）：原本固定 5 頁上限，破 500 則的
+    #    PR 會把新判詞留在第 6 頁而**靜默看不到**（白等到逾時）。仍留一個很高的
+    #    理智上限（100 頁＝一萬則），但觸頂時回 None（APIERR、大聲失敗），
+    #    不是裝作讀完了。
     out = []
-    for p in range(1, pages_max + 1):
-        d = get(f"{url}&page={p}")
+    page = 1
+    while True:
+        d = get(f"{url}&page={page}")
         if not isinstance(d, list):
             return None
         out.extend(d)
         if len(d) < 100:
-            break
-    return out
+            return out
+        page += 1
+        if page > 100:
+            return None
 
 # ①判詞就緒＝該 head 的 review check-run 已 completed（掛在 commit 上，天然綁 head；
 #   且 completed 才出現 ⇒ 不會讀到還在串流編輯中的半截判詞）。
@@ -190,7 +196,12 @@ def first_line_ok(body):
     if not first.startswith(MARKER):
         return False
     rest = first[len(MARKER):]
-    return rest == "通過" or (rest.startswith("需修改：") and len(rest) > len("需修改："))
+    if rest == "通過":
+        return True
+    # 🔴 理由不得全空白（Codex #59 r6，與 claude-review.yml 的格式判準同步收緊）：
+    #    「需修改：　」這種只有空白的理由要判不合法。
+    return rest.startswith("需修改：") and rest[len("需修改："):].strip() != ""
+
 
 review_run = next(
     (c for c in checks["check_runs"]
@@ -201,7 +212,19 @@ review_run = next(
 )
 verdict_ready = False
 if review_run is not None:
+    # 🔴 綁**本輪 run 的時間窗**（Codex #59 r6）：只設下界 `>= started` 的話，
+    #    舊 commit 的 workflow 事後人工 rerun 貼出的判詞（時間更晚）照樣通過檢查。
+    #    本 head 的判詞必然貼在**該 run 執行期間** ⇒ 上界用 completed_at（加 5 分鐘
+    #    餘裕吸收貼文與收尾的時差）。留言本身沒有 commit 關聯欄位，run 時間窗是
+    #    唯一可用的關聯鍵；真正的根治（判詞契約帶 SHA）屬 workflow 側，另列待辦。
     started = review_run.get("started_at") or ""
+    completed = review_run.get("completed_at") or "9999-12-31T00:00:00Z"
+    import datetime as _dt
+    try:
+        _c = _dt.datetime.fromisoformat(completed.replace("Z", "+00:00"))
+        upper = (_c + _dt.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        upper = completed
     comments = pages(f"{api}/issues/{pr}/comments?per_page=100")
     if comments is None:
         print("APIERR")
@@ -209,7 +232,7 @@ if review_run is not None:
     verdict_ready = any(
         c.get("user", {}).get("login") in ALLOWED_VERDICT_AUTHORS
         and first_line_ok(c.get("body", ""))
-        and (c.get("created_at") or "") >= started
+        and started <= (c.get("created_at") or "") <= upper
         for c in comments
     )
 
