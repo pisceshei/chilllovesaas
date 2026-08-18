@@ -175,7 +175,14 @@ jobs:
           #   🔴 **移除條件**：等驗收環境恢復、且失敗留言能穩定貼出「錯誤原文」之後可關掉。
           #   關掉之前先確認上面那段 `ERRTEXT` 真的撈得到 `result` 欄——
           #   若撈不到（存檔與 console 一樣被砍），這個 input 就是唯一手段，**不得關**。
-          show_full_output: "true"
+          #   🔴 2026-08-18 已關（P-00 public 安全補課）：倉庫已轉 **public**，Actions log
+          #     全網可讀，完整審核串流（含倉庫內容節錄與判詞全文）不得再外印——
+          #     `docs/worklog/2026-08-15-驗收失敗看不到原因.md` Pending 4 白紙黑字寫明
+          #     「若本倉庫日後改為 public，必須先關掉這一行」，本次即執行該條款。
+          #     上面「不得關」的前提（private）已不成立；上下各處「show_full_output 已開」
+          #     的除錯指引自此失效——需要錯誤原文時，在**分支上**暫時改回字串 true
+          #     重跑取證，取完即 revert，不得帶著它進 main。
+          show_full_output: "false"
           prompt: |
             你是 CHILL LOVE 專案的**規格守門人與驗收方**。不要自己改代碼，只出驗收意見。
             分工（2026-08-15 使用者裁定改制，見 `AGENTS.md` 開頭）：**實作由人主導的工作階段負責**；
@@ -262,14 +269,18 @@ jobs:
             - 新增的 public class/module/方法缺文檔註釋（用途/參數/回傳/副作用）；複雜邏輯（金額/併發/冪等/Liquid 相容）缺「為什麼」註釋與規格出處（規範見 `AGENTS.md` 註釋與文檔節）
             - 新增功能的 PR 缺 `docs/dev/m{N}-{功能}.md` 功能文檔（模板見 `docs/dev/README.md`）；修復/重構 PR 未更新受影響的既有文檔且未在 PR 描述說明理由
 
-            ## 🔴 你可以實跑本倉庫的檢查腳本——請盡量跑，不要只做靜態審查
-            `scripts/` 底下的檢查與回歸測試你**有權限直接執行**：
-            `bash scripts/…` / `ruby scripts/…` / `python3 scripts/…`（也可用 `git ls-files -s`、`git show`）。
+            ## 🔴 實跑證據＝CI 的結果；你自己不執行倉庫腳本（2026-08-18 public 安全改制）
+            倉庫已轉 public：**你不得（也沒有權限）執行任何倉庫內腳本**——被審 PR 帶進來的
+            代碼不能在持有 token 的本 job 裡執行。實跑證據改由 `ci.yml` 提供：它的
+            `quality` job 以唯讀權限、零 secret 跑全部 `check-*`／`test-*` 閘門與回歸 fixture，
+            它就是這個倉庫的「獨立唯讀執行環境」。
 
-            - 🔴 本專案的判準是「**破壞那一步本身也要有斷言**」：一個什麼都不檢查的腳本在乾淨倉庫上也是綠的。
-              PR 自稱「N 條 fixture 全過」**不算證據**；你自己跑一次才算。
-            - ⚠️ **複合指令要每一段都在授權清單裡**。`sed …; echo …` 這種會被整條擋掉，
-              請分開呼叫，不要因為被擋一次就放棄實跑。
+            - 🔴 用 `gh pr checks ${{ github.event.pull_request.number }}` 讀本 PR 的 CI 結果，
+              把各 check 的結論（pass／fail／pending）當作實跑證據引用：fail 的 check 逐條
+              對應到你的意見（🔴／🟡）；pending 未完成時在意見中明說「CI 尚未完成，實跑證據不全」。
+            - 🔴 本專案的判準是「**破壞那一步本身也要有斷言**」：PR 自稱「N 條 fixture 全過」
+              **不算證據**；CI 的對應 step 綠了才算。CI 沒覆蓋到的斷言，在「未覆蓋」段登記
+              「無實跑證據」，**不得把沒跑過的東西寫成跑過的**。
             - 🔴 **你沒有寫檔權限**（沒有 `Write`，也沒有任何能建檔的指令），
               所以**「改壞 checker 再跑一次」這種突變測試你做不到**。
               ⇒ 遇到「只有突變測試才能證明」的情形（例如「這條 fixture 是不是承重的」），
@@ -286,9 +297,10 @@ jobs:
             ## 🔴 文檔引用保真：由腳本判定，不由你判定（2026-08-15 新增）
 
             路徑是否存在、行號是否失效、易腐數字有沒有複驗方式、跨 PR 引用有沒有錨定
-            ——這四類**一律以 `ruby scripts/check-doc-claims.rb` 的結果為準**：
+            ——這四類**一律以 `check-doc-claims` 閘門的結果為準**（2026-08-18 起你不執行
+            倉庫腳本，見上節：以 `gh pr checks` 讀 CI 的 doc claims step 結論）：
 
-            - 請**實跑它**。非 0 才開 🔴，並把它的輸出貼進意見裡。
+            - 該 step 紅才開 🔴，並把 CI 顯示的失敗名目引進意見裡。
             - 它 exit 0 時，你對**歷史層敘事措辭**的疑慮一律走 ⚪，不得開 🔴 也不得開 🟡。
               🔴 但**終態層與 HEAD 矛盾不在此列**（worklog Changes 表／handoff §①／docs/dev/
               篇章與實物不符）——那是 AGENTS.md 分層規則的 🔴，腳本管不到語義、這一層由你把關。
@@ -583,11 +595,22 @@ jobs:
           #     ⇒ 因此**只授權 `scripts/` 底下**（`bash scripts/` / `ruby scripts/` / `python scripts/`），
           #       不給裸的 `Bash(bash:*)`。本倉庫是 private、單一作者，威脅模型有限；
           #       **若日後開放外部貢獻者或轉 public，這一組必須先撤掉再說。**
+          #   🔴 2026-08-18 已執行（P-00 public 安全補課）：倉庫已轉 **public**，上面兩段
+          #     自訂觸發條款成立，四條 `Bash(… scripts/*)` **已全部撤掉**——採**選項②**，
+          #     且不必新建 job：`ci.yml` 的 `quality` job 本來就以預設唯讀 GITHUB_TOKEN、
+          #     零 OAuth secret 跑全部 check-*/test-* 閘門，它就是那個「獨立唯讀 job」。
+          #     ⇒ 驗收方的實跑證據改為讀 CI 結果（`gh pr checks`，prompt 對應段已同步改），
+          #       新增 `Bash(gh pr checks:*)` 供讀取。這同時封掉 worklog 登記的路徑穿越洞
+          #       （`ruby scripts/../evil.rb` 能匹配 `Bash(ruby scripts/*)`）。
+          #     ⚠️ 不採選項①（只跑 base 版腳本）的理由：base-restore 擋不住上述路徑穿越
+          #       （PR 可把代碼放在 scripts/ 之外再以 ../ 引用），而「修改檢查腳本的 PR」
+          #       在 ci.yml 上照樣有實跑——quality job 跑的是 PR 版腳本，但該 job 權限唯讀、
+          #       無 secret 可洩，執行不可信代碼的爆炸半徑＝標準 CI 的威脅模型，可接受。
           claude_args: |
             --model claude-opus-5
             --effort max
             --max-turns 200
-            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),Bash(bash scripts/*),Bash(ruby scripts/*),Bash(python scripts/*),Bash(python3 scripts/*)"
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*)"
 
       - name: 解析結論並驅動閉環
         if: ${{ !cancelled() }}
@@ -835,7 +858,7 @@ jobs:
               elif [ "$HAVE_RESULT" != "1" ]; then
                 ERRBLOCK="**錯誤原文：無從撈起** —— 連 result 物件都沒有（原因見上一行的「本次執行結果」）。這一則**不是**「欄位被砍」，不要照那個方向查。"
               elif [ "$ERRSTATE" = "nofield" ]; then
-                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**沒有 \`result\` 這個欄位**（action 白名單式輸出把它砍掉了）。⇒ 看本 run 的 log 裡 \`show_full_output\` 印出的完整串流。"
+                ERRBLOCK="**錯誤原文：取不到** —— result 物件在，但**沒有 \`result\` 這個欄位**（action 白名單式輸出把它砍掉了）。⇒ \`show_full_output\` 已因 public 條款關閉（2026-08-18）：需要原文時在分支上暫時改回 true 重跑取證，取完即 revert。"
               elif [ "$ERRSTATE" = "null" ]; then
                 ERRBLOCK="**錯誤原文：欄位在但值是 \`null\`** —— 這與「欄位被砍掉」**不是同一件事**：上游有給這個欄，只是沒有填內容。⇒ 先看 log 的完整串流；若那裡也沒有，就是 SDK 沒有產生錯誤敘述。"
               else
