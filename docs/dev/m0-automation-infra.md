@@ -38,7 +38,9 @@
   評估器（C4）直接消費它的結果。
 
 ### 2.2 四條件評估器（18.1）
-- 位置：「通過」分支、approve 之後。四條件全部**存在型判定、fail-closed**（取不到＝0）：
+- 位置：「通過」分支，**在 approve 之前**（r10 起——approve 是分支保護會消費的憑證，
+  先 approve 再評估等於閘門報 0 時已留下核准，屬 fail-open）。四條件全部**存在型判定、
+  fail-closed**（取不到＝0）：
   - **C1 Codex 零建議的正向證據**（r1 加嚴：光「內文沒有某句話」不算證據——同一
     connector 有多種措辭形；r2 再加嚴：身分與 commit 都走**權威欄位**）：存在一則
     review，其 `user.login` **精確等於** `chatgpt-codex-connector[bot]` ∧ 其 `commit_id`

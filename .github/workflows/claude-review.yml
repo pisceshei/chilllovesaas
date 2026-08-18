@@ -162,6 +162,10 @@ jobs:
           LAST_ID=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" \
             | jq -s 'add // []' | jq -r '[.[].id] | max // 0')
           echo "last_id=$LAST_ID" >> "$GITHUB_OUTPUT"
+          # 🔴 同時記時間戳（Codex #59 r11）：只有留言 ID 水位擋不住「舊 commit 的 workflow
+          #    被人工 rerun、其判詞延遲貼出」——那則留言的 id 同樣大於本輪水位，會被當成
+          #    本輪結論而讓 C2 綁到一個**不是本 head** 的判詞上。時間戳供下游再加一道窗口判定。
+          echo "started_ts=$(date -u +%s)" >> "$GITHUB_OUTPUT"
 
       - name: Claude 驗收
         id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
@@ -669,6 +673,7 @@ jobs:
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
           COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
+          WATERMARK_TS: ${{ steps.watermark.outputs.started_ts }}
           # 🔴 **必須走 env，不得在 run: 內直接寫 `${{ }}`**（2026-08-18 實測事故）：
           #    含 `${{ }}` 的 run 區塊會被整段當成**一個 expression** 求值，而本步驟的
           #    run 有數百行 ⇒ 直接觸發 GitHub 的
@@ -1105,7 +1110,31 @@ jobs:
                 CODEX_STATE="has:$CODEX_INLINE"
               fi
             fi
-            C2=1  # ②bot 判詞通過＝本分支的進入條件，且上方格式驗證已過
+            # ②bot 判詞通過。🔴 **不再無條件記 1**（Codex #59 r11）：`LATEST` 只綁留言 ID
+            #    水位、不綁 head——舊 commit 的 workflow 被人工 rerun 時，其延遲貼出的合法
+            #    判詞 id 同樣大於本輪水位，會被當成本輪結論；此後 Codex 與 CI 在新 head 上
+            #    通過，四條件就會在「bot 從未審過這個 head」的情況下湊齊。
+            # 🔴 兩道補強（皆 fail-closed）：①候選判詞**必須恰好一則**——多於一則代表水位
+            #    之後有別的 run 也貼了判詞，無法分辨哪則屬本輪 ⇒ 記 0；②候選的 `created_at`
+            #    必須落在**本 job 起跑之後**（`WATERMARK_TS`，由水位步驟寫入）。
+            # ⚠️ **誠實限制**：兩道補強擋得住「多則並存」與「水位前的舊判詞」，**擋不住**
+            #    「本輪 Claude 沒貼、而某個舊 run 恰好在本 job 期間貼出唯一一則」。根治＝
+            #    判詞契約帶 head SHA（與 await-verdict 同一項待辦），屬 18.4 啟用前的前置。
+            C2=0
+            C2_STATE="unknown"
+            CAND=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
+              --argjson wm "${COMMENT_WATERMARK:-0}" --argjson ts "${WATERMARK_TS:-0}" \
+              '[.[] | select(.id > $wm)
+                    | select(.user.login as $l | $who | index($l))
+                    | select(.body | split("\\n")[0] | startswith($m))
+                    | select((.created_at | fromdateiso8601) >= $ts)] | length') \
+              || CAND="ERR"
+            case "$CAND" in
+              1) C2=1; C2_STATE="unique" ;;
+              0) C2_STATE="none-in-window" ;;
+              ERR) C2_STATE="parse-error" ;;
+              *) C2_STATE="ambiguous:$CAND" ;;
+            esac
             # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
             #   in_progress）。任何非 success ⇒ 0。空集合⇒ 0（沒跑≠綠）。
             # 🔴 有界等待（Codex #59 r1）：一次性查詢會把「還在跑」永久記 0——判詞常比
@@ -1134,15 +1163,24 @@ jobs:
             done
             [ "$CHECKS_STATE" = "allgreen" ] && C3=1
             C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
-            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1（$CODEX_STATE） ②bot 通過=$C2 ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
+            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1（$CODEX_STATE） ②bot 通過且判詞綁本輪=$C2（$C2_STATE） ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
 
             # 🔴 指示文案必須跟著條件走（Codex #59 r2）：舊版在 EVAL 有 0 時照樣說
             #    「請人工合併」，跟前一句「缺任一即不得合併」自相矛盾，而 C1 未確認／
             #    CI 未跑完正是最常見的狀態——操作者照著它按下去就是搶跑。
             if [ "$AUTO_MERGE" != "true" ]; then
               if [ "$C1$C2$C3$C4" = "1111" ]; then
-                gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
-                  || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+                # 🔴 approve 也要綁被評估的那個 head（Codex #59 r11）：評估與本行之間仍有時間窗，
+                #    期間的 push 會讓 approve 落在一個**沒被評估過的 head** 上。合併路徑雖有原子
+                #    `--match-head-commit` 守衛，但它只擋合併、擋不住已經留下的核准；而 AUTO_MERGE
+                #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
+                NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
+                if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
+                  gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+                    || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+                else
+                  gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
+                fi
                 gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
               else
                 gh pr comment "$PR" --body "✅ bot 側驗收通過，但 18.1 四條件**尚未齊**：$EVAL（1=成立、0=不成立或無法機械確認）⇒ **先不要合併**。待補：0 的那幾項——①＝Codex 尚未對本輪 head 出零意見 review（可在本 PR 留言 \`@codex review\` 觸發）；③＝機械 CI 未全綠或未跑完。齊了之後再人工合併。"
@@ -1154,8 +1192,17 @@ jobs:
               gh pr comment "$PR" --body "⛔ 18.1 四條件未齊：$EVAL ⇒ **不自動合併**（fail-closed；沒跑≠零意見）。請人工核對後處置。"
               exit 0
             fi
-            gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
-              || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+            # 🔴 approve 也要綁被評估的那個 head（Codex #59 r11）：評估與本行之間仍有時間窗，
+            #    期間的 push 會讓 approve 落在一個**沒被評估過的 head** 上。合併路徑雖有原子
+            #    `--match-head-commit` 守衛，但它只擋合併、擋不住已經留下的核准；而 AUTO_MERGE
+            #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
+            NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
+            if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
+              gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+                || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+            else
+              gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
+            fi
 
             # 🔴 合併前 head 守衛（Codex #59 r2 引入、r3 改為原子）：評估與合併之間仍有
             #    時間窗，期間的 push 會讓「已驗證的 head」與「即將被合併的 head」分岔。

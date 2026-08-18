@@ -205,10 +205,21 @@ def get(url):
         with urllib.request.urlopen(url, timeout=30) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
-        if e.code in (403, 429) and (e.headers.get("X-RateLimit-Remaining") == "0"):
-            reset = e.headers.get("X-RateLimit-Reset") or "0"
-            print(f"{RATE_LIMITED} {reset}")
-            raise SystemExit
+        # 🔴 匿名路徑同樣要分 primary／secondary（Codex #59 r11）：舊版只認
+        #    「403/429 ∧ X-RateLimit-Remaining == 0」，那是 **primary** 額度耗盡的簽名。
+        #    **secondary（突發／abuse）限制下 Remaining 可能還是正數**，冷卻時間在
+        #    `Retry-After` 標頭裡 ⇒ 舊版對這種回應回 None、被上游記成 APIERR，
+        #    重試預算耗盡就 exit 2，與檔頭契約「限流一律等到可用再續」相反。
+        #    ⇒ 先看 `Retry-After`（秒數形），沒有才退回 `X-RateLimit-Reset` 的 primary 判準。
+        if e.code in (403, 429):
+            ra = (e.headers.get("Retry-After") or "").strip()
+            if ra.isdigit():
+                print(f"{RATE_LIMITED} {int(time.time()) + int(ra)}")
+                raise SystemExit
+            if e.headers.get("X-RateLimit-Remaining") == "0":
+                reset = e.headers.get("X-RateLimit-Reset") or "0"
+                print(f"{RATE_LIMITED} {reset}")
+                raise SystemExit
         return None
     except Exception:
         return None
