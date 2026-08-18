@@ -229,6 +229,14 @@
   併進 `scripts/await-verdict.sh` 的就緒判準（現值只看留言存在與否）。
   【F12；來源＝本輪自報，非判詞點名——G-xx 候選，與 R4/R5 雙重洞同群（都是
   「檢查跑了但沒真看到東西」）】
+- 🔴候選 **閘門一鍵配方以 `echo` 收尾 ⇒ 退出碼傳不出去、紅燈照樣 commit**（2026-08-18
+  第 13 輪自報現行犯）：worklog 自測段那份「可複製貼上」的配方原本結尾是 `echo FAIL=$FAIL`，
+  而 `echo` **恆成功** ⇒ 串成 `… && git commit` 時，就算迴圈裡已印出 `RED <腳本>`、
+  `FAIL=1`，commit 照樣執行（本輪 doc-claims 紅著進了 commit，靠 post-commit 複跑才發現）。
+  形態＝**「檢查跑了、也真的紅了，但結果沒有被消費」**，與 R4/R5 雙重洞、熔斷 label
+  靜默失效同群（都是閘門存在但不生效）。已就地補 `test "$FAIL" = 0`；機制側候選＝
+  把該配方收進一支腳本（如 `bin/ci` 的文檔輪子集模式），免得每個複製它的人各自帶著
+  自己的收尾【F12；來源＝本輪自報，非判詞點名——G-xx 候選】
 - AGENTS.md 閘門節與 CLAUDE.md 15.4 只要求 commit **前**跑閘門，與 doc-claims R4 的
   post-commit 補跑紀律對不上（該紀律現只在 `docs/dev/m0-review-convergence.md` 與本檔
   上方條目）——與既有同群條目合看；規範層補課屬改 CLAUDE/AGENTS（18.3 人工類）
