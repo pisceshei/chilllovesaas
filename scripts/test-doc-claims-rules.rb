@@ -28,6 +28,8 @@ FIXTURES = File.join(ROOT, "spec/fixtures/ci_violations")
 # 🔴 一律加 `--all`：R4／R5 預設只掃「相對 base 有改動」的 worklog／handoff，
 #    而 fixture 目錄不是 git 工作樹，算不出差異 ⇒ 不加的話那兩條規則永遠不會被測到。
 CASES = [
+  [ "doc_plans_scope", 1, "不存在於樹上",
+    "🔴 掃描範圍 canary：docs/plans/ 於 2026-08-18（PR #58）納入 IN_SCOPE——"     "本 fixture 釘住它真的被掃。把 check-doc-claims.rb 的 %r{\Adocs/plans/} 拿掉，"     "本條轉綠＝範圍退化被抓（#58 第 3 輪判詞 ⚪2 點名的缺口，第 6 輪落地）" ],
   [ "doc_missing_path", 1, "不存在於樹上",
     "R1：帶目錄前綴的具體路徑指到不存在的檔。" \
     "九輪驗收裡 PR #40 第 2 輪那條 🔴 就是這個形態（worklog:57／handoff:44 引用當時未合併的 check-ci-parity.rb）" ],

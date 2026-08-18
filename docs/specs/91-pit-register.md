@@ -153,13 +153,17 @@
   ——契約層註釋已於第 4 輪補限定；要收窄落差改註釋已做、改 R4 範圍屬 G 級裁定
   【F12；來源＝#58 第 3 輪判詞 ⚪1】
 - doc-claims 新納管項（docs/plans/）無 fixture 釘住掃描範圍——既有形態（doc_* fixture
-  的 **md** 全部落在 docs/worklog/（fixture 數見 `ls spec/fixtures/ci_violations/`；
+  的 **md** 當時全落在 docs/worklog/（doc_ 集合見 `ls spec/fixtures/ci_violations/ | grep ^doc_`；
   doc_no_files 是無檔 canary、doc_clean 另有 scripts 檔）；IN_SCOPE **既有項**裡也只有
   worklog 真被 fixture 覆蓋）；「擴充承重」證據＝擴入當輪抓到兩條（該輪已修）；
   複驗法＝暫置一條壞引用 md 於 docs/plans/ 重跑應轉紅（或收割輪建 doc_plans fixture）
-  【F12；來源＝#58 第 3 輪判詞 ⚪2；措辭經第 5 輪校正——見下條】
+  【F12；來源＝#58 第 3 輪判詞 ⚪2；措辭經第 5 輪校正——見下條；**第 6 輪已建
+  `doc_plans_scope` canary fixture 並經突變驗證（拿掉範圍→test 轉紅），結案候選**】
+- 15.4 順序偏差一例（#58 第 5 輪）：push 先於 15.2 最後重拉；判詞獨立複驗實害為零
+  （全部既有留言時戳早於 push）——教訓落庫於此免只活在 PR 留言；⚠️ 判詞明示
+  **再犯不是 ⚪**（15.4「回到本款起點重來」）【F11；來源＝#58 第 5 輪判詞 ⚪，登記即處置】
 - 本條上一版摘寫兩處失真（「九個…fixture 全在」漏「的 md」致與 doc_no_files/doc_clean
-  的非 md 檔矛盾；「七項」漏「既有」限定致與 HEAD 八項打架）——第 5 輪已就地校正並
+  的非 md 檔矛盾；「七項」漏「既有」限定致與 HEAD 現值打架）——第 5 輪已就地校正並
   去裸數字；91 §3 摘寫紀律的實例教訓：摘寫刪限定詞＝造假數字【F11；來源＝#58 第 4 輪
   判詞 ⚪，登記即處置】
 
@@ -267,6 +271,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-17-鐵律15提交前復核.md`
 - [ ] `docs/worklog/README.md`
 - [ ] `docs/worklog/2026-08-17-91坑登記簿骨架.md`（本 PR 新增，第 2 輪補列）
+- [ ] `docs/worklog/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列——#57 未動本檔＝集合比對缺口實例）
+- [ ] `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
 
 ### A.2 handoff
 
@@ -328,6 +334,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-17-phase0收官與codex59佇列交接.md`（本 PR 入庫；**59 條佇列＋47 條 live 清單來源檔，最密集收割源**，第 2 輪補列）
 - [ ] `docs/handoff/2026-08-17-phase1開工與91骨架.md`（本 PR 新增，第 2 輪補列）
 - [ ] `docs/handoff/2026-08-17-session交接-phase0收官與phase1首輪.md`（本 PR 第 2 輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列）
+- [ ] `docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 

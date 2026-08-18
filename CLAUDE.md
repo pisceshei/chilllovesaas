@@ -200,7 +200,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       bot 判詞 15–25 分鐘一輪；CI 5–10 分鐘；部署 healthcheck 2–5 分鐘。
       CI 結果輪詢兩條路：`gh pr checks`（**需 `gh auth` 登入態**）；或 GitHub REST
       `GET /repos/{o}/{r}/commits/{ref}/check-runs`——public 倉庫**未認證即可讀**，
-      未認證上限 60 次/小時/IP ⇒ 輪詢間隔取 ≥75 秒且單 PR 同時只掛一個輪詢
+      未認證上限 60 次/小時/IP——**作用於同 IP 全部未認證請求的合計**，多 PR 並行
+      共享同一額度 ⇒ 同機同時段只掛**一個**未認證 poller（或加大間隔／改用 `gh auth`
+      認證輪詢）
       （來源：https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
       ＋本倉庫對 PR #57/#58 的未認證輪詢實測，取證 2026-08-18）。
     - **17.2 自動修復循環**：驗收有意見 ⇒ 自動修復（**只修點名處**，既有裁定
@@ -211,6 +213,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       ⇒ 停該 PR 轉做他事。無第三種出口，也不得空轉。
     - **17.3 零未清意見即自動前進**：驗收與 CI 皆無問題 ⇒ **自動進入下一項任務，
       不需使用者確認，直到整個階段完成**（既有記憶 `full-automation-authorized` 升格於此）。
+      🔴 例外：命中 18.3 人工合併清單的 PR，雙零後**通知使用者等人工合併**——其依賴鏈上的
+      後續任務**不得**在合併完成前自動開工（否則會從未含該 PR 的 main 建立依賴工作，
+      P-8 這類基建包的下游直接缺依賴）；**無依賴關係**的其他任務可照常並行。
       例外仍須停下來問：憑證紅線、破壞性／不可逆操作、計畫外重大裁定
       （改鐵律本文、不可逆 schema 選擇、會產生費用的動作）。
     - **17.4 熔斷（輪數引機制值，不寫死——鐵律 6 精神）**：熔斷輪數＝
@@ -237,21 +242,26 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       **Codex 沒跑≠零意見**，查無審查紀錄一律不滿足本項）∧
       ②Claude bot 判詞**通過**且零未清意見 ∧
       ③**全部機械 CI 綠** ∧ ④**判詞經格式機械驗證**（非散文比對）。
-      ③④是對 LLM 判詞遭 prompt injection 誘導「通過」的程式層防護
-      （LLM 判詞單獨不足以守合併閘門，`claude-review.yml` 的沿革註釋已載明此風險）。
+      ③④**降低但不消除** prompt injection 風險——被注入的判詞可以格式完全合法
+      （`claude-review.yml` 沿革註釋已載明此風險正是 AUTO_MERGE=false 的原因）；
+      ③只證明測試綠、④只證明格式合法，**兩者都不證明審查結論未受注入**。
     - **18.2 條件齊 ⇒ 自動合併 main**；部署管線就緒後（合併版總方案 CD 包，
       等伺服器到位）合併即自動部署＋healthcheck，紅則自動 rollback。
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
-      改 `claude-review.yml`（反竄改機制使其**自身**驗收失效——job 顯示 success
-      但只跑十幾秒、無判詞）、**改機械閘門本體**——`ci.yml` **與它呼叫的
-      `scripts/check-*`／`test-*`（含 `config/ci.rb` 這類 parity 清單）**
-      （驗收照常產生，但 ci.yml 只是呼叫器、判準在 scripts/ 裡：只改閘門腳本的 PR
-      會讓 18.1③「機械 CI 綠」由被改的腳本自己定義＝自我指涉，配對 test-* 同倉
-      同 commit 可一起改、不構成獨立防線）、改 CLAUDE.md／AGENTS.md（規範本文）、
-      涉及不可逆 schema 裁定或費用的 PR。
+      改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
+      自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
+      job 顯示 success 但只跑十幾秒、無判詞）、**改機械閘門本體**——`ci.yml` 呼叫的
+      **全部 `scripts/` 腳本**（現值＝`check-*`／`test-*`／`lint-prototype.py`，
+      以 ci.yml 的 `run:` 步驟為準，複驗：`grep -n "scripts/" .github/workflows/ci.yml`；
+      含 `config/ci.rb` 這類 parity 清單。理由：ci.yml 只是呼叫器、判準在 scripts/ 裡，
+      只改閘門腳本的 PR 會讓 18.1③「機械 CI 綠」由被改的腳本自己定義＝自我指涉，
+      配對 test-* 同倉同 commit 可一起改、不構成獨立防線）、
+      改 CLAUDE.md／AGENTS.md（規範本文）、涉及不可逆 schema 裁定或費用的 PR。
     - **18.4 啟用程序**：自動合併 workflow＋判詞格式機械驗證由 P-8 交付並在
-      一個真實 PR 上實測全鏈路後才啟用；在那之前維持「雙方零**未清**意見後人工按合併」
-      （`AUTO_MERGE: "false"` 現狀不變）。🔴 啟用時要把 `AUTO_MERGE` 翻回 true 的人，
+      一個真實 PR 上實測全鏈路後才啟用；**啟用前 P-8 必須另立不依賴受審 LLM 判詞的
+      信任邊界**（例：外部貢獻者 PR 一律人工／由獨立可信 workflow 做二次驗證——
+      形態由 P-8 裁定），單靠③④不足以安全開啟。在那之前維持
+      「雙方零**未清**意見後人工按合併」（`AUTO_MERGE: "false"` 現狀不變）。🔴 啟用時要把 `AUTO_MERGE` 翻回 true 的人，
       必須同時面對「讓執行過 PR 代碼的 job 重新拿到 `contents: write`」的權限決定
       ——該取捨已寫在 `claude-review.yml` 的 permissions 註釋，不得只翻開關。
 

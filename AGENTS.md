@@ -222,6 +222,7 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   走**人工熔斷**，機制化屬 P-8）；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
   零未清（review 的 `Reviewed commit:` 須等於當前 head）∧ Claude bot 通過且零未清 ∧
   **機械 CI 全綠** ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
-  改 workflow／機械閘門本體（`ci.yml` 與其呼叫的 `scripts/check-*`・`test-*`）／
-  CLAUDE.md／AGENTS.md 的 PR 一律人工；
+  改 `.github/workflows/` 任何檔／機械閘門本體（ci.yml 呼叫的全部 `scripts/` 腳本，
+  含 lint-prototype.py 與 `config/ci.rb`）／CLAUDE.md／AGENTS.md 的 PR 一律人工，
+  且此類 PR 合併完成前其依賴鏈不自動前進；
   自動合併機制（P-8）實測全鏈路前維持人工按鈕。
