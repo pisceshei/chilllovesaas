@@ -262,7 +262,7 @@
 - [ ] `docs/specs/53-ui-gap-recheck.md`
 - [ ] `docs/specs/84-m1-gate-triage.md`
 - [ ] `docs/specs/89-prototype-defect-reverify.md`
-- [ ] `docs/specs/71-parity-register.md` §F（V 項全表）
+- [ ] `docs/specs/71-admin-parity-sweep.md` §F（V 項全表；（第 3 輪更正）：原誤寫 `71-parity-register.md`——與 A.3 前五格同批「憑印象寫」，第 2 輪漏改此格）
 - [ ] `.github/workflows/claude-review.yml`（🔴 全檔註釋＝最密集事故檔之一）
 - [ ] `.github/workflows/ci.yml`（同上）
 - [ ] `scripts/*` 檔頭 docstring（複驗：`ls scripts/`，逐支）
