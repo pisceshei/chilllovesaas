@@ -20,13 +20,15 @@
 # ## 用法
 #   bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒] [MAX_POLLS]
 #   INTERVAL 預設 900（15 分鐘，鐵律 17.1 的 15–25 分鐘窗下緣）；MAX_POLLS 預設 8（約 2 小時）。
-#   HEAD_SHA 必須是 9–40 位十六進位前綴（Codex 錨定比對用前 9 位；短於 9 位會在
-#   舊 review 內文誤中子串——參數驗證直接擋，Codex #59 r1）。
+#   HEAD_SHA 必須是 9–40 位十六進位（比對一律用**完整值**與 API 的 `commit_id`／
+#   check-run 端點；前 9 位只用於訊息顯示。長度下限沿用 r1 的參數驗證）。
 #
 # ## 退出碼
-#   0＝雙方都已回應（判詞數增加 ∧ Codex 錨定 head）
-#   2＝參數錯誤／API 持續失敗（檢查跑不了）——含非數字的 INTERVAL/MAX_POLLS、
-#     非十六進位或過短過長的 HEAD_SHA（Codex #59 r1：爛參數不得滑進輪詢循環變 exit 4）
+#   0＝兩側都已**對該 head** 完成（review check-run completed ∧ Codex review 的
+#     `commit_id` 等於該 head）
+#   2＝參數錯誤／API 持續不可用（檢查跑不了）——含非數字的 INTERVAL/MAX_POLLS、
+#     非十六進位或過短過長的 HEAD_SHA（Codex #59 r1：爛參數不得滑進輪詢循環變 exit 4）；
+#     🔴 **限流不走這裡**——它會等到額度重置再續（見紀律 ③）
 #   4＝逾時升級（等滿 MAX_POLLS 輪仍缺至少一方）
 #
 # ## 🔴 實作紀律（每一條都是本倉庫實測換來的，動這支前先讀）
@@ -37,7 +39,9 @@
 #     實際發生過、claude-review.yml 為此上了 --paginate）只看第一頁會永遠等不到新判詞。
 #     逐頁抓到不足 100 則為止、上限 PAGES_MAX 頁。
 #   ③**未認證 API 限額 60 次/小時/IP、跨工具共用**——每輪請求數＝實際頁數×2（單頁
-#     常態＝2 次），INTERVAL 下限 300 秒由參數驗證硬擋。
+#     常態＝2 次），INTERVAL 下限 300 秒由參數驗證硬擋。**撞限時等到 `X-RateLimit-Reset`
+#     再續**，不計入失敗也不消耗輪次（2026-08-18 實測：同日的診斷查詢把額度用光，
+#     舊版起跑即 exit 2 報「回應非清單」——把可恢復狀態當成故障）。
 set -u
 
 PR="${1:-}"
@@ -70,20 +74,32 @@ fi
 
 HEAD_SHORT=$(printf '%.9s' "$HEAD_SHA")
 
-# 起跑基準：現有判詞數（之後「變多」才算本輪判詞出了——判詞是累積的，
-# 比對絕對數會把上一輪的誤認成這一輪）。
+# 回傳「判詞就緒 codex已審」兩個 0/1；限流回 `RATELIMITED <reset_epoch>`、
+# 其他不可解析回 `APIERR`（兩者由呼叫端分開處置）。
 fetch_state() {
   python - "$API" "$PR" "$HEAD_SHA" "$PAGES_MAX" "$REVIEW_CHECK_NAME" "$CODEX_LOGIN" <<'PYEOF'
-import io, json, sys, urllib.request
+import io, json, sys, urllib.error, urllib.request
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 api, pr, head_sha, pages_max, check_name, codex_login = (
     sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6]
 )
 
+# 🔴 限流要與「真的壞掉」分開（2026-08-18 實測：診斷查詢把 60/hr 的未認證額度用光，
+#    本腳本起跑即 exit 2 報「回應非清單」——訊息沒錯但處置錯了。限流是**可恢復**狀態，
+#    正確處置是等到 reset 再續，不是當成故障退出）。偵測法＝HTTP 403/429 且
+#    `X-RateLimit-Remaining: 0`；reset 時點讀 `X-RateLimit-Reset`（epoch 秒）。
+RATE_LIMITED = "RATELIMITED"
+
 def get(url):
     try:
         with urllib.request.urlopen(url, timeout=30) as r:
             return json.load(r)
+    except urllib.error.HTTPError as e:
+        if e.code in (403, 429) and (e.headers.get("X-RateLimit-Remaining") == "0"):
+            reset = e.headers.get("X-RateLimit-Reset") or "0"
+            print(f"{RATE_LIMITED} {reset}")
+            raise SystemExit
+        return None
     except Exception:
         return None
 
@@ -126,8 +142,29 @@ PYEOF
 REVIEW_CHECK_NAME="review"
 CODEX_LOGIN="chatgpt-codex-connector[bot]"
 
-BASELINE_LINE=$(fetch_state) || { echo "🔴 起跑抓取失敗（API 不可達或限額耗盡）" >&2; exit 2; }
-case "$BASELINE_LINE" in APIERR*) echo "🔴 起跑回應非清單（可能被限流）" >&2; exit 2;; esac
+# 🔴 限流時**等到 reset 再續**，不算失敗也不消耗輪次（實測教訓見 get() 上方註釋）。
+#    等待上限用 RATE_WAIT_MAX 兜底，免得 reset 值異常時無限睡。
+RATE_WAIT_MAX=3900
+wait_for_reset() {
+  RESET_EPOCH=${1:-0}
+  NOW=$(date +%s)
+  WAIT=$((RESET_EPOCH - NOW + 5))
+  [ "$WAIT" -lt 5 ] && WAIT=5
+  [ "$WAIT" -gt "$RATE_WAIT_MAX" ] && WAIT=$RATE_WAIT_MAX
+  echo "⏳ 未認證 API 限額用盡（60/小時/IP、跨工具共用）——等待 ${WAIT} 秒到額度重置後續查"
+  sleep "$WAIT"
+}
+
+BASELINE_LINE=""
+for _try in 1 2 3; do
+  BASELINE_LINE=$(fetch_state) || { echo "🔴 起跑抓取失敗（API 不可達）" >&2; exit 2; }
+  case "$BASELINE_LINE" in
+    RATELIMITED*) wait_for_reset "${BASELINE_LINE#* }"; continue;;
+    APIERR*) echo "🔴 起跑回應非預期格式（非限流）" >&2; exit 2;;
+  esac
+  break
+done
+case "$BASELINE_LINE" in RATELIMITED*|"") echo "🔴 連續三次都撞限額，放棄起跑" >&2; exit 2;; esac
 echo "起跑（head $HEAD_SHORT）：判詞就緒=${BASELINE_LINE% *}／codex已審=${BASELINE_LINE#* }；" \
      "等待兩者皆為 1（判詞就緒＝該 head 的 \`$REVIEW_CHECK_NAME\` check-run completed）；" \
      "每 $INTERVAL 秒查一次、上限 $MAX_POLLS 輪"
@@ -138,7 +175,10 @@ while [ "$i" -lt "$MAX_POLLS" ]; do
   i=$((i + 1))
   sleep "$INTERVAL"
   LINE=$(fetch_state) || { FAILS=$((FAILS + 1)); echo "poll#$i 抓取失敗（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && { echo "🔴 連續失敗達 3 次，檢查跑不了" >&2; exit 2; }; continue; }
-  case "$LINE" in APIERR*) FAILS=$((FAILS + 1)); echo "poll#$i 回應非清單（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && exit 2; continue;; esac
+  case "$LINE" in
+    RATELIMITED*) i=$((i - 1)); wait_for_reset "${LINE#* }"; continue;;
+    APIERR*) FAILS=$((FAILS + 1)); echo "poll#$i 回應非預期格式（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && exit 2; continue;;
+  esac
   FAILS=0
   V=${LINE% *}
   CX=${LINE#* }

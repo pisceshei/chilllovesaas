@@ -81,6 +81,10 @@
   ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4；API 連敗 3 次 exit 2。
 - **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
   INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
+- **限流是可恢復狀態、不是故障**（第 4 輪自報實測）：撞 60/hr 未認證上限時，讀
+  `X-RateLimit-Reset` 等到重置再續，**不計入失敗也不消耗輪次**（上限 `RATE_WAIT_MAX`
+  兜底）。舊版把它當解析失敗直接 exit 2——同日診斷查詢把額度用光後，poller 起跑即
+  假性失敗。判別法＝HTTP 403/429 且 `X-RateLimit-Remaining: 0`。
 - **分頁**（Codex #59 r1）：留言破百的 PR 只看第一頁會永遠等不到新判詞——逐頁抓到
   不足 100 則為止（上限見腳本 `PAGES_MAX`）。
 - 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
