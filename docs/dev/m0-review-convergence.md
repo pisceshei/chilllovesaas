@@ -89,6 +89,7 @@
 🔴 canary 用 3 而非 2，是為了與 fail-closed 的 2 **結構上可分辨**。
 
 **納管範圍**＝對本倉庫**現況**做斷言的地方：`docs/worklog/`、`docs/handoff/`、`docs/dev/`、
+`docs/plans/`（2026-08-18 PR #58 擴入——方案檔同性質；注意僅 R1／R3，R4／R5 範圍見上表不變）、
 `AGENTS.md`、`CLAUDE.md`、`HANDOFF.md`、`scripts/`。
 
 **R4／R5 只掃改動過的檔**，這是分層規範的直接後果：歷史層不回頭改，

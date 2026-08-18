@@ -144,6 +144,18 @@
   fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
   無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
   落 `docs/DECISIONS.md`【F11】
+- doc-claims `IN_SCOPE` 刻意不含 docs/specs/／docs/research/／docs/design/ ⇒ #58 第 2 輪
+  🔴1（91 誤插）落在 docs/specs/ 而無閘門攔得到——既有取捨（腳本檔頭有誠實聲明），
+  要擴須先解「本尊路徑 vs 我方路徑」判別；與 G-01 同屬登記簿保真缺口群
+  【F12；來源＝#58 第 2 輪判詞 ⚪，第 4 輪補搬——第 3 輪漏搬＝G-01 第二次現行犯，
+  本條目即該事故的登記】
+- docs/plans/ 納管後實得覆蓋僅 R1／R3（R4／R5 範圍判斷硬綁 worklog／handoff 未動）
+  ——契約層註釋已於第 4 輪補限定；要收窄落差改註釋已做、改 R4 範圍屬 G 級裁定
+  【F12；來源＝#58 第 3 輪判詞 ⚪1】
+- doc-claims 新納管項（docs/plans/）無 fixture 釘住掃描範圍——既有形態（九個 doc_*
+  fixture 全在 docs/worklog/，七項裡也只有 worklog 真被 fixture 覆蓋）；「擴充承重」
+  證據＝擴入當輪抓到兩條（該輪已修）；複驗法＝暫置一條壞引用 md 於 docs/plans/ 重跑
+  應轉紅（或收割輪建 doc_plans fixture）【F12；來源＝#58 第 3 輪判詞 ⚪2】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
