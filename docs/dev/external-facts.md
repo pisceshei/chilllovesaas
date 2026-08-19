@@ -114,7 +114,30 @@ rulesets 與概念層寫 "the most recent **reviewable** push"。`reviewable` �
 
 來源：<https://docs.github.com/en/code-security/dependabot/working-with-dependabot/automating-dependabot-with-github-actions>（取證 2026-08-19）
 
-⇒ 業界做法**不是**去守核准那一步（守不住），而是**把閘門放在合併**時重新求值。
+⇒ **本頁不只是「一份沒做 head 複驗的範例」——它同一頁就明文把閘門開在合併**：
+> "**If you use status checks to test pull requests, you should enable Require status checks to pass
+> before merging for the target branch for Dependabot pull requests.**"
+> 同頁對 auto-merge 的定義 — "This enables the pull request to be merged **when any tests and approvals
+> required by the branch protection rules are successfully met**."
+
+同日另取三份獨立來源，措辭一律以**合併**為界（**不是**我方外推）：
+> GitHub 分支保護 — "After enabling required status checks, **all required status checks must pass before
+> collaborators can merge changes into the protected branch.**"
+> <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches>（取證 2026-08-19）
+> OpenSSF Scorecard 的 Branch-Protection 分級 — "Require at least 1 reviewer for approval **before merging**"／
+> "Require branch to be up to date **before merging**"／"Require branch to pass at least 1 status check **before merging**"
+> <https://github.com/ossf/scorecard/blob/main/docs/checks.md>（取證 2026-08-19）
+> Renovate — "By default, Renovate **will not automerge until it sees passing status checks / check runs**
+> for the branch." <https://docs.renovatebot.com/key-concepts/automerge/>（取證 2026-08-19）
+
+⚠️ **精度（本條只能說到這裡）**：以上支持的是「**官方指引與通行安全基準把閘門定在合併**」，
+**不支持**「業界普遍如此」——後者要抽樣調查，我方沒做 ⇒ 原句的「業界做法」是單例外推，已刪。
+「核准那一步守不住」不是新斷言，是 A1／A4 的直接後果（核准端沒有 head 前置條件原語）。
+「合併時**重新**求值」的強形式（真的重跑）只在 strict 模式與 merge queue 成立：
+> "The merge queue will ensure the pull request's changes pass all required status checks
+> **when applied to the latest version of the target branch** and any pull requests already in the queue."
+> <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue>（取證 2026-08-19）
+非 strict 的必要檢查是**對合併當下的 head 求值**（推了新 commit ⇒ 該 head 沒有通過紀錄 ⇒ 擋住），不是重跑。
 
 ### A8. auto-merge 的停用條件——⚠️ 本條原斷言被複核判為 **WRONG**，已更正
 

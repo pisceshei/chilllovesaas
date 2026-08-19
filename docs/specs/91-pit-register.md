@@ -407,6 +407,36 @@
   `core.quotePath=false` 防中文檔名被轉義成八進位而比對假紅）。
   🔴 **本輪未改**——第 23 輪判詞未點名此處，依「只修點名處」僅登記
   【F11；來源＝2026-08-19 研究（git 官方 `A...B` 定義）＋使用者裁定】
+- **`CLAUDE.md` 鐵律 17.4 引述的被否決提案「升 R4／R5 為 error」，前提在同一天被自己推翻**：
+  該處逐字是「否決了兩個機制化提案**（升 R4／R5 為 error、加推送前檢查腳本）**」，而
+  `AGENTS.md` §7 已於同日更正——**R4 本來就是 error**，只有 R5 走 `warnings`
+  （複驗：`grep -n 'violations <<\|warnings <<' scripts/check-doc-claims.rb`）⇒ 提案名稱裡的
+  「R4」是無效項，被否決的實質只有 R5。🔴 **僅登記不修**：該句是使用者裁定的逐字紀錄，
+  改它等於改鐵律本文（17.3 例外清單明列「改鐵律本文」），需使用者裁定；且提案已被否決、
+  無實害。日後若重提機制化，先按本條把提案名稱收窄為 R5，別把一個已經是 error 的規則
+  再「升」一次【F11；來源＝#58 bot R25 ⚪；R26 判詞點名「本輪未落籍」後補登】
+- **R4／R5 雙重洞條目缺結案註：兩項 P-8 修法都已隨 PR #59 進 main**：本節上方那條
+  （錨點：`grep -n 'CI 生產調用疑似結構性未執行' docs/specs/91-pit-register.md`）把修法寫成
+  「屬 P-8：CI fetch 深度足＋「未執行」由 warning 升 canary 退出碼」，兩項都已落地——
+  ①ci.yml 的 doc-claims 前置步驟先 `git fetch --no-tags --unshallow origin || true` 再補抓 base；
+  ②同 step 帶 `--require-base`，而 `scripts/check-doc-claims.rb` 對該旗標的處置逐字是
+  「＝**檢查根本沒有生效**（exit 3）」。複驗：`grep -n 'unshallow\|require-base' .github/workflows/ci.yml`
+  與 `grep -n 'require_base' -A 6 scripts/check-doc-claims.rb`。
+  🔴 **但這條不是整條結案**：機制解掉的只是 **CI 側**的淺 clone；該條同時承載的「commit 後
+  必再跑一次 doc-claims」屬**本地側**紀律，成因是 pre-commit 時 R4 對未提交行盲，與 clone
+  深度無關、未因 #59 而消失（`AGENTS.md` §7 末段的 2026-08-19 實測即本地側）。把它讀成
+  全條結案，下一個人就會停掉補跑
+  【F12；來源＝#58 bot R25 ⚪；R26 判詞點名「本輪未落籍」後補登】
+- **`docs/dev/m0-automation-infra.md` 的第二處 `gh --add-label` 斷言只寫「實測為假」、無出處**：
+  逐字是「舊註釋稱「label 不存在時 `--add-label` 會自動建立它」——**實測為假**（2026-08-18）」
+  （錨點：`grep -n 'add-label' docs/dev/m0-automation-infra.md`），依 `AGENTS.md` §8 屬外部行為
+  斷言，必須附 URL＋取證日期＋英文原文逐字，或標〔推論〕並寫出怎樣驗證。
+  🔴 **範圍外，僅登記**：該檔隨 PR #59 於 2026-08-19 合併帶入本分支、不在 #58 的 diff 內
+  （複驗：`git log --format=%h -- docs/dev/m0-automation-infra.md`），依鐵律 17.2「只修點名處」
+  不順手改；第 36 輪 commit message 也已自記「登記不動」。補證據時**不必重查**——本節熔斷
+  條目的〔證據 E〕（E1–E4：gh --help／上游原始碼把名稱解析成 ID／mutation 只吃 ID／全庫
+  `createLabel` 反向封閉）就是同一個斷言的完整取證，直接引它即可
+  【F11；來源＝#58 bot R26 ⚪；第 36 輪 commit message 已自記「登記不動」】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 

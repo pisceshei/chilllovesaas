@@ -150,6 +150,13 @@
 - 🔴 **同一個 commit 內必須回寫終態層**——worklog `Changes` 表、handoff `§①`、
   受影響的 `docs/dev/`。**只追加不回寫＝打回。**
 - **commit 之後**跑 `ruby scripts/check-doc-claims.rb`（第 2／4／5 條已機制化，見下節）——🔴 它用 `git diff <base>` 只掃**已提交**的新增行，commit 前跑掃不到剛寫的散文（＝假綠）；**轉紅或出現警告（R5 不影響退出碼，要自己看）⇒ 修正後另做一個 commit 再跑，警告為 0 才推**（見下節第 7 條末段）。
+  🔴 **與 `CLAUDE.md` 鐵律 15.4 的時序對照——15.4 的判準一字不動，本段只說明兩者怎麼併存**：
+  ①15.4「全部閘門逐支親眼看退出碼 → commit」照跑，**doc-claims 也在那一輪裡**（它是 `config/ci.rb`
+  的一步）——本款要的是 commit **之後再補跑一次**，不是把它從 commit 前那一輪抽掉；
+  ②補跑**不動檔**（只讀 `git diff`），與 15.4 自己放行的「15.2 重拉留言（重拉不動檔）」同類
+  ⇒ **不觸發** 15.4「閘門後再動任何檔案＝回到本款起點重來」；
+  ③但補跑轉紅（或有警告）之後的**修正會動檔** ⇒ 那一刻起**以 15.4 為準**：本款的「另做一個 commit」
+  ＝15.4 的「重跑全部閘門、重新 commit，再 15.1 核對」，**不是只重跑 doc-claims 就推**。
 
 ### 7. 🔴 紀律優先；機制只是補網，而且網有洞
 
@@ -199,7 +206,7 @@ commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，com
 **事故（2026-08-19，PR #59／#60）**：驗收方查了 `gh pr review --help`——**它拿得到的證據，
 觀察完全正確**（該 CLI 確實沒有 head 前置條件旗標）——然後**推論**改用 REST 的 `commit_id`
 就能把核准綁到被評估的 commit，並以肯定句寫成修法建議。作者照做了。
-事後查官方文檔才發現：該參數的定義是「the commit the review **pertains to**」，
+事後查官方文檔才發現：該參數（REST）的定義逐字是「The SHA of the commit that needs a review…Defaults to the most recent commit in the pull request when you do not specify a value.」（`docs/dev/external-facts.md` A1），
 端點列出的狀態碼只有 200／403／422、**沒有 409**，它**沒有任何前置條件語義**。
 ⇒ **一個看起來安全的假修復進了 main**，直到補審才被抓出來。
 
