@@ -182,8 +182,23 @@ jobs:
         id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
         continue-on-error: true   # 失敗也要讓解析步驟跑完並貼出可讀的診斷
         uses: anthropics/claude-code-action@v1
+        # 🔴🔴🔴 **`prompt:` 內一律不得出現 `${{ }}`（2026-08-19 事故後立法）**
+        #   YAML scalar 只要含 `${{ }}`，Actions 就把**整個 scalar 當成一個 template expression**
+        #   （本檔下方 `run:` 那段早就記過同一條，只是 `prompt:` 從沒套用），
+        #   而單一 expression 有 **21000 上限**（官方錯誤字串："Exceeded max expression length 21000"）。
+        #   🔴 **後果不是報錯，是整份 workflow 無法解析** ⇒ `pull_request` 觸發器不再生效、
+        #      **一則判詞都不會有**，PR 上只看到 CI 綠、Claude Review 消失，極難歸因。
+        #   📌 **實測（2026-08-19，用丟棄分支讓 GitHub 當預言機，push 到無 PR 的分支：
+        #      檔案有效⇒零 run；無效⇒產生一個以檔案路徑命名、0 job 的 failure run）**：
+        #        prompt 19729 bytes ＋含 `${{ }}` ⇒ ✅｜21023 ⇒ 🔴｜21791 ⇒ 🔴｜23085 ⇒ 🔴
+        #        prompt 22940 bytes ＋**零** `${{ }}` ⇒ ✅ ⇒ **限制的觸發條件是「含 expression」，不是長度本身**
+        #   ⇒ 解法＝把值走 **step 層 `env:`**，prompt 裡寫 `$PR_NUMBER`（agent 的 Bash 會展開）。
+        #   ⚠️ prompt 每輪都在變長，這條**只會越來越容易踩**；新增內容前先確認 prompt 仍零 `${{ }}`。
+        #   複驗：`ruby -ryaml -e '…' | grep -c '\$\{\{'` 對 prompt 值應為 0。
         env:
           GH_TOKEN: ${{ github.token }}
+          # PR 號改走 env（見上方立法註）——prompt 內用 `$PR_NUMBER`，不得再寫 `${{ }}`。
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # 🔴 **診斷用，2026-08-15 開啟**：預設 false 時 action 只印
@@ -225,7 +240,7 @@ jobs:
             分工（2026-08-15 使用者裁定改制，見 `AGENTS.md` 開頭）：**實作由人主導的工作階段負責**；
             你與 **Codex** 並列為兩個**獨立**的驗收方，各自出意見、互不派工。
 
-            審核 PR #${{ github.event.pull_request.number }}（`gh pr diff ${{ github.event.pull_request.number }}` 取得變更）。PR 標題或分支對應里程碑（M0–M6）時，驗收範圍以 `HANDOFF.md` §5 該里程碑的完成定義為準。
+            審核 PR #$PR_NUMBER（`gh pr diff $PR_NUMBER` 取得變更）。PR 標題或分支對應里程碑（M0–M6）時，驗收範圍以 `HANDOFF.md` §5 該里程碑的完成定義為準。
 
             ## 驗收依據（依序讀，變更碰到哪塊就讀哪塊）
             0. `CLAUDE.md` — 專案共用規則與工作方式。🔴 **2026-08-15 補進本清單**：
@@ -312,7 +327,7 @@ jobs:
             `quality` job 以唯讀權限、零 secret 跑全部 `check-*`／`test-*` 閘門與回歸 fixture，
             它就是這個倉庫的「獨立唯讀執行環境」。
 
-            - 🔴 用 `gh pr checks ${{ github.event.pull_request.number }}` 讀本 PR 的 CI 結果，
+            - 🔴 用 `gh pr checks $PR_NUMBER` 讀本 PR 的 CI 結果，
               把各 check 的結論（pass／fail／pending）當作實跑證據引用：fail 的 check 逐條
               對應到你的意見（🔴／🟡）；pending 未完成時在意見中明說「CI 尚未完成，實跑證據不全」。
             - 🔴 本專案的判準是「**破壞那一步本身也要有斷言**」：PR 自稱「N 條 fixture 全過」
@@ -436,7 +451,7 @@ jobs:
 
             ## 本輪與上一輪的關係（2026-08-15 新增）
 
-            先跑 `gh pr view ${{ github.event.pull_request.number }} --comments`，
+            先跑 `gh pr view $PR_NUMBER --comments`，
             找出**上一則**以【驗收結論】開頭的留言，然後：
 
             - 上一輪列為 🔴、且本輪 diff **已改動對應位置**的：驗證是否真的修好。
@@ -456,7 +471,7 @@ jobs:
             不切斷這一點，任何「修完再審」的迴圈都不會收斂。
 
             ## 輸出（格式必須嚴格遵守，後續自動化步驟會機器解析）
-            用 `gh pr comment ${{ github.event.pull_request.number }} --body "..."` 貼**恰好一則**審核意見：
+            用 `gh pr comment $PR_NUMBER --body "..."` 貼**恰好一則**審核意見：
 
             - 第一行必須是下列兩者之一，一字不差（全形【】）：
               - 【驗收結論】通過
