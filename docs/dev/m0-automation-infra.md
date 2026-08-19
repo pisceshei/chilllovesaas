@@ -59,6 +59,15 @@
     （`unique`／`none-in-window`／`ambiguous:N`／`parse-error`）。
     ⚠️ 誠實限制：擋不住「本輪 Claude 沒貼、而某舊 run 恰在本 job 期間貼出唯一一則」，
     根治＝判詞契約帶 head SHA（與 `await-verdict.sh` 同一項待辦）。
+  - 🔴 **approve 綁 commit 的真實效力（2026-08-19 補審更正，此前本篇宣稱過頭）**：
+    送核准走 `POST /pulls/{n}/reviews` 並帶 `commit_id="$HEAD_SHA"`。
+    ⚠️ **它不會讓 head 前進後的核准失效**——官方對該參數的定義是
+    「Not using the latest commit SHA may render your review **comment** outdated…」
+    （docs.github.com/en/rest/pulls/reviews，取證 2026-08-19），管的是**留言行定位**；
+    dismiss-stale 則是**推播事件撤銷全部核准**，與 `commit_id` 無關。
+    ⇒ check-then-act 的競態**沒有關掉**，只是窗變小＋留下可稽核紀錄。
+    ⚠️ 現況：`main` **未設分支保護**（實測 404 Branch not protected）⇒ 核准不構成閘門，
+    本項風險惰性；啟用 required approving review 後才會活過來。
   - 🔴 **approve 在四條件之後才送出**（r10）：舊版先 `gh pr review --approve` 再算
     C1–C4，缺項時只留言「先不要合併」——但 approve 是**分支保護規則會消費的憑證**，
     在啟用 Actions approvals 的倉庫可能滿足「需要一則核准」而讓人工或外部 auto-merge

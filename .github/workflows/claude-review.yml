@@ -1199,8 +1199,20 @@ jobs:
                   #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
                   #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
                   #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
-                  #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
-                  #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+                  #    ⇒ 直接把核准釘在 $HEAD_SHA 上。
+                  #    🔴🔴 **更正（2026-08-19 補審，本註原文是錯的）**：原文寫「head 若已前進，這則
+                  #       核准就屬於舊 commit，分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗」
+                  #       ——**官方文檔不支持這個推論**。`POST /pulls/{n}/reviews` 的 `commit_id` 逐字定義是
+                  #       「The SHA of the commit that needs a review. Not using the latest commit SHA may
+                  #       render your review comment outdated if a subsequent commit modifies the line you
+                  #       specify as the position.」（docs.github.com/en/rest/pulls/reviews，取證 2026-08-19）
+                  #       ⇒ 它管的是**留言的行定位**，不是核准對分支保護的效力；而 dismiss-stale 是
+                  #       **推播事件撤銷全部核准**，與 `commit_id` 指向哪個 commit 無關。
+                  #    ⇒ **check-then-act 的競態沒有被關掉**，只是窗變小＋留下「評估的是哪個 commit」的
+                  #       可稽核紀錄。真正關掉要靠分支保護的 dismiss-stale，或不在合併前送核准。
+                  #    ⚠️ 現況實測（2026-08-19，`gh api repos/OWNER/REPO/branches/main/protection` 回
+                  #       404 Branch not protected）：**main 未設任何分支保護** ⇒ 核准目前不構成閘門，
+                  #       本項風險**現在是惰性的**；一旦啟用 required approving review 就會活過來。
                   gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
                     -f event=APPROVE -f commit_id="$HEAD_SHA" \
                     -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
@@ -1233,8 +1245,20 @@ jobs:
               #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
               #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
               #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
-              #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
-              #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+              #    ⇒ 直接把核准釘在 $HEAD_SHA 上。
+              #    🔴🔴 **更正（2026-08-19 補審，本註原文是錯的）**：原文寫「head 若已前進，這則
+              #       核准就屬於舊 commit，分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗」
+              #       ——**官方文檔不支持這個推論**。`POST /pulls/{n}/reviews` 的 `commit_id` 逐字定義是
+              #       「The SHA of the commit that needs a review. Not using the latest commit SHA may
+              #       render your review comment outdated if a subsequent commit modifies the line you
+              #       specify as the position.」（docs.github.com/en/rest/pulls/reviews，取證 2026-08-19）
+              #       ⇒ 它管的是**留言的行定位**，不是核准對分支保護的效力；而 dismiss-stale 是
+              #       **推播事件撤銷全部核准**，與 `commit_id` 指向哪個 commit 無關。
+              #    ⇒ **check-then-act 的競態沒有被關掉**，只是窗變小＋留下「評估的是哪個 commit」的
+              #       可稽核紀錄。真正關掉要靠分支保護的 dismiss-stale，或不在合併前送核准。
+              #    ⚠️ 現況實測（2026-08-19，`gh api repos/OWNER/REPO/branches/main/protection` 回
+              #       404 Branch not protected）：**main 未設任何分支保護** ⇒ 核准目前不構成閘門，
+              #       本項風險**現在是惰性的**；一旦啟用 required approving review 就會活過來。
               gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
                 -f event=APPROVE -f commit_id="$HEAD_SHA" \
                 -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
