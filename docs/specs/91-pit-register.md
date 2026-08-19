@@ -523,6 +523,14 @@
   `MAX_POLLS_MAX`／十進位位數先比的上界驗證，並與 #58 的 INTERVAL 900–1500 契約合併
   【F7；來源＝#58 Claude R37 issue comment `5344159684` ⚪4；取證日期＝2026-08-19】
 
+### 3.5 自階段一' PR-1 開場包驗證（2026-08-20）
+
+- **總方案 §2.6 的 X3–X10 列少於表頭一欄**：`docs/plans/2026-08-18-總方案.md` 該表表頭
+  宣告「#／資產／要點」，但 X3–X10 只提供代碼與一格內容；Markdown 會把內容全放進「資產」欄，
+  「要點」留空。PR-1 點名射程只含 CD 解凍、§十二裁定回寫與新執行方案落庫，依鐵律 17.2
+  本輪只登記、不順手補欄。複驗：對該表每列計算 `(?<!\\)\|` 命中數，須與表頭相等
+  【F5；來源＝PR-1 開場包 Markdown 結構自查；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -630,6 +638,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列——#57 未動本檔＝集合比對缺口實例）
 - [ ] `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
 - [ ] `docs/worklog/2026-08-18-P8-自動化基建.md`（PR #59 合併帶入；#58 R29 🔴1 補列）
+- [ ] `docs/worklog/2026-08-19-P8補審-approve綁定斷言更正.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/worklog/2026-08-19-PR60-第十輪驗收修復.md`（PR #60 新增；PR-1 D1 修復補列）
 - [ ] `docs/worklog/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
@@ -640,6 +650,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -717,6 +729,9 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR60-第十輪驗收修復.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/handoff/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
