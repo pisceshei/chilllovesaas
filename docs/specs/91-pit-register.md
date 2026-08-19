@@ -564,6 +564,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-18-P8-自動化基建.md`（PR #59 合併帶入；#58 R29 🔴1 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -633,6 +634,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-全專案交接-階段0收官與codex接手.md`（PR #58 第 41 輪後新增；#58 R29 🔴1 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
