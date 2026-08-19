@@ -475,14 +475,14 @@
   PR A，再合併會改變 A merge-base 的 related PR B；在 B 合併後、嘗試合併 A 前後分別以
   `GET /pulls/{N}/reviews` 記錄 review state／時間並重複至少三次。只有官方文件明載求值時點，或受控
   實驗能穩定區分兩案，才可將結論升格
-  【F11；來源＝#58 Codex review `4972265738` inline `3813089519`】
+  【F11；來源＝#58 Codex review `4972265738` inline `3813089519`；取證日期＝2026-08-19】
 
 - **驗收方外部語義 handoff 尚有第三處「官方從未公布」歷史全稱句**：
   `docs/handoff/2026-08-19-驗收方外部語義與研究前置.md` 的既有歷史層逐字寫
   「`require_last_push_approval` 的判準未取得（官方從未公布比 `submitted_at` 還是比 commit）」；
   有限檢索不能證明「從未公布」。R33 只要求依同輪先例落籍，故本輪依鐵律 17.2 保留原文不改；
   P-1 收割時須在原文鄰行追加證據邊界更正，不得覆寫歷史
-  【F11；來源＝#58 Claude R33 issue comment `5342461892` ⚪1】
+  【F11；來源＝#58 Claude R33 issue comment `5342461892` ⚪1；取證日期＝2026-08-19】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -597,6 +597,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -670,6 +671,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
