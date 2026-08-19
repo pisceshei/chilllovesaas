@@ -241,8 +241,7 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）——`MAX_FIX_ROUNDS` 與
   `review:需人工裁定` 閘門**已隨 PR #59 於 2026-08-19 合併移除**（複驗：
   `git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:**2**`（兩處命中都在**廢止說明註釋**裡，不是活的常數））
-  ⇒ 該 label 對驗收 workflow 無作用，殘留的直接移除。**任何人不得以輪數為由停驗收或建議停**。配套（非可選）＝反覆出現的意見類型固化成確定性腳本，
-  不靠再審一輪（依據：2026-08-15 實測九輪 15 條 🔴 有 12 條是抽樣切片而非真新問題）。
+  ⇒ 該 label 對驗收 workflow 無作用，殘留的直接移除。**任何人不得以輪數為由停驗收或建議停**。配套的現行狀態＝**建議而非強制**（2026-08-19 使用者裁定「把機制改成紀律」⇒ 固化成腳本是候選方向、啟用需裁定；現行防線＝紀律，見本檔 §7）。
   🔴 **雙清必須顯式含 Codex**：`ROUNDS` 只計 Claude bot 判詞 ⇒ 只看 bot 會漏掉
   「bot 通過 ∧ Codex 未清」。全文 CLAUDE.md 17.4；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且
   零未清（review 的 `Reviewed commit:` 須等於當前 head）∧ Claude bot 通過且零未清 ∧
