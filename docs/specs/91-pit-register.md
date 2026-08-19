@@ -466,8 +466,23 @@
   「A5 的求值時機（push 當下 vs 合併時惰性）官方從未公布」。本輪 Codex 只點名終態層
   `docs/dev/external-facts.md` 的同型句；主 worklog 這段屬歷史層且未被點名，依鐵律 17.2
   只登記、不順手改。未來收割時須保留原文並追加更正註：有限檢索只能支持〔推論〕，不能證明
-  「從未公布」；升格條件沿用 external-facts A5 的官方明文或受控 scratch repo 實驗
+  「從未公布」；升格條件由下一條 A5 求值時機未決登記管理
   【F11；來源＝#58 Codex review `4972060836` 後的同型掃描】
+
+- **A5 求值時機〔推論〕與受控實驗不屬於已查證外部事實檔**：
+  `docs/dev/external-facts.md` A5 只保留 GitHub rulesets 官方逐字與它能支持的證據邊界；「事件當下更新
+  vs 合併判定時惰性求值」仍未決，不得押注。升格法＝在 scratch repo 啟用 stale dismissal，先核准
+  PR A，再合併會改變 A merge-base 的 related PR B；在 B 合併後、嘗試合併 A 前後分別以
+  `GET /pulls/{N}/reviews` 記錄 review state／時間並重複至少三次。只有官方文件明載求值時點，或受控
+  實驗能穩定區分兩案，才可將結論升格
+  【F11；來源＝#58 Codex review `4972265738` inline `3813089519`】
+
+- **驗收方外部語義 handoff 尚有第三處「官方從未公布」歷史全稱句**：
+  `docs/handoff/2026-08-19-驗收方外部語義與研究前置.md` 的既有歷史層逐字寫
+  「`require_last_push_approval` 的判準未取得（官方從未公布比 `submitted_at` 還是比 commit）」；
+  有限檢索不能證明「從未公布」。R33 只要求依同輪先例落籍，故本輪依鐵律 17.2 保留原文不改；
+  P-1 收割時須在原文鄰行追加證據邊界更正，不得覆寫歷史
+  【F11；來源＝#58 Claude R33 issue comment `5342461892` ⚪1】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -581,6 +596,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -653,6 +669,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
