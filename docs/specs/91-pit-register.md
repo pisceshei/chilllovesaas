@@ -455,6 +455,12 @@
   （把證得出來的事實寫成猜測，登記簿只會更不可信）
   【F11；來源＝#58 bot R28 ⚪1】
 
+- **附錄 A 的雙向集合判準會把 `docs/worklog/README.md` 納入歷史收割，但它是格式說明檔**：
+  現行判準要求 `git ls-files docs/worklog docs/handoff` 與 checkbox 路徑集合相等，所以 README
+  不能在不改規則的情況下略過。P-1 實作 checker 時須二選一：①白名單排除 README，並同步
+  P-1 判準文字與 fixture；②維持全收，通讀後以「零抽取」完成。選案前不得一邊保留集合相等、
+  一邊靜默略過模板檔【F11／F12；來源＝#58 bot R30 ⚪1，R31 🟡1 點名未落籍】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -565,6 +571,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -635,6 +642,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
