@@ -83,10 +83,13 @@
     **有界等待**（r1）：pending 時每 30 秒重查，仍未落定＝0。
     **末查不 sleep**（r8）：21 次查詢夾 20 段等待——舊版 query→sleep 收尾，CI 在最後
     一段 sleep 中轉綠會帶著過期的 pending 收場、C3 誤記 0。
-    🔴 **另有時間預算截斷**（r13 引入、r14 改 fail-closed）：本 job `timeout-minutes: 30`
-    而 Claude 驗收步驟可跑 18–20 分 ⇒ 再等滿 10 分鐘會讓 job **在解析途中被砍**、
-    評估留言與核准一則都貼不出。用水位步驟輸出的 `started_ts` 算已用時間，逼近
-    `JOB_BUDGET_S`（22 分）即停等。**C3 因此有兩個額外狀態**：
+    🔴 **另有時間預算截斷**（r13 引入、r14 改 fail-closed；30／22 分於 2026-08-19 依使用者裁定
+    改為 50／42 分）：本 job `timeout-minutes: 50`，而 Claude 驗收步驟**本輪實測 22m39s–30m08s**
+    （run 32209105601＝22m39s 成功、run 32218865214＝26m15s 成功、run 32212979615＝**30m08s 仍未跑完
+    即撞當時的 30 分 job 上限被砍**，conclusion=cancelled ⇒ **上界至今未量到**；三筆皆取
+    `Claude 驗收` step 的 started_at→completed_at，取證 2026-08-19）⇒ 再等滿 10 分鐘會讓 job
+    **在解析途中被砍**、評估留言與核准一則都貼不出。用水位步驟輸出的 `started_ts` 算已用時間，
+    逼近 `JOB_BUDGET_S`（2520 秒＝42 分＝(50−8)×60，留 8 分鐘貼留言與收尾）即停等。**C3 因此有兩個額外狀態**：
     `pending-timebudget`（預算用盡）與 `skipped-no-watermark-ts`（**取不到 `started_ts`**
     ⇒ 連輪詢都不開始）。兩者都記 C3=0。
     🔴 **r15 更正：r14 的 `pending-nobudgetclock` 已刪除，因為它寫得像 fail-closed、
@@ -158,7 +161,8 @@
   ⇒ 誤差上界＝**22500 秒**，比預設預算 14400 秒還大（原文「一次進行中的網路呼叫」低估約 300 倍）。
   🔴 ⇒ **exit 5 的契約範圍是「所有等待（sleep）」，不含 API 呼叫本身耗時**；收緊需 gRPC 型
   deadline 傳遞（把已耗用時間從 timeout 扣掉），**未實作、已登記**。
-  限流仍然**不消耗輪次**（`i=$((i-1))` 不變），但整體由本上限保證有界終止。
+  限流仍然**不消耗輪次**（`i=$((i-1))` 不變），而「等待」這一側由本上限保證有界終止
+  （承上一行：**不含 API 呼叫本身耗時**，不得寫成「整體」）。
   立法理由（研究實據，取證 2026-08-19）：GitHub 官方對 **primary** 限流**沒有**任何放棄
   門檻（只說等到 reset），對 secondary 才說「throw an error after a specific number of
   retries」——**次數而非時間**，且不覆蓋本案主要形態；缺口形狀取自 gRPC A6 的 deadline
