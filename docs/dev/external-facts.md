@@ -87,7 +87,14 @@ request is merged into the target branch"**）⇒ **不碰本 PR 也可能失效
 ⚠️ **不得反過來讀成「任何人合併到 base 都足以讓核准失效」**：原文的條件是 **diff 改變**，
 合併只是**可能造成**該改變的例子，限定詞還是 **related**；不改變本 PR diff 的無關合併，
 **現有原文並不支持**核准一定被 dismiss。
-⚠️ **求值時機（push 當下 vs 合併時惰性）官方從未公布 ⇒ 未取得，不得押注。**
+⚠️ **〔推論〕目前引用的官方資料沒有區分求值時機（事件當下更新 vs 合併判定時惰性求值），不得押注。**
+本輪重新檢查 GitHub 官方 rulesets 文件（取證 2026-08-19），逐字仍只寫
+**"If the merge base changes, the pull request cannot be merged until someone approves the work again."**；
+這能證成合併前置條件，不能證成內部狀態在何時求值，也不能升格成「官方從未公布」的全稱結論。
+來源：<https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets>。
+**升格驗證法**：在 scratch repo 啟用 stale dismissal，先核准 PR A，再合併會改變 A merge-base 的
+related PR B；在 B 合併後、嘗試合併 A 前後，分別以 `GET /pulls/{N}/reviews` 記錄 review state／時間，
+並重複至少三次。只有官方文件明載求值時點，或受控實驗能穩定區分兩案，才可移除〔推論〕。
 rulesets 的 API 措辭同樣是事件式（"New, reviewable commits pushed will dismiss…"），
 而其概念頁與 about-protected-branches 用同一段狀態式文字。
 

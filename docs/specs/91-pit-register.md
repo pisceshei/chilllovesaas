@@ -461,6 +461,14 @@
   P-1 判準文字與 fixture；②維持全收，通讀後以「零抽取」完成。選案前不得一邊保留集合相等、
   一邊靜默略過模板檔【F11／F12；來源＝#58 bot R30 ⚪1，R31 🟡1 點名未落籍】
 
+- **P-0 主 worklog 的歷史 Pending 仍有一處「官方從未公布」外部全稱句**：
+  `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 的外部事實建檔輪 Pending 逐字寫
+  「A5 的求值時機（push 當下 vs 合併時惰性）官方從未公布」。本輪 Codex 只點名終態層
+  `docs/dev/external-facts.md` 的同型句；主 worklog 這段屬歷史層且未被點名，依鐵律 17.2
+  只登記、不順手改。未來收割時須保留原文並追加更正註：有限檢索只能支持〔推論〕，不能證明
+  「從未公布」；升格條件沿用 external-facts A5 的官方明文或受控 scratch repo 實驗
+  【F11；來源＝#58 Codex review `4972060836` 後的同型掃描】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -572,6 +580,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -643,6 +652,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第三次新head驗收修復.md`（PR #58 `811a5e2` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
