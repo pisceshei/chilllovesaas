@@ -79,6 +79,13 @@
     **有界等待**（r1）：pending 時每 30 秒重查，仍未落定＝0。
     **末查不 sleep**（r8）：21 次查詢夾 20 段等待——舊版 query→sleep 收尾，CI 在最後
     一段 sleep 中轉綠會帶著過期的 pending 收場、C3 誤記 0。
+    🔴 **另有時間預算截斷**（r13 引入、r14 改 fail-closed）：本 job `timeout-minutes: 30`
+    而 Claude 驗收步驟可跑 18–20 分 ⇒ 再等滿 10 分鐘會讓 job **在解析途中被砍**、
+    評估留言與核准一則都貼不出。用水位步驟輸出的 `started_ts` 算已用時間，逼近
+    `JOB_BUDGET_S`（22 分）即停等。**C3 因此有兩個額外狀態**：
+    `pending-timebudget`（預算用盡）與 `pending-nobudgetclock`（**取不到 `started_ts`**——
+    r14 起改 fail-closed：取不到就當預算已用盡並停等，舊版是「守衛整個停用、照跑滿」，
+    那是 fail-open）。兩者都記 C3=0。
     **全頁聚合**（r2）：`--paginate`＋`jq -s`——單頁上限 100，破百時後面幾頁的
     pending／failed 會整批看不到而誤報 allgreen。
   - **C4 判詞格式**：§2.1 的結果（格式失敗根本走不到這裡）。
@@ -125,6 +132,14 @@
   判準不同步，會讓人照摘要把已被否決的行為復原）：no-verdict 診斷路徑同樣是 job success；
   ②**Codex 已審該 head**＝**存在**一則 review 其 `user.login` 精確等於 connector 身分
   ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4。
+  🔴 **exit 5＝達總時鐘上限**（`DEADLINE_S`，預設 `MAX_POLLS×INTERVAL×2`，第 5 參數可覆寫）
+  ——與 exit 4 的差別：4 是「輪次用完」，5 是「**牆鐘用完**」，後者涵蓋限流等待。
+  限流仍然**不消耗輪次**（`i=$((i-1))` 不變），但整體由本上限保證有界終止。
+  立法理由（研究實據，取證 2026-08-19）：GitHub 官方對 **primary** 限流**沒有**任何放棄
+  門檻（只說等到 reset），對 secondary 才說「throw an error after a specific number of
+  retries」——**次數而非時間**，且不覆蓋本案主要形態；缺口形狀取自 gRPC A6 的 deadline
+  「applies across all attempts」。⚠️ 官方對本形態的首選建議是「Avoid polling」，
+  本腳本收不到 webhook ⇒ 屬**已登記的合法偏離**。
   **exit 2 有三個獨立門檻**（r12 起不再是單一數字）：輪詢路徑連敗 **3** 次／起跑路徑連敗 **4** 次（`BASE_FAILS`）／起跑連續撞限額 **6** 次（`RATE_WAITS`）。
   🔴 **本腳本只做存在性判定、不數 inline 意見**（r9 澄清）：它回答「Codex 審完了沒」，
   不是「Codex 有沒有意見」。**意見數的聚合只存在於 `claude-review.yml` 的 C1**——

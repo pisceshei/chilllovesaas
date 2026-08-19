@@ -42,6 +42,13 @@
 #     ⇒ 呼叫端看到 exit 2 時，**訊息會指明是哪一種**（「連續 N 次抓取失敗」vs
 #     「連續 N 次撞限額」），不要一律當成 API 持續不可用。
 #   4＝逾時升級（等滿 MAX_POLLS 輪仍缺至少一方）
+#   5＝**達總時鐘上限**（`DEADLINE_S`，預設 MAX_POLLS×INTERVAL×2，可由第 5 參數覆寫）
+#     ——與 4 的差別：4 是「輪次用完」，5 是「**牆鐘用完**」，後者涵蓋限流等待。
+#     🔴 **限流仍然不消耗輪次**（軟界不變），但整體由本上限保證有界終止：
+#     官方對 primary 限流**沒有**任何放棄門檻（只說等到 reset），對 secondary 才說
+#     「throw an error after a specific number of retries」——**次數而非時間**，
+#     且不覆蓋本案主要形態（匿名 60/hr 的 primary）⇒ 缺口須自行補，形狀取自
+#     gRPC A6 的 deadline「applies across all attempts」。取證 2026-08-19。
 #
 # ## 🔴 實作紀律（每一條都是本倉庫實測換來的，動這支前先讀）
 #   ①**JSON 一律由 python 直接抓取＋UTF-8 顯式解析，輸出只回 ASCII 計數**——
@@ -459,12 +466,40 @@ fi
 
 i=0
 FAILS=0
+# 🔴 **總時鐘上限＝有界終止的唯一保證**（Codex #59 r14③；依使用者要求先上網研究後採用）。
+#   問題：限流分支用 `i=$((i - 1))` 表達「限流不消耗輪次」，但那只是**軟界**——GitHub
+#   若持續更新限流，這個迴圈既到不了 MAX_POLLS/exit 4，也到不了起跑路徑那個 RATE_WAITS
+#   上限（那個上限**只存在於起跑**，主迴圈從來沒有）⇒ 實際是無界等待。
+#   🔴 **根因是用錯維度，不是漏寫計數器**：gRPC 官方 retry 設計（proposal A6）把三件事
+#   拆開——retryThrottling（准不准重試）／maxAttempts（最多幾次）／**deadline（整件事
+#   何時必須結束，"applies across all attempts"）**。「不消耗輪次」屬前兩者那一側，
+#   「有界」只能由 deadline 表達。
+#   🔴 **為什麼不用「限流次數上限」**：一次限流等待可以是 5 秒，也可以撞到
+#   RATE_WAIT_MAX（本檔上限）；同一個「N 次」在真實時間上差兩三個數量級 ⇒ 次數當界
+#   等於界的長度不可預測。而人工掛起這支腳本的人，真實約束是**時間**。
+#   deadline 還是唯一**可組合**的界：限流等待、INTERVAL 睡眠、API 慢回應，全部自動
+#   吃同一個預算，日後新增任何等待都不必再補計數器。
+#   ⚠️ 官方對本形態的首選建議其實是「Avoid polling／subscribe to webhook events instead」
+#   （docs.github.com/rest/guides/best-practices-for-using-the-rest-api，取證 2026-08-19）
+#   ——本腳本是人工掛起的本機工具、收不到 webhook，屬**已登記的合法偏離**，不是漏讀。
+#   ⚠️ 另一句官方警語是這條上限的立法理由：「Continuing to make requests while you are
+#   rate limited may result in the banning of your integration.」
+#   預設＝ MAX_POLLS × INTERVAL 的兩倍（給限流等待留一倍餘裕），可由第 5 個參數覆寫。
+DEADLINE_S="${5:-$(( MAX_POLLS * INTERVAL * 2 ))}"
+case "$DEADLINE_S" in ''|0|*[!0-9]*) echo "🔴 DEADLINE_S 必須是正整數：$DEADLINE_S" >&2; exit 2;; esac
+STARTED_AT=$(date -u +%s)
+deadline_left() { echo $(( STARTED_AT + DEADLINE_S - $(date -u +%s) )); }
 while [ "$i" -lt "$MAX_POLLS" ]; do
+  if [ "$(deadline_left)" -le 0 ]; then
+    echo "🔴 已達總時鐘上限 ${DEADLINE_S}s（含限流等待）——限流不消耗輪次是刻意的，但整體必須有界。" >&2
+    echo "   請人工看 PR #$PR：若持續撞限額，考慮改用已認證的 gh（5000/hr）或加大 INTERVAL。" >&2
+    exit 5
+  fi
   i=$((i + 1))
   sleep "$INTERVAL"
   LINE=$(fetch_state) || { FAILS=$((FAILS + 1)); echo "poll#$i 抓取失敗（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && { echo "🔴 連續失敗達 3 次，檢查跑不了" >&2; exit 2; }; continue; }
   case "$LINE" in
-    RATELIMITED*) i=$((i - 1)); wait_for_reset "${LINE#* }"; continue;;
+    RATELIMITED*) i=$((i - 1)); echo "poll#$i 撞限額（不消耗輪次；總時鐘剩 $(deadline_left)s）"; wait_for_reset "${LINE#* }"; continue;;
     APIERR*) FAILS=$((FAILS + 1)); echo "poll#$i 回應非預期格式（累計 $FAILS）"; [ "$FAILS" -ge 3 ] && exit 2; continue;;
   esac
   FAILS=0

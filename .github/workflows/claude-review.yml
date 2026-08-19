@@ -1173,8 +1173,19 @@ jobs:
                            elif all(.conclusion == "success") then "allgreen"
                            else "notgreen" end' || printf 'apifail')
               [ "$CHECKS_STATE" = "pending" ] || break
-              ELAPSED=$(( $(date -u +%s) - ${WATERMARK_TS:-0} ))
-              if [ "${WATERMARK_TS:-0}" -gt 0 ] && [ "$ELAPSED" -ge "$JOB_BUDGET_S" ]; then
+              # 🔴 取不到時間戳 ⇒ **停止等待**，不是繼續等（Codex #59 r14④）：舊寫法是
+              #    `[ "${WATERMARK_TS:-0}" -gt 0 ] && …`，時間戳缺失時整個預算守衛被**停用**，
+              #    十分鐘輪詢照跑 ⇒ 正好是它要防的「job 被 30 分鐘上限砍掉、評估留言與核准一則
+              #    都貼不出」。缺 `started_ts` 的實際成因＝水位步驟寫 `$GITHUB_OUTPUT` 的第二次
+              #    寫入失敗（第一次寫 `last_id` 成功 ⇒ 現有的水位守衛放行）。
+              #    ⇒ fail-closed 方向＝**當成預算已用盡**：C3 記 pending（保守、不合併），
+              #    而不是冒著整輪無產出的風險把迴圈跑滿。
+              if [ -z "${WATERMARK_TS:-}" ] || [ "${WATERMARK_TS:-0}" -le 0 ]; then
+                CHECKS_STATE="pending-nobudgetclock"
+                break
+              fi
+              ELAPSED=$(( $(date -u +%s) - WATERMARK_TS ))
+              if [ "$ELAPSED" -ge "$JOB_BUDGET_S" ]; then
                 CHECKS_STATE="pending-timebudget"
                 break
               fi
@@ -1209,7 +1220,26 @@ jobs:
                   #       ⇒ 它管的是**留言的行定位**，不是核准對分支保護的效力；而 dismiss-stale 是
                   #       **推播事件撤銷全部核准**，與 `commit_id` 指向哪個 commit 無關。
                   #    ⇒ **check-then-act 的競態沒有被關掉**，只是窗變小＋留下「評估的是哪個 commit」的
-                  #       可稽核紀錄。真正關掉要靠分支保護的 dismiss-stale，或不在合併前送核准。
+                  #    可稽核紀錄。
+                  # 🔴🔴 **再更正（2026-08-19 補審第二輪；上一版寫「真正關掉要靠 dismiss-stale」也是錯的）**：
+                  #       dismiss-stale **關不掉這個缺口**——若 push 落在 head 複驗之後、POST 之前，撤銷動作
+                  #       先於這則核准存在，之後沒有新 push 再觸發撤銷 ⇒ 舊 head 的核准留下來。且**官方文檔
+                  #       自相矛盾**：API 層事件式（`dismiss_stale_reviews_on_push`／「when someone pushes a
+                  #       new commit」），概念層狀態式（「records the state of the diff… dismissed as stale」）
+                  #       ⇒ **求值時機從未公布、未取得**，不得押注。
+                  # ✅ **真正的解（研究實據，取證 2026-08-19）**：核准端**不存在**原子解法。GitHub 有 head
+                  #       前置條件原語（REST merge 的 `sha`「SHA that pull request head must match to allow
+                  #       merge」＋**409**、GraphQL `expectedHeadOid`、`gh pr merge --match-head-commit`），
+                  #       但**一個都沒掛在 approve 上**；`commit_id` 定義是「the commit the review **pertains
+                  #       to**」，端點狀態碼只有 200/403/422、**沒有 409**；POST 也不支援條件式請求。
+                  #       ⇒ 業界做法是**不守核准那一步**：GitHub 官方 Dependabot 自動核准教學就是裸的
+                  #       `gh pr review --approve "$PR_URL"`、零 head 複驗，閘門放在**合併**時重新求值。
+                  #       ⇒ 本專案對應＝①合併已帶 `--match-head-commit`（唯一真正原子的一步，保留）
+                  #       ②啟用 `require_last_push_approval`（**純狀態謂詞**「the most recent reviewable push
+                  #       must be approved by someone other than the person who pushed it」，作為合併閘門求值，
+                  #       **不依賴撤銷是否及時發生** ⇒ 對該時序缺口免疫）——⚠️ 該規則**尚未啟用**
+                  #       （main 目前無分支保護，實測 404 Branch not protected），屬 18.4 啟用裁定範圍。
+                  # 🔴 **本行的 head 複驗保留，但它是 best-effort、不得當成安全保證。**
                   #    ⚠️ 現況實測（2026-08-19，`gh api repos/OWNER/REPO/branches/main/protection` 回
                   #       404 Branch not protected）：**main 未設任何分支保護** ⇒ 核准目前不構成閘門，
                   #       本項風險**現在是惰性的**；一旦啟用 required approving review 就會活過來。
@@ -1255,7 +1285,26 @@ jobs:
               #       ⇒ 它管的是**留言的行定位**，不是核准對分支保護的效力；而 dismiss-stale 是
               #       **推播事件撤銷全部核准**，與 `commit_id` 指向哪個 commit 無關。
               #    ⇒ **check-then-act 的競態沒有被關掉**，只是窗變小＋留下「評估的是哪個 commit」的
-              #       可稽核紀錄。真正關掉要靠分支保護的 dismiss-stale，或不在合併前送核准。
+              #    可稽核紀錄。
+              # 🔴🔴 **再更正（2026-08-19 補審第二輪；上一版寫「真正關掉要靠 dismiss-stale」也是錯的）**：
+              #       dismiss-stale **關不掉這個缺口**——若 push 落在 head 複驗之後、POST 之前，撤銷動作
+              #       先於這則核准存在，之後沒有新 push 再觸發撤銷 ⇒ 舊 head 的核准留下來。且**官方文檔
+              #       自相矛盾**：API 層事件式（`dismiss_stale_reviews_on_push`／「when someone pushes a
+              #       new commit」），概念層狀態式（「records the state of the diff… dismissed as stale」）
+              #       ⇒ **求值時機從未公布、未取得**，不得押注。
+              # ✅ **真正的解（研究實據，取證 2026-08-19）**：核准端**不存在**原子解法。GitHub 有 head
+              #       前置條件原語（REST merge 的 `sha`「SHA that pull request head must match to allow
+              #       merge」＋**409**、GraphQL `expectedHeadOid`、`gh pr merge --match-head-commit`），
+              #       但**一個都沒掛在 approve 上**；`commit_id` 定義是「the commit the review **pertains
+              #       to**」，端點狀態碼只有 200/403/422、**沒有 409**；POST 也不支援條件式請求。
+              #       ⇒ 業界做法是**不守核准那一步**：GitHub 官方 Dependabot 自動核准教學就是裸的
+              #       `gh pr review --approve "$PR_URL"`、零 head 複驗，閘門放在**合併**時重新求值。
+              #       ⇒ 本專案對應＝①合併已帶 `--match-head-commit`（唯一真正原子的一步，保留）
+              #       ②啟用 `require_last_push_approval`（**純狀態謂詞**「the most recent reviewable push
+              #       must be approved by someone other than the person who pushed it」，作為合併閘門求值，
+              #       **不依賴撤銷是否及時發生** ⇒ 對該時序缺口免疫）——⚠️ 該規則**尚未啟用**
+              #       （main 目前無分支保護，實測 404 Branch not protected），屬 18.4 啟用裁定範圍。
+              # 🔴 **本行的 head 複驗保留，但它是 best-effort、不得當成安全保證。**
               #    ⚠️ 現況實測（2026-08-19，`gh api repos/OWNER/REPO/branches/main/protection` 回
               #       404 Branch not protected）：**main 未設任何分支保護** ⇒ 核准目前不構成閘門，
               #       本項風險**現在是惰性的**；一旦啟用 required approving review 就會活過來。
