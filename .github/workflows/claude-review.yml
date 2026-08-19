@@ -13,14 +13,14 @@ name: Claude Review
 #   開 PR / push
 #     ├→ Codex（chatgpt-codex-connector App）自動審查 → inline review
 #     └→ Claude 依 docs 規格驗收，貼出【驗收結論】
-#          ├─ 需修改 → **只通知，不派工**；修好 push 本分支即自動重審
-#          │            └─ 累計 > MAX_FIX_ROUNDS 輪 → 升級提示（可能是結構問題，該拆 PR 或回頭改規格）
+#          ├─ 需修改 → **只通知，不派工**；修好 push 本分支即自動重審（🔴 **輪數無上限**，
+#          │            2026-08-19 使用者裁定「取消熔斷，一律循環到雙清為止、不限次數」）
 #          └─ 通過   → 自動 approve；AUTO_MERGE=true 時 squash 合併
 #                       └→ 關閉本階段 issue，並指出下一個里程碑 issue（**不 @ 任何人**）
 #
 # 開關：
-#   MAX_FIX_ROUNDS             同一 PR 累計「需修改」幾輪後升級提示（不再是派修上限）
-#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve）
+#   AUTO_MERGE                 通過後是否自動合併（"false"＝只 approve＋貼 18.1 四條件評估；
+#                              "true" 時評估器是合併前最後一道硬閘——P-8 引入，四條件缺一不合）
 #
 # 🔴 `secrets.CODEX_PING_TOKEN` **已不再使用**（2026-08-15）。
 #    它存在的唯一理由是「讓 @codex 留言以本人身分發出，Codex 才視為有效請求」——
@@ -49,7 +49,18 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MAX_FIX_ROUNDS: "3"
+  # 🔴🔴 **`MAX_FIX_ROUNDS` 已移除（2026-08-19 使用者裁定，逐字：「取消熔断机制，
+  #    所有的必须循环到双清为止。不限次数」）。任何人不得把它加回來。**
+  #    它原本是「同一 PR 累計 N 輪需修改就自動掛 `review:需人工裁定` label 並停跑驗收」，
+  #    2026-08-15 由 C-4 從提示升級成真閘門，論述是「唯一保證有限步終止的機制」。
+  #    🔴 廢止的理由**不是它壞掉**（它 2026-08-18 才首次真動作），而是它的代價：
+  #    它用「停下來」換有限步，等於承認自動驗收有判不了的區間、把「什麼時候夠好」交回人手。
+  #    使用者不接受這個代價——收斂要靠真的修完，不靠放棄。
+  #    ⚠️ 換來的風險寫明白：**沒有任何機制保證輪數收斂**。2026-08-15 實測記著
+  #    「兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，而且不是被修出來的，是每輪抽樣
+  #    抽到不同切片」⇒ 真正讓輪數下降的手段是**把反覆出現的意見固化成確定性腳本**
+  #    （`scripts/check-doc-claims.rb` 那一類），不是設上限。這是取消熔斷後的替代方案，
+  #    不是可選項。
   # 依 2026-08-13 使用者裁定改 "false"（原值 "true"）：合併 main 的唯一閘門是 LLM 留言的一行
   # 【驗收結論】文字，存在兩個已確認的風險形態——
   #   ① diff／PR 描述內的 prompt injection 可誘導「通過」直接落地 main（本檔無程式層防禦）；
@@ -66,17 +77,23 @@ env:
 
 jobs:
   review:
-    # 🔴 **C-4（2026-08-15 使用者裁定）：`MAX_FIX_ROUNDS` 由「換一句留言」升級成真閘門。**
-    #   舊行為：超過門檻只是把提示文字換掉，然後 `exit 0` ⇒ **下一輪照樣全量重審**，
+    # 🔴🔴 **C-4 已於 2026-08-19 被使用者裁定廢止**（逐字：「取消熔断机制，所有的必须
+    #   循环到双清为止。不限次数」）。條文保留於此，因為它解釋了這個 `if:` 為什麼曾經
+    #   有第二個條件，也提醒後人不要「順手加回一個上限」。
+    #   ── C-4 原文（2026-08-15 使用者裁定，已廢止）──
+    #   舊行為：超過門檻只是把提示文字換掉，然後 `exit 0` ⇒ 下一輪照樣全量重審，
     #   閉環行為完全不變。PR #39／#40 分別跑到第 4／5 輪，兩者都早已越線而毫無作用。
-    #   新行為：越線時打上 `review:需人工裁定` label；本 job 見到該 label **直接不跑**，
-    #   直到人把 label 移除。
-    #   ⇒ 這是**唯一保證有限步終止**的機制；前面三項（C-1／C-2／C-5）都只降低發生率。
-    #   ⚠️ 代價寫明白：這等於承認自動驗收有它判不了的區間，把「什麼時候夠好」交回人手上。
-    #     這正是它該做的事——一個永遠不會說「夠了」的驗收方，與沒有驗收方一樣沒用。
+    #   C-4 行為：越線時打上 `review:需人工裁定` label；本 job 見到該 label 直接不跑，
+    #   直到人把 label 移除。當時的論述是「這是**唯一保證有限步終止**的機制」。
+    #   ── 廢止理由 ──
+    #   有限步終止是用「停下來」換的：越線即停＝承認自動驗收有判不了的區間。
+    #   使用者裁定不接受這個代價 ⇒ 一律循環到**雙清**（bot 判詞 🔴0🟡0 ∧ Codex 對當前
+    #   head 的 inline 意見總和為 0）為止，輪數不設上限。
+    #   🔴 **label 條件一併移除**：留著它，任何殘留的舊 label 都會變成一個沒有機制會解除的
+    #   永久封鎖（機制已不再自動掛，也就不再有「移除後恢復」的既定路徑）。
+    #   ⇒ 現在 `review:需人工裁定` 對本 workflow **完全無作用**，僅剩人工標記語義。
     if: >-
       github.event.pull_request.draft == false
-      && !contains(github.event.pull_request.labels.*.name, 'review:需人工裁定')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # 🔴🔴 **最小權限（2026-08-15 收緊，依 PR #44 的 Codex review）**
@@ -107,6 +124,11 @@ jobs:
       issues: write
       id-token: write
       actions: read
+      # 🔴 C3（機械 CI 全綠）要讀 head 的 check-runs（Codex #59 r3）：顯式 permissions
+      #    區塊會**關閉未列出的權限**，缺這一項時該 API 回權限錯誤 ⇒ `CHECKS_STATE=apifail`
+      #    ⇒ C3 恆為 0 ⇒ 四條件結構上永遠湊不齊。AUTO_MERGE 若已啟用，等於自動合併被
+      #    永久停用（fail-closed 方向正確，但那是「壞掉」不是「守住」）。
+      checks: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -138,8 +160,20 @@ jobs:
           # 🔴 `--paginate`：留言超過 100 則時，單頁只會拿到**最舊**的 100 則，
           #    水位會取得太低 ⇒ 舊結論又能混進來。乒乓 PR 累積破百並不罕見。
           LAST_ID=$(gh api --paginate "repos/$REPO/issues/$PR/comments?per_page=100" \
-            | jq -s 'add // []' | jq -r '[.[].id] | max // 0')
+            | jq -s 'add // []' | jq -r '[.[].id] | max // 0') \
+            || LAST_ID="APIERR"
+          # 🔴 分頁中途失敗一律 fail-closed（Codex #59 r12）：`--paginate` 會把已取得的頁
+          #    先寫進 stdout，後面某頁失敗時 jq 仍算得出一個**偏小**的 last_id；本步驟是
+          #    `set -uo pipefail` 沒有 -e、也沒檢查狀態 ⇒ 偏小的水位會被成功輸出。
+          #    下游用 `.id > $wm` 篩判詞候選 ⇒ 水位偏小＝**更多舊判詞被當成本輪候選**，
+          #    正是水位機制要擋的那件事。取不到就輸出空值，讓下游既有的「水位缺失」分支
+          #    接管（該分支會留言並停止一切自動動作）。
+          if [ "$LAST_ID" = "APIERR" ] || [ -z "$LAST_ID" ]; then LAST_ID=""; fi
           echo "last_id=$LAST_ID" >> "$GITHUB_OUTPUT"
+          # 🔴 同時記時間戳（Codex #59 r11）：只有留言 ID 水位擋不住「舊 commit 的 workflow
+          #    被人工 rerun、其判詞延遲貼出」——那則留言的 id 同樣大於本輪水位，會被當成
+          #    本輪結論而讓 C2 綁到一個**不是本 head** 的判詞上。時間戳供下游再加一道窗口判定。
+          echo "started_ts=$(date -u +%s)" >> "$GITHUB_OUTPUT"
 
       - name: Claude 驗收
         id: review          # 供下一步精確判斷「是 Claude 步驟失敗」還是「跑完但沒有結論」
@@ -397,8 +431,8 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-opus-5`（現行＝2026-08-17 沿革⑥，Fable 5 額度耗盡帶
-          #      錯誤原文復發後照④先例換回；上一任＝2026-08-16 使用者裁定⑤ claude-fable-5）。
+          #   🔴 `--model claude-fable-5`（現行＝2026-08-19 使用者裁定⑦，行使⑥預留的裁定點；
+          #      上一任＝2026-08-17 沿革⑥ claude-opus-5，因 Fable 5 額度耗盡帶錯誤原文而換）。
           #      裁定沿革（每次都保留，因為它們解釋了這一行為什麼會來回改）：
           #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
           #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
@@ -425,9 +459,29 @@ jobs:
           #          閉環：假說（Fable 5 對本帳號間歇不可用／額度受限）得到正向確認。
           #          照④先例與 :404 的既定處置換回 opus；額度回復後要不要回 Fable 5
           #          ＝使用者裁定（③的理由仍未被推翻）。
-          #      🔴 **③的理由沒有被推翻**（Fable 5 仍是官方標示的 most capable）——
-          #      本次是使用者的選擇，不是因為發現③講錯了。任何人想改回 Fable 5 之前，
-          #      請先確認是不是又要繞一圈。
+          #        ⑦2026-08-19 使用者裁定改回 `claude-fable-5`——⑥自己預留的那個裁定點
+          #          （「額度回復後要不要回 Fable 5＝使用者裁定」）由使用者行使。
+          #          ⚠️ 這**不是推翻⑥**：⑥的觀察（08-17 該帳號 Fable 5 額度確實耗盡、
+          #          錯誤原文點名）仍然成立；只是額度事件已過兩天，而③的理由
+          #          （官方標示 most capable）從未被推翻 ⇒ 回到能力較強的那一側。
+          #          ✅ 本組合**不是沒驗證過的配置**（2026-08-19 複驗，取證快照）：
+          #          `claude-fable-5`＋`--effort max` 在 main 上的在位區間＝
+          #          `8e70ced`(08-16 11:08)→`2b55a09`(08-17 18:39)，約 31.5 小時；
+          #          期間的驗收 run 全數 success（08-17 08:35–14:25 一段最密集）。
+          #          複驗：`git log -S "claude-fable-5" -- .github/workflows/claude-review.yml`
+          #          取區間，再 `gh run list --workflow=claude-review.yml --limit 60` 對時間。
+          #          ⇒ 08-17 的額度耗盡發生在 14:25 之後，**不是這個組合本身不能跑**。
+          #          🔴 **復發處置不變**：再看到 ERRTEXT 出現「Fable 5 limit」字樣，
+          #          照④／⑥先例換回 `claude-opus-5`，不必再問——那是已走過兩次的路。
+          #          ⚠️ 切換當下 status.claude.com 有一則**未解除**的多模型 degraded 事故
+          #          （08-18 16:20 UTC 起，Fable 5 在受影響清單內，PR #58 的驗收已因此
+          #          連續三次拿到 `API Error: 529 Overloaded`）⇒ 若接下來出現 529，
+          #          **那是事故不是額度**：兩者錯誤原文不同（529 Overloaded vs
+          #          「You've reached your Fable 5 limit」），不得混為一談而錯誤換回。
+          #      🔴 **每一次來回都要留下理由**：③的理由（Fable 5 是官方標示的 most capable）
+          #      與⑥的觀察（該帳號的 Fable 5 額度會耗盡）**兩者都成立、並不互相否定**——
+          #      這一行之所以反覆改，正是因為它在「能力」與「可用性」之間取捨。
+          #      任何人想再改之前，請先確認自己知道是為了哪一邊。
           #
           #      ⚠️ **本次換模型與驗收機器人的連續失敗有關，但不要當成已確認的修復**：
           #      2026-08-15 PR #33/#35 的驗收連續失敗，簽名是
@@ -607,7 +661,7 @@ jobs:
           #       在 ci.yml 上照樣有實跑——quality job 跑的是 PR 版腳本，但該 job 權限唯讀、
           #       無 secret 可洩，執行不可信代碼的爆炸半徑＝標準 CI 的威脅模型，可接受。
           claude_args: |
-            --model claude-opus-5
+            --model claude-fable-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*)"
@@ -627,6 +681,14 @@ jobs:
           REVIEW_OUTCOME: ${{ steps.review.outcome }}
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
           COMMENT_WATERMARK: ${{ steps.watermark.outputs.last_id }}
+          WATERMARK_TS: ${{ steps.watermark.outputs.started_ts }}
+          # 🔴 **必須走 env，不得在 run: 內直接寫 `${{ }}`**（2026-08-18 實測事故）：
+          #    含 `${{ }}` 的 run 區塊會被整段當成**一個 expression** 求值，而本步驟的
+          #    run 有數百行 ⇒ 直接觸發 GitHub 的
+          #    `Exceeded max expression length 21000`，整個 workflow 檔變成 invalid、
+          #    **每次 push 立即 Failure 且完全不執行**（PR #59 的 e39a96f／c5de2bd 兩輪
+          #    連續失敗即此）。env 注入同時也是官方推薦的 script-injection 防護寫法。
+          EVENT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -uo pipefail
 
@@ -678,11 +740,21 @@ jobs:
           LATEST=$(printf '%s' "$COMMENTS" | jq -r --argjson who "$REVIEWERS" --arg m "$MARKER" \
             --argjson wm "${COMMENT_WATERMARK:-0}" \
             '[.[] | select(.id > $wm) | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m))] | (.[-1].body // "")')
-          # 🔴 `ROUNDS` **刻意不加水位過濾**：它是「這個 PR 至今被派修幾輪」的累計計數，
-          #    用來擋 MAX_FIX_ROUNDS。加了水位它每輪都會歸零，上限就永遠觸發不到。
-          #    ⇒ 兩個變數的時間範圍不同是**刻意的**，不是漏改。
+          # 🔴 `ROUNDS` **刻意不加水位過濾**：它是「這個 PR 至今被打回幾輪」的累計計數，
+          #    加了水位它每輪都會歸零。⇒ 兩個變數的時間範圍不同是**刻意的**，不是漏改。
+          #    ⚠️ 2026-08-19 起它**純屬資訊**（顯示在通知留言的「累計第 N 輪」）——
+          #    熔斷已依使用者裁定廢止，沒有任何判定讀它。保留的理由是這個數字本身有價值：
+          #    輪數只增不減，是判斷「意見在收斂還是在原地打轉」最直接的訊號。
+          # 🔴 只計**格式合法**的需修改判詞（Codex #59 r3）：下方 18.1④ 會把格式走樣的判詞
+          #    判為不採信（job 轉紅、不驅動任何動作），舊式 ROUNDS 只看「第一行以標記＋
+          #    需修改開頭」會把被拒絕的那一則也計入，於是顯示的輪數與實際有效輪數對不上。
+          #    判準與 FORMAT_OK 對齊：第一行整行匹配合法形 ∧ 標記全文只出現一次。
+          #    （此對齊在熔斷廢止後仍然要保留——它現在保護的是數字的誠實，不是閘門。）
           ROUNDS=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
-            '[.[] | select(.user.login as $l | $who | index($l)) | select(.body | split("\n")[0] | startswith($m + "需修改"))] | length')
+            '[.[]
+              | select(.user.login as $l | $who | index($l))
+              | select(.body | split("\n")[0] | test("^" + $m + "需修改：[ \t\r　]*[^ \t\r　].*$"))
+              | select(((.body | split($m) | length) - 1) == 1)] | length')
 
           if [ -z "$LATEST" ]; then
             # 🔴 把「查無結論」拆成兩種原因並分別報。原本兩種都印同一句「Claude 可能失敗或逾時」，
@@ -925,56 +997,265 @@ jobs:
             exit 0
           fi
 
+          # ── 18.1④ 判詞格式機械驗證（P-8 引入）─────────────────────────────
+          # 🔴 這一步之前，格式契約只存在兩端：prompt 規定（供）與 LATEST 的 jq 過濾（收）。
+          #    jq 只保證「第一行以標記開頭」，沒人驗：①第一行是否恰為兩種合法結論形之一
+          #    ②標記是否全文只出現一次（prompt 的原文契約）。亂寫的第一行會一路落到
+          #    檔尾「無法判讀」留言、job 照綠——18.1④ 要堵的正是這種永真化。
+          # 🔴 失敗＝exit 1（job 轉紅），不是留言後 exit 0：格式走樣代表產出端出事或
+          #    注入面得手，綠燈會讓「判詞經格式機械驗證」變成寫在條文裡的擺設。
+          #    （本步驟留言不得含結論標記字面值——理由見上方 MARKER 註解；下面用「標記」代稱。）
+          FIRST_LINE=$(printf '%s' "$LATEST" | head -n 1)
+          # 🔴 兩處都要「全量」語義（Codex #59 r1）：①regex 必須錨定行尾——不錨定的話
+          #    「標記＋通過＋垃圾尾巴」照樣過（允許行尾空白/CR，其餘不放）；②出現次數用
+          #    grep -o 數「每一次出現」——grep -c 數的是「有命中的行數」，同一行兩個標記
+          #    仍算 1，唯一性斷言等於沒驗。
+          MARKER_COUNT=$(printf '%s' "$LATEST" | grep -o -- "$MARKER" | wc -l | tr -d '[:space:]')
+          FORMAT_OK=0
+          # 🔴 理由不得全空白（Codex #59 r6）：`.+` 會把「需修改：　」的尾空白當理由吃掉
+          #    ——空理由照樣綠、照樣被當成一輪。要求冒號後至少一個非空白字元。
+          # 🔴 空白判準與 ROUNDS jq 完全一致（Codex #59 r7）：兩邊都顯式含**全形空白 U+3000
+          #    與 CR**——grep 的 [[:space:]] 對 U+3000 的歸類依 locale 實作而異、jq 的
+          #    [ \t] 又只認 ASCII ⇒ 各寫各的會出現「這邊拒絕、那邊照計輪」的縫。
+          #    ⚠️ 這兩條的原始動機是「畸形留言會讓熔斷提早觸發」，熔斷已於 2026-08-19 廢止；
+          #    **但兩條都保留且判準仍須一致**——現在保護的是 ROUNDS 這個數字的誠實
+          #    （它是判斷「在收斂還是在原地打轉」的唯一訊號），以及 FORMAT_OK 這個真閘門。
+          if printf '%s' "$FIRST_LINE" | grep -qE "^${MARKER}(通過|需修改：[[:space:]　]*[^[:space:]　].*)[[:space:]]*$" && [ "$MARKER_COUNT" -eq 1 ]; then
+            FORMAT_OK=1
+          else
+            gh pr comment "$PR" --body "🔴 判詞**格式驗證失敗**（18.1④，P-8 機制）：第一行必須恰為「標記＋通過」或「標記＋需修改：理由」兩形之一，且標記全文只准出現一次（實得 $MARKER_COUNT 次）。本輪判詞不採信、job 轉紅；請檢查產出端或人工判讀最新一則驗收意見。"
+            exit 1
+          fi
+
           # 🔴 **需修改＝只通知，不派工**（2026-08-15 使用者裁定）。
           #    舊制在這裡自動留言 `@codex 請…逐條修復…`。**已移除。**
           #    ⚠️ 本則留言**不得**包含 `@` 開頭的代理呼叫——Codex 對 @ 提及會接單，
           #      在新制下那等於繞過裁定直接改代碼。要人改就寫給人看。
           #    （本則留言同樣不得含結論標記字面值，理由見上方 MARKER 註解。）
           if printf '%s' "$LATEST" | grep -q "【驗收結論】需修改"; then
-            if [ "$ROUNDS" -le "$MAX_FIX_ROUNDS" ]; then
-              gh pr comment "$PR" --body "🔴 **驗收未通過**（本 PR 累計第 $ROUNDS 輪）。請依上一則驗收意見逐條處理：🔴 必須修；🟡 必須清（修復／裁定不修入 DECISIONS／證偽附證據，三擇一——2026-08-16 起 🟡 也擋通過）。修好後 **push 到本分支（\`$PR_BRANCH\`）即會自動重新驗收**，不要開新 PR。"
-            else
-              # 🔴 這裡不再是「派修上限」，是**結構問題的警示線**。
-              #    同一個 PR 被打回超過 MAX_FIX_ROUNDS 輪，通常不是「再修一次就好」，
-              #    而是 PR 太大、或規格本身沒定案 ⇒ 提示往那兩個方向處理，而不是繼續修。
-              # 🔴 C-4：打 label 讓 job 層的 `if:` 在下一次 push 時直接跳過本 workflow。
-              #    label 不存在時 `--add-label` 會自動建立它。失敗不擋（`|| true`）——
-              #    留言已經貼出去了，label 建不起來時人仍看得到，只是閘門沒生效。
-              gh pr edit "$PR" --add-label "review:需人工裁定" || true
-              # 🔴 用 printf 多參數寫檔、再 --body-file。兩個都不能用：
-              #   ①直接 `--body "多行…"` ⇒ 續行落到第 0 欄，YAML block scalar 解析失敗（實測過）；
-              #   ②heredoc ⇒ YAML 去縮排後分隔符仍帶殘餘縮排，而 `<<"EOF"` 要求頂格、
-              #     `<<-` 只吃 tab 不吃空白 ⇒ `bash -n` 報 "delimited by end-of-file"（也實測過）。
-              #   printf 的每一段都是獨立參數，完全不受縮排影響。
-              printf '%s\n' \
-                "⛔ 本 PR 已累計 **$ROUNDS 輪**驗收未通過（門檻 $MAX_FIX_ROUNDS 輪），**自動驗收就此停止**。" \
-                "" \
-                "已打上 \`review:需人工裁定\` label；在移除該 label 之前，push 到本分支**不會**再觸發驗收。" \
-                "" \
-                "到這個次數通常不是「再修一次就好」。請先判斷：" \
-                "" \
-                "1. **PR 範圍太大該拆**？" \
-                "2. **規格本身還沒定案**？（若是，裁定要落進 spec／DECISIONS，不能只留在 PR 留言）" \
-                "3. 🔴 **剩下的 🔴 是不是同一類反覆出現？** 2026-08-15 的實測：兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，而它們**不是被修出來的**——是每輪抽樣抽到不同切片。這一類請跑 \`ruby scripts/check-doc-claims.rb\` 確定性地清乾淨，不要靠再審一輪。" \
-                "" \
-                "要恢復自動驗收：移除 \`review:需人工裁定\` label 後再 push。" \
-                > "$RUNNER_TEMP/escalate.md"
-              gh pr comment "$PR" --body-file "$RUNNER_TEMP/escalate.md"
-
-            fi
+            # 🔴 熔斷分支已於 2026-08-19 依使用者裁定整段移除（見檔頭 env 段與 job `if:` 的
+            #    廢止說明）。原本這裡是 `if ROUNDS <= MAX_FIX_ROUNDS` 的二分：越線就建 label、
+            #    掛 label、貼 ⛔ 升級留言並停跑後續所有輪。現在**只剩通知，沒有上限**。
+            # 🔴 保留原熔斷留言裡唯一有實質價值的那一句，改成**每輪都給、且不擋**的提醒：
+            #    2026-08-15 實測「兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，而且不是被修
+            #    出來的，是每輪抽樣抽到不同切片」⇒ 同類意見反覆出現時，正解是跑確定性腳本
+            #    一次清乾淨，不是再審一輪。刪掉熔斷不該把這條經驗一起刪掉。
+            gh pr comment "$PR" --body "🔴 **驗收未通過**（本 PR 累計第 $ROUNDS 輪；**無輪數上限**，2026-08-19 裁定：一律循環到雙清為止）。請依上一則驗收意見逐條處理：🔴 必須修；🟡 必須清（修復／裁定不修入 DECISIONS／證偽附證據，三擇一——2026-08-16 起 🟡 也擋通過）。修好後 **push 到本分支（\`$PR_BRANCH\`）即會自動重新驗收**，不要開新 PR。　💡 若同一類意見反覆出現而不像被修出來的，多半是每輪抽樣抽到不同切片（2026-08-15 實測：九輪 15 條 🔴 有 12 條屬此）——這一類請跑 \`ruby scripts/check-doc-claims.rb\` 之類的確定性檢查一次清乾淨，比再審一輪有效。"
             exit 0
           fi
 
           if printf '%s' "$LATEST" | grep -q "【驗收結論】通過"; then
-            gh pr review "$PR" --approve --body "Claude 驗收通過 ✅（自動核准）" \
-              || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響自動合併。"
+            # 🔴 **approve 已移到四條件之後**（Codex #59 r10）：舊版在這裡就先送出 approving
+            #    review，然後才算 C1–C4、缺項時只留言「先不要合併」。但 approve 是**會被分支
+            #    保護規則消費的憑證**（`gh pr review --help`：`--approve` = Approve pull request）
+            #    ——在啟用 Actions approvals 的倉庫，它可能滿足「需要一則核准」而讓人工或外部
+            #    auto-merge 在閘門報 0 的情況下照樣合併 ⇒ 那是 fail-open，與本評估器整體的
+            #    fail-closed 立場矛盾。現值＝**四條件齊才 approve**，缺項只留言。
 
+            # ── 18.1 四條件評估器（P-8 引入；fail-closed，1=成立）──────────────
+            # 🔴 每一條都是**存在型判定**（沒跑≠零意見）：取值失敗、解析不到、狀態未完成
+            #    一律記 0，寧可不合併。AUTO_MERGE 關閉期它只留言存證（18.4 過渡期止於評估），
+            #    開啟後它是合併前的最後一道硬閘。
+            # 🔴 ① 的已知限制（誠實寫明，18.4 啟用裁定前不遮）：Codex「零未清」無法直接
+            #    機械讀取（inline thread 的 resolved 狀態拿不到）——代理判準＝該 review
+            #    的 `commit_id` 等於本輪 head ∧ 其名下 inline 意見數＝0。Codex「無建議輪」
+            #    可能只按 👍 不發 review ⇒ 找不到該 head 的 review ⇒ C1=0 ⇒ 不合併：
+            #    方向是 fail-closed，代價是可能多等一輪人工，不是誤合併。
+            # 🔴 **一律用 workflow event 的 head，不用即時 `gh pr view`**（Codex #59 r2）：
+            #    判詞貼出後、本步驟查詢前若發生 synchronize，即時查詢會拿到**新** head，
+            #    而 LATEST／C2／C4 描述的是**舊** head ⇒ 併發取消抵達前，新 commit 可能
+            #    在沒有自己的判詞的情況下被合併。event head 是本輪 checkout 的那一個。
+            HEAD_SHA="${EVENT_HEAD_SHA:-}"
+            if [ -z "$HEAD_SHA" ]; then
+              HEAD_SHA=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            fi
+            CODEX_LOGIN='chatgpt-codex-connector[bot]'
+            # 🔴 C1 要**正向證據**（Codex #59 r1）：「內文沒有某句話」不算零建議——同一
+            #    connector 有多種措辭（review suggestions／review comments），漏掉任一種就
+            #    誤判零建議。改查該 review 實際掛的 inline 意見數。
+            # 🔴 身分與 commit 都走**權威欄位**（Codex #59 r2）：`user.login` 精確比對
+            #    （`contains` 會被任何含 codex 的 login 命中）、commit 身分用 review 物件的
+            #    `commit_id` 精確比對（用內文含 9 位 SHA 會被引述舊 SHA 的散文騙過，
+            #    那正是「拿舊 review 當本輪證據」的路）。
+            # 🔴 聚合**同 head 的全部** Codex review（Codex #59 r7）：只取 `.[-1]` 的話，
+            #    自動審查發現了問題、之後又有一則零意見的 review 蓋在同一個 commit 上
+            #    ⇒ 後者把 C1 蓋成 1，前者的未清發現被遮蔽。改法：收齊該 head 全部
+            #    review id，加總其名下 inline 意見數——**總和為 0** 才算零建議
+            #    （resolved 狀態 REST 拿不到——GraphQL reviewThreads 拿得到但評估器全線
+            #    REST；總和制在 REST 面內不漏，代價是已解決未標 resolved 的意見也擋 C1，
+            #    方向 fail-closed，可接受）。
+            # 🔴 分頁中途失敗必須 fail-closed（Codex #59 r9）：`--paginate` 會把已取得的前幾頁
+            #    先寫進 stdout，後面某頁失敗時 jq 照樣用**部分資料**產出一個非空的 rids。
+            #    本步驟是 `set -uo pipefail`（**沒有 -e**）⇒ 賦值的非零狀態沒人看，評估照跑；
+            #    若漏掉的那頁正好是帶意見的 review，它的 id 不在 rids 裡、其 inline 意見也不會被
+            #    計入 ⇒ **一次暫時性 API 失敗就能產出「零意見」這個合併證據**。
+            # 🔴 「取不到」與「真的沒有」必須分開：兩者都得到空清單，但前者要 fail-closed、
+            #    後者是合法狀態（Codex 該輪沒發 review），評估留言要能講清楚是哪一種。
+            CODEX_RIDS=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+              | jq -s -c --arg who "$CODEX_LOGIN" --arg head "$HEAD_SHA" \
+                  'add // [] | [.[] | select(.user.login == $who) | select(.commit_id == $head) | .id]') \
+              || CODEX_RIDS="APIERR"
+            C1=0
+            CODEX_STATE="unknown"
+            if [ "$CODEX_RIDS" = "APIERR" ] || [ -z "$CODEX_RIDS" ]; then
+              CODEX_STATE="apifail"
+            elif [ -z "$HEAD_SHA" ]; then
+              CODEX_STATE="nohead"
+            elif [ "$CODEX_RIDS" = "[]" ]; then
+              CODEX_STATE="noreview"
+            else
+              # 同一個道理：這條管線失敗也一律當成取不到，不得讓部分資料算出 0。
+              CODEX_INLINE=$(gh api --paginate "repos/$REPO/pulls/$PR/comments?per_page=100" \
+                | jq -s --argjson rids "$CODEX_RIDS" \
+                    'add // [] | [.[] | select(.pull_request_review_id as $r | $rids | index($r))] | length') \
+                || CODEX_INLINE="APIERR"
+              if [ "$CODEX_INLINE" = "APIERR" ]; then
+                CODEX_STATE="apifail"
+              elif [ "$CODEX_INLINE" = "0" ]; then
+                CODEX_STATE="zero"
+                C1=1
+              else
+                CODEX_STATE="has:$CODEX_INLINE"
+              fi
+            fi
+            # ②bot 判詞通過。🔴 **不再無條件記 1**（Codex #59 r11）：`LATEST` 只綁留言 ID
+            #    水位、不綁 head——舊 commit 的 workflow 被人工 rerun 時，其延遲貼出的合法
+            #    判詞 id 同樣大於本輪水位，會被當成本輪結論；此後 Codex 與 CI 在新 head 上
+            #    通過，四條件就會在「bot 從未審過這個 head」的情況下湊齊。
+            # 🔴 兩道補強（皆 fail-closed）：①候選判詞**必須恰好一則**——多於一則代表水位
+            #    之後有別的 run 也貼了判詞，無法分辨哪則屬本輪 ⇒ 記 0；②候選的 `created_at`
+            #    必須落在**本 job 起跑之後**（`WATERMARK_TS`，由水位步驟寫入）。
+            # ⚠️ **誠實限制**：兩道補強擋得住「多則並存」與「水位前的舊判詞」，**擋不住**
+            #    「本輪 Claude 沒貼、而某個舊 run 恰好在本 job 期間貼出唯一一則」。根治＝
+            #    判詞契約帶 head SHA（與 await-verdict 同一項待辦），屬 18.4 啟用前的前置。
+            C2=0
+            C2_STATE="unknown"
+            CAND=$(printf '%s' "$COMMENTS" | jq --argjson who "$REVIEWERS" --arg m "$MARKER" \
+              --argjson wm "${COMMENT_WATERMARK:-0}" --argjson ts "${WATERMARK_TS:-0}" \
+              '[.[] | select(.id > $wm)
+                    | select(.user.login as $l | $who | index($l))
+                    | select(.body | split("\\n")[0] | startswith($m))
+                    | select((.created_at | fromdateiso8601) >= $ts)] | length') \
+              || CAND="ERR"
+            case "$CAND" in
+              1) C2=1; C2_STATE="unique" ;;
+              0) C2_STATE="none-in-window" ;;
+              ERR) C2_STATE="parse-error" ;;
+              *) C2_STATE="ambiguous:$CAND" ;;
+            esac
+            # ③機械 CI 全綠：讀 head 的 check-runs，排除本 review job 自身（它此刻必然
+            #   in_progress）。任何非 success ⇒ 0。空集合⇒ 0（沒跑≠綠）。
+            # 🔴 有界等待（Codex #59 r1）：一次性查詢會把「還在跑」永久記 0——判詞常比
+            #   test job 先出。改為 pending 時每 30 秒重查、至多 20 段等待（約 10 分鐘），
+            #   仍未落定＝維持 0（fail-closed）。🔴 最後一段 sleep 之後必須**再查一次**
+            #   （Codex #59 r8）：舊版 query→sleep 收尾，CI 在第 20 段 sleep 中轉綠時，
+            #   迴圈帶著過期的 pending 收場，C3 被誤記 0——十分鐘窗的最後 30 秒等於白等。
+            #   現值＝21 次查詢夾 20 段等待，末次查詢後不再 sleep（sleep 由 if 包住，
+            #   避免 && 短路在 set -e 下把整個 job 打死）。⚠️ 誠實限制：本 job 結束後才完成的 check
+            #   不會回頭重評——那屬 18.4 啟用時自動合併 workflow 的再評路徑
+            #   （workflow_run 觸發），本步驟只負責「當下證據」，AUTO_MERGE 開啟前
+            #   後果僅是評估留言偏保守。
+            # 🔴 `--paginate`＋`jq -s` 聚合全部頁（Codex #59 r2）：單頁上限 100，check-run
+            #    破百時後面幾頁的 pending／failed 會整批看不到，評估器就會誤報 allgreen。
+            C3=0
+            CHECKS_STATE="apifail"
+            # 🔴 **輪詢不得吃掉 job 的時間上限**（Codex #59 r13）：本 job `timeout-minutes: 30`，
+            #    而 Claude 驗收步驟本身可跑 18–20 分鐘（本 PR 的 run 紀錄即有）⇒ 再加最多 10 分鐘
+            #    的 C3 等待會讓 job **在解析途中被 GitHub 砍掉**，評估留言與核准一則都貼不出來
+            #    ——那比「C3 記 0」嚴重得多（後者只是保守，前者是整輪無產出）。
+            #    ⇒ 用水位步驟記下的 `WATERMARK_TS` 算已用時間，逼近上限就停止等待、記 pending。
+            JOB_BUDGET_S=1320   # 22 分鐘：留 8 分鐘給貼留言與收尾（job 上限 30 分）
+            for _i in $(seq 1 21); do
+              CHECKS_STATE=$(gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
+                | jq -s -r '[.[].check_runs[] | select(.name != "review")]
+                         | if length == 0 then "empty"
+                           elif any(.status != "completed") then "pending"
+                           elif all(.conclusion == "success") then "allgreen"
+                           else "notgreen" end' || printf 'apifail')
+              [ "$CHECKS_STATE" = "pending" ] || break
+              ELAPSED=$(( $(date -u +%s) - ${WATERMARK_TS:-0} ))
+              if [ "${WATERMARK_TS:-0}" -gt 0 ] && [ "$ELAPSED" -ge "$JOB_BUDGET_S" ]; then
+                CHECKS_STATE="pending-timebudget"
+                break
+              fi
+              if [ "$_i" -lt 21 ]; then sleep 30; fi
+            done
+            [ "$CHECKS_STATE" = "allgreen" ] && C3=1
+            C4="$FORMAT_OK"  # ④判詞格式機械驗證（上方步驟；失敗根本走不到這裡）
+            EVAL="①Codex 錨定 head 且 inline 意見數=0（正向證據）=$C1（$CODEX_STATE） ②bot 通過且判詞綁本輪=$C2（$C2_STATE） ③機械 CI 全綠=$C3（$CHECKS_STATE）④判詞格式驗證=$C4"
+
+            # 🔴 指示文案必須跟著條件走（Codex #59 r2）：舊版在 EVAL 有 0 時照樣說
+            #    「請人工合併」，跟前一句「缺任一即不得合併」自相矛盾，而 C1 未確認／
+            #    CI 未跑完正是最常見的狀態——操作者照著它按下去就是搶跑。
             if [ "$AUTO_MERGE" != "true" ]; then
-              gh pr comment "$PR" --body "✅ 驗收通過。AUTO_MERGE 已關閉，請手動合併。"
+              if [ "$C1$C2$C3$C4" = "1111" ]; then
+                # 🔴 approve 也要綁被評估的那個 head（Codex #59 r11）：評估與本行之間仍有時間窗，
+                #    期間的 push 會讓 approve 落在一個**沒被評估過的 head** 上。合併路徑雖有原子
+                #    `--match-head-commit` 守衛，但它只擋合併、擋不住已經留下的核准；而 AUTO_MERGE
+                #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
+                NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
+                if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
+                  # 🔴 **原子綁定被評估的 head**（Codex #59 r13）：先讀 NOW_HEAD 再 `gh pr review` 是
+                  #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
+                  #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
+                  #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
+                  #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
+                  #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+                  gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
+                    -f event=APPROVE -f commit_id="$HEAD_SHA" \
+                    -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
+                    || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+                  # 🔴 評估留言與核准同在 head 相符分支（Codex #59 r12）：head 不符時再貼「四條件齊、
+                  #    可人工合併」會與上一則「本輪評估不適用於新 head」直接互斥，而 PR UI 此刻指向的
+                  #    正是未被評估的新 head ⇒ 操作者照著按下去就是合併一個沒人審過的提交。
+                  gh pr comment "$PR" --body "✅ 驗收通過。18.1 四條件評估（P-8 證據留存；AUTO_MERGE 關閉、18.4 過渡期**止於評估**）：$EVAL ⇒ **四條件齊**，可人工合併。"
+                else
+                  gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
+                  gh pr comment "$PR" --body "⚠️ 同一個 head 變動也使**本輪四條件評估失效**（$EVAL 是對 \`$HEAD_SHA\` 算的）⇒ **不要依本輪結果合併**。新的 push 會自動觸發新一輪驗收。"
+                fi
+              else
+                gh pr comment "$PR" --body "✅ bot 側驗收通過，但 18.1 四條件**尚未齊**：$EVAL（1=成立、0=不成立或無法機械確認）⇒ **先不要合併**。待補：0 的那幾項——①＝Codex 尚未對本輪 head 出零意見 review（可在本 PR 留言 \`@codex review\` 觸發）；③＝機械 CI 未全綠或未跑完。齊了之後再人工合併。"
+              fi
               exit 0
             fi
 
-            if ! gh pr merge "$PR" --squash --delete-branch; then
+            if [ "$C1$C2$C3$C4" != "1111" ]; then
+              gh pr comment "$PR" --body "⛔ 18.1 四條件未齊：$EVAL ⇒ **不自動合併**（fail-closed；沒跑≠零意見）。請人工核對後處置。"
+              exit 0
+            fi
+            # 🔴 approve 也要綁被評估的那個 head（Codex #59 r11）：評估與本行之間仍有時間窗，
+            #    期間的 push 會讓 approve 落在一個**沒被評估過的 head** 上。合併路徑雖有原子
+            #    `--match-head-commit` 守衛，但它只擋合併、擋不住已經留下的核准；而 AUTO_MERGE
+            #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
+            NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
+            if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
+              # 🔴 **原子綁定被評估的 head**（Codex #59 r13）：先讀 NOW_HEAD 再 `gh pr review` 是
+              #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
+              #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
+              #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
+              #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
+              #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+              gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
+                -f event=APPROVE -f commit_id="$HEAD_SHA" \
+                -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
+                || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
+            else
+              gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
+            fi
+
+            # 🔴 合併前 head 守衛（Codex #59 r2 引入、r3 改為原子）：評估與合併之間仍有
+            #    時間窗，期間的 push 會讓「已驗證的 head」與「即將被合併的 head」分岔。
+            #    r2 版是 `gh pr view` 查完再 merge ＝ **check-then-act**，競態窗只是變小
+            #    沒有消失；r3 改用 `gh pr merge --match-head-commit`（gh 2.97.0 實測有此
+            #    旗標），由 **GitHub 服務端**在合併前比對 head，不相等直接拒絕 ⇒ 原子。
+            #    先做一次前置查詢只為了**產生可讀的診斷留言**，真正的保證在下面那個旗標。
+            HEAD_NOW=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            if [ "$HEAD_NOW" != "$HEAD_SHA" ]; then
+              gh pr comment "$PR" --body "⛔ 合併前複驗發現 head 已變動（評估時 \`$HEAD_SHA\`、現在 \`$HEAD_NOW\`）⇒ **放棄本輪自動合併**。新 head 會由它自己的驗收輪處理。"
+              exit 0
+            fi
+
+            if ! gh pr merge "$PR" --squash --delete-branch --match-head-commit "$HEAD_SHA"; then
               gh pr comment "$PR" --body "⚠️ 驗收通過但自動合併失敗（可能與 main 衝突或被保護規則擋下），請手動合併。"
               exit 0
             fi
@@ -1009,4 +1290,8 @@ jobs:
             exit 0
           fi
 
-          gh pr comment "$PR" --body "⚠️ 驗收意見含結論標記但無法判讀（既非通過也非需修改），請人工判讀最新一則驗收意見。"
+          # 🔴 P-8 後這一行**結構上不可達**：上方 18.1④ 格式驗證已保證第一行恰為兩種合法
+          #    結論形之一，兩個分支必中其一。保留當縱深防線；真走到＝上面的邏輯被改壞了
+          #    ⇒ exit 1（job 紅），不再是綠燈留言——那正是格式驗證要消滅的形態。
+          gh pr comment "$PR" --body "⚠️ 驗收意見含結論標記但無法判讀（既非通過也非需修改）——18.1④ 格式驗證後本分支不應可達，代表判讀邏輯被改壞。job 轉紅，請人工判讀最新一則驗收意見並檢查本檔。"
+          exit 1
