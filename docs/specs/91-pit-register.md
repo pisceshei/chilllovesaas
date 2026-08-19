@@ -140,7 +140,7 @@
 - 🔴 **熔斷閘門實證失效（本條 2026-08-18 第 13 輪就地重寫；初版兩個斷言皆已被實測推翻，
   依 bot R11 🟡3／R12 🟡3「教訓落庫免只活在 PR 留言」紀律更新）**：
   **初版寫的是**「label 仍未宣告，但靠 `--add-label` **自動建立**、失敗不擋」——
-  **兩點都錯**：①`gh pr edit --add-label` **不會建立**不存在的 label；②因此 `|| true`
+  **兩點都錯**：①`gh pr edit --add-label` **不會建立**不存在的 label（外部行為斷言，證據見本條末〔證據 E〕）；②因此 `|| true`
   吞掉的不是偶發失敗，而是**每一次**。實測後果＝#58 第 4–10 輪期間 workflow 連發
   ⛔「自動驗收就此停止」而**驗收一路照跑**（label 從未掛上、閘門實質失效整整六輪，
   複驗：翻該 PR timeline 的 ⛔ 留言與其後的判詞交錯）。現況：label 已於 2026-08-18
@@ -157,6 +157,55 @@
        🔴 **要留下的是形態不是那個閘門**：「宣稱掛上了其實沒掛上、失敗被 `|| true` 吞掉」
        這個靜默失效形態仍然有效，任何新的 label／狀態類機制都要照它設防。
        移除隨 **PR #59 於 2026-08-19 合併進 main** ⇒ 複驗：`git grep -c -F -e add-label origin/main -- ':/.github/workflows/claude-review.yml'` **應 exit 1 且無輸出**（＝該識別字不存在；⚠️ **不得用 `git show <ref>:<path> | grep -c`**，三重 fail-open 見 `CLAUDE.md` 鐵律 17.4 的複驗註）。 -->
+  <!-- 〔證據 E〕2026-08-19 補（#58 Codex[4] 點名：本條①是**外部 CLI 語義**，原文只有結論，
+       無來源 URL／取證日期／英文原文逐字，也沒標〔推論〕）。依 `AGENTS.md` §8.2 第 1 款補齊。
+       🔴 **查證結論＝斷言為真，且可由上游原始碼證明** ⇒ 走「補證據」，**不得**降級為〔推論〕：
+       把一條證得出來的事實寫成猜測，登記簿只會更不可信。
+       🔴 **本條為何非補不可**：熔斷機制已隨 PR #59 全部移除，倉庫裡**再無可反推的代碼**
+       （複驗見上一段的 git grep）⇒ 這則坑記錄是該事實在本專案的**唯一載體**。
+
+       E1 gh 自身說明**只承諾「by name」，不含建立語義**（本機 gh 2.97.0，`gh pr edit --help`，實測 2026-08-19）：
+             "--add-label name          Add labels by name"
+          ⇒ 這只證明「沒承諾會建」，**證明不了「不會建」**。決定性證據是 E2–E4。
+
+       E2 上游原始碼：`--add-label` 先把**名稱解析成既有 label 的 ID**，查無即報錯中止
+          （取證 2026-08-19，釘 cli/cli commit `95d3a1db45abd547c2dafbee4f8a68ca53fb9c80`）
+          <https://github.com/cli/cli/blob/95d3a1db45abd547c2dafbee4f8a68ca53fb9c80/pkg/cmd/pr/shared/editable_http.go#L18-L25>
+             "addedLabelIds, err := options.Metadata.LabelsToIDs(options.Labels.Add)"
+             "if err != nil { return err }"
+             "return addLabels(httpClient, id, repo, addedLabelIds)"
+          <https://github.com/cli/cli/blob/95d3a1db45abd547c2dafbee4f8a68ca53fb9c80/api/queries_repo.go#L806-L822>
+             "for _, l := range m.Labels { if strings.EqualFold(labelName, l.Name) { ids = append(ids, l.ID); found = true; break } }"
+             "if !found { return nil, fmt.Errorf(\"'%s' not found\", labelName) }"
+          ⇒ 比對範圍是**已抓下來的 repo 既有 label 清單**（大小寫不敏感），查無即 `'<name>' not found` 並中止。
+          （同檔 `api/queries_repo.go:1427` 的 `labels(first: 100, …, after: $endCursor)` 在 for 迴圈內分頁
+           ⇒ 清單是全量，排除「label 存在但沒抓到」這個替代解釋。）
+
+       E3 送出的 mutation **只吃 ID**：gh 送 `AddLabelsToLabelableInput{LabelIDs: …}`
+          （同上 editable_http.go#L152-L156）；GitHub GraphQL schema 對該欄位的定義
+          （`gh api graphql` introspection，實測 2026-08-19）：`labelIds` — "The ids of the labels to add."
+          ⇒ **結構上沒有以名稱建立的入口**。
+
+       E4 反向封閉：`gh api "search/code?q=createLabel+repo:cli/cli"`（實測 2026-08-19）只命中
+          `pkg/cmd/label/create.go`／`pkg/cmd/label/clone.go` ⇒ 建 label 的代碼**只存在於 `gh label` 子命令**，
+          `pr edit` 路徑上不是「沒走到」而是「不存在」。
+
+       ⚠️ **範圍限定，不得外推到 REST**：E1–E4 只涵蓋 `gh pr edit --add-label`（走 GraphQL）。
+          **REST `POST /repos/{owner}/{repo}/issues/{n}/labels` 對不存在 label 的行為，官方文檔查無明文**
+          <https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28>（取證 2026-08-19）：該端點只寫
+          "Adds labels to an issue." 與狀態碼 200／301／404／410／422，**全頁未說明** label 不存在時如何
+          （頁內唯一提到不存在的句子屬**移除**端點："This endpoint returns a 404 Not Found status if the label does not exist."）
+          ⇒ REST 路徑**〔推論·未實測〕**，依賴它的設計必須自驗。可重跑驗證
+          （🔴 **不得在本倉庫跑**——會產生真實 label／PR 變更；用拋棄式測試倉庫）：
+             U=<your-github-login>
+             gh repo create "$U/label-probe" --private --add-readme
+             N=$(gh api "repos/$U/label-probe/issues" -f title=probe --jq .number)
+             gh api -X POST "repos/$U/label-probe/issues/$N/labels" -f 'labels[]=zzz-not-exist'; echo "rc=$?"
+             gh api "repos/$U/label-probe/labels" --jq '.[].name'   # 看 zzz-not-exist 有沒有被建出來
+             gh repo delete "$U/label-probe" --yes
+
+       ⚠️ **本證據會過期**：E2–E4 釘的是 cli/cli 的一個 commit，上游改實作即失效；
+          重查法＝重跑 E4 的 search/code，並比對那兩個檔案的當前 trunk 內容。 -->
 - 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
   fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
   無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
