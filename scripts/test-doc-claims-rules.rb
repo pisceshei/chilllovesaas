@@ -28,6 +28,8 @@ FIXTURES = File.join(ROOT, "spec/fixtures/ci_violations")
 # 🔴 一律加 `--all`：R4／R5 預設只掃「相對 base 有改動」的 worklog／handoff，
 #    而 fixture 目錄不是 git 工作樹，算不出差異 ⇒ 不加的話那兩條規則永遠不會被測到。
 CASES = [
+  [ "doc_plans_scope", 1, "不存在於樹上",
+    '🔴 掃描範圍 canary：docs/plans/ 於 2026-08-18（PR #58）納入 IN_SCOPE——'     '本 fixture 釘住它真的被掃。把 check-doc-claims.rb 的 %r{\Adocs/plans/} 拿掉，'     '本 fixture 只剩零個可掃檔 ⇒ checker exit 3（零檔 canary）≠ 期望 1 ⇒ 本 CASE 失敗、'     '整支回歸測試轉紅＝範圍退化被抓（#58 第 3 輪判詞 ⚪2 點名的缺口，第 6 輪落地）' ],
   [ "doc_missing_path", 1, "不存在於樹上",
     "R1：帶目錄前綴的具體路徑指到不存在的檔。" \
     "九輪驗收裡 PR #40 第 2 輪那條 🔴 就是這個形態（worklog:57／handoff:44 引用當時未合併的 check-ci-parity.rb）" ],
@@ -63,7 +65,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 9
+MIN_CASES = 10
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
@@ -95,7 +97,7 @@ end
 #
 # 🔴 上面的 fixture 目錄**結構上測不到**這條路徑：CASES 一律帶 `--all`
 #    （fixture 不是 git 樹，算不出 diff）⇒ `-U0` hunk 行號集合那段代碼
-#    在九條 fixture 裡一次都沒執行過——改壞它，上面照樣全綠。
+#    在既有 doc_* fixture 裡一次都沒執行過——改壞它，上面照樣全綠。
 #    照 test-exec-bits-rules.sh 的辦法：現場 `git init` 一個臨時倉庫，
 #    做出「歷史層有髒數字、新增行才受檢」的真實形態（就是本倉庫 worklog 的日常）。
 require "tmpdir"

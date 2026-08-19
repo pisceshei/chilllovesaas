@@ -194,10 +194,15 @@ script_headers = listing(ROOT, "scripts/", "scripts/*")
 #    ⇒ 納管範圍＝**對我方倉庫此刻狀態做斷言**的地方：
 #      worklog／handoff（工作紀錄）、docs/dev（實作篇章）、AGENTS.md／CLAUDE.md（規約）、
 #      scripts/（腳本檔頭）。九輪驗收裡的路徑錯誤**全部落在這個範圍內**。
+#      docs/plans/（2026-08-18 PR #58 擴入）：方案檔對倉庫現況與待建檔做大量斷言——
+#      未納管時本 PR 最大的新檔（方案正本，行數以 `wc -l` 為準）零機械覆蓋
+#      （#58 第 2 輪 🟡5），納入當輪即抓到兩條無錨引用。
+#      ⚠️ 實得覆蓋僅 R1／R3：R4／R5 的範圍判斷（下方兩處 start_with?）仍只認
+#      worklog／handoff，plans 不在內——刻意維持，勿讀成全規則納管。
 #    ⚠️ 代價寫在這裡：research／design／specs 的路徑錯誤本檢查**不管**。
 #      那是刻意的取捨，不是漏了——要納管必須先解決「如何區分本尊路徑與我方路徑」。
 IN_SCOPE = [
-  %r{\Adocs/worklog/}, %r{\Adocs/handoff/}, %r{\Adocs/dev/},
+  %r{\Adocs/worklog/}, %r{\Adocs/handoff/}, %r{\Adocs/dev/}, %r{\Adocs/plans/},
   %r{\AAGENTS\.md\z}, %r{\ACLAUDE\.md\z}, %r{\AHANDOFF\.md\z},
   %r{\Ascripts/}
 ].freeze

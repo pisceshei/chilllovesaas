@@ -105,7 +105,7 @@
 - 契約註釋同步更正（錯誤斷言不留原文）。
 
 ### 2.4 `scripts/await-verdict.sh`
-- `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900] [MAX_POLLS=8]`：
+- `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900（限 900–1500）] [MAX_POLLS=8]`：
   每輪查**兩側是否都已對同一個 head 完成**（r2 重寫；原本兩側都只是 PR 全域條件）：
   ①**判詞就緒**＝該 head 的 `review` check-run `conclusion == success`
   **∧ 該 run 時間窗內存在一則合法判詞留言**（完整判準見下方同節「現行判準追加」段）——
@@ -120,8 +120,9 @@
   🔴 **本腳本只做存在性判定、不數 inline 意見**（r9 澄清）：它回答「Codex 審完了沒」，
   不是「Codex 有沒有意見」。**意見數的聚合只存在於 `claude-review.yml` 的 C1**——
   兩者職責不同，不要把評估器的保證讀到這支腳本身上。
-- **參數驗證全走 exit 2**（Codex #59 r1）：PR 十進位、HEAD_SHA 十六進位 9–40 位、
-  INTERVAL/MAX_POLLS 正整數、INTERVAL≥300——爛參數不得滑進循環變成假逾時或燒限額。
+- **參數驗證全走 exit 2**（Codex #59 r1；#58 exact-head review `4973362395` 收緊）：PR 十進位、
+  HEAD_SHA 十六進位 9–40 位、INTERVAL/MAX_POLLS 正整數、INTERVAL＝900–1500 秒——爛參數不得
+  滑進循環變成假逾時、燒限額，或違反鐵律 17.1 的 15–25 分鐘窗。
 - **額度路徑雙軌**（第 6 輪）：偵測到**已認證的 `gh`** 就走它（5000/小時），否則回退匿名
   urllib（60/小時）。回退分支必須留著——本腳本是本機工具，不保證每台機器都裝了 gh。
 - **SHA 一律正規化成完整 40 位小寫**（Codex r3／r4）：API 回的 `commit_id` 是完整小寫，
@@ -167,7 +168,8 @@
   不足 100 則為止（理智上限見腳本具名常數 `HARD_PAGE_CAP`＝100 頁，兩個 pager 共用；觸頂＝APIERR 大聲失敗，不裝作讀完）。
 - 🔴 實作紀律寫在檔頭：JSON 由 **python 直接抓取＋UTF-8 顯式解析、輸出只回 ASCII
   計數**（Windows cp950 管道解 CJK JSON 靜默出錯，同日兩次實測）；未認證 API
-  **60 次/小時/IP 跨工具共用** ⇒ INTERVAL 下限 300 秒（腳本硬擋）。
+  **60 次/小時/IP 跨工具共用** ⇒ 額度估算原先只設 300 秒下限；現由鐵律 17.1 的
+  900–1500 秒區間收緊，腳本硬擋區間外值。
 - **未登記進 `config/ci.rb` 的 `step` 清單，故不是驗收閘門**——它是操作工具，刻意的。
   複驗：`grep -n await-verdict config/ci.rb .github/workflows/ci.yml`（應無命中）。
   <!-- 🔴 2026-08-19 更正（#59 r12 掃描）：原文寫「不匹配閘門 selector（`^(check|test|lint)-`）」，
