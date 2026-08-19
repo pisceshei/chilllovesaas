@@ -21,7 +21,7 @@
 #
 # ## 用法
 #   bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒] [MAX_POLLS]
-#   INTERVAL 預設 900（15 分鐘，鐵律 17.1 的 15–25 分鐘窗下緣）；MAX_POLLS 預設 8（約 2 小時）。
+#   INTERVAL 預設 900，且只接受 900–1500 秒（鐵律 17.1 的 15–25 分鐘窗）；MAX_POLLS 預設 8（約 2 小時）。
 #   HEAD_SHA 接受 9–40 位十六進位（大小寫皆可）：**內部一律正規化成完整 40 位小寫**
 #   ——大寫或短前綴會與 API 回的 `commit_id`（完整小寫）比不中，那會表現成「白等到
 #   逾時」而非明顯錯誤。短前綴解析不出完整值時 exit 2，不進輪詢。
@@ -52,7 +52,8 @@
 #     逐頁跟到 API 回短頁為止（理智上限 100 頁，觸頂＝APIERR 大聲失敗，不靜默截斷）。
 #   ③**額度**：有 `gh` 且已認證時走**認證路徑（5000 次/小時）**；否則回退匿名
 #     （**60 次/小時/IP、跨工具共用**）。每輪請求數＝實際頁數×2（單頁常態＝2 次），
-#     INTERVAL 下限 300 秒由參數驗證硬擋。**撞限時等到 `X-RateLimit-Reset` 再續**，
+#     額度估算曾只要求 INTERVAL≥300；現依鐵律 17.1 收緊為 900–1500 秒並由參數驗證硬擋。
+#     **撞限時等到 `X-RateLimit-Reset` 再續**，
 #     不計入**失敗**預算、也不消耗輪詢輪次（但限流自身有上限，見退出碼 2 的說明）
 #     （2026-08-18 實測：同日的診斷查詢把匿名額度用光，
 #     舊版起跑即 exit 2 報「回應非清單」——把可恢復狀態當成故障）。
@@ -91,8 +92,14 @@ for _pair in "INTERVAL:$INTERVAL" "MAX_POLLS:$MAX_POLLS"; do
     *) echo "🔴 $_name 不得有前導零（八進位歧義／假逾時）：$_val" >&2; exit 2;;
   esac
 done
-if [ "$INTERVAL" -lt 300 ]; then
-  echo "🔴 INTERVAL=$INTERVAL 低於下限 300 秒（未認證 API 限額 60 次/小時/IP、跨工具共用）" >&2
+# 先比十進位位數，避免超出 shell 整數範圍的輸入讓 `[ -gt ]` 報錯後 fail-open。
+_decimal_gt() {
+  [ "${#1}" -gt "${#2}" ] && return 0
+  [ "${#1}" -lt "${#2}" ] && return 1
+  [ "$1" -gt "$2" ]
+}
+if _decimal_gt "$INTERVAL" 1500 || [ "$INTERVAL" -lt 900 ]; then
+  echo "🔴 INTERVAL=$INTERVAL 不在鐵律 17.1 的 900–1500 秒（15–25 分鐘）範圍內" >&2
   exit 2
 fi
 

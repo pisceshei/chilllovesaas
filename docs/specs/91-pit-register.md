@@ -484,6 +484,17 @@
   P-1 收割時須在原文鄰行追加證據邊界更正，不得覆寫歷史
   【F11；來源＝#58 Claude R33 issue comment `5342461892` ⚪1；取證日期＝2026-08-19】
 
+- **GitHub primary rate-limit 指引不能支持「客戶端沒有任何放棄門檻」的全稱句**：
+  官方逐字只要求「You should not retry your request until after the time specified by the
+  `x-ratelimit-reset` header」，而 secondary 指引另寫 exponential wait 與 specific number of retries；
+  兩段都沒有替本專案指定總 deadline。有限官方頁面檢索不能證明某機制「不存在」，故
+  `docs/dev/external-facts.md` B6 只保留逐字可支持的邊界；長時間 poller 是否設 deadline／次數界線
+  是本專案設計決定。升格法＝若 GitHub 日後官方文檔明載 primary 的總重試／時間契約，按新原文
+  更新 B6；在此之前只以本地腳本契約與測試驗證我方選案，不把它冒充 GitHub 保證
+  【F11；來源＝#58 Codex review `4973362395` inline `3813973532`；取證日期＝2026-08-19；
+  官方來源＝<https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api>、
+  <https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api>】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -599,6 +610,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -674,6 +686,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 

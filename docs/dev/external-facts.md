@@ -157,7 +157,13 @@ rulesets 與概念層寫 "the most recent **reviewable** push"。`reviewable` �
 > "The merge queue will ensure the pull request's changes pass all required status checks
 > **when applied to the latest version of the target branch** and any pull requests already in the queue."
 > <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue>（取證 2026-08-19）
-非 strict 的必要檢查是**對合併當下的 head 求值**（推了新 commit ⇒ 該 head 沒有通過紀錄 ⇒ 擋住），不是重跑。
+required check 對新 head 的效果另有官方明文：
+> "**Required checks must pass on the latest commit SHA. Checks from earlier commits don't satisfy the requirement.**"
+> <https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks>（取證 2026-08-19）
+
+⚠️ **精度**：這句支持的是「先前 commit SHA 的檢查結果不能滿足 latest commit SHA」，**不是重新執行**。
+同頁另區分 test merge commit 有／無 status 的兩種判準：有 status 時看 test merge commit，沒有才看
+head commit；因此原句一概稱「合併當下的 head」也過寬，已刪。
 
 ### A8. auto-merge 的停用條件——⚠️ 本條原斷言被複核判為 **WRONG**，已更正
 
@@ -251,7 +257,7 @@ GFM 規範同文 <https://github.github.com/gfm/>（取證 2026-08-19，已與 c
 ⇒ 文件裡的「預期輸出」若含 `**`，會與終端機實際輸出**字面不符**；
 要強調就把粗體包在 code span **外**，不要塞進去。
 
-### B6. 限流：primary **沒有任何放棄門檻**，只有 secondary 提到次數
+### B6. 限流：primary 明列 reset 時點；secondary 另明列有限次重試
 
 > primary — "If you exceed your primary rate limit, you will receive a 403 or 429 response, and the
 > `x-ratelimit-remaining` header will be 0. **You should not retry your request until after the time
@@ -262,9 +268,11 @@ GFM 規範同文 <https://github.github.com/gfm/>（取證 2026-08-19，已與 c
 來源：<https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api>、
 <https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api>（取證 2026-08-19）
 
-🔴 **要害**：primary 的指引**只有「等到 reset 再重試」**——沒有退避、沒有次數上限、沒有時間預算。
-「throw an error after a specific number of retries」**只綁 secondary，而且是次數不是時間**。
-⇒ 長時間輪詢的「總體有界」**官方幫不上忙，必須自己補**。
+🔴 **證據邊界**：primary 的上列逐字只支持「reset 時點之前不要重試」，**不支持**把客戶端的
+總重試次數或總時間寫成「不存在」；有限頁面的檢索也不能證明不存在。secondary 的上列逐字則
+明載 exponential wait 與 specific number of retries，但沒有替本專案指定那個數值。
+⇒ 長時間輪詢是否另設 deadline／次數界線是**本專案的設計決定**，不是可由這兩段官方原文推出的
+GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.4。
 
 另有一句該當警語引用：
 > "**Continuing to make requests while you are rate limited may result in the banning of your integration.**"
