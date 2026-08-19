@@ -82,10 +82,27 @@ head 前置條件旗標），據此**推論**改用 REST 的 `commit_id` 就能�
 <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches>（取證 2026-08-19）
 
 🔴 **實作影響**：照 API 描述建模的人會以為「沒人 push 就不會 stale」，
-但**別人合併到 base 分支就足以讓核准失效**——無需任何人碰本 PR。
+但概念層的條件寫的是 **"If the diff changes from this state"**——push 只是括號內
+**"for example"** 三個例子之一（另兩個是 **"clicks Update branch"** 與 **"a related pull
+request is merged into the target branch"**）⇒ **不碰本 PR 也可能失效**。
+⚠️ **不得反過來讀成「任何人合併到 base 都足以讓核准失效」**：原文的條件是 **diff 改變**，
+合併只是**可能造成**該改變的例子，限定詞還是 **related**；不改變本 PR diff 的無關合併，
+**現有原文並不支持**核准一定被 dismiss。
 ⚠️ **求值時機（push 當下 vs 合併時惰性）官方從未公布 ⇒ 未取得，不得押注。**
 rulesets 的 API 措辭同樣是事件式（"New, reviewable commits pushed will dismiss…"），
 而其概念頁與 about-protected-branches 用同一段狀態式文字。
+
+📌 **「related」為什麼是承重詞（官方 changelog，取證 2026-08-19）**：
+> "The branch protection for dismissing stale reviews now dismisses approvals **whenever a merge
+> base changes** after a review." ／ "The merge base of a pull request is the **closest common
+> ancestor** of both the target and source branches for that pull request." ／ "Merge bases changing
+> under a pull request will **preserve approvals in most situations where no new changes are introduced**."
+
+來源：<https://github.blog/changelog/2023-06-06-security-enhancements-to-required-approvals-on-pull-requests/>（取證 2026-08-19）
+
+⇒ 觸發被綁在 **merge base 改變**上；無關 PR 合入 target 只讓 target 前移，**不動**本 PR 的最近共同祖先。
+⚠️ **精度**：changelog 的 "whenever a merge base changes" 與概念頁的「條件＝diff 改變」**措辭仍不一致**，
+且 "in most situations" 留了餘地 ⇒ **正反兩個方向都不得寫成保證**，本條只否掉「任何 base merge 必然 dismiss」。
 
 ### A6. `require_last_push_approval`：措辭是狀態謂詞，但**官方自承比 dismiss stale 鬆**
 
