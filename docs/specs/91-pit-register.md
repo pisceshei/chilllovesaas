@@ -326,6 +326,7 @@
   本檔 `:159`／`docs/dev/m0-review-convergence.md:18`／`docs/worklog/2026-08-18-P0-…:607`／
   `docs/handoff/2026-08-19-鐵律遵守稽核與P8合併.md:18`）——依「只修點名處」不動，登記於此
   【F11；來源＝#58 第 22 輪 bot 判詞 🟡3 ＋ 2026-08-19 使用者「只修點名的問題」裁定】
+  <!-- 🔴 2026-08-19 更正（#58 第 31 輪）：上面「另有 6 處未被點名」是第 30 輪的現值，**第 31 輪已把六處全部改成 `git grep -c <ref> -- <pathspec>`**（該輪的 🔴1 點名了全部五處終態層宣稱，故不再屬「未點名」）。本條目保留為形態紀錄——fail-open 的複驗寫法本身仍值得警惕；現值＝全樹無 `git show <ref>:<path> | grep -c` 殘留，複驗：`git grep -c -F -e 'git show main:' HEAD -- ':/docs' ':/*.md'`。 -->
 - **連續推播會讓驗收永遠拿不到結果**：`claude-review.yml` 有 `concurrency: cancel-in-progress`
   ⇒ 半小時內推四次（#58 於 2026-08-19 00:28／00:41／00:45／00:59），前三個 review run 全被
   砍成 `cancelled`，只有最後一個跑完。當時表面症狀是「bot 不出意見了」，實際是自己造成的

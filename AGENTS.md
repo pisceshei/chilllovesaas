@@ -155,13 +155,27 @@
 
 **第 2／4／5 條是你必須自己遵守的紀律，不是「交給腳本擋」的事項。**
 `scripts/check-doc-claims.rb` 掛在 CI `quality` job 與 `bin/ci`，但它**只是事後補網**——
-🔴 **它的網有一個已量過的洞**：R1（路徑保真）／R3（行號保真）是 **error，擋得住**；
-**R4（裸數字）／R5（全稱句）只是 warning，不擋**。
+🔴 **它的網有兩個已量過的洞，而且第二個比第一個大**（2026-08-19 依驗收方指正重新查證，
+**原文把嚴重度寫錯了**——原文稱「R4／R5 只是 warning」，實際 **R4 是 error**）：
 
-**2026-08-19 實測（同一個工作階段、同一批檔案、同一個執行者）**：
-R1／R3 紅過兩次，**兩次都在推送前被擋下並修掉，零違反出庫**；
-R4／R5 的違反**反覆推出去**，被驗收方點名至少四次。
-⇒ 差別不在執行者有多小心，**只在機制擋不擋**。而 R4／R5 正好不擋。
+**洞一：嚴重度。** R1（路徑保真）／R3（行號保真）／**R4（裸數字）都走 `violations`＝會擋**；
+**只有 R5（全稱句）走 `warnings`＝不擋**（退出碼只由 `violations` 決定）。
+複驗：`grep -n 'violations <<\|warnings <<' scripts/check-doc-claims.rb`。
+
+**洞二（真正的成因）：R4 是一份很窄的白名單，認不出大多數裸計數。**
+（複驗：`grep -n 'VOLATILE_NUM' -A 12 scripts/check-doc-claims.rb`）
+`VOLATILE_NUM` 只列 `NUM 支(檢查器|腳本)`／`NUM 條 (case|fixture)`／`NUM 個 fixture`／
+`NUM 張 (突變)?表`／`共 NUM [支條個張份]`（腳本檔頭自述「🔴 刻意窄——只列真的燒過的形態」）。
+⇒ **「三處」「共 56 行」「兩處錯誤斷言」「第 14 輪」全部認不出來**。
+🔴 **決定性重現（2026-08-19）**：把本倉庫一份實際 worklog 當新增檔餵給該腳本，
+R4 **全額啟用、檔案在範圍內、行是新增行**，結果 **exit 0、零違規**——其中裸寫的
+「兩處錯誤斷言」原樣通過，最後由驗收方人工抓到。
+
+**洞三：範圍。** R4／R5 **只掃 `docs/worklog/`＋`docs/handoff/`，且只掃相對 base 的新增行**；
+R1／R3 才是 `IN_SCOPE` 全樹。⇒ 同樣的裸數字寫進 `docs/dev/`／`AGENTS.md`／`plans` **零命中**。
+
+⇒ **結論不是「機制不擋所以我沒守」，而是「機制的形態覆蓋率有限，擋不到的部分只能靠紀律」。**
+這正是本節標題的意思：**紀律第一道、機制第二道**，而第二道網眼很大。
 
 🔴 **所以不能等腳本擋**：寫完 worklog／handoff **先自己逐條核對第 2／4／5 條**，
 再跑腳本當第二道確認；**腳本綠不等於你守了紀律**（R4／R5 綠可能只是它不擋）。
@@ -240,7 +254,7 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   （例外：憑證紅線/破壞性操作/計畫外重大裁定）；🔴 **輪數不設上限**（2026-08-19 使用者
   裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）——`MAX_FIX_ROUNDS` 與
   `review:需人工裁定` 閘門**已隨 PR #59 於 2026-08-19 合併移除**（複驗：
-  `git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:**2**`（兩處命中都在**廢止說明註釋**裡，不是活的常數））
+  `git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:2`（兩處命中都在**廢止說明註釋**裡，不是活的常數））
   ⇒ 該 label 對驗收 workflow 無作用，殘留的直接移除。**任何人不得以輪數為由停驗收或建議停**。配套的現行狀態＝**建議而非強制**（2026-08-19 使用者裁定「把機制改成紀律」⇒ 固化成腳本是候選方向、啟用需裁定；現行防線＝紀律，見本檔 §7）。
   🔴 **雙清必須顯式含 Codex**：`ROUNDS` 只計 Claude bot 判詞 ⇒ 只看 bot 會漏掉
   「bot 通過 ∧ Codex 未清」。全文 CLAUDE.md 17.4；③合併條件**四重缺一不可**＝Codex **已完成本輪審查**且

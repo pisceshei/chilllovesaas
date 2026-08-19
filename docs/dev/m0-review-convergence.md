@@ -15,7 +15,7 @@
 1. `scripts/check-doc-claims.rb` — 文檔引用保真的**確定性檢查器**
 2. `AGENTS.md` 新增文檔**分層規範**（歷史層／終態層／契約層）
 3. `claude-review.yml` — 文檔類判定權交給腳本、同一項目不重提、`CLAUDE.md` 進驗收依據
-4. ~~`MAX_FIX_ROUNDS` 由「換一句留言」升級成**真閘門**~~ **已廢止（2026-08-19 使用者裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）**——機制已隨 **PR #59 於 2026-08-19 合併移除**（複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:**2**`（兩處命中都在**廢止說明註釋**裡，不是活的常數））。🔴 **它留下的缺口沒有替代機制**：收斂現在完全依賴第 1 項那類確定性檢查器，見文末「廢止後的收斂責任」段。
+4. ~~`MAX_FIX_ROUNDS` 由「換一句留言」升級成**真閘門**~~ **已廢止（2026-08-19 使用者裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）**——機制已隨 **PR #59 於 2026-08-19 合併移除**（複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:2`（兩處命中都在**廢止說明註釋**裡，不是活的常數））。🔴 **它留下的缺口沒有替代機制**：收斂現在完全依賴第 1 項那類確定性檢查器，見文末「廢止後的收斂責任」段。
 5. **鐵律 15 提交前復核**（交付完整性層）：修復→閘門→commit→逐項核對→重拉兩類留言→push（全文見文末「第五機制」段）。
 
 ## 為什麼要做（問題的形狀）
@@ -101,7 +101,7 @@
 已知限制（2026-08-18 補）：⚠️ R4／R5 在 **CI 生產調用**疑似結構上未執行（淺 clone
 取不到 merge-base ⇒ 腳本走「未執行」warning 分支 exit 0；#58 第 7 輪判詞 ⚪1 的
 機械跡象＋本地 post-commit 實測互證）——修法屬 P-8（fetch 深度＋skip 升 canary 碼）；
-在那之前**本表對 R4 的「生效中」描述只對本地 full-clone 成立**。另：R4 對「commit 前
+✅ **該限制已於 P-8 落地修復**（`ci.yml` 加 `--unshallow`＋完整 base fetch，checker 加 `--require-base`：取不到 merge-base 即 exit 3，隨 PR #59 合併進 main）⇒ 本表對 R4 的「生效中」描述**現已對 CI 成立**。🔴 **仍然成立的限制只剩一條**：R4／R5 用 `git diff <base>` 只掃**已提交**的新增行 ⇒ **commit 之後必須再跑一次**，commit 前跑掃不到剛寫的散文。另：R4 對「commit 前
 的未提交行」盲（diff 對 base→HEAD）⇒ 閘門必須 **commit 後再跑一次** 才驗得到本輪散文。
 R1 的 `TOP_DIRS`／`PATH_SHAPE` 只認**真實頂層目錄**開頭的
 路徑與裸腳本名——去掉 `docs/` 前綴的短式（`specs/110-…`、`research/105-…`）對 R1
@@ -204,5 +204,5 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
 對這一類，再審一輪不會讓它變少，只有**確定性腳本一次掃全樹**才會。
 
 ⇒ 操作準則：**每當同一類意見第二次出現，先問「這一類能不能寫成腳本」**，
-能就寫（進 `scripts/`＋掛 `config/ci.rb`），不能就登記進 `docs/specs/91-pit-register.md` 說明為什麼不能。
+🔴 **能寫也不要直接寫**（2026-08-19 使用者裁定「把機制改成紀律」並否決兩個機制化提案後更新）：先把**候選與代價**寫進 `docs/specs/91-pit-register.md` 並取得使用者裁定，**裁定後才實作**（進 `scripts/`＋掛 `config/ci.rb` 兩側）。不能寫的同樣登記，說明為什麼不能。
 讓意見數單調下降的是這件事，不是輪數上限。

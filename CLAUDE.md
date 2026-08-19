@@ -237,7 +237,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       🔴 **不得**以「輪數太多」為由停止驗收、掛人工裁定 label、或建議使用者這樣做。
       🔴 **條文與機制皆已生效**：機制側隨 **PR #59 於 2026-08-19 合併進 main**
       （`MAX_FIX_ROUNDS`、job 層 label 閘門、整段超輪分支皆已不存在）。
-      複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:**2**`（兩處命中都在**廢止說明註釋**裡，不是活的常數）
+      複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:2`（兩處命中都在**廢止說明註釋**裡，不是活的常數）
       <!-- 🔴 2026-08-19 更正（#58 第 23 輪 bot 判詞 🔴1）：原複驗式是
            `git show main:<path> | grep -c MAX_FIX_ROUNDS`，宣稱「應為 0」——**兩者都錯**。
            ①宣稱值錯：實測 origin/main 上該識別字命中 **2 行**（皆在廢止說明註釋裡）。
@@ -254,7 +254,6 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
            argv、參數無冒號（Windows 免逃生變數），且 ref 不存在時 **exit 128 大聲失敗**。
            `:/` 前綴＝`:(top)`，順帶解掉「pathspec 預設相對 cwd、從子目錄跑會假性回 0」。
            本註為五處共用依據，其餘四處不重複。 -->
-      應為 **0**（廢止說明改寫在 `env:` 區塊的註釋裡，不含該識別字）。
       ⇒ `review:需人工裁定` 對本 workflow **無作用**；殘留在既有 PR 上的直接移除即可。
       <!-- 2026-08-19 合併後回寫。原文描述的是 #59 未合併時的過渡期（每輪需手動移除
            label 才推得動），該狀態已結束——過渡期敘述保留在 worklog 歷史層。 -->
