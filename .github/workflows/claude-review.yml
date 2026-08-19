@@ -1159,6 +1159,12 @@ jobs:
             #    破百時後面幾頁的 pending／failed 會整批看不到，評估器就會誤報 allgreen。
             C3=0
             CHECKS_STATE="apifail"
+            # 🔴 **輪詢不得吃掉 job 的時間上限**（Codex #59 r13）：本 job `timeout-minutes: 30`，
+            #    而 Claude 驗收步驟本身可跑 18–20 分鐘（本 PR 的 run 紀錄即有）⇒ 再加最多 10 分鐘
+            #    的 C3 等待會讓 job **在解析途中被 GitHub 砍掉**，評估留言與核准一則都貼不出來
+            #    ——那比「C3 記 0」嚴重得多（後者只是保守，前者是整輪無產出）。
+            #    ⇒ 用水位步驟記下的 `WATERMARK_TS` 算已用時間，逼近上限就停止等待、記 pending。
+            JOB_BUDGET_S=1320   # 22 分鐘：留 8 分鐘給貼留言與收尾（job 上限 30 分）
             for _i in $(seq 1 21); do
               CHECKS_STATE=$(gh api --paginate "repos/$REPO/commits/$HEAD_SHA/check-runs?per_page=100" \
                 | jq -s -r '[.[].check_runs[] | select(.name != "review")]
@@ -1167,6 +1173,11 @@ jobs:
                            elif all(.conclusion == "success") then "allgreen"
                            else "notgreen" end' || printf 'apifail')
               [ "$CHECKS_STATE" = "pending" ] || break
+              ELAPSED=$(( $(date -u +%s) - ${WATERMARK_TS:-0} ))
+              if [ "${WATERMARK_TS:-0}" -gt 0 ] && [ "$ELAPSED" -ge "$JOB_BUDGET_S" ]; then
+                CHECKS_STATE="pending-timebudget"
+                break
+              fi
               if [ "$_i" -lt 21 ]; then sleep 30; fi
             done
             [ "$CHECKS_STATE" = "allgreen" ] && C3=1
@@ -1184,7 +1195,15 @@ jobs:
                 #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
                 NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
                 if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
-                  gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+                  # 🔴 **原子綁定被評估的 head**（Codex #59 r13）：先讀 NOW_HEAD 再 `gh pr review` 是
+                  #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
+                  #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
+                  #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
+                  #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
+                  #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+                  gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
+                    -f event=APPROVE -f commit_id="$HEAD_SHA" \
+                    -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
                     || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
                   # 🔴 評估留言與核准同在 head 相符分支（Codex #59 r12）：head 不符時再貼「四條件齊、
                   #    可人工合併」會與上一則「本輪評估不適用於新 head」直接互斥，而 PR UI 此刻指向的
@@ -1210,7 +1229,15 @@ jobs:
             #    關閉的路徑更是完全沒有後續 head 檢查。⇒ 送出前複驗，不一致就不 approve。
             NOW_HEAD=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha) || NOW_HEAD=""
             if [ -n "$NOW_HEAD" ] && [ "$NOW_HEAD" = "$HEAD_SHA" ]; then
-              gh pr review "$PR" --approve --body "Claude 驗收通過且 18.1 四條件齊 ✅（自動核准）" \
+              # 🔴 **原子綁定被評估的 head**（Codex #59 r13）：先讀 NOW_HEAD 再 `gh pr review` 是
+              #    check-then-act——兩者之間的 push 會讓核准落在未評估的 head 上。`gh pr review`
+              #    沒有 head 參數，但 REST `POST /pulls/{n}/reviews` **收 `commit_id`**（該欄位存在於
+              #    review 物件，複驗：`gh api repos/OWNER/REPO/pulls/N/reviews --jq '.[0]|keys'`）
+              #    ⇒ 直接把核准釘在 $HEAD_SHA 上：head 若已前進，這則核准就屬於舊 commit，
+              #    分支保護的 dismiss-stale 會自然忽略它，不再需要賭時間窗。
+              gh api --method POST "repos/$REPO/pulls/$PR/reviews" \
+                -f event=APPROVE -f commit_id="$HEAD_SHA" \
+                -f body="Claude 驗收通過且 18.1 四條件齊 ✅（自動核准；已釘在被評估的 commit $HEAD_SHA）" \
                 || gh pr comment "$PR" --body "ℹ️ 自動 approve 被擋：到 Settings → Actions → General 勾選 Allow GitHub Actions to create and approve pull requests 可啟用。不影響其餘判定。"
             else
               gh pr comment "$PR" --body "⚠️ 評估完成後 head 已變動（評估的是 \`$HEAD_SHA\`，現在是 \`${NOW_HEAD:-取不到}\`）⇒ **不送出核准**，本輪評估結果不適用於新 head。新的 push 會自動觸發新一輪驗收。"
