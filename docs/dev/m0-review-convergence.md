@@ -101,9 +101,8 @@
 已知限制（2026-08-18 補）：⚠️ R4／R5 在 **CI 生產調用**疑似結構上未執行（淺 clone
 取不到 merge-base ⇒ 腳本走「未執行」warning 分支 exit 0；#58 第 7 輪判詞 ⚪1 的
 機械跡象＋本地 post-commit 實測互證）——修法屬 P-8（fetch 深度＋skip 升 canary 碼）；
-✅ **該限制已於 P-8 落地修復**（`ci.yml` 加 `--unshallow`＋完整 base fetch，checker 加 `--require-base`：取不到 merge-base 即 exit 3，隨 PR #59 合併進 main）⇒ 本表對 R4 的「生效中」描述**現已對 CI 成立**。🔴 **仍然成立的限制只剩一條**：R4／R5 用 `git diff <base>` 只掃**已提交**的新增行 ⇒ **commit 之後必須再跑一次**，commit 前跑掃不到剛寫的散文。另：R4 對「commit 前
-的未提交行」盲（diff 對 base→HEAD）⇒ 閘門必須 **commit 後再跑一次** 才驗得到本輪散文。
-R1 的 `TOP_DIRS`／`PATH_SHAPE` 只認**真實頂層目錄**開頭的
+✅ **該限制已於 P-8 落地修復**（`ci.yml` 加 `--unshallow`＋完整 base fetch，checker 加 `--require-base`：取不到 merge-base 即 exit 3，隨 PR #59 合併進 main）⇒ 本表對 R4 的「生效中」描述**現已對 CI 成立**。🔴 **仍然成立的限制**：R4／R5 用 `git diff <base>` 只掃**已提交**的新增行 ⇒ **commit 之後必須再跑一次**，commit 前跑掃不到剛寫的散文。
+**另一條**：R1 的 `TOP_DIRS`／`PATH_SHAPE` 只認**真實頂層目錄**開頭的
 路徑與裸腳本名——去掉 `docs/` 前綴的短式（`specs/110-…`、`research/105-…`）對 R1
 **隱形**；引用待建檔時用全式 `docs/…` 才有機械保真（#58 第 6 輪判詞 ⚪2）。
 
