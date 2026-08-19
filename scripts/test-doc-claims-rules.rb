@@ -102,7 +102,7 @@ require "tmpdir"
 require "fileutils"
 require "open3"
 
-GIT_SCENARIOS = 2
+GIT_SCENARIOS = 3
 git_run = lambda do |work, *cmd|
   out, st = Open3.capture2e({ "LC_ALL" => "C" }, "git", "-C", work,
                             "-c", "user.email=t@example.com", "-c", "user.name=t", *cmd)
@@ -147,6 +147,29 @@ Dir.mktmpdir("doc-claims-git-") do |work|
   elsif out.include?("2026-08-15-case.md:1")
     failures << "git-G2：連歷史層第 1 行也被打了——「只掃新增行」的範圍語義壞了\n      完整輸出：\n#{indent.call(out)}"
   end
+
+  # W1（workflow 供給斷言；Codex #59 r1）：G3 只測 checker 的旗標**分支**——把 ci.yml 的
+  # `--require-base` 拿掉，G3 照綠、淺 clone 靜默跳過洞原樣回歸（check-ci-parity 比的是
+  # 腳本路徑、不含參數）。契約在供給端就釘在供給端：直接斷言 ci.yml 的 doc-claims
+  # 調用行帶著旗標。
+  ci_yml_text = File.read(File.join(ROOT, ".github/workflows/ci.yml"), encoding: "UTF-8") rescue ""
+  unless ci_yml_text.match?(/check-doc-claims\.rb .*--require-base/)
+    failures << "W1：.github/workflows/ci.yml 的 check-doc-claims 調用行沒帶 --require-base——" \
+                "G3 守的退出分支在生產端沒被啟用，R4/R5 淺 clone 靜默跳過洞會無聲回歸"
+  end
+
+  # 情境 G3（P-8）：`--require-base` 下取不到 base 差異 ⇒ 必須 exit 3，不得警告後照綠。
+  # 🔴 這條釘的是 CI 淺 clone 雙重洞（PR #58 期考掘，2026-08-18）：quality job 的
+  #    三點 diff 因淺 clone 無 merge-base，腳本印「R4/R5 本次未執行」warning 後 exit 0
+  #    ——連續多輪沒有任何人發現。把 ci.yml 的 --require-base 拿掉、或把 exit 3 分支
+  #    改回 warning，這條立刻紅。base 用一個必然不存在的 ref 模擬「取不到差異」。
+  out = `ruby "#{CHECKER}" "#{work}" --base refs/never-exists-p8-canary --require-base 2>&1`
+  st = $?.exitstatus
+  if st != 3
+    failures << "git-G3：--require-base＋取不到 base 應 exit 3（檢查根本沒有生效），實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
+  elsif !out.include?("檢查根本沒有生效")
+    failures << "git-G3：exit 對但輸出未講明「檢查根本沒有生效」——訊息是這個碼的一半價值\n      完整輸出：\n#{indent.call(out)}"
+  end
 rescue StandardError => e
   failures << "git 情境測試自身失敗（#{e.class}）：#{e.message}"
 end
@@ -157,6 +180,8 @@ if failures.empty?
   CASES.each { |dir, st, needle, why| puts "  - #{dir} → exit #{st}，含 `#{needle}`：#{why}" }
   puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
+  puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
+  puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
   exit 0
 end
 

@@ -172,11 +172,21 @@ jobs:
       #   ⇒ 這是紀律型條款的固有失效率，與 config/ci.rb 那條「兩邊要同步」
       #     在寫下的隔天就被違反是同一形態。本專案對這種東西的處置是讓機器擋。
       #   ⚠️ 需要 base 才能算 R4／R5 的範圍（見下一步的 fetch）。
+      # 🔴 P-8 修復（2026-08-18 考掘出的雙重洞）：舊式 `--depth=1` fetch 是為**單點 ref**
+      #    比對設計的修法（下方 baseline 步驟那種），套到本步驟就斷根——R4／R5 吃的是
+      #    `base...HEAD` **三點 diff**，需要 merge-base，而 checkout 的淺 clone＋base 的淺
+      #    fetch 兩邊都沒有共同祖先 ⇒ 腳本每輪印「R4/R5 本次未執行」warning 後 exit 0，
+      #    quality 照綠，連續多輪無人發現。修法三件一組，缺一即回洞：
+      #    ①`--unshallow` 補全歷史（已完整時會報錯，用 `|| true` 吞——只吞這一種）；
+      #    ②base fetch 不帶 depth 也**不帶 `|| true`**：拿不到 base 就當場紅，不再靜默；
+      #    ③下一步帶 `--require-base`：就算前兩件被改回去，diff 算不出來時腳本自己 exit 3。
       - name: Fetch base for doc-claim scope
-        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}" || true
+        run: |
+          git fetch --no-tags --unshallow origin || true
+          git fetch --no-tags origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}"
 
       - name: Check doc claims
-        run: ruby scripts/check-doc-claims.rb --base "origin/${{ github.base_ref || 'main' }}"
+        run: ruby scripts/check-doc-claims.rb --base "origin/${{ github.base_ref || 'main' }}" --require-base
 
       # 上一步自己的反向證明（65 §K.7）。它守的是「防止文檔說謊」，
       # 壞掉的話所有人會以為引用已經被守著——這種失效沒有任何外部跡象。

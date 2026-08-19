@@ -41,16 +41,19 @@
 #   ⚠️ R1／R3 **是 tree-wide 的**：路徑與行號是客觀事實，歷史紀錄寫錯了一樣會誤導人，
 #     而它們的修法是「加更正註記」，不是改原文——不衝突。
 #
-# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>]
+# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>] [--require-base]
 #   ROOT 省略＝本倉庫根目錄（傳入是給 scripts/test-doc-claims-rules.rb 用 fixture 打紅它用的，
 #   形態比照 check-limits-keys.rb／check-money-boundary.rb／check-ci-parity.rb）。
 #   --base 省略＝origin/main。
+#   --require-base（P-8 引入）＝base 取不到差異時**升為 exit 3**，不再只警告——
+#     給 CI 用：淺 clone 曾使 R4／R5 連續多輪靜默跳過而 quality 綠（PR #58 期考掘出的
+#     雙重洞，2026-08-18），warning 形態被證實無人看見。本機日常不加，維持警告即可。
 #
 # 退出碼（照 `scripts/check-limits-keys.rb` 已立的三分碼表）：
 #   0＝通過（可能有 🟡 警告）
 #   1＝**檢查跑了，發現違規**
 #   2＝**檢查跑不了**（讀檔／解析失敗）
-#   3＝**檢查根本沒有生效**（掃了 0 個檔，canary）
+#   3＝**檢查根本沒有生效**（掃了 0 個檔 canary；或 --require-base 下取不到 base 差異）
 #
 # 相關：AGENTS.md §工作記錄與交接文件的寫法、CLAUDE.md §工作方式、
 #      docs/dev/m0-review-convergence.md。
@@ -64,6 +67,11 @@ base_ref = "origin/main"
 # 🔴 日常 CI **不加**這個旗標：對既有歷史散文全面開火，會與「歷史層不回頭改」的裁定衝突，
 #    而且一次噴出的量會讓規則被當噪音關掉（見檔頭分層說明）。
 scan_all = !!argv.delete("--all")
+# `--require-base`：R4／R5 的範圍差異算不出來時，從「警告後照跑 R1／R3」升為 exit 3。
+# 🔴 為什麼是旗標不是無條件（P-8）：fixture 目錄不是 git 樹、本機也可能沒有 origin/main，
+#    無條件 exit 3 會把全部 fixture CASE 與離線使用打死；CI 則必須有這道 canary——
+#    「未執行」printf 過 GitHub Actions log 沒有任何人看到，是實測過的失效形態。
+require_base = !!argv.delete("--require-base")
 if (i = argv.index("--base"))
   base_ref = argv[i + 1].to_s
   argv.delete_at(i)
@@ -227,6 +235,15 @@ elsif (diff = git(ROOT, "diff", "--name-only", "-z", "#{base_ref}...HEAD"))
     changed_docs[rel] = added
   end
 else
+  # 🔴 --require-base（P-8）：這條路在 CI 上曾連續多輪被靜默走到（淺 clone ⇒ 三點
+  #    diff 無 merge-base）而 quality 照綠——「檢查沒生效」與「檢查通過」在退出碼上
+  #    長得一樣，正是 exit 3 這個碼存在的理由。帶旗標時就升成它。
+  if require_base
+    warn "::error::--require-base：取不到 base `#{base_ref}` 的差異 ⇒ R4／R5 無法執行" \
+         "＝**檢查根本沒有生效**（exit 3）。CI 請確認 checkout／fetch 拿得到 merge-base" \
+         "（淺 clone 是已實測過的成因）；本機請改用存在的 --base ref 或去掉 --require-base。"
+    exit 3
+  end
   scope_note = "⚠️ 取不到 base `#{base_ref}` 的差異 ⇒ **R4／R5 本次未執行**（R1／R3 仍為全樹）。" \
                "在 CI 上請確認有 fetch 到 base；本機請用 --base 指定一個存在的 ref。"
 end
