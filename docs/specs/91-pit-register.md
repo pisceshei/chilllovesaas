@@ -459,7 +459,7 @@
   現行判準要求 `git ls-files docs/worklog docs/handoff` 與 checkbox 路徑集合相等，所以 README
   不能在不改規則的情況下略過。P-1 實作 checker 時須二選一：①白名單排除 README，並同步
   P-1 判準文字與 fixture；②維持全收，通讀後以「零抽取」完成。選案前不得一邊保留集合相等、
-  一邊靜默略過模板檔【F11／F12；來源＝#58 bot R30 ⚪1，R31 🟡1 點名未落籍】
+  一邊靜默略過模板檔【F11／F12；來源＝#58 bot R30 ⚪1，R31 🟡1 點名未落籍；取證日期＝2026-08-19】
 
 - **P-0 主 worklog 的歷史 Pending 仍有一處「官方從未公布」外部全稱句**：
   `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 的外部事實建檔輪 Pending 逐字寫
@@ -467,7 +467,7 @@
   `docs/dev/external-facts.md` 的同型句；主 worklog 這段屬歷史層且未被點名，依鐵律 17.2
   只登記、不順手改。未來收割時須保留原文並追加更正註：有限檢索只能支持〔推論〕，不能證明
   「從未公布」；升格條件由下一條 A5 求值時機未決登記管理
-  【F11；來源＝#58 Codex review `4972060836` 後的同型掃描】
+  【F11；來源＝#58 Codex review `4972060836` 後的同型掃描；取證日期＝2026-08-19】
 
 - **A5 求值時機〔推論〕與受控實驗不屬於已查證外部事實檔**：
   `docs/dev/external-facts.md` A5 只保留 GitHub rulesets 官方逐字與它能支持的證據邊界；「事件當下更新
@@ -598,6 +598,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -672,6 +673,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第四次新head驗收修復.md`（PR #58 `427e11f` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第五次新head驗收修復.md`（PR #58 `4856da2` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
