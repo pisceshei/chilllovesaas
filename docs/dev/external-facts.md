@@ -157,6 +157,7 @@ rulesets 與概念層寫 "the most recent **reviewable** push"。`reviewable` �
 > "The merge queue will ensure the pull request's changes pass all required status checks
 > **when applied to the latest version of the target branch** and any pull requests already in the queue."
 > <https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue>（取證 2026-08-19）
+
 required check 對新 head 的效果另有官方明文：
 > "**Required checks must pass on the latest commit SHA. Checks from earlier commits don't satisfy the requirement.**"
 > <https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks>（取證 2026-08-19）

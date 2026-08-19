@@ -495,6 +495,34 @@
   官方來源＝<https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api>、
   <https://docs.github.com/en/rest/using-the-rest-api/best-practices-for-using-the-rest-api>】
 
+- **R37 對 `HANDOFF.md:126`「從未正確過」的範圍外觀察經 commit-specific 行號反證**：
+  `git show 2811225:HANDOFF.md` 與 `git show 22d5448^:HANDOFF.md` 的第 126 行均逐字包含「從 0
+  重建」；`22d5448` 在檔頭新增六行後，同一句才移到第 132 行。故三處既有「漂移錯錨」定性
+  符合 git 史，不能按 R37 建議改成「建檔即錯」。本條保留反證，避免 P-1 收割時採用錯誤更正
+  【F6；來源＝#58 Claude R37 issue comment `5344159684` ⚪1（已證偽）；取證日期＝2026-08-19】
+
+- **第六次 handoff 對附錄 A 集合的全稱句漏掉 A.3**：
+  `docs/handoff/2026-08-19-PR58-第六次新head驗收修復.md` 逐字寫「附錄 A 的集合只由
+  worklog／handoff 路徑構成」，但現行附錄另有 A.3 的 specs／workflow／scripts 事故密集檔。
+  該句屬歷史層且本輪未被要求改寫，故只登記；收割時須保留原文並追加射程更正
+  【F11；來源＝#58 Claude R37 issue comment `5344159684` ⚪2（沿掛 R36／R35）；
+  取證日期＝2026-08-19】
+
+- **P-0 主 worklog 留有兩句已被終態查證推翻的歷史殘影**：
+  `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 仍可由
+  `grep -n -E 'primary 無放棄門檻|非 strict 是對合併當下的 head 求值' docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`
+  找到 B6 舊標題與 A7 舊句；終態 `docs/dev/external-facts.md` 已分別撤除全稱句及依 test merge
+  commit 例外收窄。
+  兩處都是歷史層、R37 未要求改實物，故只登記；下次動主 worklog 時以鄰行更正註保真
+  【F5／F11；來源＝#58 Claude R37 issue comment `5344159684` ⚪3；取證日期＝2026-08-19】
+
+- **`await-verdict.sh` 的 `MAX_POLLS` 缺上界會讓超大整數假逾時**：
+  現行只檢查正整數與前導零；超出 shell 整數範圍的值可使
+  `while [ "$i" -lt "$MAX_POLLS" ]` 比較報錯，迴圈零輪後走 exit 4，與既有 `00` 假逾時同族。
+  本輪被點名的只有 INTERVAL，依鐵律 17.2 不擴修；PR #60 rebase 時須保留其
+  `MAX_POLLS_MAX`／十進位位數先比的上界驗證，並與 #58 的 INTERVAL 900–1500 契約合併
+  【F7；來源＝#58 Claude R37 issue comment `5344159684` ⚪4；取證日期＝2026-08-19】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -611,6 +639,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -687,6 +716,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第六次新head驗收修復.md`（PR #58 `bda2455` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
