@@ -56,7 +56,10 @@
     不代表那則判詞屬於本輪 ⇒ 追加兩道 fail-closed：①水位之後的合法判詞**必須恰好一則**
     （多於一則＝無法分辨哪則屬本輪，記 0）②該則的 `created_at` 必須 ≥ **本 job 起跑時刻**
     （水位步驟輸出的 `started_ts`）。狀態字串 `C2_STATE` 進評估留言
-    （`unique`／`none-in-window`／`ambiguous:N`／`parse-error`）。
+    （`unique`／`none-in-window`／`ambiguous:N`／`parse-error`／`no-watermark-ts`）。
+    🔴 **r15 起 `started_ts` 缺失不再退成 0**：舊寫法 `--argjson ts "${WATERMARK_TS:-0}"`
+    在缺時間戳時把下界退成 1970-01-01 ⇒ `>= $ts` 對任何真實留言恆真、**時間窗靜默變 no-op**。
+    現改由評估器入口的統一前置守衛判定，缺時間戳一律 `no-watermark-ts`、C2 記 0。
     ⚠️ 誠實限制：擋不住「本輪 Claude 沒貼、而某舊 run 恰在本 job 期間貼出唯一一則」，
     根治＝判詞契約帶 head SHA（與 `await-verdict.sh` 同一項待辦）。
   - 🔴 **approve 綁 commit 的真實效力（2026-08-19 補審更正，此前本篇宣稱過頭）**：
@@ -83,9 +86,15 @@
     而 Claude 驗收步驟可跑 18–20 分 ⇒ 再等滿 10 分鐘會讓 job **在解析途中被砍**、
     評估留言與核准一則都貼不出。用水位步驟輸出的 `started_ts` 算已用時間，逼近
     `JOB_BUDGET_S`（22 分）即停等。**C3 因此有兩個額外狀態**：
-    `pending-timebudget`（預算用盡）與 `pending-nobudgetclock`（**取不到 `started_ts`**——
-    r14 起改 fail-closed：取不到就當預算已用盡並停等，舊版是「守衛整個停用、照跑滿」，
-    那是 fail-open）。兩者都記 C3=0。
+    `pending-timebudget`（預算用盡）與 `skipped-no-watermark-ts`（**取不到 `started_ts`**
+    ⇒ 連輪詢都不開始）。兩者都記 C3=0。
+    🔴 **r15 更正：r14 的 `pending-nobudgetclock` 已刪除，因為它寫得像 fail-closed、
+    實際不 fail-close 任何東西。** 該分支被放在輪詢迴圈**內**，而迴圈第一件事是
+    `[ "$CHECKS_STATE" = "pending" ] || break` ⇒ CI 全綠（**唯一會導致核准的狀態**）時
+    第一輪即 break，守衛對那條路徑零覆蓋。r15 把判定提到**評估器入口**做一次，
+    ②③ 共用同一結果；提到入口之後原分支真正不可達，故一併刪除（留著死碼＝把缺陷換個形狀留原地）。
+    ⚠️ 缺 `started_ts` 的成因＝水位步驟寫 `$GITHUB_OUTPUT` 的第二次寫入失敗（第一次寫
+    `last_id` 成功 ⇒ 舊水位守衛放行）⇒ 同步驟的 `last_id` 也不可信，fail-closed 是唯一正解。
     **全頁聚合**（r2）：`--paginate`＋`jq -s`——單頁上限 100，破百時後面幾頁的
     pending／failed 會整批看不到而誤報 allgreen。
   - **C4 判詞格式**：§2.1 的結果（格式失敗根本走不到這裡）。
@@ -134,6 +143,18 @@
   ∧ `commit_id` 精確等於該 head。雙到 exit 0；等滿升級 exit 4。
   🔴 **exit 5＝達總時鐘上限**（`DEADLINE_S`，預設 `MAX_POLLS×INTERVAL×2`，第 5 參數可覆寫）
   ——與 exit 4 的差別：4 是「輪次用完」，5 是「**牆鐘用完**」，後者涵蓋限流等待。
+  🔴 **r15 更正起算點**：r14 把宣告寫在主輪詢迴圈正上方 ⇒ **起跑階段完全在預算外**
+  （SHA 正規化的 API 呼叫、起跑 4 次失敗重試、最多 6 次限流等待，合計上界約 23440 秒
+  全不計時）——宣稱是總上限卻從第一次等待之後才計時，那不是上限。r15 把宣告移到
+  **第一個可能等待的動作之前**，並把所有等待統一走 `nap()`（夾到 `min(想睡, 剩餘)`，
+  語義取自 Go `context.WithDeadline`「no later than」）。
+  🔴 **行為變更**：「起跑連撞 6 次限流」原本一定走 exit 2，現在可能先撞 exit 5。刻意如此。
+  🔴 **夾斷一律 exit 5，不得 continue**：夾斷代表還沒等到 rate-limit reset，此時再打 API
+  正是官方警告的「Continuing to make requests while you are rate limited may result in
+  the banning of your integration.」
+  ⚠️ **已知殘留**：單次 `fetch_state` 自身不受預算約束（3 支分頁端點 × `HARD_PAGE_CAP`），
+  `nap()` 夾不到已發出的同步呼叫 ⇒ 誤差上界＝「一次進行中的網路呼叫」；收緊需 per-attempt
+  timeout，**未實作、已登記**。
   限流仍然**不消耗輪次**（`i=$((i-1))` 不變），但整體由本上限保證有界終止。
   立法理由（研究實據，取證 2026-08-19）：GitHub 官方對 **primary** 限流**沒有**任何放棄
   門檻（只說等到 reset），對 secondary 才說「throw an error after a specific number of
