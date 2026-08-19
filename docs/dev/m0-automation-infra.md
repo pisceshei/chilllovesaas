@@ -130,7 +130,7 @@
 - 契約註釋同步更正（錯誤斷言不留原文）。
 
 ### 2.4 `scripts/await-verdict.sh`
-- `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900（限 900–1500）] [MAX_POLLS=8]`：
+- `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900（限 900–1500）] [MAX_POLLS=8] [DEADLINE_S=MAX_POLLS×INTERVAL×2]`：
   每輪查**兩側是否都已對同一個 head 完成**（r2 重寫；原本兩側都只是 PR 全域條件）：
   ①**判詞就緒**＝該 head 的 `review` check-run `conclusion == success`
   **∧ 該 run 時間窗內存在一則合法判詞留言**（完整判準見下方同節「現行判準追加」段）——
@@ -152,9 +152,11 @@
   🔴 **夾斷一律 exit 5，不得 continue**：夾斷代表還沒等到 rate-limit reset，此時再打 API
   正是官方警告的「Continuing to make requests while you are rate limited may result in
   the banning of your integration.」
-  ⚠️ **已知殘留**：單次 `fetch_state` 自身不受預算約束（3 支分頁端點 × `HARD_PAGE_CAP`），
-  `nap()` 夾不到已發出的同步呼叫 ⇒ 誤差上界＝「一次進行中的網路呼叫」；收緊需 per-attempt
-  timeout，**未實作、已登記**。
+  ⚠️ **已知殘留（#60[2] 覆核後更正）**：單次 `fetch_state` 自身不受預算約束——3 支分頁端點
+  × `HARD_PAGE_CAP`(100) × 每次 `get()` 上界 75 秒（gh 45 秒逾時後**再回退匿名 urllib 30 秒**）
+  ⇒ 誤差上界＝**22500 秒**，比預設預算 14400 秒還大（原文「一次進行中的網路呼叫」低估約 300 倍）。
+  🔴 ⇒ **exit 5 的契約範圍是「所有等待（sleep）」，不含 API 呼叫本身耗時**；收緊需 gRPC 型
+  deadline 傳遞（把已耗用時間從 timeout 扣掉），**未實作、已登記**。
   限流仍然**不消耗輪次**（`i=$((i-1))` 不變），但整體由本上限保證有界終止。
   立法理由（研究實據，取證 2026-08-19）：GitHub 官方對 **primary** 限流**沒有**任何放棄
   門檻（只說等到 reset），對 secondary 才說「throw an error after a specific number of

@@ -20,8 +20,9 @@
 # 依鐵律 17 的「逾時升級」語義：不是錯誤，是「該去人工看一眼」的信號）。
 #
 # ## 用法
-#   bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒] [MAX_POLLS]
-#   INTERVAL 預設 900，且只接受 900–1500 秒（鐵律 17.1 的 15–25 分鐘窗）；MAX_POLLS 預設 8（約 2 小時）。
+#   bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒] [MAX_POLLS] [DEADLINE_S秒]
+#   INTERVAL 預設 900，且只接受 900–1500 秒（鐵律 17.1 的 15–25 分鐘窗）；MAX_POLLS 預設 8（約 2 小時）；
+#   DEADLINE_S 預設 MAX_POLLS×INTERVAL×2（預設值下＝14400 秒／4 小時），達上限 exit 5（見退出碼 5）。
 #   HEAD_SHA 接受 9–40 位十六進位（大小寫皆可）：**內部一律正規化成完整 40 位小寫**
 #   ——大寫或短前綴會與 API 回的 `commit_id`（完整小寫）比不中，那會表現成「白等到
 #   逾時」而非明顯錯誤。短前綴解析不出完整值時 exit 2，不進輪詢。
@@ -42,7 +43,16 @@
 #     ⇒ 呼叫端看到 exit 2 時，**訊息會指明是哪一種**（「連續 N 次抓取失敗」vs
 #     「連續 N 次撞限額」），不要一律當成 API 持續不可用。
 #   4＝逾時升級（等滿 MAX_POLLS 輪仍缺至少一方）
-#   5＝**達總時鐘上限**（`DEADLINE_S`，預設 MAX_POLLS×INTERVAL×2，可由第 5 參數覆寫）
+#   5＝**達等待預算上限**（`DEADLINE_S`，預設 MAX_POLLS×INTERVAL×2，可由第 5 參數覆寫）
+#     🔴 **契約範圍＝所有「等待」（sleep），不含 API 呼叫本身的耗時**（#60[2] 覆核後明文降級）：
+#       單次 fetch_state 走 3 支分頁端點 × HARD_PAGE_CAP=100 頁，每次 get() 上界 75 秒
+#       （gh 子行程 45 秒逾時後**再回退匿名 urllib 30 秒**）⇒ 理論上界 22500 秒，
+#       **比預設預算 14400 秒還大**；且 urlopen 的 timeout 只是每次阻塞操作的 socket
+#       timeout（Python 官方逐字："a timeout in seconds for blocking operations like the
+#       connection attempt"），慢速滴流回應連 30 秒都不是硬界。
+#       ⇒ **不得把 exit 5 讀成「牆鐘絕不超過 DEADLINE_S」**。收緊要 per-attempt deadline
+#       傳遞（gRPC 型："converts the deadline to a timeout from which the already elapsed
+#       time is already deducted"），已登記待辦、本輪未實作。
 #     🔴 自 2026-08-19 起，預算**自腳本啟動起算**（涵蓋起跑重試與限流等待）⇒
 #     「起跑連撞限額」可能先撞 5 而不是 2。牆鐘用盡本來就該是 5，這是刻意的行為變更。
 #     ——與 4 的差別：4 是「輪次用完」，5 是「**牆鐘用完**」，後者涵蓋限流等待。
@@ -77,7 +87,7 @@ REPO="pisceshei/chilllovesaas"
 API="https://api.github.com/repos/$REPO"
 
 if [ -z "$PR" ] || [ -z "$HEAD_SHA" ]; then
-  echo "用法：bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒=900] [MAX_POLLS=8]" >&2
+  echo "用法：bash scripts/await-verdict.sh <PR號> <HEAD_SHA> [INTERVAL秒=900] [MAX_POLLS=8] [DEADLINE_S秒=MAX_POLLS×INTERVAL×2]" >&2
   exit 2
 fi
 # 🔴 參數驗證一律 exit 2（Codex #59 r1 兩條）：非數字 INTERVAL 在 [ -lt ] 只會吐個被吞的
@@ -91,9 +101,10 @@ if [ "${#HEAD_SHA}" -lt 9 ] || [ "${#HEAD_SHA}" -gt 40 ]; then
 fi
 case "$INTERVAL" in ''|*[!0-9]*) echo "🔴 INTERVAL 必須是十進位整數：$INTERVAL" >&2; exit 2;; esac
 case "$MAX_POLLS" in ''|0|*[!0-9]*) echo "🔴 MAX_POLLS 必須是正整數：$MAX_POLLS" >&2; exit 2;; esac
-# 🔴 前導零要擋（Codex #59 r5）：純數字檢查放行 `00` 與 `08` 兩種壞值——`00` 通過非零檢查
-#    卻讓迴圈一次都不跑、報成逾時（假 exit 4）；`08` 會在算術展開時被 bash 當**八進位**
-#    而報錯。兩者都該是參數錯誤（exit 2），不是逾時也不是 shell 錯誤。
+# 🔴 前導零要擋（Codex #59 r5；#60[3] 起 DEADLINE_S 也同辦，見第 127 行下方）：純數字檢查
+#    放行 `00` 與 `08` 兩種壞值——`00` 通過非零檢查卻讓迴圈一次都不跑、報成逾時（假 exit 4）；
+#    `08` 會在算術展開時被 bash 當**八進位**而報錯。兩者都該是參數錯誤（exit 2），
+#    不是逾時也不是 shell 錯誤。
 for _pair in "INTERVAL:$INTERVAL" "MAX_POLLS:$MAX_POLLS"; do
   _name=${_pair%%:*}; _val=${_pair#*:}
   case "$_val" in
@@ -132,6 +143,17 @@ fi
 #   預設＝ MAX_POLLS × INTERVAL 的兩倍（給限流等待留一倍餘裕），可由第 5 個參數覆寫。
 DEADLINE_S="${5:-$(( MAX_POLLS * INTERVAL * 2 ))}"
 case "$DEADLINE_S" in ''|0|*[!0-9]*) echo "🔴 DEADLINE_S 必須是正整數：$DEADLINE_S" >&2; exit 2;; esac
+# 🔴 前導零同樣要擋（Codex #60[3]）：理由與上方 INTERVAL／MAX_POLLS 那條完全相同，只是
+#    DEADLINE_S 在第 126 行才存在（要先驗完 MAX_POLLS×INTERVAL 才算得出預設值）⇒ 進不了
+#    那個迴圈，只能在此補一份。三形皆實測：`08`／`09` 讓 deadline_left() 的算術報
+#    `value too great for base`——**且不會中止腳本**，而是讓 $(deadline_left) 展成空字串、
+#    下游每個 [ ] 都 integer expected ⇒ nap() 不夾斷、sleep 睡滿、deadline 靜默失效
+#    （實測跑到 exit 4）；`00` 算術＝0 ⇒ 第一次檢查就 exit 5（假牆鐘用盡）；
+#    `010`／`0900` 被當八進位靜默算成 8／576（預算悄悄縮水）。三形一律參數錯誤 exit 2。
+case "$DEADLINE_S" in
+  [1-9]*) ;;
+  *) echo "🔴 DEADLINE_S 不得有前導零（八進位歧義／假逾時）：$DEADLINE_S" >&2; exit 2;;
+esac
 STARTED_AT=$(date -u +%s)
 deadline_left() { echo $(( STARTED_AT + DEADLINE_S - $(date -u +%s) )); }
 # 🔴 **位置就是語義（2026-08-19 補審第二輪點名）**：這四行原本寫在主輪詢迴圈正上方，
@@ -141,10 +163,13 @@ deadline_left() { echo $(( STARTED_AT + DEADLINE_S - $(date -u +%s) )); }
 #   ⇒ 預算必須宣告在**第一個可能等待的動作之前**，即本處。
 # 🔴 **行為變更（明寫，不得靜默）**：搬到這裡之後，「起跑連撞 6 次限流」原本一定走 exit 2
 #   （API 持續不可用），現在可能先撞 exit 5（牆鐘用盡）。這是刻意的——牆鐘用盡本來就該是 5。
-#   ⚠️ **已知殘留（未修，本輪未被點名）**：單次 fetch_state 自己不受預算約束
-#   （3 支分頁端點 × HARD_PAGE_CAP=100 頁），nap() 夾不到已經發出的同步呼叫 ⇒ 誤差上界
-#   ＝「一次進行中的網路呼叫」。要收緊需 per-attempt timeout（AWS SDK 的三層規則：
-#   apiCallTimeout ≥ apiCallAttemptTimeout ≥ HTTP client timeout）——已登記，未實作。
+#   ⚠️ **已知殘留（#60[2] 覆核後更正數量級；契約已於退出碼 5 條目明文降級）**：單次
+#   fetch_state 自己不受預算約束——3 支分頁端點 × HARD_PAGE_CAP=100 頁 × 每次 get() 上界
+#   75 秒（gh 45 秒逾時後**再回退匿名 urllib 30 秒**）⇒ 誤差上界＝**22500 秒（一整次
+#   fetch_state）**，比預設預算 14400 秒還大。🔴 原文寫「一次進行中的網路呼叫」**低估約
+#   300 倍**，教訓＝**但書的數字要算出來，不要憑印象寫**。收緊需 AWS 三層規則
+#   （apiCallTimeout ≥ apiCallAttemptTimeout ≥ HTTP client timeout）＋ gRPC 型 deadline
+#   傳遞（把已耗用時間從 timeout 扣掉）——已登記，未實作。
 # 🔴 **所有等待一律走 nap()，不得再出現裸 sleep**。語義取自 Go 的 context.WithDeadline
 #   （「has the deadline adjusted to be **no later than** d」）：把想睡的秒數夾到
 #   min(想睡, 剩餘預算)。回 1 ＝預算已盡 ⇒ 呼叫端一律 deadline_exit。
@@ -163,7 +188,7 @@ nap() {
   return 0
 }
 deadline_exit() {
-  echo "🔴 已達總時鐘上限 ${DEADLINE_S}s（自腳本啟動起算，涵蓋起跑重試、INTERVAL 睡眠與所有限流等待）" >&2
+  echo "🔴 已達等待預算上限 ${DEADLINE_S}s（自腳本啟動起算，涵蓋起跑重試、INTERVAL 睡眠與所有限流等待；**不含 API 呼叫本身耗時**）" >&2
   echo "   請人工看 PR #$PR：若持續撞限額，考慮改用已認證的 gh（5000/hr）或加大 DEADLINE_S（第 5 參數）。" >&2
   exit 5
 }
