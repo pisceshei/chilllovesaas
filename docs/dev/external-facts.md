@@ -66,7 +66,6 @@ head 前置條件旗標），據此**推論**改用 REST 的 `commit_id` 就能�
 來源：GitHub 官方公開 GraphQL schema <https://docs.github.com/public/fpt/schema.docs.graphql>（取證 2026-08-19）
 
 🔴 **A1／A3／A4 合起來的結論**：head 前置條件原語**只掛在合併，一個都沒掛在核准**。
-這是刻意的設計不是文檔疏漏——merge 是狀態轉移所以給樂觀鎖，approve 是意見表態所以沒給。
 **任何「用 approve 端點做 head 綁定」的設計，都是在原文沒有承諾的地方假設保證。**
 
 ### A5. `dismiss_stale_reviews`：API 層與概念層措辭**不一致**，且觸發不只推送

@@ -207,9 +207,8 @@
        ⚠️ **本證據會過期**：E2–E4 釘的是 cli/cli 的一個 commit，上游改實作即失效；
           重查法＝重跑 E4 的 search/code，並比對那兩個檔案的當前 trunk 內容。 -->
 - 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
-  fix-only-what-is-flagged／full-automation-authorized）不在倉庫內，換機器或新 session
-  無法核對原文——條文本身自足，僅登記；若日後要可核對，隨 P-8 或文檔輪把裁定原文
-  落 `docs/DECISIONS.md`【F11】
+  fix-only-what-is-flagged／full-automation-authorized）原不在倉庫內；接手輪已把裁定內容補入
+  `docs/DECISIONS.md` D17–D18，條文本身仍自足，本條轉為結案候選【F11】
 - doc-claims `IN_SCOPE` 刻意不含 docs/specs/／docs/research/／docs/design/ ⇒ #58 第 2 輪
   🔴1（91 誤插）落在 docs/specs/ 而無閘門攔得到——既有取捨（腳本檔頭有誠實聲明），
   要擴須先解「本尊路徑 vs 我方路徑」判別；與 G-01 同屬登記簿保真缺口群
@@ -562,6 +561,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-17-91坑登記簿骨架.md`（本 PR 新增，第 2 輪補列）
 - [ ] `docs/worklog/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列——#57 未動本檔＝集合比對缺口實例）
 - [ ] `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
+- [ ] `docs/worklog/2026-08-18-P8-自動化基建.md`（PR #59 合併帶入；#58 R29 🔴1 補列）
+- [ ] `docs/worklog/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 
 ### A.2 handoff
 
@@ -625,7 +626,11 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-17-session交接-phase0收官與phase1首輪.md`（本 PR 第 2 輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列）
 - [ ] `docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
+- [ ] `docs/handoff/2026-08-18-P8-自動化基建.md`（PR #59 合併帶入；#58 R29 🔴1 補列）
 - [ ] `docs/handoff/2026-08-19-鐵律遵守稽核與P8合併.md`（PR #58 第 29 輪新增；鐵律遵守稽核＋P-8 合併紀錄）
+- [ ] `docs/handoff/2026-08-19-驗收方外部語義與研究前置.md`（PR #58 第 35 輪新增；#58 R29 🔴1 補列）
+- [ ] `docs/handoff/2026-08-19-全專案交接-階段0收官與codex接手.md`（PR #58 第 41 輪後新增；#58 R29 🔴1 補列）
+- [ ] `docs/handoff/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
