@@ -24,7 +24,7 @@
 #   INTERVAL 預設 900，且只接受 900–1500 秒（鐵律 17.1 的 15–25 分鐘窗）；MAX_POLLS 預設 8（約 2 小時）；
 #   DEADLINE_S 預設 MAX_POLLS×INTERVAL×2（預設值下＝14400 秒／4 小時），達上限 exit 5（見退出碼 5）。
 #   🔴 三個時間類參數另有**上限**（#60[2]；bash 算術是有號 64 位且官方明文不檢查溢位）：
-#   INTERVAL ≤ 3024000／MAX_POLLS ≤ 10080／DEADLINE_S ≤ 3024000（＝35 天），逾界一律 exit 2。
+#   INTERVAL 只接受 900–1500／MAX_POLLS ≤ 3360／DEADLINE_S ≤ 3024000（＝35 天），逾界一律 exit 2。
 #   HEAD_SHA 接受 9–40 位十六進位（大小寫皆可）：**內部一律正規化成完整 40 位小寫**
 #   ——大寫或短前綴會與 API 回的 `commit_id`（完整小寫）比不中，那會表現成「白等到
 #   逾時」而非明顯錯誤。短前綴解析不出完整值時 exit 2，不進輪詢。
@@ -134,7 +134,7 @@ done
 #     可在算出預設 DEADLINE_S 時先溢位，讓預算靜默縮短。
 #   🔴 ③**不得用 `[ "$X" -gt "$MAX" ]` 直接擋**：`[` 不 wrap，它對超範圍運算元印
 #     `integer expected` 到 stderr 並回狀態 2 ⇒ `if` 走 else ⇒ **fail-open**（實測：現行
-#     `[ "$INTERVAL" -lt 300 ]` 就是這樣讓 INTERVAL=2^63 通過下限檢查的）。
+#     舊版的 `[ "$INTERVAL" -lt 300 ]` 就曾讓 INTERVAL=2^63 通過下限檢查）。
 #     ⇒ 一律先比**十進位位數**，位數相同時才數值比——那時兩邊都保證在範圍內。
 #   🔴 上限值的判準（不是拍腦袋）：本腳本等的是 GitHub 上的 workflow run／review，
 #     而官方逐字「Workflow run time — 35 days / workflow run — If a workflow run reaches
@@ -147,7 +147,7 @@ done
 #   三者都受限後，預設乘積結構上不可能溢位；若乘積超過 35 天，後方 DEADLINE_S 上限再
 #   fail-closed 拒絕。
 # ⚠️ 這裡硬編常數與鐵律 6（上限值引 `config/limits.yml`）不衝突：`limits.yml` 是**產品**上限值，
-#   本檔是開發期本機工具，同檔既有的 `RATE_WAIT_MAX`／`HARD_PAGE_CAP`／INTERVAL 下限 300 亦同體例。
+#   本檔是開發期本機工具，同檔既有的 `RATE_WAIT_MAX`／`HARD_PAGE_CAP`／INTERVAL 900–1500 秒界亦同體例。
 DEADLINE_MAX_S=3024000              # 35 天，見上方立法理由
 MAX_POLLS_MAX=$(( DEADLINE_MAX_S / 900 ))   # 3360
 # 回 0 ＝ $1 超過上限 $2。$2 必須是十進位、無前導零、且在 bash 算術範圍內的常數。
