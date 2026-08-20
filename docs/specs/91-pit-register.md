@@ -836,7 +836,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
 - [x] `docs/worklog/2026-08-20-Claude-Fable5額度回退Opus5.md`（PR #62 兩次 attempt 逐字同報 Fable 5 limit；依 workflow 沿革⑦的既定處置切回 Opus 5，沒有新增坑項）
-- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正；handoff 意見依使用者 2026-08-20 裁定不修，D36 尚只在未合併 PR #62 head `5209087`，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正；handoff 意見依使用者 2026-08-20 裁定不修；D36 已隨 PR #62 於 2026-08-20 合併進 main，merge commit `0fbe520502588b34f9b9cad6ae9b3a282d4db643`，複驗：`gh pr view 62 --repo pisceshei/chilllovesaas --json state,headRefOid,mergeCommit,mergedAt`；沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR63第二輪驗收修復.md`（review `4984304467`；補清 D36 未合併邊界與驗證數字的日期／head snapshot，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
 - [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
@@ -862,6 +862,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
+- [x] `docs/worklog/2026-08-20-P8證據來源與合併後文件債收斂.md`（PR #62 exact-head review `4983737311` 的兩則 inline 與 PR #62 合併後終態已逐項收斂；已通讀，沒有新增 §3 項）
 
 ### A.2 handoff
 
