@@ -722,6 +722,30 @@
   可機械檢查的終態，不得把本登記當成恢復假債的理由
   【F11/F12；來源＝PR #64 Claude comment `5359558626` ⚪4、`git log -p`；取證日期＝2026-08-21】
 
+- **歷史層「原文不改」與 20.2.3「刪除非必要數字」會直接衝突**：
+  PR #64 第二輪 worklog 的 Done／20.3 歷史稽核曾把「四處」靜默收窄為「被點名」，而 Changes
+  終態層直接回寫則符合規則。當數字本身仍為真但缺鄰近 recheck 時，AGENTS 歷史層要求保留原文，
+  鐵律 20.2.3 卻要求刪數字；後續改制度須明定優先序與更正形態。本 PR 只登記，不回改歷史實物
+  【F4/F11；來源＝PR #64 Claude comment `5359997378` ⚪1；取證日期＝2026-08-21】
+
+- **external-facts 的程式碼逐字引用缺「改排」標記**：
+  A9 把 pinned 官方實作的三行縮排區塊排成較短的 blockquote；控制流語義經重取仍忠實，但該檔
+  規則把 blockquote 當英文逐字原文載體。後續證據格式包須保留原始換行，或明示「節錄改排」；
+  本 PR 不為非阻擋的呈現差異擴改外部事實
+  【F3/F11；來源＝PR #64 Claude comment `5359997378` ⚪2；取證日期＝2026-08-21】
+
+- **A9 尚未登記首組 `pageInfo` 可提早終止其他連線的更強邊界**：
+  pinned `findEndCursor` 對首組湊齊的 `pageInfo` 若得到 `hasNextPage:false` 會回空游標並停止
+  `--paginate`，即使另一層 connection 尚有頁；A9 現只說單一 endCursor，不代表已涵蓋這個
+  停止條件。後續 external-facts 獨立包須附官方實作逐字與 dated URL 後再補，不得在本 PR 推論擴寫
+  【F3/F5；來源＝PR #64 Claude comment `5359997378` ⚪3；取證日期＝2026-08-21】
+
+- **首輪事後 20.3 稽核沒有逐列交代不適用類型**：
+  `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md` 的事後表只列 ①②③，未明列 ④⑤⑥⑦；
+  其中該工作單位實際加入 HTML comment，⑦ 並非顯然不適用。上一輪只點名全檔零命中，且後續輪
+  已另做 Markdown 驗證，依 17.2／20.5 不在本輪擴修；後續 worklog 契約包再決定是否強制全列
+  【F5/F11；來源＝PR #64 Claude comment `5359997378` ⚪4；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -889,6 +913,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md`（issue comment `5358544615` 的射程意見已清；暫登 §3 候選於第二輪經語義複驗撤回）
 - [x] `docs/worklog/2026-08-21-PR64第二輪雙驗收修復.md`（Claude comment `5359209200`＋Codex review `4985307122`；PR 描述、歷史更正格式、外部事實與假債已逐項收斂）
 - [x] `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md`（Claude comment `5359558626`＋Codex review `4985595726`；20.3 缺件、A9／A10 證據邊界與易腐計數已處置）
+- [x] `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md`（Claude comment `5359997378`＋Codex review `4985973166`；累積清單回歸、終態 Changes 與範圍外登記已處置）
 
 ### A.2 handoff
 
