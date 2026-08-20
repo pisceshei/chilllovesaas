@@ -184,6 +184,38 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 ⇒ **auto-merge 本身不是 head 變動的防護**。
 📌 本頁**未提及**「PR 產生衝突／變成不可合併」是否停用——屬未涵蓋，不是已否定。
 
+### A9. `gh api --paginate` 的 GraphQL 游標只對查詢中提供游標契約的 collection 生效
+
+> "it fetches the `pageInfo{ hasNextPage, endCursor }` set of fields from a collection."
+
+來源：<https://cli.github.com/manual/gh_api>（取證 2026-08-21）
+
+官方同段另要求原查詢接受 `$endCursor: String`，並說 `--paginate` 會依序請求結果頁。
+🔴 **邊界**：游標變數與 `pageInfo` 掛在哪個 collection，就只能證明該 collection 被推進；
+不得把外層 `reviewThreads(first:100, after:$endCursor)` 的分頁外推成其巢狀
+`comments(first:100)` 也逐頁取完。巢狀正文全集另走三個 `--paginate` REST 集合；GraphQL
+threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
+
+⚠️ **推論標記**：上一段的「外層不能替巢狀連線分頁」是依官方單數 `a collection` 與游標
+位置推得，不是手冊逐字列出「巢狀連線不分頁」。PR #62 的實際查詢把 `$endCursor`／
+`pageInfo` 都放在外層 `reviewThreads`，因此「完整 reviewThreads 重取」與「巢狀正文不完整」
+可同時成立，兩者不得混為矛盾。
+
+### A10. PR commits 端點可列 PR 的 commits；250 以上須改用 commits 端點
+
+> "Lists a maximum of 250 commits for a pull request."
+
+來源：<https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request>（取證 2026-08-21）
+
+端點為 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`。官方同段明定超過 250 時要改用
+repository 的 List commits endpoint；因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
+
+📌 **倉庫快照，不是全域保證**：2026-08-21 實跑
+`gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/commits`，在 PR #61 已 squash merge
+（merge commit `1800b20aa006ee67f6f8c88cd24e50322db99a4c`）後仍取回 pre-squash
+`2ed2403d06eb50bba0f82e74fcacf44643a81bd8`。這證明該精確 PR 的 API 取回路徑可用；官方頁面
+沒有承諾所有已合併 PR 永久保留所有 pre-squash 物件，故不得升格為永久可達保證。
+
 ---
 
 ## B. 工具鏈：退出碼、路徑轉換、Markdown、限流

@@ -699,16 +699,6 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
-- **PR #62 第二輪 worklog 仍把非正文全集的 GraphQL 查詢稱為「完整重取／REST／GraphQL 全集」**：
-  `docs/worklog/2026-08-20-PR62第二輪驗收修復.md` 的 Done 與 Changes 各留一處完成性敘述，
-  其實都回指首輪 worklog 內的 `comments(first:100)` 巢狀連線；PR #64 已在首輪 worklog
-  緊鄰更正，明定三個 `--paginate` REST 集合才負責正文全集、GraphQL 只負責 thread 狀態，
-  因而這兩句成為歷史殘留。它們不在 PR #64 首輪累積 diff，依鐵律 17.2 本輪不順手修改；
-  後續若該歷史 worklog 被明確點名，須保留原文並緊鄰追加日期更正，不得把本登記當改檔授權。
-  複驗：`rg -n -e 'comments\(first:' -e '完整重取命令' -e 'GraphQL 全集' -- docs AGENTS.md CLAUDE.md`
-  【F5/F11/F12；來源＝PR #64 exact-head `7de4ab0f873ca9449a9dac0c8442cc29fefcc862`
-  Claude issue comment `5358544615` 🟡1／⚪1、`git log -p`；取證日期＝2026-08-21】
-
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -872,8 +862,9 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
-- [x] `docs/worklog/2026-08-20-P8證據來源與合併後文件債收斂.md`（PR #62 exact-head review `4983737311` 的兩則 inline 與 PR #62 合併後終態已逐項收斂；PR #64 Claude 首輪指出反查射程過窄，範圍外歷史殘留已登 §3）
-- [x] `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md`（issue comment `5358544615` 的 🟡1 已依清法②收窄宣稱；⚪1 已登 §3，未擴修歷史檔）
+- [x] `docs/worklog/2026-08-20-P8證據來源與合併後文件債收斂.md`（PR #62 exact-head review `4983737311` 的兩則 inline 與 PR #62 合併後終態已逐項收斂；PR #64 驗收令反查射程收窄，候選歷史債經官方語義複驗證偽）
+- [x] `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md`（issue comment `5358544615` 的射程意見已清；暫登 §3 候選於第二輪經語義複驗撤回）
+- [x] `docs/worklog/2026-08-21-PR64第二輪雙驗收修復.md`（Claude comment `5359209200`＋Codex review `4985307122`；PR 描述、歷史更正格式、外部事實與假債已逐項收斂）
 
 ### A.2 handoff
 
