@@ -768,7 +768,8 @@
   畸形／游離標頭與收尾檢查；現句不假，完整契約也已在 checker 註釋及
   `docs/dev/m0-review-convergence.md`，故本輪只登記。後續訊息包若要擴寫，須以契約反查避免
   成功文字再次落後行為
-  【F5/F12；來源＝PR #65 Claude comments `5360428264` ⚪2／`5360765482` ⚪；
+  【F5/F12；來源＝PR #65 Claude comments `5360428264` ⚪2／`5360765482` ⚪／
+  `5361142724` ⚪；
   取證日期＝2026-08-21】
 
 - **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
@@ -788,14 +789,17 @@
   【F5/F12；來源＝PR #65 Claude comment `5359428067` ⚪2＋
   <https://github.github.com/gfm/#tables-extension>；取證日期＝2026-08-21】
 
-- **R6 重複 `type: count` 候選已轉結案；production ROOT 豁免供給 canary 仍開放**：
+- **R6 的 count／recheck cardinality 與 production ROOT 供給缺口已逐輪轉結案候選**：
   原候選有兩個獨立邊界：同一合法區塊的第二筆 count 可共用第一筆 recheck，以及
   `explicit_root` 會讓 R6 零供給 canary 豁免、W1 又只釘 `--require-base` 而未禁止 CI 傳 ROOT。
   前者經 Codex inline `3824670871` 正式點名後，PR #65 第五輪已以每區塊 count cardinality
   檢查與 `doc_claim_duplicate_count` 負向 fixture 修成結案候選；同輪 inline `3824670885` 點名的
-  索引內 count 全空另由 `doc_claim_no_count` 固化。後者未被本輪要求修改，仍保持開放；後續若改
-  production wiring 仍須獨立查證並按 18.3 人工合併
-  【F10/F12；來源＝PR #65 Claude comment `5359428067` ✅4／未覆蓋；取證日期＝2026-08-21】
+  索引內 count 全空另由 `doc_claim_no_count` 固化。第六輪 Codex inline `3824945934` 正式點名
+  explicit ROOT 後，checker 改以明示 `--fixture-mode` 作唯一豁免，並加入無 ROOT／明確 ROOT
+  兩個 production supply 情境與 CI 不得傳 fixture flag 的供給斷言。inline `3824945940` 另把
+  單區塊 recheck cardinality 納入同一 fail-closed 契約
+  【F10/F12；來源＝PR #65 Claude comment `5359428067` ✅4、Codex inlines `3824670871`／
+  `3824670885`／`3824945934`／`3824945940`；取證日期＝2026-08-21】
 
 - **B9 標題與射程只描述圍欄，不能當作 HTML comment／code span 契約的總入口**：
   `docs/dev/external-facts.md` B9 的官方證據與專案政策只處理清單縮排及未收尾 fenced code；
@@ -810,11 +814,33 @@
   情境的總數。現行檢查仍執行，問題是摘要口徑不完整；未被要求修改 runner 輸出，依 17.2 只登記
   【F5/F12；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
 
-- **階段一執行方案的 P-2 R6 摘要仍只寫「計數必附複驗指令」**：
-  `docs/plans/2026-08-20-階段一執行方案.md` §2 的交付表是開工時快照，沒有同步後續驗收擴出的
-  活性 Markdown、唯一性、收尾與供給 canary 契約。現行終態已由 checker 註釋及
-  `docs/dev/m0-review-convergence.md` 發布；方案本輪未被點名修改，依歷史層與 17.2 只登記
-  【F5/F11；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
+- **總方案與階段一執行方案的 P-2 R6 摘要仍只寫「計數必附複驗指令」**：
+  Claude comment `5360765482` ⚪4 點名的是 `docs/plans/2026-08-18-總方案.md` 的 P-2 摘要；
+  第五輪反查另發現 `docs/plans/2026-08-20-階段一執行方案.md` §2 有同一句。前版登記錯把後者
+  取代前者，current-head Claude `5361142724` 🟡-1 已指出來源失真。兩份方案都是歷史開工快照，
+  現行終態由 checker 註釋及 `docs/dev/m0-review-convergence.md` 發布；依 17.2 並列登記，不回寫方案
+  【F5/F11；來源＝PR #65 Claude comments `5360765482` ⚪4、`5361142724` 🟡-1；
+  階段一方案為第五輪內部反查；取證日期＝2026-08-21】
+
+- **R6 comment opener 比 CommonMark HTML block start condition 更寬**：
+  CommonMark 0.31.2 §4.6 逐字為 "Start condition: line begins with the string `<!--`."；現行
+  checker 在正文任意位置尋找 opener，只排除同一行成對 code span，方向是多遮。EOF 未收尾已
+  fail-closed，但後方若另有 closer 仍可能把中間內容當 comment；本輪阻擋只要求修正 closer 的
+  假敘述，不擴寫 opener parser
+  【F6/F11/F12；來源＝PR #65 Claude comment `5361142724` ⚪1、
+  <https://spec.commonmark.org/0.31.2/#html-blocks>；取證日期＝2026-08-21】
+
+- **R6 的零 count 訊息不能區分「真零供給」與「標頭全畸形」**：
+  header 格式 violation 會先記錄，但畸形區塊在解析 type 前被略過；若檔內沒有其他合法 count，
+  尾端還會印「沒有任何活性 type: count」。退出仍為 1 且真正格式錯誤同時存在，故只屬訊息口徑；
+  本輪不順手改文案
+  【F5/F12；來源＝PR #65 Claude comment `5361142724` ⚪2；取證日期＝2026-08-21】
+
+- **m0-review-convergence 的 R6 已知限制沒有列跨行 code span 與 closer 邊界**：
+  終態規則表與 fixture 表已按本輪阻擋改成 opener-only，外部證據也明列 comment 開啟後任何
+  `-->` 都收尾；但該檔「已知限制」段仍沒集中列出不支援跨行 code span、closer 不遮罩兩點。
+  行為與來源已在 external-facts／第六輪 worklog 保存，本輪依 17.2 只登記，不擴寫未點名段落
+  【F5/F11；來源＝PR #65 Claude comment `5361142724` ⚪3；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -986,6 +1012,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第三輪雙驗收修復.md`（Claude comment `5359967807`＋Codex review `4985880560`；快照／口徑／R6 fail-closed 與契約同步已處置）
 - [x] `docs/worklog/2026-08-21-PR65第四輪雙驗收修復.md`（Claude comment `5360428264`＋Codex review `4986322814`；HTML comment fail-closed、終態 Changes、外部證據與宣稱斷言已處置）
 - [x] `docs/worklog/2026-08-21-PR65第五輪雙驗收修復.md`（Claude comment `5360765482`＋Codex review `4986560215`；count cardinality／零供給、code span comment scope、歷史分類與終態聲明已處置）
+- [x] `docs/worklog/2026-08-21-PR65第六輪雙驗收修復.md`（Claude comment `5361142724`＋Codex review `4986877890`；closer 契約、metadata／supply fail-closed、歷史快照與終態宣稱已處置）
 
 ### A.2 handoff
 

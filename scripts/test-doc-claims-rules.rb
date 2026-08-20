@@ -62,9 +62,15 @@ CASES = [
   [ "doc_claim_duplicate_count", 1, "R6 同一 CLAIM-001 含多個 `type: count`",
     "🔴 R6：同一 CLAIM 區塊的第二筆 count 不得借用第一筆 recheck；" \
     "每個計數宣稱必須有自己的 CLAIM 標頭與複驗命令" ],
+  [ "doc_claim_duplicate_recheck", 1, "R6 同一 CLAIM-001 含多個 `recheck:`",
+    "🔴 R6：同一 count 區塊不得以第一筆合法命令遮住後續過期／錯誤 recheck；" \
+    "每個計數宣稱只能有一個無歧義的複驗入口" ],
   [ "doc_claim_no_count", 1, "R6 宣稱索引沒有任何活性 `type: count`",
     "🔴 R6 局部零供給 canary：合法 CLAIM 標頭存在但 count 全被刪除／改型時必須轉紅，" \
     "不能拿 header canary 冒充計數契約有輸入" ],
+  [ "doc_claim_bad_type", 1, "R6 不支援 type metadata `counts`",
+    "🔴 R6：已有另一個合法 count 時，`type: counts` 仍不得被 exact-match 篩選靜默略過；" \
+    "未支援或拼錯的 type 必須在原行 fail-closed" ],
   [ "doc_claim_malformed_header", 1, "R6 宣稱標頭格式錯誤",
     "🔴 R6：已有合法區塊時，後續 `### CLAIM-02` 不得被折入前一區塊，" \
     "否則該錯字區塊的 `type: count` 可借用前一條的 recheck 靜默通過" ],
@@ -100,8 +106,11 @@ CASES = [
     "🔴 R6 反向斷言：合法 recheck code span 內的 `<!--` 是字面命令內容，" \
     "不得誤開 HTML comment 或把合法 count 擋掉" ],
   [ "doc_claim_code_span_comment_scope", 1, "R6 計數宣稱 CLAIM-002",
-    "🔴 R6：正文 code span 內的 `<!--`／`-->` 都不得改變 comment 狀態；" \
-    "兩者之間缺 recheck 的 CLAIM-002 必須保持活性並轉紅" ],
+    "🔴 R6：正文 code span 內的 `<!--` 不得誤開 comment；" \
+    "其後缺 recheck 的 CLAIM-002 必須保持活性並轉紅" ],
+  [ "doc_claim_comment_close_span", 1, "R6 重複 CLAIM-001",
+    "🔴 R6：comment 已開啟後，行內任何 `-->` 都依 HTML block end condition 收尾；" \
+    "看似 code span 的 closer 不得被 opener-only 遮罩吃掉" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -114,7 +123,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 27
+MIN_CASES = 30
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
@@ -130,7 +139,7 @@ CASES.each do |dir, want_status, want_output, why|
     next
   end
 
-  output = `ruby "#{CHECKER}" "#{path}" --all 2>&1`
+  output = `ruby "#{CHECKER}" "#{path}" --all --fixture-mode 2>&1`
   status = $?.exitstatus
 
   if status != want_status
@@ -154,7 +163,7 @@ require "fileutils"
 require "open3"
 
 GIT_SCENARIOS = 3
-SUPPLY_SCENARIOS = 1
+SUPPLY_SCENARIOS = 2
 git_run = lambda do |work, *cmd|
   out, st = Open3.capture2e({ "LC_ALL" => "C" }, "git", "-C", work,
                             "-c", "user.email=t@example.com", "-c", "user.name=t", *cmd)
@@ -179,7 +188,7 @@ Dir.mktmpdir("doc-claims-git-") do |work|
   File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n")
   git_run.call(work, "add", "-A")
   git_run.call(work, "commit", "-qm", "clean-add")
-  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} --fixture-mode 2>&1`
   if $?.exitstatus != 0 || !out.include?("OK：文檔引用保真檢查通過")
     failures << "git-G1：歷史層髒數字＋乾淨新增行應 exit 0（只掃新增行），實得 #{$?.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
   end
@@ -190,7 +199,7 @@ Dir.mktmpdir("doc-claims-git-") do |work|
   File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n本輪補了八條 fixture，這行同樣沒有附覆核方式。\n")
   git_run.call(work, "add", "-A")
   git_run.call(work, "commit", "-qm", "cjk-add")
-  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} --fixture-mode 2>&1`
   st = $?.exitstatus
   if st != 1
     failures << "git-G2：新增行的中文數字易腐宣稱應 exit 1，實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
@@ -209,13 +218,17 @@ Dir.mktmpdir("doc-claims-git-") do |work|
     failures << "W1：.github/workflows/ci.yml 的 check-doc-claims 調用行沒帶 --require-base——" \
                 "G3 守的退出分支在生產端沒被啟用，R4/R5 淺 clone 靜默跳過洞會無聲回歸"
   end
+  if ci_yml_text.include?("--fixture-mode")
+    failures << "W2：.github/workflows/ci.yml 不得傳 --fixture-mode——" \
+                "fixture 豁免若流入生產，明確 ROOT 又會把 R6 零供給 canary 關掉"
+  end
 
   # 情境 G3（P-8）：`--require-base` 下取不到 base 差異 ⇒ 必須 exit 3，不得警告後照綠。
   # 🔴 這條釘的是 CI 淺 clone 雙重洞（PR #58 期考掘，2026-08-18）：quality job 的
   #    三點 diff 因淺 clone 無 merge-base，腳本印「R4/R5 本次未執行」warning 後 exit 0
   #    ——連續多輪沒有任何人發現。把 ci.yml 的 --require-base 拿掉、或把 exit 3 分支
   #    改回 warning，這條立刻紅。base 用一個必然不存在的 ref 模擬「取不到差異」。
-  out = `ruby "#{CHECKER}" "#{work}" --base refs/never-exists-p8-canary --require-base 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base refs/never-exists-p8-canary --require-base --fixture-mode 2>&1`
   st = $?.exitstatus
   if st != 3
     failures << "git-G3：--require-base＋取不到 base 應 exit 3（檢查根本沒有生效），實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
@@ -226,8 +239,8 @@ rescue StandardError => e
   failures << "git 情境測試自身失敗（#{e.class}）：#{e.message}"
 end
 
-# S1（R6 生產供給 canary）：總掃描不為 0，不代表 R6 有輸入。把 checker 放進一棵只有
-# docs/dev 的乾淨樹，以**無 ROOT 參數**的生產形態執行；缺 92 索引必須 exit 3。
+# S1／S2（R6 生產供給 canary）：總掃描不為 0，不代表 R6 有輸入。把 checker 放進一棵只有
+# docs/dev 的乾淨樹，分別用無 ROOT 與明確 ROOT 的生產形態執行；缺 92 索引都必須 exit 3。
 Dir.mktmpdir("doc-claims-r6-supply-") do |work|
   FileUtils.mkdir_p(File.join(work, "scripts"))
   FileUtils.mkdir_p(File.join(work, "docs/dev"))
@@ -237,6 +250,11 @@ Dir.mktmpdir("doc-claims-r6-supply-") do |work|
   if st.exitstatus != 3 || !out.include?("R6 掃到 **0 個")
     failures << "supply-S1：生產樹缺 docs/specs/92-* 應 exit 3 並點名 R6 零供給，" \
                 "實得 #{st.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
+  end
+  out, st = Open3.capture2e("ruby", File.join(work, "scripts/check-doc-claims.rb"), work, "--all")
+  if st.exitstatus != 3 || !out.include?("R6 掃到 **0 個")
+    failures << "supply-S2：明確 ROOT 的生產樹缺 docs/specs/92-* 仍應 exit 3，" \
+                "不得把所有明確 ROOT 當 fixture；實得 #{st.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
   end
 rescue StandardError => e
   failures << "R6 supply 情境測試自身失敗（#{e.class}）：#{e.message}"
@@ -251,7 +269,9 @@ if failures.empty?
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
   puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
+  puts "  - W2 → ci.yml 不得傳 --fixture-mode（fixture 豁免不得流入生產）"
   puts "  - supply-S1 → 生產樹缺 docs/specs/92-* 時 exit 3，不得拿其他受管檔掩蓋 R6 零輸入"
+  puts "  - supply-S2 → 明確 ROOT 的生產樹缺 docs/specs/92-* 時同樣 exit 3"
   exit 0
 end
 

@@ -258,10 +258,18 @@ GFM 規範同文 <https://github.github.com/gfm/>（取證 2026-08-19，已與 c
 ⇒ 文件裡的「預期輸出」若含 `**`，會與終端機實際輸出**字面不符**；
 要強調就把粗體包在 code span **外**，不要塞進去。
 
-🔴 **2026-08-21 對 R6 的直接應用**：依上列同一段官方逐字，同一行成對 code span 內的
-`<!--`／`-->` 是字面內容，不得改變 HTML comment 狀態。`check-doc-claims.rb` 因此只在尋找
-comment opener 時遮掉這類 code span；這是本專案針對單行 metadata／正文的實作邊界，不外推為
-完整 CommonMark parser，也不宣稱支援跨行 code span。
+CommonMark 0.31.2 §4.6 對 HTML comment block 另有兩句直接規則：
+
+> "Start condition: line begins with the string `<!--`."
+> "End condition: line contains the string `-->`."
+
+來源：<https://spec.commonmark.org/0.31.2/#html-blocks>（取證 2026-08-21）。
+
+🔴 **2026-08-21 對 R6 的窄應用**：`check-doc-claims.rb` 只在尋找 comment opener 時遮掉同一行
+成對 code span；comment 已開啟後，任何 `-->` 子字串都會依上列 end condition 收尾，不再解析
+inline code span。這是本專案針對單行 metadata／正文的 opener-only 實作邊界，不外推為完整
+CommonMark parser，也不宣稱支援跨行 code span。opener 並未完整實作 §4.6 的行首條件，該差異只
+登記於 `docs/specs/91-pit-register.md` §3，未在本輪擴修。
 
 ### B6. 限流：primary 明列 reset 時點；secondary 另明列有限次重試
 

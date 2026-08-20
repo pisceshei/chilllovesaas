@@ -70,6 +70,9 @@ base_ref = "origin/main"
 # 🔴 日常 CI **不加**這個旗標：對既有歷史散文全面開火，會與「歷史層不回頭改」的裁定衝突，
 #    而且一次噴出的量會讓規則被當噪音關掉（見檔頭分層說明）。
 scan_all = !!argv.delete("--all")
+# `--fixture-mode`：只供帶明確 ROOT 的隔離 fixture 使用；允許該 fixture 不含生產
+# `docs/specs/92-*`。一般的明確 ROOT 仍須通過 R6 零供給 canary，不能因呼叫形式而靜默豁免。
+fixture_mode = !!argv.delete("--fixture-mode")
 # `--require-base`：R4／R5 的範圍差異算不出來時，從「警告後照跑 R1／R3」升為 exit 3。
 # 🔴 為什麼是旗標不是無條件（P-8）：fixture 目錄不是 git 樹、本機也可能沒有 origin/main，
 #    無條件 exit 3 會把全部 fixture CASE 與離線使用打死；CI 則必須有這道 canary——
@@ -82,6 +85,10 @@ if (i = argv.index("--base"))
 end
 explicit_root = !argv.empty?
 ROOT = argv[0] ? File.expand_path(argv[0]) : File.expand_path("..", __dir__)
+if fixture_mode && !explicit_root
+  warn "::error::`--fixture-mode` 必須搭配明確 ROOT；不得用它豁免生產樹的 R6 供給 canary。"
+  exit 2
+end
 
 # 反引號內、看起來像倉庫路徑的東西。開頭限定在真實存在的頂層目錄，
 # 避免把 `application/json`、`text/html` 這種 MIME 當成路徑。
@@ -157,6 +164,7 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
 CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
+CLAIM_TYPE = /\A {0,3}-\s+type:\s*(.*?)\s*\z/
 CLAIM_COUNT_TYPE = /\A {0,3}-\s+type:\s*count\s*\z/
 CLAIM_RECHECK = /\A {0,3}-\s+recheck:\s*(.+)\z/
 
@@ -202,7 +210,8 @@ end
 
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
-# block fence 先於 inline/comment 掃描；正文同一行的 code span 內 comment delimiter 是字面值。
+# block fence 先於 inline/comment 掃描；正文同一行的 code span 只在尋找 comment opener 時遮罩。
+# comment 已開啟後，任何 `-->` 子字串都依 HTML block end condition 收尾，不解析 inline code span。
 # 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
@@ -414,6 +423,15 @@ targets.each do |rel|
       end
 
       block = active_lines[start_pos...finish_pos]
+      type_entries = block.filter_map do |idx, line|
+        match = line.match(CLAIM_TYPE)
+        match && [ idx, match[1].strip ]
+      end
+      type_entries.reject { |_idx, value| value == "count" }.each do |idx, value|
+        violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
+                      "宣稱索引目前只允許精確的 `- type: count`，拼字錯誤不得靜默脫離複驗契約。"
+      end
+
       count_entries = block.select { |_idx, line| line.match?(CLAIM_COUNT_TYPE) }
       next if count_entries.empty?
 
@@ -423,7 +441,15 @@ targets.each do |rel|
                       "每筆計數必須放在自己的 `### CLAIM-NNN` 區塊並附複驗指令。"
       end
 
-      recheck = block.filter_map { |_idx, line| line.match(CLAIM_RECHECK)&.[](1) }.first
+      recheck_entries = block.filter_map do |idx, line|
+        match = line.match(CLAIM_RECHECK)
+        match && [ idx, match[1] ]
+      end
+      recheck_entries.drop(1).each do |idx, _value|
+        violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `recheck:`——" \
+                      "每個計數區塊只能發布一個無歧義的複驗命令。"
+      end
+      recheck = recheck_entries.first&.last
       next if recheck&.match?(RECHECK_CMD)
 
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
@@ -520,9 +546,9 @@ if scanned.empty?
 end
 
 # 🔴 R6 的局部零掃描 canary：整棵樹有其他受管檔時，總 canary 不會響；若生產樹的
-#    `docs/specs/92-*` 全被移除，舊版仍印「R6 ... tree-wide」並 exit 0。fixture 明確傳 ROOT，
-#    可合法沒有生產索引；無 ROOT 的生產調用則必須至少掃到一份。
-if !explicit_root && claim_indexes_scanned.zero?
+#    `docs/specs/92-*` 全被移除，舊版仍印「R6 ... tree-wide」並 exit 0。只有明確標記
+#    `--fixture-mode` 的隔離 fixture 可合法沒有生產索引；一般調用即使傳 ROOT 仍須至少掃到一份。
+if !fixture_mode && claim_indexes_scanned.zero?
   warn "::error::R6 掃到 **0 個 `docs/specs/92-*` 宣稱索引**——" \
        "這不是通過，是 R6 在生產樹沒有輸入（exit 3）。"
   exit 3
