@@ -810,7 +810,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
 - [x] `docs/worklog/2026-08-20-Claude-Fable5額度回退Opus5.md`（PR #62 兩次 attempt 逐字同報 Fable 5 limit；依 workflow 沿革⑦的既定處置切回 Opus 5，沒有新增坑項）
-- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正，handoff 意見依 D36 裁定不修，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正；handoff 意見依使用者 2026-08-20 裁定不修，D36 尚只在未合併 PR #62 head `5209087`，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR63第二輪驗收修復.md`（review `4984304467`；補清 D36 未合併邊界與驗證數字的日期／head snapshot，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
 - [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
 - [x] `docs/worklog/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；已修三個被點名宣稱）

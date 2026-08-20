@@ -43,6 +43,11 @@ allowed tools、判詞解析與其餘 workflow 行為全部不動。
 Windows 等價口徑，把 setup 拆成四步、`bin/*` 改由 Ruby 執行、Python 改用 Codex bundled
 Python，並在同一 process 把 Git for Windows Bash 放到 PATH 前端後，從 setup 起完整重跑：
 
+<!-- 🔴 2026-08-20 更正（PR #63 Codex inline `3822823484`）：下列數字是
+     2026-08-20（Asia/Taipei）對 immutable head
+     `ec4eb1d7f4c91cb2ca091bc3062340fe15028cf7` 的 captured-output snapshot；不是 `main`
+     或後續 head 的現值，不得跨 head 沿用。原段保留為歷史，以上述日期／head 邊界為準。 -->
+
 - `GATES_TOTAL=29`、`GATES_PASSED=29`、`GATES_FAILED=0`；
 - Rails `284 examples, 0 failures`；Vitest `5 passed`；RuboCop 162 檔、0 offenses；
   Brakeman 0 errors／0 warnings；Ruby 與前端 audit 無已知漏洞；
