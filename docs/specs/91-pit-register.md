@@ -763,6 +763,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
 - [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
 - [x] `docs/worklog/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；已修三個被點名宣稱）
+- [x] `docs/worklog/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；已移除自我重複觸發詞）
 
 ### A.2 handoff
 
@@ -860,6 +861,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
 - [x] `docs/handoff/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；證據與邊界已交接）
 - [x] `docs/handoff/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；命中與修法已交接）
+- [x] `docs/handoff/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；證據與邊界已交接）
 
 ### A.3 事故密集檔（specs／機制檔）
 

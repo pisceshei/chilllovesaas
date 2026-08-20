@@ -8,7 +8,7 @@
   `ruby scripts/check-doc-claims.rb`。2026-08-20 實跑快照：exit 1；命中兩項 R4 error，另有一項
   R5 warning，因此依規則停止 push。
 - 只修檢查輸出點名的三句：handoff 的「29 支」改成不寫易腐總數；Rails worklog 去掉首跑
-  29／28 的手抄總數；Rails handoff 撤掉「唯一失敗」全稱句，保留可由該次 RSpec 輸出直接支持的
+  29／28 的手抄總數；Rails handoff 撤掉未附列舉的完整性用語，保留可由該次 RSpec 輸出直接支持的
   `284 examples, 1 failure`。
 - 新增本 worklog 與同名 handoff，並補進 `docs/specs/91-pit-register.md` 附錄 A 與開場包終態入口；
   沒有順手改其他未被本次 post-commit 輸出點名的同型句。
