@@ -209,7 +209,8 @@
 - 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
   fix-only-what-is-flagged／full-automation-authorized）原不在倉庫內；接手輪已把裁定內容補入
   `docs/DECISIONS.md` D17–D18，條文本身仍自足，本條轉為結案候選【F11】
-- doc-claims `IN_SCOPE` 刻意不含 docs/specs/／docs/research/／docs/design/ ⇒ #58 第 2 輪
+- doc-claims `IN_SCOPE` 刻意不廣泛納管 docs/specs/／docs/research/／docs/design/；P-2 只為
+  `docs/specs/92-*` 宣稱索引加入 R6 窄例外，沒有解除其餘 specs 的既有缺口 ⇒ #58 第 2 輪
   🔴1（91 誤插）落在 docs/specs/ 而無閘門攔得到——既有取捨（腳本檔頭有誠實聲明），
   要擴須先解「本尊路徑 vs 我方路徑」判別；與 G-01 同屬登記簿保真缺口群
   【F12；來源＝#58 第 2 輪判詞 ⚪，第 4 輪補搬——第 3 輪漏搬＝G-01 第二次現行犯，
@@ -699,6 +700,17 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
+- **P-2 的 Markdown 複驗發現三份既有文件有裸 `|` 表格列，且總方案一段正文落在圍欄內**：
+  這些位置不屬 P-2 點名修復，依鐵律 17.2 只登記、不順手改。具體集合是：總方案
+  「2.6 可直接借鑑的成熟方案」表 X3～X10 少尾端分隔線；53 號「表 4 · 反向缺口」的
+  `const per=c.per||8` 兩個裸直線使該列欄數由 5 變 7；83 號 §6.2 的同型
+  `const per=c.per||8` 使該列欄數由 4 變 6；總方案 §9.2 的 1～6 點被位於
+  「### 9.2 要點」後的第二組圍欄包住，故粗體標記不會渲染。後續獨立文檔修復包須逐表
+  統一未跳脫直線數、跳脫代碼內 `||`，並以 GitHub `/markdown` API 對 `<tr>`／`<th>`／`<td>`
+  計數；圍欄只包架構圖或命令，不得包正文。複驗入口為逐檔對連續 `|` 列計
+  `l.scan(/(?<!\\)\|/).size`，以及在 `^```$` 間搜尋 `**`
+  【F5/F12；來源＝P-2 提交前 Markdown 全檔結構複驗；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -862,6 +874,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
+- [x] `docs/worklog/2026-08-21-P2宣稱索引與R6.md`（六組假數字證據化＋R6 正反 fixture；已通讀，Markdown 範圍外同型問題已登 §3）
 
 ### A.2 handoff
 

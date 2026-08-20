@@ -29,6 +29,7 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
+#   R6｜**宣稱索引的計數項必須附複驗指令**（🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
 #
@@ -145,6 +146,14 @@ SNAPSHOT = /快照|實跑輸出|輸出如下|取證/
 UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從來沒有/, /一律都/ ].freeze
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
+# R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
+# 每個 `type: count` 區塊都必須有 `recheck:`，且內容要符合上方 RECHECK_CMD 的
+# 可執行指令形態。既有 R1–R5 的判定對象與語義因此不變。
+CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
+CLAIM_HEADER = /^### CLAIM-(\d{3})\s*$/
+CLAIM_COUNT_TYPE = /^-\s+type:\s*count\s*$/
+CLAIM_RECHECK = /^-\s+recheck:\s*(.+)$/
+
 violations = []
 warnings = []
 scanned = []
@@ -199,10 +208,12 @@ script_headers = listing(ROOT, "scripts/", "scripts/*")
 #      （#58 第 2 輪 🟡5），納入當輪即抓到兩條無錨引用。
 #      ⚠️ 實得覆蓋僅 R1／R3：R4／R5 的範圍判斷（下方兩處 start_with?）仍只認
 #      worklog／handoff，plans 不在內——刻意維持，勿讀成全規則納管。
-#    ⚠️ 代價寫在這裡：research／design／specs 的路徑錯誤本檢查**不管**。
-#      那是刻意的取捨，不是漏了——要納管必須先解決「如何區分本尊路徑與我方路徑」。
+#    ⚠️ 代價寫在這裡：research／design／specs 的路徑錯誤本檢查**普遍不管**；
+#      唯一窄例外是 P-2 新建的 `docs/specs/92-*` 宣稱索引，供 R6 檢查結構化計數。
+#      這不等於 specs 全面納管；全面納管仍須先解決「如何區分本尊路徑與我方路徑」。
 IN_SCOPE = [
   %r{\Adocs/worklog/}, %r{\Adocs/handoff/}, %r{\Adocs/dev/}, %r{\Adocs/plans/},
+  CLAIM_INDEX,
   %r{\AAGENTS\.md\z}, %r{\ACLAUDE\.md\z}, %r{\AHANDOFF\.md\z},
   %r{\Ascripts/}
 ].freeze
@@ -268,6 +279,28 @@ targets.each do |rel|
 
   scanned << rel
   lines = text.lines.map(&:chomp)
+
+  # --- R6（宣稱索引，tree-wide）---
+  if rel.match?(CLAIM_INDEX)
+    headers = lines.each_index.select { |idx| lines[idx].match?(CLAIM_HEADER) }
+    if headers.empty?
+      violations << "#{rel}:1 R6 宣稱索引沒有任何 `### CLAIM-NNN` 區塊——" \
+                    "這不是零宣稱，是結構化檢查沒有生效。"
+    end
+    headers.each_with_index do |start, pos|
+      finish = pos + 1 < headers.size ? headers[pos + 1] : lines.size
+      block = lines[start...finish]
+      next unless block.any? { |line| line.match?(CLAIM_COUNT_TYPE) }
+
+      recheck = block.filter_map { |line| line.match(CLAIM_RECHECK)&.[](1) }.first
+      next if recheck&.match?(RECHECK_CMD)
+
+      claim_id = lines[start].match(CLAIM_HEADER)[1]
+      violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
+                    "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
+    end
+  end
+
   added_line_set =
     if changed_docs == :all
       rel.start_with?("docs/worklog/", "docs/handoff/") ? :all : nil
@@ -358,6 +391,7 @@ if violations.empty?
   puts "OK：文檔引用保真檢查通過"
   puts "  - 掃描檔案：#{scanned.size} 個（*.md ＋ scripts/*）"
   puts "  - R1 路徑保真／R3 行號保真：全樹"
+  puts "  - R6 計數宣稱：docs/specs/92-* 結構化索引（tree-wide）"
   if changed_docs == :all
     puts "  - R4 易腐數字／R5 全稱句：**全部** worklog／handoff（`--all`）"
   elsif changed_docs

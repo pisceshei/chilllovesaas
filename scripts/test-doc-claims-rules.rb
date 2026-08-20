@@ -53,6 +53,12 @@ CASES = [
   [ "doc_volatile_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 反向斷言：同樣寫數字但**附了複驗指令** ⇒ 放行。" \
     "缺這條，R4 會退化成「一律禁止寫數字」，那會逼人把有用的量化敘述都刪掉" ],
+  [ "doc_claim_count_missing_recheck", 1, "R6 計數宣稱",
+    "🔴 R6：`docs/specs/92-*` 的 `type: count` 宣稱缺 `recheck:` 必須轉紅。" \
+    "這是 P-2『計數必附複驗指令』的負向 fixture" ],
+  [ "doc_claim_count_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：同一結構補上可執行 `recheck:` 後必須通過，" \
+    "避免規則退化成宣稱索引一律失敗" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -65,7 +71,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 10
+MIN_CASES = 12
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
