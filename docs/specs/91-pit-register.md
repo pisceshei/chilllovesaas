@@ -689,9 +689,10 @@ git -c core.quotepath=false ls-files docs/worklog docs/handoff | sort | md5sum
 grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|handoff)/[^`]+' | sort | md5sum
 ```
 
-> 🔴 **新增 worklog/handoff 的同一 commit 必須同步補列本清單**（第 2 輪改——原
-> 「之後隨輪補列」擋不住同 commit 新增檔漏列：本 PR 首版即漏了自己的 3 檔，
-> 其中 phase0 交接檔正是最密集的收割源）。
+> 🔴 **新增 tracked worklog 的同一 commit 必須同步補列本清單**（第 2 輪改——原
+> 「之後隨輪補列」擋不住同 commit 新增檔漏列）。依 D36，之後不得新增 tracked
+> `docs/handoff/`；倉庫外的本地 handoff 不屬於本清單。既有 `docs/handoff/` 保留於
+> A.2 作歷史追溯，不刪除、不改寫。
 
 ### A.1 worklog
 
@@ -827,6 +828,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-handoff工作單位節奏與本地保存更正.md`（D36 恢復工作單位節奏；新 handoff 改為倉庫外本地保存，沒有新增坑項）
 
 ### A.2 handoff
 
