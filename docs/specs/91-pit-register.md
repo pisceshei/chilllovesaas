@@ -847,6 +847,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 - [x] `docs/worklog/2026-08-20-handoff工作單位節奏與本地保存更正.md`（D36 恢復工作單位節奏；新 handoff 改為倉庫外本地保存，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR62首輪驗收修復.md`（Codex review `4982782311` 與 Claude comment `5356127623`；D36 延後消費者及凍結 handoff 待辦已落 §3）
+- [x] `docs/worklog/2026-08-20-PR62第二輪驗收修復.md`（Codex inline `3821829610` 與 Claude comment `5356457527` 同件；REST／GraphQL 重取入口已補，未新增 §3 項）
 
 ### A.2 handoff
 
