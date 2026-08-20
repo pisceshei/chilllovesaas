@@ -857,6 +857,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62首輪驗收修復.md`（Codex review `4982782311` 與 Claude comment `5356127623`；D36 延後消費者及凍結 handoff 待辦已落 §3）
 - [x] `docs/worklog/2026-08-20-PR62第二輪驗收修復.md`（Codex inline `3821829610` 與 Claude comment `5356457527` 同件；REST／GraphQL 重取入口已補，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
+- [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 
 ### A.2 handoff
 
