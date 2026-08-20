@@ -768,7 +768,8 @@
   畸形／游離標頭與收尾檢查；現句不假，完整契約也已在 checker 註釋及
   `docs/dev/m0-review-convergence.md`，故本輪只登記。後續訊息包若要擴寫，須以契約反查避免
   成功文字再次落後行為
-  【F5/F12；來源＝PR #65 Claude comment `5360428264` ⚪2；取證日期＝2026-08-21】
+  【F5/F12；來源＝PR #65 Claude comments `5360428264` ⚪2／`5360765482` ⚪；
+  取證日期＝2026-08-21】
 
 - **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
   `CLAIM_COUNT_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
@@ -787,14 +788,33 @@
   【F5/F12；來源＝PR #65 Claude comment `5359428067` ⚪2＋
   <https://github.github.com/gfm/#tables-extension>；取證日期＝2026-08-21】
 
-- **R6 尚未約束單一合法區塊的重複 `type: count`，供給 canary 也依賴 CI 不傳位置 ROOT**：
-  `scripts/check-doc-claims.rb` 目前只以 `block.any?` 判區塊含計數類型，同一合法區塊若塞入
-  第二筆未另立 CLAIM 標頭的 `type: count`，仍會共用第一筆 recheck；另 `explicit_root` 會讓
-  R6 零供給 canary 豁免，而 W1 只釘 `--require-base`、未禁止 CI 傳 ROOT。本輪 current-head
-  Claude 明列兩洞但判為不開阻擋項，依鐵律 17.2 不擴改；後續 script-only 包須分別加「每區塊
-  type 唯一」負向 fixture，以及 production wiring 不得意外關 canary 的供給斷言，仍按 18.3
-  人工合併
+- **R6 重複 `type: count` 候選已轉結案；production ROOT 豁免供給 canary 仍開放**：
+  原候選有兩個獨立邊界：同一合法區塊的第二筆 count 可共用第一筆 recheck，以及
+  `explicit_root` 會讓 R6 零供給 canary 豁免、W1 又只釘 `--require-base` 而未禁止 CI 傳 ROOT。
+  前者經 Codex inline `3824670871` 正式點名後，PR #65 第五輪已以每區塊 count cardinality
+  檢查與 `doc_claim_duplicate_count` 負向 fixture 修成結案候選；同輪 inline `3824670885` 點名的
+  索引內 count 全空另由 `doc_claim_no_count` 固化。後者未被本輪要求修改，仍保持開放；後續若改
+  production wiring 仍須獨立查證並按 18.3 人工合併
   【F10/F12；來源＝PR #65 Claude comment `5359428067` ✅4／未覆蓋；取證日期＝2026-08-21】
+
+- **B9 標題與射程只描述圍欄，不能當作 HTML comment／code span 契約的總入口**：
+  `docs/dev/external-facts.md` B9 的官方證據與專案政策只處理清單縮排及未收尾 fenced code；
+  code span 優先級另由 B5 取證，HTML comment EOF 則是本專案 fail-closed 契約。三者不得因都在
+  `active_markdown_lines` 實作就合寫成同一個外部語義；本輪只把被點名的 code span 應用同步到
+  B5，不擴張 B9 標題
+  【F5/F11；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
+
+- **doc-claims runner 的摘要沒有完整呈現 W1 生產供給情境**：
+  `GIT_SCENARIOS` 與 `SUPPLY_SCENARIOS` 的計數只會發布各自陣列大小，但 runner 另有 W1 wiring
+  檢查；因此即使輸出含五個 bullet，也不能從「3 組 git＋1 組 supply」推出所有非 fixture
+  情境的總數。現行檢查仍執行，問題是摘要口徑不完整；未被要求修改 runner 輸出，依 17.2 只登記
+  【F5/F12；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
+
+- **階段一執行方案的 P-2 R6 摘要仍只寫「計數必附複驗指令」**：
+  `docs/plans/2026-08-20-階段一執行方案.md` §2 的交付表是開工時快照，沒有同步後續驗收擴出的
+  活性 Markdown、唯一性、收尾與供給 canary 契約。現行終態已由 checker 註釋及
+  `docs/dev/m0-review-convergence.md` 發布；方案本輪未被點名修改，依歷史層與 17.2 只登記
+  【F5/F11；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -965,6 +985,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第二輪post-commit宣稱修復.md`（commit `6afac5d` 後 doc-claims 命中 R6 子集合手抄分量；只撤回該易腐計數）
 - [x] `docs/worklog/2026-08-21-PR65第三輪雙驗收修復.md`（Claude comment `5359967807`＋Codex review `4985880560`；快照／口徑／R6 fail-closed 與契約同步已處置）
 - [x] `docs/worklog/2026-08-21-PR65第四輪雙驗收修復.md`（Claude comment `5360428264`＋Codex review `4986322814`；HTML comment fail-closed、終態 Changes、外部證據與宣稱斷言已處置）
+- [x] `docs/worklog/2026-08-21-PR65第五輪雙驗收修復.md`（Claude comment `5360765482`＋Codex review `4986560215`；count cardinality／零供給、code span comment scope、歷史分類與終態聲明已處置）
 
 ### A.2 handoff
 

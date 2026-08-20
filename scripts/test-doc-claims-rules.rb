@@ -59,6 +59,12 @@ CASES = [
   [ "doc_claim_count_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：同一結構補上可執行 `recheck:` 後必須通過，" \
     "避免規則退化成宣稱索引一律失敗" ],
+  [ "doc_claim_duplicate_count", 1, "R6 同一 CLAIM-001 含多個 `type: count`",
+    "🔴 R6：同一 CLAIM 區塊的第二筆 count 不得借用第一筆 recheck；" \
+    "每個計數宣稱必須有自己的 CLAIM 標頭與複驗命令" ],
+  [ "doc_claim_no_count", 1, "R6 宣稱索引沒有任何活性 `type: count`",
+    "🔴 R6 局部零供給 canary：合法 CLAIM 標頭存在但 count 全被刪除／改型時必須轉紅，" \
+    "不能拿 header canary 冒充計數契約有輸入" ],
   [ "doc_claim_malformed_header", 1, "R6 宣稱標頭格式錯誤",
     "🔴 R6：已有合法區塊時，後續 `### CLAIM-02` 不得被折入前一區塊，" \
     "否則該錯字區塊的 `type: count` 可借用前一條的 recheck 靜默通過" ],
@@ -90,6 +96,12 @@ CASES = [
   [ "doc_claim_unclosed_comment", 1, "R6 HTML comment 未關閉",
     "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉 HTML comment 時不得把後續索引全部靜默遮掉；" \
     "必須在 comment 起始行阻擋" ],
+  [ "doc_claim_code_span_comment_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：合法 recheck code span 內的 `<!--` 是字面命令內容，" \
+    "不得誤開 HTML comment 或把合法 count 擋掉" ],
+  [ "doc_claim_code_span_comment_scope", 1, "R6 計數宣稱 CLAIM-002",
+    "🔴 R6：正文 code span 內的 `<!--`／`-->` 都不得改變 comment 狀態；" \
+    "兩者之間缺 recheck 的 CLAIM-002 必須保持活性並轉紅" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -102,7 +114,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 23
+MIN_CASES = 27
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

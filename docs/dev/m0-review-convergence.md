@@ -88,7 +88,7 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| R6 | 索引須有活性 `CLAIM-NNN` 標頭、CLAIM ID 唯一、圍欄／HTML comment 須收尾；`type: count` 須附可辨識的 `recheck:` 命令 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| R6 | 索引須有活性 `CLAIM-NNN` 標頭與至少一個 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；每個區塊只能有一筆 `type: count` 並須附可辨識的 `recheck:` 命令；同一行成對 code span 內的 comment delimiter 是字面值 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
 | canary | 全樹掃到 0 個檔，或生產調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
@@ -168,6 +168,8 @@
 | `doc_plans_scope` | 1 | 🔴 掃描範圍 canary：`docs/plans/` 已納 IN_SCOPE（2026-08-18 PR #58）——拿掉範圍時本 CASE 期望 1 實得 3（零檔 canary）＝回歸測試轉紅 |
 | `doc_claim_count_missing_recheck` | 1 | R6 計數宣稱缺 `recheck:` |
 | `doc_claim_count_ok` | 0 | R6 反向：合法命令形態必須放行 |
+| `doc_claim_duplicate_count` | 1 | R6 同一區塊的第二筆 count 不得借用第一筆 recheck |
+| `doc_claim_no_count` | 1 | R6 局部零供給：合法 CLAIM 存在但 count 全空仍須阻擋 |
 | `doc_claim_bad_recheck` | 1 | R6 有 `recheck:` 但不是命令，不得只驗欄位存在 |
 | `doc_claim_no_headers` | 1 | R6 索引沒有任何 CLAIM 標頭 |
 | `doc_claim_count_before_header` | 1 | R6 計數宣稱落在第一個合法區塊前 |
@@ -179,6 +181,8 @@
 | `doc_claim_inactive_headers` | 0 | R6 反向：fenced code／HTML comment 內的範例標頭必須忽略 |
 | `doc_claim_unclosed_fence` | 1 | R6 fail-closed：未關閉圍欄不得把後續索引靜默排除 |
 | `doc_claim_unclosed_comment` | 1 | R6 fail-closed：未關閉 HTML comment 不得把後續索引靜默排除 |
+| `doc_claim_code_span_comment_ok` | 0 | R6 反向：同一行成對 code span 內的 `<!--` 不得誤開 comment |
+| `doc_claim_code_span_comment_scope` | 1 | R6 code span 內的 delimiter 不得遮掉後續缺 recheck 區塊 |
 | `doc_no_files` | **3** | canary |
 | `doc_clean` | 0 | 總反向斷言 |
 （表列以 `ls spec/fixtures/ci_violations/ | grep ^doc_` 為準——列數勿手寫。）
@@ -188,8 +192,10 @@
 
 **突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／
 全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
-首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／重複 ID／把 fenced code 或 HTML comment
-誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML comment 靜默截斷／生產樹零份
+首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／
+重複 ID／單區塊重複 count 借用 recheck／合法標頭下 count 零供給／把 fenced code 或 HTML comment
+誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML comment 靜默截斷／code span delimiter
+誤開 comment 或改變 comment scope／生產樹零份
 `docs/specs/92-*`；逐項由 fixture、git 情境或
 supply-S1 令 `scripts/test-doc-claims-rules.rb` 轉紅。
 

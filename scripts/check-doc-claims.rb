@@ -29,7 +29,8 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
-#   R6｜**宣稱索引須有活性標頭、CLAIM ID 唯一、圍欄／HTML comment 須收尾，且計數項必須附複驗指令**
+#   R6｜**宣稱索引須有活性標頭與 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾，
+#       且每個區塊只能有一筆計數並附複驗指令**
 #       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
@@ -149,9 +150,9 @@ UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從�
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
-# 索引必須至少有一個活性 `CLAIM-NNN` 標頭且 ID 唯一，Markdown 圍欄與 HTML comment
-# 必須收尾；每個
-# `type: count` 區塊都必須有 `recheck:`，且內容要符合上方 RECHECK_CMD 的可執行指令形態。
+# 索引必須至少有一個活性 `CLAIM-NNN` 標頭與一個 `type: count` 區塊，且 ID 唯一；
+# Markdown 圍欄與 HTML comment 必須收尾。每個區塊只能有一筆 `type: count`，並附一筆
+# `recheck:`，內容要符合上方 RECHECK_CMD 的可執行指令形態。
 # 既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
@@ -177,8 +178,31 @@ def near?(lines, idx, re)
   lines[lo..hi].join("\n").match?(re)
 end
 
+# 只遮同一行內成對的 code span，保留字元位置與原文供後續 metadata 判定；未成對 backtick
+# 仍是字面文字。這個遮罩只拿來找 HTML comment opener，不能拿它取代可見正文。
+def mask_inline_code_spans(line)
+  masked = line.dup
+  cursor = 0
+
+  while (opening = /`+/.match(line, cursor))
+    run = opening[0]
+    closing = /(?<!`)#{Regexp.escape(run)}(?!`)/.match(line, opening.end(0))
+    unless closing
+      cursor = opening.end(0)
+      next
+    end
+
+    length = closing.end(0) - opening.begin(0)
+    masked[opening.begin(0), length] = " " * length
+    cursor = closing.end(0)
+  end
+
+  masked
+end
+
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
+# block fence 先於 inline/comment 掃描；正文同一行的 code span 內 comment delimiter 是字面值。
 # 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
@@ -193,6 +217,18 @@ def active_markdown_lines(lines)
       next
     end
 
+    unless comment
+      if (fence_opening = raw.match(/\A {0,3}(`{3,}|~{3,})(.*)\z/))
+        run = fence_opening[1]
+        info = fence_opening[2]
+        # CommonMark：backtick fence 的 info string 不得再含 backtick；不合法者仍是正文。
+        unless run.start_with?("`") && info.include?("`")
+          fence = { char: run[0], length: run.length, line: idx }
+          next
+        end
+      end
+    end
+
     visible = +""
     rest = raw
     loop do
@@ -203,7 +239,7 @@ def active_markdown_lines(lines)
         rest = rest[(closing + 3)..].to_s
         comment = nil
       else
-        opening = rest.index("<!--")
+        opening = mask_inline_code_spans(rest).index("<!--")
         unless opening
           visible << rest
           break
@@ -212,16 +248,6 @@ def active_markdown_lines(lines)
         visible << rest[0...opening]
         rest = rest[(opening + 4)..].to_s
         comment = { line: idx }
-      end
-    end
-
-    if (opening = visible.match(/\A {0,3}(`{3,}|~{3,})(.*)\z/))
-      run = opening[1]
-      info = opening[2]
-      # CommonMark：backtick fence 的 info string 不得再含 backtick；不合法者仍是正文。
-      unless run.start_with?("`") && info.include?("`")
-        fence = { char: run[0], length: run.length, line: idx }
-        next
       end
     end
 
@@ -368,6 +394,7 @@ targets.each do |rel|
       end
     end
     seen_claim_ids = {}
+    count_claim_blocks = 0
     header_positions.each_with_index do |start_pos, pos|
       finish_pos = pos + 1 < header_positions.size ? header_positions[pos + 1] : active_lines.size
       start, header_line = active_lines[start_pos]
@@ -386,14 +413,25 @@ targets.each do |rel|
         seen_claim_ids[claim_id] = start
       end
 
-      block = active_lines[start_pos...finish_pos].map(&:last)
-      next unless block.any? { |line| line.match?(CLAIM_COUNT_TYPE) }
+      block = active_lines[start_pos...finish_pos]
+      count_entries = block.select { |_idx, line| line.match?(CLAIM_COUNT_TYPE) }
+      next if count_entries.empty?
 
-      recheck = block.filter_map { |line| line.match(CLAIM_RECHECK)&.[](1) }.first
+      count_claim_blocks += 1
+      count_entries.drop(1).each do |idx, _line|
+        violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `type: count`——" \
+                      "每筆計數必須放在自己的 `### CLAIM-NNN` 區塊並附複驗指令。"
+      end
+
+      recheck = block.filter_map { |_idx, line| line.match(CLAIM_RECHECK)&.[](1) }.first
       next if recheck&.match?(RECHECK_CMD)
 
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
-                    "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
+                      "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
+    end
+    if count_claim_blocks.zero?
+      violations << "#{rel}:1 R6 宣稱索引沒有任何活性 `type: count` CLAIM 區塊——" \
+                    "這不是零宣稱，是計數契約的輸入被清空。"
     end
   end
 

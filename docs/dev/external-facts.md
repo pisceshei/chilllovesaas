@@ -258,6 +258,11 @@ GFM 規範同文 <https://github.github.com/gfm/>（取證 2026-08-19，已與 c
 ⇒ 文件裡的「預期輸出」若含 `**`，會與終端機實際輸出**字面不符**；
 要強調就把粗體包在 code span **外**，不要塞進去。
 
+🔴 **2026-08-21 對 R6 的直接應用**：依上列同一段官方逐字，同一行成對 code span 內的
+`<!--`／`-->` 是字面內容，不得改變 HTML comment 狀態。`check-doc-claims.rb` 因此只在尋找
+comment opener 時遮掉這類 code span；這是本專案針對單行 metadata／正文的實作邊界，不外推為
+完整 CommonMark parser，也不宣稱支援跨行 code span。
+
 ### B6. 限流：primary 明列 reset 時點；secondary 另明列有限次重試
 
 > primary — "If you exceed your primary rate limit, you will receive a 403 or 429 response, and the
