@@ -59,6 +59,17 @@ CASES = [
   [ "doc_claim_count_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：同一結構補上可執行 `recheck:` 後必須通過，" \
     "避免規則退化成宣稱索引一律失敗" ],
+  [ "doc_claim_malformed_header", 1, "R6 宣稱標頭格式錯誤",
+    "🔴 R6：已有合法區塊時，後續 `### CLAIM-02` 不得被折入前一區塊，" \
+    "否則該錯字區塊的 `type: count` 可借用前一條的 recheck 靜默通過" ],
+  [ "doc_claim_bad_recheck", 1, "R6 計數宣稱",
+    "🔴 R6：`recheck:` 有值但不是可辨識命令時仍須轉紅；" \
+    "本 case 釘住 RECHECK_CMD，避免判準退化成只檢查欄位存在" ],
+  [ "doc_claim_no_headers", 1, "R6 宣稱索引沒有任何",
+    "🔴 R6：索引檔有 `type: count` 卻沒有任何 CLAIM 標頭時必須轉紅，" \
+    "釘住 headers.empty? 的局部零掃描分支" ],
+  [ "doc_claim_count_before_header", 1, "R6 計數宣稱出現在第一個 CLAIM 標頭之前",
+    "🔴 R6：合法 CLAIM 區塊存在時，標頭前的 `type: count` 也不得落在結構化檢查之外" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -71,7 +82,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 12
+MIN_CASES = 16
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
@@ -111,6 +122,7 @@ require "fileutils"
 require "open3"
 
 GIT_SCENARIOS = 3
+SUPPLY_SCENARIOS = 1
 git_run = lambda do |work, *cmd|
   out, st = Open3.capture2e({ "LC_ALL" => "C" }, "git", "-C", work,
                             "-c", "user.email=t@example.com", "-c", "user.name=t", *cmd)
@@ -182,14 +194,32 @@ rescue StandardError => e
   failures << "git 情境測試自身失敗（#{e.class}）：#{e.message}"
 end
 
+# S1（R6 生產供給 canary）：總掃描不為 0，不代表 R6 有輸入。把 checker 放進一棵只有
+# docs/dev 的乾淨樹，以**無 ROOT 參數**的生產形態執行；缺 92 索引必須 exit 3。
+Dir.mktmpdir("doc-claims-r6-supply-") do |work|
+  FileUtils.mkdir_p(File.join(work, "scripts"))
+  FileUtils.mkdir_p(File.join(work, "docs/dev"))
+  FileUtils.cp(CHECKER, File.join(work, "scripts/check-doc-claims.rb"))
+  File.write(File.join(work, "docs/dev/README.md"), "# clean\n")
+  out, st = Open3.capture2e("ruby", File.join(work, "scripts/check-doc-claims.rb"), "--all")
+  if st.exitstatus != 3 || !out.include?("R6 掃到 **0 個")
+    failures << "supply-S1：生產樹缺 docs/specs/92-* 應 exit 3 並點名 R6 零供給，" \
+                "實得 #{st.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
+  end
+rescue StandardError => e
+  failures << "R6 supply 情境測試自身失敗（#{e.class}）：#{e.message}"
+end
+
 if failures.empty?
   puts "OK：文檔引用保真檢查器的回歸測試通過" \
-       "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ #{GIT_SCENARIOS} 條 git 情境）"
+       "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ " \
+       "#{GIT_SCENARIOS} 條 git 情境＋#{SUPPLY_SCENARIOS} 條供給情境）"
   CASES.each { |dir, st, needle, why| puts "  - #{dir} → exit #{st}，含 `#{needle}`：#{why}" }
   puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
   puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
+  puts "  - supply-S1 → 生產樹缺 docs/specs/92-* 時 exit 3，不得拿其他受管檔掩蓋 R6 零輸入"
   exit 0
 end
 

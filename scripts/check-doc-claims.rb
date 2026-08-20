@@ -78,6 +78,7 @@ if (i = argv.index("--base"))
   argv.delete_at(i)
   argv.delete_at(i)
 end
+explicit_root = !argv.empty?
 ROOT = argv[0] ? File.expand_path(argv[0]) : File.expand_path("..", __dir__)
 
 # 反引號內、看起來像倉庫路徑的東西。開頭限定在真實存在的頂層目錄，
@@ -151,12 +152,14 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 # 可執行指令形態。既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /^### CLAIM-(\d{3})\s*$/
+CLAIM_LIKE_HEADER = /\A#+\s+CLAIM-/
 CLAIM_COUNT_TYPE = /^-\s+type:\s*count\s*$/
 CLAIM_RECHECK = /^-\s+recheck:\s*(.+)$/
 
 violations = []
 warnings = []
 scanned = []
+claim_indexes_scanned = 0
 
 def anchored?(lines, idx)
   lo = [ idx - 2, 0 ].max
@@ -282,20 +285,36 @@ targets.each do |rel|
 
   # --- R6（宣稱索引，tree-wide）---
   if rel.match?(CLAIM_INDEX)
-    headers = lines.each_index.select { |idx| lines[idx].match?(CLAIM_HEADER) }
+    claim_indexes_scanned += 1
+    headers = lines.each_index.select { |idx| lines[idx].match?(CLAIM_LIKE_HEADER) }
     if headers.empty?
       violations << "#{rel}:1 R6 宣稱索引沒有任何 `### CLAIM-NNN` 區塊——" \
                     "這不是零宣稱，是結構化檢查沒有生效。"
     end
+    if headers.any?
+      lines[0...headers.first].each_with_index do |line, idx|
+        next unless line.match?(CLAIM_COUNT_TYPE)
+
+        violations << "#{rel}:#{idx + 1} R6 計數宣稱出現在第一個 CLAIM 標頭之前——" \
+                      "每個 `type: count` 都必須位於自己的 `### CLAIM-NNN` 區塊內。"
+      end
+    end
     headers.each_with_index do |start, pos|
       finish = pos + 1 < headers.size ? headers[pos + 1] : lines.size
+      header = lines[start].match(CLAIM_HEADER)
+      unless header
+        violations << "#{rel}:#{start + 1} R6 宣稱標頭格式錯誤：`#{lines[start]}`——" \
+                      "必須使用三位數 `### CLAIM-NNN`（例如 `### CLAIM-002`）。"
+        next
+      end
+
       block = lines[start...finish]
       next unless block.any? { |line| line.match?(CLAIM_COUNT_TYPE) }
 
       recheck = block.filter_map { |line| line.match(CLAIM_RECHECK)&.[](1) }.first
       next if recheck&.match?(RECHECK_CMD)
 
-      claim_id = lines[start].match(CLAIM_HEADER)[1]
+      claim_id = header[1]
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
                     "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
     end
@@ -385,13 +404,22 @@ if scanned.empty?
   exit 3
 end
 
+# 🔴 R6 的局部零掃描 canary：整棵樹有其他受管檔時，總 canary 不會響；若生產樹的
+#    `docs/specs/92-*` 全被移除，舊版仍印「R6 ... tree-wide」並 exit 0。fixture 明確傳 ROOT，
+#    可合法沒有生產索引；無 ROOT 的生產調用則必須至少掃到一份。
+if !explicit_root && claim_indexes_scanned.zero?
+  warn "::error::R6 掃到 **0 個 `docs/specs/92-*` 宣稱索引**——" \
+       "這不是通過，是 R6 在生產樹沒有輸入（exit 3）。"
+  exit 3
+end
+
 warnings.each { |w| warn "::warning::#{w}" }
 
 if violations.empty?
   puts "OK：文檔引用保真檢查通過"
   puts "  - 掃描檔案：#{scanned.size} 個（*.md ＋ scripts/*）"
   puts "  - R1 路徑保真／R3 行號保真：全樹"
-  puts "  - R6 計數宣稱：docs/specs/92-* 結構化索引（tree-wide）"
+  puts "  - R6 計數宣稱：docs/specs/92-* 結構化索引（tree-wide；#{claim_indexes_scanned} 份）"
   if changed_docs == :all
     puts "  - R4 易腐數字／R5 全稱句：**全部** worklog／handoff（`--all`）"
   elsif changed_docs

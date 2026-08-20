@@ -8,10 +8,10 @@
 
 - type: count
 - sources: `docs/specs/50-logic-gap-register.md` 表 3、附錄
-- original: 表 3 把 C-01～C-16 寫成 15 條，因而寫成表 3 共 25、全簿共 313。
-- corrected: C 列 16、T 列 10、表 3 共 26；附錄五表合計 314。
+- original: P-2 輸入把 C-01～C-16 的 16 列都視為衝突，要求把表 3 從 25 改成 26、全簿從 313 改成 314。
+- corrected: C 列雖有 16 列，但 C-16 是正面對照；15 條 C 衝突＋10 條 T 衝突＝表 3 共 25，附錄五表合計 313。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/50-logic-gap-register.md"); c=s.scan(/^\| C-\d{2} /).size; t=s.scan(/^\| \*\*T-\d{2}\*\* \|/).size; sums=s.lines.filter_map{|l| m=l.match(/^\| \u8868 [1-5].*?\| \*\*(\d+)\*\*/); m&&m[1].to_i}; abort "unexpected structure" unless [c,t,sums.size]==[16,10,5]; p [c,t,c+t,sums.sum]'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/50-logic-gap-register.md"); c=s.lines.grep(/^\| C-\d{2} /); positive=c.count{|l| l.include?("三方一致正面清單")}; conflicts=c.size-positive; t=s.scan(/^\| \*\*T-\d{2}\*\* \|/).size; sums=s.lines.filter_map{|l| m=l.match(/^\| \u8868 [1-5].*?\| \*\*(\d+)\*\*/); m&&m[1].to_i}; abort "unexpected structure" unless [c.size,conflicts,positive,t,sums.size]==[16,15,1,10,5]; p({c_rows:c.size,c_conflicts:conflicts,positive_controls:positive,t_conflicts:t,table_3:conflicts+t,total:sums.sum})'`
 - status: corrected
 
 ### CLAIM-002
@@ -19,9 +19,9 @@
 - type: count
 - sources: `docs/specs/83-admin-1to1-audit-round3.md` §0、§1.1
 - original: §0 寫本輪已修復 7 條 P0，但 §1.1 的逐項複驗列有 10 條。
-- corrected: 本輪複驗為已修復的 P0 是 10 條；不得再用「53 的 10 條未解決」當這組的分母。
+- corrected: §1.1 有 10 列 P0 複驗紀錄；其中 8 列已修復，P0-14／P0-18 仍為部分修復。不得再用「53 的 10 條未解決」當這組的分母。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/83-admin-1to1-audit-round3.md"); x=s[s.index(/^### 1\.1 /)...s.index(/^### 1\.2 /)]; ids=x.scan(/^\| (P0-\d+)/).flatten; abort "duplicate or wrong count" unless ids.uniq==ids && ids.size==10; p ids'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/83-admin-1to1-audit-round3.md"); x=s[s.index(/^### 1\.1 /)...s.index(/^### 1\.2 /)]; rows=x.lines.filter_map{|l| m=l.match(/^\| (P0-\d+).*?\[(已修復|部分)\]/); m&&[m[1],m[2]]}; fixed=rows.select{|_,v|v=="已修復"}.map(&:first); partial=rows.select{|_,v|v=="部分"}.map(&:first); abort "unexpected states" unless [rows.size,fixed.size,partial]==[10,8,%w[P0-14 P0-18]]; p({rows:rows.size,fixed:fixed,partial:partial})'`
 - status: corrected
 
 ### CLAIM-003
@@ -29,9 +29,9 @@
 - type: count
 - sources: `docs/specs/84-m1-gate-triage.md` 起因、`docs/specs/71-admin-parity-sweep.md` §F
 - original: 84 建檔文字把「81 條未結案」寫成無時間邊界的現值。
-- corrected: 81 只保留為建檔原文的歷史引述；71 目前未結案列為 76。
+- corrected: 81 只保留為建檔原文的歷史引述；71 目前含未結案標記的列為 77（含混合狀態 71-R3-DOC1）。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 'puts File.foreach("docs/specs/71-admin-parity-sweep.md").count{|l| l.start_with?("| 71-R") && l.split("|")[-2].to_s.strip.bytes.first(3)==[226,172,156]}'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 'rows=File.readlines("docs/specs/71-admin-parity-sweep.md",chomp:true).grep(/^\| 71-R/); open=rows.count{|l| l.match?(/\|\s*[^|]*⬜[^|]*\s*\|\s*\z/)}; abort "expected 77 unresolved rows, got #{open}" unless open==77; puts open'`
 - status: corrected
 
 ### CLAIM-004
@@ -51,7 +51,7 @@
 - original: 外部流傳的「48 新增 63 個 token」不是 48 自己的文字，且逐行 regex 漏算同列多宣告。
 - corrected: 在指定歷史快照，§00 有 82 個不同宣告；與 23 §1 重疊 4 個，故新增 78 個。這不是 HEAD 現值。
 - baseline: `e50b9120cc9b2514fde4995a5ff4f6ff15332bff`
-- recheck: `ruby -EUTF-8:UTF-8 -e 'a=%x[git show e50b9120cc9b2514fde4995a5ff4f6ff15332bff:docs/design/48-component-contract.md]; b=%x[git show e50b9120cc9b2514fde4995a5ff4f6ff15332bff:docs/design/23-interaction-css-spec.md]; x=a[a.index("## §00")...a.index("## §0 ")]; aa=x.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq; bb=b.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq; p({declarations:aa.size,overlap:(aa&bb).size,new_tokens:aa.size-(aa&bb).size})'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 'a=%x[git show e50b9120cc9b2514fde4995a5ff4f6ff15332bff:docs/design/48-component-contract.md]; b=%x[git show e50b9120cc9b2514fde4995a5ff4f6ff15332bff:docs/design/23-interaction-css-spec.md]; x=a[a.index("## §00")...a.index("## §0 ")]; aa=x.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq; bb=b.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq; values=[aa.size,(aa&bb).size,aa.size-(aa&bb).size]; abort "unexpected snapshot counts #{values.inspect}" unless values==[82,4,78]; p({declarations:values[0],overlap:values[1],new_tokens:values[2]})'`
 - status: corrected
 
 ### CLAIM-006
@@ -59,7 +59,7 @@
 - type: count
 - sources: `docs/specs/53-ui-gap-recheck.md` §0、§6、§9
 - original: 162 是表 1–5 小計，卻以「合計」呈現，沒有納入同檔新增的 §6 與 §9。
-- corrected: 表 1–5 小計 162、§6 回歸風險 7、§9 新發現 11；全文件口徑為 180。
+- corrected: 表 1–5 小計 162、§6 回歸風險 7 列、§9 新發現 11 列；三段合計 180 個原始列次，但 §6／§9 有六組成對重述，因此 180 不代表 distinct gap 總數。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/53-ui-gap-recheck.md"); line=s.lines.find{|l| l.include?("**162**") && l.start_with?("| **")}; nums=line.scan(/\*\*(\d+)\*\*/).flatten; base=nums[1].to_i; risks=s.scan(/^\| \*\*R-\d{2}\*\* \|/).size; findings=s.scan(/^\| \*\*N-\d{2}\*\* \|/).size; abort "unexpected counts" unless [base,risks,findings]==[162,7,11]; p({tables_1_to_5:base,section_6:risks,section_9:findings,all:base+risks+findings})'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/53-ui-gap-recheck.md"); line=s.lines.find{|l| l.include?("**162**") && l.start_with?("| **")}; nums=line.scan(/\*\*(\d+)\*\*/).flatten; base=nums[1].to_i; risks=s.scan(/^\| \*\*R-\d{2}\*\* \|/).size; findings=s.scan(/^\| \*\*N-\d{2}\*\* \|/).size; abort "unexpected counts" unless [base,risks,findings]==[162,7,11]; p({tables_1_to_5:base,section_6_rows:risks,section_9_rows:findings,row_occurrences:base+risks+findings,distinct_total:"not claimed"})'`
 - status: corrected

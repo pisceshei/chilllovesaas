@@ -215,6 +215,9 @@
   要擴須先解「本尊路徑 vs 我方路徑」判別；與 G-01 同屬登記簿保真缺口群
   【F12；來源＝#58 第 2 輪判詞 ⚪，第 4 輪補搬——第 3 輪漏搬＝G-01 第二次現行犯，
   本條目即該事故的登記】
+- `AGENTS.md`「洞一：嚴重度」的阻擋規則例舉仍只寫 R1／R3／R4，R6 落地後列舉不完整；
+  該段沒有宣稱「只有」三種，現值不是假話，且 `AGENTS.md` 不在 PR #65 累積 diff，故只登記、
+  留待獨立鐵律文件輪同步【F5/F12；來源＝PR #65 首輪 Claude comment `5359074865` ⚪】
 - docs/plans/ 納管後實得覆蓋僅 R1／R3（R4／R5 範圍判斷硬綁 worklog／handoff 未動）
   ——契約層註釋已於第 4 輪補限定；要收窄落差改註釋已做、改 R4 範圍屬 G 級裁定
   【F12；來源＝#58 第 3 輪判詞 ⚪1】
@@ -875,6 +878,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-21-P2宣稱索引與R6.md`（六組假數字證據化＋R6 正反 fixture；已通讀，Markdown 範圍外同型問題已登 §3）
+- [x] `docs/worklog/2026-08-21-PR65首輪雙驗收修復.md`（Codex review `4985224623`＋Claude comment `5359074865`；首輪意見與鐵律 20.3 稽核已處置）
 
 ### A.2 handoff
 

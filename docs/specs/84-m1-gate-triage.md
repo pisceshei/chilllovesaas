@@ -1,8 +1,8 @@
 # 84 — M1 閘門分流（2026-08-14）
 
 > 起因：本檔建立時文字記作「parity R0–R13 累積 81 條未結案」，但那個無時間邊界的
-> 數字不能代表後續處置後的現值；`docs/specs/71-admin-parity-sweep.md` 目前未結案列為 **76 條**。
-> 複驗：`ruby -EUTF-8:UTF-8 -e 'puts File.foreach("docs/specs/71-admin-parity-sweep.md").count{|l| l.start_with?("| 71-R") && l.split("|")[-2].to_s.strip.bytes.first(3)==[226,172,156]}'`。
+> 數字不能代表後續處置後的現值；`docs/specs/71-admin-parity-sweep.md` 目前含未結案標記的列為 **77 條**。
+> 複驗：`ruby -EUTF-8:UTF-8 -e 'rows=File.readlines("docs/specs/71-admin-parity-sweep.md",chomp:true).grep(/^\| 71-R/); open=rows.count{|l| l.match?(/\|\s*[^|]*⬜[^|]*\s*\|\s*\z/)}; abort "expected 77 unresolved rows, got #{open}" unless open==77; puts open'`。
 > 本檔當時從登記中取出其中 16 條標「M1 相關」，但沒人確認過這 16 條
 > **是不是真的都擋 M1**——標籤是各輪當下順手打的，沒有統一判準。
 > 🔴 **判準（本檔唯一標準）**：**這條沒答，M1 會不會寫出「之後必須重寫的表或欄位」？**
