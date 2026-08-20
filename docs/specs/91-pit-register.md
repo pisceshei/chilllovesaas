@@ -704,7 +704,8 @@
 - **規定的 HTML comment 更正會在 GitHub 渲染中不可見，且放在清單項之間會切斷清單**：
   PR #64 的 P-8 與首輪驗收 worklog 已把被點名的 blockquote 改成 `AGENTS.md` 規定形態，
   但 GitHub 渲染後原句與修正句之間沒有可見說明；comment 以第 0 欄 HTML block 插在 bullet
-  之間時，還會把一個邏輯清單切成多個 `<ul>`。列表切斷根因已在 §2 第 8 輪 ⚪ 登記，
+  之間時，還會把一個邏輯清單切成多個 `<ul>`。列表切斷根因已在 §3.3 的第 8 輪 ⚪ 條目登記；
+  §2 G-02 是另一個 Markdown fence balancing 機械缺口，不是本條 HTML list breakage 的來源。
   本條補的是「規定格式本身不可見」的終態缺口。後續若改可見更正載體會命中 `AGENTS.md`
   本文與鐵律 18.3，須獨立人工審核；本 PR 只登記，不改規則或歷史實物
   【F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
@@ -928,6 +929,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md`（Claude comment `5359558626`＋Codex review `4985595726`；20.3 缺件、A9／A10 證據邊界與易腐計數已處置）
 - [x] `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md`（Claude comment `5359997378`＋Codex review `4985973166`；累積清單回歸、終態 Changes 與範圍外登記已處置）
 - [x] `docs/worklog/2026-08-21-PR64第五輪雙驗收修復.md`（Claude comment `5360279873`＋Codex review `4986192842`；終態集合遞迴過期、20.4 復發閉環與本輪文件意見已處置）
+- [x] `docs/worklog/2026-08-21-PR64第六輪雙驗收修復.md`（Claude comment `5360596028`＋Codex review `4986421292`；穩定基準、可重跑渲染、動態集合與 A9／91 證據邊界已處置）
 
 ### A.2 handoff
 

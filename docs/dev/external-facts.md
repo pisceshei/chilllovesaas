@@ -184,7 +184,7 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 ⇒ **auto-merge 本身不是 head 變動的防護**。
 📌 本頁**未提及**「PR 產生衝突／變成不可合併」是否停用——屬未涵蓋，不是已否定。
 
-### A9. `gh api --paginate` 只從 JSON token stream 首組完整 `pageInfo` 取得單一 `$endCursor`
+### A9. `gh api --paginate` 以單一 `$endCursor` 前進；不完整 `pageInfo` 交錯邊界未取得
 
 > "it fetches the `pageInfo{ hasNextPage, endCursor }` set of fields from a collection."
 
@@ -192,7 +192,7 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 
 官方同段另要求原查詢接受 `$endCursor: String`，並說 `--paginate` 會依序請求結果頁。
 GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada` 的
-`findEndCursor` 讀到一組 `pageInfo.endCursor`／`hasNextPage` 後即：
+`findEndCursor` 使用函式層級的 `foundEndCursor`／`foundNextPage`，遇到另一旗標已成立時即：
 
 > `if foundNextPage { break loop }`
 > `if foundEndCursor { break loop }`
@@ -202,8 +202,15 @@ GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39a
 <https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/api.go>
 （取證 2026-08-21）。
 
-🔴 **由官方實作直接支持的邊界**：同一回應若有多個或巢狀 `pageInfo`，CLI 取 JSON 走訪中
-首個湊齊的游標對，下一次只回填單一 `$endCursor`；它不會替每個巢狀 connection 維護獨立游標。
+⚠️ **證據邊界**：上述旗標沒有綁定到某一個 `pageInfo` 物件；若同一 JSON token stream 出現
+多個、不完整或交錯的 `pageInfo`，不同物件的 token 可能令兩旗標先後成立。官方手冊沒有承諾
+這種輸入的選擇／停止規則，因此「首組完整游標對」及特定 mixed-token 結果均為**未取得**，
+不得發布或依賴。官方同 commit 的 `pagination_test.go` 有正常完整 block 與
+`more pageInfo blocks` 案例，但沒有把不完整交錯升格成公開契約：
+<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/pagination_test.go>
+（取證 2026-08-21）。
+
+🔴 **可發布邊界**：下一頁只回填單一 `$endCursor`，不會替每個巢狀 connection 維護獨立游標。
 因此 PR #62 把 `$endCursor`／`pageInfo` 放在外層 `reviewThreads` 時，只能把該外層重取稱為完整，
 不得外推巢狀 `comments(first:100)` 也逐頁取完。正文全集仍走三個 `--paginate` REST 集合；
 GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
