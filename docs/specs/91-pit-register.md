@@ -602,6 +602,29 @@
   不能以跳過 setup 冒充 wrapper 已修
   【F6/F12；來源＝鐵律 21 本機閘門復驗；取證日期＝2026-08-20】
 
+- **Rails system spec 會因 test 環境 Vite 首次冷建置超過 Capybara 預設等待而假紅**：
+  PR #61 的完整 29 閘門首跑只有 `bundle exec rspec` 失敗，結果為 `284 examples, 1 failure`；
+  `spec/system/m0_admin_shell_spec.rb:18` 在點擊登入後立即等待 `/admin/products`，失敗訊息卻仍顯示
+  `/login`。但同次失敗截圖已呈現正確的 CHILL LOVE 商品空狀態；`log/test.log` 亦逐步證明登入
+  建立有效 session、302 到 `/admin`、`GET /admin` 回 200、首次 Vite 建置與 layout render 約
+  3.58 秒，之後 `/admin/api/2026-08/graphql.json` 回 200。倉庫未設定
+  `Capybara.default_max_wait_time`，而 `/admin` 到 `/admin/products` 是 React `Navigate` 的客戶端
+  redirect；因此本次證據指向冷啟動等待競態，不是登入或授權失效。該 spec／測試基建未被本包
+  點名，依鐵律 17.2 只登記、不改；日後獨立包須以穩健的頁面／路徑等待或測前建置處理，並同時
+  複驗冷、暖兩種執行，不能把單次暖快取綠燈外推成已斷根
+  【F6/F11/F12；來源＝PR #61 2026-08-20 本機 29 閘門首跑、失敗截圖與 test log；取證日期＝2026-08-20】
+
+- **受限工具環境會令 Ruby 對工作區外 gem 路徑的絕對 `Dir.glob` 假性回空**：同一個
+  `solid_cache-1.0.10/lib/generators` 路徑在受限程序內呈現 `File.exist? == true`、
+  `Dir.children` 可列出，但 `Dir.glob(<絕對路徑>) == []`；Zeitwerk 2.8.3 的 ignore 規則正由
+  glob 展開，因而錯把 `solid_cache` generators eager load，造成
+  `uninitialized constant Rails::Generators::Base` 與 `0 examples`。相同命令在獲准的本機外層
+  可列出該路徑，Rails 8.1.3.1 boot、MySQL `SELECT 1` 與定向 system spec `1 example, 0 failures`
+  全部通過。這是驗收執行環境差異，不是專案碼缺陷；本包只登記不改。之後本機 Rails gate 必須
+  先用絕對 glob canary 判別環境，失敗時改在有完整檔案枚舉權的本機層執行，禁止把
+  `0 examples` 當產品失敗或成功
+  【F6/F11/F12；來源＝PR #61 2026-08-20 受限／外層同命令 A/B 實測；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -737,6 +760,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
+- [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
 
 ### A.2 handoff
 
@@ -831,6 +856,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
+- [x] `docs/handoff/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；證據與邊界已交接）
 
 ### A.3 事故密集檔（specs／機制檔）
 
