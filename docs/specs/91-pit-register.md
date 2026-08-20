@@ -787,7 +787,26 @@
   同一 validator 的 `manual round list returned` 使用不跨行的 `.*?`，而歷史散文可跨行換行，
   因此跨行手抄列舉可能避開守衛。兩者都不影響本輪被點名的跨日期 A.1 漏列修復；依 17.2
   只登記，後續 validator 契約包須用結構化 current-entry metadata 與跨行反向案例共同收斂
-  【F5/F11/F12；來源＝PR #64 Claude comment `5361414731` ⚪1／2；取證日期＝2026-08-21】
+  【F5/F11/F12；來源＝PR #64 Claude comments `5361414731` ⚪1／2、`5361847317` ⚪3
+  （再次核對，無新動作）；取證日期＝2026-08-21】
+
+- **PR64 worklog 集合 validator 的輸入缺失／工具失敗分支沒有 mutation 承重**：
+  現行 block 已有 normal、duplicate、drop、missing-section、off-date、delete、rename 路徑，
+  但 `missing terminal correction`、entry path multiplicity、heading multiplicity、manual list、
+  command failure 與 empty set 等 fail-closed guard 沒有各自的 mutation／fixture；因此不能由既有
+  mutation 推出所有輸入缺失與工具失敗分支都被證明。這不影響本輪被點名的歷史表更正；依
+  17.2 只登記，後續 validator 契約包須以逐分支 mutation 補齊 20.2.5
+  【F5/F11/F12；來源＝PR #64 Claude comment `5361847317` ⚪1；取證日期＝2026-08-21】
+
+- **external-facts A9 的短引文丟失官方句中的情態與模式上下文**：
+  A9 現值把片段引為 "the original query accepts..."，但 GitHub CLI 官方 pinned 原文是
+  "For GraphQL requests, this requires that the original query accepts an `$endCursor: String` variable"；
+  完整取頁片段的官方前綴另為 "In `--paginate` mode,"。現行 A9 的後續散文補回要求語義，
+  結論未被證偽；缺口只在逐字節錄載體本身。依 17.2 不順手改 external-facts，後續 evidence-format
+  包須讓引文自行保留必要情態／上下文。來源：
+  <https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/api.go>
+  【F3/F5/F11；官方 pinned 原文獨立重取；PR #64 Claude comment `5361847317` ⚪2；
+  取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -963,6 +982,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第八輪Codex驗收修復.md`（Codex review `4987003396`；A9 完整取頁／GraphQL 游標契約與 A10 超限 fallback 逐字已補）
 - [x] `docs/worklog/2026-08-21-PR64第八輪Claude晚到驗收修復.md`（Claude comment `5361414731`；跨日期 PR64 worklog 漏列改為 fail-closed 並加承重 mutation）
 - [x] `docs/worklog/2026-08-21-PR64第九輪Codex驗收修復.md`（Codex review `4987319876`／inline `3825320726`；歷史 worklog 刪除／改名改為 fail-closed 並加雙 mutation）
+- [x] `docs/worklog/2026-08-21-PR64第十輪Claude驗收修復.md`（Claude comment `5361847317`；20.3 類型名與歷史 snapshot 改用相鄰更正收斂）
 
 ### A.2 handoff
 
