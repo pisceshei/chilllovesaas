@@ -769,7 +769,8 @@
   字串宣稱新的 main-only clone 可直接取得。第五／第六輪已把現行入口改用 preserved main base，
   不回寫第四輪歷史命令；後續引用該舊快照須明列 fetch PR object 的前置。GitHub 對 squash 後
   pull ref 的保留期限／契約未取得，故不主張必然可達或不可達
-  【F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪2、`5360974435` ⚪2；
+  【F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪2、`5360974435` ⚪2、
+  `5361414731` ⚪3（本輪重申、無新動作）；
   取證日期＝2026-08-21】
 
 - **external-facts B5 尚未收錄 code span 開閉 backtick string 等長規則**：
@@ -779,6 +780,14 @@
   不需擴寫 B5，依 17.2 只登記。後續 evidence-format 包若補入，須保留與 fenced code 規則的分界
   【F3/F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪3、`5360974435` ⚪1；
   官方頁面由本輪獨立重取；取證日期＝2026-08-21】
+
+- **P-8 的現行 validator 指標與手抄守衛都沒有釘住下一次 supersede**：
+  P-8 終態散文雖指名第五輪 worklog 的現行 heading，但 validator 只驗該 heading 在 entry 檔內
+  唯一，沒有把 P-8 指名值與實際執行 block 做相等比較；指名文字又可被 80 欄換行拆開。
+  同一 validator 的 `manual round list returned` 使用不跨行的 `.*?`，而歷史散文可跨行換行，
+  因此跨行手抄列舉可能避開守衛。兩者都不影響本輪被點名的跨日期 A.1 漏列修復；依 17.2
+  只登記，後續 validator 契約包須用結構化 current-entry metadata 與跨行反向案例共同收斂
+  【F5/F11/F12；來源＝PR #64 Claude comment `5361414731` ⚪1／2；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -952,6 +961,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第六輪雙驗收修復.md`（Claude comment `5360596028`＋Codex review `4986421292`；穩定基準、可重跑渲染、動態集合與 A9／91 證據邊界已處置）
 - [x] `docs/worklog/2026-08-21-PR64第七輪雙驗收修復.md`（Claude comment `5360974435`＋Codex review `4986687378`；HEAD-only 集合、multiplicity、A9 歷史更正與 91 假衝突已處置）
 - [x] `docs/worklog/2026-08-21-PR64第八輪Codex驗收修復.md`（Codex review `4987003396`；A9 完整取頁／GraphQL 游標契約與 A10 超限 fallback 逐字已補）
+- [x] `docs/worklog/2026-08-21-PR64第八輪Claude晚到驗收修復.md`（Claude comment `5361414731`；跨日期 PR64 worklog 漏列改為 fail-closed 並加承重 mutation）
 
 ### A.2 handoff
 
