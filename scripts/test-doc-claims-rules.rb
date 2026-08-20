@@ -87,6 +87,9 @@ CASES = [
   [ "doc_claim_unclosed_fence", 1, "R6 Markdown 圍欄未關閉",
     "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉圍欄時不得把後續索引全部靜默遮掉；" \
     "必須在圍欄起始行阻擋" ],
+  [ "doc_claim_unclosed_comment", 1, "R6 HTML comment 未關閉",
+    "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉 HTML comment 時不得把後續索引全部靜默遮掉；" \
+    "必須在 comment 起始行阻擋" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -99,7 +102,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 22
+MIN_CASES = 23
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

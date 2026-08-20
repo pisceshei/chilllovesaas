@@ -304,8 +304,11 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 
 > "preceding each line of Ls by up to three spaces of indentation"
 
-來源：CommonMark 0.31.2 §5.2 List items
-<https://spec.commonmark.org/0.31.2/#list-items>（取證 2026-08-21）。
+> "Unclosed code blocks are closed by the end of the document"
+
+來源：CommonMark 0.31.2 §5.2 List items 與 §4.5 Fenced code blocks：
+<https://spec.commonmark.org/0.31.2/#list-items>、
+<https://spec.commonmark.org/0.31.2/#fenced-code-blocks>（取證 2026-08-21）。
 
 官方規格因此支持 `  - type: count` 仍是活性清單項。§4.5 另規定文件到尾仍找不到 closing
 fence 時，圍欄內容延伸至文件結尾；這是 CommonMark 的合法解析結果，不是假設。R6 的宣稱索引

@@ -750,12 +750,32 @@
   該同型問題未被要求在本輪修實物，依鐵律 17.2 只登記
   【F4/F5；來源＝PR #65 Claude comment `5359967807` ⚪3；取證日期＝2026-08-21】
 
-- **R6 對未關閉 HTML comment 仍可能靜默截斷索引**：
-  本輪依點名修復未關閉 Markdown 圍欄的 fail-open 後，反向讀 `active_markdown_lines` 發現
-  `in_comment` 到 EOF 仍為真時同樣會把後續 CLAIM 排除，且沒有 violation。Claude／Codex 本輪
-  沒點名 HTML comment 未收尾；依鐵律 17.2 不順手擴寫 checker。後續獨立 R6 包須先補負向 fixture，
-  重現舊邏輯 exit 0，再決定是否採與圍欄相同的 fail-closed 契約
-  【F6/F12；來源＝PR #65 comment `5359967807` 🟡-1 修復後同根反向稽核；取證日期＝2026-08-21】
+- **R6 對未關閉 HTML comment 的靜默截斷已於 PR #65 第四輪轉為 fail-closed**：
+  原缺口是 `active_markdown_lines` 的 comment 狀態到 EOF 仍為真時，後續 CLAIM 全被排除且零
+  violation；它先依 17.2 登記於此，後由 Claude comment `5360428264` 🟡-1 正式點名。修復以
+  `doc_claim_unclosed_comment` 先重現舊 checker exit 0，再保存 comment 起始行並於 EOF 報 violation；
+  `ruby scripts/test-doc-claims-rules.rb` 為結案候選複驗入口
+  【F6/F10/F12；來源＝PR #65 comments `5359967807`／`5360428264`；取證日期＝2026-08-21】
+
+- **53 號來源檔自己的「列次口徑複驗」沒有斷言發布儲存格**：
+  `docs/specs/53-ui-gap-recheck.md` 的行內命令只輸出 §6／§9 列數，沒有讀取表內發布的 180；
+  PR #65 被點名的是 CLAIM-006，該索引命令已同時斷言分量、發布值與合計，但來源檔這份未被
+  點名的副本依 17.2 不順手改。後續獨立包應改為引用 CLAIM-006，或與其共用同一可失敗命令
+  【F5/F11；來源＝PR #65 Codex inline `3824470994` 後同型反查；取證日期＝2026-08-21】
+
+- **R6 的成功訊息沒有列出已擴張的結構判準**：
+  `scripts/check-doc-claims.rb` 成功時仍只印「R6 計數宣稱」，沒有呈現活性標頭、ID 唯一、
+  畸形／游離標頭與收尾檢查；現句不假，完整契約也已在 checker 註釋及
+  `docs/dev/m0-review-convergence.md`，故本輪只登記。後續訊息包若要擴寫，須以契約反查避免
+  成功文字再次落後行為
+  【F5/F12；來源＝PR #65 Claude comment `5360428264` ⚪2；取證日期＝2026-08-21】
+
+- **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
+  `CLAIM_COUNT_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
+  前導至少 4 空格的 CommonMark 巢狀清單，該 count 可能不進 R6。current-head 阻擋意見只點名
+  未關閉 HTML comment，依 17.2 不把此候選順手擴進 checker；後續須先裁定 92 索引是否允許巢狀
+  metadata，再以正反 fixture 固化，禁止先放寬正則後補契約
+  【F6/F7/F12；來源＝PR #65 Claude comment `5360428264` ✅4 同型反查；取證日期＝2026-08-21】
 
 - **m0-review-convergence 的 fixture 表後缺空行，且續行 code span 含未跳脫直線**：
   `docs/dev/m0-review-convergence.md` 的 fixture 表最後一列後緊接「表列以⋯」正文，code span
@@ -944,6 +964,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第二輪雙驗收修復.md`（Codex review `4985525215`＋Claude comment `5359428067`；R6 邊界、宣稱斷言與鐵律 20.4 復發記錄已處置）
 - [x] `docs/worklog/2026-08-21-PR65第二輪post-commit宣稱修復.md`（commit `6afac5d` 後 doc-claims 命中 R6 子集合手抄分量；只撤回該易腐計數）
 - [x] `docs/worklog/2026-08-21-PR65第三輪雙驗收修復.md`（Claude comment `5359967807`＋Codex review `4985880560`；快照／口徑／R6 fail-closed 與契約同步已處置）
+- [x] `docs/worklog/2026-08-21-PR65第四輪雙驗收修復.md`（Claude comment `5360428264`＋Codex review `4986322814`；HTML comment fail-closed、終態 Changes、外部證據與宣稱斷言已處置）
 
 ### A.2 handoff
 

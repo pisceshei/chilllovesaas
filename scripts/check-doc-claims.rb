@@ -29,7 +29,7 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
-#   R6｜**宣稱索引須有活性標頭、CLAIM ID 唯一、圍欄須收尾，且計數項必須附複驗指令**
+#   R6｜**宣稱索引須有活性標頭、CLAIM ID 唯一、圍欄／HTML comment 須收尾，且計數項必須附複驗指令**
 #       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
@@ -149,7 +149,8 @@ UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從�
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
-# 索引必須至少有一個活性 `CLAIM-NNN` 標頭且 ID 唯一，Markdown 圍欄必須收尾；每個
+# 索引必須至少有一個活性 `CLAIM-NNN` 標頭且 ID 唯一，Markdown 圍欄與 HTML comment
+# 必須收尾；每個
 # `type: count` 區塊都必須有 `recheck:`，且內容要符合上方 RECHECK_CMD 的可執行指令形態。
 # 既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
@@ -178,12 +179,12 @@ end
 
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
-# 回傳活性行與未關閉圍欄（若有）；活性行為
+# 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
   active = []
   fence = nil
-  in_comment = false
+  comment = nil
 
   lines.each_with_index do |raw, idx|
     if fence
@@ -195,12 +196,12 @@ def active_markdown_lines(lines)
     visible = +""
     rest = raw
     loop do
-      if in_comment
+      if comment
         closing = rest.index("-->")
         break unless closing
 
         rest = rest[(closing + 3)..].to_s
-        in_comment = false
+        comment = nil
       else
         opening = rest.index("<!--")
         unless opening
@@ -210,7 +211,7 @@ def active_markdown_lines(lines)
 
         visible << rest[0...opening]
         rest = rest[(opening + 4)..].to_s
-        in_comment = true
+        comment = { line: idx }
       end
     end
 
@@ -227,7 +228,7 @@ def active_markdown_lines(lines)
     active << [ idx, visible ]
   end
 
-  [ active, fence ]
+  [ active, fence, comment ]
 end
 
 # ---- 收集要掃的檔 ----------------------------------------------------------
@@ -342,10 +343,14 @@ targets.each do |rel|
   # --- R6（宣稱索引，tree-wide）---
   if rel.match?(CLAIM_INDEX)
     claim_indexes_scanned += 1
-    active_lines, unclosed_fence = active_markdown_lines(lines)
+    active_lines, unclosed_fence, unclosed_comment = active_markdown_lines(lines)
     if unclosed_fence
       violations << "#{rel}:#{unclosed_fence[:line] + 1} R6 Markdown 圍欄未關閉——" \
                     "後續索引不可被靜默排除；請補上同字元且長度不少於起始圍欄的收尾行。"
+    end
+    if unclosed_comment
+      violations << "#{rel}:#{unclosed_comment[:line] + 1} R6 HTML comment 未關閉——" \
+                    "後續索引不可被靜默排除；請補上 `-->` 收尾。"
     end
     header_positions = active_lines.each_index.select do |pos|
       active_lines[pos][1].match?(CLAIM_LIKE_HEADER)
