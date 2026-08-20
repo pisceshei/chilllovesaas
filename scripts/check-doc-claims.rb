@@ -29,8 +29,9 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
-#   R6｜**宣稱索引須有活性標頭與 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾，
-#       且每個區塊只能有一筆計數並附複驗指令**
+#   R6｜**宣稱索引須有活性標頭與 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；
+#       `type` 鍵大小寫／冒號前空白不敏感，但值只允許小寫 `count`，`type*` 畸形鍵拒絕；
+#       每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
 #       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
@@ -44,9 +45,9 @@
 #   ⚠️ R1／R3 **是 tree-wide 的**：路徑與行號是客觀事實，歷史紀錄寫錯了一樣會誤導人，
 #     而它們的修法是「加更正註記」，不是改原文——不衝突。
 #
-# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>] [--require-base]
-#   ROOT 省略＝本倉庫根目錄（傳入是給 scripts/test-doc-claims-rules.rb 用 fixture 打紅它用的，
-#   形態比照 check-limits-keys.rb／check-money-boundary.rb／check-ci-parity.rb）。
+# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>] [--require-base] [--fixture-mode]
+#   ROOT 省略＝本倉庫根目錄；明確 ROOT 仍是生產形態。只有「明確 ROOT＋`--fixture-mode`」
+#   才允許隔離 fixture 不含 `docs/specs/92-*`，形態比照其他 checker 的 fixture runner。
 #   --base 省略＝origin/main。
 #   --require-base（P-8 引入）＝base 取不到差異時**升為 exit 3**，不再只警告——
 #     給 CI 用：淺 clone 曾使 R4／R5 連續多輪靜默跳過而 quality 綠（PR #58 期考掘出的
@@ -55,8 +56,9 @@
 # 退出碼（照 `scripts/check-limits-keys.rb` 已立的三分碼表）：
 #   0＝通過（可能有 🟡 警告）
 #   1＝**檢查跑了，發現違規**
-#   2＝**檢查跑不了**（讀檔／解析失敗）
-#   3＝**檢查根本沒有生效**（掃了 0 個檔 canary；或 --require-base 下取不到 base 差異）
+#   2＝**檢查跑不了**（讀檔／解析失敗；或 `--fixture-mode` 沒搭配明確 ROOT）
+#   3＝**檢查根本沒有生效**（掃了 0 個檔、非 fixture 模式的 R6 索引為 0；
+#      或 --require-base 下取不到 base 差異）
 #
 # 相關：AGENTS.md §工作記錄與交接文件的寫法、CLAUDE.md §工作方式、
 #      docs/dev/m0-review-convergence.md。
@@ -150,6 +152,9 @@ VOLATILE_NUM = [
 
 # R4 的豁免：鄰近有可複驗的指令，或明示是某時點的快照。
 RECHECK_CMD = /`[^`\n]*\b(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`/
+# R6 比 R4 的鄰近「像命令」判定更嚴：整個 code span 必須以受支援工具開頭；只在散文中
+# 提到工具名不得滿足結構化宣稱的可重跑契約。`bundle exec` 是唯一明列的前置 wrapper。
+CLAIM_RECHECK_CMD = /\A`(?:bundle\s+exec\s+)?(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`\z/
 SNAPSHOT = /快照|實跑輸出|輸出如下|取證/
 
 # R5：全稱句（只警告）。
@@ -158,14 +163,14 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
 # 索引必須至少有一個活性 `CLAIM-NNN` 標頭與一個 `type: count` 區塊，且 ID 唯一；
-# Markdown 圍欄與 HTML comment 必須收尾。每個區塊只能有一筆 `type: count`，並附一筆
-# `recheck:`，內容要符合上方 RECHECK_CMD 的可執行指令形態。
+# Markdown 圍欄與 HTML comment 必須收尾。`type` 鍵大小寫／冒號前空白不敏感，值只允許
+# 小寫 `count`；以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆計數，並附一筆
+# `recheck:`，內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
 # 既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
 CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
-CLAIM_TYPE = /\A {0,3}-\s+type:\s*(.*?)\s*\z/
-CLAIM_COUNT_TYPE = /\A {0,3}-\s+type:\s*count\s*\z/
+CLAIM_TYPE = /\A {0,3}-\s+(type[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
 CLAIM_RECHECK = /\A {0,3}-\s+recheck:\s*(.+)\z/
 
 violations = []
@@ -396,10 +401,21 @@ targets.each do |rel|
     end
     if header_positions.any?
       active_lines[0...header_positions.first].each do |idx, line|
-        next unless line.match?(CLAIM_COUNT_TYPE)
+        match = line.match(CLAIM_TYPE)
+        next unless match
 
-        violations << "#{rel}:#{idx + 1} R6 計數宣稱出現在第一個 CLAIM 標頭之前——" \
-                      "每個 `type: count` 都必須位於自己的 `### CLAIM-NNN` 區塊內。"
+        key = match[1]
+        value = match[2].strip
+        if !key.casecmp?("type")
+          violations << "#{rel}:#{idx + 1} R6 畸形 type metadata 鍵 `#{key}`——" \
+                        "鍵只允許 `type`（大小寫／冒號前空白不敏感），`type*` 拼字不得靜默略過。"
+        elsif value != "count"
+          violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
+                        "值只允許精確小寫 `count`，拼字錯誤不得靜默脫離複驗契約。"
+        else
+          violations << "#{rel}:#{idx + 1} R6 計數宣稱出現在第一個 CLAIM 標頭之前——" \
+                        "每個 `type: count` 都必須位於自己的 `### CLAIM-NNN` 區塊內。"
+        end
       end
     end
     seen_claim_ids = {}
@@ -425,18 +441,25 @@ targets.each do |rel|
       block = active_lines[start_pos...finish_pos]
       type_entries = block.filter_map do |idx, line|
         match = line.match(CLAIM_TYPE)
-        match && [ idx, match[1].strip ]
+        match && [ idx, match[1], match[2].strip ]
       end
-      type_entries.reject { |_idx, value| value == "count" }.each do |idx, value|
+      type_entries.reject { |_idx, key, _value| key.casecmp?("type") }.each do |idx, key, _value|
+        violations << "#{rel}:#{idx + 1} R6 畸形 type metadata 鍵 `#{key}`——" \
+                      "鍵只允許 `type`（大小寫／冒號前空白不敏感），`type*` 拼字不得靜默略過。"
+      end
+      type_entries.select { |_idx, key, _value| key.casecmp?("type") }
+                  .reject { |_idx, _key, value| value == "count" }.each do |idx, _key, value|
         violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
-                      "宣稱索引目前只允許精確的 `- type: count`，拼字錯誤不得靜默脫離複驗契約。"
+                      "值只允許精確小寫 `count`，拼字錯誤不得靜默脫離複驗契約。"
       end
 
-      count_entries = block.select { |_idx, line| line.match?(CLAIM_COUNT_TYPE) }
+      count_entries = type_entries.select do |_idx, key, value|
+        key.casecmp?("type") && value == "count"
+      end
       next if count_entries.empty?
 
       count_claim_blocks += 1
-      count_entries.drop(1).each do |idx, _line|
+      count_entries.drop(1).each do |idx, _key, _value|
         violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `type: count`——" \
                       "每筆計數必須放在自己的 `### CLAIM-NNN` 區塊並附複驗指令。"
       end
@@ -450,10 +473,10 @@ targets.each do |rel|
                       "每個計數區塊只能發布一個無歧義的複驗命令。"
       end
       recheck = recheck_entries.first&.last
-      next if recheck&.match?(RECHECK_CMD)
+      next if recheck&.match?(CLAIM_RECHECK_CMD)
 
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
-                      "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
+                      "整段 code span 必須以 `ruby` 等 CLAIM_RECHECK_CMD 支援工具開頭，不能只是提到工具名。"
     end
     if count_claim_blocks.zero?
       violations << "#{rel}:1 R6 宣稱索引沒有任何活性 `type: count` CLAIM 區塊——" \

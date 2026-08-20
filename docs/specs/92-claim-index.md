@@ -1,8 +1,10 @@
 # 92 — 宣稱索引（可重跑計數）
 
 > 本檔只收錄可由倉庫內容重算的計數宣稱。機械契約固定使用 `### CLAIM-NNN` 區塊；
-> `type: count` 必須附一行 `recheck:` 可執行命令，否則 `scripts/check-doc-claims.rb` R6 阻擋。
-> `baseline: HEAD` 表示命令應對目前樹重算；指定 commit 則表示不可拿歷史快照外推 HEAD。
+> 語義 `type: count`（`type` 鍵大小寫／冒號前空白不敏感；值只允許小寫 `count`）必須附一行
+> 以受支援工具開頭的 `recheck:` 可執行命令，否則 `scripts/check-doc-claims.rb` R6 阻擋。
+> `baseline: HEAD` 表示命令應對目前樹重算；指定 commit 時，命令必須取得該 Git object 並直接
+> 重算來源，取不到就非零停止，不得用本檔轉錄快照自我證明或外推 HEAD。
 
 ### CLAIM-001
 
@@ -53,7 +55,7 @@
 - baseline: `e50b9120cc9b2514fde4995a5ff4f6ff15332bff`
 - snapshot-48: `--ai-border,--art-404,--art-lg,--art-md,--art-sm,--attention-border,--border-strong,--bw-100,--bw-200,--critical-border,--ctl-24,--ctl-28,--ctl-32,--ctl-36,--ctl-40,--ctl-44,--disabled-opacity,--dur-bar-grow,--dur-shake,--dur-shimmer,--dur-toast-dwell,--ease-linear,--focus-glow,--focus-glow-critical,--focus-ring,--focus-ring-offset,--focus-ring-w,--h-topbar,--hit-min,--hit-row,--info-border,--r-000,--r-pill,--scrim,--selected-bg,--sh,--sh-modal,--sh-pop,--sh-sticky,--shake-amp,--sp-1200,--sp-800,--success-border,--surface-active,--surface-hover,--surface-inverse,--surface-sunken,--t-2xs,--t-3xl,--t-display,--text-inverse,--w-aside,--w-crumbtitle,--w-detail-max,--w-drawer,--w-index-max,--w-modal,--w-modal-lg,--w-modal-sm,--w-narrow,--w-popover-max,--w-popover-min,--w-search-shell,--w-search-shell-m,--w-settings-content,--w-settings-nav,--w-sidebar,--warning-border,--z-bulkbar,--z-content,--z-docpop,--z-drawer,--z-modal,--z-overlay,--z-popover,--z-savebar,--z-scrim,--z-settings,--z-sheet,--z-shell,--z-sticky,--z-toast`
 - snapshot-23: `--ai,--ai-bg,--attention,--attention-bg,--bg,--border,--border-2,--brand,--brand-hover,--chart,--critical,--critical-bg,--focus,--grid,--info,--info-bg,--link,--r-btn,--r-card,--r-pill,--sh,--sh-modal,--sh-pop,--success,--success-bg,--surface,--surface-2,--surface-3,--text,--text-2,--text-3,--tr,--tr-big,--warning,--warning-bg`
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/92-claim-index.md"); aa=s[/^- snapshot-48: `([^`]+)`$/,1].split(","); bb=s[/^- snapshot-23: `([^`]+)`$/,1].split(","); abort "snapshot order or uniqueness changed" unless aa==aa.uniq.sort && bb==bb.uniq.sort; values=[aa.size,(aa&bb).size,aa.size-(aa&bb).size]; abort "unexpected snapshot counts #{values.inspect}" unless values==[82,4,78]; p({declarations:values[0],overlap:values[1],new_tokens:values[2]})'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 'require "open3"; base="e50b9120cc9b2514fde4995a5ff4f6ff15332bff"; get=->(*cmd){o,e,st=Open3.capture3(*cmd); abort "command failed #{cmd.join(" ")}: #{e.strip}" unless st.success?; o}; get.call("git","cat-file","-e","#{base}^{commit}"); a=get.call("git","show","#{base}:docs/design/48-component-contract.md"); b=get.call("git","show","#{base}:docs/design/23-interaction-css-spec.md"); x=a[a.index("## §00")...a.index("## §0 ")]; actual48=x.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq.sort; actual23=b.scan(/--[a-z0-9-]+\s*:/i).map{|v|v.delete_suffix(":").strip}.uniq.sort; s=File.read("docs/specs/92-claim-index.md"); snapshot=->(name){line=s.lines.find{|l|l.start_with?("- #{name}: ")} or abort "missing #{name}"; line.split(": ",2).last.strip[1...-1].split(",")}; aa=snapshot.call("snapshot-48"); bb=snapshot.call("snapshot-23"); abort "snapshot does not match baseline source" unless [aa,bb]==[actual48,actual23]; values=[actual48.size,(actual48&actual23).size,actual48.size-(actual48&actual23).size]; abort "unexpected baseline counts #{values.inspect}" unless values==[82,4,78]; p({declarations:values[0],overlap:values[1],new_tokens:values[2]})'`
 - status: corrected
 
 ### CLAIM-006

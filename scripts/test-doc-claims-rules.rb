@@ -69,14 +69,23 @@ CASES = [
     "🔴 R6 局部零供給 canary：合法 CLAIM 標頭存在但 count 全被刪除／改型時必須轉紅，" \
     "不能拿 header canary 冒充計數契約有輸入" ],
   [ "doc_claim_bad_type", 1, "R6 不支援 type metadata `counts`",
-    "🔴 R6：已有另一個合法 count 時，`type: counts` 仍不得被 exact-match 篩選靜默略過；" \
-    "未支援或拼錯的 type 必須在原行 fail-closed" ],
+    "🔴 R6：已有另一個合法 count 時，`type: counts` 仍不得被篩選靜默略過；" \
+    "type 值只允許精確小寫 count" ],
+  [ "doc_claim_bad_type_key", 1, "R6 畸形 type metadata 鍵 `types`",
+    "🔴 R6：已有另一個合法 count 時，`types: count` 仍必須在原行 fail-closed；" \
+    "不能讓 key typo 在 exact matcher 之前消失" ],
+  [ "doc_claim_type_key_variants_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：`Type: count` 與 `type : count` 的鍵大小寫／冒號前空白不影響語義，" \
+    "兩個區塊各有合法命令時必須放行" ],
   [ "doc_claim_malformed_header", 1, "R6 宣稱標頭格式錯誤",
     "🔴 R6：已有合法區塊時，後續 `### CLAIM-02` 不得被折入前一區塊，" \
     "否則該錯字區塊的 `type: count` 可借用前一條的 recheck 靜默通過" ],
   [ "doc_claim_bad_recheck", 1, "R6 計數宣稱",
     "🔴 R6：`recheck:` 有值但不是可辨識命令時仍須轉紅；" \
-    "本 case 釘住 RECHECK_CMD，避免判準退化成只檢查欄位存在" ],
+    "本 case 釘住 CLAIM_RECHECK_CMD，避免判準退化成只檢查欄位存在" ],
+  [ "doc_claim_prose_recheck", 1, "R6 計數宣稱 CLAIM-001",
+    "🔴 R6：code span 只是散文提到 ruby 時仍須轉紅；" \
+    "整段必須以受支援工具開頭，不能只在任意位置命中工具名" ],
   [ "doc_claim_no_headers", 1, "R6 宣稱索引沒有任何",
     "🔴 R6：索引檔有 `type: count` 卻沒有任何 CLAIM 標頭時必須轉紅，" \
     "釘住 headers.empty? 的局部零掃描分支" ],
@@ -123,7 +132,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 30
+MIN_CASES = 33
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

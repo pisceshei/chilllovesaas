@@ -842,6 +842,29 @@
   行為與來源已在 external-facts／第六輪 worklog 保存，本輪依 17.2 只登記，不擴寫未點名段落
   【F5/F11；來源＝PR #65 Claude comment `5361142724` ⚪3；取證日期＝2026-08-21】
 
+- **doc-claims runner 的非 fixture 摘要與實際情境集合再次漂移**：既有登記仍寫「五個 bullet」
+  與「3 組 git＋1 組 supply」，current runner 已另有 W2、兩個 supply 情境與更多摘要列；坑仍是
+  「手抄摘要不能證明供給情境全集」，本輪不回寫既有登記或 runner 輸出
+  【F5/F12；來源＝PR #65 Claude comment `5361587574` ⚪1；取證日期＝2026-08-21】
+
+- **fixture flag 的 production wiring 守衛只釘 GitHub job，沒有釘 Windows runner**：
+  `scripts/test-doc-claims-rules.rb` 的 W2 只讀 `.github/workflows/ci.yml`；
+  `config/ci.rb` 也是 production-equivalent 供給端，而 CI parity 只比腳本／runner 識別、不比參數。
+  若日後只在 Windows runner 調用加入 fixture flag，R6 supply canary 可被關閉而現有 W2 不響；
+  本輪只登記，未修改未被阻斷意見點名的 wiring guard
+  【F10/F12；來源＝PR #65 Claude comment `5361587574` ⚪2；取證日期＝2026-08-21】
+
+- **CLAIM-005 的長 recheck 仍有 Markdown／PowerShell 可攜性缺口**：第六輪版本把內層正則的
+  反引號寫進外層 code span，GitHub 會拆成多段，PowerShell 又把反引號視為 escape；本輪阻斷只
+  要求 recheck 不得自我證明。現行命令已移除內層反引號並以 Ruby 起頭，但 Windows 原生 shell
+  的可複製貼上形式仍須後續獨立包設計，不把 Git Bash 實跑外推為 PowerShell 相容
+  【F5/F8/F11；來源＝PR #65 Claude comment `5361587574` ⚪3；取證日期＝2026-08-21】
+
+- **m0-review-convergence 的變更記錄沒有逐輪涵蓋 PR #65**：本 PR 多輪修改該檔的 R6 規則、
+  fixture 表與證據敘述，但檔尾變更記錄未建立相應條目；本輪只同步被點名的終態契約，不把
+  ⚪ 觀察擴成歷史 changelog 修復
+  【F5/F11；來源＝PR #65 Claude comment `5361587574` ⚪4；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -1013,6 +1036,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第四輪雙驗收修復.md`（Claude comment `5360428264`＋Codex review `4986322814`；HTML comment fail-closed、終態 Changes、外部證據與宣稱斷言已處置）
 - [x] `docs/worklog/2026-08-21-PR65第五輪雙驗收修復.md`（Claude comment `5360765482`＋Codex review `4986560215`；count cardinality／零供給、code span comment scope、歷史分類與終態聲明已處置）
 - [x] `docs/worklog/2026-08-21-PR65第六輪雙驗收修復.md`（Claude comment `5361142724`＋Codex review `4986877890`；closer 契約、metadata／supply fail-closed、歷史快照與終態宣稱已處置）
+- [x] `docs/worklog/2026-08-21-PR65第七輪雙驗收修復.md`（Claude comment `5361587574`＋Codex review `4987154051`；檔頭契約、baseline source recheck、type key 與命令起始形態已處置）
 
 ### A.2 handoff
 

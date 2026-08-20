@@ -88,7 +88,7 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| R6 | 索引須有活性 `CLAIM-NNN` 標頭與至少一個 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；只支援精確 `type: count`，每區塊各限一筆 count 與 `recheck:`；同一行成對 code span 內的 `<!--` 不開 comment，但 comment 開啟後任何 `-->` 都收尾 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| R6 | 索引須有活性 `CLAIM-NNN` 標頭與至少一個 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；`type` 鍵大小寫／冒號前空白不敏感、值只允許小寫 `count`、`type*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與 `recheck:`，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，但 comment 開啟後任何 `-->` 都收尾 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
 | canary | 全樹掃到 0 個檔，或非 `--fixture-mode` 調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效；明確 ROOT 不構成豁免 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
@@ -171,8 +171,11 @@
 | `doc_claim_duplicate_count` | 1 | R6 同一區塊的第二筆 count 不得借用第一筆 recheck |
 | `doc_claim_duplicate_recheck` | 1 | R6 同一區塊不得發布兩筆有歧義的 recheck |
 | `doc_claim_no_count` | 1 | R6 局部零供給：合法 CLAIM 存在但 count 全空仍須阻擋 |
-| `doc_claim_bad_type` | 1 | R6 未支援／拼錯的 type metadata 不得被 exact-match 靜默略過 |
+| `doc_claim_bad_type` | 1 | R6 type 值不是精確小寫 `count` 時不得靜默略過 |
+| `doc_claim_bad_type_key` | 1 | R6 `types:` 等 type-like 畸形鍵不得在 exact matcher 之前消失 |
+| `doc_claim_type_key_variants_ok` | 0 | R6 反向：`Type:`／`type :` 的鍵變體配合法值與命令時須放行 |
 | `doc_claim_bad_recheck` | 1 | R6 有 `recheck:` 但不是命令，不得只驗欄位存在 |
+| `doc_claim_prose_recheck` | 1 | R6 code span 只在散文中提到工具名，不得冒充可執行命令 |
 | `doc_claim_no_headers` | 1 | R6 索引沒有任何 CLAIM 標頭 |
 | `doc_claim_count_before_header` | 1 | R6 計數宣稱落在第一個合法區塊前 |
 | `doc_claim_malformed_header` | 1 | R6 位數、標題階層或括注不合契約，不得被前一區塊吸收 |
@@ -196,7 +199,8 @@
 **突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／
 全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
 首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／
-未支援 type 靜默略過／重複 ID／單區塊重複 count 借用 recheck／單區塊重複 recheck／合法標頭下
+type 值錯誤靜默略過／type-like 畸形鍵漏判／合法 type 鍵變體被誤擋／recheck 散文只提工具名／
+重複 ID／單區塊重複 count 借用 recheck／單區塊重複 recheck／合法標頭下
 count 零供給／把 fenced code 或 HTML comment 誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML
 comment 靜默截斷／code span opener 誤開 comment／comment closer 被錯誤遮罩／無 ROOT 與明確 ROOT
 生產樹零份
