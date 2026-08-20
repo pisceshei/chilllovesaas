@@ -962,6 +962,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第七輪雙驗收修復.md`（Claude comment `5360974435`＋Codex review `4986687378`；HEAD-only 集合、multiplicity、A9 歷史更正與 91 假衝突已處置）
 - [x] `docs/worklog/2026-08-21-PR64第八輪Codex驗收修復.md`（Codex review `4987003396`；A9 完整取頁／GraphQL 游標契約與 A10 超限 fallback 逐字已補）
 - [x] `docs/worklog/2026-08-21-PR64第八輪Claude晚到驗收修復.md`（Claude comment `5361414731`；跨日期 PR64 worklog 漏列改為 fail-closed 並加承重 mutation）
+- [x] `docs/worklog/2026-08-21-PR64第九輪Codex驗收修復.md`（Codex review `4987319876`／inline `3825320726`；歷史 worklog 刪除／改名改為 fail-closed 並加雙 mutation）
 
 ### A.2 handoff
 
