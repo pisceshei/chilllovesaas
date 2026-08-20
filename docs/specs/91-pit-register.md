@@ -702,14 +702,15 @@
 ### 3.6 PR #64 P-8 證據來源文件債收斂驗收（2026-08-21）
 
 - **規定的 HTML comment 更正會在 GitHub 渲染中不可見，且放在清單項之間會切斷清單**：
-  PR #64 的 P-8 與首輪驗收 worklog 已把被點名的 blockquote 改成 `AGENTS.md` 規定形態，
+  PR #64 的 P-8、首輪、第四輪與第五輪驗收 worklog 已把被點名的 blockquote／歷史敘述改成
+  `AGENTS.md` 規定形態，
   但 GitHub 渲染後原句與修正句之間沒有可見說明；comment 以第 0 欄 HTML block 插在 bullet
   之間時，還會把一個邏輯清單切成多個 `<ul>`。列表切斷根因已在 §3.3 的第 8 輪 ⚪ 條目登記；
   §2 G-02 是另一個 Markdown fence balancing 機械缺口，不是本條 HTML list breakage 的來源。
   本條補的是「規定格式本身不可見」的終態缺口。後續若改可見更正載體會命中 `AGENTS.md`
   本文與鐵律 18.3，須獨立人工審核；本 PR 只登記，不改規則或歷史實物
   【F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
-  `5359558626` ⚪3；取證日期＝2026-08-21】
+  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；取證日期＝2026-08-21】
 
 - **external-facts 的 A 區標題已不能涵蓋 A9／A10**：
   `docs/dev/external-facts.md` A 區題為 GitHub 核准／合併前置條件，但 A9 是 GitHub CLI
@@ -725,11 +726,13 @@
   可機械檢查的終態，不得把本登記當成恢復假債的理由
   【F11/F12；來源＝PR #64 Claude comment `5359558626` ⚪4、`git log -p`；取證日期＝2026-08-21】
 
-- **歷史層「原文不改」與 20.2.3「刪除非必要數字」會直接衝突**：
-  PR #64 第二輪 worklog 的 Done／20.3 歷史稽核曾把「四處」靜默收窄為「被點名」，而 Changes
-  終態層直接回寫則符合規則。當數字本身仍為真但缺鄰近 recheck 時，AGENTS 歷史層要求保留原文，
-  鐵律 20.2.3 卻要求刪數字；後續改制度須明定優先序與更正形態。本 PR 只登記，不回改歷史實物
-  【F4/F11；來源＝PR #64 Claude comment `5359997378` ⚪1；取證日期＝2026-08-21】
+- **歷史計數曾被靜默改寫；缺口是未套相鄰更正，不是制度衝突**：
+  PR #64 第二輪 worklog 的 Done／20.3 歷史稽核曾把「四處」直接收窄成「被點名」，破壞沿革。
+  AGENTS 歷史層與鐵律 20.2.3 可同時滿足：歷史原文保留並在原處加 dated correction；終態層則
+  刪除非必要計數，或把必要計數綁日期／ref 與 recheck。第四輪 worklog 已用「保留四條＋相鄰
+  immutable snapshot」證明兩規則不互斥；後續不得把真缺口誤登成待裁制度衝突
+  【F4/F11；來源＝PR #64 Claude comment `5359997378` ⚪1、Codex inline `3824777629`；
+  取證日期＝2026-08-21】
 
 - **external-facts 的程式碼逐字引用缺「改排」標記**：
   A9 把 pinned 官方實作的三行縮排區塊排成較短的 blockquote；控制流語義經重取仍忠實，但該檔
@@ -757,8 +760,25 @@
   與掃描輸出並列，但同一流程會在 push 後強制把 `pr64-last-push` 移到新 head；因此命令文字不是
   immutable 快照入口。後續描述須把 base 綁到實跑時的完整 SHA，或只標成 dated output snapshot，
   不得以已移動 tag 冒充可重跑原輸出
-  【F5/F11；來源＝PR #64 Claude comment `5360279873` ⚪1、`git rev-parse pr64-last-push`；
+  【F5/F11；來源＝PR #64 Claude comments `5360279873` ⚪1、`5360596028` ⚪1；後一輪指出
+  當時 `git rev-parse pr64-last-push` 的解析 SHA 未保存，故該命令不能補作 immutable metadata；
   取證日期＝2026-08-21】
+
+- **PR #64 歷史複驗錨到 PR 內 commit，main-only clone 需額外 fetch**：
+  第四輪 worklog 仍以 `eb1afba..7c10b6a` 保存歷史輸入；它是有效的 PR 內快照，但不能僅憑 SHA
+  字串宣稱新的 main-only clone 可直接取得。第五／第六輪已把現行入口改用 preserved main base，
+  不回寫第四輪歷史命令；後續引用該舊快照須明列 fetch PR object 的前置。GitHub 對 squash 後
+  pull ref 的保留期限／契約未取得，故不主張必然可達或不可達
+  【F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪2、`5360974435` ⚪2；
+  取證日期＝2026-08-21】
+
+- **external-facts B5 尚未收錄 code span 開閉 backtick string 等長規則**：
+  CommonMark 0.31.2 §6.1 官方逐字為 "A code span begins with a backtick string and ends with a
+  backtick string of equal length."，來源 <https://spec.commonmark.org/0.31.2/#code-spans>
+  （取證 2026-08-21）。B5 現值只收優先序與反斜線語義；本輪阻擋修法已改用 fenced block，
+  不需擴寫 B5，依 17.2 只登記。後續 evidence-format 包若補入，須保留與 fenced code 規則的分界
+  【F3/F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪3、`5360974435` ⚪1；
+  官方頁面由本輪獨立重取；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -930,6 +950,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md`（Claude comment `5359997378`＋Codex review `4985973166`；累積清單回歸、終態 Changes 與範圍外登記已處置）
 - [x] `docs/worklog/2026-08-21-PR64第五輪雙驗收修復.md`（Claude comment `5360279873`＋Codex review `4986192842`；終態集合遞迴過期、20.4 復發閉環與本輪文件意見已處置）
 - [x] `docs/worklog/2026-08-21-PR64第六輪雙驗收修復.md`（Claude comment `5360596028`＋Codex review `4986421292`；穩定基準、可重跑渲染、動態集合與 A9／91 證據邊界已處置）
+- [x] `docs/worklog/2026-08-21-PR64第七輪雙驗收修復.md`（Claude comment `5360974435`＋Codex review `4986687378`；HEAD-only 集合、multiplicity、A9 歷史更正與 91 假衝突已處置）
 
 ### A.2 handoff
 
