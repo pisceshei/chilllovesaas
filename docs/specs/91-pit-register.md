@@ -602,6 +602,15 @@
   不能以跳過 setup 冒充 wrapper 已修
   【F6/F12；來源＝鐵律 21 本機閘門復驗；取證日期＝2026-08-20】
 
+- **Windows 的 `python3.exe` App Execution Alias 可能存在但不是可用直譯器**：PR #61
+  延遲意見修復閘門中，`Get-Command python3` 命中
+  `C:/Users/pisce/AppData/Local/Microsoft/WindowsApps/python3.exe`，實際執行 gate 卻回 9009；
+  同機 `C:/Users/pisce/AppData/Local/Programs/Python/Python312/python.exe --version` 實得
+  Python 3.12.10，指定該絕對路徑且設 `PYTHONIOENCODING=utf-8` 後三個 Python gate 全綠。
+  本輪未被點名修改 `config/ci.rb`／腳本，依鐵律 17.2 只登記不改；Windows 本機配方日後須驗證
+  候選直譯器能實際執行，而非只信 `Get-Command` 存在，並保留非 ASCII 輸出探針
+  【F6/F12；來源＝PR #61 延遲意見修復 29 閘門 A/B 實測；取證日期＝2026-08-20】
+
 - **Rails system spec 會因 test 環境 Vite 首次冷建置超過 Capybara 預設等待而假紅**：
   PR #61 的完整 29 閘門首跑只有 `bundle exec rspec` 失敗，結果為 `284 examples, 1 failure`；
   `spec/system/m0_admin_shell_spec.rb:18` 在點擊登入後立即等待 `/admin/products`，失敗訊息卻仍顯示
@@ -786,6 +795,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
 - [x] `docs/worklog/2026-08-20-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；受限層根因已由 §3.5 既有條目涵蓋）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見修復.md`（review `4980284182` 兩則延遲 inline 精準修復；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見閘門復驗.md`（完整 29 閘門；已抽取 Windows Python App Alias 假直譯器）
 
 ### A.2 handoff
 
@@ -889,6 +900,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
 - [x] `docs/handoff/2026-08-20-階段一-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；既有坑涵蓋，無新增項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見修復.md`（review `4980284182` 兩則延遲 inline 精準修復；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見閘門復驗.md`（完整 29 閘門；已抽取 Windows Python App Alias 假直譯器）
 
 ### A.3 事故密集檔（specs／機制檔）
 
