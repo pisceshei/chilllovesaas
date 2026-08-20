@@ -826,6 +826,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 
 ### A.2 handoff
 
@@ -937,6 +938,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 
 ### A.3 事故密集檔（specs／機制檔）
 
