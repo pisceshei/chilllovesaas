@@ -349,3 +349,35 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 🔴 **可借的設計形狀**：A6 把三件事拆開——`retryThrottling`（准不准重試）／`maxAttempts`（最多幾次）／
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
+
+### B9. `gh api -f` 傳靜態字串；只有 `-F` 的 `@path` 會讀檔
+
+> "Pass one or more `-f/--raw-field` values in `key=value` format to add static string parameters"
+>
+> "if the value starts with `@`, the rest of the value is interpreted as a filename"
+
+來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。前句屬
+`-f/--raw-field`，後句屬 `-F/--field` 的 magic type conversion；不得把後句外推到 `-f`。
+
+🔴 **本專案的用途**：`gh api ... -f text=@path` 送出的是字面 `@path`；要把檔案內容放進
+`text` 欄位必須使用 `-F text=@path`。PR #64 exact response 曾把字面路徑渲染成
+`<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`，證明 HTTP exit 0
+不等於 request body 正確。任何 Markdown render 複驗都要同時釘輸入來源與至少一個承重 HTML
+canary，不能把 table／pre 的零計數直接當成功。
+
+### B10. `git log` 預設不輸出 merge diff；`separate` 逐 parent 顯示
+
+> "merge commits will not show a diff"
+>
+> "Show full diff with respect to each of parents."
+
+來源：Git 官方 <https://git-scm.com/docs/git-log> 的 DIFF FORMATTING／
+`--diff-merges=separate`（取證 2026-08-21）。官方另明列 `--diff-merges` 預設為 `off`（未使用
+`--first-parent` 時）；所以 `--name-status` 與 `--diff-filter` 本身不能證明 merge-resolution
+刪除／改名已被掃到。
+
+🔴 **倉庫 fixture**：immutable merge `59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890` 相對 first parent
+`76751e4162a79bbb28860b545e673ee1d9ee1bea`，目標
+`scripts/__pycache__/lint-prototype.cpython-311.pyc` 在未開 merge diff 的 range log 出現 1 次，
+加 `--diff-merges=separate` 後出現 2 次；`git diff-tree -m` 單看 merge 本身的 witness 為 1 次。
+PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必須非零。

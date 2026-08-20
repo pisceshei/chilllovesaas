@@ -707,10 +707,14 @@
   保留對應 GitHub `/markdown` request／response artifact。因此本登記**不發布**「更正不可見」或
   「第 0 欄 comment 會切成多個 `<ul>`」的外部行為結論。取得方式＝保存 exact request body 與
   response HTML，並另取官方 Markdown／CommonMark 適用語義；兩者未齊前維持未取得。本 PR 只
-  收窄證據強度，不改 `AGENTS.md` 或歷史 worklog
+  收窄證據強度，不改 `AGENTS.md` 或歷史 worklog。後續抽樣另命中
+  `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md` 的肯定式歷史標題，以及本 PR 累積 diff
+  之外 `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 的同型句；兩者只登記候選，不以
+  終態的「未取得」授權回寫歷史層
   【F3/F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
-  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；Codex inline `3825640340`；
-  取證日期＝2026-08-21】
+  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；Codex inline `3825640340`／
+  `3826028172`；
+  Claude comment `5363200002` ⚪4；取證日期＝2026-08-21】
 
 - **GitHub Markdown API 取證若把 `-f text=@path` 誤當讀檔，會得到 exit 0 的假零**：
   本輪初次命令使用 `gh api ... -f text=@docs/worklog/...md`，current response 逐字是
@@ -721,6 +725,10 @@
   才取得實際文件 HTML。後續 Markdown 複驗須同時釘 request body 來源與至少一個承重 response
   canary（例如預期有表格的檔必須含 `<table role="table">`），不得只因 API exit 0 就發布零計數
   【F1/F3/F5/F11/F12；本輪自報，未被驗收點名，依 17.2 只登記；取證日期＝2026-08-21】
+
+<!-- 🔴 2026-08-21 第十二輪終態補充（Codex inline `3826028174`）：上列「未被驗收點名」
+只描述第十一輪入庫時狀態；本輪已被點名。可重用 `-f`／`-F @path` 官方契約與證據邊界現集中於
+`docs/dev/external-facts.md` B9，本條只保留事故、復發形狀與來源。 -->
 
 - **external-facts 的 A 區標題已不能涵蓋 A9／A10**：
   `docs/dev/external-facts.md` A 區題為 GitHub 核准／合併前置條件，但 A9 是 GitHub CLI
@@ -798,7 +806,21 @@
   因此跨行手抄列舉可能避開守衛。兩者都不影響本輪被點名的跨日期 A.1 漏列修復；依 17.2
   只登記，後續 validator 契約包須用結構化 current-entry metadata 與跨行反向案例共同收斂
   【F5/F11/F12；來源＝PR #64 Claude comments `5361414731` ⚪1／2、`5361847317` ⚪3
-  （再次核對，無新動作）；取證日期＝2026-08-21】
+  （再次核對，無新動作）、`5363200002` ⚪1（第四次 supersede 復發錨）；取證日期＝2026-08-21】
+
+- **PR64 的 20.3 correction validator 沒有固定 HEAD snapshot**：
+  第十一輪 worklog 的 correction validator 以 `File.read` 直接讀工作樹，沒有像第五輪現行
+  validator 先要求乾淨工作樹；有未提交編輯時可能把 working copy 結果寫成 HEAD 證據。本輪
+  阻擋項不要求改該 validator，依 17.2 只登記。後續 validator 契約包須統一 snapshot 來源，並以
+  dirty-worktree mutation 證明不會混用
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363200002` ⚪2；取證日期＝2026-08-21】
+
+- **tracked worklog 無法在同一 commit 保存「最後 repo edit 後」的最終實跑結果**：
+  第九／第十／第十一輪 20.3 表都把最後閘門寫成待跑，結果改放 PR 描述；若把結果再回寫 worklog，
+  該回寫本身又成為新的 repo edit，使前一輪結果不能外推。這是 tracked evidence 的 bootstrapping
+  邊界，不得靠手寫「已跑」消除。後續 evidence-tail／機器 artifact 包須把 immutable commit 與
+  run URL 綁定，歷史 worklog 只留待辦及證據入口
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363200002` ⚪3；取證日期＝2026-08-21】
 
 - **PR64 worklog 集合 validator 的輸入缺失／工具失敗分支沒有 mutation 承重**：
   現行 block 已有 normal、duplicate、drop、missing-section、off-date、delete、rename 路徑，
@@ -994,6 +1016,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第九輪Codex驗收修復.md`（Codex review `4987319876`／inline `3825320726`；歷史 worklog 刪除／改名改為 fail-closed 並加雙 mutation）
 - [x] `docs/worklog/2026-08-21-PR64第十輪Claude驗收修復.md`（Claude comment `5361847317`；20.3 類型名與歷史 snapshot 改用相鄰更正收斂）
 - [x] `docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md`（Claude comment `5362492718`＋Codex review `4987731284`；destructive history producer、20.3 固定編號與 rendering 未取得已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md`（Claude comment `5363200002`＋Codex review `4988295763`；零掃描 canary、merge diff、rendering 歷史更正與外部契約集中已處置）
 
 ### A.2 handoff
 
