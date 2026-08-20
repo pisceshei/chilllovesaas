@@ -773,7 +773,7 @@
   取證日期＝2026-08-21】
 
 - **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
-  `CLAIM_COUNT_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
+  `CLAIM_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
   前導至少 4 空格的 CommonMark 巢狀清單，該 count 可能不進 R6。current-head 阻擋意見只點名
   未關閉 HTML comment，依 17.2 不把此候選順手擴進 checker；後續須先裁定 92 索引是否允許巢狀
   metadata，再以正反 fixture 固化，禁止先放寬正則後補契約
@@ -871,6 +871,19 @@
   具可執行參數或能完成複驗。第八輪阻擋只點名 wrapper 冗餘與 recheck 鍵變體，依 17.2 不擴成
   command grammar 改寫；後續契約包須先定義哪些工具允許無參數，再各放正反 fixture
   【F5/F11/F12；來源＝PR #65 Claude comment `5362007581` ⚪；取證日期＝2026-08-21】
+
+- **R6 的 `CLAIM_RECHECK` 值沒有比照 type 值移除尾端空白**：
+  `CLAIM_RECHECK` 以 `(.+)` 保留行尾空白，後續直接送入 `CLAIM_RECHECK_CMD`；Markdown 合法的
+  兩個尾隨空白因此會 fail-closed，但錯誤訊息會指向「命令未以工具開頭」而非真正的尾端空白。
+  本輪阻擋只點名 type metadata 缺字，不擴修 recheck 診斷；後續須先裁定尾端空白應正規化或
+  明確禁止，再用正反 fixture 固化
+  【F5/F12；來源＝PR #65 Claude comment `5362761839` ⚪1；取證日期＝2026-08-21】
+
+- **R4 的鄰近複驗豁免仍可由含工具名的散文 code span 取得**：
+  R6 已用 `CLAIM_RECHECK_CMD` 要求整段以工具開頭，但 R4 的 `RECHECK_CMD` 刻意維持寬鬆搜尋；
+  因此同一個 code span 若只是散文提到 `git`，仍可能讓鄰近易腐數字免於 R4 警告。這是未被
+  本輪阻擋點名的另一規則，依 17.2 只登記，不把 R6 修法擴散到 R4
+  【F5/F12；來源＝PR #65 Claude comment `5362761839` ⚪2；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -1045,6 +1058,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第六輪雙驗收修復.md`（Claude comment `5361142724`＋Codex review `4986877890`；closer 契約、metadata／supply fail-closed、歷史快照與終態宣稱已處置）
 - [x] `docs/worklog/2026-08-21-PR65第七輪雙驗收修復.md`（Claude comment `5361587574`＋Codex review `4987154051`；檔頭契約、baseline source recheck、type key 與命令起始形態已處置）
 - [x] `docs/worklog/2026-08-21-PR65第八輪雙驗收修復.md`（Claude comment `5362007581`＋Codex review `4987453495`；wrapper 冗餘、recheck 鍵變體與 CLAIM-005 證偽已處置）
+- [x] `docs/worklog/2026-08-21-PR65第九輪雙驗收修復.md`（Claude comment `5362761839`＋Codex review `4987956545`；活性 CLAIM type metadata 與登記簿識別字同步已處置）
 
 ### A.2 handoff
 

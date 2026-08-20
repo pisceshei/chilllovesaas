@@ -80,6 +80,9 @@ CASES = [
   [ "doc_claim_bad_type_key", 1, "R6 畸形 type metadata 鍵 `types`",
     "🔴 R6：已有另一個合法 count 時，`types: count` 仍必須在原行 fail-closed；" \
     "不能讓 key typo 在 exact matcher 之前消失" ],
+  [ "doc_claim_missing_type_metadata", 1, "R6 CLAIM-002 缺 `type: count` metadata",
+    "🔴 R6：已有另一個合法 count 時，`typ: count` 這種未命中 type-like matcher 的缺字鍵" \
+    "仍不得讓整個活性 CLAIM 被 next 靜默略過" ],
   [ "doc_claim_type_key_variants_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：`Type: count` 與 `type : count` 的鍵大小寫／冒號前空白不影響語義，" \
     "兩個區塊各有合法命令時必須放行" ],
@@ -138,7 +141,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 35
+MIN_CASES = 36
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

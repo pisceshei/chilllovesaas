@@ -29,7 +29,7 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
-#   R6｜**宣稱索引須有活性標頭與 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；
+#   R6｜**宣稱索引的每個活性 CLAIM 都須有 `type: count`、CLAIM ID 唯一、圍欄／HTML comment 須收尾；
 #       `type`／`recheck` 鍵大小寫與冒號前空白不敏感，但 type 值只允許小寫 `count`，
 #       `type*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
 #       （🔴 **阻擋**）。
@@ -163,7 +163,7 @@ UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從�
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
-# 索引必須至少有一個活性 `CLAIM-NNN` 標頭與一個 `type: count` 區塊，且 ID 唯一；
+# 索引必須至少有一個活性 `CLAIM-NNN` 標頭，且每個合法活性區塊都要有 `type: count`、ID 唯一；
 # Markdown 圍欄與 HTML comment 必須收尾。`type`／`recheck` 鍵大小寫與冒號前空白不敏感；
 # type 值只允許小寫 `count`，以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆
 # 計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
@@ -452,6 +452,12 @@ targets.each do |rel|
                   .reject { |_idx, _key, value| value == "count" }.each do |idx, _key, value|
         violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
                       "值只允許精確小寫 `count`，拼字錯誤不得靜默脫離複驗契約。"
+      end
+
+      if type_entries.empty?
+        violations << "#{rel}:#{start + 1} R6 CLAIM-#{claim_id} 缺 `type: count` metadata——" \
+                      "每個活性 CLAIM 都必須明示受 R6 計數複驗契約納管；欄位缺字不得靜默略過。"
+        next
       end
 
       count_entries = type_entries.select do |_idx, key, value|
