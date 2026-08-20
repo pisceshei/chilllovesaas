@@ -916,6 +916,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-P2宣稱索引與R6.md`（六組假數字證據化＋R6 正反 fixture；已通讀，Markdown 範圍外同型問題已登 §3）
 - [x] `docs/worklog/2026-08-21-PR65首輪雙驗收修復.md`（Codex review `4985224623`＋Claude comment `5359074865`；首輪意見與鐵律 20.3 稽核已處置）
 - [x] `docs/worklog/2026-08-21-PR65第二輪雙驗收修復.md`（Codex review `4985525215`＋Claude comment `5359428067`；R6 邊界、宣稱斷言與鐵律 20.4 復發記錄已處置）
+- [x] `docs/worklog/2026-08-21-PR65第二輪post-commit宣稱修復.md`（commit `6afac5d` 後 doc-claims 命中 R6 子集合手抄分量；只撤回該易腐計數）
 
 ### A.2 handoff
 
