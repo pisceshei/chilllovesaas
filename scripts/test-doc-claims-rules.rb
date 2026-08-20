@@ -73,11 +73,20 @@ CASES = [
   [ "doc_claim_indented_header", 1, "R6 計數宣稱 CLAIM-001",
     "🔴 R6：CommonMark 允許標題前 0–3 個空格；縮排標頭仍須進入自己的區塊，" \
     "不能掉進 headers.empty? 分支形成假阻擋" ],
+  [ "doc_claim_indented_metadata", 1, "R6 計數宣稱 CLAIM-001",
+    "🔴 R6：CommonMark 允許清單標記前 0–3 個空格；縮排的 type: count 仍須受 recheck 契約約束，" \
+    "不能因 byte-zero 錨定而靜默繞過" ],
+  [ "doc_claim_indented_metadata_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：縮排的 type: count 與合法 recheck 必須成對辨識並放行，" \
+    "避免修法退化成一律拒絕合法縮排" ],
   [ "doc_claim_duplicate_id", 1, "R6 重複 CLAIM-001",
     "🔴 R6：兩個活性區塊不得共用同一 CLAIM ID；即使都不是 count 也必須阻擋" ],
   [ "doc_claim_inactive_headers", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：fenced code 與 HTML comment 內的範例 CLAIM 不是活性區塊，" \
     "不得切斷正文或製造假重複" ],
+  [ "doc_claim_unclosed_fence", 1, "R6 Markdown 圍欄未關閉",
+    "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉圍欄時不得把後續索引全部靜默遮掉；" \
+    "必須在圍欄起始行阻擋" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -90,7 +99,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 19
+MIN_CASES = 22
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

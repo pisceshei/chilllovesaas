@@ -731,6 +731,32 @@
   歷史邊界，不得把「部分」寫成「已解」
   【F5/F11；來源＝PR #65 Claude comment `5359428067` ⚪1；取證日期＝2026-08-21】
 
+- **71 號的「未結案 76」圖例未涵蓋含開放子項的混合狀態**：
+  `docs/specs/71-admin-parity-sweep.md` §F 圖例表把以 `⬜` 起頭的列發布為未結案 76，卻未定義
+  `71-R3-DOC1` 的「✅ 考證；⬜ 選型」是否仍有開放子項；因此 84／92 採「狀態格含 `⬜`」
+  時會得到 77。PR #65 已在被點名的 84／92 明列兩種口徑，但 71 不在累積 diff，依鐵律 17.2
+  不回寫；後續獨立包應在 71 圖例拆出純開放／混合開放，而不是把任一數字宣布為另一個必然錯誤
+  【F4/F5；來源＝PR #65 Claude comment `5359967807` 🟡-3／⚪1；取證日期＝2026-08-21】
+
+- **83 號保留的 CLAIM-002 行內命令已與宣稱索引分岔**：
+  `docs/specs/83-admin-1to1-audit-round3.md` 仍保留不含 `summary_synced` 的舊版命令；HEAD 上執行
+  仍會通過，因此不是假宣稱，但同一斷言已有兩份不同消費者。該位置不在本輪被點名修復集合，
+  依鐵律 17.2 只登記；後續獨立包應改成引用 CLAIM-002，避免複製命令再次漂移
+  【F5/F11；來源＝PR #65 Claude comment `5359967807` ⚪2；取證日期＝2026-08-21】
+
+- **83 號 §0「本輪仍缺」與 §1.2 權威缺口清單口徑不同**：
+  §0 把 P0-14／P0-18 以「（部分）」列入「本輪仍缺」，§1.2 的仍缺權威清單則不含兩者；
+  括注足以自我消歧，現況不是互斥假話，但兩個標題沒有明示「部分殘留」與「完全未修」的差別。
+  該同型問題未被要求在本輪修實物，依鐵律 17.2 只登記
+  【F4/F5；來源＝PR #65 Claude comment `5359967807` ⚪3；取證日期＝2026-08-21】
+
+- **R6 對未關閉 HTML comment 仍可能靜默截斷索引**：
+  本輪依點名修復未關閉 Markdown 圍欄的 fail-open 後，反向讀 `active_markdown_lines` 發現
+  `in_comment` 到 EOF 仍為真時同樣會把後續 CLAIM 排除，且沒有 violation。Claude／Codex 本輪
+  沒點名 HTML comment 未收尾；依鐵律 17.2 不順手擴寫 checker。後續獨立 R6 包須先補負向 fixture，
+  重現舊邏輯 exit 0，再決定是否採與圍欄相同的 fail-closed 契約
+  【F6/F12；來源＝PR #65 comment `5359967807` 🟡-1 修復後同根反向稽核；取證日期＝2026-08-21】
+
 - **m0-review-convergence 的 fixture 表後缺空行，且續行 code span 含未跳脫直線**：
   `docs/dev/m0-review-convergence.md` 的 fixture 表最後一列後緊接「表列以⋯」正文，code span
   內另有裸 `|`。GFM §4.10 官方逐字為 "The table is broken at the first empty line"，並要求
@@ -917,6 +943,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65首輪雙驗收修復.md`（Codex review `4985224623`＋Claude comment `5359074865`；首輪意見與鐵律 20.3 稽核已處置）
 - [x] `docs/worklog/2026-08-21-PR65第二輪雙驗收修復.md`（Codex review `4985525215`＋Claude comment `5359428067`；R6 邊界、宣稱斷言與鐵律 20.4 復發記錄已處置）
 - [x] `docs/worklog/2026-08-21-PR65第二輪post-commit宣稱修復.md`（commit `6afac5d` 後 doc-claims 命中 R6 子集合手抄分量；只撤回該易腐計數）
+- [x] `docs/worklog/2026-08-21-PR65第三輪雙驗收修復.md`（Claude comment `5359967807`＋Codex review `4985880560`；快照／口徑／R6 fail-closed 與契約同步已處置）
 
 ### A.2 handoff
 

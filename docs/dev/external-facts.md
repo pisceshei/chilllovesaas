@@ -299,3 +299,15 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 🔴 **可借的設計形狀**：A6 把三件事拆開——`retryThrottling`（准不准重試）／`maxAttempts`（最多幾次）／
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
+
+### B9. CommonMark 清單可前導 0–3 空格；R6 對未收尾圍欄採更嚴格的內部契約
+
+> "preceding each line of Ls by up to three spaces of indentation"
+
+來源：CommonMark 0.31.2 §5.2 List items
+<https://spec.commonmark.org/0.31.2/#list-items>（取證 2026-08-21）。
+
+官方規格因此支持 `  - type: count` 仍是活性清單項。§4.5 另規定文件到尾仍找不到 closing
+fence 時，圍欄內容延伸至文件結尾；這是 CommonMark 的合法解析結果，不是假設。R6 的宣稱索引
+若照此放行，圍欄後的 CLAIM 會全部退出結構檢查，因此本專案刻意採更嚴格的 fail-closed 契約：
+`docs/specs/92-*` 的圍欄必須收尾。這一條是**專案政策**，不是宣稱 CommonMark 本身會報錯。

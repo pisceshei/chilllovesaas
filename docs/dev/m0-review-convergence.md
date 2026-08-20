@@ -88,7 +88,7 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| R6 | `type: count` 宣稱必須在合法 `CLAIM-NNN` 區塊內附可辨識的 `recheck:` 命令 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| R6 | 索引須有活性 `CLAIM-NNN` 標頭、CLAIM ID 唯一、圍欄須收尾；`type: count` 須附可辨識的 `recheck:` 命令 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
 | canary | 全樹掃到 0 個檔，或生產調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
@@ -173,8 +173,11 @@
 | `doc_claim_count_before_header` | 1 | R6 計數宣稱落在第一個合法區塊前 |
 | `doc_claim_malformed_header` | 1 | R6 位數、標題階層或括注不合契約，不得被前一區塊吸收 |
 | `doc_claim_indented_header` | 1 | R6 依 CommonMark 接受 0–3 個前導空格，且縮排標頭仍受 count 契約約束 |
+| `doc_claim_indented_metadata` | 1 | R6 依 CommonMark 接受清單標記前 0–3 個空格；縮排 `type: count` 不能繞過 recheck 契約 |
+| `doc_claim_indented_metadata_ok` | 0 | R6 反向：縮排的 count／recheck 成對合法時必須放行 |
 | `doc_claim_duplicate_id` | 1 | R6 活性 CLAIM ID 必須唯一，不依賴 `type: count` 才檢查 |
 | `doc_claim_inactive_headers` | 0 | R6 反向：fenced code／HTML comment 內的範例標頭必須忽略 |
+| `doc_claim_unclosed_fence` | 1 | R6 fail-closed：未關閉圍欄不得把後續索引靜默排除 |
 | `doc_no_files` | **3** | canary |
 | `doc_clean` | 0 | 總反向斷言 |
 （表列以 `ls spec/fixtures/ci_violations/ | grep ^doc_` 為準——列數勿手寫。）
@@ -184,8 +187,8 @@
 
 **突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／
 全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
-首標頭前計數／畸形標頭吸收／縮排標頭漏判／重複 ID／把 fenced code 或 HTML comment
-誤當活性區塊／生產樹零份 `docs/specs/92-*`；逐項由 fixture、git 情境或
+首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／重複 ID／把 fenced code 或 HTML comment
+誤當活性區塊／未關閉圍欄靜默截斷／生產樹零份 `docs/specs/92-*`；逐項由 fixture、git 情境或
 supply-S1 令 `scripts/test-doc-claims-rules.rb` 轉紅。
 
 ## 已知限制

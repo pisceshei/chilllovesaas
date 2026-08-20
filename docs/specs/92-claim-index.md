@@ -29,9 +29,9 @@
 - type: count
 - sources: `docs/specs/84-m1-gate-triage.md` 起因、`docs/specs/71-admin-parity-sweep.md` §F
 - original: 84 建檔文字把「81 條未結案」寫成無時間邊界的現值。
-- corrected: 81 只保留為建檔原文的歷史引述；71 目前含未結案標記的列為 77（含混合狀態 71-R3-DOC1）。
+- corrected: 81 只保留為建檔原文的歷史引述；71 目前有 77 列狀態格含 `⬜`，其中 76 列以 `⬜` 起頭，另 1 列 71-R3-DOC1 為「✅ 考證；⬜ 選型」。77 是「仍含開放子項」口徑，不等於 71 §F 圖例表的純 `⬜` 未結案 76。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 'rows=File.readlines("docs/specs/71-admin-parity-sweep.md",chomp:true).grep(/^\| 71-R/); open=rows.count{|l| l.match?(/\|\s*[^|]*⬜[^|]*\s*\|\s*\z/)}; abort "expected 77 unresolved rows, got #{open}" unless open==77; puts open'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 'rows=File.readlines("docs/specs/71-admin-parity-sweep.md",chomp:true).grep(/^\| 71-R/); statuses=rows.map{|l|p=l.split("|",-1);[p[1].strip,p[-2].strip]}; containing=statuses.count{|_,s|s.include?("⬜")}; leading=statuses.count{|_,s|s.start_with?("⬜")}; mixed=statuses.select{|_,s|s.include?("⬜")&&!s.start_with?("⬜")}.map(&:first); abort "unexpected unresolved status split #{[containing,leading,mixed].inspect}" unless [containing,leading,mixed]==[77,76,["71-R3-DOC1"]]; p({contains_open:containing,leading_open:leading,mixed:mixed})'`
 - status: corrected
 
 ### CLAIM-004
