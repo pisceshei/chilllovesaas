@@ -526,8 +526,8 @@ jobs:
           #      `action.yml` inputs 清單**沒有 `model` 這個 input**（39 個 input 全查過），
           #      網路上「with: model:」的寫法是舊版 v0 的，v1 會被 GitHub 當成未知 input 忽略，
           #      **不報錯、靜默用預設模型**——這是最難發現的失效形態。
-          #   🔴 `--model claude-fable-5`（現行＝2026-08-19 使用者裁定⑦，行使⑥預留的裁定點；
-          #      上一任＝2026-08-17 沿革⑥ claude-opus-5，因 Fable 5 額度耗盡帶錯誤原文而換）。
+          #   🔴 `--model claude-opus-5`（現行＝2026-08-20 沿革⑧，依⑦預先寫明的復發處置；
+          #      上一任＝2026-08-19 使用者裁定⑦ claude-fable-5）。
           #      裁定沿革（每次都保留，因為它們解釋了這一行為什麼會來回改）：
           #        ①f9ee98e 00:01 由預設改成 Opus（alias）——「用更高的能力去驗收得到更好的效果」
           #        ②7c9a9d8 00:10 alias `opus` 釘成完整名 `claude-opus-5`
@@ -573,6 +573,12 @@ jobs:
           #          連續三次拿到 `API Error: 529 Overloaded`）⇒ 若接下來出現 529，
           #          **那是事故不是額度**：兩者錯誤原文不同（529 Overloaded vs
           #          「You've reached your Fable 5 limit」），不得混為一談而錯誤換回。
+          #        ⑧2026-08-20 依⑦的既定復發處置改回 `claude-opus-5`——PR #62 的
+          #          run 32378427336 attempt 1 實際審查 34 回合、花費 US$4.555815 後回傳
+          #          「You've reached your Fable 5 limit. Switch to another model to continue.」；
+          #          整個 workflow 重跑的 attempt 2 在第一個請求即以 num_turns=1、cost=0、
+          #          689ms 回傳逐字同一句。這與 529 Overloaded 的事故原文不同，也符合⑦明載
+          #          的額度復發判準，故照⑥先例切回 Opus；不是推翻③對能力的判斷。
           #      🔴 **每一次來回都要留下理由**：③的理由（Fable 5 是官方標示的 most capable）
           #      與⑥的觀察（該帳號的 Fable 5 額度會耗盡）**兩者都成立、並不互相否定**——
           #      這一行之所以反覆改，正是因為它在「能力」與「可用性」之間取捨。
@@ -809,7 +815,7 @@ jobs:
           #   ⚠️ **跨 host 重導向不跟隨**，所以導向目標也必須自己在白名單裡。已知案例：
           #      `docs.anthropic.com` 回 301 → `platform.claude.com`（本輪實測），兩者都已列入。
           claude_args: |
-            --model claude-fable-5
+            --model claude-opus-5
             --effort max
             --max-turns 200
             --allowedTools "Read,Grep,Glob,WebSearch,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr checks:*),Bash(git diff:*),Bash(git log:*),Bash(git ls-files:*),Bash(git show:*),Bash(ls:*),Bash(cat:*),WebFetch(domain:code.claude.com),WebFetch(domain:platform.claude.com),WebFetch(domain:docs.anthropic.com),WebFetch(domain:docs.github.com),WebFetch(domain:github.com),WebFetch(domain:raw.githubusercontent.com),WebFetch(domain:github.github.com),WebFetch(domain:git-scm.com),WebFetch(domain:www.gnu.org),WebFetch(domain:gnu.org),WebFetch(domain:pubs.opengroup.org),WebFetch(domain:www.msys2.org),WebFetch(domain:msys2.org),WebFetch(domain:spec.commonmark.org),WebFetch(domain:guides.rubyonrails.org),WebFetch(domain:edgeguides.rubyonrails.org),WebFetch(domain:api.rubyonrails.org),WebFetch(domain:docs.ruby-lang.org),WebFetch(domain:dev.mysql.com),WebFetch(domain:nodejs.org),WebFetch(domain:shopify.dev),WebFetch(domain:help.shopify.com),WebFetch(domain:shopify.github.io),WebFetch(domain:developer.mozilla.org),WebFetch(domain:www.rfc-editor.org)"
