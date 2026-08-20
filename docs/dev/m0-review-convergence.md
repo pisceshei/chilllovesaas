@@ -281,7 +281,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
   [inline 3809330908](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809330908)
   再次抓到用未證實 API 語義選修法；PR #61 的
   [inline 3818337787](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337787)
-  再抓到逐字證據不足。
+  與 [inline 3818520936](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520936)
+  再抓到逐字證據不足；後者證明立下鐵律 19／20 後，既有方案種子若未按同一矩陣回掃，仍會把
+  中文摘要與外部 UI 分類外推成 enum／狀態機。
 - **根因**：把「驗收方說了」「舊 review 存在」「沒有看到留言」誤當存在型證據；取證對象、
   commit 與聲明沒有逐項綁定。
 - **固定處理**：外部語義走鐵律 16／19；GitHub 先讀 `headRefOid`，再讀三個 REST 集合、每則
@@ -296,7 +298,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
   使「三條全部轉交」實為漏項；`docs/worklog/2026-08-20-PR61-第四輪驗收修復.md` 又曾把
   review body 模板誤述成零 inline，Claude 留言
   [5350972681](https://github.com/pisceshei/chilllovesaas/pull/61#issuecomment-5350972681)
-  要求在原處更正。
+  要求在原處更正；鐵律 20 入庫後，PR #61 的
+  [inline 3818520933](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520933)
+  又抓到執行方案只把 GraphQL threads 寫進規範、沒有同步到每輪實際重拉流程。
 - **根因**：把 GitHub 的 conversation、review 容器、review body、inline comment 與 thread
   當成同一資料源；未分頁時再把截斷結果當全集。
 - **固定處理**：三個 REST 集合全部 `--paginate`；逐則讀 review `.body`；GraphQL threads 用來
@@ -312,7 +316,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
   PR #60 的 [inline 3809330909](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809330909)
   與 [inline 3809830153](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809830153)；
   PR #61 的 [inline 3818337781](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337781)
-  與 [inline 3818337799](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337799)。
+  與 [inline 3818337799](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337799)；
+  [inline 3818520940](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520940)
+  則證明 `AGENTS.md` 已定義 commit 後 doc-claims，執行方案 consumer 卻仍漏掉該時序。
 - **根因**：以「我改的那個檔」當影響面，沒有追同識別字的執行消費者與終態入口；歷史層又被
   靜默覆寫或只在遠處加一個新段落。
 - **固定處理**：改前 `rg` 識別字、讀 `git log -p` 沿革，列 producer → consumers → terminal
