@@ -30,8 +30,8 @@
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
 #   R6｜**宣稱索引須有活性標頭與 count、CLAIM ID 唯一、圍欄／HTML comment 須收尾；
-#       `type` 鍵大小寫／冒號前空白不敏感，但值只允許小寫 `count`，`type*` 畸形鍵拒絕；
-#       每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
+#       `type`／`recheck` 鍵大小寫與冒號前空白不敏感，但 type 值只允許小寫 `count`，
+#       `type*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
 #       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
@@ -153,8 +153,9 @@ VOLATILE_NUM = [
 # R4 的豁免：鄰近有可複驗的指令，或明示是某時點的快照。
 RECHECK_CMD = /`[^`\n]*\b(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`/
 # R6 比 R4 的鄰近「像命令」判定更嚴：整個 code span 必須以受支援工具開頭；只在散文中
-# 提到工具名不得滿足結構化宣稱的可重跑契約。`bundle exec` 是唯一明列的前置 wrapper。
-CLAIM_RECHECK_CMD = /\A`(?:bundle\s+exec\s+)?(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`\z/
+# 提到工具名不得滿足結構化宣稱的可重跑契約。清單本身已含 `bundle`，因此
+# `bundle exec ...` 由同一工具起頭規則涵蓋，不另放語言等價、無法承重的 wrapper pattern。
+CLAIM_RECHECK_CMD = /\A`(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`\z/
 SNAPSHOT = /快照|實跑輸出|輸出如下|取證/
 
 # R5：全稱句（只警告）。
@@ -163,15 +164,15 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
 # 索引必須至少有一個活性 `CLAIM-NNN` 標頭與一個 `type: count` 區塊，且 ID 唯一；
-# Markdown 圍欄與 HTML comment 必須收尾。`type` 鍵大小寫／冒號前空白不敏感，值只允許
-# 小寫 `count`；以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆計數，並附一筆
-# `recheck:`，內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
+# Markdown 圍欄與 HTML comment 必須收尾。`type`／`recheck` 鍵大小寫與冒號前空白不敏感；
+# type 值只允許小寫 `count`，以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆
+# 計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
 # 既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
 CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
 CLAIM_TYPE = /\A {0,3}-\s+(type[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
-CLAIM_RECHECK = /\A {0,3}-\s+recheck:\s*(.+)\z/
+CLAIM_RECHECK = /\A {0,3}-\s+recheck\s*:\s*(.+)\z/i
 
 violations = []
 warnings = []

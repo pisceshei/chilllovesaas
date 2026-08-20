@@ -65,6 +65,12 @@ CASES = [
   [ "doc_claim_duplicate_recheck", 1, "R6 同一 CLAIM-001 含多個 `recheck:`",
     "🔴 R6：同一 count 區塊不得以第一筆合法命令遮住後續過期／錯誤 recheck；" \
     "每個計數宣稱只能有一個無歧義的複驗入口" ],
+  [ "doc_claim_recheck_key_variants_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：`Recheck :` 的鍵大小寫／冒號前空白不影響語義；" \
+    "單一合法鍵變體與命令必須通過" ],
+  [ "doc_claim_duplicate_recheck_key_variant", 1, "R6 同一 CLAIM-001 含多個 `recheck:`",
+    "🔴 R6：精確 `recheck:` 與 `Recheck :` 是同一語義欄位；" \
+    "鍵變體不得讓第二筆過期命令繞過 cardinality" ],
   [ "doc_claim_no_count", 1, "R6 宣稱索引沒有任何活性 `type: count`",
     "🔴 R6 局部零供給 canary：合法 CLAIM 標頭存在但 count 全被刪除／改型時必須轉紅，" \
     "不能拿 header canary 冒充計數契約有輸入" ],
@@ -132,7 +138,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 33
+MIN_CASES = 35
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

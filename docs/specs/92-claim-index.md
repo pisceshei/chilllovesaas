@@ -2,7 +2,8 @@
 
 > 本檔只收錄可由倉庫內容重算的計數宣稱。機械契約固定使用 `### CLAIM-NNN` 區塊；
 > 語義 `type: count`（`type` 鍵大小寫／冒號前空白不敏感；值只允許小寫 `count`）必須附一行
-> 以受支援工具開頭的 `recheck:` 可執行命令，否則 `scripts/check-doc-claims.rb` R6 阻擋。
+> 以受支援工具開頭的語義 `recheck:` 可執行命令；`recheck` 鍵同樣大小寫／冒號前空白不敏感，
+> 否則 `scripts/check-doc-claims.rb` R6 阻擋。
 > `baseline: HEAD` 表示命令應對目前樹重算；指定 commit 時，命令必須取得該 Git object 並直接
 > 重算來源，取不到就非零停止，不得用本檔轉錄快照自我證明或外推 HEAD。
 

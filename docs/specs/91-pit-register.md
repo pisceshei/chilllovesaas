@@ -865,6 +865,13 @@
   ⚪ 觀察擴成歷史 changelog 修復
   【F5/F11；來源＝PR #65 Claude comment `5361587574` ⚪4；取證日期＝2026-08-21】
 
+- **R6 的 recheck 命令近似判定仍接受只有工具名的 code span**：
+  `CLAIM_RECHECK_CMD` 只要求整段以受支援工具 token 起頭，後續參數可為空，因此單獨的
+  `ruby` 也合語法；這與「不能只在散文中提到工具名」的 prefix 需求不衝突，但尚未證明命令
+  具可執行參數或能完成複驗。第八輪阻擋只點名 wrapper 冗餘與 recheck 鍵變體，依 17.2 不擴成
+  command grammar 改寫；後續契約包須先定義哪些工具允許無參數，再各放正反 fixture
+  【F5/F11/F12；來源＝PR #65 Claude comment `5362007581` ⚪；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -1037,6 +1044,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第五輪雙驗收修復.md`（Claude comment `5360765482`＋Codex review `4986560215`；count cardinality／零供給、code span comment scope、歷史分類與終態聲明已處置）
 - [x] `docs/worklog/2026-08-21-PR65第六輪雙驗收修復.md`（Claude comment `5361142724`＋Codex review `4986877890`；closer 契約、metadata／supply fail-closed、歷史快照與終態宣稱已處置）
 - [x] `docs/worklog/2026-08-21-PR65第七輪雙驗收修復.md`（Claude comment `5361587574`＋Codex review `4987154051`；檔頭契約、baseline source recheck、type key 與命令起始形態已處置）
+- [x] `docs/worklog/2026-08-21-PR65第八輪雙驗收修復.md`（Claude comment `5362007581`＋Codex review `4987453495`；wrapper 冗餘、recheck 鍵變體與 CLAIM-005 證偽已處置）
 
 ### A.2 handoff
 
