@@ -674,22 +674,30 @@
   `docs/specs/11-production-baseline.md` §2-6 及 MySQL 8.4 PITR 官方程序同步
   【F4/F5；來源＝總方案 CD-1 矩陣與 MySQL 8.4 官方 PITR 文檔；取證日期＝2026-08-20】
 
-- **D36 已改成本地 handoff，但 workflow prompt 與 script 契約註釋仍指向倉庫 handoff**：
-  `.github/workflows/claude-review.yml` 驗收 prompt 仍以「handoff §①」作倉庫終態層例示，
-  `scripts/check-doc-claims.rb` 檔頭也未帶「本地」限定；前者會引導驗收方要求修改已凍結的
-  `docs/handoff/`，後者目前只影響契約文字、不影響腳本掃描行為。兩者都屬鐵律 18.3，且 workflow
-  改動須獨立 PR 才能取得可信 Claude 判詞；後續分成 workflow-only 與 script-only 工作包，按
-  `AGENTS.md`「三層文字，三套規則」的新分流同步文字並各自走人工合併，不得在本 PR 順手改
-  【F5/F12；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` 🟡3／⚪1；
+- **D36 已改成本地 handoff，但 workflow prompt 與兩份 script 契約註釋仍指向倉庫 handoff**：
+  `.github/workflows/claude-review.yml` 驗收 prompt 仍以「handoff §①」作倉庫終態層例示；
+  `scripts/check-doc-claims.rb` 檔頭未帶「本地」限定；`scripts/test-workflow-syntax-rules.rb` 檔頭仍命令
+  fixture 組成改變時「這裡、handoff、worklog 三處一起改」。前者會引導驗收方要求修改已凍結的
+  `docs/handoff/`，後兩者目前只影響契約文字、不影響腳本行為。三者都屬鐵律 18.3，後續分成
+  workflow-only 與 script-only 工作包，按 `AGENTS.md`「三層文字，三套規則」的新分流同步文字，
+  不得在本 PR 順手改。workflow-only 包因修改的正是 `claude-review.yml`，**無法取得自身 head 的
+  Claude 判詞**；須取得 current-head Codex review、機械 CI 與 validation-skip 正向證據後停止
+  自動放行，通知使用者做獨立人工審核／合併，再由合併後第一個 PR 跑 canary。script-only 包須
+  同時覆蓋上述兩份 script 契約註釋；兩個工作包都依 18.3 走人工合併
+  【F5/F12；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` 🟡3／⚪1、exact-head
+  Codex inline `3822037663`／`3822037669` 與 Claude comment `5356779594` 🟡1／2；
   取證日期＝2026-08-20】
 
 - **D36 凍結既有 handoff 後，§3.4 的「下次動該 handoff 時順手補敘事」已不可執行**：
-  原條目以 `docs/handoff/2026-08-18-P0-…` §①為內容錨，要求日後回寫 R15–R17 敘事；現行
-  `CLAUDE.md` 鐵律 21.3 禁止再修改既有 `docs/handoff/`。收割到 §1 時應保留舊條目作沿革，
-  把未來更正分流到新 worklog，若屬使用者裁定另進 `docs/DECISIONS.md`，並以精確 handoff 路徑
-  與穩定內容錨回指，不得解除唯讀或把本登記當成改檔授權
-  【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2；
-  取證日期＝2026-08-20】
+  原條目所指檔案是 `docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md`，目標在 §① 內以
+  「第 26–27 輪補入本節」為穩定內容錨；可用
+  `git grep -n -F '第 26–27 輪補入本節' HEAD -- 'docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md'`
+  唯一重取。原處置要求日後回寫 R15–R17 敘事，但現行 `CLAUDE.md` 鐵律 21.3 禁止再修改既有
+  `docs/handoff/`。收割到 §1 時應保留舊條目作沿革，把未來更正分流到新 worklog，若屬使用者
+  裁定另進 `docs/DECISIONS.md`；回指須使用上述精確路徑與穩定內容錨，不得解除唯讀或把本登記
+  當成改檔授權
+  【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
+  inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -848,6 +856,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-handoff工作單位節奏與本地保存更正.md`（D36 恢復工作單位節奏；新 handoff 改為倉庫外本地保存，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR62首輪驗收修復.md`（Codex review `4982782311` 與 Claude comment `5356127623`；D36 延後消費者及凍結 handoff 待辦已落 §3）
 - [x] `docs/worklog/2026-08-20-PR62第二輪驗收修復.md`（Codex inline `3821829610` 與 Claude comment `5356457527` 同件；REST／GraphQL 重取入口已補，未新增 §3 項）
+- [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 
 ### A.2 handoff
 
