@@ -699,6 +699,8 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
+### 3.6 PR #64 P-8 證據來源文件債收斂驗收（2026-08-21）
+
 - **規定的 HTML comment 更正會在 GitHub 渲染中不可見，且放在清單項之間會切斷清單**：
   PR #64 的 P-8 與首輪驗收 worklog 已把被點名的 blockquote 改成 `AGENTS.md` 規定形態，
   但 GitHub 渲染後原句與修正句之間沒有可見說明；comment 以第 0 欄 HTML block 插在 bullet
@@ -734,17 +736,28 @@
   本 PR 不為非阻擋的呈現差異擴改外部事實
   【F3/F11；來源＝PR #64 Claude comment `5359997378` ⚪2；取證日期＝2026-08-21】
 
-- **A9 尚未登記首組 `pageInfo` 可提早終止其他連線的更強邊界**：
-  pinned `findEndCursor` 對首組湊齊的 `pageInfo` 若得到 `hasNextPage:false` 會回空游標並停止
-  `--paginate`，即使另一層 connection 尚有頁；A9 現只說單一 endCursor，不代表已涵蓋這個
-  停止條件。後續 external-facts 獨立包須附官方實作逐字與 dated URL 後再補，不得在本 PR 推論擴寫
+- **A9 的首組 `pageInfo` 提早終止候選缺官方證據，現況為未取得**：
+  Claude comment 提出的候選是：首組完整 `pageInfo` 可能令 `findEndCursor` 回空游標並停止
+  `--paginate`，即使另一層 connection 尚有頁；本輪未取得支持這個更強跨 connection 結論的
+  pinned 官方逐字與 dated URL，故不得當成既定外部行為。後續 external-facts 獨立包須從 GitHub
+  CLI 的 pinned `findEndCursor` 實作重取完整控制流、逐字、URL 與日期，查證成立後才可升格
   【F3/F5；來源＝PR #64 Claude comment `5359997378` ⚪3；取證日期＝2026-08-21】
 
-- **首輪事後 20.3 稽核沒有逐列交代不適用類型**：
+- **首輪與第四輪事後 20.3 稽核沒有逐列交代不適用類型**：
   `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md` 的事後表只列 ①②③，未明列 ④⑤⑥⑦；
-  其中該工作單位實際加入 HTML comment，⑦ 並非顯然不適用。上一輪只點名全檔零命中，且後續輪
-  已另做 Markdown 驗證，依 17.2／20.5 不在本輪擴修；後續 worklog 契約包再決定是否強制全列
-  【F5/F11；來源＝PR #64 Claude comment `5359997378` ⚪4；取證日期＝2026-08-21】
+  `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md` 只列 ①②③⑦，未明列 ④⑤⑥。首輪工作
+  單位實際加入 HTML comment，⑦ 並非顯然不適用。被點名的修復範圍不含回改這兩份歷史表，
+  依 17.2／20.5 不擴修；後續 worklog 契約包再決定是否強制全列
+  【F5/F11；來源＝PR #64 Claude comments `5359997378` ⚪4／`5360279873` ⚪2；
+  取證日期＝2026-08-21】
+
+- **PR 描述的 doc-claims 快照以可移動 tag 當 base，命令重跑不再對應原輸出**：
+  head `7c10b6a` 的 PR 描述把 `ruby scripts/check-doc-claims.rb --base pr64-last-push --require-base`
+  與掃描輸出並列，但同一流程會在 push 後強制把 `pr64-last-push` 移到新 head；因此命令文字不是
+  immutable 快照入口。後續描述須把 base 綁到實跑時的完整 SHA，或只標成 dated output snapshot，
+  不得以已移動 tag 冒充可重跑原輸出
+  【F5/F11；來源＝PR #64 Claude comment `5360279873` ⚪1、`git rev-parse pr64-last-push`；
+  取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -914,6 +927,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第二輪雙驗收修復.md`（Claude comment `5359209200`＋Codex review `4985307122`；PR 描述、歷史更正格式、外部事實與假債已逐項收斂）
 - [x] `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md`（Claude comment `5359558626`＋Codex review `4985595726`；20.3 缺件、A9／A10 證據邊界與易腐計數已處置）
 - [x] `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md`（Claude comment `5359997378`＋Codex review `4985973166`；累積清單回歸、終態 Changes 與範圍外登記已處置）
+- [x] `docs/worklog/2026-08-21-PR64第五輪雙驗收修復.md`（Claude comment `5360279873`＋Codex review `4986192842`；終態集合遞迴過期、20.4 復發閉環與本輪文件意見已處置）
 
 ### A.2 handoff
 
