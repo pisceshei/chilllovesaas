@@ -625,6 +625,15 @@
   `0 examples` 當產品失敗或成功
   【F6/F11/F12；來源＝PR #61 2026-08-20 受限／外層同命令 A/B 實測；取證日期＝2026-08-20】
 
+- **PowerShell `ConvertFrom-Json` 日期再用 `DateTimeOffset.Parse` 會受本地時區二次解讀而假判舊資料**：
+  PR #61 current-head Codex review 於 07:08:48Z 產生後，reviews／inline 總量已由 36／62 增至
+  37／67，但以觸發時間篩選的 `new` 仍報 0；逐筆列出才證實新 review `4979980175` 與五則 inline
+  已存在。成因是 `ConvertFrom-Json` 已把 ISO timestamp 轉成 `DateTime`，再交給
+  `DateTimeOffset.Parse` 時按 Asia/Taipei 重解未帶出的 `Z`，把 UTC 07:08 誤當本地 07:08。
+  本輪沒有倉庫 poller 被點名，依 17.2 只登記不擴修；日後 PowerShell 輪詢須直接比較 UTC
+  `DateTime`／先 `ToUniversalTime()`，並保留集合總量或最大 ID 作獨立 canary，禁止只信時間濾鏡
+  【F11/F12；來源＝PR #61 current-head review 攝取 A/B 實測；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -764,6 +773,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
 - [x] `docs/worklog/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；已修三個被點名宣稱）
 - [x] `docs/worklog/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；已移除自我重複觸發詞）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
 
 ### A.2 handoff
 
@@ -862,6 +872,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；證據與邊界已交接）
 - [x] `docs/handoff/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；命中與修法已交接）
 - [x] `docs/handoff/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；證據與邊界已交接）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 
