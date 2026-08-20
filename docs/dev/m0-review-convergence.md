@@ -172,6 +172,9 @@
 | `doc_claim_no_headers` | 1 | R6 索引沒有任何 CLAIM 標頭 |
 | `doc_claim_count_before_header` | 1 | R6 計數宣稱落在第一個合法區塊前 |
 | `doc_claim_malformed_header` | 1 | R6 位數、標題階層或括注不合契約，不得被前一區塊吸收 |
+| `doc_claim_indented_header` | 1 | R6 依 CommonMark 接受 0–3 個前導空格，且縮排標頭仍受 count 契約約束 |
+| `doc_claim_duplicate_id` | 1 | R6 活性 CLAIM ID 必須唯一，不依賴 `type: count` 才檢查 |
+| `doc_claim_inactive_headers` | 0 | R6 反向：fenced code／HTML comment 內的範例標頭必須忽略 |
 | `doc_no_files` | **3** | canary |
 | `doc_clean` | 0 | 總反向斷言 |
 （表列以 `ls spec/fixtures/ci_violations/ | grep ^doc_` 為準——列數勿手寫。）
@@ -181,7 +184,8 @@
 
 **突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／
 全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
-首標頭前計數／畸形標頭吸收／生產樹零份 `docs/specs/92-*`；逐項由 fixture、git 情境或
+首標頭前計數／畸形標頭吸收／縮排標頭漏判／重複 ID／把 fenced code 或 HTML comment
+誤當活性區塊／生產樹零份 `docs/specs/92-*`；逐項由 fixture、git 情境或
 supply-S1 令 `scripts/test-doc-claims-rules.rb` 轉紅。
 
 ## 已知限制

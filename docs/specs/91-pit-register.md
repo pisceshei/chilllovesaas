@@ -714,6 +714,42 @@
   `l.scan(/(?<!\\)\|/).size`，以及在 `^```$` 間搜尋 `**`
   【F5/F12；來源＝P-2 提交前 Markdown 全檔結構複驗；取證日期＝2026-08-21】
 
+- **PR #65 首輪修復 worklog 也保留了未附 exact response 的 GitHub Markdown 衍生計數與
+  會隨 head 腐化的閘門快照**：`docs/worklog/2026-08-21-PR65首輪雙驗收修復.md` 的
+  「九個修改區塊 API 全成功」與「首輪 29／29 全綠」屬本輪 Codex 點名 P-2 主 worklog 後
+  反查到的同型位置；current-head review 沒有點名該檔，依鐵律 17.2 不順手改。後續獨立處理時，
+  GitHub `/markdown` 若沒有保存 request／response artifact 必須標「未取得」，閘門數字必須標成
+  dated terminal snapshot 並附鄰近導出入口，不得外推 current HEAD
+  【F4/F11；來源＝PR #65 Codex inline `3823799574`／`3823799581` 後同型掃描；
+  取證日期＝2026-08-21】
+
+- **71 號總登記簿仍保留 83 號 P0 狀態的舊副本**：
+  `docs/specs/71-admin-parity-sweep.md` §「83 號第三輪管理面稽核未進 R0–R13 去重」仍寫
+  「已解 7 條」，括號卻列出九個 ID，並把 P0-14／P0-18 混在已解集合；本輪 Claude 只點名
+  被 PR #65 改到的 `docs/specs/83-admin-1to1-audit-round3.md` §0 總表，71 不在累積 diff，
+  依鐵律 17.2 只登記。後續獨立包須以 83 §1.1 的逐項狀態為來源，同步 71 的摘要，並保留
+  歷史邊界，不得把「部分」寫成「已解」
+  【F5/F11；來源＝PR #65 Claude comment `5359428067` ⚪1；取證日期＝2026-08-21】
+
+- **m0-review-convergence 的 fixture 表後缺空行，且續行 code span 含未跳脫直線**：
+  `docs/dev/m0-review-convergence.md` 的 fixture 表最後一列後緊接「表列以⋯」正文，code span
+  內另有裸 `|`。GFM §4.10 官方逐字為 "The table is broken at the first empty line"，並要求
+  "Include a pipe in a cell’s content by escaping it"；現檔沒有空行，故該正文會被吸入表格列，
+  裸直線再切儲存格。本 PR 累積 diff 只把前面的 fixture 表擴列，該正文屬既有 context 且未被
+  阻擋意見點名，依鐵律 17.2 只登記；後續 Markdown 修復包須補空行、跳脫直線並以 GitHub
+  `/markdown` API 計 `<tr>`／`<th>`／`<td>`
+  【F5/F12；來源＝PR #65 Claude comment `5359428067` ⚪2＋
+  <https://github.github.com/gfm/#tables-extension>；取證日期＝2026-08-21】
+
+- **R6 尚未約束單一合法區塊的重複 `type: count`，供給 canary 也依賴 CI 不傳位置 ROOT**：
+  `scripts/check-doc-claims.rb` 目前只以 `block.any?` 判區塊含計數類型，同一合法區塊若塞入
+  第二筆未另立 CLAIM 標頭的 `type: count`，仍會共用第一筆 recheck；另 `explicit_root` 會讓
+  R6 零供給 canary 豁免，而 W1 只釘 `--require-base`、未禁止 CI 傳 ROOT。本輪 current-head
+  Claude 明列兩洞但判為不開阻擋項，依鐵律 17.2 不擴改；後續 script-only 包須分別加「每區塊
+  type 唯一」負向 fixture，以及 production wiring 不得意外關 canary 的供給斷言，仍按 18.3
+  人工合併
+  【F10/F12；來源＝PR #65 Claude comment `5359428067` ✅4／未覆蓋；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -879,6 +915,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-21-P2宣稱索引與R6.md`（六組假數字證據化＋R6 正反 fixture；已通讀，Markdown 範圍外同型問題已登 §3）
 - [x] `docs/worklog/2026-08-21-PR65首輪雙驗收修復.md`（Codex review `4985224623`＋Claude comment `5359074865`；首輪意見與鐵律 20.3 稽核已處置）
+- [x] `docs/worklog/2026-08-21-PR65第二輪雙驗收修復.md`（Codex review `4985525215`＋Claude comment `5359428067`；R6 邊界、宣稱斷言與鐵律 20.4 復發記錄已處置）
 
 ### A.2 handoff
 

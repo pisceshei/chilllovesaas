@@ -151,8 +151,8 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 # 每個 `type: count` 區塊都必須有 `recheck:`，且內容要符合上方 RECHECK_CMD 的
 # 可執行指令形態。既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
-CLAIM_HEADER = /^### CLAIM-(\d{3})\s*$/
-CLAIM_LIKE_HEADER = /\A#+\s+CLAIM-/
+CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
+CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
 CLAIM_COUNT_TYPE = /^-\s+type:\s*count\s*$/
 CLAIM_RECHECK = /^-\s+recheck:\s*(.+)$/
 
@@ -172,6 +172,59 @@ def near?(lines, idx, re)
   lo = [ idx - 2, 0 ].max
   hi = [ idx + 2, lines.size - 1 ].min
   lines[lo..hi].join("\n").match?(re)
+end
+
+# R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
+# 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
+# 回傳 `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
+def active_markdown_lines(lines)
+  active = []
+  fence = nil
+  in_comment = false
+
+  lines.each_with_index do |raw, idx|
+    if fence
+      close = /\A {0,3}#{Regexp.escape(fence[:char])}{#{fence[:length]},}[ \t]*\z/
+      fence = nil if raw.match?(close)
+      next
+    end
+
+    visible = +""
+    rest = raw
+    loop do
+      if in_comment
+        closing = rest.index("-->")
+        break unless closing
+
+        rest = rest[(closing + 3)..].to_s
+        in_comment = false
+      else
+        opening = rest.index("<!--")
+        unless opening
+          visible << rest
+          break
+        end
+
+        visible << rest[0...opening]
+        rest = rest[(opening + 4)..].to_s
+        in_comment = true
+      end
+    end
+
+    if (opening = visible.match(/\A {0,3}(`{3,}|~{3,})(.*)\z/))
+      run = opening[1]
+      info = opening[2]
+      # CommonMark：backtick fence 的 info string 不得再含 backtick；不合法者仍是正文。
+      unless run.start_with?("`") && info.include?("`")
+        fence = { char: run[0], length: run.length }
+        next
+      end
+    end
+
+    active << [ idx, visible ]
+  end
+
+  active
 end
 
 # ---- 收集要掃的檔 ----------------------------------------------------------
@@ -286,35 +339,47 @@ targets.each do |rel|
   # --- R6（宣稱索引，tree-wide）---
   if rel.match?(CLAIM_INDEX)
     claim_indexes_scanned += 1
-    headers = lines.each_index.select { |idx| lines[idx].match?(CLAIM_LIKE_HEADER) }
-    if headers.empty?
+    active_lines = active_markdown_lines(lines)
+    header_positions = active_lines.each_index.select do |pos|
+      active_lines[pos][1].match?(CLAIM_LIKE_HEADER)
+    end
+    if header_positions.empty?
       violations << "#{rel}:1 R6 宣稱索引沒有任何 `### CLAIM-NNN` 區塊——" \
                     "這不是零宣稱，是結構化檢查沒有生效。"
     end
-    if headers.any?
-      lines[0...headers.first].each_with_index do |line, idx|
+    if header_positions.any?
+      active_lines[0...header_positions.first].each do |idx, line|
         next unless line.match?(CLAIM_COUNT_TYPE)
 
         violations << "#{rel}:#{idx + 1} R6 計數宣稱出現在第一個 CLAIM 標頭之前——" \
                       "每個 `type: count` 都必須位於自己的 `### CLAIM-NNN` 區塊內。"
       end
     end
-    headers.each_with_index do |start, pos|
-      finish = pos + 1 < headers.size ? headers[pos + 1] : lines.size
-      header = lines[start].match(CLAIM_HEADER)
+    seen_claim_ids = {}
+    header_positions.each_with_index do |start_pos, pos|
+      finish_pos = pos + 1 < header_positions.size ? header_positions[pos + 1] : active_lines.size
+      start, header_line = active_lines[start_pos]
+      header = header_line.match(CLAIM_HEADER)
       unless header
-        violations << "#{rel}:#{start + 1} R6 宣稱標頭格式錯誤：`#{lines[start]}`——" \
+        violations << "#{rel}:#{start + 1} R6 宣稱標頭格式錯誤：`#{header_line}`——" \
                       "必須使用三位數 `### CLAIM-NNN`（例如 `### CLAIM-002`）。"
         next
       end
 
-      block = lines[start...finish]
+      claim_id = header[1]
+      if seen_claim_ids.key?(claim_id)
+        violations << "#{rel}:#{start + 1} R6 重複 CLAIM-#{claim_id}——" \
+                      "首次出現在第 #{seen_claim_ids[claim_id] + 1} 行；每個 CLAIM ID 必須唯一。"
+      else
+        seen_claim_ids[claim_id] = start
+      end
+
+      block = active_lines[start_pos...finish_pos].map(&:last)
       next unless block.any? { |line| line.match?(CLAIM_COUNT_TYPE) }
 
       recheck = block.filter_map { |line| line.match(CLAIM_RECHECK)&.[](1) }.first
       next if recheck&.match?(RECHECK_CMD)
 
-      claim_id = header[1]
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
                     "新增 `- recheck: `ruby ...``（或 RECHECK_CMD 支援的等價命令）。"
     end

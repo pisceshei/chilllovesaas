@@ -11,7 +11,7 @@
 - original: P-2 輸入把 C-01～C-16 的 16 列都視為衝突，要求把表 3 從 25 改成 26、全簿從 313 改成 314。
 - corrected: C 列雖有 16 列，但 C-16 是正面對照；15 條 C 衝突＋10 條 T 衝突＝表 3 共 25，附錄五表合計 313。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/50-logic-gap-register.md"); c=s.lines.grep(/^\| C-\d{2} /); positive=c.count{|l| l.include?("三方一致正面清單")}; conflicts=c.size-positive; t=s.scan(/^\| \*\*T-\d{2}\*\* \|/).size; sums=s.lines.filter_map{|l| m=l.match(/^\| \u8868 [1-5].*?\| \*\*(\d+)\*\*/); m&&m[1].to_i}; abort "unexpected structure" unless [c.size,conflicts,positive,t,sums.size]==[16,15,1,10,5]; p({c_rows:c.size,c_conflicts:conflicts,positive_controls:positive,t_conflicts:t,table_3:conflicts+t,total:sums.sum})'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/50-logic-gap-register.md"); c=s.lines.grep(/^\| C-\d{2} /); positive=c.count{|l| l.include?("三方一致正面清單")}; conflicts=c.size-positive; t=s.scan(/^\| \*\*T-\d{2}\*\* \|/).size; sums=s.lines.filter_map{|l| m=l.match(/^\| \u8868 [1-5].*?\| \*\*(\d+)\*\*/); m&&m[1].to_i}; table3=s.lines.find{|l|l.start_with?("| 表 3 ·")}.match(/\*\*(\d+)\*\*/)[1].to_i; total=s.lines.find{|l|l.start_with?("| **合計** |")}.match(/\*\*(\d+)\*\*/)[1].to_i; values=[c.size,conflicts,positive,t,sums.size,conflicts+t,table3,sums.sum,total]; abort "unexpected structure #{values.inspect}" unless values==[16,15,1,10,5,25,25,313,313]; p({c_rows:c.size,c_conflicts:conflicts,positive_controls:positive,t_conflicts:t,table_3:table3,total:total})'`
 - status: corrected
 
 ### CLAIM-002
@@ -21,7 +21,7 @@
 - original: §0 寫本輪已修復 7 條 P0，但 §1.1 的逐項複驗列有 10 條。
 - corrected: §1.1 有 10 列 P0 複驗紀錄；其中 8 列已修復，P0-14／P0-18 仍為部分修復。不得再用「53 的 10 條未解決」當這組的分母。
 - baseline: HEAD
-- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/83-admin-1to1-audit-round3.md"); x=s[s.index(/^### 1\.1 /)...s.index(/^### 1\.2 /)]; rows=x.lines.filter_map{|l| m=l.match(/^\| (P0-\d+).*?\[(已修復|部分)\]/); m&&[m[1],m[2]]}; fixed=rows.select{|_,v|v=="已修復"}.map(&:first); partial=rows.select{|_,v|v=="部分"}.map(&:first); abort "unexpected states" unless [rows.size,fixed.size,partial]==[10,8,%w[P0-14 P0-18]]; p({rows:rows.size,fixed:fixed,partial:partial})'`
+- recheck: `ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/83-admin-1to1-audit-round3.md"); x=s[s.index(/^### 1\.1 /)...s.index(/^### 1\.2 /)]; rows=x.lines.filter_map{|l| m=l.match(/^\| (P0-\d+).*?\[(已修復|部分)\]/); m&&[m[1],m[2]]}; fixed=rows.select{|_,v|v=="已修復"}.map(&:first); partial=rows.select{|_,v|v=="部分"}.map(&:first); summary=s.lines.find{|l|l.start_with?("| 元件級（§6） |")}.split("|").map(&:strip); summary_ok=summary[3].scan(/P0-(?:14|18)/).empty? && summary[4].scan(/P0-(?:14|18)（部分）/)==%w[P0-14（部分） P0-18（部分）]; values=[rows.size,fixed.size,partial,summary_ok]; abort "unexpected states #{values.inspect}" unless values==[10,8,%w[P0-14 P0-18],true]; p({rows:rows.size,fixed:fixed,partial:partial,summary_synced:summary_ok})'`
 - status: corrected
 
 ### CLAIM-003
