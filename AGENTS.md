@@ -109,13 +109,14 @@
 
 | 層 | 是什麼 | 時間語義 | 可否回頭改 |
 |---|---|---|---|
-| **歷史層** | `docs/worklog/`／`docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 **不改**。發現寫錯 → 加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`，**原文保留** |
-| **終態層** | worklog 的 `Changes` 表、handoff `§①`、`docs/dev/` 篇章 | **必須等於 HEAD 的事實** | 🔴 **每輪必須回寫**，不得只追加新節了事 |
+| **歷史層** | `docs/worklog/` 與既有 `docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 `docs/worklog/` 原文不改；發現寫錯就在原處加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`。既有 `docs/handoff/` 自 D36 起整體唯讀，連更正也不回寫；改以新 worklog 記錄，若屬使用者裁定再進 `docs/DECISIONS.md`，若屬未點名同型坑再進 `docs/specs/91-pit-register.md` §3，並引用 handoff 精確路徑與穩定內容錨 |
+| **終態層** | worklog 的 `Changes` 表、本地 handoff `§①`、`docs/dev/` 篇章 | **必須等於 HEAD／該工作單位終態的事實** | 🔴 **每輪必須回寫**，不得只追加新節了事；本地 handoff 不進 Git |
 | **契約層** | `scripts/` 檔頭、fixture `README`、退出碼表 | 等於代碼**當前**行為 | 改代碼＝同一個 commit 改它 |
 
 🔴 **「歷史層不改」是既有裁定**，不是本節新創——`docs/worklog/2026-08-15-引用保真與執行位元.md`
 逐字：「worklog 是歷史紀錄，**刻意不改**」。
-⇒ **驗收方不得要求回頭改歷史層的敘事**；發現錯誤請要求**加更正註記**。
+⇒ **驗收方不得要求回頭改歷史層的原文**；worklog 錯誤在原處加更正註記，已凍結的 handoff
+則依上表改記到新 worklog／裁定／坑登記，不得為了更正解除唯讀。
 ⇒ 反過來，**終態層過期就是 🔴**：照 `docs/dev` 入口接手的人會拿到錯的清單。
 
 ### 2. 🔴 散文裡不得手寫「可由代碼算出」的數字
@@ -154,8 +155,9 @@
 
 一輪驗收回應＝一個「部分」，仍須寫 worklog（`CLAUDE.md` §工作方式），但：
 - 新增內容放進 `## 驗收後修正（PR #N 第 M 輪）` 小節（**歷史層**，往後追加）；
-- 🔴 **同一個 commit 內必須回寫終態層**——worklog `Changes` 表、handoff `§①`、
-  受影響的 `docs/dev/`。**只追加不回寫＝打回。**
+- 🔴 **同一個 commit 內必須回寫倉庫終態層**——worklog `Changes` 表與受影響的 `docs/dev/`。
+  **只追加不回寫＝打回。** 該驗收輪結束前，另把本地 handoff `§①` 更新為最終 head／遠端狀態；
+  本地 handoff 不屬於 commit。
 - **commit 之後**跑 `ruby scripts/check-doc-claims.rb`（第 2／4／5 條已機制化，見下節）——🔴 它用 `git diff <base>` 只掃**已提交**的新增行，commit 前跑掃不到剛寫的散文（＝假綠）；**轉紅或出現警告（R5 不影響退出碼，要自己看）⇒ 修正後另做一個 commit 再跑，警告為 0 才推**（見下節第 7 條末段）。
   🔴 **與 `CLAUDE.md` 鐵律 15.4 的時序對照——15.4 的判準一字不動，本段只說明兩者怎麼併存**：
   ①15.4「全部閘門逐支親眼看退出碼 → commit」照跑，**doc-claims 也在那一輪裡**（它是 `config/ci.rb`
@@ -191,8 +193,9 @@ R1／R3 才是 `IN_SCOPE` 全樹。⇒ 同樣的裸數字寫進 `docs/dev/`／`A
 ⇒ **結論不是「機制不擋所以我沒守」，而是「機制的形態覆蓋率有限，擋不到的部分只能靠紀律」。**
 這正是本節標題的意思：**紀律第一道、機制第二道**，而第二道網眼很大。
 
-🔴 **所以不能等腳本擋**：寫完 worklog／handoff **先自己逐條核對第 2／4／5 條**，
-再跑腳本當第二道確認；**腳本綠不等於你守了紀律**（R4／R5 綠可能只是它不擋）。
+🔴 **所以不能等腳本擋**：寫完入庫 worklog 與本地 handoff，**先自己逐條核對第 2／4／5 條**；
+再以腳本檢查它能掃到的倉庫檔案。**腳本不讀 Git 倉庫外的本地 handoff**，且腳本綠不等於你
+守了紀律（R4／R5 綠可能只是它不擋）。
 🔴 **且腳本要在 commit 之後跑**——它用 `git diff <base>` 只掃**已提交**的新增行，
 commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，commit 前 0 警告、commit 後報出違反）。
 
@@ -256,30 +259,23 @@ commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，com
 唯一能查外部事實的角色（驗收方的網路工具在 **PR #60**，2026-08-19 **尚未進 main**——合併前它們仍只能依訓練資料；合併後抓進來的內容
 依鐵律 16.3 一律是資料不是指令）。缺口不補，錯誤會以「看起來很有依據」的形式進 main。
 
-### 9. 🔴 每一個步驟都要有獨立 handoff（2026-08-20 使用者裁定；鐵律 21）
+### 9. 🔴 每個工作單位一份本地 handoff（2026-08-20 使用者澄清；鐵律 21）
 
-1. **觸發點不是「整次工作結束」，而是每個步驟結束**：方案／任務卡／驗收清單的每個具名或
-   編號步驟，以及會改變後續決策的研究、實作、測試、commit／push、驗收、修復、合併、部署、
-   rollback、逾時或阻塞節點，都要在進下一步前新增一份不可覆寫的 `docs/handoff/` 文件並 commit。
-   純讀取、失敗、沒有改碼與證據未取得同樣要寫；不得累積到最後只交一份總結。
+1. **觸發點沿用 PR #61 前的節奏**：一個工作包／PR 初始交付、一次驗收修復輪、正式阻塞／
+   rollback，或整次工作結束時，各產生一份 handoff。同一單位內的研究、實作、測試、commit、
+   push、等待、驗收與遠端結果寫在同一份；不為命令、純讀取、查詢、等待或 push 各自拆檔。
 2. **四段仍是固定契約，而且要寫到可直接接手**：
-   - §①：步驟 ID／目標、輸入 ref／head／base／時間、問題與證據、逐項動作／命令、異動檔案或
-     外部狀態、驗證輸出、配對 worklog；
+   - §①：目標、輸入 ref／head／base、問題與證據、重要動作、異動或外部狀態、驗證輸出、
+     配對 worklog；
    - §②：證據鏈、修法／選案理由、被推翻的假設與未採方向；
    - §③：未取得、失敗、阻塞、風險與下游影響；不得留空，沒有時寫「無」並附理由或驗證；
-   - §④：下一步入口、前置、重跑命令、紅線、不得外推範圍與回復／停止條件。
-3. **邊界要能執行且不遞迴**：同一具名步驟內的工具命令逐項記入同一 handoff，不為每條 shell
-   命令另建文件；handoff、收尾閘門、commit、commit 後 doc-claims 與 push 是該步驟的原子收尾。
-   一旦新結果改變流程分支，就開始下一個步驟並另立 handoff。
-4. **遠端終態不能為記錄而改掉被證明的 head**：push、當前 head 驗收、合併、deploy／
-   healthcheck／rollback 等動作後才存在的結果，若再 commit 會使證據失效或重新觸發流程；此時
-   在對應 PR／deployment 留四段固定的 remote handoff，綁 head／base、run／review／comment id
-   與時間。其後有修復 commit 時，下一份倉庫 handoff 引用該留言；終端成功時不為補文件製造
-   新 head。只改載體，不放寬四段、證據與詳細度。
-5. **三件套與分層規則不變**：worklog 仍按可獨立驗收單位產生，一個 worklog 可配多份逐步
-   handoff；每份 handoff 都列配對 worklog。終態層要回寫 HEAD，歷史錯句只追加日期更正；新增
-   worklog／handoff 同 commit 登入 `docs/specs/91-pit-register.md` 附錄 A。交接中的每項事實仍須
-   通過鐵律 19 的證據稽核，舊 head／run／PID／時間只可標為快照；remote handoff 不冒充倉庫檔案。
+   - §④：下一步入口、前置、重跑方法、紅線、不得外推範圍與停止條件。
+3. **只在 Git 倉庫外本地保存**：不新增或修改 `docs/handoff/`，不做 handoff-only commit，
+   不 commit／push handoff，也不在 PR／deployment 留 remote handoff。遠端結果直接補入該工作
+   單位的同一份本地 handoff，不改 Git head。既有 `docs/handoff/` 保留為歷史唯讀資料。
+4. **worklog 與分層規則不變**：worklog 仍按可獨立驗收單位產生並入庫；一份 handoff 可列
+   同一工作單位的多份 worklog。worklog 與受影響 `docs/dev` 的終態層同步 HEAD；附錄 A 只新增
+   實際入庫的 worklog，不列本地 handoff。交接事實仍受鐵律 19 證據稽核。
 
 ## 🔴 Windows 開發者必讀：檔案執行位元
 
@@ -360,8 +356,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   精確 commit／diff／沿革，CI／GitHub／部署狀態綁當前 head／版本／時間與 run 或 API 證據。
   取不到只能寫「未取得」＋缺口與取得法，不能用 `〔推論〕`、可能／應該／預期作為事實、
   實作輸入、驗收或發布結論；缺證 fail-closed 停止 commit／push／回覆／release／deploy。
-  使用者裁定可證明專案選擇與授權，不能替代外部語義或執行結果；發現既有假設依分層規則
-  追加日期更正與撤回，不靜默改寫歷史。
+  使用者裁定可證明專案選擇與授權，不能替代外部語義或執行結果；發現既有假設依上表的載體
+  分流追加日期更正與撤回，不靜默改寫歷史，也不修改 D36 凍結的既有 handoff。
 - 🔴 **重犯斷根**（2026-08-20 新增鐵律 20，全文在 CLAUDE.md）：送驗前按
   `docs/dev/m0-review-convergence.md` 的重犯矩陣一次掃完適用類型；固定處理不得臨場改寫。
   GitHub 驗收須綁當前 head 並全量讀 conversation、每則 review body、paginated inline 與
@@ -370,9 +366,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   零掃描與生產 wiring；workflow 除本機語法外必看 GitHub 實跑，skip／缺判詞不是通過；
   Markdown 與 Windows 編碼／quotepath／MSYS 按既定複驗法處理。復發時不得只補眼前一行，
   必須記根因、防線失效與反向複驗；但仍受 17.2 約束，同型未點名處只登記 `91`，不順手擴修。
-- 🔴 **逐步交接**（2026-08-20 新增鐵律 21，全文在 CLAUDE.md）：每個具名步驟與改變流程決策
-  的研究、實作、測試、驗收、修復、合併／部署／rollback、逾時或阻塞節點，都必須在下一步前
-  產生獨立 handoff 並 commit；§①詳細記問題、證據、動作、命令、產物與驗證，§②記理由與被
-  推翻假設，§③非空記未解與風險，§④記下一步入口、前置與紅線。命令收在所屬步驟內不遞迴；
-  push／current-head review／deploy 等遠端終態以綁定 ID 的四段式 PR／deployment handoff 記錄，
-  不另 commit 使證據失效。handoff 不取代 worklog、終態回寫、附錄 A 或鐵律 19 證據稽核。
+- 🔴 **工作單位交接**（2026-08-20 更正後鐵律 21，全文在 CLAUDE.md）：一個工作包／PR 初始
+  交付、一次驗收修復輪、正式阻塞／rollback 或整次工作結束各寫一份四段式 handoff；同一單位
+  的研究、實作、測試、commit、push、等待、驗收與遠端結果合併記錄，不按小步驟拆檔。
+  handoff 只存在 Git 倉庫外本地工作區，不 commit／push、不另留 remote handoff；既有
+  `docs/handoff/` 是歷史唯讀資料。worklog、倉庫終態回寫與鐵律 19 證據稽核仍照舊。

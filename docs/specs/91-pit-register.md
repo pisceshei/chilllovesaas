@@ -674,6 +674,31 @@
   `docs/specs/11-production-baseline.md` §2-6 及 MySQL 8.4 PITR 官方程序同步
   【F4/F5；來源＝總方案 CD-1 矩陣與 MySQL 8.4 官方 PITR 文檔；取證日期＝2026-08-20】
 
+- **D36 已改成本地 handoff，但 workflow prompt 與兩份 script 契約註釋仍指向倉庫 handoff**：
+  `.github/workflows/claude-review.yml` 驗收 prompt 仍以「handoff §①」作倉庫終態層例示；
+  `scripts/check-doc-claims.rb` 檔頭未帶「本地」限定；`scripts/test-workflow-syntax-rules.rb` 檔頭仍命令
+  fixture 組成改變時「這裡、handoff、worklog 三處一起改」。前者會引導驗收方要求修改已凍結的
+  `docs/handoff/`，後兩者目前只影響契約文字、不影響腳本行為。三者都屬鐵律 18.3，後續分成
+  workflow-only 與 script-only 工作包，按 `AGENTS.md`「三層文字，三套規則」的新分流同步文字，
+  不得在本 PR 順手改。workflow-only 包因修改的正是 `claude-review.yml`，**無法取得自身 head 的
+  Claude 判詞**；須取得 current-head Codex review、機械 CI 與 validation-skip 正向證據後停止
+  自動放行，通知使用者做獨立人工審核／合併，再由合併後第一個 PR 跑 canary。script-only 包須
+  同時覆蓋上述兩份 script 契約註釋；兩個工作包都依 18.3 走人工合併
+  【F5/F12；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` 🟡3／⚪1、exact-head
+  Codex inline `3822037663`／`3822037669` 與 Claude comment `5356779594` 🟡1／2；
+  取證日期＝2026-08-20】
+
+- **D36 凍結既有 handoff 後，§3.4 的「下次動該 handoff 時順手補敘事」已不可執行**：
+  原條目所指檔案是 `docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md`，目標在 §① 內以
+  「第 26–27 輪補入本節」為穩定內容錨；可用
+  `git grep -n -F '第 26–27 輪補入本節' HEAD -- 'docs/handoff/2026-08-18-P0-方案落庫與鐵律16-18.md'`
+  唯一重取。原處置要求日後回寫 R15–R17 敘事，但現行 `CLAUDE.md` 鐵律 21.3 禁止再修改既有
+  `docs/handoff/`。收割到 §1 時應保留舊條目作沿革，把未來更正分流到新 worklog，若屬使用者
+  裁定另進 `docs/DECISIONS.md`；回指須使用上述精確路徑與穩定內容錨，不得解除唯讀或把本登記
+  當成改檔授權
+  【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
+  inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -689,9 +714,10 @@ git -c core.quotepath=false ls-files docs/worklog docs/handoff | sort | md5sum
 grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|handoff)/[^`]+' | sort | md5sum
 ```
 
-> 🔴 **新增 worklog/handoff 的同一 commit 必須同步補列本清單**（第 2 輪改——原
-> 「之後隨輪補列」擋不住同 commit 新增檔漏列：本 PR 首版即漏了自己的 3 檔，
-> 其中 phase0 交接檔正是最密集的收割源）。
+> 🔴 **新增 tracked worklog 的同一 commit 必須同步補列本清單**（第 2 輪改——原
+> 「之後隨輪補列」擋不住同 commit 新增檔漏列）。依 D36，之後不得新增 tracked
+> `docs/handoff/`；倉庫外的本地 handoff 不屬於本清單。既有 `docs/handoff/` 保留於
+> A.2 作歷史追溯，不刪除、不改寫。
 
 ### A.1 worklog
 
@@ -830,6 +856,12 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-handoff工作單位節奏與本地保存更正.md`（D36 恢復工作單位節奏；新 handoff 改為倉庫外本地保存，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR62首輪驗收修復.md`（Codex review `4982782311` 與 Claude comment `5356127623`；D36 延後消費者及凍結 handoff 待辦已落 §3）
+- [x] `docs/worklog/2026-08-20-PR62第二輪驗收修復.md`（Codex inline `3821829610` 與 Claude comment `5356457527` 同件；REST／GraphQL 重取入口已補，未新增 §3 項）
+- [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
+- [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
+- [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
 
 ### A.2 handoff
 

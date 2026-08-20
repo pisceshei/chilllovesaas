@@ -201,26 +201,26 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
   處理與反向複驗的交付根因升格為鐵律 20。未授權新增 checker，本輪只立紀律與證據帳。
 - 2026-08-20（PR #61）：依 D35／鐵律 21 把 handoff 觸發點從整次工作結束收緊為每個具名
   步驟與決策節點；命令留在所屬步驟內，避免遞迴建檔，worklog 與終態回寫照舊並存。
+- 2026-08-20（D36）：使用者指出上一項把「沿用以前形式」錯誤擴張成每個小步驟都 commit
+  handoff。現行規則恢復為每個工作單位／驗收修復輪結束一份，並改在 Git 倉庫外本地保存；
+  上一項保留為錯誤制度沿革，不再執行。
 
-## 逐步 handoff 契約（2026-08-20，鐵律 21）
+## 工作單位 handoff 契約（2026-08-20，D36／鐵律 21）
 
-既有制度分別在「可獨立驗收單位完成」產生 worklog、在「工作結束前」產生 handoff；D35 補的
-是兩者之間的決策鏈。研究結論、測試結果、驗收攝取、失敗／阻塞等節點即使沒有改碼，也可能
-改變下一步輸入；若只在最後總結，接手者無法區分當時證據、其後更正與現行入口。
+既有制度分別在「可獨立驗收單位完成」產生 worklog、在「工作結束前」產生一份 handoff。
+D35 把後者錯誤收緊成每個具名步驟與決策節點都要另檔、另 commit，造成 handoff 本身反覆改
+PR head。D36 依使用者澄清恢復原有時間邊界，並把 handoff 移出 Git 倉庫。
 
 固定處理如下：
 
-- 每個計畫／任務具名步驟及會改變流程分支的結果，各自新增不可覆寫 handoff，進下一步前 commit。
-- §①綁步驟輸入與證據並列逐項動作、產物、驗證及配對 worklog；§②記決策與被推翻假設；
+- 一個工作包／PR 初始交付、一次驗收修復輪、正式阻塞／rollback 或整次工作結束，各寫一份
+  handoff；研究、實作、測試、commit、push、等待、驗收與遠端結果收在同一份，不逐小步拆檔。
+- §①綁工作單位輸入與證據並列重要動作、產物、驗證及配對 worklog；§②記決策與被推翻假設；
   §③非空記未解／阻塞／風險；§④給精確下一步入口、前置、紅線與不得外推範圍。
-- 同一目標內的工具命令是該步驟的證據列，不逐命令另建文件；handoff、閘門、commit、
-  commit 後 doc-claims 與 push 是原子收尾。取得會改變後續分支的新結果後才開下一份。
-- push、當前 head 驗收、合併、deploy／healthcheck／rollback 的結果只能在遠端動作後取得；
-  若為寫倉庫 handoff 再 commit，會讓結果所綁 head 失效。這些終態在 PR／deployment 留相同
-  四段 remote handoff，綁 head／base、run／review／comment id 與時間；後續修復的倉庫 handoff
-  引用該留言。它只改載體，不把 skip／pending／未取得證據換算成通過。
-- worklog 三段、終態回寫、`91` 附錄 A 與鐵律 19 不被取代；逐步 handoff 只增加時間邊界，
-  不放寬事實證據或修改射程。
+- handoff 只存 Git 倉庫外本地工作區；不新增／修改 `docs/handoff/`，不做 handoff-only commit，
+  不 push，也不留 remote handoff。遠端終態取得後補進同一份本地 handoff，避免改 head。
+- worklog 三段、倉庫終態回寫與鐵律 19 不被取代；附錄 A 只追蹤實際入庫的 worklog 與既有
+  歷史 handoff，不為本地 handoff 新增路徑。
 
 ## 廢止後的收斂責任（2026-08-19）
 
@@ -344,8 +344,11 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
 - **根因**：以「我改的那個檔」當影響面，沒有追同識別字的執行消費者與終態入口；歷史層又被
   靜默覆寫或只在遠處加一個新段落。
 - **固定處理**：改前 `rg` 識別字、讀 `git log -p` 沿革，列 producer → consumers → terminal
-  docs → history correction 影響圖；同 commit 閉合。worklog `Changes`、handoff §①、受影響
-  `docs/dev` 是終態；歷史錯句原處加日期更正，不能只在新篇說明。
+  docs → history correction 影響圖；同 commit 閉合倉庫內容。worklog `Changes` 與受影響 `docs/dev`
+  是倉庫終態；本地 handoff §①在工作單位結束前同步最終 head／遠端狀態，不進 commit。
+  worklog 歷史錯句原處加日期更正；D36 已凍結的既有 `docs/handoff/` 不改，改在新 worklog
+  （使用者裁定另進 `docs/DECISIONS.md`，未點名同型坑另進 `91` §3）引用其精確路徑與穩定
+  內容錨後更正，不能留下無法追到原說法的新篇聲明。
 - **反向複驗**：對被改識別字跑全樹搜尋；每個仍活的舊契約要嘛同步、要嘛在處置清單附不受影響
   的證據。終態三處與 HEAD diff 的檔案集合雙向相等。
 
