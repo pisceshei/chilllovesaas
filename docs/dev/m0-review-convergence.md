@@ -346,7 +346,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
 - **固定處理**：改前 `rg` 識別字、讀 `git log -p` 沿革，列 producer → consumers → terminal
   docs → history correction 影響圖；同 commit 閉合倉庫內容。worklog `Changes` 與受影響 `docs/dev`
   是倉庫終態；本地 handoff §①在工作單位結束前同步最終 head／遠端狀態，不進 commit。
-  歷史錯句原處加日期更正，不能只在新篇說明。
+  worklog 歷史錯句原處加日期更正；D36 已凍結的既有 `docs/handoff/` 不改，改在新 worklog
+  （使用者裁定另進 `docs/DECISIONS.md`，未點名同型坑另進 `91` §3）引用其精確路徑與穩定
+  內容錨後更正，不能留下無法追到原說法的新篇聲明。
 - **反向複驗**：對被改識別字跑全樹搜尋；每個仍活的舊契約要嘛同步、要嘛在處置清單附不受影響
   的證據。終態三處與 HEAD diff 的檔案集合雙向相等。
 

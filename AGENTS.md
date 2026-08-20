@@ -109,13 +109,14 @@
 
 | 層 | 是什麼 | 時間語義 | 可否回頭改 |
 |---|---|---|---|
-| **歷史層** | `docs/worklog/` 與既有 `docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 **不改**。發現寫錯 → 加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`，**原文保留**；既有 `docs/handoff/` 自 D36 起整體唯讀 |
+| **歷史層** | `docs/worklog/` 與既有 `docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 `docs/worklog/` 原文不改；發現寫錯就在原處加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`。既有 `docs/handoff/` 自 D36 起整體唯讀，連更正也不回寫；改以新 worklog 記錄，若屬使用者裁定再進 `docs/DECISIONS.md`，若屬未點名同型坑再進 `docs/specs/91-pit-register.md` §3，並引用 handoff 精確路徑與穩定內容錨 |
 | **終態層** | worklog 的 `Changes` 表、本地 handoff `§①`、`docs/dev/` 篇章 | **必須等於 HEAD／該工作單位終態的事實** | 🔴 **每輪必須回寫**，不得只追加新節了事；本地 handoff 不進 Git |
 | **契約層** | `scripts/` 檔頭、fixture `README`、退出碼表 | 等於代碼**當前**行為 | 改代碼＝同一個 commit 改它 |
 
 🔴 **「歷史層不改」是既有裁定**，不是本節新創——`docs/worklog/2026-08-15-引用保真與執行位元.md`
 逐字：「worklog 是歷史紀錄，**刻意不改**」。
-⇒ **驗收方不得要求回頭改歷史層的敘事**；發現錯誤請要求**加更正註記**。
+⇒ **驗收方不得要求回頭改歷史層的原文**；worklog 錯誤在原處加更正註記，已凍結的 handoff
+則依上表改記到新 worklog／裁定／坑登記，不得為了更正解除唯讀。
 ⇒ 反過來，**終態層過期就是 🔴**：照 `docs/dev` 入口接手的人會拿到錯的清單。
 
 ### 2. 🔴 散文裡不得手寫「可由代碼算出」的數字
@@ -355,8 +356,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   精確 commit／diff／沿革，CI／GitHub／部署狀態綁當前 head／版本／時間與 run 或 API 證據。
   取不到只能寫「未取得」＋缺口與取得法，不能用 `〔推論〕`、可能／應該／預期作為事實、
   實作輸入、驗收或發布結論；缺證 fail-closed 停止 commit／push／回覆／release／deploy。
-  使用者裁定可證明專案選擇與授權，不能替代外部語義或執行結果；發現既有假設依分層規則
-  追加日期更正與撤回，不靜默改寫歷史。
+  使用者裁定可證明專案選擇與授權，不能替代外部語義或執行結果；發現既有假設依上表的載體
+  分流追加日期更正與撤回，不靜默改寫歷史，也不修改 D36 凍結的既有 handoff。
 - 🔴 **重犯斷根**（2026-08-20 新增鐵律 20，全文在 CLAUDE.md）：送驗前按
   `docs/dev/m0-review-convergence.md` 的重犯矩陣一次掃完適用類型；固定處理不得臨場改寫。
   GitHub 驗收須綁當前 head 並全量讀 conversation、每則 review body、paginated inline 與
