@@ -634,6 +634,14 @@
   `DateTime`／先 `ToUniversalTime()`，並保留集合總量或最大 ID 作獨立 canary，禁止只信時間濾鏡
   【F11/F12；來源＝PR #61 current-head review 攝取 A/B 實測；取證日期＝2026-08-20】
 
+- **Codex 的「無重大問題」總結可能早於同一輪 inline，不能把總結到達當作留言集合終止**：
+  PR #61 head `44ebd39` 的 issue comment `5352954268` 於 07:45:46Z 宣稱未新增重大 inline，
+  但 exact-head review `4980284182` 與兩則 inline `3819608325`／`3819608329` 於 07:47:33Z
+  才建立；合併前 GraphQL 守衛因此從 36/0 看到 38/2 並 exit 4，避免錯合。現有 workflow／
+  poller 未被本輪點名，依 17.2 只登記不改；後續合併仍須在動作前重拉完整 GraphQL unresolved
+  集合，禁止用較早的總結 comment 或安靜時間猜測 inline 已送完
+  【F11/F12；來源＝PR #61 merge guard 與 review `4980284182`；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -777,6 +785,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
 - [x] `docs/worklog/2026-08-20-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；受限層根因已由 §3.5 既有條目涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
 
 ### A.2 handoff
 
@@ -879,6 +888,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
 - [x] `docs/handoff/2026-08-20-階段一-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；既有坑涵蓋，無新增項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 
