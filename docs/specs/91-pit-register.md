@@ -531,6 +531,25 @@
   本輪只登記、不順手補欄。複驗：對該表每列計算 `(?<!\\)\|` 命中數，須與表頭相等
   【F5；來源＝PR-1 開場包 Markdown 結構自查；取證日期＝2026-08-20】
 
+- **鐵律 13.3 的導入包錨仍寫 PR-C0，但現行路線圖已改由 P-6 交付**：本輪 Claude bot
+  把它列為 ⚪；它與本輪 D32 點名的合併授權不是同一修復根，且直接改 `CLAUDE.md` 會擴大
+  鐵律本文修復射程。依鐵律 17.2 本輪只登記，P-6 開工時以內容錨追 `git log -p` 後另包同步
+  【F11；來源＝PR #61 Claude 首輪判詞 ⚪；取證日期＝2026-08-20】
+
+- **S-1 與已被移出本階段的 R-8 有同型射程疑義**：PR #61 Codex 只點名 R-8 屬階段二'，
+  階段一'方案的 Q-1 列仍把「S-1 屬二'，本階段可先行」列為並行包。依鐵律 17.2 不把
+  未點名的 S-1 順手移除；後續須由 D30 射程裁定另包處置，未裁前不得把本登記當成執行授權
+  【F11；來源＝PR #61 Codex 首輪 review 後同型掃描；取證日期＝2026-08-20】
+
+- **Windows Ruby `Tempfile` 與 Git Bash 的 workflow syntax 本機假紅**：原生 Windows Ruby
+  產生並保持開啟的暫存檔，Git Bash `bash -n <path>` 在本環境無法讀取；改由 stdin 傳入時，
+  Ruby text mode 的 CRLF 又會讓反斜線續行失真，誤報 `unexpected |`／`unexpected elif`。
+  以倉庫外 local-only adapter 將同一內容正規化為 LF 後餵入 stdin，既有
+  `check-workflow-syntax.rb` 與 11 條回歸測試皆綠，證明 workflow 實物未壞。本輪未被點名且
+  `scripts/` 不在修復射程，依鐵律 17.2 只登記、不修改腳本；若日後另包處理，必須先補
+  Windows 原生 Ruby＋Git Bash 的承重 fixture，禁止用跳過該閘門冒充通過
+  【F12；來源＝PR #61 本機閘門複驗；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -651,6 +670,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/worklog/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.2 handoff
@@ -731,6 +751,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR60-第十輪驗收修復.md`（PR #60 新增；PR-1 D1 修復補列）
 - [ ] `docs/handoff/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/handoff/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）

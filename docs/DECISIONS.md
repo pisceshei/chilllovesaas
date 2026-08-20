@@ -382,3 +382,15 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   `gh pr merge <N> --squash --match-head-commit <head>`，成功後刪除遠端 `pr{N}-last-push` tag。
 - 鐵律 18.3 清單與 17.3 例外不在代行授權內，雙零後仍停下等使用者人工合併或裁定；
   本授權不翻 `AUTO_MERGE`，階段 B canary 仍須另行裁定。
+
+### D32. 互動式 Codex 實作與過渡期代行合併的鐵律補正
+
+- 2026-08-20 使用者在 PR #61 首輪驗收後選案「1」，並明文批准修改 `CLAUDE.md`／
+  `AGENTS.md`：取得完整對話脈絡及具名射程授權的互動式 Codex 可以實作；workflow 自動
+  `@codex` 派修仍維持廢止，GitHub Codex bot 仍只負責獨立驗收。
+- 在鐵律 18.4 workflow 自動合併尚未啟用期間，D31 所授權的互動式工作階段可對
+  **未命中 18.3**的 PR，在 18.1 四條件齊時以
+  `gh pr merge <N> --squash --match-head-commit <head>` 代行合併；這是使用者授權的 CLI
+  操作，不翻 `AUTO_MERGE`，也不把權限交給 workflow。
+- PR #61 因本裁定修改兩份鐵律本文，已命中 18.3，必須在雙清後由使用者人工合併；
+  D31 的代行路徑從其後第一個符合資格的常規 PR 才開始實測。
