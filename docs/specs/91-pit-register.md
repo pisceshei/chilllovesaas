@@ -559,6 +559,12 @@
   workflow 包同步時，須同時保留「18.3 永遠人工」與 `AUTO_MERGE=false` 的信任邊界
   【F11；來源＝PR #61 Claude 第二輪判詞 ⚪；取證日期＝2026-08-20】
 
+- **第三輪 handoff 把四條件過度概括成所有合併通道共同門檻**：18.3 的條文停點是雙清後
+  通知使用者人工合併；若 PR 修改 review workflow，反竄改還可能使條件②④結構上不產生。
+  原文已按歷史層規則保留並追加更正註，後續交接不得把 D31／D32／18.4 的四條件門檻外推
+  到 18.3，造成永遠等不到的通知死鎖
+  【F11；來源＝PR #61 Claude 第四輪判詞 ⚪；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -682,6 +688,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.2 handoff
@@ -765,6 +772,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
