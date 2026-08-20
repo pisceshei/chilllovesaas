@@ -553,6 +553,8 @@
 - **四條件評估器成功文案只寫「可人工合併」，未呈現 D32 代行通道**：
   `.github/workflows/claude-review.yml` 的成功留言仍固定為「四條件齊，可人工合併」。這句
   本身為真，但 D32 生效後不完整：具名射程的非 18.3 PR 也可由互動式 Codex 帶 head 鎖代行。
+  同根的 `docs/dev/m0-automation-infra.md` 也把評估器文案只描述為「可人工合併」，workflow
+  日後改文案時必須同包同步該機制文檔，不能只改產生端。
   該 workflow 未被本輪點名修改且屬 18.3，依鐵律 17.2 只登記、不順手改；待 P-8 後續
   workflow 包同步時，須同時保留「18.3 永遠人工」與 `AUTO_MERGE=false` 的信任邊界
   【F11；來源＝PR #61 Claude 第二輪判詞 ⚪；取證日期＝2026-08-20】
@@ -679,6 +681,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
 - [ ] `docs/worklog/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.2 handoff
@@ -761,6 +764,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
 - [ ] `docs/handoff/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
