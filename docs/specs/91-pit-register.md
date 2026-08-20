@@ -701,16 +701,26 @@
 
 ### 3.6 PR #64 P-8 證據來源文件債收斂驗收（2026-08-21）
 
-- **規定的 HTML comment 更正會在 GitHub 渲染中不可見，且放在清單項之間會切斷清單**：
-  PR #64 的 P-8、首輪、第四輪與第五輪驗收 worklog 已把被點名的 blockquote／歷史敘述改成
-  `AGENTS.md` 規定形態，
-  但 GitHub 渲染後原句與修正句之間沒有可見說明；comment 以第 0 欄 HTML block 插在 bullet
-  之間時，還會把一個邏輯清單切成多個 `<ul>`。列表切斷根因已在 §3.3 的第 8 輪 ⚪ 條目登記；
-  §2 G-02 是另一個 Markdown fence balancing 機械缺口，不是本條 HTML list breakage 的來源。
-  本條補的是「規定格式本身不可見」的終態缺口。後續若改可見更正載體會命中 `AGENTS.md`
-  本文與鐵律 18.3，須獨立人工審核；本 PR 只登記，不改規則或歷史實物
-  【F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
-  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；取證日期＝2026-08-21】
+- **GitHub Markdown 對相關 HTML comment 的可見性與清單分段：未取得**：
+  倉庫內部只可確認 PR #64 的 P-8、首輪、第四輪與第五輪驗收 worklog 使用 `AGENTS.md` 規定的
+  HTML comment 更正形態；現有來源僅是 PR review comment ID，沒有官方 URL＋英文逐字，也沒有
+  保留對應 GitHub `/markdown` request／response artifact。因此本登記**不發布**「更正不可見」或
+  「第 0 欄 comment 會切成多個 `<ul>`」的外部行為結論。取得方式＝保存 exact request body 與
+  response HTML，並另取官方 Markdown／CommonMark 適用語義；兩者未齊前維持未取得。本 PR 只
+  收窄證據強度，不改 `AGENTS.md` 或歷史 worklog
+  【F3/F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
+  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；Codex inline `3825640340`；
+  取證日期＝2026-08-21】
+
+- **GitHub Markdown API 取證若把 `-f text=@path` 誤當讀檔，會得到 exit 0 的假零**：
+  本輪初次命令使用 `gh api ... -f text=@docs/worklog/...md`，current response 逐字是
+  `<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`；它渲染的是字面路徑，
+  因此 table／pre 全為 0 仍 exit 0。GitHub CLI 官方 <https://cli.github.com/manual/gh_api>
+  （取證 2026-08-21）對 `-f` 逐字是 "Add a string parameter in key=value format"，而 `-F`
+  明列 "use \"@<path>\" or \"@-\" to read value from file or stdin"。改用 `-F text=@path` 後
+  才取得實際文件 HTML。後續 Markdown 複驗須同時釘 request body 來源與至少一個承重 response
+  canary（例如預期有表格的檔必須含 `<table role="table">`），不得只因 API exit 0 就發布零計數
+  【F1/F3/F5/F11/F12；本輪自報，未被驗收點名，依 17.2 只登記；取證日期＝2026-08-21】
 
 - **external-facts 的 A 區標題已不能涵蓋 A9／A10**：
   `docs/dev/external-facts.md` A 區題為 GitHub 核准／合併前置條件，但 A9 是 GitHub CLI
@@ -983,6 +993,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第八輪Claude晚到驗收修復.md`（Claude comment `5361414731`；跨日期 PR64 worklog 漏列改為 fail-closed 並加承重 mutation）
 - [x] `docs/worklog/2026-08-21-PR64第九輪Codex驗收修復.md`（Codex review `4987319876`／inline `3825320726`；歷史 worklog 刪除／改名改為 fail-closed 並加雙 mutation）
 - [x] `docs/worklog/2026-08-21-PR64第十輪Claude驗收修復.md`（Claude comment `5361847317`；20.3 類型名與歷史 snapshot 改用相鄰更正收斂）
+- [x] `docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md`（Claude comment `5362492718`＋Codex review `4987731284`；destructive history producer、20.3 固定編號與 rendering 未取得已處置）
 
 ### A.2 handoff
 
