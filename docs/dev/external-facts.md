@@ -184,24 +184,31 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 ⇒ **auto-merge 本身不是 head 變動的防護**。
 📌 本頁**未提及**「PR 產生衝突／變成不可合併」是否停用——屬未涵蓋，不是已否定。
 
-### A9. `gh api --paginate` 的 GraphQL 游標只對查詢中提供游標契約的 collection 生效
+### A9. `gh api --paginate` 只從 JSON token stream 首組完整 `pageInfo` 取得單一 `$endCursor`
 
 > "it fetches the `pageInfo{ hasNextPage, endCursor }` set of fields from a collection."
 
 來源：<https://cli.github.com/manual/gh_api>（取證 2026-08-21）
 
 官方同段另要求原查詢接受 `$endCursor: String`，並說 `--paginate` 會依序請求結果頁。
-🔴 **邊界**：游標變數與 `pageInfo` 掛在哪個 collection，就只能證明該 collection 被推進；
-不得把外層 `reviewThreads(first:100, after:$endCursor)` 的分頁外推成其巢狀
-`comments(first:100)` 也逐頁取完。巢狀正文全集另走三個 `--paginate` REST 集合；GraphQL
-threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
+GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada` 的
+`findEndCursor` 讀到一組 `pageInfo.endCursor`／`hasNextPage` 後即：
 
-⚠️ **推論標記**：上一段的「外層不能替巢狀連線分頁」是依官方單數 `a collection` 與游標
-位置推得，不是手冊逐字列出「巢狀連線不分頁」。PR #62 的實際查詢把 `$endCursor`／
-`pageInfo` 都放在外層 `reviewThreads`，因此「完整 reviewThreads 重取」與「巢狀正文不完整」
-可同時成立，兩者不得混為矛盾。
+> `if foundNextPage { break loop }`
+> `if foundEndCursor { break loop }`
 
-### A10. PR commits 端點可列 PR 的 commits；250 以上須改用 commits 端點
+來源：<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/pagination.go#L30-L88>
+（取證 2026-08-21）。同版 `api.go` 下一頁只設定單一 `params["endCursor"] = endCursor`：
+<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/api.go>
+（取證 2026-08-21）。
+
+🔴 **由官方實作直接支持的邊界**：同一回應若有多個或巢狀 `pageInfo`，CLI 取 JSON 走訪中
+首個湊齊的游標對，下一次只回填單一 `$endCursor`；它不會替每個巢狀 connection 維護獨立游標。
+因此 PR #62 把 `$endCursor`／`pageInfo` 放在外層 `reviewThreads` 時，只能把該外層重取稱為完整，
+不得外推巢狀 `comments(first:100)` 也逐頁取完。正文全集仍走三個 `--paginate` REST 集合；
+GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
+
+### A10. PR commits 端點可列 PR 的 commits；超過 250 須改用 repository commits 端點
 
 > "Lists a maximum of 250 commits for a pull request."
 

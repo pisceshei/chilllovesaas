@@ -699,6 +699,29 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
+- **規定的 HTML comment 更正會在 GitHub 渲染中不可見，且放在清單項之間會切斷清單**：
+  PR #64 的 P-8 與首輪驗收 worklog 已把被點名的 blockquote 改成 `AGENTS.md` 規定形態，
+  但 GitHub 渲染後原句與修正句之間沒有可見說明；comment 以第 0 欄 HTML block 插在 bullet
+  之間時，還會把一個邏輯清單切成多個 `<ul>`。列表切斷根因已在 §2 第 8 輪 ⚪ 登記，
+  本條補的是「規定格式本身不可見」的終態缺口。後續若改可見更正載體會命中 `AGENTS.md`
+  本文與鐵律 18.3，須獨立人工審核；本 PR 只登記，不改規則或歷史實物
+  【F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
+  `5359558626` ⚪3；取證日期＝2026-08-21】
+
+- **external-facts 的 A 區標題已不能涵蓋 A9／A10**：
+  `docs/dev/external-facts.md` A 區題為 GitHub 核准／合併前置條件，但 A9 是 GitHub CLI
+  GraphQL pagination 實作，A10 是 PR commits REST 邊界，兩者不屬核准或合併前置條件。
+  內容正確性與編排是兩件事；本輪阻擋意見只點名 A9 證據強度與 A10 閾值，依鐵律 17.2
+  不順手搬章。後續文檔編排包應把工具語義移到 B 區或改 A 區總標題，並重跑所有錨與入口
+  【F5/F11；來源＝PR #64 Claude comment `5359558626` ⚪2；取證日期＝2026-08-21】
+
+- **91 §3 缺少「候選經證偽撤回」的 tombstone 形態**：
+  PR #64 首輪暫登的 GraphQL 完成性候選在第二輪經官方語義與原句文法證偽後被整段刪除，
+  目前只剩附錄 A.1 摘要可追沿革；§0.3 只規定合併重複條目時留空殼，沒有規定被證偽時
+  應保留 status、來源與撤回理由。後續 P-1 坑簿機制包須為「合併／證偽／已修」分別定義
+  可機械檢查的終態，不得把本登記當成恢復假債的理由
+  【F11/F12；來源＝PR #64 Claude comment `5359558626` ⚪4、`git log -p`；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -865,6 +888,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-P8證據來源與合併後文件債收斂.md`（PR #62 exact-head review `4983737311` 的兩則 inline 與 PR #62 合併後終態已逐項收斂；PR #64 驗收令反查射程收窄，候選歷史債經官方語義複驗證偽）
 - [x] `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md`（issue comment `5358544615` 的射程意見已清；暫登 §3 候選於第二輪經語義複驗撤回）
 - [x] `docs/worklog/2026-08-21-PR64第二輪雙驗收修復.md`（Claude comment `5359209200`＋Codex review `4985307122`；PR 描述、歷史更正格式、外部事實與假債已逐項收斂）
+- [x] `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md`（Claude comment `5359558626`＋Codex review `4985595726`；20.3 缺件、A9／A10 證據邊界與易腐計數已處置）
 
 ### A.2 handoff
 
