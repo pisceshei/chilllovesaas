@@ -691,6 +691,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
 
 ### A.2 handoff
 
@@ -776,6 +777,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
 
 ### A.3 事故密集檔（specs／機制檔）
 
