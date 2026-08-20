@@ -776,6 +776,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；受限層根因已由 §3.5 既有條目涵蓋）
 
 ### A.2 handoff
 
@@ -877,6 +878,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
+- [x] `docs/handoff/2026-08-20-階段一-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；既有坑涵蓋，無新增項）
 
 ### A.3 事故密集檔（specs／機制檔）
 
