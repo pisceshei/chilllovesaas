@@ -594,6 +594,14 @@
   內容錨定位，移除 fence 內的 Markdown 強調符後再做實際渲染複驗
   【F6；來源＝鐵律 20 結構自查；取證日期＝2026-08-20】
 
+- **Windows 原生 Ruby 執行 `bin/setup` 會在 extensionless `bin/rails` 取得 `ENOEXEC`**：
+  `ruby bin/setup --skip-server` 能進入 setup，但其 `system! "bin/rails db:prepare"` 交給 Windows
+  `Kernel#system` 後回 `Errno::ENOEXEC`；逐項改用 `ruby bin/rails db:prepare` 與
+  `ruby bin/rails log:clear tmp:clear` 則退出 0，Rails specs 亦通過。本輪任務未點名 `bin/`，
+  依鐵律 17.2 只登記不改；另包處理時須同時證明 Unix shebang 路徑與 Windows 原生 Ruby 路徑，
+  不能以跳過 setup 冒充 wrapper 已修
+  【F6/F12；來源＝鐵律 21 本機閘門復驗；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -724,6 +732,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
 - [x] `docs/worklog/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
+- [x] `docs/worklog/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
 
 ### A.2 handoff
 
@@ -813,6 +823,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
 - [x] `docs/handoff/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
+- [x] `docs/handoff/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
 
 ### A.3 事故密集檔（specs／機制檔）
 
