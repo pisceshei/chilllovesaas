@@ -651,6 +651,14 @@
   集合，禁止用較早的總結 comment 或安靜時間猜測 inline 已送完
   【F11/F12；來源＝PR #61 merge guard 與 review `4980284182`；取證日期＝2026-08-20】
 
+- **Shopify combinations 類型數是易腐快照，方案現值已與官方頁漂移**：階段一'方案 §11.5
+  仍寫「合法組合五枚舉」，但 Shopify 官方《Combining discounts》於 2026-08-20 取證的逐字
+  現值為 "There are six types of discount combinations:"。current-head Codex 只點名同節把競品
+  模型升格成我方選案，未點名這個固定數字；依鐵律 17.2 本輪只登記、不順手改。後續獨立包須
+  以官方頁逐列導出或明確日期快照取代固定枚舉敘述，並防止把供應商現值當永久我方契約。
+  URL：<https://help.shopify.com/en/manual/discounts/discount-combinations>
+  【F5/F11；來源＝PR #61 exact-head comment `5353555384` 修法前官方複查；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -907,6 +915,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f殘留層級修復.md`（current-head P1；已讀並同步同語義兩端，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復查證.md`（review `4980533036` 七則 inline 修法前查證；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 
