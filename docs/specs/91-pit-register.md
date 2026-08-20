@@ -659,6 +659,21 @@
   URL：<https://help.shopify.com/en/manual/discounts/discount-combinations>
   【F5/F11；來源＝PR #61 exact-head comment `5353555384` 修法前官方複查；取證日期＝2026-08-20】
 
+- **總方案 P-5 仍把 percent 比例鍵列為金額 float 的抓取目標**：
+  `docs/plans/2026-08-18-總方案.md` 的 P-5 判準仍寫
+  `currency_conversion_fee_percent` 要被抓出處置，但 `config/limits.yml` 的名稱、註釋與現值
+  都把它定義為百分比；PR #61 inline `3820221217` 只點名階段一'執行方案的同型矛盾。依鐵律
+  17.2，本輪只修被點名位置並在此登記；後續獨立包須裁定 percent float 維持，或先取得使用者
+  對 basis points 表示法、鍵名與 consumers 同步遷移的批准
+  【F4/F5；來源＝`git log -p -S currency_conversion_fee_percent`；取證日期＝2026-08-20】
+
+- **總方案 CD-1 收口矩陣只要求最小 full-dump 還原，沒有驗 PITR**：
+  `docs/plans/2026-08-18-總方案.md` 的 CD-1 列可在異地副本完成最小還原便收口，未要求保存
+  dump 的 binlog coordinates、核對連續歸檔或重播到指定時間；PR #61 inline `3820221220` 只點名
+  階段一'執行方案的演練步驟。依鐵律 17.2，本輪不擴改總方案；後續獨立包須與
+  `docs/specs/11-production-baseline.md` §2-6 及 MySQL 8.4 PITR 官方程序同步
+  【F4/F5；來源＝總方案 CD-1 矩陣與 MySQL 8.4 官方 PITR 文檔；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -810,6 +825,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；既有坑涵蓋）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 
 ### A.2 handoff
 
@@ -920,6 +936,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 
