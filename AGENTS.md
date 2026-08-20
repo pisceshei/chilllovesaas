@@ -337,3 +337,11 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   實作輸入、驗收或發布結論；缺證 fail-closed 停止 commit／push／回覆／release／deploy。
   使用者裁定可證明專案選擇與授權，不能替代外部語義或執行結果；發現既有假設依分層規則
   追加日期更正與撤回，不靜默改寫歷史。
+- 🔴 **重犯斷根**（2026-08-20 新增鐵律 20，全文在 CLAUDE.md）：送驗前按
+  `docs/dev/m0-review-convergence.md` 的重犯矩陣一次掃完適用類型；固定處理不得臨場改寫。
+  GitHub 驗收須綁當前 head 並全量讀 conversation、每則 review body、paginated inline 與
+  review threads；規則生產者、執行消費者、終態文件與歷史更正同提交閉合；易腐計數／行號／
+  全稱句改為快照＋查法或內容錨；流程先列完整狀態空間；閘門必測違規、輸入缺失、工具失敗、
+  零掃描與生產 wiring；workflow 除本機語法外必看 GitHub 實跑，skip／缺判詞不是通過；
+  Markdown 與 Windows 編碼／quotepath／MSYS 按既定複驗法處理。復發時不得只補眼前一行，
+  必須記根因、防線失效與反向複驗；但仍受 17.2 約束，同型未點名處只登記 `91`，不順手擴修。

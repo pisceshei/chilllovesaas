@@ -581,6 +581,19 @@
   【F7/F11；來源＝PR #61 Codex inline `3818337801`＋`docs/dev/external-facts.md` A3；
   取證日期＝2026-08-20】
 
+- **跨輪重犯不能再靠下一輪抽樣發現**：2026-08-20 依使用者裁定，已用本檔 F1–F12、可追
+  worklog／handoff 及 PR #58／#60／#61 三端點驗收紀錄做根因稽核。符合「跨事故復發或修後
+  再犯＋已有固定處理＋反向複驗」者已升格為鐵律 20；完整證據與未升格理由落在
+  `docs/dev/m0-review-convergence.md`「重犯根因收斂稽核」。本條只登記制度結果，不把未被點名
+  的既有同型坑順手修掉；日後若要擴 checker，仍須先進 §2 列代價並另取裁定
+  【F4/F5/F6/F8/F10/F11/F12；來源＝D34／CLAUDE.md 鐵律 20；取證日期＝2026-08-20】
+
+- **階段一'方案 §6.1 的 fenced 偽代碼仍含 Markdown 粗體符號**：在「每個並行包」那行，
+  `**` 位於 fence 內會按字面顯示，不能形成強調；與鐵律 20.2⑦同型。本輪點名的是建立防重犯
+  鐵律，未點名回改既有方案該段，依 17.2 只登記不順手改；另包處理時以「§6.1 階段編排器」
+  內容錨定位，移除 fence 內的 Markdown 強調符後再做實際渲染複驗
+  【F6；來源＝鐵律 20 結構自查；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -709,6 +722,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
+- [x] `docs/worklog/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
 
 ### A.2 handoff
 
@@ -796,6 +810,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
+- [x] `docs/handoff/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
 
 ### A.3 事故密集檔（specs／機制檔）
 
