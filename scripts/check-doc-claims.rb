@@ -29,7 +29,8 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
-#   R6｜**宣稱索引的每個活性 CLAIM 都須有 `type: count`、CLAIM ID 唯一、圍欄／HTML comment 須收尾；
+#   R6｜**每份宣稱索引須有活性標頭、每個活性 CLAIM 都須有 `type: count`、CLAIM ID 跨索引全域唯一、
+#       圍欄／HTML comment 須收尾；
 #       `type`／`recheck` 鍵大小寫與冒號前空白不敏感，但 type 值只允許小寫 `count`，
 #       `type*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
 #       （🔴 **阻擋**）。
@@ -163,7 +164,8 @@ UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從�
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
 # R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
-# 索引必須至少有一個活性 `CLAIM-NNN` 標頭，且每個合法活性區塊都要有 `type: count`、ID 唯一；
+# 每份索引必須至少有一個活性 `CLAIM-NNN` 標頭，且每個合法活性區塊都要有 `type: count`；
+# 所有 `docs/specs/92-*` 索引之間的 CLAIM ID 必須全域唯一。
 # Markdown 圍欄與 HTML comment 必須收尾。`type`／`recheck` 鍵大小寫與冒號前空白不敏感；
 # type 值只允許小寫 `count`，以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆
 # 計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
@@ -367,6 +369,8 @@ end
 
 # ---- 逐檔掃 ----------------------------------------------------------------
 
+# R6 的 ID namespace 是整個 `docs/specs/92-*`，不能逐檔重置；否則分片索引可各自發布同一 ID。
+seen_claim_ids = {}
 targets.each do |rel|
   path = File.join(ROOT, rel)
   next unless File.file?(path)
@@ -419,7 +423,6 @@ targets.each do |rel|
         end
       end
     end
-    seen_claim_ids = {}
     count_claim_blocks = 0
     header_positions.each_with_index do |start_pos, pos|
       finish_pos = pos + 1 < header_positions.size ? header_positions[pos + 1] : active_lines.size
@@ -433,10 +436,12 @@ targets.each do |rel|
 
       claim_id = header[1]
       if seen_claim_ids.key?(claim_id)
+        first = seen_claim_ids[claim_id]
         violations << "#{rel}:#{start + 1} R6 重複 CLAIM-#{claim_id}——" \
-                      "首次出現在第 #{seen_claim_ids[claim_id] + 1} 行；每個 CLAIM ID 必須唯一。"
+                      "首次出現在 #{first[:path]}:#{first[:line] + 1}；" \
+                      "所有 `docs/specs/92-*` 的 CLAIM ID 必須全域唯一。"
       else
-        seen_claim_ids[claim_id] = start
+        seen_claim_ids[claim_id] = { path: rel, line: start }
       end
 
       block = active_lines[start_pos...finish_pos]

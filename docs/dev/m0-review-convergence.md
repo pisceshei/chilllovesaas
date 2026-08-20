@@ -88,7 +88,7 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| R6 | 索引須有活性 `CLAIM-NNN` 標頭，且每個合法活性 CLAIM 都須有 `type: count`、CLAIM ID 唯一、圍欄／HTML comment 須收尾；`type`／`recheck` 鍵大小寫與冒號前空白不敏感、type 值只允許小寫 `count`、`type*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與語義 recheck，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，但 comment 開啟後任何 `-->` 都收尾 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| R6 | 每份索引須有活性 `CLAIM-NNN` 標頭，且每個合法活性 CLAIM 都須有 `type: count`、CLAIM ID 跨全部索引全域唯一、圍欄／HTML comment 須收尾；`type`／`recheck` 鍵大小寫與冒號前空白不敏感、type 值只允許小寫 `count`、`type*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與語義 recheck，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，但 comment 開啟後任何 `-->` 都收尾 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
 | canary | 全樹掃到 0 個檔，或非 `--fixture-mode` 調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效；明確 ROOT 不構成豁免 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
@@ -186,6 +186,7 @@
 | `doc_claim_indented_metadata` | 1 | R6 依 CommonMark 接受清單標記前 0–3 個空格；縮排 `type: count` 不能繞過 recheck 契約 |
 | `doc_claim_indented_metadata_ok` | 0 | R6 反向：縮排的 count／recheck 成對合法時必須放行 |
 | `doc_claim_duplicate_id` | 1 | R6 活性 CLAIM ID 必須唯一，不依賴 `type: count` 才檢查 |
+| `doc_claim_duplicate_id_across_indexes` | 1 | R6 CLAIM ID 跨全部 `docs/specs/92-*` 全域唯一；分片索引不得各自重用同一 ID |
 | `doc_claim_inactive_headers` | 0 | R6 反向：fenced code／HTML comment 內的範例標頭必須忽略 |
 | `doc_claim_unclosed_fence` | 1 | R6 fail-closed：未關閉圍欄不得把後續索引靜默排除 |
 | `doc_claim_unclosed_comment` | 1 | R6 fail-closed：未關閉 HTML comment 不得把後續索引靜默排除 |
@@ -203,7 +204,7 @@
 全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
 首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／
 type 值錯誤靜默略過／type-like 畸形鍵漏判／活性 CLAIM 缺 type metadata／合法 type 鍵變體被誤擋／recheck 散文只提工具名／
-合法 recheck 鍵變體被誤擋／recheck 精確鍵與變體重複漏判／重複 ID／單區塊重複 count 借用
+合法 recheck 鍵變體被誤擋／recheck 精確鍵與變體重複漏判／單檔及跨索引重複 ID／單區塊重複 count 借用
 recheck／單區塊重複 recheck／合法標頭下
 count 零供給／把 fenced code 或 HTML comment 誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML
 comment 靜默截斷／code span opener 誤開 comment／comment closer 被錯誤遮罩／無 ROOT 與明確 ROOT

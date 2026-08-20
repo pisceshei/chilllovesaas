@@ -111,6 +111,9 @@ CASES = [
     "避免修法退化成一律拒絕合法縮排" ],
   [ "doc_claim_duplicate_id", 1, "R6 重複 CLAIM-001",
     "🔴 R6：兩個活性區塊不得共用同一 CLAIM ID；即使都不是 count 也必須阻擋" ],
+  [ "doc_claim_duplicate_id_across_indexes", 1, "R6 重複 CLAIM-001",
+    "🔴 R6：CLAIM ID 是整個 docs/specs/92-* 的全域 namespace；" \
+    "兩份各自合法的分片索引不得重複發布同一 ID" ],
   [ "doc_claim_inactive_headers", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：fenced code 與 HTML comment 內的範例 CLAIM 不是活性區塊，" \
     "不得切斷正文或製造假重複" ],
@@ -141,7 +144,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 36
+MIN_CASES = 37
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

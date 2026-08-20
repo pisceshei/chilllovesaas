@@ -774,10 +774,12 @@
 
 - **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
   `CLAIM_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
-  前導至少 4 空格的 CommonMark 巢狀清單，該 count 可能不進 R6。current-head 阻擋意見只點名
-  未關閉 HTML comment，依 17.2 不把此候選順手擴進 checker；後續須先裁定 92 索引是否允許巢狀
-  metadata，再以正反 fixture 固化，禁止先放寬正則後補契約
-  【F6/F7/F12；來源＝PR #65 Claude comment `5360428264` ✅4 同型反查；取證日期＝2026-08-21】
+  前導至少 4 空格的 CommonMark 巢狀清單，活性 CLAIM 區塊內的情形已由 PR #65 第九輪
+  type 必填 guard 轉為 fail-closed；本機隔離複驗為 exit 1。仍成立的缺口限於第一個 CLAIM 標頭前：
+  同樣縮排的 metadata 不進 pre-header matcher，也不影響檔案級 count canary，本機隔離複驗仍 exit 0。
+  後續須先裁定 92 索引是否允許該位置的巢狀 metadata，再以正反 fixture 固化，禁止先放寬正則後補契約
+  【F6/F7/F12；來源＝PR #65 Claude comments `5360428264` ✅4、`5363275846` 🟡1；
+  取證日期＝2026-08-21】
 
 - **m0-review-convergence 的 fixture 表後缺空行，且續行 code span 含未跳脫直線**：
   `docs/dev/m0-review-convergence.md` 的 fixture 表最後一列後緊接「表列以⋯」正文，code span
@@ -863,7 +865,8 @@
 - **m0-review-convergence 的變更記錄沒有逐輪涵蓋 PR #65**：本 PR 多輪修改該檔的 R6 規則、
   fixture 表與證據敘述，但檔尾變更記錄未建立相應條目；本輪只同步被點名的終態契約，不把
   ⚪ 觀察擴成歷史 changelog 修復
-  【F5/F11；來源＝PR #65 Claude comment `5361587574` ⚪4；取證日期＝2026-08-21】
+  【F5/F11；來源＝PR #65 Claude comments `5361587574` ⚪4、`5363275846` ⚪4；
+  取證日期＝2026-08-21】
 
 - **R6 的 recheck 命令近似判定仍接受只有工具名的 code span**：
   `CLAIM_RECHECK_CMD` 只要求整段以受支援工具 token 起頭，後續參數可為空，因此單獨的
@@ -884,6 +887,24 @@
   因此同一個 code span 若只是散文提到 `git`，仍可能讓鄰近易腐數字免於 R4 警告。這是未被
   本輪阻擋點名的另一規則，依 17.2 只登記，不把 R6 修法擴散到 R4
   【F5/F12；來源＝PR #65 Claude comment `5362761839` ⚪2；取證日期＝2026-08-21】
+
+- **R6 metadata 只認 `-`，未涵蓋 CommonMark 的 `+`／`*` bullet marker**：
+  `CLAIM_TYPE`／`CLAIM_RECHECK` 對以 `+` 或 `*` 開頭的合法 bullet 不匹配；第九輪 type 必填 guard
+  會 fail-closed，但訊息把人指向欄位缺字而非清單標記。現況不會誤綠，本輪依 17.2 只登記；
+  後續若擴 marker 集合，須先以正反 fixture 固化診斷與既有 `-` 行為。CommonMark 0.31.2 §5.2
+  官方逐字為 "A bullet list marker is a `-`, `+`, or `*` character."
+  【F5/F6/F12；來源＝PR #65 Claude comment `5363275846` ⚪1、
+  <https://spec.commonmark.org/0.31.2/>；取證日期＝2026-08-21】
+
+- **R6 的 type 必填訊息把「每個活性 CLAIM」寫得比實際 parser 射程寬**：
+  畸形 CLAIM 標頭會先在格式分支阻擋並 `next`，不會進 type 必填 guard；兩條路都 fail-closed，
+  退出碼不變，差異只在訊息射程。依 17.2 只登記，不順手改診斷文字
+  【F5/F12；來源＝PR #65 Claude comment `5363275846` ⚪2；取證日期＝2026-08-21】
+
+- **第九輪 pit 條目的「本輪阻擋只點名 type metadata 缺字」已成歷史時點敘述**：
+  該理由在第九輪成立；第十輪另有 91 識別字同步阻擋。條目仍正確解釋當時為何不擴修
+  `CLAIM_RECHECK`，但「本輪」不可外推成 PR 全部驗收輪的集合；後續引用須帶第九輪時點
+  【F5/F11；來源＝PR #65 Claude comment `5363275846` ⚪3；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -1059,6 +1080,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第七輪雙驗收修復.md`（Claude comment `5361587574`＋Codex review `4987154051`；檔頭契約、baseline source recheck、type key 與命令起始形態已處置）
 - [x] `docs/worklog/2026-08-21-PR65第八輪雙驗收修復.md`（Claude comment `5362007581`＋Codex review `4987453495`；wrapper 冗餘、recheck 鍵變體與 CLAIM-005 證偽已處置）
 - [x] `docs/worklog/2026-08-21-PR65第九輪雙驗收修復.md`（Claude comment `5362761839`＋Codex review `4987956545`；活性 CLAIM type metadata 與登記簿識別字同步已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
 
 ### A.2 handoff
 
