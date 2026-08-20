@@ -565,6 +565,22 @@
   到 18.3，造成永遠等不到的通知死鎖
   【F11；來源＝PR #61 Claude 第四輪判詞 ⚪；取證日期＝2026-08-20】
 
+- **硬規則已更新但執行 prompt 沒同步，會讓驗收方繼續發布規則明禁的內容**：鐵律 19 已禁止
+  未取證推論，`claude-review.yml` 卻仍允許〔推論〕與「未經查證修法」。制度變更的完成面
+  必須同時核對規範本文與實際消費者；只改其一不能宣稱生效
+  【F11；來源＝PR #61 Codex inline `3818337781`；取證日期＝2026-08-20】
+
+- **首次交付誤套回應輪，會引用尚不存在的 PR 編號與 last-push tag**：初次分支 push 前沒有
+  PR 編號，tag 也只能在建立 PR 後命名；首次交付須走 base 累計盤點與 15.2 豁免，後續輪才
+  走 `pr{N}-last-push..HEAD` 與三端點全量重拉
+  【F7/F11；來源＝PR #61 Codex inline `3818337791`；取證日期＝2026-08-20】
+
+- **`--match-head-commit` 只鎖 PR head，不證明驗收時的 base 仍是最新 main**：並行包可讓 main
+  在某包完成驗收後前進；代行合併前須 fetch、合入最新 base、對任何新 head 重跑閘門與雙方
+  驗收，再於合併前比較 base SHA。該流程仍不得宣稱消除最後一次比較後的外部服務競態
+  【F7/F11；來源＝PR #61 Codex inline `3818337801`＋`docs/dev/external-facts.md` A3；
+  取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -692,6 +708,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
 - [ ] `docs/worklog/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
 
 ### A.2 handoff
 
@@ -778,6 +795,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
 - [ ] `docs/handoff/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 
