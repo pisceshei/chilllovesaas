@@ -269,12 +269,17 @@ commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，com
    - §③：未取得、失敗、阻塞、風險與下游影響；不得留空，沒有時寫「無」並附理由或驗證；
    - §④：下一步入口、前置、重跑命令、紅線、不得外推範圍與回復／停止條件。
 3. **邊界要能執行且不遞迴**：同一具名步驟內的工具命令逐項記入同一 handoff，不為每條 shell
-   命令另建文件；handoff、收尾閘門、commit 與 commit 後 doc-claims 是該步驟的原子收尾。
+   命令另建文件；handoff、收尾閘門、commit、commit 後 doc-claims 與 push 是該步驟的原子收尾。
    一旦新結果改變流程分支，就開始下一個步驟並另立 handoff。
-4. **三件套與分層規則不變**：worklog 仍按可獨立驗收單位產生，一個 worklog 可配多份逐步
+4. **遠端終態不能為記錄而改掉被證明的 head**：push、當前 head 驗收、合併、deploy／
+   healthcheck／rollback 等動作後才存在的結果，若再 commit 會使證據失效或重新觸發流程；此時
+   在對應 PR／deployment 留四段固定的 remote handoff，綁 head／base、run／review／comment id
+   與時間。其後有修復 commit 時，下一份倉庫 handoff 引用該留言；終端成功時不為補文件製造
+   新 head。只改載體，不放寬四段、證據與詳細度。
+5. **三件套與分層規則不變**：worklog 仍按可獨立驗收單位產生，一個 worklog 可配多份逐步
    handoff；每份 handoff 都列配對 worklog。終態層要回寫 HEAD，歷史錯句只追加日期更正；新增
    worklog／handoff 同 commit 登入 `docs/specs/91-pit-register.md` 附錄 A。交接中的每項事實仍須
-   通過鐵律 19 的證據稽核，舊 head／run／PID／時間只可標為快照。
+   通過鐵律 19 的證據稽核，舊 head／run／PID／時間只可標為快照；remote handoff 不冒充倉庫檔案。
 
 ## 🔴 Windows 開發者必讀：檔案執行位元
 
@@ -368,5 +373,6 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
 - 🔴 **逐步交接**（2026-08-20 新增鐵律 21，全文在 CLAUDE.md）：每個具名步驟與改變流程決策
   的研究、實作、測試、驗收、修復、合併／部署／rollback、逾時或阻塞節點，都必須在下一步前
   產生獨立 handoff 並 commit；§①詳細記問題、證據、動作、命令、產物與驗證，§②記理由與被
-  推翻假設，§③非空記未解與風險，§④記下一步入口、前置與紅線。命令收在所屬步驟內不遞迴，
-  handoff 不取代 worklog、終態回寫、附錄 A 登記或鐵律 19 證據稽核。
+  推翻假設，§③非空記未解與風險，§④記下一步入口、前置與紅線。命令收在所屬步驟內不遞迴；
+  push／current-head review／deploy 等遠端終態以綁定 ID 的四段式 PR／deployment handoff 記錄，
+  不另 commit 使證據失效。handoff 不取代 worklog、終態回寫、附錄 A 或鐵律 19 證據稽核。

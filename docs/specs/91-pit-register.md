@@ -735,6 +735,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
 - [x] `docs/worklog/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
 
 ### A.2 handoff
 
@@ -827,6 +829,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
 - [x] `docs/handoff/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
 
 ### A.3 事故密集檔（specs／機制檔）
 

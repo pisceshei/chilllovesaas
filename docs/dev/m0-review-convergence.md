@@ -213,8 +213,12 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
 - 每個計畫／任務具名步驟及會改變流程分支的結果，各自新增不可覆寫 handoff，進下一步前 commit。
 - §①綁步驟輸入與證據並列逐項動作、產物、驗證及配對 worklog；§②記決策與被推翻假設；
   §③非空記未解／阻塞／風險；§④給精確下一步入口、前置、紅線與不得外推範圍。
-- 同一目標內的工具命令是該步驟的證據列，不逐命令另建文件；handoff、閘門與 commit 是原子
-  收尾。取得會改變後續分支的新結果後才開下一份。
+- 同一目標內的工具命令是該步驟的證據列，不逐命令另建文件；handoff、閘門、commit、
+  commit 後 doc-claims 與 push 是原子收尾。取得會改變後續分支的新結果後才開下一份。
+- push、當前 head 驗收、合併、deploy／healthcheck／rollback 的結果只能在遠端動作後取得；
+  若為寫倉庫 handoff 再 commit，會讓結果所綁 head 失效。這些終態在 PR／deployment 留相同
+  四段 remote handoff，綁 head／base、run／review／comment id 與時間；後續修復的倉庫 handoff
+  引用該留言。它只改載體，不把 skip／pending／未取得證據換算成通過。
 - worklog 三段、終態回寫、`91` 附錄 A 與鐵律 19 不被取代；逐步 handoff 只增加時間邊界，
   不放寬事實證據或修改射程。
 

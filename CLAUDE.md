@@ -410,6 +410,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       純讀取、沒有改碼或證據未取得都不能省略。**進入下一步前**，必須新增一份不可覆寫的
       `docs/handoff/YYYY-MM-DD-<階段>-<包>-<步驟>-<主題>.md`，並與該步驟產物一起 commit；沒有其他
       產物時也要做 handoff-only commit。不得把多個已能獨立判斷的步驟累積到工作結束才補一份。
+      只有 21.4 的遠端終態採不同載體，內容要求不變。
     - **21.2 handoff 必須詳細回答問題、動作與注意事項**，並維持既有四段固定：
       ①**我改了什麼**＝步驟 ID／目標、輸入 ref／head／base／時間、遇到的問題及證據、實際執行
       的動作與命令、異動檔案／外部狀態、驗證輸出與配對 worklog；②**為什麼這樣改**＝證據鏈、
@@ -418,13 +419,20 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       下一步的精確入口、前置條件、重跑命令、紅線、不得外推的範圍與回復／停止條件。
     - **21.3 命令不另造遞迴文件，但必須逐項可追**：同一具名步驟內為達成同一目標而執行的工具
       命令，全部記在該步驟 handoff 的動作／證據內，不為每一條 shell 命令另建一份 handoff。
-      寫 handoff、跑該步驟收尾閘門、commit 與 commit 後 doc-claims 屬該步驟的原子收尾，不再
+      寫 handoff、跑該步驟收尾閘門、commit、commit 後 doc-claims 與 push 屬該步驟的原子收尾，不再
       觸發無限遞迴；但一旦得到會改變流程分支的新結果，就成為下一個步驟，須另立 handoff。
-    - **21.4 handoff 不取代 worklog 與終態回寫**：`docs/worklog/` 仍按「可獨立驗收單位」三段
+    - **21.4 遠端終態不得用新 commit 毀掉自身證據**：push 成功、當前 head 驗收完成、合併、
+      deploy／healthcheck／rollback 等結果只在動作後才存在；若為記錄它再 commit，就會改變正在
+      證明的 head、重新觸發驗收或在已合併後製造旁支。這類節點改在對應 PR／deployment 留一則
+      **四段固定的 remote handoff**，綁 head／base、run／review／comment id 與時間；若其後因修復
+      產生倉庫 commit，下一份 `docs/handoff/` 必須引用該 remote handoff。若它是終端成功，PR 留言
+      本身就是本步交接，不為「補文件」製造新 head。這是載體例外，不是內容、證據或詳細度例外。
+    - **21.5 handoff 不取代 worklog 與終態回寫**：`docs/worklog/` 仍按「可獨立驗收單位」三段
       固定產生；一個 worklog 可對應多個逐步 handoff，但每份 handoff 都要列配對 worklog，
       worklog `Changes` 與終態 handoff §①仍依 `AGENTS.md` 分層規則同步 HEAD。新增的 worklog／
       handoff 同 commit 補進 `docs/specs/91-pit-register.md` 附錄 A，不得只在對話或 PR 留言交接。
-    - **21.5 交接內容仍受零假設發布約束**：問題、已做事項、測試結果、GitHub 狀態與「無待辦」
+      21.4 的 remote handoff 不冒充倉庫檔案，也不需要為其新增空殼 worklog。
+    - **21.6 交接內容仍受零假設發布約束**：問題、已做事項、測試結果、GitHub 狀態與「無待辦」
       都須依鐵律 19 綁證據；舊 head、舊 run、舊 PID、舊時間的結果只作快照，不得冒充下一步現值。
       handoff 缺檔、四段缺項、證據對不上該步驟輸入或尚未 commit，均視為該步驟未收口。
 
