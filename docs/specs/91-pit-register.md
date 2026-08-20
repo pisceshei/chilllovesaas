@@ -951,6 +951,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第五輪雙驗收修復.md`（Claude comment `5360279873`＋Codex review `4986192842`；終態集合遞迴過期、20.4 復發閉環與本輪文件意見已處置）
 - [x] `docs/worklog/2026-08-21-PR64第六輪雙驗收修復.md`（Claude comment `5360596028`＋Codex review `4986421292`；穩定基準、可重跑渲染、動態集合與 A9／91 證據邊界已處置）
 - [x] `docs/worklog/2026-08-21-PR64第七輪雙驗收修復.md`（Claude comment `5360974435`＋Codex review `4986687378`；HEAD-only 集合、multiplicity、A9 歷史更正與 91 假衝突已處置）
+- [x] `docs/worklog/2026-08-21-PR64第八輪Codex驗收修復.md`（Codex review `4987003396`；A9 完整取頁／GraphQL 游標契約與 A10 超限 fallback 逐字已補）
 
 ### A.2 handoff
 

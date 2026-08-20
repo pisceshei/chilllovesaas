@@ -186,11 +186,15 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 
 ### A9. `gh api --paginate` 以單一 `$endCursor` 前進；不完整 `pageInfo` 交錯邊界未取得
 
-> "it fetches the `pageInfo{ hasNextPage, endCursor }` set of fields from a collection."
+> "all pages of results will sequentially be requested"
+>
+> "the original query accepts an `$endCursor: String` variable"
+>
+> "`pageInfo{ hasNextPage, endCursor }`"
 
 來源：<https://cli.github.com/manual/gh_api>（取證 2026-08-21）
 
-官方同段另要求原查詢接受 `$endCursor: String`，並說 `--paginate` 會依序請求結果頁。
+以上三段逐字分別支持完整取頁、GraphQL 游標變數及 `pageInfo` 欄位契約。
 GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada` 的
 `findEndCursor` 使用函式層級的 `foundEndCursor`／`foundNextPage`，遇到另一旗標已成立時即：
 
@@ -217,12 +221,12 @@ GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
 
 ### A10. PR commits 端點可列 PR 的 commits；超過 250 須改用 repository commits 端點
 
-> "Lists a maximum of 250 commits for a pull request."
+> "To receive a complete commit list for pull requests with more than 250 commits, use the List commits endpoint."
 
 來源：<https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request>（取證 2026-08-21）
 
-端點為 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`。官方同段明定超過 250 時要改用
-repository 的 List commits endpoint；因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
+端點為 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`。以上逐字明定超過 250 時要改用
+List commits endpoint；因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
 
 📌 **倉庫快照，不是全域保證**：2026-08-21 實跑
 `gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/commits`，在 PR #61 已 squash merge
