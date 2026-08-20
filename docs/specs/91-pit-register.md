@@ -807,6 +807,9 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見閘門復驗.md`（完整 29 閘門；已抽取 Windows Python App Alias 假直譯器）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f殘留層級修復.md`（current-head P1；同一語義的證據段與摘要同步收斂，既有坑涵蓋）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f七則延遲意見修復查證.md`（review `4980533036` 七則 inline 修法前查證；既有坑涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；既有坑涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 
 ### A.2 handoff
 
@@ -916,6 +919,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復查證.md`（review `4980533036` 七則 inline 修法前查證；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 
 ### A.3 事故密集檔（specs／機制檔）
 
