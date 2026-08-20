@@ -734,6 +734,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
 - [x] `docs/worklog/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
+- [x] `docs/worklog/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
 
 ### A.2 handoff
 
@@ -825,6 +826,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
 - [x] `docs/handoff/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
+- [x] `docs/handoff/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
 
 ### A.3 事故密集檔（specs／機制檔）
 
