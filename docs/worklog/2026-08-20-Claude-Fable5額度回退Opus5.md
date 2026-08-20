@@ -22,6 +22,14 @@ Claude 步驟，且服務端錯誤原文明確點名 Fable 5 limit。`git log -p
 本次 run、兩次 attempt、費用／回合指紋與逐字錯誤；`--effort max`、`--max-turns 200`、
 allowed tools、判詞解析與其餘 workflow 行為全部不動。
 
+<!-- 🔴 2026-08-20 更正（PR #63 Codex inline `3822600830`）：上一句「其餘 workflow 行為
+     全部不動」是範圍未封閉的全稱句。可證範圍收窄為：在提交 `ec4eb1d` 相對 base
+     `1800b20` 的 workflow diff 中，唯一改動的 non-comment 設定是 `--model`；其餘 hunks
+     都是緊鄰的模型沿革註解。複驗：
+     `git diff --unified=0 1800b20aa006ee67f6f8c88cd24e50322db99a4c..ec4eb1d7f4c91cb2ca091bc3062340fe15028cf7 -- .github/workflows/claude-review.yml | grep -E '^[+-][[:space:]]*[^#[:space:]]' | grep -vE '^(---|\+\+\+)'`
+     應只輸出舊／新兩行 `--model`。這證明的是該 commit 的文字差異，不外推 action 執行期
+     語義或未被 diff 涵蓋的環境行為。原句保留為歷史，以上述更正為準。 -->
+
 ## 修改的檔案與核心邏輯 (Changes)
 
 | 檔案 | 改動 |
