@@ -2,6 +2,8 @@
 
 > 收斂機制現為**四項**：原四機制之一（`MAX_FIX_ROUNDS` 真閘門）已於 **2026-08-19 依使用者裁定廢止**，
 > 其餘三項＋鐵律 15 提交前復核（交付完整性層，見文末段；2026-08-17）。
+> 2026-08-20 新增的鐵律 20 是「送驗前重犯矩陣」紀律與證據帳，未新增 checker，故不改上列
+> 機制集合；若日後要機械化，須先進 `91` §2 列代價並另取裁定。
 
 > 對應規格：`AGENTS.md` §工作記錄與交接文件的寫法、`CLAUDE.md` §工作方式。
 > 建立日期：2026-08-15（使用者裁定）。
@@ -134,7 +136,10 @@
    「如何區分本尊路徑與我方路徑」，本輪沒解。
 
 4. **「同一項目不重提」是在賭模型配合**（讀上一則留言）。
-   賭輸的後果是**放行**而非誤擋，且 `AUTO_MERGE` 維持 `false`，有人工這道安全網。
+   賭輸的後果是**放行**而非誤擋；`AUTO_MERGE` 維持 `false`，所以 workflow 本身不會合併。
+   🔴 **2026-08-20 D31／D32 終態補充**：18.3 PR 與未取得具名代行授權的 PR 仍保留使用者
+   人工安全網；但具名授權的互動式 Codex 可對非 18.3 PR 在四條件齊時代行 CLI 合併。
+   因此 `AUTO_MERGE=false` 不得再被解讀成所有 PR 都必須由使用者逐次操作。
 
 5. **`MAX_FIX_ROUNDS` 變閘門＝承認自動驗收有判不了的區間**，把「什麼時候夠好」交回人手上。
    這正是它該做的事——一個永遠不會說「夠了」的驗收方，與沒有驗收方一樣沒用。
@@ -192,6 +197,30 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
 - 2026-08-17（PR #53 續）：基準再修——回應輪＝對上輪 push 的 HEAD 取**兩點** diff（三點在 rebase 後退回 merge-base；SHA 由作者 push 時自記，不依賴判詞）；初始盤點與修復證據分離；push 末步增記 HEAD。
 - 2026-08-17（PR #53 續 2）：清法②限定僅 🟡（🔴 放行唯有改鐵律本文）；push 末步增建輕量基準 ref（僅 SHA 字串在重寫歷史／換 clone 後不保 object 可達）。
 - 2026-08-17（PR #53 續 3）：基準 ref 增**推送遠端**（本地 tag 換 clone 後同樣不可達；`pull/{N}/head` 只指現任 head 取不回上一輪）；合併後刪遠端 tag。
+- 2026-08-20（PR #61）：依使用者裁定完成 F1–F12 全型態稽核；把有跨 PR 復發證據且已有固定
+  處理與反向複驗的交付根因升格為鐵律 20。未授權新增 checker，本輪只立紀律與證據帳。
+- 2026-08-20（PR #61）：依 D35／鐵律 21 把 handoff 觸發點從整次工作結束收緊為每個具名
+  步驟與決策節點；命令留在所屬步驟內，避免遞迴建檔，worklog 與終態回寫照舊並存。
+
+## 逐步 handoff 契約（2026-08-20，鐵律 21）
+
+既有制度分別在「可獨立驗收單位完成」產生 worklog、在「工作結束前」產生 handoff；D35 補的
+是兩者之間的決策鏈。研究結論、測試結果、驗收攝取、失敗／阻塞等節點即使沒有改碼，也可能
+改變下一步輸入；若只在最後總結，接手者無法區分當時證據、其後更正與現行入口。
+
+固定處理如下：
+
+- 每個計畫／任務具名步驟及會改變流程分支的結果，各自新增不可覆寫 handoff，進下一步前 commit。
+- §①綁步驟輸入與證據並列逐項動作、產物、驗證及配對 worklog；§②記決策與被推翻假設；
+  §③非空記未解／阻塞／風險；§④給精確下一步入口、前置、紅線與不得外推範圍。
+- 同一目標內的工具命令是該步驟的證據列，不逐命令另建文件；handoff、閘門、commit、
+  commit 後 doc-claims 與 push 是原子收尾。取得會改變後續分支的新結果後才開下一份。
+- push、當前 head 驗收、合併、deploy／healthcheck／rollback 的結果只能在遠端動作後取得；
+  若為寫倉庫 handoff 再 commit，會讓結果所綁 head 失效。這些終態在 PR／deployment 留相同
+  四段 remote handoff，綁 head／base、run／review／comment id 與時間；後續修復的倉庫 handoff
+  引用該留言。它只改載體，不把 skip／pending／未取得證據換算成通過。
+- worklog 三段、終態回寫、`91` 附錄 A 與鐵律 19 不被取代；逐步 handoff 只增加時間邊界，
+  不放寬事實證據或修改射程。
 
 ## 廢止後的收斂責任（2026-08-19）
 
@@ -205,3 +234,203 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
 ⇒ 操作準則：**每當同一類意見第二次出現，先問「這一類能不能寫成腳本」**，
 🔴 **能寫也不要直接寫**（2026-08-19 使用者裁定「把機制改成紀律」並否決兩個機制化提案後更新）：先把**候選與代價**寫進 `docs/specs/91-pit-register.md` 並取得使用者裁定，**裁定後才實作**（進 `scripts/`＋掛 `config/ci.rb` 兩側）。不能寫的同樣登記，說明為什麼不能。
 讓意見數單調下降的是這件事，不是輪數上限。
+
+## 重犯根因收斂稽核（2026-08-20，鐵律 20 的證據帳）
+
+### 稽核邊界與升格門檻
+
+本節回答的是「哪些**處理方法已經定型**，送驗前就該一次做完」，不是宣稱所有既有坑都已修完。
+稽核範圍固定為三層：
+
+1. `docs/specs/91-pit-register.md` 的 F1–F12 正典形態表與 §3 暫存；
+2. 當前樹可追蹤的 `docs/worklog/`、`docs/handoff/` 及本檔所載沿革；
+3. GitHub PR #58、#60、#61 的三個 REST 集合與 review threads。取證日為 2026-08-20；
+   每次使用本節判當前 PR 時仍須重拉現值，不得把本次快照外推。
+
+可重跑的取證入口：
+
+```bash
+N=61 # 例：本 PR；處理其他 PR 時替換
+git -c core.quotepath=false ls-files docs/worklog docs/handoff
+git log -p -- CLAUDE.md AGENTS.md docs/dev/m0-review-convergence.md docs/specs/91-pit-register.md
+gh pr view "$N" --repo pisceshei/chilllovesaas --json headRefOid
+gh api "repos/pisceshei/chilllovesaas/issues/$N/comments" --paginate
+gh api "repos/pisceshei/chilllovesaas/pulls/$N/reviews" --paginate
+gh api "repos/pisceshei/chilllovesaas/pulls/$N/comments" --paginate
+gh api graphql --paginate -F owner=pisceshei -F name=chilllovesaas -F number="$N" -f query='
+query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
+  repository(owner:$owner, name:$name) {
+    pullRequest(number:$number) {
+      reviewThreads(first:100, after:$endCursor) {
+        nodes { id isResolved comments(first:1) { nodes { databaseId } } }
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  }
+}'
+```
+
+升格鐵律須同時滿足：同一系統性根因有兩個獨立可追事故，或在宣稱修復後復發；處理法已由
+實跑、現行規則或反向 fixture 定型；不含尚待產品／費用／架構裁定。未滿足者只進 `91`，
+避免把一次性事故硬編成永久負擔。
+
+### F1–F12 全型態判定
+
+| 91 形態 | 是否進鐵律 20 | 判定 | 現行主要防線 |
+|---|---|---|---|
+| F1 死控件 | 不重複立法 | 屬產品實作缺陷；近期驗收循環沒有形成新的通用交付修法 | `lint-prototype.py`、按鈕表與 E2E |
+| F2 假數字 | 不重複立法 | 已有鐵律 7 的同源 rollup 約束；文檔裸計數另歸 F11 | 鐵律 7、資料同源測試 |
+| F3 假成功 | 不重複立法 | 要按每個 mutation／outbox／UI 流程做真實效果驗證，沒有一條可取代領域規格的通法 | 鐵律 5、API／E2E 驗證 |
+| F4 假憑證 | 升格 | 跨 PR 復發，且已定型為逐聲明證據、當前 head 與完整驗收攝取 | 鐵律 14、15、19、20.2① |
+| F5 副本漂移 | 升格 | 終態檔、執行 prompt、參數契約與入口多次漏同步 | 分層規範、影響面閉合、20.2② |
+| F6 引用失真 | 升格 | 外部來源、內容錨、歷史更正位置均曾重犯 | 鐵律 16、19、20.2②③ |
+| F7 值域缺陷 | 不重複立法 | enum／上下限需由各領域正典與 `config/limits.yml` 決定，不能以一條審查流程代替 | 鐵律 6、領域規格、邊界測試 |
+| F8 狀態機缺陷 | 部分升格 | 產品狀態機仍按領域規格；交付流程的漏分支已有跨 PR 固定修法 | 狀態表與 20.2④ |
+| F9 租戶隔離缺陷 | 不重複立法 | 已是鐵律 2 與專用 checker 的技術紅線 | 鐵律 2、tenant checker／DB 約束 |
+| F10 回歸 | 升格 | 修法帶入新錯、只驗 happy path 與生產 wiring 漏接均有重犯 | mutation、反向 fixture、20.2②⑤ |
+| F11 計數腐化 | 升格 | 裸數字、行號與全稱句在修復輪本身反覆腐化 | AGENTS §2–§5、doc-claims、20.2③ |
+| F12 閘門失效 | 升格 | fail-open、零掃描、workflow 平台 skip 與自我指涉均有實案 | canary、反向測試、18.3、20.2⑤⑥⑦ |
+
+「不重複立法」不是放行，而是現有技術鐵律已比本節更精確；把同義規則再抄一次只會製造 F5。
+
+### 已升格根因與固定處理
+
+#### A. 證據不完整、舊 head 或缺席被當現況（F4／F6）
+
+- **復發證據**：PR #58 的 [inline 3802403719](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802403719)
+  點名外部規則無來源，[inline 3802581074](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802581074)
+  點名 Codex 完成證據未綁當前 head；PR #60 的
+  [inline 3809330908](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809330908)
+  再次抓到用未證實 API 語義選修法；PR #61 的
+  [inline 3818337787](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337787)
+  與 [inline 3818520936](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520936)
+  再抓到逐字證據不足；後者證明立下鐵律 19／20 後，既有方案種子若未按同一矩陣回掃，仍會把
+  中文摘要與外部 UI 分類外推成 enum／狀態機。
+- **根因**：把「驗收方說了」「舊 review 存在」「沒有看到留言」誤當存在型證據；取證對象、
+  commit 與聲明沒有逐項綁定。
+- **固定處理**：外部語義走鐵律 16／19；GitHub 先讀 `headRefOid`，再讀三個 REST 集合、每則
+  review body 與 GraphQL threads，最後以 review／comment／run id 加 commit 對帳。任何端點、
+  權限或判詞未取得都明載「未取得」，不推導零意見。
+- **反向複驗**：故意把 current-head review 拿掉或把 `commit_id` 換成舊 SHA，四條件判定必須
+  fail-closed；處置清單的每個 ID 都能由上面的 `gh api` 入口重新找到。
+
+#### B. 驗收資料只拉一部分（F4／F5）
+
+- **復發證據**：`docs/worklog/2026-08-19-PR58-R29驗收修復.md` 記錄只讀 inline 漏掉 review body，
+  使「三條全部轉交」實為漏項；`docs/worklog/2026-08-20-PR61-第四輪驗收修復.md` 又曾把
+  review body 模板誤述成零 inline，Claude 留言
+  [5350972681](https://github.com/pisceshei/chilllovesaas/pull/61#issuecomment-5350972681)
+  要求在原處更正；鐵律 20 入庫後，PR #61 的
+  [inline 3818520933](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520933)
+  又抓到執行方案只把 GraphQL threads 寫進規範、沒有同步到每輪實際重拉流程。
+- **根因**：把 GitHub 的 conversation、review 容器、review body、inline comment 與 thread
+  當成同一資料源；未分頁時再把截斷結果當全集。
+- **固定處理**：三個 REST 集合全部 `--paginate`；逐則讀 review `.body`；GraphQL threads 用來
+  判 unresolved，不用 review 外殼取代意見明細。結論只能在集合對帳後發布。
+- **反向複驗**：在 scratch 清單各放一則 conversation、review body 與 inline ID，任一集合
+  未拉或少分頁時，集合差異必須非空並禁止「全收」。
+
+#### C. 生產者修了，消費者、終態或歷史更正漏同步（F5／F6／F10）
+
+- **復發證據**：PR #58 的
+  [inline 3802403727](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802403727) 與
+  [inline 3802942084](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802942084)；
+  PR #60 的 [inline 3809330909](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809330909)
+  與 [inline 3809830153](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809830153)；
+  PR #61 的 [inline 3818337781](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337781)
+  與 [inline 3818337799](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337799)；
+  [inline 3818520940](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818520940)
+  則證明 `AGENTS.md` 已定義 commit 後 doc-claims，執行方案 consumer 卻仍漏掉該時序。
+- **根因**：以「我改的那個檔」當影響面，沒有追同識別字的執行消費者與終態入口；歷史層又被
+  靜默覆寫或只在遠處加一個新段落。
+- **固定處理**：改前 `rg` 識別字、讀 `git log -p` 沿革，列 producer → consumers → terminal
+  docs → history correction 影響圖；同 commit 閉合。worklog `Changes`、handoff §①、受影響
+  `docs/dev` 是終態；歷史錯句原處加日期更正，不能只在新篇說明。
+- **反向複驗**：對被改識別字跑全樹搜尋；每個仍活的舊契約要嘛同步、要嘛在處置清單附不受影響
+  的證據。終態三處與 HEAD diff 的檔案集合雙向相等。
+
+#### D. 易腐數字、行號、全稱句與完成性聲明（F11）
+
+- **復發證據**：PR #58 的
+  [inline 3802403730](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802403730) 與
+  [inline 3802942078](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802942078)；
+  PR #60 的 [inline 3811512313](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3811512313)
+  與 [inline 3811512317](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3811512317)。
+  本檔前文另記錄修數字的 commit 再造錯數字，故不是單次筆誤。
+- **根因**：把可計算狀態抄成散文常數，或把會漂移的位置當主鍵；「全部／唯一」沒有定義全集。
+- **固定處理**：不需要就刪數字；需要就寫日期、ref、命令與實跑輸出。引用改用章節／內容錨；
+  全稱句列舉集合或附雙向集合比對。`check-doc-claims.rb` 只作第二道網，不能代替人工核對。
+- **反向複驗**：在新提交增刪一個集合成員，原命令輸出會改變而散文不需改；若散文中的數字或
+  行號因此必須手修，表示仍未解除易腐副本。
+
+#### E. 狀態空間漏分、head 鎖被誤當 base 鎖（F8／F10）
+
+- **復發證據**：PR #61 的
+  [inline 3818337791](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337791) 指出首次推送
+  尚無 PR／tag 卻套後續修復流程；[inline 3818337801](https://github.com/pisceshei/chilllovesaas/pull/61#discussion_r3818337801)
+  指出合併前未處理 base 漂移；Claude 留言
+  [5350285952](https://github.com/pisceshei/chilllovesaas/pull/61#issuecomment-5350285952)
+  抓到代行授權狀態空間漏掉「非 18.3 但未具名授權」。PR #60 的 timeout 修復亦多次漏掉
+  fetch、retry 或 sleep 路徑，見同包 worklog 沿革。
+- **根因**：用 happy-path 敘事代替狀態機；把 head、base、首次／後續與完成／缺席混成同一格。
+- **固定處理**：先列狀態表，再寫流程。首次交付與後續修復分支；每個新 head 重新驗收；合併前
+  fetch 最新 base、整合並重跑；證據未取得與平台 skip 是獨立失敗狀態。head 鎖不替代 base 更新。
+- **反向複驗**：逐格走首次 push、舊 review、新 head、base 前進、skip、人工合併與失敗／逾時；
+  任一格若要引用尚不存在的物件或沿用舊證據，流程不得發布。
+
+#### F. fail-open、只測 happy path 與閘門自我證明（F10／F12）
+
+- **復發證據**：PR #58 的
+  [inline 3802744737](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802744737) 要求新增納管範圍的
+  regression canary；PR #60 的
+  [inline 3809560024](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809560024)、
+  [inline 3809830150](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3809830150)、
+  [inline 3810723077](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3810723077) 與
+  [inline 3810723082](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3810723082)
+  分別抓到缺時間戳放行、數值解析邊界、算術溢位與吞掉 `sleep` 失敗。
+- **根因**：只證明合法輸入能綠，沒有證明違規與工具失敗會紅；管道、fallback 或自改 checker
+  又能把「沒執行」偽裝成成功。
+- **固定處理**：每條新判準至少覆蓋正常、違規、輸入缺失／依賴失敗與零掃描；以 mutation／fixture
+  讓判準真的轉紅；核對 `config/ci.rb` 與 workflow 的生產 wiring。不得吞錯，不得用被改判準
+  自己的綠作唯一證據。
+- **反向複驗**：逐一停用判準、刪目標、破壞輸入、令依賴命令失敗；每個 mutation 都必須取得
+  非零且可分辨的退出碼，移除 production wiring 也必須由 parity／canary 擋下。
+
+#### G. workflow 本機假綠與 YAML 字面塊（F12）
+
+- **復發證據**：`docs/worklog/2026-08-14-CI全紅修復.md`、
+  `docs/worklog/2026-08-14-驗收maxturns事故.md` 與
+  `docs/worklog/2026-08-15-workflow語法閘門.md` 記錄 YAML／shell 交錯事故；PR #58 的
+  [inline 3802403739](https://github.com/pisceshei/chilllovesaas/pull/58#discussion_r3802403739) 更正 workflow
+  validation-skip 語義；PR #60 的
+  [inline 3810262495](https://github.com/pisceshei/chilllovesaas/pull/60#discussion_r3810262495) 抓到
+  `claude_args` 字面塊中的假註釋。`docs/worklog/2026-08-19-P8補審-approve綁定斷言更正.md`
+  另有長 prompt 內嵌 expression 導致 GitHub 不啟動的實測沿革。
+- **根因**：把 YAML parse、`bash -n` 或本機 action validator 的綠外推成 GitHub Actions 實跑；
+  忽略 literal scalar 內所有文字都是值的一部分，及修改 workflow 的 PR 可能沒有有效 Claude 判詞。
+- **固定處理**：保留本機多層語法檢查，但推後必查實際 run 的 step output／log。長 prompt 變數只走
+  step `env`；`claude_args` 內不放 `#` 說明行。skip／run 消失／零判詞只記未取得，且一律走 18.3。
+- **反向複驗**：解析 YAML 後直接檢查 prompt 與 args 的值；推送後以 run id 讀 log，確認不是
+  validation skip。只有 GitHub 上對該 head 真執行的結果能支持平台狀態聲明。
+
+#### H. Markdown 與 Windows 工具鏈製造假結果（F6／F12）
+
+- **復發證據**：`docs/worklog/2026-08-19-PR58-第九次新head驗收修復.md` 記錄表格／code span
+  的真實渲染複驗；`docs/worklog/2026-08-19-P8補審-approve綁定斷言更正.md` 記錄 cp950 把
+  lint 輸出錯誤偽裝成檢查失敗；`91` 附錄集合比對與本專案接手紀律則記錄 quotepath 對中文檔名
+  造成「全部缺失」的假差異。MSYS 路徑轉換的外部證據已落 `docs/dev/external-facts.md` B4。
+- **根因**：把工具輸出層、編碼層、shell 轉參層與被驗內容混為一談；只看退出畫面，不驗實際
+  輸入集合或渲染樹。
+- **固定處理**：表格字面直線跳脫，預期輸出不加 Markdown 強調符；用實際 Markdown render
+  核對結構。Windows 顯式 UTF-8、中文集合關閉 quotepath；可能被 MSYS 改寫的 `ref:path`
+  改成 ref 與 path 分開的 argv，並確認實際使用的 bash／python。
+- **反向複驗**：渲染後計數 table 結構節點；UTF-8 重跑 lint；集合兩端都用相同 quotepath 設定；
+  令 ref 不存在時命令必須顯性非零，而不是得到與「零命中」相同的輸出。
+
+### 送驗前固定順序
+
+1. 用本輪改檔圈出上面適用類型；未適用的列記「不適用＋理由」，不能留白。
+2. 先跑每類的反向複驗，再跑全閘門；結果寫入 worklog，不用「已確認」代替輸出。
+3. 依鐵律 15 commit 後核對兩點 diff，再重拉 GitHub 全量資料；任何新意見回到第 1 步。
+4. 同類若仍復發，依鐵律 20.4 記防線失效；需擴 checker 時先進 `91` §2 等裁定，不能在
+   當輪以「順手斷根」擴張 `scripts/` 或 CI。

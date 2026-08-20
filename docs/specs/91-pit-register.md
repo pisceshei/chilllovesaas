@@ -523,6 +523,157 @@
   `MAX_POLLS_MAX`／十進位位數先比的上界驗證，並與 #58 的 INTERVAL 900–1500 契約合併
   【F7；來源＝#58 Claude R37 issue comment `5344159684` ⚪4；取證日期＝2026-08-19】
 
+### 3.5 自階段一' PR-1 開場包驗證（2026-08-20）
+
+- **總方案 §2.6 的 X3–X10 列少於表頭一欄**：`docs/plans/2026-08-18-總方案.md` 該表表頭
+  宣告「#／資產／要點」，但 X3–X10 只提供代碼與一格內容；Markdown 會把內容全放進「資產」欄，
+  「要點」留空。PR-1 點名射程只含 CD 解凍、§十二裁定回寫與新執行方案落庫，依鐵律 17.2
+  本輪只登記、不順手補欄。複驗：對該表每列計算 `(?<!\\)\|` 命中數，須與表頭相等
+  【F5；來源＝PR-1 開場包 Markdown 結構自查；取證日期＝2026-08-20】
+
+- **鐵律 13.3 的導入包錨仍寫 PR-C0，但現行路線圖已改由 P-6 交付**：本輪 Claude bot
+  把它列為 ⚪；它與本輪 D32 點名的合併授權不是同一修復根，且直接改 `CLAUDE.md` 會擴大
+  鐵律本文修復射程。依鐵律 17.2 本輪只登記，P-6 開工時以內容錨追 `git log -p` 後另包同步
+  【F11；來源＝PR #61 Claude 首輪判詞 ⚪；取證日期＝2026-08-20】
+
+- **S-1 與已被移出本階段的 R-8 有同型射程疑義**：PR #61 Codex 只點名 R-8 屬階段二'，
+  階段一'方案的 Q-1 列仍把「S-1 屬二'，本階段可先行」列為並行包。依鐵律 17.2 不把
+  未點名的 S-1 順手移除；後續須由 D30 射程裁定另包處置，未裁前不得把本登記當成執行授權
+  【F11；來源＝PR #61 Codex 首輪 review 後同型掃描；取證日期＝2026-08-20】
+
+- **Windows Ruby `Tempfile` 與 Git Bash 的 workflow syntax 本機假紅**：原生 Windows Ruby
+  產生並保持開啟的暫存檔，Git Bash `bash -n <path>` 在本環境無法讀取；改由 stdin 傳入時，
+  Ruby text mode 的 CRLF 又會讓反斜線續行失真，誤報 `unexpected |`／`unexpected elif`。
+  以倉庫外 local-only adapter 將同一內容正規化為 LF 後餵入 stdin，既有
+  `check-workflow-syntax.rb` 與 11 條回歸測試皆綠，證明 workflow 實物未壞。本輪未被點名且
+  `scripts/` 不在修復射程，依鐵律 17.2 只登記、不修改腳本；若日後另包處理，必須先補
+  Windows 原生 Ruby＋Git Bash 的承重 fixture，禁止用跳過該閘門冒充通過
+  【F12；來源＝PR #61 本機閘門複驗；取證日期＝2026-08-20】
+
+- **四條件評估器成功文案只寫「可人工合併」，未呈現 D32 代行通道**：
+  `.github/workflows/claude-review.yml` 的成功留言仍固定為「四條件齊，可人工合併」。這句
+  本身為真，但 D32 生效後不完整：具名射程的非 18.3 PR 也可由互動式 Codex 帶 head 鎖代行。
+  同根的 `docs/dev/m0-automation-infra.md` 也把評估器文案只描述為「可人工合併」，workflow
+  日後改文案時必須同包同步該機制文檔，不能只改產生端。
+  該 workflow 未被本輪點名修改且屬 18.3，依鐵律 17.2 只登記、不順手改；待 P-8 後續
+  workflow 包同步時，須同時保留「18.3 永遠人工」與 `AUTO_MERGE=false` 的信任邊界
+  【F11；來源＝PR #61 Claude 第二輪判詞 ⚪；取證日期＝2026-08-20】
+
+- **第三輪 handoff 把四條件過度概括成所有合併通道共同門檻**：18.3 的條文停點是雙清後
+  通知使用者人工合併；若 PR 修改 review workflow，反竄改還可能使條件②④結構上不產生。
+  原文已按歷史層規則保留並追加更正註，後續交接不得把 D31／D32／18.4 的四條件門檻外推
+  到 18.3，造成永遠等不到的通知死鎖
+  【F11；來源＝PR #61 Claude 第四輪判詞 ⚪；取證日期＝2026-08-20】
+
+- **硬規則已更新但執行 prompt 沒同步，會讓驗收方繼續發布規則明禁的內容**：鐵律 19 已禁止
+  未取證推論，`claude-review.yml` 卻仍允許〔推論〕與「未經查證修法」。制度變更的完成面
+  必須同時核對規範本文與實際消費者；只改其一不能宣稱生效
+  【F11；來源＝PR #61 Codex inline `3818337781`；取證日期＝2026-08-20】
+
+- **首次交付誤套回應輪，會引用尚不存在的 PR 編號與 last-push tag**：初次分支 push 前沒有
+  PR 編號，tag 也只能在建立 PR 後命名；首次交付須走 base 累計盤點與 15.2 豁免，後續輪才
+  走 `pr{N}-last-push..HEAD` 與三端點全量重拉
+  【F7/F11；來源＝PR #61 Codex inline `3818337791`；取證日期＝2026-08-20】
+
+- **`--match-head-commit` 只鎖 PR head，不證明驗收時的 base 仍是最新 main**：並行包可讓 main
+  在某包完成驗收後前進；代行合併前須 fetch、合入最新 base、對任何新 head 重跑閘門與雙方
+  驗收，再於合併前比較 base SHA。該流程仍不得宣稱消除最後一次比較後的外部服務競態
+  【F7/F11；來源＝PR #61 Codex inline `3818337801`＋`docs/dev/external-facts.md` A3；
+  取證日期＝2026-08-20】
+
+- **跨輪重犯不能再靠下一輪抽樣發現**：2026-08-20 依使用者裁定，已用本檔 F1–F12、可追
+  worklog／handoff 及 PR #58／#60／#61 三端點驗收紀錄做根因稽核。符合「跨事故復發或修後
+  再犯＋已有固定處理＋反向複驗」者已升格為鐵律 20；完整證據與未升格理由落在
+  `docs/dev/m0-review-convergence.md`「重犯根因收斂稽核」。本條只登記制度結果，不把未被點名
+  的既有同型坑順手修掉；日後若要擴 checker，仍須先進 §2 列代價並另取裁定
+  【F4/F5/F6/F8/F10/F11/F12；來源＝D34／CLAUDE.md 鐵律 20；取證日期＝2026-08-20】
+
+- **階段一'方案 §6.1 的 fenced 偽代碼仍含 Markdown 粗體符號**：在「每個並行包」那行，
+  `**` 位於 fence 內會按字面顯示，不能形成強調；與鐵律 20.2⑦同型。本輪點名的是建立防重犯
+  鐵律，未點名回改既有方案該段，依 17.2 只登記不順手改；另包處理時以「§6.1 階段編排器」
+  內容錨定位，移除 fence 內的 Markdown 強調符後再做實際渲染複驗
+  【F6；來源＝鐵律 20 結構自查；取證日期＝2026-08-20】
+
+- **Windows 原生 Ruby 執行 `bin/setup` 會在 extensionless `bin/rails` 取得 `ENOEXEC`**：
+  `ruby bin/setup --skip-server` 能進入 setup，但其 `system! "bin/rails db:prepare"` 交給 Windows
+  `Kernel#system` 後回 `Errno::ENOEXEC`；逐項改用 `ruby bin/rails db:prepare` 與
+  `ruby bin/rails log:clear tmp:clear` 則退出 0，Rails specs 亦通過。本輪任務未點名 `bin/`，
+  依鐵律 17.2 只登記不改；另包處理時須同時證明 Unix shebang 路徑與 Windows 原生 Ruby 路徑，
+  不能以跳過 setup 冒充 wrapper 已修
+  【F6/F12；來源＝鐵律 21 本機閘門復驗；取證日期＝2026-08-20】
+
+- **Windows 的 `python3.exe` App Execution Alias 可能存在但不是可用直譯器**：PR #61
+  延遲意見修復閘門中，`Get-Command python3` 命中
+  `C:/Users/pisce/AppData/Local/Microsoft/WindowsApps/python3.exe`，實際執行 gate 卻回 9009；
+  同機 `C:/Users/pisce/AppData/Local/Programs/Python/Python312/python.exe --version` 實得
+  Python 3.12.10，指定該絕對路徑且設 `PYTHONIOENCODING=utf-8` 後三個 Python gate 全綠。
+  本輪未被點名修改 `config/ci.rb`／腳本，依鐵律 17.2 只登記不改；Windows 本機配方日後須驗證
+  候選直譯器能實際執行，而非只信 `Get-Command` 存在，並保留非 ASCII 輸出探針
+  【F6/F12；來源＝PR #61 延遲意見修復 29 閘門 A/B 實測；取證日期＝2026-08-20】
+
+- **Rails system spec 會因 test 環境 Vite 首次冷建置超過 Capybara 預設等待而假紅**：
+  PR #61 的完整 29 閘門首跑只有 `bundle exec rspec` 失敗，結果為 `284 examples, 1 failure`；
+  `spec/system/m0_admin_shell_spec.rb:18` 在點擊登入後立即等待 `/admin/products`，失敗訊息卻仍顯示
+  `/login`。但同次失敗截圖已呈現正確的 CHILL LOVE 商品空狀態；`log/test.log` 亦逐步證明登入
+  建立有效 session、302 到 `/admin`、`GET /admin` 回 200、首次 Vite 建置與 layout render 約
+  3.58 秒，之後 `/admin/api/2026-08/graphql.json` 回 200。倉庫未設定
+  `Capybara.default_max_wait_time`，而 `/admin` 到 `/admin/products` 是 React `Navigate` 的客戶端
+  redirect；因此本次證據指向冷啟動等待競態，不是登入或授權失效。該 spec／測試基建未被本包
+  點名，依鐵律 17.2 只登記、不改；日後獨立包須以穩健的頁面／路徑等待或測前建置處理，並同時
+  複驗冷、暖兩種執行，不能把單次暖快取綠燈外推成已斷根
+  【F6/F11/F12；來源＝PR #61 2026-08-20 本機 29 閘門首跑、失敗截圖與 test log；取證日期＝2026-08-20】
+
+- **受限工具環境會令 Ruby 對工作區外 gem 路徑的絕對 `Dir.glob` 假性回空**：同一個
+  `solid_cache-1.0.10/lib/generators` 路徑在受限程序內呈現 `File.exist? == true`、
+  `Dir.children` 可列出，但 `Dir.glob(<絕對路徑>) == []`；Zeitwerk 2.8.3 的 ignore 規則正由
+  glob 展開，因而錯把 `solid_cache` generators eager load，造成
+  `uninitialized constant Rails::Generators::Base` 與 `0 examples`。相同命令在獲准的本機外層
+  可列出該路徑，Rails 8.1.3.1 boot、MySQL `SELECT 1` 與定向 system spec `1 example, 0 failures`
+  全部通過。這是驗收執行環境差異，不是專案碼缺陷；本包只登記不改。之後本機 Rails gate 必須
+  先用絕對 glob canary 判別環境，失敗時改在有完整檔案枚舉權的本機層執行，禁止把
+  `0 examples` 當產品失敗或成功
+  【F6/F11/F12；來源＝PR #61 2026-08-20 受限／外層同命令 A/B 實測；取證日期＝2026-08-20】
+
+- **PowerShell `ConvertFrom-Json` 日期再用 `DateTimeOffset.Parse` 會受本地時區二次解讀而假判舊資料**：
+  PR #61 current-head Codex review 於 07:08:48Z 產生後，reviews／inline 總量已由 36／62 增至
+  37／67，但以觸發時間篩選的 `new` 仍報 0；逐筆列出才證實新 review `4979980175` 與五則 inline
+  已存在。成因是 `ConvertFrom-Json` 已把 ISO timestamp 轉成 `DateTime`，再交給
+  `DateTimeOffset.Parse` 時按 Asia/Taipei 重解未帶出的 `Z`，把 UTC 07:08 誤當本地 07:08。
+  本輪沒有倉庫 poller 被點名，依 17.2 只登記不擴修；日後 PowerShell 輪詢須直接比較 UTC
+  `DateTime`／先 `ToUniversalTime()`，並保留集合總量或最大 ID 作獨立 canary，禁止只信時間濾鏡
+  【F11/F12；來源＝PR #61 current-head review 攝取 A/B 實測；取證日期＝2026-08-20】
+
+- **Codex 的「無重大問題」總結可能早於同一輪 inline，不能把總結到達當作留言集合終止**：
+  PR #61 head `44ebd39` 的 issue comment `5352954268` 於 07:45:46Z 宣稱未新增重大 inline，
+  但 exact-head review `4980284182` 與兩則 inline `3819608325`／`3819608329` 於 07:47:33Z
+  才建立；合併前 GraphQL 守衛因此從 36/0 看到 38/2 並 exit 4，避免錯合。現有 workflow／
+  poller 未被本輪點名，依 17.2 只登記不改；後續合併仍須在動作前重拉完整 GraphQL unresolved
+  集合，禁止用較早的總結 comment 或安靜時間猜測 inline 已送完
+  【F11/F12；來源＝PR #61 merge guard 與 review `4980284182`；取證日期＝2026-08-20】
+
+- **Shopify combinations 類型數是易腐快照，方案現值已與官方頁漂移**：階段一'方案 §11.5
+  仍寫「合法組合五枚舉」，但 Shopify 官方《Combining discounts》於 2026-08-20 取證的逐字
+  現值為 "There are six types of discount combinations:"。current-head Codex 只點名同節把競品
+  模型升格成我方選案，未點名這個固定數字；依鐵律 17.2 本輪只登記、不順手改。後續獨立包須
+  以官方頁逐列導出或明確日期快照取代固定枚舉敘述，並防止把供應商現值當永久我方契約。
+  URL：<https://help.shopify.com/en/manual/discounts/discount-combinations>
+  【F5/F11；來源＝PR #61 exact-head comment `5353555384` 修法前官方複查；取證日期＝2026-08-20】
+
+- **總方案 P-5 仍把 percent 比例鍵列為金額 float 的抓取目標**：
+  `docs/plans/2026-08-18-總方案.md` 的 P-5 判準仍寫
+  `currency_conversion_fee_percent` 要被抓出處置，但 `config/limits.yml` 的名稱、註釋與現值
+  都把它定義為百分比；PR #61 inline `3820221217` 只點名階段一'執行方案的同型矛盾。依鐵律
+  17.2，本輪只修被點名位置並在此登記；後續獨立包須裁定 percent float 維持，或先取得使用者
+  對 basis points 表示法、鍵名與 consumers 同步遷移的批准
+  【F4/F5；來源＝`git log -p -S currency_conversion_fee_percent`；取證日期＝2026-08-20】
+
+- **總方案 CD-1 收口矩陣只要求最小 full-dump 還原，沒有驗 PITR**：
+  `docs/plans/2026-08-18-總方案.md` 的 CD-1 列可在異地副本完成最小還原便收口，未要求保存
+  dump 的 binlog coordinates、核對連續歸檔或重播到指定時間；PR #61 inline `3820221220` 只點名
+  階段一'執行方案的演練步驟。依鐵律 17.2，本輪不擴改總方案；後續獨立包須與
+  `docs/specs/11-production-baseline.md` §2-6 及 MySQL 8.4 PITR 官方程序同步
+  【F4/F5；來源＝總方案 CD-1 矩陣與 MySQL 8.4 官方 PITR 文檔；取證日期＝2026-08-20】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -630,6 +781,8 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-18-P00-public安全補課.md`（PR #57 新增；#58 第 6 輪補列——#57 未動本檔＝集合比對缺口實例）
 - [ ] `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`（PR #58 新增，第 6 輪補列）
 - [ ] `docs/worklog/2026-08-18-P8-自動化基建.md`（PR #59 合併帶入；#58 R29 🔴1 補列）
+- [ ] `docs/worklog/2026-08-19-P8補審-approve綁定斷言更正.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/worklog/2026-08-19-PR60-第十輪驗收修復.md`（PR #60 新增；PR-1 D1 修復補列）
 - [ ] `docs/worklog/2026-08-19-PR58-R29驗收修復.md`（PR #58 R29 接手輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-新head驗收修復.md`（PR #58 `0db8ef5` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第二次新head驗收修復.md`（PR #58 `e2e5db7` 驗收輪新增，同 commit 補列）
@@ -640,6 +793,40 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 - [ ] `docs/worklog/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/worklog/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
+- [ ] `docs/worklog/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
+- [x] `docs/worklog/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
+- [x] `docs/worklog/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
+- [x] `docs/worklog/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
+- [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
+- [x] `docs/worklog/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；已修三個被點名宣稱）
+- [x] `docs/worklog/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；已移除自我重複觸發詞）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；受限層根因已由 §3.5 既有條目涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見修復.md`（review `4980284182` 兩則延遲 inline 精準修復；既有坑涵蓋，無新增項）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-44ebd39延遲意見閘門復驗.md`（完整 29 閘門；已抽取 Windows Python App Alias 假直譯器）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f殘留層級修復.md`（current-head P1；同一語義的證據段與摘要同步收斂，既有坑涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f七則延遲意見修復查證.md`（review `4980533036` 七則 inline 修法前查證；既有坑涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；既有坑涵蓋）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
+- [x] `docs/worklog/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 
 ### A.2 handoff
 
@@ -717,6 +904,41 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-19-PR58-第七次新head驗收修復.md`（PR #58 `e2c3573` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第八次新head驗收修復.md`（PR #58 `4335450` 驗收輪新增，同 commit 補列）
 - [ ] `docs/handoff/2026-08-19-PR58-第九次新head驗收修復.md`（PR #58 `7aadf4ae` 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-19-PR60-第十輪驗收修復.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/handoff/2026-08-20-PR60-第十一輪rebase契約同步.md`（PR #60 新增；PR-1 D1 修復補列）
+- [ ] `docs/handoff/2026-08-20-PR61-首輪驗收修復.md`（PR #61 驗收輪新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-第二輪驗收修復.md`（PR #61 第二輪驗收新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-第三輪驗收修復.md`（PR #61 第三輪驗收新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-第四輪驗收修復.md`（PR #61 第四輪驗收新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-階段一開場包.md`（PR-1 新增，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-鐵律19零假設發布.md`（PR #61 使用者新裁定，同 commit 補列）
+- [ ] `docs/handoff/2026-08-20-PR61-Codex當前head驗收修復.md`（PR #61 current-head Codex 六條，同 commit 補列）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-96ffc01驗收修復.md`（PR #61 Codex review `4978735798`；已讀並抽取三項坑）
+- [x] `docs/handoff/2026-08-20-鐵律20重犯斷根.md`（D34／鐵律 20；已讀並抽取跨輪重犯根因）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-5cea329驗收修復.md`（PR #61 review `4978950448`；已讀並處置三則 current-head inline）
+- [x] `docs/handoff/2026-08-20-鐵律21逐步交接沿革查證.md`（D35 前置沿革與影響面；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21本機MySQL與閘門復驗.md`（本機環境與假綠撤回；已抽取 Windows setup wrapper 缺口）
+- [x] `docs/handoff/2026-08-20-鐵律21逐步交接落地.md`（D35／鐵律 21；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
+- [x] `docs/handoff/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；證據與邊界已交接）
+- [x] `docs/handoff/2026-08-20-PR61-commit後doc-claims修復.md`（commit 後檢查轉紅；命中與修法已交接）
+- [x] `docs/handoff/2026-08-20-PR61-postcommit警告修復.md`（post-commit R5 warning；證據與邊界已交接）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea修復查證.md`（review `4979980175` 修法前查證；已抽取 PowerShell UTC 篩選坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea驗收修復.md`（review `4979980175` 五則 inline 修復；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-35c9eea閘門復驗.md`（Git Bash PATH 修正後完整 29 閘門；既有坑涵蓋，無新增項）
+- [x] `docs/handoff/2026-08-20-階段一-PR61-本機MySQL當前查活.md`（當前 MySQL／Rails A/B 查活；既有坑涵蓋，無新增項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見修復查證.md`（review `4980284182` 修法前查證；已抽取總結先於 inline 的終態坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見修復.md`（review `4980284182` 兩則延遲 inline 精準修復；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-44ebd39延遲意見閘門復驗.md`（完整 29 閘門；已抽取 Windows Python App Alias 假直譯器）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f殘留層級修復.md`（current-head P1；已讀並同步同語義兩端，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復查證.md`（review `4980533036` 七則 inline 修法前查證；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b96426f七則延遲意見修復.md`（review `4980533036` 七則 inline 精準修復；已讀，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731促銷疊加修復查證.md`（exact-head comment `5353555384` 修法前查證；已抽取 combinations 快照漂移坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
+- [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 
 ### A.3 事故密集檔（specs／機制檔）
 
