@@ -855,6 +855,12 @@
   不藉白色觀察順手改方案；日後若修改 0f／0g 原因欄，須引用已取證的 validation-skip 實物
   【F5/F11；來源＝PR #66 Claude issue comment `5368608706` ⚪2；取證日期＝2026-08-21】
 
+- **PR body 與 worklog 的 `LEDGER_TUPLE` 呈現形態不一致**：
+  worklog 把 tuple 放在 `text` code fence，PR body 的 raw tuple 行則直接相鄰，GitHub 會以
+  paragraph soft-break 呈現；機械 parser 讀 raw body 且逐行錨定，行為與資料未反轉。依 17.2
+  只登記，不為呈現差異改 remote body；日後若把 tuple 改成需人工閱讀的主要介面，再統一渲染形態
+  【F5/F11；來源＝PR #66 Claude issue comment `5369077825` ⚪1；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
