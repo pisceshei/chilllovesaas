@@ -77,7 +77,7 @@
 | G-01 | 判詞 ⚪ 落籍檢查——每輪判詞的 ⚪ 條目必須落在**本檔 §3 ∪ 該輪 exact-head PR body 的合法 `DEFERRED_WHITE` 行**兩者的聯集（後者＝鐵律 15.1／D38 的 terminal-white 例外：`head` 精確等於受驗 `headRefOid`、grammar 精確、`comment:item` pair 可在完整判詞集合複驗；錯 head、重複或無來源者一律不算登記，仍須判紅）（PR #55 判詞連續多輪點名此缺口；例外射程與 grammar 見 `CLAUDE.md` 鐵律 15.1 與 §驗收基準） | ⚪ 蒸發族（§3.3「兩源句腐化」組的上游——⚪ 無人搬運即消失） | 判詞為自由文本、需解析 ⚪ 段與 §3 對條，另須讀 PR body machine line 並綁 head 複驗來源 pair，格式耦合高；誤報時擋錯 PR | **待**（收割輪一併裁） |
 | G-02 | markdown 柵欄自檢——掃全檔行首三反引號行：行數須偶數、每個閉合行去圍欄後為空（式子＝#55 第 7 輪判詞所給；防柵欄黏尾文吞段） | 柵欄事故族（#55 第 7 輪 151 checkbox 被吞＝現行犯） | 極低（一支 grep/awk 即可）；範圍限 docs/specs（或全 docs） | **待**（收割輪與 G-01 一併裁；第 9 輪登記） |
 | G-03 | `claude-review.yml` prompt 的 ⚪ 處置段與 terminal-white 例外同步＋deferred ingestion checker——現行 prompt 無條件要求作者把 ⚪「搬進坑登記簿」並明文宣告「建立前登記於 PR 描述」的過渡辦法作廢，與鐵律 15.1／D38 的 exact-head `DEFERRED_WHITE` 例外正面相反；合規使用該例外的 terminal-white PR 會被讀 prompt 的驗收方判成未登記。ingestion 側另缺「下一個 tree-changing PR 首候選是否已把 merged PR body 的 pair 入籍」的機械檢查 | ⚪ 蒸發族（同 G-01）＋**判準型 consumer 漂移**（prompt 是驗收方實際讀的判準，散文 consumer 同步不涵蓋它；來源＝PR #66 Claude issue comment `5369828302` 🔴-1(b)） | 改 `.github/workflows/` 命中鐵律 18.3，且 `claude-review.yml` 反竄改會令該 PR 自身驗收失效 ⇒ 必須另開 workflow-only PR；ingestion checker 另需先定義「既有 merged PR」的查詢範圍與起點（與本節 §3 已登記的同名 ⚪ 同源） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4「需擴 workflow／CI 判準時先登記候選與代價、另開 18.3 PR」，本 PR 不得改 workflow，指派給 P-8 的 **0f workflow-only 接線**一併交付） |
-| G-04 | **表格列未跳脫直線的全樹檢查**——掃全部 `*.md` 的表格列，若某列的未跳脫 `\|` 數不等於表頭欄數即報錯（GFM tables extension 逐字：超額格 "the excess is ignored" ⇒ 該列末欄被靜默截斷） | Markdown 假結果族（§3 已登記本 PR 與另四檔實例：`specs/52`（兩處）、`specs/83`、`specs/53`、`worklog/2026-08-18-P8-自動化基建`） | 低（一支 awk/ruby 即可）；需先裁定射程（全 `docs/` 或含 `*.md` 全樹）與既有違規的處置（一次修完 vs 建立基準線） | **提案／待**（🔴 使用者尚未裁定；本 PR 的結構斷言只涵蓋本輪改動檔，抓不到既有檔——依鐵律 20.4 先登記候選與代價，另開 18.3 PR 實作） |
+| G-04 | **表格列儲存格數的全樹檢查**——掃全部 `*.md` 的表格列，**先按 GFM 規則切出儲存格再比對格數**：去掉行首與行尾的邊界直線（邊界直線不代表額外欄）後以未跳脫 `\|` 分割，切出的格數多於表頭欄數即報錯（GFM tables extension 逐字：超額格 "the excess is ignored" ⇒ 該列末欄被靜默截斷）。🔴 **不得直接數未跳脫直線**——本表即反例：五欄的表頭列與本列各有 6 個未跳脫直線（首尾各一為邊界），照直線數比對會讓這道閘門開跑第一秒就否決自己所在的表、連基準線都建不出來（來源＝Codex inline `3831890277`，2026-08-21） | Markdown 假結果族（§3 已登記本 PR 與另四檔實例：`specs/52`（兩處）、`specs/83`、`specs/53`、`worklog/2026-08-18-P8-自動化基建`） | 低（一支 awk/ruby 即可）；需先裁定射程（全 `docs/` 或含 `*.md` 全樹）與既有違規的處置（一次修完 vs 建立基準線） | **提案／待**（🔴 使用者尚未裁定；本 PR 的結構斷言只涵蓋本輪改動檔，抓不到既有檔——依鐵律 20.4 先登記候選與代價，另開 18.3 PR 實作） |
 | （其餘待收割輪填入） | | | | |
 
 ## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
@@ -921,6 +921,21 @@
   且檔頭已標「早期機制編號保留作沿革」，故不反轉現值；依 17.2 只登記，日後整理該檔沿革層時
   以日期化更正處理
   【F2/F11；來源＝PR #66 Claude issue comment `5372100557` ⚪2；取證日期＝2026-08-21】
+
+- **worklog 歷史層仍描述已被取代的 ledger 機制**：
+  `docs/worklog/2026-08-21-驗收收斂制度V2.md` 的 `7146270` 回應輪輸出節寫「期望集合已改為外部
+  導出：由 `git log --format=%H <base>..HEAD`⋯」，該敘述**對它那一輪為真**；`ee6e7ec` 輪已改為
+  不可變 registry ＋ ancestry 交叉檢查。歷史層依 AGENTS §1 不回改，但後人循該段找現行機制會
+  找錯位置。日後整理沿革層時就地加日期化指路註即可，不反轉現值
+  【F2/F11；來源＝PR #66 Claude issue comment `5372536493` ⚪1；取證日期＝2026-08-21】
+
+- **`$ledgerBase` 硬編 `0fbe520` ⇒ rebase 後 ancestry 會假紅**：
+  同檔 tuple block 的 `$ledgerBase` 是固定 SHA；分支若 rebase 到較新的 main，
+  `0fbe520..HEAD` 會納入新 main 的 commit，這些 commit 都不在受驗 head registry 內 ⇒
+  ancestry 迴圈報 `reviewed branch head missing from ledger registry`。方向保守
+  （**假紅、不是 fail-open**），且舊版同樣要求每個 branch head 有 section、非本輪引入，
+  故依 17.2 只登記不修；日後若要修，正解是把 base 改成 `git merge-base origin/main HEAD`
+  【F5/F11；來源＝PR #66 Claude issue comment `5372536493` ⚪2；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
