@@ -542,3 +542,20 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 🔴 **可借的設計形狀**：A6 把三件事拆開——`retryThrottling`（准不准重試）／`maxAttempts`（最多幾次）／
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
+
+### A16. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
+
+Microsoft Learn 的 `about_Functions` 在 **7.6 與 5.1 兩個版本頁面**都以 Important 區塊逐字寫：
+
+> "Within script files and script-based modules, functions must be defined before they can be called."
+
+來源：<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions>
+（7.6，取證 2026-08-22）與
+<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions?view=powershell-5.1>
+（5.1，取證 2026-08-22）。⚠️ **兩個版本都查了**，因為本倉庫的 worklog block 實際跑在
+Windows PowerShell 5.1 上，拿 7.x 的頁面替 5.1 背書不成立。
+
+🔴 **本專案使用邊界**：本條只支持「**指令碼檔內**呼叫點必須排在定義之後」。它**不**支持
+「PowerShell 完全不做前置解析」這類更強的說法——官方這句限定在 script files 與 script-based
+modules，互動式 session 與 dot-source 後的可見性不在本條射程。`docs/worklog/` 內以此為由的
+函式移位，引用範圍以本條為限。
