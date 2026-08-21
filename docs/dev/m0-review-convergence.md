@@ -455,8 +455,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
    `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都重取
    `headRefOid`，任一次不等於候選 SHA 就丟棄結果並非零終止。零 check 集合與 `pending` 在
    deadline 內繼續等；`gh pr checks` 的 pending 退出碼 8 要先按已取得的 JSON bucket 分流，不能
-   被 shell 非零處理誤判為 API failure；終態 `fail` 進 ledger；空集合到 deadline、JSON 未取得／
-   不可解析、API 失敗或 head drift 才是未取得；只有非空集合全 `pass` 且 head 不變才可合併
+   被 shell 非零處理誤判為 API failure；終態 `fail` 進 ledger；`skipping`／`cancel` 先對
+   同一 head 重跑 owning check 一次，仍非乾淨才保存兩次證據轉人工；空集合到 deadline、
+   JSON 未取得／不可解析、API 失敗或 head drift 才是未取得；只有非空集合全 `pass` 且 head 不變才可合併
    （external-facts A11）。
 4. 一次按根因批次處置；同一元件的完整狀態矩陣與反向 fixture 同批封閉，無關元件只登記
    `91` §3。commit 後核對兩點 diff 並最終重拉，再推一個整合修復 head。
@@ -534,8 +535,8 @@ finding，欄位缺失、解析失敗或時間相等都 fail-closed。數字 ID 
 不跨端點排序（官方欄位證據見 `docs/dev/external-facts.md` A12）。未知作者、缺／多／錯 ref、未知 envelope 一律 fail-closed。未來若 connector 產生 clean
 REST review，也必須先以實物加入 fixture 並有權威 exact-head 欄位，不能靠一般 body SHA 猜測。
 
-Issue comment 不做自然語言「可處置」分類。第一個非空行若精確為 A 型前綴或 B 型首行，就依完整
-envelope＋ref grammar 分類為一個 clean completion event；A 型其後的固定 About-Codex `<details>`、
+Issue comment 不做自然語言「可處置」分類。第一個非空行若**以 A 型精確前綴開頭**，或**精確等於
+B 型首行**，就依完整 envelope＋ref grammar 分類為一個 clean completion event；A 型其後的固定 About-Codex `<details>`、
 B 型其後的確認敘述與 checks 都是同一 completion 的說明，不因「還有文字」改判 finding。第一個
 非空行精確為 `## 驗收結論：需修改` 則是 finding event；其他首行是 unknown。任何 comment 出現
 第二個頂層 verdict marker（A 型前綴或以 `## 驗收結論` 開頭的行）都屬互斥／ambiguous，C1=0。
@@ -564,17 +565,24 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
 只作歷史／排隊訊號，不得證明 C1、C3 或雙清。在獨立 evaluator 與 workflow-only 接線各自合併前，舊 `1111`
 不得授權互動式 Codex 代行合併，過渡期全部 PR 走使用者人工合併。
 
-### C2／C3 的 exact-head 與自我排除契約
+### C2／C3／C4 的 exact-head、自我排除與格式契約
 
 - **C2** 不再使用「留言 id 水位＋job 起跑時間窗」猜判詞歸屬。0f 必須由受信任 workflow 產生
-  run-specific evidence（至少 `run_id`、`run_attempt`、candidate head、verdict comment id／hash），
-  0e 再以 workflow-runs API 複驗該 run 的 `head_sha == candidate`；證據缺失、跨 run、錯 head、
-  只有時間落窗或多個無法配對的判詞一律 C2=0。官方 run/head identity 見 external-facts A13。
+  run-specific evidence（至少 `run_id`、`run_attempt`、candidate＝
+  `github.event.pull_request.head.sha`、verdict comment id／hash）。0e 依 run id 要求
+  `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且其 `head.sha == candidate`，並比對
+  run／job／check-run 的 `head_sha` 作本倉庫 canary。官方未給最後三欄的 pull_request 永久語義；
+  任一缺失／多義／不等、跨 run、只有時間落窗或多個無法配對的判詞一律 C2=0。官方邊界與 PR #66
+  run `32463413197` 的具名實證見 external-facts A13。
 - **C3** 的 eligible 集合是 candidate head 的 check runs，扣掉 0f 提供的 evaluator 自身**精確
   check-run ID**。0f 由 workflow jobs REST 的 `check_run_url` 取得該 ID；找不到、找到多個或 ID
   不屬同 run/head 就 C3=0。自己的 pending 可排除，任何其他 pending／非 success 都保留；排除後
   只剩自己等於空集合，仍 C3=0。fixtures 必須覆蓋 self pending＋其他全綠、self pending＋他項
   pending、only-self、錯 self ID／多 self ID 四格。
+- **C4** 不得只沿用 workflow 內一段未被獨立測試的 grep。0e fixture／mutation 至少覆蓋合法
+  「通過」、合法「需修改：非空理由」、判詞缺失、標記不在首行、重複標記、通過／需修改互斥、
+  空白理由（ASCII／全形空白／CR）與未知結構；first-line、唯一標記、互斥與非空理由任一守衛
+  被刪，regression 必須轉紅。
 - Codex 晚到只重跑／再調用 evaluator，不整體 rerun Claude workflow。whole-run rerun 只保留
   「Claude 判詞格式畸形」同 head 最多一次的 transport 例外；不得因 C1 timing 另造 Claude 判詞。
 

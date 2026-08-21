@@ -819,6 +819,18 @@
   複驗：以 fenced-code-aware 掃描定位 `docs/plans/2026-08-18-總方案.md` 的 `| X3 |` 並比較同表 pipe 數
   【F5/F11；來源＝PR #66 整合修復 targeted Markdown 檢查；取證日期＝2026-08-21】
 
+- **基建歷史說明仍用容易自命中的 `grep -n "MAX_FIX_ROUNDS"` 作複驗**：
+  `docs/dev/m0-automation-infra.md` 的舊機制廢止說明中仍保留該指令，而現行固定寫法是
+  以 `git grep` 與自排除 pattern 檢查 Git tree。Claude 明列為範圍外觀察；依 17.2
+  只登記，不修該 consumer，日後改動該段時再用不自命中的 `git grep` 取代
+  【F11；來源＝PR #66 Claude issue comment `5367753356` ⚪1；取證日期＝2026-08-21】
+
+- **AGENTS 過渡期摘要仍只稱「新 C1 evaluator」，與現行 C1–C4 完整 evaluator 名稱不一致**：
+  對應段落的合併 guard 與其他 consumers 已明載 C1–C4，此行只是不精確摘要，不改變
+  現行狀態；Claude 明列為範圍外觀察。依 17.2 只登記，不修 `AGENTS.md`
+  該行，日後改動該摘要時再同步成 C1–C4
+  【F11；來源＝PR #66 Claude issue comment `5367753356` ⚪2；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

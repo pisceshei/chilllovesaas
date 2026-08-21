@@ -347,8 +347,9 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   查詢前後與凍結 ledger 前都要重取 `headRefOid`，任一次不等於候選 SHA 就丟棄結果並非零終止。
   零 check 集合在 deadline 內繼續等，deadline 後是未取得／C3=0，不能 vacuous all-pass；
   `pending` 等待，且 `gh pr checks` 此時的退出碼 8 必須先按 JSON bucket 分流，不能讓 shell 非零
-  處理把它誤判成 API failure；`fail` 是已完成 finding，可進凍結 ledger 修復；JSON 未取得／不可解析、
-  API／deadline 才是未取得；
+  處理把它誤判成 API failure；`fail` 是已完成 finding，可進凍結 ledger 修復；
+  `skipping`／`cancel` 必須先對同一 head 重跑 owning check 一次，仍非乾淨才保存兩次證據轉人工；
+  JSON 未取得／不可解析、API／deadline 才是未取得；
   合併仍須非空集合 bucket 全 `pass` 且 head 未變。
   `MAX_FIX_ROUNDS` 與自動掛人工裁定 label 不恢復。雙清必須顯式含 Codex；③合併條件**四重
   缺一不可**＝Codex 已完成當前 head 審查，全量攝取三個 REST 集合、每則 review body 與
@@ -370,11 +371,14 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   OpenAI 官方要求 reaction 後仍發布結果，所以 reaction-only 不算 completion、沒有可綁 exact-head
   結果時 fail-closed 轉人工；無 tree 變更的 finding 處置只可 same-head 請求一次，若 deadline
   前沒有更晚 completion，C1 保持 0 並轉獨立人工審核／人工合併，不再造 head 或重試 ∧
-  Claude bot 通過且零未清，且 0f 產生的 run-specific evidence 可由 workflow-runs API 證明
-  `head_sha == candidate`；留言水位／時間窗不能取代 run/head 綁定 ∧
+  Claude bot 通過且零未清，且 0f 產生的 run-specific evidence 以
+  `github.event.pull_request.head.sha` 作 candidate；0e 依 run id 複驗 `event=pull_request`、目標 PR
+  的 `pull_requests[].head.sha` 與 run／job／check-run `head_sha` 均同值。最後三欄只是本倉庫具名
+  canary、不是平台永久保證；任一缺失／不等即 C2=0，留言水位／時間窗不能取代 run/head 綁定 ∧
   **機械 CI 全綠**：candidate head 的 check-run 集合只排除 0f 由 workflow jobs `check_run_url`
   取得的 evaluator 精確 self ID；排除後仍須非空且全部 success，only-self、錯／多 self ID 或其他
-  pending 都 C3=0 ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
+  pending 都 C3=0 ∧ 判詞格式機械驗證；C4 fixture／mutation 要覆蓋合法通過／合法需修改、缺失、
+  非首行、重複、互斥、空白理由與未知結構（每項存在型判定，沒跑≠零意見），
   改 `.github/workflows/` 任何檔／機械閘門判準（scripts/ 全部腳本、**`config/ci.rb` 本身**、
   及 ci.yml・config/ci.rb 的 step 所引用的其他判準檔——`.rubocop.yml`、`package.json`
   scripts、`spec/` 等，舉例非窮舉）／CLAUDE.md／AGENTS.md 的 PR 一律人工；人工合併類 PR

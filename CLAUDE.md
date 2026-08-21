@@ -348,13 +348,19 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       `docs/dev/external-facts.md` A9／A10／A12；載體形態的倉庫實測見
       `docs/dev/m0-review-convergence.md`「Convergence Protocol v2」∧
       ②Claude bot 判詞**通過**且零未清意見，且 0f 由受信任 workflow 產生的 run-specific evidence
-      （`run_id`／`run_attempt`／candidate head／verdict comment id 或 hash）可由 workflow-runs API 複驗
-      `head_sha == candidate`；留言 id 水位與時間窗只可輔助排序，不能綁 run/head。錯 head、跨 run、
-      缺 evidence 或多個無法配對的判詞均 C2=0 ∧
+      （`run_id`／`run_attempt`／candidate＝`github.event.pull_request.head.sha`／verdict comment id 或
+      hash）可依 run id 複驗：run `event=pull_request`、`pull_requests[]` 恰有目標 PR 且其
+      `head.sha == candidate`，並要求 run／job／check-run 回應的 `head_sha` 同值作本倉庫 canary。
+      官方未保證 workflow-run `head_sha` 對所有 pull_request 永遠等於 PR head，故任一欄缺失、多義
+      或不等即 C2=0，該單欄與留言 id 水位／時間窗都不能獨立綁 run/head。具名實證與官方邊界見
+      external-facts A13 ∧
       ③**全部機械 CI 綠**：0f 須由 workflow jobs REST 的 `check_run_url` 提供 evaluator 自身精確
       check-run ID，C3 只排除該 ID；self ID 缺失／多重／錯 head 即 0。排除後 eligible 集合仍須
       非空且全部 success；self pending＋其他全綠可通過，其他 pending／fail 或 only-self 均 C3=0 ∧
-      ④**判詞經格式機械驗證**（非散文比對）。0e／0f 的官方 identity 邊界見 external-facts A13。
+      ④**C4：判詞經格式機械驗證**（非散文比對）。0e fixture／mutation 必須各自鎖定：合法「通過」、
+      合法「需修改：非空理由」、判詞缺失、標記不在首行、重複標記、通過／需修改互斥、空白理由
+      （含全形空白／CR）與未知結構；刪除 first-line、唯一標記、互斥或非空理由任一守衛都要使
+      regression 轉紅。0e／0f 的官方 identity 邊界見 external-facts A13。
       ③④**降低但不消除** prompt injection 風險——被注入的判詞可以格式完全合法
       （`claude-review.yml` 沿革註釋已載明此風險正是 AUTO_MERGE=false 的原因）；
       ③只證明測試綠、④只證明格式合法，**兩者都不證明審查結論未受注入**。

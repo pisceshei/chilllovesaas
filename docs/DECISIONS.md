@@ -577,12 +577,19 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   鎖定，不得把不存在的最後 finding 誤歸欄位缺失。
 - CI 零 check 集合＝尚未執行，不是 all-pass：deadline 內等待，deadline 後 C3=0／證據未取得。
   `gh pr checks` 在 pending 時的退出碼 8 不是 API failure，必須先解析 JSON bucket 再分流；JSON
-  未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending、terminal
-  fail、skip／cancel、API failure 與 head drift 照 D37 矩陣分流。
+  未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending 繼續等，
+  terminal fail 進凍結 ledger；skip／cancel 先對同一 head 重跑 owning check 一次，仍非乾淨才保存
+  兩次證據轉人工。API failure 與 head drift 非零終止。
 - C2 必須改成 run-specific exact-head 證據：0f 由受信任 workflow 產生 `run_id`／`run_attempt`／
-  candidate head／verdict comment id 或 hash，0e 以 workflow-runs API 複驗 `head_sha == candidate`；
-  舊時間窗只能排序，不能綁 run/head。C3 只排除 workflow jobs `check_run_url` 指出的 evaluator 精確
+  candidate＝`github.event.pull_request.head.sha`／verdict comment id 或 hash；0e 依 run id 複驗
+  `event=pull_request`、目標 PR 的 `pull_requests[].head.sha`，並要求 run／job／check-run
+  `head_sha == candidate` 作本倉庫具名 canary。官方未給該 response 欄位的 pull_request 永久語義，
+  故任一缺失／不等即 C2=0，單看 `head_sha` 或舊時間窗都不能綁 run/head。C3 只排除 workflow jobs
+  `check_run_url` 指出的 evaluator 精確
   check-run ID；self ID 缺失／多重、排除後 only-self、其他 pending 或錯 head 都是 C3=0（A13）。
+- C4 的 0e fixture／mutation 必須覆蓋合法通過、合法需修改＋非空理由、判詞缺失、標記不在首行、
+  重複標記、通過／需修改互斥、空白理由（含全形空白／CR）與未知結構；first-line、唯一標記、
+  互斥與非空理由任一守衛被刪都必須使 regression 轉紅。
 - P-8 當前唯一執行序列改為 0e 獨立 evaluator＋fixtures／mutation（人工合併）→ 0f
   workflow-only 接線**完整 C1–C4**並實查 validation-skip（人工合併）→ 0g 常規 PR canary。
   Codex 晚到只再調用 evaluator；whole-run rerun 只保留 Claude 判詞格式畸形的同 head 一次例外。

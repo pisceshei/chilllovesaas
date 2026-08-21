@@ -303,6 +303,17 @@ GitHub Actions variables 官方頁逐字寫：
 的實際 commit 依觸發事件而異，所以本專案不把它不加判別地等同 PR head。來源：
 <https://docs.github.com/en/actions/reference/workflows-and-actions/variables>（取證 2026-08-21）。
 
+GitHub 的 `pull_request` 事件頁另逐字區分 merge SHA 與 head SHA：
+
+> "`GITHUB_SHA` is the SHA of the merge commit on the merge branch"
+>
+> "To test only the head branch commits without simulating a merge, check out the head branch using
+> `github.event.pull_request.head.sha` in your workflow."
+
+來源：<https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows>
+（取證 2026-08-21）。所以 0f 的 candidate 必須明取 `github.event.pull_request.head.sha`，不得從
+`GITHUB_SHA` 猜。
+
 Workflow runs REST 的 `head_sha` 查詢參數逐字是：
 
 > "Only returns workflow runs that are associated with the specified `head_sha`."
@@ -314,11 +325,32 @@ REST response 則提供 `id`、`head_sha`、`status` 與 `conclusion`。來源�
 <https://docs.github.com/en/rest/actions/workflow-jobs>、
 <https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28>（取證 2026-08-21）。
 
-🔴 **本專案使用邊界**：0f 以受信任 workflow 產生 `run_id`／`run_attempt`／candidate head／verdict
-comment id（或內容 hash）的 run-specific evidence，0e 以 REST `head_sha` 複驗後才令 C2 成立；時間窗
-只能排序、不能綁 run/head。C3 只排除 workflow jobs `check_run_url` 指出的 evaluator 精確 check-run
-ID；不得只按 `name=review` 排除。排除後 eligible 集合仍須非空且全部 success；self ID 缺失／多重、
-只剩 self、其他 pending 或 head 不符都 C3=0。
+⚠️ **官方缺口與本倉庫實證分開寫**：上面的 workflow-runs 文件只定義 `head_sha` 查詢參數，沒有
+逐字定義 `pull_request` run response 的 `head_sha` 一定等於 PR head；不得從欄位名自行外推。
+本倉庫 PR #66 的 run `32463413197`（2026-08-21）原始 REST 回應實得
+`event=pull_request`、`head_sha=ae41a51a6b69e45a2aa5e225e748fc9a9fe5fd24`，其
+`pull_requests[0].number=66` 與 `.head.sha` 也是同一值；job `96714869405` 及其
+`check_run_url` 指向的 check-run 回應也各自回同一 `head_sha`。同一時點 PR API 的 `.head.sha`
+相同，而 `.merge_commit_sha=8e8e3f95d8895b275f725c47e3bc5e4c2749aec6`，兩者可區分。複驗：
+
+```bash
+gh api repos/pisceshei/chilllovesaas/actions/runs/32463413197
+gh api --paginate repos/pisceshei/chilllovesaas/actions/runs/32463413197/jobs
+gh api repos/pisceshei/chilllovesaas/check-runs/96714869405
+gh api repos/pisceshei/chilllovesaas/pulls/66
+```
+
+這是**具名倉庫／run 快照，不是 GitHub 永久語義保證**；未來回應不再同形時必須 C2=0，不得改成
+猜測或時間窗 fallback。
+
+🔴 **本專案使用邊界**：0f 以受信任 workflow 產生 `run_id`／`run_attempt`／candidate
+（精確取 `github.event.pull_request.head.sha`）／verdict comment id（或內容 hash）的 run-specific
+evidence。0e 依 run id 取原始回應，要求 `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且
+其 `head.sha == candidate`，並以 run／job／check-run 的 `head_sha == candidate` 作本倉庫 canary；
+任一缺失、多義或不等即 C2=0，`head_sha` 單欄與時間窗都不能獨立證明綁定。C3 只排除 workflow
+jobs `check_run_url` 指出的 evaluator 精確 check-run ID；不得只按 `name=review` 排除。排除後
+eligible 集合仍須非空且全部 success；self ID 缺失／多重、只剩 self、其他 pending 或 head 不符
+都 C3=0。
 
 ---
 
