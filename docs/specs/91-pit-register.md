@@ -1039,6 +1039,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md`（Claude comment `5362492718`＋Codex review `4987731284`；destructive history producer、20.3 固定編號與 rendering 未取得已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md`（Claude comment `5363200002`＋Codex review `4988295763`；零掃描 canary、merge diff、rendering 歷史更正與外部契約集中已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十三輪雙驗收修復.md`（Claude comment `5363469305`＋Codex review `4988472500`；production wiring、外部契約去重與 `diff-tree -r` witness 已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十四輪雙驗收修復.md`（Claude comment `5363665327`＋Codex review `4988636859`；repository commits fallback 與 `gh api` body 供給邊界已處置）
 
 ### A.2 handoff
 

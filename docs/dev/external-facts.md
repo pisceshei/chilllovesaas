@@ -219,14 +219,26 @@ GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39a
 不得外推巢狀 `comments(first:100)` 也逐頁取完。正文全集仍走三個 `--paginate` REST 集合；
 GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
 
-### A10. PR commits 端點可列 PR 的 commits；超過 250 須改用 repository commits 端點
+### A10. PR commits 端點最多 250；fallback 是 repository List commits＋`sha` 起點
 
 > "To receive a complete commit list for pull requests with more than 250 commits, use the List commits endpoint."
+>
+> "SHA or branch to start listing commits from."
 
-來源：<https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request>（取證 2026-08-21）
+來源：GitHub REST 官方的
+<https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request> 與
+<https://docs.github.com/en/rest/commits/commits#list-commits>（取證 2026-08-21）。第一句是 PR
+commits 的超限指引；第二句是 repository List commits 的 `sha` query parameter 定義。
 
-端點為 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`。以上逐字明定超過 250 時要改用
-List commits endpoint；因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
+受 250 上限的端點是 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`；官方指向的 fallback
+端點是 `GET /repos/{owner}/{repo}/commits?sha={pull_head_sha}`。2026-08-21 對 PR #64 exact head
+`26fc683e40bb8ad6466d082c6887876345f84646` 實跑後，repository endpoint 第一筆 SHA 與該 head
+逐字相同。因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
+
+⚠️ **證據邊界**：repository List commits 只明定「從 SHA／branch 開始列 commits」；上述兩頁
+沒有提供「只取 PR delta」的停止參數，也沒有把 merge-base／base exclusion 的客戶端算法定為
+契約。因此 fallback endpoint 與起點已取得，但如何從它的 ancestor stream 精確裁出 PR-only
+集合仍為**未取得**，不得把 `?sha={pull_head_sha}` 的全部回應直接稱為 PR commits 全集。
 
 📌 **倉庫快照，不是全域保證**：2026-08-21 實跑
 `gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/commits`，在 PR #61 已 squash merge
@@ -350,7 +362,7 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
 
-### B9. `gh api -f` 傳靜態字串；只有 `-F` 的 `@path` 會讀檔
+### B9. `gh api` 的字面 `@path` shorthand 屬 `-F`；stdin／整體 body 另有入口
 
 > "Pass one or more `-f/--raw-field` values in `key=value` format to add static string parameters"
 >
@@ -359,8 +371,14 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。前句屬
 `-f/--raw-field`，後句屬 `-F/--field` 的 magic type conversion；不得把後句外推到 `-f`。
 
-🔴 **本專案的用途**：`gh api ... -f text=@path` 送出的是字面 `@path`；要把檔案內容放進
-`text` 欄位必須使用 `-F text=@path`。PR #64 exact response 曾把字面路徑渲染成
+官方同頁另明列：`-F key=@-` 可從 stdin 讀取**欄位值**；`--input file` 可讀取預先組好的
+**整體 request body**，且 `--input -` 從 stdin 讀。2026-08-21 實跑 `-F text=@-` 與
+`--input -` 兩路，GitHub Markdown API 分別回傳帶 `field stdin canary`／`stdin body canary` 的
+`<h1>`，兩種替代入口均已取得。
+
+🔴 **本專案的用途**：`gh api ... -f text=@path` 送出的是字面 `@path`；若要使用 CLI 的
+`@path` shorthand 把該檔內容放進 `text` 欄位，須用 `-F text=@path`，但這不是所有 file/stdin
+供給形態的絕對要求。PR #64 exact response 曾把字面路徑渲染成
 `<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`，證明 HTTP exit 0
 不等於 request body 正確。任何 Markdown render 複驗都要同時釘輸入來源與至少一個承重 HTML
 canary，不能把 table／pre 的零計數直接當成功。
