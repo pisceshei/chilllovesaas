@@ -560,7 +560,11 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   獨立 `Reviewed commit:` 欄位證明，該欄只接受 10–40 位十六進位、且須為當前完整 head 的前綴。
   已觀測 envelope 有 A 型首行精確前綴 `Codex Review: Didn't find any major issues.`（句點後同一行
   自由尾句不參與分類），以及 B 型前兩個非空行 `## 驗收結論`／
-  `**未發現需要新增 inline 意見的重大問題。**`；兩型其餘 body 仍須掃 finding。PR #61／#64 的
+  `**未發現需要新增 inline 意見的重大問題。**`。A 型固定 About-Codex details 與 B 型確認敘述／
+  checks 屬同一 completion 說明，不用未定義的 prose NLP 重分類；可由同一 ref grammar 綁 current
+  head、且第一個非空行為 `## 驗收結論：需修改` 的留言是 issue-comment finding，第二個頂層
+  verdict marker 則 ambiguous／C1=0。
+  PR #61／#64 的
   paginated issue comments 證明兩型存在；這是倉庫觀察，不冒充平台永久保證。PR #61 comment
   `5352954268` 後又有較晚 finding review `4980284182`，故該 clean 事件不能作終態；0e 必須以此
   fixture 證明「先 clean、後 finding」令 C1 回到 0。缺 ref、多 ref、錯 ref、未知 envelope、一般
@@ -568,12 +572,21 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 - 載體間先後只比較 UTC event time：已提交 review 用 `submitted_at`，issue comment 用
   `created_at`；clean 必須嚴格晚於最後 finding。缺值、解析失敗或相等都 fail-closed，數字 ID
   只作 endpoint-local 身分／去重，不跨端點排序（官方欄位證據＝external-facts A12）。
+- current-head finding 集合為空時，時間下界定義為負無限；合法 exact-head clean completion 可滿足
+  時序，但沒有 completion 仍 C1=0。0e 要以「零 finding＋clean／零 finding＋無 completion」正反格
+  鎖定，不得把不存在的最後 finding 誤歸欄位缺失。
 - CI 零 check 集合＝尚未執行，不是 all-pass：deadline 內等待，deadline 後 C3=0／證據未取得。
   `gh pr checks` 在 pending 時的退出碼 8 不是 API failure，必須先解析 JSON bucket 再分流；JSON
   未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending、terminal
   fail、skip／cancel、API failure 與 head drift 照 D37 矩陣分流。
+- C2 必須改成 run-specific exact-head 證據：0f 由受信任 workflow 產生 `run_id`／`run_attempt`／
+  candidate head／verdict comment id 或 hash，0e 以 workflow-runs API 複驗 `head_sha == candidate`；
+  舊時間窗只能排序，不能綁 run/head。C3 只排除 workflow jobs `check_run_url` 指出的 evaluator 精確
+  check-run ID；self ID 缺失／多重、排除後 only-self、其他 pending 或錯 head 都是 C3=0（A13）。
 - P-8 當前唯一執行序列改為 0e 獨立 evaluator＋fixtures／mutation（人工合併）→ 0f
-  workflow-only 接線並實查 validation-skip（人工合併）→ 0g 常規 PR canary。#59 的舊
+  workflow-only 接線**完整 C1–C4**並實查 validation-skip（人工合併）→ 0g 常規 PR canary。
+  Codex 晚到只再調用 evaluator；whole-run rerun 只保留 Claude 判詞格式畸形的同 head 一次例外。
+  #59 的舊
   `1111` evaluator 與 `await-verdict.sh` 只作已部署歷史／排隊訊號，**不得再作 C1、C3、雙清或
   代行合併證據**；0e／0f 完成前全部 PR 人工合併。總方案 P-8 舊合包契約、兩單元尾包與階段
   A／B 舊敘述移入歷史註，不再與現行序列並列。

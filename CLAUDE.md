@@ -180,6 +180,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       Claude 已產生判詞但只因 18.1④格式失敗時，最多對**同一 head**整體 rerun 一次作 transport／
       產出重試；不得改 Git tree 來刷新格式。第二次仍畸形就保留兩次 run 證據、轉獨立人工審核，
       不建立第三個 review attempt。格式驗證本身不撤除：缺標記、互斥結論或未知結構仍 fail-closed。
+      Codex 較 Claude 晚完成不是第二個 whole-run 例外：0e 前由 CLI 重算，0e／0f 後只再調用 evaluator；
+      不得為 C1 timing 重新執行 Claude、製造重複判詞或新增 review surface。
       D38 起現有 `scripts/await-verdict.sh` 只屬已部署歷史／排隊訊號，**不是 C1、C3、雙清或
       合併證據**。0e／0f 尚未合併時直接以 CLI 在同一個明列 interval／max-polls／deadline 的有界
       預算輪詢三方載體；合併後只消費 0e evaluator 的版本化輸出。機械 CI 以
@@ -298,13 +300,17 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       每則 review `.body` 與 paginated GraphQL `reviewThreads`。Codex 有兩個已在本倉庫實測的載體：
       **finding review**＝REST review 的 `.user.login` 精確等於 `chatgpt-codex-connector[bot]`、
       `.commit_id == headRefOid`，其 body 或以 `.pull_request_review_id` 關聯的 inline／thread 有任何
-      可處置意見；**clean issue comment**＝issues comments 中同一 bot 的留言，且符合 0e fixture
+      finding；**finding issue comment**＝issues comments 中同一 bot、可由獨立 `Reviewed commit:`
+      綁 current head，且第一個非空行精確為 `## 驗收結論：需修改` 的留言；**clean issue comment**＝
+      同一端點、同一 bot 的留言，且符合 0e fixture
       鎖定的兩種倉庫實測形態之一：A 型首行以精確前綴
       `Codex Review: Didn't find any major issues.` 開頭（句點後同一行是 reviewer-controlled 自由尾句，
       不參與 envelope 判定）；B 型前兩個非空行精確為 `## 驗收結論` 與
       `**未發現需要新增 inline 意見的重大問題。**`。兩型都須有恰一個獨立 `Reviewed commit:`
       欄位，只含 10–40 位十六進位 ref、且為當前 40 位 `headRefOid` 的前綴；envelope 以外的 body
-      仍須攝取，任何可處置 finding 都使該 comment 不是 clean。這是 PR #61／#64 的倉庫實測契約，
+      仍須保存但不做 prose NLP：A 型固定 About-Codex details 與 B 型確認敘述／checks 都是同一
+      completion 的說明；若同一 comment 再出現第二個頂層 verdict marker（A 型前綴或以
+      `## 驗收結論` 開頭的行）即屬互斥／ambiguous、C1=0。這是 PR #61／#64 的倉庫實測契約，
       不外推成平台永遠不變的保證；未知作者、缺 ref、模糊／多個 ref、ref 不符或其他 envelope
       一律 fail-closed。一般散文中的 SHA 不解析；inline 仍只以 review ID 歸戶，不用 force-push 後
       可能重映射的 comment `.commit_id`。
@@ -313,6 +319,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       已提交 review 用 `submitted_at`，issue comment 用 `created_at`；completion 必須嚴格晚於最後
       finding，欄位缺失、無法解析或時間相等都 fail-closed。數字 ID 只作 endpoint-local 身分／去重，
       不跨 reviews／issues comments 排序。completion 時點之前的所有 finding 必須已有合規 disposition。
+      current-head finding 集合為空時，時間下界定義為負無限：合法 exact-head completion 可通過；
+      空 finding 但沒有 completion 仍 C1=0，不能把「找不到最後 finding」誤作欄位缺失或乾淨證據。
       證偽、裁定不修或 resolve 只記 disposition，
       不刪除 finding 的 event time／endpoint-local ID，也不把「最後 finding」往前移。
       處置未改 tree 時只可在同一 head 再觸發**一次** review，並在有界 deadline 等候後續
@@ -325,10 +333,12 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       但 GitHub 官方允許 PR 作者或具 write 權限者 resolve conversation，因此 `isResolved=true` 只
       是輔助工作流狀態，不能單獨證明獨立審核通過。證偽／裁定不修者須先有合規處置落點；作者
       resolve 不能取代更晚的 reviewer completion。0e fixture 必須覆蓋作者自貼 envelope、review
-      `.commit_id` 不等於 head、A 型前綴及自由尾句、B 型兩個非空首行、clean issue comment 的
+      `.commit_id` 不等於 head、A 型前綴及自由尾句、A 型固定 boilerplate、B 型兩個非空首行及
+      長敘述、finding 型 `## 驗收結論：需修改`、clean 後第二個 verdict marker、clean issue comment 的
       exact／錯誤／缺失／多重 `Reviewed commit:`、issue-comment finding、先到 clean 後到較晚
       finding 時 C1 回到 0、處置未改 tree 後的 same-head completion，以及 same-head 請求被去重／
-      逾時時保持 C1=0 並轉人工。REST inline 歷史總數
+      逾時時保持 C1=0 並轉人工；另有「零 finding＋clean → 1／零 finding＋無 completion → 0」正反格。
+      REST inline 歷史總數
       只作攝取，不再直接當未清數。
       OpenAI 官方流程要求 Codex reaction 後仍發布 review 結果；任何 reaction 都只作觸發／排隊訊號，
       沒有可依上述受控載體綁 exact head 的結果時本項 fail-closed 並轉人工，不得把 👀、👍 或其他
@@ -337,8 +347,14 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       review body／issue-comment envelope，都不滿足本項**。GitHub／OpenAI 官方邊界見
       `docs/dev/external-facts.md` A9／A10／A12；載體形態的倉庫實測見
       `docs/dev/m0-review-convergence.md`「Convergence Protocol v2」∧
-      ②Claude bot 判詞**通過**且零未清意見 ∧
-      ③**全部機械 CI 綠** ∧ ④**判詞經格式機械驗證**（非散文比對）。
+      ②Claude bot 判詞**通過**且零未清意見，且 0f 由受信任 workflow 產生的 run-specific evidence
+      （`run_id`／`run_attempt`／candidate head／verdict comment id 或 hash）可由 workflow-runs API 複驗
+      `head_sha == candidate`；留言 id 水位與時間窗只可輔助排序，不能綁 run/head。錯 head、跨 run、
+      缺 evidence 或多個無法配對的判詞均 C2=0 ∧
+      ③**全部機械 CI 綠**：0f 須由 workflow jobs REST 的 `check_run_url` 提供 evaluator 自身精確
+      check-run ID，C3 只排除該 ID；self ID 缺失／多重／錯 head 即 0。排除後 eligible 集合仍須
+      非空且全部 success；self pending＋其他全綠可通過，其他 pending／fail 或 only-self 均 C3=0 ∧
+      ④**判詞經格式機械驗證**（非散文比對）。0e／0f 的官方 identity 邊界見 external-facts A13。
       ③④**降低但不消除** prompt injection 風險——被注入的判詞可以格式完全合法
       （`claude-review.yml` 沿革註釋已載明此風險正是 AUTO_MERGE=false 的原因）；
       ③只證明測試綠、④只證明格式合法，**兩者都不證明審查結論未受注入**。

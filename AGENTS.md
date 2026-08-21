@@ -355,20 +355,26 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   paginated GraphQL threads，且最後 finding 後已有 reviewer-controlled 乾淨 completion、
   未解 thread 為零（作者可 resolve，故 `isResolved` 不單獨證明通過）∧
   finding 來自 exact-head REST review body／以 review ID 關聯的 inline／thread，或 connector
-  issue comment 中可由受控 `Reviewed commit:` 欄位綁 head 的可處置意見；disposition 不抹除時間。
+  issue comment 中可由受控 `Reviewed commit:` 欄綁 current head，且第一個非空行精確為
+  `## 驗收結論：需修改` 的 finding envelope；disposition 不抹除時間。
   本倉庫實測 clean completion 有兩種同一 bot issue-comment envelope：A 型首行以精確前綴
   `Codex Review: Didn't find any major issues.` 開頭，句點後自由尾句不參與 envelope 判定；B 型
   前兩個非空行精確為 `## 驗收結論` 與 `**未發現需要新增 inline 意見的重大問題。**`。兩型都要
-  有恰一個 10–40 位 `Reviewed commit:` 前綴並匹配當前 head，且其餘 body 仍須掃 finding；一般
-  散文 SHA、缺／多 ref、未知 envelope 都 fail-closed。跨載體順序只比較 UTC event time：已提交 review 的 `submitted_at` 對
+  有恰一個 10–40 位 `Reviewed commit:` 前綴並匹配當前 head。A 型固定 About-Codex details 與 B 型
+  確認敘述屬同一 completion 說明，不以 prose NLP 重分類；第二個頂層 verdict marker 使 comment
+  ambiguous／C1=0。一般散文 SHA、缺／多 ref、未知 envelope 都 fail-closed。跨載體順序只比較 UTC event time：已提交 review 的 `submitted_at` 對
   issue comment 的 `created_at`；completion 必須嚴格晚於最後 finding，缺值、解析失敗或相等都
-  fail-closed，數字 ID 不跨端點排序。未來 clean REST review 只有在 fixture 明列且有權威
+  fail-closed；finding 集合為空時時間下界是負無限，有合法 completion 才通過，沒有 completion
+  仍 C1=0。數字 ID 不跨端點排序。未來 clean REST review 只有在 fixture 明列且有權威
   exact-head 欄位時才收 ∧
   OpenAI 官方要求 reaction 後仍發布結果，所以 reaction-only 不算 completion、沒有可綁 exact-head
   結果時 fail-closed 轉人工；無 tree 變更的 finding 處置只可 same-head 請求一次，若 deadline
   前沒有更晚 completion，C1 保持 0 並轉獨立人工審核／人工合併，不再造 head 或重試 ∧
-  Claude bot 通過且零未清 ∧
-  **機械 CI 全綠** ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
+  Claude bot 通過且零未清，且 0f 產生的 run-specific evidence 可由 workflow-runs API 證明
+  `head_sha == candidate`；留言水位／時間窗不能取代 run/head 綁定 ∧
+  **機械 CI 全綠**：candidate head 的 check-run 集合只排除 0f 由 workflow jobs `check_run_url`
+  取得的 evaluator 精確 self ID；排除後仍須非空且全部 success，only-self、錯／多 self ID 或其他
+  pending 都 C3=0 ∧ 判詞格式機械驗證（每項存在型判定，沒跑≠零意見），
   改 `.github/workflows/` 任何檔／機械閘門判準（scripts/ 全部腳本、**`config/ci.rb` 本身**、
   及 ci.yml・config/ci.rb 的 step 所引用的其他判準檔——`.rubocop.yml`、`package.json`
   scripts、`spec/` 等，舉例非窮舉）／CLAUDE.md／AGENTS.md 的 PR 一律人工；人工合併類 PR
@@ -376,6 +382,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   另行授權的互動式 Codex，僅可對非 18.3 PR 在四條件齊時帶 `--match-head-commit`
   代行 CLI 合併，這不等於啟用 P-8 自動合併。新 C1 evaluator 與 workflow 接線尚未各自合併前，
   舊 evaluator／wait 腳本不得授權代行合併，過渡期全部 PR 由使用者人工合併。
+  Codex 晚到只再調用 evaluator，不整體 rerun Claude；whole-run rerun 只保留判詞格式畸形的同 head
+  一次 transport 例外。
 - 🔴 **零假設發布**（2026-08-20 新增鐵律 19，全文在 CLAUDE.md）：全部倉庫內容與外部發布
   先逐項取證；外部語義帶官方／第一方 URL、取證日期與英文原文，內部事實帶可重跑命令輸出或
   精確 commit／diff／沿革，CI／GitHub／部署狀態綁當前 head／版本／時間與 run 或 API 證據。

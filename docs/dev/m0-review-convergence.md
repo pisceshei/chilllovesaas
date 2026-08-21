@@ -47,14 +47,17 @@
 而第 2／3／4 輪都聲稱「docs 全讀」卻沒有標它。
 ⇒ **缺陷不是被修出來的，是每輪抽樣抽到不同切片。**
 
-### ② 產物層：修法本身在放大挑剔面
+### ② 歷史：產物層曾由逐輪記錄放大挑剔面（2026-08-15）
+
+> 本節描述事故當時已被 D38 廢止的舊解讀，不是 HEAD 現行 worklog 契約。現值是一個可獨立合併
+> PR／原子工作包維護一份 tracked worklog；no-tree disposition 不改 worklog、不產生新 head。
 
 累積新增行數逐輪：**313 → 508 → 686 → 829 → 1000**，其中 **66% 是 docs**；
 單一份 worklog 從 98 行長到 487 行，刪除率只有 6%。
 實際交付的腳本與 fixture 只有 337 行——**散文是代碼的兩倍，而且是被逐字審的那一半**。
 
-`CLAUDE.md` 規定「一個部分＝⋯**一次修復**」且每個部分要寫 worklog
-⇒ **每一輪驗收回應本身就是一個「部分」，規則強制它產生新的散文**。
+當時的 `CLAUDE.md` 把「一個部分」解讀到**一次修復**且每個部分要寫 worklog，於是每一輪驗收
+回應都被當成新「部分」，規則強制產生新的散文；D38 已撤銷這個解讀。
 
 ### ③ 行為層：修正 commit 自己在生產新缺陷
 
@@ -512,7 +515,8 @@ issues comments 發 finding；只有其獨立 `Reviewed commit:` 欄能依下述
 以精確前綴 `Codex Review: Didn't find any major issues.` 開頭，句點後同一行的 `:rocket:`／自由
 尾句不參與 envelope 分類；B 型（PR #61 comment `5352954268`）前兩個非空行精確為
 `## 驗收結論` 與 `**未發現需要新增 inline 意見的重大問題。**`。兩型都有獨立
-`Reviewed commit:`；其餘 body 仍須掃可處置 finding。重跑入口：
+`Reviewed commit:`；其餘 body 保存供稽核，依下述結構化 verdict marker 分類，不做 prose NLP。
+重跑入口：
 
 ```bash
 gh api --paginate repos/pisceshei/chilllovesaas/issues/64/comments
@@ -529,6 +533,18 @@ gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/reviews
 finding，欄位缺失、解析失敗或時間相等都 fail-closed。數字 ID 只作 endpoint-local 身分／去重，
 不跨端點排序（官方欄位證據見 `docs/dev/external-facts.md` A12）。未知作者、缺／多／錯 ref、未知 envelope 一律 fail-closed。未來若 connector 產生 clean
 REST review，也必須先以實物加入 fixture 並有權威 exact-head 欄位，不能靠一般 body SHA 猜測。
+
+Issue comment 不做自然語言「可處置」分類。第一個非空行若精確為 A 型前綴或 B 型首行，就依完整
+envelope＋ref grammar 分類為一個 clean completion event；A 型其後的固定 About-Codex `<details>`、
+B 型其後的確認敘述與 checks 都是同一 completion 的說明，不因「還有文字」改判 finding。第一個
+非空行精確為 `## 驗收結論：需修改` 則是 finding event；其他首行是 unknown。任何 comment 出現
+第二個頂層 verdict marker（A 型前綴或以 `## 驗收結論` 開頭的行）都屬互斥／ambiguous，C1=0。
+0e fixture 必須用 PR #61 comments `5352963934`／`5353241564`／`5353555384` 鎖定 finding 型，並覆蓋
+A 型＋固定 boilerplate、B 型＋長敘述、clean＋第二 verdict marker、未知首行四格；不得用 prose NLP。
+
+若 current-head finding 集合為空，時間下界定義為負無限：任一合法 exact-head clean completion
+即滿足「晚於最後 finding」；空 finding 但沒有 completion 仍為 C1=0。0e 必須有「零 finding＋clean
+→ 1」與「零 finding＋無 completion → 0」正反 fixture，不能把不存在的最後 finding 誤作欄位缺失。
 
 OpenAI 官方要求 Codex reaction 後仍發布 review 結果（逐字與 URL 見 `docs/dev/external-facts.md` A10）；
 reaction 只作觸發／排隊輔助訊號。reaction-only／沒有可綁 exact-head 的受控載體時 C1 fail-closed 並轉人工，
@@ -547,6 +563,20 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
 仍以 REST inline 歷史總數計 C1，`await-verdict.sh` 也看不到 clean issue comment；兩者自 D38 起
 只作歷史／排隊訊號，不得證明 C1、C3 或雙清。在獨立 evaluator 與 workflow-only 接線各自合併前，舊 `1111`
 不得授權互動式 Codex 代行合併，過渡期全部 PR 走使用者人工合併。
+
+### C2／C3 的 exact-head 與自我排除契約
+
+- **C2** 不再使用「留言 id 水位＋job 起跑時間窗」猜判詞歸屬。0f 必須由受信任 workflow 產生
+  run-specific evidence（至少 `run_id`、`run_attempt`、candidate head、verdict comment id／hash），
+  0e 再以 workflow-runs API 複驗該 run 的 `head_sha == candidate`；證據缺失、跨 run、錯 head、
+  只有時間落窗或多個無法配對的判詞一律 C2=0。官方 run/head identity 見 external-facts A13。
+- **C3** 的 eligible 集合是 candidate head 的 check runs，扣掉 0f 提供的 evaluator 自身**精確
+  check-run ID**。0f 由 workflow jobs REST 的 `check_run_url` 取得該 ID；找不到、找到多個或 ID
+  不屬同 run/head 就 C3=0。自己的 pending 可排除，任何其他 pending／非 success 都保留；排除後
+  只剩自己等於空集合，仍 C3=0。fixtures 必須覆蓋 self pending＋其他全綠、self pending＋他項
+  pending、only-self、錯 self ID／多 self ID 四格。
+- Codex 晚到只重跑／再調用 evaluator，不整體 rerun Claude workflow。whole-run rerun 只保留
+  「Claude 判詞格式畸形」同 head 最多一次的 transport 例外；不得因 C1 timing 另造 Claude 判詞。
 
 ### 產物頻率的終態
 

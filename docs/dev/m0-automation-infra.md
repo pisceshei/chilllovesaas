@@ -5,13 +5,16 @@
 > 且舊 C1 仍累加 REST inline 歷史，因此**不得再作 C1、C3、雙清、核准或合併授權證據**。
 > 當前唯一序列是 0e 獨立 evaluator＋fixtures／mutation → 0f workflow-only 接線 → 0g 常規
 > canary；前兩包依鐵律 18.3 人工合併，兩者完成前全部 PR 人工合併。現行狀態機全文見
-> `docs/dev/m0-review-convergence.md`「2026-08-21 Convergence Protocol v2」與 D38。
+> `docs/dev/m0-review-convergence.md`「2026-08-21 Convergence Protocol v2」與 D38。§4 已回寫為
+> D38 consumer；其餘說明舊 evaluator／workflow 內部的段落只作部署沿革，不得外推成現行契約。
 
-> 🔴 **2026-08-19 使用者裁定「取消熔斷機制，一律循環到雙清為止、不限次數」**：本包原有的
+> 🟠 **2026-08-19 歷史裁定「取消熔斷機制，一律循環到雙清為止、不限次數」**：本包原有的
 > 第 3 項交付「熔斷 label 修復」**已廢止**，機制（`MAX_FIX_ROUNDS`／label 閘門／超輪分支）
 > 已自 `claude-review.yml` 整個移除。下文 §2.3 保留為**事故紀錄**（那個靜默失效形態仍有
 > 參考價值），但它描述的機制**不再存在**。複驗現值：
 > `grep -n "MAX_FIX_ROUNDS" .github/workflows/claude-review.yml`（應只剩廢止說明註釋）。
+> D38 已再覆寫「同一失敗方法不限次數」的解讀：等待有 deadline；第二個 finding-bearing head
+> 同根因復發時停止小修小推，改做模型重建／mutation／拆包，任務持續但不得無界重複同一方法。
 
 > 出處：合併版總方案 §八 P-8（`docs/plans/2026-08-18-總方案.md`，隨 PR #58 於
 > 2026-08-19 合併進 main）。條文依據＝鐵律 17/18（CLAUDE.md，同隨 PR #58 生效）。
@@ -378,16 +381,16 @@
 - **所有後續 PR 的 quality job**：base 拿不到會**當場紅**（先前靜默綠）——分支
   剛開、遠端 base 改名等情況會顯性失敗，這是刻意的；修法是把 base 餵對，不是拿掉旗標。
 - **判詞格式走樣＝review job 紅**（先前綠）：驗收方產出走樣會第一時間可見。
-- 🔴 **驗收循環不再有輪數上限**（2026-08-19 裁定取代原「熔斷真正生效」段）：
-  `MAX_FIX_ROUNDS`、job 層 label 閘門、超輪分支皆已移除 ⇒ **`review:需人工裁定`
-  對機制完全無作用**，殘留在既有 PR 上的直接移除即可，不必再把「label 在不在」
-  當成狀態。終止條件只剩一個＝**雙清**（bot 🔴0🟡0 ∧ Codex 對當前 head inline 總和 0）。
-  ⚠️ 代價誠實寫明：沒有任何機制保證輪數收斂，配套＝把復發的意見類型固化成確定性腳本。
-- **`gh pr checks` 消費者**（驗收 bot prompt 的 CI-as-evidence 段）：不受影響，
-  check 名稱與結論語義未動；評估器另走 check-runs API。
-- **18.4 啟用時**（未來裁定）：只翻 `AUTO_MERGE` 是不夠的——workflow 頂部與
-  contents 權限註釋列了配套（`contents: write`、approve 設定）；評估器屆時自動
-  從「證據留言」升為「合併硬閘」，無需再改代碼。
+- **舊熔斷仍維持廢止**：`MAX_FIX_ROUNDS`、job 層 label 閘門與超輪分支不恢復；既有
+  `review:需人工裁定` label 不構成狀態。D38 的替代控制流是 exact-head 三方有界等待、一次凍結
+  ledger、一次根因批次修復；第二個 finding-bearing head 同根因復發時切換成影響圖／狀態矩陣／
+  mutation 或拆包，禁止沿用小修小推。雙清改讀版本化 evaluator 的 C1–C4，不再讀 inline 歷史總和。
+- **`gh pr checks`／check-runs 消費者**：0e 必須取 candidate SHA 的非空 eligible check-run 集合，
+  由 0f 提供 evaluator 自己的**精確 check-run ID**並只排除該 ID；排除後只剩自己仍是空集合／C3=0，
+  其他 pending／fail 一律保留。自我 ID 缺失、多重或不匹配時 fail-closed，不得靠名稱排除。
+- **18.4 啟用時**（未來裁定）：只翻 `AUTO_MERGE` 不足；必須先依 0e → 0f → 0g 完成 evaluator、
+  workflow 接線與真實 canary，再另立不依賴受審 LLM 判詞的信任邊界。本篇舊 evaluator 不會因
+  `AUTO_MERGE=true` 自動升格，任何恢復它裁定權的改動都屬新制度變更。
 - 🔴 **驗收 job 現在會主動對外發網路請求**（§2.6）：它同時持有 OAuth token 與
   `pull-requests: write`，三件事因此綁在一起——①任何往 `--allowedTools` 的 Bash 群加
   `curl`／`wget`／直譯器的改動，會把整套網域白名單一次作廢（官方明文 WebFetch 本身不阻斷網路）；

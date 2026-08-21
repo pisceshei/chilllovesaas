@@ -289,6 +289,37 @@ GitHub REST issue comments 官方 response example 使用：
 沒有官方全域排序契約，只作各自載體的身分、去重與 endpoint-local 水位，不拿來比較 review 與
 issue comment 的先後；時間欄缺失、無法解析或相等時一律 fail-closed。PENDING review 不構成 completion。
 
+### A13. workflow run／job／check-run 提供可綁 head 與排除 evaluator 自身的精確身分
+
+GitHub Actions variables 官方頁逐字寫：
+
+> `GITHUB_RUN_ID` — "A unique number for each workflow run within a repository."
+>
+> `GITHUB_RUN_ATTEMPT` — "A unique number for each attempt of a particular workflow run in a repository."
+>
+> `GITHUB_SHA` — "The commit SHA that triggered the workflow."
+
+同頁說 `GITHUB_RUN_ID` 在 re-run 時不變，而 `GITHUB_RUN_ATTEMPT` 每次 re-run 遞增；`GITHUB_SHA`
+的實際 commit 依觸發事件而異，所以本專案不把它不加判別地等同 PR head。來源：
+<https://docs.github.com/en/actions/reference/workflows-and-actions/variables>（取證 2026-08-21）。
+
+Workflow runs REST 的 `head_sha` 查詢參數逐字是：
+
+> "Only returns workflow runs that are associated with the specified `head_sha`."
+
+來源：<https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28>（取證 2026-08-21）。
+
+Workflow jobs REST 的官方 response 同時提供 `id`、`run_id`、`head_sha` 與 `check_run_url`；check-runs
+REST response 則提供 `id`、`head_sha`、`status` 與 `conclusion`。來源：
+<https://docs.github.com/en/rest/actions/workflow-jobs>、
+<https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28>（取證 2026-08-21）。
+
+🔴 **本專案使用邊界**：0f 以受信任 workflow 產生 `run_id`／`run_attempt`／candidate head／verdict
+comment id（或內容 hash）的 run-specific evidence，0e 以 REST `head_sha` 複驗後才令 C2 成立；時間窗
+只能排序、不能綁 run/head。C3 只排除 workflow jobs `check_run_url` 指出的 evaluator 精確 check-run
+ID；不得只按 `name=review` 排除。排除後 eligible 集合仍須非空且全部 success；self ID 缺失／多重、
+只剩 self、其他 pending 或 head 不符都 C3=0。
+
 ---
 
 ## B. 工具鏈：退出碼、路徑轉換、Markdown、限流
