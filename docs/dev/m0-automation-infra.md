@@ -122,6 +122,14 @@
   **`--match-head-commit "$HEAD_SHA"`**——由 GitHub 服務端在合併前比對 head，不相等直接
   拒絕（r2 的「查完再 merge」是 check-then-act，競態窗只變小沒消失；r3 改為原子。
   前置的 `gh pr view` 查詢保留，只為產生可讀的診斷留言）。
+  🔴 **2026-08-21 補正（PR #66，來源＝Codex inline `3830074197`）：這一步只對 head 原子，對
+  review state 不原子**。官方逐字只保證 "Commit SHA that the pull request head must match to allow
+  merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 四條件求值之後、merge
+  之前同 head 新增的 review、issue comment 或 thread 變化**不會**讓這個旗標拒絕合併。
+  因此本檔上文把它稱作「唯一真正原子的一步」時，射程僅限 head 競態；review-state 競態要靠
+  D38／鐵律 18.2 要求的 **0e merge-boundary mode**（同一控制流重取 head、stable vector、四集合
+  watermarks 與 C1–C4，任何較晚變化即中止）。該 guard 的 production canary 證成前，代行與自動
+  合併保持凍結。
 - **全程用 workflow event 的 head**（r2）：不用即時 `gh pr view`——判詞貼出後、
   評估前若發生 synchronize，即時查詢會拿到新 head，而判詞描述的是舊 head，
   併發取消抵達前可能合併一個沒有自己判詞的 commit。

@@ -346,8 +346,10 @@ gh api repos/pisceshei/chilllovesaas/pulls/66
 🔴 **本專案使用邊界**：0f 以受信任 workflow 產生 `run_id`／`run_attempt`／candidate
 （精確取 `github.event.pull_request.head.sha`）／`verdict_comment_id`／`verdict_body_sha256` 的
 run-specific evidence；comment ID 與 body hash 必須同時存在，不是二選一。0e 依 run id 取原始
-回應，要求 `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且其
-`head.sha == candidate`，並以 run／job／check-run 的 `head_sha == candidate` 作本倉庫 canary；
+回應，要求 `event=pull_request`、`run_attempt` 與 evidence 精確相等、`pull_requests[]` 中恰有目標
+PR 且其 `head.sha == candidate`，並以 run／job／check-run 的 `head_sha == candidate` 作本倉庫
+canary；**job 只能取自 attempt-specific 端點、check-run 只能沿該 job 的 `check_run_url`**（端點
+差異與 attempt 語義見 A15）；
 任一缺失、多義或不等即 C2=0，`head_sha` 單欄與時間窗都不能獨立證明綁定。body 不可變綁定
 另見 A14。C3 只排除 workflow
 jobs `check_run_url` 指出的 evaluator 精確 check-run ID；不得只按 `name=review` 排除。排除後
@@ -374,18 +376,56 @@ GitHub pagination 官方頁逐字寫：
 獨立 list endpoint：<https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28>
 （取證 2026-08-21）。
 
-⚠️ **〔推論，不是 GitHub 明文保證〕**：上述官方頁只定義可更新的 comment 與各端點／各頁如何
-讀取，沒有提供 issues comments、reviews、inline comments、GraphQL threads 的跨端點交易
-snapshot 契約。因此本專案不把單次依序讀取視為原子快照：0e 對四個完整集合使用版本化
-canonical serializer＋SHA-256 digest，只有兩次連續完整掃描在非零 settle interval 前後得到相同
-digest vector，且每輪前後 `headRefOid` 未變，才可凍結。任何插入、body 原地更新、thread 狀態
-變化或分頁失敗都要重掃或 fail-closed。
+🔴 **證據缺口，不是可引用的事實（鐵律 19.3「未取得」）**：本輪在上述官方頁**沒有查到**
+issues comments、reviews、inline comments 與 GraphQL threads 之間的跨端點交易 snapshot 契約，
+也沒有查到任何跨端點一致性視窗的數值或 SLA（取證 2026-08-21；再查方法＝重讀本節兩個官方頁
+與 GraphQL 文件，或取得 GitHub 第一方對跨端點一致性的明文）。**「沒查到」只能記為未取得**：
+既不得反向斷言「平台保證沒有 snapshot」，也**不得作為實作輸入、判準或驗收依據**。
+本專案據此採取的兩次穩定掃描、fail-closed 與 `SETTLE_INTERVAL_S` 校準，是**專案安全裁定**、
+不是平台語義——理由、射程與交付責任全文見 `docs/DECISIONS.md` D38，本檔只保留上面三項可查
+原文的事實（comment 可更新、update endpoint 與 schema、分頁 `link` header 與各集合獨立端點）。
 
 🔴 **本專案的 C2 邊界**：0f 完成最終判詞貼文／更新後，按 `verdict_comment_id` 從 GitHub 回讀
 `.body`，對不作換行或 Unicode 正規化的 UTF-8 bytes 計算 `verdict_body_sha256`；0e 依同一 ID
 重取 body 並重算。相同 ID 但 hash 不等、hash 缺失／格式錯、或 body 後續被改，一律 C2=0；
 `updated_at` 只作診斷，不替代內容 hash。0e 必須有 same-ID body-edit fixture 與移除 hash guard 的
 mutation。
+
+### A15. jobs 有 attempt-specific 端點；run／job／check-run 只能沿同一 attempt 配對
+
+GitHub workflow-jobs REST 官方頁對兩個端點分別逐字寫：
+
+> "Lists jobs for a specific workflow run attempt. You can use parameters to narrow the list of results."
+>
+> "Lists jobs for a workflow run. You can use parameters to narrow the list of results."
+
+前者的路徑是 `GET /repos/{owner}/{repo}/actions/runs/{run_id}/attempts/{attempt_number}/jobs`，
+後者是 `GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs`。來源：
+<https://docs.github.com/en/rest/actions/workflow-jobs?apiVersion=2022-11-28>（取證 2026-08-21）。
+⇒ **官方本身把「某次 attempt 的 jobs」與「這個 run 的 jobs」定義成兩個不同端點**；後者的敘述
+沒有限定 attempt，因此不能用來證明取回的 job 屬於 evidence 記錄的那一次 attempt。
+
+同一 run 重跑時 `GITHUB_RUN_ID` 不變、`GITHUB_RUN_ATTEMPT` 遞增（官方逐字與來源見 A13）
+⇒ 只比對 `run_id` 無法區分 attempt-1 與 attempt-2 的執行證據。
+
+**本倉庫具名 canary（不是平台永久保證）**：PR #66 的 run `32480285711` 原始 REST 回應實得
+`event=pull_request`、`run_attempt=1`、`head_sha=073fadc6ea20e28904565767c7a32afb86472250`，
+其 `pull_requests[0].number=66` 且 `.head.sha` 同值；attempt-specific 端點
+`/actions/runs/32480285711/attempts/1/jobs` 回 job `96764927745`（`name=review`）且 `head_sha`
+同值，該 job 的 `check_run_url` 指向 check-run `96764927745`，其 `head_sha` 亦同值。複驗：
+
+```bash
+gh api repos/pisceshei/chilllovesaas/actions/runs/32480285711
+gh api repos/pisceshei/chilllovesaas/actions/runs/32480285711/attempts/1/jobs
+gh api repos/pisceshei/chilllovesaas/check-runs/96764927745
+```
+
+🔴 **本專案使用邊界**：C2 必須把 evidence 的 `run_attempt` 與 run 回應的 `run_attempt` **精確
+比對**；job 只能從 attempt-specific 端點取得，check-run 只能沿該 job 回應的 `check_run_url` 取得。
+一般 run jobs 集合、另一 attempt 的 job／check-run，或只比 `run_id` 都不得配對成功，一律 C2=0。
+0e fixture 必須含 attempt mismatch（evidence attempt ≠ run 回應 attempt）與 cross-attempt
+job／check-run 兩格，且移除 attempt 守衛的 mutation 必須轉紅。專案驗收選擇的理由與射程見
+`docs/DECISIONS.md` D38。
 
 ---
 

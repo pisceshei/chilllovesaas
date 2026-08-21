@@ -519,9 +519,14 @@ issues comments 發 finding；只有其獨立 `Reviewed commit:` 欄能依下述
 其他散文 SHA 不解析。證偽、裁定不修或 resolve 不抹除 finding 的 event time／endpoint-local ID。
 四端點沒有被當成交易快照：0e 用版本化 serializer 對每個完整集合的排序後判定投影計算
 SHA-256，投影必須含 endpoint-local identity、所有 C1 判定欄、body／body digest 與可用版本欄位；
-每輪掃描前後都 guard `headRefOid`。兩次完整掃描須在明列非零 settle interval 前後得到相同四
-digest vector；reviews 讀完後才插入 finding、同 ID body 被編輯、thread resolve 狀態變化、缺頁
-或兩掃不等都 C1=0。fixture 與 guard-removal mutation 必須鎖住這些格（external-facts A14）。
+每輪掃描前後都 guard `headRefOid`。兩次完整掃描須在**已校準的 `SETTLE_INTERVAL_S`** 前後得到
+相同四 digest vector；reviews 讀完後才插入 finding、同 ID body 被編輯、thread resolve 狀態變化、
+缺頁或兩掃不等都 C1=0。fixture、guard-removal 與 **interval 退化** mutation 必須鎖住這些格。
+`SETTLE_INTERVAL_S` 的採值責任在 0e（受控 live calibration＋原始證據＋採值理由同包提交），
+本檔與任何 consumer 都不得自填數值。**0e 合併前不存在 serializer 與已校準 interval**：CLI 全拉
+只供人工 ledger 與修法，不輸出合規 digest、不令 C1／四條件成立、不授權代行或自動合併。
+雙掃是 D38 的專案安全裁定（對未知邊界 fail-closed），不是平台保證；可查原文邊界見
+external-facts A14。
 
 乾淨 completion 的本倉庫實測載體是 connector issue comment，而非 clean REST review。已觀測兩種
 受控形態：A 型（PR #61 comment `5351471350`、PR #64 comments `5358332294`／`5363805191`）首行
@@ -576,6 +581,12 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
 仍以 REST inline 歷史總數計 C1，`await-verdict.sh` 也看不到 clean issue comment；兩者自 D38 起
 只作歷史／排隊訊號，不得證明 C1、C3 或雙清。在獨立 evaluator 與 workflow-only 接線各自合併前，舊 `1111`
 不得授權互動式 Codex 代行合併，過渡期全部 PR 走使用者人工合併。
+🔴 **合併邊界另有一格**：四條件成立到實際 merge 之間，同 head 仍可能新增 review／comment／
+thread，而 `--match-head-commit` 官方逐字只是 "Commit SHA that the pull request head must match
+to allow merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 只鎖 Git head、
+不重驗 review state。0e 因此必須交付 merge-boundary mode：合併 consumer 在呼叫 merge 的同一
+控制流重取 current head、新 stable vector、四集合 watermarks 與 C1–C4，任何較晚變化或不等即
+中止；在該 guard 的 production canary 證成前，代行與自動合併都保持凍結。
 
 ### C2／C3／C4 的 exact-head、自我排除與格式契約
 
@@ -584,11 +595,15 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
   `github.event.pull_request.head.sha`、`verdict_comment_id`、`verdict_body_sha256` 五者都存在。
   0f 完成最終貼文／更新後按 ID 回讀 `.body`，對原樣 UTF-8 bytes 算 SHA-256；0e 按 ID 重取、
   重算且要求相等，comment ID 不能替代 hash。再依 run id 要求 `event=pull_request`、
-  `pull_requests[]` 中恰有目標 PR 且其 `head.sha == candidate`，並比對 run／job／check-run 的
-  `head_sha` 作本倉庫 canary。缺／錯 hash、same-ID body edit、任一關聯缺失／多義／不等、跨 run、
-  只有時間落窗或多個無法配對的判詞一律 C2=0。fixture 必測 same-ID edit、缺 hash、錯 hash；
-  hash guard mutation 必須轉紅。官方邊界與 PR #66 run `32463413197` 的具名實證見
-  external-facts A13／A14。
+  **`run_attempt` 與 evidence 精確相等**、`pull_requests[]` 中恰有目標 PR 且其
+  `head.sha == candidate`，並比對 run／job／check-run 的 `head_sha` 作本倉庫 canary；**job 只能
+  取自 attempt-specific 端點 `/actions/runs/{run_id}/attempts/{run_attempt}/jobs`，check-run 只能沿
+  該 job 的 `check_run_url`**（run 重跑時 run_id 不變、attempt 遞增 ⇒ 只比 run id 會把 attempt-1
+  判詞配到 attempt-2 執行證據）。缺／錯 hash、same-ID body edit、任一關聯缺失／多義／不等、
+  跨 run、跨 attempt、只有時間落窗或多個無法配對的判詞一律 C2=0。fixture 必測 same-ID edit、
+  缺 hash、錯 hash、attempt mismatch 與 cross-attempt job／check-run；hash 與 attempt guard
+  mutation 都必須轉紅。官方邊界與 PR #66 run `32463413197`／`32480285711` 的具名實證見
+  external-facts A13／A14／A15。
 - **C3** 的 eligible 集合是 candidate head 的 check runs，扣掉 0f 提供的 evaluator 自身**精確
   check-run ID**。0f 由 workflow jobs REST 的 `check_run_url` 取得該 ID；找不到、找到多個或 ID
   不屬同 run/head 就 C3=0。自己的 pending 可排除，任何其他 pending／非 success 都保留；排除後

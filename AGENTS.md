@@ -328,8 +328,10 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
 - 🔴 **提交前復核（2026-08-17 新增鐵律 15，全文與沿革見 CLAUDE.md／該輪 worklog）**：
   push 前逐項對照——宣稱已修復者於已提交差異（回應輪對**上輪 push 的 HEAD** 取兩點 diff、SHA 由 push 時自記、基準 ref 推送遠端；對 base 的累計 diff 僅作初始盤點）有對應 hunk、
   ②（僅 🟡）⚪ 核對 `91` 或合規 terminal deferred line 存在、③核對證據或其可存取引用存在。
-  候選 head 先等雙方＋CI 完成，四集合須在 head guards 間連續兩次得到相同 canonical digest
-  vector 才凍結 ledger；編輯期 targeted gate，tree 凍結後只跑一次全套，再 commit、
+  候選 head 先等雙方＋CI 完成；0e 合併後四集合須在 head guards 間依已提交 serializer 與已校準
+  `SETTLE_INTERVAL_S` 連續兩次得到相同 canonical digest vector 才凍結 ledger（`SETTLE_INTERVAL_S`
+  由 0e 受控 live calibration 產生並落值，任何人不得自行填數；官方無此 SLA＝未取得）。0e 前 CLI
+  全拉只供人工 ledger，不得證明 C1／四條件、不得代行或自動合併；編輯期 targeted gate，tree 凍結後只跑一次全套，再 commit、
   逐項核對、最終重拉、push＋自記 head 與遠端基準 ref。全收定論只寫核對後 PR 留言；全套後
   動 tracked file＝重新凍結並再跑，但純查詢、resolve、PR body 與本地 handoff 不產生新 head。
 - 🔴 **響應式與網路層取證**（2026-08-16 新增鐵律 13/14，全文在 CLAUDE.md）：
@@ -355,8 +357,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   合併仍須非空集合 bucket 全 `pass` 且 head 未變。
   `MAX_FIX_ROUNDS` 與自動掛人工裁定 label 不恢復。雙清必須顯式含 Codex；③合併條件**四重
   缺一不可**＝Codex 已完成當前 head 審查，全量攝取三個 REST 集合、每則 review body 與
-  paginated GraphQL threads，且四集合連續兩次 canonical digest vector 相同、每輪前後
-  `headRefOid` 未變；最後 finding 後已有 reviewer-controlled 乾淨 completion、
+  paginated GraphQL threads；0e 合併後另須四集合連續兩次 canonical digest vector 相同、每輪前後
+  `headRefOid` 未變；0e 前本項機械證據未取得。最後 finding 後已有 reviewer-controlled 乾淨 completion、
   未解 thread 為零（作者可 resolve，故 `isResolved` 不單獨證明通過）∧
   finding 來自 exact-head REST review body／以 review ID 關聯的 inline／thread，或 connector
   issue comment 中可由受控 `Reviewed commit:` 欄綁 current head，且第一個非空行精確為
@@ -377,9 +379,11 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   Claude bot 通過且零未清，且 0f 產生的 run-specific evidence 以
   `github.event.pull_request.head.sha` 作 candidate，並同時提供 `verdict_comment_id` 與回讀最終
   `.body` UTF-8 bytes 的 `verdict_body_sha256`；0e 依 ID 重取 body、重算 hash，再依 run id 複驗
-  `event=pull_request`、目標 PR 的 `pull_requests[].head.sha` 與 run／job／check-run `head_sha`
-  均同值。comment ID 不可替代 hash；任一缺失／不等即 C2=0，留言水位／時間窗不能取代
-  run/head/body 綁定。最後三個 `head_sha` 只作本倉庫 canary、不是平台永久保證 ∧
+  `event=pull_request`、`run_attempt` 精確相等、目標 PR 的 `pull_requests[].head.sha`，並只從
+  attempt-specific jobs endpoint 取得 job、沿該 job 的 `check_run_url` 取得 check-run；run／job／
+  check-run `head_sha` 均須同值。comment ID 不可替代 hash、一般 jobs 集合不可替代 attempt-specific
+  集合；任一缺失／不等即 C2=0，fixture 另須覆蓋 attempt mismatch 與跨 attempt job／check-run
+  （官方端點原文與本倉庫 canary 見 `docs/dev/external-facts.md` A15）。最後三個 `head_sha` 只作本倉庫 canary、不是平台永久保證 ∧
   **機械 CI 全綠**：candidate head 的 check-run 集合只排除 0f 由 workflow jobs `check_run_url`
   取得的 evaluator 精確 self ID；排除後仍須非空且全部 success，only-self、錯／多 self ID 或其他
   pending 都 C3=0 ∧ 判詞格式機械驗證；C4 fixture／mutation 要覆蓋合法通過／合法需修改、缺失、
@@ -390,7 +394,9 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   合併完成前其依賴鏈不自動前進。18.4 啟用前 workflow 自動合併維持關閉；D31／D32
   另行授權的互動式 Codex，僅可對非 18.3 PR 在四條件齊時帶 `--match-head-commit`
   代行 CLI 合併，這不等於啟用 P-8 自動合併。新 C1 evaluator 與 workflow 接線尚未各自合併前，
-  舊 evaluator／wait 腳本不得授權代行合併，過渡期全部 PR 由使用者人工合併。
+  舊 evaluator／wait 腳本不得授權代行合併，過渡期全部 PR 由使用者人工合併。0e／0f 合併後仍須
+  先完成 merge-boundary mode 的 production canary：合併同一控制流重驗 stable vector、四集合
+  watermarks 與 C1–C4；`--match-head-commit` 只鎖 head，不鎖 review state。canary 前代行仍凍結。
   Codex 晚到只再調用 evaluator，不整體 rerun Claude；whole-run rerun 只保留判詞格式畸形的同 head
   一次 transport 例外。
 - 🔴 **零假設發布**（2026-08-20 新增鐵律 19，全文在 CLAUDE.md）：全部倉庫內容與外部發布

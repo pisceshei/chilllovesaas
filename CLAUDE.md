@@ -208,14 +208,23 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       明文提出可處置 finding，否則不得開始修法。合併前仍須全部 bucket 為 `pass` 且再次重取
       `headRefOid` 等於候選 SHA（官方契約與本專案競態防線見 `docs/dev/external-facts.md` A11）。三方完成後以
       `--paginate` 全量拉 issues comments、pull reviews（逐則讀 `.body`）、pull inline comments
-      與 GraphQL review threads。四端點不是單一交易快照：每次完整掃描前後都重取
-      `headRefOid`，並用 0e 版本化 canonical serializer 對排序後、含所有判定欄位與 body／版本欄位
-      的四集合各算 SHA-256 digest；只有**兩次連續完整掃描**在明列的非零 settle interval 前後取得
-      相同四 digest vector，且兩輪全部 head guard 相等，才可去重成倉庫外凍結 ledger。插入 review、
-      原地編輯 comment、thread 狀態改變、缺頁、缺 review body、GraphQL 失敗或任一方未完成都
-      fail-closed，重掃直到穩定或 deadline 後記「未取得」；單次掃描即使 head 沒變也不得通過。
-      0e fixture 必測「讀完 reviews 後、讀 issues 前插入 finding」與「兩掃之間原地改 body」，刪掉
-      digest 穩定守衛的 mutation 必須轉紅（官方端點／推論邊界見 `docs/dev/external-facts.md` A14）。
+      與 GraphQL review threads。**0e evaluator 合併後**，每次完整掃描前後都重取 `headRefOid`，
+      並用該包已提交的版本化 canonical serializer 對排序後、含所有判定欄位與 body／版本欄位的
+      四集合各算 SHA-256 digest；只有兩次連續完整掃描在該包已提交、經受控 live calibration 的
+      `SETTLE_INTERVAL_S` 前後取得相同四 digest vector，且兩輪全部 head guard 相等，才可去重成
+      倉庫外凍結 ledger。插入 review、原地編輯 comment、thread 狀態改變、缺頁、缺 review body、
+      GraphQL 失敗或任一方未完成都 fail-closed，重掃直到穩定或 deadline 後記「未取得」。0e fixture
+      必測端點間插入 finding、兩掃間原地改 body、刪掉 digest 守衛與 settle interval 退化；serializer
+      schema／排序欄位、校準原始證據與最後採值須同包提交。**`SETTLE_INTERVAL_S` 的所有權在 0e**：
+      本檔與任何 consumer 都不得自行填值或區間——GitHub 官方未提供跨端點一致性視窗的數字或 SLA
+      （本輪查證結論＝未取得，見 `docs/dev/external-facts.md` A14），故採值只能由 0e 的**受控 live
+      calibration** 產生：明列量測程序、輪次、原始觀測與採值理由，連同 interval 退化（例如趨近 0）
+      必須轉紅的 mutation 一起提交（P-8 的 0e 交付列同款）。在 0e 落值前，「非零 settle interval」
+      是**待交付契約**而不是已生效判準，不得被任何 consumer 當成已滿足。GitHub comments 可編輯、各集合分端點／
+      分頁是官方可證事實；穩定雙掃是 D38 的專案安全裁定，不把「平台沒有 snapshot」的未證推論
+      當輸入（外部證據邊界見 `docs/dev/external-facts.md` A14）。
+      **0e 尚未合併的過渡期沒有上述 serializer 或已校準 interval**：CLI 全量拉取只供獨立人工
+      審核與修法 ledger，不得輸出合規 digest、不得令 C1／四條件成立，也不得授權代行或自動合併。
       push 整合修復 head 前再
       重拉上述集合；若同一受驗 head 新增 finding，併入同一 ledger 後才可 push（首次 push、PR
       尚不存在時豁免；開 PR 後首輪照本款）。
@@ -286,9 +295,10 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       這是使用者授權的互動式代行，不是 workflow 自動合併，也不得翻 `AUTO_MERGE`。
       未取得 D31／D32 具名代行授權的非 18.3 PR，即使四條件齊也不得套用代行通道，須
       **通知使用者等人工合併**；已取得授權但四條件未齊者，繼續 17.2 驗收循環，不得合併。
-      🔴 **D38 過渡期覆寫**：能實作現行 C1 的獨立 evaluator 與 workflow 接線尚未各自合併前，
-      舊 evaluator 不得證明 18.1①，故所有 PR（包含原本在 D31／D32 射程者）都走使用者人工合併；
-      這是暫時凍結代行通道，不撤銷其後在新 evaluator 啟用時恢復的授權。
+      🔴 **D38 過渡期覆寫**：能實作現行 C1 的獨立 evaluator、workflow 接線與 merge-boundary
+      guard 尚未各自合併並完成 production canary 前，舊 evaluator 不得證明 18.1①，故所有 PR
+      （包含原本在 D31／D32 射程者）都走使用者人工合併；這是暫時凍結代行通道，不撤銷其後在
+      三者實證完成時恢復的授權。
       **任何 PR 在尚未實際合併進 main 前，其依賴鏈都不得自動開工**（否則會從未含該 PR 的
       main 建立依賴工作，P-8 這類基建包的下游直接缺依賴）；無依賴關係的其他任務可照常並行。
       例外仍須停下來問：憑證紅線、破壞性／不可逆操作、計畫外重大裁定
@@ -369,12 +379,17 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       ID 從 GitHub 回讀 `.body`，對其 UTF-8 bytes（不作換行或 Unicode 正規化）計算 SHA-256，才可
       發出 evidence；0e 依同一 ID 再取 body 並重算，hash 缺失、格式錯、同 ID 內容已變或不等一律
       C2=0，comment ID 不再能替代內容 hash。另依 run id 複驗 run `event=pull_request`、
-      `pull_requests[]` 恰有目標 PR 且其 `head.sha == candidate`，並要求 run／job／check-run 回應的
-      `head_sha` 同值作本倉庫 canary。官方未保證 workflow-run `head_sha` 對所有 pull_request 永遠
+      `run_attempt == evidence.run_attempt`、`pull_requests[]` 恰有目標 PR 且其
+      `head.sha == candidate`；jobs 只能從官方 attempt-specific
+      `/actions/runs/{run_id}/attempts/{run_attempt}/jobs` 端點取得，再沿該回應的 `check_run_url`
+      取得 check-run，並要求 run／job／check-run 回應的 `head_sha` 同值作本倉庫 canary。一般
+      run jobs 集合、另一 attempt 的 job／check-run 或只比 run id 都不得配對。官方未保證
+      workflow-run `head_sha` 對所有 pull_request 永遠
       等於 PR head，故任一欄缺失、多義或不等即 C2=0；留言 id 水位／時間窗、comment ID 單欄或
-      `updated_at` 都不能獨立綁 run/head/body。0e fixture 必測「相同 comment ID、body 被原地編輯」
-      與「缺／錯 hash」，移除 hash 比對守衛的 mutation 必須轉紅。具名實證與官方邊界見
-      external-facts A13／A14 ∧
+      `updated_at` 都不能獨立綁 run/head/body。0e fixture 必測「相同 comment ID、body 被原地編輯」、
+      「缺／錯 hash」、「evidence attempt 與 run 回應不等」及「混入另一 attempt job／check-run」，
+      移除 hash／attempt 守衛的 mutation 必須轉紅。具名實證與官方邊界見
+      external-facts A13／A15 ∧
       ③**全部機械 CI 綠**：0f 須由 workflow jobs REST 的 `check_run_url` 提供 evaluator 自身精確
       check-run ID，C3 只排除該 ID；self ID 缺失／多重／錯 head 即 0。排除後 eligible 集合仍須
       非空且全部 success；self pending＋其他全綠可通過，其他 pending／fail 或 only-self 均 C3=0 ∧
@@ -387,10 +402,16 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       ③只證明測試綠、④只證明格式合法，**兩者都不證明審查結論未受注入**。
       在能實作上述 C1 的獨立 evaluator 與 workflow 接線各自合併前，舊 evaluator 不得作互動式
       Codex 代行合併依據；過渡期所有 PR 走使用者人工合併。
-    - **18.2 條件齊 ⇒ 依已啟用的合併通道進 main**：18.4 啟用後由 workflow 自動合併；
-      啟用前僅能人工合併，或在上述 D38 過渡期結束後，由 D31／D32 明文授權的互動式 Codex
-      對非 18.3 PR 代行 `gh pr merge --squash --match-head-commit <head>`。部署管線就緒後（合併版總方案 CD 包）
-      合併即自動部署＋healthcheck，紅則自動 rollback。
+    - **18.2 條件齊 ⇒ 依已啟用的合併通道進 main**：0e／0f 與 merge-boundary guard 未各自合併、
+      實測前，所有 PR 只走使用者人工合併，CLI 全拉或舊 evaluator 不得把此過渡期標成四條件齊。
+      代行／自動通道日後啟用時，合併 consumer 必須在呼叫 merge 的同一控制流重新執行 0e
+      merge-boundary mode，取得 current head 的新 stable vector、C1–C4 與四集合 watermarks；任何
+      晚於該結果的 review／comment／thread 變化、vector／watermark 不等或重驗失敗都中止合併。
+      `--match-head-commit` 官方只保證 PR head SHA 相等，**不會**讓 review state 的舊結果自動失效；
+      在上述 guard 的 production canary 尚未證成前，D31／D32 代行授權保持凍結，18.4 workflow
+      自動合併也不得啟用。日後 guard 實證完成且非 18.3 PR 命中具名授權，才可代行
+      `gh pr merge --squash --match-head-commit <head>`。部署管線就緒後（合併版總方案 CD 包）合併即
+      自動部署＋healthcheck，紅則自動 rollback。
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，

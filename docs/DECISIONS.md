@@ -575,12 +575,23 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 - current-head finding 集合為空時，時間下界定義為負無限；合法 exact-head clean completion 可滿足
   時序，但沒有 completion 仍 C1=0。0e 要以「零 finding＋clean／零 finding＋無 completion」正反格
   鎖定，不得把不存在的最後 finding 誤歸欄位缺失。
-- 四個驗收集合（issues comments、reviews body、inline comments、GraphQL threads）不是一個
-  可假定原子的讀取。0e／過渡期 CLI 每次完整掃描前後都須確認 candidate `headRefOid`，再由
-  版本化 canonical serializer 對排序後、含判定欄位與 body／版本欄位的四集合各算 SHA-256；
-  只有兩次連續完整掃描在非零 settle interval 前後得到相同 digest vector 才可凍結 ledger。
+- 四個驗收集合（issues comments、reviews body、inline comments、GraphQL threads）**本專案不
+  假定其為原子讀取**。🔴 這是**專案安全裁定**，不是平台語義：GitHub 官方頁只定義各端點與分頁，
+  本輪查不到跨端點交易 snapshot 契約，也查不到一致性視窗數值或 SLA——「查不到」依鐵律 19.3
+  記為未取得，既不反向斷言平台沒有 snapshot，也不作為實作輸入；採雙掃的理由是本專案選擇對
+  未知邊界 fail-closed（外部可查原文只留在 external-facts A14）。
+  **0e 合併後**：每次完整掃描前後都須確認 candidate `headRefOid`，再由該包已提交的版本化
+  canonical serializer 對排序後、含判定欄位與 body／版本欄位的四集合各算 SHA-256；只有兩次連續
+  完整掃描在已校準的 `SETTLE_INTERVAL_S` 前後得到相同 digest vector 才可凍結 ledger。
+  `SETTLE_INTERVAL_S` **由 0e 以受控 live calibration 產生並在該包落值**（提交量測程序、原始觀測、
+  採值理由與 interval 退化 mutation）；在此之前任何人不得自行填值或區間，「非零 interval」是待
+  交付契約而非已生效判準。
+  **0e 合併前的過渡期沒有 serializer、也沒有已校準 interval**：CLI 三端點＋reviews body＋GraphQL
+  全量拉取只供獨立人工審核與修法 ledger，**不得輸出合規 digest、不得令 C1／四條件成立、不得
+  代行或自動合併**；此時的穩定雙掃只是診斷輔助，不是機械證據。
   插入 finding、原地改 body、thread 狀態變化、分頁失敗或兩掃不等均 fail-closed；0e fixture 必測
-  review 與 issue 端點讀取間插入 finding、兩掃間改 body，以及刪除穩定守衛的 mutation（A14）。
+  review 與 issue 端點讀取間插入 finding、兩掃間改 body、刪除穩定守衛，以及 interval 退化的
+  mutation（可查原文邊界見 A14）。
 - ⚪ 登記不得成為 exact-head 增殖器：只要本批另有 tree 修復，仍在同一 commit 搬入 `91` §3；
   exact-head 終態若只新增 ⚪，改在 PR body 寫唯一 grammar
   `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`，不改 tree。下一個本來就會改
@@ -597,8 +608,14 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   `verdict_comment_id`／`verdict_body_sha256`。0f 完成最終貼文或更新後，必須按 ID 從 GitHub
   回讀 `.body`，對不作任何正規化的 UTF-8 bytes 計算 SHA-256；0e 按同一 ID 重取、重算並要求
   hash 相等。ID 不替代 hash；缺／錯 hash、同 ID body 被原地編輯或內容不等均 C2=0。0e 再依
-  run id 複驗 `event=pull_request`、目標 PR 的 `pull_requests[].head.sha`，並要求 run／job／
-  check-run `head_sha == candidate` 作本倉庫具名 canary。官方未給該 response 欄位的 pull_request
+  run id 複驗 `event=pull_request`、**`run_attempt` 與 evidence 精確相等**、目標 PR 的
+  `pull_requests[].head.sha`，並要求 run／job／check-run `head_sha == candidate` 作本倉庫具名
+  canary；**job 只能取自官方 attempt-specific 端點
+  `/actions/runs/{run_id}/attempts/{run_attempt}/jobs`，check-run 只能沿該 job 回應的
+  `check_run_url` 取得**——同一 run 重跑時 `run_id` 不變而 `run_attempt` 遞增，只比 run id 會把
+  attempt-1 的判詞配到 attempt-2 的執行證據。一般 run jobs 集合、另一 attempt 的 job／check-run
+  或只比 run id 一律 C2=0，fixture 另須含 attempt mismatch 與 cross-attempt job／check-run
+  （官方端點原文與本倉庫 canary＝A15）。官方未給該 response 欄位的 pull_request
   永久語義，故任一缺失／不等即 C2=0，單看 `head_sha`、comment ID、`updated_at` 或舊時間窗
   都不能綁 run/head/body；fixture 必測 same-ID body edit 與缺／錯 hash（A13／A14）。C3 只排除 workflow jobs
   `check_run_url` 指出的 evaluator 精確
@@ -608,6 +625,13 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   互斥與非空理由任一守衛被刪都必須使 regression 轉紅。
 - P-8 當前唯一執行序列改為 0e 獨立 evaluator＋fixtures／mutation（人工合併）→ 0f
   workflow-only 接線**完整 C1–C4**並實查 validation-skip（人工合併）→ 0g 常規 PR canary。
+  0e 另須交付 **merge-boundary mode**：合併 consumer 必須在呼叫 merge 的**同一控制流**重新取得
+  current head、新的 stable digest vector、四集合 watermarks 與 C1–C4，任何晚於該結果的
+  review／comment／thread 變化或 watermark／vector 不等都中止合併。`gh pr merge` 的
+  `--match-head-commit` 官方逐字只是 "Commit SHA that the pull request head must match to allow
+  merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 它**只鎖 Git head、不會
+  使既有 review state 失效**，同 head 新增的 finding 不會觸發它。在 merge-boundary guard 的
+  production canary 證成前，D31／D32 代行授權與 18.4 自動合併都保持凍結。
   Codex 晚到只再調用 evaluator；whole-run rerun 只保留 Claude 判詞格式畸形的同 head 一次例外。
   #59 的舊
   `1111` evaluator 與 `await-verdict.sh` 只作已部署歷史／排隊訊號，**不得再作 C1、C3、雙清或

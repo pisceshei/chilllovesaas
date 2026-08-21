@@ -74,8 +74,9 @@
 
 | 編號 | 擬建閘門 | 防的坑（K-###） | 建的代價 | 裁定（建/不建/待） |
 |---|---|---|---|---|
-| G-01 | 判詞 ⚪ 落籍檢查——每輪判詞的 ⚪ 條目在本檔 §3 有對應（PR #55 判詞連續多輪點名此缺口） | ⚪ 蒸發族（§3.3「兩源句腐化」組的上游——⚪ 無人搬運即消失） | 判詞為自由文本、需解析 ⚪ 段與 §3 對條，格式耦合高；誤報時擋錯 PR | **待**（收割輪一併裁） |
+| G-01 | 判詞 ⚪ 落籍檢查——每輪判詞的 ⚪ 條目必須落在**本檔 §3 ∪ 該輪 exact-head PR body 的合法 `DEFERRED_WHITE` 行**兩者的聯集（後者＝鐵律 15.1／D38 的 terminal-white 例外：`head` 精確等於受驗 `headRefOid`、grammar 精確、`comment:item` pair 可在完整判詞集合複驗；錯 head、重複或無來源者一律不算登記，仍須判紅）（PR #55 判詞連續多輪點名此缺口；例外射程與 grammar 見 `CLAUDE.md` 鐵律 15.1 與 §驗收基準） | ⚪ 蒸發族（§3.3「兩源句腐化」組的上游——⚪ 無人搬運即消失） | 判詞為自由文本、需解析 ⚪ 段與 §3 對條，另須讀 PR body machine line 並綁 head 複驗來源 pair，格式耦合高；誤報時擋錯 PR | **待**（收割輪一併裁） |
 | G-02 | markdown 柵欄自檢——掃全檔行首三反引號行：行數須偶數、每個閉合行去圍欄後為空（式子＝#55 第 7 輪判詞所給；防柵欄黏尾文吞段） | 柵欄事故族（#55 第 7 輪 151 checkbox 被吞＝現行犯） | 極低（一支 grep/awk 即可）；範圍限 docs/specs（或全 docs） | **待**（收割輪與 G-01 一併裁；第 9 輪登記） |
+| G-03 | `claude-review.yml` prompt 的 ⚪ 處置段與 terminal-white 例外同步＋deferred ingestion checker——現行 prompt 無條件要求作者把 ⚪「搬進坑登記簿」並明文宣告「建立前登記於 PR 描述」的過渡辦法作廢，與鐵律 15.1／D38 的 exact-head `DEFERRED_WHITE` 例外正面相反；合規使用該例外的 terminal-white PR 會被讀 prompt 的驗收方判成未登記。ingestion 側另缺「下一個 tree-changing PR 首候選是否已把 merged PR body 的 pair 入籍」的機械檢查 | ⚪ 蒸發族（同 G-01）＋**判準型 consumer 漂移**（prompt 是驗收方實際讀的判準，散文 consumer 同步不涵蓋它；來源＝PR #66 Claude issue comment `5369828302` 🔴-1(b)） | 改 `.github/workflows/` 命中鐵律 18.3，且 `claude-review.yml` 反竄改會令該 PR 自身驗收失效 ⇒ 必須另開 workflow-only PR；ingestion checker 另需先定義「既有 merged PR」的查詢範圍與起點（與本節 §3 已登記的同名 ⚪ 同源） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4「需擴 workflow／CI 判準時先登記候選與代價、另開 18.3 PR」，本 PR 不得改 workflow，指派給 P-8 的 **0f workflow-only 接線**一併交付） |
 | （其餘待收割輪填入） | | | | |
 
 ## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
@@ -873,6 +874,20 @@
   依 17.2 只登記；日後若 recovery reviewer 真承載 ⚪，須把來源 grammar 與實際作者一起版本化，
   不得以錯作者字面硬湊集合
   【F5/F11；來源＝PR #66 Claude issue comment `5369375370` ⚪2；取證日期＝2026-08-21】
+
+- **`Assert-FrozenLedgerCoverage` 的射程 predicate 仍有一半是自由文字**：
+  `docs/worklog/2026-08-21-驗收收斂制度V2.md` 的 coverage 函式以 `### exact-head`＋7 位 hex 標題
+  認列射程，legacy section 則靠硬編標題字串與硬編 head 具名補進。marker 已是 full-SHA 且逐段
+  必須存在，故本輪集合未反轉；但「標題換句話就脫離射程」這個產生器類別只是上移一層。依 17.2
+  只登記，日後整理該函式時改以 marker 為唯一真源、移除標題與硬編 head 依賴
+  【F5/F11；來源＝PR #66 Claude issue comment `5369828302` ⚪1；取證日期＝2026-08-21】
+
+- **terminal-white「下一個 tree-changing PR 全量讀既有 merged PR body」缺範圍與查詢起點**：
+  `CLAUDE.md` 鐵律 15.1、`docs/DECISIONS.md` D38 與 `docs/plans/2026-08-18-總方案.md` P-1 都要求
+  批量入籍，但沒界定「既有」涵蓋哪些 PR、自哪一號起、用什麼查詢，也沒有對應 checker ⇒ deferred
+  pair 可能無限期停在遠端 body 而本檔讀不出缺口。不反轉現值（本輪 terminal-white 例外尚無實際
+  使用者），依 17.2 只登記；機械化候選已併入 §2 的 G-03（ingestion checker），待使用者裁定
+  【F5/F11；來源＝PR #66 Claude issue comment `5369828302` ⚪2；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
