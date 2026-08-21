@@ -221,7 +221,7 @@ GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
 
 ### A10. PR commits 端點最多 250；fallback 是 repository List commits＋`sha` 起點
 
-> "To receive a complete commit list for pull requests with more than 250 commits, use the List commits endpoint."
+> "Lists a maximum of 250 commits for a pull request. To receive a complete commit list for pull requests with more than 250 commits, use the List commits endpoint."
 >
 > "SHA or branch to start listing commits from."
 
@@ -366,7 +366,9 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 
 > "Pass one or more `-f/--raw-field` values in `key=value` format to add static string parameters"
 >
-> "if the value starts with `@`, the rest of the value is interpreted as a filename"
+> "if the value starts with `@`, the rest of the value is interpreted as a filename to read the value from. Pass `-` to read from standard input."
+>
+> "To pass pre-constructed JSON or payloads in other formats, a request body may be read from file specified by `--input`. Use `-` to read from standard input."
 
 來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。前句屬
 `-f/--raw-field`，後句屬 `-F/--field` 的 magic type conversion；不得把後句外推到 `-f`。

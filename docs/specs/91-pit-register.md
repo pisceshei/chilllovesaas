@@ -831,12 +831,44 @@
   【F5/F11/F12；來源＝PR #64 Claude comments `5361847317` ⚪1、`5363469305` ⚪3；
   取證日期＝2026-08-21】
 
+- **PR64 destructive history guard 的零掃描 canary 擋不住 pathspec 縮成非空子集**：
+  現行 block 只要求同一 pathspec 的 A 類 canary 非空；若 pathspec 從完整承重集合縮成仍有新增檔
+  的子集，canary 仍非空、D／R 也可合法為空，整支會通過。`history_status` 接住 production D／R
+  結果後沒有再被讀取，也不能補上集合射程相等的斷言。本輪未獲授權改歷史 validator，依 17.2
+  只登記；後續 validator 契約包須先固定承重資產集合，並以「合法非空子集」mutation 證明縮射程
+  會轉紅【F5/F11/F12；來源＝PR #64 Claude comment `5363665327` ⚪1；取證日期＝2026-08-21】
+
+- **PR64 對歷史 worklog 現行 block 的實質改寫沒有在原處留下 dated correction**：
+  第十三輪曾改寫第五輪 worklog 的現行 fenced block，但 heading 仍稱「第十二輪更正」，原處也沒有
+  記錄第十三輪改了什麼；這讓歷史層只剩 git diff 才能還原沿革。本輪只登記、不回寫未被點名的
+  第五輪 block；後續若再 supersede，必須在相鄰位置留下日期、來源判詞與變動邊界
+  【F5/F11；來源＝PR #64 Claude comment `5363665327` ⚪2；取證日期＝2026-08-21】
+
 - **PR64 destructive history guard 未涵蓋 `external-facts.md`**：
   第十三輪時 B9／B10 已成為 P-8 的承重外部事實，但第五輪現行 validator 的 destructive
   pathspec 只掃 `docs/worklog`；刪除或改名 `docs/dev/external-facts.md` 不會由該 guard 擋住。
   本輪只修被點名的 worklog production wiring，依 17.2 不擴大資產射程；後續 validator 契約包
   應先定義承重資產集合，再為每個集合配置同射程非空 canary 與刪除／改名 mutation
-  【F5/F11/F12；來源＝PR #64 Claude comment `5363469305` ⚪2；取證日期＝2026-08-21】
+  【F5/F11/F12；來源＝PR #64 Claude comments `5363469305` ⚪2、`5363665327` ⚪3；
+  取證日期＝2026-08-21】
+
+- **終態 external-facts 把帶完整 SHA 的歷史快照稱為會移動的「PR exact head」**：
+  `26fc683e40bb8ad6466d082c6887876345f84646` 有日期與完整 ref，快照本身可重現；但在終態層仍稱
+  「PR #64 exact head」，下一次 push 後 descriptor 就不再等於 HEAD。依 17.2 不改未點名原文，
+  後續 evidence-format 包須寫「當時的 head」或只保留日期＋SHA
+  【F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪1；取證日期＝2026-08-21】
+
+- **external-facts A10 把官方 endpoint 與本專案的 `?sha=` 組法歸成同一個官方指引**：
+  官方 PR commits 頁指向 repository List commits endpoint；`sha` query 的合法性由另一頁參數定義
+  分別支持。把兩者合寫為「官方指向的端點是 `...commits?sha=...`」會模糊來源歸屬。依 17.2
+  不改未點名原文；後續 evidence-format 包須把官方 endpoint、官方參數語義與本專案組法分欄
+  【F3/F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪2；取證日期＝2026-08-21】
+
+- **external-facts B10 的 `--diff-merges` 預設 `off` 只有中文轉述、沒有英文逐字**：
+  同節其他 Git 語義已有官方英文原文，但「未使用 `--first-parent` 時預設 off」仍只寫轉述；本輪
+  點名修的是新寫入 A10／B9，不得順手擴修前輪內容，依 17.2 只登記。後續 evidence-format 包須
+  重新取 Git 官方原文並保留完整條件
+  【F3/F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪3；取證日期＝2026-08-21】
 
 - **91 附錄 A.1 的全量對帳仍只存在於 worklog fence，沒有 CI 機械閘門**：
   現行動態對帳可在人工執行時比對 PR64 worklog 集合，但 `ci.yml` 沒有呼叫該 fenced validator；
@@ -1040,6 +1072,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md`（Claude comment `5363200002`＋Codex review `4988295763`；零掃描 canary、merge diff、rendering 歷史更正與外部契約集中已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十三輪雙驗收修復.md`（Claude comment `5363469305`＋Codex review `4988472500`；production wiring、外部契約去重與 `diff-tree -r` witness 已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十四輪雙驗收修復.md`（Claude comment `5363665327`＋Codex review `4988636859`；repository commits fallback 與 `gh api` body 供給邊界已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十五輪Claude驗收修復.md`（Claude comment `5363892357`；⚪ 落籍、20.3 實跑輸出與 A10／B9 官方逐字已處置）
 
 ### A.2 handoff
 
