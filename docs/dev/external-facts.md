@@ -356,7 +356,7 @@ jobs `check_run_url` 指出的 evaluator 精確 check-run ID；不得只按 `nam
 eligible 集合仍須非空且全部 success；self ID 缺失／多重、只剩 self、其他 pending 或 head 不符
 都 C3=0。
 
-### A14. PR issue comment 可原地更新；分頁只保證逐頁取全，不是跨端點交易快照
+### A14. PR issue comment 可原地更新；分頁只保證逐頁取全（跨端點快照語義＝未取得）
 
 GitHub issue-comments REST 官方逐字寫：
 
