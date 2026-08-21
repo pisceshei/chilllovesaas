@@ -169,8 +169,15 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       `git fetch origin main && git diff origin/main...HEAD`（base 非 main 以 PR metadata
       的 base ref 取代）僅作**初始交付盤點**，不作修復存在性證據；②**裁定不修**者（**僅 🟡**——🔴 不適用清法②，放行 🔴 唯有先改鐵律本文並以該
       修法的已提交 hunk 核對，同「驗收基準」節）⇒ DECISIONS／PR 描述條目存在；③**證偽**者 ⇒
-      證據或其可存取引用存在（僅有「已證偽」登記＝缺項）；⚪ 者 ⇒ 登記存在。
-      **缺一項不得 push**＝清單存在「既無對應 hunk、也無合規②③⚪登記」的項目。
+      證據或其可存取引用存在（僅有「已證偽」登記＝缺項）；⚪ 者 ⇒ 本批仍有 tracked-tree
+      修復時隨同登記 `docs/specs/91-pit-register.md` §3。若 exact-head 三方已完成且**只新增 ⚪**、
+      沒有其他理由改 tree，則不得為登記刷新 head；改在該 PR body 逐項寫唯一機器行
+      `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`。head 必須等於受驗
+      `headRefOid`，pair 必須能在完整 Claude 判詞集合中複驗，重複／錯 head／找不到來源都不算
+      登記。下一個本來就會改 tracked tree 的 PR 須在首個候選前全量讀既有 merged PR body，將
+      尚未存在於 `91` 的 deferred pair 批量搬入 §3；原 PR body 保留為遠端來源，不另造
+      evidence-only head。**缺一項不得 push**＝清單存在「既無對應 hunk、也無合規②③、`91`
+      登記或上述 terminal deferred line」的項目。
     - **15.2 原子攝取**：候選 head 推出後，**先等 Claude、Codex 與 CI 都對該 exact head
       完成，再開始任何修法**；禁止第一方先回就改檔，令另一方審到半途失效。若已由 current-head
       run 的 step output／log 證實 Claude 命中 validation-skip，該 run 結構上不會產生判詞；此時
@@ -201,8 +208,15 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       明文提出可處置 finding，否則不得開始修法。合併前仍須全部 bucket 為 `pass` 且再次重取
       `headRefOid` 等於候選 SHA（官方契約與本專案競態防線見 `docs/dev/external-facts.md` A11）。三方完成後以
       `--paginate` 全量拉 issues comments、pull reviews（逐則讀 `.body`）、pull inline comments
-      與 GraphQL review threads，一次去重成倉庫外的凍結 finding ledger；缺頁、缺 review body、
-      GraphQL 失敗或任一方尚未完成都只能寫「未取得」，不得開始修。push 整合修復 head 前再
+      與 GraphQL review threads。四端點不是單一交易快照：每次完整掃描前後都重取
+      `headRefOid`，並用 0e 版本化 canonical serializer 對排序後、含所有判定欄位與 body／版本欄位
+      的四集合各算 SHA-256 digest；只有**兩次連續完整掃描**在明列的非零 settle interval 前後取得
+      相同四 digest vector，且兩輪全部 head guard 相等，才可去重成倉庫外凍結 ledger。插入 review、
+      原地編輯 comment、thread 狀態改變、缺頁、缺 review body、GraphQL 失敗或任一方未完成都
+      fail-closed，重掃直到穩定或 deadline 後記「未取得」；單次掃描即使 head 沒變也不得通過。
+      0e fixture 必測「讀完 reviews 後、讀 issues 前插入 finding」與「兩掃之間原地改 body」，刪掉
+      digest 穩定守衛的 mutation 必須轉紅（官方端點／推論邊界見 `docs/dev/external-facts.md` A14）。
+      push 整合修復 head 前再
       重拉上述集合；若同一受驗 head 新增 finding，併入同一 ledger 後才可 push（首次 push、PR
       尚不存在時豁免；開 PR 後首輪照本款）。
     - **15.3 宣稱與實物同刻**：「N 項全收」定論**只寫在核對完成後的 PR 留言**；
@@ -296,8 +310,10 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 
 18. **自動合併鐵律（2026-08-18 使用者裁定；配套機制未落地前不啟用自動合併）**：
     - **18.1 合併條件（四重合取，缺一不可，且每項都是 fail-closed 的存在型判定）**：
-      ①Codex **已完成本輪審查**且零未清意見：先對當前 head 全量讀三個 paginated REST 集合、
-      每則 review `.body` 與 paginated GraphQL `reviewThreads`。Codex 有兩個已在本倉庫實測的載體：
+      ①Codex **已完成本輪審查**且零未清意見：先按 15.2 對當前 head 全量讀三個 paginated REST
+      集合、每則 review `.body` 與 paginated GraphQL `reviewThreads`，並取得兩次連續相同的四集合
+      canonical digest vector；單次跨端點讀取、兩掃 digest 不同或任一 head guard 不等均 C1=0。
+      Codex 有兩個已在本倉庫實測的載體：
       **finding review**＝REST review 的 `.user.login` 精確等於 `chatgpt-codex-connector[bot]`、
       `.commit_id == headRefOid`，其 body 或以 `.pull_request_review_id` 關聯的 inline／thread 有任何
       finding；**finding issue comment**＝issues comments 中同一 bot、可由獨立 `Reviewed commit:`
@@ -348,12 +364,17 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       `docs/dev/external-facts.md` A9／A10／A12；載體形態的倉庫實測見
       `docs/dev/m0-review-convergence.md`「Convergence Protocol v2」∧
       ②Claude bot 判詞**通過**且零未清意見，且 0f 由受信任 workflow 產生的 run-specific evidence
-      （`run_id`／`run_attempt`／candidate＝`github.event.pull_request.head.sha`／verdict comment id 或
-      hash）可依 run id 複驗：run `event=pull_request`、`pull_requests[]` 恰有目標 PR 且其
-      `head.sha == candidate`，並要求 run／job／check-run 回應的 `head_sha` 同值作本倉庫 canary。
-      官方未保證 workflow-run `head_sha` 對所有 pull_request 永遠等於 PR head，故任一欄缺失、多義
-      或不等即 C2=0，該單欄與留言 id 水位／時間窗都不能獨立綁 run/head。具名實證與官方邊界見
-      external-facts A13 ∧
+      必須同時含 `run_id`、`run_attempt`、candidate＝`github.event.pull_request.head.sha`、
+      `verdict_comment_id` 與 `verdict_body_sha256`。0f 只有在最終判詞貼出／更新完成後，按 comment
+      ID 從 GitHub 回讀 `.body`，對其 UTF-8 bytes（不作換行或 Unicode 正規化）計算 SHA-256，才可
+      發出 evidence；0e 依同一 ID 再取 body 並重算，hash 缺失、格式錯、同 ID 內容已變或不等一律
+      C2=0，comment ID 不再能替代內容 hash。另依 run id 複驗 run `event=pull_request`、
+      `pull_requests[]` 恰有目標 PR 且其 `head.sha == candidate`，並要求 run／job／check-run 回應的
+      `head_sha` 同值作本倉庫 canary。官方未保證 workflow-run `head_sha` 對所有 pull_request 永遠
+      等於 PR head，故任一欄缺失、多義或不等即 C2=0；留言 id 水位／時間窗、comment ID 單欄或
+      `updated_at` 都不能獨立綁 run/head/body。0e fixture 必測「相同 comment ID、body 被原地編輯」
+      與「缺／錯 hash」，移除 hash 比對守衛的 mutation 必須轉紅。具名實證與官方邊界見
+      external-facts A13／A14 ∧
       ③**全部機械 CI 綠**：0f 須由 workflow jobs REST 的 `check_run_url` 提供 evaluator 自身精確
       check-run ID，C3 只排除該 ID；self ID 缺失／多重／錯 head 即 0。排除後 eligible 集合仍須
       非空且全部 success；self pending＋其他全綠可通過，其他 pending／fail 或 only-self 均 C3=0 ∧
@@ -511,9 +532,11 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
   ①**修復**（本輪 diff 可驗證）②**裁定不修**（PR 描述或 `docs/DECISIONS.md` 有明文條目，
   驗收方核對存在即算清、不評裁定本身）③**證偽**（附證據推翻，驗收方複驗成立即算清）。
   🔴 不適用②——鐵律違反不能靠裁定放行，要放行先改鐵律本文。
-  範圍外的既有問題走 **⚪（範圍外觀察）**：僅登記、不擋通過，作者須把 ⚪ 條目搬進
-  `docs/specs/91-pit-register.md` 坑登記簿 §3 轉入暫存區（PR #55 已建立；
-  建立前的過渡辦法「登記於 PR 描述」自此作廢）。
+  範圍外的既有問題走 **⚪（範圍外觀察）**：僅登記、不擋通過。只要本批另有 tracked-tree
+  修復，作者就須把 ⚪ 搬進 `docs/specs/91-pit-register.md` §3；若 exact-head 終態只有新增 ⚪、
+  沒有其他 tree 變更，則使用 15.1 的 `DEFERRED_WHITE` PR-body 機器行，留待下一個本來就會改
+  tree 的 PR 首候選批量入籍，禁止為登記本身刷新 head。PR #55 前的任意散文過渡辦法仍作廢；
+  本例外只接受 15.1 的 exact grammar、exact head 與可複驗來源 pair。
   <!-- 改制理由（2026-08-16）：使用者裁定「必須 review 到完全沒有任何意見才算驗收成功」。
        配套＝⚪ 標記：🟡 變真閘門的同時必須給「非本輪責任」一個不擋的去處，
        否則每輪擋一批舊帳、重演 2026-08-15 九輪不收斂。機制落地在 claude-review.yml

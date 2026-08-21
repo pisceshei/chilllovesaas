@@ -449,7 +449,10 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
 2. 編輯期先跑每類反向複驗與 targeted gate；候選 tree 凍結後才跑一次全套。結果寫入現行規則
    要求的 worklog，不用「已確認」代替輸出。
 3. push 候選後先等 Claude、Codex 與 CI 都對 exact head 完成；未齊以前不改檔。完成後全量拉
-   conversation、review body、inline 與 GraphQL threads，去重成倉庫外凍結 ledger。D38 起現有
+   conversation、review body、inline 與 GraphQL threads；每次完整掃描前後都 guard head，並對
+   四個排序後的完整集合算版本化 canonical SHA-256 digest。只有兩次連續掃描在非零 settle
+   interval 前後得到相同 digest vector，才去重成倉庫外凍結 ledger；單次掃描或兩掃間插入／
+   編輯／thread 變化都 fail-closed（external-facts A14）。D38 起現有
    `await-verdict.sh` 只屬歷史／排隊訊號，不作任何通過證據；0e／0f 尚未合併時直接以 CLI 在同一
    明列 interval／max-polls／deadline 的有界預算輪詢三方載體，之後只用 0e evaluator。CI 以
    `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都重取
@@ -460,7 +463,9 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
    JSON 未取得／不可解析、API 失敗或 head drift 才是未取得；只有非空集合全 `pass` 且 head 不變才可合併
    （external-facts A11）。
 4. 一次按根因批次處置；同一元件的完整狀態矩陣與反向 fixture 同批封閉，無關元件只登記
-   `91` §3。commit 後核對兩點 diff 並最終重拉，再推一個整合修復 head。
+   `91` §3。若 exact-head 終態只新增 ⚪，以 PR body 的 exact `DEFERRED_WHITE` machine line
+   延後到下一個 tree-changing PR 首候選批量入籍，不為登記造 head。commit 後核對兩點 diff 並
+   最終重拉，再推一個整合修復 head。
 5. 第二個 finding-bearing head 仍有同根因時，停止小修小推；在本地重建影響圖、狀態矩陣與
    mutation，必要時拆包。需擴 checker 時依 18.3 另包，不在當輪順手改 `scripts/` 或 CI。
 
@@ -492,7 +497,8 @@ done
 
 - 每個**實際 Git tree 變更**仍須 exact-head Claude＋Codex 最終審查；舊 head 不可沿用。
 - GitHub CI 對每次 push 仍全跑；本地只是把開發內迴圈改成 targeted，沒有略過候選驗證。
-- 三個 REST 集合、review body 與 GraphQL threads 仍全量分頁攝取；缺席不是通過。
+- 三個 REST 集合、review body 與 GraphQL threads 仍全量分頁攝取；還要連續兩次取得相同
+  canonical digest vector，缺席、單掃或不穩定都不是通過。
 - 18.3 自我指涉、workflow、規範、不可逆 schema 與費用 PR 仍由使用者人工合併。
 - 外部語義仍先走鐵律 16／19 官方取證；無關元件仍受 17.2 射程限制。
 
@@ -500,6 +506,7 @@ done
 
 ```text
 C1 = all_current_head_review_surfaces_ingested
+     AND two_consecutive_canonical_digest_vectors_equal
      AND reviewer_clean_completion_after_last_current_head_finding
      AND unresolved_review_threads == 0
 ```
@@ -510,6 +517,11 @@ paginated GraphQL threads。finding review 以 REST review `.user.login` 精確�
 `.pull_request_review_id` 歸戶；一般 comment `.commit_id` 不作 head 證據。connector 也可能在
 issues comments 發 finding；只有其獨立 `Reviewed commit:` 欄能依下述受控 parser 綁 exact head，
 其他散文 SHA 不解析。證偽、裁定不修或 resolve 不抹除 finding 的 event time／endpoint-local ID。
+四端點沒有被當成交易快照：0e 用版本化 serializer 對每個完整集合的排序後判定投影計算
+SHA-256，投影必須含 endpoint-local identity、所有 C1 判定欄、body／body digest 與可用版本欄位；
+每輪掃描前後都 guard `headRefOid`。兩次完整掃描須在明列非零 settle interval 前後得到相同四
+digest vector；reviews 讀完後才插入 finding、同 ID body 被編輯、thread resolve 狀態變化、缺頁
+或兩掃不等都 C1=0。fixture 與 guard-removal mutation 必須鎖住這些格（external-facts A14）。
 
 乾淨 completion 的本倉庫實測載體是 connector issue comment，而非 clean REST review。已觀測兩種
 受控形態：A 型（PR #61 comment `5351471350`、PR #64 comments `5358332294`／`5363805191`）首行
@@ -568,12 +580,15 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
 ### C2／C3／C4 的 exact-head、自我排除與格式契約
 
 - **C2** 不再使用「留言 id 水位＋job 起跑時間窗」猜判詞歸屬。0f 必須由受信任 workflow 產生
-  run-specific evidence（至少 `run_id`、`run_attempt`、candidate＝
-  `github.event.pull_request.head.sha`、verdict comment id／hash）。0e 依 run id 要求
-  `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且其 `head.sha == candidate`，並比對
-  run／job／check-run 的 `head_sha` 作本倉庫 canary。官方未給最後三欄的 pull_request 永久語義；
-  任一缺失／多義／不等、跨 run、只有時間落窗或多個無法配對的判詞一律 C2=0。官方邊界與 PR #66
-  run `32463413197` 的具名實證見 external-facts A13。
+  run-specific evidence，且 `run_id`、`run_attempt`、candidate＝
+  `github.event.pull_request.head.sha`、`verdict_comment_id`、`verdict_body_sha256` 五者都存在。
+  0f 完成最終貼文／更新後按 ID 回讀 `.body`，對原樣 UTF-8 bytes 算 SHA-256；0e 按 ID 重取、
+  重算且要求相等，comment ID 不能替代 hash。再依 run id 要求 `event=pull_request`、
+  `pull_requests[]` 中恰有目標 PR 且其 `head.sha == candidate`，並比對 run／job／check-run 的
+  `head_sha` 作本倉庫 canary。缺／錯 hash、same-ID body edit、任一關聯缺失／多義／不等、跨 run、
+  只有時間落窗或多個無法配對的判詞一律 C2=0。fixture 必測 same-ID edit、缺 hash、錯 hash；
+  hash guard mutation 必須轉紅。官方邊界與 PR #66 run `32463413197` 的具名實證見
+  external-facts A13／A14。
 - **C3** 的 eligible 集合是 candidate head 的 check runs，扣掉 0f 提供的 evaluator 自身**精確
   check-run ID**。0f 由 workflow jobs REST 的 `check_run_url` 取得該 ID；找不到、找到多個或 ID
   不屬同 run/head 就 C3=0。自己的 pending 可排除，任何其他 pending／非 success 都保留；排除後
@@ -590,6 +605,9 @@ resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不
 
 - 一個可獨立合併的 PR／原子工作包維護一份 tracked worklog；tree 真改時在同一整合 commit
   更新，no-tree disposition／遠端狀態不改 worklog。
+- exact-head 終態只有新增 ⚪ 時，PR body 的 `DEFERRED_WHITE head=<40hex> comment=<decimal>
+  item=<decimal>` 是唯一 no-tree 登記形態；下一個本來會改 tree 的 PR 在首候選前掃 merged PR
+  bodies，將尚未存在於 `91` 的 pair 批量入籍。任意散文、錯 head、重複或無來源 pair 都不算。
 - 一個工作包／PR 從研究到 merge／rollback／正式阻塞維護一份倉庫外本地 handoff，不按驗收輪
   拆檔。只有正式轉交、rollback 後另起恢復包或真正拆 PR 才另建。
 - 這一終態由 D38 覆寫 D36／D37 的過渡粒度；`docs/worklog/README.md`、CLAUDE 與 AGENTS 已同批同步。

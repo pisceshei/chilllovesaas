@@ -861,6 +861,19 @@
   只登記，不為呈現差異改 remote body；日後若把 tuple 改成需人工閱讀的主要介面，再統一渲染形態
   【F5/F11；來源＝PR #66 Claude issue comment `5369077825` ⚪1；取證日期＝2026-08-21】
 
+- **舊「五處共用依據」歷史更正仍指向已刪除的兩個 consumer**：
+  本 PR 重寫現行收斂制度時，`CLAUDE.md` 與 `docs/dev/m0-review-convergence.md` 已不再保留原本
+  共用的 fail-open 複驗式，但本檔歷史更正仍以「五處」列出它們。現行規則方向與 doc-claims
+  沒有反轉；依 17.2 只登記，日後整理該歷史更正時再按實際 consumer 集合日期化校正
+  【F2/F11；來源＝PR #66 Claude issue comment `5369375370` ⚪1；取證日期＝2026-08-21】
+
+- **⚪ 對帳 observed reviewer allowlist 與 registered 來源字面不對稱**：
+  observed 端依 workflow 接受 `claude[bot]`／`github-actions[bot]`，registered regex 仍要求來源
+  字面為 `PR #66 Claude issue comment`；現有 recovery 身分留言沒有 ⚪，所以本輪集合未反轉。
+  依 17.2 只登記；日後若 recovery reviewer 真承載 ⚪，須把來源 grammar 與實際作者一起版本化，
+  不得以錯作者字面硬湊集合
+  【F5/F11；來源＝PR #66 Claude issue comment `5369375370` ⚪2；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

@@ -344,13 +344,48 @@ gh api repos/pisceshei/chilllovesaas/pulls/66
 猜測或時間窗 fallback。
 
 🔴 **本專案使用邊界**：0f 以受信任 workflow 產生 `run_id`／`run_attempt`／candidate
-（精確取 `github.event.pull_request.head.sha`）／verdict comment id（或內容 hash）的 run-specific
-evidence。0e 依 run id 取原始回應，要求 `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且
-其 `head.sha == candidate`，並以 run／job／check-run 的 `head_sha == candidate` 作本倉庫 canary；
-任一缺失、多義或不等即 C2=0，`head_sha` 單欄與時間窗都不能獨立證明綁定。C3 只排除 workflow
+（精確取 `github.event.pull_request.head.sha`）／`verdict_comment_id`／`verdict_body_sha256` 的
+run-specific evidence；comment ID 與 body hash 必須同時存在，不是二選一。0e 依 run id 取原始
+回應，要求 `event=pull_request`、`pull_requests[]` 中恰有目標 PR 且其
+`head.sha == candidate`，並以 run／job／check-run 的 `head_sha == candidate` 作本倉庫 canary；
+任一缺失、多義或不等即 C2=0，`head_sha` 單欄與時間窗都不能獨立證明綁定。body 不可變綁定
+另見 A14。C3 只排除 workflow
 jobs `check_run_url` 指出的 evaluator 精確 check-run ID；不得只按 `name=review` 排除。排除後
 eligible 集合仍須非空且全部 success；self ID 缺失／多重、只剩 self、其他 pending 或 head 不符
 都 C3=0。
+
+### A14. PR issue comment 可原地更新；分頁只保證逐頁取全，不是跨端點交易快照
+
+GitHub issue-comments REST 官方逐字寫：
+
+> "You can use the REST API to update comments on issues and pull requests."
+
+同頁的 update endpoint 是 `PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}`，response schema
+同時含 `body` 與 `updated_at`。來源：
+<https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28>（取證 2026-08-21）。
+
+GitHub pagination 官方頁逐字寫：
+
+> "When a response is paginated, the response headers will include a `link` header."
+
+並說明 paginate 會逐頁請求直到最後一頁；每頁上限通常為 100。來源：
+<https://docs.github.com/en/rest/using-the-rest-api/using-pagination-in-the-rest-api>
+（取證 2026-08-21）。Review comments 官方頁另明載它們不同於 PR 的 issue comments，且各自有
+獨立 list endpoint：<https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28>
+（取證 2026-08-21）。
+
+⚠️ **〔推論，不是 GitHub 明文保證〕**：上述官方頁只定義可更新的 comment 與各端點／各頁如何
+讀取，沒有提供 issues comments、reviews、inline comments、GraphQL threads 的跨端點交易
+snapshot 契約。因此本專案不把單次依序讀取視為原子快照：0e 對四個完整集合使用版本化
+canonical serializer＋SHA-256 digest，只有兩次連續完整掃描在非零 settle interval 前後得到相同
+digest vector，且每輪前後 `headRefOid` 未變，才可凍結。任何插入、body 原地更新、thread 狀態
+變化或分頁失敗都要重掃或 fail-closed。
+
+🔴 **本專案的 C2 邊界**：0f 完成最終判詞貼文／更新後，按 `verdict_comment_id` 從 GitHub 回讀
+`.body`，對不作換行或 Unicode 正規化的 UTF-8 bytes 計算 `verdict_body_sha256`；0e 依同一 ID
+重取 body 並重算。相同 ID 但 hash 不等、hash 缺失／格式錯、或 body 後續被改，一律 C2=0；
+`updated_at` 只作診斷，不替代內容 hash。0e 必須有 same-ID body-edit fixture 與移除 hash guard 的
+mutation。
 
 ---
 

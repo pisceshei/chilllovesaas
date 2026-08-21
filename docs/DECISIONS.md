@@ -575,16 +575,32 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 - current-head finding 集合為空時，時間下界定義為負無限；合法 exact-head clean completion 可滿足
   時序，但沒有 completion 仍 C1=0。0e 要以「零 finding＋clean／零 finding＋無 completion」正反格
   鎖定，不得把不存在的最後 finding 誤歸欄位缺失。
+- 四個驗收集合（issues comments、reviews body、inline comments、GraphQL threads）不是一個
+  可假定原子的讀取。0e／過渡期 CLI 每次完整掃描前後都須確認 candidate `headRefOid`，再由
+  版本化 canonical serializer 對排序後、含判定欄位與 body／版本欄位的四集合各算 SHA-256；
+  只有兩次連續完整掃描在非零 settle interval 前後得到相同 digest vector 才可凍結 ledger。
+  插入 finding、原地改 body、thread 狀態變化、分頁失敗或兩掃不等均 fail-closed；0e fixture 必測
+  review 與 issue 端點讀取間插入 finding、兩掃間改 body，以及刪除穩定守衛的 mutation（A14）。
+- ⚪ 登記不得成為 exact-head 增殖器：只要本批另有 tree 修復，仍在同一 commit 搬入 `91` §3；
+  exact-head 終態若只新增 ⚪，改在 PR body 寫唯一 grammar
+  `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`，不改 tree。下一個本來就會改
+  tree 的 PR，在首個候選前全量讀 merged PR bodies，把尚未存在於 `91` 的 deferred pair 批量
+  入籍。錯 head、重複或無法在完整判詞集合複驗的 machine line 不算登記；任意 PR 散文不復活
+  PR #55 前已廢止的過渡辦法。
 - CI 零 check 集合＝尚未執行，不是 all-pass：deadline 內等待，deadline 後 C3=0／證據未取得。
   `gh pr checks` 在 pending 時的退出碼 8 不是 API failure，必須先解析 JSON bucket 再分流；JSON
   未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending 繼續等，
   terminal fail 進凍結 ledger；skip／cancel 先對同一 head 重跑 owning check 一次，仍非乾淨才保存
   兩次證據轉人工。API failure 與 head drift 非零終止。
-- C2 必須改成 run-specific exact-head 證據：0f 由受信任 workflow 產生 `run_id`／`run_attempt`／
-  candidate＝`github.event.pull_request.head.sha`／verdict comment id 或 hash；0e 依 run id 複驗
-  `event=pull_request`、目標 PR 的 `pull_requests[].head.sha`，並要求 run／job／check-run
-  `head_sha == candidate` 作本倉庫具名 canary。官方未給該 response 欄位的 pull_request 永久語義，
-  故任一缺失／不等即 C2=0，單看 `head_sha` 或舊時間窗都不能綁 run/head。C3 只排除 workflow jobs
+- C2 必須改成 run-specific exact-head 且內容不可變的證據：0f 由受信任 workflow 同時產生
+  `run_id`／`run_attempt`／candidate＝`github.event.pull_request.head.sha`／
+  `verdict_comment_id`／`verdict_body_sha256`。0f 完成最終貼文或更新後，必須按 ID 從 GitHub
+  回讀 `.body`，對不作任何正規化的 UTF-8 bytes 計算 SHA-256；0e 按同一 ID 重取、重算並要求
+  hash 相等。ID 不替代 hash；缺／錯 hash、同 ID body 被原地編輯或內容不等均 C2=0。0e 再依
+  run id 複驗 `event=pull_request`、目標 PR 的 `pull_requests[].head.sha`，並要求 run／job／
+  check-run `head_sha == candidate` 作本倉庫具名 canary。官方未給該 response 欄位的 pull_request
+  永久語義，故任一缺失／不等即 C2=0，單看 `head_sha`、comment ID、`updated_at` 或舊時間窗
+  都不能綁 run/head/body；fixture 必測 same-ID body edit 與缺／錯 hash（A13／A14）。C3 只排除 workflow jobs
   `check_run_url` 指出的 evaluator 精確
   check-run ID；self ID 缺失／多重、排除後 only-self、其他 pending 或錯 head 都是 C3=0（A13）。
 - C4 的 0e fixture／mutation 必須覆蓋合法通過、合法需修改＋非空理由、判詞缺失、標記不在首行、

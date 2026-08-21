@@ -321,13 +321,15 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
 - 🔴 **🔴＋🟡 全清驗收（2026-08-16 使用者裁定，取代「🟡 不擋通過」）**：通過＝🔴 為零
   **且未清 🟡 為零**。🟡 三清法：①修復（diff 可驗證）②裁定不修（PR 描述或
   `docs/DECISIONS.md` 明文條目，驗收方核對存在即清、不評裁定本身）③證偽（附證據，
-  驗收方複驗成立即清）。🔴 不適用②。範圍外既有問題走 **⚪**（登記不擋，作者搬進
-  `docs/specs/91-pit-register.md` §3 轉入暫存區——PR #55 已建立，「建立前登記於
-  PR 描述」的過渡辦法自此作廢）。全文＝CLAUDE.md §驗收基準。
+  驗收方複驗成立即清）。🔴 不適用②。範圍外既有問題走 **⚪**（登記不擋）：本批有 tree
+  修復就搬進 `docs/specs/91-pit-register.md` §3；exact-head 終態若只新增 ⚪，不得為登記造 head，
+  改在 PR body 寫 CLAUDE 15.1 的 exact `DEFERRED_WHITE` 機器行，下一個本來會改 tree 的 PR
+  首候選批量入籍。任意 PR 散文不算此例外。全文＝CLAUDE.md §驗收基準。
 - 🔴 **提交前復核（2026-08-17 新增鐵律 15，全文與沿革見 CLAUDE.md／該輪 worklog）**：
   push 前逐項對照——宣稱已修復者於已提交差異（回應輪對**上輪 push 的 HEAD** 取兩點 diff、SHA 由 push 時自記、基準 ref 推送遠端；對 base 的累計 diff 僅作初始盤點）有對應 hunk、
-  ②（僅 🟡）⚪ 核對登記存在、③核對證據或其可存取引用存在。候選 head 先等雙方＋CI 完成，
-  四集合全量攝取後凍結 ledger；編輯期 targeted gate，tree 凍結後只跑一次全套，再 commit、
+  ②（僅 🟡）⚪ 核對 `91` 或合規 terminal deferred line 存在、③核對證據或其可存取引用存在。
+  候選 head 先等雙方＋CI 完成，四集合須在 head guards 間連續兩次得到相同 canonical digest
+  vector 才凍結 ledger；編輯期 targeted gate，tree 凍結後只跑一次全套，再 commit、
   逐項核對、最終重拉、push＋自記 head 與遠端基準 ref。全收定論只寫核對後 PR 留言；全套後
   動 tracked file＝重新凍結並再跑，但純查詢、resolve、PR body 與本地 handoff 不產生新 head。
 - 🔴 **響應式與網路層取證**（2026-08-16 新增鐵律 13/14，全文在 CLAUDE.md）：
@@ -353,7 +355,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   合併仍須非空集合 bucket 全 `pass` 且 head 未變。
   `MAX_FIX_ROUNDS` 與自動掛人工裁定 label 不恢復。雙清必須顯式含 Codex；③合併條件**四重
   缺一不可**＝Codex 已完成當前 head 審查，全量攝取三個 REST 集合、每則 review body 與
-  paginated GraphQL threads，且最後 finding 後已有 reviewer-controlled 乾淨 completion、
+  paginated GraphQL threads，且四集合連續兩次 canonical digest vector 相同、每輪前後
+  `headRefOid` 未變；最後 finding 後已有 reviewer-controlled 乾淨 completion、
   未解 thread 為零（作者可 resolve，故 `isResolved` 不單獨證明通過）∧
   finding 來自 exact-head REST review body／以 review ID 關聯的 inline／thread，或 connector
   issue comment 中可由受控 `Reviewed commit:` 欄綁 current head，且第一個非空行精確為
@@ -372,9 +375,11 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   結果時 fail-closed 轉人工；無 tree 變更的 finding 處置只可 same-head 請求一次，若 deadline
   前沒有更晚 completion，C1 保持 0 並轉獨立人工審核／人工合併，不再造 head 或重試 ∧
   Claude bot 通過且零未清，且 0f 產生的 run-specific evidence 以
-  `github.event.pull_request.head.sha` 作 candidate；0e 依 run id 複驗 `event=pull_request`、目標 PR
-  的 `pull_requests[].head.sha` 與 run／job／check-run `head_sha` 均同值。最後三欄只是本倉庫具名
-  canary、不是平台永久保證；任一缺失／不等即 C2=0，留言水位／時間窗不能取代 run/head 綁定 ∧
+  `github.event.pull_request.head.sha` 作 candidate，並同時提供 `verdict_comment_id` 與回讀最終
+  `.body` UTF-8 bytes 的 `verdict_body_sha256`；0e 依 ID 重取 body、重算 hash，再依 run id 複驗
+  `event=pull_request`、目標 PR 的 `pull_requests[].head.sha` 與 run／job／check-run `head_sha`
+  均同值。comment ID 不可替代 hash；任一缺失／不等即 C2=0，留言水位／時間窗不能取代
+  run/head/body 綁定。最後三個 `head_sha` 只作本倉庫 canary、不是平台永久保證 ∧
   **機械 CI 全綠**：candidate head 的 check-run 集合只排除 0f 由 workflow jobs `check_run_url`
   取得的 evaluator 精確 self ID；排除後仍須非空且全部 success，only-self、錯／多 self ID 或其他
   pending 都 C3=0 ∧ 判詞格式機械驗證；C4 fixture／mutation 要覆蓋合法通過／合法需修改、缺失、
