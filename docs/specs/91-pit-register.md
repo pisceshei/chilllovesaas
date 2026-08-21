@@ -889,6 +889,15 @@
   使用者），依 17.2 只登記；機械化候選已併入 §2 的 G-03（ingestion checker），待使用者裁定
   【F5/F11；來源＝PR #66 Claude issue comment `5369828302` ⚪2；取證日期＝2026-08-21】
 
+- **`external-facts.md` B5 與 GFM tables extension 的跳脫例外互斥**：
+  B5 逐字寫「code span 內不做任何 inline 解析，反斜線轉義也失效」並註「GFM 規範同文」，
+  但 GFM 的 **tables extension** 對表格儲存格內的直線有明文例外（逐字＝
+  "Include a pipe in a cell content by escaping it, including inside other inline spans"，
+  <https://github.github.com/gfm/>，取證 2026-08-21）⇒ 照 B5 現行文字辦事的人會結論
+  「code span 裡跳脫無效」，而 `CLAUDE.md` 鐵律 20.2.7 恰恰要求跳脫。該檔不在本 PR 累積 diff
+  內，依 17.2 只登記；日後動 B5 時補一句 tables-extension 例外並與 20.2.7 互相交叉引用
+  【F7/F11；來源＝PR #66 Claude issue comment `5371106688` ⚪1；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

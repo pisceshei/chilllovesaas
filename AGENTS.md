@@ -369,7 +369,11 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   有恰一個 10–40 位 `Reviewed commit:` 前綴並匹配當前 head。A 型固定 About-Codex details 與 B 型
   確認敘述屬同一 completion 說明，不以 prose NLP 重分類；第二個頂層 verdict marker 使 comment
   ambiguous／C1=0。一般散文 SHA、缺／多 ref、未知 envelope 都 fail-closed。跨載體順序只比較 UTC event time：已提交 review 的 `submitted_at` 對
-  issue comment 的 `created_at`；completion 必須嚴格晚於最後 finding，缺值、解析失敗或相等都
+  issue comment 的 `created_at`（**曾被編輯者改用 `updated_at`**——connector 可在 clean 之後編輯
+  既有 same-head 留言補 finding，照 `created_at` 排會讓 clean 誤判為較晚；`updated_at` 缺失或
+  不可解析即 fail-closed）；completion 必須嚴格晚於最後 finding，且每筆較早 finding 都要有
+  **機器可讀、以 finding 身分為鍵**的 disposition（`fixed`／`disproved`／`no-fix-ruled`，後兩者
+  帶證據或裁定引用），不得由事件排序或 thread 狀態推定。缺值、解析失敗或相等都
   fail-closed；finding 集合為空時時間下界是負無限，有合法 completion 才通過，沒有 completion
   仍 C1=0。數字 ID 不跨端點排序。未來 clean REST review 只有在 fixture 明列且有權威
   exact-head 欄位時才收 ∧

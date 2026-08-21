@@ -570,7 +570,13 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   fixture 證明「先 clean、後 finding」令 C1 回到 0。缺 ref、多 ref、錯 ref、未知 envelope、一般
   散文 SHA 或只有 reaction 一律 C1=0。
 - 載體間先後只比較 UTC event time：已提交 review 用 `submitted_at`，issue comment 用
-  `created_at`；clean 必須嚴格晚於最後 finding。缺值、解析失敗或相等都 fail-closed，數字 ID
+  `created_at`；**曾被編輯的 issue comment（`updated_at` 晚於 `created_at`）改以 `updated_at`
+  為排序時點，缺失或不可解析即 fail-closed**——否則 connector 在 clean 之後編輯既有留言補
+  finding，該 finding 會帶較舊的 `created_at` 而讓 clean 誤判為較晚（可編輯性官方證據＝A14）。
+  clean 必須嚴格晚於最後 finding，且 clean 時點前的每筆 finding 都須有**機器可讀、以 finding
+  身分為鍵**的 disposition（值域 `fixed`／`disproved`／`no-fix-ruled`；後兩者帶可存取的證據或
+  裁定條目引用），不得由事件排序或 thread 狀態推定；缺鍵、值域外或缺證據引用即 C1=0。
+  缺值、解析失敗或相等都 fail-closed，數字 ID
   只作 endpoint-local 身分／去重，不跨端點排序（官方欄位證據＝external-facts A12）。
 - current-head finding 集合為空時，時間下界定義為負無限；合法 exact-head clean completion 可滿足
   時序，但沒有 completion 仍 C1=0。0e 要以「零 finding＋clean／零 finding＋無 completion」正反格

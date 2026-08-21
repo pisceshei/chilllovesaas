@@ -321,8 +321,12 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
 18. **自動合併鐵律（2026-08-18 使用者裁定；配套機制未落地前不啟用自動合併）**：
     - **18.1 合併條件（四重合取，缺一不可，且每項都是 fail-closed 的存在型判定）**：
       ①Codex **已完成本輪審查**且零未清意見：先按 15.2 對當前 head 全量讀三個 paginated REST
-      集合、每則 review `.body` 與 paginated GraphQL `reviewThreads`，並取得兩次連續相同的四集合
-      canonical digest vector；單次跨端點讀取、兩掃 digest 不同或任一 head guard 不等均 C1=0。
+      集合、每則 review `.body` 與 paginated GraphQL `reviewThreads`。**0e 合併後**另須取得兩次
+      連續相同的四集合 canonical digest vector，此時單次跨端點讀取、兩掃 digest 不同或任一
+      head guard 不等均 C1=0；**0e 合併前**倉庫內沒有 serializer 與已校準 `SETTLE_INTERVAL_S`
+      （見 15.2 過渡期分流），本項只能由人工 ledger 完成集合對帳並誠實記「機械證據未取得」，
+      不得把「兩掃穩定」當已生效判準，也不得據此宣稱四條件齊。任一集合未取全、head guard
+      不等仍然 C1=0。
       Codex 有兩個已在本倉庫實測的載體：
       **finding review**＝REST review 的 `.user.login` 精確等於 `chatgpt-codex-connector[bot]`、
       `.commit_id == headRefOid`，其 body 或以 `.pull_request_review_id` 關聯的 inline／thread 有任何
@@ -343,8 +347,23 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       reviewer-controlled 乾淨 completion 只接受上述 exact-head clean issue comment，或未來 0e fixture
       明列且同樣有權威 exact-head 欄位的 clean REST review。跨載體先後只比較 UTC event time：
       已提交 review 用 `submitted_at`，issue comment 用 `created_at`；completion 必須嚴格晚於最後
-      finding，欄位缺失、無法解析或時間相等都 fail-closed。數字 ID 只作 endpoint-local 身分／去重，
-      不跨 reviews／issues comments 排序。completion 時點之前的所有 finding 必須已有合規 disposition。
+      finding，欄位缺失、無法解析或時間相等都 fail-closed。🔴 **被編輯過的 issue comment 不得用
+      `created_at` 排序**：GitHub 官方明載 comment 可經 REST 原地更新並暴露 `updated_at`
+      （external-facts A14），故 connector 可在 clean completion 之後**編輯既有 same-head 留言**
+      補上 finding，而該 finding 仍帶較舊的 `created_at` ⇒ clean 會被誤判為較晚、C1 假通過。
+      判定：凡 `updated_at` 晚於 `created_at` 的 issue comment，一律以 `updated_at` 作其排序
+      時點；若 `updated_at` 缺失或無法解析則整則 fail-closed。0e fixture 必須含
+      「clean 之後編輯既有留言補 finding ⇒ C1 回到 0」與「移除 `updated_at` 排序守衛的
+      mutation 必須轉紅」兩格。數字 ID 只作 endpoint-local 身分／去重，
+      不跨 reviews／issues comments 排序。completion 時點之前的所有 finding 必須已有合規
+      disposition，且 **disposition 必須是機器可讀輸入、不得由事件排序或 thread 狀態推定**：
+      0e 契約要求一份以 finding 身分為鍵的 disposition 來源（inline／thread 用 review ID＋
+      comment ID，issue-comment finding 用 comment ID），每筆值域恰為
+      `fixed`／`disproved`／`no-fix-ruled`，且 `disproved`／`no-fix-ruled` 須各自帶可存取的
+      證據或裁定條目引用。缺鍵、值域外、缺證據引用或來源不可解析一律 C1=0。0e fixture 必須
+      含「全部 finding 有合規 disposition ⇒ 可通過」與「其中一筆缺 disposition ⇒ C1=0」正反格；
+      若日後裁定改採「較晚的 reviewer completion 本身即 disposition」，須同批刪除本句，不得
+      兩制並存。
       current-head finding 集合為空時，時間下界定義為負無限：合法 exact-head completion 可通過；
       空 finding 但沒有 completion 仍 C1=0，不能把「找不到最後 finding」誤作欄位缺失或乾淨證據。
       證偽、裁定不修或 resolve 只記 disposition，
@@ -407,7 +426,13 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       代行／自動通道日後啟用時，合併 consumer 必須在呼叫 merge 的同一控制流重新執行 0e
       merge-boundary mode，取得 current head 的新 stable vector、C1–C4 與四集合 watermarks；任何
       晚於該結果的 review／comment／thread 變化、vector／watermark 不等或重驗失敗都中止合併。
-      `--match-head-commit` 官方只保證 PR head SHA 相等，**不會**讓 review state 的舊結果自動失效；
+      🔴 **這只縮小競態窗，並未關閉它**：最後一次重驗完成到 merge 指令生效之間，同 head 仍可能
+      新增 finding，而該變化不在已擷取的 watermarks 內；`--match-head-commit` 官方只保證 PR head
+      SHA 相等（"Commit SHA that the pull request head must match to allow merge"），**不會**讓
+      review state 的舊結果自動失效。GitHub 未提供 review-state 的服務端合併前置條件（本輪查證
+      ＝未取得）⇒ **殘餘窗只能靠「不開代行／自動合併」承擔**：在服務端前置條件出現前，
+      18.4 自動合併與 D31／D32 代行一律維持關閉，合併由使用者人工執行；任何人不得以
+      「已在同一控制流重驗」為由宣稱該競態已消除。
       在上述 guard 的 production canary 尚未證成前，D31／D32 代行授權保持凍結，18.4 workflow
       自動合併也不得啟用。日後 guard 實證完成且非 18.3 PR 命中具名授權，才可代行
       `gh pr merge --squash --match-head-commit <head>`。部署管線就緒後（合併版總方案 CD 包）合併即

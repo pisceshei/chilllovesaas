@@ -450,9 +450,12 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
    要求的 worklog，不用「已確認」代替輸出。
 3. push 候選後先等 Claude、Codex 與 CI 都對 exact head 完成；未齊以前不改檔。完成後全量拉
    conversation、review body、inline 與 GraphQL threads；每次完整掃描前後都 guard head，並對
-   四個排序後的完整集合算版本化 canonical SHA-256 digest。只有兩次連續掃描在非零 settle
-   interval 前後得到相同 digest vector，才去重成倉庫外凍結 ledger；單次掃描或兩掃間插入／
-   編輯／thread 變化都 fail-closed（external-facts A14）。D38 起現有
+   四個排序後的完整集合算版本化 canonical SHA-256 digest。🔴 **本步依 0e 是否已合併分流**：
+   **0e 合併後**＝只有兩次連續掃描在該包已校準的 `SETTLE_INTERVAL_S` 前後得到相同 digest
+   vector，才去重成倉庫外凍結 ledger；單次掃描或兩掃間插入／編輯／thread 變化都 fail-closed。
+   **0e 合併前（現況）**＝倉庫內不存在 serializer 與已校準 interval，全量拉取只作**人工
+   ledger**，可另跑診斷用雙掃但只能標為診斷，不得宣稱合規 digest、不得令 C1／四條件成立、
+   不得授權代行或自動合併（external-facts A14；分流全文見 CLAUDE.md 15.2 與 D38）。D38 起現有
    `await-verdict.sh` 只屬歷史／排隊訊號，不作任何通過證據；0e／0f 尚未合併時直接以 CLI 在同一
    明列 interval／max-polls／deadline 的有界預算輪詢三方載體，之後只用 0e evaluator。CI 以
    `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都重取
@@ -497,8 +500,10 @@ done
 
 - 每個**實際 Git tree 變更**仍須 exact-head Claude＋Codex 最終審查；舊 head 不可沿用。
 - GitHub CI 對每次 push 仍全跑；本地只是把開發內迴圈改成 targeted，沒有略過候選驗證。
-- 三個 REST 集合、review body 與 GraphQL threads 仍全量分頁攝取；還要連續兩次取得相同
-  canonical digest vector，缺席、單掃或不穩定都不是通過。
+- 三個 REST 集合、review body 與 GraphQL threads 仍全量分頁攝取。**0e 合併後**另須連續兩次
+  取得相同 canonical digest vector，缺席、單掃或不穩定都不是通過；**0e 合併前**沒有 serializer
+  與已校準 interval，全量攝取只作人工 ledger，缺席仍然不是通過，但「兩掃穩定」在此期間是
+  診斷而非機械證據（同 CLAUDE.md 15.2 的過渡期分流）。
 - 18.3 自我指涉、workflow、規範、不可逆 schema 與費用 PR 仍由使用者人工合併。
 - 外部語義仍先走鐵律 16／19 官方取證；無關元件仍受 17.2 射程限制。
 
@@ -547,7 +552,11 @@ gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/reviews
 10–40 位十六進位 ref、該 ref 為當前 40 位 head 前綴的 issue comment。PR #61 的 B 型 comment
 `5352954268`（`2026-08-20T07:45:46Z`）之後又有同 head finding review `4980284182`
 （`2026-08-20T07:47:33Z`），所以先到 clean 不是終態；較晚 finding 必須令 C1 回到 0。跨載體先後只把已提交 review
-的 `submitted_at` 與 issue comment 的 `created_at` 解析為 UTC event time；clean 必須嚴格晚於最後
+的 `submitted_at` 與 issue comment 的 `created_at` 解析為 UTC event time（**曾被編輯的 issue
+comment 改用 `updated_at`**，缺失或不可解析即 fail-closed；否則 clean 之後編輯既有留言補上的
+finding 會帶較舊 `created_at` 而讓 clean 誤判為較晚）；每筆較早 finding 另須有機器可讀、以
+finding 身分為鍵的 disposition（`fixed`／`disproved`／`no-fix-ruled`，後兩者帶證據或裁定引用），
+不得由事件排序或 thread 狀態推定。clean 必須嚴格晚於最後
 finding，欄位缺失、解析失敗或時間相等都 fail-closed。數字 ID 只作 endpoint-local 身分／去重，
 不跨端點排序（官方欄位證據見 `docs/dev/external-facts.md` A12）。未知作者、缺／多／錯 ref、未知 envelope 一律 fail-closed。未來若 connector 產生 clean
 REST review，也必須先以實物加入 fixture 並有權威 exact-head 欄位，不能靠一般 body SHA 猜測。
