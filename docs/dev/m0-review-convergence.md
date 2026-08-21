@@ -1,9 +1,8 @@
 # M0 — 驗收閉環的收斂機制
 
-> 收斂機制現為**四項**：原四機制之一（`MAX_FIX_ROUNDS` 真閘門）已於 **2026-08-19 依使用者裁定廢止**，
-> 其餘三項＋鐵律 15 提交前復核（交付完整性層，見文末段；2026-08-17）。
-> 2026-08-20 新增的鐵律 20 是「送驗前重犯矩陣」紀律與證據帳，未新增 checker，故不改上列
-> 機制集合；若日後要機械化，須先進 `91` §2 列代價並另取裁定。
+> **現行入口是文末「2026-08-21 Convergence Protocol v2」**。下方早期四／五機制編號保留作
+> 沿革，不再代表目前流程；`MAX_FIX_ROUNDS` 不恢復，新的 C1 evaluator 與 workflow 接線仍待
+> 各自的 18.3 工作包落地。
 
 > 對應規格：`AGENTS.md` §工作記錄與交接文件的寫法、`CLAUDE.md` §工作方式。
 > 建立日期：2026-08-15（使用者裁定）。
@@ -11,14 +10,13 @@
 ## 概述
 
 把「自動驗收永遠找得到新問題、因此永遠不通過」這個結構性問題修掉。
-🔴 **現行四項**（下列編號 1–5 是**歷史編號**，保留以免既有交叉引用失效；第 4 項已於
-2026-08-19 廢止，**不計入現行機制**）：
+🔴 **歷史機制清單**（下列編號 1–5 保留以免既有交叉引用失效；現行流程見文末 v2）：
 
 1. `scripts/check-doc-claims.rb` — 文檔引用保真的**確定性檢查器**
 2. `AGENTS.md` 新增文檔**分層規範**（歷史層／終態層／契約層）
 3. `claude-review.yml` — 文檔類判定權交給腳本、同一項目不重提、`CLAUDE.md` 進驗收依據
-4. ~~`MAX_FIX_ROUNDS` 由「換一句留言」升級成**真閘門**~~ **已廢止（2026-08-19 使用者裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）**——機制已隨 **PR #59 於 2026-08-19 合併移除**（複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:2`（兩處命中都在**廢止說明註釋**裡，不是活的常數））。🔴 **它留下的缺口沒有替代機制**：收斂現在完全依賴第 1 項那類確定性檢查器，見文末「廢止後的收斂責任」段。
-5. **鐵律 15 提交前復核**（交付完整性層）：修復→閘門→commit→逐項核對→重拉兩類留言→push（全文見文末「第五機制」段）。
+4. ~~`MAX_FIX_ROUNDS` 由「換一句留言」升級成**真閘門**~~ **已廢止（2026-08-19 使用者裁定「取消熔断机制，所有的必须循环到双清为止。不限次数」）**——機制已隨 **PR #59 於 2026-08-19 合併移除**。當時留下的缺口於 2026-08-21 改由 v2 的原子攝取、根因批次與模式切換承接，不恢復輪數熔斷。
+5. **鐵律 15 提交前復核**（交付完整性層）：現行已改為雙方完成→凍結 ledger→targeted 內迴圈→凍結 tree 全套→commit→逐項核對→最終全量重拉→push。
 
 ## 為什麼要做（問題的形狀）
 
@@ -182,12 +180,14 @@
 
 ## 歷史編號第五機制：鐵律 15 提交前復核（2026-08-17，PR #53）
 
-> 🔴 編號沿用建立時的「第五」；現行機制實為**四項**（原第 4 項熔斷已於 2026-08-19 廢止）。
+> 🔴 編號沿用建立時的「第五」；本節只保存 2026-08-17 的歷史編號，不再計算或描述現行機制；
+> 現行流程以文末 Convergence Protocol v2 為準。
 
-流程＝修復 → 閘門 → commit → **逐項核對已提交差異**（回應輪對**上輪 push 的 HEAD** 兩點 diff、SHA 與輕量基準 ref 由 push 時自記**並推送遠端**（合併後刪）；對 PR base 的累計 diff 僅作初始盤點——同 CLAUDE 15.1）（宣稱已修復者有
+2026-08-17 原流程＝修復 → 閘門 → commit → **逐項核對已提交差異**（回應輪對**上輪 push 的 HEAD** 兩點 diff、SHA 與輕量基準 ref 由 push 時自記**並推送遠端**（合併後刪）；對 PR base 的累計 diff 僅作初始盤點——同 CLAUDE 15.1）（宣稱已修復者有
 hunk；清法②（僅 🟡）與 ⚪ 核對登記存在、③ 核對證據存在）→ **重拉兩種留言**（bot 判詞＋
 Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「前四機制」，現行為三項——原第 4 項已廢止）：它們管「判定怎麼下」，
-本機制管「回應輪的交付完整性」。已知限制：目前為**紀律條款**，機制化（腳本比對
+本機制管「回應輪的交付完整性」。2026-08-21 起此段只作沿革，現行固定順序見文末 v2。
+當時已知限制：它是**紀律條款**，機制化（腳本比對
 判詞清單 vs diff hunk）為待辦。
 <!-- 2026-08-17 第 5 輪自註釋移出；第 7 輪自歷史清單中段移至文末獨立段 -->
 
@@ -204,14 +204,19 @@ Codex inline；首推豁免）→ push。與其餘機制的關係（原文寫「
 - 2026-08-20（D36）：使用者指出上一項把「沿用以前形式」錯誤擴張成每個小步驟都 commit
   handoff。現行規則恢復為每個工作單位／驗收修復輪結束一份，並改在 Git 倉庫外本地保存；
   上一項保留為錯誤制度沿革，不再執行。
+- 2026-08-21（D37／D38）：先廢止以 commit 刷新驗收的循環，再由 D38 把同一 PR 的 worklog／
+  handoff 收斂為各一份；D36 的本地載體保留，驗收修復輪另拆檔與一對多 worklog 改為歷史。
 
-## 工作單位 handoff 契約（2026-08-20，D36／鐵律 21）
+## 歷史：工作單位 handoff 契約（2026-08-20，D36）
+
+> 本節保存 D36 當時形態；2026-08-21 起檔案頻率已由 D38／鐵律 21 覆寫，現行契約讀文末
+> 「產物頻率的終態」。D36 的「只存 Git 倉庫外本地工作區」仍有效。
 
 既有制度分別在「可獨立驗收單位完成」產生 worklog、在「工作結束前」產生一份 handoff。
 D35 把後者錯誤收緊成每個具名步驟與決策節點都要另檔、另 commit，造成 handoff 本身反覆改
 PR head。D36 依使用者澄清恢復原有時間邊界，並把 handoff 移出 Git 倉庫。
 
-固定處理如下：
+D36 當時固定處理如下：
 
 - 一個工作包／PR 初始交付、一次驗收修復輪、正式阻塞／rollback 或整次工作結束，各寫一份
   handoff；研究、實作、測試、commit、push、等待、驗收與遠端結果收在同一份，不逐小步拆檔。
@@ -222,7 +227,10 @@ PR head。D36 依使用者澄清恢復原有時間邊界，並把 handoff 移出
 - worklog 三段、倉庫終態回寫與鐵律 19 不被取代；附錄 A 只追蹤實際入庫的 worklog 與既有
   歷史 handoff，不為本地 handoff 新增路徑。
 
-## 廢止後的收斂責任（2026-08-19）
+## 歷史：廢止後的收斂責任（2026-08-19）
+
+> 本節記錄 2026-08-19 到 D37 前的判斷；2026-08-21 已由文末 v2 取代「只靠確定性 checker」
+> 的單一路徑，保留本節是為了說明沿革，不作現行操作指令。
 
 熔斷是本文原本論述的第 4 項機制，也是唯一一個**保證有限步終止**的機制。它被使用者裁定取消後，
 「輪數會不會收斂」不再有任何機制保障 ⇒ **收斂責任整個移到第 1 項那類確定性檢查器上**。
@@ -425,15 +433,131 @@ query($owner:String!, $name:String!, $number:Int!, $endCursor:String) {
 - **根因**：把工具輸出層、編碼層、shell 轉參層與被驗內容混為一談；只看退出畫面，不驗實際
   輸入集合或渲染樹。
 - **固定處理**：表格字面直線跳脫，預期輸出不加 Markdown 強調符；用實際 Markdown render
-  核對結構。Windows 顯式 UTF-8、中文集合關閉 quotepath；可能被 MSYS 改寫的 `ref:path`
+  核對結構，並以穩定內容錨定位目標列，斷言最後 `<td>` 保留末欄 sentinel 全文。Windows 顯式
+  UTF-8、中文集合關閉 quotepath；可能被 MSYS 改寫的 `ref:path`
   改成 ref 與 path 分開的 argv，並確認實際使用的 bash／python。
-- **反向複驗**：渲染後計數 table 結構節點；UTF-8 重跑 lint；集合兩端都用相同 quotepath 設定；
-  令 ref 不存在時命令必須顯性非零，而不是得到與「零命中」相同的輸出。
+- **反向複驗**：渲染後除計數 table 結構節點，另刪掉末欄 sentinel 或插入一個裸 `|`，內容級
+  斷言必須轉紅；UTF-8 重跑 lint；集合兩端都用相同 quotepath 設定；令 ref 不存在時命令必須
+  顯性非零，而不是得到與「零命中」相同的輸出。
 
 ### 送驗前固定順序
 
 1. 用本輪改檔圈出上面適用類型；未適用的列記「不適用＋理由」，不能留白。
-2. 先跑每類的反向複驗，再跑全閘門；結果寫入 worklog，不用「已確認」代替輸出。
-3. 依鐵律 15 commit 後核對兩點 diff，再重拉 GitHub 全量資料；任何新意見回到第 1 步。
-4. 同類若仍復發，依鐵律 20.4 記防線失效；需擴 checker 時先進 `91` §2 等裁定，不能在
-   當輪以「順手斷根」擴張 `scripts/` 或 CI。
+2. 編輯期先跑每類反向複驗與 targeted gate；候選 tree 凍結後才跑一次全套。結果寫入現行規則
+   要求的 worklog，不用「已確認」代替輸出。
+3. push 候選後先等 Claude、Codex 與 CI 都對 exact head 完成；未齊以前不改檔。完成後全量拉
+   conversation、review body、inline 與 GraphQL threads，去重成倉庫外凍結 ledger。D38 起現有
+   `await-verdict.sh` 只屬歷史／排隊訊號，不作任何通過證據；0e／0f 尚未合併時直接以 CLI 在同一
+   明列 interval／max-polls／deadline 的有界預算輪詢三方載體，之後只用 0e evaluator。CI 以
+   `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都重取
+   `headRefOid`，任一次不等於候選 SHA 就丟棄結果並非零終止。零 check 集合與 `pending` 在
+   deadline 內繼續等；`gh pr checks` 的 pending 退出碼 8 要先按已取得的 JSON bucket 分流，不能
+   被 shell 非零處理誤判為 API failure；終態 `fail` 進 ledger；空集合到 deadline、JSON 未取得／
+   不可解析、API 失敗或 head drift 才是未取得；只有非空集合全 `pass` 且 head 不變才可合併
+   （external-facts A11）。
+4. 一次按根因批次處置；同一元件的完整狀態矩陣與反向 fixture 同批封閉，無關元件只登記
+   `91` §3。commit 後核對兩點 diff 並最終重拉，再推一個整合修復 head。
+5. 第二個 finding-bearing head 仍有同根因時，停止小修小推；在本地重建影響圖、狀態矩陣與
+   mutation，必要時拆包。需擴 checker 時依 18.3 另包，不在當輪順手改 `scripts/` 或 CI。
+
+## 2026-08-21 Convergence Protocol v2
+
+### 為什麼問題會愈修愈多
+
+2026-08-21 依 GitHub 三個 paginated REST 集合、review body、GraphQL threads、PR metadata 與
+git 歷史重建 PR #61–#65。可重跑入口如下；數量只視為該日快照，不寫進流程判準：
+
+```bash
+for n in 61 62 63 64 65; do
+  gh api --paginate "repos/pisceshei/chilllovesaas/issues/$n/comments"
+  gh api --paginate "repos/pisceshei/chilllovesaas/pulls/$n/reviews"
+  gh api --paginate "repos/pisceshei/chilllovesaas/pulls/$n/comments"
+  gh api --paginate "repos/pisceshei/chilllovesaas/pulls/$n/commits"
+done
+```
+
+| 根因 | 舊流程如何放大 | v2 固定處理 |
+|---|---|---|
+| 非同步先到先修 | Claude 先回就改 head；Codex 晚到時舊審作廢，下一 head 又各自重跑 | 三方 exact-head 全完成才凍結 ledger，未齊不改檔 |
+| C1 把歷史當未清 | 同 head 所有 REST inline 永久相加，resolve／證偽後仍 `has:N` | review `.commit_id` 綁 head、inline 以 review ID 關聯；最後 finding 後須有 fixture 鎖定 completion，未解 thread 為零 |
+| 驗證粒度錯置 | 每個本地微改全套重跑，但真正候選仍可能在最後又改 | 編輯期 targeted；tree 凍結後與 base 變動時才跑全套 |
+| 同一失敗方法無限重複 | 點修只改被指行，下一輪抽到同根因另一狀態；沒有模式切換 | 首輪整合修封閉同元件狀態矩陣；同根因再現就重建模型或拆包 |
+| 產物按驗收輪增殖 | 每輪另建 worklog／handoff，為記錄遠端結果再改 head，新增散文又成為下一輪 finding | 一個可獨立合併 PR 維護一份 worklog；一個工作包維護一份本地 handoff；no-tree 狀態不進 Git |
+
+### 不被廢止的安全邊界
+
+- 每個**實際 Git tree 變更**仍須 exact-head Claude＋Codex 最終審查；舊 head 不可沿用。
+- GitHub CI 對每次 push 仍全跑；本地只是把開發內迴圈改成 targeted，沒有略過候選驗證。
+- 三個 REST 集合、review body 與 GraphQL threads 仍全量分頁攝取；缺席不是通過。
+- 18.3 自我指涉、workflow、規範、不可逆 schema 與費用 PR 仍由使用者人工合併。
+- 外部語義仍先走鐵律 16／19 官方取證；無關元件仍受 17.2 射程限制。
+
+### C1 的唯一現行語義
+
+```text
+C1 = all_current_head_review_surfaces_ingested
+     AND reviewer_clean_completion_after_last_current_head_finding
+     AND unresolved_review_threads == 0
+```
+
+`all_current_head_review_surfaces_ingested` 包含三個 paginated REST 集合、每則 review `.body` 與
+paginated GraphQL threads。finding review 以 REST review `.user.login` 精確等於
+`chatgpt-codex-connector[bot]` 且 `.commit_id == headRefOid` 綁 head，inline／thread 只以
+`.pull_request_review_id` 歸戶；一般 comment `.commit_id` 不作 head 證據。connector 也可能在
+issues comments 發 finding；只有其獨立 `Reviewed commit:` 欄能依下述受控 parser 綁 exact head，
+其他散文 SHA 不解析。證偽、裁定不修或 resolve 不抹除 finding 的 event time／endpoint-local ID。
+
+乾淨 completion 的本倉庫實測載體是 connector issue comment，而非 clean REST review。已觀測兩種
+受控形態：A 型（PR #61 comment `5351471350`、PR #64 comments `5358332294`／`5363805191`）首行
+以精確前綴 `Codex Review: Didn't find any major issues.` 開頭，句點後同一行的 `:rocket:`／自由
+尾句不參與 envelope 分類；B 型（PR #61 comment `5352954268`）前兩個非空行精確為
+`## 驗收結論` 與 `**未發現需要新增 inline 意見的重大問題。**`。兩型都有獨立
+`Reviewed commit:`；其餘 body 仍須掃可處置 finding。重跑入口：
+
+```bash
+gh api --paginate repos/pisceshei/chilllovesaas/issues/64/comments
+gh api --paginate repos/pisceshei/chilllovesaas/pulls/64/reviews
+gh api --paginate repos/pisceshei/chilllovesaas/issues/61/comments
+gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/reviews
+```
+
+0e 因此只接受 bot 身分精確相等、A／B 任一 envelope 符合 fixture，且 `Reviewed commit:` 恰有一個
+10–40 位十六進位 ref、該 ref 為當前 40 位 head 前綴的 issue comment。PR #61 的 B 型 comment
+`5352954268`（`2026-08-20T07:45:46Z`）之後又有同 head finding review `4980284182`
+（`2026-08-20T07:47:33Z`），所以先到 clean 不是終態；較晚 finding 必須令 C1 回到 0。跨載體先後只把已提交 review
+的 `submitted_at` 與 issue comment 的 `created_at` 解析為 UTC event time；clean 必須嚴格晚於最後
+finding，欄位缺失、解析失敗或時間相等都 fail-closed。數字 ID 只作 endpoint-local 身分／去重，
+不跨端點排序（官方欄位證據見 `docs/dev/external-facts.md` A12）。未知作者、缺／多／錯 ref、未知 envelope 一律 fail-closed。未來若 connector 產生 clean
+REST review，也必須先以實物加入 fixture 並有權威 exact-head 欄位，不能靠一般 body SHA 猜測。
+
+OpenAI 官方要求 Codex reaction 後仍發布 review 結果（逐字與 URL 見 `docs/dev/external-facts.md` A10）；
+reaction 只作觸發／排隊輔助訊號。reaction-only／沒有可綁 exact-head 的受控載體時 C1 fail-closed 並轉人工，
+不得把 👀、👍 或其他 reaction 當 reviewer-controlled completion。
+
+`isResolved` 只是必要的工作流狀態，不是獨立核准：GitHub 官方允許 PR 作者或具 write 權限者
+resolve conversation，而且 review body 是 inline comments 之外的 review 構成；逐字與 URL 見
+`docs/dev/external-facts.md` A9。證偽與裁定不修須先有合規證據／裁定落點；作者 resolve 不能取代
+更晚的 reviewer-controlled completion。處置未改 tree 時只送一次同 head review 請求並作有界等待；
+官方未保證同 SHA 的重複請求必產生新 review，若 deadline 前沒有更晚 completion，C1 保持 0 並
+轉獨立人工審核／人工合併，不再請求或造 head。作者自貼 envelope、review `.commit_id` 不等於
+head、A 型前綴／尾句、B 型兩個非空首行、clean issue comment 缺／多／錯 ref、跨載體時間缺失／
+相等／解析失敗、先 clean 後較晚 finding、issue-comment finding、reaction-only、same-head 請求
+被去重／逾時仍把 C1 設 1，都是 0e 必測反例。
+resolve、PR body、check artifact 與本地 handoff 不改 Git tree，所以不產生新 head。舊 evaluator
+仍以 REST inline 歷史總數計 C1，`await-verdict.sh` 也看不到 clean issue comment；兩者自 D38 起
+只作歷史／排隊訊號，不得證明 C1、C3 或雙清。在獨立 evaluator 與 workflow-only 接線各自合併前，舊 `1111`
+不得授權互動式 Codex 代行合併，過渡期全部 PR 走使用者人工合併。
+
+### 產物頻率的終態
+
+- 一個可獨立合併的 PR／原子工作包維護一份 tracked worklog；tree 真改時在同一整合 commit
+  更新，no-tree disposition／遠端狀態不改 worklog。
+- 一個工作包／PR 從研究到 merge／rollback／正式阻塞維護一份倉庫外本地 handoff，不按驗收輪
+  拆檔。只有正式轉交、rollback 後另起恢復包或真正拆 PR 才另建。
+- 這一終態由 D38 覆寫 D36／D37 的過渡粒度；`docs/worklog/README.md`、CLAUDE 與 AGENTS 已同批同步。
+
+### 1–2 次的精確承諾
+
+目標是通常只發布初始候選與一次整合修復，不承諾 reviewer 一定在兩次內發現所有缺陷。若第二個
+finding-bearing head 仍有同根因，任務不停止，但禁止第三次沿用點修；本地先完成根因模型、mutation
+與拆包判斷。這讓第三個 head（若確有必要）來自更強的修法或更小的語義單元，而不是重複碰運氣。

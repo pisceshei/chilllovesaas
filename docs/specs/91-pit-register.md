@@ -156,7 +156,7 @@
        ③不再需要。**本條目的歷史紀錄不改**（它記的是真實發生過的六輪靜默失效）。
        🔴 **要留下的是形態不是那個閘門**：「宣稱掛上了其實沒掛上、失敗被 `|| true` 吞掉」
        這個靜默失效形態仍然有效，任何新的 label／狀態類機制都要照它設防。
-       移除隨 **PR #59 於 2026-08-19 合併進 main** ⇒ 複驗：`git grep -c -F -e add-label origin/main -- ':/.github/workflows/claude-review.yml'` **應 exit 1 且無輸出**（＝該識別字不存在；⚠️ **不得用 `git show <ref>:<path> | grep -c`**，三重 fail-open 見 `CLAUDE.md` 鐵律 17.4 的複驗註）。 -->
+       移除隨 **PR #59 於 2026-08-19 合併進 main** ⇒ 複驗：`git grep -c -F -e add-label origin/main -- ':/.github/workflows/claude-review.yml'` **應 exit 1 且無輸出**（＝該識別字不存在；⚠️ **不得用 `git show <ref>:<path> | grep -c`**，`grep -c`／`pipefail`／MSYS 三重 fail-open 的現行證據分別見 `docs/dev/external-facts.md` B1／B3／B4）。 -->
   <!-- 〔證據 E〕2026-08-19 補（#58 Codex[4] 點名：本條①是**外部 CLI 語義**，原文只有結論，
        無來源 URL／取證日期／英文原文逐字，也沒標〔推論〕）。依 `AGENTS.md` §8.2 第 1 款補齊。
        🔴 **查證結論＝斷言為真，且可由上游原始碼證明** ⇒ 走「補證據」，**不得**降級為〔推論〕：
@@ -414,6 +414,11 @@
   改它等於改鐵律本文（17.3 例外清單明列「改鐵律本文」），需使用者裁定；且提案已被否決、
   無實害。日後若重提機制化，先按本條把提案名稱收窄為 R5，別把一個已經是 error 的規則
   再「升」一次【F11；來源＝#58 bot R25 ⚪；R26 判詞點名「本輪未落籍」後補登】
+  <!-- 🔴 2026-08-21 更正（PR #66 Claude comment `5365460704`）：上段的逐字來源原在
+       `CLAUDE.md` 舊 17.4，但該條已由 D37 改寫；現行 17.4 不再含此句。歷史原文保存在
+       `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 的「17.4 配套」相關段落；本條只作
+       歷史坑位，不再把現行鐵律當逐字落點。複驗：
+       `git grep -n -F '升 R4／R5 為 error' -- CLAUDE.md docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md`。 -->
 - **R4／R5 雙重洞條目缺結案註：兩項 P-8 修法都已隨 PR #59 進 main**：本節上方那條
   （錨點：`grep -n 'CI 生產調用疑似結構性未執行' docs/specs/91-pit-register.md`）把修法寫成
   「屬 P-8：CI fetch 深度足＋「未執行」由 warning 升 canary 退出碼」，兩項都已落地——
@@ -699,6 +704,103 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
+- **PR 描述的 Changed docs 清單會漏列同一 head 的實際改檔**：PR #66 首輪描述列出多份制度檔，
+  但沒有列 `docs/specs/91-pit-register.md`，即使該檔已在 PR diff。這是遠端描述與 Git tree 集合未
+  對帳的同型風險；本輪依 ⚪ 僅登記，不為它改 Git tree。後續可在候選凍結後用
+  `gh pr diff <N> --name-only` 與 PR body 的 Changed docs 清單做集合複驗；是否機械化仍待 §2 裁定
+  【F5/F11；來源＝PR #66 Claude issue comment `5364608941` ⚪1；取證日期＝2026-08-21】
+
+- **worklog 的完整閘門總數若未綁日期／ref／重跑命令就會腐化**：本工作記錄 Done 段保存
+  `GATES_ALL_GREEN=29`，但沒有在同位置給出計數的取得日期、候選 ref 與導出命令；之後
+  `config/ci.rb` 改動便可能讓數字失真。本輪依 ⚪ 與歷史層規則只登記、不靜默改寫原句；後續
+  需要引用時應用當前 ref 的可重跑 selector 取代裸總數
+  【F5/F11；來源＝PR #66 Claude issue comment `5364608941` ⚪2；取證日期＝2026-08-21】
+
+- **worklog 的 Changes 清單是否應包含 worklog 自身未有成文規則**：PR #66 第二候選的 Changes
+  段列出其餘變更文件，未列該 worklog 自己；驗收方明載「本倉庫無成文規定」，故本輪只登記、
+  不藉此擴寫交付規則。若日後要把 Changes 當完整集合，須先裁定是否自含，並以
+  `git diff --name-only <base>...<head>` 與該段 selector 做集合 fixture，避免人工計數
+  【F5/F11；來源＝PR #66 Claude issue comment `5364935551` ⚪1；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：鐵律 21／worklog README 已改成每個獨立 Git 單位維護同一份
+  worklog；本工作記錄的 Changes 終態清單亦納入自身。是否自含不再靠讀者猜測。
+
+- **worklog 的 Markdown 渲染／表格計數若沒有可重跑命令與實際輸出就不能由第三方複驗**：
+  PR #66 第二候選的 20.2.7 只聲明文件與表格皆成功，沒有保存 selector、API 呼叫與各結構計數；
+  doc-claims 綠也不涵蓋 GitHub render 結果。後續若需要把 render 當驗收證據，應在 PR artifact／
+  本地 handoff 保存命令與輸出，worklog 只保留綁 head 的快照引用
+  【F5/F11；來源＝PR #66 Claude issue comment `5364935551` ⚪2；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：鐵律 20.2.7、階段一方案 §10 與本工作記錄改用穩定內容錨，並要求
+  GitHub `/markdown` 回傳後驗證目標列最後一個 `<td>` 仍含末欄 sentinel；完整命令與輸出留同一
+  本地 handoff，不再只留節點總數。
+
+- **下位方案只靠上游條款繼承「過渡期人工合併」，讀者可能漏掉就地限制**：階段一方案 §6.2
+  第 8 步仍保留 ④評估器 `1111` 後代行合併的常態路徑，過渡期限制由同節第 7 步及 CLAUDE
+  18.1 上游提供。兩路徑目前不互斥，但 consumer 就地不重述會提高漏讀風險；若日後修改該步，
+  應加入相鄰 guard 或用同一狀態 selector 生成，不在本輪順手重寫
+  【F5/F11；來源＝PR #66 Claude issue comment `5365173662` ⚪1；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：階段一方案第 5／7／8 步已就地撤銷舊 evaluator／wait 腳本的證據
+  效力，並明載 0e／0f 合併前只能人工合併；不再依賴上游條款補足互斥 guard。
+
+- **worklog 表格使用倉庫內不可搜尋的臨時表名，第三方無法從名稱定位證據**：本工作記錄
+  20.2.7 使用 `m0-root`／`total-p`／`total-risk`／`phase-sequence`／`worklog-matrix`，但這些不是
+  文件錨點或腳本 selector。後續若需保存同類 render 證據，表名須對應穩定內容錨或 artifact key
+  【F5/F11；來源＝PR #66 Claude issue comment `5365173662` ⚪2；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：終態反向複驗以表格中的自然內容錨（例如
+  `docs/worklog/README.md` 與 `P-8（D38 現行）`）定位目標列，不再使用倉庫外臨時表名。
+
+- **新舊 evaluator 都叫 C1，只有收斂文件明載橋接，基建文件仍可能被誤讀為現值**：
+  `docs/dev/m0-automation-infra.md` 仍以 C1 描述已在 main 運作的 REST inline 加總 evaluator；
+  `docs/dev/m0-review-convergence.md` 才說明新 C1 尚待 0e／0f。0e 落地時須同步基建文件或改成
+  `legacy_C1`／`review_state_C1` 等不混淆名稱；本輪未改該檔，依 17.2 只登記
+  【F5/F11；來源＝PR #66 Claude issue comment `5365460704` ⚪1；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：`docs/dev/m0-automation-infra.md` 現以頂層警告與「舊四條件
+  evaluator」標題標明只屬已部署歷史，且不得作 C1／C3／雙清／合併證據；現行狀態機只指向
+  `docs/dev/m0-review-convergence.md` 與 0e／0f／0g。
+
+- **總方案 P-8 同一儲存格先寫舊「兩單元」再於末尾覆寫 D37 現值，讀到中段會拿到舊流程**：
+  現值可由格末 D37 補充辨認，但 producer 仍同時承載相反時態。第二語義包或 P-8 終態回寫時
+  應拆歷史／現行層或在舊句前加明確歷史標記；本輪依 17.2 不順手重排大型表格
+  【F5/F11；來源＝PR #66 Claude issue comment `5365460704` ⚪2；取證日期＝2026-08-21】
+
+  **2026-08-21 D38 處置**：總方案 P-8 現行表只保留 0e／0f／0g 一列；舊合包與兩單元文字移入
+  明確 HTML 歷史註，不再渲染成現行表格。階段一方案的狀態表、收口段與 Verification 同步改名。
+
+- **已部署 evaluator 與 `await-verdict.sh` 看不到 Codex clean issue-comment 載體，拿它們判雙清會
+  結構性假死**：CLI 全量取證顯示 PR #61 issue comment `5351471350`、PR #64 issue comments
+  `5358332294`／`5363805191` 均由 `chatgpt-codex-connector[bot]` 發出，首行以精確前綴
+  `Codex Review: Didn't find any major issues.` 開頭、尾句不同，並帶獨立 `Reviewed commit:`；相同
+  head 沒有 clean REST review。另有 PR #61 comment `5352954268` 的 B 型兩個非空首行
+  `## 驗收結論`／`**未發現需要新增 inline 意見的重大問題。**`，但其後 1 分 47 秒又到 finding
+  review `4980284182`，所以 clean 事件不能單獨作終態。舊 evaluator 只從 reviews／inline 建 C1，
+  舊 wait 腳本也不解析受控 issue-comment 載體，故不能以「沒看到 review」外推 Codex 未完成。
+  D38 已撤銷兩者的裁定權；0e fixture 必須覆蓋 A 型前綴＋尾句、B 型首行、先 clean 後 finding、
+  finding review、issue-comment finding及缺／多／錯 ref，0f 才可接線
+  【F5/F9/F11；來源＝PR #66 Claude issue comments `5365735867`／`5366398775`＋上述四則 GitHub CLI 實物；
+  取證日期＝2026-08-21】
+
+- **只比較 Markdown pipe／`<td>` 數量會在 GFM 丟棄超額儲存格時假綠**：PR #66 worklog 的
+  20.2.2 末欄含未跳脫 shell `|`，GitHub 仍輸出預期 `<td>` 數，卻把超額第四格丟棄，造成末欄
+  內容殘缺。D38 已把固定判準升為「結構數量＋最後 `<td>` 必含末欄 sentinel 全文」，並把該列
+  shell 改成多個 `rg -e`，避免 live table 再含裸直線
+  【F6/F11；來源＝PR #66 Claude issue comment `5365735867` 🔴2；取證日期＝2026-08-21】
+
+- **worklog 的「⚪ 已登齊」若只點名首輪 comment，後續輪次增加後會變成完成性敘述滯後**：
+  PR #66 worklog 20.2.3 仍只寫 comment `5364608941` 的兩條 ⚪，但本 PR 後續多輪 ⚪ 已另在本節
+  登記。該句不是錯誤否定，卻不能再代表全 PR 完成性；日後只用具名 ledger 或動態集合對帳，
+  不把單輪例子寫成全量證明。本輪依 17.2 只登記，不回寫該歷史列
+  【F5/F11；來源＝PR #66 Claude issue comment `5366398775` ⚪1；取證日期＝2026-08-21】
+
+- **階段一排程表的「代行合併」靠 0e／0f 上游完成後才成立，consumer 沒有就地重述 guard**：
+  `docs/plans/2026-08-20-階段一執行方案.md` §2 排程表的 0h／P-7／S-13／P-5／P-6 等列位於
+  0e／0f 後，按依賴順序不會在過渡期直接代行；但每列只寫「代行合併」，讀者若跳讀表格會漏掉
+  上游前提。日後修改這些列時應改由同一狀態 selector 產生或就地附 guard；本輪依 17.2 只登記
+  【F5/F11；來源＝PR #66 Claude issue comment `5366398775` ⚪2；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -862,6 +964,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
+- [x] `docs/worklog/2026-08-21-驗收收斂制度V2.md`（D37／Convergence Protocol v2；已讀，根因與固定處理已落 `docs/dev/m0-review-convergence.md`；已抽取閘門總數、Changes 自含、Markdown 複驗與臨時表名等 §3 項）
 
 ### A.2 handoff
 

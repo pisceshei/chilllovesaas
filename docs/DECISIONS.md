@@ -375,16 +375,26 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 
 ### D31. 階段一'全自動化與代行合併授權
 
+> 🔴 **2026-08-21 D38 現值**：下文的舊 `1111`／「階段 B」只保留 2026-08-20 授權沿革；
+> 0e／0f 合併前不具代行效力。現行入口只有 D38 的 0e → 0f → 0g，且 `AUTO_MERGE=false`。
+
 - 2026-08-20 使用者明文授權本次互動式 Codex 工作階段執行整個階段一'：實作、測試、commit、
   push、監視 GitHub 驗收、依結果修復並循環至雙清，以及在合規條件下代行合併；本條是取代
   D25 已到期授權的本階段新授權，不恢復 workflow 自動 `@codex` 派修。
 - 代行合併僅限鐵律 18.1 四條件齊：Codex 對當前 head 完成且零未清、Claude bot 通過且
-  零未清、全部機械 CI 綠、評估器已有 `1111` 留言；合併須使用
+  零未清、非空機械 CI check 集合全部綠、0e／0f 現行 evaluator 已對 exact head 證明 C1–C4
+  全通過；合併須使用
   `gh pr merge <N> --squash --match-head-commit <head>`，成功後刪除遠端 `pr{N}-last-push` tag。
 - 鐵律 18.3 清單與 17.3 例外不在代行授權內，雙零後仍停下等使用者人工合併或裁定；
-  本授權不翻 `AUTO_MERGE`，階段 B canary 仍須另行裁定。
+  本授權不翻 `AUTO_MERGE`，0g 只作現行 evaluator／接線的常規 PR canary。
+- 2026-08-21 D38 過渡期補正：能實作新 C1 的獨立 evaluator 與 workflow 接線各自合併前，舊
+  evaluator 不得啟動本條代行權，故全部 PR 暫由使用者人工合併；兩包完成後，本條只對原具名射程
+  恢復，不外推到其他工作階段。
 
 ### D32. 互動式 Codex 實作與過渡期代行合併的鐵律補正
+
+> 🔴 **2026-08-21 D38 現值**：本條授權主體仍有效，但任何舊 evaluator 結果均不得啟動代行；
+> 只有 0e／0f 已合併且現行 evaluator 對 exact head 證明四條件全通過時，非 18.3 PR 才可代行。
 
 - 2026-08-20 使用者在 PR #61 首輪驗收後選案「1」，並明文批准修改 `CLAUDE.md`／
   `AGENTS.md`：取得完整對話脈絡及具名射程授權的互動式 Codex 可以實作；workflow 自動
@@ -395,6 +405,8 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   操作，不翻 `AUTO_MERGE`，也不把權限交給 workflow。
 - PR #61 因本裁定修改兩份鐵律本文，已命中 18.3，必須在雙清後由使用者人工合併；
   D31 的代行路徑從其後第一個符合資格的常規 PR 才開始實測。
+- 2026-08-21 D38 進一步凍結上述「其後第一個」：必須先讓新 C1 evaluator 與 workflow 接線各自
+  合併，再由其後第一個符合資格的常規 PR canary；過渡期不因 PR 非 18.3 而恢復舊 evaluator 代行。
 
 ### D33. 全項目零假設發布
 
@@ -410,6 +422,10 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   日期更正並撤回錯誤聲明。PR #61 因修改規範本文仍命中 18.3，雙清後由使用者人工合併。
 
 ### D34. 重犯問題按已定型處理法一次斷根
+
+> 🔴 **2026-08-21 D37 射程補正**：下文「同型未點名只登記」只適用於**不在已點名根因影響圖**
+> 的既有問題；同一 producer／consumer／元件內可列舉的狀態矩陣屬同一被點名根因，必須同批封閉。
+> 這是現行 17.2／20.5 射程；不得再以本條舊絕對句拒絕做根因閉合。
 
 - 2026-08-20 使用者要求深度整理所有已處理問題類型，將「重複犯錯且已有固定處理方式」者寫入
   鐵律，避免再用後續驗收輪發現同型問題、浪費時間與 token；本裁定升格為鐵律 20。
@@ -443,6 +459,9 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 
 ### D36. handoff 恢復原有工作單位節奏並改為本地保存
 
+> 2026-08-21 D38 覆寫：本條「handoff 只存本地」仍有效；下文「一次驗收修復輪另觸發 handoff」
+> 與「一份 handoff 可列多份 worklog」只保存 2026-08-20 沿革，現行檔案粒度一律讀 D38。
+
 - 2026-08-20 使用者先後明文裁定：「handoff不需要commit只需要保留在本地」、
   「未來停commit到github，只保留本地」，並澄清：「我說的每次寫handoff都是按照以前那種形式，
   而不是要你每一個小步驟都commit到github」及「按照以前的來做handoff」。
@@ -458,3 +477,105 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   `docs/handoff/` 保留為歷史唯讀資料。
 - worklog 規則不變：仍按可獨立驗收單位三段入庫並與產物一起 commit；一份本地 handoff 可以
   列出同一工作單位的多份 worklog。附錄 A 只登記實際入庫的 worklog，不登記本地 handoff。
+
+### D37. 驗收改採 Convergence Protocol v2，廢止會自行增殖的循環
+
+> 2026-08-21 後續裁定：本條的「產物頻率留第二包」、PR #66 一次性例外，以及下文把 clean
+> completion 限定為 REST review／禁止 body ref 的舊 C1 均已由 D38 取代；以下保留為改制沿革，
+> 現行產物頻率、C1 與 P-8 序列一律讀 D38。
+
+- 2026-08-21 使用者裁定：廢除不必要、不合理且會讓驗收問題自行增加的機制；其餘採本輪
+  根因審計提出的收斂方案。目標服務水準是每個可獨立驗收單元通常只發布「初始候選＋一次
+  整合修復」兩個受驗 head；這是流程設計目標，不得冒充「任何缺陷必然兩輪內全被發現」的
+  技術保證。
+- 取證快照（2026-08-21，來源為 GitHub 三個 paginated REST 集合、review body、PR metadata
+  與 git 歷史）：PR #61–#65 的修復循環已產生大量新 commit 與 review surface；PR #65 的
+  current diff 另含多份逐輪 worklog，而 exact-head Codex 意見中有一組直接指向這些新生成的
+  worklog／證據散文。重跑入口：
+  `gh api --paginate repos/pisceshei/chilllovesaas/issues/65/comments`、
+  `gh api --paginate repos/pisceshei/chilllovesaas/pulls/65/comments`、
+  `gh api --paginate repos/pisceshei/chilllovesaas/pulls/65/reviews`、
+  `git fetch -f origin tag pr65-last-push`、
+  `git -c core.quotepath=false diff --name-only origin/main...pr65-last-push`。reviews 集合須逐則讀
+  `.body`；`pr65-last-push` 是為該 exact head 保持可達的遠端基準 tag。
+- 本第一語義包先廢止六項驗收控制流：①第一個 reviewer 回覆後即開始修、未等另一方完成；
+  ②把同一 head 的歷史 inline 總數當未清數；③把「只修點名處」解讀成禁止封閉被點名根因在
+  同一元件內可列舉的狀態空間；④每次本地微小編輯都跑全套閘門；⑤無限小修小推而不切換成
+  根因審計／拆包模式；⑥Claude 判詞只有格式失敗時仍靠改檔換 head 或無界 rerun。
+  worklog／handoff 的**檔案產生頻率與聚合方式**屬第二語義包；在該包連
+  `docs/worklog/README.md` 等 consumers 一起合併前，D36／鐵律 21 的現行粒度維持不變。
+  本第一包只禁止「唯一目的為刷新受驗 head／C1」的 unrelated、evidence、worklog、handoff 或
+  空白 commit；這是驗收狀態機邊界，不裁定一般工程何時另建 worklog／handoff。PR #66 本身是
+  D37 制度採用的一個可獨立驗收單元，當時的全部 bot 回應屬同一單元迭代，具名維護同一份 worklog；
+  此過渡裁定只清本 PR，不外推成通用粒度規則。
+- 新流程：一個候選 head 推送後，CI、Claude、Codex 三方未全部對 exact head 完成以前不得改檔；
+  完成後一次全量拉 conversation、review body、inline 與 GraphQL threads，去重成凍結 finding
+  ledger，再按根因批次修復。修復射程可涵蓋被點名根因在同一 producer／consumer／元件內的
+  完整狀態矩陣與反向 fixture；無關元件仍只登記 `91` §3。
+- 驗證採兩層：本地編輯時只跑受影響的 targeted gate；候選 head 凍結、整合修復 head 凍結及
+  合併前 base 有變時，各跑一次完整正典閘門。任何 tracked file 在完整閘門後再變動，該候選
+  證據失效；但純查詢、PR body、本地 handoff 與 thread resolve 不改 Git tree，不產生新 head。
+- exact-head 原則保留於**實際 Git tree 變更**：新內容必須由兩方驗當前 head。Codex finding
+  固定為 exact-head REST review body 或以 review ID 關聯的 inline／thread；處置不抹除時間。
+  乾淨 completion 的 REST author、review `.commit_id`、body envelope 與無關聯 finding 四格均由
+  fixture 鎖定，且須晚於最後 finding；不得用 comment `.commit_id` 或 body SHA 猜測。三個 REST
+  集合、每則 review body 與 GraphQL threads 全取＋未解 threads 為零仍是必要條件，不再用 REST
+  inline 歷史總數。GitHub 官方允許 PR 作者或具 write 權限者 resolve conversation，故 `isResolved=true`
+  只是必要的工作流狀態，不足以單獨證明獨立驗收；官方證據見 `docs/dev/external-facts.md` A9。
+  OpenAI 官方要求 Codex reaction 後仍 post review；reaction-only 沒有 exact-head review，故只作
+  觸發／排隊訊號，C1 fail-closed 並轉人工，不得把 reaction 當乾淨 completion（外部證據 A10）。
+  finding 處置未改 tree 時只送一次 same-head review 請求；第一方資料未保證同 SHA 重複請求必定
+  產生新 review，故 deadline 前沒有更晚 exact-head completion（含平台去重）時 C1 保持 0，保存
+  請求與水位後轉獨立人工審核／人工合併，不再重試、造 head 或啟用代行／自動合併。
+  現有 `await-verdict.sh` 只等待兩個 reviewer，不構成機械 CI 證據；0e 接手前在同一有界 deadline
+  另以 `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都須重取
+  `headRefOid` 並等於候選 SHA，否則丟棄結果、非零終止。`pending` 等待；終態 `fail` 進 ledger
+  授權修復；API／deadline 才是未取得；合併時仍確認全部 bucket 為 `pass` 並重驗 head（A11）。
+  在新 evaluator 與 workflow 接線分別合併前，舊 `1111` 不得作代行合併依據；過渡期全部 PR
+  視同 18.3 走使用者人工合併，避免舊 C1 假死或假綠。
+- 收斂模式：初始候選有意見時只做一次整合修復；第二個 finding-bearing head 仍有同根因時，
+  不得再小修小推，須在本地重建狀態矩陣、mutation 與影響圖，必要時自動把過大的單元拆成
+  語義獨立 PR。這不是棄單熔斷，任務仍持續；它是禁止第三輪沿用已證失敗的點修方法。
+- Claude 只有判詞格式失敗時，最多對同一 exact head 整體 rerun 一次；第二次仍畸形即保留兩次
+  run 轉獨立人工審核，不為格式 push 新 head、不建立第三次 attempt。格式驗證仍 fail-closed，
+  本款廢止的是無界重試與「改檔刷新」，不是允許畸形判詞自動通過。
+- 仍保留：18.3 人工合併、GitHub CI 對每個 pushed head 全跑、tracked tree 變更後的 exact-head
+  雙方最終驗收、三端點＋review body＋GraphQL 全量攝取、外部語義官方取證、合併前 base 更新
+  與最終完整驗證。被廢止的是重複且不增加這些安全保證的手續，不是品質門檻。
+
+### D38. 舊驗收制度整域退役，不再保留第二個產物頻率包
+
+- 2026-08-21 使用者明文要求：「一次性修復好，不要再這樣不停的修復好幾輪，舊制度全部
+  一次性剔除」，並要求深度分析、排查完成後才 commit。據此撤銷 D37 的「產物頻率留到第二
+  語義包」過渡切法；D36 的「handoff 只存本地」保留，但檔案頻率由本條覆寫。
+- 一個可獨立合併的 PR／原子工作包只維護一份 tracked worklog：初始候選與產物同 commit；
+  finding 真正改 tracked tree 時，在一次整合修復 commit 更新同一份 worklog 與終態文件；純
+  disposition、等待、resolve、PR body、run 與遠端終態不改 worklog、不造 head。umbrella 只有
+  實際拆成可獨立合併 PR 才各建一份。`docs/worklog/README.md`、鐵律 21 與 AGENTS 同批同步。
+- 一個工作包／PR 從研究到 merge／rollback／正式阻塞只維護一份倉庫外本地 handoff，不按
+  驗收輪、命令、查詢、等待、commit 或 push 拆檔。只有正式轉交、rollback 後另起恢復包，或
+  真正拆成獨立 PR 才另建；handoff 永不 commit／push。
+- C1 採本倉庫實測的雙載體狀態機：finding 以 exact-head REST review `.commit_id`＋review ID
+  關聯 body／inline／thread；clean completion 可由 connector issue comment 的受控 envelope 加
+  獨立 `Reviewed commit:` 欄位證明，該欄只接受 10–40 位十六進位、且須為當前完整 head 的前綴。
+  已觀測 envelope 有 A 型首行精確前綴 `Codex Review: Didn't find any major issues.`（句點後同一行
+  自由尾句不參與分類），以及 B 型前兩個非空行 `## 驗收結論`／
+  `**未發現需要新增 inline 意見的重大問題。**`；兩型其餘 body 仍須掃 finding。PR #61／#64 的
+  paginated issue comments 證明兩型存在；這是倉庫觀察，不冒充平台永久保證。PR #61 comment
+  `5352954268` 後又有較晚 finding review `4980284182`，故該 clean 事件不能作終態；0e 必須以此
+  fixture 證明「先 clean、後 finding」令 C1 回到 0。缺 ref、多 ref、錯 ref、未知 envelope、一般
+  散文 SHA 或只有 reaction 一律 C1=0。
+- 載體間先後只比較 UTC event time：已提交 review 用 `submitted_at`，issue comment 用
+  `created_at`；clean 必須嚴格晚於最後 finding。缺值、解析失敗或相等都 fail-closed，數字 ID
+  只作 endpoint-local 身分／去重，不跨端點排序（官方欄位證據＝external-facts A12）。
+- CI 零 check 集合＝尚未執行，不是 all-pass：deadline 內等待，deadline 後 C3=0／證據未取得。
+  `gh pr checks` 在 pending 時的退出碼 8 不是 API failure，必須先解析 JSON bucket 再分流；JSON
+  未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending、terminal
+  fail、skip／cancel、API failure 與 head drift 照 D37 矩陣分流。
+- P-8 當前唯一執行序列改為 0e 獨立 evaluator＋fixtures／mutation（人工合併）→ 0f
+  workflow-only 接線並實查 validation-skip（人工合併）→ 0g 常規 PR canary。#59 的舊
+  `1111` evaluator 與 `await-verdict.sh` 只作已部署歷史／排隊訊號，**不得再作 C1、C3、雙清或
+  代行合併證據**；0e／0f 完成前全部 PR 人工合併。總方案 P-8 舊合包契約、兩單元尾包與階段
+  A／B 舊敘述移入歷史註，不再與現行序列並列。
+- Markdown 表格驗證新增內容級反向斷言：除 pipe 與 cell 數外，改動表格要選末欄 sentinel，
+  確認 GitHub 渲染後該列末欄保留 sentinel 全文；只數 `<td>` 不能證明超額 cell 沒被 GFM 丟棄。

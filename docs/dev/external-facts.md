@@ -184,6 +184,111 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 ⇒ **auto-merge 本身不是 head 變動的防護**。
 📌 本頁**未提及**「PR 產生衝突／變成不可合併」是否停用——屬未涵蓋，不是已否定。
 
+### A9. resolved thread 不是獨立核准，review body 也不是 inline thread
+
+GitHub 官方對 conversation 權限逐字寫（節錄）：
+
+> "if you opened the pull request or if you have write access"
+>
+> "The entire conversation will collapse and be marked as resolved."
+
+來源：<https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/commenting-on-a-pull-request>（取證 2026-08-21）
+
+GraphQL schema 對 `PullRequestReviewThread` 的欄位逐字只定義狀態：
+
+> `isResolved` — "Whether this thread has been resolved."
+>
+> `isOutdated` — "Indicates whether this thread was outdated by newer changes."
+>
+> `resolvedBy` — "The user who resolved this thread."
+
+來源：<https://docs.github.com/en/graphql/reference/pulls>（取證 2026-08-21）
+
+官方 webhook 文件另外把 review 定義為：
+
+> "A pull request review is a group of pull request review comments in addition to a body comment and a state."
+
+來源：<https://docs.github.com/en/webhooks/webhook-events-and-payloads>（取證 2026-08-21）
+
+🔴 **證據邊界**：官方只說 thread 是否被 resolved，且 PR 作者本身就有 resolve 權；因此
+`isResolved=true` 不能單獨證明獨立 reviewer 已接受修法。review body 又是 review comments 之外的
+獨立構成，故只讀 inline／thread 也不能證明沒有 body-only finding。
+
+📌 **本專案設計決定（不是 GitHub 保證）**：C1 同時保留未解 thread 為零，並要求全量讀每則
+review body，再取得建立於當前 head 最後 finding 之後的 reviewer-controlled 乾淨 completion；
+未知 body 或缺少較晚 completion 一律 fail-closed。這是為補上作者可 resolve 與 body 分流兩個缺口。
+
+### A10. Codex 的 reaction 不取代 GitHub review
+
+OpenAI 官方 Codex GitHub 指南在「Request a Codex review」步驟逐字寫：
+
+> "Wait for Codex to react (👀) and post a review."
+>
+> "Codex posts a review on the pull request, just like a teammate would."
+
+來源：<https://learn.chatgpt.com/docs/third-party/github>（取證 2026-08-21）
+
+🔴 **證據邊界**：官方把 reaction 與 review 並列，沒有說 reaction 本身是綁 commit 的乾淨審核，
+也沒有保證對**同一 SHA**重複請求必定產生一則更晚 review。因此本專案只把 reaction 當觸發／
+排隊輔助訊號，不得把 👀、👍 或其他 reaction 解讀成獨立核准。官方沒有定義 GitHub 載體或
+head-binding 欄位；本倉庫觀察到的 clean issue
+comment 契約另記於 `docs/dev/m0-review-convergence.md`，不得冒充官方保證。沒有可由受控載體綁
+exact head 的結果時 C1 fail-closed。若有 finding 但處置不改 tree，只送一次 same-head 請求；
+有界 deadline 內沒有
+更晚 completion（包含 connector 去重）時 C1 保持 0，轉獨立人工審核／人工合併，不造新 head。
+
+### A11. `gh pr checks` 的 watch 沒有文件化 deadline，bucket 可區分等待、失敗與合併就緒
+
+GitHub CLI 官方手冊逐字寫：
+
+> "Show CI status for a single pull request."
+>
+> `--watch` — "Watch checks until they finish"
+>
+> `--fail-fast` — "Exit watch mode on first check failure"
+
+同頁並明列 JSON `bucket` 可能值為 `pass`、`fail`、`pending`、`skipping`、`cancel`，且另列：
+
+> "Additional exit codes: 8: Checks pending"
+
+來源：<https://cli.github.com/manual/gh_pr_checks>（取證 2026-08-21）
+
+🔴 **證據邊界**：官方列出的 watch 相關旗標只有 interval 與 fail-fast，沒有 deadline／timeout；
+`--fail-fast` 只承諾第一個 failure 時退出，不能保證 pending 永遠不結束時有界終止。
+
+📌 **本專案使用邊界**：`gh pr checks` 的查詢對象是 PR，不是固定 SHA；自動化以
+`--json name,bucket,link` 作有界間隔輪詢時，每輪查詢**前後**與凍結 ledger 前都要重取 PR
+`headRefOid` 並與候選 SHA 精確相等，否則丟棄該輪結果、以 head drift 非零終止。不直接用 `--watch`。
+零個 check 的集合在 deadline 內仍視為尚未開始並繼續等，deadline 到期才記證據未取得／C3=0；
+不能對空集合做 vacuous all-pass，也不能把 CLI 的 no-check 訊息當作可立即終止的 API 故障。
+`pending` 是等待；此時 `gh pr checks` 的退出碼 8 是文件化狀態，不是 API failure。消費者須先解析
+已取得的 JSON bucket，再決定等待／finding／完成；不得讓 shell 的一般非零退出處理在讀 JSON 前
+終止。只有 JSON 未取得／不可解析或傳輸失敗才走 API failure。終態 `fail` 是已取得的 CI finding，
+可凍結進 ledger 後修復；API／deadline 才是證據未取得。`skipping`／`cancel` 同 head rerun 一次後仍
+轉人工。合併判定另要求**非空集合**所有 bucket 均 `pass`，並重取 PR `headRefOid` 與候選 SHA 精確相等。
+
+### A12. review 與 issue comment 的時間欄位不同；跨端點 ID 不作先後順序
+
+GitHub REST reviews 官方頁逐字寫：
+
+> "The list of reviews returns in chronological order."
+>
+> `"submitted_at": "2019-11-17T17:43:43Z"`
+
+同頁另明載 PENDING review 尚未 submit，因此 response 不含 `submitted_at`。來源：
+<https://docs.github.com/en/rest/pulls/reviews>（取證 2026-08-21）。
+
+GitHub REST issue comments 官方 response example 使用：
+
+> `"created_at": "2011-04-14T16:00:49Z"`
+
+來源：<https://docs.github.com/en/rest/issues/comments>（取證 2026-08-21）。
+
+🔴 **本專案使用邊界**：0e 把已提交 review 的 `submitted_at` 與 issue comment 的 `created_at`
+解析成 UTC event time，clean completion 必須**嚴格晚於**最後 current-head finding。跨端點的數字 ID
+沒有官方全域排序契約，只作各自載體的身分、去重與 endpoint-local 水位，不拿來比較 review 與
+issue comment 的先後；時間欄缺失、無法解析或相等時一律 fail-closed。PENDING review 不構成 completion。
+
 ---
 
 ## B. 工具鏈：退出碼、路徑轉換、Markdown、限流

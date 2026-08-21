@@ -1,5 +1,12 @@
 # M0 — P-8 自動化基建（判詞格式驗證・四條件評估器・倒計時腳本・CI 淺 clone 修洞）
 
+> 🔴 **2026-08-21 D38 現行狀態**：本篇 §2.2 記錄的是 main 已部署的舊 evaluator 實物，
+> §2.4 記錄的是舊 reviewer wait 腳本；兩者均看不到本倉庫實測的 Codex clean issue comment，
+> 且舊 C1 仍累加 REST inline 歷史，因此**不得再作 C1、C3、雙清、核准或合併授權證據**。
+> 當前唯一序列是 0e 獨立 evaluator＋fixtures／mutation → 0f workflow-only 接線 → 0g 常規
+> canary；前兩包依鐵律 18.3 人工合併，兩者完成前全部 PR 人工合併。現行狀態機全文見
+> `docs/dev/m0-review-convergence.md`「2026-08-21 Convergence Protocol v2」與 D38。
+
 > 🔴 **2026-08-19 使用者裁定「取消熔斷機制，一律循環到雙清為止、不限次數」**：本包原有的
 > 第 3 項交付「熔斷 label 修復」**已廢止**，機制（`MAX_FIX_ROUNDS`／label 閘門／超輪分支）
 > 已自 `claude-review.yml` 整個移除。下文 §2.3 保留為**事故紀錄**（那個靜默失效形態仍有
@@ -37,7 +44,7 @@
 - 為何插在「需修改／通過」分支之前：格式是兩個分支共同的前置契約，通過分支的
   評估器（C4）直接消費它的結果。
 
-### 2.2 四條件評估器（18.1）
+### 2.2 舊四條件評估器（已部署實物；D38 起不得作合併授權）
 - 位置：「通過」分支，**在 approve 之前**（r10 起——approve 是分支保護會消費的憑證，
   先 approve 再評估等於閘門報 0 時已留下核准，屬 fail-open）。四條件全部**存在型判定、
   fail-closed**（取不到＝0）：
@@ -136,7 +143,7 @@
   ②`gh pr edit --add-label` **不再吞錯**，失敗即留言講明「閘門此刻沒有生效」。
 - 契約註釋同步更正（錯誤斷言不留原文）。
 
-### 2.4 `scripts/await-verdict.sh`
+### 2.4 `scripts/await-verdict.sh`（已部署實物；D38 起只作歷史／排隊訊號）
 - `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900（限 900–1500）] [MAX_POLLS=8] [DEADLINE_S=MAX_POLLS×INTERVAL×2]`：
   每輪查**兩側是否都已對同一個 head 完成**（r2 重寫；原本兩側都只是 PR 全域條件）：
   ①**判詞就緒**＝該 head 的 `review` check-run `conclusion == success`
