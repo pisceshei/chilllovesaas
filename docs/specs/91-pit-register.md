@@ -780,7 +780,8 @@
   舊 wait 腳本也不解析受控 issue-comment 載體，故不能以「沒看到 review」外推 Codex 未完成。
   D38 已撤銷兩者的裁定權；0e fixture 必須覆蓋 A 型前綴＋尾句、B 型首行、先 clean 後 finding、
   finding review、issue-comment finding及缺／多／錯 ref，0f 才可接線
-  【F5/F9/F11；來源＝PR #66 Claude issue comments `5365735867`／`5366398775`＋上述四則 GitHub CLI 實物；
+  【F5/F9/F11；來源＝PR #66 Claude issue comment `5365735867` ⚪1＋後續 comment
+  `5366398775` 的複驗＋上述四則 GitHub CLI 實物；
   取證日期＝2026-08-21】
 
 - **只比較 Markdown pipe／`<td>` 數量會在 GFM 丟棄超額儲存格時假綠**：PR #66 worklog 的
@@ -817,19 +818,28 @@
   X3 列只有 3 個，GitHub Markdown 會把它交給寬鬆表格解析而非維持明確欄界。本列早已存在於
   `origin/main`、不是 PR #66 改動，也未被本輪 reviewer 點名；依 17.2 只登記，不在制度包順手修。
   複驗：以 fenced-code-aware 掃描定位 `docs/plans/2026-08-18-總方案.md` 的 `| X3 |` 並比較同表 pipe 數
-  【F5/F11；來源＝PR #66 整合修復 targeted Markdown 檢查；取證日期＝2026-08-21】
+  【F5/F11；來源＝PR #66 整合修復 targeted Markdown 檢查、PR #66 Claude issue comment
+  `5368272566` ⚪3；取證日期＝2026-08-21】
 
 - **基建歷史說明仍用容易自命中的 `grep -n "MAX_FIX_ROUNDS"` 作複驗**：
   `docs/dev/m0-automation-infra.md` 的舊機制廢止說明中仍保留該指令，而現行固定寫法是
   以 `git grep` 與自排除 pattern 檢查 Git tree。Claude 明列為範圍外觀察；依 17.2
   只登記，不修該 consumer，日後改動該段時再用不自命中的 `git grep` 取代
-  【F11；來源＝PR #66 Claude issue comment `5367753356` ⚪1；取證日期＝2026-08-21】
+  【F11；來源＝PR #66 Claude issue comment `5367753356` ⚪1；本條根因敘述仍待更正的觀察來源＝
+  PR #66 Claude issue comment `5368272566` ⚪2；取證日期＝2026-08-21】
 
 - **AGENTS 過渡期摘要仍只稱「新 C1 evaluator」，與現行 C1–C4 完整 evaluator 名稱不一致**：
   對應段落的合併 guard 與其他 consumers 已明載 C1–C4，此行只是不精確摘要，不改變
   現行狀態；Claude 明列為範圍外觀察。依 17.2 只登記，不修 `AGENTS.md`
   該行，日後改動該摘要時再同步成 C1–C4
   【F11；來源＝PR #66 Claude issue comment `5367753356` ⚪2；取證日期＝2026-08-21】
+
+- **worklog 的歷史更正仍保存已被 D38 翻轉的 `README.md` 無 diff 斷言**：
+  `docs/worklog/2026-08-21-驗收收斂制度V2.md` 的歷史 HTML 更正要求
+  `git diff --quiet origin/main -- docs/worklog/README.md` 為 exit 0，但 D38 已刻意把產物粒度包併回
+  本包，README 現為 PR #66 的變更檔，故該舊式今日必然 exit 1。它位於歷史層且不改現行機械
+  行為；依 17.2 只登記，日後整理該歷史段時以日期化更正取代，不在本輪順手改原文
+  【F5/F11；來源＝PR #66 Claude issue comment `5368272566` ⚪1；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
