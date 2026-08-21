@@ -841,6 +841,20 @@
   行為；依 17.2 只登記，日後整理該歷史段時以日期化更正取代，不在本輪順手改原文
   【F5/F11；來源＝PR #66 Claude issue comment `5368272566` ⚪1；取證日期＝2026-08-21】
 
+- **worklog 的 mutation 紅燈宣稱曾缺可直接重跑的公開 wrapper**：
+  `docs/worklog/2026-08-21-驗收收斂制度V2.md` 曾記憶體移除 registered pair 後輸出
+  `WHITE_LEDGER_MUTATION_RED=1`，但當時刊出的 PowerShell block 本身只執行正向集合比較，
+  第三方不能由該 block 單獨重現歷史輸出。屬證據呈現缺口，不反轉集合對帳現值；依 17.2
+  只登記，日後引用歷史 mutation 時必須同時刊出 fixture／wrapper
+  【F5/F11；來源＝PR #66 Claude issue comment `5368608706` ⚪1；取證日期＝2026-08-21】
+
+- **階段一方案對 workflow validation-skip 的原因摘要過度壓縮**：
+  `docs/plans/2026-08-20-階段一執行方案.md` 以「新 workflow 尚未進 default branch」概括
+  0f 自身只能離線驗證、0g 才能 production canary；結果與分工正確，但沒有在該處完整重述
+  GitHub／Claude action 的 server-side anti-tamper validation-skip 機制。依 17.2 只登記，
+  不藉白色觀察順手改方案；日後若修改 0f／0g 原因欄，須引用已取證的 validation-skip 實物
+  【F5/F11；來源＝PR #66 Claude issue comment `5368608706` ⚪2；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
