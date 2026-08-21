@@ -719,10 +719,9 @@
 - **GitHub Markdown API 取證若把 `-f text=@path` 誤當讀檔，會得到 exit 0 的假零**：
   本輪初次命令使用 `gh api ... -f text=@docs/worklog/...md`，current response 逐字是
   `<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`；它渲染的是字面路徑，
-  因此 table／pre 全為 0 仍 exit 0。GitHub CLI 官方 <https://cli.github.com/manual/gh_api>
-  （取證 2026-08-21）對 `-f` 逐字是 "Add a string parameter in key=value format"，而 `-F`
-  明列 "use \"@<path>\" or \"@-\" to read value from file or stdin"。改用 `-F text=@path` 後
-  才取得實際文件 HTML。後續 Markdown 複驗須同時釘 request body 來源與至少一個承重 response
+  因此 table／pre 全為 0 仍 exit 0。可重用的 `-f`／`-F @path` 旗標契約、官方來源與逐字集中於
+  `docs/dev/external-facts.md` B9；本條只保存事故。改用 `-F text=@path` 後才取得實際文件 HTML。
+  後續 Markdown 複驗須同時釘 request body 來源與至少一個承重 response
   canary（例如預期有表格的檔必須含 `<table role="table">`），不得只因 API exit 0 就發布零計數
   【F1/F3/F5/F11/F12；本輪自報，未被驗收點名，依 17.2 只登記；取證日期＝2026-08-21】
 
@@ -806,7 +805,8 @@
   因此跨行手抄列舉可能避開守衛。兩者都不影響本輪被點名的跨日期 A.1 漏列修復；依 17.2
   只登記，後續 validator 契約包須用結構化 current-entry metadata 與跨行反向案例共同收斂
   【F5/F11/F12；來源＝PR #64 Claude comments `5361414731` ⚪1／2、`5361847317` ⚪3
-  （再次核對，無新動作）、`5363200002` ⚪1（第四次 supersede 復發錨）；取證日期＝2026-08-21】
+  （再次核對，無新動作）、`5363200002` ⚪1（第四次 supersede 復發錨）、`5363469305` ⚪1
+  （第五次 supersede 復發錨）；取證日期＝2026-08-21】
 
 - **PR64 的 20.3 correction validator 沒有固定 HEAD snapshot**：
   第十一輪 worklog 的 correction validator 以 `File.read` 直接讀工作樹，沒有像第五輪現行
@@ -828,7 +828,28 @@
   command failure 與 empty set 等 fail-closed guard 沒有各自的 mutation／fixture；因此不能由既有
   mutation 推出所有輸入缺失與工具失敗分支都被證明。這不影響本輪被點名的歷史表更正；依
   17.2 只登記，後續 validator 契約包須以逐分支 mutation 補齊 20.2.5
-  【F5/F11/F12；來源＝PR #64 Claude comment `5361847317` ⚪1；取證日期＝2026-08-21】
+  【F5/F11/F12；來源＝PR #64 Claude comments `5361847317` ⚪1、`5363469305` ⚪3；
+  取證日期＝2026-08-21】
+
+- **PR64 destructive history guard 未涵蓋 `external-facts.md`**：
+  第十三輪時 B9／B10 已成為 P-8 的承重外部事實，但第五輪現行 validator 的 destructive
+  pathspec 只掃 `docs/worklog`；刪除或改名 `docs/dev/external-facts.md` 不會由該 guard 擋住。
+  本輪只修被點名的 worklog production wiring，依 17.2 不擴大資產射程；後續 validator 契約包
+  應先定義承重資產集合，再為每個集合配置同射程非空 canary 與刪除／改名 mutation
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363469305` ⚪2；取證日期＝2026-08-21】
+
+- **91 附錄 A.1 的全量對帳仍只存在於 worklog fence，沒有 CI 機械閘門**：
+  現行動態對帳可在人工執行時比對 PR64 worklog 集合，但 `ci.yml` 沒有呼叫該 fenced validator；
+  因此「附錄已全量」仍不能由一般 CI 綠推得。本輪不改 workflow，也不把範圍外意見升格為修檔
+  授權；後續若產品化，必須依鐵律 18.3 拆成 workflow／script 受限包並由使用者人工合併
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363469305` ⚪4；取證日期＝2026-08-21】
+
+- **merge-only witness 的未點名歷史副本仍漏 `git diff-tree -r`**：
+  `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md` 的歷史 Done 仍寫 `git diff-tree -m`
+  witness 為 1 次；對巢狀 `.pyc` 路徑實跑時，不加 `-r` 只得到 `M scripts`，加 `-r` 才得到
+  目標 `D`。本輪被點名的是中央契約 `docs/dev/external-facts.md` B10；依 17.2 不回寫未點名的
+  歷史副本。官方 `-r` 契約、可重跑命令與取證日期集中於 B10
+  【F3/F5/F11/F12；來源＝PR #64 Codex inline `3826183941` 的同型抽樣；取證日期＝2026-08-21】
 
 - **external-facts A9 的短引文丟失官方句中的情態與模式上下文**：
   A9 現值把片段引為 "the original query accepts..."，但 GitHub CLI 官方 pinned 原文是
@@ -1017,6 +1038,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第十輪Claude驗收修復.md`（Claude comment `5361847317`；20.3 類型名與歷史 snapshot 改用相鄰更正收斂）
 - [x] `docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md`（Claude comment `5362492718`＋Codex review `4987731284`；destructive history producer、20.3 固定編號與 rendering 未取得已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md`（Claude comment `5363200002`＋Codex review `4988295763`；零掃描 canary、merge diff、rendering 歷史更正與外部契約集中已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十三輪雙驗收修復.md`（Claude comment `5363469305`＋Codex review `4988472500`；production wiring、外部契約去重與 `diff-tree -r` witness 已處置）
 
 ### A.2 handoff
 

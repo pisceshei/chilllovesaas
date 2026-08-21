@@ -376,8 +376,15 @@ canary，不能把 table／pre 的零計數直接當成功。
 `--first-parent` 時）；所以 `--name-status` 與 `--diff-filter` 本身不能證明 merge-resolution
 刪除／改名已被掃到。
 
+`git diff-tree` 的 `-r` 官方逐字是 "Recurse into sub-trees."，來源：Git 官方
+<https://git-scm.com/docs/git-diff-tree>（取證 2026-08-21）。因此巢狀路徑的 merge-only witness
+必須明示 `-r`，不能把只回報頂層 tree 的輸出當成目標檔案紀錄。
+
 🔴 **倉庫 fixture**：immutable merge `59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890` 相對 first parent
 `76751e4162a79bbb28860b545e673ee1d9ee1bea`，目標
-`scripts/__pycache__/lint-prototype.cpython-311.pyc` 在未開 merge diff 的 range log 出現 1 次，
-加 `--diff-merges=separate` 後出現 2 次；`git diff-tree -m` 單看 merge 本身的 witness 為 1 次。
+`scripts/__pycache__/lint-prototype.cpython-311.pyc`（該檔已刪除，只存在於上述 immutable merge
+歷史）在未開 merge diff 的 range log 出現 1 次，
+加 `--diff-merges=separate` 後出現 2 次；
+`git diff-tree -m -r --format= --name-status 59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890 -- scripts/__pycache__/lint-prototype.cpython-311.pyc`
+單看 merge 本身得到 1 筆目標 `D` 紀錄。拿掉 `-r` 時只得到頂層 `M scripts`，不能重現該計數。
 PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必須非零。
