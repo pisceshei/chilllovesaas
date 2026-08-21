@@ -114,6 +114,9 @@ CASES = [
   [ "doc_claim_duplicate_id_across_indexes", 1, "R6 重複 CLAIM-001",
     "🔴 R6：CLAIM ID 是整個 docs/specs/92-* 的全域 namespace；" \
     "兩份各自合法的分片索引不得重複發布同一 ID" ],
+  [ "doc_claim_distinct_ids_across_indexes_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：兩份各自合法且 ID 不重複的分片索引必須放行；" \
+    "不得把全域唯一性退化成只准存在一份索引" ],
   [ "doc_claim_inactive_headers", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：fenced code 與 HTML comment 內的範例 CLAIM 不是活性區塊，" \
     "不得切斷正文或製造假重複" ],
@@ -132,6 +135,9 @@ CASES = [
   [ "doc_claim_comment_close_span", 1, "R6 重複 CLAIM-001",
     "🔴 R6：comment 已開啟後，行內任何 `-->` 都依 HTML block end condition 收尾；" \
     "看似 code span 的 closer 不得被 opener-only 遮罩吃掉" ],
+  [ "doc_claim_comment_closer_suffix_header", 1, "R6 宣稱索引沒有任何",
+    "🔴 R6：HTML comment 的 closing line 整行仍屬 HTML block；`-->` 後緊接的假 CLAIM 標頭" \
+    "不得被重新餵進活性 parser，否則 inactive content 會滿足 header canary" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -144,7 +150,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 37
+MIN_CASES = 39
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1

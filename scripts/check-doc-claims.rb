@@ -219,7 +219,8 @@ end
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
 # block fence 先於 inline/comment 掃描；正文同一行的 code span 只在尋找 comment opener 時遮罩。
-# comment 已開啟後，任何 `-->` 子字串都依 HTML block end condition 收尾，不解析 inline code span。
+# comment 已開啟後，任何 `-->` 子字串都依 HTML block end condition 收尾，不解析 inline code span；
+# closing line 仍屬 HTML block，`-->` 後綴不得重新餵回行首結構解析，下一個 raw line 才恢復。
 # 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
@@ -253,8 +254,8 @@ def active_markdown_lines(lines)
         closing = rest.index("-->")
         break unless closing
 
-        rest = rest[(closing + 3)..].to_s
         comment = nil
+        break
       else
         opening = mask_inline_code_spans(rest).index("<!--")
         unless opening

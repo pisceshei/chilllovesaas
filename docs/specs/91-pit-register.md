@@ -906,6 +906,26 @@
   `CLAIM_RECHECK`，但「本輪」不可外推成 PR 全部驗收輪的集合；後續引用須帶第九輪時點
   【F5/F11；來源＝PR #65 Claude comment `5363275846` ⚪3；取證日期＝2026-08-21】
 
+- **R6 的 production listing 不掃尚未納入 git index 的 92 新檔**：
+  `listing()` 優先用 `git ls-files`，只有輸出為空才退回 glob；生產樹已有其他 Markdown，故未
+  `git add` 的 `docs/specs/92-*` 新檔不會進 R6，也不受跨索引 ID 唯一性檢查。該檔未納管時本來
+  也不能進 main；本輪不改既有 listing 策略，後續若要求 pre-index 檢查須另定工作樹／index
+  射程並放正反 fixture
+  【F5/F11/F12；來源＝PR #65 Claude comment `5363573988` ⚪1；取證日期＝2026-08-21】
+
+- **92 宣稱索引的自我契約仍是 R6 完整契約的子集**：
+  `docs/specs/92-claim-index.md` 已寫 CLAIM ID 全域唯一，但未列「每份索引須有活性標頭」與
+  「圍欄／HTML comment 須收尾」；完整現值在 checker 檔頭與
+  `docs/dev/m0-review-convergence.md`。目前是摘要不完整而非互斥，本輪依 17.2 只登記，不回寫
+  未被阻擋意見點名的索引前言
+  【F5/F11；來源＝PR #65 Claude comment `5363573988` ⚪2；取證日期＝2026-08-21】
+
+- **跨索引重複 ID 診斷的「首次」指字典序，不是撰寫時序**：
+  targets 先排序再掃描，錯誤訊息的首次 path／line 因而可重現，但不代表哪一份較早寫入。
+  訊息已同時列出兩份路徑，退出碼與約束不受影響；後續診斷文字包可改成「排序後先見」，本輪
+  不為非阻擋措辭擴改腳本
+  【F5/F12；來源＝PR #65 Claude comment `5363573988` ⚪3；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -1081,6 +1101,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第八輪雙驗收修復.md`（Claude comment `5362007581`＋Codex review `4987453495`；wrapper 冗餘、recheck 鍵變體與 CLAIM-005 證偽已處置）
 - [x] `docs/worklog/2026-08-21-PR65第九輪雙驗收修復.md`（Claude comment `5362761839`＋Codex review `4987956545`；活性 CLAIM type metadata 與登記簿識別字同步已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十一輪雙驗收修復.md`（Claude comment `5363573988`＋Codex review `4988556633`；跨索引相異 ID happy path 與 HTML comment closing-line suffix 已處置）
 
 ### A.2 handoff
 
