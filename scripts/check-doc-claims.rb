@@ -219,9 +219,10 @@ end
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
 # block fence 先於 inline/comment 掃描；正文同一行的 code span 只在尋找 comment opener 時遮罩。
-# 只有行首 0–3 個空格後的 `<!--` 會開 HTML block；行中 opener 是 inline raw HTML comment。
-# comment 已開啟後，任何 `-->` 子字串都收尾，不解析 inline code span。block closing line 的後綴
-# 不重新餵回；inline comment 的後綴仍是同一行活性正文，必須繼續解析。
+# HTML block start 只用未遮罩 raw line 判定，且只能在該 raw line 第一次掃描時成立；行中 opener
+# 是 inline raw HTML comment。comment 已開啟後，任何 `-->` 子字串都收尾，不解析 inline code
+# span。block closing line 的後綴不重新餵回；inline comment 可跨 raw line，開啟前的 prefix 與
+# 收尾後的 suffix 必須重組成同一個邏輯活性行，不能讓換行把畸形 metadata 拆成兩段。
 # 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
@@ -248,7 +249,16 @@ def active_markdown_lines(lines)
       end
     end
 
-    visible = +""
+    raw_block_opening = raw.match(/\A {0,3}<!--/)
+    first_raw_scan = true
+    suppress_active = false
+    if comment && !comment[:block]
+      visible = comment[:visible]
+      active_line = comment[:active_line]
+    else
+      visible = +""
+      active_line = idx
+    end
     rest = raw
     loop do
       if comment
@@ -257,9 +267,13 @@ def active_markdown_lines(lines)
 
         block_comment = comment[:block]
         comment = nil
-        break if block_comment
+        if block_comment
+          suppress_active = true
+          break
+        end
 
         rest = rest[(closing + 3)..].to_s
+        first_raw_scan = false
       else
         masked = mask_inline_code_spans(rest)
         opening = masked.index("<!--")
@@ -268,14 +282,27 @@ def active_markdown_lines(lines)
           break
         end
 
-        block_comment = visible.empty? && masked.match?(/\A {0,3}<!--/)
+        raw_block_opener = raw_block_opening && raw_block_opening.end(0) - "<!--".length
+        block_comment = first_raw_scan && opening == raw_block_opener
         visible << rest[0...opening]
         rest = rest[(opening + 4)..].to_s
         comment = { line: idx, block: block_comment }
+        unless block_comment
+          comment[:visible] = visible
+          comment[:active_line] = active_line
+        end
+        first_raw_scan = false
       end
     end
 
-    active << [ idx, visible ]
+    if comment
+      unless comment[:block]
+        comment[:visible] = visible
+        comment[:active_line] = active_line
+      end
+      next
+    end
+    active << [ active_line, visible ] unless suppress_active
   end
 
   [ active, fence, comment ]

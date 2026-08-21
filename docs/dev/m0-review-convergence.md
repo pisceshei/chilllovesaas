@@ -88,7 +88,7 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| R6 | 每份索引須有活性 `CLAIM-NNN` 標頭，且每個合法活性 CLAIM 都須有 `type: count`、CLAIM ID 跨全部索引全域唯一、圍欄／HTML comment 須收尾；`type`／`recheck` 鍵大小寫與冒號前空白不敏感、type 值只允許小寫 `count`、`type*`／`recheck*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與語義 recheck，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，只有行首 0–3 空格後的 opener 開 HTML block，行中 inline comment 的後綴仍是活性正文 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| R6 | 每份索引須有活性 `CLAIM-NNN` 標頭，且每個合法活性 CLAIM 都須有 `type: count`、CLAIM ID 跨全部索引全域唯一、圍欄／HTML comment 須收尾；`type`／`recheck` 鍵大小寫與冒號前空白不敏感、type 值只允許小寫 `count`、`type*`／`recheck*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與語義 recheck，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，只有未遮罩 raw line 的行首 0–3 空格後 opener 開 HTML block；inline comment 可跨 raw line，prefix 與 closing-line suffix 重組為同一邏輯活性行 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
 | canary | 全樹掃到 0 個檔，或非 `--fixture-mode` 調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效；明確 ROOT 不構成豁免 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
@@ -198,6 +198,10 @@
 | `doc_claim_comment_closer_suffix_header` | 1 | R6 HTML comment closing line 的 `-->` 後綴不得冒充活性 CLAIM 標頭 |
 | `doc_claim_inline_comment_suffix` | 1 | R6 行中 inline comment 後綴不得被 block 收尾規則丟棄，使畸形 type 值縮成合法 count |
 | `doc_claim_inline_comment_ok` | 0 | R6 反向：移除行中成對 comment 後仍是合法 count 時必須放行 |
+| `doc_claim_inline_comment_multiline_suffix` | 1 | R6 跨行 inline comment 的 prefix／suffix 必須重組，換行不得把畸形 type 拆成合法 count |
+| `doc_claim_inline_comment_multiline_ok` | 0 | R6 反向：跨行 inline comment 移除後仍是合法 count 時必須放行 |
+| `doc_claim_inline_comment_reopen_suffix` | 1 | R6 closing line 的餘段再開 inline comment 時，不得改用 HTML block 規則丟 suffix |
+| `doc_claim_inline_comment_reopen_ok` | 0 | R6 反向：closing line 再開成對 inline comment 後仍是合法 count 時須放行 |
 | `doc_no_files` | **3** | canary |
 | `doc_clean` | 0 | 總反向斷言 |
 （表列以 `ls spec/fixtures/ci_violations/ | grep ^doc_` 為準——列數勿手寫。）
@@ -214,10 +218,12 @@ type 值錯誤靜默略過／type-like 畸形鍵漏判／活性 CLAIM 缺 type m
 recheck／單區塊重複 recheck／合法標頭下
 count 零供給／把 fenced code 或 HTML comment 誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML
 comment 靜默截斷／code span opener 誤開 comment／comment closer 被錯誤遮罩／closing-line 後綴
-被重餵為活性標頭／行中 comment 後綴被 block 規則丟棄／合法行中 comment 被誤擋／無 ROOT 與明確 ROOT
+被重餵為活性標頭／行中 comment 後綴被 block 規則丟棄／合法行中 comment 被誤擋／跨行 inline
+comment prefix／suffix 未重組／closing line 餘段 opener 被誤判 block／raw line 前置 code span 被遮罩
+成三格縮排而誤判 block／合法跨行與 reopen comment 被誤擋／無 ROOT 與明確 ROOT
 生產樹零份
 `docs/specs/92-*`；逐項由 fixture、git 情境或
-supply-S1／S2 令 `scripts/test-doc-claims-rules.rb` 轉紅。
+supply-S1／S2／production helper parser probes 令 `scripts/test-doc-claims-rules.rb` 轉紅。
 
 ## 已知限制
 

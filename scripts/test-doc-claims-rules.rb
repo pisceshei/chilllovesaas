@@ -147,6 +147,17 @@ CASES = [
   [ "doc_claim_inline_comment_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 R6 反向斷言：行中成對 HTML comment 可從 metadata 可見文字移除；" \
     "移除後仍是精確 count 且 recheck 合法時不得誤擋" ],
+  [ "doc_claim_inline_comment_multiline_suffix", 1, "R6 不支援 type metadata `count  qualitative`",
+    "🔴 R6：跨行 inline comment 的 opener prefix 與 closing-line suffix 必須重組；" \
+    "不能讓換行把畸形 type 值拆成合法 count 與無效散文兩行" ],
+  [ "doc_claim_inline_comment_multiline_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：跨行 inline comment 移除後仍是精確 count 時必須放行；" \
+    "不得把所有跨行 comment 一律判成 metadata 違規" ],
+  [ "doc_claim_inline_comment_reopen_suffix", 1, "R6 不支援 type metadata `qualitative`",
+    "🔴 R6：inline comment 在 closing line 收尾後，餘段的第二個 opener 仍不得被誤判成 HTML block；" \
+    "raw line 以 closer 起頭，不滿足 block start condition" ],
+  [ "doc_claim_inline_comment_reopen_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：closing line 上再開一個成對 inline comment，移除後仍是合法 count 時須放行" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -159,7 +170,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 42
+MIN_CASES = 46
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
@@ -167,6 +178,36 @@ end
 
 indent = ->(t) { t.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n") }
 failures = []
+
+# `docs/specs/92-*` 的行首規則有兩格無法只靠 R6 metadata outcome 承重：code span 在 raw line
+# 最前方時，visible 仍會保留 code span；因此 suffix 無論是否被錯丟，都不會變成 line-start metadata。
+# 這裡直接抽取**生產 helper 本體**做輸出 probe，不複製 parser 實作；抽取失敗本身也要轉紅。
+PARSER_PROBES = [
+  [ "raw-code-span-prefix", [ "`x`<!-- a --> tail" ], [ [ 0, "`x` tail" ] ] ],
+  [ "indented-block-start", [ "   <!-- a", "--> tail" ], [] ],
+  [ "raw-block-closing-suffix", [ "<!-- a", "--> tail" ], [] ],
+  [ "multiline-inline-rejoin", [ "- type: count <!-- a", "--> qualitative" ],
+    [ [ 0, "- type: count  qualitative" ] ] ],
+  [ "closing-line-inline-reopen", [ "- type: <!-- a", "--><!-- b --> qualitative" ],
+    [ [ 0, "- type:  qualitative" ] ] ]
+].freeze
+MIN_PARSER_PROBES = 5
+if PARSER_PROBES.size < MIN_PARSER_PROBES
+  failures << "parser probes 只剩 #{PARSER_PROBES.size} 條（下限 #{MIN_PARSER_PROBES}）"
+end
+
+begin
+  checker_source = File.read(CHECKER, encoding: "UTF-8")
+  helper_source = checker_source[/def mask_inline_code_spans.*?(?=^# ---- 收集要掃的檔)/m] or
+    raise "production parser helper extraction failed"
+  eval(helper_source) # rubocop:disable Security/Eval
+  PARSER_PROBES.each do |name, lines, expected|
+    actual, = active_markdown_lines(lines)
+    failures << "parser-#{name}：預期 #{expected.inspect}，實得 #{actual.inspect}" unless actual == expected
+  end
+rescue StandardError => e
+  failures << "parser probes 自身失敗（#{e.class}）：#{e.message}"
+end
 
 CASES.each do |dir, want_status, want_output, why|
   path = File.join(FIXTURES, dir)
@@ -299,13 +340,15 @@ end
 if failures.empty?
   puts "OK：文檔引用保真檢查器的回歸測試通過" \
        "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ " \
-       "#{GIT_SCENARIOS} 條 git 情境＋#{SUPPLY_SCENARIOS} 條供給情境）"
+       "#{PARSER_PROBES.size} 條 parser probe＋#{GIT_SCENARIOS} 條 git 情境＋" \
+       "#{SUPPLY_SCENARIOS} 條供給情境）"
   CASES.each { |dir, st, needle, why| puts "  - #{dir} → exit #{st}，含 `#{needle}`：#{why}" }
   puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
   puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
   puts "  - W2 → ci.yml 不得傳 --fixture-mode（fixture 豁免不得流入生產）"
+  PARSER_PROBES.each { |name, _lines, expected| puts "  - parser-#{name} → #{expected.inspect}" }
   puts "  - supply-S1 → 生產樹缺 docs/specs/92-* 時 exit 3，不得拿其他受管檔掩蓋 R6 零輸入"
   puts "  - supply-S2 → 明確 ROOT 的生產樹缺 docs/specs/92-* 時同樣 exit 3"
   exit 0

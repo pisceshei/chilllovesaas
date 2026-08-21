@@ -837,6 +837,13 @@
   > checker 現在只有行首 0–3 空格後的 opener 會進 block 模式；行中 inline comment 收尾後繼續
   > 解析同一行後綴。負向 fixture 修前 exit 0、修後 exit 1，合法相反方向維持 exit 0。
 
+  > ✅ **2026-08-21 第十三輪相鄰更正與收割**：Claude comment `5364105225` 證明上段把
+  > `visible.empty?` 與 masked 餘段誤當 raw-line 行首，且只覆蓋同一 raw line 內的 inline
+  > comment。checker 現改以未遮罩 raw line 的 0–3 空格＋opener 判 HTML block，且每個 raw line
+  > 只容許第一次掃描成立；跨行 inline comment 會保存 prefix，並把 closing-line suffix 接回同一
+  > 邏輯活性行。畸形／合法跨行與 reopen 四支 fixture、raw-code-span／block-closing／跨行／reopen
+  > 五條生產 helper probe 均已承重；前段保留作第十二輪時點記錄，不再作現行契約。
+
 - **R4 中文數字集合不含「兩」**：`NUM` 的中文數字字元類沒有「兩」，因此既有白名單形態中的
   「兩支」「兩份」「兩組」不會命中；本輪 worklog 的 Pending 有現成「兩支」實例。這是 PR #42
   以來的既有 pattern 邊界，並非本輪 inline comment 修法引入；依鐵律 17.2 只登記，不順手擴字元集
@@ -935,6 +942,19 @@
   訊息已同時列出兩份路徑，退出碼與約束不受影響；後續診斷文字包可改成「排序後先見」，本輪
   不為非阻擋措辭擴改腳本
   【F5/F12；來源＝PR #65 Claude comment `5363573988` ⚪3；取證日期＝2026-08-21】
+
+- **`recheck*` 畸形鍵的診斷射程與 `type*` 不對稱**：第一個活性 CLAIM 標頭前的 `type*`
+  會由前置 metadata 分支檢查，`recheck*` 沒有對應分支；區塊內的 recheck 診斷又位於
+  `next if count_entries.empty?` 之後，因此 `type: qualitative` 與 `rechecks:` 並存時只報 type
+  violation。所有這些形態仍非零退出，不構成 fail-open；依 17.2 只登記診斷完整性，不擴修 checker
+  【F5/F12；來源＝PR #65 Claude comment `5364105225` ⚪；取證日期＝2026-08-21】
+
+- **第十二輪 worklog 的鐵律 20.3 表頭缺少「輸出」二字**：
+  `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md` 的第三欄仍寫「反向複驗」，與鐵律
+  20.3 固定表頭「反向複驗輸出」不一致。`git log --follow -p` 證明該表頭由 commit `cf9fa51`
+  首次寫入；這是本輪內部全掃發現、未被 comment `5364105225` 點名，依 17.2 只登記，不回寫
+  歷史 worklog 表格
+  【F5/F11/F12；來源＝內部 `git log --follow -p`；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -1113,6 +1133,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十一輪雙驗收修復.md`（Claude comment `5363573988`＋Codex review `4988556633`；跨索引相異 ID happy path 與 HTML comment closing-line suffix 已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md`（Codex review `4988736695`＋Claude comment `5363844402`；Markdown raw evidence、歷史 totals 邊界、recheck-like 畸形鍵與 inline comment fail-open 已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md`（Claude comment `5364105225`；raw-line block start、跨行 inline 重組與 parser probes 已處置）
 
 ### A.2 handoff
 

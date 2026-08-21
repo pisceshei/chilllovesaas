@@ -268,14 +268,23 @@ CommonMark 0.31.2 §4.6 對 HTML comment block 有以下直接規則：
 
 來源：<https://spec.commonmark.org/0.31.2/#html-blocks>（取證 2026-08-21）。
 
-🔴 **2026-08-21 對 R6 的窄應用**：`check-doc-claims.rb` 只在尋找 comment opener 時遮掉同一行
-成對 code span；只有行首 0–3 個空格後的 `<!--` 會開 HTML block。block comment 已開啟後，
-任何 `-->` 子字串都依上列 end condition 收尾，不解析 inline code span；closing line 的後綴不會
-被重新當成活性 CLAIM 結構，下一個 raw line 才恢復解析。未滿足 start condition 的行中 opener
-不會套用 block closing-line 規則；R6 仍移除該 inline raw HTML comment，但 `-->` 後綴保留為
-同一行活性正文。正反 fixture 分別釘住「畸形後綴不得消失」及「合法 inline comment 不得誤擋」。
-這是本專案針對單行 metadata／正文的窄實作邊界，不外推為完整 CommonMark parser，也不宣稱
-支援跨行 code span。
+🔴 **2026-08-21 對 R6 的窄應用**：HTML block 的 start condition 只對未遮罩的 raw line 判定，
+且只在該 raw line 第一次取得 opener 時成立；raw line 必須由 0–3 個空格後緊接 `<!--` 開始。
+block comment 已開啟後，任何 `-->` 子字串都依上列 end condition 收尾，不解析 inline code span；
+closing line 的後綴不會被重新當成活性 CLAIM 結構，下一個 raw line 才恢復解析。未滿足 start
+condition 的 opener 是 inline raw HTML comment；它可跨 raw line，R6 會保留 opener 前的 prefix，
+再把 closing-line suffix 接回同一個邏輯活性行。closing line 餘段若另有 opener，也不能改用
+HTML block 規則，因為該 raw line 並非由 opener 開始。
+
+GitHub 官方 Render a Markdown document endpoint
+<https://docs.github.com/en/rest/markdown/markdown#render-a-markdown-document>（取證 2026-08-21）
+對 `text` 的逐字說明是 "The Markdown text to render in HTML."。以 exact request
+``{"text":"### CLAIM-001\n\n- type: count <!-- a\n--> qualitative\n- recheck: `ruby -e 'exit 0'`","mode":"gfm","context":"pisceshei/chilllovesaas"}``
+實跑，raw response 逐字含 `<li>type: count  qualitative</li>`；因此換行不能把 suffix 從同一個
+可見 metadata 值中丟掉。四支正反 fixture 與五條 production helper probe 分別釘住畸形／合法
+跨行、closing-line reopen、raw code-span prefix、縮排 block start 與 block closing suffix。這是本專案針對
+line-based metadata／正文的窄實作邊界，不外推為完整 CommonMark parser，也不宣稱支援跨行
+code span。
 
 ### B6. 限流：primary 明列 reset 時點；secondary 另明列有限次重試
 
