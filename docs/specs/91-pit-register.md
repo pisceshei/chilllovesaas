@@ -832,6 +832,16 @@
   【F6/F11/F12；來源＝PR #65 Claude comment `5361142724` ⚪1、
   <https://spec.commonmark.org/0.31.2/#html-blocks>；取證日期＝2026-08-21】
 
+  > ✅ **2026-08-21 第十二輪相鄰收割**：Claude comment `5363844402` 證明前輪的 block-closer
+  > 修法把本條從「多遮」升成可放行畸形 metadata 的 fail-open，因此本輪只收割這個已點名坑。
+  > checker 現在只有行首 0–3 空格後的 opener 會進 block 模式；行中 inline comment 收尾後繼續
+  > 解析同一行後綴。負向 fixture 修前 exit 0、修後 exit 1，合法相反方向維持 exit 0。
+
+- **R4 中文數字集合不含「兩」**：`NUM` 的中文數字字元類沒有「兩」，因此既有白名單形態中的
+  「兩支」「兩份」「兩組」不會命中；本輪 worklog 的 Pending 有現成「兩支」實例。這是 PR #42
+  以來的既有 pattern 邊界，並非本輪 inline comment 修法引入；依鐵律 17.2 只登記，不順手擴字元集
+  【F5/F12；來源＝PR #65 Claude comment `5363844402` ⚪；取證日期＝2026-08-21】
+
 - **R6 的零 count 訊息不能區分「真零供給」與「標頭全畸形」**：
   header 格式 violation 會先記錄，但畸形區塊在解析 type 前被略過；若檔內沒有其他合法 count，
   尾端還會印「沒有任何活性 type: count」。退出仍為 1 且真正格式錯誤同時存在，故只屬訊息口徑；
@@ -1102,6 +1112,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第九輪雙驗收修復.md`（Claude comment `5362761839`＋Codex review `4987956545`；活性 CLAIM type metadata 與登記簿識別字同步已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十一輪雙驗收修復.md`（Claude comment `5363573988`＋Codex review `4988556633`；跨索引相異 ID happy path 與 HTML comment closing-line suffix 已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md`（Codex review `4988736695`＋Claude comment `5363844402`；Markdown raw evidence、歷史 totals 邊界、recheck-like 畸形鍵與 inline comment fail-open 已處置）
 
 ### A.2 handoff
 

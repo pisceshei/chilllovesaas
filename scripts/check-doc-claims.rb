@@ -32,7 +32,7 @@
 #   R6｜**每份宣稱索引須有活性標頭、每個活性 CLAIM 都須有 `type: count`、CLAIM ID 跨索引全域唯一、
 #       圍欄／HTML comment 須收尾；
 #       `type`／`recheck` 鍵大小寫與冒號前空白不敏感，但 type 值只允許小寫 `count`，
-#       `type*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
+#       `type*`／`recheck*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
 #       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
@@ -167,14 +167,14 @@ ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 # 每份索引必須至少有一個活性 `CLAIM-NNN` 標頭，且每個合法活性區塊都要有 `type: count`；
 # 所有 `docs/specs/92-*` 索引之間的 CLAIM ID 必須全域唯一。
 # Markdown 圍欄與 HTML comment 必須收尾。`type`／`recheck` 鍵大小寫與冒號前空白不敏感；
-# type 值只允許小寫 `count`，以 `type` 起頭的畸形鍵 fail-closed。每個 count 區塊只能有一筆
-# 計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
+# type 值只允許小寫 `count`，以 `type`／`recheck` 起頭的畸形鍵 fail-closed。每個 count 區塊
+# 只能有一筆計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
 # 既有 R1–R5 的判定對象與語義因此不變。
 CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
 CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
 CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
 CLAIM_TYPE = /\A {0,3}-\s+(type[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
-CLAIM_RECHECK = /\A {0,3}-\s+recheck\s*:\s*(.+)\z/i
+CLAIM_RECHECK = /\A {0,3}-\s+(recheck[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
 
 violations = []
 warnings = []
@@ -219,8 +219,9 @@ end
 # R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
 # 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
 # block fence 先於 inline/comment 掃描；正文同一行的 code span 只在尋找 comment opener 時遮罩。
-# comment 已開啟後，任何 `-->` 子字串都依 HTML block end condition 收尾，不解析 inline code span；
-# closing line 仍屬 HTML block，`-->` 後綴不得重新餵回行首結構解析，下一個 raw line 才恢復。
+# 只有行首 0–3 個空格後的 `<!--` 會開 HTML block；行中 opener 是 inline raw HTML comment。
+# comment 已開啟後，任何 `-->` 子字串都收尾，不解析 inline code span。block closing line 的後綴
+# 不重新餵回；inline comment 的後綴仍是同一行活性正文，必須繼續解析。
 # 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
 # `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
 def active_markdown_lines(lines)
@@ -254,18 +255,23 @@ def active_markdown_lines(lines)
         closing = rest.index("-->")
         break unless closing
 
+        block_comment = comment[:block]
         comment = nil
-        break
+        break if block_comment
+
+        rest = rest[(closing + 3)..].to_s
       else
-        opening = mask_inline_code_spans(rest).index("<!--")
+        masked = mask_inline_code_spans(rest)
+        opening = masked.index("<!--")
         unless opening
           visible << rest
           break
         end
 
+        block_comment = visible.empty? && masked.match?(/\A {0,3}<!--/)
         visible << rest[0...opening]
         rest = rest[(opening + 4)..].to_s
-        comment = { line: idx }
+        comment = { line: idx, block: block_comment }
       end
     end
 
@@ -479,13 +485,18 @@ targets.each do |rel|
 
       recheck_entries = block.filter_map do |idx, line|
         match = line.match(CLAIM_RECHECK)
-        match && [ idx, match[1] ]
+        match && [ idx, match[1], match[2].strip ]
       end
-      recheck_entries.drop(1).each do |idx, _value|
+      recheck_entries.reject { |_idx, key, _value| key.casecmp?("recheck") }.each do |idx, key, _value|
+        violations << "#{rel}:#{idx + 1} R6 畸形 recheck metadata 鍵 `#{key}`——" \
+                      "鍵只允許 `recheck`（大小寫／冒號前空白不敏感），`recheck*` 拼字不得靜默略過。"
+      end
+      semantic_rechecks = recheck_entries.select { |_idx, key, _value| key.casecmp?("recheck") }
+      semantic_rechecks.drop(1).each do |idx, _key, _value|
         violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `recheck:`——" \
                       "每個計數區塊只能發布一個無歧義的複驗命令。"
       end
-      recheck = recheck_entries.first&.last
+      recheck = semantic_rechecks.first&.last
       next if recheck&.match?(CLAIM_RECHECK_CMD)
 
       violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
