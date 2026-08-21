@@ -934,8 +934,55 @@
   `0fbe520..HEAD` 會納入新 main 的 commit，這些 commit 都不在受驗 head registry 內 ⇒
   ancestry 迴圈報 `reviewed branch head missing from ledger registry`。方向保守
   （**假紅、不是 fail-open**），且舊版同樣要求每個 branch head 有 section、非本輪引入，
-  故依 17.2 只登記不修；日後若要修，正解是把 base 改成 `git merge-base origin/main HEAD`
-  【F5/F11；來源＝PR #66 Claude issue comment `5372536493` ⚪2；取證日期＝2026-08-21】
+  故依 17.2 只登記不修。🔴 **修法方向＝未取得**：`git merge-base origin/main HEAD` 曾被寫成
+  「正解」，2026-08-22 查證後撤回——rebase 會**同時改寫 branch commit 的 SHA**，而 registry 存的
+  是 rebase 前的 SHA，換成 merge-base 之後守衛仍會 throw 同一句；淺 clone 下該命令無輸出。
+  缺的證據＝`git merge-base` 在「rebase 後 SHA 改寫」與「`--depth` 淺 clone」兩情境下的行為、
+  以及 registry 該如何重錄；取得方法＝git-scm 官方文檔 ＋ 臨時倉庫實跑該兩情境。
+  依 AGENTS §8.2 第 2 條，取證前不得作為實作輸入
+  【F5/F11；來源＝PR #66 Claude issue comment `5372536493` ⚪2 ＋ Codex inline `3832262558`；
+  取證日期＝2026-08-21／2026-08-22】
+
+- **`Assert-DeferredWhite` 以 `,@($deferred)` 收尾，與同 commit 新立的反巢狀規則互斥**：
+  `docs/worklog/2026-08-21-驗收收斂制度V2.md` 的 `Get-LedgerTupleSet` 註釋逐字要求「不用
+  `,$set` 包裝：PS 5.1 下它會產生巢狀陣列，呼叫端 `@()` 收到的是一個元素」，而同檔相隔約
+  160 行的 `Assert-DeferredWhite` 仍用 `,@(...)`。PS 5.1 實跑複驗（2026-08-22）：呼叫端的
+  `@()` **一律收到 Count=1 的巢狀陣列**（函式回 0／1／2 個 pair 皆然）⇒ 正向 fixture 的
+  `$positivePairs.Count -ne 1` 這半條守衛**恆為真而失效**、`$positivePairs[0] -ne $deferredSample`
+  退化成陣列過濾比較（相等回空陣列 falsy、不等回一元素 truthy）。方向仍 fail-closed，
+  但🔴 **承重的是函式內的集合相等守衛，不是這一行**（內層為空時該行條件實測為 False）；
+  生產側 `$deferred` 賦值後全檔未再使用 ⇒ 無後果。依 17.2 只登記不修；日後統一寫法時
+  **兩支要一起改**，並把數量判準改成對內層集合斷言
+  【F5/F11；來源＝PR #66 Claude issue comment `5373193694` ⚪1；PS 5.1 實跑複驗＝2026-08-22】
+
+- **`Invoke-AncestryGuard` 的兩格邊界（登記觀察與其處置的因果，不是待辦）**：
+  Claude 指出①`$Registry` 整組為空時走降級 return、承重方向靜默消失（下游以
+  `frozen ledger marker does not correspond to any known head` 接住 ⇒ 整體仍 fail-closed，
+  但紅燈與 ancestry 無關）；②git 退出 0 而輸出為空時，訊息誤寫成 `non-squash reason: git exit=0`。
+  🔴 **②的射程比判詞寫的大**：實跑複驗（2026-08-22）顯示只要**HEAD 是 `$Base` 的祖先或與之
+  相等**即為此形態（`HEAD..HEAD` 與 `1e8e12a..5fc4355` 皆 exit 0／0 行）——而那正是 squash
+  合併後把 base 更新到新 main 的情形，**等於降級分支要服務的場景反被判成「非 squash 原因」**；
+  連帶當時的 tool-failure 突變以該句字串為判準，而 exit=0 與 exit=128 共用同一句 ⇒ 證不出
+  紅燈來自工具失敗。⚠️ **這三點已被同輪重構一併改掉**（該重構由 Codex inline `3832262543`
+  的 P1 強制，非本條所致）：空 registry 由 `ledger ancestry registry is empty` 明確 throw 且有
+  具名突變；空輸出改由 `Get-BranchHeads` 以 `ledger ancestry git log returned no commit` 歸因，
+  與 `ledger ancestry git log failed: exit=<n>` **訊息分離**，兩者各有具名突變
+  【F5/F11；來源＝PR #66 Claude issue comment `5373193694` ⚪2；PS 5.1 實跑複驗＝2026-08-22】
+
+- **`white ledger mismatch` 這條具名 throw 不可達**（本輪自查發現，非驗收方點名）：
+  同檔 `Assert-DeferredWhite` 內，具名 `throw` 的前一行是
+  `$delta | Format-Table -AutoSize | Out-String | Write-Error`；在 `$ErrorActionPreference =
+  'Stop'` 下 `Write-Error` **先成為終止錯誤**，於是實際紅燈訊息是 delta 表格、具名訊息永遠不會
+  出現。方向仍 fail-closed（照樣中止），與同檔已登記的 git stderr 事故同一形態。
+  依 17.2 與「只修被點名的問題」，本輪只登記不修
+  【F5/F11；來源＝PR #66 第 18 輪自查（`1e8e12a` 回應輪）；取證日期＝2026-08-22】
+
+- **`PR body ledger mismatch` 未被任何突變驅動**（本輪自查發現，非驗收方點名）：
+  同檔的 body tuple 突變（把某 head 換成 40 個 0）自行 inline 做 `Compare-Object`，
+  **完全沒有呼叫 `Assert-FrozenLedgerCoverage`** ⇒ `BODY_LEDGER_MUTATION_RED=1` 證明的是
+  inline 比較、不是生產函式的那條 throw。方向仍 fail-closed，本輪只登記不修；
+  日後修法＝把該突變改走生產函式（同本輪對 `Get-LedgerTupleSet` 的處置）
+  【F5/F11；來源＝PR #66 第 18 輪自查（`1e8e12a` 回應輪）；取證日期＝2026-08-22】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
