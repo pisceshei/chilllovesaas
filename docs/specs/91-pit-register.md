@@ -948,8 +948,14 @@
   `,$set` 包裝：PS 5.1 下它會產生巢狀陣列，呼叫端 `@()` 收到的是一個元素」，而同檔相隔約
   160 行的 `Assert-DeferredWhite` 仍用 `,@(...)`。PS 5.1 實跑複驗（2026-08-22）：呼叫端的
   `@()` **一律收到 Count=1 的巢狀陣列**（函式回 0／1／2 個 pair 皆然）⇒ 正向 fixture 的
-  `$positivePairs.Count -ne 1` 這半條守衛**恆為真而失效**、`$positivePairs[0] -ne $deferredSample`
-  退化成陣列過濾比較（相等回空陣列 falsy、不等回一元素 truthy）。方向仍 fail-closed，
+  `$positivePairs.Count -ne 1` 這半條守衛**恆為假**（`1 -ne 1`）⇒ **從不觸發**、
+  `$positivePairs[0] -ne $deferredSample` 退化成陣列過濾比較（相等回空陣列 falsy、
+  不等回一元素 truthy）。⚠️ **內層為空時兩半都為假 ⇒ 該情境從這道 `if` 逃掉**，由函式內的
+  集合相等守衛接住。方向仍 fail-closed，
+  <!-- 🔴 2026-08-22 極性更正（來源＝Codex inline `3832688949`）：本條原寫
+       「`$positivePairs.Count -ne 1` **恆為真**而失效」。**逐字撤回**：巢狀陣列使 `.Count`
+       恆等於 1，因此該表達式**恆為假**、守衛從不觸發——與「恆為真」方向相反。
+       極性寫反會讓日後照本條寫回歸測試的人斷在相反的條件上。 -->
   但🔴 **承重的是函式內的集合相等守衛，不是這一行**（內層為空時該行條件實測為 False）；
   生產側 `$deferred` 賦值後全檔未再使用 ⇒ 無後果。依 17.2 只登記不修；日後統一寫法時
   **兩支要一起改**，並把數量判準改成對內層集合斷言
@@ -967,6 +973,11 @@
   的 P1 強制，非本條所致）：空 registry 由 `ledger ancestry registry is empty` 明確 throw 且有
   具名突變；空輸出改由 `Get-BranchHeads` 以 `ledger ancestry git log returned no commit` 歸因，
   與 `ledger ancestry git log failed: exit=<n>` **訊息分離**，兩者各有具名突變
+  （`failed` 餵不存在的 object 作 base、`returned no commit` 餵 `HEAD` 作 base）
+  <!-- 🔴 2026-08-22 補正（來源＝Claude issue comment `5373872716` 🔴-2）：本句在寫下的當時
+       **只有 `failed` 有突變**，`returned no commit` 零覆蓋——宣稱先於實物。同輪已補上
+       `git-empty-range` 具名突變（`Get-BranchHeads 'HEAD'` ⇒ git 退出 0、輸出 0 行），
+       本句自該 commit 起才成立。留註是因為它一度是假宣稱，不是因為現在還假。 -->
   【F5/F11；來源＝PR #66 Claude issue comment `5373193694` ⚪2；PS 5.1 實跑複驗＝2026-08-22】
 
 - **`white ledger mismatch` 這條具名 throw 不可達**（本輪自查發現，非驗收方點名）：
@@ -983,6 +994,18 @@
   inline 比較、不是生產函式的那條 throw。方向仍 fail-closed，本輪只登記不修；
   日後修法＝把該突變改走生產函式（同本輪對 `Get-LedgerTupleSet` 的處置）
   【F5/F11；來源＝PR #66 第 18 輪自查（`1e8e12a` 回應輪）；取證日期＝2026-08-22】
+
+- **worklog 兩處節指標指錯**：`docs/worklog/2026-08-21-驗收收斂制度V2.md` 的兩則歷史層更正註
+  分別寫「完整 11 條見『本輪（`1e8e12a` 回應）』節」與「見**下一節**『乙堆清單（以 comment id
+  為鍵）』」，而該節實際位於「本輪（`ee6e7ec` 回應）驗證輸出」之前、也不在「本輪（`1e8e12a`
+  回應）驗證輸出」內；後者的下一節其實是 20.4 復發紀錄。兩處都在歷史層更正註內、Pending 的
+  權威指標正確 ⇒ 不反轉結論，依 17.2 只登記
+  【F2/F11；來源＝PR #66 Claude issue comment `5373872716` ⚪1；取證日期＝2026-08-22】
+
+- **本檔「相隔約 160 行」與實物不符**：本節 `Assert-DeferredWhite` 條目寫「同檔相隔約 160 行的
+  `Assert-DeferredWhite`」，而受驗 head 上兩者實距 194–222 行。與同輪 🔴-1 同族（數字取自較早的
+  樹狀態），但為 hedge 過的近似值、不反轉結論，依 17.2 只登記
+  【F5/F11；來源＝PR #66 Claude issue comment `5373872716` ⚪2；取證日期＝2026-08-22】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
