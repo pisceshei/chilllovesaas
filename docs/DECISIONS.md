@@ -597,7 +597,10 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   代行或自動合併**；此時的穩定雙掃只是診斷輔助，不是機械證據。
   插入 finding、原地改 body、thread 狀態變化、分頁失敗或兩掃不等均 fail-closed；0e fixture 必測
   review 與 issue 端點讀取間插入 finding、兩掃間改 body、刪除穩定守衛，以及 interval 退化的
-  mutation（可查原文邊界見 A14）。
+  mutation（可查原文邊界見 A14）。🔴 **另含四格**：clean 後編輯既有留言補 finding ⇒ C1 回到 0、
+  移除 `updated_at` 排序守衛的 mutation（`updated_at` 不前進時須由 disposition 接住）、全部
+  finding 有合規 disposition ⇒ 通過、其中一筆缺 disposition ⇒ C1=0；disposition 的載體／schema／
+  責任方由 0e 同包定義並落地，落地前是待交付契約而非已生效判準。
 - ⚪ 登記不得成為 exact-head 增殖器：只要本批另有 tree 修復，仍在同一 commit 搬入 `91` §3；
   exact-head 終態若只新增 ⚪，改在 PR body 寫唯一 grammar
   `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`，不改 tree。下一個本來就會改
@@ -637,7 +640,10 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   `--match-head-commit` 官方逐字只是 "Commit SHA that the pull request head must match to allow
   merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 它**只鎖 Git head、不會
   使既有 review state 失效**，同 head 新增的 finding 不會觸發它。在 merge-boundary guard 的
-  production canary 證成前，D31／D32 代行授權與 18.4 自動合併都保持凍結。
+  production canary 證成前，D31／D32 代行授權與 18.4 自動合併都保持凍結。🔴 **唯一解凍條件
+  （全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且僅對 0g 之後的非 18.3 PR 生效；
+  最後一次重驗到 merge 之間的殘餘窗是已登記、被接受的風險（GitHub 是否有服務端 review-state
+  前置條件＝未取得，不反向斷言），**不另立為第二條解凍前置**。
   Codex 晚到只再調用 evaluator；whole-run rerun 只保留 Claude 判詞格式畸形的同 head 一次例外。
   #59 的舊
   `1111` evaluator 與 `await-verdict.sh` 只作已部署歷史／排隊訊號，**不得再作 C1、C3、雙清或

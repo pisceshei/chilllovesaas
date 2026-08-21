@@ -297,8 +297,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       **通知使用者等人工合併**；已取得授權但四條件未齊者，繼續 17.2 驗收循環，不得合併。
       🔴 **D38 過渡期覆寫**：能實作現行 C1 的獨立 evaluator、workflow 接線與 merge-boundary
       guard 尚未各自合併並完成 production canary 前，舊 evaluator 不得證明 18.1①，故所有 PR
-      （包含原本在 D31／D32 射程者）都走使用者人工合併；這是暫時凍結代行通道，不撤銷其後在
-      三者實證完成時恢復的授權。
+      （包含原本在 D31／D32 射程者）都走使用者人工合併；這是暫時凍結代行通道，不撤銷其後恢復的
+      授權。🔴 **唯一解凍條件（全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且僅對 0g 之後的非 18.3 PR
+      生效。
       **任何 PR 在尚未實際合併進 main 前，其依賴鏈都不得自動開工**（否則會從未含該 PR 的
       main 建立依賴工作，P-8 這類基建包的下游直接缺依賴）；無依賴關係的其他任務可照常並行。
       例外仍須停下來問：憑證紅線、破壞性／不可逆操作、計畫外重大裁定
@@ -352,15 +353,25 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       （external-facts A14），故 connector 可在 clean completion 之後**編輯既有 same-head 留言**
       補上 finding，而該 finding 仍帶較舊的 `created_at` ⇒ clean 會被誤判為較晚、C1 假通過。
       判定：凡 `updated_at` 晚於 `created_at` 的 issue comment，一律以 `updated_at` 作其排序
-      時點；若 `updated_at` 缺失或無法解析則整則 fail-closed。0e fixture 必須含
-      「clean 之後編輯既有留言補 finding ⇒ C1 回到 0」與「移除 `updated_at` 排序守衛的
-      mutation 必須轉紅」兩格。數字 ID 只作 endpoint-local 身分／去重，
+      時點；若 `updated_at` 缺失或無法解析則整則 fail-closed。⚠️ **本守衛只作輔助，不承重**：
+      GitHub 官方頁把 `updated_at` 列為必填的 date-time，但**對「編輯是否使該欄前進」完全沉默**
+      （<https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28>，本輪查證＝未取得；
+      不反向斷言它不前進）⇒ 若實際不前進，本守衛會靜默不觸發。**承重的是 disposition**：
+      clean 時點前的每筆 finding 都必須有合規 disposition，編輯補上的 finding 因此仍會擋住 C1。
+      同軸不對稱一併登記：「編輯既有 review body／inline 補 finding」沒有對應排序條款，同樣只靠
+      disposition 一道。0e fixture 必須含「clean 之後編輯既有留言補 finding ⇒ C1 回到 0」與
+      「移除 `updated_at` 排序守衛的 mutation」兩格；後者在 `updated_at` 不前進的情境下應由
+      disposition 守衛接住，fixture 需同時鎖住這條退路。數字 ID 只作 endpoint-local 身分／去重，
       不跨 reviews／issues comments 排序。completion 時點之前的所有 finding 必須已有合規
       disposition，且 **disposition 必須是機器可讀輸入、不得由事件排序或 thread 狀態推定**：
       0e 契約要求一份以 finding 身分為鍵的 disposition 來源（inline／thread 用 review ID＋
       comment ID，issue-comment finding 用 comment ID），每筆值域恰為
       `fixed`／`disproved`／`no-fix-ruled`，且 `disproved`／`no-fix-ruled` 須各自帶可存取的
-      證據或裁定條目引用。缺鍵、值域外、缺證據引用或來源不可解析一律 C1=0。0e fixture 必須
+      證據或裁定條目引用。缺鍵、值域外、缺證據引用或來源不可解析一律 C1=0。
+      🔴 **載體、格式與責任方由 0e 定義並在該包落地**（與 `SETTLE_INTERVAL_S` 同形的待交付契約）：
+      0e 須同包提交 disposition 來源的存放位置、schema（鍵的組成、值域列舉、證據引用欄）與
+      產生責任方，並在 P-8／0e 交付列明列。**在 0e 落地前本項是待交付契約、不是已生效判準**，
+      任何人不得自行發明 schema，也不得據此宣稱 C1 成立。0e fixture 必須
       含「全部 finding 有合規 disposition ⇒ 可通過」與「其中一筆缺 disposition ⇒ C1=0」正反格；
       若日後裁定改採「較晚的 reviewer completion 本身即 disposition」，須同批刪除本句，不得
       兩制並存。
@@ -429,13 +440,14 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       🔴 **這只縮小競態窗，並未關閉它**：最後一次重驗完成到 merge 指令生效之間，同 head 仍可能
       新增 finding，而該變化不在已擷取的 watermarks 內；`--match-head-commit` 官方只保證 PR head
       SHA 相等（"Commit SHA that the pull request head must match to allow merge"），**不會**讓
-      review state 的舊結果自動失效。GitHub 未提供 review-state 的服務端合併前置條件（本輪查證
-      ＝未取得）⇒ **殘餘窗只能靠「不開代行／自動合併」承擔**：在服務端前置條件出現前，
-      18.4 自動合併與 D31／D32 代行一律維持關閉，合併由使用者人工執行；任何人不得以
-      「已在同一控制流重驗」為由宣稱該競態已消除。
-      在上述 guard 的 production canary 尚未證成前，D31／D32 代行授權保持凍結，18.4 workflow
-      自動合併也不得啟用。日後 guard 實證完成且非 18.3 PR 命中具名授權，才可代行
-      `gh pr merge --squash --match-head-commit <head>`。部署管線就緒後（合併版總方案 CD 包）合併即
+      review state 的舊結果自動失效。GitHub 是否提供 review-state 的服務端合併前置條件＝**本輪
+      查證未取得**（不反向斷言其不存在）。🔴 **這個殘餘窗是已登記、被接受的風險，不是額外的
+      解凍前置**：解凍條件只有一個（見下），窗本身以「代行只用於非 18.3 PR、且合併瞬間仍帶
+      `--match-head-commit`」承擔；任何人不得以「已在同一控制流重驗」為由宣稱該競態已消除，
+      也不得把它改寫成第二條解凍條件。
+      🔴 **唯一解凍條件（全倉同文）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，屆時非 18.3 PR 命中具名授權即可代行
+      `gh pr merge --squash --match-head-commit <head>`；在此之前 D31／D32 代行授權保持凍結、
+      18.4 workflow 自動合併不得啟用。部署管線就緒後（合併版總方案 CD 包）合併即
       自動部署＋healthcheck，紅則自動 rollback。
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
@@ -456,8 +468,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       一個真實 PR 上實測全鏈路後才啟用；**啟用前 P-8 必須另立不依賴受審 LLM 判詞的
       信任邊界**（例：外部貢獻者 PR 一律人工／由獨立可信 workflow 做二次驗證——
       形態由 P-8 裁定），單靠③④不足以安全開啟。在那之前 `AUTO_MERGE: "false"` 維持不變；
-      合併只走使用者人工操作，或在 D38 evaluator＋接線完成後恢復的 D31／D32 窄範圍互動式
-      代行。兩者都不是 workflow 自動合併；D38 過渡期內僅前者可用。
+      合併只走使用者人工操作，或在**唯一解凍條件**（0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後，同 17.3／18.2）成立後恢復的
+      D31／D32 窄範圍互動式代行。兩者都不是 workflow 自動合併；解凍前僅前者可用。
       🔴 啟用時要把 `AUTO_MERGE` 翻回 true 的人，
       必須同時面對「讓執行過 PR 代碼的 job 重新拿到 `contents: write`」的權限決定
       ——該取捨已寫在 `claude-review.yml` 的 permissions 註釋，不得只翻開關。

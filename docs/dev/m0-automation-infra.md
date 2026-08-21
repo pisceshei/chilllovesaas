@@ -128,7 +128,7 @@
   之前同 head 新增的 review、issue comment 或 thread 變化**不會**讓這個旗標拒絕合併。
   因此本檔上文把它稱作「唯一真正原子的一步」時，射程僅限 head 競態；review-state 競態要靠
   D38／鐵律 18.2 要求的 **0e merge-boundary mode**（同一控制流重取 head、stable vector、四集合
-  watermarks 與 C1–C4，任何較晚變化即中止）。該 guard 的 production canary 證成前，代行與自動
+  watermarks 與 C1–C4，任何較晚變化即中止）。🔴 唯一解凍條件（全倉同文）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後，僅對 0g 之後的非 18.3 PR 生效。該 guard 的 production canary 證成前，代行與自動
   合併保持凍結。
 - **全程用 workflow event 的 head**（r2）：不用即時 `gh pr view`——判詞貼出後、
   評估前若發生 synchronize，即時查詢會拿到新 head，而判詞描述的是舊 head，

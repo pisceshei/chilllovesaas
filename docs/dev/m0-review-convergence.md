@@ -595,7 +595,7 @@ thread，而 `--match-head-commit` 官方逐字只是 "Commit SHA that the pull 
 to allow merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 只鎖 Git head、
 不重驗 review state。0e 因此必須交付 merge-boundary mode：合併 consumer 在呼叫 merge 的同一
 控制流重取 current head、新 stable vector、四集合 watermarks 與 C1–C4，任何較晚變化或不等即
-中止；在該 guard 的 production canary 證成前，代行與自動合併都保持凍結。
+中止；🔴 唯一解凍條件（全倉同文）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後，僅對 0g 之後的非 18.3 PR 生效，在此之前代行與自動合併都保持凍結。
 
 ### C2／C3／C4 的 exact-head、自我排除與格式契約
 

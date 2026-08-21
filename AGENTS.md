@@ -395,7 +395,8 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   改 `.github/workflows/` 任何檔／機械閘門判準（scripts/ 全部腳本、**`config/ci.rb` 本身**、
   及 ci.yml・config/ci.rb 的 step 所引用的其他判準檔——`.rubocop.yml`、`package.json`
   scripts、`spec/` 等，舉例非窮舉）／CLAUDE.md／AGENTS.md 的 PR 一律人工；人工合併類 PR
-  合併完成前其依賴鏈不自動前進。18.4 啟用前 workflow 自動合併維持關閉；D31／D32
+  合併完成前其依賴鏈不自動前進。🔴 **代行／自動合併的唯一解凍條件（全倉同文）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，
+  且僅對 0g 之後的非 18.3 PR 生效；不得另立變體。18.4 啟用前 workflow 自動合併維持關閉；D31／D32
   另行授權的互動式 Codex，僅可對非 18.3 PR 在四條件齊時帶 `--match-head-commit`
   代行 CLI 合併，這不等於啟用 P-8 自動合併。新 C1 evaluator 與 workflow 接線尚未各自合併前，
   舊 evaluator／wait 腳本不得授權代行合併，過渡期全部 PR 由使用者人工合併。0e／0f 合併後仍須
