@@ -868,3 +868,30 @@ asciidoc 屬性；<https://raw.githubusercontent.com/git/git/master/Documentatio
 `git diff-tree -m -r --format= --name-status 59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890 -- scripts/__pycache__/lint-prototype.cpython-311.pyc`
 單看 merge 本身得到 1 筆目標 `D` 紀錄。拿掉 `-r` 時只得到頂層 `M scripts`，不能重現該計數。
 PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必須非零。
+
+### B15. `gh pr view --json mergedAt --jq .mergedAt` 對**未合併** PR 回**空值**，不是字面 `null`
+
+- **來源**：本機實測（不是官方文檔轉述）。`gh version 2.97.0 (2026-07-31)`，取證日期＝2026-08-23。
+- **實測命令與逐字輸出**：
+
+  ```
+  $ gh pr view 64 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt | od -c
+  0000000  0a
+  0000001
+  ```
+
+  ⇒ stdout **只有一個換行**；經 `$( )` 命令替換後是**空字串**（長度 0），
+  **不是**四個字元的 `null`。
+
+- **為什麼要登記**：`--json` 那一層拿到的 JSON 值確實是 JSON `null`，
+  但 `--jq` 對 JSON `null` 的輸出是**空行**而不是字面字串 `null`。
+  兩者在 shell 裡的行為完全不同——`[ -z "$v" ]` 對前者為真、對後者為假；
+  而任何寫成 `[ "$v" = "null" ]` 的防呆對前者**完全無效**。
+
+- **落點**：`docs/DECISIONS.md` D39 的 fail-closed 判準以此為據
+  （空字串走「非 ISO8601」那條分支被擋成 rc 2）。
+
+- 🔴 **登記的緣由是一次真實的誤述**：PR #64 第 19 輪的 D39 更正註逐字寫過
+  「#66 尚未合併（`--jq .mergedAt` 得**字面 `null`**）」，該句來自驗收方措辭的轉述，
+  **沒有任何一方實測過**。第 20 輪驗收方自行以 `od -c` 實測後撤回自己的措辭。
+  ⇒ **外部行為的轉述不算證據**；本檔的存在就是為了讓這類句子有一個必須帶實測的落點。

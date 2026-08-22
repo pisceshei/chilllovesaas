@@ -689,12 +689,19 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   RULE_AT=$(gh pr view 66 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt) || { echo "EVIDENCE_NOT_OBTAINED: gh 取 #66 mergedAt 失敗" >&2; exit 2; }
   PR_AT=$(gh pr view "$N" --repo pisceshei/chilllovesaas --json createdAt --jq .createdAt)  || { echo "EVIDENCE_NOT_OBTAINED: gh 取 PR createdAt 失敗" >&2; exit 2; }
   # 🔴 fail-closed：兩值都必須是**整串**合法的 ISO8601。
-  #    空字串（`gh` 對未合併 PR 的 `--jq .mergedAt` 實回空值）、多行、
+  #    空字串（`gh` 對未合併 PR 的 `--jq .mergedAt` 實回**空值**；逐字證據＝`docs/dev/external-facts.md` **B15**）、多行、
   #    權限不足、PR 不存在 —— 一律非零終止，**不得落到 APPLIES**。
   for v in "$RULE_AT" "$PR_AT"; do
     # 🔴 `grep` 是**逐行**比對：多行值只要有一行合法就會過。先擋掉換行。
     [ "$(printf '%s' "$v" | wc -l)" -eq 0 ] || { echo "EVIDENCE_NOT_OBTAINED: 值含換行" >&2; exit 2; }
     printf '%s' "$v" | grep -Eq "$ISO" || { echo "EVIDENCE_NOT_OBTAINED: 非 ISO8601: [$v]" >&2; exit 2; }
+  done
+  # 🔴 regex 只認**形狀**，收不掉**不存在的日曆日期**：
+  #    `2026-02-31` / `2026-04-31` / 非閏年的 `2026-02-29` 三者形狀全合法。
+  #    再做一次日曆回吐：正規化後必須逐字等於原值。
+  for v in "$RULE_AT" "$PR_AT"; do
+    [ "$(date -u -d "$v" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" = "$v" ] \
+      || { echo "EVIDENCE_NOT_OBTAINED: 不存在的日曆日期: [$v]" >&2; exit 2; }
   done
   [ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES
   ```
@@ -706,9 +713,12 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   | 正常·適用 | `2026-08-22T14:21:47Z` | `2026-08-20T15:48:34Z` | `APPLIES`、rc 0 |
   | 正常·不適用 | `2026-08-22T14:21:47Z` | `2026-08-25T00:00:00Z` | `NOT_APPLIES`、rc 0 |
   | 輸入缺失（`gh` 回空） | 任意 | 空字串 | rc 2、`EVIDENCE_NOT_OBTAINED` |
-  | 工具失敗（#66 未合併 ⇒ `gh` 回空值） | 空字串 | 任意 | rc 2、`EVIDENCE_NOT_OBTAINED` |
+  | 工具失敗（#66 未合併 ⇒ `gh` 回空值，見 `external-facts` **B15**） | 空字串 | 任意 | rc 2、`EVIDENCE_NOT_OBTAINED` |
   | 多行汙染 | `2026-08-22T14:21:47Z` | `x` ＋換行＋合法值 | rc 2（`grep` 逐行比對，不先擋換行就會過） |
   | 值域荒謬 | `2026-08-22T14:21:47Z` | `0000-00-00T00:00:00Z` | rc 2（月／日為 00）|
+  | 不存在的日期（非閏年 2/29） | `2026-08-22T14:21:47Z` | `2026-02-29T00:00:00Z` | rc 2（regex 過、日曆回吐擋）|
+  | 不存在的日期（4/31） | `2026-08-22T14:21:47Z` | `2026-04-31T00:00:00Z` | rc 2（同上）|
+  | 閏年真日期不得誤擋 | `2026-08-22T14:21:47Z` | `2024-02-29T00:00:00Z` | `APPLIES`、rc 0（2024 早於規則生效點，本來就該適用；重點是**不得被日曆檢查誤擋**）|
   | **零掃描 canary** | 把上面那個 `for` 迴圈整段刪掉，再跑**「輸入缺失」**那格 | 空字串 | 必須翻回 `APPLIES` ——沒翻代表斷言根本沒被執行，這張表全部作廢 |
 
   <!-- 🔴 2026-08-23 更正（來源＝本輪 push 前實跑，非驗收方點名）：
@@ -722,7 +732,13 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
        上一版判準逐字＝`[ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES`，
        **沒有失敗分支**。驗收方直接跑 shell 實測：`test "" "<" "2026-08-22T14:21:47Z"` ⇒ `APPLIES`；
        `test "2026-08-20T15:48:34Z" "<" "null"` ⇒ `APPLIES`。
-       ⇒ `gh` 失敗、PR 不存在、權限不足、或 #66 尚未合併（`--jq .mergedAt` 得字面 `null`）時**一律給豁免**。
+       ⇒ `gh` 失敗、PR 不存在、權限不足、或 #66 尚未合併時**一律給豁免**。
+       ---- 本行第二次更正（2026-08-23，來源＝PR #64 Claude issue comment `5381930022` 🟡-1）：
+            上一版逐字寫「#66 尚未合併（`--jq .mergedAt` 得**字面 `null`**）」，**該描述為假**。
+            實測（`gh` 2.97.0，2026-08-23）：對 OPEN 的 PR 走同一條路徑，stdout 經 `od -c` 得 `0000000` 後接兩個空白與一個 LF（`0a`），
+            即**只有一個換行**；命令替換後是**空字串**，不是四個字元的 `null`。
+            🔴 這句的來源是驗收方上一輪的措辭，我沒有實測就落進裁定文件——**轉述不是證據**。
+            外部行為的權威記錄改放 `docs/dev/external-facts.md` **B15**（帶實測命令、版本與取證日期）。 ----
        🔴 **20.4 四欄**：
        ① 復發錨：與觸發改判準的 Codex `3836378178` **同一個方向**（誤給豁免）——換了訊號、沒換防呆姿勢，第 2 次。
        ② 既有防線為何沒攔住：本倉庫沒有任何閘門會執行文件裡的 shell；20.2.5 是規則、不是機制。
@@ -732,6 +748,10 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
        ④ 可重跑的反向複驗＝上表四列，任何一列不符即本判準無效。 -->
 
   PR #64 實跑：`PR_AT=2026-08-20T15:48:34Z`、`RULE_AT=2026-08-22T14:21:47Z` ⇒ **APPLIES**。
+
+  ⚠️ **可攜性邊界**：日曆回吐用 **GNU `date`** 的 `-d`（本機 Git Bash 與 CI ubuntu 皆為 GNU coreutils）。
+  BSD／macOS 的 `date` 無 `-d` ⇒ 該格解析失敗會**擋下所有值**：方向是 fail-closed，但會誤擋合法輸入，
+  在該平台要改 `date -j -f`。**這是已知邊界，不是未標示假設。**
   <!-- 🔴 2026-08-23 改判準（來源＝PR #64 Codex inline `3836378178`）：
        本條原本用 commit 譜系判斷（`git log --first-parent` 取第一個 commit，再與規則生效
        commit 比祖先關係）。**那個訊號答的不是本條要問的問題**——它答「這條分支的第一個 commit
