@@ -896,8 +896,17 @@
 - **`external-facts` B9 的 `-f/--raw-field` 逐字是無省略號的截斷句**：該句引為
   "…to add static string parameters"，而上游 `cli/cli` 的 `pkg/cmd/api/api.go` 全句為
   "Pass one or more `-f/--raw-field` values in `key=value` format to add static string
-  parameters **to the request payload**."——缺的 "to the request payload" 正是把該旗標定位在
-  request body 層的限定語，且截斷處**沒有省略號**，讀者無從察覺這是節錄。語義未被證偽、
+  parameters **to the request payload**."——缺的 "to the request payload" 正是限定該旗標
+  「參數放進哪裡」的那半句，且截斷處**沒有省略號**，讀者無從察覺這是節錄。語義未被證偽、
+  <!-- 🔴 2026-08-22 更正（來源＝Codex inline `3835660396`）：本條原寫「⋯正是把該旗標**定位在
+       request body 層**的限定語」。**`request payload` 不等於 `request body`**——同一段官方
+       說明的下一句逐字寫著：
+         "To send the parameters as a `GET` query string instead, use `--method GET`."
+       （本輪實跑 `gh api --help` 取得，與 <https://cli.github.com/manual/gh_api> 一致）
+       ⇒ `-f` 的值在預設 POST 下進 body，在 `--method GET` 下進 **query string**。
+       把它寫成「body 層」會讓照本檔組 GET 請求的人組錯，屬**會製造未來債的錯誤定位**。
+       已改為官方自己的措辭「request payload」，並在此保留 GET 邊界。
+       🔴 本條原本要說的事沒有變：**截斷處沒有省略號**這個載體問題仍然成立、仍只登記不修。 -->
   該行本輪未動 ⇒ 依 17.2 只登記。與本節 A9 的「短引文丟失情態」同根因（逐字節錄載體
   未保留必要限定），後續 evidence-format 包應統一規定「節錄必加省略號並保留限定語」
   【F3/F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪1；取證日期＝2026-08-22】
@@ -907,6 +916,17 @@
   框架失去對象——讀者會去找一個不在別處、就在上面三行的東西。屬敘事框架與現況脫節，
   不影響任何斷言 ⇒ 依 17.2 只登記。正解＝把「另明列」改為指向上方 blockquote 的第二／三句
   【F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪2；取證日期＝2026-08-22】
+
+- **上一條的標題行在同一行用了四個 `**` run，GFM 把粗體切成兩段、被夾住的「另」反而不是粗體**：
+  原文為 `` - **`external-facts` B9 的「官方同頁**另**明列」⋯變成同節內重述**：``。
+  🔴 **本條的渲染證據是本輪實跑取得的**（判詞把它記為「未取得」）：把該行單獨送 GitHub
+  `/markdown`（`mode=gfm`）實得
+  `<li><strong><code>external-facts</code> B9 的「官方同頁</strong>另<strong>明列」⋯重述</strong>：⋯</li>`
+  ——`<strong>` 標籤 **2 個**，邊界落在「官方同頁 / 另 / 明列」之間 ⇒ 作者意圖的
+  「整句粗體、其中『另』再強調」**沒有發生**，實際是兩段粗體夾一個普通字。
+  ⚠️ 可讀、不影響任何斷言，且它是敘事措辭而非規範性斷言 ⇒ 依 17.2 只登記。
+  正解＝該行改用單一 `**⋯**` 包住整句，內部強調改用其他標記或直接去掉
+  【F5/F11；來源＝PR #64 Claude issue comment `5379467830` ⚪1；取證日期＝2026-08-22】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -1088,6 +1108,26 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第十三輪雙驗收修復.md`（Claude comment `5363469305`＋Codex review `4988472500`；production wiring、外部契約去重與 `diff-tree -r` witness 已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十四輪雙驗收修復.md`（Claude comment `5363665327`＋Codex review `4988636859`；repository commits fallback 與 `gh api` body 供給邊界已處置）
 - [x] `docs/worklog/2026-08-21-PR64第十五輪Claude驗收修復.md`（Claude comment `5363892357`；⚪ 落籍、20.3 實跑輸出與 A10／B9 官方逐字已處置）
+- [x] `docs/worklog/2026-08-22-PR64第十六輪雙驗收修復.md`（Claude comment `5364180385`＋Codex review `4988979665`；B9 逐句歸屬、B10 條件逐字、W14 歷史表還原與 `th=` 計數式錨定已處置）
+- [x] `docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md`（Claude comment `5379467830`＋Codex review `4999795981`；W15 就地改寫還原、A.1 漏列、R5 警告與窗口實測不一致已處置）
+
+<!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
+     第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
+     「新增 tracked worklog 的同一 commit 必須同步補列本清單」正是為了擋這件事，
+     且它是第 2 輪才加嚴的（原文「之後隨輪補列」擋不住同 commit 新增檔漏列）。
+     ⇒ **條文擋住了它要擋的形態，漏的是執行**：我當輪沒有把「本 commit 有沒有新增 tracked
+     worklog」列進送驗前稽核。
+     可重跑反向複驗（本輪實跑，見第十七輪 worklog 的 20.4）：
+       BASE=0fbe520502588b34f9b9cad6ae9b3a282d4db643
+       comm -23 <(git -c core.quotepath=false diff --name-only --diff-filter=A $BASE HEAD \
+                    -- 'docs/worklog/*.md' | sort) \
+                <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md | sort)
+     應為**空集合**；非空即為漏列。本輪實跑：空集合；把第十六輪那一列刪掉的突變 ⇒ 差集
+     恰好只剩該檔 ⇒ 式子承重。
+     🔴 **射程必須是「本 PR 新增的 worklog」，不是「全部 tracked worklog」**（初稿寫錯，
+     實跑當場打回）：A.1 是**漸進收割清單**，本輪實測 tracked worklog **159 份**、
+     A.1 條目 **279 條**（含未勾選），全量比對會噴出上百個「漏列」——那是收割進度，不是違規。
+     同理 `[x]` 與 `[ ]` 都要算進來，只抓 `[x]` 會把已列但未收割的誤判成漏列。 -->
 
 ### A.2 handoff
 
