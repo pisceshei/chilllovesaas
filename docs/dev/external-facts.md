@@ -491,8 +491,13 @@ GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
 <https://docs.github.com/en/rest/commits/commits#list-commits>（取證 2026-08-21）。第一句是 PR
 commits 的超限指引；第二句是 repository List commits 的 `sha` query parameter 定義。
 
-受 250 上限的端點是 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`；官方指向的 fallback
-端點是 `GET /repos/{owner}/{repo}/commits?sha={pull_head_sha}`。2026-08-21 對 PR #64 exact head
+🔴 **三件事必須分開，不得併成一句**（來源＝PR #64 Codex inline `3836905826`）：
+① **官方明文的上限**：受 250 上限的端點是 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`，
+   官方要求改用 **List commits** 端點；
+② **官方明文的參數語義**：List commits 的 `sha` 逐字為 “SHA or branch to start listing commits from.”
+   （另一頁文檔，見本節上方引文）；
+③ **本專案把 ①② 組合出來的查詢**：`GET /repos/{owner}/{repo}/commits?sha={pull_head_sha}`——
+   🔴 **這是我方的組合，不是 GitHub 的逐字指示**，不得當成官方原文引用。2026-08-21 對 PR #64 exact head
 `26fc683e40bb8ad6466d082c6887876345f84646` 實跑後，repository endpoint 第一筆 SHA 與該 head
 逐字相同。因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
 
@@ -877,12 +882,29 @@ PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必�
 - **實測命令與逐字輸出**：
 
   ```
+  $ set -o pipefail
   $ gh pr view 64 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt | od -c
-  0000000
+  0000000  \n
+  0000001
+  $ echo $?
+  0
   ```
 
-  🔴 **本區塊的初稿把輸出寫成 `0000000  0a`**——那是 `od -An -tx1` 的形態，不是 `od -c` 的。
-  一個以「轉述不是證據」立條的條目，證據塊本身卻是重打的。上面這幾行是重跑後**逐字貼上**的。
+  🔴 **本區塊的證據前後錯了兩次，兩次根因不同，都記在這裡**：
+  ① 初稿寫成 `0000000  0a`——那是 `od -An -tx1` 的形態，不是 `od -c` 的。**重打的**。
+  ② 第二版改成「重跑後逐字貼上」，貼出來卻只有單獨一行 `0000000`——那是**零位元組**的
+     od 簽章，與本段結論「只有一個換行」互斥（來源＝PR #64 Claude `5382422505` 🔴-1）。
+     🔴 **成因已逐步查清**：我用 Python `subprocess` 呼叫 `bash -c` 抓輸出，
+     而**該子行程的 PATH 上沒有 `gh`**（實測 stderr 逐字 `bash: line 1: gh: command not found`）
+     ⇒ 管線左端無輸出，`od` 對空輸入印出零位元組簽章。
+     ⇒ 又一次「量了 X（子行程環境）當成關於 Y（文件裡那條指令）的事實發布」。
+  🔴 **`gh` 失敗時這條管線預設不會報錯**：管線退出碼取最後一個命令（`od` 的 0）。
+     來源＝PR #64 Codex inline `3836905817`，引 GNU Bash 手冊 Pipelines 節逐字
+     “The return status of a pipeline is the status of the last command”（取證 2026-08-22）。
+     ⇒ 上面的重跑**加了 `set -o pipefail` 並貼出退出碼**；沒有這一步，
+     這個證據塊無法區分「未合併 PR 回空值」與「`gh` 呼叫失敗」。
+     ⚠️ 但 `pipefail` **擋不住本次的成因**——`gh` 不在 PATH 時是 shell 回 127，
+     而我上一輪根本沒看退出碼。真正的防線是**貼出退出碼**，不是只加 `pipefail`。
 
   ⇒ stdout **只有一個換行**；經 `$( )` 命令替換後是**空字串**（長度 0），
   **不是**四個字元的 `null`。
