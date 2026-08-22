@@ -1621,7 +1621,10 @@
 - **本 PR 動過的檔裡有既有的「表格欄數不符 header」列，且形態不只一種**：
   ① `docs/plans/2026-08-18-總方案.md` 的 X3–X10（header 三欄、各只有兩欄，末欄整格缺）；
   ② `docs/dev/m0-review-convergence.md` 表後那句以 `（表列以 `…` 為準）` 開頭的段落——它**沒有以直線開頭**，卻因為緊貼表格且句中 code span 內有未跳脫的直線，被 GFM 併進上一張表當成表列、切成兩格、反引號失去 code 語義。
-  🔴 **不在此列舉筆數**：初稿只寫了 ①、並逐字寫「僅⋯八列」，複驗立刻找到 ②。例外集合一旦手寫列舉就會漏——導出指令見下。
+  🔴 **不在此列舉筆數**：初稿只寫了 ①、並逐字寫「僅⋯八列」，複驗立刻找到 ②；第 23 輪換上集合判準的檢查器後又找到 ③④。例外集合一旦手寫列舉就會漏——導出指令見下。
+  ③ `docs/plans/2026-08-18-總方案.md` 的 `P-8` 那一列：原始碼是表列形狀，**渲染後不是 `<tr>`**（被擠出表格）；
+  ④ `docs/specs/91-pit-register.md` 的「（其餘待收割輪填入）」那一列末欄為空。
+  ⚠️ ③④ 同樣在 base `bbf5f3b7` 上就已存在、本 PR 未動該區塊 ⇒ 一併只登記。
   依 GFM 官方規格逐字——
   > “The remainder of the table’s rows may vary in the number of cells. If there are a number of cells fewer than the number of cells in the header row, empty cells are inserted. If there are greater, the excess is ignored”
   （<https://github.github.com/gfm/> §4.10 Tables，取證日期＝2026-08-23）
