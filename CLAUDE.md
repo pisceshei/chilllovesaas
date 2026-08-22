@@ -574,7 +574,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       驗收輪另建 worklog。若 disposition、等待或遠端終態不改 tree，資訊只進 PR body／合規裁定
       落點與本地 handoff，**不得修改或 commit worklog 來製造新 head**。附錄 A 每個 tracked
       worklog 只登一次；受影響 `docs/dev` 仍須同步終態。
-      🔴 **本條對規則生效前已開的 PR 不追溯**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
+      🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
     - **21.5 交接內容仍受零假設發布約束**：問題、已做事項、測試結果、GitHub 狀態與「無待辦」
       都須依鐵律 19 綁證據；舊 head、舊 run、舊 PID、舊時間的結果只作快照，不得冒充下一步現值。
       工作單位結束時缺本地 handoff、四段缺項或證據對不上該單位輸入，均視為交接未完成。

@@ -567,6 +567,7 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   finding 真正改 tracked tree 時，在一次整合修復 commit 更新同一份 worklog 與終態文件；純
   disposition、等待、resolve、PR body、run 與遠端終態不改 worklog、不造 head。umbrella 只有
   實際拆成可獨立合併 PR 才各建一份。`docs/worklog/README.md`、鐵律 21 與 AGENTS 同批同步。
+  🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
 - 一個工作包／PR 從研究到 merge／rollback／正式阻塞只維護一份倉庫外本地 handoff，不按
   驗收輪、命令、查詢、等待、commit 或 push 拆檔。只有正式轉交、rollback 後另起恢復包，或
   真正拆成獨立 PR 才另建；handoff 永不 commit／push。
@@ -677,23 +678,25 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   而 PR #64 在該規則存在之前就已開始，並依當時的體例逐輪各建一份 worklog。
 - **裁定**：該要求**不追溯**。規則生效前已開的 PR，其既有逐輪 worklog **維持原樣**，
   不要求整併、不因此判為違規；**生效後新建的 worklog 一律照規則**。
-- **判準（可機械判定，不靠日期口述）**：
+- **判準（單一權威訊號＝PR 的建立時間，不看 commit 譜系）**：
 
   ```bash
-  RULE=bbf5f3b73971b35d23c253a68bb2554d14eff1bc          # 規則生效點＝#66 的 merge commit
-  # 🔴 必須 --first-parent：只走該 PR 自己的主線
-  FIRST=$(git log --format=%H --reverse --first-parent <base>..<PR head> | head -1)
-  git merge-base --is-ancestor "$RULE" "$FIRST"          # rc≠0 ⇒ 規則生效前已開 ⇒ 適用本豁免
+  RULE_AT=$(gh pr view 66 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt)
+  PR_AT=$(gh pr view <N> --repo pisceshei/chilllovesaas --json createdAt --jq .createdAt)
+  [ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES
   ```
 
-  PR #64 實跑：`FIRST=7de4ab0f`（2026-08-20T23:47:15+08:00），`rc=1` ⇒ 適用。
-  <!-- 🔴 2026-08-22 更正（來源＝PR #64 Codex inline `3836295485`）：本式原本**沒有 `--first-parent`**。
-       漏洞：一個**規則生效後**才開的 PR，若併入一條含 pre-rule commit 的側枝，
-       不受限的 `<base>..<head>` 範圍可能把那個側枝 commit 選成 `FIRST`，
-       於是本來不該適用的 PR 也拿到豁免。驗收方已在本倉庫重現該情境。
-       ⇒ 加 `--first-parent`，只沿該 PR 自己的主線取第一個 commit。
-       ⚠️ 對 PR #64 本身兩種寫法同值（皆 `7de4ab0f`，本輪實跑對照過），
-       所以這不是改結論、是把判準的射程收正確。 -->
+  PR #64 實跑：`PR_AT=2026-08-20T15:48:34Z`、`RULE_AT=2026-08-22T14:21:47Z` ⇒ **APPLIES**。
+  <!-- 🔴 2026-08-23 改判準（來源＝PR #64 Codex inline `3836378178`）：
+       本條原本用 commit 譜系判斷（`git log --first-parent` 取第一個 commit，再與規則生效
+       commit 比祖先關係）。**那個訊號答的不是本條要問的問題**——它答「這條分支的第一個 commit
+       多早」，而本條要問的是「**這個 PR 何時被開**」。
+       🔴 漏洞：一個**規則生效後**才開、但從**過期 checkout** 長出來的 PR，其第一個 commit
+       仍早於 RULE ⇒ `merge-base --is-ancestor` 回 1 ⇒ **不該適用的 PR 拿到豁免**。
+       （更早一次的修正加了 `--first-parent`，堵的是「併入側枝」那個變體；
+        本次是同一個根因的更上游——**譜系根本不是正確的訊號**。）
+       ⇒ 改用 GitHub 的 `createdAt`：它是「PR 何時被開」的權威記錄，不受 checkout 新舊影響。
+       ⚠️ 對 PR #64 兩種判準同值（皆適用），這是**把判準換成對的那一個**，不是改結論。 -->
 - **理由，逐條**：
   ① **規則不能約束它存在之前完成的工作**——共同基底 `0fbe520` 上
   `grep -c '不另建「第 M 輪」' AGENTS.md` ⇒ **0**，main 上 ⇒ **1**，該條確由 #66 引入。
@@ -708,4 +711,16 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   ① 只豁免「一份 worklog」這一條，**不豁免**其他任何條文（分層、更正註、閘門、ledger 照舊）；
   ② 只對規則生效前已開的 PR，**不對**其後新開的；
   ③ 這些 PR 若在生效後**新建** worklog，那一份仍受規則約束。
-- 落點同步：`AGENTS.md` §6 就地加一句指向本條。
+- 落點同步：🔴 **規則的每一個落點**都就地加同一串指標（逐字相同、機器複製），**不只加 `AGENTS.md`**。
+  複驗（不寫死數字，因為落點會隨文件成長）：
+  ```bash
+  # 左：規則陳述句全集；右：已帶指標者。逐筆看左邊每一個**規則陳述**（非引用、非 worklog 敍事）相鄰處是否有右邊那一行。
+  grep -rn '不另建「第 M 輪」\|一份 worklog\|不按驗收輪增殖\|只維護一份' --include=*.md docs/ AGENTS.md CLAUDE.md
+  grep -rn '判準與射程邊界見' --include=*.md docs/ AGENTS.md CLAUDE.md
+  ```
+  <!-- 🔴 2026-08-23 更正（來源＝PR #64 Claude issue comment `5381302078` 🔴-5）：
+       本行原寫「落點同步：`AGENTS.md` §6 就地加一句指向本條。」
+       🔴 兩個問題：①實際加了五處，本行只寫一處；②更要命的是，即使加了五處仍有
+       **D38 本文、Convergence Protocol v2 正典表、`AGENTS.md` §工作單位交接、總方案鐵律 17** 四處沒有 ——
+       讀到那四處的人拿到的是**未豁免版**，等於裁定沒生效。
+       → 本輪四處都補上；並把本行改成**導出指令**而不是數字，因為寫死的落點數下一次新增文件就又錯一次。 -->
