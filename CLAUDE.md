@@ -169,24 +169,80 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       `git fetch origin main && git diff origin/main...HEAD`（base 非 main 以 PR metadata
       的 base ref 取代）僅作**初始交付盤點**，不作修復存在性證據；②**裁定不修**者（**僅 🟡**——🔴 不適用清法②，放行 🔴 唯有先改鐵律本文並以該
       修法的已提交 hunk 核對，同「驗收基準」節）⇒ DECISIONS／PR 描述條目存在；③**證偽**者 ⇒
-      證據或其可存取引用存在（僅有「已證偽」登記＝缺項）；⚪ 者 ⇒ 登記存在。
-      **缺一項不得 push**＝清單存在「既無對應 hunk、也無合規②③⚪登記」的項目。
-    - **15.2 時序復查**：push 前**重新拉取 PR 最新留言**，兩種形式都拉——bot 判詞留言
-      ＋Codex inline review——網頁端展開**全部** Conversation，或 gh 分別查
-      comments／reviews／review threads（單查其一必漏 inline）（首次 push、PR 尚未
-      存在時豁免；開 PR 後首輪意見照常進 15.1）。
+      證據或其可存取引用存在（僅有「已證偽」登記＝缺項）；⚪ 者 ⇒ 本批仍有 tracked-tree
+      修復時隨同登記 `docs/specs/91-pit-register.md` §3。若 exact-head 三方已完成且**只新增 ⚪**、
+      沒有其他理由改 tree，則不得為登記刷新 head；改在該 PR body 逐項寫唯一機器行
+      `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`。head 必須等於受驗
+      `headRefOid`，pair 必須能在完整 Claude 判詞集合中複驗，重複／錯 head／找不到來源都不算
+      登記。下一個本來就會改 tracked tree 的 PR 須在首個候選前全量讀既有 merged PR body，將
+      尚未存在於 `91` 的 deferred pair 批量搬入 §3；原 PR body 保留為遠端來源，不另造
+      evidence-only head。**缺一項不得 push**＝清單存在「既無對應 hunk、也無合規②③、`91`
+      登記或上述 terminal deferred line」的項目。
+    - **15.2 原子攝取**：候選 head 推出後，**先等 Claude、Codex 與 CI 都對該 exact head
+      完成，再開始任何修法**；禁止第一方先回就改檔，令另一方審到半途失效。若已由 current-head
+      run 的 step output／log 證實 Claude 命中 validation-skip，該 run 結構上不會產生判詞；此時
+      不再假等 Claude，而以同一組有界輪詢預算取得 exact-head Codex、機械 CI 與 skip run 三項
+      存在證據，之後轉 18.3 獨立人工審核，明載「Claude 證據未取得／未達雙清」。任何必需證據
+      到 deadline 仍未取得，須停止發新請求、以非零終止並通知使用者，不得把逾時或 skip 當通過。
+      Claude 已產生判詞但只因 18.1④格式失敗時，最多對**同一 head**整體 rerun 一次作 transport／
+      產出重試；不得改 Git tree 來刷新格式。第二次仍畸形就保留兩次 run 證據、轉獨立人工審核，
+      不建立第三個 review attempt。格式驗證本身不撤除：缺標記、互斥結論或未知結構仍 fail-closed。
+      Codex 較 Claude 晚完成不是第二個 whole-run 例外：0e 前由 CLI 重算，0e／0f 後只再調用 evaluator；
+      不得為 C1 timing 重新執行 Claude、製造重複判詞或新增 review surface。
+      D38 起現有 `scripts/await-verdict.sh` 只屬已部署歷史／排隊訊號，**不是 C1、C3、雙清或
+      合併證據**。0e／0f 尚未合併時直接以 CLI 在同一個明列 interval／max-polls／deadline 的有界
+      預算輪詢三方載體；合併後只消費 0e evaluator 的版本化輸出。機械 CI 以
+      `gh pr checks <N> --json name,bucket,link` 間隔輪詢；每一輪在查 checks
+      **前後**都須重取 PR `headRefOid` 並與凍結的候選 SHA 精確相等，任一不等就丟棄該輪結果、
+      以 head drift 非零終止；凍結 ledger 前再比一次。不得直接用沒有 deadline 旗標的 `--watch`
+      冒充有界等待。**零個 check 不是全綠**：在 deadline 內視為尚未開始而繼續等，deadline
+      到期仍為空則記證據未取得、C3=0；不得對空集合做 vacuous `all(pass)`，也不得把 CLI 的
+      no-check 訊息誤歸成可立刻終止的 API 故障。`pending` 繼續等；`gh pr checks` 在 checks
+      仍 pending 時會以**退出碼 8**結束，故任何非零退出都要先解析已取得的 JSON bucket：有
+      `pending` 就等待，不能被 shell 的 `set -e`／`$LASTEXITCODE` 直接誤分類為 API failure；只有
+      JSON 未取得／不可解析或傳輸失敗才走 API failure。非空集合全部 `pass` 才是可合併的乾淨完成；沒有
+      `pending` 且出現 `fail` 是**已完成的 CI finding**，待兩個 reviewer 也完成後把失敗 check 名稱
+      與 URL 納入同一凍結 ledger，即可開始修復，不能誤列「未取得」而鎖死修法。`skipping`／
+      `cancel` 先對同一 head rerun 一次；仍非乾淨時保存 run 證據並轉獨立人工判讀。API／分頁
+      失敗、deadline 到期或 head 變更才是證據未取得；此時非零終止，除非獨立人工對同一 head
+      明文提出可處置 finding，否則不得開始修法。合併前仍須全部 bucket 為 `pass` 且再次重取
+      `headRefOid` 等於候選 SHA（官方契約與本專案競態防線見 `docs/dev/external-facts.md` A11）。三方完成後以
+      `--paginate` 全量拉 issues comments、pull reviews（逐則讀 `.body`）、pull inline comments
+      與 GraphQL review threads。**0e evaluator 合併後**，每次完整掃描前後都重取 `headRefOid`，
+      並用該包已提交的版本化 canonical serializer 對排序後、含所有判定欄位與 body／版本欄位的
+      四集合各算 SHA-256 digest；只有兩次連續完整掃描在該包已提交、經受控 live calibration 的
+      `SETTLE_INTERVAL_S` 前後取得相同四 digest vector，且兩輪全部 head guard 相等，才可去重成
+      倉庫外凍結 ledger。插入 review、原地編輯 comment、thread 狀態改變、缺頁、缺 review body、
+      GraphQL 失敗或任一方未完成都 fail-closed，重掃直到穩定或 deadline 後記「未取得」。0e fixture
+      必測端點間插入 finding、兩掃間原地改 body、刪掉 digest 守衛與 settle interval 退化；serializer
+      schema／排序欄位、校準原始證據與最後採值須同包提交。**`SETTLE_INTERVAL_S` 的所有權在 0e**：
+      本檔與任何 consumer 都不得自行填值或區間——GitHub 官方未提供跨端點一致性視窗的數字或 SLA
+      （本輪查證結論＝未取得，見 `docs/dev/external-facts.md` A14），故採值只能由 0e 的**受控 live
+      calibration** 產生：明列量測程序、輪次、原始觀測與採值理由，連同 interval 退化（例如趨近 0）
+      必須轉紅的 mutation 一起提交（P-8 的 0e 交付列同款）。在 0e 落值前，「非零 settle interval」
+      是**待交付契約**而不是已生效判準，不得被任何 consumer 當成已滿足。GitHub comments 可編輯、各集合分端點／
+      分頁是官方可證事實；穩定雙掃是 D38 的專案安全裁定，不把「平台沒有 snapshot」的未證推論
+      當輸入（外部證據邊界見 `docs/dev/external-facts.md` A14）。
+      **0e 尚未合併的過渡期沒有上述 serializer 或已校準 interval**：CLI 全量拉取只供獨立人工
+      審核與修法 ledger，不得輸出合規 digest、不得令 C1／四條件成立，也不得授權代行或自動合併。
+      push 整合修復 head 前再
+      重拉上述集合；若同一受驗 head 新增 finding，併入同一 ledger 後才可 push（首次 push、PR
+      尚不存在時豁免；開 PR 後首輪照本款）。
     - **15.3 宣稱與實物同刻**：「N 項全收」定論**只寫在核對完成後的 PR 留言**；
       commit message 與隨 commit 入庫的 worklog 皆不作全收定論（worklog 記處置清單即可，
       兩者都在核對完成前定稿）。宣稱前 N 必須等於 15.1 清單長度且逐項打勾。
-    - **15.4 順序**：清單建立＋修復完成 → 全部閘門逐支**親眼看退出碼** → **commit** →
-      15.1 逐項核對（此刻才有已提交差異可核；缺項 ⇒ 補修復、重跑閘門、再 commit）→
-      15.2 重拉留言（**push 前最後一個動作**——重拉不動檔；有新判詞 ⇒ **回本款起點重來**）→
-      push ＋ **自記本次 push 的 HEAD SHA 並將輕量基準 ref 推送至遠端**
+    - **15.4 順序與驗證分層**：開發中的每個微小編輯只跑受影響的 targeted gate；凍結候選
+      tree 後才跑一次全部正典閘門並逐支**親眼看退出碼** → **commit** → 補跑必須以已提交
+      diff 為輸入的檢查 → 15.1 逐項核對（此刻才有已提交差異可核；缺項或檢查轉紅 ⇒ 回到
+      targeted gate，修完再凍結 tree 並重跑一次全部正典閘門）→ 15.2 最終重拉（只讀、不動
+      tracked file）→ push ＋ **自記本次 push 的 HEAD SHA 並將輕量基準 ref 推送至遠端**
       （`git tag -f pr{N}-last-push && git push -f origin pr{N}-last-push`；PR 合併後刪除
       遠端 tag）——重寫歷史或換 clone 後**僅 SHA 字串或僅本地 tag 都不保 object 可達**
       （`pull/{N}/head` 只指向 force-push 後的現任 head，取不回上一輪）；新環境接手
       `git fetch -f origin tag pr{N}-last-push` 即得基準（-f：本地已有同名 tag 時覆寫，否則 would clobber 失敗）。**閘門後再動任何檔案＝回到本款起點重來**（重跑全部閘門、重新 commit，
       再 15.1 核對——僅回 15.1 會讓未提交的新改動帶著舊 commit 的核對結果矇混過關）。
+      不得為記錄 review、run、SHA、resolve 或遠端水位製造 unrelated／evidence-only commit；
+      這些易腐狀態只進 PR body、check artifact 或倉庫外本地 handoff，不改 head。
     - 條文沿革（本鐵律經 PR #53 多輪驗收修訂定形；含兩起立法事故與逐款修訂理由）
       ＝`docs/worklog/2026-08-17-鐵律15提交前復核.md`，行內不留輪次註記。
 
@@ -217,11 +273,13 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       認證輪詢）
       （來源：https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api
       ＋本倉庫對 PR #57/#58 的未認證輪詢實測，取證 2026-08-18）。
-    - **17.2 自動修復循環**：驗收有意見 ⇒ 自動修復（**只修點名處**，既有裁定
-      `fix-only-what-is-flagged` 升格於此；修法涉域語義照鐵律 16 先上網研究）⇒
-      重跑全部閘門 ⇒ commit ⇒ push（鐵律 15 逐款照做）⇒ 重掛倒計時——
+    - **17.2 自動修復循環**：驗收有意見 ⇒ 依 15.2 等雙方完成並凍結 finding ledger ⇒
+      自動做**一次根因批次修復**（修法涉域語義照鐵律 16 先上網研究）。「只修點名處」的
+      射程是被點名根因在**同一 producer／consumer／元件內可列舉的完整狀態矩陣與反向 fixture**，
+      不是只改 reviewer 指到的一行；無關元件的同型既有問題仍只登記 `91` §3。修完依 15.4
+      targeted gate → 凍結 tree → 全部正典閘門 → commit → push → 重掛倒計時——
       **終止條件恰一個**：全部驗收方零**未清**意見（⚪ 不擋，2026-08-16 改制）⇒ 走合併。
-      **不得空轉，也不得以輪數為由停止**（2026-08-19 使用者裁定，見 17.4）。
+      **不得空轉，也不得用輪數停止任務**；重複失敗改走 17.4 收斂模式。
       <!-- 2026-08-19 改制（使用者裁定取消熔斷）。原文是「**終止條件恰兩個**」：
            ①零未清意見 ⇒ 走合併；②熔斷 ⇒ 停該 PR 轉做他事；並附一段辨析說明
            「熔斷後的恢復不是第三種出口」。熔斷取消後出口②連同其恢復款一起消失，
@@ -237,77 +295,160 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       這是使用者授權的互動式代行，不是 workflow 自動合併，也不得翻 `AUTO_MERGE`。
       未取得 D31／D32 具名代行授權的非 18.3 PR，即使四條件齊也不得套用代行通道，須
       **通知使用者等人工合併**；已取得授權但四條件未齊者，繼續 17.2 驗收循環，不得合併。
+      🔴 **D38 過渡期覆寫**：能實作現行 C1 的獨立 evaluator、workflow 接線與 merge-boundary
+      guard 尚未各自合併並完成 production canary 前，舊 evaluator 不得證明 18.1①，故所有 PR
+      （包含原本在 D31／D32 射程者）都走使用者人工合併；這是暫時凍結代行通道，不撤銷其後恢復的
+      授權。🔴 **唯一解凍條件（全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且僅對 0g 之後的非 18.3 PR
+      生效。
       **任何 PR 在尚未實際合併進 main 前，其依賴鏈都不得自動開工**（否則會從未含該 PR 的
       main 建立依賴工作，P-8 這類基建包的下游直接缺依賴）；無依賴關係的其他任務可照常並行。
       例外仍須停下來問：憑證紅線、破壞性／不可逆操作、計畫外重大裁定
       （改鐵律本文、不可逆 schema 選擇、會產生費用的動作）。
-    - 🔴 **17.4 輪數不設上限（2026-08-19 使用者裁定，取代原熔斷條款）**：
-      驗收循環**沒有輪數上限**，一律跑到 17.2 的單一出口——**雙清**——為止。
-      「雙清」＝**兩個驗收方都零未清意見**：Claude bot 判詞 🔴0🟡0（🟡 三種清法皆算清、
-      ⚪ 不擋）**∧** Codex 對**當前 head** 的 inline 意見總和為 0。
-      🔴 **不得**以「輪數太多」為由停止驗收、掛人工裁定 label、或建議使用者這樣做。
-      🔴 **條文與機制皆已生效**：機制側隨 **PR #59 於 2026-08-19 合併進 main**
-      （`MAX_FIX_ROUNDS`、job 層 label 閘門、整段超輪分支皆已不存在）。
-      複驗：`git grep -c -F -e MAX_FIX_ROUNDS origin/main -- ':/.github/workflows/claude-review.yml'` 應輸出 `origin/main:.github/workflows/claude-review.yml:2`（兩處命中都在**廢止說明註釋**裡，不是活的常數）
-      <!-- 🔴 2026-08-19 更正（#58 第 23 輪 bot 判詞 🔴1）：原複驗式是
-           `git show main:<path> | grep -c MAX_FIX_ROUNDS`，宣稱「應為 0」——**兩者都錯**。
-           ①宣稱值錯：實測 origin/main 上該識別字命中 **2 行**（皆在廢止說明註釋裡）。
-           ②指令三重 fail-open（依使用者要求先上網研究後改，取證 2026-08-19）：
-             a. ref 不存在時 git 走 die()／exit 128，但被管道吞掉，空 stdin 進 `grep -c`
-                回 **0** —— 恰好等於「已移除」的期望讀數（POSIX grep EXIT STATUS：
-                無行被選中回 1，而 -c 仍把 0 寫進 stdout）。
-             b. `set -o pipefail` **零鑑別力**：bash 官方定義取「最右邊那個非零」，
-                grep 的 1 會蓋掉 git 的 128 ⇒「ref 不存在」與「識別字真的不在」同形。
-             c. Windows Git Bash：`origin/main:.github/…` 的冒號被 MSYS 路徑轉換吃成
-                `origin\main;.github\…`（msys2-runtime `msys2_path_conv.cc` 對冒號**開頭**的
-                參數才豁免）；**加引號無效**，轉換發生在組 win32 argv 時。
-           ⇒ 改用 `git grep -c <pattern> <ref> -- <pathspec>`：ref 與 pathspec 是兩個獨立
-           argv、參數無冒號（Windows 免逃生變數），且 ref 不存在時 **exit 128 大聲失敗**。
-           `:/` 前綴＝`:(top)`，順帶解掉「pathspec 預設相對 cwd、從子目錄跑會假性回 0」。
-           本註為五處共用依據，其餘四處不重複。 -->
-      ⇒ `review:需人工裁定` 對本 workflow **無作用**；殘留在既有 PR 上的直接移除即可。
-      <!-- 2026-08-19 合併後回寫。原文描述的是 #59 未合併時的過渡期（每輪需手動移除
-           label 才推得動），該狀態已結束——過渡期敘述保留在 worklog 歷史層。 -->
-      🔴 **配套的現行狀態（2026-08-19 使用者裁定後更新）**：取消熔斷等於放棄「保證有限步終止」，因此**讓輪數下降的
-      責任移到執行者身上**——⚠️ **本款原文寫「配套不是可選項⋯必須固化成腳本」，但使用者於 2026-08-19 明示「把機制改成紀律」並否決了兩個機制化提案**（升 R4／R5 為 error、加推送前檢查腳本）⇒ **固化成腳本現為「候選方向」不是強制配套，啟用需使用者裁定**；現行防線＝紀律（見 `AGENTS.md` §7「紀律優先；機制只是補網，而且網有洞」）。反覆出現的意見類型**建議**固化成腳本
-      （`scripts/check-doc-claims.rb` 那一類），而不是靠再審一輪碰運氣。
-      依據：2026-08-15 實測「兩個 PR 九輪裡 15 條 🔴 有 12 條是文檔敘述類，
-      而且不是被修出來的，是每輪抽樣抽到不同切片」。
-      🔴 **雙清必須顯式包含 Codex**：`ROUNDS` 只計 Claude bot 的判詞（Codex 不在
-      workflow 的 `REVIEWERS` 內、也不貼判詞）⇒ 任何只看 bot 的判斷都會漏掉
-      「bot 已通過 ∧ Codex 仍有未清項」這個狀態。機械化判定見鐵律 18.1①。
-      <!-- 2026-08-19 全款改寫（使用者裁定逐字：「取消熔断机制，所有的必须循环到
-           双清为止。不限次数」）。原款是「熔斷（輪數引機制值，不寫死——鐵律 6 精神）」，
-           內容＝熔斷輪數引 `claude-review.yml` 的 `MAX_FIX_ROUNDS`（現值 "3"）、
-           超值下一輪自動掛 `review:需人工裁定` 並停跑驗收（即原 17.2 出口②）、
-           計數涵蓋範圍（只計 bot 判詞 ⇒ 「bot 過但 Codex 未清」永不自動熔斷，
-           出口＝人工熔斷）、以及**恢復款**（使用者或其明示授權的工作階段移除 label
-           後 push；三個語義：恢復不是第三種出口／ROUNDS 刻意不歸零故每次移除只換
-           一輪／恢復後不豁免熔斷）。
-           🔴 **廢止理由不是它壞掉**——它 2026-08-18 才首次真動作（此前 label 根本
-           不存在、歷輪熔斷從未真掛上，見 docs/specs/91-pit-register.md §3.4）。
-           廢止的是它的**代價**：越線即停＝承認自動驗收有判不了的區間、把「什麼時候
-           夠好」交回人手。使用者裁定不接受這個代價。
-           🔴 保留原款摘要於此，是為了讓後人知道這裡曾經有一個上限、以及它為什麼
-           被拿掉——否則「沒寫」會被讀成「忘了寫」而被加回去。 -->
-    - 機制註記：倒計時輪詢的腳本化＝**`scripts/await-verdict.sh`，已隨 PR #59 於 2026-08-19 合併落地**（用法 `bash scripts/await-verdict.sh <PR> <HEAD_SHA> [INTERVAL=900（限 900–1500）] [MAX_POLLS=8] [DEADLINE_S=MAX_POLLS×INTERVAL×2]`；退出碼與判準見該檔檔頭契約）——原由合併版總方案
-      P-8 交付；機制落地前本條以操作紀律生效（同鐵律 15 的形態——程序性條款先行）。
+    - 🔴 **17.4 收斂模式（2026-08-21 使用者裁定；取代無限小修小推）**：服務水準目標是每個
+      可獨立驗收單元通常只發布「初始候選＋一次整合修復」兩個受驗 head；這是流程目標，不是
+      「任何缺陷必然兩輪全被發現」的假保證。第二個 finding-bearing head 仍出現同一根因時，
+      **任務不得停止，但小修小推必須停止**：在本地重建 producer／consumer 影響圖、完整狀態
+      矩陣與 mutation，必要時把過大工作單元拆成語義獨立 PR，再產生下一個候選。不得用
+      unrelated／evidence-only／handoff-only 或空白 commit 刷新 head。
+      「雙清」仍顯式包含兩方：Claude bot 判詞 🔴0🟡0（🟡 三種清法皆算清、⚪ 不擋）**∧**
+      Codex 對當前 head 的最後 finding 之後已有 reviewer-controlled 乾淨 completion，且所有
+      未解 review threads 為零；只看 workflow 的 Claude 輪數、作者可自行 resolve 的 thread 狀態或
+      REST inline 歷史總數都不成立。2026-08-19 廢止的 `MAX_FIX_ROUNDS`／自動掛人工裁定 label
+      不恢復；本款切換的是失敗方法，不是棄單熔斷。
+    - 歷史機制註記：`scripts/await-verdict.sh` 已隨 PR #59 於 2026-08-19 合併落地，但 D38 已證實
+      它看不到 clean issue-comment 載體，也不攝取機械 CI；故只可作排隊訊號，**不得作 C1、C3、
+      雙清、核准或合併證據**。0e／0f 前的現行做法是 CLI 有界輪詢，之後只用版本化 evaluator。
 
 18. **自動合併鐵律（2026-08-18 使用者裁定；配套機制未落地前不啟用自動合併）**：
     - **18.1 合併條件（四重合取，缺一不可，且每項都是 fail-closed 的存在型判定）**：
-      ①Codex **已完成本輪審查**且零未清意見（「零意見」的操作定義＝存在
-      「Didn't find any major issues」空殼回覆或等價完成證據，**且該 review 本體的
-      `Reviewed commit:` 必須等於 PR 當前 head**——舊 head 的審查結果不得充當本輪；
-      **Codex 沒跑≠零意見**，查無審查紀錄一律不滿足本項）∧
-      ②Claude bot 判詞**通過**且零未清意見 ∧
-      ③**全部機械 CI 綠** ∧ ④**判詞經格式機械驗證**（非散文比對）。
+      ①Codex **已完成本輪審查**且零未清意見：先按 15.2 對當前 head 全量讀三個 paginated REST
+      集合、每則 review `.body` 與 paginated GraphQL `reviewThreads`。**0e 合併後**另須取得兩次
+      連續相同的四集合 canonical digest vector，此時單次跨端點讀取、兩掃 digest 不同或任一
+      head guard 不等均 C1=0；**0e 合併前**倉庫內沒有 serializer 與已校準 `SETTLE_INTERVAL_S`
+      （見 15.2 過渡期分流），本項只能由人工 ledger 完成集合對帳並誠實記「機械證據未取得」，
+      不得把「兩掃穩定」當已生效判準，也不得據此宣稱四條件齊。任一集合未取全、head guard
+      不等仍然 C1=0。
+      Codex 有兩個已在本倉庫實測的載體：
+      **finding review**＝REST review 的 `.user.login` 精確等於 `chatgpt-codex-connector[bot]`、
+      `.commit_id == headRefOid`，其 body 或以 `.pull_request_review_id` 關聯的 inline／thread 有任何
+      finding；**finding issue comment**＝issues comments 中同一 bot、可由獨立 `Reviewed commit:`
+      綁 current head，且第一個非空行精確為 `## 驗收結論：需修改` 的留言；**clean issue comment**＝
+      同一端點、同一 bot 的留言，且符合 0e fixture
+      鎖定的兩種倉庫實測形態之一：A 型首行以精確前綴
+      `Codex Review: Didn't find any major issues.` 開頭（句點後同一行是 reviewer-controlled 自由尾句，
+      不參與 envelope 判定）；B 型前兩個非空行精確為 `## 驗收結論` 與
+      `**未發現需要新增 inline 意見的重大問題。**`。兩型都須有恰一個獨立 `Reviewed commit:`
+      欄位，只含 10–40 位十六進位 ref、且為當前 40 位 `headRefOid` 的前綴；envelope 以外的 body
+      仍須保存但不做 prose NLP：A 型固定 About-Codex details 與 B 型確認敘述／checks 都是同一
+      completion 的說明；若同一 comment 再出現第二個頂層 verdict marker（A 型前綴或以
+      `## 驗收結論` 開頭的行）即屬互斥／ambiguous、C1=0。這是 PR #61／#64 的倉庫實測契約，
+      不外推成平台永遠不變的保證；未知作者、缺 ref、模糊／多個 ref、ref 不符或其他 envelope
+      一律 fail-closed。一般散文中的 SHA 不解析；inline 仍只以 review ID 歸戶，不用 force-push 後
+      可能重映射的 comment `.commit_id`。
+      reviewer-controlled 乾淨 completion 只接受上述 exact-head clean issue comment，或未來 0e fixture
+      明列且同樣有權威 exact-head 欄位的 clean REST review。跨載體先後只比較 UTC event time：
+      已提交 review 用 `submitted_at`，issue comment 用 `created_at`；completion 必須嚴格晚於最後
+      finding，欄位缺失、無法解析或時間相等都 fail-closed。🔴 **被編輯過的 issue comment 不得用
+      `created_at` 排序**：GitHub 官方明載 comment 可經 REST 原地更新並暴露 `updated_at`
+      （external-facts A14），故 connector 可在 clean completion 之後**編輯既有 same-head 留言**
+      補上 finding，而該 finding 仍帶較舊的 `created_at` ⇒ clean 會被誤判為較晚、C1 假通過。
+      判定：凡 `updated_at` 晚於 `created_at` 的 issue comment，一律以 `updated_at` 作其排序
+      時點；若 `updated_at` 缺失或無法解析則整則 fail-closed。⚠️ **本守衛只作輔助，不承重**：
+      GitHub 官方頁把 `updated_at` 列為必填的 date-time，但**對「編輯是否使該欄前進」完全沉默**
+      （<https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28>，本輪查證＝未取得；
+      不反向斷言它不前進）⇒ 若實際不前進，本守衛會靜默不觸發。**承重的是 disposition**：
+      clean 時點前的每筆 finding 都必須有合規 disposition，編輯補上的 finding 因此仍會擋住 C1。
+      同軸不對稱一併登記：「編輯既有 review body／inline 補 finding」沒有對應排序條款，同樣只靠
+      disposition 一道。0e fixture 必須含「clean 之後編輯既有留言補 finding ⇒ C1 回到 0」與
+      「移除 `updated_at` 排序守衛的 mutation」兩格；後者在 `updated_at` 不前進的情境下應由
+      disposition 守衛接住，fixture 需同時鎖住這條退路。數字 ID 只作 endpoint-local 身分／去重，
+      不跨 reviews／issues comments 排序。completion 時點之前的所有 finding 必須已有合規
+      disposition，且 **disposition 必須是機器可讀輸入、不得由事件排序或 thread 狀態推定**：
+      0e 契約要求一份以 finding 身分為鍵的 disposition 來源（inline／thread 用 review ID＋
+      comment ID，issue-comment finding 用 comment ID），每筆值域恰為
+      `fixed`／`disproved`／`no-fix-ruled`，且 `disproved`／`no-fix-ruled` 須各自帶可存取的
+      證據或裁定條目引用。缺鍵、值域外、缺證據引用或來源不可解析一律 C1=0。
+      🔴 **載體、格式與責任方由 0e 定義並在該包落地**（與 `SETTLE_INTERVAL_S` 同形的待交付契約）：
+      0e 須同包提交 disposition 來源的存放位置、schema（鍵的組成、值域列舉、證據引用欄）與
+      產生責任方，並在 P-8／0e 交付列明列。**在 0e 落地前本項是待交付契約、不是已生效判準**，
+      任何人不得自行發明 schema，也不得據此宣稱 C1 成立。0e fixture 必須
+      含「全部 finding 有合規 disposition ⇒ 可通過」與「其中一筆缺 disposition ⇒ C1=0」正反格；
+      若日後裁定改採「較晚的 reviewer completion 本身即 disposition」，須同批刪除本句，不得
+      兩制並存。
+      current-head finding 集合為空時，時間下界定義為負無限：合法 exact-head completion 可通過；
+      空 finding 但沒有 completion 仍 C1=0，不能把「找不到最後 finding」誤作欄位缺失或乾淨證據。
+      證偽、裁定不修或 resolve 只記 disposition，
+      不刪除 finding 的 event time／endpoint-local ID，也不把「最後 finding」往前移。
+      處置未改 tree 時只可在同一 head 再觸發**一次** review，並在有界 deadline 等候後續
+      completion，不靠新 commit。OpenAI 第一方資料沒有保證同一 SHA 的重複請求必定產生新 review；
+      deadline 內沒有更晚 exact-head completion（包含 connector 去重）時 C1 維持 0，保存請求／
+      reaction／review 水位後轉獨立人工審核與人工合併，不得再觸發、造 head 或啟用代行／自動合併。
+      未知／非空 review body、body-only finding、inline、thread，或可綁 head 的 Codex issue
+      comment finding 若沒有更晚 completion 一律
+      fail-closed。GraphQL 未解 thread 數仍須為零，
+      但 GitHub 官方允許 PR 作者或具 write 權限者 resolve conversation，因此 `isResolved=true` 只
+      是輔助工作流狀態，不能單獨證明獨立審核通過。證偽／裁定不修者須先有合規處置落點；作者
+      resolve 不能取代更晚的 reviewer completion。0e fixture 必須覆蓋作者自貼 envelope、review
+      `.commit_id` 不等於 head、A 型前綴及自由尾句、A 型固定 boilerplate、B 型兩個非空首行及
+      長敘述、finding 型 `## 驗收結論：需修改`、clean 後第二個 verdict marker、clean issue comment 的
+      exact／錯誤／缺失／多重 `Reviewed commit:`、issue-comment finding、先到 clean 後到較晚
+      finding 時 C1 回到 0、處置未改 tree 後的 same-head completion，以及 same-head 請求被去重／
+      逾時時保持 C1=0 並轉人工；另有「零 finding＋clean → 1／零 finding＋無 completion → 0」正反格。
+      REST inline 歷史總數
+      只作攝取，不再直接當未清數。
+      OpenAI 官方流程要求 Codex reaction 後仍發布 review 結果；任何 reaction 都只作觸發／排隊訊號，
+      沒有可依上述受控載體綁 exact head 的結果時本項 fail-closed 並轉人工，不得把 👀、👍 或其他
+      reaction 當 completion。
+      **Codex 沒跑、任一集合未取全、completion 不綁當前 head／不晚於最後 finding，或存在未知
+      review body／issue-comment envelope，都不滿足本項**。GitHub／OpenAI 官方邊界見
+      `docs/dev/external-facts.md` A9／A10／A12；載體形態的倉庫實測見
+      `docs/dev/m0-review-convergence.md`「Convergence Protocol v2」∧
+      ②Claude bot 判詞**通過**且零未清意見，且 0f 由受信任 workflow 產生的 run-specific evidence
+      必須同時含 `run_id`、`run_attempt`、candidate＝`github.event.pull_request.head.sha`、
+      `verdict_comment_id` 與 `verdict_body_sha256`。0f 只有在最終判詞貼出／更新完成後，按 comment
+      ID 從 GitHub 回讀 `.body`，對其 UTF-8 bytes（不作換行或 Unicode 正規化）計算 SHA-256，才可
+      發出 evidence；0e 依同一 ID 再取 body 並重算，hash 缺失、格式錯、同 ID 內容已變或不等一律
+      C2=0，comment ID 不再能替代內容 hash。另依 run id 複驗 run `event=pull_request`、
+      `run_attempt == evidence.run_attempt`、`pull_requests[]` 恰有目標 PR 且其
+      `head.sha == candidate`；jobs 只能從官方 attempt-specific
+      `/actions/runs/{run_id}/attempts/{run_attempt}/jobs` 端點取得，再沿該回應的 `check_run_url`
+      取得 check-run，並要求 run／job／check-run 回應的 `head_sha` 同值作本倉庫 canary。一般
+      run jobs 集合、另一 attempt 的 job／check-run 或只比 run id 都不得配對。官方未保證
+      workflow-run `head_sha` 對所有 pull_request 永遠
+      等於 PR head，故任一欄缺失、多義或不等即 C2=0；留言 id 水位／時間窗、comment ID 單欄或
+      `updated_at` 都不能獨立綁 run/head/body。0e fixture 必測「相同 comment ID、body 被原地編輯」、
+      「缺／錯 hash」、「evidence attempt 與 run 回應不等」及「混入另一 attempt job／check-run」，
+      移除 hash／attempt 守衛的 mutation 必須轉紅。具名實證與官方邊界見
+      external-facts A13／A15 ∧
+      ③**全部機械 CI 綠**：0f 須由 workflow jobs REST 的 `check_run_url` 提供 evaluator 自身精確
+      check-run ID，C3 只排除該 ID；self ID 缺失／多重／錯 head 即 0。排除後 eligible 集合仍須
+      非空且全部 success；self pending＋其他全綠可通過，其他 pending／fail 或 only-self 均 C3=0 ∧
+      ④**C4：判詞經格式機械驗證**（非散文比對）。0e fixture／mutation 必須各自鎖定：合法「通過」、
+      合法「需修改：非空理由」、判詞缺失、標記不在首行、重複標記、通過／需修改互斥、空白理由
+      （含全形空白／CR）與未知結構；刪除 first-line、唯一標記、互斥或非空理由任一守衛都要使
+      regression 轉紅。0e／0f 的官方 identity 邊界見 external-facts A13。
       ③④**降低但不消除** prompt injection 風險——被注入的判詞可以格式完全合法
       （`claude-review.yml` 沿革註釋已載明此風險正是 AUTO_MERGE=false 的原因）；
       ③只證明測試綠、④只證明格式合法，**兩者都不證明審查結論未受注入**。
-    - **18.2 條件齊 ⇒ 依已啟用的合併通道進 main**：18.4 啟用後由 workflow 自動合併；
-      啟用前僅能人工合併，或由 D31／D32 明文授權的互動式 Codex 對非 18.3 PR 代行
-      `gh pr merge --squash --match-head-commit <head>`。部署管線就緒後（合併版總方案 CD 包）
-      合併即自動部署＋healthcheck，紅則自動 rollback。
+      在能實作上述 C1 的獨立 evaluator 與 workflow 接線各自合併前，舊 evaluator 不得作互動式
+      Codex 代行合併依據；過渡期所有 PR 走使用者人工合併。
+    - **18.2 條件齊 ⇒ 依已啟用的合併通道進 main**：0e／0f 與 merge-boundary guard 未各自合併、
+      實測前，所有 PR 只走使用者人工合併，CLI 全拉或舊 evaluator 不得把此過渡期標成四條件齊。
+      代行／自動通道日後啟用時，合併 consumer 必須在呼叫 merge 的同一控制流重新執行 0e
+      merge-boundary mode，取得 current head 的新 stable vector、C1–C4 與四集合 watermarks；任何
+      晚於該結果的 review／comment／thread 變化、vector／watermark 不等或重驗失敗都中止合併。
+      🔴 **這只縮小競態窗，並未關閉它**：最後一次重驗完成到 merge 指令生效之間，同 head 仍可能
+      新增 finding，而該變化不在已擷取的 watermarks 內；`--match-head-commit` 官方只保證 PR head
+      SHA 相等（"Commit SHA that the pull request head must match to allow merge"），**不會**讓
+      review state 的舊結果自動失效。GitHub 是否提供 review-state 的服務端合併前置條件＝**本輪
+      查證未取得**（不反向斷言其不存在）。🔴 **這個殘餘窗是已登記、被接受的風險，不是額外的
+      解凍前置**：解凍條件只有一個（見下），窗本身以「代行只用於非 18.3 PR、且合併瞬間仍帶
+      `--match-head-commit`」承擔；任何人不得以「已在同一控制流重驗」為由宣稱該競態已消除，
+      也不得把它改寫成第二條解凍條件。
+      🔴 **唯一解凍條件（全倉同文）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，屆時非 18.3 PR 命中具名授權即可代行
+      `gh pr merge --squash --match-head-commit <head>`；在此之前 D31／D32 代行授權保持凍結、
+      18.4 workflow 自動合併不得啟用。部署管線就緒後（合併版總方案 CD 包）合併即
+      自動部署＋healthcheck，紅則自動 rollback。
     - 🔴 **18.3 不適用自動合併的 PR**（一律人工審閱與合併）：
       改 **`.github/workflows/` 下任何檔**（現有兩支之外，日後新增的 deploy／
       自動合併 workflow 同樣在內——`claude-review.yml` 另有反竄改：其自身驗收失效，
@@ -327,7 +468,8 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       一個真實 PR 上實測全鏈路後才啟用；**啟用前 P-8 必須另立不依賴受審 LLM 判詞的
       信任邊界**（例：外部貢獻者 PR 一律人工／由獨立可信 workflow 做二次驗證——
       形態由 P-8 裁定），單靠③④不足以安全開啟。在那之前 `AUTO_MERGE: "false"` 維持不變；
-      合併只走使用者人工操作，或 D31／D32 的窄範圍互動式代行。兩者都不是 workflow 自動合併。
+      合併只走使用者人工操作，或在**唯一解凍條件**（0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後，同 17.3／18.2）成立後恢復的
+      D31／D32 窄範圍互動式代行。兩者都不是 workflow 自動合併；解凍前僅前者可用。
       🔴 啟用時要把 `AUTO_MERGE` 翻回 true 的人，
       必須同時面對「讓執行過 PR 代碼的 job 重新拿到 `contents: write`」的權限決定
       ——該取捨已寫在 `claude-review.yml` 的 permissions 註釋，不得只翻開關。
@@ -391,7 +533,9 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
          不是通過。長 `prompt` 不嵌 `${{ }}`，改用 step `env`；`claude_args: |` 內不得放
          偽裝成註釋的 `#` 行。此類 PR 始終受 18.3 人工合併約束。
       7. **Markdown 與 Windows 工具鏈假結果**：表格儲存格的字面 `|` 要跳脫；預期輸出的
-         code／fence 不加 Markdown 粗體符號，改完以實際渲染複驗。Windows 跑原型 lint 顯式設
+         code／fence 不加 Markdown 粗體符號，改完以實際渲染複驗。只比 `<td>` 數會漏掉 GFM
+         丟棄超額 cell 的假綠；每個改動表格至少選一個末欄 sentinel，斷言渲染後該列末欄仍含
+         sentinel 全文。Windows 跑原型 lint 顯式設
          UTF-8 輸出；中文路徑集合用 `git -c core.quotepath=false`；Git Bash／MSYS 可能改寫的
          `ref:path` 參數改用無冒號 argv 的等價命令。編碼、路徑轉換或 shell 選錯造成的失敗
          不得誤報為程式缺陷或成功。
@@ -403,15 +547,16 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       反向複驗；只寫「已修」「下次小心」或再加一段提醒不算收口。若斷根需要新增／擴張
       `scripts/`、workflow 或 CI 判準，先依 17.2 只把候選與代價登記到 `91` §2，取得使用者
       裁定後另開 18.3 PR，不得借「斷根」越權改判準。
-    - **20.5 不覆寫只修點名處**：本條規定的是已點名問題的處理品質與送驗前檢查，不擴大
-      17.2 的修復射程。同型但未被點名的既有問題仍只登記 `91` §3；不得用本條包裝順手擴修。
+    - **20.5 根因封閉不是無界擴修**：已點名問題可且必須封閉 17.2 定義的同一元件狀態矩陣；
+      這仍不授權修改無關 producer／consumer／元件。同型但不在該根因影響圖內的既有問題只登記
+      `91` §3；不得用「斷根」包裝跨元件順手擴修。
 
-21. **工作單位交接鐵律（2026-08-20 使用者澄清；沿用 PR #61 前節奏，本地保存）**：
-    - **21.1 一個工作單位一份 handoff，不按小步驟拆分**：「工作單位」＝一個工作包／PR 的
-      初始交付、一次驗收修復輪、正式阻塞／rollback，或整次工作結束的交接點。同一單位內的
-      研究、實作、測試、commit、push、等待、驗收攝取與遠端終態都收進同一份 handoff；單條
-      命令、純讀取、一次查詢、一次等待或一次 push **不是**獨立 handoff 觸發點。該單位結束、
-      阻塞或交給下一個人以前完成 handoff，不把多個已結束的工作單位累積到整個階段收官才補。
+21. **工作單位交接鐵律（2026-08-21 收斂裁定；本地保存、不得按驗收輪增殖）**：
+    - **21.1 一個工作包／PR 維護一份 handoff，不按小步驟或驗收輪拆分**：從初始研究到最後
+      merge／rollback／正式阻塞都更新同一份本地 handoff；研究、實作、測試、commit、push、
+      等待、驗收攝取與遠端終態都收進該檔。單條命令、純讀取、查詢、等待、push、bot 回覆或
+      驗收修復輪都**不是**新 handoff 觸發點。只有工作包真正分拆成獨立 PR、正式轉交另一位執行者，
+      或 rollback 後開始新的恢復工作包時才另建；結束／阻塞／轉交以前須把同一份更新到可接手。
     - **21.2 handoff 維持既有四段，內容要能直接接手**：①**我改了什麼**＝目標、輸入
       ref／head／base、遇到的問題與證據、該單位做過的重要動作、異動／外部狀態、驗證輸出與
       配對 worklog；②**為什麼這樣改**＝證據鏈、選案理由、被推翻的假設與未採方向；
@@ -423,10 +568,12 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       PR／deployment 留言另造 remote handoff。push、review、合併、deploy 等遠端結果取得後，
       直接補進同一工作單位的本地 handoff，不改被證明的 Git head。倉庫內既有 `docs/handoff/`
       全部視為歷史唯讀資料，保留但不再增長。
-    - **21.4 handoff 不取代 worklog 與倉庫終態文件**：`docs/worklog/` 仍按「可獨立驗收單位」
-      三段固定產生並與產物一起 commit；一份工作單位 handoff 可列出該單位產生的多份 worklog。
-      worklog `Changes` 與受影響 `docs/dev` 仍依 `AGENTS.md` 同步 HEAD；附錄 A 只新增本輪入庫的
-      worklog，不為本地 handoff 新增 checkbox 或路徑。
+    - **21.4 一個獨立 Git 驗收單位只維護一份 worklog**：通常一個 PR／原子工作包一份；umbrella
+      拆成幾個可獨立合併的 PR，才各有一份。初始候選把三段與產物一起 commit；後續 finding 若
+      真的改 tracked tree，就在同一個整合修復 commit 更新這份 worklog 的處置與 `Changes`，不為
+      驗收輪另建 worklog。若 disposition、等待或遠端終態不改 tree，資訊只進 PR body／合規裁定
+      落點與本地 handoff，**不得修改或 commit worklog 來製造新 head**。附錄 A 每個 tracked
+      worklog 只登一次；受影響 `docs/dev` 仍須同步終態。
     - **21.5 交接內容仍受零假設發布約束**：問題、已做事項、測試結果、GitHub 狀態與「無待辦」
       都須依鐵律 19 綁證據；舊 head、舊 run、舊 PID、舊時間的結果只作快照，不得冒充下一步現值。
       工作單位結束時缺本地 handoff、四段缺項或證據對不上該單位輸入，均視為交接未完成。
@@ -443,9 +590,11 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
   ①**修復**（本輪 diff 可驗證）②**裁定不修**（PR 描述或 `docs/DECISIONS.md` 有明文條目，
   驗收方核對存在即算清、不評裁定本身）③**證偽**（附證據推翻，驗收方複驗成立即算清）。
   🔴 不適用②——鐵律違反不能靠裁定放行，要放行先改鐵律本文。
-  範圍外的既有問題走 **⚪（範圍外觀察）**：僅登記、不擋通過，作者須把 ⚪ 條目搬進
-  `docs/specs/91-pit-register.md` 坑登記簿 §3 轉入暫存區（PR #55 已建立；
-  建立前的過渡辦法「登記於 PR 描述」自此作廢）。
+  範圍外的既有問題走 **⚪（範圍外觀察）**：僅登記、不擋通過。只要本批另有 tracked-tree
+  修復，作者就須把 ⚪ 搬進 `docs/specs/91-pit-register.md` §3；若 exact-head 終態只有新增 ⚪、
+  沒有其他 tree 變更，則使用 15.1 的 `DEFERRED_WHITE` PR-body 機器行，留待下一個本來就會改
+  tree 的 PR 首候選批量入籍，禁止為登記本身刷新 head。PR #55 前的任意散文過渡辦法仍作廢；
+  本例外只接受 15.1 的 exact grammar、exact head 與可複驗來源 pair。
   <!-- 改制理由（2026-08-16）：使用者裁定「必須 review 到完全沒有任何意見才算驗收成功」。
        配套＝⚪ 標記：🟡 變真閘門的同時必須給「非本輪責任」一個不擋的去處，
        否則每輪擋一批舊帳、重演 2026-08-15 九輪不收斂。機制落地在 claude-review.yml
@@ -494,15 +643,17 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
      單源下結論即誤判（R4 幣別管理鈕、財務導航子項為前例）。
   產出入 `docs/research/7x` teardown 檔＋`docs/specs/71` §F 登記；與 Shopify 的差異只有兩種
   合法形態：71 §A 保護清單（使用者裁定）或 §F 登記的 V（待驗證）——**其餘一律修到一致**。
-- **每完成一個部分，就寫一份工作記錄**（2026-08-13 使用者裁定，硬性）：`docs/worklog/YYYY-MM-DD-<功能>.md`，**三段固定**，與該部分的改動**一起 commit**：
+- **每個可獨立合併的 Git 驗收單位維護一份工作記錄**（2026-08-21 收斂裁定，覆寫「一次修復另算一部分」的舊解讀）：`docs/worklog/YYYY-MM-DD-<功能>.md`，**三段固定**，初始候選與該單位產物**一起 commit**：
   - **已完成的工作 (Done)**：條列這次實作了哪些功能、修復了什麼 bug。
   - **修改的檔案與核心邏輯 (Changes)**：列出異動的檔案路徑，並簡述關鍵函式或架構變動。
   - **尚未完成或需注意的風險 (Pending / TODO)**：列出還沒寫的邊際條件、潛在 bug 或待補的單元測試。
-  - 🔴 **「一個部分」＝一個可獨立驗收的單位**（一個 spec 章節／一個畫面／一支 API／一次修復），**不是一整輪工作**。做完就寫，不要累積到最後補。
+  - 🔴 **單位邊界以可獨立合併的 PR／原子工作包為準**；同一 PR 的驗收修復只更新同一份，
+    不另建 worklog。只有實際 tracked tree 變更才在整合修復 commit 更新它；純 disposition、
+    查詢、等待、resolve、PR body 或遠端終態不改 worklog、不造 head。
   - 🔴 **Pending 段不得留空**。真的沒有待辦，要寫「無，理由是⋯⋯」，因為空白讀起來像「沒檢查」而不是「檢查過沒有」。
-- **每個工作單位結束前寫一份本地 handoff**（鐵律 21；與上面的工作記錄**並存，不互相
-  取代**）：一個工作包／PR 初始交付、一次驗收修復輪、正式阻塞／rollback 或整次工作結束
-  各寫一份；同一單位內的小步驟收在同一份，不逐命令、查詢、等待、commit 或 push 拆檔。
+- **每個工作包／PR 維護一份本地 handoff**（鐵律 21；與上面的工作記錄**並存，不互相
+  取代**）：初始交付、驗收修復、等待與遠端終態持續更新同一份，不逐輪或逐命令、查詢、
+  commit、push 拆檔；只有真正拆 PR、正式轉交或 rollback 後另開恢復包才另建。
   四段固定：①我改了什麼 ②為什麼這樣改（含被推翻的假設）③還有什麼沒解決（不得留空）
   ④下一個人要注意什麼。handoff 只存 Git 倉庫外的本地工作區，不 commit／push；既有
   `docs/handoff/` 是歷史唯讀資料。
