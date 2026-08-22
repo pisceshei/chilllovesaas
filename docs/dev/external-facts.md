@@ -667,3 +667,35 @@ Windows PowerShell 5.1 上。
 `Method invocation failed because [System.Management.Automation.ScriptBlock] does not contain
 a method named 'op_Addition'.`。**該修法對「機制是哪一條」並不敏感**，因此不受 ③ 的未取得
 狀態影響；反過來，**任何人不得用 ③ 去論證別處的作用域行為**。
+
+### B12. 大小寫語義：PowerShell 比較運算子預設**不分**大小寫；.NET 靜態 `Regex` 預設**分**大小寫
+
+**① PowerShell 比較運算子（含 `-match`／`-notmatch`）預設不分大小寫——官方逐字：**
+
+> "String comparisons are case-insensitive unless you use the explicit case-sensitive operator. To make a comparison operator case-sensitive, add a `c` after the `-`."
+
+來源 `about_Comparison_Operators`，**5.1 moniker 頁**（與本倉庫 worklog block 的執行環境一致）：
+<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_comparison_operators?view=powershell-5.1>
+（取證 2026-08-22）
+
+**② .NET 無 `options` 參數的靜態 `Regex` 方法預設分大小寫——官方逐字：**
+
+> "By default, the comparison of an input string with any literal characters in a regular expression pattern is case-sensitive"
+
+> （`RegexOptions.None` 條目）"Comparisons are case-sensitive."
+
+> "A constructor or static pattern-matching method without an `options` parameter is called instead."
+
+來源 <https://learn.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-options>
+（取證 2026-08-22）
+
+🔴 **兩者相加就是一個安靜的漏洞**：同一段程式碼裡用 `[regex]::Matches($x, $p)` **掃**、
+再用 `$v -notmatch $p` **驗**，兩邊對同一個 pattern 的大小寫語義**相反**。掃得到但驗不出來的
+輸入（例如大寫 hex）會被判為合文法而放行，隨後抽取階段又因分大小寫而抽不到 ⇒
+**「掃過了」與「驗過了」之間出現一個誰都不管的縫**。本倉庫 `docs/worklog/` 的
+`Assert-DeferredWhite` 就踩過這個縫（2026-08-22，來源＝Claude issue comment `5377528418` 🔴-2）。
+
+🔴 **本專案使用邊界**：本條只支持「同一 pattern 在 PowerShell 運算子與 .NET 靜態方法上
+預設語義相反」這一件事，以及由它推出的**修法方向**（把驗證側改成 `-cnotmatch` 或
+`[regex]::IsMatch`，讓兩側同語義）。它**不**支持任何關於 `-like`／`Compare-Object`／
+`Sort-Object -Unique` 等其他比較路徑的大小寫斷言——那些各有各的文件，要用要各自取證。
