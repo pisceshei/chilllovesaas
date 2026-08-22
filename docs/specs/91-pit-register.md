@@ -1117,17 +1117,26 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
      且它是第 2 輪才加嚴的（原文「之後隨輪補列」擋不住同 commit 新增檔漏列）。
      ⇒ **條文擋住了它要擋的形態，漏的是執行**：我當輪沒有把「本 commit 有沒有新增 tracked
      worklog」列進送驗前稽核。
-     可重跑反向複驗（本輪實跑，見第十七輪 worklog 的 20.4）：
-       BASE=0fbe520502588b34f9b9cad6ae9b3a282d4db643
-       comm -23 <(git -c core.quotepath=false diff --name-only --diff-filter=A $BASE HEAD \
-                    -- 'docs/worklog/*.md' | sort) \
-                <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md | sort)
-     應為**空集合**；非空即為漏列。本輪實跑：空集合；把第十六輪那一列刪掉的突變 ⇒ 差集
-     恰好只剩該檔 ⇒ 式子承重。
-     🔴 **射程必須是「本 PR 新增的 worklog」，不是「全部 tracked worklog」**（初稿寫錯，
-     實跑當場打回）：A.1 是**漸進收割清單**，本輪實測 tracked worklog **159 份**、
-     A.1 條目 **279 條**（含未勾選），全量比對會噴出上百個「漏列」——那是收割進度，不是違規。
-     同理 `[x]` 與 `[ ]` 都要算進來，只抓 `[x]` 會把已列但未收割的誤判成漏列。 -->
+     可重跑反向複驗＝**本節上方既有的那組 canonical 全量雜湊**（內容錨＝
+     `grep -n 'ls-files docs/worklog docs/handoff' docs/specs/91-pit-register.md`），
+     兩式 md5 相等即通過。本輪實跑：相等。
+     另以集合差再驗一次（同一結論、不同表述）：
+       comm -23 <(git -c core.quotepath=false ls-files 'docs/worklog/*.md' | sort) \
+                <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md \
+                    | grep '^docs/worklog/' | sort)
+     以及反方向 `comm -13`，**兩向皆為空集合**（實測：tracked 160、A.1 條目 160）。 -->
+<!-- 🔴 2026-08-22 更正之二（來源＝PR #64 Codex inline `3835780547`）：
+     上一則註曾把射程收窄成「只檢查本 PR 新增的 worklog」，理由是「A.1 是**漸進收割清單**，
+     實測 tracked 159 份、A.1 條目 279 條」。**那個理由是我自己量錯**：
+     `grep -oP '^- \[[x ]\] \`\K[^\`]+'` **沒有篩 `docs/worklog/` 前綴**，於是把 A.2 的
+     handoff 條目一起數了進來（本輪重現：不篩＝279、篩了＝160）。
+     🔴 **A.1 就是全量索引**：tracked worklog 160、A.1 條目 160，`comm` 兩向皆空；
+     勾選符號才代表收割進度。⇒ 收窄射程**會讓「刪掉一列」不被察覺**，等於把閘門改弱。
+     ⇒ 已還原為全量比對，並改用本節上方**既有的** canonical 全量雜湊（不另立新判準）。
+     🔴 教訓：**收窄一道既有閘門之前，先確認要收窄的理由不是自己的測量誤差。** -->
+<!-- 🔴 2026-08-22 補列（承上，來源＝`5379467830` 🔴-2）：第十六輪那一列在該 worklog
+     誕生的同一個 commit 就該加上；條文擋住了它要擋的形態，漏的是執行——我當輪沒有把
+     「本 commit 有沒有新增 tracked worklog」列進送驗前稽核。 -->
 
 ### A.2 handoff
 
