@@ -543,6 +543,41 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
 
+### B10. GFM 表格：行首／行尾分隔直線是「建議」不是必要；直線靠反斜線跳脫
+
+GitHub Flavored Markdown Spec 的 Tables (extension) 節逐字：
+
+> "A leading and trailing pipe is also recommended for clarity of reading, and if there's otherwise parsing ambiguity."
+
+> "Include a pipe in a cell's content by escaping it, including inside other inline spans"
+
+來源：<https://github.github.com/gfm/>（取證 2026-08-22）。
+
+🔴 **第一句支持的是「尾巴沒有分隔直線的列仍然是合法的一列」**——原文用 recommended（建議）
+而不是 required，給的兩個理由是「便於閱讀」與「有解析歧義時」，兩者都不是有效性條件。
+
+跳脫的判定另需 Backslash escapes 節逐字：
+
+> "Any ASCII punctuation character may be backslash-escaped."
+
+> "Backslashes before other characters are treated as literal backslashes."
+
+來源：<https://github.github.com/gfm/#backslash-escapes>（取證 2026-08-22）。
+而 spec 的 ASCII punctuation character 定義逐字列舉中含反斜線（`U+005B–0060` 段）與直線
+（`U+007B–007E` 段）：來源 <https://github.github.com/gfm/#ascii-punctuation-character>
+（取證 2026-08-22）。
+
+🔴 **奇偶規則是我方推導，不是官方逐字**（依 AGENTS §8.2 明示標記）：官方逐字只給三件事
+——①任何 ASCII 標點都可被反斜線跳脫 ②反斜線自己就是 ASCII 標點 ③表格內要放直線得靠跳脫。
+把三者合起來才得到：`\\` 是**一個已被跳脫、已被消耗的反斜線**，它後面那個直線前面並沒有
+可用來跳脫的反斜線 ⇒ 那是**分隔符**。故判準是**緊鄰該直線之前的連續反斜線串長度的奇偶**
+（奇＝被跳脫、偶＝分隔符），**不是**「前一個字元是不是反斜線」。⚠️ 這一段若日後被引用，
+要引的是「我方由三條逐字推導」，不得寫成「GFM 規定奇偶」。
+
+🔴 **本專案使用邊界**：本條只支持 `docs/worklog/2026-08-21-驗收收斂制度V2.md` 的乙堆表
+切格與邊界剝除如何判定分隔直線。它**不**支持任何關於表格對齊列、行內元素解析、或最終渲染
+結果的說法；表頭欄數與超出格的處置是另一條（`the excess is ignored`，見該 worklog 內引用）。
+
 ### B9. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
 
 <!-- 🔴 2026-08-22 更正（來源＝Codex inline `3834080765`）：本條原編為 `A16`，但它**物理上位於
