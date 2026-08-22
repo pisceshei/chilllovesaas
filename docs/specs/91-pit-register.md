@@ -892,12 +892,13 @@
   command grammar 改寫；後續契約包須先定義哪些工具允許無參數，再各放正反 fixture
   【F5/F11/F12；來源＝PR #65 Claude comment `5362007581` ⚪；取證日期＝2026-08-21】
 
-- **R6 的 `CLAIM_RECHECK` 值沒有比照 type 值移除尾端空白**：
-  `CLAIM_RECHECK` 以 `(.+)` 保留行尾空白，後續直接送入 `CLAIM_RECHECK_CMD`；Markdown 合法的
-  兩個尾隨空白因此會 fail-closed，但錯誤訊息會指向「命令未以工具開頭」而非真正的尾端空白。
-  本輪阻擋只點名 type metadata 缺字，不擴修 recheck 診斷；後續須先裁定尾端空白應正規化或
-  明確禁止，再用正反 fixture 固化
-  【F5/F12；來源＝PR #65 Claude comment `5362761839` ⚪1；取證日期＝2026-08-21】
+- **[已撤回] R6 的 `CLAIM_RECHECK` 值沒有比照 type 值移除尾端空白**：
+  舊條目依早期 `(.+)` matcher 推論尾端空白會進 `CLAIM_RECHECK_CMD`，但 current head 已用
+  `(.*?)` 捕捉，並在建立 entry 時執行 `match[2].strip`。`git log -p` 證明這個正規化由 commit
+  `cf9fa51` 引入；因此原 pit 在該 head 已不存在，不能再作 active queue。保留本條只為記錄撤回
+  與來源更正，不派修
+  【F5/F11/F12；來源＝PR #65 Codex inline `3826579184`、內部 `git log -p`；
+  取證日期＝2026-08-21】
 
 - **R4 的鄰近複驗豁免仍可由含工具名的散文 code span 取得**：
   R6 已用 `CLAIM_RECHECK_CMD` 要求整段以工具開頭，但 R4 的 `RECHECK_CMD` 刻意維持寬鬆搜尋；
@@ -955,6 +956,12 @@
   首次寫入；這是本輪內部全掃發現、未被 comment `5364105225` 點名，依 17.2 只登記，不回寫
   歷史 worklog 表格
   【F5/F11/F12；來源＝內部 `git log --follow -p`；取證日期＝2026-08-21】
+
+- **第十三輪 worklog 的 Changes 手抄 parser probe 數量已與 runner 漂移**：
+  `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md` 的 Changes 仍寫「四條 parser probe」，
+  而 runner 已有額外的 `indented-block-start` probe。這是本輪內部重讀發現、未被 Codex review
+  `4988929408` 或 Claude comment `5364105225` 點名；依 17.2 只登記，不回寫該 worklog bullet
+  【F5/F11/F12；來源＝內部 worklog／runner 集合比對；取證日期＝2026-08-21】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -1133,7 +1140,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十一輪雙驗收修復.md`（Claude comment `5363573988`＋Codex review `4988556633`；跨索引相異 ID happy path 與 HTML comment closing-line suffix 已處置）
 - [x] `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md`（Codex review `4988736695`＋Claude comment `5363844402`；Markdown raw evidence、歷史 totals 邊界、recheck-like 畸形鍵與 inline comment fail-open 已處置）
-- [x] `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md`（Claude comment `5364105225`；raw-line block start、跨行 inline 重組與 parser probes 已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md`（Claude comment `5364105225`＋Codex review `4988929408`；raw-line block start、跨行 inline 重組、歷史終態更正與 CLAIM-003 consumer 閉環已處置）
 
 ### A.2 handoff
 
