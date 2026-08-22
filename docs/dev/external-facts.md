@@ -186,6 +186,9 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 
 ### A9. resolved thread 不是獨立核准，review body 也不是 inline thread
 
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `A9` 這個編號，內容完全不同；
+     合併時已改編為 **`A16`**（見本檔該節）。歷史 worklog 若以 `A9` 指涉 `gh api`／`git log` 那一族內容，指的是 `A16` 而不是本節。 -->
+
 GitHub 官方對 conversation 權限逐字寫（節錄）：
 
 > "if you opened the pull request or if you have write access"
@@ -219,6 +222,9 @@ review body，再取得建立於當前 head 最後 finding 之後的 reviewer-co
 未知 body 或缺少較晚 completion 一律 fail-closed。這是為補上作者可 resolve 與 body 分流兩個缺口。
 
 ### A10. Codex 的 reaction 不取代 GitHub review
+
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `A10` 這個編號，內容完全不同；
+     合併時已改編為 **`A17`**（見本檔該節）。歷史 worklog 若以 `A10` 指涉 `gh api`／`git log` 那一族內容，指的是 `A17` 而不是本節。 -->
 
 OpenAI 官方 Codex GitHub 指南在「Request a Codex review」步驟逐字寫：
 
@@ -430,7 +436,7 @@ job／check-run 兩格，且移除 attempt 守衛的 mutation 必須轉紅。專
 ### A16. `gh api --paginate` 以單一 `$endCursor` 前進；不完整 `pageInfo` 交錯邊界未取得
 
 <!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本條在 PR #64 期間編為 `A9`。
-     PR #66 先行合併，其 `A9` 是**完全不同的內容**（resolved thread 不是獨立核准，review body 也不是 i）
+     PR #66 先行合併，其 `A9` 是**完全不同的內容**（逐字標題：「resolved thread 不是獨立核准，review body 也不是 inline thread」）
      ⇒ 同號不同義，本條改編為 `A16`（main 已用到 A15／B12，取下一個未占用號）。
      🔴 **歷史 worklog 裡對 `A9` 的引用指的是本條**——那些 worklog 屬歷史層、不就地改寫，
      以本註作為對照。體例先例＝main 的 B9 自註原編為 `A16`。 -->
@@ -619,6 +625,9 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 
 ### B9. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
 
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `B9` 這個編號，內容完全不同；
+     合併時已改編為 **`B13`**（見本檔該節）。歷史 worklog 若以 `B9` 指涉 `gh api`／`git log` 那一族內容，指的是 `B13` 而不是本節。 -->
+
 <!-- 🔴 2026-08-22 更正（來源＝Codex inline `3834080765`）：本條原編為 `A16`，但它**物理上位於
      `## B. 工具鏈` 之後**，而 A 區全部屬 GitHub 語義、PowerShell 屬工具鏈 ⇒ 編號歸錯區，
      且讓 A 區出現一個不在 A 區的號、B 區的序號斷在 B8。改編為 `B9`，全部引用同批更新。 -->
@@ -639,6 +648,9 @@ modules，互動式 session 與 dot-source 後的可見性不在本條射程。`
 函式移位，引用範圍以本條為限。
 
 ### B10. GFM 表格：行首／行尾分隔直線是「建議」不是必要；直線靠反斜線跳脫
+
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `B10` 這個編號，內容完全不同；
+     合併時已改編為 **`B14`**（見本檔該節）。歷史 worklog 若以 `B10` 指涉 `gh api`／`git log` 那一族內容，指的是 `B14` 而不是本節。 -->
 
 <!-- 🔴 2026-08-22 移位（來源＝Claude issue comment `5376772877` 🟡-2）：本條新增時被插在
      `B9` **之前**，使全檔唯一一處編號逆序落在 B 區——而上一輪 Codex `3834080765` 點掉、

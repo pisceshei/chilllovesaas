@@ -11,6 +11,7 @@
 驗收修復不是新單位：若 finding 需要改 tracked tree，在同一份 worklog 更新處置與終態 `Changes`，
 與一次整合修復 commit 一起提交；純等待、證偽／裁定不修、same-head completion、resolve、PR body
 或遠端終態不改 worklog，也不得為它們製造新 head。
+🔴 **本條對規則生效前已開的 PR 不追溯**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
 
 ## 檔名
 

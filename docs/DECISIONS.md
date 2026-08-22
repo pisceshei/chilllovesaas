@@ -681,16 +681,27 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 
   ```bash
   RULE=bbf5f3b73971b35d23c253a68bb2554d14eff1bc          # 規則生效點＝#66 的 merge commit
-  FIRST=$(git log --format=%H --reverse <base>..<PR head> | head -1)
+  # 🔴 必須 --first-parent：只走該 PR 自己的主線
+  FIRST=$(git log --format=%H --reverse --first-parent <base>..<PR head> | head -1)
   git merge-base --is-ancestor "$RULE" "$FIRST"          # rc≠0 ⇒ 規則生效前已開 ⇒ 適用本豁免
   ```
 
   PR #64 實跑：`FIRST=7de4ab0f`（2026-08-20T23:47:15+08:00），`rc=1` ⇒ 適用。
+  <!-- 🔴 2026-08-22 更正（來源＝PR #64 Codex inline `3836295485`）：本式原本**沒有 `--first-parent`**。
+       漏洞：一個**規則生效後**才開的 PR，若併入一條含 pre-rule commit 的側枝，
+       不受限的 `<base>..<head>` 範圍可能把那個側枝 commit 選成 `FIRST`，
+       於是本來不該適用的 PR 也拿到豁免。驗收方已在本倉庫重現該情境。
+       ⇒ 加 `--first-parent`，只沿該 PR 自己的主線取第一個 commit。
+       ⚠️ 對 PR #64 本身兩種寫法同值（皆 `7de4ab0f`，本輪實跑對照過），
+       所以這不是改結論、是把判準的射程收正確。 -->
 - **理由，逐條**：
   ① **規則不能約束它存在之前完成的工作**——共同基底 `0fbe520` 上
   `grep -c '不另建「第 M 輪」' AGENTS.md` ⇒ **0**，main 上 ⇒ **1**，該條確由 #66 引入。
+  本 PR 的逐輪 worklog 份數複驗：
+  `git -c core.quotepath=false diff --name-only --diff-filter=A origin/main...HEAD -- 'docs/worklog/*.md' | wc -l`
+  （2026-08-22 於 `df506749` 實跑 ⇒ **19**；該數會隨後續輪次增加，判準不依賴它）。
   ② **整併的代價是銷毀稽核軌跡**。逐輪 worklog 記的是「那一輪當時說了什麼」，而本倉庫的
-  20.4 復發紀錄、19.5 逐字撤回、歷史層不回改**全部建立在這個軌跡上**；把 19 份壓成一份，
+  20.4 復發紀錄、19.5 逐字撤回、歷史層不回改**全部建立在這個軌跡上**；把它們壓成一份，
   會把「同一個錯誤第幾次出現」抹平——那正是這批 PR 一路在保護的東西。
   ③ **要解決的問題（按輪次增殖文件）在新 PR 上已由規則本身解決**，追溯不會多解決任何事。
 - **射程邊界（不得外推）**：

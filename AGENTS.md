@@ -284,6 +284,7 @@ commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，com
 4. **worklog 不按驗收輪增殖**：一個可獨立合併的 PR／原子工作包維護一份 tracked worklog；
    tree 真的改變時與產物在同一整合 commit 更新，no-tree disposition／遠端狀態不改 worklog。
    附錄 A 每份 tracked worklog 只登一次，不列本地 handoff；交接事實仍受鐵律 19 證據稽核。
+   🔴 **本條對規則生效前已開的 PR 不追溯**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
 
 ## 🔴 Windows 開發者必讀：檔案執行位元
 
