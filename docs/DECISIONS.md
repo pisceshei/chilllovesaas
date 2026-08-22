@@ -681,10 +681,38 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 - **判準（單一權威訊號＝PR 的建立時間，不看 commit 譜系）**：
 
   ```bash
-  RULE_AT=$(gh pr view 66 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt)
-  PR_AT=$(gh pr view <N> --repo pisceshei/chilllovesaas --json createdAt --jq .createdAt)
+  set -u
+  ISO='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$'
+  RULE_AT=$(gh pr view 66 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt) || { echo "EVIDENCE_NOT_OBTAINED: gh 取 #66 mergedAt 失敗" >&2; exit 2; }
+  PR_AT=$(gh pr view "$N" --repo pisceshei/chilllovesaas --json createdAt --jq .createdAt)  || { echo "EVIDENCE_NOT_OBTAINED: gh 取 PR createdAt 失敗" >&2; exit 2; }
+  # 🔴 fail-closed：兩值都必須是 ISO8601。空字串、字面 null（#66 未合併時 --jq 就回這個）、
+  #    權限不足、PR 不存在 —— 一律非零終止，**不得落到 APPLIES**。
+  for v in "$RULE_AT" "$PR_AT"; do
+    printf '%s' "$v" | grep -Eq "$ISO" || { echo "EVIDENCE_NOT_OBTAINED: 非 ISO8601: [$v]" >&2; exit 2; }
+  done
   [ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES
   ```
+
+  🔴 **四種輸入都必須驗過才算這條判準成立**（20.2.5）：
+
+  | 輸入 | `RULE_AT` | `PR_AT` | 期望 |
+  |---|---|---|---|
+  | 正常·適用 | `2026-08-22T14:21:47Z` | `2026-08-20T15:48:34Z` | `APPLIES`、rc 0 |
+  | 正常·不適用 | `2026-08-22T14:21:47Z` | `2026-08-25T00:00:00Z` | `NOT_APPLIES`、rc 0 |
+  | 輸入缺失（`gh` 回空） | 任意 | 空字串 | rc 2、`EVIDENCE_NOT_OBTAINED` |
+  | 工具失敗（#66 未合併） | 字面 `null` | 任意 | rc 2、`EVIDENCE_NOT_OBTAINED` |
+  <!-- 🔴 2026-08-23 補正（來源＝PR #64 Claude issue comment `5381492053` 🔴-3）：
+       上一版判準逐字＝`[ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES`，
+       **沒有失敗分支**。驗收方直接跑 shell 實測：`test "" "<" "2026-08-22T14:21:47Z"` ⇒ `APPLIES`；
+       `test "2026-08-20T15:48:34Z" "<" "null"` ⇒ `APPLIES`。
+       ⇒ `gh` 失敗、PR 不存在、權限不足、或 #66 尚未合併（`--jq .mergedAt` 得字面 `null`）時**一律給豁免**。
+       🔴 **20.4 四欄**：
+       ① 復發錨：與觸發改判準的 Codex `3836378178` **同一個方向**（誤給豁免）——換了訊號、沒換防呆姿勢，第 2 次。
+       ② 既有防線為何沒攔住：本倉庫沒有任何閘門會執行文件裡的 shell；20.2.5 是規則、不是機制。
+       ③ 固定處理哪一步被漏掉：20.2.5 要求「同時證明正常、違規、**輸入缺失／工具失敗**與零掃描 canary」——
+         我只證了前兩格（PR #64 適用／生效後開的不適用），第三格連想都沒想，因為**判準看起來只是一個比較**。
+         🔴 判別法：凡是把外部指令的 stdout 直接餵進條件式，就必然存在「stdout 不是預期形狀」這一格。
+       ④ 可重跑的反向複驗＝上表四列，任何一列不符即本判準無效。 -->
 
   PR #64 實跑：`PR_AT=2026-08-20T15:48:34Z`、`RULE_AT=2026-08-22T14:21:47Z` ⇒ **APPLIES**。
   <!-- 🔴 2026-08-23 改判準（來源＝PR #64 Codex inline `3836378178`）：
