@@ -186,6 +186,9 @@ or switches the base branch」可讀成「無寫入權限者推送」OR「任何
 
 ### A9. resolved thread 不是獨立核准，review body 也不是 inline thread
 
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `A9` 這個編號，內容完全不同；
+     合併時已改編為 **`A16`**（見本檔該節）。歷史 worklog 若以 `A9` 指涉 `gh api`／`git log` 那一族內容，指的是 `A16` 而不是本節。 -->
+
 GitHub 官方對 conversation 權限逐字寫（節錄）：
 
 > "if you opened the pull request or if you have write access"
@@ -219,6 +222,9 @@ review body，再取得建立於當前 head 最後 finding 之後的 reviewer-co
 未知 body 或缺少較晚 completion 一律 fail-closed。這是為補上作者可 resolve 與 body 分流兩個缺口。
 
 ### A10. Codex 的 reaction 不取代 GitHub review
+
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `A10` 這個編號，內容完全不同；
+     合併時已改編為 **`A17`**（見本檔該節）。歷史 worklog 若以 `A10` 指涉 `gh api`／`git log` 那一族內容，指的是 `A17` 而不是本節。 -->
 
 OpenAI 官方 Codex GitHub 指南在「Request a Codex review」步驟逐字寫：
 
@@ -427,6 +433,85 @@ gh api repos/pisceshei/chilllovesaas/check-runs/96764927745
 job／check-run 兩格，且移除 attempt 守衛的 mutation 必須轉紅。專案驗收選擇的理由與射程見
 `docs/DECISIONS.md` D38。
 
+### A16. `gh api --paginate` 以單一 `$endCursor` 前進；不完整 `pageInfo` 交錯邊界未取得
+
+<!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本條在 PR #64 期間編為 `A9`。
+     PR #66 先行合併，其 `A9` 是**完全不同的內容**（逐字標題：「resolved thread 不是獨立核准，review body 也不是 inline thread」）
+     ⇒ 同號不同義，本條改編為 `A16`（main 已用到 A15／B12，取下一個未占用號）。
+     🔴 **歷史 worklog 裡對 `A9` 的引用指的是本條**——那些 worklog 屬歷史層、不就地改寫，
+     以本註作為對照。體例先例＝main 的 B9 自註原編為 `A16`。 -->
+
+> "all pages of results will sequentially be requested"
+>
+> "the original query accepts an `$endCursor: String` variable"
+>
+> "`pageInfo{ hasNextPage, endCursor }`"
+
+來源：<https://cli.github.com/manual/gh_api>（取證 2026-08-21）
+
+以上三段逐字分別支持完整取頁、GraphQL 游標變數及 `pageInfo` 欄位契約。
+GitHub CLI 官方原始碼在 pinned commit `fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada` 的
+`findEndCursor` 使用函式層級的 `foundEndCursor`／`foundNextPage`，遇到另一旗標已成立時即：
+
+> `if foundNextPage { break loop }`
+> `if foundEndCursor { break loop }`
+
+來源：<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/pagination.go#L30-L88>
+（取證 2026-08-21）。同版 `api.go` 下一頁只設定單一 `params["endCursor"] = endCursor`：
+<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/api.go>
+（取證 2026-08-21）。
+
+⚠️ **證據邊界**：上述旗標沒有綁定到某一個 `pageInfo` 物件；若同一 JSON token stream 出現
+多個、不完整或交錯的 `pageInfo`，不同物件的 token 可能令兩旗標先後成立。官方手冊沒有承諾
+這種輸入的選擇／停止規則，因此「首組完整游標對」及特定 mixed-token 結果均為**未取得**，
+不得發布或依賴。官方同 commit 的 `pagination_test.go` 有正常完整 block 與
+`more pageInfo blocks` 案例，但沒有把不完整交錯升格成公開契約：
+<https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/pagination_test.go>
+（取證 2026-08-21）。
+
+🔴 **可發布邊界**：下一頁只回填單一 `$endCursor`，不會替每個巢狀 connection 維護獨立游標。
+因此 PR #62 把 `$endCursor`／`pageInfo` 放在外層 `reviewThreads` 時，只能把該外層重取稱為完整，
+不得外推巢狀 `comments(first:100)` 也逐頁取完。正文全集仍走三個 `--paginate` REST 集合；
+GraphQL threads 只取 `isResolved`／`isOutdated` 與首則 inline ID 對應。
+
+### A17. PR commits 端點最多 250；fallback 是 repository List commits＋`sha` 起點
+
+<!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本條在 PR #64 期間編為 `A10`。
+     PR #66 先行合併，其 `A10` 是**完全不同的內容**（Codex 的 reaction 不取代 GitHub review）
+     ⇒ 同號不同義，本條改編為 `A17`（main 已用到 A15／B12，取下一個未占用號）。
+     🔴 **歷史 worklog 裡對 `A10` 的引用指的是本條**——那些 worklog 屬歷史層、不就地改寫，
+     以本註作為對照。體例先例＝main 的 B9 自註原編為 `A16`。 -->
+
+> "Lists a maximum of 250 commits for a pull request. To receive a complete commit list for pull requests with more than 250 commits, use the List commits endpoint."
+>
+> "SHA or branch to start listing commits from."
+
+來源：GitHub REST 官方的
+<https://docs.github.com/en/rest/pulls/pulls#list-commits-on-a-pull-request> 與
+<https://docs.github.com/en/rest/commits/commits#list-commits>（取證 2026-08-21）。第一句是 PR
+commits 的超限指引；第二句是 repository List commits 的 `sha` query parameter 定義。
+
+🔴 **三件事必須分開，不得併成一句**（來源＝PR #64 Codex inline `3836905826`）：
+① **官方明文的上限**：受 250 上限的端點是 `GET /repos/{owner}/{repo}/pulls/{pull_number}/commits`，
+   官方要求改用 **List commits** 端點；
+② **官方明文的參數語義**：List commits 的 `sha` 逐字為 “SHA or branch to start listing commits from.”
+   （另一頁文檔，見本節上方引文）；
+③ **本專案把 ①② 組合出來的查詢**：`GET /repos/{owner}/{repo}/commits?sha={pull_head_sha}`——
+   🔴 **這是我方的組合，不是 GitHub 的逐字指示**，不得當成官方原文引用。2026-08-21 對 PR #64 exact head
+`26fc683e40bb8ad6466d082c6887876345f84646` 實跑後，repository endpoint 第一筆 SHA 與該 head
+逐字相同。因此不得把單次 PR commits 回應外推成任意大型 PR 的全集。
+
+⚠️ **證據邊界**：repository List commits 只明定「從 SHA／branch 開始列 commits」；上述兩頁
+沒有提供「只取 PR delta」的停止參數，也沒有把 merge-base／base exclusion 的客戶端算法定為
+契約。因此 fallback endpoint 與起點已取得，但如何從它的 ancestor stream 精確裁出 PR-only
+集合仍為**未取得**，不得把 `?sha={pull_head_sha}` 的全部回應直接稱為 PR commits 全集。
+
+📌 **倉庫快照，不是全域保證**：2026-08-21 實跑
+`gh api --paginate repos/pisceshei/chilllovesaas/pulls/61/commits`，在 PR #61 已 squash merge
+（merge commit `1800b20aa006ee67f6f8c88cd24e50322db99a4c`）後仍取回 pre-squash
+`2ed2403d06eb50bba0f82e74fcacf44643a81bd8`。這證明該精確 PR 的 API 取回路徑可用；官方頁面
+沒有承諾所有已合併 PR 永久保留所有 pre-squash 物件，故不得升格為永久可達保證。
+
 ---
 
 ## B. 工具鏈：退出碼、路徑轉換、Markdown、限流
@@ -545,6 +630,9 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 
 ### B9. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
 
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `B9` 這個編號，內容完全不同；
+     合併時已改編為 **`B13`**（見本檔該節）。歷史 worklog 若以 `B9` 指涉 `gh api`／`git log` 那一族內容，指的是 `B13` 而不是本節。 -->
+
 <!-- 🔴 2026-08-22 更正（來源＝Codex inline `3834080765`）：本條原編為 `A16`，但它**物理上位於
      `## B. 工具鏈` 之後**，而 A 區全部屬 GitHub 語義、PowerShell 屬工具鏈 ⇒ 編號歸錯區，
      且讓 A 區出現一個不在 A 區的號、B 區的序號斷在 B8。改編為 `B9`，全部引用同批更新。 -->
@@ -565,6 +653,9 @@ modules，互動式 session 與 dot-source 後的可見性不在本條射程。`
 函式移位，引用範圍以本條為限。
 
 ### B10. GFM 表格：行首／行尾分隔直線是「建議」不是必要；直線靠反斜線跳脫
+
+<!-- 🔴 2026-08-22 反向指標（合併 PR #64 時加）：PR #64 在其分支期間也用 `B10` 這個編號，內容完全不同；
+     合併時已改編為 **`B14`**（見本檔該節）。歷史 worklog 若以 `B10` 指涉 `gh api`／`git log` 那一族內容，指的是 `B14` 而不是本節。 -->
 
 <!-- 🔴 2026-08-22 移位（來源＝Claude issue comment `5376772877` 🟡-2）：本條新增時被插在
      `B9` **之前**，使全檔唯一一處編號逆序落在 B 區——而上一輪 Codex `3834080765` 點掉、
@@ -699,3 +790,134 @@ a method named 'op_Addition'.`。**該修法對「機制是哪一條」並不敏
 預設語義相反」這一件事，以及由它推出的**修法方向**（把驗證側改成 `-cnotmatch` 或
 `[regex]::IsMatch`，讓兩側同語義）。它**不**支持任何關於 `-like`／`Compare-Object`／
 `Sort-Object -Unique` 等其他比較路徑的大小寫斷言——那些各有各的文件，要用要各自取證。
+
+### B13. `gh api` 的字面 `@path` shorthand 屬 `-F`；stdin／整體 body 另有入口
+
+<!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本條在 PR #64 期間編為 `B9`。
+     PR #66 先行合併，其 `B9` 是**完全不同的內容**（指令碼檔內的 PowerShell 函式必須先定義才能呼叫）
+     ⇒ 同號不同義，本條改編為 `B13`（main 已用到 A15／B12，取下一個未占用號）。
+     🔴 **歷史 worklog 裡對 `B9` 的引用指的是本條**——那些 worklog 屬歷史層、不就地改寫，
+     以本註作為對照。體例先例＝main 的 B9 自註原編為 `A16`。 -->
+
+> "Pass one or more `-f/--raw-field` values in `key=value` format to add static string parameters"
+>
+> "if the value starts with `@`, the rest of the value is interpreted as a filename to read the value from. Pass `-` to read from standard input."
+>
+> "To pass pre-constructed JSON or payloads in other formats, a request body may be read from file specified by `--input`. Use `-` to read from standard input."
+
+來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。
+🔴 **上方三句逐句分屬三個不同旗標，不得互相代替**（2026-08-22 改寫；來源＝Claude issue
+comment `5364180385` 🟡-1）：
+- **第一句**屬 `-f/--raw-field`——靜態字串參數。
+- **第二句**屬 `-F/--field` 的 magic type conversion（`@filename`／`@-`）。
+  🔴 **不得外推到 `-f`**：`-f text=@path` 送出的是字面 `@path`，本節下方即為該事故的實測。
+- **第三句**屬 `--input`——它是**整體 request body** 的入口，與 `-F` 的**單一欄位值**入口不同層。
+<!-- 🔴 2026-08-22 更正（同來源）：本段原文為「前句屬 `-f/--raw-field`，後句屬 `-F/--field`
+     的 magic type conversion；不得把後句外推到 `-f`」——那是為**兩句**版本寫的。上一輪在
+     blockquote 補進第三句（`--input`）時沒有同批改這裡，於是「後句」的自然讀法（最後一句）
+     指向 `--input`，第二句的歸屬被頂掉、第三句沒有歸屬。
+     🔴 而「不得把後句外推到 `-f`」是本節**唯一的規範性防線**，擋的正是已發生過的事故。 -->
+
+官方同頁另明列：`-F key=@-` 可從 stdin 讀取**欄位值**；`--input file` 可讀取預先組好的
+**整體 request body**，且 `--input -` 從 stdin 讀。2026-08-21 實跑 `-F text=@-` 與
+`--input -` 兩路，GitHub Markdown API 分別回傳帶 `field stdin canary`／`stdin body canary` 的
+`<h1>`，兩種替代入口均已取得。
+
+🔴 **本專案的用途**：`gh api ... -f text=@path` 送出的是字面 `@path`；若要使用 CLI 的
+`@path` shorthand 把該檔內容放進 `text` 欄位，須用 `-F text=@path`，但這不是所有 file/stdin
+供給形態的絕對要求。PR #64 exact response 曾把字面路徑渲染成
+`<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`，證明 HTTP exit 0
+不等於 request body 正確。任何 Markdown render 複驗都要同時釘輸入來源與至少一個承重 HTML
+canary，不能把 table／pre 的零計數直接當成功。
+
+### B14. `git log` 預設不輸出 merge diff；`separate` 逐 parent 顯示
+
+<!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本條在 PR #64 期間編為 `B10`。
+     PR #66 先行合併，其 `B10` 是**完全不同的內容**（GFM 表格：行首／行尾分隔直線是「建議」不是必要；直線靠反斜線跳脫）
+     ⇒ 同號不同義，本條改編為 `B14`（main 已用到 A15／B12，取下一個未占用號）。
+     🔴 **歷史 worklog 裡對 `B10` 的引用指的是本條**——那些 worklog 屬歷史層、不就地改寫，
+     以本註作為對照。體例先例＝main 的 B9 自註原編為 `A16`。 -->
+
+> "merge commits will not show a diff"
+>
+> "Show full diff with respect to each of parents."
+
+> "Disable output of diffs for merge commits. Useful to override implied value."
+
+> "Default is `off` unless --first-parent is in use, in which case first-parent is the default."
+
+來源：Git 官方 <https://git-scm.com/docs/git-log> 的 DIFF FORMATTING／
+`--diff-merges=separate`（取證 2026-08-21）。
+🔴 **上面兩句是本輪補的條件逐字**（2026-08-22；來源＝Codex inline `3826627165`）：原文只用
+中文寫「官方另明列 `--diff-merges` 預設為 `off`（未使用 `--first-parent` 時）」，而**那正是
+本條承重的那一句**——沒有它，「預設不輸出 merge diff」這個結論沒有出處。
+⚠️ **取證路徑要說清楚**：`git-scm.com/docs/git-log` 的渲染頁在本次抓取時被截斷，取不到
+DIFF FORMATTING 全段；因此改取 git 一手來源
+<https://raw.githubusercontent.com/git/git/master/Documentation/diff-options.adoc>
+（取證 2026-08-22）。該檔的條件句寫作 `"Default is {diff-merges-default} unless --first-parent
+is in use, in which case first-parent is the default."`，其中 `{diff-merges-default}` 是
+asciidoc 屬性；<https://raw.githubusercontent.com/git/git/master/Documentation/git-log.adoc>
+（取證 2026-08-22）逐字設 `:diff-merges-default: ``off``` ⇒ 在 git-log 文檔的渲染結果即為
+`off`。**上面第二句引的是展開後的形態，展開依據就是這一行屬性定義**，不是我方推斷。
+所以 `--name-status` 與 `--diff-filter` 本身不能證明 merge-resolution 刪除／改名已被掃到。
+
+`git diff-tree` 的 `-r` 官方逐字是 "Recurse into sub-trees."，來源：Git 官方
+<https://git-scm.com/docs/git-diff-tree>（取證 2026-08-21）。因此巢狀路徑的 merge-only witness
+必須明示 `-r`，不能把只回報頂層 tree 的輸出當成目標檔案紀錄。
+
+🔴 **倉庫 fixture**：immutable merge `59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890` 相對 first parent
+`76751e4162a79bbb28860b545e673ee1d9ee1bea`，目標
+`scripts/__pycache__/lint-prototype.cpython-311.pyc`（該檔已刪除，只存在於上述 immutable merge
+歷史）在未開 merge diff 的 range log 出現 1 次，
+加 `--diff-merges=separate` 後出現 2 次；
+`git diff-tree -m -r --format= --name-status 59cfaf44bd2d71cef6d54d8e1b63aa8b8b602890 -- scripts/__pycache__/lint-prototype.cpython-311.pyc`
+單看 merge 本身得到 1 筆目標 `D` 紀錄。拿掉 `-r` 時只得到頂層 `M scripts`，不能重現該計數。
+PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必須非零。
+
+### B15. `gh pr view --json mergedAt --jq .mergedAt` 對**未合併** PR 回**空值**，不是字面 `null`
+
+- **來源**：**本機實測**（本檔規則 2 要求「查得到原文」——`gh` 官方文檔未記載 `--jq` 對 JSON `null` 的輸出形態，
+  查無可引的原文 ⇒ 本條以**可重跑的實測**替代逐字原文，並明標此例外）。
+  環境：`gh version 2.97.0 (2026-07-31)`，取證日期＝2026-08-23。
+- **實測命令與逐字輸出**：
+
+  ```
+  $ set -o pipefail
+  $ gh pr view 64 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt | od -c
+  0000000  \n
+  0000001
+  $ echo $?
+  0
+  ```
+
+  🔴 **本區塊的證據前後錯了兩次，兩次根因不同，都記在這裡**：
+  ① 初稿寫成 `0000000  0a`——那是 `od -An -tx1` 的形態，不是 `od -c` 的。**重打的**。
+  ② 第二版改成「重跑後逐字貼上」，貼出來卻只有單獨一行 `0000000`——那是**零位元組**的
+     od 簽章，與本段結論「只有一個換行」互斥（來源＝PR #64 Claude `5382422505` 🔴-1）。
+     🔴 **成因已逐步查清**：我用 Python `subprocess` 呼叫 `bash -c` 抓輸出，
+     而**該子行程的 PATH 上沒有 `gh`**（實測 stderr 逐字 `bash: line 1: gh: command not found`）
+     ⇒ 管線左端無輸出，`od` 對空輸入印出零位元組簽章。
+     ⇒ 又一次「量了 X（子行程環境）當成關於 Y（文件裡那條指令）的事實發布」。
+  🔴 **`gh` 失敗時這條管線預設不會報錯**：管線退出碼取最後一個命令（`od` 的 0）。
+     來源＝PR #64 Codex inline `3836905817`，引 GNU Bash 手冊 Pipelines 節逐字
+     “The return status of a pipeline is the status of the last command”（取證 2026-08-22）。
+     ⇒ 上面的重跑**加了 `set -o pipefail` 並貼出退出碼**；沒有這一步，
+     這個證據塊無法區分「未合併 PR 回空值」與「`gh` 呼叫失敗」。
+     ⚠️ 但 `pipefail` **擋不住本次的成因**——`gh` 不在 PATH 時是 shell 回 127，
+     而我上一輪根本沒看退出碼。真正的防線是**貼出退出碼**，不是只加 `pipefail`。
+
+  ⇒ stdout **只有一個換行**；經 `$( )` 命令替換後是**空字串**（長度 0），
+  **不是**四個字元的 `null`。
+
+- **為什麼要登記**：`--json` 那一層拿到的 JSON 值確實是 JSON `null`，
+  但 `--jq` 對 JSON `null` 的輸出是**空行**而不是字面字串 `null`。
+  兩者在 shell 裡的行為完全不同——`[ -z "$v" ]` 對前者為真、對後者為假；
+  而任何寫成 `[ "$v" = "null" ]` 的防呆對前者**完全無效**。
+
+- **落點**：`docs/DECISIONS.md` D39 的 fail-closed 判準以此為據
+  （空字串走「非 ISO8601」那條分支被擋成 rc 2）。
+
+- 🔴 **登記的緣由是一次真實的誤述**：PR #64 第 19 輪的 D39 更正註逐字寫過
+  「#66 尚未合併（`--jq .mergedAt` 得**字面 `null`**）」，該句來自驗收方措辭的轉述，
+  **沒有任何一方實測過**。第 20 輪驗收方自行以 `od -c` 實測後撤回自己的措辭。
+  ⇒ **外部行為的轉述不算證據**；本檔的存在就是為了讓這類句子有一個必須帶實測的落點。

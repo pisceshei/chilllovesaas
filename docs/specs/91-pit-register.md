@@ -1317,6 +1317,396 @@
   或在下一個本來就要動該節的工作包一併處理
   【F5/F11；來源＝PR #66 Claude issue comment `5380713614` ⚪1；取證日期＝2026-08-22】
 
+### 3.6 PR #64 P-8 證據來源文件債收斂驗收（2026-08-21）
+
+<!-- 🔴 2026-08-22 改編號（合併 PR #66 進 main 之後）：本節原本引用 `external-facts` 的
+     `A9`／`A10`／`B9`／`B10`。PR #66 先行合併，其同號條目是**完全不同的內容**
+     ⇒ PR #64 的四節已改編為 `A16`／`A17`／`B13`／`B14`（見該檔各節的原編號自註），
+     本節 22 行引用同批改號。
+     🔴 **必須改**：本節是後續工作會消費的待辦清單，不改就會去改到 PR #66 的條目。
+     ⚠️ 歷史層 worklog 裡的舊編號引用**不就地改**，以 external-facts 各節的自註作為對照。 -->
+
+- **GitHub Markdown 對相關 HTML comment 的可見性與清單分段：未取得**：
+  倉庫內部只可確認 PR #64 的 P-8、首輪、第四輪與第五輪驗收 worklog 使用 `AGENTS.md` 規定的
+  HTML comment 更正形態；現有來源僅是 PR review comment ID，沒有官方 URL＋英文逐字，也沒有
+  保留對應 GitHub `/markdown` request／response artifact。因此本登記**不發布**「更正不可見」或
+  「第 0 欄 comment 會切成多個 `<ul>`」的外部行為結論。取得方式＝保存 exact request body 與
+  response HTML，並另取官方 Markdown／CommonMark 適用語義；兩者未齊前維持未取得。本 PR 只
+  收窄證據強度，不改 `AGENTS.md` 或歷史 worklog。後續抽樣另命中
+  `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md` 的肯定式歷史標題，以及本 PR 累積 diff
+  之外 `docs/worklog/2026-08-18-P0-方案落庫與鐵律16-18.md` 的同型句；兩者只登記候選，不以
+  終態的「未取得」授權回寫歷史層
+  【F3/F5/F11/F12；來源＝PR #64 Claude comments `5358544615` ⚪2、`5359209200` ⚪3／4、
+  `5359558626` ⚪3、`5360596028` ⚪4、`5360974435` ⚪3；Codex inline `3825640340`／
+  `3826028172`；
+  Claude comment `5363200002` ⚪4；取證日期＝2026-08-21】
+
+- **GitHub Markdown API 取證若把 `-f text=@path` 誤當讀檔，會得到 exit 0 的假零**：
+  本輪初次命令使用 `gh api ... -f text=@docs/worklog/...md`，current response 逐字是
+  `<p dir="auto">@docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md</p>`；它渲染的是字面路徑，
+  因此 table／pre 全為 0 仍 exit 0。可重用的 `-f`／`-F @path` 旗標契約、官方來源與逐字集中於
+  `docs/dev/external-facts.md` B13；本條只保存事故。改用 `-F text=@path` 後才取得實際文件 HTML。
+  後續 Markdown 複驗須同時釘 request body 來源與至少一個承重 response
+  canary（例如預期有表格的檔必須含 `<table role="table">`），不得只因 API exit 0 就發布零計數
+  【F1/F3/F5/F11/F12；本輪自報，未被驗收點名，依 17.2 只登記；取證日期＝2026-08-21】
+
+<!-- 🔴 2026-08-21 第十二輪終態補充（Codex inline `3826028174`）：上列「未被驗收點名」
+只描述第十一輪入庫時狀態；本輪已被點名。可重用 `-f`／`-F @path` 官方契約與證據邊界現集中於
+`docs/dev/external-facts.md` B13，本條只保留事故、復發形狀與來源。 -->
+
+- **external-facts 的 A 區標題已不能涵蓋 A16／A17**：
+  `docs/dev/external-facts.md` A 區題為 GitHub 核准／合併前置條件，但 A16 是 GitHub CLI
+  GraphQL pagination 實作，A17 是 PR commits REST 邊界，兩者不屬核准或合併前置條件。
+  內容正確性與編排是兩件事；本輪阻擋意見只點名 A16 證據強度與 A17 閾值，依鐵律 17.2
+  不順手搬章。後續文檔編排包應把工具語義移到 B 區或改 A 區總標題，並重跑所有錨與入口
+  【F5/F11；來源＝PR #64 Claude comment `5359558626` ⚪2；取證日期＝2026-08-21】
+
+- **91 §3 缺少「候選經證偽撤回」的 tombstone 形態**：
+  PR #64 首輪暫登的 GraphQL 完成性候選在第二輪經官方語義與原句文法證偽後被整段刪除，
+  目前只剩附錄 A.1 摘要可追沿革；§0.3 只規定合併重複條目時留空殼，沒有規定被證偽時
+  應保留 status、來源與撤回理由。後續 P-1 坑簿機制包須為「合併／證偽／已修」分別定義
+  可機械檢查的終態，不得把本登記當成恢復假債的理由
+  【F11/F12；來源＝PR #64 Claude comment `5359558626` ⚪4、`git log -p`；取證日期＝2026-08-21】
+
+- **歷史計數曾被靜默改寫；缺口是未套相鄰更正，不是制度衝突**：
+  PR #64 第二輪 worklog 的 Done／20.3 歷史稽核曾把「四處」直接收窄成「被點名」，破壞沿革。
+  AGENTS 歷史層與鐵律 20.2.3 可同時滿足：歷史原文保留並在原處加 dated correction；終態層則
+  刪除非必要計數，或把必要計數綁日期／ref 與 recheck。第四輪 worklog 已用「保留四條＋相鄰
+  immutable snapshot」證明兩規則不互斥；後續不得把真缺口誤登成待裁制度衝突
+  【F4/F11；來源＝PR #64 Claude comment `5359997378` ⚪1、Codex inline `3824777629`；
+  取證日期＝2026-08-21】
+
+- **external-facts 的程式碼逐字引用缺「改排」標記**：
+  A16 把 pinned 官方實作的三行縮排區塊排成較短的 blockquote；控制流語義經重取仍忠實，但該檔
+  規則把 blockquote 當英文逐字原文載體。後續證據格式包須保留原始換行，或明示「節錄改排」；
+  本 PR 不為非阻擋的呈現差異擴改外部事實
+  【F3/F11；來源＝PR #64 Claude comment `5359997378` ⚪2；取證日期＝2026-08-21】
+
+- **A16 的首組 `pageInfo` 提早終止候選缺官方證據，現況為未取得**：
+  Claude comment 提出的候選是：首組完整 `pageInfo` 可能令 `findEndCursor` 回空游標並停止
+  `--paginate`，即使另一層 connection 尚有頁；本輪未取得支持這個更強跨 connection 結論的
+  pinned 官方逐字與 dated URL，故不得當成既定外部行為。後續 external-facts 獨立包須從 GitHub
+  CLI 的 pinned `findEndCursor` 實作重取完整控制流、逐字、URL 與日期，查證成立後才可升格
+  【F3/F5；來源＝PR #64 Claude comment `5359997378` ⚪3；取證日期＝2026-08-21】
+
+- **首輪與第四輪事後 20.3 稽核沒有逐列交代不適用類型**：
+  `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md` 的事後表只列 ①②③，未明列 ④⑤⑥⑦；
+  `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md` 只列 ①②③⑦，未明列 ④⑤⑥。首輪工作
+  單位實際加入 HTML comment，⑦ 並非顯然不適用。被點名的修復範圍不含回改這兩份歷史表，
+  依 17.2／20.5 不擴修；後續 worklog 契約包再決定是否強制全列
+  【F5/F11；來源＝PR #64 Claude comments `5359997378` ⚪4／`5360279873` ⚪2；
+  取證日期＝2026-08-21】
+
+- **PR 描述的 doc-claims 快照以可移動 tag 當 base，命令重跑不再對應原輸出**：
+  head `7c10b6a` 的 PR 描述把 `ruby scripts/check-doc-claims.rb --base pr64-last-push --require-base`
+  與掃描輸出並列，但同一流程會在 push 後強制把 `pr64-last-push` 移到新 head；因此命令文字不是
+  immutable 快照入口。後續描述須把 base 綁到實跑時的完整 SHA，或只標成 dated output snapshot，
+  不得以已移動 tag 冒充可重跑原輸出
+  【F5/F11；來源＝PR #64 Claude comments `5360279873` ⚪1、`5360596028` ⚪1；後一輪指出
+  當時 `git rev-parse pr64-last-push` 的解析 SHA 未保存，故該命令不能補作 immutable metadata；
+  取證日期＝2026-08-21】
+
+- **PR #64 歷史複驗錨到 PR 內 commit，main-only clone 需額外 fetch**：
+  第四輪 worklog 仍以 `eb1afba..7c10b6a` 保存歷史輸入；它是有效的 PR 內快照，但不能僅憑 SHA
+  字串宣稱新的 main-only clone 可直接取得。第五／第六輪已把現行入口改用 preserved main base，
+  不回寫第四輪歷史命令；後續引用該舊快照須明列 fetch PR object 的前置。GitHub 對 squash 後
+  pull ref 的保留期限／契約未取得，故不主張必然可達或不可達
+  【F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪2、`5360974435` ⚪2、
+  `5361414731` ⚪3（本輪重申、無新動作）；
+  取證日期＝2026-08-21】
+
+- **external-facts B5 尚未收錄 code span 開閉 backtick string 等長規則**：
+  CommonMark 0.31.2 §6.1 官方逐字為 "A code span begins with a backtick string and ends with a
+  backtick string of equal length."，來源 <https://spec.commonmark.org/0.31.2/#code-spans>
+  （取證 2026-08-21）。B5 現值只收優先序與反斜線語義；本輪阻擋修法已改用 fenced block，
+  不需擴寫 B5，依 17.2 只登記。後續 evidence-format 包若補入，須保留與 fenced code 規則的分界
+  【F3/F5/F11；來源＝PR #64 Claude comments `5360596028` ⚪3、`5360974435` ⚪1；
+  官方頁面由本輪獨立重取；取證日期＝2026-08-21】
+
+- **P-8 的現行 validator 指標與手抄守衛都沒有釘住下一次 supersede**：
+  P-8 終態散文雖指名第五輪 worklog 的現行 heading，但 validator 只驗該 heading 在 entry 檔內
+  唯一，沒有把 P-8 指名值與實際執行 block 做相等比較；指名文字又可被 80 欄換行拆開。
+  同一 validator 的 `manual round list returned` 使用不跨行的 `.*?`，而歷史散文可跨行換行，
+  因此跨行手抄列舉可能避開守衛。兩者都不影響本輪被點名的跨日期 A.1 漏列修復；依 17.2
+  只登記，後續 validator 契約包須用結構化 current-entry metadata 與跨行反向案例共同收斂
+  【F5/F11/F12；來源＝PR #64 Claude comments `5361414731` ⚪1／2、`5361847317` ⚪3
+  （再次核對，無新動作）、`5363200002` ⚪1（第四次 supersede 復發錨）、`5363469305` ⚪1
+  （第五次 supersede 復發錨）；取證日期＝2026-08-21】
+
+- **PR64 的 20.3 correction validator 沒有固定 HEAD snapshot**：
+  第十一輪 worklog 的 correction validator 以 `File.read` 直接讀工作樹，沒有像第五輪現行
+  validator 先要求乾淨工作樹；有未提交編輯時可能把 working copy 結果寫成 HEAD 證據。本輪
+  阻擋項不要求改該 validator，依 17.2 只登記。後續 validator 契約包須統一 snapshot 來源，並以
+  dirty-worktree mutation 證明不會混用
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363200002` ⚪2；取證日期＝2026-08-21】
+
+- **tracked worklog 無法在同一 commit 保存「最後 repo edit 後」的最終實跑結果**：
+  第九／第十／第十一輪 20.3 表都把最後閘門寫成待跑，結果改放 PR 描述；若把結果再回寫 worklog，
+  該回寫本身又成為新的 repo edit，使前一輪結果不能外推。這是 tracked evidence 的 bootstrapping
+  邊界，不得靠手寫「已跑」消除。後續 evidence-tail／機器 artifact 包須把 immutable commit 與
+  run URL 綁定，歷史 worklog 只留待辦及證據入口
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363200002` ⚪3；取證日期＝2026-08-21】
+
+- **PR64 worklog 集合 validator 的輸入缺失／工具失敗分支沒有 mutation 承重**：
+  現行 block 已有 normal、duplicate、drop、missing-section、off-date、delete、rename 路徑，
+  但 `missing terminal correction`、entry path multiplicity、heading multiplicity、manual list、
+  command failure 與 empty set 等 fail-closed guard 沒有各自的 mutation／fixture；因此不能由既有
+  mutation 推出所有輸入缺失與工具失敗分支都被證明。這不影響本輪被點名的歷史表更正；依
+  17.2 只登記，後續 validator 契約包須以逐分支 mutation 補齊 20.2.5
+  【F5/F11/F12；來源＝PR #64 Claude comments `5361847317` ⚪1、`5363469305` ⚪3；
+  取證日期＝2026-08-21】
+
+- **PR64 destructive history guard 的零掃描 canary 擋不住 pathspec 縮成非空子集**：
+  現行 block 只要求同一 pathspec 的 A 類 canary 非空；若 pathspec 從完整承重集合縮成仍有新增檔
+  的子集，canary 仍非空、D／R 也可合法為空，整支會通過。`history_status` 接住 production D／R
+  結果後沒有再被讀取，也不能補上集合射程相等的斷言。本輪未獲授權改歷史 validator，依 17.2
+  只登記；後續 validator 契約包須先固定承重資產集合，並以「合法非空子集」mutation 證明縮射程
+  會轉紅【F5/F11/F12；來源＝PR #64 Claude comment `5363665327` ⚪1；取證日期＝2026-08-21】
+
+- **PR64 對歷史 worklog 現行 block 的實質改寫沒有在原處留下 dated correction**：
+  第十三輪曾改寫第五輪 worklog 的現行 fenced block，但 heading 仍稱「第十二輪更正」，原處也沒有
+  記錄第十三輪改了什麼；這讓歷史層只剩 git diff 才能還原沿革。本輪只登記、不回寫未被點名的
+  第五輪 block；後續若再 supersede，必須在相鄰位置留下日期、來源判詞與變動邊界
+  【F5/F11；來源＝PR #64 Claude comment `5363665327` ⚪2；取證日期＝2026-08-21】
+
+- **PR64 destructive history guard 未涵蓋 `external-facts.md`**：
+  第十三輪時 B13／B14 已成為 P-8 的承重外部事實，但第五輪現行 validator 的 destructive
+  pathspec 只掃 `docs/worklog`；刪除或改名 `docs/dev/external-facts.md` 不會由該 guard 擋住。
+  本輪只修被點名的 worklog production wiring，依 17.2 不擴大資產射程；後續 validator 契約包
+  應先定義承重資產集合，再為每個集合配置同射程非空 canary 與刪除／改名 mutation
+  【F5/F11/F12；來源＝PR #64 Claude comments `5363469305` ⚪2、`5363665327` ⚪3；
+  取證日期＝2026-08-21】
+
+- **終態 external-facts 把帶完整 SHA 的歷史快照稱為會移動的「PR exact head」**：
+  `26fc683e40bb8ad6466d082c6887876345f84646` 有日期與完整 ref，快照本身可重現；但在終態層仍稱
+  「PR #64 exact head」，下一次 push 後 descriptor 就不再等於 HEAD。依 17.2 不改未點名原文，
+  後續 evidence-format 包須寫「當時的 head」或只保留日期＋SHA
+  【F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪1；取證日期＝2026-08-21】
+
+- **external-facts A17 把官方 endpoint 與本專案的 `?sha=` 組法歸成同一個官方指引**：
+  官方 PR commits 頁指向 repository List commits endpoint；`sha` query 的合法性由另一頁參數定義
+  分別支持。把兩者合寫為「官方指向的端點是 `...commits?sha=...`」會模糊來源歸屬。依 17.2
+  不改未點名原文；後續 evidence-format 包須把官方 endpoint、官方參數語義與本專案組法分欄
+  【F3/F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪2；取證日期＝2026-08-21】
+
+- **external-facts B14 的 `--diff-merges` 預設 `off` 只有中文轉述、沒有英文逐字**：
+  同節其他 Git 語義已有官方英文原文，但「未使用 `--first-parent` 時預設 off」仍只寫轉述；本輪
+  點名修的是新寫入 A17／B13，不得順手擴修前輪內容，依 17.2 只登記。後續 evidence-format 包須
+  重新取 Git 官方原文並保留完整條件
+  【F3/F5/F11；來源＝PR #64 Claude comment `5363892357` ⚪3；取證日期＝2026-08-21】
+
+- **91 附錄 A.1 的全量對帳仍只存在於 worklog fence，沒有 CI 機械閘門**：
+  現行動態對帳可在人工執行時比對 PR64 worklog 集合，但 `ci.yml` 沒有呼叫該 fenced validator；
+  因此「附錄已全量」仍不能由一般 CI 綠推得。本輪不改 workflow，也不把範圍外意見升格為修檔
+  授權；後續若產品化，必須依鐵律 18.3 拆成 workflow／script 受限包並由使用者人工合併
+  【F5/F11/F12；來源＝PR #64 Claude comment `5363469305` ⚪4；取證日期＝2026-08-21】
+
+- **merge-only witness 的未點名歷史副本仍漏 `git diff-tree -r`**：
+  `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md` 的歷史 Done 仍寫 `git diff-tree -m`
+  witness 為 1 次；對巢狀 `.pyc` 路徑實跑時，不加 `-r` 只得到 `M scripts`，加 `-r` 才得到
+  目標 `D`。本輪被點名的是中央契約 `docs/dev/external-facts.md` B14；依 17.2 不回寫未點名的
+  歷史副本。官方 `-r` 契約、可重跑命令與取證日期集中於 B14
+  【F3/F5/F11/F12；來源＝PR #64 Codex inline `3826183941` 的同型抽樣；取證日期＝2026-08-21】
+
+- **external-facts A16 的短引文丟失官方句中的情態與模式上下文**：
+  A16 現值把片段引為 "the original query accepts..."，但 GitHub CLI 官方 pinned 原文是
+  "For GraphQL requests, this requires that the original query accepts an `$endCursor: String` variable"；
+  完整取頁片段的官方前綴另為 "In `--paginate` mode,"。現行 A16 的後續散文補回要求語義，
+  結論未被證偽；缺口只在逐字節錄載體本身。依 17.2 不順手改 external-facts，後續 evidence-format
+  包須讓引文自行保留必要情態／上下文。來源：
+  <https://github.com/cli/cli/blob/fadd4efb7daddd8afd8a5517a0cb5f5f39af6ada/pkg/cmd/api/api.go>
+  【F3/F5/F11；官方 pinned 原文獨立重取；PR #64 Claude comment `5361847317` ⚪2；
+  取證日期＝2026-08-21】
+
+- **`external-facts` B13 的 `-f/--raw-field` 逐字是無省略號的截斷句**：該句引為
+  "…to add static string parameters"，而上游 `cli/cli` 的 `pkg/cmd/api/api.go` 全句為
+  "Pass one or more `-f/--raw-field` values in `key=value` format to add static string
+  parameters **to the request payload**."——缺的 "to the request payload" 正是限定該旗標
+  「參數放進哪裡」的那半句，且截斷處**沒有省略號**，讀者無從察覺這是節錄。語義未被證偽、
+  <!-- 🔴 2026-08-22 更正（來源＝Codex inline `3835660396`）：本條原寫「⋯正是把該旗標**定位在
+       request body 層**的限定語」。**`request payload` 不等於 `request body`**——同一段官方
+       說明的下一句逐字寫著：
+         "To send the parameters as a `GET` query string instead, use `--method GET`."
+       （本輪實跑 `gh api --help` 取得，與 <https://cli.github.com/manual/gh_api> 一致）
+       ⇒ `-f` 的值在預設 POST 下進 body，在 `--method GET` 下進 **query string**。
+       把它寫成「body 層」會讓照本檔組 GET 請求的人組錯，屬**會製造未來債的錯誤定位**。
+       已改為官方自己的措辭「request payload」，並在此保留 GET 邊界。
+       🔴 本條原本要說的事沒有變：**截斷處沒有省略號**這個載體問題仍然成立、仍只登記不修。 -->
+  該行本輪未動 ⇒ 依 17.2 只登記。與本節 A16 的「短引文丟失情態」同根因（逐字節錄載體
+  未保留必要限定），後續 evidence-format 包應統一規定「節錄必加省略號並保留限定語」
+  【F3/F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪1；取證日期＝2026-08-22】
+
+- **`external-facts` B13 的「官方同頁**另**明列」在本輪之後變成同節內重述**：上一輪已把
+  `-F …@-` 與 `--input` 的逐字補進**正上方**的 blockquote，於是該段「另（在別處）明列」的
+  框架失去對象——讀者會去找一個不在別處、就在上面三行的東西。屬敘事框架與現況脫節，
+  不影響任何斷言 ⇒ 依 17.2 只登記。正解＝把「另明列」改為指向上方 blockquote 的第二／三句
+  【F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪2；取證日期＝2026-08-22】
+
+- **上一條的標題行在同一行用了四個 `**` run，GFM 把粗體切成兩段、被夾住的「另」反而不是粗體**：
+  原文為 `` - **`external-facts` B13 的「官方同頁**另**明列」⋯變成同節內重述**：``。
+  🔴 **本條的渲染證據是本輪實跑取得的**（判詞把它記為「未取得」）：把該行單獨送 GitHub
+  `/markdown`（`mode=gfm`）實得
+  `<li><strong><code>external-facts</code> B13 的「官方同頁</strong>另<strong>明列」⋯重述</strong>：⋯</li>`
+  ——`<strong>` 標籤 **2 個**，邊界落在「官方同頁 / 另 / 明列」之間 ⇒ 作者意圖的
+  「整句粗體、其中『另』再強調」**沒有發生**，實際是兩段粗體夾一個普通字。
+  ⚠️ 可讀、不影響任何斷言，且它是敘事措辭而非規範性斷言 ⇒ 依 17.2 只登記。
+  正解＝該行改用單一 `**⋯**` 包住整句，內部強調改用其他標記或直接去掉
+  【F5/F11；來源＝PR #64 Claude issue comment `5379467830` ⚪1；取證日期＝2026-08-22】
+
+- **worklog `Done` 段宣稱「六則 inline」，逐條列名只有五則**：PR #64 第十七輪 worklog 的
+  `Done` 首項寫「Codex review `4999795981`（六則 inline：五則 P1、一則 P2）」，
+  而同段逐條列名只出現五則。⚠️ **總數是對的**（該 review 確為六則），漏的是列名那一份；
+  不影響任何處置結論 ⇒ 依 17.2 只登記。
+  正解＝把第六則補進列名，或不寫總數、只列處置到的那幾則
+  【F5/F11；來源＝PR #64 Claude issue comment `5379763381` ⚪1（`5381104120` ⚪3 續登記）；取證日期＝2026-08-22】
+
+- **本檔「本節 22 行引用同批改號」是手寫數字、同位置無複驗指令**：該數在寫下時為真
+  （驗收方複驗：舊號側 `-` 行 22、新號側 `+` 行 23，多的一條是說明註自身），
+  但依 `AGENTS.md` §2「散文裡不得手寫可由代碼算出的數字」，它需要鄰近的複驗指令或快照標記。
+  ⚠️ 不影響改號的正確性（改號結果另有集合複驗）⇒ 依 17.2 只登記。
+  正解＝改為不寫數字，或鄰附 `git diff --stat` 之類的導出式
+  【F5/F11；來源＝PR #64 Claude issue comment `5381104120` ⚪1；取證日期＝2026-08-22】
+
+- **A.1 的一則 dated correction 引用的「160／160」在後續 head 已是 161／161**：
+  該註記錄的是「tracked worklog 數與 A.1 條目數相等」這個**結論**，兩側同步成長
+  ⇒ **結論在現值仍然成立**，過期的只是它引用的那一組具體數字。
+  ⚠️ 它是歷史層的 dated correction、不就地改 ⇒ 依 17.2 只登記。
+  正解＝該類註一律不寫具體數字，改寫「兩式必須相等」＋導出指令
+  （本檔上方既有的 canonical 全量 md5 就是這個形態）
+  【F5/F11；來源＝PR #64 Claude issue comment `5381104120` ⚪2；取證日期＝2026-08-22】
+
+- **更正註寫在 `Changes` 子節，而被改寫的原文在 `Done` 段**：`AGENTS.md:112` 逐字要求「發現寫錯就在**原處**加更正註」，而 PR #64 第十七輪 worklog 那則第 4 次復發的更正註，註在 `Changes` 下的 `合併輪處置` 子節，被替換的兩段原文則在 `## 已完成的工作 (Done)`。
+  ⚠️ 內容完整、來源與復發次數都寫了，且 `check-doc-claims.rb` 綠 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：讀 `Done` 段的人**不會看到**那裡的兩段話已被撤回——更正註的全部作用就是「讓讀到錯誤原文的人當場看到更正」，位置錯了等於作用歸零。
+  正解＝更正註一律緊貼被更正的原文；若一則註涵蓋多處，各處都放指標
+  【F5/F11；來源＝PR #64 Claude issue comment `5381302078` ⚪1；取證日期＝2026-08-23】
+
+- **「傳播到全部 N 個落點」這類全稱句，同位置無導出指令**：PR #64 第十七輪 worklog 寫「傳播到規則的**全部 5 個落點**」，一道 grep 即證偽（**在 `3ffd2d26` 那棵樹上**同規則另有四個落點無指標；本輪已補齊，現況以導出指令為準），而同列的落點清單本身讀起來是 6。
+  ⚠️ 本輪已把該句撤掉並補齊落點（見該檔第十八輪處置），此處登記的是**類**不是那一個實例 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：「全部 N 個」是一個**對集合的全稱斷言**，而寫的人手上只有自己剛改過的那幾處——
+  這兩者從來不是同一個集合。同型事故在本檔另見「手寫 22 行」與「手寫 160／160」兩條（不寫總數——本節仍在增長）。
+  正解＝**不寫數字**，改寫「規則的每一個落點都要有」＋一道能列出全集的 grep；要寫數字就同位置附導出式
+  【F5/F11；來源＝PR #64 Claude issue comment `5381302078` ⚪2；取證日期＝2026-08-23】
+
+- **「驗收方已在本倉庫重現該情境」這類轉述，無可存取的複驗錨**：`docs/DECISIONS.md` 的 D39 更正註曾逐字寫這一句，而驗收方原文說的是「I reproduced this in a temporary repository」——**臨時倉庫不是本倉庫**，且該倉庫讀者無從存取。
+  ⚠️ 該句已在本輪改判準時隨整則註一起被換掉（現行註不含任何轉述型證據），此處登記的是**類** ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：把外部代理的「我試過了」轉寫成本倉庫的既成事實，會讓後續讀者以為倉庫裡有那個 fixture。
+  正解＝轉述外部驗證一律逐字引原文＋標明載體（哪個 comment id、哪一句），不改寫成本倉庫語氣
+  【F5/F11；來源＝PR #64 Claude issue comment `5381302078` ⚪3；取證日期＝2026-08-23】
+
+- **落點複驗的雙 grep 左式無射程限定，輸出須人工逐筆分辨**：`docs/DECISIONS.md` D39「落點同步」那條改成導出指令後，左式（規則陳述句全集）在本樹輸出數十行，其中**大部分不是規則陳述**——而是歷史 worklog 的敘事、`docs/DECISIONS.md` 自己的沿革段、以及各處對該規則的**引述**。
+  成分導出（不寫死數字，會隨文件成長）：
+  ```bash
+  grep -rn '不另建「第 M 輪」\|一份 worklog\|不按驗收輪增殖\|只維護一份' --include=*.md docs/ AGENTS.md CLAUDE.md \
+    | sed 's|:.*||' | sed 's|/[^/]*$||' | sort | uniq -c | sort -rn
+  ```
+  <!-- 🔴 2026-08-23 更正（來源＝本輪 push 前對抗式複驗，非驗收方點名）：
+       本條初稿逐字寫「其中大半是 `docs/handoff/`（D36 已凍結、不回寫）與歷史 worklog 的敘事」。
+       🔴 實跑證偽：`docs/handoff/` 只佔 **1 行**。
+       後果不是描述不美——初稿據此開出的正解是「左式加路徑排除（至少排掉 `docs/handoff/`）」，
+       那樣只會少掉那 1 行，**解決不了它自己描述的問題**。
+       🔴 這是「我以為的成分」被當成「量到的成分」發布：我沒有跑過 `uniq -c`，只是從印象寫。
+       ⇒ 改為只給導出指令，並把正解改成按「是不是規則陳述」判，不是按路徑排除。 -->
+  ⚠️ 該條已自註「逐筆看左邊每一個規則陳述（非引用、非 worklog 敘事）」，**判準本身沒錯，缺的是機械斷言** ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：沒有機械斷言 ⇒ 這條複驗的可靠度等於執行者的耐心；而它保護的正是「規則有沒有真的生效」。
+  正解＝改成 checker 腳本，判準是「**每個規則陳述句** ±N 行內有指標」——**不是路徑排除**（排除路徑解決不了「同一個檔裡既有規則陳述又有敘事」這件事）。過渡期用導出指令＋人工逐筆判，並在同位置寫明判別法：規則陳述＝該句本身要求讀者做或不做某事；敘事／引述＝該句在描述某輪發生過什麼
+  【F5/F11；來源＝PR #64 Claude issue comment `5381492053` ⚪1；取證日期＝2026-08-23】
+
+- **worklog 檔名射程與內容射程持續背離**：`docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md` 檔名寫「第十七輪」，內容已含第十八、十九輪處置段。D39 之後同一份 worklog 會持續累積輪次，而 `docs/worklog/README.md` 的檔名規約在同位置沒有說明這件事。
+  ⚠️ 這是 D38「一個 PR 一份 worklog」的**必然結果**，不是缺陷 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：用檔名找「第 N 輪在哪」的人會找不到，而本倉庫的復發計數正是靠逐輪紀錄。
+  正解＝檔名規約明文「檔名記的是**建檔輪次**，不是內容射程；輪次入口看檔內 `### 第 N 輪處置` 標題」，並在 README 同位置附導出指令
+  【F5/F11；來源＝PR #64 Claude issue comment `5381492053` ⚪2；取證日期＝2026-08-23】
+
+- **本 PR 動過的檔裡有既有的「表格欄數不符 header」列，且形態不只一種**：
+  ① `docs/plans/2026-08-18-總方案.md` 的 X3–X10（header 三欄、各只有兩欄，末欄整格缺）；
+  ② `docs/dev/m0-review-convergence.md` 表後那句以 `（表列以 `…` 為準）` 開頭的段落——它**沒有以直線開頭**，卻因為緊貼表格且句中 code span 內有未跳脫的直線，被 GFM 併進上一張表當成表列、切成兩格、反引號失去 code 語義。
+  🔴 **不在此列舉筆數**：初稿只寫了 ①、並逐字寫「僅⋯八列」，複驗立刻找到 ②；第 23 輪換上集合判準的檢查器後又找到 ③④。例外集合一旦手寫列舉就會漏——導出指令見下。
+  ③ `docs/plans/2026-08-18-總方案.md` 的 `P-8` 那一列：原始碼是表列形狀，**渲染後不是 `<tr>`**（被擠出表格）；
+  ④ `docs/specs/91-pit-register.md` 的「（其餘待收割輪填入）」那一列末欄為空。
+  ⚠️ ③④ 同樣在 base `bbf5f3b7` 上就已存在、本 PR 未動該區塊 ⇒ 一併只登記。
+  依 GFM 官方規格逐字——
+  > “The remainder of the table’s rows may vary in the number of cells. If there are a number of cells fewer than the number of cells in the header row, empty cells are inserted. If there are greater, the excess is ignored”
+  （<https://github.github.com/gfm/> §4.10 Tables，取證日期＝2026-08-23）
+  ——**少格**不會丟資料（補空格），**超格**才會丟；這八列屬前者，症狀是該表第三欄對它們一律空白。
+  ⚠️ 兩者在 base `bbf5f3b7` 上就已存在，本 PR 對這兩個檔的 hunk 都不在該區塊（複驗：`git diff bbf5f3b7..HEAD -- <該檔> | grep '^@@'`）；依使用者「只修點名的」裁定不在本包修 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：與 20.2.7 點名的那一列（內容錨：PR #64 第十七輪 worklog `合併輪處置` 表裡「兩向差集皆空」開頭的 `Claude 🔴-1` 列）是**同一類**（表格欄數與 header 不符），只是方向相反（缺格 vs 超格）；缺格不會像超格那樣丟掉內容，所以優先度低，但同一支掃描器兩者都會報。
+  🔴 **兩種形態的正解不同，不能共用一條**：
+  - **形態 ①（表列缺格）** 正解＝**補上第三欄**。🔴 **不要改 header 為兩欄**——同表的 X1／X2 有第三欄，把 header 縮成兩欄會讓它們的第三欄變成超額 cell 而被 GFM **靜默丟棄**，
+    正好是本條上一段引的那句 "the excess is ignored"。
+  - **形態 ②（段落被誤吸進表格）** 正解＝在該表最後一列與該段落之間**補一個空行**。
+    🔴 **不要照形態 ① 補第三欄**——那會把一個本來是散文的句子**固化成表列**，等於承認了誤吸。
+    ⚠️ 只跳脫 code span 內的直線**不夠**：句子仍緊貼表格 ⇒ 仍被吸進去；
+    而只補空行**就夠了**——該句成為獨立 `<p>` 之後，code span 內的直線不再被當成儲存格分隔（本輪以 GitHub `/markdown` 實跑確認）。
+    🔴 初稿在這裡寫「兩者要同時做」，是**未實跑就推論**；照初稿改會在一個本來不需要跳脫的 code span 裡留下一個 `\|`。
+
+  複驗＝欄數掃描（逐表逐列比對「未跳脫直線數 − 1」與 header 欄數，跳過 fenced code block 與分隔列）。
+  🔴 **本倉庫尚無此掃描器**（`scripts/` 下查無）；本輪是以一次性腳本跑的，隨用隨棄。要固化成閘門須另立工作包
+  【F5/F11；來源＝PR #64 Claude issue comment `5381492053`（本輪 20.3 ⑦ 掃描的副產物，非驗收方點名）；取證日期＝2026-08-23】
+
+- **`scripts/check-doc-claims.rb` R4 的中文數詞字元類不含「兩」**：該檔 `NUM` 逐字為 `/(?:[〇零二三四五六七八九十百][〇零一二三四五六七八九十百]*|一[〇零一二三四五六七八九十百]+|\d+)/`——**「兩」不在字元類裡**，而中文量詞前用「兩」比用「二」常見得多。
+  ⇒ 「三張表」會被 R4 抓到，「**兩**張表」不會；「共三份」會，「共**兩**份」不會。
+  ⚠️ 這是**閘門缺口**不是文件缺陷，且改 `scripts/` 屬本包射程外（使用者「只修點名的」裁定）⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：本 PR 第 19 輪確實有一句「對本輪改過的**兩張表**」落在 R4 的生效射程內（改動 worklog 的新增行）而**結構性隱形**，
+  `ruby scripts/check-doc-claims.rb --base <上一 head>` 實得 OK、🟡 警告 0。該句最後是被人工對抗式複驗抓到的，不是被閘門。
+  🔴 **這是同根因第 2 次**：該腳本 121–125 行自己記載「初版五條 pattern 全以 `\d+` 開頭 ⇒ 對本專案最常見的寫法結構上全盲」——
+  當時補了中文數詞，但補的字元類漏了最常用的那一個。
+  正解＝`NUM` 的兩個字元類各補「兩」（連帶考慮 千／萬／廿／卅／倆），並加 fixture 打紅「共兩份」「兩張表」；
+  複驗＝`ruby scripts/test-doc-claims-rules.rb` 需有一則新 fixture 因此轉紅
+  【F5/F11；來源＝PR #64 第 19 輪 push 前對抗式複驗（非驗收方點名）；取證日期＝2026-08-23】
+
+- **鐵律 20.3 的稽核表沒有任何機器會讀它，同一張表已被點名四次**：PR #64 的 20.3 表在第 15 輪（欄名被改）、第 18 輪（輸出欄指向不存在的段落）、第 20 輪（欄名再被改＋四列無輸出）、以及該輪 push 前複驗（⑥ 列的反向複驗式本身是 fail-open）各被點名一次。
+  前三次的固定處理都是「把這一格補上」，第四次證明問題不在某一格——**這張表的每一格都是散文，正確性只取決於寫的人有沒有真的逐格跑過**。
+  ⚠️ 改 `scripts/` 屬 PR #64 射程外（使用者「只修點名的」裁定）⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：在它被機制化之前，20.3 表的可靠度等於「作者這一輪的自律」，而本 PR 已經證明那個可靠度不足以支撐四輪。
+  正解＝把可機械化的列做成 `scripts/` 檢查器並掛 CI，至少涵蓋：
+  ①⑥ 的禁區 pathspec（`git diff --name-only <range> -- .github scripts script config bin spec package.json Rakefile Gemfile .rubocop.yml` 非空即 FAIL；**用 pathspec 不用 regex 交替**，因為交替符在 Markdown 表格裡會被跳脫成字面直線而恆不匹配）
+  ②⑦ 的表格欄數斷言與末欄 sentinel（渲染後每列最後一個 `<td>` 非空）
+  ③「輸出欄不得只有指令或位置指標而無實跑結果」的形狀檢查
+  複驗＝新檢查器對 `abafcc2^..abafcc2`（該 commit 動過 `.github/workflows/`）必須 FAIL；對純 docs 的 range 必須 PASS
+  🔴 **本條的 pathspec 與 worklog 20.3 ⑥ 列必須逐字相同**——它是未來檢查器的規格來源，
+  兩處分歧時實作出來的檢查器會重現已被點名過的缺口。同步複驗（兩式輸出必須完全相同）：
+  ```bash
+  grep -o -- '-- \.github[^`]*' docs/specs/91-pit-register.md
+  grep -o -- '-- \.github[^`]*' docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md
+  ```
+  <!-- 🔴 2026-08-23 更正（來源＝PR #64 Claude issue comment `5382552421` 🔴-3）：
+       本條的 pathspec 原本逐字漏掉 `spec` 與 `package.json`。上一輪已在 worklog 的 20.3 ⑥ 列補寬，
+       **卻沒有同步本條與 PR 描述** ⇒ 照本條實作出來的 CI 檢查器，正好重現上一輪被點名的缺口
+       （把 `pnpm test` 改成 no-op 或刪掉 `spec/` 仍會報綠）。
+       🔴 這是同一輪內的 producer／consumer 不同步：**我把「修好」等同於「被點名的那一行改了」**。 -->
+  【F5/F11；來源＝PR #64 第 20 輪 push 前對抗式複驗（11 agent，非驗收方點名）；取證日期＝2026-08-23】
+
+- **更正註逐字保留「被改動的處」時，用手寫列舉就會漏**：PR #64 第 20 輪的更正註逐字寫「本節⋯有**六處**被本輪就地改寫，依 19.5 逐字保留改前原文如下」，而同一個 commit 在該節內改動的段落多於六處。
+  ⚠️ 本輪已改為「逐字保留被點名的那幾處 ＋ 其餘以 `git show <舊 head>:<檔>` 取回指標為準」⇒ 依 17.2 只登記**類**。
+  🔴 **登記的代價**：19.5 的目的是讓讀者看得出「這裡曾經寫過別的」。列舉漏掉的那幾處，讀者不但看不出改過，還會因為前面有一份「完整清單」而**更加相信沒改過**——不完整的列舉比沒有列舉更糟。
+  正解＝更正註一律附**取回指標**（`git show <改動前 head>:<檔案>`）與**導出指令**（`git diff <舊> <新> -- <檔>`），逐字保留只給被點名的那幾處，不宣稱涵蓋全部
+  【F5/F11；來源＝PR #64 Claude issue comment `5382422505` ⚪1；取證日期＝2026-08-23】
+
+- **同一份 worklog 有兩張 `### 鐵律 20.3 送驗前稽核`，射程重疊而方法不同**：PR #64 第十七輪 worklog 內，前一張綁第 15–17 輪、後一張標「涵蓋第 18／19／20 輪」但宣告的 range 是 `bbf5f3b7..HEAD`——**該 range 也涵蓋第 17 輪**。
+  兩張表對重疊區間的 ⑥ 列給了不同方法（前者「`git status` 僅 docs 檔」、後者禁區 pathspec），讀者拿不到「哪一張管哪一段」的判準。
+  ⚠️ 前一張是歷史層（記第 15–17 輪當時做了什麼），依 `AGENTS.md:112` 不就地改⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：稽核表是用來回答「這一輪有沒有掃過」的。兩張射程重疊的表並存時，那個問題對重疊區間有兩個互相衝突的答案。
+  正解＝新表的射程宣告改為**排除已被前一張涵蓋的區間**（例如綁 `<前一張的終點>..HEAD`），或在新表開頭明寫「前一張管到哪個 head 為止」
+  【F5/F11；來源＝PR #64 Claude issue comment `5382422505` ⚪2；取證日期＝2026-08-23】
+
+- **就地改寫「別人立的 dated 更正註」時沒有自己的來源標註**：PR #64 第 21 輪改寫了第 20 輪立的一則更正註內文（把一句全稱句改成列舉），而該處**沒有留下自己的 dated 標記或來源**——同輪其他就地改寫都有標。
+  ⚠️ 整段在 HTML 註釋內、渲染後不可見，且 doc-claims 綠 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：更正註是**事故軌跡**。改寫別人立的註而不留自己的標記，等於把兩輪的認知壓成一輪，
+  下一個人讀到的是「第 20 輪就想通了」，而事實是第 21 輪才改的。19.5 擋的正是這件事。
+  ⚠️ 同處另有兩個小瑕疵（本輪一併登記，不單獨立條）：句末留下未閉合的全形左括號；「三件事」的手寫列舉漏掉兩項，
+  而同一則註三行之上才剛寫過「手寫列舉就會漏」。
+  正解＝改寫既有更正註一律追加自己的 dated 標記與來源，不就地覆蓋；列舉一律附導出指令
+  【F5/F11；來源＝PR #64 Claude issue comment `5382552421` ⚪1；取證日期＝2026-08-23】
+
+- **註釋內的巢狀分隔標記出現多餘的收尾**：`docs/DECISIONS.md` 有一處句末是兩個連續的 `----`，而同檔體例是一個 `----` 收一則巢狀 dated 註，第二個沒有對應的開啟。
+  ⚠️ 在 HTML 註釋內、不影響渲染，doc-claims 綠 ⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：`----` 是本倉庫**自訂**的巢狀註分隔法（因為 HTML 註釋不能真的巢狀）。
+  自訂標記沒有任何機器檢查，配對錯了只能靠讀者自己數——而它存在的理由正是「HTML 註釋巢狀會出事」。
+  正解＝把巢狀 dated 註改成**同層並列的獨立註**（各自 `<!-- -->` 收口），不要自訂巢狀語法；
+  過渡期複驗＝`grep -c -- '^ *---- ' <檔>` 與 `grep -c -- ' ----$' <檔>` 應成對
+  【F5/F11；來源＝PR #64 Claude issue comment `5382552421` ⚪2；取證日期＝2026-08-23】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -1454,7 +1844,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-鐵律21遠端終態收斂.md`（D35 遠端終態防自失效；已讀，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-鐵律21閘門Shell路徑復驗.md`（Windows Bash 路徑假失敗；已抽取環境坑）
 - [x] `docs/worklog/2026-08-20-Claude-Fable5額度回退Opus5.md`（PR #62 兩次 attempt 逐字同報 Fable 5 limit；依 workflow 沿革⑦的既定處置切回 Opus 5，沒有新增坑項）
-- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正；handoff 意見依使用者 2026-08-20 裁定不修，D36 尚只在未合併 PR #62 head `5209087`，沒有新增坑項）
+- [x] `docs/worklog/2026-08-20-PR63首輪驗收修復.md`（review `4984000690`；全稱句已加可重跑範圍更正；handoff 意見依使用者 2026-08-20 裁定不修；D36 已隨 PR #62 於 2026-08-20 合併進 main，merge commit `0fbe520502588b34f9b9cad6ae9b3a282d4db643`，複驗：`gh pr view 62 --repo pisceshei/chilllovesaas --json state,headRefOid,mergeCommit,mergedAt`；沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR63第二輪驗收修復.md`（review `4984304467`；補清 D36 未合併邊界與驗證數字的日期／head snapshot，沒有新增坑項）
 - [x] `docs/worklog/2026-08-20-PR61-Codex-2ed2403驗收修復.md`（review `4979564233`；五則 current-head inline 已逐項處置）
 - [x] `docs/worklog/2026-08-20-PR61-Rails冷啟動閘門復驗.md`（29 閘門首跑的 system spec 假紅；已抽取冷啟動等待競態）
@@ -1481,6 +1871,53 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-21-驗收收斂制度V2.md`（D37／Convergence Protocol v2；已讀，根因與固定處理已落 `docs/dev/m0-review-convergence.md`；已抽取閘門總數、Changes 自含、Markdown 複驗與臨時表名等 §3 項）
+
+- [x] `docs/worklog/2026-08-20-P8證據來源與合併後文件債收斂.md`（PR #62 exact-head review `4983737311` 的兩則 inline 與 PR #62 合併後終態已逐項收斂；PR #64 驗收令反查射程收窄，候選歷史債經官方語義複驗證偽）
+- [x] `docs/worklog/2026-08-21-PR64首輪Claude驗收修復.md`（issue comment `5358544615` 的射程意見已清；暫登 §3 候選於第二輪經語義複驗撤回）
+- [x] `docs/worklog/2026-08-21-PR64第二輪雙驗收修復.md`（Claude comment `5359209200`＋Codex review `4985307122`；PR 描述、歷史更正格式、外部事實與假債已逐項收斂）
+- [x] `docs/worklog/2026-08-21-PR64第三輪雙驗收修復.md`（Claude comment `5359558626`＋Codex review `4985595726`；20.3 缺件、A9／A10 證據邊界與易腐計數已處置）
+- [x] `docs/worklog/2026-08-21-PR64第四輪雙驗收修復.md`（Claude comment `5359997378`＋Codex review `4985973166`；累積清單回歸、終態 Changes 與範圍外登記已處置）
+- [x] `docs/worklog/2026-08-21-PR64第五輪雙驗收修復.md`（Claude comment `5360279873`＋Codex review `4986192842`；終態集合遞迴過期、20.4 復發閉環與本輪文件意見已處置）
+- [x] `docs/worklog/2026-08-21-PR64第六輪雙驗收修復.md`（Claude comment `5360596028`＋Codex review `4986421292`；穩定基準、可重跑渲染、動態集合與 A9／91 證據邊界已處置）
+- [x] `docs/worklog/2026-08-21-PR64第七輪雙驗收修復.md`（Claude comment `5360974435`＋Codex review `4986687378`；HEAD-only 集合、multiplicity、A9 歷史更正與 91 假衝突已處置）
+- [x] `docs/worklog/2026-08-21-PR64第八輪Codex驗收修復.md`（Codex review `4987003396`；A9 完整取頁／GraphQL 游標契約與 A10 超限 fallback 逐字已補）
+- [x] `docs/worklog/2026-08-21-PR64第八輪Claude晚到驗收修復.md`（Claude comment `5361414731`；跨日期 PR64 worklog 漏列改為 fail-closed 並加承重 mutation）
+- [x] `docs/worklog/2026-08-21-PR64第九輪Codex驗收修復.md`（Codex review `4987319876`／inline `3825320726`；歷史 worklog 刪除／改名改為 fail-closed 並加雙 mutation）
+- [x] `docs/worklog/2026-08-21-PR64第十輪Claude驗收修復.md`（Claude comment `5361847317`；20.3 類型名與歷史 snapshot 改用相鄰更正收斂）
+- [x] `docs/worklog/2026-08-21-PR64第十一輪雙驗收修復.md`（Claude comment `5362492718`＋Codex review `4987731284`；destructive history producer、20.3 固定編號與 rendering 未取得已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十二輪雙驗收修復.md`（Claude comment `5363200002`＋Codex review `4988295763`；零掃描 canary、merge diff、rendering 歷史更正與外部契約集中已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十三輪雙驗收修復.md`（Claude comment `5363469305`＋Codex review `4988472500`；production wiring、外部契約去重與 `diff-tree -r` witness 已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十四輪雙驗收修復.md`（Claude comment `5363665327`＋Codex review `4988636859`；repository commits fallback 與 `gh api` body 供給邊界已處置）
+- [x] `docs/worklog/2026-08-21-PR64第十五輪Claude驗收修復.md`（Claude comment `5363892357`；⚪ 落籍、20.3 實跑輸出與 A10／B9 官方逐字已處置）
+- [x] `docs/worklog/2026-08-22-PR64第十六輪雙驗收修復.md`（Claude comment `5364180385`＋Codex review `4988979665`；B9 逐句歸屬、B10 條件逐字、W14 歷史表還原與 `th=` 計數式錨定已處置）
+- [x] `docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md`（Claude comment `5379467830`＋Codex review `4999795981`；W15 就地改寫還原、A.1 漏列、R5 警告與窗口實測不一致已處置）
+
+<!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
+     第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
+     「新增 tracked worklog 的同一 commit 必須同步補列本清單」正是為了擋這件事，
+     且它是第 2 輪才加嚴的（原文「之後隨輪補列」擋不住同 commit 新增檔漏列）。
+     ⇒ **條文擋住了它要擋的形態，漏的是執行**：我當輪沒有把「本 commit 有沒有新增 tracked
+     worklog」列進送驗前稽核。
+     可重跑反向複驗＝**本節上方既有的那組 canonical 全量雜湊**（內容錨＝
+     `grep -n 'ls-files docs/worklog docs/handoff' docs/specs/91-pit-register.md`），
+     兩式 md5 相等即通過。本輪實跑：相等。
+     另以集合差再驗一次（同一結論、不同表述）：
+       comm -23 <(git -c core.quotepath=false ls-files 'docs/worklog/*.md' | sort) \
+                <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md \
+                    | grep '^docs/worklog/' | sort)
+     以及反方向 `comm -13`，**兩向皆為空集合**（實測：tracked 160、A.1 條目 160）。 -->
+<!-- 🔴 2026-08-22 更正之二（來源＝PR #64 Codex inline `3835780547`）：
+     上一則註曾把射程收窄成「只檢查本 PR 新增的 worklog」，理由是「A.1 是**漸進收割清單**，
+     實測 tracked 159 份、A.1 條目 279 條」。**那個理由是我自己量錯**：
+     `grep -oP '^- \[[x ]\] \`\K[^\`]+'` **沒有篩 `docs/worklog/` 前綴**，於是把 A.2 的
+     handoff 條目一起數了進來（本輪重現：不篩＝279、篩了＝160）。
+     🔴 **A.1 就是全量索引**：tracked worklog 160、A.1 條目 160，`comm` 兩向皆空；
+     勾選符號才代表收割進度。⇒ 收窄射程**會讓「刪掉一列」不被察覺**，等於把閘門改弱。
+     ⇒ 已還原為全量比對，並改用本節上方**既有的** canonical 全量雜湊（不另立新判準）。
+     🔴 教訓：**收窄一道既有閘門之前，先確認要收窄的理由不是自己的測量誤差。** -->
+<!-- 🔴 2026-08-22 補列（承上，來源＝`5379467830` 🔴-2）：第十六輪那一列在該 worklog
+     誕生的同一個 commit 就該加上；條文擋住了它要擋的形態，漏的是執行——我當輪沒有把
+     「本 commit 有沒有新增 tracked worklog」列進送驗前稽核。 -->
 
 ### A.2 handoff
 
