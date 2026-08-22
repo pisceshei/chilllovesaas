@@ -209,11 +209,15 @@
 - 鐵律 16.1／17.2／17.3 引用的三條「既有記憶條目」（web-research-for-fixes／
   fix-only-what-is-flagged／full-automation-authorized）原不在倉庫內；接手輪已把裁定內容補入
   `docs/DECISIONS.md` D17–D18，條文本身仍自足，本條轉為結案候選【F11】
-- doc-claims `IN_SCOPE` 刻意不含 docs/specs/／docs/research/／docs/design/ ⇒ #58 第 2 輪
+- doc-claims `IN_SCOPE` 刻意不廣泛納管 docs/specs/／docs/research/／docs/design/；P-2 只為
+  `docs/specs/92-*` 宣稱索引加入 R6 窄例外，沒有解除其餘 specs 的既有缺口 ⇒ #58 第 2 輪
   🔴1（91 誤插）落在 docs/specs/ 而無閘門攔得到——既有取捨（腳本檔頭有誠實聲明），
   要擴須先解「本尊路徑 vs 我方路徑」判別；與 G-01 同屬登記簿保真缺口群
   【F12；來源＝#58 第 2 輪判詞 ⚪，第 4 輪補搬——第 3 輪漏搬＝G-01 第二次現行犯，
   本條目即該事故的登記】
+- `AGENTS.md`「洞一：嚴重度」的阻擋規則例舉仍只寫 R1／R3／R4，R6 落地後列舉不完整；
+  該段沒有宣稱「只有」三種，現值不是假話，且 `AGENTS.md` 不在 PR #65 累積 diff，故只登記、
+  留待獨立鐵律文件輪同步【F5/F12；來源＝PR #65 首輪 Claude comment `5359074865` ⚪】
 - docs/plans/ 納管後實得覆蓋僅 R1／R3（R4／R5 範圍判斷硬綁 worklog／handoff 未動）
   ——契約層註釋已於第 4 輪補限定；要收窄落差改註釋已做、改 R4 範圍屬 G 級裁定
   【F12；來源＝#58 第 3 輪判詞 ⚪1】
@@ -699,6 +703,266 @@
   【F5/F11；來源＝PR #62 Claude 首輪判詞 issue comment `5356127623` ⚪2、exact-head Codex
   inline `3822037678` 與 Claude comment `5356779594` 🟡3；取證日期＝2026-08-20】
 
+- **P-2 的 Markdown 複驗發現三份既有文件有裸 `|` 表格列，且總方案一段正文落在圍欄內**：
+  這些位置不屬 P-2 點名修復，依鐵律 17.2 只登記、不順手改。具體集合是：總方案
+  「2.6 可直接借鑑的成熟方案」表 X3～X10 少尾端分隔線；53 號「表 4 · 反向缺口」的
+  `const per=c.per||8` 兩個裸直線使該列欄數由 5 變 7；83 號 §6.2 的同型
+  `const per=c.per||8` 使該列欄數由 4 變 6；總方案 §9.2 的 1～6 點被位於
+  「### 9.2 要點」後的第二組圍欄包住，故粗體標記不會渲染。後續獨立文檔修復包須逐表
+  統一未跳脫直線數、跳脫代碼內 `||`，並以 GitHub `/markdown` API 對 `<tr>`／`<th>`／`<td>`
+  計數；圍欄只包架構圖或命令，不得包正文。複驗入口為逐檔對連續 `|` 列計
+  `l.scan(/(?<!\\)\|/).size`，以及在 `^```$` 間搜尋 `**`
+  【F5/F12；來源＝P-2 提交前 Markdown 全檔結構複驗；取證日期＝2026-08-21】
+
+- **PR #65 首輪修復 worklog 也保留了未附 exact response 的 GitHub Markdown 衍生計數與
+  會隨 head 腐化的閘門快照**：`docs/worklog/2026-08-21-PR65首輪雙驗收修復.md` 的
+  「九個修改區塊 API 全成功」與「首輪 29／29 全綠」屬本輪 Codex 點名 P-2 主 worklog 後
+  反查到的同型位置；current-head review 沒有點名該檔，依鐵律 17.2 不順手改。後續獨立處理時，
+  GitHub `/markdown` 若沒有保存 request／response artifact 必須標「未取得」，閘門數字必須標成
+  dated terminal snapshot 並附鄰近導出入口，不得外推 current HEAD
+  【F4/F11；來源＝PR #65 Codex inline `3823799574`／`3823799581` 後同型掃描；
+  取證日期＝2026-08-21】
+
+- **71 號總登記簿仍保留 83 號 P0 狀態的舊副本**：
+  `docs/specs/71-admin-parity-sweep.md` §「83 號第三輪管理面稽核未進 R0–R13 去重」仍寫
+  「已解 7 條」，括號卻列出九個 ID，並把 P0-14／P0-18 混在已解集合；本輪 Claude 只點名
+  被 PR #65 改到的 `docs/specs/83-admin-1to1-audit-round3.md` §0 總表，71 不在累積 diff，
+  依鐵律 17.2 只登記。後續獨立包須以 83 §1.1 的逐項狀態為來源，同步 71 的摘要，並保留
+  歷史邊界，不得把「部分」寫成「已解」
+  【F5/F11；來源＝PR #65 Claude comment `5359428067` ⚪1；取證日期＝2026-08-21】
+
+- **71 號的「未結案 76」圖例未涵蓋含開放子項的混合狀態**：
+  `docs/specs/71-admin-parity-sweep.md` §F 圖例表把以 `⬜` 起頭的列發布為未結案 76，卻未定義
+  `71-R3-DOC1` 的「✅ 考證；⬜ 選型」是否仍有開放子項；因此 84／92 採「狀態格含 `⬜`」
+  時會得到 77。PR #65 已在被點名的 84／92 明列兩種口徑，但 71 不在累積 diff，依鐵律 17.2
+  不回寫；後續獨立包應在 71 圖例拆出純開放／混合開放，而不是把任一數字宣布為另一個必然錯誤
+  【F4/F5；來源＝PR #65 Claude comment `5359967807` 🟡-3／⚪1；取證日期＝2026-08-21】
+
+- **83 號保留的 CLAIM-002 行內命令已與宣稱索引分岔**：
+  `docs/specs/83-admin-1to1-audit-round3.md` 仍保留不含 `summary_synced` 的舊版命令；HEAD 上執行
+  仍會通過，因此不是假宣稱，但同一斷言已有兩份不同消費者。該位置不在本輪被點名修復集合，
+  依鐵律 17.2 只登記；後續獨立包應改成引用 CLAIM-002，避免複製命令再次漂移
+  【F5/F11；來源＝PR #65 Claude comment `5359967807` ⚪2；取證日期＝2026-08-21】
+
+- **83 號 §0「本輪仍缺」與 §1.2 權威缺口清單口徑不同**：
+  §0 把 P0-14／P0-18 以「（部分）」列入「本輪仍缺」，§1.2 的仍缺權威清單則不含兩者；
+  括注足以自我消歧，現況不是互斥假話，但兩個標題沒有明示「部分殘留」與「完全未修」的差別。
+  該同型問題未被要求在本輪修實物，依鐵律 17.2 只登記
+  【F4/F5；來源＝PR #65 Claude comment `5359967807` ⚪3；取證日期＝2026-08-21】
+
+- **R6 對未關閉 HTML comment 的靜默截斷已於 PR #65 第四輪轉為 fail-closed**：
+  原缺口是 `active_markdown_lines` 的 comment 狀態到 EOF 仍為真時，後續 CLAIM 全被排除且零
+  violation；它先依 17.2 登記於此，後由 Claude comment `5360428264` 🟡-1 正式點名。修復以
+  `doc_claim_unclosed_comment` 先重現舊 checker exit 0，再保存 comment 起始行並於 EOF 報 violation；
+  `ruby scripts/test-doc-claims-rules.rb` 為結案候選複驗入口
+  【F6/F10/F12；來源＝PR #65 comments `5359967807`／`5360428264`；取證日期＝2026-08-21】
+
+- **53 號來源檔自己的「列次口徑複驗」沒有斷言發布儲存格**：
+  `docs/specs/53-ui-gap-recheck.md` 的行內命令只輸出 §6／§9 列數，沒有讀取表內發布的 180；
+  PR #65 被點名的是 CLAIM-006，該索引命令已同時斷言分量、發布值與合計，但來源檔這份未被
+  點名的副本依 17.2 不順手改。後續獨立包應改為引用 CLAIM-006，或與其共用同一可失敗命令
+  【F5/F11；來源＝PR #65 Codex inline `3824470994` 後同型反查；取證日期＝2026-08-21】
+
+- **R6 的成功訊息沒有列出已擴張的結構判準**：
+  `scripts/check-doc-claims.rb` 成功時仍只印「R6 計數宣稱」，沒有呈現活性標頭、ID 唯一、
+  畸形／游離標頭與收尾檢查；現句不假，完整契約也已在 checker 註釋及
+  `docs/dev/m0-review-convergence.md`，故本輪只登記。後續訊息包若要擴寫，須以契約反查避免
+  成功文字再次落後行為
+  【F5/F12；來源＝PR #65 Claude comments `5360428264` ⚪2／`5360765482` ⚪／
+  `5361142724` ⚪；
+  取證日期＝2026-08-21】
+
+- **R6 的 0–3 空格 metadata 契約不涵蓋巢狀清單縮排**：
+  `CLAIM_TYPE`／`CLAIM_RECHECK` 只認清單標記前 0–3 空格；若有人把結構化 metadata 放入
+  前導至少 4 空格的 CommonMark 巢狀清單，活性 CLAIM 區塊內的情形已由 PR #65 第九輪
+  type 必填 guard 轉為 fail-closed；本機隔離複驗為 exit 1。仍成立的缺口限於第一個 CLAIM 標頭前：
+  同樣縮排的 metadata 不進 pre-header matcher，也不影響檔案級 count canary，本機隔離複驗仍 exit 0。
+  後續須先裁定 92 索引是否允許該位置的巢狀 metadata，再以正反 fixture 固化，禁止先放寬正則後補契約
+  【F6/F7/F12；來源＝PR #65 Claude comments `5360428264` ✅4、`5363275846` 🟡1；
+  取證日期＝2026-08-21】
+
+- **m0-review-convergence 的 fixture 表後缺空行，且續行 code span 含未跳脫直線**：
+  `docs/dev/m0-review-convergence.md` 的 fixture 表最後一列後緊接「表列以⋯」正文，code span
+  內另有裸 `|`。GFM §4.10 官方逐字為 "The table is broken at the first empty line"，並要求
+  "Include a pipe in a cell’s content by escaping it"；現檔沒有空行，故該正文會被吸入表格列，
+  裸直線再切儲存格。本 PR 累積 diff 只把前面的 fixture 表擴列，該正文屬既有 context 且未被
+  阻擋意見點名，依鐵律 17.2 只登記；後續 Markdown 修復包須補空行、跳脫直線並以 GitHub
+  `/markdown` API 計 `<tr>`／`<th>`／`<td>`
+  【F5/F12；來源＝PR #65 Claude comment `5359428067` ⚪2＋
+  <https://github.github.com/gfm/#tables-extension>；取證日期＝2026-08-21】
+
+- **R6 的 count／recheck cardinality 與 production ROOT 供給缺口已逐輪轉結案候選**：
+  原候選有兩個獨立邊界：同一合法區塊的第二筆 count 可共用第一筆 recheck，以及
+  `explicit_root` 會讓 R6 零供給 canary 豁免、W1 又只釘 `--require-base` 而未禁止 CI 傳 ROOT。
+  前者經 Codex inline `3824670871` 正式點名後，PR #65 第五輪已以每區塊 count cardinality
+  檢查與 `doc_claim_duplicate_count` 負向 fixture 修成結案候選；同輪 inline `3824670885` 點名的
+  索引內 count 全空另由 `doc_claim_no_count` 固化。第六輪 Codex inline `3824945934` 正式點名
+  explicit ROOT 後，checker 改以明示 `--fixture-mode` 作唯一豁免，並加入無 ROOT／明確 ROOT
+  兩個 production supply 情境與 CI 不得傳 fixture flag 的供給斷言。inline `3824945940` 另把
+  單區塊 recheck cardinality 納入同一 fail-closed 契約
+  【F10/F12；來源＝PR #65 Claude comment `5359428067` ✅4、Codex inlines `3824670871`／
+  `3824670885`／`3824945934`／`3824945940`；取證日期＝2026-08-21】
+
+- **B9 標題與射程只描述圍欄，不能當作 HTML comment／code span 契約的總入口**：
+  `docs/dev/external-facts.md` B9 的官方證據與專案政策只處理清單縮排及未收尾 fenced code；
+  code span 優先級另由 B5 取證，HTML comment EOF 則是本專案 fail-closed 契約。三者不得因都在
+  `active_markdown_lines` 實作就合寫成同一個外部語義；本輪只把被點名的 code span 應用同步到
+  B5，不擴張 B9 標題
+  【F5/F11；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
+
+- **doc-claims runner 的摘要沒有完整呈現 W1 生產供給情境**：
+  `GIT_SCENARIOS` 與 `SUPPLY_SCENARIOS` 的計數只會發布各自陣列大小，但 runner 另有 W1 wiring
+  檢查；因此即使輸出含五個 bullet，也不能從「3 組 git＋1 組 supply」推出所有非 fixture
+  情境的總數。現行檢查仍執行，問題是摘要口徑不完整；未被要求修改 runner 輸出，依 17.2 只登記
+  【F5/F12；來源＝PR #65 Claude comment `5360765482` ⚪；取證日期＝2026-08-21】
+
+- **總方案與階段一執行方案的 P-2 R6 摘要仍只寫「計數必附複驗指令」**：
+  Claude comment `5360765482` ⚪4 點名的是 `docs/plans/2026-08-18-總方案.md` 的 P-2 摘要；
+  第五輪反查另發現 `docs/plans/2026-08-20-階段一執行方案.md` §2 有同一句。前版登記錯把後者
+  取代前者，current-head Claude `5361142724` 🟡-1 已指出來源失真。兩份方案都是歷史開工快照，
+  現行終態由 checker 註釋及 `docs/dev/m0-review-convergence.md` 發布；依 17.2 並列登記，不回寫方案
+  【F5/F11；來源＝PR #65 Claude comments `5360765482` ⚪4、`5361142724` 🟡-1；
+  階段一方案為第五輪內部反查；取證日期＝2026-08-21】
+
+- **R6 comment opener 比 CommonMark HTML block start condition 更寬**：
+  CommonMark 0.31.2 §4.6 逐字為 "Start condition: line begins with the string `<!--`."；現行
+  checker 在正文任意位置尋找 opener，只排除同一行成對 code span，方向是多遮。EOF 未收尾已
+  fail-closed，但後方若另有 closer 仍可能把中間內容當 comment；本輪阻擋只要求修正 closer 的
+  假敘述，不擴寫 opener parser
+  【F6/F11/F12；來源＝PR #65 Claude comment `5361142724` ⚪1、
+  <https://spec.commonmark.org/0.31.2/#html-blocks>；取證日期＝2026-08-21】
+
+  > ✅ **2026-08-21 第十二輪相鄰收割**：Claude comment `5363844402` 證明前輪的 block-closer
+  > 修法把本條從「多遮」升成可放行畸形 metadata 的 fail-open，因此本輪只收割這個已點名坑。
+  > checker 現在只有行首 0–3 空格後的 opener 會進 block 模式；行中 inline comment 收尾後繼續
+  > 解析同一行後綴。負向 fixture 修前 exit 0、修後 exit 1，合法相反方向維持 exit 0。
+
+  > ✅ **2026-08-21 第十三輪相鄰更正與收割**：Claude comment `5364105225` 證明上段把
+  > `visible.empty?` 與 masked 餘段誤當 raw-line 行首，且只覆蓋同一 raw line 內的 inline
+  > comment。checker 現改以未遮罩 raw line 的 0–3 空格＋opener 判 HTML block，且每個 raw line
+  > 只容許第一次掃描成立；跨行 inline comment 會保存 prefix，並把 closing-line suffix 接回同一
+  > 邏輯活性行。畸形／合法跨行與 reopen 四支 fixture、raw-code-span／block-closing／跨行／reopen
+  > 五條生產 helper probe 均已承重；前段保留作第十二輪時點記錄，不再作現行契約。
+
+- **R4 中文數字集合不含「兩」**：`NUM` 的中文數字字元類沒有「兩」，因此既有白名單形態中的
+  「兩支」「兩份」「兩組」不會命中；本輪 worklog 的 Pending 有現成「兩支」實例。這是 PR #42
+  以來的既有 pattern 邊界，並非本輪 inline comment 修法引入；依鐵律 17.2 只登記，不順手擴字元集
+  【F5/F12；來源＝PR #65 Claude comment `5363844402` ⚪；取證日期＝2026-08-21】
+
+- **R6 的零 count 訊息不能區分「真零供給」與「標頭全畸形」**：
+  header 格式 violation 會先記錄，但畸形區塊在解析 type 前被略過；若檔內沒有其他合法 count，
+  尾端還會印「沒有任何活性 type: count」。退出仍為 1 且真正格式錯誤同時存在，故只屬訊息口徑；
+  本輪不順手改文案
+  【F5/F12；來源＝PR #65 Claude comment `5361142724` ⚪2；取證日期＝2026-08-21】
+
+- **m0-review-convergence 的 R6 已知限制沒有列跨行 code span 與 closer 邊界**：
+  終態規則表與 fixture 表已按本輪阻擋改成 opener-only，外部證據也明列 comment 開啟後任何
+  `-->` 都收尾；但該檔「已知限制」段仍沒集中列出不支援跨行 code span、closer 不遮罩兩點。
+  行為與來源已在 external-facts／第六輪 worklog 保存，本輪依 17.2 只登記，不擴寫未點名段落
+  【F5/F11；來源＝PR #65 Claude comment `5361142724` ⚪3；取證日期＝2026-08-21】
+
+- **doc-claims runner 的非 fixture 摘要與實際情境集合再次漂移**：既有登記仍寫「五個 bullet」
+  與「3 組 git＋1 組 supply」，current runner 已另有 W2、兩個 supply 情境與更多摘要列；坑仍是
+  「手抄摘要不能證明供給情境全集」，本輪不回寫既有登記或 runner 輸出
+  【F5/F12；來源＝PR #65 Claude comment `5361587574` ⚪1；取證日期＝2026-08-21】
+
+- **fixture flag 的 production wiring 守衛只釘 GitHub job，沒有釘 Windows runner**：
+  `scripts/test-doc-claims-rules.rb` 的 W2 只讀 `.github/workflows/ci.yml`；
+  `config/ci.rb` 也是 production-equivalent 供給端，而 CI parity 只比腳本／runner 識別、不比參數。
+  若日後只在 Windows runner 調用加入 fixture flag，R6 supply canary 可被關閉而現有 W2 不響；
+  本輪只登記，未修改未被阻斷意見點名的 wiring guard
+  【F10/F12；來源＝PR #65 Claude comment `5361587574` ⚪2；取證日期＝2026-08-21】
+
+- **CLAIM-005 的長 recheck 仍有 Markdown／PowerShell 可攜性缺口**：第六輪版本把內層正則的
+  反引號寫進外層 code span，GitHub 會拆成多段，PowerShell 又把反引號視為 escape；本輪阻斷只
+  要求 recheck 不得自我證明。現行命令已移除內層反引號並以 Ruby 起頭，但 Windows 原生 shell
+  的可複製貼上形式仍須後續獨立包設計，不把 Git Bash 實跑外推為 PowerShell 相容
+  【F5/F8/F11；來源＝PR #65 Claude comment `5361587574` ⚪3；取證日期＝2026-08-21】
+
+- **m0-review-convergence 的變更記錄沒有逐輪涵蓋 PR #65**：本 PR 多輪修改該檔的 R6 規則、
+  fixture 表與證據敘述，但檔尾變更記錄未建立相應條目；本輪只同步被點名的終態契約，不把
+  ⚪ 觀察擴成歷史 changelog 修復
+  【F5/F11；來源＝PR #65 Claude comments `5361587574` ⚪4、`5363275846` ⚪4；
+  取證日期＝2026-08-21】
+
+- **R6 的 recheck 命令近似判定仍接受只有工具名的 code span**：
+  `CLAIM_RECHECK_CMD` 只要求整段以受支援工具 token 起頭，後續參數可為空，因此單獨的
+  `ruby` 也合語法；這與「不能只在散文中提到工具名」的 prefix 需求不衝突，但尚未證明命令
+  具可執行參數或能完成複驗。第八輪阻擋只點名 wrapper 冗餘與 recheck 鍵變體，依 17.2 不擴成
+  command grammar 改寫；後續契約包須先定義哪些工具允許無參數，再各放正反 fixture
+  【F5/F11/F12；來源＝PR #65 Claude comment `5362007581` ⚪；取證日期＝2026-08-21】
+
+- **[已撤回] R6 的 `CLAIM_RECHECK` 值沒有比照 type 值移除尾端空白**：
+  舊條目依早期 `(.+)` matcher 推論尾端空白會進 `CLAIM_RECHECK_CMD`，但 current head 已用
+  `(.*?)` 捕捉，並在建立 entry 時執行 `match[2].strip`。`git log -p` 證明這個正規化由 commit
+  `cf9fa51` 引入；因此原 pit 在該 head 已不存在，不能再作 active queue。保留本條只為記錄撤回
+  與來源更正，不派修
+  【F5/F11/F12；來源＝PR #65 Codex inline `3826579184`、內部 `git log -p`；
+  取證日期＝2026-08-21】
+
+- **R4 的鄰近複驗豁免仍可由含工具名的散文 code span 取得**：
+  R6 已用 `CLAIM_RECHECK_CMD` 要求整段以工具開頭，但 R4 的 `RECHECK_CMD` 刻意維持寬鬆搜尋；
+  因此同一個 code span 若只是散文提到 `git`，仍可能讓鄰近易腐數字免於 R4 警告。這是未被
+  本輪阻擋點名的另一規則，依 17.2 只登記，不把 R6 修法擴散到 R4
+  【F5/F12；來源＝PR #65 Claude comment `5362761839` ⚪2；取證日期＝2026-08-21】
+
+- **R6 metadata 只認 `-`，未涵蓋 CommonMark 的 `+`／`*` bullet marker**：
+  `CLAIM_TYPE`／`CLAIM_RECHECK` 對以 `+` 或 `*` 開頭的合法 bullet 不匹配；第九輪 type 必填 guard
+  會 fail-closed，但訊息把人指向欄位缺字而非清單標記。現況不會誤綠，本輪依 17.2 只登記；
+  後續若擴 marker 集合，須先以正反 fixture 固化診斷與既有 `-` 行為。CommonMark 0.31.2 §5.2
+  官方逐字為 "A bullet list marker is a `-`, `+`, or `*` character."
+  【F5/F6/F12；來源＝PR #65 Claude comment `5363275846` ⚪1、
+  <https://spec.commonmark.org/0.31.2/>；取證日期＝2026-08-21】
+
+- **R6 的 type 必填訊息把「每個活性 CLAIM」寫得比實際 parser 射程寬**：
+  畸形 CLAIM 標頭會先在格式分支阻擋並 `next`，不會進 type 必填 guard；兩條路都 fail-closed，
+  退出碼不變，差異只在訊息射程。依 17.2 只登記，不順手改診斷文字
+  【F5/F12；來源＝PR #65 Claude comment `5363275846` ⚪2；取證日期＝2026-08-21】
+
+- **第九輪 pit 條目的「本輪阻擋只點名 type metadata 缺字」已成歷史時點敘述**：
+  該理由在第九輪成立；第十輪另有 91 識別字同步阻擋。條目仍正確解釋當時為何不擴修
+  `CLAIM_RECHECK`，但「本輪」不可外推成 PR 全部驗收輪的集合；後續引用須帶第九輪時點
+  【F5/F11；來源＝PR #65 Claude comment `5363275846` ⚪3；取證日期＝2026-08-21】
+
+- **R6 的 production listing 不掃尚未納入 git index 的 92 新檔**：
+  `listing()` 優先用 `git ls-files`，只有輸出為空才退回 glob；生產樹已有其他 Markdown，故未
+  `git add` 的 `docs/specs/92-*` 新檔不會進 R6，也不受跨索引 ID 唯一性檢查。該檔未納管時本來
+  也不能進 main；本輪不改既有 listing 策略，後續若要求 pre-index 檢查須另定工作樹／index
+  射程並放正反 fixture
+  【F5/F11/F12；來源＝PR #65 Claude comment `5363573988` ⚪1；取證日期＝2026-08-21】
+
+- **92 宣稱索引的自我契約仍是 R6 完整契約的子集**：
+  `docs/specs/92-claim-index.md` 已寫 CLAIM ID 全域唯一，但未列「每份索引須有活性標頭」與
+  「圍欄／HTML comment 須收尾」；完整現值在 checker 檔頭與
+  `docs/dev/m0-review-convergence.md`。目前是摘要不完整而非互斥，本輪依 17.2 只登記，不回寫
+  未被阻擋意見點名的索引前言
+  【F5/F11；來源＝PR #65 Claude comment `5363573988` ⚪2；取證日期＝2026-08-21】
+
+- **跨索引重複 ID 診斷的「首次」指字典序，不是撰寫時序**：
+  targets 先排序再掃描，錯誤訊息的首次 path／line 因而可重現，但不代表哪一份較早寫入。
+  訊息已同時列出兩份路徑，退出碼與約束不受影響；後續診斷文字包可改成「排序後先見」，本輪
+  不為非阻擋措辭擴改腳本
+  【F5/F12；來源＝PR #65 Claude comment `5363573988` ⚪3；取證日期＝2026-08-21】
+
+- **`recheck*` 畸形鍵的診斷射程與 `type*` 不對稱**：第一個活性 CLAIM 標頭前的 `type*`
+  會由前置 metadata 分支檢查，`recheck*` 沒有對應分支；區塊內的 recheck 診斷又位於
+  `next if count_entries.empty?` 之後，因此 `type: qualitative` 與 `rechecks:` 並存時只報 type
+  violation。所有這些形態仍非零退出，不構成 fail-open；依 17.2 只登記診斷完整性，不擴修 checker
+  【F5/F12；來源＝PR #65 Claude comment `5364105225` ⚪；取證日期＝2026-08-21】
+
+- **第十二輪 worklog 的鐵律 20.3 表頭缺少「輸出」二字**：
+  `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md` 的第三欄仍寫「反向複驗」，與鐵律
+  20.3 固定表頭「反向複驗輸出」不一致。`git log --follow -p` 證明該表頭由 commit `cf9fa51`
+  首次寫入；這是本輪內部全掃發現、未被 comment `5364105225` 點名，依 17.2 只登記，不回寫
+  歷史 worklog 表格
+  【F5/F11/F12；來源＝內部 `git log --follow -p`；取證日期＝2026-08-21】
+
+- **第十三輪 worklog 的 Changes 手抄 parser probe 數量已與 runner 漂移**：
+  `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md` 的 Changes 仍寫「四條 parser probe」，
+  而 runner 已有額外的 `indented-block-start` probe。這是本輪內部重讀發現、未被 Codex review
+  `4988929408` 或 Claude comment `5364105225` 點名；依 17.2 只登記，不回寫該 worklog bullet
+  【F5/F11/F12；來源＝內部 worklog／runner 集合比對；取證日期＝2026-08-21】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -862,6 +1126,21 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-20-PR62第三輪驗收修復.md`（Codex review `4983293473` 三則 inline 與 Claude comment `5356779594` 同三根因；延後包與精確錨已補）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告修復.md`（commit `f6c9b7a` 後 doc-claims 命中一則 R5；已在原處補查法，未新增 §3 項）
 - [x] `docs/worklog/2026-08-20-PR62第三輪post-commit警告第二次修復.md`（commit `93a02cd` 後同一 R5 仍在；已按 checker 鄰近窗口補查法，未新增 §3 項）
+- [x] `docs/worklog/2026-08-21-P2宣稱索引與R6.md`（六組假數字證據化＋R6 正反 fixture；已通讀，Markdown 範圍外同型問題已登 §3）
+- [x] `docs/worklog/2026-08-21-PR65首輪雙驗收修復.md`（Codex review `4985224623`＋Claude comment `5359074865`；首輪意見與鐵律 20.3 稽核已處置）
+- [x] `docs/worklog/2026-08-21-PR65第二輪雙驗收修復.md`（Codex review `4985525215`＋Claude comment `5359428067`；R6 邊界、宣稱斷言與鐵律 20.4 復發記錄已處置）
+- [x] `docs/worklog/2026-08-21-PR65第二輪post-commit宣稱修復.md`（commit `6afac5d` 後 doc-claims 命中 R6 子集合手抄分量；只撤回該易腐計數）
+- [x] `docs/worklog/2026-08-21-PR65第三輪雙驗收修復.md`（Claude comment `5359967807`＋Codex review `4985880560`；快照／口徑／R6 fail-closed 與契約同步已處置）
+- [x] `docs/worklog/2026-08-21-PR65第四輪雙驗收修復.md`（Claude comment `5360428264`＋Codex review `4986322814`；HTML comment fail-closed、終態 Changes、外部證據與宣稱斷言已處置）
+- [x] `docs/worklog/2026-08-21-PR65第五輪雙驗收修復.md`（Claude comment `5360765482`＋Codex review `4986560215`；count cardinality／零供給、code span comment scope、歷史分類與終態聲明已處置）
+- [x] `docs/worklog/2026-08-21-PR65第六輪雙驗收修復.md`（Claude comment `5361142724`＋Codex review `4986877890`；closer 契約、metadata／supply fail-closed、歷史快照與終態宣稱已處置）
+- [x] `docs/worklog/2026-08-21-PR65第七輪雙驗收修復.md`（Claude comment `5361587574`＋Codex review `4987154051`；檔頭契約、baseline source recheck、type key 與命令起始形態已處置）
+- [x] `docs/worklog/2026-08-21-PR65第八輪雙驗收修復.md`（Claude comment `5362007581`＋Codex review `4987453495`；wrapper 冗餘、recheck 鍵變體與 CLAIM-005 證偽已處置）
+- [x] `docs/worklog/2026-08-21-PR65第九輪雙驗收修復.md`（Claude comment `5362761839`＋Codex review `4987956545`；活性 CLAIM type metadata 與登記簿識別字同步已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十輪雙驗收修復.md`（Claude comment `5363275846`＋Codex review `4988342175`；活性標頭契約、巢狀 metadata 射程與 CLAIM ID 跨索引唯一性已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十一輪雙驗收修復.md`（Claude comment `5363573988`＋Codex review `4988556633`；跨索引相異 ID happy path 與 HTML comment closing-line suffix 已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十二輪Codex驗收修復.md`（Codex review `4988736695`＋Claude comment `5363844402`；Markdown raw evidence、歷史 totals 邊界、recheck-like 畸形鍵與 inline comment fail-open 已處置）
+- [x] `docs/worklog/2026-08-21-PR65第十三輪Claude驗收修復.md`（Claude comment `5364105225`＋Codex review `4988929408`；raw-line block start、跨行 inline 重組、歷史終態更正與 CLAIM-003 consumer 閉環已處置）
 
 ### A.2 handoff
 

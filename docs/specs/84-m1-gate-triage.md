@@ -1,6 +1,11 @@
 # 84 — M1 閘門分流（2026-08-14）
 
-> 起因：parity R0–R13 累積 81 條未結案，其中 16 條標「M1 相關」。但沒人確認過這 16 條
+> 起因：本檔建立時文字記作「parity R0–R13 累積 81 條未結案」，但那個無時間邊界的
+> 數字不能代表後續處置後的現值；`docs/specs/71-admin-parity-sweep.md` 目前有 **77 列狀態格含 `⬜`**：
+> 其中 **76 列以 `⬜` 起頭**，另 1 列 `71-R3-DOC1` 是「✅ 考證；⬜ 選型」的混合狀態。
+> 這裡的 77 是「仍含開放子項」口徑，不等於 71 §F 圖例表的純 `⬜` 未結案 76。
+> 複驗：`ruby -EUTF-8:UTF-8 -e 'rows=File.readlines("docs/specs/71-admin-parity-sweep.md",chomp:true).grep(/^\| 71-R/); statuses=rows.map{|l|p=l.split("|",-1);[p[1].strip,p[-2].strip]}; containing=statuses.count{|_,s|s.include?("⬜")}; leading=statuses.count{|_,s|s.start_with?("⬜")}; mixed=statuses.select{|_,s|s.include?("⬜")&&!s.start_with?("⬜")}.map(&:first); abort "unexpected unresolved status split #{[containing,leading,mixed].inspect}" unless [containing,leading,mixed]==[77,76,["71-R3-DOC1"]]; p({contains_open:containing,leading_open:leading,mixed:mixed})'`。
+> 本檔當時從登記中取出其中 16 條標「M1 相關」，但沒人確認過這 16 條
 > **是不是真的都擋 M1**——標籤是各輪當下順手打的，沒有統一判準。
 > 🔴 **判準（本檔唯一標準）**：**這條沒答，M1 會不會寫出「之後必須重寫的表或欄位」？**
 > - 會 → **A 真的擋**（動工前必須有答案）

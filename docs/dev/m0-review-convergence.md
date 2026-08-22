@@ -88,13 +88,15 @@
 | R3 | `路徑:行號` 的行號不得超出該檔行數 | 全樹（納管目錄內） |
 | R4 | 易腐數字必須附複驗指令或標為快照 | 只掃**相對 base 有改動**的 worklog／handoff |
 | R5 | 全稱句要列舉或附查法 | 同上，**🟡 警告不擋** |
-| canary | 掃到 0 個檔 ⇒ 不是通過，是沒生效 | — |
+| R6 | 每份索引須有活性 `CLAIM-NNN` 標頭，且每個合法活性 CLAIM 都須有 `type: count`、CLAIM ID 跨全部索引全域唯一、圍欄／HTML comment 須收尾；`type`／`recheck` 鍵大小寫與冒號前空白不敏感、type 值只允許小寫 `count`、`type*`／`recheck*` 畸形鍵拒絕；每個 count 區塊各限一筆 type 與語義 recheck，且 recheck code span 須以受支援工具開頭；同一行成對 code span 內的 `<!--` 不開 comment，只有未遮罩 raw line 的行首 0–3 空格後 opener 開 HTML block；inline comment 可跨 raw line，prefix 與 closing-line suffix 重組為同一邏輯活性行 | `docs/specs/92-*`（tree-wide，🔴 阻擋） |
+| canary | 全樹掃到 0 個檔，或非 `--fixture-mode` 調用掃到 0 份 `docs/specs/92-*` ⇒ 不是通過，是沒生效；明確 ROOT 不構成豁免 | — |
 
 退出碼照 `check-limits-keys.rb` 已立的三分表：`0` 通過／`1` 有違規／`2` 跑不了／`3` 沒生效。
 🔴 canary 用 3 而非 2，是為了與 fail-closed 的 2 **結構上可分辨**。
 
 **納管範圍**＝對本倉庫**現況**做斷言的地方：`docs/worklog/`、`docs/handoff/`、`docs/dev/`、
 `docs/plans/`（2026-08-18 PR #58 擴入——方案檔同性質；注意僅 R1／R3，R4／R5 範圍見上表不變）、
+`docs/specs/92-*`（P-2 窄例外：R1／R3＋R6，不代表其餘 specs 納管）、
 `AGENTS.md`、`CLAUDE.md`、`HANDOFF.md`、`scripts/`。
 
 **R4／R5 只掃改動過的檔**，這是分層規範的直接後果：歷史層不回頭改，
@@ -132,8 +134,9 @@
 2. **R1 不管編號簡稱**。簡稱指到不存在的編號抓不到。
    可接受：九輪裡的路徑錯誤**全部**是帶副檔名的具體路徑。
 
-3. **R1／R3 不管 research／design／specs**。要納管必須先解決
-   「如何區分本尊路徑與我方路徑」，本輪沒解。
+3. **R1／R3 普遍不管 research／design／specs**；P-2 只為 `docs/specs/92-*` 宣稱索引
+   增加窄例外，讓 R6 檢查結構化計數。這不等於 specs 全面納管；要全面納管仍須先解決
+   「如何區分本尊路徑與我方路徑」。
 
 4. **「同一項目不重提」是在賭模型配合**（讀上一則留言）。
    賭輸的後果是**放行**而非誤擋；`AUTO_MERGE` 維持 `false`，所以 workflow 本身不會合併。
@@ -163,6 +166,42 @@
 | `doc_volatile_ok` | 0 | 反向：附複驗指令必須放行 |
 | `doc_volatile_cjk` | 1 | 🔴 R4 **中文數字**分支（「八條」這類——初版 \d+ pattern 對最常見寫法全盲） |
 | `doc_plans_scope` | 1 | 🔴 掃描範圍 canary：`docs/plans/` 已納 IN_SCOPE（2026-08-18 PR #58）——拿掉範圍時本 CASE 期望 1 實得 3（零檔 canary）＝回歸測試轉紅 |
+| `doc_claim_count_missing_recheck` | 1 | R6 計數宣稱缺 `recheck:` |
+| `doc_claim_count_ok` | 0 | R6 反向：合法命令形態必須放行 |
+| `doc_claim_duplicate_count` | 1 | R6 同一區塊的第二筆 count 不得借用第一筆 recheck |
+| `doc_claim_duplicate_recheck` | 1 | R6 同一區塊不得發布兩筆有歧義的 recheck |
+| `doc_claim_recheck_key_variants_ok` | 0 | R6 反向：單一 `Recheck :` 鍵變體與合法命令須放行 |
+| `doc_claim_duplicate_recheck_key_variant` | 1 | R6 精確鍵與鍵變體仍是同一欄位，不得繞過 cardinality |
+| `doc_claim_bad_recheck_key` | 1 | R6 `rechecks:` 等 recheck-like 畸形鍵不得在 exact matcher 之前消失 |
+| `doc_claim_no_count` | 1 | R6 局部零供給：合法 CLAIM 存在但 count 全空仍須阻擋 |
+| `doc_claim_bad_type` | 1 | R6 type 值不是精確小寫 `count` 時不得靜默略過 |
+| `doc_claim_bad_type_key` | 1 | R6 `types:` 等 type-like 畸形鍵不得在 exact matcher 之前消失 |
+| `doc_claim_missing_type_metadata` | 1 | R6 `typ:` 等未命中 type-like matcher 的缺字鍵不得讓活性 CLAIM 被靜默略過 |
+| `doc_claim_type_key_variants_ok` | 0 | R6 反向：`Type:`／`type :` 的鍵變體配合法值與命令時須放行 |
+| `doc_claim_bad_recheck` | 1 | R6 有 `recheck:` 但不是命令，不得只驗欄位存在 |
+| `doc_claim_prose_recheck` | 1 | R6 code span 只在散文中提到工具名，不得冒充可執行命令 |
+| `doc_claim_no_headers` | 1 | R6 索引沒有任何 CLAIM 標頭 |
+| `doc_claim_count_before_header` | 1 | R6 計數宣稱落在第一個合法區塊前 |
+| `doc_claim_malformed_header` | 1 | R6 位數、標題階層或括注不合契約，不得被前一區塊吸收 |
+| `doc_claim_indented_header` | 1 | R6 依 CommonMark 接受 0–3 個前導空格，且縮排標頭仍受 count 契約約束 |
+| `doc_claim_indented_metadata` | 1 | R6 依 CommonMark 接受清單標記前 0–3 個空格；縮排 `type: count` 不能繞過 recheck 契約 |
+| `doc_claim_indented_metadata_ok` | 0 | R6 反向：縮排的 count／recheck 成對合法時必須放行 |
+| `doc_claim_duplicate_id` | 1 | R6 活性 CLAIM ID 必須唯一，不依賴 `type: count` 才檢查 |
+| `doc_claim_duplicate_id_across_indexes` | 1 | R6 CLAIM ID 跨全部 `docs/specs/92-*` 全域唯一；分片索引不得各自重用同一 ID |
+| `doc_claim_distinct_ids_across_indexes_ok` | 0 | R6 反向：多份合法分片索引的 ID 不重複時必須放行 |
+| `doc_claim_inactive_headers` | 0 | R6 反向：fenced code／HTML comment 內的範例標頭必須忽略 |
+| `doc_claim_unclosed_fence` | 1 | R6 fail-closed：未關閉圍欄不得把後續索引靜默排除 |
+| `doc_claim_unclosed_comment` | 1 | R6 fail-closed：未關閉 HTML comment 不得把後續索引靜默排除 |
+| `doc_claim_code_span_comment_ok` | 0 | R6 反向：同一行成對 code span 內的 `<!--` 不得誤開 comment |
+| `doc_claim_code_span_comment_scope` | 1 | R6 code span 內的 `<!--` 不得遮掉後續缺 recheck 區塊 |
+| `doc_claim_comment_close_span` | 1 | R6 comment 開啟後，行內 `-->` 即使看似 code span 內容仍會收尾 |
+| `doc_claim_comment_closer_suffix_header` | 1 | R6 HTML comment closing line 的 `-->` 後綴不得冒充活性 CLAIM 標頭 |
+| `doc_claim_inline_comment_suffix` | 1 | R6 行中 inline comment 後綴不得被 block 收尾規則丟棄，使畸形 type 值縮成合法 count |
+| `doc_claim_inline_comment_ok` | 0 | R6 反向：移除行中成對 comment 後仍是合法 count 時必須放行 |
+| `doc_claim_inline_comment_multiline_suffix` | 1 | R6 跨行 inline comment 的 prefix／suffix 必須重組，換行不得把畸形 type 拆成合法 count |
+| `doc_claim_inline_comment_multiline_ok` | 0 | R6 反向：跨行 inline comment 移除後仍是合法 count 時必須放行 |
+| `doc_claim_inline_comment_reopen_suffix` | 1 | R6 closing line 的餘段再開 inline comment 時，不得改用 HTML block 規則丟 suffix |
+| `doc_claim_inline_comment_reopen_ok` | 0 | R6 反向：closing line 再開成對 inline comment 後仍是合法 count 時須放行 |
 | `doc_no_files` | **3** | canary |
 | `doc_clean` | 0 | 總反向斷言 |
 （表列以 `ls spec/fixtures/ci_violations/ | grep ^doc_` 為準——列數勿手寫。）
@@ -170,7 +209,21 @@
 **開發時的決定性驗證**：把 `check-doc-claims.rb` 拿去跑四個**歷史 commit**，
 確認它抓得到當時驗收方標的**同一行**——`worklog:57`、`handoff:44`、`:13`、`:14` 全部命中。
 
-**突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補，test 轉紅）。
+**突變測試全抓**（逐項）：R1 停用／裸檔名分支拿掉／R3 停用／R4 停用／錨定變全放行／
+全樹 canary 拿掉／docs/plans 範圍拿掉（2026-08-18 補）／R6 缺命令／假命令／零標頭／
+首標頭前計數／畸形標頭吸收／縮排標頭漏判／縮排 count metadata 漏判／合法縮排 metadata 誤擋／
+type 值錯誤靜默略過／type-like 畸形鍵漏判／活性 CLAIM 缺 type metadata／合法 type 鍵變體被誤擋／recheck 散文只提工具名／
+合法 recheck 鍵變體被誤擋／recheck 精確鍵與變體重複漏判／recheck-like 畸形鍵漏判／單檔及跨索引重複 ID／跨索引合法
+相異 ID 被一律拒絕／單區塊重複 count 借用
+recheck／單區塊重複 recheck／合法標頭下
+count 零供給／把 fenced code 或 HTML comment 誤當活性區塊／未關閉圍欄靜默截斷／未關閉 HTML
+comment 靜默截斷／code span opener 誤開 comment／comment closer 被錯誤遮罩／closing-line 後綴
+被重餵為活性標頭／行中 comment 後綴被 block 規則丟棄／合法行中 comment 被誤擋／跨行 inline
+comment prefix／suffix 未重組／closing line 餘段 opener 被誤判 block／raw line 前置 code span 被遮罩
+成三格縮排而誤判 block／合法跨行與 reopen comment 被誤擋／無 ROOT 與明確 ROOT
+生產樹零份
+`docs/specs/92-*`；逐項由 fixture、git 情境或
+supply-S1／S2／production helper parser probes 令 `scripts/test-doc-claims-rules.rb` 轉紅。
 
 ## 已知限制
 
@@ -178,7 +231,8 @@
 2. R5 只警告不擋，全稱句的**真假**仍然沒有機器判準。
 3. `MIN_CASES` 是手動維護的下限，加 case 時要記得往上調。
 4. 「同一項目不重提」依賴驗收方正確讀取上一則留言，**沒有機制驗證它有沒有照做**。
-5. `check-doc-claims.rb` 本身沒有納管 `docs/specs/`／`docs/research/`——那兩處的引用錯誤仍靠人。
+5. `check-doc-claims.rb` 不**廣泛**納管 `docs/specs/`／`docs/research/`；唯一窄例外是
+   `docs/specs/92-*`，由 R1／R3／R6 檢查。其餘兩處的引用與宣稱錯誤仍靠人。
 
 ## 歷史編號第五機制：鐵律 15 提交前復核（2026-08-17，PR #53）
 
