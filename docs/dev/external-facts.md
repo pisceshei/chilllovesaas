@@ -370,8 +370,18 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 >
 > "To pass pre-constructed JSON or payloads in other formats, a request body may be read from file specified by `--input`. Use `-` to read from standard input."
 
-來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。前句屬
-`-f/--raw-field`，後句屬 `-F/--field` 的 magic type conversion；不得把後句外推到 `-f`。
+來源：GitHub CLI 官方 <https://cli.github.com/manual/gh_api>（取證 2026-08-21）。
+🔴 **上方三句逐句分屬三個不同旗標，不得互相代替**（2026-08-22 改寫；來源＝Claude issue
+comment `5364180385` 🟡-1）：
+- **第一句**屬 `-f/--raw-field`——靜態字串參數。
+- **第二句**屬 `-F/--field` 的 magic type conversion（`@filename`／`@-`）。
+  🔴 **不得外推到 `-f`**：`-f text=@path` 送出的是字面 `@path`，本節下方即為該事故的實測。
+- **第三句**屬 `--input`——它是**整體 request body** 的入口，與 `-F` 的**單一欄位值**入口不同層。
+<!-- 🔴 2026-08-22 更正（同來源）：本段原文為「前句屬 `-f/--raw-field`，後句屬 `-F/--field`
+     的 magic type conversion；不得把後句外推到 `-f`」——那是為**兩句**版本寫的。上一輪在
+     blockquote 補進第三句（`--input`）時沒有同批改這裡，於是「後句」的自然讀法（最後一句）
+     指向 `--input`，第二句的歸屬被頂掉、第三句沒有歸屬。
+     🔴 而「不得把後句外推到 `-f`」是本節**唯一的規範性防線**，擋的正是已發生過的事故。 -->
 
 官方同頁另明列：`-F key=@-` 可從 stdin 讀取**欄位值**；`--input file` 可讀取預先組好的
 **整體 request body**，且 `--input -` 從 stdin 讀。2026-08-21 實跑 `-F text=@-` 與
@@ -391,10 +401,24 @@ canary，不能把 table／pre 的零計數直接當成功。
 >
 > "Show full diff with respect to each of parents."
 
+> "Disable output of diffs for merge commits. Useful to override implied value."
+
+> "Default is `off` unless --first-parent is in use, in which case first-parent is the default."
+
 來源：Git 官方 <https://git-scm.com/docs/git-log> 的 DIFF FORMATTING／
-`--diff-merges=separate`（取證 2026-08-21）。官方另明列 `--diff-merges` 預設為 `off`（未使用
-`--first-parent` 時）；所以 `--name-status` 與 `--diff-filter` 本身不能證明 merge-resolution
-刪除／改名已被掃到。
+`--diff-merges=separate`（取證 2026-08-21）。
+🔴 **上面兩句是本輪補的條件逐字**（2026-08-22；來源＝Codex inline `3826627165`）：原文只用
+中文寫「官方另明列 `--diff-merges` 預設為 `off`（未使用 `--first-parent` 時）」，而**那正是
+本條承重的那一句**——沒有它，「預設不輸出 merge diff」這個結論沒有出處。
+⚠️ **取證路徑要說清楚**：`git-scm.com/docs/git-log` 的渲染頁在本次抓取時被截斷，取不到
+DIFF FORMATTING 全段；因此改取 git 一手來源
+<https://raw.githubusercontent.com/git/git/master/Documentation/diff-options.adoc>
+（取證 2026-08-22）。該檔的條件句寫作 `"Default is {diff-merges-default} unless --first-parent
+is in use, in which case first-parent is the default."`，其中 `{diff-merges-default}` 是
+asciidoc 屬性；<https://raw.githubusercontent.com/git/git/master/Documentation/git-log.adoc>
+（取證 2026-08-22）逐字設 `:diff-merges-default: ``off``` ⇒ 在 git-log 文檔的渲染結果即為
+`off`。**上面第二句引的是展開後的形態，展開依據就是這一行屬性定義**，不是我方推斷。
+所以 `--name-status` 與 `--diff-filter` 本身不能證明 merge-resolution 刪除／改名已被掃到。
 
 `git diff-tree` 的 `-r` 官方逐字是 "Recurse into sub-trees."，來源：Git 官方
 <https://git-scm.com/docs/git-diff-tree>（取證 2026-08-21）。因此巢狀路徑的 merge-only witness

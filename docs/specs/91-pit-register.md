@@ -893,6 +893,21 @@
   【F3/F5/F11；官方 pinned 原文獨立重取；PR #64 Claude comment `5361847317` ⚪2；
   取證日期＝2026-08-21】
 
+- **`external-facts` B9 的 `-f/--raw-field` 逐字是無省略號的截斷句**：該句引為
+  "…to add static string parameters"，而上游 `cli/cli` 的 `pkg/cmd/api/api.go` 全句為
+  "Pass one or more `-f/--raw-field` values in `key=value` format to add static string
+  parameters **to the request payload**."——缺的 "to the request payload" 正是把該旗標定位在
+  request body 層的限定語，且截斷處**沒有省略號**，讀者無從察覺這是節錄。語義未被證偽、
+  該行本輪未動 ⇒ 依 17.2 只登記。與本節 A9 的「短引文丟失情態」同根因（逐字節錄載體
+  未保留必要限定），後續 evidence-format 包應統一規定「節錄必加省略號並保留限定語」
+  【F3/F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪1；取證日期＝2026-08-22】
+
+- **`external-facts` B9 的「官方同頁**另**明列」在本輪之後變成同節內重述**：上一輪已把
+  `-F …@-` 與 `--input` 的逐字補進**正上方**的 blockquote，於是該段「另（在別處）明列」的
+  框架失去對象——讀者會去找一個不在別處、就在上面三行的東西。屬敘事框架與現況脫節，
+  不影響任何斷言 ⇒ 依 17.2 只登記。正解＝把「另明列」改為指向上方 blockquote 的第二／三句
+  【F5/F11；來源＝PR #64 Claude issue comment `5364180385` ⚪2；取證日期＝2026-08-22】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
