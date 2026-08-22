@@ -161,6 +161,11 @@
   寫合規 PR／DECISIONS 落點與同一份本地 handoff，**不修改／commit worklog，不製造新 head**。
 - 只有工作真正拆成另一個可獨立合併 PR，才另建 worklog；只有正式轉交、rollback 後另起恢復包，
   才另建本地 handoff。
+- 🔴 **本節「一份 worklog」對規則生效前已開的 PR 不追溯**（`docs/DECISIONS.md` **D39**，
+  2026-08-22 使用者裁定）。判準可機械判定：
+  `git merge-base --is-ancestor <Convergence Protocol v2 的 merge commit> <該 PR 的第一個 commit>`
+  ——rc 非 0 即適用。適用者的既有逐輪 worklog 維持原樣、不要求整併；
+  **生效後新建的 worklog 一律照本節**。射程邊界（只豁免這一條、只對生效前已開的 PR）見 D39。
 - **commit 之後**跑 `ruby scripts/check-doc-claims.rb`（第 2／4／5 條已機制化，見下節）——🔴 它用 `git diff <base>` 只掃**已提交**的新增行，commit 前跑掃不到剛寫的散文（＝假綠）；**轉紅或出現警告（R5 不影響退出碼，要自己看）⇒ 修正後重凍結、重跑全部閘門並 amend／重建同一個尚未 push 的候選，警告為 0 才推**（見下節第 7 條末段）。
   🔴 **與 `CLAUDE.md` 鐵律 15.4 的時序對照——15.4 的判準一字不動，本段只說明兩者怎麼併存**：
   ①15.4「全部閘門逐支親眼看退出碼 → commit」照跑，**doc-claims 也在那一輪裡**（它是 `config/ci.rb`
