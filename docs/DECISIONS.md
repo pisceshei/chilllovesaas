@@ -389,7 +389,7 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   本授權不翻 `AUTO_MERGE`，0g 只作現行 evaluator／接線的常規 PR canary。
 - 2026-08-21 D38 過渡期補正：能實作新 C1 的獨立 evaluator 與 workflow 接線各自合併前，舊
   evaluator 不得啟動本條代行權，故全部 PR 暫由使用者人工合併；
-  🔴 **解凍條件＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 之後**，
+  🔴 **唯一解凍條件（全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，
   且僅對 0g 之後的 PR、只對原具名射程恢復，不外推到其他工作階段。
   <!-- 🔴 2026-08-22 更正（來源＝PR #66 Codex inline `3835736708`）：本則原寫「兩包完成後，
        本條只對原具名射程恢復」——**漏掉 0g**。0e／0f 合併到 0g 完成之間有一段區間，
@@ -401,9 +401,9 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 ### D32. 互動式 Codex 實作與過渡期代行合併的鐵律補正
 
 > 🔴 **2026-08-21 D38 現值（2026-08-22 補 0g 條件）**：本條授權主體仍有效，但任何舊 evaluator
-> 結果均不得啟動代行；只有 **0e／0f 已合併、且 0g 完成 merge-boundary guard 的 production
-> canary 之後**，現行 evaluator 對 exact head 證明四條件全通過時，非 18.3 PR 才可代行，
-> 且僅適用於 0g 之後的 PR。
+> 結果均不得啟動代行；**唯一解凍條件（全倉同文，不得另立變體）＝
+> 0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且現行 evaluator 對 exact head 證明
+> 四條件全通過時，非 18.3 PR 才可代行，且僅適用於 0g 之後的 PR。
 > <!-- 🔴 2026-08-22 更正（來源＝PR #66 Codex inline `3835736708`）：本段原寫「只有 0e／0f
 >      已合併且現行 evaluator 對 exact head 證明四條件全通過時，非 18.3 PR 才可代行」
 >      ——**漏掉 0g 完成這個前置**。在 0e／0f 合併後、0g 完成前的區間裡，照原文讀
