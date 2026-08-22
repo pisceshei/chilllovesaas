@@ -1622,7 +1622,7 @@
   ① `docs/plans/2026-08-18-總方案.md` 的 X3–X10（header 三欄、各只有兩欄，末欄整格缺）；
   ② `docs/dev/m0-review-convergence.md` 表後那句以 `（表列以 `…` 為準）` 開頭的段落——它**沒有以直線開頭**，卻因為緊貼表格且句中 code span 內有未跳脫的直線，被 GFM 併進上一張表當成表列、切成兩格、反引號失去 code 語義。
   🔴 **不在此列舉筆數**：初稿只寫了 ①、並逐字寫「僅⋯八列」，複驗立刻找到 ②。例外集合一旦手寫列舉就會漏——導出指令見下。
-依 GFM 官方規格逐字——
+  依 GFM 官方規格逐字——
   > “The remainder of the table’s rows may vary in the number of cells. If there are a number of cells fewer than the number of cells in the header row, empty cells are inserted. If there are greater, the excess is ignored”
   （<https://github.github.com/gfm/> §4.10 Tables，取證日期＝2026-08-23）
   ——**少格**不會丟資料（補空格），**超格**才會丟；這八列屬前者，症狀是該表第三欄對它們一律空白。
@@ -1636,6 +1636,7 @@
     ⚠️ 只跳脫 code span 內的直線**不夠**：句子仍緊貼表格 ⇒ 仍被吸進去；
     而只補空行**就夠了**——該句成為獨立 `<p>` 之後，code span 內的直線不再被當成儲存格分隔（本輪以 GitHub `/markdown` 實跑確認）。
     🔴 初稿在這裡寫「兩者要同時做」，是**未實跑就推論**；照初稿改會在一個本來不需要跳脫的 code span 裡留下一個 `\|`。
+
   複驗＝欄數掃描（逐表逐列比對「未跳脫直線數 − 1」與 header 欄數，跳過 fenced code block 與分隔列）。
   🔴 **本倉庫尚無此掃描器**（`scripts/` 下查無）；本輪是以一次性腳本跑的，隨用隨棄。要固化成閘門須另立工作包
   【F5/F11；來源＝PR #64 Claude issue comment `5381492053`（本輪 20.3 ⑦ 掃描的副產物，非驗收方點名）；取證日期＝2026-08-23】
@@ -1650,6 +1651,17 @@
   正解＝`NUM` 的兩個字元類各補「兩」（連帶考慮 千／萬／廿／卅／倆），並加 fixture 打紅「共兩份」「兩張表」；
   複驗＝`ruby scripts/test-doc-claims-rules.rb` 需有一則新 fixture 因此轉紅
   【F5/F11；來源＝PR #64 第 19 輪 push 前對抗式複驗（非驗收方點名）；取證日期＝2026-08-23】
+
+- **鐵律 20.3 的稽核表沒有任何機器會讀它，同一張表已被點名四次**：PR #64 的 20.3 表在第 15 輪（欄名被改）、第 18 輪（輸出欄指向不存在的段落）、第 20 輪（欄名再被改＋四列無輸出）、以及該輪 push 前複驗（⑥ 列的反向複驗式本身是 fail-open）各被點名一次。
+  前三次的固定處理都是「把這一格補上」，第四次證明問題不在某一格——**這張表的每一格都是散文，正確性只取決於寫的人有沒有真的逐格跑過**。
+  ⚠️ 改 `scripts/` 屬 PR #64 射程外（使用者「只修點名的」裁定）⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：在它被機制化之前，20.3 表的可靠度等於「作者這一輪的自律」，而本 PR 已經證明那個可靠度不足以支撐四輪。
+  正解＝把可機械化的列做成 `scripts/` 檢查器並掛 CI，至少涵蓋：
+  ①⑥ 的禁區 pathspec（`git diff --name-only <range> -- .github scripts script config bin Rakefile Gemfile .rubocop.yml` 非空即 FAIL；**用 pathspec 不用 regex 交替**，因為交替符在 Markdown 表格裡會被跳脫成字面直線而恆不匹配）
+  ②⑦ 的表格欄數斷言與末欄 sentinel（渲染後每列最後一個 `<td>` 非空）
+  ③「輸出欄不得只有指令或位置指標而無實跑結果」的形狀檢查
+  複驗＝新檢查器對 `abafcc2^..abafcc2`（該 commit 動過 `.github/workflows/`）必須 FAIL；對純 docs 的 range 必須 PASS
+  【F5/F11；來源＝PR #64 第 20 輪 push 前對抗式複驗（11 agent，非驗收方點名）；取證日期＝2026-08-23】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
