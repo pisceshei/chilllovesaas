@@ -543,7 +543,34 @@ GitHub 契約；未決證據邊界登記於 `docs/specs/91-pit-register.md` §3.
 **deadline（整件事何時必須結束）**。「暫時性錯誤不算失敗」屬前兩者，**「有界」只能由 deadline 表達**。
 ⇒ 想用「次數上限」表達「時間有界」是**維度用錯**：一次等待可長可短，同一個次數在真實時間上可差數個量級。
 
+### B9. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
+
+<!-- 🔴 2026-08-22 更正（來源＝Codex inline `3834080765`）：本條原編為 `A16`，但它**物理上位於
+     `## B. 工具鏈` 之後**，而 A 區全部屬 GitHub 語義、PowerShell 屬工具鏈 ⇒ 編號歸錯區，
+     且讓 A 區出現一個不在 A 區的號、B 區的序號斷在 B8。改編為 `B9`，全部引用同批更新。 -->
+
+Microsoft Learn 的 `about_Functions` 在 **7.6 與 5.1 兩個版本頁面**都以 Important 區塊逐字寫：
+
+> "Within script files and script-based modules, functions must be defined before they can be called."
+
+來源：<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions>
+（7.6，取證 2026-08-22）與
+<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions?view=powershell-5.1>
+（5.1，取證 2026-08-22）。⚠️ **兩個版本都查了**，因為本倉庫的 worklog block 實際跑在
+Windows PowerShell 5.1 上，拿 7.x 的頁面替 5.1 背書不成立。
+
+🔴 **本專案使用邊界**：本條只支持「**指令碼檔內**呼叫點必須排在定義之後」。它**不**支持
+「PowerShell 完全不做前置解析」這類更強的說法——官方這句限定在 script files 與 script-based
+modules，互動式 session 與 dot-source 後的可見性不在本條射程。`docs/worklog/` 內以此為由的
+函式移位，引用範圍以本條為限。
+
 ### B10. GFM 表格：行首／行尾分隔直線是「建議」不是必要；直線靠反斜線跳脫
+
+<!-- 🔴 2026-08-22 移位（來源＝Claude issue comment `5376772877` 🟡-2）：本條新增時被插在
+     `B9` **之前**，使全檔唯一一處編號逆序落在 B 區——而上一輪 Codex `3834080765` 點掉、
+     並由本 PR 修掉的，正是同一檔同一區的「編號與物理位置不一致」。⚠️ 本檔沒有明文排序
+     規則，但下一個要加 `B11` 的人需要一個明確的插入位置，因此就地補上：**本檔以編號遞增
+     的物理順序排列，新條目一律追加在該區末尾。** -->
 
 GitHub Flavored Markdown Spec 的 Tables (extension) 節逐字：
 
@@ -578,23 +605,65 @@ GitHub Flavored Markdown Spec 的 Tables (extension) 節逐字：
 切格與邊界剝除如何判定分隔直線。它**不**支持任何關於表格對齊列、行內元素解析、或最終渲染
 結果的說法；表頭欄數與超出格的處置是另一條（`the excess is ignored`，見該 worklog 內引用）。
 
-### B9. 指令碼檔內的 PowerShell 函式必須先定義才能呼叫
+### B11. PowerShell：變數名不分大小寫（官方逐字）；`&` 呼叫 scriptblock 的**父作用域是誰**＝未取得
 
-<!-- 🔴 2026-08-22 更正（來源＝Codex inline `3834080765`）：本條原編為 `A16`，但它**物理上位於
-     `## B. 工具鏈` 之後**，而 A 區全部屬 GitHub 語義、PowerShell 屬工具鏈 ⇒ 編號歸錯區，
-     且讓 A 區出現一個不在 A 區的號、B 區的序號斷在 B8。改編為 `B9`，全部引用同批更新。 -->
+**① 變數名不分大小寫——官方逐字：**
 
-Microsoft Learn 的 `about_Functions` 在 **7.6 與 5.1 兩個版本頁面**都以 Important 區塊逐字寫：
+> "Variable names aren't case-sensitive, and can include spaces and special characters."
 
-> "Within script files and script-based modules, functions must be defined before they can be called."
+來源 `about_Variables`，**5.1 與當前版兩個頁面逐字相同**：
+<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_variables?view=powershell-5.1>
+與 <https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_variables>
+（皆取證 2026-08-22）。⚠️ **兩個版本都查了**，理由同 `B9`：本倉庫的 worklog block 跑在
+Windows PowerShell 5.1 上。
 
-來源：<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions>
-（7.6，取證 2026-08-22）與
-<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions?view=powershell-5.1>
-（5.1，取證 2026-08-22）。⚠️ **兩個版本都查了**，因為本倉庫的 worklog block 實際跑在
-Windows PowerShell 5.1 上，拿 7.x 的頁面替 5.1 背書不成立。
+🔴 **逐字與推導的分界**：官方**沒有**逐字寫「`$Body` 與 `$body` 是同一個變數」，那是上面那句的
+直接蘊涵。引用本條時要說「由『不分大小寫』推得」，不得寫成「官方寫了」。
 
-🔴 **本專案使用邊界**：本條只支持「**指令碼檔內**呼叫點必須排在定義之後」。它**不**支持
-「PowerShell 完全不做前置解析」這類更強的說法——官方這句限定在 script files 與 script-based
-modules，互動式 session 與 dot-source 後的可見性不在本條射程。`docs/worklog/` 內以此為由的
-函式移位，引用範圍以本條為限。
+**② `&` 執行 scriptblock 的作用域——官方逐字說的是 child scope：**
+
+> "The call operator executes in a child scope."
+
+（`about_Operators`；<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_operators?view=powershell-5.1>
+與當前版逐字相同，取證 2026-08-22）
+
+> "Scriptblocks create a new scope for variables."
+
+> "The call operator is another way to execute scriptblocks stored in a variable. Like `Invoke-Command`, the call operator executes the scriptblock in a child scope."
+
+（`about_Script_Blocks`；<https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_script_blocks?view=powershell-5.1>
+與當前版逐字相同，取證 2026-08-22）
+
+🔴 **本條同批更正一句我方寫錯的話**（來源＝Codex inline `3834527588`）：worklog 曾寫
+「`& $Body` 是**在該函式的作用域裡**執行 scriptblock」——**與官方逐字相反**，官方說的是
+**child scope**（新的子作用域）。該句已就地更正。
+
+**③ 真正承重的那一環＝未取得：**
+
+「該 child scope 的**父**是**呼叫點**的作用域，而不是 scriptblock **定義處**的作用域」
+——這一句**在官方參考文檔裡查不到**。查得到的只有下列各句，它們**每一句都同樣相容於
+語彙作用域（lexical scoping）**，接不到「呼叫點才是父」這一環：
+
+> "You can create a new child scope by calling a script or function. The calling scope is the parent scope. The called script or function is the child scope."
+
+> "When code running in a runspace references an item, PowerShell searches the scope hierarchy, starting with the current scope and proceeding through each parent scope."
+
+（`about_Scopes`，5.1／當前版逐字相同，取證 2026-08-22）
+
+> "Within a child scope, a name defined there hides any items defined with the same name in parent scopes."
+
+（Windows PowerShell Language Specification 3.0 §3.5.1；該頁帶 Microsoft 自己的
+「does not reflect the current state of PowerShell⋯historical reference」告示，取證 2026-08-22）
+
+**查過而沒有這句的五處**（複驗＝逐頁搜尋「invok」「parent scope」「dynamic」）：
+`about_Operators`、`about_Script_Blocks`、`about_Scopes`、語言規格 §3.5.1、語言規格 §3.5.5
+（後者列出 `& { ... }` 屬「建立新作用域」那一側，但仍未說**父是誰**）。**明確演示
+「呼叫點的區域變數會贏」的只有一處**：learn.microsoft.com 上一篇**已封存的 MSDN 部落格**
+（`ms.topic: Archived`、`ROBOTS: NOINDEX,NOFOLLOW`）——**部落格不是規格，不得當官方語義
+引用**。⇒ 依 AGENTS §8.2 記為 **未取得**。
+
+🔴 **本專案使用邊界**：`docs/worklog/` 內那處「突變文字要在 scriptblock 外組好」的修法，
+其前提只是**本機實測到的觀察**——scriptblock 內的 `$body` 拿到的不是 PR 描述，錯誤逐字
+`Method invocation failed because [System.Management.Automation.ScriptBlock] does not contain
+a method named 'op_Addition'.`。**該修法對「機制是哪一條」並不敏感**，因此不受 ③ 的未取得
+狀態影響；反過來，**任何人不得用 ③ 去論證別處的作用域行為**。
