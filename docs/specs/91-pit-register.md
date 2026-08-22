@@ -1728,10 +1728,18 @@
   PR #64 第 24 輪就有一條 R5 警告這樣通過 CI 並被發布成「警告皆 0」。
   🔴 更根本的是：**`rc=0` 與「警告 0」是兩個不同的事實，而只有前者會自動傳播**。
   正解＝①`ci.yml` 的該步改成（🔴 三件缺一不可：`set -o pipefail` 保 rc、`2>&1` 併 stderr——
-  警告經 Ruby `warn` 走 **stderr**，只接 stdout 的 `tee` 什麼都看不到——再 grep `::warning::` 非空即 fail）：
+  警告經 Ruby `warn` 走 **stderr**，只接 stdout 的 `tee` 什麼都看不到——再 grep `::warning::` 非空即 fail。
+  🔴 「走 stderr」的**倉庫內自證**（本機實跑，ruby 3.4.10，2026-08-23，不依賴外部頁面）：
+  `ruby -e 'warn "::warning::x"' 1>/dev/null` ⇒ 仍印出 `::warning::x`；同式 `2>/dev/null` ⇒ 無輸出）：
   `set -o pipefail; ruby scripts/check-doc-claims.rb --base … --require-base 2>&1 | tee out.log; test $? -eq 0 && ! grep -q "^::warning::" out.log`；
   或②腳本加 `--strict` 旗標讓警告進退出碼、CI 用該旗標。複驗＝對一個含已知 R5 警告的 fixture，該 job 必須轉紅
   【F5/F11；來源＝PR #64 Claude issue comment `5382918375` ⚪；取證日期＝2026-08-23】
+
+- **合併輪次寫成「（第 M／N 輪）」時，`grep -q "第 N 輪"` 恆 MISS**：「（第 24／25 輪）」不含子字串「第 24 輪」也不含「第 25 輪」——斜線隔開的縮寫讓逐輪 grep 全部落空。
+  ⚠️ PR #64 的反向複驗迴圈已在註釋要求「不縮寫成區間」，但那只是註釋、沒有機制⇒ 依 17.2 只登記。
+  🔴 **登記的代價**：條目作者少打幾個字，換來覆蓋檢查對該條目**結構性失明**。
+  正解＝逐檔條目一律逐輪寫全（「第 24 輪／第 25 輪」），或迴圈謂詞改為先展開「（第 M／N 輪）」再比對
+  【F5/F11；來源＝PR #64 Claude issue comment `5383193671` ⚪-2；取證日期＝2026-08-23】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
