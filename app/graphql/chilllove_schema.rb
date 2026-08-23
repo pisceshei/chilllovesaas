@@ -5,8 +5,10 @@
 # docs/specs/12 F4。
 class ChillloveSchema < GraphQL::Schema
   query Types::QueryType
+  mutation Types::MutationType
 
-  orphan_types Types::ProductType
+  # ProductType 已由 productSet payload 引用，不再是 orphan；此行在 mutation root
+  # 掛載（2026-08-23）時移除。
   max_complexity GraphqlLimits.fetch(:max_query_cost_points)
 
   # 透過明確的 tenant-scoped query 解析 GID。

@@ -2,29 +2,32 @@
 module Types
   # Admin GraphQL 的 mutation root。
   #
-  # 🔴 **本型別目前是空的，而且刻意沒有掛上 `ChillloveSchema`**（見 `mutation_root_guard_spec`）。
+  # 🔴 **本型別自 2026-08-23 起掛上 `ChillloveSchema`**——解鎖條件
+  # 「第一支真正的 mutation 落地時，同批處理 claim/replay」已由本批滿足：
+  # `Mutations::ProductSet` ＋ `Idempotency::Guard`（11 §2.1 狀態機）＋
+  # `idempotency_keys` 表形對齊遷移，三者同一個 PR 交付。
   #
-  # 為什麼建了卻不掛：本 PR 交付的是**寫入路徑的地基**（`BaseMutation`／
-  # `DisplayableError`／錯誤碼池／`UserErrors::Path`／冪等清單讀取器），
-  # 一支具體的 mutation 都不出。掛一個空的 mutation root 上去會讓 schema
-  # 多出一個 `Mutation` 型別而裡面什麼都沒有——對客戶端是雜訊，
-  # 對之後的人是「看起來已經可以寫 mutation 了」的錯誤訊號。
+  # 歷史（保留給讀 blame 的人）：掛載前它刻意空置且不掛 schema，因為
+  # `enforce_idempotency_contract!` 只檢查 key 有沒有帶、不做去重——
+  # 掛一個沒有 claim/replay 的 mutation root 會給下一位作者**虛假的安全感**。
+  # 那個保護消失的條件就是本次交付的內容；guard spec
+  # （spec/graphql/mutation_root_guard_spec.rb）已同批反轉成掛載後的斷言。
   #
-  # 🔴 更重要的是：`BaseMutation#enforce_idempotency_contract!` **只檢查 key 有沒有帶，
-  # 不做去重**。claim/replay 狀態機刻意延後（四個未決點見
-  # `docs/worklog/2026-08-15-mutation寫入地基.md`）。**本 PR 一支 mutation 都不出，
-  # 所以沒有任何東西會因此獲得虛假的安全感**——這是「不掛 root」的實質理由。
-  #
-  # 掛上去的條件：第一支真正的 mutation 落地時，同批處理 claim/replay。
+  # 🔴 新增 mutation 的義務（缺一 CI 擋）：
+  #   ① `resolve` 開頭呼叫 `enforce_idempotency_contract!`（graphql-ruby 無
+  #      around hook，忘了呼叫沒有 runtime 機制會發現——由
+  #      `spec/graphql/mutation_idempotency_call_spec.rb` 靜態掃描兜底）；
+  #   ② 建立型 mutation 進 `limits.idempotency` 對應清單（判準：重放會不會
+  #      憑空多出實體或一筆錢）；
+  #   ③ 專屬 error code enum ＋ error object type（鐵律 4：code 一律有值）。
   #
   # @see docs/research/28-api-contract.md §0.3.3
+  # @see docs/dev/m1-product-set-foundation.md
   class MutationType < BaseObject
     graphql_name "Mutation"
-    description "Admin API 的寫入入口（尚未啟用）。"
+    description "Admin API 的寫入入口。"
 
-    # graphql-ruby 對「沒有欄位的 object type」會警告，並預告未來版本改成 raise。
-    # 明示宣告，而不是靠「反正沒掛上 schema 所以不會被驗證」——
-    # 那個前提在有人把它掛上去的那一刻就不成立了。
-    has_no_fields(true)
+    field :product_set, mutation: Mutations::ProductSet,
+      description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
   end
 end

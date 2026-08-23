@@ -1,0 +1,253 @@
+# frozen_string_literal: true
+
+module Catalog
+  # admin 商品頁 SaveBar 的服務端本體——`productSet` 的 normalize→validate→commit
+  # （63 §A.1／§B.4：一次儲存 ＝ 一支宣告式 upsert，單一 transaction 原子寫入）。
+  #
+  # ## v1 射程（2026-08-23，docs/dev/m1-product-set-foundation.md）
+  #
+  # 本版只實作**建立態（input 無 id）＋隱含變體（無選項 ⇒ variants 恰一筆）**。
+  # 更新態（含 lockVersion 全樹比對）與具名選項（B.5 變體身分保持）屬後續包；
+  # input 帶 id 或多筆變體 ⇒ `INVALID` userError，訊息說明現況。
+  #
+  # ## 錯誤模型
+  #
+  # 回傳 `Result`（product + user_errors）；**AR 例外在這裡轉譯**，不外洩——
+  # graphql_controller 對 `RecordNotUnique` 刻意 re-raise（63 §A.1 ④「不得漏成 500」
+  # 的責任在 mutation/service 層）。
+  #
+  # @see docs/specs/63-product-data-flow.md §A.1／§B.4
+  # @see docs/specs/13-spec-products-inventory-media.md §F1／§F2
+  class SaveProduct
+    Result = Data.define(:product, :user_errors)
+
+    # 富文本白名單（13 §F1:126）：存前 sanitize，前台輸出處再 sanitize 一次（雙保險）。
+    # ⚠️ img[src 限自家 CDN] 的 CDN 白名單待媒體包（現階段限 https）；登記於 dev doc Pending。
+    ALLOWED_TAGS = %w[p br strong em ul ol li a img].freeze
+    ALLOWED_ATTRIBUTES = %w[href src alt].freeze
+
+    class << self
+      # 執行一次商品儲存（目前＝建立）。
+      #
+      # @param shop [Shop] 當前租戶
+      # @param input [Hash] GraphQL ProductSetInput 的 to_h（鍵為 snake_case Symbol）
+      # @return [Result] product 與 userErrors（互斥：有錯誤時 product 為 nil）
+      # @note 副作用：成功時在單一 transaction 內寫入 products／product_variants／
+      #   event_outbox 三表。
+      def call(shop:, input:)
+        errors = []
+        reject_unsupported!(input, errors)
+        return Result.new(product: nil, user_errors: errors) if errors.any?
+
+        attributes = normalize(shop, input, errors)
+        return Result.new(product: nil, user_errors: errors) if errors.any?
+
+        commit(shop, attributes)
+      end
+
+      private
+
+      # v1 射程外的輸入直接以 userErrors 拒絕（不靜默忽略欄位——那會讓呼叫端
+      # 以為存進去了）。
+      def reject_unsupported!(input, errors)
+        if input[:id].present?
+          errors << error([ "id" ], "更新態尚未開放：目前 productSet 只受理建立（無 id）。", "INVALID")
+        end
+
+        variants = input[:variants] || []
+        return if variants.length == 1
+
+        errors << error(
+          [ "variants" ],
+          "無選項商品的變體必須恰為一筆（隱含變體）；具名選項與多變體屬後續里程碑。",
+          "INVALID"
+        )
+      end
+
+      def normalize(shop, input, errors)
+        title = input[:title].to_s.strip
+        errors << error([ "title" ], "標題不能為空白。", "BLANK") if title.empty?
+        if title.length > Limits.fetch(:product, :title_max_chars)
+          errors << error([ "title" ], "標題長度超過上限。", "TOO_LONG")
+        end
+
+        description = sanitize_description(input[:description_html].to_s)
+        if description.bytesize > Limits.fetch(:product, :description_max_bytes)
+          errors << error([ "descriptionHtml" ], "說明超過大小上限。", "TOO_BIG")
+        end
+
+        manual_handle = input[:handle].presence
+        if manual_handle && !manual_handle.match?(/\A[a-z0-9-]+\z/)
+          errors << error([ "handle" ], "handle 只能包含小寫字母、數字與連字號。", "INVALID")
+        end
+
+        variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
+
+        {
+          title:,
+          description_html: description,
+          # 未帶 status ⇒ draft：admin 建立實測預設 DRAFT（90-blueprint/01 §B.1，61 實測），
+          # 與 DB default 一致；本尊 API 層預設官方未載明（登記於 dev doc）。
+          status: (input[:status] || "DRAFT").to_s.downcase,
+          handle: manual_handle,
+          variant:
+        }
+      end
+
+      def normalize_variant(shop, variant_input, errors)
+        price_cents = parse_money(variant_input[:price], shop, "price", errors, required: true)
+        compare_cents = parse_money(variant_input[:compare_at_price], shop, "compareAtPrice", errors, required: false)
+        cost_cents = parse_money(variant_input[:cost], shop, "cost", errors, required: false)
+
+        {
+          price_cents:,
+          compare_at_price_cents: compare_cents,
+          cost_cents:,
+          sku: variant_input[:sku].presence,
+          barcode: variant_input[:barcode].presence,
+          taxable: variant_input.fetch(:taxable, true)
+        }
+      end
+
+      # 65 §B X12：admin GraphQL 入向金額＝R4 十進位字串 → R1 integer cents。
+      # 走 `Money::Decimal`（嚴格兩位小數 regex）→ `to_storage`；不合格式一律 userError，
+      # **不得 round、不得默默補位**。負數在型別層合法（65 §A.7），價格域再擋。
+      def parse_money(raw, shop, field, errors, required:)
+        if raw.blank?
+          errors << error([ "variants", "0", field ], "價格欄位必填。", "BLANK") if required
+          return nil
+        end
+
+        decimal = Money::Decimal.from_string(raw.to_s, shop.store_currency)
+        storage = decimal.to_storage
+        if storage.cents.negative?
+          errors << error([ "variants", "0", field ], "金額不得為負。", "GREATER_THAN_OR_EQUAL_TO")
+          return nil
+        end
+        storage.cents
+      rescue ArgumentError
+        errors << error(
+          [ "variants", "0", field ],
+          "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。",
+          "INVALID"
+        )
+        nil
+      end
+
+      def sanitize_description(html)
+        return "" if html.blank?
+
+        scrubber = Rails::HTML::PermitScrubber.new
+        scrubber.tags = ALLOWED_TAGS
+        scrubber.attributes = ALLOWED_ATTRIBUTES
+        fragment = Loofah.fragment(html)
+        fragment.scrub!(scrubber)
+        strip_disallowed_urls(fragment)
+        fragment.to_s
+      end
+
+      # a[href] 與 img[src] 只留 http(s)（13 §F1:126）；javascript: 等一律拔屬性。
+      def strip_disallowed_urls(fragment)
+        fragment.css("a[href]").each do |node|
+          node.remove_attribute("href") unless node["href"].to_s.match?(%r{\Ahttps?://}i)
+        end
+        fragment.css("img[src]").each do |node|
+          node.remove_attribute("src") unless node["src"].to_s.match?(%r{\Ahttps://}i)
+        end
+      end
+
+      def commit(shop, attributes)
+        product = nil
+        ActsAsTenant.with_tenant(shop) do
+          ActiveRecord::Base.transaction do
+            product = create_product!(shop, attributes)
+            create_implicit_variant!(shop, product, attributes.fetch(:variant))
+            enqueue_created_event!(shop, product)
+          end
+        end
+        Result.new(product:, user_errors: [])
+      rescue ActiveRecord::RecordNotUnique
+        # handle 唯一索引兜底（63 §A.1 ④：轉譯成 userErrors，不得漏成 500）。
+        Result.new(product: nil,
+                   user_errors: [ error([ "handle" ], "handle 已被使用。", "HANDLE_TAKEN") ])
+      rescue ActiveRecord::RecordInvalid => invalid
+        Result.new(product: nil, user_errors: translate_record_invalid(invalid))
+      end
+
+      def create_product!(shop, attributes)
+        handle = attributes[:handle] || unique_generated_handle(shop, attributes[:title])
+
+        Product.create!(
+          title: attributes[:title],
+          description_html: attributes[:description_html],
+          status: attributes[:status],
+          handle: handle
+        )
+      end
+
+      # 隱含變體（61 §1.1：商品恆有 ≥1 變體；無選項＝Default Title 那一筆）。
+      # DB title 直接存 `catalog_flow.default_variant_liquid_title` 的值——Liquid 硬相容
+      # 契約與 DB 存值同源（2026-08-23 裁定，缺口「隱含變體 DB title 存值未明文」以此結案）。
+      def create_implicit_variant!(shop, product, variant_attributes)
+        product.product_variants.create!(
+          title: Limits.fetch(:catalog_flow, :default_variant_liquid_title),
+          position: 1,
+          currency: shop.store_currency,
+          price_cents: variant_attributes.fetch(:price_cents),
+          compare_at_price_cents: variant_attributes[:compare_at_price_cents],
+          cost_cents: variant_attributes[:cost_cents],
+          sku: variant_attributes[:sku],
+          barcode: variant_attributes[:barcode],
+          taxable: variant_attributes.fetch(:taxable)
+        )
+      end
+
+      def enqueue_created_event!(shop, product)
+        EventOutbox.create!(
+          event_id: SecureRandom.uuid,
+          topic: "products/create",
+          aggregate_type: "Product",
+          aggregate_id: product.id,
+          payload: { product_id: product.id, handle: product.handle, status: product.status },
+          available_at: Time.current,
+          status: "pending"
+        )
+      end
+
+      # 生成衝突 ⇒ 自 -1 起算尾碼（`collision_strategy_generated: numeric_suffix_from_1`；
+      # 本尊實測 potion → potion-1）。手填衝突**不走這裡**——那是 reject（HANDLE_TAKEN）。
+      def unique_generated_handle(shop, title)
+        base = HandleGenerator.call(title, resource: "product").handle
+        return base unless handle_taken?(shop, base)
+
+        (1..).each do |suffix|
+          candidate = "#{base}-#{suffix}"
+          return candidate unless handle_taken?(shop, candidate)
+        end
+      end
+
+      def handle_taken?(shop, handle)
+        Product.where(shop_id: shop.id, handle:).exists?
+      end
+
+      def translate_record_invalid(invalid)
+        invalid.record.errors.map do |model_error|
+          code = case model_error.type
+          when :blank then "BLANK"
+          when :taken
+                   # 手填 handle 衝突走專屬碼（`collision_strategy_explicit: reject`）。
+                   model_error.attribute == :handle ? "HANDLE_TAKEN" : "TAKEN"
+          when :too_long then "TOO_LONG"
+          when :inclusion then "INCLUSION"
+          else "INVALID"
+          end
+          error([ model_error.attribute.to_s ], model_error.full_message, code)
+        end
+      end
+
+      def error(path_segments, message, code)
+        { field: UserErrors::Path.build(*path_segments), message:, code: }
+      end
+    end
+  end
+end

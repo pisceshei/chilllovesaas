@@ -144,6 +144,7 @@
 | **X9** | 內 | R1 → R2 → R1（presentment 解析） | 放大 ×10⁶、最後一步取整一次 | R2 **不得**離開解析器 | — | 63 §G.3 |
 | **X10** | 內 | R1 → 會計分錄 | **不轉換**（分錄就是 R1） | 分錄禁用 R5；雙幣別走 MoneyBag，兩欄都是 R1 | 拒絕入帳 | §F |
 | **X11** | 內 | R1 → 平台 rollup | 不轉換 | **跨幣別不得直接相加** | 拒絕彙總 | §F.3、⚠ V-134 |
+| **X12** | 入 | R4 → R1（**admin GraphQL mutation 金額輸入**：`ProductSetVariantInput.price` 等） | `Money::Decimal.from_string(raw, shop_currency)` → `#to_storage`（BigDecimal×100 ⇒ Integer） | 字串符合 `money_boundary.decimal_string_regex`（恆兩位小數）；**不得 round、不得補位**；價格域另擋負數（`GREATER_THAN_OR_EQUAL_TO`） | userErrors `INVALID`（HTTP 200，鐵律 4 ①） | 🔴 2026-08-23 新增（本表封閉條款：admin 入向此前**不存在於表中**，productSet 落地時補列）；63 §B.3 `variant_price_write_mutations` |
 
 **這張表的完整性檢查（CI 可跑）**：對 `app/` 全庫搜尋「金額離開/進入行程邊界」的呼叫點（HTTP client、序列化器、CSV writer、view helper），每一處都必須對應到 X1–X11（PSP 兩向再細分 X7a／X7b／X8a／X8b）的其中一列；對應不上的一律 fail。這條把「有沒有漏掉一個邊界」從人工紀律變成可執行斷言（同 63 §D.3 對 `cache_stamp` 的做法）。
 
