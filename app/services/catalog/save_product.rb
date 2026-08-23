@@ -64,6 +64,14 @@ module Catalog
         end
       end
 
+      # ML-3：系列的說明走同一套白名單 sanitize（公開；實作仍在 private 的 sanitize_description）。
+      #
+      # @param html [String]
+      # @return [String]
+      def sanitize_description_for(html)
+        sanitize_description(html)
+      end
+
       private
 
       # 射程外的輸入直接以 userErrors 拒絕（不靜默忽略欄位——那會讓呼叫端

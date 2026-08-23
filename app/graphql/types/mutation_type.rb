@@ -31,6 +31,8 @@ module Types
       description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
     field :staff_locale_update, mutation: Mutations::StaffLocaleUpdate,
       description: "更新目前員工的 admin 介面語言（67 §E.1；ML-1）。"
+    field :collection_set, mutation: Mutations::CollectionSet,
+      description: "商品系列全樹宣告式 upsert（ML-3；與 productSet 對稱）。"
     # ML-4：語言集合是**資料**——這三支只動 shop_locales 的列，不建表、不 migration。
     field :shop_locale_enable, mutation: Mutations::ShopLocaleEnable,
       description: "為本店啟用一個內容語言（67 §A.2）。"

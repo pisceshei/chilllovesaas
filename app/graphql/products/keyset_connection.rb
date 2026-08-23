@@ -102,10 +102,17 @@ module Products
       @scope.reorder(created_at: :desc, id: :desc)
     end
 
+    # 表名由 scope 導出（2026-08-23 泛化）：原版把 `products.` 寫死在 SQL 字串裡，
+    # collections 等其他資源要用同一套 cursor 分頁就得整支拷貝——沒有拷貝就沒有
+    # 不同步。條件欄位固定為 (created_at, id)，任何帶這兩欄的表都可用。
+    def table
+      @scope.model.table_name
+    end
+
     def apply_after(relation, cursor)
       time, id = KeysetCursor.decode(cursor)
       relation.where(
-        "products.created_at < :time OR (products.created_at = :time AND products.id < :id)",
+        "#{table}.created_at < :time OR (#{table}.created_at = :time AND #{table}.id < :id)",
         time:, id:
       )
     end
@@ -113,7 +120,7 @@ module Products
     def apply_before(relation, cursor)
       time, id = KeysetCursor.decode(cursor)
       relation.where(
-        "products.created_at > :time OR (products.created_at = :time AND products.id > :id)",
+        "#{table}.created_at > :time OR (#{table}.created_at = :time AND #{table}.id > :id)",
         time:, id:
       )
     end

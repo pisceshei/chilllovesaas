@@ -5,6 +5,8 @@ import { APPS, NAVIGATION, SALES_CHANNELS } from "./layout/navigation";
 import { I18nProvider, useT } from "./i18n/I18nContext";
 import { SaveBarProvider } from "./lib/SaveBarContext";
 import { ToastProvider } from "./lib/ToastContext";
+import { CollectionDetailPage } from "./pages/CollectionDetailPage";
+import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
@@ -47,6 +49,7 @@ function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
  */
 const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/products", () => <ProductsPage /> ],
+  [ "/admin/collections", () => <CollectionsPage /> ],
 ]);
 
 /**
@@ -78,6 +81,8 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
                   />
                 );
               })}
+              <Route element={<CollectionDetailPage isNew />} path="/admin/collections/new" />
+              <Route element={<CollectionDetailPage isNew={false} />} path="/admin/collections/:id" />
               <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
               <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
               <Route element={<PlaceholderPage titleKey="nav.assistant" />} path="/admin/assistant" />
