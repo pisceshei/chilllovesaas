@@ -375,6 +375,95 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
     end
   end
 
+  describe "組織分類＋SEO（91 §11–12，P1）" do
+    ORG_MUTATION = <<~GRAPHQL
+      mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
+        productSet(input: $input, idempotencyKey: $idempotencyKey) {
+          product {
+            id lockVersion vendor productType tags
+            seo { title description }
+          }
+          userErrors { field message code }
+        }
+      }
+    GRAPHQL
+
+    it "建立帶齊四欄位：strip、tags 去重保序、SEO 落覆寫欄" do
+      login!
+      post_graphql(ORG_MUTATION, variables: { idempotencyKey: SecureRandom.uuid, input: base_input(
+        vendor: "  Frederic Malle ", productType: "香水",
+        tags: [ " 花香 ", "花香", "秋冬", "" ],
+        seo: { title: "玫瑰雷鳴 EDP", description: "前調玫瑰。" }
+      ) })
+
+      data = response.parsed_body.dig("data", "productSet")
+      expect(data["userErrors"]).to eq([])
+      expect(data.dig("product", "vendor")).to eq("Frederic Malle")
+      expect(data.dig("product", "productType")).to eq("香水")
+      expect(data.dig("product", "tags")).to eq([ "花香", "秋冬" ])
+      expect(data.dig("product", "seo", "title")).to eq("玫瑰雷鳴 EDP")
+      expect(data.dig("product", "seo", "description")).to eq("前調玫瑰。")
+    end
+
+    it "更新：缺席鍵保持現值、空字串／空陣列＝清除（宣告式語義）" do
+      login!
+      post_graphql(ORG_MUTATION, variables: { idempotencyKey: SecureRandom.uuid, input: base_input(
+        vendor: "Frederic Malle", productType: "香水", tags: [ "花香" ],
+        seo: { title: "玫瑰雷鳴" }
+      ) })
+      created = response.parsed_body.dig("data", "productSet", "product")
+
+      # 只送 vendor 清除＋tags 清空：productType 與 seo.title 缺席 ⇒ 保持現值
+      post_graphql(ORG_MUTATION, variables: { input: base_input(
+        id: created["id"], lockVersion: created["lockVersion"],
+        vendor: "", tags: []
+      ) })
+
+      data = response.parsed_body.dig("data", "productSet")
+      expect(data["userErrors"]).to eq([])
+      expect(data.dig("product", "vendor")).to be_nil
+      expect(data.dig("product", "tags")).to eq([])
+      expect(data.dig("product", "productType")).to eq("香水")
+      expect(data.dig("product", "seo", "title")).to eq("玫瑰雷鳴")
+    end
+
+    it "SEO 標題超過 70 ⇒ userErrors seo.title TOO_LONG；Meta 描述 160–320 之間可存（160 是建議值不是上限）" do
+      login!
+      post_graphql(ORG_MUTATION, variables: { idempotencyKey: SecureRandom.uuid, input: base_input(
+        seo: { title: "長" * (Limits.fetch(:content, :seo_title_max_chars) + 1) }
+      ) })
+      data = response.parsed_body.dig("data", "productSet")
+      expect(data["userErrors"]).to contain_exactly(
+        a_hash_including("field" => [ "seo", "title" ], "code" => "TOO_LONG")
+      )
+
+      over_serp = "描" * 200 # >160（SERP 建議）但 <320（上限）⇒ 必須成功
+      post_graphql(ORG_MUTATION, variables: { idempotencyKey: SecureRandom.uuid, input: base_input(
+        title: "第二件商品", seo: { description: over_serp }
+      ) })
+      data = response.parsed_body.dig("data", "productSet")
+      expect(data["userErrors"]).to eq([])
+      expect(data.dig("product", "seo", "description")).to eq(over_serp)
+    end
+
+    it "productVendors／productTypes：去重、字母序、tenant-scoped" do
+      login!
+      ActsAsTenant.with_tenant(shop) do
+        create(:product, vendor: "Byredo", product_type: "香水")
+        create(:product, vendor: "Aesop", product_type: "護膚")
+        create(:product, vendor: "Byredo", product_type: nil)
+      end
+      other_shop = create(:shop, subdomain: "other-org-shop")
+      ActsAsTenant.with_tenant(other_shop) { create(:product, vendor: "外店廠商") }
+
+      post_graphql("query { productVendors productTypes }", variables: {})
+      data = response.parsed_body["data"]
+      expect(data["productVendors"]).to eq([ "Aesop", "Byredo" ])
+      # utf8mb4_0900_ai_ci 對 CJK 按碼位序：護(U+8B77) < 香(U+9999)
+      expect(data["productTypes"]).to eq([ "護膚", "香水" ])
+    end
+  end
+
   describe "product(id:) 查詢與 variants 讀取面" do
     it "編輯頁載入形：descriptionHtml 與變體金額（R4 兩位小數字串）" do
       login!

@@ -26,6 +26,17 @@ module Types
         description: "URL handle（a-z0-9-）；省略時由標題自動生成。手填衝突一律拒絕。"
       argument :variants, [ Types::Inputs::ProductSetVariantInput ], required: false,
         description: "變體全樹（宣告式：未列出視為刪除）。v1 恰一筆（隱含變體）。"
+      # ── 組織分類＋SEO（91 §11–12 對齊，P1 包）。缺席（nil）＝更新態保持現值；
+      #    空字串／空陣列＝清除——admin SPA 是宣告式恆送，缺席只發生在 API 直呼叫，
+      #    語義與 status 的「缺席＝保持現值」一致（normalize 註釋）。──
+      argument :vendor, String, required: false,
+        description: "廠商；空字串＝清除，缺席＝保持現值。"
+      argument :product_type, String, required: false,
+        description: "產品類型（自由文字，search-or-create）；空字串＝清除。"
+      argument :tags, [ String ], required: false,
+        description: "標籤全量（宣告式覆寫）；空陣列＝清空。上限引 product.max_tags。"
+      argument :seo, Types::Inputs::SeoInput, required: false,
+        description: "SEO 覆寫；子欄位各自缺席＝保持現值。"
     end
   end
 end
