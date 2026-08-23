@@ -69,7 +69,7 @@ export function AdminRoutes({ brandName }: AdminRoutesProps) {
           );
         })}
         <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
-        <Route element={<PlaceholderPage title="商品詳情" />} path="/admin/products/:id" />
+        <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
         <Route element={<PlaceholderPage title="AI 助理" />} path="/admin/assistant" />
         <Route element={<PlaceholderPage title="設定" />} path="/admin/settings" />
         <Route element={<Navigate replace to="/admin/products" />} path="*" />

@@ -1,8 +1,9 @@
 import { ArrowLeft, ImagePlus, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useBlocker, useNavigate } from "react-router-dom";
+import { useBlocker, useNavigate, useParams } from "react-router-dom";
 import { AdminGraphQLError, requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
+import type { BadgeProgress, BadgeTone } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { TextField } from "../components/TextField";
@@ -15,16 +16,16 @@ import { centsToApiString, isValidMoneyInput, parseMoneyToCents, profitState } f
  * 商品建立／詳情頁（59 §7：**同一個元件的兩種狀態，不是兩個頁面**——
  * 分家後同名函式靜默覆蓋整頁是本專案頭號事故 53 號 N-01）。
  *
- * v1 只開建立態（isNew）；編輯態掛上時走同一元件的另一分支，禁止另開檔案。
- * 版面、卡片順序、pill 分組鍵對照原型 productPage()（chilllove-admin-v2.html），
- * 建立態差異只有預設值與空態（DOCS newproduct 四項）。
+ * isNew＝建立態（固定草稿、右欄只有發布卡）；否則編輯態（載入既有商品、
+ * 右欄多狀態卡、儲存帶 id＋lockVersion 走 productSet 更新分支）。
+ * 版面、卡片順序、pill 分組鍵對照原型 productPage()（chilllove-admin-v2.html）。
  *
  * 未接線欄位（disabled）＝後續里程碑的通道還沒到（庫存／運送／發布／SEO 文案），
  * **刻意 disabled 而不是收集後丟棄**——收了不送等於騙商家已儲存。
  * 清單與依賴見 docs/dev/m1-product-set-foundation.md §4／§6。
  */
 export interface ProductDetailPageProps {
-  /** 建立態（v1 唯一支援值＝true）。 */
+  /** 建立態；false＝編輯態（路由 /admin/products/:id）。 */
   isNew: boolean;
 }
 
@@ -37,11 +38,45 @@ const PRODUCT_SET_MUTATION = `
   }
 `;
 
+const PRODUCT_QUERY = `
+  query productForEdit($id: ID!) {
+    product(id: $id) {
+      id title descriptionHtml status handle lockVersion
+      variants { price compareAtPrice cost sku barcode taxable }
+    }
+  }
+`;
+
 interface ProductSetData {
   productSet: {
-    product: { id: string; handle: string; status: string; title: string } | null;
+    product: {
+      id: string;
+      handle: string;
+      status: string;
+      title: string;
+      lockVersion: number;
+    } | null;
     userErrors: { field: string[] | null; message: string; code: string }[];
   };
+}
+
+interface ProductQueryData {
+  product: {
+    id: string;
+    title: string;
+    descriptionHtml: string;
+    status: string;
+    handle: string;
+    lockVersion: number;
+    variants: {
+      price: string;
+      compareAtPrice: string | null;
+      cost: string | null;
+      sku: string | null;
+      barcode: string | null;
+      taxable: boolean;
+    }[];
+  } | null;
 }
 
 /** 表單值（原型 PD_NEW 的對應子集；金額欄以原始輸入字串保存，送出才轉）。 */
@@ -55,6 +90,7 @@ interface FormValues {
   sku: string;
   barcode: string;
   handle: string;
+  status: string;
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -68,6 +104,7 @@ const INITIAL_VALUES: FormValues = {
   sku: "",
   barcode: "",
   handle: "",
+  status: "DRAFT",
 };
 
 type FieldKey = "title" | "price" | "compare" | "cost" | "handle";
@@ -81,6 +118,25 @@ const SERVER_PATHS: Record<string, FieldKey> = {
   "variants.0.cost": "cost",
 };
 
+/**
+ * 狀態呈現（正典＝原型 P_STATUS，chilllove-admin-v2.html:3105；
+ * 與 ProductsPage 同表——文案與 pip 不得漂移）。
+ */
+const STATUS_PRESENTATION: Record<string, { label: string; progress: BadgeProgress; tone: BadgeTone }> = {
+  ACTIVE: { label: "啟用中", progress: "full", tone: "success" },
+  ARCHIVED: { label: "已封存", progress: "full", tone: "default" },
+  DRAFT: { label: "草稿", progress: "empty", tone: "info" },
+  UNLISTED: { label: "未列出", progress: "empty", tone: "attention" },
+};
+
+/** 兩維真值表（13 §F1.2：discoverable ⊆ purchasable 恆成立）。 */
+const STATUS_DIMENSIONS: Record<string, { purchasable: boolean; discoverable: boolean }> = {
+  ACTIVE: { purchasable: true, discoverable: true },
+  UNLISTED: { purchasable: true, discoverable: false },
+  DRAFT: { purchasable: false, discoverable: false },
+  ARCHIVED: { purchasable: false, discoverable: false },
+};
+
 /** 純文字說明 → 段落 HTML（伺服器端再做白名單 sanitize，雙保險的前半）。 */
 export function descriptionToHtml(text: string): string {
   const paragraphs = text
@@ -90,6 +146,18 @@ export function descriptionToHtml(text: string): string {
   return paragraphs
     .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>`)
     .join("");
+}
+
+/** 已儲存的段落 HTML → textarea 純文字（descriptionToHtml 的反向，編輯態載入用）。 */
+export function htmlToDescription(html: string): string {
+  return html
+    .replaceAll(/<br\s*\/?>/gi, "\n")
+    .replaceAll(/<\/p>\s*<p>/gi, "\n\n")
+    .replaceAll(/<\/?p>/gi, "")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&")
+    .trim();
 }
 
 function escapeHtml(raw: string): string {
@@ -166,29 +234,79 @@ function PillGroup({
 }
 
 /**
- * 呈現商品建立頁（isNew）。
+ * 呈現商品建立／編輯頁。
  *
- * @param props - 目前僅 isNew。
- * @returns 對齊原型卡片樹的建立表單。
+ * @param props - isNew 分流。
+ * @returns 對齊原型卡片樹的商品表單。
  */
 export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const navigate = useNavigate();
+  const params = useParams();
   const { showToast } = useToast();
   const registerSaveBar = useSaveBarRegister();
+
+  const productGid = isNew ? null : decodeURIComponent(params.id ?? "");
 
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [saving, setSaving] = useState(false);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "missing">(
+    isNew ? "ready" : "loading",
+  );
+  const [lockVersion, setLockVersion] = useState(0);
   const [openPills, setOpenPills] = useState<ReadonlySet<string>>(new Set());
   const [shakeSignal, setShakeSignal] = useState(0);
 
-  // 冪等鍵：進頁生成一次，重試沿用（11 §2.1(e)：送出前先持久化 key；
-  // 失敗後同 key 重試是伺服器端 failed 態的契約），成功即離頁。
+  // 冪等鍵：建立態專用（更新態是宣告式覆寫、天然冪等，防線是 lockVersion——D-PS5）。
   const idempotencyKey = useRef<string>(uuidV4());
   const fieldRefs = useRef<Partial<Record<FieldKey, HTMLInputElement | null>>>({});
 
   const snapshot = useRef(JSON.stringify(INITIAL_VALUES));
   const dirty = useMemo(() => JSON.stringify(values) !== snapshot.current, [values]);
+
+  // 編輯態：載入既有商品填表（隱含變體恆一筆，B1-2）。
+  useEffect(() => {
+    if (isNew || !productGid) return;
+    const controller = new AbortController();
+    setLoadState("loading");
+
+    requestAdminGraphQL<ProductQueryData, { id: string }>(
+      PRODUCT_QUERY,
+      { id: productGid },
+      controller.signal,
+    )
+      .then((data) => {
+        const product = data.product;
+        if (!product) {
+          setLoadState("missing");
+          return;
+        }
+        const variant = product.variants[0];
+        const loaded: FormValues = {
+          title: product.title,
+          description: htmlToDescription(product.descriptionHtml),
+          price: variant?.price ?? "",
+          compare: variant?.compareAtPrice ?? "",
+          cost: variant?.cost ?? "",
+          taxable: variant?.taxable ?? true,
+          sku: variant?.sku ?? "",
+          barcode: variant?.barcode ?? "",
+          handle: product.handle,
+          status: product.status,
+        };
+        snapshot.current = JSON.stringify(loaded);
+        setValues(loaded);
+        setLockVersion(product.lockVersion);
+        setLoadState("ready");
+      })
+      .catch((reason: unknown) => {
+        if (controller.signal.aborted) return;
+        showToast(reason instanceof Error ? reason.message : "無法載入商品。");
+        setLoadState("missing");
+      });
+
+    return () => controller.abort();
+  }, [isNew, productGid, showToast]);
 
   const setValue = useCallback(<Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -219,7 +337,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     if (!isValidMoneyInput(values.cost)) {
       found.cost = "請輸入有效金額（最多兩位小數，不含幣別符號）";
     }
-    if (values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
+    if (isNew && values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
       found.handle = "handle 只能包含小寫字母、數字與連字號。";
     }
 
@@ -232,7 +350,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       return false;
     }
     return true;
-  }, [showToast, values]);
+  }, [isNew, showToast, values]);
 
   const applyServerErrors = useCallback(
     (userErrors: ProductSetData["productSet"]["userErrors"]) => {
@@ -257,32 +375,38 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     if (!validate()) return;
     setSaving(true);
     try {
-      // 🔴 B.4 規則 1：送**完整樹**（不是 dirty fields）；status 顯式送 DRAFT。
+      // 🔴 B.4 規則 1：送**完整樹**（不是 dirty fields）。
+      // 建立態顯式 DRAFT；編輯態帶 id＋lockVersion＋狀態卡的值。
+      // handle：建立可手填；編輯不送（v1 handle 不可變，缺席＝保持現值）。
+      const input: Record<string, unknown> = {
+        title: values.title.trim(),
+        descriptionHtml: descriptionToHtml(values.description),
+        status: values.status,
+        variants: [
+          {
+            price: centsToApiString(parseMoneyToCents(values.price) ?? null),
+            ...(values.compare.trim()
+              ? { compareAtPrice: centsToApiString(parseMoneyToCents(values.compare) ?? null) }
+              : {}),
+            ...(values.cost.trim()
+              ? { cost: centsToApiString(parseMoneyToCents(values.cost) ?? null) }
+              : {}),
+            ...(values.sku.trim() ? { sku: values.sku.trim() } : {}),
+            ...(values.barcode.trim() ? { barcode: values.barcode.trim() } : {}),
+            taxable: values.taxable,
+          },
+        ],
+      };
+      if (isNew) {
+        if (values.handle) input.handle = values.handle;
+      } else {
+        input.id = productGid;
+        input.lockVersion = lockVersion;
+      }
+
       const data = await requestAdminGraphQL<ProductSetData, Record<string, unknown>>(
         PRODUCT_SET_MUTATION,
-        {
-          input: {
-            title: values.title.trim(),
-            descriptionHtml: descriptionToHtml(values.description),
-            status: "DRAFT",
-            ...(values.handle ? { handle: values.handle } : {}),
-            variants: [
-              {
-                price: centsToApiString(parseMoneyToCents(values.price) ?? null),
-                ...(values.compare.trim()
-                  ? { compareAtPrice: centsToApiString(parseMoneyToCents(values.compare) ?? null) }
-                  : {}),
-                ...(values.cost.trim()
-                  ? { cost: centsToApiString(parseMoneyToCents(values.cost) ?? null) }
-                  : {}),
-                ...(values.sku.trim() ? { sku: values.sku.trim() } : {}),
-                ...(values.barcode.trim() ? { barcode: values.barcode.trim() } : {}),
-                taxable: values.taxable,
-              },
-            ],
-          },
-          idempotencyKey: idempotencyKey.current,
-        },
+        isNew ? { input, idempotencyKey: idempotencyKey.current } : { input },
       );
 
       const { product, userErrors } = data.productSet;
@@ -293,7 +417,13 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
       snapshot.current = JSON.stringify(values);
       showToast("已儲存變更");
-      navigate("/admin/products");
+      if (isNew) {
+        navigate("/admin/products");
+      } else {
+        // 編輯態留在頁上：吸收新 lockVersion，快照歸零 dirty。
+        setLockVersion(product.lockVersion);
+        setValues((current) => ({ ...current }));
+      }
     } catch (reason: unknown) {
       // 鐵律 4 三層的另外兩層：top-level（THROTTLED／ACCESS_DENIED／
       // IDEMPOTENCY_KEY_REQUIRED）與非 200——都要有人話訊息，不得靜默空畫面。
@@ -305,7 +435,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     } finally {
       setSaving(false);
     }
-  }, [applyServerErrors, navigate, saving, showToast, validate, values]);
+  }, [applyServerErrors, isNew, lockVersion, navigate, productGid, saving, showToast, validate, values]);
 
   const discard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
@@ -346,10 +476,28 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     fieldRefs.current[key] = node;
   };
 
-  if (!isNew) {
-    // 編輯態屬後續包；路由目前不會以 isNew=false 進來（守衛見 App.tsx）。
-    return null;
+  if (loadState === "loading") {
+    return (
+      <div className="cl-page cl-page--detail cl-product-detail">
+        <p className="cl-card-note">載入中…</p>
+      </div>
+    );
   }
+
+  if (loadState === "missing") {
+    return (
+      <div className="cl-page cl-page--detail cl-product-detail">
+        <Card padded>
+          <h3>找不到商品</h3>
+          <p className="cl-card-note">此商品不存在或已被刪除。</p>
+          <Button onClick={() => navigate("/admin/products")}>返回商品列表</Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const statusBadge = STATUS_PRESENTATION[values.status] ?? STATUS_PRESENTATION.DRAFT;
+  const dimensions = STATUS_DIMENSIONS[values.status] ?? STATUS_DIMENSIONS.DRAFT;
 
   return (
     <div className="cl-page cl-page--detail cl-product-detail">
@@ -362,12 +510,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         >
           <ArrowLeft aria-hidden="true" size={16} />
         </button>
-        <h1>新增商品</h1>
-        <Badge progress="empty" tone="info">
-          草稿
+        <h1>{isNew ? "新增商品" : values.title || "商品"}</h1>
+        <Badge progress={statusBadge.progress} tone={statusBadge.tone}>
+          {statusBadge.label}
         </Badge>
-        {/* 內容語言 chip：建立一律在來源語言（67 §E.2，base row 還不存在）⇒ 停用 */}
-        <span className="cl-locale-chip" title="建立商品一律在來源語言下進行">
+        {/* 內容語言 chip：建立一律在來源語言（67 §E.2）；編輯態的切換器屬多語言包 */}
+        <span className="cl-locale-chip" title="內容語言">
           繁體中文
         </span>
         <div className="cl-detail-head__actions">
@@ -383,7 +531,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             <h3>標題與說明</h3>
             <TextField
               error={errors.title}
-              hint="儲存時自動生成 handle 並唯一化"
+              hint={isNew ? "儲存時自動生成 handle 並唯一化" : undefined}
               label="標題"
               maxLength={255}
               onChange={(event) => setValue("title", event.target.value)}
@@ -461,10 +609,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 onToggle={togglePill}
                 open={openPills}
                 pills={[
-                  { key: "compare", label: "比較價格" },
+                  { key: "compare", label: "比較價格", value: values.compare || undefined },
                   { key: "unit", label: "單價" },
                   { key: "tax", label: "收取稅金", value: values.taxable ? "是" : "否" },
-                  { key: "cost", label: "每品項成本" },
+                  { key: "cost", label: "每品項成本", value: values.cost || undefined },
                 ]}
               />
               {openPills.has("compare") ? (
@@ -547,24 +695,26 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           <Card padded>
             <h3>庫存</h3>
             <SwitchRow checked disabled hint="關閉時不寫 ledger（庫存里程碑開放）" label="已追蹤庫存" />
-            <div className="cl-grid2">
-              <TextField disabled hint="庫存里程碑開放" label="數量" value="0" />
-              <div className="cl-field">
-                <label className="cl-field__label" htmlFor="inventory-location">
-                  地點
-                </label>
-                <select className="cl-field__input" disabled id="inventory-location">
-                  <option>Shop location</option>
-                </select>
+            {isNew ? (
+              <div className="cl-grid2">
+                <TextField disabled hint="庫存里程碑開放" label="數量" value="0" />
+                <div className="cl-field">
+                  <label className="cl-field__label" htmlFor="inventory-location">
+                    地點
+                  </label>
+                  <select className="cl-field__input" disabled id="inventory-location">
+                    <option>Shop location</option>
+                  </select>
+                </div>
               </div>
-            </div>
+            ) : null}
             <div className="cl-pillset">
               <PillGroup
                 onToggle={togglePill}
                 open={openPills}
                 pills={[
                   { key: "sku", label: "SKU", value: values.sku || undefined },
-                  { key: "barcode", label: "條碼" },
+                  { key: "barcode", label: "條碼", value: values.barcode || undefined },
                   { key: "continue", label: "無庫存時繼續銷售" },
                 ]}
               />
@@ -643,11 +793,16 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
           <Card padded>
             <h3>搜尋引擎產品資訊</h3>
-            <p className="cl-card-note">尚無可預覽的內容</p>
+            {isNew ? <p className="cl-card-note">尚無可預覽的內容</p> : null}
             <TextField disabled hint="留空時沿用商品標題（SEO 里程碑開放）" label="頁面標題" maxLength={70} value="" />
             <TextField
+              disabled={!isNew}
               error={errors.handle}
-              hint="儲存時由英文標題自動生成；手填衝突會被拒絕"
+              hint={
+                isNew
+                  ? "儲存時由英文標題自動生成；手填衝突會被拒絕"
+                  : "handle 變更需 301 轉址（URL 里程碑開放）"
+              }
               label="網址 handle"
               onChange={(event) => setValue("handle", event.target.value)}
               placeholder="自動生成"
@@ -658,6 +813,36 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         </div>
 
         <div className="cl-od-grid__aside">
+          {isNew ? null : (
+            <Card padded>
+              <h3>狀態</h3>
+              <div className="cl-field">
+                <label className="cl-field__label" htmlFor="product-status">
+                  商品狀態
+                </label>
+                <select
+                  className="cl-field__input"
+                  id="product-status"
+                  onChange={(event) => setValue("status", event.target.value)}
+                  value={values.status}
+                >
+                  <option value="ACTIVE">啟用中</option>
+                  <option value="UNLISTED">未列出</option>
+                  <option value="DRAFT">草稿</option>
+                  <option value="ARCHIVED">已封存</option>
+                </select>
+              </div>
+              {/* 兩維讀值（13 §F1.2）：是/否文字本身承載語意，顏色只加速掃視 */}
+              <div className="cl-derow">
+                <div className="cl-de">
+                  可購買 <b className={dimensions.purchasable ? "" : "cl-de--unknown"}>{dimensions.purchasable ? "是" : "否"}</b>
+                </div>
+                <div className="cl-de">
+                  可被發現 <b className={dimensions.discoverable ? "" : "cl-de--unknown"}>{dimensions.discoverable ? "是" : "否"}</b>
+                </div>
+              </div>
+            </Card>
+          )}
           <Card padded>
             <h3>發布</h3>
             <SwitchRow checked disabled hint="排程上線：立即（發布里程碑開放）" label="線上商店" />
