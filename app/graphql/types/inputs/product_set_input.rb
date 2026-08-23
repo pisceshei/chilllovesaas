@@ -37,6 +37,10 @@ module Types
         description: "標籤全量（宣告式覆寫）；空陣列＝清空。上限引 product.max_tags。"
       argument :seo, Types::Inputs::SeoInput, required: false,
         description: "SEO 覆寫；子欄位各自缺席＝保持現值。"
+      # 內容翻譯（ML-2；67 §C.2）。缺席＝不動該譯文；空字串＝刪除該譯文列（回落來源語言）。
+      # 🔴 來源語言的文字在 base row（title／descriptionHtml／seo），**不得**經這裡寫。
+      argument :translations, [ Types::Inputs::TranslationInput ], required: false,
+        description: "非來源語言的譯文（title／body_html／meta_title／meta_description）。"
     end
   end
 end

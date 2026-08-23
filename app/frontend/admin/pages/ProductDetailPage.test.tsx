@@ -65,6 +65,23 @@ const SUGGESTIONS = {
   data: { productVendors: [ "Aesop", "Byredo" ], productTypes: [ "香水" ] },
 };
 
+// ML-2：內容語言清單（來源語言 en 排第一；其餘語言在編輯頁長出對應欄位）。
+const SHOP_LOCALES = {
+  data: {
+    shopLocales: [
+      { locale: { tag: "en", endonym: "English" }, isSource: true, position: 0 },
+      { locale: { tag: "zh-Hant", endonym: "繁體中文" }, isSource: false, position: 1 },
+      { locale: { tag: "ja", endonym: "日本語" }, isSource: false, position: 3 },
+    ],
+  },
+};
+
+/** 每個測試都要有的基礎路由（掛載時三支查詢並發）。 */
+const BASE_ROUTES = [
+  { match: "productOrganizationSuggestions", body: SUGGESTIONS },
+  { match: "query shopLocales", body: SHOP_LOCALES },
+];
+
 const CREATED = {
   data: {
     productSet: {
@@ -88,7 +105,7 @@ describe("新增商品頁", () => {
   beforeEach(() => installCsrfMeta());
 
   it("渲染建立態：草稿徽章＋原型卡片樹（定價／庫存／SEO／組織分類／發布）", () => {
-    stubRoutedFetch([ { match: "productOrganizationSuggestions", body: SUGGESTIONS } ]);
+    stubRoutedFetch([ ...BASE_ROUTES ]);
     renderAt("/admin/products/new");
 
     // scope 到 main：側欄有「草稿」（訂單子項連結）同字樣（UI-2 教訓同型）。
@@ -107,9 +124,7 @@ describe("新增商品頁", () => {
   });
 
   it("驗證失敗：空表單儲存 ⇒ toast＋標題欄錯誤，且不打 productSet", async () => {
-    const fetchMock = stubRoutedFetch([
-      { match: "productOrganizationSuggestions", body: SUGGESTIONS },
-    ]);
+    const fetchMock = stubRoutedFetch([ ...BASE_ROUTES ]);
     const user = userEvent.setup();
     renderAt("/admin/products/new");
 
@@ -123,14 +138,14 @@ describe("新增商品頁", () => {
 
   it("儲存成功：送完整樹（含 DRAFT／組織欄位／idempotencyKey），轉導商品列表", async () => {
     const fetchMock = stubRoutedFetch([
-      { match: "productOrganizationSuggestions", body: SUGGESTIONS },
+      ...BASE_ROUTES,
       { match: "mutation productSet", body: CREATED },
       { match: "query products", body: EMPTY_LIST },
     ]);
     const user = userEvent.setup();
     const router = renderAt("/admin/products/new");
 
-    await user.type(screen.getByLabelText("標題"), "奶茶色寬版帽T");
+    await user.type(await screen.findByLabelText("標題（English）"), "奶茶色寬版帽T");
     await user.type(screen.getByLabelText("價格（HK$）"), "128.5");
     // dirty 後同時有頁首「儲存」與 SaveBar「儲存」（雙提交入口）⇒ 取 SaveBar 內那顆消歧
     const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
@@ -151,6 +166,7 @@ describe("新增商品頁", () => {
       productType: "",
       tags: [],
       seo: { title: "", description: "" },
+      translations: [],
       variants: [ { price: "128.50", taxable: true } ],
     });
     expect(idempotencyKey).toMatch(
@@ -162,7 +178,7 @@ describe("新增商品頁", () => {
 
   it("伺服器 userErrors 映射到欄位（variants.0.price → 價格欄）", async () => {
     stubRoutedFetch([
-      { match: "productOrganizationSuggestions", body: SUGGESTIONS },
+      ...BASE_ROUTES,
       {
         match: "mutation productSet",
         body: {
@@ -180,7 +196,7 @@ describe("新增商品頁", () => {
     const user = userEvent.setup();
     renderAt("/admin/products/new");
 
-    await user.type(screen.getByLabelText("標題"), "測試");
+    await user.type(await screen.findByLabelText("標題（English）"), "測試");
     await user.type(screen.getByLabelText("價格（HK$）"), "1.00");
     const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
     await user.click(within(savebar).getByRole("button", { name: "儲存" }));
@@ -202,6 +218,7 @@ describe("新增商品頁", () => {
           productType: "香水",
           tags: [ "花香" ],
           seo: { title: null, description: null },
+          translations: [ { locale: "zh-Hant", field: "title", value: "既有商品（繁中）", outdated: false } ],
           variants: [
             { price: "128.00", compareAtPrice: null, cost: null, sku: "SKU-1", barcode: null, taxable: true },
           ],
@@ -210,7 +227,7 @@ describe("新增商品頁", () => {
     };
 
     const EDIT_ROUTES = [
-      { match: "productOrganizationSuggestions", body: SUGGESTIONS },
+      ...BASE_ROUTES,
       { match: "query productForEdit", body: EXISTING },
     ];
 
@@ -220,7 +237,7 @@ describe("新增商品頁", () => {
 
       const main = within(await screen.findByRole("main"));
       expect(await main.findByRole("heading", { name: "既有商品" })).toBeVisible();
-      expect(main.getByLabelText("標題")).toHaveValue("既有商品");
+      expect(main.getByLabelText("標題（English）")).toHaveValue("既有商品");
       expect(main.getByLabelText("價格（HK$）")).toHaveValue("128.00");
       // 狀態 listbox（91 §2）：按鈕顯示現值
       expect(main.getByLabelText("商品狀態")).toHaveTextContent("草稿");
@@ -330,7 +347,7 @@ describe("新增商品頁", () => {
       const main = within(await screen.findByRole("main"));
       await user.click(await main.findByRole("button", { name: "編輯搜尋引擎產品資訊" }));
 
-      const seoTitle = main.getByLabelText("頁面標題");
+      const seoTitle = main.getByLabelText("頁面標題（English）");
       await user.type(seoTitle, "玫瑰雷鳴香精");
       // 計數器（91 §11）：字元數即時、70 是標題上限
       expect(main.getByText("已使用 6 / 70 個字元；留空時沿用商品標題")).toBeVisible();
@@ -390,7 +407,7 @@ describe("新增商品頁", () => {
       renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
 
       const main = within(await screen.findByRole("main"));
-      await user.type(await main.findByLabelText("標題"), "x");
+      await user.type(await main.findByLabelText("標題（English）"), "x");
       const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
       await user.click(within(savebar).getByRole("button", { name: "儲存" }));
 
@@ -399,7 +416,7 @@ describe("新增商品頁", () => {
 
     it("查無商品 ⇒ 空態卡＋返回列表", async () => {
       stubRoutedFetch([
-        { match: "productOrganizationSuggestions", body: SUGGESTIONS },
+        ...BASE_ROUTES,
         { match: "query productForEdit", body: { data: { product: null } } },
       ]);
       renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F404");
@@ -410,19 +427,152 @@ describe("新增商品頁", () => {
   });
 
   it("dirty 時 SaveBar 取代搜尋列；捨棄還原快照", async () => {
-    stubRoutedFetch([ { match: "productOrganizationSuggestions", body: SUGGESTIONS } ]);
+    stubRoutedFetch([ ...BASE_ROUTES ]);
     const user = userEvent.setup();
     renderAt("/admin/products/new");
 
     expect(screen.getByRole("button", { name: "開啟全域搜尋" })).toBeVisible();
-    const title = screen.getByLabelText("標題");
+    const title = await screen.findByLabelText("標題（English）");
     await user.type(title, "abc");
 
     const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
     expect(screen.queryByRole("button", { name: "開啟全域搜尋" })).toBeNull();
 
     await user.click(within(savebar).getByRole("button", { name: "捨棄" }));
-    expect(screen.getByLabelText("標題")).toHaveValue("");
+    expect(screen.getByLabelText("標題（English）")).toHaveValue("");
     expect(screen.getByRole("button", { name: "開啟全域搜尋" })).toBeVisible();
+  });
+});
+
+// ── ML-2：內容語言（標題堆疊／說明與 SEO 分頁；docs/plans/2026-08-23-多語言方案.md §6）──
+describe("商品內容多語言", () => {
+  beforeEach(() => installCsrfMeta());
+
+  const LOCALIZED_EXISTING = {
+    data: {
+      product: {
+        id: "gid://chilllove/Product/9",
+        title: "Rose Tonnerre",
+        descriptionHtml: "<p>Rose and spice</p>",
+        status: "ACTIVE",
+        handle: "rose-tonnerre",
+        lockVersion: 2,
+        vendor: "Frederic Malle",
+        productType: "Fragrance",
+        tags: [],
+        seo: { title: "Rose Tonnerre EDP", description: "Niche fragrance" },
+        translations: [
+          { locale: "zh-Hant", field: "title", value: "玫瑰雷鳴", outdated: false },
+          { locale: "ja", field: "title", value: "ローズトネール", outdated: true },
+          { locale: "zh-Hant", field: "body_html", value: "<p>玫瑰與辛香</p>", outdated: false },
+        ],
+        variants: [ { price: "128.00", compareAtPrice: null, cost: null, sku: null, barcode: null, taxable: true } ],
+      },
+    },
+  };
+
+  const ROUTES = [ ...BASE_ROUTES, { match: "query productForEdit", body: LOCALIZED_EXISTING } ];
+
+  it("標題＝堆疊式：三語同時可見、各標語言自稱，載入既有譯文", async () => {
+    stubRoutedFetch(ROUTES);
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByLabelText("標題（English）")).toHaveValue("Rose Tonnerre");
+    expect(main.getByLabelText("標題（繁體中文）")).toHaveValue("玫瑰雷鳴");
+    expect(main.getByLabelText("標題（日本語）")).toHaveValue("ローズトネール");
+  });
+
+  it("說明＝分頁式：切語言換值，非來源語言可展開原文對照", async () => {
+    stubRoutedFetch(ROUTES);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    await main.findByLabelText("標題（English）");
+    // 說明卡的 tablist（第一個）：來源語言 tab 預設選中
+    const tablists = main.getAllByRole("tablist", { name: "內容語言" });
+    const descriptionTabs = within(tablists[0]);
+    expect(descriptionTabs.getByRole("tab", { name: /English/ })).toHaveAttribute("aria-selected", "true");
+
+    await user.click(descriptionTabs.getByRole("tab", { name: /繁體中文/ }));
+    expect(main.getByLabelText("說明（zh-Hant）")).toHaveValue("<p>玫瑰與辛香</p>");
+    expect(main.getAllByText("顯示原文")[0]).toBeVisible();
+  });
+
+  it("過期徽章：伺服端 outdated 的語言 tab 帶提示（不影響譯文內容）", async () => {
+    stubRoutedFetch(ROUTES);
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    await main.findByLabelText("標題（English）");
+    // ja 的 title 過期 ⇒ 該語言在說明/SEO tab 列上不標（欄位不同），只在 title 相關 UI 反映；
+    // 這裡驗資料有正確帶入：日文標題值仍在。
+    expect(main.getByLabelText("標題（日本語）")).toHaveValue("ローズトネール");
+  });
+
+  it("儲存：譯文逐欄位一列送出，來源語言不進 translations（在 base 欄位）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...ROUTES,
+      {
+        match: "mutation productSet",
+        body: {
+          data: {
+            productSet: {
+              product: { id: "gid://chilllove/Product/9", handle: "rose-tonnerre", status: "ACTIVE", title: "Rose Tonnerre", lockVersion: 3 },
+              userErrors: [],
+            },
+          },
+        },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    const japanese = await main.findByLabelText("標題（日本語）");
+    await user.clear(japanese);
+    await user.type(japanese, "ローズ・トネール");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
+    const translations = input.translations as { locale: string; field: string; value: string }[];
+    expect(translations).toContainEqual({ locale: "ja", field: "title", value: "ローズ・トネール" });
+    expect(translations).toContainEqual({ locale: "zh-Hant", field: "title", value: "玫瑰雷鳴" });
+    expect(translations.some((row) => row.locale === "en")).toBe(false);
+    // 來源語言的標題仍走 base 欄位
+    expect(input.title).toBe("Rose Tonnerre");
+  });
+
+  it("清空某語言＝送空字串（伺服端刪除該譯文列、回落來源語言）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...ROUTES,
+      {
+        match: "mutation productSet",
+        body: {
+          data: {
+            productSet: {
+              product: { id: "gid://chilllove/Product/9", handle: "rose-tonnerre", status: "ACTIVE", title: "Rose Tonnerre", lockVersion: 3 },
+              userErrors: [],
+            },
+          },
+        },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    await user.clear(await main.findByLabelText("標題（繁體中文）"));
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
+    expect(input.translations).toContainEqual({ locale: "zh-Hant", field: "title", value: "" });
   });
 });

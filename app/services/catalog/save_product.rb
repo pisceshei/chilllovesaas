@@ -25,6 +25,17 @@ module Catalog
     # 更新態 handle 變更的控制流例外（轉譯成 userErrors，不外洩）。
     class HandleChangePending < StandardError; end
 
+    # 譯文驗證失敗 ⇒ 整棵樹回滾（B.4 全樹語義：不得留下「base 存了、譯文沒存」的半套）。
+    class TranslationRejected < StandardError
+      # @return [Array<Hash>] userErrors
+      attr_reader :user_errors
+
+      def initialize(user_errors)
+        @user_errors = user_errors
+        super("translations rejected")
+      end
+    end
+
     # 富文本白名單（13 §F1:126）：存前 sanitize，前台輸出處再 sanitize 一次（雙保險）。
     # ⚠️ img[src 限自家 CDN] 的 CDN 白名單待媒體包（現階段限 https）；登記於 dev doc Pending。
     ALLOWED_TAGS = %w[p br strong em ul ol li a img].freeze
@@ -90,6 +101,8 @@ module Catalog
 
         variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
         organization = normalize_organization(input, errors)
+        # 譯文原樣帶下去（驗證在 Translations::Upsert，與 base 寫入同 tx）。
+        translations = input[:translations]
 
         {
           title:,
@@ -100,6 +113,7 @@ module Catalog
           status: input[:status] && input[:status].to_s.downcase,
           handle: manual_handle,
           organization:,
+          translations:,
           variant:
         }
       end
@@ -237,6 +251,9 @@ module Catalog
             ActiveRecord::Base.transaction do
               product = create_product!(shop, attributes)
               create_implicit_variant!(shop, product, attributes.fetch(:variant))
+              translation_errors = save_translations!(shop, product, attributes)
+              raise TranslationRejected, translation_errors if translation_errors.any?
+
               enqueue_event!(shop, product, "products/create")
             end
           end
@@ -257,6 +274,8 @@ module Catalog
                        user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_generation_failed"),
                                             "CREATION_FAILED") ])
           end
+        rescue TranslationRejected => rejected
+          Result.new(product: nil, user_errors: rejected.user_errors)
         rescue ActiveRecord::RecordInvalid => invalid
           Result.new(product: nil, user_errors: translate_record_invalid(invalid))
         end
@@ -320,6 +339,9 @@ module Catalog
             product.save!
 
             update_implicit_variant!(product, attributes.fetch(:variant))
+            translation_errors = save_translations!(shop, product, attributes)
+            raise TranslationRejected, translation_errors if translation_errors.any?
+
             enqueue_event!(shop, product, "products/update")
           end
         end
@@ -330,11 +352,41 @@ module Catalog
       rescue ActiveRecord::StaleObjectError
         Result.new(product: nil,
                    user_errors: [ error(nil, I18n.t("errors.product.stale"), "STALE_OBJECT") ])
+      rescue TranslationRejected => rejected
+        Result.new(product: nil, user_errors: rejected.user_errors)
       rescue HandleChangePending
         Result.new(product: nil,
                    user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_change_pending"), "INVALID") ])
       rescue ActiveRecord::RecordInvalid => invalid
         Result.new(product: nil, user_errors: translate_record_invalid(invalid))
+      end
+
+      # 寫譯文（ML-2）。**在商品的 transaction 內**呼叫：base 與譯文分兩次 commit 會出現
+      # 「base 已改、digest 還是舊的」的窗口，那正是 67 §C.5 過期偵測要防的東西。
+      # 缺席（nil）＝完全不動譯文；空陣列＝也不動（要刪某一條走「該條 value 空字串」）。
+      #
+      # @return [Array<Hash>] userErrors（空陣列＝成功）
+      # 🔴 `entries` 缺席時**仍要跑**（只是不寫新譯文）：來源文字改了而譯文沒送，
+      #    正是最常見的情境（商家改英文標題、沒動翻譯）——那時過期偵測必須照樣標記。
+      #    早期版本在 nil 就 return，導致「改來源文字後譯文不標過期」（spec 抓到）。
+      def save_translations!(shop, product, attributes)
+        entries = attributes[:translations]
+
+        source_locale = Locales::Registry.source_tag(shop)
+        result = Translations::Upsert.call(
+          shop:,
+          resource_type: "PRODUCT",
+          resource_id: product.id,
+          source_locale:,
+          source_values: {
+            "title" => product.title,
+            "body_html" => product.description_html,
+            "meta_title" => product.seo_title,
+            "meta_description" => product.seo_description
+          },
+          translations: Array(entries).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
+        )
+        result.user_errors
       end
 
       # 宣告式覆寫那筆隱含變體（無選項 ⇒ 恰一筆，B1-2 不變量）。

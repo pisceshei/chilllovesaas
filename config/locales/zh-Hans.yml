@@ -25,5 +25,10 @@
       not_found: "找不到商品。"
       stale: "商品已被其他人修改，请重新加载后再保存。"
       handle_change_pending: "handle 变更需要 301 重定向基础设施（URL 里程碑），暂不开放。"
+    translation:
+      locale_not_enabled: "此语言未在本商店启用。"
+      source_locale_not_translatable: "来源语言的内容存在商品本体，不是译文。"
+      field_not_translatable: "此字段目前不可翻译。"
+      too_long: "译文长度超过上限。"
     staff:
       locale_unsupported: "不支持的界面语言。"

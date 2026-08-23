@@ -39,7 +39,6 @@
   "nav.assistantChat": "AI アシスタントと会話",
   "nav.assistant": "AI アシスタント",
   "nav.settings": "設定",
-
   "shell.version": "秋 ’26",
   "shell.search.open": "グローバル検索を開く",
   "shell.search.label": "検索",
@@ -57,7 +56,6 @@
   "shell.savebar.discard": "破棄",
   "shell.savebar.save": "保存",
   "shell.savebar.saving": "保存中…",
-
   "common.processing": "処理中",
   "common.save": "保存",
   "common.saving": "保存中…",
@@ -68,10 +66,8 @@
   "common.comingSoon": "{label}：準備中",
   "placeholder.title": "準備中",
   "placeholder.body": "このエリアは今後のマイルストーンで仕様に沿って順次公開されます。",
-
   "table.selectAll": "すべて選択",
   "table.selectRow": "{label} を選択",
-
   "status.active": "公開中",
   "status.archived": "アーカイブ済み",
   "status.draft": "下書き",
@@ -80,7 +76,6 @@
   "status.hint.draft": "未準備：どのチャネルでも顧客はアクセスできません",
   "status.hint.unlisted": "購入は可能だが検索には出ない：直接リンクのみ",
   "status.hint.archived": "販売終了：他のステータスを選ぶとアーカイブ解除",
-
   "products.title": "商品",
   "products.export": "エクスポート",
   "products.import": "インポート",
@@ -104,7 +99,6 @@
   "products.col.vendor": "仕入先",
   "products.inventory.units": "{count, plural, other {# 点}}",
   "products.inventory.untracked": "追跡なし",
-
   "product.new": "商品を追加",
   "product.untitled": "商品",
   "product.backToList": "商品一覧に戻る",
@@ -133,7 +127,6 @@
   "product.validation.handleInvalid": "handle に使えるのは小文字英字・数字・ハイフンのみです。",
   "product.validation.seoTitleTooLong": "SEO タイトルが {max} 文字の上限を超えています。",
   "product.validation.seoDescriptionTooLong": "メタディスクリプションが {max} 文字の上限を超えています。",
-
   "product.card.titleDescription": "タイトルと説明",
   "product.field.title": "タイトル",
   "product.field.title.hint": "保存時に handle を自動生成し一意化します",
@@ -225,5 +218,12 @@
   "product.org.tags.placeholder": "Enter またはカンマで追加",
   "product.org.tags.remove": "タグ {tag} を削除",
   "product.org.template": "テーマテンプレート",
-  "product.org.template.default": "既定の商品"
+  "product.org.template.default": "既定の商品",
+  "i18n.field.fallbackPlaceholder": "空欄の場合は英語の原文を表示",
+  "i18n.field.localeTabs": "コンテンツ言語",
+  "i18n.field.outdated": "この翻訳の後にソーステキストが変更されました",
+  "i18n.field.empty": "未翻訳",
+  "i18n.field.showSource": "原文を表示",
+  "i18n.field.sourceEmpty": "（空）",
+  "product.contentLocale.hint": "各言語で入力してください。空欄はソース言語にフォールバックします"
 }

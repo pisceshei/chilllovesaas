@@ -39,7 +39,6 @@
   "nav.assistantChat": "AI assistant chat",
   "nav.assistant": "AI assistant",
   "nav.settings": "Settings",
-
   "shell.version": "Autumn ’26",
   "shell.search.open": "Open global search",
   "shell.search.label": "Search",
@@ -57,7 +56,6 @@
   "shell.savebar.discard": "Discard",
   "shell.savebar.save": "Save",
   "shell.savebar.saving": "Saving…",
-
   "common.processing": "Processing",
   "common.save": "Save",
   "common.saving": "Saving…",
@@ -68,10 +66,8 @@
   "common.comingSoon": "{label}: coming soon",
   "placeholder.title": "Coming soon",
   "placeholder.body": "This area opens up in later milestones, following the spec.",
-
   "table.selectAll": "Select all",
   "table.selectRow": "Select {label}",
-
   "status.active": "Active",
   "status.archived": "Archived",
   "status.draft": "Draft",
@@ -80,7 +76,6 @@
   "status.hint.draft": "Not ready: customers can’t reach it on any channel",
   "status.hint.unlisted": "Purchasable but not discoverable: reachable only by direct link",
   "status.hint.archived": "No longer for sale: pick another status to unarchive",
-
   "products.title": "Products",
   "products.export": "Export",
   "products.import": "Import",
@@ -104,7 +99,6 @@
   "products.col.vendor": "Vendor",
   "products.inventory.units": "{count, plural, one {# unit} other {# units}}",
   "products.inventory.untracked": "Not tracked",
-
   "product.new": "Add product",
   "product.untitled": "Product",
   "product.backToList": "Back to products",
@@ -133,7 +127,6 @@
   "product.validation.handleInvalid": "Handle can only contain lowercase letters, numbers, and hyphens.",
   "product.validation.seoTitleTooLong": "SEO title is over the {max}-character limit.",
   "product.validation.seoDescriptionTooLong": "Meta description is over the {max}-character limit.",
-
   "product.card.titleDescription": "Title and description",
   "product.field.title": "Title",
   "product.field.title.hint": "A handle is generated and made unique on save",
@@ -225,5 +218,12 @@
   "product.org.tags.placeholder": "Press Enter or comma to add",
   "product.org.tags.remove": "Remove tag {tag}",
   "product.org.template": "Theme template",
-  "product.org.template.default": "Default product"
+  "product.org.template.default": "Default product",
+  "i18n.field.fallbackPlaceholder": "Leave blank to show the English original",
+  "i18n.field.localeTabs": "Content languages",
+  "i18n.field.outdated": "Source text changed since this translation",
+  "i18n.field.empty": "Not translated yet",
+  "i18n.field.showSource": "Show original",
+  "i18n.field.sourceEmpty": "(empty)",
+  "product.contentLocale.hint": "Fill each language; blank fields fall back to the source language"
 }

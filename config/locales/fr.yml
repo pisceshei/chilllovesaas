@@ -25,5 +25,10 @@
       not_found: "Produit introuvable."
       stale: "Ce produit a été modifié par quelqu’un d’autre. Rechargez puis enregistrez à nouveau."
       handle_change_pending: "Changer le handle nécessite l’infrastructure de redirection 301 (jalon URL) et n’est pas encore disponible."
+    translation:
+      locale_not_enabled: "Cette langue n’est pas activée pour la boutique."
+      source_locale_not_translatable: "La langue source est stockée sur le produit lui-même, pas comme traduction."
+      field_not_translatable: "Ce champ n’est pas encore traduisible."
+      too_long: "La traduction dépasse la limite."
     staff:
       locale_unsupported: "Langue d’interface non prise en charge."
