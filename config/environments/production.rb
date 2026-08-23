@@ -25,10 +25,17 @@ Rails.application.configure do
   config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
-  config.assume_ssl = true
+  #
+  # CD-1 walking skeleton（2026-08-23）：bt3 伺服器位於 NAT 後、WAN 443 由另一台
+  # 機器佔用，TLS 終結尚未到位。DISABLE_FORCE_SSL=1 時同時關閉 assume_ssl 與
+  # force_ssl——只關其一會出事：只關 force_ssl 留 assume_ssl 會把明文請求當成
+  # HTTPS 而發出 Secure cookie（瀏覽器在 http:// 下拒收 ⇒ 登入靜默失敗）；
+  # 只關 assume_ssl 留 force_ssl 會在無 TLS 環境重導向迴圈。TLS 就緒後移除該
+  # 環境變數即回到安全預設（fail-secure：未設定＝全開）。
+  config.assume_ssl = ENV["DISABLE_FORCE_SSL"] != "1"
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = true
+  config.force_ssl = ENV["DISABLE_FORCE_SSL"] != "1"
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }

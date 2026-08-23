@@ -1,0 +1,24 @@
+# CD-1（2026-08-23）：CHILL LOVE walking skeleton 的 puma systemd 單元。
+# 部署位置＝bt3 伺服器 /etc/systemd/system/chilllove-puma.service（由 scripts/deploy.sh 同步）。
+# Solid Queue 跑在 puma 內（SOLID_QUEUE_IN_PUMA=1，見 config/puma.rb:38）——單機
+# 部署不另起 worker 進程；日後拆出獨立 worker 時再加第二個單元。
+[Unit]
+Description=CHILL LOVE puma (production)
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+# 🔴 秘密一律走 /etc/chilllove/env（root:chilllove 0640），不寫進本檔——本檔進 Git。
+EnvironmentFile=/etc/chilllove/env
+User=chilllove
+Group=chilllove
+WorkingDirectory=/www/wwwroot/chilllove/app
+ExecStart=/opt/rbenv/shims/bundle exec puma -C config/puma.rb
+Restart=always
+RestartSec=3
+# puma Type=notify 需要 watchdog 整合；Rails 8 內建 sd_notify 支援。
+WatchdogSec=0
+
+[Install]
+WantedBy=multi-user.target
