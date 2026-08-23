@@ -118,6 +118,55 @@ RSpec.describe "Admin GraphQL product translations", type: :request do
     expect(status["zh-Hant"]).to include("outdatedCount" => 1, "complete" => false)
   end
 
+  # 🔴 線上實測抓到的缺口（admin SPA 恆送全樹）：改來源文字的那一次儲存**同時**送了
+  #    未變更的既有譯文；早期實作無條件重寫 digest ⇒ 過期偵測永遠不觸發。
+  it "改來源文字＋恆送未變更譯文 ⇒ 仍標 outdated（digest 只在譯文真的被改寫時推進）" do
+    login!
+    created = create_with([
+      { locale: "zh-Hant", field: "title", value: "玫瑰雷鳴" },
+      { locale: "ja", field: "title", value: "ローズトネール" }
+    ])
+    product = created["product"]
+
+    # 前端形態：改英文標題，同時把兩條既有譯文原值一起送回。
+    post_graphql(mutation, variables: { input: base_input(
+      id: product["id"], lockVersion: product["lockVersion"], title: "Rose Tonnerre EDP 100ml",
+      translations: [
+        { locale: "zh-Hant", field: "title", value: "玫瑰雷鳴" },
+        { locale: "ja", field: "title", value: "ローズトネール" }
+      ]
+    ) })
+    data = response.parsed_body.dig("data", "productSet")
+    expect(data["userErrors"]).to eq([])
+    expect(data.dig("product", "translations").map { |row| row["outdated"] }).to all(be(true))
+    status = data.dig("product", "translationStatus").index_by { |row| row["locale"] }
+    expect(status["ja"]).to include("outdatedCount" => 1)
+  end
+
+  it "譯文被改寫 ⇒ digest 推進到新來源文字，不再標過期" do
+    login!
+    created = create_with([ { locale: "ja", field: "title", value: "ローズトネール" } ])
+    product = created["product"]
+
+    # 第一次：改來源文字（譯文原值送回）⇒ 過期
+    post_graphql(mutation, variables: { input: base_input(
+      id: product["id"], lockVersion: product["lockVersion"], title: "Rose Tonnerre EDP 100ml",
+      translations: [ { locale: "ja", field: "title", value: "ローズトネール" } ]
+    ) })
+    intermediate = response.parsed_body.dig("data", "productSet", "product")
+    expect(intermediate["translations"].first["outdated"]).to be(true)
+
+    # 第二次：商家更新譯文本身 ⇒ digest 推進、旗標清掉
+    post_graphql(mutation, variables: { input: base_input(
+      id: product["id"], lockVersion: intermediate["lockVersion"], title: "Rose Tonnerre EDP 100ml",
+      translations: [ { locale: "ja", field: "title", value: "ローズトネール 100ml" } ]
+    ) })
+    data = response.parsed_body.dig("data", "productSet")
+    expect(data["userErrors"]).to eq([])
+    row = data.dig("product", "translations").first
+    expect(row).to include("outdated" => false, "value" => "ローズトネール 100ml")
+  end
+
   it "缺席 translations ⇒ 完全不動既有譯文（宣告式的「缺席＝保持現值」）" do
     login!
     created = create_with([ { locale: "ja", field: "title", value: "ローズ" } ])

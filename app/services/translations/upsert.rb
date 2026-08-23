@@ -100,17 +100,26 @@ module Translations
         end
 
         record = scope.first_or_initialize
+        # 🔴 **譯文值沒變就不動 digest**（線上實測抓到的缺口）：admin SPA 是宣告式、
+        #    **恆送全樹**（含未編輯的既有譯文），若無條件重寫 digest，商家「改了英文標題、
+        #    沒動翻譯」的那一次儲存會把 digest 更新成新來源文字 ⇒ 過期偵測永遠不觸發。
+        #    digest 的語義是「這條譯文是照哪一版來源文字翻的」，只有譯文真的被改寫時才推進。
+        unchanged = record.persisted? && record.value == entry[:value]
         record.assign_attributes(
           shop_id: shop.id, resource_type:, resource_id:,
           locale_tag: entry[:locale], field_key: entry[:field],
           value: entry[:value],
-          source_locale_tag: source_locale,
-          source_digest: Translation.digest_for(source_values[entry[:field]]),
-          value_source: "human",
-          outdated: false,
-          outdated_severity: "none",
-          review_required: false
+          source_locale_tag: source_locale
         )
+        unless unchanged
+          record.assign_attributes(
+            source_digest: Translation.digest_for(source_values[entry[:field]]),
+            value_source: "human",
+            outdated: false,
+            outdated_severity: "none",
+            review_required: false
+          )
+        end
         record.save!
       end
 
