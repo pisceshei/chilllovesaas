@@ -133,7 +133,7 @@ GEM
       raabro (~> 1.4)
     globalid (1.4.0)
       activesupport (>= 6.1)
-    graphql (2.6.7)
+    graphql (2.6.9)
       base64
       fiber-storage
       logger
