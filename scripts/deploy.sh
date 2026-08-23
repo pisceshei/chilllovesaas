@@ -62,9 +62,16 @@ systemctl enable -q chilllove-puma
 systemctl restart chilllove-puma
 
 echo "==> [7/7] 健康檢查 /up"
+# 🔴 健康檢查必須帶 **Host 標頭**：`config.hosts` 只放行 `.$CHILLLOVE_BASE_HOST`
+#    與已驗證的 custom domain，裸 `curl http://127.0.0.1/up` 的 `Host: 127.0.0.1`
+#    會被 `ActionDispatch::HostAuthorization` 擋成 403 ⇒ **puma 明明是好的，健檢卻永遠紅**
+#    （實測 2026-08-23：journal 每 2 秒一行 "Blocked hosts: 127.0.0.1"）。
+#    TenantResolver 把 base_host 自身視為 platform host，所以這個標頭不需要租戶。
+HEALTH_HOST="$(sed -n 's/^CHILLLOVE_BASE_HOST=//p' "$ENV_FILE" | tail -1)"
+[ -n "$HEALTH_HOST" ] || { echo "    ❌ $ENV_FILE 缺 CHILLLOVE_BASE_HOST" >&2; exit 2; }
 for i in $(seq 1 30); do
-  if curl -fsS -o /dev/null http://127.0.0.1/up; then
-    echo "    ✅ /up 綠（第 ${i} 次嘗試）"; exit 0
+  if curl -fsS -o /dev/null -H "Host: $HEALTH_HOST" http://127.0.0.1/up; then
+    echo "    ✅ /up 綠（第 ${i} 次嘗試，Host: $HEALTH_HOST）"; exit 0
   fi
   sleep 2
 done
