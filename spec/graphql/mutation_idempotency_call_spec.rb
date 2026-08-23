@@ -12,7 +12,8 @@ require "rails_helper"
 # 判準刻意是「resolve 方法體內出現該呼叫」而不只是「檔案裡出現字串」——
 # 寫在註釋裡不算（謂詞不得被便宜的實作偷換）。
 RSpec.describe "Mutation idempotency contract call" do
-  MUTATION_SOURCE_GLOB = Rails.root.join("app/graphql/mutations/*.rb")
+  # 遞迴 glob：日後 namespaced mutation（子目錄）不得靜默逃出掃描（對抗審查 confirmed #15）。
+  MUTATION_SOURCE_GLOB = Rails.root.join("app/graphql/mutations/**/*.rb")
 
   it "每支具體 mutation 的 resolve 都呼叫 enforce_idempotency_contract!" do
     offenders = Dir.glob(MUTATION_SOURCE_GLOB).filter_map do |path|

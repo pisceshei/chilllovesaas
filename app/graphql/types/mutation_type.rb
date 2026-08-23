@@ -13,7 +13,7 @@ module Types
   # 那個保護消失的條件就是本次交付的內容；guard spec
   # （spec/graphql/mutation_root_guard_spec.rb）已同批反轉成掛載後的斷言。
   #
-  # 🔴 新增 mutation 的義務（缺一 CI 擋）：
+  # 🔴 新增 mutation 的義務（① 有 CI 擋；②③ 靠 review——尚無機械斷言，誠實標示）：
   #   ① `resolve` 開頭呼叫 `enforce_idempotency_contract!`（graphql-ruby 無
   #      around hook，忘了呼叫沒有 runtime 機制會發現——由
   #      `spec/graphql/mutation_idempotency_call_spec.rb` 靜態掃描兜底）；

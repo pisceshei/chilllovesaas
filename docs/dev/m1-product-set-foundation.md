@@ -19,7 +19,7 @@
 
 | # | 裁定 | 依據與理由 |
 |---|---|---|
-| D-PS1 | claim 在業務 transaction **外**（獨立 commit） | ①InnoDB 唯一索引在未 commit 時第二個 INSERT 是 lock wait 不是立即 CONCURRENT_REQUEST ②failed 列必須在 rollback 後存活（11 §2.1(b) 的 failed 態才有記錄可查）。未決點 2 結案 |
+| D-PS1 | **三段式交易邊界**（對抗審查後修訂）：claim INSERT 在外（獨立 commit）；**succeeded 落款在業務 transaction 內**（同 commit）；failed 落款在外 | claim 在外＝立即 CONCURRENT 而非 lock wait；succeeded 在內＝消滅「業務已 commit、落款前死掉 ⇒ TTL 後同 key 重建重複商品」窗口（審查 confirmed #5）；failed 在外＝rollback 後存活。殘餘窗口＝failed 落款前死掉 ⇒ 列卡 processing 到 TTL（防重複優先，登記）。未決點 2 結案 |
 | D-PS2 | 業務失敗（非空 userErrors）⇒ claim 記 `failed` | 什麼都沒 commit ⇒ 依 (b) 表「視為未執行、同 key 可重試」；succeeded 必有 result_ref 可重建，業務失敗沒有結果物件可指。未決點 5 結案 |
 | D-PS3 | failed 分流在指紋比對**之前**，指紋隨新嘗試重置 | 「同 key 重試」重試的正是**修正後參數**；先比指紋會把每次修正判成 MISMATCH，(b) 的語義形同虛設 |
 | D-PS4 | `IDEMPOTENCY_PREVIOUS_ATTEMPT_FAILED` 商品線**不發** | 11 §2.1(b) 與 90 藍圖矛盾（91 §3.7 第 1 條）；遵循生產基線 11 |
@@ -43,9 +43,10 @@
 - **金額**：`ProductSetVariantInput.price` 等收 R4 十進位字串（恆兩位小數），
   `Money::Decimal.from_string → to_storage` ⇒ integer cents；格式錯 `INVALID`、
   負數 `GREATER_THAN_OR_EQUAL_TO`，皆 userErrors。**input 不收 Float**（鐵律 3）。
-- **handle**：手填 ⇒ 格式驗證＋衝突 reject `HANDLE_TAKEN`（model :taken 特判）；
-  未填 ⇒ HandleGenerator，生成衝突 `-1` 起算尾碼；DB 唯一索引兜底
-  （`RecordNotUnique` → `HANDLE_TAKEN`，63 §A.1 ④ 不得漏成 500）。
+- **handle**：手填 ⇒ 格式＋保留字驗證＋衝突 reject `HANDLE_TAKEN`（model :taken
+  特判）；未填 ⇒ HandleGenerator，生成衝突 `-1` 起算尾碼（保留字視同已占用）；
+  DB 唯一索引兜底時**手填/生成分流**——手填 `HANDLE_TAKEN`、生成重試 ≤3 次後
+  `CREATION_FAILED`（63 §A.1 ④ 不得漏成 500）。
 - **sanitize**：白名單 p/br/strong/em/ul/ol/li/a/img；a[href] http(s)、
   img[src] https（**自家 CDN 白名單待媒體包**）。
 
@@ -60,9 +61,33 @@
 | 發布線 | 88 §5 #2 | `auto_publish` 的 after_create 行為本批未做：v1 建立的 ACTIVE 商品**不會**自動進 online_store 管道（M2 前無實害，前台未存在） |
 | 多語言線 | 67 §E.2 | 建立時的 translation base row 本批未寫；handle 來源優先序的 `en_title` 步待多語言表 |
 
-## 5. Pending（誠實清單）
+## 5. 對抗審查輪（2026-08-23，發 PR 前）
+
+45-agent 工作流（5 鏡頭 × 每條 finding 2 個獨立反駁者）：**17 條確認、3 條被反駁**。
+四條紅色全數修復並各配回歸釘：
+
+| 紅色 | 修法 | 回歸釘 |
+|---|---|---|
+| 金額尾隨換行穿 regex → 500 | limits `decimal_string_regex` 錨點 `^$`→`\A\z`＋parse_money 補 rescue ExcessPrecision（雙防線） | request spec「尾隨換行 ⇒ INVALID」 |
+| failed→processing 非原子（雙贏雙建） | 帶狀態條件的 `update_all` CAS，輸家回 CONCURRENT | 併發 spec 兩執行緒 CAS 恰一贏 |
+| succeeded 落款與 commit 不原子 | 落款移進業務 transaction（D-PS1 修訂） | guard_spec 例外/失敗路徑 |
+| （自查）外層 transaction 讓部分寫入變孤兒 | userErrors ⇒ `raise ActiveRecord::Rollback`＋`requires_new: true`（joined 巢狀下 Rollback 會被靜默吞掉） | guard_spec「不留孤兒列」 |
+
+黃色已修：replay 釘 shop 參數 tenant（不信 ambient）；expired 讓位原子化＋
+retrying 旗標；HandleGenerator 撇號刪除移到 NFKC 前（U+00B4 分解事故）；
+保留字（all/new/index）手填 reject、生成走尾碼；letters_dropped 結構化日誌；
+生成衝突併發重試（≤3 次）與手填 reject 分流；靜態掃描 glob 遞迴化；
+HandleGenerator 專屬 spec（裁定範例全數釘住）；v1 射程守門三測試；
+回放已刪 NOT_FOUND 測試。
+
+黃色登記不修（各有依賴）：`reserved_first_segments` 全表檢查（storefront 路由
+包）；letters_dropped 落庫欄位（SEO health 包）；payload 的 variants selection
+（需 ProductVariant GraphQL type，更新態包一併做）。
+
+## 6. Pending（誠實清單）
 
 - 更新態／具名選項／多變體（B.5）；初始庫存量通道；auto_publish callback；
   translation base row；img src 的 CDN 白名單；`orderCreate` 類清單合併
   （未決點 4，catalog_create_merge_pending 照舊）。
 - 未決點 3（IDEMPOTENCY_KEY_REQUIRED 的 enum 歸屬）照舊：仍走 top-level 暫行。
+- §5 的三條登記不修黃色；D-PS1 殘餘窗口（failed 落款前死掉 ⇒ TTL 內同 key 被擋）。

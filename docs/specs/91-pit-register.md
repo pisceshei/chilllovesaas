@@ -2067,6 +2067,13 @@
   若日後開放第三方 API 且要對齊本尊（傳聞 ACTIVE），此裁定要重審
   【F5；來源＝docs/dev/m1-product-set-foundation.md；取證日期＝2026-08-23】
 
+- **`psp_decimal_string_regex` 與修正前的 `decimal_string_regex` 同型（行錨點 ^/$）**：
+  後者已於 2026-08-23 改 \A/\z（尾隨換行穿透 ⇒ ExcessPrecision ⇒ 500，productSet
+  對抗審查 confirmed #2）；前者**刻意不改**——其字串一律由我方 `Money.fixed_string`
+  生成、無外部輸入面，行錨點的弱點需要攻擊者控制的輸入才成立。若日後任何入向
+  開始用該 regex 驗外部字串，必須先改錨點
+  【F5；來源＝config/limits.yml:259 vs :193 比對；取證日期＝2026-08-23】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

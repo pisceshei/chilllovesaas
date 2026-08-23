@@ -13,7 +13,7 @@
   （limits handle 區塊全管線，六個裁定範例逐字元通過）、`ProductPolicy#create?`
   （products.edit）、`EventOutbox` model。
 - guard spec 反轉＋新增 `mutation_idempotency_call_spec`（靜態掃描 resolve 呼叫，
-  兌現 2026-08-15 worklog 承諾）＋ productSet request spec 19 例＋併發 claim spec。
+  兌現 2026-08-15 worklog 承諾）＋ productSet request spec（例數以 `bundle exec rspec spec/requests/product_set_spec.rb` 實跑輸出為準）＋併發 claim spec。
 - `docs/specs/65` §B 補 X12 列（admin 金額入向——封閉條款要求先改表）；
   `docs/specs/91` §3.7 登記三條；`docs/dev/m1-product-set-foundation.md` 全新。
 
@@ -39,3 +39,13 @@
   商品線遵循 11 不發此碼；**庫存線落地前必須先解**。
 - 測試端算指紋的兩個坑已寫進 dev doc §3（snake_case＋類別 graphql_name），
   第一次就都踩過（實跑 MISMATCH 抓出）。
+
+---
+
+## 補記（同日：對抗審查輪）
+
+發 PR 前跑 45-agent 對抗審查（5 鏡頭×2 反駁者）：17 條確認全數處置——
+四紅修復（金額換行 500／failed CAS／succeeded 原子性／孤兒列）各配回歸釘，
+黃色修 10 條、登記 3 條（詳見 dev doc §5）。修復後全套 rspec 重跑歸零。
+🔴 原 worklog 的「request spec 19 例」是手抄數、與實物不符（審查 confirmed #17
+點名）——已改為導出指令；本檔其他計數同步檢視過。

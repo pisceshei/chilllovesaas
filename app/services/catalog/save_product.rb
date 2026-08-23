@@ -79,6 +79,9 @@ module Catalog
         manual_handle = input[:handle].presence
         if manual_handle && !manual_handle.match?(/\A[a-z0-9-]+\z/)
           errors << error([ "handle" ], "handle 只能包含小寫字母、數字與連字號。", "INVALID")
+        elsif manual_handle && Limits.fetch(:handle, :reserved).map(&:to_s).include?(manual_handle)
+          # limits handle.reserved（all/new/index）：撞平台路由段（如 /admin/products/new）。
+          errors << error([ "handle" ], "此 handle 為系統保留字，請改用其他值。", "INVALID")
         end
 
         variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
@@ -125,7 +128,10 @@ module Catalog
           return nil
         end
         storage.cents
-      rescue ArgumentError
+      rescue ArgumentError, Money::ExcessPrecision
+        # ExcessPrecision 也要接：regex 錨點修正前「尾隨換行」的輸入曾能穿過
+        # from_string 而在 to_storage 才炸（65 §B X12 的處置是 userErrors，不是 500）。
+        # 錨點修好後理論上不可達，仍保留——兩道防線各自獨立成立。
         errors << error(
           [ "variants", "0", field ],
           "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。",
@@ -156,22 +162,42 @@ module Catalog
         end
       end
 
+      # 生成 handle 的併發衝突重試上限：check-then-insert 的窗口內兩請求可同名，
+      # 輸家重生成（拿到下一個尾碼）再試；連輸表示異常熱點，放棄並回報。
+      GENERATED_HANDLE_ATTEMPTS = 3
+
       def commit(shop, attributes)
-        product = nil
-        ActsAsTenant.with_tenant(shop) do
-          ActiveRecord::Base.transaction do
-            product = create_product!(shop, attributes)
-            create_implicit_variant!(shop, product, attributes.fetch(:variant))
-            enqueue_created_event!(shop, product)
+        manual = attributes[:handle].present?
+        attempts = 0
+        begin
+          product = nil
+          ActsAsTenant.with_tenant(shop) do
+            ActiveRecord::Base.transaction do
+              product = create_product!(shop, attributes)
+              create_implicit_variant!(shop, product, attributes.fetch(:variant))
+              enqueue_created_event!(shop, product)
+            end
           end
+          Result.new(product:, user_errors: [])
+        rescue ActiveRecord::RecordNotUnique
+          # handle 唯一索引兜底（63 §A.1 ④：轉譯成 userErrors，不得漏成 500）。
+          # 🔴 手填與生成分流（對抗審查 confirmed #9）：手填衝突＝reject
+          # （collision_strategy_explicit）；**生成**衝突＝自動改尾碼
+          # （collision_strategy_generated）——併發撞索引的輸家重生成再試，
+          # 不得把 reject 誤用在生成路徑上。
+          if manual
+            Result.new(product: nil,
+                       user_errors: [ error([ "handle" ], "handle 已被使用。", "HANDLE_TAKEN") ])
+          elsif (attempts += 1) < GENERATED_HANDLE_ATTEMPTS
+            retry
+          else
+            Result.new(product: nil,
+                       user_errors: [ error([ "handle" ], "handle 產生時持續發生衝突，請重試。",
+                                            "CREATION_FAILED") ])
+          end
+        rescue ActiveRecord::RecordInvalid => invalid
+          Result.new(product: nil, user_errors: translate_record_invalid(invalid))
         end
-        Result.new(product:, user_errors: [])
-      rescue ActiveRecord::RecordNotUnique
-        # handle 唯一索引兜底（63 §A.1 ④：轉譯成 userErrors，不得漏成 500）。
-        Result.new(product: nil,
-                   user_errors: [ error([ "handle" ], "handle 已被使用。", "HANDLE_TAKEN") ])
-      rescue ActiveRecord::RecordInvalid => invalid
-        Result.new(product: nil, user_errors: translate_record_invalid(invalid))
       end
 
       def create_product!(shop, attributes)
@@ -217,7 +243,17 @@ module Catalog
       # 生成衝突 ⇒ 自 -1 起算尾碼（`collision_strategy_generated: numeric_suffix_from_1`；
       # 本尊實測 potion → potion-1）。手填衝突**不走這裡**——那是 reject（HANDLE_TAKEN）。
       def unique_generated_handle(shop, title)
-        base = HandleGenerator.call(title, resource: "product").handle
+        result = HandleGenerator.call(title, resource: "product")
+        if result.flagged?
+          # `flag_when_letters_dropped`：有字母被丟棄一律標記、不得靜默。
+          # ⚠️ 落庫欄位待 SEO health 包（surface_auto_token_ratio_in_seo_health 的
+          #    消費端），先以結構化日誌承載，登記於 dev doc §5。
+          Rails.logger.info(
+            "[handle] letters_dropped shop_id=#{shop.id} handle=#{result.handle.inspect} title=#{title.inspect}"
+          )
+        end
+
+        base = result.handle
         return base unless handle_taken?(shop, base)
 
         (1..).each do |suffix|
@@ -227,6 +263,10 @@ module Catalog
       end
 
       def handle_taken?(shop, handle)
+        # 保留字視同已占用：生成出 "new" 這類值時自動走尾碼（new-1），
+        # 不讓商品 handle 撞平台路由段。
+        return true if Limits.fetch(:handle, :reserved).map(&:to_s).include?(handle)
+
         Product.where(shop_id: shop.id, handle:).exists?
       end
 

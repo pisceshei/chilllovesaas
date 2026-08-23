@@ -55,4 +55,34 @@ RSpec.describe IdempotencyKey, "concurrency" do
       expect(IdempotencyKey.where(key: "race-key").count).to eq(1)
     end
   end
+
+  # 🔴 紅色回歸釘（對抗審查 confirmed #3／#11）：failed→processing 若是
+  # read-modify-write，兩個並發同 key 重試會**雙雙**通過 failed 分流、各建一個
+  # 商品。原子化後：帶狀態條件的 UPDATE 恰一個贏。
+  it "failed→processing 的 CAS：兩執行緒同時搶，恰一個贏" do
+    shop = ActsAsTenant.without_tenant { create(:shop, subdomain: "idem-race") }
+    fingerprint = Idempotency::CanonicalJson.fingerprint({ "t" => "1" })
+    record = ActsAsTenant.with_tenant(shop) do
+      IdempotencyKey.create!(
+        key: "cas-key", mutation_name: "ProductSet", state: "failed",
+        params_fingerprint: fingerprint, expires_at: 1.hour.from_now
+      )
+    end
+
+    wins = Queue.new
+    threads = 2.times.map do
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          won = IdempotencyKey.unscoped
+                              .where(id: record.id, state: "failed")
+                              .update_all(state: "processing", updated_at: Time.current)
+          wins << won
+        end
+      end
+    end
+    threads.each(&:join)
+
+    results = 2.times.map { wins.pop }.sort
+    expect(results).to eq([ 0, 1 ])
+  end
 end

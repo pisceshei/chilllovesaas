@@ -40,9 +40,15 @@ module Catalog
       def rules = Limits.fetch(:handle)
 
       def pipeline(raw)
-        s = raw.unicode_normalize(:nfkc)           # nfkc_normalize：全形→半形
-        s = s.downcase                              # lowercase
+        # 🔴 撇號類刪除必須在 NFKC **之前**：NFKC 把 U+00B4（´）分解成
+        # 空格＋combining acute，之後的 delete("´") 永遠匹配不到——該字元會走
+        # 「標點轉分隔」得到 bob-s，而規格要求的是刪除得到 bobs
+        # （對抗審查 confirmed #6；delete_chars 清單裡只有 U+00B4 受 NFKC 分解影響，
+        # 但順序調整對其餘字元無害——它們 NFKC 前後同形）。
+        s = raw.to_s
         rules.fetch(:delete_chars).each { |ch| s = s.delete(ch) } # 撇號類刪除：Bob's→bobs
+        s = s.unicode_normalize(:nfkc)             # nfkc_normalize：全形→半形
+        s = s.downcase                              # lowercase
         rules.fetch(:transliterate_table).each { |from, to| s = s.gsub(from.to_s, to.to_s) } # ß→ss（NFKD 不分解）
         # fold_diacritics：NFKD 後去 combining marks（Kérastase→kerastase）
         s = s.unicode_normalize(:nfkd).gsub(/\p{Mn}/, "")

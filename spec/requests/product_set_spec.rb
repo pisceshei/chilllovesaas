@@ -219,6 +219,81 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
         expect(html).to include("<p>好</p>")
       end
     end
+
+    # 🔴 紅色回歸釘（對抗審查 confirmed #2）：尾隨換行曾穿過行錨點 regex、
+    # 在 to_storage 炸 Money::ExcessPrecision 成 HTTP 500。
+    it "金額帶尾隨換行 ⇒ INVALID userError（不是 500）" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: base_input(variants: [ { price: "128.00
+" } ]), idempotencyKey: SecureRandom.uuid
+      })
+
+      payload = response.parsed_body
+      expect(response).to have_http_status(:ok)
+      expect(payload["errors"]).to be_nil
+      expect(payload.dig("data", "productSet", "userErrors", 0, "code")).to eq("INVALID")
+    end
+
+    it "手填 handle 撞保留字（new）⇒ INVALID" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: base_input(handle: "new"), idempotencyKey: SecureRandom.uuid
+      })
+
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("INVALID")
+      expect(error["field"]).to eq([ "handle" ])
+    end
+  end
+
+  describe "v1 射程守門（對抗審查 confirmed #13）" do
+    it "帶 id（更新態）⇒ INVALID，不動任何資料" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: "gid://chilllove/Product/1"), idempotencyKey: SecureRandom.uuid
+      })
+
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("INVALID")
+      expect(error["field"]).to eq([ "id" ])
+      ActsAsTenant.with_tenant(shop) { expect(Product.count).to eq(0) }
+    end
+
+    it "variants 缺席 ⇒ INVALID（隱含變體必須恰一筆）" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: { title: "無變體" }, idempotencyKey: SecureRandom.uuid
+      })
+
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("INVALID")
+      expect(error["field"]).to eq([ "variants" ])
+    end
+
+    it "多筆 variants ⇒ INVALID（具名選項屬後續包）" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: base_input(variants: [ { price: "128.00" }, { price: "158.00" } ]),
+        idempotencyKey: SecureRandom.uuid
+      })
+
+      expect(response.parsed_body.dig("data", "productSet", "userErrors", 0, "code")).to eq("INVALID")
+    end
+  end
+
+  describe "回放的 result_ref 已刪（11 §2.1(b) 末列）" do
+    it "回 NOT_FOUND userError（原請求成功、商品隨後被刪）" do
+      login!
+      key = SecureRandom.uuid
+      post_graphql(MUTATION, variables: { input: base_input, idempotencyKey: key })
+      ActsAsTenant.with_tenant(shop) { Product.sole.destroy! }
+
+      post_graphql(MUTATION, variables: { input: base_input, idempotencyKey: key })
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("NOT_FOUND")
+      ActsAsTenant.with_tenant(shop) { expect(Product.count).to eq(0) }
+    end
   end
 
   describe "授權與租戶隔離" do
