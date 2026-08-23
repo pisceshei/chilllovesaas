@@ -1,49 +1,68 @@
-import {
-  BarChart3,
-  Bell,
-  Boxes,
-  Heart,
-  Home,
-  Menu,
-  Package,
-  Search,
-  Settings,
-  ShoppingBag,
-  Sparkles,
-  Store,
-  Tag,
-  Users,
-  X,
-} from "lucide-react";
+import { Bell, Heart, Menu, Search, Settings, Sparkles, X } from "lucide-react";
 import { useState } from "react";
-import type { LucideIcon } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
-
-interface NavigationItem {
-  label: string;
-  path: string;
-  icon: LucideIcon;
-}
-
-const primaryNavigation: readonly NavigationItem[] = [
-  { label: "首頁", path: "/admin/home", icon: Home },
-  { label: "訂單", path: "/admin/orders", icon: ShoppingBag },
-  { label: "商品", path: "/admin/products", icon: Package },
-  { label: "顧客", path: "/admin/customers", icon: Users },
-  { label: "折扣", path: "/admin/discounts", icon: Tag },
-  { label: "分析", path: "/admin/analytics", icon: BarChart3 },
-];
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { APPS, NAVIGATION, SALES_CHANNELS, entryContains } from "./navigation";
+import type { NavigationEntry } from "./navigation";
 
 /**
- * AdminShell 可用屬性，佈局對應 `docs/design/23-interaction-css-spec.md` §2 App frame。
+ * AdminShell 可用屬性，佈局對應原型 topbar／sidebar（值一律走 tokens，鐵律 8）。
  */
 export interface AdminShellProps {
   /** Rails 從單一 `#admin-root[data-brand-name]` 注入的平台品牌。 */
   brandName: string;
 }
 
+interface SidebarEntryProps {
+  entry: NavigationEntry;
+  onNavigate: () => void;
+}
+
 /**
- * 呈現登入後的 52px topbar、220px sidebar 與可捲動內容區。
+ * 呈現一個導覽單元＋其子項手風琴。
+ *
+ * 展開語義照原型 `renderSidebar`：**目前頁面屬於這個群組**時展開
+ * （`nav-subs.open`＋子項 `show`），不是點擊切換——切到別的群組會自動收合。
+ * 群組歸屬由 navigation.ts 的資料表決定，不由 URL 前綴推導。
+ */
+function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
+  const location = useLocation();
+  const active = entryContains(entry, location.pathname);
+  const Icon = entry.icon;
+
+  return (
+    <>
+      <NavLink
+        className={`cl-nav-item ${active && location.pathname === entry.path ? "cl-nav-item--active" : ""}`}
+        onClick={onNavigate}
+        to={entry.path}
+      >
+        <Icon aria-hidden="true" size={15} />
+        <span>{entry.label}</span>
+      </NavLink>
+      {entry.kids.length > 0 ? (
+        <div className={`cl-nav-subs ${active ? "cl-nav-subs--open" : ""}`}>
+          {entry.kids.map(([ path, label ]) => (
+            <NavLink
+              className={({ isActive }) =>
+                `cl-nav-sub ${active ? "cl-nav-sub--show" : ""} ${isActive ? "cl-nav-sub--active" : ""}`
+              }
+              key={path}
+              onClick={onNavigate}
+              to={path}
+            >
+              {label}
+            </NavLink>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * 呈現登入後的 topbar、sidebar 與可捲動內容區。
+ *
+ * 導覽樹＝原型 `NAV`＋銷售管道＋應用程式＋工具（navigation.ts 逐項對照）。
  *
  * @param props - 後端注入的單一品牌值。
  * @returns 可響應窄螢幕且具 accessible navigation 的 admin shell。
@@ -51,6 +70,7 @@ export interface AdminShellProps {
 export function AdminShell({ brandName }: AdminShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const avatarText = Array.from(brandName.trim())[0]?.toLocaleUpperCase() ?? "";
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
     <div className="cl-admin-shell">
@@ -100,48 +120,35 @@ export function AdminShell({ brandName }: AdminShellProps) {
           <button
             aria-label="關閉導覽"
             className="cl-sidebar-backdrop"
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
             type="button"
           />
         ) : null}
         <aside className={`cl-sidebar ${sidebarOpen ? "cl-sidebar--open" : ""}`}>
           <nav aria-label="主要導覽" className="cl-sidebar__navigation">
-            {primaryNavigation.map(({ icon: Icon, label, path }) => (
-              <NavLink
-                className={({ isActive }) => `cl-nav-item ${isActive ? "cl-nav-item--active" : ""}`}
-                key={path}
-                onClick={() => setSidebarOpen(false)}
-                to={path}
-              >
-                <Icon aria-hidden="true" size={16} />
-                <span>{label}</span>
-              </NavLink>
+            {NAVIGATION.map((entry) => (
+              <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
             ))}
           </nav>
 
-          <div className="cl-sidebar__group">
-            <p>銷售管道</p>
-            <NavLink className="cl-nav-item" onClick={() => setSidebarOpen(false)} to="/admin/store">
-              <Store aria-hidden="true" size={16} />
-              <span>線上商店</span>
-            </NavLink>
-          </div>
+          <p className="cl-nav-group">銷售管道</p>
+          {SALES_CHANNELS.map((entry) => (
+            <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
+          ))}
 
-          <div className="cl-sidebar__group">
-            <p>應用程式</p>
-            <NavLink className="cl-nav-item" onClick={() => setSidebarOpen(false)} to="/admin/apps">
-              <Boxes aria-hidden="true" size={16} />
-              <span>新增應用程式</span>
-            </NavLink>
-          </div>
+          <p className="cl-nav-group">應用程式</p>
+          {APPS.map((entry) => (
+            <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
+          ))}
 
-          <nav aria-label="工具與設定" className="cl-sidebar__footer">
-            <NavLink className="cl-nav-item" onClick={() => setSidebarOpen(false)} to="/admin/assistant">
-              <Sparkles aria-hidden="true" size={16} />
+          <div className="cl-sidebar__spacer" />
+          <nav aria-label="工具與設定" className="cl-nav-foot">
+            <NavLink className="cl-nav-item" onClick={closeSidebar} to="/admin/assistant">
+              <Sparkles aria-hidden="true" size={15} />
               <span>AI 助理對話</span>
             </NavLink>
-            <NavLink className="cl-nav-item" onClick={() => setSidebarOpen(false)} to="/admin/settings">
-              <Settings aria-hidden="true" size={16} />
+            <NavLink className="cl-nav-item" onClick={closeSidebar} to="/admin/settings">
+              <Settings aria-hidden="true" size={15} />
               <span>設定</span>
             </NavLink>
           </nav>
