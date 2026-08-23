@@ -44,8 +44,10 @@ name: Claude Review
 # ============================================================
 
 on:
-  pull_request:
-    types: [opened, synchronize, ready_for_review]
+  # 🔴 D40（2026-08-23 使用者裁定）：雙 bot 驗收廢止，自動觸發（原 pull_request:
+  #    types: [opened, synchronize, ready_for_review]）移除。檔案保留——歷史 worklog
+  #    大量引用其路徑（R1 全樹路徑保真要求它存在）——僅留手動觸發供日後使用。
+  workflow_dispatch:
 
 concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
