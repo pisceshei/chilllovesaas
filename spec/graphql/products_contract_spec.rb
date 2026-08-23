@@ -25,6 +25,30 @@ RSpec.describe "Admin GraphQL products contract", type: :request do
     )
   end
 
+  # 反向分頁（last/before）與正向走的是不同一支條件（apply_before vs apply_after）。
+  # 2026-08-23 把兩支從 SQL 字串內插改成 Arel 時發現只有正向有覆蓋——
+  # 改一個沒人測的分支，綠燈只證明另一半沒壞。
+  it "paginates backwards with last/before and keeps hasPreviousPage honest" do
+    oldest = create_product(shop, title: "最舊", created_at: 3.minutes.ago)
+    middle = create_product(shop, title: "中間", created_at: 2.minutes.ago)
+    newest = create_product(shop, title: "最新", created_at: 1.minute.ago)
+    login!
+
+    post_graphql("{ products(first: 3) { edges { cursor node { title } } } }")
+    edges = response.parsed_body.dig("data", "products", "edges")
+    expect(edges.map { |edge| edge.dig("node", "title") }).to eq([ newest.title, middle.title, oldest.title ])
+
+    # 游標指向最舊那筆：往回要拿到「比它新」的兩筆，且順序仍是新→舊。
+    post_graphql(
+      "query($cursor: String!) { products(last: 2, before: $cursor) { nodes { title } pageInfo { hasPreviousPage hasNextPage } } }",
+      variables: { cursor: edges.last.fetch("cursor") }
+    )
+    connection = response.parsed_body.dig("data", "products")
+    expect(connection.fetch("nodes").map { |node| node.fetch("title") }).to eq([ newest.title, middle.title ])
+    expect(connection.dig("pageInfo", "hasNextPage")).to be(true)
+    expect(connection.dig("pageInfo", "hasPreviousPage")).to be(false)
+  end
+
   it "uses opaque keyset cursors, GIDs, and never leaks another shop's product" do
     first_product = create_product(shop, title: "第一件", created_at: 2.minutes.ago)
     second_product = create_product(shop, title: "第二件", created_at: 1.minute.ago)
