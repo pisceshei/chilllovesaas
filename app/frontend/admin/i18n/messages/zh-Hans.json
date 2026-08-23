@@ -39,7 +39,6 @@
   "nav.assistantChat": "AI 助理对话",
   "nav.assistant": "AI 助理",
   "nav.settings": "设置",
-
   "shell.version": "秋季 ’26",
   "shell.search.open": "打开全局搜索",
   "shell.search.label": "搜索",
@@ -57,7 +56,6 @@
   "shell.savebar.discard": "放弃",
   "shell.savebar.save": "保存",
   "shell.savebar.saving": "保存中…",
-
   "common.processing": "处理中",
   "common.save": "保存",
   "common.saving": "保存中…",
@@ -68,10 +66,8 @@
   "common.comingSoon": "{label}：功能准备中",
   "placeholder.title": "功能准备中",
   "placeholder.body": "此区域将在后续里程碑按规格逐步开放。",
-
   "table.selectAll": "全选",
   "table.selectRow": "选择 {label}",
-
   "status.active": "已启用",
   "status.archived": "已归档",
   "status.draft": "草稿",
@@ -80,7 +76,6 @@
   "status.hint.draft": "尚未就绪：顾客在任何渠道都无法访问",
   "status.hint.unlisted": "可购买但不可被发现：仅能通过直接链接访问",
   "status.hint.archived": "已停售：选择其他状态即取消归档",
-
   "products.title": "商品",
   "products.export": "导出",
   "products.import": "导入",
@@ -104,7 +99,6 @@
   "products.col.vendor": "供应商",
   "products.inventory.units": "{count, plural, other {# 件}}",
   "products.inventory.untracked": "未跟踪",
-
   "product.new": "添加商品",
   "product.untitled": "商品",
   "product.backToList": "返回商品列表",
@@ -133,7 +127,6 @@
   "product.validation.handleInvalid": "handle 只能包含小写字母、数字与连字符。",
   "product.validation.seoTitleTooLong": "SEO 标题超过 {max} 字符上限。",
   "product.validation.seoDescriptionTooLong": "Meta 描述超过 {max} 字符上限。",
-
   "product.card.titleDescription": "标题与描述",
   "product.field.title": "标题",
   "product.field.title.hint": "保存时自动生成 handle 并确保唯一",
@@ -225,5 +218,12 @@
   "product.org.tags.placeholder": "按 Enter 或逗号添加",
   "product.org.tags.remove": "移除标签 {tag}",
   "product.org.template": "主题模板",
-  "product.org.template.default": "默认商品"
+  "product.org.template.default": "默认商品",
+  "i18n.field.fallbackPlaceholder": "留空时显示英文原文",
+  "i18n.field.localeTabs": "内容语言",
+  "i18n.field.outdated": "来源文字在此译文之后已变更",
+  "i18n.field.empty": "尚未翻译",
+  "i18n.field.showSource": "显示原文",
+  "i18n.field.sourceEmpty": "（空白）",
+  "product.contentLocale.hint": "逐语填写；留空的字段在前台回落来源语言"
 }

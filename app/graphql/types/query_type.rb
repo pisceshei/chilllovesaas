@@ -23,6 +23,9 @@ module Types
       argument :id, ID, required: true
     end
 
+    field :shop_locales, [ Types::ShopLocaleType ], null: false,
+      description: "本店已啟用的內容語言（position 序，來源語言優先；ML-2）。"
+
     field :product_vendors, [ String ], null: false,
       description: "本店既有廠商（去重、字母序；組織分類卡 autocomplete 用，91 §12）。"
     field :product_types, [ String ], null: false,
@@ -45,6 +48,19 @@ module Types
       authorize_products!
       scope = Product.where(shop_id: context.fetch(:current_shop).id)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
+    # 本店已啟用的內容語言。語言集合是**資料**（67 §A.2）：新增語言不改程式碼、
+    # 不 migration，編輯頁下次載入就多出那一格。
+    #
+    # @return [Array<ShopLocale>] enabled 的語言（來源語言排第一，其餘照 position）
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def shop_locales
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      ActsAsTenant.with_tenant(shop) do
+        ShopLocale.enabled.includes(:platform_locale).sort_by { |row| [ row.is_source ? 0 : 1, row.position ] }
+      end
     end
 
     # 本店既有廠商清單（distinct、排序、上限引 api.pagination_max_page_size）。

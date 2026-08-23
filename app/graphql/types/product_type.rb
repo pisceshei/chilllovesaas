@@ -25,6 +25,12 @@ module Types
       description: "標籤全量（宣告式契約的讀取面；恆為陣列，無標籤＝[]）。"
     field :seo, Types::SeoType, null: false,
       description: "SEO 覆寫（物件恆在，子欄位 null＝未覆寫）。"
+    field :translations, [ Types::TranslationType ], null: false,
+      description: "非來源語言的譯文（ML-2）；locales 省略＝該店已啟用的全部語言。" do
+      argument :locales, [ String ], required: false
+    end
+    field :translation_status, [ Types::TranslationStatusType ], null: false,
+      description: "各語言翻譯進度（鐵律 7：唯一來源 translation_status）。"
 
     # 序列化 product 的穩定 global API identifier。
     #
@@ -41,6 +47,21 @@ module Types
 
     # @return [Array<String>] products.tags（json 欄，DB default []）
     def tags = object.tags || []
+
+    # @param locales [Array<String>, nil] 篩選語言；省略＝全部已啟用語言
+    # @return [Array<Translation>] 本商品的譯文列
+    # @note 副作用：tenant-scoped SELECT。
+    def translations(locales: nil)
+      scope = Translation.where(shop_id: object.shop_id, resource_type: "PRODUCT", resource_id: object.id)
+      scope = scope.where(locale_tag: locales.map { |tag| Locales::Tag.normalize(tag) }) if locales.present?
+      scope.order(:locale_tag, :field_key)
+    end
+
+    # @return [Array<TranslationStatus>] 各語言進度（無列＝尚未有任何譯文，前端顯示 0/N）
+    def translation_status
+      TranslationStatus.where(shop_id: object.shop_id, resource_type: "PRODUCT", resource_id: object.id)
+                       .order(:locale_tag)
+    end
 
     # @return [Array<ProductVariant>] position 序（B1-2：恆 ≥1 筆）
     def variants

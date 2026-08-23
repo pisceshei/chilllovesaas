@@ -39,7 +39,6 @@
   "nav.assistantChat": "AI 助理對話",
   "nav.assistant": "AI 助理",
   "nav.settings": "設定",
-
   "shell.version": "秋季 ’26",
   "shell.search.open": "開啟全域搜尋",
   "shell.search.label": "搜尋",
@@ -57,7 +56,6 @@
   "shell.savebar.discard": "捨棄",
   "shell.savebar.save": "儲存",
   "shell.savebar.saving": "儲存中…",
-
   "common.processing": "處理中",
   "common.save": "儲存",
   "common.saving": "儲存中…",
@@ -68,10 +66,8 @@
   "common.comingSoon": "{label}：功能準備中",
   "placeholder.title": "功能準備中",
   "placeholder.body": "這個區域會在後續里程碑依規格逐步開放。",
-
   "table.selectAll": "全選",
   "table.selectRow": "選取 {label}",
-
   "status.active": "啟用中",
   "status.archived": "已封存",
   "status.draft": "草稿",
@@ -80,7 +76,6 @@
   "status.hint.draft": "尚未備妥：顧客在任何管道都取用不到",
   "status.hint.unlisted": "可購買但不被發現：僅能透過直接連結存取",
   "status.hint.archived": "已停售：選擇其他狀態即取消封存",
-
   "products.title": "商品",
   "products.export": "匯出",
   "products.import": "匯入",
@@ -104,7 +99,6 @@
   "products.col.vendor": "供應商",
   "products.inventory.units": "{count, plural, other {# 件}}",
   "products.inventory.untracked": "未追蹤",
-
   "product.new": "新增商品",
   "product.untitled": "商品",
   "product.backToList": "返回商品列表",
@@ -133,7 +127,6 @@
   "product.validation.handleInvalid": "handle 只能包含小寫字母、數字與連字號。",
   "product.validation.seoTitleTooLong": "SEO 標題超過 {max} 字元上限。",
   "product.validation.seoDescriptionTooLong": "Meta 描述超過 {max} 字元上限。",
-
   "product.card.titleDescription": "標題與說明",
   "product.field.title": "標題",
   "product.field.title.hint": "儲存時自動生成 handle 並唯一化",
@@ -225,5 +218,12 @@
   "product.org.tags.placeholder": "以 Enter 或逗號加入",
   "product.org.tags.remove": "移除標籤 {tag}",
   "product.org.template": "佈景主題範本",
-  "product.org.template.default": "預設商品"
+  "product.org.template.default": "預設商品",
+  "i18n.field.fallbackPlaceholder": "留空時顯示英文原文",
+  "i18n.field.localeTabs": "內容語言",
+  "i18n.field.outdated": "來源文字在此譯文之後已變更",
+  "i18n.field.empty": "尚未翻譯",
+  "i18n.field.showSource": "顯示原文",
+  "i18n.field.sourceEmpty": "（空白）",
+  "product.contentLocale.hint": "逐語填寫；留空的欄位在前台回落來源語言"
 }

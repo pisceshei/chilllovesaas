@@ -6,6 +6,8 @@ import { Badge } from "../components/Badge";
 import type { BadgeProgress, BadgeTone } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import { LocalizedField } from "../components/LocalizedField";
+import type { LocaleOption } from "../components/LocalizedField";
 import { TextField } from "../components/TextField";
 import { useSaveBarRegister } from "../lib/SaveBarContext";
 import { useToast } from "../lib/ToastContext";
@@ -45,10 +47,28 @@ const PRODUCT_QUERY = `
       id title descriptionHtml status handle lockVersion
       vendor productType tags
       seo { title description }
+      translations { locale field value outdated }
       variants { price compareAtPrice cost sku barcode taxable }
     }
   }
 `;
+
+/** 該店已啟用的內容語言（ML-2；語言集合是資料，新增語言零部署即出欄位——67 §A.2）。 */
+const SHOP_LOCALES_QUERY = `
+  query shopLocales {
+    shopLocales { locale { tag endonym } isSource position }
+  }
+`;
+
+interface ShopLocalesData {
+  shopLocales: { locale: { tag: string; endonym: string }; isSource: boolean; position: number }[];
+}
+
+/** 可翻欄位（v1 三組：標題／說明／SEO 兩欄）。 */
+type TranslatableField = "title" | "body_html" | "meta_title" | "meta_description";
+
+/** locale → field → 值（來源語言那格永遠對映 base 欄位，不進 translations 送出）。 */
+type TranslationMap = Record<string, Partial<Record<TranslatableField, string>>>;
 
 /** 組織分類卡 autocomplete 的建議清單（91 §12；伺服端 distinct＋字母序）。 */
 const SUGGESTIONS_QUERY = `
@@ -88,6 +108,7 @@ interface ProductQueryData {
     productType: string | null;
     tags: string[];
     seo: { title: string | null; description: string | null };
+    translations: { locale: string; field: string; value: string; outdated: boolean }[];
     variants: {
       price: string;
       compareAtPrice: string | null;
@@ -116,6 +137,8 @@ interface FormValues {
   tags: string[];
   seoTitle: string;
   seoDescription: string;
+  /** 非來源語言的譯文（ML-2）；來源語言的值在上面那些 base 欄位。 */
+  translations: TranslationMap;
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -135,6 +158,7 @@ const INITIAL_VALUES: FormValues = {
   tags: [],
   seoTitle: "",
   seoDescription: "",
+  translations: {},
 };
 
 type FieldKey =
@@ -213,6 +237,36 @@ export function htmlToDescription(html: string): string {
     .replaceAll("&gt;", ">")
     .replaceAll("&amp;", "&")
     .trim();
+}
+
+/** GraphQL translations 列 → locale/field 巢狀 map（前端表單值形態）。 */
+function toTranslationMap(rows: { locale: string; field: string; value: string }[]): TranslationMap {
+  const map: TranslationMap = {};
+  for (const row of rows) {
+    map[row.locale] = { ...(map[row.locale] ?? {}), [row.field as TranslatableField]: row.value };
+  }
+  return map;
+}
+
+/**
+ * 表單 map → productSet 的 translations 陣列。
+ *
+ * 🔴 逐欄位一列（不是每語言一包 JSON）：67 §E.2-1 硬規則 1——map 形態承載不了
+ * 六個稽核欄，也毀掉欄位級 digest／過期標記／翻譯 CSV。
+ * 🔴 來源語言略過：它的文字在 base row，寫進 translations 會被伺服端 reject（INVALID）。
+ */
+function translationEntries(map: TranslationMap, sourceLocale: string) {
+  const fields: TranslatableField[] = [ "title", "body_html", "meta_title", "meta_description" ];
+  const entries: { locale: string; field: TranslatableField; value: string }[] = [];
+  for (const [ locale, byField ] of Object.entries(map)) {
+    if (locale === sourceLocale) continue;
+    for (const field of fields) {
+      const value = byField[field];
+      if (value === undefined) continue;
+      entries.push({ locale, field, value });
+    }
+  }
+  return entries;
 }
 
 function escapeHtml(raw: string): string {
@@ -459,6 +513,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const [seoOpen, setSeoOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestionsData>({ productVendors: [], productTypes: [] });
+  // 內容語言（來源語言排第一）；載入前先給來源語言一格，避免建立頁閃空。
+  const [contentLocales, setContentLocales] = useState<{ tag: string; endonym: string; isSource: boolean }[]>([]);
+  // locale → 已過期的欄位集合（伺服端 translations.outdated；前端不自行推算，重載才更新）。
+  const [outdatedFields, setOutdatedFields] = useState<Record<string, Set<TranslatableField>>>({});
   // 更多動作→封存／取消封存：改狀態後立即儲存（本尊為即時動作，不停在 SaveBar）。
   const pendingAutoSave = useRef(false);
 
@@ -503,9 +561,18 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           tags: product.tags ?? [],
           seoTitle: product.seo?.title ?? "",
           seoDescription: product.seo?.description ?? "",
+          translations: toTranslationMap(product.translations),
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
+        setOutdatedFields(
+          product.translations.reduce<Record<string, Set<TranslatableField>>>((accumulator, row) => {
+            if (!row.outdated) return accumulator;
+            const set = accumulator[row.locale] ?? new Set<TranslatableField>();
+            set.add(row.field as TranslatableField);
+            return { ...accumulator, [row.locale]: set };
+          }, {}),
+        );
         setLockVersion(product.lockVersion);
         setLoadState("ready");
       })
@@ -529,6 +596,21 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     requestAdminGraphQL<SuggestionsData, Record<string, never>>(SUGGESTIONS_QUERY, {}, controller.signal)
       .then((data) => setSuggestions(data))
       .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  // 已啟用內容語言（ML-2）。失敗時退回「只有來源語言」——寧可少幾格，不要整頁掛掉。
+  useEffect(() => {
+    const controller = new AbortController();
+    requestAdminGraphQL<ShopLocalesData, Record<string, never>>(SHOP_LOCALES_QUERY, {}, controller.signal)
+      .then((data) => {
+        const rows = [ ...data.shopLocales ].sort((left, right) => {
+          if (left.isSource !== right.isSource) return left.isSource ? -1 : 1;
+          return left.position - right.position;
+        });
+        setContentLocales(rows.map((row) => ({ tag: row.locale.tag, endonym: row.locale.endonym, isSource: row.isSource })));
+      })
+      .catch(() => setContentLocales([]));
     return () => controller.abort();
   }, []);
 
@@ -616,6 +698,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           title: values.seoTitle.trim(),
           description: values.seoDescription.trim(),
         },
+        // 譯文恆送（宣告式）：空字串＝刪除該譯文列、回落來源語言（67 §C.4(b)）。
+        // 🔴 來源語言那一格**不送**——它的內容在 base 欄位（title／descriptionHtml／seo）。
+        translations: translationEntries(values.translations, sourceLocale),
         variants: [
           {
             price: centsToApiString(parseMoneyToCents(values.price) ?? null),
@@ -726,6 +811,48 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     fieldRefs.current[key] = node;
   };
 
+  // 內容語言（ML-2）。來源語言那一格讀寫的是 base 欄位；其餘語言讀寫 values.translations。
+  const sourceLocale = contentLocales.find((locale) => locale.isSource)?.tag ?? "en";
+  const localeOptionsFor = (field: TranslatableField): LocaleOption[] =>
+    contentLocales.map((locale) => ({
+      tag: locale.tag,
+      endonym: locale.endonym,
+      outdated: outdatedFields[locale.tag]?.has(field) ?? false,
+    }));
+
+  const baseFieldFor: Record<TranslatableField, FieldKey | "description"> = {
+    title: "title",
+    body_html: "description",
+    meta_title: "seoTitle",
+    meta_description: "seoDescription",
+  };
+
+  /** 某語言某欄位的目前值（來源語言＝base 欄位，其餘＝譯文 map）。 */
+  const localizedValues = (field: TranslatableField): Record<string, string> => {
+    const map: Record<string, string> = {};
+    for (const locale of contentLocales) {
+      map[locale.tag] = locale.isSource
+        ? String(values[baseFieldFor[field] as keyof FormValues] ?? "")
+        : values.translations[locale.tag]?.[field] ?? "";
+    }
+    return map;
+  };
+
+  /** 寫回：來源語言寫 base 欄位；其餘寫譯文 map（保留其他語言與欄位）。 */
+  const setLocalized = (field: TranslatableField, locale: string, next: string) => {
+    if (locale === sourceLocale) {
+      setValue(baseFieldFor[field] as keyof FormValues, next as never);
+      return;
+    }
+    setValues((current) => ({
+      ...current,
+      translations: {
+        ...current.translations,
+        [locale]: { ...(current.translations[locale] ?? {}), [field]: next },
+      },
+    }));
+  };
+
   if (loadState === "loading") {
     return (
       <div className="cl-page cl-page--detail cl-product-detail">
@@ -772,7 +899,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         </Badge>
         {/* 內容語言 chip：建立一律在來源語言（67 §E.2）；編輯態的切換器屬多語言包 */}
         <span className="cl-locale-chip" title={t("product.contentLocale")}>
-          English
+          {contentLocales.find((locale) => locale.isSource)?.endonym ?? sourceLocale}
         </span>
         <div className="cl-detail-head__actions">
           {isNew ? null : (
@@ -831,33 +958,47 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         <div className="cl-od-grid__main">
           <Card padded>
             <h3>{t("product.card.titleDescription")}</h3>
-            <TextField
+            {/* 標題＝堆疊式（67 §E.2-1：短單行欄位一次看完所有語言，才看得出譯錯語言／漏一語）。 */}
+            <LocalizedField
               error={errors.title}
-              hint={isNew ? t("product.field.title.hint") : undefined}
+              hint={isNew ? t("product.field.title.hint") : t("product.contentLocale.hint")}
               label={t("product.field.title")}
+              locales={localeOptionsFor("title")}
               maxLength={255}
-              onChange={(event) => setValue("title", event.target.value)}
+              mode="stacked"
+              onChange={(locale, next) => setLocalized("title", locale, next)}
               placeholder={t("product.field.title.placeholder")}
-              ref={bindField("title")}
-              value={values.title}
+              sourceLocale={sourceLocale}
+              sourceRef={bindField("title")}
+              values={localizedValues("title")}
             />
-            <div className="cl-field">
-              <label className="cl-field__label" htmlFor="product-description">
-                {t("product.field.description")}
-              </label>
-              <div className="cl-rte-toolbar" title={t("product.rte.hint")}>
-                <button className="cl-rte-tool" disabled type="button">
-                  <Sparkles aria-hidden="true" size={13} /> {t("product.rte.ai")}
-                </button>
-              </div>
-              <textarea
-                className="cl-field__input cl-field__textarea"
-                id="product-description"
-                onChange={(event) => setValue("description", event.target.value)}
-                rows={4}
-                value={values.description}
-              />
-            </div>
+            {/* 說明＝分頁式（長內容／富文本：N 個實例＝N 條工具列與載入成本，67 §E.2-1(b)）。 */}
+            <LocalizedField
+              label={t("product.field.description")}
+              locales={localeOptionsFor("body_html")}
+              mode="tabbed"
+              onChange={(locale, next) => setLocalized("body_html", locale, next)}
+              renderTabbed={(locale, value, onValueChange) => (
+                <>
+                  <div className="cl-rte-toolbar" title={t("product.rte.hint")}>
+                    <button className="cl-rte-tool" disabled type="button">
+                      <Sparkles aria-hidden="true" size={13} /> {t("product.rte.ai")}
+                    </button>
+                  </div>
+                  <textarea
+                    aria-label={`${t("product.field.description")}（${locale}）`}
+                    className="cl-field__input cl-field__textarea"
+                    id={locale === sourceLocale ? "product-description" : undefined}
+                    lang={locale}
+                    onChange={(event) => onValueChange(event.target.value)}
+                    rows={4}
+                    value={value}
+                  />
+                </>
+              )}
+              sourceLocale={sourceLocale}
+              values={localizedValues("body_html")}
+            />
           </Card>
 
           <Card padded>
@@ -1130,27 +1271,43 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             )}
             {seoOpen ? (
               <>
-                <TextField
+                {/* SEO 標題＋描述＝分頁式整組（判準不是「長」，是「一組要一起讀才判斷得出來」）。 */}
+                <LocalizedField
                   error={errors.seoTitle}
                   hint={t("product.seo.pageTitle.hint", { used: values.seoTitle.length, max: SEO_TITLE_MAX })}
                   label={t("product.seo.pageTitle")}
+                  locales={localeOptionsFor("meta_title")}
                   maxLength={SEO_TITLE_MAX}
-                  onChange={(event) => setValue("seoTitle", event.target.value)}
-                  ref={bindField("seoTitle")}
-                  value={values.seoTitle}
+                  mode="tabbed"
+                  onChange={(locale, next) => setLocalized("meta_title", locale, next)}
+                  sourceLocale={sourceLocale}
+                  sourceRef={bindField("seoTitle")}
+                  values={localizedValues("meta_title")}
                 />
                 <div className="cl-field">
                   <label className="cl-field__label" htmlFor="seo-description">
                     {t("product.seo.meta")}
                   </label>
-                  <textarea
-                    aria-invalid={errors.seoDescription ? true : undefined}
-                    className="cl-field__input cl-field__textarea"
-                    id="seo-description"
-                    maxLength={SEO_DESCRIPTION_MAX}
-                    onChange={(event) => setValue("seoDescription", event.target.value)}
-                    rows={3}
-                    value={values.seoDescription}
+                  <LocalizedField
+                    label={t("product.seo.meta")}
+                    locales={localeOptionsFor("meta_description")}
+                    mode="tabbed"
+                    onChange={(locale, next) => setLocalized("meta_description", locale, next)}
+                    renderTabbed={(locale, value, onValueChange) => (
+                      <textarea
+                        aria-invalid={locale === sourceLocale && errors.seoDescription ? true : undefined}
+                        aria-label={`${t("product.seo.meta")}（${locale}）`}
+                        className="cl-field__input cl-field__textarea"
+                        id={locale === sourceLocale ? "seo-description" : undefined}
+                        lang={locale}
+                        maxLength={SEO_DESCRIPTION_MAX}
+                        onChange={(event) => onValueChange(event.target.value)}
+                        rows={3}
+                        value={value}
+                      />
+                    )}
+                    sourceLocale={sourceLocale}
+                    values={localizedValues("meta_description")}
                   />
                   {/* 160 是 SERP 建議值不是上限（91 §11：本尊 203/160 照樣可存；硬上限 320）。 */}
                   {errors.seoDescription ? (

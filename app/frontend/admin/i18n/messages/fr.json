@@ -39,7 +39,6 @@
   "nav.assistantChat": "Discuter avec l’assistant IA",
   "nav.assistant": "Assistant IA",
   "nav.settings": "Paramètres",
-
   "shell.version": "Automne ’26",
   "shell.search.open": "Ouvrir la recherche globale",
   "shell.search.label": "Rechercher",
@@ -57,7 +56,6 @@
   "shell.savebar.discard": "Abandonner",
   "shell.savebar.save": "Enregistrer",
   "shell.savebar.saving": "Enregistrement…",
-
   "common.processing": "Traitement",
   "common.save": "Enregistrer",
   "common.saving": "Enregistrement…",
@@ -68,10 +66,8 @@
   "common.comingSoon": "{label} : bientôt disponible",
   "placeholder.title": "Bientôt disponible",
   "placeholder.body": "Cette zone sera ouverte lors des prochains jalons, conformément aux spécifications.",
-
   "table.selectAll": "Tout sélectionner",
   "table.selectRow": "Sélectionner {label}",
-
   "status.active": "Actif",
   "status.archived": "Archivé",
   "status.draft": "Brouillon",
@@ -80,7 +76,6 @@
   "status.hint.draft": "Pas prêt : inaccessible aux clients sur tous les canaux",
   "status.hint.unlisted": "Achetable mais non visible : accessible uniquement par lien direct",
   "status.hint.archived": "Plus en vente : choisissez un autre statut pour désarchiver",
-
   "products.title": "Produits",
   "products.export": "Exporter",
   "products.import": "Importer",
@@ -104,7 +99,6 @@
   "products.col.vendor": "Fournisseur",
   "products.inventory.units": "{count, plural, one {# unité} other {# unités}}",
   "products.inventory.untracked": "Non suivi",
-
   "product.new": "Ajouter un produit",
   "product.untitled": "Produit",
   "product.backToList": "Retour aux produits",
@@ -133,7 +127,6 @@
   "product.validation.handleInvalid": "Le handle ne peut contenir que des minuscules, des chiffres et des tirets.",
   "product.validation.seoTitleTooLong": "Le titre SEO dépasse la limite de {max} caractères.",
   "product.validation.seoDescriptionTooLong": "La méta-description dépasse la limite de {max} caractères.",
-
   "product.card.titleDescription": "Titre et description",
   "product.field.title": "Titre",
   "product.field.title.hint": "Un handle est généré et rendu unique à l’enregistrement",
@@ -225,5 +218,12 @@
   "product.org.tags.placeholder": "Entrée ou virgule pour ajouter",
   "product.org.tags.remove": "Retirer la balise {tag}",
   "product.org.template": "Modèle de thème",
-  "product.org.template.default": "Produit par défaut"
+  "product.org.template.default": "Produit par défaut",
+  "i18n.field.fallbackPlaceholder": "Laisser vide pour afficher l’original en anglais",
+  "i18n.field.localeTabs": "Langues du contenu",
+  "i18n.field.outdated": "Le texte source a changé depuis cette traduction",
+  "i18n.field.empty": "Pas encore traduit",
+  "i18n.field.showSource": "Afficher l’original",
+  "i18n.field.sourceEmpty": "(vide)",
+  "product.contentLocale.hint": "Renseignez chaque langue ; les champs vides retombent sur la langue source"
 }

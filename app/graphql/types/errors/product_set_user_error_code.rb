@@ -15,6 +15,8 @@ module Types
 
       from_pools
       own_value :HANDLE_TAKEN, "handle 已被同店其他商品使用（手填衝突一律拒絕，不自動加尾碼）。"
+      # ML-2：譯文的語言不在該店已啟用清單（67 §C.1；設定 › 語言啟用後才可寫）。
+      own_value :LOCALE_NOT_ENABLED, "指定的語言未在本商店啟用。"
     end
   end
 end
