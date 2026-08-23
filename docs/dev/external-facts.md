@@ -586,6 +586,34 @@ GFM 規範同文 <https://github.github.com/gfm/>（取證 2026-08-19，已與 c
 ⇒ 文件裡的「預期輸出」若含 `**`，會與終端機實際輸出**字面不符**；
 要強調就把粗體包在 code span **外**，不要塞進去。
 
+CommonMark 0.31.2 §4.6 對 HTML comment block 有以下直接規則：
+
+> "The block begins with a line that meets a start condition (after up to three optional spaces of indentation)."
+> "It ends with the first subsequent line that meets a matching end condition"
+> "If the first line meets both the start condition and the end condition, the block will contain just that line."
+> "Start condition: line begins with the string `<!--`."
+> "End condition: line contains the string `-->`."
+
+來源：<https://spec.commonmark.org/0.31.2/#html-blocks>（取證 2026-08-21）。
+
+🔴 **2026-08-21 對 R6 的窄應用**：HTML block 的 start condition 只對未遮罩的 raw line 判定，
+且只在該 raw line 第一次取得 opener 時成立；raw line 必須由 0–3 個空格後緊接 `<!--` 開始。
+block comment 已開啟後，任何 `-->` 子字串都依上列 end condition 收尾，不解析 inline code span；
+closing line 的後綴不會被重新當成活性 CLAIM 結構，下一個 raw line 才恢復解析。未滿足 start
+condition 的 opener 是 inline raw HTML comment；它可跨 raw line，R6 會保留 opener 前的 prefix，
+再把 closing-line suffix 接回同一個邏輯活性行。closing line 餘段若另有 opener，也不能改用
+HTML block 規則，因為該 raw line 並非由 opener 開始。
+
+GitHub 官方 Render a Markdown document endpoint
+<https://docs.github.com/en/rest/markdown/markdown#render-a-markdown-document>（取證 2026-08-21）
+對 `text` 的逐字說明是 "The Markdown text to render in HTML."。以 exact request
+``{"text":"### CLAIM-001\n\n- type: count <!-- a\n--> qualitative\n- recheck: `ruby -e 'exit 0'`","mode":"gfm","context":"pisceshei/chilllovesaas"}``
+實跑，raw response 逐字含 `<li>type: count  qualitative</li>`；因此換行不能把 suffix 從同一個
+可見 metadata 值中丟掉。四支正反 fixture 與五條 production helper probe 分別釘住畸形／合法
+跨行、closing-line reopen、raw code-span prefix、縮排 block start 與 block closing suffix。這是本專案針對
+line-based metadata／正文的窄實作邊界，不外推為完整 CommonMark parser，也不宣稱支援跨行
+code span。
+
 ### B6. 限流：primary 明列 reset 時點；secondary 另明列有限次重試
 
 > primary — "If you exceed your primary rate limit, you will receive a 403 or 429 response, and the
@@ -925,3 +953,21 @@ D39 是 fail-closed：空值走「非 ISO8601」分支被擋，**不依賴**「�
   「#66 尚未合併（`--jq .mergedAt` 得**字面 `null`**）」，該句來自驗收方措辭的轉述，
   **沒有任何一方實測過**。第 20 輪驗收方自行以 `od -c` 實測後撤回自己的措辭。
   ⇒ **外部行為的轉述不算證據**；本檔的存在就是為了讓這類句子有一個必須帶實測的落點。
+<!-- 🔴 2026-08-23 改編號（合併 PR #64 後的 main 時）：本節在 PR #65 分支期間編為 `B9`，
+     與 main（PR #64 改編後）的 `B9`（PowerShell 函式先定義）碰撞；main 已編至 `B15` ⇒ 本節改編 **`B16`**。
+     歷史 worklog 以 `B9` 指涉 CommonMark 清單／圍欄語義者，指的是本節。 -->
+
+### B16. CommonMark 清單可前導 0–3 空格；R6 對未收尾圍欄採更嚴格的內部契約
+
+> "preceding each line of Ls by up to three spaces of indentation"
+
+> "Unclosed code blocks are closed by the end of the document"
+
+來源：CommonMark 0.31.2 §5.2 List items 與 §4.5 Fenced code blocks：
+<https://spec.commonmark.org/0.31.2/#list-items>、
+<https://spec.commonmark.org/0.31.2/#fenced-code-blocks>（取證 2026-08-21）。
+
+官方規格因此支持 `  - type: count` 仍是活性清單項。§4.5 另規定文件到尾仍找不到 closing
+fence 時，圍欄內容延伸至文件結尾；這是 CommonMark 的合法解析結果，不是假設。R6 的宣稱索引
+若照此放行，圍欄後的 CLAIM 會全部退出結構檢查，因此本專案刻意採更嚴格的 fail-closed 契約：
+`docs/specs/92-*` 的圍欄必須收尾。這一條是**專案政策**，不是宣稱 CommonMark 本身會報錯。

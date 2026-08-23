@@ -23,29 +23,35 @@
 | 產品（§3） | 3 仍缺 | **1**（庫存四欄） | 1＋1 部分 | 列表批次鏈死、CSV modal 三缺、59/60 缺口若干 |
 | 設定（§4） | 1-E 10＋1-F 12＋P0 ×4 | **1-E 6、1-F 4、P0-07、R-05 全清、N-05、X-07 清** | 1-E 4、1-F 8、P0-10/11/21 | **9**（T-01～T-09，含 1 條 P0 自相矛盾＋1 條合規） |
 | 顧客-市場-內容（§5） | 1-D 5＋1-G 11＋P0-02/19 | **P0-02、P0-19** | 1-D 4、1-G 10 | **1 個真 bug（segCount）**＋折扣組合缺＋捨入 DOCS 超前等 |
-| 元件級（§6） | 32 元件門檻 0 過＋R×7＋N×11＋P0×6 | **R-01/02/03/05/07、N-01..05/07/11、P0-14/15/16/18** | R-04/06、N-06/08/09/10、P0-20③、F-06(S) | 死 CSS 全量 35 條、aria 三屬性掛點已備 |
+| 元件級（§6） | 32 元件門檻 0 過＋R×7＋N×11＋P0×6 | **R-01/02/03/05/07、N-01..05/07/11、P0-15/16** | R-04/06、N-06/08/09/10、P0-14（部分）／P0-18（部分）、P0-20③、F-06(S) | 死 CSS 全量 35 條、aria 三屬性掛點已備 |
 | 外殼（§7） | 1-A 1＋404×2＋listbar | 0 | 全部 | palette 假資料＋DOCS 超前 5 鍵＋雙實作等 |
 
-**53 → 本輪淨變化的關鍵事實**：53 的 10 條「未解決 P0」中 **7 條已在 53 之後的輪次解決**（P0-01/02/07/14/15/16/18/19 — 其中 07 為稅務三檔、09 結帳規則引擎亦已落地見 §4 F2），剩餘未動的是 P0-10（聯動）、P0-11（通知分組）、P0-20③（頁尾儲存鈕）、P0-21（配額分母）。**本輪最嚴重的三條新發現**：訂單退款上限被寫回「硬擋＋DB 鎖」（22 號紅字明令不得回退的形態）、分群 `segCount()` 假解析器（會顯示錯誤數字）、請款模式 UI 只渲染 3/4 顆（22 §9.1 紅字防回退標記的正反面）。
+**53 → 本輪淨變化的關鍵事實**：§1.1 有 **10 列 P0 複驗紀錄**，其中 8 列已修復
+（P0-01/02/07/09/15/16/17/19），2 列仍是部分修復（P0-14：A/P 已有 focus trap、S 仍缺；
+P0-18：hash 路由已有、cursor 同步仍待實作）。這組橫跨 53 原先的「未解決／部分修復」口徑，
+不能再拿「53 的 10 條未解決」當分母；目前仍缺的 P0-10（聯動）、P0-11（通知分組）、
+P0-20③（頁尾儲存鈕）、P0-21（配額分母）是另一個現況集合。複驗：
+`ruby -EUTF-8:UTF-8 -e 's=File.read("docs/specs/83-admin-1to1-audit-round3.md"); x=s[s.index(/^### 1\.1 /)...s.index(/^### 1\.2 /)]; rows=x.lines.filter_map{|l| m=l.match(/^\| (P0-\d+).*?\[(已修復|部分)\]/); m&&[m[1],m[2]]}; fixed=rows.select{|_,v|v=="已修復"}.map(&:first); partial=rows.select{|_,v|v=="部分"}.map(&:first); abort "unexpected states" unless [rows.size,fixed.size,partial]==[10,8,%w[P0-14 P0-18]]; p({rows:rows.size,fixed:fixed,partial:partial})'`。
+**本輪最嚴重的三條新發現**：訂單退款上限被寫回「硬擋＋DB 鎖」（22 號紅字明令不得回退的形態）、分群 `segCount()` 假解析器（會顯示錯誤數字）、請款模式 UI 只渲染 3/4 顆（22 §9.1 紅字防回退標記的正反面）。
 
 ---
 
 ## 1. 53 號遺留項總結帳
 
-### 1.1 已在 53 之後輪次修復（本輪驗證確認，不需再動）
+### 1.1 53 之後輪次的逐項複驗（P0：8 已修復／2 部分）
 
 | 項 | 證據 |
 |---|---|
-| P0-01 訂單依 fulfillment order 分卡 | `foSeed/foGet/foSync/foCard/foActionBar` A:2513–2778；7 status × 8 requestStatus × 12 supportedActions；cancel 產生替代單、split 產生剩餘單 |
-| P0-02 市場父子繼承 | `mktDerive()` A:7224（conditions 推導＋specificity）、`mktRes/mktResAdd` A:7241/7248、三態 UI A:7257–7288、市場階層卡 A:7551 |
-| P0-07 稅務三檔 | `TAX_TIERS` A:8238、`taxRegionCard` A:8286 radiogroup、`taxManualEditor` A:8273 僅 manual 檔出現 |
-| P0-09 結帳規則引擎 | `CK_RULES` A:9578、`ckrPage` A:9593、`ckrEditPage` A:9658（條件→動作＋擋單計數＋validation function 出處） |
-| P0-14 focus trap／還原／inert（A/P） | `withFocusTrap()` A:3653、`ftSync()` A:3632、`ftRestoreFocus()` A:3644；6 個浮層全掛；P 同構 P:1646–1663。**S 仍缺** |
-| P0-15 sr-only（A/P） | `.vh` A:255／P:202；`announce()`×19、`aria-live`×5 |
-| P0-16 拖曳鍵盤 | `.grip` role=button＋tabindex＋`dragKey` A:6921–7044、`aria-grabbed`×7、`#dragHelp` |
-| P0-17 草稿空車付款區 | `draftTaxState()` 四態＋「未計算」A:4972–4990、`draftPaySync()` A:4998–5012 |
-| P0-18 URL 路由 | hash 路由 A:2238–2360、pushState×4／replaceState×4；註釋明寫「實作換 cursor」A:2258 |
-| P0-19 財務 2FA 閘門 | `financePage()` 未過閘早退、含金額字串不進 DOM A:7645–7699 |
+| P0-01 訂單依 fulfillment order 分卡 [已修復] | `foSeed/foGet/foSync/foCard/foActionBar` A:2513–2778；7 status × 8 requestStatus × 12 supportedActions；cancel 產生替代單、split 產生剩餘單 |
+| P0-02 市場父子繼承 [已修復] | `mktDerive()` A:7224（conditions 推導＋specificity）、`mktRes/mktResAdd` A:7241/7248、三態 UI A:7257–7288、市場階層卡 A:7551 |
+| P0-07 稅務三檔 [已修復] | `TAX_TIERS` A:8238、`taxRegionCard` A:8286 radiogroup、`taxManualEditor` A:8273 僅 manual 檔出現 |
+| P0-09 結帳規則引擎 [已修復] | `CK_RULES` A:9578、`ckrPage` A:9593、`ckrEditPage` A:9658（條件→動作＋擋單計數＋validation function 出處） |
+| P0-14 focus trap／還原／inert（A/P）[部分] | `withFocusTrap()` A:3653、`ftSync()` A:3632、`ftRestoreFocus()` A:3644；6 個浮層全掛；P 同構 P:1646–1663。**S 仍缺** |
+| P0-15 sr-only（A/P）[已修復] | `.vh` A:255／P:202；`announce()`×19、`aria-live`×5 |
+| P0-16 拖曳鍵盤 [已修復] | `.grip` role=button＋tabindex＋`dragKey` A:6921–7044、`aria-grabbed`×7、`#dragHelp` |
+| P0-17 草稿空車付款區 [已修復] | `draftTaxState()` 四態＋「未計算」A:4972–4990、`draftPaySync()` A:4998–5012 |
+| P0-18 URL 路由 [部分] | hash 路由 A:2238–2360、pushState×4／replaceState×4；註釋明寫「實作換 cursor」A:2258 |
+| P0-19 財務 2FA 閘門 [已修復] | `financePage()` 未過閘早退、含金額字串不進 DOM A:7645–7699 |
 | R-01/N-01 billingPage 覆蓋事故 | 改名 `setBillingPage` A:8362；lint `r_dup_functions` 固化 |
 | R-02/N-02 --focus-ring 雙宣告 | A:245 單一宣告，`#4b92e5` 生效 |
 | R-03/N-03 savebar 焦點環被壓 | A:996 以 (0,3,0) 重宣告＋原因註釋 |

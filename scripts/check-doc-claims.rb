@@ -29,6 +29,11 @@
 #       **可由代碼算出**的數字，鄰近必須有複驗指令（反引號內含 grep／git／ruby／python／wc／ls），
 #       否則就是一顆定時炸彈。
 #   R5｜**全稱句要附查法或改成列舉**（🟡 **警告，不擋**）。
+#   R6｜**每份宣稱索引須有活性標頭、每個活性 CLAIM 都須有 `type: count`、CLAIM ID 跨索引全域唯一、
+#       圍欄／HTML comment 須收尾；
+#       `type`／`recheck` 鍵大小寫與冒號前空白不敏感，但 type 值只允許小寫 `count`，
+#       `type*`／`recheck*` 畸形鍵拒絕；每個 count 區塊只能有一筆計數與一筆「以受支援工具開頭」的複驗命令**
+#       （🔴 **阻擋**）。
 #
 # ## 🔴 R4／R5 只掃「本次改動的」worklog／handoff，這是刻意的
 #
@@ -41,9 +46,9 @@
 #   ⚠️ R1／R3 **是 tree-wide 的**：路徑與行號是客觀事實，歷史紀錄寫錯了一樣會誤導人，
 #     而它們的修法是「加更正註記」，不是改原文——不衝突。
 #
-# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>] [--require-base]
-#   ROOT 省略＝本倉庫根目錄（傳入是給 scripts/test-doc-claims-rules.rb 用 fixture 打紅它用的，
-#   形態比照 check-limits-keys.rb／check-money-boundary.rb／check-ci-parity.rb）。
+# 用法：ruby scripts/check-doc-claims.rb [ROOT] [--base <git-ref>] [--require-base] [--fixture-mode]
+#   ROOT 省略＝本倉庫根目錄；明確 ROOT 仍是生產形態。只有「明確 ROOT＋`--fixture-mode`」
+#   才允許隔離 fixture 不含 `docs/specs/92-*`，形態比照其他 checker 的 fixture runner。
 #   --base 省略＝origin/main。
 #   --require-base（P-8 引入）＝base 取不到差異時**升為 exit 3**，不再只警告——
 #     給 CI 用：淺 clone 曾使 R4／R5 連續多輪靜默跳過而 quality 綠（PR #58 期考掘出的
@@ -52,8 +57,9 @@
 # 退出碼（照 `scripts/check-limits-keys.rb` 已立的三分碼表）：
 #   0＝通過（可能有 🟡 警告）
 #   1＝**檢查跑了，發現違規**
-#   2＝**檢查跑不了**（讀檔／解析失敗）
-#   3＝**檢查根本沒有生效**（掃了 0 個檔 canary；或 --require-base 下取不到 base 差異）
+#   2＝**檢查跑不了**（讀檔／解析失敗；或 `--fixture-mode` 沒搭配明確 ROOT）
+#   3＝**檢查根本沒有生效**（掃了 0 個檔、非 fixture 模式的 R6 索引為 0；
+#      或 --require-base 下取不到 base 差異）
 #
 # 相關：AGENTS.md §工作記錄與交接文件的寫法、CLAUDE.md §工作方式、
 #      docs/dev/m0-review-convergence.md。
@@ -67,6 +73,9 @@ base_ref = "origin/main"
 # 🔴 日常 CI **不加**這個旗標：對既有歷史散文全面開火，會與「歷史層不回頭改」的裁定衝突，
 #    而且一次噴出的量會讓規則被當噪音關掉（見檔頭分層說明）。
 scan_all = !!argv.delete("--all")
+# `--fixture-mode`：只供帶明確 ROOT 的隔離 fixture 使用；允許該 fixture 不含生產
+# `docs/specs/92-*`。一般的明確 ROOT 仍須通過 R6 零供給 canary，不能因呼叫形式而靜默豁免。
+fixture_mode = !!argv.delete("--fixture-mode")
 # `--require-base`：R4／R5 的範圍差異算不出來時，從「警告後照跑 R1／R3」升為 exit 3。
 # 🔴 為什麼是旗標不是無條件（P-8）：fixture 目錄不是 git 樹、本機也可能沒有 origin/main，
 #    無條件 exit 3 會把全部 fixture CASE 與離線使用打死；CI 則必須有這道 canary——
@@ -77,7 +86,12 @@ if (i = argv.index("--base"))
   argv.delete_at(i)
   argv.delete_at(i)
 end
+explicit_root = !argv.empty?
 ROOT = argv[0] ? File.expand_path(argv[0]) : File.expand_path("..", __dir__)
+if fixture_mode && !explicit_root
+  warn "::error::`--fixture-mode` 必須搭配明確 ROOT；不得用它豁免生產樹的 R6 供給 canary。"
+  exit 2
+end
 
 # 反引號內、看起來像倉庫路徑的東西。開頭限定在真實存在的頂層目錄，
 # 避免把 `application/json`、`text/html` 這種 MIME 當成路徑。
@@ -139,15 +153,33 @@ VOLATILE_NUM = [
 
 # R4 的豁免：鄰近有可複驗的指令，或明示是某時點的快照。
 RECHECK_CMD = /`[^`\n]*\b(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`/
+# R6 比 R4 的鄰近「像命令」判定更嚴：整個 code span 必須以受支援工具開頭；只在散文中
+# 提到工具名不得滿足結構化宣稱的可重跑契約。清單本身已含 `bundle`，因此
+# `bundle exec ...` 由同一工具起頭規則涵蓋，不另放語言等價、無法承重的 wrapper pattern。
+CLAIM_RECHECK_CMD = /\A`(?:grep|git|ruby|python3?|wc|ls|awk|sed|bundle)\b[^`\n]*`\z/
 SNAPSHOT = /快照|實跑輸出|輸出如下|取證/
 
 # R5：全稱句（只警告）。
 UNIVERSALS = [ /唯一/, /都各有/, /全部都/, /所有[^\s]{0,6}都/, /從來沒有/, /一律都/ ].freeze
 ENUMERATION = /[、，,].*[、，,]|^\s*[-*]\s|\d+\s*組/
 
+# R6：只納管 P-2 新建的結構化宣稱索引，不把整個 specs 歷史集合突然納入。
+# 每份索引必須至少有一個活性 `CLAIM-NNN` 標頭，且每個合法活性區塊都要有 `type: count`；
+# 所有 `docs/specs/92-*` 索引之間的 CLAIM ID 必須全域唯一。
+# Markdown 圍欄與 HTML comment 必須收尾。`type`／`recheck` 鍵大小寫與冒號前空白不敏感；
+# type 值只允許小寫 `count`，以 `type`／`recheck` 起頭的畸形鍵 fail-closed。每個 count 區塊
+# 只能有一筆計數與一筆語義 `recheck`，後者內容要符合上方 CLAIM_RECHECK_CMD 的整段可執行指令形態。
+# 既有 R1–R5 的判定對象與語義因此不變。
+CLAIM_INDEX = %r{\Adocs/specs/92-[^/]+\.md\z}
+CLAIM_HEADER = /\A {0,3}### CLAIM-(\d{3})\s*\z/
+CLAIM_LIKE_HEADER = /\A {0,3}#+\s+CLAIM-/
+CLAIM_TYPE = /\A {0,3}-\s+(type[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
+CLAIM_RECHECK = /\A {0,3}-\s+(recheck[A-Za-z0-9_-]*)\s*:\s*(.*?)\s*\z/i
+
 violations = []
 warnings = []
 scanned = []
+claim_indexes_scanned = 0
 
 def anchored?(lines, idx)
   lo = [ idx - 2, 0 ].max
@@ -160,6 +192,120 @@ def near?(lines, idx, re)
   lo = [ idx - 2, 0 ].max
   hi = [ idx + 2, lines.size - 1 ].min
   lines[lo..hi].join("\n").match?(re)
+end
+
+# 只遮同一行內成對的 code span，保留字元位置與原文供後續 metadata 判定；未成對 backtick
+# 仍是字面文字。這個遮罩只拿來找 HTML comment opener，不能拿它取代可見正文。
+def mask_inline_code_spans(line)
+  masked = line.dup
+  cursor = 0
+
+  while (opening = /`+/.match(line, cursor))
+    run = opening[0]
+    closing = /(?<!`)#{Regexp.escape(run)}(?!`)/.match(line, opening.end(0))
+    unless closing
+      cursor = opening.end(0)
+      next
+    end
+
+    length = closing.end(0) - opening.begin(0)
+    masked[opening.begin(0), length] = " " * length
+    cursor = closing.end(0)
+  end
+
+  masked
+end
+
+# R6 讀的是 Markdown 的**活性正文**，不是原始字串集合。圍欄與 HTML comment 可合法放
+# 範例／歷史註記；若把裡面的假 `### CLAIM-*` 當區塊，會切斷真區塊或製造假重複。
+# block fence 先於 inline/comment 掃描；正文同一行的 code span 只在尋找 comment opener 時遮罩。
+# HTML block start 只用未遮罩 raw line 判定，且只能在該 raw line 第一次掃描時成立；行中 opener
+# 是 inline raw HTML comment。comment 已開啟後，任何 `-->` 子字串都收尾，不解析 inline code
+# span。block closing line 的後綴不重新餵回；inline comment 可跨 raw line，開啟前的 prefix 與
+# 收尾後的 suffix 必須重組成同一個邏輯活性行，不能讓換行把畸形 metadata 拆成兩段。
+# 回傳活性行、未關閉圍欄與未關閉 HTML comment（若有）；活性行為
+# `[原始零基行號, 移除 HTML comment 後的可見文字]`，保留原行號供錯誤定位。
+def active_markdown_lines(lines)
+  active = []
+  fence = nil
+  comment = nil
+
+  lines.each_with_index do |raw, idx|
+    if fence
+      close = /\A {0,3}#{Regexp.escape(fence[:char])}{#{fence[:length]},}[ \t]*\z/
+      fence = nil if raw.match?(close)
+      next
+    end
+
+    unless comment
+      if (fence_opening = raw.match(/\A {0,3}(`{3,}|~{3,})(.*)\z/))
+        run = fence_opening[1]
+        info = fence_opening[2]
+        # CommonMark：backtick fence 的 info string 不得再含 backtick；不合法者仍是正文。
+        unless run.start_with?("`") && info.include?("`")
+          fence = { char: run[0], length: run.length, line: idx }
+          next
+        end
+      end
+    end
+
+    raw_block_opening = raw.match(/\A {0,3}<!--/)
+    first_raw_scan = true
+    suppress_active = false
+    if comment && !comment[:block]
+      visible = comment[:visible]
+      active_line = comment[:active_line]
+    else
+      visible = +""
+      active_line = idx
+    end
+    rest = raw
+    loop do
+      if comment
+        closing = rest.index("-->")
+        break unless closing
+
+        block_comment = comment[:block]
+        comment = nil
+        if block_comment
+          suppress_active = true
+          break
+        end
+
+        rest = rest[(closing + 3)..].to_s
+        first_raw_scan = false
+      else
+        masked = mask_inline_code_spans(rest)
+        opening = masked.index("<!--")
+        unless opening
+          visible << rest
+          break
+        end
+
+        raw_block_opener = raw_block_opening && raw_block_opening.end(0) - "<!--".length
+        block_comment = first_raw_scan && opening == raw_block_opener
+        visible << rest[0...opening]
+        rest = rest[(opening + 4)..].to_s
+        comment = { line: idx, block: block_comment }
+        unless block_comment
+          comment[:visible] = visible
+          comment[:active_line] = active_line
+        end
+        first_raw_scan = false
+      end
+    end
+
+    if comment
+      unless comment[:block]
+        comment[:visible] = visible
+        comment[:active_line] = active_line
+      end
+      next
+    end
+    active << [ active_line, visible ] unless suppress_active
+  end
+
+  [ active, fence, comment ]
 end
 
 # ---- 收集要掃的檔 ----------------------------------------------------------
@@ -199,10 +345,12 @@ script_headers = listing(ROOT, "scripts/", "scripts/*")
 #      （#58 第 2 輪 🟡5），納入當輪即抓到兩條無錨引用。
 #      ⚠️ 實得覆蓋僅 R1／R3：R4／R5 的範圍判斷（下方兩處 start_with?）仍只認
 #      worklog／handoff，plans 不在內——刻意維持，勿讀成全規則納管。
-#    ⚠️ 代價寫在這裡：research／design／specs 的路徑錯誤本檢查**不管**。
-#      那是刻意的取捨，不是漏了——要納管必須先解決「如何區分本尊路徑與我方路徑」。
+#    ⚠️ 代價寫在這裡：research／design／specs 的路徑錯誤本檢查**普遍不管**；
+#      唯一窄例外是 P-2 新建的 `docs/specs/92-*` 宣稱索引，供 R6 檢查結構化計數。
+#      這不等於 specs 全面納管；全面納管仍須先解決「如何區分本尊路徑與我方路徑」。
 IN_SCOPE = [
   %r{\Adocs/worklog/}, %r{\Adocs/handoff/}, %r{\Adocs/dev/}, %r{\Adocs/plans/},
+  CLAIM_INDEX,
   %r{\AAGENTS\.md\z}, %r{\ACLAUDE\.md\z}, %r{\AHANDOFF\.md\z},
   %r{\Ascripts/}
 ].freeze
@@ -255,6 +403,8 @@ end
 
 # ---- 逐檔掃 ----------------------------------------------------------------
 
+# R6 的 ID namespace 是整個 `docs/specs/92-*`，不能逐檔重置；否則分片索引可各自發布同一 ID。
+seen_claim_ids = {}
 targets.each do |rel|
   path = File.join(ROOT, rel)
   next unless File.file?(path)
@@ -268,6 +418,123 @@ targets.each do |rel|
 
   scanned << rel
   lines = text.lines.map(&:chomp)
+
+  # --- R6（宣稱索引，tree-wide）---
+  if rel.match?(CLAIM_INDEX)
+    claim_indexes_scanned += 1
+    active_lines, unclosed_fence, unclosed_comment = active_markdown_lines(lines)
+    if unclosed_fence
+      violations << "#{rel}:#{unclosed_fence[:line] + 1} R6 Markdown 圍欄未關閉——" \
+                    "後續索引不可被靜默排除；請補上同字元且長度不少於起始圍欄的收尾行。"
+    end
+    if unclosed_comment
+      violations << "#{rel}:#{unclosed_comment[:line] + 1} R6 HTML comment 未關閉——" \
+                    "後續索引不可被靜默排除；請補上 `-->` 收尾。"
+    end
+    header_positions = active_lines.each_index.select do |pos|
+      active_lines[pos][1].match?(CLAIM_LIKE_HEADER)
+    end
+    if header_positions.empty?
+      violations << "#{rel}:1 R6 宣稱索引沒有任何 `### CLAIM-NNN` 區塊——" \
+                    "這不是零宣稱，是結構化檢查沒有生效。"
+    end
+    if header_positions.any?
+      active_lines[0...header_positions.first].each do |idx, line|
+        match = line.match(CLAIM_TYPE)
+        next unless match
+
+        key = match[1]
+        value = match[2].strip
+        if !key.casecmp?("type")
+          violations << "#{rel}:#{idx + 1} R6 畸形 type metadata 鍵 `#{key}`——" \
+                        "鍵只允許 `type`（大小寫／冒號前空白不敏感），`type*` 拼字不得靜默略過。"
+        elsif value != "count"
+          violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
+                        "值只允許精確小寫 `count`，拼字錯誤不得靜默脫離複驗契約。"
+        else
+          violations << "#{rel}:#{idx + 1} R6 計數宣稱出現在第一個 CLAIM 標頭之前——" \
+                        "每個 `type: count` 都必須位於自己的 `### CLAIM-NNN` 區塊內。"
+        end
+      end
+    end
+    count_claim_blocks = 0
+    header_positions.each_with_index do |start_pos, pos|
+      finish_pos = pos + 1 < header_positions.size ? header_positions[pos + 1] : active_lines.size
+      start, header_line = active_lines[start_pos]
+      header = header_line.match(CLAIM_HEADER)
+      unless header
+        violations << "#{rel}:#{start + 1} R6 宣稱標頭格式錯誤：`#{header_line}`——" \
+                      "必須使用三位數 `### CLAIM-NNN`（例如 `### CLAIM-002`）。"
+        next
+      end
+
+      claim_id = header[1]
+      if seen_claim_ids.key?(claim_id)
+        first = seen_claim_ids[claim_id]
+        violations << "#{rel}:#{start + 1} R6 重複 CLAIM-#{claim_id}——" \
+                      "首次出現在 #{first[:path]}:#{first[:line] + 1}；" \
+                      "所有 `docs/specs/92-*` 的 CLAIM ID 必須全域唯一。"
+      else
+        seen_claim_ids[claim_id] = { path: rel, line: start }
+      end
+
+      block = active_lines[start_pos...finish_pos]
+      type_entries = block.filter_map do |idx, line|
+        match = line.match(CLAIM_TYPE)
+        match && [ idx, match[1], match[2].strip ]
+      end
+      type_entries.reject { |_idx, key, _value| key.casecmp?("type") }.each do |idx, key, _value|
+        violations << "#{rel}:#{idx + 1} R6 畸形 type metadata 鍵 `#{key}`——" \
+                      "鍵只允許 `type`（大小寫／冒號前空白不敏感），`type*` 拼字不得靜默略過。"
+      end
+      type_entries.select { |_idx, key, _value| key.casecmp?("type") }
+                  .reject { |_idx, _key, value| value == "count" }.each do |idx, _key, value|
+        violations << "#{rel}:#{idx + 1} R6 不支援 type metadata `#{value}`——" \
+                      "值只允許精確小寫 `count`，拼字錯誤不得靜默脫離複驗契約。"
+      end
+
+      if type_entries.empty?
+        violations << "#{rel}:#{start + 1} R6 CLAIM-#{claim_id} 缺 `type: count` metadata——" \
+                      "每個活性 CLAIM 都必須明示受 R6 計數複驗契約納管；欄位缺字不得靜默略過。"
+        next
+      end
+
+      count_entries = type_entries.select do |_idx, key, value|
+        key.casecmp?("type") && value == "count"
+      end
+      next if count_entries.empty?
+
+      count_claim_blocks += 1
+      count_entries.drop(1).each do |idx, _key, _value|
+        violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `type: count`——" \
+                      "每筆計數必須放在自己的 `### CLAIM-NNN` 區塊並附複驗指令。"
+      end
+
+      recheck_entries = block.filter_map do |idx, line|
+        match = line.match(CLAIM_RECHECK)
+        match && [ idx, match[1], match[2].strip ]
+      end
+      recheck_entries.reject { |_idx, key, _value| key.casecmp?("recheck") }.each do |idx, key, _value|
+        violations << "#{rel}:#{idx + 1} R6 畸形 recheck metadata 鍵 `#{key}`——" \
+                      "鍵只允許 `recheck`（大小寫／冒號前空白不敏感），`recheck*` 拼字不得靜默略過。"
+      end
+      semantic_rechecks = recheck_entries.select { |_idx, key, _value| key.casecmp?("recheck") }
+      semantic_rechecks.drop(1).each do |idx, _key, _value|
+        violations << "#{rel}:#{idx + 1} R6 同一 CLAIM-#{claim_id} 含多個 `recheck:`——" \
+                      "每個計數區塊只能發布一個無歧義的複驗命令。"
+      end
+      recheck = semantic_rechecks.first&.last
+      next if recheck&.match?(CLAIM_RECHECK_CMD)
+
+      violations << "#{rel}:#{start + 1} R6 計數宣稱 CLAIM-#{claim_id} 必須附複驗指令：" \
+                      "整段 code span 必須以 `ruby` 等 CLAIM_RECHECK_CMD 支援工具開頭，不能只是提到工具名。"
+    end
+    if count_claim_blocks.zero?
+      violations << "#{rel}:1 R6 宣稱索引沒有任何活性 `type: count` CLAIM 區塊——" \
+                    "這不是零宣稱，是計數契約的輸入被清空。"
+    end
+  end
+
   added_line_set =
     if changed_docs == :all
       rel.start_with?("docs/worklog/", "docs/handoff/") ? :all : nil
@@ -352,12 +619,22 @@ if scanned.empty?
   exit 3
 end
 
+# 🔴 R6 的局部零掃描 canary：整棵樹有其他受管檔時，總 canary 不會響；若生產樹的
+#    `docs/specs/92-*` 全被移除，舊版仍印「R6 ... tree-wide」並 exit 0。只有明確標記
+#    `--fixture-mode` 的隔離 fixture 可合法沒有生產索引；一般調用即使傳 ROOT 仍須至少掃到一份。
+if !fixture_mode && claim_indexes_scanned.zero?
+  warn "::error::R6 掃到 **0 個 `docs/specs/92-*` 宣稱索引**——" \
+       "這不是通過，是 R6 在生產樹沒有輸入（exit 3）。"
+  exit 3
+end
+
 warnings.each { |w| warn "::warning::#{w}" }
 
 if violations.empty?
   puts "OK：文檔引用保真檢查通過"
   puts "  - 掃描檔案：#{scanned.size} 個（*.md ＋ scripts/*）"
   puts "  - R1 路徑保真／R3 行號保真：全樹"
+  puts "  - R6 計數宣稱：docs/specs/92-* 結構化索引（tree-wide；#{claim_indexes_scanned} 份）"
   if changed_docs == :all
     puts "  - R4 易腐數字／R5 全稱句：**全部** worklog／handoff（`--all`）"
   elsif changed_docs

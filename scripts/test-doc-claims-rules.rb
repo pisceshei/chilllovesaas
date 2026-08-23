@@ -53,6 +53,111 @@ CASES = [
   [ "doc_volatile_ok", 0, "OK：文檔引用保真檢查通過",
     "🔴 反向斷言：同樣寫數字但**附了複驗指令** ⇒ 放行。" \
     "缺這條，R4 會退化成「一律禁止寫數字」，那會逼人把有用的量化敘述都刪掉" ],
+  [ "doc_claim_count_missing_recheck", 1, "R6 計數宣稱",
+    "🔴 R6：`docs/specs/92-*` 的 `type: count` 宣稱缺 `recheck:` 必須轉紅。" \
+    "這是 P-2『計數必附複驗指令』的負向 fixture" ],
+  [ "doc_claim_count_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：同一結構補上可執行 `recheck:` 後必須通過，" \
+    "避免規則退化成宣稱索引一律失敗" ],
+  [ "doc_claim_duplicate_count", 1, "R6 同一 CLAIM-001 含多個 `type: count`",
+    "🔴 R6：同一 CLAIM 區塊的第二筆 count 不得借用第一筆 recheck；" \
+    "每個計數宣稱必須有自己的 CLAIM 標頭與複驗命令" ],
+  [ "doc_claim_duplicate_recheck", 1, "R6 同一 CLAIM-001 含多個 `recheck:`",
+    "🔴 R6：同一 count 區塊不得以第一筆合法命令遮住後續過期／錯誤 recheck；" \
+    "每個計數宣稱只能有一個無歧義的複驗入口" ],
+  [ "doc_claim_recheck_key_variants_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：`Recheck :` 的鍵大小寫／冒號前空白不影響語義；" \
+    "單一合法鍵變體與命令必須通過" ],
+  [ "doc_claim_duplicate_recheck_key_variant", 1, "R6 同一 CLAIM-001 含多個 `recheck:`",
+    "🔴 R6：精確 `recheck:` 與 `Recheck :` 是同一語義欄位；" \
+    "鍵變體不得讓第二筆過期命令繞過 cardinality" ],
+  [ "doc_claim_bad_recheck_key", 1, "R6 畸形 recheck metadata 鍵 `rechecks`",
+    "🔴 R6：一筆合法 `recheck:` 後的 `rechecks:` 不得在 exact matcher 之前消失；" \
+    "畸形第二筆命令必須在原行 fail-closed" ],
+  [ "doc_claim_no_count", 1, "R6 宣稱索引沒有任何活性 `type: count`",
+    "🔴 R6 局部零供給 canary：合法 CLAIM 標頭存在但 count 全被刪除／改型時必須轉紅，" \
+    "不能拿 header canary 冒充計數契約有輸入" ],
+  [ "doc_claim_bad_type", 1, "R6 不支援 type metadata `counts`",
+    "🔴 R6：已有另一個合法 count 時，`type: counts` 仍不得被篩選靜默略過；" \
+    "type 值只允許精確小寫 count" ],
+  [ "doc_claim_bad_type_key", 1, "R6 畸形 type metadata 鍵 `types`",
+    "🔴 R6：已有另一個合法 count 時，`types: count` 仍必須在原行 fail-closed；" \
+    "不能讓 key typo 在 exact matcher 之前消失" ],
+  [ "doc_claim_missing_type_metadata", 1, "R6 CLAIM-002 缺 `type: count` metadata",
+    "🔴 R6：已有另一個合法 count 時，`typ: count` 這種未命中 type-like matcher 的缺字鍵" \
+    "仍不得讓整個活性 CLAIM 被 next 靜默略過" ],
+  [ "doc_claim_type_key_variants_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：`Type: count` 與 `type : count` 的鍵大小寫／冒號前空白不影響語義，" \
+    "兩個區塊各有合法命令時必須放行" ],
+  [ "doc_claim_malformed_header", 1, "R6 宣稱標頭格式錯誤",
+    "🔴 R6：已有合法區塊時，後續 `### CLAIM-02` 不得被折入前一區塊，" \
+    "否則該錯字區塊的 `type: count` 可借用前一條的 recheck 靜默通過" ],
+  [ "doc_claim_bad_recheck", 1, "R6 計數宣稱",
+    "🔴 R6：`recheck:` 有值但不是可辨識命令時仍須轉紅；" \
+    "本 case 釘住 CLAIM_RECHECK_CMD，避免判準退化成只檢查欄位存在" ],
+  [ "doc_claim_prose_recheck", 1, "R6 計數宣稱 CLAIM-001",
+    "🔴 R6：code span 只是散文提到 ruby 時仍須轉紅；" \
+    "整段必須以受支援工具開頭，不能只在任意位置命中工具名" ],
+  [ "doc_claim_no_headers", 1, "R6 宣稱索引沒有任何",
+    "🔴 R6：索引檔有 `type: count` 卻沒有任何 CLAIM 標頭時必須轉紅，" \
+    "釘住 headers.empty? 的局部零掃描分支" ],
+  [ "doc_claim_count_before_header", 1, "R6 計數宣稱出現在第一個 CLAIM 標頭之前",
+    "🔴 R6：合法 CLAIM 區塊存在時，標頭前的 `type: count` 也不得落在結構化檢查之外" ],
+  [ "doc_claim_indented_header", 1, "R6 計數宣稱 CLAIM-001",
+    "🔴 R6：CommonMark 允許標題前 0–3 個空格；縮排標頭仍須進入自己的區塊，" \
+    "不能掉進 headers.empty? 分支形成假阻擋" ],
+  [ "doc_claim_indented_metadata", 1, "R6 計數宣稱 CLAIM-001",
+    "🔴 R6：CommonMark 允許清單標記前 0–3 個空格；縮排的 type: count 仍須受 recheck 契約約束，" \
+    "不能因 byte-zero 錨定而靜默繞過" ],
+  [ "doc_claim_indented_metadata_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：縮排的 type: count 與合法 recheck 必須成對辨識並放行，" \
+    "避免修法退化成一律拒絕合法縮排" ],
+  [ "doc_claim_duplicate_id", 1, "R6 重複 CLAIM-001",
+    "🔴 R6：兩個活性區塊不得共用同一 CLAIM ID；即使都不是 count 也必須阻擋" ],
+  [ "doc_claim_duplicate_id_across_indexes", 1, "R6 重複 CLAIM-001",
+    "🔴 R6：CLAIM ID 是整個 docs/specs/92-* 的全域 namespace；" \
+    "兩份各自合法的分片索引不得重複發布同一 ID" ],
+  [ "doc_claim_distinct_ids_across_indexes_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：兩份各自合法且 ID 不重複的分片索引必須放行；" \
+    "不得把全域唯一性退化成只准存在一份索引" ],
+  [ "doc_claim_inactive_headers", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：fenced code 與 HTML comment 內的範例 CLAIM 不是活性區塊，" \
+    "不得切斷正文或製造假重複" ],
+  [ "doc_claim_unclosed_fence", 1, "R6 Markdown 圍欄未關閉",
+    "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉圍欄時不得把後續索引全部靜默遮掉；" \
+    "必須在圍欄起始行阻擋" ],
+  [ "doc_claim_unclosed_comment", 1, "R6 HTML comment 未關閉",
+    "🔴 R6 fail-closed：合法 CLAIM 後出現未關閉 HTML comment 時不得把後續索引全部靜默遮掉；" \
+    "必須在 comment 起始行阻擋" ],
+  [ "doc_claim_code_span_comment_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：合法 recheck code span 內的 `<!--` 是字面命令內容，" \
+    "不得誤開 HTML comment 或把合法 count 擋掉" ],
+  [ "doc_claim_code_span_comment_scope", 1, "R6 計數宣稱 CLAIM-002",
+    "🔴 R6：正文 code span 內的 `<!--` 不得誤開 comment；" \
+    "其後缺 recheck 的 CLAIM-002 必須保持活性並轉紅" ],
+  [ "doc_claim_comment_close_span", 1, "R6 重複 CLAIM-001",
+    "🔴 R6：comment 已開啟後，行內任何 `-->` 都依 HTML block end condition 收尾；" \
+    "看似 code span 的 closer 不得被 opener-only 遮罩吃掉" ],
+  [ "doc_claim_comment_closer_suffix_header", 1, "R6 宣稱索引沒有任何",
+    "🔴 R6：HTML comment 的 closing line 整行仍屬 HTML block；`-->` 後緊接的假 CLAIM 標頭" \
+    "不得被重新餵進活性 parser，否則 inactive content 會滿足 header canary" ],
+  [ "doc_claim_inline_comment_suffix", 1, "R6 不支援 type metadata `count  qualitative`",
+    "🔴 R6：行中 `<!-- -->` 是 inline raw HTML，不是 HTML block；comment 後綴仍是活性正文，" \
+    "不得被 closing-line block 規則丟棄後把畸形 type 值縮成合法 count" ],
+  [ "doc_claim_inline_comment_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：行中成對 HTML comment 可從 metadata 可見文字移除；" \
+    "移除後仍是精確 count 且 recheck 合法時不得誤擋" ],
+  [ "doc_claim_inline_comment_multiline_suffix", 1, "R6 不支援 type metadata `count  qualitative`",
+    "🔴 R6：跨行 inline comment 的 opener prefix 與 closing-line suffix 必須重組；" \
+    "不能讓換行把畸形 type 值拆成合法 count 與無效散文兩行" ],
+  [ "doc_claim_inline_comment_multiline_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：跨行 inline comment 移除後仍是精確 count 時必須放行；" \
+    "不得把所有跨行 comment 一律判成 metadata 違規" ],
+  [ "doc_claim_inline_comment_reopen_suffix", 1, "R6 不支援 type metadata `qualitative`",
+    "🔴 R6：inline comment 在 closing line 收尾後，餘段的第二個 opener 仍不得被誤判成 HTML block；" \
+    "raw line 以 closer 起頭，不滿足 block start condition" ],
+  [ "doc_claim_inline_comment_reopen_ok", 0, "OK：文檔引用保真檢查通過",
+    "🔴 R6 反向斷言：closing line 上再開一個成對 inline comment，移除後仍是合法 count 時須放行" ],
   [ "doc_no_files", 3, "掃到 **0 個檔案**",
     "🔴 canary：掃到 0 個檔必須 exit 3，不是印「通過」。" \
     "IN_SCOPE 寫壞、glob 打錯、或 git ls-files 回空時，這支會報通過而它一個字都沒讀過。" \
@@ -65,7 +170,7 @@ CASES = [
 # 🔴 canary：本測試自己也會「沒有失敗」與「沒有檢查」長得一模一樣。
 #    把 CASES 清空，這支會印「OK（0 條）」並 exit 0。
 #    數字只准往上調；要調低必須在 PR 描述說明刪了哪一條、為什麼不再需要。
-MIN_CASES = 10
+MIN_CASES = 46
 if CASES.size < MIN_CASES
   warn "::error::CASES 只剩 #{CASES.size} 條（下限 #{MIN_CASES}）——這不是通過，是檢查被砍掉了。"
   exit 1
@@ -74,6 +179,36 @@ end
 indent = ->(t) { t.to_s.lines.map { |l| "        #{l.rstrip}" }.join("\n") }
 failures = []
 
+# `docs/specs/92-*` 的行首規則有兩格無法只靠 R6 metadata outcome 承重：code span 在 raw line
+# 最前方時，visible 仍會保留 code span；因此 suffix 無論是否被錯丟，都不會變成 line-start metadata。
+# 這裡直接抽取**生產 helper 本體**做輸出 probe，不複製 parser 實作；抽取失敗本身也要轉紅。
+PARSER_PROBES = [
+  [ "raw-code-span-prefix", [ "`x`<!-- a --> tail" ], [ [ 0, "`x` tail" ] ] ],
+  [ "indented-block-start", [ "   <!-- a", "--> tail" ], [] ],
+  [ "raw-block-closing-suffix", [ "<!-- a", "--> tail" ], [] ],
+  [ "multiline-inline-rejoin", [ "- type: count <!-- a", "--> qualitative" ],
+    [ [ 0, "- type: count  qualitative" ] ] ],
+  [ "closing-line-inline-reopen", [ "- type: <!-- a", "--><!-- b --> qualitative" ],
+    [ [ 0, "- type:  qualitative" ] ] ]
+].freeze
+MIN_PARSER_PROBES = 5
+if PARSER_PROBES.size < MIN_PARSER_PROBES
+  failures << "parser probes 只剩 #{PARSER_PROBES.size} 條（下限 #{MIN_PARSER_PROBES}）"
+end
+
+begin
+  checker_source = File.read(CHECKER, encoding: "UTF-8")
+  helper_source = checker_source[/def mask_inline_code_spans.*?(?=^# ---- 收集要掃的檔)/m] or
+    raise "production parser helper extraction failed"
+  eval(helper_source) # rubocop:disable Security/Eval
+  PARSER_PROBES.each do |name, lines, expected|
+    actual, = active_markdown_lines(lines)
+    failures << "parser-#{name}：預期 #{expected.inspect}，實得 #{actual.inspect}" unless actual == expected
+  end
+rescue StandardError => e
+  failures << "parser probes 自身失敗（#{e.class}）：#{e.message}"
+end
+
 CASES.each do |dir, want_status, want_output, why|
   path = File.join(FIXTURES, dir)
   unless Dir.exist?(path)
@@ -81,7 +216,7 @@ CASES.each do |dir, want_status, want_output, why|
     next
   end
 
-  output = `ruby "#{CHECKER}" "#{path}" --all 2>&1`
+  output = `ruby "#{CHECKER}" "#{path}" --all --fixture-mode 2>&1`
   status = $?.exitstatus
 
   if status != want_status
@@ -105,6 +240,7 @@ require "fileutils"
 require "open3"
 
 GIT_SCENARIOS = 3
+SUPPLY_SCENARIOS = 2
 git_run = lambda do |work, *cmd|
   out, st = Open3.capture2e({ "LC_ALL" => "C" }, "git", "-C", work,
                             "-c", "user.email=t@example.com", "-c", "user.name=t", *cmd)
@@ -129,7 +265,7 @@ Dir.mktmpdir("doc-claims-git-") do |work|
   File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n")
   git_run.call(work, "add", "-A")
   git_run.call(work, "commit", "-qm", "clean-add")
-  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} --fixture-mode 2>&1`
   if $?.exitstatus != 0 || !out.include?("OK：文檔引用保真檢查通過")
     failures << "git-G1：歷史層髒數字＋乾淨新增行應 exit 0（只掃新增行），實得 #{$?.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
   end
@@ -140,7 +276,7 @@ Dir.mktmpdir("doc-claims-git-") do |work|
   File.write(doc, hist + "本次新增：這行沒有任何量化宣稱。\n本輪補了八條 fixture，這行同樣沒有附覆核方式。\n")
   git_run.call(work, "add", "-A")
   git_run.call(work, "commit", "-qm", "cjk-add")
-  out = `ruby "#{CHECKER}" "#{work}" --base #{base} 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base #{base} --fixture-mode 2>&1`
   st = $?.exitstatus
   if st != 1
     failures << "git-G2：新增行的中文數字易腐宣稱應 exit 1，實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
@@ -159,13 +295,17 @@ Dir.mktmpdir("doc-claims-git-") do |work|
     failures << "W1：.github/workflows/ci.yml 的 check-doc-claims 調用行沒帶 --require-base——" \
                 "G3 守的退出分支在生產端沒被啟用，R4/R5 淺 clone 靜默跳過洞會無聲回歸"
   end
+  if ci_yml_text.include?("--fixture-mode")
+    failures << "W2：.github/workflows/ci.yml 不得傳 --fixture-mode——" \
+                "fixture 豁免若流入生產，明確 ROOT 又會把 R6 零供給 canary 關掉"
+  end
 
   # 情境 G3（P-8）：`--require-base` 下取不到 base 差異 ⇒ 必須 exit 3，不得警告後照綠。
   # 🔴 這條釘的是 CI 淺 clone 雙重洞（PR #58 期考掘，2026-08-18）：quality job 的
   #    三點 diff 因淺 clone 無 merge-base，腳本印「R4/R5 本次未執行」warning 後 exit 0
   #    ——連續多輪沒有任何人發現。把 ci.yml 的 --require-base 拿掉、或把 exit 3 分支
   #    改回 warning，這條立刻紅。base 用一個必然不存在的 ref 模擬「取不到差異」。
-  out = `ruby "#{CHECKER}" "#{work}" --base refs/never-exists-p8-canary --require-base 2>&1`
+  out = `ruby "#{CHECKER}" "#{work}" --base refs/never-exists-p8-canary --require-base --fixture-mode 2>&1`
   st = $?.exitstatus
   if st != 3
     failures << "git-G3：--require-base＋取不到 base 應 exit 3（檢查根本沒有生效），實得 #{st}\n      完整輸出：\n#{indent.call(out)}"
@@ -176,14 +316,41 @@ rescue StandardError => e
   failures << "git 情境測試自身失敗（#{e.class}）：#{e.message}"
 end
 
+# S1／S2（R6 生產供給 canary）：總掃描不為 0，不代表 R6 有輸入。把 checker 放進一棵只有
+# docs/dev 的乾淨樹，分別用無 ROOT 與明確 ROOT 的生產形態執行；缺 92 索引都必須 exit 3。
+Dir.mktmpdir("doc-claims-r6-supply-") do |work|
+  FileUtils.mkdir_p(File.join(work, "scripts"))
+  FileUtils.mkdir_p(File.join(work, "docs/dev"))
+  FileUtils.cp(CHECKER, File.join(work, "scripts/check-doc-claims.rb"))
+  File.write(File.join(work, "docs/dev/README.md"), "# clean\n")
+  out, st = Open3.capture2e("ruby", File.join(work, "scripts/check-doc-claims.rb"), "--all")
+  if st.exitstatus != 3 || !out.include?("R6 掃到 **0 個")
+    failures << "supply-S1：生產樹缺 docs/specs/92-* 應 exit 3 並點名 R6 零供給，" \
+                "實得 #{st.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
+  end
+  out, st = Open3.capture2e("ruby", File.join(work, "scripts/check-doc-claims.rb"), work, "--all")
+  if st.exitstatus != 3 || !out.include?("R6 掃到 **0 個")
+    failures << "supply-S2：明確 ROOT 的生產樹缺 docs/specs/92-* 仍應 exit 3，" \
+                "不得把所有明確 ROOT 當 fixture；實得 #{st.exitstatus}\n      完整輸出：\n#{indent.call(out)}"
+  end
+rescue StandardError => e
+  failures << "R6 supply 情境測試自身失敗（#{e.class}）：#{e.message}"
+end
+
 if failures.empty?
   puts "OK：文檔引用保真檢查器的回歸測試通過" \
-       "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ #{GIT_SCENARIOS} 條 git 情境）"
+       "（#{CASES.size} 條 fixture case / #{CASES.map(&:first).uniq.size} 個 fixture ＋ " \
+       "#{PARSER_PROBES.size} 條 parser probe＋#{GIT_SCENARIOS} 條 git 情境＋" \
+       "#{SUPPLY_SCENARIOS} 條供給情境）"
   CASES.each { |dir, st, needle, why| puts "  - #{dir} → exit #{st}，含 `#{needle}`：#{why}" }
   puts "  - git-G1 → exit 0：歷史層髒數字＋乾淨新增行必須放行（「只掃新增行」canary）"
   puts "  - git-G2 → exit 1：新增行的中文數字易腐宣稱要抓到該行、且不連坐歷史行"
   puts "  - git-G3 → exit 3：--require-base 下取不到 base 差異＝檢查沒生效，不得靜默照綠（CI 淺 clone 洞的 canary）"
   puts "  - W1 → ci.yml 的 doc-claims 調用行必帶 --require-base（供給端釘住；G3 只測消費端分支）"
+  puts "  - W2 → ci.yml 不得傳 --fixture-mode（fixture 豁免不得流入生產）"
+  PARSER_PROBES.each { |name, _lines, expected| puts "  - parser-#{name} → #{expected.inspect}" }
+  puts "  - supply-S1 → 生產樹缺 docs/specs/92-* 時 exit 3，不得拿其他受管檔掩蓋 R6 零輸入"
+  puts "  - supply-S2 → 明確 ROOT 的生產樹缺 docs/specs/92-* 時同樣 exit 3"
   exit 0
 end
 
