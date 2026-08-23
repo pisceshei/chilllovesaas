@@ -11,6 +11,9 @@ module Types
     field :title, String, null: false
     field :handle, String, null: false
     field :status, Types::ProductStatusEnum, null: false
+    # SaveBar 樂觀鎖（63 §A.4：lockVersion 涵蓋整棵樹）；payload 帶回讓前端
+    # 下一次儲存能偵測併發覆蓋（STALE_OBJECT）。
+    field :lock_version, Integer, null: false
 
     # 序列化 product 的穩定 global API identifier。
     #

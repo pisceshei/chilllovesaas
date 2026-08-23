@@ -2045,6 +2045,35 @@
   而 runner 已有額外的 `indented-block-start` probe。這是本輪內部重讀發現、未被 Codex review
   `4988929408` 或 Claude comment `5364105225` 點名；依 17.2 只登記，不回寫該 worklog bullet
   【F5/F11/F12；來源＝內部 worklog／runner 集合比對；取證日期＝2026-08-21】
+### 3.7 productSet／claim-replay 落地輪（2026-08-23）
+
+- 🔴 **11 §2.1(b) 與 90 號藍圖對「failed」語義互相矛盾**：11 §2.1(b) 逐字
+  「failed＝視為未執行，允許以同一把 key 重試」；90-blueprint（§801、02-inventory:222）
+  逐字「前次失敗須換 key ⇒ `IDEMPOTENCY_PREVIOUS_ATTEMPT_FAILED`」。
+  兩者不可同真。productSet 落地遵循 11（生產基線）；該碼在商品線**不發**，
+  但仍留在 CONCURRENCY 池與 enum——**庫存線（S19/S20 引用它）落地前必須先解此矛盾**，
+  否則兩線對同一個 code 的觸發條件會不一致
+  【F5；來源＝內部規格比對（第二輪研究 r2_spec11）；取證日期＝2026-08-23】
+
+- **`limits.idempotency` 名單以 mutation 名為鍵，表達不了條件強制**：productSet
+  「無 id（建立）＝強制冪等、有 id（更新）＝天然冪等刻意不列入」——同一支兩態。
+  現以 resolver 內顯式檢查落地（`Mutations::ProductSet#enforce_creation_key!`），
+  名單機制的表達力缺口留此登記；`catalog_create_merge_pending`（未決點 4）不受影響、照舊未併
+  【F5；來源＝config/limits.yml idempotency 區塊 vs 63 §B.4；取證日期＝2026-08-23】
+
+- **productSet 建立未帶 status 的預設＝DRAFT（已裁定落地）**：本尊 API 層預設
+  官方未載明（90-blueprint/01 §B.1「admin 預設 DRAFT ⚠️ 依 61 實測；API 可指定」）；
+  我方唯一客戶端是 admin SPA、DB default 亦為 draft ⇒ 裁定 DRAFT。
+  若日後開放第三方 API 且要對齊本尊（傳聞 ACTIVE），此裁定要重審
+  【F5；來源＝docs/dev/m1-product-set-foundation.md；取證日期＝2026-08-23】
+
+- **`psp_decimal_string_regex` 與修正前的 `decimal_string_regex` 同型（行錨點 ^/$）**：
+  後者已於 2026-08-23 改 \A/\z（尾隨換行穿透 ⇒ ExcessPrecision ⇒ 500，productSet
+  對抗審查 confirmed #2）；前者**刻意不改**——其字串一律由我方 `Money.fixed_string`
+  生成、無外部輸入面，行錨點的弱點需要攻擊者控制的輸入才成立。若日後任何入向
+  開始用該 regex 驗外部字串，必須先改錨點
+  【F5；來源＝config/limits.yml:259 vs :193 比對；取證日期＝2026-08-23】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

@@ -1,0 +1,29 @@
+# frozen_string_literal: true
+
+module Types
+  module Inputs
+    # `productSet` 的全樹宣告式輸入（63 §B.4：建立與更新同一支，差別只在有無 id）。
+    #
+    # v1 射程＝建立態＋隱含變體；`id` 已宣告但服務端暫回 INVALID（更新態屬
+    # 後續包）——欄位先進 schema 是刻意的：**schema 形狀是客戶端寫死的東西**，
+    # 之後補行為不補欄位，客戶端不用改 query。
+    #
+    # @see docs/specs/63-product-data-flow.md §B.4
+    class ProductSetInput < GraphQL::Schema::InputObject
+      graphql_name "ProductSetInput"
+      description "商品全樹宣告式 upsert 輸入。"
+
+      argument :id, ID, required: false,
+        description: "既有商品 GID；省略＝建立。"
+      argument :title, String, required: false, description: "商品標題（建立時必填）。"
+      argument :description_html, String, required: false,
+        description: "富文本說明（服務端依白名單 sanitize）。"
+      argument :status, Types::ProductStatusEnum, required: false,
+        description: "商品狀態；建立未帶時預設 DRAFT。"
+      argument :handle, String, required: false,
+        description: "URL handle（a-z0-9-）；省略時由標題自動生成。手填衝突一律拒絕。"
+      argument :variants, [ Types::Inputs::ProductSetVariantInput ], required: false,
+        description: "變體全樹（宣告式：未列出視為刪除）。v1 恰一筆（隱含變體）。"
+    end
+  end
+end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_16_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -340,14 +340,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_16_000000) do
     t.datetime "created_at", null: false
     t.datetime "expires_at"
     t.string "key", null: false
-    t.string "request_digest", limit: 64
+    t.string "mutation_name", null: false
+    t.string "params_fingerprint", limit: 64, null: false
     t.bigint "resource_id"
     t.string "resource_type", limit: 64
-    t.text "response_body", size: :long
-    t.string "response_digest", limit: 64
     t.bigint "shop_id", null: false
     t.string "state", limit: 32, default: "processing", null: false
-    t.integer "status_code"
     t.datetime "updated_at", null: false
     t.index ["shop_id", "id"], name: "uq_idempotency_keys_tenant_id", unique: true
     t.index ["shop_id", "key"], name: "uq_idempotency_keys_key", unique: true

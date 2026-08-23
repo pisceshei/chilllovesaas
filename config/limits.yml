@@ -188,7 +188,12 @@ money_boundary:
   # --- R4 十進位字串（JSON-LD／feed／CSV／MoneyV2.amount／物流商）----------------
   # 恆兩位小數、無幣別符號、無千分位、小數點為 "."。與 seo.jsonld.price_* 同一規則，不重複定義。
   decimal_string_digits: 2
-  decimal_string_regex: '^-?\d+\.\d{2}$'
+  # 🔴 2026-08-23 錨點修正（productSet 對抗審查 confirmed #2）：原值用行錨點 ^/$，
+  #    Ruby 的 $ 匹配尾隨換行之前 ⇒ 「128.00 尾隨 LF」通過本 regex 後在 to_storage 以
+  #    split 數出 3 位小數而 raise Money::ExcessPrecision，穿透成 HTTP 500。
+  #    \A/\z 是字串錨點，整串必須恰為金額形。psp_decimal_string_regex 同型
+  #    但其字串一律由我方 fixed_string 生成（無外部輸入面），登記於 91 §3.7 不改。
+  decimal_string_regex: '\A-?\d+\.\d{2}\z'
   decimal_string_divisor: 100
   # 解析外部十進位字串：BigDecimal 全程，小數超過 2 位 ⇒ raise/該行失敗，**不得 round**（58 §G.3 規則 2）。
   decimal_parse_type: BigDecimal
