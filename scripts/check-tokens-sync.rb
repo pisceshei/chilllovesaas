@@ -45,10 +45,10 @@ if tokens_block != prototype_block
   proto_lines = prototype_block.lines
   token_lines = tokens_block.lines
   differing = []
-  [proto_lines.length, token_lines.length].max.times do |index|
+  [ proto_lines.length, token_lines.length ].max.times do |index|
     left = proto_lines[index]
     right = token_lines[index]
-    differing << [index + 1, left, right] if left != right
+    differing << [ index + 1, left, right ] if left != right
   end
   detail = differing.first(5).map do |line_number, left, right|
     "  第 #{line_number} 行\n    原型  ：#{left.to_s.chomp.inspect}\n    tokens：#{right.to_s.chomp.inspect}"
