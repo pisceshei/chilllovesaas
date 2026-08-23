@@ -22,7 +22,7 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 /** 取得 toast 發送器；Provider 外使用即丟錯（fail fast，不靜默吞通知）。 */
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast 必須在 ToastProvider 內使用。");
+  if (!context) throw new Error("useToast must be used inside <ToastProvider>.");
   return context;
 }
 

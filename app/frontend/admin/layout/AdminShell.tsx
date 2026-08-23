@@ -1,7 +1,12 @@
-import { Bell, Heart, Menu, Search, Settings, Sparkles, X } from "lucide-react";
+import { Bell, Heart, Languages, Menu, Search, Settings, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { requestAdminGraphQL } from "../api/graphql";
+import { translateWith, useSetUiLocale, useT, useUiLocale } from "../i18n/I18nContext";
+import { UI_LOCALES } from "../i18n/locales";
+import type { UiLocale } from "../i18n/locales";
 import { useSaveBarState } from "../lib/SaveBarContext";
+import { useToast } from "../lib/ToastContext";
 import { APPS, NAVIGATION, SALES_CHANNELS, entryContains } from "./navigation";
 import type { NavigationEntry } from "./navigation";
 
@@ -11,6 +16,7 @@ import type { NavigationEntry } from "./navigation";
  * shakeSignal 遞增時重播 cl-shake（原型 47 #88：先移除 class 並強制 reflow）。
  */
 function TopbarSaveBar() {
+  const t = useT();
   const state = useSaveBarState();
   const barRef = useRef<HTMLDivElement | null>(null);
   const lastShake = useRef(0);
@@ -28,15 +34,15 @@ function TopbarSaveBar() {
   if (!state?.dirty) return null;
 
   return (
-    <div aria-label="未儲存的變更" className="cl-savebar" ref={barRef} role="region">
-      <span className="cl-savebar__text">未儲存的變更</span>
+    <div aria-label={t("shell.savebar.unsaved")} className="cl-savebar" ref={barRef} role="region">
+      <span className="cl-savebar__text">{t("shell.savebar.unsaved")}</span>
       <button
         className="cl-savebar__button cl-savebar__button--secondary"
         disabled={state.saving}
         onClick={state.onDiscard}
         type="button"
       >
-        捨棄
+        {t("shell.savebar.discard")}
       </button>
       <button
         className="cl-savebar__button cl-savebar__button--primary"
@@ -44,7 +50,7 @@ function TopbarSaveBar() {
         onClick={state.onSave}
         type="button"
       >
-        {state.saving ? "儲存中…" : "儲存"}
+        {state.saving ? t("shell.savebar.saving") : t("shell.savebar.save")}
       </button>
     </div>
   );
@@ -71,6 +77,7 @@ interface SidebarEntryProps {
  * 群組歸屬由 navigation.ts 的資料表決定，不由 URL 前綴推導。
  */
 function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
+  const t = useT();
   const location = useLocation();
   const active = entryContains(entry, location.pathname);
   const Icon = entry.icon;
@@ -83,11 +90,11 @@ function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
         to={entry.path}
       >
         <Icon aria-hidden="true" size={15} />
-        <span>{entry.label}</span>
+        <span>{t(entry.labelKey)}</span>
       </NavLink>
       {entry.kids.length > 0 ? (
         <div className={`cl-nav-subs ${active ? "cl-nav-subs--open" : ""}`}>
-          {entry.kids.map(([ path, label ]) => (
+          {entry.kids.map(([ path, labelKey ]) => (
             <NavLink
               className={({ isActive }) =>
                 `cl-nav-sub ${active ? "cl-nav-sub--show" : ""} ${isActive ? "cl-nav-sub--active" : ""}`
@@ -96,7 +103,7 @@ function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
               onClick={onNavigate}
               to={path}
             >
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </div>
@@ -107,14 +114,78 @@ function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
 
 /** 搜尋鈕與 SaveBar 共用同一個 topbar 槽位（dirty 時取代，不疊加）。 */
 function SearchOrSaveBar() {
+  const t = useT();
   const state = useSaveBarState();
   if (state?.dirty) return <TopbarSaveBar />;
   return (
-    <button aria-label="開啟全域搜尋" className="cl-search-trigger" type="button">
+    <button aria-label={t("shell.search.open")} className="cl-search-trigger" type="button">
       <Search aria-hidden="true" size={14} />
-      <span>搜尋</span>
+      <span>{t("shell.search.label")}</span>
       <kbd>CTRL K</kbd>
     </button>
+  );
+}
+
+const STAFF_LOCALE_MUTATION = `
+  mutation staffLocaleUpdate($locale: String!) {
+    staffLocaleUpdate(locale: $locale) {
+      locale
+      userErrors { field message code }
+    }
+  }
+`;
+
+interface StaffLocaleData {
+  staffLocaleUpdate: { locale: string | null; userErrors: { message: string }[] };
+}
+
+/**
+ * 介面語言切換器（67 §E.1：員工屬性，與內容語言**不連動**）。
+ * 先持久化（staffLocaleUpdate）再切前端狀態；失敗時不切，避免「畫面換了、重整又跳回」。
+ */
+function UiLocaleSwitcher() {
+  const t = useT();
+  const locale = useUiLocale();
+  const setLocale = useSetUiLocale();
+  const { showToast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const change = async (next: UiLocale) => {
+    if (next === locale || busy) return;
+    setBusy(true);
+    try {
+      const data = await requestAdminGraphQL<StaffLocaleData, { locale: string }>(STAFF_LOCALE_MUTATION, { locale: next });
+      if (data.staffLocaleUpdate.userErrors.length > 0) {
+        showToast(data.staffLocaleUpdate.userErrors[0].message);
+        return;
+      }
+      setLocale(next);
+      // 成功訊息用**新**語言：閉包裡的 t 仍是切換前的語言。
+      showToast(translateWith(next)("shell.uiLocale.updated"));
+    } catch {
+      showToast(t("shell.uiLocale.failed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <label className="cl-locale-switch" title={t("shell.uiLocale")}>
+      <Languages aria-hidden="true" size={16} />
+      <span className="cl-sr-only">{t("shell.uiLocale")}</span>
+      <select
+        className="cl-locale-switch__select"
+        disabled={busy}
+        onChange={(event) => void change(event.target.value as UiLocale)}
+        value={locale}
+      >
+        {UI_LOCALES.map((option) => (
+          <option key={option.tag} lang={option.tag} value={option.tag}>
+            {option.endonym}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -127,6 +198,7 @@ function SearchOrSaveBar() {
  * @returns 可響應窄螢幕且具 accessible navigation 的 admin shell。
  */
 export function AdminShell({ brandName }: AdminShellProps) {
+  const t = useT();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const avatarText = Array.from(brandName.trim())[0]?.toLocaleUpperCase() ?? "";
   const closeSidebar = () => setSidebarOpen(false);
@@ -136,7 +208,7 @@ export function AdminShell({ brandName }: AdminShellProps) {
       <header className="cl-topbar">
         <button
           aria-expanded={sidebarOpen}
-          aria-label={sidebarOpen ? "關閉導覽" : "開啟導覽"}
+          aria-label={sidebarOpen ? t("shell.nav.close") : t("shell.nav.open")}
           className="cl-icon-button cl-topbar__menu"
           onClick={() => setSidebarOpen((open) => !open)}
           type="button"
@@ -149,19 +221,20 @@ export function AdminShell({ brandName }: AdminShellProps) {
             <Heart fill="currentColor" size={13} />
           </span>
           <span className="cl-brand__name">{brandName}</span>
-          <span className="cl-brand__version">秋季 ’26</span>
+          <span className="cl-brand__version">{t("shell.version")}</span>
         </div>
 
         <SearchOrSaveBar />
 
         <div className="cl-topbar__actions">
-          <button aria-label="AI 助理" className="cl-icon-button" type="button">
+          <UiLocaleSwitcher />
+          <button aria-label={t("shell.assistant")} className="cl-icon-button" type="button">
             <Sparkles aria-hidden="true" size={17} />
           </button>
-          <button aria-label="通知" className="cl-icon-button" type="button">
+          <button aria-label={t("shell.notifications")} className="cl-icon-button" type="button">
             <Bell aria-hidden="true" size={17} />
           </button>
-          <button aria-label={`目前商店：${brandName}`} className="cl-store-chip" type="button">
+          <button aria-label={t("shell.currentStore", { name: brandName })} className="cl-store-chip" type="button">
             <span aria-hidden="true" className="cl-store-chip__avatar">
               {avatarText}
             </span>
@@ -173,38 +246,38 @@ export function AdminShell({ brandName }: AdminShellProps) {
       <div className="cl-app-frame">
         {sidebarOpen ? (
           <button
-            aria-label="關閉導覽"
+            aria-label={t("shell.nav.close")}
             className="cl-sidebar-backdrop"
             onClick={closeSidebar}
             type="button"
           />
         ) : null}
         <aside className={`cl-sidebar ${sidebarOpen ? "cl-sidebar--open" : ""}`}>
-          <nav aria-label="主要導覽" className="cl-sidebar__navigation">
+          <nav aria-label={t("shell.nav.main")} className="cl-sidebar__navigation">
             {NAVIGATION.map((entry) => (
               <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
             ))}
           </nav>
 
-          <p className="cl-nav-group">銷售管道</p>
+          <p className="cl-nav-group">{t("nav.group.salesChannels")}</p>
           {SALES_CHANNELS.map((entry) => (
             <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
           ))}
 
-          <p className="cl-nav-group">應用程式</p>
+          <p className="cl-nav-group">{t("nav.group.apps")}</p>
           {APPS.map((entry) => (
             <SidebarEntry entry={entry} key={entry.path} onNavigate={closeSidebar} />
           ))}
 
           <div className="cl-sidebar__spacer" />
-          <nav aria-label="工具與設定" className="cl-nav-foot">
+          <nav aria-label={t("shell.nav.tools")} className="cl-nav-foot">
             <NavLink className="cl-nav-item" onClick={closeSidebar} to="/admin/assistant">
               <Sparkles aria-hidden="true" size={15} />
-              <span>AI 助理對話</span>
+              <span>{t("nav.assistantChat")}</span>
             </NavLink>
             <NavLink className="cl-nav-item" onClick={closeSidebar} to="/admin/settings">
               <Settings aria-hidden="true" size={15} />
-              <span>設定</span>
+              <span>{t("nav.settings")}</span>
             </NavLink>
           </nav>
         </aside>

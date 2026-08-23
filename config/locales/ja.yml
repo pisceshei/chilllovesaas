@@ -1,0 +1,29 @@
+# 平台 admin 伺服端訊息（userErrors.message）——介面語言依 staff_members.locale（ML-1）。
+# 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
+"ja":
+  errors:
+    product:
+      variants_single_only: "オプションのない商品はバリエーションが1件（暗黙のバリエーション）のみです。名前付きオプションと複数バリエーションは今後のマイルストーンで提供します。"
+      title_blank: "タイトルは必須です。"
+      title_too_long: "タイトルが上限を超えています。"
+      description_too_big: "説明がサイズ上限を超えています。"
+      handle_invalid: "handle に使えるのは小文字英字・数字・ハイフンのみです。"
+      handle_reserved: "この handle はシステム予約語です。別の値を使用してください。"
+      vendor_too_long: "仕入先が上限を超えています。"
+      product_type_too_long: "商品タイプが上限を超えています。"
+      tags_too_many: "タグの数が上限を超えています。"
+      tag_too_long: "タグの長さが上限を超えています。"
+      seo_title_too_long: "SEO タイトルが上限を超えています。"
+      seo_description_too_long: "メタディスクリプションが上限を超えています。"
+      price_required: "価格は必須です。"
+      amount_negative: "金額を負にすることはできません。"
+      amount_invalid: "有効な金額文字列を入力してください（主単位、小数点以下2桁固定、記号や桁区切りなし）。"
+      handle_taken: "この handle は既に使用されています。"
+      handle_generation_failed: "handle の生成で衝突が続きました。もう一度お試しください。"
+      gid_invalid: "無効な商品 GID です。"
+      lock_version_required: "商品の更新には lockVersion が必要です。"
+      not_found: "商品が見つかりません。"
+      stale: "この商品は他のユーザーによって変更されました。再読み込みしてから保存してください。"
+      handle_change_pending: "handle の変更には 301 リダイレクト基盤（URL マイルストーン）が必要で、まだ利用できません。"
+    staff:
+      locale_unsupported: "サポートされていない表示言語です。"

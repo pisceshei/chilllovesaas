@@ -1,5 +1,6 @@
 import { LoaderCircle } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { useT } from "../i18n/I18nContext";
 
 /**
  * Button 的視覺型態，對應 `docs/design/23-interaction-css-spec.md` §3 Button。
@@ -37,12 +38,14 @@ export function Button({
   className = "",
   disabled,
   loading = false,
-  loadingLabel = "處理中",
+  loadingLabel,
   size = "default",
   type = "button",
   variant = "secondary",
   ...props
 }: ButtonProps) {
+  const t = useT();
+  const resolvedLoadingLabel = loadingLabel ?? t("common.processing");
   const classes = [
     "cl-button",
     `cl-button--${variant}`,
@@ -63,7 +66,7 @@ export function Button({
       {loading ? (
         <>
           <LoaderCircle aria-hidden="true" className="cl-button__spinner" size={14} />
-          {loadingLabel}
+          {resolvedLoadingLabel}
         </>
       ) : (
         children

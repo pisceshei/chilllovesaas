@@ -49,12 +49,16 @@ module Admin
             )
           end
 
-          result = ChillloveSchema.execute(
-            params[:query].to_s,
-            variables:,
-            operation_name: params[:operationName],
-            context: { current_shop: Current.shop, current_staff: Current.staff }
-          )
+          # 伺服端訊息（userErrors.message）依員工介面語言（67 §E.1；ML-1）。
+          # 未登入／未設定時走平台預設，不得落到 Rails 的 :en 以外的隱含值。
+          result = I18n.with_locale(ui_locale_for(Current.staff)) do
+            ChillloveSchema.execute(
+              params[:query].to_s,
+              variables:,
+              operation_name: params[:operationName],
+              context: { current_shop: Current.shop, current_staff: Current.staff }
+            )
+          end
           payload = result.to_h
           normalize_top_level_errors!(payload)
           payload["extensions"] = payload.fetch("extensions", {}).merge(
@@ -145,6 +149,13 @@ module Admin
 
         def handle_not_authorized
           render_access_denied
+        end
+
+        # 員工介面語言 → Rails I18n locale；值域外或未登入走平台預設（limits i18n.admin.ui_locale_default）。
+        def ui_locale_for(staff)
+          allowed = Limits.fetch(:i18n, :admin, :ui_locales).map(&:to_s)
+          tag = staff&.locale.to_s
+          (allowed.include?(tag) ? tag : Limits.fetch(:i18n, :admin, :ui_locale_default).to_s).to_sym
         end
 
         def render_access_denied

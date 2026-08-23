@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<%# <html lang> 跟員工介面語言（67 §E.1）；SPA 掛載後由 I18nProvider 同步。 %>
+<html lang="<%= current_staff&.locale.presence || Limits.fetch(:i18n, :admin, :ui_locale_default) %>">
   <head>
     <title><%= content_for(:title) || Rails.configuration.x.brand.name %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">

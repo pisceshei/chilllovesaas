@@ -29,5 +29,7 @@ module Types
 
     field :product_set, mutation: Mutations::ProductSet,
       description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
+    field :staff_locale_update, mutation: Mutations::StaffLocaleUpdate,
+      description: "更新目前員工的 admin 介面語言（67 §E.1；ML-1）。"
   end
 end

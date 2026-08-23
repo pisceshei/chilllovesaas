@@ -3,6 +3,7 @@
 <div
   id="admin-root"
   data-brand-name="<%= Rails.configuration.x.brand.name %>"
+  data-ui-locale="<%= current_staff&.locale.presence || Limits.fetch(:i18n, :admin, :ui_locale_default) %>"
 ></div>
 
 <noscript>需要啟用 JavaScript 才能使用商家後台。</noscript>
