@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_23_100000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -652,6 +652,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
     t.index ["shop_id", "published_at", "id"], name: "ix_pages_published_at_id"
   end
 
+  create_table "platform_locales", primary_key: "tag", id: { type: :string, limit: 35, comment: "BCP-47，寫入層正規化：zh-Hant / zh-Hans / en / ja / fr" }, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "平台語言字典（跨租戶共用；非租戶資料，無 shop_id——鐵律 2 平台字典表）", force: :cascade do |t|
+    t.string "collation", limit: 64, null: false, comment: "該語言排序用 collation（67 §C.7）"
+    t.datetime "created_at", null: false
+    t.string "date_format_id", limit: 32, default: "default", null: false
+    t.string "direction", limit: 3, default: "ltr", null: false, comment: "ltr / rtl"
+    t.string "endonym", limit: 64, null: false, comment: "語言自稱：繁體中文 / English（切換器顯示這個）"
+    t.string "language", limit: 3, null: false, comment: "ISO 639-1（必要時 639-3）"
+    t.string "number_format_id", limit: 32, default: "default", null: false
+    t.string "plural_rule", limit: 32, null: false, comment: "複數類別集合識別字（Intl.PluralRules 的 locale）"
+    t.string "region", limit: 2, comment: "ISO 3166-1 alpha-2；通常 NULL（地區屬市場，67 §C.1 規則 1）"
+    t.string "script", limit: 4, comment: "ISO 15924：Hant / Hans；拉丁文字留 NULL"
+    t.string "status", limit: 16, default: "available", null: false, comment: "available / deprecated"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "product_options", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品選項，配額由 limits.yml 管理", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -884,6 +899,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
     t.index ["shop_id", "shipping_profile_id"], name: "ix_shipping_zones_shipping_profile_id"
   end
 
+  create_table "shop_locales", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶啟用的語言（67 §C.1）：恆一列 is_source", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: true, null: false, comment: "false＝下架但譯文保留（加回即復原）"
+    t.boolean "is_source", default: false, null: false, comment: "來源語言：base 資料表的文字語言；每店恰一列"
+    t.string "locale_tag", limit: 35, null: false
+    t.integer "position", default: 0, null: false, comment: "切換器與堆疊欄位排序"
+    t.boolean "published", default: false, null: false, comment: "前台可見；未發布＝只能預覽連結"
+    t.bigint "shop_id", null: false
+    t.virtual "source_guard", type: :integer, as: "if(`is_source`,1,NULL)", stored: true
+    t.datetime "updated_at", null: false
+    t.index ["locale_tag"], name: "fk_shop_locales_locale"
+    t.index ["shop_id", "enabled", "position"], name: "ix_shop_locales_enabled_position"
+    t.index ["shop_id", "id"], name: "uq_shop_locales_tenant_id", unique: true
+    t.index ["shop_id", "locale_tag"], name: "uq_shop_locales_locale_tag", unique: true
+    t.index ["shop_id", "source_guard"], name: "uq_shop_locales_single_source", unique: true
+  end
+
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "custom_domain", limit: 253
@@ -905,7 +937,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
     t.datetime "deactivated_at"
     t.string "email", limit: 320, null: false
     t.datetime "invited_at"
-    t.string "locale", limit: 16, default: "zh-Hant", null: false
+    t.string "locale", limit: 16, default: "en", null: false
     t.boolean "owner", default: false, null: false
     t.string "password_digest"
     t.string "status", limit: 32, default: "invited", null: false
@@ -969,6 +1001,46 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
     t.index ["shop_id", "name"], name: "uq_themes_name", unique: true
     t.index ["shop_id", "published_slot"], name: "uq_themes_published_slot", unique: true
     t.index ["shop_id", "role", "updated_at"], name: "ix_themes_role_updated_at"
+  end
+
+  create_table "translation_status", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "翻譯進度物化（67 §C.6；鐵律 7：進度數字唯一來源）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "locale_tag", limit: 35, null: false
+    t.integer "outdated_count", default: 0, null: false
+    t.integer "required_fields", default: 0, null: false
+    t.bigint "resource_id", null: false
+    t.string "resource_type", limit: 48, null: false
+    t.integer "review_pending", default: 0, null: false
+    t.bigint "shop_id", null: false
+    t.integer "translated_fields", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_translation_status_tenant_id", unique: true
+    t.index ["shop_id", "locale_tag", "translated_fields"], name: "ix_translation_status_locale_progress"
+    t.index ["shop_id", "resource_type", "resource_id", "locale_tag"], name: "uq_translation_status_resource_locale", unique: true
+  end
+
+  create_table "translations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "內容譯文（67 §C.2）：一列＝一個 (resource, locale, field)；base row 永遠是來源語言", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "field_key", null: false, comment: "title / body_html / meta_title / meta_description"
+    t.string "locale_tag", limit: 35, null: false
+    t.boolean "outdated", default: false, null: false
+    t.string "outdated_severity", limit: 8, default: "none", null: false, comment: "none / minor / major"
+    t.bigint "resource_id", null: false
+    t.string "resource_type", limit: 48, null: false, comment: "PRODUCT / COLLECTION /（後續）…"
+    t.boolean "review_required", default: false, null: false, comment: "machine / script_conversion 一律 true"
+    t.bigint "shop_id", null: false
+    t.string "source_digest", limit: 64, null: false, comment: "來源文字正規化後 SHA-256（67 §C.5 過期偵測）"
+    t.string "source_locale_tag", limit: 35, null: false, comment: "這條譯文是從哪個語言翻的（改來源語言時用）"
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_staff_id"
+    t.text "value", size: :medium, null: false
+    t.string "value_source", limit: 24, null: false, comment: "human / machine / script_conversion / import"
+    t.index ["locale_tag"], name: "fk_translations_locale"
+    t.index ["shop_id", "id"], name: "uq_translations_tenant_id", unique: true
+    t.index ["shop_id", "locale_tag", "outdated", "resource_type"], name: "ix_translations_locale_outdated"
+    t.index ["shop_id", "locale_tag", "review_required"], name: "ix_translations_locale_review"
+    t.index ["shop_id", "resource_type", "resource_id", "locale_tag", "field_key"], name: "uq_translations_resource_locale_field", unique: true
+    t.index ["shop_id", "resource_type", "resource_id", "locale_tag"], name: "ix_translations_resource_locale"
   end
 
   create_table "user_store_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -1075,12 +1147,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_000000) do
   add_foreign_key "shipping_rates", "shops", name: "fk_shipping_rates_shop"
   add_foreign_key "shipping_zones", "shipping_profiles", column: ["shop_id", "shipping_profile_id"], primary_key: ["shop_id", "id"], name: "fk_shipping_zones_shipping_profile_id"
   add_foreign_key "shipping_zones", "shops", name: "fk_shipping_zones_shop"
+  add_foreign_key "shop_locales", "platform_locales", column: "locale_tag", primary_key: "tag", name: "fk_shop_locales_locale"
+  add_foreign_key "shop_locales", "shops", name: "fk_shop_locales_shop"
   add_foreign_key "tax_settings", "shops", name: "fk_tax_settings_shop"
   add_foreign_key "templates", "shops", name: "fk_templates_shop"
   add_foreign_key "templates", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_templates_theme_id"
   add_foreign_key "theme_settings", "shops", name: "fk_theme_settings_shop"
   add_foreign_key "theme_settings", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_theme_settings_theme_id"
   add_foreign_key "themes", "shops", name: "fk_themes_shop"
+  add_foreign_key "translation_status", "shops", name: "fk_translation_status_shop"
+  add_foreign_key "translations", "platform_locales", column: "locale_tag", primary_key: "tag", name: "fk_translations_locale"
+  add_foreign_key "translations", "shops", name: "fk_translations_shop"
   add_foreign_key "user_store_assignments", "roles", name: "fk_usa_role_id"
   add_foreign_key "user_store_assignments", "shops", name: "fk_usa_shop_id"
   add_foreign_key "user_store_assignments", "staff_members", name: "fk_usa_staff_member_id"

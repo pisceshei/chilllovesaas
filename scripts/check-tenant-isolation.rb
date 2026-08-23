@@ -59,11 +59,15 @@ unless overlap.empty?
 end
 
 # 非租戶資料：平台級或系統表，本來就不該有 shop_id。
+# 🔴 `platform_locales`＝**平台字典表**（2026-08-23 ML-0，docs/plans/2026-08-23-多語言方案.md §3.1）：
+#    跨租戶共用、隨版本部署、無任何租戶資料——它不是身分表（不進 ORG_LEVEL_TABLES），
+#    也不是業務資料；分類依 CLAUDE.md 鐵律 2 註釋「平台字典表」段，71 §A G24 同步登記。
 NON_TENANT_TABLES = %w[
   schema_migrations
   ar_internal_metadata
   solid_queue_jobs
   solid_cache_entries
+  platform_locales
 ].freeze
 
 # 身分表的 model 不得再宣告 acts_as_tenant。

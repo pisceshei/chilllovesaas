@@ -39,6 +39,13 @@ class Shop < ApplicationRecord
   # `has_many :through`，**沒有也不能有 `dependent:`**（擋刪店的是它底下的
   # `user_store_assignments`）。數錯不影響本條的裁定，但會讓人去找一個不存在的第三個。
   has_many :publications, dependent: :destroy
+  # 🔴 三張 i18n 表用 `delete_all` 不用 `destroy`：ShopLocale#before_destroy 擋「刪來源語言」
+  #    （SOURCE_LOCALE_IMMUTABLE）——那是保護**活著的店**；整店刪除時語言列必須跟著走，
+  #    走 destroy 會被自己的守門擋住變成「空店刪不掉」（shop_spec 三條即此）。
+  #    順序：translations／translation_status 有 FK → shops，必須在 shop 刪除前清掉。
+  has_many :shop_locales, dependent: :delete_all
+  has_many :translations, dependent: :delete_all
+  has_many :translation_statuses, class_name: "TranslationStatus", dependent: :delete_all
 
   normalizes :subdomain, with: ->(value) { value.to_s.strip.downcase }
   normalizes :custom_domain, with: ->(value) { value.to_s.strip.downcase.delete_suffix(".").presence }
@@ -53,6 +60,7 @@ class Shop < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
 
   after_create :create_default_publication
+  after_create :enable_launch_locales
   # 🔴 `prepend: true` 不可省。`has_many ... dependent: :destroy` 是在**關聯宣告當下**
   # 註冊成 `before_destroy` 的，而本檔的關聯宣告在這行之上 ⇒ 不 prepend 的話，
   # dependent 的刪除會**先跑**、落在租戶包裹之外，`NoTenantSet` 照樣拋。
@@ -119,6 +127,26 @@ class Shop < ApplicationRecord
         auto_publish: true,
         supports_future_publishing: true
       )
+    end
+  end
+
+  # 新店啟用首發語言（limits `i18n.launch_locales`；種子不是列舉，商家之後可自行增刪）。
+  # 來源語言＝`i18n.source_locale_default`（en，裁定 C1/R1）且 published；其餘啟用但未發布。
+  # 與 migration 20260823100000 對既有商店的規則**同一份**（docs/plans/2026-08-23-多語言方案.md §3.2）。
+  def enable_launch_locales
+    source = Limits.fetch(:i18n, :source_locale_default).to_s
+    ActsAsTenant.with_tenant(self) do
+      Limits.fetch(:i18n, :launch_locales).map(&:to_s).each_with_index do |tag, position|
+        next unless PlatformLocale.exists?(tag:)
+
+        shop_locales.create!(
+          locale_tag: tag,
+          is_source: tag == source,
+          published: tag == source,
+          enabled: true,
+          position:
+        )
+      end
     end
   end
 
