@@ -987,3 +987,356 @@ a {
     transform: none;
   }
 }
+
+/* ═══════════ 商品詳情頁（建立態；UI-3/PR B，2026-08-23）═══════════
+   量測出處＝原型 productPage 家族：.page-head(:354-356)/.od-grid(:522)/
+   .pill 家族(:1081-1112)/.swrow(:1001-1004)/.savebar(:1005-1018,:1409-1414)/
+   .toast(:671-672)/.derow(:1106-1112)/.grid2(:984)。
+   值一律走 token（鐵律 8）；佈局常數 --col-main 633／--col-aside 317（64 §1）。 */
+
+.cl-product-detail {
+  /* 64 §1：主 633＋間 16＋次 317＝966，加頁面左右內距推導（原型 :1394 同式） */
+  max-width: calc(var(--col-main) + var(--sp-400) + var(--col-aside) + var(--sp-400) * 4);
+}
+
+.cl-detail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-300);
+  margin: var(--sp-100) 0 var(--sp-400);
+  flex-wrap: wrap;
+}
+
+.cl-detail-head h1 {
+  margin: 0;
+  font-size: var(--t-2xl);
+  line-height: var(--lh-2xl);
+  font-weight: var(--fw-lg);
+}
+
+.cl-detail-head__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  margin-left: auto;
+}
+
+.cl-locale-chip {
+  padding: var(--sp-050) var(--sp-200);
+  border-radius: var(--r-pill);
+  background: var(--surface-chip);
+  color: var(--text-quiet);
+  font-size: var(--t-xs);
+}
+
+.cl-od-grid {
+  display: grid;
+  grid-template-columns: minmax(0, var(--col-main)) var(--col-aside);
+  gap: var(--sp-400);
+  align-items: start;
+}
+
+.cl-od-grid__main,
+.cl-od-grid__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-400);
+  min-width: 0;
+}
+
+.cl-od-grid__aside { position: sticky; top: var(--sp-200); }
+
+.cl-product-detail .cl-card h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  margin: 0 0 var(--sp-300);
+  font-size: var(--t-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-title);
+}
+
+.cl-card__head-action { margin-left: auto; font-weight: var(--fw-body); }
+
+.cl-product-detail .cl-field + .cl-field { margin-top: var(--sp-300); }
+
+.cl-field__textarea {
+  height: auto;
+  min-height: 84px;
+  padding: var(--sp-150) var(--sp-200);
+  resize: vertical;
+  font: inherit;
+}
+
+.cl-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-300);
+  margin-top: var(--sp-300);
+}
+
+.cl-rte-toolbar { display: flex; gap: var(--sp-150); margin-bottom: var(--sp-100); }
+
+.cl-rte-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-100);
+  min-height: var(--h-28);
+  padding: var(--sp-100) var(--sp-200);
+  border-radius: var(--r-200);
+  background: var(--ai-bg);
+  color: var(--ai);
+  font-size: var(--t-xs);
+  font-weight: var(--fw-control);
+}
+
+.cl-rte-tool:disabled { opacity: 0.6; }
+
+.cl-card-note { margin: 0 0 var(--sp-300); color: var(--text-2); font-size: var(--t-sm); }
+
+/* pill 收合組（原型 :1081-1112：高 28、圓角 8、內距 4/8、無框透明；
+   展開＝sunken 底＋倒三角旋轉；值比標籤重一階） */
+.cl-pillset { margin-top: var(--sp-300); }
+
+.cl-pills { display: flex; flex-wrap: wrap; gap: var(--sp-150); align-items: center; }
+
+.cl-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-150);
+  max-width: 100%;
+  min-height: var(--h-28);
+  padding: var(--sp-100) var(--sp-200);
+  border: 0;
+  border-radius: var(--r-200);
+  background: transparent;
+  font-size: var(--t-sm);
+  font-weight: var(--fw-control);
+  color: var(--text);
+  text-align: left;
+  transition: background-color var(--dur-base) ease;
+}
+
+.cl-pill:hover { background: var(--surface-2); }
+
+.cl-pill[aria-expanded="true"] { background: var(--surface-sunken); }
+
+.cl-pill__value {
+  font-weight: var(--fw-title);
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cl-pill__chevron {
+  color: var(--text-3);
+  font-size: var(--t-2xs);
+  line-height: 1;
+  transition: rotate var(--dur-fast) var(--ease-decelerate);
+}
+
+.cl-pill[aria-expanded="true"] .cl-pill__chevron { rotate: 180deg; }
+
+.cl-pillpanel {
+  padding-top: var(--sp-300);
+  margin-top: var(--sp-300);
+  border-top: var(--hairline) solid var(--border-2);
+}
+
+/* 衍生唯讀列（利潤/利潤率：算不出顯示 -- 而非 0） */
+.cl-derow { display: flex; flex-wrap: wrap; gap: var(--sp-400); align-items: baseline; margin-top: var(--sp-300); }
+
+.cl-de { display: flex; gap: var(--sp-150); align-items: baseline; font-size: var(--t-xs); color: var(--text-2); }
+
+.cl-de b { font-size: var(--t-sm); color: var(--text); }
+
+.cl-de--unknown { color: var(--text-3); font-weight: var(--fw-control); }
+
+.cl-num { font-variant-numeric: tabular-nums; }
+
+.cl-checkrow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  font-size: var(--t-sm);
+  margin-top: var(--sp-200);
+}
+
+/* 開關列（原型 .swrow :1001-1004） */
+.cl-swrow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-300);
+  padding: var(--sp-200) 0;
+  border-bottom: var(--hairline) solid var(--border-2);
+}
+
+.cl-swrow:last-child { border-bottom: 0; }
+
+.cl-swrow__text { flex: 1; min-width: 0; font-size: var(--t-sm); }
+
+.cl-swrow__text span {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--text-2);
+  margin-top: var(--sp-050);
+}
+
+.cl-switch {
+  flex: none;
+  width: 32px;
+  height: 18px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  position: relative;
+  transition: background-color var(--dur-base) ease;
+}
+
+.cl-switch--on { background: var(--brand); }
+
+.cl-switch:disabled { opacity: 0.55; }
+
+.cl-switch__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--sh-raised);
+  transition: translate var(--dur-base) var(--ease-standard);
+}
+
+.cl-switch--on .cl-switch__knob { translate: 14px 0; }
+
+/* dropzone 空態（多媒體卡） */
+.cl-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-200);
+  padding: var(--sp-600) var(--sp-400);
+  border: var(--bw-150) dashed var(--border-strong);
+  border-radius: var(--r-200);
+  color: var(--text-2);
+  text-align: center;
+}
+
+.cl-dropzone__actions { display: flex; gap: var(--sp-200); }
+
+.cl-dropzone p { margin: 0; font-size: var(--t-2xs); color: var(--text-3); }
+
+/* SaveBar：桌機＝topbar 搜尋槽位（44 §22.5 取代不疊加；原型 :1409-1414），
+   小於 48em 退回底部浮動（原型 :1005-1010／:1234）。深色浮層底。 */
+.cl-savebar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  flex: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  height: var(--h-36);
+  padding: 0 var(--sp-150) 0 var(--sp-300);
+  border-radius: var(--r-300);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  box-shadow: var(--sh-raised);
+  animation: cl-pop var(--dur-base) var(--ease-decelerate);
+}
+
+.cl-savebar__text { flex: 1; font-size: var(--t-sm); font-weight: 500; white-space: nowrap; }
+
+.cl-savebar__button {
+  min-height: var(--h-28);
+  padding: var(--sp-100) var(--sp-300);
+  border-radius: var(--r-200);
+  border: 0;
+  font-size: var(--t-sm);
+  font-weight: var(--fw-control);
+  transition: background-color var(--dur-base) ease;
+}
+
+.cl-savebar__button--secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text-inverse);
+}
+
+.cl-savebar__button--secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.24); }
+
+.cl-savebar__button--primary { background: var(--surface); color: var(--text); }
+
+.cl-savebar__button--primary:hover:not(:disabled) { background: var(--surface-sunken-hover); }
+
+.cl-savebar__button:disabled { opacity: 0.6; }
+
+@keyframes cl-pop {
+  from { transform: scale(0.97); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes cl-shake {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.cl-shake { animation: cl-shake var(--dur-shake) var(--ease-standard); }
+
+/* toast（原型 :671-672：底部中央、深色浮層、滑入） */
+.cl-toast-host {
+  position: fixed;
+  bottom: var(--sp-600);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-200);
+  z-index: var(--z-popover);
+  pointer-events: none;
+}
+
+.cl-toast {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  border-radius: var(--r-300);
+  padding: var(--sp-200) var(--sp-400);
+  font-size: var(--t-sm);
+  box-shadow: var(--sh-float);
+  animation: cl-toast-in var(--dur-slow) var(--ease-decelerate);
+}
+
+@keyframes cl-toast-in {
+  from { transform: translateY(80px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (max-width: 64.9975em) {
+  .cl-od-grid { grid-template-columns: 1fr; }
+  .cl-od-grid__aside { position: static; }
+}
+
+@media (max-width: 47.9975em) {
+  .cl-grid2 { grid-template-columns: 1fr; }
+  /* SaveBar 底部浮動退場形（原型 :1234；safe-area 併入） */
+  .cl-savebar {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    max-width: none;
+    height: auto;
+    padding: var(--sp-200);
+    z-index: var(--z-bulk);
+    flex-wrap: wrap;
+  }
+  .cl-savebar__text { flex: 1 0 100%; margin-bottom: var(--sp-050); }
+  .cl-savebar__button { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-shake, .cl-savebar, .cl-toast { animation: none; }
+}

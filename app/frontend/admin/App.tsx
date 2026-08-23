@@ -2,6 +2,9 @@ import type { ReactElement } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminShell } from "./layout/AdminShell";
 import { APPS, NAVIGATION, SALES_CHANNELS } from "./layout/navigation";
+import { SaveBarProvider } from "./lib/SaveBarContext";
+import { ToastProvider } from "./lib/ToastContext";
+import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { Card } from "./components/Card";
 import { Page } from "./components/Page";
@@ -50,8 +53,10 @@ export function AdminRoutes({ brandName }: AdminRoutesProps) {
   ]);
 
   return (
-    <Routes>
-      <Route element={<AdminShell brandName={brandName} />}>
+    <ToastProvider>
+      <SaveBarProvider>
+        <Routes>
+          <Route element={<AdminShell brandName={brandName} />}>
         <Route element={<Navigate replace to="/admin/products" />} path="/admin" />
         {navigationPaths.map(({ label, path }) => {
           const implemented = IMPLEMENTED.get(path);
@@ -63,12 +68,14 @@ export function AdminRoutes({ brandName }: AdminRoutesProps) {
             />
           );
         })}
-        <Route element={<PlaceholderPage title="新增商品" />} path="/admin/products/new" />
+        <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
         <Route element={<PlaceholderPage title="商品詳情" />} path="/admin/products/:id" />
         <Route element={<PlaceholderPage title="AI 助理" />} path="/admin/assistant" />
         <Route element={<PlaceholderPage title="設定" />} path="/admin/settings" />
         <Route element={<Navigate replace to="/admin/products" />} path="*" />
-      </Route>
-    </Routes>
+          </Route>
+        </Routes>
+      </SaveBarProvider>
+    </ToastProvider>
   );
 }
