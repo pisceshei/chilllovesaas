@@ -22,6 +22,29 @@ class PlatformLocale < ApplicationRecord
 
   scope :available, -> { where(status: "available").order(:tag) }
 
+  # 首發語言字典種子（docs/plans/2026-08-23-多語言方案.md §3.1）。**唯一正典**——
+  # migration 20260823100000、db/seeds.rb、spec/support 三處都呼叫它，不各抄一份
+  # （測試庫走 schema load 不跑 migration，種子若只在 migration 裡，CI 上 platform_locales 是空的）。
+  LAUNCH_SEED = [
+    { tag: "en",      language: "en", script: nil,    endonym: "English",  plural_rule: "en", collation: "utf8mb4_0900_ai_ci" },
+    { tag: "zh-Hant", language: "zh", script: "Hant", endonym: "繁體中文", plural_rule: "zh", collation: "utf8mb4_zh_0900_as_cs" },
+    { tag: "zh-Hans", language: "zh", script: "Hans", endonym: "简体中文", plural_rule: "zh", collation: "utf8mb4_zh_0900_as_cs" },
+    { tag: "ja",      language: "ja", script: nil,    endonym: "日本語",   plural_rule: "ja", collation: "utf8mb4_ja_0900_as_cs" },
+    { tag: "fr",      language: "fr", script: nil,    endonym: "Français", plural_rule: "fr", collation: "utf8mb4_0900_ai_ci" }
+  ].freeze
+
+  # 冪等寫入種子（已存在的列不動——endonym 等若日後調整走獨立 migration）。
+  #
+  # @return [Integer] 新建列數
+  def self.seed!
+    LAUNCH_SEED.count do |row|
+      next false if exists?(tag: row[:tag])
+
+      create!(row.merge(direction: "ltr", date_format_id: "default", number_format_id: "default", status: "available"))
+      true
+    end
+  end
+
   private
 
   # 寫入層的標籤驗證（67 §C.1 規則 2）：格式、禁用表、zh 必帶 script。

@@ -12,6 +12,9 @@ if Rails.env.production? && seed_password.nil?
   abort "Production seed requires SEED_ADMIN_PASSWORD."
 end
 
+# 平台語言字典（ML-0）：冪等，正典在 PlatformLocale::LAUNCH_SEED。
+PlatformLocale.seed!
+
 brand_name = Rails.configuration.x.brand.name
 shop_created = false
 shop = ActsAsTenant.without_tenant do
