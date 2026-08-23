@@ -161,6 +161,18 @@
   寫合規 PR／DECISIONS 落點與同一份本地 handoff，**不修改／commit worklog，不製造新 head**。
 - 只有工作真正拆成另一個可獨立合併 PR，才另建 worklog；只有正式轉交、rollback 後另起恢復包，
   才另建本地 handoff。
+- 🔴 **本節「一份 worklog」對規則生效前已開的 PR 不追溯**（`docs/DECISIONS.md` **D39**，
+  2026-08-22 使用者裁定）。
+  🔴 **判準全文只在 D39，本處不複製**——判準已因「該看哪個訊號」連改兩次
+  （先補 `--first-parent`，再整個換成 PR `createdAt`）；複製一份就是第二個會腐化的
+  來源（20.2.2 producer／consumer 同步）。
+  <!-- 🔴 2026-08-23 修正（來源＝PR #64 Claude issue comment `5381302078` 🟡-2）：
+       本段原本自帶一份判準（`git merge-base --is-ancestor <merge commit> <該 PR 的第一個 commit>`），
+       而「第一個 commit 怎麼取」正是 D39 被點掉兩次的那個洞。
+       同一個 commit 改了 producer（D39）、consumer（本段）沒跟 ⇒ 兩份判準不一致。
+       → 不再複製，只指向 D39。 -->
+  適用者的既有逐輪 worklog 維持原樣、不要求整併；
+  **生效後新建的 worklog 一律照本節**。射程邊界（只豁免這一條、只對生效前已開的 PR）見 D39。
 - **commit 之後**跑 `ruby scripts/check-doc-claims.rb`（第 2／4／5 條已機制化，見下節）——🔴 它用 `git diff <base>` 只掃**已提交**的新增行，commit 前跑掃不到剛寫的散文（＝假綠）；**轉紅或出現警告（R5 不影響退出碼，要自己看）⇒ 修正後重凍結、重跑全部閘門並 amend／重建同一個尚未 push 的候選，警告為 0 才推**（見下節第 7 條末段）。
   🔴 **與 `CLAUDE.md` 鐵律 15.4 的時序對照——15.4 的判準一字不動，本段只說明兩者怎麼併存**：
   ①15.4「全部閘門逐支親眼看退出碼 → commit」照跑，**doc-claims 也在那一輪裡**（它是 `config/ci.rb`
@@ -279,6 +291,7 @@ commit 前跑掃不到你剛寫的散文（2026-08-19 實測：同一 base，com
 4. **worklog 不按驗收輪增殖**：一個可獨立合併的 PR／原子工作包維護一份 tracked worklog；
    tree 真的改變時與產物在同一整合 commit 更新，no-tree disposition／遠端狀態不改 worklog。
    附錄 A 每份 tracked worklog 只登一次，不列本地 handoff；交接事實仍受鐵律 19 證據稽核。
+   🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
 
 ## 🔴 Windows 開發者必讀：檔案執行位元
 
@@ -426,3 +439,4 @@ Windows 請在 **Git Bash 或 WSL** 下跑 `bin/ci`——PowerShell／cmd 直接
   handoff 只存在 Git 倉庫外本地工作區，不 commit／push、不另留 remote handoff；既有
   `docs/handoff/` 是歷史唯讀資料。一個可獨立合併 PR／原子包只維護一份 tracked worklog；
   no-tree disposition 不改 worklog、不造 head。倉庫終態回寫與鐵律 19 證據稽核仍照舊。
+  🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
