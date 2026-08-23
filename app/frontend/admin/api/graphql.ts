@@ -15,6 +15,30 @@ interface GraphQLResponse<Data> {
 }
 
 /**
+ * top-level GraphQL error 的型別化例外——保留 extensions.code 供呼叫端分支。
+ *
+ * 鐵律 4 的三層錯誤裡，第 ② 層（THROTTLED／MAX_COST_EXCEEDED）與部分第 ③ 層
+ * 語義（ACCESS_DENIED、IDEMPOTENCY_KEY_REQUIRED）都走 top-level errors；
+ * 只丟 join 過的字串會讓呼叫端拿不到 code、無法機器分支。
+ */
+export class AdminGraphQLError extends Error {
+  /** 原始 top-level errors。 */
+  readonly errors: GraphQLTopLevelError[];
+
+  constructor(errors: GraphQLTopLevelError[]) {
+    super(errors.map((error) => error.message).join("；"));
+    this.name = "AdminGraphQLError";
+    this.errors = errors;
+  }
+
+  /** 第一個 error 的 extensions.code（無則 undefined）。 */
+  get code(): string | undefined {
+    const raw = this.errors[0]?.extensions?.["code"];
+    return typeof raw === "string" ? raw : undefined;
+  }
+}
+
+/**
  * 讀取 Rails 產生的 CSRF token。
  *
  * @returns token；測試或非 Rails 文件缺少 meta 時回傳 undefined。
@@ -64,7 +88,7 @@ export async function requestAdminGraphQL<
 
   const payload = (await response.json()) as GraphQLResponse<Data>;
   if (payload.errors?.length) {
-    throw new Error(payload.errors.map((error) => error.message).join("；"));
+    throw new AdminGraphQLError(payload.errors);
   }
   if (!payload.data) {
     throw new Error("伺服器沒有回傳商品資料。");

@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { AdminRoutes } from "../admin/App";
 
 const rootElement = document.getElementById("admin-root");
@@ -14,8 +14,11 @@ if (!brandName) {
   throw new Error("Admin SPA 缺少品牌設定。");
 }
 
-createRoot(rootElement).render(
-  <BrowserRouter>
-    <AdminRoutes brandName={brandName} />
-  </BrowserRouter>,
-);
+// data router（createBrowserRouter）而非 <BrowserRouter>：SaveBar 的離頁攔截
+// 用 useBlocker，它只在 data router 下生效——declarative router 會直接拋錯。
+// 單一 splat route 包住既有 <Routes> 樹，內層路由行為不變。
+const router = createBrowserRouter([
+  { path: "*", element: <AdminRoutes brandName={brandName} /> },
+]);
+
+createRoot(rootElement).render(<RouterProvider router={router} />);

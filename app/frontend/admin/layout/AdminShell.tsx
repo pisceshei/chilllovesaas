@@ -1,8 +1,54 @@
 import { Bell, Heart, Menu, Search, Settings, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useSaveBarState } from "../lib/SaveBarContext";
 import { APPS, NAVIGATION, SALES_CHANNELS, entryContains } from "./navigation";
 import type { NavigationEntry } from "./navigation";
+
+/**
+ * SaveBar（44 §22.5：dirty 時**取代**搜尋列的槽位，不疊加；深色浮層底）。
+ *
+ * shakeSignal 遞增時重播 cl-shake（原型 47 #88：先移除 class 並強制 reflow）。
+ */
+function TopbarSaveBar() {
+  const state = useSaveBarState();
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const lastShake = useRef(0);
+
+  useEffect(() => {
+    if (!state || state.shakeSignal === lastShake.current) return;
+    lastShake.current = state.shakeSignal;
+    const bar = barRef.current;
+    if (!bar) return;
+    bar.classList.remove("cl-shake");
+    void bar.offsetWidth;
+    bar.classList.add("cl-shake");
+  }, [state]);
+
+  if (!state?.dirty) return null;
+
+  return (
+    <div aria-label="未儲存的變更" className="cl-savebar" ref={barRef} role="region">
+      <span className="cl-savebar__text">未儲存的變更</span>
+      <button
+        className="cl-savebar__button cl-savebar__button--secondary"
+        disabled={state.saving}
+        onClick={state.onDiscard}
+        type="button"
+      >
+        捨棄
+      </button>
+      <button
+        className="cl-savebar__button cl-savebar__button--primary"
+        disabled={state.saving}
+        onClick={state.onSave}
+        type="button"
+      >
+        {state.saving ? "儲存中…" : "儲存"}
+      </button>
+    </div>
+  );
+}
 
 /**
  * AdminShell 可用屬性，佈局對應原型 topbar／sidebar（值一律走 tokens，鐵律 8）。
@@ -59,6 +105,19 @@ function SidebarEntry({ entry, onNavigate }: SidebarEntryProps) {
   );
 }
 
+/** 搜尋鈕與 SaveBar 共用同一個 topbar 槽位（dirty 時取代，不疊加）。 */
+function SearchOrSaveBar() {
+  const state = useSaveBarState();
+  if (state?.dirty) return <TopbarSaveBar />;
+  return (
+    <button aria-label="開啟全域搜尋" className="cl-search-trigger" type="button">
+      <Search aria-hidden="true" size={14} />
+      <span>搜尋</span>
+      <kbd>CTRL K</kbd>
+    </button>
+  );
+}
+
 /**
  * 呈現登入後的 topbar、sidebar 與可捲動內容區。
  *
@@ -93,11 +152,7 @@ export function AdminShell({ brandName }: AdminShellProps) {
           <span className="cl-brand__version">秋季 ’26</span>
         </div>
 
-        <button aria-label="開啟全域搜尋" className="cl-search-trigger" type="button">
-          <Search aria-hidden="true" size={14} />
-          <span>搜尋</span>
-          <kbd>CTRL K</kbd>
-        </button>
+        <SearchOrSaveBar />
 
         <div className="cl-topbar__actions">
           <button aria-label="AI 助理" className="cl-icon-button" type="button">

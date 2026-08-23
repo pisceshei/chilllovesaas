@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, Ref } from "react";
 
 /**
  * TextField 可用屬性，對應 `docs/design/23-interaction-css-spec.md` §3 輸入框。
@@ -14,6 +14,8 @@ export interface TextFieldProps
   hint?: string;
   /** 驗證錯誤；出現時自動套用紅框及 aria-invalid。 */
   error?: string;
+  /** 轉發給原生 input（React 19 ref-as-prop；驗證失敗 focus 首個壞欄位用）。 */
+  ref?: Ref<HTMLInputElement>;
 }
 
 /**
@@ -29,6 +31,7 @@ export function TextField({
   label,
   labelHidden = false,
   className = "",
+  ref,
   ...props
 }: TextFieldProps) {
   const generatedId = useId();
@@ -44,6 +47,7 @@ export function TextField({
       </label>
       <input
         {...props}
+        ref={ref}
         aria-describedby={describedBy}
         aria-invalid={error ? true : undefined}
         className={`cl-field__input ${error ? "cl-field__input--error" : ""}`.trim()}
