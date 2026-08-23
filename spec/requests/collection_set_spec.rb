@@ -156,6 +156,27 @@ RSpec.describe "Admin GraphQL collectionSet", type: :request do
     ActsAsTenant.with_tenant(other) { expect(Collection.count).to eq(0) }
   end
 
+  # 🔴 列表的成員數不得逐列 COUNT：上限 250（limits.yml）⇒ 單一請求 250 次 DB。
+  # 斷言方式是「數 SQL」而不是「看回傳值」——回傳值正確的 N+1 一樣是 N+1。
+  it "collections 列表用單一子查詢帶出成員數，不逐列 COUNT" do
+    3.times do |index|
+      create_collection(title: "Batch #{index}", handle: "batch-#{index}", productIds: [ "gid://chilllove/Product/#{product_a.id}" ])
+    end
+
+    counts = []
+    subscriber = lambda do |_name, _started, _finished, _id, payload|
+      counts << payload[:sql] if payload[:sql].to_s.match?(/\ASELECT COUNT\(\*\)\s+FROM\s+`?collection_products/i)
+    end
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      post_graphql("query { collections(first: 10) { nodes { title productsCount } } }")
+    end
+
+    nodes = response.parsed_body.dig("data", "collections", "nodes")
+    expect(nodes.length).to eq(3)
+    expect(nodes.map { |row| row["productsCount"] }).to all(eq(1))
+    expect(counts).to be_empty
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

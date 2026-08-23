@@ -33,7 +33,11 @@
 
 ## 4. 前端
 
-- `/admin/collections` 列表（keyset＋IndexTable，與商品同一套）；🔴 智慧系列的商品數顯示 `—` **不是 0**——規則引擎落地前我方不知道成員數，顯示 0 是在說一件假的事。
+- `/admin/collections` 列表（keyset＋IndexTable，與商品同一套）；成員數由 `Collection::MEMBER_COUNT_SELECT`
+  相關子查詢**一次撈完**——列表上限 250（`limits.yml`），逐列 COUNT 就是單一請求打 250 次 DB；
+  單筆讀取（編輯頁）沒有那個 select，`CollectionType#products_count` 退回逐筆 COUNT。
+  測試以「數 SQL」斷言（`spec/requests/collection_set_spec.rb`「不逐列 COUNT」一例）——回傳值正確的 N+1 一樣是 N+1。
+- 🔴 智慧系列的商品數顯示 `—` **不是 0**——規則引擎落地前我方不知道成員數，顯示 0 是在說一件假的事。
 - `/admin/collections/new`／`/:id` 編輯頁：標題堆疊式三語、說明與 SEO 分頁式，全部用**同一個** `LocalizedField`；SaveBar／dirty／離頁攔截與商品頁共用。
 - 智慧系列選起來時顯示「成員由規則決定，規則編輯器在後續里程碑開放」——不放一個編不了的條件 UI。
 
