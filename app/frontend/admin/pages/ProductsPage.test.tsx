@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -105,12 +105,15 @@ describe("商品頁", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("table", { name: "商品列表" })).toBeVisible();
-    expect(screen.getByText("夏日上衣")).toBeVisible();
-    expect(screen.getByText("草稿")).toBeVisible();
+    // 🔴 狀態文案的斷言 scope 到表格內：側欄導覽有「草稿」（訂單子項）這類同字
+    // 樣的連結（UI-2 對齊原型 NAV 之後），全文件 getByText 會撞到多重命中。
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    expect(table).toBeVisible();
+    expect(within(table).getByText("夏日上衣")).toBeVisible();
+    expect(within(table).getByText("草稿")).toBeVisible();
     // 文案正典＝原型 P_STATUS 的 `bt` 欄（chilllove-admin-v2.html:3106）。
     // 本斷言原本是「使用中」——那是本專案自創的文案，與原型不符（鐵律 12）。
-    expect(screen.getByText("啟用中")).toBeVisible();
+    expect(within(table).getByText("啟用中")).toBeVisible();
 
     await user.type(screen.getByRole("searchbox", { name: "搜尋商品" }), "不存在");
     expect(await screen.findByRole("heading", { name: "找不到符合的商品" })).toBeVisible();
@@ -139,19 +142,22 @@ describe("商品頁", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByRole("table", { name: "商品列表" })).toBeVisible();
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    expect(table).toBeVisible();
     // 文案逐字取自原型 P_STATUS 的 `bt` 欄（chilllove-admin-v2.html:3106-3113）。
-    expect(screen.getByText("啟用中")).toBeVisible();
-    expect(screen.getByText("未列出")).toBeVisible();
-    expect(screen.getByText("草稿")).toBeVisible();
-    expect(screen.getByText("已封存")).toBeVisible();
+    // scope 到表格內，理由同上一個測試（側欄的「草稿」連結會造成多重命中）。
+    expect(within(table).getByText("啟用中")).toBeVisible();
+    expect(within(table).getByText("未列出")).toBeVisible();
+    expect(within(table).getByText("草稿")).toBeVisible();
+    expect(within(table).getByText("已封存")).toBeVisible();
 
     // 🔴 pip 也要釘住，不是只釘文案。原型 P_STATUS 的 `pip` 欄：
     // ACTIVE=full、UNLISTED=''（裸圈⇒我方 empty）、DRAFT=''（同）、ARCHIVED=blocked。
     // UNLISTED 本檔原本寫 `half`（半圈＝進行中），語義上是錯的——它不是「進行中」，
     // 它是「啟用但不被發現」。文案斷言抓不到這種錯，只有 pip 斷言抓得到。
     const pipOf = (label: string) =>
-      screen.getByText(label).parentElement?.querySelector("[class*='cl-badge__pip']")?.className;
+      within(table).getByText(label).parentElement?.querySelector("[class*='cl-badge__pip']")
+        ?.className;
     expect(pipOf("啟用中")).toContain("cl-badge__pip--full");
     expect(pipOf("未列出")).toContain("cl-badge__pip--empty");
     expect(pipOf("草稿")).toContain("cl-badge__pip--empty");

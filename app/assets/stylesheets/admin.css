@@ -69,7 +69,7 @@ a {
   z-index: 40;
   display: flex;
   align-items: center;
-  height: 52px;
+  height: var(--topbar-h); /* 47 §0 量測真值 56px（原 52，51 表 1 P0-11）*/
   gap: 16px;
   padding: 0 16px;
   background: var(--surface);
@@ -215,68 +215,125 @@ a {
 
 .cl-app-frame {
   display: flex;
-  height: calc(100vh - 52px);
+  height: calc(100vh - var(--topbar-h));
 }
 
 .cl-sidebar {
   display: flex;
-  flex: 0 0 220px;
+  flex: 0 0 var(--sidebar-w);
   flex-direction: column;
-  width: 220px;
-  gap: 1px;
-  padding: 10px 8px 8px;
+  width: var(--sidebar-w);
+  gap: var(--sp-050);
+  padding: var(--sp-200);
   overflow-y: auto;
-  border-right: 1px solid var(--border);
+  border-right: var(--hairline) solid var(--border);
   background: var(--surface-2);
 }
 
 .cl-sidebar__navigation {
-  display: grid;
-  gap: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-050);
 }
 
-.cl-sidebar__group {
-  margin-top: 16px;
-}
-
-.cl-sidebar__group > p {
-  padding: 0 10px 4px;
-  margin: 0;
+/* 原型 .nav-group（docs/design/chilllove-admin-v2.html:346）。 */
+.cl-nav-group {
+  margin: var(--sp-400) 0 0;
+  padding: 0 var(--sp-200) var(--sp-100);
   color: var(--text-3);
-  font-size: 11px;
+  font-size: var(--t-2xs);
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
-.cl-sidebar__footer {
-  display: grid;
-  gap: 1px;
-  padding-top: 8px;
-  margin-top: auto;
-  border-top: 1px solid var(--border-2);
+.cl-sidebar__spacer {
+  flex: 1;
 }
 
+/* 原型 .nav-foot（:348）。 */
+.cl-nav-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-050);
+  padding-top: var(--sp-200);
+  margin-top: var(--sp-200);
+  border-top: var(--hairline) solid var(--border-2);
+}
+
+/* 原型 .nav-item（:336-340）：13px／500、hover 換底、on 白底＋raised 陰影＋600。 */
 .cl-nav-item {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 30px;
-  gap: 9px;
-  padding: 6px 10px;
-  border-radius: var(--r-btn);
-  color: #3f4144;
+  gap: var(--sp-200);
+  padding: var(--sp-150) var(--sp-200);
+  border-radius: var(--r-200);
+  color: var(--text-nav);
+  font-size: var(--t-sm);
   font-weight: 500;
+  text-align: left;
   text-decoration: none;
-  transition: background var(--tr), color var(--tr);
+  transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
 }
 
 .cl-nav-item:hover {
-  background: #ededee;
+  background: var(--surface-hover);
+}
+
+.cl-nav-item svg {
+  opacity: 0.75;
 }
 
 .cl-nav-item--active {
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(26, 28, 30, 0.08);
+  box-shadow: var(--sh-raised);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.cl-nav-item--active svg {
+  opacity: 1;
+}
+
+/* 原型 .nav-subs 手風琴（:294-297）：max-height 摺疊（不用 height，避免 reflow，47 §5 M4）。 */
+.cl-nav-subs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-050);
+  max-height: 0;
+  overflow: clip;
+  overflow-clip-margin: var(--focus-ring-w);
+  transition: max-height var(--dur-fast) var(--ease-decelerate);
+}
+
+.cl-nav-subs--open {
+  max-height: 240px;
+}
+
+/* 原型 .nav-sub（:342-345）：左縮排 3×sp-300，未展開 display:none。 */
+.cl-nav-sub {
+  display: none;
+  width: 100%;
+  padding: var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300) * 3);
+  border-radius: var(--r-200);
+  color: var(--text-nav-2);
+  font-size: var(--t-sm);
+  text-align: left;
+  text-decoration: none;
+  transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
+}
+
+.cl-nav-sub--show {
+  display: block;
+}
+
+.cl-nav-sub:hover {
+  background: var(--surface-hover);
+}
+
+.cl-nav-sub--active {
+  background: var(--surface);
+  box-shadow: var(--sh-raised);
   color: var(--text);
   font-weight: 600;
 }
@@ -853,9 +910,12 @@ a {
   .cl-sidebar {
     position: fixed;
     z-index: 40;
-    top: 52px;
+    top: var(--topbar-h);
     bottom: 0;
     left: 0;
+    /* 原型 :755：行動抽屜寬 min(272px, 84vw)，不是桌機的 --sidebar-w。 */
+    width: min(272px, 84vw);
+    max-width: min(272px, 84vw);
     transform: translateX(-100%);
     box-shadow: var(--sh-pop);
     transition: transform var(--tr-big);
@@ -868,7 +928,7 @@ a {
   .cl-sidebar-backdrop {
     position: fixed;
     z-index: 39;
-    inset: 52px 0 0;
+    inset: var(--topbar-h) 0 0;
     display: block;
     padding: 0;
     border: 0;
