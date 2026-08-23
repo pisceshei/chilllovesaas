@@ -25,6 +25,13 @@
 ### 兩個實作缺口（spec 抓到，已修）
 1. 🔴 `sync_members!` 原本用 `Product.where(id: ids).pluck(:id)` 當順序來源——那是 **DB 順序**不是送入順序，症狀是「拖曳排序存檔後順序又跳回去」。改成用原陣列排序、只用查詢結果做存在性過濾。
 2. 🔴 handle 衝突有**兩條路徑**（model uniqueness 驗證 vs DB 唯一索引），原本只轉了後者 ⇒ 單機測試回 `INVALID`、併發才回 `HANDLE_TAKEN`。改成 `translate_record_invalid` 統一轉碼。
+3. 🔴 **成員 ID 解析不出來或查無此商品時原本被靜默丟掉**（線上驗收時傳裸整數才發現）。宣告式 API 下靜默丟棄是最糟的失敗形態：存檔回「成功」、成員卻少一個，商家要到前台才發現。改成回 `INVALID`（格式不對）／`NOT_FOUND`（已刪除或別店 GID），整棵樹回滾。
+4. 🔴 **巢狀交易回滾**：`ActiveRecord::Base.transaction` 若併入外層（joined），
+   「block 內 raise、block 外 rescue」**什麼都不會回滾**。實測（2026-08-23，MySQL 8.4／Rails 8.1）：
+   joined 殘留列數 1、`requires_new: true` 為 0。v1 沒有外層交易所以現在剛好是對的，
+   但那取決於呼叫者 ⇒ 兩條路徑都加 `requires_new: true`。
+   ⚠️ **request spec 驗不到這件事**——RSpec 測試交易是 `joinable: false`，兩種寫法都綠；
+   守衛在 `spec/services/catalog/save_collection_spec.rb`（已做突變驗證：拿掉 `requires_new` 該例轉紅）。
 
 ## 3. GID 解析擴充
 

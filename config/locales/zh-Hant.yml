@@ -19,6 +19,8 @@
       amount_negative: "金額不得為負。"
       amount_invalid: "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。"
       handle_taken: "handle 已被使用。"
+      product_gid_invalid: "不是有效的商品 ID：%{gid}"
+      product_not_found: "找不到商品 %{id}（可能已被刪除或不屬於本店）。"
       handle_generation_failed: "handle 產生時持續發生衝突，請重試。"
       gid_invalid: "無效的商品 GID。"
       lock_version_required: "更新商品必須提供 lockVersion。"
