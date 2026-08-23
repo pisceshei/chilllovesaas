@@ -8,9 +8,27 @@
 set -euo pipefail
 
 APP_DIR=/www/wwwroot/chilllove/app
+ENV_FILE=/etc/chilllove/env
 REF="${1:-origin/main}"
 export RBENV_ROOT=/opt/rbenv
 export PATH="/opt/rbenv/shims:/opt/rbenv/bin:$PATH"
+
+# 以 app 使用者執行一道命令，讓**子行程自己讀** $ENV_FILE。
+#
+# 🔴 不用 `env VAR=$VAR ...` 逐個轉交：①漏一個就炸在部署中途
+#    （CHILLLOVE_BASE_HOST 漏轉交害 assets:precompile 掛在 KeyError，實測 2026-08-23）
+#    ②轉交等於把秘密寫進 argv，`ps aux` 全機可見。
+# 🔴 不用 `sudo -E`：本機 sudoers 明文拒絕（實測訊息
+#    "preserving the entire environment is not supported, '-E' is ignored"），
+#    會靜默降級成沒帶環境——比報錯更糟。
+# ⇒ `env -i` 清空後只給 PATH/HOME/RBENV_ROOT，其餘由子行程 source env 檔取得
+#   （檔案 0640 root:chilllove，app 使用者靠群組讀得到）。
+run_as_app() {
+  sudo -u chilllove -H env -i \
+    PATH="$PATH" HOME=/home/chilllove RBENV_ROOT="$RBENV_ROOT" \
+    bash -c 'cd "$0"; set -a; . "$1"; set +a; shift 2; exec "$@"' \
+    "$APP_DIR" "$ENV_FILE" -- "$@"
+}
 
 echo "==> [1/7] 取碼：$REF"
 cd "$APP_DIR"
@@ -19,21 +37,16 @@ sudo -u chilllove git checkout -q --detach "$REF"
 echo "    HEAD=$(git rev-parse --short HEAD)"
 
 echo "==> [2/7] Ruby 依賴"
-sudo -u chilllove -H env PATH="$PATH" bundle config set --local deployment true
-sudo -u chilllove -H env PATH="$PATH" bundle config set --local without "development test"
-sudo -u chilllove -H env PATH="$PATH" bundle install --quiet
+run_as_app bundle config set --local deployment true
+run_as_app bundle config set --local without "development test"
+run_as_app bundle install --quiet
 
 echo "==> [3/7] JS 依賴＋前端建置"
-sudo -u chilllove -H env PATH="$PATH" pnpm install --frozen-lockfile --silent
-set -a; . /etc/chilllove/env; set +a
-sudo -u chilllove -H env PATH="$PATH" SECRET_KEY_BASE="$SECRET_KEY_BASE" \
-  CHILLLOVE_DATABASE_PASSWORD="$CHILLLOVE_DATABASE_PASSWORD" RAILS_ENV=production \
-  bundle exec rails assets:precompile
+run_as_app pnpm install --frozen-lockfile --silent
+run_as_app bundle exec rails assets:precompile
 
 echo "==> [4/7] 資料庫 prepare（建庫＋遷移，冪等）"
-sudo -u chilllove -H env PATH="$PATH" SECRET_KEY_BASE="$SECRET_KEY_BASE" \
-  CHILLLOVE_DATABASE_PASSWORD="$CHILLLOVE_DATABASE_PASSWORD" RAILS_ENV=production \
-  bundle exec rails db:prepare
+run_as_app bundle exec rails db:prepare
 
 echo "==> [5/7] 同步 systemd／nginx 配置（有變更才動）"
 install -m 644 config/deploy/chilllove-puma.service /etc/systemd/system/chilllove-puma.service
