@@ -1750,7 +1750,7 @@
   ⚠️ 兩者皆不影響渲染 ⇒ 依 17.2 只登記。正解＝註釋內的示例式也用真值或 `$VAR`；括號在同段內閉合
   【F5/F11；來源＝PR #64 Claude issue comment `5383317323` ⚪-2／⚪-3；取證日期＝2026-08-23】
 
-- **PR 描述的無錨歷史節會被當成現值讀**：PR #64 描述的「Failure-first 與反向證明」節自第十五輪未改、無輪次／head／日期錨，其中「commits 端點實取 17 筆」是第 15 輪快照；🔴 **本條初稿寫「現 head 實為 41」，那個 41 又是無錨現值**——它屬 `93e7991` 那棵樹（`git rev-list --count bbf5f3b7..93e7991`），寫下時就已過期（Codex inline `3837411220`）。⇒ 本條不寫任何現值，改附導出式：`git rev-list --count bbf5f3b7..<被審 head>`。
+- **PR 描述的無錨歷史節會被當成現值讀**：PR #64 描述的「Failure-first 與反向證明」節自第十五輪未改、無輪次／head／日期錨，其中「commits 端點實取 17 筆」是第 15 輪快照；🔴 **本條初稿寫「現 head 實為 41」，那個 41 又是無錨現值**——它屬 `93e7991` 那棵樹（`git rev-list --count bbf5f3b7..93e7991`），寫下時就已過期（Codex inline `3837411220`）。⇒ 本條不寫任何現值，改附導出式（🔴 角括號在 bash 是重導向，用變數）：`H=$(gh pr view 64 --repo pisceshei/chilllovesaas --json headRefOid --jq .headRefOid); git rev-list --count bbf5f3b73971b35d23c253a68bb2554d14eff1bc.."$H"`。
   ⚠️ 該節是第 15 輪的正確快照，錯在無錨 ⇒ 依 17.2 只登記。正解＝描述內每個含數字的節都帶「（第 N 輪快照）」錨
   【F5/F11；來源＝PR #64 Claude issue comment `5383464497` ⚪；取證日期＝2026-08-23】
 
