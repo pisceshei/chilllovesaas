@@ -30,5 +30,11 @@
       source_locale_not_translatable: "La langue source est stockée sur le produit lui-même, pas comme traduction."
       field_not_translatable: "Ce champ n’est pas encore traduisible."
       too_long: "La traduction dépasse la limite."
+    locale:
+      not_in_catalog: "Cette langue ne figure pas au catalogue de la plateforme."
+      already_enabled: "Cette langue est déjà activée."
+      not_enabled: "Cette langue n’est pas activée pour la boutique."
+      source_immutable: "La langue source ne peut pas être désactivée ; changez d’abord la langue source."
+      login_required: "Connexion requise."
     staff:
       locale_unsupported: "Langue d’interface non prise en charge."
