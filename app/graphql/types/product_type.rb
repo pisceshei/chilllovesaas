@@ -18,6 +18,13 @@ module Types
     # SaveBar 樂觀鎖（63 §A.4：lockVersion 涵蓋整棵樹）；payload 帶回讓前端
     # 下一次儲存能偵測併發覆蓋（STALE_OBJECT）。
     field :lock_version, Integer, null: false
+    # ── 組織分類＋SEO（91 §11–12，P1）──
+    field :vendor, String, null: true
+    field :product_type, String, null: true
+    field :tags, [ String ], null: false,
+      description: "標籤全量（宣告式契約的讀取面；恆為陣列，無標籤＝[]）。"
+    field :seo, Types::SeoType, null: false,
+      description: "SEO 覆寫（物件恆在，子欄位 null＝未覆寫）。"
 
     # 序列化 product 的穩定 global API identifier。
     #
@@ -27,6 +34,13 @@ module Types
     def id
       "gid://chilllove/Product/#{object.id}"
     end
+
+    # SEO 子物件直接以 product 本身為 object（欄位在同一列上，SeoType 讀
+    # seo_title／seo_description）——不做額外查詢。
+    def seo = object
+
+    # @return [Array<String>] products.tags（json 欄，DB default []）
+    def tags = object.tags || []
 
     # @return [Array<ProductVariant>] position 序（B1-2：恆 ≥1 筆）
     def variants

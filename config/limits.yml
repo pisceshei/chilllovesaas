@@ -831,6 +831,9 @@ product:
   #    ⚠ V-68：若日後取得官方值再改；在那之前**不得**在規格裡寫成「對齊 Shopify」。
   title_max_chars: 255            # ours（非官方）
   description_max_bytes: 65536    # ours（非官方）
+  # 廠商／產品類型字元上限：官方未載明（同上 V-68 查證脈絡）⇒ 本專案自訂，對齊 DB varchar(255)。
+  vendor_max_chars: 255           # ours（非官方）
+  product_type_max_chars: 255     # ours（非官方）
   # 子類每日上傳速率（>500,000 子類的店）；Plus 豁免。出處：46c:657–669（help）、P14、P54
   daily_variant_upload_limit: 10000
   daily_variant_upload_plus_exempt: true

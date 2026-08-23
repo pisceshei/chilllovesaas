@@ -1,5 +1,5 @@
-import { ArrowLeft, ImagePlus, Sparkles } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Sparkles, X } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useBlocker, useNavigate, useParams } from "react-router-dom";
 import { AdminGraphQLError, requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
@@ -42,10 +42,25 @@ const PRODUCT_QUERY = `
   query productForEdit($id: ID!) {
     product(id: $id) {
       id title descriptionHtml status handle lockVersion
+      vendor productType tags
+      seo { title description }
       variants { price compareAtPrice cost sku barcode taxable }
     }
   }
 `;
+
+/** 組織分類卡 autocomplete 的建議清單（91 §12；伺服端 distinct＋字母序）。 */
+const SUGGESTIONS_QUERY = `
+  query productOrganizationSuggestions {
+    productVendors
+    productTypes
+  }
+`;
+
+interface SuggestionsData {
+  productVendors: string[];
+  productTypes: string[];
+}
 
 interface ProductSetData {
   productSet: {
@@ -68,6 +83,10 @@ interface ProductQueryData {
     status: string;
     handle: string;
     lockVersion: number;
+    vendor: string | null;
+    productType: string | null;
+    tags: string[];
+    seo: { title: string | null; description: string | null };
     variants: {
       price: string;
       compareAtPrice: string | null;
@@ -91,6 +110,11 @@ interface FormValues {
   barcode: string;
   handle: string;
   status: string;
+  vendor: string;
+  productType: string;
+  tags: string[];
+  seoTitle: string;
+  seoDescription: string;
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -105,18 +129,48 @@ const INITIAL_VALUES: FormValues = {
   barcode: "",
   handle: "",
   status: "DRAFT",
+  vendor: "",
+  productType: "",
+  tags: [],
+  seoTitle: "",
+  seoDescription: "",
 };
 
-type FieldKey = "title" | "price" | "compare" | "cost" | "handle";
+type FieldKey =
+  | "title" | "price" | "compare" | "cost" | "handle"
+  | "vendor" | "productType" | "seoTitle" | "seoDescription";
 
 /** 伺服器 userErrors path（productSet 剝 `input` 首段後）→ 表單欄位。 */
 const SERVER_PATHS: Record<string, FieldKey> = {
   title: "title",
   handle: "handle",
+  vendor: "vendor",
+  productType: "productType",
+  "seo.title": "seoTitle",
+  "seo.description": "seoDescription",
   "variants.0.price": "price",
   "variants.0.compareAtPrice": "compare",
   "variants.0.cost": "cost",
 };
+
+/**
+ * 狀態 listbox 選項（91 §2：本尊每項帶描述副行；**封存不在 listbox**，
+ * 只能走「更多動作→封存商品」）。副行文案為我方措辭（鐵律 9 不抄本尊文案），
+ * 語義取自 13 §F1.2 真值表。
+ */
+const STATUS_OPTIONS: { value: string; label: string; hint: string }[] = [
+  { value: "ACTIVE", label: "啟用中", hint: "可販售也可被發現：進搜尋、系列與 sitemap" },
+  { value: "DRAFT", label: "草稿", hint: "尚未備妥：顧客在任何管道都取用不到" },
+  { value: "UNLISTED", label: "未列出", hint: "可購買但不被發現：僅能透過直接連結存取" },
+];
+
+/** 封存態只在目前狀態＝ARCHIVED 時出現在 listbox（顯示用；解除走選其他值）。 */
+const ARCHIVED_OPTION = { value: "ARCHIVED", label: "已封存", hint: "已停售：選擇其他狀態即取消封存" };
+
+/** SEO 計數器的 SERP 建議值（不是上限；上限＝伺服端 70／320，91 §11）。 */
+const SEO_TITLE_MAX = 70;
+const SEO_DESCRIPTION_SERP = 160;
+const SEO_DESCRIPTION_MAX = 320;
 
 /**
  * 狀態呈現（正典＝原型 P_STATUS，chilllove-admin-v2.html:3105；
@@ -234,6 +288,148 @@ function PillGroup({
 }
 
 /**
+ * 狀態選單（91 §2 形態：按鈕＋listbox popover，每項主文＋描述副行）。
+ * 原生 select 的 option 放不下副行 ⇒ 自訂 listbox；鍵盤：Escape 關閉、點選即選取。
+ */
+function StatusListbox({
+  value,
+  onChange,
+  labelId,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  labelId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const listId = useId();
+  const options = value === "ARCHIVED" ? [ ...STATUS_OPTIONS, ARCHIVED_OPTION ] : STATUS_OPTIONS;
+  const current = options.find((option) => option.value === value) ?? STATUS_OPTIONS[1];
+
+  return (
+    <div className="cl-statusbox">
+      <button
+        aria-controls={listId}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-labelledby={labelId}
+        className="cl-field__input cl-statusbox__button"
+        onClick={() => setOpen((state) => !state)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+        }}
+        type="button"
+      >
+        {current.label}
+        <ChevronDown aria-hidden="true" size={14} />
+      </button>
+      {open ? (
+        <ul aria-label="商品狀態" className="cl-statusbox__list" id={listId} role="listbox">
+          {options.map((option) => (
+            <li
+              aria-selected={option.value === value}
+              className={`cl-statusbox__option ${option.value === value ? "cl-statusbox__option--active" : ""}`}
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              role="option"
+            >
+              <span className="cl-statusbox__check">
+                {option.value === value ? <Check aria-hidden="true" size={14} /> : null}
+              </span>
+              <span className="cl-statusbox__text">
+                {option.label}
+                <span>{option.hint}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * 標籤欄（91 §12：token 多值）。Enter／逗號提交；chip × 移除。
+ * 草稿輸入獨立於表單值 ⇒ 只敲了一半的標籤不會弄髒 SaveBar。
+ */
+function TagsField({
+  tags,
+  onChange,
+  suggestions,
+}: {
+  tags: string[];
+  onChange: (next: string[]) => void;
+  suggestions: string[];
+}) {
+  const [draft, setDraft] = useState("");
+  const inputId = useId();
+  const listId = useId();
+
+  const commit = () => {
+    const value = draft.trim().replace(/,+$/, "").trim();
+    setDraft("");
+    if (!value || tags.includes(value)) return;
+    onChange([ ...tags, value ]);
+  };
+
+  return (
+    <div className="cl-field">
+      <label className="cl-field__label" htmlFor={inputId}>
+        標籤
+      </label>
+      {tags.length > 0 ? (
+        <div className="cl-chips">
+          {tags.map((tag) => (
+            <span className="cl-chip" key={tag}>
+              {tag}
+              <button
+                aria-label={`移除標籤 ${tag}`}
+                className="cl-chip__remove"
+                onClick={() => onChange(tags.filter((existing) => existing !== tag))}
+                type="button"
+              >
+                <X aria-hidden="true" size={11} />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <input
+        className="cl-field__input"
+        id={inputId}
+        list={listId}
+        onChange={(event) => {
+          if (event.target.value.endsWith(",")) {
+            setDraft(event.target.value);
+            // 逗號輸入即提交（IME 安全：組字期間不會產生裸逗號）
+            const value = event.target.value.slice(0, -1).trim();
+            setDraft("");
+            if (value && !tags.includes(value)) onChange([ ...tags, value ]);
+            return;
+          }
+          setDraft(event.target.value);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            commit();
+          }
+        }}
+        placeholder="以 Enter 或逗號加入"
+        value={draft}
+      />
+      <datalist id={listId}>
+        {suggestions.map((suggestion) => (
+          <option key={suggestion} value={suggestion} />
+        ))}
+      </datalist>
+    </div>
+  );
+}
+
+/**
  * 呈現商品建立／編輯頁。
  *
  * @param props - isNew 分流。
@@ -256,6 +452,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const [lockVersion, setLockVersion] = useState(0);
   const [openPills, setOpenPills] = useState<ReadonlySet<string>>(new Set());
   const [shakeSignal, setShakeSignal] = useState(0);
+  const [seoOpen, setSeoOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestionsData>({ productVendors: [], productTypes: [] });
+  // 更多動作→封存／取消封存：改狀態後立即儲存（本尊為即時動作，不停在 SaveBar）。
+  const pendingAutoSave = useRef(false);
 
   // 冪等鍵：建立態專用（更新態是宣告式覆寫、天然冪等，防線是 lockVersion——D-PS5）。
   const idempotencyKey = useRef<string>(uuidV4());
@@ -293,6 +494,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           barcode: variant?.barcode ?? "",
           handle: product.handle,
           status: product.status,
+          vendor: product.vendor ?? "",
+          productType: product.productType ?? "",
+          tags: product.tags ?? [],
+          seoTitle: product.seo?.title ?? "",
+          seoDescription: product.seo?.description ?? "",
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
@@ -310,6 +516,16 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
   const setValue = useCallback(<Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     setValues((current) => ({ ...current, [key]: value }));
+  }, []);
+
+  // 組織分類卡的 autocomplete 建議（91 §12）。失敗靜默：建議清單是增強不是資料，
+  // 空清單只是少了 datalist，欄位照常可打字。
+  useEffect(() => {
+    const controller = new AbortController();
+    requestAdminGraphQL<SuggestionsData, Record<string, never>>(SUGGESTIONS_QUERY, {}, controller.signal)
+      .then((data) => setSuggestions(data))
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   const togglePill = useCallback((key: string) => {
@@ -339,6 +555,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     }
     if (isNew && values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
       found.handle = "handle 只能包含小寫字母、數字與連字號。";
+    }
+    if (values.seoTitle.length > SEO_TITLE_MAX) {
+      found.seoTitle = `SEO 標題超過 ${SEO_TITLE_MAX} 字元上限。`;
+    }
+    if (values.seoDescription.length > SEO_DESCRIPTION_MAX) {
+      found.seoDescription = `Meta 描述超過 ${SEO_DESCRIPTION_MAX} 字元上限。`;
     }
 
     setErrors(found);
@@ -382,6 +604,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         title: values.title.trim(),
         descriptionHtml: descriptionToHtml(values.description),
         status: values.status,
+        // 組織分類＋SEO 恆送（宣告式：空字串／空陣列＝清除，伺服端契約同語義）。
+        vendor: values.vendor.trim(),
+        productType: values.productType.trim(),
+        tags: values.tags,
+        seo: {
+          title: values.seoTitle.trim(),
+          description: values.seoDescription.trim(),
+        },
         variants: [
           {
             price: centsToApiString(parseMoneyToCents(values.price) ?? null),
@@ -443,6 +673,22 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     showToast("已捨棄變更，還原為上次儲存的內容");
   }, [showToast]);
 
+  // 封存／取消封存：狀態寫入 state 後由本 effect 立即觸發儲存（91 §1 本尊為即時動作）。
+  useEffect(() => {
+    if (!pendingAutoSave.current) return;
+    pendingAutoSave.current = false;
+    void save();
+  }, [save, values.status]);
+
+  const applyStatusAction = useCallback(
+    (status: string) => {
+      pendingAutoSave.current = true;
+      setActionsOpen(false);
+      setValue("status", status);
+    },
+    [setValue],
+  );
+
   // SaveBar 註冊（topbar 渲染；離頁清除）。
   useEffect(() => {
     registerSaveBar({ dirty, saving, onSave: () => void save(), onDiscard: discard, shakeSignal });
@@ -499,6 +745,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const statusBadge = STATUS_PRESENTATION[values.status] ?? STATUS_PRESENTATION.DRAFT;
   const dimensions = STATUS_DIMENSIONS[values.status] ?? STATUS_DIMENSIONS.DRAFT;
 
+  // SERP 預覽（91 §11）：覆寫值優先，留空 fallback 商品標題／說明摘要。
+  const serpHost = window.location.host;
+  const serpTitle = values.seoTitle.trim() || values.title.trim();
+  const serpDescription = (values.seoDescription.trim() || values.description.trim().replaceAll("\n", " "))
+    .slice(0, SEO_DESCRIPTION_SERP);
+
   return (
     <div className="cl-page cl-page--detail cl-product-detail">
       <header className="cl-detail-head">
@@ -519,6 +771,52 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           繁體中文
         </span>
         <div className="cl-detail-head__actions">
+          {isNew ? null : (
+            <div className="cl-actionsmenu">
+              <Button
+                aria-expanded={actionsOpen}
+                aria-haspopup="menu"
+                onClick={() => setActionsOpen((state) => !state)}
+              >
+                更多動作 <MoreHorizontal aria-hidden="true" size={14} />
+              </Button>
+              {actionsOpen ? (
+                <div className="cl-actionsmenu__list" role="menu">
+                  <button className="cl-actionsmenu__item" disabled role="menuitem" title="複製屬後續包" type="button">
+                    複製商品
+                  </button>
+                  {values.status === "ARCHIVED" ? (
+                    <button
+                      className="cl-actionsmenu__item"
+                      onClick={() => applyStatusAction("DRAFT")}
+                      role="menuitem"
+                      type="button"
+                    >
+                      取消封存商品
+                    </button>
+                  ) : (
+                    <button
+                      className="cl-actionsmenu__item"
+                      onClick={() => applyStatusAction("ARCHIVED")}
+                      role="menuitem"
+                      type="button"
+                    >
+                      封存商品
+                    </button>
+                  )}
+                  <button
+                    className="cl-actionsmenu__item cl-actionsmenu__item--danger"
+                    disabled
+                    role="menuitem"
+                    title="刪除屬後續包"
+                    type="button"
+                  >
+                    刪除商品
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          )}
           <Button loading={saving} loadingLabel="儲存中…" onClick={() => void save()} variant="primary">
             儲存
           </Button>
@@ -792,23 +1090,85 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
 
           <Card padded>
-            <h3>搜尋引擎產品資訊</h3>
-            {isNew ? <p className="cl-card-note">尚無可預覽的內容</p> : null}
-            <TextField disabled hint="留空時沿用商品標題（SEO 里程碑開放）" label="頁面標題" maxLength={70} value="" />
-            <TextField
-              disabled={!isNew}
-              error={errors.handle}
-              hint={
-                isNew
-                  ? "儲存時由英文標題自動生成；手填衝突會被拒絕"
-                  : "handle 變更需 301 轉址（URL 里程碑開放）"
-              }
-              label="網址 handle"
-              onChange={(event) => setValue("handle", event.target.value)}
-              placeholder="自動生成"
-              ref={bindField("handle")}
-              value={values.handle}
-            />
+            <h3>
+              搜尋引擎產品資訊
+              <span className="cl-card__head-action">
+                <button
+                  aria-expanded={seoOpen}
+                  aria-label="編輯搜尋引擎產品資訊"
+                  className="cl-icon-button"
+                  onClick={() => setSeoOpen((state) => !state)}
+                  type="button"
+                >
+                  <Pencil aria-hidden="true" size={14} />
+                </button>
+              </span>
+            </h3>
+            {/* SERP 預覽（91 §11 收合態）：站名 → 麵包屑 URL → 標題連結 → 描述 → 價格列。 */}
+            {serpTitle ? (
+              <div className="cl-serp">
+                <div className="cl-serp__site">CHILL LOVE</div>
+                <div className="cl-serp__url">
+                  {serpHost} › products › {values.handle || "…"}
+                </div>
+                <div className="cl-serp__title">{serpTitle}</div>
+                {serpDescription ? <div className="cl-serp__desc">{serpDescription}</div> : null}
+                {values.price.trim() ? (
+                  <div className="cl-serp__price">HK${values.price.trim()} HKD</div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="cl-card-note">尚無可預覽的內容——填寫標題後這裡會顯示搜尋結果預覽。</p>
+            )}
+            {seoOpen ? (
+              <>
+                <TextField
+                  error={errors.seoTitle}
+                  hint={`已使用 ${values.seoTitle.length} / ${SEO_TITLE_MAX} 個字元；留空時沿用商品標題`}
+                  label="頁面標題"
+                  maxLength={SEO_TITLE_MAX}
+                  onChange={(event) => setValue("seoTitle", event.target.value)}
+                  ref={bindField("seoTitle")}
+                  value={values.seoTitle}
+                />
+                <div className="cl-field">
+                  <label className="cl-field__label" htmlFor="seo-description">
+                    Meta 描述
+                  </label>
+                  <textarea
+                    aria-invalid={errors.seoDescription ? true : undefined}
+                    className="cl-field__input cl-field__textarea"
+                    id="seo-description"
+                    maxLength={SEO_DESCRIPTION_MAX}
+                    onChange={(event) => setValue("seoDescription", event.target.value)}
+                    rows={3}
+                    value={values.seoDescription}
+                  />
+                  {/* 160 是 SERP 建議值不是上限（91 §11：本尊 203/160 照樣可存；硬上限 320）。 */}
+                  {errors.seoDescription ? (
+                    <p className="cl-field__error">{errors.seoDescription}</p>
+                  ) : (
+                    <p className="cl-field__hint">
+                      已使用 {values.seoDescription.length} / {SEO_DESCRIPTION_SERP} 個字元；超過會被搜尋結果截斷（上限 {SEO_DESCRIPTION_MAX}）
+                    </p>
+                  )}
+                </div>
+                <TextField
+                  disabled={!isNew}
+                  error={errors.handle}
+                  hint={
+                    isNew
+                      ? "儲存時由英文標題自動生成；手填衝突會被拒絕"
+                      : "handle 變更需 301 轉址（URL 里程碑開放）"
+                  }
+                  label="網址 handle"
+                  onChange={(event) => setValue("handle", event.target.value)}
+                  placeholder="自動生成"
+                  ref={bindField("handle")}
+                  value={values.handle}
+                />
+              </>
+            ) : null}
           </Card>
         </div>
 
@@ -817,20 +1177,15 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             <Card padded>
               <h3>狀態</h3>
               <div className="cl-field">
-                <label className="cl-field__label" htmlFor="product-status">
+                <span className="cl-field__label" id="product-status-label">
                   商品狀態
-                </label>
-                <select
-                  className="cl-field__input"
-                  id="product-status"
-                  onChange={(event) => setValue("status", event.target.value)}
+                </span>
+                {/* 91 §2：listbox 每項帶描述副行；封存不在清單（走更多動作）。 */}
+                <StatusListbox
+                  labelId="product-status-label"
+                  onChange={(next) => setValue("status", next)}
                   value={values.status}
-                >
-                  <option value="ACTIVE">啟用中</option>
-                  <option value="UNLISTED">未列出</option>
-                  <option value="DRAFT">草稿</option>
-                  <option value="ARCHIVED">已封存</option>
-                </select>
+                />
               </div>
               {/* 兩維讀值（13 §F1.2）：是/否文字本身承載語意，顏色只加速掃視 */}
               <div className="cl-derow">
@@ -848,6 +1203,52 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             <SwitchRow checked disabled hint="排程上線：立即（發布里程碑開放）" label="線上商店" />
             <SwitchRow checked disabled label="AI 代理" />
             <SwitchRow checked={false} disabled label="門市 POS" />
+          </Card>
+          {/* 組織分類卡（91 §12：類型 search-or-create、廠商 autocomplete、標籤 token、佈景範本）。 */}
+          <Card padded>
+            <h3>組織分類</h3>
+            <TextField
+              error={errors.productType}
+              label="產品類型"
+              list="product-type-suggestions"
+              maxLength={255}
+              onChange={(event) => setValue("productType", event.target.value)}
+              placeholder="搜尋或新增產品類型"
+              ref={bindField("productType")}
+              value={values.productType}
+            />
+            <datalist id="product-type-suggestions">
+              {suggestions.productTypes.map((type) => (
+                <option key={type} value={type} />
+              ))}
+            </datalist>
+            <TextField
+              error={errors.vendor}
+              label="廠商"
+              list="product-vendor-suggestions"
+              maxLength={255}
+              onChange={(event) => setValue("vendor", event.target.value)}
+              ref={bindField("vendor")}
+              value={values.vendor}
+            />
+            <datalist id="product-vendor-suggestions">
+              {suggestions.productVendors.map((vendor) => (
+                <option key={vendor} value={vendor} />
+              ))}
+            </datalist>
+            <TagsField
+              onChange={(tags) => setValue("tags", tags)}
+              suggestions={[]}
+              tags={values.tags}
+            />
+            <div className="cl-field">
+              <label className="cl-field__label" htmlFor="theme-template">
+                佈景主題範本
+              </label>
+              <select className="cl-field__input" disabled id="theme-template">
+                <option>預設商品</option>
+              </select>
+            </div>
           </Card>
         </div>
       </div>

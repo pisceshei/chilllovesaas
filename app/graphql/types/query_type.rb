@@ -23,6 +23,11 @@ module Types
       argument :id, ID, required: true
     end
 
+    field :product_vendors, [ String ], null: false,
+      description: "本店既有廠商（去重、字母序；組織分類卡 autocomplete 用，91 §12）。"
+    field :product_types, [ String ], null: false,
+      description: "本店既有產品類型（去重、字母序；search-or-create combobox 用）。"
+
     field :nodes, [ Interfaces::Node, { null: true } ], null: false do
       argument :ids, [ ID ], required: true
     end
@@ -41,6 +46,17 @@ module Types
       scope = Product.where(shop_id: context.fetch(:current_shop).id)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
+
+    # 本店既有廠商清單（distinct、排序、上限引 api.pagination_max_page_size）。
+    #
+    # @return [Array<String>] 去重後的 vendor 值（排除 null 與空字串）
+    # @note 副作用：tenant-scoped SELECT DISTINCT，不寫入資料。
+    def product_vendors = organization_values(:vendor)
+
+    # 本店既有產品類型清單（同 product_vendors 規則）。
+    #
+    # @return [Array<String>] 去重後的 product_type 值
+    def product_types = organization_values(:product_type)
 
     # 在不跨越目前 tenant boundary 的前提下解析一個 GID。
     #
@@ -84,6 +100,16 @@ module Types
     end
 
     private
+
+    # 組織欄位（vendor／product_type）的去重清單共同實作。
+    # 排除 null 與空字串；上限引 `api.pagination_max_page_size`（鐵律 6）。
+    def organization_values(column)
+      authorize_products!
+      Product.where(shop_id: context.fetch(:current_shop).id)
+             .where.not(column => [ nil, "" ])
+             .distinct.order(column).limit(GraphqlLimits.fetch(:pagination_max_page_size))
+             .pluck(column)
+    end
 
     def authorize_products!
       return if ProductPolicy.new(context[:current_staff], Product).index?

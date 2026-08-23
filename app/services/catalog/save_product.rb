@@ -89,6 +89,7 @@ module Catalog
         end
 
         variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
+        organization = normalize_organization(input, errors)
 
         {
           title:,
@@ -98,8 +99,64 @@ module Catalog
           # 缺席只發生在 API 直呼叫，保持現值比靜默改 draft 安全）。
           status: input[:status] && input[:status].to_s.downcase,
           handle: manual_handle,
+          organization:,
           variant:
         }
+      end
+
+      # 組織分類＋SEO（91 §11–12）。回傳 hash **只含有提供的鍵**：
+      # 缺席（nil）＝更新態保持現值（與 status 同語義）；空字串／空陣列＝清除。
+      # 上限全部引 limits（鐵律 6）；SEO 的 160 是 SERP 建議值不是上限，只擋 320。
+      def normalize_organization(input, errors)
+        organization = {}
+
+        unless input[:vendor].nil?
+          vendor = input[:vendor].to_s.strip
+          if vendor.length > Limits.fetch(:product, :vendor_max_chars)
+            errors << error([ "vendor" ], "廠商長度超過上限。", "TOO_LONG")
+          end
+          organization[:vendor] = vendor.presence
+        end
+
+        unless input[:product_type].nil?
+          product_type = input[:product_type].to_s.strip
+          if product_type.length > Limits.fetch(:product, :product_type_max_chars)
+            errors << error([ "productType" ], "產品類型長度超過上限。", "TOO_LONG")
+          end
+          organization[:product_type] = product_type.presence
+        end
+
+        unless input[:tags].nil?
+          # 宣告式全量覆寫：strip → 去空 → 去重（保序）。單標籤與總數上限各自回錯。
+          tags = input[:tags].map { |tag| tag.to_s.strip }.reject(&:empty?).uniq
+          if tags.length > Limits.fetch(:product, :max_tags)
+            errors << error([ "tags" ], "標籤數量超過上限。", "TOO_LONG")
+          end
+          if tags.any? { |tag| tag.length > Limits.fetch(:product, :tag_max_chars) }
+            errors << error([ "tags" ], "單一標籤長度超過上限。", "TOO_LONG")
+          end
+          organization[:tags] = tags
+        end
+
+        unless input[:seo].nil?
+          seo = input[:seo]
+          unless seo[:title].nil?
+            seo_title = seo[:title].to_s.strip
+            if seo_title.length > Limits.fetch(:content, :seo_title_max_chars)
+              errors << error([ "seo", "title" ], "SEO 標題長度超過上限。", "TOO_LONG")
+            end
+            organization[:seo_title] = seo_title.presence
+          end
+          unless seo[:description].nil?
+            seo_description = seo[:description].to_s.strip
+            if seo_description.length > Limits.fetch(:content, :seo_meta_description_max_chars)
+              errors << error([ "seo", "description" ], "Meta 描述長度超過上限。", "TOO_LONG")
+            end
+            organization[:seo_description] = seo_description.presence
+          end
+        end
+
+        organization
       end
 
       def normalize_variant(shop, variant_input, errors)
@@ -212,7 +269,8 @@ module Catalog
           title: attributes[:title],
           description_html: attributes[:description_html],
           status: attributes[:status] || "draft",
-          handle: handle
+          handle: handle,
+          **attributes.fetch(:organization)
         )
       end
 
@@ -253,7 +311,9 @@ module Catalog
             product.assign_attributes(
               title: attributes[:title],
               description_html: attributes[:description_html],
-              status: attributes[:status] || product.status
+              status: attributes[:status] || product.status,
+              # 只覆寫有提供的組織／SEO 鍵（缺席＝保持現值，normalize_organization 註釋）。
+              **attributes.fetch(:organization)
             )
             # 全樹鎖：即使只有變體欄位變動也要 bump 版本 ⇒ 恆 touch updated_at。
             product.updated_at = Time.current

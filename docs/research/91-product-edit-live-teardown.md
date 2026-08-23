@@ -38,8 +38,9 @@ select 展開＝3 選項，**每項帶描述副行**（我方現行只有純文�
 | UNLISTED（2026 新） | 未刊登 | 僅能透過直接連結存取 |
 
 - **封存不在 select 裡**——只能走「更多動作→封存商品」。⇒ 狀態機：select 三態＋封存單向動作。
-- 我方 63 §B.4 status enum 現為 ACTIVE/DRAFT/ARCHIVED；UNLISTED 為 2026 新增值，需裁定是否納入
-  （V-91.2，牽動 storefront 可及性語義：僅直連可看＝發布層規則，不只是 enum 加值）。
+- 我方**已裁定四態**（13 §F1.2 真值表＋`limits.yml` `product.status_values`＝ACTIVE/DRAFT/ARCHIVED/UNLISTED，
+  purchasable/discoverable 雙 scope；GraphQL enum 已四值）——本項無需新裁定，V-91.2 改為
+  「UNLISTED 的 admin picker＋storefront noindex 落地」追蹤項。
 
 ## 3. 標題＋說明（RTE）
 
@@ -148,7 +149,7 @@ SaveBar 取代搜尋列＋捨棄快照還原＋dirty 偵測；價格 HK$ 前綴�
 
 ## 17. 未竟項登記（V-91.x，逐項待補實測；不得當「沒有」）
 
-V-91.1 分享選單值域｜V-91.2 UNLISTED 狀態納入裁定（含發布層語義）｜V-91.3 RTE 三下拉值域｜
+V-91.1 分享選單值域｜V-91.2 UNLISTED 已裁定（13 §F1.2）——admin picker 本輪 P1 落地、storefront noindex 屬 G12｜V-91.3 RTE 三下拉值域｜
 V-91.4 媒體 tile 深測｜V-91.5 檢視調整記錄頁｜V-91.6 包材選單值域｜V-91.7 原產地/HS 展開｜
 V-91.8 類別樹 autocomplete｜V-91.9 handle 修改→301 redirect 對話框｜V-91.10 系列/標籤編輯對話框｜
 V-91.11 佈景範本值域｜V-91.12 管理發布 popover｜V-91.13 多變體商品的變體表（本商品單變體測不到）｜
