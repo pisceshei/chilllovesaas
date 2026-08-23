@@ -12,16 +12,18 @@ module Catalog
   class SaveCollection
     Result = Data.define(:collection, :user_errors)
 
-    class TranslationRejected < StandardError
+    # 整棵樹的拒絕載體（譯文、成員 ID⋯⋯）：任一子部分被拒 ⇒ 整筆存檔回滾。
+    class TreeRejected < StandardError
       attr_reader :user_errors
 
       def initialize(user_errors)
         @user_errors = user_errors
-        super("translations rejected")
+        super("collection tree rejected")
       end
     end
 
     GID_PATTERN = %r{\Agid://chilllove/Collection/(\d+)\z}
+    PRODUCT_GID_PATTERN = %r{\Agid://chilllove/Product/(\d+)\z}
 
     class << self
       # @param shop [Shop]
@@ -98,7 +100,17 @@ module Catalog
       def create(shop, attributes)
         collection = nil
         ActsAsTenant.with_tenant(shop) do
-          ActiveRecord::Base.transaction do
+          # 🔴 `requires_new:` 不是可選的謹慎，是**正確性**：Rails 的 joined 巢狀交易
+          #    下，這個 block 內 raise 再於 block 外 rescue，**什麼都不會回滾**——
+          #    部分寫入照樣被外層 commit（`Idempotency::Guard` 註釋記錄過同一個陷阱）。
+          #    v1 的 collectionSet 沒有外層交易，所以現在「剛好」是對的；
+          #    但這種正確性取決於呼叫者，日後有人加上冪等包裝就靜默失效，
+          #    而症狀是「回了 userErrors，資料庫卻多了一筆半成品系列」。
+          #    🔴 這不是推論，是實測（2026-08-23，MySQL 8.4 / Rails 8.1）：
+          #    joined 巢狀 ⇒ 殘留列數 1；requires_new ⇒ 0。
+          #    **request spec 驗不到這件事**（RSpec 測試交易是 joinable: false，
+          #    兩種寫法都綠），守衛在 spec/services/catalog/save_collection_spec.rb。
+          ActiveRecord::Base.transaction(requires_new: true) do
             collection = Collection.create!(
               title: attributes[:title],
               description_html: attributes[:description_html],
@@ -112,7 +124,7 @@ module Catalog
           end
         end
         Result.new(collection: collection.reload, user_errors: [])
-      rescue TranslationRejected => rejected
+      rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)
       rescue ActiveRecord::RecordNotUnique
         Result.new(collection: nil, user_errors: [ error([ "handle" ], I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ])
@@ -142,7 +154,8 @@ module Catalog
 
         collection = nil
         ActsAsTenant.with_tenant(shop) do
-          ActiveRecord::Base.transaction do
+          # 見 create 的 `requires_new:` 說明——兩條路徑必須一致。
+          ActiveRecord::Base.transaction(requires_new: true) do
             collection = Collection.lock.find_by(id: match[1])
             raise ActiveRecord::RecordNotFound if collection.nil?
             raise ActiveRecord::StaleObjectError.new(collection, "update") if collection.lock_version != input[:lock_version]
@@ -161,7 +174,7 @@ module Catalog
           end
         end
         Result.new(collection: collection.reload, user_errors: [])
-      rescue TranslationRejected => rejected
+      rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)
       rescue ActiveRecord::RecordNotFound
         Result.new(collection: nil, user_errors: [ error([ "id" ], I18n.t("errors.collection.not_found"), "NOT_FOUND") ])
@@ -173,17 +186,40 @@ module Catalog
 
       # 宣告式成員同步（只對手動系列）：未列出＝移除，順序＝陣列順序。
       # 🔴 智慧系列送 productIds 一律忽略——成員是規則的函數，接受它等於製造第二個真相。
+      # 成員 GID → id。🔴 **解析不出來或不屬於本店的一律報錯，不得靜默丟掉**：
+      # 這是宣告式 API（未列出＝移除），靜默丟掉的症狀是「存檔成功，但成員少了一個」——
+      # 沒有錯誤訊息、沒有紅字，商家要到前台才發現，而那時已經不知道是哪一步弄丟的。
+      # 併發刪除（商品剛被同事刪掉）也走這條：回 NOT_FOUND 讓商家重載後看見商品真的沒了，
+      # 比替他決定「那就不要那個成員」誠實。
+      def resolve_member_ids(shop, product_ids, errors)
+        parsed = Array(product_ids).map do |gid|
+          id = gid.to_s[PRODUCT_GID_PATTERN, 1]
+          errors << error([ "productIds" ], I18n.t("errors.collection.product_gid_invalid", gid: gid.to_s), "INVALID") if id.nil?
+          id&.to_i
+        end
+        return [] if errors.any?
+
+        ids = parsed.uniq
+        found = Product.where(shop_id: shop.id, id: ids).pluck(:id).to_set
+        missing = ids.reject { |id| found.include?(id) }
+        missing.each do |id|
+          errors << error([ "productIds" ], I18n.t("errors.collection.product_not_found", id:), "NOT_FOUND")
+        end
+        # 🔴 `pluck` 回的是 **DB 順序**不是送入順序——position 必須照商家給的陣列順序，
+        #    否則「拖曳排序後儲存，順序又跳回去」。排序一律用原陣列。
+        ids
+      end
+
       def sync_members!(shop, collection, product_ids)
         return if product_ids.nil?
         return unless collection.collection_type == "manual"
 
-        ids = Array(product_ids).filter_map { |gid| gid.to_s[%r{/(\d+)\z}, 1]&.to_i }
-        # 🔴 `pluck` 回的是 **DB 順序**不是送入順序——position 必須照商家給的陣列順序，
-        #    否則「拖曳排序後儲存，順序又跳回去」。存在性用 Set 過濾，排序用原陣列。
-        found = Product.where(shop_id: shop.id, id: ids).pluck(:id).to_set
-        existing = ids.uniq.select { |id| found.include?(id) }
-        collection.collection_products.where.not(product_id: existing).delete_all
-        existing.each_with_index do |product_id, index|
+        errors = []
+        ids = resolve_member_ids(shop, product_ids, errors)
+        raise TreeRejected, errors if errors.any?
+
+        collection.collection_products.where.not(product_id: ids).delete_all
+        ids.each_with_index do |product_id, index|
           record = collection.collection_products.find_or_initialize_by(product_id:)
           record.shop_id = shop.id
           record.position = index
@@ -206,7 +242,7 @@ module Catalog
           },
           translations: Array(attributes[:translations]).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
         )
-        raise TranslationRejected, result.user_errors if result.user_errors.any?
+        raise TreeRejected, result.user_errors if result.user_errors.any?
       end
 
       def unique_handle(shop, title)

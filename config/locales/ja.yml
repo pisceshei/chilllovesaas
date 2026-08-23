@@ -19,6 +19,8 @@
       amount_negative: "金額を負にすることはできません。"
       amount_invalid: "有効な金額文字列を入力してください（主単位、小数点以下2桁固定、記号や桁区切りなし）。"
       handle_taken: "この handle は既に使用されています。"
+      product_gid_invalid: "有効な商品 ID ではありません：%{gid}"
+      product_not_found: "商品 %{id} が見つかりません（削除済み、または別ストアの商品です）。"
       handle_generation_failed: "handle の生成で衝突が続きました。もう一度お試しください。"
       gid_invalid: "無効な商品 GID です。"
       lock_version_required: "商品の更新には lockVersion が必要です。"

@@ -19,6 +19,8 @@
       amount_negative: "Le montant ne peut pas être négatif."
       amount_invalid: "Saisissez une chaîne de montant valide (unités principales, toujours deux décimales, sans symbole ni séparateur de milliers)."
       handle_taken: "Ce handle est déjà utilisé."
+      product_gid_invalid: "Identifiant de produit invalide : %{gid}"
+      product_not_found: "Produit %{id} introuvable dans cette boutique."
       handle_generation_failed: "La génération du handle a rencontré des conflits répétés. Réessayez."
       gid_invalid: "GID de produit invalide."
       lock_version_required: "La mise à jour d’un produit nécessite lockVersion."

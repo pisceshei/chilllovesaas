@@ -19,6 +19,8 @@
       amount_negative: "Amount can't be negative."
       amount_invalid: "Enter a valid amount string (major units, always two decimals, no symbols or thousands separators)."
       handle_taken: "This handle is already in use."
+      product_gid_invalid: "Not a valid product ID: %{gid}"
+      product_not_found: "Product %{id} was not found in this store."
       handle_generation_failed: "Handle generation kept colliding. Please try again."
       gid_invalid: "Invalid product GID."
       lock_version_required: "Updating a product requires lockVersion."
