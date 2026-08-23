@@ -874,7 +874,11 @@ asciidoc 屬性；<https://raw.githubusercontent.com/git/git/master/Documentatio
 單看 merge 本身得到 1 筆目標 `D` 紀錄。拿掉 `-r` 時只得到頂層 `M scripts`，不能重現該計數。
 PR #64 validator 以該 multiset 差異承重，移除 merge-diff 選項就必須非零。
 
-### B15. `gh pr view --json mergedAt --jq .mergedAt` 對**未合併** PR 回**空值**，不是字面 `null`
+### B15. 〔**官方逐字＝未取得**；版本限定實測〕`gh pr view --json mergedAt --jq .mergedAt` 對**未合併** PR 回**空值**，不是字面 `null`
+
+🔴 **本條的證據等級**（來源＝PR #64 Codex inline `3837307764`）：官方文檔未記載此行為 ⇒ 依 19.3 標「未取得」；
+下方實測只建立 **`gh` 2.97.0 這一版**的觀察，不得外推為跨版本語義。D39 依它成立的部分**不受影響**——
+D39 是 fail-closed：空值走「非 ISO8601」分支被擋，**不依賴**「空值 vs 字面 null」哪個為真。
 
 - **來源**：**本機實測**（本檔規則 2 要求「查得到原文」——`gh` 官方文檔未記載 `--jq` 對 JSON `null` 的輸出形態，
   查無可引的原文 ⇒ 本條以**可重跑的實測**替代逐字原文，並明標此例外）。
