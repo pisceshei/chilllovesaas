@@ -140,6 +140,123 @@ describe("新增商品頁", () => {
     expect(await screen.findByText("金額不得為負。")).toBeVisible();
   });
 
+  describe("編輯態（/admin/products/:id）", () => {
+    const EXISTING = {
+      data: {
+        product: {
+          id: "gid://chilllove/Product/9",
+          title: "既有商品",
+          descriptionHtml: "<p>舊說明</p>",
+          status: "DRAFT",
+          handle: "existing-tee",
+          lockVersion: 3,
+          variants: [
+            { price: "128.00", compareAtPrice: null, cost: null, sku: "SKU-1", barcode: null, taxable: true },
+          ],
+        },
+      },
+    };
+
+    it("載入既有商品填表：標題／價格／handle（唯讀）／狀態卡兩維讀值", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(graphqlResponse(EXISTING));
+      vi.stubGlobal("fetch", fetchMock);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      expect(await main.findByRole("heading", { name: "既有商品" })).toBeVisible();
+      expect(main.getByLabelText("標題")).toHaveValue("既有商品");
+      expect(main.getByLabelText("價格（HK$）")).toHaveValue("128.00");
+      expect(main.getByLabelText("網址 handle")).toHaveValue("existing-tee");
+      expect(main.getByLabelText("網址 handle")).toBeDisabled();
+      expect(main.getByLabelText("商品狀態")).toHaveValue("DRAFT");
+      expect(main.getByText("可購買")).toBeVisible();
+    });
+
+    it("儲存送 id＋lockVersion、不帶 idempotencyKey；成功後留在頁上", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(graphqlResponse(EXISTING))
+        .mockResolvedValue(
+          graphqlResponse({
+            data: {
+              productSet: {
+                product: {
+                  id: "gid://chilllove/Product/9",
+                  handle: "existing-tee",
+                  status: "ACTIVE",
+                  title: "改名",
+                  lockVersion: 4,
+                },
+                userErrors: [],
+              },
+            },
+          }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      const router = renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      const title = await main.findByLabelText("標題");
+      await user.clear(title);
+      await user.type(title, "改名");
+      await user.selectOptions(main.getByLabelText("商品狀態"), "ACTIVE");
+
+      const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+      await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+      await screen.findByText("已儲存變更");
+      // 留在編輯頁（不轉導）
+      expect(router.state.location.pathname).toContain("/admin/products/gid");
+
+      const [ , init ] = fetchMock.mock.calls[1] as [ string, RequestInit ];
+      const body = JSON.parse(String(init.body)) as { variables: Record<string, unknown> };
+      const input = body.variables.input as Record<string, unknown>;
+      expect(input.id).toBe("gid://chilllove/Product/9");
+      expect(input.lockVersion).toBe(3);
+      expect(input.status).toBe("ACTIVE");
+      expect(input).not.toHaveProperty("handle");
+      expect(body.variables).not.toHaveProperty("idempotencyKey");
+    });
+
+    it("STALE_OBJECT（field null）以 toast 呈現", async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(graphqlResponse(EXISTING))
+        .mockResolvedValue(
+          graphqlResponse({
+            data: {
+              productSet: {
+                product: null,
+                userErrors: [
+                  { field: null, message: "商品已被其他人修改，請重新載入後再儲存。", code: "STALE_OBJECT" },
+                ],
+              },
+            },
+          }),
+        );
+      vi.stubGlobal("fetch", fetchMock);
+      const user = userEvent.setup();
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      await user.type(await main.findByLabelText("標題"), "x");
+      const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+      await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+      expect(await screen.findByText("商品已被其他人修改，請重新載入後再儲存。")).toBeVisible();
+    });
+
+    it("查無商品 ⇒ 空態卡＋返回列表", async () => {
+      const fetchMock = vi.fn().mockResolvedValue(graphqlResponse({ data: { product: null } }));
+      vi.stubGlobal("fetch", fetchMock);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F404");
+
+      expect(await screen.findByText("此商品不存在或已被刪除。")).toBeVisible();
+      expect(screen.getByRole("button", { name: "返回商品列表" })).toBeVisible();
+    });
+  });
+
   it("dirty 時 SaveBar 取代搜尋列；捨棄還原快照", async () => {
     const user = userEvent.setup();
     renderAt("/admin/products/new");

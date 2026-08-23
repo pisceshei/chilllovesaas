@@ -14,6 +14,11 @@ module Types
       argument :before, String, required: false
     end
 
+    field :product, ProductType, null: true do
+      description "以 GID 取單一商品（不存在或非本店回 null）。"
+      argument :id, GraphQL::Types::ID, required: true
+    end
+
     field :node, Interfaces::Node, null: true do
       argument :id, ID, required: true
     end
@@ -44,6 +49,16 @@ module Types
     # @note 副作用：執行 tenant-scoped SELECT，不寫入資料。
     # @see docs/specs/12-spec-tenancy-auth-permissions.md F4
     def node(id:)
+      authorize_products!
+      context.schema.object_from_id(id, context)
+    end
+
+    # 以 GID 取單一商品（28 §1 的 product(id) 對應；編輯頁載入用）。
+    #
+    # @param id [String] `gid://chilllove/Product/{id}`
+    # @return [Product, nil] tenant-scoped；不存在或非本店回 nil
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def product(id:)
       authorize_products!
       context.schema.object_from_id(id, context)
     end

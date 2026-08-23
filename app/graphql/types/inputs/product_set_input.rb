@@ -15,6 +15,8 @@ module Types
 
       argument :id, ID, required: false,
         description: "既有商品 GID；省略＝建立。"
+      argument :lock_version, Integer, required: false,
+        description: "樂觀鎖版本（63 §A.4：涵蓋整棵樹）。更新（帶 id）時必填。"
       argument :title, String, required: false, description: "商品標題（建立時必填）。"
       argument :description_html, String, required: false,
         description: "富文本說明（服務端依白名單 sanitize）。"

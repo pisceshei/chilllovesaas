@@ -4,11 +4,12 @@ module Catalog
   # admin 商品頁 SaveBar 的服務端本體——`productSet` 的 normalize→validate→commit
   # （63 §A.1／§B.4：一次儲存 ＝ 一支宣告式 upsert，單一 transaction 原子寫入）。
   #
-  # ## v1 射程（2026-08-23，docs/dev/m1-product-set-foundation.md）
+  # ## 射程（2026-08-23；更新態於同日第二包加入）
   #
-  # 本版只實作**建立態（input 無 id）＋隱含變體（無選項 ⇒ variants 恰一筆）**。
-  # 更新態（含 lockVersion 全樹比對）與具名選項（B.5 變體身分保持）屬後續包；
-  # input 帶 id 或多筆變體 ⇒ `INVALID` userError，訊息說明現況。
+  # 建立態（無 id）＋更新態（帶 id ＋ lockVersion）皆支援；仍限**隱含變體**
+  # （無選項 ⇒ variants 恰一筆）。具名選項與多變體（B.5 變體身分保持）屬變體包。
+  # 更新態的 handle 變更暫拒（301 基建屬 URL 包）：input.handle 與現值相同＝no-op，
+  # 不同＝INVALID——宣告式全樹契約下前端照常送整棵樹，不受影響。
   #
   # ## 錯誤模型
   #
@@ -20,6 +21,9 @@ module Catalog
   # @see docs/specs/13-spec-products-inventory-media.md §F1／§F2
   class SaveProduct
     Result = Data.define(:product, :user_errors)
+
+    # 更新態 handle 變更的控制流例外（轉譯成 userErrors，不外洩）。
+    class HandleChangePending < StandardError; end
 
     # 富文本白名單（13 §F1:126）：存前 sanitize，前台輸出處再 sanitize 一次（雙保險）。
     # ⚠️ img[src 限自家 CDN] 的 CDN 白名單待媒體包（現階段限 https）；登記於 dev doc Pending。
@@ -42,18 +46,18 @@ module Catalog
         attributes = normalize(shop, input, errors)
         return Result.new(product: nil, user_errors: errors) if errors.any?
 
-        commit(shop, attributes)
+        if input[:id].present?
+          update(shop, input, attributes)
+        else
+          commit(shop, attributes)
+        end
       end
 
       private
 
-      # v1 射程外的輸入直接以 userErrors 拒絕（不靜默忽略欄位——那會讓呼叫端
+      # 射程外的輸入直接以 userErrors 拒絕（不靜默忽略欄位——那會讓呼叫端
       # 以為存進去了）。
       def reject_unsupported!(input, errors)
-        if input[:id].present?
-          errors << error([ "id" ], "更新態尚未開放：目前 productSet 只受理建立（無 id）。", "INVALID")
-        end
-
         variants = input[:variants] || []
         return if variants.length == 1
 
@@ -89,9 +93,10 @@ module Catalog
         {
           title:,
           description_html: description,
-          # 未帶 status ⇒ draft：admin 建立實測預設 DRAFT（90-blueprint/01 §B.1，61 實測），
-          # 與 DB default 一致；本尊 API 層預設官方未載明（登記於 dev doc）。
-          status: (input[:status] || "DRAFT").to_s.downcase,
+          # 建立未帶 status ⇒ draft（90-blueprint/01 §B.1，61 實測；91 §3.7 登記）；
+          # 更新未帶 ⇒ nil（update 分支解讀為「保持現值」——宣告式契約下前端會送，
+          # 缺席只發生在 API 直呼叫，保持現值比靜默改 draft 安全）。
+          status: input[:status] && input[:status].to_s.downcase,
           handle: manual_handle,
           variant:
         }
@@ -175,7 +180,7 @@ module Catalog
             ActiveRecord::Base.transaction do
               product = create_product!(shop, attributes)
               create_implicit_variant!(shop, product, attributes.fetch(:variant))
-              enqueue_created_event!(shop, product)
+              enqueue_event!(shop, product, "products/create")
             end
           end
           Result.new(product:, user_errors: [])
@@ -206,8 +211,82 @@ module Catalog
         Product.create!(
           title: attributes[:title],
           description_html: attributes[:description_html],
-          status: attributes[:status],
+          status: attributes[:status] || "draft",
           handle: handle
+        )
+      end
+
+      # ── 更新態（63 §B.4：同一支 mutation，差別只在有無 id；lockVersion 涵蓋全樹）──
+
+      GID_PATTERN = %r{\Agid://chilllove/Product/(\d+)\z}
+
+      def update(shop, input, attributes)
+        match = GID_PATTERN.match(input[:id].to_s)
+        unless match
+          return Result.new(product: nil,
+                            user_errors: [ error([ "id" ], "無效的商品 GID。", "INVALID") ])
+        end
+        if input[:lock_version].nil?
+          # 🔴 更新必帶 lockVersion：缺它「最後寫入者贏」會靜默蓋掉並發修改，
+          #    正是 63 §A.4 樂觀鎖要擋的事故。
+          return Result.new(product: nil,
+                            user_errors: [ error([ "lockVersion" ], "更新商品必須提供 lockVersion。", "BLANK") ])
+        end
+
+        product = nil
+        ActsAsTenant.with_tenant(shop) do
+          ActiveRecord::Base.transaction do
+            # FOR UPDATE 序列化並發儲存；鎖住後比對版本，輸家吃 STALE_OBJECT。
+            product = Product.lock.find_by(id: match[1])
+            raise ActiveRecord::RecordNotFound if product.nil?
+
+            if product.lock_version != input[:lock_version]
+              raise ActiveRecord::StaleObjectError.new(product, "update")
+            end
+
+            if attributes[:handle] && attributes[:handle] != product.handle
+              # handle 變更需 301（62 §F.3）；url_redirects 基建屬 URL 包 ⇒ 暫拒，
+              # 相同值視為 no-op（前端送全樹不受影響）。登記於 dev doc §6。
+              raise HandleChangePending
+            end
+
+            product.assign_attributes(
+              title: attributes[:title],
+              description_html: attributes[:description_html],
+              status: attributes[:status] || product.status
+            )
+            # 全樹鎖：即使只有變體欄位變動也要 bump 版本 ⇒ 恆 touch updated_at。
+            product.updated_at = Time.current
+            product.save!
+
+            update_implicit_variant!(product, attributes.fetch(:variant))
+            enqueue_event!(shop, product, "products/update")
+          end
+        end
+        Result.new(product: product.reload, user_errors: [])
+      rescue ActiveRecord::RecordNotFound
+        Result.new(product: nil,
+                   user_errors: [ error([ "id" ], "找不到商品。", "NOT_FOUND") ])
+      rescue ActiveRecord::StaleObjectError
+        Result.new(product: nil,
+                   user_errors: [ error(nil, "商品已被其他人修改，請重新載入後再儲存。", "STALE_OBJECT") ])
+      rescue HandleChangePending
+        Result.new(product: nil,
+                   user_errors: [ error([ "handle" ], "handle 變更需要 301 轉址基建（URL 里程碑），暫不開放。", "INVALID") ])
+      rescue ActiveRecord::RecordInvalid => invalid
+        Result.new(product: nil, user_errors: translate_record_invalid(invalid))
+      end
+
+      # 宣告式覆寫那筆隱含變體（無選項 ⇒ 恰一筆，B1-2 不變量）。
+      def update_implicit_variant!(product, variant_attributes)
+        variant = product.product_variants.order(:position).first
+        variant.update!(
+          price_cents: variant_attributes.fetch(:price_cents),
+          compare_at_price_cents: variant_attributes[:compare_at_price_cents],
+          cost_cents: variant_attributes[:cost_cents],
+          sku: variant_attributes[:sku],
+          barcode: variant_attributes[:barcode],
+          taxable: variant_attributes.fetch(:taxable)
         )
       end
 
@@ -228,10 +307,10 @@ module Catalog
         )
       end
 
-      def enqueue_created_event!(shop, product)
+      def enqueue_event!(shop, product, topic)
         EventOutbox.create!(
           event_id: SecureRandom.uuid,
-          topic: "products/create",
+          topic: topic,
           aggregate_type: "Product",
           aggregate_id: product.id,
           payload: { product_id: product.id, handle: product.handle, status: product.status },

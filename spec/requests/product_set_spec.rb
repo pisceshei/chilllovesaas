@@ -248,15 +248,17 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
   end
 
   describe "v1 射程守門（對抗審查 confirmed #13）" do
-    it "帶 id（更新態）⇒ INVALID，不動任何資料" do
+    # 歷史：v1 曾整段拒絕更新態（INVALID）；更新分支落地後，守門縮小為
+    # 「缺 lockVersion 不得更新」（BLANK）——同輸入的行為演進在此釘住。
+    it "帶 id 但缺 lockVersion ⇒ BLANK，不動任何資料" do
       login!
       post_graphql(MUTATION, variables: {
         input: base_input(id: "gid://chilllove/Product/1"), idempotencyKey: SecureRandom.uuid
       })
 
       error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
-      expect(error["code"]).to eq("INVALID")
-      expect(error["field"]).to eq([ "id" ])
+      expect(error["code"]).to eq("BLANK")
+      expect(error["field"]).to eq([ "lockVersion" ])
       ActsAsTenant.with_tenant(shop) { expect(Product.count).to eq(0) }
     end
 
@@ -279,6 +281,123 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
       })
 
       expect(response.parsed_body.dig("data", "productSet", "userErrors", 0, "code")).to eq("INVALID")
+    end
+  end
+
+  describe "更新態（帶 id ＋ lockVersion）" do
+    def create_via_api!(key: SecureRandom.uuid)
+      post_graphql(MUTATION, variables: { input: base_input, idempotencyKey: key })
+      response.parsed_body.dig("data", "productSet", "product")
+    end
+
+    it "宣告式覆寫：改標題／狀態／價格，lockVersion bump 並回傳" do
+      login!
+      created = create_via_api!
+
+      post_graphql(MUTATION, variables: {
+        input: base_input(
+          id: created["id"], lockVersion: 0, title: "改名後", status: "ACTIVE",
+          variants: [ { price: "199.00", sku: "SKU-9" } ]
+        )
+      })
+
+      payload = response.parsed_body
+      expect(payload["errors"]).to be_nil
+      data = payload.dig("data", "productSet")
+      expect(data["userErrors"]).to eq([])
+      expect(data.dig("product", "title")).to eq("改名後")
+      expect(data.dig("product", "status")).to eq("ACTIVE")
+      expect(data.dig("product", "lockVersion")).to be > 0
+
+      ActsAsTenant.with_tenant(shop) do
+        product = Product.sole
+        expect(product.title).to eq("改名後")
+        expect(product.status).to eq("active")
+        variant = product.product_variants.sole
+        expect(variant.price_cents).to eq(19_900)
+        expect(variant.sku).to eq("SKU-9")
+        expect(EventOutbox.where(topic: "products/update", aggregate_id: product.id)).to exist
+      end
+    end
+
+    it "過期 lockVersion ⇒ STALE_OBJECT（field null），資料不動" do
+      login!
+      created = create_via_api!
+      # 先成功更新一次（版本前進）
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: created["id"], lockVersion: 0, title: "第一次改")
+      })
+      expect(response.parsed_body.dig("data", "productSet", "userErrors")).to eq([])
+
+      # 再用舊版本 0 儲存 ⇒ 輸
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: created["id"], lockVersion: 0, title: "第二次改")
+      })
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("STALE_OBJECT")
+      expect(error["field"]).to be_nil
+      ActsAsTenant.with_tenant(shop) { expect(Product.sole.title).to eq("第一次改") }
+    end
+
+    it "缺 lockVersion ⇒ BLANK（更新必帶，防最後寫入者贏）" do
+      login!
+      created = create_via_api!
+      post_graphql(MUTATION, variables: { input: base_input(id: created["id"]) })
+
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("BLANK")
+      expect(error["field"]).to eq([ "lockVersion" ])
+    end
+
+    it "handle 變更暫拒（301 基建屬 URL 包）；同值＝no-op 通過" do
+      login!
+      created = create_via_api!
+
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: created["id"], lockVersion: 0, handle: created["handle"])
+      })
+      expect(response.parsed_body.dig("data", "productSet", "userErrors")).to eq([])
+
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: created["id"], lockVersion: 1, handle: "changed-handle")
+      })
+      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
+      expect(error["code"]).to eq("INVALID")
+      expect(error["field"]).to eq([ "handle" ])
+    end
+
+    it "不存在／他店的 id ⇒ NOT_FOUND" do
+      login!
+      post_graphql(MUTATION, variables: {
+        input: base_input(id: "gid://chilllove/Product/999999", lockVersion: 0)
+      })
+      expect(response.parsed_body.dig("data", "productSet", "userErrors", 0, "code")).to eq("NOT_FOUND")
+    end
+  end
+
+  describe "product(id:) 查詢與 variants 讀取面" do
+    it "編輯頁載入形：descriptionHtml 與變體金額（R4 兩位小數字串）" do
+      login!
+      post_graphql(MUTATION, variables: { input: base_input, idempotencyKey: SecureRandom.uuid })
+      gid = response.parsed_body.dig("data", "productSet", "product", "id")
+
+      post_graphql(<<~GRAPHQL, variables: { id: gid })
+        query($id: ID!) {
+          product(id: $id) {
+            id title descriptionHtml status lockVersion
+            variants { id title price compareAtPrice sku taxable position }
+          }
+        }
+      GRAPHQL
+
+      product = response.parsed_body.dig("data", "product")
+      expect(product["title"]).to eq("奶茶色寬版帽T")
+      expect(product["descriptionHtml"]).to eq("<p>秋冬款</p>")
+      variant = product["variants"].sole
+      expect(variant["title"]).to eq("Default Title")
+      expect(variant["price"]).to eq("128.00")
+      expect(variant["compareAtPrice"]).to be_nil
+      expect(variant["taxable"]).to be(true)
     end
   end
 
