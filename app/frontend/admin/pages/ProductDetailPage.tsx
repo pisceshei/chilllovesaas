@@ -8,6 +8,7 @@ import { Card } from "../components/Card";
 import { TextField } from "../components/TextField";
 import { useSaveBarRegister } from "../lib/SaveBarContext";
 import { useToast } from "../lib/ToastContext";
+import { uuidV4 } from "../lib/uuid";
 import { centsToApiString, isValidMoneyInput, parseMoneyToCents, profitState } from "../lib/money";
 
 /**
@@ -183,7 +184,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
   // 冪等鍵：進頁生成一次，重試沿用（11 §2.1(e)：送出前先持久化 key；
   // 失敗後同 key 重試是伺服器端 failed 態的契約），成功即離頁。
-  const idempotencyKey = useRef<string>(crypto.randomUUID());
+  const idempotencyKey = useRef<string>(uuidV4());
   const fieldRefs = useRef<Partial<Record<FieldKey, HTMLInputElement | null>>>({});
 
   const snapshot = useRef(JSON.stringify(INITIAL_VALUES));
