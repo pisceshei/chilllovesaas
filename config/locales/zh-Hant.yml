@@ -30,6 +30,16 @@
       source_locale_not_translatable: "來源語言的內容存在商品本體，不是譯文。"
       field_not_translatable: "此欄位目前不可翻譯。"
       too_long: "譯文長度超過上限。"
+    translation_csv:
+      missing_digest_column: "檔案缺少 source_digest 欄，整檔拒絕匯入。"
+      missing_value_column: "檔案缺少 translated_text 欄，沒有可匯入的內容。"
+      invalid_row: "此列無法解析。"
+      resource_gid: "resource_gid 格式錯誤。"
+      resource_type: "不支援的 resource_type。"
+      field_key: "此 field_key 不可翻譯。"
+      locale_not_enabled: "此語言未在本商店啟用。"
+      source_locale: "來源語言的內容存在資源本體，不是譯文。"
+      market_not_supported: "本平台不做市場級內容覆寫，market 欄請留空。"
     locale:
       not_in_catalog: "此語言不在平台語言字典中。"
       already_enabled: "此語言已啟用。"

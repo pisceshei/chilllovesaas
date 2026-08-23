@@ -253,5 +253,20 @@
   "settings.languages.restore": "Re-enable",
   "settings.languages.restoredDone": "Language re-enabled with its translations",
   "settings.languages.loadFailed": "Couldn’t load languages.",
-  "settings.languages.actionFailed": "The action failed. Try again."
+  "settings.languages.actionFailed": "The action failed. Try again.",
+  "settings.languages.csv": "Import / export translations",
+  "settings.languages.csvHint": "Translations are their own CSV — separate from the product and inventory files. Export gives translators the source text plus a digest so re-imports stay safe.",
+  "settings.languages.exportCsv": "Export CSV",
+  "settings.languages.exportAll": "All languages",
+  "settings.languages.importCsv": "Import CSV",
+  "settings.languages.chooseFile": "Choose a file",
+  "settings.languages.preview": "Preview",
+  "settings.languages.applyImport": "Apply import",
+  "settings.languages.overwrite": "Overwrite existing translations",
+  "settings.languages.overwriteHint": "Off by default: only new translations are added. Blank cells never delete anything — clearing needs __CLEAR__.",
+  "settings.languages.previewResult": "{created} to add · {updated} to overwrite · {cleared} to clear · {skipped} untouched",
+  "settings.languages.digestMismatch": "{count} row(s) were translated from an older source text — they will be marked as needing review.",
+  "settings.languages.importDone": "Import applied",
+  "settings.languages.importErrors": "{count} row(s) were rejected",
+  "settings.languages.noFile": "Choose a CSV file first."
 }

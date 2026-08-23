@@ -41,6 +41,9 @@ gem "bootsnap", require: false
 # ⇒ 升 2.x 的前置條件：①決定影像後端 ②本機與 CI 都裝好 libvips ③補影像處理的實際用例與測試。
 gem "image_processing", "~> 1.14"
 
+# CSV 自 Ruby 3.4 起是 bundled gem，不再預設 require（翻譯 CSV 匯入匯出用，ML-5b）。
+gem "csv"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
