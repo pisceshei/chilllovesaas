@@ -102,19 +102,34 @@ module Products
       @scope.reorder(created_at: :desc, id: :desc)
     end
 
+    # 條件由 scope 的 arel_table 導出（2026-08-23 泛化）：原版把 `products.` 寫死在
+    # SQL 字串裡，collections 等其他資源要用同一套 cursor 分頁就得整支拷貝——
+    # 沒有拷貝就沒有不同步。條件欄位固定為 (created_at, id)，任何帶這兩欄的表都可用。
+    #
+    # 🔴 用 Arel 而不是 "#{table}.created_at < :time" 字串內插：表名雖然來自
+    # `model.table_name`（不是使用者輸入），但**把識別字接進 SQL 字串**這個形態本身
+    # 就是 Brakeman 的 SQL Injection 告警來源，而 CI 的 quality 閘門是 fail-closed。
+    # 更重要的是語義：Arel 會替我們處理識別字引號與 binding，泛化後表名成了變數，
+    # 「這個字串永遠安全」不再是讀一眼就能確定的事——讓型別去保證比讓人去記得好。
+    def arel
+      @scope.model.arel_table
+    end
+
     def apply_after(relation, cursor)
       time, id = KeysetCursor.decode(cursor)
       relation.where(
-        "products.created_at < :time OR (products.created_at = :time AND products.id < :id)",
-        time:, id:
+        arel[:created_at].lt(time).or(
+          arel[:created_at].eq(time).and(arel[:id].lt(id))
+        )
       )
     end
 
     def apply_before(relation, cursor)
       time, id = KeysetCursor.decode(cursor)
       relation.where(
-        "products.created_at > :time OR (products.created_at = :time AND products.id > :id)",
-        time:, id:
+        arel[:created_at].gt(time).or(
+          arel[:created_at].eq(time).and(arel[:id].gt(id))
+        )
       )
     end
 

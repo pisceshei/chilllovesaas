@@ -14,6 +14,19 @@ module Types
       argument :before, String, required: false
     end
 
+    field :collections, CollectionConnectionType, null: false, connection: false do
+      description "商品系列列表（keyset 分頁，與商品同一套實作）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+    end
+
+    field :collection, CollectionType, null: true do
+      description "以 GID 取單一系列（不存在或非本店回 null）。"
+      argument :id, GraphQL::Types::ID, required: true
+    end
+
     field :product, ProductType, null: true do
       description "以 GID 取單一商品（不存在或非本店回 null）。"
       argument :id, GraphQL::Types::ID, required: true
@@ -100,6 +113,26 @@ module Types
     # @note 副作用：執行 tenant-scoped SELECT，不寫入資料。
     # @see docs/specs/12-spec-tenancy-auth-permissions.md F4
     def node(id:)
+      authorize_products!
+      context.schema.object_from_id(id, context)
+    end
+
+    # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。
+    #
+    # @return [Hash] Relay-shaped connection
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def collections(first: nil, after: nil, last: nil, before: nil)
+      authorize_products!
+      scope = Collection.where(shop_id: context.fetch(:current_shop).id)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
+    # 以 GID 取單一系列（編輯頁載入用）。
+    #
+    # @param id [String] `gid://chilllove/Collection/{id}`
+    # @return [Collection, nil]
+    # @note 副作用：tenant-scoped SELECT。
+    def collection(id:)
       authorize_products!
       context.schema.object_from_id(id, context)
     end

@@ -13,10 +13,23 @@ class Collection < ApplicationRecord
   acts_as_tenant :shop
 
   has_many :resource_publications, as: :publishable, dependent: :destroy
+  # 手動系列的成員；智慧系列不用這個關聯（成員是規則的函數，見 CollectionProduct）。
+  has_many :collection_products, dependent: :delete_all
+  has_many :products, through: :collection_products
+  has_many :collection_rules, dependent: :delete_all
 
   validates :title, :handle, presence: true
   # DB 已有 uq_collections_handle (shop_id, handle) 唯一索引；沒有 model validation
   # 的話重複 handle 會拋 RecordNotUnique 而不是乾淨的驗證錯誤，
   # 與 Product 的處理不一致（PR #24 的 Claude 驗收 🟡 建議）。
   validates :handle, uniqueness: { scope: :shop_id, case_sensitive: false }
+
+  # 兩種系列型別（13 §F4；71-R8-V4 的「來源」概念差仍待裁定，v1 維持二分）。
+  TYPES = %w[manual smart].freeze
+  SORT_ORDERS = %w[manual best_selling title_asc title_desc price_asc price_desc created_desc created_asc].freeze
+
+  validates :collection_type, inclusion: { in: TYPES }
+  validates :sort_order, inclusion: { in: SORT_ORDERS }
+
+  scope :manual, -> { where(collection_type: "manual") }
 end
