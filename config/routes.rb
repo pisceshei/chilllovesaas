@@ -9,6 +9,12 @@ Rails.application.routes.draw do
     as: :admin_graphql,
     format: false
 
+  # 翻譯 CSV 檔案通道（ML-5b）：檔案上傳／下載走 HTTP 語義，資料讀寫仍只走 GraphQL（D5）。
+  # 🔴 必須排在 admin/*path 的 SPA catch-all **之前**，否則會被吃掉變成 SPA 頁面。
+  get "admin/translations/export" => "admin/translations#export", as: :admin_translations_export
+  post "admin/translations/preview" => "admin/translations#preview", as: :admin_translations_preview
+  post "admin/translations/import" => "admin/translations#import", as: :admin_translations_import
+
   get "admin" => "admin/spa#show", as: :admin_root
   # API namespace 不可 fall through 到 SPA；錯誤 method/version 必須維持
   # no-route 404，避免 client 把 HTML shell 誤判成 API success。

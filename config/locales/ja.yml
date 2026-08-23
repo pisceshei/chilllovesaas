@@ -30,6 +30,16 @@
       source_locale_not_translatable: "ソース言語の内容は商品本体に保存され、翻訳ではありません。"
       field_not_translatable: "このフィールドはまだ翻訳できません。"
       too_long: "翻訳が上限を超えています。"
+    translation_csv:
+      missing_digest_column: "ファイルに source_digest 列がないため、インポートを中止しました。"
+      missing_value_column: "ファイルに translated_text 列がなく、取り込む内容がありません。"
+      invalid_row: "この行を読み取れませんでした。"
+      resource_gid: "resource_gid の形式が正しくありません。"
+      resource_type: "サポートされていない resource_type です。"
+      field_key: "この field_key は翻訳できません。"
+      locale_not_enabled: "この言語はショップで有効になっていません。"
+      source_locale: "ソース言語の内容はリソース本体に保存され、翻訳ではありません。"
+      market_not_supported: "市場単位のコンテンツ上書きには対応していません。market 列は空にしてください。"
     locale:
       not_in_catalog: "この言語はプラットフォームのカタログにありません。"
       already_enabled: "この言語はすでに有効です。"

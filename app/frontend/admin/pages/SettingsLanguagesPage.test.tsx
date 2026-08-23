@@ -108,8 +108,11 @@ describe("設定 › 語言", () => {
     renderSettings();
 
     const main = within(await screen.findByRole("main"));
-    await main.findByText("日本語");
-    await user.click(main.getAllByRole("button", { name: /停用/ })[0]);
+    // 「日本語」同時出現在語言列與 CSV 匯出下拉 ⇒ 用列表區塊收窄（同型教訓：查詢要指定容器）
+    // 已啟用清單是第一個 list（第二個是「已停用的語言」）
+    const list = within((await main.findAllByRole("list"))[0]);
+    await list.findByText("日本語");
+    await user.click(list.getAllByRole("button", { name: /停用/ })[0]);
 
     await screen.findByText("已停用；譯文保留");
     expect(callsTo(fetchMock, "shopLocaleDisable")).toHaveLength(1);

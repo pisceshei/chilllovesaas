@@ -30,6 +30,16 @@
       source_locale_not_translatable: "La langue source est stockée sur le produit lui-même, pas comme traduction."
       field_not_translatable: "Ce champ n’est pas encore traduisible."
       too_long: "La traduction dépasse la limite."
+    translation_csv:
+      missing_digest_column: "Le fichier n’a pas de colonne source_digest ; import refusé."
+      missing_value_column: "Le fichier n’a pas de colonne translated_text ; rien à importer."
+      invalid_row: "Cette ligne n’a pas pu être lue."
+      resource_gid: "resource_gid invalide."
+      resource_type: "resource_type non pris en charge."
+      field_key: "Ce field_key n’est pas traduisible."
+      locale_not_enabled: "Cette langue n’est pas activée pour la boutique."
+      source_locale: "La langue source est stockée sur la ressource elle-même."
+      market_not_supported: "Les surcharges de contenu par marché ne sont pas prises en charge ; laissez la colonne market vide."
     locale:
       not_in_catalog: "Cette langue ne figure pas au catalogue de la plateforme."
       already_enabled: "Cette langue est déjà activée."

@@ -30,6 +30,16 @@
       source_locale_not_translatable: "The source language is stored on the product itself, not as a translation."
       field_not_translatable: "This field can’t be translated yet."
       too_long: "The translation is longer than the limit."
+    translation_csv:
+      missing_digest_column: "The file is missing the source_digest column; import refused."
+      missing_value_column: "The file is missing the translated_text column; there is nothing to import."
+      invalid_row: "This row could not be read."
+      resource_gid: "Invalid resource_gid."
+      resource_type: "Unsupported resource_type."
+      field_key: "This field can’t be translated."
+      locale_not_enabled: "This language is not enabled for the shop."
+      source_locale: "The source language is stored on the resource itself, not as a translation."
+      market_not_supported: "Market-level content overrides are not supported; leave the market column blank."
     locale:
       not_in_catalog: "This language is not in the platform catalog."
       already_enabled: "This language is already enabled."

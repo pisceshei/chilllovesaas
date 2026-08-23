@@ -253,5 +253,20 @@
   "settings.languages.restore": "重新啟用",
   "settings.languages.restoredDone": "已重新啟用，譯文原樣回來",
   "settings.languages.loadFailed": "無法載入語言設定。",
-  "settings.languages.actionFailed": "操作失敗，請再試一次。"
+  "settings.languages.actionFailed": "操作失敗，請再試一次。",
+  "settings.languages.csv": "匯入／匯出翻譯",
+  "settings.languages.csvHint": "翻譯是獨立的一套 CSV，與商品檔、庫存檔分開。匯出檔含原文與 digest，讓譯者交回時能安全回寫。",
+  "settings.languages.exportCsv": "匯出 CSV",
+  "settings.languages.exportAll": "全部語言",
+  "settings.languages.importCsv": "匯入 CSV",
+  "settings.languages.chooseFile": "選擇檔案",
+  "settings.languages.preview": "預覽",
+  "settings.languages.applyImport": "確認匯入",
+  "settings.languages.overwrite": "覆寫既有譯文",
+  "settings.languages.overwriteHint": "預設不勾＝只補新的。空白儲存格永遠不會刪除任何東西；要清空必須寫 __CLEAR__。",
+  "settings.languages.previewResult": "將新增 {created} 筆・覆寫 {updated} 筆・清空 {cleared} 筆・不動 {skipped} 筆",
+  "settings.languages.digestMismatch": "有 {count} 筆是照舊版原文翻的，將標記為需要覆核。",
+  "settings.languages.importDone": "匯入完成",
+  "settings.languages.importErrors": "有 {count} 列被拒絕",
+  "settings.languages.noFile": "請先選擇 CSV 檔。"
 }

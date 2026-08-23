@@ -6,6 +6,7 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Page } from "../components/Page";
 import { useT } from "../i18n/I18nContext";
+import { TranslationCsvCard } from "./TranslationCsvCard";
 import { useToast } from "../lib/ToastContext";
 
 /**
@@ -248,6 +249,8 @@ export function SettingsLanguagesPage() {
           </Button>
         </div>
       </Card>
+
+      <TranslationCsvCard locales={enabledRows.filter((row) => !row.isSource).map((row) => row.locale)} />
 
       {disabledRows.length > 0 ? (
         <Card padded>

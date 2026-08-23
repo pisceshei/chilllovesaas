@@ -253,5 +253,20 @@
   "settings.languages.restore": "再度有効化",
   "settings.languages.restoredDone": "翻訳とともに再度有効化しました",
   "settings.languages.loadFailed": "言語設定を読み込めませんでした。",
-  "settings.languages.actionFailed": "操作に失敗しました。もう一度お試しください。"
+  "settings.languages.actionFailed": "操作に失敗しました。もう一度お試しください。",
+  "settings.languages.csv": "翻訳のインポート／エクスポート",
+  "settings.languages.csvHint": "翻訳は商品・在庫とは別のCSVです。エクスポートには原文とダイジェストが含まれ、再取り込みを安全にします。",
+  "settings.languages.exportCsv": "CSV をエクスポート",
+  "settings.languages.exportAll": "すべての言語",
+  "settings.languages.importCsv": "CSV をインポート",
+  "settings.languages.chooseFile": "ファイルを選択",
+  "settings.languages.preview": "プレビュー",
+  "settings.languages.applyImport": "インポートを実行",
+  "settings.languages.overwrite": "既存の翻訳を上書きする",
+  "settings.languages.overwriteHint": "既定はオフ＝新規のみ追加。空欄が削除になることはありません。消去には __CLEAR__ が必要です。",
+  "settings.languages.previewResult": "追加 {created} 件・上書き {updated} 件・消去 {cleared} 件・変更なし {skipped} 件",
+  "settings.languages.digestMismatch": "{count} 件は古い原文に基づく翻訳です。要確認としてマークされます。",
+  "settings.languages.importDone": "インポートが完了しました",
+  "settings.languages.importErrors": "{count} 行が拒否されました",
+  "settings.languages.noFile": "先に CSV ファイルを選択してください。"
 }

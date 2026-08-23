@@ -1434,3 +1434,13 @@ a {
 .cl-locale-source { margin-bottom: var(--sp-200); font-size: var(--t-xs); color: var(--text-2); }
 .cl-locale-source summary { cursor: pointer; }
 .cl-locale-source p { margin: var(--sp-100) 0 0; padding: var(--sp-150); background: var(--surface-2); border-radius: var(--r-200); }
+
+/* ── 翻譯 CSV 匯出／匯入（ML-5b）── */
+.cl-csv-row { display: flex; gap: var(--sp-200); align-items: center; margin-top: var(--sp-200); flex-wrap: wrap; }
+.cl-csv-row .cl-field__input { flex: 1; min-width: 220px; }
+.cl-csv-preview {
+  margin-top: var(--sp-300); padding: var(--sp-200);
+  background: var(--surface-2); border-radius: var(--r-200); font-size: var(--t-sm);
+}
+.cl-csv-preview p { margin: 0 0 var(--sp-150); }
+.cl-csv-errors { margin: 0 0 var(--sp-200); padding-left: var(--sp-400); color: var(--critical); font-size: var(--t-xs); }

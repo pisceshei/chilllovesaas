@@ -253,5 +253,20 @@
   "settings.languages.restore": "Réactiver",
   "settings.languages.restoredDone": "Langue réactivée avec ses traductions",
   "settings.languages.loadFailed": "Impossible de charger les langues.",
-  "settings.languages.actionFailed": "L’action a échoué. Réessayez."
+  "settings.languages.actionFailed": "L’action a échoué. Réessayez.",
+  "settings.languages.csv": "Importer / exporter les traductions",
+  "settings.languages.csvHint": "Les traductions ont leur propre CSV, distinct des fichiers produits et stocks. L’export fournit le texte source et une empreinte pour sécuriser le réimport.",
+  "settings.languages.exportCsv": "Exporter le CSV",
+  "settings.languages.exportAll": "Toutes les langues",
+  "settings.languages.importCsv": "Importer le CSV",
+  "settings.languages.chooseFile": "Choisir un fichier",
+  "settings.languages.preview": "Aperçu",
+  "settings.languages.applyImport": "Appliquer l’import",
+  "settings.languages.overwrite": "Écraser les traductions existantes",
+  "settings.languages.overwriteHint": "Désactivé par défaut : seules les nouvelles traductions sont ajoutées. Une cellule vide ne supprime jamais rien ; utilisez __CLEAR__.",
+  "settings.languages.previewResult": "{created} à ajouter · {updated} à écraser · {cleared} à effacer · {skipped} inchangés",
+  "settings.languages.digestMismatch": "{count} ligne(s) traduites depuis un texte source plus ancien : elles seront marquées à revoir.",
+  "settings.languages.importDone": "Import appliqué",
+  "settings.languages.importErrors": "{count} ligne(s) rejetée(s)",
+  "settings.languages.noFile": "Choisissez d’abord un fichier CSV."
 }
