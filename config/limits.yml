@@ -3099,7 +3099,10 @@ agents:
 i18n:
   # --- 語言註冊（67 §A.2、§C.1）-----------------------------------------------
   # 首發三語＝**種子資料**，不是值域。（ruling）
-  launch_locales: [zh-Hant, zh-Hans, en]
+  # 2026-08-23 裁定（docs/plans/2026-08-23-多語言方案.md R1/R3）：首發五語、來源語言 en。
+  launch_locales: [en, zh-Hant, zh-Hans, ja, fr]
+  # 新店的來源語言（base row 的文字語言；67 §C.3）。改它不影響既有店（既有店走遷移精靈）。
+  source_locale_default: en
   launch_locales_is_seed_not_enum: true
   # 每店語言數上限。出處：docs/research/29-markets-i18n.md:21（help，「全店最多 20 種語言」）
   max_shop_locales: 20
@@ -3459,8 +3462,14 @@ i18n:
     # 內容語言進 URL（可分享、可回退、重整不丟失）。形態沿用 52 號 P0-18「路由進 URL」。
     content_locale_in_url: true
     content_locale_default: source_locale
-    # 建立新資源一律在 source locale 下（base row 還不存在，沒有東西可翻）。
-    create_only_in_source_locale: true
+    # 🔴 2026-08-23 裁定 C1 翻轉（原 true）：建立態**即可填多語**（SHOPLINE 內嵌形態；
+    #    productSet 一次 tx 寫 base＋譯文）。來源語言欄位仍必填（C4）。原文保留供追溯：
+    #    「建立新資源一律在 source locale 下（base row 還不存在，沒有東西可翻）」——資料層仍成立
+    #    （base 先寫、譯文後寫，同一 tx），改的只是 UI 能不能在同一次提交裡帶譯文。
+    create_only_in_source_locale: false
+    # 平台 admin 介面語言包（ML-1）；與 launch_locales 同集合但**不是同一件事**（介面 vs 內容）。
+    ui_locales: [en, zh-Hant, zh-Hans, ja, fr]
+    ui_locale_default: en
     # 🔴 非來源語言下必須唯讀的欄位——最貴的誤操作在這裡：
     #    不做唯讀，商家會在 en 頁面把價格 1,480 改成 148（以為只影響英文版），
     #    而實際上改的是唯一的那筆 product_variants.price_cents（63 §B.3：商品層沒有價格）。

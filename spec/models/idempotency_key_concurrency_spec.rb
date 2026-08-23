@@ -19,6 +19,10 @@ RSpec.describe IdempotencyKey, "concurrency" do
       IdempotencyKey.delete_all
       UserStoreAssignment.unscoped.delete_all
       Publication.unscoped.delete_all if defined?(Publication)
+      # ML-0（2026-08-23）：Shop 建立 callback 另生 shop_locales（FK → shops），同理先刪。
+      Translation.unscoped.delete_all
+      TranslationStatus.unscoped.delete_all
+      ShopLocale.unscoped.delete_all
       Shop.delete_all
     end
   end
