@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "lucide-react": "^1.31.0",
+    "lucide-react": "^1.32.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.8.0"
@@ -22,7 +22,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
+    "@testing-library/user-event": "^14.6.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.0",
@@ -30,6 +30,6 @@
     "typescript": "^7.0.2",
     "vite": "^8.0.0",
     "vite-plugin-ruby": "^5.2.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.1.11"
   }
 }

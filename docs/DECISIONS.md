@@ -375,16 +375,41 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 
 ### D31. 階段一'全自動化與代行合併授權
 
+> 🔴 **2026-08-21 D38 現值**：下文的舊 `1111`／「階段 B」只保留 2026-08-20 授權沿革；
+> 0e／0f 合併前不具代行效力。現行入口只有 D38 的 0e → 0f → 0g，且 `AUTO_MERGE=false`。
+
 - 2026-08-20 使用者明文授權本次互動式 Codex 工作階段執行整個階段一'：實作、測試、commit、
   push、監視 GitHub 驗收、依結果修復並循環至雙清，以及在合規條件下代行合併；本條是取代
   D25 已到期授權的本階段新授權，不恢復 workflow 自動 `@codex` 派修。
 - 代行合併僅限鐵律 18.1 四條件齊：Codex 對當前 head 完成且零未清、Claude bot 通過且
-  零未清、全部機械 CI 綠、評估器已有 `1111` 留言；合併須使用
+  零未清、非空機械 CI check 集合全部綠、0e／0f 現行 evaluator 已對 exact head 證明 C1–C4
+  全通過；合併須使用
   `gh pr merge <N> --squash --match-head-commit <head>`，成功後刪除遠端 `pr{N}-last-push` tag。
 - 鐵律 18.3 清單與 17.3 例外不在代行授權內，雙零後仍停下等使用者人工合併或裁定；
-  本授權不翻 `AUTO_MERGE`，階段 B canary 仍須另行裁定。
+  本授權不翻 `AUTO_MERGE`，0g 只作現行 evaluator／接線的常規 PR canary。
+- 2026-08-21 D38 過渡期補正：能實作新 C1 的獨立 evaluator 與 workflow 接線各自合併前，舊
+  evaluator 不得啟動本條代行權，故全部 PR 暫由使用者人工合併；
+  🔴 **唯一解凍條件（全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，
+  且僅對 0g 之後的 PR、只對原具名射程恢復，不外推到其他工作階段。
+  <!-- 🔴 2026-08-22 更正（來源＝PR #66 Codex inline `3835736708`）：本則原寫「兩包完成後，
+       本條只對原具名射程恢復」——**漏掉 0g**。0e／0f 合併到 0g 完成之間有一段區間，
+       照原文讀會在該區間內恢復代行，而那正好**繞過最後一道 bootstrap 安全檢查**。
+       全倉不變量的逐字在本檔的 merge-boundary guard 段（內容錨＝
+       `grep -n '唯一解凍條件' docs/DECISIONS.md`），該段明寫「**全倉同文，不得另立變體**」
+       ⇒ 本則與 D32 現值段同批補齊。 -->
 
 ### D32. 互動式 Codex 實作與過渡期代行合併的鐵律補正
+
+> 🔴 **2026-08-21 D38 現值（2026-08-22 補 0g 條件）**：本條授權主體仍有效，但任何舊 evaluator
+> 結果均不得啟動代行；**唯一解凍條件（全倉同文，不得另立變體）＝
+> 0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且現行 evaluator 對 exact head 證明
+> 四條件全通過時，非 18.3 PR 才可代行，且僅適用於 0g 之後的 PR。
+> <!-- 🔴 2026-08-22 更正（來源＝PR #66 Codex inline `3835736708`）：本段原寫「只有 0e／0f
+>      已合併且現行 evaluator 對 exact head 證明四條件全通過時，非 18.3 PR 才可代行」
+>      ——**漏掉 0g 完成這個前置**。在 0e／0f 合併後、0g 完成前的區間裡，照原文讀
+>      「evaluator 一通過就可代行」，於是**最後一道 bootstrap 安全檢查被繞過**。
+>      與 D31 同批補齊；逐字以本檔 merge-boundary guard 段的「唯一解凍條件」為準
+>      （該段自述「全倉同文，不得另立變體」）。 -->
 
 - 2026-08-20 使用者在 PR #61 首輪驗收後選案「1」，並明文批准修改 `CLAUDE.md`／
   `AGENTS.md`：取得完整對話脈絡及具名射程授權的互動式 Codex 可以實作；workflow 自動
@@ -395,6 +420,8 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   操作，不翻 `AUTO_MERGE`，也不把權限交給 workflow。
 - PR #61 因本裁定修改兩份鐵律本文，已命中 18.3，必須在雙清後由使用者人工合併；
   D31 的代行路徑從其後第一個符合資格的常規 PR 才開始實測。
+- 2026-08-21 D38 進一步凍結上述「其後第一個」：必須先讓新 C1 evaluator 與 workflow 接線各自
+  合併，再由其後第一個符合資格的常規 PR canary；過渡期不因 PR 非 18.3 而恢復舊 evaluator 代行。
 
 ### D33. 全項目零假設發布
 
@@ -410,6 +437,10 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   日期更正並撤回錯誤聲明。PR #61 因修改規範本文仍命中 18.3，雙清後由使用者人工合併。
 
 ### D34. 重犯問題按已定型處理法一次斷根
+
+> 🔴 **2026-08-21 D37 射程補正**：下文「同型未點名只登記」只適用於**不在已點名根因影響圖**
+> 的既有問題；同一 producer／consumer／元件內可列舉的狀態矩陣屬同一被點名根因，必須同批封閉。
+> 這是現行 17.2／20.5 射程；不得再以本條舊絕對句拒絕做根因閉合。
 
 - 2026-08-20 使用者要求深度整理所有已處理問題類型，將「重複犯錯且已有固定處理方式」者寫入
   鐵律，避免再用後續驗收輪發現同型問題、浪費時間與 token；本裁定升格為鐵律 20。
@@ -443,6 +474,9 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 
 ### D36. handoff 恢復原有工作單位節奏並改為本地保存
 
+> 2026-08-21 D38 覆寫：本條「handoff 只存本地」仍有效；下文「一次驗收修復輪另觸發 handoff」
+> 與「一份 handoff 可列多份 worklog」只保存 2026-08-20 沿革，現行檔案粒度一律讀 D38。
+
 - 2026-08-20 使用者先後明文裁定：「handoff不需要commit只需要保留在本地」、
   「未來停commit到github，只保留本地」，並澄清：「我說的每次寫handoff都是按照以前那種形式，
   而不是要你每一個小步驟都commit到github」及「按照以前的來做handoff」。
@@ -458,3 +492,358 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   `docs/handoff/` 保留為歷史唯讀資料。
 - worklog 規則不變：仍按可獨立驗收單位三段入庫並與產物一起 commit；一份本地 handoff 可以
   列出同一工作單位的多份 worklog。附錄 A 只登記實際入庫的 worklog，不登記本地 handoff。
+
+### D37. 驗收改採 Convergence Protocol v2，廢止會自行增殖的循環
+
+> 2026-08-21 後續裁定：本條的「產物頻率留第二包」、PR #66 一次性例外，以及下文把 clean
+> completion 限定為 REST review／禁止 body ref 的舊 C1 均已由 D38 取代；以下保留為改制沿革，
+> 現行產物頻率、C1 與 P-8 序列一律讀 D38。
+
+- 2026-08-21 使用者裁定：廢除不必要、不合理且會讓驗收問題自行增加的機制；其餘採本輪
+  根因審計提出的收斂方案。目標服務水準是每個可獨立驗收單元通常只發布「初始候選＋一次
+  整合修復」兩個受驗 head；這是流程設計目標，不得冒充「任何缺陷必然兩輪內全被發現」的
+  技術保證。
+- 取證快照（2026-08-21，來源為 GitHub 三個 paginated REST 集合、review body、PR metadata
+  與 git 歷史）：PR #61–#65 的修復循環已產生大量新 commit 與 review surface；PR #65 的
+  current diff 另含多份逐輪 worklog，而 exact-head Codex 意見中有一組直接指向這些新生成的
+  worklog／證據散文。重跑入口：
+  `gh api --paginate repos/pisceshei/chilllovesaas/issues/65/comments`、
+  `gh api --paginate repos/pisceshei/chilllovesaas/pulls/65/comments`、
+  `gh api --paginate repos/pisceshei/chilllovesaas/pulls/65/reviews`、
+  `git fetch -f origin tag pr65-last-push`、
+  `git -c core.quotepath=false diff --name-only origin/main...pr65-last-push`。reviews 集合須逐則讀
+  `.body`；`pr65-last-push` 是為該 exact head 保持可達的遠端基準 tag。
+- 本第一語義包先廢止六項驗收控制流：①第一個 reviewer 回覆後即開始修、未等另一方完成；
+  ②把同一 head 的歷史 inline 總數當未清數；③把「只修點名處」解讀成禁止封閉被點名根因在
+  同一元件內可列舉的狀態空間；④每次本地微小編輯都跑全套閘門；⑤無限小修小推而不切換成
+  根因審計／拆包模式；⑥Claude 判詞只有格式失敗時仍靠改檔換 head 或無界 rerun。
+  worklog／handoff 的**檔案產生頻率與聚合方式**屬第二語義包；在該包連
+  `docs/worklog/README.md` 等 consumers 一起合併前，D36／鐵律 21 的現行粒度維持不變。
+  本第一包只禁止「唯一目的為刷新受驗 head／C1」的 unrelated、evidence、worklog、handoff 或
+  空白 commit；這是驗收狀態機邊界，不裁定一般工程何時另建 worklog／handoff。PR #66 本身是
+  D37 制度採用的一個可獨立驗收單元，當時的全部 bot 回應屬同一單元迭代，具名維護同一份 worklog；
+  此過渡裁定只清本 PR，不外推成通用粒度規則。
+- 新流程：一個候選 head 推送後，CI、Claude、Codex 三方未全部對 exact head 完成以前不得改檔；
+  完成後一次全量拉 conversation、review body、inline 與 GraphQL threads，去重成凍結 finding
+  ledger，再按根因批次修復。修復射程可涵蓋被點名根因在同一 producer／consumer／元件內的
+  完整狀態矩陣與反向 fixture；無關元件仍只登記 `91` §3。
+- 驗證採兩層：本地編輯時只跑受影響的 targeted gate；候選 head 凍結、整合修復 head 凍結及
+  合併前 base 有變時，各跑一次完整正典閘門。任何 tracked file 在完整閘門後再變動，該候選
+  證據失效；但純查詢、PR body、本地 handoff 與 thread resolve 不改 Git tree，不產生新 head。
+- exact-head 原則保留於**實際 Git tree 變更**：新內容必須由兩方驗當前 head。Codex finding
+  固定為 exact-head REST review body 或以 review ID 關聯的 inline／thread；處置不抹除時間。
+  乾淨 completion 的 REST author、review `.commit_id`、body envelope 與無關聯 finding 四格均由
+  fixture 鎖定，且須晚於最後 finding；不得用 comment `.commit_id` 或 body SHA 猜測。三個 REST
+  集合、每則 review body 與 GraphQL threads 全取＋未解 threads 為零仍是必要條件，不再用 REST
+  inline 歷史總數。GitHub 官方允許 PR 作者或具 write 權限者 resolve conversation，故 `isResolved=true`
+  只是必要的工作流狀態，不足以單獨證明獨立驗收；官方證據見 `docs/dev/external-facts.md` A9。
+  OpenAI 官方要求 Codex reaction 後仍 post review；reaction-only 沒有 exact-head review，故只作
+  觸發／排隊訊號，C1 fail-closed 並轉人工，不得把 reaction 當乾淨 completion（外部證據 A10）。
+  finding 處置未改 tree 時只送一次 same-head review 請求；第一方資料未保證同 SHA 重複請求必定
+  產生新 review，故 deadline 前沒有更晚 exact-head completion（含平台去重）時 C1 保持 0，保存
+  請求與水位後轉獨立人工審核／人工合併，不再重試、造 head 或啟用代行／自動合併。
+  現有 `await-verdict.sh` 只等待兩個 reviewer，不構成機械 CI 證據；0e 接手前在同一有界 deadline
+  另以 `gh pr checks --json name,bucket,link` 間隔輪詢；每輪查詢前後與凍結 ledger 前都須重取
+  `headRefOid` 並等於候選 SHA，否則丟棄結果、非零終止。`pending` 等待；終態 `fail` 進 ledger
+  授權修復；API／deadline 才是未取得；合併時仍確認全部 bucket 為 `pass` 並重驗 head（A11）。
+  在新 evaluator 與 workflow 接線分別合併前，舊 `1111` 不得作代行合併依據；過渡期全部 PR
+  視同 18.3 走使用者人工合併，避免舊 C1 假死或假綠。
+- 收斂模式：初始候選有意見時只做一次整合修復；第二個 finding-bearing head 仍有同根因時，
+  不得再小修小推，須在本地重建狀態矩陣、mutation 與影響圖，必要時自動把過大的單元拆成
+  語義獨立 PR。這不是棄單熔斷，任務仍持續；它是禁止第三輪沿用已證失敗的點修方法。
+- Claude 只有判詞格式失敗時，最多對同一 exact head 整體 rerun 一次；第二次仍畸形即保留兩次
+  run 轉獨立人工審核，不為格式 push 新 head、不建立第三次 attempt。格式驗證仍 fail-closed，
+  本款廢止的是無界重試與「改檔刷新」，不是允許畸形判詞自動通過。
+- 仍保留：18.3 人工合併、GitHub CI 對每個 pushed head 全跑、tracked tree 變更後的 exact-head
+  雙方最終驗收、三端點＋review body＋GraphQL 全量攝取、外部語義官方取證、合併前 base 更新
+  與最終完整驗證。被廢止的是重複且不增加這些安全保證的手續，不是品質門檻。
+
+### D38. 舊驗收制度整域退役，不再保留第二個產物頻率包
+
+- 2026-08-21 使用者明文要求：「一次性修復好，不要再這樣不停的修復好幾輪，舊制度全部
+  一次性剔除」，並要求深度分析、排查完成後才 commit。據此撤銷 D37 的「產物頻率留到第二
+  語義包」過渡切法；D36 的「handoff 只存本地」保留，但檔案頻率由本條覆寫。
+- 一個可獨立合併的 PR／原子工作包只維護一份 tracked worklog：初始候選與產物同 commit；
+  finding 真正改 tracked tree 時，在一次整合修復 commit 更新同一份 worklog 與終態文件；純
+  disposition、等待、resolve、PR body、run 與遠端終態不改 worklog、不造 head。umbrella 只有
+  實際拆成可獨立合併 PR 才各建一份。`docs/worklog/README.md`、鐵律 21 與 AGENTS 同批同步。
+  🔴 **「一份 worklog（不另建「第 M 輪」）」這一條對規則生效前已開的 PR 不追溯；其餘條文（分層、更正註、閘門、ledger）照舊不豁免**：判準與射程邊界見 `docs/DECISIONS.md` **D39**（2026-08-22 使用者裁定）。
+- 一個工作包／PR 從研究到 merge／rollback／正式阻塞只維護一份倉庫外本地 handoff，不按
+  驗收輪、命令、查詢、等待、commit 或 push 拆檔。只有正式轉交、rollback 後另起恢復包，或
+  真正拆成獨立 PR 才另建；handoff 永不 commit／push。
+- C1 採本倉庫實測的雙載體狀態機：finding 以 exact-head REST review `.commit_id`＋review ID
+  關聯 body／inline／thread；clean completion 可由 connector issue comment 的受控 envelope 加
+  獨立 `Reviewed commit:` 欄位證明，該欄只接受 10–40 位十六進位、且須為當前完整 head 的前綴。
+  已觀測 envelope 有 A 型首行精確前綴 `Codex Review: Didn't find any major issues.`（句點後同一行
+  自由尾句不參與分類），以及 B 型前兩個非空行 `## 驗收結論`／
+  `**未發現需要新增 inline 意見的重大問題。**`。A 型固定 About-Codex details 與 B 型確認敘述／
+  checks 屬同一 completion 說明，不用未定義的 prose NLP 重分類；可由同一 ref grammar 綁 current
+  head、且第一個非空行為 `## 驗收結論：需修改` 的留言是 issue-comment finding，第二個頂層
+  verdict marker 則 ambiguous／C1=0。
+  PR #61／#64 的
+  paginated issue comments 證明兩型存在；這是倉庫觀察，不冒充平台永久保證。PR #61 comment
+  `5352954268` 後又有較晚 finding review `4980284182`，故該 clean 事件不能作終態；0e 必須以此
+  fixture 證明「先 clean、後 finding」令 C1 回到 0。缺 ref、多 ref、錯 ref、未知 envelope、一般
+  散文 SHA 或只有 reaction 一律 C1=0。
+- 載體間先後只比較 UTC event time：已提交 review 用 `submitted_at`，issue comment 用
+  `created_at`；**曾被編輯的 issue comment（`updated_at` 晚於 `created_at`）改以 `updated_at`
+  為排序時點，缺失或不可解析即 fail-closed**——否則 connector 在 clean 之後編輯既有留言補
+  finding，該 finding 會帶較舊的 `created_at` 而讓 clean 誤判為較晚（可編輯性官方證據＝A14）。
+  clean 必須嚴格晚於最後 finding，且 clean 時點前的每筆 finding 都須有**機器可讀、以 finding
+  身分為鍵**的 disposition（值域 `fixed`／`disproved`／`no-fix-ruled`；後兩者帶可存取的證據或
+  裁定條目引用），不得由事件排序或 thread 狀態推定；缺鍵、值域外或缺證據引用即 C1=0。
+  缺值、解析失敗或相等都 fail-closed，數字 ID
+  只作 endpoint-local 身分／去重，不跨端點排序（官方欄位證據＝external-facts A12）。
+- current-head finding 集合為空時，時間下界定義為負無限；合法 exact-head clean completion 可滿足
+  時序，但沒有 completion 仍 C1=0。0e 要以「零 finding＋clean／零 finding＋無 completion」正反格
+  鎖定，不得把不存在的最後 finding 誤歸欄位缺失。
+- 四個驗收集合（issues comments、reviews body、inline comments、GraphQL threads）**本專案不
+  假定其為原子讀取**。🔴 這是**專案安全裁定**，不是平台語義：GitHub 官方頁只定義各端點與分頁，
+  本輪查不到跨端點交易 snapshot 契約，也查不到一致性視窗數值或 SLA——「查不到」依鐵律 19.3
+  記為未取得，既不反向斷言平台沒有 snapshot，也不作為實作輸入；採雙掃的理由是本專案選擇對
+  未知邊界 fail-closed（外部可查原文只留在 external-facts A14）。
+  **0e 合併後**：每次完整掃描前後都須確認 candidate `headRefOid`，再由該包已提交的版本化
+  canonical serializer 對排序後、含判定欄位與 body／版本欄位的四集合各算 SHA-256；只有兩次連續
+  完整掃描在已校準的 `SETTLE_INTERVAL_S` 前後得到相同 digest vector 才可凍結 ledger。
+  `SETTLE_INTERVAL_S` **由 0e 以受控 live calibration 產生並在該包落值**（提交量測程序、原始觀測、
+  採值理由與 interval 退化 mutation）；在此之前任何人不得自行填值或區間，「非零 interval」是待
+  交付契約而非已生效判準。
+  **0e 合併前的過渡期沒有 serializer、也沒有已校準 interval**：CLI 三端點＋reviews body＋GraphQL
+  全量拉取只供獨立人工審核與修法 ledger，**不得輸出合規 digest、不得令 C1／四條件成立、不得
+  代行或自動合併**；此時的穩定雙掃只是診斷輔助，不是機械證據。
+  插入 finding、原地改 body、thread 狀態變化、分頁失敗或兩掃不等均 fail-closed；0e fixture 必測
+  review 與 issue 端點讀取間插入 finding、兩掃間改 body、刪除穩定守衛，以及 interval 退化的
+  mutation（可查原文邊界見 A14）。🔴 **另含四格**：clean 後編輯既有留言補 finding ⇒ C1 回到 0、
+  移除 `updated_at` 排序守衛的 mutation（`updated_at` 不前進時須由 disposition 接住）、全部
+  finding 有合規 disposition ⇒ 通過、其中一筆缺 disposition ⇒ C1=0；disposition 的載體／schema／
+  責任方由 0e 同包定義並落地，落地前是待交付契約而非已生效判準。
+- ⚪ 登記不得成為 exact-head 增殖器：只要本批另有 tree 修復，仍在同一 commit 搬入 `91` §3；
+  exact-head 終態若只新增 ⚪，改在 PR body 寫唯一 grammar
+  `DEFERRED_WHITE head=<40hex> comment=<decimal> item=<decimal>`，不改 tree。下一個本來就會改
+  tree 的 PR，在首個候選前全量讀 merged PR bodies，把尚未存在於 `91` 的 deferred pair 批量
+  入籍。錯 head、重複或無法在完整判詞集合複驗的 machine line 不算登記；任意 PR 散文不復活
+  PR #55 前已廢止的過渡辦法。
+- CI 零 check 集合＝尚未執行，不是 all-pass：deadline 內等待，deadline 後 C3=0／證據未取得。
+  `gh pr checks` 在 pending 時的退出碼 8 不是 API failure，必須先解析 JSON bucket 再分流；JSON
+  未取得／不可解析才屬 API failure。非空集合全部 bucket 為 `pass` 才可合併；pending 繼續等，
+  terminal fail 進凍結 ledger；skip／cancel 先對同一 head 重跑 owning check 一次，仍非乾淨才保存
+  兩次證據轉人工。API failure 與 head drift 非零終止。
+- C2 必須改成 run-specific exact-head 且內容不可變的證據：0f 由受信任 workflow 同時產生
+  `run_id`／`run_attempt`／candidate＝`github.event.pull_request.head.sha`／
+  `verdict_comment_id`／`verdict_body_sha256`。0f 完成最終貼文或更新後，必須按 ID 從 GitHub
+  回讀 `.body`，對不作任何正規化的 UTF-8 bytes 計算 SHA-256；0e 按同一 ID 重取、重算並要求
+  hash 相等。ID 不替代 hash；缺／錯 hash、同 ID body 被原地編輯或內容不等均 C2=0。0e 再依
+  run id 複驗 `event=pull_request`、**`run_attempt` 與 evidence 精確相等**、目標 PR 的
+  `pull_requests[].head.sha`，並要求 run／job／check-run `head_sha == candidate` 作本倉庫具名
+  canary；**job 只能取自官方 attempt-specific 端點
+  `/actions/runs/{run_id}/attempts/{run_attempt}/jobs`，check-run 只能沿該 job 回應的
+  `check_run_url` 取得**——同一 run 重跑時 `run_id` 不變而 `run_attempt` 遞增，只比 run id 會把
+  attempt-1 的判詞配到 attempt-2 的執行證據。一般 run jobs 集合、另一 attempt 的 job／check-run
+  或只比 run id 一律 C2=0，fixture 另須含 attempt mismatch 與 cross-attempt job／check-run
+  （官方端點原文與本倉庫 canary＝A15）。官方未給該 response 欄位的 pull_request
+  永久語義，故任一缺失／不等即 C2=0，單看 `head_sha`、comment ID、`updated_at` 或舊時間窗
+  都不能綁 run/head/body；fixture 必測 same-ID body edit 與缺／錯 hash（A13／A14）。C3 只排除 workflow jobs
+  `check_run_url` 指出的 evaluator 精確
+  check-run ID；self ID 缺失／多重、排除後 only-self、其他 pending 或錯 head 都是 C3=0（A13）。
+- C4 的 0e fixture／mutation 必須覆蓋合法通過、合法需修改＋非空理由、判詞缺失、標記不在首行、
+  重複標記、通過／需修改互斥、空白理由（含全形空白／CR）與未知結構；first-line、唯一標記、
+  互斥與非空理由任一守衛被刪都必須使 regression 轉紅。
+- P-8 當前唯一執行序列改為 0e 獨立 evaluator＋fixtures／mutation（人工合併）→ 0f
+  workflow-only 接線**完整 C1–C4**並實查 validation-skip（人工合併）→ 0g 常規 PR canary。
+  0e 另須交付 **merge-boundary mode**：合併 consumer 必須在呼叫 merge 的**同一控制流**重新取得
+  current head、新的 stable digest vector、四集合 watermarks 與 C1–C4，任何晚於該結果的
+  review／comment／thread 變化或 watermark／vector 不等都中止合併。`gh pr merge` 的
+  `--match-head-commit` 官方逐字只是 "Commit SHA that the pull request head must match to allow
+  merge"（<https://cli.github.com/manual/gh_pr_merge>，取證 2026-08-21）⇒ 它**只鎖 Git head、不會
+  使既有 review state 失效**，同 head 新增的 finding 不會觸發它。在 merge-boundary guard 的
+  production canary 證成前，D31／D32 代行授權與 18.4 自動合併都保持凍結。🔴 **唯一解凍條件
+  （全倉同文，不得另立變體）＝0e 與 0f 各自合併、且 0g 完成 merge-boundary guard 的 production canary 後**，且僅對 0g 之後的非 18.3 PR 生效；
+  最後一次重驗到 merge 之間的殘餘窗是已登記、被接受的風險（GitHub 是否有服務端 review-state
+  前置條件＝未取得，不反向斷言），**不另立為第二條解凍前置**。
+  Codex 晚到只再調用 evaluator；whole-run rerun 只保留 Claude 判詞格式畸形的同 head 一次例外。
+  #59 的舊
+  `1111` evaluator 與 `await-verdict.sh` 只作已部署歷史／排隊訊號，**不得再作 C1、C3、雙清或
+  代行合併證據**；0e／0f 完成前全部 PR 人工合併。總方案 P-8 舊合包契約、兩單元尾包與階段
+  A／B 舊敘述移入歷史註，不再與現行序列並列。
+- Markdown 表格驗證新增內容級反向斷言：除 pipe 與 cell 數外，改動表格要選末欄 sentinel，
+  確認 GitHub 渲染後該列末欄保留 sentinel 全文；只數 `<td>` 不能證明超額 cell 沒被 GFM 丟棄。
+
+---
+
+### D39. 「一個工作包一份 worklog」對規則生效前已開的 PR 不追溯
+
+- **2026-08-22 使用者裁定（選項 A）**。起因：Convergence Protocol v2（PR #66，merge commit
+  `bbf5f3b73971b35d23c253a68bb2554d14eff1bc`）把 `AGENTS.md` §6「一個可獨立合併的 PR／
+  原子工作包只維護一份 worklog⋯**不另建「第 M 輪」worklog**」變成硬性要求。
+  而 PR #64 在該規則存在之前就已開始，並依當時的體例逐輪各建一份 worklog。
+- **裁定**：該要求**不追溯**。規則生效前已開的 PR，其既有逐輪 worklog **維持原樣**，
+  不要求整併、不因此判為違規；**生效後新建的 worklog 一律照規則**。
+- **判準（單一權威訊號＝PR 的建立時間，不看 commit 譜系）**：
+
+  ```bash
+  set -u
+  N=64                       # ← 要判定的 PR 編號；沒有這一行，下面整段跑不起來
+  # 🔴 值域也要卡（月 01-12、日 01-31、時 00-23、分秒 00-59）——
+  #    只卡形狀的話 `0000-00-00T00:00:00Z` 會通過然後被判成「很早」⇒ 誤給豁免。
+  # 🔴 年份也要有下界：`[0-9]{4}` 讓 `0000-01-01T00:00:00Z` 形狀與日曆都合法，
+  #    它會被判成「非常早」而拿到豁免。GitHub 時戳不可能早於 2008 ⇒ 收到 20xx。
+  #    ⚠️ 這條下界在 2100 年後要改；它是**刻意的窄射程**，不是筆誤。
+  ISO='^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$'
+  RULE_AT=$(gh pr view 66 --repo pisceshei/chilllovesaas --json mergedAt --jq .mergedAt) || { echo "EVIDENCE_NOT_OBTAINED: gh 取 #66 mergedAt 失敗" >&2; exit 2; }
+  PR_AT=$(gh pr view "$N" --repo pisceshei/chilllovesaas --json createdAt --jq .createdAt)  || { echo "EVIDENCE_NOT_OBTAINED: gh 取 PR createdAt 失敗" >&2; exit 2; }
+  # 🔴 fail-closed：兩值都必須是**整串**合法的 ISO8601。
+  #    空字串（`gh` 對未合併 PR 的 `--jq .mergedAt` 實回**空值**；逐字證據＝`docs/dev/external-facts.md` **B15**）、多行、
+  #    權限不足、PR 不存在 —— 一律非零終止，**不得落到 APPLIES**。
+  for v in "$RULE_AT" "$PR_AT"; do
+    # 🔴 `grep` 是**逐行**比對：多行值只要有一行合法就會過。先擋掉換行。
+    [ "$(printf '%s' "$v" | wc -l)" -eq 0 ] || { echo "EVIDENCE_NOT_OBTAINED: 值含換行" >&2; exit 2; }
+    printf '%s' "$v" | grep -Eq "$ISO" || { echo "EVIDENCE_NOT_OBTAINED: 非 ISO8601: [$v]" >&2; exit 2; }
+  done
+  # 🔴 regex 只認**形狀**，收不掉**不存在的日曆日期**：
+  #    `2026-02-31` / `2026-04-31` / 非閏年的 `2026-02-29` 三者形狀全合法。
+  #    再做一次日曆回吐：正規化後必須逐字等於原值。
+  for v in "$RULE_AT" "$PR_AT"; do
+    [ "$(date -u -d "$v" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null)" = "$v" ] \
+      || { echo "EVIDENCE_NOT_OBTAINED: 不存在的日曆日期: [$v]" >&2; exit 2; }
+  done
+  [ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES
+  ```
+
+  🔴 **下列每一格都必須實跑過，這條判準才算成立**（20.2.5 逐字要求「正常、違規、輸入缺失／工具失敗**與零掃描 canary**」）：
+
+  | 輸入 | `RULE_AT` | `PR_AT` | 期望 |
+  |---|---|---|---|
+  | 正常·適用 | `2026-08-22T14:21:47Z` | `2026-08-20T15:48:34Z` | `APPLIES`、rc 0 |
+  | 正常·不適用 | `2026-08-22T14:21:47Z` | `2026-08-25T00:00:00Z` | `NOT_APPLIES`、rc 0 |
+  | 輸入缺失（`gh` 回空） | 任意 | 空字串 | rc 2、`EVIDENCE_NOT_OBTAINED` |
+  | 工具失敗（#66 未合併 ⇒ `gh` 回空值，見 `external-facts` **B15**） | 空字串 | 任意 | rc 2、`EVIDENCE_NOT_OBTAINED` |
+  | 多行汙染 | `2026-08-22T14:21:47Z` | `x` ＋換行＋合法值 | rc 2（`grep` 逐行比對，不先擋換行就會過） |
+  | 值域荒謬 | `2026-08-22T14:21:47Z` | `0000-00-00T00:00:00Z` | rc 2（月／日為 00）|
+  | 不存在的日期（非閏年 2/29） | `2026-08-22T14:21:47Z` | `2026-02-29T00:00:00Z` | rc 2（regex 過、日曆回吐擋）|
+  | 不存在的日期（4/31） | `2026-08-22T14:21:47Z` | `2026-04-31T00:00:00Z` | rc 2（同上）|
+  | 閏年真日期不得誤擋 | `2026-08-22T14:21:47Z` | `2024-02-29T00:00:00Z` | `APPLIES`、rc 0（2024 早於規則生效點，本來就該適用；重點是**不得被日曆檢查誤擋**）|
+  | 年份無下界（`0000`） | `2026-08-22T14:21:47Z` | `0000-01-01T00:00:00Z` | rc 2（日曆合法但年份被 `20xx` 擋）|
+  | 年份早於 GitHub（`1999`） | `2026-08-22T14:21:47Z` | `1999-01-01T00:00:00Z` | rc 2（同上）|
+  | **零掃描 canary** | 把上面**兩個 `for` 迴圈都**刪掉，再跑「輸入缺失」那格 | 空字串 | 必須翻回 `APPLIES` ——沒翻代表斷言根本沒被執行，這張表全部作廢 |
+  | canary 補充（只刪其中一個） | 只刪 ISO 迴圈／只刪日曆迴圈 | 空字串 | **仍 rc 2**——兩道斷言互為備援，這是預期行為，不代表 canary 失效 |
+
+  <!-- 🔴 2026-08-23 更正（來源＝本輪 push 前實跑，非驗收方點名）：
+       canary 那列初稿寫的是「刪掉迴圈再跑**工具失敗**那格」，實跑回 `NOT_APPLIES` 而不是 `APPLIES`。
+       原因：「工具失敗」那格空的是 `RULE_AT`，而 `[ "$PR_AT" \< "$RULE_AT" ]` 在 `RULE_AT` 為空時
+       恰好落在**安全側**（任何非空字串都不小於空字串）⇒ 它證不出「斷言有沒有在跑」。
+       真正會誤放行的是 **`PR_AT` 為空**那一格（空字串小於任何值 ⇒ `APPLIES`）。
+       🔴 這說明 canary **選錯格等於沒做**：一個永遠回安全值的輸入，拿掉防線也不會變色。
+       ⇒ canary 一律選「拿掉防線後會翻成危險側」的那一格。
+       ---- 2026-08-23 二次更正（來源＝本輪 push 前對抗式複驗）：
+            上一版 canary 逐字寫「把上面**那個** `for` 迴圈整段刪掉」。同一個 commit 把驗證迴圈從 1 個增為 2 個
+            （ISO 形狀 ＋ 日曆回吐）之後，「那個」失去唯一解，而**兩種單刪法實跑都仍是 rc 2**（兩道斷言互為備援）
+            ⇒ 照該列文字跑不出它宣稱的翻轉，依它自己的收尾句「這張表全部作廢」。
+            🔴 這是 20.2.2 的 producer／consumer 不同步：我改了被 canary 指涉的對象，沒改 canary。
+            ⇒ 改成「兩個都刪」，並另立一格記錄「只刪其一仍 rc 2」是預期行為。 ----
+       ---- 2026-08-23 三次更正（來源＝PR #64 Codex inline `3836905824`）：
+            本註**原本沒有結束標記**，而下一行又開了一則新註。GFM 的 HTML block 結束條件是
+            「該行含結束序列」，於是兩則註釋合成一大塊，把夾在中間的 **D39 現行指引**
+            （PR #64 的實跑結果、GNU／BSD 可攜性邊界）一併吞成不可見。
+            🔴 這是本 PR 第二次因為「註釋沒各自關閉」而讓正文消失（前一次是第 0 欄殘骸行）。
+            ⇒ 每一則 dated 更正註都必須自己閉合，不得靠後面那則的結束標記。 ----
+  -->
+  <!-- 🔴 2026-08-23 補正（來源＝PR #64 Claude issue comment `5381492053` 🔴-3）：
+       上一版判準逐字＝`[ "$PR_AT" \< "$RULE_AT" ] && echo APPLIES || echo NOT_APPLIES`，
+       **沒有失敗分支**。驗收方直接跑 shell 實測：`test "" "<" "2026-08-22T14:21:47Z"` ⇒ `APPLIES`；
+       `test "2026-08-20T15:48:34Z" "<" "null"` ⇒ `APPLIES`。
+       ⇒ `gh` 失敗、PR 不存在、權限不足、或 #66 尚未合併時**一律給豁免**。
+       ---- 本行第二次更正（2026-08-23，來源＝PR #64 Claude issue comment `5381930022` 🟡-1）：
+            上一版逐字寫「#66 尚未合併（`--jq .mergedAt` 得**字面 `null`**）」，**該描述為假**。
+            實測結論：對 OPEN 的 PR 走同一條路徑，stdout 只有一個換行；命令替換後是**空字串**，
+            不是四個字元的 `null`。
+            🔴 **本處不再複製任何量測輸出**——逐字命令、逐字輸出、`gh` 版本與取證日期
+            一律以 `docs/dev/external-facts.md` **B15** 為唯一來源。
+            ---- 2026-08-23 更正（來源＝PR #64 Claude issue comment `5382552421` 🔴-1）：
+                 本處原本自帶一份量測輸出，逐字寫「stdout 經 `od -c` 得 `0000000` 後接兩個空白與一個 LF（`0a`）」。
+                 🔴 **兩處都錯**：`od -c` 對 LF 印的是反斜線 n、輸出裡不存在 `0a`（那是 `od -tx1` 的形態）；
+                 且真實輸出有**兩行**，第二行被整個省略。
+                 🔴 更難看的是：同一則更正註三行之下就宣告「外部行為的權威記錄改放 B15」，
+                 而 B15 自己逐字寫著「初稿寫成 `0000000  0a`⋯那是 `od -An -tx1` 的形態」——
+                 **一邊指定 B15 為權威、一邊在同一則註裡發布與 B15 不符的量測**。
+                 ⇒ 本處只留結論與指標，不複製輸出。同一份量測**只能有一個發布點**。 ----
+            🔴 這句的來源是驗收方上一輪的措辭，我沒有實測就落進裁定文件——**轉述不是證據**。
+            外部行為的權威記錄改放 `docs/dev/external-facts.md` **B15**（帶實測命令、版本與取證日期）。 ----
+       🔴 **20.4 四欄**：
+       ① 復發錨：與觸發改判準的 Codex `3836378178` **同一個方向**（誤給豁免）——換了訊號、沒換防呆姿勢，第 2 次。
+       ② 既有防線為何沒攔住：本倉庫沒有任何閘門會執行文件裡的 shell；20.2.5 是規則、不是機制。
+       ③ 固定處理哪一步被漏掉：20.2.5 要求「同時證明正常、違規、**輸入缺失／工具失敗**與零掃描 canary」——
+         我只證了前兩格（PR #64 適用／生效後開的不適用），第三格連想都沒想，因為**判準看起來只是一個比較**。
+         🔴 判別法：凡是把外部指令的 stdout 直接餵進條件式，就必然存在「stdout 不是預期形狀」這一格。
+       ④ 可重跑的反向複驗＝**上表每一列**（含後續補的日曆三格與 canary 兩格），任何一列不符即本判準無效。
+          🔴 不寫列數——該表已隨每輪新發現的失敗形態擴充過兩次，寫死列數下一次就過期。
+       ---- 2026-08-23 追記（來源＝PR #64 Codex inline `3836378178`／`3836685420`）：
+            本區塊 ① 原寫「第 2 次」。到本輪為止，**同一個方向（誤給豁免）已經是第 3 次**：
+            ①`3836378178` 譜系訊號錯 ②本註原記的 fail-open 無失敗分支 ③`3836685420` regex 只認形狀、
+            收不掉不存在的日曆日期。三次的共同形態是**「我證明了正常路徑，就當作判準成立」**——
+            每一次補的都是**失敗路徑**，而失敗路徑的集合我從來沒有一次性列全。
+            🔴 因此本判準的驗證表改為「**每新發現一種失敗輸入就進表**」，不宣稱它已經完整。 ---- ----
+  -->
+
+  PR #64 實跑：`PR_AT=2026-08-20T15:48:34Z`、`RULE_AT=2026-08-22T14:21:47Z` ⇒ **APPLIES**。
+
+  ⚠️ **可攜性邊界**：日曆回吐用 **GNU `date`** 的 `-d`（本機 Git Bash 與 CI ubuntu 皆為 GNU coreutils）。
+  🔴 **BSD／macOS 的實際行為＝未取得**（本機無該平台，亦未取得官方 `date(1)` 逐字）。
+  以下是**條件推論**，不是實測：*若* 該平台的 `date` 不接受 `-d` 而使該格解析失敗、stdout 為空，
+  *則* 對非空值會被擋下（方向 fail-closed，但誤擋合法輸入）。
+  🔴 **但對空字串是反例**：兩邊皆空 ⇒ 相等 ⇒ **不擋**。空字串由前面那個 ISO 迴圈承接，
+  所以現行雙迴圈版**不是** fail-open；但「兩道斷言互為備援」這句話**在非 GNU `date` 上對空字串不成立**。
+  在該平台可能要改 `date -j -f`（**同樣未取得**）。
+  🔴 **已驗證的只有 GNU 側**：本機 Git Bash 與 CI ubuntu 皆為 GNU coreutils，本輪矩陣**每一格**全部實跑於此（逐格輸出見 PR #64 第十七輪 worklog 的「D39 判準輸入矩陣實跑」段）。
+  🔴 **空字串那個反例不依賴平台**——它只用到 shell 字串比較（兩邊皆空 ⇒ 相等 ⇒ 不擋），
+  所以「兩道斷言互為備援」這句話在**任何** `date` 失效的平台上，對空字串都不成立；
+  空字串實際由前面的 ISO 迴圈承接，現行雙迴圈版**不是** fail-open。
+  <!-- 2026-08-23 更正（來源＝PR #64 Claude issue comment `5382552421` 🟡-1）：上一版把
+       「BSD 無 `-d`」寫成事實並緊接著宣告「這是已知邊界，不是未標示假設」，而下一行又寫「實際行為未取得」
+       ⇒ 同一件事三行內同時被宣告為「已知」與「未取得」，與 19.3 互斥。⇒ 平台行為降為未取得，
+       「已知邊界」限縮到 GNU 側，並把不依賴平台的那半（空字串反例）與依賴平台的那半分開。 -->
+  <!-- 🔴 2026-08-23 改判準（來源＝PR #64 Codex inline `3836378178`）：
+       本條原本用 commit 譜系判斷（`git log --first-parent` 取第一個 commit，再與規則生效
+       commit 比祖先關係）。**那個訊號答的不是本條要問的問題**——它答「這條分支的第一個 commit
+       多早」，而本條要問的是「**這個 PR 何時被開**」。
+       🔴 漏洞：一個**規則生效後**才開、但從**過期 checkout** 長出來的 PR，其第一個 commit
+       仍早於 RULE ⇒ `merge-base --is-ancestor` 回 1 ⇒ **不該適用的 PR 拿到豁免**。
+       （更早一次的修正加了 `--first-parent`，堵的是「併入側枝」那個變體；
+        本次是同一個根因的更上游——**譜系根本不是正確的訊號**。）
+       ⇒ 改用 GitHub 的 `createdAt`：它是「PR 何時被開」的權威記錄，不受 checkout 新舊影響。
+       ⚠️ 對 PR #64 兩種判準同值（皆適用），這是**把判準換成對的那一個**，不是改結論。 -->
+- **理由，逐條**：
+  ① **規則不能約束它存在之前完成的工作**——共同基底 `0fbe520` 上
+  `grep -c '不另建「第 M 輪」' AGENTS.md` ⇒ **0**，main 上 ⇒ **1**，該條確由 #66 引入。
+  本 PR 的逐輪 worklog 份數複驗：
+  `git -c core.quotepath=false diff --name-only --diff-filter=A origin/main...HEAD -- 'docs/worklog/*.md' | wc -l`
+  （2026-08-22 於 `df506749` 實跑 ⇒ **19**；該數會隨後續輪次增加，判準不依賴它）。
+  ② **整併的代價是銷毀稽核軌跡**。逐輪 worklog 記的是「那一輪當時說了什麼」，而本倉庫的
+  20.4 復發紀錄、19.5 逐字撤回、歷史層不回改**全部建立在這個軌跡上**；把它們壓成一份，
+  會把「同一個錯誤第幾次出現」抹平——那正是這批 PR 一路在保護的東西。
+  ③ **要解決的問題（按輪次增殖文件）在新 PR 上已由規則本身解決**，追溯不會多解決任何事。
+- **射程邊界（不得外推）**：
+  ① 只豁免「一份 worklog」這一條，**不豁免**其他任何條文（分層、更正註、閘門、ledger 照舊）；
+  ② 只對規則生效前已開的 PR，**不對**其後新開的；
+  ③ 這些 PR 若在生效後**新建** worklog，那一份仍受規則約束。
+- 落點同步：🔴 **規則的每一個落點**都就地加指標，**不只加 `AGENTS.md`**。
+  指標有**兩種合法形態**，不是一種：
+  ① **規則本體所在的那一處**（`AGENTS.md` §6）用「本節「一份 worklog」⋯」的**就地限定寫法**——
+     在規則自己的段落裡說「本節」是精確的，把規則名再抄一次反而累贅；
+  ② **其餘所有落點**用逐字相同、機器複製的那一串（開頭為「「一份 worklog（不另建⋯」）。
+  <!-- 🔴 2026-08-23 更正（來源＝本輪 push 前對抗式複驗，非驗收方點名）：
+       本行原逐字寫「都就地加**同一串**指標（**逐字相同**、機器複製）」。
+       🔴 那句話與倉庫現況矛盾：`AGENTS.md` §6 的指標是第 18 輪 🟡-2 **刻意**改成的限定寫法，
+       不是那一串。照原文拿下面的雙 grep 去複驗，§6 這個落點會在右式零命中 ⇒ **假 FAIL**。
+       ⇒ 明文承認兩種形態。判準不是「字串相同」，是「**每個規則陳述句的相鄰處，讀者都拿得到射程限定**」。 -->
+  複驗（不寫死數字，因為落點會隨文件成長）：
+  ```bash
+  # 左：規則陳述句全集；右：已帶指標者。逐筆看左邊每一個**規則陳述**（非引用、非 worklog 敍事）相鄰處是否有右邊那一行。
+  grep -rn '不另建「第 M 輪」\|一份 worklog\|不按驗收輪增殖\|只維護一份' --include=*.md docs/ AGENTS.md CLAUDE.md
+  grep -rn '判準與射程邊界見\|本節「一份 worklog」' --include=*.md docs/ AGENTS.md CLAUDE.md
+  ```
+  <!-- 🔴 2026-08-23 更正（來源＝PR #64 Claude issue comment `5381302078` 🔴-5）：
+       本行原寫「落點同步：`AGENTS.md` §6 就地加一句指向本條。」
+       🔴 兩個問題：①實際加了五處，本行只寫一處；②更要命的是，即使加了五處仍有
+       **D38 本文、Convergence Protocol v2 正典表、`AGENTS.md` §工作單位交接、總方案鐵律 17** 四處沒有 ——
+       讀到那四處的人拿到的是**未豁免版**，等於裁定沒生效。
+       → 本輪四處都補上；並把本行改成**導出指令**而不是數字，因為寫死的落點數下一次新增文件就又錯一次。 -->
