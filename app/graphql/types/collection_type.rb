@@ -66,8 +66,12 @@ module Types
     end
 
     # @return [Integer, nil]
+    # 智慧系列回 nil（規則引擎未落地，回 0 是在斷言一件我方不知道的事）。
+    # 手動系列優先用列表 select 帶下來的 `member_count`（見 `Collection::MEMBER_COUNT_SELECT`），
+    # 單筆讀取沒有該欄時才退回自己 COUNT。
     def products_count
       return nil unless object.collection_type == "manual"
+      return object.read_attribute("member_count").to_i if object.has_attribute?("member_count")
 
       CollectionProduct.where(shop_id: object.shop_id, collection_id: object.id).count
     end

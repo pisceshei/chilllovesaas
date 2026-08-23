@@ -123,7 +123,9 @@ module Types
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
     def collections(first: nil, after: nil, last: nil, before: nil)
       authorize_products!
-      scope = Collection.where(shop_id: context.fetch(:current_shop).id)
+      scope = Collection
+        .where(shop_id: context.fetch(:current_shop).id)
+        .select(Arel.sql("collections.*"), Arel.sql(Collection::MEMBER_COUNT_SELECT))
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 

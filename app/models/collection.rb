@@ -26,6 +26,16 @@ class Collection < ApplicationRecord
 
   # 兩種系列型別（13 §F4；71-R8-V4 的「來源」概念差仍待裁定，v1 維持二分）。
   TYPES = %w[manual smart].freeze
+  # 列表頁的成員數：**用相關子查詢一次撈完**，不是每列一次 COUNT。
+  # 🔴 N+1 在這裡不是效能潔癖——列表上限是 250（`limits.yml`），
+  # 逐列 COUNT 就是單一請求打 250 次 DB，而列表正是最常開的頁。
+  # 單筆讀取（編輯頁）沒有這個 select，`Types::CollectionType` 會退回逐筆 COUNT。
+  MEMBER_COUNT_SELECT = <<~SQL.squish.freeze
+    (SELECT COUNT(*) FROM collection_products cp
+      WHERE cp.shop_id = collections.shop_id
+        AND cp.collection_id = collections.id) AS member_count
+  SQL
+
   SORT_ORDERS = %w[manual best_selling title_asc title_desc price_asc price_desc created_desc created_asc].freeze
 
   validates :collection_type, inclusion: { in: TYPES }
