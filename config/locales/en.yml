@@ -30,5 +30,11 @@
       source_locale_not_translatable: "The source language is stored on the product itself, not as a translation."
       field_not_translatable: "This field can’t be translated yet."
       too_long: "The translation is longer than the limit."
+    locale:
+      not_in_catalog: "This language is not in the platform catalog."
+      already_enabled: "This language is already enabled."
+      not_enabled: "This language is not enabled for the shop."
+      source_immutable: "The source language can’t be disabled; change the source language first."
+      login_required: "Sign in required."
     staff:
       locale_unsupported: "Unsupported interface language."

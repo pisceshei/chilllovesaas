@@ -7,6 +7,8 @@ import { SaveBarProvider } from "./lib/SaveBarContext";
 import { ToastProvider } from "./lib/ToastContext";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
+import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { Card } from "./components/Card";
 import { Page } from "./components/Page";
 
@@ -79,7 +81,8 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
               <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
               <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
               <Route element={<PlaceholderPage titleKey="nav.assistant" />} path="/admin/assistant" />
-              <Route element={<PlaceholderPage titleKey="nav.settings" />} path="/admin/settings" />
+              <Route element={<SettingsPage />} path="/admin/settings" />
+              <Route element={<SettingsLanguagesPage />} path="/admin/settings/languages" />
               <Route element={<Navigate replace to="/admin/products" />} path="*" />
             </Route>
           </Routes>

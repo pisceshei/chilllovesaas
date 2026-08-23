@@ -21,11 +21,19 @@ RSpec.describe ShopLocale, type: :model do
       expect(shop.shop_locales.where(enabled: false)).not_to exist
     end
 
-    it "平台字典五語齊全且 endonym 用語言自稱" do
-      expect(PlatformLocale.available.pluck(:tag, :endonym)).to contain_exactly(
-        [ "en", "English" ], [ "zh-Hant", "繁體中文" ], [ "zh-Hans", "简体中文" ],
-        [ "ja", "日本語" ], [ "fr", "Français" ]
+    # ML-4 起字典擴到多語（設定頁的候選來源）；這裡驗「首發五語在字典中且 endonym 正確」，
+    # 不驗字典總數——總數會隨新增候選語言變動，寫死就是易腐斷言。
+    it "首發五語在平台字典中且 endonym 用語言自稱（不是語言碼、不是國旗）" do
+      catalog = PlatformLocale.available.pluck(:tag, :endonym).to_h
+      expect(catalog).to include(
+        "en" => "English", "zh-Hant" => "繁體中文", "zh-Hans" => "简体中文",
+        "ja" => "日本語", "fr" => "Français"
       )
+      expect(catalog.keys).to include(*Limits.fetch(:i18n, :launch_locales).map(&:to_s))
+    end
+
+    it "字典含 RTL 語言，且 direction 正確（RTL 主題落地屬 M6，資料層現在就位）" do
+      expect(PlatformLocale.where(direction: "rtl").pluck(:tag)).to contain_exactly("ar", "he")
     end
   end
 
@@ -60,11 +68,11 @@ RSpec.describe ShopLocale, type: :model do
 
   describe "語言數上限與標籤正規化" do
     it "新增超過 i18n.max_shop_locales 即拒絕（LOCALE_LIMIT_EXCEEDED）" do
-      stub_const("Limits::TEST_OVERRIDE", nil) # 僅確保常數存在時不影響；上限由 limits 決定
       allow(Limits).to receive(:fetch).and_call_original
       allow(Limits).to receive(:fetch).with(:i18n, :max_shop_locales).and_return(5)
 
-      PlatformLocale.create!(tag: "de", language: "de", endonym: "Deutsch", plural_rule: "de", collation: "utf8mb4_0900_ai_ci")
+      # `de` 自 ML-4 起就在平台字典裡（設定頁候選），這裡直接用它——不再自建列。
+      expect(PlatformLocale.exists?(tag: "de")).to be(true)
       extra = described_class.new(locale_tag: "de")
       expect(extra).not_to be_valid
       expect(extra.errors[:base].join).to include("LOCALE_LIMIT_EXCEEDED")

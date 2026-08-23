@@ -24,7 +24,13 @@ module Types
     end
 
     field :shop_locales, [ Types::ShopLocaleType ], null: false,
-      description: "本店已啟用的內容語言（position 序，來源語言優先；ML-2）。"
+      description: "本店的內容語言（position 序，來源語言優先；ML-2）。" do
+      argument :include_disabled, Boolean, required: false,
+        description: "含停用中的語言（設定頁要能重新啟用它們；停用是狀態不是刪除）。"
+    end
+
+    field :available_locales, [ Types::PlatformLocaleType ], null: false,
+      description: "平台字典中尚未被本店啟用的語言（設定 › 語言的「新增」候選；ML-4）。"
 
     field :product_vendors, [ String ], null: false,
       description: "本店既有廠商（去重、字母序；組織分類卡 autocomplete 用，91 §12）。"
@@ -55,12 +61,25 @@ module Types
     #
     # @return [Array<ShopLocale>] enabled 的語言（來源語言排第一，其餘照 position）
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
-    def shop_locales
+    def shop_locales(include_disabled: false)
       authorize_products!
       shop = context.fetch(:current_shop)
       ActsAsTenant.with_tenant(shop) do
-        ShopLocale.enabled.includes(:platform_locale).sort_by { |row| [ row.is_source ? 0 : 1, row.position ] }
+        scope = include_disabled ? ShopLocale.all : ShopLocale.enabled
+        scope.includes(:platform_locale).sort_by { |row| [ row.is_source ? 0 : 1, row.position ] }
       end
+    end
+
+    # 可新增的語言＝平台字典 − 本店已啟用（含停用中的：停用是狀態不是刪除，
+    # 它們走「重新啟用」而不是「新增」，所以一樣不列在候選裡）。
+    #
+    # @return [Array<PlatformLocale>] tag 序
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def available_locales
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      taken = ActsAsTenant.with_tenant(shop) { ShopLocale.pluck(:locale_tag) }
+      PlatformLocale.available.where.not(tag: taken)
     end
 
     # 本店既有廠商清單（distinct、排序、上限引 api.pagination_max_page_size）。

@@ -30,5 +30,11 @@
       source_locale_not_translatable: "来源语言的内容存在商品本体，不是译文。"
       field_not_translatable: "此字段目前不可翻译。"
       too_long: "译文长度超过上限。"
+    locale:
+      not_in_catalog: "此语言不在平台语言字典中。"
+      already_enabled: "此语言已启用。"
+      not_enabled: "此语言未在本商店启用。"
+      source_immutable: "来源语言不可停用；请先变更来源语言。"
+      login_required: "需要登录。"
     staff:
       locale_unsupported: "不支持的界面语言。"

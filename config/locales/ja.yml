@@ -30,5 +30,11 @@
       source_locale_not_translatable: "ソース言語の内容は商品本体に保存され、翻訳ではありません。"
       field_not_translatable: "このフィールドはまだ翻訳できません。"
       too_long: "翻訳が上限を超えています。"
+    locale:
+      not_in_catalog: "この言語はプラットフォームのカタログにありません。"
+      already_enabled: "この言語はすでに有効です。"
+      not_enabled: "この言語はショップで有効になっていません。"
+      source_immutable: "ソース言語は無効にできません。先にソース言語を変更してください。"
+      login_required: "ログインが必要です。"
     staff:
       locale_unsupported: "サポートされていない表示言語です。"
