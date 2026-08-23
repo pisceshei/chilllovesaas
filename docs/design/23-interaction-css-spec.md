@@ -4,39 +4,40 @@
 
 ## 1. Admin Design Tokens（複製即用）
 
-```css
-:root{
-  /* 表面與文字 */
-  --bg:#f4f4f5;            /* 頁面底 */
-  --surface:#fff;          /* 卡片 */
-  --surface-2:#f7f7f8;     /* 次層（側欄、輸入底、hover）*/
-  --surface-3:#fafafb;     /* 表頭 */
-  --text:#1a1c1e;          /* 主文字（白底 16.1:1）*/
-  --text-2:#6b6d71;        /* 次要（5.2:1）*/
-  --text-3:#67696e;        /* 弱化（5.5:1；≥4.5 AA 為底線）*/
-  --border:#e3e3e6; --border-2:#ececef;   /* 卡框 / 分隔線 */
-  /* 品牌與互動 */
-  --brand:#2b2c2e; --brand-hover:#1f2022; /* 主按鈕近黑 */
-  --link:#2a5bd7; --focus:#2a78d6;
-  /* 語意色（bg 配 text 成對使用）*/
-  --success:#0a7a5c; --success-bg:#e2f1ea;
-  --warning:#8a6116; --warning-bg:#fdf3dc;
-  --critical:#b3172c; --critical-bg:#fdecee;
-  --attention:#6d5f00; --attention-bg:#f9f1bc;
-  --info:#155e8f; --info-bg:#e8f2fa;
-  --ai:#6d28d9; --ai-bg:#f3efff;          /* AI 專用紫 */
-  /* 圖表（已過對比/CVD 驗證）*/
-  --chart:#2a78d6; --grid:#ececef;
-  /* 形狀與陰影 */
-  --r-card:12px; --r-btn:8px; --r-pill:999px;
-  --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
-  --sh-pop:0 12px 32px rgba(26,28,30,.16);
-  --sh-modal:0 24px 64px rgba(26,28,30,.35);
-  /* 動效 */
-  --tr:150ms cubic-bezier(.2,.6,.3,1);      /* hover/focus/小狀態 */
-  --tr-big:240ms cubic-bezier(.2,.8,.2,1);  /* drawer/savebar/toast */
-}
-```
+<!-- 🔴 2026-08-23 裁定（Q-1 「23 號升版」，總方案 §十 序 13）：**本節不再複製 token 值**。
+
+     改的理由不是「規格不重要」，而是**這一節的拷貝已經是漂移的那一份**：
+     它停在 2026-07 的估計值（`--bg:#f4f4f5`、`--focus:#2a78d6`、只有 30 顆），
+     而原型早已換成研究 47／64 的**實測值**（`#f1f1f1`、`#005bd3`）並長到 223 顆
+     （間距七階、字級九階、字重四階、導航色、語意 5 族×5 層×3 態、hairline 0.66px…）。
+     三份拷貝（本節／原型 `:root`／`app/assets/tokens.css`）都自稱權威，
+     於是「讀哪一份決定你寫出哪一版 UI」——`--bg` 差一階、`--focus` 差一個色相，
+     照本節寫的人與照原型寫的人做出來的畫面不會一致，而**兩邊都可以說自己照規格**。
+
+     ⇒ 唯一 producer ＝ 原型 `docs/design/chilllove-admin-v2.html` 的 `:root` 區塊
+       （它帶著每顆值的量測出處註釋，那些註釋本身就是規格）。
+       實作端 `app/assets/tokens.css` 是它的**機械副本**，由 `scripts/sync-tokens.rb` 產生。
+       漂移由 `scripts/check-tokens-sync.rb` 在 CI quality job 擋下（含「本節不得復活 `:root{`」）。
+
+     🔴 **鐵律 8 沒有放寬**：「UI 值一律取自 tokens」照舊，只是 tokens 的位址從
+       「本節的程式碼區塊」變成「原型的 `:root` ＋其機械副本」。自創色值與尺寸仍然禁止。
+
+     被本次升版取代的舊值區塊，完整保留在 git 歷史（本檔 `84d1514` 以前的版本）。 -->
+
+**Token 的唯一 producer ＝ 原型 `docs/design/chilllove-admin-v2.html` 的 `:root` 區塊。**
+
+| 你要做的事 | 去哪裡 |
+|---|---|
+| 查一顆 token 的值與**為什麼是這個值** | 原型 `:root` 區塊（每顆值旁有量測出處註釋，引 47／64 號研究） |
+| 在 Rails／React 端使用 token | `app/assets/tokens.css`（機械副本，已由 layout 載入；**不要手改**） |
+| 改了原型的 token 之後 | `ruby scripts/sync-tokens.rb`，然後照常提交（CI 會驗兩邊逐位元組相同） |
+| 確認自己沒有引入第三份拷貝 | `ruby scripts/check-tokens-sync.rb` |
+
+Token 家族一覽（值見 producer；此處只列**有哪些家族**，避免再生一份會漂移的值表）：
+中性階與表面／文字／邊框｜品牌與互動（`--brand`／`--link`／`--focus`）｜
+語意 5 族 × 5 層 × 3 態（info／success／caution／warning／critical）｜
+間距七階 `--sp-050…--sp-600`｜字級九階 `--t-2xs…--t-3xl` 與字重四階｜
+圓角與陰影｜動效時長與 easing｜佈局常數（`--sidebar-w`／`--topbar-h`／`--hairline`）。
 
 - **字體**：`Inter,"Noto Sans TC",system-ui,sans-serif`；HTML 基準 `13px`。
 - **字級 scale（只准用這些）**：11（kbd/hint/pal-foot）、12（badge/輔助/軸標）、13（正文/表格/按鈕）、14（強調正文/hero 副標）、16（保留）、20（頁標題 h1/圖表大數）、24（指標卡值/hero 標題）。行高 1.45–1.6；中文標題字距 0，數字用 `tabular-nums`。

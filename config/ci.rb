@@ -62,6 +62,7 @@ CI.run do
   step "Invariants: Doc claims", "ruby scripts/check-doc-claims.rb"
   step "Invariants: Doc claim rules regression", "ruby scripts/test-doc-claims-rules.rb"
   step "Invariants: Tenant isolation", "ruby scripts/check-tenant-isolation.rb"
+  step "Invariants: Design token single source", "ruby scripts/check-tokens-sync.rb"
   step "Invariants: Reversal naming", "ruby scripts/check-reversal-naming.rb"
   # 鐵律 3 的 L4。與下一步是一組：檢查器自己綠不算交付（65 §K 第 7 條）。
   step "Invariants: Money unit boundary", "ruby scripts/check-money-boundary.rb"

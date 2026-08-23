@@ -1,31 +1,214 @@
+/* 🔴 本檔是機械副本，**不要手改**。
+   唯一 producer ＝ docs/design/chilllove-admin-v2.html 的 `:root` 區塊。
+   同步：ruby scripts/sync-tokens.rb　／　檢查：ruby scripts/check-tokens-sync.rb
+   為什麼不手改：值曾有三份拷貝並已漂移（23 §1 與本檔停在 2026-07 估計值、
+   原型已換成研究 47／64 實測值），三份都自稱權威。見 docs/design/23 §1 的 dated 註。 */
 :root{
-  /* 表面與文字 */
-  --bg:#f4f4f5;            /* 頁面底 */
-  --surface:#fff;          /* 卡片 */
-  --surface-2:#f7f7f8;     /* 次層（側欄、輸入底、hover）*/
-  --surface-3:#fafafb;     /* 表頭 */
-  --text:#1a1c1e;          /* 主文字（白底 16.1:1）*/
-  --text-2:#6b6d71;        /* 次要（5.2:1）*/
-  --text-3:#67696e;        /* 弱化（5.5:1；≥4.5 AA 為底線）*/
-  --border:#e3e3e6; --border-2:#ececef;   /* 卡框 / 分隔線 */
-  /* 品牌與互動 */
-  --brand:#2b2c2e; --brand-hover:#1f2022; /* 主按鈕近黑 */
-  --link:#2a5bd7; --focus:#2a78d6;
-  /* 語意色（bg 配 text 成對使用）*/
-  --success:#0a7a5c; --success-bg:#e2f1ea;
-  --warning:#8a6116; --warning-bg:#fdf3dc;
-  --critical:#b3172c; --critical-bg:#fdecee;
-  --attention:#6d5f00; --attention-bg:#f9f1bc;
-  --info:#155e8f; --info-bg:#e8f2fa;
-  --ai:#6d28d9; --ai-bg:#f3efff;          /* AI 專用紫 */
-  /* 圖表（已過對比/CVD 驗證）*/
-  --chart:#2a78d6; --grid:#ececef;
-  /* 形狀與陰影 */
-  --r-card:12px; --r-btn:8px; --r-pill:999px;
+  /* ══ 中性階（47 §6：只取層級關係，色值為 CHILL LOVE 自有）══════════════ */
+  /* 64 §1 實測頁面底色 rgb(241,241,241)。原值 #f4f4f5 是估計值，本輪換成量測值。 */
+  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
+  --surface-sunken:#e6e6e9;      /* 47 §6：次級按鈕底「比頁底深一階」（原 --surface-2 比頁底淺，層級反轉）*/
+  --surface-sunken-hover:#dcdce0;--surface-sunken-active:#d2d2d7;
+  --surface-inverse:#1a1b1d;     /* 深色浮層底（toast／bulkbar／savebar／doc-pop）*/
+  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;
+  --text-disabled:#b5b5b5;       /* 47 §E：disabled 只降文字色、底色不動 */
+  --text-inverse:#fff;           /* 47 §6：深底上的文字階 */
+  --icon:#4a4a4a;                /* 47 §6：圖示灰獨立一階 */
+  --border:#e3e3e6;--border-2:#ececef;--border-strong:#c9cace;
+  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
+  --ai:#6d28d9;--ai-bg:#f3efff;
+  --chart:#2a78d6;--grid:#ececef;
+  --surface-hover:#ededee;        /* 導航／列 hover 底 */
+  --surface-row-hover:#fafafc;    /* 表格列 hover */
+  --surface-selected:#f0f5ff;     /* 表格選取列 */
+  --surface-chip:#eeeef0;--surface-count:#e8e8ea;
+  --text-nav:#3f4144;--text-nav-2:#5c5e62;--text-quiet:#55575b;
+  --border-hover:#a9aaae;         /* 輸入框 hover 框色 */
+  --scroll-thumb:#d2d3d7;
+  --skeleton-1:#ededef;--skeleton-2:#f6f6f7;
+  --ai-border:#e2d9f8;--danger-border:#e6b3bc;
+  --touch-min:44px;               /* 34 §觸控：命中區下限（行為常數）*/
+
+  /* ══ 47 §H2-1 語意色：5 族 × 5 層 × 3 態 = 75 token ════════════════════
+     族：info / success / caution（黃）/ warning（橘）/ critical
+     層：surface（極淺染色底）/ fill（實色底）/ border / icon / text
+     態：base / hover / active
+     色相為 CHILL LOVE 自有；明度階梯取自 47 §H2-1 量測公式：
+       surface L≈94–97%，hover −2~3，active −4~7。
+     text 層一律驗過 ≥6.5:1（AA+）、icon 層 ≥3.5:1（WCAG 1.4.11）於同族 surface 上。
+     caution 與 warning 是兩族，不是同一族的兩階（47 §H2-1）。 */
+  --sem-info-surface:#ebf4fa;--sem-info-surface-hover:#e3eff8;--sem-info-surface-active:#d0e5f4;
+  --sem-info-fill:#1e78b8;--sem-info-fill-hover:#1c6fab;--sem-info-fill-active:#1a679e;
+  --sem-info-border:#bbd5e7;--sem-info-border-hover:#accbe2;--sem-info-border-active:#9dc2dd;
+  --sem-info-icon:#2486cc;--sem-info-icon-hover:#217aba;--sem-info-icon-active:#1e6fa9;
+  --sem-info-text:#195885;--sem-info-text-hover:#164d74;--sem-info-text-active:#134163;
+  --sem-success-surface:#e9f8f4;--sem-success-surface-hover:#ddf4ee;--sem-success-surface-active:#cff0e8;
+  --sem-success-fill:#158468;--sem-success-fill-hover:#13765e;--sem-success-fill-active:#116953;
+  --sem-success-border:#bbe7dc;--sem-success-border-hover:#ace2d4;--sem-success-border-active:#9dddcd;
+  --sem-success-icon:#1a9375;--sem-success-icon-hover:#178267;--sem-success-icon-active:#14715a;
+  --sem-success-text:#13634f;--sem-success-text-hover:#105141;--sem-success-text-active:#0c4033;
+  --sem-caution-surface:#fefcf1;--sem-caution-surface-hover:#fdfae8;--sem-caution-surface-active:#fcf7dd;
+  --sem-caution-fill:#847115;--sem-caution-fill-hover:#766613;--sem-caution-fill-active:#695b11;
+  --sem-caution-border:#e7e0bb;--sem-caution-border-hover:#e2d9ac;--sem-caution-border-active:#ddd29d;
+  --sem-caution-icon:#98831b;--sem-caution-icon-hover:#867418;--sem-caution-icon-active:#756515;
+  --sem-caution-text:#675914;--sem-caution-text-hover:#564a10;--sem-caution-text-active:#453b0d;
+  --sem-warning-surface:#fcf2ea;--sem-warning-surface-hover:#fbece0;--sem-warning-surface-active:#fae5d5;
+  --sem-warning-fill:#af5c1d;--sem-warning-fill-hover:#a2551a;--sem-warning-fill-active:#954e18;
+  --sem-warning-border:#e7cebb;--sem-warning-border-hover:#e2c3ac;--sem-warning-border-active:#ddb89d;
+  --sem-warning-icon:#c36822;--sem-warning-icon-hover:#b25f1f;--sem-warning-icon-active:#a0561c;
+  --sem-warning-text:#814618;--sem-warning-text-hover:#6f3c15;--sem-warning-text-active:#5e3312;
+  --sem-critical-surface:#fcebee;--sem-critical-surface-hover:#fae2e5;--sem-critical-surface-active:#f8d6da;
+  --sem-critical-fill:#db243c;--sem-critical-fill-hover:#ce2239;--sem-critical-fill-active:#c11f35;
+  --sem-critical-border:#e7bbc1;--sem-critical-border-hover:#e2acb3;--sem-critical-border-active:#dd9da5;
+  --sem-critical-icon:#d0253c;--sem-critical-icon-hover:#bf2237;--sem-critical-icon-active:#ad1f32;
+  --sem-critical-text:#921c2b;--sem-critical-text-hover:#811826;--sem-critical-text-active:#6f1521;
+  /* critical 專屬例外（47 §H2-1：只有 critical 多出按鈕填色）*/
+  --sem-critical-button-fill:#c11f35;
+  --sem-critical-button-gradient-fill:linear-gradient(180deg,#db243c,#b81c30);
+
+  /* 相容別名（既有 markup 的 .b-* 與 --success 等仍可用）*/
+  --success:var(--sem-success-text);--success-bg:var(--sem-success-surface);
+  --warning:var(--sem-warning-text);--warning-bg:var(--sem-warning-surface);
+  --caution:var(--sem-caution-text);--caution-bg:var(--sem-caution-surface);
+  --attention:var(--sem-caution-text);--attention-bg:var(--sem-caution-surface);   /* attention ＝ caution 的舊名 */
+  --critical:var(--sem-critical-text);--critical-bg:var(--sem-critical-surface);
+  --info:var(--sem-info-text);--info-bg:var(--sem-info-surface);
+
+  /* ══ 64 §4 髮絲線＝**固定次像素常數 0.66px**（推翻 47 §C 的「1 裝置像素」解釋）══
+     為什麼改：47 §C 當時只量到 dpr=1.5 的 0.667px，於是推論成「1 個裝置像素」，
+     並據此寫了三檔 min-resolution / dppx 媒體查詢讓它隨 dpr 變細。
+     64 號改用 getComputedStyle 穿透 shadow root 重量，**在 dpr = 1 的螢幕上讀到 0.66px**——
+     若真是「1 裝置像素」，dpr=1 應該讀到 1px。所以那不是換算出來的值，是寫死的次像素常數。
+     ⇒ 三檔 dppx 媒體查詢本輪整組移除（保留這段說明，才認得出這是刻意刪的不是漏的）。
+     全站邊框一律 var(--hairline)；48 §00.4 的 --bw-100:1px 依 51 表 6 作廢，不落地。 */
+  --hairline:.66px;
+  --bw-150:1.5px;                /* 僅供 badge pip 環與 dashed 落點區使用 */
+
+  /* ══ 47 §1 間距七階（唯一允許的間距值：2/4/6/8/12/16/24）══════════════ */
+  --sp-050:2px;   /* 表頭列內距、小 pill 上下內距 */
+  --sp-100:4px;   /* icon 按鈕內距、密集列 gap */
+  --sp-150:6px;   /* 欄位標題按鈕內距、次級 gap */
+  --sp-200:8px;   /* 最高頻 gap：控件間標準間距 */
+  --sp-300:12px;  /* 卡片內距、按鈕水平內距 */
+  --sp-400:16px;  /* 卡片間距、區段內距 */
+  --sp-600:24px;  /* 區段之間 */
+  /* >24px 一律以上列階梯的整數倍組合（calc），不得出現裸值 */
+
+  /* ══ 47 §3 字級階（size / line-height / weight）════════════════════════ */
+  --t-2xs:11px; --lh-2xs:14px; --fw-2xs:600;  /* 微標籤（47 未量到，我方保留階）*/
+  --t-xs:12px;  --lh-xs:16px;  --fw-xs:500;   /* 表格內容、欄位標題 */
+  --t-sm:13px;  --lh-sm:20px;  --fw-sm:var(--fw-body);  /* UI 預設 13/20；64 §3 把此階字重定為 450 */
+  --t-md:14px;  --lh-md:20px;  --fw-md:500;   /* 次要標題 */
+  --t-lg:16px;  --lh-lg:20px;  --fw-lg:450;   /* 卡片標題（weight 刻意降為 450） */
+  --t-xl:18px;  --lh-xl:24px;  --fw-xl:500;   /* 區段標題 */
+  --t-2xl:20px; --lh-2xl:24px;                /* 頁面標題 */
+  --t-3xl:24px; --lh-3xl:32px;                /* 統計數字 */
+  /* ══ 64 §3 字重四階（實測值，非估計）════════════════════════════════════
+     450 內文／輸入值／標籤｜500 pill 與按鈕｜550 badge｜600 卡片標題。
+     這四階是**同一條軸上的四格**，所以收斂成四顆 token，元件一律引用不再各寫數字。
+     47 §6.5 先前只發現 550 一階（--fw-split），64 補齊另外三階並改寫其用途表：
+       ・卡片標題原本是 --fw-lg:450（47 §3 的舊判讀），64 實測是 **13 / 20 / 600**——
+         字級變小、字重變大，兩處都要改，只改一處會得到「小而輕」的錯誤觀感。
+       ・badge 原本硬寫 500，實測 550（＝與 split 鈕同一階，故 --fw-badge 直接指向它）。
+     ⚠ 依賴可變字體軸，見 <head> 的字體載入註釋。 */
+  --fw-body:450;                              /* 64 §3：內文、輸入框文字、標籤、段落 */
+  --fw-control:500;                           /* 64 §3：pill 與按鈕（可點控件）*/
+  --fw-split:550;                             /* 47 §6.5：split 鈕字重 550（介於 500/600）*/
+  --fw-badge:var(--fw-split);                 /* 64 §3：badge 12/16/550 ＝ 與 split 同階 */
+  --fw-title:600;                             /* 64 §3：卡片標題 13/20/600 */
+
+  /* ══ 47 §2 圓角四階 ═══════════════════════════════════════════════════ */
+  --r-100:4px;    /* 最小元素 */
+  --r-200:8px;    /* 控件：按鈕、輸入框、chip、tab、badge */
+  --r-300:12px;   /* 卡片 */
+  --r-400:18px;   /* 大容器 */
+  --r-pill:999px; /* 標籤 tag／進度條（47 §D：tag 才是全圓藥丸）*/
+  --r-card:var(--r-300);--r-btn:var(--r-200);   /* 相容別名 */
+
+  /* ══ 47 §4／§B 控件高度與版面常數 ═════════════════════════════════════ */
+  --h-24:24px;  /* 列表 tab */
+  --h-28:28px;  /* icon 按鈕、表頭按鈕 */
+  --h-32:32px;  /* 表格資料列、輸入框、按鈕 */
+  --h-36:36px;  /* 頂欄控件 */
+  --topbar-h:56px;    /* 47 §0／§B 量測真值（原 52，51 表 1 P0-11）*/
+  --sidebar-w:240px;  /* 47 §B 桌機常駐側欄真值（原 220，51 表 1 P0-11）*/
+  --sz-icon:20px;     /* 64 §4：圖示 20 × 20（我方原本散落 15／16，本輪收斂成一顆 token）*/
+  /* ══ 64 §1 詳情頁雙欄版面（實測）═══════════════════════════════════════
+     左欄（主）寬 633、右欄（次）寬 317；右欄內層盒 285 ⇒ 左右內距各 16
+     （317 − 285 = 32），恰好等於 .card-pad 的 --sp-400，不必另開內距 token。
+     主欄用 minmax(0, …) 只做「上限」不做「固定」——窄視口仍要能收縮，
+     否則 47 §F 的 em 斷點還沒生效就先撐破版面。 */
+  --col-main:633px;
+  --col-aside:317px;
+  /* 64 §1：卡片間距 16（同群）／52（跨群）。52 > 24 ⇒ 依 47 §1「>24px 一律以階梯的
+     整數倍組合」寫成 calc（24×2 + 4），不得出現裸值。同群間距即 .col 的 gap（--sp-400）。 */
+  --sp-group:calc(var(--sp-600)*2 + var(--sp-100));
+
+  /* ══ 47 §G／§H2-2 z-index 窄帶（浮層全部擠在 510–520，靠 DOM 序決勝）══ */
+  --z-base:1;        /* 卡片內基礎堆疊 */
+  --z-sticky:100;    /* 表格 sticky 表頭／儲存格、常駐導航 */
+  --z-mid:400;       /* 中層雜項（tooltip、面板內關閉鈕）*/
+  --z-bulk:510;      /* 表格批次操作 sticky 列、浮動儲存列 */
+  --z-topbar:517;    /* 頂欄、側欄寬度把手 */
+  --z-drawer:518;    /* nav drawer */
+  --z-scrim:518;     /* modal／drawer 遮罩 */
+  --z-dialog:519;    /* 對話框本體 */
+  --z-popover:520;   /* 下拉選單／popover／toast（必須 > dialog）*/
+  --scrim:rgba(0,0,0,.5);   /* 47 §H2-2 實測遮罩不透明度 = .5 */
+
+  /* ══ 47 §H2-3 focus 環：outline:none ＋ 雙層 box-shadow ════════════════
+     內層＝底色做出的留白間隙，外層＝環本身（環寬＝4 個實體像素）。
+     48 §A.2「不准用 box-shadow 模擬焦點環」依 51 表 6 已被 47 推翻。 */
+  --focus-ring:var(--focus);   /* 47 §H2-3 目視為深中性、非品牌藍 */
+  --focus-gap-w:2px;      /* 內層間隙寬 */
+  --focus-ring-w:4px;     /* 環寬＝dpr1.5 下 computed 2.667px ＝ 4 個實體像素 */
+  --border-control:#8a8a8a;  /* 47 §H2-4 表單控件框色（inset 陰影用）*/
+  --surface-bright:#fdfdfd;  /* radio 已選內點 */
+  --focus-gap:var(--bg);  /* 深色浮層內會就地覆寫成該浮層底色 */
+
+  /* ══ 47 §5 動效系統（5 時長 × 3 曲線）═════════════════════════════════ */
+  --dur-fast:100ms;    /* 色彩、邊框、focus、accordion */
+  --dur-base:150ms;    /* 底色 hover、淡入淡出 */
+  --dur-slow:200ms;    /* popover 進場（opacity + scale） */
+  --dur-slower:250ms;  /* 抽屜 transform */
+  --dur-slowest:300ms; /* 側欄寬度 */
+  --dur-shake:300ms;   /* 47 #88 驗證失敗 shake */
+  --dur-bar-grow:500ms;/* 條圖／進度條生長（非 M1–M7，屬資料視覺化）*/
+  --dur-shimmer:1200ms;/* skeleton */
+  --dur-pulse:2000ms;  /* live dot 呼吸 */
+  --ease-standard:cubic-bezier(.25,.1,.25,1);
+  --ease-in-out:cubic-bezier(.42,0,.58,1);
+  --ease-decelerate:cubic-bezier(.19,.91,.38,1);
+  --tr:var(--dur-base) var(--ease-standard);--tr-big:var(--dur-slower) var(--ease-standard);
+
+  /* ══ 陰影階（整條 token 化，51 表 2 要求）═════════════════════════════ */
   --sh:0 1px 2px rgba(26,28,30,.05),0 1px 6px rgba(26,28,30,.04);
+  /* ── 64 §2 卡片：圓角 12／背景 #FFF／**border-width: 0**／六層陰影 ──────────
+     前五層是同步收斂的柔和投影（offset、blur、spread 一起遞減），**第六層
+     `0 0 0 1px` 就是那條看起來像 border 的框線**——卡片根本沒有 border。
+     為什麼這樣做（64 §2 的解釋）：框線走 box-shadow 就不佔 box model、可做次像素、
+     且能與投影合成一次繪製，與 47 §H2-4「表單控件框也用 inset box-shadow」同一套。
+     收斂成**一顆** token：六層寫六次的話，日後調一層就會有卡片沒跟上。
+     不透明度沿用實測的 .03/.02/.02/.03/.04/.06；色相為純黑，屬中性層級不是品牌色。 */
+  --sh-card:
+    rgba(0,0,0,.03) 0 5px 5px -2.5px,
+    rgba(0,0,0,.02) 0 3px 3px -1.5px,
+    rgba(0,0,0,.02) 0 2px 2px -1px,
+    rgba(0,0,0,.03) 0 1px 1px -.5px,
+    rgba(0,0,0,.04) 0 .5px .5px 0,
+    rgba(0,0,0,.06) 0 0 0 1px;
+  --sh-raised:0 1px 2px rgba(26,28,30,.08);
   --sh-pop:0 12px 32px rgba(26,28,30,.16);
   --sh-modal:0 24px 64px rgba(26,28,30,.35);
-  /* 動效 */
-  --tr:150ms cubic-bezier(.2,.6,.3,1);      /* hover/focus/小狀態 */
-  --tr-big:240ms cubic-bezier(.2,.8,.2,1);  /* drawer/savebar/toast */
+  --sh-drawer:0 16px 44px rgba(26,28,30,.2);
+  --sh-bulk:0 8px 24px rgba(26,28,30,.35);
+  --sh-float:0 12px 32px rgba(26,28,30,.35);
+  --sh-doc:0 16px 48px rgba(26,28,30,.5);
+
+  /* ══ 47 §F 斷點階梯（8 階，em，root 16）— 供實作者對照 ═════════════════
+     22.5em=360 / 30.625em=490 / 41.6875em=667 / 48em=768（主斷點，用量 421）
+     / 65em=1040 / 75em=1200 / 90em=1440 / 160em=2560
+     max 配對一律 −0.0025em。media query 的 em 以初始字級 16px 計算，
+     不受 html{font-size:13px} 影響，故 px→em 換算安全（51 表 3.1 註 4）。
+     CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
 }

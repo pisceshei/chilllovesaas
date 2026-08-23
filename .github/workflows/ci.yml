@@ -214,6 +214,14 @@ jobs:
       - name: Check tenant isolation
         run: ruby scripts/check-tenant-isolation.rb
 
+      # 🔴 把鐵律 8「UI 值一律取自 tokens」從紀律變成機制。
+      # 判準是 app/assets/tokens.css 與原型 `:root` 區塊**逐位元組相同**——
+      # 只比對 token 名稱的檢查會對「同名不同值」全綠，而那正是本次抓到的漂移形態
+      # （23 §1 與 tokens.css 停在 2026-07 估計值，原型是 47／64 號的實測值）。
+      # 同時擋「把值貼回 docs/design/23」的第三份拷貝復活。修法＝ruby scripts/sync-tokens.rb
+      - name: Check design token single source
+        run: ruby scripts/check-tokens-sync.rb
+
       # 🔴 把 docs/specs/86 的命名契約從「紀律」變成「機制」。
       # returns（實體退貨）與 sales_reversals（撤銷款項聚合）是兩個概念，
       # 官方 2026-03-05 特地拆開；合併會導致總銷售額對不上或退貨資料無處可放。
