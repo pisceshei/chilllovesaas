@@ -17,8 +17,9 @@ RSpec.describe "M0 Admin shell", type: :system do
 
     expect(page).to have_current_path("/admin/products")
     expect(page).to have_css(".cl-brand__name", text: "CHILL LOVE")
-    expect(page).to have_text("還沒有商品")
-    expect(page).to have_button("新增商品")
+    # ML-1：介面語言依員工 locale（factory 預設 en，裁定 C3）⇒ 英文文案
+    expect(page).to have_text("No products yet")
+    expect(page).to have_button("Add product")
 
     screenshot_path = ENV["M0_SCREENSHOT_PATH"]
     page.save_screenshot(screenshot_path) if screenshot_path.present?

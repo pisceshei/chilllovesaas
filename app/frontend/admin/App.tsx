@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AdminShell } from "./layout/AdminShell";
 import { APPS, NAVIGATION, SALES_CHANNELS } from "./layout/navigation";
+import { I18nProvider, useT } from "./i18n/I18nContext";
 import { SaveBarProvider } from "./lib/SaveBarContext";
 import { ToastProvider } from "./lib/ToastContext";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
@@ -13,18 +14,24 @@ import { Page } from "./components/Page";
 export interface AdminRoutesProps {
   /** Rails 注入的品牌名稱；route tree 只接受這個來源。 */
   brandName: string;
+  /**
+   * 介面語言初值（Rails 從 `staff_members.locale` 注入 `data-ui-locale`）。
+   * 67 §E.1：介面語言＝員工屬性，與內容語言不連動。未注入時 Provider 回平台預設。
+   */
+  uiLocale?: string;
 }
 
 interface PlaceholderPageProps {
-  title: string;
+  titleKey: string;
 }
 
-function PlaceholderPage({ title }: PlaceholderPageProps) {
+function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
+  const t = useT();
   return (
-    <Page title={title}>
+    <Page title={t(titleKey)}>
       <Card className="cl-placeholder" padded>
-        <h2>功能準備中</h2>
-        <p>這個區域會在後續里程碑依規格逐步開放。</p>
+        <h2>{t("placeholder.title")}</h2>
+        <p>{t("placeholder.body")}</p>
       </Card>
     </Page>
   );
@@ -43,39 +50,41 @@ const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
 /**
  * 定義 Admin SPA 的 React Router 路由。
  *
- * @param props - 後端注入的單一品牌值。
+ * @param props - 後端注入的單一品牌值與介面語言初值。
  * @returns 以 AdminShell 包住所有登入後頁面的 route tree。
  */
-export function AdminRoutes({ brandName }: AdminRoutesProps) {
+export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
   const navigationPaths = [ ...NAVIGATION, ...SALES_CHANNELS, ...APPS ].flatMap((entry) => [
-    { label: entry.label, path: entry.path },
-    ...entry.kids.map(([ path, label ]) => ({ label, path })),
+    { labelKey: entry.labelKey, path: entry.path },
+    ...entry.kids.map(([ path, labelKey ]) => ({ labelKey, path })),
   ]);
 
   return (
-    <ToastProvider>
-      <SaveBarProvider>
-        <Routes>
-          <Route element={<AdminShell brandName={brandName} />}>
-        <Route element={<Navigate replace to="/admin/products" />} path="/admin" />
-        {navigationPaths.map(({ label, path }) => {
-          const implemented = IMPLEMENTED.get(path);
-          return (
-            <Route
-              element={implemented ? implemented() : <PlaceholderPage title={label} />}
-              key={path}
-              path={path}
-            />
-          );
-        })}
-        <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
-        <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
-        <Route element={<PlaceholderPage title="AI 助理" />} path="/admin/assistant" />
-        <Route element={<PlaceholderPage title="設定" />} path="/admin/settings" />
-        <Route element={<Navigate replace to="/admin/products" />} path="*" />
-          </Route>
-        </Routes>
-      </SaveBarProvider>
-    </ToastProvider>
+    <I18nProvider initialLocale={uiLocale}>
+      <ToastProvider>
+        <SaveBarProvider>
+          <Routes>
+            <Route element={<AdminShell brandName={brandName} />}>
+              <Route element={<Navigate replace to="/admin/products" />} path="/admin" />
+              {navigationPaths.map(({ labelKey, path }) => {
+                const implemented = IMPLEMENTED.get(path);
+                return (
+                  <Route
+                    element={implemented ? implemented() : <PlaceholderPage titleKey={labelKey} />}
+                    key={path}
+                    path={path}
+                  />
+                );
+              })}
+              <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
+              <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
+              <Route element={<PlaceholderPage titleKey="nav.assistant" />} path="/admin/assistant" />
+              <Route element={<PlaceholderPage titleKey="nav.settings" />} path="/admin/settings" />
+              <Route element={<Navigate replace to="/admin/products" />} path="*" />
+            </Route>
+          </Routes>
+        </SaveBarProvider>
+      </ToastProvider>
+    </I18nProvider>
   );
 }

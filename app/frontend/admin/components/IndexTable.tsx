@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
+import { useT } from "../i18n/I18nContext";
 
 /**
  * IndexTable 欄位定義，對應 `docs/design/23-interaction-css-spec.md` §3 IndexTable。
@@ -53,6 +54,7 @@ export function IndexTable<Row>({
   onSelectionChange,
   rows,
 }: IndexTableProps<Row>) {
+  const t = useT();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set());
   const selectAllRef = useRef<HTMLInputElement>(null);
   const rowKeys = rows.map(getRowKey);
@@ -107,7 +109,7 @@ export function IndexTable<Row>({
           <tr>
             <th className="cl-index-table__select" scope="col">
               <input
-                aria-label="全選"
+                aria-label={t("table.selectAll")}
                 checked={allSelected}
                 className="cl-checkbox"
                 onChange={toggleAll}
@@ -149,7 +151,7 @@ export function IndexTable<Row>({
               >
                 <td className="cl-index-table__select" onClick={(event) => event.stopPropagation()}>
                   <input
-                    aria-label={`選取 ${getRowLabel(row)}`}
+                    aria-label={t("table.selectRow", { label: getRowLabel(row) })}
                     checked={selected}
                     className="cl-checkbox"
                     onChange={() => toggleRow(row)}

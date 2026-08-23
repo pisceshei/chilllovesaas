@@ -36,7 +36,7 @@ describe("商品頁", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin/products"]}>
-        <AdminRoutes brandName="測試品牌" />
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
       </MemoryRouter>,
     );
 
@@ -74,7 +74,7 @@ describe("商品頁", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin/products"]}>
-        <AdminRoutes brandName="測試品牌" />
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
       </MemoryRouter>,
     );
 
@@ -101,7 +101,7 @@ describe("商品頁", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin/products"]}>
-        <AdminRoutes brandName="測試品牌" />
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
       </MemoryRouter>,
     );
 
@@ -138,7 +138,7 @@ describe("商品頁", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin/products"]}>
-        <AdminRoutes brandName="測試品牌" />
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
       </MemoryRouter>,
     );
 
@@ -178,7 +178,7 @@ describe("商品頁", () => {
 
     render(
       <MemoryRouter initialEntries={["/admin/products"]}>
-        <AdminRoutes brandName="測試品牌" />
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
       </MemoryRouter>,
     );
 

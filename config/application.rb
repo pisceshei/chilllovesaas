@@ -40,6 +40,11 @@ module Chilllove
     # 品牌與操作上限只從設定載入，不在 controller 或 GraphQL type 重複常數。
     # 見 HANDOFF.md D3、docs/research/22 §9.4。
     config.x.brand = config_for(:brand)
+
+    # 平台 admin 介面語言（ML-1；正典＝limits i18n.admin.ui_locales，這裡是 Rails I18n 的鏡像）。
+    config.i18n.available_locales = %i[en zh-Hant zh-Hans ja fr]
+    config.i18n.default_locale = :en
+    config.i18n.fallbacks = [ :en ]
     # limits.yml 是全專案唯一的上限值來源（CLAUDE.md 鐵律 6），為「產品限制」而非
     # 環境設定 ⇒ 檔案是扁平結構、無 development/test/production 分層，不能用
     # config_for（它要求 env 分層，讀扁平檔會得到空值 ⇒ GraphqlLimits 在 boot 就 raise）。

@@ -1,0 +1,29 @@
+# 平台 admin 伺服端訊息（userErrors.message）——介面語言依 staff_members.locale（ML-1）。
+# 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
+"fr":
+  errors:
+    product:
+      variants_single_only: "Un produit sans option doit avoir exactement une variante (implicite) ; les options nommées et les variantes multiples arrivent dans un jalon ultérieur."
+      title_blank: "Le titre est obligatoire."
+      title_too_long: "Le titre dépasse la limite."
+      description_too_big: "La description dépasse la taille maximale."
+      handle_invalid: "Le handle ne peut contenir que des minuscules, des chiffres et des tirets."
+      handle_reserved: "Ce handle est réservé par la plateforme. Choisissez-en un autre."
+      vendor_too_long: "Le fournisseur dépasse la limite."
+      product_type_too_long: "Le type de produit dépasse la limite."
+      tags_too_many: "Trop de balises."
+      tag_too_long: "Une balise dépasse la limite."
+      seo_title_too_long: "Le titre SEO dépasse la limite."
+      seo_description_too_long: "La méta-description dépasse la limite."
+      price_required: "Le prix est obligatoire."
+      amount_negative: "Le montant ne peut pas être négatif."
+      amount_invalid: "Saisissez une chaîne de montant valide (unités principales, toujours deux décimales, sans symbole ni séparateur de milliers)."
+      handle_taken: "Ce handle est déjà utilisé."
+      handle_generation_failed: "La génération du handle a rencontré des conflits répétés. Réessayez."
+      gid_invalid: "GID de produit invalide."
+      lock_version_required: "La mise à jour d’un produit nécessite lockVersion."
+      not_found: "Produit introuvable."
+      stale: "Ce produit a été modifié par quelqu’un d’autre. Rechargez puis enregistrez à nouveau."
+      handle_change_pending: "Changer le handle nécessite l’infrastructure de redirection 301 (jalon URL) et n’est pas encore disponible."
+    staff:
+      locale_unsupported: "Langue d’interface non prise en charge."

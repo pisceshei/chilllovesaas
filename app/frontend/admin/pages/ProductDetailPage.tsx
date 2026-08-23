@@ -11,6 +11,7 @@ import { useSaveBarRegister } from "../lib/SaveBarContext";
 import { useToast } from "../lib/ToastContext";
 import { uuidV4 } from "../lib/uuid";
 import { centsToApiString, isValidMoneyInput, parseMoneyToCents, profitState } from "../lib/money";
+import { useT } from "../i18n/I18nContext";
 
 /**
  * 商品建立／詳情頁（59 §7：**同一個元件的兩種狀態，不是兩個頁面**——
@@ -158,14 +159,14 @@ const SERVER_PATHS: Record<string, FieldKey> = {
  * 只能走「更多動作→封存商品」）。副行文案為我方措辭（鐵律 9 不抄本尊文案），
  * 語義取自 13 §F1.2 真值表。
  */
-const STATUS_OPTIONS: { value: string; label: string; hint: string }[] = [
-  { value: "ACTIVE", label: "啟用中", hint: "可販售也可被發現：進搜尋、系列與 sitemap" },
-  { value: "DRAFT", label: "草稿", hint: "尚未備妥：顧客在任何管道都取用不到" },
-  { value: "UNLISTED", label: "未列出", hint: "可購買但不被發現：僅能透過直接連結存取" },
+const STATUS_OPTIONS: { value: string; labelKey: string; hintKey: string }[] = [
+  { value: "ACTIVE", labelKey: "status.active", hintKey: "status.hint.active" },
+  { value: "DRAFT", labelKey: "status.draft", hintKey: "status.hint.draft" },
+  { value: "UNLISTED", labelKey: "status.unlisted", hintKey: "status.hint.unlisted" },
 ];
 
 /** 封存態只在目前狀態＝ARCHIVED 時出現在 listbox（顯示用；解除走選其他值）。 */
-const ARCHIVED_OPTION = { value: "ARCHIVED", label: "已封存", hint: "已停售：選擇其他狀態即取消封存" };
+const ARCHIVED_OPTION = { value: "ARCHIVED", labelKey: "status.archived", hintKey: "status.hint.archived" };
 
 /** SEO 計數器的 SERP 建議值（不是上限；上限＝伺服端 70／320，91 §11）。 */
 const SEO_TITLE_MAX = 70;
@@ -176,11 +177,11 @@ const SEO_DESCRIPTION_MAX = 320;
  * 狀態呈現（正典＝原型 P_STATUS，chilllove-admin-v2.html:3105；
  * 與 ProductsPage 同表——文案與 pip 不得漂移）。
  */
-const STATUS_PRESENTATION: Record<string, { label: string; progress: BadgeProgress; tone: BadgeTone }> = {
-  ACTIVE: { label: "啟用中", progress: "full", tone: "success" },
-  ARCHIVED: { label: "已封存", progress: "full", tone: "default" },
-  DRAFT: { label: "草稿", progress: "empty", tone: "info" },
-  UNLISTED: { label: "未列出", progress: "empty", tone: "attention" },
+const STATUS_PRESENTATION: Record<string, { labelKey: string; progress: BadgeProgress; tone: BadgeTone }> = {
+  ACTIVE: { labelKey: "status.active", progress: "full", tone: "success" },
+  ARCHIVED: { labelKey: "status.archived", progress: "full", tone: "default" },
+  DRAFT: { labelKey: "status.draft", progress: "empty", tone: "info" },
+  UNLISTED: { labelKey: "status.unlisted", progress: "empty", tone: "attention" },
 };
 
 /** 兩維真值表（13 §F1.2：discoverable ⊆ purchasable 恆成立）。 */
@@ -300,6 +301,7 @@ function StatusListbox({
   onChange: (next: string) => void;
   labelId?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const listId = useId();
   const options = value === "ARCHIVED" ? [ ...STATUS_OPTIONS, ARCHIVED_OPTION ] : STATUS_OPTIONS;
@@ -319,11 +321,11 @@ function StatusListbox({
         }}
         type="button"
       >
-        {current.label}
+        {t(current.labelKey)}
         <ChevronDown aria-hidden="true" size={14} />
       </button>
       {open ? (
-        <ul aria-label="商品狀態" className="cl-statusbox__list" id={listId} role="listbox">
+        <ul aria-label={t("product.status.label")} className="cl-statusbox__list" id={listId} role="listbox">
           {options.map((option) => (
             <li
               aria-selected={option.value === value}
@@ -339,8 +341,8 @@ function StatusListbox({
                 {option.value === value ? <Check aria-hidden="true" size={14} /> : null}
               </span>
               <span className="cl-statusbox__text">
-                {option.label}
-                <span>{option.hint}</span>
+                {t(option.labelKey)}
+                <span>{t(option.hintKey)}</span>
               </span>
             </li>
           ))}
@@ -363,6 +365,7 @@ function TagsField({
   onChange: (next: string[]) => void;
   suggestions: string[];
 }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   const inputId = useId();
   const listId = useId();
@@ -377,7 +380,7 @@ function TagsField({
   return (
     <div className="cl-field">
       <label className="cl-field__label" htmlFor={inputId}>
-        標籤
+        {t("product.org.tags")}
       </label>
       {tags.length > 0 ? (
         <div className="cl-chips">
@@ -385,7 +388,7 @@ function TagsField({
             <span className="cl-chip" key={tag}>
               {tag}
               <button
-                aria-label={`移除標籤 ${tag}`}
+                aria-label={t("product.org.tags.remove", { tag })}
                 className="cl-chip__remove"
                 onClick={() => onChange(tags.filter((existing) => existing !== tag))}
                 type="button"
@@ -417,7 +420,7 @@ function TagsField({
             commit();
           }
         }}
-        placeholder="以 Enter 或逗號加入"
+        placeholder={t("product.org.tags.placeholder")}
         value={draft}
       />
       <datalist id={listId}>
@@ -438,6 +441,7 @@ function TagsField({
 export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const navigate = useNavigate();
   const params = useParams();
+  const t = useT();
   const { showToast } = useToast();
   const registerSaveBar = useSaveBarRegister();
 
@@ -507,12 +511,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        showToast(reason instanceof Error ? reason.message : "無法載入商品。");
+        showToast(reason instanceof Error ? reason.message : t("product.loadFailed"));
         setLoadState("missing");
       });
 
     return () => controller.abort();
-  }, [isNew, productGid, showToast]);
+  }, [isNew, productGid, showToast, t]);
 
   const setValue = useCallback(<Key extends keyof FormValues>(key: Key, value: FormValues[Key]) => {
     setValues((current) => ({ ...current, [key]: value }));
@@ -540,39 +544,39 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // 原型 formValidate：req/max/money/handle 規則；失敗 → toast＋shake＋focus 首個壞欄位。
   const validate = useCallback((): boolean => {
     const found: Partial<Record<FieldKey, string>> = {};
-    if (!values.title.trim()) found.title = "標題不能為空白。";
-    else if (values.title.length > 255) found.title = "標題長度超過上限（255）。";
+    if (!values.title.trim()) found.title = t("product.validation.titleBlank");
+    else if (values.title.length > 255) found.title = t("product.validation.titleTooLong", { max: 255 });
 
-    if (!values.price.trim()) found.price = "價格必填。";
+    if (!values.price.trim()) found.price = t("product.validation.priceRequired");
     else if (!isValidMoneyInput(values.price)) {
-      found.price = "請輸入有效金額（最多兩位小數，不含幣別符號）";
+      found.price = t("product.validation.moneyInvalid");
     }
     if (!isValidMoneyInput(values.compare)) {
-      found.compare = "請輸入有效金額（最多兩位小數，不含幣別符號）";
+      found.compare = t("product.validation.moneyInvalid");
     }
     if (!isValidMoneyInput(values.cost)) {
-      found.cost = "請輸入有效金額（最多兩位小數，不含幣別符號）";
+      found.cost = t("product.validation.moneyInvalid");
     }
     if (isNew && values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
-      found.handle = "handle 只能包含小寫字母、數字與連字號。";
+      found.handle = t("product.validation.handleInvalid");
     }
     if (values.seoTitle.length > SEO_TITLE_MAX) {
-      found.seoTitle = `SEO 標題超過 ${SEO_TITLE_MAX} 字元上限。`;
+      found.seoTitle = t("product.validation.seoTitleTooLong", { max: SEO_TITLE_MAX });
     }
     if (values.seoDescription.length > SEO_DESCRIPTION_MAX) {
-      found.seoDescription = `Meta 描述超過 ${SEO_DESCRIPTION_MAX} 字元上限。`;
+      found.seoDescription = t("product.validation.seoDescriptionTooLong", { max: SEO_DESCRIPTION_MAX });
     }
 
     setErrors(found);
     const firstBad = (Object.keys(found) as FieldKey[])[0];
     if (firstBad) {
-      showToast("有欄位未通過驗證");
+      showToast(t("product.validation.failed"));
       setShakeSignal((signal) => signal + 1);
       fieldRefs.current[firstBad]?.focus();
       return false;
     }
     return true;
-  }, [isNew, showToast, values]);
+  }, [isNew, showToast, t, values]);
 
   const applyServerErrors = useCallback(
     (userErrors: ProductSetData["productSet"]["userErrors"]) => {
@@ -584,12 +588,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         else unmapped.push(userError.message);
       }
       setErrors(mapped);
-      showToast(unmapped[0] ?? "有欄位未通過驗證");
+      showToast(unmapped[0] ?? t("product.validation.failed"));
       setShakeSignal((signal) => signal + 1);
       const firstBad = (Object.keys(mapped) as FieldKey[])[0];
       fieldRefs.current[firstBad ?? "title"]?.focus();
     },
-    [showToast],
+    [showToast, t],
   );
 
   const save = useCallback(async () => {
@@ -646,7 +650,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       }
 
       snapshot.current = JSON.stringify(values);
-      showToast("已儲存變更");
+      showToast(t("product.saved"));
       if (isNew) {
         navigate("/admin/products");
       } else {
@@ -660,18 +664,18 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       if (reason instanceof AdminGraphQLError) {
         showToast(reason.message);
       } else {
-        showToast(reason instanceof Error ? reason.message : "儲存失敗，請稍後再試。");
+        showToast(reason instanceof Error ? reason.message : t("product.saveFailed"));
       }
     } finally {
       setSaving(false);
     }
-  }, [applyServerErrors, isNew, lockVersion, navigate, productGid, saving, showToast, validate, values]);
+  }, [applyServerErrors, isNew, lockVersion, navigate, productGid, saving, showToast, t, validate, values]);
 
   const discard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
     setErrors({});
-    showToast("已捨棄變更，還原為上次儲存的內容");
-  }, [showToast]);
+    showToast(t("product.discarded"));
+  }, [showToast, t]);
 
   // 封存／取消封存：狀態寫入 state 後由本 effect 立即觸發儲存（91 §1 本尊為即時動作）。
   useEffect(() => {
@@ -706,10 +710,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       return;
     }
     lastBlockAt.current = now;
-    showToast("有未儲存的變更——再點一次即離開並捨棄");
+    showToast(t("product.leaveWarning"));
     setShakeSignal((signal) => signal + 1);
     blocker.reset();
-  }, [blocker, showToast]);
+  }, [blocker, showToast, t]);
 
   const priceCents = parseMoneyToCents(values.price);
   const costCents = parseMoneyToCents(values.cost);
@@ -725,7 +729,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   if (loadState === "loading") {
     return (
       <div className="cl-page cl-page--detail cl-product-detail">
-        <p className="cl-card-note">載入中…</p>
+        <p className="cl-card-note">{t("product.loading")}</p>
       </div>
     );
   }
@@ -734,9 +738,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     return (
       <div className="cl-page cl-page--detail cl-product-detail">
         <Card padded>
-          <h3>找不到商品</h3>
-          <p className="cl-card-note">此商品不存在或已被刪除。</p>
-          <Button onClick={() => navigate("/admin/products")}>返回商品列表</Button>
+          <h3>{t("product.notFound.title")}</h3>
+          <p className="cl-card-note">{t("product.notFound.body")}</p>
+          <Button onClick={() => navigate("/admin/products")}>{t("product.notFound.back")}</Button>
         </Card>
       </div>
     );
@@ -755,20 +759,20 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     <div className="cl-page cl-page--detail cl-product-detail">
       <header className="cl-detail-head">
         <button
-          aria-label="返回商品列表"
+          aria-label={t("product.backToList")}
           className="cl-icon-button"
           onClick={() => navigate("/admin/products")}
           type="button"
         >
           <ArrowLeft aria-hidden="true" size={16} />
         </button>
-        <h1>{isNew ? "新增商品" : values.title || "商品"}</h1>
+        <h1>{isNew ? t("product.new") : values.title || t("product.untitled")}</h1>
         <Badge progress={statusBadge.progress} tone={statusBadge.tone}>
-          {statusBadge.label}
+          {t(statusBadge.labelKey)}
         </Badge>
         {/* 內容語言 chip：建立一律在來源語言（67 §E.2）；編輯態的切換器屬多語言包 */}
-        <span className="cl-locale-chip" title="內容語言">
-          繁體中文
+        <span className="cl-locale-chip" title={t("product.contentLocale")}>
+          English
         </span>
         <div className="cl-detail-head__actions">
           {isNew ? null : (
@@ -778,12 +782,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 aria-haspopup="menu"
                 onClick={() => setActionsOpen((state) => !state)}
               >
-                更多動作 <MoreHorizontal aria-hidden="true" size={14} />
+                {t("product.moreActions")} <MoreHorizontal aria-hidden="true" size={14} />
               </Button>
               {actionsOpen ? (
                 <div className="cl-actionsmenu__list" role="menu">
-                  <button className="cl-actionsmenu__item" disabled role="menuitem" title="複製屬後續包" type="button">
-                    複製商品
+                  <button className="cl-actionsmenu__item" disabled role="menuitem" title={t("product.duplicate.pending")} type="button">
+                    {t("product.duplicate")}
                   </button>
                   {values.status === "ARCHIVED" ? (
                     <button
@@ -792,7 +796,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                       role="menuitem"
                       type="button"
                     >
-                      取消封存商品
+                      {t("product.unarchive")}
                     </button>
                   ) : (
                     <button
@@ -801,24 +805,24 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                       role="menuitem"
                       type="button"
                     >
-                      封存商品
+                      {t("product.archive")}
                     </button>
                   )}
                   <button
                     className="cl-actionsmenu__item cl-actionsmenu__item--danger"
                     disabled
                     role="menuitem"
-                    title="刪除屬後續包"
+                    title={t("product.delete.pending")}
                     type="button"
                   >
-                    刪除商品
+                    {t("product.delete")}
                   </button>
                 </div>
               ) : null}
             </div>
           )}
-          <Button loading={saving} loadingLabel="儲存中…" onClick={() => void save()} variant="primary">
-            儲存
+          <Button loading={saving} loadingLabel={t("common.saving")} onClick={() => void save()} variant="primary">
+            {t("common.save")}
           </Button>
         </div>
       </header>
@@ -826,24 +830,24 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       <div className="cl-od-grid">
         <div className="cl-od-grid__main">
           <Card padded>
-            <h3>標題與說明</h3>
+            <h3>{t("product.card.titleDescription")}</h3>
             <TextField
               error={errors.title}
-              hint={isNew ? "儲存時自動生成 handle 並唯一化" : undefined}
-              label="標題"
+              hint={isNew ? t("product.field.title.hint") : undefined}
+              label={t("product.field.title")}
               maxLength={255}
               onChange={(event) => setValue("title", event.target.value)}
-              placeholder="例：奶茶色寬版帽T"
+              placeholder={t("product.field.title.placeholder")}
               ref={bindField("title")}
               value={values.title}
             />
             <div className="cl-field">
               <label className="cl-field__label" htmlFor="product-description">
-                說明
+                {t("product.field.description")}
               </label>
-              <div className="cl-rte-toolbar" title="富文本工具列（媒體里程碑開放）">
+              <div className="cl-rte-toolbar" title={t("product.rte.hint")}>
                 <button className="cl-rte-tool" disabled type="button">
-                  <Sparkles aria-hidden="true" size={13} /> AI 生成
+                  <Sparkles aria-hidden="true" size={13} /> {t("product.rte.ai")}
                 </button>
               </div>
               <textarea
@@ -857,46 +861,46 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
 
           <Card padded>
-            <h3>多媒體</h3>
+            <h3>{t("product.card.media")}</h3>
             <div className="cl-dropzone">
               <ImagePlus aria-hidden="true" size={20} />
               <div className="cl-dropzone__actions">
                 <Button disabled size="small">
-                  上傳新檔案
+                  {t("product.media.upload")}
                 </Button>
                 <Button disabled size="small" variant="ghost">
-                  選取現有檔案
+                  {t("product.media.selectExisting")}
                 </Button>
               </div>
-              <p>接受圖片、影片或 3D 模型（媒體里程碑開放）</p>
+              <p>{t("product.media.accept")}</p>
             </div>
           </Card>
 
           <Card padded>
-            <h3>商品類別</h3>
+            <h3>{t("product.card.category")}</h3>
             <TextField
               disabled
-              hint="未選時適用稅則與中繼欄位顯示 --（分類里程碑開放）"
-              label="類別"
-              placeholder="搜尋標準分類…"
+              hint={t("product.category.hint")}
+              label={t("product.category.label")}
+              placeholder={t("product.category.placeholder")}
               value=""
             />
             <div className="cl-derow">
               <div className="cl-de">
-                適用稅則 <b className="cl-de--unknown">--</b>
+                {t("product.category.taxRule")} <b className="cl-de--unknown">--</b>
               </div>
               <div className="cl-de">
-                中繼欄位 <b className="cl-de--unknown">--</b>
+                {t("product.category.metafields")} <b className="cl-de--unknown">--</b>
               </div>
             </div>
           </Card>
 
           <Card padded>
-            <h3>定價</h3>
+            <h3>{t("product.card.pricing")}</h3>
             <TextField
               error={errors.price}
               inputMode="decimal"
-              label="價格（HK$）"
+              label={t("product.price.label")}
               onChange={(event) => setValue("price", event.target.value)}
               placeholder="0.00"
               ref={bindField("price")}
@@ -907,21 +911,21 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 onToggle={togglePill}
                 open={openPills}
                 pills={[
-                  { key: "compare", label: "比較價格", value: values.compare || undefined },
-                  { key: "unit", label: "單價" },
-                  { key: "tax", label: "收取稅金", value: values.taxable ? "是" : "否" },
-                  { key: "cost", label: "每品項成本", value: values.cost || undefined },
+                  { key: "compare", label: t("product.pill.compare"), value: values.compare || undefined },
+                  { key: "unit", label: t("product.pill.unit") },
+                  { key: "tax", label: t("product.pill.tax"), value: values.taxable ? t("common.yes") : t("common.no") },
+                  { key: "cost", label: t("product.pill.cost"), value: values.cost || undefined },
                 ]}
               />
               {openPills.has("compare") ? (
                 <div className="cl-pillpanel">
                   <TextField
                     error={errors.compare}
-                    hint="高於售價時前台顯示劃線價"
+                    hint={t("product.compare.hint")}
                     inputMode="decimal"
-                    label="原價（劃線價）"
+                    label={t("product.compare.label")}
                     onChange={(event) => setValue("compare", event.target.value)}
-                    placeholder="選填"
+                    placeholder={t("product.compare.placeholder")}
                     ref={bindField("compare")}
                     value={values.compare}
                   />
@@ -931,14 +935,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 <div className="cl-pillpanel">
                   <div className="cl-field">
                     <label className="cl-field__label" htmlFor="unit-pricing">
-                      單位定價
+                      {t("product.unit.label")}
                     </label>
                     <select className="cl-field__input" disabled id="unit-pricing">
-                      <option>不啟用</option>
-                      <option>每 100 ml</option>
-                      <option>每 100 g</option>
-                      <option>每 1 kg</option>
-                      <option>每 1 m</option>
+                      <option>{t("product.unit.off")}</option>
+                      <option>{t("product.unit.per100ml")}</option>
+                      <option>{t("product.unit.per100g")}</option>
+                      <option>{t("product.unit.per1kg")}</option>
+                      <option>{t("product.unit.per1m")}</option>
                     </select>
                   </div>
                 </div>
@@ -951,7 +955,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                       onChange={(event) => setValue("taxable", event.target.checked)}
                       type="checkbox"
                     />
-                    收取稅金（課不課由 jurisdiction pack 決定）
+                    {t("product.tax.checkbox")}
                   </label>
                 </div>
               ) : null}
@@ -959,9 +963,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 <div className="cl-pillpanel">
                   <TextField
                     error={errors.cost}
-                    hint="不對顧客顯示"
+                    hint={t("product.cost.hint")}
                     inputMode="decimal"
-                    label="每品項成本"
+                    label={t("product.cost.label")}
                     onChange={(event) => setValue("cost", event.target.value)}
                     placeholder="0.00"
                     ref={bindField("cost")}
@@ -969,7 +973,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                   />
                   <div className="cl-derow">
                     <div className="cl-de">
-                      利潤{" "}
+                      {t("product.profit")}{" "}
                       {profit.profit === null ? (
                         <b className="cl-de--unknown">--</b>
                       ) : (
@@ -977,7 +981,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                       )}
                     </div>
                     <div className="cl-de">
-                      利潤率{" "}
+                      {t("product.margin")}{" "}
                       {profit.margin === null ? (
                         <b className="cl-de--unknown">--</b>
                       ) : (
@@ -991,14 +995,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
 
           <Card padded>
-            <h3>庫存</h3>
-            <SwitchRow checked disabled hint="關閉時不寫 ledger（庫存里程碑開放）" label="已追蹤庫存" />
+            <h3>{t("product.card.inventory")}</h3>
+            <SwitchRow checked disabled hint={t("product.inventory.tracked.hint")} label={t("product.inventory.tracked")} />
             {isNew ? (
               <div className="cl-grid2">
-                <TextField disabled hint="庫存里程碑開放" label="數量" value="0" />
+                <TextField disabled hint={t("product.inventory.quantity.hint")} label={t("product.inventory.quantity")} value="0" />
                 <div className="cl-field">
                   <label className="cl-field__label" htmlFor="inventory-location">
-                    地點
+                    {t("product.inventory.location")}
                   </label>
                   <select className="cl-field__input" disabled id="inventory-location">
                     <option>Shop location</option>
@@ -1011,16 +1015,16 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 onToggle={togglePill}
                 open={openPills}
                 pills={[
-                  { key: "sku", label: "SKU", value: values.sku || undefined },
-                  { key: "barcode", label: "條碼", value: values.barcode || undefined },
-                  { key: "continue", label: "無庫存時繼續銷售" },
+                  { key: "sku", label: t("product.pill.sku"), value: values.sku || undefined },
+                  { key: "barcode", label: t("product.pill.barcode"), value: values.barcode || undefined },
+                  { key: "continue", label: t("product.pill.continue") },
                 ]}
               />
               {openPills.has("sku") ? (
                 <div className="cl-pillpanel">
                   <TextField
-                    hint="軟唯一：重複時警告但不阻擋"
-                    label="SKU（庫存單位）"
+                    hint={t("product.sku.hint")}
+                    label={t("product.sku.label")}
                     maxLength={64}
                     onChange={(event) => setValue("sku", event.target.value)}
                     value={values.sku}
@@ -1030,7 +1034,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
               {openPills.has("barcode") ? (
                 <div className="cl-pillpanel">
                   <TextField
-                    label="條碼（ISBN、UPC、GTIN 等）"
+                    label={t("product.barcode.label")}
                     onChange={(event) => setValue("barcode", event.target.value)}
                     value={values.barcode}
                   />
@@ -1040,7 +1044,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 <div className="cl-pillpanel">
                   <label className="cl-checkrow">
                     <input disabled type="checkbox" />
-                    售完後仍可繼續銷售（庫存里程碑開放）
+                    {t("product.continue.checkbox")}
                   </label>
                 </div>
               ) : null}
@@ -1048,19 +1052,19 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
 
           <Card padded>
-            <h3>運送</h3>
+            <h3>{t("product.card.shipping")}</h3>
             <label className="cl-checkrow">
               <input defaultChecked disabled type="checkbox" />
-              這是實體商品（運送里程碑開放）
+              {t("product.shipping.physical")}
             </label>
             <div className="cl-grid2">
-              <TextField disabled label="商品重量（kg）" placeholder="0.00" value="" />
+              <TextField disabled label={t("product.shipping.weight")} placeholder="0.00" value="" />
               <div className="cl-field">
                 <label className="cl-field__label" htmlFor="shipping-package">
-                  包材
+                  {t("product.shipping.package")}
                 </label>
                 <select className="cl-field__input" disabled id="shipping-package">
-                  <option>商店預設・樣品盒</option>
+                  <option>{t("product.shipping.packageDefault")}</option>
                 </select>
               </div>
             </div>
@@ -1068,21 +1072,25 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
           <Card padded>
             <h3>
-              子類
+              {t("product.card.variants")}
               <span className="cl-card__head-action">
-                <Button disabled size="small" title="具名選項屬變體里程碑">
-                  ＋ 新增子類
+                <Button disabled size="small" title={t("product.variants.add.pending")}>
+                  {t("product.variants.add")}
                 </Button>
               </span>
             </h3>
-            <p className="cl-card-note">新增尺寸、顏色等選項後，變體以選項值組合生成（≤2048）。</p>
+            <p className="cl-card-note">{t("product.variants.note")}</p>
           </Card>
 
           <Card padded>
-            <h3>購買選項</h3>
+            <h3>{t("product.card.purchaseOptions")}</h3>
             <div className="cl-detail-head__actions cl-purchase-options">
-              {["訂閱", "預購", "先試後買"].map((label) => (
-                <Button key={label} onClick={() => showToast(`${label}：功能準備中`)} size="small">
+              {[
+                t("product.purchase.subscription"),
+                t("product.purchase.preorder"),
+                t("product.purchase.tryBeforeBuy"),
+              ].map((label) => (
+                <Button key={label} onClick={() => showToast(t("common.comingSoon", { label }))} size="small">
                   {label}
                 </Button>
               ))}
@@ -1091,11 +1099,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
           <Card padded>
             <h3>
-              搜尋引擎產品資訊
+              {t("product.card.seo")}
               <span className="cl-card__head-action">
                 <button
                   aria-expanded={seoOpen}
-                  aria-label="編輯搜尋引擎產品資訊"
+                  aria-label={t("product.seo.edit")}
                   className="cl-icon-button"
                   onClick={() => setSeoOpen((state) => !state)}
                   type="button"
@@ -1118,14 +1126,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 ) : null}
               </div>
             ) : (
-              <p className="cl-card-note">尚無可預覽的內容——填寫標題後這裡會顯示搜尋結果預覽。</p>
+              <p className="cl-card-note">{t("product.seo.empty")}</p>
             )}
             {seoOpen ? (
               <>
                 <TextField
                   error={errors.seoTitle}
-                  hint={`已使用 ${values.seoTitle.length} / ${SEO_TITLE_MAX} 個字元；留空時沿用商品標題`}
-                  label="頁面標題"
+                  hint={t("product.seo.pageTitle.hint", { used: values.seoTitle.length, max: SEO_TITLE_MAX })}
+                  label={t("product.seo.pageTitle")}
                   maxLength={SEO_TITLE_MAX}
                   onChange={(event) => setValue("seoTitle", event.target.value)}
                   ref={bindField("seoTitle")}
@@ -1133,7 +1141,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 />
                 <div className="cl-field">
                   <label className="cl-field__label" htmlFor="seo-description">
-                    Meta 描述
+                    {t("product.seo.meta")}
                   </label>
                   <textarea
                     aria-invalid={errors.seoDescription ? true : undefined}
@@ -1149,21 +1157,21 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                     <p className="cl-field__error">{errors.seoDescription}</p>
                   ) : (
                     <p className="cl-field__hint">
-                      已使用 {values.seoDescription.length} / {SEO_DESCRIPTION_SERP} 個字元；超過會被搜尋結果截斷（上限 {SEO_DESCRIPTION_MAX}）
+                      {t("product.seo.meta.hint", {
+                        used: values.seoDescription.length,
+                        serp: SEO_DESCRIPTION_SERP,
+                        max: SEO_DESCRIPTION_MAX,
+                      })}
                     </p>
                   )}
                 </div>
                 <TextField
                   disabled={!isNew}
                   error={errors.handle}
-                  hint={
-                    isNew
-                      ? "儲存時由英文標題自動生成；手填衝突會被拒絕"
-                      : "handle 變更需 301 轉址（URL 里程碑開放）"
-                  }
-                  label="網址 handle"
+                  hint={isNew ? t("product.seo.handle.hintNew") : t("product.seo.handle.hintEdit")}
+                  label={t("product.seo.handle")}
                   onChange={(event) => setValue("handle", event.target.value)}
-                  placeholder="自動生成"
+                  placeholder={t("product.seo.handle.placeholder")}
                   ref={bindField("handle")}
                   value={values.handle}
                 />
@@ -1175,10 +1183,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         <div className="cl-od-grid__aside">
           {isNew ? null : (
             <Card padded>
-              <h3>狀態</h3>
+              <h3>{t("product.card.status")}</h3>
               <div className="cl-field">
                 <span className="cl-field__label" id="product-status-label">
-                  商品狀態
+                  {t("product.status.label")}
                 </span>
                 {/* 91 §2：listbox 每項帶描述副行；封存不在清單（走更多動作）。 */}
                 <StatusListbox
@@ -1190,30 +1198,30 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
               {/* 兩維讀值（13 §F1.2）：是/否文字本身承載語意，顏色只加速掃視 */}
               <div className="cl-derow">
                 <div className="cl-de">
-                  可購買 <b className={dimensions.purchasable ? "" : "cl-de--unknown"}>{dimensions.purchasable ? "是" : "否"}</b>
+                  {t("product.status.purchasable")} <b className={dimensions.purchasable ? "" : "cl-de--unknown"}>{dimensions.purchasable ? t("common.yes") : t("common.no")}</b>
                 </div>
                 <div className="cl-de">
-                  可被發現 <b className={dimensions.discoverable ? "" : "cl-de--unknown"}>{dimensions.discoverable ? "是" : "否"}</b>
+                  {t("product.status.discoverable")} <b className={dimensions.discoverable ? "" : "cl-de--unknown"}>{dimensions.discoverable ? t("common.yes") : t("common.no")}</b>
                 </div>
               </div>
             </Card>
           )}
           <Card padded>
-            <h3>發布</h3>
-            <SwitchRow checked disabled hint="排程上線：立即（發布里程碑開放）" label="線上商店" />
-            <SwitchRow checked disabled label="AI 代理" />
-            <SwitchRow checked={false} disabled label="門市 POS" />
+            <h3>{t("product.card.publishing")}</h3>
+            <SwitchRow checked disabled hint={t("product.publishing.onlineStore.hint")} label={t("product.publishing.onlineStore")} />
+            <SwitchRow checked disabled label={t("product.publishing.agent")} />
+            <SwitchRow checked={false} disabled label={t("product.publishing.pos")} />
           </Card>
           {/* 組織分類卡（91 §12：類型 search-or-create、廠商 autocomplete、標籤 token、佈景範本）。 */}
           <Card padded>
-            <h3>組織分類</h3>
+            <h3>{t("product.card.organization")}</h3>
             <TextField
               error={errors.productType}
-              label="產品類型"
+              label={t("product.org.type")}
               list="product-type-suggestions"
               maxLength={255}
               onChange={(event) => setValue("productType", event.target.value)}
-              placeholder="搜尋或新增產品類型"
+              placeholder={t("product.org.type.placeholder")}
               ref={bindField("productType")}
               value={values.productType}
             />
@@ -1224,7 +1232,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             </datalist>
             <TextField
               error={errors.vendor}
-              label="廠商"
+              label={t("product.org.vendor")}
               list="product-vendor-suggestions"
               maxLength={255}
               onChange={(event) => setValue("vendor", event.target.value)}
@@ -1243,10 +1251,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             />
             <div className="cl-field">
               <label className="cl-field__label" htmlFor="theme-template">
-                佈景主題範本
+                {t("product.org.template")}
               </label>
               <select className="cl-field__input" disabled id="theme-template">
-                <option>預設商品</option>
+                <option>{t("product.org.template.default")}</option>
               </select>
             </div>
           </Card>

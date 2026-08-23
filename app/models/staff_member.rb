@@ -25,6 +25,8 @@ class StaffMember < ApplicationRecord
   # 一個 email 一個帳號，透過 user_store_assignments 進入多間店（D8／docs/specs/85 §2）。
   validates :email, uniqueness: { case_sensitive: false }
   validates :status, inclusion: { in: STATUSES }
+  # 介面語言（67 §E.1：員工屬性）；值域＝平台 admin 語言包（limits i18n.admin.ui_locales，鐵律 6）。
+  validates :locale, inclusion: { in: ->(_) { Limits.fetch(:i18n, :admin, :ui_locales).map(&:to_s) } }
   validates :password, length: { minimum: MINIMUM_PASSWORD_LENGTH }, if: -> { password.present? }
   validate :password_present_for_active_staff
 

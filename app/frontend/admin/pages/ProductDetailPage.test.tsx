@@ -10,7 +10,7 @@ import { ADMIN_GRAPHQL_ENDPOINT } from "../api/graphql";
 // （MemoryRouter 是 declarative，ProductDetailPage 一掛載就會拋錯）。
 function renderAt(path: string) {
   const router = createMemoryRouter(
-    [ { path: "*", element: <AdminRoutes brandName="測試品牌" /> } ],
+    [ { path: "*", element: <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" /> } ],
     { initialEntries: [ path ] },
   );
   render(<RouterProvider router={router} />);

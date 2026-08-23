@@ -12,6 +12,7 @@ import type { BadgeProgress, BadgeTone } from "../components/Badge";
 import type { IndexTableColumn } from "../components/IndexTable";
 import { Page } from "../components/Page";
 import { TextField } from "../components/TextField";
+import { useT, useUiLocale } from "../i18n/I18nContext";
 
 const PRODUCTS_QUERY = `
   query ProductsIndex($first: Int!) {
@@ -50,7 +51,7 @@ interface ProductsQueryData {
 }
 
 interface StatusPresentation {
-  label: string;
+  labelKey: string;
   progress: BadgeProgress;
   tone: BadgeTone;
 }
@@ -79,10 +80,10 @@ interface StatusPresentation {
  * 而這個欄位講的是商家有沒有把商品**啟用**。
  */
 const statusPresentation: Record<string, StatusPresentation> = {
-  ACTIVE: { label: "啟用中", progress: "full", tone: "success" },
-  ARCHIVED: { label: "已封存", progress: "full", tone: "default" },
-  DRAFT: { label: "草稿", progress: "empty", tone: "info" },
-  UNLISTED: { label: "未列出", progress: "empty", tone: "attention" },
+  ACTIVE: { labelKey: "status.active", progress: "full", tone: "success" },
+  ARCHIVED: { labelKey: "status.archived", progress: "full", tone: "default" },
+  DRAFT: { labelKey: "status.draft", progress: "empty", tone: "info" },
+  UNLISTED: { labelKey: "status.unlisted", progress: "empty", tone: "attention" },
 };
 
 /**
@@ -110,6 +111,8 @@ export async function fetchProducts(signal?: AbortSignal): Promise<ProductsQuery
  */
 export function ProductsPage() {
   const navigate = useNavigate();
+  const t = useT();
+  const locale = useUiLocale();
   const [products, setProducts] = useState<ProductNode[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
@@ -124,11 +127,11 @@ export function ProductsPage() {
       .then((data) => setProducts(data.products.nodes))
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        setError(reason instanceof Error ? reason.message : "無法載入商品，請稍後再試。");
+        setError(reason instanceof Error ? reason.message : t("products.loadError"));
       });
 
     return () => controller.abort();
-  }, [requestKey]);
+  }, [requestKey, t]);
 
   const retry = useCallback(() => setRequestKey((key) => key + 1), []);
   const filteredProducts = useMemo(() => {
@@ -145,21 +148,17 @@ export function ProductsPage() {
     () => [
       {
         key: "title",
-        header: "商品",
+        header: t("products.col.product"),
         render: (product) => <span className="cl-product-title">{product.title}</span>,
       },
       {
         key: "status",
-        header: "狀態",
+        header: t("products.col.status"),
         render: (product) => {
-          const presentation = statusPresentation[product.status.toLocaleUpperCase()] ?? {
-            label: product.status,
-            progress: "empty" as const,
-            tone: "default" as const,
-          };
+          const presentation = statusPresentation[product.status.toLocaleUpperCase()];
           return (
-            <Badge progress={presentation.progress} tone={presentation.tone}>
-              {presentation.label}
+            <Badge progress={presentation?.progress ?? "empty"} tone={presentation?.tone ?? "default"}>
+              {presentation ? t(presentation.labelKey) : product.status}
             </Badge>
           );
         },
@@ -167,58 +166,58 @@ export function ProductsPage() {
       {
         align: "right",
         key: "inventory",
-        header: "庫存",
+        header: t("products.col.inventory"),
         render: (product) =>
           typeof product.totalInventory === "number"
-            ? `${product.totalInventory.toLocaleString("zh-TW")} 件`
-            : "未追蹤",
+            ? t("products.inventory.units", { count: product.totalInventory })
+            : t("products.inventory.untracked"),
       },
       {
         key: "type",
-        header: "類型",
+        header: t("products.col.type"),
         render: (product) => product.productType || "—",
       },
       {
         key: "vendor",
-        header: "供應商",
+        header: t("products.col.vendor"),
         render: (product) => product.vendor || "—",
       },
     ],
-    [],
+    [locale, t],
   );
 
   const actions = (
     <>
       <Button size="small" variant="ghost">
-        匯出
+        {t("products.export")}
       </Button>
       <Button size="small" variant="ghost">
-        匯入
+        {t("products.import")}
       </Button>
       <Button onClick={() => navigate("/admin/products/new")} variant="primary">
         <Plus aria-hidden="true" size={15} />
-        新增商品
+        {t("products.add")}
       </Button>
     </>
   );
 
   return (
-    <Page actions={actions} title="商品">
+    <Page actions={actions} title={t("products.title")}>
       {error ? (
         <div className="cl-error-banner" role="alert">
           <div>
-            <strong>商品載入失敗</strong>
+            <strong>{t("products.loadFailed")}</strong>
             <p>{error}</p>
           </div>
           <Button onClick={retry} size="small" variant="secondary">
             <RefreshCw aria-hidden="true" size={14} />
-            再試一次
+            {t("common.retry")}
           </Button>
         </div>
       ) : products === null ? (
-        <Card aria-label="正在載入商品" className="cl-products-loading">
+        <Card aria-label={t("products.loading")} className="cl-products-loading">
           <span className="cl-sr-only" role="status">
-            正在載入商品
+            {t("products.loading")}
           </span>
           {Array.from({ length: 5 }, (_, index) => (
             <span className="cl-skeleton" key={index} />
@@ -230,25 +229,25 @@ export function ProductsPage() {
             action={
               <Button onClick={() => navigate("/admin/products/new")} variant="primary">
                 <Plus aria-hidden="true" size={15} />
-                新增商品
+                {t("products.add")}
               </Button>
             }
-            description="建立第一項商品，開始整理你的商店目錄。"
+            description={t("products.empty.description")}
             illustration={<PackagePlus size={30} strokeWidth={1.7} />}
-            title="還沒有商品"
+            title={t("products.empty.title")}
           />
         </Card>
       ) : (
         <Card>
           <div className="cl-listbar">
-            <span className="cl-view-chip">全部</span>
+            <span className="cl-view-chip">{t("products.view.all")}</span>
             <div className="cl-product-search">
               <Search aria-hidden="true" size={14} />
               <TextField
-                label="搜尋商品"
+                label={t("products.search.label")}
                 labelHidden
                 onChange={(event) => setSearchValue(event.currentTarget.value)}
-                placeholder="搜尋商品、類型或供應商…"
+                placeholder={t("products.search.placeholder")}
                 type="search"
                 value={searchValue}
               />
@@ -256,7 +255,7 @@ export function ProductsPage() {
           </div>
           {filteredProducts.length > 0 ? (
             <IndexTable
-              caption="商品列表"
+              caption={t("products.caption")}
               columns={columns}
               getRowKey={(product) => product.id}
               getRowLabel={(product) => product.title}
@@ -267,12 +266,12 @@ export function ProductsPage() {
             <EmptyState
               action={
                 <Button onClick={() => setSearchValue("")} size="small">
-                  清除搜尋
+                  {t("products.clearSearch")}
                 </Button>
               }
-              description="請調整搜尋字詞後再試一次。"
+              description={t("products.noMatch.description")}
               illustration={<Search size={28} strokeWidth={1.7} />}
-              title="找不到符合的商品"
+              title={t("products.noMatch.title")}
             />
           )}
         </Card>

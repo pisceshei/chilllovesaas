@@ -1,0 +1,29 @@
+# 平台 admin 伺服端訊息（userErrors.message）——介面語言依 staff_members.locale（ML-1）。
+# 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
+"zh-Hant":
+  errors:
+    product:
+      variants_single_only: "無選項商品的變體必須恰為一筆（隱含變體）；具名選項與多變體屬後續里程碑。"
+      title_blank: "標題不能為空白。"
+      title_too_long: "標題長度超過上限。"
+      description_too_big: "說明超過大小上限。"
+      handle_invalid: "handle 只能包含小寫字母、數字與連字號。"
+      handle_reserved: "此 handle 為系統保留字，請改用其他值。"
+      vendor_too_long: "廠商長度超過上限。"
+      product_type_too_long: "產品類型長度超過上限。"
+      tags_too_many: "標籤數量超過上限。"
+      tag_too_long: "單一標籤長度超過上限。"
+      seo_title_too_long: "SEO 標題長度超過上限。"
+      seo_description_too_long: "Meta 描述長度超過上限。"
+      price_required: "價格欄位必填。"
+      amount_negative: "金額不得為負。"
+      amount_invalid: "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。"
+      handle_taken: "handle 已被使用。"
+      handle_generation_failed: "handle 產生時持續發生衝突，請重試。"
+      gid_invalid: "無效的商品 GID。"
+      lock_version_required: "更新商品必須提供 lockVersion。"
+      not_found: "找不到商品。"
+      stale: "商品已被其他人修改，請重新載入後再儲存。"
+      handle_change_pending: "handle 變更需要 301 轉址基建（URL 里程碑），暫不開放。"
+    staff:
+      locale_unsupported: "不支援的介面語言。"

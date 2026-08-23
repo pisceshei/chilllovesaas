@@ -175,7 +175,8 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
       expect(response).to have_http_status(:ok)
       expect(payload["errors"]).to be_nil
       error = payload.dig("data", "productSet", "userErrors", 0)
-      expect(error).to eq({ "field" => [ "title" ], "message" => "標題不能為空白。", "code" => "BLANK" })
+      # 訊息依員工介面語言（ML-1）；factory 員工預設 en ⇒ 英文。繁中版在 spec/requests/staff_locale_update_spec.rb。
+      expect(error).to eq({ "field" => [ "title" ], "message" => I18n.t("errors.product.title_blank", locale: :en), "code" => "BLANK" })
     end
 
     it "金額非嚴格兩位小數字串 ⇒ INVALID（不 round、不補位）" do

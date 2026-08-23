@@ -23,11 +23,12 @@ import type { LucideIcon } from "lucide-react";
  * `/admin/collections` 屬「產品」群組、`/admin/catalogs` 屬「市場」群組，
  * 兩者的 URL 都看不出歸屬。
  */
-export type NavigationKid = readonly [path: string, label: string];
+export type NavigationKid = readonly [path: string, labelKey: string]; // labelKey＝i18n bundle 的 key（nav.*）
 
 /** 主導覽單元（對齊原型 `NAV` 常數，docs/design/chilllove-admin-v2.html:2225）。 */
 export interface NavigationEntry {
-  label: string;
+  /** i18n key（`nav.*`），渲染時 t(labelKey)；導覽文案不得硬編（ML-1）。 */
+  labelKey: string;
   path: string;
   icon: LucideIcon;
   kids: readonly NavigationKid[];
@@ -50,75 +51,75 @@ export interface NavigationEntry {
  *   導航資料驅動時實作，71-R4-V4）。
  */
 export const NAVIGATION: readonly NavigationEntry[] = [
-  { label: "首頁", path: "/admin/home", icon: House, kids: [] },
+  { labelKey: "nav.home", path: "/admin/home", icon: House, kids: [] },
   {
-    label: "訂單",
+    labelKey: "nav.orders",
     path: "/admin/orders",
     icon: ShoppingBag,
     kids: [
-      [ "/admin/orders/drafts", "草稿" ],
-      [ "/admin/orders/shipping-labels", "運送標籤" ],
-      [ "/admin/orders/abandoned", "未完成結帳" ],
+      [ "/admin/orders/drafts", "nav.orders.drafts" ],
+      [ "/admin/orders/shipping-labels", "nav.orders.shippingLabels" ],
+      [ "/admin/orders/abandoned", "nav.orders.abandoned" ],
     ],
   },
   {
-    label: "產品",
+    labelKey: "nav.products",
     path: "/admin/products",
     icon: Package,
     kids: [
-      [ "/admin/collections", "商品系列" ],
-      [ "/admin/inventory", "庫存" ],
-      [ "/admin/purchase-orders", "採購單" ],
-      [ "/admin/transfers", "轉移" ],
-      [ "/admin/gift-cards", "禮品卡" ],
+      [ "/admin/collections", "nav.products.collections" ],
+      [ "/admin/inventory", "nav.products.inventory" ],
+      [ "/admin/purchase-orders", "nav.products.purchaseOrders" ],
+      [ "/admin/transfers", "nav.products.transfers" ],
+      [ "/admin/gift-cards", "nav.products.giftCards" ],
     ],
   },
   {
-    label: "顧客",
+    labelKey: "nav.customers",
     path: "/admin/customers",
     icon: Users,
     kids: [
-      [ "/admin/customers/segments", "分群" ],
-      [ "/admin/companies", "公司" ],
+      [ "/admin/customers/segments", "nav.customers.segments" ],
+      [ "/admin/companies", "nav.customers.companies" ],
     ],
   },
   {
-    label: "成長",
+    labelKey: "nav.growth",
     path: "/admin/growth",
     icon: TrendingUp,
     kids: [
-      [ "/admin/growth/attribution", "歸因" ],
-      [ "/admin/growth/campaigns", "行銷活動" ],
+      [ "/admin/growth/attribution", "nav.growth.attribution" ],
+      [ "/admin/growth/campaigns", "nav.growth.campaigns" ],
     ],
   },
-  { label: "折扣", path: "/admin/discounts", icon: Percent, kids: [] },
+  { labelKey: "nav.discounts", path: "/admin/discounts", icon: Percent, kids: [] },
   {
-    label: "內容",
+    labelKey: "nav.content",
     path: "/admin/content/metaobjects",
     icon: Newspaper,
     kids: [
-      [ "/admin/content/files", "檔案" ],
-      [ "/admin/content/menus", "選單" ],
-      [ "/admin/content/blog", "部落格貼文" ],
+      [ "/admin/content/files", "nav.content.files" ],
+      [ "/admin/content/menus", "nav.content.menus" ],
+      [ "/admin/content/blog", "nav.content.blog" ],
     ],
   },
   {
-    label: "市場",
+    labelKey: "nav.markets",
     path: "/admin/markets",
     icon: Globe,
     kids: [
-      [ "/admin/catalogs", "目錄" ],
-      [ "/admin/rollouts", "推出" ],
+      [ "/admin/catalogs", "nav.markets.catalogs" ],
+      [ "/admin/rollouts", "nav.markets.rollouts" ],
     ],
   },
-  { label: "財務", path: "/admin/finance", icon: Landmark, kids: [] },
+  { labelKey: "nav.finance", path: "/admin/finance", icon: Landmark, kids: [] },
   {
-    label: "分析",
+    labelKey: "nav.analytics",
     path: "/admin/analytics",
     icon: ChartLine,
     kids: [
-      [ "/admin/reports", "報告" ],
-      [ "/admin/live", "實況瀏覽" ],
+      [ "/admin/reports", "nav.analytics.reports" ],
+      [ "/admin/live", "nav.analytics.live" ],
     ],
   },
 ];
@@ -132,21 +133,21 @@ export const NAVIGATION: readonly NavigationEntry[] = [
  */
 export const SALES_CHANNELS: readonly NavigationEntry[] = [
   {
-    label: "線上商店",
+    labelKey: "nav.onlineStore",
     path: "/admin/store",
     icon: Store,
     kids: [
-      [ "/admin/pages", "頁面" ],
-      [ "/admin/store/preferences", "偏好設定" ],
+      [ "/admin/pages", "nav.onlineStore.pages" ],
+      [ "/admin/store/preferences", "nav.onlineStore.preferences" ],
     ],
   },
-  { label: "代理式", path: "/admin/channels/agentic", icon: Bot, kids: [] },
-  { label: "門市 POS", path: "/admin/channels/pos", icon: Tablet, kids: [] },
+  { labelKey: "nav.agentic", path: "/admin/channels/agentic", icon: Bot, kids: [] },
+  { labelKey: "nav.pos", path: "/admin/channels/pos", icon: Tablet, kids: [] },
 ];
 
 /** 應用程式群組。 */
 export const APPS: readonly NavigationEntry[] = [
-  { label: "應用程式", path: "/admin/apps", icon: LayoutGrid, kids: [] },
+  { labelKey: "nav.apps", path: "/admin/apps", icon: LayoutGrid, kids: [] },
 ];
 
 /**

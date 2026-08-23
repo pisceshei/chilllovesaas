@@ -1,31 +1,29 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
-en:
-  hello: "Hello world"
+# 平台 admin 伺服端訊息（userErrors.message）——介面語言依 staff_members.locale（ML-1）。
+# 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
+"en":
+  errors:
+    product:
+      variants_single_only: "Products without options must have exactly one (implicit) variant; named options and multiple variants arrive in a later milestone."
+      title_blank: "Title can't be blank."
+      title_too_long: "Title is longer than the limit."
+      description_too_big: "Description exceeds the size limit."
+      handle_invalid: "Handle can only contain lowercase letters, numbers, and hyphens."
+      handle_reserved: "This handle is reserved by the platform. Choose another."
+      vendor_too_long: "Vendor is longer than the limit."
+      product_type_too_long: "Product type is longer than the limit."
+      tags_too_many: "Too many tags."
+      tag_too_long: "A tag is longer than the limit."
+      seo_title_too_long: "SEO title is longer than the limit."
+      seo_description_too_long: "Meta description is longer than the limit."
+      price_required: "Price is required."
+      amount_negative: "Amount can't be negative."
+      amount_invalid: "Enter a valid amount string (major units, always two decimals, no symbols or thousands separators)."
+      handle_taken: "This handle is already in use."
+      handle_generation_failed: "Handle generation kept colliding. Please try again."
+      gid_invalid: "Invalid product GID."
+      lock_version_required: "Updating a product requires lockVersion."
+      not_found: "Product not found."
+      stale: "This product was changed by someone else. Reload and save again."
+      handle_change_pending: "Changing the handle needs the 301 redirect infrastructure (URL milestone) and is not available yet."
+    staff:
+      locale_unsupported: "Unsupported interface language."

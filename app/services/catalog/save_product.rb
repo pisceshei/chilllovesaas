@@ -63,29 +63,29 @@ module Catalog
 
         errors << error(
           [ "variants" ],
-          "無選項商品的變體必須恰為一筆（隱含變體）；具名選項與多變體屬後續里程碑。",
+          I18n.t("errors.product.variants_single_only"),
           "INVALID"
         )
       end
 
       def normalize(shop, input, errors)
         title = input[:title].to_s.strip
-        errors << error([ "title" ], "標題不能為空白。", "BLANK") if title.empty?
+        errors << error([ "title" ], I18n.t("errors.product.title_blank"), "BLANK") if title.empty?
         if title.length > Limits.fetch(:product, :title_max_chars)
-          errors << error([ "title" ], "標題長度超過上限。", "TOO_LONG")
+          errors << error([ "title" ], I18n.t("errors.product.title_too_long"), "TOO_LONG")
         end
 
         description = sanitize_description(input[:description_html].to_s)
         if description.bytesize > Limits.fetch(:product, :description_max_bytes)
-          errors << error([ "descriptionHtml" ], "說明超過大小上限。", "TOO_BIG")
+          errors << error([ "descriptionHtml" ], I18n.t("errors.product.description_too_big"), "TOO_BIG")
         end
 
         manual_handle = input[:handle].presence
         if manual_handle && !manual_handle.match?(/\A[a-z0-9-]+\z/)
-          errors << error([ "handle" ], "handle 只能包含小寫字母、數字與連字號。", "INVALID")
+          errors << error([ "handle" ], I18n.t("errors.product.handle_invalid"), "INVALID")
         elsif manual_handle && Limits.fetch(:handle, :reserved).map(&:to_s).include?(manual_handle)
           # limits handle.reserved（all/new/index）：撞平台路由段（如 /admin/products/new）。
-          errors << error([ "handle" ], "此 handle 為系統保留字，請改用其他值。", "INVALID")
+          errors << error([ "handle" ], I18n.t("errors.product.handle_reserved"), "INVALID")
         end
 
         variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
@@ -113,7 +113,7 @@ module Catalog
         unless input[:vendor].nil?
           vendor = input[:vendor].to_s.strip
           if vendor.length > Limits.fetch(:product, :vendor_max_chars)
-            errors << error([ "vendor" ], "廠商長度超過上限。", "TOO_LONG")
+            errors << error([ "vendor" ], I18n.t("errors.product.vendor_too_long"), "TOO_LONG")
           end
           organization[:vendor] = vendor.presence
         end
@@ -121,7 +121,7 @@ module Catalog
         unless input[:product_type].nil?
           product_type = input[:product_type].to_s.strip
           if product_type.length > Limits.fetch(:product, :product_type_max_chars)
-            errors << error([ "productType" ], "產品類型長度超過上限。", "TOO_LONG")
+            errors << error([ "productType" ], I18n.t("errors.product.product_type_too_long"), "TOO_LONG")
           end
           organization[:product_type] = product_type.presence
         end
@@ -130,10 +130,10 @@ module Catalog
           # 宣告式全量覆寫：strip → 去空 → 去重（保序）。單標籤與總數上限各自回錯。
           tags = input[:tags].map { |tag| tag.to_s.strip }.reject(&:empty?).uniq
           if tags.length > Limits.fetch(:product, :max_tags)
-            errors << error([ "tags" ], "標籤數量超過上限。", "TOO_LONG")
+            errors << error([ "tags" ], I18n.t("errors.product.tags_too_many"), "TOO_LONG")
           end
           if tags.any? { |tag| tag.length > Limits.fetch(:product, :tag_max_chars) }
-            errors << error([ "tags" ], "單一標籤長度超過上限。", "TOO_LONG")
+            errors << error([ "tags" ], I18n.t("errors.product.tag_too_long"), "TOO_LONG")
           end
           organization[:tags] = tags
         end
@@ -143,14 +143,14 @@ module Catalog
           unless seo[:title].nil?
             seo_title = seo[:title].to_s.strip
             if seo_title.length > Limits.fetch(:content, :seo_title_max_chars)
-              errors << error([ "seo", "title" ], "SEO 標題長度超過上限。", "TOO_LONG")
+              errors << error([ "seo", "title" ], I18n.t("errors.product.seo_title_too_long"), "TOO_LONG")
             end
             organization[:seo_title] = seo_title.presence
           end
           unless seo[:description].nil?
             seo_description = seo[:description].to_s.strip
             if seo_description.length > Limits.fetch(:content, :seo_meta_description_max_chars)
-              errors << error([ "seo", "description" ], "Meta 描述長度超過上限。", "TOO_LONG")
+              errors << error([ "seo", "description" ], I18n.t("errors.product.seo_description_too_long"), "TOO_LONG")
             end
             organization[:seo_description] = seo_description.presence
           end
@@ -179,14 +179,14 @@ module Catalog
       # **不得 round、不得默默補位**。負數在型別層合法（65 §A.7），價格域再擋。
       def parse_money(raw, shop, field, errors, required:)
         if raw.blank?
-          errors << error([ "variants", "0", field ], "價格欄位必填。", "BLANK") if required
+          errors << error([ "variants", "0", field ], I18n.t("errors.product.price_required"), "BLANK") if required
           return nil
         end
 
         decimal = Money::Decimal.from_string(raw.to_s, shop.store_currency)
         storage = decimal.to_storage
         if storage.cents.negative?
-          errors << error([ "variants", "0", field ], "金額不得為負。", "GREATER_THAN_OR_EQUAL_TO")
+          errors << error([ "variants", "0", field ], I18n.t("errors.product.amount_negative"), "GREATER_THAN_OR_EQUAL_TO")
           return nil
         end
         storage.cents
@@ -196,7 +196,7 @@ module Catalog
         # 錨點修好後理論上不可達，仍保留——兩道防線各自獨立成立。
         errors << error(
           [ "variants", "0", field ],
-          "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。",
+          I18n.t("errors.product.amount_invalid"),
           "INVALID"
         )
         nil
@@ -249,12 +249,12 @@ module Catalog
           # 不得把 reject 誤用在生成路徑上。
           if manual
             Result.new(product: nil,
-                       user_errors: [ error([ "handle" ], "handle 已被使用。", "HANDLE_TAKEN") ])
+                       user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_taken"), "HANDLE_TAKEN") ])
           elsif (attempts += 1) < GENERATED_HANDLE_ATTEMPTS
             retry
           else
             Result.new(product: nil,
-                       user_errors: [ error([ "handle" ], "handle 產生時持續發生衝突，請重試。",
+                       user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_generation_failed"),
                                             "CREATION_FAILED") ])
           end
         rescue ActiveRecord::RecordInvalid => invalid
@@ -282,13 +282,13 @@ module Catalog
         match = GID_PATTERN.match(input[:id].to_s)
         unless match
           return Result.new(product: nil,
-                            user_errors: [ error([ "id" ], "無效的商品 GID。", "INVALID") ])
+                            user_errors: [ error([ "id" ], I18n.t("errors.product.gid_invalid"), "INVALID") ])
         end
         if input[:lock_version].nil?
           # 🔴 更新必帶 lockVersion：缺它「最後寫入者贏」會靜默蓋掉並發修改，
           #    正是 63 §A.4 樂觀鎖要擋的事故。
           return Result.new(product: nil,
-                            user_errors: [ error([ "lockVersion" ], "更新商品必須提供 lockVersion。", "BLANK") ])
+                            user_errors: [ error([ "lockVersion" ], I18n.t("errors.product.lock_version_required"), "BLANK") ])
         end
 
         product = nil
@@ -326,13 +326,13 @@ module Catalog
         Result.new(product: product.reload, user_errors: [])
       rescue ActiveRecord::RecordNotFound
         Result.new(product: nil,
-                   user_errors: [ error([ "id" ], "找不到商品。", "NOT_FOUND") ])
+                   user_errors: [ error([ "id" ], I18n.t("errors.product.not_found"), "NOT_FOUND") ])
       rescue ActiveRecord::StaleObjectError
         Result.new(product: nil,
-                   user_errors: [ error(nil, "商品已被其他人修改，請重新載入後再儲存。", "STALE_OBJECT") ])
+                   user_errors: [ error(nil, I18n.t("errors.product.stale"), "STALE_OBJECT") ])
       rescue HandleChangePending
         Result.new(product: nil,
-                   user_errors: [ error([ "handle" ], "handle 變更需要 301 轉址基建（URL 里程碑），暫不開放。", "INVALID") ])
+                   user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_change_pending"), "INVALID") ])
       rescue ActiveRecord::RecordInvalid => invalid
         Result.new(product: nil, user_errors: translate_record_invalid(invalid))
       end

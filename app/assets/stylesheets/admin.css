@@ -1399,3 +1399,16 @@ a {
 .cl-actionsmenu__item:hover:not(:disabled) { background: var(--surface-hover); }
 .cl-actionsmenu__item:disabled { color: var(--text-3); cursor: not-allowed; }
 .cl-actionsmenu__item--danger:not(:disabled) { color: var(--critical); }
+
+/* ── 介面語言切換器（ML-1；67 §E.1 員工屬性，與內容語言不連動）── */
+.cl-locale-switch {
+  display: inline-flex; align-items: center; gap: var(--sp-100);
+  color: var(--text-2); cursor: pointer;
+}
+.cl-locale-switch__select {
+  height: var(--h-28); padding: 0 var(--sp-150); font-size: var(--t-sm);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-200);
+  color: var(--text); cursor: pointer;
+}
+.cl-locale-switch__select:hover { border-color: var(--border-hover); }
+.cl-locale-switch__select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }

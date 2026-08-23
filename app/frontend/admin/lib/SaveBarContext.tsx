@@ -31,14 +31,14 @@ const SaveBarContext = createContext<SaveBarContextValue | null>(null);
 /** AdminShell 讀取現行 SaveBar 狀態（無表單頁為 null）。 */
 export function useSaveBarState(): SaveBarState | null {
   const context = useContext(SaveBarContext);
-  if (!context) throw new Error("useSaveBarState 必須在 SaveBarProvider 內使用。");
+  if (!context) throw new Error("useSaveBarState must be used inside <SaveBarProvider>.");
   return context.state;
 }
 
 /** 表單頁註冊／清除 SaveBar。 */
 export function useSaveBarRegister(): (state: SaveBarState | null) => void {
   const context = useContext(SaveBarContext);
-  if (!context) throw new Error("useSaveBarRegister 必須在 SaveBarProvider 內使用。");
+  if (!context) throw new Error("useSaveBarRegister must be used inside <SaveBarProvider>.");
   return context.register;
 }
 
