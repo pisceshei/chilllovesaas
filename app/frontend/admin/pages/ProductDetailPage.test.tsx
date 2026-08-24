@@ -327,6 +327,20 @@ describe("新增商品頁", () => {
       await user.click(await main.findByRole("button", { name: /更多動作/ }));
       await user.click(main.getByRole("menuitem", { name: "封存商品" }));
 
+      // 包 4：封存先過確認框——取消＝不送任何 mutation
+      const dialog = within(await screen.findByRole("dialog"));
+      expect(dialog.getByText("要封存這個商品嗎？")).toBeVisible();
+      await user.click(dialog.getByRole("button", { name: "取消" }));
+      expect(callsTo(fetchMock, "mutation productSet")).toHaveLength(0);
+      // 取消後框已關＋焦點回「更多動作」（選單項已 unmount ⇒ restoreFocusTo 鏈，審查 C1/C7）
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(main.getByRole("button", { name: /更多動作/ })).toHaveFocus();
+
+      await user.click(main.getByRole("button", { name: /更多動作/ }));
+      await user.click(main.getByRole("menuitem", { name: "封存商品" }));
+      await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "封存" }));
+      expect(screen.queryByRole("dialog")).toBeNull();
+
       await screen.findByText("已儲存變更");
       const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
       expect(input.status).toBe("ARCHIVED");
@@ -438,9 +452,63 @@ describe("新增商品頁", () => {
     const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
     expect(screen.queryByRole("button", { name: "開啟全域搜尋" })).toBeNull();
 
+    // 包 4：捨棄先過確認框（還原快照不可復原）——取消＝表單不動
     await user.click(within(savebar).getByRole("button", { name: "捨棄" }));
+    let dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "取消" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByLabelText("標題（English）")).toHaveValue("abc");
+
+    await user.click(within(savebar).getByRole("button", { name: "捨棄" }));
+    dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "捨棄變更" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByLabelText("標題（English）")).toHaveValue("");
     expect(screen.getByRole("button", { name: "開啟全域搜尋" })).toBeVisible();
+    // SaveBar 已 unmount ⇒ 焦點退到頁標題（restoreFocusTo 鏈，審查 C1）
+    expect(screen.getByRole("heading", { name: "新增商品" })).toHaveFocus();
+  });
+
+  it("儲存後快照前進：SaveBar 消失；再編輯後捨棄還原到「上次儲存」而非初值（審查 C6）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE_ROUTES,
+      {
+        match: "query productForEdit",
+        body: {
+          data: {
+            product: {
+              id: "gid://chilllove/Product/9",
+              title: "原名", descriptionHtml: "", status: "DRAFT", handle: "tee",
+              lockVersion: 3, vendor: "", productType: "", tags: [],
+              seo: { title: null, description: null }, translations: [],
+              variants: { nodes: [
+                { price: "128.00", compareAtPrice: null, cost: null, sku: null, barcode: null, taxable: true },
+              ] },
+            },
+          },
+        },
+      },
+      { match: "mutation productSet", body: CREATED },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const title = await screen.findByLabelText("標題（English）");
+    await user.clear(title);
+    await user.type(title, "改名一版");
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+    // dirty=false ⇒ SaveBar 讓位回搜尋列
+    expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull();
+    expect(callsTo(fetchMock, "mutation productSet")).toHaveLength(1);
+
+    await user.type(screen.getByLabelText("標題（English）"), "又改");
+    const savebar2 = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar2).getByRole("button", { name: "捨棄" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "捨棄變更" }));
+    // 還原到上次儲存的「改名一版」，不是頁面載入時的初值
+    expect(screen.getByLabelText("標題（English）")).toHaveValue("改名一版");
   });
 });
 

@@ -6,6 +6,7 @@ import { Badge } from "../components/Badge";
 import type { BadgeProgress, BadgeTone } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { InventoryCard } from "../components/InventoryCard";
 import { LocalizedField } from "../components/LocalizedField";
 import type { LocaleOption } from "../components/LocalizedField";
@@ -515,6 +516,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const [shakeSignal, setShakeSignal] = useState(0);
   const [seoOpen, setSeoOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  // 破壞性動作確認（包 4）：null＝無待確認；封存走確認框、取消封存不用（可逆）。
+  const [confirmAction, setConfirmAction] = useState<"discard" | "archive" | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionsData>({ productVendors: [], productTypes: [] });
   // 內容語言（來源語言排第一）；載入前先給來源語言一格，避免建立頁閃空。
   const [contentLocales, setContentLocales] = useState<{ tag: string; endonym: string; isSource: boolean }[]>([]);
@@ -526,6 +529,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // 冪等鍵：建立態專用（更新態是宣告式覆寫、天然冪等，防線是 lockVersion——D-PS5）。
   const idempotencyKey = useRef<string>(uuidV4());
   const fieldRefs = useRef<Partial<Record<FieldKey, HTMLInputElement | null>>>({});
+  // modal 焦點還原目標（觸發鈕隨開框 unmount：選單項→更多動作鈕、SaveBar→頁標題）
+  const actionsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
 
   const snapshot = useRef(JSON.stringify(INITIAL_VALUES));
   const dirty = useMemo(() => JSON.stringify(values) !== snapshot.current, [values]);
@@ -759,18 +765,24 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     }
   }, [applyServerErrors, isNew, lockVersion, navigate, productGid, saving, showToast, t, validate, values]);
 
-  const discard = useCallback(() => {
+  const applyDiscard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
     setErrors({});
     showToast(t("product.discarded"));
   }, [showToast, t]);
 
+  // 捨棄走確認框（包 4）：還原快照不可復原，SaveBar 的捨棄鈕先問後做。
+  const requestDiscard = useCallback(() => setConfirmAction("discard"), []);
+
   // 封存／取消封存：狀態寫入 state 後由本 effect 立即觸發儲存（91 §1 本尊為即時動作）。
   useEffect(() => {
     if (!pendingAutoSave.current) return;
+    // 手動儲存進行中不消費 flag——save() 首行 `if (saving) return` 會靜默吞掉
+    // 這次封存；等 saving 轉 false 本 effect 重跑再送。
+    if (saving) return;
     pendingAutoSave.current = false;
     void save();
-  }, [save, values.status]);
+  }, [save, saving, values.status]);
 
   const applyStatusAction = useCallback(
     (status: string) => {
@@ -783,9 +795,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
   // SaveBar 註冊（topbar 渲染；離頁清除）。
   useEffect(() => {
-    registerSaveBar({ dirty, saving, onSave: () => void save(), onDiscard: discard, shakeSignal });
+    registerSaveBar({ dirty, saving, onSave: () => void save(), onDiscard: requestDiscard, shakeSignal });
     return () => registerSaveBar(null);
-  }, [dirty, discard, registerSaveBar, save, saving, shakeSignal]);
+  }, [dirty, registerSaveBar, requestDiscard, save, saving, shakeSignal]);
 
   // guardNav（原型 §4453：dirty 首次攔截 shake＋toast，4 秒內再點同意離開）。
   const blocker = useBlocker(dirty && !saving);
@@ -896,7 +908,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         >
           <ArrowLeft aria-hidden="true" size={16} />
         </button>
-        <h1>{isNew ? t("product.new") : values.title || t("product.untitled")}</h1>
+        <h1 ref={headingRef} tabIndex={-1}>{isNew ? t("product.new") : values.title || t("product.untitled")}</h1>
         <Badge progress={statusBadge.progress} tone={statusBadge.tone}>
           {t(statusBadge.labelKey)}
         </Badge>
@@ -911,6 +923,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 aria-expanded={actionsOpen}
                 aria-haspopup="menu"
                 onClick={() => setActionsOpen((state) => !state)}
+                ref={actionsButtonRef}
               >
                 {t("product.moreActions")} <MoreHorizontal aria-hidden="true" size={14} />
               </Button>
@@ -931,7 +944,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                   ) : (
                     <button
                       className="cl-actionsmenu__item"
-                      onClick={() => applyStatusAction("ARCHIVED")}
+                      onClick={() => {
+                        setActionsOpen(false);
+                        setConfirmAction("archive");
+                      }}
                       role="menuitem"
                       type="button"
                     >
@@ -1426,6 +1442,33 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
         </div>
       </div>
+
+      {/* 破壞性動作確認框（包 4）。封存確認後沿既有 applyStatusAction 通道自動儲存。 */}
+      <ConfirmDialog
+        confirmLabel={t("confirm.discard.action")}
+        danger
+        message={t("confirm.discard.body")}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          applyDiscard();
+        }}
+        open={confirmAction === "discard"}
+        restoreFocusTo={headingRef}
+        title={t("confirm.discard.title")}
+      />
+      <ConfirmDialog
+        confirmLabel={t("confirm.archive.action")}
+        message={t("confirm.archive.body")}
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() => {
+          setConfirmAction(null);
+          applyStatusAction("ARCHIVED");
+        }}
+        open={confirmAction === "archive"}
+        restoreFocusTo={actionsButtonRef}
+        title={t("confirm.archive.title")}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { LoaderCircle } from "lucide-react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { useT } from "../i18n/I18nContext";
 
 /**
@@ -25,6 +25,8 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   /** loading 時供使用者與輔助科技讀取的文案。 */
   loadingLabel?: string;
+  /** 底層 <button> 的 ref（React 19 ref-as-prop；modal 焦點還原用）。 */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**
