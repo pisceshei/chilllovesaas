@@ -7,13 +7,16 @@ module MediaPipeline
   #   ——Gemfile:34-42 已記載這是 image_processing 被退回 1.x 的原因。
   #   ⇒ 本類是**可插拔後端**：`available?` 為假時拋 `BackendUnavailable`（環境錯，
   #   由 ProcessFile 上拋走 relay 退避），**不得**把檔案標 failed。
-  # ②🔴 **一律走 `thumbnail_buffer`**（審查 C1/C3）：它是 libvips 的 shrink-on-load
-  #   路徑，且**自動 autorot 與 premultiply**。手寫 `resize` 的版本被推翻——
-  #   `thumbnail_image` 自動轉正、`resize` 不轉，兩者混用會讓直式手機照片的
-  #   thumb/card/detail 全歪而 og 是正的（strip 又把 orientation tag 刪掉，
-  #   瀏覽器無從補救）；`resize` 也不 premultiply，透明圖邊緣會有色暈。
-  # ③🔴 `fail_on: :error`（審查 C2）：libvips 預設 `VIPS_FAIL_ON_NONE`——**截斷檔
-  #   不報錯**，用灰色填滿當成正常圖存下。要讓壞檔真的走 failed 分支就得顯式設定。
+  # ②🔴 **`fail_on: :error` 必須下在 loader，下在 `thumbnail_buffer` 無效**
+  #   （2026-08-25 於 bt3 libvips 8.18.0 實測：`thumbnail_buffer(fail_on: :error)`
+  #   對只剩 1/3 的 JPEG **不報錯**、只印一行 `VIPS-WARNING error in tile`，回一張
+  #   灰底圖；同一份 buffer 走 `new_from_buffer(fail_on: :error)` 則在寫出時拋
+  #   `VipsJpeg: premature end of JPEG image`）。⇒ 本類改「**一次 `open` 載入、
+  #   四個 variant 共用**」：`fail_on` 在 open 下，解碼錯誤在 derive 寫出時浮現。
+  #   代價＝失去 shrink-on-load（改用 `thumbnail_image`），由 20MP 上限兜住最壞情況。
+  # ③🔴 `autorot` 在 open 一次做掉：`thumbnail_image` 自動轉正而 `resize` 不轉，
+  #   混用會讓直式手機照片一半歪一半正（審查 C1）。統一在來源轉正、後續全部繼承；
+  #   autorot 同時移除 orientation metadata，thumbnail_image 不會再轉第二次。
   # ④🔴 **錯誤分類 fail-closed**（審查 C0/C5，本包最重要的一條）：`Vips::Error` 是
   #   libvips 的**唯一**錯誤類——OOM、fd 耗盡、缺 webp saver 全部長一樣。只有訊息
   #   命中「檔案內容問題」白名單才判 `DecodeFailed`（⇒ 終態 failed）；**未知一律
@@ -26,8 +29,6 @@ module MediaPipeline
     class DecodeFailed < StandardError; end
     class TooManyPixels < StandardError; end
 
-    Probe = Data.define(:width, :height)
-
     # 判為「檔案內容問題」的訊息片段（libvips 的錯誤訊息帶操作名前綴）。
     # 🔴 白名單制：命中才終態，未知一律當環境錯——見檔頭 ④。
     FILE_FAULT_PATTERNS = [
@@ -35,6 +36,38 @@ module MediaPipeline
       /not a known file format|unable to load|no known loader/i,
       /truncated/i, /insufficient data/i, /unsupported .*(colour|color)space/i
     ].freeze
+
+    # 已載入、已轉正的來源影像（四個 variant 共用；ProcessFile 持有）。
+    class Source
+      # @param image [Vips::Image] 已 autorot 的來源
+      def initialize(image)
+        @image = image
+      end
+
+      def width = @image.width
+
+      def height = @image.height
+
+      # 產一個衍生尺寸。
+      # @param spec [Hash] MediaPipeline::Derivatives::SPECS 的一格
+      # @return [Array(String, Integer, Integer)] [webp_bytes, width, height]
+      def derive(spec)
+        VipsBackend.send(:classify_errors) do
+          thumb = case spec.fetch(:mode)
+          when :fit
+                    # size: :down＝只縮不放；thumbnail 系列自動 premultiply
+                    @image.thumbnail_image(spec.fetch(:width), height: spec.fetch(:height), size: :down)
+          when :cover
+                    @image.thumbnail_image(spec.fetch(:width), height: spec.fetch(:height), crop: :centre)
+          else raise ArgumentError, "unknown mode #{spec[:mode]}"
+          end
+          thumb = thumb.colourspace(:srgb)
+          # 🔴 解碼在這一步真正發生——截斷檔的 `premature end` 從這裡拋（見檔頭 ②）。
+          out = thumb.write_to_buffer("#{Derivatives::EXTENSION}[Q=82,strip=true]")
+          [ out, thumb.width, thumb.height ]
+        end
+      end
+    end
 
     class << self
       # @return [Boolean] libvips 是否可用（載入失敗＝環境沒裝）
@@ -57,50 +90,21 @@ module MediaPipeline
         remove_instance_variable(:@available) if defined?(@available)
       end
 
-      # 讀 header 取尺寸（不解碼全圖）＋像素上限。
+      # 載入來源並驗像素上限（header 階段；不解碼像素）。
+      # @return [Source]
       # @raise [DecodeFailed] header 就壞的檔
       # @raise [TooManyPixels] 超過像素上限（防解壓炸彈）
-      def probe(bytes)
+      def open(bytes)
         ensure_available!
-        width, height = classify_errors do
-          image = Vips::Image.new_from_buffer(bytes, "", access: :sequential)
-          # 🔴 autorot 後的視覺尺寸才是「這張圖多大」——直式照片的 header 是橫的。
-          #    沒有 orientation 欄位時 get 會拋，視同 1（不旋轉）。
-          orientation = begin
-            image.get("orientation").to_i
-          rescue StandardError
-            1
-          end
-          orientation.between?(5, 8) ? [ image.height, image.width ] : [ image.width, image.height ]
+        image = classify_errors do
+          # 🔴 fail_on 下在這裡（檔頭 ②）；不指定 access ⇒ random，四個 variant 可共用
+          Vips::Image.new_from_buffer(bytes, "", fail_on: :error).autorot
         end
-        pixels = width.to_i * height.to_i
+        pixels = image.width.to_i * image.height.to_i
         max_pixels = Limits.fetch(:content, :files_image_max_megapixels) * 1_000_000
         raise TooManyPixels, "#{pixels} pixels exceeds #{max_pixels}" if pixels > max_pixels
 
-        Probe.new(width:, height:)
-      end
-
-      # 產一個衍生尺寸。
-      # @param spec [Hash] MediaPipeline::Derivatives::SPECS 的一格
-      # @return [Array(String, Integer, Integer)] [webp_bytes, width, height]
-      def derive(bytes, spec)
-        ensure_available!
-        image = classify_errors do
-          case spec.fetch(:mode)
-          when :fit
-            # size: :down＝只縮不放；thumbnail 自動 autorot＋premultiply
-            Vips::Image.thumbnail_buffer(bytes, spec.fetch(:width), height: spec.fetch(:height),
-                                         size: :down, fail_on: :error)
-          when :cover
-            Vips::Image.thumbnail_buffer(bytes, spec.fetch(:width), height: spec.fetch(:height),
-                                         crop: :centre, fail_on: :error)
-          else raise ArgumentError, "unknown mode #{spec[:mode]}"
-          end
-        end
-        image = classify_errors { image.colourspace(:srgb) }
-        # strip: true ⇒ keep=none（EXIF/GPS 與 ICC 都去掉；上一行已轉 sRGB）
-        out = classify_errors { image.write_to_buffer("#{Derivatives::EXTENSION}[Q=82,strip=true]") }
-        [ out, image.width, image.height ]
+        Source.new(image)
       end
 
       private

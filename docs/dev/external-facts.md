@@ -971,3 +971,33 @@ D39 是 fail-closed：空值走「非 ISO8601」分支被擋，**不依賴**「�
 fence 時，圍欄內容延伸至文件結尾；這是 CommonMark 的合法解析結果，不是假設。R6 的宣稱索引
 若照此放行，圍欄後的 CLAIM 會全部退出結構檢查，因此本專案刻意採更嚴格的 fail-closed 契約：
 `docs/specs/92-*` 的圍欄必須收尾。這一條是**專案政策**，不是宣稱 CommonMark 本身會報錯。
+## C. 影像處理（libvips／ruby-vips）
+
+### C1. 〔**官方逐字＝未取得**；bt3 libvips 8.18.0 實測〕`fail_on:` 下在 `thumbnail_buffer` 對截斷檔**無效**，必須下在 loader
+
+第 26 包（媒體處理管線）落地時的實測結論。**截斷檔會被靜默當成正常圖處理**，
+除非 `fail_on` 下在 loader 層。
+
+實測程序（bt3，`bundle exec ruby`，libvips 8.18.0／ruby-vips 2.3.0，取證 2026-08-25）：
+造一張 2400×1200 的 JPEG（79547 bytes），取前 1/3（26515 bytes）當截斷檔，兩條路徑各跑一次。
+
+| 路徑 | 結果 |
+|---|---|
+| `Vips::Image.thumbnail_buffer(trunc, 160, height: 160, size: :down, fail_on: :error)` | **不報錯**，回 160×80 的圖；`write_to_buffer` 也不報錯。只有一行 stderr：`VIPS-WARNING **: error in tile 0 x 392` |
+| `Vips::Image.new_from_buffer(trunc, "", access: :sequential, fail_on: :error)` | header 讀得出（2400×1200）；`write_to_buffer` 拋 `Vips::Error: VipsJpeg: premature end of JPEG image` |
+
+`fail_on` 確實在兩者的參數表裡（`Vips::Introspect.get("thumbnail_buffer").optional_input`
+含 `fail_on`；`jpegload_buffer` 亦然），所以這不是「參數不存在」而是**在 thumbnail 這一層
+不生效**。官方文檔對此差異未見明文說明（本輪查證＝未取得），故本條以實測登記。
+
+⇒ 我方落地：`MediaPipeline::VipsBackend.open` 用 `new_from_buffer(bytes, "", fail_on: :error)`
+載入一次（順帶 `autorot`），四個 variant 共用該來源做 `thumbnail_image`；解碼錯誤在
+`write_to_buffer` 浮現並由白名單分類成 `DecodeFailed`（終態 failed）。
+代價＝失去 shrink-on-load，由 20MP 上限（`content.files_image_max_megapixels`）兜住最壞情況。
+
+### C2. `Vips::Image#set` 對未知欄位推不出 gtype，需 `set_type`
+
+同輪實測：`image.set("orientation", 6)` 拋
+`Vips::Error: unimplemented gtype for set:  (0)`（ruby-vips `gvalue.rb:199`）。
+需改 `image.set_type(GObject::GINT_TYPE, "orientation", 6)`。
+影響面＝造測資（線上驗收腳本），非生產路徑。

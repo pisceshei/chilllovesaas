@@ -20,14 +20,19 @@ RSpec.describe "媒體處理管線端到端", type: :request do
   end
 
   def stub_backend!(behaviour: :ok)
+    source = Object.new
+    def source.width = 2000
+    def source.height = 1000
+    def source.derive(spec) = [ "WEBP#{spec[:width]}", spec[:width], spec[:height] ]
+
     backend = Object.new
     backend.instance_variable_set(:@behaviour, behaviour)
-    def backend.probe(_bytes)
+    backend.instance_variable_set(:@source, source)
+    def backend.open(_bytes)
       raise MediaPipeline::VipsBackend::DecodeFailed, "corrupt" if @behaviour == :decode_failed
 
-      MediaPipeline::VipsBackend::Probe.new(width: 2000, height: 1000)
+      @source
     end
-    def backend.derive(_bytes, spec) = [ "WEBP#{spec[:width]}", spec[:width], spec[:height] ]
     MediaPipeline::ProcessFile.backend = backend
     backend
   end

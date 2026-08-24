@@ -42,11 +42,9 @@ RSpec.describe MediaPipeline::VipsBackend do
   end
 
   describe "libvips 不在時" do
-    it "probe／derive 一律 BackendUnavailable（不是 NameError、不是 failed）" do
+    it "open 拋 BackendUnavailable（不是 NameError、不是 failed）" do
       allow(described_class).to receive(:available?).and_return(false)
-      expect { described_class.probe("x") }.to raise_error(described_class::BackendUnavailable)
-      expect { described_class.derive("x", MediaPipeline::Derivatives::SPECS.fetch("thumb")) }
-        .to raise_error(described_class::BackendUnavailable)
+      expect { described_class.open("x") }.to raise_error(described_class::BackendUnavailable)
     end
   end
 end
