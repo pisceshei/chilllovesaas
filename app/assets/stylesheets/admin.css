@@ -1444,3 +1444,63 @@ a {
 }
 .cl-csv-preview p { margin: 0 0 var(--sp-150); }
 .cl-csv-errors { margin: 0 0 var(--sp-200); padding-left: var(--sp-400); color: var(--critical); font-size: var(--t-xs); }
+
+/* ══ 庫存（排程第 18 包）══════════════════════════════════════════════════
+   ①這是什麼：庫存列表的數量儲存格、行內調整浮層、商品頁庫存卡、歷程頁儲存格。
+   ②值：全部取自 tokens（鐵律 8），不自創色值與尺寸。
+   ③為什麼：數量欄一律 tabular-nums——庫存頁的核心動作是「上下掃一列數字找異常」，
+     比例寬數字會讓位數對不齊（鐵律 10 對金額的同一個理由，數量同樣適用）。
+   ④跨影響：`.cl-inventory-adjust` 由庫存列表（A 塊）、商品頁庫存卡（B 塊）、
+     第 29 包變體子頁共用；改這裡會同時改三處。 */
+
+/* 數量儲存格：平常只是數字，可調的才是按鈕形態 */
+.cl-inventory-qty {
+  border: 0; background: none; padding: var(--sp-050) var(--sp-100); margin: calc(-1 * var(--sp-050)) 0;
+  font: inherit; font-variant-numeric: tabular-nums; color: var(--text);
+  border-radius: var(--r-100); cursor: pointer;
+}
+.cl-inventory-qty:hover { background: var(--surface-hover); }
+.cl-inventory-qty:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+/* 已 stage 未儲存：舊值 → 新值，新值加重。這是兩段式的唯一視覺線索。 */
+.cl-inventory-qty__pending { color: var(--text-2); white-space: nowrap; }
+.cl-inventory-qty__pending strong { color: var(--text); font-weight: var(--fw-control); }
+
+/* 行內調整浮層（A/B 塊共用） */
+.cl-inventory-adjust {
+  display: inline-flex; align-items: center; gap: var(--sp-150); flex-wrap: wrap;
+  padding: var(--sp-200); background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-300); box-shadow: var(--sh-pop);
+}
+.cl-inventory-adjust__mode select, .cl-inventory-adjust__reason select {
+  height: var(--h-28); padding: 0 var(--sp-150); font-size: var(--t-sm);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-200);
+  color: var(--text); cursor: pointer;
+}
+.cl-inventory-adjust input {
+  width: 5.5rem; height: var(--h-28); padding: 0 var(--sp-150);
+  font-size: var(--t-sm); font-variant-numeric: tabular-nums;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-200); color: var(--text);
+}
+.cl-inventory-adjust__location { font-size: var(--t-xs); color: var(--text-2); }
+
+/* 商品頁庫存卡（B 塊） */
+.cl-inventory-card { display: flex; flex-direction: column; gap: var(--sp-200); }
+.cl-inventory-card__table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.cl-inventory-card__table th, .cl-inventory-card__table td {
+  padding: var(--sp-150) var(--sp-100); border-bottom: 1px solid var(--border-2); text-align: left;
+}
+.cl-inventory-card__table thead th { font-size: var(--t-xs); color: var(--text-2); font-weight: var(--fw-control); }
+.cl-inventory-card__table thead th:not(:first-child),
+.cl-inventory-card__table td { text-align: right; font-variant-numeric: tabular-nums; }
+.cl-inventory-card__table tbody th { font-weight: var(--fw-body); }
+.cl-inventory-card__table tbody th small { display: block; color: var(--text-2); font-size: var(--t-xs); }
+.cl-inventory-card__actions { display: flex; gap: var(--sp-200); align-items: center; }
+
+/* 歷程頁儲存格 */
+.cl-history-note { margin: 0 0 var(--sp-200); font-size: var(--t-xs); color: var(--text-2); }
+.cl-history-activity { display: inline-flex; flex-direction: column; gap: var(--sp-050); }
+.cl-history-activity__doc { color: var(--text-2); font-size: var(--t-xs); word-break: break-all; }
+/* delta 弱、期後值強：商家掃的是期後值，delta 是解釋 */
+.cl-history-delta { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cl-history-delta small { color: var(--text-2); }
+.cl-muted { color: var(--text-2); font-size: var(--t-sm); }

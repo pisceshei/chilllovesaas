@@ -6,6 +6,8 @@ import { I18nProvider, useT } from "./i18n/I18nContext";
 import { SaveBarProvider } from "./lib/SaveBarContext";
 import { ToastProvider } from "./lib/ToastContext";
 import { CollectionDetailPage } from "./pages/CollectionDetailPage";
+import { InventoryHistoryPage } from "./pages/InventoryHistoryPage";
+import { InventoryPage } from "./pages/InventoryPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
@@ -50,6 +52,7 @@ function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
 const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/products", () => <ProductsPage /> ],
   [ "/admin/collections", () => <CollectionsPage /> ],
+  [ "/admin/inventory", () => <InventoryPage /> ],
 ]);
 
 /**
@@ -81,6 +84,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
                   />
                 );
               })}
+              <Route element={<InventoryHistoryPage />} path="/admin/inventory/:itemId/history" />
               <Route element={<CollectionDetailPage isNew />} path="/admin/collections/new" />
               <Route element={<CollectionDetailPage isNew={false} />} path="/admin/collections/:id" />
               <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />

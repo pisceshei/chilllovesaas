@@ -17,6 +17,32 @@ module Types
       argument :query, String, required: false
     end
 
+    # ── 庫存讀取面（排程第 18 包）──
+    field :inventory_items, InventoryItemConnectionType, null: false, connection: false do
+      description "庫存列表（單一地點視角；keyset 分頁，與商品/系列同一套實作）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+      argument :location_id, GraphQL::Types::ID, required: false,
+        description: "地點 GID；省略＝該店第一個地點（priority 序）。"
+      argument :query, String, required: false,
+        description: "字面搜尋：商品標題／變體標題／SKU（v1 無 status/vendor 等軸）。"
+      argument :product_id, GraphQL::Types::ID, required: false,
+        description: "只回該商品的品項（商品頁庫存卡用；比用標題搜尋可靠）。"
+    end
+
+    field :locations, [ LocationType ], null: false do
+      description "本店地點（priority 序）；庫存頁的地點選擇器來源。"
+    end
+
+    field :inventory_history, [ InventoryHistoryRowType ], null: false do
+      description "某 (品項, 地點) 的調整歷程（新→舊，保留窗見 limits.inventory.adjustment_history_retention_days）。"
+      argument :inventory_item_id, GraphQL::Types::ID, required: true
+      argument :location_id, GraphQL::Types::ID, required: false
+      argument :first, Integer, required: false
+    end
+
     field :collections, CollectionConnectionType, null: false, connection: false do
       description "商品系列列表（keyset 分頁，與商品同一套實作）。"
       argument :first, Integer, required: false
@@ -124,6 +150,60 @@ module Types
       context.schema.object_from_id(id, context)
     end
 
+    # 一頁庫存品項（單一地點視角）。
+    #
+    # @param location_id [String, nil] 地點 GID；省略取預設地點
+    # @return [Hash] Relay-shaped connection
+    # @note 副作用：tenant-scoped SELECT（一次 JOIN 帶出數量，不逐列查 level）。
+    # @see docs/plans/2026-08-24-第18包執行規格.md §4a
+    def inventory_items(first: nil, after: nil, last: nil, before: nil, location_id: nil, query: nil, product_id: nil)
+      authorize_inventory!
+      shop = context.fetch(:current_shop)
+      location = resolve_location(shop, location_id)
+      return empty_connection if location.nil?
+
+      product_key = product_id.presence && product_id.to_s[%r{\Agid://chilllove/Product/(\d+)\z}, 1]
+      return empty_connection if product_id.present? && product_key.nil?
+
+      # 🔴 型別層要知道這一頁是哪個地點（回 locationId 欄用）——放 context 而不是逐列查。
+      context[:inventory_location_id] = location.id
+      scope = Inventory::ItemsQuery.call(shop:, location_id: location.id, query:, product_id: product_key&.to_i)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
+    # 本店地點（priority 序）。
+    #
+    # @return [Array<Location>]
+    # @note 副作用：tenant-scoped SELECT。
+    def locations
+      authorize_inventory!
+      ActsAsTenant.with_tenant(context.fetch(:current_shop)) do
+        Location.where(shop_id: context.fetch(:current_shop).id).order(:priority, :id).to_a
+      end
+    end
+
+    # 調整歷程（新→舊）。
+    #
+    # @return [Array<Inventory::HistoryQuery::Row>] 查不到品項／地點時回空陣列
+    # @note 副作用：tenant-scoped SELECT（window function 的 running sum 在日期過濾前開窗）。
+    # @see docs/plans/2026-08-24-庫存ledger形狀總裁定.md §四-2（第八式）
+    def inventory_history(inventory_item_id:, location_id: nil, first: nil)
+      authorize_inventory!
+      shop = context.fetch(:current_shop)
+      item_id = inventory_item_id.to_s[%r{\Agid://chilllove/InventoryItem/(\d+)\z}, 1]
+      return [] if item_id.nil?
+
+      location = resolve_location(shop, location_id)
+      return [] if location.nil?
+
+      level = ActsAsTenant.with_tenant(shop) do
+        InventoryLevel.find_by(shop_id: shop.id, inventory_item_id: item_id.to_i, location_id: location.id)
+      end
+      return [] if level.nil?
+
+      Inventory::HistoryQuery.call(shop:, level_id: level.id, limit: (first || 50).clamp(1, 250))
+    end
+
     # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。
     #
     # @return [Hash] Relay-shaped connection
@@ -195,6 +275,37 @@ module Types
         "沒有權限讀取商品。",
         extensions: { "code" => "ACCESS_DENIED" }
       )
+    end
+
+    # D42：庫存讀取用 `inventory.view`，與 products.view **分開的鍵**。
+    # M1 全員 owner ⇒ `can?` 恆 true，但縫現在就分開，M5 RBAC 展開時不必回頭拆。
+    def authorize_inventory!
+      staff = context[:current_staff]
+      return if staff && (staff.owner? || staff.can?("inventory.view"))
+
+      raise GraphQL::ExecutionError.new(
+        I18n.t("errors.inventory.access_denied"),
+        extensions: { "code" => "ACCESS_DENIED" }
+      )
+    end
+
+    # 地點解析：帶 GID 就用它（跨店回 nil ⇒ 空結果，不是別店資料）；
+    # 省略則取 priority 序第一個（建店必有預設地點＝第 16 包的 callback 保證）。
+    def resolve_location(shop, location_id)
+      ActsAsTenant.with_tenant(shop) do
+        if location_id.present?
+          id = location_id.to_s[%r{\Agid://chilllove/Location/(\d+)\z}, 1]
+          return nil if id.nil?
+
+          Location.find_by(shop_id: shop.id, id: id.to_i)
+        else
+          Location.where(shop_id: shop.id).order(:priority, :id).first
+        end
+      end
+    end
+
+    def empty_connection
+      { nodes: [], edges: [], page_info: { has_next_page: false, has_previous_page: false, start_cursor: nil, end_cursor: nil } }
     end
   end
 end

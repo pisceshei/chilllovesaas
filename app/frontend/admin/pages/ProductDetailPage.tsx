@@ -6,6 +6,7 @@ import { Badge } from "../components/Badge";
 import type { BadgeProgress, BadgeTone } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
+import { InventoryCard } from "../components/InventoryCard";
 import { LocalizedField } from "../components/LocalizedField";
 import type { LocaleOption } from "../components/LocalizedField";
 import { TextField } from "../components/TextField";
@@ -1139,6 +1140,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             <h3>{t("product.card.inventory")}</h3>
             <SwitchRow checked disabled hint={t("product.inventory.tracked.hint")} label={t("product.inventory.tracked")} />
             {isNew ? (
+              // 建立態：變體與 inventory_item 還不存在（callback 在 create 之後才跑），
+              // 所以只留欄位形狀。初始數量走 productSet 的 initialQuantities＝第 22 包。
               <div className="cl-grid2">
                 <TextField disabled hint={t("product.inventory.quantity.hint")} label={t("product.inventory.quantity")} value="0" />
                 <div className="cl-field">
@@ -1150,7 +1153,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                   </select>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              // 編輯態：真實數量＋行內調整（第 18 包 B 塊；卡內自己的儲存鈕，
+              // 不掛頁面 SaveBar——理由見 InventoryCard 檔頭③）。
+              <InventoryCard productId={productGid ?? ""} />
+            )}
             <div className="cl-pillset">
               <PillGroup
                 onToggle={togglePill}
