@@ -11,6 +11,11 @@
       source_invalid: "Source URL could not be fetched or was blocked by security rules."
       type_unacceptable: "File type is not accepted (images only for now)."
       too_large: "File exceeds the size limit."
+      access_denied: "You do not have permission to access files."
+      not_found: "File not found."
+      still_processing: "This file is still processing. Delete it once processing finishes."
+      not_ready: "This file is still being processed. Edit it once processing finishes."
+      update_failed_state: "A file that failed processing can't be edited. Delete it instead."
     media:
       position_conflict: "Concurrent uploads collided on the same position; please retry."
       not_found: "Media not found."

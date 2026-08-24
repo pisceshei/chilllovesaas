@@ -180,6 +180,19 @@ module Catalog
         Result.new(media: [ row ], user_errors: [])
       end
 
+      # 補位到 1..n 連續的**公開入口**（第 28 包：檔案庫刪檔會連帶拿掉媒體列）。
+      #
+      # 🔴 為什麼要開這道口而不是讓呼叫端自己補：補位必須走兩階段落位
+      #   （`uq_media_product_id_position` 是 unique，逐列 update 會撞 1062），
+      #   那個知識屬於本服務。`Storage::FileWrite` 只該說「這個商品的媒體少了幾列，
+      #   請補位」，不該知道負區間那一招。
+      # 🔴 呼叫端必須自己在 transaction 裡（本方法不開交易——刪媒體與補位要原子）。
+      #
+      # @param shop [Shop]
+      # @param product [Product]
+      # @return [void]
+      def compact_for!(shop:, product:) = compact_positions!(shop, product)
+
       private
 
       def error(field, message, code) = { field:, message:, code: }

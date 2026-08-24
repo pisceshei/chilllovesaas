@@ -51,6 +51,23 @@ module Types
       argument :before, String, required: false
     end
 
+    # ── 檔案庫（排程第 28 包）──
+    field :files, FileConnectionType, null: false, connection: false do
+      description "檔案庫列表（keyset 分頁，與商品同一套實作）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+      # 🔴 檔名子字串搜尋，不是 products 的 search syntax。檔案庫沒有 status:／vendor:
+      #    這類欄位語法可談，硬套 SearchScope 只會讓 `status:ready` 被當成檔名文字
+      #    ——那比不支援更糟（使用者以為篩了）。型別／狀態走各自的具名參數。
+      argument :query, String, required: false, description: "檔名子字串（大小寫不敏感）。"
+      argument :status, FileStatusEnum, required: false, description: "只回這個處理狀態。"
+      argument :content_type, String, required: false, description: "只回這個 MIME 型別。"
+      argument :used_in, FileUsedInFilterEnum, required: false,
+                         description: "依引用狀態篩選（NONE＝沒有任何商品引用，可安全刪除）。"
+    end
+
     field :collection, CollectionType, null: true do
       description "以 GID 取單一系列（不存在或非本店回 null）。"
       argument :id, GraphQL::Types::ID, required: true
@@ -230,6 +247,40 @@ module Types
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 
+    # 檔案庫列表（第 28 包）。
+    #
+    # @param query [String, nil] 檔名子字串
+    # @param status [String, nil] `FileStatusEnum` 值（大寫）
+    # @param content_type [String, nil] MIME 型別等值
+    # @return [Hash] keyset connection
+    # @note 副作用：一條 tenant-scoped SELECT（引用計數走相關子查詢，不是逐列 COUNT）。
+    def files(first: nil, after: nil, last: nil, before: nil,
+              query: nil, status: nil, content_type: nil, used_in: nil)
+      authorize_files!
+      scope = StoredFile
+        .where(shop_id: context.fetch(:current_shop).id)
+        .select(Arel.sql("files.*"), Arel.sql(StoredFile::USAGE_COUNT_SELECT))
+      # 🔴 LIKE 的 % 與 _ 必須跳脫——檔名本來就可能含它們（`100%_final.png`），
+      #    不跳脫則使用者打 `%` 會匹配整表（同 Products::SearchScope 的前例）。
+      if query.present?
+        escaped = ActiveRecord::Base.sanitize_sql_like(query.to_s)
+        scope = scope.where("files.filename LIKE ?", "%#{escaped}%")
+      end
+      # enum 進來是大寫（GraphQL 契約），DB 存小寫。
+      scope = scope.where(status: status.to_s.downcase) if status.present?
+      scope = scope.where(content_type:) if content_type.present?
+      # 🔴 用 EXISTS 而不是 `usage_count_select` 的 HAVING：select 別名在 WHERE 階段
+      #    還不存在（MySQL 只在 HAVING／ORDER BY 認別名），而 HAVING 會逼出
+      #    暫存表、又與 keyset 的 LIMIT 打架。EXISTS 走 uq_file_usages_file_owner
+      #    的前綴索引，代價是一次半連接。
+      if used_in.present?
+        exists = FileUsage.where("file_usages.shop_id = files.shop_id")
+                          .where("file_usages.file_id = files.id").arel.exists
+        scope = used_in == "NONE" ? scope.where.not(exists) : scope.where(exists)
+      end
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
     # 以 GID 取單一系列（編輯頁載入用）。
     #
     # @param id [String] `gid://chilllove/Collection/{id}`
@@ -293,6 +344,18 @@ module Types
 
     # D42：庫存讀取用 `inventory.view`，與 products.view **分開的鍵**。
     # M1 全員 owner ⇒ `can?` 恆 true，但縫現在就分開，M5 RBAC 展開時不必回頭拆。
+    # 檔案庫的讀取授權（第 28 包）。權限鍵是 `files.view`，**不是** products.view
+    # ——檔案庫在內容線、有自己的權限格（12 F3），沿用商品的會讓只給了商品權限的
+    # staff 看到整個檔案庫。
+    def authorize_files!
+      return if StoredFilePolicy.new(context[:current_staff], StoredFile).index?
+
+      raise GraphQL::ExecutionError.new(
+        I18n.t("errors.files.access_denied"),
+        extensions: { "code" => "ACCESS_DENIED" }
+      )
+    end
+
     def authorize_inventory!
       staff = context[:current_staff]
       return if staff && (staff.owner? || staff.can?("inventory.view"))

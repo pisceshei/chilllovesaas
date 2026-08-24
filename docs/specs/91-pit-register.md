@@ -2158,6 +2158,67 @@
   `grep -rn "Idempotency::Guard" app/graphql/mutations/product_create_media.rb`
   （無輸出＝未接）；取證日期＝2026-08-25】
 
+### 3.10 第 28 包（檔案庫）——上網研究抓到的三個方向錯誤＋一個真分歧（2026-08-25）
+
+- 🔴 **alt 的分層：我方 per-product vs 本尊 per-file——真分歧，待使用者裁定**。
+  本尊的 `MediaImage` 同時 implements `File` 與 `Media`，**只曝露一個 `alt`**；
+  `FileUpdateInput.alt` 官方逐字＝"The alt text description of the file for screen
+  readers and accessibility."；help 逐字＝"Accepting suggested alt text in the media
+  editor saves the alt text to **the file**."
+  （<https://shopify.dev/docs/api/admin-graphql/latest/objects/MediaImage>、
+  <https://help.shopify.com/en/manual/products/product-media/add-alt-text>，取證 2026-08-25）
+  ⇒ 本尊是**檔案層單一值**，改一次影響所有引用該檔的商品。
+  我方在第 26／27 包裁定 alt 權威在 `media` 那一列（同檔掛不同商品可各有 alt），
+  第 28 包**維持該裁定**並把 `files.alt_text` 定義成「新掛載時的預設值」。
+  ⚠️ **「本尊改 Files 的 alt 會傳播到全部商品」這一句是 schema 推論，不是官方逐字**
+  ——依鐵律 19 不得當已證外部事實引用。複驗法＝測試店把同一檔掛兩個商品、
+  從 Content › Files 改 alt、再讀兩個商品的 media alt。
+  🔴 依鐵律 12，與本尊的差異只有兩種合法形態（71 §A 保護清單或 §F 的 V）；
+  本條目前登記為 **V**，需使用者裁定選一：①re-ratify 成 §A 保護分歧（附本證據）
+  ②遷移到檔案層單一 alt。**不得繼續以隱含實作選擇存在。**
+  兩個具體後果：ⓐ同一張圖用在 30 個商品時，我方有 30 份可各自編輯的 alt、本尊只有 1 份，
+  往 `fileUpdate` 圓桌回寫會塌成一份；ⓑ本尊 Files 頁有「Alt text」篩選（找缺 alt 的檔），
+  那個語義只在 alt 是 per-file 時well-defined。
+  【F5；來源＝第 28 包上網研究（官方 shopify.dev＋help.shopify.com）；取證日期＝2026-08-25】
+
+- **本尊 `files` 的能力比我方 v1 寬，三項登記 V**：①排序（本尊可依 Date added／
+  File name／Size，我方 `KeysetCursor::ORDER_KEYS` 只有 `created_at`／`position`，
+  加鍵要動 cursor 白名單）②`used_in` 值域（本尊含 Metaobjects 與 Brand Settings，
+  我方那兩者未實作 ⇒ `PRODUCT` 恆等於「有任何引用」，第 30+ 包必須回頭拆細）
+  ③選檔器內上傳（本尊 picker 可「Upload new」／「Add from URL」，我方上傳鈕在
+  modal 外）。複驗：`grep -n "ORDER_KEYS" -A 12 app/graphql/products/keyset_cursor.rb`
+  【F5；來源＝同上研究＋本包實作；取證日期＝2026-08-25】
+
+- **`fileCreate` 仍未接 `Idempotency::Guard`**：與 §3.8 的同名條目**同型同因**
+  （批量 mutation 的冪等落款形態未裁定），第 28 包的 `fileUpdate`／`fileDelete`
+  亦同（兩者不是建立型、不在 limits 的強制清單內，但同樣沒有 claim/replay）。
+  展開時三處**一起**裁定，不要分批。複驗：
+  `grep -rn "Idempotency::Guard" app/graphql/mutations/`（無輸出＝都沒接）
+  【F5；來源＝第 28 包實作自查；取證日期＝2026-08-25】
+
+- **檔案庫列表只做第一頁**：`pageInfo` 有取但沒有「載入更多」UI——**這不是本包
+  特有缺口**，商品／系列列表現況相同（全站尚無 load-more 元件）。登記在此是為了
+  讓「檔案超過一頁時使用者看不到其餘」這件事有據可查，不是把既有問題算進本包。
+  複驗：`grep -rn "hasNextPage" app/frontend/admin/pages/ | head`
+  【F5；來源＝第 28 包實作自查；取證日期＝2026-08-25】
+
+- 📌 **方向性錯誤三則（已在本包修正，登記為「研究先於實作」的正面案例）**：
+  動手前依鐵律 16.1 查官方，抓到原設計三處與本尊相反或缺漏——ⓐ原打算「檔案使用中
+  就擋刪」，官方是自動解除引用**並補位**（`fileDelete` 逐字見
+  `app/services/storage/file_write.rb` 檔頭②）ⓑ原要自創 `FILE_IS_PROCESSING`，
+  官方對應碼是 `FILE_LOCKED`ⓒ原沒有「`fileUpdate` 要求 ready」這道前置。
+  三者若照原設計落地，都要在對齊輪回頭改，且ⓐ的「補位」缺漏**測試不會紅**
+  （刪完位置變 [1,3] 仍是合法資料，只有拖曳排序的全量判準會在之後某天對不上）。
+  【F5；來源＝第 28 包上網研究；取證日期＝2026-08-25】
+
+- **staged 保留期官方無任何敘述＝未取得**：`stagedUploadsCreate` 文檔描述兩段式
+  流程，但對「簽了沒完成 `fileCreate` 的 target 會怎樣」沒有 TTL／保留期／清掃的
+  任何一句。⇒ 我方 `media.staged_purge_grace_seconds: 3600` 與每日排程是
+  **ours 裁定不是對齊**，不得寫成「照本尊」。🔴 也不得反向斷言「本尊沒有清掃」
+  ——文檔沒寫不等於行為不存在。
+  【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
+  取證日期＝2026-08-25】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -2349,6 +2410,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-22-PR64第十六輪雙驗收修復.md`（Claude comment `5364180385`＋Codex review `4988979665`；B9 逐句歸屬、B10 條件逐字、W14 歷史表還原與 `th=` 計數式錨定已處置）
 - [x] `docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md`（Claude comment `5379467830`＋Codex review `4999795981`；W15 就地改寫還原、A.1 漏列、R5 警告與窗口實測不一致已處置）
 - [ ] `docs/worklog/2026-08-25-第27包媒體卡.md`（本包新增；D40 直接開發，待後續輪次收割）
+- [ ] `docs/worklog/2026-08-25-第28包檔案庫.md`（本包新增；D40 直接開發，待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -2503,6 +2565,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 - [ ] `docs/handoff/2026-08-25-第27包媒體卡.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
+- [ ] `docs/handoff/2026-08-25-第28包檔案庫.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 

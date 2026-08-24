@@ -21,6 +21,14 @@ production:
     class: Events::OutboxPurgeJob
     queue: background
     schedule: at 4am every day
+  # 第 28 包：staged 區孤兒清掃（25→26→27 三度順延後在此收口）。
+  # 🔴 判準窗＝limits.media.staged_upload_ttl_seconds ＋ .staged_purge_grace_seconds，
+  #    **在服務裡讀**；本檔只決定「多久跑一次」，與那兩個鍵無雙寫關係。
+  #    排在 outbox purge 之後半小時，避開兩個清掃同時吃磁碟 IO。
+  storage_staged_purge:
+    class: Storage::StagedPurgeJob
+    queue: background
+    schedule: at 4:30am every day
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

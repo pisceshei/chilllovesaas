@@ -11,6 +11,11 @@
       source_invalid: "來源 URL 無法取得或被安全規則擋下。"
       type_unacceptable: "檔案格式不受理（本階段僅接受圖片）。"
       too_large: "檔案超過大小上限。"
+      access_denied: "沒有權限存取檔案庫。"
+      not_found: "找不到指定的檔案。"
+      still_processing: "檔案還在處理中，完成後才能刪除。"
+      not_ready: "檔案尚未處理完成，完成後才能編輯。"
+      update_failed_state: "處理失敗的檔案無法編輯，只能刪除。"
     media:
       position_conflict: "多個上傳同時寫入同一個位置，請重試。"
       not_found: "找不到指定的媒體。"

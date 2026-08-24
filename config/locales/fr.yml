@@ -11,6 +11,11 @@
       source_invalid: "L'URL source n'a pas pu être récupérée ou a été bloquée par les règles de sécurité."
       type_unacceptable: "Type de fichier non accepté (images uniquement pour le moment)."
       too_large: "Le fichier dépasse la taille limite."
+      access_denied: "Vous n'avez pas l'autorisation d'accéder aux fichiers."
+      not_found: "Fichier introuvable."
+      still_processing: "Ce fichier est encore en cours de traitement. Supprimez-le une fois le traitement terminé."
+      not_ready: "Ce fichier est encore en cours de traitement. Modifiez-le une fois le traitement terminé."
+      update_failed_state: "Un fichier dont le traitement a échoué ne peut pas être modifié. Supprimez-le."
     media:
       position_conflict: "Des téléversements simultanés sont entrés en conflit ; réessayez."
       not_found: "Média introuvable."

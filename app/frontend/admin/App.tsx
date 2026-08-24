@@ -8,6 +8,7 @@ import { ToastProvider } from "./lib/ToastContext";
 import { CollectionDetailPage } from "./pages/CollectionDetailPage";
 import { InventoryHistoryPage } from "./pages/InventoryHistoryPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { FilesPage } from "./pages/FilesPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
@@ -53,6 +54,7 @@ const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/products", () => <ProductsPage /> ],
   [ "/admin/collections", () => <CollectionsPage /> ],
   [ "/admin/inventory", () => <InventoryPage /> ],
+  [ "/admin/content/files", () => <FilesPage /> ],
 ]);
 
 /**
