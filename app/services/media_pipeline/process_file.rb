@@ -52,9 +52,12 @@ module MediaPipeline
           raise
         end
 
-        # 內容在本輪期間被 replace 換掉 ⇒ 丟棄本輪結果（新內容自有事件在跑）
+        # 內容在本輪期間被 replace 換掉 ⇒ 丟棄本輪結果（新內容自有事件在跑）。
+        # 🔴 `delete_with_empty_parents` 而不是 `delete`：衍生 key 是
+        #   `.../derivatives/{file_id}/{checksum}/…`，只 rm 檔案會留下兩層空目錄
+        #   ——與 `Storage::FileWrite.delete` 同一個孤兒目錄產生者（2026-08-25 bt3 實測）。
         unless file.reload.checksum == original_checksum
-          written.each_value { |entry| Storage::LocalDisk.delete(entry["key"]) }
+          written.each_value { |entry| Storage::LocalDisk.delete_with_empty_parents(entry["key"]) }
           return Result.new(status: file.status, derivatives: file.derivatives)
         end
 
@@ -92,7 +95,7 @@ module MediaPipeline
                                  "byte_size" => derived.bytesize }
           end
         rescue StandardError
-          written.each_value { |entry| Storage::LocalDisk.delete(entry["key"]) }
+          written.each_value { |entry| Storage::LocalDisk.delete_with_empty_parents(entry["key"]) }
           raise
         end
         written
