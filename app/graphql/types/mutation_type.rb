@@ -31,6 +31,16 @@ module Types
       description: "為一批待上傳檔案簽發 staged 上傳目標（12 §D.7 第 1 步）。"
     field :file_create, mutation: Mutations::FileCreate,
       description: "以 originalSource 建立檔案（12 §D.7 第 3 步）。"
+    field :product_create_media, mutation: Mutations::ProductCreateMedia,
+      description: "把媒體掛到商品上（第 27 包）。"
+    field :product_update_media, mutation: Mutations::ProductUpdateMedia,
+      description: "更新商品媒體的 alt。"
+    field :product_delete_media, mutation: Mutations::ProductDeleteMedia,
+      description: "從商品移除媒體。"
+    field :product_reorder_media, mutation: Mutations::ProductReorderMedia,
+      description: "重排商品媒體（宣告式全量）。"
+    field :product_variant_append_media, mutation: Mutations::ProductVariantAppendMedia,
+      description: "把一張圖掛到變體上。"
     field :product_set, mutation: Mutations::ProductSet,
       description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
     field :staff_locale_update, mutation: Mutations::StaffLocaleUpdate,

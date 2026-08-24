@@ -11,6 +11,15 @@
       source_invalid: "來源 URL 無法取得或被安全規則擋下。"
       type_unacceptable: "檔案格式不受理（本階段僅接受圖片）。"
       too_large: "檔案超過大小上限。"
+    media:
+      position_conflict: "多個上傳同時寫入同一個位置，請重試。"
+      not_found: "找不到指定的媒體。"
+      alt_too_long: "alt 文字超過 512 字元。"
+      over_limit: "媒體數量超過單一商品上限。"
+      source_required: "originalSource 與 fileId 必須且只能提供其中一個。"
+      reorder_incomplete: "重排必須送出該商品的全部媒體。"
+      variant_not_found: "找不到指定的子類。"
+      variant_image_only: "子類只能掛圖片（影片與 3D 不支援）。"
     product:
       variants_single_only: "無選項商品的變體必須恰為一筆（隱含變體）；具名選項與多變體屬後續里程碑。"
       last_variant_required: "無法刪除最後一個子類；每個商品至少保留一個子類。"

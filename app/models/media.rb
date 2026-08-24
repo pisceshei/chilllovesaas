@@ -19,9 +19,26 @@ class Media < ApplicationRecord
   # 檔案本體（第 26 包加欄）；nullable 因寫入端＝第 27 包 productCreateMedia。
   belongs_to :stored_file, foreign_key: :file_id, optional: true, inverse_of: false
 
+  # 🔴 引用計數釋放的**唯一保證**（審查 C6）：`file_usages.owner_id` 是 polymorphic、
+  #    沒有 FK，而 `product.destroy!`（has_many dependent: :destroy）不經
+  #    `Catalog::MediaSync.delete`——少了這個 callback 就會留下 stale usage 列，
+  #    讓第 28 包的引用計數虛高、共用檔被誤判成「還有人在用」而永遠刪不掉。
+  before_destroy :release_file_usage!
+
   validates :media_type, presence: true
   validates :position, presence: true
   validates :source_url, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :alt_text, length: { maximum: 512 }, allow_nil: true
+
+  private
+
+  # 釋放本列持有的檔案引用（見上方 before_destroy 說明）。
+  # @return [void]
+  # @note 副作用：刪除 file_usages 列。
+  def release_file_usage!
+    return if file_id.nil?
+
+    FileUsage.where(shop_id:, file_id:, owner_type: "Media", owner_id: id).delete_all
+  end
 end

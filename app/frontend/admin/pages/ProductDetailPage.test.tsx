@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -902,5 +902,210 @@ describe("商品內容多語言", () => {
 
     const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
     expect(input.translations).toContainEqual({ locale: "zh-Hant", field: "title", value: "" });
+  });
+});
+
+/**
+ * 媒體排序的生命週期（第 27 包對抗審查 C7/C8/C9/C13/C19/C20 的回歸）。
+ *
+ * 這一組釘住的不是「排序能不能存」，而是**待存順序這個表單值什麼時候該活著、
+ * 什麼時候該死**——四個被審查抓到的缺口全部在這條線上：
+ * 儲存失敗仍寫了順序（C9/C19）／存完 SaveBar 不消失（C8/C20）／
+ * 上傳一張圖就丟掉拖好的順序（C7）／失敗的順序永遠重送（C13）。
+ */
+describe("商品媒體排序", () => {
+  beforeEach(() => installCsrfMeta());
+
+  const MEDIA_A = {
+    id: "gid://chilllove/Media/1", position: 1, alt: "貓", status: "READY",
+    image: { thumbUrl: "/admin/files/7/blob?variant=thumb", url: "/admin/files/7/blob" },
+  };
+  const MEDIA_B = {
+    id: "gid://chilllove/Media/2", position: 2, alt: "狗", status: "READY",
+    image: { thumbUrl: "/admin/files/8/blob?variant=thumb", url: "/admin/files/8/blob" },
+  };
+
+  const WITH_MEDIA = {
+    data: {
+      product: {
+        id: "gid://chilllove/Product/9",
+        title: "既有商品",
+        descriptionHtml: "<p>舊說明</p>",
+        status: "ACTIVE",
+        handle: "existing-tee",
+        lockVersion: 3,
+        vendor: null,
+        productType: null,
+        tags: [],
+        seo: { title: null, description: null },
+        translations: [],
+        media: [ MEDIA_A, MEDIA_B ],
+        variants: { nodes: [
+          { price: "128.00", compareAtPrice: null, cost: null, sku: "SKU-1", barcode: null, taxable: true },
+        ] },
+      },
+    },
+  };
+
+  const MEDIA_ROUTES = [
+    ...BASE_ROUTES,
+    { match: "query productForEdit", body: WITH_MEDIA },
+  ];
+
+  const SAVE_OK = {
+    data: {
+      productSet: {
+        product: {
+          id: "gid://chilllove/Product/9", handle: "existing-tee",
+          status: "ACTIVE", title: "既有商品", lockVersion: 4,
+        },
+        userErrors: [],
+      },
+    },
+  };
+
+  /** 把第 2 格拖到第 1 格＝待存順序 [B, A]。 */
+  async function dragSecondToFirst() {
+    const tiles = await screen.findAllByRole("listitem");
+    // 原生 Event 觸發不到 React 的合成 onDragStart／onDrop（MediaCard.test 同註）
+    fireEvent.dragStart(tiles[1]);
+    fireEvent.drop(tiles[0], { dataTransfer: { files: [] } });
+  }
+
+  function tileAlts() {
+    return screen.getAllByRole("listitem")
+      .map((tile) => within(tile).getByRole("img").getAttribute("alt"));
+  }
+
+  it("🔴 C9/C19：productSet 回 userErrors ⇒ 排序**不得**送出（順序不能比商品先落地）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...MEDIA_ROUTES,
+      {
+        match: "mutation productSet",
+        body: {
+          data: {
+            productSet: {
+              product: null,
+              userErrors: [ { field: [ "input", "title" ], message: "標題不能為空白。", code: "BLANK" } ],
+            },
+          },
+        },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    await screen.findByRole("heading", { name: "既有商品" });
+
+    await dragSecondToFirst();
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("標題不能為空白。");
+
+    expect(callsTo(fetchMock, "mutation productReorderMedia")).toHaveLength(0);
+    // 待存順序仍在（使用者改完標題再存一次就會落地）
+    expect(tileAlts()).toEqual([ "狗", "貓" ]);
+  });
+
+  it("🔴 C8/C20：排序成功落地後 SaveBar 消失（快照要用清空 mediaOrder 後的形狀）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...MEDIA_ROUTES,
+      { match: "mutation productSet", body: SAVE_OK },
+      {
+        match: "mutation productReorderMedia",
+        body: { data: { productReorderMedia: { media: [], userErrors: [] } } },
+      },
+      {
+        match: "query productMedia",
+        body: { data: { product: { media: [
+          { ...MEDIA_B, position: 1 }, { ...MEDIA_A, position: 2 },
+        ] } } },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    await screen.findByRole("heading", { name: "既有商品" });
+
+    await dragSecondToFirst();
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const reorder = callsTo(fetchMock, "mutation productReorderMedia");
+    expect(reorder).toHaveLength(1);
+    expect(JSON.parse(String(reorder[0].body)).variables.mediaIds).toEqual([ MEDIA_B.id, MEDIA_A.id ]);
+    // 🔴 SaveBar 必須消失：快照存了舊的非空 mediaOrder 就會永遠 dirty
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull());
+  });
+
+  it("🔴 C13：排序被伺服端拒絕 ⇒ 丟掉這份順序（不得每次儲存都重送同一份失敗清單）", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...MEDIA_ROUTES,
+      { match: "mutation productSet", body: SAVE_OK },
+      {
+        match: "mutation productReorderMedia",
+        body: {
+          data: {
+            productReorderMedia: {
+              media: [],
+              userErrors: [ { field: [ "mediaIds" ], message: "媒體清單必須是完整集合。", code: "INVALID" } ],
+            },
+          },
+        },
+      },
+      { match: "query productMedia", body: { data: { product: { media: [ MEDIA_A, MEDIA_B ] } } } },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    await screen.findByRole("heading", { name: "既有商品" });
+
+    await dragSecondToFirst();
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("媒體清單必須是完整集合。");
+
+    // 順序回落伺服端真相（重讀），且商品本體已存成功 ⇒ SaveBar 收起
+    await waitFor(() => expect(tileAlts()).toEqual([ "貓", "狗" ]));
+    await waitFor(() =>
+      expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull());
+
+    // 改別的欄位再存一次：那份失敗清單**不得**跟著重送
+    await user.type(within(screen.getByRole("main")).getByLabelText("標題（English）"), "！");
+    await user.click(within(await screen.findByRole("region", { name: "未儲存的變更" }))
+      .getByRole("button", { name: "儲存" }));
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productSet")).toHaveLength(2));
+    expect(callsTo(fetchMock, "mutation productReorderMedia")).toHaveLength(1);
+  });
+
+  it("🔴 C7：拖好順序後編 alt（觸發重讀）⇒ 順序保留；新上傳的圖接在尾端", async () => {
+    const MEDIA_C = {
+      id: "gid://chilllove/Media/3", position: 3, alt: "鳥", status: "READY",
+      image: { thumbUrl: "/admin/files/9/blob?variant=thumb", url: "/admin/files/9/blob" },
+    };
+    stubRoutedFetch([
+      ...MEDIA_ROUTES,
+      {
+        match: "mutation productUpdateMedia",
+        body: { data: { productUpdateMedia: { media: [], userErrors: [] } } },
+      },
+      // 重讀時多了一張（別的分頁／剛上傳完成）——待存順序裡沒有它
+      {
+        match: "query productMedia",
+        body: { data: { product: { media: [ MEDIA_A, MEDIA_B, MEDIA_C ] } } },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    await screen.findByRole("heading", { name: "既有商品" });
+
+    await dragSecondToFirst();
+    expect(tileAlts()).toEqual([ "狗", "貓" ]);
+
+    // alt 失焦 ⇒ productUpdateMedia ⇒ onRefresh ⇒ reloadMedia
+    await user.type(screen.getByLabelText("第 1 張圖的替代文字"), "！");
+    await user.tab();
+
+    // 🔴 拖好的順序沒被重讀清掉；沒在順序裡的新圖接尾端而非消失
+    await waitFor(() => expect(tileAlts()).toEqual([ "狗", "貓", "鳥" ]));
   });
 });

@@ -40,6 +40,10 @@ module Types
     # 🔴 用 `media` 關聯而非 `images`：後者在本尊已 deprecated（90-blueprint/01:49）。
     field :featured_image, Types::ImageType, null: true,
       description: "首圖（position 最小的媒體；無媒體時 null）。"
+    # 媒體全量（第 27 包媒體卡；position 序）。上限 250（limits.product.max_media）
+    # ⇒ 不做分頁：一次全取，媒體卡本來就要顯示全部縮圖。
+    field :media, [ Types::MediaType ], null: false,
+      description: "商品媒體（position 序；第一格＝精選圖）。"
     # 缺 alt 數（62 §M S3 明列 M1）：alt 不自動填但要度量。
     field :media_missing_alt_count, Integer, null: false,
       description: "缺 alt 文字的媒體數（無障礙與 SEO 度量；62 §F.1 不自動填、只度量）。"
@@ -77,6 +81,18 @@ module Types
       return nil unless row&.stored_file
 
       Types::ImageType::Presenter.new(file: row.stored_file, alt: row.alt_text)
+    end
+
+    # 🔴 單筆路徑（`product(id:)` 走 `object_from_id`）沒有 QueryType 的 preload，
+    #    而每列讀 `stored_file` ⇒ 250 列＝250 次查詢（審查 C18）。就地批次載入一次；
+    #    列表路徑已 preload 則跳過（不用 `.includes` 掛關聯——那會另發查詢並繞開
+    #    呼叫端的 preload，第 26 包審查 C10 的教訓）。
+    def media
+      rows = object.media.to_a.sort_by(&:position)
+      unless rows.empty? || rows.all? { |row| row.association(:stored_file).loaded? }
+        ActiveRecord::Associations::Preloader.new(records: rows, associations: :stored_file).call
+      end
+      rows
     end
 
     # 缺 alt 數（62 §M S3）：alt 不自動填、只度量。
