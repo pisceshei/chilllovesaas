@@ -866,3 +866,48 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   memory，供日後恢復驗收制時參考。
 - **背景**：PR #64 經 34 輪雙驗收不收斂（🔴 集中於驗收記錄自身），
   使用者裁定合併後進一步裁定改制。
+
+### D41. 冪等 failed 語義：11 §2.1(b) 勝出，`IDEMPOTENCY_PREVIOUS_ATTEMPT_FAILED` 我方不發（2026-08-24，排程第 15 包）
+
+- **問題**：91 §3.7 登記的矛盾——11 §2.1(b) 逐字「failed＝視為未執行，允許以同一把 key 重試」；
+  本尊庫存三支 mutation 的 enum 描述逐字「A previous request with this idempotency key failed.
+  **Retry with a new idempotency key.**」（三支同文，docs/research/95 §4 取證 2026-08-24）。
+  兩者不可同真，而 91 明文「庫存線落地前必須先解此矛盾」。
+- **選擇：11 勝出（同 key 重試），全平台單一語義；該 code 從我方庫存錯誤 enum 移除、永不發出。**
+- **理由**：①productSet 線已依 11 落地（`Idempotency::Guard` 的 failed→同 key 重試是**已上線行為**），
+  庫存線若改走換鍵語義，就是 91 警告的「兩線對同一個 code 觸發條件不一致」；
+  ②同 key 重試是嚴格更友善的語義——客戶端失敗後不需要新鍵管理邏輯；
+  ③我方錯誤 enum 本來就是刻意重造的（G-code 前例），不背未發出的死碼。
+- **影響**：第 17 包的庫存 mutation 錯誤 enum **不含** `IDEMPOTENCY_PREVIOUS_ATTEMPT_FAILED`；
+  CONCURRENCY 池若列有此碼，掛「商品線／庫存線皆不發」註記。與本尊的機器可見差異
+  屬 enum 重造的既有範圍（71 §A G28 同案脈絡），非新增豁免。
+
+### D42. 庫存權限鍵＝獨立的 `inventory.view`／`inventory.edit`，不沿用 `products.edit`（2026-08-24，排程第 15 包）
+
+- **問題**：12 號規格的 permission key 清單 grep `inventory` 零命中——庫存三支 mutation
+  落地時要嘛沒有授權檢查、要嘛靜默沿用 `products.edit`，兩者都是排程文件點名的缺口。
+- **選擇：新增 `inventory.view`／`inventory.edit` 兩鍵**，命名照 12 §2 的 `資源.動詞` 慣例；
+  已寫入 12 §2 的 key 清單。
+- **理由**：本尊在 API scope 層就把庫存與商品分開（`read_inventory`／`write_inventory` 獨立於
+  `read_products`；webhook topic 逐條標注所需 scope——2026-08-24 研究）。倉管改庫存數量
+  不應自動獲得改價格與文案的權力，反之亦然。
+- **影響**：第 16 包的 `totalInventory` 欄位**沿用 products.view**（它是商品讀取面的欄位，
+  本尊同樣以 read_products 讀 `Product.totalInventory`）；`inventory.*` 兩鍵的第一個強制點
+  是第 17 包的 mutation 與第 18 包的 /admin/inventory 頁。M1 全員 owner ⇒ `can?` 恆 true，
+  但 policy 縫現在就分開，M5 RBAC 展開時不必回頭拆。
+
+### D43. 批量編輯器與庫存 CSV 明文延後；第 17 包的禁直寫 cop 不留豁免口（2026-08-24，排程第 15 包）
+
+- **問題**：①本尊 bulk editor 明文不留庫存移動紀錄（help 逐字「a record of your inventory
+  movements isn't tracked when you use the bulk editor」，94 §2b④）——與 13 §F5「ledger 唯一入口」
+  正面衝突，第 17 包的 rubocop cop 要不要為它留豁免口？②庫存 CSV 匯入與批量編輯器
+  在不在本階段？
+- **選擇**：①cop **不留豁免口**——M1 沒有 bulk editor，豁免口是為不存在的東西開洞；
+  日後 bulk editor 落地時**一律走 `Inventory::Adjust`**（即：我方批量路徑也寫 ledger，
+  是對本尊的行為超集）。⚠️ 該超集屬與本尊的刻意差異，**落地前需使用者批准入 71 §A**——
+  本條先定 cop 形狀，不預支 §A。②庫存 CSV 匯入器與批量編輯器**明文延後**（不入 M1 排程；
+  71 §F 既有 R8-V5／R8-V2 兩條 V 繼續持有此缺口，不靜默丟掉）。
+- **理由**：豁免口的成本不是現在的代碼，是它教會下一個人「繞過入口是選項之一」；
+  而「批量也寫 ledger」在資料上嚴格多於本尊，商家看到的是**更完整**的歷程，不是行為差。
+- **影響**：第 17 包 cop 全域生效無例外；R8-V2／R8-V5 的結案責任移交 bulk editor／CSV 落地輪。
+

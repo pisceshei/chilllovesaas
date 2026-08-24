@@ -18,6 +18,11 @@ module Types
     # SaveBar 樂觀鎖（63 §A.4：lockVersion 涵蓋整棵樹）；payload 帶回讓前端
     # 下一次儲存能偵測併發覆蓋（STALE_OBJECT）。
     field :lock_version, Integer, null: false
+    # 庫存合計（排程第 16 包）。null＝沒有任何 tracked 品項（UI 顯示「未追蹤」），
+    # 0＝有追蹤且為零——兩個真相不得合併。權限沿用 products.view（D42：本尊同樣以
+    # read_products 讀 Product.totalInventory）。
+    field :total_inventory, Integer, null: true
+
     # ── 組織分類＋SEO（91 §11–12，P1）──
     field :vendor, String, null: true
     field :product_type, String, null: true
@@ -75,6 +80,21 @@ module Types
     # @see docs/research/28-api-contract.md §0.3
     def legacy_resource_id
       object.id.to_s
+    end
+    # 列表路徑讀 select 帶下來的 total_inventory_sum；單筆讀取（編輯頁）無該欄時現算。
+    # SUM 回 NULL（無 tracked 品項）⇒ nil ⇒ UI「未追蹤」。
+    def total_inventory
+      if object.has_attribute?("total_inventory_sum")
+        value = object.read_attribute("total_inventory_sum")
+        return value.nil? ? nil : value.to_i
+      end
+
+      value = Product
+        .where(shop_id: object.shop_id, id: object.id)
+        .select(Arel.sql(Product::TOTAL_INVENTORY_SELECT))
+        .take
+        &.read_attribute("total_inventory_sum")
+      value.nil? ? nil : value.to_i
     end
   end
 end

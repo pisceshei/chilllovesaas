@@ -14,25 +14,18 @@ RSpec.describe "inventory ledger schema invariants", type: :model do
     ActsAsTenant.with_tenant(shop) { create(:product_variant, shop:) }
   end
 
+  # 第 16 包起 item／level 由 callback 自動誕生（Shop→預設地點、Variant→item＋levels）；
+  # 本 helper 改為：取 callback 建好的 level，UPDATE 出測試值。
+  # UPDATE 刻意**不含** on_hand/unavailable——它們是 generated，含了就是本 spec 要抓的錯。
   def insert_chain!
-    now = "NOW()"
+    level = ActsAsTenant.with_tenant(shop) { variant.inventory_item.inventory_levels.first! }
     conn.execute(<<~SQL)
-      INSERT INTO locations (shop_id, name, address, created_at, updated_at)
-      VALUES (#{shop.id}, 'Main', JSON_OBJECT(), #{now}, #{now})
+      UPDATE inventory_levels
+         SET available = 7, committed = 2, reserved = 1, damaged = 3,
+             safety_stock = 0, quality_control = 0, incoming = 99
+       WHERE id = #{level.id}
     SQL
-    location_id = conn.select_value("SELECT LAST_INSERT_ID()").to_i
-    conn.execute(<<~SQL)
-      INSERT INTO inventory_items (shop_id, product_variant_id, created_at, updated_at)
-      VALUES (#{shop.id}, #{variant.id}, #{now}, #{now})
-    SQL
-    item_id = conn.select_value("SELECT LAST_INSERT_ID()").to_i
-    conn.execute(<<~SQL)
-      INSERT INTO inventory_levels
-        (shop_id, inventory_item_id, location_id, available, committed,
-         reserved, damaged, safety_stock, quality_control, incoming, created_at, updated_at)
-      VALUES (#{shop.id}, #{item_id}, #{location_id}, 7, 2, 1, 3, 0, 0, 99, #{now}, #{now})
-    SQL
-    conn.select_value("SELECT LAST_INSERT_ID()").to_i
+    level.id
   end
 
   def insert_group!(key: "idem-1")

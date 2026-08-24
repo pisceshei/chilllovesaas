@@ -96,8 +96,8 @@ describe("商品頁", () => {
       const body = JSON.parse(String(init?.body)) as { variables: { query: string | null } };
       if (body.variables.query?.includes("不存在")) return successfulResponse([]);
       return successfulResponse([
-        { id: "gid://chilllove/Product/1", title: "夏日上衣", status: "DRAFT" },
-        { id: "gid://chilllove/Product/2", title: "經典長褲", status: "ACTIVE" },
+        { id: "gid://chilllove/Product/1", title: "夏日上衣", status: "DRAFT", totalInventory: 9 },
+        { id: "gid://chilllove/Product/2", title: "經典長褲", status: "ACTIVE", totalInventory: null },
       ]);
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -117,6 +117,10 @@ describe("商品頁", () => {
     expect(within(table).getByText("草稿")).toBeVisible();
     // 文案正典＝原型 P_STATUS 的 `bt` 欄（chilllove-admin-v2.html:3106）。
     expect(within(table).getByText("啟用中")).toBeVisible();
+    // 第 16 包：庫存欄兩個真相——數字（9 件）與 null（未追蹤）各自有渲染，不得合併。
+    // 這條路徑在 totalInventory 落地前恆 undefined，從未被走過。
+    expect(within(table).getByText("9 件")).toBeVisible();
+    expect(within(table).getByText("未追蹤")).toBeVisible();
 
     await user.type(screen.getByRole("searchbox", { name: "搜尋商品" }), "不存在");
     // 300ms 去抖後才發出帶 query 的第二發（findBy 的預設等待涵蓋它）
