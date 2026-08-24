@@ -286,6 +286,18 @@ WHERE p.shop_id = :shop_id
 2. 驗證：content_type 白名單（jpeg/png/webp/gif/mp4）、大小上限（圖 20MB/影片 200MB）、**像素上限（如 50MP）防解壓炸彈**——`image_processing` + libvips 讀 header 先驗尺寸再處理。
 3. 上傳完成 → job 預生成常用尺寸（thumb 160、card 533、detail 1200、og 1200×630）、strip EXIF（隱私：照片 GPS）、轉 webp。
 4. 前台 `<img>` 一律帶 width/height + `loading="lazy"`（防 CLS）；首圖 `fetchpriority="high"`。
+
+> 🔴 **更正註（2026-08-24，第 24 包 B6/B7；原文依文檔分層保留不改寫）**：
+> ①本節與下方「工具」的 **Active Storage** 敘述是 M0 期規劃——裁定 B6＝**自建
+> files/media 兩表＋presigned POST 直傳，不啟用 Active Storage**（兩套真相；
+> AS direct-upload routes 已刻意關閉；blueprint 12 §D.7-5 共用 staged 管線）。
+> ②第 2 點「影片 200MB」「像素上限（如 50MP）」**非官方值**：官方 help 逐字＝圖
+> 「Maximum of 20 MB (megabytes)」「Maximum of 20 MP (megapixels)」、長寬比
+> 「Between 100:1 and 1:100」、影片「Maximum of 1 GB (gigabyte)」
+> 「Maximum video length of 10 minutes」、泛型「Maximum of 20 MB」
+> （<https://help.shopify.com/en/manual/shopify-admin/productivity-tools/file-uploads>，
+> 取證 2026-08-24）。正典鍵＝`config/limits.yml` `content.files_*`（現值已與官方一致）；
+> 防解壓炸彈的像素上限即官方 20MP，不另立 50MP。
 5. alt text 欄位進後台表單（無障礙 + SEO）。
 
 **工具**：Active Storage、image_processing（libvips）、R2/S3。

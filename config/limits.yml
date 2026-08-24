@@ -1018,6 +1018,36 @@ collection:
 media:
   # 出處：docs/research/22:160（live）
   csv_max_upload_mb: 15
+  # ── 第 24 包：媒體裁定 B6–B9 落鍵（整合規格 §5，2026-08-24）。B10（處理走 outbox）
+  #    無 limits 鍵，落點＝第 25 包 event_deliveries。 ──
+  # B6：儲存層＝自建 files/media 兩表＋presigned POST 直傳，不啟用 Active Storage
+  #（AS 疊上去＝兩套真相；AS direct-upload routes 已刻意關閉；13 §F3 已加更正註）。（ours 裁定）
+  storage_backend: self_hosted_presigned_post
+  # B7：單檔上限的正典＝content.files_* 五鍵（本節不重複數字，只登記來源）。
+  #    官方 help 逐字：「Maximum of 20 MB (megabytes)」「Maximum of 20 MP (megapixels)」
+  #    「Between 100:1 and 1:100」「Maximum of 1 GB (gigabyte)」
+  #    「Maximum video length of 10 minutes」「Maximum of 20 MB」（generic）。
+  #    出處：help.shopify.com/en/manual/shopify-admin/productivity-tools/file-uploads
+  #   （取證 2026-08-24）——limits 現值與官方一致，13 §F3 的 200MB/50MP 已加更正註。
+  size_limit_source_keys:
+    - content.files_image_max_mb
+    - content.files_image_max_megapixels
+    - content.files_video_max_gb
+    - content.files_video_max_minutes
+    - content.files_generic_max_mb
+  # B8：撞名解法 enum＝官方三值照搬（shopify.dev enum
+  #    FileCreateInputDuplicateResolutionMode：APPEND_UUID／RAISE_ERROR／REPLACE，
+  #    取證 2026-08-24）。🔴 預設 append_uuid 是**我方裁定（ours）**——官方文檔未載明
+  #    預設值；理由＝永不靜默覆蓋、永不因撞名失敗。
+  duplicate_resolution_modes: [append_uuid, raise_error, replace]
+  duplicate_resolution_mode_default: append_uuid
+  # B9：本批可上傳型別（伺服器僅 libvips、無影片轉碼器）；影片/3D 上傳 UI 擋、
+  #    外嵌 ExternalVideo＝第 37 包。（ours 裁定）
+  upload_media_types_enabled: [image]
+  # 媒體處理四態（第 26 包管線狀態機：uploaded→processing→ready／failed）。
+  # 🔴 schema 現值 media.status default "ready" 與起點 uploaded 矛盾＝第 26 包
+  #    migration 修（整合規格 §4-26），本鍵先立正典供 CI enum 對照。
+  statuses: [uploaded, processing, ready, failed]
 
 # =============================================================================
 # 9. 折扣（P0-03 相關上限）
