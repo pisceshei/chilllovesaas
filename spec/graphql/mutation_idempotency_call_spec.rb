@@ -17,7 +17,11 @@ RSpec.describe "Mutation idempotency contract call" do
 
   it "每支具體 mutation 的 resolve 都呼叫 enforce_idempotency_contract!" do
     offenders = Dir.glob(MUTATION_SOURCE_GLOB).filter_map do |path|
-      next if File.basename(path) == "base_mutation.rb"
+      # 抽象底座沒有 resolve（第 27 包新增 base_media_mutation.rb 時擴充）。
+      # 🔴 判準是「檔名 base_* **且**原始碼沒有 `def resolve` 定義」——不逐檔白名單，
+      #    也不只看檔名：日後若有 base_* 真的定義了 resolve，它照樣要受本斷言約束。
+      next if File.basename(path).start_with?("base_") &&
+              !File.read(path).match?(/^\s*def resolve/)
 
       source = File.read(path)
       resolve_body = source[/^\s*def resolve\b.*?^\s*end$/m]

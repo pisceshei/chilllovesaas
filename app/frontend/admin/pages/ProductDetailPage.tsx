@@ -8,6 +8,8 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { InventoryCard } from "../components/InventoryCard";
+import { MediaCard } from "../components/MediaCard";
+import type { MediaCardItem } from "../components/MediaCard";
 import { LocalizedField } from "../components/LocalizedField";
 import type { LocaleOption } from "../components/LocalizedField";
 import { TextField } from "../components/TextField";
@@ -55,6 +57,7 @@ const PRODUCT_QUERY = `
       vendor productType tags
       seo { title description }
       translations { locale field value outdated }
+      media { id position alt status image { thumbUrl url } }
       options { name position values { value position } }
       variants(first: 250) {
         nodes { id title position price compareAtPrice cost sku barcode taxable selectedOptions { name value } }
@@ -76,6 +79,25 @@ interface LocationsData {
 }
 
 /** 該店已啟用的內容語言（ML-2；語言集合是資料，新增語言零部署即出欄位——67 §A.2）。 */
+/** 媒體重讀（上傳／刪除後只重讀這一塊，不動使用者正在編輯的欄位）。 */
+/** 媒體重排（拖曳後隨儲存送出）。 */
+const REORDER_MEDIA_MUTATION = `
+  mutation productReorderMedia($productId: ID!, $mediaIds: [ID!]!) {
+    productReorderMedia(productId: $productId, mediaIds: $mediaIds) {
+      media { id position }
+      userErrors { field message code }
+    }
+  }
+`;
+
+const MEDIA_QUERY = `
+  query productMedia($id: ID!) {
+    product(id: $id) {
+      media { id position alt status image { thumbUrl url } }
+    }
+  }
+`;
+
 const SHOP_LOCALES_QUERY = `
   query shopLocales {
     shopLocales { locale { tag endonym } isSource position }
@@ -132,6 +154,7 @@ interface ProductQueryData {
     tags: string[];
     seo: { title: string | null; description: string | null };
     translations: { locale: string; field: string; value: string; outdated: boolean }[];
+    media?: MediaCardItem[];
     options?: { name: string; position: number; values: { value: string; position: number }[] }[];
     variants: {
       nodes: {
@@ -174,6 +197,8 @@ interface FormValues {
   options: OptionDraft[];
   /** 變體列（顯式清單，非笛卡兒積——lib/variantMatrix.ts ①）。 */
   variantRows: VariantRowData[];
+  /** 媒體展示序（第 27 包；拖曳後進 SaveBar，隨儲存送 mediaOrder）。空＝不動順序。 */
+  mediaOrder: string[];
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -196,6 +221,7 @@ const INITIAL_VALUES: FormValues = {
   translations: {},
   options: [],
   variantRows: [],
+  mediaOrder: [],
 };
 
 type FieldKey =
@@ -230,6 +256,9 @@ const STATUS_OPTIONS: { value: string; labelKey: string; hintKey: string }[] = [
 const ARCHIVED_OPTION = { value: "ARCHIVED", labelKey: "status.archived", hintKey: "status.hint.archived" };
 
 /** 「新增選項」建議名稱（我方措辭，鐵律 9 不抄本尊文案；自訂選項恆在末位）。 */
+/** 鏡射 `config/limits.yml` `product.max_media`（正典在 limits，改那邊要同步）。 */
+const MAX_PRODUCT_MEDIA = 250;
+
 const SUGGESTED_OPTION_KEYS = [
   "product.options.suggested.size",
   "product.options.suggested.color",
@@ -578,6 +607,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const [variantOverflow, setVariantOverflow] = useState(false);
   // 內容語言（來源語言排第一）；載入前先給來源語言一格，避免建立頁閃空。
   const [contentLocales, setContentLocales] = useState<{ tag: string; endonym: string; isSource: boolean }[]>([]);
+  // 媒體清單（伺服端真相；上傳／刪除後重讀。只有「順序」是表單值＝values.mediaOrder）
+  const [media, setMedia] = useState<MediaCardItem[]>([]);
   // locale → 已過期的欄位集合（伺服端 translations.outdated；前端不自行推算，重載才更新）。
   const [outdatedFields, setOutdatedFields] = useState<Record<string, Set<TranslatableField>>>({});
   // 更多動作→封存／取消封存：改狀態後立即儲存（本尊為即時動作，不停在 SaveBar）。
@@ -657,9 +688,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           translations: toTranslationMap(product.translations),
           options: optionDrafts,
           variantRows,
+          mediaOrder: [],
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
+        setMedia([ ...(product.media ?? []) ].sort((a, b) => a.position - b.position));
         rowGraveyard.current.clear();
         setVariantOverflow(product.variants.pageInfo?.hasNextPage ?? false);
         setOutdatedFields(
@@ -867,6 +900,46 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     else if (target.row !== undefined) rowPriceRefs.current[target.row]?.focus();
   }, [saving, errors, rowErrors]);
 
+  // 媒體重讀（上傳／刪除／alt 之後）。只重讀媒體不重讀整個表單——
+  // 否則使用者打到一半的欄位會被伺服端值蓋掉。
+  const reloadMedia = useCallback(async () => {
+    if (!productGid) return;
+
+    try {
+      const data = await requestAdminGraphQL<ProductQueryData, { id: string }>(
+        MEDIA_QUERY, { id: productGid },
+      );
+      const rows = [ ...(data.product?.media ?? []) ].sort((a, b) => a.position - b.position);
+      setMedia(rows);
+      // 🔴 **只在「待存順序已對不上伺服端集合」時才清**（審查 C7）：原本無條件清空，
+      //    上傳／刪除／alt 失焦都會靜默丟掉使用者拖好還沒存的順序。
+      //    對得上就保留——新上傳的圖接在待存順序尾端（orderedMedia 負責併上）。
+      setValues((current) => {
+        if (current.mediaOrder.length === 0) return current;
+
+        const live = new Set(rows.map((row) => row.id));
+        const stale = current.mediaOrder.some((id) => !live.has(id));
+        return stale ? { ...current, mediaOrder: [] } : current;
+      });
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("product.media.reloadFailed"));
+    }
+  }, [productGid, showToast, t]);
+
+  // 顯示序＝待存的拖曳結果（若有）否則伺服端序
+  const orderedMedia = useMemo(() => {
+    if (values.mediaOrder.length === 0) return media;
+
+    const byId = new Map(media.map((item) => [ item.id, item ]));
+    const ordered = values.mediaOrder
+      .map((id) => byId.get(id))
+      .filter((item): item is MediaCardItem => !!item);
+    // 🔴 待存順序之外的媒體（拖曳後才上傳的那幾張）接在尾端——直接 filter 掉會讓
+    //    使用者剛傳好的圖從畫面上消失（審查 C7 的下半）。
+    const known = new Set(values.mediaOrder);
+    return [ ...ordered, ...media.filter((item) => !known.has(item.id)) ];
+  }, [media, values.mediaOrder]);
+
   const save = useCallback(async () => {
     if (saving) return;
     if (variantOverflow) {
@@ -952,6 +1025,31 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         return;
       }
 
+      // 媒體排序（第 27 包工作卡：排序隨商品儲存送出）。
+      // 🔴 順序寫入是**獨立 mutation**——productSet 的宣告式全量語義不適用於媒體：
+      //    媒體卡的上傳／刪除是即時動作，把媒體塞進 productSet 會讓「沒載入 media
+      //    就存檔＝清空」的坑重演（同 collection productIds 的先例）。
+      // 🔴 **必須在確認 productSet 成功之後才送**（審查 C9/C19）：原本擺在
+      //    userErrors 檢查之前，商品儲存被伺服端拒絕時媒體順序照樣被永久改掉，
+      //    而使用者看到的是「儲存失敗」。
+      let mediaOrderApplied = false;
+      if (!isNew && values.mediaOrder.length > 0) {
+        const reordered = await requestAdminGraphQL<
+          { productReorderMedia: { userErrors: { message: string }[] } },
+          Record<string, unknown>
+        >(REORDER_MEDIA_MUTATION, { productId: productGid, mediaIds: values.mediaOrder });
+        const reorderErrors = reordered.productReorderMedia.userErrors;
+        if (reorderErrors.length > 0) {
+          // 🔴 失敗時清掉這份順序（審查 C13）：留著會讓之後每次儲存都重送同一份
+          //    失敗清單（例如其中一張圖已被別的分頁刪掉，永遠對不上全量判準）。
+          showToast(reorderErrors[0].message);
+          setValue("mediaOrder", []);
+          void reloadMedia();
+        } else {
+          mediaOrderApplied = true;
+        }
+      }
+
       // 就地認 id（審查 C4）：本次新建的列在回應裡以座標對回 id——否則之後
       //    改名選項（改名＝後端刪＋加）時 id-less 列 digest 對不上、變體被換新。
       const savedNodes = product.variants?.nodes ?? [];
@@ -962,7 +1060,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             (node.selectedOptions ?? []).find((so) => so.name === option.name.trim())?.value === row.coords[index]));
         return match ? { ...row, id: match.id } : row;
       });
-      const savedValues = { ...values, variantRows: adoptedRows };
+      // 🔴 快照必須是「順序已落地＝mediaOrder 清空」的形狀（審查 C8/C20）：
+      //    存進舊的非空 mediaOrder，之後 reloadMedia 把它清成 [] 就永遠不相等，
+      //    頁面停在 dirty、SaveBar 不消失、離頁還會被攔。
+      const savedValues = { ...values, variantRows: adoptedRows, mediaOrder: [] };
       snapshot.current = JSON.stringify(savedValues);
       showToast(t("product.saved"));
       if (isNew) {
@@ -971,6 +1072,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         // 編輯態留在頁上：吸收新 lockVersion＋認回 id，快照歸零 dirty。
         setLockVersion(product.lockVersion);
         setValues(savedValues);
+        if (mediaOrderApplied) void reloadMedia();
       }
     } catch (reason: unknown) {
       // 鐵律 4 三層的另外兩層：top-level（THROTTLED／ACCESS_DENIED／
@@ -983,7 +1085,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     } finally {
       setSaving(false);
     }
-  }, [applyServerErrors, isNew, locations, lockVersion, navigate, productGid, saving, showToast, t, validate, values, variantOverflow]);
+  }, [applyServerErrors, isNew, locations, lockVersion, navigate, productGid, reloadMedia, saving, showToast, t, validate, values, variantOverflow]);
 
   const applyDiscard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
@@ -1242,18 +1344,13 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
           <Card padded>
             <h3>{t("product.card.media")}</h3>
-            <div className="cl-dropzone">
-              <ImagePlus aria-hidden="true" size={20} />
-              <div className="cl-dropzone__actions">
-                <Button disabled size="small">
-                  {t("product.media.upload")}
-                </Button>
-                <Button disabled size="small" variant="ghost">
-                  {t("product.media.selectExisting")}
-                </Button>
-              </div>
-              <p>{t("product.media.accept")}</p>
-            </div>
+            <MediaCard
+              maxMedia={MAX_PRODUCT_MEDIA}
+              media={orderedMedia}
+              onRefresh={() => void reloadMedia()}
+              onReorder={(mediaIds) => setValue("mediaOrder", mediaIds)}
+              productGid={productGid}
+            />
           </Card>
 
           <Card padded>

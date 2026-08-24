@@ -11,6 +11,15 @@
       source_invalid: "Source URL could not be fetched or was blocked by security rules."
       type_unacceptable: "File type is not accepted (images only for now)."
       too_large: "File exceeds the size limit."
+    media:
+      position_conflict: "Concurrent uploads collided on the same position; please retry."
+      not_found: "Media not found."
+      alt_too_long: "Alt text exceeds 512 characters."
+      over_limit: "Too many media files for one product."
+      source_required: "Provide exactly one of originalSource or fileId."
+      reorder_incomplete: "Reordering must include every media item of the product."
+      variant_not_found: "Variant not found."
+      variant_image_only: "Variants accept images only (no video or 3D)."
     product:
       variants_single_only: "Products without options must have exactly one (implicit) variant; named options and multiple variants arrive in a later milestone."
       last_variant_required: "Cannot delete the last variant; every product must keep at least one variant."

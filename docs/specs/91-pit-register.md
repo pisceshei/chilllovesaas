@@ -2094,11 +2094,69 @@
   【F5；來源＝同上輪自查；複驗：`ls storage/chilllove/shops/*/staged 2>/dev/null | head`；
   取證日期＝2026-08-25】
 
+  🔴 **2026-08-25 更正（撤回上句的「隨第 26 包」）**：第 26 包（媒體處理管線）已合併
+  （PR #127 主體＋#128 `fail_on` 後修），**沒有帶清掃 job**——上句在寫下時是計畫、
+  合併後就成了與 HEAD 不符的陳述。第 27 包（媒體卡）同樣不帶：本包射程是媒體寫入
+  路徑與卡片 UI，磁碟生命週期不在其影響圖內（鐵律 20.5）。**現行歸屬＝第 28 包
+  檔案庫**——理由不是「再順延一次」，而是檔案庫本來就要管 `files` 列與 blob 的
+  生命週期，孤兒清掃是它的自然子集；在它落地之前，staged 區是**已知且未收口的
+  磁碟成長來源**。複驗歸屬：
+  `grep -n "staged" docs/specs/整合執行規格檔名候選 2>/dev/null`（規格檔尚未建立時
+  以本條為唯一歸屬記錄）；複驗現況：
+  `ls storage/chilllove/shops/*/staged 2>/dev/null | head`
+  【F2/F5；來源＝第 27 包對抗審查 C26 confirmed；取證日期＝2026-08-25】
+
 - **12 §B.6:155 與 §C.7:257 的 scheme 白名單不一致**：前者寫「scheme 僅 http/https」、
   後者寫「僅 https」。第 25 包 `Storage::SafeFetch` 取聯集（http/https）落地；
   下次動 12 章時擇一釘明，並回頭對齊實作
   【F7；來源＝第 25 包實作時比對；複驗：
   `grep -n "scheme" docs/research/90-blueprint/12-online-store.md`；取證日期＝2026-08-25】
+
+### 3.9 第 26／27 包（媒體管線＋媒體卡）對抗審查（2026-08-25）
+
+- **附錄 A 名單自 D40 直接開發起與實物集合背離**：A.1／A.2 的打勾清單停在
+  2026-08-22（PR #65 系列），其後每個工作包新增的 tracked worklog／handoff 都沒有
+  同步補列——附錄 A 前言自己規定的「同一 commit 必須同步補列」對 D40 之後的包
+  全面失效。本包只補列自己的兩份（規則對本 commit 的要求），**不回頭補其他包的**
+  （鐵律 20.5：不在本根因影響圖內）。🔴 **本條刻意不寫漏列筆數**（易腐）；
+  複驗差集：
+  ```bash
+  A=$(git -c core.quotepath=false ls-files docs/worklog docs/handoff | sort)
+  B=$(grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|handoff)/[^`]+' | sort)
+  diff <(echo "$A") <(echo "$B")
+  ```
+  【F2/F11；來源＝第 27 包附錄 A 集合比對實跑；取證日期＝2026-08-25】
+
+- **附錄 A 前言仍寫「依 D36，之後不得新增 tracked `docs/handoff/`」**：該句已被
+  **D47（2026-08-24 使用者裁定，改寫鐵律 21.3）**推翻——handoff 現在一律入庫
+  `docs/handoff/` 並與產物同 commit。本包已就地追加更正註（前言層是**規約**不是
+  事故紀錄，依鐵律 19.5 屬「終態層直接改成現值」，但為保留 D36→D47 的沿革脈絡
+  採追加而非覆寫）
+  【F2；來源＝`docs/DECISIONS.md` D47 ∧ 附錄 A 前言；複驗：
+  `grep -n "D36" docs/specs/91-pit-register.md`；取證日期＝2026-08-25】
+
+- **媒體拖曳排序只有 HTML5 drag events，觸控與鍵盤不可用**：`MediaCard` 的 tile 用
+  `draggable` ＋ `onDragStart`/`onDrop`，**觸控裝置沒有 pointer 事件回退**，鍵盤只能
+  tab 到 tile、沒有「上移／下移」。登記為 v1 限制，第 29 包（變體子頁複用同一 tile）
+  一併補
+  【F5；來源＝第 27 包實作自查；複驗：
+  `grep -n "draggable\|onPointerDown" app/frontend/admin/components/MediaCard.tsx`；
+  取證日期＝2026-08-25】
+
+- **`media.status` 欄位在讀取面已無用，但仍留在表上**：真相在 `files.status`
+  （審查 C2 的修法：`Types::MediaType#status` 讀 `stored_file.status`），
+  `media.status` 只剩建立當下的快照。留著它是 M0 建表遺產，**任何新讀取端都不得
+  再用**；要不要 drop 欄位屬 schema 裁定（不可逆），留待檔案庫或後續 schema 輪
+  一併裁
+  【F5；來源＝第 27 包對抗審查 C2；複驗：
+  `grep -rn "\.status" app/graphql/types/media_type.rb`；取證日期＝2026-08-25】
+
+- **`productCreateMedia` 仍未接 `Idempotency::Guard`**：與 §3.8 的 `fileCreate` 同型
+  同因（批量 mutation 的落款形態未裁定），本包沿用「強制帶 key 但不 claim/replay」。
+  同 key 重送＝多掛一次媒體。展開時與 §3.8 那條**一起**裁定
+  【F5；來源＝第 27 包實作自查；複驗：
+  `grep -rn "Idempotency::Guard" app/graphql/mutations/product_create_media.rb`
+  （無輸出＝未接）；取證日期＝2026-08-25】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -2119,6 +2177,12 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 > 「之後隨輪補列」擋不住同 commit 新增檔漏列）。依 D36，之後不得新增 tracked
 > `docs/handoff/`；倉庫外的本地 handoff 不屬於本清單。既有 `docs/handoff/` 保留於
 > A.2 作歷史追溯，不刪除、不改寫。
+>
+> 🔴 **2026-08-25 更正（上句的 D36 部分已失效）**：**D47（2026-08-24 使用者裁定）
+> 推翻 D36 的 handoff 條款**——handoff 現在一律入庫 `docs/handoff/` 並與該工作單位的
+> 產物同 commit（鐵律 21.3 現行文）。⇒ 本清單的補列義務**同時涵蓋 worklog 與
+> handoff**，不再有「倉庫外 handoff 不屬於本清單」這回事。上句原文保留是為了讓
+> D36→D47 的沿革可追（複驗：`grep -n "D47" docs/DECISIONS.md`）。
 
 ### A.1 worklog
 
@@ -2284,6 +2348,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-21-PR64第十五輪Claude驗收修復.md`（Claude comment `5363892357`；⚪ 落籍、20.3 實跑輸出與 A10／B9 官方逐字已處置）
 - [x] `docs/worklog/2026-08-22-PR64第十六輪雙驗收修復.md`（Claude comment `5364180385`＋Codex review `4988979665`；B9 逐句歸屬、B10 條件逐字、W14 歷史表還原與 `th=` 計數式錨定已處置）
 - [x] `docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md`（Claude comment `5379467830`＋Codex review `4999795981`；W15 就地改寫還原、A.1 漏列、R5 警告與窗口實測不一致已處置）
+- [ ] `docs/worklog/2026-08-25-第27包媒體卡.md`（本包新增；D40 直接開發，待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -2437,6 +2502,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-b4bd731驗收修復.md`（exact-head comment `5353555384`＋review `4980786354`；兩個 P1 精準修復，沒有新增坑項）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復查證.md`（review `4981088935` 七則 inline 修法前查證；已抽取總方案兩個同型坑）
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
+- [ ] `docs/handoff/2026-08-25-第27包媒體卡.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 
