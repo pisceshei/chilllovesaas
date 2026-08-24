@@ -49,7 +49,7 @@ const PRODUCT_QUERY = `
       vendor productType tags
       seo { title description }
       translations { locale field value outdated }
-      variants { price compareAtPrice cost sku barcode taxable }
+      variants(first: 1) { nodes { price compareAtPrice cost sku barcode taxable } }
     }
   }
 `;
@@ -111,13 +111,15 @@ interface ProductQueryData {
     seo: { title: string | null; description: string | null };
     translations: { locale: string; field: string; value: string; outdated: boolean }[];
     variants: {
-      price: string;
-      compareAtPrice: string | null;
-      cost: string | null;
-      sku: string | null;
-      barcode: string | null;
-      taxable: boolean;
-    }[];
+      nodes: {
+        price: string;
+        compareAtPrice: string | null;
+        cost: string | null;
+        sku: string | null;
+        barcode: string | null;
+        taxable: boolean;
+      }[];
+    };
   } | null;
 }
 
@@ -545,7 +547,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           setLoadState("missing");
           return;
         }
-        const variant = product.variants[0];
+        const variant = product.variants.nodes[0];
         const loaded: FormValues = {
           title: product.title,
           description: htmlToDescription(product.descriptionHtml),

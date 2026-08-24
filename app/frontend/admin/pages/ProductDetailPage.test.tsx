@@ -219,9 +219,9 @@ describe("新增商品頁", () => {
           tags: [ "花香" ],
           seo: { title: null, description: null },
           translations: [ { locale: "zh-Hant", field: "title", value: "既有商品（繁中）", outdated: false } ],
-          variants: [
+          variants: { nodes: [
             { price: "128.00", compareAtPrice: null, cost: null, sku: "SKU-1", barcode: null, taxable: true },
-          ],
+          ] },
         },
       },
     };
@@ -466,7 +466,7 @@ describe("商品內容多語言", () => {
           { locale: "ja", field: "title", value: "ローズトネール", outdated: true },
           { locale: "zh-Hant", field: "body_html", value: "<p>玫瑰與辛香</p>", outdated: false },
         ],
-        variants: [ { price: "128.00", compareAtPrice: null, cost: null, sku: null, barcode: null, taxable: true } ],
+        variants: { nodes: [ { price: "128.00", compareAtPrice: null, cost: null, sku: null, barcode: null, taxable: true } ] },
       },
     },
   };

@@ -20,6 +20,9 @@ module Types
     field :barcode, String, null: true
     field :taxable, Boolean, null: false
     field :position, Integer, null: false
+    # 第 21 包：本尊 SelectedOption 形（name/value 扁平對；隱含變體＝空陣列）。
+    field :selected_options, [ Types::SelectedOptionType ], null: false,
+      description: "選中的選項（選項 position 序；隱含變體為空）。"
 
     # @return [String] GID
     def id
@@ -46,6 +49,14 @@ module Types
     def cost
       cents = object.cost_cents
       cents && Money::Storage.from_cents(cents, object.currency).to_decimal.string
+    end
+
+    # @return [Array<Hash>] 座標展開為 {name:, value:}（依選項 position 排序）。
+    #   關聯已由 ProductType#variants preload——這裡只走記憶體。
+    def selected_options
+      object.product_variant_option_values
+            .sort_by { |pvov| pvov.product_option.position }
+            .map { |pvov| { name: pvov.product_option.name, value: pvov.option_value.value } }
     end
   end
 end
