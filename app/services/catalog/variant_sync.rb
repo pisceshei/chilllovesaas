@@ -75,6 +75,11 @@ module Catalog
         apply_matched!(shop, product, matched, projections, options_by_name)
         create_new!(shop, product, to_create, options_by_name, idempotency_key)
         Result.new(user_errors: [])
+      rescue ActiveRecord::RecordNotUnique
+        # ai_ci 索引的 accent 級撞法（"e"／"é"）穿過 casefold 驗證才會到這——
+        # 轉 userErrors，SaveProduct 收到後 raise ⇒ 外層 transaction 回滾。
+        Result.new(user_errors: [ error([ "options" ],
+          I18n.t("errors.product.option_values_invalid"), "INVALID") ])
       end
 
       private
@@ -87,12 +92,16 @@ module Catalog
           errors << error([ "options" ], I18n.t("errors.product.options_over_limit"), "OPTIONS_OVER_LIMIT")
         end
         names = options_input.map { |o| o[:name].to_s.strip }
-        if names.any?(&:empty?) || names.uniq.length != names.length
+        # casefold 去重：DB 唯一索引是 ai_ci（大小寫不敏感），Ruby 純 uniq 擋不住
+        # "Red"/"RED" 這種撞法（審查 C7）；accent 級差異由 call 的 RecordNotUnique
+        # 安全網收尾。
+        if names.any?(&:empty?) || names.map { |n| n.unicode_normalize(:nfkc).downcase }.uniq.length != names.length
           errors << error([ "options" ], I18n.t("errors.product.option_name_invalid"), "INVALID")
         end
         options_input.each_with_index do |option, index|
           values = Array(option[:values]).map { |v| v.to_s.strip }
-          if values.empty? || values.any?(&:empty?) || values.uniq.length != values.length
+          if values.empty? || values.any?(&:empty?) ||
+             values.map { |v| v.unicode_normalize(:nfkc).downcase }.uniq.length != values.length
             errors << error([ "options", index.to_s, "values" ],
               I18n.t("errors.product.option_values_invalid"), "INVALID")
           end
@@ -139,37 +148,55 @@ module Catalog
       # ——值改名（Red→Crimson）在宣告式下無法與「刪 Red 加 Crimson」區分，
       # 一律視為刪＋加；引用被刪值的既有變體由階段 B 的刪除分支處置。
       # @return [Hash{String => ProductOption}] name → option（含 reload 後的 values）
+      # 🔴 position 兩階段落位（uq(shop, product, position) unique，同 apply_matched!）：
+      #    ①刪除先行——被刪選項若仍佔位，重排會撞 1062；②留存者整批挪負區間再落正
+      #    ——交換順序（尺寸↔色）與「新建者要的位被留存者佔住」兩種撞法一起消掉；
+      #    ③update_all 後必 reload（P19 dirty-tracking 坑：快取舊值會讓 update! 靜默不發）。
       def sync_options!(shop, product, options_input)
         existing = product.product_options.includes(:option_values).to_a
+        wanted = options_input.map { |oi| oi[:name].to_s.strip }
+        (existing.map(&:name) - wanted).each do |gone|
+          option = existing.find { |o| o.name == gone }
+          option.option_values.each { |v| ProductVariantOptionValue.where(shop_id: shop.id, option_value_id: v.id).delete_all }
+          option.destroy!
+        end
+        kept = existing.select { |o| wanted.include?(o.name) }
+        if kept.any?
+          ProductOption.where(shop_id: shop.id, id: kept.map(&:id))
+                       .update_all("position = -position - 100000")
+          kept.each(&:reload)
+        end
         keep = {}
         options_input.each_with_index do |option_input, index|
           name = option_input[:name].to_s.strip
-          option = existing.find { |o| o.name == name } ||
+          option = kept.find { |o| o.name == name } ||
                    ProductOption.create!(shop_id: shop.id, product_id: product.id,
                                          name:, position: index + 1)
           option.update!(position: index + 1) if option.position != index + 1
           sync_values!(shop, option, Array(option_input[:values]).map { |v| v.to_s.strip })
           keep[name] = option
         end
-        (existing.map(&:name) - keep.keys).each do |gone|
-          option = existing.find { |o| o.name == gone }
-          option.option_values.each { |v| ProductVariantOptionValue.where(shop_id: shop.id, option_value_id: v.id).delete_all }
-          option.destroy!
-        end
         keep
       end
 
+      # 與 sync_options! 同款三步（值層的 unique＝uq(option, position)／uq(option, value)）。
       def sync_values!(shop, option, values)
         existing = option.option_values.to_a
-        values.each_with_index do |value, index|
-          row = existing.find { |v| v.value == value } ||
-                OptionValue.create!(shop_id: shop.id, product_option_id: option.id,
-                                    value:, position: index + 1)
-          row.update!(position: index + 1) if row.position != index + 1
-        end
         existing.reject { |v| values.include?(v.value) }.each do |gone|
           ProductVariantOptionValue.where(shop_id: shop.id, option_value_id: gone.id).delete_all
           gone.destroy!
+        end
+        kept = existing.select { |v| values.include?(v.value) }
+        if kept.any?
+          OptionValue.where(shop_id: shop.id, id: kept.map(&:id))
+                     .update_all("position = -position - 100000")
+          kept.each(&:reload)
+        end
+        values.each_with_index do |value, index|
+          row = kept.find { |v| v.value == value } ||
+                OptionValue.create!(shop_id: shop.id, product_option_id: option.id,
+                                    value:, position: index + 1)
+          row.update!(position: index + 1) if row.position != index + 1
         end
         option.association(:option_values).reload
       end

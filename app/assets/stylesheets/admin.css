@@ -1545,3 +1545,25 @@ a {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
   to { opacity: 1; transform: none; }
 }
+
+/* ── 選項編輯器＋變體表（包 23）─────────────────────────── */
+.cl-fieldset-plain { border: 0; margin: 0; padding: 0; min-width: 0; }
+.cl-card-note--warn { color: var(--critical); }
+.cl-option-row {
+  display: flex; flex-direction: column; gap: var(--sp-200);
+  padding: var(--sp-300) 0; border-bottom: 1px solid var(--border);
+}
+.cl-option-row__head { display: flex; align-items: flex-end; gap: var(--sp-200); }
+.cl-option-row__head > .cl-field { flex: 1; }
+.cl-variant-table-wrap { overflow-x: auto; margin-top: var(--sp-300); }
+.cl-variant-table {
+  width: 100%; border-collapse: collapse;
+  font-size: var(--t-sm); line-height: var(--lh-sm);
+}
+.cl-variant-table th, .cl-variant-table td {
+  padding: var(--sp-150) var(--sp-200); border-bottom: 1px solid var(--border);
+  text-align: left; vertical-align: top;
+}
+.cl-variant-table thead th { color: var(--text-2); font-weight: var(--fw-md); }
+.cl-variant-table tbody th[scope="row"] { font-weight: var(--fw-md); white-space: nowrap; }
+.cl-variant-table__input { width: 100%; min-width: 96px; }

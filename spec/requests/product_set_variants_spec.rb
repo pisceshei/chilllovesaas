@@ -164,6 +164,113 @@ RSpec.describe "Admin GraphQL productSet 多變體", type: :request do
     expect(data2["userErrors"].map { |e| e["code"] }).to include("OPTIONS_OVER_LIMIT")
   end
 
+  it "選項交換＋值交換＋中段刪除不撞 position 唯一索引（兩階段落位）；title 依新選項序重算" do
+    login!
+    data = set!({
+      title: "重排",
+      options: [ { name: "尺寸", values: [ "S", "M", "L" ] }, { name: "色", values: [ "黑", "白" ] } ],
+      variants: [ { price: "1.00",
+                    optionValues: [ { optionName: "尺寸", value: "S" }, { optionName: "色", value: "黑" } ] } ]
+    })
+    expect(data["userErrors"]).to eq([])
+    product = data["product"]
+    vid = product.dig("variants", "nodes").sole["id"]
+
+    # ①選項交換（尺寸1↔色2）②尺寸值重排＋刪中段 M（[S,M,L]→[L,S]）③色值交換（[黑,白]→[白,黑]）
+    # ——三種形態都會讓逐列 update 撞 uq(*, position)，兩階段落位前此例必 1062。
+    data2 = set!({
+      id: product["id"], lockVersion: product["lockVersion"], title: "重排",
+      options: [ { name: "色", values: [ "白", "黑" ] }, { name: "尺寸", values: [ "L", "S" ] } ],
+      variants: [ { id: vid, price: "1.00",
+                    optionValues: [ { optionName: "色", value: "黑" }, { optionName: "尺寸", value: "S" } ] } ]
+    })
+    expect(data2["userErrors"]).to eq([])
+    expect(data2.dig("product", "options")).to eq([
+      { "name" => "色", "values" => [ { "value" => "白" }, { "value" => "黑" } ] },
+      { "name" => "尺寸", "values" => [ { "value" => "L" }, { "value" => "S" } ] }
+    ])
+    node = data2.dig("product", "variants", "nodes").sole
+    expect(node["id"]).to eq(vid)
+    expect(node["title"]).to eq("黑 / S")
+  end
+
+  it "🔴 改名選項（列帶 id）：variant id 與座標值全保持——id-match 勝過 name（審查 C12）" do
+    login!
+    data = set!({
+      title: "改名", options: [ { name: "尺寸", values: [ "S", "M" ] } ],
+      variants: [
+        { price: "1.00", optionValues: [ { optionName: "尺寸", value: "S" } ] },
+        { price: "2.00", optionValues: [ { optionName: "尺寸", value: "M" } ] }
+      ]
+    })
+    expect(data["userErrors"]).to eq([])
+    product = data["product"]
+    ids = product.dig("variants", "nodes").map { |n| n["id"] }
+
+    data2 = set!({
+      id: product["id"], lockVersion: product["lockVersion"], title: "改名",
+      options: [ { name: "Size", values: [ "S", "M" ] } ],
+      variants: [
+        { id: ids[0], price: "1.00", optionValues: [ { optionName: "Size", value: "S" } ] },
+        { id: ids[1], price: "2.00", optionValues: [ { optionName: "Size", value: "M" } ] }
+      ]
+    })
+    expect(data2["userErrors"]).to eq([])
+    nodes = data2.dig("product", "variants", "nodes")
+    expect(nodes.map { |n| n["id"] }).to eq(ids)
+    expect(nodes.map { |n| n["title"] }).to eq(%w[S M])
+    expect(nodes.first["selectedOptions"]).to eq([ { "name" => "Size", "value" => "S" } ])
+  end
+
+  it "不動索引位的選項也要真的落正位（釘 reload 守衛——[A,B,C]→[A,C,B]，A 位置不變）" do
+    login!
+    data = set!({
+      title: "三選項",
+      options: [ { name: "A", values: [ "a" ] }, { name: "B", values: [ "b" ] }, { name: "C", values: [ "c" ] } ],
+      variants: [ { price: "1.00", optionValues: [
+        { optionName: "A", value: "a" }, { optionName: "B", value: "b" }, { optionName: "C", value: "c" } ] } ]
+    })
+    expect(data["userErrors"]).to eq([])
+    product = data["product"]
+    data2 = set!({
+      id: product["id"], lockVersion: product["lockVersion"], title: "三選項",
+      options: [ { name: "A", values: [ "a" ] }, { name: "C", values: [ "c" ] }, { name: "B", values: [ "b" ] } ],
+      variants: [ { id: product.dig("variants", "nodes").sole["id"], price: "1.00", optionValues: [
+        { optionName: "A", value: "a" }, { optionName: "B", value: "b" }, { optionName: "C", value: "c" } ] } ]
+    })
+    expect(data2["userErrors"]).to eq([])
+    # 🔴 A 的索引位沒變：沒有 update_all 後的 reload，dirty-tracking 會拿快取正值
+    #    比對新值相等而靜默不發 UPDATE，DB 停在負區間（審查 C8 的坑本體）
+    ActsAsTenant.without_tenant do
+      pid = product["id"][%r{/(\d+)\z}, 1].to_i
+      expect(ProductOption.where(product_id: pid).order(:position).pluck(:position)).to eq([ 1, 2, 3 ])
+      expect(OptionValue.joins(:product_option).where(product_options: { product_id: pid })
+               .pluck(:position)).to all(be > 0)
+    end
+  end
+
+  it "casefold 重複（Red/RED）⇒ INVALID 不是 500；accent 級（e/é）走 RecordNotUnique 安全網也回 INVALID" do
+    login!
+    data = set!({
+      title: "撞名", options: [ { name: "色", values: [ "Red", "RED" ] } ],
+      variants: [ { price: "1.00", optionValues: [ { optionName: "色", value: "Red" } ] } ]
+    })
+    expect(data["userErrors"].map { |e| e["code"] }).to include("INVALID")
+
+    data2 = set!({
+      title: "重音", options: [ { name: "字", values: [ "e", "é" ] } ],
+      variants: [
+        { price: "1.00", optionValues: [ { optionName: "字", value: "e" } ] },
+        { price: "1.00", optionValues: [ { optionName: "字", value: "é" } ] }
+      ]
+    })
+    expect(data2["userErrors"].map { |e| e["code"] }).to include("INVALID")
+    # 回滾乾淨：商品沒被半建
+    ActsAsTenant.with_tenant(shop) do
+      expect(Product.where(title: "重音")).to be_empty
+    end
+  end
+
   it "digest 不對外曝露（13 §F1-2：不進 GraphQL）——introspection 全 schema 零命中" do
     login!
     post_graphql("query { __schema { types { name fields { name } } } }")
