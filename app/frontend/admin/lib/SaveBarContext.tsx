@@ -15,7 +15,7 @@ export interface SaveBarState {
   saving: boolean;
   /** 觸發儲存（與頁首「儲存」同一入口——雙提交入口，DOCS savebar）。 */
   onSave: () => void;
-  /** 捨棄變更（還原快照，無二次確認 modal）。 */
+  /** 捨棄變更（包 4 起先過 ConfirmDialog，確認後才還原快照）。 */
   onDiscard: () => void;
   /** shake 動畫的觸發序號（guardNav 攔截時遞增，SaveBar 播 cl-shake）。 */
   shakeSignal: number;

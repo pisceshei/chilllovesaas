@@ -1338,7 +1338,7 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cl-shake, .cl-savebar, .cl-toast { animation: none; }
+  .cl-shake, .cl-savebar, .cl-toast, .cl-modal { animation: none; }
 }
 
 /* ── 商品編輯頁 P1（91 §2/§11/§12）：狀態 listbox／SERP 預覽／標籤 chips／更多動作 ── */
@@ -1504,3 +1504,44 @@ a {
 .cl-history-delta { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cl-history-delta small { color: var(--text-2); }
 .cl-muted { color: var(--text-2); font-size: var(--t-sm); }
+
+/* ── Modal 原語（包 4）：--z-scrim／--z-dialog／--scrim／--sh-modal 的第一個消費者
+   （tokens.css :147 註明浮層窄帶 510–520 靠 DOM 序決勝；scrim 與面板同屬一個 root） ── */
+.cl-modal-root {
+  position: fixed; inset: 0; z-index: var(--z-scrim);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--sp-400);
+}
+.cl-scrim {
+  position: absolute; inset: 0; border: 0; margin: 0; padding: 0;
+  background: var(--scrim); cursor: default;
+}
+.cl-modal {
+  position: relative; z-index: var(--z-dialog);
+  width: 100%; max-width: 480px; max-height: calc(100vh - var(--sp-600) * 2);
+  display: flex; flex-direction: column;
+  background: var(--surface); border-radius: var(--r-300); box-shadow: var(--sh-modal);
+  animation: cl-modal-in var(--dur-slow) var(--ease-decelerate);
+}
+.cl-modal:focus { outline: none; }
+.cl-modal__header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-200);
+  padding: var(--sp-400) var(--sp-400) var(--sp-200);
+}
+.cl-modal__title { margin: 0; font-size: var(--t-lg); line-height: var(--lh-lg); font-weight: var(--fw-title); }
+.cl-modal__close {
+  display: inline-flex; border: 0; background: none; padding: var(--sp-100);
+  border-radius: var(--r-200); color: var(--text-2); cursor: pointer;
+}
+.cl-modal__close:hover:not(:disabled) { background: var(--surface-2); }
+.cl-modal__close:disabled { color: var(--text-disabled); cursor: default; }
+.cl-modal__body { padding: 0 var(--sp-400); overflow-y: auto; }
+.cl-modal__message { margin: 0; font-size: var(--t-sm); line-height: var(--lh-sm); color: var(--text-2); }
+.cl-modal__footer {
+  display: flex; justify-content: flex-end; gap: var(--sp-200);
+  padding: var(--sp-400);
+}
+@keyframes cl-modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
