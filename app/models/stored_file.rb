@@ -6,9 +6,10 @@
 #   `storage_key`（本體在物件儲存，B6＝自建 presigned POST，不用 Active Storage）。
 #   🔴 類名取 StoredFile 因為 `File` 撞 Ruby core——GraphQL 面仍曝露為 `File`
 #   （`Types::FileType.graphql_name`）、GID 仍是 `gid://chilllove/File/{id}`。
-# ②狀態機：limits `media.statuses` 四態（uploaded→processing→ready／failed）；
-#   本包 fileCreate 落 `ready`（圖片不需轉檔即可用；第 26 包管線接手後
-#   進場改 uploaded→processing）。
+# ②狀態機：limits `media.statuses` 四態。fileCreate 落 `uploaded`（起點），
+#   `media.uploaded` 事件的消費者（第 26 包 `MediaPipeline::ProcessConsumer`）
+#   產完衍生尺寸才轉 `ready`；壞檔轉 `failed` 並記 `processing_error`。
+
 # ③引用：`file_usages`（附掛端第 27 包寫入）；刪除確認與 in-use 擋刪讀它。
 # ④跨功能影響：fileCreate／fileUpdate／fileDelete（25／28）、媒體卡（27）、
 #   檔案庫頁（28）、`media.source_url` 衍生（27）。
@@ -32,4 +33,13 @@ class StoredFile < ApplicationRecord
 
   # 引用數（第 28 包刪除確認的數字來源；兩套計數＝事故，排程 §四.28）。
   def usage_count = file_usages.count
+
+  # 衍生尺寸的讀出 URL（第 26 包；nil＝該尺寸尚未產出／處理失敗）。
+  # 端點與原圖同一支（`/admin/files/:id/blob`）＋variant 參數——衍生檔不另開路由，
+  # 授權面因此只有一處（StoredFilePolicy#index?）。
+  def derivative_url(variant)
+    return nil unless derivatives.is_a?(Hash) && derivatives[variant.to_s]
+
+    "/admin/files/#{id}/blob?variant=#{variant}"
+  end
 end

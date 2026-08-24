@@ -97,6 +97,10 @@ module Types
       scope = Product
         .where(shop_id: context.fetch(:current_shop).id)
         .select(Arel.sql("products.*"), Arel.sql(Product::TOTAL_INVENTORY_SELECT))
+        # 🔴 列表的縮圖欄與缺 alt 數（第 26 包）：沒有這個 preload，
+        #    `featuredImage`＋`mediaMissingAltCount` 會變成每列兩三條查詢
+        #    （審查 C10/C11 實證）。單筆路徑不走這裡、多一次查詢可接受。
+        .preload(media: :stored_file)
       # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
       scope = Products::SearchScope.apply(scope:, query:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)

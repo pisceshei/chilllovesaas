@@ -15,9 +15,9 @@ RSpec.describe Events::Relay do
     built
   end
 
-  def enqueue!(**attributes)
+  def enqueue!(topic: Events::Topics::MEDIA_UPLOADED, **attributes)
     ActsAsTenant.with_tenant(shop) do
-      EventOutbox.create!(event_id: SecureRandom.uuid, topic: Events::Topics::MEDIA_UPLOADED,
+      EventOutbox.create!(event_id: SecureRandom.uuid, topic:,
                           aggregate_type: "StoredFile", aggregate_id: 1, payload: {},
                           available_at: Time.current, status: "pending", **attributes)
     end
@@ -57,7 +57,9 @@ RSpec.describe Events::Relay do
   end
 
   it "零消費者 topic：照舊直接 published、零 delivery 列（P19 語義不變）" do
-    event = enqueue!
+    # 🔴 media.uploaded 自第 26 包起有真實消費者 ⇒ 本例改用仍無消費者的 topic
+    # （複驗：`grep -n REGISTRY -A 3 app/services/events/consumers.rb`）
+    event = enqueue!(topic: Events::Topics::PRODUCT_UPDATED)
     described_class.drain!
     expect(reload(event).status).to eq("published")
     expect(deliveries(event)).to be_empty

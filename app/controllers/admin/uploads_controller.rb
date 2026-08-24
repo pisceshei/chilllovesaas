@@ -35,10 +35,24 @@ module Admin
       head :forbidden
     end
 
-    # GET /admin/files/:id/blob
+    # GET /admin/files/:id/blob[?variant=thumb|card|detail|og]
+    #
+    # 衍生尺寸與原圖同一支端點：授權面只有一處（StoredFilePolicy#index?），
+    # 且 variant 只能取自白名單——key 由 file.id＋variant 推導，不吃使用者輸入的路徑。
     def show_file
       authorize StoredFile, :index?
       file = StoredFile.find(params[:id])
+      variant = params[:variant].presence
+
+      if variant
+        entry = file.derivatives.is_a?(Hash) ? file.derivatives[variant] : nil
+        return head :not_found unless entry && MediaPipeline::Derivatives.names.include?(variant)
+
+        return send_data Storage::LocalDisk.read(entry.fetch("key")),
+          filename: "#{::File.basename(file.filename, ".*")}-#{variant}#{MediaPipeline::Derivatives::EXTENSION}",
+          type: "image/webp", disposition: "inline"
+      end
+
       send_data Storage::LocalDisk.read(file.storage_key),
         filename: file.filename, type: file.content_type, disposition: "inline"
     end

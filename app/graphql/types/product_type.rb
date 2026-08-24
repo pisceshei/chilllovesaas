@@ -35,6 +35,15 @@ module Types
     # read_products 讀 Product.totalInventory）。
     field :total_inventory, Integer, null: true
 
+    # ── 媒體（第 26 包）──
+    # 首圖＝position 最小的那張（本尊語義；media 的排序即展示序）。
+    # 🔴 用 `media` 關聯而非 `images`：後者在本尊已 deprecated（90-blueprint/01:49）。
+    field :featured_image, Types::ImageType, null: true,
+      description: "首圖（position 最小的媒體；無媒體時 null）。"
+    # 缺 alt 數（62 §M S3 明列 M1）：alt 不自動填但要度量。
+    field :media_missing_alt_count, Integer, null: false,
+      description: "缺 alt 文字的媒體數（無障礙與 SEO 度量；62 §F.1 不自動填、只度量）。"
+
     # ── 組織分類＋SEO（91 §11–12，P1）──
     field :vendor, String, null: true
     field :product_type, String, null: true
@@ -56,6 +65,25 @@ module Types
     # @see docs/research/28-api-contract.md §0.3
     def id
       "gid://chilllove/Product/#{object.id}"
+    end
+
+    # 首圖：position 最小的媒體所指的檔案（媒體排序即展示序）。
+    # 🔴 用 `object.media.to_a`（不是 `.includes` 再查）——`includes` 掛在關聯上會
+    #    **另發一次查詢**、繞開呼叫端的 preload（審查 C10）。列表路徑的 preload 在
+    #    `Types::QueryType#products`（`preload(media: :stored_file)`）；單筆路徑
+    #    多一次查詢可接受。
+    def featured_image
+      row = object.media.to_a.min_by(&:position)
+      return nil unless row&.stored_file
+
+      Types::ImageType::Presenter.new(file: row.stored_file, alt: row.alt_text)
+    end
+
+    # 缺 alt 數（62 §M S3）：alt 不自動填、只度量。
+    # 🔴 `to_a.count { }` 而非關聯的 block-form `count`——後者每次都回 DB 全撈
+    #    （審查 C11）；`to_a` 吃 preload 好的那份。
+    def media_missing_alt_count
+      object.media.to_a.count { |row| row.alt_text.blank? }
     end
 
     # SEO 子物件直接以 product 本身為 object（欄位在同一列上，SeoType 讀

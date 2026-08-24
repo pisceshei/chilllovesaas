@@ -44,6 +44,12 @@ class Product < ApplicationRecord
   #    ⚠️ 這與 `docs/specs/88` §4 那個 `Shop#publications` 的教訓是同一型：
   #    **新增一張有外鍵指回來的表時，父表的關聯宣告要一起補**。
   has_many :product_options, dependent: :destroy
+  # 媒體（第 26 包接讀取面；寫入端＝第 27 包 productCreateMedia）。
+  # dependent: :destroy——刪商品連動刪媒體列；blob 的清掃走第 28 包引用計數
+  # （13 §F3 坑「刪商品要連動清 blob」，file_usages 是那個計數的唯一來源）。
+  # 🔴 class_name 必填：Rails 把 `media` 單數化成 `Medium`（實測 NameError
+  #    "Missing model class Medium"）——model 名是 `Media`，不跟著改。
+  has_many :media, class_name: "Media", dependent: :destroy, inverse_of: :product
   # 多型：商品可獨立發布到各管道（docs/specs/88）。
   has_many :resource_publications, as: :publishable, dependent: :destroy
 
