@@ -118,6 +118,11 @@ RSpec.describe "事件產生端" do
     end
 
     describe "合併窗（63 §C.6）" do
+      # 🔴 凍結時鐘：dedupe_key 的時間桶取 Time.current（adjust.rb
+      #    enqueue_adjust_event!），不凍時三次呼叫踩到桶邊界就併成 2 顆事件
+      #    ——2026-08-24 全套實跑抓到一次（expected 1 got 2）。凍住＝同桶確定成立。
+      around { |example| freeze_time { example.run } }
+
       it "同 (item, location) 窗內非豁免筆併成一列：coalesced_count 累加、payload 為最新" do
         adjust!(name: "damaged", delta: 1)
         adjust!(name: "damaged", delta: 2)
@@ -137,6 +142,15 @@ RSpec.describe "事件產生端" do
         expect(events.first.status).to eq("published")
         expect(events.last.status).to eq("pending")
         expect(events.last.coalesced_count).to eq(1)
+      end
+
+      it "跨桶不併：兩次呼叫落在不同時間桶＝兩列各自 coalesced_count=1（窗語義的另一半——當年 flake 的機制本體）" do
+        adjust!(name: "damaged", delta: 1)
+        travel ((Limits.fetch(:catalog_flow, :inventory_event_coalesce_window_ms) + 1) / 1000.0).seconds
+        adjust!(name: "damaged", delta: 2)
+        events = outbox(Events::Topics::INVENTORY_ADJUSTED).to_a
+        expect(events.size).to eq(2)
+        expect(events.map(&:coalesced_count)).to eq([ 1, 1 ])
       end
 
       it "ledger 永不合併（紅線 3）：三次呼叫＝三列 group、三列 ledger，被併的只有事件" do
