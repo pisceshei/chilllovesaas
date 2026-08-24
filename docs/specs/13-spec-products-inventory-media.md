@@ -376,22 +376,49 @@ collection_memberships(                          -- 物化結果，**前台唯�
 ### F4.2 求值管線與 include/exclude 的優先順序
 
 ```
-候選集 = ⋃ 各 include 來源的求值結果          （四型來源各自求值後聯集）
-最終集 = 候選集 − ⋃ 各 exclude 來源的求值結果  （exclude 最後套用）
+最終集 = ⋃ₛ ( inclusion(s) − exclusion(s) )
+         ↑ 每個來源各自把自己的 exclusion 套完，再聯集
 ```
 
-**三層優先序**（`limits.collection.source_precedence`）：
+🔴 **2026-08-24 修正（`docs/research/95` §1）**：本節原本寫的是**全域相減**
+（`候選集 = ⋃ include 來源；最終集 = 候選集 − ⋃ exclude 來源`）＋三層優先序，
+並把第 1 層登記為我方假設 **V-57**。**兩者都已被官方明文推翻，V-57 撤銷。**
 
-| 層 | 規則 | 依據 |
+官方原文：排除條件「**evaluated per source and reconciled into the collection's final membership**」
+⇒ **排除只在自己這個來源內結算**。
+
+| | 全域相減（舊，錯） | per-source 相減（新，對） |
 |---|---|---|
-| 1（最高） | **exclude 勝過所有 include**（含手動加入） | 🔴 **我方假設**，見下 |
-| 2 | **manual include 勝過 conditions** | ✅ **官方明載**：手動加入的商品／變體「除非手動移除，否則永遠留在該商品系列內」（61 §4.1 引 help P23）⇒ 條件重算不得把手動加入的踢出去 |
-| 3 | conditions include | — |
+| A 來源排除商品 X，B 來源包含 X | X **不在**系列內 | X **仍在**系列內 |
 
-> 🔴 **這是我方假設，不是官方事實**（61 §11 登記為 **V-57**）：官方 P25 只說 `Products` 來源可以排除特定商品，**未載明 exclude 與 include／manual 的交互與求值次序**。
-> **本規格選定「exclude 最後套用、勝過一切」**，理由是失效方向正確——排除通常出於下架、法遵、地區限制這類「不該賣」的原因，讓它被一條條件覆蓋掉的代價，遠高於少賣一件商品。
-> **這個假設做成一個 limits 鍵是刻意的**：官方日後澄清為別的順序時，改的是 `source_precedence` 這一個鍵 ＋ 求值器的排序，**不動任何資料模型**。
-> **rebuild 測試必須覆蓋這個假設的三條**：①手動加入 ＋ 明確排除同一商品 ⇒ 不在系列內；②條件命中 ＋ 明確排除 ⇒ 不在系列內；③手動加入 ＋ 條件不命中 ⇒ **仍在系列內**（第 2 層）。
+> 🔴 **為什麼這個錯誤特別危險**：它不會報錯，只會讓某些系列少列商品，
+> 而且**只在「A 來源排除、B 來源包含同一商品」的系列上露餡**——這種系列在測試資料裡不會自然出現。
+> 與 zero-decimal 幣別在 HKD 上全綠是同一個形態。
+>
+> **「手動加入的除非手動移除否則永遠留著」在新模型裡不再是優先序問題**：
+> 手選（`selections`）與條件（`conditions`）同在 `inclusion` 區塊**內**，兩者是聯集關係。
+>
+> **rebuild 測試必須覆蓋的三條**（已按新公式改寫）：
+> ①**同一來源**內手動加入 ＋ 明確排除同一商品 ⇒ 不在系列內；
+> ②**同一來源**內條件命中 ＋ 明確排除 ⇒ 不在系列內；
+> ③🔴 **A 來源排除商品 X ＋ B 來源包含 X ⇒ X 仍在系列內**（這一條是新公式的關鍵測試，舊公式會判反）。
+
+**條件區塊的值域不對稱**（`docs/research/95` §1.2／§1.3）：
+inclusion 條件 **19 種**、exclusion 條件**只有 6 種**（`collection`／`product_category`／
+`product_tag`／`product_type`／`product_vendor`／`unknown`），沒有價格、庫存、狀態、metafield 類。
+🔴 ⇒ schema **不得**用單一 `field ENUM` ＋ `mode ENUM('inclusion','exclusion')`——
+沒有任何東西阻止在 exclusion 列寫 `price`。**值域不是「有哪些欄位」，是「哪個區塊有哪些欄位」。**
+另：`collection` 型**只在 exclusion 側**；inclusion 側要取另一系列的成員走的是
+`CollectionSubCollectionsSource`（獨立的 source 型別），不是條件。
+
+**向前相容**：本尊在兩個 union 裡都放了顯式的 `...ConditionUnknown` 成員
+（原文「An inclusion condition introduced in a newer API version that is not modeled by…」）
+⇒ 我方遇到不認識的條件型別必須**原樣保留**，不 reject、不丟棄（`limits.collection.condition_unknown_passthrough`）。
+
+**條件 × 運算子的對應不是靜態表**：本尊用執行期 query `collectionRulesConditions` 回
+`allowedRelations`／`defaultRelation`，因為 metafield 條件的關係集合**依 metafield 型別逐筆而定**。
+⇒ 我方也要一支同語義的 API 給 admin SPA 動態渲染，**前端不得硬編對應表**
+（`limits.collection.condition_relations_source: runtime_query`）。
 
 ### F4.3 🔴 標籤條件是集合運算，不是子字串
 
@@ -466,9 +493,17 @@ product_tags(shop_id, product_id,
 | 每店含**變體**的系列數 | `max_with_variants_per_shop`（100） | ✅ 官方（help P23） |
 | 每店含**任何條件**的系列數 | `max_smart_collections_per_shop`（5000） | ✅ 官方（help P23） |
 | 單一系列的條件總數 | `max_rules_per_collection`（60） | ✅ 官方（help P23、P24） |
-| **巢狀深度** | `source_nesting_max_depth`（5） | 🔴 **官方未載明，本專案推導** ⇒ ⚠ **V-135** |
+| **巢狀深度** | `source_nesting_max_depth`（**1**） | ✅ **官方明載**（`SubCollectionIneligibleReason.CHAIN_REFERENCE`：「The referenced collection itself owns a sub-collection source」）⇒ ⚠ V-135 **已撤銷**（2026-08-24，見 `docs/research/95` §1.1） |
 
-> 深度上限是本專案自訂的理由：官方只給了 per-shop 的**家數**，沒給**深度**。而家數擋不住深度——5 個系列就能串出深度 5 的鏈。每加一層，rebuild 的扇出與失效傳播成本乘一次，且商家無從察覺為什麼系列頁變慢。
+> 🔴 **2026-08-24 修正**：本段原本論證「官方只給家數沒給深度，所以我方推導深度 5」。
+> **官方其實給了深度**：`SubCollectionIneligibleReason` 三值裡的 `CHAIN_REFERENCE` 就是
+> 「被參照的系列自己也擁有 sub-collection 來源」⇒ **深度上限就是 1**，A→B→C 根本建不起來。
+>
+> **這件事的連鎖後果**：深度 1 之下，環偵測退化成兩個謂詞——①不得參照自己（`SELF_REFERENCE`）
+> ②被參照者不得自己擁有 sub-collection 來源（`CHAIN_REFERENCE`）。
+> 併發用**被參照列的 row lock** 就擋得住，**`collection_graph_locks` 圖鎖表不必建**，
+> 下面 (c)(d)(f) 三段為深度 ≥ 2 設計的遞迴解析器、可達性檢查與逐層傳播全部可大幅縮減。
+> ⚠️ 本輪只改結論與上限值，**(c)(d)(f) 三段的改寫另立一包**（見 `docs/research/95` 的後續項）。
 
 **(b) 寫入期環偵測**：新增／修改 `source_type='collections'` 的來源時，在**同一 transaction 內**沿 `collection_sources` 做可達性檢查（自 target 出發能否走回 source）。命中 ⇒ `userErrors{code: CYCLIC_REFERENCE}`（`limits.collection.cycle_detection_error_code`）。
 

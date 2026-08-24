@@ -802,8 +802,40 @@ inventory:
   top_level_states: [on_hand, available, committed, unavailable, incoming]
   # unavailable 的子分類。出處：46c:925–927（help，H20 zh-TW）
   unavailable_subtypes: [damaged, quality_control, safety_stock, draft_reserved, app_reserved, other]
-  # 調整原因七項（第一項為預設）。出處：46c:608–617（help）
-  adjustment_reasons: [correction, count, received, return_restock, damaged, theft_or_loss, promotion_or_donation]
+  # 🔴 API 的 quantity name 全集（8 個，小寫底線）。出處：inventoryProperties.quantityNames，
+  #    2026-07，取證 2026-08-24（docs/research/95 §2）。
+  #    `top_level_states` 是**顯示層**的五態（UI 的 unavailable 是四項的彙總顯示），
+  #    本鍵是**API 層**的真實 name 集合，兩者不可混用。
+  quantity_names: [available, committed, damaged, incoming, on_hand, quality_control, reserved, safety_stock]
+  # on_hand 的組成（官方 comprises，**六項、不含 incoming**）。它是導出量不是獨立變數。
+  on_hand_comprises: [available, committed, damaged, quality_control, reserved, safety_stock]
+  # `isInUse` 語義＝**該商家用過沒有**（原文 "Whether the quantity name has been used by the merchant."），
+  # **不是** per-shop 功能開關。parity 行為：未使用過的狀態不主動在庫存表格露出欄位。
+  hide_unused_quantity_names: true
+  # `displayName` 是**已本地化**字串 ⇒ 我方繁中介面自備對照表，不得直接顯示 API 回的英文。
+  use_own_quantity_display_names: true
+
+  # 🔴 調整原因：**API 17 個，admin UI 手動下拉只露 7 個**——兩者是同一份值域的兩個投影，都要。
+  #    出處：docs/research/95 §3（2026-07，取證 2026-08-24）＋ 實機 docs/research/94 §2.4。
+  #    ⚠ 舊鍵存的是 **UI 標籤 snake_case**（count／return_restock／theft_or_loss），
+  #      **不是 API 識別字**——與 collection 的 title_asc vs alpha_asc 是同一種坑，本輪改正。
+  adjustment_reasons: [correction, cycle_count_available, received, restock, damaged, shrinkage, promotion,
+                       other, quality_control, safety_stock,
+                       movement_created, movement_updated, movement_received, movement_canceled,
+                       reservation_created, reservation_updated, reservation_deleted]
+  # UI 手動下拉露出的子集（順序即 UI 順序；第一項 correction 為預設，help 明文
+  # "The default option when no other reason is selected."）。
+  adjustment_reasons_manual_ui: [correction, cycle_count_available, received, restock, damaged, shrinkage, promotion]
+  # 數量邊界：🔴 **adjust 與 set 不同**，照一個數字實作會在其中一支放行不該放行的值。
+  #   adjust：INVALID_QUANTITY_TOO_HIGH "The quantity can't be higher than 2,000,000,000."
+  #   set   ：INVALID_QUANTITY_TOO_HIGH "The **total** quantity can't be higher than 1,000,000,000."
+  adjust_quantity_max: 2000000000
+  adjust_quantity_min: -2000000000
+  set_total_quantity_max: 1000000000
+  set_total_quantity_min: -1000000000
+  # ledgerDocumentUri：除 available 外**全部必填**，且不得用 gid://shopify/*。
+  ledger_document_required_except: [available]
+  ledger_document_forbid_shopify_gid: true
   # 調整歷史保留天數。出處：docs/research/22:81（live）
   adjustment_history_retention_days: 180
   # 訂單草稿保留庫存的去向＝unavailable（**不是 committed**）。出處：46c:546–549、46c:895（help）
@@ -900,36 +932,49 @@ collection:
   # 單一商品系列可手動加入的商品數：官方未載明 ⇒ 不設上限，靠分頁與效能測試把關。⚠ V-59
   max_manual_items_per_collection: null
 
-  # --- sources 模型（規格見 docs/specs/13 §F4）----------------------------------
-  # 🔴 官方已把 manual／smart 二分法標為 **legacy**（P22 有「Legacy smart collections」與
-  #    「Legacy manual collections」兩個獨立頁面）。新模型是**來源（sources）**：
-  #    來源有四型，每型可 include 也可 exclude。
-  # 出處：help.shopify.com/en/manual/products/collections/manage-sources（P25，help）
-  source_types: [products, variants, collections, apps]
-  source_modes: [include, exclude]
-  source_selections: [manual, conditions]
-  # 條件的邏輯連接只有「全部符合(AND)／任一符合(OR)」，**官方未提供混合或括號分組**。出處：P24（help）
+  # --- sources 模型（規格見 docs/specs/13 §F4；值域全文＝docs/research/95）-------
+  # 🔴 官方已把 manual／smart 二分法標為 **legacy**。新模型是**來源（sources）**。
+  #
+  # 🔴🔴 2026-08-24 重大修正：本區塊原本抄的是 **help 頁的 UI 形態**（四型來源 × include/exclude 旗標），
+  #      那與 **GraphQL 資料模型**不同。實測（94 §1.3）UI 下拉確實有四項，但 API 上
+  #      products/variants 是同一型來源的 **targetType**、app 是 `CollectionSource.app` **欄位**。
+  #      照 UI 形態建表會多出兩個不存在的維度、少掉 targetType 與 shareable 兩個真實維度。
+  #      出處：docs/research/95 §1.1（2026-07，取證 2026-08-24）
+  source_types: [conditions, sub_collections]        # ＝CollectionConditionsSource／CollectionSubCollectionsSource
+  source_target_types: [products, variants]          # ＝CollectionSourceTargetType（僅 conditions 型適用）
+  # include/exclude **不是 source 上的極性旗標**，而是 conditions source 內部的兩個區塊，
+  # 各自帶 conditions ＋ matchType ＋ selections（手選與條件在**同一區塊內共存**，不是二選一）。
+  source_blocks: [inclusion, exclusion]
+  # 條件的邏輯連接（per block）：CollectionConditionMatchType，官方未提供混合或括號分組。
   condition_logic_modes: [all, any]
   condition_grouping_supported: false
-  # 🔴 求值優先序：exclude > manual include > conditions include。
-  #    「手動加入者除非手動移除否則永遠留著」是官方明載（P23，help）⇒ manual 勝過 conditions。
-  #    **但 exclude 與 include 的交互官方未載明（61 §4.1 ⚠ V-57）** ⇒ 下列順序是**我方假設**。
-  #    做成一個鍵是刻意的：官方日後澄清時改這一個鍵＋求值器的排序，**不動資料模型**。
-  source_precedence: [exclude, manual_include, conditions_include]   # ours（假設，V-57）
-  verify_source_precedence: true
-  # 巢狀來源（collection 套 collection）的深度上限。**官方只給了 per-shop 家數（50／5），
-  # 未給深度** ⇒ 本鍵為本專案推導：depth 每加一層，rebuild 的扇出與失效傳播成本乘一次。⚠ V-135
-  source_nesting_max_depth: 5              # ours（官方未載明）
-  verify_source_nesting_depth: true
+  # 🔴 求值公式：**最終集 = ⋃ₛ ( inclusion(s) − exclusion(s) )**——排除**只在自己這個 source 內結算**。
+  #    官方原文「evaluated per source and reconciled into the collection's final membership」。
+  #    ⇒ A source 排掉商品 X、B source 包含 X ⇒ **X 仍在系列裡**。
+  #    ⚠ 舊鍵 `source_precedence`（全域相減）與 V-57 已撤銷：V-57 的登記前提是「官方未載明
+  #      exclude 與 include 的交互」，該前提已被上述原文推翻。全域相減是**靜默錯誤**——
+  #      只在「A 排除、B 包含同一商品」的系列露餡，測試資料裡不會自然出現。
+  membership_formula: union_of_per_source_inclusion_minus_exclusion
+  verify_per_source_exclusion: true
+  # 🔴 巢狀深度上限＝**1**，官方明載（SubCollectionIneligibleReason.CHAIN_REFERENCE：
+  #    「The referenced collection itself owns a sub-collection source」）。⚠ 舊值 5 與 V-135 已撤銷。
+  #    ⇒ 深度 1 之下環偵測退化成兩個謂詞（不得參照自己／被參照者不得自己擁有 sub-collection 來源），
+  #      **`collection_graph_locks` 圖鎖表不必建**，用被參照列的 row lock 就擋得住併發成環。
+  source_nesting_max_depth: 1
+  sub_collection_ineligible_reasons: [self_reference, chain_reference, invalid_collection_reference]
   # 巢狀取的是來源系列的**最終成員**（＝它自己的 exclude 套用後的結果），不是候選集。（ours，13 §F4.5）
   nested_source_uses_final_membership: true
-  # 🔴 環偵測：寫入期可達性檢查擋不住併發成環（兩個 transaction 各加一條邊，各自檢查都會過）。
-  #    必須以 shop 粒度的圖鎖序列化寫入——這是唯一擋得住的做法。（ours，13 §F4.5）
-  cycle_detection_on_write: true
-  cycle_detection_error_code: CYCLIC_REFERENCE
-  source_graph_lock_table: collection_graph_locks
-  # 求值期第二道保險：visited 集合 ＋ 深度計數，超限即中止該系列 rebuild 並告警，**不得部分寫入**。
-  rebuild_cycle_guard: visited_set_and_depth_counter
+  # 🔴 exclusion 的條件集合是 inclusion 的**子集**（6 vs 19），且 `collection` 型**只在 exclusion 側**。
+  #    ⇒ schema 不得用單一 field ENUM ＋ mode ENUM——沒有東西阻止在 exclusion 列寫 price。
+  #    值域不是「有哪些欄位」，是「**哪個區塊有哪些欄位**」。全文＝docs/research/95 §1.2／§1.3
+  exclusion_condition_types: [collection, product_category, product_tag, product_type, product_vendor, unknown]
+  # 🔴 本尊在兩個 union 裡都放了一個顯式的 `...ConditionUnknown` 成員，讓舊客戶端遇到新條件型別
+  #    不會炸。我方必須有等價物：不認識的條件型別**原樣保留**，不 reject、不丟棄。
+  condition_unknown_passthrough: true
+  # 🔴 column ↔ relation 的對應**不是靜態表**：本尊用執行期 query `collectionRulesConditions`
+  #    回 allowedRelations／defaultRelation，因為 metafield 條件的關係集合依 metafield 型別逐筆而定。
+  #    ⇒ 我方也要一支同語義的 API 給 admin SPA 動態渲染，前端**不得硬編對應表**。
+  condition_relations_source: runtime_query
 
   # --- 標籤條件是集合運算，不是子字串（🔴 61 §4.2 C-6）--------------------------
   # `Product tag` 的運算子是 includes / does not include（集合），與字串類的 contains 是**不同東西**。
