@@ -4,6 +4,7 @@
   errors:
     product:
       variants_single_only: "无选项商品的变体必须恰为一条（隐含变体）；具名选项与多变体属后续里程碑。"
+      last_variant_required: "无法删除最后一个子类；每个商品至少保留一个子类。"
       title_blank: "标题不能为空。"
       title_too_long: "标题长度超过上限。"
       description_too_big: "描述超过大小上限。"

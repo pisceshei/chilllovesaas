@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -406,12 +406,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_140000) do
     t.string "country_code_of_origin", limit: 2
     t.datetime "created_at", null: false
     t.string "harmonized_system_code", limit: 16
-    t.bigint "product_variant_id", null: false
+    t.bigint "product_variant_id"
     t.boolean "requires_shipping", default: true, null: false
     t.bigint "shop_id", null: false
     t.string "sku"
     t.boolean "tracked", default: true, null: false
     t.datetime "updated_at", null: false
+    t.datetime "variant_deleted_at", comment: "變體被刪除的時點（B1 稽核欄；NULL＝變體仍在）"
     t.index ["shop_id", "created_at", "id"], name: "ix_inventory_items_keyset"
     t.index ["shop_id", "id"], name: "uq_inventory_items_tenant_id", unique: true
     t.index ["shop_id", "product_variant_id"], name: "uq_inventory_items_product_variant_id", unique: true

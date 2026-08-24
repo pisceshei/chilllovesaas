@@ -4,6 +4,7 @@
   errors:
     product:
       variants_single_only: "Un produit sans option doit avoir exactement une variante (implicite) ; les options nommées et les variantes multiples arrivent dans un jalon ultérieur."
+      last_variant_required: "Impossible de supprimer la dernière variante ; chaque produit doit en conserver au moins une."
       title_blank: "Le titre est obligatoire."
       title_too_long: "Le titre dépasse la limite."
       description_too_big: "La description dépasse la taille maximale."
