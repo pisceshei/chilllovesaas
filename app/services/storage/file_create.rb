@@ -20,7 +20,8 @@ module Storage
   #   不讓前面已 commit 的檔留無主 blob（該列的 blob 在 rescue 內清掉）。
   # ⑤撞名解法＝limits `media.duplicate_resolution_modes`（B8）：append_uuid（改名）／
   #   raise_error（INVALID）／replace（保留原列 id 換 blob——引用不斷）。
-  # ⑥狀態：圖片本層直接 ready；第 26 包管線接手後改 uploaded→processing（worklog 登記）。
+  # ⑥狀態：落庫＝`uploaded`（四態起點）；`media.uploaded` 事件的消費者
+  #   `MediaPipeline::ProcessConsumer` 接手產衍生尺寸後才轉 ready／failed（第 26 包）。
   # ⑦錯誤碼＝已證四值（12 §C.7:90）：INVALID／UNACCEPTABLE_ASSET／
   #   ALT_VALUE_LIMIT_EXCEEDED／FILE_DOES_NOT_EXIST。
   class FileCreate
@@ -149,12 +150,15 @@ module Storage
           ActiveRecord::Base.transaction do
             if replace_target
               old_key = replace_target.storage_key
+              # replace＝換內容 ⇒ 舊衍生作廢、回四態起點重跑管線
               replace_target.update!(storage_key: key, content_type:, byte_size: bytes.bytesize,
-                                     checksum:, alt_text: alt.presence, status: "ready")
+                                     checksum:, alt_text: alt.presence, status: "uploaded",
+                                     derivatives: nil, processing_error: nil)
               file = replace_target
             else
               file = StoredFile.create!(filename:, content_type:, byte_size: bytes.bytesize,
-                                        checksum:, storage_key: key, alt_text: alt.presence, status: "ready")
+                                        checksum:, storage_key: key, alt_text: alt.presence,
+                                        status: "uploaded")
             end
             # 鐵律 5：事件與業務寫入同 transaction（消費者＝第 26 包處理管線）
             EventOutbox.create!(event_id: SecureRandom.uuid, topic: Events::Topics::MEDIA_UPLOADED,

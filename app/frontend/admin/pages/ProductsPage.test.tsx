@@ -217,6 +217,47 @@ describe("商品頁", () => {
     expect(pipOf("已封存")).toContain("cl-badge__pip--full");
   });
 
+  // 第 26 包：縮圖欄三態＋缺 alt 徽章
+  it("縮圖欄三態：有衍生顯示 img、處理中與無圖各自空態；缺 alt 數顯示徽章", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      successfulResponse([
+        {
+          id: "gid://chilllove/Product/1", title: "有圖", status: "ACTIVE", totalInventory: 1,
+          mediaMissingAltCount: 0,
+          featuredImage: { thumbUrl: "/admin/files/7/blob?variant=thumb", status: "READY", alt: "貓" },
+        },
+        {
+          id: "gid://chilllove/Product/2", title: "處理中", status: "ACTIVE", totalInventory: 1,
+          mediaMissingAltCount: 2,
+          featuredImage: { thumbUrl: null, status: "PROCESSING", alt: null },
+        },
+        {
+          id: "gid://chilllove/Product/3", title: "沒圖", status: "ACTIVE", totalInventory: 1,
+          mediaMissingAltCount: 0, featuredImage: null,
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("table", { name: "商品列表" });
+    // 有衍生 ⇒ 真的 <img>，且 alt 取自媒體列
+    const thumb = screen.getByRole("img", { name: "貓" });
+    expect(thumb).toHaveAttribute("src", "/admin/files/7/blob?variant=thumb");
+    expect(thumb).toHaveAttribute("loading", "lazy");
+    // 🔴 處理中不得拿原圖冒充：空態而非 img
+    expect(screen.getByRole("img", { name: "圖片處理中" })).toBeVisible();
+    expect(screen.getByRole("img", { name: "沒有圖片" })).toBeVisible();
+    // 缺 alt 徽章只出現在有缺的那列
+    expect(screen.getByText("缺 alt 2")).toBeVisible();
+    expect(screen.queryByText("缺 alt 0")).toBeNull();
+  });
+
   // 未知狀態的 fallback：GraphQL enum 之後若再擴值，前端不得整頁炸掉。
   it("未知狀態退回顯示原始 token，不丟例外", async () => {
     const fetchMock = vi.fn().mockResolvedValue(

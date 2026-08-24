@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_25_100000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -320,8 +320,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
     t.string "checksum", limit: 64, null: false
     t.string "content_type", null: false
     t.datetime "created_at", null: false
+    t.json "derivatives"
     t.string "filename", null: false
     t.integer "height"
+    t.text "processing_error"
     t.bigint "shop_id", null: false
     t.string "status", limit: 32, default: "uploaded", null: false
     t.string "storage_key", null: false
@@ -532,6 +534,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
     t.bigint "byte_size"
     t.datetime "created_at", null: false
     t.integer "duration_ms"
+    t.bigint "file_id"
     t.integer "height"
     t.string "media_type", limit: 32, default: "image", null: false
     t.integer "position", null: false
@@ -539,9 +542,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
     t.bigint "product_variant_id"
     t.bigint "shop_id", null: false
     t.string "source_url", limit: 2048, null: false
-    t.string "status", limit: 32, default: "ready", null: false
+    t.string "status", limit: 32, default: "uploaded", null: false
     t.datetime "updated_at", null: false
     t.integer "width"
+    t.index ["shop_id", "file_id"], name: "ix_media_file_id"
     t.index ["shop_id", "id"], name: "uq_media_tenant_id", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_media_product_id_position", unique: true
     t.index ["shop_id", "product_id"], name: "ix_media_product_id"
@@ -1168,6 +1172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
   add_foreign_key "line_items", "product_variants", column: ["shop_id", "product_variant_id"], primary_key: ["shop_id", "id"], name: "fk_line_items_product_variant_id"
   add_foreign_key "line_items", "shops", name: "fk_line_items_shop"
   add_foreign_key "locations", "shops", name: "fk_locations_shop"
+  add_foreign_key "media", "files", column: ["shop_id", "file_id"], primary_key: ["shop_id", "id"], name: "fk_media_file_id"
   add_foreign_key "media", "product_variants", column: ["shop_id", "product_variant_id"], primary_key: ["shop_id", "id"], name: "fk_media_product_variant_id"
   add_foreign_key "media", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_media_product_id"
   add_foreign_key "media", "shops", name: "fk_media_shop"

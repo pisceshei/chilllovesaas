@@ -55,7 +55,7 @@ RSpec.describe "Staged upload 兩段式", type: :request do
     response.parsed_body.dig("data", "fileCreate")
   end
 
-  it "🔴 三步走完：簽發→直傳→fileCreate；檔案 READY、事件同 transaction 落 outbox、blob 端點可讀" do
+  it "🔴 三步走完：簽發→直傳→fileCreate；檔案 UPLOADED、事件同 transaction 落 outbox、blob 端點可讀" do
     login!
     target = staged_targets!([ { filename: "貓咪.png", mimeType: "image/png",
                                  fileSize: PNG_BYTES.bytesize } ]).sole
@@ -69,7 +69,9 @@ RSpec.describe "Staged upload 兩段式", type: :request do
     data = file_create!([ { originalSource: resource_url, alt: "一隻貓" } ])
     expect(data["userErrors"]).to eq([])
     file = data["files"].sole
-    expect(file["status"]).to eq("READY")
+    # 第 26 包起：fileCreate 落庫＝四態起點 UPLOADED，衍生尺寸由 media.uploaded
+    # 的消費者（MediaPipeline::ProcessConsumer）產出後才轉 READY。
+    expect(file["status"]).to eq("UPLOADED")
     expect(file["filename"]).to end_with(".png")
     expect(file["byteSize"].to_i).to eq(PNG_BYTES.bytesize)
 

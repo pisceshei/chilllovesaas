@@ -1567,3 +1567,18 @@ a {
 .cl-variant-table thead th { color: var(--text-2); font-weight: var(--fw-md); }
 .cl-variant-table tbody th[scope="row"] { font-weight: var(--fw-md); white-space: nowrap; }
 .cl-variant-table__input { width: 100%; min-width: 96px; }
+
+/* ── 商品列表縮圖與缺 alt 提示（包 26）─────────────────────── */
+.cl-product-thumb {
+  display: block; width: 40px; height: 40px;
+  border-radius: var(--r-200); border: 1px solid var(--border);
+  object-fit: cover; background: var(--surface-2);
+}
+.cl-product-thumb--pending { background: var(--surface-3); border-style: dashed; }
+.cl-product-thumb--empty { background: var(--surface-2); }
+.cl-alt-warning {
+  margin-left: var(--sp-200); padding: 0 var(--sp-150);
+  border-radius: var(--r-pill); font-size: var(--t-xs, 12px);
+  background: var(--sem-warning-surface, var(--surface-2)); color: var(--warning, var(--text-2));
+  white-space: nowrap;
+}

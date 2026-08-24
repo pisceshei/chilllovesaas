@@ -24,6 +24,8 @@ const PRODUCTS_QUERY = `
         vendor
         productType
         totalInventory
+        mediaMissingAltCount
+        featuredImage { thumbUrl status alt }
       }
       pageInfo {
         hasNextPage
@@ -41,6 +43,10 @@ export interface ProductNode {
   totalInventory?: number | null;
   productType?: string | null;
   vendor?: string | null;
+  /** 缺 alt 的媒體數（62 §F.1：不自動填、只度量）。 */
+  mediaMissingAltCount?: number;
+  /** 首圖；thumbUrl 為 null＝尚未處理完（不得改用原圖，20MB 原圖當縮圖會炸列表）。 */
+  featuredImage?: { thumbUrl: string | null; status: string; alt: string | null } | null;
 }
 
 interface ProductsQueryData {
@@ -163,9 +169,47 @@ export function ProductsPage() {
   const columns = useMemo<readonly IndexTableColumn<ProductNode>[]>(
     () => [
       {
+        key: "thumb",
+        header: t("products.col.image"),
+        render: (product) => {
+          const image = product.featuredImage;
+          if (image?.thumbUrl) {
+            return (
+              <img
+                alt={image.alt ?? ""}
+                className="cl-product-thumb"
+                height={40}
+                loading="lazy"
+                src={image.thumbUrl}
+                width={40}
+              />
+            );
+          }
+          // 兩種空態要分開：處理中（有圖但衍生未產出）vs 根本沒圖
+          const pending = image != null && image.status !== "READY";
+          return (
+            <span
+              aria-label={pending ? t("products.image.processing") : t("products.image.none")}
+              className={pending ? "cl-product-thumb cl-product-thumb--pending" : "cl-product-thumb cl-product-thumb--empty"}
+              role="img"
+              title={pending ? t("products.image.processing") : t("products.image.none")}
+            />
+          );
+        },
+      },
+      {
         key: "title",
         header: t("products.col.product"),
-        render: (product) => <span className="cl-product-title">{product.title}</span>,
+        render: (product) => (
+          <span className="cl-product-title">
+            {product.title}
+            {product.mediaMissingAltCount ? (
+              <span className="cl-alt-warning" title={t("products.missingAlt.hint")}>
+                {t("products.missingAlt", { count: product.mediaMissingAltCount })}
+              </span>
+            ) : null}
+          </span>
+        ),
       },
       {
         key: "status",
