@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_23_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_100000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -354,26 +354,49 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_120000) do
     t.index ["shop_id", "state", "expires_at"], name: "ix_idempotency_keys_state_expires_at"
   end
 
+  create_table "inventory_adjustment_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "一次庫存異動呼叫的批次頭（＝本尊 InventoryAdjustmentGroup）", force: :cascade do |t|
+    t.integer "changes_count", default: 0, null: false
+    t.string "client_source", limit: 32
+    t.datetime "created_at", null: false
+    t.string "idempotency_key", null: false
+    t.string "mutation_kind", limit: 16, null: false
+    t.string "quantity_name", limit: 32, null: false
+    t.string "reason", limit: 64, null: false
+    t.string "reference_document_uri"
+    t.bigint "reference_id"
+    t.string "reference_type", limit: 64
+    t.bigint "shop_id", null: false
+    t.bigint "staff_member_id"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "created_at"], name: "ix_inventory_adjustment_groups_created_at"
+    t.index ["shop_id", "id"], name: "uq_inventory_adjustment_groups_tenant_id", unique: true
+    t.index ["shop_id", "idempotency_key"], name: "uq_inventory_adjustment_groups_idem_key", unique: true
+    t.index ["shop_id", "reference_type", "reference_id"], name: "ix_inventory_adjustment_groups_reference"
+    t.index ["shop_id", "staff_member_id"], name: "ix_inventory_adjustment_groups_staff"
+  end
+
   create_table "inventory_adjustments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "append-only 庫存 ledger", force: :cascade do |t|
     t.integer "available_delta", default: 0, null: false
     t.integer "committed_delta", default: 0, null: false
     t.datetime "created_at", null: false
-    t.string "idempotency_key", null: false
+    t.integer "damaged_delta", default: 0, null: false
     t.integer "incoming_delta", default: 0, null: false
+    t.bigint "inventory_adjustment_group_id", null: false
     t.bigint "inventory_level_id", null: false
+    t.string "ledger_document_uri"
     t.text "note"
-    t.integer "on_hand_delta", default: 0, null: false
-    t.string "reason", limit: 64, null: false
-    t.bigint "reference_id"
-    t.string "reference_type", limit: 64
+    t.virtual "on_hand_delta", type: :integer, null: false, as: "(((((`available_delta` + `committed_delta`) + `reserved_delta`) + `damaged_delta`) + `safety_stock_delta`) + `quality_control_delta`)", stored: true
+    t.integer "position", default: 0, null: false
+    t.integer "quality_control_delta", default: 0, null: false
+    t.integer "reserved_delta", default: 0, null: false
+    t.integer "safety_stock_delta", default: 0, null: false
     t.bigint "shop_id", null: false
-    t.integer "unavailable_delta", default: 0, null: false
+    t.virtual "unavailable_delta", type: :integer, null: false, as: "(((`reserved_delta` + `damaged_delta`) + `safety_stock_delta`) + `quality_control_delta`)", stored: true
     t.datetime "updated_at", null: false
     t.index ["shop_id", "id"], name: "uq_inventory_adjustments_tenant_id", unique: true
-    t.index ["shop_id", "idempotency_key"], name: "uq_inventory_adjustments_idempotency_key", unique: true
+    t.index ["shop_id", "inventory_adjustment_group_id", "inventory_level_id"], name: "uq_inv_adjustments_group_level", unique: true
     t.index ["shop_id", "inventory_level_id", "created_at"], name: "ix_inventory_adjustments_inventory_level_id_created_at"
     t.index ["shop_id", "inventory_level_id"], name: "ix_inventory_adjustments_inventory_level_id"
-    t.index ["shop_id", "reference_type", "reference_id"], name: "ix_inventory_adjustments_reference_type_reference_id"
   end
 
   create_table "inventory_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "變體對應的一對一庫存品項", force: :cascade do |t|
@@ -395,18 +418,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_120000) do
     t.integer "available", default: 0, null: false
     t.integer "committed", default: 0, null: false
     t.datetime "created_at", null: false
+    t.integer "damaged", default: 0, null: false
     t.integer "incoming", default: 0, null: false
     t.bigint "inventory_item_id", null: false
     t.bigint "location_id", null: false
     t.integer "lock_version", default: 0, null: false
-    t.integer "on_hand", default: 0, null: false
+    t.virtual "on_hand", type: :integer, null: false, as: "(((((`available` + `committed`) + `reserved`) + `damaged`) + `safety_stock`) + `quality_control`)", stored: true
+    t.integer "quality_control", default: 0, null: false
+    t.integer "reserved", default: 0, null: false
+    t.integer "safety_stock", default: 0, null: false
     t.bigint "shop_id", null: false
-    t.integer "unavailable", default: 0, null: false
+    t.virtual "unavailable", type: :integer, null: false, as: "(((`reserved` + `damaged`) + `safety_stock`) + `quality_control`)", stored: true
     t.datetime "updated_at", null: false
+    t.index ["shop_id", "available"], name: "ix_inventory_levels_available"
     t.index ["shop_id", "id"], name: "uq_inventory_levels_tenant_id", unique: true
     t.index ["shop_id", "inventory_item_id", "location_id"], name: "uq_inventory_levels_inventory_item_id_location_id", unique: true
     t.index ["shop_id", "inventory_item_id"], name: "ix_inventory_levels_inventory_item_id"
     t.index ["shop_id", "location_id"], name: "ix_inventory_levels_location_id"
+    t.index ["shop_id", "on_hand"], name: "ix_inventory_levels_on_hand"
   end
 
   create_table "jurisdiction_capability_skips", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "法域能力 documented_no_op 記錄（HK 首發即大量寫入）", force: :cascade do |t|
@@ -1089,6 +1118,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_23_120000) do
   add_foreign_key "fulfillments", "fulfillment_orders", column: ["shop_id", "fulfillment_order_id"], primary_key: ["shop_id", "id"], name: "fk_fulfillments_fulfillment_order_id"
   add_foreign_key "fulfillments", "shops", name: "fk_fulfillments_shop"
   add_foreign_key "idempotency_keys", "shops", name: "fk_idempotency_keys_shop"
+  add_foreign_key "inventory_adjustment_groups", "shops", name: "fk_inventory_adjustment_groups_shop"
+  add_foreign_key "inventory_adjustments", "inventory_adjustment_groups", column: ["shop_id", "inventory_adjustment_group_id"], primary_key: ["shop_id", "id"], name: "fk_inventory_adjustments_group_id"
   add_foreign_key "inventory_adjustments", "inventory_levels", column: ["shop_id", "inventory_level_id"], primary_key: ["shop_id", "id"], name: "fk_inventory_adjustments_inventory_level_id"
   add_foreign_key "inventory_adjustments", "shops", name: "fk_inventory_adjustments_shop"
   add_foreign_key "inventory_items", "product_variants", column: ["shop_id", "product_variant_id"], primary_key: ["shop_id", "id"], name: "fk_inventory_items_product_variant_id"
