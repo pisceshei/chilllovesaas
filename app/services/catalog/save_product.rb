@@ -219,7 +219,11 @@ module Catalog
           cost_cents:,
           sku: variant_input[:sku].presence,
           barcode: variant_input[:barcode].presence,
-          taxable: variant_input.fetch(:taxable, true)
+          taxable: variant_input.fetch(:taxable, true),
+          # 第 29 包：運送兩欄。`weight_grams` 欄是 `null: false, default: 0`
+          # ⇒ 沒送就給 0（不是 nil，否則 update! 撞 not-null）。
+          weight_grams: variant_input.fetch(:weight_grams, 0).to_i,
+          requires_shipping: variant_input.fetch(:requires_shipping, true)
         }
       end
 
@@ -472,7 +476,12 @@ module Catalog
           cost_cents: variant_attributes[:cost_cents],
           sku: variant_attributes[:sku],
           barcode: variant_attributes[:barcode],
-          taxable: variant_attributes.fetch(:taxable)
+          taxable: variant_attributes.fetch(:taxable),
+          # 🔴 隱含變體與具名變體（VariantSync）**兩條路徑都要寫運送欄**——只補一條
+          #    的症狀是「單變體商品改重量沒反應、多變體商品正常」，而單變體正是
+          #    絕大多數商品（第 29 包 spec 的第四例就是抓這個）。
+          weight_grams: variant_attributes.fetch(:weight_grams, 0),
+          requires_shipping: variant_attributes.fetch(:requires_shipping, true)
         )
       end
 
@@ -489,7 +498,9 @@ module Catalog
           cost_cents: variant_attributes[:cost_cents],
           sku: variant_attributes[:sku],
           barcode: variant_attributes[:barcode],
-          taxable: variant_attributes.fetch(:taxable)
+          taxable: variant_attributes.fetch(:taxable),
+          weight_grams: variant_attributes.fetch(:weight_grams, 0),
+          requires_shipping: variant_attributes.fetch(:requires_shipping, true)
         )
       end
 
