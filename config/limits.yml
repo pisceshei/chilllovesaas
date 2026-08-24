@@ -1048,6 +1048,17 @@ media:
   # 🔴 schema 現值 media.status default "ready" 與起點 uploaded 矛盾＝第 26 包
   #    migration 修（整合規格 §4-26），本鍵先立正典供 CI enum 對照。
   statuses: [uploaded, processing, ready, failed]
+  # 第 25 包：staged 簽名有效期。🔴 官方簽名時長未明文（12 §D.7-2 ⚠、90 blueprint
+  # Q-100 登記待查）＝本值是我方裁定（ours）：上傳窗 15 分鐘，逾期重簽。
+  staged_upload_ttl_seconds: 900
+  # 檔名保留字尾（本尊的衍生圖尺寸後綴，撞名會蓋掉衍生圖；出處 12 §C.7:255，
+  # 取證 2026-08-14）＋不得以 . 開頭＋HTML 一律拒收（同處）。
+  filename_reserved_suffixes: [pico, icon, thumb, testing, small, compact, medium, large, grande]
+  # 圖片 content-type 白名單（13 §F3-2 白名單去 mp4——B9 本批 image-only）。
+  image_content_types: [image/jpeg, image/png, image/webp, image/gif]
+  # fileCreate 單次批量上限。出處：12 §C.7:87（官方 ≤250 檔/次，取證 2026-08-14）；
+  # content.files_upload_batch_max(20) 是 UI 單次選檔上限，兩者不同層。
+  file_create_batch_max: 250
 
 # =============================================================================
 # 9. 折扣（P0-03 相關上限）
@@ -4523,7 +4534,10 @@ outbound_http:
   webhook_connect_timeout_seconds: 1         # 官方明載（13 C.3：連線 timeout 1s，G-2）
   webhook_response_timeout_seconds: 5        # 官方明載（13 C.3：回應 timeout 5s，G-2）
   callback_timeout_seconds: 5                # 3PL callback 逾時——官方未載，我方裁定對齊 webhook 回應 5s
-  file_fetch_timeout_seconds: 30             # originalSource 抓檔逾時——我方裁定（20 MiB 預算的下載窗，≈5.6 Mbps 持續即讀滿；第 21 輪隨 bytes 上限對齊改註）
+  file_fetch_timeout_seconds: 30
+  # 第 25 包：originalSource 抓檔的 redirect 上限（每跳重驗 scheme/IP——12 §B.6:155
+  # 「redirect 每跳重驗」；上限值官方未載＝ours，3 跳涵蓋常見 CDN 跳轉鏈）
+  file_fetch_redirect_hops_max: 3             # originalSource 抓檔逾時——我方裁定（20 MiB 預算的下載窗，≈5.6 Mbps 持續即讀滿；第 21 輪隨 bytes 上限對齊改註）
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 事件與 outbox 轉發（第 19 包，docs/plans/2026-08-24-第19包執行規格.md §4.1）

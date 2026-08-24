@@ -2074,6 +2074,32 @@
   開始用該 regex 驗外部字串，必須先改錨點
   【F5；來源＝config/limits.yml:259 vs :193 比對；取證日期＝2026-08-23】
 
+### 3.8 第 25 包（儲存層＋staged 上傳）對抗審查（2026-08-25）
+
+- **`fileCreate` 強制帶 idempotencyKey，但沒有 claim/replay**：本包依
+  `limits.idempotency.required_for_catalog_create`（含 fileCreate）在 resolver 加了
+  必帶 key 的檢查，**未接 `Idempotency::Guard`**——同 key 重送仍會重跑一次
+  （append_uuid 下不衝突＝靜默多出檔案實體與 blob）。未接的技術原因兩條：
+  ①Guard 的落款只記**單一** `resource_type`/`resource_id`，fileCreate 是批量
+  （一次可 250 檔，12 §C.7:87）；②Guard 的 `run_and_settle` 把業務 block 包進
+  transaction，而本包刻意把檔案系統寫入放在 transaction **之外**（審查 C2/C3/C8
+  的修法），兩者的交易邊界相斥。展開時要一併裁定「批量 mutation 的冪等落款形態」
+  （候選：per-item key，或 resource_type 記集合摘要）
+  【F5；來源＝第 25 包對抗審查 C7 confirmed；複驗：
+  `grep -n "required_for_catalog_create" -A 8 config/limits.yml`；取證日期＝2026-08-25】
+
+- **staged 區孤兒檔沒有清掃**：簽了沒傳、或傳了沒 `fileCreate`（含 fileCreate 失敗
+  回滾，本包刻意不 move 原檔）的 staged blob 會永久留在磁碟。清掃 job 預定隨第 26 包
+  管線一起做（同 outbox purge 節奏）；在那之前是**已知的磁碟成長來源**
+  【F5；來源＝同上輪自查；複驗：`ls storage/chilllove/shops/*/staged 2>/dev/null | head`；
+  取證日期＝2026-08-25】
+
+- **12 §B.6:155 與 §C.7:257 的 scheme 白名單不一致**：前者寫「scheme 僅 http/https」、
+  後者寫「僅 https」。第 25 包 `Storage::SafeFetch` 取聯集（http/https）落地；
+  下次動 12 章時擇一釘明，並回頭對齊實作
+  【F7；來源＝第 25 包實作時比對；複驗：
+  `grep -n "scheme" docs/research/90-blueprint/12-online-store.md`；取證日期＝2026-08-25】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

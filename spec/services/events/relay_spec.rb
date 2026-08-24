@@ -18,6 +18,18 @@ RSpec.describe Events::Relay do
     end
   end
 
+  # 具名消費者（第 25 包契約：#name 進 event_deliveries.consumer、#call 投遞）。
+  # 🔴 不用 define_singleton_method(&block)——它重綁 self，block 裡的 let 方法
+  #    （shop 等）會斷鏈（本包實踩：undefined local variable 'shop'）。
+  def consumer(name, &block)
+    built = Object.new
+    built.instance_variable_set(:@consumer_name, name)
+    built.instance_variable_set(:@handler, block)
+    def built.name = @consumer_name
+    def built.call(event) = @handler.call(event)
+    built
+  end
+
   def reload(event) = ActsAsTenant.without_tenant { EventOutbox.find(event.id) }
 
   describe ".drain!" do
@@ -57,7 +69,7 @@ RSpec.describe Events::Relay do
 
     it "消費者拋錯 ⇒ attempts+1、available_at 指數退避後移、不標 published" do
       event = enqueue!
-      boom = ->(_e) { raise "boom" }
+      boom = consumer("test.boom") { |_e| raise "boom" }
       allow(described_class).to receive(:consumers_for).and_return([ boom ])
       now = Time.current
       described_class.drain!(now: now)
@@ -71,7 +83,7 @@ RSpec.describe Events::Relay do
     it "attempts 達 outbox_dead_letter_attempts ⇒ dead 並清 dedupe_key（specs/18 F1-5）" do
       limit = Limits.fetch(:events, :outbox_dead_letter_attempts)
       event = enqueue!(attempts: limit - 1, dedupe_key: "inv:9:9:9")
-      allow(described_class).to receive(:consumers_for).and_return([ ->(_e) { raise "still broken" } ])
+      allow(described_class).to receive(:consumers_for).and_return([ consumer("test.broken") { |_e| raise "still broken" } ])
       described_class.drain!
       after = reload(event)
       expect(after.status).to eq("dead")
@@ -88,7 +100,7 @@ RSpec.describe Events::Relay do
                             payload: {}, available_at: Time.current, status: "pending")
       end
       calls = []
-      failing_once = lambda do |e|
+      failing_once = consumer("test.failing-once") do |e|
         calls << e.shop_id
         raise "shop1 boom" if e.shop_id == shop.id
       end

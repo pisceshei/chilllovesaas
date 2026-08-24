@@ -10,9 +10,10 @@ module Events
   #   locked_at 逾時回收（worker 死掉的孤兒，limits.events.outbox_lock_timeout_s）＋
   #   attempts 指數退避（available_at 後移 2^attempts 秒）＋
   #   attempts ≥ limits.events.outbox_dead_letter_attempts ⇒ status=dead（specs/18 F1-5）。
-  # ③🔴 本包消費者路由表＝空（consumers_for 恆回 []）：「投遞」＝標 published。
-  #   這讓 bt3 既有 pending 積壓被安全 drain（PR #115 假設 A5）。接真實消費者的包
-  #   的開工前置＝先建 event_deliveries（63 §L-4 門檻，2026-08-24 寫死）。
+  # ③消費者路由（第 25 包升級；63 §L-4 門檻已結清）：路由表＝Events::Consumers，
+  #   投遞逐消費者記帳（event_deliveries 一列一消費者）——done 列重試時跳過，
+  #   一個消費者失敗不連累另一個重放；全部 done ⇒ 事件 published。
+  #   零消費者 topic 照舊直接標 published（P19 語義不變，bt3 積壓 drain 安全）。
   # ④租戶模式＝A 案（PR #115 假設 A4）：without_tenant 取件、按 shop_id 分組
   #   with_tenant 處理；租戶不得殘留到下一家店（spec 釘住）。
   # ⑤終態（published/failed/dead）一律清 dedupe_key（release-on-terminal）——
@@ -22,6 +23,10 @@ module Events
   # ⑦跨功能影響：event_outbox（唯一寫終態方）、config/recurring.yml（排程）、
   #   未來消費者包（consumers_for 是唯一掛載縫）。
   class Relay
+    # 部分消費者失敗（成功者的 delivery 帳已落 done）——訊息進 last_error，
+    # 事件走既有 attempts 退避；下輪只重放未 done 的消費者。
+    class PartialDeliveryFailure < StandardError; end
+
     class << self
       # @param now [Time] 注入時鐘（測試逾時回收用）
       # @return [Integer] 本輪處理的事件數
@@ -54,9 +59,9 @@ module Events
         end
       end
 
-      # 🔴 消費者路由的唯一掛載縫。本包恆空（§4.6③）；接消費者前先建 event_deliveries。
-      # @return [Array<#call>]
-      def consumers_for(_topic) = []
+      # 🔴 消費者路由的唯一掛載縫——委派 Events::Consumers（接消費者只動註冊表）。
+      # @return [Array<#name, #call>]
+      def consumers_for(topic) = Events::Consumers.for(topic)
 
       private
 
@@ -80,8 +85,10 @@ module Events
         end
       end
 
+      # 逐消費者投遞（第 25 包）：每消費者一列 event_deliveries；done 跳過（重放隔離）、
+      # 任一失敗 ⇒ 拋 PartialDeliveryFailure 走既有退避/dead 分支（成功者的帳已落）。
       def deliver(event, now)
-        consumers_for(event.topic).each { |consumer| consumer.call(event) }
+        deliver_to_consumers!(event)
         # 🔴 終態同時清 dedupe_key（release-on-terminal）：released 後同 key 的新事件
         #    開新列，不會 upsert 到已發布列上。
         event.update!(status: "published", published_at: now, locked_at: nil, dedupe_key: nil)
@@ -98,6 +105,28 @@ module Events
                         last_error: e.message.to_s.first(1000))
           log(:outbox_retry, event)
         end
+      end
+
+      def deliver_to_consumers!(event)
+        consumers = consumers_for(event.topic)
+        return if consumers.empty?
+
+        failed = []
+        consumers.each do |consumer|
+          delivery = EventDelivery.find_or_create_by!(event_id: event.event_id, consumer: consumer.name)
+          next if delivery.state == "done"
+
+          begin
+            consumer.call(event)
+            delivery.update!(state: "done", last_error: nil)
+            log(:delivery_done, event, consumer: consumer.name)
+          rescue StandardError => e
+            delivery.update!(attempts: delivery.attempts + 1, last_error: e.message.to_s.first(1000))
+            log(:delivery_failed, event, consumer: consumer.name, error: e.class.name)
+            failed << consumer.name
+          end
+        end
+        raise PartialDeliveryFailure, "consumers failed: #{failed.join(",")}" if failed.any?
       end
 
       def log(kind, event = nil, **extra)

@@ -2,6 +2,15 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "ja":
   errors:
+    files:
+      batch_too_large: "一度に処理できるファイル数を超えています。"
+      alt_too_long: "alt テキストが 512 文字を超えています。"
+      filename_invalid: "ファイル名が不正です（先頭のドット、HTML 拡張子、予約サフィックスは不可）。"
+      filename_taken: "ファイル名は既に使用されています。"
+      source_missing: "staged ファイルが存在しません（未アップロードまたは期限切れ）。"
+      source_invalid: "ソース URL を取得できないか、セキュリティルールでブロックされました。"
+      type_unacceptable: "このファイル形式は受け付けられません（現段階では画像のみ）。"
+      too_large: "ファイルがサイズ上限を超えています。"
     product:
       variants_single_only: "オプションのない商品はバリエーションが1件（暗黙のバリエーション）のみです。名前付きオプションと複数バリエーションは今後のマイルストーンで提供します。"
       last_variant_required: "最後のバリエーションは削除できません。商品には少なくとも 1 つのバリエーションが必要です。"

@@ -26,6 +26,9 @@ class ChillloveSchema < GraphQL::Schema
   RESOLVABLE_TYPES = {
     "Product" => -> { Product },
     "Collection" => -> { Collection }
+    # 🔴 "File" 不入表（審查 C6）：fileCreate 回傳 File type 只需 gid 序列化、不需
+    #    node(id:) 全域查詢；加進來但 resolve_type 無分支＋FileType 未 implements Node
+    #    ⇒ node(File-gid) 從回 null 退化成 500。完整 Node 支援＝第 28 包 files query。
   }.freeze
 
   def self.object_from_id(global_id, context)
