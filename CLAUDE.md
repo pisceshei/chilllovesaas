@@ -560,11 +560,15 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
       ③**還有什麼沒解決**＝未取得證據、失敗／阻塞、風險與下游影響，**不得留空**，確實沒有
       時寫「無」並附理由或驗證；④**下一個人要注意什麼**＝下一步入口、前置、重跑方法、紅線、
       不得外推範圍與停止條件。
-    - **21.3 handoff 只保存在 Git 倉庫外的本地工作區**：自本澄清起不再新增或修改
-      `docs/handoff/`，不做 handoff-only commit，不把 handoff commit／push 到 GitHub，也不以
-      PR／deployment 留言另造 remote handoff。push、review、合併、deploy 等遠端結果取得後，
-      直接補進同一工作單位的本地 handoff，不改被證明的 Git head。倉庫內既有 `docs/handoff/`
-      全部視為歷史唯讀資料，保留但不再增長。
+    - **21.3 handoff 一律入庫 `docs/handoff/`，與該工作單位的產物同 commit**
+      （🔴 2026-08-24 使用者裁定推翻原 21.3，全文＝`docs/DECISIONS.md` D47）。
+      原條文（2026-08-21）規定 handoff 只存倉庫外本地、`docs/handoff/` 唯讀不再增長。
+      推翻的直接原因：接手者的形態已改變——「另一個 Claude clone 倉庫接手」是常態，
+      倉庫外的本地檔案對它根本不存在；且原條文生效後的實踐（2026-08-23 起十個 PR）
+      本來就全部把 handoff commit 入庫——那是一份過期 CLAUDE.md 複本造成的漂移，
+      使用者裁定時選擇**承認實踐、更正條文**，而不是回頭改十個 PR 的歷史。
+      仍然成立的部分：一個工作包一份（21.1）、四段結構（21.2）、零假設發布（21.5）。
+      <!-- 原 21.3 全文保留於 git 歷史與 D47 引文；不得再引用它拒寫 docs/handoff/。 -->
     - **21.4 一個獨立 Git 驗收單位只維護一份 worklog**：通常一個 PR／原子工作包一份；umbrella
       拆成幾個可獨立合併的 PR，才各有一份。初始候選把三段與產物一起 commit；後續 finding 若
       真的改 tracked tree，就在同一個整合修復 commit 更新這份 worklog 的處置與 `Changes`，不為

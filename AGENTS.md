@@ -111,7 +111,7 @@
 
 | 層 | 是什麼 | 時間語義 | 可否回頭改 |
 |---|---|---|---|
-| **歷史層** | `docs/worklog/` 與既有 `docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 `docs/worklog/` 原文不改；發現寫錯就在原處加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`。既有 `docs/handoff/` 自 D36 起整體唯讀，連更正也不回寫；改以新 worklog 記錄，若屬使用者裁定再進 `docs/DECISIONS.md`，若屬未點名同型坑再進 `docs/specs/91-pit-register.md` §3，並引用 handoff 精確路徑與穩定內容錨 |
+| **歷史層** | `docs/worklog/` 與既有 `docs/handoff/` 的**敘事段** | 寫下當刻的認知 | 🔴 `docs/worklog/` 原文不改；發現寫錯就在原處加 `<!-- 🔴 YYYY-MM-DD 更正（來源）：原文⋯ -->`。`docs/handoff/` 的**既有份**維持歷史唯讀（錯誤以新文件更正，不回寫原文）；**新增份自 D47（2026-08-24）起恢復入庫**，與該工作單位產物同 commit。更正入口不變：屬使用者裁定進 `docs/DECISIONS.md`，屬未點名同型坑進 `docs/specs/91-pit-register.md` §3 |
 | **終態層** | worklog 的 `Changes` 表、本地 handoff `§①`、`docs/dev/` 篇章 | **必須等於 HEAD／該工作單位終態的事實** | 🔴 tracked tree 真的改變時須在同一整合 commit 回寫；純等待／disposition／遠端狀態只更新本地 handoff，不改 Git head |
 | **契約層** | `scripts/` 檔頭、fixture `README`、退出碼表 | 等於代碼**當前**行為 | 改代碼＝同一個 commit 改它 |
 
@@ -155,7 +155,7 @@
 
 ### 6. 驗收回應的寫法（不得按輪次增殖文件或 head）
 
-一個可獨立合併的 PR／原子工作包只維護一份 worklog 與一份倉庫外本地 handoff：
+一個可獨立合併的 PR／原子工作包只維護一份 worklog 與一份 handoff（🔴 D47：handoff 自 2026-08-24 起**入庫 `docs/handoff/`**，不再是倉庫外本地檔）：
 - finding 需要改 tracked tree ⇒ 把完整 ledger 按根因一次整合，在**同一份** worklog 追加有 ID／head
   的處置段，並在同一整合 commit 回寫 worklog `Changes` 與受影響的 `docs/dev`；不另建「第 M 輪」
   worklog。只追加處置、不回寫終態層仍打回。
