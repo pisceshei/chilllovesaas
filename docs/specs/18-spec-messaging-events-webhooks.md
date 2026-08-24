@@ -4,8 +4,10 @@
 
 ## F1. Outbox 事件系統（一切通知與自動化的地基）
 
+<!-- 🔴 2026-08-24 更正（第 19 包執行規格 §4.0）：本節原寫表名 `events_outbox`，實物自 M0 起即為 `event_outbox`（單數；複驗 `grep -n 'create_table "event_outbox' db/schema.rb`）。表名以實物為準——CI test job 有 schema drift 檢查，不得反過來改表名。 -->
+
 **生產級做法**：
-1. `events_outbox`（uuid、shop_id、topic「資源/動詞」、payload JSON、status、attempts、locked_at）——**與業務同 transaction 寫入**（11 §8），這是「事件必達」的唯一保證。
+1. `event_outbox`（uuid、shop_id、topic「資源/動詞」、payload JSON、status、attempts、locked_at）——**與業務同 transaction 寫入**（11 §8），這是「事件必達」的唯一保證。
 2. Dispatcher：Solid Queue recurring job 每 5s `SELECT ... WHERE status='pending' ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED` → 逐筆路由給訂閱者（寄信、統計、之後的 webhook）→ 成功標 done。
 3. 語意 **at-least-once**：每個消費者自行冪等（processed 去重表或天然冪等操作）；順序不保證，消費者不得依賴順序。
 4. payload 規範：`{topic, event_id, occurred_at, resource: {type, id}, diff?}`——只帶 ID 與必要摘要，消費時再查現值（防 PII 蔓延與陳舊資料）。
