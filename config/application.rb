@@ -35,7 +35,7 @@ module Chilllove
     config.load_defaults 8.1
 
     # chilllove 目錄由上方明確 require，不能交給 Zeitwerk reload。
-    config.autoload_lib(ignore: %w[assets tasks chilllove])
+    config.autoload_lib(ignore: %w[assets tasks chilllove rubocop])
 
     # 品牌與操作上限只從設定載入，不在 controller 或 GraphQL type 重複常數。
     # 見 HANDOFF.md D3、docs/research/22 §9.4。
