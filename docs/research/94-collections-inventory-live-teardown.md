@@ -131,13 +131,54 @@ products, and locations before you save.」（未存檔就離開頁面則全部�
 **⑤ 欄位名依頁面而異**：庫存頁是 `Available` 與 `On hand`；商品詳情頁與變體詳情頁是
 `Available` 與 **`Total`**。同一個量在兩處叫不同名字。
 
+### 2.5 調整歷程頁實測（2026-08-24 第二輪，**親自走完整流程**：調整 → Save → 進歷程頁）
+
+> 操作：庫存頁點 `&honey Color Control Repair Hair Oil 100ml` 的 Available 儲存格 →
+> 切 `Adjust by` → 數量 1 → origin 保持 `Inventory addition`、destination `Shop location` →
+> `Add reason` 選 `Received` → ✓ → 頂部 Save。
+> 再從商品頁 Inventory 卡的 `View adjustment history` 真實 href 進入歷程頁：
+> 路由＝`/products/inventory/{inventory_item_id}/inventory_history`。
+
+**歷程頁欄位（7 欄）**：`Date ｜ Activity ｜ Created by ｜ Unavailable ｜ Committed ｜ Available ｜ On hand`
+（無 Incoming 欄、無獨立 reason 欄——**reason 就是 Activity 標籤**：`received` 顯示為
+「Inventory received」）。
+
+🔴 **一次調整 ＝ 歷程頁一列**，該列在**每個受影響的數量欄**各顯示 delta ＋ 期後值：
+```
+3 minutes ago | Inventory received | KEN LEE | 0 | 0 | (+1) 10 | (+1) 10
+Jul 15       | Initial inventory  | Fecify  | 0 | 0 | (+9) 9  | (+9) 9
+```
+儲存格格式＝「increased by 1 for a total of 10 (+1)」⇒ **delta 與 running total 同格顯示**
+（＝API 的 `quantityAfterChange` 有 UI 落點）。
+
+三條連帶事實：
+
+1. **`Created by` 是 group 級、兩種身分**：staff（KEN LEE）或 **app**（Fecify）——
+   與 `InventoryAdjustmentGroup.staffMember`／`app` 兩欄位對應。
+2. 🔴 **期初庫存本身就是一列 ledger 事件**（「Initial inventory (+9)」，由 app 建立）——
+   開帳不是隱含的起始值，是**物化的第一列**。⇒ 180 天修剪的 checkpoint 方案
+   （修剪時寫一列期初餘額）正是本尊自己的形態，不是我方發明。
+3. 🔴 **Activity 儲存格點開有 popover，露出參考文件**：
+   `Shopify TransferAdjustment 518e3347-…` ＋ 來源「Shopify Web」＋
+   `gid://shopify/TransferAdjustment/518e3347-ea4f-443e-870a-626092618191` ＋「View analytics」鈕。
+   ⇒ **admin 手動的 origin→destination 調整，內部被記成 TransferAdjustment 參考文件**——
+   連手動調整都有 reference document，且用的是 `gid://shopify/*` 命名空間
+   （API 禁第三方用該命名空間 ⇒ 是為了保留給 Shopify 內部文件，兩者一致）。
+
+**與 API 面互證**（`inventoryAdjustQuantities` 官方範例，取證 2026-08-24）：
+調 `available` −4 的回應 `changes` 陣列含**兩筆**——`{name: "available", delta: -4}` ＋
+`{name: "on_hand", delta: -4}`。庫存頁的 pending 預覽也同時在 Available 與 On hand
+兩欄顯示 `9 → 10`。⇒ **UI 列＝group×level 一列多欄；API＝每個受影響 name 一筆 change**。
+同一份資料的兩個投影。
+
 ## §3 待補（V 項，本輪未取得）
 
 - **V-94.1** 各條件屬性的**運算子值域**（每個屬性的 relation 集合不同，需逐屬性展開）。
 - ~~V-94.2 調整原因值域~~ ⇒ **已解**，見 §2.4（7 項，`Correction` 為預設）。
   🔴 仍待查：**API 側**的 reason 值域是否多於 UI 的 7 項（傳聞十餘項）——那是文檔題不是實測題。
-- **V-94.3** 庫存異動歷程頁（ledger 呈現形態）：一次調整產生幾列、參考文件怎麼顯示。
-  這是「一把冪等鍵對 N 筆異動」裁定的實機對照面。
+- ~~V-94.3 庫存異動歷程頁~~ ⇒ **已解**（2026-08-24 第二輪，見 §2.5）：一次調整＝歷程頁一列
+  （每個受影響數量欄各顯示 delta＋期後值）；參考文件在 Activity 儲存格的 popover
+  （名稱＋來源＋完整 gid）。API 側同一事件回**每 name 一筆** change（含衍生的 on_hand）。
 - **V-94.4** `Variants` 與 `App` 兩種來源型別的條件屬性集合（本輪只展開了 `Products` 的）。
 - **V-94.5** 來源之間的組合語義：多個來源是**併集**還是**交集**？UI 上沒有 all/any 切換，
   需要實際建兩個來源才能確認。
