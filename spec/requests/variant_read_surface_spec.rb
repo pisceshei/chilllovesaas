@@ -37,7 +37,7 @@ RSpec.describe "Admin GraphQL 變體讀取面", type: :request do
     end
   end
 
-  QUERY = <<~GRAPHQL
+  P21_READ_QUERY = <<~GRAPHQL
     query($id: ID!, $first: Int, $after: String) {
       product(id: $id) {
         options { name position values { value position } }
@@ -53,7 +53,7 @@ RSpec.describe "Admin GraphQL 變體讀取面", type: :request do
   it "variants 依 position 序（不是 created_at）；selectedOptions 為 name/value 對" do
     product = build_product!
     login!
-    post_graphql(QUERY, variables: { id: "gid://chilllove/Product/#{product.id}" })
+    post_graphql(P21_READ_QUERY, variables: { id: "gid://chilllove/Product/#{product.id}" })
     data = response.parsed_body.dig("data", "product")
 
     expect(data["options"]).to eq([
@@ -70,19 +70,19 @@ RSpec.describe "Admin GraphQL 變體讀取面", type: :request do
   it "cursor 分頁沿 position 前進；隱含變體 selectedOptions 為空陣列" do
     product = build_product!
     login!
-    post_graphql(QUERY, variables: { id: "gid://chilllove/Product/#{product.id}", first: 2 })
+    post_graphql(P21_READ_QUERY, variables: { id: "gid://chilllove/Product/#{product.id}", first: 2 })
     page1 = response.parsed_body.dig("data", "product", "variants")
     expect(page1["nodes"].map { |n| n["title"] }).to eq(%w[L M])
     expect(page1.dig("pageInfo", "hasNextPage")).to be(true)
 
-    post_graphql(QUERY, variables: { id: "gid://chilllove/Product/#{product.id}",
+    post_graphql(P21_READ_QUERY, variables: { id: "gid://chilllove/Product/#{product.id}",
                                      first: 2, after: page1.dig("pageInfo", "endCursor") })
     page2 = response.parsed_body.dig("data", "product", "variants")
     expect(page2["nodes"].map { |n| n["title"] }).to eq(%w[S])
     expect(page2.dig("pageInfo", "hasNextPage")).to be(false)
 
     plain = ActsAsTenant.with_tenant(shop) { create(:product_variant, shop:) }
-    post_graphql(QUERY, variables: { id: "gid://chilllove/Product/#{plain.product_id}" })
+    post_graphql(P21_READ_QUERY, variables: { id: "gid://chilllove/Product/#{plain.product_id}" })
     expect(response.parsed_body.dig("data", "product", "variants", "nodes").sole["selectedOptions"]).to eq([])
   end
 
@@ -92,7 +92,7 @@ RSpec.describe "Admin GraphQL 變體讀取面", type: :request do
     queries = []
     counter = ->(_n, _s, _f, _id, payload) { queries << payload[:sql] if payload[:sql] =~ /\ASELECT/ }
     ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
-      post_graphql(QUERY, variables: { id: "gid://chilllove/Product/#{product.id}" })
+      post_graphql(P21_READ_QUERY, variables: { id: "gid://chilllove/Product/#{product.id}" })
     end
     variant_reads = queries.count { |q| q.include?("product_variant_option_values") }
     expect(variant_reads).to be <= 1

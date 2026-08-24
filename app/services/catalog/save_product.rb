@@ -25,6 +25,12 @@ module Catalog
     # 更新態 handle 變更的控制流例外（轉譯成 userErrors，不外洩）。
     class HandleChangePending < StandardError; end
 
+    # 第 22 包：VariantSync 的 userErrors 載體（含 InitialQuantityRejected 轉包）。
+    class VariantRejected < StandardError
+      attr_reader :user_errors
+      def initialize(user_errors) = (@user_errors = user_errors; super("variants rejected"))
+    end
+
     # 譯文驗證失敗 ⇒ 整棵樹回滾（B.4 全樹語義：不得留下「base 存了、譯文沒存」的半套）。
     class TranslationRejected < StandardError
       # @return [Array<Hash>] userErrors
@@ -76,7 +82,11 @@ module Catalog
 
       # 射程外的輸入直接以 userErrors 拒絕（不靜默忽略欄位——那會讓呼叫端
       # 以為存進去了）。
+      # 第 22 包解除單筆限制：input 帶 options 樹 ⇒ 走 VariantSync 多變體路；
+      # 無 options ⇒ 維持「無選項商品恰一筆隱含變體」的原判準（B1-2 不變量）。
       def reject_unsupported!(input, errors)
+        return if input[:options].present?
+
         variants = input[:variants] || []
         return if variants.length == 1
 
@@ -107,7 +117,21 @@ module Catalog
           errors << error([ "handle" ], I18n.t("errors.product.handle_reserved"), "INVALID")
         end
 
-        variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
+        if input[:options].present?
+          options_input = input[:options].map { |o| { name: o[:name], values: o[:values] } }
+          variants_input = (input[:variants] || []).each_with_index.map do |row, index|
+            normalize_variant(shop, row, errors, index:).merge(
+              id: parse_variant_gid(row[:id], index, errors),
+              option_values: row[:option_values]&.map { |c| { option_name: c[:option_name], value: c[:value] } },
+              initial_quantities: row[:initial_quantities]&.map { |q| { location_id: parse_location_gid(q[:location_id], index, errors), quantity: q[:quantity] } }
+            )
+          end
+          variant = nil
+        else
+          options_input = nil
+          variants_input = nil
+          variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
+        end
         organization = normalize_organization(input, errors)
         # 譯文原樣帶下去（驗證在 Translations::Upsert，與 base 寫入同 tx）。
         translations = input[:translations]
@@ -122,7 +146,10 @@ module Catalog
           handle: manual_handle,
           organization:,
           translations:,
-          variant:
+          variant:,
+          options_input:,
+          variants_input:,
+          idempotency_key: input[:idempotency_key]
         }
       end
 
@@ -181,10 +208,10 @@ module Catalog
         organization
       end
 
-      def normalize_variant(shop, variant_input, errors)
-        price_cents = parse_money(variant_input[:price], shop, "price", errors, required: true)
-        compare_cents = parse_money(variant_input[:compare_at_price], shop, "compareAtPrice", errors, required: false)
-        cost_cents = parse_money(variant_input[:cost], shop, "cost", errors, required: false)
+      def normalize_variant(shop, variant_input, errors, index: 0)
+        price_cents = parse_money(variant_input[:price], shop, "price", errors, required: true, index:)
+        compare_cents = parse_money(variant_input[:compare_at_price], shop, "compareAtPrice", errors, required: false, index:)
+        cost_cents = parse_money(variant_input[:cost], shop, "cost", errors, required: false, index:)
 
         {
           price_cents:,
@@ -199,16 +226,16 @@ module Catalog
       # 65 §B X12：admin GraphQL 入向金額＝R4 十進位字串 → R1 integer cents。
       # 走 `Money::Decimal`（嚴格兩位小數 regex）→ `to_storage`；不合格式一律 userError，
       # **不得 round、不得默默補位**。負數在型別層合法（65 §A.7），價格域再擋。
-      def parse_money(raw, shop, field, errors, required:)
+      def parse_money(raw, shop, field, errors, required:, index: 0)
         if raw.blank?
-          errors << error([ "variants", "0", field ], I18n.t("errors.product.price_required"), "BLANK") if required
+          errors << error([ "variants", index.to_s, field ], I18n.t("errors.product.price_required"), "BLANK") if required
           return nil
         end
 
         decimal = Money::Decimal.from_string(raw.to_s, shop.store_currency)
         storage = decimal.to_storage
         if storage.cents.negative?
-          errors << error([ "variants", "0", field ], I18n.t("errors.product.amount_negative"), "GREATER_THAN_OR_EQUAL_TO")
+          errors << error([ "variants", index.to_s, field ], I18n.t("errors.product.amount_negative"), "GREATER_THAN_OR_EQUAL_TO")
           return nil
         end
         storage.cents
@@ -217,11 +244,28 @@ module Catalog
         # from_string 而在 to_storage 才炸（65 §B X12 的處置是 userErrors，不是 500）。
         # 錨點修好後理論上不可達，仍保留——兩道防線各自獨立成立。
         errors << error(
-          [ "variants", "0", field ],
+          [ "variants", index.to_s, field ],
           I18n.t("errors.product.amount_invalid"),
           "INVALID"
         )
         nil
+      end
+
+      VARIANT_GID = %r{\Agid://chilllove/ProductVariant/(\d+)\z}
+      LOCATION_GID = %r{\Agid://chilllove/Location/(\d+)\z}
+
+      def parse_variant_gid(raw, index, errors)
+        return nil if raw.blank?
+
+        match = VARIANT_GID.match(raw.to_s)
+        errors << error([ "variants", index.to_s, "id" ], I18n.t("errors.product.gid_invalid"), "INVALID") unless match
+        match && Integer(match[1])
+      end
+
+      def parse_location_gid(raw, index, errors)
+        match = LOCATION_GID.match(raw.to_s)
+        errors << error([ "variants", index.to_s, "initialQuantities" ], I18n.t("errors.product.gid_invalid"), "INVALID") unless match
+        raw
       end
 
       def sanitize_description(html)
@@ -258,7 +302,7 @@ module Catalog
           ActsAsTenant.with_tenant(shop) do
             ActiveRecord::Base.transaction do
               product = create_product!(shop, attributes)
-              create_implicit_variant!(shop, product, attributes.fetch(:variant))
+              sync_variants!(shop, product, attributes)
               translation_errors = save_translations!(shop, product, attributes)
               raise TranslationRejected, translation_errors if translation_errors.any?
 
@@ -283,6 +327,8 @@ module Catalog
                                             "CREATION_FAILED") ])
           end
         rescue TranslationRejected => rejected
+          Result.new(product: nil, user_errors: rejected.user_errors)
+        rescue VariantRejected, Catalog::VariantSync::InitialQuantityRejected => rejected
           Result.new(product: nil, user_errors: rejected.user_errors)
         rescue ActiveRecord::RecordInvalid => invalid
           Result.new(product: nil, user_errors: translate_record_invalid(invalid))
@@ -346,7 +392,7 @@ module Catalog
             product.updated_at = Time.current
             product.save!
 
-            update_implicit_variant!(product, attributes.fetch(:variant))
+            sync_variants!(shop, product, attributes)
             translation_errors = save_translations!(shop, product, attributes)
             raise TranslationRejected, translation_errors if translation_errors.any?
 
@@ -361,6 +407,8 @@ module Catalog
         Result.new(product: nil,
                    user_errors: [ error(nil, I18n.t("errors.product.stale"), "STALE_OBJECT") ])
       rescue TranslationRejected => rejected
+        Result.new(product: nil, user_errors: rejected.user_errors)
+      rescue VariantRejected, Catalog::VariantSync::InitialQuantityRejected => rejected
         Result.new(product: nil, user_errors: rejected.user_errors)
       rescue HandleChangePending
         Result.new(product: nil,
@@ -395,6 +443,24 @@ module Catalog
           translations: Array(entries).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
         )
         result.user_errors
+      end
+
+      # 第 22 包分流：有 options 樹 ⇒ VariantSync（兩階段 diff）；無 ⇒ 隱含變體路。
+      # VariantSync 的 userErrors 以例外上拋（外層 rescue 轉 Result——與 Translation
+      # 同型；🔴 不得用 ActiveRecord::Rollback，會被 transaction 靜默吞掉）。
+      def sync_variants!(shop, product, attributes)
+        if attributes[:options_input]
+          result = Catalog::VariantSync.call(
+            shop:, product:,
+            options_input: attributes.fetch(:options_input),
+            variants_input: attributes.fetch(:variants_input),
+            idempotency_key: attributes[:idempotency_key])
+          raise VariantRejected, result.user_errors if result.user_errors.any?
+        elsif product.previously_new_record? || product.product_variants.none?
+          create_implicit_variant!(shop, product, attributes.fetch(:variant))
+        else
+          update_implicit_variant!(product, attributes.fetch(:variant))
+        end
       end
 
       # 宣告式覆寫那筆隱含變體（無選項 ⇒ 恰一筆，B1-2 不變量）。

@@ -24,6 +24,8 @@ module Types
         description: "商品狀態；建立未帶時預設 DRAFT。"
       argument :handle, String, required: false,
         description: "URL handle（a-z0-9-）；省略時由標題自動生成。手填衝突一律拒絕。"
+      argument :options, [ Types::Inputs::ProductSetOptionInput ], required: false,
+        description: "選項樹（宣告式全量：未列出的既有選項視為刪除；缺席＝不動選項面）。"
       argument :variants, [ Types::Inputs::ProductSetVariantInput ], required: false,
         description: "變體全樹（宣告式：未列出視為刪除）。v1 恰一筆（隱含變體）。"
       # ── 組織分類＋SEO（91 §11–12 對齊，P1 包）。缺席（nil）＝更新態保持現值；
