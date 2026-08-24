@@ -911,3 +911,14 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   而「批量也寫 ledger」在資料上嚴格多於本尊，商家看到的是**更完整**的歷程，不是行為差。
 - **影響**：第 17 包 cop 全域生效無例外；R8-V2／R8-V5 的結案責任移交 bulk editor／CSV 落地輪。
 
+### D44. 冪等鍵 TTL 過期後重用＝userError，不靜默 replay（2026-08-24，第 17 包對抗審查的解）
+
+- **問題**：Guard 的 24h TTL（11 §2.1：過期＝同 key 視為全新操作）與
+  `inventory_adjustment_groups` 的**永久**唯一索引互撞——過期讓位重跑時 group create
+  撞舊列，未接住＝該 key 毒化成永久 5xx（對抗審查以實跑 repro 證實）。
+- **選擇**：接住撞索引，回 `IDEMPOTENCY_KEY_ALREADY_USED` userError（200），
+  **不**靜默 replay 舊 group。
+- **理由**：TTL 過期後指紋列已刪，無從驗證新請求參數與原請求相同——回舊結果是冒充成功。
+  fail-closed 讓客戶端顯式換新鍵，語義誠實且一行不改 Guard。
+- **影響**：group 的永久唯一索引成為庫存線的「第二層冪等」；11 §2.1 的「過期＝全新操作」
+  對庫存線的實效＝「過期＝必須換鍵」。錯誤碼入 InventoryAdjustUserErrorCode（own_value）。

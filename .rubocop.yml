@@ -1,4 +1,7 @@
 # Omakase Ruby styling for Rails
+require:
+  - ./lib/rubocop/cop/chilllove/inventory_direct_write.rb
+
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
 inherit_mode:
@@ -20,3 +23,13 @@ AllCops:
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`
 # Layout/SpaceInsideArrayLiteralBrackets:
 #   Enabled: false
+
+# 庫存唯一寫入入口（13 §F5；D43 無豁免口）。spec/ 不掃＝fixture 直建資料是測試需要，
+# cop 守的是生產代碼；唯一的 Exclude 是入口自己。
+Chilllove/InventoryDirectWrite:
+  Enabled: true
+  Include:
+    - "app/**/*.rb"
+    - "lib/**/*.rb"
+  Exclude:
+    - "app/services/inventory/adjust.rb"

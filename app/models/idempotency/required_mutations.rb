@@ -34,7 +34,12 @@ module Idempotency
       # @note 副作用：無；只讀已載入的 limits 設定。
       # @see docs/specs/11-production-baseline.md §2.1
       def required?(mutation_name)
-        all.include?(mutation_name.to_s)
+        # 🔴 正規化為 camelCase 再比對（2026-08-24 對抗審查 high）：limits 清單是
+        #    camelCase（inventoryAdjustQuantities）、BaseMutation 傳的是 graphql_name
+        #    （PascalCase InventoryAdjustQuantities）——不正規化則**整個 enforce 機制
+        #    對所有 mutation 恆 false**（實測），清單裡的每一支都在裸奔。
+        name = mutation_name.to_s
+        all.include?(name[0].downcase + name[1..].to_s)
       end
 
       # 租戶域的強制清單。
