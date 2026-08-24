@@ -1,10 +1,14 @@
 ﻿# Product GraphQL query service 的 namespace。
 module Products
-  # 只用 keyset SQL materialize Relay-shaped Product connection。
+  # 只用 keyset SQL materialize Relay-shaped connection（products／collections／variants 共用）。
   #
-  # 排序鍵固定為 `(created_at, id)`，避免 concurrent write 下 offset pagination
-  # 造成重複或跳列；本類別只讀取 relation，不修改資料。見
-  # docs/specs/11 §4、docs/research/28 §0.3。
+  # 第 21 包泛化：排序鍵改為參數 `(order_key, direction)`＋id tiebreaker（同向）——
+  # 預設 `(created_at desc, id desc)` 與舊版行為逐位元組相同（零回歸）；
+  # 變體連線用 `(position asc, id asc)`（🔴 position 是變體的語義序：拖曳重排改
+  # position 不改 created_at，直接沿用預設鍵會讓加選項後的順序凍在建立時間序
+  # ——排程 §2.1③ 點名的缺陷）。order_key 走 KeysetCursor::ORDER_KEYS 白名單。
+  # 避免 concurrent write 下 offset pagination 造成重複或跳列；本類別只讀取
+  # relation，不修改資料。見 docs/specs/11 §4、docs/research/28 §0.3。
   class KeysetConnection
     class << self
       # 建立一個有上限的 product connection。
@@ -18,8 +22,9 @@ module Products
       # @raise [GraphQL::ExecutionError] 參數或 cursor 無效時拋出
       # @note 副作用：執行一筆有 `LIMIT`、無 `OFFSET` 的 SELECT，不寫入資料。
       # @see docs/research/28-api-contract.md §0.3
-      def call(scope:, first: nil, after: nil, last: nil, before: nil)
-        new(scope:, first:, after:, last:, before:).call
+      def call(scope:, first: nil, after: nil, last: nil, before: nil,
+               order_key: :created_at, direction: :desc)
+        new(scope:, first:, after:, last:, before:, order_key:, direction:).call
       end
     end
 
@@ -33,7 +38,12 @@ module Products
     # @return [KeysetConnection] query object
     # @note 副作用：只保存參數，不執行 SQL。
     # @see docs/research/28-api-contract.md §0.3
-    def initialize(scope:, first:, after:, last:, before:)
+    def initialize(scope:, first:, after:, last:, before:,
+                   order_key: :created_at, direction: :desc)
+      raise ArgumentError, "unknown order_key" unless KeysetCursor::ORDER_KEYS.key?(order_key)
+      raise ArgumentError, "direction must be :asc or :desc" unless %i[asc desc].include?(direction)
+      @order_key = order_key
+      @direction = direction
       @scope = scope
       @first = first
       @after = after
@@ -89,7 +99,7 @@ module Products
 
     def backward_page
       size = @last
-      relation = @scope.reorder(created_at: :asc, id: :asc)
+      relation = @scope.reorder(@order_key => reversed, :id => reversed)
       relation = apply_before(relation, @before) if @before
       rows = relation.limit(size + 1).to_a
       has_previous_page = rows.length > size
@@ -99,8 +109,10 @@ module Products
     end
 
     def canonical_scope
-      @scope.reorder(created_at: :desc, id: :desc)
+      @scope.reorder(@order_key => @direction, :id => @direction)
     end
+
+    def reversed = @direction == :desc ? :asc : :desc
 
     # 條件由 scope 的 arel_table 導出（2026-08-23 泛化）：原版把 `products.` 寫死在
     # SQL 字串裡，collections 等其他資源要用同一套 cursor 分頁就得整支拷貝——
@@ -115,26 +127,27 @@ module Products
       @scope.model.arel_table
     end
 
+    # after＝沿 canonical 方向「之後」：desc ⇒ lt、asc ⇒ gt；before 相反。
     def apply_after(relation, cursor)
-      time, id = KeysetCursor.decode(cursor)
-      relation.where(
-        arel[:created_at].lt(time).or(
-          arel[:created_at].eq(time).and(arel[:id].lt(id))
-        )
-      )
+      value, id = KeysetCursor.decode(cursor, key: @order_key)
+      cmp = @direction == :desc ? :lt : :gt
+      relation.where(keyset_predicate(value, id, cmp))
     end
 
     def apply_before(relation, cursor)
-      time, id = KeysetCursor.decode(cursor)
-      relation.where(
-        arel[:created_at].gt(time).or(
-          arel[:created_at].eq(time).and(arel[:id].gt(id))
-        )
+      value, id = KeysetCursor.decode(cursor, key: @order_key)
+      cmp = @direction == :desc ? :gt : :lt
+      relation.where(keyset_predicate(value, id, cmp))
+    end
+
+    def keyset_predicate(value, id, cmp)
+      arel[@order_key].public_send(cmp, value).or(
+        arel[@order_key].eq(value).and(arel[:id].public_send(cmp, id))
       )
     end
 
     def build_result(nodes, has_next_page:, has_previous_page:)
-      edges = nodes.map { |node| { node:, cursor: KeysetCursor.encode(node) } }
+      edges = nodes.map { |node| { node:, cursor: KeysetCursor.encode(node, key: @order_key) } }
       {
         nodes:,
         edges:,

@@ -475,7 +475,7 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
         query($id: ID!) {
           product(id: $id) {
             id title descriptionHtml status lockVersion
-            variants { id title price compareAtPrice sku taxable position }
+            variants(first: 10) { nodes { id title price compareAtPrice sku taxable position } }
           }
         }
       GRAPHQL
@@ -483,7 +483,7 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
       product = response.parsed_body.dig("data", "product")
       expect(product["title"]).to eq("奶茶色寬版帽T")
       expect(product["descriptionHtml"]).to eq("<p>秋冬款</p>")
-      variant = product["variants"].sole
+      variant = product["variants"]["nodes"].sole
       expect(variant["title"]).to eq("Default Title")
       expect(variant["price"]).to eq("128.00")
       expect(variant["compareAtPrice"]).to be_nil

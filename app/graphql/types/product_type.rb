@@ -13,8 +13,20 @@ module Types
     field :status, Types::ProductStatusEnum, null: false
     field :description_html, String, null: false,
       description: "富文本說明（已 sanitize 的儲存值）。"
-    field :variants, [ Types::ProductVariantType ], null: false,
-      description: "變體（position 序）；無選項商品恆為一筆隱含變體。"
+    # 第 21 包：list → connection（cursor 編 (position, id)；≤ limits 分頁上限）。
+    # 🔴 排序鍵＝position 不是 created_at：加選項後既有變體 position 會重排、
+    #    created_at 不會（排程 §2.1③）。
+    # `connection: false`：禁用 graphql-ruby 內建 Relay extension（會自動加分頁引數
+    # 與手動宣告撞名），keyset 實作與參數自管——同 QueryType#products 慣例。
+    field :variants, Types::ProductVariantConnectionType, null: false, connection: false,
+      description: "變體 connection（position 序）；無選項商品恆為一筆隱含變體。" do
+      argument :after, String, required: false
+      argument :before, String, required: false
+      argument :first, Integer, required: false
+      argument :last, Integer, required: false
+    end
+    field :options, [ Types::ProductOptionType ], null: false,
+      description: "商品選項（position 序；無選項商品為空陣列）。"
     # SaveBar 樂觀鎖（63 §A.4：lockVersion 涵蓋整棵樹）；payload 帶回讓前端
     # 下一次儲存能偵測併發覆蓋（STALE_OBJECT）。
     field :lock_version, Integer, null: false
@@ -68,9 +80,19 @@ module Types
                        .order(:locale_tag)
     end
 
-    # @return [Array<ProductVariant>] position 序（B1-2：恆 ≥1 筆）
-    def variants
-      object.product_variants.order(:position)
+    # @return [Hash] Relay connection（B1-2：恆 ≥1 筆）
+    # @note preload 選項座標：selected_options 走記憶體，不逐變體查（N+1 守衛
+    #   ＝spec 的 query count 斷言）。
+    def variants(first: nil, after: nil, last: nil, before: nil)
+      scope = object.product_variants
+                    .includes(product_variant_option_values: [ :product_option, :option_value ])
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :position, direction: :asc)
+    end
+
+    # @return [Array<ProductOption>] position 序（含值，一次 preload）
+    def options
+      object.product_options.includes(:option_values).order(:position)
     end
 
     # 為 migration compatibility 序列化底層 database id。
