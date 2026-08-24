@@ -833,6 +833,11 @@ inventory:
   adjust_quantity_min: -2000000000
   set_total_quantity_max: 1000000000
   set_total_quantity_min: -1000000000
+  # 🔴 **結果值**邊界（與單次 delta/目標邊界是兩件事）：欄位是 signed INT，
+  #    兩次各 +1.5e9 單獨合法、相加溢位 ⇒ 寫入前驗累積結果（含投影 on_hand）。
+  #    對齊本尊「resulting quantity can't exceed 2,000,000,000」語義且落在 INT 內。
+  quantity_result_max: 2000000000
+  quantity_result_min: -2000000000
   # ledgerDocumentUri：除 available 外**全部必填**，且不得用 gid://shopify/*。
   ledger_document_required_except: [available]
   ledger_document_forbid_shopify_gid: true

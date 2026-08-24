@@ -31,6 +31,10 @@ module Types
       description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
     field :staff_locale_update, mutation: Mutations::StaffLocaleUpdate,
       description: "更新目前員工的 admin 介面語言（67 §E.1；ML-1）。"
+    field :inventory_adjust_quantities, mutation: Mutations::InventoryAdjustQuantities,
+      description: "以差額調整庫存（唯一入口 Inventory::Adjust；idempotencyKey 必填＝G28）。"
+    field :inventory_set_quantities, mutation: Mutations::InventorySetQuantities,
+      description: "以絕對值＋CAS 設定庫存（同一唯一入口的 set 模式）。"
     field :collection_set, mutation: Mutations::CollectionSet,
       description: "商品系列全樹宣告式 upsert（ML-3；與 productSet 對稱）。"
     # ML-4：語言集合是**資料**——這三支只動 shop_locales 的列，不建表、不 migration。
