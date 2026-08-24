@@ -836,6 +836,8 @@ inventory:
   # ledgerDocumentUri：除 available 外**全部必填**，且不得用 gid://shopify/*。
   ledger_document_required_except: [available]
   ledger_document_forbid_shopify_gid: true
+  # 建店預設地點名（同本尊「Shop location」；資料預設英文＝2026-08-23 使用者指示）。
+  default_location_name: Shop location
   # 調整歷史保留天數。出處：docs/research/22:81（live）
   adjustment_history_retention_days: 180
   # 訂單草稿保留庫存的去向＝unavailable（**不是 committed**）。出處：46c:546–549、46c:895（help）

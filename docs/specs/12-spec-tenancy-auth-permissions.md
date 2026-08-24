@@ -58,7 +58,7 @@ end
 
 **生產級做法**：
 1. 邀請：owner 建 staff（email + role）→ 寄簽名邀請 token（72 小時、單次）→ 受邀者設密碼啟用；重寄 = 舊 token 作廢。
-2. 權限模型：`roles`（shop 內自訂）+ `role_permissions`（permission key 字串）+ `staff_members.role_id`；permission key 命名照 05 研究：`orders.view / orders.refund / products.edit / products.cost.view / settings.payments / …`（demo 先 20 個 key）。
+2. 權限模型：`roles`（shop 內自訂）+ `role_permissions`（permission key 字串）+ `staff_members.role_id`；permission key 命名照 05 研究：`orders.view / orders.refund / products.edit / products.cost.view / inventory.view / inventory.edit / settings.payments / …`（demo 先 20 個 key；🔴 `inventory.*` 與 `products.*` 是**分開的鍵**＝DECISIONS D42，2026-08-24——本尊 scope 層即分 read_inventory/write_inventory，倉管改數量不應自動獲得改價格文案的權力）。
 3. 強制點：Pundit policy 全 controller `verify_authorized`（漏掛直接測試紅）；React 端只做「藏按鈕」的 UX，**授權真相只在 server**。
 4. owner 特權：不可刪除、不可降權、permission check 永遠 true；轉移店主是獨立雙確認流程（P1）。
 5. 稽核：`audit_logs`（actor、action、target_type/id、before/after JSON、ip）——append-only，設定變更/退款/刪除/權限變更必記（對齊 05 的 Store activity log）。

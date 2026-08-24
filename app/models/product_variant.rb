@@ -26,7 +26,25 @@ class ProductVariant < ApplicationRecord
   has_many :product_variant_option_values, dependent: :destroy, autosave: true
   has_many :option_values, through: :product_variant_option_values
 
+  has_one :inventory_item, dependent: :destroy
+
   validates :title, presence: true
+
+  after_create :create_inventory_item
+
+  private
+
+  # 變體出生即建 inventory_item（63 §B.5：加選項後原 variant.id 與 inventory_item.id
+  # 必須完全相同 ⇒ item 的身分必須與變體同時誕生，不能等「之後補庫存」）。
+  # 每個既有地點補一列 0 量 level；反方向（新地點補 level）在 Location#after_create。
+  # 🔴 做成 callback 而不是 SaveProduct 的服務層步驟：任何建立路徑（含未來的匯入、
+  # bulk、測試 factory）都必須成立，服務層紀律涵蓋不了它們。
+  def create_inventory_item
+    item = InventoryItem.create!(shop_id: shop_id, product_variant_id: id, sku: sku, tracked: true)
+    Location.where(shop_id: shop_id).find_each do |location|
+      InventoryLevel.find_or_create_by!(shop_id: shop_id, inventory_item_id: item.id, location_id: location.id)
+    end
+  end
 
   # 🔴 digest 一律由 join 列算出來，**不接受呼叫端指定**。
   # 允許外部塞值 ＝ 允許 join 列與 digest 不一致，而唯一索引只認 digest。

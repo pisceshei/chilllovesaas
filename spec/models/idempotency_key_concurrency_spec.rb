@@ -17,6 +17,12 @@ RSpec.describe IdempotencyKey, "concurrency" do
   def purge!
     ActsAsTenant.without_tenant do
       IdempotencyKey.delete_all
+      # 第 16 包：庫存鏈同理（子先於父），Shop 的 locations callback 會擋 Shop.delete_all。
+      InventoryAdjustment.unscoped.delete_all
+      InventoryAdjustmentGroup.unscoped.delete_all
+      InventoryLevel.unscoped.delete_all
+      InventoryItem.unscoped.delete_all
+      Location.unscoped.delete_all
       UserStoreAssignment.unscoped.delete_all
       Publication.unscoped.delete_all if defined?(Publication)
       # ML-0（2026-08-23）：Shop 建立 callback 另生 shop_locales（FK → shops），同理先刪。

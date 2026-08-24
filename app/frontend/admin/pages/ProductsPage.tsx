@@ -23,6 +23,7 @@ const PRODUCTS_QUERY = `
         status
         vendor
         productType
+        totalInventory
       }
       pageInfo {
         hasNextPage

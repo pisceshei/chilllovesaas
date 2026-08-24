@@ -43,6 +43,11 @@ class Shop < ApplicationRecord
   #    （SOURCE_LOCALE_IMMUTABLE）——那是保護**活著的店**；整店刪除時語言列必須跟著走，
   #    走 destroy 會被自己的守門擋住變成「空店刪不掉」（shop_spec 三條即此）。
   #    順序：translations／translation_status 有 FK → shops，必須在 shop 刪除前清掉。
+  # 庫存鏈（排程第 16 包）。地點 delete_all：每家新店都有預設地點，restrict 會讓
+  # 空店永遠刪不掉；有商品的店本來就被 products 的 restrict 擋住，不會走到這裡。
+  has_many :locations, dependent: :delete_all
+  has_many :inventory_items, dependent: :delete_all
+  has_many :inventory_adjustment_groups, dependent: :delete_all
   has_many :shop_locales, dependent: :delete_all
   has_many :translations, dependent: :delete_all
   has_many :translation_statuses, class_name: "TranslationStatus", dependent: :delete_all
@@ -60,6 +65,7 @@ class Shop < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
 
   after_create :create_default_publication
+  after_create :create_default_location
   after_create :enable_launch_locales
   # 🔴 `prepend: true` 不可省。`has_many ... dependent: :destroy` 是在**關聯宣告當下**
   # 註冊成 `before_destroy` 的，而本檔的關聯宣告在這行之上 ⇒ 不 prepend 的話，
@@ -119,6 +125,15 @@ class Shop < ApplicationRecord
   # @return [Publication] 本店的線上商店管道
   # @note 副作用：INSERT 一列 `publications`。
   # @see docs/specs/88-publication-model.md §4、§5 #1
+  # 建店即建預設地點（名稱同本尊「Shop location」；資料預設英文＝2026-08-23 使用者指示）。
+  # 🔴 沒有這一步，第一個變體的 level 鏈就斷了——90 藍圖 §9.1.4：「任何『先做商品、
+  # 之後再補庫存』的排法都會產生一次資料回填，而 ledger 是 append-only、期初列無法追認」。
+  def create_default_location
+    ActsAsTenant.with_tenant(self) do
+      locations.create!(name: Limits.fetch(:inventory, :default_location_name))
+    end
+  end
+
   def create_default_publication
     ActsAsTenant.with_tenant(self) do
       publications.create!(

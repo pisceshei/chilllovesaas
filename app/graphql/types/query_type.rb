@@ -68,7 +68,9 @@ module Types
     # @see docs/research/28-api-contract.md §0.2–0.3
     def products(first: nil, after: nil, last: nil, before: nil, query: nil)
       authorize_products!
-      scope = Product.where(shop_id: context.fetch(:current_shop).id)
+      scope = Product
+        .where(shop_id: context.fetch(:current_shop).id)
+        .select(Arel.sql("products.*"), Arel.sql(Product::TOTAL_INVENTORY_SELECT))
       # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
       scope = Products::SearchScope.apply(scope:, query:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)

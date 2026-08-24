@@ -47,6 +47,24 @@ class Product < ApplicationRecord
   # 多型：商品可獨立發布到各管道（docs/specs/88）。
   has_many :resource_publications, as: :publishable, dependent: :destroy
 
+  # 商品列表的庫存合計：**相關子查詢一次撈完**（與 Collection::MEMBER_COUNT_SELECT 同構，
+  # N+1 的理由同 84 §2 那次——列表上限 250，逐列 SUM 就是單一請求 250 次 DB）。
+  # 🔴 鐵律 7（數字同源）：/admin/inventory（第 18 包）與本欄必須同一份算式——
+  #    到時把這段抽成共用 scope，不得另寫一份 SUM。
+  # 🔴 SUM 只計 tracked=1 的品項；全部未追蹤 ⇒ NULL（GraphQL null ⇒ UI「未追蹤」）。
+  #    回 0 是在說「有追蹤而且是零」，與「沒在追蹤」是兩個真相。
+  TOTAL_INVENTORY_SELECT = <<~SQL.squish.freeze
+    (SELECT SUM(il.available)
+       FROM inventory_levels il
+       JOIN inventory_items ii
+         ON ii.shop_id = il.shop_id AND ii.id = il.inventory_item_id
+       JOIN product_variants pv
+         ON pv.shop_id = ii.shop_id AND pv.id = ii.product_variant_id
+      WHERE pv.shop_id = products.shop_id
+        AND pv.product_id = products.id
+        AND ii.tracked = TRUE) AS total_inventory_sum
+  SQL
+
   validates :title, :handle, :status, presence: true
   validates :handle, uniqueness: { scope: :shop_id, case_sensitive: false }
   validates :status, inclusion: { in: STATUSES }

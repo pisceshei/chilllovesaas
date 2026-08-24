@@ -133,6 +133,13 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
   # 而失敗訊息出現在一條與它無關的 example 上。非交易式測試必須能自我修復，
   # 否則一次崩潰會污染之後每一次執行。
   def purge!
+    # 第 16 包（2026-08-24）：變體 callback 另生 inventory_items／levels，Shop callback 另生
+    # locations——FK 子表先刪，否則 Shop.delete_all 被 fk_locations_shop 擋下。
+    InventoryAdjustment.unscoped.delete_all
+    InventoryAdjustmentGroup.unscoped.delete_all
+    InventoryLevel.unscoped.delete_all
+    InventoryItem.unscoped.delete_all
+    Location.unscoped.delete_all
     ProductVariant.unscoped.delete_all
     Product.unscoped.delete_all
     Publication.unscoped.delete_all if defined?(Publication)
