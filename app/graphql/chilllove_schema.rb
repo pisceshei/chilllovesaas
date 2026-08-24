@@ -25,10 +25,11 @@ class ChillloveSchema < GraphQL::Schema
   #    「query 回 null 但 mutation 寫得進去」或反過來，兩者都很難從錯誤訊息看出原因。
   RESOLVABLE_TYPES = {
     "Product" => -> { Product },
-    "Collection" => -> { Collection }
-    # 🔴 "File" 不入表（審查 C6）：fileCreate 回傳 File type 只需 gid 序列化、不需
-    #    node(id:) 全域查詢；加進來但 resolve_type 無分支＋FileType 未 implements Node
-    #    ⇒ node(File-gid) 從回 null 退化成 500。完整 Node 支援＝第 28 包 files query。
+    "Collection" => -> { Collection },
+    # 第 28 包補齊（原本 C6 排除的理由已消解）：`FileType` 現在 implements Node、
+    # 下面 resolve_type 也有 StoredFile 分支，三處齊了才入表。
+    # 🔴 鍵是對外的 `File`、值是 model `StoredFile`（類名避開 Ruby core）。
+    "File" => -> { StoredFile }
   }.freeze
 
   def self.object_from_id(global_id, context)
@@ -65,6 +66,7 @@ class ChillloveSchema < GraphQL::Schema
   def self.resolve_type(_abstract_type, object, _context)
     return Types::ProductType if object.is_a?(Product)
     return Types::CollectionType if object.is_a?(Collection)
+    return Types::FileType if object.is_a?(StoredFile)
 
     raise GraphQL::RequiredImplementationMissingError, "Unsupported GraphQL object: #{object.class.name}"
   end

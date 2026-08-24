@@ -1628,3 +1628,74 @@ a {
   cursor: pointer;
 }
 .cl-media-tile__remove:hover { color: var(--critical); }
+
+/* ── 第 28 包：檔案庫（/admin/content/files）與選檔 modal ───────────────
+   🔴 值一律取 §1 tokens（鐵律 8）——本區沒有任何裸色值與裸尺寸；
+      網格與 tile 的骨架沿用第 27 包 .cl-media-grid 的比例，但**不共用 class**：
+      媒體卡的 tile 可拖曳、有精選標記，檔案庫的 tile 是選取控件（button），
+      兩者的互動語義不同，共用 class 會讓其中一邊的 hover/active 樣式外溢。 */
+.cl-files-filters {
+  display: flex; flex-wrap: wrap; gap: var(--sp-300); align-items: end;
+  margin-bottom: var(--sp-400);
+}
+.cl-files-filters__search { flex: 1 1 220px; min-width: 0; }
+.cl-files-filters__select { display: flex; flex-direction: column; gap: var(--sp-100); }
+.cl-files-filters__select > span { font-size: var(--t-sm); color: var(--text-2); }
+
+.cl-file-row__thumb {
+  width: 36px; height: 36px; object-fit: cover; display: block;
+  border-radius: var(--r-200); background: var(--surface-2);
+}
+.cl-file-row__thumb--empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-3); color: var(--text-3);
+}
+.cl-file-row__alt { width: 100%; min-width: 120px; }
+.cl-file-row__alt:disabled { background: var(--surface-3); color: var(--text-3); }
+/* 「未使用」是可安全刪除的訊號，要與數字看得出差別（不是把 0 印出來） */
+.cl-file-row__unused { color: var(--text-3); }
+.cl-file-delete__warning { color: var(--critical); font-weight: var(--fw-md); }
+
+.cl-file-picker { display: flex; flex-direction: column; gap: var(--sp-300); min-height: 280px; }
+.cl-file-picker__search {
+  display: flex; align-items: center; gap: var(--sp-200);
+  padding: 0 var(--sp-200); border: 1px solid var(--border); border-radius: var(--r-300);
+  background: var(--surface); color: var(--text-2);
+}
+.cl-file-picker__search input {
+  flex: 1; border: none; background: none; padding: var(--sp-200) 0;
+  font: inherit; color: var(--text); outline: none;
+}
+.cl-file-picker__error { color: var(--critical); }
+.cl-file-picker__grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: var(--sp-300); margin: 0; padding: 0; list-style: none;
+  max-height: 46vh; overflow-y: auto;
+}
+.cl-file-picker__skeleton { aspect-ratio: 1; border-radius: var(--r-300); }
+.cl-file-picker__count { margin-right: auto; color: var(--text-2); font-size: var(--t-sm); }
+
+.cl-file-tile {
+  display: flex; flex-direction: column; gap: var(--sp-150); width: 100%;
+  padding: var(--sp-150); border: 1px solid var(--border); border-radius: var(--r-300);
+  background: var(--surface); text-align: left; cursor: pointer; font: inherit;
+  color: var(--text);
+}
+.cl-file-tile:hover:not(:disabled) { border-color: var(--border-strong); }
+.cl-file-tile:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.cl-file-tile:disabled { opacity: 0.45; cursor: not-allowed; }
+/* 選中態靠邊框＋底色，不靠打勾圖示——tile 很小，圖示會蓋掉縮圖本身 */
+.cl-file-tile--on { border-color: var(--focus); background: var(--surface-selected); }
+.cl-file-tile img {
+  width: 100%; aspect-ratio: 1; object-fit: cover;
+  border-radius: var(--r-200); background: var(--surface-2);
+}
+.cl-file-tile__placeholder {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 1; border-radius: var(--r-200);
+  background: var(--surface-3); color: var(--text-3);
+}
+.cl-file-tile__name {
+  font-size: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cl-file-tile__meta { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }

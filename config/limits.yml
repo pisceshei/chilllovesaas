@@ -1051,6 +1051,12 @@ media:
   # 第 25 包：staged 簽名有效期。🔴 官方簽名時長未明文（12 §D.7-2 ⚠、90 blueprint
   # Q-100 登記待查）＝本值是我方裁定（ours）：上傳窗 15 分鐘，逾期重簽。
   staged_upload_ttl_seconds: 900
+  # 第 28 包：staged 孤兒清掃的**寬限窗**（加在 ttl 之上才是刪除判準）。
+  # 🔴 為什麼不能只用 ttl：簽名過期的那一刻，`Storage::FileCreate` 可能正在讀那份
+  #    bytes——fileCreate 本身不驗簽（簽名是在上傳端點驗的），沒有寬限就是在別人
+  #    讀到一半時抽掉檔案。3600 秒＝我方裁定（ours；官方對 staged 保留期未明文，
+  #    本輪查證＝未取得），取「遠大於任何一次 fileCreate 的執行時間」而非精算值。
+  staged_purge_grace_seconds: 3600
   # 檔名保留字尾（本尊的衍生圖尺寸後綴，撞名會蓋掉衍生圖；出處 12 §C.7:255，
   # 取證 2026-08-14）＋不得以 . 開頭＋HTML 一律拒收（同處）。
   filename_reserved_suffixes: [pico, icon, thumb, testing, small, compact, medium, large, grande]

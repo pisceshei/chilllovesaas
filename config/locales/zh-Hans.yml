@@ -11,6 +11,11 @@
       source_invalid: "来源 URL 无法获取或被安全规则拦截。"
       type_unacceptable: "文件格式不受理（本阶段仅接受图片）。"
       too_large: "文件超过大小上限。"
+      access_denied: "没有权限访问文件库。"
+      not_found: "找不到指定的文件。"
+      still_processing: "文件还在处理中，完成后才能删除。"
+      not_ready: "文件尚未处理完成，完成后才能编辑。"
+      update_failed_state: "处理失败的文件无法编辑，只能删除。"
     media:
       position_conflict: "多个上传同时写入同一个位置，请重试。"
       not_found: "找不到指定的媒体。"

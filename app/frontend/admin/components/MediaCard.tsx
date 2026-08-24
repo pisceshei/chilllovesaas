@@ -8,6 +8,7 @@ import { uuidV4 } from "../lib/uuid";
 import { useToast } from "../lib/ToastContext";
 import { Button } from "./Button";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { FilePickerModal } from "./FilePickerModal";
 
 /**
  * 商品媒體卡（第 27 包；原型 `pd-media` 的移植）。
@@ -60,6 +61,17 @@ const DELETE_MUTATION = `
   }
 `;
 
+// 「選取現有檔案」走的是 `productCreateMedia` 的 **fileId 分支**（第 27 包就備好、
+// 第 28 包才有 UI 呼叫它）——與上傳分支同一支 mutation、同一套容量與位置檢查。
+const ATTACH_EXISTING_MUTATION = `
+  mutation productCreateMedia($productId: ID!, $media: [CreateMediaInput!]!, $idempotencyKey: String) {
+    productCreateMedia(productId: $productId, media: $media, idempotencyKey: $idempotencyKey) {
+      media { id }
+      userErrors { field message code }
+    }
+  }
+`;
+
 const UPDATE_MUTATION = `
   mutation productUpdateMedia($productId: ID!, $media: [UpdateMediaInput!]!) {
     productUpdateMedia(productId: $productId, media: $media) {
@@ -86,6 +98,33 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [pendingDelete, setPendingDelete] = useState<MediaCardItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const selectExistingRef = useRef<HTMLButtonElement | null>(null);
+
+  // 從檔案庫挑既有檔掛上來（第 28 包）。一次送出整批，走 fileId 分支。
+  const attachExisting = useCallback(async (fileIds: string[]) => {
+    setPickerOpen(false);
+    if (!productGid || fileIds.length === 0) return;
+
+    setUploading(true);
+    try {
+      const data = await requestAdminGraphQL<
+        { productCreateMedia: { userErrors: { message: string }[] } },
+        Record<string, unknown>
+      >(ATTACH_EXISTING_MUTATION, {
+        productId: productGid,
+        media: fileIds.map((fileId) => ({ fileId })),
+        idempotencyKey: uuidV4(),
+      });
+      const errors = data.productCreateMedia.userErrors;
+      if (errors.length > 0) showToast(errors[0].message);
+      else onRefresh();
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
+    } finally {
+      setUploading(false);
+    }
+  }, [onRefresh, productGid, showToast, t]);
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
@@ -220,7 +259,12 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
           >
             {t("product.media.upload")}
           </Button>
-          <Button disabled size="small" title={t("product.media.selectExisting.pending")} variant="ghost">
+          <Button
+            onClick={() => setPickerOpen(true)}
+            ref={selectExistingRef}
+            size="small"
+            variant="ghost"
+          >
             {t("product.media.selectExisting")}
           </Button>
         </div>
@@ -286,6 +330,14 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
           })}
         </ul>
       ) : null}
+
+      <FilePickerModal
+        maxSelectable={Math.max(maxMedia - media.length, 0)}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(fileIds) => void attachExisting(fileIds)}
+        open={pickerOpen}
+        restoreFocusTo={selectExistingRef}
+      />
 
       <ConfirmDialog
         busy={deleting}

@@ -31,6 +31,10 @@ module Types
       description: "為一批待上傳檔案簽發 staged 上傳目標（12 §D.7 第 1 步）。"
     field :file_create, mutation: Mutations::FileCreate,
       description: "以 originalSource 建立檔案（12 §D.7 第 3 步）。"
+    field :file_update, mutation: Mutations::FileUpdate,
+      description: "更新檔案層 alt／檔名（第 28 包檔案庫）。"
+    field :file_delete, mutation: Mutations::FileDelete,
+      description: "刪除檔案，連帶解除商品引用並補位（第 28 包）。"
     field :product_create_media, mutation: Mutations::ProductCreateMedia,
       description: "把媒體掛到商品上（第 27 包）。"
     field :product_update_media, mutation: Mutations::ProductUpdateMedia,

@@ -31,8 +31,30 @@ class StoredFile < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :alt_text, length: { maximum: 512 }, allow_nil: true
 
+  # 引用數的**相關子查詢**（第 28 包檔案庫列表）。
+  #
+  # 🔴 為什麼不是列表逐列呼叫 `usage_count`：那是每列一條 COUNT，50 列的檔案庫頁
+  #   就是 50 條查詢（第 26 包 `featuredImage` 的 N+1 已經踩過一次）。列表路徑
+  #   `.select(Arel.sql(StoredFile::USAGE_COUNT_SELECT))` 把計數併進同一條 SELECT。
+  # 🔴 **這不是第二套計數**（排程 §四.28 的紅線）：算式與 `usage_count` 逐字同義
+  #   ——都是「`file_usages` 裡 file_id 等於本列的列數」。兩者的一致性由
+  #   `spec/models/stored_file_spec.rb` 的同源斷言釘住。
+  USAGE_COUNT_SELECT = <<~SQL.squish.freeze
+    (SELECT COUNT(*)
+       FROM file_usages fu
+      WHERE fu.shop_id = files.shop_id
+        AND fu.file_id = files.id) AS usage_count_select
+  SQL
+
   # 引用數（第 28 包刪除確認的數字來源；兩套計數＝事故，排程 §四.28）。
   def usage_count = file_usages.count
+
+  # 列表路徑 preload 進來的計數；沒走 `USAGE_COUNT_SELECT` 時為 nil（呼叫端回落）。
+  def usage_count_loaded
+    return nil unless has_attribute?(:usage_count_select)
+
+    self[:usage_count_select]&.to_i
+  end
 
   # 衍生尺寸的讀出 URL（第 26 包；nil＝該尺寸尚未產出／處理失敗）。
   # 端點與原圖同一支（`/admin/files/:id/blob`）＋variant 參數——衍生檔不另開路由，
