@@ -62,10 +62,11 @@ RSpec.describe "inventory baseline mechanisms", type: :model do
     end
   end
 
-  # 🔴 刪除語義的現況釘板（2026-08-24 對抗審查後裁定；三選一屬排程第 20 包）：
-  # ledger 是 append-only 稽核資料，FK RESTRICT＝fail-closed——有 ledger 歷史的商品／地點
-  # **刻意刪不掉**。這條測試把現況釘住：第 20 包裁定改變行為時它會轉紅，逼人回來讀這段。
-  it "有 ledger 歷史時 product.destroy 與 location.destroy 被 FK 擋下（fail-closed 至第 20 包）" do
+  # 🔴 刪除語義釘板 v2（2026-08-24 第 20 包／B1 方案② 落地；原 v1「fail-closed 至第 20 包」
+  # 如其自述在本包轉紅並改寫）：variant destroy 先孤兒化 inventory_item
+  # （product_variant_id 置 NULL＋variant_deleted_at），ledger／levels 隨孤兒**保留**
+  # ⇒ 有 ledger 歷史的**商品**現在刪得掉且稽核帳完整；**地點**仍被 FK 擋（不在 B1 射程）。
+  it "有 ledger 歷史時 product.destroy 可行且 ledger 保留；location.destroy 仍被 FK 擋（B1）" do
     variant = ActsAsTenant.with_tenant(shop) { create(:product_variant, shop:) }
     ActsAsTenant.with_tenant(shop) do
       level = variant.inventory_item.inventory_levels.first!
@@ -77,7 +78,15 @@ RSpec.describe "inventory baseline mechanisms", type: :model do
         shop_id: shop.id, inventory_adjustment_group_id: group.id,
         inventory_level_id: level.id, available_delta: 1
       )
-      expect { variant.product.destroy! }.to raise_error(ActiveRecord::InvalidForeignKey)
+      item_id = variant.inventory_item.id
+      ledger_before = InventoryAdjustment.unscoped.count
+      expect { variant.product.destroy! }.not_to raise_error
+      ActsAsTenant.without_tenant do
+        expect(InventoryAdjustment.unscoped.count).to eq(ledger_before)
+        orphan = InventoryItem.unscoped.find(item_id)
+        expect(orphan.product_variant_id).to be_nil
+        expect(orphan.variant_deleted_at).to be_present
+      end
       expect { level.location.destroy! }.to raise_error(ActiveRecord::InvalidForeignKey)
       # 沒有 ledger 歷史的可以刪（對照組）——證明擋的是稽核資料，不是刪除本身
       clean = create(:product_variant, shop:)

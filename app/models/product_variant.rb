@@ -26,13 +26,28 @@ class ProductVariant < ApplicationRecord
   has_many :product_variant_option_values, dependent: :destroy, autosave: true
   has_many :option_values, through: :product_variant_option_values
 
-  has_one :inventory_item, dependent: :destroy
+  # 🔴 無 dependent（2026-08-24 第 20 包／B1）：item 在變體刪除後**保留為孤兒**
+  #    （product_variant_id 置 NULL＋variant_deleted_at）——ledger 是 append-only
+  #    稽核帳，連鎖刪 item→levels 會撞 ledger 的 RESTRICT FK；且 dependent: :destroy
+  #    走**記憶體快取的關聯物件**，呼叫端載過關聯時連「先置 NULL」都繞不過。
+  #    刪除唯一路徑＝Catalog::DeleteVariant。
+  has_one :inventory_item
+
+  # B1 全域不變量：任何 destroy 路徑（含 product.destroy 連鎖）都先孤兒化 item，
+  # ledger／levels 隨孤兒保留。update_all 不觸發回呼、冪等（已 NULL 查無列）。
+  before_destroy :orphan_inventory_item!
 
   validates :title, presence: true
 
   after_create :create_inventory_item
 
   private
+
+  def orphan_inventory_item!
+    InventoryItem.where(shop_id: shop_id, product_variant_id: id)
+                 .update_all(product_variant_id: nil, variant_deleted_at: Time.current)
+    association(:inventory_item).reset
+  end
 
   # 變體出生即建 inventory_item（63 §B.5：加選項後原 variant.id 與 inventory_item.id
   # 必須完全相同 ⇒ item 的身分必須與變體同時誕生，不能等「之後補庫存」）。
