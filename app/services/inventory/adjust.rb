@@ -251,7 +251,7 @@ module Inventory
             raise ActiveRecord::Rollback if errors.any?
 
             effective.each_with_index do |entry, index|
-              InventoryAdjustment.create!(
+              adjustment = InventoryAdjustment.create!(
                 shop_id: shop.id,
                 inventory_adjustment_group_id: group.id,
                 inventory_level_id: entry.fetch(:level_id),
@@ -260,7 +260,11 @@ module Inventory
                 position: index
               )
               level = locked.fetch(entry.fetch(:level_id))
-              level.update!(leaf => level.public_send(leaf) + entry.fetch(:delta))
+              old_leaf = level.public_send(leaf)
+              level.update!(leaf => old_leaf + entry.fetch(:delta))
+              # 🔴 第 19 包 §4.5(b)：事件與業務寫入同 transaction（鐵律 5）——rollback 時一併消失。
+              #    availability_flipped 在算出 leaf 新值的同段算（事後補算會拿到被後續呼叫改過的值）。
+              enqueue_adjust_event!(shop, group, level, name, leaf, entry.fetch(:delta), adjustment.id, old_leaf)
             end
           end
         end
@@ -273,6 +277,55 @@ module Inventory
         raise unless collision.message.match?(/idempotency.key|uq_inventory_adjustment_groups_idem_key/i)
 
         [ nil, [ error(nil, I18n.t("errors.inventory.key_already_used"), "IDEMPOTENCY_KEY_ALREADY_USED") ] ]
+      end
+
+      # 庫存事件產生端（第 19 包 §4.5(b)；檔頭「事件 outbox 屬第 19 包」的加掛點）。
+      #
+      # ①topic＝inventory.adjusted（假設 A3；inventory.level.changed 保留給非調整型變化）。
+      # ②payload 不帶數量值（63 §C.3 防線④）：delta 是變動量不是餘額，餘額一律查 DB。
+      #   63 §C.2 範本的 from_state/to_state/sub_type 屬狀態轉移型操作（Move）——本包的
+      #   Adjust 是單 leaf 調整、無轉移對，改帶 quantity_name（規格更正註見
+      #   docs/plans/2026-08-24-第19包執行規格.md §4.5）。
+      # ③合併窗（63 §C.6）：非豁免筆 dedupe_key＝inv:item:loc:時間桶（桶寬＝
+      #   catalog_flow.inventory_event_coalesce_window_ms，讓 1000ms 窗機械成立而非名義引用），
+      #   對 (shop_id, dedupe_key) 唯一鍵 upsert——撞鍵＝payload 覆蓋為最新、coalesced_count+1、
+      #   available_at 不延後。豁免筆（availability_flipped，引 limits 鍵不硬編）dedupe_key＝NULL，
+      #   靠 MySQL 唯一索引多 NULL 不碰撞天生免併。ledger 永不合併（紅線 3）。
+      # ④availability 邊界＝available leaf 的 >0 ⇄ ≤0（僅 leaf==available 時可能翻轉）。
+      def enqueue_adjust_event!(shop, group, level, name, leaf, delta, ledger_id, old_leaf)
+        new_leaf = old_leaf + delta
+        flipped = leaf == "available" && (old_leaf.positive? != new_leaf.positive?)
+        payload = {
+          inventory_item_id: level.inventory_item_id,
+          location_id: level.location_id,
+          adjustment: { reason: group.reason, quantity_name: name, delta: delta,
+                        ledger_id: ledger_id, group_id: group.id },
+          availability_flipped: flipped
+        }
+        exempt_keys = Limits.fetch(:catalog_flow, :inventory_event_coalesce_exempt).map(&:to_sym)
+        exempt = exempt_keys.any? { |key| payload[key] }
+        now = Time.current
+        window_ms = Limits.fetch(:catalog_flow, :inventory_event_coalesce_window_ms)
+        dedupe_key = exempt ? nil : "inv:#{level.inventory_item_id}:#{level.location_id}:#{(now.to_f * 1000 / window_ms).floor}"
+        EventOutbox.upsert(
+          {
+            shop_id: shop.id,
+            event_id: SecureRandom.uuid,
+            topic: Events::Topics::INVENTORY_ADJUSTED,
+            aggregate_type: "InventoryLevel",
+            aggregate_id: level.id,
+            payload: payload,
+            status: "pending",
+            available_at: now,
+            dedupe_key: dedupe_key,
+            coalesced_count: 1,
+            created_at: now,
+            updated_at: now
+          },
+          on_duplicate: Arel.sql(
+            "payload = VALUES(payload), coalesced_count = coalesced_count + 1, updated_at = VALUES(updated_at)"
+          )
+        )
       end
 
       def leaf_delta_column(leaf) = :"#{leaf}_delta"

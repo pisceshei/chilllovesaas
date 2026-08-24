@@ -4494,3 +4494,16 @@ outbound_http:
   webhook_response_timeout_seconds: 5        # 官方明載（13 C.3：回應 timeout 5s，G-2）
   callback_timeout_seconds: 5                # 3PL callback 逾時——官方未載，我方裁定對齊 webhook 回應 5s
   file_fetch_timeout_seconds: 30             # originalSource 抓檔逾時——我方裁定（20 MiB 預算的下載窗，≈5.6 Mbps 持續即讀滿；第 21 輪隨 bytes 上限對齊改註）
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 事件與 outbox 轉發（第 19 包，docs/plans/2026-08-24-第19包執行規格.md §4.1）
+# 🔴 本區塊只新增鍵，不改既有鍵的值。合併窗兩鍵在 catalog_flow（63 §C.6），不搬。
+events:
+  outbox_poll_interval_s: 5        # relay 輪詢間隔。權威＝specs/18 F1-2「每 5s」。🔴 雙寫點：config/recurring.yml events_relay 的 schedule 不讀本鍵，改值要同步兩處
+  outbox_batch_size: 100           # 單批取件上限。權威＝specs/18 F1-2「LIMIT 100」
+  outbox_dead_letter_attempts: 8   # attempts 達此值 ⇒ status=dead。權威＝specs/18 F1-5「attempts ≥8 → dead」
+  outbox_retention_days: 30        # published/dead 保留天數，逾期 purge。權威＝specs/18 F1-5「保留 30 天 purge」
+  # 🔴 裁定候選 A1（PR #115 假設清單；18 號規格未給值，不得靜默發明——此值＝提案）：
+  #    本包零真實消費者、單批 ≤100 筆秒級完成；300s 給未來慢消費者 60 倍餘裕，
+  #    又讓 worker 死亡後的孤兒鎖在一兩輪輪詢內被回收。
+  outbox_lock_timeout_s: 300

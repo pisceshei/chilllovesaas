@@ -10,6 +10,8 @@ RSpec.describe Inventory::Adjust, "concurrency" do
   self.use_transactional_tests = false
 
   def purge!
+    # 第 19 包起 Adjust 在同 transaction 寫 event_outbox（FK → shops），purge 必含它
+    EventOutbox.unscoped.delete_all
     InventoryAdjustment.unscoped.delete_all
     InventoryAdjustmentGroup.unscoped.delete_all
     IdempotencyKey.unscoped.delete_all

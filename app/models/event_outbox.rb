@@ -12,7 +12,10 @@
 class EventOutbox < ApplicationRecord
   self.table_name = "event_outbox"
 
-  STATUSES = %w[pending published failed].freeze
+  # dead＝attempts 達 limits.events.outbox_dead_letter_attempts 的終態（specs/18 F1-5；
+  # 第 19 包 §4.3-1 裁定入列）。終態列的 dedupe_key 由 Events::Relay 清成 NULL。
+  STATUSES = %w[pending published failed dead].freeze
+  TERMINAL_STATUSES = %w[published failed dead].freeze
 
   acts_as_tenant :shop
 

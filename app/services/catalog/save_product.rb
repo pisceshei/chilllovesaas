@@ -262,7 +262,7 @@ module Catalog
               translation_errors = save_translations!(shop, product, attributes)
               raise TranslationRejected, translation_errors if translation_errors.any?
 
-              enqueue_event!(shop, product, "products/create")
+              enqueue_event!(shop, product, Events::Topics::PRODUCTS_CREATE)
             end
           end
           Result.new(product:, user_errors: [])
@@ -350,7 +350,7 @@ module Catalog
             translation_errors = save_translations!(shop, product, attributes)
             raise TranslationRejected, translation_errors if translation_errors.any?
 
-            enqueue_event!(shop, product, "products/update")
+            enqueue_event!(shop, product, Events::Topics::PRODUCTS_UPDATE)
           end
         end
         Result.new(product: product.reload, user_errors: [])
@@ -427,13 +427,29 @@ module Catalog
         )
       end
 
+      # 63 §C.2 形（第 19 包 §4.5(a) 升級）：resource_version＝lock_version（§C.3 亂序防線①）、
+      # changed_fields 只有欄位名沒有值（§C.2 紀律 1）、status 變更時經 StatusTransition
+      # 一處實作補 status_transition 與 product.publication.changed 內部事件。
+      # 🔴 內部 product.updated／product.variant.updated 本包不發（PR #115 §4.5 射程；
+      #    留給接消費者的包，前置＝event_deliveries，63 §L-4 門檻）。
+      NOISE_FIELDS = %w[id shop_id created_at updated_at lock_version].freeze
+
       def enqueue_event!(shop, product, topic)
+        changed = product.saved_changes.keys - NOISE_FIELDS
+        payload = {
+          product_id: product.id,
+          handle: product.handle,
+          status: product.status,
+          resource_version: product.lock_version,
+          changed_fields: changed
+        }
+        payload[:status_transition] = Catalog::StatusTransition.call(shop: shop, product: product) if product.saved_changes.key?("status")
         EventOutbox.create!(
           event_id: SecureRandom.uuid,
           topic: topic,
           aggregate_type: "Product",
           aggregate_id: product.id,
-          payload: { product_id: product.id, handle: product.handle, status: product.status },
+          payload: payload,
           available_at: Time.current,
           status: "pending"
         )
