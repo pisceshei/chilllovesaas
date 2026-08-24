@@ -17,6 +17,12 @@ module Types
       graphql_name "ProductSetVariantInput"
       description "productSet 的變體輸入。"
 
+      argument :id, ID, required: false,
+        description: "更新既有變體時帶（primary match key，limits variant_identity_id_wins）；缺席＝以投影後 digest 比對或新建。"
+      argument :option_values, [ Types::Inputs::VariantOptionValueInput ], required: false,
+        description: "選項座標（有 options 樹時每選項恰一值）。"
+      argument :initial_quantities, [ Types::Inputs::InitialQuantityInput ], required: false,
+        description: "初始可售量（create-only；帶 id 時給它＝INVALID）。"
       argument :price, String, required: false,
         description: "售價（主單位十進位字串，恆兩位小數，例：128.00）。建立時必填。"
       argument :compare_at_price, String, required: false,
