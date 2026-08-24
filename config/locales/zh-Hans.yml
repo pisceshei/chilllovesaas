@@ -2,6 +2,15 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "zh-Hans":
   errors:
+    files:
+      batch_too_large: "单次文件数量超过上限。"
+      alt_too_long: "alt 文本超过 512 字符。"
+      filename_invalid: "文件名不合法（不得以点开头、不得含 HTML 扩展名或保留字尾）。"
+      filename_taken: "文件名已被使用。"
+      source_missing: "staged 文件不存在（未上传或已过期）。"
+      source_invalid: "来源 URL 无法获取或被安全规则拦截。"
+      type_unacceptable: "文件格式不受理（本阶段仅接受图片）。"
+      too_large: "文件超过大小上限。"
     product:
       variants_single_only: "无选项商品的变体必须恰为一条（隐含变体）；具名选项与多变体属后续里程碑。"
       last_variant_required: "无法删除最后一个子类；每个商品至少保留一个子类。"

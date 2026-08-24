@@ -15,6 +15,11 @@ Rails.application.routes.draw do
   post "admin/translations/preview" => "admin/translations#preview", as: :admin_translations_preview
   post "admin/translations/import" => "admin/translations#import", as: :admin_translations_import
 
+  # 檔案通道（第 25 包；B6 presigned POST 的 HTTP 端）。同 CSV 通道：二進位走 HTTP、
+  # 資料仍只走 GraphQL（D5）。🔴 必須在 SPA catch-all 之前。
+  post "admin/uploads/staged" => "admin/uploads#create_staged", as: :admin_staged_upload
+  get "admin/files/:id/blob" => "admin/uploads#show_file", as: :admin_file_blob
+
   get "admin" => "admin/spa#show", as: :admin_root
   # API namespace 不可 fall through 到 SPA；錯誤 method/version 必須維持
   # no-route 404，避免 client 把 HTML shell 誤判成 API success。

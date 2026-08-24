@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_162000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -243,6 +243,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
     t.index ["shop_id", "order_id"], name: "ix_einvoices_order_id"
   end
 
+  create_table "event_deliveries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "event × consumer 投遞帳（逐消費者重放隔離）", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.string "consumer", limit: 100, null: false
+    t.datetime "created_at", null: false
+    t.string "event_id", limit: 36, null: false
+    t.text "last_error"
+    t.bigint "shop_id", null: false
+    t.string "state", limit: 32, default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "event_id", "consumer"], name: "uq_event_deliveries_event_consumer", unique: true
+    t.index ["shop_id", "id"], name: "uq_event_deliveries_tenant_id", unique: true
+    t.index ["shop_id", "state"], name: "ix_event_deliveries_state"
+  end
+
   create_table "event_outbox", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "與業務寫入同 transaction 的 at-least-once outbox", force: :cascade do |t|
     t.bigint "aggregate_id", null: false
     t.string "aggregate_type", limit: 64, null: false
@@ -288,6 +302,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
     t.index ["staff_member_id"], name: "fk_events_staff_member_id"
   end
 
+  create_table "file_usages", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "檔案引用（file × owner 恰一列；引用計數的唯一來源）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "file_id", null: false
+    t.bigint "owner_id", null: false
+    t.string "owner_type", limit: 64, null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "file_id", "owner_type", "owner_id"], name: "uq_file_usages_file_owner", unique: true
+    t.index ["shop_id", "id"], name: "uq_file_usages_tenant_id", unique: true
+    t.index ["shop_id", "owner_type", "owner_id"], name: "ix_file_usages_owner"
+  end
+
   create_table "files", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "上傳檔案 metadata", force: :cascade do |t|
     t.string "alt_text", limit: 512
     t.bigint "byte_size", null: false
@@ -301,6 +327,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
     t.string "storage_key", null: false
     t.datetime "updated_at", null: false
     t.integer "width"
+    t.index ["shop_id", "filename"], name: "ix_files_filename"
     t.index ["shop_id", "id"], name: "uq_files_tenant_id", unique: true
     t.index ["shop_id", "status", "created_at"], name: "ix_files_status_created_at"
     t.index ["shop_id", "storage_key"], name: "uq_files_storage_key", unique: true
@@ -1112,10 +1139,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_150000) do
   add_foreign_key "einvoice_allowances", "shops", name: "fk_einvoice_allowances_shop"
   add_foreign_key "einvoices", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_einvoices_order_id"
   add_foreign_key "einvoices", "shops", name: "fk_einvoices_shop"
+  add_foreign_key "event_deliveries", "event_outbox", column: ["shop_id", "event_id"], primary_key: ["shop_id", "event_id"], name: "fk_event_deliveries_event", on_delete: :cascade
+  add_foreign_key "event_deliveries", "shops", name: "fk_event_deliveries_shop"
   add_foreign_key "event_outbox", "shops", name: "fk_event_outbox_shop"
   add_foreign_key "events", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_events_order_id"
   add_foreign_key "events", "shops", name: "fk_events_shop"
   add_foreign_key "events", "staff_members", name: "fk_events_staff_member_id"
+  add_foreign_key "file_usages", "files", column: ["shop_id", "file_id"], primary_key: ["shop_id", "id"], name: "fk_file_usages_file_id"
+  add_foreign_key "file_usages", "shops", name: "fk_file_usages_shop"
   add_foreign_key "files", "shops", name: "fk_files_shop"
   add_foreign_key "fulfillment_orders", "locations", column: ["shop_id", "location_id"], primary_key: ["shop_id", "id"], name: "fk_fulfillment_orders_location_id"
   add_foreign_key "fulfillment_orders", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_fulfillment_orders_order_id"

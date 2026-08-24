@@ -31,7 +31,10 @@ RSpec.describe Events::Relay, "concurrency" do
                             payload: {}, available_at: Time.current, status: "pending")
       end
     end
-    slow = ->(_e) { sleep 0.05 }
+    slow = Object.new
+    slow.instance_variable_set(:@x, nil)
+    def slow.name = "test.slow"
+    def slow.call(_event) = sleep(0.05)
     allow(described_class).to receive(:consumers_for).and_return([ slow ])
     counts = []
     threads = 2.times.map { Thread.new { counts << described_class.drain! } }

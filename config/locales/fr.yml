@@ -2,6 +2,15 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "fr":
   errors:
+    files:
+      batch_too_large: "Trop de fichiers dans un même appel."
+      alt_too_long: "Le texte alternatif dépasse 512 caractères."
+      filename_invalid: "Nom de fichier invalide (pas de point initial, d'extension HTML ni de suffixe réservé)."
+      filename_taken: "Ce nom de fichier est déjà utilisé."
+      source_missing: "Le fichier staged n'existe pas (non téléversé ou expiré)."
+      source_invalid: "L'URL source n'a pas pu être récupérée ou a été bloquée par les règles de sécurité."
+      type_unacceptable: "Type de fichier non accepté (images uniquement pour le moment)."
+      too_large: "Le fichier dépasse la taille limite."
     product:
       variants_single_only: "Un produit sans option doit avoir exactement une variante (implicite) ; les options nommées et les variantes multiples arrivent dans un jalon ultérieur."
       last_variant_required: "Impossible de supprimer la dernière variante ; chaque produit doit en conserver au moins une."

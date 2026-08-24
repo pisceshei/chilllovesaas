@@ -37,10 +37,12 @@ module Events
     PRODUCT_PUBLICATION_CHANGED = "product.publication.changed"
     INVENTORY_LEVEL_CHANGED = "inventory.level.changed"
     INVENTORY_ADJUSTED = "inventory.adjusted"
+    # 檔案入庫（fileCreate 落列後發；消費者＝第 26 包處理管線）。第 25 包啟用。
+    MEDIA_UPLOADED = "media.uploaded"
 
     INTERNAL = [
       PRODUCT_UPDATED, PRODUCT_VARIANT_UPDATED, PRODUCT_PUBLICATION_CHANGED,
-      INVENTORY_LEVEL_CHANGED, INVENTORY_ADJUSTED
+      INVENTORY_LEVEL_CHANGED, INVENTORY_ADJUSTED, MEDIA_UPLOADED
     ].freeze
 
     ALL = (EXTERNAL + INTERNAL).freeze

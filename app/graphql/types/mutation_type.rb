@@ -27,6 +27,10 @@ module Types
     graphql_name "Mutation"
     description "Admin API 的寫入入口。"
 
+    field :staged_uploads_create, mutation: Mutations::StagedUploadsCreate,
+      description: "為一批待上傳檔案簽發 staged 上傳目標（12 §D.7 第 1 步）。"
+    field :file_create, mutation: Mutations::FileCreate,
+      description: "以 originalSource 建立檔案（12 §D.7 第 3 步）。"
     field :product_set, mutation: Mutations::ProductSet,
       description: "商品全樹宣告式 upsert（admin 商品頁 SaveBar 的唯一寫入映射，63 §B.4）。"
     field :staff_locale_update, mutation: Mutations::StaffLocaleUpdate,
