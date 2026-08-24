@@ -48,7 +48,8 @@ module Mutations
           next
         end
         targets << Storage::SignedUpload.issue(
-          shop: Current.shop, filename: declaration.filename, byte_size: declaration.file_size)
+          shop: context.fetch(:current_shop), filename: declaration.filename,
+          byte_size: declaration.file_size)
       end
       { staged_targets: errors.any? ? [] : targets, user_errors: errors }
     end

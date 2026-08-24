@@ -25,7 +25,7 @@ module Mutations
       authorize_files!
 
       result = Storage::FileCreate.call(
-        shop: Current.shop,
+        shop: context.fetch(:current_shop),
         files_input: files.map do |input|
           { original_source: input.original_source, alt: input.alt,
             filename: input.filename, duplicate_resolution_mode: input.duplicate_resolution_mode }
