@@ -300,5 +300,7 @@
   "collections.field.title.placeholder": "e.g. Spring picks",
   "collections.validation.titleBlank": "Title can’t be blank.",
   "collections.notFound.title": "Collection not found",
-  "collections.back": "Back to collections"
+  "collections.back": "Back to collections",
+  "products.filter.statusLabel": "Filter by status",
+  "products.filter.statusAll": "All statuses"
 }

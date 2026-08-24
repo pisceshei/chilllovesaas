@@ -300,5 +300,7 @@
   "collections.field.title.placeholder": "例：春のおすすめ",
   "collections.validation.titleBlank": "タイトルは必須です。",
   "collections.notFound.title": "コレクションが見つかりません",
-  "collections.back": "コレクション一覧に戻る"
+  "collections.back": "コレクション一覧に戻る",
+  "products.filter.statusLabel": "ステータスで絞り込み",
+  "products.filter.statusAll": "すべてのステータス"
 }
