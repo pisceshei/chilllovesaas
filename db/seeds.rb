@@ -46,6 +46,14 @@ staff = ActsAsTenant.with_tenant(shop) do
   end
 end
 
+# 🔴 指派是**登入的前提**，不是選配。
+# `ApplicationController#resume_admin_session` 與 `SessionsController#create` 兩道閘
+# 都以 `user_store_assignments` 判定「這個人屬不屬於這間店」（fail-closed）。
+# 少了這一列，seeds 建出來的 owner **登入會被自己的安全閘擋掉**——
+# 帳密全對、卻一直退回登入頁，而且錯誤訊息（刻意地）不會說出真正原因。
+assignment = UserStoreAssignment.find_or_create_by!(staff_member_id: staff.id, shop_id: shop.id)
+
 puts "#{shop_created ? 'Created' : 'Preserved'} empty shop #{shop.subdomain.inspect}."
+puts "#{assignment.previously_new_record? ? 'Created' : 'Preserved'} store assignment "      "staff##{staff.id} → shop##{shop.id}."
 puts "#{staff_created ? 'Created' : 'Preserved'} owner #{staff.email.inspect}."
 puts "Development login password for a newly created owner: chill-love-demo" if !Rails.env.production? && staff_created

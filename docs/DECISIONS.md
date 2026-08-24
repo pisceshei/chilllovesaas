@@ -945,3 +945,34 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   「damaged 未附仍回 `INVALID_QUANTITY_DOCUMENT`」——後者防止放寬被擴大成橡皮圖章）。
 - **影響**：`docs/research/95` §4 的本尊語義**不改**（那是外部事實）；差異記在本條與
   `docs/dev/m1-inventory-ui.md`。日後若本尊也放寬，本條可降級為「與本尊一致」。
+
+### D46
+
+**第一道租戶閘接線：`user_store_assignments` 成為登入與 session 恢復的前提（2026-08-24）**
+
+- **背景**：D8 把身分表（`staff_members`／`roles`／`sessions`）升為組織層、拿掉 `shop_id`，
+  並明文要求由 `Current#accessible_shop_ids`／`#can_access_shop?` 這道 fail-closed 安全網
+  在應用層補回「這個人屬於這間店嗎」。**但那道閘從未接線**——對抗式複查（2026-08-24）
+  `grep` 證實 `can_access_shop?` 只有定義、註釋與 spec，**零 production 呼叫點**。
+- **後果（已重現）**：`SessionsController#create` 用 `StaffMember.find_by(email:)`
+  **全平台**查，成功即發 session；`Session.authenticate` 只比對 token digest；
+  `StaffMember#can?` 第一行 `return true if owner?`。
+  ⇒ **A 店的 owner 在 B 店的 host 用自己的帳密登入，即可讀寫 B 店資料**。
+  曝險面是整個 admin（products／collections／inventory 全部），不只複查發現它的庫存面。
+- **裁定**：接上**兩側**的閘，判定依據一律 `user_store_assignments`：
+  - **登入側**（`SessionsController#create`）：發 session 前要求本店指派，
+    失敗走**與帳密錯誤完全相同**的訊息（否則登入表單成為帳號／租戶枚舉側通道）。
+  - **恢復側**（`ApplicationController#resume_admin_session`）：每個 request 驗一次，
+    失敗當作**未登入**（不是 403——403 等於承認「這間店存在、你只是沒權限」）。
+    `Admin::BaseController` 與 GraphQL controller 都繼承它，**一處覆蓋整個 admin**。
+- **🔴 不改 `can?` 的 owner 短路**：兩層是 AND，第一層＝能不能進來、第二層＝進來能做什麼。
+  owner 在**自己有指派的店**裡本來就該無所不能。缺的是第一層就補第一層，
+  把租戶歸屬塞進第二層只會讓兩層語義糊在一起。
+- **配套（少一個就是把所有人鎖在門外）**：
+  ① `db/migrate/20260824130000_backfill_user_store_assignments.rb`——正式站實測
+     `assignments=0`，不先鋪路，接閘當天所有帳號都進不去。
+     恰好一間店才推斷補齊；**多於一間店一列都不建**（猜錯的代價正是這個漏洞本身）。
+  ② `db/seeds.rb` 建立指派，否則新裝的 owner 會被自己的安全閘擋掉，
+     而錯誤訊息（刻意地）不會說出原因。
+- **影響**：新增商店的 onboarding 流程**必須**同時建立 owner 的指派——
+  目前沒有 production 的建店路徑（只有 seeds／console），做 onboarding 時這是硬前提。

@@ -35,7 +35,7 @@ class SessionsController < ApplicationController
     staff = StaffMember.find_by(email: params[:email].to_s.strip.downcase)
     authenticated_staff = authenticate_candidate(staff, params[:password].to_s)
 
-    if authenticated_staff
+    if authenticated_staff && permitted_for_current_shop?(authenticated_staff)
       reset_session
       _record, raw_token = ::Session.issue!(staff_member: authenticated_staff, request: request)
       session[:admin_session_token] = raw_token
@@ -58,6 +58,24 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  # 這個 staff 有沒有**本店**的指派。
+  #
+  # 🔴 `StaffMember.find_by(email:)` 是**全平台**查的（email 已改為平台級唯一，D8），
+  # 所以密碼對了只證明「這個人是誰」，不證明「這個人屬於這間店」。
+  # 少了這一句，A 店的人在 B 店 host 輸入自己的帳密就能拿到 B 店的 session。
+  #
+  # 失敗時走**與帳密錯誤完全相同**的錯誤訊息（`AUTHENTICATION_ERROR`）：
+  # 若另給一句「你不屬於這間店」，就等於用登入表單洩漏「這個 email 在平台上存在」，
+  # 以及「這間店存在」——兩個都是枚舉側通道。
+  #
+  # 這是第一道閘的登入側；session 恢復側在 `ApplicationController#resume_admin_session`。
+  # 兩邊都要有：只擋登入，既有的 cookie 仍能用；只擋恢復，登入會「成功」然後畫面像沒登入。
+  def permitted_for_current_shop?(staff)
+    return false if Current.shop.nil?
+
+    UserStoreAssignment.exists?(staff_member_id: staff.id, shop_id: Current.shop.id)
+  end
 
   def authenticate_candidate(staff, password)
     # invited staff 沒有 password_digest；仍以 dummy digest 做一次同成本比對，
