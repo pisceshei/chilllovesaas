@@ -12,6 +12,9 @@ module Types
       argument :after, String, required: false
       argument :last, Integer, required: false
       argument :before, String, required: false
+      # 伺服器端搜尋（28 §1 契約的 query 參數；v1 白名單子集見 Products::SearchScope）。
+      # `sortKey` 刻意不在本包——排程第 21 包做排序鍵一般化時一起上。
+      argument :query, String, required: false
     end
 
     field :collections, CollectionConnectionType, null: false, connection: false do
@@ -63,9 +66,11 @@ module Types
     # @return [Hash] Relay-shaped product connection
     # @note 副作用：執行 Pundit 等價政策檢查與 tenant-scoped SELECT，不寫入資料。
     # @see docs/research/28-api-contract.md §0.2–0.3
-    def products(first: nil, after: nil, last: nil, before: nil)
+    def products(first: nil, after: nil, last: nil, before: nil, query: nil)
       authorize_products!
       scope = Product.where(shop_id: context.fetch(:current_shop).id)
+      # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
+      scope = Products::SearchScope.apply(scope:, query:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 

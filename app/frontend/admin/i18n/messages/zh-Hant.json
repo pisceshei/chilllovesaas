@@ -300,5 +300,7 @@
   "collections.field.title.placeholder": "例：春季精選",
   "collections.validation.titleBlank": "標題不能為空白。",
   "collections.notFound.title": "找不到系列",
-  "collections.back": "返回系列列表"
+  "collections.back": "返回系列列表",
+  "products.filter.statusLabel": "依狀態篩選",
+  "products.filter.statusAll": "全部狀態"
 }

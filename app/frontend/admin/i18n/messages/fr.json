@@ -300,5 +300,7 @@
   "collections.field.title.placeholder": "ex. Sélection de printemps",
   "collections.validation.titleBlank": "Le titre est obligatoire.",
   "collections.notFound.title": "Collection introuvable",
-  "collections.back": "Retour aux collections"
+  "collections.back": "Retour aux collections",
+  "products.filter.statusLabel": "Filtrer par statut",
+  "products.filter.statusAll": "Tous les statuts"
 }

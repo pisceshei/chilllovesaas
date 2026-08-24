@@ -58,8 +58,8 @@ describe("商品頁", () => {
     );
     expect(JSON.parse(String(options.body))).toEqual(
       expect.objectContaining({
-        query: expect.stringContaining("products(first: $first)"),
-        variables: { first: 50 },
+        query: expect.stringContaining("products(first: $first, query: $query)"),
+        variables: { first: 50, query: null },
       }),
     );
   });
@@ -89,13 +89,17 @@ describe("商品頁", () => {
     }
   });
 
-  it("呈現商品資料表，並可從搜尋空結果清除條件", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
-      successfulResponse([
+  // ML-P1：搜尋改打伺服器（Products::SearchScope）。stub 依 query 變數分流——
+  // 這正是「記憶體過濾」與「伺服器過濾」的可測差異：前者無論打什麼字 fetch 都只有一次。
+  it("搜尋打在伺服器：query 變數送達、空結果可清除條件", async () => {
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { variables: { query: string | null } };
+      if (body.variables.query?.includes("不存在")) return successfulResponse([]);
+      return successfulResponse([
         { id: "gid://chilllove/Product/1", title: "夏日上衣", status: "DRAFT" },
         { id: "gid://chilllove/Product/2", title: "經典長褲", status: "ACTIVE" },
-      ]),
-    );
+      ]);
+    });
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
@@ -112,14 +116,56 @@ describe("商品頁", () => {
     expect(within(table).getByText("夏日上衣")).toBeVisible();
     expect(within(table).getByText("草稿")).toBeVisible();
     // 文案正典＝原型 P_STATUS 的 `bt` 欄（chilllove-admin-v2.html:3106）。
-    // 本斷言原本是「使用中」——那是本專案自創的文案，與原型不符（鐵律 12）。
     expect(within(table).getByText("啟用中")).toBeVisible();
 
     await user.type(screen.getByRole("searchbox", { name: "搜尋商品" }), "不存在");
+    // 300ms 去抖後才發出帶 query 的第二發（findBy 的預設等待涵蓋它）
     expect(await screen.findByRole("heading", { name: "找不到符合的商品" })).toBeVisible();
+    const queried = fetchMock.mock.calls
+      .map((call) => (JSON.parse(String((call[1] as RequestInit).body)) as { variables: { query: string | null } }).variables.query)
+      .filter(Boolean);
+    expect(queried).toContain("不存在");
 
     await user.click(screen.getByRole("button", { name: "清除搜尋" }));
-    expect(screen.getByText("經典長褲")).toBeVisible();
+    expect(await within(await screen.findByRole("table", { name: "商品列表" })).findByText("經典長褲")).toBeVisible();
+  });
+
+  // 值域窮舉：狀態下拉必須四值全列（ARCHIVED 不得省略），且送出的是 status:<小寫> 語法。
+  it("狀態篩選：四值全列、選取後以 status: 語法打伺服器", async () => {
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { variables: { query: string | null } };
+      if (body.variables.query === "status:draft") {
+        return successfulResponse([{ id: "gid://chilllove/Product/1", title: "草稿品", status: "DRAFT" }]);
+      }
+      return successfulResponse([
+        { id: "gid://chilllove/Product/1", title: "草稿品", status: "DRAFT" },
+        { id: "gid://chilllove/Product/2", title: "上架品", status: "ACTIVE" },
+      ]);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    expect(within(table).getByText("上架品")).toBeVisible();
+
+    const select = screen.getByRole("combobox", { name: "依狀態篩選" });
+    const options = within(select).getAllByRole("option").map((option) => option.textContent);
+    expect(options).toEqual(["全部狀態", "啟用中", "草稿", "已封存", "未列出"]);
+
+    await user.selectOptions(select, "DRAFT");
+    await waitFor(() => {
+      const sent = fetchMock.mock.calls
+        .map((call) => (JSON.parse(String((call[1] as RequestInit).body)) as { variables: { query: string | null } }).variables.query);
+      expect(sent).toContain("status:draft");
+    });
+    const filtered = await screen.findByRole("table", { name: "商品列表" });
+    await waitFor(() => expect(within(filtered).queryByText("上架品")).toBeNull());
   });
 
   // 🔴 四態全部要能畫出來（13 §F1.2）。UNLISTED 是本輪新加進 GraphQL enum 的第四值——

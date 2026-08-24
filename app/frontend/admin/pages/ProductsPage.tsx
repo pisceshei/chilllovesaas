@@ -15,12 +15,14 @@ import { TextField } from "../components/TextField";
 import { useT, useUiLocale } from "../i18n/I18nContext";
 
 const PRODUCTS_QUERY = `
-  query ProductsIndex($first: Int!) {
-    products(first: $first) {
+  query ProductsIndex($first: Int!, $query: String) {
+    products(first: $first, query: $query) {
       nodes {
         id
         title
         status
+        vendor
+        productType
       }
       pageInfo {
         hasNextPage
@@ -92,13 +94,19 @@ const statusPresentation: Record<string, StatusPresentation> = {
  * @param signal - 頁面卸載時中止網路請求。
  * @returns 首頁一頁商品（預設頁量見 api/pagination.ts）及 cursor pageInfo。
  */
-export async function fetchProducts(signal?: AbortSignal): Promise<ProductsQueryData> {
-  return requestAdminGraphQL<ProductsQueryData, { first: number }>(
+export async function fetchProducts(signal?: AbortSignal, query?: string): Promise<ProductsQueryData> {
+  return requestAdminGraphQL<ProductsQueryData, { first: number; query: string | null }>(
     PRODUCTS_QUERY,
-    { first: DEFAULT_PAGE_SIZE },
+    { first: DEFAULT_PAGE_SIZE, query: query?.trim() ? query.trim() : null },
     signal,
   );
 }
+
+/**
+ * 狀態篩選的值域＝ProductStatusEnum 全集（值域窮舉：**四值**，ARCHIVED 不得省略）。
+ * 送往伺服器時組成 `status:<value>` 併入 search query（Products::SearchScope 白名單）。
+ */
+const STATUS_FILTERS = ["ACTIVE", "DRAFT", "ARCHIVED", "UNLISTED"] as const;
 
 /**
  * 呈現商品 Index 頁面的 loading/error/empty/data 四態。
@@ -117,13 +125,28 @@ export function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
   const [searchValue, setSearchValue] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  // 🔴 搜尋在伺服器（排程第 1 包）。舊版對已載入的一頁做記憶體過濾——
+  // 第 51 筆之後的關鍵字永遠搜不到，且 vendor/productType 根本沒被選取（恆 undefined）。
+  const composedQuery = useMemo(() => {
+    const parts = [searchValue.trim()];
+    if (statusFilter) parts.push(`status:${statusFilter.toLocaleLowerCase()}`);
+    return parts.filter(Boolean).join(" ");
+  }, [searchValue, statusFilter]);
+
+  // 300ms 去抖：每個按鍵都打伺服器是浪費，也會讓結果閃爍。
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(composedQuery), 300);
+    return () => clearTimeout(timer);
+  }, [composedQuery]);
 
   useEffect(() => {
     const controller = new AbortController();
-    setProducts(null);
     setError(null);
 
-    void fetchProducts(controller.signal)
+    void fetchProducts(controller.signal, debouncedQuery)
       .then((data) => setProducts(data.products.nodes))
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
@@ -131,18 +154,10 @@ export function ProductsPage() {
       });
 
     return () => controller.abort();
-  }, [requestKey, t]);
+  }, [requestKey, debouncedQuery, t]);
 
   const retry = useCallback(() => setRequestKey((key) => key + 1), []);
-  const filteredProducts = useMemo(() => {
-    const normalizedQuery = searchValue.trim().toLocaleLowerCase();
-    if (!normalizedQuery || !products) return products ?? [];
-    return products.filter((product) =>
-      [product.title, product.vendor, product.productType]
-        .filter(Boolean)
-        .some((value) => value?.toLocaleLowerCase().includes(normalizedQuery)),
-    );
-  }, [products, searchValue]);
+  const hasActiveFilter = composedQuery.length > 0;
 
   const columns = useMemo<readonly IndexTableColumn<ProductNode>[]>(
     () => [
@@ -223,7 +238,7 @@ export function ProductsPage() {
             <span className="cl-skeleton" key={index} />
           ))}
         </Card>
-      ) : products.length === 0 ? (
+      ) : products.length === 0 && !hasActiveFilter ? (
         <Card className="cl-products-empty">
           <EmptyState
             action={
@@ -252,20 +267,41 @@ export function ProductsPage() {
                 value={searchValue}
               />
             </div>
+            <label className="cl-status-filter">
+              <span className="cl-sr-only">{t("products.filter.statusLabel")}</span>
+              <select
+                aria-label={t("products.filter.statusLabel")}
+                onChange={(event) => setStatusFilter(event.currentTarget.value)}
+                value={statusFilter}
+              >
+                <option value="">{t("products.filter.statusAll")}</option>
+                {STATUS_FILTERS.map((status) => (
+                  <option key={status} value={status}>
+                    {t(statusPresentation[status].labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          {filteredProducts.length > 0 ? (
+          {products.length > 0 ? (
             <IndexTable
               caption={t("products.caption")}
               columns={columns}
               getRowKey={(product) => product.id}
               getRowLabel={(product) => product.title}
               onRowActivate={(product) => navigate(`/admin/products/${encodeURIComponent(product.id)}`)}
-              rows={filteredProducts}
+              rows={products}
             />
           ) : (
             <EmptyState
               action={
-                <Button onClick={() => setSearchValue("")} size="small">
+                <Button
+                  onClick={() => {
+                    setSearchValue("");
+                    setStatusFilter("");
+                  }}
+                  size="small"
+                >
                   {t("products.clearSearch")}
                 </Button>
               }
