@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes, useParams } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useParams, useSearchParams } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
 import { InventoryCard } from "./InventoryCard";
@@ -52,10 +52,21 @@ const CARD_BODY = {
   },
 };
 
-function stubFetch() {
+function stubFetch(multiLocation = false) {
   const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
     const request = JSON.parse(String(init?.body)) as { query: string };
-    if (request.query.includes("query ProductInventory")) return graphqlResponse(CARD_BODY);
+    if (request.query.includes("query ProductInventory")) {
+      if (!multiLocation) return graphqlResponse(CARD_BODY);
+      return graphqlResponse({
+        data: {
+          ...CARD_BODY.data,
+          locations: [
+            { id: "gid://chilllove/Location/1", name: "Shop location" },
+            { id: "gid://chilllove/Location/2", name: "Warehouse B" },
+          ],
+        },
+      });
+    }
     if (request.query.includes("mutation ProductInventoryAdjust")) {
       return graphqlResponse({
         data: { inventoryAdjustQuantities: { inventoryAdjustmentGroup: { id: "gid://chilllove/InventoryAdjustmentGroup/9" }, userErrors: [] } },
@@ -76,7 +87,13 @@ function bodiesOf(fetchMock: Mock, match: string) {
 /** 歷程頁的替身：只印出它收到的 :itemId，用來斷言連結真的帶對品項。 */
 function HistoryProbe() {
   const params = useParams<{ itemId: string }>();
-  return <p>歷程 {decodeURIComponent(params.itemId ?? "")}</p>;
+  const [search] = useSearchParams();
+  return (
+    <>
+      <p>歷程 {decodeURIComponent(params.itemId ?? "")}</p>
+      <p>地點 {search.get("locationId") ?? "（未帶）"}</p>
+    </>
+  );
 }
 
 function renderCard() {
@@ -103,7 +120,7 @@ describe("商品頁庫存卡", () => {
 
     await waitFor(() => expect(screen.getByText("S / 黑")).toBeTruthy());
     const headers = Array.from(document.querySelectorAll("thead th")).map((cell) => cell.textContent);
-    expect(headers).toEqual([ "變體", "可售", "總計" ]);
+    expect(headers).toEqual([ "變體", "可售", "總計", "記錄" ]);
 
     // 查詢一定帶 productId——B 塊不靠標題搜尋（會撈到同名的別的商品）
     const [ query ] = bodiesOf(fetchMock, "query ProductInventory");
@@ -151,13 +168,45 @@ describe("商品頁庫存卡", () => {
     await waitFor(() => expect(bodiesOf(fetchMock, "query ProductInventory").length).toBe(2));
   });
 
-  it("歷程連結指向該品項的調整記錄頁（C 塊）", async () => {
+  it("歷程連結**逐列**且必帶 locationId（歷程是 (品項, 地點) 的帳）", async () => {
     stubFetch();
     renderCard();
 
     await waitFor(() => expect(screen.getByText("S / 黑")).toBeTruthy());
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "檢視調整記錄" }));
-    await waitFor(() => expect(screen.getByText("歷程 gid://chilllove/InventoryItem/7")).toBeTruthy());
+
+    // 🔴 每一列各有自己的連結：原本整張卡共用一顆鈕、永遠指 rows[0]，
+    // 多變體商品必定指錯變體（對抗式複查 2026-08-24 抓到）。
+    const links = screen.getAllByRole("button", { name: "檢視調整記錄" });
+    expect(links.length).toBe(2);
+
+    // 點第二列 ⇒ 必須是第二列的品項，不是 rows[0]
+    await user.click(links[1]);
+    await waitFor(() => expect(screen.getByText("歷程 gid://chilllove/InventoryItem/8")).toBeTruthy());
+    // 且帶著地點——不帶的話後端退回 priority 序第一個地點，看到別的倉庫的帳
+    expect(screen.getByText("地點 gid://chilllove/Location/1")).toBeTruthy();
+  });
+
+  it("換地點一律丟棄 pending，並且說出來（不得靜默）", async () => {
+    stubFetch(true);
+    const user = userEvent.setup();
+    renderCard();
+
+    await waitFor(() => expect(screen.getByText("S / 黑")).toBeTruthy());
+    await user.click(screen.getByRole("button", { name: "25" }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "調整方式" }), "adjust");
+    const quantity = screen.getByRole("textbox", { name: "數量" });
+    await user.clear(quantity);
+    await user.type(quantity, "1");
+    await user.click(screen.getByRole("button", { name: "暫存調整" }));
+    await waitFor(() => expect(screen.getByText("26")).toBeTruthy());
+
+    // 🔴 換地點：pending 的 compareAgainst 是**舊地點**看到的值，
+    // 若留著，儲存時會用 A 倉的 CAS 基準寫進 B 倉（同值時 CAS 還會通過）。
+    await user.selectOptions(screen.getByRole("combobox", { name: "地點" }), "gid://chilllove/Location/2");
+
+    await waitFor(() => expect(screen.getByText("已切換地點，未儲存的調整已捨棄。")).toBeTruthy());
+    // 儲存鈕消失＝真的沒有 pending 了
+    expect(screen.queryByRole("button", { name: "儲存庫存" })).toBeNull();
   });
 });

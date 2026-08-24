@@ -372,7 +372,7 @@
   "inventory.history.col.date": "日期",
   "inventory.history.col.activity": "活動",
   "inventory.history.col.createdBy": "建立者",
-  "inventory.history.retentionNote": "僅顯示最近 180 天。",
+  "inventory.history.retentionNote": "僅顯示最近 {days} 天。",
   "inventory.history.empty.title": "還沒有調整記錄",
   "inventory.history.empty.description": "調整庫存後，記錄就會出現在這裡。",
   "inventory.empty.action": "新增商品",
@@ -380,5 +380,6 @@
   "product.inventory.caption": "各變體庫存",
   "product.inventory.variant": "變體",
   "product.inventory.total": "總計",
-  "product.inventory.save": "儲存庫存"
+  "product.inventory.save": "儲存庫存",
+  "inventory.pendingDiscardedOnLocationChange": "已切換地點，未儲存的調整已捨棄。"
 }

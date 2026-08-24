@@ -372,7 +372,7 @@
   "inventory.history.col.date": "日期",
   "inventory.history.col.activity": "活动",
   "inventory.history.col.createdBy": "创建者",
-  "inventory.history.retentionNote": "仅显示最近 180 天。",
+  "inventory.history.retentionNote": "仅显示最近 {days} 天。",
   "inventory.history.empty.title": "还没有调整记录",
   "inventory.history.empty.description": "调整库存后，记录就会出现在这里。",
   "inventory.empty.action": "新增商品",
@@ -380,5 +380,6 @@
   "product.inventory.caption": "各变体库存",
   "product.inventory.variant": "变体",
   "product.inventory.total": "总计",
-  "product.inventory.save": "保存库存"
+  "product.inventory.save": "保存库存",
+  "inventory.pendingDiscardedOnLocationChange": "已切换地点，未保存的调整已舍弃。"
 }

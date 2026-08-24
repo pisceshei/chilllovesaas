@@ -33,6 +33,15 @@ module Inventory
     # @return [Array<Row>] 新→舊
     def self.call(shop:, level_id:, limit: 50)
       retention = Limits.fetch(:inventory, :adjustment_history_retention_days).to_i
+      # 🔴 保留期用 `UTC_TIMESTAMP(6)` 而不是 `NOW(6)`：`created_at` 是 Rails 以 UTC 寫入的
+      # （`ActiveRecord.default_timezone == :utc`），而 `NOW()` 跟著 MySQL session 時區走。
+      # 目前 bt3 的 session tz 是 SYSTEM＝UTC 所以兩者同值，但那是**環境巧合不是保證**——
+      # 換一台 `time_zone=+08:00` 的機器，保留窗就整整偏 8 小時。
+      #
+      # 🔴 註釋一律寫在 heredoc **外面**：這段 SQL 走 `.squish`，
+      # 它把換行壓成空白 ⇒ 一個 `--` 行內註釋會把**它後面整條 SQL 都吃掉**
+      # （WHERE／ORDER BY／LIMIT 全部消失，查詢仍然「成功」只是語義全變）。
+      # 本輪就是這樣讓三條 spec 紅的。要註在 SQL 裡只能用 /* */。
       rows = ActiveRecord::Base.connection.select_all(<<~SQL.squish, "Inventory::HistoryQuery")
         WITH ledger AS (
           SELECT ia.id, ia.inventory_adjustment_group_id, ia.created_at, ia.ledger_document_uri,
@@ -53,7 +62,7 @@ module Inventory
         INNER JOIN inventory_adjustment_groups g
           ON g.shop_id = #{shop.id.to_i}
          AND g.id = l.inventory_adjustment_group_id
-        WHERE l.created_at >= NOW(6) - INTERVAL #{retention} DAY
+        WHERE l.created_at >= UTC_TIMESTAMP(6) - INTERVAL #{retention} DAY
         ORDER BY l.created_at DESC, l.id DESC
         LIMIT #{limit.to_i}
       SQL
