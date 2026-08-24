@@ -176,11 +176,16 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
     end
   end
 
-  it "🔴 fileDelete 刪 blob 與衍生（commit 之後）" do
-    derivatives = { "thumb" => { "key" => "shops/#{0}/derivatives/x/thumb.webp",
-                                 "width" => 160, "height" => 160, "byte_size" => 4 } }
-    file = make_file!(derivatives:)
-    Storage::LocalDisk.write(derivatives["thumb"]["key"], StringIO.new("WEBP"))
+  it "🔴 fileDelete 刪 blob 與衍生（commit 之後），且衍生的空目錄一併收掉" do
+    file = make_file!
+    # 衍生 key 的真實形狀＝shops/{id}/derivatives/{file_id}/{checksum}/{variant}.webp
+    # ——每個檔案自己一棵樹，只 rm 檔案會留下兩層空目錄（2026-08-25 bt3 實測發現）。
+    derivative_key = "shops/#{shop.id}/derivatives/#{file.id}/abc123/thumb.webp"
+    ActsAsTenant.with_tenant(shop) do
+      file.update!(derivatives: { "thumb" => { "key" => derivative_key, "width" => 160,
+                                              "height" => 160, "byte_size" => 4 } })
+    end
+    Storage::LocalDisk.write(derivative_key, StringIO.new("WEBP"))
     key = file.storage_key
     login!
 
@@ -188,7 +193,9 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
     post_graphql(FILE_DELETE, variables: { fileIds: [ gid(file) ] })
     expect(response.parsed_body.dig("data", "fileDelete", "userErrors")).to be_empty
     expect(Storage::LocalDisk.exist?(key)).to be(false)
-    expect(Storage::LocalDisk.exist?(derivatives["thumb"]["key"])).to be(false)
+    expect(Storage::LocalDisk.exist?(derivative_key)).to be(false)
+    # 🔴 空目錄不得留下——這是單元測試看不到、累積才顯形的洩漏
+    expect(Storage::LocalDisk.root.join("shops/#{shop.id}/derivatives/#{file.id}")).not_to exist
   end
 
   it "🔴 處理中的檔不得刪（管線正在寫衍生）⇒ FILE_LOCKED，且 row 與 blob 都還在" do

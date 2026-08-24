@@ -113,7 +113,11 @@ module Storage
         # ——row 已經沒了，剩下的孤兒佔空間但不會破圖。
         blobs.each do |blob|
           safe_unlink(blob[:key])
-          blob[:derivatives].each { |key| safe_unlink(key) }
+          # 🔴 衍生檔要連空目錄一起收：它們的 key 是
+          #   `.../derivatives/{file_id}/{checksum}/{variant}.webp`，每個檔案自己一棵樹，
+          #   只 rm 檔案會永久留下兩層空目錄（2026-08-25 於 bt3 實測：14 個檔案對應
+          #   31 個 file_id 目錄、17 個空的）。原圖 blob 不必——全部共用 `files/` 一層。
+          blob[:derivatives].each { |key| safe_unlink(key, prune: true) }
         end
 
         Result.new(files: [], deleted_file_ids: deleted, user_errors: [])
@@ -206,8 +210,8 @@ module Storage
         file.derivatives.values.filter_map { |entry| entry["key"] if entry.is_a?(Hash) }
       end
 
-      def safe_unlink(key)
-        LocalDisk.delete(key)
+      def safe_unlink(key, prune: false)
+        prune ? LocalDisk.delete_with_empty_parents(key) : LocalDisk.delete(key)
       rescue StandardError => e
         Rails.logger.warn("event=file_blob_delete_failed key=#{key} error=#{e.class}: #{e.message}")
       end
