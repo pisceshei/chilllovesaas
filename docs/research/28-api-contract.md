@@ -520,6 +520,11 @@ type 系統首發 15 種：single_line_text/multi_line_text/rich_text/integer/de
 - **簽章**：`X-CL-Hmac-Sha256`＝base64(HMAC-SHA256(raw body, app secret))，timing-safe 比較；headers `X-CL-Topic/X-CL-Shop-Domain/X-CL-Webhook-Id（去重）/X-CL-Event-Id/X-CL-Triggered-At/X-CL-API-Version`。
 - **投遞**：5 秒內 2xx；重試指數退避（demo 3 次；規格目標 8 次/4 小時）；API 建立的訂閱連續失敗自動刪除；outbox 驅動（18 號）。
 - **Topics 首發 24 個**：`app/uninstalled`, `shop/update`；`products/create|update|delete`；`collections/create|update|delete`；`inventory_levels/update`；`orders/create|updated|paid|cancelled|fulfilled|partially_fulfilled|edited`；`draft_orders/create|update`；`customers/create|update|delete`；`fulfillments/create|update`；`refunds/create`；`checkouts/create|update`（棄單）；`themes/publish`；`bulk_operations/finish`（佔位）。payload＝資源 snake_case JSON＋`admin_graphql_api_id`。
+- **內部 topic（不對外開放訂閱；2026-08-24 依 63 §C.1 決議表回寫，第 19 包 §4.4）**：
+  `product.updated`、`product.variant.updated`、`product.publication.changed`、
+  `inventory.level.changed`、`inventory.adjusted`——細粒度內部消費（快取 stamp／搜尋索引／
+  smart collection／發布同步／feed 增量），**不進 `webhookSubscriptionCreate` 可訂閱列表**
+  （體例同 18 §F1-6 的 `einvoice/*` 先例）。正典常數表＝`app/services/events/topics.rb`。
 - **內部 topic 3 個（不對外開放訂閱）**：`einvoice/issue_requested`、`einvoice/void_requested`、`einvoice/refund_routed`——由 16-F5.5 寫入、38 號的 job 消費。**不出現在 `webhookSubscriptionCreate` 的可選 topic 列表**（發票 payload 含統編等敏感欄位）。
   <!-- 依 38:876–877、38:1338–1356 補寫：全額取消自動作廢、部分退貨自動折讓。原本 topic 清單無 einvoice/* → 退款不觸發作廢/折讓＝稅務錯誤（50 號 TW-5） -->
 - **⚠ 已知差異（不實作）**：44:447 實測 Shopify 的 webhook 支援 **XML 與 JSON 兩種格式**且歸在「通知」IA 下；本專案 `format: JSON` 單一（H-117 屬 P2，此處明文記錄以免被誤判為遺漏）。

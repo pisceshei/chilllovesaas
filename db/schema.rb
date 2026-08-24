@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_140000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -248,7 +248,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_130000) do
     t.string "aggregate_type", limit: 64, null: false
     t.integer "attempts", default: 0, null: false
     t.datetime "available_at", null: false
+    t.integer "coalesced_count", default: 1, null: false
     t.datetime "created_at", null: false
+    t.string "dedupe_key", limit: 191
     t.string "event_id", limit: 36, null: false
     t.text "last_error"
     t.datetime "locked_at"
@@ -259,6 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_130000) do
     t.string "topic", limit: 100, null: false
     t.datetime "updated_at", null: false
     t.index ["shop_id", "aggregate_type", "aggregate_id"], name: "ix_event_outbox_aggregate_type_aggregate_id"
+    t.index ["shop_id", "dedupe_key"], name: "uq_event_outbox_dedupe_key", unique: true
     t.index ["shop_id", "event_id"], name: "uq_event_outbox_event_id", unique: true
     t.index ["shop_id", "id"], name: "uq_event_outbox_tenant_id", unique: true
     t.index ["shop_id", "status", "available_at"], name: "ix_event_outbox_status_available_at"

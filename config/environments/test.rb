@@ -4,6 +4,10 @@
 # and recreated between test runs. Don't rely on the data there!
 
 Rails.application.configure do
+  # 第 19 包 §4.7：未設時落在 async ⇒ 事件類測試隨機紅。核心一律直呼
+  # Events::Relay.drain!，job 只測「會呼叫 service」——:test adapter 讓 enqueue 可斷言。
+  config.active_job.queue_adapter = :test
+
   # Settings specified here will take precedence over those in config/application.rb.
 
   # While tests run files are not watched, reloading is not necessary.

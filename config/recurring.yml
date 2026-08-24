@@ -10,6 +10,17 @@
 #     schedule: at 5am every day
 
 production:
+  # 第 19 包（docs/plans/2026-08-24-第19包執行規格.md §4.6）。
+  # 🔴 間隔＝limits.events.outbox_poll_interval_s（5）——recurring.yml 不讀 Limits，
+  #    改該鍵時要同步這裡（雙寫點已在 limits 鍵旁註明）。
+  events_relay:
+    class: Events::RelayJob
+    queue: default
+    schedule: every 5 seconds
+  events_outbox_purge:
+    class: Events::OutboxPurgeJob
+    queue: background
+    schedule: at 4am every day
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
