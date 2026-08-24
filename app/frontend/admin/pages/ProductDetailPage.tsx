@@ -16,6 +16,8 @@ import { useToast } from "../lib/ToastContext";
 import { uuidV4 } from "../lib/uuid";
 import { centsToApiString, isValidMoneyInput, parseMoneyToCents, profitState } from "../lib/money";
 import { useT } from "../i18n/I18nContext";
+import { graveKey, MAX_PRODUCT_OPTIONS, rebuildRows } from "../lib/variantMatrix";
+import type { OptionDraft, RowSeed, VariantRowData } from "../lib/variantMatrix";
 
 /**
  * 商品建立／詳情頁（59 §7：**同一個元件的兩種狀態，不是兩個頁面**——
@@ -37,7 +39,10 @@ export interface ProductDetailPageProps {
 const PRODUCT_SET_MUTATION = `
   mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
     productSet(input: $input, idempotencyKey: $idempotencyKey) {
-      product { id handle status title lockVersion }
+      product {
+        id handle status title lockVersion
+        variants(first: 250) { nodes { id selectedOptions { name value } } }
+      }
       userErrors { field message code }
     }
   }
@@ -50,10 +55,25 @@ const PRODUCT_QUERY = `
       vendor productType tags
       seo { title description }
       translations { locale field value outdated }
-      variants(first: 1) { nodes { price compareAtPrice cost sku barcode taxable } }
+      options { name position values { value position } }
+      variants(first: 250) {
+        nodes { id title position price compareAtPrice cost sku barcode taxable selectedOptions { name value } }
+        pageInfo { hasNextPage }
+      }
     }
   }
 `;
+
+/** 建立態的據點清單（初始數量欄的落點；v1 數量套用到第一個據點）。 */
+const LOCATIONS_QUERY = `
+  query productFormLocations {
+    locations { id name }
+  }
+`;
+
+interface LocationsData {
+  locations: { id: string; name: string }[];
+}
 
 /** 該店已啟用的內容語言（ML-2；語言集合是資料，新增語言零部署即出欄位——67 §A.2）。 */
 const SHOP_LOCALES_QUERY = `
@@ -93,6 +113,7 @@ interface ProductSetData {
       status: string;
       title: string;
       lockVersion: number;
+      variants?: { nodes: { id: string; selectedOptions?: { name: string; value: string }[] }[] };
     } | null;
     userErrors: { field: string[] | null; message: string; code: string }[];
   };
@@ -111,15 +132,21 @@ interface ProductQueryData {
     tags: string[];
     seo: { title: string | null; description: string | null };
     translations: { locale: string; field: string; value: string; outdated: boolean }[];
+    options?: { name: string; position: number; values: { value: string; position: number }[] }[];
     variants: {
       nodes: {
+        id?: string;
+        title?: string;
+        position?: number;
         price: string;
         compareAtPrice: string | null;
         cost: string | null;
         sku: string | null;
         barcode: string | null;
         taxable: boolean;
+        selectedOptions?: { name: string; value: string }[];
       }[];
+      pageInfo?: { hasNextPage: boolean };
     };
   } | null;
 }
@@ -143,6 +170,10 @@ interface FormValues {
   seoDescription: string;
   /** 非來源語言的譯文（ML-2）；來源語言的值在上面那些 base 欄位。 */
   translations: TranslationMap;
+  /** 選項樹（空陣列＝無選項模式，走隱含單變體路）。 */
+  options: OptionDraft[];
+  /** 變體列（顯式清單，非笛卡兒積——lib/variantMatrix.ts ①）。 */
+  variantRows: VariantRowData[];
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -163,6 +194,8 @@ const INITIAL_VALUES: FormValues = {
   seoTitle: "",
   seoDescription: "",
   translations: {},
+  options: [],
+  variantRows: [],
 };
 
 type FieldKey =
@@ -195,6 +228,14 @@ const STATUS_OPTIONS: { value: string; labelKey: string; hintKey: string }[] = [
 
 /** 封存態只在目前狀態＝ARCHIVED 時出現在 listbox（顯示用；解除走選其他值）。 */
 const ARCHIVED_OPTION = { value: "ARCHIVED", labelKey: "status.archived", hintKey: "status.hint.archived" };
+
+/** 「新增選項」建議名稱（我方措辭，鐵律 9 不抄本尊文案；自訂選項恆在末位）。 */
+const SUGGESTED_OPTION_KEYS = [
+  "product.options.suggested.size",
+  "product.options.suggested.color",
+  "product.options.suggested.material",
+  "product.options.suggested.style",
+] as const;
 
 /** SEO 計數器的 SERP 建議值（不是上限；上限＝伺服端 70／320，91 §11）。 */
 const SEO_TITLE_MAX = 70;
@@ -418,10 +459,17 @@ function TagsField({
   tags,
   onChange,
   suggestions,
+  label,
+  placeholder,
+  removeLabel,
 }: {
   tags: string[];
   onChange: (next: string[]) => void;
   suggestions: string[];
+  /** 欄位標籤；預設＝商品標籤（既有唯一呼叫端）。 */
+  label?: string;
+  placeholder?: string;
+  removeLabel?: (tag: string) => string;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
@@ -438,7 +486,7 @@ function TagsField({
   return (
     <div className="cl-field">
       <label className="cl-field__label" htmlFor={inputId}>
-        {t("product.org.tags")}
+        {label ?? t("product.org.tags")}
       </label>
       {tags.length > 0 ? (
         <div className="cl-chips">
@@ -446,7 +494,7 @@ function TagsField({
             <span className="cl-chip" key={tag}>
               {tag}
               <button
-                aria-label={t("product.org.tags.remove", { tag })}
+                aria-label={removeLabel ? removeLabel(tag) : t("product.org.tags.remove", { tag })}
                 className="cl-chip__remove"
                 onClick={() => onChange(tags.filter((existing) => existing !== tag))}
                 type="button"
@@ -478,7 +526,7 @@ function TagsField({
             commit();
           }
         }}
-        placeholder={t("product.org.tags.placeholder")}
+        placeholder={placeholder ?? t("product.org.tags.placeholder")}
         value={draft}
       />
       <datalist id={listId}>
@@ -516,9 +564,18 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const [shakeSignal, setShakeSignal] = useState(0);
   const [seoOpen, setSeoOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
+  // 「新增選項」建議選單（排程：popover→自訂選項→inline→chips；menu-popover 形態）
+  const [optionMenuOpen, setOptionMenuOpen] = useState(false);
   // 破壞性動作確認（包 4）：null＝無待確認；封存走確認框、取消封存不用（可逆）。
   const [confirmAction, setConfirmAction] = useState<"discard" | "archive" | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionsData>({ productVendors: [], productTypes: [] });
+  // 變體列的逐列錯誤（index → 訊息）；選項模式下取代 price/compare/cost 的欄位級映射
+  const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
+  // 建立態據點（初始數量欄；v1 套用到第一個據點）
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  // 🔴 變體超過 250（查詢截斷）：宣告式儲存會把沒載到的變體整批刪掉（審查 C0）
+  //    ——整頁儲存封鎖，顯示 tooMany 警示，交 API／29 包子頁處理。
+  const [variantOverflow, setVariantOverflow] = useState(false);
   // 內容語言（來源語言排第一）；載入前先給來源語言一格，避免建立頁閃空。
   const [contentLocales, setContentLocales] = useState<{ tag: string; endonym: string; isSource: boolean }[]>([]);
   // locale → 已過期的欄位集合（伺服端 translations.outdated；前端不自行推算，重載才更新）。
@@ -532,6 +589,13 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // modal 焦點還原目標（觸發鈕隨開框 unmount：選單項→更多動作鈕、SaveBar→頁標題）
   const actionsButtonRef = useRef<HTMLButtonElement | null>(null);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const rowPriceRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // 本編輯階段被剔除的列（審查 C1：刪值再加回要復活原列，不是空白 freshRow
+  // ——空白列會被後端 digest-match 後宣告式抹掉既有變體的回聲欄）
+  const rowGraveyard = useRef(new Map<string, VariantRowData>());
+  // 伺服錯誤的待聚焦目標：saving 期間 fieldset disabled、focus() 打不進——
+  // 存起來等 saving 落 false 的 effect 再聚焦。
+  const pendingErrorFocus = useRef<{ field?: FieldKey; row?: number } | null>(null);
 
   const snapshot = useRef(JSON.stringify(INITIAL_VALUES));
   const dirty = useMemo(() => JSON.stringify(values) !== snapshot.current, [values]);
@@ -554,6 +618,26 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           return;
         }
         const variant = product.variants.nodes[0];
+        const optionDrafts: OptionDraft[] = [ ...(product.options ?? []) ]
+          .sort((left, right) => left.position - right.position)
+          .map((option) => ({
+            key: uuidV4(),
+            name: option.name,
+            values: [ ...option.values ].sort((a, b) => a.position - b.position).map((v) => v.value),
+          }));
+        const variantRows: VariantRowData[] = optionDrafts.length === 0 ? [] :
+          product.variants.nodes.map((node) => ({
+            id: node.id ?? null,
+            coords: optionDrafts.map((option) =>
+              (node.selectedOptions ?? []).find((so) => so.name === option.name)?.value ?? ""),
+            price: node.price,
+            sku: node.sku ?? "",
+            quantity: "",
+            compare: node.compareAtPrice ?? "",
+            cost: node.cost ?? "",
+            barcode: node.barcode ?? "",
+            taxable: node.taxable,
+          }));
         const loaded: FormValues = {
           title: product.title,
           description: htmlToDescription(product.descriptionHtml),
@@ -571,9 +655,13 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           seoTitle: product.seo?.title ?? "",
           seoDescription: product.seo?.description ?? "",
           translations: toTranslationMap(product.translations),
+          options: optionDrafts,
+          variantRows,
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
+        rowGraveyard.current.clear();
+        setVariantOverflow(product.variants.pageInfo?.hasNextPage ?? false);
         setOutdatedFields(
           product.translations.reduce<Record<string, Set<TranslatableField>>>((accumulator, row) => {
             if (!row.outdated) return accumulator;
@@ -608,6 +696,16 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     return () => controller.abort();
   }, []);
 
+  // 建立態據點（初始數量欄）。失敗靜默：沒有據點清單只是數量欄不出現，表單照常。
+  useEffect(() => {
+    if (!isNew) return;
+    const controller = new AbortController();
+    requestAdminGraphQL<LocationsData, Record<string, never>>(LOCATIONS_QUERY, {}, controller.signal)
+      .then((data) => setLocations(data.locations))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [isNew]);
+
   // 已啟用內容語言（ML-2）。失敗時退回「只有來源語言」——寧可少幾格，不要整頁掛掉。
   useEffect(() => {
     const controller = new AbortController();
@@ -623,6 +721,46 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     return () => controller.abort();
   }, []);
 
+  // 選項變更唯一入口（加/刪選項、加/刪值都走這裡；🔴 改名不走——coords 是位置制，
+  // 改名不動列；若把改名餵進 rebuildRows 會被當成刪＋加、整個維度的列值歸位重置）。
+  const applyOptionsChange = useCallback((nextOptions: OptionDraft[]) => {
+    // 🔴 零值選項＝UI 草稿，不進列模型——否則「先加選項、後打值」的空檔
+    //    會把既有列清光（cartesian 含空值集＝零組合），值回來時 id／價格全重置。
+    const effective = (list: OptionDraft[]) => list.filter((option) => option.values.length > 0);
+    const seed: RowSeed = {
+      price: values.price, sku: values.sku, compare: values.compare,
+      cost: values.cost, barcode: values.barcode, taxable: values.taxable,
+    };
+    const effPrev = effective(values.options);
+    const effNext = effective(nextOptions);
+    // 埋葬現行列（座標身分＝選項 key 序＋座標）——之後座標重現即復活原列
+    for (const row of values.variantRows) {
+      rowGraveyard.current.set(graveKey(effPrev, row.coords), row);
+    }
+    const rows = rebuildRows(effPrev, effNext, values.variantRows, seed, rowGraveyard.current);
+    if (rows === null) {
+      // 超渲染上限：不套用且明說（審查 C6——靜默丟輸入不可接受）
+      showToast(t("product.options.overflow"));
+      return;
+    }
+    setValues((current) => ({ ...current, options: nextOptions, variantRows: rows }));
+    setRowErrors({});
+  }, [showToast, t, values]);
+
+  const renameOption = useCallback((index: number, name: string) => {
+    setValues((current) => ({
+      ...current,
+      options: current.options.map((option, i) => (i === index ? { ...option, name } : option)),
+    }));
+  }, []);
+
+  const setRowField = useCallback((index: number, key: "price" | "sku" | "quantity", value: string) => {
+    setValues((current) => ({
+      ...current,
+      variantRows: current.variantRows.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    }));
+  }, []);
+
   const togglePill = useCallback((key: string) => {
     setOpenPills((current) => {
       const next = new Set(current);
@@ -635,18 +773,35 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // 原型 formValidate：req/max/money/handle 規則；失敗 → toast＋shake＋focus 首個壞欄位。
   const validate = useCallback((): boolean => {
     const found: Partial<Record<FieldKey, string>> = {};
+    const rowFound: Record<number, string> = {};
     if (!values.title.trim()) found.title = t("product.validation.titleBlank");
     else if (values.title.length > 255) found.title = t("product.validation.titleTooLong", { max: 255 });
 
-    if (!values.price.trim()) found.price = t("product.validation.priceRequired");
-    else if (!isValidMoneyInput(values.price)) {
-      found.price = t("product.validation.moneyInvalid");
-    }
-    if (!isValidMoneyInput(values.compare)) {
-      found.compare = t("product.validation.moneyInvalid");
-    }
-    if (!isValidMoneyInput(values.cost)) {
-      found.cost = t("product.validation.moneyInvalid");
+    if (values.options.length > 0) {
+      // 選項模式：金額規則落在逐列；選項本身要名稱非空不重複、至少一個值
+      const names = values.options.map((option) => option.name.trim());
+      if (names.some((name) => !name) || new Set(names).size !== names.length ||
+          values.options.some((option) => option.values.length === 0)) {
+        rowFound[-1] = t("product.validation.optionsInvalid"); // -1＝選項層錯誤：只 toast＋shake，不聚焦列
+      }
+      values.variantRows.forEach((row, index) => {
+        if (!row.price.trim()) rowFound[index] = t("product.validation.priceRequired");
+        else if (!isValidMoneyInput(row.price)) rowFound[index] = t("product.validation.moneyInvalid");
+        else if (row.quantity.trim() && !/^\d+$/.test(row.quantity.trim())) {
+          rowFound[index] = t("product.validation.quantityInvalid");
+        }
+      });
+    } else {
+      if (!values.price.trim()) found.price = t("product.validation.priceRequired");
+      else if (!isValidMoneyInput(values.price)) {
+        found.price = t("product.validation.moneyInvalid");
+      }
+      if (!isValidMoneyInput(values.compare)) {
+        found.compare = t("product.validation.moneyInvalid");
+      }
+      if (!isValidMoneyInput(values.cost)) {
+        found.cost = t("product.validation.moneyInvalid");
+      }
     }
     if (isNew && values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
       found.handle = t("product.validation.handleInvalid");
@@ -659,11 +814,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     }
 
     setErrors(found);
+    setRowErrors(rowFound);
     const firstBad = (Object.keys(found) as FieldKey[])[0];
-    if (firstBad) {
+    const firstBadRow = Object.keys(rowFound).map(Number).filter((i) => i >= 0).sort((a, b) => a - b)[0];
+    if (firstBad || Object.keys(rowFound).length > 0) {
       showToast(t("product.validation.failed"));
       setShakeSignal((signal) => signal + 1);
-      fieldRefs.current[firstBad]?.focus();
+      if (firstBad) fieldRefs.current[firstBad]?.focus();
+      else if (firstBadRow !== undefined) rowPriceRefs.current[firstBadRow]?.focus();
       return false;
     }
     return true;
@@ -672,23 +830,50 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   const applyServerErrors = useCallback(
     (userErrors: ProductSetData["productSet"]["userErrors"]) => {
       const mapped: Partial<Record<FieldKey, string>> = {};
+      const rowMapped: Record<number, string> = {};
       const unmapped: string[] = [];
+      const optionsMode = values.options.length > 0;
       for (const userError of userErrors) {
-        const key = userError.field ? SERVER_PATHS[userError.field.join(".")] : undefined;
+        const path = userError.field?.join(".") ?? "";
+        const rowMatch = optionsMode ? /^variants\.(\d+)(?:\.|$)/.exec(path) : null;
+        if (rowMatch) {
+          rowMapped[Number(rowMatch[1])] = userError.message;
+          continue;
+        }
+        const key = userError.field ? SERVER_PATHS[path] : undefined;
         if (key) mapped[key] = userError.message;
         else unmapped.push(userError.message);
       }
       setErrors(mapped);
+      setRowErrors(rowMapped);
       showToast(unmapped[0] ?? t("product.validation.failed"));
       setShakeSignal((signal) => signal + 1);
       const firstBad = (Object.keys(mapped) as FieldKey[])[0];
-      fieldRefs.current[firstBad ?? "title"]?.focus();
+      const firstBadRow = Object.keys(rowMapped).map(Number).sort((a, b) => a - b)[0];
+      pendingErrorFocus.current =
+        firstBad ? { field: firstBad } :
+        firstBadRow !== undefined ? { row: firstBadRow } : { field: "title" };
     },
-    [showToast, t],
+    [showToast, t, values.options.length],
   );
+
+  // 伺服錯誤聚焦（見 pendingErrorFocus 註）：等 saving 解鎖、DOM 已重繪再聚焦。
+  useEffect(() => {
+    if (saving) return;
+    const target = pendingErrorFocus.current;
+    if (!target) return;
+    pendingErrorFocus.current = null;
+    if (target.field) fieldRefs.current[target.field]?.focus();
+    else if (target.row !== undefined) rowPriceRefs.current[target.row]?.focus();
+  }, [saving, errors, rowErrors]);
 
   const save = useCallback(async () => {
     if (saving) return;
+    if (variantOverflow) {
+      // 宣告式全量：只載到前 250 列，儲存＝把其餘變體整批刪掉 ⇒ 整頁封鎖
+      showToast(t("product.variants.tooMany"));
+      return;
+    }
     if (!validate()) return;
     setSaving(true);
     try {
@@ -710,20 +895,44 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         // 譯文恆送（宣告式）：空字串＝刪除該譯文列、回落來源語言（67 §C.4(b)）。
         // 🔴 來源語言那一格**不送**——它的內容在 base 欄位（title／descriptionHtml／seo）。
         translations: translationEntries(values.translations, sourceLocale),
-        variants: [
-          {
-            price: centsToApiString(parseMoneyToCents(values.price) ?? null),
-            ...(values.compare.trim()
-              ? { compareAtPrice: centsToApiString(parseMoneyToCents(values.compare) ?? null) }
-              : {}),
-            ...(values.cost.trim()
-              ? { cost: centsToApiString(parseMoneyToCents(values.cost) ?? null) }
-              : {}),
-            ...(values.sku.trim() ? { sku: values.sku.trim() } : {}),
-            ...(values.barcode.trim() ? { barcode: values.barcode.trim() } : {}),
-            taxable: values.taxable,
-          },
-        ],
+        // 選項模式：options 樹＋逐列 variants（🔴 既有列必帶 id——改名選項時
+        // 後端靠 id-match 保座標；回聲欄照送，宣告式缺席＝清除）。
+        ...(values.options.length > 0
+          ? { options: values.options.map((option) => ({ name: option.name.trim(), values: option.values })) }
+          : {}),
+        variants: values.options.length > 0
+          ? values.variantRows.map((row) => ({
+              ...(row.id ? { id: row.id } : {}),
+              price: centsToApiString(parseMoneyToCents(row.price) ?? null),
+              ...(row.compare.trim()
+                ? { compareAtPrice: centsToApiString(parseMoneyToCents(row.compare) ?? null) }
+                : {}),
+              ...(row.cost.trim() ? { cost: centsToApiString(parseMoneyToCents(row.cost) ?? null) } : {}),
+              ...(row.sku.trim() ? { sku: row.sku.trim() } : {}),
+              ...(row.barcode.trim() ? { barcode: row.barcode.trim() } : {}),
+              taxable: row.taxable,
+              optionValues: values.options.map((option, index) => ({
+                optionName: option.name.trim(),
+                value: row.coords[index],
+              })),
+              ...(isNew && row.quantity.trim() && locations[0]
+                ? { initialQuantities: [ { locationId: locations[0].id, quantity: Number(row.quantity.trim()) } ] }
+                : {}),
+            }))
+          : [
+              {
+                price: centsToApiString(parseMoneyToCents(values.price) ?? null),
+                ...(values.compare.trim()
+                  ? { compareAtPrice: centsToApiString(parseMoneyToCents(values.compare) ?? null) }
+                  : {}),
+                ...(values.cost.trim()
+                  ? { cost: centsToApiString(parseMoneyToCents(values.cost) ?? null) }
+                  : {}),
+                ...(values.sku.trim() ? { sku: values.sku.trim() } : {}),
+                ...(values.barcode.trim() ? { barcode: values.barcode.trim() } : {}),
+                taxable: values.taxable,
+              },
+            ],
       };
       if (isNew) {
         if (values.handle) input.handle = values.handle;
@@ -743,14 +952,25 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         return;
       }
 
-      snapshot.current = JSON.stringify(values);
+      // 就地認 id（審查 C4）：本次新建的列在回應裡以座標對回 id——否則之後
+      //    改名選項（改名＝後端刪＋加）時 id-less 列 digest 對不上、變體被換新。
+      const savedNodes = product.variants?.nodes ?? [];
+      const adoptedRows = values.variantRows.map((row) => {
+        if (row.id) return row;
+        const match = savedNodes.find((node) =>
+          values.options.filter((option) => option.values.length > 0).every((option, index) =>
+            (node.selectedOptions ?? []).find((so) => so.name === option.name.trim())?.value === row.coords[index]));
+        return match ? { ...row, id: match.id } : row;
+      });
+      const savedValues = { ...values, variantRows: adoptedRows };
+      snapshot.current = JSON.stringify(savedValues);
       showToast(t("product.saved"));
       if (isNew) {
         navigate("/admin/products");
       } else {
-        // 編輯態留在頁上：吸收新 lockVersion，快照歸零 dirty。
+        // 編輯態留在頁上：吸收新 lockVersion＋認回 id，快照歸零 dirty。
         setLockVersion(product.lockVersion);
-        setValues((current) => ({ ...current }));
+        setValues(savedValues);
       }
     } catch (reason: unknown) {
       // 鐵律 4 三層的另外兩層：top-level（THROTTLED／ACCESS_DENIED／
@@ -763,7 +983,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     } finally {
       setSaving(false);
     }
-  }, [applyServerErrors, isNew, lockVersion, navigate, productGid, saving, showToast, t, validate, values]);
+  }, [applyServerErrors, isNew, locations, lockVersion, navigate, productGid, saving, showToast, t, validate, values, variantOverflow]);
 
   const applyDiscard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
@@ -1057,6 +1277,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
           <Card padded>
             <h3>{t("product.card.pricing")}</h3>
+            {values.options.length > 0 ? (
+              // 選項模式：金額落在變體表逐列（Shopify 同型——有變體即無商品級價格）
+              <p className="cl-card-note">{t("product.pricing.perVariant")}</p>
+            ) : (
+            <>
             <TextField
               error={errors.price}
               inputMode="decimal"
@@ -1152,6 +1377,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 </div>
               ) : null}
             </div>
+            </>
+            )}
           </Card>
 
           <Card padded>
@@ -1176,6 +1403,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
               // 不掛頁面 SaveBar——理由見 InventoryCard 檔頭③）。
               <InventoryCard productId={productGid ?? ""} />
             )}
+            {values.options.length > 0 ? (
+              <p className="cl-card-note">{t("product.inventory.perVariant")}</p>
+            ) : (
             <div className="cl-pillset">
               <PillGroup
                 onToggle={togglePill}
@@ -1215,6 +1445,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 </div>
               ) : null}
             </div>
+            )}
           </Card>
 
           <Card padded>
@@ -1237,15 +1468,157 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           </Card>
 
           <Card padded>
-            <h3>
-              {t("product.card.variants")}
-              <span className="cl-card__head-action">
-                <Button disabled size="small" title={t("product.variants.add.pending")}>
-                  {t("product.variants.add")}
+            <h3>{t("product.card.variants")}</h3>
+            {variantOverflow ? (
+              <p className="cl-card-note cl-card-note--warn">{t("product.variants.tooMany")}</p>
+            ) : null}
+            <fieldset className="cl-fieldset-plain" disabled={saving || variantOverflow}>
+            {values.options.map((option, optionIndex) => (
+              <div className="cl-option-row" key={optionIndex}>
+                <div className="cl-option-row__head">
+                  <TextField
+                    label={t("product.options.name")}
+                    onChange={(event) => renameOption(optionIndex, event.target.value)}
+                    placeholder={t("product.options.name.placeholder")}
+                    value={option.name}
+                  />
+                  <Button
+                    aria-label={t("product.options.remove", { name: option.name || t("product.options.name") })}
+                    onClick={() => applyOptionsChange(values.options.filter((_, i) => i !== optionIndex))}
+                    size="small"
+                  >
+                    {t("common.remove")}
+                  </Button>
+                </div>
+                <TagsField
+                  label={t("product.options.values")}
+                  onChange={(nextValues) =>
+                    applyOptionsChange(values.options.map((existing, i) =>
+                      (i === optionIndex ? { ...existing, values: nextValues } : existing)))}
+                  placeholder={t("product.options.values.placeholder")}
+                  removeLabel={(value) => t("product.options.values.remove", { value })}
+                  suggestions={[]}
+                  tags={option.values}
+                />
+              </div>
+            ))}
+            {values.options.length < MAX_PRODUCT_OPTIONS ? (
+              <div className="cl-actionsmenu">
+                <Button
+                  aria-expanded={optionMenuOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setOptionMenuOpen((state) => !state)}
+                  size="small"
+                >
+                  {t("product.options.add")}
                 </Button>
-              </span>
-            </h3>
-            <p className="cl-card-note">{t("product.variants.note")}</p>
+                {optionMenuOpen ? (
+                  <div className="cl-actionsmenu__list" role="menu">
+                    {SUGGESTED_OPTION_KEYS.map((suggestedKey) => {
+                      const name = t(suggestedKey);
+                      const used = values.options.some((option) => option.name.trim() === name);
+                      return (
+                        <button
+                          className="cl-actionsmenu__item"
+                          disabled={used}
+                          key={suggestedKey}
+                          onClick={() => {
+                            setOptionMenuOpen(false);
+                            applyOptionsChange([ ...values.options, { key: uuidV4(), name, values: [] } ]);
+                          }}
+                          role="menuitem"
+                          type="button"
+                        >
+                          {name}
+                        </button>
+                      );
+                    })}
+                    <button
+                      className="cl-actionsmenu__item"
+                      onClick={() => {
+                        setOptionMenuOpen(false);
+                        applyOptionsChange([ ...values.options, { key: uuidV4(), name: "", values: [] } ]);
+                      }}
+                      role="menuitem"
+                      type="button"
+                    >
+                      {t("product.options.custom")}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            {values.options.length === 0 ? (
+              <p className="cl-card-note">{t("product.variants.note")}</p>
+            ) : null}
+            {values.variantRows.length > 0 ? (
+              <div className="cl-variant-table-wrap">
+                <table
+                  aria-label={t("product.variants.table.caption", { count: values.variantRows.length })}
+                  className="cl-variant-table"
+                >
+                  <thead>
+                    <tr>
+                      <th scope="col">{t("product.variants.table.variant")}</th>
+                      <th scope="col">{t("product.variants.table.price")}</th>
+                      <th scope="col">{t("product.variants.table.sku")}</th>
+                      {isNew && locations[0] ? (
+                        <th scope="col">{t("product.variants.table.quantity", { location: locations[0].name })}</th>
+                      ) : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {values.variantRows.map((variantRow, rowIndex) => {
+                      const variantTitle = variantRow.coords.join(" / ");
+                      const priceClass = rowErrors[rowIndex]
+                        ? "cl-field__input cl-variant-table__input cl-field__input--error"
+                        : "cl-field__input cl-variant-table__input";
+                      return (
+                        <tr key={variantRow.coords.join("|")}>
+                          <th scope="row">{variantTitle}</th>
+                          <td>
+                            <input
+                              aria-invalid={rowErrors[rowIndex] ? true : undefined}
+                              aria-label={t("product.variants.table.priceFor", { variant: variantTitle })}
+                              className={priceClass}
+                              inputMode="decimal"
+                              onChange={(event) => setRowField(rowIndex, "price", event.target.value)}
+                              ref={(node) => {
+                                rowPriceRefs.current[rowIndex] = node;
+                              }}
+                              value={variantRow.price}
+                            />
+                            {rowErrors[rowIndex] ? (
+                              <p className="cl-field__error">{rowErrors[rowIndex]}</p>
+                            ) : null}
+                          </td>
+                          <td>
+                            <input
+                              aria-label={t("product.variants.table.skuFor", { variant: variantTitle })}
+                              className="cl-field__input cl-variant-table__input"
+                              onChange={(event) => setRowField(rowIndex, "sku", event.target.value)}
+                              value={variantRow.sku}
+                            />
+                          </td>
+                          {isNew && locations[0] ? (
+                            <td>
+                              <input
+                                aria-label={t("product.variants.table.quantityFor", { variant: variantTitle })}
+                                className="cl-field__input cl-variant-table__input"
+                                inputMode="numeric"
+                                onChange={(event) => setRowField(rowIndex, "quantity", event.target.value)}
+                                value={variantRow.quantity}
+                              />
+                            </td>
+                          ) : null}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+            </fieldset>
           </Card>
 
           <Card padded>

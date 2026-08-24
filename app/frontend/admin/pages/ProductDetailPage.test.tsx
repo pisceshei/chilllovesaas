@@ -512,6 +512,266 @@ describe("新增商品頁", () => {
   });
 });
 
+// ── 第 23 包：選項編輯器＋卡底變體表（整合規格 §4-23；63 §B.4/§B.5 的 UI 面）──
+describe("商品選項與變體表", () => {
+  beforeEach(() => installCsrfMeta());
+
+  const LOCATIONS_ROUTE = {
+    match: "query productFormLocations",
+    body: { data: { locations: [ { id: "gid://chilllove/Location/1", name: "Shop location" } ] } },
+  };
+
+  it("建立態：popover 加「尺寸」→ 打 S,M,L ⇒ 表即時三列；儲存 payload 帶 options＋座標＋initialQuantities", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE_ROUTES,
+      LOCATIONS_ROUTE,
+      { match: "mutation productSet", body: CREATED },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/new");
+
+    const main = within(await screen.findByRole("main"));
+    await user.type(await main.findByLabelText("標題（English）"), "帽T");
+    await user.type(main.getByLabelText("價格（HK$）"), "128.00");
+
+    await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
+    await user.click(main.getByRole("menuitem", { name: "尺寸" }));
+    const valuesInput = main.getByLabelText("選項值");
+    await user.type(valuesInput, "S{Enter}M{Enter}L{Enter}");
+
+    // 判準：值一打完表即時三列（列首＝座標 title）
+    expect(main.getByRole("rowheader", { name: "S" })).toBeVisible();
+    expect(main.getByRole("rowheader", { name: "M" })).toBeVisible();
+    expect(main.getByRole("rowheader", { name: "L" })).toBeVisible();
+    // 首列繼承定價卡價格；定價卡轉 per-variant note（商品級價格入口消失）
+    expect(main.getByLabelText("價格（S）")).toHaveValue("128.00");
+    expect(main.getByText("已啟用選項——價格改在下方子類表逐列設定。")).toBeVisible();
+
+    await user.clear(main.getByLabelText("價格（M）"));
+    await user.type(main.getByLabelText("價格（M）"), "138.00");
+    await user.clear(main.getByLabelText("價格（L）"));
+    await user.type(main.getByLabelText("價格（L）"), "148.00");
+    await user.type(main.getByLabelText("數量（S）"), "7");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
+    expect(input.options).toEqual([ { name: "尺寸", values: [ "S", "M", "L" ] } ]);
+    const variants = input.variants as Record<string, unknown>[];
+    expect(variants).toHaveLength(3);
+    expect(variants.map((v) => v.price)).toEqual([ "128.00", "138.00", "148.00" ]);
+    expect(variants[0].optionValues).toEqual([ { optionName: "尺寸", value: "S" } ]);
+    expect(variants[0].initialQuantities).toEqual([
+      { locationId: "gid://chilllove/Location/1", quantity: 7 },
+    ]);
+    expect(variants[1]).not.toHaveProperty("initialQuantities");
+    expect(variants[0]).not.toHaveProperty("id");
+  });
+
+  it("🔴 編輯態：既有列儲存必帶原 id（22 契約的 UI 面首驗）；加值＝補列不動舊列；回聲欄照送", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE_ROUTES,
+      {
+        match: "query productForEdit",
+        body: {
+          data: {
+            product: {
+              id: "gid://chilllove/Product/9",
+              title: "外套", descriptionHtml: "", status: "DRAFT", handle: "coat",
+              lockVersion: 3, vendor: "", productType: "", tags: [],
+              seo: { title: null, description: null }, translations: [],
+              options: [ { name: "尺寸", position: 1,
+                values: [ { value: "S", position: 1 }, { value: "M", position: 2 } ] } ],
+              variants: { nodes: [
+                { id: "gid://chilllove/ProductVariant/11", title: "S", position: 1,
+                  price: "100.00", compareAtPrice: "150.00", cost: null, sku: "C-S",
+                  barcode: "471", taxable: true,
+                  selectedOptions: [ { name: "尺寸", value: "S" } ] },
+                { id: "gid://chilllove/ProductVariant/12", title: "M", position: 2,
+                  price: "110.00", compareAtPrice: null, cost: null, sku: null,
+                  barcode: null, taxable: false,
+                  selectedOptions: [ { name: "尺寸", value: "M" } ] },
+              ] },
+            },
+          },
+        },
+      },
+      { match: "mutation productSet", body: CREATED },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByRole("rowheader", { name: "S" })).toBeVisible();
+    expect(main.getByLabelText("價格（M）")).toHaveValue("110.00");
+    // 編輯態沒有數量欄（initialQuantities 是 create-only）
+    expect(main.queryByLabelText("數量（S）")).toBeNull();
+
+    // 加值 L ⇒ 第三列即時出現
+    await user.type(main.getByLabelText("選項值"), "L{Enter}");
+    expect(main.getByRole("rowheader", { name: "L" })).toBeVisible();
+    // 新列價格繼承定價卡 seed（編輯態＝variants[0] 的 100.00）——清掉再打
+    expect(main.getByLabelText("價格（L）")).toHaveValue("100.00");
+    await user.clear(main.getByLabelText("價格（L）"));
+    await user.type(main.getByLabelText("價格（L）"), "120.00");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
+    expect(input.options).toEqual([ { name: "尺寸", values: [ "S", "M", "L" ] } ]);
+    const variants = input.variants as Record<string, unknown>[];
+    expect(variants).toHaveLength(3);
+    // 🔴 既有列帶原 id；新列無 id
+    expect(variants[0].id).toBe("gid://chilllove/ProductVariant/11");
+    expect(variants[1].id).toBe("gid://chilllove/ProductVariant/12");
+    expect(variants[2]).not.toHaveProperty("id");
+    // 回聲欄：compare/barcode/taxable 原樣送回（宣告式缺席＝清除，缺了就是資料抹除）
+    expect(variants[0].compareAtPrice).toBe("150.00");
+    expect(variants[0].barcode).toBe("471");
+    expect(variants[1].taxable).toBe(false);
+  });
+
+  it("🔴 改名選項不重置列（審查 C12 UI 面）：rows／id 原位，payload 帶新名＋原 id", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE_ROUTES,
+      {
+        match: "query productForEdit",
+        body: {
+          data: {
+            product: {
+              id: "gid://chilllove/Product/9",
+              title: "外套", descriptionHtml: "", status: "DRAFT", handle: "coat",
+              lockVersion: 3, vendor: "", productType: "", tags: [],
+              seo: { title: null, description: null }, translations: [],
+              options: [ { name: "尺寸", position: 1,
+                values: [ { value: "S", position: 1 }, { value: "M", position: 2 } ] } ],
+              variants: { nodes: [
+                { id: "gid://chilllove/ProductVariant/11", title: "S", position: 1,
+                  price: "100.00", compareAtPrice: null, cost: null, sku: "C-S",
+                  barcode: null, taxable: true,
+                  selectedOptions: [ { name: "尺寸", value: "S" } ] },
+                { id: "gid://chilllove/ProductVariant/12", title: "M", position: 2,
+                  price: "110.00", compareAtPrice: null, cost: null, sku: null,
+                  barcode: null, taxable: true,
+                  selectedOptions: [ { name: "尺寸", value: "M" } ] },
+              ] },
+            },
+          },
+        },
+      },
+      { match: "mutation productSet", body: CREATED },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+    const main = within(await screen.findByRole("main"));
+    await main.findByRole("rowheader", { name: "S" });
+    const nameField = main.getByLabelText("選項名稱");
+    await user.clear(nameField);
+    await user.type(nameField, "Size");
+    // 列不因改名重建：rowheader 與逐列價格原位
+    expect(main.getByRole("rowheader", { name: "S" })).toBeVisible();
+    expect(main.getByLabelText("價格（M）")).toHaveValue("110.00");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+    const { input } = parsedInput(callsTo(fetchMock, "mutation productSet")[0]);
+    expect(input.options).toEqual([ { name: "Size", values: [ "S", "M" ] } ]);
+    const variants = input.variants as Record<string, unknown>[];
+    expect(variants[0].id).toBe("gid://chilllove/ProductVariant/11");
+    expect(variants[0].optionValues).toEqual([ { optionName: "Size", value: "S" } ]);
+  });
+
+  it("中位草稿選項（審查 C16）：零值選項不進列模型；帶草稿儲存被擋", async () => {
+    stubRoutedFetch([ ...BASE_ROUTES, LOCATIONS_ROUTE ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/new");
+
+    const main = within(await screen.findByRole("main"));
+    await user.type(await main.findByLabelText("標題（English）"), "T");
+    await user.type(main.getByLabelText("價格（HK$）"), "10.00");
+    await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
+    await user.click(main.getByRole("menuitem", { name: "尺寸" }));
+    await user.type(main.getByLabelText("選項值"), "S{Enter}M{Enter}");
+    // 加第二個選項但不打值（草稿）
+    await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
+    await user.click(main.getByRole("menuitem", { name: "顏色" }));
+    // 列模型不受草稿影響：仍是單維兩列
+    expect(main.getAllByRole("rowheader").map((n) => n.textContent)).toEqual([ "S", "M" ]);
+    // 草稿仍在 ⇒ 對第一個選項加值也不會炸列
+    const valueInputs = main.getAllByLabelText("選項值");
+    await user.type(valueInputs[0], "L{Enter}");
+    expect(main.getAllByRole("rowheader").map((n) => n.textContent)).toEqual([ "S", "M", "L" ]);
+    // 帶草稿儲存被擋
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    expect(await screen.findByText("有欄位未通過驗證")).toBeVisible();
+  });
+
+  it("伺服錯誤 variants.1（無尾段）與 variants.0.price 都映射到對應列（審查 C15）", async () => {
+    stubRoutedFetch([
+      ...BASE_ROUTES,
+      LOCATIONS_ROUTE,
+      {
+        match: "mutation productSet",
+        body: {
+          data: {
+            productSet: {
+              product: null,
+              userErrors: [ { field: [ "variants", "1" ], message: "子類重複。", code: "INVALID" } ],
+            },
+          },
+        },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/new");
+
+    const main = within(await screen.findByRole("main"));
+    await user.type(await main.findByLabelText("標題（English）"), "T");
+    await user.type(main.getByLabelText("價格（HK$）"), "10.00");
+    await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
+    await user.click(main.getByRole("menuitem", { name: "尺寸" }));
+    await user.type(main.getByLabelText("選項值"), "S{Enter}M{Enter}");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    // ['variants','1'] join＝"variants.1"（無尾段）也要中列 1
+    const rowInput = await main.findByLabelText("價格（M）");
+    expect(rowInput).toHaveAttribute("aria-invalid", "true");
+    expect(main.getByText("子類重複。")).toBeVisible();
+    expect(rowInput).toHaveFocus();
+  });
+
+  it("刪值收確認語義：移除值 ⇒ 該列即時消失；選項零值＝儲存被client擋（optionsInvalid）", async () => {
+    stubRoutedFetch([ ...BASE_ROUTES, LOCATIONS_ROUTE ]);
+    const user = userEvent.setup();
+    renderAt("/admin/products/new");
+
+    const main = within(await screen.findByRole("main"));
+    await user.type(await main.findByLabelText("標題（English）"), "T");
+    await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
+    await user.click(main.getByRole("menuitem", { name: "顏色" }));
+    await user.type(main.getByLabelText("選項值"), "黑{Enter}白{Enter}");
+    expect(main.getByRole("rowheader", { name: "白" })).toBeVisible();
+
+    await user.click(main.getByRole("button", { name: "移除選項值 白" }));
+    expect(main.queryByRole("rowheader", { name: "白" })).toBeNull();
+
+    await user.click(main.getByRole("button", { name: "移除選項值 黑" }));
+    // 零值選項＝草稿：表清空、儲存被擋
+    expect(main.queryByRole("table")).toBeNull();
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    expect(await screen.findByText("有欄位未通過驗證")).toBeVisible();
+  });
+});
+
 // ── ML-2：內容語言（標題堆疊／說明與 SEO 分頁；docs/plans/2026-08-23-多語言方案.md §6）──
 describe("商品內容多語言", () => {
   beforeEach(() => installCsrfMeta());
