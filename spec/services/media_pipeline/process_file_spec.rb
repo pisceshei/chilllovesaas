@@ -10,26 +10,33 @@ require "rails_helper"
 RSpec.describe MediaPipeline::ProcessFile do
   let(:shop) { create(:shop, subdomain: "mp-shop") }
 
-  # 替身後端：記錄呼叫、可注入失敗
-  def backend_double(behaviour: :ok, probe: [ 800, 600 ])
+  # 替身後端：形狀與 VipsBackend 相同（`open` 回 Source、Source 有 width/height/derive）
+  def backend_double(behaviour: :ok, size: [ 800, 600 ])
+    source = Object.new
+    source.instance_variable_set(:@behaviour, behaviour)
+    source.instance_variable_set(:@size, size)
+    source.instance_variable_set(:@calls, [])
+    def source.calls = @calls
+    def source.width = @size[0]
+    def source.height = @size[1]
+    def source.derive(spec)
+      @calls << spec
+      raise MediaPipeline::VipsBackend::DecodeFailed, "mid-way" if @behaviour == :derive_fails
+
+      [ "WEBP#{spec[:width]}", spec[:width], spec[:height] ]
+    end
+
     double = Object.new
     double.instance_variable_set(:@behaviour, behaviour)
-    double.instance_variable_set(:@probe, probe)
-    double.instance_variable_set(:@calls, [])
-    def double.calls = @calls
-    def double.probe(_bytes)
+    double.instance_variable_set(:@source, source)
+    def double.calls = @source.calls
+    def double.open(_bytes)
       case @behaviour
       when :decode_failed then raise MediaPipeline::VipsBackend::DecodeFailed, "bad header"
       when :too_many_pixels then raise MediaPipeline::VipsBackend::TooManyPixels, "too big"
       when :unavailable then raise MediaPipeline::VipsBackend::BackendUnavailable, "no libvips"
       end
-      MediaPipeline::VipsBackend::Probe.new(width: @probe[0], height: @probe[1])
-    end
-    def double.derive(_bytes, spec)
-      @calls << spec
-      raise MediaPipeline::VipsBackend::DecodeFailed, "mid-way" if @behaviour == :derive_fails
-
-      [ "WEBP#{spec[:width]}", spec[:width], spec[:height] ]
+      @source
     end
     double
   end

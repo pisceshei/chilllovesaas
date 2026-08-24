@@ -37,8 +37,9 @@ module MediaPipeline
 
         begin
           bytes = Storage::LocalDisk.read(file.storage_key)
-          probe = backend.probe(bytes)
-          written = write_derivatives!(file, bytes, original_checksum)
+          # 一次載入四個 variant 共用（`fail_on` 必須下在 loader，見 VipsBackend ②）
+          source = backend.open(bytes)
+          written = write_derivatives!(file, source, original_checksum)
         rescue VipsBackend::DecodeFailed, VipsBackend::TooManyPixels => e
           # 檔案本身的錯＝終態，不重試。derivatives 一併清空（審查 C9：
           # 舊的一組已作廢，留著會讓讀取面指向不存在的 blob）。
@@ -57,7 +58,7 @@ module MediaPipeline
           return Result.new(status: file.status, derivatives: file.derivatives)
         end
 
-        file.update!(status: "ready", width: probe.width, height: probe.height,
+        file.update!(status: "ready", width: source.width, height: source.height,
                      derivatives: written, processing_error: nil)
         Result.new(status: "ready", derivatives: written)
       end
@@ -80,11 +81,11 @@ module MediaPipeline
       end
 
       # 🔴 全部衍生先落磁碟（txn 外）；任一步失敗清掉本輪已寫的，不留孤兒。
-      def write_derivatives!(file, bytes, checksum)
+      def write_derivatives!(file, source, checksum)
         written = {}
         begin
           Derivatives::SPECS.each do |variant, spec|
-            derived, width, height = backend.derive(bytes, spec)
+            derived, width, height = source.derive(spec)
             key = Derivatives.key_for(file, variant, checksum:)
             Storage::LocalDisk.write(key, StringIO.new(derived))
             written[variant] = { "key" => key, "width" => width, "height" => height,
