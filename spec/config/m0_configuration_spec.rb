@@ -63,6 +63,23 @@ RSpec.describe "M0 shared configuration" do
     end
   end
 
+  it "declares the media enum keys the M1 media pipeline consumes (第 24 包 B6–B9)" do
+    limits = load_config("limits")
+    media = limits.fetch("media")
+    # MediaStatus 四態（26 包狀態機起點；schema default "ready" 矛盾由 26 包 migration 修）
+    expect(media.fetch("statuses")).to eq(%w[uploaded processing ready failed])
+    # B8：官方三值照搬＋我方預設（官方未載明預設＝ours）
+    expect(media.fetch("duplicate_resolution_modes")).to eq(%w[append_uuid raise_error replace])
+    expect(media.fetch("duplicate_resolution_mode_default")).to eq("append_uuid")
+    # B9：本批僅圖片可上傳（無轉碼器）
+    expect(media.fetch("upload_media_types_enabled")).to eq(%w[image])
+    # B7：尺寸正典鍵必須存在（引用斷鏈＝這裡紅，不是消費端上線後才 KeyError）
+    media.fetch("size_limit_source_keys").each do |ref|
+      section, key = ref.split(".")
+      expect(limits.fetch(section).fetch(key)).to be_a(Numeric)
+    end
+  end
+
   it "routes Solid Cache to its dedicated development database" do
     config = load_config("cache")
 
