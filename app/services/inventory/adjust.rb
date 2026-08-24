@@ -135,10 +135,27 @@ module Inventory
         []
       end
 
+      # `ledgerDocumentUri` 免附文件的 name 集合。
+      #
+      # 🔴 **`on_hand` 在此是我方的刻意放寬（ours），不是照抄本尊**（使用者 2026-08-24 裁定）。
+      # 本尊語義是「除 available 外全部必填」（95 §4）。我方放寬的理由有二：
+      #   ① **在我方模型裡 on_hand 不是獨立變數**——`LEAF_COLUMN` 明文把它翻譯成
+      #      `available` leaf（見本檔 §「name → levels/adjustments 的實體欄」）。
+      #      既然實際寫的是 available 這條 leaf，卻要求它附一份 available 自己不准附的文件，
+      #      規則就自相矛盾。
+      #   ② **手動盤點沒有文件可附**。庫存後台的 On hand 儲存格是商家數完架上數量後直接改的，
+      #      不存在對應的轉移單／收貨單。強制必填的結果是這個入口 100% 失敗
+      #      （實測 bt3 回 `INVALID_QUANTITY_DOCUMENT`），等於功能不存在。
+      # 其餘四個 name（reserved／damaged／safety_stock／quality_control）**維持必填**：
+      # 它們是真正獨立的 leaf，且都由單據驅動，附文件才有稽核意義。
+      LEDGER_DOCUMENT_OPTIONAL_NAMES = %w[available on_hand].freeze
+
       def validate_ledger_document(name, change, path, ledger_uris)
         uri = change[:ledger_document_uri]
         if name == "available"
           return [ error(path + [ "ledgerDocumentUri" ], I18n.t("errors.inventory.available_document_forbidden"), "INVALID_AVAILABLE_DOCUMENT") ] if uri.present?
+        elsif LEDGER_DOCUMENT_OPTIONAL_NAMES.include?(name)
+          # on_hand：帶了就照下面的 gid 檢查驗，不帶也放行（見上方裁定）
         elsif uri.blank?
           return [ error(path + [ "ledgerDocumentUri" ], I18n.t("errors.inventory.quantity_document_required"), "INVALID_QUANTITY_DOCUMENT") ]
         end

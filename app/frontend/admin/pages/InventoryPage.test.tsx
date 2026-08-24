@@ -242,6 +242,53 @@ describe("庫存列表頁", () => {
       expect(sent).toContain("gid://chilllove/Location/2");
     });
   });
+
+  it("mount 只抓一次（選取地點與資料所屬地點是兩個 state）", async () => {
+    const fetchMock = stubFetch();
+    renderAt("/admin/inventory");
+
+    await screen.findByRole("table", { name: "庫存列表" });
+    // 🔴 混成一個 state 會 "" → 抓 → 設成 L1 → 又抓；白抓那次還會蓋掉
+    // 使用者在等待期間 stage 的東西。與 InventoryCard 同一形態。
+    await waitFor(() => expect(bodiesOf(fetchMock, "query InventoryIndex").length).toBe(1));
+  });
+
+  it("🔴 換地點一律丟棄 pending：不丟會用 A 倉的 CAS 基準寫進 B 倉", async () => {
+    const fetchMock = stubFetch();
+    const user = userEvent.setup();
+    renderAt("/admin/inventory");
+
+    const table = await screen.findByRole("table", { name: "庫存列表" });
+    await user.click(within(table).getByRole("button", { name: "9" }));
+    const quantity = screen.getByRole("textbox", { name: "數量" });
+    await user.clear(quantity);
+    await user.type(quantity, "20");
+    await user.click(screen.getByRole("button", { name: "暫存調整" }));
+    await screen.findByRole("region", { name: "未儲存的變更" });
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "地點" }), "gid://chilllove/Location/2");
+
+    // 說出來（靜默丟棄同樣不誠實）
+    expect(await screen.findByText("已切換地點，未儲存的調整已捨棄。")).toBeVisible();
+    // SaveBar 消失＝pending 真的空了；且整段過程一次 mutation 都沒送出
+    await waitFor(() => expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull());
+    expect(bodiesOf(fetchMock, "mutation")).toEqual([]);
+  });
+
+  it("歷程連結帶 locationId（歷程是 (品項, 地點) 的帳）", async () => {
+    stubFetch();
+    const user = userEvent.setup();
+    const router = renderAt("/admin/inventory");
+
+    const table = await screen.findByRole("table", { name: "庫存列表" });
+    await user.click(within(table).getAllByRole("button", { name: "檢視調整記錄" })[0]);
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toContain("/history");
+      // 🔴 不帶 locationId 時後端退回 priority 序第一個地點 ⇒ 顯示別的倉庫的帳
+      expect(router.state.location.search).toContain("locationId=gid");
+    });
+  });
 });
 
 describe("調整記錄頁", () => {

@@ -201,7 +201,17 @@ module Types
       end
       return [] if level.nil?
 
-      Inventory::HistoryQuery.call(shop:, level_id: level.id, limit: (first || 50).clamp(1, 250))
+      # 🔴 頁量引 limits.yml（鐵律 6），不硬編。
+      default_page = Limits.fetch(:api, :pagination_default_page_size).to_i
+      max_page = Limits.fetch(:api, :pagination_max_page_size).to_i
+      rows = Inventory::HistoryQuery.call(
+        shop:, level_id: level.id, limit: (first || default_page).clamp(1, max_page)
+      )
+      # 一次把整頁的 staff_member_id 交給 InventoryHistoryRowType 批次查 email，
+      # 避免它逐列 SELECT（本包在列表端已用 JOIN 擋掉同一形態的 N+1）。
+      context[:inventory_history_staff_ids] = rows.filter_map(&:staff_member_id).uniq
+      context[:inventory_history_staff_emails] = nil
+      rows
     end
 
     # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。

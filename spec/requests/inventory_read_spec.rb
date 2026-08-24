@@ -182,6 +182,64 @@ RSpec.describe "Admin GraphQL inventory read surface", type: :request do
     expect(names).not_to include("別店倉")
   end
 
+  # ── 對抗式複查（2026-08-24）補的守衛 ─────────────────────────────────
+  #
+  # 🔴 這三條都是「**缺席的測試**」，不是既有測試的加強。
+  # 複查指出：整份 spec 全程以 owner 登入，`authorize_inventory!` 的**拒絕分支
+  # 零覆蓋**——把整個授權閘刪掉，原本的測試會全綠。
+
+  it "authorize_inventory!：無 inventory.view 的員工三支查詢全部被拒（拒絕分支存在）" do
+    # 非 owner 且無指派 ⇒ `can?` 回 false（見 StaffMember#can?）
+    weak = ActsAsTenant.with_tenant(shop) { create(:staff_member, shop:, owner: false) }
+    delete logout_path
+    post login_path, params: { email: weak.email, password: "long-password-123" }
+
+    [ [ LIST, {} ],
+      [ HISTORY, { item: "gid://chilllove/InventoryItem/#{item.id}" } ],
+      [ "{ locations { id } }", {} ] ].each do |query, vars|
+      post_graphql(query, variables: vars)
+      codes = response.parsed_body["errors"].to_a.map { |e| e.dig("extensions", "code") }
+      expect(codes).to include("ACCESS_DENIED"), "查詢未被拒：#{query[0, 40]}"
+    end
+  end
+
+  it "🔴 on_hand 調整免附 ledgerDocumentUri（2026-08-24 裁定的 ours 放寬）" do
+    # 本尊語義是「除 available 外全部必填」（95 §4）。我方對 on_hand 刻意放寬，
+    # 理由：on_hand 在我方模型翻譯成 available leaf，且手動盤點沒有文件可附。
+    # 放寬前這個入口 100% 失敗（實測回 INVALID_QUANTITY_DOCUMENT）。
+    result = Inventory::Adjust.call(shop:, mode: "adjust", input: {
+      idempotency_key: "onhand-nodoc", reason: "correction", name: "on_hand",
+      changes: [ { inventory_item_id: "gid://chilllove/InventoryItem/#{item.id}",
+                   location_id: "gid://chilllove/Location/#{main.id}", delta: 4 } ]
+    }, staff:)
+    expect(result.user_errors).to eq([])
+
+    # 🔴 放寬只給 on_hand：其餘 name 仍必附，否則這條測試就變成「全部放寬」的橡皮圖章
+    strict = Inventory::Adjust.call(shop:, mode: "adjust", input: {
+      idempotency_key: "damaged-nodoc", reason: "damaged", name: "damaged",
+      changes: [ { inventory_item_id: "gid://chilllove/InventoryItem/#{item.id}",
+                   location_id: "gid://chilllove/Location/#{main.id}", delta: 1 } ]
+    }, staff:)
+    expect(strict.user_errors.map { |e| e[:code] }).to eq([ "INVALID_QUANTITY_DOCUMENT" ])
+  end
+
+  it "歷程的 createdBy 批次查 email：整頁只打一次 staff_members" do
+    3.times { |i| adjust!(delta: 1, key: "batch-#{i}") }
+
+    queries = []
+    subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+      queries << payload[:sql] if payload[:sql].include?("staff_members")
+    end
+    post_graphql(HISTORY, variables: { item: "gid://chilllove/InventoryItem/#{item.id}" })
+    ActiveSupport::Notifications.unsubscribe(subscriber)
+
+    rows = response.parsed_body.dig("data", "inventoryHistory")
+    expect(rows.length).to be >= 3
+    # 正向計數：撈 email 的那一句恰好一次（不是「沒有 N+1」這種空集斷言）
+    email_selects = queries.count { |q| q.match?(/SELECT.*staff_members.*email|email.*FROM .staff_members./i) }
+    expect(email_selects).to eq(1), "staff_members email 查了 #{email_selects} 次：#{queries.inspect}"
+  end
+
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

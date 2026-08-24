@@ -32,3 +32,13 @@ export const ADJUSTMENT_REASONS_MANUAL_UI = [
  * 下拉是動詞式的短標（「已收件」），歷程是事件式的敘述（「Inventory received」）。
  */
 export const ACTIVITY_KEY_PREFIX = "inventory.activity." as const;
+
+/**
+ * 調整記錄的保留天數（顯示用）。
+ *
+ * 🔴 正典＝`config/limits.yml` 的 `inventory.adjustment_history_retention_days`
+ * （後端 `Inventory::HistoryQuery` 用它裁窗）。這裡鏡射它**只為了畫那句說明文案**——
+ * 原本 180 這個數字被寫死在五份語言包裡，改 limits 時五個檔案都不會跟著動，
+ * 而畫面會理直氣壯地寫著一個與實際窗口不符的天數。
+ */
+export const ADJUSTMENT_HISTORY_RETENTION_DAYS = 180;

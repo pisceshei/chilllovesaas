@@ -922,3 +922,26 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   fail-closed 讓客戶端顯式換新鍵，語義誠實且一行不改 Guard。
 - **影響**：group 的永久唯一索引成為庫存線的「第二層冪等」；11 §2.1 的「過期＝全新操作」
   對庫存線的實效＝「過期＝必須換鍵」。錯誤碼入 InventoryAdjustUserErrorCode（own_value）。
+
+### D45
+
+**on_hand 調整免附 `ledgerDocumentUri`（ours，2026-08-24 使用者裁定）**
+
+- **背景**：對抗式複查（第 18 包出貨後）實測發現，庫存後台的「On hand／總計」行內調整
+  **100% 失敗**——bt3 實跑回 `INVALID_QUANTITY_DOCUMENT`。成因是 `Inventory::Adjust`
+  照 `docs/research/95` §4 的本尊語義實作了「除 `available` 外 `ledgerDocumentUri` 全部必填」，
+  而手動盤點的 UI 沒有任何文件 URI 可附。
+- **裁定**：**放寬 `on_hand`**，其餘四個 name（`reserved`／`damaged`／`safety_stock`／
+  `quality_control`）維持必填。落點＝`Inventory::Adjust::LEDGER_DOCUMENT_OPTIONAL_NAMES`。
+- **理由**（兩條，缺一則這個放寬就只是便宜行事）：
+  ① **在我方模型裡 `on_hand` 不是獨立變數**——`LEAF_COLUMN` 明文把它翻譯成 `available` leaf。
+     實際寫的是 available 這條 leaf，卻要求它附一份 available 自己**不准**附的文件，
+     規則自相矛盾。
+  ② **手動盤點沒有文件**。On hand 儲存格是商家數完架上數量直接改的，
+     不存在對應的轉移單／收貨單。必填的實效是「這個入口不存在」。
+- **🔴 這是與本尊的刻意差異（ours），不是照抄**。與鐵律 4 的
+  「`code` 一律有值是我方刻意加嚴」同一性質：登記在案、寫進註釋、有測試守著
+  （`spec/requests/inventory_read_spec.rb` 同時測「on_hand 免附放行」與
+  「damaged 未附仍回 `INVALID_QUANTITY_DOCUMENT`」——後者防止放寬被擴大成橡皮圖章）。
+- **影響**：`docs/research/95` §4 的本尊語義**不改**（那是外部事實）；差異記在本條與
+  `docs/dev/m1-inventory-ui.md`。日後若本尊也放寬，本條可降級為「與本尊一致」。

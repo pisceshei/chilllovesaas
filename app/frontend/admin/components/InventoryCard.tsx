@@ -84,6 +84,7 @@ export function InventoryCard({ productId }: InventoryCardProps) {
   const t = useT();
   const { showToast } = useToast();
   const [rows, setRows] = useState<InventoryRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   // 🔴 選取地點與「目前資料屬於哪個地點」是兩件事。
   // `selection` 只在使用者**主動改選**時才有值；null＝用伺服器解析的預設地點。
@@ -98,6 +99,7 @@ export function InventoryCard({ productId }: InventoryCardProps) {
 
   useEffect(() => {
     const controller = new AbortController();
+    setError(null);
     // 🔴 頁量引鏡像常數不硬編（鐵律 6）。單一商品最多 product.max_variants=2048 個變體，
     // 超過一頁的部分本包不分頁——已記進 docs/dev/m1-inventory-ui.md 的限制段。
     void requestAdminGraphQL<CardQueryData, { first: number; productId: string; locationId: string | null }>(
@@ -111,13 +113,30 @@ export function InventoryCard({ productId }: InventoryCardProps) {
         // 資料屬於哪個地點由回應自己說（第一列的 locationId），不由前端猜
         setResolvedLocationId(selection ?? data.inventoryItems.nodes[0]?.locationId ?? data.locations[0]?.id ?? "");
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setRows([]);
+      .catch((reason: unknown) => {
+        // 🔴 失敗 ≠ 沒有庫存。原本一律 setRows([])，網路錯誤會顯示成
+        // 「此商品沒有追蹤中的庫存」——商家會以為資料真的不存在。
+        if (controller.signal.aborted) return;
+        setError(reason instanceof Error ? reason.message : t("inventory.loadError"));
       });
     return () => controller.abort();
   }, [productId, selection, requestKey]);
 
   const locationId = selection ?? resolvedLocationId;
+
+  /**
+   * 換地點：**一律先丟掉 pending**（與 A 塊 InventoryPage 同一條理由）。
+   * pending 的 `compareAgainst` 是舊地點看到的值，save 卻用當下的 locationId ⇒
+   * 用 A 倉的 CAS 基準寫進 B 倉；同值時 CAS 還會通過，靜默寫錯倉庫。
+   */
+  const changeLocation = useCallback((next: string) => {
+    setSelection(next);
+    setOpenCell(null);
+    setPending((prev) => {
+      if (prev.size > 0) showToast(t("inventory.pendingDiscardedOnLocationChange"));
+      return new Map();
+    });
+  }, [showToast, t]);
   const locationName = useMemo(
     () => locations.find((location) => location.id === locationId)?.name ?? "",
     [locations, locationId],
@@ -125,9 +144,11 @@ export function InventoryCard({ productId }: InventoryCardProps) {
 
   const save = useCallback(async () => {
     if (pending.size === 0) return;
+    // 定格這一批：儲存期間新 stage 的格子不屬於它，事後不得被一起清掉。
+    const batch = new Map(pending);
     setSaving(true);
     const failures: string[] = [];
-    for (const [key, staged] of pending) {
+    for (const [key, staged] of batch) {
       const itemId = key.split("::")[0];
       const change =
         staged.mode === "set"
@@ -145,7 +166,11 @@ export function InventoryCard({ productId }: InventoryCardProps) {
       }
     }
     setSaving(false);
-    setPending(new Map());
+    setPending((prev) => {
+      const next = new Map(prev);
+      batch.forEach((_value, key) => next.delete(key));
+      return next;
+    });
     setRequestKey((key) => key + 1);
     if (failures.length > 0) failures.forEach((message) => showToast(message));
     else showToast(t("inventory.saved"));
@@ -183,6 +208,19 @@ export function InventoryCard({ productId }: InventoryCardProps) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="cl-error-banner" role="alert">
+        <div>
+          <strong>{t("inventory.loadFailed")}</strong>
+          <p>{error}</p>
+        </div>
+        <Button onClick={() => setRequestKey((key) => key + 1)} size="small" variant="secondary">
+          {t("common.retry")}
+        </Button>
+      </div>
+    );
+  }
   if (rows === null) return <p className="cl-muted">{t("inventory.loading")}</p>;
   if (rows.length === 0) return <p className="cl-muted">{t("product.inventory.none")}</p>;
 
@@ -194,7 +232,7 @@ export function InventoryCard({ productId }: InventoryCardProps) {
           <select
             aria-label={t("inventory.location")}
             className="cl-field__input"
-            onChange={(event) => setSelection(event.currentTarget.value)}
+            onChange={(event) => changeLocation(event.currentTarget.value)}
             value={locationId}
           >
             {locations.map((location) => (
@@ -214,6 +252,7 @@ export function InventoryCard({ productId }: InventoryCardProps) {
             <th scope="col">{t("inventory.col.available")}</th>
             {/* 本尊商品頁把 on_hand 這一欄叫 Total（實測 94 §2b⑤） */}
             <th scope="col">{t("product.inventory.total")}</th>
+            <th scope="col"><span className="cl-sr-only">{t("inventory.col.history")}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -225,19 +264,29 @@ export function InventoryCard({ productId }: InventoryCardProps) {
               </th>
               <td>{cell(row, "available", row.quantities.available)}</td>
               <td>{cell(row, "on_hand", row.quantities.onHand)}</td>
+              <td>
+                {/* 🔴 逐列自己的連結：歷程是 (品項, 地點) 的帳。
+                    原本整張卡共用一顆鈕、永遠指 rows[0]，多變體商品必定指錯變體；
+                    且一定要帶 locationId，否則後端退回 priority 序第一個地點。 */}
+                <Button
+                  onClick={() =>
+                    navigate(
+                      `/admin/inventory/${encodeURIComponent(row.id)}/history` +
+                        `?locationId=${encodeURIComponent(row.locationId)}`,
+                    )
+                  }
+                  size="small"
+                  variant="ghost"
+                >
+                  {t("inventory.viewHistory")}
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
 
       <div className="cl-inventory-card__actions">
-        <Button
-          onClick={() => navigate(`/admin/inventory/${encodeURIComponent(rows[0].id)}/history`)}
-          size="small"
-          variant="ghost"
-        >
-          {t("inventory.viewHistory")}
-        </Button>
         {pending.size > 0 ? (
           <Button loading={saving} loadingLabel={t("common.saving")} onClick={() => void save()} size="small" variant="primary">
             {t("product.inventory.save")}

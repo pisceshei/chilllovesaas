@@ -115,7 +115,11 @@ export function InventoryPage() {
   const { showToast } = useToast();
   const [rows, setRows] = useState<InventoryRow[] | null>(null);
   const [locations, setLocations] = useState<LocationOption[]>([]);
-  const [locationId, setLocationId] = useState<string>("");
+  // 🔴 選取地點與「目前資料屬於哪個地點」是兩件事（與 InventoryCard 同一形態）。
+  // `selection` 只在使用者**主動改選**時才有值；null＝用伺服器解析的預設地點。
+  // 混成一個 state 會 mount 時抓兩次（"" → 抓 → 設成 L1 → 又抓）。
+  const [selection, setSelection] = useState<string | null>(null);
+  const [resolvedLocationId, setResolvedLocationId] = useState<string>("");
   const [searchValue, setSearchValue] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -135,22 +139,44 @@ export function InventoryPage() {
     setError(null);
     void requestAdminGraphQL<InventoryQueryData, { first: number; locationId: string | null; query: string | null }>(
       INVENTORY_QUERY,
-      { first: DEFAULT_PAGE_SIZE, locationId: locationId || null, query: debouncedQuery || null },
+      { first: DEFAULT_PAGE_SIZE, locationId: selection, query: debouncedQuery || null },
       controller.signal,
     )
       .then((data) => {
         setRows(data.inventoryItems.nodes);
         setLocations(data.locations);
-        if (!locationId && data.locations.length > 0) setLocationId(data.locations[0].id);
+        // 資料屬於哪個地點由回應自己說（第一列的 locationId），不由前端猜
+        setResolvedLocationId(
+          selection ?? data.inventoryItems.nodes[0]?.locationId ?? data.locations[0]?.id ?? "",
+        );
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
         setError(reason instanceof Error ? reason.message : t("inventory.loadError"));
       });
     return () => controller.abort();
-  }, [requestKey, debouncedQuery, locationId, t]);
+  }, [requestKey, debouncedQuery, selection, t]);
+
+  const locationId = selection ?? resolvedLocationId;
 
   const reload = useCallback(() => setRequestKey((key) => key + 1), []);
+
+  /**
+   * 換地點：**一律先丟掉 pending**。
+   *
+   * 🔴 不丟會寫錯倉庫：pending 的 `compareAgainst` 是「在舊地點看到的值」，
+   * 而 save 送出時帶的是**當下的** locationId ⇒ 用 A 倉的 CAS 基準寫進 B 倉。
+   * 若 B 倉恰好同值，CAS 還會通過，庫存就這樣進了錯的地點且無錯誤訊息。
+   * 靜默丟棄同樣不誠實，所以丟的時候一定出 toast。
+   */
+  const changeLocation = useCallback((next: string) => {
+    setSelection(next);
+    setOpenCell(null);
+    setPending((prev) => {
+      if (prev.size > 0) showToast(t("inventory.pendingDiscardedOnLocationChange"));
+      return new Map();
+    });
+  }, [showToast, t]);
 
   const stage = useCallback((itemId: string, staged: StagedAdjustment) => {
     setPending((prev) => new Map(prev).set(pendingKey(itemId, staged.name), staged));
@@ -164,11 +190,14 @@ export function InventoryPage() {
 
   const save = useCallback(async () => {
     if (pending.size === 0) return;
+    // 送出當下把這一批定格：儲存期間使用者還能繼續 stage 別的格子，
+    // 那些**不屬於這一批**，事後不得被一起清掉（否則輸入無聲消失還報「已儲存」）。
+    const batch = new Map(pending);
     setSaving(true);
     const failures: string[] = [];
     // 逐筆送：一次呼叫＝一把冪等鍵＝一筆 group（後端契約），不合併成一次多 change——
     // 合併會讓其中一格 stale 時整批被拒，商家看不出是哪一格。
-    for (const [key, staged] of pending) {
+    for (const [key, staged] of batch) {
       const itemId = key.split("::")[0];
       const base = {
         reason: staged.reason,
@@ -201,7 +230,11 @@ export function InventoryPage() {
       }
     }
     setSaving(false);
-    setPending(new Map());
+    setPending((prev) => {
+      const next = new Map(prev);
+      batch.forEach((_value, key) => next.delete(key));
+      return next;
+    });
     // 🔴 一律重載：CAS 判定在伺服器，前端的 projected 只是預覽——重載才是真相。
     reload();
     if (failures.length > 0) {
@@ -325,7 +358,14 @@ export function InventoryPage() {
         header: t("inventory.col.history"),
         render: (row) => (
           <Button
-            onClick={() => navigate(`/admin/inventory/${encodeURIComponent(row.id)}/history`)}
+            // 🔴 一定要帶 locationId：歷程是 (品項, 地點) 的帳，
+            // 不帶的話後端退回 priority 序第一個地點，商家看到的是別的倉庫的歷程。
+            onClick={() =>
+              navigate(
+                `/admin/inventory/${encodeURIComponent(row.id)}/history` +
+                  `?locationId=${encodeURIComponent(row.locationId)}`,
+              )
+            }
             size="small"
             variant="ghost"
           >
@@ -407,7 +447,7 @@ export function InventoryPage() {
               <span className="cl-sr-only">{t("inventory.location")}</span>
               <select
                 aria-label={t("inventory.location")}
-                onChange={(event) => setLocationId(event.currentTarget.value)}
+                onChange={(event) => changeLocation(event.currentTarget.value)}
                 value={locationId}
               >
                 {locations.map((location) => (

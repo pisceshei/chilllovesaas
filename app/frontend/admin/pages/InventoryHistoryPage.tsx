@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ClipboardList, RefreshCw } from "lucide-react";
 import { requestAdminGraphQL } from "../api/graphql";
 import { Button } from "../components/Button";
@@ -9,7 +9,7 @@ import { IndexTable } from "../components/IndexTable";
 import type { IndexTableColumn } from "../components/IndexTable";
 import { Page } from "../components/Page";
 import { useT } from "../i18n/I18nContext";
-import { ACTIVITY_KEY_PREFIX } from "../lib/inventoryLimits";
+import { ACTIVITY_KEY_PREFIX, ADJUSTMENT_HISTORY_RETENTION_DAYS } from "../lib/inventoryLimits";
 
 /**
  * 調整記錄頁 `/admin/inventory/:itemId/history`（排程第 18 包 C 塊）。
@@ -47,8 +47,8 @@ interface HistoryQueryData {
 }
 
 const HISTORY_QUERY = `
-  query InventoryHistory($itemId: ID!) {
-    inventoryHistory(inventoryItemId: $itemId) {
+  query InventoryHistory($itemId: ID!, $locationId: ID) {
+    inventoryHistory(inventoryItemId: $itemId, locationId: $locationId) {
       id
       createdAt
       reason
@@ -67,19 +67,24 @@ const QUANTITY_COLUMNS = [ "unavailable", "committed", "available", "on_hand" ] 
 export function InventoryHistoryPage() {
   const navigate = useNavigate();
   const params = useParams<{ itemId: string }>();
+  // 🔴 歷程是 (品項, **地點**) 的帳，不是品項的帳。
+  // 不帶 locationId 時後端退回 priority 序第一個地點——單一地點的店看不出來，
+  // 多地點的店會看到「別的倉庫」的歷程，而且畫面上沒有任何線索說它換了地點。
+  const [searchParams] = useSearchParams();
   const t = useT();
   const [rows, setRows] = useState<HistoryRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
 
   const itemId = decodeURIComponent(params.itemId ?? "");
+  const locationId = searchParams.get("locationId");
 
   useEffect(() => {
     const controller = new AbortController();
     setError(null);
-    void requestAdminGraphQL<HistoryQueryData, { itemId: string }>(
+    void requestAdminGraphQL<HistoryQueryData, { itemId: string; locationId: string | null }>(
       HISTORY_QUERY,
-      { itemId },
+      { itemId, locationId },
       controller.signal,
     )
       .then((data) => setRows(data.inventoryHistory))
@@ -88,7 +93,7 @@ export function InventoryHistoryPage() {
         setError(reason instanceof Error ? reason.message : t("inventory.history.loadError"));
       });
     return () => controller.abort();
-  }, [itemId, requestKey, t]);
+  }, [itemId, locationId, requestKey, t]);
 
   // Incoming 條件性欄：整份歷程都沒有 incoming 變動就不顯示（實測 7 欄的成因）。
   const showIncoming = useMemo(
@@ -195,7 +200,7 @@ export function InventoryHistoryPage() {
         </Card>
       ) : (
         <Card>
-          <p className="cl-history-note">{t("inventory.history.retentionNote")}</p>
+          <p className="cl-history-note">{t("inventory.history.retentionNote", { days: ADJUSTMENT_HISTORY_RETENTION_DAYS })}</p>
           <IndexTable
             caption={t("inventory.history.caption")}
             columns={columns}

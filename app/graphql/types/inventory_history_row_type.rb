@@ -29,10 +29,14 @@ module Types
     # 🔴 我方 `staff_members` **沒有 name 欄**（只有 email），所以顯示的是 email；
     #    要顯示姓名得先加欄，屬 M5 RBAC 展開時一併做（本包登記不做）。
     #    該表依鐵律 2 白名單不帶 shop_id，故查詢無需 tenant 包裹。
+    # 🔴 一次查完整頁的 email，不逐列查。
+    # 逐列 `pick(:email)` 在滿頁時是 N 次額外 SELECT——本包才剛在列表端用
+    # 一個 JOIN 把 N+1 擋掉（`Inventory::ItemsQuery`），歷程端不該自己再開一個。
+    # 用 `context` 當請求級快取：同一次 GraphQL 執行只查一次 staff_members。
     def created_by
       staff_id = object.staff_member_id
       if staff_id
-        email = StaffMember.where(id: staff_id).pick(:email)
+        email = staff_emails[staff_id]
         return email if email.present?
       end
       object.client_source
@@ -44,6 +48,20 @@ module Types
         next if delta.zero?
 
         { name:, delta:, after: object.after.fetch(name) }
+      end
+    end
+
+    private
+
+    # 該次請求所有歷程列的 staff_member_id → email。
+    # 🔴 `private` 一定要在所有 **GraphQL field 解析方法之後**——
+    # 放在 `changes` 之前會讓 graphql-ruby 找不到它（"which did not exist"），
+    # 整個 changes 欄位在執行期炸掉。這次就是這樣紅了三條 spec。
+    # `staff_members` 依鐵律 2 白名單不帶 shop_id，故查詢無需 tenant 包裹。
+    def staff_emails
+      context[:inventory_history_staff_emails] ||= begin
+        ids = Array(context[:inventory_history_staff_ids]).compact.uniq
+        ids.empty? ? {} : StaffMember.where(id: ids).pluck(:id, :email).to_h
       end
     end
   end

@@ -372,7 +372,7 @@
   "inventory.history.col.date": "Date",
   "inventory.history.col.activity": "Activité",
   "inventory.history.col.createdBy": "Créé par",
-  "inventory.history.retentionNote": "Affichage des 180 derniers jours.",
+  "inventory.history.retentionNote": "Affichage des {days} derniers jours uniquement.",
   "inventory.history.empty.title": "Aucun ajustement",
   "inventory.history.empty.description": "Les ajustements apparaîtront ici après une modification du stock.",
   "inventory.empty.action": "Ajouter un produit",
@@ -380,5 +380,6 @@
   "product.inventory.caption": "Stock par variante",
   "product.inventory.variant": "Variante",
   "product.inventory.total": "Total",
-  "product.inventory.save": "Enregistrer le stock"
+  "product.inventory.save": "Enregistrer le stock",
+  "inventory.pendingDiscardedOnLocationChange": "Les ajustements non enregistrés ont été abandonnés suite au changement d'emplacement."
 }

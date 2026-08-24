@@ -372,7 +372,7 @@
   "inventory.history.col.date": "日付",
   "inventory.history.col.activity": "アクティビティ",
   "inventory.history.col.createdBy": "作成者",
-  "inventory.history.retentionNote": "直近 180 日間のみ表示します。",
+  "inventory.history.retentionNote": "直近 {days} 日間のみ表示しています。",
   "inventory.history.empty.title": "調整履歴がありません",
   "inventory.history.empty.description": "在庫を調整すると、ここに履歴が表示されます。",
   "inventory.empty.action": "商品を追加",
@@ -380,5 +380,6 @@
   "product.inventory.caption": "バリエーション別在庫",
   "product.inventory.variant": "バリエーション",
   "product.inventory.total": "合計",
-  "product.inventory.save": "在庫を保存"
+  "product.inventory.save": "在庫を保存",
+  "inventory.pendingDiscardedOnLocationChange": "ロケーションを変更したため、未保存の調整を破棄しました。"
 }

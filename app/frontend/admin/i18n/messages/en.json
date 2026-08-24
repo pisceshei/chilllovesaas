@@ -372,7 +372,7 @@
   "inventory.history.col.date": "Date",
   "inventory.history.col.activity": "Activity",
   "inventory.history.col.createdBy": "Created by",
-  "inventory.history.retentionNote": "Showing the last 180 days.",
+  "inventory.history.retentionNote": "Showing the last {days} days only.",
   "inventory.history.empty.title": "No adjustments yet",
   "inventory.history.empty.description": "Adjustments appear here once inventory changes.",
   "inventory.empty.action": "Add product",
@@ -380,5 +380,6 @@
   "product.inventory.caption": "Inventory by variant",
   "product.inventory.variant": "Variant",
   "product.inventory.total": "Total",
-  "product.inventory.save": "Save inventory"
+  "product.inventory.save": "Save inventory",
+  "inventory.pendingDiscardedOnLocationChange": "Unsaved adjustments were discarded because the location changed."
 }
