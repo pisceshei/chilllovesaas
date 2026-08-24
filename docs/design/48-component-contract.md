@@ -5370,10 +5370,11 @@ cl-srccard                           框 --hairline --border-2；圓角 --r-300�
 
 ### 36.7 實作備註
 
-- **求值優先序**（`collection.source_precedence`）：`exclude ＞ manual include ＞ conditions`。第 2 層是**官方明載**（手動加入的除非手動移除否則永遠留著）；**第 1 層是我方假設**（官方未定義交互次序），選它的理由是失效方向正確——排除多半出於下架／法遵／地區限制。做成一個 limits 鍵是刻意的：官方日後澄清為別的順序時，改的是那一個鍵 ＋ 求值器排序，**不動資料模型**。
+- 🔴 **2026-08-24：本條已作廢**（`docs/research/95` §1）——官方明文「evaluated per source and reconciled」⇒ 求值是 **per-source 相減**（`最終集 = ⋃ₛ(inclusion(s) − exclusion(s))`），沒有全域優先序；`collection.source_precedence` 這個鍵已從 `limits.yml` 移除，V-57 撤銷。以下原文保留供對照，**不得據以實作**：
+- ~~**求值優先序**（`collection.source_precedence`）~~：`exclude ＞ manual include ＞ conditions`。第 2 層是**官方明載**（手動加入的除非手動移除否則永遠留著）；**第 1 層是我方假設**（官方未定義交互次序），選它的理由是失效方向正確——排除多半出於下架／法遵／地區限制。做成一個 limits 鍵是刻意的：官方日後澄清為別的順序時，改的是那一個鍵 ＋ 求值器排序，**不動資料模型**。
 - **origin 由來源型別決定，不是由選法決定**：巢狀系列來源的選法也是 manual，照選法判會把整批巢狀成員標成「手動加入」，商家就看不出它其實來自另一個系列。
 - **只有 SQL 一套求值**：同一條件若在 rebuild 時用 Ruby 求值、在前台用 SQL 求值，兩套實作必然漂移。rebuild 也走 `INSERT ... SELECT`。
-- **上限一律引 `config/limits.yml`**：`max_rules_per_collection`／`max_containing_collection_per_shop`／`max_excluding_collection_per_shop`／`max_with_variants_per_shop`／`max_smart_collections_per_shop`／`source_nesting_max_depth`（後者官方未載明，我方推導）。
+- **上限一律引 `config/limits.yml`**：`max_rules_per_collection`／`max_containing_collection_per_shop`／`max_excluding_collection_per_shop`／`max_with_variants_per_shop`／`max_smart_collections_per_shop`／`source_nesting_max_depth`（🔴 **已改為 1 且為官方明載**，見 `docs/research/95` §1.1；原註「官方未載明、我方推導 5」已作廢）。
 - **class 名對照**：`src-card→cl-srccard`、`src-head→cl-srccard__head`、`sh-t→cl-srccard__type`、`sh-x→cl-srccard__remove`、`src-mem→cl-srccard__members`、`sm→cl-srccard__chip`、`rule→cl-rule`。
 
 ---
