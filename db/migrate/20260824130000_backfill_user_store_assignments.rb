@@ -29,16 +29,30 @@ class BackfillUserStoreAssignments < ActiveRecord::Migration[8.1]
     end
 
     shop_id = shop_ids.first
-    inserted = execute(<<~SQL.squish)
-      INSERT INTO user_store_assignments (staff_member_id, shop_id, created_at, updated_at)
-      SELECT sm.id, #{shop_id.to_i}, NOW(6), NOW(6)
-      FROM staff_members sm
-      WHERE NOT EXISTS (
-        SELECT 1 FROM user_store_assignments usa
-        WHERE usa.staff_member_id = sm.id AND usa.shop_id = #{shop_id.to_i}
-      )
-    SQL
-    say "已為 shop##{shop_id} 補上既有 staff 的指派（#{inserted&.affected_rows} 列）。"
+
+    # 🔴 `safety_assured` 是必要的，不是繞過檢查：strong_migrations 明說它
+    # **無法檢視 `execute` 裡面發生什麼事**，所以一律擋下、要求作者自己保證。
+    # 這裡保證的內容：對 `user_store_assignments`（小表）做一次
+    # `INSERT ... SELECT`，不改結構、不鎖既有寫入路徑、且帶 `NOT EXISTS` 冪等。
+    #
+    # 🔴 這一行是 2026-08-24 上線失敗補的。當時 CI 與本地都綠，
+    # 因為**它們的資料庫沒有任何 shop**，於是走的是上面 `shop_ids.length != 1`
+    # 的早退分支，`execute` 根本沒被執行到。正式站有一間店才第一次走到這裡。
+    # ⇒ 教訓：**只在特定資料狀態下才執行的 migration 分支，CI 不會替你驗**。
+    before = select_value("SELECT COUNT(*) FROM user_store_assignments").to_i
+    safety_assured do
+      execute(<<~SQL.squish)
+        INSERT INTO user_store_assignments (staff_member_id, shop_id, created_at, updated_at)
+        SELECT sm.id, #{shop_id.to_i}, NOW(6), NOW(6)
+        FROM staff_members sm
+        WHERE NOT EXISTS (
+          SELECT 1 FROM user_store_assignments usa
+          WHERE usa.staff_member_id = sm.id AND usa.shop_id = #{shop_id.to_i}
+        )
+      SQL
+    end
+    after = select_value("SELECT COUNT(*) FROM user_store_assignments").to_i
+    say "已為 shop##{shop_id} 補上既有 staff 的指派（新增 #{after - before} 列，總計 #{after}）。"
   end
 
   def down
