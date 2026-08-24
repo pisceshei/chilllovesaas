@@ -77,7 +77,7 @@
      │ product_tags / metafields / product_publications                 │
      │ 物化欄：min_price_cents / max_price_cents / available_for_sale   │
      │ collections.products_updated_at（14 §F1 坑：不用 touch 連鎖）     │
-     │ events_outbox ×N（與業務同交易，這是「事件必達」的唯一保證）      │
+     │ event_outbox ×N（與業務同交易，這是「事件必達」的唯一保證）      │
      └────────────────────────────────────────────────────────────────┘
   ⑥ 回應（含 extensions.cost）
         │
@@ -123,9 +123,9 @@
 |---|---|---|
 | products / options / option_values / variants（diff）/ inventory_items / tags / metafields / publications | **媒體二進位上傳**：`stagedUploadsCreate` 取簽名 URL → 瀏覽器**直傳** S3/R2 → `fileCreate` 只寫「指向已存在 blob 的一列」（13 §F3-1） | 衍生尺寸生成、EXIF strip、webp 轉檔（13 §F3-3） |
 | 物化欄（§D.2）與 `collections.products_updated_at` | 權限檢查、限流扣點 | 銷售管道發布、feed 推送、IndexNow ping、webhook 投遞、通知信 |
-| `events_outbox` 插入 | — | smart collection 重算、搜尋索引 |
+| `event_outbox` 插入 | — | smart collection 重算、搜尋索引 |
 
-**為什麼一定要 outbox，不能直接 `perform_later`**〔ours〕：Rails 8 的 Solid Queue 預設使用**獨立的 `queue` database**（D1：Solid Queue/Cache，不用 Redis）。跨資料庫的 `perform_later` **不具事務性**——商品寫入 rollback 了、job 卻已入列（或反之：commit 了、入列失敗）。`events_outbox` 與業務表在**同一個 primary DB**，同交易插入才是「事件必達」的唯一保證（18 §F1-1）。
+**為什麼一定要 outbox，不能直接 `perform_later`**〔ours〕：Rails 8 的 Solid Queue 預設使用**獨立的 `queue` database**（D1：Solid Queue/Cache，不用 Redis）。跨資料庫的 `perform_later` **不具事務性**——商品寫入 rollback 了、job 卻已入列（或反之：commit 了、入列失敗）。`event_outbox` 與業務表在**同一個 primary DB**，同交易插入才是「事件必達」的唯一保證（18 §F1-1）。
 > 這條推理若 Solid Queue 被設定成與 primary 同庫則不成立，但**規格仍要求走 outbox**：同庫只是讓錯誤寫法「碰巧沒事」，架構不能建立在部署配置上。
 
 **CDN purge 絕不進 transaction**：它是 HTTP 呼叫，且我方根本不做 delete-based 失效（§D.4）。
@@ -376,6 +376,8 @@ mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
 
 ## C. 事件與 outbox
 
+<!-- 🔴 2026-08-24 更正（第 19 包執行規格 §4.0）：本章原寫表名 `events_outbox`（5 處），實物為 `event_outbox`（單數），已全數改正。表名以實物為準。 -->
+
 ### C.1 兩層事件：對外 webhook（粗粒度）／內部 outbox（細粒度）
 
 **Shopify 沒有 `product_variants/update` 這個對外 topic**——變體變更透過 `products/update` 攜帶完整商品 payload 傳遞。28 §15 的首發 24 個 topic 照此，**本篇不改**。
@@ -389,7 +391,7 @@ mutation productSet($input: ProductSetInput!, $idempotencyKey: String) {
 | 對外 | `products/create`、`products/update`、`products/delete`、`collections/*`、`inventory_levels/update` | 第三方 app、feed 消費者 | ✅（`webhookSubscriptionCreate`） |
 | 內部 | `product.updated`、`product.variant.updated`、`product.publication.changed`、`inventory.level.changed`、`inventory.adjusted` | 快取 stamp、搜尋索引、smart collection、發布同步、feed 增量 | ❌ **不出現在可訂閱列表** |
 
-一次 `productSet` 產生：1 筆 `product.updated`（帶 `changed_fields`）＋ 0..N 筆 `product.variant.updated`（每個實際變動的變體一筆）＋ 1 筆對外 `products/update`。全部在同一個 transaction 內插入 `events_outbox`。
+一次 `productSet` 產生：1 筆 `product.updated`（帶 `changed_fields`）＋ 0..N 筆 `product.variant.updated`（每個實際變動的變體一筆）＋ 1 筆對外 `products/update`。全部在同一個 transaction 內插入 `event_outbox`。
 
 ### C.2 三個事件的 payload
 
@@ -476,7 +478,7 @@ payload 規範沿用 18 §F1-4：**只帶 ID 與必要摘要，消費時再查�
 
 ### C.6 庫存事件的合併窗
 
-庫存變動頻率比商品資料高兩個數量級（每筆訂單 N 個 line item × M 個地點）。不處理的話 `events_outbox` 會被庫存事件淹沒。
+庫存變動頻率比商品資料高兩個數量級（每筆訂單 N 個 line item × M 個地點）。不處理的話 `event_outbox` 會被庫存事件淹沒。
 
 **合併規則**〔ours〕：
 
@@ -1213,7 +1215,7 @@ F 平台      platform_product_access(rollup_only) / platform_rollup_staleness_w
 | **L-1** | SKU 唯一性 | 11 §2-1 舉例「SKU per shop 用唯一索引兜底」 | **該例子錯了**：官方是軟唯一（警告不阻擋，61 §1.5／help P10）。DB 用一般索引，重複時回 `warnings`（§B.6） | 11 §2-1 換一個例子（handle 與折扣碼仍是好例子，SKU 不是） |
 | **L-2** | `platform_daily_rollups` 的形狀矛盾 | 36 §3 定義為**無 shop_id、唯一鍵 (date)**；39:2225 卻 join 它並讀 `gmv_30d_cents`（需要每店一列，且該欄不在 36 的欄位表） | 兩張表：`platform_daily_rollups`（平台日總計，豁免表）＋ `platform_shop_daily_rollups`（**帶 shop_id**，不需豁免） | 36 §3 與 39 §2225 二選一改，並更新 `config/tenancy_exempt_tables.yml` |
 | ~~**L-3**~~ | ~~`CONFLICT` 錯誤碼的分類~~ | 28 §8 把 `CONFLICT` 歸為「折扣專屬」 | ✅ **2026-08-15 以相反方向結案**：本尊的 `CONFLICT` 只存在於 `DiscountErrorCode`、語義是折扣屬性互斥的**輸入驗證**，與樂觀鎖無關 ⇒ **28 §8 是對的，改的是本篇**。樂觀鎖用 `STALE_OBJECT`、庫存 CAS 用 `CHANGE_FROM_QUANTITY_STALE`，兩者進本輪新開的 `ConcurrencyCode` 池（28 §6 的 20 個泛用碼全是欄位級輸入驗證，結構上容不下併發語義）。 | 本篇 §A.4／§E.5／驗收清單皆已改 |
-| **L-4** | outbox 的投遞狀態粒度 | 18 §F1-2「逐筆路由給訂閱者 → 成功標 done」——單一 `status` 欄位 | 需要**逐消費者**的投遞狀態表，否則一個消費者失敗會連累其他消費者重放（§C.4） | 18 §F1（加 `event_deliveries` 表） |
+| **L-4** | outbox 的投遞狀態粒度 | 18 §F1-2「逐筆路由給訂閱者 → 成功標 done」——單一 `status` 欄位 | 需要**逐消費者**的投遞狀態表，否則一個消費者失敗會連累其他消費者重放（§C.4）。🔴 **門檻（2026-08-24 第 19 包執行規格 §4.3 寫死）：第一個掛真實多消費者的包，開工前置＝先建 `event_deliveries`**——第 19 包只做零消費者的 relay 骨架，單一 status 欄在該射程內自洽 | 18 §F1（加 `event_deliveries` 表） |
 | **L-5** | 匯率的儲存型別 | 29 §1.4 `currency_exchange_rates(base/quote/**rate**/fetched_at)` 未指定型別 | `rate_ppm BIGINT`（鐵律 3：float 即 bug） | 29 §1.4 |
 | **L-6** | 零小數貨幣的顯示 | 29 §3.3「零小數貨幣顯示與收款一律整數；money filter 格式化**不得出現小數**」 | 被 2026-08-12 裁定二覆蓋：**顯示一律兩位小數**（`limits.currency_display`）。但 29 §3.3 講的「**收款**」那一半仍然成立且更重要（§G.4） | 29 §3.3 拆成「顯示（已被覆蓋）」與「收款（仍有效）」兩句 |
 | **L-7** | ~~13 §F5.1 的 zh-TW 用詞~~ | ~~統一為 60 §4 庫存頁那套~~ | 🔴 **本篇撤回此項**：61 §3.2 指出 13 §F5.1 現用的 help 官方譯名才是穩的錨，照 60 §4 建議改是回退。**13 §F5.1 不動**，取捨交 V-52 | — |
