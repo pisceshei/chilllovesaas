@@ -17,7 +17,7 @@
 
 | 條件型別（snake_case） | relation | 值欄 | SQL 形態 |
 |---|---|---|---|
-| product_title／product_type／product_vendor | eq／not_eq／starts_with／ends_with／contains／not_contains | value_text | products 欄位直比；contains＝LIKE（`sanitize_sql_like` 跳脫 `%`／`_`；值 ≥3 字元） |
+| product_title／product_type／product_vendor | eq／not_eq／starts_with／ends_with／contains／not_contains | value_text | products 欄位直比；contains＝LIKE（`sanitize_sql_like` 跳脫 `%`／`_`；值 ≥3 字元）；🔴 **not_eq／not_contains 帶 `OR IS NULL`**（2026-08-26 審查 F1：可空欄的三值邏輯把未設定商品靜默剔除，而 tag 的 does_not_include 卻納入無標籤商品——空值語義統一為「未設定＝不是那個值」） |
 | variant_title | 同上 | value_text | EXISTS 變體 |
 | product_tag | includes／does_not_include | value_text（比對用 `Tags::Normalize.key`） | `tag_key` 等值 EXISTS——🔴 **禁 LIKE**（`red` 誤中 `red-new`）；多條件各自 EXISTS，🔴 **禁併 IN**（IN＝OR） |
 | product_status | eq／not_eq | value_text（四態） | p.status 直比 |
@@ -61,8 +61,13 @@ unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 �
 - **求值公式**＝`⋃ₛ ( inclusion(s) − exclusion(s) )`（per-source 相減；
   `membership_formula`）。13 §F4.2 的三條必測全在 `engine_spec.rb`，含關鍵的
   「A 排除 X＋B 包含 X ⇒ X 仍在」。
-- `Rebuild`：世代戳＋id 批（`rebuild_batch_size`）＋逐批短 txn（`Collection.lock`）＋
-  `INSERT…SELECT…ON DUPLICATE KEY UPDATE rebuilt_at`＋世代掃尾。
+- `Rebuild`：🔴 **整場先拿 advisory lock**（`GET_LOCK('chilllove:rebuild:<shop>:<collection>')`，
+  等待預算 `rebuild_lock_wait_seconds`；2026-08-26 審查 F2——逐批列鎖不序列化整場，
+  兩場同系列 rebuild 交錯時小世代覆蓋現任列＋大世代掃尾＝**整組成員被清空**，
+  gated-threads 實跑重現）；等不到＝讓位，`RebuildJob` 延後重排（`rebuild_lock_requeue_delay_seconds`）。
+  之後：世代戳＋id 批（`rebuild_batch_size`）＋逐批短 txn（`Collection.lock`）＋
+  `INSERT…SELECT…ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(rebuilt_at, 世代)`
+  （單調帶——即使鎖被繞過，舊世代也降不了現任列的戳）＋世代掃尾。
   🔴 變更判定＝`created_at >= generation`（新列）＋swept>0——**不是** affected_rows
   （ON DUPLICATE 對既有列每輪記 2 ⇒ 拿它判會讓零變更的 rebuild 白打快取，初版實測踩到）。
   編不了（unknown／unsupported）⇒ 整系列 ERROR、零寫入。

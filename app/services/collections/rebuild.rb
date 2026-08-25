@@ -29,8 +29,23 @@ module Collections
   #   同一列再寫 rules ⇒ rebuild 讀到的規則必然是最新已提交版（REPEATABLE READ 快照
   #   陷阱的解法同 `handle_change.rb:71-73`：鎖定讀讀最新已提交版本）。
   #   resync 與 rebuild 交錯無害：兩者都在鎖下對同一份最新規則求值、都以收斂為語義。
+  #
+  # ⑤🔴 **rebuild 對 rebuild 必須整程序列化**（2026-08-26 審查 F2，gated-threads 實跑重現）：
+  #   逐批列鎖只序列化「單一批」，**不序列化整場 rebuild**——兩場同系列 rebuild 交錯時，
+  #   晚開場但先拿到批鎖的一方會用**較小的世代戳**蓋掉現任列（初版 ON DUPLICATE 無條件
+  #   `rebuilt_at = 世代`），另一方的掃尾（`rebuilt_at < 世代`）接著把這些**本該留下**的列
+  #   全刪——重現輸出＝BASELINE members=[1282]／FINAL members=[]，兩場都回報 OK。
+  #   防線兩道：
+  #   a) **MySQL advisory lock**（`GET_LOCK('chilllove:rebuild:<shop>:<collection>')`）鎖住
+  #      整場 rebuild（含 sources 讀取與編譯——晚到者必見最新已提交規則），等待預算
+  #      `limits.collection.rebuild_lock_wait_seconds`；等不到＝讓位（RebuildJob 延後重排，
+  #      不靜默丟——跑者可能在本 job 的規則版本之前編譯）。連線死掉鎖自動釋放（MySQL 語義）。
+  #   b) **世代戳單調帶**：upsert 改 `GREATEST(rebuilt_at, ?)`——即使 a) 被繞過（新呼叫點
+  #      不走本服務之類），舊世代也**降不了**現任列的戳，掃尾就刪不掉它們。
   class Rebuild
     Result = Data.define(:status, :inserted, :swept, :error)
+    # 檔頭⑤a 的讓位訊號（RebuildJob 據此延後重排，不靜默丟）。
+    LOCK_TIMEOUT_ERROR = "rebuild lock wait timeout"
 
     class << self
       # @param shop [Shop]
@@ -39,51 +54,9 @@ module Collections
       # @note 副作用：寫 memberships／collections.rebuild_status／cache stamp／outbox。
       def call(shop:, collection:)
         ActsAsTenant.with_tenant(shop) do
-          sources = CollectionSource.where(shop_id: shop.id, collection_id: collection.id)
-                                    .conditions_type.includes(:rules).order(:position).to_a
-          return Result.new(status: :skipped, inserted: 0, swept: 0, error: nil) if sources.empty?
-
-          # ③-1：全部先編譯，編不了就 ERROR、零寫入。
-          compiled = compile_all!(shop, collection, sources)
-          return compiled if compiled.is_a?(Result)
-
-          generation = Time.current
-          batch_size = Limits.fetch(:collection, :rebuild_batch_size)
-          Product.where(shop_id: shop.id).in_batches(of: batch_size) do |batch|
-            ids = batch.ids
-            next if ids.empty?
-
-            Collection.transaction do
-              Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
-              compiled.each do |source, where_sql|
-                next if where_sql.nil?   # 空 inclusion＝該來源貢獻空集合
-
-                upsert_batch(shop, collection, source, where_sql, ids, generation)
-              end
-            end
+          with_rebuild_lock(shop, collection) do
+            rebuild!(shop, collection)
           end
-
-          swept = 0
-          inserted = 0
-          Collection.transaction do
-            Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
-            # 🔴 「有沒有變」不能看 affected_rows：`ON DUPLICATE KEY UPDATE rebuilt_at`
-            #   對既有列**每輪都**改世代戳（MySQL 記 affected=2）⇒ 拿它當變更訊號，
-            #   內容沒變的 rebuild 也會白白打掉快取＋發事件（初版 smoke 實測抓到）。
-            #   新列的判準＝`created_at >= generation`——ON DUPLICATE 不動 created_at，
-            #   只有真 INSERT 會設，構造上精確。
-            inserted = CollectionMembership
-                       .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
-                       .where(created_at: generation..).count
-            swept = CollectionMembership
-                    .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
-                    .where(rebuilt_at: ...generation).delete_all
-            collection.update_columns(rebuild_status: "OK", rebuilt_at: generation,
-                                      updated_at: Time.current)
-          end
-
-          notify_members_changed!(shop, collection) if inserted.positive? || swept.positive?
-          Result.new(status: :ok, inserted:, swept:, error: nil)
         end
       end
 
@@ -104,6 +77,78 @@ module Collections
       end
 
       private
+
+      # 檔頭⑤a：整場 rebuild 的 advisory lock；等不到＝讓位（LOCK_TIMEOUT_ERROR）。
+      def with_rebuild_lock(shop, collection)
+        # 檔頭⑤a：advisory lock 綁「這條連線」——同執行緒後續語句同連線（Rails 連線池
+        # per-thread checkout），構造上成立。鎖名 <64 字元（MySQL 上限）。
+        lock_name = "chilllove:rebuild:#{shop.id}:#{collection.id}"
+        wait = Limits.fetch(:collection, :rebuild_lock_wait_seconds)
+        got = ActiveRecord::Base.connection.select_value(
+          ActiveRecord::Base.sanitize_sql_array([ "SELECT GET_LOCK(?, ?)", lock_name, wait ])
+        ).to_i
+        unless got == 1
+          Rails.logger.warn({ event: "collection_rebuild_lock_timeout", shop_id: shop.id,
+                              collection_id: collection.id, wait_seconds: wait }.to_json)
+          return Result.new(status: :skipped, inserted: 0, swept: 0, error: LOCK_TIMEOUT_ERROR)
+        end
+
+        begin
+          yield
+        ensure
+          ActiveRecord::Base.connection.execute(
+            ActiveRecord::Base.sanitize_sql_array([ "SELECT RELEASE_LOCK(?)", lock_name ])
+          )
+        end
+      end
+
+      def rebuild!(shop, collection)
+        sources = CollectionSource.where(shop_id: shop.id, collection_id: collection.id)
+                                  .conditions_type.includes(:rules).order(:position).to_a
+        return Result.new(status: :skipped, inserted: 0, swept: 0, error: nil) if sources.empty?
+
+        # ③-1：全部先編譯，編不了就 ERROR、零寫入。
+        compiled = compile_all!(shop, collection, sources)
+        return compiled if compiled.is_a?(Result)
+
+        generation = Time.current
+        batch_size = Limits.fetch(:collection, :rebuild_batch_size)
+        Product.where(shop_id: shop.id).in_batches(of: batch_size) do |batch|
+          ids = batch.ids
+          next if ids.empty?
+
+          Collection.transaction do
+            Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
+            compiled.each do |source, where_sql|
+              next if where_sql.nil?   # 空 inclusion＝該來源貢獻空集合
+
+              upsert_batch(shop, collection, source, where_sql, ids, generation)
+            end
+          end
+        end
+
+        swept = 0
+        inserted = 0
+        Collection.transaction do
+          Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
+          # 🔴 「有沒有變」不能看 affected_rows：`ON DUPLICATE KEY UPDATE rebuilt_at`
+          #   對既有列**每輪都**改世代戳（MySQL 記 affected=2）⇒ 拿它當變更訊號，
+          #   內容沒變的 rebuild 也會白白打掉快取＋發事件（初版 smoke 實測抓到）。
+          #   新列的判準＝`created_at >= generation`——ON DUPLICATE 不動 created_at，
+          #   只有真 INSERT 會設，構造上精確。
+          inserted = CollectionMembership
+                     .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
+                     .where(created_at: generation..).count
+          swept = CollectionMembership
+                  .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
+                  .where(rebuilt_at: ...generation).delete_all
+          collection.update_columns(rebuild_status: "OK", rebuilt_at: generation,
+                                    updated_at: Time.current)
+        end
+
+        notify_members_changed!(shop, collection) if inserted.positive? || swept.positive?
+        Result.new(status: :ok, inserted:, swept:, error: nil)
+      end
 
       # @return [Array<[CollectionSource, String|nil]>] 或 ERROR Result
       def compile_all!(shop, collection, sources)
@@ -144,7 +189,7 @@ module Collections
           SELECT ?, ?, p.id, NULL, 'conditions', ?, 0, ?, ?, ?
           FROM products p
           WHERE p.shop_id = ? AND p.id IN (#{id_list}) AND (#{where_sql})
-          ON DUPLICATE KEY UPDATE rebuilt_at = ?
+          ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(rebuilt_at, ?)
         SQL
         ActiveRecord::Base.connection.execute(sql)
         nil   # affected_rows 對 ON DUPLICATE 是 2/列，不是變更訊號——變更判定見 call 內註釋

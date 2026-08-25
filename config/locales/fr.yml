@@ -108,6 +108,7 @@
       title_blank: "Le titre est obligatoire."
       title_too_long: "Le titre dépasse la limite."
       type_invalid: "Type de collection non pris en charge."
+      type_immutable: "Le type d'une collection ne peut plus être modifié après sa création."
       sort_order_invalid: "Ordre de tri non pris en charge."
       handle_invalid: "Le handle ne peut contenir que des minuscules, chiffres et tirets."
       handle_redirected: "Ce handle est la source d'une redirection existante — les anciens handles ne sont jamais réutilisés."

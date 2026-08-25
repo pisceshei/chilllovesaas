@@ -266,4 +266,16 @@ RSpec.describe "智慧系列求值引擎" do
       expect(winter).to be_present   # 手動系列僅作上面紅字邊界的敘事錨
     end
   end
+
+  it "🔴 F1（2026-08-26 審查）：not_eq 納入 NULL 欄商品——與 tag does_not_include 的空值語義一致" do
+    typed = product!(title: "有型", type: "香水")
+    untyped = product!(title: "無型", type: nil, vendor: nil)
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_type", relation: "not_eq", value_text: "香水" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(untyped.id)
+    expect(members(collection)).not_to include(typed.id)
+  end
 end

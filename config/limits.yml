@@ -1040,6 +1040,10 @@ collection:
                               variant_price, variant_title, variant_weight]
   # rebuild 的商品 id 批次大小（ours：批間不持鎖、前台讀舊物化列——13 §F4.9）。
   rebuild_batch_size: 1000
+  # rebuild 對 rebuild 的整程序列化（2026-08-26 審查 F2；ours——本尊內部排程不可觀測）：
+  # advisory lock 等待預算與讓位後的重排延遲。
+  rebuild_lock_wait_seconds: 60
+  rebuild_lock_requeue_delay_seconds: 30
   # 🔴 compare_at 的 is_set 是 ALL-variants 語義。官方逐字 "all variants must have a
   # compare-at price value (including 0) for the product to match."（2026-08-25）——
   # 寫成 any-variant EXISTS 是靜默語義錯（研究 §9-5）。

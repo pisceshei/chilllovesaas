@@ -108,6 +108,7 @@
       title_blank: "标题不能为空。"
       title_too_long: "标题长度超过上限。"
       type_invalid: "不支持的系列类型。"
+      type_immutable: "系列类型创建后不可更改。"
       sort_order_invalid: "不支持的排序方式。"
       handle_invalid: "handle 只能包含小写字母、数字与连字符。"
       handle_redirected: "这个 handle 是既有网址转向的来源——旧 handle 不回收。"

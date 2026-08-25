@@ -49,13 +49,18 @@ module Catalog
 
         description = Catalog::SaveProduct.sanitize_description_for(input[:description_html].to_s)
 
-        collection_type = (input[:collection_type] || "manual").to_s.downcase
-        unless Collection::TYPES.include?(collection_type)
+        # 🔴 宣告式契約（審查 F3）：**缺席＝保持現值，不得補預設**——初版
+        #   `input[:collection_type] || "manual"` 讓「部分更新沒帶 collectionType」把
+        #   智慧系列**靜默改成手動**（sortOrder 同型：缺席被重置回 manual）。
+        #   與 SaveProduct#normalize 的 status 同款語義（那邊註釋：「保持現值比靜默改
+        #   draft 安全」）。預設值只在 create 補（見 create）；型別驗證只對「有帶」執行。
+        collection_type = input[:collection_type]&.to_s&.downcase
+        if collection_type && !Collection::TYPES.include?(collection_type)
           errors << error([ "collectionType" ], I18n.t("errors.collection.type_invalid"), "INVALID")
         end
 
-        sort_order = (input[:sort_order] || "manual").to_s.downcase
-        unless Collection::SORT_ORDERS.include?(sort_order)
+        sort_order = input[:sort_order]&.to_s&.downcase
+        if sort_order && !Collection::SORT_ORDERS.include?(sort_order)
           errors << error([ "sortOrder" ], I18n.t("errors.collection.sort_order_invalid"), "INVALID")
         end
 
@@ -82,7 +87,7 @@ module Catalog
           sort_order:,
           seo: seo_attributes(input, errors),
           product_ids: input[:product_ids],
-          sources: normalize_sources(shop, input, collection_type, errors),
+          sources: normalize_sources(shop, input, errors),
           source_locale:,
           translations_prepared: prepare_translations(shop, source_locale, input, errors)
         }
@@ -97,15 +102,22 @@ module Catalog
       MONEY_RULE_TYPES = %w[variant_price variant_compare_at_price].freeze
       INT_RULE_TYPES = %w[variant_weight variant_inventory].freeze
 
-      def normalize_sources(shop, input, collection_type, errors)
+      # sources 只准掛在 smart 系列上（有帶且非 nil 才檢查；[] 也算「有帶」——
+      # 對 manual 帶空陣列同樣是契約誤用）。effective_type：create＝輸入或預設、
+      # update＝現行型別（型別不可變）。
+      def sources_smart_only_gate!(effective_type, sources)
+        return if sources.nil? || effective_type == "smart"
+
+        raise TreeRejected, [ error([ "sources" ], I18n.t("errors.collection.sources_manual"), "INVALID") ]
+      end
+
+      def normalize_sources(shop, input, errors)
         raw_sources = input[:sources]
         return nil if raw_sources.nil?   # 缺席＝保持現值（宣告式家族語義）
 
-        if collection_type != "smart"
-          errors << error([ "sources" ], I18n.t("errors.collection.sources_manual"), "INVALID")
-          return nil
-        end
-
+        # 「sources 只准掛在 smart 上」的閘移到 create／update（sources_smart_only_gate!）：
+        # normalize 這一層看不見更新目標的**現行**型別（F3 改制後 collection_type 缺席＝nil），
+        # 在這裡判會把「更新智慧系列、沒帶 collectionType、帶 sources」誤殺。
         sources = Array(raw_sources).each_with_index.map do |src, s_index|
           normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors)
         end
@@ -270,6 +282,8 @@ module Catalog
       end
 
       def create(shop, attributes)
+        effective_type = attributes[:collection_type] || "manual"
+        sources_smart_only_gate!(effective_type, attributes[:sources])
         collection = nil
         ActsAsTenant.with_tenant(shop) do
           # 🔴 `requires_new:` 不是可選的謹慎，是**正確性**：Rails 的 joined 巢狀交易
@@ -287,8 +301,8 @@ module Catalog
               title: attributes[:title],
               description_html: attributes[:description_html],
               handle: attributes[:handle] || unique_handle(shop, attributes[:title]),
-              collection_type: attributes[:collection_type],
-              sort_order: attributes[:sort_order],
+              collection_type: effective_type,
+              sort_order: attributes[:sort_order] || "manual",
               **attributes.fetch(:seo)
             )
             sync_members!(shop, collection, attributes[:product_ids])
@@ -342,12 +356,24 @@ module Catalog
             # 🔴 跨兩張表的不變量 ⇒ 店級序列化（HandleChange 檔頭③；與商品同一套）。
             Catalog::HandleChange.serialize!(shop) if handle_changed
 
+            # 🔴 型別建立後**不可變**（審查 F3 連動；本尊官方逐字，取證 2026-08-26：
+            #   "You can't change an automatic collection to a manual collection. Instead,
+            #   create a manual collection and add the products that you want."
+            #   https://help.shopify.com/en/manual/products/collections/manual-shopify-collection
+            #   2026 新 sources 模型頁對此沉默＝未取得反例 ⇒ 從嚴照舊）。硬拒也順帶封掉
+            #   「smart→manual 後 sources 列殘留、ResyncProduct 仍照算」的孤兒面。
+            #   同值重送＝no-op。
+            if attributes[:collection_type] && attributes[:collection_type] != collection.collection_type
+              raise TreeRejected, [ error([ "collectionType" ],
+                                          I18n.t("errors.collection.type_immutable"), "INVALID") ]
+            end
+            sources_smart_only_gate!(collection.collection_type, attributes[:sources])
+
             collection.assign_attributes(
               title: attributes[:title],
               handle: handle_changed ? new_handle : collection.handle,
               description_html: attributes[:description_html],
-              collection_type: attributes[:collection_type],
-              sort_order: attributes[:sort_order],
+              sort_order: attributes[:sort_order] || collection.sort_order,
               **attributes.fetch(:seo)
             )
             collection.updated_at = Time.current

@@ -108,6 +108,7 @@
       title_blank: "タイトルは必須です。"
       title_too_long: "タイトルが上限を超えています。"
       type_invalid: "サポートされていないコレクションタイプです。"
+      type_immutable: "コレクションのタイプは作成後に変更できません。"
       sort_order_invalid: "サポートされていない並び順です。"
       handle_invalid: "handle に使えるのは小文字英字・数字・ハイフンのみです。"
       handle_redirected: "この handle は既存 URL リダイレクトの転送元です。旧 handle は再利用されません。"

@@ -132,6 +132,59 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     end
   end
 
+  it "🔴 F3（2026-08-26 審查）：宣告式契約——更新缺席 collectionType／sortOrder＝保持現值" do
+    login!
+    created = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { sortOrder: "best_selling" }))
+    expect(created["userErrors"]).to eq([])
+    id = created.dig("collection", "id")
+
+    # 初版 `input[:collection_type] || "manual"` 在這裡把智慧系列**靜默改成手動**、
+    # sortOrder 重置回 manual——與 SaveProduct 的 status 語義（保持現值）相反。
+    kept = set!({ id:, lockVersion: created.dig("collection", "lockVersion"), title: "改名" })
+    expect(kept["userErrors"]).to eq([])
+    expect(kept.dig("collection", "collectionType")).to eq("smart")
+    ActsAsTenant.with_tenant(shop) do
+      row = Collection.sole
+      expect(row.collection_type).to eq("smart")
+      expect(row.sort_order).to eq("best_selling")
+      expect(CollectionSourceRule.count).to eq(1)   # sources 也原封不動
+    end
+
+    # 缺席 collectionType＋帶 sources：更新智慧系列的正常形，不得誤殺成 sources_manual。
+    resourced = set!({ id:, lockVersion: kept.dig("collection", "lockVersion"),
+                       title: "改名", sources: [ { rules: [
+                         { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "blue" }
+                       ] } ] })
+    expect(resourced["userErrors"]).to eq([])
+    ActsAsTenant.with_tenant(shop) do
+      expect(CollectionSourceRule.sole.value_text).to eq("blue")
+    end
+  end
+
+  it "🔴 F3 連動：型別建立後不可變——顯式 smart→manual 一律 INVALID（本尊官方語義）" do
+    login!
+    created = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ]))
+    id = created.dig("collection", "id")
+
+    flipped = set!({ id:, lockVersion: created.dig("collection", "lockVersion"),
+                     title: "夏季精選", collectionType: "manual" })
+    expect(flipped["userErrors"].map { |e| [ e["field"], e["code"] ] })
+      .to eq([ [ [ "collectionType" ], "INVALID" ] ])
+    ActsAsTenant.with_tenant(shop) do
+      row = Collection.sole
+      expect(row.collection_type).to eq("smart")
+      expect(CollectionSourceRule.count).to eq(1)   # 整棵樹回滾，sources 沒被動
+    end
+    # 同值重送＝no-op（既有更新測試都帶 collectionType: "smart"，那條路必須續通）。
+    same = set!({ id:, lockVersion: created.dig("collection", "lockVersion"),
+                  title: "夏季精選", collectionType: "smart" })
+    expect(same["userErrors"]).to eq([])
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")

@@ -151,11 +151,18 @@ module Collections
         value = rule.value_text.to_s
         case rule.relation
         when "eq" then bind("#{column} = ?", value)
-        when "not_eq" then bind("#{column} <> ?", value)
+        # 🔴 否定運算子必須 NULL-guard（2026-08-25 審查 F1，實跑重現）：
+        #   `product_type`／`vendor` 可為 NULL（SaveProduct 對空值存 `presence`＝NULL），
+        #   而 SQL 三值邏輯下 `NULL <> 'x'`＝NULL ⇒ **未設定類型的商品被「不等於」
+        #   靜默剔除**——同一個功能裡 tag 的 does_not_include（NOT EXISTS）卻會納入
+        #   無標籤商品，兩個「is not」對空值一個進一個出。語義基準＝「未設定＝不是那個值」
+        #   （與 tag 否定、與本尊空字串儲存下的行為一致）。NOT NULL 欄（variant_title）
+        #   多出的 OR IS NULL 恆假、無害。
+        when "not_eq" then bind("(#{column} <> ? OR #{column} IS NULL)", value)
         when "starts_with" then bind("#{column} LIKE ?", "#{like(value)}%")
         when "ends_with" then bind("#{column} LIKE ?", "%#{like(value)}")
         when "contains" then bind("#{column} LIKE ?", "%#{like(value)}%")
-        when "not_contains" then bind("#{column} NOT LIKE ?", "%#{like(value)}%")
+        when "not_contains" then bind("(#{column} NOT LIKE ? OR #{column} IS NULL)", "%#{like(value)}%")
         else raise Unsupported, "字串欄不支援 relation=#{rule.relation}"
         end
       end

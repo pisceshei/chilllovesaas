@@ -171,4 +171,22 @@ RSpec.describe Collections::RuleCompiler do
         .to match_array((described_class::INCLUSION_TYPES + described_class::EXCLUSION_TYPES).uniq)
     end
   end
+
+  describe "🔴 否定運算子的 NULL-guard（2026-08-26 審查 F1）" do
+    it "not_eq／not_contains 對可空欄帶 OR IS NULL——未設定＝「不是那個值」" do
+      # SQL 三值邏輯：`NULL <> 'x'`＝NULL ⇒ 沒有 guard 時未設定類型的商品被靜默剔除，
+      # 而同功能的 tag does_not_include（NOT EXISTS）卻納入無標籤商品——兩個 is-not 打架。
+      sql = described_class.where_sql(source(rules: [ rule(type: "product_type", relation: "not_eq", text: "香水") ]))
+      expect(sql).to include("(p.product_type <> '香水' OR p.product_type IS NULL)")
+
+      sql = described_class.where_sql(source(rules: [ rule(type: "product_vendor", relation: "not_contains", text: "acme") ]))
+      expect(sql).to include("(p.vendor NOT LIKE '%acme%' OR p.vendor IS NULL)")
+    end
+
+    it "肯定運算子不帶 guard（NULL 不等於任何值＝正確不命中）" do
+      sql = described_class.where_sql(source(rules: [ rule(type: "product_type", relation: "eq", text: "香水") ]))
+      expect(sql).to include("p.product_type = '香水'")
+      expect(sql).not_to include("IS NULL")
+    end
+  end
 end
