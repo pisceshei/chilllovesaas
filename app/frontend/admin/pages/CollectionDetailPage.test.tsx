@@ -87,8 +87,8 @@ describe("商品系列編輯頁", () => {
     expect(main.getByLabelText("標題（日本語）")).toHaveValue("");
     expect(main.getByLabelText("類型")).toHaveValue("manual");
     expect(main.getByLabelText("排序方式")).toHaveValue("manual");
-    // handle 在編輯態唯讀（與商品同一條紀律：改 handle 要 301）
-    expect(main.getByLabelText("網址 handle")).toBeDisabled();
+    // 第 6 包：handle 在編輯態**可改**（與商品同一條紀律：改名同 txn 落 301）
+    expect(main.getByLabelText("網址 handle")).toBeEnabled();
   });
 
   it("儲存：譯文逐欄位一列、不含來源語言、帶 id＋lockVersion", async () => {

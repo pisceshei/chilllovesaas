@@ -2,8 +2,10 @@
 
 # 路徑級重導（第 6 包；62 §B.5）。
 #
-# 🔴 `from_path`／`to_path` 是**無 locale 前綴的正規路徑**（62 §F.3）：
-#   路由層剝前綴查表、命中後把前綴加回去再 301。存帶前綴路徑＝每語言一列。
+# 🔴 `handle_change` 來源的列是**無 locale 前綴的正規路徑**（62 §F.3）：
+#   路由層剝前綴查表、命中後把前綴加回去再 301。
+#   ⚠️ 這是**該寫入者的屬性、不是表級不變量**：62 §B.5 允許帶前綴的列
+#   （manual／import），語義由第 36 包裁定（審查 DOC-5）。
 # 🔴 本表同時是 handle 唯一性的一部分（舊 handle 永不回收）——判準入口＝
 #   `Catalog::HandleChange.path_reserved?`，不要在別處自寫查詢。
 class UrlRedirect < ApplicationRecord

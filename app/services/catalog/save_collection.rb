@@ -61,7 +61,14 @@ module Catalog
         manual_handle = input[:handle].presence
         if manual_handle && !manual_handle.match?(/\A[a-z0-9-]+\z/)
           errors << error([ "handle" ], I18n.t("errors.collection.handle_invalid"), "INVALID")
-        elsif manual_handle && Catalog::HandleChange.path_reserved?(shop, "/collections/#{manual_handle}")
+        elsif manual_handle && manual_handle.length > Limits.fetch(:handle, :max_chars)
+          errors << error([ "handle" ], I18n.t("errors.collection.handle_too_long"), "TOO_LONG")
+        elsif manual_handle && Limits.fetch(:handle, :reserved).map(&:to_s).include?(manual_handle)
+          # 🔴 保留字檢查商品側早就有、系列側沒有（審查 R6-4）：本包解鎖系列改名後
+          #    系列可被改成 "all"／"new"／"index"，撞平台路由段。
+          errors << error([ "handle" ], I18n.t("errors.collection.handle_reserved"), "INVALID")
+        elsif manual_handle && Catalog::HandleChange.path_reserved?(
+          shop, Catalog::HandleChange.path_for(:collection, manual_handle))
           # 舊 handle 永不回收（62 §F.3；與 SaveProduct 同判準入口）。
           errors << error([ "handle" ], I18n.t("errors.collection.handle_redirected"), "HANDLE_TAKEN")
         end
@@ -167,11 +174,9 @@ module Catalog
             # 商家以為改了、其實沒改）。相同值＝no-op。
             new_handle = attributes[:handle]
             handle_changed = new_handle.present? && new_handle != collection.handle
-            if handle_changed && Collection.where(shop_id: shop.id, handle: new_handle).exists?
-              raise TreeRejected, [ error([ "handle" ],
-                I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ]
-            end
-            old_path = "/collections/#{collection.handle}"
+            old_handle = collection.handle
+            # 🔴 跨兩張表的不變量 ⇒ 店級序列化（HandleChange 檔頭③；與商品同一套）。
+            Catalog::HandleChange.serialize!(shop) if handle_changed
 
             collection.assign_attributes(
               title: attributes[:title],
@@ -185,8 +190,8 @@ module Catalog
             collection.save!
             # 改名 301 同 txn（62 §F.3；與 SaveProduct 同一套語義）。
             if handle_changed
-              Catalog::HandleChange.register!(shop:,
-                from_path: old_path, to_path: "/collections/#{new_handle}")
+              Catalog::HandleChange.register!(shop:, resource: :collection,
+                                              old_handle:, new_handle:)
             end
             sync_members!(shop, collection, attributes[:product_ids])
             reject_translations!(shop, collection, attributes)
@@ -199,6 +204,13 @@ module Catalog
         Result.new(collection: nil, user_errors: [ error([ "id" ], I18n.t("errors.collection.not_found"), "NOT_FOUND") ])
       rescue ActiveRecord::StaleObjectError
         Result.new(collection: nil, user_errors: [ error(nil, I18n.t("errors.collection.stale"), "STALE_OBJECT") ])
+      rescue ActiveRecord::RecordNotUnique
+        # 併發窗：輸家撞 `uq_collections_handle`（審查 R6-2，與商品同型）。
+        Result.new(collection: nil,
+                   user_errors: [ error([ "handle" ], I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ])
+      rescue Catalog::HandleChange::Raced
+        Result.new(collection: nil,
+                   user_errors: [ error([ "handle" ], I18n.t("errors.collection.handle_raced"), "HANDLE_TAKEN") ])
       rescue ActiveRecord::RecordInvalid => invalid
         Result.new(collection: nil, user_errors: translate_record_invalid(invalid))
       end
@@ -266,13 +278,28 @@ module Catalog
         raise TreeRejected, result.user_errors if result.user_errors.any?
       end
 
+      # 生成衝突＝數字尾碼（limits `collision_strategy_generated: numeric_suffix_from_1`，
+      # 與 SaveProduct 同語義）。
+      # 🔴 舊版是 `3.times` 重跑同一個確定性生成器——三輪必得同一個 candidate，
+      #   任何衝突都直接掉進隨機 fallback（`collection-<8碼>`），而商品側是
+      #   `veteran → veteran-1`。同倉兩套語義，且隨機 fallback 不經任何檢查
+      #   （審查 P6-6）。隨機碼現在只留給「品質閘門不過」那一種情形。
       def unique_handle(shop, title)
-        3.times do
-          candidate = Catalog::HandleGenerator.call(title, resource: "collection").handle
-          next if Catalog::HandleChange.path_reserved?(shop, "/collections/#{candidate}")
-          return candidate unless Collection.where(shop_id: shop.id, handle: candidate).exists?
+        base = Catalog::HandleGenerator.call(title, resource: "collection").handle
+        return base unless collection_handle_taken?(shop, base)
+
+        (1..).each do |suffix|
+          candidate = "#{base}-#{suffix}"
+          return candidate unless collection_handle_taken?(shop, candidate)
         end
-        "collection-#{SecureRandom.alphanumeric(8).downcase}"
+      end
+
+      def collection_handle_taken?(shop, handle)
+        return true if Limits.fetch(:handle, :reserved).map(&:to_s).include?(handle)
+        return true if Catalog::HandleChange.path_reserved?(
+          shop, Catalog::HandleChange.path_for(:collection, handle))
+
+        Collection.where(shop_id: shop.id, handle:).exists?
       end
 
       def error(field, message, code)

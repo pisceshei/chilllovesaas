@@ -15,19 +15,41 @@ limits 落三鍵：`redirect_sources`（62 §B.5 逐字四值）、`redirect_sta
 （[301, 410]——302 未在規格出現，manual 值域待第 36 包取證）、
 `redirect_path_max_chars`（ours 防呆；unique 索引 utf8mb4 鍵長上限內）。
 
-### 🔴 核心不變量：表裡永遠沒有鏈、沒有迴圈
+### 🔴 核心不變量與它的**修正史**
 
-兩件事合起來保證（spec 以「無任何列的 to_path 是別列的 from_path」釘住）：
-1. **寫入時鏈坍縮**：B 改名 C 時把所有指向 /…/B 的列改指 /…/C（A→B 變 A→C）。
-   不坍縮的話鏈隨改名次數線性成長，逼近 `seo.redirect_max_chain`（Google ≤10 hops）
-   才爆——爆的時候已不知道是哪幾次改名疊出來的。
-2. **舊 handle 永不回收**（62 §F.3 逐字）：新路徑不得是既有 from_path
-   （迴圈需要「新 from＝某列的 to ∧ 新 to＝某列的 from」兩件同時成立，本條擋掉
-   後半；形式論證見 `url_redirects_spec` 檔頭，機械複驗＝該檔的不變量斷言）。
-   `Catalog::HandleChange.path_reserved?` 是判準入口（複驗全部呼叫端＝
-   `git grep -n "path_reserved?" app/`，應恰為 SaveProduct×2、SaveCollection×2）——
-   手填驗證、**handle 生成器**（生成出的 handle 撞舊網址要自動跳號）、
-   商品與系列共用同一個。
+不變量＝**「redirect 的 from_path 永遠不是一個還活著的資源網址」**。它同時擋掉
+「鏈」（`{a→b, x→a}` 之所以是鏈，正因 `a` 同時是 from_path 與 P2 的活 handle）
+與「活頁被遮蔽」。純表內的鏈由**鏈坍縮**在寫入時消掉。
+
+🔴 **第一版把它寫成保證，而對抗審查（R6-3／P6-3）用實跑推翻了**：
+pre-flight 檢查在 transaction 外、跨兩張表（活 handle 在 products／collections、
+from_path 在 url_redirects），沒有任何 DB 約束能跨表擋 ⇒ check-then-act 在併發下
+必破，複驗方撐開窗後表裡真的出現了鏈。
+〔2026-08-25 更正：本節原文宣稱「兩件事合起來保證表裡永遠沒有鏈也沒有迴圈」，
+且據此告訴第 36 包「不需要迴圈偵測」——**該保證在修法前不成立**。〕
+
+**修法＝單一序列化點**：改名操作在**店級鎖**（`HandleChange.serialize!`）下序列化，
+鎖內以**鎖定讀**複查兩件事（新路徑未被佔／舊 handle 未被別人拿走）。
+代價＝同店改名彼此排隊；改名是商家手動低頻動作，這個代價買到可證明的正確性。
+
+🔴 **兩個被實測推翻的直覺，一併記下**：
+- **InnoDB 的 gap lock 關不了這個窗**：gap lock 彼此**相容**，兩個
+  `SELECT … FOR UPDATE` 都會通過（實測）；只有 INSERT 會被擋，而那只涵蓋兩種
+  到達順序中的一種。審查建議的「txn 內重查」只縮窗不關窗。
+- **複查必須用鎖定讀**：REPEATABLE READ 下普通讀吃本 txn 快照，看不到等鎖期間
+  對方 commit 的資料。
+
+### 🔴 併發測試的假綠（本包第二個方法論教訓）
+
+第一版的併發 spec 只是開兩個執行緒——MRI 的 GIL ＋ 查詢太快，它們幾乎必然自然
+序列化：**四道守衛刪掉三道仍然全綠**。修法＝人工把窗撐在兩個不同位置（順序 A：
+gate 在 pre-flight 之後；順序 B：gate 在 R1 的 txn 內、redirect 已插入未 commit）。
+
+即使如此，逐一刪除仍證明不了每道守衛都承重——因為 `複查一` 的鎖定讀在 unique
+index 上取的 gap lock **恰好**也擋住順序 B 的 INSERT。所以另加一格直接測
+**序列化性質本身**（兩個 register! 的臨界區不得重疊），它對「刪掉店級鎖」穩定轉紅。
+⚠️ `複查二` 在店級鎖下**構造上不可達**（刪掉不會紅）——檔內已誠實標為
+fail-closed 第二道，**不宣稱它承重**。
 
 ### 解鎖三個寫入面
 
@@ -73,8 +95,10 @@ uniqueness` → RecordInvalid → HANDLE_TAKEN 承接（紅測＝`url_redirects_
   存而不用——這是排程的刻意順序（此刻沒有任何顧客可見 URL 會斷）。
 - **manual／domain_move／import 三種 source 無寫入者**（第 36 包／匯入包）。
 - **410（下架）不在本包**：`redirect_status_codes` 已含 410，寫入者隨下架流程。
-- **系列頁前端未動**：`CollectionDetailPage` 的 handle 欄位現況（唯讀與否）
-  未在本包射程內驗證——服務端已支援，前端解鎖屬第 23 包同型小改，登記待辦。
+- **系列頁前端已一併解鎖**（審查 P6-4）：第一版只改服務端、前端仍 `disabled`，
+  而我又把**共用的** `product.seo.handle.hintEdit` 改成「改 handle 會建立 301」
+  ——鎖死的欄位上掛著描述改名行為的提示。既然服務端已支援，補齊前端比另立一個
+  描述「為何鎖住」的鍵誠實。
 - **spec 常數撞名的坑**（新踩）：describe 區塊裡的常數定義在 Object 上，
   後載檔覆蓋先載檔——第一版的 `SET` 撞 `inventory_adjust_spec` 的 `SET`，
   那邊兩例只在**整套跑**時炸（單跑全綠）。同型風險存在於既有 spec 的

@@ -229,9 +229,11 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
         seo: { title: values.seoTitle.trim(), description: values.seoDescription.trim() },
         translations: translationEntries(values.translations, sourceLocale),
       };
-      if (isNew) {
-        if (values.handle) input.handle = values.handle;
-      } else {
+      // 第 6 包：系列 handle 兩態都送（同值＝伺服端 no-op；改值＝同 txn 落 301）。
+      // 🔴 服務端在本包已解鎖，前端不同步的話 hintEdit 會在一個鎖死的欄位上
+      //    描述「改 handle 會建立 301」——文案與可操作性互相矛盾（審查 P6-4）。
+      if (values.handle) input.handle = values.handle.trim();
+      if (!isNew) {
         input.id = gid;
         input.lockVersion = lockVersion;
       }
@@ -395,7 +397,6 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
               values={localizedValues("meta_description")}
             />
             <TextField
-              disabled={!isNew}
               hint={isNew ? t("product.seo.handle.hintNew") : t("product.seo.handle.hintEdit")}
               label={t("product.seo.handle")}
               onChange={(event) => setValues((current) => ({ ...current, handle: event.target.value }))}

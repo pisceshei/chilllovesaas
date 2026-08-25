@@ -63,6 +63,8 @@
       not_found: "Produit introuvable."
       stale: "Ce produit a été modifié par quelqu’un d’autre. Rechargez puis enregistrez à nouveau."
       handle_redirected: "Ce handle est la source d'une redirection issue d'un ancien renommage — les anciens handles ne sont jamais réutilisés ; supprimez d'abord cette redirection."
+      handle_too_long: "Le handle est trop long."
+      handle_raced: "Ce handle vient d'être pris par une autre modification. Rechargez et réessayez."
     translation:
       locale_not_enabled: "Cette langue n’est pas activée pour la boutique."
       source_locale_not_translatable: "La langue source est stockée sur le produit lui-même, pas comme traduction."
@@ -105,6 +107,9 @@
       sort_order_invalid: "Ordre de tri non pris en charge."
       handle_invalid: "Le handle ne peut contenir que des minuscules, chiffres et tirets."
       handle_redirected: "Ce handle est la source d'une redirection existante — les anciens handles ne sont jamais réutilisés."
+      handle_too_long: "Le handle est trop long."
+      handle_reserved: "Ce handle est réservé par la plateforme."
+      handle_raced: "Ce handle vient d'être pris par une autre modification. Rechargez et réessayez."
       handle_taken: "Ce handle est déjà utilisé."
       product_gid_invalid: "Identifiant de produit invalide : %{gid}"
       product_not_found: "Produit %{id} introuvable dans cette boutique."
