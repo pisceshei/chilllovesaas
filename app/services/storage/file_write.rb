@@ -65,7 +65,12 @@ module Storage
               raise ActiveRecord::Rollback
             end
 
-            file.update!(attrs) if attrs.present?
+            if attrs.present?
+              file.update!(attrs)
+              # 第 3 包 cache stamp：D48 之後檔案層 alt 是所有掛著它的商品的呈現
+              # ⇒ bump 全部（filename 只在檔案庫顯示，不 bump）。
+              Catalog::CacheStamps.bump_media_for_file!(shop.id, file.id) if attrs.key?(:alt_text)
+            end
             files << file
           end
         end
@@ -197,6 +202,8 @@ module Storage
         product_ids.each do |product_id|
           product = Product.where(shop_id: file.shop_id).find_by(id: product_id)
           Catalog::MediaSync.compact_for!(shop: product.shop, product:) if product
+          # 第 3 包 cache stamp：這個商品少了一張圖。
+          Catalog::CacheStamps.bump_media_for_product!(file.shop_id, product_id)
         end
         # 保險：非 Media 擁有者的殘留 usage（未來的主題／頁面引用）也要清，
         # 否則 `dependent: :restrict_with_error` 會讓 destroy! **靜默回 false**。

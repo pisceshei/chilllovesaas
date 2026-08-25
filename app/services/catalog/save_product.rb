@@ -439,6 +439,12 @@ module Catalog
             # 全樹鎖：即使只有變體欄位變動也要 bump 版本 ⇒ 恆 touch updated_at。
             product.updated_at = Time.current
             product.save!
+            # 第 3 包 cache stamp：宣告式全量下變體樹**每次更新都被重寫**
+            # ⇒ 恆 bump（不精算「這次有沒有真的變」——精算漏一種形態就是舊快取）。
+            # 🔴 走 CacheStamps 而不是直接賦值（審查 DOC-1）：stamp 的 runtime
+            #    寫入面只有一個，「唯一寫入面」的宣稱與 `git grep CacheStamps`
+            #    的複驗指令才都成立；混用直寫＝時鐘域與 lock 語義各走各的。
+            Catalog::CacheStamps.bump_variants!(shop.id, product.id)
 
             sync_variants!(shop, product, attributes)
             translation_errors = save_translations!(shop, product, attributes)

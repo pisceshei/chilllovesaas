@@ -1057,6 +1057,10 @@ media:
   #    原本 `MediaSync`／`FileCreate`／`FileWrite` 各自硬編 512（鐵律 6 違反），
   #    三處同時守同一欄卻各寫一份，改一處就漂移。
   alt_max_length: 512
+  # 第 3 包：alt 來源稽核的值域（62 §F.1：AI 產生的 alt 要標來源）。
+  # human＝後台人工輸入（現行全部寫入路徑）；ai／imported 的寫入者分別隨
+  # AI alt 產生器與 CSV 匯入（M2）落地。null＝立欄前的存量（來源未知，不猜）。
+  alt_sources: [ai, human, imported]
   staged_upload_ttl_seconds: 900
   # 第 28 包：staged 孤兒清掃的**寬限窗**（加在 ttl 之上才是刪除判準）。
   # 🔴 為什麼不能只用 ttl：簽名過期的那一刻，`Storage::FileCreate` 可能正在讀那份
