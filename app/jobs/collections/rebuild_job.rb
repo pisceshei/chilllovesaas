@@ -8,22 +8,25 @@ module Collections
 
     # @param shop_id [Integer]
     # @param collection_id [Integer]
-    # @param depth [Integer] 反向傳播鏈長（預設 0 ⇒ 既有已入列的兩參數 payload 照樣能跑）
-    def perform(shop_id, collection_id, depth = 0)
+    # @param visited [Array<Integer>] 本條反向傳播鏈上已經算過的系列 id（環的止步依據）。
+    #   預設空陣列 ⇒ 既有已入列的兩參數 payload 照樣能跑；第七輪短暫用過 Integer
+    #   depth，若佇列裡還有那種 payload，非陣列一律當成空集合（不會誤跳過任何系列）。
+    def perform(shop_id, collection_id, visited = [])
+      visited = [] unless visited.is_a?(Array)
       shop = Shop.find_by(id: shop_id)
       return if shop.nil?
 
       collection = ActsAsTenant.with_tenant(shop) { Collection.find_by(shop_id: shop.id, id: collection_id) }
       return if collection.nil?   # 系列已刪：job 比資料活得久，不是錯誤
 
-      result = Collections::Rebuild.call(shop:, collection:, depth:)
+      result = Collections::Rebuild.call(shop:, collection:, visited:)
       # 🔴 鎖等逾時＝同系列另一場 rebuild 正在跑且超出等待預算：**讓位＋延後重排**，
       #   不靜默丟——跑者可能在本 job 觸發的規則版本**之前**編譯（advisory lock 見
       #   Rebuild 檔頭⑤a）。重排以實際爭用為界（鎖隨連線死亡自動釋放，不會永久卡住）；
       #   rake catalog:rebuild:collections 為兜底。
       if result.error == Collections::Rebuild::LOCK_TIMEOUT_ERROR
         delay = Limits.fetch(:collection, :rebuild_lock_requeue_delay_seconds)
-        self.class.set(wait: delay.seconds).perform_later(shop_id, collection_id, depth)
+        self.class.set(wait: delay.seconds).perform_later(shop_id, collection_id, visited)
       end
     end
   end

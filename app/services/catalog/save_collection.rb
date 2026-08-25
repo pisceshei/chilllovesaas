@@ -157,6 +157,12 @@ module Catalog
         sources
       end
 
+      # 「能走到本系列」的祖先集合，**每個請求只算一次**（第八輪 M3）。
+      def cycle_ancestors(shop, current_id)
+        @cycle_ancestors ||= {}
+        @cycle_ancestors[[ shop.id, current_id ]] ||= Collections::ReferenceGraph.ancestors(shop, current_id)
+      end
+
       # 更新態的本系列 id（J5 的自我引用判準）；建立態沒有 id ⇒ nil。
       def current_collection_id(input)
         match = GID_PATTERN.match(input[:id].to_s)
@@ -309,7 +315,7 @@ module Catalog
           #   震盪，而反向傳播（K8）以「有沒有變」為傳播條件 ⇒ **無界 job 鏈與無界
           #   outbox**（實測 n=3 週期 6、永不終止）。偶數環雖會停，答案卻取決於起始
           #   狀態——環在這個語義下沒有一個「對」的答案，所以不分奇偶一律拒。
-          if current_id && Collections::ReferenceGraph.reaches?(shop, referenced_id, current_id)
+          if current_id && cycle_ancestors(shop, current_id).include?(referenced_id)
             errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_cycle"), "INVALID")
             return nil
           end
@@ -324,6 +330,25 @@ module Catalog
       #   collection 列鎖為界，後到者必見前者已提交的規則。
       def replace_sources!(shop, collection, sources)
         return if sources.nil?
+
+        # 🔴 環的複查必須在**序列化點內**再做一次（2026-08-26 第八輪 M2）：
+        #   `normalize` 的 `cycle_ancestors` 是純讀的 pre-flight，跑在 transaction 與
+        #   `Collection.lock` **之外**，而那個列鎖只鎖被編輯的**這一列**——被引用方
+        #   那一列從頭到尾沒鎖。兩個並行請求各加環的一端（A 加 A→B、B 加 B→A）鎖的
+        #   是不同列，構造上不互斥 ⇒ 兩邊都看不到對方未提交的邊、兩邊都通過 ⇒ 環落庫。
+        #   同倉庫對「跨兩列的不變量」的既有做法就是店級序列化（`HandleChange` 檔頭③），
+        #   這裡沿用：鎖 shop 列 ⇒ 兩個請求排隊，後到者的複查看得到先到者已提交的邊。
+        referenced = sources.flat_map { |src| src[:rules] }
+                            .select { |rule| rule[:condition_type] == "collection" }
+                            .filter_map { |rule| rule[:value_int] }
+        if referenced.any?
+          Catalog::HandleChange.serialize!(shop)
+          ancestors = Collections::ReferenceGraph.ancestors(shop, collection.id)
+          offender = referenced.find { |id| id == collection.id || ancestors.include?(id) }
+          if offender
+            raise TreeRejected, [ error([ "sources" ], I18n.t("errors.collection.reference_cycle"), "INVALID") ]
+          end
+        end
 
         CollectionSource.where(shop_id: shop.id, collection_id: collection.id).destroy_all
         sources.each_with_index do |src, index|

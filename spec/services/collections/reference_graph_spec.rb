@@ -132,4 +132,41 @@ RSpec.describe Collections::ReferenceGraph do
       expect(described_class.reaches?(shop, a.id, 999_999)).to be(false)
     end
   end
+
+  describe ".ancestors（一次算完，取代逐規則的 reaches?）" do
+    it "回傳能走到 target 的全部系列" do
+      a, b, c, d = collections!(4)
+      reference!(a, b)
+      reference!(b, c)
+
+      expect(described_class.ancestors(shop, c.id)).to contain_exactly(a.id, b.id)
+      expect(described_class.ancestors(shop, a.id)).to be_empty
+      expect(described_class.ancestors(shop, d.id)).to be_empty
+    end
+
+    it "🔴 既有環不得無窮迴圈" do
+      a, b, c = collections!(3)
+      reference!(a, b)
+      reference!(b, c)
+      reference!(c, a)
+
+      result = nil
+      expect { result = described_class.ancestors(shop, a.id) }.not_to raise_error
+      expect(result).to contain_exactly(a.id, b.id, c.id)
+    end
+
+    it "查詢次數與**層數**成正比，不與節點數成正比（逐層批次）" do
+      cols = collections!(6)
+      cols.each_cons(2) { |owner, referenced| reference!(owner, referenced) }
+
+      queries = 0
+      counter = ->(*, payload) { queries += 1 if payload[:sql].include?("collection_source_rules") }
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        described_class.ancestors(shop, cols.last.id)
+      end
+
+      # 5 層祖先 ⇒ 逐層各一次，加最後一次空 frontier 的收尾查詢。
+      expect(queries).to be <= 7
+    end
+  end
 end

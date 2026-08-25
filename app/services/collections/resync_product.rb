@@ -55,6 +55,8 @@ module Collections
               next :gone if collection.nil?
               next :error if collection.rebuild_status == "ERROR"
 
+              current = collection
+
               # 商品已刪 ⇒ 移出（查無主＝從所有系列移出）。ARCHIVED 的排除**下沉到 SQL**
               # （`RuleCompiler::PRODUCT_ELIGIBLE_SQL`，與 Rebuild 同一份字面）——
               # 初版在這裡用 Ruby 擋，而 Rebuild 沒擋，兩支引擎因此對封存商品給出
@@ -67,13 +69,27 @@ module Collections
                 CollectionMembership.create!(shop_id: shop.id, collection_id: collection.id,
                                              product_id:, origin: "conditions",
                                              rebuilt_at: Time.current)
+                # 🔴 對外面與成員寫入同一個 txn（第八輪 M5，理由見 `Rebuild#rebuild!`）：
+                #   放在 txn 外時只要失敗一次就永久遺失——本服務的變更判定是
+                #   「這一輪有沒有 diff」，重跑會得到 :noop。
+                Rebuild.notify_members_changed!(shop, collection)
                 :joined
               elsif !should_be_member && row&.origin == "conditions"
                 row.destroy!
+                Rebuild.notify_members_changed!(shop, collection)
                 :left
               else
                 :noop
               end
+            rescue RuleCompiler::Unsupported => e
+              # 🔴 三條求值路徑必須共用同一份「遇 unknown ⇒ 整系列 ERROR」契約
+              #   （2026-08-26 第八輪 M4）：`Rebuild` 的 `compile_all!` 有這道守衛，
+              #   本服務沒有 ⇒ 例外直接穿出整個逐系列迴圈，**拓樸序中排在它後面、
+              #   與該壞系列毫無關係的系列整批漏算**，且每次重試都在同一點再炸
+              #   （事件退避到 dead-letter）⇒ 那些系列的成員永久停在錯值、無自癒。
+              #   處置與 Rebuild 一致：標 ERROR、記錄、跳過這一個，其他照算。
+              Rebuild.mark_error_for(shop, current, e.message) if current
+              :error
             end
 
             case outcome
@@ -82,10 +98,6 @@ module Collections
             when :error then skipped += 1
             else next
             end
-            next if outcome == :error
-
-            collection = Collection.find_by(shop_id: shop.id, id: collection_id)
-            Rebuild.notify_members_changed!(shop, collection) if collection
           end
 
           Result.new(joined:, left:, skipped_error: skipped)

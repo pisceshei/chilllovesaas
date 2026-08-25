@@ -1037,10 +1037,6 @@ collection:
   # 單一系列的來源數上限（ours；本尊未取得）。與 `max_rules_per_collection` 是兩件事：
   # 空來源不貢獻條件數，少了這一條就沒有任何東西擋得住無限量的 source 列（K6）。
   max_sources_per_collection: 10
-  # 反向傳播（K8）的鏈長上限（ours）。🔴 這是**既有資料的安全帶**，不是主要防線：
-  # 環自 2026-08-26 第七輪（L1）起在寫入層一律拒收，正常資料不會有環。守衛上線前
-  # 建立的環仍可能存在 ⇒ 傳播鏈到上限就停並記警告，避免無界 job 鏈與無界 outbox。
-  rebuild_propagation_max_depth: 20
   # 60 條上限的口徑：官方 "A single collection can have a maximum of 60 total conditions"
   # 傾向 per-collection；新模型 per-source 口徑未實測（P11-U18）⇒ fail-closed 取嚴的一側
   # （三道裁定 :289 的既定判準）。

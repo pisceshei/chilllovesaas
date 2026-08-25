@@ -133,7 +133,7 @@ RSpec.describe "智慧系列引擎併發" do
       # 讓位不靜默丟：RebuildJob 見逾時訊號要延後重排。
       expect {
         Collections::RebuildJob.perform_now(shop.id, collection.id)
-      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, collection.id, 0)
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, collection.id, [])
     ensure
       holder.execute(ActiveRecord::Base.sanitize_sql_array([ "SELECT RELEASE_LOCK(?)", lock_name ]))
       ActiveRecord::Base.connection_pool.checkin(holder)
@@ -175,5 +175,46 @@ RSpec.describe "智慧系列引擎併發" do
       expect(row.rebuilt_at).to be_within(1.second).of(future),
         "本輪（較舊）世代把 rebuilt_at 降下來了——GREATEST 單調帶失效，交錯掃尾可清空系列"
     end
+  end
+
+  it "🔴 M2（2026-08-26 第八輪）：環的複查在序列化點內——並行建環的後到者必須被擋" do
+    # `normalize` 的 pre-flight 是純讀、在 txn 與列鎖之外，且列鎖只鎖被編輯的那一列
+    # ⇒ 兩個請求各加環的一端時構造上不互斥。複查因此必須在店級序列化點內再做一次。
+    a, b = %w[m2-a m2-b].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+
+    save_edge = lambda do |owner, referenced|
+      Catalog::SaveCollection.call(shop:, input: {
+        id: "gid://chilllove/Collection/#{owner.id}",
+        lock_version: owner.reload.lock_version,
+        title: owner.title,
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "collection", relation: "includes",
+            referenced_collection_id: "gid://chilllove/Collection/#{referenced.id}" }
+        ] } ]
+      })
+    end
+
+    first = ActsAsTenant.with_tenant(shop) { save_edge.call(a, b) }
+    expect(first.user_errors).to eq([])
+
+    # 🔴 模擬 TOCTOU：把 **pre-flight** 那一道打瞎（等同「檢查時對方的邊還沒提交」），
+    #   只留序列化點內的複查。少了複查，環就會落庫——那正是並行下真實會發生的事。
+    #   （序列化測試裡兩個請求本來就不會交錯，所以必須把第一道拿掉才測得到第二道。）
+    allow(Catalog::SaveCollection).to receive(:cycle_ancestors).and_return(Set.new)
+
+    second = ActsAsTenant.with_tenant(shop) { save_edge.call(b, a) }
+    expect(second.user_errors.map { |e| e[:code] }).to eq([ "INVALID" ]),
+      "pre-flight 被繞過後沒有第二道 ⇒ 並行請求可以把環寫進資料庫（M2）"
+
+    edges = ActsAsTenant.with_tenant(shop) do
+      CollectionSourceRule.where(shop_id: shop.id, condition_type: "collection").count
+    end
+    expect(edges).to eq(1), "環落庫了（M2）"
   end
 end

@@ -101,6 +101,30 @@ module Collections
       ordered
     end
 
+    # 能沿著 exclusion 引用鏈走到 `target_id` 的**全部**系列（＝target 的祖先集合）。
+    # 🔴 一次算完，取代「每條規則各跑一次 `reaches?`」（2026-08-26 第八輪 M3）：
+    #   `reaches?` 每訪問一個節點打一次 DB，而 `normalize_rule` 對**每一條** collection
+    #   型規則各叫一次、跨規則零記憶化 ⇒ 上限相乘（每系列 60 條規則 × 每店 5000 個
+    #   系列）可在同步請求路徑上打出數十萬次查詢。本方法逐層批次查（每層一次 IN 查詢），
+    #   呼叫端算一次、所有規則共用。
+    #   判準等價：「加 current→referenced 這條邊會成環」⇔「referenced 走得回 current」
+    #   ⇔ `referenced ∈ ancestors(current)`。
+    # @return [Set<Integer>]
+    def ancestors(shop, target_id)
+      seen = Set.new
+      frontier = [ target_id ]
+      until frontier.empty?
+        parents = CollectionSourceRule
+                  .joins(:source)
+                  .where(shop_id: shop.id, block: "exclusion", condition_type: "collection",
+                         value_int: frontier)
+                  .distinct.pluck("collection_sources.collection_id")
+        frontier = parents.reject { |id| seen.include?(id) }
+        seen.merge(frontier)
+      end
+      seen
+    end
+
     # `from_id` 能不能沿著 exclusion 引用鏈走到 `target_id`？（迭代，不遞迴。）
     # 用途＝寫入層的環偵測：要加「current 排除 referenced」這條邊之前，
     # 先問「referenced 走得回 current 嗎」——走得回就是環。

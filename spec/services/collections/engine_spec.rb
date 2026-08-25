@@ -593,7 +593,7 @@ RSpec.describe "智慧系列求值引擎" do
         ActsAsTenant.with_tenant(shop) do
           Collections::Rebuild.notify_members_changed!(shop, b.reload)
         end
-      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id, 1)
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id, [ b.id ])
     end
 
     it "沒有人引用時不排任何額外重建" do
@@ -688,7 +688,7 @@ RSpec.describe "智慧系列求值引擎" do
                                      value_int: referenced.id, position: 1)
       end
     end
-    cap = Limits.fetch(:collection, :rebuild_propagation_max_depth)
+    smart_count = ActsAsTenant.with_tenant(shop) { Collection.where(shop_id: shop.id, collection_type: "smart").count }
     # 🔴 起始狀態必須落在**震盪軌道上**，否則第一步就收斂、測不到東西
     #   （軌道＝(a,b,c) 週期 6：100→110→010→011→001→101）。
     #   種下 a=1、b=c=0，再從 B 起跑：b←¬c=1（變）→傳給 A；a←¬b=0（變）→傳給 C；
@@ -701,8 +701,9 @@ RSpec.describe "智慧系列求值引擎" do
     queue.clear
     Collections::Rebuild.call(shop:, collection: b.reload)
 
-    # 逐一執行到佇列空。**沒有深度上限時這個迴圈永遠不會停**（實測 n=3 週期 6）。
-    budget = (cap + 5) * 3
+    # 逐一執行到佇列空。**沒有 visited 集合時這個迴圈永遠不會停**（實測 n=3 週期 6）。
+    #   有 visited 時鏈長天然有界於「這家店的智慧系列數」。
+    budget = (smart_count + 5) * 3
     ran = 0
     while (job = queue.shift)
       ran += 1
@@ -713,7 +714,125 @@ RSpec.describe "智慧系列求值引擎" do
     end
 
     expect(queue).to be_empty,
-      "傳播鏈在預算內沒有停 ⇒ 既有環會產生無界 job 鏈與無界 outbox（L1 安全帶失效）"
+      "傳播鏈在預算內沒有停 ⇒ 既有環會產生無界 job 鏈與無界 outbox（visited 集合失效）"
     expect(ran).to be <= budget
+  end
+
+  it "🔴 M1（2026-08-26 第八輪）：合法的**無環長鏈**必須整條走完，不得被截斷" do
+    # 第七輪用「深度上限」當安全帶，但它擋的是**路徑長度**不是環 ⇒ 一條合法的長鏈
+    # 尾端變動時，前段永遠收不到重建通知、成員停在錯值（K8 的症狀在長鏈上重開）。
+    # visited 集合精確：只跳過**這條鏈上已算過的**，無環長鏈照走完。
+    depth = 24
+    cols = Array.new(depth) do |i|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: "chain#{i}", handle: "m1-chain-#{i}",
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    # c[i+1] 排除 c[i] ⇒ 反向傳播從 c0 一路傳到 c23。
+    ActsAsTenant.with_tenant(shop) do
+      cols.each_with_index do |col, i|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        next if i.zero?
+
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: cols[i - 1].id, position: 1)
+      end
+    end
+
+    # 🔴 起始狀態必須讓**每一層都會變**，否則第一層算完就收斂、傳播根本不會往下走
+    #   （與第七輪 ML1c 同一課）。正解是偶數層＝[商品]、奇數層＝[]；種相反的。
+    product = product!(title: "紅鏈", tags: [ "red" ])
+    ActsAsTenant.with_tenant(shop) do
+      cols.each_with_index do |col, i|
+        next if i.even?
+
+        CollectionMembership.create!(shop_id: shop.id, collection_id: col.id, product_id: product.id,
+                                     origin: "conditions", rebuilt_at: Time.current)
+      end
+    end
+
+    queue = ActiveJob::Base.queue_adapter.enqueued_jobs
+    queue.clear
+    seen_ids = []
+    Collections::Rebuild.call(shop:, collection: cols.first.reload)
+    budget = depth * 4
+    ran = 0
+    while (job = queue.shift)
+      ran += 1
+      break if ran > budget
+
+      args = ActiveJob::Arguments.deserialize(job[:args])
+      seen_ids << args[1]
+      Collections::RebuildJob.perform_now(*args)
+    end
+
+    expect(queue).to be_empty
+    # 鏈尾（最後一層）必須被造訪過——深度上限會讓它永遠收不到通知。
+    expect(seen_ids).to include(cols.last.id),
+      "無環長鏈被截斷 ⇒ 尾端系列永遠停在錯值且無自癒（M1）"
+  end
+
+  it "🔴 M5（2026-08-26 第八輪）：notify 失敗必須讓整筆重建回滾——對外面不得永久遺失" do
+    # 對外面（cache stamp／outbox／反向傳播）原本在 txn **外**。變更判定是「本輪有沒有
+    # 新列或掃掉的列」，所以只要 notify 失敗一次，成員已落庫、status 已 OK，
+    # **重跑一律 inserted=0／swept=0** ⇒ 三個對外面永久遺失（K8 的症狀原樣復發）。
+    product = product!(title: "紅", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+
+    allow(Catalog::CacheStamps).to receive(:bump_collection_members!).and_raise(ActiveRecord::LockWaitTimeout)
+    expect { rebuild!(collection) }.to raise_error(ActiveRecord::LockWaitTimeout)
+
+    # notify 在 txn 內 ⇒ 掃尾那一段整段回滾 ⇒ status 不會停在 OK。
+    expect(collection.reload.rebuild_status).not_to eq("OK")
+
+    # 🔴 關鍵斷言：解除故障後重跑**必須補上對外面**。批次 upsert 是逐批各自的 txn，
+    #   成員列還在 ⇒ 重跑的 inserted／swept 都是 0；若變更判定只看這兩個數字，
+    #   對外面就永遠補不回來（M5 的第二半，實跑才發現）。
+    allow(Catalog::CacheStamps).to receive(:bump_collection_members!).and_call_original
+    outbox_before = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.where(shop_id: shop.id, topic: Events::Topics::COLLECTIONS_UPDATE).count
+    end
+    rebuild!(collection)
+
+    expect(members(collection)).to eq([ product.id ])
+    expect(collection.reload.rebuild_status).to eq("OK")
+    outbox_after = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.where(shop_id: shop.id, topic: Events::Topics::COLLECTIONS_UPDATE).count
+    end
+    expect(outbox_after).to be > outbox_before,
+      "重跑得到 inserted=0／swept=0 ⇒ 對外面永遠補不回來（M5 第二半）"
+  end
+
+  it "🔴 M4（2026-08-26 第八輪）：unknown 條件只讓**該系列** ERROR，不得中止整個迴圈" do
+    # `Rebuild` 有這道守衛、`ResyncProduct` 沒有 ⇒ 例外穿出逐系列迴圈，
+    # 拓樸序中排在它後面、與該壞系列無關的系列整批漏算且無自癒。
+    product = product!(title: "紅", tags: [ "red" ])
+    broken = smart!(title: "壞的", sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    healthy = smart!(title: "好的", sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    # 直接改成 unknown（寫入層拒收，只能由匯入／console 產生——P11-B4）。
+    ActsAsTenant.with_tenant(shop) do
+      rule = CollectionSourceRule.joins(:source)
+                                 .find_by(collection_sources: { collection_id: broken.id })
+      rule.update_columns(condition_type: "unknown")
+    end
+
+    result = nil
+    expect { result = Collections::ResyncProduct.call(shop:, product_id: product.id) }.not_to raise_error
+    expect(result.skipped_error).to be_positive
+    expect(members(healthy)).to eq([ product.id ]),
+      "壞系列的例外中止了整個迴圈 ⇒ 無關的系列漏算（M4）"
+    expect(broken.reload.rebuild_status).to eq("ERROR")
   end
 end

@@ -63,10 +63,10 @@ module Collections
       # @param collection [Collection] smart（有 conditions source）
       # @return [Result] status ∈ [:ok, :error, :skipped]
       # @note 副作用：寫 memberships／collections.rebuild_status／cache stamp／outbox。
-      def call(shop:, collection:, depth: 0)
+      def call(shop:, collection:, visited: [])
         ActsAsTenant.with_tenant(shop) do
           with_rebuild_lock(shop, collection) do
-            rebuild!(shop, collection, depth)
+            rebuild!(shop, collection, visited)
           end
         end
       end
@@ -79,7 +79,7 @@ module Collections
       #   只在「真的變了」時傳播（呼叫端已判 inserted/swept），且只傳一層：
       #   被排的 A 自己重建完若也變了，會再傳給引用 A 的——天然的逐層收斂，
       #   環由 `RebuildJob` 的重複入列與最終不變性收斂（P11-B10 仍登記為不保證）。
-      def notify_members_changed!(shop, collection, depth: 0)
+      def notify_members_changed!(shop, collection, visited: [])
         # cache stamp（唯一寫入面＝CacheStamps；`update_all` 帶 lock_version 守則在那一支裡）。
         Catalog::CacheStamps.bump_collection_members!(shop.id, collection.id)
         # 外部事件（blueprint D.4）：outbox 形態，鐵律 5。
@@ -92,27 +92,30 @@ module Collections
           available_at: Time.current,
           payload: { collection_id: collection.id, members_changed: true }
         )
-        enqueue_referrers!(shop, collection, depth)
+        enqueue_referrers!(shop, collection, visited)
       end
 
       # 引用本系列做 exclusion 的那些：它們的成員集合現在過期了。
-      def enqueue_referrers!(shop, collection, depth = 0)
-        # 🔴 鏈長上限＝**既有資料的安全帶**（2026-08-26 第七輪 L1）：環自本輪起在
-        #   寫入層一律拒收，但守衛上線前建立的環仍可能存在。奇數環沒有不動點 ⇒
-        #   每一輪成員都真的變 ⇒ 傳播條件恆真 ⇒ 無界 job 鏈與無界 outbox。
-        #   到上限就停並記警告（不靜默丟：警告是「這家店有環」的訊號）。
-        maximum = Limits.fetch(:collection, :rebuild_propagation_max_depth)
-        if depth >= maximum
-          Rails.logger.warn({ event: "collection_rebuild_propagation_capped", shop_id: shop.id,
-                              collection_id: collection.id, depth: }.to_json)
-          return
-        end
-
+      # 🔴 終止性靠 **visited 集合**，不是深度上限（2026-08-26 第八輪 M1）：
+      #   第七輪用 `depth >= 上限` 當安全帶，但它擋的是**路徑長度**而不是環——
+      #   一條**合法、無環**的引用鏈只要超過上限，尾端以後的系列就永遠收不到重建
+      #   通知、物化成員停在錯值（＝K8 修掉的「永久錯誤且無自癒」在長鏈上重開；
+      #   實測 24 層鏈的第 21〜23 層停在錯值）。
+      #   visited 則精確：**只跳過這條傳播鏈上已經算過的系列**，
+      #   ⇒ ①環（既有資料才可能有，寫入層已拒新的）走一圈就停 ②無環長鏈**照走完**。
+      #   鏈長因此天然有界於「這家店的智慧系列數」，不需要另一個會誤殺的上限。
+      def enqueue_referrers!(shop, collection, visited)
+        seen = visited | [ collection.id ]
         ReferenceGraph.referrers(shop, collection.id).each do |referrer_id|
-          next if referrer_id == collection.id   # 自引在寫入層已拒（J5），保險。
+          next if seen.include?(referrer_id)   # 環（含自引）在此止步
 
-          RebuildJob.perform_later(shop.id, referrer_id, depth + 1)
+          RebuildJob.perform_later(shop.id, referrer_id, seen)
         end
+      end
+
+      # 標記整系列 ERROR（`ResyncProduct` 也用——同一份「遇 unknown ⇒ ERROR」契約）。
+      def mark_error_for(shop, collection, message)
+        mark_error!(shop, collection, message)
       end
 
       private
@@ -141,7 +144,7 @@ module Collections
         end
       end
 
-      def rebuild!(shop, collection, depth = 0)
+      def rebuild!(shop, collection, visited = [])
         # 🔴 非智慧系列才是「與本服務無關」＝跳過（手動成員在 collection_products，
         #   不歸這裡管）。**零 source 的智慧系列不是跳過，是「成員集合＝空集合」**——
         #   2026-08-26 收斂輪 G1：初版在 `sources.empty?` 就早退，而早退點在**世代掃尾
@@ -181,7 +184,11 @@ module Collections
         swept = 0
         inserted = 0
         Collection.transaction do
-          Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
+          # 🔴 用**鎖定讀回傳的那一列**判斷上一輪狀態，不要用傳進來的物件
+          #   （第八輪 M5）：`update_columns` 在回滾後**仍然留著記憶體裡的新值**，
+          #   所以上一輪失敗的 collection 物件會宣稱自己是 OK，而 DB 是 PENDING。
+          #   鎖定讀一律讀最新已提交版本。
+          locked = Collection.lock.find_by!(shop_id: shop.id, id: collection.id)
           # 🔴 「有沒有變」不能看 affected_rows：`ON DUPLICATE KEY UPDATE rebuilt_at`
           #   對既有列**每輪都**改世代戳（MySQL 記 affected=2）⇒ 拿它當變更訊號，
           #   內容沒變的 rebuild 也會白白打掉快取＋發事件（初版 smoke 實測抓到）。
@@ -198,9 +205,30 @@ module Collections
                   .delete_all
           collection.update_columns(rebuild_status: "OK", rebuilt_at: generation,
                                     updated_at: Time.current)
+
+          # 🔴 **三個對外面必須與成員寫入同一個 transaction**（2026-08-26 第八輪 M5）：
+          #   它們原本在 txn **之外**。變更判定是「本輪 `created_at >= generation`
+          #   或 swept>0」，所以只要 notify 失敗一次（`bump_collection_members!` 的
+          #   `update_all` 撞上別人持有的 `Collection.lock` 而 `LockWaitTimeout`；
+          #   或 worker 在 commit 與 notify 之間被 deploy 殺掉），成員已落庫、
+          #   `rebuild_status` 已是 OK，**重跑一律得到 inserted=0／swept=0**
+          #   ⇒ cache stamp 永不推進、`collections/update` 永不外發、反向傳播永不發生
+          #   ＝ K8 修掉的「引用者永久錯誤且無自癒」原樣復發。
+          #   三者都是**同一個資料庫**的寫入（outbox 列／stamp／Solid Queue 的 job 列），
+          #   不是鐵律 5 禁止的「txn 內外部 IO」——外部呼叫本來就由 outbox 之後才發。
+          #   同倉庫慣例亦同：`SaveProduct#commit` 的 `enqueue_event!` 在 txn 內。
+          # 🔴 變更訊號還要**跨重試存活**（第八輪 M5 的第二半，實跑才發現）：
+          #   把 notify 移進 txn 只解決了「原子性」，沒解決「重試不會補」。
+          #   批次 upsert 是**逐批各自的 txn**，所以 notify 失敗回滾的只有掃尾這一段，
+          #   成員列還在；重跑時 `created_at >= 新世代` 一律 0、`swept` 也 0
+          #   ⇒ 條件永遠不成立、對外面永遠補不回來。
+          #   ⇒ 判準加一項：**上一輪沒走到 OK**（status ≠ OK）就強制 notify。
+          #   代價＝首次重建出空集合的系列會多發一則事件；那其實是對的——
+          #   `products_count` 從 null（不知道）變成 0（知道是空的）本來就是一次變更。
+          resumed = locked.rebuild_status != "OK"
+          notify_members_changed!(shop, collection, visited:) if inserted.positive? || swept.positive? || resumed
         end
 
-        notify_members_changed!(shop, collection, depth:) if inserted.positive? || swept.positive?
         Result.new(status: :ok, inserted:, swept:, error: nil)
       end
 
