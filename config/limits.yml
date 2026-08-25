@@ -2789,6 +2789,10 @@ catalog_flow:
     - products.publications_updated_at
     - products.media_updated_at
     - shops.catalog_version
+    # 🔴 下兩項的**欄位尚未存在**（2026-08-25 依審查 D2 標註；複驗＝
+    #    `grep -c "market_settings_version\|price_list_updated_at" db/schema.rb` ⇒ 0）：
+    #    它們是第 32 包（市場／價格表）預告的來源名，列在這裡是**規劃**不是現況。
+    #    第 32 包立欄時把本註釋刪掉；在那之前 selfcheck 的接收端也尚未實作，不會誤 raise。
     - market_settings_version          # 🔴 市場繼承解析結果變了，商品 updated_at 一動也沒動（63 §G.5）
     - price_list_updated_at
   # render 期記錄 drop 讀過哪些表，結束時斷言 touched_sources ⊆ cache_stamp_sources。
@@ -3318,12 +3322,14 @@ i18n:
   # 🔴 繁簡之間永不互為 fallback。地區借用只是用詞差異，**字體借用是整頁文字都不對**。
   never_fallback_pairs: [[zh-Hant, zh-Hans]]
   # 截尾不得落到被禁用的裸語言碼（zh）⇒ 鏈提前結束，不是特例分支。
-  # 🔴 這一條與 CLDR 同構，**不是我方自創的加嚴**（2026-08-25 取證）：
-  #    CLDR common/supplemental/parentLocales.xml 把 zh-Hant 的 parent 寫成 und（＝root），
-  #    官方理由逐字：「If the locale is written in the non-default script for the language,
-  #    it needs to have the parent specified as root, for example, zh_Hant and sr_Latn need
-  #    to fall back to root (not to zh and sr which are in different scripts).」
-  #    出處：https://github.com/unicode-org/cldr/blob/main/common/supplemental/parentLocales.xml（2026-08-25）
+  # 🔴 這一條與 CLDR 同構，**不是我方自創的加嚴**（2026-08-25 取證；同日依審查 D1
+  #    更正引文——原引一個不存在的檔案路徑與一段無法溯源的「逐字」，撤回，改引下列
+  #    親自複驗的來源）：CLDR 正典 supplementalData.xml 把 zh_Hant 的 parent 寫成 root
+  #    （<parentLocale parent="root" localeRules="nonlikelyScript" locales="…zh_Hant"/>，
+  #    https://raw.githubusercontent.com/unicode-org/cldr/main/common/supplemental/supplementalData.xml），
+  #    理由在 TR35 逐字：「if the truncation algorithm changes script, then a mixture of
+  #    child and parent textual data is a mishmash of different scripts.」
+  #    （https://raw.githubusercontent.com/unicode-org/cldr/main/docs/ldml/tr35.md）
   #    ⚠️ 相對地，RFC 4647 §3.4 Lookup 的**字面**演算法會產生 zh-Hant → zh（它不懂 script 語義）
   #    ⇒ 我方在此刻意偏離 RFC 字面，**不得寫成「照 RFC 實作」**。實作＝Locales::FallbackChain。
   truncation_stops_at_forbidden: true
@@ -3350,7 +3356,8 @@ i18n:
     # ⇒ 同一支查詢的執行計畫在無預警下改變。⌊200 / 3⌋ = 66，取 50 留餘裕。
     # 出處：https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html（2026-08-25）
     #     ＋https://dev.mysql.com/blog-archive/you-asked-for-it-new-default-for-eq_range_index_dive_limit/（2026-08-25）
-    # ⚠️ U14 未取得：我方實例的 @@eq_range_index_dive_limit 現值尚未實查（200 是官方預設值）。
+    # ✅ P7-L6 已取得（2026-08-25 bt3 正式環境實查）：@@eq_range_index_dive_limit=200
+    #    （MySQL 8.4.10），與推導用的預設值相同。複驗＝SELECT @@eq_range_index_dive_limit;
     max_resources_per_batch: 50
     # 候選語言階數硬上限（含請求語言自己）。Locales::Tag::FORMAT 只有
     # language[-script][-region] 三段 ⇒ 截尾最多兩次。（ours）
@@ -3387,9 +3394,15 @@ i18n:
     # 🔴 不是 void elements 清單（area/base/col/link/meta/track/wbr 是 void 但不可見）。
     # 出處：https://html.spec.whatwg.org/multipage/dom.html（2026-08-25）
     content_bearing_source: whatwg_embedded_content
-    # 🔴 讀寫共用**同一份**實作，讀取端不做簡化版快篩。（ours，2026-08-25）
-    #    省下的 ~85µs/次不值得買回「同一個值讀寫兩種答案」的漂移。
+    # 🔴 讀寫共用**同一份**實作（BlankValue 只有一支）；但讀取端有尺寸上限 fast-path
+    #    （2026-08-25 二次修正，依審查 C5 撤回首版的「讀取端也跑完整判準」裁定）：
+    #    首版依據「85µs/次、50 列 ~4ms」否決研究建議的讀取端快篩——該量測是錯的，
+    #    實測 17KB body_html 一次判準 ≈1987µs、50 列 ≈95ms（本機，2026-08-25；審查方
+    #    較慢機器量到 14ms/700ms）。修正＝html 值 bytesize 超過下列閾值時讀取端不 parse、
+    #    直接判非空：語義空 HTML 的形態結構上都是幾十 bytes，大值誤判非空落在假陰性側
+    #    （不刪資料、頂多多顯示）。🔴 寫入端與稽核**永遠跑完整判準**（刪列不可逆）。
     single_implementation_for_read_and_write: true
+    read_fast_path_max_bytes: 1024
 
   # --- 過期偵測（67 §C.5）—— 假陽性率決定這個功能有沒有用 ----------------------
   digest_algorithm: sha256

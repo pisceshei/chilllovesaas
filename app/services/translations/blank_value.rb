@@ -36,12 +36,16 @@ module Translations
   #   sanitize 後它整個被白名單移除變成 `""`（真的什麼都不會顯示）。先判空就會存進一列
   #   「後台顯示已翻譯、前台是空白」的鬼列。`Upsert`／`CsvImport` 因此都先 sanitize 再判空。
   #
-  #   🔴 **只有一份實作，讀寫都跑完整判準**（ours，2026-08-25）：研究階段曾建議讀取熱路徑
-  #   只跑不可見字元快篩（~1.1µs）、完整 HTML 判準（~85µs）留給寫入端。**否決**——
-  #   理由是量級不成比例：四個可翻欄位裡只有 `body_html` 是 `:html`，一張商品詳情頁
-  #   ≈1 次 HTML 判準（85µs），50 筆的列表頁即使全解析 `body_html` 也只有 ~4ms；
-  #   而兩套判準的代價是「讀寫對同一個值給不同答案」這種只在特定輸入發作的漂移
-  #   （正是本模組存在的理由）。省 85µs 不值得買回一個 U11 型的已知限制。
+  #   🔴 **單一實作＋讀取端的尺寸上限 fast-path**（2026-08-25 二次修正，撤回首版裁定）：
+  #   首版以「HTML 判準 ~85µs、50 列列表頁 ~4ms」為由否決研究建議的讀取端快篩——
+  #   **那個量測是錯的**（對抗審查 C5 抓到，我方複測確認）：實測 17KB `body_html`
+  #   一次判準 ≈1987µs、50 列全 parse ≈95ms（本機；審查方較慢的機器量到 14ms/700ms）。
+  #   複驗＝對 ~17KB 中文段落跑 `Loofah.fragment` 判準 200 次取均值。
+  #   ⇒ 修正案：**實作仍然只有這一份**，但讀取端可傳 `skip_parse_above:`（bytes）——
+  #   `kind: :html` 且 bytesize 超過閾值時**不 parse、直接判非空**。理由：
+  #   語義空 HTML 的形態（`<p>&nbsp;</p>`／`<p class="x"></p>`／空清單）結構上都是
+  #   幾十 bytes 的小字串；大字串誤判成非空落在**假陰性側**（不刪資料、頂多多顯示），
+  #   與本模組的代價不對稱原則同向。寫入端與稽核**永遠傳 nil**（完整判準）。
   #
   # ④跨功能影響：
   #   - 寫入端判空 ⇒ `Upsert` 刪列、`CsvImport` skip；**這是不可逆動作**，改判準前先讀上面的
@@ -54,12 +58,17 @@ module Translations
     # 即使不含任何文字也會佔版面／傳達內容的元素。
     #
     # 🔴 這**不是** void elements 清單：`area`／`base`／`col`／`link`／`meta`／`track`／`wbr`
-    #    是 void 但不可見。判準是「使用者看不看得到東西」，來源＝WHATWG HTML
-    #    「Embedded content」分類（https://html.spec.whatwg.org/multipage/dom.html，2026-08-25）
-    #    ＋三個 embedded 之外仍然可見的加項：`hr`（水平線）、`table`（框線）、表單控件。
+    #    是 void 但不可見。判準是「使用者看不看得到東西」。組成＝
+    #    WHATWG「Embedded content」分類的**恰十個元素**（audio canvas embed iframe img
+    #    math object picture svg video；https://html.spec.whatwg.org/multipage/dom.html，
+    #    2026-08-25）＋六個 embedded 之外仍然可見的加項：`hr`、`table`、
+    #    表單四控件（input／select／textarea／button）。
     # 🔴 `br` **不在**清單裡——`<p><br></p>` 正是 RTE 的初始值，是本模組要抓的主要形態。
+    # 🔴 `source` 也**不在**（2026-08-25 依對抗審查 D10 修正，首版誤列）：它是 void 且
+    #    單獨渲染無物，只在 `picture`／`video`／`audio` 內有意義——而那三個父元素本身
+    #    已在清單內，列它既違反判準又讓「WHATWG 推導」的宣稱失真。
     CONTENT_BEARING = %w[
-      img video audio iframe embed object canvas svg math picture source
+      img video audio iframe embed object canvas svg math picture
       hr table input select textarea button
     ].freeze
 
@@ -75,11 +84,15 @@ module Translations
 
     # @param value [String, nil]
     # @param kind [Symbol] `:text` 或 `:html`（由 `Translations::Fields.kind` 決定）
+    # @param skip_parse_above [Integer, nil] 讀取端 fast-path（見檔頭③）：`:html` 且
+    #   bytesize 超過此值 ⇒ 不 parse、直接判非空。🔴 **寫入端與稽核一律傳 nil**——
+    #   刪列／skip 是不可逆動作，必須跑完整判準；只有「多顯示一次」是可以便宜的。
     # @return [Boolean] true＝視同「沒有翻譯」，呼叫端據此刪列或往鏈的下一階走
-    def blank?(value, kind: :text)
+    def blank?(value, kind: :text, skip_parse_above: nil)
       text = value.to_s
       return true if invisible_only?(text)
       return false unless kind == :html
+      return false if skip_parse_above && text.bytesize > skip_parse_above
 
       fragment = Loofah.fragment(text)
       return false if fragment.css(CONTENT_BEARING_SELECTOR).any?
@@ -91,6 +104,49 @@ module Translations
 
     def invisible_only?(text)
       text.gsub(INVISIBLE, "").empty?
+    end
+
+    # 「這段原始輸入裡有沒有人看得到的文字或內容元素」——**不經 parser** 的判斷。
+    #
+    # 🔴 為什麼不能用 `blank?` 來回答這件事（2026-08-25 實測發現，本包自己踩到）：
+    #   呼叫端要偵測的是「sanitize 把內容毀掉了」，而毀掉內容的機制之一正是
+    #   **parser 自身的深度上限**（libxml2 在巢狀 256 層起丟棄子樹：實測
+    #   `("<div>"*300) + "IMPORTANT"` sanitize 後為 0 bytes）。用 `blank?` 判 raw
+    #   會走**同一個 parser**、撞**同一個懸崖**，於是回報「raw 也是空的」——
+    #   偵測器與被偵測的失效共用同一個盲點，等於沒有偵測。
+    #   ⇒ 這裡用正則剝標籤（parser-independent），只回答「剝掉標籤後還有沒有可見字元，
+    #   或出現過 content-bearing 標籤名」。它不精確（不解實體、不懂巢狀），
+    #   但它的**失效模式與 parser 無關**，這正是它的用途。
+    #
+    # @return [Boolean] true＝原始輸入確實帶有內容（因此 sanitize 後變空＝內容被毀）
+    def text_bearing?(raw)
+      text = raw.to_s
+      stripped = drop_invisible_refs(text.gsub(/<[^>]*>/m, ""))
+      return true unless invisible_only?(stripped)
+
+      text.scan(/<\s*([a-zA-Z][a-zA-Z0-9]*)/).any? { |(tag)| CONTENT_BEARING.include?(tag.downcase) }
+    end
+
+    # 剝掉「解出來是不可見字元」的字元參照。
+    # 🔴 這裡**不能**呼叫 parser（那就繞回 `text_bearing?` 要避開的懸崖），也不能用
+    #   `CGI.unescapeHTML`——實測它在本專案的 Ruby 只解 5 個基本具名參照，數值參照原樣留著
+    #   （`CGI.unescapeHTML("&#160;") == "&#160;"`），於是 `<p>&#160;</p>` 會被誤判成有內容。
+    # ⚠️ 已知不精確：只處理數值參照與**不可見的**具名參照白名單；其餘參照一律當可見內容
+    #   （落在「報錯而不是刪列」那一側，與本模組的代價不對稱同向）。
+    INVISIBLE_NAMED_REFS = %w[nbsp ensp emsp thinsp hairsp zwnj zwj lrm rlm feff].freeze
+
+    def drop_invisible_refs(text)
+      text
+        .gsub(/&#x([0-9a-fA-F]+);|&#(\d+);/) do
+          code = ::Regexp.last_match(1) ? ::Regexp.last_match(1).to_i(16) : ::Regexp.last_match(2).to_i
+          char = begin
+            code.chr(Encoding::UTF_8)
+          rescue RangeError
+            nil
+          end
+          char && invisible_only?(char) ? "" : ::Regexp.last_match(0)
+        end
+        .gsub(/&([a-zA-Z]+);/) { INVISIBLE_NAMED_REFS.include?(::Regexp.last_match(1).downcase) ? "" : ::Regexp.last_match(0) }
     end
   end
 end

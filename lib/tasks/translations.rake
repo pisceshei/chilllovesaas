@@ -41,7 +41,9 @@ namespace :translations do
   task :audit, [ :subdomain ] => :environment do |_task, args|
     total = 0
     each_target(args[:subdomain]) do |shop|
-      report = Translations::Audit.call(shop:)
+      # 每 500 列印一次進度：html 欄每列要兩次 parse（~50ms 量級），大店是分鐘級任務，
+      # 沒有進度輸出看起來像卡死（審查 C6）。
+      report = Translations::Audit.call(shop:, progress: ->(n) { puts "  …已掃 #{n} 列" })
       total += report.findings.length
       print_report(shop, report)
     end
@@ -56,9 +58,13 @@ namespace :translations do
     abort "translations:fix 必須指名商店：rails \"translations:fix[<subdomain>]\"" if args[:subdomain].blank?
 
     each_target(args[:subdomain]) do |shop|
-      report = Translations::Audit.call(shop:, fix: true)
+      report = Translations::Audit.call(shop:, fix: true, progress: ->(n) { puts "  …已掃 #{n} 列" })
       print_report(shop, report)
       puts "  🔧 已修復 #{report.fixed} 列（其餘規則僅登記不動）"
+      if report.skipped_stale.positive?
+        # 掃描與修復之間值變了 ⇒ 重驗擋下、未動（審查 C2 的 TOCTOU 防線）。再跑一次即可。
+        puts "  ⏭️ #{report.skipped_stale} 列在掃描後被改動，已跳過未修——重跑一次 fix 可收斂"
+      end
     end
   end
 end

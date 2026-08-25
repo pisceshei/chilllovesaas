@@ -78,8 +78,18 @@ module Translations
             # 🔴 `__CLEAR__` 在 sanitize **之前**判：它是控制 token 不是內容，
             #   讓它經過 HTML sanitizer 只會多一條「token 被改寫就悄悄變成一般文字」的路。
             if raw.strip == CLEAR_TOKEN
-              apply_row(shop, row, counters, source_locale:, touched:,
-                        overwrite_existing:, dry_run:)
+              guard_row(errors, row, counters) do
+                apply_row(shop, row, counters, source_locale:, touched:,
+                          overwrite_existing:, dry_run:)
+              end
+              next
+            end
+
+            # 🔴 尺寸前置閘在 sanitize 之前（與 `Upsert#normalize` 同一套順序與理由，
+            #   審查 S4：無上界輸入先進 Loofah＝CPU 放大面；審查 A6／S3：先前 CSV 路徑
+            #   **完全沒有**長度檢查，能寫進 GraphQL 拒收的超長值，兩條路徑兩種答案）。
+            if Fields.measure(row.field, raw) > Fields.limit(row.field)
+              errors << error(row.line, "too_long", "TOO_LONG")
               next
             end
 
@@ -88,15 +98,26 @@ module Translations
             #   `strip.empty?`，於是 `<p>&nbsp;</p>` 這種語義空 HTML 會經 CSV 寫進去，
             #   造出一列「後台顯示已翻譯、前台落 fallback」的鬼列——而同一個值走 GraphQL
             #   會被判空刪掉。**同一個輸入兩條路徑兩種結果**正是要消掉的東西）。
-            #   🔴 順序同 `Upsert`：先 sanitize 後判空（`runs_after_sanitize`）。
             value = sanitize(row.field, raw)
             if BlankValue.blank?(value, kind: Fields.kind(row.field))
-              counters[:skipped] += 1
+              # 🔴 raw 非空而 sanitize 後空＝內容被 sanitizer 毀掉（<video> 等白名單外元素、
+              #   深巢狀懸崖）⇒ **行級錯誤**，不靜默 skip（與 Upsert 的 userError 同語義）。
+              # parser-independent 判斷（理由同 Upsert；見 BlankValue#text_bearing?）。
+              if BlankValue.text_bearing?(raw)
+                errors << error(row.line, "unsupported_content", "INVALID")
+              else
+                counters[:skipped] += 1
+              end
               next
             end
 
-            apply_row(shop, row.with(value:), counters, source_locale:, touched:,
-                      overwrite_existing:, dry_run:)
+            # 🔴 逐行 rescue（審查 A4／C1 實跑重現）：先前任何一列拋例外（實測：併發撞
+            #   唯一鍵的 RecordNotUnique）就讓整個 call 以例外收場——已成功列不重算進度、
+            #   Outcome 不回傳、controller 500，「逐行報告」的文檔宣稱形同虛設。
+            guard_row(errors, row, counters) do
+              apply_row(shop, row.with(value:), counters, source_locale:, touched:,
+                        overwrite_existing:, dry_run:)
+            end
           end
 
           # 🔴 **進度必須在這裡重算**（本包補的缺口）：先前 `CsvImport` 全程沒有任何
@@ -107,7 +128,10 @@ module Translations
           #   而快取失效的失敗是**靜默的**（商家改了譯文、前台永遠是舊的）。
           unless dry_run
             touched.each do |type, id, tag|
-              Upsert.recompute_status(shop:, resource_type: type, resource_id: id, locale_tag: tag)
+              # touch: true——touched 集合裡的每一組都真的動過列（寫入／覆寫／清空），
+              # 只改文字時計數欄不變，靠 touch 推進 updated_at（見 Upsert#recompute_status）。
+              Upsert.recompute_status(shop:, resource_type: type, resource_id: id,
+                                      locale_tag: tag, touch: true)
             end
           end
         end
@@ -133,8 +157,22 @@ module Translations
         )
       end
 
+      # 一列的例外不得毀掉整份檔案：記行級錯誤、照常處理下一列。
+      # 🔴 只接 StandardError——NoMemoryError 之類的系統級錯誤照常往上炸。
+      def guard_row(errors, row, counters)
+        yield
+      rescue StandardError => e
+        counters[:skipped] += 1
+        errors << { line: row.line,
+                    message: "#{I18n.t('errors.translation_csv.row_failed')}（#{e.class}）",
+                    code: "ERROR" }
+      end
+
       def validate(row, enabled, source_locale)
         return error(row.line, "resource_gid", "INVALID") if row.resource_id.nil?
+        # 🔴 id 超過 BIGINT 範圍會在 save 時炸 RangeError（審查 A4 用 20 位數 gid 實跑重現）；
+        #   在 validate 就擋成行級 INVALID，不留給 rescue 兜底。
+        return error(row.line, "resource_gid", "INVALID") if row.resource_id.bit_length >= 64
         return error(row.line, "resource_type", "INVALID") unless Translation::RESOURCE_TYPES.include?(row.resource_type)
         return error(row.line, "field_key", "INVALID") unless Upsert::FIELDS.include?(row.field)
         return error(row.line, "locale_not_enabled", "LOCALE_NOT_ENABLED") unless enabled.include?(row.locale)

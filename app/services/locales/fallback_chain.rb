@@ -23,12 +23,20 @@ module Locales
   #   繼續截）——67 §C.4(a) 逐字：「不得續截到只剩語言碼、若該語言碼本身被禁用」，且
   #   「這是 zh 唯一被特別處理的地方，而處理方式是**縮短鏈**，不是特例分支」。
   #
-  #   🔴 **這一條與 CLDR 同構，不是我方自創的加嚴**（2026-08-25 取證）：
-  #   CLDR `common/supplemental/parentLocales.xml` 對 `zh-Hant` 的 parent 明文寫 `und`（＝root），
-  #   官方理由逐字：`If the locale is written in the non-default script for the language, it
-  #   needs to have the parent specified as root, for example, zh_Hant and sr_Latn need to fall
-  #   back to root (not to zh and sr which are in different scripts).`
-  #   出處：https://github.com/unicode-org/cldr/blob/main/common/supplemental/parentLocales.xml（2026-08-25）
+  #   🔴 **這一條與 CLDR 同構，不是我方自創的加嚴**（2026-08-25 取證；引文於同日
+  #   對抗審查 D1 後**二次修正**——首版引了一個不存在的檔案路徑與一段無法溯源的
+  #   「官方逐字」，已撤回，以下三個來源皆經親自抓取複驗）：
+  #   ① CLDR 正典 XML `common/supplemental/supplementalData.xml` 第 5157 行（main 分支）：
+  #      `<parentLocale parent="root" localeRules="nonlikelyScript" locales="…sr_Latn…zh_Hant"/>`
+  #      ——`zh_Hant` 的 parent 明文是 **root**，規則名 `nonlikelyScript`。
+  #      https://raw.githubusercontent.com/unicode-org/cldr/main/common/supplemental/supplementalData.xml
+  #   ② 理由在 CLDR 的 TR35（LDML 規格，unicode-org/cldr repo 內）逐字：
+  #      `In some cases, the normal truncation inheritance does not function well. For example,
+  #      if the truncation algorithm changes script, then a mixture of child and parent textual
+  #      data is a mishmash of different scripts.`
+  #      https://raw.githubusercontent.com/unicode-org/cldr/main/docs/ldml/tr35.md
+  #   ③ 衍生 JSON（unicode-org/**cldr-json** repo，非正典）把同一事實寫成 `"zh-Hant": "und"`：
+  #      https://raw.githubusercontent.com/unicode-org/cldr-json/main/cldr-json/cldr-core/supplemental/parentLocales.json
   #   ⇒ 我方的「截到 zh 就停」＝CLDR 的「zh-Hant 的 parent 是 root」。差別只在我方沒有 root
   #   這一階（root 之後我們接的是 base row ＝來源語言），不在截尾規則本身。
   #

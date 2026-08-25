@@ -75,11 +75,21 @@ RSpec.describe Translations::Resolve do
     ActiveSupport::Notifications.unsubscribe(subscriber)
   end
 
-  def capture_sql
+  # 🔴 收**全部**業務表的 SELECT，不是只收 translations（2026-08-25 依審查 C7 修正）：
+  #   首版過濾 `sql.include?("`translations`")`，於是把 `Resolve` 對 `shop_locales` 的查詢
+  #   全部濾掉——而那正是 `resolve.rb` 自己紅字警告的 N+1 面。實測把 batch 改成逐欄位
+  #   重查 shop_locales 後會發出 76 條查詢，首版的 N+1 spec 仍然綠。
+  IGNORED_SQL = /SCHEMA|TRANSACTION|\A(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)/i
+
+  def capture_sql(table: nil)
     queries = []
     subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
-      sql = payload[:sql]
-      queries << sql if sql.include?("`translations`") && sql.start_with?("SELECT")
+      sql = payload[:sql].to_s
+      next if payload[:name].to_s == "SCHEMA" || sql.match?(IGNORED_SQL)
+      next unless sql.lstrip.start_with?("SELECT")
+      next if table && !sql.include?("`#{table}`")
+
+      queries << sql
     end
     yield
     queries
@@ -248,6 +258,36 @@ RSpec.describe Translations::Resolve do
       expect(resolve(product, "title", "ja").source).to eq(:base)
     end
 
+    it "🔴 A3：scope 濾掉請求語言時 depth **不得**塌回 0（否則 lang 屬性與遙測全盲）" do
+      product = product!(title: "Rose")
+      translate!(product, "ja", "title", "ローズ")   # 有譯文，但 ja 未 published
+
+      hits = capture_hits { @result = resolve(product, "title", "ja") }
+
+      # 首版用 select 先移除候選 ⇒ candidates 空 ⇒ depth=0、fallback?=false、hits=0，
+      # 與「請求語言直接命中」在回傳值上完全無法區分。
+      expect(@result.depth).to eq(1)
+      expect(@result.fallback?).to be(true)
+      expect(@result.source).to eq(:base)
+      expect(hits.length).to eq(1)
+      expect(hits.first).to include(requested_locale: "ja", resolved_locale: "en", depth: 1)
+    end
+
+    it "🔴 A3：鏈中間階被 scope 濾掉時，後面階的 depth 索引不位移" do
+      add_locale!("zh-Hant", published: false) if false   # zh-Hant 已存在，僅示意
+      ActsAsTenant.with_tenant(shop) { ShopLocale.find_by!(locale_tag: "zh-Hant").update!(published: false) }
+      add_locale!("zh-Hant-HK", published: true)
+      product = product!(title: "Rose")
+      translate!(product, "zh-Hant", "title", "玫瑰")   # 鏈的第 1 階，但未 published
+
+      result = resolve(product, "title", "zh-Hant-HK")
+
+      # zh-Hant 被跳過（不讀它的譯文），但它仍佔 depth=1 這一格 ⇒ base 落在 depth=2。
+      expect(result.value).to eq("Rose")
+      expect(result.source).to eq(:base)
+      expect(result.depth).to eq(2)
+    end
+
     it ":enabled 讀得到（預覽連結的形態）" do
       product = product!(title: "Rose")
       translate!(product, "ja", "title", "ローズ")
@@ -274,7 +314,7 @@ RSpec.describe Translations::Resolve do
       end
       products.each { |p| translate!(p, "zh-Hant", "title", "譯#{p.id}") }
 
-      queries = capture_sql do
+      queries = capture_sql(table: "translations") do
         described_class.batch(shop:, resources: products + [ collection ], locale: "zh-Hant")
       end
 
@@ -286,7 +326,7 @@ RSpec.describe Translations::Resolve do
       product = product!
       translate!(product, "zh-Hant", "title", "譯")
 
-      queries = capture_sql do
+      queries = capture_sql(table: "translations") do
         described_class.batch(shop:, resources: [ product ], locale: "zh-Hant")
       end
 
@@ -334,9 +374,60 @@ SQL: #{queries.first}"
       expect(product_of).to be <= 200
     end
 
-    it "空 resources 直接回空 hash（不發任何查詢）" do
-      queries = capture_sql { expect(described_class.batch(shop:, resources: [], locale: "en")).to eq({}) }
-      expect(queries).to be_empty
+    it "空 resources 直接回空 hash（連 shop_locales 都不查）" do
+      shop   # 先把 lazy factory 拉起來，不然它的建店查詢會混進量測
+      t = capture_sql(table: "translations") { described_class.batch(shop:, resources: [], locale: "en") }
+      l = capture_sql(table: "shop_locales") { expect(described_class.batch(shop:, resources: [], locale: "en")).to eq({}) }
+      expect(t).to be_empty
+      expect(l).to be_empty
+    end
+
+    it "🔴 C7：整批的 shop_locales 查詢是**固定次數**，不隨資源或欄位數成長" do
+      publish!("zh-Hant")
+      products = Array.new(6) { |i| product!(title: "P#{i}") }
+      products.each { |p| translate!(p, "zh-Hant", "title", "譯#{p.id}") }
+
+      queries = capture_sql(table: "shop_locales") do
+        described_class.batch(shop:, resources: products, locale: "zh-Hant")
+      end
+
+      # source_tag 一次 ＋ published_tags 一次＝2；逐資源／逐欄位重查會變成 6×4×2。
+      expect(queries.length).to eq(2),
+        "shop_locales 查了 #{queries.length} 次——batch 內出現 N+1（首版的 capture_sql 看不到這個）"
+    end
+
+    it "🔴 C7 反向：把 registry 查詢搬進逐欄位迴圈後，上面那格必須紅" do
+      # 突變的可執行版本：證明該斷言真的在守 shop_locales 的 N+1，而不是碰巧成立。
+      publish!("zh-Hant")
+      products = Array.new(3) { |i| product!(title: "P#{i}") }
+      call_count = 0
+      allow(Locales::Registry).to receive(:published_tags).and_wrap_original do |orig, arg|
+        call_count += 1
+        orig.call(arg)
+      end
+
+      described_class.batch(shop:, resources: products, locale: "zh-Hant")
+
+      expect(call_count).to eq(1), "published_tags 每批只該查一次"
+    end
+
+    it "🔴 A7：field 傳 Symbol 也能用（內層 key 統一 String）" do
+      publish!("zh-Hant")
+      product = product!(title: "Rose")
+      translate!(product, "zh-Hant", "title", "玫瑰")
+
+      expect(described_class.field(shop:, resource: product, field: :title, locale: "zh-Hant").value)
+        .to eq("玫瑰")
+      expect(described_class.fields_for(shop:, resource: product, fields: [ :title ], locale: "zh-Hant").keys)
+        .to eq([ "title" ])
+    end
+
+    it "🔴 A10：傳別店的資源物件一律 raise（base 值是從物件讀的，查詢層擋不到）" do
+      other = create(:shop, subdomain: "resolve-other")
+      theirs = ActsAsTenant.with_tenant(other) { create(:product, shop: other, title: "SECRET") }
+
+      expect { described_class.batch(shop:, resources: [ theirs ], locale: "en") }
+        .to raise_error(ArgumentError, /不屬於本店/)
     end
 
     it "不支援的資源類型 raise（不靜默推導成一個查不到列的字串）" do
@@ -391,7 +482,7 @@ SQL: #{queries.first}"
       product = product!
       translate!(product, "zh-Hant", "title", "玫瑰")
 
-      queries = capture_sql do
+      queries = capture_sql(table: "translations") do
         ActsAsTenant.with_tenant(shop) do
           product_type_for(product).translations(locales: [ "zh-Hant-HK" ]).to_a
         end
@@ -414,6 +505,31 @@ SQL: #{queries.first}"
       end
 
       expect(rows).to be_empty
+    end
+  end
+
+  describe "🔴 C5：讀取端尺寸 fast-path" do
+    it "超過閾值的 html 值不 parse、直接視為有內容" do
+      publish!("zh-Hant")
+      product = product!(description_html: "<p>base</p>")
+      threshold = Limits.fetch(:i18n, :blank_value, :read_fast_path_max_bytes)
+      # 語義上是空的，但體積超過閾值 ⇒ 讀取端不 parse ⇒ 當成有內容（假陰性側）。
+      big_blank = "<p>#{'&nbsp;' * ((threshold / 6) + 50)}</p>"
+      expect(big_blank.bytesize).to be > threshold
+      translate!(product, "zh-Hant", "body_html", big_blank)
+
+      result = resolve(product, "body_html", "zh-Hant")
+
+      expect(result.source).to eq(:translation)
+      expect(result.depth).to eq(0)
+    end
+
+    it "🔴 寫入端**不**吃 fast-path：同一個值走 Upsert 仍判空（不可逆動作要跑完整判準）" do
+      threshold = Limits.fetch(:i18n, :blank_value, :read_fast_path_max_bytes)
+      big_blank = "<p>#{'&nbsp;' * ((threshold / 6) + 50)}</p>"
+
+      expect(Translations::BlankValue.blank?(big_blank, kind: :html)).to be(true)
+      expect(Translations::BlankValue.blank?(big_blank, kind: :html, skip_parse_above: threshold)).to be(false)
     end
   end
 

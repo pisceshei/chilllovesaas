@@ -45,6 +45,10 @@ RSpec.describe Translations::Fields do
   end
 
   describe "limit" do
+    it "🔴 A8：未知欄位 raise，不靜默回別欄的上限" do
+      expect { described_class.limit("totally_unknown") }.to raise_error(KeyError, /未知的可翻欄位/)
+    end
+
     it "沿用來源欄位的上限（不另立一套）" do
       expect(described_class.limit("title")).to eq(Limits.fetch(:product, :title_max_chars))
       expect(described_class.limit("body_html")).to eq(Limits.fetch(:product, :description_max_bytes))

@@ -122,5 +122,42 @@ RSpec.describe Translations::BlankValue do
     it "🔴 不可見的 void 元素不在清單裡（判準是「看不看得到」，不是 void elements 清單）" do
       expect(described_class::CONTENT_BEARING).not_to include("area", "base", "col", "link", "meta", "wbr")
     end
+
+    it "🔴 D10：`source` 不在清單裡（它是 void、單獨不可見；父元素已在清單內）" do
+      expect(described_class::CONTENT_BEARING).not_to include("source", "track")
+      expect(described_class.blank?("<source src=x>", kind: :html)).to be(true)
+      # 但它的父元素仍然算內容：
+      expect(described_class.blank?("<video><source src=x></video>", kind: :html)).to be(false)
+    end
+
+    it "清單＝WHATWG embedded 十元素 ＋ 六個可見加項，無其他" do
+      embedded = %w[audio canvas embed iframe img math object picture svg video]
+      extras = %w[hr table input select textarea button]
+      expect(described_class::CONTENT_BEARING).to match_array(embedded + extras)
+    end
+  end
+
+  # 🔴 這一組守的是「偵測器不得與被偵測的失效共用盲點」——本包實際踩到過：
+  #   用 `blank?` 判 raw 會走同一個 parser、撞同一個深度懸崖，於是回報「raw 也是空的」。
+  describe ".text_bearing?（parser-independent）" do
+    it "深巢狀真內容：`blank?` 被 parser 懸崖騙過，`text_bearing?` 沒有" do
+      deep = ("<div>" * 300) + "IMPORTANT" + ("</div>" * 300)
+
+      expect(described_class.blank?(deep, kind: :html)).to be(true), "前提：blank? 在這裡確實被騙"
+      expect(described_class.text_bearing?(deep)).to be(true)
+    end
+
+    it "語義空 HTML 一律回 false（含數值實體與具名不可見實體）" do
+      [ "<p></p>", "<p><br></p>", "<p>&nbsp;</p>", "<p>&#160;</p>", "<p>&#xA0;</p>",
+        "<p>&#8203;</p>", "<p>&zwnj;</p>", '<p class="x"></p>', "<ul><li></li></ul>", "" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(false), "#{html.inspect} 不該被當成有內容"
+      end
+    end
+
+    it "真內容與 content-bearing 標籤回 true" do
+      [ "<p>你好</p>", "<p>&amp;</p>", "<p><img src=x></p>", "<hr>", "<video src=x></video>" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(true), "#{html.inspect} 應該算有內容"
+      end
+    end
   end
 end

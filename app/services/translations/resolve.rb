@@ -5,8 +5,10 @@ module Translations
   #
   # @!attribute value [String, nil] 要輸出的字串；`source == :omitted` 時為 nil
   # @!attribute locale [String, nil] 這個字串**實際**是什麼語言（第 34 包的 `lang` 屬性值）
-  # @!attribute depth [Integer] 0＝請求語言直接命中；1..n＝走了第 n 階 fallback；
-  #   n+1＝落到 base row。遙測門檻 `i18n.resolve.fallback_telemetry_min_depth` 比對這個值。
+  # @!attribute depth [Integer] 離請求語言幾步（以**完整**截尾鏈的索引計，與 scope 無關
+  #   ——2026-08-25 依審查 A3 修正，首版用過濾後索引，「請求語言不在 scope」時會塌回 0）。
+  #   0＝請求語言直接命中（或請求語言就是來源語言）；1..n＝落在鏈的第 n 階；
+  #   鏈長＝落到 base row。遙測門檻 `i18n.resolve.fallback_telemetry_min_depth` 比對這個值。
   # @!attribute source [Symbol] `:translation`／`:base`／`:omitted`
   Resolved = Data.define(:value, :locale, :depth, :source) do
     # 🔴 第 34 包判斷「要不要加 lang 屬性」用這個，**不是**比對字串是否等於原文
@@ -32,8 +34,9 @@ module Translations
   # ②具體功能（完整值域與規則）：
   #   - `scope:` 兩值。`:published`（預設，前台）只在 `shop_locales.published` 的語言裡解析；
   #     `:enabled` 給預覽連結用（67：「未發布＝只能預覽連結」）。
-  #     🔴 **不在 scope 內的候選一律跳過，不是報錯**——請求未發布語言的 URL 該在路由層 404
-  #     （`i18n.storefront.unpublished_locale_status: 404`），不是在這裡才發現。
+  #     🔴 **不在 scope 內的候選一律跳過（保留 depth 索引），不是報錯**——請求未發布語言的
+  #     URL 該在路由層 404（`i18n.storefront.unpublished_locale_status: 404`），不是在這裡
+  #     才發現；但在路由層尚未落地前，這裡落到 base 仍如實回報 `fallback?=true` 與遙測。
   #   - 🔴 **`resolve()` 不收 market 參數**（67 §C.2 沿革／驗收 I18N-6）。市場影響「曝光」與
   #     「錢」，不影響「內容」；`translations.market_id` 已刪欄。想加回來的人先讀 §C.2。
   #   - 空值（含語義空 HTML）視同沒有譯文 ⇒ 繼續往下一階（`Translations::BlankValue`）。
@@ -41,8 +44,9 @@ module Translations
   #
   # ③怎麼做到 —— 三個非顯而易見的點：
   #   🔴 **(a) 請求語言就是來源語言時，depth 必須是 0**。來源語言的文字在 base row，
-  #      `translations` 裡按定義一列都沒有（`Upsert` 會用 `SOURCE_LOCALE_NOT_TRANSLATABLE`
-  #      擋下）。若照「查不到 ⇒ 一路走到 base ⇒ depth=n+1」算，**每一次正常的來源語言渲染
+  #      正規寫入路徑不會產生來源語言的譯文列（`Upsert` 以 code=`INVALID`、i18n key
+  #      `errors.translation.source_locale_not_translatable` 擋；繞道寫入的歷史列由
+  #      `Translations::Audit` 的 `source_locale_row` 規則登記）。若照「查不到 ⇒ 一路走到 base ⇒ depth=n+1」算，**每一次正常的來源語言渲染
   #      都會發一筆 fallback_hit** ——遙測會被自己的正常路徑淹沒，§E.4 的缺漏可視化就廢了。
   #      實作上不需要特例分支：候選清單裡遇到 `== source_locale` 就直接回 base，
   #      而來源語言的候選索引恰好是 0。
@@ -55,8 +59,9 @@ module Translations
   #      欄位在 Ruby 端過濾，每列最多 4 欄，浪費極小。
   #      出處：https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html（2026-08-25）
   #      ＋ https://dev.mysql.com/blog-archive/you-asked-for-it-new-default-for-eq_range_index_dive_limit/（2026-08-25）
-  #      ⚠️ **U14 未取得**：我方 MySQL 實例的 `@@eq_range_index_dive_limit` 現值尚未實查，
-  #      200 來自官方預設值文件。上線前以 `SELECT @@eq_range_index_dive_limit;` 複驗。
+  #      ✅ **P7-L6 已取得**（2026-08-25 於 bt3 正式環境實查）：`@@eq_range_index_dive_limit
+  #      = 200`（MySQL 8.4.10），與推導所用的官方預設值相同。
+  #      複驗＝`SELECT @@eq_range_index_dive_limit;`。
   #   🔴 **(d) 按 `resource_type` 分組發查詢，不用 row constructor**
   #      （`(resource_type, resource_id) IN ((..),(..))`）。MySQL 對 row constructor 走 range
   #      有四個條件，其中「右側必須多於一個 row constructor」在單筆時不成立而退化成全掃。
@@ -112,6 +117,21 @@ module Translations
         end
         return {} if records.empty?
 
+        # 🔴 呼叫端傳錯店的物件時要炸，不能靜默回別店的 base 文字（審查 A10）：
+        #   查詢層全部帶 shop_id（隔離無破洞），但 base 值是直接從**傳進來的物件**讀的
+        #   ——那一步只有這個斷言在守。先驗型別（未知類別在這裡就炸，而不是對一個
+        #   沒有 shop_id 的物件 NoMethodError），再驗歸屬。
+        records.each do |record|
+          resource_type_for(record)
+          next if record.shop_id == shop.id
+
+          raise ArgumentError, "resources 含不屬於本店的資源：" \
+                               "#{record.class.name}##{record.id}（shop_id=#{record.shop_id}≠#{shop.id}）"
+        end
+        # 🔴 內層 hash 的 key 統一成 String——首版 `field()` 用 `field.to_s` fetch、
+        #   內層卻用原始物件當 key，Symbol 呼叫端會 KeyError（審查 A7）。
+        field_keys = Array(fields).map(&:to_s)
+
         # 🔴 自己開租戶脈絡（形態同 `Locales::Registry`）：呼叫端是 Liquid drop 與 rake 任務，
         #   不保證跑在 `ActsAsTenant.current_tenant` 已設定的請求脈絡裡；沒有這一層，
         #   `Translation.where` 會拋 `NoTenantSet`。`shop:` 是顯式參數 ⇒ 這裡是**唯一**
@@ -119,14 +139,19 @@ module Translations
         ActsAsTenant.with_tenant(shop) do
           source_locale = Locales::Registry.source_tag(shop)
           allowed = allowed_tags(shop, scope)
-          candidates = candidates_for(locale, source_locale, allowed)
-          rows = load_rows(shop, records, candidates, source_locale)
+          # 🔴 走訪清單是**未過濾**的完整截尾鏈；scope 在走訪時「跳過」而不是事先「移除」
+          #   （2026-08-25 依審查 A3 修正）。首版用 select 先移除，於是「請求語言不在
+          #   scope 內」時候選塌陷、`depth` 從 0 起算 ⇒ 明明落到來源語言卻回報
+          #   `fallback?=false`、第 34 包不加 `lang`、遙測全盲。depth 的語義＝
+          #   「離請求語言幾步」，它必須以完整鏈的索引計，與 scope 無關。
+          walk = Locales::FallbackChain.candidates(locale)
+          rows = load_rows(shop, records, walk & allowed, source_locale)
 
           records.each_with_object({}) do |record, out|
             type = resource_type_for(record)
-            out[[ type, record.id ]] = Array(fields).index_with do |field|
-              resolve_one(shop:, record:, type:, field: field.to_s, locale:,
-                          candidates:, source_locale:, rows:)
+            out[[ type, record.id ]] = field_keys.index_with do |field|
+              resolve_one(shop:, record:, type:, field:, locale:,
+                          walk:, allowed:, source_locale:, rows:)
             end
           end
         end
@@ -170,24 +195,12 @@ module Translations
         end
       end
 
-      # 候選清單＝請求語言 ＋ 截尾鏈，過濾掉 scope 外的語言。
-      #
-      # `tag == source_locale` 這個豁免在**兩個 scope 下都恆為多餘**：`ShopLocale` 的
-      # `source_stays_published_and_enabled` 驗證讓來源語言的 `published`／`enabled` 都恆 true
-      # （複驗＝`grep -n "source_stays_published_and_enabled" -A 6 app/models/shop_locale.rb`）。
-      # ⚠️ 留著是 fail-closed：那條驗證是 model 層的，`update_columns`／SQL 直改繞得過去；
-      # 真的繞過時，沒有這個豁免會讓整條鏈斷在半路、前台顯示空白。
-      # **不得**因此宣稱它是承重守衛（突變驗證：刪掉它現有測試不會紅）。
-      def candidates_for(locale, source_locale, allowed)
-        Locales::FallbackChain.candidates(locale).select do |tag|
-          tag == source_locale || allowed.include?(tag)
-        end
-      end
-
-      # 一條 SELECT / resource_type（見檔頭③(c)(d)）。
+      # 一條 SELECT / resource_type（見檔頭③(c)(d)）。只載入 scope 內的語言——
+      # 走訪時對 scope 外候選是「跳過」，但**資料庫層根本不去讀它們的列**（未發布語言的
+      # 譯文保留而不可取用，兩層都要成立）。
       # @return [Hash{Array(String,Integer,String,String) => String}] 值查表
-      def load_rows(shop, records, candidates, source_locale)
-        lookup_tags = candidates - [ source_locale ]
+      def load_rows(shop, records, allowed_candidates, source_locale)
+        lookup_tags = allowed_candidates - [ source_locale ]
         return {} if lookup_tags.empty?
 
         records.group_by { |record| resource_type_for(record) }.each_with_object({}) do |(type, group), out|
@@ -199,23 +212,40 @@ module Translations
         end
       end
 
-      def resolve_one(shop:, record:, type:, field:, locale:, candidates:, source_locale:, rows:)
+      def resolve_one(shop:, record:, type:, field:, locale:, walk:, allowed:, source_locale:, rows:)
         kind = Fields.kind(field)
 
-        candidates.each_with_index do |tag, depth|
+        walk.each_with_index do |tag, depth|
           # 檔頭③(a)(b)：來源語言的內容在 base row，不在 translations。
+          # 🔴 這一格在 scope 檢查**之前**：來源語言是最終 fallback，即使它被
+          #   `update_columns` 之類繞道改成未發布（model 驗證擋不到的形態），
+          #   鏈也不得斷在半路——沒有這個順序，前台會顯示空白。
           return base_result(shop:, record:, type:, field:, locale:, depth:,
                              source_locale:, kind:) if tag == source_locale
+          # scope 外＝跳過但**保留 depth 索引**（見 batch 內的修正註釋）。
+          # ⚠️ **這一行目前構造上不可達**：`load_rows` 只載入 scope 內的語言，所以
+          #   scope 外的候選在 `rows` 裡本來就查不到值、下一行的判空會接住它。
+          #   突變驗證：刪掉它測試**不會紅**（N16）⇒ 它是縱深防禦，不是承重守衛，
+          #   **不得**宣稱有測試證明它有效。留著的理由是承重的那一道在別的方法裡
+          #   （`load_rows` 的 `allowed_candidates`），日後若有人為了預載而把完整
+          #   `rows` 傳進來，這一行是唯一還站著的防線。
+          next unless allowed.include?(tag)
 
           value = rows[[ type, record.id, tag, field ]]
-          next if BlankValue.blank?(value, kind:)
+          next if BlankValue.blank?(value, kind:, skip_parse_above: read_fast_path)
 
           emit(shop:, locale:, resolved: tag, type:, field:, depth:)
           return Resolved.new(value:, locale: tag, depth:, source: :translation)
         end
 
-        base_result(shop:, record:, type:, field:, locale:, depth: candidates.length,
+        base_result(shop:, record:, type:, field:, locale:, depth: walk.length,
                     source_locale:, kind:)
+      end
+
+      # 讀取端 fast-path 閾值（`i18n.blank_value.read_fast_path_max_bytes`；C5 修正）。
+      # 🔴 只有 Resolve 用；寫入端與稽核走完整判準（BlankValue 檔頭③）。
+      def read_fast_path
+        Limits.fetch(:i18n, :blank_value, :read_fast_path_max_bytes)
       end
 
       def base_result(shop:, record:, type:, field:, locale:, depth:, source_locale:, kind:)
@@ -223,7 +253,9 @@ module Translations
         emit(shop:, locale:, resolved: source_locale, type:, field:, depth:)
 
         # optional 欄位缺翻譯且原文也空 ⇒ **整個欄位不輸出**（67 §B.1；不是輸出空字串）。
-        if Fields.missing(field) == :optional && BlankValue.blank?(value, kind:)
+        # base 的判空同樣走讀取端 fast-path（大 body ⇒ 視為有內容，落假陰性側）。
+        if Fields.missing(field) == :optional &&
+           BlankValue.blank?(value, kind:, skip_parse_above: read_fast_path)
           return Resolved.new(value: nil, locale: nil, depth:, source: :omitted)
         end
 

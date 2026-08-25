@@ -40,6 +40,7 @@ module Catalog
       private
 
       def normalize(shop, input, errors)
+        source_locale = Locales::Registry.source_tag(shop)
         title = input[:title].to_s.strip
         errors << error([ "title" ], I18n.t("errors.collection.title_blank"), "BLANK") if title.empty?
         if title.length > Limits.fetch(:product, :title_max_chars)
@@ -81,7 +82,8 @@ module Catalog
           sort_order:,
           seo: seo_attributes(input, errors),
           product_ids: input[:product_ids],
-          translations: input[:translations]
+          source_locale:,
+          translations_prepared: prepare_translations(shop, source_locale, input, errors)
         }
       end
 
@@ -260,20 +262,31 @@ module Catalog
         Catalog::CacheStamps.bump_collection_members!(shop.id, collection.id)
       end
 
-      # 譯文與商品共用同一個服務（只換 resource_type）；驗證失敗 ⇒ 整棵樹回滾。
+      # 譯文與商品共用同一個服務（只換 resource_type）。
+      # 🔴 驗證與 sanitize 在 normalize（txn 外）的 `prepare_translations` 完成（審查 C4，
+      #   與 SaveProduct 同拆法）；這裡只做 DB 寫入。
+      def prepare_translations(shop, source_locale, input, errors)
+        prepared = Translations::Upsert.prepare(
+          shop:, source_locale:,
+          translations: Array(input[:translations]).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
+        )
+        errors.concat(prepared.user_errors)
+        prepared
+      end
+
       def reject_translations!(shop, collection, attributes)
-        result = Translations::Upsert.call(
+        result = Translations::Upsert.commit(
           shop:,
           resource_type: "COLLECTION",
           resource_id: collection.id,
-          source_locale: Locales::Registry.source_tag(shop),
+          source_locale: attributes[:source_locale],
           source_values: {
             "title" => collection.title,
             "body_html" => collection.description_html,
             "meta_title" => collection.seo_title,
             "meta_description" => collection.seo_description
           },
-          translations: Array(attributes[:translations]).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
+          prepared: attributes[:translations_prepared]
         )
         raise TreeRejected, result.user_errors if result.user_errors.any?
       end

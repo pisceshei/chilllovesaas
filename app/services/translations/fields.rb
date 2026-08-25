@@ -86,13 +86,21 @@ module Translations
     #
     # @param field [String]
     # @return [Integer] 上限值。單位由 `measure` 決定，見下。
+    # @raise [KeyError] 未知欄位。🔴 `kind`／`missing` 對未知值有安全預設可回；上限**沒有**
+    #   ——靜默回某個別欄的數字（首版的 `else` 分支就是這樣）等於給新欄位一個看起來
+    #   合法、實際上是別人的上限，正是「新增可翻欄位＝改這一張表」最會踩的那種陷阱。
+    LIMIT_KEYS = {
+      "title" => [ :product, :title_max_chars ],
+      "body_html" => [ :product, :description_max_bytes ],
+      "meta_title" => [ :content, :seo_title_max_chars ],
+      "meta_description" => [ :content, :seo_meta_description_max_chars ]
+    }.freeze
+
     def limit(field)
-      case field.to_s
-      when "title" then Limits.fetch(:product, :title_max_chars)
-      when "body_html" then Limits.fetch(:product, :description_max_bytes)
-      when "meta_title" then Limits.fetch(:content, :seo_title_max_chars)
-      else Limits.fetch(:content, :seo_meta_description_max_chars)
+      keys = LIMIT_KEYS.fetch(field.to_s) do
+        raise KeyError, "未知的可翻欄位 #{field.inspect}——上限沒有安全預設，先在 Fields 登記"
       end
+      Limits.fetch(*keys)
     end
 
     # 🔴 **上限的單位不是同一種，量錯就等於沒有上限**：`*_max_chars` 是字元數，

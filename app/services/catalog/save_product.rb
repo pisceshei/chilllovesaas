@@ -40,7 +40,11 @@ module Catalog
       end
     end
 
-    # 富文本白名單（13 §F1:126）：存前 sanitize，前台輸出處再 sanitize 一次（雙保險）。
+    # 富文本白名單（13 §F1:126）：存前 sanitize。
+    # 🔴 2026-08-25 更正（審查 S6）：原句宣稱「前台輸出處再 sanitize 一次（雙保險）」——
+    #   **輸出側的第二道目前不存在**（複驗＝`grep -rn "sanitize" app/ poc/ --include=*.rb
+    #   --include=*.liquid | grep -v sql`，只有 SQL 跳脫與本檔）。第二道落在第 30／33 包
+    #   （渲染管線）；在那之前，儲存側是唯一防線，`Translations::Audit` 是它的補網。
     # ⚠️ img[src 限自家 CDN] 的 CDN 白名單待媒體包（現階段限 https）；登記於 dev doc Pending。
     ALLOWED_TAGS = %w[p br strong em ul ol li a img].freeze
     ALLOWED_ATTRIBUTES = %w[href src alt].freeze
@@ -150,8 +154,16 @@ module Catalog
           variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
         end
         organization = normalize_organization(input, errors)
-        # 譯文原樣帶下去（驗證在 Translations::Upsert，與 base 寫入同 tx）。
-        translations = input[:translations]
+        # 🔴 譯文在這裡（transaction **外**）就完成驗證與 sanitize（2026-08-25 依審查 C4）：
+        #   原本整包原樣帶進 txn、由 Upsert 在裡面做，而 sanitize 是數百 ms 級的 CPU 活，
+        #   會把 product 列鎖（改名時還有店級鎖）的持有時間拉到秒級。base 的
+        #   description_html 本來就在本方法（txn 前）sanitize，譯文比照。
+        source_locale = Locales::Registry.source_tag(shop)
+        translations_prepared = Translations::Upsert.prepare(
+          shop:, source_locale:,
+          translations: Array(input[:translations]).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
+        )
+        errors.concat(translations_prepared.user_errors)
 
         {
           title:,
@@ -162,7 +174,8 @@ module Catalog
           status: input[:status] && input[:status].to_s.downcase,
           handle: manual_handle,
           organization:,
-          translations:,
+          source_locale:,
+          translations_prepared:,
           variant:,
           options_input:,
           variants_input:,
@@ -508,21 +521,19 @@ module Catalog
       #    正是最常見的情境（商家改英文標題、沒動翻譯）——那時過期偵測必須照樣標記。
       #    早期版本在 nil 就 return，導致「改來源文字後譯文不標過期」（spec 抓到）。
       def save_translations!(shop, product, attributes)
-        entries = attributes[:translations]
-
-        source_locale = Locales::Registry.source_tag(shop)
-        result = Translations::Upsert.call(
+        # 驗證與 sanitize 已在 normalize（txn 外）完成；這裡只做 DB 寫入（Upsert.commit）。
+        result = Translations::Upsert.commit(
           shop:,
           resource_type: "PRODUCT",
           resource_id: product.id,
-          source_locale:,
+          source_locale: attributes[:source_locale],
           source_values: {
             "title" => product.title,
             "body_html" => product.description_html,
             "meta_title" => product.seo_title,
             "meta_description" => product.seo_description
           },
-          translations: Array(entries).map { |entry| entry.respond_to?(:to_h) ? entry.to_h.symbolize_keys : entry }
+          prepared: attributes[:translations_prepared]
         )
         result.user_errors
       end

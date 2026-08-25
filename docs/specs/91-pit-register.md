@@ -2229,6 +2229,56 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.17 第 7 包（譯文解析）的範圍外觀察與待裁定（2026-08-25）
+
+來源＝第 7 包七方對抗審查（PR #140，受驗 head `19cb349`）確認、但不在該包根因射程內者。
+
+- 🔴 **待使用者裁定：OpenCC 字表（Apache-2.0）能不能入庫**。繁簡誤借稽核
+  （`Translations::Audit` 的 `script_mismatch`）需要繁簡字表；本輪調查所及唯一成熟的
+  公開字表是 OpenCC 的 `STCharacters.txt`／`TSCharacters.txt`，LICENSE 為 Apache-2.0
+  （<https://raw.githubusercontent.com/BYVoid/OpenCC/master/LICENSE>，2026-08-25 複驗）。
+  鐵律 9 逐字：「Apache-2.0 可用但有專利授權與 NOTICE 保留義務，混入前法務面要知情」
+  ⇒ 計畫外授權裁定，命中鐵律 17.3 例外。第 7 包的處置＝規則以**明文棄權**存在，
+  報告寫「未執行」而**絕不回報 0 筆**（有突變守衛 N16 盯著）。裁定「引入」時要同批交付
+  `NOTICE`、attribution、`docs/specs/107-external-adoption-register.md` 條目。
+  【選項與代價全文＝`docs/dev/m2-translations-resolve.md` §7】
+
+- ⚪ **`Catalog::SaveProduct#normalize` 有與第 7 包同型的 CPU 放大面**：它對
+  `descriptionHtml` 也是**先 `sanitize_description` 再量 `bytesize`**，於是無上界輸入會
+  先進 Loofah（實測 1MB≈14s、5MB≈160s，超線性；nginx 收 32MB、`Rack::Attack` 只限
+  `admin-login`）。第 7 包已把譯文兩條寫入路徑改成「先量 raw 再 parse」，但**沒有**動
+  base 這條（鐵律 20.5：不在該根因影響圖內，不順手擴修）。修法與譯文端同形。
+  【來源＝第 7 包 security 審查 S4；複驗＝`grep -n "sanitize_description(input\[:description_html\]" -A 3 app/services/catalog/save_product.rb`】
+
+- ⚪ **`limits.i18n.translation_value_hard_max_bytes: 65536` 零消費者**：全樹沒有任何
+  程式讀它（第 7 包改成由 `Fields.limit` 走 `product.description_max_bytes` 等既有鍵）。
+  要嘛接上、要嘛刪鍵——留著是「看起來有上限其實沒有」。
+  【來源＝第 7 包 security 審查 S3；複驗＝`git grep -n translation_value_hard_max_bytes`】
+
+- ⚪ **`cache_stamp_sources` 有三個懸空來源名**：`catalog_flow.cache_stamp_sources` 的
+  `market_settings_version`／`price_list_updated_at`，與
+  `i18n.cache.additional_cache_stamp_sources` 的 `translations_updated_at`／
+  `shop_locales_version`，對應欄位在 `db/schema.rb` 都不存在（前二者是第 32 包預告名，
+  後二者待第 3 包立欄）。第 7 包已在 `config/limits.yml` 就地標註，未刪未加。
+  🔴 第 33 包的 `cache_stamp` render 期自檢**接收端一旦實作**，這些名字就會開始被斷言
+  ——那時必須確認每一個都已立欄，否則第一次渲染就 raise。
+  【來源＝第 7 包 docs-evidence 審查 D2；複驗＝`grep -c "market_settings_version\|price_list_updated_at" db/schema.rb` ⇒ 0】
+
+- ⚪ **`ProductType`／`CollectionType#translations` 沒有 `Resolve` 的反向保護機制，只有
+  spec**：第 7 包立了兩格反向 spec（SQL 斷言＋行為斷言）擋「後台接上 fallback 鏈」，
+  但那是測試不是機制。若日後 admin 端真的需要「顯示 fallback 值」，正確做法是**新增
+  一個明確標示的欄位**（如 `translationsResolved`），不得改這兩支的語義——改了商家
+  一按儲存就把來源語言原文寫成該語言的真譯文。
+  【來源＝第 7 包 interface-fitness 審查（反駁者否決為 finding，但保留為紀律）】
+
+- ⚪ **一次性 `rails runner` 腳本的頂層 `def` 是全域猴補**：本輪探針寫了
+  `def blank?(value, html:)`，它定義在 `Object` 上（private），於是 `find_each` 內部的
+  `compact_blank` → `reject(&:blank?)` 對 Arel 節點呼叫時參數數目不符而爆
+  `NoMethodError: private method 'blank?' called for an instance of Arel::Nodes::Ascending`。
+  ⇒ 一次性腳本的 helper 一律用**不與 ActiveSupport 核心擴充撞名**的名字（或包進 module）。
+  交付碼不受影響（`Translations::BlankValue.blank?` 有命名空間）。
+  【來源＝第 7 包自查；複驗＝在 runner 腳本定義頂層 `def blank?` 再跑任何 `find_each`】
+
 ### 3.16 `https://chilling.com.hk`（裸 apex）送自簽憑證（第 31 包順手發現，2026-08-25）
 
 - ⚪ **裸網域 `chilling.com.hk` 的 HTTPS 是壞的**：瀏覽器會看到憑證警告，
