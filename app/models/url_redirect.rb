@@ -13,7 +13,11 @@ class UrlRedirect < ApplicationRecord
 
   validates :from_path, :to_path, presence: true,
     length: { maximum: Limits.fetch(:seo, :redirect_path_max_chars) },
-    format: { with: %r{\A/}, message: "must start with /" }
+    # 🔴 **必須 `\A…\z` 全錨**（brakeman ValidationRegex，High）：只錨開頭的話，
+    #   正則對**換行之後**的內容不設限 ⇒ `"/ok\nLocation: evil"` 通得過。
+    #   這個欄位最後會進第 36 包的 301 `Location` 標頭，換行＝標頭注入。
+    #   值域收斂成「/ 開頭、無空白無控制字元」。
+    format: { with: %r{\A/[^[:space:]]*\z}, message: "must be a path with no whitespace" }
   validates :source, inclusion: { in: Limits.enum(:seo, :redirect_sources).map(&:downcase) }
   validates :status_code, inclusion: { in: Limits.fetch(:seo, :redirect_status_codes) }
   # from == to 的列＝自我迴圈；鏈坍縮的不變量（見 HandleChange）保證寫入端

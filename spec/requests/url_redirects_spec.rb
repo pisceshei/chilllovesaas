@@ -165,6 +165,20 @@ RSpec.describe "Admin GraphQL handle 變更與 301", type: :request do
     expect(redirects).to eq([ [ "/collections/summer", "/collections/summer-sale", 301, "handle_change" ] ])
   end
 
+  it "🔴 路徑欄拒收換行／空白（第 36 包會把它放進 301 Location 標頭）" do
+    # brakeman ValidationRegex（High）抓到的：只錨開頭的正則對**換行之後**的內容
+    # 不設限，於是帶 CRLF 的值通得過 ⇒ 標頭注入。
+    ActsAsTenant.with_tenant(shop) do
+      [ "/ok\nLocation: https://evil.com", "/ok\r\nX-Injected: 1",
+        "/has space", "no-slash" ].each do |bad|
+        row = UrlRedirect.new(shop_id: shop.id, from_path: bad, to_path: "/products/z",
+                              status_code: 301, source: "handle_change")
+        expect(row).not_to be_valid, "#{bad.inspect} 竟然通過驗證"
+        expect(row.errors[:from_path]).not_to be_empty
+      end
+    end
+  end
+
   def login!(email: staff.email)
     post login_path, params: { email:, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)
