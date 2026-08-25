@@ -13,7 +13,10 @@ module Types
       argument :last, Integer, required: false
       argument :before, String, required: false
       # 伺服器端搜尋（28 §1 契約的 query 參數；v1 白名單子集見 Products::SearchScope）。
-      # `sortKey` 刻意不在本包——排程第 21 包做排序鍵一般化時一起上。
+      # 🔴 **products 的 `sortKey` 仍未上**（登記 V）。第 21 包已把排序鍵一般化、
+      #    D48 也已把 `files` 的排序補齊，但 products 的排序值域要對齊本尊
+      #    （PRODUCT_TITLE／INVENTORY_TOTAL／PUBLISHED_AT…）是另一份值域窮舉，
+      #    不在 D48 射程內。這句話**只對 products 成立**，不要讀成全站沒有排序。
       argument :query, String, required: false
     end
 
@@ -66,6 +69,11 @@ module Types
       argument :content_type, String, required: false, description: "只回這個 MIME 型別。"
       argument :used_in, FileUsedInFilterEnum, required: false,
                          description: "依引用狀態篩選（NONE＝沒有任何商品引用，可安全刪除）。"
+      # D48：本尊 Files 頁可依 Date added／File name／Size 排序，各可升降。
+      argument :sort_key, FileSortKeysEnum, required: false,
+                          description: "排序鍵；預設 CREATED_AT。"
+      argument :reverse, Boolean, required: false,
+                         description: "反轉排序方向。預設方向：CREATED_AT 新到舊、其餘由小到大。"
     end
 
     field :collection, CollectionType, null: true do
@@ -255,7 +263,8 @@ module Types
     # @return [Hash] keyset connection
     # @note 副作用：一條 tenant-scoped SELECT（引用計數走相關子查詢，不是逐列 COUNT）。
     def files(first: nil, after: nil, last: nil, before: nil,
-              query: nil, status: nil, content_type: nil, used_in: nil)
+              query: nil, status: nil, content_type: nil, used_in: nil,
+              sort_key: nil, reverse: false)
       authorize_files!
       scope = StoredFile
         .where(shop_id: context.fetch(:current_shop).id)
@@ -278,7 +287,8 @@ module Types
                           .where("file_usages.file_id = files.id").arel.exists
         scope = used_in == "NONE" ? scope.where.not(exists) : scope.where(exists)
       end
-      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+      order_key, direction = file_order(sort_key, reverse)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:, order_key:, direction:)
     end
 
     # 以 GID 取單一系列（編輯頁載入用）。
@@ -344,6 +354,21 @@ module Types
 
     # D42：庫存讀取用 `inventory.view`，與 products.view **分開的鍵**。
     # M1 全員 owner ⇒ `can?` 恆 true，但縫現在就分開，M5 RBAC 展開時不必回頭拆。
+    # `sortKey`／`reverse` → keyset 的 `(order_key, direction)`。
+    #
+    # 🔴 **預設方向依鍵而異**，不是一律 desc：日期預設「新到舊」（本尊逐字
+    #    "from newest to oldest"），但檔名與大小預設「由小到大」才符合直覺
+    #    ——檔名 desc 開頭是 z 開頭的檔，沒有人會期待那個。
+    #    `reverse` 反轉的是「該鍵的預設方向」，不是「desc」。
+    def file_order(sort_key, reverse)
+      key, natural = case sort_key
+      when "FILENAME" then [ :filename, :asc ]
+      when "ORIGINAL_UPLOAD_SIZE" then [ :byte_size, :asc ]
+      else [ :created_at, :desc ]
+      end
+      [ key, reverse ? (natural == :asc ? :desc : :asc) : natural ]
+    end
+
     # 檔案庫的讀取授權（第 28 包）。權限鍵是 `files.view`，**不是** products.view
     # ——檔案庫在內容線、有自己的權限格（12 F3），沿用商品的會讓只給了商品權限的
     # staff 看到整個檔案庫。

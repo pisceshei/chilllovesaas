@@ -26,8 +26,12 @@ function file(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function stubGraphql(nodes: ReturnType<typeof file>[]) {
+function stubGraphql(
+  nodes: ReturnType<typeof file>[],
+  pages?: { nodes: ReturnType<typeof file>[]; hasNextPage: boolean; endCursor: string | null }[],
+) {
   const calls: { query: string; variables: Record<string, unknown> }[] = [];
+  let page = 0;
   const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body)) as { query: string; variables: Record<string, unknown> };
     calls.push(body);
@@ -36,6 +40,14 @@ function stubGraphql(nodes: ReturnType<typeof file>[]) {
     }
     if (body.query.includes("fileUpdate")) {
       return jsonResponse({ data: { fileUpdate: { files: [], userErrors: [] } } });
+    }
+    if (pages) {
+      // 第一頁＝after 為 null，之後照序給
+      const index = body.variables.after == null ? 0 : Math.min(page + 1, pages.length - 1);
+      page = index;
+      const p = pages[index];
+      return jsonResponse({ data: { files: { nodes: p.nodes,
+        pageInfo: { hasNextPage: p.hasNextPage, endCursor: p.endCursor } } } });
     }
     return jsonResponse({ data: { files: { nodes, pageInfo: { hasNextPage: false, endCursor: null } } } });
   });
@@ -123,6 +135,97 @@ describe("檔案庫頁", () => {
 
     await user.selectOptions(screen.getByLabelText("使用中"), "NONE");
     await waitFor(() => expect(calls.at(-1)?.variables.usedIn).toBe("NONE"));
+  });
+
+  it("🔴 D48：排序控件把 sortKey／reverse 送到伺服端", async () => {
+    const calls = stubGraphql([ file() ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText("cat.png");
+    await user.selectOptions(screen.getByLabelText("排序"), "FILENAME");
+    await waitFor(() => expect(calls.at(-1)?.variables.sortKey).toBe("FILENAME"));
+
+    await user.click(screen.getByLabelText("反轉排序"));
+    await waitFor(() => expect(calls.at(-1)?.variables.reverse).toBe(true));
+  });
+
+  it("🔴 D48：載入更多**接在後面**而不是取代；沒有下一頁時整顆不渲染", async () => {
+    const p1 = [ file({ filename: "a.png" }) ];
+    const p2 = [ file({ id: "gid://chilllove/File/2", filename: "b.png" }) ];
+    stubGraphql([], [
+      { nodes: p1, hasNextPage: true, endCursor: "cur1" },
+      { nodes: p2, hasNextPage: false, endCursor: null },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText("a.png");
+    await user.click(screen.getByRole("button", { name: "載入更多" }));
+
+    // 兩頁都在（接續，不是取代）
+    expect(await screen.findByText("b.png")).toBeVisible();
+    expect(screen.getByText("a.png")).toBeVisible();
+    // 沒有下一頁 ⇒ 按鈕消失（不是 disabled）
+    await waitFor(() => expect(screen.queryByRole("button", { name: "載入更多" })).toBeNull());
+  });
+
+  it("🔴 D48：載入更多途中改篩選 ⇒ 按鈕不得永遠卡在載入中", async () => {
+    // 讓「載入更多」那一次請求**停在半空**，期間改篩選條件。
+    // holder 物件：直接用 `let fn: (() => void) | null` 會被 TS 窄化成 never
+    // （賦值發生在它看不進去的 callback 裡），呼叫時報 not callable。
+    const gate: { release: (() => void) | null } = { release: null };
+    let sawLoadMore = false;
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { variables: Record<string, unknown> };
+      const isLoadMore = body.variables.after != null;
+      if (isLoadMore && !sawLoadMore) {
+        sawLoadMore = true;
+        await new Promise<void>((resolve) => { gate.release = resolve; });
+      }
+      return jsonResponse({ data: { files: {
+        nodes: [ file({ filename: isLoadMore ? "page2.png" : "page1.png" }) ],
+        pageInfo: { hasNextPage: true, endCursor: "cur" },
+      } } });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderPage();
+    const user = userEvent.setup();
+    await screen.findByText("page1.png");
+
+    await user.click(screen.getByRole("button", { name: "載入更多" }));
+    // 請求還卡著 ⇒ 顯示載入中
+    await waitFor(() => expect(screen.getByRole("button", { name: "載入中…" })).toBeDisabled());
+
+    // 途中改篩選：第一頁 effect 重跑、世代前進
+    await user.selectOptions(screen.getByLabelText("狀態"), "FAILED");
+    gate.release?.();
+
+    // 🔴 舊世代的 loadMore 回來時世代已不符；若 finally 帶世代守衛就永遠不清旗標
+    //    ⇒「載入更多」會一直是「載入中…」且 disabled。
+    await waitFor(() => expect(screen.getByRole("button", { name: "載入更多" })).toBeEnabled());
+  });
+
+  it("🔴 D48：改篩選條件要回到第一頁（不得把新條件的頁接在舊條件後面）", async () => {
+    const calls = stubGraphql([], [
+      { nodes: [ file({ filename: "old.png" }) ], hasNextPage: true, endCursor: "cur1" },
+      { nodes: [ file({ id: "gid://chilllove/File/2", filename: "old2.png" }) ], hasNextPage: true, endCursor: "cur2" },
+    ]);
+    renderPage();
+    const user = userEvent.setup();
+
+    await screen.findByText("old.png");
+    await user.click(screen.getByRole("button", { name: "載入更多" }));
+    await screen.findByText("old2.png");
+
+    await user.selectOptions(screen.getByLabelText("狀態"), "FAILED");
+    // 換條件後的第一次請求 after 必須是 null
+    await waitFor(() => {
+      const last = calls.at(-1);
+      expect(last?.variables.status).toBe("FAILED");
+      expect(last?.variables.after ?? null).toBeNull();
+    });
   });
 
   it("alt 失焦送 fileUpdate；非 READY 的檔不給編輯（官方要求 ready）", async () => {

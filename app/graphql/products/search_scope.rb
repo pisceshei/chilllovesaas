@@ -16,7 +16,7 @@ module Products
   #   （「100% cotton」），不跳脫則使用者輸入 `0%` 會萬用匹配整表。
   #   🔴 不用字串內插組 SQL（Brakeman fail-closed；ML-3b 的 keyset 前例）。
   # ④跨功能影響：與 `Products::KeysetConnection` 組合——filter 先於 cursor 套用，
-  #   同一 query 字串跨頁傳遞時 keyset 語義不變。`sortKey` 刻意不在本包
+  #   同一 query 字串跨頁傳遞時 keyset 語義不變。products 的 `sortKey` 仍未上（D48 已補 `files` 的排序，products 的值域窮舉另計）——原文寫「刻意不在本包」
   #   （排程第 21 包做排序鍵一般化時一起上，這裡先做會把該包拆散）。
   #   v1 未支援而**登記 V** 的：`tag:`（等值集合運算需 product_tags 正規化表＝排程第 9 包，
   #   在那之前做 JSON LIKE 就是 13 §F4.3 禁止的子字串比對）、`created_at:>`、`-`/`NOT` 否定、

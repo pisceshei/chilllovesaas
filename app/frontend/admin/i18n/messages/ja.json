@@ -485,5 +485,14 @@
   "files.picker.noMatch": "検索語を変えてください。",
   "files.picker.empty.title": "ファイルライブラリは空です",
   "files.picker.empty.description": "「コンテンツ > ファイル」からアップロードするか、上のエリアにドロップしてください。",
-  "product.media.attachFailed": "選択したファイルを追加できませんでした。"
+  "product.media.attachFailed": "選択したファイルを追加できませんでした。",
+  "common.loadMore": "さらに読み込む",
+  "files.col.sort": "並び替え",
+  "files.sort.CREATED_AT": "追加日",
+  "files.sort.FILENAME": "ファイル名",
+  "files.sort.ORIGINAL_UPLOAD_SIZE": "サイズ",
+  "files.sort.reverse": "並び順を反転",
+  "files.picker.uploadNew": "新規アップロード",
+  "files.picker.uploading": "アップロード中…",
+  "files.picker.uploadedNotSelected": "{count} 件のファイルはライブラリにアップロードされましたが、選択上限に達しているため選択されていません。"
 }

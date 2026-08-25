@@ -485,5 +485,14 @@
   "files.picker.noMatch": "換個關鍵字再試一次。",
   "files.picker.empty.title": "檔案庫是空的",
   "files.picker.empty.description": "先到「內容 › 檔案」上傳，或直接把檔案拖到上面的區域。",
-  "product.media.attachFailed": "無法加入選取的檔案。"
+  "product.media.attachFailed": "無法加入選取的檔案。",
+  "common.loadMore": "載入更多",
+  "files.col.sort": "排序",
+  "files.sort.CREATED_AT": "上傳日期",
+  "files.sort.FILENAME": "檔名",
+  "files.sort.ORIGINAL_UPLOAD_SIZE": "大小",
+  "files.sort.reverse": "反轉排序",
+  "files.picker.uploadNew": "上傳新檔案",
+  "files.picker.uploading": "上傳中…",
+  "files.picker.uploadedNotSelected": "{count} 個檔案已上傳到檔案庫，但因為已達選取上限而沒有被選取。"
 }

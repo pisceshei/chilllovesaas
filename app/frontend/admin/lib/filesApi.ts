@@ -1,5 +1,6 @@
 import { requestAdminGraphQL } from "../api/graphql";
 import { StagedUploadError, stageAndUpload } from "./stagedUpload";
+import type { Page } from "./useCursorPagination";
 
 /**
  * 檔案庫的資料存取（第 28 包）——`files` query＋`fileCreate`／`fileUpdate`／`fileDelete`。
@@ -25,10 +26,16 @@ export interface FileNode {
   createdAt: string;
 }
 
+/** 排序鍵（值域＝`Types::FileSortKeysEnum`）。 */
+export type FileSortKey = "CREATED_AT" | "FILENAME" | "ORIGINAL_UPLOAD_SIZE";
+
 export interface FilesFilter {
   query?: string;
   status?: FileNode["status"];
   usedIn?: "PRODUCT" | "NONE";
+  sortKey?: FileSortKey;
+  /** 反轉該鍵的**預設**方向（不是「改成 desc」——見伺服端 `file_order`）。 */
+  reverse?: boolean;
 }
 
 const FILE_FIELDS = `
@@ -37,8 +44,10 @@ const FILE_FIELDS = `
 `;
 
 const FILES_QUERY = `
-  query filesList($first: Int!, $query: String, $status: FileStatus, $usedIn: FileUsedInFilter) {
-    files(first: $first, query: $query, status: $status, usedIn: $usedIn) {
+  query filesList($first: Int!, $after: String, $query: String, $status: FileStatus,
+                  $usedIn: FileUsedInFilter, $sortKey: FileSortKeys, $reverse: Boolean) {
+    files(first: $first, after: $after, query: $query, status: $status,
+          usedIn: $usedIn, sortKey: $sortKey, reverse: $reverse) {
       nodes { ${FILE_FIELDS} }
       pageInfo { hasNextPage endCursor }
     }
@@ -76,17 +85,27 @@ interface UserError {
   message: string;
 }
 
-/** 讀一頁檔案。 */
+/** 讀一頁檔案（含 `pageInfo`，供 `useCursorPagination` 接續）。 */
+export async function fetchFilesPage(
+  first: number,
+  filter: FilesFilter,
+  after: string | null,
+  signal?: AbortSignal,
+): Promise<Page<FileNode>> {
+  const data = await requestAdminGraphQL<
+    { files: Page<FileNode> },
+    Record<string, unknown>
+  >(FILES_QUERY, { first, after, ...filter }, signal);
+  return data.files;
+}
+
+/** 只要第一頁的節點（選檔 modal 用；它不翻頁）。 */
 export async function fetchFiles(
   first: number,
   filter: FilesFilter,
   signal?: AbortSignal,
 ): Promise<FileNode[]> {
-  const data = await requestAdminGraphQL<
-    { files: { nodes: FileNode[] } },
-    Record<string, unknown>
-  >(FILES_QUERY, { first, ...filter }, signal);
-  return data.files.nodes;
+  return (await fetchFilesPage(first, filter, null, signal)).nodes;
 }
 
 /** 單檔上傳結果；`error` 有值＝該檔失敗（其餘檔不受影響）。 */

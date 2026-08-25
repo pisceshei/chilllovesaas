@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_25_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_25_130000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -329,6 +329,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_120000) do
     t.string "storage_key", null: false
     t.datetime "updated_at", null: false
     t.integer "width"
+    t.index ["shop_id", "byte_size"], name: "ix_files_byte_size"
     t.index ["shop_id", "filename"], name: "ix_files_filename"
     t.index ["shop_id", "id"], name: "uq_files_tenant_id", unique: true
     t.index ["shop_id", "status", "created_at"], name: "ix_files_status_created_at"

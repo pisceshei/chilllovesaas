@@ -30,6 +30,15 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
     }
   GRAPHQL
 
+  SORTED_QUERY = <<~GRAPHQL
+    query($sortKey: FileSortKeys, $reverse: Boolean, $first: Int!, $after: String) {
+      files(first: $first, after: $after, sortKey: $sortKey, reverse: $reverse) {
+        nodes { filename byteSize }
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  GRAPHQL
+
   FILE_UPDATE = <<~GRAPHQL
     mutation($files: [FileUpdateInput!]!) {
       fileUpdate(files: $files) {
@@ -91,6 +100,79 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
 
     post_graphql(FILES_QUERY, variables: { status: "FAILED" })
     expect(response.parsed_body.dig("data", "files", "nodes").sole["filename"]).to eq("dog.png")
+  end
+
+  it "🔴 D48：三種排序鍵各可升降，且**預設方向依鍵而異**" do
+    ActsAsTenant.with_tenant(shop) do
+      [ [ "banana.png", 300 ], [ "apple.png", 100 ], [ "cherry.png", 200 ] ].each do |name, size|
+        key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+        Storage::LocalDisk.write(key, StringIO.new("B" * size))
+        StoredFile.create!(filename: name, content_type: "image/png", byte_size: size,
+                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+      end
+    end
+    login!
+
+    def names(vars)
+      post_graphql(SORTED_QUERY, variables: { first: 50 }.merge(vars))
+      response.parsed_body.dig("data", "files", "nodes").map { |n| n["filename"] }
+    end
+
+    # 🔴 檔名預設**由小到大**（不是 desc）：檔名 desc 開頭是 z，沒人期待那個。
+    expect(names(sortKey: "FILENAME")).to eq([ "apple.png", "banana.png", "cherry.png" ])
+    expect(names(sortKey: "FILENAME", reverse: true)).to eq([ "cherry.png", "banana.png", "apple.png" ])
+
+    expect(names(sortKey: "ORIGINAL_UPLOAD_SIZE")).to eq([ "apple.png", "cherry.png", "banana.png" ])
+    expect(names(sortKey: "ORIGINAL_UPLOAD_SIZE", reverse: true))
+      .to eq([ "banana.png", "cherry.png", "apple.png" ])
+
+    # 🔴 日期預設**新到舊**（本尊逐字 "from newest to oldest"）——與上面兩鍵相反。
+    expect(names(sortKey: "CREATED_AT")).to eq([ "cherry.png", "apple.png", "banana.png" ])
+    expect(names({})).to eq(names(sortKey: "CREATED_AT")) # 不指定＝CREATED_AT
+  end
+
+  it "🔴 D48：非預設排序鍵的 cursor 分頁不得跳列或重複" do
+    ActsAsTenant.with_tenant(shop) do
+      %w[e d c b a].each_with_index do |name, index|
+        key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+        Storage::LocalDisk.write(key, StringIO.new("B"))
+        StoredFile.create!(filename: "#{name}.png", content_type: "image/png",
+                           byte_size: 10 + index, checksum: SecureRandom.hex(32),
+                           storage_key: key, status: "ready")
+      end
+    end
+    login!
+
+    seen = []
+    cursor = nil
+    3.times do
+      post_graphql(SORTED_QUERY, variables: { first: 2, after: cursor, sortKey: "FILENAME" })
+      page = response.parsed_body.dig("data", "files")
+      seen.concat(page["nodes"].map { |n| n["filename"] })
+      cursor = page.dig("pageInfo", "endCursor")
+      break unless page.dig("pageInfo", "hasNextPage")
+    end
+    expect(seen).to eq(seen.uniq)                # 不重複
+    expect(seen).to eq(seen.sort)                # 跨頁仍是全序
+    expect(seen.first(5)).to eq(%w[a.png b.png c.png d.png e.png])
+  end
+
+  it "🔴 D48：字串排序鍵的 cursor 必須驗型別（數字 payload 不得被隱式轉型吞掉）" do
+    login!
+    # 把 filename 位置塞一個數字——`Integer()` 那種天然 fail-closed 在字串鍵上不存在
+    bad = Base64.urlsafe_encode64(JSON.generate([ 123, 1 ]), padding: false)
+    post_graphql(SORTED_QUERY, variables: { first: 5, after: bad, sortKey: "FILENAME" })
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+  end
+
+  it "🔴 byte_size cursor 超出 bigint ⇒ BAD_USER_INPUT，不得漏成 500" do
+    login!
+    # `Integer(10**20)` 本身不會 raise，會一路帶到 bind 參數才炸 RangeError ⇒ 500。
+    huge = Base64.urlsafe_encode64(JSON.generate([ 10**20, 1 ]), padding: false)
+    post_graphql(SORTED_QUERY,
+                 variables: { first: 5, after: huge, sortKey: "ORIGINAL_UPLOAD_SIZE" })
+    expect(response).to have_http_status(:ok)
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
   end
 
   it "🔴 LIKE 的萬用字元必須跳脫——搜 `%` 不得匹配整表" do

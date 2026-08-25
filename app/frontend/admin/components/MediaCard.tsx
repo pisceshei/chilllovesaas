@@ -5,6 +5,7 @@ import { requestAdminGraphQL } from "../api/graphql";
 import { useT } from "../i18n/I18nContext";
 import { uploadProductMedia } from "../lib/mediaUpload";
 import { uuidV4 } from "../lib/uuid";
+import { ACCEPTED_TYPES, isAcceptableImage } from "../lib/imageUploadRules";
 import { useToast } from "../lib/ToastContext";
 import { Button } from "./Button";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -33,11 +34,6 @@ export interface MediaCardItem {
   status: string;
   image: { thumbUrl: string | null; url: string } | null;
 }
-
-/** 前端可接受的圖片型別（鏡射 limits `media.image_content_types`）。 */
-const ACCEPTED_TYPES = [ "image/jpeg", "image/png", "image/webp", "image/gif" ];
-/** 圖片大小上限（鏡射 limits `content.files_image_max_mb`）。 */
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 export interface MediaCardProps {
   /** 商品 GID；建立態為 null（媒體要先有商品才能掛）。 */
@@ -133,9 +129,7 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
       // 送簽前先擋（審查 C11）：型別與大小。拖放進來的檔案沒有 accept 屬性把關，
       // 這道是唯一的前端防線。
       const all = Array.from(files);
-      const rejected = all.filter(
-        (file) => !ACCEPTED_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES,
-      );
+      const rejected = all.filter((file) => !isAcceptableImage(file));
       if (rejected.length > 0) {
         showToast(t("product.media.rejected", { filename: rejected[0].name }));
       }

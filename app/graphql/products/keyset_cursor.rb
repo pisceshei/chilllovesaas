@@ -22,6 +22,34 @@ module Products
       position: {
         dump: ->(v) { Integer(v) },
         load: ->(raw) { Integer(raw) }
+      },
+      # ── D48「所有的都跟 Shopify」：檔案庫排序（本尊 Files 頁可依
+      #    Date added／File name／Size 排序）──
+      # 🔴 字串鍵的 load **必須自己驗型別**：`Integer(raw)` 遇到 "abc" 會 raise
+      #    ⇒ position/byte_size 天然 fail-closed；字串沒有這個保護，
+      #    `JSON.parse('[123, 5]')` 會給你一個 Integer 當 filename，
+      #    後面 `WHERE filename > 123` 在 MySQL 是**隱式轉型**不是錯誤
+      #    ——那是一整頁錯資料而不是一個錯誤訊息。
+      filename: {
+        dump: ->(v) { String(v) },
+        load: lambda { |raw|
+          raise ArgumentError, "filename cursor must be a string" unless raw.is_a?(String)
+
+          raw
+        }
+      },
+      byte_size: {
+        dump: ->(v) { Integer(v) },
+        # 🔴 `Integer(raw)` 不夠：JSON 的整數沒有上界，`Integer(10**20)` 原封放行，
+        #    然後在 bind 參數時炸 `ActiveModel::RangeError` ⇒ **HTTP 500**，
+        #    而契約要求無效 cursor 一律 `BAD_USER_INPUT`（鐵律 4）。
+        #    在這裡就夾在 signed bigint 範圍內，讓它走既有的 rescue。
+        load: lambda { |raw|
+          value = Integer(raw)
+          raise ArgumentError, "byte_size cursor out of range" unless value.between?(-2**63, 2**63 - 1)
+
+          value
+        }
       }
     }.freeze
 
