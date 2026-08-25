@@ -520,5 +520,10 @@
   "variant.shipping.weight": "Poids (grammes)",
   "variant.shipping.weightInvalid": "Le poids doit être 0 ou un entier positif, en grammes.",
   "variant.variantNotFound": "Variante introuvable — elle a peut-être été supprimée.",
-  "variant.backToProduct": "Retour au produit"
+  "variant.backToProduct": "Retour au produit",
+  "product.media.embedVideo": "Intégrer une vidéo",
+  "product.media.embedVideoAdd": "Ajouter la vidéo",
+  "product.media.embedVideoUrl": "URL de la vidéo",
+  "product.media.embedVideoHint": "Collez l'URL de la page de la vidéo sur YouTube ou Vimeo. La vidéo reste sur cette plateforme et n'utilise pas votre stockage.",
+  "product.media.embedVideoPrivacy": "Le lecteur se charge dans le mode de confidentialité renforcée de chaque plateforme (youtube-nocookie pour YouTube, le paramètre dnt pour Vimeo), ce qui réduit les données collectées à des fins de suivi."
 }

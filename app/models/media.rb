@@ -29,7 +29,41 @@ class Media < ApplicationRecord
   validates :position, presence: true
   validates :source_url, presence: true
   validates :status, inclusion: { in: STATUSES }
-  validates :alt_text, length: { maximum: 512 }, allow_nil: true
+  # 🔴 512 原本是**硬編**（鐵律 6 違反）：`media.alt_max_length` 這個鍵早就存在，
+  #   `MediaSync::ALT_MAX` 也已在用，只有這裡各寫一份。第 37 包讓 `alt_text` 從
+  #   「D48 停用欄」變成外嵌影片的**承重欄**，這條守衛因此落進本包的根因半徑
+  #   （鐵律 17.2／20.5 的同元件狀態矩陣）⇒ 一併改成引 limits。
+  validates :alt_text, length: { maximum: Limits.fetch(:media, :alt_max_length) }, allow_nil: true
+
+  # ── 第 37 包：外嵌影片（YouTube／Vimeo）──
+  # 判準只有一個：`media_type == "external_video"`。讀取面的 alt／status 回落、
+  # 寫入面的分派、變體掛圖的拒絕，全部認這一個謂詞。
+  def external_video? = media_type == "external_video"
+
+  # D48 窄縫的**唯一落點**（審查 R6-EV-1／P37-W1）：alt 的權威——有檔案讀檔案、
+  # 外嵌影片讀媒體列（它沒有檔案）。
+  # 🔴 第一版把這條分支寫在 `Types::MediaType#alt` 裡，結果第二個消費者
+  #   （`ProductType#media_missing_alt_count`）就漏掉了：填了 alt 的外嵌影片
+  #   被永遠算成「缺 alt」，而且**清不掉**。判準只能有一份——第三個消費者
+  #   出現時（第 30 包的 Liquid drop）直接用這個方法，不要再抄分支。
+  # 🔴 回落條件只認 `external_video?`，不得放寬成「file 為 nil 就回落」——
+  #   那會讓 D48 停用的舊語義從 M0 遺留圖片列的後門復活。
+  def alt_authority
+    external_video? ? alt_text : stored_file&.alt_text
+  end
+
+  # 🔴 兩欄只在外嵌影片時有值、且**必須**有值：半個外嵌影片（有 host 沒有 id）
+  #   會讓 `ExternalVideoUrl.embed_url` 產生 `.../embed/` 這種殘缺 URL，
+  #   而那是個會被前台當成合法 iframe src 的字串。
+  validates :external_host, :external_id, presence: true, if: :external_video?
+  validates :external_host,
+    inclusion: { in: Limits.enum(:media, :external_video_hosts).map(&:downcase) },
+    if: :external_video?
+  validates :external_id,
+    length: { maximum: Limits.fetch(:media, :external_video_id_max_length) },
+    if: :external_video?
+  # 反向：不是外嵌影片就不該帶這兩欄（避免圖片列被塞進外嵌欄位而讀取面誤判）。
+  validates :external_host, :external_id, absence: true, unless: :external_video?
 
   private
 

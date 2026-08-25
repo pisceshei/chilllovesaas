@@ -39,9 +39,17 @@ module Catalog
         #    包在交易裡還會讓外層 rollback 留下無主 blob。
         errors = []
         prepared = entries.each_with_index.map do |entry, index|
-          file, entry_errors = resolve_file(shop, entry, index, idempotency_key)
+          # 🔴 **先分派再解析**（第 37 包）：外嵌影片沒有檔案，走 `resolve_file` 會掉進
+          #    `Storage::FileCreate` → `SafeFetch` 去抓一份 YouTube 的 HTML，
+          #    使用者看到的錯誤訊息與真實原因完全無關。
+          if external_video_entry?(entry)
+            item, entry_errors = resolve_external_video(entry, index)
+          else
+            file, entry_errors = resolve_file(shop, entry, index, idempotency_key)
+            item = { kind: :file, file:, alt: entry[:alt] }
+          end
           errors.concat(entry_errors)
-          { file:, alt: entry[:alt] }
+          item
         end
         return Result.new(media: [], user_errors: errors) if errors.any?
 
@@ -64,7 +72,13 @@ module Catalog
 
             base_position = locked.media.maximum(:position).to_i
             prepared.each_with_index do |item, index|
-              created << build_media!(shop, product, item[:file], item[:alt], base_position + index + 1)
+              position = base_position + index + 1
+              created <<
+                if item[:kind] == :external_video
+                  build_external_video!(shop, product, item, position)
+                else
+                  build_media!(shop, product, item[:file], item[:alt], position)
+                end
             end
           end
         rescue ActiveRecord::RecordNotUnique
@@ -107,6 +121,14 @@ module Catalog
               errors << error([ "media", index.to_s, "alt" ],
                 I18n.t("errors.media.alt_too_long"), "ALT_VALUE_LIMIT_EXCEEDED")
               raise ActiveRecord::Rollback
+            end
+            # 🔴 外嵌影片沒有檔案，媒體列就是 alt 的唯一落點（D48 的窄縫，裁定 C5）。
+            #   沒有這一段的話外嵌影片的 alt **永遠改不了**——會落到下面的
+            #   「無處可寫」分支回 NOT_FOUND，而那個訊息與真實原因完全無關。
+            if row.external_video?
+              row.update!(alt_text: alt.presence)
+              updated << row
+              next
             end
             # 沒有檔案的媒體列（M0 遺產，`file_id` nullable）無處可寫 alt。
             file = row.stored_file
@@ -240,6 +262,70 @@ module Catalog
         return [] if total <= Limits.fetch(:product, :max_media)
 
         [ error([ "media" ], I18n.t("errors.media.over_limit"), "MEDIA_LIMIT_EXCEEDED") ]
+      end
+
+      # 這一筆是不是外嵌影片（第 37 包）。
+      #
+      # 兩種判定：①`mediaContentType: EXTERNAL_VIDEO` 顯式指定 ②**型別省略但
+      # `originalSource` 的 host 命中 YouTube／Vimeo**（ours）。②的理由＝不這樣做，
+      # 使用者貼 YouTube URL 會掉進 `Storage::FileCreate` 去抓 HTML，錯誤訊息與
+      # 真實原因無關。官方 `fileCreate` 有「contentType 可省略、平台自行判斷」的
+      # 先例，但那是**別支 mutation**，所以本規則標 ours 不標「對齊」。
+      # 🔴 判準是 `external_video_candidate?`（host 命中）**不是「parse 成功」**
+      #   （審查 EVU-2）：`shorts/x` 是「認得的平台、抽不出 id」，用 parse 成功當
+      #   判準會把它分派去 FileCreate——伺服器對 youtube.com 抓一份 HTML、回
+      #   UNACCEPTABLE_ASSET，而 Shorts 專屬的「可改成 watch 形態」引導訊息
+      #   永遠不會出現。host 命中就進外嵌分支，成敗由 parse 在分支內回報。
+      # 🔴 顯式 `IMAGE` 不套用②——使用者明說是圖片就照圖片走。
+      def external_video_entry?(entry)
+        declared = entry[:media_content_type].to_s.presence
+        return true if declared == "external_video"
+        return false if declared.present?
+
+        source = entry[:original_source].presence
+        source.present? && Catalog::ExternalVideoUrl.external_video_candidate?(source)
+      end
+
+      # 外嵌影片的解析（**零外部 IO**——見 `ExternalVideoUrl` 檔頭②）。
+      def resolve_external_video(entry, index)
+        if entry[:file_id].present?
+          # 外嵌沒有檔案可選——給了 fileId 就是語義矛盾。
+          return [ nil, [ error([ "media", index.to_s, "fileId" ],
+            I18n.t("errors.media.external_video_no_file"), "INVALID") ] ]
+        end
+
+        if entry[:alt].to_s.length > ALT_MAX
+          return [ nil, [ error([ "media", index.to_s, "alt" ],
+            I18n.t("errors.media.alt_too_long"), "ALT_VALUE_LIMIT_EXCEEDED") ] ]
+        end
+
+        parsed = Catalog::ExternalVideoUrl.parse(entry[:original_source])
+        if parsed.is_a?(Catalog::ExternalVideoUrl::Rejection)
+          code = parsed.code == :unsupported_host ? "EXTERNAL_VIDEO_UNSUPPORTED_HOST" : "EXTERNAL_VIDEO_INVALID_URL"
+          return [ nil, [ error([ "media", index.to_s, "originalSource" ],
+            I18n.t(parsed.message_key), code) ] ]
+        end
+
+        [ { kind: :external_video, host: parsed.host, external_id: parsed.external_id,
+            origin_url: parsed.origin_url, alt: entry[:alt] }, [] ]
+      end
+
+      # 🔴 **不建 `files` 列、不寫 `file_usages`**（裁定 C4）：`files` 的 `byte_size`／
+      #   `checksum`／`content_type`／`storage_key`(unique) 全是 `null: false`，塞一個
+      #   沒有 bytes 的實體就得把那些 NOT NULL 全部可空化＝拆掉既有防線。
+      #   代價＝外嵌影片不出現在檔案庫（本尊是否如此＝未取得 U7），登記 V。
+      # 🔴 `status` 建立即 `ready`：A 面沒有非同步驗證鏈（B 面 oEmbed 才有）。
+      #   **這是已知偏離**——本尊建立時是 `UPLOADED`（官方範例逐字），登記 V（U10）。
+      def build_external_video!(shop, product, item, position)
+        Media.create!(
+          shop_id: shop.id, product_id: product.id, file_id: nil,
+          media_type: "external_video", position:,
+          external_host: item[:host], external_id: item[:external_id],
+          # 存的是**重建**的 origin URL，不是使用者原字串（`ExternalVideoUrl` 檔頭②）。
+          source_url: item[:origin_url],
+          alt_text: item[:alt].presence,
+          status: "ready"
+        )
       end
 
       # originalSource ⇒ 走 Storage::FileCreate 建檔；file_id ⇒ 取既有檔（第 28 包選檔）。

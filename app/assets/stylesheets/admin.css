@@ -1609,6 +1609,22 @@ a {
   width: 100%; aspect-ratio: 1; border-radius: var(--r-200);
   background: var(--surface-3); color: var(--text-2); font-size: var(--t-sm);
 }
+/* 第 37 包：外嵌影片的縮圖占位。A 面沒有縮圖（preview 恆 null，要縮圖得等 B 面
+   的 oEmbed），所以顯示平台名＋播放圖示——而不是「處理中」那種永遠不會結束的字。 */
+.cl-media-tile__video {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--sp-100);
+  width: 100%; aspect-ratio: 1; border-radius: var(--r-200);
+  background: var(--surface-3); color: var(--text-2);
+}
+.cl-media-tile__video-host { font-size: var(--t-sm); font-weight: var(--fw-badge); }
+/* 變體圖格（第 29 包）沿用同一格尺寸——雖然變體目前掛不了影片
+   （`productVariantAppendMedia` 只收 image），寫在這裡是為了讓兩處的占位形狀一致。 */
+.cl-variant-nav__thumb .cl-media-tile__video { font-size: 0; aspect-ratio: auto; height: 100%; }
+
+.cl-embed-video { display: flex; flex-direction: column; gap: var(--sp-200); }
+.cl-embed-video__note { margin: 0; color: var(--text-2); font-size: var(--t-sm); line-height: 1.6; }
+
 .cl-media-tile__tag {
   position: absolute; top: var(--sp-200); left: var(--sp-200); z-index: var(--z-base);
   display: inline-flex; align-items: center; gap: 2px;

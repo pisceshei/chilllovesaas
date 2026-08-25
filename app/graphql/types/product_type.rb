@@ -71,14 +71,20 @@ module Types
       "gid://chilllove/Product/#{object.id}"
     end
 
-    # 首圖：position 最小的媒體所指的檔案（媒體排序即展示序）。
+    # 首圖：position 序中**第一個有檔案的**媒體（審查 P37-W2／R6-EV-2）。
+    # 🔴 不是「position 最小的媒體」：外嵌影片沒有 `stored_file`，第一版遇到
+    #    影片排在第一格就直接回 nil ⇒ 商品列表對一個明明有圖的商品顯示「沒有圖片」，
+    #    而媒體卡的第一格又掛著「精選」標——前後台兩份互相矛盾的真相。
+    #    「featuredImage＝第一張**圖片**」與 Liquid `product.featured_image` 的語義
+    #    一致（本尊 admin 列表對「影片在首格」的實際行為＝未取得，登記 V；
+    #    B 面 oEmbed 縮圖落地後可改回「第一格媒體的 preview」）。
     # 🔴 用 `object.media.to_a`（不是 `.includes` 再查）——`includes` 掛在關聯上會
     #    **另發一次查詢**、繞開呼叫端的 preload（審查 C10）。列表路徑的 preload 在
     #    `Types::QueryType#products`（`preload(media: :stored_file)`）；單筆路徑
     #    多一次查詢可接受。
     def featured_image
-      row = object.media.to_a.min_by(&:position)
-      return nil unless row&.stored_file
+      row = object.media.to_a.sort_by(&:position).find(&:stored_file)
+      return nil unless row
 
       Types::ImageType::Presenter.new(file: row.stored_file)
     end
@@ -101,7 +107,10 @@ module Types
       #    `row.alt_text`（media 已載入、零額外查詢），所以單筆路徑沒有 preload 也無妨；
       #    改讀 `stored_file` 之後，不 preload 就是每列一條查詢。
       #    `media` 欄位的 preload 幫不上忙——GraphQL 不保證兩個欄位的解析順序。
-      preloaded_media.count { |row| row.stored_file&.alt_text.blank? }
+      # 🔴 判準＝`Media#alt_authority`（審查 R6-EV-1）：第一版直接讀
+      #    `stored_file&.alt_text`，外嵌影片的 alt 在媒體列 ⇒ 填了 alt 的外嵌影片
+      #    被永遠算成「缺 alt」，而且在 UI 上**清不掉**（外嵌的 alt 不寫檔案）。
+      preloaded_media.count { |row| row.alt_authority.blank? }
     end
 
     # SEO 子物件直接以 product 本身為 object（欄位在同一列上，SeoType 讀

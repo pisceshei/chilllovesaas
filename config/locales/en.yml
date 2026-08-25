@@ -25,6 +25,10 @@
       reorder_incomplete: "Reordering must include every media item of the product."
       variant_not_found: "Variant not found."
       variant_image_only: "Variants accept images only (no video or 3D)."
+      external_video_invalid_url: "Couldn't find a video ID in that URL. Paste the video's page URL, for example https://www.youtube.com/watch?v=… or https://vimeo.com/…."
+      external_video_unsupported_host: "Embedded video currently supports YouTube and Vimeo only."
+      external_video_shorts: "YouTube Shorts URLs are not supported. Change the URL to the https://www.youtube.com/watch?v=… form."
+      external_video_no_file: "An embedded video can't use an existing file — it isn't an uploaded file."
     product:
       variants_single_only: "Products without options must have exactly one (implicit) variant; named options and multiple variants arrive in a later milestone."
       last_variant_required: "Cannot delete the last variant; every product must keep at least one variant."

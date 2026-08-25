@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_25_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -536,6 +536,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_140000) do
     t.bigint "byte_size"
     t.datetime "created_at", null: false
     t.integer "duration_ms"
+    t.string "external_host", limit: 16, comment: "外嵌影片平台（youtube／vimeo，小寫；對齊 Liquid external_video.host 值域）"
+    t.string "external_id", limit: 32, comment: "平台的影片 ID（string——YouTube 非數字）"
     t.bigint "file_id"
     t.integer "height"
     t.string "media_type", limit: 32, default: "image", null: false
@@ -547,6 +549,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_25_140000) do
     t.string "status", limit: 32, default: "uploaded", null: false
     t.datetime "updated_at", null: false
     t.integer "width"
+    t.index ["shop_id", "external_host", "external_id"], name: "ix_media_external_ref"
     t.index ["shop_id", "file_id"], name: "ix_media_file_id"
     t.index ["shop_id", "id"], name: "uq_media_tenant_id", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_media_product_id_position", unique: true

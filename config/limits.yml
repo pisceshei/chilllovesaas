@@ -1073,6 +1073,60 @@ media:
   # content.files_upload_batch_max(20) 是 UI 單次選檔上限，兩者不同層。
   file_create_batch_max: 250
 
+  # ── 第 37 包：外嵌 ExternalVideo（B9 的收斂面）。2026-08-25 取證。 ──
+  # 🔴 `upload_media_types_enabled` **一個字都不動**：那是「可上傳」的型別，
+  #    B9 的閘門（伺服器僅 libvips、無轉碼器）就靠它；外嵌不是上傳，另立一鍵。
+  #    `MediaContentTypeEnum` ＝ upload ∪ embed 兩鍵聯集。（ours）
+  embed_media_types_enabled: [external_video]
+  # host 值域。官方 `MediaHost` enum 恰兩值且封閉，逐字：
+  #   "VIMEO — Host for Vimeo embedded videos." / "YOUTUBE — Host for YouTube embedded videos."
+  #   <https://shopify.dev/docs/api/admin-graphql/latest/enums/MediaHost>（取證 2026-08-25）
+  # 🔴 型別名是 `MediaHost` **不是** `ExternalVideoHost`——後者不存在，憑印象寫會建出
+  #    一個本尊沒有的型別。小寫存庫＝對齊 Liquid `external_video.host` 的值域，前台零轉換。
+  external_video_hosts: [youtube, vimeo]
+  # 平台影片 ID 的長度上界。🔴 **官方未載明**（YouTube 的「11 碼」是坊間說法、
+  #    本輪取證＝未取得）⇒ 本值是 ours 的防呆上界，只擋異常長度，不作正確性判準。
+  external_video_id_max_length: 32
+  # origin URL 樣板。help 逐字兩形態："https://youtube.com/watch?v=[video-id]"、
+  #   "https://vimeo.com/[video-id]"
+  #   <https://help.shopify.com/en/manual/products/product-media/add-media>（取證 2026-08-25）
+  external_video_origin_url_templates:
+    youtube: "https://www.youtube.com/watch?v=%{id}"
+    vimeo: "https://vimeo.com/%{id}"
+  # embed URL 樣板。🔴 **序列化時導出、不落庫**：隱私決策會變，落庫等於改設定後舊資料
+  #    還停在舊網域，要跑 data migration 才救得回來。
+  #   youtube 的 privacy-enhanced 逐字＝只換網域："Change the domain for the embed URL in
+  #     your HTML from https://www.youtube.com to https://www.youtube-nocookie.com."
+  #     <https://support.google.com/youtube/answer/171780?hl=en>（取證 2026-08-25）
+  #   🔴 vimeo 的 `player.vimeo.com/video/{id}` 形態**官方未取得**
+  #     （developer.vimeo.com 是 JS 渲染頁，抓到的是空殼）⇒ 本值 ours 暫定，
+  #     **第 33 包前台上線前必須補一輪取證**（未取得清單 U3）。
+  external_video_embed_url_templates:
+    youtube: "https://www.youtube-nocookie.com/embed/%{id}"
+    vimeo: "https://player.vimeo.com/video/%{id}"
+  # 隱私參數。vimeo `dnt` 官方逐字："Setting this parameter to 'true' blocks the player
+  #   from collecting session data and analytics"；值域 "true, false OR 1,0"、預設 false
+  #   <https://help.vimeo.com/hc/en-us/articles/12426260232977-About-Player-Parameters>（取證 2026-08-25）
+  # 🔴 **文案紅線**：同頁逐字警告 "With DNT active, some essential cookies will still be
+  #    active." ⇒ UI **不得**宣稱「零 cookie」。youtube-nocookie 官方整頁沒有任何 cookie
+  #    敘述（本輪取證＝未取得），只宣稱不用於個人化 ⇒ 同樣不得寫成「不設 cookie」。
+  external_video_privacy_enhanced: true
+  external_video_privacy_params:
+    youtube: {}
+    vimeo: { dnt: "1" }
+  # 外嵌是否計入 `product.max_media`（250）。🔴 **官方未取得**：250 的措辭是
+  #   "a maximum of 250 images, 3D models, or videos"，但 dev 指南對 ExternalVideo
+  #   另寫 "No limits (hosted externally)"，兩處官方未調和 ⇒ 本值 ours，取保守側。
+  external_video_counts_toward_product_max_media: true
+  # 外嵌不佔儲存配額。官方逐字："Doesn't count against shop's storage quota."
+  #   <https://shopify.dev/docs/apps/build/online-store/product-media>（取證 2026-08-25）
+  external_video_counts_toward_storage_quota: false
+  # B 面閘門：oEmbed 可用性驗證與縮圖抓取。🔴 端點與回應形狀**本輪未取得**，
+  #   取證前一律 false（false ⇒ `preview` 恆 null、建立即 ready）。
+  #   🔴 沒有它，商家貼一支私人／已刪除的影片我方會**靜默接受**，前台才顯示錯誤
+  #   ——這是本包與本尊最大的行為差距（本尊六個 EXTERNAL_VIDEO_* 錯誤碼正是為此存在）。
+  external_video_oembed_enabled: false
+
 # =============================================================================
 # 9. 折扣（P0-03 相關上限）
 # =============================================================================

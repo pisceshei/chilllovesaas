@@ -32,6 +32,8 @@ module Mutations
           # 🔴 錨定型別（審查 C16）：無錨的尾段比對會讓任何 `.../123` 形狀的 GID
           #    （含 Product GID）被當成 File GID，解析成同號的別種資源。
           { original_source: entry.original_source, alt: entry.alt,
+            # 第 37 包：外嵌影片的分派要看它（省略時由 MediaSync 依 URL 形態判定）。
+            media_content_type: entry.media_content_type,
             file_id: entry.file_id.to_s[%r{\Agid://chilllove/File/(\d+)\z}, 1] }
         end,
         idempotency_key:

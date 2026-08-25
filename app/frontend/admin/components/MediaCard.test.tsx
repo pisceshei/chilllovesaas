@@ -142,6 +142,117 @@ describe("媒體卡", () => {
     expect(String((fetchMock.mock.calls[0][1] as RequestInit).body)).toContain("productDeleteMedia");
   });
 
+  // ── 第 37 包：外嵌影片 ────────────────────────────────────────────
+  const VIDEO_ITEM = {
+    id: "gid://chilllove/Media/5", position: 3, alt: "示範影片", status: "READY",
+    image: null,
+    externalVideo: {
+      host: "YOUTUBE" as const, externalId: "dQw4w9WgXcQ",
+      embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      originUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    },
+  };
+
+  it("🔴 貼 URL 外嵌影片：送出 EXTERNAL_VIDEO，而不是走上傳", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      data: { productCreateMedia: { media: [ { id: "gid://chilllove/Media/5" } ], userErrors: [] } },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { onRefresh } = renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+
+    await waitFor(() => expect(onRefresh).toHaveBeenCalled());
+    const body = String((fetchMock.mock.calls[0][1] as RequestInit).body);
+    expect(body).toContain("productCreateMedia");
+    expect(body).toContain("EXTERNAL_VIDEO");
+    // 🔴 前端**不驗 URL 形態**：判準只有一份、在後端。前端再寫一套 regex，
+    //    兩份判準遲早漂移，而症狀是「前端說不行、後端其實可以」這種查不出來的假錯誤。
+    expect(body).toContain("watch?v=dQw4w9WgXcQ");
+  });
+
+  it("🔴 伺服器的錯誤顯示在欄位旁而不是 toast（貼錯網址是要就地改的）", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      data: { productCreateMedia: { media: [], userErrors: [
+        { field: [ "media", "0", "originalSource" ], message: "外嵌影片目前只支援 YouTube 與 Vimeo。",
+          code: "EXTERNAL_VIDEO_UNSUPPORTED_HOST" } ] } },
+    })));
+    const { onRefresh } = renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://dailymotion.com/video/x1");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+
+    expect(await screen.findByText("外嵌影片目前只支援 YouTube 與 Vimeo。")).toBeVisible();
+    // 失敗不關 modal——關掉的話使用者剛打的網址就沒了，要重貼一次
+    expect(screen.getByRole("dialog")).toBeVisible();
+    expect(onRefresh).not.toHaveBeenCalled();
+  });
+
+  it("🔴 外嵌影片的格子顯示平台名，不是永遠不會結束的「處理中」", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    renderCard({ media: [ VIDEO_ITEM ] });
+    expect(screen.getByText("YouTube")).toBeVisible();
+    // 🔴 用 regex（審查 FE-7）：實際文案是「處理中…」，精確比對 "處理中" 恆 null
+    //    ——那個斷言無論實作對錯都不會紅，是個假守衛。
+    expect(screen.queryByText(/處理中/)).toBeNull();
+  });
+
+  it("🔴 送出中鎖住取消（審查 FE-1）：不鎖的話失敗完全靜默、成功變「取消了卻加進去」", async () => {
+    // 一個永不 resolve 的 fetch ⇒ 停在送出中
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
+    renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://vimeo.com/1");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+
+    expect(screen.getByRole("button", { name: "取消" })).toBeDisabled();
+  });
+
+  it("🔴 重開 modal 時網址與錯誤一起清空（審查 FE-3：不得留著病灶、丟了診斷）", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      data: { productCreateMedia: { media: [], userErrors: [
+        { field: [ "media", "0", "originalSource" ], message: "外嵌影片目前只支援 YouTube 與 Vimeo。",
+          code: "EXTERNAL_VIDEO_UNSUPPORTED_HOST" } ] } },
+    })));
+    renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://dailymotion.com/video/x1");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+    await screen.findByText("外嵌影片目前只支援 YouTube 與 Vimeo。");
+
+    await user.click(screen.getByRole("button", { name: "取消" }));
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    expect(screen.getByLabelText("影片網址")).toHaveValue("");
+    expect(screen.queryByText("外嵌影片目前只支援 YouTube 與 Vimeo。")).toBeNull();
+  });
+
+  it("🔴 影片排第一格時，精選標掛在第一個圖片 tile 上（審查 FE-2：與後端 featuredImage 同語義）", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    renderCard({ media: [ { ...VIDEO_ITEM, position: 1 }, { ...READY_ITEM, position: 2 } ] });
+    const tiles = screen.getAllByRole("listitem");
+    // 首格是影片：不得掛精選標
+    expect(tiles[0]).not.toHaveTextContent("精選");
+    // 精選標在第一個圖片 tile
+    expect(tiles[1]).toHaveTextContent("精選");
+  });
+
+  it("空網址時「加入影片」不可按", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    renderCard();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    expect(screen.getByRole("button", { name: "加入影片" })).toBeDisabled();
+  });
+
   it("建立態（尚未有商品 GID）：只提示先儲存，不給上傳入口", () => {
     renderCard({ productGid: null, media: [] });
     expect(screen.getByText("先儲存商品，之後才能在這裡加圖片。")).toBeVisible();
