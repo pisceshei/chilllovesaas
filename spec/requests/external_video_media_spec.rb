@@ -91,6 +91,54 @@ RSpec.describe "Admin GraphQL 外嵌影片", type: :request do
     ActsAsTenant.with_tenant(shop) { expect(product.media.count).to eq(0) }
   end
 
+  it "🔴 型別省略＋認得的平台但抽不出 id ⇒ 外嵌的 userError，不是去抓 HTML" do
+    # 審查 EVU-2：第一版用「parse 成功」當分派判準，shorts 這種「認得的平台、
+    # 抽不出 id」會被分派去 Storage::FileCreate ⇒ 伺服器對 youtube.com 抓一份
+    # HTML、回 UNACCEPTABLE_ASSET，而 Shorts 專屬的引導訊息永遠不會出現。
+    product = product!
+    login!
+    body = create_media(product, [ { originalSource: "https://www.youtube.com/shorts/AbCdEfGhIjK" } ])
+    err = body["userErrors"].sole
+    expect(err["code"]).to eq("EXTERNAL_VIDEO_INVALID_URL")
+    expect(err["message"]).to include("watch")   # 引導訊息有出現
+  end
+
+  it "🔴 mediaMissingAltCount 對填了 alt 的外嵌影片不得計缺" do
+    # 審查 R6-EV-1／P37-W1：D48 窄縫第一版只補在 MediaType#alt，這個計數器漏了
+    # ⇒ 外嵌影片被永遠算成「缺 alt」，而且在 UI 上清不掉。
+    product = product!
+    login!
+    create_media(product, [ { originalSource: "https://vimeo.com/76979871",
+                              mediaContentType: "EXTERNAL_VIDEO", alt: "有說明" } ])
+    q = "query($id: ID!) { product(id: $id) { mediaMissingAltCount } }"
+    post_graphql(q, variables: { id: gid(product) })
+    expect(response.parsed_body.dig("data", "product", "mediaMissingAltCount")).to eq(0)
+
+    create_media(product, [ { originalSource: "https://vimeo.com/111", mediaContentType: "EXTERNAL_VIDEO" } ])
+    post_graphql(q, variables: { id: gid(product) })
+    expect(response.parsed_body.dig("data", "product", "mediaMissingAltCount")).to eq(1)
+  end
+
+  it "🔴 影片排第一格時 featuredImage 是第一張圖，不是 null" do
+    # 審查 P37-W2／R6-EV-2：第一版取 position 最小的媒體、沒檔案就放棄 ⇒
+    # 商品列表對一個明明有圖的商品顯示「沒有圖片」，而媒體卡首格又掛著精選標。
+    product = product!
+    login!
+    create_media(product, [ { originalSource: "https://vimeo.com/76979871",
+                              mediaContentType: "EXTERNAL_VIDEO" } ])
+    ActsAsTenant.with_tenant(shop) do
+      key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+      Storage::LocalDisk.write(key, StringIO.new("B"))
+      file = StoredFile.create!(filename: "f.png", content_type: "image/png", byte_size: 1,
+                                checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+      Media.create!(shop_id: shop.id, product_id: product.id, file_id: file.id,
+                    media_type: "image", position: 2, source_url: "/x", status: "ready")
+    end
+    post_graphql("query($id: ID!) { product(id: $id) { featuredImage { url } } }",
+                 variables: { id: gid(product) })
+    expect(response.parsed_body.dig("data", "product", "featuredImage", "url")).to be_present
+  end
+
   it "外嵌影片不能同時給 fileId（語義矛盾）" do
     product = product!
     login!

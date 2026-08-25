@@ -111,6 +111,14 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
   const [videoUrl, setVideoUrl] = useState("");
   const [videoError, setVideoError] = useState<string | null>(null);
   const embedVideoRef = useRef<HTMLButtonElement | null>(null);
+  // 🔴 關閉＝三個 state 一起重設（審查 FE-3）：第一版只在**開啟**時清 error、
+  //    誰都不清 url ⇒ 重開 modal 時欄位保留上次失敗的網址、但說明失敗原因的紅字
+  //    已被抹掉——留著病灶、丟了診斷。錯誤與造成錯誤的輸入要**同進同出**。
+  const closeVideoModal = useCallback(() => {
+    setVideoOpen(false);
+    setVideoUrl("");
+    setVideoError(null);
+  }, []);
 
   // 從檔案庫挑既有檔掛上來（第 28 包）。一次送出整批，走 fileId 分支。
   const attachExisting = useCallback(async (fileIds: string[]) => {
@@ -166,15 +174,14 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
         setVideoError(errors[0].message);
         return;
       }
-      setVideoOpen(false);
-      setVideoUrl("");
+      closeVideoModal();
       onRefresh();
     } catch (reason: unknown) {
       setVideoError(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
     } finally {
       setUploading(false);
     }
-  }, [onRefresh, productGid, showToast, t, videoUrl]);
+  }, [closeVideoModal, onRefresh, productGid, t, videoUrl]);
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
@@ -318,7 +325,7 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
           {/* 第 37 包：外嵌影片。🔴 與「上傳」分開的入口——影片**不是上傳**
               （伺服器沒有轉碼器，B9），放進同一個檔案選擇器會讓人以為可以傳影片檔。 */}
           <Button
-            onClick={() => { setVideoError(null); setVideoOpen(true); }}
+            onClick={() => setVideoOpen(true)}
             ref={embedVideoRef}
             size="small"
             variant="ghost"
@@ -342,6 +349,11 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
       {media.length > 0 ? (
         <ul aria-label={t("product.media.grid")} className="cl-media-grid">
           {media.map((item, index) => {
+            // 🔴 精選標掛在**第一個圖片** tile 上，不是第一格（審查 FE-2）：
+            //    後端 featuredImage＝position 序中第一個有檔案的媒體（外嵌影片沒有
+            //    檔案）。標掛在首格影片上＝卡片說「這是精選圖」、商品列表說
+            //    「這個商品沒有圖片」——兩份互相矛盾的真相。
+            const featured = item.image !== null && media.findIndex((m) => m.image !== null) === index;
             return (
               <li
                 className={index === 0 ? "cl-media-tile cl-media-tile--lead" : "cl-media-tile"}
@@ -352,7 +364,7 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
                 onDragStart={() => setDragFrom(index)}
                 onDrop={(event) => onTileDrop(event, index)}
               >
-                {index === 0 ? (
+                {featured ? (
                   <span className="cl-media-tile__tag">
                     <Star aria-hidden="true" size={11} /> {t("product.media.featured")}
                   </span>
@@ -386,10 +398,14 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
       ) : null}
 
       {/* 第 37 包：貼 URL 外嵌影片。 */}
+      {/* 🔴 送出中鎖死所有關閉途徑（審查 FE-1，比照 ConfirmDialog 的既有形態）：
+          不鎖的話，使用者在送出中關掉 modal——失敗完全靜默（錯誤只寫進已 unmount
+          的欄位）；成功則是「按了取消卻還是被加進去」。 */}
       <Modal
+        dismissable={!uploading}
         footer={
           <>
-            <Button onClick={() => setVideoOpen(false)} variant="secondary">
+            <Button disabled={uploading} onClick={closeVideoModal} variant="secondary">
               {t("common.cancel")}
             </Button>
             <Button
@@ -402,7 +418,7 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
             </Button>
           </>
         }
-        onClose={() => setVideoOpen(false)}
+        onClose={closeVideoModal}
         open={videoOpen}
         restoreFocusTo={embedVideoRef}
         title={t("product.media.embedVideo")}

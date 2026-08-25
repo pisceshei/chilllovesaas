@@ -40,6 +40,18 @@ class Media < ApplicationRecord
   # 寫入面的分派、變體掛圖的拒絕，全部認這一個謂詞。
   def external_video? = media_type == "external_video"
 
+  # D48 窄縫的**唯一落點**（審查 R6-EV-1／P37-W1）：alt 的權威——有檔案讀檔案、
+  # 外嵌影片讀媒體列（它沒有檔案）。
+  # 🔴 第一版把這條分支寫在 `Types::MediaType#alt` 裡，結果第二個消費者
+  #   （`ProductType#media_missing_alt_count`）就漏掉了：填了 alt 的外嵌影片
+  #   被永遠算成「缺 alt」，而且**清不掉**。判準只能有一份——第三個消費者
+  #   出現時（第 30 包的 Liquid drop）直接用這個方法，不要再抄分支。
+  # 🔴 回落條件只認 `external_video?`，不得放寬成「file 為 nil 就回落」——
+  #   那會讓 D48 停用的舊語義從 M0 遺留圖片列的後門復活。
+  def alt_authority
+    external_video? ? alt_text : stored_file&.alt_text
+  end
+
   # 🔴 兩欄只在外嵌影片時有值、且**必須**有值：半個外嵌影片（有 host 沒有 id）
   #   會讓 `ExternalVideoUrl.embed_url` 產生 `.../embed/` 這種殘缺 URL，
   #   而那是個會被前台當成合法 iframe src 的字串。

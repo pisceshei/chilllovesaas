@@ -267,10 +267,15 @@ module Catalog
       # 這一筆是不是外嵌影片（第 37 包）。
       #
       # 兩種判定：①`mediaContentType: EXTERNAL_VIDEO` 顯式指定 ②**型別省略但
-      # `originalSource` 命中外嵌形態**（ours）。②的理由＝不這樣做的話，使用者貼
-      # YouTube URL 會掉進 `Storage::FileCreate` 去抓 HTML，錯誤訊息與真實原因無關。
-      # 官方 `fileCreate` 有「contentType 可省略、平台自行判斷」的先例，但那是**別支
-      # mutation**，所以本規則標 ours 不標「對齊」。
+      # `originalSource` 的 host 命中 YouTube／Vimeo**（ours）。②的理由＝不這樣做，
+      # 使用者貼 YouTube URL 會掉進 `Storage::FileCreate` 去抓 HTML，錯誤訊息與
+      # 真實原因無關。官方 `fileCreate` 有「contentType 可省略、平台自行判斷」的
+      # 先例，但那是**別支 mutation**，所以本規則標 ours 不標「對齊」。
+      # 🔴 判準是 `external_video_candidate?`（host 命中）**不是「parse 成功」**
+      #   （審查 EVU-2）：`shorts/x` 是「認得的平台、抽不出 id」，用 parse 成功當
+      #   判準會把它分派去 FileCreate——伺服器對 youtube.com 抓一份 HTML、回
+      #   UNACCEPTABLE_ASSET，而 Shorts 專屬的「可改成 watch 形態」引導訊息
+      #   永遠不會出現。host 命中就進外嵌分支，成敗由 parse 在分支內回報。
       # 🔴 顯式 `IMAGE` 不套用②——使用者明說是圖片就照圖片走。
       def external_video_entry?(entry)
         declared = entry[:media_content_type].to_s.presence
@@ -278,7 +283,7 @@ module Catalog
         return false if declared.present?
 
         source = entry[:original_source].presence
-        source.present? && Catalog::ExternalVideoUrl.parse(source).is_a?(Catalog::ExternalVideoUrl::Parsed)
+        source.present? && Catalog::ExternalVideoUrl.external_video_candidate?(source)
       end
 
       # 外嵌影片的解析（**零外部 IO**——見 `ExternalVideoUrl` 檔頭②）。

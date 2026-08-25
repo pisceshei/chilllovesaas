@@ -52,6 +52,22 @@ module Catalog
     VIMEO_HOSTS = %w[vimeo.com www.vimeo.com player.vimeo.com].freeze
 
     class << self
+      # 這個字串**看起來想當**外嵌影片嗎（分派判準，審查 EVU-2）。
+      #
+      # 🔴 與 `parse` 成功與否**是兩件事**：`youtube.com/shorts/x` 是「認得的平台、
+      #   抽不出 id」——它應該走外嵌分支拿到 EXTERNAL_VIDEO_INVALID_URL 的 userError
+      #   （含「可改成 watch 形態」的引導），而不是因為 parse 失敗被分派去
+      #   `Storage::FileCreate`，讓伺服器對 youtube.com 抓一份 HTML、回一個
+      #   「格式不受理（本批僅接受圖片）」的無關錯誤。
+      #   判準＝host 命中白名單；後面的成敗由 `parse` 在外嵌分支內回報。
+      def external_video_candidate?(raw)
+        uri = safe_uri(raw)
+        return false if uri.nil?
+
+        host = uri.host.to_s.downcase
+        YOUTUBE_HOSTS.include?(host) || VIMEO_HOSTS.include?(host)
+      end
+
       # @param raw [String] 使用者貼的 URL
       # @return [Parsed, Rejection]
       def parse(raw)
@@ -139,12 +155,21 @@ module Catalog
       end
 
       def parse_vimeo(uri, host)
+        # 🔴 unlisted 的 privacy hash 有**兩個載體**（審查 EVU-1）：path 形態
+        #   `vimeo.com/{id}/{hash}` 與 query 形態 `?h={hash}`（官方 Share→Embed
+        #   給的就是 `player.vimeo.com/video/{id}?h=...`）。第一版只擋 path 載體，
+        #   query 載體被「丟棄追蹤參數」的一般規則靜默吃掉 ⇒ 存進去一個**缺了
+        #   hash、前台一定播不出來**的影片，而建立當下沒有任何錯誤。
+        #   兩個載體必須同一個下場＝拒收（接受就得知道 embed 端怎麼帶 h，
+        #   官方未取得 ⇒ 寧可拒也不猜，鐵律 19）。
+        query_keys = URI.decode_www_form(uri.query.to_s).map(&:first)
+        return Rejection.new(:invalid_url, "errors.media.external_video_invalid_url") if query_keys.include?("h")
+
         segments = uri.path.to_s.split("/").reject(&:empty?)
         # `player.vimeo.com/video/{id}`（V2，登記 V）與 `vimeo.com/{id}`（V1，help 逐字）。
         segments = segments.drop(1) if host == "player.vimeo.com" && segments.first == "video"
-        # 🔴 V3 `vimeo.com/{id}/{hash}`（unlisted 的 privacy hash）**拒收**：官方完全
-        #   未提，接受就得知道 embed 端要不要帶 `h=`；猜錯＝存進去的影片前台一定播不出來。
-        #   寧可拒收也不猜（鐵律 19）。多於一段即落到 finish 的字元集檢查而被拒。
+        # 🔴 V3 `vimeo.com/{id}/{hash}`（path 載體）拒收——多於一段就在**這一行**被拒
+        #   （不是落到 finish 的字元集檢查；第一版註釋寫錯了層）。
         return Rejection.new(:invalid_url, "errors.media.external_video_invalid_url") if segments.length != 1
 
         finish(:vimeo, segments.first.to_s, VIMEO_ID)

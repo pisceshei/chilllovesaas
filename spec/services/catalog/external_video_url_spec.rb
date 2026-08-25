@@ -43,7 +43,9 @@ RSpec.describe Catalog::ExternalVideoUrl do
   describe "拒絕的形態" do
     {
       "Shorts（help 逐字：不支援，可改成 watch 形態）" => "https://www.youtube.com/shorts/abc123",
-      "Vimeo unlisted 的 privacy hash（官方未提 ⇒ 寧可拒也不猜）" => "https://vimeo.com/76979871/abcdef",
+      "Vimeo unlisted 的 privacy hash（path 載體）" => "https://vimeo.com/76979871/abcdef",
+      "🔴 同一個 hash 的 query 載體也要拒（官方 Share→Embed 給的形態）" => "https://player.vimeo.com/video/76979871?h=abcdef1234",
+      "query 載體之二（影片頁 URL 帶 h）" => "https://vimeo.com/76979871?h=abcdef1234",
       "Vimeo vanity URL（help 逐字要求用 direct video URL）" => "https://vimeo.com/mychannel/myvideo",
       "Vimeo 非數字 id" => "https://vimeo.com/notanumber",
       "空的 v 參數" => "https://www.youtube.com/watch?v=",

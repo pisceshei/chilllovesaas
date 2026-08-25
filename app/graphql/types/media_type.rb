@@ -30,15 +30,9 @@ module Types
 
     # D48：權威在檔案。沒有檔案的 M0 遺留列回 nil（不回落 `media.alt_text`
     # ——那正是停用的那一欄，回落等於讓舊語義從後門活著）。
-    # 🔴 D48 的**窄縫**：外嵌影片沒有檔案，媒體列就是 alt 的唯一落點。
-    #   回落條件**只認 `external_video`**，不得放寬成「file 為 nil 就回落」——
-    #   放寬會讓 D48 停用的舊語義從後門復活（`file_id` 為 nil 的 M0 遺留圖片列
-    #   仍然回 nil，這是刻意的）。
-    def alt
-      return object.alt_text if object.external_video?
-
-      object.stored_file&.alt_text
-    end
+    # D48 的窄縫：判準在 `Media#alt_authority`（唯一一份——第一版把分支寫在
+    # 這裡，第二個消費者 `mediaMissingAltCount` 就漏了，見該方法的紅字）。
+    def alt = object.alt_authority
 
     # 🔴 狀態的真相在 `files.status`（審查 C2）：`media.status` 是建立當下的快照，
     #    管線把檔案轉 ready 時不回頭改媒體列——讀它會讓卡片永遠停在「處理中」。

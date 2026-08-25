@@ -197,7 +197,52 @@ describe("媒體卡", () => {
     vi.stubGlobal("fetch", vi.fn());
     renderCard({ media: [ VIDEO_ITEM ] });
     expect(screen.getByText("YouTube")).toBeVisible();
-    expect(screen.queryByText("處理中")).toBeNull();
+    // 🔴 用 regex（審查 FE-7）：實際文案是「處理中…」，精確比對 "處理中" 恆 null
+    //    ——那個斷言無論實作對錯都不會紅，是個假守衛。
+    expect(screen.queryByText(/處理中/)).toBeNull();
+  });
+
+  it("🔴 送出中鎖住取消（審查 FE-1）：不鎖的話失敗完全靜默、成功變「取消了卻加進去」", async () => {
+    // 一個永不 resolve 的 fetch ⇒ 停在送出中
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
+    renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://vimeo.com/1");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+
+    expect(screen.getByRole("button", { name: "取消" })).toBeDisabled();
+  });
+
+  it("🔴 重開 modal 時網址與錯誤一起清空（審查 FE-3：不得留著病灶、丟了診斷）", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+      data: { productCreateMedia: { media: [], userErrors: [
+        { field: [ "media", "0", "originalSource" ], message: "外嵌影片目前只支援 YouTube 與 Vimeo。",
+          code: "EXTERNAL_VIDEO_UNSUPPORTED_HOST" } ] } },
+    })));
+    renderCard();
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    await user.type(screen.getByLabelText("影片網址"), "https://dailymotion.com/video/x1");
+    await user.click(screen.getByRole("button", { name: "加入影片" }));
+    await screen.findByText("外嵌影片目前只支援 YouTube 與 Vimeo。");
+
+    await user.click(screen.getByRole("button", { name: "取消" }));
+    await user.click(screen.getByRole("button", { name: "嵌入影片" }));
+    expect(screen.getByLabelText("影片網址")).toHaveValue("");
+    expect(screen.queryByText("外嵌影片目前只支援 YouTube 與 Vimeo。")).toBeNull();
+  });
+
+  it("🔴 影片排第一格時，精選標掛在第一個圖片 tile 上（審查 FE-2：與後端 featuredImage 同語義）", () => {
+    vi.stubGlobal("fetch", vi.fn());
+    renderCard({ media: [ { ...VIDEO_ITEM, position: 1 }, { ...READY_ITEM, position: 2 } ] });
+    const tiles = screen.getAllByRole("listitem");
+    // 首格是影片：不得掛精選標
+    expect(tiles[0]).not.toHaveTextContent("精選");
+    // 精選標在第一個圖片 tile
+    expect(tiles[1]).toHaveTextContent("精選");
   });
 
   it("空網址時「加入影片」不可按", async () => {

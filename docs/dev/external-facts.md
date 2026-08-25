@@ -1070,10 +1070,24 @@ ExternalVideo 另寫 "No limits (hosted externally)"，**兩處官方未調和**
 
 ### D8. 本輪未取得清單（實作已按 ours 裁定落地，取得證據後回寫）
 
-`originalSource` 的 URL 形態／`youtube.com/embed` 與 `player.vimeo.com` 是否被本尊接受／
-同步層錯誤碼與訊息／是否計入 250 與方案配額與每週 1000 支節流／同一支影片重複加入的行為／
-外嵌是否進 Content > Files 檔案庫／alt 是否被 host 標題覆寫／`MediaPreviewImageStatus`
-完整值域（只確認 `READY` 一值）／oEmbed 端點與回應形狀／`productCreateMedia` 棄用的
-生效版本／本尊 `productUpdateMedia` 是否要求 ready 前置。
-🔴 我方 A 面另有一個**已知偏離**：本尊建立時 `MediaStatus` 是 `UPLOADED`（官方範例逐字），
-我方建立即 `ready`（沒有非同步驗證鏈）。B 面（oEmbed）恢復 UPLOADED→READY/FAILED。
+🔴 **編號是錨點**：程式註釋以 `U<n>` 引用本清單（審查 F5 抓到第一版沒編號、
+錨點全樹解析不到）。改動編號要同步全部引用處
+（複驗＝`git grep -nE "U[0-9]+" app/ config/limits.yml | grep -i "未取得\|登記 V"`）。
+
+- **U1** `originalSource` 對 EXTERNAL_VIDEO 該放哪種 URL（三處官方措辭互斥，見 D3）。
+- **U2** `youtube.com/embed/{id}`／`player.vimeo.com/video/{id}`／純影片 ID 是否被本尊接受。
+- **U3** Vimeo 的 embed URL 形態與 iframe 逐字輸出（`developer.vimeo.com` 是 JS 渲染頁，
+  抓到空殼；官方 `external_video_tag` 範例只有 YouTube）——**第 33 包前台上線前必補**。
+- **U4** 送非法外部影片 URL 時，本尊**同步層**回什麼 code／message。
+- **U5** 外嵌是否計入每商品 250、方案級影片配額、每週 1000 支上傳節流（見 D6）。
+- **U6** 同一支影片重複加入同一商品的行為（我方不去重，少一個失敗態）。
+- **U7** 外嵌是否進 Content > Files 檔案庫、能否被 `files` 查詢列出（我方不進，裁定 C4）。
+- **U8** alt 是否被 host 標題覆寫；preview 縮圖從何而來。
+- **U9** `MediaPreviewImageStatus` 完整值域（只確認 `READY` 一值 ⇒ 本包不建該 enum）。
+- **U10** 本尊建立時 `MediaStatus`＝`UPLOADED`（官方範例逐字）；我方 A 面建立即
+  `ready`（沒有非同步驗證鏈）——**已知偏離**，B 面恢復 UPLOADED→READY/FAILED。
+- **U11** oEmbed 端點與回應形狀（B 面前置；`external_video_oembed_enabled` 取證前恆 false）。
+- **U12** `productCreateMedia` 棄用（deprecated）的生效／移除版本。
+- **U13** 本尊 `productUpdateMedia` 是否要求 ready 前置（沿用既有裁定：不套）。
+- **U14** YouTube 影片 ID 的長度規則（「11 碼」是坊間說法）——limits
+  `external_video_id_max_length: 32` 是 ours 防呆上界，不作正確性判準。
