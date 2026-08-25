@@ -214,8 +214,12 @@ module Catalog
           I18n.t("errors.media.variant_not_found"), "NOT_FOUND") ]) if variant.nil?
 
         if media_id.nil?
-          product.media.where(product_variant_id: variant.id).update_all(product_variant_id: nil)
-          Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)   # 第 3 包 stamp
+          # 卸圖＋bump 同一個 txn（審查 cs-5：兩條各自 auto-commit 的語句，
+          # 第一條成功第二條失敗＝呈現變了、stamp 沒動——正是靜默舊快取的窗）。
+          ActiveRecord::Base.transaction do
+            product.media.where(product_variant_id: variant.id).update_all(product_variant_id: nil)
+            Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)
+          end
           return Result.new(media: [], user_errors: [])
         end
 
@@ -397,7 +401,13 @@ module Catalog
                             status: file.status)
         # 🔴 D48：alt 落在**檔案**上。只在有給值時寫——沒給就保留檔案既有的 alt
         #    （掛既有檔案的常見情形），寫 nil 會把檔案庫裡寫好的說明清掉。
-        file.update!(alt_text: alt) if alt.present?
+        if alt.present? && file.alt_text != alt
+          file.update!(alt_text: alt)
+          # 🔴 掛既有共用檔＋alt＝改了**所有**掛著它的商品的呈現（審查 cs-1／P3-1
+          #    ——CacheStamps 檔頭③自己點名的錯，第一版就在這裡犯了：create 只
+          #    bump 目標商品，其他商品留在舊快取顯示舊 alt）。
+          Catalog::CacheStamps.bump_media_for_file!(shop.id, file.id)
+        end
         # 引用計數（第 28 包刪除確認的唯一來源）
         FileUsage.find_or_create_by!(shop_id: shop.id, file_id: file.id,
                                      owner_type: OWNER_TYPE, owner_id: row.id)

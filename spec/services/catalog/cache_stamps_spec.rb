@@ -28,7 +28,11 @@ RSpec.describe Catalog::CacheStamps do
     it "🔴 cache_stamp_sources 的每一個來源都解析得到真實欄位（或在已知未建清單裡）" do
       # 這條測試的目的：有人往 limits 加一個維度而**忘了建欄**時要當場紅，
       # 而不是等第 33 包上線後陷入「快取 key 引用不存在的欄」。
-      known_pending = %w[market_settings_version price_list_updated_at]
+      # 🔴 known_pending 不只是登記——每一項綁它的**未來表**，表一建、這裡就紅
+      #   （審查 DOC-3：第一版只斷言「∈ 清單」，第 32 包建表時什麼都不會轉紅，
+      #   handoff 的「強制回頭對帳」是機械上不成立的宣稱）。
+      known_pending = { "market_settings_version" => "markets",
+                        "price_list_updated_at" => "price_lists" }
       Limits.fetch(:catalog_flow, :cache_stamp_sources).each do |source|
         src = source.to_s
         if src.include?(".")
@@ -36,10 +40,11 @@ RSpec.describe Catalog::CacheStamps do
           expect(ActiveRecord::Base.connection.column_exists?(table, column))
             .to be(true), "#{src} 在 schema 找不到欄位"
         else
-          # 沒帶表前綴的來源＝它的表還沒建（markets／price lists 屬第 32 包）。
-          # 集合是**封閉的**：第 32 包建表時，把它從這清單拿掉、換成帶前綴寫法。
-          expect(known_pending).to include(src),
+          expect(known_pending).to have_key(src),
             "#{src} 不帶表前綴又不在已知未建清單——請建欄或登記"
+          expect(ActiveRecord::Base.connection.table_exists?(known_pending.fetch(src)))
+            .to be(false),
+            "#{known_pending.fetch(src)} 表已建——把 #{src} 換成帶前綴寫法並建 stamp 欄"
         end
       end
     end
@@ -212,6 +217,37 @@ RSpec.describe Catalog::CacheStamps do
         expect(file.reload.status).to eq("failed")
       ensure
         MediaPipeline::ProcessFile.reset_backend!
+      end
+    end
+
+    it "🔴 掛既有共用檔＋alt（productCreateMedia 的 fileId 路徑）⇒ 其他商品的 stamp 也動" do
+      # 審查 cs-1／P3-1：CacheStamps 檔頭③自己點名的錯，第一版就在 build_media! 犯了
+      # ——create 只 bump 目標商品，其他掛著同檔的商品留在舊快取顯示舊 alt。
+      ActsAsTenant.with_tenant(shop) do
+        other = create(:product_variant, shop:).product
+        file = make_file!
+        file.update!(alt_text: "舊說明")
+        Catalog::MediaSync.create(shop:, product: other, entries: [ { file_id: file.id } ])
+        before_other = db_row("products", other.id, "media_updated_at")["media_updated_at"]
+
+        travel(1.second) do
+          Catalog::MediaSync.create(shop:, product:,
+            entries: [ { file_id: file.id, alt: "新說明" } ])
+        end
+        expect(file.reload.alt_text).to eq("新說明")
+        expect(db_row("products", other.id, "media_updated_at")["media_updated_at"])
+          .not_to eq(before_other)
+      end
+    end
+
+    it "🔴 TOUCH 寫入值與 Rails 的 UTC 同一個時鐘域" do
+      # 審查 cs-3（實測證實）：CURRENT_TIMESTAMP(6) 用 session 時區（本機＝台北），
+      # Rails 以 UTC 讀 ⇒ stamp 變成未來 8 小時。TOUCH 必須用 UTC_TIMESTAMP(6)。
+      ActsAsTenant.with_tenant(shop) do
+        described_class.bump_media_for_product!(shop.id, product.id)
+        stamp = db_row("products", product.id, "media_updated_at")["media_updated_at"]
+        expect((stamp - Time.current.utc).abs).to be < 60,
+          "stamp 與 UTC 差 #{(stamp - Time.current.utc).round} 秒——時鐘域不一致"
       end
     end
 

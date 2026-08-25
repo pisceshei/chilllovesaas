@@ -430,7 +430,7 @@ Shopify 的機制：平台自動產生預設 `robots.txt`，主題可加 `templa
   一個 `alt` ⇒ 一張圖只有一份說明。上句的「一級欄位」與可翻譯性不變（GraphQL 面
   `Media.alt`／`Image.alt`／`File.alt` 三處讀的是同一個值）；改變的是**它存在哪一張表**。
   ⇒ 下一行「缺 alt 的媒體數」的算式因此是「該商品的媒體列中，其**檔案**沒有 alt 的數量」。
-- **不自動填、但要度量**：後台商品列表與 SEO 健康頁顯示「缺 alt 的媒體數」。若提供 AI 產生 alt，寫入時必須落 `alt_source: ai|human|imported` 稽核欄（🔴 D48 之後該欄隨 alt 一起在**檔案層**＝`files.alt_source`，尚未建）——理由同 30 §1.2 的 scaled content abuse 防線：無標記的大量自動內容日後無法回溯清理。
+- **不自動填、但要度量**：後台商品列表與 SEO 健康頁顯示「缺 alt 的媒體數」。若提供 AI 產生 alt，寫入時必須落 `alt_source: ai|human|imported` 稽核欄（🔴 D48 之後該欄隨 alt 一起在**檔案層**＝`files.alt_source`；已建於第 3 包遷移 `20260826055500`，值域正典＝limits `media.alt_sources`，後台人工寫入由 `StoredFile#stamp_alt_source` 自動標 `human`）——理由同 30 §1.2 的 scaled content abuse 防線：無標記的大量自動內容日後無法回溯清理。
 - 裝飾性圖片（主題背景）輸出 `alt=""`，**不是**省略屬性。
 
 ### F.2 `<h1>` 唯一性
@@ -1134,7 +1134,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 |---|---|---|---|---|
 | S1 | `url_redirects` 表＋handle 變更掛鉤＋410 紀律 | **M0**（表）/ **M1**（掛鉤） | §B.5 | 改 handle 後舊 URL 301；下架回 410；鏈長 ≤ `limits.seo.redirect_max_chain` |
 | S2 | 商品／系列／頁面／文章的 `seo_title`／`seo_description`（**可翻譯**）＋ `handle`（🔴 **不可翻譯**，全站單一值、語言走 URL 前綴，67 §D.3） | **M1** | 29 §2.1 對應 key；handle 見 `limits.handle` | 翻譯後台可見；digest 機制生效；handle 不出現在可翻欄位清單 |
-| S3 | 檔案 `alt` 一級欄位＋`alt_source` 稽核＋缺 alt 計數（🔴 D48：權威在檔案層，原文寫 `media.*`） | **M1** | `files.alt_text`, `files.alt_source`（後者尚未建） | 商品列表顯示缺 alt 數 |
+| S3 | 檔案 `alt` 一級欄位＋`alt_source` 稽核＋缺 alt 計數（🔴 D48：權威在檔案層，原文寫 `media.*`） | **M1** | `files.alt_text`, `files.alt_source`（皆已建；後者隨第 3 包遷移） | 商品列表顯示缺 alt 數 |
 | S4 | Admin SEO 預覽卡（五列，含價格） | **M1** | 讀 `PriceView` | 與前台渲染價格逐位相同（§O SEO-2） |
 | S5 | `resolve_price_view()` ＋ `SeoPriceParityTest` | **M2**（feed 消費者在 M5 接入） | §A.3 | 四方全等；任一不等紅燈 |
 | S6 | canonical 引擎（八種變形） | **M2** | `canonical_overrides` | §B.1 逐列測 |

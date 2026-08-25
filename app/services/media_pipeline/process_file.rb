@@ -43,10 +43,12 @@ module MediaPipeline
         rescue VipsBackend::DecodeFailed, VipsBackend::TooManyPixels => e
           # 檔案本身的錯＝終態，不重試。derivatives 一併清空（審查 C9：
           # 舊的一組已作廢，留著會讓讀取面指向不存在的 blob）。
-          file.update!(status: "failed", derivatives: nil,
-                       processing_error: e.message.to_s.first(1000))
-          # 第 3 包 cache stamp：失敗也是呈現變化（縮圖 → 失敗占位）。
-          Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
+          # 同 ready 分支：狀態寫入與 bump 同 txn（審查 cs-2 的同型）。
+          ActiveRecord::Base.transaction do
+            file.update!(status: "failed", derivatives: nil,
+                         processing_error: e.message.to_s.first(1000))
+            Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
+          end
           return Result.new(status: "failed", derivatives: nil)
         rescue StandardError => e
           # 環境的錯＝可恢復。還原 uploaded 讓重試從乾淨態開始（審查 C7）。
@@ -63,10 +65,16 @@ module MediaPipeline
           return Result.new(status: file.status, derivatives: file.derivatives)
         end
 
-        file.update!(status: "ready", width: source.width, height: source.height,
-                     derivatives: written, processing_error: nil)
-        # 第 3 包 cache stamp：衍生尺寸就緒＝媒體卡從占位變縮圖（呈現變了）。
-        Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
+        # 🔴 狀態寫入與 stamp bump 同一個 txn（審查 cs-2）：分成兩條 auto-commit
+        #    的話，bump 失敗後檔已 ready ⇒ call 開頭的 complete? 早退，**任何重試
+        #    都不會再補 bump**——舊快取就永久了。包成一 txn 後 bump 失敗＝整段
+        #    rollback ⇒ status 非 ready ⇒ 重試整段重跑。blob 已在 txn 外落盤，
+        #    不違反鐵律 5。
+        ActiveRecord::Base.transaction do
+          file.update!(status: "ready", width: source.width, height: source.height,
+                       derivatives: written, processing_error: nil)
+          Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
+        end
         Result.new(status: "ready", derivatives: written)
       end
 

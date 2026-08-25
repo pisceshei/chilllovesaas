@@ -3,7 +3,7 @@
 # 第 3 包：共用遷移批次（一次改表，避免五次遷移演練）。
 #
 # ①cache stamp 欄（63 §D.3 的 key-based expiry 維度；正典清單＝limits
-#   `cache.cache_stamp_sources`）。🔴 stamp 欄晚補的失敗形態是**靜默的**：
+#   `catalog_flow.cache_stamp_sources`——不是 `cache.`，那個路徑不存在）。🔴 stamp 欄晚補的失敗形態是**靜默的**：
 #   第 33 包的頁級快取 key 少一個維度＝顯示舊圖舊價且沒人會知道。
 #   欄位**刻意 nullable**：null＝「本包上線前從未變動過」，快取 key 端把 null
 #   當 epoch；改 `null: false` 會要求每個 `Product.create!` 呼叫點都帶值，
@@ -36,8 +36,12 @@ class AddCacheStampsAndAuditColumns < ActiveRecord::Migration[8.1]
     add_column :orders, :locale_snapshot, :string, if_not_exists: true, limit: 35,
       comment: "訂單成立當下的顧客語言（BCP-47；寫入者在 M3）"
 
-    # backfill：存量商品的三個 stamp 都以「最後一次整體更新」為誠實起點——
-    # 全樹鎖下任何儲存都 bump updated_at，所以它是三者的上界。
+    # backfill：存量商品的三個 stamp 都以「最後一次**經 SaveProduct** 的整體更新」
+    # 為起點。🔴 它對 media 軸**不是上界**（第一版這麼寫，審查 M3-1 證偽）：
+    # 媒體路徑（FileWrite／MediaSync／ProcessFile）在本包之前從不動
+    # products.updated_at，存量商品若最後一次變動是媒體操作，backfill 值會偏舊。
+    # 對 key-based expiry 無害（遷移前不存在任何快取條目，key 只需在未來寫入時
+    # 前進）；但**不得**把這些 stamp 當「實際最後變動時刻」的資料來源用。
     # 純 backfill UPDATE（小表、無鎖風險）；strong_migrations 看不進 execute
     # 的內容，一律要 safety_assured 明示。
     safety_assured do

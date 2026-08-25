@@ -4,7 +4,9 @@ module Catalog
   # cache stamp 欄的**唯一寫入面**（第 3 包；63 §D.3 的 key-based expiry 維度）。
   #
   # ①這是什麼：第 33 包的頁級快取 key 會吃這些欄
-  #   （`limits cache.cache_stamp_sources`）。欄位存在但沒人 bump＝凍結的 stamp
+  #   （正典清單＝limits **`catalog_flow.cache_stamp_sources`**——第一版檔頭寫成
+  #   `cache.`，那個路徑不存在，審查 M3-4 抓到；handoff 自己都把它列為被推翻的
+  #   假設，檔頭卻沒跟上）。欄位存在但沒人 bump＝凍結的 stamp
   #   ＝**永久舊快取**——顯示舊圖舊價且沒有任何錯誤，這正是排程把它列為
   #   「靜默失敗」的原因。所以每一個會改變前台呈現的寫入路徑都必須經過這裡。
   #
@@ -29,8 +31,12 @@ module Catalog
       # 變體樹變了（SaveProduct 的宣告式全量寫入／DeleteVariant）。
       # 一律收 `shop_id` 整數不收 Shop 物件——ProcessFile 這類呼叫端手上只有
       # `file.shop_id`，收物件會逼它多發一次 `Shop.find`。
-      # `CURRENT_TIMESTAMP(6)`＝與 Rails datetime 的微秒精度一致。
-      TOUCH = "%s = CURRENT_TIMESTAMP(6), lock_version = lock_version"
+      # 🔴 **`UTC_TIMESTAMP(6)` 不是 `CURRENT_TIMESTAMP(6)`**（審查 cs-3，實測）：
+      #   後者用 MySQL session 時區（本機＝SYSTEM＝台北 +8），寫進去的是牆鐘時刻，
+      #   而 Rails 全部以 UTC 讀寫 datetime ⇒ stamp 被讀成**未來 8 小時**。
+      #   同一根欄兩個時鐘域＝快取 key 的比較毫無意義。UTC_TIMESTAMP 不受 session
+      #   時區影響（實測與 `Time.current.utc` 同值）；(6)＝Rails datetime 的微秒精度。
+      TOUCH = "%s = UTC_TIMESTAMP(6), lock_version = lock_version"
 
       def bump_variants!(shop_id, product_id)
         Product.where(shop_id:, id: product_id)
