@@ -124,12 +124,15 @@ RSpec.describe "媒體處理管線端到端", type: :request do
                          checksum: "y" * 64, storage_key: key, status: "uploaded")
     end
     ActsAsTenant.with_tenant(shop) do
+      # 🔴 D48：alt 的權威在 `files.alt_text`——測試資料因此寫在檔案上，
+      #    不是媒體列上。`mediaMissingAltCount` 數的也是檔案有沒有 alt。
+      file.update!(alt_text: "有 alt")
       Media.create!(shop_id: shop.id, product_id: product.id, position: 1, media_type: "image",
                     source_url: "/admin/files/#{file.id}/blob", file_id: file.id,
-                    alt_text: "有 alt", status: "ready")
+                    status: "ready")
       Media.create!(shop_id: shop.id, product_id: product.id, position: 2, media_type: "image",
                     source_url: "/admin/files/#{unprocessed.id}/blob", file_id: unprocessed.id,
-                    alt_text: nil, status: "uploaded")
+                    status: "uploaded")
     end
 
     login!
@@ -154,16 +157,58 @@ RSpec.describe "媒體處理管線端到端", type: :request do
     expect(unprocessed.reload.derivative_url("thumb")).to be_nil
   end
 
+  it "🔴 D48：**單筆路徑**的缺 alt 數也不得 N+1（計數改讀 file 之後新出現的耦合）" do
+    stub_backend!
+    Events::Relay.drain!
+    product = ActsAsTenant.with_tenant(shop) { create(:product_variant, shop:).product }
+    ActsAsTenant.with_tenant(shop) do
+      4.times do |index|
+        key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+        Storage::LocalDisk.write(key, StringIO.new(MPF_PNG))
+        f = StoredFile.create!(filename: "s#{index}.png", content_type: "image/png", byte_size: 10,
+                               checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                               alt_text: index.zero? ? nil : "alt")
+        Media.create!(shop_id: shop.id, product_id: product.id, position: index + 1,
+                      media_type: "image", source_url: "/admin/files/#{f.id}/blob",
+                      file_id: f.id, status: "ready")
+      end
+    end
+
+    login!
+    queries = []
+    counter = ->(_n, _s, _f, _id, payload) { queries << payload[:sql] if payload[:sql] =~ /\ASELECT/ }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      post_graphql(<<~GRAPHQL, variables: { id: "gid://chilllove/Product/#{product.id}" })
+        query($id: ID!) { product(id: $id) { mediaMissingAltCount } }
+      GRAPHQL
+    end
+    expect(response.parsed_body.dig("data", "product", "mediaMissingAltCount")).to eq(1)
+    # 🔴 四個媒體列 ⇒ files 必須是**一次**批次查詢。沒有共用 preload 的話是四次。
+    expect(queries.count { |q| q.include?("`files`") }).to be <= 1
+  end
+
   it "🔴 審查 C12：列表路徑的 featuredImage／缺 alt 數不得 N+1（preload 生效）" do
     stub_backend!
     file = create_file!
     Events::Relay.drain!
     ActsAsTenant.with_tenant(shop) do
+      # 🔴 D48 之後三列**不能共用同一個 file**：alt 在檔案層，共用檔就等於共用 alt，
+      #    原本「第 0 列缺 alt、另兩列有」的三態會塌成一種，`mediaMissingAltCount`
+      #    的值斷言（下方）就驗不到東西。⇒ 每個商品各給一個檔，只有第一個沒 alt。
       3.times do |index|
         product = create(:product_variant, shop:).product
+        own_file = if index.zero?
+          file
+        else
+          key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+          Storage::LocalDisk.write(key, StringIO.new(MPF_PNG))
+          StoredFile.create!(filename: "n#{index}.png", content_type: "image/png", byte_size: 10,
+                             checksum: SecureRandom.hex(32), storage_key: key,
+                             status: "ready", alt_text: "alt")
+        end
         Media.create!(shop_id: shop.id, product_id: product.id, position: 1, media_type: "image",
-                      source_url: "/admin/files/#{file.id}/blob", file_id: file.id,
-                      alt_text: index.zero? ? nil : "alt", status: "ready")
+                      source_url: "/admin/files/#{own_file.id}/blob", file_id: own_file.id,
+                      status: "ready")
       end
     end
 
@@ -179,7 +224,11 @@ RSpec.describe "媒體處理管線端到端", type: :request do
         }
       GRAPHQL
     end
-    expect(response.parsed_body.dig("data", "products", "nodes").length).to be >= 3
+    nodes = response.parsed_body.dig("data", "products", "nodes")
+    expect(nodes.length).to be >= 3
+    # 🔴 **先驗值再驗查詢數**（審查建議）：本例原本只斷言 N+1，缺 alt 數算錯也照樣綠。
+    #    三個商品裡恰一個的檔案沒有 alt ⇒ 缺 alt 數恰一個 1、其餘 0。
+    expect(nodes.map { |n| n["mediaMissingAltCount"] }.tally[1]).to eq(1)
     # 三個商品 ⇒ media 與 files 各一次批次查詢（不是每列一次）
     expect(queries.count { |q| q.include?("`media`") }).to be <= 1
     expect(queries.count { |q| q.include?("`files`") }).to be <= 1

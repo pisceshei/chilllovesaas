@@ -22,8 +22,9 @@ module Catalog
     Result = Data.define(:media, :user_errors)
 
     OWNER_TYPE = "Media"
-    # alt 上限＝DB 欄寬（media.alt_text limit 512）；兩條建立路徑共用同一個判準。
-    ALT_MAX = 512
+    # alt 上限＝limits `media.alt_max_length`（鐵律 6；官方逐字出處見該鍵註釋）。
+    # D48 之後權威在 `files.alt_text`，三個服務共用同一個鍵、不再各自硬編。
+    ALT_MAX = Limits.fetch(:media, :alt_max_length)
 
     class << self
       # 建立媒體（originalSource 建新檔／fileId 用既有檔，二選一）。
@@ -76,8 +77,14 @@ module Catalog
         Result.new(media: created, user_errors: [])
       end
 
-      # 更新 alt（媒體層的 alt 才是權威——同一檔案掛不同商品可有不同 alt，
-      # 第 26 包 ImageType 檔頭已載明）。
+      # 更新 alt。
+      #
+      # 🔴 **寫的是 `files.alt_text` 不是 `media.alt_text`**（D48，2026-08-25 使用者裁定
+      #   「所有的都跟 Shopify」）：本尊一張圖只有一份說明，在商品頁改 alt 會影響
+      #   所有用到這張圖的商品，而且**不給警告**。第 26 包那句「媒體層才是權威」
+      #   已被推翻。
+      # 🔴 這代表 `productUpdateMedia` 的副作用比它的名字大——它動的是檔案。
+      #   前端沒有額外提示是**刻意對齊**，不是漏做。
       def update(shop:, product:, entries:)
         errors = []
         updated = []
@@ -89,13 +96,35 @@ module Catalog
                 I18n.t("errors.media.not_found"), "NOT_FOUND")
               raise ActiveRecord::Rollback
             end
+            # 沒送 alt ⇒ 什麼都不動（見 `product_update_media.rb` 的 `key?` 註）。
+            unless entry.key?(:alt)
+              updated << row
+              next
+            end
+
             alt = entry[:alt].to_s
             if alt.length > ALT_MAX
               errors << error([ "media", index.to_s, "alt" ],
                 I18n.t("errors.media.alt_too_long"), "ALT_VALUE_LIMIT_EXCEEDED")
               raise ActiveRecord::Rollback
             end
-            row.update!(alt_text: alt.presence)
+            # 沒有檔案的媒體列（M0 遺產，`file_id` nullable）無處可寫 alt。
+            file = row.stored_file
+            if file.nil?
+              errors << error([ "media", index.to_s, "id" ],
+                I18n.t("errors.media.not_found"), "NOT_FOUND")
+              raise ActiveRecord::Rollback
+            end
+            # 🔴 **這裡刻意不套 `fileUpdate` 的 ready 前置**，理由不是「懶得對齊」：
+            #    官方那條限制掛在 `fileUpdate` 上，而 `fileUpdate` 還能換
+            #    `originalSource`／`previewImageSource`——**換內容**與處理管線真的衝突，
+            #    所以要求 ready 有它的道理。本路徑只寫 alt，而管線
+            #    （`MediaPipeline::ProcessFile`）只動 status／derivatives／processing_error，
+            #    從不碰 alt_text ⇒ 沒有衝突可言。
+            #    套上去的實際後果是：使用者剛拖進一張圖、趁處理中打 alt 會被拒——
+            #    多一個本尊沒有明文要求的失敗態。⚠️ 本尊 `productUpdateMedia` 是否要求
+            #    ready＝**未取得**（官方只對 fileUpdate 明文）；查得到再回頭對齊。
+            file.update!(alt_text: alt.presence)
             updated << row
           end
         end
@@ -229,6 +258,8 @@ module Catalog
           return [ file, [] ]
         end
 
+        # `FileCreate` 本來就把 alt 寫進 `files.alt_text`（D48 之後那正是權威所在），
+        # 所以這條路徑不必也不該再寫一次。
         result = Storage::FileCreate.call(shop:, files_input: [
           { original_source: source, alt: entry[:alt] }
         ])
@@ -245,6 +276,9 @@ module Catalog
         [ result.files.first, [] ]
       end
 
+      # @param alt [String, nil] 建立時附帶的 alt。**寫進檔案不寫進媒體列**（D48）；
+      #   `nil`＝不動檔案既有的 alt（掛既有檔案時常見：檔案庫早就寫好了說明，
+      #   掛到商品上不該把它清成 nil）。
       def build_media!(shop, product, file, alt, position)
         # 🔴 `media.status` 只是建立當下的快照，**不是真相**（審查 C2）：管線之後把
         #    `files.status` 轉 ready／failed 時不會回頭改這一列，凍結它會讓媒體卡
@@ -253,7 +287,10 @@ module Catalog
         row = Media.create!(shop_id: shop.id, product_id: product.id, file_id: file.id,
                             media_type: "image", position:,
                             source_url: "/admin/files/#{file.id}/blob",
-                            alt_text: alt.presence, status: file.status)
+                            status: file.status)
+        # 🔴 D48：alt 落在**檔案**上。只在有給值時寫——沒給就保留檔案既有的 alt
+        #    （掛既有檔案的常見情形），寫 nil 會把檔案庫裡寫好的說明清掉。
+        file.update!(alt_text: alt) if alt.present?
         # 引用計數（第 28 包刪除確認的唯一來源）
         FileUsage.find_or_create_by!(shop_id: shop.id, file_id: file.id,
                                      owner_type: OWNER_TYPE, owner_id: row.id)

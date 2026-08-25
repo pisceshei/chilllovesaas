@@ -1006,3 +1006,32 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   同步方式與提醒見 `docs/handoff/2026-08-24-總交接.md`。
 - **影響**：D36／D38 中與「handoff 不入庫」相關的部分由本條取代；
   AGENTS §9.3 歷史層的「既有份唯讀」不變（新增份恢復增長）。
+
+### D48
+
+**alt 權威遷回檔案層；並確立「有分歧一律跟本尊」的通則（2026-08-25 使用者裁定）**
+
+- **裁定原文**：「所有的都跟Shopify」——回應第 28 包 PR 提出的 alt 分層抉擇。
+- **直接效果（推翻 D-無編號的第 26／27 包實作裁定）**：alt 的權威從 `media.alt_text`
+  改為 **`files.alt_text`，全店一份**。同一張圖掛在 30 個商品上就是同一份 alt，
+  在檔案庫或任何商品頁改它，處處跟著改。`media.alt_text` 欄位**停用但不刪**
+  （不刪欄＝schema drift 最小，同 B4 的 `product_variants.sku` 先例）。
+- **被推翻的理由**（記下來，免得日後有人以為當初沒想過）：第 26／27 包選 per-product
+  的論據是「同一張圖用在洋裝和外套上，各寫各的說明比較貼近實際用途」。那個論據**本身
+  沒有錯**，但它不是我們的取捨——本專案的目標是與本尊 1:1 對齊（鐵律 12），
+  「我們覺得比較好用」不構成偏離理由；偏離只有兩種合法形態（71 §A 保護清單或 §F 的 V），
+  而這一條沒有進 §A 的理由。
+- **證據層級（誠實登記，鐵律 19）**：本尊 alt 在檔案層有**兩項官方佐證**——
+  ①`MediaImage` 同時 implements `File` 與 `Media`，**只曝露一個 `alt` 欄位**
+  （<https://shopify.dev/docs/api/admin-graphql/latest/objects/MediaImage>）
+  ②help 逐字 "Accepting suggested alt text in the media editor saves the alt text to
+  **the file**."（<https://help.shopify.com/en/manual/products/product-media/add-alt-text>）
+  ⚠️ 「在 Files 改 alt 會傳播到全部商品」這一句**沒有官方逐字**，是由 ①的型別結構
+  推導出來的。⇒ 實作依本裁定進行，但該句在文檔中一律標明是推論；
+  複驗法＝測試店把同一檔掛兩個商品、從 Content › Files 改 alt、再讀兩個商品。
+- **通則**：「所有的都跟 Shopify」同時是對**其餘已登記缺口**的裁定——
+  第 28 包 `91` §3.10 登記的三項（檔案庫排序、選檔器內上傳、列表載入更多）
+  一律補到與本尊一致；`used_in` 值域涵蓋 Metaobjects／Brand Settings 那一項
+  **維持登記**，因為那兩個功能我方尚未實作，不是選擇不做而是還沒到。
+- **不受影響**：§A 保護清單的 27 條仍然有效。本裁定推翻的是「未經裁定就形成的實作
+  偏離」，不是已經明文裁定過的偏離——兩者不同，不得混為一談。

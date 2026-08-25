@@ -4,10 +4,10 @@ module Types
   # 檔案（表 files／model StoredFile——類名避開 Ruby core `File`，對外仍是 `File`）。
   #
   # 🔴 **本 type 是檔案庫的讀取面，`Image` 是商品媒體的讀取面**——兩者都掛在同一張
-  #   `files` 列上，差別在 alt：`Image` 的 alt 來自 `media` 那一列（同檔掛不同商品
-  #   可有不同 alt），本 type 的 `alt` 是**檔案自身**的 `files.alt_text`，也就是
-  #   檔案庫裡編輯的那一個、以及新掛載時的預設值。改這裡不會回頭改既有 media 的 alt
-  #   （那會把使用者針對某個商品寫的 alt 蓋掉）。
+  #   `files` 列上，而 D48（2026-08-25 使用者裁定）之後**兩邊的 `alt` 是同一個值**：
+  #   權威在 `files.alt_text`、全店一份，改哪一邊都一樣。
+  #   ⚠️ 曾經不是這樣：第 26／27 包裁定 alt 在 `media` 那一列（同檔掛不同商品可各有
+  #   alt），本檔頭原本明文「改這裡不會回頭改既有 media 的 alt」——那句已隨 D48 作廢。
   class FileType < Types::BaseObject
     graphql_name "File"
     description "檔案庫的一個檔案。"
@@ -20,7 +20,7 @@ module Types
     field :byte_size, GraphQL::Types::BigInt, null: false
     field :status, FileStatusEnum, null: false
     field :alt, String, null: true, method: :alt_text,
-                        description: "檔案層 alt（新掛載的預設值；不是某個商品的 alt）。"
+                        description: "alt 說明（全店一份；改它會影響所有用到本檔的商品）。"
     field :url, String, null: false, description: "檔案讀出端點（admin 認證後可取）。"
     field :created_at, GraphQL::Types::ISO8601DateTime, null: false
 

@@ -136,7 +136,7 @@ RSpec.describe "Admin GraphQL 商品媒體", type: :request do
     end
   end
 
-  it "productUpdateMedia：alt 是媒體層的（不寫回 files）；超長 ⇒ ALT_VALUE_LIMIT_EXCEEDED" do
+  it "🔴 D48：productUpdateMedia 的 alt 寫進**檔案**（改一次處處生效）；超長 ⇒ ALT_VALUE_LIMIT_EXCEEDED" do
     login!
     media = create_media!(count: 1, alt: "原始")
     id = media.sole["id"]
@@ -150,8 +150,13 @@ RSpec.describe "Admin GraphQL 商品媒體", type: :request do
     post_graphql(update, variables: { productId: product_gid, media: [ { id:, alt: "新 alt" } ] })
     expect(response.parsed_body.dig("data", "productUpdateMedia", "media").sole["alt"]).to eq("新 alt")
     ActsAsTenant.with_tenant(shop) do
-      # 🔴 檔案層的 alt 不受影響（同檔掛不同商品可有不同 alt）
-      expect(StoredFile.sole.alt_text).to eq("原始")
+      # 🔴 **權威在檔案**（D48，2026-08-25 使用者裁定「所有的都跟 Shopify」）：
+      #    在商品頁改 alt ＝ 改這個檔案的 alt ＝ 所有用到它的商品都跟著變。
+      #    本例在 D48 之前斷言的是相反的事（「檔案層不受影響」），
+      #    那是第 26／27 包 per-product 裁定的化身，隨該裁定被推翻而反轉。
+      expect(StoredFile.sole.alt_text).to eq("新 alt")
+      # 停用的 `media.alt_text` 不再被寫入（欄位保留，但不是權威）
+      expect(Media.sole.alt_text).to be_nil
     end
 
     post_graphql(update, variables: { productId: product_gid, media: [ { id:, alt: "x" * 513 } ] })

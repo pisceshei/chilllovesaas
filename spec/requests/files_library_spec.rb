@@ -116,19 +116,31 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
     expect(response.parsed_body.dig("data", "files", "nodes").sole["filename"]).to eq("used.png")
   end
 
-  it "🔴 fileUpdate 改檔案層 alt，**不回寫既有 media 的 alt**（我方與本尊的已知分歧）" do
+  it "🔴 D48：fileUpdate 改 alt ⇒ **所有引用這個檔的商品媒體都跟著變**（本尊語義）" do
     file = make_file!(alt: "舊檔案 alt")
-    row = attach!(file, 1)
-    ActsAsTenant.with_tenant(shop) { row.update!(alt_text: "這個商品專屬的 alt") }
+    # 同一個檔掛在兩個不同商品上——這正是「一份 alt 還是多份 alt」分野的場景
+    row_a = attach!(file, 1)
+    other = ActsAsTenant.with_tenant(shop) { create(:product_variant, shop:).product }
+    row_b = ActsAsTenant.with_tenant(shop) do
+      r = Media.create!(shop_id: shop.id, product_id: other.id, file_id: file.id,
+                        media_type: "image", position: 1,
+                        source_url: "/admin/files/#{file.id}/blob", status: file.status)
+      FileUsage.create!(shop_id: shop.id, file_id: file.id, owner_type: "Media", owner_id: r.id)
+      r
+    end
     login!
 
     post_graphql(FILE_UPDATE, variables: { files: [ { id: gid(file), alt: "新檔案 alt" } ] })
     expect(response.parsed_body.dig("data", "fileUpdate", "userErrors")).to be_empty
-    ActsAsTenant.with_tenant(shop) do
-      expect(file.reload.alt_text).to eq("新檔案 alt")
-      # 使用者針對這個商品寫的 alt 不得被檔案庫的一次編輯蓋掉
-      expect(row.reload.alt_text).to eq("這個商品專屬的 alt")
+
+    # 兩個商品的媒體讀出來都是新值——因為它們讀的是同一個 files 列
+    [ row_a, row_b ].each do |row|
+      post_graphql(<<~GRAPHQL, variables: { id: "gid://chilllove/Product/#{row.product_id}" })
+        query($id: ID!) { product(id: $id) { media { alt } } }
+      GRAPHQL
+      expect(response.parsed_body.dig("data", "product", "media").sole["alt"]).to eq("新檔案 alt")
     end
+    ActsAsTenant.with_tenant(shop) { expect(file.reload.alt_text).to eq("新檔案 alt") }
   end
 
   it "fileUpdate 改檔名：同店撞名 ⇒ FILENAME_ALREADY_EXISTS；改成原值不算撞名" do

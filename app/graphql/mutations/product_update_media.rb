@@ -18,7 +18,15 @@ module Mutations
       product = authorized_product!(product_id)
       result = Catalog::MediaSync.update(
         shop: context.fetch(:current_shop), product:,
-        entries: media.map { |entry| { id: legacy_media_id(entry.id), alt: entry.alt } }
+        # 🔴 `key?` 而不是直接取值（同 `fileUpdate` 的紀律）：`alt` 是 optional，
+        #    「沒送」與「送空字串清除」是兩件事。直接 `alt: entry.alt` 會讓沒送 alt 的
+        #    呼叫變成 nil ⇒ 清除——D48 之後那是**清掉所有引用此檔的商品看到的 alt**，
+        #    爆炸半徑從一列變成全站。
+        entries: media.map do |entry|
+          row = { id: legacy_media_id(entry.id) }
+          row[:alt] = entry.alt if entry.key?(:alt)
+          row
+        end
       )
       { media: result.media, user_errors: user_errors_from(result) }
     end

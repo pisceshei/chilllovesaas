@@ -1050,6 +1050,13 @@ media:
   statuses: [uploaded, processing, ready, failed]
   # 第 25 包：staged 簽名有效期。🔴 官方簽名時長未明文（12 §D.7-2 ⚠、90 blueprint
   # Q-100 登記待查）＝本值是我方裁定（ours）：上傳窗 15 分鐘，逾期重簽。
+  # alt 文字上限。官方 `FilesErrorCode.ALT_VALUE_LIMIT_EXCEEDED` 逐字：
+  # "The alt value exceeds the maximum limit of 512 characters."
+  # （<https://shopify.dev/docs/api/admin-graphql/latest/enums/FilesErrorCode>，取證 2026-08-25）
+  # 🔴 D48 之後 alt 只有一份（`files.alt_text`），這個上限因此也只該有一份判準：
+  #    原本 `MediaSync`／`FileCreate`／`FileWrite` 各自硬編 512（鐵律 6 違反），
+  #    三處同時守同一欄卻各寫一份，改一處就漂移。
+  alt_max_length: 512
   staged_upload_ttl_seconds: 900
   # 第 28 包：staged 孤兒清掃的**寬限窗**（加在 ttl 之上才是刪除判準）。
   # 🔴 為什麼不能只用 ttl：簽名過期的那一刻，`Storage::FileCreate` 可能正在讀那份
