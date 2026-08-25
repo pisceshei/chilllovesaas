@@ -20,7 +20,7 @@
 | product_title／product_type／product_vendor | eq／not_eq／starts_with／ends_with／contains／not_contains | value_text | products 欄位直比；contains＝LIKE（`sanitize_sql_like` 跳脫 `%`／`_`；值 ≥3 字元）；🔴 **not_eq／not_contains 帶 `OR IS NULL`**（2026-08-26 審查 F1：可空欄的三值邏輯把未設定商品靜默剔除，而 tag 的 does_not_include 卻納入無標籤商品——空值語義統一為「未設定＝不是那個值」） |
 | variant_title | 同上 | value_text | EXISTS 變體 |
 | product_tag | includes／does_not_include | value_text（比對用 `Tags::Normalize.key`） | `tag_key` 等值 EXISTS——🔴 **禁 LIKE**（`red` 誤中 `red-new`）；多條件各自 EXISTS，🔴 **禁併 IN**（IN＝OR） |
-| product_status | eq／not_eq | value_text（四態） | p.status 直比 |
+| product_status | eq／not_eq | value_text（四態，**寫入層白名單**＝`limits.product.status_values`，存小寫） | p.status 直比。🔴 `archived` 因 `PRODUCT_ELIGIBLE_SQL` 構造上恆 0 成員 |
 | variant_price／variant_compare_at_price | eq／not_eq／gt／lt | **value_cents**（鐵律 3） | EXISTS 變體（任一變體——V-58 已結案的官方語義） |
 | variant_compare_at_price | 另有 is_set／is_not_set | 無值 | 🔴 is_set＝**ALL variants**（官方逐字 "all variants must have a compare-at price value (including 0)"）＝NOT EXISTS 缺值變體＋至少一變體；is_not_set＝any-variant EXISTS 缺值 |
 | variant_weight | eq／not_eq／gt／lt | value_int（克） | EXISTS 變體 |
@@ -113,11 +113,14 @@ collections on your storefront" 的旁證（P11-U3 直取未複驗）。
 | P11-B8 | 智慧系列命中數即時預覽（Add condition 旁的數字）＝UI 包（工作卡明文） |
 | P11-B9 | resync 觸發面缺口：變體子頁（第 29 包）的獨立變體更新是否經 PRODUCTS_UPDATE ——**未驗證**；若否，價格條件的增量觸發漏一面（rake rebuild 兜底） |
 
-**P11-B10（2026-08-26 收斂輪 G4 的殘留面）**：exclusion 的 `collection` 型讓系列 A 的
-成員資格依賴系列 B 的物化列。`ResyncProduct` 已加第二趟（先算全部、再重算「引用了
-其他系列」的那些），單向引用因此在一次事件內收斂；**互相引用**（A 排除 B ∧ B 排除 A）
-需要不動點迭代，兩趟不保證收斂——該格由 `catalog:rebuild:collections` 兜底，
-且 `config/recurring.yml` 目前**沒有**排這支（要排程屬 CD 包）。
+**P11-B10（2026-08-26；經 G4→H5→J3 三次修正後的最終形）**：exclusion 的 `collection`
+型讓系列 A 的成員資格依賴系列 B 的物化列。`ResyncProduct` 依引用關係做**拓樸排序**
+（被引用者先算）⇒ **單向引用**（含 A→B→C 鏈）在一次事件內收斂。
+🔴 **互相引用**（A 排除 B ∧ B 排除 A）沒有拓樸序，以穩定順序打破、**不保證收斂**
+——該格由 `catalog:rebuild:collections` 兜底，且 `config/recurring.yml` 目前**沒有**
+排這支（要排程屬 CD 包）。**自我引用**（A 排除 A）已在寫入層硬拒（J5）：它連
+不動點都不存在，每次重建都翻面，兜底本身就會變成震盪源。
+沿革（三次修法各修掉前一版的什麼、又漏了什麼）＝worklog 2026-08-25 檔的第三～五節。
 
 **P11-B11（2026-08-26 收斂輪 H8）**：13 §F4.2 的第三條必測（手動加入＋明確排除）
 在 v1 無載體可測（`collection_source_members` 未建）⇒ 隨手選成員的包補測，不得再宣稱

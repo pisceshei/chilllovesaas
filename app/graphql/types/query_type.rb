@@ -256,7 +256,12 @@ module Types
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
     def collection_rule_conditions
       authorize_products!
-      Collections::RuleCompiler::INCLUSION_TYPES.map do |type|
+      # 🔴 聯集，不是只有 INCLUSION_TYPES（2026-08-26 收斂輪 J6）：`collection`
+      #   是 **exclusion 專用**型別，不在 INCLUSION_TYPES 裡 ⇒ 只走 inclusion 的話
+      #   這支 query 永遠不回傳它，前端就拿不到它的 allowedRelations。而契約檔頭與
+      #   `limits.condition_relations_source: runtime_query` 明文「前端不得硬編這張表」
+      #   ⇒ 規則編輯器只剩「違反明文硬編」或「做不出 collection 排除」兩條路。
+      (Collections::RuleCompiler::INCLUSION_TYPES | Collections::RuleCompiler::EXCLUSION_TYPES).map do |type|
         {
           rule_type: type,
           allowed_relations: Collections::RuleCompiler.relations_for(type),

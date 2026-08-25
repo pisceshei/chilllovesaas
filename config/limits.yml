@@ -1019,6 +1019,13 @@ collection:
   # contains／not_contains 的最小值長。官方逐字 "You need to specify a value that is at
   # least 3 characters long"（help /smart-collections/conditions，2026-08-25）。
   condition_value_contains_min_length: 3
+  # 🔴 規則值上限＝欄寬（`collection_source_rules.value_text` varchar(255)）
+  #   （2026-08-26 收斂輪 J1；ours——本尊未取得）。**必須有寫入層檢查**：少了它，
+  #   >255 字的規則值讓 `create!` 拋 `ActiveRecord::ValueTooLong`（`StatementInvalid`
+  #   子類、不在 SaveCollection 的 rescue 清單）⇒ 漏成 top-level INTERNAL、
+  #   userErrors 為空，違反鐵律 4①。同 normalize 的 title／description／seo／handle
+  #   都有上限，只有規則值沒有——與 F5→G3 同一個「只封被點名那幾格」形態。
+  condition_value_max_chars: 255
   # 60 條上限的口徑：官方 "A single collection can have a maximum of 60 total conditions"
   # 傾向 per-collection；新模型 per-source 口徑未實測（P11-U18）⇒ fail-closed 取嚴的一側
   # （三道裁定 :289 的既定判準）。

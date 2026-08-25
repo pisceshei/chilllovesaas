@@ -239,7 +239,16 @@ module Catalog
           if tags.length > Limits.fetch(:product, :max_tags)
             errors << error([ "tags" ], I18n.t("errors.product.tags_too_many"), "TOO_LONG")
           end
-          if tags.any? { |tag| tag.length > Limits.fetch(:product, :tag_max_chars) }
+          # 🔴 **原字串與正規化後的 key 都要驗**（2026-08-26 收斂輪 J2）：落庫的是
+          #   `Tags::Normalize.key(raw)`，而正規化會把字串**變長**——NFKC 展開相容字
+          #   （㍿→株式会社、Ⅷ→viii、…→...）、`downcase(:fold)` 全摺疊（ß→ss、™→tm）。
+          #   `product_tags.tag_key` 是 varchar(255)、上限也是 255 ⇒ 任何膨脹都必然溢位，
+          #   而 `ValueTooLong` 不在 SaveProduct 的 rescue 清單裡 ⇒ **整筆商品**回
+          #   top-level INTERNAL、商家看不到任何 userError（違反鐵律 4① 與本檔檔頭的
+          #   「不得漏成 500」）。本包之前 product_tags 不存在，同一輸入存得進去 ⇒
+          #   這是本包引入的回歸，必須在寫入層擋。
+          tag_limit = Limits.fetch(:product, :tag_max_chars)
+          if tags.any? { |tag| tag.length > tag_limit || Tags::Normalize.key(tag).length > tag_limit }
             errors << error([ "tags" ], I18n.t("errors.product.tag_too_long"), "TOO_LONG")
           end
           organization[:tags] = tags

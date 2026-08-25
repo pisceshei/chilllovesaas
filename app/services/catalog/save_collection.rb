@@ -106,7 +106,7 @@ module Catalog
           sort_order:,
           seo: seo_attributes(input, errors),
           product_ids: input[:product_ids],
-          sources: normalize_sources(shop, input, errors),
+          sources: normalize_sources(shop, input, errors, current_collection_id(input)),
           source_locale:,
           translations_prepared: prepare_translations(shop, source_locale, input, errors)
         }
@@ -130,7 +130,7 @@ module Catalog
         raise TreeRejected, [ error([ "sources" ], I18n.t("errors.collection.sources_manual"), "INVALID") ]
       end
 
-      def normalize_sources(shop, input, errors)
+      def normalize_sources(shop, input, errors, current_id = nil)
         raw_sources = input[:sources]
         return nil if raw_sources.nil?   # 缺席＝保持現值（宣告式家族語義）
 
@@ -138,7 +138,7 @@ module Catalog
         # normalize 這一層看不見更新目標的**現行**型別（F3 改制後 collection_type 缺席＝nil），
         # 在這裡判會把「更新智慧系列、沒帶 collectionType、帶 sources」誤殺。
         sources = Array(raw_sources).each_with_index.map do |src, s_index|
-          normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors)
+          normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors, current_id)
         end
         # 60 條上限：per-collection 口徑（fail-closed，P11-U18；三道裁定 :289）。
         total = sources.sum { |src| src[:rules].length }
@@ -149,7 +149,23 @@ module Catalog
         sources
       end
 
-      def normalize_source(shop, src, s_index, errors)
+      # 更新態的本系列 id（J5 的自我引用判準）；建立態沒有 id ⇒ nil。
+      def current_collection_id(input)
+        match = GID_PATTERN.match(input[:id].to_s)
+        match && match[1].to_i
+      end
+
+      # J1／J2：規則值的欄寬鏡射。原字串與正規化後的 key 都要過。
+      def value_within_limit?(value, path, errors)
+        maximum = Limits.fetch(:collection, :condition_value_max_chars)
+        return true if value.length <= maximum
+
+        errors << error(path + [ "valueText" ],
+                        I18n.t("errors.collection.rule_value_too_long", max: maximum), "TOO_LONG")
+        false
+      end
+
+      def normalize_source(shop, src, s_index, errors, current_id = nil)
         path = [ "sources", s_index.to_s ]
         target = (src[:target_type] || "products").to_s
         # v1 只收 products：variants／sub_collections 的機制屬後續包（schema 已就位）。
@@ -164,12 +180,12 @@ module Catalog
 
         rules = Array(src[:rules]).each_with_index.map do |rule, r_index|
           normalize_rule(shop, rule.respond_to?(:to_h) ? rule.to_h.symbolize_keys : rule,
-                         path + [ "rules", r_index.to_s ], errors)
+                         path + [ "rules", r_index.to_s ], errors, current_id)
         end
         { target_type: target, inclusion_match:, exclusion_match:, rules: rules.compact }
       end
 
-      def normalize_rule(shop, rule, path, errors)
+      def normalize_rule(shop, rule, path, errors, current_id = nil)
         block = rule[:block].to_s
         type = rule[:condition_type].to_s
         relation = rule[:relation].to_s
@@ -193,12 +209,29 @@ module Catalog
 
         attrs = { block:, condition_type: type, relation: }
         case type
-        when *STRING_RULE_TYPES, "product_status"
+        when "product_status"
+          # 🔴 值域白名單（2026-08-26 收斂輪 J4）：同 normalize 的 collection_type／
+          #   sort_order、同方法的 block／condition_type／relation 全部逐一白名單，
+          #   唯獨狀態值直通 ⇒ 打錯字存檔成功、系列恆空、商家零回饋；而且與**合法值**
+          #   `archived`（因 `PRODUCT_ELIGIBLE_SQL` 構造上恆 0 成員）在畫面上無法區分。
           value = rule[:value_text].to_s.strip
           if value.empty?
             errors << error(path + [ "valueText" ], I18n.t("errors.collection.value_required"), "BLANK")
             return nil
           end
+          unless Limits.enum(:product, :status_values).map { |v| v.to_s.downcase }.include?(value.downcase)
+            errors << error(path + [ "valueText" ], I18n.t("errors.collection.status_value_invalid"), "INVALID")
+            return nil
+          end
+          attrs[:value_text] = value.downcase
+        when *STRING_RULE_TYPES
+          value = rule[:value_text].to_s.strip
+          if value.empty?
+            errors << error(path + [ "valueText" ], I18n.t("errors.collection.value_required"), "BLANK")
+            return nil
+          end
+          return nil unless value_within_limit?(value, path, errors)
+
           # 官方：contains 類值 ≥3 字元（limits condition_value_contains_min_length）。
           if %w[contains not_contains].include?(relation) &&
              value.length < Limits.fetch(:collection, :condition_value_contains_min_length)
@@ -212,7 +245,14 @@ module Catalog
             errors << error(path + [ "valueText" ], I18n.t("errors.collection.value_required"), "BLANK")
             return nil
           end
-          attrs[:value_text] = rule[:value_text].to_s.strip
+          value = rule[:value_text].to_s.strip
+          # 🔴 存的是原字串、比對的是 key——**兩者都要在欄寬內**（J1／J2 同一個
+          #   「DB 欄寬沒有鏡射到寫入層」的類）。key 可能比原字串**長**（NFKC 與
+          #   casefold 會展開：ß→ss、㍿→株式会社）⇒ 只驗原字串會漏。
+          return nil unless value_within_limit?(value, path, errors)
+          return nil unless value_within_limit?(key, path, errors)
+
+          attrs[:value_text] = value
         when *MONEY_RULE_TYPES
           if %w[is_set is_not_set].include?(relation)
             # 一元運算子：無值。
@@ -237,6 +277,16 @@ module Catalog
           referenced_id = match[1].to_i
           unless Collection.where(shop_id: shop.id, id: referenced_id).exists?
             errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_invalid"), "INVALID")
+            return nil
+          end
+          # 🔴 自我引用一律拒（2026-08-26 收斂輪 J5）：`compile_collection_exclusion`
+          #   讀的是**物化成員**，所以「排除自己」＝「凡已在本系列的商品就排除」
+          #   ——不存在不動點，membership 每次 rebuild／resync 都翻面，每翻一次
+          #   bump 一次 cache stamp、發一筆 `collections/update`（EXTERNAL topic）。
+          #   與 P11-B10（A⇄B 互相引用、由 rake 兜底）不同：自引在兜底下是
+          #   **每跑一次翻一次**，兜底本身就是震盪源。
+          if current_id && referenced_id == current_id
+            errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_self"), "INVALID")
             return nil
           end
           attrs[:value_int] = referenced_id

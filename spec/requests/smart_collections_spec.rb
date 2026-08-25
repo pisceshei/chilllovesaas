@@ -218,12 +218,81 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     ActsAsTenant.with_tenant(shop) { expect(Collection.count).to eq(0) }
   end
 
+  it "🔴 J1（2026-08-26 收斂輪）：規則值超過欄寬 ⇒ TOO_LONG，不得漏成 500" do
+    login!
+    # `collection_source_rules.value_text` 是 varchar(255)。少了寫入層檢查，
+    # `create!` 拋的 ValueTooLong 不在 rescue 清單裡 ⇒ top-level INTERNAL、
+    # userErrors 為空（違反鐵律 4①）。
+    over = "長" * 256
+    data = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_title", relation: "eq", valueText: over }
+    ]))
+
+    expect(data).to be_present, "回了 top-level errors（500）而不是 userErrors"
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "TOO_LONG" ])
+    expect(data["userErrors"].first["field"]).to include("valueText")
+    ActsAsTenant.with_tenant(shop) { expect(Collection.count).to eq(0) }
+  end
+
+  it "🔴 J2（同上）：tag 條件的**正規化後 key** 也要在欄寬內（正規化會變長）" do
+    login!
+    # ß 經 downcase(:fold) 變 ss ⇒ 原字串 255 但 key 510。只驗原字串會漏。
+    data = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "ß" * 255 }
+    ]))
+
+    expect(data).to be_present
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "TOO_LONG" ])
+  end
+
+  it "🔴 J4（同上）：product_status 的值域白名單" do
+    login!
+    bad = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_status", relation: "eq", valueText: "actve" }
+    ]))
+    expect(bad["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(bad["userErrors"].first["field"]).to include("valueText")
+
+    ok = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_status", relation: "eq", valueText: "ACTIVE" }
+    ]))
+    expect(ok["userErrors"]).to eq([])
+    # 大小寫正規化：存進去的是小寫（與 products.status 同形）。
+    ActsAsTenant.with_tenant(shop) { expect(CollectionSourceRule.sole.value_text).to eq("active") }
+  end
+
+  it "🔴 J5（同上）：系列不得排除自己（自引沒有不動點，每次重建都翻面）" do
+    login!
+    created = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ]))
+    id = created.dig("collection", "id")
+
+    data = set!({ id:, lockVersion: created.dig("collection", "lockVersion"),
+                  title: "夏季精選", sources: [ { rules: [
+                    { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                    { block: "exclusion", conditionType: "collection", relation: "includes",
+                      referencedCollectionId: id }
+                  ] } ] })
+
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(data["userErrors"].first["field"]).to include("referencedCollectionId")
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")
     rows = response.parsed_body.dig("data", "collectionRuleConditions")
 
-    expect(rows.map { |r| r["ruleType"] }).to match_array(Collections::RuleCompiler::INCLUSION_TYPES)
+    # 🔴 聯集而非只有 inclusion（2026-08-26 收斂輪 J6）：`collection` 是 exclusion
+    #   專用型，原本的斷言把「resolver 漏掉它」寫成了期望值。
+    expect(rows.map { |r| r["ruleType"] })
+      .to match_array(Collections::RuleCompiler::INCLUSION_TYPES | Collections::RuleCompiler::EXCLUSION_TYPES)
+    exclusion_only = rows.find { |r| r["ruleType"] == "collection" }
+    expect(exclusion_only).to be_present,
+      "前端拿不到 collection 型的 relations ⇒ 規則編輯器只能硬編（契約明文禁止）"
+    expect(exclusion_only["allowedRelations"]).to eq(Collections::RuleCompiler.relations_for("collection"))
+    expect(exclusion_only["allowedInExclusion"]).to be(true)
     tag_row = rows.find { |r| r["ruleType"] == "product_tag" }
     expect(tag_row["allowedRelations"]).to eq(%w[includes does_not_include])
     expect(tag_row["allowedInExclusion"]).to be(true)

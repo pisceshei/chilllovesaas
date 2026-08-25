@@ -194,4 +194,103 @@ RSpec.describe Collections::ResyncConsumer do
     expect(events).to eq([ b.id ]),
       "A 沒有實際成員變動卻發了 collections/update（先加後刪各一則＝兩倍快取失效）"
   end
+
+  it "🔴 J3（2026-08-26 收斂輪）：鏈式單向引用 A→B→C 單次事件也要收斂（拓樸序）" do
+    # H5 的「改序」修掉了翻轉，卻把第二次求值機會也拿掉 ⇒ A 與 B 同落尾段、
+    # 順序由 pluck 決定，A 讀到完全沒被重算過的 B。正解＝依引用關係拓樸排序。
+    shop = create(:shop, subdomain: "resync-chain")
+    product = ActsAsTenant.with_tenant(shop) do
+      p = create(:product, shop:, title: "紅", tags: [ "red" ])
+      create(:product_variant, shop:, product: p, price_cents: 100)
+      ProductTag.create!(shop_id: shop.id, product_id: p.id, tag_key: "red", tag_display: "red")
+      p
+    end
+
+    a, b, c = %w[chain-a chain-b chain-c].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    # A 排除 B；B 排除 C；C＝tag red。id 序 a < b < c（最壞情況：與需要的序相反）。
+    ActsAsTenant.with_tenant(shop) do
+      [ [ a, b ], [ b, c ] ].each do |(owner, referenced)|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: referenced.id, position: 1)
+      end
+      src_c = CollectionSource.create!(shop_id: shop.id, collection_id: c.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+      # 🔴 C 用商品**沒有**的標籤：這樣 C 空 ⇒ B 含商品 ⇒ A 應為空。
+      #   若 C 也含商品，B 就是空的，A 無論什麼順序都「碰巧」對——
+      #   拓樸序的守衛必須在「依賴方非空」的拓樸下才測得出來（MJ3 第一次是綠的原因）。
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src_c.id, block: "inclusion",
+                                   condition_type: "product_tag", relation: "includes",
+                                   value_text: "blue", position: 0)
+    end
+
+    Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+    members = ->(col) { ActsAsTenant.with_tenant(shop) { CollectionMembership.where(collection_id: col.id).pluck(:product_id) } }
+    expect(members.call(c)).to be_empty                    # C：tag blue ⇒ 商品不在
+    expect(members.call(b)).to eq([ product.id ])          # B：tag red 減去 C（空）⇒ 在
+    expect(members.call(a)).to be_empty,                   # A：tag red 減去 B（含商品）⇒ 空
+      "A 讀到的是本次事件沒被重算過的 B ⇒ 鏈式引用未收斂（拓樸序失效）"
+  end
+
+  it "🔴 J7（同上）：與本商品無關的系列不進工作清單（每則事件不掃全店）" do
+    shop = create(:shop, subdomain: "resync-scope")
+    product = ActsAsTenant.with_tenant(shop) do
+      p = create(:product, shop:, title: "紅", tags: [ "red" ])
+      create(:product_variant, shop:, product: p, price_cents: 100)
+      ProductTag.create!(shop_id: shop.id, product_id: p.id, tag_key: "red", tag_display: "red")
+      p
+    end
+    with_source = ActsAsTenant.with_tenant(shop) do
+      col = Collection.create!(shop_id: shop.id, title: "有條件", handle: "scoped-a",
+                               collection_type: "smart", sort_order: "manual", description_html: "")
+      src = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                     target_type: "products", inclusion_match: "all", position: 0)
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                   condition_type: "product_tag", relation: "includes",
+                                   value_text: "red", position: 0)
+      col
+    end
+    # 零 source、且本商品沒有物化列 ⇒ 構造上不可能有變化，不該被造訪。
+    untouched = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "無關", handle: "scoped-b",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+    # 零 source 但**有**本商品的殘留列 ⇒ 必須被造訪（G1 的自癒面）。
+    orphan = ActsAsTenant.with_tenant(shop) do
+      col = Collection.create!(shop_id: shop.id, title: "殘留", handle: "scoped-c",
+                               collection_type: "smart", sort_order: "manual", description_html: "")
+      CollectionMembership.create!(shop_id: shop.id, collection_id: col.id, product_id: product.id,
+                                   origin: "conditions", rebuilt_at: Time.current)
+      col
+    end
+
+    locked = []
+    allow(Collection).to receive(:lock).and_wrap_original do |orig, *args|
+      relation = orig.call(*args)
+      allow(relation).to receive(:find_by).and_wrap_original do |find, *find_args|
+        row = find.call(*find_args)
+        locked << row.id if row
+        row
+      end
+      relation
+    end
+
+    Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+    expect(locked).to include(with_source.id)
+    expect(locked).to include(orphan.id), "G1 的自癒面被 J7 的過濾誤殺"
+    expect(locked).not_to include(untouched.id),
+      "與本商品構造上無關的系列仍被逐一鎖住求值（J7 的放大鏈）"
+  end
 end

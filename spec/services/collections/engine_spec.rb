@@ -508,4 +508,30 @@ RSpec.describe "智慧系列求值引擎" do
       expect(members(collection)).to eq([ unlisted.id ])
     end
   end
+
+  it "🔴 J2 商品側（2026-08-26 收斂輪）：正規化後超長的標籤 ⇒ userError，不得漏成 500" do
+    # `product_tags.tag_key` 是 varchar(255)，而 `Tags::Normalize.key` 會展開
+    # （ß→ss）⇒ 原字串 255 但 key 510。少了 key 側的檢查，`sync_product_tags!` 的
+    # `create!` 會拋 ValueTooLong，而它不在 SaveProduct 的 rescue 清單裡 ⇒
+    # **整筆商品**回 top-level INTERNAL、商家看不到任何 userError（鐵律 4①）。
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveProduct.call(shop:, input: { title: "膨脹標籤", tags: [ "ß" * 255 ],
+                                                variants: [ { price: "10.00" } ] })
+    end
+
+    expect(result.user_errors.map { |e| e[:code] }).to eq([ "TOO_LONG" ])
+    expect(result.user_errors.first[:field]).to include("tags")
+    expect(ActsAsTenant.with_tenant(shop) { Product.where(title: "膨脹標籤").count }).to eq(0)
+  end
+
+  it "J2 對照組：正規化後仍在欄寬內的標籤照常存檔" do
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveProduct.call(shop:, input: { title: "正常標籤", tags: [ "ß" * 100 ],
+                                                variants: [ { price: "10.00" } ] })
+    end
+
+    expect(result.user_errors).to eq([])
+    key = ActsAsTenant.with_tenant(shop) { ProductTag.where(tag_display: "ß" * 100).pick(:tag_key) }
+    expect(key.length).to eq(200)
+  end
 end

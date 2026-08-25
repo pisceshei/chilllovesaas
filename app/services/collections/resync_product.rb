@@ -36,18 +36,17 @@ module Collections
           left = 0
           skipped = 0
 
-          ids = smart_collection_ids(shop)
-          # 🔴 引用其他系列的**排到最後算**（2026-08-26 收斂輪 G4／H5）：exclusion 的
-          #   `collection` 型讀被引用系列的**物化成員** ⇒ 必須等被引用方先落定。
-          #   初版寫成 `ids + referencing`（**追加**）：A 仍會在第一趟先算一次、
-          #   **提交**一筆錯誤的成員列、bump 快取、發一則 `collections/update`，
-          #   第二趟才刪掉再發一則——前台在那個窗口讀得到依規則絕不該在 A 裡的商品，
-          #   而且每個被排除的商品每次事件都固定產生兩倍的快取失效與 outbox 事件。
-          #   改序（`ids - referencing` 之後才跑 `referencing`）達成同樣意圖且無中間寫入。
-          #   互相引用（A 排除 B ∧ B 排除 A）需要不動點迭代，改序不保證收斂——
-          #   那一格登記在 dev doc §5（P11-B10），由 rake 兜底。
-          referencing = collection_ids_referencing_others(shop, ids)
-          ((ids - referencing) + referencing).each do |collection_id|
+          # 🔴 **拓樸序**（2026-08-26 收斂輪 J3）：exclusion 的 `collection` 型讀被引用
+          #   系列的**物化成員** ⇒ 被引用方必須先落定。沿革與兩次錯誤修法：
+          #   ①初版無序（G4 發現：A 排除 B 且 A.id < B.id ⇒ A 誤留商品）；
+          #   ②第二版 `ids + referencing`（**追加**，H5 發現：A 仍在第一趟先提交一筆
+          #     錯誤成員、bump 快取、發事件，第二趟才刪掉再發一則＝雙倍事件＋前台窗口）；
+          #   ③第三版 `(ids - referencing) + referencing`（**改序**，J3 發現：修掉了翻轉，
+          #     但把「第二次求值機會」也一起拿掉 ⇒ **鏈式**單向引用 A→B→C 時 A 與 B
+          #     同落尾段、順序由 pluck 決定，A 讀到完全沒被重算過的 B ⇒ 錯且不自癒）。
+          #   ⇒ 正解是**依引用關係做拓樸排序**：被引用的先算。環（A⇄B）無拓樸序，
+          #   以穩定順序打破並登記 P11-B10（由 rake 兜底）——環是唯一不保證收斂的形態。
+          topological_order(shop, smart_collection_ids(shop, product_id)).each do |collection_id|
             outcome = Collection.transaction do
               collection = Collection.lock.find_by(shop_id: shop.id, id: collection_id)
               next :gone if collection.nil?
@@ -92,24 +91,56 @@ module Collections
 
       private
 
-      # 🔴 工作清單＝**全部智慧系列**，不是「還有 conditions source 的系列」
-      #   （2026-08-26 收斂輪 G1）：從 `collection_sources` 導出清單的話，條件被清空的
-      #   系列會從所有清理路徑的視野裡消失，物化成員永久殘留。零 source 的智慧系列
-      #   在 `member_by_rules?` 下對每個商品都回 false ⇒ 本服務會逐一把殘留列移出，
-      #   即「自癒」。
-      def smart_collection_ids(shop)
-        Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
+      # 🔴 工作清單的兩個必要條件（G1 ∧ J7）：
+      #   ①**不得**只取「還有 conditions source 的系列」——條件被清空的系列會從所有
+      #     清理路徑消失、物化成員永久殘留（G1）；
+      #   ②也**不必**每則事件都掃全店每一個智慧系列——那會對零 source 且與本商品
+      #     無關的系列白付一次列鎖與求值，而 H3 把庫存事件接活之後這條放大鏈才真正
+      #     通電（`max_smart_collections_per_shop` × 每商品的變體×地點事件數，J7）。
+      #   ⇒ 取聯集：**有 conditions source 的**（可能要加入）∪ **本商品已有物化列的**
+      #     （可能要移出——這一半就是 G1 的自癒面，且用主鍵索引，代價極小）。
+      #     兩者都不在 ⇒ 該系列對這個商品構造上不可能有任何變化，跳過是**正確**的，
+      #     不是抄捷徑。
+      def smart_collection_ids(shop, product_id)
+        with_sources = CollectionSource.where(shop_id: shop.id).conditions_type
+                                       .joins(:collection).where(collections: { collection_type: "smart" })
+                                       .distinct.pluck(:collection_id)
+        with_rows = CollectionMembership.where(shop_id: shop.id, product_id:, origin: "conditions")
+                                        .distinct.pluck(:collection_id)
+        (with_sources | with_rows)
       end
 
-      # 帶 `collection` 型 exclusion 規則的系列（第二趟重算對象）。
-      def collection_ids_referencing_others(shop, ids)
-        return [] if ids.empty?
+      # 引用圖：collection_id => 它 exclusion 引用的 collection id 集合。
+      def reference_edges(shop, ids)
+        return {} if ids.empty?
 
         CollectionSourceRule
           .joins(:source)
           .where(shop_id: shop.id, block: "exclusion", condition_type: "collection")
           .where(collection_sources: { collection_id: ids })
-          .distinct.pluck("collection_sources.collection_id")
+          .pluck("collection_sources.collection_id", :value_int)
+          .each_with_object({}) { |(from, to), acc| (acc[from] ||= []) << to if to }
+      end
+
+      # 被引用者先算的拓樸序（DFS＋visiting 標記斷環）。
+      # 🔴 環（A⇄B）沒有拓樸序：以穩定順序打破，該格登記 P11-B10、由 rake 兜底。
+      def topological_order(shop, ids)
+        edges = reference_edges(shop, ids)
+        return ids if edges.empty?
+
+        known = ids.to_set
+        ordered = []
+        state = {}   # id => :visiting | :done
+        visit = lambda do |id|
+          return if state[id] == :done || state[id] == :visiting
+
+          state[id] = :visiting
+          Array(edges[id]).sort.each { |dep| visit.call(dep) if known.include?(dep) }
+          state[id] = :done
+          ordered << id
+        end
+        ids.each { |id| visit.call(id) }
+        ordered
       end
 
       # 與 rebuild 同一段 WHERE，加 id 等值——SQL-only 的單商品形。

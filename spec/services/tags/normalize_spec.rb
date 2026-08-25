@@ -36,4 +36,14 @@ RSpec.describe Tags::Normalize do
       expect(described_class.key(once)).to eq(once)
     end
   end
+
+  describe "🔴 J2（2026-08-26 收斂輪）：正規化會讓字串**變長**" do
+    it "NFKC 展開與 casefold 都會膨脹——寫入層必須用 key 的長度驗上限" do
+      # 這些是實際會撐爆 varchar(255) 的形態（審查實測）。
+      expect(described_class.key("ß" * 10).length).to eq(20)      # casefold: ß→ss
+      expect(described_class.key("㍿" * 10).length).to eq(40)     # NFKC: ㍿→株式会社
+      expect(described_class.key("Ⅷ" * 10).length).to eq(40)      # NFKC: Ⅷ→viii
+      expect(described_class.key("a" * 10).length).to eq(10)      # 對照組
+    end
+  end
 end
