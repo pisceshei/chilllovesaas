@@ -23,6 +23,9 @@ module Types
         description: "手動系列成員（宣告式：未列出＝移除；順序＝陣列順序）。"
       argument :translations, [ Types::Inputs::TranslationInput ], required: false,
         description: "非來源語言的譯文（與商品共用同一張 translations 表）。"
+      # 第 11 包（D50）：智慧系列的來源／條件（宣告式：整份取代；缺席＝保持現值）。
+      argument :sources, [ Types::Inputs::CollectionSourceInput ], required: false,
+        description: "智慧系列的條件來源（只對 collectionType=smart 生效）。"
     end
   end
 end

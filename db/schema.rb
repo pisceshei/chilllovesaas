@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_058000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -60,6 +60,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
     t.index ["shop_id", "token"], name: "uq_checkouts_token", unique: true
   end
 
+  create_table "collection_memberships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "物化成員（前台唯一查詢對象；13 §F4.6-1）。智慧成員禁入 collection_products", force: :cascade do |t|
+    t.bigint "collection_id", null: false
+    t.datetime "created_at", null: false
+    t.string "origin", limit: 24, default: "conditions", null: false, comment: "conditions / manual / nested_collection / app（13 §F4.1）"
+    t.bigint "origin_source_id"
+    t.integer "position", default: 0, null: false
+    t.bigint "product_id", null: false
+    t.datetime "rebuilt_at", comment: "本輪 rebuild 的世代戳（掃尾依據）"
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "variant_id", comment: "NULL＝整商品；非 NULL＝variants 目標（v1 恆 NULL）"
+    t.virtual "variant_key", type: :bigint, as: "coalesce(`variant_id`,0)", stored: true
+    t.index ["shop_id", "collection_id", "position"], name: "ix_collection_memberships_position"
+    t.index ["shop_id", "collection_id", "product_id", "variant_key"], name: "uq_collection_memberships_member", unique: true
+    t.index ["shop_id", "product_id"], name: "ix_collection_memberships_product"
+  end
+
   create_table "collection_products", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "手動系列與商品的租戶安全 join", force: :cascade do |t|
     t.bigint "collection_id", null: false
     t.datetime "created_at", null: false
@@ -88,6 +105,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
     t.index ["shop_id", "id"], name: "uq_collection_rules_tenant_id", unique: true
   end
 
+  create_table "collection_source_rules", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "typed-value 條件（金額一律 value_cents——鐵律 3；13 §F4.1 修訂形）", force: :cascade do |t|
+    t.string "block", limit: 12, null: false, comment: "inclusion / exclusion"
+    t.bigint "collection_source_id", null: false
+    t.string "condition_type", limit: 64, null: false, comment: "開放集：未知型別原樣保留（condition_unknown_passthrough）"
+    t.datetime "created_at", null: false
+    t.bigint "metafield_definition_id", comment: "metafield 條件（v1 不收，欄位先就位）"
+    t.integer "position", default: 0, null: false
+    t.json "raw_payload", comment: "unknown 型別的原樣保存（passthrough 載體）"
+    t.string "relation", limit: 32, comment: "已知型別必填；unknown 可 NULL"
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "value_bool"
+    t.bigint "value_cents", comment: "金額規則值唯一合法欄（鐵律 3）"
+    t.bigint "value_int"
+    t.string "value_text"
+    t.index ["shop_id", "collection_source_id", "block", "position"], name: "uq_collection_source_rules_position", unique: true
+  end
+
+  create_table "collection_sources", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "系列來源（sources 模型；limits collection.source_types）", force: :cascade do |t|
+    t.bigint "app_id", comment: "app 是 source 的欄位不是型別（95 §1.1）；v1 恆 NULL"
+    t.bigint "collection_id", null: false
+    t.datetime "created_at", null: false
+    t.string "exclusion_match", limit: 8, comment: "all / any / NULL（三態；三道裁定 :58-59）"
+    t.string "inclusion_match", limit: 8, default: "all", null: false, comment: "all / any（per block）"
+    t.integer "position", default: 0, null: false
+    t.bigint "referenced_collection_id", comment: "僅 sub_collections 型：被引用的系列"
+    t.boolean "shareable", comment: "95 §1.1 記載的真實維度；語義未取證（P11 登記），v1 不寫"
+    t.bigint "shop_id", null: false
+    t.string "source_type", limit: 32, null: false, comment: "conditions / sub_collections"
+    t.string "target_type", limit: 16, comment: "products / variants（僅 conditions 型；v1 只收 products）"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "collection_id", "position"], name: "ix_collection_sources_collection"
+    t.index ["shop_id", "source_type", "referenced_collection_id"], name: "ix_collection_sources_referenced"
+  end
+
   create_table "collections", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "手動或智慧系列", force: :cascade do |t|
     t.string "collection_type", limit: 32, default: "manual", null: false
     t.datetime "created_at", null: false
@@ -95,6 +147,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
     t.string "handle", null: false
     t.integer "lock_version", default: 0, null: false
     t.datetime "products_updated_at", comment: "成員集合最後變動時刻（cache stamp；14 §F1）"
+    t.string "rebuild_status", limit: 12, comment: "OK / PENDING / ERROR（13 §F4.1；NULL＝從未 rebuild 過＝manual 或未啟用）"
+    t.datetime "rebuilt_at", comment: "最後一次成功 rebuild 完成時刻"
     t.string "rules_match", limit: 16, default: "all", null: false
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
@@ -753,6 +807,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
     t.index ["shop_id", "product_id", "name"], name: "uq_product_options_product_id_name", unique: true
     t.index ["shop_id", "product_id", "position"], name: "uq_product_options_product_id_position", unique: true
     t.index ["shop_id", "product_id"], name: "ix_product_options_product_id"
+  end
+
+  create_table "product_tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品標籤正規化表（13 §F4.4）：display 顯示、key 比對", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "product_id", null: false
+    t.bigint "shop_id", null: false
+    t.string "tag_display", null: false, comment: "商家原字串（同 key 只留首次寫入的）"
+    t.string "tag_key", null: false, collation: "utf8mb4_bin", comment: "正規化鍵（Tags::Normalize 唯一實作）；比對一律用這欄"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "product_id", "tag_key"], name: "ix_product_tags_product"
+    t.index ["shop_id", "tag_key", "product_id"], name: "uq_product_tags_key_product", unique: true
   end
 
   create_table "product_variant_option_values", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "變體 × 選項的座標（每個變體對每個選項恰好一列）", force: :cascade do |t|

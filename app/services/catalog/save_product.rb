@@ -72,6 +72,29 @@ module Catalog
         end
       end
 
+      # 第 11 包：規則契約的金額邊界（公開）——十進位字串 → cents，走與變體價格
+      # 完全相同的 `Money::Decimal` 路（鐵律 3：折換只在這一個邊界發生）。
+      #
+      # @param raw [String, nil]
+      # @param path [Array<String>] userError 欄位路徑
+      # @return [Integer, nil] cents；nil＝已寫入 errors
+      def parse_money_for(raw, shop, path, errors)
+        if raw.blank?
+          errors << error(path, I18n.t("errors.product.price_required"), "BLANK")
+          return nil
+        end
+        decimal = Money::Decimal.from_string(raw.to_s, shop.store_currency)
+        storage = decimal.to_storage
+        if storage.cents.negative?
+          errors << error(path, I18n.t("errors.product.amount_negative"), "GREATER_THAN_OR_EQUAL_TO")
+          return nil
+        end
+        storage.cents
+      rescue ArgumentError, Money::ExcessPrecision
+        errors << error(path, I18n.t("errors.product.amount_invalid"), "INVALID")
+        nil
+      end
+
       # ML-3：系列的說明走同一套白名單 sanitize（公開；實作仍在 private 的 sanitize_description）。
       #
       # @param html [String]
@@ -374,6 +397,7 @@ module Catalog
             ActiveRecord::Base.transaction do
               product = create_product!(shop, attributes)
               sync_variants!(shop, product, attributes)
+              sync_product_tags!(shop, product)
               translation_errors = save_translations!(shop, product, attributes)
               # ⚠️ 現行 `Upsert.commit` 只回空 user_errors（驗證全在 normalize 的 prepare
               #   完成）⇒ 這條 raise **目前構造上不可達**（審查 F7）。留著是 fail-closed：
@@ -489,6 +513,7 @@ module Catalog
             Catalog::CacheStamps.bump_variants!(shop.id, product.id)
 
             sync_variants!(shop, product, attributes)
+            sync_product_tags!(shop, product)
             translation_errors = save_translations!(shop, product, attributes)
             # ⚠️ 同 create 路徑：現行構造上不可達的 fail-closed 網（審查 F7）。
             raise TranslationRejected, translation_errors if translation_errors.any?
@@ -608,6 +633,27 @@ module Catalog
       # 🔴 內部 product.updated／product.variant.updated 本包不發（PR #115 §4.5 射程；
       #    留給接消費者的包，前置＝event_deliveries，63 §L-4 門檻）。
       NOISE_FIELDS = %w[id shop_id created_at updated_at lock_version].freeze
+
+      # 🔴 第 11 包：`product_tags` 正規化表與 `products.tags`（JSON，顯示順序權威）
+      #   **同一 transaction** 同步（13 §F4.4）。key 撞（兩個原字串同 key）＝同一標籤，
+      #   只留首次的 display；正規化唯一實作＝`Tags::Normalize`。
+      #   讀取者＝智慧系列 tag 條件的 EXISTS（RuleCompiler）。
+      def sync_product_tags!(shop, product)
+        wanted = {}
+        Array(product.tags).each do |raw|
+          key = Tags::Normalize.key(raw)
+          next if key.empty? || wanted.key?(key)
+
+          wanted[key] = raw
+        end
+
+        existing = ProductTag.where(shop_id: shop.id, product_id: product.id).index_by(&:tag_key)
+        (existing.keys - wanted.keys).each { |key| existing.fetch(key).destroy! }
+        (wanted.keys - existing.keys).each do |key|
+          ProductTag.create!(shop_id: shop.id, product_id: product.id,
+                             tag_key: key, tag_display: wanted.fetch(key))
+        end
+      end
 
       def enqueue_event!(shop, product, topic)
         changed = product.saved_changes.keys - NOISE_FIELDS

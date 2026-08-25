@@ -1015,6 +1015,39 @@ collection:
   # 手動排序的移動操作。出處：P26（help）
   manual_move_actions: [move_to_front, move_to_back, move_to_position]
 
+  # --- 第 11 包（D50）新鍵 ---------------------------------------------------------
+  # contains／not_contains 的最小值長。官方逐字 "You need to specify a value that is at
+  # least 3 characters long"（help /smart-collections/conditions，2026-08-25）。
+  condition_value_contains_min_length: 3
+  # 60 條上限的口徑：官方 "A single collection can have a maximum of 60 total conditions"
+  # 傾向 per-collection；新模型 per-source 口徑未實測（P11-U18）⇒ fail-closed 取嚴的一側
+  # （三道裁定 :289 的既定判準）。
+  rule_limit_scope: per_collection
+  # 超限舊系列可續用但不得再加條件。官方逐字 "If you already have a collection that has
+  # more than 60 conditions, then you can still use it…you can't add any conditions when
+  # it's over the limit."（/smart-collections/create，2026-08-25）。v1 整份取代語義下
+  # 自然成立（超限的新輸入整份被拒），鍵先落供 UI 端引用。
+  over_limit_grace_editable: false
+  # inclusion 條件 19 型（95 §1.2；補齊「只有 exclusion 側落了鍵」的不對稱）。
+  # 🔴 v1 引擎支援其中 10 型（RuleCompiler::INCLUSION_TYPES）；metafield 六型與
+  #    product_category 待 metafield／taxonomy 系統（寫入層拒收，登記於 dev doc）。
+  inclusion_condition_types: [metafield_boolean, metafield_decimal, metafield_integer,
+                              metafield_metaobject, metafield_metaobject_list,
+                              metafield_string, metafield_string_list,
+                              product_category, product_status, product_tag, product_title,
+                              product_type, product_vendor, unknown,
+                              variant_compare_at_price, variant_inventory,
+                              variant_price, variant_title, variant_weight]
+  # rebuild 的商品 id 批次大小（ours：批間不持鎖、前台讀舊物化列——13 §F4.9）。
+  rebuild_batch_size: 1000
+  # 🔴 compare_at 的 is_set 是 ALL-variants 語義。官方逐字 "all variants must have a
+  # compare-at price value (including 0) for the product to match."（2026-08-25）——
+  # 寫成 any-variant EXISTS 是靜默語義錯（研究 §9-5）。
+  compare_at_is_set_variant_scope: all_variants
+  # 數值/字串變體條件的比對基準＝任一變體。官方逐字 "the condition is true if any
+  # variant matches the condition."（/collections/conditions，2026-08-25）——V-58 據此結案。
+  variant_match_scope: any_variant
+
 media:
   # 出處：docs/research/22:160（live）
   csv_max_upload_mb: 15

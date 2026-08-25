@@ -82,9 +82,169 @@ module Catalog
           sort_order:,
           seo: seo_attributes(input, errors),
           product_ids: input[:product_ids],
+          sources: normalize_sources(shop, input, collection_type, errors),
           source_locale:,
           translations_prepared: prepare_translations(shop, source_locale, input, errors)
         }
+      end
+
+      # === 第 11 包：sources／rules 契約（D50；值域＝limits collection.*）================
+      #
+      # 🔴 「契約與求值同 PR」（三方向 :87 的教訓：先開 input 後補服務＝「存檔成功但
+      #   條件沒了」）——本方法與 RuleCompiler／Rebuild 同包交付，白名單三處同步
+      #   （這裡、RuleCompiler 常數、dev doc 值域表）。
+      STRING_RULE_TYPES = %w[product_title product_type product_vendor variant_title].freeze
+      MONEY_RULE_TYPES = %w[variant_price variant_compare_at_price].freeze
+      INT_RULE_TYPES = %w[variant_weight variant_inventory].freeze
+
+      def normalize_sources(shop, input, collection_type, errors)
+        raw_sources = input[:sources]
+        return nil if raw_sources.nil?   # 缺席＝保持現值（宣告式家族語義）
+
+        if collection_type != "smart"
+          errors << error([ "sources" ], I18n.t("errors.collection.sources_manual"), "INVALID")
+          return nil
+        end
+
+        sources = Array(raw_sources).each_with_index.map do |src, s_index|
+          normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors)
+        end
+        # 60 條上限：per-collection 口徑（fail-closed，P11-U18；三道裁定 :289）。
+        total = sources.sum { |src| src[:rules].length }
+        maximum = Limits.fetch(:collection, :max_rules_per_collection)
+        if total > maximum
+          errors << error([ "sources" ], I18n.t("errors.collection.too_many_rules", max: maximum), "TOO_LONG")
+        end
+        sources
+      end
+
+      def normalize_source(shop, src, s_index, errors)
+        path = [ "sources", s_index.to_s ]
+        target = (src[:target_type] || "products").to_s
+        # v1 只收 products：variants／sub_collections 的機制屬後續包（schema 已就位）。
+        errors << error(path + [ "targetType" ], I18n.t("errors.collection.target_type_unsupported"), "INVALID") unless target == "products"
+
+        inclusion_match = (src[:inclusion_match] || "all").to_s
+        exclusion_match = src[:exclusion_match]&.to_s
+        errors << error(path + [ "inclusionMatch" ], I18n.t("errors.collection.match_invalid"), "INVALID") unless Limits.fetch(:collection, :condition_logic_modes).map(&:to_s).include?(inclusion_match)
+        if exclusion_match && !Limits.fetch(:collection, :condition_logic_modes).map(&:to_s).include?(exclusion_match)
+          errors << error(path + [ "exclusionMatch" ], I18n.t("errors.collection.match_invalid"), "INVALID")
+        end
+
+        rules = Array(src[:rules]).each_with_index.map do |rule, r_index|
+          normalize_rule(shop, rule.respond_to?(:to_h) ? rule.to_h.symbolize_keys : rule,
+                         path + [ "rules", r_index.to_s ], errors)
+        end
+        { target_type: target, inclusion_match:, exclusion_match:, rules: rules.compact }
+      end
+
+      def normalize_rule(shop, rule, path, errors)
+        block = rule[:block].to_s
+        type = rule[:condition_type].to_s
+        relation = rule[:relation].to_s
+
+        unless %w[inclusion exclusion].include?(block)
+          errors << error(path + [ "block" ], I18n.t("errors.collection.block_invalid"), "INVALID")
+          return nil
+        end
+        # 🔴 值域是「哪個區塊有哪些型別」（95 §1.2/1.3）：exclusion 只認 4 個 v1 支援型。
+        allowed = block == "exclusion" ? Collections::RuleCompiler::EXCLUSION_TYPES : Collections::RuleCompiler::INCLUSION_TYPES
+        unless allowed.include?(type)
+          errors << error(path + [ "conditionType" ], I18n.t("errors.collection.condition_type_invalid"), "INVALID")
+          return nil
+        end
+        # relation 白名單與編譯器同一份（RELATIONS）——寫入層先擋，rebuild 不該是
+        # 商家第一次知道 relation 打錯的地方。
+        unless Collections::RuleCompiler.relations_for(type).include?(relation)
+          errors << error(path + [ "relation" ], I18n.t("errors.collection.relation_invalid"), "INVALID")
+          return nil
+        end
+
+        attrs = { block:, condition_type: type, relation: }
+        case type
+        when *STRING_RULE_TYPES, "product_status"
+          value = rule[:value_text].to_s.strip
+          if value.empty?
+            errors << error(path + [ "valueText" ], I18n.t("errors.collection.value_required"), "BLANK")
+            return nil
+          end
+          # 官方：contains 類值 ≥3 字元（limits condition_value_contains_min_length）。
+          if %w[contains not_contains].include?(relation) &&
+             value.length < Limits.fetch(:collection, :condition_value_contains_min_length)
+            errors << error(path + [ "valueText" ], I18n.t("errors.collection.contains_too_short"), "TOO_SHORT")
+            return nil
+          end
+          attrs[:value_text] = value
+        when "product_tag"
+          key = Tags::Normalize.key(rule[:value_text])
+          if key.empty?
+            errors << error(path + [ "valueText" ], I18n.t("errors.collection.value_required"), "BLANK")
+            return nil
+          end
+          attrs[:value_text] = rule[:value_text].to_s.strip
+        when *MONEY_RULE_TYPES
+          if %w[is_set is_not_set].include?(relation)
+            # 一元運算子：無值。
+          else
+            cents = Catalog::SaveProduct.parse_money_for(rule[:value_money], shop, path + [ "valueMoney" ], errors)
+            return nil if cents.nil?
+
+            attrs[:value_cents] = cents
+          end
+        when *INT_RULE_TYPES
+          if rule[:value_int].nil?
+            errors << error(path + [ "valueInt" ], I18n.t("errors.collection.value_required"), "BLANK")
+            return nil
+          end
+          attrs[:value_int] = rule[:value_int].to_i
+        when "collection"
+          match = rule[:referenced_collection_id].to_s.match(GID_PATTERN)
+          if match.nil?
+            errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_invalid"), "INVALID")
+            return nil
+          end
+          referenced_id = match[1].to_i
+          unless Collection.where(shop_id: shop.id, id: referenced_id).exists?
+            errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_invalid"), "INVALID")
+            return nil
+          end
+          attrs[:value_int] = referenced_id
+        end
+        attrs
+      end
+
+      # 第 11 包：整份取代 sources／rules（宣告式；nil＝缺席＝保持現值）。
+      # 🔴 在呼叫端 transaction 內執行；update 路徑已持 `Collection.lock`（create 是新列
+      #   無競爭）——這正是研究 §5 的序列化點：規則編輯與 rebuild/resync 都以
+      #   collection 列鎖為界，後到者必見前者已提交的規則。
+      def replace_sources!(shop, collection, sources)
+        return if sources.nil?
+
+        CollectionSource.where(shop_id: shop.id, collection_id: collection.id).destroy_all
+        sources.each_with_index do |src, index|
+          source = CollectionSource.create!(
+            shop_id: shop.id, collection_id: collection.id,
+            source_type: "conditions", target_type: src[:target_type],
+            inclusion_match: src[:inclusion_match], exclusion_match: src[:exclusion_match],
+            position: index
+          )
+          src[:rules].each_with_index do |rule, r_index|
+            CollectionSourceRule.create!(
+              shop_id: shop.id, collection_source_id: source.id,
+              position: r_index, **rule
+            )
+          end
+        end
+        # 規則變了 ⇒ 物化尚未反映 ⇒ 標 PENDING（Rebuild 成功時標 OK）。
+        collection.update_columns(rebuild_status: "PENDING", updated_at: Time.current)
+      end
+
+      # 🔴 commit **之後**才 enqueue（txn 內不掛外部工作；job 只帶 id，執行時重讀
+      #   當前規則——研究 §5 競態防線的另一半：帶規則快照的 job 會用舊規則蓋新結果）。
+      def enqueue_rebuild(shop, collection, sources)
+        return if sources.nil? || collection.nil?
+
+        Collections::RebuildJob.perform_later(shop.id, collection.id)
       end
 
       def seo_attributes(input, errors)
@@ -132,9 +292,11 @@ module Catalog
               **attributes.fetch(:seo)
             )
             sync_members!(shop, collection, attributes[:product_ids])
+            replace_sources!(shop, collection, attributes[:sources])
             reject_translations!(shop, collection, attributes)
           end
         end
+        enqueue_rebuild(shop, collection, attributes[:sources])
         Result.new(collection: collection.reload, user_errors: [])
       rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)
@@ -196,9 +358,11 @@ module Catalog
                                               old_handle:, new_handle:)
             end
             sync_members!(shop, collection, attributes[:product_ids])
+            replace_sources!(shop, collection, attributes[:sources])
             reject_translations!(shop, collection, attributes)
           end
         end
+        enqueue_rebuild(shop, collection, attributes[:sources])
         Result.new(collection: collection.reload, user_errors: [])
       rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)

@@ -30,10 +30,19 @@ class Collection < ApplicationRecord
   # 🔴 N+1 在這裡不是效能潔癖——列表上限是 250（`limits.yml`），
   # 逐列 COUNT 就是單一請求打 250 次 DB，而列表正是最常開的頁。
   # 單筆讀取（編輯頁）沒有這個 select，`Types::CollectionType` 會退回逐筆 COUNT。
+  # 🔴 型別分流（第 11 包收斂三處成員數）：手動＝collection_products；
+  #   智慧＝collection_memberships（物化，13 §F4.6-1）。兩張表兩個真相的邊界
+  #   就在 collection_type 上——CASE 讓一條 select 同時答對兩型。
   MEMBER_COUNT_SELECT = <<~SQL.squish.freeze
-    (SELECT COUNT(*) FROM collection_products cp
-      WHERE cp.shop_id = collections.shop_id
-        AND cp.collection_id = collections.id) AS member_count
+    (CASE WHEN collections.collection_type = 'smart' THEN
+      (SELECT COUNT(*) FROM collection_memberships cm
+        WHERE cm.shop_id = collections.shop_id
+          AND cm.collection_id = collections.id)
+     ELSE
+      (SELECT COUNT(*) FROM collection_products cp
+        WHERE cp.shop_id = collections.shop_id
+          AND cp.collection_id = collections.id)
+     END) AS member_count
   SQL
 
   SORT_ORDERS = %w[manual best_selling title_asc title_desc price_asc price_desc created_desc created_asc].freeze

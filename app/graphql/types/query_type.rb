@@ -48,6 +48,11 @@ module Types
       argument :first, Integer, required: false
     end
 
+    # 第 11 包：條件 × relation 的執行期對照（`condition_relations_source: runtime_query`；
+    # 對齊本尊 `collectionRulesConditions` 的形狀）。🔴 前端不得硬編這張表。
+    field :collection_rule_conditions, [ Types::CollectionRuleConditionType ], null: false,
+      description: "智慧系列可用的條件型別與各自的合法 relation（執行期查詢，前端不得硬編）。"
+
     field :collections, CollectionConnectionType, null: false, connection: false do
       description "商品系列列表（keyset 分頁，與商品同一套實作）。"
       argument :first, Integer, required: false
@@ -249,6 +254,18 @@ module Types
     #
     # @return [Hash] Relay-shaped connection
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def collection_rule_conditions
+      authorize_products!
+      Collections::RuleCompiler::INCLUSION_TYPES.map do |type|
+        {
+          rule_type: type,
+          allowed_relations: Collections::RuleCompiler.relations_for(type),
+          default_relation: Collections::RuleCompiler.default_relation(type),
+          allowed_in_exclusion: Collections::RuleCompiler::EXCLUSION_TYPES.include?(type)
+        }
+      end
+    end
+
     def collections(first: nil, after: nil, last: nil, before: nil)
       authorize_products!
       scope = Collection
