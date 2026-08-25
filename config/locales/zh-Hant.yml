@@ -62,7 +62,7 @@
       lock_version_required: "更新商品必須提供 lockVersion。"
       not_found: "找不到商品。"
       stale: "商品已被其他人修改，請重新載入後再儲存。"
-      handle_change_pending: "handle 變更需要 301 轉址基建（URL 里程碑），暫不開放。"
+      handle_redirected: "這個 handle 是某次改名留下的舊網址轉向來源——舊 handle 不回收；要使用它請先刪除該轉向。"
     translation:
       locale_not_enabled: "此語言未在本商店啟用。"
       source_locale_not_translatable: "來源語言的內容存在商品本體，不是譯文。"
@@ -104,6 +104,7 @@
       type_invalid: "不支援的系列類型。"
       sort_order_invalid: "不支援的排序方式。"
       handle_invalid: "handle 只能包含小寫字母、數字與連字號。"
+      handle_redirected: "這個 handle 是既有網址轉向的來源——舊 handle 不回收。"
       handle_taken: "handle 已被使用。"
       product_gid_invalid: "不是有效的商品 ID：%{gid}"
       product_not_found: "找不到商品 %{id}（可能已被刪除或不屬於本店）。"

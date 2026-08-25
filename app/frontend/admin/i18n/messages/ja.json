@@ -255,7 +255,7 @@
   "product.seo.meta.hint": "{serp} 文字中 {used} 文字使用；超過分は検索結果で切り捨てられる可能性（上限 {max}）",
   "product.seo.handle": "URL handle",
   "product.seo.handle.hintNew": "保存時に英語タイトルから自動生成；手入力で衝突した場合は拒否",
-  "product.seo.handle.hintEdit": "handle の変更には 301 リダイレクトが必要（URL のマイルストーンで公開）",
+  "product.seo.handle.hintEdit": "handle を変更すると旧 URL からの 301 リダイレクトが自動作成されます。旧 handle は再利用されません。",
   "product.seo.handle.placeholder": "自動生成",
   "product.card.status": "ステータス",
   "product.status.label": "商品ステータス",

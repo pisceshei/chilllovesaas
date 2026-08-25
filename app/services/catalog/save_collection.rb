@@ -61,6 +61,9 @@ module Catalog
         manual_handle = input[:handle].presence
         if manual_handle && !manual_handle.match?(/\A[a-z0-9-]+\z/)
           errors << error([ "handle" ], I18n.t("errors.collection.handle_invalid"), "INVALID")
+        elsif manual_handle && Catalog::HandleChange.path_reserved?(shop, "/collections/#{manual_handle}")
+          # 舊 handle 永不回收（62 §F.3；與 SaveProduct 同判準入口）。
+          errors << error([ "handle" ], I18n.t("errors.collection.handle_redirected"), "HANDLE_TAKEN")
         end
 
         {
@@ -160,8 +163,19 @@ module Catalog
             raise ActiveRecord::RecordNotFound if collection.nil?
             raise ActiveRecord::StaleObjectError.new(collection, "update") if collection.lock_version != input[:lock_version]
 
+            # 第 6 包：系列 handle 可改（先前是靜默忽略——那比硬拒更糟，
+            # 商家以為改了、其實沒改）。相同值＝no-op。
+            new_handle = attributes[:handle]
+            handle_changed = new_handle.present? && new_handle != collection.handle
+            if handle_changed && Collection.where(shop_id: shop.id, handle: new_handle).exists?
+              raise TreeRejected, [ error([ "handle" ],
+                I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ]
+            end
+            old_path = "/collections/#{collection.handle}"
+
             collection.assign_attributes(
               title: attributes[:title],
+              handle: handle_changed ? new_handle : collection.handle,
               description_html: attributes[:description_html],
               collection_type: attributes[:collection_type],
               sort_order: attributes[:sort_order],
@@ -169,6 +183,11 @@ module Catalog
             )
             collection.updated_at = Time.current
             collection.save!
+            # 改名 301 同 txn（62 §F.3；與 SaveProduct 同一套語義）。
+            if handle_changed
+              Catalog::HandleChange.register!(shop:,
+                from_path: old_path, to_path: "/collections/#{new_handle}")
+            end
             sync_members!(shop, collection, attributes[:product_ids])
             reject_translations!(shop, collection, attributes)
           end
@@ -250,6 +269,7 @@ module Catalog
       def unique_handle(shop, title)
         3.times do
           candidate = Catalog::HandleGenerator.call(title, resource: "collection").handle
+          next if Catalog::HandleChange.path_reserved?(shop, "/collections/#{candidate}")
           return candidate unless Collection.where(shop_id: shop.id, handle: candidate).exists?
         end
         "collection-#{SecureRandom.alphanumeric(8).downcase}"

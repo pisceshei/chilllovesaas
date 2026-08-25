@@ -350,21 +350,28 @@ RSpec.describe "Admin GraphQL productSet", type: :request do
       expect(error["field"]).to eq([ "lockVersion" ])
     end
 
-    it "handle 變更暫拒（301 基建屬 URL 包）；同值＝no-op 通過" do
+    it "第 6 包：handle 可改，改名同 txn 寫 301；同值＝no-op 不寫列" do
       login!
       created = create_via_api!
+      old_handle = created["handle"]
 
+      # 同值＝no-op：不產生 redirect
       post_graphql(MUTATION, variables: {
-        input: base_input(id: created["id"], lockVersion: 0, handle: created["handle"])
+        input: base_input(id: created["id"], lockVersion: 0, handle: old_handle)
       })
       expect(response.parsed_body.dig("data", "productSet", "userErrors")).to eq([])
+      ActsAsTenant.with_tenant(shop) { expect(UrlRedirect.count).to eq(0) }
 
+      # 改名：301 同 transaction 落列
       post_graphql(MUTATION, variables: {
         input: base_input(id: created["id"], lockVersion: 1, handle: "changed-handle")
       })
-      error = response.parsed_body.dig("data", "productSet", "userErrors", 0)
-      expect(error["code"]).to eq("INVALID")
-      expect(error["field"]).to eq([ "handle" ])
+      expect(response.parsed_body.dig("data", "productSet", "userErrors")).to eq([])
+      ActsAsTenant.with_tenant(shop) do
+        row = UrlRedirect.sole
+        expect([ row.from_path, row.to_path, row.status_code, row.source ])
+          .to eq([ "/products/#{old_handle}", "/products/changed-handle", 301, "handle_change" ])
+      end
     end
 
     it "不存在／他店的 id ⇒ NOT_FOUND" do

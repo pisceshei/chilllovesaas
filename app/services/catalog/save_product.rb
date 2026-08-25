@@ -22,9 +22,6 @@ module Catalog
   class SaveProduct
     Result = Data.define(:product, :user_errors)
 
-    # 更新態 handle 變更的控制流例外（轉譯成 userErrors，不外洩）。
-    class HandleChangePending < StandardError; end
-
     # 第 22 包：VariantSync 的 userErrors 載體（含 InitialQuantityRejected 轉包）。
     class VariantRejected < StandardError
       attr_reader :user_errors
@@ -124,6 +121,12 @@ module Catalog
         elsif manual_handle && Limits.fetch(:handle, :reserved).map(&:to_s).include?(manual_handle)
           # limits handle.reserved（all/new/index）：撞平台路由段（如 /admin/products/new）。
           errors << error([ "handle" ], I18n.t("errors.product.handle_reserved"), "INVALID")
+        elsif manual_handle && Catalog::HandleChange.path_reserved?(shop, "/products/#{manual_handle}")
+          # 🔴 舊 handle 永不回收（62 §F.3）：這個網址已是某次改名的轉向來源，
+          #    讓新商品佔走它＝既有 301 把新商品的頁面轉去別處。
+          #    送**自己現有的 handle**（更新態回聲）不會命中——不變量保證自己的
+          #    現任 handle 不可能是 from_path（指派當下就被本檢查擋掉了）。
+          errors << error([ "handle" ], I18n.t("errors.product.handle_redirected"), "HANDLE_TAKEN")
         end
 
         if input[:options].present?
@@ -421,14 +424,19 @@ module Catalog
               raise ActiveRecord::StaleObjectError.new(product, "update")
             end
 
-            if attributes[:handle] && attributes[:handle] != product.handle
-              # handle 變更需 301（62 §F.3）；url_redirects 基建屬 URL 包 ⇒ 暫拒，
-              # 相同值視為 no-op（前端送全樹不受影響）。登記於 dev doc §6。
-              raise HandleChangePending
-            end
+            # 第 6 包：handle 可改了。相同值＝no-op（前端送全樹不受影響）。
+            # 佔用檢查不在這裡重複做：保留字與 redirect 佔用已在 normalize 擋；
+            # 撞另一個商品由 model 的 `validates :handle, uniqueness` →
+            # RecordInvalid → translate_record_invalid（HANDLE_TAKEN）承接，
+            # DB 的 `uq_products_handle` 是併發窗的第二道。這裡再寫一份只是
+            # 突變測不出差異的冗餘（本包實測：刪了行為不變）。
+            new_handle = attributes[:handle]
+            handle_changed = new_handle.present? && new_handle != product.handle
+            old_path = "/products/#{product.handle}"
 
             product.assign_attributes(
               title: attributes[:title],
+              handle: handle_changed ? new_handle : product.handle,
               # 🔴 `||` 而不是直接指派：normalize 在缺席時給 nil＝保持現值。
               #    Ruby 的 "" 是 truthy ⇒ 顯式清空（空字串）仍然寫得進去。
               description_html: attributes[:description_html] || product.description_html,
@@ -439,6 +447,12 @@ module Catalog
             # 全樹鎖：即使只有變體欄位變動也要 bump 版本 ⇒ 恆 touch updated_at。
             product.updated_at = Time.current
             product.save!
+            # 🔴 改名 301 與改名**同一個 transaction**（62 §F.3）：redirect 沒寫成
+            #    ＝舊網址 404；redirect 寫了、改名回滾＝好網址被轉走。兩者都不可接受。
+            if handle_changed
+              Catalog::HandleChange.register!(shop:,
+                from_path: old_path, to_path: "/products/#{new_handle}")
+            end
             # 第 3 包 cache stamp：宣告式全量下變體樹**每次更新都被重寫**
             # ⇒ 恆 bump（不精算「這次有沒有真的變」——精算漏一種形態就是舊快取）。
             # 🔴 走 CacheStamps 而不是直接賦值（審查 DOC-1）：stamp 的 runtime
@@ -464,9 +478,6 @@ module Catalog
         Result.new(product: nil, user_errors: rejected.user_errors)
       rescue VariantRejected, Catalog::VariantSync::InitialQuantityRejected => rejected
         Result.new(product: nil, user_errors: rejected.user_errors)
-      rescue HandleChangePending
-        Result.new(product: nil,
-                   user_errors: [ error([ "handle" ], I18n.t("errors.product.handle_change_pending"), "INVALID") ])
       rescue ActiveRecord::RecordInvalid => invalid
         Result.new(product: nil, user_errors: translate_record_invalid(invalid))
       end
@@ -608,6 +619,9 @@ module Catalog
         # 保留字視同已占用：生成出 "new" 這類值時自動走尾碼（new-1），
         # 不讓商品 handle 撞平台路由段。
         return true if Limits.fetch(:handle, :reserved).map(&:to_s).include?(handle)
+        # 第 6 包：舊 handle 永不回收——重導的 from_path 也視同已占用，
+        # 否則生成出的 handle 會被既有 301 把頁面轉走。
+        return true if Catalog::HandleChange.path_reserved?(shop, "/products/#{handle}")
 
         Product.where(shop_id: shop.id, handle:).exists?
       end

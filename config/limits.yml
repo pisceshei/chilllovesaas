@@ -2955,6 +2955,17 @@ seo:
   # --- Canonical 與重導（62 §B）----------------------------------------------
   # Google 記載 redirect ≤10 hops。出處：docs/research/30-seo-merchant-feeds.md:8（google）
   redirect_max_chain: 10
+  # ── 第 6 包：url_redirects（62 §B.5 的表形狀落鍵）──
+  # source 值域＝62 §B.5 逐字「source ∈ {handle_change, manual, domain_move, import}」。
+  redirect_sources: [handle_change, manual, domain_move, import]
+  # status 值域＝62 §F.3：改名 301；下架預設 410（可選 301）。302 未在規格出現、
+  # manual 重導的完整值域待第 36 包（後台自訂重導管理）取證 ⇒ 先收斂 [301, 410]，
+  # 屆時要擴充是加值不是改值。
+  redirect_status_codes: [301, 410]
+  # 路徑長度上界。🔴 官方未載明（62 §B.5 無長度）⇒ ours 防呆：unique 索引
+  # utf8mb4 下 512×4＝2048 bytes < InnoDB 3072 bytes 鍵上限，且遠大於
+  # /products/{handle} 的實際長度（handle 上限見 handle 區塊）。
+  redirect_path_max_chars: 512
   # 參與 canonical 的 query 參數採**白名單**制，白名單外一律剝除（62 §B.1 變形 6）。（ours）
   canonical_query_allowlist: [page, q, type, constraint]
   # 變體 URL 模式：a＝單頁多變體（canonical 去 ?variant=）。

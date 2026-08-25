@@ -62,7 +62,7 @@
       lock_version_required: "商品の更新には lockVersion が必要です。"
       not_found: "商品が見つかりません。"
       stale: "この商品は他のユーザーによって変更されました。再読み込みしてから保存してください。"
-      handle_change_pending: "handle の変更には 301 リダイレクト基盤（URL マイルストーン）が必要で、まだ利用できません。"
+      handle_redirected: "この handle は改名時に残った旧 URL リダイレクトの転送元です。旧 handle は再利用されません。使用するには先にそのリダイレクトを削除してください。"
     translation:
       locale_not_enabled: "この言語はショップで有効になっていません。"
       source_locale_not_translatable: "ソース言語の内容は商品本体に保存され、翻訳ではありません。"
@@ -104,6 +104,7 @@
       type_invalid: "サポートされていないコレクションタイプです。"
       sort_order_invalid: "サポートされていない並び順です。"
       handle_invalid: "handle に使えるのは小文字英字・数字・ハイフンのみです。"
+      handle_redirected: "この handle は既存 URL リダイレクトの転送元です。旧 handle は再利用されません。"
       handle_taken: "この handle は既に使用されています。"
       product_gid_invalid: "有効な商品 ID ではありません：%{gid}"
       product_not_found: "商品 %{id} が見つかりません（削除済み、または別ストアの商品です）。"
