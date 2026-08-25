@@ -115,6 +115,7 @@
       too_many_sources: "A collection can have at most %{max} condition sources."
       status_value_invalid: "Not a valid product status."
       reference_self: "A collection can't exclude itself."
+      reference_cycle: "A collection can't exclude a collection that (directly or indirectly) excludes it."
       sort_order_invalid: "Unsupported sort order."
       handle_invalid: "Handle can only contain lowercase letters, numbers, and hyphens."
       handle_redirected: "This handle is the source of an existing URL redirect. Old handles are never recycled."

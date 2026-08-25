@@ -28,8 +28,18 @@ module Collections
   #   （永久毒丸），且同一批 `claim_batch` 內**其他商店**的事件一起不投遞。
   #   ⇒ 本檔一律用**顯式堆疊**的迭代 DFS，深度只受記憶體限制。
   #
-  # ④環（A⇄B、A→B→C→A）沒有拓樸序：以穩定順序打破，登記 P11-B10、由 rake 兜底。
-  #   自我引用（A 排除 A）在寫入層就被拒（J5），這裡不會遇到。
+  # ④🔴 **環在寫入層就被拒**（2026-08-26 第七輪 L1，`reaches?` ＋ `SaveCollection`）：
+  #   自引（J5）之外，**任何長度的環**一律 INVALID。理由是 J5 那句話的一般化——
+  #   「A 排除 B」讀的是 B 的**物化成員**，所以它是一個**反單調**函數 a := ¬b。
+  #   奇數長度的環是奇數次反單調的合成 ⇒ **沒有不動點**，成員週期震盪；
+  #   而第六輪的反向傳播（K8）以「本輪成員有沒有變」為傳播條件，震盪的每一步都「有變」
+  #   ⇒ 無界的 RebuildJob 鏈、無界的 `collections/update` outbox（EXTERNAL，會外發 webhook），
+  #   而兜底 rake 自己跑一輪就是新的震盪源。實測 n=3／n=5 永不終止（週期 6），
+  #   n=2／n=4 各 1／2 個 job 就停——偶數環是兩次反單調的合成＝單調，有不動點。
+  #   ⇒ 判準不是「偶數放行奇數拒收」（那只是碰巧收斂，答案仍取決於起始狀態），
+  #   而是**全部拒收**：環在這個語義下沒有一個「對」的答案可言。
+  #   本模組因此在正常資料上不會遇到環；`visiting` 標記只為**既有資料**（守衛上線前
+  #   建立的）留一條不無窮迴圈的路。
   module ReferenceGraph
     module_function
 
@@ -89,6 +99,33 @@ module Collections
         end
       end
       ordered
+    end
+
+    # `from_id` 能不能沿著 exclusion 引用鏈走到 `target_id`？（迭代，不遞迴。）
+    # 用途＝寫入層的環偵測：要加「current 排除 referenced」這條邊之前，
+    # 先問「referenced 走得回 current 嗎」——走得回就是環。
+    # @return [Boolean]
+    def reaches?(shop, from_id, target_id)
+      return true if from_id == target_id
+
+      seen = Set.new([ from_id ])
+      stack = [ from_id ]
+      until stack.empty?
+        current = stack.pop
+        next_ids = CollectionSourceRule
+                   .joins(:source)
+                   .where(shop_id: shop.id, block: "exclusion", condition_type: "collection")
+                   .where(collection_sources: { collection_id: current })
+                   .pluck(:value_int).compact
+        next_ids.each do |nxt|
+          return true if nxt == target_id
+          next if seen.include?(nxt)
+
+          seen << nxt
+          stack.push(nxt)
+        end
+      end
+      false
     end
 
     # 直接引用 `collection_id` 的系列（＝它變動後要跟著重算的那些）。

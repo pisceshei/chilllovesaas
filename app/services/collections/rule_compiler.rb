@@ -121,8 +121,20 @@ module Collections
         if exclusion.any?
           # per-source 相減（membership_formula）：命中 exclusion 組合者從本來源剔除。
           # exclusion_match 三態：NULL（單型別時無意義）視同 all。
+          #
+          # 🔴 **`COALESCE(…, FALSE)` 才是三值邏輯的正解**（2026-08-26 第七輪 L2）：
+          #   這一行的 `NOT` 是本編譯器**真正產生否定的地方**——F1（字串否定 relation）
+          #   與 G2（數值否定 relation）兩次都只封了「被點名的那個 relation」，
+          #   沒封這裡，於是**正向**謂詞落進 exclusion 區塊時照樣中招：
+          #   `NOT (p.product_type = 'X')` 在 `product_type IS NULL` 時回 NULL
+          #   ⇒ WHERE 丟掉該列 ⇒ **沒設類型的商品被一個根本不該命中它的排除條件剔除**。
+          #   受影響的格＝可空欄 × 非 NULL-safe relation（product_type／product_vendor
+          #   × eq／starts_with／ends_with／contains）。
+          #   `NOT COALESCE(expr, FALSE)`：expr 為 NULL（未知）時視為「沒命中排除」
+          #   ⇒ 保留該列。這一層封住之後，**任何**新增的 exclusion 型別與 relation
+          #   都自動 NULL-safe，不必再逐格補（F1／G2／L2 三次的共同根因就在這裡）。
           ex_joiner = source.exclusion_match == "any" ? " OR " : " AND "
-          sql += " AND NOT (#{exclusion.map { |rule| compile(rule) }.join(ex_joiner)})"
+          sql += " AND NOT COALESCE(#{exclusion.map { |rule| compile(rule) }.join(ex_joiner)}, FALSE)"
         end
         sql
       end
@@ -286,7 +298,13 @@ module Collections
       #   也**不得**對含本片段的字串呼叫 `.squish`：squish 在內插之後才跑，會壓縮
       #   商家值字面量**內部**的空白（`'紅玫瑰  禮盒'` → `'紅玫瑰 禮盒'`），讓 rebuild
       #   與 resync 對同一條規則得到不同答案。
-      #   ⇒ 兩個消費者一律用 `connection.quote` 逐值 quote、不用位置參數、不 squish。
+      #   ⇒ 兩個消費者一律把本片段**在 `sanitize_sql_array` 之後才代入**：模板留一個
+      #   註解形式的槽（`Rebuild::WHERE_SLOT`），用 `sub` 的 **block 形式**換入。
+      #   於是 sanitize 只看得到模板自己的 `?`、`squish` 只作用在代入之前的模板、
+      #   block 形式也不解讀 `\0`／`\1` 反向參照。
+      #   🔴 **第一版曾改成逐值 `connection.quote` 全手拼並在此宣告「不用位置參數、
+      #   不 squish」——那一版被 Brakeman 擋下（2 個 SQL Injection，Medium），已廢棄**；
+      #   本註釋自 2026-08-26 第七輪 L3 起描述的是實際落地的形態。
       def bind(template, value)
         ActiveRecord::Base.sanitize_sql_array([ template, value ])
       end

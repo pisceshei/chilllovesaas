@@ -69,7 +69,9 @@ module Types
     end
 
     # @return [Integer, nil]
-    # 智慧系列回 nil（規則引擎未落地，回 0 是在斷言一件我方不知道的事）。
+    # 智慧系列在**尚未成功重建**（rebuild_status ≠ OK）時回 nil——回 0 是在斷言一件
+    # 我方不知道的事。（2026-08-26 第七輪 L7 更正：原文寫「規則引擎未落地」，
+    # 而該引擎正是第 11 包交付的；判準已改成看 rebuild_status。）
     # 手動系列優先用列表 select 帶下來的 `member_count`（見 `Collection::MEMBER_COUNT_SELECT`），
     # 單筆讀取沒有該欄時才退回自己 COUNT。
     def products_count

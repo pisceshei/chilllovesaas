@@ -593,7 +593,7 @@ RSpec.describe "智慧系列求值引擎" do
         ActsAsTenant.with_tenant(shop) do
           Collections::Rebuild.notify_members_changed!(shop, b.reload)
         end
-      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id)
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id, 1)
     end
 
     it "沒有人引用時不排任何額外重建" do
@@ -631,5 +631,89 @@ RSpec.describe "智慧系列求值引擎" do
 
     expect(result.user_errors).to eq([]), "既有超長標籤讓商品變唯讀"
     expect(ActsAsTenant.with_tenant(shop) { product.reload.title }).to eq("改個標題")
+  end
+
+  it "🔴 L2（2026-08-26 第七輪）：exclusion 區塊的**正向**謂詞不得把 NULL 欄商品整列丟掉" do
+    # `NOT (p.product_type = 'X')` 在 product_type IS NULL 時回 NULL ⇒ WHERE 丟掉該列。
+    # F1／G2 兩次只封了「否定 relation」，沒封真正產生否定的區塊層 NOT。
+    untyped = product!(title: "沒類型", tags: [ "red" ], type: nil)
+    perfume = product!(title: "香水", tags: [ "red" ], type: "香水")
+    other = product!(title: "蠟燭", tags: [ "red" ], type: "蠟燭")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+      { block: "exclusion", condition_type: "product_type", relation: "eq", value_text: "香水" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(untyped.id, other.id),
+      "沒設類型的商品被一個根本不該命中它的排除條件剔除了（三值邏輯）"
+    expect(members(collection)).not_to include(perfume.id)
+  end
+
+  it "🔴 L2 對偶：contains 型的 exclusion 同樣不得丟掉 NULL 欄商品" do
+    untyped = product!(title: "沒廠商", tags: [ "red" ], vendor: nil)
+    acme = product!(title: "acme 貨", tags: [ "red" ], vendor: "ACME Ltd")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+      { block: "exclusion", condition_type: "product_vendor", relation: "contains", value_text: "ACME" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to eq([ untyped.id ])
+    expect(members(collection)).not_to include(acme.id)
+  end
+
+  it "🔴 L1 安全帶（2026-08-26 第七輪）：**既有**的奇數環不得產生無界的 job 鏈" do
+    # 環自本輪起在寫入層一律拒收，但守衛上線前建立的環仍可能存在 ⇒ 直接寫 DB 造出
+    # 三元環（繞過寫入層），驗證傳播鏈到上限就停。
+    # 為什麼是奇數環：「A 排除 B」讀 B 的物化成員 ⇒ 反單調函數 a := ¬b。
+    # 奇數次反單調的合成仍是反單調 ⇒ 沒有不動點 ⇒ 成員週期震盪 ⇒ 每一輪都「有變」
+    # ⇒ 傳播條件恆真。（偶數環是單調、有不動點，實測 1〜2 個 job 就停。）
+    product = product!(title: "紅", tags: [ "red" ])
+    a, b, c = %w[cyc-a cyc-b cyc-c].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    ActsAsTenant.with_tenant(shop) do
+      [ [ a, b ], [ b, c ], [ c, a ] ].each do |(owner, referenced)|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: referenced.id, position: 1)
+      end
+    end
+    cap = Limits.fetch(:collection, :rebuild_propagation_max_depth)
+    # 🔴 起始狀態必須落在**震盪軌道上**，否則第一步就收斂、測不到東西
+    #   （軌道＝(a,b,c) 週期 6：100→110→010→011→001→101）。
+    #   種下 a=1、b=c=0，再從 B 起跑：b←¬c=1（變）→傳給 A；a←¬b=0（變）→傳給 C；
+    #   c←¬a=1（變）→傳給 B⋯⋯每一步都「有變」，沒有深度上限就永遠停不下來。
+    ActsAsTenant.with_tenant(shop) do
+      CollectionMembership.create!(shop_id: shop.id, collection_id: a.id, product_id: product.id,
+                                   origin: "conditions", rebuilt_at: Time.current)
+    end
+    queue = ActiveJob::Base.queue_adapter.enqueued_jobs
+    queue.clear
+    Collections::Rebuild.call(shop:, collection: b.reload)
+
+    # 逐一執行到佇列空。**沒有深度上限時這個迴圈永遠不會停**（實測 n=3 週期 6）。
+    budget = (cap + 5) * 3
+    ran = 0
+    while (job = queue.shift)
+      ran += 1
+      break if ran > budget
+
+      args = ActiveJob::Arguments.deserialize(job[:args])
+      Collections::RebuildJob.perform_now(*args)
+    end
+
+    expect(queue).to be_empty,
+      "傳播鏈在預算內沒有停 ⇒ 既有環會產生無界 job 鏈與無界 outbox（L1 安全帶失效）"
+    expect(ran).to be <= budget
   end
 end

@@ -304,6 +304,15 @@ module Catalog
             errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_self"), "INVALID")
             return nil
           end
+          # 🔴 **任何長度的環一律拒**（2026-08-26 第七輪 L1）：自引只是環的 n=1 格。
+          #   「A 排除 B」讀 B 的物化成員 ⇒ 反單調函數；奇數環沒有不動點 ⇒ 成員週期
+          #   震盪，而反向傳播（K8）以「有沒有變」為傳播條件 ⇒ **無界 job 鏈與無界
+          #   outbox**（實測 n=3 週期 6、永不終止）。偶數環雖會停，答案卻取決於起始
+          #   狀態——環在這個語義下沒有一個「對」的答案，所以不分奇偶一律拒。
+          if current_id && Collections::ReferenceGraph.reaches?(shop, referenced_id, current_id)
+            errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_cycle"), "INVALID")
+            return nil
+          end
           attrs[:value_int] = referenced_id
         end
         attrs

@@ -80,4 +80,52 @@ RSpec.describe "rake catalog:rebuild:collections" do
 
     expect { run_task }.to output(/rebuild OK/).to_stdout
   end
+
+  it "🔴 L4（2026-08-26 第七輪）：真的跑任務——兜底必須依拓樸序，不 stub 引擎" do
+    # 🔴 這一格存在的理由：既有五個 example 全部 `allow(Collections::Rebuild).to receive(:call)`，
+    #   於是 rake 的**排序**在該檔構造上不可觀測——把 `ReferenceGraph.topological`
+    #   那一行刪掉，整套仍然綠。K2 原本被抓到的形態（「resync 改了、兜底沒改」）
+    #   會在測試面原樣重演。本格因此**不 stub 引擎**，走真實 Rebuild 並斷言成員。
+    product = ActsAsTenant.with_tenant(shop) do
+      p = create(:product, shop:, title: "紅", tags: [ "red" ], status: "active")
+      create(:product_variant, shop:, product: p, price_cents: 100)
+      ProductTag.create!(shop_id: shop.id, product_id: p.id, tag_key: "red", tag_display: "red")
+      p
+    end
+    # A 排除 B、B 排除 C、C＝tag blue（商品沒有）⇒ C 空、B 含商品、A 應為空。
+    # 建立序＝id 昇冪，與需要的計算序相反（最壞情況）。
+    a, b, c = %w[l4-a l4-b l4-c].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    ActsAsTenant.with_tenant(shop) do
+      [ [ a, b ], [ b, c ] ].each do |(owner, referenced)|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: referenced.id, position: 1)
+      end
+      src_c = CollectionSource.create!(shop_id: shop.id, collection_id: c.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src_c.id, block: "inclusion",
+                                   condition_type: "product_tag", relation: "includes",
+                                   value_text: "blue", position: 0)
+    end
+
+    expect { run_task }.to output(/rebuild OK/).to_stdout
+
+    members = lambda do |col|
+      ActsAsTenant.with_tenant(shop) { CollectionMembership.where(collection_id: col.id).pluck(:product_id) }
+    end
+    expect(members.call(c)).to be_empty
+    expect(members.call(b)).to eq([ product.id ])
+    expect(members.call(a)).to be_empty,
+      "兜底照 id 序跑 ⇒ A 讀到還沒重建的 B ⇒ 與 resync 給出不同答案（K2 重開）"
+  end
 end

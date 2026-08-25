@@ -105,4 +105,31 @@ RSpec.describe Collections::ReferenceGraph do
       expect(described_class.referrers(shop, a.id)).to be_empty
     end
   end
+
+  describe ".reaches?（環偵測的判準）" do
+    it "沿引用鏈可達＝true，不可達＝false" do
+      a, b, c, d = collections!(4)
+      reference!(a, b)
+      reference!(b, c)
+
+      expect(described_class.reaches?(shop, a.id, c.id)).to be(true)
+      expect(described_class.reaches?(shop, c.id, a.id)).to be(false)
+      expect(described_class.reaches?(shop, a.id, d.id)).to be(false)
+    end
+
+    it "自己到自己＝true（自引是環的 n=1 格）" do
+      a, = collections!(1)
+      expect(described_class.reaches?(shop, a.id, a.id)).to be(true)
+    end
+
+    it "🔴 既有環不得讓 reaches? 無窮迴圈" do
+      a, b, c = collections!(3)
+      reference!(a, b)
+      reference!(b, c)
+      reference!(c, a)
+
+      expect { described_class.reaches?(shop, a.id, 999_999) }.not_to raise_error
+      expect(described_class.reaches?(shop, a.id, 999_999)).to be(false)
+    end
+  end
 end

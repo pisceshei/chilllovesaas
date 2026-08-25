@@ -304,6 +304,38 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     expect(data["userErrors"].map { |e| e["field"] }).to include([ "sources" ])
   end
 
+  it "🔴 L1（2026-08-26 第七輪）：任何長度的引用環一律拒——不只自引" do
+    login!
+    # A 排除 B；再讓 B 排除 A ⇒ 二元環。三元以上同理（判準是可達性，不是長度）。
+    a = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { title: "A" }))
+    b = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { title: "B" }))
+    a_id = a.dig("collection", "id")
+    b_id = b.dig("collection", "id")
+
+    # A 排除 B：合法。
+    linked = set!({ id: a_id, lockVersion: a.dig("collection", "lockVersion"), title: "A",
+                    sources: [ { rules: [
+                      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                      { block: "exclusion", conditionType: "collection", relation: "includes",
+                        referencedCollectionId: b_id }
+                    ] } ] })
+    expect(linked["userErrors"]).to eq([])
+
+    # B 排除 A：會成環 ⇒ 拒。
+    cycled = set!({ id: b_id, lockVersion: b.dig("collection", "lockVersion"), title: "B",
+                    sources: [ { rules: [
+                      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                      { block: "exclusion", conditionType: "collection", relation: "includes",
+                        referencedCollectionId: a_id }
+                    ] } ] })
+    expect(cycled["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(cycled["userErrors"].first["field"]).to include("referencedCollectionId")
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")

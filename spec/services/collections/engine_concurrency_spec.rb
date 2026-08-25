@@ -133,7 +133,7 @@ RSpec.describe "智慧系列引擎併發" do
       # 讓位不靜默丟：RebuildJob 見逾時訊號要延後重排。
       expect {
         Collections::RebuildJob.perform_now(shop.id, collection.id)
-      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, collection.id)
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, collection.id, 0)
     ensure
       holder.execute(ActiveRecord::Base.sanitize_sql_array([ "SELECT RELEASE_LOCK(?)", lock_name ]))
       ActiveRecord::Base.connection_pool.checkin(holder)

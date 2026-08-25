@@ -115,6 +115,7 @@
       too_many_sources: "Une collection accepte au maximum %{max} sources de conditions."
       status_value_invalid: "Statut de produit non valide."
       reference_self: "Une collection ne peut pas s’exclure elle-même."
+      reference_cycle: "Une collection ne peut pas exclure une collection qui l’exclut (directement ou non)."
       sort_order_invalid: "Ordre de tri non pris en charge."
       handle_invalid: "Le handle ne peut contenir que des minuscules, chiffres et tirets."
       handle_redirected: "Ce handle est la source d'une redirection existante — les anciens handles ne sont jamais réutilisés."

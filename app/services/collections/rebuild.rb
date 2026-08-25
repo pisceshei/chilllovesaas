@@ -63,10 +63,10 @@ module Collections
       # @param collection [Collection] smart（有 conditions source）
       # @return [Result] status ∈ [:ok, :error, :skipped]
       # @note 副作用：寫 memberships／collections.rebuild_status／cache stamp／outbox。
-      def call(shop:, collection:)
+      def call(shop:, collection:, depth: 0)
         ActsAsTenant.with_tenant(shop) do
           with_rebuild_lock(shop, collection) do
-            rebuild!(shop, collection)
+            rebuild!(shop, collection, depth)
           end
         end
       end
@@ -79,7 +79,7 @@ module Collections
       #   只在「真的變了」時傳播（呼叫端已判 inserted/swept），且只傳一層：
       #   被排的 A 自己重建完若也變了，會再傳給引用 A 的——天然的逐層收斂，
       #   環由 `RebuildJob` 的重複入列與最終不變性收斂（P11-B10 仍登記為不保證）。
-      def notify_members_changed!(shop, collection)
+      def notify_members_changed!(shop, collection, depth: 0)
         # cache stamp（唯一寫入面＝CacheStamps；`update_all` 帶 lock_version 守則在那一支裡）。
         Catalog::CacheStamps.bump_collection_members!(shop.id, collection.id)
         # 外部事件（blueprint D.4）：outbox 形態，鐵律 5。
@@ -92,15 +92,26 @@ module Collections
           available_at: Time.current,
           payload: { collection_id: collection.id, members_changed: true }
         )
-        enqueue_referrers!(shop, collection)
+        enqueue_referrers!(shop, collection, depth)
       end
 
       # 引用本系列做 exclusion 的那些：它們的成員集合現在過期了。
-      def enqueue_referrers!(shop, collection)
+      def enqueue_referrers!(shop, collection, depth = 0)
+        # 🔴 鏈長上限＝**既有資料的安全帶**（2026-08-26 第七輪 L1）：環自本輪起在
+        #   寫入層一律拒收，但守衛上線前建立的環仍可能存在。奇數環沒有不動點 ⇒
+        #   每一輪成員都真的變 ⇒ 傳播條件恆真 ⇒ 無界 job 鏈與無界 outbox。
+        #   到上限就停並記警告（不靜默丟：警告是「這家店有環」的訊號）。
+        maximum = Limits.fetch(:collection, :rebuild_propagation_max_depth)
+        if depth >= maximum
+          Rails.logger.warn({ event: "collection_rebuild_propagation_capped", shop_id: shop.id,
+                              collection_id: collection.id, depth: }.to_json)
+          return
+        end
+
         ReferenceGraph.referrers(shop, collection.id).each do |referrer_id|
           next if referrer_id == collection.id   # 自引在寫入層已拒（J5），保險。
 
-          RebuildJob.perform_later(shop.id, referrer_id)
+          RebuildJob.perform_later(shop.id, referrer_id, depth + 1)
         end
       end
 
@@ -130,7 +141,7 @@ module Collections
         end
       end
 
-      def rebuild!(shop, collection)
+      def rebuild!(shop, collection, depth = 0)
         # 🔴 非智慧系列才是「與本服務無關」＝跳過（手動成員在 collection_products，
         #   不歸這裡管）。**零 source 的智慧系列不是跳過，是「成員集合＝空集合」**——
         #   2026-08-26 收斂輪 G1：初版在 `sources.empty?` 就早退，而早退點在**世代掃尾
@@ -189,7 +200,7 @@ module Collections
                                     updated_at: Time.current)
         end
 
-        notify_members_changed!(shop, collection) if inserted.positive? || swept.positive?
+        notify_members_changed!(shop, collection, depth:) if inserted.positive? || swept.positive?
         Result.new(status: :ok, inserted:, swept:, error: nil)
       end
 

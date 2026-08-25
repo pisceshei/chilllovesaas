@@ -110,12 +110,15 @@ RSpec.describe Collections::RuleCompiler do
   end
 
   describe "區塊語義（per-source 相減＝membership_formula）" do
-    it "exclusion 併進 AND NOT (…)" do
+    it "exclusion 併進 AND NOT COALESCE(…, FALSE)" do
+      # 🔴 `COALESCE(…, FALSE)` 是三值邏輯的正解（第七輪 L2）：這一層的 NOT 是編譯器
+      #   真正產生否定的地方，正向謂詞落進 exclusion 時同樣會被 NULL 吃掉整列。
       sql = described_class.where_sql(source(rules: [
         rule(type: "product_type", relation: "eq", text: "香水"),
         rule(block: "exclusion", type: "product_tag", relation: "includes", text: "clearance")
       ]))
-      expect(sql).to include("AND NOT (")
+      expect(sql).to include("AND NOT COALESCE(")
+      expect(sql).to end_with(", FALSE)")
     end
 
     it "inclusion any ⇒ OR；exclusion 預設 all ⇒ AND" do
