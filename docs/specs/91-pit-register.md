@@ -78,6 +78,7 @@
 | G-02 | markdown 柵欄自檢——掃全檔行首三反引號行：行數須偶數、每個閉合行去圍欄後為空（式子＝#55 第 7 輪判詞所給；防柵欄黏尾文吞段） | 柵欄事故族（#55 第 7 輪 151 checkbox 被吞＝現行犯） | 極低（一支 grep/awk 即可）；範圍限 docs/specs（或全 docs） | **待**（收割輪與 G-01 一併裁；第 9 輪登記） |
 | G-03 | `claude-review.yml` prompt 的 ⚪ 處置段與 terminal-white 例外同步＋deferred ingestion checker——現行 prompt 無條件要求作者把 ⚪「搬進坑登記簿」並明文宣告「建立前登記於 PR 描述」的過渡辦法作廢，與鐵律 15.1／D38 的 exact-head `DEFERRED_WHITE` 例外正面相反；合規使用該例外的 terminal-white PR 會被讀 prompt 的驗收方判成未登記。ingestion 側另缺「下一個 tree-changing PR 首候選是否已把 merged PR body 的 pair 入籍」的機械檢查 | ⚪ 蒸發族（同 G-01）＋**判準型 consumer 漂移**（prompt 是驗收方實際讀的判準，散文 consumer 同步不涵蓋它；來源＝PR #66 Claude issue comment `5369828302` 🔴-1(b)） | 改 `.github/workflows/` 命中鐵律 18.3，且 `claude-review.yml` 反竄改會令該 PR 自身驗收失效 ⇒ 必須另開 workflow-only PR；ingestion checker 另需先定義「既有 merged PR」的查詢範圍與起點（與本節 §3 已登記的同名 ⚪ 同源） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4「需擴 workflow／CI 判準時先登記候選與代價、另開 18.3 PR」，本 PR 不得改 workflow，指派給 P-8 的 **0f workflow-only 接線**一併交付） |
 | G-04 | **表格列儲存格數的全樹檢查**——掃全部 `*.md` 的表格列，**先按 GFM 規則切出儲存格再比對格數**：去掉行首與行尾的邊界直線（邊界直線不代表額外欄）後以未跳脫 `\|` 分割，切出的格數多於表頭欄數即報錯（GFM tables extension 逐字：超額格 "the excess is ignored" ⇒ 該列末欄被靜默截斷）。🔴 **不得直接數未跳脫直線**——本表即反例：五欄的表頭列與本列各有 6 個未跳脫直線（首尾各一為邊界），照直線數比對會讓這道閘門開跑第一秒就否決自己所在的表、連基準線都建不出來（來源＝Codex inline `3831890277`，2026-08-21） | Markdown 假結果族（§3 已登記本 PR 與另四檔實例：`specs/52`（兩處）、`specs/83`、`specs/53`、`worklog/2026-08-18-P8-自動化基建`） | 低（一支 awk/ruby 即可）；需先裁定射程（全 `docs/` 或含 `*.md` 全樹）與既有違規的處置（一次修完 vs 建立基準線） | **提案／待**（🔴 使用者尚未裁定；本 PR 的結構斷言只涵蓋本輪改動檔，抓不到既有檔——依鐵律 20.4 先登記候選與代價，另開 18.3 PR 實作） |
+| G-05 | **alt 權威單一來源檢查**——D48 之後 `files.alt_text` 是唯一權威、`media.alt_text` 停用。擬掃 `app/` 全樹，禁止任何**寫入** `media.alt_text` 的敘述（`alt_text:` 出現在 Media 的 create!／update!／assign 之側），並禁止**讀取**面把它當 alt 來源（`\.alt_text` 掛在 media 列物件上）。🔴 判準必須排除三處合法殘留：資料遷移 `20260825120000`（原始值保留可救）、`db/schema.rb` 的欄位宣告、以及本表本列自己 | **權威分裂族**——同一語義兩個欄位各寫一半，症狀是「在 A 頁改了 B 頁沒變」，而兩邊各自的測試都綠（第 26／27 包 per-product 裁定被 D48 推翻即此形態的來源） | 低（一支 grep/ruby 即可）；需先裁定射程（只掃 `app/` 或含 `lib/`）與停用欄何時真正 drop（drop 之前這道閘門是唯一防線） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4 不得在本 PR 逕自新增 `scripts/` 判準，另開 18.3 PR。在那之前的防線＝本包把每一條 per-product alt 斷言反轉成 per-file） |
 | （其餘待收割輪填入） | | | | |
 
 ## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
@@ -2179,9 +2180,18 @@
   兩個具體後果：ⓐ同一張圖用在 30 個商品時，我方有 30 份可各自編輯的 alt、本尊只有 1 份，
   往 `fileUpdate` 圓桌回寫會塌成一份；ⓑ本尊 Files 頁有「Alt text」篩選（找缺 alt 的檔），
   那個語義只在 alt 是 per-file 時well-defined。
-  【F5；來源＝第 28 包上網研究（官方 shopify.dev＋help.shopify.com）；取證日期＝2026-08-25】
+  🔴 **2026-08-25 結案（D48 使用者裁定「所有的都跟 Shopify」）**：本條登記的 V 已裁定
+  ——**遷到檔案層**，`files.alt_text` 是唯一權威、全店一份，`media.alt_text` 停用但不刪欄。
+  上面「本包維持我方裁定」那句自此作廢（依鐵律 19.5 保留原文以存沿革）。
+  落地＝遷移 `20260825120000_move_alt_authority_to_files`（只填空位、不覆蓋、不刪來源）
+  ＋讀寫兩面全部改走檔案層＋每一條 per-product 斷言反轉。
+  ⚠️ 「傳播」那一句仍是 schema 推論不是官方逐字（本條原文已載明），實作依裁定進行；
+  複驗法不變。停用欄的機械守衛候選＝本檔 §2 的 **G-05**（依鐵律 20.4 待裁）。
+  【F5；來源＝第 28 包上網研究（官方 shopify.dev＋help.shopify.com）＋D48；取證日期＝2026-08-25】
 
-- **本尊 `files` 的能力比我方 v1 寬，三項登記 V**：①排序（本尊可依 Date added／
+- **本尊 `files` 的能力比我方 v1 寬，三項登記 V**（🔴 **D48 已裁定全部補齊**，
+  下段原文保留為沿革；`used_in` 值域那一項維持登記，因為 Metaobjects／Brand Settings
+  我方尚未實作、不是選擇不做）：①排序（本尊可依 Date added／
   File name／Size，我方 `KeysetCursor::ORDER_KEYS` 只有 `created_at`／`position`，
   加鍵要動 cursor 白名單）②`used_in` 值域（本尊含 Metaobjects 與 Brand Settings，
   我方那兩者未實作 ⇒ `PRODUCT` 恆等於「有任何引用」，第 30+ 包必須回頭拆細）
@@ -2218,6 +2228,35 @@
   ——文檔沒寫不等於行為不存在。
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
+
+### 3.11 D48 alt 遷移（2026-08-25）
+
+- 🔴 **`check-doc-claims` 在本機對「刻意未追蹤的檔」會假綠**：R1 路徑保真是對
+  **檔案系統**解析的，本機工作區裡有那個未追蹤檔 ⇒ 通過；CI 上檔案系統＝已提交樹
+  ⇒ 同一份文檔紅。本輪現行犯：handoff 寫了 `app/frontend/admin/lib/useCursorPagination.ts`
+  （刻意不入庫，因為還沒有消費者，入庫就是死碼），本機三次複驗全綠、PR #132 的
+  quality job 紅在「Check doc claims」。
+  🔴 **固定處理**：凡本輪有刻意未追蹤的新檔，複驗要**先把它移開**再跑
+  ——`mv <未追蹤檔> /tmp/ && ruby scripts/check-doc-claims.rb --base origin/main --require-base`。
+  用 `git stash -u` **不行**：它會連同你正在做的修正一起收走，跑的是上一個 commit。
+  🔴 **不要為了讓檢查過就把檔案入庫**——那是讓文檔遷就工具；正解是文檔不要寫樹上
+  沒有的路徑（本輪改成敘述而不給路徑）。
+  【F6 同族（本機假綠）；來源＝PR #132 quality job 實測；
+  複驗：`gh run view <run-id> --log` 或 REST `/actions/jobs/{id}/logs`；取證日期＝2026-08-25】
+
+- **`media.alt_text` 停用後沒有機械守衛**：D48 之後該欄不再是權威，但沒有任何 CI 判準
+  擋「有人又去讀寫它」。依鐵律 20.4 不得在遷移 PR 裡逕自新增 `scripts/` 判準
+  ⇒ 候選登記於本檔 §2 的 **G-05**，待使用者裁定後另開 18.3 PR。
+  現行防線只有 spec（每一條 per-product alt 斷言都已反轉）。
+  【F5；來源＝D48 遷移自查；複驗：`grep -rn "alt_text" app/ --include=*.rb`；
+  取證日期＝2026-08-25】
+
+- **`files.alt_source` 稽核欄尚未建**：62 §F.1 要求 AI 產生的 alt 要標來源
+  （`ai|human|imported`）。原規劃在第 3 包遷移批次、且原文寫 `media.alt_source`
+  ——D48 之後該欄必須跟著 alt 走到檔案層，兩份計畫的第 3 包描述已同批改成
+  `files.alt_source`。欄位本身仍未建。
+  【F2；來源＝D48 遷移的跨檔同步；複驗：
+  `grep -rn "alt_source" docs/plans/ docs/specs/62-seo-geo.md`；取證日期＝2026-08-25】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
@@ -2411,6 +2450,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/worklog/2026-08-22-PR64第十七輪雙驗收修復.md`（Claude comment `5379467830`＋Codex review `4999795981`；W15 就地改寫還原、A.1 漏列、R5 警告與窗口實測不一致已處置）
 - [ ] `docs/worklog/2026-08-25-第27包媒體卡.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-25-第28包檔案庫.md`（本包新增；D40 直接開發，待後續輪次收割）
+- [ ] `docs/worklog/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D40 直接開發，待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -2566,6 +2606,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [x] `docs/handoff/2026-08-20-PR61-Codex-5a70431七則驗收修復.md`（review `4981088935` 七則 inline 精準修復；既有坑涵蓋，無新增項）
 - [ ] `docs/handoff/2026-08-25-第27包媒體卡.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 - [ ] `docs/handoff/2026-08-25-第28包檔案庫.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
+- [ ] `docs/handoff/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 

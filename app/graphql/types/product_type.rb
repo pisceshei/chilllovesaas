@@ -80,30 +80,46 @@ module Types
       row = object.media.to_a.min_by(&:position)
       return nil unless row&.stored_file
 
-      Types::ImageType::Presenter.new(file: row.stored_file, alt: row.alt_text)
+      Types::ImageType::Presenter.new(file: row.stored_file)
     end
 
     # 🔴 單筆路徑（`product(id:)` 走 `object_from_id`）沒有 QueryType 的 preload，
     #    而每列讀 `stored_file` ⇒ 250 列＝250 次查詢（審查 C18）。就地批次載入一次；
     #    列表路徑已 preload 則跳過（不用 `.includes` 掛關聯——那會另發查詢並繞開
     #    呼叫端的 preload，第 26 包審查 C10 的教訓）。
-    def media
-      rows = object.media.to_a.sort_by(&:position)
-      unless rows.empty? || rows.all? { |row| row.association(:stored_file).loaded? }
-        ActiveRecord::Associations::Preloader.new(records: rows, associations: :stored_file).call
-      end
-      rows
-    end
+    def media = preloaded_media.sort_by(&:position)
 
     # 缺 alt 數（62 §M S3）：alt 不自動填、只度量。
     # 🔴 `to_a.count { }` 而非關聯的 block-form `count`——後者每次都回 DB 全撈
     #    （審查 C11）；`to_a` 吃 preload 好的那份。
     def media_missing_alt_count
-      object.media.to_a.count { |row| row.alt_text.blank? }
+      # 🔴 D48：數的是**檔案**有沒有 alt，不是媒體列。語義仍是「這個商品有幾張圖
+      #    缺說明」——同一張圖在同一商品掛兩次就算兩次（那確實是兩個要修的格子）。
+      #    🔴 `stored_file` 沒載到時算「缺」而不是跳過：漏算比多算糟，
+      #    這是無障礙度量，寧可提醒過頭。
+      # 🔴 **走 `preloaded_media` 而不是 `object.media.to_a`**：D48 之前這個計數只讀
+      #    `row.alt_text`（media 已載入、零額外查詢），所以單筆路徑沒有 preload 也無妨；
+      #    改讀 `stored_file` 之後，不 preload 就是每列一條查詢。
+      #    `media` 欄位的 preload 幫不上忙——GraphQL 不保證兩個欄位的解析順序。
+      preloaded_media.count { |row| row.stored_file&.alt_text.blank? }
     end
 
     # SEO 子物件直接以 product 本身為 object（欄位在同一列上，SeoType 讀
     # seo_title／seo_description）——不做額外查詢。
+    # 媒體列＋其檔案的單次批次載入。`media` 與 `mediaMissingAltCount` 共用同一份
+    # ——兩個欄位各自 preload 會發兩次查詢，各自不 preload 則各自 N+1。
+    # 🔴 不用 `.includes`：那會另發查詢並繞開呼叫端已經做好的 preload
+    #    （第 26 包審查 C10 的教訓）。
+    def preloaded_media
+      @preloaded_media ||= begin
+        rows = object.media.to_a
+        unless rows.empty? || rows.all? { |row| row.association(:stored_file).loaded? }
+          ActiveRecord::Associations::Preloader.new(records: rows, associations: :stored_file).call
+        end
+        rows
+      end
+    end
+
     def seo = object
 
     # @return [Array<String>] products.tags（json 欄，DB default []）

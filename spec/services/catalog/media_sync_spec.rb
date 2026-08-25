@@ -72,7 +72,33 @@ RSpec.describe Catalog::MediaSync do
       described_class.create(shop:, product:, entries: [ { file_id: file.id, alt: "x" * 513 } ])
     end
     expect(result.user_errors.sole[:code]).to eq("ALT_VALUE_LIMIT_EXCEEDED")
-    ActsAsTenant.with_tenant(shop) { expect(Media.count).to eq(0) }
+    ActsAsTenant.with_tenant(shop) do
+      expect(Media.count).to eq(0)
+      # 🔴 D48：alt 現在寫檔案層 ⇒ 超長被擋下時**檔案也不得被污染**。
+      #    舊版沒有這條，因為當年 alt 根本不碰 files。
+      expect(file.reload.alt_text).to be_nil
+    end
+  end
+
+  it "🔴 D48：建立時的 alt 落在**檔案**上，不落媒體列（停用欄）" do
+    ActsAsTenant.with_tenant(shop) do
+      file = make_file!
+      row = described_class.create(shop:, product:,
+                                   entries: [ { file_id: file.id, alt: "貓在窗邊" } ]).media.sole
+      expect(file.reload.alt_text).to eq("貓在窗邊")
+      expect(row.reload.alt_text).to be_nil
+      # 讀取面看得到（權威在檔案 ⇒ 媒體讀它）
+      expect(row.stored_file.alt_text).to eq("貓在窗邊")
+    end
+  end
+
+  it "🔴 D48：掛既有檔案而**不送 alt** 時，不得清掉檔案庫已寫好的說明" do
+    ActsAsTenant.with_tenant(shop) do
+      file = make_file!
+      file.update!(alt_text: "檔案庫寫好的說明")
+      described_class.create(shop:, product:, entries: [ { file_id: file.id } ])
+      expect(file.reload.alt_text).to eq("檔案庫寫好的說明")
+    end
   end
 
   it "🔴 審查 C6：product.destroy!（不經 MediaSync.delete）也釋放引用計數" do

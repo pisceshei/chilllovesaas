@@ -15,12 +15,12 @@ module Storage
   #   對應碼）ⓑ **刪完必須補位**——那是官方明載的副作用，不是實作細節。
   #   來源：<https://shopify.dev/docs/api/admin-graphql/latest/mutations/fileDelete>
   #
-  # ③🔴 **alt 的分層是我方與本尊的已知分歧，不是疏漏**（登記見 `docs/specs/91` §3.10）：
-  #   本尊的 alt 在**檔案層且只有一份**（`MediaImage` 同時 implements `File` 與
-  #   `Media`，只曝露一個 `alt`）；我方在第 26／27 包裁定 alt 權威在 `media` 那一列
-  #   （同檔掛不同商品可有不同 alt）。⇒ `fileUpdate` 只改 `files.alt_text`，
-  #   **刻意不回寫既有 media**：使用者針對三個商品分別寫過的 alt，不該被檔案庫的
-  #   一次編輯蓋掉。檔案層 alt 的作用＝新掛載時的預設值。
+  # ③🔴 **alt 在檔案層、全店一份**（D48，2026-08-25 使用者裁定「所有的都跟 Shopify」）：
+  #   本尊的 `MediaImage` 同時 implements `File` 與 `Media` 但只曝露一個 `alt`
+  #   ⇒ 一張圖只有一份說明。`fileUpdate` 改 `files.alt_text` **就是改所有用到它的
+  #   商品看到的 alt**——這不是副作用，這就是語義。
+  #   ⚠️ 第 26／27 包曾裁定 alt 權威在 `media` 那一列、並在此明文「刻意不回寫」，
+  #   D48 已推翻該裁定；`media.alt_text` 欄保留但停用（遷移的落選值留著可救）。
   #
   # ④🔴 **blob 刪除在 transaction 之外、且在 commit 之後**（鐵律 5＋檔案系統不回滾）：
   #   順序是「DB txn 刪 row → commit → 刪 blob 與衍生」。反過來（先刪 blob）在 txn
@@ -34,7 +34,7 @@ module Storage
   class FileWrite
     Result = Data.define(:files, :deleted_file_ids, :user_errors)
 
-    ALT_MAX = 512
+    ALT_MAX = Limits.fetch(:media, :alt_max_length)
 
     class << self
       # 改檔案層 metadata（alt／filename）。
@@ -42,6 +42,8 @@ module Storage
       # 🔴 **要求 ready**（官方：`fileUpdate` 的 "Files must be in `ready` state before
       #   they can be updated."）；失敗態是終態、只能刪（官方
       #   `INVALID_FAILED_MEDIA_STATE`："File cannot be updated in a failed state."）。
+      #
+      # 🔴 改 alt **會傳播到所有引用這個檔案的商品**（D48）。本尊不給警告，我方對齊。
       #
       # @param shop [Shop]
       # @param entries [Array<Hash>] `{ id:, alt:, filename: }`（後兩者可缺）

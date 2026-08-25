@@ -27,7 +27,7 @@ module Storage
   class FileCreate
     Result = Data.define(:files, :user_errors)
 
-    ALT_MAX = 512
+    ALT_MAX = Limits.fetch(:media, :alt_max_length)
 
     class << self
       # @param shop [Shop]
