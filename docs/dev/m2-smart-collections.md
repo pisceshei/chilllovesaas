@@ -108,13 +108,50 @@ collections on your storefront" 的旁證（P11-U3 直取未複驗）。
 | P11-B8 | 智慧系列命中數即時預覽（Add condition 旁的數字）＝UI 包（工作卡明文） |
 | P11-B9 | resync 觸發面缺口：變體子頁（第 29 包）的獨立變體更新是否經 PRODUCTS_UPDATE ——**未驗證**；若否，價格條件的增量觸發漏一面（rake rebuild 兜底） |
 
+**P11-B10（2026-08-26 收斂輪 G4 的殘留面）**：exclusion 的 `collection` 型讓系列 A 的
+成員資格依賴系列 B 的物化列。`ResyncProduct` 已加第二趟（先算全部、再重算「引用了
+其他系列」的那些），單向引用因此在一次事件內收斂；**互相引用**（A 排除 B ∧ B 排除 A）
+需要不動點迭代，兩趟不保證收斂——該格由 `catalog:rebuild:collections` 兜底，
+且 `config/recurring.yml` 目前**沒有**排這支（要排程屬 CD 包）。
+
 ## 6. 三處成員數收斂（工作卡驗收項）
 
 `Collection::MEMBER_COUNT_SELECT`（CASE by type）／GraphQL `products_count`
 （smart＝memberships 計數，**未成功 rebuild 回 null**——「未求值」≠0）／前端 `—` 分支
 語義更新。鐵律 7：三處同一來源（物化表）。
 
-## 7. 驗證
+## 7. 寫入契約狀態矩陣（鐵律 17.4 的收斂交付物）
+
+🔴 **這張表存在的理由**：本包三輪對抗審查共確認 10 條 finding，其中 **8 條是同一形態**
+——「修法只封了被點名的那幾格，同一方法裡的鄰居欄位或同一契約的下游消費者沒跟上」。
+逐格列出來，是為了讓下一個改 `SaveCollection` 的人**先看見整張表再動手**，
+而不是改完一格再等審查告訴他還有九格。
+
+判準＝`CollectionSetInput` 檔頭宣告的「缺席＝保持現值、空字串／空陣列＝清除」。
+
+| 欄位 | 缺席(nil) | 顯式空值("" / []) | create 預設 | 守衛在哪 |
+| --- | --- | --- | --- | --- |
+| `title` | ⚠️ **BLANK 錯誤**（非保持現值） | BLANK 錯誤 | 必填 | 與 `SaveProduct` 逐字同款 ⇒ 家族一致的既有行為，本包不單方面改；⚪ 登記 `91` §3.16 |
+| `description_html` | 保持現值 | 清除 | `""` | `normalize` 的 `.nil?` 分支＋update 的 `\|\|`；上限走 `product.description_max_bytes` ⇒ TOO_BIG |
+| `handle` | 保持現值 | 保持現值（`.presence`） | 由標題生成 | `handle_changed` 判斷；改名同 txn 落 301 |
+| `collection_type` | 保持現值 | — | `manual` | 🔴 **建立後不可變**：update 帶不同值＝INVALID（本尊官方語義） |
+| `sort_order` | 保持現值 | — | `manual` | update 的 `\|\| collection.sort_order` |
+| `seo.title` / `seo.description` | 保持現值（鍵不進 attributes） | 清除（`.presence` → nil） | 無 | `seo_attributes` 的兩個 `unless .nil?`；`seo` 整個缺席 ⇒ `return {}` |
+| `product_ids` | 保持現值 | 全部移除 | 無 | `sync_members!` 的 `return if nil`；**只對 manual 生效** |
+| `sources` | 保持現值 | 🔴 清除**且**物化成員被掃尾回收 | 無 | `replace_sources!` 的 `return if nil`＋`Rebuild` 對零 source 的智慧系列照樣掃尾（收斂輪 G1） |
+| `translations` | 不寫任何譯文＝保持現值 | 同左 | 無 | `Array(input[:translations])` → prepare 空集合 |
+
+**消費者影響圖**（改動下列任一生產者時，這一欄就是必須同步的清單）：
+
+| 生產者 | 消費者 |
+| --- | --- |
+| `Rebuild::Result`（status／error） | `RebuildJob`（逾時延後重排）、`catalog:rebuild:collections`（`contended` 計數）、engine/rake spec |
+| `collection_type` 不可變契約 | `collectionSet` mutation、**admin `CollectionDetailPage`**（下拉停用＋payload 條件化）、`m1-collections.md` |
+| `RuleCompiler.where_sql` | `Rebuild`（`INSERT…SELECT`）、`ResyncProduct`（同段 WHERE ＋ `p.id = ?`）——兩者必須永遠是同一段 |
+| `collection_memberships` 列 | 前台（唯一查詢對象）、`Collection::MEMBER_COUNT_SELECT`、`CollectionType#products_count`、🔴 `RuleCompiler#compile_collection_exclusion`（**別的系列**讀它） |
+| 智慧系列的工作清單 | `ResyncProduct#smart_collection_ids`、`catalog.rake` ——🔴 兩者都必須是「全部智慧系列」，**不得**從 `collection_sources` 導出（收斂輪 G1） |
+
+## 8. 驗證
 
 ```bash
 bundle exec rspec spec/services/collections spec/services/tags spec/requests/smart_collections_spec.rb

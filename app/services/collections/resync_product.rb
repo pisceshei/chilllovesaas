@@ -36,7 +36,14 @@ module Collections
           left = 0
           skipped = 0
 
-          smart_collection_ids(shop).each do |collection_id|
+          ids = smart_collection_ids(shop)
+          # 🔴 引用其他系列的要**再算一次**（2026-08-26 收斂輪 G4）：exclusion 的
+          #   `collection` 型讀被引用系列的**物化成員**，而本迴圈無依賴排序 ⇒
+          #   A 排除 B 且 A.id < B.id 時（先建 A、後建 B 再加排除，很常見），
+          #   第一趟算 A 時商品還沒進 B ⇒ A 誤留該商品；第二趟在 B 落定後重算 A 修正。
+          #   互相引用（A 排除 B、B 排除 A）需要不動點迭代，兩趟不保證收斂——
+          #   那一格登記在 dev doc §5（P11-B10），由 rake 兜底。
+          (ids + collection_ids_referencing_others(shop, ids)).each do |collection_id|
             outcome = Collection.transaction do
               collection = Collection.lock.find_by(shop_id: shop.id, id: collection_id)
               next :gone if collection.nil?
@@ -79,9 +86,24 @@ module Collections
 
       private
 
+      # 🔴 工作清單＝**全部智慧系列**，不是「還有 conditions source 的系列」
+      #   （2026-08-26 收斂輪 G1）：從 `collection_sources` 導出清單的話，條件被清空的
+      #   系列會從所有清理路徑的視野裡消失，物化成員永久殘留。零 source 的智慧系列
+      #   在 `member_by_rules?` 下對每個商品都回 false ⇒ 本服務會逐一把殘留列移出，
+      #   即「自癒」。
       def smart_collection_ids(shop)
-        CollectionSource.where(shop_id: shop.id).conditions_type
-                        .distinct.pluck(:collection_id)
+        Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
+      end
+
+      # 帶 `collection` 型 exclusion 規則的系列（第二趟重算對象）。
+      def collection_ids_referencing_others(shop, ids)
+        return [] if ids.empty?
+
+        CollectionSourceRule
+          .joins(:source)
+          .where(shop_id: shop.id, block: "exclusion", condition_type: "collection")
+          .where(collection_sources: { collection_id: ids })
+          .distinct.pluck("collection_sources.collection_id")
       end
 
       # 與 rebuild 同一段 WHERE，加 id 等值——SQL-only 的單商品形。

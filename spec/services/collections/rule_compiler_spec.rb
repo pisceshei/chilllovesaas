@@ -189,4 +189,25 @@ RSpec.describe Collections::RuleCompiler do
       expect(sql).not_to include("IS NULL")
     end
   end
+
+  describe "🔴 G2（2026-08-26 收斂輪）：可空數值欄的否定運算子同樣要 NULL-guard" do
+    it "variant_compare_at_price 的 not_eq 帶 OR IS NULL" do
+      # compare_at_price_cents 可空，且是編譯器涵蓋欄位中唯一「可空 × 允許 not_eq」的格。
+      # 少了 guard，「比價不等於 X」會把沒設過比價的商品靜默剔除——與同檔的
+      # is_not_set（把 NULL 當未設定納入）自相矛盾。
+      sql = described_class.where_sql(source(rules: [
+        rule(type: "variant_compare_at_price", relation: "not_eq", cents: 19_800)
+      ]))
+      # Integer 綁定產生帶引號常量＝本檔既有記載的 Rails 8.1 mysql2 行為（常量側折算一次）。
+      expect(sql).to include("(v.compare_at_price_cents <> '19800' OR v.compare_at_price_cents IS NULL)")
+    end
+
+    it "比較型 relation（gt／lt）不帶 guard——NULL 不大於也不小於任何值" do
+      sql = described_class.where_sql(source(rules: [
+        rule(type: "variant_compare_at_price", relation: "gt", cents: 100)
+      ]))
+      expect(sql).to include("v.compare_at_price_cents > '100'")
+      expect(sql).not_to include("IS NULL")
+    end
+  end
 end

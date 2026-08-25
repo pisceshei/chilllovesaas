@@ -236,6 +236,19 @@ module Collections
         op = NUMERIC_RELATIONS.fetch(rule.relation) do
           raise Unsupported, "#{column} 不支援 relation=#{rule.relation}"
         end
+        # 🔴 否定運算子的 NULL-guard（2026-08-26 收斂輪 G2）：F1 只封了 `compile_string`
+        #   的字串否定，但本方法涵蓋的欄位裡 `v.compare_at_price_cents` **可空**
+        #   （db/schema.rb 的 product_variants 無 `null: false`），三值邏輯下
+        #   `NULL <> x`＝NULL ⇒「比價不等於 X」把**沒設過比價**的商品靜默剔除，
+        #   而同語義的 `product_type not_eq`／`product_tag does_not_include` 都納入
+        #   未設定者——同一個功能裡三個 is-not 打架。更矛盾的是本編譯器為 compare_at
+        #   特設了 `is_set`／`is_not_set`（NULL 是這一欄的正常狀態），`is_not_set`
+        #   把 NULL 當「未設定」納入、`not_eq` 卻排除同一批。
+        #   語義基準與 F1 同：**未設定＝不是那個值**。其餘走本方法的欄位
+        #   （price_cents／weight_grams 皆 NOT NULL、inventory 已 COALESCE）多出的
+        #   `OR ... IS NULL` 恆假、無害。
+        return bind("(#{column} #{op} ? OR #{column} IS NULL)", value) if rule.relation == "not_eq"
+
         bind("#{column} #{op} ?", value)
       end
 

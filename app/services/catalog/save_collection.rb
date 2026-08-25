@@ -59,6 +59,14 @@ module Catalog
         else
                         Catalog::SaveProduct.sanitize_description_for(input[:description_html].to_s)
         end
+        # 🔴 上限與商品同一個鍵（2026-08-26 收斂輪 G3）：F5 把 SaveProduct 的 nil-guard
+        #   抄了過來，緊接的 TOO_BIG 檢查卻沒抄——同一份內容在 productSet 回 TOO_BIG、
+        #   在 collectionSet 靜默存進去；而 translations 的譯文硬上限明文「對齊
+        #   product.description_max_bytes」⇒ 超限的系列說明其 body_html 譯文永遠寫不進去。
+        #   沿用 product 命名空間與本檔 title 的既定慣例一致（同方法 `product.title_max_chars`）。
+        if description && description.bytesize > Limits.fetch(:product, :description_max_bytes)
+          errors << error([ "descriptionHtml" ], I18n.t("errors.collection.description_too_big"), "TOO_BIG")
+        end
 
         # 🔴 宣告式契約（審查 F3）：**缺席＝保持現值，不得補預設**——初版
         #   `input[:collection_type] || "manual"` 讓「部分更新沒帶 collectionType」把

@@ -109,6 +109,7 @@
       title_too_long: "標題長度超過上限。"
       type_invalid: "不支援的系列類型。"
       type_immutable: "系列型別建立後不可變更。"
+      description_too_big: "說明超過大小上限。"
       sort_order_invalid: "不支援的排序方式。"
       handle_invalid: "handle 只能包含小寫字母、數字與連字號。"
       handle_redirected: "這個 handle 是既有網址轉向的來源——舊 handle 不回收。"

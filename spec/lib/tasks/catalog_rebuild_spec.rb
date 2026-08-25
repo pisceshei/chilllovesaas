@@ -33,6 +33,23 @@ RSpec.describe "rake catalog:rebuild:collections" do
     Rake::Task["catalog:rebuild:collections"].invoke
   end
 
+  it "🔴 G1 兜底面：工作清單＝全部智慧系列，零 source 的系列也要被造訪" do
+    orphan = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "零條件", handle: "zero-src",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+    visited = []
+    allow(Collections::Rebuild).to receive(:call) do |shop:, collection:|
+      visited << collection.id
+      Collections::Rebuild::Result.new(status: :ok, inserted: 0, swept: 0, error: nil)
+    end
+
+    run_task
+    expect(visited).to include(orphan.id),
+      "兜底用 collection_sources 導出清單 ⇒ 最需要兜底的那一格（條件被清空）反而掃不到"
+    expect(visited).to include(collection.id)
+  end
+
   it "全部成功 ⇒ 印 rebuild OK、不 abort" do
     allow(Collections::Rebuild).to receive(:call)
       .and_return(Collections::Rebuild::Result.new(status: :ok, inserted: 1, swept: 0, error: nil))

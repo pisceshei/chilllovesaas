@@ -2310,6 +2310,21 @@
   非萬用 SAN），再補一個精確的 `server_name chilling.com.hk` vhost。
   🔴 那是使用者主站的憑證流程，**不是 CHILL LOVE 的射程**——動它之前要先問。
 
+### 3.16 `title` 在宣告式全樹 upsert 裡「缺席＝錯誤」而非「保持現值」（第 11 包收斂輪順手發現，2026-08-26）
+
+**形態**：`ProductSetInput`／`CollectionSetInput` 兩份輸入的檔頭都明文宣告
+「缺席＝保持現值」，但 `SaveProduct#normalize` 與 `SaveCollection#normalize` 對 `title`
+一律 `input[:title].to_s.strip` 後空值回 `BLANK` ⇒ **更新時不帶 title 就是硬錯**，
+不是保持現值。兩支服務**逐字同款**，所以這是家族一致的既有行為，不是第 11 包引入的。
+
+**為什麼登記而不修**：①它硬錯、不靜默改資料，與本輪根因（缺席補預設後寫回）不同類；
+②單方面只改系列側會讓兩支語義分家，正是 `CollectionSetInput` 檔頭警告的那件事
+（「兩支 mutation 的語義若不同，商家第一次用系列匯入就會踩到」）；
+③要改就兩支一起改，且要先確認本尊 `productUpdate`／`collectionUpdate` 對缺席 title
+的實際行為（未取得）。⇒ 屬範圍外觀察，留給商品線的 parity 輪一併裁定。
+
+**複驗**：`grep -n "input\[:title\].to_s.strip" app/services/catalog/save_product.rb app/services/catalog/save_collection.rb`
+
 ### 3.15 `Product#destroy` 在變體掛了圖時撞 FK（第 29 包線上驗收順手發現，2026-08-25）
 
 - ⚪ **`product.destroy!` 對「有變體圖的商品」一定失敗**，回

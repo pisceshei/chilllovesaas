@@ -208,6 +208,16 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     ActsAsTenant.with_tenant(shop) { expect(Collection.sole.description_html).to eq("") }
   end
 
+  it "🔴 G3（2026-08-26 收斂輪）：系列說明超過上限 ⇒ TOO_BIG，與商品同一個判準" do
+    login!
+    oversized = "<p>#{"字" * 30_000}</p>"   # 中文 3 bytes/字 ⇒ 遠超 65536
+    data = set!({ title: "超長說明", descriptionHtml: oversized })
+
+    expect(data["userErrors"].map { |e| [ e["field"], e["code"] ] })
+      .to eq([ [ [ "descriptionHtml" ], "TOO_BIG" ] ])
+    ActsAsTenant.with_tenant(shop) { expect(Collection.count).to eq(0) }
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")

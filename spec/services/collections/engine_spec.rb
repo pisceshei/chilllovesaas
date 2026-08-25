@@ -278,4 +278,108 @@ RSpec.describe "智慧系列求值引擎" do
     expect(members(collection)).to contain_exactly(untyped.id)
     expect(members(collection)).not_to include(typed.id)
   end
+
+  describe "🔴 G1（2026-08-26 收斂輪）：條件清空後物化成員必須被回收" do
+    it "sources 清成空陣列 ⇒ 掃尾清空成員、rebuild_status 回 OK" do
+      product = product!(title: "紅玫瑰", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(collection)
+      expect(members(collection)).to eq([ product.id ])
+
+      # 契約明文的「空陣列＝清除」（request spec 自己在測的合法輸入）。
+      ActsAsTenant.with_tenant(shop) do
+        CollectionSource.where(shop_id: shop.id, collection_id: collection.id).destroy_all
+        collection.update_columns(rebuild_status: "PENDING")
+      end
+
+      result = rebuild!(collection.reload)
+      expect(result.status).to eq(:ok),
+        "零 source 的智慧系列被當成『與本服務無關』早退 ⇒ 掃尾不執行、成員永久殘留"
+      expect(result.swept).to eq(1)
+      expect(members(collection)).to be_empty
+      expect(collection.reload.rebuild_status).to eq("OK")
+    end
+
+    it "🔴 殘留成員會污染**別的**系列：X 清空後，「排除 X」的 Y 必須算得出正確成員" do
+      product = product!(title: "紅玫瑰2", tags: [ "red" ])
+      x = smart!(title: "X", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(x)
+      expect(members(x)).to eq([ product.id ])
+
+      ActsAsTenant.with_tenant(shop) do
+        CollectionSource.where(shop_id: shop.id, collection_id: x.id).destroy_all
+      end
+      rebuild!(x.reload)
+
+      # Y＝tag red 減去 X 的成員。X 已無條件 ⇒ X 無成員 ⇒ Y 應含該商品。
+      y = smart!(title: "Y", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+        { block: "exclusion", condition_type: "collection", relation: "includes", value_int: x.id }
+      ] } ])
+      rebuild!(y)
+      expect(members(y)).to eq([ product.id ]),
+        "Y 被 X 的幽靈成員錯誤排除——殘留列不是死資料，compile_collection_exclusion 讀它"
+    end
+
+    it "非智慧系列照舊跳過（手動成員不歸本服務管）" do
+      manual = ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: "手動", handle: "manual-one",
+                           collection_type: "manual", sort_order: "manual", description_html: "")
+      end
+      expect(rebuild!(manual).status).to eq(:skipped)
+    end
+  end
+
+  it "🔴 F7（2026-08-26 自查）：NULL 世代戳的列既要能被蓋上戳，也要能被掃掉" do
+    product = product!(title: "紅3", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    rebuild!(collection)
+
+    # 模擬未帶世代戳的物化列（日後 manual／nested／app origin 的形態；欄位可空）。
+    ActsAsTenant.with_tenant(shop) { CollectionMembership.update_all(rebuilt_at: nil) }
+
+    result = rebuild!(collection)
+    expect(members(collection)).to eq([ product.id ]),
+      "仍命中規則的列被掃掉了"
+    stamp = ActsAsTenant.with_tenant(shop) { CollectionMembership.sole.rebuilt_at }
+    expect(stamp).not_to be_nil,
+      "GREATEST(NULL, 世代) 回 NULL ⇒ 這一列再也蓋不上戳、也掃不掉（不死列）"
+    expect(result.status).to eq(:ok)
+  end
+
+  it "🔴 F7 對偶：NULL 戳且**不再命中**規則的列必須被掃掉" do
+    product = product!(title: "紅4", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    rebuild!(collection)
+    ActsAsTenant.with_tenant(shop) do
+      CollectionMembership.update_all(rebuilt_at: nil)
+      # 規則改成藍：這個商品不再命中。
+      CollectionSourceRule.where(shop_id: shop.id).update_all(value_text: "blue")
+    end
+
+    rebuild!(collection)
+    expect(members(collection)).to be_empty,
+      "掃尾的 `< 世代` 在三值邏輯下漏掉 NULL ⇒ 陳舊列永遠留在系列裡"
+    expect(product).to be_present
+  end
+
+  it "🔴 G2 行為面：沒設過比價的商品必須被『比價不等於 X』納入" do
+    without_compare = product!(title: "沒比價", compare_at: nil)
+    with_compare = product!(title: "有比價", compare_at: 19_800)
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "variant_compare_at_price", relation: "not_eq", value_cents: 19_800 }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(without_compare.id)
+    expect(members(collection)).not_to include(with_compare.id)
+  end
 end

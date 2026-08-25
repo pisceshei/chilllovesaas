@@ -14,7 +14,10 @@ namespace :catalog do
       contended = 0
       Shop.find_each do |shop|
         ActsAsTenant.with_tenant(shop) do
-          ids = CollectionSource.where(shop_id: shop.id).conditions_type.distinct.pluck(:collection_id)
+          # 🔴 兜底的工作清單＝**全部智慧系列**（2026-08-26 收斂輪 G1）：從
+          #   `collection_sources` 導出會讓「條件被清空」的系列從兜底視野裡消失，
+          #   而那正是最需要兜底的一格（物化成員殘留且無自癒路徑）。
+          ids = Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
           next if ids.empty?
 
           ids.each do |collection_id|

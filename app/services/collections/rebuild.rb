@@ -40,8 +40,13 @@ module Collections
   #      整場 rebuild（含 sources 讀取與編譯——晚到者必見最新已提交規則），等待預算
   #      `limits.collection.rebuild_lock_wait_seconds`；等不到＝讓位（RebuildJob 延後重排，
   #      不靜默丟——跑者可能在本 job 的規則版本之前編譯）。連線死掉鎖自動釋放（MySQL 語義）。
-  #   b) **世代戳單調帶**：upsert 改 `GREATEST(rebuilt_at, ?)`——即使 a) 被繞過（新呼叫點
-  #      不走本服務之類），舊世代也**降不了**現任列的戳，掃尾就刪不掉它們。
+  #   b) **世代戳單調帶**：upsert 改 `GREATEST(COALESCE(rebuilt_at, 世代), 世代)`——即使 a)
+  #      被繞過（新呼叫點不走本服務之類），舊世代也**降不了**現任列的戳，掃尾就刪不掉它們。
+  #      🔴 `COALESCE` 不是裝飾：`rebuilt_at` 可空（schema 無 `null: false`；日後的
+  #      manual／nested／app origin 物化不必然帶世代戳），而 MySQL 的 `GREATEST(NULL, x)`
+  #      **回 NULL** ⇒ 少了 COALESCE，一列 NULL 戳會變成「再也蓋不上戳、也掃不掉」的
+  #      不死列（掃尾的 `< 世代` 在三值邏輯下同樣漏掉 NULL）。掃尾因此也顯式收 NULL
+  #      ——與 F1 的否定條件同一個三值邏輯坑（2026-08-26 自查 F7）。
   class Rebuild
     Result = Data.define(:status, :inserted, :swept, :error)
     # 檔頭⑤a 的讓位訊號（RebuildJob 據此延後重排，不靜默丟）。
@@ -103,11 +108,23 @@ module Collections
       end
 
       def rebuild!(shop, collection)
+        # 🔴 非智慧系列才是「與本服務無關」＝跳過（手動成員在 collection_products，
+        #   不歸這裡管）。**零 source 的智慧系列不是跳過，是「成員集合＝空集合」**——
+        #   2026-08-26 收斂輪 G1：初版在 `sources.empty?` 就早退，而早退點在**世代掃尾
+        #   之前** ⇒ 商家把條件清成 `sources: []`（契約明文的「空陣列＝清除」、本包
+        #   request spec 自己在測的合法輸入）之後，先前物化的成員**永久殘留**，
+        #   `rebuild_status` 永遠停在 PENDING，且三條清理路徑同時照不到它
+        #   （早退不掃尾／resync 與 rake 的工作清單都從 `collection_sources` 導出，
+        #   該系列已無 source 列）。殘留列不是死資料：`compile_collection_exclusion`
+        #   讀 memberships ⇒ **另一個**系列會繼續把這些幽靈成員減掉，成員判定當場出錯。
+        return Result.new(status: :skipped, inserted: 0, swept: 0, error: nil) unless collection.collection_type == "smart"
+
         sources = CollectionSource.where(shop_id: shop.id, collection_id: collection.id)
                                   .conditions_type.includes(:rules).order(:position).to_a
-        return Result.new(status: :skipped, inserted: 0, swept: 0, error: nil) if sources.empty?
 
-        # ③-1：全部先編譯，編不了就 ERROR、零寫入。
+        # ③-1：全部先編譯，編不了就 ERROR、零寫入。零 source ⇒ 空編譯清單，
+        #   下面的批次迴圈不插任何列、掃尾把舊成員全清——語義上正確且與
+        #   `sources: [{rules: []}]`（空條件集）走同一條路。
         compiled = compile_all!(shop, collection, sources)
         return compiled if compiled.is_a?(Result)
 
@@ -139,9 +156,12 @@ module Collections
           inserted = CollectionMembership
                      .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
                      .where(created_at: generation..).count
+          # `rebuilt_at IS NULL` 顯式納入：三值邏輯下 `NULL < 世代`＝NULL，
+          # 純 range 條件會把 NULL 戳的陳舊列永遠留在系列裡（檔頭⑤b）。
           swept = CollectionMembership
                   .where(shop_id: shop.id, collection_id: collection.id, origin: "conditions")
-                  .where(rebuilt_at: ...generation).delete_all
+                  .where("collection_memberships.rebuilt_at IS NULL OR collection_memberships.rebuilt_at < ?", generation)
+                  .delete_all
           collection.update_columns(rebuild_status: "OK", rebuilt_at: generation,
                                     updated_at: Time.current)
         end
@@ -182,14 +202,14 @@ module Collections
       def upsert_batch(shop, collection, source, where_sql, ids, generation)
         id_list = ids.map { |id| Integer(id) }.join(",")
         now = Time.current
-        sql = ActiveRecord::Base.sanitize_sql_array([ <<~SQL.squish, shop.id, collection.id, source.id, generation, now, now, shop.id, generation ])
+        sql = ActiveRecord::Base.sanitize_sql_array([ <<~SQL.squish, shop.id, collection.id, source.id, generation, now, now, shop.id, generation, generation ])
           INSERT INTO collection_memberships
             (shop_id, collection_id, product_id, variant_id, origin, origin_source_id,
              position, rebuilt_at, created_at, updated_at)
           SELECT ?, ?, p.id, NULL, 'conditions', ?, 0, ?, ?, ?
           FROM products p
           WHERE p.shop_id = ? AND p.id IN (#{id_list}) AND (#{where_sql})
-          ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(rebuilt_at, ?)
+          ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(COALESCE(rebuilt_at, ?), ?)
         SQL
         ActiveRecord::Base.connection.execute(sql)
         nil   # affected_rows 對 ON DUPLICATE 是 2/列，不是變更訊號——變更判定見 call 內註釋
