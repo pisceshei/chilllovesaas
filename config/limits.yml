@@ -3318,6 +3318,14 @@ i18n:
   # 🔴 繁簡之間永不互為 fallback。地區借用只是用詞差異，**字體借用是整頁文字都不對**。
   never_fallback_pairs: [[zh-Hant, zh-Hans]]
   # 截尾不得落到被禁用的裸語言碼（zh）⇒ 鏈提前結束，不是特例分支。
+  # 🔴 這一條與 CLDR 同構，**不是我方自創的加嚴**（2026-08-25 取證）：
+  #    CLDR common/supplemental/parentLocales.xml 把 zh-Hant 的 parent 寫成 und（＝root），
+  #    官方理由逐字：「If the locale is written in the non-default script for the language,
+  #    it needs to have the parent specified as root, for example, zh_Hant and sr_Latn need
+  #    to fall back to root (not to zh and sr which are in different scripts).」
+  #    出處：https://github.com/unicode-org/cldr/blob/main/common/supplemental/parentLocales.xml（2026-08-25）
+  #    ⚠️ 相對地，RFC 4647 §3.4 Lookup 的**字面**演算法會產生 zh-Hant → zh（它不懂 script 語義）
+  #    ⇒ 我方在此刻意偏離 RFC 字面，**不得寫成「照 RFC 實作」**。實作＝Locales::FallbackChain。
   truncation_stops_at_forbidden: true
   # 🔴 商家不可自訂 fallback 鏈：可自訂的鏈會產生 A→B→A 的環。（ours）
   merchant_configurable_chain: false
@@ -3329,7 +3337,59 @@ i18n:
   # 空值定義：NULL / "" / 只含空白 / 語義空 HTML（<p></p>、<p><br></p>）四者等價。
   empty_includes_semantically_empty_html: true
   # 回落到來源語言的**大段文字**在前台加 lang 屬性（無障礙＋誠實）。短欄位不加。
+  # 🔴 lang 的值＝`Translations::Resolved#locale`（實際語言，可能是 zh-Hant），
+  #    **不是**請求語言（zh-Hant-HK）。消費者是第 34 包。
   mark_fallback_with_lang_attribute_on: [body_html, policy_body, article_body]
+
+  # --- 解析器（67 §C.4 的執行參數；第 7 包 Translations::Resolve）-------------
+  resolve:
+    # 單批資源數上限。推導：等值 range 數＝資源數 × 候選語言階數。MySQL 官方逐字：
+    #   「If there are two IN() lists, the number of predicates combined with OR is the
+    #    product of the number of literal values in each list.」
+    # 而 eq_range_index_dive_limit 預設 200，達到即從 index dive 換成統計估算
+    # ⇒ 同一支查詢的執行計畫在無預警下改變。⌊200 / 3⌋ = 66，取 50 留餘裕。
+    # 出處：https://dev.mysql.com/doc/refman/8.4/en/range-optimization.html（2026-08-25）
+    #     ＋https://dev.mysql.com/blog-archive/you-asked-for-it-new-default-for-eq_range_index_dive_limit/（2026-08-25）
+    # ⚠️ U14 未取得：我方實例的 @@eq_range_index_dive_limit 現值尚未實查（200 是官方預設值）。
+    max_resources_per_batch: 50
+    # 候選語言階數硬上限（含請求語言自己）。Locales::Tag::FORMAT 只有
+    # language[-script][-region] 三段 ⇒ 截尾最多兩次。（ours）
+    max_chain_length: 3
+    # 🔴 field_key **不進 IN 清單**——三個 IN 的乘積 50×3×4=600 遠超 200。
+    #    欄位在 Ruby 端過濾（每列最多 4 欄，浪費極小）。（ours）
+    batch_filters_fields_in_ruby: true
+    # 🔴 按 resource_type 分組查詢，不用 row constructor `(a,b) IN ((..),(..))`——
+    #    後者走 range 有四個條件，其中「右側必須多於一個 row constructor」在單筆時
+    #    不成立而退化成全掃。這是對 67 §F.3(c) 字面「一次 IN」的刻意偏離。（ours）
+    batch_groups_by_resource_type: true
+    # 前台預設只在 published 語言集合內解析（下架／未發布語言的譯文保留但不得取用）。
+    # 預覽連結走 :enabled。（ours；對齊 storefront.unpublished_locale_status: 404）
+    default_scope: published
+    # 遙測門檻：depth >= 此值才發 i18n.fallback_hit。
+    # 🔴 0 會讓**每一次正常渲染**都發一筆（請求語言＝來源語言時 depth 恆 0）。
+    # 🔴 payload 禁放 resource_id：Prometheus 官方「Do not use labels to store dimensions
+    #    with high cardinality … such as user IDs … or other unbounded sets of values.」
+    #    出處：https://prometheus.io/docs/practices/naming/（2026-08-25）
+    fallback_telemetry_min_depth: 1
+
+  # --- 空值判準（67 §C.4(b)；讀寫共用單一實作 Translations::BlankValue）-------
+  blank_value:
+    # HTML parser 走 Loofah.fragment（＝Loofah::HTML4::DocumentFragment，2026-08-25 實測）。
+    # 🔴 選它的理由是**與 sanitizer 同源**：Catalog::SaveProduct#sanitize_description 已經用
+    #    Loofah.fragment，同一支 parser 才不會出現「sanitizer 看得到、判空器看不到」的漂移。
+    # 🔴 HTML4 vs HTML5 的代價不對稱（2026-08-25 實測）：截斷輸入 "<p><img src=x"
+    #    在 HTML4 判非空、HTML5 判空，而判空的動作是**刪掉商家的譯文** ⇒ 選在假陰性側。
+    html_parser: html4_via_loofah
+    # 🔴 判空必須在 sanitize 之後：<video src=x></video> sanitize 前判非空、sanitize 後是 ""，
+    #    先判空就會存進一列「後台已翻譯、前台空白」的鬼列。（ours）
+    runs_after_sanitize: true
+    # 內容承載元素清單由 WHATWG「Embedded content」分類推導＋hr/table/表單控件三項加項。
+    # 🔴 不是 void elements 清單（area/base/col/link/meta/track/wbr 是 void 但不可見）。
+    # 出處：https://html.spec.whatwg.org/multipage/dom.html（2026-08-25）
+    content_bearing_source: whatwg_embedded_content
+    # 🔴 讀寫共用**同一份**實作，讀取端不做簡化版快篩。（ours，2026-08-25）
+    #    省下的 ~85µs/次不值得買回「同一個值讀寫兩種答案」的漂移。
+    single_implementation_for_read_and_write: true
 
   # --- 過期偵測（67 §C.5）—— 假陽性率決定這個功能有沒有用 ----------------------
   digest_algorithm: sha256
