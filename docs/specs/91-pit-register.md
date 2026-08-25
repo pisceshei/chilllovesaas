@@ -2229,6 +2229,37 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.13 D48 列表對齊：兩條由對抗審查驗證存活的缺陷（2026-08-25）
+
+- 🔴 **cursor 不帶排序鍵 ⇒ 換鍵重用會靜默回錯資料**（S1）。原本 payload 是
+  `[value, id]`，`decode` 只信呼叫端傳的 `key`。CREATED_AT 的值是 ISO8601
+  **字串**，因此通過 filename codec 的 `is_a?(String)` 守衛 ⇒ SQL 變成
+  `WHERE filename > '2026-08-25T…'`。審查方以真實端點復現：四個檔
+  （`0001-invoice.png`／`1099-form.png`／`yak.png`／`zebra.png`）在換鍵後
+  **前兩筆被靜默吞掉**（數字開頭排在時間戳字串之前）；換一組資料則變成
+  使用者看過的列再回一次。
+  🔴 **守衛原本只有單向**：byte_size→filename 擋得住（`Integer` 對字串會 raise），
+  filename→byte_size 也擋得住，但 created_at→filename 不擋——因為兩者都是字串。
+  修法＝payload 改三元組 `[key, value, id]`，decode 比對；二元組僅對本次之前
+  就存在的 `created_at`／`position` 相容（那兩個 codec 本來就互斥），
+  新鍵一律只認三元組。反向 fixture＋突變驗證已加。
+  【F5；來源＝PR #133 對抗審查 S1（verifier 以 rspec request spec 真實端點復現）；
+  複驗：`bundle exec rspec spec/requests/files_library_spec.rb -e "cursor 綁定它的排序鍵"`；
+  取證日期＝2026-08-25】
+
+- 🔴 **窮舉句漏掉預設值，而漏的正是最常走的那條**（S2）。migration
+  `20260825130000` 的註釋寫「為什麼**只有** `byte_size` 需要加索引」——漏了
+  `created_at`，也就是 `files(sortKey:)` 不指定時的預設鍵。
+  `ix_files_status_created_at` 是 `(shop_id, status, created_at)`，沒有 status
+  條件時前綴對不上。審查方在 50,000 檔的複刻資料上量到：預設鍵
+  `Sort: files.created_at DESC` 讀滿 50,000 列、**95.2 ms**；兩個新鍵各
+  **0.143 ms**／**0.098 ms**（約 670 倍差距），而且預設鍵是唯一隨店內檔數
+  線性成長的一條——同輪新增的「載入更多」還把它從「一次 filesort」變成
+  「每翻一頁一次」。修法＝`20260825140000` 補 `ix_files_created_at`，
+  並把前一支的窮舉句改成**逐鍵列舉**（鐵律 20.2③）。
+  複驗（本機）：`EXPLAIN` 現為 `key="ix_files_created_at" Extra="Backward index scan"`。
+  【F5／F11；來源＝PR #133 對抗審查 S2；取證日期＝2026-08-25】
+
 ### 3.12 對抗審查的方法論事故（2026-08-25，D48 列表對齊輪）
 
 - 🔴 **verify 階段跑在會動的樹上＝驗到自己的修法**（本輪現行犯）。

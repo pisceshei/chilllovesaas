@@ -62,7 +62,14 @@ module Products
       # @see docs/research/28-api-contract.md §0.3
       def encode(record, key: :created_at)
         codec = ORDER_KEYS.fetch(key)
-        payload = [ codec[:dump].call(record.public_send(key)), record.id ]
+        # 🔴 payload **帶排序鍵**（三元組）。只有 `[value, id]` 的話，
+        #    cursor 沒有任何東西說得出它是用哪個鍵編的，而 `decode` 只信呼叫端傳的
+        #    `key` ⇒ 拿 CREATED_AT 的 cursor 去當 `sortKey: FILENAME` 的 after，
+        #    ISO8601 字串通過 `is_a?(String)` 守衛、SQL 變成
+        #    `WHERE filename > '2026-08-25T…'`，**靜默回一整頁錯資料**
+        #    （數字開頭的檔名整批被吞掉，或使用者看過的列再回一次）。
+        #    對抗審查以真實端點復現，見 `docs/specs/91` §3.13。
+        payload = [ key.to_s, codec[:dump].call(record.public_send(key)), record.id ]
         Base64.urlsafe_encode64(JSON.generate(payload), padding: false)
       end
 
@@ -74,7 +81,7 @@ module Products
       # @raise [GraphQL::ExecutionError] cursor 格式錯誤時拋出
       def decode(cursor, key: :created_at)
         codec = ORDER_KEYS.fetch(key)
-        raw, id = JSON.parse(Base64.urlsafe_decode64(padded(cursor.to_s)))
+        raw, id = extract(JSON.parse(Base64.urlsafe_decode64(padded(cursor.to_s))), key)
         parsed_key = codec[:load].call(raw)
         parsed_id = Integer(id)
         raise ArgumentError unless parsed_id.positive?
@@ -88,6 +95,36 @@ module Products
       end
 
       private
+
+      # payload → `[raw, id]`，並確認它是用**同一個鍵**編出來的。
+      #
+      # 🔴 **兩種長度都要收**：三元組是本次（D48）之後的新形；二元組是本次之前
+      #   線上已經發出去的 cursor（admin SPA 正在翻頁的那些）。若只收三元組，
+      #   部署當下所有進行中的分頁會一起變成 BAD_USER_INPUT。
+      # 🔴 二元組的相容範圍**只到本次之前存在的兩個鍵**（`created_at`／`position`），
+      #   而那兩個鍵的 codec 本來就互斥（`Time.iso8601(3)` 丟 TypeError、
+      #   `Integer("2026-08-…")` 丟 ArgumentError）⇒ 舊形沒有跨鍵誤用的空間。
+      #   新鍵（filename／byte_size）一律只認三元組。
+      LEGACY_KEYS = %i[created_at position].freeze
+      private_constant :LEGACY_KEYS
+
+      def extract(payload, key)
+        raise ArgumentError, "cursor payload must be an array" unless payload.is_a?(Array)
+
+        case payload.length
+        when 3
+          cursor_key, raw, id = payload
+          raise ArgumentError, "cursor key mismatch" unless cursor_key == key.to_s
+
+          [ raw, id ]
+        when 2
+          raise ArgumentError, "legacy cursor not valid for #{key}" unless LEGACY_KEYS.include?(key)
+
+          payload
+        else
+          raise ArgumentError, "cursor payload has unexpected shape"
+        end
+      end
 
       def padded(cursor)
         cursor + ("=" * ((4 - cursor.length % 4) % 4))

@@ -165,6 +165,40 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
     expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
   end
 
+  it "🔴 審查 S1：cursor 綁定它的排序鍵——換鍵重用一律 BAD_USER_INPUT，不得靜默回錯頁" do
+    ActsAsTenant.with_tenant(shop) do
+      # 數字開頭的檔名排在 ISO8601 時間戳字串**之前**——正是會被靜默吞掉的那些
+      [ "0001-invoice.png", "1099-form.png", "yak.png", "zebra.png" ].each do |name|
+        key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
+        Storage::LocalDisk.write(key, StringIO.new("B"))
+        StoredFile.create!(filename: name, content_type: "image/png", byte_size: 10,
+                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+      end
+    end
+    login!
+
+    # 先用預設鍵（CREATED_AT）取一個 cursor
+    post_graphql(SORTED_QUERY, variables: { first: 2 })
+    created_cursor = response.parsed_body.dig("data", "files", "pageInfo", "endCursor")
+    expect(created_cursor).to be_present
+
+    # 🔴 拿它去當 FILENAME 的 after：必須被擋，而不是回一頁少了兩筆的結果
+    post_graphql(SORTED_QUERY,
+                 variables: { first: 10, after: created_cursor, sortKey: "FILENAME" })
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+
+    # 反方向同樣要擋
+    post_graphql(SORTED_QUERY, variables: { first: 2, sortKey: "FILENAME" })
+    filename_cursor = response.parsed_body.dig("data", "files", "pageInfo", "endCursor")
+    post_graphql(SORTED_QUERY, variables: { first: 10, after: filename_cursor })
+    expect(response.parsed_body.dig("errors", 0, "extensions", "code")).to eq("BAD_USER_INPUT")
+
+    # 同鍵照常可用（守衛不得誤傷正常翻頁）
+    post_graphql(SORTED_QUERY,
+                 variables: { first: 10, after: filename_cursor, sortKey: "FILENAME" })
+    expect(response.parsed_body["errors"]).to be_nil
+  end
+
   it "🔴 byte_size cursor 超出 bigint ⇒ BAD_USER_INPUT，不得漏成 500" do
     login!
     # `Integer(10**20)` 本身不會 raise，會一路帶到 bind 參數才炸 RangeError ⇒ 500。
