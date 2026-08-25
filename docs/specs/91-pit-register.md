@@ -2372,6 +2372,34 @@
   【F6 同族（本機假綠）；來源＝PR #132 quality job 實測；
   複驗：`gh run view <run-id> --log` 或 REST `/actions/jobs/{id}/logs`；取證日期＝2026-08-25】
 
+- 🔴 **同一根因 2026-08-25 再犯，形態不同（鐵律 20.4 復發登記）**：
+  PR #136（第 31 包）的 quality job 同樣紅在「Check doc claims」，本機同一條指令、
+  同一組旗標卻是綠的。
+  **復發錨**＝該 PR 首個候選 head。**既有防線為何失效**＝§3.11 原本那條固定處理
+  只針對「刻意不入庫的檔」，而本次的檔（worklog／handoff）是**要入庫、只是當下還
+  沒 commit**，不在原處理的射程內。
+  🔴 **實測確認的機制**（`scripts/check-doc-claims.rb` 內容錨：`git diff --name-only`
+  搭 `"#{base_ref}...HEAD"`）：R4／R5 的範圍取自 **`base...HEAD`**，也就是
+  **已提交**的差異——工作區與**已 `git add` 但未 commit** 的內容一律看不到。
+  所以新寫的 worklog／handoff 在 commit 之前，這兩條規則掃到的是**零行**、必然綠。
+  ⚠️ 早先一版本條把分界寫成「`git add` 之後」，**那是錯的**：實測 `git add` 之後
+  仍然假綠，commit 之後才轉紅（見下方複驗）。
+  🔴 **固定處理**：`check-doc-claims` 一律**在 commit 之後**跑。這不是新規則
+  ——鐵律 15.4 的順序本來就是「凍結 tree → 全部閘門 → **commit** → 補跑必須以
+  已提交 diff 為輸入的檢查」，doc-claims 的 `--base` 模式正是那一類；本次是把它
+  提前到 commit 之前跑而自造的假綠。
+  反向複驗（在暫存區放一份含易腐數字的新 worklog，兩次結果必須不同）：
+
+  ```
+  git add -A && ruby scripts/check-doc-claims.rb --base origin/main --require-base   # 期望 PASS（假綠）
+  git commit -q -m probe && ruby scripts/check-doc-claims.rb --base origin/main --require-base   # 期望 FAIL
+  ```
+
+  🔴 複驗完要還原時**不要用 `git reset --hard`**——本輪就是這樣把同批未提交的修正
+  一起清掉、整組重做。用 `git reset --soft HEAD~1` 或在別的 worktree 做。
+  【F6 同族（本機假綠）；來源＝PR #136 quality job ＋本機 commit 前後對照實測；
+  複驗＝上面兩行；取證日期＝2026-08-25】
+
 - **`media.alt_text` 停用後沒有機械守衛**：D48 之後該欄不再是權威，但沒有任何 CI 判準
   擋「有人又去讀寫它」。依鐵律 20.4 不得在遷移 PR 裡逕自新增 `scripts/` 判準
   ⇒ 候選登記於本檔 §2 的 **G-05**，待使用者裁定後另開 18.3 PR。
