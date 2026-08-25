@@ -85,16 +85,36 @@ RSpec.describe "Admin GraphQL product translations", type: :request do
 
   it "空字串／語義空 HTML＝刪除譯文列（回落來源語言），不是存空白" do
     login!
-    created = create_with([ { locale: "ja", field: "title", value: "ローズ" }, { locale: "fr", field: "title", value: "Rose" } ])
+    created = create_with([
+      { locale: "ja", field: "title", value: "ローズ" },
+      { locale: "fr", field: "body_html", value: "<p>Rose et épices</p>" }
+    ])
     product = created["product"]
 
     post_graphql(mutation, variables: { input: base_input(
       id: product["id"], lockVersion: product["lockVersion"],
-      translations: [ { locale: "ja", field: "title", value: "" }, { locale: "fr", field: "title", value: "<p><br></p>" } ]
+      translations: [ { locale: "ja", field: "title", value: "" },
+                      { locale: "fr", field: "body_html", value: "<p><br></p>" } ]
     ) })
     data = response.parsed_body.dig("data", "productSet")
     expect(data["userErrors"]).to eq([])
     expect(data.dig("product", "translations")).to eq([])
+  end
+
+  # 🔴 **2026-08-25 第 7 包修正的行為**（原本這一格是用 `title` 送 `<p><br></p>` 並期待被刪）。
+  #   67 §C.4(b) 的原文把 HTML 那一條明文限定在**富文本欄位**：
+  #   「NULL、空字串、只含空白字元的字串三者等價視為「無譯文」。🔴 富文本欄位**另加一條**：
+  #    `<p></p>`／`<p><br></p>` 這類語義空的 HTML 也算空」
+  #   舊實作的 `blank_value?` 不看欄位型別，於是把富文本的規則套到純文字欄上。
+  #   ⇒ 商家在**標題**欄真的打了 `<p><br></p>`（那是他打的字，標題欄不是 RTE），
+  #     會被靜默刪成「未翻譯」。判準改成 kind-aware 之後這一格必須反過來斷言。
+  it "🔴 純文字欄的語義空 HTML **不**判空（§C.4(b) 的 HTML 規則只適用富文本欄）" do
+    login!
+    created = create_with([ { locale: "ja", field: "title", value: "<p><br></p>" } ])
+
+    expect(created["userErrors"]).to eq([])
+    expect(created.dig("product", "translations"))
+      .to contain_exactly(a_hash_including("field" => "title", "locale" => "ja", "value" => "<p><br></p>"))
   end
 
   it "改來源文字 ⇒ 該欄位所有語言標 outdated（不影響譯文內容）" do

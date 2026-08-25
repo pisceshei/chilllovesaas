@@ -70,6 +70,7 @@
       source_locale_not_translatable: "來源語言的內容存在商品本體，不是譯文。"
       field_not_translatable: "此欄位目前不可翻譯。"
       too_long: "譯文長度超過上限。"
+      unsupported_content: "此內容移除不支援的元素（如影片內嵌）後就沒有東西了，請改用支援的內容。"
     translation_csv:
       missing_digest_column: "檔案缺少 source_digest 欄，整檔拒絕匯入。"
       missing_value_column: "檔案缺少 translated_text 欄，沒有可匯入的內容。"
@@ -80,6 +81,9 @@
       locale_not_enabled: "此語言未在本商店啟用。"
       source_locale: "來源語言的內容存在資源本體，不是譯文。"
       market_not_supported: "本平台不做市場級內容覆寫，market 欄請留空。"
+      row_failed: "此列套用失敗；檔案其餘列已照常處理。"
+      too_long: "譯文長度超過該欄位上限。"
+      unsupported_content: "此儲存格經 sanitize 後沒有剩下內容；本列已拒絕。"
     inventory:
       key_already_used: "此冪等鍵已在超過 24 小時前使用過，請換一把新的。"
       invalid_reason: "無效的調整原因。"

@@ -1,0 +1,180 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+# 第 7 包：空值判準（67 §C.4(b)）。純函式，不碰 DB。
+#
+# 🔴 這支 spec 的 fixture 是**兩個方向都要窮舉**的：
+#   - 判「空」錯了 ⇒ 商家看到空白區塊而不是原文（fallback 永遠不觸發）
+#   - 判「非空」錯了 ⇒ `Upsert` 執行 `delete_all`，**商家的譯文被靜默刪掉**
+#   後者不可逆，所以有疑慮時一律往「非空」倒。
+#
+# 🔴 **不可見字元一律寫 `\uXXXX` 跳脫，不放字面字元**：字面 ZWSP／BOM 在編輯器、
+#   git diff、code review 裡全都看不見，改壞了沒有人會發現（本包寫檔時也踩過字面 NUL）。
+RSpec.describe Translations::BlankValue do
+  P7_NBSP = "\u00A0"       # 不斷行空白
+  P7_IDEOGRAPHIC = "\u3000" # 全形空白
+  P7_ZWSP = "\u200B"       # 零寬空白
+  P7_BOM = "\uFEFF"        # 位元組順序記號
+  P7_LRM = "\u200E"        # 由左至右標記
+
+  # 立本規則之前 `Upsert#blank_value?` 判錯的八格（2026-08-25 實跑對照，本檔第一版即為修正對象）。
+  P7_REGRESSED_BY_OLD_IMPL = [
+    "<p>&#160;</p>",              # 數字實體形式的 NBSP：舊實作只認字面 &nbsp;
+    "<p>#{P7_IDEOGRAPHIC}</p>",      # 全形空白 U+3000：舊實作的 \s 不含它
+    "<p>#{P7_ZWSP}</p>",             # ZWSP：同上
+    '<p class="x"></p>',          # 帶屬性的 p：舊實作的 </?p> 正則對不上
+    "<div><p></p></div>",         # 巢狀空容器
+    "<p>#{P7_ZWSP}#{P7_BOM}</p>",       # ZWSP + BOM
+    "<p><span></span></p>",       # 空 span
+    "<ul><li></li></ul>"          # 空清單
+  ].freeze
+
+  describe ".blank?(kind: :html)" do
+    {
+      # ---- 應判空（fallback 必須觸發）----
+      "" => true,
+      "   " => true,
+      "\n\t " => true,
+      "<p></p>" => true,
+      "<p><br></p>" => true,
+      "<p><br/></p>" => true,
+      "<p>&nbsp;</p>" => true,
+      "<p>&#160;</p>" => true,
+      "<p>#{P7_IDEOGRAPHIC}</p>" => true,
+      "<p>#{P7_NBSP}</p>" => true,
+      "<p>#{P7_ZWSP}</p>" => true,
+      "<p>#{P7_ZWSP}#{P7_BOM}</p>" => true,
+      "<p>#{P7_LRM}</p>" => true,
+      '<p class="x"></p>' => true,
+      "<div><p></p></div>" => true,
+      "<p><span></span></p>" => true,
+      "<ul><li></li></ul>" => true,
+      "<p><br><br><br></p>" => true,
+      # ---- 應判非空（誤刪＝不可逆）----
+      "<p>你好</p>" => false,
+      "<div>text</div>" => false,
+      "<p>0</p>" => false,
+      "&amp;" => false,
+      "<ul><li>a</li></ul>" => false,
+      '<p><img src="/a.png"></p>' => false,   # 只有圖沒有字，仍然是內容
+      "<hr>" => false,
+      "<table><tr><td></td></tr></table>" => false,
+      '<iframe src="/v"></iframe>' => false,
+      "<video src=x></video>" => false,
+      "<p><img src=x" => false                # 截斷 HTML：HTML4 保留 img ⇒ 不誤刪
+    }.each do |html, expected|
+      it "#{html.inspect} → #{expected}" do
+        expect(described_class.blank?(html, kind: :html)).to eq(expected)
+      end
+    end
+
+    it "nil 判空" do
+      expect(described_class.blank?(nil, kind: :html)).to be(true)
+    end
+  end
+
+  describe ".blank?(kind: :text)" do
+    it "🔴 純文字欄裡的 `<p></p>` 是真內容（帶角括號的標題），不判空" do
+      expect(described_class.blank?("<p></p>", kind: :text)).to be(false)
+    end
+
+    it "不可見字元仍然判空（全形空白／NBSP／ZWSP／BOM／LRM）" do
+      [ P7_IDEOGRAPHIC, P7_NBSP, P7_ZWSP, P7_BOM, P7_LRM, " \t\n" ].each do |value|
+        expect(described_class.blank?(value, kind: :text)).to be(true), "#{value.inspect} 應判空"
+      end
+    end
+
+    it "預設 kind 是 :text（呼叫端漏帶時走比較不會誤刪的那一側）" do
+      expect(described_class.blank?("<p></p>")).to be(false)
+    end
+  end
+
+  describe "🔴 回歸：舊 regex 實作判錯的八格" do
+    P7_REGRESSED_BY_OLD_IMPL.each do |html|
+      it "#{html.inspect} 現在判空（舊實作判非空 ⇒ 前台顯示空白區塊）" do
+        expect(described_class.blank?(html, kind: :html)).to be(true)
+      end
+    end
+
+    it "舊實作的八格**沒有**反向誤判（沒有把有內容的判成空）" do
+      # 這一格把「本次修正只往一個方向動」寫成可執行的斷言：舊實作在測試矩陣裡
+      # 從未把「有內容」判成「空」⇒ 本次修正不會刪到任何既有資料。
+      old_blank = lambda do |value|
+        text = value.to_s
+        next true if text.strip.empty?
+
+        text.gsub(%r{<br\s*/?>|&nbsp;|\s}i, "").gsub(%r{</?p>}i, "").empty?
+      end
+      has_content = [ "<p>你好</p>", "<div>text</div>", "<p>0</p>", '<p><img src="/a.png"></p>', "<hr>" ]
+      has_content.each do |html|
+        expect(old_blank.call(html)).to be(false), "#{html.inspect} 舊實作竟然判空"
+        expect(described_class.blank?(html, kind: :html)).to be(false)
+      end
+    end
+  end
+
+  describe "CONTENT_BEARING 的邊界" do
+    it "🔴 br 不在清單裡（`<p><br></p>` 是 RTE 初始值，正是要抓的形態）" do
+      expect(described_class::CONTENT_BEARING).not_to include("br")
+    end
+
+    it "🔴 不可見的 void 元素不在清單裡（判準是「看不看得到」，不是 void elements 清單）" do
+      expect(described_class::CONTENT_BEARING).not_to include("area", "base", "col", "link", "meta", "wbr")
+    end
+
+    it "🔴 D10：`source` 不在清單裡（它是 void、單獨不可見；父元素已在清單內）" do
+      expect(described_class::CONTENT_BEARING).not_to include("source", "track")
+      expect(described_class.blank?("<source src=x>", kind: :html)).to be(true)
+      # 但它的父元素仍然算內容：
+      expect(described_class.blank?("<video><source src=x></video>", kind: :html)).to be(false)
+    end
+
+    it "清單＝WHATWG embedded 十元素 ＋ 六個可見加項，無其他" do
+      embedded = %w[audio canvas embed iframe img math object picture svg video]
+      extras = %w[hr table input select textarea button]
+      expect(described_class::CONTENT_BEARING).to match_array(embedded + extras)
+    end
+  end
+
+  # 🔴 這一組守的是「偵測器不得與被偵測的失效共用盲點」——本包實際踩到過：
+  #   用 `blank?` 判 raw 會走同一個 parser、撞同一個深度懸崖，於是回報「raw 也是空的」。
+  describe ".text_bearing?（parser-independent）" do
+    it "深巢狀真內容：`blank?` 被 parser 懸崖騙過，`text_bearing?` 沒有" do
+      deep = ("<div>" * 300) + "IMPORTANT" + ("</div>" * 300)
+
+      expect(described_class.blank?(deep, kind: :html)).to be(true), "前提：blank? 在這裡確實被騙"
+      expect(described_class.text_bearing?(deep)).to be(true)
+    end
+
+    it "語義空 HTML 一律回 false（含數值實體與具名不可見實體）" do
+      [ "<p></p>", "<p><br></p>", "<p>&nbsp;</p>", "<p>&#160;</p>", "<p>&#xA0;</p>",
+        "<p>&#8203;</p>", "<p>&zwnj;</p>", '<p class="x"></p>', "<ul><li></li></ul>", "" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(false), "#{html.inspect} 不該被當成有內容"
+      end
+    end
+
+    it "🔴 F4：大寫 `&#X…;` 與小寫同義（HTML 允許兩種，libxml2 兩種都解）" do
+      # 首版正則只收小寫 x ⇒ `<p>&#X200B;</p>` 被判「有內容」⇒ 商家清空欄位時
+      # 整個 mutation 被拒成 INVALID，而小寫寫法卻正常清掉——同一個值兩種命運。
+      [ "<p>&#X200B;</p>", "<p>&#XA0;</p>", "<p>&#X0000A0;</p>" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(false), "#{html.inspect} 不該被當成有內容"
+      end
+      expect(described_class.text_bearing?("<p>&#X4E00;</p>")).to be(true)   # 大寫但可見（一）
+    end
+
+    it "惡意／畸形參照落在安全側（當成有內容 ⇒ 報錯而不是刪列）" do
+      [ "<p>&#;</p>", "<p>&#x;</p>", "<p>&#55296;</p>", "<p>&#xD800;</p>",
+        "<p>&#999999999999;</p>", "<p>&#160</p>" ].each do |html|
+        expect { described_class.text_bearing?(html) }.not_to raise_error
+        expect(described_class.text_bearing?(html)).to be(true), "#{html.inspect} 應落安全側"
+      end
+    end
+
+    it "真內容與 content-bearing 標籤回 true" do
+      [ "<p>你好</p>", "<p>&amp;</p>", "<p><img src=x></p>", "<hr>", "<video src=x></video>" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(true), "#{html.inspect} 應該算有內容"
+      end
+    end
+  end
+end

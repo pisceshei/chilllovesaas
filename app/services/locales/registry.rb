@@ -18,6 +18,24 @@ module Locales
       ActsAsTenant.with_tenant(shop) { ShopLocale.source!.locale_tag }
     end
 
+    # 前台可見的語言（`shop_locales.published`）。
+    #
+    # 🔴 **enabled 與 published 是兩件事，不得互相代用**：`enabled=false` 是「下架但譯文保留」
+    #   （`shop_locales.enabled` 欄註釋），`published=false` 是「只能用預覽連結看」
+    #   （`i18n.storefront.unpublished_locale_status: 404`）。
+    #   ⇒ `Translations::Resolve` 的 `scope: :published` 用這一支、`scope: :enabled` 用上一支；
+    #   把前台的解析範圍寫成 enabled，未發布語言的譯文就會經由 fallback 鏈漏到前台去。
+    #
+    # @param shop [Shop]
+    # @return [Array<String>] 已發布語言（position 序）
+    def published_tags(shop)
+      # `ShopLocale.published` scope 本身沒有 order（`enabled` 有）⇒ 這裡補上，
+      # 讓兩支的回傳順序一致；順序會流進切換器與 fallback 候選，不該由 DB 決定。
+      ActsAsTenant.with_tenant(shop) do
+        ShopLocale.published.order(:position, :locale_tag).pluck(:locale_tag)
+      end
+    end
+
     # @param shop [Shop]
     # @return [Array<String>] 已啟用且非來源語言（編輯頁要長出欄位的那些）
     def translatable_tags(shop)

@@ -54,6 +54,9 @@ module Translations
         source_locale = Locales::Registry.source_tag(shop)
         counters = { created: 0, updated: 0, cleared: 0, skipped: 0, digest_mismatch: 0 }
         errors = []
+        # 本次實際動到的 (resource_type, resource_id, locale) —— 收尾時逐組重算進度。
+        # 用 Set 去重：同一個資源的四個欄位分四列進來，重算一次就夠。
+        touched = Set.new
 
         ActsAsTenant.with_tenant(shop) do
           table.each_with_index do |csv_row, index|
@@ -65,13 +68,88 @@ module Translations
               next
             end
 
-            # 🔴 儲存格空白＝本列不做任何事（不是刪除）。
-            if row.value.nil? || row.value.strip.empty?
+            raw = row.value
+            if raw.nil?
+              # 欄位缺席（表頭沒有 translated_text 這一欄時 CSV::Row 回 nil）。
               counters[:skipped] += 1
               next
             end
 
-            apply_row(shop, row, counters, overwrite_existing:, dry_run:)
+            # 🔴 `__CLEAR__` 在 sanitize **之前**判：它是控制 token 不是內容，
+            #   讓它經過 HTML sanitizer 只會多一條「token 被改寫就悄悄變成一般文字」的路。
+            if raw.strip == CLEAR_TOKEN
+              guard_row(errors, row, counters) do
+                apply_row(shop, row, counters, source_locale:, touched:,
+                          overwrite_existing:, dry_run:)
+              end
+              next
+            end
+
+            # 🔴 尺寸前置閘在 sanitize 之前（與 `Upsert#normalize` 同一套順序與理由，
+            #   審查 S4：無上界輸入先進 Loofah＝CPU 放大面；審查 A6／S3：先前 CSV 路徑
+            #   **完全沒有**長度檢查，能寫進 GraphQL 拒收的超長值，兩條路徑兩種答案）。
+            if Fields.measure(row.field, raw) > Fields.limit(row.field)
+              errors << error(row.line, "too_long", "TOO_LONG")
+              next
+            end
+
+            # 🔴 儲存格空白＝本列不做任何事（不是刪除）。
+            #   判準與 GraphQL 寫入端共用同一支 `BlankValue`（本包合併；先前這裡只做
+            #   `strip.empty?`，於是 `<p>&nbsp;</p>` 這種語義空 HTML 會經 CSV 寫進去，
+            #   造出一列「後台顯示已翻譯、前台落 fallback」的鬼列——而同一個值走 GraphQL
+            #   會被判空刪掉。**同一個輸入兩條路徑兩種結果**正是要消掉的東西）。
+            value = sanitize(row.field, raw)
+            if BlankValue.blank?(value, kind: Fields.kind(row.field))
+              # 🔴 raw 非空而 sanitize 後空＝內容被 sanitizer 毀掉（<video> 等白名單外元素、
+              #   深巢狀懸崖）⇒ **行級錯誤**，不靜默 skip（與 Upsert 的 userError 同語義）。
+              # parser-independent 判斷（理由同 Upsert；見 BlankValue#text_bearing?）。
+              if BlankValue.text_bearing?(raw)
+                errors << error(row.line, "unsupported_content", "INVALID")
+              else
+                counters[:skipped] += 1
+              end
+              next
+            end
+            # 🔴 sanitize 之後**變成**清空 token 的值一律拒收（審查 F5）：
+            #   `<div>__CLEAR__</div>` 經白名單 sanitize 恰好剩 `__CLEAR__`——放行的話它會
+            #   走進清空分支刪掉既有譯文（且繞過 overwrite 模式）；就算改成照存，這個值
+            #   匯出再匯入時又會變成真的清空指令（延遲引爆）。token 是控制字，不是內容。
+            if value.strip == CLEAR_TOKEN
+              errors << error(row.line, "unsupported_content", "INVALID")
+              next
+            end
+            # 🔴 sanitize 可能**放大**輸出（實體跳脫：`&` → `&amp;`，51KB 的規格表可以脹成
+            #   74KB），落庫值仍須在限內（審查 F1——首版只量了 raw，這一道漏抄了
+            #   `Upsert#normalize` 的第二次量測，於是 CSV 能寫進 GraphQL 拒收的超長值，
+            #   且該值 CSV 自己都無法再匯入＝匯出→匯入來回炸掉）。
+            if Fields.measure(row.field, value) > Fields.limit(row.field)
+              errors << error(row.line, "too_long", "TOO_LONG")
+              next
+            end
+
+            # 🔴 逐行 rescue（審查 A4／C1 實跑重現）：先前任何一列拋例外（實測：併發撞
+            #   唯一鍵的 RecordNotUnique）就讓整個 call 以例外收場——已成功列不重算進度、
+            #   Outcome 不回傳、controller 500，「逐行報告」的文檔宣稱形同虛設。
+            guard_row(errors, row, counters) do
+              apply_row(shop, row.with(value:), counters, source_locale:, touched:,
+                        overwrite_existing:, dry_run:)
+            end
+          end
+
+          # 🔴 **進度必須在這裡重算**（本包補的缺口）：先前 `CsvImport` 全程沒有任何
+          #   `recompute_status` 呼叫（複驗＝`git log -p` 本次 diff），於是經 CSV 進來的譯文
+          #   既不反映在後台進度徽章，也不推進 `translation_status.updated_at`。
+          #   後者正是 67 §G.3 建議拿來當 `translations` cache stamp 載體的那一欄
+          #   ⇒ 不補這個缺口，第 3 包會在一個已知破的不變式上建快取失效機制，
+          #   而快取失效的失敗是**靜默的**（商家改了譯文、前台永遠是舊的）。
+          unless dry_run
+            touched.each do |type, id, tag|
+              # touch: true——touched 只收「寫入前 `changed?` 為真」或被清空的組
+              # （見 apply_row／write_row 的審查 F3 註釋），所以這裡可以無條件 touch；
+              # 只改文字時計數欄不變，靠 touch 推進 updated_at（見 Upsert#recompute_status）。
+              Upsert.recompute_status(shop:, resource_type: type, resource_id: id,
+                                      locale_tag: tag, touch: true)
+            end
           end
         end
 
@@ -96,8 +174,22 @@ module Translations
         )
       end
 
+      # 一列的例外不得毀掉整份檔案：記行級錯誤、照常處理下一列。
+      # 🔴 只接 StandardError——NoMemoryError 之類的系統級錯誤照常往上炸。
+      def guard_row(errors, row, counters)
+        yield
+      rescue StandardError => e
+        counters[:skipped] += 1
+        errors << { line: row.line,
+                    message: "#{I18n.t('errors.translation_csv.row_failed')}（#{e.class}）",
+                    code: "ERROR" }
+      end
+
       def validate(row, enabled, source_locale)
         return error(row.line, "resource_gid", "INVALID") if row.resource_id.nil?
+        # 🔴 id 超過 BIGINT 範圍會在 save 時炸 RangeError（審查 A4 用 20 位數 gid 實跑重現）；
+        #   在 validate 就擋成行級 INVALID，不留給 rescue 兜底。
+        return error(row.line, "resource_gid", "INVALID") if row.resource_id.bit_length >= 64
         return error(row.line, "resource_type", "INVALID") unless Translation::RESOURCE_TYPES.include?(row.resource_type)
         return error(row.line, "field_key", "INVALID") unless Upsert::FIELDS.include?(row.field)
         return error(row.line, "locale_not_enabled", "LOCALE_NOT_ENABLED") unless enabled.include?(row.locale)
@@ -112,7 +204,7 @@ module Translations
         { line:, message: I18n.t("errors.translation_csv.#{key}", default: I18n.t("errors.translation_csv.invalid_row")), code: }
       end
 
-      def apply_row(shop, row, counters, overwrite_existing:, dry_run:)
+      def apply_row(shop, row, counters, source_locale:, touched:, overwrite_existing:, dry_run:)
         record = Translation.find_by(
           shop_id: shop.id, resource_type: row.resource_type, resource_id: row.resource_id,
           locale_tag: row.locale, field_key: row.field
@@ -121,17 +213,26 @@ module Translations
 
         if clearing
           # `__CLEAR__` 是唯一清空手段；沒有既有譯文就沒事可做。
+          # 🔴 清空**不受** overwrite 模式限制（刻意）：overwrite 管的是「有值儲存格要不要
+          #   覆蓋既有譯文」（`overwrite_scope: non_blank_cells_in_present_columns`）；
+          #   清空 token 是**另一類**明示破壞動作，有自己的預覽計數與比例閾值
+          #   （`preview_clear_count_separate`／`clear_ratio_confirm_threshold`）。
           if record.nil?
             counters[:skipped] += 1
             return
           end
-          counters[:cleared] += 1
-          # 🔴 清空寫稽核軌（clear_writes_audit_trail）：誰、何時、哪一次匯入、舊值是什麼——
-          #    沒有它，「譯者交錯檔案」事後完全無法還原。
+          # 🔴 計數在寫入**成功之後**才進（審查 F2）：先計後寫的話，寫入拋例外時
+          #   guard_row 又補一個 skipped ⇒ 一列產生兩個計數、報告宣稱清掉了一列
+          #   實際上還在。dry_run 沒有寫入動作，直接計。
           unless dry_run
+            # 🔴 清空寫稽核軌（clear_writes_audit_trail）：誰、何時、哪一次匯入、
+            #    舊值是什麼——沒有它，「譯者交錯檔案」事後完全無法還原。
             log_audit(shop, row, previous: record.value, action: "clear")
             record.destroy!
+            # 🔴 清空也要重算進度：分子少一，不記就會停在舊數字。
+            touched << [ row.resource_type, row.resource_id, row.locale ]
           end
+          counters[:cleared] += 1
           return
         end
 
@@ -143,36 +244,52 @@ module Translations
 
         source_text = source_text_for(row)
         mismatch = row.source_digest.present? && row.source_digest != Translation.digest_for(source_text)
-        counters[:digest_mismatch] += 1 if mismatch
-        record ? counters[:updated] += 1 : counters[:created] += 1
-        return if dry_run
+        if dry_run
+          counters[:digest_mismatch] += 1 if mismatch
+          record ? counters[:updated] += 1 : counters[:created] += 1
+          return
+        end
 
         log_audit(shop, row, previous: record&.value, action: record ? "overwrite" : "create") if record
-        write_row(shop, row, source_text, mismatch)
+        changed = write_row(shop, row, source_text, mismatch, source_locale)
+        counters[:digest_mismatch] += 1 if mismatch
+        record ? counters[:updated] += 1 : counters[:created] += 1
+        # 🔴 touched 只收**真的變了**的列（審查 F3）：overwrite 重匯同一份檔案時
+        #   `save!` 對無變更列不發 UPDATE，把它們也 touch 會把整份檔案覆蓋範圍的
+        #   stamp 全部推進、前台快取白白全失效——GraphQL 路徑對同樣的 no-op 不會推進
+        #   （`Upsert#apply` 的回傳值），兩條路徑必須同一種行為。
+        touched << [ row.resource_type, row.resource_id, row.locale ] if changed
       end
 
+      # base row 的原文（算 digest 用）。欄位→屬性的對照集中在 `Translations::Fields`，
+      # 這裡不再自己寫一份 `case`（本包合併；先前 GraphQL 端與這裡各有一份）。
       def source_text_for(row)
         resource = row.resource_type == "COLLECTION" ? Collection.find_by(id: row.resource_id) : Product.find_by(id: row.resource_id)
         return "" unless resource
 
-        case row.field
-        when "title" then resource.title
-        when "body_html" then resource.description_html
-        when "meta_title" then resource.seo_title
-        else resource.seo_description
-        end.to_s
+        Fields.base_value(resource, row.field)
+      end
+
+      # 🔴 富文本譯文與 base 同一套白名單 sanitize——理由與實測見 `Upsert#sanitize`。
+      #   CSV 是**第二條**寫入路徑；只修 GraphQL 那條等於把同一個 XSS 留了一個入口。
+      def sanitize(field, value)
+        return value unless Fields.kind(field) == :html
+
+        Catalog::SaveProduct.sanitize_description_for(value)
       end
 
       # 🔴 digest 不符仍然**寫入**（譯者是照當時原文翻的，內容多半可用），
       #    但標 outdated＋review_required，並在報告單列出——**不得靜默當成最新**（§E.6(b)）。
-      def write_row(shop, row, source_text, mismatch)
+      # `source_locale` 由呼叫端一次查好帶進來——先前這裡每列各查一次 `shop_locales`
+      # （N+1；一份千列的檔案就是一千次查詢）。
+      def write_row(shop, row, source_text, mismatch, source_locale)
         record = Translation.find_or_initialize_by(
           shop_id: shop.id, resource_type: row.resource_type, resource_id: row.resource_id,
           locale_tag: row.locale, field_key: row.field
         )
         record.assign_attributes(
           value: row.value,
-          source_locale_tag: Locales::Registry.source_tag(shop),
+          source_locale_tag: source_locale,
           source_digest: Translation.digest_for(source_text),
           value_source: "import",
           review_required: mismatch,
@@ -181,7 +298,9 @@ module Translations
         )
         # 逐行獨立 transaction（`per_row_transaction`，沿用 13 §F6.1 形態）：
         # 一列壞掉不該讓整份檔案回滾，報告單逐行列出結果。
+        changed = record.new_record? || record.changed?
         ActiveRecord::Base.transaction(requires_new: true) { record.save! }
+        changed
       end
 
       # 稽核軌以結構化日誌承載（專用資料表屬後續包；`clear/overwrite_writes_audit_trail` 的最小實作）。
