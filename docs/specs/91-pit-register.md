@@ -2229,6 +2229,35 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.15 `Product#destroy` 在變體掛了圖時撞 FK（第 29 包線上驗收順手發現，2026-08-25）
+
+- ⚪ **`product.destroy!` 對「有變體圖的商品」一定失敗**，回
+  `ActiveRecord::InvalidForeignKey`（`fk_media_product_variant_id`）。
+  成因是 `dependent: :destroy` 的**執行順序跟著宣告順序**：
+  `app/models/product.rb` 先宣告 `has_many :product_variants, dependent: :destroy`，
+  之後才宣告 `has_many :media, ..., dependent: :destroy` ⇒ 變體先被刪，而此時
+  `media.product_variant_id` 還指著它們。`ProductVariant` 的 `has_many :media`
+  **沒有** `dependent:`（那是刻意的——`Catalog::DeleteVariant` 走的是「置 NULL、
+  圖退回商品媒體池」，見該檔 :13／:43），所以連鎖刪不會幫忙斷開。
+
+- **今天不會發生**：沒有任何生產路徑會刪商品。複驗（輸出應只有註釋，無實際呼叫）：
+
+  ```
+  grep -rn "product\.destroy" app/ lib/
+  grep -n "product_delete" app/graphql/types/mutation_type.rb
+  ```
+
+  目前 `mutation_type.rb` 只有 `product_delete_media`，沒有 `productDelete`。
+
+- **復現方式**（2026-08-25 實測，本地 rspec 與 bt3 production 各一次）：建商品→建變體
+  →建一列 `media` 帶 `product_variant_id`→`product.destroy!` ⇒ 上述例外。
+
+- **為什麼不在第 29 包修**：不在被點名根因的影響圖內（鐵律 20.5；使用者 2026-08-17
+  「只修點名處」的裁定）。第 29 包只碰變體讀寫與子頁；商品刪除語義屬未來實作
+  `productDelete` 的那一包。**做那一包的人必須先讀本條**——修法有兩個方向
+  （調宣告順序，或在 `Product` 加 `before_destroy` 先 nullify 變體圖），
+  兩者都要配一條「變體掛圖後刪商品」的反向 fixture，否則改完仍是綠的。
+
 ### 3.14 第 29 包變體子頁：一條範圍外觀察（2026-08-25）
 
 - ⚪ **`ProductDetailPage` 在 overflow 時鎖了整頁，卻留著一個可點的入口**。
