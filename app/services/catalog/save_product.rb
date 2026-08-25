@@ -648,10 +648,26 @@ module Catalog
       #   只留首次的 display；正規化唯一實作＝`Tags::Normalize`。
       #   讀取者＝智慧系列 tag 條件的 EXISTS（RuleCompiler）。
       def sync_product_tags!(shop, product)
+        # 🔴 超出欄寬的**既有**標籤一律跳過並記稽核 log（2026-08-26 第六輪 K5）：
+        #   `products.tags` 是本包之前就存在的欄位，可能留著正規化後 >255 的標籤
+        #   （`Tags::Normalize` 會展開，J2）。寫入層自 J2 起會拒收新的這種標籤，
+        #   但**既有**的還在——而本方法每次商品更新都從 `product.tags` 重算並補建，
+        #   撞上 J2 新增的 model 長度驗證 ⇒ `RecordInvalid` ⇒ 整筆 productSet 回滾，
+        #   商品變成**唯讀**（即使商家完全沒帶 tags——宣告式「缺席＝保持現值」）。
+        #   ⇒ 跳過（與 migration 回填同一種處置），分岔登記於 dev doc §5 P11-B12。
+        #   判準引 limits，不硬編（鐵律 6；migration 與 model 同步）。
+        limit = Limits.fetch(:product, :tag_max_chars)
         wanted = {}
         Array(product.tags).each do |raw|
           key = Tags::Normalize.key(raw)
           next if key.empty? || wanted.key?(key)
+
+          if key.length > limit || raw.to_s.length > limit
+            Rails.logger.warn({ event: "product_tag_skipped_oversize", shop_id: shop.id,
+                                product_id: product.id, key_length: key.length,
+                                raw_length: raw.to_s.length }.to_json)
+            next
+          end
 
           wanted[key] = raw
         end

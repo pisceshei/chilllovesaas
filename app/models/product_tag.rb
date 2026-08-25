@@ -10,11 +10,15 @@ class ProductTag < ApplicationRecord
 
   belongs_to :product
 
-  validates :tag_display, presence: true, length: { maximum: 255 }
+  # 上限一律引 `limits`（鐵律 6）——服務層、model、migration 回填三處必須同一個判準
+  # （2026-08-26 第六輪 K5：第五輪在 model 與 migration 各硬編了一個 255）。
+  TAG_MAX_CHARS = Limits.fetch(:product, :tag_max_chars)
+
+  validates :tag_display, presence: true, length: { maximum: TAG_MAX_CHARS }
   # 🔴 `tag_key` 也要驗長度（2026-08-26 收斂輪 J2）：它是**正規化後**的值，
   #   而正規化會展開（ß→ss、㍿→株式会社）⇒ 原字串合法不代表 key 合法。
   #   少了這一條，溢位會以 `ActiveRecord::ValueTooLong`（DB 層）現形，
   #   而那個例外不在服務層的 rescue 清單裡 ⇒ 漏成 500。
-  validates :tag_key, presence: true, length: { maximum: 255 },
+  validates :tag_key, presence: true, length: { maximum: TAG_MAX_CHARS },
                       uniqueness: { scope: [ :shop_id, :product_id ] }
 end

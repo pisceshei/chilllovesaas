@@ -126,6 +126,14 @@ collections on your storefront" 的旁證（P11-U3 直取未複驗）。
 在 v1 無載體可測（`collection_source_members` 未建）⇒ 隨手選成員的包補測，不得再宣稱
 「三條全在」。
 
+**P11-B12（2026-08-26 第六輪 K5）**：`products.tags` 可能留著**正規化後超過欄寬**的
+既有標籤（本包之前無 `product_tags`，那些值存得進去）。migration 回填與
+`sync_product_tags!` 都**跳過**這種標籤並記 log ⇒ `products.tags`（顯示權威）與
+`product_tags`（比對權威）在該筆上分岔：它不會被智慧系列的 tag 條件命中。
+不修的理由＝修法只有兩種、都更糟（截斷＝改商家資料；硬拒＝商品變唯讀，正是 K5
+本身的症狀）。寫入層自 J2 起拒收新的這種標籤 ⇒ 分岔集合只會縮小、不會成長。
+商家自行編輯該標籤即消失。
+
 ## 6. 三處成員數收斂（工作卡驗收項）
 
 `Collection::MEMBER_COUNT_SELECT`（CASE by type）／GraphQL `products_count`
@@ -161,7 +169,8 @@ collections on your storefront" 的旁證（P11-U3 直取未複驗）。
 | `collection_type` 不可變契約 | `collectionSet` mutation、**admin `CollectionDetailPage`**（下拉停用＋payload 條件化）、`m1-collections.md` |
 | `RuleCompiler.where_sql` | `Rebuild`（`INSERT…SELECT`）、`ResyncProduct`（同段 WHERE ＋ `p.id = ?`）——兩者必須永遠是同一段 |
 | `collection_memberships` 列 | 前台（唯一查詢對象）、`Collection::MEMBER_COUNT_SELECT`、`CollectionType#products_count`、🔴 `RuleCompiler#compile_collection_exclusion`（**別的系列**讀它） |
-| 智慧系列的工作清單 | `ResyncProduct#smart_collection_ids`、`catalog.rake` ——🔴 兩者都必須是「全部智慧系列」，**不得**從 `collection_sources` 導出（收斂輪 G1） |
+| 智慧系列的工作清單 | `ResyncProduct#smart_collection_ids`（＝**有 conditions source 的 ∪ 本商品已有物化列的**——後半是 G1 的自癒面，缺了它條件被清空的系列會永久殘留；前半若擴成「全部智慧系列」則重演 J7 的事件放大鏈）、`catalog.rake`（兜底＝全部智慧系列，它不針對單一商品） |
+| 🔴 系列之間的引用（`collection` 型 exclusion） | **三條求值路徑共用** `Collections::ReferenceGraph`：`topological`（先算誰）＋`referrers`（誰要跟著重算）。`ResyncProduct`、`catalog.rake`、`Rebuild.notify_members_changed!` 各用一處——**新增任何求值路徑都必須接上這兩個**，否則就是 K2／K8 那種「同一份規則兩支引擎給不同答案」與「A 永久錯誤且無自癒」 |
 
 ## 8. 驗證
 

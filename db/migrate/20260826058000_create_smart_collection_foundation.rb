@@ -129,8 +129,13 @@ class CreateSmartCollectionFoundation < ActiveRecord::Migration[8.1]
           # 🔴 正規化可能讓 key 比原字串長（NFKC 展開／casefold；收斂輪 J2）⇒
           #   既有資料可能超過欄寬。回填**不得因此中斷整個 db:migrate**：
           #   跳過並記稽核 log（與撞鍵同一種處置——不靜默丟）。
-          if key.length > 255
-            say "skip oversize shop=#{product.shop_id} product=#{product.id} raw=#{raw[0, 40].inspect} key_length=#{key.length}", true
+          # 判準引 limits（鐵律 6），且 **raw 與 key 都要守**：`tag_display` 同為
+          # varchar(255)，而正規化可能**縮短**（連續空白／`-` 壓縮）⇒ 只守 key 時
+          # 「raw>上限 但 key≤上限」的既有列仍會讓 db:migrate 中斷（第六輪 K5）。
+          tag_limit = Limits.fetch(:product, :tag_max_chars)
+          if key.length > tag_limit || raw.to_s.length > tag_limit
+            say "skip oversize shop=#{product.shop_id} product=#{product.id} " \
+                "raw_length=#{raw.to_s.length} key_length=#{key.length}", true
             next
           end
           seen[key] = raw

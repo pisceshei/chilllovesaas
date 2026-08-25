@@ -71,7 +71,14 @@ module Collections
         end
       end
 
-      # 成員變動的兩個對外面（resync 也用；一處實作）。
+      # 成員變動的**三個**對外面（resync 也用；一處實作）。
+      # 🔴 第三個是**反向傳播**（2026-08-26 第六輪 K8）：exclusion 的 `collection` 型
+      #   讓 A 的成員依賴 B 的物化列，所以 B 的成員一變，引用 B 的 A 就過期了。
+      #   在此之前三條路徑都沒有這一步——規則編輯只排自己那一個系列的 RebuildJob，
+      #   `collections/update` 事件也沒有任何消費者 ⇒ **A 永久錯誤且無自癒路徑**。
+      #   只在「真的變了」時傳播（呼叫端已判 inserted/swept），且只傳一層：
+      #   被排的 A 自己重建完若也變了，會再傳給引用 A 的——天然的逐層收斂，
+      #   環由 `RebuildJob` 的重複入列與最終不變性收斂（P11-B10 仍登記為不保證）。
       def notify_members_changed!(shop, collection)
         # cache stamp（唯一寫入面＝CacheStamps；`update_all` 帶 lock_version 守則在那一支裡）。
         Catalog::CacheStamps.bump_collection_members!(shop.id, collection.id)
@@ -85,6 +92,16 @@ module Collections
           available_at: Time.current,
           payload: { collection_id: collection.id, members_changed: true }
         )
+        enqueue_referrers!(shop, collection)
+      end
+
+      # 引用本系列做 exclusion 的那些：它們的成員集合現在過期了。
+      def enqueue_referrers!(shop, collection)
+        ReferenceGraph.referrers(shop, collection.id).each do |referrer_id|
+          next if referrer_id == collection.id   # 自引在寫入層已拒（J5），保險。
+
+          RebuildJob.perform_later(shop.id, referrer_id)
+        end
       end
 
       private

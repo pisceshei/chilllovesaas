@@ -111,6 +111,8 @@
       type_immutable: "Le type d'une collection ne peut plus être modifié après sa création."
       description_too_big: "La description dépasse la taille maximale."
       rule_value_too_long: "La valeur de condition dépasse %{max} caractères."
+      rule_value_too_large: "Le montant de la condition est hors limites."
+      too_many_sources: "Une collection accepte au maximum %{max} sources de conditions."
       status_value_invalid: "Statut de produit non valide."
       reference_self: "Une collection ne peut pas s’exclure elle-même."
       sort_order_invalid: "Ordre de tri non pris en charge."

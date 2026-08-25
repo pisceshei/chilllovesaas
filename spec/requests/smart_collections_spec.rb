@@ -279,6 +279,31 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     expect(data["userErrors"].first["field"]).to include("referencedCollectionId")
   end
 
+  it "🔴 K3（2026-08-26 第六輪）：金額規則值超出 BIGINT ⇒ userError，不得漏成 500" do
+    login!
+    # `parse_money_for` 只擋格式與負數、不限位數 ⇒ ×100 後超出 BIGINT，
+    # `create!` 拋的 `ActiveModel::RangeError` **不是** StatementInvalid、
+    # 連 GraphQL controller 的兜底 rescue 都接不到 ⇒ 直接 500。
+    data = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "variant_price", relation: "gt",
+        valueMoney: "999999999999999999.00" }
+    ]))
+
+    expect(data).to be_present, "回了 top-level errors（500）而不是 userErrors"
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "TOO_LONG" ])
+    expect(data["userErrors"].first["field"]).to include("valueMoney")
+  end
+
+  it "🔴 K6（同上）：來源陣列本身也有上限（空來源不貢獻條件數）" do
+    login!
+    maximum = Limits.fetch(:collection, :max_sources_per_collection)
+    data = set!({ title: "太多來源", collectionType: "smart",
+                  sources: Array.new(maximum + 1) { { rules: [] } } })
+
+    expect(data["userErrors"].map { |e| e["code"] }).to include("TOO_LONG")
+    expect(data["userErrors"].map { |e| e["field"] }).to include([ "sources" ])
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")

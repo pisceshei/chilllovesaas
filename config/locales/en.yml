@@ -111,6 +111,8 @@
       type_immutable: "You can't change a collection's type after it's created."
       description_too_big: "Description exceeds the size limit."
       rule_value_too_long: "Condition value is longer than %{max} characters."
+      rule_value_too_large: "Condition amount is out of range."
+      too_many_sources: "A collection can have at most %{max} condition sources."
       status_value_invalid: "Not a valid product status."
       reference_self: "A collection can't exclude itself."
       sort_order_invalid: "Unsupported sort order."

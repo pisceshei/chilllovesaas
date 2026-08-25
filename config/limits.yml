@@ -1026,6 +1026,17 @@ collection:
   #   userErrors 為空，違反鐵律 4①。同 normalize 的 title／description／seo／handle
   #   都有上限，只有規則值沒有——與 F5→G3 同一個「只封被點名那幾格」形態。
   condition_value_max_chars: 255
+  # 🔴 金額規則值的上界（2026-08-26 第六輪 K3；ours）。`value_cents` 是 BIGINT，
+  #   而 `parse_money_for` 只擋格式與負數、不限位數 ⇒ 超大數在 `create!` 落庫時拋
+  #   `ActiveModel::RangeError`——它**既不是** `ActiveRecord::StatementInvalid`
+  #   **也不是** `ActiveRecordError`，所以連 GraphQL controller 的兜底 rescue 都接不到
+  #   ⇒ 直接 500、userErrors 為空。這是 J1／J2「欄寬鏡射到寫入層」的殘留面：
+  #   varchar 那兩格補了，同一個 normalize_rule 裡的 BIGINT 這格沒補。
+  #   值＝BIGINT 上限（9223372036854775807）除以 100 再留一位安全邊際。
+  condition_value_max_cents: 92233720368547758
+  # 單一系列的來源數上限（ours；本尊未取得）。與 `max_rules_per_collection` 是兩件事：
+  # 空來源不貢獻條件數，少了這一條就沒有任何東西擋得住無限量的 source 列（K6）。
+  max_sources_per_collection: 10
   # 60 條上限的口徑：官方 "A single collection can have a maximum of 60 total conditions"
   # 傾向 per-collection；新模型 per-source 口徑未實測（P11-U18）⇒ fail-closed 取嚴的一側
   # （三道裁定 :289 的既定判準）。

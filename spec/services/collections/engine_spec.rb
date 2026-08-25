@@ -534,4 +534,102 @@ RSpec.describe "智慧系列求值引擎" do
     key = ActsAsTenant.with_tenant(shop) { ProductTag.where(tag_display: "ß" * 100).pick(:tag_key) }
     expect(key.length).to eq(200)
   end
+
+  describe "🔴 K2／K8（2026-08-26 第六輪）：三條求值路徑必須給同一個答案" do
+    # A 排除 B、B 排除 C、C＝tag blue（商品沒有）⇒ C 空、B 含商品、A 應為空。
+    # id 序 a < b < c（最壞情況：與需要的計算序相反）。
+    def chain!
+      product = product!(title: "紅玫瑰", tags: [ "red" ])
+      a, b, c = %w[k2-a k2-b k2-c].map do |handle|
+        ActsAsTenant.with_tenant(shop) do
+          Collection.create!(shop_id: shop.id, title: handle, handle:,
+                             collection_type: "smart", sort_order: "manual", description_html: "")
+        end
+      end
+      ActsAsTenant.with_tenant(shop) do
+        [ [ a, b ], [ b, c ] ].each do |(owner, referenced)|
+          src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                         target_type: "products", inclusion_match: "all", position: 0)
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                       condition_type: "product_tag", relation: "includes",
+                                       value_text: "red", position: 0)
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                       condition_type: "collection", relation: "includes",
+                                       value_int: referenced.id, position: 1)
+        end
+        src_c = CollectionSource.create!(shop_id: shop.id, collection_id: c.id, source_type: "conditions",
+                                         target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src_c.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "blue", position: 0)
+      end
+      [ product, a, b, c ]
+    end
+
+    it "🔴 全量兜底（rake 的逐系列 rebuild）依拓樸序 ⇒ 與 resync 同答案" do
+      product, a, b, c = chain!
+
+      # rake 的工作：拓樸序 → 逐一 Rebuild。
+      ids = ActsAsTenant.with_tenant(shop) do
+        Collections::ReferenceGraph.topological(
+          shop, Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
+        )
+      end
+      ids.each do |id|
+        col = ActsAsTenant.with_tenant(shop) { Collection.find_by(shop_id: shop.id, id:) }
+        Collections::Rebuild.call(shop:, collection: col)
+      end
+
+      expect(members(c)).to be_empty
+      expect(members(b)).to eq([ product.id ])
+      expect(members(a)).to be_empty,
+        "兜底照 id 序跑 ⇒ A 讀到還沒重建的 B ⇒ 與 resync 給出不同答案（H4 的根因重開）"
+    end
+
+    it "🔴 K8：B 的成員一變，引用 B 的 A 必須被排進重建（反向傳播）" do
+      _product, a, b, _c = chain!
+
+      expect {
+        ActsAsTenant.with_tenant(shop) do
+          Collections::Rebuild.notify_members_changed!(shop, b.reload)
+        end
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id)
+    end
+
+    it "沒有人引用時不排任何額外重建" do
+      # 🔴 鏈是 A→B→C（A 排除 B、B 排除 C）⇒ **沒有人引用 A**（A 是鏈頭）。
+      #   C 被 B 引用，拿 C 來測會期望錯方向。
+      _product, a, _b, _c = chain!
+
+      expect {
+        ActsAsTenant.with_tenant(shop) do
+          Collections::Rebuild.notify_members_changed!(shop, a.reload)
+        end
+      }.not_to have_enqueued_job(Collections::RebuildJob)
+    end
+  end
+
+  it "🔴 K5（2026-08-26 第六輪）：既有的超長標籤不得讓商品變成唯讀" do
+    # `products.tags` 是本包之前就存在的欄位，可能留著正規化後 >上限 的標籤。
+    # `sync_product_tags!` 每次更新都重算並補建 ⇒ 撞上 J2 的 model 驗證 ⇒
+    # RecordInvalid ⇒ 整筆 productSet 回滾，商品再也存不進去（即使沒帶 tags）。
+    product = product!(title: "舊商品")
+    ActsAsTenant.with_tenant(shop) do
+      product.update_column(:tags, [ "ß" * 200 ])   # key 長 400 > 255
+      ProductTag.where(shop_id: shop.id, product_id: product.id).delete_all
+    end
+
+    result = ActsAsTenant.with_tenant(shop) do
+      variant = ProductVariant.find_by!(shop_id: shop.id, product_id: product.id)
+      Catalog::SaveProduct.call(shop:, input: {
+        id: "gid://chilllove/Product/#{product.id}",
+        lock_version: product.reload.lock_version,
+        title: "改個標題",
+        variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "128.00" } ]
+      })
+    end
+
+    expect(result.user_errors).to eq([]), "既有超長標籤讓商品變唯讀"
+    expect(ActsAsTenant.with_tenant(shop) { product.reload.title }).to eq("改個標題")
+  end
 end

@@ -20,6 +20,12 @@ namespace :catalog do
           ids = Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
           next if ids.empty?
 
+          # 🔴 **與 resync 同一份拓樸排序**（2026-08-26 第六輪 K2）：exclusion 的
+          #   `collection` 型讀被引用系列的物化列 ⇒ 先算誰會改變答案。第五輪只把
+          #   resync 改成拓樸序、這支兜底仍照 id 序，於是同一份規則兩支引擎給出
+          #   不同的成員集（H4「取決於最後跑的是哪一支引擎」那個根因被重新打開）。
+          ids = Collections::ReferenceGraph.topological(shop, ids)
+
           ids.each do |collection_id|
             collection = Collection.find_by(shop_id: shop.id, id: collection_id)
             next if collection.nil?

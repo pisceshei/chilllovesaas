@@ -46,7 +46,10 @@ module Collections
           #     同落尾段、順序由 pluck 決定，A 讀到完全沒被重算過的 B ⇒ 錯且不自癒）。
           #   ⇒ 正解是**依引用關係做拓樸排序**：被引用的先算。環（A⇄B）無拓樸序，
           #   以穩定順序打破並登記 P11-B10（由 rake 兜底）——環是唯一不保證收斂的形態。
-          topological_order(shop, smart_collection_ids(shop, product_id)).each do |collection_id|
+          #   🔴 排序實作在 `Collections::ReferenceGraph`（第六輪 K2）：**三條求值路徑
+          #   共用同一份**。第五輪只改了這裡，兜底 rake 仍照 id 序 ⇒ 同一份規則兩支
+          #   引擎給不同答案，H4 的根因被重新打開。
+          ReferenceGraph.topological(shop, smart_collection_ids(shop, product_id)).each do |collection_id|
             outcome = Collection.transaction do
               collection = Collection.lock.find_by(shop_id: shop.id, id: collection_id)
               next :gone if collection.nil?
@@ -108,39 +111,6 @@ module Collections
         with_rows = CollectionMembership.where(shop_id: shop.id, product_id:, origin: "conditions")
                                         .distinct.pluck(:collection_id)
         (with_sources | with_rows)
-      end
-
-      # 引用圖：collection_id => 它 exclusion 引用的 collection id 集合。
-      def reference_edges(shop, ids)
-        return {} if ids.empty?
-
-        CollectionSourceRule
-          .joins(:source)
-          .where(shop_id: shop.id, block: "exclusion", condition_type: "collection")
-          .where(collection_sources: { collection_id: ids })
-          .pluck("collection_sources.collection_id", :value_int)
-          .each_with_object({}) { |(from, to), acc| (acc[from] ||= []) << to if to }
-      end
-
-      # 被引用者先算的拓樸序（DFS＋visiting 標記斷環）。
-      # 🔴 環（A⇄B）沒有拓樸序：以穩定順序打破，該格登記 P11-B10、由 rake 兜底。
-      def topological_order(shop, ids)
-        edges = reference_edges(shop, ids)
-        return ids if edges.empty?
-
-        known = ids.to_set
-        ordered = []
-        state = {}   # id => :visiting | :done
-        visit = lambda do |id|
-          return if state[id] == :done || state[id] == :visiting
-
-          state[id] = :visiting
-          Array(edges[id]).sort.each { |dep| visit.call(dep) if known.include?(dep) }
-          state[id] = :done
-          ordered << id
-        end
-        ids.each { |id| visit.call(id) }
-        ordered
       end
 
       # 與 rebuild 同一段 WHERE，加 id 等值——SQL-only 的單商品形。

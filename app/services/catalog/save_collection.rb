@@ -140,6 +140,14 @@ module Catalog
         sources = Array(raw_sources).each_with_index.map do |src, s_index|
           normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors, current_id)
         end
+        # 🔴 來源陣列本身也要有上限（2026-08-26 第六輪 K6）：60 條上限只算**條件總數**，
+        #   而空來源（`{rules: []}`，契約允許）貢獻 0 條 ⇒ 一次請求可無限量建 source 列，
+        #   且寫入發生在 `Collection.lock` 之內 ⇒ 把 rebuild／resync 共用的序列化點
+        #   壓住整個寫入時長。
+        source_max = Limits.fetch(:collection, :max_sources_per_collection)
+        if sources.length > source_max
+          errors << error([ "sources" ], I18n.t("errors.collection.too_many_sources", max: source_max), "TOO_LONG")
+        end
         # 60 條上限：per-collection 口徑（fail-closed，P11-U18；三道裁定 :289）。
         total = sources.sum { |src| src[:rules].length }
         maximum = Limits.fetch(:collection, :max_rules_per_collection)
@@ -259,6 +267,13 @@ module Catalog
           else
             cents = Catalog::SaveProduct.parse_money_for(rule[:value_money], shop, path + [ "valueMoney" ], errors)
             return nil if cents.nil?
+
+            # 🔴 BIGINT 上界也要鏡射到寫入層（第六輪 K3）：超出範圍時 `create!` 拋的
+            #   `ActiveModel::RangeError` 不在任何一層的 rescue 清單裡 ⇒ 漏成 500。
+            if cents > Limits.fetch(:collection, :condition_value_max_cents)
+              errors << error(path + [ "valueMoney" ], I18n.t("errors.collection.rule_value_too_large"), "TOO_LONG")
+              return nil
+            end
 
             attrs[:value_cents] = cents
           end
