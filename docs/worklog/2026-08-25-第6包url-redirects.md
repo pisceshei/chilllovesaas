@@ -21,9 +21,11 @@ limits 落三鍵：`redirect_sources`（62 §B.5 逐字四值）、`redirect_sta
 1. **寫入時鏈坍縮**：B 改名 C 時把所有指向 /…/B 的列改指 /…/C（A→B 變 A→C）。
    不坍縮的話鏈隨改名次數線性成長，逼近 `seo.redirect_max_chain`（Google ≤10 hops）
    才爆——爆的時候已不知道是哪幾次改名疊出來的。
-2. **舊 handle 永不回收**（62 §F.3 逐字）：新路徑不得是既有 from_path。
-   迴圈唯一可能的來源＝「新 from＝某列的 to ∧ 新 to＝某列的 from」，這條把後半
-   永久擋掉。`Catalog::HandleChange.path_reserved?` 是唯一判準入口——
+2. **舊 handle 永不回收**（62 §F.3 逐字）：新路徑不得是既有 from_path
+   （迴圈需要「新 from＝某列的 to ∧ 新 to＝某列的 from」兩件同時成立，本條擋掉
+   後半；形式論證見 `url_redirects_spec` 檔頭，機械複驗＝該檔的不變量斷言）。
+   `Catalog::HandleChange.path_reserved?` 是判準入口（複驗全部呼叫端＝
+   `git grep -n "path_reserved?" app/`，應恰為 SaveProduct×2、SaveCollection×2）——
    手填驗證、**handle 生成器**（生成出的 handle 撞舊網址要自動跳號）、
    商品與系列共用同一個。
 
@@ -42,8 +44,9 @@ limits 落三鍵：`redirect_sources`（62 §B.5 逐字四值）、`redirect_sta
 `handle_redirected`（product＋collection ×5 語言）：「舊 handle 不回收」要說得出
 原因，不能只回一句 taken。`handle_change_pending` 五語言全部移除（死鍵）。
 🔴 更新態撞另一商品的現任 handle **不另寫檢查**：model 的 `validates :handle,
-uniqueness` → RecordInvalid → HANDLE_TAKEN 已承接（有紅測），DB 唯一索引是併發窗
-的第二道——再寫一份是突變測不出差異的冗餘（本包實測：寫了又刪）。
+uniqueness` → RecordInvalid → HANDLE_TAKEN 承接（紅測＝`url_redirects_spec` 的
+「撞現任 handle」例），DB 唯一索引 `uq_products_handle` 是併發窗的第二道——
+再寫一份是突變測不出差異的冗餘（本包實測：寫了又刪）。
 
 ### 測試
 
