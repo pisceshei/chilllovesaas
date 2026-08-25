@@ -68,13 +68,15 @@ module Types
     def weight_grams = object.weight_grams.to_i
 
     # @return [Types::ImageType::Presenter, nil]
-    #   🔴 alt 取**媒體列**的（同 `ProductType#featuredImage` 的紀律）：alt 權威在
-    #   `media.alt_text`，不是 `files.alt_text`（第 26／27 包裁定，91 §3.10 登記分歧）。
+    #   alt 由 `Presenter` 從檔案導出（D48：權威在 `files.alt_text`、全店一份）。
+    #   ⚠️ 本方法原本傳 `alt: row.alt_text` 兩個參數——那是第 26／27 包 per-product
+    #   裁定的寫法，D48 推翻後 `Presenter` 收成單成員，這裡**會直接 ArgumentError**。
+    #   那正是把它做成型別守衛的用意：不是靜默讀舊值，是當場炸。
     def image
       row = object.media.find { |m| m.media_type == "image" }
       return nil if row.nil? || row.stored_file.nil?
 
-      Types::ImageType::Presenter.new(file: row.stored_file, alt: row.alt_text)
+      Types::ImageType::Presenter.new(file: row.stored_file)
     end
 
     # @return [Array<InventoryLevel>] 地點 priority 序

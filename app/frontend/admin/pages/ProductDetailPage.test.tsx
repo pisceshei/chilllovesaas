@@ -167,7 +167,9 @@ describe("新增商品頁", () => {
       tags: [],
       seo: { title: "", description: "" },
       translations: [],
-      variants: [ { price: "128.50", taxable: true } ],
+      // 🔴 運送兩欄**一律送**（第 29 包）：productSet 是宣告式覆寫，不送＝回落
+      //    0／true ⇒ 把使用者在變體子頁設好的重量清掉。這一行就是那道保證。
+      variants: [ { price: "128.50", taxable: true, weightGrams: 0, requiresShipping: true } ],
     });
     expect(idempotencyKey).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,

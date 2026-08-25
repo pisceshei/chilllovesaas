@@ -152,18 +152,24 @@ RSpec.describe "Admin GraphQL 變體子頁讀寫面", type: :request do
     ActsAsTenant.with_tenant(shop) do
       key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
       Storage::LocalDisk.write(key, StringIO.new("BYTES"))
+      # D48：alt 掛在**檔案**上（`media.alt_text` 已停用）。
       file = StoredFile.create!(filename: "v.png", content_type: "image/png", byte_size: 5,
-                                checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+                                checksum: SecureRandom.hex(32), storage_key: key,
+                                status: "ready", alt_text: "變體圖")
       Media.create!(shop_id: shop.id, product_id: product.id, product_variant_id: variant.id,
                     file_id: file.id, media_type: "image", position: 1,
-                    source_url: "/admin/files/#{file.id}/blob", alt_text: "變體圖", status: "ready")
+                    source_url: "/admin/files/#{file.id}/blob", status: "ready")
     end
 
     post_graphql(SUBPAGE_QUERY, variables: { id: gid(product) })
     image = response.parsed_body.dig("data", "product", "variants", "nodes").sole["image"]
     expect(image["url"]).to be_present
-    # alt 取媒體列的（不是 files 的）——第 26／27 包裁定
+    # 🔴 D48：alt 取**檔案**的。順帶反向守衛——媒體列那一欄是空的，
+    #    證明讀取面確實沒有回落到停用欄。
     expect(image["alt"]).to eq("變體圖")
+    ActsAsTenant.with_tenant(shop) do
+      expect(Media.where(product_variant_id: variant.id).sole.alt_text).to be_nil
+    end
   end
 
   it "🔴 多變體不得 N+1：新增的三個欄位都已 preload" do

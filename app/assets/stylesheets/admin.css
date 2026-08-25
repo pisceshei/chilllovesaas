@@ -1714,3 +1714,70 @@ a {
 .cl-spin { animation: cl-spin 900ms linear infinite; }
 @keyframes cl-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .cl-spin { animation: none; } }
+
+/* ── 第 29 包：變體子頁（麵包屑／左欄變體導航／變體圖格）──
+   值一律取 §1 tokens（鐵律 8）。左欄沿用 .cl-od-grid__aside 的 sticky 版位，
+   不另立一套兩欄佈局。 */
+.cl-breadcrumb ol {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-100);
+  margin: 0 0 var(--sp-100); padding: 0; list-style: none;
+  font-size: var(--t-sm); color: var(--text-2);
+}
+.cl-breadcrumb li { display: inline-flex; align-items: center; gap: var(--sp-100); }
+.cl-breadcrumb a { color: var(--text-2); }
+.cl-breadcrumb a:hover { color: var(--text); }
+/* 目前位置不是連結——顏色也要看得出差別 */
+.cl-breadcrumb [aria-current="page"] { color: var(--text); }
+
+.cl-variant-nav__product {
+  display: flex; gap: var(--sp-200); align-items: flex-start;
+  padding-bottom: var(--sp-300); border-bottom: 1px solid var(--border);
+}
+.cl-variant-nav__product p { margin: var(--sp-050) 0 0; color: var(--text-3); font-size: var(--t-sm); }
+.cl-variant-nav__thumb {
+  flex-shrink: 0; display: block; width: 40px; height: 40px;
+  border-radius: var(--r-200); overflow: hidden; background: var(--surface-2);
+}
+.cl-variant-nav__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 占位（處理中／失敗）在 40px 格子裡放不下文字——縮到看得出「不是圖」就好 */
+.cl-variant-nav__thumb .cl-media-tile__pending { font-size: 0; aspect-ratio: auto; height: 100%; }
+
+.cl-variant-nav__search {
+  display: flex; align-items: center; gap: var(--sp-200);
+  margin: var(--sp-300) 0; padding: 0 var(--sp-200);
+  border: 1px solid var(--border); border-radius: var(--r-300);
+  background: var(--surface); color: var(--text-2);
+}
+.cl-variant-nav__search input {
+  flex: 1; border: none; background: none; padding: var(--sp-200) 0;
+  font: inherit; color: var(--text); outline: none;
+}
+.cl-variant-nav__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--sp-100); }
+.cl-variant-nav__item {
+  display: flex; align-items: center; gap: var(--sp-200); width: 100%;
+  padding: var(--sp-150); border: 1px solid transparent; border-radius: var(--r-300);
+  background: none; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+}
+.cl-variant-nav__item:hover { background: var(--surface-2); }
+.cl-variant-nav__item:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+/* 當前變體：邊框＋底色兩者都給——只靠底色在深色主題下對比不足 */
+.cl-variant-nav__item--on { border-color: var(--focus); background: var(--surface-selected); }
+.cl-variant-nav__empty { margin: var(--sp-200) 0 0; color: var(--text-3); font-size: var(--t-sm); }
+
+.cl-variant-head { display: flex; gap: var(--sp-300); align-items: flex-start; margin-bottom: var(--sp-300); }
+.cl-variant-head__meta { display: flex; flex-direction: column; gap: var(--sp-150); }
+.cl-variant-image__tile {
+  position: relative; width: 96px; height: 96px;
+  border: 1px solid var(--border); border-radius: var(--r-300);
+  background: var(--surface); overflow: hidden;
+}
+.cl-variant-image__tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cl-variant-image__empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--sp-200); padding: var(--sp-300);
+  border: 1px dashed var(--border); border-radius: var(--r-300);
+  background: var(--surface-2); color: var(--text-2);
+}
+.cl-variant-image__actions { display: flex; gap: var(--sp-150); flex-wrap: wrap; justify-content: center; }
+.cl-variant-inventory__empty,
+.cl-variant-inventory__note { margin: var(--sp-200) 0 0; color: var(--text-3); font-size: var(--t-sm); }
