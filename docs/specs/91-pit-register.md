@@ -2233,7 +2233,9 @@
 
 來源＝第 7 包七方對抗審查（PR #140，受驗 head `19cb349`）確認、但不在該包根因射程內者。
 
-- 🔴 **待使用者裁定：OpenCC 字表（Apache-2.0）能不能入庫**。繁簡誤借稽核
+- ~~🔴 待使用者裁定~~ ✅ **已裁定（D49，2026-08-25）：引入**——`lib/opencc/` 落地、
+  `script_mismatch` 轉實際執行、107 OpenCC-1 登記。原文保留於下：
+  **待使用者裁定：OpenCC 字表（Apache-2.0）能不能入庫**。繁簡誤借稽核
   （`Translations::Audit` 的 `script_mismatch`）需要繁簡字表；本輪調查所及唯一成熟的
   公開字表是 OpenCC 的 `STCharacters.txt`／`TSCharacters.txt`，LICENSE 為 Apache-2.0
   （<https://raw.githubusercontent.com/BYVoid/OpenCC/master/LICENSE>，2026-08-25 複驗）。

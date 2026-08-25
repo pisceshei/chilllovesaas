@@ -1,0 +1,31 @@
+Open Chinese Convert (OpenCC) character dictionaries
+====================================================
+
+This directory vendors two data files from the Open Chinese Convert (OpenCC)
+project, unmodified:
+
+  - STCharacters.txt  (Simplified -> Traditional character table)
+  - TSCharacters.txt  (Traditional -> Simplified character table)
+
+Upstream:   https://github.com/BYVoid/OpenCC
+Copyright:  Copyright 2010-2014 Carbo Kuo <byvoid@byvoid.com> and OpenCC contributors
+License:    Apache License, Version 2.0 (see LICENSE in this directory,
+            copied verbatim from the upstream repository)
+
+Retrieved:  2026-08-25 from
+  https://raw.githubusercontent.com/BYVoid/OpenCC/master/data/dictionary/STCharacters.txt
+  https://raw.githubusercontent.com/BYVoid/OpenCC/master/data/dictionary/TSCharacters.txt
+  https://raw.githubusercontent.com/BYVoid/OpenCC/master/LICENSE
+
+SHA-256 of the vendored copies (verify with `sha256sum lib/opencc/*`):
+  a0ca1601c70648cf48b33c3c6210ccbecc5c7eead4b4c3daf76587ba2c03582b  STCharacters.txt
+  737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925  TSCharacters.txt
+  b534e465949558eec2597b04f5092b5e161236a68dfbfd04d547592ac3964308  LICENSE
+
+These files are used by Translations::ScriptDetector (app/services/translations/
+script_detector.rb) to detect Simplified/Traditional Chinese script mismatches in
+merchant translations. No OpenCC source code is included — data files only.
+
+Adoption record: docs/specs/107-external-adoption-register.md (entry OpenCC-1).
+User authorization for including Apache-2.0 material: docs/DECISIONS.md D49
+(2026-08-25).

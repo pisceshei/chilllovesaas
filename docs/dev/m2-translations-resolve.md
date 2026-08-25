@@ -347,7 +347,7 @@ base 的 `SaveProduct#normalize` 用 `description.bytesize` 量，而譯文端�
 | **P7-L8** | `field_key` 到 67 §B.1 三分類的**權威對照倉庫內不存在**。`Fields::MISSING` 是我方裁定；`Upsert::REQUIRED_FIELDS` 是**進度分母**，語義不同。兩者目前值相同純屬 v1 射程小，`spec/services/translations/fields_spec.rb` 有 tripwire |
 | **P7-L9** | Resolve 對 `PRODUCT`／`COLLECTION` 以外 resource_type（`SHOP_POLICY`／`PAGE`／`METAFIELD`／`THEME_LOCALE_CONTENT`）的射程未定。`Translation::RESOURCE_TYPES` 目前封閉在兩值 |
 | **P7-L10** | `digest` 的正規化實作本尊未公開；我方既有 `Translation.digest_for` 與 `limits.i18n.digest_normalization` 不相符，`Upsert#severity_for` 也與 67 §C.5(b) 的字元層編輯距離不同。**既有落差，不在本包射程**（鐵律 20.5）。讀取端**不得**自行重算 digest 當判準，只讀 `translations.outdated` 欄 |
-| **P7-L11** | 🔴 **繁簡誤借稽核（`script_mismatch`）本包一律棄權，不是零筆**——見 §7 |
+| ~~**P7-L11**~~ ✅ | D49（2026-08-25）已裁定引入 OpenCC ⇒ `script_mismatch` 實際執行（字元級；詞彙級仍不在射程）。棄權機制保留為空清單 |
 | **P7-L18** | 🔴 **`Resolve` 的讀取端 fast-path 是刻意的假陰性**：超過 `read_fast_path_max_bytes`（1024）的 `:html` 值一律當成有內容，不 parse。⇒ 一個「體積大但語義空」的譯文列在前台會顯示成空白區塊而不觸發 fallback。寫入端會擋住新的這種列（判空刪列），舊列由 `translations:audit` 掃出 ⇒ 殘餘窗＝立規之前就存在的大型空值列。接受，因為另一側（讀取端誤判成空）會讓前台顯示原文蓋掉真譯文 |
 | **P7-L19** | ⚠️ **`Translations::Audit` 是分鐘級任務**：每個 html 欄列要跑判空＋sanitize 兩次 parse（本機量級 ~50ms/列），5 萬列的店一次 audit 約十分鐘（審查 C6 的外推）。已改成逐列短 transaction（不再持長鎖）＋每 500 列印進度；**慢是接受的，鎖不是**。若日後要縮短：先分頁、不要把 parse 搬回 transaction 內 |
 | **P7-L20** | ⚠️ **`BlankValue.text_bearing?` 是刻意不精確的**：它用正則剝標籤而非 parser（因為它要偵測的正是 parser 的資料遺失，共用 parser 就共用盲點）。只處理數值字元參照與一份**不可見具名參照白名單**；白名單外的具名參照一律當可見內容 ⇒ 落在「報錯而不是刪列」那一側 |
@@ -356,7 +356,13 @@ base 的 `SaveProduct#normalize` 用 `description.bytesize` 量，而譯文端�
 
 ---
 
-## 7. 🔴 需使用者裁定（本包不做，命中鐵律 17.3 例外）
+## 7. ~~🔴 需使用者裁定~~ ✅ 已裁定（D49，2026-08-25）：引入 OpenCC 字表
+
+**裁定結果**：使用者選「引入（連 NOTICE＋attribution 一起入庫）」。落地＝
+`lib/opencc/`（兩個字元表＋LICENSE＋NOTICE）、`Translations::ScriptDetector`、
+`Audit` 的 `script_mismatch` 由棄權轉實際執行（僅登記不自動修）；採用登記＝
+`docs/specs/107-external-adoption-register.md` OpenCC-1。詞庫（TWPhrases）不在裁定內。
+以下為裁定前的原始問題陳述（保留供追溯）：
 
 **繁簡誤借偵測要不要引入 OpenCC 的字表？**
 

@@ -1035,3 +1035,33 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   **維持登記**，因為那兩個功能我方尚未實作，不是選擇不做而是還沒到。
 - **不受影響**：§A 保護清單的 27 條仍然有效。本裁定推翻的是「未經裁定就形成的實作
   偏離」，不是已經明文裁定過的偏離——兩者不同，不得混為一談。
+
+### D49
+
+**OpenCC 字元表（Apache-2.0）准予入庫；繁簡誤借稽核轉為實際執行（2026-08-25 使用者裁定）**
+
+- **裁定**：對「第 7 包的繁簡誤借稽核需要 OpenCC 字表（Apache-2.0——帶專利授權與
+  NOTICE 保留義務）。要引入嗎？」使用者選「**引入（連 NOTICE＋attribution 一起入庫）**」。
+- **射程**：僅 `STCharacters.txt`／`TSCharacters.txt` 兩個**資料檔**（未修改），
+  不含 OpenCC 原始碼；詞庫（TWPhrases 等）**不在本裁定內**（要用另行裁定）。
+- **落地**：`lib/opencc/`（LICENSE 逐字＋NOTICE）＋`Translations::ScriptDetector`＋
+  `Translations::Audit` 的 `script_mismatch` 規則由「明文棄權」轉實際執行（僅登記不自動修）。
+  採用登記＝`docs/specs/107-external-adoption-register.md` OpenCC-1（本檔隨本裁定建立）。
+
+### D50
+
+**第 11 包（智慧系列引擎）採案 A：連最小地基一起交付（2026-08-25 使用者裁定）**
+
+- **背景**：W5 整合規格把 sources schema（包 10）與 product_tags（包 9）列「不回補」，
+  但包 11 的引擎沒有表可寫；舊 `collection_rules.condition_value` 用字串存金額
+  （`'148.00'`）＝鐵律 3 禁止的十進位字串入口，不能沿用（三方向 :86 已登記）。
+  第 11 包研究輪（P11-U16／§9-9）依 90 §7「未裁定不得動工」呈裁定。
+- **裁定**：**案 A**——包 11 自帶三張必要表：`collection_memberships`（物化成員，
+  含 13:369 的 `variant_key` 產生欄 NULL 陷阱解）、typed-value 規則儲存（金額走
+  `value_cents`）、`product_tags` 正規化表（tag EXISTS 的載體，13 §F4.3）。
+  照 D13「建表前先改 schema」與 spec 13 正典一次建對；包 11 由 M 升 L。
+- **不採**：案 B（沿用字串規則表——違鐵律 3，除非改鐵律本文）；案 C（先另開包 9/10
+  回補——多兩輪 PR 無實質差別）。
+- **配套**：spec 13 §F4.1 的過時 schema 塊（13:337-347）隨包 11 契約 PR 回寫；
+  `collections` 補 `rebuild_status`/`rebuilt_at`（13:335）。
+

@@ -166,16 +166,78 @@ RSpec.describe Translations::Audit do
       #    這一格的用途是把「0 掃描」與「0 發現」在 API 層就分得開。
     end
 
-    it "🔴 script_mismatch 一律登記為棄權，**絕不回報 0 筆**" do
+    it "D49 後棄權清單為空（script_mismatch 已實際執行；機制保留）" do
       product = product!
       raw_translation!(product, "zh-Hant", "title", "玫瑰")
 
       report = described_class.call(shop:)
 
-      abstained = report.abstained.map { |item| item[:rule] }
-      expect(abstained).to eq([ "script_mismatch" ])
-      expect(report.findings_by_rule).not_to have_key("script_mismatch")
-      expect(report.abstained.first[:reason]).to include("Apache-2.0")
+      expect(report.abstained).to eq([])
+      expect(report.findings).to be_empty   # 正字形 ⇒ 零發現，而且現在是「掃過」的零
+    end
+
+    it "🔴 D49：zh-Hant 值含簡體專用字 ⇒ script_mismatch（detail 列出誤借字）" do
+      product = product!
+      raw_translation!(product, "zh-Hant", "title", "玫瑰与辛香（门市限定）")
+
+      findings = described_class.call(shop:).findings
+
+      expect(findings.map(&:rule)).to eq([ "script_mismatch" ])
+      expect(findings.first.detail).to include("与").and include("门")
+      expect(findings.first.detail).not_to include("市")   # 共用字不列
+    end
+
+    it "D49：zh-Hans 值含繁體專用字 ⇒ script_mismatch" do
+      product = product!
+      raw_translation!(product, "zh-Hans", "title", "玫瑰與辛香")
+
+      expect(described_class.call(shop:).findings.map(&:rule)).to eq([ "script_mismatch" ])
+    end
+
+    it "🔴 D49：非 zh locale 一律不跑（日文漢字也是 Han 字元，跑了就滿屏誤報）" do
+      product = product!
+      # 🔴 fixture 必須同時含**簡體專用**（国）與**繁體專用**（層）字——日文正字法
+      #   本來就兩類都用（国＝常用漢字表字形）。只放單邊的話，「誤把 ja 當 zh-Hant 跑」
+      #   這種突變恰好檢查不到另一邊 ⇒ 假綠（O5 突變第一版就是這樣活下來的）。
+      raw_translation!(product, "ja", "title", "全国限定・薔薇と辛香料の層")
+
+      expect(described_class.call(shop:).findings).to be_empty
+    end
+
+    it "D49：html 欄取 parser 文字判——實體要解（&#19982;＝与 必須抓到）" do
+      product = product!
+      # 🔴 誤借字只以**數字實體**存在：不解實體（拿 raw 判）就抓不到 ⇒ 這格逼出 parser。
+      raw_translation!(product, "zh-Hant", "body_html", "<p>玫瑰&#19982;辛香</p>")
+
+      findings = described_class.call(shop:).findings
+
+      mismatch = findings.find { |f| f.rule == "script_mismatch" }
+      expect(mismatch).to be_present, "實體編碼的簡體字沒被解出來判（拿 raw 判的形態）"
+      expect(mismatch.detail).to include("与")
+    end
+
+    it "D49：屬性值裡的字**不**判（那不是使用者看得到的文字）" do
+      product = product!
+      # 🔴 反向：誤借字只出現在屬性值——parser 文字不含它 ⇒ 不得誤報。
+      #   （title 不在白名單 ⇒ 同列合法命中 unsanitized_html，規則可組合、各管各的。）
+      raw_translation!(product, "zh-Hant", "body_html", '<p title="门">玫瑰辛香</p>')
+
+      rules = described_class.call(shop:).findings.map(&:rule)
+
+      expect(rules).to eq([ "unsanitized_html" ]),
+        "出現 script_mismatch＝把屬性值當內文判了（拿 raw 判的形態）"
+    end
+
+    it "🔴 D49：script_mismatch 僅登記——fix 不動它（簡→繁一對多，自動改字是 ML-5 的事）" do
+      product = product!
+      raw_translation!(product, "zh-Hant", "title", "门市限定")
+
+      report = described_class.call(shop:, fix: true)
+
+      expect(report.fixed).to eq(0)
+      ActsAsTenant.with_tenant(shop) do
+        expect(Translation.find_by(locale_tag: "zh-Hant", field_key: "title").value).to eq("门市限定")
+      end
     end
   end
 
