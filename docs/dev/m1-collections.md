@@ -8,8 +8,8 @@
 | 表 | 角色 | 關鍵紀律 |
 |---|---|---|
 | `collections` | 系列本體（title／handle／description_html／seo_*／collection_type／sort_order／**lock_version**） | 本包補 `lock_version`（migration `20260823120000`）：缺它時兩人同時編輯會靜默互蓋，含譯文 |
-| `collection_products` | **手動系列**的成員 join，`position` 為顯示序 | 🔴 智慧系列**不寫**這張表——成員是規則的函數，物化就有兩個真相 |
-| `collection_rules` | 智慧系列條件（column_name／relation／condition_value／position） | v1 只建模與讀取；求值引擎屬後續包 |
+| `collection_products` | **手動系列**的成員 join，`position` 為顯示序 | 🔴 智慧系列**不寫**這張表（2026-08-26 更正：理由不是「不物化」——第 11 包起智慧成員**確實物化**，但物化在專屬的 `collection_memberships`；寫進本表才會有兩個真相） |
+| `collection_rules` | 智慧系列條件（column_name／relation／condition_value／position） | ⚠️ **Legacy**——第 11 包（D50）起停止寫入、讀取面亦無消費者；現行條件存 `collection_sources`＋`collection_source_rules`（typed value，金額走 `value_cents`）。見 `docs/dev/m2-smart-collections.md` |
 | `translations` | 譯文，**與商品同一張表** | `resource_type = "COLLECTION"`，其餘完全相同 |
 
 ②值域：`collection_type` ∈ manual／smart；`sort_order` ∈ manual／best_selling／title_asc／title_desc／price_asc／price_desc／created_desc／created_asc。
@@ -44,7 +44,9 @@
   相關子查詢**一次撈完**——列表上限 250（`limits.yml`），逐列 COUNT 就是單一請求打 250 次 DB；
   單筆讀取（編輯頁）沒有那個 select，`CollectionType#products_count` 退回逐筆 COUNT。
   測試以「數 SQL」斷言（`spec/requests/collection_set_spec.rb`「不逐列 COUNT」一例）——回傳值正確的 N+1 一樣是 N+1。
-- 🔴 智慧系列的商品數顯示 `—` **不是 0**——規則引擎落地前我方不知道成員數，顯示 0 是在說一件假的事。
+- 🔴 智慧系列的商品數顯示 `—` **不是 0**——顯示 0 是在說一件假的事。
+  （2026-08-26 更正：判準已不是「規則引擎落地前」而是**這個系列有沒有成功重建過**
+  ——`rebuildStatus != "OK"` 時 `productsCount` 回 null，前端顯示 `—`；成功重建後顯示真實數字。）
 - `/admin/collections/new`／`/:id` 編輯頁：標題堆疊式三語、說明與 SEO 分頁式，全部用**同一個** `LocalizedField`；SaveBar／dirty／離頁攔截與商品頁共用。
 - 智慧系列選起來時顯示「成員由規則決定，規則編輯器在後續里程碑開放」——不放一個編不了的條件 UI。
   🔴 **2026-08-26 更正（第 11 包 delta 審查 F4）**：上一句只在**建立頁**成立。型別
@@ -63,7 +65,8 @@ Collection 的譯文**自動被翻譯 CSV 涵蓋**（`resource_type=COLLECTION`�
 
 ## 6. 已知邊界
 
-- 智慧系列規則編輯器與求值引擎未做（`collection_rules` 只有模型）。
+- 智慧系列**規則編輯器**（UI）未做——屬第 13 包；**求值引擎已於第 11 包（D50）交付**，
+  見 `docs/dev/m2-smart-collections.md`（2026-08-26 更正：原文寫「求值引擎未做」已過時）。
 - 手動成員的商品挑選器 UI 未做（API 已支援 `productIds`；v1 靠匯入或 API 設定）。
 - 71-R8-V4（2026 本尊的「來源」卡概念 vs 我方手動/智慧二分）仍待裁定——`collections` 表兩種都撐得住（84 §2 B-4），不影響本包。
 - 系列的發布（channels）沿用 `resource_publications`，UI 未接。

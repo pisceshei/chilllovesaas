@@ -29,7 +29,7 @@
 
 **exclusion 區塊 v1 支援**：product_tag／product_type／product_vendor／collection
 （canon 6 型中 product_category 不支援——無 taxonomy 樹）。
-**canon 19 型中 v1 不支援**（寫入層拒收 INVALID）：metafield 六型、product_category、
+**canon 19 型中 v1 不支援**（寫入層拒收 INVALID）：metafield 七型、product_category、
 unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 延後項）。
 
 🔴 **三處同步**：本表 ↔ `Collections::RuleCompiler` 常數 ↔ `SaveCollection` 白名單。
@@ -59,14 +59,19 @@ unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 �
   注入安全兩軸：值一律 `sanitize_sql_array` 綁定；識別字只來自 frozen 常數表，
   查表 miss ⇒ `Unsupported`（fail-closed）。
 - **求值公式**＝`⋃ₛ ( inclusion(s) − exclusion(s) )`（per-source 相減；
-  `membership_formula`）。13 §F4.2 的三條必測全在 `engine_spec.rb`，含關鍵的
-  「A 排除 X＋B 包含 X ⇒ X 仍在」。
+  `membership_formula`）。13 §F4.2 列三條必測，`engine_spec.rb` 釘住其中**兩條**：
+  「同一來源內條件命中＋明確排除 ⇒ 不在」與關鍵的「A 排除 X＋B 包含 X ⇒ X 仍在」。
+  🔴 第三條（**手動加入**＋明確排除 ⇒ 不在）在 v1 **結構上測不了**：手選成員需要
+  `collection_source_members`，而該表 §2 已登記「未建」⇒ 登記為 P11-B11，隨手選成員
+  的包一併補測。（2026-08-26 收斂輪 H8：原文寫「三條必測全在」是缺證的完成性聲明。）
 - `Rebuild`：🔴 **整場先拿 advisory lock**（`GET_LOCK('chilllove:rebuild:<shop>:<collection>')`，
   等待預算 `rebuild_lock_wait_seconds`；2026-08-26 審查 F2——逐批列鎖不序列化整場，
   兩場同系列 rebuild 交錯時小世代覆蓋現任列＋大世代掃尾＝**整組成員被清空**，
   gated-threads 實跑重現）；等不到＝讓位，`RebuildJob` 延後重排（`rebuild_lock_requeue_delay_seconds`）。
   之後：世代戳＋id 批（`rebuild_batch_size`）＋逐批短 txn（`Collection.lock`）＋
-  `INSERT…SELECT…ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(rebuilt_at, 世代)`
+  `INSERT…SELECT…ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(COALESCE(rebuilt_at, 世代), 世代)`
+  （🔴 `COALESCE` 不可省：`rebuilt_at` 可空而 MySQL `GREATEST(NULL, x)` 回 NULL ⇒
+  NULL 戳的列會變成「再也蓋不上戳、也掃不掉」的不死列；掃尾同理必須顯式收 `IS NULL`）
   （單調帶——即使鎖被繞過，舊世代也降不了現任列的戳）＋世代掃尾。
   🔴 變更判定＝`created_at >= generation`（新列）＋swept>0——**不是** affected_rows
   （ON DUPLICATE 對既有列每輪記 2 ⇒ 拿它判會讓零變更的 rebuild 白打快取，初版實測踩到）。
@@ -113,6 +118,10 @@ collections on your storefront" 的旁證（P11-U3 直取未複驗）。
 其他系列」的那些），單向引用因此在一次事件內收斂；**互相引用**（A 排除 B ∧ B 排除 A）
 需要不動點迭代，兩趟不保證收斂——該格由 `catalog:rebuild:collections` 兜底，
 且 `config/recurring.yml` 目前**沒有**排這支（要排程屬 CD 包）。
+
+**P11-B11（2026-08-26 收斂輪 H8）**：13 §F4.2 的第三條必測（手動加入＋明確排除）
+在 v1 無載體可測（`collection_source_members` 未建）⇒ 隨手選成員的包補測，不得再宣稱
+「三條全在」。
 
 ## 6. 三處成員數收斂（工作卡驗收項）
 

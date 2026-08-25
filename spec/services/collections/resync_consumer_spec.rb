@@ -118,4 +118,80 @@ RSpec.describe Collections::ResyncConsumer do
     expect(remaining).to be_empty,
       "工作清單從 collection_sources 導出 ⇒ 條件被清空的系列從所有清理路徑消失，殘留成員無自癒"
   end
+
+  it "🔴 H3（2026-08-26 收斂輪）：庫存事件的**真實** payload 形狀（只有 inventory_item_id）也要能觸發" do
+    # 🔴 這一格的 payload 必須與 `Inventory::Adjust#enqueue_adjust_event!` 實際產生的
+    #   形狀一致：`{adjustment, location_id, inventory_item_id, availability_flipped}`
+    #   ——**沒有** product_id／product_variant_id。初版消費者照後兩者讀 ⇒ 永遠早退，
+    #   整條 INVENTORY_ADJUSTED 觸發鏈是死的，而舊 spec 自己捏了帶 product_variant_id
+    #   的 payload 所以綠。fixture 與真實生產者不符＝假綠。
+    shop = create(:shop, subdomain: "resync-inv")
+    variant = ActsAsTenant.with_tenant(shop) do
+      p = create(:product, shop:, title: "庫存商品")
+      create(:product_variant, shop:, product: p, price_cents: 100)
+    end
+    # 變體工廠已建 inventory_item（1:1 側車）——取現成的，不另建（唯一索引擋）。
+    item = ActsAsTenant.with_tenant(shop) do
+      InventoryItem.find_by!(shop_id: shop.id, product_variant_id: variant.id)
+    end
+
+    event = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.create!(event_id: SecureRandom.uuid, topic: Events::Topics::INVENTORY_ADJUSTED,
+                          aggregate_type: "InventoryLevel", aggregate_id: 1, shop_id: shop.id,
+                          available_at: Time.current,
+                          payload: { inventory_item_id: item.id, location_id: 1,
+                                     adjustment: { reason: "correction", quantity_name: "available",
+                                                   delta: 5, ledger_id: 1, group_id: 1 },
+                                     availability_flipped: false })
+    end
+
+    expect(Collections::ResyncProduct).to receive(:call).with(shop: anything, product_id: variant.product_id)
+    described_class.call(event)
+  end
+
+  it "🔴 H5（2026-08-26 收斂輪）：引用其他系列的排最後算——不得先提交錯誤成員再刪" do
+    shop = create(:shop, subdomain: "resync-noflap")
+    product = ActsAsTenant.with_tenant(shop) do
+      p = create(:product, shop:, title: "紅", tags: [ "red" ])
+      create(:product_variant, shop:, product: p, price_cents: 100)
+      ProductTag.create!(shop_id: shop.id, product_id: p.id, tag_key: "red", tag_display: "red")
+      p
+    end
+    a = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "A", handle: "noflap-a",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+    b = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "B", handle: "noflap-b",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+    ActsAsTenant.with_tenant(shop) do
+      sa = CollectionSource.create!(shop_id: shop.id, collection_id: a.id, source_type: "conditions",
+                                    target_type: "products", inclusion_match: "all", position: 0)
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: sa.id, block: "inclusion",
+                                   condition_type: "product_tag", relation: "includes",
+                                   value_text: "red", position: 0)
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: sa.id, block: "exclusion",
+                                   condition_type: "collection", relation: "includes",
+                                   value_int: b.id, position: 1)
+      sb = CollectionSource.create!(shop_id: shop.id, collection_id: b.id, source_type: "conditions",
+                                    target_type: "products", inclusion_match: "all", position: 0)
+      CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: sb.id, block: "inclusion",
+                                   condition_type: "product_tag", relation: "includes",
+                                   value_text: "red", position: 0)
+      EventOutbox.where(shop_id: shop.id).delete_all
+    end
+
+    result = Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+    # A 從頭到尾不該有這個商品 ⇒ 不該有「加入又移除」的中間提交。
+    expect(result.joined).to eq(1), "A 被先加入再移除 ⇒ joined 把同一個商品算了兩次"
+    expect(result.left).to eq(0)
+    events = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.where(shop_id: shop.id, topic: Events::Topics::COLLECTIONS_UPDATE)
+                 .pluck(:aggregate_id)
+    end
+    expect(events).to eq([ b.id ]),
+      "A 沒有實際成員變動卻發了 collections/update（先加後刪各一則＝兩倍快取失效）"
+  end
 end

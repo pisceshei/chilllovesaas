@@ -382,4 +382,130 @@ RSpec.describe "智慧系列求值引擎" do
     expect(members(collection)).to contain_exactly(without_compare.id)
     expect(members(collection)).not_to include(with_compare.id)
   end
+
+  describe "🔴 H1／H2（2026-08-26 收斂輪）：已 quote 的片段不得再被當成 SQL 模板" do
+    it "條件值含 `?` 的系列必須能重建（不是 PreparedStatementInvalid）" do
+      # `sanitize_sql_array` 用 count("?") 對位、不分引號內外 ⇒ 商家值裡的一個問號
+      # 就讓 arity 不符。寫入層不濾 `?`（自由文字），所以這是可達輸入。
+      hit = product!(title: "Why not?")
+      miss = product!(title: "Why not")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "Why not?" }
+      ] } ])
+
+      result = rebuild!(collection)
+      expect(result.status).to eq(:ok)
+      expect(members(collection)).to eq([ hit.id ])
+      expect(members(collection)).not_to include(miss.id)
+    end
+
+    it "tag 值含 `?`（Tags::Normalize 原樣保留）同樣要能重建" do
+      hit = product!(title: "問號標籤", tags: [ "Sale? Item" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "Sale? Item" }
+      ] } ])
+
+      expect(rebuild!(collection).status).to eq(:ok)
+      expect(members(collection)).to eq([ hit.id ])
+    end
+
+    it "🔴 resync 端同樣（一個問號規則不得讓整店的增量重算停擺）" do
+      other = product!(title: "無關商品", tags: [ "red" ])
+      product!(title: "Why not?")
+      smart!(title: "問號系列", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "Why not?" }
+      ] } ])
+      red = smart!(title: "紅", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      expect { Collections::ResyncProduct.call(shop:, product_id: other.id) }.not_to raise_error
+      expect(members(red)).to eq([ other.id ]),
+        "問號系列拋例外 ⇒ 迴圈中排在它後面的無辜系列拿不到增量更新"
+    end
+
+    it "🔴 條件值內部的連續空白必須原樣比對（squish 不得改寫商家值）" do
+      # `<<~SQL.squish` 在內插之後才跑 ⇒ 會把 '紅玫瑰  禮盒'（兩空白）壓成一個，
+      # 而 resync 端沒有 squish ⇒ 兩支引擎對同一條規則給出不同答案。
+      double_space = product!(title: "紅玫瑰  禮盒")
+      single_space = product!(title: "紅玫瑰 禮盒")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "紅玫瑰  禮盒" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ double_space.id ])
+      expect(members(collection)).not_to include(single_space.id)
+
+      # 兩支引擎必須同答案（13 §F4.9「求值只有 SQL 一套」）。
+      Collections::ResyncProduct.call(shop:, product_id: single_space.id)
+      Collections::ResyncProduct.call(shop:, product_id: double_space.id)
+      expect(members(collection)).to eq([ double_space.id ])
+
+      # 連跑兩次列數不變（13:716 的驗收錨）。
+      second = rebuild!(collection)
+      expect([ second.inserted, second.swept ]).to eq([ 0, 0 ])
+    end
+  end
+
+  it "🔴 條件值含反斜線＋數字必須原樣比對（`sub` 的反向參照不得解讀商家值）" do
+    # `where_sql` 是用 `sub` 代入模板的。`sub(pattern, replacement)` 的**字串形式**
+    # 把替換字串裡的 `\0`／`\1`／`\&` 當反向參照 ⇒ mysql2 為了跳脫而產生的
+    # `\\`（SQL 裡的兩個字元）被折回一個 ⇒ SQL 變成 `'折扣\1號'`，
+    # 而 MySQL 讀 `\1` 就是 `1` ⇒ 比對到完全不同的字串。**block 形式**不做這個解讀。
+    # （值用 `92.chr` 組，避免 Ruby 字面值把 `\1` 讀成八進位跳脫。）
+    backslash_title = "折扣" + 92.chr + "1號"
+    hit = product!(title: backslash_title)
+    miss = product!(title: "折扣1號")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: backslash_title }
+    ] } ])
+
+    result = rebuild!(collection)
+    expect(result.status).to eq(:ok)
+    expect(members(collection)).to eq([ hit.id ])
+    expect(members(collection)).not_to include(miss.id)
+  end
+
+  describe "🔴 H4（2026-08-26 收斂輪）：ARCHIVED 的判定兩支引擎必須一致" do
+    it "全量 rebuild 不得把封存商品塞回物化表" do
+      active = product!(title: "在架", tags: [ "red" ])
+      archived = product!(title: "已封存", tags: [ "red" ], status: "archived")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ active.id ]),
+        "rebuild 的 INSERT…SELECT 沒有 archived 守衛 ⇒ 封存品被塞回、掃尾也刪不掉"
+      expect(members(collection)).not_to include(archived.id)
+    end
+
+    it "resync 移出封存品之後，rake 兜底的 rebuild 不得又把它加回來" do
+      product = product!(title: "先在架", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(collection)
+      expect(members(collection)).to eq([ product.id ])
+
+      ActsAsTenant.with_tenant(shop) { product.update_columns(status: "archived") }
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(members(collection)).to be_empty
+
+      rebuild!(collection)
+      expect(members(collection)).to be_empty,
+        "成員集合不得取決於『最後跑的是哪一支引擎』"
+    end
+
+    it "UNLISTED 照舊是成員（前台不可見≠非成員）" do
+      unlisted = product!(title: "未列出", tags: [ "red" ], status: "unlisted")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ unlisted.id ])
+    end
+  end
 end

@@ -65,6 +65,15 @@ module Collections
     ].freeze
     EXCLUSION_TYPES = %w[product_tag product_type product_vendor collection].freeze
 
+    # 🔴 商品層資格謂詞（2026-08-26 收斂輪 H4）：ARCHIVED 商品**不進**任何智慧系列的
+    #   物化列（13 §F4.6-5）。初版只有 `ResyncProduct` 在 Ruby 端擋，`Rebuild` 的
+    #   `INSERT…SELECT` 沒有對應條件 ⇒ 全量重建會把封存商品塞回去、掃尾也刪不掉
+    #   （同一輪剛蓋上新世代戳），成員集合變成「取決於最後跑的是哪一支引擎」。
+    #   ⇒ 判準只有這一份字面，兩個消費者都拼它，構造上不可能再分岔。
+    #   UNLISTED 照舊**是**成員（前台不可見≠非成員，13 §F1.2(f)）。
+    #   `products.status` 帶 `null: false` ⇒ 這裡不需要 NULL-guard。
+    PRODUCT_ELIGIBLE_SQL = "p.status <> 'archived'"
+
     # 逐型合法 relation（`condition_relations_source: runtime_query` 的資料源——
     # 前端經 `collectionRuleConditions` query 取得，不得硬編；本表同時是寫入層驗證的依據，
     # 三個消費者共用一份＝不漂移）。
@@ -269,6 +278,15 @@ module Collections
         ActiveRecord::Base.sanitize_sql_like(value.to_s)
       end
 
+      # 🔴 **產物是「已經 quote 完的 SQL 片段」，不是模板**（2026-08-26 收斂輪 H1／H2）。
+      #   消費者**不得**把它內插進另一段還要走 `sanitize_sql_array` 位置參數的字串：
+      #   Rails 的 `replace_bind_variables` 用 `statement.count("?")` 對位、**不分引號內外**
+      #   ⇒ 商家值裡的一個 `?`（`"Why not?"`、tag `sale?-item`⋯⋯全都合法且寫入層不濾）
+      #   就讓 arity 不符、當場 `PreparedStatementInvalid`。
+      #   也**不得**對含本片段的字串呼叫 `.squish`：squish 在內插之後才跑，會壓縮
+      #   商家值字面量**內部**的空白（`'紅玫瑰  禮盒'` → `'紅玫瑰 禮盒'`），讓 rebuild
+      #   與 resync 對同一條規則得到不同答案。
+      #   ⇒ 兩個消費者一律用 `connection.quote` 逐值 quote、不用位置參數、不 squish。
       def bind(template, value)
         ActiveRecord::Base.sanitize_sql_array([ template, value ])
       end

@@ -37,22 +37,28 @@ module Collections
           skipped = 0
 
           ids = smart_collection_ids(shop)
-          # 🔴 引用其他系列的要**再算一次**（2026-08-26 收斂輪 G4）：exclusion 的
-          #   `collection` 型讀被引用系列的**物化成員**，而本迴圈無依賴排序 ⇒
-          #   A 排除 B 且 A.id < B.id 時（先建 A、後建 B 再加排除，很常見），
-          #   第一趟算 A 時商品還沒進 B ⇒ A 誤留該商品；第二趟在 B 落定後重算 A 修正。
-          #   互相引用（A 排除 B、B 排除 A）需要不動點迭代，兩趟不保證收斂——
+          # 🔴 引用其他系列的**排到最後算**（2026-08-26 收斂輪 G4／H5）：exclusion 的
+          #   `collection` 型讀被引用系列的**物化成員** ⇒ 必須等被引用方先落定。
+          #   初版寫成 `ids + referencing`（**追加**）：A 仍會在第一趟先算一次、
+          #   **提交**一筆錯誤的成員列、bump 快取、發一則 `collections/update`，
+          #   第二趟才刪掉再發一則——前台在那個窗口讀得到依規則絕不該在 A 裡的商品，
+          #   而且每個被排除的商品每次事件都固定產生兩倍的快取失效與 outbox 事件。
+          #   改序（`ids - referencing` 之後才跑 `referencing`）達成同樣意圖且無中間寫入。
+          #   互相引用（A 排除 B ∧ B 排除 A）需要不動點迭代，改序不保證收斂——
           #   那一格登記在 dev doc §5（P11-B10），由 rake 兜底。
-          (ids + collection_ids_referencing_others(shop, ids)).each do |collection_id|
+          referencing = collection_ids_referencing_others(shop, ids)
+          ((ids - referencing) + referencing).each do |collection_id|
             outcome = Collection.transaction do
               collection = Collection.lock.find_by(shop_id: shop.id, id: collection_id)
               next :gone if collection.nil?
               next :error if collection.rebuild_status == "ERROR"
 
-              # 商品已刪 / ARCHIVED ⇒ 移出（13 §F4.6-5；UNLISTED **不**移出——
-              # 它只是前台不可見，成員資格照舊，§F1.2(f)）。
-              should_be_member = product.present? && product.status != "archived" &&
-                                 member_by_rules?(shop, collection, product)
+              # 商品已刪 ⇒ 移出（查無主＝從所有系列移出）。ARCHIVED 的排除**下沉到 SQL**
+              # （`RuleCompiler::PRODUCT_ELIGIBLE_SQL`，與 Rebuild 同一份字面）——
+              # 初版在這裡用 Ruby 擋，而 Rebuild 沒擋，兩支引擎因此對封存商品給出
+              # 相反答案（2026-08-26 收斂輪 H4）。UNLISTED **不**移出（前台不可見≠
+              # 非成員，13 §F1.2(f)）。
+              should_be_member = product.present? && member_by_rules?(shop, collection, product)
               row = CollectionMembership.find_by(shop_id: shop.id, collection_id: collection.id,
                                                  product_id:, variant_id: nil)
               if should_be_member && row.nil?
@@ -114,10 +120,13 @@ module Collections
           where_sql = RuleCompiler.where_sql(source)
           next false if where_sql.nil?
 
-          sql = ActiveRecord::Base.sanitize_sql_array(
-            [ "SELECT EXISTS(SELECT 1 FROM products p WHERE p.shop_id = ? AND p.id = ? AND (#{where_sql}))",
-              shop.id, product.id ]
-          )
+          # 🔴 與 `Rebuild#upsert_batch` 同一條紀律（收斂輪 H1／H2）：`where_sql`
+          #   **在 sanitize 之後才代入**，商家值裡的 `?` 與內部空白都不得被再解析一次。
+          #   資格謂詞也拼同一份字面（H4）⇒ 兩支引擎構造上同一段 WHERE。
+          template = "SELECT EXISTS(SELECT 1 FROM products p WHERE p.shop_id = ? AND p.id = ? " \
+                     "AND #{RuleCompiler::PRODUCT_ELIGIBLE_SQL} AND (#{Rebuild::WHERE_SLOT}))"
+          sql = ActiveRecord::Base.sanitize_sql_array([ template, shop.id, product.id ])
+                                  .sub(Rebuild::WHERE_SLOT) { where_sql }
           ActiveRecord::Base.connection.select_value(sql).to_i.positive?
         end
       end

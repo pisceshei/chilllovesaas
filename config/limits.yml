@@ -1029,8 +1029,11 @@ collection:
   # 自然成立（超限的新輸入整份被拒），鍵先落供 UI 端引用。
   over_limit_grace_editable: false
   # inclusion 條件 19 型（95 §1.2；補齊「只有 exclusion 側落了鍵」的不對稱）。
-  # 🔴 v1 引擎支援其中 10 型（RuleCompiler::INCLUSION_TYPES）；metafield 六型與
+  # 🔴 v1 引擎支援其中 10 型（RuleCompiler::INCLUSION_TYPES）；metafield **七型**與
   #    product_category 待 metafield／taxonomy 系統（寫入層拒收，登記於 dev doc）。
+  #    算術：10（v1）＋7（metafield）＋product_category＋unknown＝19，與 95 §1.2 一致
+  #    （95 §1.2 逐字：「19 種扣掉 7 個 Metafield* 與 Unknown」）。
+  #    2026-08-26 收斂輪 H9：原文寫「六型」，被它自己下方的 value 列舉推翻（列了 7 個）。
   inclusion_condition_types: [metafield_boolean, metafield_decimal, metafield_integer,
                               metafield_metaobject, metafield_metaobject_list,
                               metafield_string, metafield_string_list,

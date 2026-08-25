@@ -9,7 +9,10 @@ module Collections
   #
   # ②🔴 求值只有 SQL 一套（13 §F4.9）：成員集合由 `RuleCompiler` 的 WHERE 片段經
   #   `INSERT … SELECT` 直接落列——**沒有** Ruby 端逐商品求值的第二套實作。
-  #   resync（增量）用同一段 WHERE 加 `p.id = ?`，語義構造上一致。
+  #   resync（增量）用同一段 WHERE 加商品 id 等值，語義構造上一致。
+  #   🔴 「同一段」包含**商品層資格謂詞**（`RuleCompiler::PRODUCT_ELIGIBLE_SQL`）：
+  #   初版只有 resync 擋 ARCHIVED、本服務沒擋 ⇒ 全量重建把封存商品塞回物化表，
+  #   成員集合變成「取決於最後跑的是哪一支引擎」（2026-08-26 收斂輪 H4）。
   #
   # ③怎麼做到（世代戳＋批次＋逐批短鎖；13 §F4.9「rebuild 不能鎖住前台」）：
   #   1. 先把**全部** sources 編譯完（任何一條編不了 ⇒ 整個系列 `rebuild_status=ERROR`、
@@ -51,6 +54,9 @@ module Collections
     Result = Data.define(:status, :inserted, :swept, :error)
     # 檔頭⑤a 的讓位訊號（RebuildJob 據此延後重排，不靜默丟）。
     LOCK_TIMEOUT_ERROR = "rebuild lock wait timeout"
+    # `where_sql` 的代入槽（見 `upsert_batch`）：模板先 sanitize，之後才把編譯好的
+    # 片段換進來。內容不含 `?`、不含引號，且不可能出現在 bind 值（全是 id 與時戳）裡。
+    WHERE_SLOT = "/*__CHILLLOVE_WHERE__*/"
 
     class << self
       # @param shop [Shop]
@@ -202,15 +208,27 @@ module Collections
       def upsert_batch(shop, collection, source, where_sql, ids, generation)
         id_list = ids.map { |id| Integer(id) }.join(",")
         now = Time.current
-        sql = ActiveRecord::Base.sanitize_sql_array([ <<~SQL.squish, shop.id, collection.id, source.id, generation, now, now, shop.id, generation, generation ])
+        # 🔴 `where_sql` **在 sanitize 之後才代入**（2026-08-26 收斂輪 H1／H2；
+        #   理由全文在 `RuleCompiler#bind` 上方）。兩件事同時被這個順序解決：
+        #   ①`sanitize_sql_array` 只看得到本模板自己的 `?`，商家值裡的 `?`
+        #     （`"Why not?"`）不再被 `count("?")` 誤算成佔位符；
+        #   ②`.squish` 只作用在模板上，壓不到商家值字面量**內部**的空白
+        #     （`'紅玫瑰  禮盒'` 保持兩個空白，rebuild 與 resync 因此同答案）。
+        #   代入用 `sub` 的 **block 形式**：block 形式不解讀 `\0`／`\1`／`\&`
+        #   反向參照，值裡的反斜線因此原樣保留（字串形式會被當替換指令解析）。
+        template = <<~SQL.squish
           INSERT INTO collection_memberships
             (shop_id, collection_id, product_id, variant_id, origin, origin_source_id,
              position, rebuilt_at, created_at, updated_at)
           SELECT ?, ?, p.id, NULL, 'conditions', ?, 0, ?, ?, ?
           FROM products p
-          WHERE p.shop_id = ? AND p.id IN (#{id_list}) AND (#{where_sql})
+          WHERE p.shop_id = ? AND p.id IN (#{id_list})
+            AND #{RuleCompiler::PRODUCT_ELIGIBLE_SQL} AND (#{WHERE_SLOT})
           ON DUPLICATE KEY UPDATE rebuilt_at = GREATEST(COALESCE(rebuilt_at, ?), ?)
         SQL
+        sql = ActiveRecord::Base.sanitize_sql_array(
+          [ template, shop.id, collection.id, source.id, generation, now, now, shop.id, generation, generation ]
+        ).sub(WHERE_SLOT) { where_sql }
         ActiveRecord::Base.connection.execute(sql)
         nil   # affected_rows 對 ON DUPLICATE 是 2/列，不是變更訊號——變更判定見 call 內註釋
       end
