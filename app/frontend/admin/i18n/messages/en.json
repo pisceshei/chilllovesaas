@@ -520,5 +520,10 @@
   "variant.shipping.weight": "Weight (grams)",
   "variant.shipping.weightInvalid": "Weight must be 0 or a positive whole number of grams.",
   "variant.variantNotFound": "Couldn't find this variant — it may have been deleted.",
-  "variant.backToProduct": "Back to product"
+  "variant.backToProduct": "Back to product",
+  "product.media.embedVideo": "Embed video",
+  "product.media.embedVideoAdd": "Add video",
+  "product.media.embedVideoUrl": "Video URL",
+  "product.media.embedVideoHint": "Paste the video's page URL from YouTube or Vimeo. The video stays on that platform and doesn't use your storage.",
+  "product.media.embedVideoPrivacy": "The player loads in each platform's privacy-enhanced mode (youtube-nocookie for YouTube, the dnt parameter for Vimeo), which reduces data collected for tracking."
 }

@@ -25,6 +25,10 @@
       reorder_incomplete: "重排必须提交该商品的全部媒体。"
       variant_not_found: "找不到指定的子类。"
       variant_image_only: "子类只能挂图片（视频与 3D 不支持）。"
+      external_video_invalid_url: "这个网址解析不出视频 ID。请贴视频页的网址，例如 https://www.youtube.com/watch?v=… 或 https://vimeo.com/…。"
+      external_video_unsupported_host: "外嵌视频目前只支持 YouTube 与 Vimeo。"
+      external_video_shorts: "YouTube Shorts 网址不受支持；把网址改成 https://www.youtube.com/watch?v=… 的形态即可。"
+      external_video_no_file: "外嵌视频不能选取现有文件——它不是上传的文件。"
     product:
       variants_single_only: "无选项商品的变体必须恰为一条（隐含变体）；具名选项与多变体属后续里程碑。"
       last_variant_required: "无法删除最后一个子类；每个商品至少保留一个子类。"

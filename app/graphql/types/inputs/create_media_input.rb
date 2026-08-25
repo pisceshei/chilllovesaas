@@ -13,11 +13,15 @@ module Types
       description "要掛到商品上的一個媒體。"
 
       argument :original_source, String, required: false,
-        description: "staged resourceUrl 或外部 URL（走 fileCreate 的同一條 SSRF 防線）。"
+        description: "staged resourceUrl／外部檔案 URL／YouTube 或 Vimeo 影片頁 URL。"
       argument :file_id, ID, required: false, description: "既有檔案 GID（ours 擴充）。"
       argument :alt, String, required: false
+      # 第 37 包：值域＝IMAGE ∪ EXTERNAL_VIDEO。
+      # 🔴 省略時**不是恆 IMAGE**：`MediaSync` 會看 `originalSource` 的形態——命中
+      #   YouTube／Vimeo 就走外嵌（ours）。不這樣做的話，使用者貼 YouTube URL 會掉進
+      #   `Storage::FileCreate` 去抓一份 HTML，錯誤訊息與真實原因完全無關。
       argument :media_content_type, Types::MediaContentTypeEnum, required: false,
-        description: "本批僅 IMAGE（B9）；省略即 IMAGE。"
+        description: "IMAGE 或 EXTERNAL_VIDEO；省略時依 originalSource 形態判定。"
     end
   end
 end

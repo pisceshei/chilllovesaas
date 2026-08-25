@@ -1001,3 +1001,79 @@ fence 時，圍欄內容延伸至文件結尾；這是 CommonMark 的合法解�
 `Vips::Error: unimplemented gtype for set:  (0)`（ruby-vips `gvalue.rb:199`）。
 需改 `image.set_type(GObject::GINT_TYPE, "orientation", 6)`。
 影響面＝造測資（線上驗收腳本），非生產路徑。
+
+## D. 外嵌影片（ExternalVideo；第 37 包，取證 2026-08-25）
+
+### D1. 官方型別叫 `MediaHost`，不是 `ExternalVideoHost`
+
+Admin GraphQL `ExternalVideo.host` 的型別逐字是 **`MediaHost!`**。
+`ExternalVideoHost` 這個型別在官方 schema 裡**不存在**——憑印象命名會建出一個本尊
+沒有的型別，而 admin SPA 是唯一客戶端，一旦寫進查詢就得改回來。
+值域恰兩值且封閉，官方逐字："VIMEO — Host for Vimeo embedded videos." /
+"YOUTUBE — Host for YouTube embedded videos."
+來源：<https://shopify.dev/docs/api/admin-graphql/latest/enums/MediaHost>、
+<https://shopify.dev/docs/api/admin-graphql/2026-07/objects/ExternalVideo>（取證 2026-08-25）。
+
+### D2. `presentation` 只在 Storefront，Admin 沒有；`aspectRatio` 只在 Liquid
+
+抄錯層就是憑空多一個本尊 Admin 沒有的欄位。我方 `ExternalVideoType` 因此
+**不宣告** `presentation` 與 `aspectRatio`；前台要長寬比時由 `width`／`height`
+在 drop 層算（第 30 包）。
+
+### D3. 🔴 官方對「`originalSource` 該放哪種 URL」自相矛盾，無規範列舉
+
+三處措辭互斥：①API reference 的範例用 `https://youtu.be/32mGBDk3LSo`；
+②dev 指南表格逐字 "Provide the embed or share URL."；③help center 只列
+`https://youtube.com/watch?v=[video-id]` 與 `https://vimeo.com/[video-id]`，
+並說 "use the video's page URL"。
+**沒有任何一句規範性語句定義它。** ⇒ 我方接受的形態集合（`Catalog::ExternalVideoUrl`）
+**全部是 ours**，不得寫成「對齊 Shopify」。取得測試店實測後再回寫對齊。
+
+### D4. 官方 `MediaUserErrorCode` 沒有任何外部影片專屬碼
+
+已逐字核對 22 個值。官方那六個 `EXTERNAL_VIDEO_*`（`_NOT_FOUND`／`_UNLISTED`／
+`_EMBED_DISABLED`／`_EMBED_NOT_FOUND_OR_TRANSCODING`／`_INVALID_ASPECT_RATIO` 等）
+全在**非同步**的 `MediaErrorCode`／`FileErrorCode`——它們是建立成功之後才出現在
+`media.mediaErrors` 的，本尊外部影片走非同步驗證（建立回 `UPLOADED`）。
+⇒ 我方 A 面是**同步**形態驗證，自訂兩碼（`EXTERNAL_VIDEO_UNSUPPORTED_HOST`／
+`EXTERNAL_VIDEO_INVALID_URL`，皆 ours）。
+🔴 **不得把官方那六碼搬進 userErrors**——那會把官方的同步／非同步層次搞反。
+
+### D5. 隱私模式的官方措辭邊界（文案紅線）
+
+- YouTube privacy-enhanced 官方逐字只說換網域："Change the domain for the embed URL
+  in your HTML from https://www.youtube.com to https://www.youtube-nocookie.com."
+  <https://support.google.com/youtube/answer/171780?hl=en>（取證 2026-08-25）。
+  🔴 **整頁沒有任何 cookie 敘述**（本輪查證＝未取得），只宣稱不用於個人化
+  ⇒ UI 文案**不得**寫「不設 cookie」。
+- Vimeo `dnt` 官方逐字："Setting this parameter to 'true' blocks the player from
+  collecting session data and analytics"，值域 "true, false OR 1,0"、預設 false。
+  🔴 同頁逐字警告："With DNT active, some essential cookies will still be active."
+  ⇒ **不得**宣稱「零 cookie」。
+  <https://help.vimeo.com/hc/en-us/articles/12426260232977-About-Player-Parameters>（取證 2026-08-25）
+- `dnt=1` 是否阻止請求抵達 Vimeo 伺服器（IP／UA／Referer 層）＝**未取得**，
+  不得宣稱「Vimeo 完全不知道」。
+
+### D6. 外嵌不佔儲存配額；是否計入每商品 250＝未取得
+
+不佔配額有官方逐字："Doesn't count against shop's storage quota."
+<https://shopify.dev/docs/apps/build/online-store/product-media>（取證 2026-08-25）。
+但「250」的措辭是 "a maximum of 250 images, 3D models, or videos"，而 dev 指南對
+ExternalVideo 另寫 "No limits (hosted externally)"，**兩處官方未調和** ⇒ 我方取保守側
+（計入 250，limits `media.external_video_counts_toward_product_max_media: true`，ours）。
+
+### D7. 🔴 Vimeo 的 embed URL 形態＝未取得（第 33 包上線前必補）
+
+`developer.vimeo.com` 是 JS 渲染頁，WebFetch 只拿到空殼；官方 `external_video_tag`
+的範例只有 YouTube。limits 的 `player.vimeo.com/video/%{id}` 是 **ours 暫定**。
+前台真的要渲染 iframe 之前必須補一輪取證，否則 Vimeo 影片可能整批播不出來。
+
+### D8. 本輪未取得清單（實作已按 ours 裁定落地，取得證據後回寫）
+
+`originalSource` 的 URL 形態／`youtube.com/embed` 與 `player.vimeo.com` 是否被本尊接受／
+同步層錯誤碼與訊息／是否計入 250 與方案配額與每週 1000 支節流／同一支影片重複加入的行為／
+外嵌是否進 Content > Files 檔案庫／alt 是否被 host 標題覆寫／`MediaPreviewImageStatus`
+完整值域（只確認 `READY` 一值）／oEmbed 端點與回應形狀／`productCreateMedia` 棄用的
+生效版本／本尊 `productUpdateMedia` 是否要求 ready 前置。
+🔴 我方 A 面另有一個**已知偏離**：本尊建立時 `MediaStatus` 是 `UPLOADED`（官方範例逐字），
+我方建立即 `ready`（沒有非同步驗證鏈）。B 面（oEmbed）恢復 UPLOADED→READY/FAILED。

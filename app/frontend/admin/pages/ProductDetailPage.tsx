@@ -57,7 +57,8 @@ const PRODUCT_QUERY = `
       vendor productType tags
       seo { title description }
       translations { locale field value outdated }
-      media { id position alt status image { thumbUrl url } }
+      media { id position alt status image { thumbUrl url }
+              externalVideo { host externalId embedUrl originUrl } }
       options { name position values { value position } }
       variants(first: 250) {
         nodes {
@@ -97,7 +98,8 @@ const REORDER_MEDIA_MUTATION = `
 const MEDIA_QUERY = `
   query productMedia($id: ID!) {
     product(id: $id) {
-      media { id position alt status image { thumbUrl url } }
+      media { id position alt status image { thumbUrl url }
+              externalVideo { host externalId embedUrl originUrl } }
     }
   }
 `;

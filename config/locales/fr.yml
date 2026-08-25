@@ -25,6 +25,10 @@
       reorder_incomplete: "Le réordonnancement doit inclure tous les médias du produit."
       variant_not_found: "Variante introuvable."
       variant_image_only: "Les variantes acceptent uniquement des images (ni vidéo ni 3D)."
+      external_video_invalid_url: "Impossible de trouver un identifiant de vidéo dans cette URL. Collez l'URL de la page de la vidéo, par exemple https://www.youtube.com/watch?v=… ou https://vimeo.com/…."
+      external_video_unsupported_host: "La vidéo intégrée ne prend en charge que YouTube et Vimeo pour le moment."
+      external_video_shorts: "Les URL YouTube Shorts ne sont pas prises en charge. Modifiez l'URL au format https://www.youtube.com/watch?v=…."
+      external_video_no_file: "Une vidéo intégrée ne peut pas utiliser un fichier existant : ce n'est pas un fichier téléversé."
     product:
       variants_single_only: "Un produit sans option doit avoir exactement une variante (implicite) ; les options nommées et les variantes multiples arrivent dans un jalon ultérieur."
       last_variant_required: "Impossible de supprimer la dernière variante ; chaque produit doit en conserver au moins une."

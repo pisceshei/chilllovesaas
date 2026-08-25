@@ -520,5 +520,10 @@
   "variant.shipping.weight": "商品重量（克）",
   "variant.shipping.weightInvalid": "重量必须是 0 或正整数（单位：克）。",
   "variant.variantNotFound": "找不到这个变体——它可能已被删除。",
-  "variant.backToProduct": "回到商品"
+  "variant.backToProduct": "回到商品",
+  "product.media.embedVideo": "嵌入视频",
+  "product.media.embedVideoAdd": "加入视频",
+  "product.media.embedVideoUrl": "视频网址",
+  "product.media.embedVideoHint": "贴上 YouTube 或 Vimeo 的视频页网址。视频存放在该平台，不占用你的存储空间。",
+  "product.media.embedVideoPrivacy": "播放器会以平台的隐私强化模式载入（YouTube 用 youtube-nocookie、Vimeo 带 dnt 参数），减少追踪用途的数据收集。"
 }

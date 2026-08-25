@@ -1,4 +1,4 @@
-import { ImagePlus, Star, X } from "lucide-react";
+import { ImagePlus, Link2, Star, X } from "lucide-react";
 import { useCallback, useId, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import { requestAdminGraphQL } from "../api/graphql";
@@ -11,6 +11,8 @@ import { Button } from "./Button";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { FilePickerModal } from "./FilePickerModal";
 import { MediaThumb } from "./MediaThumb";
+import { Modal } from "./Modal";
+import { TextField } from "./TextField";
 
 /**
  * 商品媒體卡（第 27 包；原型 `pd-media` 的移植）。
@@ -34,6 +36,13 @@ export interface MediaCardItem {
   alt: string | null;
   status: string;
   image: { thumbUrl: string | null; url: string } | null;
+  /** 外嵌影片（第 37 包）；非外嵌為 null。 */
+  externalVideo?: {
+    host: "YOUTUBE" | "VIMEO";
+    externalId: string;
+    embedUrl: string;
+    originUrl: string;
+  } | null;
 }
 
 export interface MediaCardProps {
@@ -97,6 +106,11 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
   const [deleting, setDeleting] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectExistingRef = useRef<HTMLButtonElement | null>(null);
+  // 第 37 包：外嵌影片。
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoError, setVideoError] = useState<string | null>(null);
+  const embedVideoRef = useRef<HTMLButtonElement | null>(null);
 
   // 從檔案庫挑既有檔掛上來（第 28 包）。一次送出整批，走 fileId 分支。
   const attachExisting = useCallback(async (fileIds: string[]) => {
@@ -122,6 +136,45 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
       setUploading(false);
     }
   }, [onRefresh, productGid, showToast, t]);
+
+  /**
+   * 貼 URL 外嵌影片（第 37 包）。
+   *
+   * 🔴 **前端不驗 URL 形態**——判準只有一份，在
+   *   `Catalog::ExternalVideoUrl`（後端）。前端再寫一套正規表達式的話，
+   *   兩份判準遲早漂移，而漂移的症狀是「前端說不行、後端其實可以」這種
+   *   查不出來的假錯誤。前端只負責把錯誤訊息**顯示在欄位旁**而不是 toast
+   *   ——貼錯網址是要就地改的，toast 會消失。
+   */
+  const embedVideo = useCallback(async () => {
+    const url = videoUrl.trim();
+    if (!productGid || url === "") return;
+
+    setUploading(true);
+    setVideoError(null);
+    try {
+      const data = await requestAdminGraphQL<
+        { productCreateMedia: { userErrors: { message: string }[] } },
+        Record<string, unknown>
+      >(ATTACH_EXISTING_MUTATION, {
+        productId: productGid,
+        media: [ { originalSource: url, mediaContentType: "EXTERNAL_VIDEO" } ],
+        idempotencyKey: uuidV4(),
+      });
+      const errors = data.productCreateMedia.userErrors;
+      if (errors.length > 0) {
+        setVideoError(errors[0].message);
+        return;
+      }
+      setVideoOpen(false);
+      setVideoUrl("");
+      onRefresh();
+    } catch (reason: unknown) {
+      setVideoError(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
+    } finally {
+      setUploading(false);
+    }
+  }, [onRefresh, productGid, showToast, t, videoUrl]);
 
   const upload = useCallback(
     async (files: FileList | File[]) => {
@@ -262,6 +315,16 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
           >
             {t("product.media.selectExisting")}
           </Button>
+          {/* 第 37 包：外嵌影片。🔴 與「上傳」分開的入口——影片**不是上傳**
+              （伺服器沒有轉碼器，B9），放進同一個檔案選擇器會讓人以為可以傳影片檔。 */}
+          <Button
+            onClick={() => { setVideoError(null); setVideoOpen(true); }}
+            ref={embedVideoRef}
+            size="small"
+            variant="ghost"
+          >
+            <Link2 aria-hidden="true" size={14} />{t("product.media.embedVideo")}
+          </Button>
         </div>
         <p>{t("product.media.accept", { max: maxMedia })}</p>
         <input
@@ -294,7 +357,12 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
                     <Star aria-hidden="true" size={11} /> {t("product.media.featured")}
                   </span>
                 ) : null}
-                <MediaThumb alt={item.alt} status={item.status} thumbUrl={item.image?.thumbUrl ?? null} />
+                <MediaThumb
+                  alt={item.alt}
+                  status={item.status}
+                  thumbUrl={item.image?.thumbUrl ?? null}
+                  videoHost={item.externalVideo?.host ?? null}
+                />
                 <input
                   aria-label={t("product.media.altFor", { position: index + 1 })}
                   className="cl-media-tile__alt"
@@ -316,6 +384,45 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
           })}
         </ul>
       ) : null}
+
+      {/* 第 37 包：貼 URL 外嵌影片。 */}
+      <Modal
+        footer={
+          <>
+            <Button onClick={() => setVideoOpen(false)} variant="secondary">
+              {t("common.cancel")}
+            </Button>
+            <Button
+              disabled={videoUrl.trim() === ""}
+              loading={uploading}
+              onClick={() => void embedVideo()}
+              variant="primary"
+            >
+              {t("product.media.embedVideoAdd")}
+            </Button>
+          </>
+        }
+        onClose={() => setVideoOpen(false)}
+        open={videoOpen}
+        restoreFocusTo={embedVideoRef}
+        title={t("product.media.embedVideo")}
+      >
+        <div className="cl-embed-video">
+          <TextField
+            error={videoError ?? undefined}
+            label={t("product.media.embedVideoUrl")}
+            onChange={(event) => { setVideoUrl(event.target.value); setVideoError(null); }}
+            placeholder="https://www.youtube.com/watch?v=…"
+            value={videoUrl}
+          />
+          <p className="cl-embed-video__note">{t("product.media.embedVideoHint")}</p>
+          {/* 🔴 隱私文案的紅線（limits `external_video_privacy_params` 的註）：
+              官方對 youtube-nocookie **整頁沒有任何 cookie 敘述**，只宣稱不用於個人化；
+              Vimeo 的 dnt 官方逐字警告 "some essential cookies will still be active."
+              ⇒ 這裡**不得**寫「不會設 cookie」。 */}
+          <p className="cl-embed-video__note">{t("product.media.embedVideoPrivacy")}</p>
+        </div>
+      </Modal>
 
       <FilePickerModal
         maxSelectable={Math.max(maxMedia - media.length, 0)}

@@ -520,5 +520,10 @@
   "variant.shipping.weight": "商品重量（グラム）",
   "variant.shipping.weightInvalid": "重量は 0 または正の整数（グラム）で入力してください。",
   "variant.variantNotFound": "このバリエーションが見つかりません。削除された可能性があります。",
-  "variant.backToProduct": "商品に戻る"
+  "variant.backToProduct": "商品に戻る",
+  "product.media.embedVideo": "動画を埋め込む",
+  "product.media.embedVideoAdd": "動画を追加",
+  "product.media.embedVideoUrl": "動画 URL",
+  "product.media.embedVideoHint": "YouTube または Vimeo の動画ページ URL を貼り付けてください。動画はそのプラットフォーム上に残り、ストレージを消費しません。",
+  "product.media.embedVideoPrivacy": "プレーヤーは各プラットフォームのプライバシー強化モード（YouTube は youtube-nocookie、Vimeo は dnt パラメータ）で読み込まれ、トラッキング目的のデータ収集を抑えます。"
 }

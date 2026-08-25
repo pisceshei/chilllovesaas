@@ -22,20 +22,41 @@ module Types
     field :image, Types::ImageType, null: true,
       description: "檔案本體與衍生尺寸；處理未完成時衍生 URL 為 null。"
     field :product_variant_id, ID, null: true, description: "掛在哪個變體（官方每變體 1 張）。"
+    # 第 37 包：與 `image` 平行——媒體是外嵌影片時才有值。
+    field :external_video, Types::ExternalVideoType, null: true,
+      description: "外嵌影片（YouTube／Vimeo）；非外嵌則為 null。"
 
     def id = "gid://chilllove/Media/#{object.id}"
 
     # D48：權威在檔案。沒有檔案的 M0 遺留列回 nil（不回落 `media.alt_text`
     # ——那正是停用的那一欄，回落等於讓舊語義從後門活著）。
-    def alt = object.stored_file&.alt_text
+    # 🔴 D48 的**窄縫**：外嵌影片沒有檔案，媒體列就是 alt 的唯一落點。
+    #   回落條件**只認 `external_video`**，不得放寬成「file 為 nil 就回落」——
+    #   放寬會讓 D48 停用的舊語義從後門復活（`file_id` 為 nil 的 M0 遺留圖片列
+    #   仍然回 nil，這是刻意的）。
+    def alt
+      return object.alt_text if object.external_video?
+
+      object.stored_file&.alt_text
+    end
 
     # 🔴 狀態的真相在 `files.status`（審查 C2）：`media.status` 是建立當下的快照，
     #    管線把檔案轉 ready 時不回頭改媒體列——讀它會讓卡片永遠停在「處理中」。
-    def status = object.stored_file&.status || object.status
+    # 🔴 外嵌影片必須走自己的分支：A 面它沒有 `stored_file`，湊巧會落到 `object.status`
+    #   而正確；但 B 面（oEmbed 縮圖）一旦把縮圖檔掛上 `file_id`，**媒體的狀態就會被
+    #   縮圖檔的狀態冒充**——影片好好的、縮圖還在處理，卡片卻顯示「處理中」。
+    #   現在就分開，B 面不必回頭改。
+    def status
+      return object.status if object.external_video?
+
+      object.stored_file&.status || object.status
+    end
 
     def product_variant_id
       object.product_variant_id && "gid://chilllove/ProductVariant/#{object.product_variant_id}"
     end
+
+    def external_video = object.external_video? ? object : nil
 
     def image
       return nil unless object.stored_file
