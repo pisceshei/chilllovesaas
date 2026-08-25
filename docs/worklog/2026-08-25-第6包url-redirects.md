@@ -45,7 +45,8 @@ limits 落三鍵：`redirect_sources`（62 §B.5 逐字四值）、`redirect_sta
 原因，不能只回一句 taken。`handle_change_pending` 五語言全部移除（死鍵）。
 🔴 更新態撞另一商品的現任 handle **不另寫檢查**：model 的 `validates :handle,
 uniqueness` → RecordInvalid → HANDLE_TAKEN 承接（紅測＝`url_redirects_spec` 的
-「撞現任 handle」例），DB 唯一索引 `uq_products_handle` 是併發窗的第二道——
+「撞現任 handle」例），併發窗另有 DB 索引 `uq_products_handle`
+（複驗＝`grep -n uq_products_handle db/schema.rb`）——
 再寫一份是突變測不出差異的冗餘（本包實測：寫了又刪）。
 
 ### 測試
