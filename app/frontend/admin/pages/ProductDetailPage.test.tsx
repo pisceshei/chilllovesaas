@@ -298,7 +298,8 @@ describe("新增商品頁", () => {
       expect(input.status).toBe("ACTIVE");
       expect(input.vendor).toBe("Frederic Malle");
       expect(input.tags).toEqual([ "花香" ]);
-      expect(input).not.toHaveProperty("handle");
+      // 第 6 包起編輯態送回聲 handle（同值＝伺服端 no-op；改值＝寫 301）
+      expect(input.handle).toBe("existing-tee");
     });
 
     it("更多動作→封存商品：立即送 status=ARCHIVED（不停在 SaveBar）", async () => {

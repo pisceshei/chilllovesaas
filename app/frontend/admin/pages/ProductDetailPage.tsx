@@ -855,7 +855,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         found.cost = t("product.validation.moneyInvalid");
       }
     }
-    if (isNew && values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
+    if (values.handle && !/^[a-z0-9-]+$/.test(values.handle)) {
       found.handle = t("product.validation.handleInvalid");
     }
     if (values.seoTitle.length > SEO_TITLE_MAX) {
@@ -1014,9 +1014,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           isNew && locations[0] ? locations[0].id : undefined,
         ),
       };
-      if (isNew) {
-        if (values.handle) input.handle = values.handle;
-      } else {
+      // 第 6 包：handle 兩態都送（同值＝伺服端 no-op；改值＝同 txn 寫 301；
+      // 空字串＝presence nil＝保持現值，handle 本來就清不掉）。
+      if (values.handle) input.handle = values.handle.trim();
+      if (!isNew) {
         input.id = productGid;
         input.lockVersion = lockVersion;
       }
@@ -1836,7 +1837,6 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                   )}
                 </div>
                 <TextField
-                  disabled={!isNew}
                   error={errors.handle}
                   hint={isNew ? t("product.seo.handle.hintNew") : t("product.seo.handle.hintEdit")}
                   label={t("product.seo.handle")}

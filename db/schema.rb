@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_055500) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_056500) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1119,6 +1119,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_055500) do
     t.index ["shop_id", "locale_tag", "review_required"], name: "ix_translations_locale_review"
     t.index ["shop_id", "resource_type", "resource_id", "locale_tag", "field_key"], name: "uq_translations_resource_locale_field", unique: true
     t.index ["shop_id", "resource_type", "resource_id", "locale_tag"], name: "ix_translations_resource_locale"
+  end
+
+  create_table "url_redirects", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "路徑級重導（62 §B.5）；from/to 為無前綴正規路徑", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "from_path", limit: 512, null: false
+    t.bigint "shop_id", null: false
+    t.string "source", limit: 32, null: false
+    t.integer "status_code", default: 301, null: false
+    t.string "to_path", limit: 512, null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "from_path"], name: "uq_url_redirects_from_path", unique: true
+    t.index ["shop_id", "to_path"], name: "ix_url_redirects_to_path"
   end
 
   create_table "user_store_assignments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

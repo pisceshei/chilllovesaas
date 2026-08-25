@@ -255,7 +255,7 @@
   "product.seo.meta.hint": "{used} caractères sur {serp} ; au-delà, le texte peut être tronqué dans les résultats (limite {max})",
   "product.seo.handle": "Handle d’URL",
   "product.seo.handle.hintNew": "Généré à partir du titre anglais à l’enregistrement ; une valeur manuelle en conflit est refusée",
-  "product.seo.handle.hintEdit": "Changer le handle nécessite une redirection 301 (ouvert au jalon URL)",
+  "product.seo.handle.hintEdit": "Modifier le handle crée une redirection 301 depuis l'ancienne URL. Les anciens handles ne sont jamais réutilisés.",
   "product.seo.handle.placeholder": "Généré automatiquement",
   "product.card.status": "Statut",
   "product.status.label": "Statut du produit",

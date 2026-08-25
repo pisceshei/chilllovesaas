@@ -255,7 +255,7 @@
   "product.seo.meta.hint": "{used} of {serp} characters used; longer text may be cut off in search results (limit {max})",
   "product.seo.handle": "URL handle",
   "product.seo.handle.hintNew": "Generated from the English title on save; a conflicting manual value is rejected",
-  "product.seo.handle.hintEdit": "Changing the handle needs a 301 redirect (opens with the URL milestone)",
+  "product.seo.handle.hintEdit": "Changing the handle creates a 301 redirect from the old URL. Old handles are never recycled.",
   "product.seo.handle.placeholder": "Generated automatically",
   "product.card.status": "Status",
   "product.status.label": "Product status",

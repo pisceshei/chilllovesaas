@@ -255,7 +255,7 @@
   "product.seo.meta.hint": "已使用 {used} / {serp} 個字元；超過會被搜尋結果截斷（上限 {max}）",
   "product.seo.handle": "網址 handle",
   "product.seo.handle.hintNew": "儲存時由英文標題自動生成；手填衝突會被拒絕",
-  "product.seo.handle.hintEdit": "handle 變更需 301 轉址（URL 里程碑開放）",
+  "product.seo.handle.hintEdit": "改 handle 會自動建立舊網址的 301 轉向；舊 handle 不回收。",
   "product.seo.handle.placeholder": "自動生成",
   "product.card.status": "狀態",
   "product.status.label": "商品狀態",

@@ -44,7 +44,7 @@
 - **SEO 卡**（91 §11 形態）：收合態＝SERP 預覽（站名→`host › products › handle`→標題→描述→
   價格列 `HK$X.XX HKD`；覆寫值優先、留空 fallback 商品標題／說明前 160 字）；✏️ 展開＝
   頁面標題（計數器 `已使用 X / 70`，maxLength 70）＋Meta 描述（計數器 `X / 160`，
-  **可超過**，硬上限 320）＋網址 handle（編輯態仍鎖定，301 屬 URL 包）。
+  **可超過**，硬上限 320）＋網址 handle（第 6 包起**編輯態可改**：改名在同一 transaction 落 301，舊 handle 永不回收；見 `Catalog::HandleChange`）。
   ④影響：`seo_title`／`seo_description` 是 G12 前台 `<title>`／`<meta name=description>`
   的資料源（62 號）；SERP 預覽的 fallback 規則將來要與前台渲染規則同源。
 - **狀態 listbox**（91 §2 形態）：①按鈕＋popover listbox ②三選項各帶副行——啟用中／草稿／
