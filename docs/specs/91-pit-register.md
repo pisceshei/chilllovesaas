@@ -2229,6 +2229,35 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.16 `https://chilling.com.hk`（裸 apex）送自簽憑證（第 31 包順手發現，2026-08-25）
+
+- ⚪ **裸網域 `chilling.com.hk` 的 HTTPS 是壞的**：瀏覽器會看到憑證警告，
+  `openssl s_client` 回 `verify error:num=18:self-signed certificate`。
+  `http://chilling.com.hk` 正常（200）。
+
+- **成因不是設定失誤，是 X.509 的規則**：`.187` 上那張萬用憑證的 SAN 是
+  `*.chill.love`／`*.chilling.com.hk`／`*.chilllove.ca`／`*.chillnow.ca`
+  ——**萬用字元不涵蓋裸 apex**（`*.example.com` 不匹配 `example.com`）。
+  而 `.187` 的 vhost 裡沒有任何一個 `server_name` 精確等於 `chilling.com.hk`
+  ⇒ 該 SNI 落到寶塔的 `0.default` 區塊，送出它的自簽憑證。
+
+- **複驗**（在能連到該網域的機器上跑）：
+
+  ```
+  echo | openssl s_client -connect chilling.com.hk:443 -servername chilling.com.hk 2>&1 | grep "verify error"
+  echo | openssl s_client -connect demo.chilling.com.hk:443 -servername demo.chilling.com.hk 2>/dev/null | openssl x509 -noout -ext subjectAltName
+  ```
+
+  前者應出現 num=18；後者的 SAN 清單裡不會有裸 `chilling.com.hk`。
+
+- **與第 31 包無關**：該包只在 `.187` 新增一個 `server_name demo.chilling.com.hk`
+  的 vhost（精確比對），動不到 apex 走的那條路徑。登記在此是因為查證過程順手
+  發現，且它會讓任何人「連 apex 看看站活著沒」時誤以為是我方弄壞的。
+
+- **要修屬另一件事**：給 apex 簽一張含裸網域的憑證（或在既有憑證加一個
+  非萬用 SAN），再補一個精確的 `server_name chilling.com.hk` vhost。
+  🔴 那是使用者主站的憑證流程，**不是 CHILL LOVE 的射程**——動它之前要先問。
+
 ### 3.15 `Product#destroy` 在變體掛了圖時撞 FK（第 29 包線上驗收順手發現，2026-08-25）
 
 - ⚪ **`product.destroy!` 對「有變體圖的商品」一定失敗**，回
