@@ -195,6 +195,15 @@ module Catalog
 
         max = Limits.fetch(:product, :max_images_per_variant)
         ActiveRecord::Base.transaction do
+          # 🔴 **鎖商品列**（審查 VIS-4）：下面是「讀出已掛的圖 → 卸超額 → 掛新的」
+          #    三步 read-then-write，中間沒有任何列鎖，而
+          #    `ix_media_product_variant_id` **不是 unique** ⇒ DB 層也沒有
+          #    「一個變體最多一張圖」的約束。兩個請求同時給同一變體掛不同的圖，
+          #    兩邊都讀到「目前 0 張」⇒ 兩邊都不卸 ⇒ 掛完是 2 張，超過官方上限 1。
+          #    同檔 `create` 為完全同型的並發問題已取 `Product.lock`（見上），本處沿用。
+          locked = Product.lock.find_by(id: product.id)
+          raise ActiveRecord::RecordNotFound if locked.nil?
+
           # 每變體上限（官方 1 張）：掛新的之前，把「超出上限的舊圖」卸下。
           # 🔴 保留數＝max-1（新的那張佔一格）；`limit` 不可用——MySQL 不接受
           #    UPDATE ... LIMIT 搭配子查詢，且 limit(0) 會變成什麼都不卸（實測抓到）。

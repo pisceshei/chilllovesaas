@@ -26,6 +26,12 @@ class ProductVariant < ApplicationRecord
   has_many :product_variant_option_values, dependent: :destroy, autosave: true
   has_many :option_values, through: :product_variant_option_values
 
+  # 變體圖（第 27 包建立、第 29 包讀取面用）。
+  # 🔴 **無 dependent**：變體被刪時 `Catalog::DeleteVariant` 只把
+  #    `media.product_variant_id` 置 NULL（B1 方案②第 ② 步）——圖仍屬於商品，
+  #    只是不再是「這個變體的圖」。加 dependent: :destroy 會把商品的圖一起刪掉。
+  has_many :media, class_name: "Media", inverse_of: :product_variant
+
   # 🔴 無 dependent（2026-08-24 第 20 包／B1）：item 在變體刪除後**保留為孤兒**
   #    （product_variant_id 置 NULL＋variant_deleted_at）——ledger 是 append-only
   #    稽核帳，連鎖刪 item→levels 會撞 ledger 的 RESTRICT FK；且 dependent: :destroy
@@ -38,6 +44,12 @@ class ProductVariant < ApplicationRecord
   before_destroy :orphan_inventory_item!
 
   validates :title, presence: true
+  # 重量是非負整數公克。DB 是 signed int ⇒ 負數在資料庫層完全合法，擋不住；
+  # `SaveProduct#normalize_weight` 已在服務層回 userError，這是第二道
+  # ——涵蓋 insert_all 以外的所有寫入路徑（審查 R-4／P29-BE-W2）。
+  # 上限不設：官方值未取得（鐵律 19），要設須先依鐵律 6 在 limits.yml 立鍵並帶出處。
+  validates :weight_grams,
+    numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   after_create :create_inventory_item
 

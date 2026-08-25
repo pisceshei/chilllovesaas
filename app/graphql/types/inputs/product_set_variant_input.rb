@@ -32,6 +32,14 @@ module Types
       argument :sku, String, required: false, description: "SKU（軟唯一：重複警告不阻擋）。"
       argument :barcode, String, required: false, description: "條碼（ISBN／UPC／GTIN）。"
       argument :taxable, Boolean, required: false, description: "是否收取稅金（預設 true）。"
+      # ── 第 29 包（變體子頁運送卡）──
+      # 🔴 `weightGrams` 是**公克整數**，不是「公斤浮點」：與金額同紀律
+      #    ——內部整數、顯示層才換算單位。收浮點公斤會在 0.1 kg 這類值上
+      #    出現 100.00000000000001 g 的經典二進位誤差。
+      argument :weight_grams, Integer, required: false,
+        description: "商品重量（公克整數；預設 0）。"
+      argument :requires_shipping, Boolean, required: false,
+        description: "是否為需運送的實體商品（預設 true）。"
     end
   end
 end

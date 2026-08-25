@@ -49,6 +49,10 @@ export interface VariantRowData {
   cost: string;
   barcode: string;
   taxable: boolean;
+  /** 回聲欄（第 29 包）：商品重量（公克整數）。 */
+  weightGrams: number;
+  /** 回聲欄（第 29 包）：是否為需運送的實體商品。 */
+  requiresShipping: boolean;
 }
 
 /** 新列的繼承來源（定價卡現值；首次啟用時首列全欄繼承＝隱含變體升級）。 */
@@ -72,7 +76,55 @@ const freshRow = (coords: string[], seed: RowSeed, first: boolean): VariantRowDa
   cost: first ? seed.cost : "",
   barcode: first ? seed.barcode : "",
   taxable: seed.taxable,
+  // 新列的運送預設＝與 DB 欄預設同值（`weight_grams` 0、`requires_shipping` true）。
+  // 🔴 不從 seed 繼承：重量是**這一個變體**的物理屬性，不是定價那種會想沿用的東西。
+  weightGrams: 0,
+  requiresShipping: true,
 });
+
+/**
+ * 把變體列轉成 `productSet` 的 `variants` 輸入。
+ *
+ * 🔴 **商品頁與變體子頁必須共用這一支**。`productSet` 是宣告式全量——沒列在
+ *   `variants` 裡的變體會被刪掉，沒送的欄位會回落預設。兩個畫面各寫一份 payload
+ *   的話，其中一份遲早少送一個回聲欄，症狀是「在 A 頁存檔把 B 頁設好的值抹掉」，
+ *   而兩邊各自的測試都會綠。
+ * 🔴 `initialQuantities` 只在建立態送（帶 id 時給它＝INVALID，後端契約）。
+ *
+ * @param rows - 全部變體列（**不是**只有被編輯的那一個）。
+ * @param options - 選項樹；空陣列＝隱含變體（單一變體、無選項）。
+ * @param money - 金額字串 → API 字串的轉換（呼叫端注入，避免本檔依賴 money 模組）。
+ * @param initialLocationId - 建立態的初始庫存地點；省略＝不送 initialQuantities。
+ */
+export function buildVariantsPayload(
+  rows: readonly VariantRowData[],
+  options: readonly { name: string }[],
+  money: (raw: string) => string | null,
+  initialLocationId?: string,
+): Record<string, unknown>[] {
+  return rows.map((row) => ({
+    ...(row.id ? { id: row.id } : {}),
+    price: money(row.price),
+    ...(row.compare.trim() ? { compareAtPrice: money(row.compare) } : {}),
+    ...(row.cost.trim() ? { cost: money(row.cost) } : {}),
+    ...(row.sku.trim() ? { sku: row.sku.trim() } : {}),
+    ...(row.barcode.trim() ? { barcode: row.barcode.trim() } : {}),
+    taxable: row.taxable,
+    // 🔴 運送兩欄一律送（不是「有值才送」）：宣告式覆寫下，不送＝回落 0／true，
+    //    等於把使用者在變體子頁設好的重量清掉。
+    weightGrams: row.weightGrams,
+    requiresShipping: row.requiresShipping,
+    ...(options.length > 0
+      ? { optionValues: options.map((option, index) => ({
+          optionName: option.name.trim(),
+          value: row.coords[index],
+        })) }
+      : {}),
+    ...(initialLocationId && row.quantity.trim()
+      ? { initialQuantities: [ { locationId: initialLocationId, quantity: Number(row.quantity.trim()) } ] }
+      : {}),
+  }));
+}
 
 /** 鏡射 `config/limits.yml` `product.max_options`（正典在 limits，改那邊要同步）。 */
 export const MAX_PRODUCT_OPTIONS = 3;

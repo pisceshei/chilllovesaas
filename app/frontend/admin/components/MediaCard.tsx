@@ -10,6 +10,7 @@ import { useToast } from "../lib/ToastContext";
 import { Button } from "./Button";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { FilePickerModal } from "./FilePickerModal";
+import { MediaThumb } from "./MediaThumb";
 
 /**
  * 商品媒體卡（第 27 包；原型 `pd-media` 的移植）。
@@ -278,7 +279,6 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
       {media.length > 0 ? (
         <ul aria-label={t("product.media.grid")} className="cl-media-grid">
           {media.map((item, index) => {
-            const ready = item.status === "READY" && item.image?.thumbUrl;
             return (
               <li
                 className={index === 0 ? "cl-media-tile cl-media-tile--lead" : "cl-media-tile"}
@@ -294,15 +294,7 @@ export function MediaCard({ productGid, media, onReorder, onRefresh, maxMedia }:
                     <Star aria-hidden="true" size={11} /> {t("product.media.featured")}
                   </span>
                 ) : null}
-                {ready ? (
-                  <img alt={item.alt ?? ""} loading="lazy" src={item.image?.thumbUrl ?? ""} />
-                ) : (
-                  <span className="cl-media-tile__pending">
-                    {item.status === "FAILED"
-                      ? t("product.media.processingFailed")
-                      : t("product.media.processing")}
-                  </span>
-                )}
+                <MediaThumb alt={item.alt} status={item.status} thumbUrl={item.image?.thumbUrl ?? null} />
                 <input
                   aria-label={t("product.media.altFor", { position: index + 1 })}
                   className="cl-media-tile__alt"

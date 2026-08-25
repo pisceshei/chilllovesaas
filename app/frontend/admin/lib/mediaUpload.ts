@@ -19,6 +19,9 @@ import { requestAdminGraphQL } from "../api/graphql";
 export interface MediaUploadOutcome {
   filename: string;
   error?: string;
+  /** 成功時的媒體 GID。變體圖格靠它把剛傳好的圖直接指給變體（第 29 包）；
+   *  媒體卡不需要（它重讀整份列表），但回傳它不花任何代價。 */
+  mediaId?: string;
 }
 
 interface StagedTarget {
@@ -97,7 +100,7 @@ export async function uploadProductMedia(
 
     // 第 3 步：掛商品（內部走 fileCreate 建檔＋發 media.uploaded 事件）
     const created = await requestAdminGraphQL<
-      { productCreateMedia: { userErrors: UserError[] } },
+      { productCreateMedia: { media: { id: string }[]; userErrors: UserError[] } },
       Record<string, unknown>
     >(CREATE_MEDIA_MUTATION, {
       productId: productGid,
@@ -107,7 +110,7 @@ export async function uploadProductMedia(
     const createErrors = created.productCreateMedia.userErrors;
     if (createErrors.length > 0) return { filename: file.name, error: createErrors[0].message };
 
-    return { filename: file.name };
+    return { filename: file.name, mediaId: created.productCreateMedia.media[0]?.id };
   } catch (reason: unknown) {
     return { filename: file.name, error: reason instanceof Error ? reason.message : "上傳失敗" };
   }

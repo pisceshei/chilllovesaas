@@ -290,7 +290,9 @@ module Catalog
             cost_cents: row[:cost_cents],
             sku: row[:sku],
             barcode: row[:barcode],
-            taxable: row.fetch(:taxable, true)
+            taxable: row.fetch(:taxable, true),
+            weight_grams: row.fetch(:weight_grams, 0),
+            requires_shipping: row.fetch(:requires_shipping, true)
           )
         end
       end
@@ -317,7 +319,9 @@ module Catalog
             compare_at_price_cents: row[:compare_at_price_cents],
             cost_cents: row[:cost_cents],
             sku: row[:sku], barcode: row[:barcode],
-            taxable: row.fetch(:taxable, true))
+            taxable: row.fetch(:taxable, true),
+            weight_grams: row.fetch(:weight_grams, 0),
+            requires_shipping: row.fetch(:requires_shipping, true))
           projection.each do |option_id, value_id|
             variant.product_variant_option_values.build(
               shop_id: shop.id, product_id: product.id,

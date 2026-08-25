@@ -1,6 +1,6 @@
 import { ArrowLeft, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { useBlocker, useNavigate, useParams } from "react-router-dom";
+import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
 import { AdminGraphQLError, requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
 import type { BadgeProgress, BadgeTone } from "../components/Badge";
@@ -18,7 +18,7 @@ import { useToast } from "../lib/ToastContext";
 import { uuidV4 } from "../lib/uuid";
 import { centsToApiString, isValidMoneyInput, parseMoneyToCents, profitState } from "../lib/money";
 import { useT } from "../i18n/I18nContext";
-import { graveKey, MAX_PRODUCT_OPTIONS, rebuildRows } from "../lib/variantMatrix";
+import { graveKey, MAX_PRODUCT_OPTIONS, rebuildRows, buildVariantsPayload } from "../lib/variantMatrix";
 import type { OptionDraft, RowSeed, VariantRowData } from "../lib/variantMatrix";
 
 /**
@@ -60,7 +60,11 @@ const PRODUCT_QUERY = `
       media { id position alt status image { thumbUrl url } }
       options { name position values { value position } }
       variants(first: 250) {
-        nodes { id title position price compareAtPrice cost sku barcode taxable selectedOptions { name value } }
+        nodes {
+          id title position price compareAtPrice cost sku barcode taxable
+          weightGrams requiresShipping
+          selectedOptions { name value }
+        }
         pageInfo { hasNextPage }
       }
     }
@@ -167,6 +171,8 @@ interface ProductQueryData {
         sku: string | null;
         barcode: string | null;
         taxable: boolean;
+        weightGrams?: number;
+        requiresShipping?: boolean;
         selectedOptions?: { name: string; value: string }[];
       }[];
       pageInfo?: { hasNextPage: boolean };
@@ -182,6 +188,9 @@ interface FormValues {
   compare: string;
   cost: string;
   taxable: boolean;
+  /** 隱含變體（無選項）的運送回聲欄——具名變體的存在 variantRows 裡。 */
+  weightGrams: number;
+  requiresShipping: boolean;
   sku: string;
   barcode: string;
   handle: string;
@@ -209,6 +218,8 @@ const INITIAL_VALUES: FormValues = {
   compare: "",
   cost: "",
   taxable: true,
+  weightGrams: 0,
+  requiresShipping: true,
   sku: "",
   barcode: "",
   handle: "",
@@ -668,6 +679,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             cost: node.cost ?? "",
             barcode: node.barcode ?? "",
             taxable: node.taxable,
+            // 🔴 回聲欄（第 29 包）：不載入就等於「送出時不送」＝把變體子頁設好的
+            //    重量清成 0、requiresShipping 清成 true。
+            weightGrams: node.weightGrams ?? 0,
+            requiresShipping: node.requiresShipping ?? true,
           }));
         const loaded: FormValues = {
           title: product.title,
@@ -676,6 +691,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           compare: variant?.compareAtPrice ?? "",
           cost: variant?.cost ?? "",
           taxable: variant?.taxable ?? true,
+          weightGrams: variant?.weightGrams ?? 0,
+          requiresShipping: variant?.requiresShipping ?? true,
           sku: variant?.sku ?? "",
           barcode: variant?.barcode ?? "",
           handle: product.handle,
@@ -973,39 +990,27 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         ...(values.options.length > 0
           ? { options: values.options.map((option) => ({ name: option.name.trim(), values: option.values })) }
           : {}),
-        variants: values.options.length > 0
-          ? values.variantRows.map((row) => ({
-              ...(row.id ? { id: row.id } : {}),
-              price: centsToApiString(parseMoneyToCents(row.price) ?? null),
-              ...(row.compare.trim()
-                ? { compareAtPrice: centsToApiString(parseMoneyToCents(row.compare) ?? null) }
-                : {}),
-              ...(row.cost.trim() ? { cost: centsToApiString(parseMoneyToCents(row.cost) ?? null) } : {}),
-              ...(row.sku.trim() ? { sku: row.sku.trim() } : {}),
-              ...(row.barcode.trim() ? { barcode: row.barcode.trim() } : {}),
-              taxable: row.taxable,
-              optionValues: values.options.map((option, index) => ({
-                optionName: option.name.trim(),
-                value: row.coords[index],
-              })),
-              ...(isNew && row.quantity.trim() && locations[0]
-                ? { initialQuantities: [ { locationId: locations[0].id, quantity: Number(row.quantity.trim()) } ] }
-                : {}),
-            }))
-          : [
-              {
-                price: centsToApiString(parseMoneyToCents(values.price) ?? null),
-                ...(values.compare.trim()
-                  ? { compareAtPrice: centsToApiString(parseMoneyToCents(values.compare) ?? null) }
-                  : {}),
-                ...(values.cost.trim()
-                  ? { cost: centsToApiString(parseMoneyToCents(values.cost) ?? null) }
-                  : {}),
-                ...(values.sku.trim() ? { sku: values.sku.trim() } : {}),
-                ...(values.barcode.trim() ? { barcode: values.barcode.trim() } : {}),
-                taxable: values.taxable,
-              },
-            ],
+        // 🔴 走共用的 payload builder（`lib/variantMatrix`）。變體子頁存檔時用的是
+        //    同一支——兩個畫面各寫一份的話，其中一份遲早少送一個回聲欄，症狀是
+        //    「在 A 頁存檔把 B 頁設好的值抹掉」，而兩邊各自的測試都會綠。
+        variants: buildVariantsPayload(
+          values.options.length > 0 ? values.variantRows : [ {
+            id: null,
+            coords: [],
+            price: values.price,
+            sku: values.sku,
+            quantity: "",
+            compare: values.compare,
+            cost: values.cost,
+            barcode: values.barcode,
+            taxable: values.taxable,
+            weightGrams: values.weightGrams,
+            requiresShipping: values.requiresShipping,
+          } ],
+          values.options,
+          (raw: string) => centsToApiString(parseMoneyToCents(raw) ?? null),
+          isNew && locations[0] ? locations[0].id : undefined,
+        ),
       };
       if (isNew) {
         if (values.handle) input.handle = values.handle;
@@ -1672,7 +1677,18 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                         : "cl-field__input cl-variant-table__input";
                       return (
                         <tr key={variantRow.coords.join("|")}>
-                          <th scope="row">{variantTitle}</th>
+                          <th scope="row">
+                            {/* 🔴 只有**已存在**的變體才給連結（第 29 包）：新列還沒有
+                                GID，點進去沒有東西可載。建立態整張表都沒有連結。 */}
+                            {variantRow.id && !isNew ? (
+                              <Link
+                                to={`/admin/products/${encodeURIComponent(productGid ?? "")}` +
+                                    `/variants/${encodeURIComponent(variantRow.id)}`}
+                              >
+                                {variantTitle}
+                              </Link>
+                            ) : variantTitle}
+                          </th>
                           <td>
                             <input
                               aria-invalid={rowErrors[rowIndex] ? true : undefined}

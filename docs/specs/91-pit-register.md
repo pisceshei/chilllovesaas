@@ -2229,6 +2229,21 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.14 第 29 包變體子頁：一條範圍外觀察（2026-08-25）
+
+- ⚪ **`ProductDetailPage` 在 overflow 時鎖了整頁，卻留著一個可點的入口**。
+  變體數超過載入上限時該頁把 `<fieldset>` 設成 `disabled` 並顯示
+  `product.variants.tooMany`，但變體表標題格是 `<Link>`——**HTML 的
+  `fieldset[disabled]` 只 disable 表單控件，不 disable `<a>`**，所以那個
+  連到變體子頁的連結在整頁被鎖的狀態下仍然可點。
+  第 29 包的審查（V29-D2）正是循這條路徑找到子頁缺少同一道封鎖：使用者被
+  「看起來安全的鎖」引導到一個沒有鎖的頁面。
+  **子頁側已在第 29 包補上封鎖**（`pageInfo.hasNextPage` ⇒ 擋 save），
+  所以資料損失的路徑已封閉；剩下的是商品頁那個入口的 UI 一致性問題
+  （鎖了卻還能點進去），屬第 23 包射程 ⇒ 只登記，不在第 29 包順手改（鐵律 20.5）。
+  複驗：`grep -n "variantOverflow" app/frontend/admin/pages/ProductDetailPage.tsx`
+  取得守衛位置，該頁變體標題的 `<Link>` 在同一個 `<fieldset disabled>` 之內。
+
 ### 3.13 D48 列表對齊：兩條由對抗審查驗證存活的缺陷（2026-08-25）
 
 - 🔴 **cursor 不帶排序鍵 ⇒ 換鍵重用會靜默回錯資料**（S1）。原本 payload 是

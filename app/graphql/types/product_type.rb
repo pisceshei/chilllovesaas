@@ -144,8 +144,13 @@ module Types
     # @note preload 選項座標：selected_options 走記憶體，不逐變體查（N+1 守衛
     #   ＝spec 的 query count 斷言）。
     def variants(first: nil, after: nil, last: nil, before: nil)
+      # 🔴 第 29 包新增的三個欄位各自會 N+1，preload 一起帶（變體子頁一次載 250 列，
+      #    少一個 includes 就是 250 條查詢；N+1 守衛＝spec 的 query count 斷言）：
+      #    `inventoryLevels` → inventory_item → levels → location；`image` → media → file。
       scope = object.product_variants
-                    .includes(product_variant_option_values: [ :product_option, :option_value ])
+                    .includes(product_variant_option_values: [ :product_option, :option_value ],
+                              inventory_item: { inventory_levels: :location },
+                              media: :stored_file)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
                                       order_key: :position, direction: :asc)
     end

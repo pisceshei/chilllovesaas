@@ -49,6 +49,7 @@
       seo_title_too_long: "SEO 標題長度超過上限。"
       seo_description_too_long: "Meta 描述長度超過上限。"
       price_required: "價格欄位必填。"
+      weight_negative: "重量必須是 0 或正整數（單位：公克）。"
       amount_negative: "金額不得為負。"
       amount_invalid: "請輸入有效金額字串（主單位、恆兩位小數、不含符號與千分位）。"
       handle_taken: "handle 已被使用。"

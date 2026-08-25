@@ -13,6 +13,8 @@ const row = (coords: string[], overrides: Partial<VariantRowData> = {}): Variant
   id: null,
   coords,
   price: "10.00",
+  weightGrams: 0,
+  requiresShipping: true,
   sku: "",
   quantity: "",
   compare: "",
