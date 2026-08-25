@@ -104,7 +104,7 @@ module Translations
             findings.concat(inspect_row(record, known_tags, source_locale))
           end
 
-          fixed, stale = fix ? apply_fixes!(shop, findings) : [ 0, 0 ]
+          fixed, stale = fix ? apply_fixes!(shop, findings, known_tags, source_locale) : [ 0, 0 ]
           Report.new(shop_id: shop.id, scanned:, findings:, abstained: ABSTAINED,
                      fixed:, skipped_stale: stale)
         end
@@ -141,7 +141,7 @@ module Translations
       end
 
       # @return [Array(Integer, Integer)] [實際動到的列數, 因值已變而跳過的列數]
-      def apply_fixes!(shop, findings)
+      def apply_fixes!(shop, findings, known_tags, source_locale)
         targets = findings.select { |f| FIXABLE.include?(f.rule) }
         return [ 0, 0 ] if targets.empty?
 
@@ -176,7 +176,18 @@ module Translations
         end
 
         # 進度重算逐組短 transaction（鐵律 7 單一來源；touch 推進 stamp）。
+        # 🔴 只對「可翻語言」或「已有 status 列」的組重算（審查 F8）：同一列可以同時命中
+        #   `blank_value`（可修）與 `source_locale_row`／`orphan_locale`（僅登記）——修掉它
+        #   之後無條件 recompute 會**新造**一列來源語言或已刪語言的 `translation_status`，
+        #   而 `Upsert.commit` 從不為那些語言建列 ⇒ 後台翻譯分頁憑空多出「en 0/2」。
+        #   既有的 stale status 列照樣更新（讓它歸零），只是不無中生有。
+        translatable = known_tags - [ source_locale ]
         recompute.each do |type, id, tag|
+          unless translatable.include?(tag) ||
+                 TranslationStatus.exists?(shop_id: shop.id, resource_type: type,
+                                           resource_id: id, locale_tag: tag)
+            next
+          end
           Upsert.recompute_status(shop:, resource_type: type, resource_id: id,
                                   locale_tag: tag, touch: true)
         end

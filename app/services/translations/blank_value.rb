@@ -131,13 +131,15 @@ module Translations
     # 🔴 這裡**不能**呼叫 parser（那就繞回 `text_bearing?` 要避開的懸崖），也不能用
     #   `CGI.unescapeHTML`——實測它在本專案的 Ruby 只解 5 個基本具名參照，數值參照原樣留著
     #   （`CGI.unescapeHTML("&#160;") == "&#160;"`），於是 `<p>&#160;</p>` 會被誤判成有內容。
-    # ⚠️ 已知不精確：只處理數值參照與**不可見的**具名參照白名單；其餘參照一律當可見內容
-    #   （落在「報錯而不是刪列」那一側，與本模組的代價不對稱同向）。
+    # ⚠️ 已知不精確：只處理數值參照（🔴 `&#x`／`&#X` 兩種大小寫都要收——HTML 允許大寫 X，
+    #   libxml2 兩種都解；首版漏了大寫，於是 `<p>&#X200B;</p>` 被當成有內容、商家清空欄位
+    #   會整個 mutation 被拒——審查 F4）與**不可見的**具名參照白名單；其餘參照一律當
+    #   可見內容（落在「報錯而不是刪列」那一側，與本模組的代價不對稱同向）。
     INVISIBLE_NAMED_REFS = %w[nbsp ensp emsp thinsp hairsp zwnj zwj lrm rlm feff].freeze
 
     def drop_invisible_refs(text)
       text
-        .gsub(/&#x([0-9a-fA-F]+);|&#(\d+);/) do
+        .gsub(/&#[xX]([0-9a-fA-F]+);|&#(\d+);/) do
           code = ::Regexp.last_match(1) ? ::Regexp.last_match(1).to_i(16) : ::Regexp.last_match(2).to_i
           char = begin
             code.chr(Encoding::UTF_8)

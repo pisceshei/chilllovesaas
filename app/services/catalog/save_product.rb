@@ -154,10 +154,15 @@ module Catalog
           variant = normalize_variant(shop, (input[:variants] || []).first || {}, errors)
         end
         organization = normalize_organization(input, errors)
-        # 🔴 譯文在這裡（transaction **外**）就完成驗證與 sanitize（2026-08-25 依審查 C4）：
-        #   原本整包原樣帶進 txn、由 Upsert 在裡面做，而 sanitize 是數百 ms 級的 CPU 活，
-        #   會把 product 列鎖（改名時還有店級鎖）的持有時間拉到秒級。base 的
-        #   description_html 本來就在本方法（txn 前）sanitize，譯文比照。
+        # 🔴 譯文在這裡（**開商品樹 transaction 之前、任何列鎖之前**）完成驗證與 sanitize
+        #   （2026-08-25 依審查 C4）：原本整包帶進 txn 由 Upsert 在裡面做，而 sanitize 是
+        #   數百 ms 級的 CPU 活，會把 product 列鎖（改名時還有店級鎖）的持有時間拉到秒級。
+        #   base 的 description_html 本來就在本方法（開樹 txn 前）sanitize，譯文比照。
+        #   ⚠️ 精確化（審查 F6）：**不是「任何 transaction 外」**——productSet 的建立路徑
+        #   強制 idempotencyKey，`Idempotency::Guard` 會先開一層 transaction 再 yield 整個
+        #   call ⇒ 本方法在那條路徑上跑在 Guard 的 txn **內**。守住的不變量是
+        #   「parse 時**不持有**商品列鎖／店鎖」（Guard 此刻只鎖自己的 idempotency_keys
+        #   一列）；要把 parse 也移出 Guard 就得把驗證搬出冪等邊界，會改變重放語義，不做。
         source_locale = Locales::Registry.source_tag(shop)
         translations_prepared = Translations::Upsert.prepare(
           shop:, source_locale:,
@@ -370,6 +375,9 @@ module Catalog
               product = create_product!(shop, attributes)
               sync_variants!(shop, product, attributes)
               translation_errors = save_translations!(shop, product, attributes)
+              # ⚠️ 現行 `Upsert.commit` 只回空 user_errors（驗證全在 normalize 的 prepare
+              #   完成）⇒ 這條 raise **目前構造上不可達**（審查 F7）。留著是 fail-closed：
+              #   commit 的簽名允許回錯誤，日後真的回了，這裡是讓整棵樹回滾的唯一防線。
               raise TranslationRejected, translation_errors if translation_errors.any?
 
               enqueue_event!(shop, product, Events::Topics::PRODUCTS_CREATE)
@@ -482,6 +490,7 @@ module Catalog
 
             sync_variants!(shop, product, attributes)
             translation_errors = save_translations!(shop, product, attributes)
+            # ⚠️ 同 create 路徑：現行構造上不可達的 fail-closed 網（審查 F7）。
             raise TranslationRejected, translation_errors if translation_errors.any?
 
             enqueue_event!(shop, product, Events::Topics::PRODUCTS_UPDATE)

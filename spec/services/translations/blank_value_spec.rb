@@ -154,6 +154,23 @@ RSpec.describe Translations::BlankValue do
       end
     end
 
+    it "🔴 F4：大寫 `&#X…;` 與小寫同義（HTML 允許兩種，libxml2 兩種都解）" do
+      # 首版正則只收小寫 x ⇒ `<p>&#X200B;</p>` 被判「有內容」⇒ 商家清空欄位時
+      # 整個 mutation 被拒成 INVALID，而小寫寫法卻正常清掉——同一個值兩種命運。
+      [ "<p>&#X200B;</p>", "<p>&#XA0;</p>", "<p>&#X0000A0;</p>" ].each do |html|
+        expect(described_class.text_bearing?(html)).to be(false), "#{html.inspect} 不該被當成有內容"
+      end
+      expect(described_class.text_bearing?("<p>&#X4E00;</p>")).to be(true)   # 大寫但可見（一）
+    end
+
+    it "惡意／畸形參照落在安全側（當成有內容 ⇒ 報錯而不是刪列）" do
+      [ "<p>&#;</p>", "<p>&#x;</p>", "<p>&#55296;</p>", "<p>&#xD800;</p>",
+        "<p>&#999999999999;</p>", "<p>&#160</p>" ].each do |html|
+        expect { described_class.text_bearing?(html) }.not_to raise_error
+        expect(described_class.text_bearing?(html)).to be(true), "#{html.inspect} 應落安全側"
+      end
+    end
+
     it "真內容與 content-bearing 標籤回 true" do
       [ "<p>你好</p>", "<p>&amp;</p>", "<p><img src=x></p>", "<hr>", "<video src=x></video>" ].each do |html|
         expect(described_class.text_bearing?(html)).to be(true), "#{html.inspect} 應該算有內容"

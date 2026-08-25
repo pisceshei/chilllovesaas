@@ -252,6 +252,33 @@ RSpec.describe Translations::Audit do
     end
   end
 
+  describe "🔴 F8：修復不得無中生有 translation_status 列" do
+    it "同時命中 blank_value 與 source_locale_row 的列：修掉之後不為來源語言造 status 列" do
+      product = product!
+      raw_translation!(product, "en", "body_html", "<p>&#160;</p>")   # en＝來源語言、又是空值
+
+      report = described_class.call(shop:, fix: true)
+
+      expect(report.fixed).to eq(1)
+      ActsAsTenant.with_tenant(shop) do
+        expect(TranslationStatus.where(locale_tag: "en")).to be_empty,
+          "Upsert.commit 從不為來源語言建 status 列；audit 修復也不得建（後台會多出 en 0/2）"
+      end
+    end
+
+    it "orphan 語言的列被修掉時：既有 status 列照樣歸零，但沒有就不新造" do
+      product = product!
+      raw_translation!(product, "ko", "body_html", "<p>&#160;</p>")   # ko 不在 shop_locales
+
+      report = described_class.call(shop:, fix: true)
+
+      expect(report.fixed).to eq(1)
+      ActsAsTenant.with_tenant(shop) do
+        expect(TranslationStatus.where(locale_tag: "ko")).to be_empty
+      end
+    end
+  end
+
   describe "租戶隔離（鐵律 2）" do
     it "只掃本店，不碰別店的譯文" do
       other = create(:shop, subdomain: "audit-other")

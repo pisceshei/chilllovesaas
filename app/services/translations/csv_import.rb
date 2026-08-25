@@ -110,6 +110,22 @@ module Translations
               end
               next
             end
+            # 🔴 sanitize 之後**變成**清空 token 的值一律拒收（審查 F5）：
+            #   `<div>__CLEAR__</div>` 經白名單 sanitize 恰好剩 `__CLEAR__`——放行的話它會
+            #   走進清空分支刪掉既有譯文（且繞過 overwrite 模式）；就算改成照存，這個值
+            #   匯出再匯入時又會變成真的清空指令（延遲引爆）。token 是控制字，不是內容。
+            if value.strip == CLEAR_TOKEN
+              errors << error(row.line, "unsupported_content", "INVALID")
+              next
+            end
+            # 🔴 sanitize 可能**放大**輸出（實體跳脫：`&` → `&amp;`，51KB 的規格表可以脹成
+            #   74KB），落庫值仍須在限內（審查 F1——首版只量了 raw，這一道漏抄了
+            #   `Upsert#normalize` 的第二次量測，於是 CSV 能寫進 GraphQL 拒收的超長值，
+            #   且該值 CSV 自己都無法再匯入＝匯出→匯入來回炸掉）。
+            if Fields.measure(row.field, value) > Fields.limit(row.field)
+              errors << error(row.line, "too_long", "TOO_LONG")
+              next
+            end
 
             # 🔴 逐行 rescue（審查 A4／C1 實跑重現）：先前任何一列拋例外（實測：併發撞
             #   唯一鍵的 RecordNotUnique）就讓整個 call 以例外收場——已成功列不重算進度、
@@ -128,7 +144,8 @@ module Translations
           #   而快取失效的失敗是**靜默的**（商家改了譯文、前台永遠是舊的）。
           unless dry_run
             touched.each do |type, id, tag|
-              # touch: true——touched 集合裡的每一組都真的動過列（寫入／覆寫／清空），
+              # touch: true——touched 只收「寫入前 `changed?` 為真」或被清空的組
+              # （見 apply_row／write_row 的審查 F3 註釋），所以這裡可以無條件 touch；
               # 只改文字時計數欄不變，靠 touch 推進 updated_at（見 Upsert#recompute_status）。
               Upsert.recompute_status(shop:, resource_type: type, resource_id: id,
                                       locale_tag: tag, touch: true)
@@ -196,19 +213,26 @@ module Translations
 
         if clearing
           # `__CLEAR__` 是唯一清空手段；沒有既有譯文就沒事可做。
+          # 🔴 清空**不受** overwrite 模式限制（刻意）：overwrite 管的是「有值儲存格要不要
+          #   覆蓋既有譯文」（`overwrite_scope: non_blank_cells_in_present_columns`）；
+          #   清空 token 是**另一類**明示破壞動作，有自己的預覽計數與比例閾值
+          #   （`preview_clear_count_separate`／`clear_ratio_confirm_threshold`）。
           if record.nil?
             counters[:skipped] += 1
             return
           end
-          counters[:cleared] += 1
-          # 🔴 清空寫稽核軌（clear_writes_audit_trail）：誰、何時、哪一次匯入、舊值是什麼——
-          #    沒有它，「譯者交錯檔案」事後完全無法還原。
+          # 🔴 計數在寫入**成功之後**才進（審查 F2）：先計後寫的話，寫入拋例外時
+          #   guard_row 又補一個 skipped ⇒ 一列產生兩個計數、報告宣稱清掉了一列
+          #   實際上還在。dry_run 沒有寫入動作，直接計。
           unless dry_run
+            # 🔴 清空寫稽核軌（clear_writes_audit_trail）：誰、何時、哪一次匯入、
+            #    舊值是什麼——沒有它，「譯者交錯檔案」事後完全無法還原。
             log_audit(shop, row, previous: record.value, action: "clear")
             record.destroy!
+            # 🔴 清空也要重算進度：分子少一，不記就會停在舊數字。
+            touched << [ row.resource_type, row.resource_id, row.locale ]
           end
-          # 🔴 清空也要重算進度：分子少一，不記就會停在舊數字。
-          touched << [ row.resource_type, row.resource_id, row.locale ]
+          counters[:cleared] += 1
           return
         end
 
@@ -220,13 +244,21 @@ module Translations
 
         source_text = source_text_for(row)
         mismatch = row.source_digest.present? && row.source_digest != Translation.digest_for(source_text)
-        counters[:digest_mismatch] += 1 if mismatch
-        record ? counters[:updated] += 1 : counters[:created] += 1
-        return if dry_run
+        if dry_run
+          counters[:digest_mismatch] += 1 if mismatch
+          record ? counters[:updated] += 1 : counters[:created] += 1
+          return
+        end
 
         log_audit(shop, row, previous: record&.value, action: record ? "overwrite" : "create") if record
-        write_row(shop, row, source_text, mismatch, source_locale)
-        touched << [ row.resource_type, row.resource_id, row.locale ]
+        changed = write_row(shop, row, source_text, mismatch, source_locale)
+        counters[:digest_mismatch] += 1 if mismatch
+        record ? counters[:updated] += 1 : counters[:created] += 1
+        # 🔴 touched 只收**真的變了**的列（審查 F3）：overwrite 重匯同一份檔案時
+        #   `save!` 對無變更列不發 UPDATE，把它們也 touch 會把整份檔案覆蓋範圍的
+        #   stamp 全部推進、前台快取白白全失效——GraphQL 路徑對同樣的 no-op 不會推進
+        #   （`Upsert#apply` 的回傳值），兩條路徑必須同一種行為。
+        touched << [ row.resource_type, row.resource_id, row.locale ] if changed
       end
 
       # base row 的原文（算 digest 用）。欄位→屬性的對照集中在 `Translations::Fields`，
@@ -266,7 +298,9 @@ module Translations
         )
         # 逐行獨立 transaction（`per_row_transaction`，沿用 13 §F6.1 形態）：
         # 一列壞掉不該讓整份檔案回滾，報告單逐行列出結果。
+        changed = record.new_record? || record.changed?
         ActiveRecord::Base.transaction(requires_new: true) { record.save! }
+        changed
       end
 
       # 稽核軌以結構化日誌承載（專用資料表屬後續包；`clear/overwrite_writes_audit_trail` 的最小實作）。

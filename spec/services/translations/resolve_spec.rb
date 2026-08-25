@@ -458,6 +458,18 @@ SQL: #{queries.first}"
       expect(capture_hits { resolve(product, "title", "zh-Hant") }).to be_empty
     end
 
+    it "🔴 F9：omitted 欄位**不發**遙測（什麼都沒輸出，「回落到 en」是假訊息）" do
+      publish!("ja")
+      product = product!(seo_description: nil)
+
+      hits = capture_hits do
+        expect(resolve(product, "meta_description", "ja").omitted?).to be(true)
+      end
+
+      expect(hits).to be_empty,
+        "首版每個沒有 SEO 描述的商品每次渲染都發一筆 resolved_locale: en——但沒有任何字串被輸出"
+    end
+
     it "沒有訂閱者時也不會爆（訂閱者不存在＝正確狀態）" do
       publish!("ja")
       product = product!(title: "Rose")

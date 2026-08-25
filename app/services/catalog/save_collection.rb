@@ -288,6 +288,7 @@ module Catalog
           },
           prepared: attributes[:translations_prepared]
         )
+        # ⚠️ 現行 `Upsert.commit` 只回空 user_errors ⇒ 構造上不可達的 fail-closed 網（審查 F7）。
         raise TreeRejected, result.user_errors if result.user_errors.any?
       end
 

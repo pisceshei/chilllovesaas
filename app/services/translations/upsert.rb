@@ -39,8 +39,10 @@ module Translations
       # @param source_locale [String] 來源語言標籤（base row 的語言）
       # @param translations [Array<Hash>] `{ locale:, field:, value: }`；缺席＝不動、空字串＝刪除
       # @return [Prepared] entries ＋ user_errors（欄位路徑對齊 28 §0.3）
-      # @note 副作用：只讀 `shop_locales`（enabled 集合）；**不寫任何表** ⇒ 可以也應該
-      #   在 transaction 外呼叫。
+      # @note 副作用：只讀 `shop_locales`（enabled 集合）；**不寫任何表**。
+      #   🔴 呼叫位置的精確說法（審查 F6 更正）：「在**商品樹 transaction 與任何列鎖之前**」
+      #   ——不是「任何 transaction 外」。productSet 建立路徑上 `Idempotency::Guard` 先開
+      #   一層 txn 再 yield，prepare 必然在它裡面跑；守住的是 parse 期間不持商品列鎖／店鎖。
       def prepare(shop:, source_locale:, translations:)
         errors = []
         entries = normalize(shop, translations, source_locale, errors)
@@ -54,7 +56,7 @@ module Translations
       # @return [Result]
       # @note 副作用：寫 translations／translation_status。
       def commit(shop:, resource_type:, resource_id:, source_locale:, source_values:, prepared:)
-        raise ArgumentError, "commit 只收乾淨的 prepare 結果（user_errors 非空）" if prepared.user_errors.any?
+        raise ArgumentError, "commit 只收乾淨的 prepare 結果，但收到 user_errors 非空的 Prepared" if prepared.user_errors.any?
 
         # 本次真的動到列的語言集合——`recompute_status` 據此決定要不要推進 stamp（A2）。
         changed_locales = Set.new

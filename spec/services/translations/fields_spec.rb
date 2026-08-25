@@ -57,6 +57,11 @@ RSpec.describe Translations::Fields do
     end
   end
 
+  it "tripwire：LIMIT_KEYS 的鍵集合＝FIELDS（不一致時 CSV 的長度閘會對新欄炸 KeyError）" do
+    expect(described_class::LIMIT_KEYS.keys).to match_array(Translations::Upsert::FIELDS)
+    expect(described_class::LIMIT_KEYS.keys).to match_array(described_class::ALL)
+  end
+
   # 🔴 tripwire：`Upsert::REQUIRED_FIELDS` 是**進度的分母**，`Fields::MISSING` 是
   #   **缺翻譯時前台怎麼辦**——兩件不同的事，目前值相同純屬 v1 射程小（登記＝U19）。
   #   這一格紅掉時要做的是**裁定哪一邊該變**，不是把常數改成一致把測試弄綠。

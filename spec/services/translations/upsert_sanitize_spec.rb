@@ -294,6 +294,78 @@ RSpec.describe "譯文寫入端的 sanitize 與空值判準" do
       expect(outcome.errors.map { |e| e[:code] }).to eq([ "INVALID" ])
     end
 
+    it "🔴 F1：CSV 的 body_html 也要量 sanitize **之後**的值（實體跳脫會放大輸出）" do
+      allow(Limits).to receive(:fetch).and_call_original
+      allow(Limits).to receive(:fetch).with(:product, :description_max_bytes).and_return(30)
+      raw = "<p>#{'&' * 6}</p>"   # raw 13 bytes 在限內；sanitize 後 &amp;×6 ⇒ 37 bytes 超限
+      expect(raw.bytesize).to be <= 30
+
+      outcome = import!(raw)
+
+      expect(outcome.errors.map { |e| e[:code] }).to eq([ "TOO_LONG" ]),
+        "首版只量 raw ⇒ CSV 落庫一個 GraphQL 拒收、連 CSV 自己都無法再匯入的值"
+      expect(stored("body_html")).to be_nil
+    end
+
+    it "🔴 F5：sanitize 之後**變成** __CLEAR__ 的值拒收，不得清掉既有譯文" do
+      import!("<p>大切な説明</p>")
+
+      outcome = Translations::CsvImport.call(
+        shop:, dry_run: false, overwrite_existing: false,
+        csv_text: <<~CSV
+          resource_type,resource_gid,field_key,locale,market_handle,status,source_text,translated_text,source_digest
+          PRODUCT,gid://chilllove/Product/#{product.id},body_html,ja,,untranslated,Rose,<div>__CLEAR__</div>,#{Translation.digest_for('<p>Rose</p>')}
+        CSV
+      )
+
+      expect(outcome.errors.map { |e| e[:code] }).to eq([ "INVALID" ])
+      expect(outcome.cleared).to eq(0)
+      expect(stored("body_html").value).to eq("<p>大切な説明</p>"),
+        "首版：div 被白名單剝掉後恰剩 token ⇒ 走清空分支刪列，還繞過 overwrite:false"
+    end
+
+    it "🔴 F2：寫入失敗的列只計 skipped＋error，不得同時計 created／cleared" do
+      gid = "gid://chilllove/Product/#{product.id}"
+      csv = <<~CSV
+        resource_type,resource_gid,field_key,locale,market_handle,status,source_text,translated_text,source_digest
+        PRODUCT,#{gid},title,ja,,untranslated,Rose,ローズ,#{Translation.digest_for('Rose')}
+      CSV
+      allow(Translation).to receive(:find_or_initialize_by)
+        .and_raise(ActiveRecord::RecordNotUnique, "boom")
+
+      outcome = Translations::CsvImport.call(shop:, csv_text: csv, dry_run: false)
+
+      expect(outcome.created).to eq(0), "報告宣稱 created=1 但 DB 裡什麼都沒有（首版行為）"
+      expect(outcome.skipped).to eq(1)
+      expect(outcome.errors.map { |e| e[:code] }).to eq([ "ERROR" ])
+      expect(stored("title")).to be_nil
+    end
+
+    it "🔴 F3：overwrite 重匯**同一份**檔案 ⇒ 無列變更 ⇒ stamp 不得推進（與 GraphQL 同行為）" do
+      import!("<p>薔薇</p>")
+      status = ActsAsTenant.with_tenant(shop) do
+        TranslationStatus.find_by!(resource_type: "PRODUCT", resource_id: product.id, locale_tag: "ja")
+      end
+      stamp = status.updated_at
+
+      travel(2.seconds) { import!("<p>薔薇</p>") }   # 一模一樣的內容，overwrite: true
+
+      expect(status.reload.updated_at).to eq(stamp),
+        "首版無條件 touch ⇒ 重匯同一份檔案把整個覆蓋範圍的快取白白全失效"
+    end
+
+    it "F3 反向：overwrite 重匯**不同**內容 ⇒ stamp 要推進" do
+      import!("<p>薔薇</p>")
+      status = ActsAsTenant.with_tenant(shop) do
+        TranslationStatus.find_by!(resource_type: "PRODUCT", resource_id: product.id, locale_tag: "ja")
+      end
+      stamp = status.updated_at
+
+      travel(2.seconds) { import!("<p>薔薇（改訂）</p>") }
+
+      expect(status.reload.updated_at).to be > stamp
+    end
+
     it "dry_run 不寫 translation_status（預覽不得有副作用）" do
       gid = "gid://chilllove/Product/#{product.id}"
       csv = <<~CSV

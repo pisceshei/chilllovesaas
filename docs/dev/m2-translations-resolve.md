@@ -50,7 +50,13 @@ admin SPA 又是宣告式**恆送全樹**（每次儲存重跑每個語言），
 
 **③怎麼用**：
 - `prepare(shop:, source_locale:, translations:)` → `Prepared(entries:, user_errors:)`。
-  只讀 `shop_locales`，**不寫任何表**，在 transaction 外呼叫。
+  只讀 `shop_locales`，**不寫任何表**。
+  🔴 位置的精確說法（2026-08-25 二次更正，審查 F6）：「在**商品樹 transaction 與任何
+  列鎖之前**」——不是「任何 transaction 外」。productSet 的**建立**路徑強制
+  idempotencyKey，`Idempotency::Guard` 先開一層 transaction 再 yield 整個 call ⇒
+  prepare 在那條路徑上跑在 Guard 的 txn 內（此刻只持 idempotency_keys 一列的鎖，
+  不持商品列鎖／店鎖——那才是 C4 要守的）。把 parse 移出 Guard 需把驗證搬出冪等
+  邊界、改變重放語義 ⇒ 不做，登記為已知形態。
 - `commit(shop:, resource_type:, resource_id:, source_locale:, source_values:, prepared:)`
   → `Result`。在呼叫端 transaction 內。收到 `user_errors` 非空的 `Prepared` 直接 raise。
 - `call(...)` 保留為一段式便利入口（＝prepare＋commit），🔴 **productSet／collectionSet
@@ -381,8 +387,8 @@ base 的 `SaveProduct#normalize` 用 `description.bytesize` 量，而譯文端�
 bundle exec rspec spec/services/translations spec/services/locales spec/requests/product_translations_spec.rb spec/requests/translation_csv_spec.rb
 ```
 
-突變驗證（初始 18 格 ＋ 整合修復輪 22 格）＝`docs/worklog/2026-08-25-第7包譯文解析.md`
-的兩張突變表。🔴 表中另註明**兩道結構上不可達**的 fail-closed 守衛
+突變驗證（初始 18 格 ＋ 整合修復輪 22 格 ＋ delta 審查輪 8 格）＝
+`docs/worklog/2026-08-25-第7包譯文解析.md` 的三張突變表。🔴 表中另註明**兩道結構上不可達**的 fail-closed 守衛
 （`fallback_chain.rb` 的 `never_pair?`、`resolve.rb` 的 scope 跳過），它們刪掉不會紅、
 不在突變射程內，**不得**宣稱有測試證明其有效。
 

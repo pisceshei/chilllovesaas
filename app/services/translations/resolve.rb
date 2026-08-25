@@ -250,14 +250,19 @@ module Translations
 
       def base_result(shop:, record:, type:, field:, locale:, depth:, source_locale:, kind:)
         value = Fields.base_value(record, field)
-        emit(shop:, locale:, resolved: source_locale, type:, field:, depth:)
 
         # optional 欄位缺翻譯且原文也空 ⇒ **整個欄位不輸出**（67 §B.1；不是輸出空字串）。
         # base 的判空同樣走讀取端 fast-path（大 body ⇒ 視為有內容，落假陰性側）。
+        # 🔴 omitted **不發遙測**（審查 F9）：首版把 emit 放在這個分支之前，於是每個沒有
+        #   SEO 描述的商品每次渲染都發一筆 `resolved_locale: "en"`——但根本沒有任何字串
+        #   被輸出，「回落到了來源語言」是假訊息。遙測的語義＝「使用者看到了 fallback
+        #   內容」；什麼都沒輸出就什麼都不記。
         if Fields.missing(field) == :optional &&
            BlankValue.blank?(value, kind:, skip_parse_above: read_fast_path)
           return Resolved.new(value: nil, locale: nil, depth:, source: :omitted)
         end
+
+        emit(shop:, locale:, resolved: source_locale, type:, field:, depth:)
 
         # 🔴 required 欄位即使原文也空，仍然回 base（值可能就是 ""）。
         #   來源本身沒有內容是**事實**，不是「缺翻譯」——這時候顯示空白是對的，
