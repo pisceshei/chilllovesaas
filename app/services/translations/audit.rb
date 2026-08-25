@@ -15,6 +15,7 @@ module Translations
   #   | `unsanitized_html`  | html 欄的值 ≠ 白名單 sanitize 後的值（且 sanitize 後非空） | 儲存型 XSS：本包之前 `Upsert` 對譯文完全不 sanitize | 覆寫成 sanitize 後的值（重驗後） |
   #   | `orphan_locale`     | `locale_tag` 不在該店 `shop_locales`（**含停用列**） | 語言列被刪後遺留；匯出／進度分母會少算 | **不動**（僅登記） |
   #   | `source_locale_row` | `locale_tag == source_locale` | 來源語言的文字在 base row，這列是重複真相 | **不動**（僅登記） |
+  #   | `script_mismatch`   | zh-Hant* 值含簡體專用字（或 zh-Hans* 含繁體專用字） | 商家把簡體字貼進繁體欄（或反之）——字形錯誤 | **不動**（僅登記；detail 列誤借字） |
   #
   #   🔴 **`blank_value` 與 `unsanitized_html` 的判定順序是安全邊界**（2026-08-25 依審查
   #   A1／S1 修正）：先算 `clean = sanitize(value)`，`clean` 判空 ⇒ `blank_value`（刪列），
@@ -29,15 +30,15 @@ module Translations
   #   （`Mutations::ShopLocaleDisable` 明文不動譯文），首版用 `enabled_tags` 比對，
   #   於是每一家用過停用鈕的店 audit 恆非零、恆 abort。
   #
-  #   🔴 **`script_mismatch`（繁簡誤借）本輪一律「棄權」，不是「零筆」**：可靠的判別需要
-  #   繁簡字表，而本輪調查所及唯一成熟的公開字表（OpenCC 的 `STCharacters.txt`／
-  #   `TSCharacters.txt`，LICENSE＝Apache-2.0，
-  #   https://raw.githubusercontent.com/BYVoid/OpenCC/master/LICENSE，2026-08-25）依鐵律 9
-  #   「混入前法務面要知情」屬計畫外授權裁定，命中鐵律 17.3 的例外，**不在本包擅自做**。
-  #   本規則因此以「棄權」形態存在：介面就位、報告明講「未執行」，
-  #   **絕不回報 0 筆**（回報 0 筆等於宣稱掃過且乾淨，把未取得寫成事實，違反鐵律 19）。
-  #   待裁定事項全文＝`docs/dev/m2-translations-resolve.md` §7；登記＝
-  #   `docs/specs/91-pit-register.md` §3（P7 條目）。
+  #   **`script_mismatch`（繁簡誤借）自 D49（2026-08-25 使用者裁定）起實際執行**：
+  #   判別核心＝`Translations::ScriptDetector`（OpenCC 字元表，Apache-2.0，
+  #   NOTICE＝`lib/opencc/NOTICE`，採用登記＝`docs/specs/107-external-adoption-register.md`
+  #   OpenCC-1）。只對 zh-Hant*／zh-Hans* locale 跑（日文漢字也是 Han 字元，別的 locale
+  #   跑會滿屏誤報）；**僅登記、不自動修**（簡→繁一對多，自動改字是 script_conversion
+  #   （ML-5）的事）。字元級判別；詞彙級（软件 vs 軟體）不在射程——在地化差異不是字形錯誤。
+  #   <!-- 沿革：D49 之前本規則是「明文棄權」形態（報「未執行」、絕不報 0 筆）——
+  #        Apache-2.0 依鐵律 9 屬混入前需使用者知情的授權裁定（鐵律 17.3 例外）。
+  #        棄權機制（ABSTAINED 與報告欄位）保留為空清單，供日後同型規則沿用。 -->
   #
   # ③怎麼做到 —— 掃描與修復的併發紀律（2026-08-25 依審查 C2／C3 修正）：
   #   🔴 (a) **掃描不開 transaction**（`find_each` 逐批讀），**修復逐列短 transaction**：
@@ -72,15 +73,9 @@ module Translations
       def clean? = findings.empty?
     end
 
-    # 棄權的規則與逐字理由（見檔頭②的紅字段落）。
-    ABSTAINED = [
-      {
-        rule: "script_mismatch",
-        reason: "繁簡誤借偵測需要繁簡字表；本輪調查所及唯一成熟公開字表（OpenCC）為 Apache-2.0，" \
-                "依鐵律 9 屬混入前需法務知情的授權裁定 ⇒ 未取得裁定前不執行。" \
-                "🔴 這是「未執行」不是「零筆」。"
-      }
-    ].freeze
+    # 棄權中的規則（現為空——script_mismatch 自 D49 起實際執行；機制保留給日後
+    # 「介面先就位、判別依據待裁定」的同型規則，報告端與 rake 顯示邏輯不拆）。
+    ABSTAINED = [].freeze
 
     FIXABLE = %w[blank_value unsanitized_html].freeze
 
@@ -130,6 +125,18 @@ module Translations
 
         found << finding(record, "orphan_locale", "locale_tag 不在 shop_locales（含停用列都算在內）", nil) unless known_tags.include?(record.locale_tag)
         found << finding(record, "source_locale_row", "來源語言的文字應在 base row", nil) if record.locale_tag == source_locale
+
+        # 繁簡誤借（D49；判準推導與邊界見 ScriptDetector 檔頭）。只對 zh-* 跑；
+        # html 欄先取 parser 文字再判（實體解掉、標籤/屬性裡的拉丁字不進來）。
+        if (expected = ScriptDetector.expected_for(record.locale_tag))
+          plain = html ? Loofah.fragment(record.value.to_s).text : record.value.to_s
+          wrong = ScriptDetector.mismatched_chars(plain, expected:)
+          if wrong.any?
+            found << finding(record, "script_mismatch",
+                             "#{record.locale_tag} 的值含#{expected == :hant ? '簡' : '繁'}體專用字：#{wrong.join}",
+                             nil)
+          end
+        end
         found
       end
 
