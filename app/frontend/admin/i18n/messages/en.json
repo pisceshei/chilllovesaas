@@ -518,5 +518,7 @@
   "variant.inventory.readOnly": "Inventory is adjusted from the Inventory page or the product's inventory card — every adjustment is ledgered, so it isn't saved with the product.",
   "variant.shipping.physical": "This is a physical product",
   "variant.shipping.weight": "Weight (grams)",
-  "variant.shipping.weightInvalid": "Weight must be 0 or a positive whole number of grams."
+  "variant.shipping.weightInvalid": "Weight must be 0 or a positive whole number of grams.",
+  "variant.variantNotFound": "Couldn't find this variant — it may have been deleted.",
+  "variant.backToProduct": "Back to product"
 }

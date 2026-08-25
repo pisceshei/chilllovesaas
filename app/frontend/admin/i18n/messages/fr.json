@@ -518,5 +518,7 @@
   "variant.inventory.readOnly": "Le stock se règle depuis la page Stock ou la carte stock du produit : chaque ajustement est journalisé et n'est donc pas envoyé avec l'enregistrement du produit.",
   "variant.shipping.physical": "Ceci est un produit physique",
   "variant.shipping.weight": "Poids (grammes)",
-  "variant.shipping.weightInvalid": "Le poids doit être 0 ou un entier positif, en grammes."
+  "variant.shipping.weightInvalid": "Le poids doit être 0 ou un entier positif, en grammes.",
+  "variant.variantNotFound": "Variante introuvable — elle a peut-être été supprimée.",
+  "variant.backToProduct": "Retour au produit"
 }

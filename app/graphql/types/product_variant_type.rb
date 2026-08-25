@@ -6,6 +6,8 @@ module Types
   # 🔴 金額欄位一律 **R4 十進位字串**出向（65 §B X2：cents/100 恆兩位小數）——
   # 走 `Money::Storage#to_decimal`，不得在 GraphQL 層手算除法。
   class ProductVariantType < BaseObject
+    include Types::InventoryAuthorization
+
     graphql_name "ProductVariant"
     description "商品變體。"
 
@@ -81,7 +83,12 @@ module Types
 
     # @return [Array<InventoryLevel>] 地點 priority 序
     #   關聯由呼叫端 preload（`ProductType#variants` 的 includes）。
+    # 🔴 **自己擋 `inventory.view`**（審查 R-1）：本欄長在 `product(id:)` 底下，
+    #   而那條路徑只跑 `authorize_products!` ⇒ 沒有這一行，只給了商品權限的員工
+    #   就能讀到全地點庫存明細、地點名稱與可寫入的 `inventoryItemId`。
+    #   D42 把兩個權限鍵分開，讀取面就必須逐處落實，不能靠父欄位的授權。
     def inventory_levels
+      authorize_inventory!
       item = object.inventory_item
       return [] if item.nil?
 

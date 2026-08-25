@@ -104,9 +104,18 @@ module Catalog
           errors << error([ "title" ], I18n.t("errors.product.title_too_long"), "TOO_LONG")
         end
 
-        description = sanitize_description(input[:description_html].to_s)
-        if description.bytesize > Limits.fetch(:product, :description_max_bytes)
-          errors << error([ "descriptionHtml" ], I18n.t("errors.product.description_too_big"), "TOO_BIG")
+        # 🔴 缺席／顯式 null＝**保持現值**（與 status／vendor／tags／seo 同語義）；
+        #    空字串＝清除。第 29 包審查 V29-D1：變體子頁只送 title/options/variants，
+        #    舊語義（`input[:description_html].to_s` → ""）讓它每存一次就把商品說明
+        #    整段抹掉，userErrors 為空、toast 顯示「已儲存」，使用者完全看不到。
+        #    連帶 `save_translations!` 會以清空後的 body_html 重算 digest ⇒ 全語言譯文被標過期。
+        #    🔴 判準是 `.nil?` 不是 `.blank?`——後者會把「顯式清空」也吃掉。
+        description = nil
+        unless input[:description_html].nil?
+          description = sanitize_description(input[:description_html].to_s)
+          if description.bytesize > Limits.fetch(:product, :description_max_bytes)
+            errors << error([ "descriptionHtml" ], I18n.t("errors.product.description_too_big"), "TOO_BIG")
+          end
         end
 
         manual_handle = input[:handle].presence
@@ -219,12 +228,44 @@ module Catalog
           cost_cents:,
           sku: variant_input[:sku].presence,
           barcode: variant_input[:barcode].presence,
-          taxable: variant_input.fetch(:taxable, true),
+          # 🔴 `fetch(key, default)` 擋不住**顯式 null**：GraphQL 的 `Boolean` 可為 null，
+          #    graphql-ruby 只要 key 存在就把 nil 寫進 `to_h` ⇒ `fetch` 的 default 不生效
+          #    ⇒ nil 一路撞 `null: false` 欄位，噴 `ActiveRecord::NotNullViolation`。
+          #    那是 `StatementInvalid` 的子類，本服務的 rescue 清單接不到，最後由
+          #    graphql_controller 轉成 top-level `INTERNAL` ⇒ **違反鐵律 4①**
+          #    （業務輸入不得漏成 500）。所以兩個布林都要顯式 nil 判斷。
+          #    第 29 包審查 P29-BE-W1／R-2；`taxable` 是同一個 hash literal 的隔壁一行，
+          #    同 producer 同狀態矩陣，依鐵律 17.2 一併封閉。
+          taxable: boolean_or(variant_input, :taxable, true),
           # 第 29 包：運送兩欄。`weight_grams` 欄是 `null: false, default: 0`
           # ⇒ 沒送就給 0（不是 nil，否則 update! 撞 not-null）。
-          weight_grams: variant_input.fetch(:weight_grams, 0).to_i,
-          requires_shipping: variant_input.fetch(:requires_shipping, true)
+          weight_grams: normalize_weight(variant_input, errors, index:),
+          requires_shipping: boolean_or(variant_input, :requires_shipping, true)
         }
+      end
+
+      # 缺席**與**顯式 null 都回落預設（見 normalize_variant 的紅字）。
+      def boolean_or(variant_input, key, fallback)
+        value = variant_input[key]
+        value.nil? ? fallback : value
+      end
+
+      # 重量是非負整數公克。負數在 MySQL signed int 上完全合法 ⇒ DB 擋不住；
+      # ProductVariant 另有 model validation 作第二道（insert_all 以外的路徑）。
+      # 🔴 這裡就要回 userError，否則負重量靜默落庫、讀取面再原樣回出。
+      # 上限不設：官方值未取得（鐵律 19），要設須先依鐵律 6 在 limits.yml 立鍵。
+      def normalize_weight(variant_input, errors, index: 0)
+        raw = variant_input[:weight_grams]
+        return 0 if raw.nil?
+
+        grams = raw.to_i
+        if grams.negative?
+          errors << error(
+            [ "variants", index.to_s, "weightGrams" ],
+            I18n.t("errors.product.weight_negative"), "INVALID"
+          )
+        end
+        grams
       end
 
       # 65 §B X12：admin GraphQL 入向金額＝R4 十進位字串 → R1 integer cents。
@@ -344,7 +385,8 @@ module Catalog
 
         Product.create!(
           title: attributes[:title],
-          description_html: attributes[:description_html],
+          # 建立態沒有「現值」可保持 ⇒ 缺席即空字串（欄位是 null: false）。
+          description_html: attributes[:description_html].to_s,
           status: attributes[:status] || "draft",
           handle: handle,
           **attributes.fetch(:organization)
@@ -387,7 +429,9 @@ module Catalog
 
             product.assign_attributes(
               title: attributes[:title],
-              description_html: attributes[:description_html],
+              # 🔴 `||` 而不是直接指派：normalize 在缺席時給 nil＝保持現值。
+              #    Ruby 的 "" 是 truthy ⇒ 顯式清空（空字串）仍然寫得進去。
+              description_html: attributes[:description_html] || product.description_html,
               status: attributes[:status] || product.status,
               # 只覆寫有提供的組織／SEO 鍵（缺席＝保持現值，normalize_organization 註釋）。
               **attributes.fetch(:organization)

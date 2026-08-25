@@ -518,5 +518,7 @@
   "variant.inventory.readOnly": "庫存只能在庫存頁或商品頁的庫存卡調整——每一筆調整都要留帳，不隨商品儲存送出。",
   "variant.shipping.physical": "這是需要運送的實體商品",
   "variant.shipping.weight": "商品重量（公克）",
-  "variant.shipping.weightInvalid": "重量必須是 0 或正整數（單位：公克）。"
+  "variant.shipping.weightInvalid": "重量必須是 0 或正整數（單位：公克）。",
+  "variant.variantNotFound": "找不到這個變體——它可能已被刪除。",
+  "variant.backToProduct": "回到商品"
 }

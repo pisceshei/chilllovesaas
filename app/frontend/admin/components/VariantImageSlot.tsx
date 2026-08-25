@@ -99,6 +99,13 @@ export function VariantImageSlot({ productGid, variantGid, image, onChange }: Va
       // 再要求選一次是多餘的。`uploadProductMedia` 回傳的 mediaId 就是為了這一步。
       if (outcome.mediaId && await append(outcome.mediaId)) onChange();
       else onChange();
+    } catch (reason: unknown) {
+      // 🔴 沒有 catch＝未處理的 promise rejection（審查 VIS-1）：鐵律 4 第②③層
+      //    （THROTTLED／MAX_COST_EXCEEDED／401／403／423／斷線）不走 userErrors，
+      //    全樹又沒有 `unhandledrejection` 監聽器 ⇒ 使用者得到「什麼都沒發生的畫面」。
+      //    仍呼叫 onChange()：檔可能已經上傳成功、只是 append 掛掉，重讀讓它至少看得見。
+      showToast(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
+      onChange();
     } finally {
       setBusy(false);
       if (fileInput.current) fileInput.current.value = "";
@@ -126,19 +133,23 @@ export function VariantImageSlot({ productGid, variantGid, image, onChange }: Va
       }
       const mediaId = created.productCreateMedia.media[0]?.id;
       if (mediaId && await append(mediaId)) onChange();
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
     } finally {
       setBusy(false);
     }
-  }, [append, onChange, productGid, showToast]);
+  }, [append, onChange, productGid, showToast, t]);
 
   const detach = useCallback(async () => {
     setBusy(true);
     try {
       if (await append(null)) onChange();
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("product.media.attachFailed"));
     } finally {
       setBusy(false);
     }
-  }, [append, onChange]);
+  }, [append, onChange, showToast, t]);
 
   return (
     <div className="cl-variant-image">

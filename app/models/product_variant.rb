@@ -44,6 +44,12 @@ class ProductVariant < ApplicationRecord
   before_destroy :orphan_inventory_item!
 
   validates :title, presence: true
+  # 重量是非負整數公克。DB 是 signed int ⇒ 負數在資料庫層完全合法，擋不住；
+  # `SaveProduct#normalize_weight` 已在服務層回 userError，這是第二道
+  # ——涵蓋 insert_all 以外的所有寫入路徑（審查 R-4／P29-BE-W2）。
+  # 上限不設：官方值未取得（鐵律 19），要設須先依鐵律 6 在 limits.yml 立鍵並帶出處。
+  validates :weight_grams,
+    numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   after_create :create_inventory_item
 

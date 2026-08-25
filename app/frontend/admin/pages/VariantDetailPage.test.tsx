@@ -191,6 +191,129 @@ describe("變體子頁", () => {
     expect(screen.getByText(/庫存只能在庫存頁或商品頁的庫存卡調整/)).toBeVisible();
   });
 
+  // ── 對抗式審查（2026-08-25）確認後補的守衛 ──────────────────────────
+  // 🔴 全部是**缺席的測試**：把下面每一道守衛刪掉，上面七條會全綠。
+
+  it("🔴 變體超過載入上限 ⇒ 封鎖儲存（否則第 251 個之後會被宣告式刪掉）", async () => {
+    const calls = stubGraphql({
+      ...PRODUCT,
+      variants: { pageInfo: { hasNextPage: true }, nodes: [ V(1, "S"), V(2, "M") ] },
+    });
+    renderAt(2);
+    const user = userEvent.setup();
+
+    await screen.findByRole("heading", { name: "M" });
+    await user.click(screen.getByRole("button", { name: "儲存" }));
+
+    expect(await screen.findByText(/此頁編輯已鎖定/)).toBeVisible();
+    expect(calls.some((c) => c.query.includes("mutation productSet"))).toBe(false);
+  });
+
+  it("🔴 比較價／成本打錯 ⇒ 擋下（不得靜默轉成「清除該金額」）", async () => {
+    const calls = stubGraphql();
+    renderAt(2);
+    const user = userEvent.setup();
+
+    const compare = await screen.findByLabelText("原價（劃線價）");
+    await user.clear(compare);
+    await user.type(compare, "abc");
+    await user.click(screen.getByRole("button", { name: "儲存" }));
+
+    expect(await screen.findByText(/請輸入有效金額/)).toBeVisible();
+    expect(calls.some((c) => c.query.includes("mutation productSet"))).toBe(false);
+  });
+
+  it("🔴 改選項值 ⇒ 送出的 options 樹要含新值（否則後端一律 reject）", async () => {
+    const calls = stubGraphql();
+    renderAt(2);
+    const user = userEvent.setup();
+
+    const coord = await screen.findByLabelText("尺寸");
+    await user.clear(coord);
+    await user.type(coord, "Medium");
+    await user.click(screen.getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(calls.some((c) => c.query.includes("mutation productSet"))).toBe(true));
+    const input = calls.find((c) => c.query.includes("mutation productSet"))!
+      .variables.input as {
+        options: { name: string; values: string[] }[];
+        variants: { optionValues: { optionName: string; value: string }[] }[];
+      };
+    // 舊版照抄伺服器的 options（S/M/L），新值 Medium 不在裡面 ⇒ 後端必拒。
+    expect(input.options[0].values).toContain("Medium");
+    // 且不再含被改掉的舊值（沒有別的變體用 M）——這就是「重新命名」的語義。
+    expect(input.options[0].values).not.toContain("M");
+    // options.values 必須涵蓋每個變體的座標，否則兩者不一致
+    const declared = new Set(input.options[0].values);
+    for (const variant of input.variants) {
+      expect(declared.has(variant.optionValues[0].value)).toBe(true);
+    }
+  });
+
+  it("🔴 改成與別的變體相同的座標 ⇒ 前端先擋（後端只會回通用唯一鍵錯誤）", async () => {
+    const calls = stubGraphql();
+    renderAt(2);
+    const user = userEvent.setup();
+
+    const coord = await screen.findByLabelText("尺寸");
+    await user.clear(coord);
+    await user.type(coord, "L"); // 與第三個變體撞號
+
+    await user.click(screen.getByRole("button", { name: "儲存" }));
+    expect(await screen.findByText(/每個選項都要有不重複的名稱與至少一個值/)).toBeVisible();
+    expect(calls.some((c) => c.query.includes("mutation productSet"))).toBe(false);
+  });
+
+  it("🔴 變體不存在 ⇒ 顯示錯誤與回商品頁的出口（不得永遠轉圈）", async () => {
+    stubGraphql();
+    renderAt(99); // 不在 nodes 裡
+
+    expect(await screen.findByText(/找不到這個變體/)).toBeVisible();
+    expect(screen.getByRole("link", { name: "回到商品" })).toBeVisible();
+  });
+
+  it("🔴 有未存編輯時切換變體 ⇒ 先攔一次（不得靜默丟掉）", async () => {
+    stubGraphql();
+    renderAt(2);
+    const user = userEvent.setup();
+
+    const price = await screen.findByLabelText("價格（HK$）");
+    await user.clear(price);
+    await user.type(price, "888.00");
+
+    const list = within(screen.getByRole("list", { name: "變體清單" }));
+    await user.click(list.getByRole("button", { name: /L/ }));
+
+    // 攔截：仍停在 M，且輸入還在
+    expect(await screen.findByText(/有未儲存的變更/)).toBeVisible();
+    expect(screen.getByRole("heading", { name: "M" })).toBeVisible();
+    expect(screen.getByLabelText("價格（HK$）")).toHaveValue("888.00");
+  });
+
+  it("四張卡的標題是看得見的標題（不是 title 屬性 tooltip）", async () => {
+    stubGraphql();
+    renderAt(2);
+
+    await screen.findByRole("heading", { name: "M" });
+    for (const name of [ "選項值", "定價", "庫存", "運送" ]) {
+      expect(screen.getByRole("heading", { name })).toBeVisible();
+    }
+  });
+
+  it("非實體商品：重量欄不顯示，且不因此擋住儲存", async () => {
+    const calls = stubGraphql({
+      ...PRODUCT,
+      variants: { nodes: [ V(1, "S"), V(2, "M", { requiresShipping: false, weightGrams: 0 }) ] },
+    });
+    renderAt(2);
+    const user = userEvent.setup();
+
+    await screen.findByRole("heading", { name: "M" });
+    expect(screen.queryByLabelText("商品重量（公克）")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "儲存" }));
+    await waitFor(() => expect(calls.some((c) => c.query.includes("mutation productSet"))).toBe(true));
+  });
+
   it("重量非整數 ⇒ 擋在前端，不打 productSet", async () => {
     const calls = stubGraphql();
     renderAt(2);

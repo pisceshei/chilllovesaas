@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, RefreshCw, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
 import { Breadcrumb } from "../components/Breadcrumb";
@@ -47,6 +47,7 @@ const VARIANT_PAGE_QUERY = `
       featuredImage { thumbUrl status alt }
       options { name position values { value position } }
       variants(first: 250) {
+        pageInfo { hasNextPage }
         nodes {
           id title position price compareAtPrice cost sku barcode taxable
           weightGrams requiresShipping
@@ -101,7 +102,7 @@ interface ProductNode {
   lockVersion: number;
   featuredImage: { thumbUrl: string | null; status: string; alt: string | null } | null;
   options: { name: string; position: number; values: { value: string; position: number }[] }[];
-  variants: { nodes: VariantNode[] };
+  variants: { pageInfo?: { hasNextPage: boolean }; nodes: VariantNode[] };
 }
 
 /** 本頁可編輯的欄位（庫存不在其中——見檔頭③）。 */
@@ -144,8 +145,25 @@ export function VariantDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [requestKey, setRequestKey] = useState(0);
   const [draft, setDraft] = useState<VariantDraft | null>(null);
+  /** 載入時的伺服器值快照；與 draft 比對得到 dirty。 */
+  const [saved, setSaved] = useState<VariantDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+
+  // 🔴 `t` 不進依賴陣列（審查 V29-FE-03②）：切換介面語言會讓 `t` 換身分，
+  //    進了依賴就等於「換語言＝重抓整個商品」，而重抓會重設 draft。
+  //    訊息改從 ref 即時取——文案只在錯誤發生的那一刻需要，不需要是依賴。
+  const tRef = useRef(t);
+  tRef.current = t;
+  // 重讀有兩種意圖，處置相反：
+  //   `refresh()`＝背景重讀（掛／卸變體圖）⇒ **保留**未存編輯
+  //     （審查 V29-FE-03③：舊版掛完圖，使用者剛打的價格就被伺服器值蓋掉）；
+  //   `reload()`＝要伺服器現值（存檔後、錯誤重試）⇒ 用伺服器值覆寫。
+  //     存檔後必須覆寫，否則伺服器正規化過的值（"199" → "199.00"）會與 draft 不等，
+  //     dirty 永遠是 true，離頁守衛就會無故攔人。
+  const keepDraftRef = useRef(false);
+  const draftRef = useRef<VariantDraft | null>(null);
+  draftRef.current = draft;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -156,21 +174,38 @@ export function VariantDetailPage() {
     )
       .then((data) => {
         if (!data.product) {
-          setError(t("variant.notFound"));
+          setError(tRef.current("variant.notFound"));
           return;
         }
         setProduct(data.product);
         const node = data.product.variants.nodes.find((v) => v.id === variantGid);
-        setDraft(node ? draftOf(node) : null);
+        // 🔴 找不到就要有出口（審查 V29-D5／V29-FE-02）：舊版只 `setDraft(null)`，
+        //    而骨架分支的條件含 `!draft` ⇒ 手打 URL 或變體剛被刪時，畫面**永遠**停在
+        //    載入骨架，沒有訊息、沒有重試、也沒有回商品頁的路。
+        if (!node) {
+          setError(tRef.current("variant.variantNotFound"));
+          return;
+        }
+        const fresh = draftOf(node);
+        const keep = keepDraftRef.current && draftRef.current !== null;
+        keepDraftRef.current = false;
+        // `saved` 一律換成伺服器現值 ⇒ dirty 的計算永遠對著真正的基準。
+        setSaved(fresh);
+        setDraft(keep ? draftRef.current : fresh);
       })
       .catch((reason: unknown) => {
         if (controller.signal.aborted) return;
-        setError(reason instanceof Error ? reason.message : t("variant.loadError"));
+        setError(reason instanceof Error ? reason.message : tRef.current("variant.loadError"));
       });
     return () => controller.abort();
-  }, [productGid, variantGid, requestKey, t]);
+  }, [productGid, variantGid, requestKey]);
 
   const reload = useCallback(() => setRequestKey((key) => key + 1), []);
+  /** 背景重讀，保留未存編輯（見 `keepDraftRef` 的紅字）。 */
+  const refresh = useCallback(() => {
+    keepDraftRef.current = true;
+    setRequestKey((key) => key + 1);
+  }, []);
 
   const variants = useMemo(
     () => [ ...(product?.variants.nodes ?? []) ].sort((a, b) => a.position - b.position),
@@ -185,6 +220,28 @@ export function VariantDetailPage() {
     return variants.filter((v) => v.title.toLocaleLowerCase().includes(needle));
   }, [search, variants]);
 
+  // 未存變更防護（審查 V29-D6／V29-FE-03）。舊版切換變體是直接 navigate，
+  // effect 立刻重抓並用伺服器值覆寫 draft ⇒ 使用者改到一半的編輯靜默消失。
+  // 沿用商品頁的兩段式（`ProductDetailPage` 的 guardNav）：首次攔截只提示，
+  // 4 秒內再點同一個動作就放行——比 confirm 對話框少一次點擊，且不擋鍵盤流。
+  const dirty = useMemo(
+    () => Boolean(draft && saved) && JSON.stringify(draft) !== JSON.stringify(saved),
+    [draft, saved],
+  );
+  const blocker = useBlocker(dirty && !saving);
+  const lastBlockAt = useRef(0);
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    const now = Date.now();
+    if (now - lastBlockAt.current < 4000) {
+      blocker.proceed();
+      return;
+    }
+    lastBlockAt.current = now;
+    showToast(t("product.leaveWarning"));
+    blocker.reset();
+  }, [blocker, showToast, t]);
+
   const goTo = useCallback((id: string) => {
     navigate(`/admin/products/${encodeURIComponent(productGid)}/variants/${encodeURIComponent(id)}`);
   }, [navigate, productGid]);
@@ -195,14 +252,34 @@ export function VariantDetailPage() {
 
   const save = useCallback(async () => {
     if (!product || !current || !draft || saving) return;
-    if (!isValidMoneyInput(draft.price)) {
-      showToast(t("product.validation.priceRequired"));
+    // 🔴 超出載入上限就封鎖儲存（審查 V29-D2）：`variants(first: 250)` 是**截斷**，
+    //    而 productSet 是宣告式全量——把截斷後的 250 列當成全量送出，第 251 個之後的
+    //    變體會被後端整批硬刪（`VariantSync` 的 `existing - matched`）。
+    //    商品頁對同一情境早就封鎖（`variantOverflow`），子頁必須繼承，
+    //    否則使用者從商品頁那個**仍可點**的變體連結進來就繞過了它。
+    if (product.variants.pageInfo?.hasNextPage) {
+      showToast(t("product.variants.tooMany"));
       return;
     }
-    const weight = Number(draft.weightGrams);
-    if (!Number.isInteger(weight) || weight < 0) {
-      showToast(t("variant.shipping.weightInvalid"));
+    if (!draft.price.trim() || !isValidMoneyInput(draft.price)) {
+      showToast(t(draft.price.trim() ? "product.validation.moneyInvalid" : "product.validation.priceRequired"));
       return;
+    }
+    // 🔴 compare／cost 也要驗（審查 V29-D3／V29-FE-05）：它們在子頁是可編輯欄。
+    //    不驗的話 `parseMoneyToCents` 回 undefined → 送出顯式 null → 後端把 null 當
+    //    「沒有值」放行 ⇒ **打錯一個字＝把既有比較價／成本清掉**，而且回報儲存成功。
+    if (!isValidMoneyInput(draft.compare) || !isValidMoneyInput(draft.cost)) {
+      showToast(t("product.validation.moneyInvalid"));
+      return;
+    }
+    // 重量只在「需要運送」時才有欄位可改 ⇒ 驗證也只在那時做（審查 V29-FE-07）：
+    // 否則會進入「儲存被擋住、但要修的欄位不在畫面上」的死角。
+    if (draft.requiresShipping) {
+      const weight = Number(draft.weightGrams.trim());
+      if (draft.weightGrams.trim() === "" || !Number.isInteger(weight) || weight < 0) {
+        showToast(t("variant.shipping.weightInvalid"));
+        return;
+      }
     }
 
     setSaving(true);
@@ -227,6 +304,30 @@ export function VariantDetailPage() {
         };
       });
 
+      // 🔴 **選項樹由座標導出，不是照抄伺服器值**（審查 V29-D4／V29-FE-04）。
+      //    舊版把未修改的 `product.options` 原樣送出，而座標取自 draft ⇒ 改過的值
+      //    一定不在 `options.values` 裡，後端一律 reject ⇒ 那張「選項值」卡 100% 不可用。
+      //    由座標導出則兩者恆一致：改值＝把該選項值重新命名（影響所有用到它的變體，
+      //    正是卡片註釋說的語義）。順序＝原 position 序，新值接在後面。
+      const optionsPayload = options.map((option, optionIndex) => {
+        const used = rows.map((row) => row.coords[optionIndex]);
+        const known = [ ...option.values ]
+          .sort((a, b) => a.position - b.position)
+          .map((v) => v.value)
+          .filter((value) => used.includes(value));
+        const extra = used.filter((value) => !known.includes(value));
+        return { name: option.name, values: [ ...new Set([ ...known, ...extra ]) ] };
+      });
+
+      // 座標重複＝兩個變體落在同一格，後端撞 `option_values_digest` 唯一索引。
+      // 前端先擋，才給得出「是哪一欄」的訊息；靠後端只會回一句通用的唯一鍵錯誤。
+      const seen = new Set(rows.map((row) => JSON.stringify(row.coords)));
+      if (options.length > 0 && seen.size !== rows.length) {
+        setSaving(false);
+        showToast(t("product.validation.optionsInvalid"));
+        return;
+      }
+
       const data = await requestAdminGraphQL<
         { productSet: { product: { lockVersion: number } | null; userErrors: { field: string[] | null; message: string }[] } },
         Record<string, unknown>
@@ -235,10 +336,10 @@ export function VariantDetailPage() {
           id: product.id,
           title: product.title,
           lockVersion: product.lockVersion,
-          options: options.map((option) => ({
-            name: option.name,
-            values: [ ...option.values ].sort((a, b) => a.position - b.position).map((v) => v.value),
-          })),
+          // 🔴 **不送 descriptionHtml**：子頁不編輯商品說明，宣告式契約下
+          //    「缺席＝保持現值」由 `SaveProduct#normalize` 保證（審查 V29-D1 的修法）。
+          //    在這裡補送反而會讓同型缺陷在別的部分樹呼叫端被遮住。
+          options: optionsPayload,
           variants: buildVariantsPayload(rows, options, (raw) => centsToApiString(parseMoneyToCents(raw) ?? null)),
         },
         idempotencyKey: uuidV4(),
@@ -262,6 +363,14 @@ export function VariantDetailPage() {
       <div className="cl-page cl-page--detail">
         <div className="cl-error-banner" role="alert">
           <div><strong>{t("variant.loadFailed")}</strong><p>{error}</p></div>
+          {/* 重試對「這個變體不存在」沒有用（重試幾次都還是不存在）⇒ 一定要有
+              回商品頁的出口，否則使用者只能按瀏覽器上一頁。 */}
+          <Link
+            className="cl-button cl-button--secondary cl-button--small"
+            to={`/admin/products/${encodeURIComponent(productGid)}`}
+          >
+            {t("variant.backToProduct")}
+          </Link>
           <Button onClick={reload} size="small" variant="secondary">
             <RefreshCw aria-hidden="true" size={14} />{t("common.retry")}
           </Button>
@@ -324,7 +433,7 @@ export function VariantDetailPage() {
 
       <div className="cl-od-grid">
         <aside className="cl-od-grid__aside">
-          <Card>
+          <Card padded>
             <div className="cl-variant-nav__product">
               <span className="cl-variant-nav__thumb">
                 <MediaThumb
@@ -378,11 +487,12 @@ export function VariantDetailPage() {
         </aside>
 
         <div className="cl-od-grid__main">
-          <Card title={t("variant.card.options")}>
+          <Card padded>
+            <h3>{t("variant.card.options")}</h3>
             <div className="cl-variant-head">
               <VariantImageSlot
                 image={current.image ? { id: current.id, ...current.image } : null}
-                onChange={reload}
+                onChange={refresh}
                 productGid={product.id}
                 variantGid={current.id}
               />
@@ -405,7 +515,8 @@ export function VariantDetailPage() {
             ))}
           </Card>
 
-          <Card title={t("variant.card.pricing")}>
+          <Card padded>
+            <h3>{t("variant.card.pricing")}</h3>
             <TextField label={t("product.price.label")} onChange={(e) => setField("price", e.target.value)} value={draft.price} />
             <TextField label={t("product.compare.label")} onChange={(e) => setField("compare", e.target.value)} value={draft.compare} />
             <TextField label={t("product.cost.label")} onChange={(e) => setField("cost", e.target.value)} value={draft.cost} />
@@ -419,7 +530,8 @@ export function VariantDetailPage() {
             </label>
           </Card>
 
-          <Card title={t("variant.card.inventory")}>
+          <Card padded>
+            <h3>{t("variant.card.inventory")}</h3>
             <TextField label={t("product.sku.label")} onChange={(e) => setField("sku", e.target.value)} value={draft.sku} />
             <TextField label={t("product.barcode.label")} onChange={(e) => setField("barcode", e.target.value)} value={draft.barcode} />
             {/* 🔴 唯讀（見檔頭③）：庫存只能經 inventoryAdjustQuantities 改，
@@ -452,7 +564,8 @@ export function VariantDetailPage() {
             <p className="cl-variant-inventory__note">{t("variant.inventory.readOnly")}</p>
           </Card>
 
-          <Card title={t("variant.card.shipping")}>
+          <Card padded>
+            <h3>{t("variant.card.shipping")}</h3>
             <label className="cl-check">
               <input
                 checked={draft.requiresShipping}

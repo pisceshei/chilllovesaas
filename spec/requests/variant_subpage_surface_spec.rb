@@ -209,6 +209,129 @@ RSpec.describe "Admin GraphQL 變體子頁讀寫面", type: :request do
     expect(queries).to be < 40
   end
 
+  # ── 對抗式審查（2026-08-25）確認後補的守衛 ────────────────────────────
+  #
+  # 🔴 這一批全部是**缺席的測試**：把下面每一道守衛刪掉，上面既有的六條會全綠。
+  #   來源＝第 29 包審查 V29-D1／P29-BE-W1／P29-BE-W2／P29-BE-W3／R-1。
+
+  it "🔴 只送部分樹**不得**清掉商品說明（缺席＝保持現值）" do
+    product = product_with_variant!
+    variant = ActsAsTenant.with_tenant(shop) { product.product_variants.sole }
+    ActsAsTenant.with_tenant(shop) { product.update!(description_html: "<p>秋冬款</p>") }
+    login!
+
+    # 變體子頁送的就是這個形狀：只有 title／lockVersion／variants，沒有 descriptionHtml。
+    ActsAsTenant.with_tenant(shop) do
+      post_graphql(SET_MUTATION, variables: {
+        input: { id: gid(product), title: product.title, lockVersion: product.reload.lock_version,
+                 variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "199.00" } ] },
+        idempotencyKey: SecureRandom.uuid
+      })
+    end
+    expect(response.parsed_body.dig("data", "productSet", "userErrors")).to be_empty
+    # 舊語義（`input[:description_html].to_s` → ""）會讓這裡變成 ""，
+    # 而且 userErrors 為空、前端顯示「已儲存」——使用者完全看不到說明被刪光。
+    expect(product.reload.description_html).to eq("<p>秋冬款</p>")
+  end
+
+  it "顯式空字串仍然清得掉說明（缺席與清除是兩件事）" do
+    product = product_with_variant!
+    variant = ActsAsTenant.with_tenant(shop) { product.product_variants.sole }
+    ActsAsTenant.with_tenant(shop) { product.update!(description_html: "<p>要被清掉</p>") }
+    login!
+
+    ActsAsTenant.with_tenant(shop) do
+      post_graphql(SET_MUTATION, variables: {
+        input: { id: gid(product), title: product.title, lockVersion: product.reload.lock_version,
+                 descriptionHtml: "",
+                 variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "128.00" } ] },
+        idempotencyKey: SecureRandom.uuid
+      })
+    end
+    expect(response.parsed_body.dig("data", "productSet", "userErrors")).to be_empty
+    expect(product.reload.description_html).to eq("")
+  end
+
+  it "🔴 顯式 null 的布林欄回落預設，**不得**漏成 top-level INTERNAL（鐵律 4）" do
+    product = product_with_variant!
+    variant = ActsAsTenant.with_tenant(shop) { product.product_variants.sole }
+    ActsAsTenant.with_tenant(shop) { variant.update!(requires_shipping: false, taxable: false) }
+    login!
+
+    # `Boolean` 是 nullable argument ⇒ 顯式 null 會保留在 to_h 裡，
+    # `fetch(key, default)` 的 default **不生效** ⇒ 舊碼把 nil 寫進 not-null 欄，
+    # 噴 NotNullViolation → 本服務 rescue 接不到 → graphql_controller 轉 INTERNAL。
+    ActsAsTenant.with_tenant(shop) do
+      post_graphql(SET_MUTATION, variables: {
+        input: { id: gid(product), title: product.title, lockVersion: product.reload.lock_version,
+                 variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "128.00",
+                               requiresShipping: nil, taxable: nil } ] },
+        idempotencyKey: SecureRandom.uuid
+      })
+    end
+    expect(response.parsed_body["errors"]).to be_nil, "顯式 null 漏成 top-level 錯誤"
+    expect(response.parsed_body.dig("data", "productSet", "userErrors")).to be_empty
+    expect(response.parsed_body.dig("data", "productSet", "product", "variants", "nodes").sole["requiresShipping"])
+      .to be(true)
+    expect(variant.reload.taxable).to be(true)
+  end
+
+  it "🔴 負數重量回 userError，不得靜默落庫" do
+    product = product_with_variant!
+    variant = ActsAsTenant.with_tenant(shop) { product.product_variants.sole }
+    login!
+
+    ActsAsTenant.with_tenant(shop) do
+      post_graphql(SET_MUTATION, variables: {
+        input: { id: gid(product), title: product.title, lockVersion: product.reload.lock_version,
+                 variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "128.00",
+                               weightGrams: -5000 } ] },
+        idempotencyKey: SecureRandom.uuid
+      })
+    end
+    errors = response.parsed_body.dig("data", "productSet", "userErrors")
+    expect(errors.map { |e| e["field"] }).to include([ "variants", "0", "weightGrams" ])
+    # MySQL signed int 收得下負數、ProductVariant 以前也沒有 numericality ⇒ 沒有這道就寫進去了
+    expect(variant.reload.weight_grams).to eq(0)
+  end
+
+  it "model 層第二道：負數重量走 update! 也擋得住（insert_all 以外的路徑）" do
+    product = product_with_variant!
+    ActsAsTenant.with_tenant(shop) do
+      variant = product.product_variants.sole
+      expect { variant.update!(weight_grams: -1) }.to raise_error(ActiveRecord::RecordInvalid)
+    end
+  end
+
+  it "🔴 inventoryLevels 要自己擋 inventory.view（不得靠 products.view 放行）" do
+    product = product_with_variant!
+    # 🔴 這個角色的組成就是缺陷本身：**有** products.view、**沒有** inventory.view。
+    #   拿「什麼權限都沒有」的員工測是測不出來的——那種員工在 `product(id:)` 的
+    #   `authorize_products!` 就被擋掉，把 inventory 閘整個刪掉測試還是綠的（實測）。
+    viewer = ActsAsTenant.with_tenant(shop) do
+      staff_member = create(:staff_member, shop:, owner: false)
+      role = Role.create!(name: "products-only-#{SecureRandom.hex(4)}")
+      RolePermission.create!(role:, permission_key: "products.view")
+      UserStoreAssignment.find_or_initialize_by(staff_member_id: staff_member.id, shop_id: shop.id)
+                         .update!(role_id: role.id)
+      staff_member
+    end
+    login!(email: viewer.email)
+
+    post_graphql(SUBPAGE_QUERY, variables: { id: gid(product) })
+    body = response.parsed_body
+    codes = body["errors"].to_a.map { |e| e.dig("extensions", "code") }
+    expect(codes).to include("ACCESS_DENIED")
+    # 錯誤的 path 精確指到 inventoryLevels——證明是**這個欄位**擋的，
+    # 不是 `authorize_products!` 在上游就把整條查詢拒掉（那樣測不出本閘）。
+    expect(body["errors"].to_a.map { |e| e["path"] }.flatten).to include("inventoryLevels")
+    # `inventory_levels` 宣告 `null: false` ⇒ 錯誤沿非空鏈上溯，直到第一個可空欄位
+    # （`product`）。所以 data.product 是 null 而不是「部分商品資料」。
+    # 🔴 這是**刻意**的 fail-closed：庫存讀不到時不回空陣列——空陣列會被畫成
+    #   「這個變體沒有庫存」，那是個謊。缺 inventory.view 的員工請走商品頁。
+    expect(body.dig("data", "product")).to be_nil
+  end
+
   def login!(email: staff.email)
     post login_path, params: { email:, password: "long-password-123" }
     expect(response).to redirect_to(admin_root_path)

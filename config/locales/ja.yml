@@ -49,6 +49,7 @@
       seo_title_too_long: "SEO タイトルが上限を超えています。"
       seo_description_too_long: "メタディスクリプションが上限を超えています。"
       price_required: "価格は必須です。"
+      weight_negative: "重量は 0 または正の整数（グラム）で入力してください。"
       amount_negative: "金額を負にすることはできません。"
       amount_invalid: "有効な金額文字列を入力してください（主単位、小数点以下2桁固定、記号や桁区切りなし）。"
       handle_taken: "この handle は既に使用されています。"

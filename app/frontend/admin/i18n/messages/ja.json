@@ -518,5 +518,7 @@
   "variant.inventory.readOnly": "在庫は在庫ページまたは商品ページの在庫カードから調整します。すべての調整は記録されるため、商品の保存では送信されません。",
   "variant.shipping.physical": "配送が必要な物理商品です",
   "variant.shipping.weight": "商品重量（グラム）",
-  "variant.shipping.weightInvalid": "重量は 0 または正の整数（グラム）で入力してください。"
+  "variant.shipping.weightInvalid": "重量は 0 または正の整数（グラム）で入力してください。",
+  "variant.variantNotFound": "このバリエーションが見つかりません。削除された可能性があります。",
+  "variant.backToProduct": "商品に戻る"
 }

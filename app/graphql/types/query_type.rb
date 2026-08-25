@@ -5,6 +5,8 @@ module Types
   # 所有 resolver 都先執行 server-side ProductPolicy，再使用明確 shop_id
   # scope。見 docs/research/28 §0.2–0.3、docs/specs/12 F3/F4。
   class QueryType < BaseObject
+    include Types::InventoryAuthorization
+
     # `connection: false` 禁用 graphql-ruby 內建的 offset Relay extension；
     # 此欄位自行提供 keyset 實作與參數。見 docs/specs/11 §4。
     field :products, ProductConnectionType, null: false, connection: false do
@@ -377,16 +379,6 @@ module Types
 
       raise GraphQL::ExecutionError.new(
         I18n.t("errors.files.access_denied"),
-        extensions: { "code" => "ACCESS_DENIED" }
-      )
-    end
-
-    def authorize_inventory!
-      staff = context[:current_staff]
-      return if staff && (staff.owner? || staff.can?("inventory.view"))
-
-      raise GraphQL::ExecutionError.new(
-        I18n.t("errors.inventory.access_denied"),
         extensions: { "code" => "ACCESS_DENIED" }
       )
     end

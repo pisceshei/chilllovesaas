@@ -518,5 +518,7 @@
   "variant.inventory.readOnly": "库存只能在库存页或商品页的库存卡调整——每一笔调整都要留帐，不随商品保存送出。",
   "variant.shipping.physical": "这是需要运送的实体商品",
   "variant.shipping.weight": "商品重量（克）",
-  "variant.shipping.weightInvalid": "重量必须是 0 或正整数（单位：克）。"
+  "variant.shipping.weightInvalid": "重量必须是 0 或正整数（单位：克）。",
+  "variant.variantNotFound": "找不到这个变体——它可能已被删除。",
+  "variant.backToProduct": "回到商品"
 }

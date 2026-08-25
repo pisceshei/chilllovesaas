@@ -49,6 +49,7 @@
       seo_title_too_long: "SEO title is longer than the limit."
       seo_description_too_long: "Meta description is longer than the limit."
       price_required: "Price is required."
+      weight_negative: "Weight must be 0 or a positive whole number of grams."
       amount_negative: "Amount can't be negative."
       amount_invalid: "Enter a valid amount string (major units, always two decimals, no symbols or thousands separators)."
       handle_taken: "This handle is already in use."
