@@ -32,6 +32,14 @@ Rails.application.configure do
   # HTTPS 而發出 Secure cookie（瀏覽器在 http:// 下拒收 ⇒ 登入靜默失敗）；
   # 只關 assume_ssl 留 force_ssl 會在無 TLS 環境重導向迴圈。TLS 就緒後移除該
   # 環境變數即回到安全預設（fail-secure：未設定＝全開）。
+  #
+  # 🔴 **2026-08-25（第 31 包）：TLS 已就緒，bt3 的 `/etc/chilllove/env` 已移除
+  #   該變數**，所以這兩行現在都是 true。開關本身**刻意保留**——它是「TLS 壞掉時
+  #   還能把站救回明文」的唯一退路，也是本機／LAN 直連 bt3 時的逃生口。
+  #   🔴 要再開它之前先看 `config/deploy/nginx-chilllove.conf` 的 `map` 那段：
+  #   前置機（.187）送 `X-Forwarded-Proto: https`，bt3 必須**透傳**而不是用自己的
+  #   `$scheme`（那一段是明文，$scheme 恆為 http）；照抄 $scheme 會讓 force_ssl
+  #   進入無限轉址迴圈。兩者是一組，不能只改一邊。
   config.assume_ssl = ENV["DISABLE_FORCE_SSL"] != "1"
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.

@@ -2229,6 +2229,35 @@
   【F11；來源＝<https://shopify.dev/docs/api/admin-graphql/latest/mutations/stagedUploadsCreate>；
   取證日期＝2026-08-25】
 
+### 3.16 `https://chilling.com.hk`（裸 apex）送自簽憑證（第 31 包順手發現，2026-08-25）
+
+- ⚪ **裸網域 `chilling.com.hk` 的 HTTPS 是壞的**：瀏覽器會看到憑證警告，
+  `openssl s_client` 回 `verify error:num=18:self-signed certificate`。
+  `http://chilling.com.hk` 正常（200）。
+
+- **成因不是設定失誤，是 X.509 的規則**：`.187` 上那張萬用憑證的 SAN 是
+  `*.chill.love`／`*.chilling.com.hk`／`*.chilllove.ca`／`*.chillnow.ca`
+  ——**萬用字元不涵蓋裸 apex**（`*.example.com` 不匹配 `example.com`）。
+  而 `.187` 的 vhost 裡沒有任何一個 `server_name` 精確等於 `chilling.com.hk`
+  ⇒ 該 SNI 落到寶塔的 `0.default` 區塊，送出它的自簽憑證。
+
+- **複驗**（在能連到該網域的機器上跑）：
+
+  ```
+  echo | openssl s_client -connect chilling.com.hk:443 -servername chilling.com.hk 2>&1 | grep "verify error"
+  echo | openssl s_client -connect demo.chilling.com.hk:443 -servername demo.chilling.com.hk 2>/dev/null | openssl x509 -noout -ext subjectAltName
+  ```
+
+  前者應出現 num=18；後者的 SAN 清單裡不會有裸 `chilling.com.hk`。
+
+- **與第 31 包無關**：該包只在 `.187` 新增一個 `server_name demo.chilling.com.hk`
+  的 vhost（精確比對），動不到 apex 走的那條路徑。登記在此是因為查證過程順手
+  發現，且它會讓任何人「連 apex 看看站活著沒」時誤以為是我方弄壞的。
+
+- **要修屬另一件事**：給 apex 簽一張含裸網域的憑證（或在既有憑證加一個
+  非萬用 SAN），再補一個精確的 `server_name chilling.com.hk` vhost。
+  🔴 那是使用者主站的憑證流程，**不是 CHILL LOVE 的射程**——動它之前要先問。
+
 ### 3.15 `Product#destroy` 在變體掛了圖時撞 FK（第 29 包線上驗收順手發現，2026-08-25）
 
 - ⚪ **`product.destroy!` 對「有變體圖的商品」一定失敗**，回
@@ -2342,6 +2371,34 @@
   沒有的路徑（本輪改成敘述而不給路徑）。
   【F6 同族（本機假綠）；來源＝PR #132 quality job 實測；
   複驗：`gh run view <run-id> --log` 或 REST `/actions/jobs/{id}/logs`；取證日期＝2026-08-25】
+
+- 🔴 **同一根因 2026-08-25 再犯，形態不同（鐵律 20.4 復發登記）**：
+  PR #136（第 31 包）的 quality job 同樣紅在「Check doc claims」，本機同一條指令、
+  同一組旗標卻是綠的。
+  **復發錨**＝該 PR 首個候選 head。**既有防線為何失效**＝§3.11 原本那條固定處理
+  只針對「刻意不入庫的檔」，而本次的檔（worklog／handoff）是**要入庫、只是當下還
+  沒 commit**，不在原處理的射程內。
+  🔴 **實測確認的機制**（`scripts/check-doc-claims.rb` 內容錨：`git diff --name-only`
+  搭 `"#{base_ref}...HEAD"`）：R4／R5 的範圍取自 **`base...HEAD`**，也就是
+  **已提交**的差異——工作區與**已 `git add` 但未 commit** 的內容一律看不到。
+  所以新寫的 worklog／handoff 在 commit 之前，這兩條規則掃到的是**零行**、必然綠。
+  ⚠️ 早先一版本條把分界寫成「`git add` 之後」，**那是錯的**：實測 `git add` 之後
+  仍然假綠，commit 之後才轉紅（見下方複驗）。
+  🔴 **固定處理**：`check-doc-claims` 一律**在 commit 之後**跑。這不是新規則
+  ——鐵律 15.4 的順序本來就是「凍結 tree → 全部閘門 → **commit** → 補跑必須以
+  已提交 diff 為輸入的檢查」，doc-claims 的 `--base` 模式正是那一類；本次是把它
+  提前到 commit 之前跑而自造的假綠。
+  反向複驗（在暫存區放一份含易腐數字的新 worklog，兩次結果必須不同）：
+
+  ```
+  git add -A && ruby scripts/check-doc-claims.rb --base origin/main --require-base   # 期望 PASS（假綠）
+  git commit -q -m probe && ruby scripts/check-doc-claims.rb --base origin/main --require-base   # 期望 FAIL
+  ```
+
+  🔴 複驗完要還原時**不要用 `git reset --hard`**——本輪就是這樣把同批未提交的修正
+  一起清掉、整組重做。用 `git reset --soft HEAD~1` 或在別的 worktree 做。
+  【F6 同族（本機假綠）；來源＝PR #136 quality job ＋本機 commit 前後對照實測；
+  複驗＝上面兩行；取證日期＝2026-08-25】
 
 - **`media.alt_text` 停用後沒有機械守衛**：D48 之後該欄不再是權威，但沒有任何 CI 判準
   擋「有人又去讀寫它」。依鐵律 20.4 不得在遷移 PR 裡逕自新增 `scripts/` 判準
