@@ -341,6 +341,7 @@
   "collections.type.smart": "Smart",
   "collections.type.manualHint": "You pick the products and their order.",
   "collections.type.smartHint": "Membership comes from rules; the rule editor opens in a later milestone.",
+  "collections.type.immutableHint": "A collection's type can't be changed after it's created.",
   "collections.count": "{count, plural, one {# product} other {# products}}",
   "collections.card.type": "Collection type",
   "collections.sortOrder": "Sort order",

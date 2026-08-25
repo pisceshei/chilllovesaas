@@ -47,7 +47,18 @@ module Catalog
           errors << error([ "title" ], I18n.t("errors.collection.title_too_long"), "TOO_LONG")
         end
 
-        description = Catalog::SaveProduct.sanitize_description_for(input[:description_html].to_s)
+        # 🔴 缺席／顯式 null＝**保持現值**（宣告式家族契約，見 CollectionSetInput 檔頭；
+        #   與 SaveProduct 的 description_html 同一條規則）。2026-08-26 delta 審查抓到：
+        #   F3 只封了 collection_type／sort_order，**同一個 normalize 裡同根因的說明欄沒動**
+        #   ⇒ 任何不帶 descriptionHtml 的部分更新把系列說明清空、userErrors 為空。
+        #   商品側早有同款事故（save_product.rb 的 V29-D1 註釋：變體子頁每存一次抹掉整段
+        #   商品說明），參照物是對的、只抄了一半——這正是鐵律 20.2 第 2 類的形態。
+        #   🔴 判準是 `.nil?` 不是 `.blank?`：空字串＝顯式清除，必須寫得進去。
+        description = if input[:description_html].nil?
+                        nil
+        else
+                        Catalog::SaveProduct.sanitize_description_for(input[:description_html].to_s)
+        end
 
         # 🔴 宣告式契約（審查 F3）：**缺席＝保持現值，不得補預設**——初版
         #   `input[:collection_type] || "manual"` 讓「部分更新沒帶 collectionType」把
@@ -299,7 +310,8 @@ module Catalog
           ActiveRecord::Base.transaction(requires_new: true) do
             collection = Collection.create!(
               title: attributes[:title],
-              description_html: attributes[:description_html],
+              # 建立時缺席＝空說明（`description_html` NOT NULL）；更新時缺席＝保持現值。
+              description_html: attributes[:description_html] || "",
               handle: attributes[:handle] || unique_handle(shop, attributes[:title]),
               collection_type: effective_type,
               sort_order: attributes[:sort_order] || "manual",
@@ -372,7 +384,9 @@ module Catalog
             collection.assign_attributes(
               title: attributes[:title],
               handle: handle_changed ? new_handle : collection.handle,
-              description_html: attributes[:description_html],
+              # `||` 而非直接指派：normalize 缺席時給 nil＝保持現值；
+              # Ruby 的 "" 是 truthy ⇒ 顯式清空仍寫得進去（與 SaveProduct 同一形）。
+              description_html: attributes[:description_html] || collection.description_html,
               sort_order: attributes[:sort_order] || collection.sort_order,
               **attributes.fetch(:seo)
             )

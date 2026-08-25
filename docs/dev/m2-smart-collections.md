@@ -75,6 +75,11 @@ unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 �
   `Collection.lock`（序列化點——與規則編輯、rebuild 同一把鎖；鎖定讀讀最新已提交規則，
   REPEATABLE READ 快照陷阱的解法同 handle_change.rb）。ARCHIVED／刪除 ⇒ 移出；
   🔴 UNLISTED **不**移出（前台不可見≠不是成員，13 §F1.2(f)）。ERROR 系列跳過。
+- 🔴 `Rebuild.call` 的回傳有**兩種** `:skipped`：`error: nil`＝該系列沒有 conditions
+  source（正常）；`error: LOCK_TIMEOUT_ERROR`＝鎖等逾時、這一輪沒重建。**消費者必須分辨**
+  ——`RebuildJob` 延後重排、`catalog:rebuild:collections` 單獨計數並非零結束
+  （2026-08-26 delta 審查 F6：兜底靜默回報成功＝fail-open；守衛在
+  `spec/lib/tasks/catalog_rebuild_spec.rb`）。
 - 成員變動的對外面（一處實作 `Rebuild.notify_members_changed!`）：
   `CacheStamps.bump_collection_members!`（collections.products_updated_at）＋
   outbox `collections/update`（blueprint D.4；鐵律 5）。

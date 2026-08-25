@@ -7,6 +7,11 @@ namespace :catalog do
     desc "重建全部智慧系列的物化成員（逐店逐系列；ERROR 系列列出並以非零碼結束）"
     task collections: :environment do
       errors = 0
+      # 🔴 `:skipped` 自 2026-08-26（F2 advisory lock）起有**兩個**意思：
+      #   ①該系列沒有 conditions source（不是錯誤）②鎖等逾時、這一輪沒重建。
+      #   只數 `:error` 會讓②靜默——而本任務正是 dev doc §4／P11-B9 明文倚賴的「兜底」，
+      #   兜底回報綠色卻沒做事＝鐵律 20.2 第 5 類 fail-open。逐項分開數、分開報。
+      contended = 0
       Shop.find_each do |shop|
         ActsAsTenant.with_tenant(shop) do
           ids = CollectionSource.where(shop_id: shop.id).conditions_type.distinct.pluck(:collection_id)
@@ -21,10 +26,11 @@ namespace :catalog do
             puts "shop=#{shop.subdomain} collection=#{collection_id} #{status_word} " \
                  "+#{result.inserted} -#{result.swept}#{" error=#{result.error}" if result.error}"
             errors += 1 if result.status == :error
+            contended += 1 if result.error == Collections::Rebuild::LOCK_TIMEOUT_ERROR
           end
         end
       end
-      abort "rebuild FAILED：#{errors} 個系列 ERROR" if errors.positive?
+      abort "rebuild FAILED：#{errors} 個系列 ERROR、#{contended} 個系列鎖等逾時未重建" if errors.positive? || contended.positive?
       puts "rebuild OK"
     end
   end

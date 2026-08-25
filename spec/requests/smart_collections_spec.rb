@@ -185,6 +185,29 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     expect(same["userErrors"]).to eq([])
   end
 
+  it "🔴 F5（2026-08-26 delta 審查）：缺席 descriptionHtml＝保持現值，空字串＝清除" do
+    login!
+    created = set!({ title: "有說明", descriptionHtml: "<p>原本的說明</p>" })
+    expect(created["userErrors"]).to eq([])
+    id = created.dig("collection", "id")
+    ActsAsTenant.with_tenant(shop) { expect(Collection.sole.description_html).to eq("<p>原本的說明</p>") }
+
+    # 缺席＝保持現值。初版 `input[:description_html].to_s` 讓這一發把說明清空、
+    # userErrors 為空——與商品側 V29-D1 同款事故（變體子頁每存一次抹掉整段說明）。
+    kept = set!({ id:, lockVersion: created.dig("collection", "lockVersion"), title: "改個標題" })
+    expect(kept["userErrors"]).to eq([])
+    ActsAsTenant.with_tenant(shop) do
+      expect(Collection.sole.description_html).to eq("<p>原本的說明</p>")
+      expect(Collection.sole.title).to eq("改個標題")
+    end
+
+    # 顯式空字串＝清除（判準是 `.nil?` 不是 `.blank?`）。
+    cleared = set!({ id:, lockVersion: kept.dig("collection", "lockVersion"),
+                     title: "改個標題", descriptionHtml: "" })
+    expect(cleared["userErrors"]).to eq([])
+    ActsAsTenant.with_tenant(shop) { expect(Collection.sole.description_html).to eq("") }
+  end
+
   it "collectionRuleConditions：執行期 relation 對照（前端不得硬編的那張表）" do
     login!
     post_graphql("query { collectionRuleConditions { ruleType allowedRelations defaultRelation allowedInExclusion } }")

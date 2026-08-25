@@ -120,14 +120,68 @@ describe("商品系列編輯頁", () => {
     expect(input.title).toBe("Spring Picks");
   });
 
-  it("智慧系列：選 smart 時顯示「成員由規則決定」而不是假裝能編條件", async () => {
+  it("智慧系列：**建立頁**選 smart 時顯示「成員由規則決定」而不是假裝能編條件", async () => {
     stubRoutedFetch(BASE);
     const user = userEvent.setup();
-    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+    // 🔴 這一格原本開既有系列頁翻下拉——2026-08-26 起型別建立後不可變、
+    //    下拉在既有系列上停用，改在建立頁測（可翻的那一態）。
+    renderAt("/admin/collections/new");
 
     const main = within(await screen.findByRole("main"));
     await user.selectOptions(await main.findByLabelText("類型"), "smart");
     expect(main.getByText(/成員由規則決定/)).toBeVisible();
+  });
+
+  it("🔴 既有系列：型別下拉停用、hint 說明不可變、存檔 payload 不帶 collectionType", async () => {
+    // 伺服端自 2026-08-26 起硬拒改型別（本尊官方語義）。前端若照舊送出，被拒的值會
+    // 留在表單狀態裡，之後每一次存檔都被同一個 INVALID 擋下（delta 審查 F4 的死路）。
+    const fetchMock = stubRoutedFetch([
+      ...BASE,
+      {
+        match: "mutation collectionSet",
+        body: { data: { collectionSet: { collection: { id: "gid://chilllove/Collection/7", handle: "spring-picks", lockVersion: 3, title: "Spring Picks" }, userErrors: [] } } },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+
+    const main = within(await screen.findByRole("main"));
+    const typeSelect = await main.findByLabelText("類型");
+    expect(typeSelect).toBeDisabled();
+    expect(typeSelect).toHaveValue("manual");
+    expect(main.getByText(/型別建立後不可變更/)).toBeVisible();
+
+    await user.type(main.getByLabelText("標題（日本語）"), "春のおすすめ");
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await screen.findByText("已儲存變更");
+
+    const body = JSON.parse(String(callsTo(fetchMock, "collectionSet")[0].body)) as { variables: { input: Record<string, unknown> } };
+    expect(body.variables.input).not.toHaveProperty("collectionType");
+  });
+
+  it("建立頁：型別下拉可用，且存檔 payload 帶 collectionType", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE,
+      {
+        match: "mutation collectionSet",
+        body: { data: { collectionSet: { collection: { id: "gid://chilllove/Collection/9", handle: "new-one", lockVersion: 1, title: "新系列" }, userErrors: [] } } },
+      },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/new");
+
+    const main = within(await screen.findByRole("main"));
+    const typeSelect = await main.findByLabelText("類型");
+    expect(typeSelect).toBeEnabled();
+    await user.selectOptions(typeSelect, "smart");
+    await user.type(main.getByLabelText("標題（English）"), "新系列");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await user.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    const body = JSON.parse(String(callsTo(fetchMock, "collectionSet")[0].body)) as { variables: { input: Record<string, unknown> } };
+    expect(body.variables.input.collectionType).toBe("smart");
   });
 
   it("伺服端 userErrors 以 toast 呈現（STALE_OBJECT 等）", async () => {
