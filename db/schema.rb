@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_055500) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -94,6 +94,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
     t.text "description_html", size: :medium, null: false
     t.string "handle", null: false
     t.integer "lock_version", default: 0, null: false
+    t.datetime "products_updated_at", comment: "成員集合最後變動時刻（cache stamp；14 §F1）"
     t.string "rules_match", limit: 16, default: "all", null: false
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
@@ -315,6 +316,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
   end
 
   create_table "files", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "上傳檔案 metadata", force: :cascade do |t|
+    t.string "alt_source", limit: 16, comment: "alt 的來源稽核（ai／human／imported；62 §F.1）。null＝立欄前的存量"
     t.string "alt_text", limit: 512
     t.bigint "byte_size", null: false
     t.string "checksum", limit: 64, null: false
@@ -682,6 +684,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
     t.string "email", limit: 320
     t.string "financial_status", limit: 32, default: "pending", null: false
     t.string "fulfillment_status", limit: 32, default: "unfulfilled", null: false
+    t.string "locale_snapshot", limit: 35, comment: "訂單成立當下的顧客語言（BCP-47；寫入者在 M3）"
     t.integer "lock_version", default: 0, null: false
     t.string "name", limit: 64, null: false
     t.text "note"
@@ -802,7 +805,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
     t.text "description_html", size: :medium, null: false
     t.string "handle", null: false
     t.integer "lock_version", default: 0, null: false
+    t.datetime "media_updated_at", comment: "媒體（含衍生尺寸與檔案層 alt）最後變動時刻（cache stamp）"
     t.string "product_type"
+    t.datetime "publications_updated_at", comment: "發布狀態最後變動時刻（cache stamp；寫入者隨第 12 包）"
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
     t.bigint "shop_id", null: false
@@ -810,6 +815,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
     t.json "tags", default: -> { "(json_array())" }, null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.datetime "variants_updated_at", comment: "變體樹最後變動時刻（cache stamp；null＝立欄前未變動過）"
     t.string "vendor"
     t.index ["shop_id", "created_at", "id"], name: "ix_products_created_at_id"
     t.index ["shop_id", "handle"], name: "uq_products_handle", unique: true
@@ -988,6 +994,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_053000) do
   end
 
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|
+    t.bigint "catalog_version", default: 1, null: false, comment: "目錄級版本（市場／價格表變動時 bump；寫入者隨第 32 包）"
     t.datetime "created_at", null: false
     t.string "custom_domain", limit: 253
     t.json "feature_flags", default: -> { "(json_object())" }, null: false

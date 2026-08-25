@@ -50,6 +50,8 @@ module Catalog
           InventoryItem.where(shop_id: shop.id, product_variant_id: variant.id)
                        .update_all(product_variant_id: nil, variant_deleted_at: now)
           variant.destroy!
+          # 第 3 包 cache stamp：變體集合變了。
+          Catalog::CacheStamps.bump_variants!(shop.id, variant.product_id)
         end
         Result.new(deleted: true, user_errors: [])
       end

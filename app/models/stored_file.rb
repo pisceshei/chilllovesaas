@@ -29,7 +29,27 @@ class StoredFile < ApplicationRecord
   validates :checksum, presence: true
   validates :storage_key, presence: true, uniqueness: { scope: :shop_id }
   validates :status, inclusion: { in: STATUSES }
-  validates :alt_text, length: { maximum: 512 }, allow_nil: true
+  # 512 原本是硬編（鐵律 6 違反，與 Media 同型、第 37 包已修過那邊）——正典在
+  # limits `media.alt_max_length`，`MediaSync::ALT_MAX` 也引同一鍵。
+  validates :alt_text, length: { maximum: Limits.fetch(:media, :alt_max_length) }, allow_nil: true
+  # 第 3 包：alt 來源稽核（62 §F.1；值域正典＝limits `media.alt_sources`）。
+  validates :alt_source,
+    inclusion: { in: Limits.enum(:media, :alt_sources).map(&:downcase) },
+    allow_nil: true
+
+  before_save :stamp_alt_source
+
+  # 🔴 預設 `human` 是**兜底**不是權威：現行全部 alt 寫入路徑都是後台人工輸入，
+  #   所以「有人改了 alt 而沒明說來源」＝human。未來的 AI 產生器與 CSV 匯入
+  #   **必須顯式帶 alt_source**（本 callback 看到顯式值就不動）——若它們忘了帶，
+  #   會被錯標成 human，這是已登記的殘餘風險（worklog Pending），代價換來的是
+  #   「所有現行路徑零改動即正確」。
+  def stamp_alt_source
+    return unless will_save_change_to_alt_text?
+    return if will_save_change_to_alt_source?
+
+    self.alt_source = "human"
+  end
 
   # 引用數的**相關子查詢**（第 28 包檔案庫列表）。
   #

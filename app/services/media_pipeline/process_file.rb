@@ -45,6 +45,8 @@ module MediaPipeline
           # 舊的一組已作廢，留著會讓讀取面指向不存在的 blob）。
           file.update!(status: "failed", derivatives: nil,
                        processing_error: e.message.to_s.first(1000))
+          # 第 3 包 cache stamp：失敗也是呈現變化（縮圖 → 失敗占位）。
+          Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
           return Result.new(status: "failed", derivatives: nil)
         rescue StandardError => e
           # 環境的錯＝可恢復。還原 uploaded 讓重試從乾淨態開始（審查 C7）。
@@ -63,6 +65,8 @@ module MediaPipeline
 
         file.update!(status: "ready", width: source.width, height: source.height,
                      derivatives: written, processing_error: nil)
+        # 第 3 包 cache stamp：衍生尺寸就緒＝媒體卡從占位變縮圖（呈現變了）。
+        Catalog::CacheStamps.bump_media_for_file!(file.shop_id, file.id)
         Result.new(status: "ready", derivatives: written)
       end
 

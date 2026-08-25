@@ -438,6 +438,9 @@ module Catalog
             )
             # 全樹鎖：即使只有變體欄位變動也要 bump 版本 ⇒ 恆 touch updated_at。
             product.updated_at = Time.current
+            # 第 3 包 cache stamp：宣告式全量下變體樹**每次更新都被重寫**
+            # ⇒ 恆 bump（不精算「這次有沒有真的變」——精算漏一種形態就是舊快取）。
+            product.variants_updated_at = Time.current
             product.save!
 
             sync_variants!(shop, product, attributes)

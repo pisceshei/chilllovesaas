@@ -80,6 +80,8 @@ module Catalog
                   build_media!(shop, product, item[:file], item[:alt], position)
                 end
             end
+            # 第 3 包 cache stamp：媒體集合變了。
+            Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)
           end
         rescue ActiveRecord::RecordNotUnique
           # 第二道（鎖之外的意外並發／未來的其他寫入端）：不得漏成 500（鐵律 4）。
@@ -127,6 +129,7 @@ module Catalog
             #   「無處可寫」分支回 NOT_FOUND，而那個訊息與真實原因完全無關。
             if row.external_video?
               row.update!(alt_text: alt.presence)
+              Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)
               updated << row
               next
             end
@@ -147,6 +150,9 @@ module Catalog
             #    多一個本尊沒有明文要求的失敗態。⚠️ 本尊 `productUpdateMedia` 是否要求
             #    ready＝**未取得**（官方只對 fileUpdate 明文）；查得到再回頭對齊。
             file.update!(alt_text: alt.presence)
+            # 第 3 包 cache stamp：D48 之後檔案層 alt 是**所有**掛著它的商品的呈現
+            # ⇒ bump 全部（只 bump 本商品＝其他商品留在舊快取，CacheStamps 檔頭③）。
+            Catalog::CacheStamps.bump_media_for_file!(shop.id, file.id)
             updated << row
           end
         end
@@ -170,7 +176,10 @@ module Catalog
             deleted << row.id
             row.destroy!
           end
-          compact_positions!(shop, product) if errors.empty?
+          if errors.empty?
+            compact_positions!(shop, product)
+            Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)   # 第 3 包 stamp
+          end
         end
         Result.new(media: errors.any? ? [] : deleted, user_errors: errors)
       end
@@ -193,6 +202,7 @@ module Catalog
             row.reload # update_all 繞過 dirty-tracking，不 reload 會靜默不發 UPDATE
             row.update!(position: index + 1)
           end
+          Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)   # 第 3 包 stamp
         end
         Result.new(media: product.media.reload.order(:position).to_a, user_errors: [])
       end
@@ -205,6 +215,7 @@ module Catalog
 
         if media_id.nil?
           product.media.where(product_variant_id: variant.id).update_all(product_variant_id: nil)
+          Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)   # 第 3 包 stamp
           return Result.new(media: [], user_errors: [])
         end
 
@@ -236,6 +247,7 @@ module Catalog
             Media.where(shop_id: shop.id, id: overflow.map(&:id)).update_all(product_variant_id: nil)
           end
           row.update!(product_variant_id: variant.id)
+          Catalog::CacheStamps.bump_media_for_product!(shop.id, product.id)   # 第 3 包 stamp
         end
         Result.new(media: [ row ], user_errors: [])
       end

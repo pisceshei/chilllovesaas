@@ -225,6 +225,8 @@ module Catalog
           record.position = index
           record.save!
         end
+        # 第 3 包 cache stamp：成員集合變了（14 §F1 的 collections.products_updated_at）。
+        Catalog::CacheStamps.bump_collection_members!(shop.id, collection.id)
       end
 
       # 譯文與商品共用同一個服務（只換 resource_type）；驗證失敗 ⇒ 整棵樹回滾。
