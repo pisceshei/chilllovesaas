@@ -58,10 +58,55 @@ describe("商品頁", () => {
     );
     expect(JSON.parse(String(options.body))).toEqual(
       expect.objectContaining({
-        query: expect.stringContaining("products(first: $first, query: $query)"),
-        variables: { first: 50, query: null },
+        query: expect.stringContaining("products(first: $first, after: $after, query: $query)"),
+        // D48：列表可翻頁 ⇒ 第一頁的 after 是 null（不是「沒有這個欄位」）
+        variables: { first: 50, after: null, query: null },
       }),
     );
+  });
+
+  it("🔴 D48：載入更多必須把 after 送進**查詢文件**（只加 variables 是不夠的）", async () => {
+    // 🔴 這一條擋的是實測踩到的缺陷：`fetchProducts` 把 after 放進 variables，
+    //    但 GraphQL 文件沒宣告 `$after` ⇒ 依規格未宣告的變數會被丟掉，
+    //    「載入更多」於是永遠重取第一頁並把同一批列接在後面。
+    //    只斷言 variables 抓不到它——必須連文件一起驗。
+    const page1 = [ { id: "gid://chilllove/Product/1", title: "第一頁商品", status: "ACTIVE" } ];
+    const page2 = [ { id: "gid://chilllove/Product/2", title: "第二頁商品", status: "ACTIVE" } ];
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as {
+        query: string; variables: Record<string, unknown>;
+      };
+      const isPage2 = body.variables.after === "CURSOR1";
+      return {
+        json: vi.fn().mockResolvedValue({ data: { products: {
+          nodes: isPage2 ? page2 : page1,
+          pageInfo: { endCursor: isPage2 ? null : "CURSOR1", hasNextPage: !isPage2 },
+        } } }),
+        ok: true, status: 200,
+      } as unknown as Response;
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+    await screen.findByText("第一頁商品");
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "載入更多" }));
+    expect(await screen.findByText("第二頁商品")).toBeVisible();
+    // 兩頁都在（append 不是取代）
+    expect(screen.getByText("第一頁商品")).toBeVisible();
+
+    // 🔴 文件本身必須宣告 $after，否則伺服端會忽略它
+    const last = JSON.parse(String((fetchMock.mock.calls.at(-1)?.[1] as RequestInit).body)) as {
+      query: string; variables: Record<string, unknown>;
+    };
+    expect(last.query).toContain("$after");
+    expect(last.query).toContain("after: $after");
+    expect(last.variables.after).toBe("CURSOR1");
   });
 
   it("顯示可重試的錯誤狀態，重試後回到空狀態", async () => {

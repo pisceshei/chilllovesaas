@@ -1,5 +1,5 @@
 import { FolderPlus, Plus, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
 import { DEFAULT_PAGE_SIZE } from "../api/pagination";
@@ -7,10 +7,12 @@ import { Badge } from "../components/Badge";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { EmptyState } from "../components/EmptyState";
+import { LoadMore } from "../components/LoadMore";
 import { IndexTable } from "../components/IndexTable";
 import type { IndexTableColumn } from "../components/IndexTable";
 import { Page } from "../components/Page";
 import { useT } from "../i18n/I18nContext";
+import { useCursorPagination } from "../lib/useCursorPagination";
 
 /**
  * 商品系列列表（ML-3）。與商品列表同一套 keyset 分頁與 IndexTable。
@@ -19,8 +21,8 @@ import { useT } from "../i18n/I18nContext";
  * 顯示 0 是在說一件假的事（13 §F4；同 91 §5「未知與零是兩件事」）。
  */
 const COLLECTIONS_QUERY = `
-  query collectionsList($first: Int!) {
-    collections(first: $first) {
+  query collectionsList($first: Int!, $after: String) {
+    collections(first: $first, after: $after) {
       nodes { id title handle collectionType productsCount }
       pageInfo { hasNextPage endCursor }
     }
@@ -42,28 +44,18 @@ interface CollectionsData {
 export function CollectionsPage() {
   const t = useT();
   const navigate = useNavigate();
-  const [collections, setCollections] = useState<CollectionNode[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [requestKey, setRequestKey] = useState(0);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setCollections(null);
-    setError(null);
-    requestAdminGraphQL<CollectionsData, { first: number }>(
-      COLLECTIONS_QUERY,
-      { first: DEFAULT_PAGE_SIZE },
-      controller.signal,
-    )
-      .then((data) => setCollections(data.collections.nodes))
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-        setError(reason instanceof Error ? reason.message : t("collections.loadError"));
-      });
-    return () => controller.abort();
-  }, [requestKey, t]);
-
-  const retry = useCallback(() => setRequestKey((key) => key + 1), []);
+  // D48：列表可翻頁（本尊如此；我方原本只取第一頁）。
+  const fetchPage = useCallback(
+    (cursor: string | null, signal: AbortSignal) =>
+      requestAdminGraphQL<CollectionsData, { first: number; after: string | null }>(
+        COLLECTIONS_QUERY, { first: DEFAULT_PAGE_SIZE, after: cursor }, signal,
+      ).then((data) => data.collections),
+    [],
+  );
+  const {
+    items: collections, error, loadMoreError, hasNextPage, loadingMore, loadMore, reload: retry,
+  } = useCursorPagination(fetchPage, [], t("collections.loadError"));
 
   const columns: readonly IndexTableColumn<CollectionNode>[] = [
     {
@@ -145,6 +137,13 @@ export function CollectionsPage() {
           />
         </Card>
       )}
+
+      <LoadMore
+        error={loadMoreError}
+        hasNextPage={hasNextPage}
+        loading={loadingMore}
+        onLoadMore={loadMore}
+      />
     </Page>
   );
 }

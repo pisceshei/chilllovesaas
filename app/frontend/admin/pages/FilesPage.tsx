@@ -10,10 +10,13 @@ import type { IndexTableColumn } from "../components/IndexTable";
 import { Page } from "../components/Page";
 import { useT } from "../i18n/I18nContext";
 import { useToast } from "../lib/ToastContext";
-import { deleteFiles, fetchFiles, formatBytes, updateFile, uploadToLibrary } from "../lib/filesApi";
-import type { FileNode, FilesFilter } from "../lib/filesApi";
+import { deleteFiles, fetchFilesPage, formatBytes, updateFile, uploadToLibrary } from "../lib/filesApi";
+import type { FileNode, FileSortKey, FilesFilter } from "../lib/filesApi";
+import { LoadMore } from "../components/LoadMore";
+import { useCursorPagination } from "../lib/useCursorPagination";
 import { DEFAULT_PAGE_SIZE } from "../api/pagination";
 import { uuidV4 } from "../lib/uuid";
+import { ACCEPTED_TYPES, UPLOAD_BATCH_MAX, isAcceptableImage } from "../lib/imageUploadRules";
 
 /**
  * 檔案庫 `/admin/content/files`（第 28 包；整合規格 §4-28）。
@@ -34,12 +37,6 @@ import { uuidV4 } from "../lib/uuid";
 type StatusFilter = "ALL" | FileNode["status"];
 type UsageFilter = "ALL" | "PRODUCT" | "NONE";
 
-/** 前端可接受的型別／大小（鏡射 limits `media.image_content_types` 與 `content.files_image_max_mb`）。 */
-const ACCEPTED_TYPES = [ "image/jpeg", "image/png", "image/webp", "image/gif" ];
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
-/** 單次選檔上限（鏡射 limits `content.files_upload_batch_max`；本尊 Files 頁同值）。 */
-const UPLOAD_BATCH_MAX = 20;
-
 const STATUS_TONE: Record<FileNode["status"], "default" | "info" | "success" | "critical"> = {
   UPLOADED: "default",
   PROCESSING: "info",
@@ -50,15 +47,14 @@ const STATUS_TONE: Record<FileNode["status"], "default" | "info" | "success" | "
 export function FilesPage() {
   const t = useT();
   const { showToast } = useToast();
-  const [files, setFiles] = useState<FileNode[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [requestKey, setRequestKey] = useState(0);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
   const [usage, setUsage] = useState<UsageFilter>("ALL");
   // 🔴 `IndexTable` 的選取是**非受控**、且 `onSelectionChange` 回傳的是整列不是 id
   //    ——這裡存整列而不是 id 陣列，才不會為了做刪除確認再去 files 裡找回來。
+  const [sortKey, setSortKey] = useState<FileSortKey>("CREATED_AT");
+  const [reverse, setReverse] = useState(false);
   const [selected, setSelected] = useState<FileNode[]>([]);
   const [pendingDelete, setPendingDelete] = useState<FileNode[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -74,38 +70,44 @@ export function FilesPage() {
     query: debounced || undefined,
     status: status === "ALL" ? undefined : status,
     usedIn: usage === "ALL" ? undefined : usage,
-  }), [debounced, status, usage]);
+    sortKey,
+    reverse,
+  }), [debounced, status, usage, sortKey, reverse]);
 
+  const fetchPage = useCallback(
+    (cursor: string | null, signal: AbortSignal) =>
+      fetchFilesPage(DEFAULT_PAGE_SIZE, filter, cursor, signal),
+    [filter],
+  );
+  const {
+    items: files, error, loadMoreError, hasNextPage, loadingMore, loadMore, reload,
+  } = useCursorPagination(fetchPage, [ filter ], t("files.loadError"));
+
+  // 🔴 重讀後把已不存在的選取丟掉——留著會讓批次刪除送出一批幽靈 id。
+  //    改成對 `files` 的變化收斂（分頁 hook 自己管資料），而不是在載入回呼裡做。
   useEffect(() => {
-    const controller = new AbortController();
-    setFiles(null);
-    setError(null);
-    fetchFiles(DEFAULT_PAGE_SIZE, filter, controller.signal)
-      .then((rows) => {
-        setFiles(rows);
-        // 🔴 重讀後把已不存在的選取丟掉——留著會讓批次刪除送出一批幽靈 id
-        setSelected((current) => {
-          const live = new Set(rows.map((row) => row.id));
-          return current.filter((row) => live.has(row.id));
-        });
-      })
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-        setError(reason instanceof Error ? reason.message : t("files.loadError"));
-      });
-    return () => controller.abort();
-  }, [filter, requestKey, t]);
+    // 🔴 `files` 變 null（重載中）時 `IndexTable` 整個 unmount、它的非受控選取歸零，
+    //    父層若不跟著清就會留下**畫面上沒有勾、標題列卻說要刪 N 個**的幽靈選取。
+    if (files === null) {
+      setSelected((current) => (current.length === 0 ? current : []));
+      return;
+    }
 
-  const reload = useCallback(() => setRequestKey((key) => key + 1), []);
+    setSelected((current) => {
+      if (current.length === 0) return current;
+
+      const live = new Set(files.map((row) => row.id));
+      const kept = current.filter((row) => live.has(row.id));
+      return kept.length === current.length ? current : kept;
+    });
+  }, [files]);
   const hasFilter = debounced !== "" || status !== "ALL" || usage !== "ALL";
 
   const onUpload = useCallback(async (picked: FileList | null) => {
     if (!picked || picked.length === 0) return;
 
     const all = Array.from(picked);
-    const rejected = all.filter(
-      (file) => !ACCEPTED_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES,
-    );
+    const rejected = all.filter((file) => !isAcceptableImage(file));
     if (rejected.length > 0) showToast(t("files.rejected", { filename: rejected[0].name }));
     const list = all.filter((file) => !rejected.includes(file)).slice(0, UPLOAD_BATCH_MAX);
     if (list.length === 0) return;
@@ -131,9 +133,12 @@ export function FilesPage() {
     if (alt === (row.alt ?? "")) return;
 
     const message = await updateFile(row.id, { alt });
+    // 🔴 **成功時不 reload**（對抗審查抓到）：`reload()` 會把 items 設回 null，
+    //    整張表 unmount ⇒ ⓐ使用者正在另一列打到一半的 alt（非受控 defaultValue）
+    //    連同焦點一起被銷毀 ⓑ已「載入更多」累積的第 2、3 頁全部丟掉。
+    //    而 alt 是使用者自己剛打的值，畫面上已經是對的——沒有需要跟伺服端同步的東西。
     if (message) showToast(message);
-    else reload();
-  }, [reload, showToast]);
+  }, [showToast]);
 
   const confirmDelete = useCallback(async () => {
     if (!pendingDelete) return;
@@ -271,6 +276,18 @@ export function FilesPage() {
           </select>
         </label>
         <label className="cl-files-filters__select">
+          <span>{t("files.col.sort")}</span>
+          <select onChange={(event) => setSortKey(event.target.value as FileSortKey)} value={sortKey}>
+            <option value="CREATED_AT">{t("files.sort.CREATED_AT")}</option>
+            <option value="FILENAME">{t("files.sort.FILENAME")}</option>
+            <option value="ORIGINAL_UPLOAD_SIZE">{t("files.sort.ORIGINAL_UPLOAD_SIZE")}</option>
+          </select>
+        </label>
+        <label className="cl-files-filters__check">
+          <input checked={reverse} onChange={(event) => setReverse(event.target.checked)} type="checkbox" />
+          <span>{t("files.sort.reverse")}</span>
+        </label>
+        <label className="cl-files-filters__select">
           <span>{t("files.col.usage")}</span>
           <select onChange={(event) => setUsage(event.target.value as UsageFilter)} value={usage}>
             <option value="ALL">{t("files.filter.all")}</option>
@@ -322,6 +339,13 @@ export function FilesPage() {
           />
         </Card>
       )}
+
+      <LoadMore
+        error={loadMoreError}
+        hasNextPage={hasNextPage}
+        loading={loadingMore}
+        onLoadMore={loadMore}
+      />
 
       <ConfirmDialog
         busy={busy}

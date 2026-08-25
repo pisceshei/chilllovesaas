@@ -485,5 +485,14 @@
   "files.picker.noMatch": "Essayez un autre terme.",
   "files.picker.empty.title": "Votre bibliothèque est vide",
   "files.picker.empty.description": "Importez depuis Contenu > Fichiers, ou déposez des fichiers dans la zone ci-dessus.",
-  "product.media.attachFailed": "Impossible d'ajouter les fichiers sélectionnés."
+  "product.media.attachFailed": "Impossible d'ajouter les fichiers sélectionnés.",
+  "common.loadMore": "Charger plus",
+  "files.col.sort": "Trier",
+  "files.sort.CREATED_AT": "Date d'ajout",
+  "files.sort.FILENAME": "Nom du fichier",
+  "files.sort.ORIGINAL_UPLOAD_SIZE": "Taille",
+  "files.sort.reverse": "Inverser l'ordre",
+  "files.picker.uploadNew": "Importer un fichier",
+  "files.picker.uploading": "Import en cours…",
+  "files.picker.uploadedNotSelected": "{count} fichiers ont été importés dans la bibliothèque mais non sélectionnés : la limite de sélection est atteinte."
 }

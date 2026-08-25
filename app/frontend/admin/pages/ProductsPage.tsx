@@ -13,10 +13,12 @@ import type { IndexTableColumn } from "../components/IndexTable";
 import { Page } from "../components/Page";
 import { TextField } from "../components/TextField";
 import { useT, useUiLocale } from "../i18n/I18nContext";
+import { LoadMore } from "../components/LoadMore";
+import { useCursorPagination } from "../lib/useCursorPagination";
 
 const PRODUCTS_QUERY = `
-  query ProductsIndex($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
+  query ProductsIndex($first: Int!, $after: String, $query: String) {
+    products(first: $first, after: $after, query: $query) {
       nodes {
         id
         title
@@ -101,10 +103,14 @@ const statusPresentation: Record<string, StatusPresentation> = {
  * @param signal - 頁面卸載時中止網路請求。
  * @returns 首頁一頁商品（預設頁量見 api/pagination.ts）及 cursor pageInfo。
  */
-export async function fetchProducts(signal?: AbortSignal, query?: string): Promise<ProductsQueryData> {
-  return requestAdminGraphQL<ProductsQueryData, { first: number; query: string | null }>(
+export async function fetchProducts(
+  signal?: AbortSignal,
+  query?: string,
+  after: string | null = null,
+): Promise<ProductsQueryData> {
+  return requestAdminGraphQL<ProductsQueryData, { first: number; after: string | null; query: string | null }>(
     PRODUCTS_QUERY,
-    { first: DEFAULT_PAGE_SIZE, query: query?.trim() ? query.trim() : null },
+    { first: DEFAULT_PAGE_SIZE, after, query: query?.trim() ? query.trim() : null },
     signal,
   );
 }
@@ -128,9 +134,6 @@ export function ProductsPage() {
   const navigate = useNavigate();
   const t = useT();
   const locale = useUiLocale();
-  const [products, setProducts] = useState<ProductNode[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [requestKey, setRequestKey] = useState(0);
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
@@ -149,21 +152,16 @@ export function ProductsPage() {
     return () => clearTimeout(timer);
   }, [composedQuery]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    setError(null);
-
-    void fetchProducts(controller.signal, debouncedQuery)
-      .then((data) => setProducts(data.products.nodes))
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-        setError(reason instanceof Error ? reason.message : t("products.loadError"));
-      });
-
-    return () => controller.abort();
-  }, [requestKey, debouncedQuery, t]);
-
-  const retry = useCallback(() => setRequestKey((key) => key + 1), []);
+  // D48：列表可翻頁。🔴 `deps` 帶 `debouncedQuery` ⇒ 改搜尋條件會回到第一頁並
+  //    丟棄已累積的（見 hook 檔頭②：不重置就會用舊 cursor 去要新條件的下一頁）。
+  const fetchPage = useCallback(
+    (cursor: string | null, signal: AbortSignal) =>
+      fetchProducts(signal, debouncedQuery, cursor).then((data) => data.products),
+    [debouncedQuery],
+  );
+  const {
+    items: products, error, loadMoreError, hasNextPage, loadingMore, loadMore, reload: retry,
+  } = useCursorPagination(fetchPage, [ debouncedQuery ], t("products.loadError"));
   const hasActiveFilter = composedQuery.length > 0;
 
   const columns = useMemo<readonly IndexTableColumn<ProductNode>[]>(
@@ -357,6 +355,13 @@ export function ProductsPage() {
           )}
         </Card>
       )}
+
+      <LoadMore
+        error={loadMoreError}
+        hasNextPage={hasNextPage}
+        loading={loadingMore}
+        onLoadMore={loadMore}
+      />
     </Page>
   );
 }

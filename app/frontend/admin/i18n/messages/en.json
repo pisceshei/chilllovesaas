@@ -485,5 +485,14 @@
   "files.picker.noMatch": "Try a different search term.",
   "files.picker.empty.title": "Your file library is empty",
   "files.picker.empty.description": "Upload from Content > Files, or drop files onto the area above.",
-  "product.media.attachFailed": "Couldn't add the selected files."
+  "product.media.attachFailed": "Couldn't add the selected files.",
+  "common.loadMore": "Load more",
+  "files.col.sort": "Sort",
+  "files.sort.CREATED_AT": "Date added",
+  "files.sort.FILENAME": "Filename",
+  "files.sort.ORIGINAL_UPLOAD_SIZE": "Size",
+  "files.sort.reverse": "Reverse order",
+  "files.picker.uploadNew": "Upload new",
+  "files.picker.uploading": "Uploading…",
+  "files.picker.uploadedNotSelected": "{count} files were uploaded to the library but not selected — the selection limit is reached."
 }

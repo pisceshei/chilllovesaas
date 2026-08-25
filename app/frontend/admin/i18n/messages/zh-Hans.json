@@ -485,5 +485,14 @@
   "files.picker.noMatch": "换个关键词再试一次。",
   "files.picker.empty.title": "文件库是空的",
   "files.picker.empty.description": "先到「内容 > 文件」上传，或直接把文件拖到上面的区域。",
-  "product.media.attachFailed": "无法加入选取的文件。"
+  "product.media.attachFailed": "无法加入选取的文件。",
+  "common.loadMore": "加载更多",
+  "files.col.sort": "排序",
+  "files.sort.CREATED_AT": "上传日期",
+  "files.sort.FILENAME": "文件名",
+  "files.sort.ORIGINAL_UPLOAD_SIZE": "大小",
+  "files.sort.reverse": "反转排序",
+  "files.picker.uploadNew": "上传新文件",
+  "files.picker.uploading": "上传中…",
+  "files.picker.uploadedNotSelected": "{count} 个文件已上传到文件库，但因为已达选取上限而没有被选取。"
 }
