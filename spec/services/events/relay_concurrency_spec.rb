@@ -10,6 +10,10 @@ RSpec.describe Events::Relay, "concurrency" do
 
   def purge!
     ActsAsTenant.without_tenant { EventOutbox.delete_all }
+    # 🔴 發布列必須排在 Publication 之前刪（第 12 包）：Product／ProductVariant／
+    #    Collection 的 after_create 會建 resource_publications，而本幫手用的是
+    #    `delete_all`（繞過 dependent: :destroy）⇒ 殘列讓 fk_res_pub_publication_id 擋住刪除。
+    ResourcePublication.unscoped.delete_all
     Publication.unscoped.delete_all
     UserStoreAssignment.unscoped.delete_all
     StaffMember.unscoped.delete_all

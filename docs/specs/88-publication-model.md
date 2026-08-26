@@ -130,10 +130,31 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 | # | 事項 | 為什麼不在本次做 |
 |---|---|---|
 | ~~1~~ | ~~**建店時自動建 online_store publication**~~ | ✅ **2026-08-15 結案**，見下方批註 |
-| 2 | **`auto_publish` 的實際行為**（新商品自動納入 auto_publish 的管道） | 需要 Product 的 after_create 回呼，屬商品 CRUD |
+| ~~2~~ | ~~**`auto_publish` 的實際行為**~~ | ✅ **2026-08-26 結案（第 12 包）**，見下方批註 |
 | 3 | **排程發布要求商品為 Active** | 跨表條件，隨商品狀態機一起做 |
-| 4 | **商品表單的「上架管道」區塊** | UI，M1 |
-| 5 | **`ProductVariant` / `Collection` 展開** | 本次只建了最小 model（多型關聯需要類別存在），主體是 M1 |
+| 4 | **商品表單的「上架管道」區塊** | UI，前端包 |
+| ~~5~~ | ~~**`ProductVariant` / `Collection` 展開**~~ | ✅ **2026-08-26 結案（第 12 包）**，見下方批註 |
+
+<!-- 2026-08-26 結案（#2 與 #5，第 12 包）。交付＝`Publications::Materialize`
+     ＋ Product／ProductVariant／Collection 三個 `after_create`
+     ＋ 回填 migration `20260826060000`（配對 spec 含 source-guard）。
+     完整說明＝`docs/dev/m2-publication-model.md`；本尊實測憑證＝`docs/research/82` §8。
+
+     🔴 **本條的關鍵發現：`auto_publish` 有兩半，而 §2.1 只寫了我方不會先遇到的那一半。**
+     §2.1 把它寫成「新增管道時既有商品自動可用」——那是**新增 publication** 的那一半，
+     而 v1 建店只建 online_store、之後沒有新增管道的流程，永遠遇不到。
+     先遇到的是另一半：**新增商品時要不要填既有管道的列**。
+     實測本尊（82 §8.4①）：新增商品表單在**存檔前**就顯示 `All channels`，存檔後預設變體
+     即有全部管道的列 ⇒ auto_publish 同時管這一半。
+     不填的後果：全站商品永遠不可購買，而所有 spec 照樣綠。
+
+     ⚠️ **§2.1 那一半仍是 help 單源、本輪未實測**（需安裝新管道 app 才測得到）
+     ⇒ 登記於 82 §8.7 與 `m2-publication-model.md` §8 的 P12-B3。
+
+     🔴 **本次同時證實了 §3.1 的三層 AND 是「讀取時計算」而非「寫入時串聯」**（82 §8.4③ 決定性實驗）：
+     商品層取消發布某管道後，變體層的列**原封不動**。這一條決定了不變量不能靠寫入時
+     串聯維持——照那個直覺做會在「父層關了又開回來」時把使用者刻意關掉的子層設定
+     一起還原，且還原不回去（資訊已被覆蓋）。 -->
 
 <!-- 2026-08-15 結案（#1）：`Shop#after_create :create_default_publication`
      ＋ `20260815000010_backfill_missing_online_store_publication`。
@@ -161,9 +182,10 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 
 - **第三層 catalog 完全沒做**，只留了欄位。本檔標題寫「三層」但實作只有兩層——
   這是刻意的分期，不是漏做。
-- **`ProductVariant` 與 `Collection` 是最小 model**（只有租戶隔離、關聯、基本驗證）。
-  建它們的唯一理由是多型關聯需要類別存在；主體工作在 M1。
-- **`auto_publish` 目前只是一個欄位**，沒有任何行為掛在上面。
+- ~~**`ProductVariant` 與 `Collection` 是最小 model**~~／~~**`auto_publish` 目前只是一個欄位**~~
+  🔴 **2026-08-26 更正（第 12 包）**：這兩句在 2026-08-14～2026-08-26 之間為真，現已不成立。
+  三個型別都掛上了 `after_create :materialize_publications`，`auto_publish` 是該生產者的判準。
+  原文保留在此以維持沿革可讀（鐵律 19.5）。現值見 `docs/dev/m2-publication-model.md`。
 - 🔴 **多型關聯拿不到 DB 層外鍵**（§4.1）。要有底線防護只能改成「逐型別各一張關聯表」，
   代價是三張近乎相同的表。本次選多型，**並把這個取捨明寫出來**而不是假裝沒有。
   `insert_all`／`upsert_all` 這條路徑目前**沒有任何防護**。

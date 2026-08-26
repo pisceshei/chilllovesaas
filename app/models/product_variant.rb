@@ -52,8 +52,43 @@ class ProductVariant < ApplicationRecord
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   after_create :create_inventory_item
+  # 變體出生即物化發布列（本尊實測 82 §8.2：未被觸碰過的變體回傳的是**全部管道**，
+  # 不是 0 列——若是「無列＝繼承父商品」的模型應該回 0 列）。
+  # 掛 callback 的理由與上一行的 `create_inventory_item` 完全相同（見該方法註釋）。
+  after_create :materialize_publications
 
   private
+
+  # 🔴 **這裡刻意不讀父商品的 publication 集合。這是我方裁定（ours），不是照抄本尊。**
+  #
+  # 「變體應該跟著父商品」是壓倒性的直覺，任何 reviewer 看到這裡都會想提
+  # 「沒有跟父層對齊」。先讀完下面四段再決定要不要動它。
+  #
+  # **本尊官方文檔說的是「跟父商品」**（`shopify.dev/docs/apps/build/sales-channels/
+  # product-publishing`，取證 2026-08-26）逐字：
+  #   "the variant is created with the default state of published to all channels
+  #    and catalogs where the parent product is published."
+  #
+  # **但那句描述的是「生效狀態」，不是「儲存狀態」。** 同日在測試店拿到的 UI 直接證據：
+  # 對變體開 Manage publishing 時，父商品沒發布的那個管道**呈灰、帶 ⓘ、而 toggle 仍是開的**，
+  # 提示逐字 "Product must be published to the channel before variants can appear"
+  # ⇒ 變體在該管道上**確實有列**，只是被商品層閘掉（82 §8.4②(c)）。
+  #
+  # **⚠️ 儲存狀態這一側的實測有一個排除不掉的替代假說**（82 §8.4②(b)，已登記未取得）：
+  # 新變體可能是由前身 `Default Title` 變體衍生的，那顆本來就有全部管道的列。
+  #
+  # **⇒ 選「全部 auto_publish 管道」的理由是後果而非權威**：
+  #   ①與實測的儲存狀態一致；②與本尊自陳的 opt-out 模型一致（"Variants default to
+  #     published"、"configure variant visibility **before** publishing the product"）；
+  #   ③商家後果較好——商品日後發布到新管道時變體立刻跟著可見，不必逐一補發布。
+  #   而且**兩種選法對「可見性」的結果完全相同**，因為閘控在讀取層的 AND
+  #   （`Product.published_on` 的兩個 EXISTS），不在寫入層。
+  #
+  # @see Publications::Materialize
+  # @see docs/research/82-admin-channels.md §8.4②
+  def materialize_publications
+    Publications::Materialize.for(self)
+  end
 
   def orphan_inventory_item!
     InventoryItem.where(shop_id: shop_id, product_variant_id: id)

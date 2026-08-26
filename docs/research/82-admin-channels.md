@@ -298,3 +298,163 @@ catalogs that you assign to the channel market, **and** it must be published to 
 7. **B-7／UCP 有答案了**：官方開放標準、規格在 ucp.dev、Shopify+Google 共同開發、
    五個 MCP 端點、能力協商用 profile、checkout 四態、`update_*` 是 PUT 語義。
    ⇒ 我方要不要實作 UCP 相容層是**產品決策**（R13-V7），但**技術面已不是未知**。
+
+---
+
+## §8 🔴 發布模型的**寫入生產者規則**（2026-08-26 實測補完 §0.2）
+
+> 取證：`chill-love-u5q5mnzq`，2026-08-26。§0.2 的三層 AND 當時**只有 help 單源**；
+> 本節把它升級成實測，並補上 help 完全沒講、但決定我方實作的那一半——**誰在什麼時候建立那些列**。
+>
+> 工具限制照鐵律 14.3 登記：本尊 admin 走 persisted-query API，**query 全文不可觀測**；
+> ad-hoc GraphQL 一律回 **403**（實測）。故本節記 **operation name ＋ variables 形狀 ＋ response 形狀**，
+> 讀取面的 response 是**重放 admin 自己發過的 persisted query** 取得的原始 JSON。
+
+### §8.1 實測材料
+
+| 標的 | GID | 實測當下狀態 |
+|---|---|---|
+| 既有多變體商品 | `Product/9907126370539`（實測用 T恤 多變體） | Active，商品層 3 管道 |
+| ↑ 的變體 S | `ProductVariant/49283448701163` | **本輪主動關掉 Point of Sale** |
+| ↑ 的變體 M／L | `.../49283448733931`、`.../49283448766699` | 未觸碰（對照組） |
+| 本輪新建商品 | `Product/9911273160939`（P12 發布模型實測用商品） | 建立→改 Unlisted→商品層關掉 POS→加 Size 選項 |
+
+🔴 **測試店狀態被刻意留在這個形態**（鐵律 12.2 全權授權）：它是目前倉庫外唯一一組
+「三層彼此不一致」的活體 fixture，刪掉就要重做一次才能複驗。
+
+### §8.2 讀取面：**正向、稠密**，不是「例外排除」也不是「無列即繼承」
+
+`VariantsPublications` 的 response 只列出**已發布到**的 publication，未發布者**直接不在陣列裡**：
+
+| 變體 | `channelPublicationCount` | `channelPublications[].publication.name` |
+|---|---|---|
+| S（本輪關掉 POS） | 2 | Online Store, Shop |
+| M（未觸碰） | 3 | Online Store, Point of Sale, Shop |
+| L（未觸碰） | 3 | Online Store, Point of Sale, Shop |
+
+🔴 **M／L 是判別式**：如果變體層是「無列＝繼承父商品」，未觸碰的變體應該回 **0 列**。
+它們回 3 列且逐一具名 ⇒ **每個變體 × 每個 publication 都有一列被實際物化**。
+⇒ 我方 `resource_publications` 的多型設計方向正確，但**必須有人建那些列**（§8.4）。
+
+### §8.3 寫入面：unpublish 是**獨立的一支 operation**，不是整批覆寫集合
+
+在變體子頁關掉一個管道並存檔，network 面板抓到**兩支各自獨立的 POST**：
+
+| # | operation name | 說明 |
+|---|---|---|
+| 1 | `ProductVariantUpdate` | 變體本體欄位 |
+| 2 | 🔴 `ProductVariantUnpublish` | **只為「取消發布」而存在的專屬 mutation** |
+
+⇒ 語義是**逐 publication 的增刪**，不是「送出完整集合、伺服器算差集」。
+我方 GraphQL 契約應照此分成 publish／unpublish 兩支，而不是一支吃全集的 `setPublications`。
+
+### §8.4 🔴 生產者規則（本節最重的四條，help 完全沒有）
+
+**① 新商品：建立當下即物化，且預設全開**
+新增商品表單在**存檔前**就顯示 `Active` ＋ `All channels`；存檔後其預設變體
+`channelPublicationCount = 3`。⇒ 「auto\_publish」不只是「新增管道時回填既有商品」，
+**它同時是「新增商品時填滿既有管道」**。
+
+<!-- 🔴 這一條直接結掉 88 §5 的待辦 #2。88 §2.1 原本把 auto_publish 寫成
+     「新增管道時既有商品自動可用」——那只是它的一半，而且是我方**不會先遇到**的那一半
+     （v1 建店只建 online_store，之後沒有新增管道的流程）。先遇到的是這一半：
+     **商品建立時要不要填 publication 列**。填 = 商品能上架；不填 = 全站商品永遠不可購買，
+     而所有 spec 都會照樣綠——因為沒有任何 spec 斷言過「新商品必須有 publication 列」。 -->
+
+**② 新變體的儲存列涵蓋父商品沒有的管道**
+實測條件刻意做成父子不一致：`Product/9911273160939` 當時是 **Unlisted** 且商品層
+**只發布到 {Online Store, Shop}**；在這個狀態下新增 Size 選項產生兩個變體：
+
+| 新變體 | `channelPublicationCount` | 管道 |
+|---|---|---|
+| AB | **3** | Online Store, **Point of Sale**, Shop |
+| CD | **3** | Online Store, **Point of Sale**, Shop |
+
+新變體的儲存列含**父商品自己都沒有的 Point of Sale**。
+
+🔴 **本條的證據強度低於 ①③④，必須照實登記（鐵律 19）**——有兩件事拉扯：
+
+**(a) 官方文檔說的是另一回事。** `shopify.dev/docs/apps/build/sales-channels/product-publishing`
+（取證 2026-08-26）逐字：
+> If you don't set `published`, or set it to `true`, the variant is created with the default state of
+> **published to all channels and catalogs where the parent product is published.**
+
+**(b) 我這個實驗有一個排除不掉的替代假說。** 加選項時，Shopify 可能是把**原本那顆
+`Default Title` 變體**衍生成 AB／CD——而它是在商品還在 3 個管道時建立的，本來就有 3 列。
+若如此，AB／CD 的 3 列來自**兄弟／前身變體**，不是「全部 auto\_publish 管道」。
+本輪沒有做能分辨這兩者的實驗（要先把父商品與所有既有變體都從某管道下架，再新增變體），
+**⇒ 登記為未取得。**
+
+**(c) 但兩邊其實不衝突，因為「儲存」與「生效」是兩回事**——這是同一輪在 UI 上拿到的
+直接證據：對兩個變體開「Manage publishing for 2 variants」時，**Point of Sale 那一列
+呈灰、帶 ⓘ、但 toggle 仍是開的**，提示逐字：
+> **Product must be published to the channel before variants can appear**
+
+⇒ 變體在該管道上**確實有列**（toggle 開），只是被商品層閘掉。官方那句描述的是
+**生效狀態**，我量到的是**儲存狀態**，兩者可以並存。
+
+🔴 **我方採「全部 auto\_publish 管道」**，理由不是「實測贏過文檔」，而是三點合起來：
+①它與實測的儲存狀態一致；②它與本尊自陳的 opt-out 模型一致
+（官方逐字：「Variants default to published (opt-out model)」、
+「Variant publishing state persists across product publishing changes, so you can configure
+variant visibility **before** publishing the product」）；③它的商家後果較好——商品日後
+發布到新管道時，變體立刻跟著可見，不必逐一補發布。
+**這是我方裁定（ours），不得寫成「照抄本尊」。**
+
+**③ 層與層之間不連動（決定性實驗）**
+把 `Product/9911273160939` 的商品層 Point of Sale 關掉並存檔後，重新讀它的變體：
+`channelPublicationCount` 仍是 **3**，且 **Point of Sale 仍在列**。
+⇒ 商品層的寫入**不會**串聯改寫變體層的列。**三層是各自獨立的儲存，可用性是讀取時才做的 AND。**
+
+<!-- 🔴 這條是整輪最值得記的一條，因為它決定「不變量要寫在哪一層」。
+     若寫入時串聯（父關子也關），資料庫裡就永遠滿足 discoverable ⊆ purchasable，
+     讀取可以只看一層——但本尊不是這樣做的，照抄那個直覺會在「父關了又開回來」時
+     把使用者原本刻意關掉的子層設定一起還原，且無法還原回去（資訊已被覆蓋掉）。
+     本尊選的是**保留每層的獨立意圖、讀取時取交集**，這樣父層開開關關不損失子層資訊。 -->
+
+**④ `status` 與 publication 正交**
+把商品從 `Active` 改成 `Unlisted` 並存檔後，商品層與變體層的 publication 列**完全沒變**。
+⇒ 商品狀態不是 publication 的寫入來源，兩者在讀取時才一起參與判定。
+
+### §8.5 `ProductStatus` 值域窮舉（帶本尊一行語義原文）
+
+商品頁 Status 下拉逐項展開（層②值域窮舉）：
+
+| 值 | 下拉內的一行說明（原文） |
+|---|---|
+| Active | `Sell via selected sales channels and markets` |
+| Draft | `Not visible on selected sales channels or markets` |
+| **Unlisted** | `Accessible only by direct link` |
+
+🔴 **`Archived` 不在這個下拉裡**——歸檔是 `More actions` 底下的**獨立動作**，不是狀態選項。
+⇒ 我方若把 archived 做成 status 下拉的第四個選項就與本尊不一致；它應該是一個**動作**。
+
+🔴 **`Unlisted` 的一行語義正好就是「可購買但不可發現」**，即我方第 12 包那條不變量
+（`discoverable ⊆ purchasable`）的產品化形態——它不是我方發明的抽象，是本尊的實裝值。
+
+### §8.6 UI 形態登記（層①，供原型對齊）
+
+| # | 位置 | 形態 |
+|---|---|---|
+| 1 | 商品清單 | 有 **Channels** 欄，顯示管道數（實測：多變體商品 3、其他 1） |
+| 2 | 商品頁 | **Publishing** 卡，內文**列出管道名**（`Online Store, Shop`），右上齒輪開 modal |
+| 3 | modal | 標題 `Manage publishing for {product}`；左側 `Sales Channels (3)` ＋ `Agentic (1)`；有搜尋框；群組列有一個總開關（子項半選時呈 indeterminate） |
+| 4 | 變體子頁頂部 | 兩個控件：管道摘要（全集顯示 `All channels`，子集顯示 `N channels`）＋ 目錄摘要（`None`） |
+| 5 | 變體清單 | 有 `Sales channels ˅` 篩選器 |
+| 6 | 變體表格 | 有 **Publishing** 欄，同一格顯示**兩個計數**（管道數、目錄數） |
+| 7 | 變體 modal | 標題 `Manage publishing for 1 variant`，結構與商品層 modal 相同 |
+| 8 | 選項編輯 | `Add options like size or color` 先開下拉：可綁 **metafield 定義**，或 `Create custom option` |
+
+🔴 #3／#4 的 `Agentic` 與目錄摘要證實**第三層 catalog 在 UI 上是與管道並列的獨立軸**，
+不是管道的附屬——與 §0.2 的三層模型一致。
+
+### §8.7 誠實登記：本輪**未取得**的
+
+- **新增一個 publication 時是否回填既有商品**（auto\_publish 的另一半）：需要安裝新管道 app 才測得到，
+  本輪未做（會改動測試店的已安裝 app 清單）。§0.2 的該句仍是 **help 單源**。
+- **`auto_publish` 在 admin UI 哪裡設定**：本輪未找到入口。三個管道是否都 `auto_publish = true`
+  只能從「新商品拿到 3 個管道」反推，**不是直接觀測**。
+- **`ProductVariant` 能否透過公開 Admin API 做 publish/unpublish**：本輪只證實 admin **內部** operation
+  `ProductVariantUnpublish` 存在，公開 API 面未取證。
+- **`Unlisted` 的前台實際行為**（直連可買／搜尋隱藏／`noindex`）：本輪只取得下拉內的一行說明，
+  未在前台驗證。

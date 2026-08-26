@@ -8,8 +8,28 @@ require "rails_helper"
 #   ③不支援為單一 variant 排程發布
 RSpec.describe ResourcePublication, type: :model do
   let(:shop) { create(:shop) }
+
+  # 🔴 **第 12 包起，建立 publishable 會自動建發布列**（`Publications::Materialize`
+  # 掛在 Product／ProductVariant／Collection 的 `after_create`）。
+  #
+  # 本檔驗的是 `ResourcePublication` **自己的 validation**（三種 published_at 語義、
+  # 排程能力旗標、跨租戶歸屬、唯一性），每一格都要「手動建一列」才驗得到——
+  # 而自動建的列會讓那些 `create!` 全部撞唯一性驗證（`Publishable has already been taken`）。
+  # ⇒ 這裡把自動列清掉，回到「這個 publishable 在該管道上還沒有列」的起始狀態。
+  #
+  # ⚠️ **不要改成「讓生產者別建」**——那會把本檔變成在測一個生產環境不存在的狀態。
+  # 生產者本身的驗收在 `spec/models/product_spec.rb` 的「發布層」組。
+  def without_auto_publications(record)
+    ActsAsTenant.without_tenant do
+      ResourcePublication.unscoped.where(
+        publishable_type: record.class.name, publishable_id: record.id
+      ).delete_all
+    end
+    record
+  end
+
   let(:product) do
-    ActsAsTenant.with_tenant(shop) { create(:product, shop:) }
+    ActsAsTenant.with_tenant(shop) { without_auto_publications(create(:product, shop:)) }
   end
   # 🔴 **取用**建店時自動建立的那一個，不再自己 `create!`。
   # `Shop#after_create` 落地後（88 §5 #1），每一間店建立時就已經有一列
@@ -65,7 +85,9 @@ RSpec.describe ResourcePublication, type: :model do
       # 🔴 用**真的存在**的 variant。原本這裡寫 publishable_id: 1（不存在的 id），
       # 測試照樣綠——但綠的原因可能是「找不到該物件」而不是「不得為 variant 排程」，
       # 那樣就證明不到它宣稱要證明的事。
-      variant = ProductVariant.create!(shop:, product:, title: "預設", position: 1)
+      variant = without_auto_publications(
+        ProductVariant.create!(shop:, product:, title: "預設", position: 1)
+      )
 
       record = described_class.new(
         shop:, publication:, publishable: variant, published_at: 3.days.from_now

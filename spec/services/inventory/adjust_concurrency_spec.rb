@@ -20,6 +20,10 @@ RSpec.describe Inventory::Adjust, "concurrency" do
     Location.unscoped.delete_all
     ProductVariant.unscoped.delete_all
     Product.unscoped.delete_all
+    # 🔴 發布列必須排在 Publication 之前刪（第 12 包）：Product／ProductVariant／
+    #    Collection 的 after_create 會建 resource_publications，而本幫手用的是
+    #    `delete_all`（繞過 dependent: :destroy）⇒ 殘列讓 fk_res_pub_publication_id 擋住刪除。
+    ResourcePublication.unscoped.delete_all
     Publication.unscoped.delete_all
     Translation.unscoped.delete_all
     TranslationStatus.unscoped.delete_all
