@@ -33,6 +33,9 @@ RSpec.describe "智慧系列引擎併發" do
     #    `delete_all`（繞過 dependent: :destroy）⇒ 殘列讓 fk_res_pub_publication_id 擋住刪除。
     ResourcePublication.unscoped.delete_all
     Publication.unscoped.delete_all
+    # 2026-08-26 S0：`sales_catalogs` 必須排在 `publications` **之後**
+    #   （FK `fk_publications_sales_catalog_id`；反過來刪會被外鍵擋住）。
+    SalesCatalog.unscoped.delete_all
     Translation.unscoped.delete_all
     TranslationStatus.unscoped.delete_all
     ShopLocale.unscoped.delete_all

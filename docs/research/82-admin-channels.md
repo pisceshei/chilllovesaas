@@ -773,3 +773,190 @@ catalog 內商品表欄位：`Image｜Product｜Publishing｜Price in HKD｜Comp
 - **「Automatically include new products」與 `defaultState` 的確切關係**
   （送出的是 `EMPTY`，最終卻納入了商品）
 - **新增 publication 時是否回填既有商品**（§8.7 那條仍未取得；本輪建的是 catalog 不是管道）
+
+---
+
+## §10 🔴 S0 地基：管道的身分模型（2026-08-26 實測）
+
+> 分步方案 `docs/plans/2026-08-26-發布與可見性-分步執行方案.md` 的 **S0**。
+> 核心問題：本尊的「銷售管道」到底是什麼實體？我方把它壓成 `publications.channel_handle`
+> 一個字串欄，代價是什麼？
+>
+> 🔴 **本節全部是零代價、零風險的純讀取實測**（X-1／X-6）：沒有安裝任何 app、
+> 沒有改任何管道設定。使用者 2026-08-26 裁定**不安裝新管道**，故
+> 「新增管道後既有商品是否立刻可見」維持**未取得**（§9.12 那條不變）。
+
+### §10.1 「管道」在後台是**三個不同的集合**
+
+| 集合 | 內容（實測） | 頁面 |
+|---|---|---|
+| **A. 已安裝管道** | Online Store ｜ Point of Sale ｜ **Shop** | `Settings › Sales channels`（`tab=installed`） |
+| **B. 側欄可導航** | Online Store（→`/themes`）｜ **Agentic**（→`/apps/agentic`）｜ Point of Sale | 側欄 `Sales channels ›` |
+| **C. 可發布目標** | `Sales Channels` 組三個 ＋ **`Agentic` 獨立一組** ＋ `Catalogs` 動態組 | 商品的 Manage publishing modal（§9.3） |
+
+🔴 **三者兩兩不同**：Shop 在 A、C 不在 B；Agentic 在 B、C 不在 A。
+⇒ 我方一張 `publications` ＋ 一個 `channel_handle` **表達不了這三種成員關係**。
+
+### §10.2 🔴 `Settings › Apps` 與 `Settings › Sales channels` 是兩個**不相交**的清單
+
+| 頁 | 內容（實測） |
+|---|---|
+| `Settings › Apps`（`Installed`） | Translate & Adapt｜Messaging｜DealerSend Logistics Limited｜ShipAny｜Fecify |
+| `Settings › Sales channels`（`Installed` ＋ `More views`） | Online Store｜Point of Sale｜Shop |
+
+三個管道**完全不出現在 Apps 清單**，五個 app 也不出現在 Sales channels；
+但兩頁的 `⋯` 選單、`View details` 面板、頁首 `Shopify App Store` 按鈕**完全相同**。
+
+⇒ 這是 **R13-V2 裁定**（§7 第 2 條：「應是 `App` 之下的 `Channel`（帶 channel capability），
+不是兩張平行表」）的直接證據：**本尊是同一個 `App` 實體，依有無管道能力分成兩個檢視**。
+
+`⋯` 選單**逐管道不同**（由 app 能力決定，不是固定清單）：
+
+| 管道 | 選單項 |
+|---|---|
+| Online Store | `Open app`／`View details`／`Uninstall`（3 項） |
+| Point of Sale | `Open app`／`View details`／**`Get support`**／`Uninstall`（4 項） |
+
+`View details` 面板結構：識別（`by Shopify`／`Installed July 14`）／
+**Activity and permissions**（表頭 `Area｜View｜Edit｜Recent activity`）／
+**Privacy**（Customers → Sensitive data：Name／Email／Phone／Physical address；
+Device and activity data：Geolocation／IP／Browser and operating system）／Billing。
+頁首按鈕：`Get support`｜**`Uninstall app`**（紅）｜`Open app`。
+
+### §10.3 🔴 完整身分鏈——一個 payload 抓齊四層
+
+`AdminProductDetailsCatalogs`（開商品 Publishing modal 時觸發）的 response，
+剝掉內嵌 SVG 後的結構（逐字節錄，脫敏保留 GID）：
+
+```
+Publication/209681744107   name:"Shop"
+  ├─ supportsFuturePublishing: true
+  ├─ supportsBundles: true
+  ├─ supportsCombinedListings: true
+  ├─ supportsVariantFixedBundles: true
+  ├─ supportsSubscriptions: true
+  ├─ supportsPublicationForUnlistedProducts: true
+  ├─ operation: null
+  ├─ publishablesStatusSummary: { status:"PUBLISHED",
+  │                               includedIds:[ProductVariant/49295964176619,
+  │                                            ProductVariant/49295964209387] }
+  └─ catalog: AppCatalog/99441377515
+       ├─ title:  "Channel Catalog 209681744107 for Shop"
+       ├─ status: "ACTIVE"
+       ├─ apps.nodes[0]: App/3890849  title:"Shop"
+       │     ├─ installation: AppInstallation/725054128363
+       │     │      └─ navigationItem: { iconBody:<SVG>, __typename:"NavigationItemV2" }
+       │     └─ feedback: null
+       └─ channels.edges[0].node: Channel/209681744107
+              ├─ handle: "shop-72"
+              └─ resourceFeedback: null
+```
+
+🔴 **五條結構性結論**：
+
+1. **`Publication → AppCatalog → App → AppInstallation` 四層是真的**，
+   而且 `AppCatalog.channels` 還掛著 `Channel`。R13-V2 的模型描述被實測證實。
+2. 🔴 **`Channel` 的數字 id 與 `Publication` 相同**（都是 `209681744107`）
+   ⇒ 第一方管道上兩者**共用 id**。這是 `Publication : Channel = 1 : N`
+   （官方 SDL）在實務上退化成 1:1 的直接證據。
+3. 🔴 **channel handle 帶後綴**：`shop-72` 而不是乾淨的 `shop`
+   ⇒ handle 是**每店唯一**的產生值，不是全域常數。
+   ⚠️ 我方 `Publication.online_store` 用 `find_by(channel_handle: "online_store")`
+   ——那是把一個**每店產生的值**當成全域常數在比對。
+4. **catalog title 的格式**是 `Channel Catalog {publicationId} for {ChannelName}`
+   （§9.5b 已抓到 Online Store 版，本節再取得 Shop 版，兩者同格式）。
+5. **`ResourceFeedback` 有兩個掛載點**：`App.feedback` 與 `Channel.resourceFeedback`
+   （本店皆 null）。我方 `resource_publications` 完全沒有 feedback 維度。
+
+### §10.4 🔴 Publication 有**六個能力旗標**，我方只有一個
+
+| 旗標 | 本店實測值 | 我方 |
+|---|---|---|
+| `supportsFuturePublishing` | true | ✅ 有 |
+| **`supportsBundles`** | true | ❌ |
+| **`supportsCombinedListings`** | true | ❌ |
+| **`supportsVariantFixedBundles`** | true | ❌ |
+| **`supportsSubscriptions`** | true | ❌ |
+| **`supportsPublicationForUnlistedProducts`** | true | ❌ |
+
+🔴 **`supportsBundles` 解釋了 §9.4 那個一直未取得的 `includesBundle=false` URL 參數**
+——批量發布對話框要先知道「這批商品含不含 bundle」，因為**不是每個管道都支援 bundle**。
+
+🔴 **`supportsPublicationForUnlistedProducts` 解釋了 help 那句**
+「You can't publish unlisted products to any third-party sales channels」
+——它不是一條寫死的規則，是**逐管道的能力旗標**。
+
+另兩個非旗標欄位：
+- **`operation`**（本店 null）＝ §9.5d 實測到的「進行中的非同步操作」
+- **`publishablesStatusSummary { status, includedIds }`** ＝ 一個**變體粒度**的狀態摘要物件
+
+### §10.5 🔴 Agentic：獨立型別 ＋ 商品層專屬布林
+
+同一個 payload 的 `agenticChannels`（逐字）：
+
+```json
+[{"handle":"oai","__typename":"AgenticChannel"},
+ {"handle":"copilot","__typename":"AgenticChannel"},
+ {"handle":"shop_agentic","__typename":"AgenticChannel"}]
+```
+
+🔴 **`AgenticChannel` 是與 `Channel` 不同的 GraphQL 型別**，三個 handle：
+`oai`（ChatGPT）／`copilot`（Microsoft Copilot）／`shop_agentic`（Shop）。
+⚠️ UI 上顯示四項（多一個 `Other channels`）而這裡只有三個 ⇒ 第四項的來源**未取得**。
+
+🔴 同一個 payload 的 **`product.agenticCatalogDiscoverable: false`**
+——**商品層有一個專屬布林**管 agentic 可發現性。
+這正是 §9.7 實測到的「Agentic 組是唯讀狀態標籤、狀態隨 status 從 `Unpublished` 變 `Pending`」
+背後的欄位。它**不是** publication 列，是商品自己的一個欄。
+
+`/apps/agentic` 頁全文（逐字）：
+
+> **Agentic Storefronts aren't live — but your products may still be surfacing in AI agents.**
+> **Get ready for Agentic Storefronts**
+> ・Make sure catalog access is enabled — `Completed` — Allow your products to be searchable by AI agents
+> ・Update policies — `Not started` — Update your policies so AI agents can read them ／ `Review`
+>
+> **Allow Shopify to manage for me**［toggle，開］
+> ・ChatGPT ｜ Microsoft Copilot ｜ Other channels ｜ Shop —— 各自 `Channel details, Status: Inactive`
+>
+> **Sources** — Used by AI agents to recommend your products
+> ・**Shopify Catalog** — `0 products in Catalog`
+> ・**Shopify Knowledge Base** — `Install`
+
+⇒ **「管道」與「資料來源（Source）」是兩種東西**，而發布 modal 把 Shopify Catalog
+放在 `Agentic` 組裡當成一個發布目標。存在**委託式發布管理**（Allow Shopify to manage for me）。
+
+### §10.6 App Store 的管道定價（回答「安裝要不要錢」）
+
+實測 `apps.shopify.com/categories/sales-channels`：
+
+| 管道 | 定價標示（逐字） | 開發者 | 要外部帳號 |
+|---|---|---|---|
+| Buy Button channel | **`Free`** | Shopify | ❌ |
+| Shop | `Free` | Shopify | 已安裝 |
+| Google & YouTube | **`Free to install. Additional charges may apply.`** | Google LLC | ✅ |
+| Facebook & Instagram ／ TikTok ／ Faire | `Free to install` | 第三方 | ✅ |
+
+🔴 **`Free to install` ≠ 不收費**。
+🔴 **使用者 2026-08-26 裁定不安裝**（明示不用 Buy Button）⇒ §9.12 的兩條未取得維持。
+
+### §10.7 其他形態
+
+- `Settings` 子導覽完整清單：`Organization｜Users｜General｜Plan｜Billing｜Payments｜Checkout｜
+  Customer accounts｜Shipping and delivery｜Taxes and duties｜Locations｜Apps｜Sales channels｜
+  Domains｜Customer events｜Notifications｜Metafields and metaobjects｜Languages｜
+  Customer privacy｜Policies`
+- **Online Store 的完整子導覽**（來自鍵盤快捷鍵面板，比側欄多）：
+  `Overview / Blog posts / Pages / Themes / Navigation / Domains` ⇒ 側欄是**縮減後的集合**
+- POS 管道頁：頁首 `Manage locations｜Manage staff｜⋯`；側欄子項
+  `Staff｜Devices｜Register sessions｜Settings`
+- 建了 catalog 之後，商品的 **Publishing 卡多出第二行 `All catalogs`**
+  ⇒ 該卡也是動態的（與 §9.3 的 modal 左側導覽同構）
+
+### §10.8 S0 尚未取得
+
+- 安裝新管道後既有商品是否立刻可見（使用者裁定不安裝）
+- 卸載管道後 publication 與發布列的去向（官方沉默 ＋ 無法實測）
+- Agentic UI 第四項 `Other channels` 對應哪個實體
+- `Publication : Channel` 在**多帳號連線**管道上是否真的 1:N（需要多連線管道才測得到）
+- `Shop` 管道的 `⋯` 選單（兩次誤點導航走，待補）

@@ -33,6 +33,9 @@ M0 用 `products.published_at` 表達上架——那是**扁平模型**：一個
 ⇒ 本次先建**前兩層**（M1 需要的），第三層 catalog 留欄位待 M5。
 理由見 §3.2：catalog 是**讀取時的過濾條件**，加它不需要改動這兩張表的結構。
 
+> 🔴 **2026-08-26 S0**：第三層的**實體**已建（`sales_catalogs`，migration `20260826062000`），
+> 判定式仍是兩層。詳見 §3.2 的更新註與 §6。
+
 ---
 
 ## §2 資料模型
@@ -46,7 +49,7 @@ M0 用 `products.published_at` 表達上架——那是**扁平模型**：一個
 | `channel_handle` | 管道識別，`(shop_id, channel_handle)` 唯一 |
 | `auto_publish` | 預設 **true**——本尊：新增管道時既有商品**自動可用**，不要就得逐一移除 |
 | `supports_future_publishing` | 預設 true；🔴 **Shop 管道為 false**（本尊限制，82 §0.2） |
-| `catalog_id` | 三層 AND 的第三層；**暫無外鍵**，M5 建 catalogs 時補 |
+| ~~`catalog_id`~~ → `sales_catalog_id` | 三層 AND 的第三層。🔴 **2026-08-26 S0 更新**：`sales_catalogs` 表已建、外鍵已上、每筆 publication 都有 catalog（migration `20260826062000`）。原文「暫無外鍵，M5 建 catalogs 時補」已完成。⚠️ **仍未轉 NOT NULL**（理由＝兩支既有 migration 會先建 publication），屬 S1 |
 
 ### §2.2 `resource_publications` — Publishable × Publication 的關聯
 
@@ -86,6 +89,14 @@ Product／Collection／ProductVariant 三者實作，叫 `product_*` 會讓後�
 catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於在查詢後面多一個條件，
 `publications` / `resource_publications` 兩張表的欄位與索引都不用改。
 ⇒ M5 建 markets/catalogs 時，只需補 `publications.catalog_id` 的外鍵與查詢條件。
+
+> 🔴 **2026-08-26 S0 部分完成**：`sales_catalogs` 表與外鍵已建（migration `20260826062000`），
+> 但**判定式沒有變**——`Product.published_on` 仍只有兩層 EXISTS。
+> 原因是本節這句話只說對了一半：第三層確實是讀取時的過濾，但它要過濾的是
+> **catalog 的成員集合**，而成員語義是三值（Included／Excluded／All，`docs/research/82` §9.5c）
+> 且**非同步計算**（進行中會鎖住逐商品切換）⇒ 需要一張成員表，那不是「查詢後面多一個條件」。
+> 成員表屬 S10。在它存在之前第三層對每個 publishable 恆真，加進 SQL 只多一次 JOIN 不改結果。
+> 落地狀態表＝`docs/plans/2026-08-26-S0-方案D-schema設計.md` §7.2。
 
 ---
 
@@ -180,8 +191,11 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 
 ## §6 誠實聲明
 
-- **第三層 catalog 完全沒做**，只留了欄位。本檔標題寫「三層」但實作只有兩層——
-  這是刻意的分期，不是漏做。
+- ~~**第三層 catalog 完全沒做**，只留了欄位。~~ 🔴 **2026-08-26 S0 更新**：
+  `sales_catalogs` 表、回填、外鍵與寫入者都已交付，**每筆 publication 都有 catalog**。
+  仍未做的是**成員三值語義與 price list**（屬 S10）⇒ 本檔標題寫「三層」而
+  **判定式**仍是兩層。這仍是刻意的分期，界線改由
+  `docs/plans/2026-08-26-S0-方案D-schema設計.md` §7.2 定義。
 - ~~**`ProductVariant` 與 `Collection` 是最小 model**~~／~~**`auto_publish` 目前只是一個欄位**~~
   🔴 **2026-08-26 更正（第 12 包）**：這兩句在 2026-08-14～2026-08-26 之間為真，現已不成立。
   三個型別都掛上了 `after_create :materialize_publications`，`auto_publish` 是該生產者的判準。

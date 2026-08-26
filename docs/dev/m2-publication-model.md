@@ -149,6 +149,14 @@ end
 
 **第三層 catalog 不在這裡**（88 §3.2 裁定延後到 M5）。完整判準是三層 AND，本包做前兩層。
 
+> 🔴 **2026-08-26 S0 更新**：`sales_catalogs` 表已建、每個 publication 都有一筆 catalog
+> （migration `20260826062000`），但**判定式沒有變**——`published_on` 仍只有兩層 EXISTS。
+> 理由：第三層要判的是「這個 publishable 在不在這個 catalog 的成員集合裡」，而成員語義
+> 是三值（Included／Excluded／All，`82` §9.5c）且**非同步計算**，屬 S10。
+> 在成員表存在之前，第三層對每個 publishable 都恆真 ⇒ 加進 SQL 只會多一次 JOIN、不改結果。
+> ⚠️ S10 補上時，`ResourcePublication.published_exists_sql` 是**唯一**要改的地方
+> （見 P12-B13：Ruby 版 `published?` 目前零生產呼叫端，改一邊會靜默分叉）。
+
 ---
 
 ## §6 消費者影響圖
@@ -244,7 +252,7 @@ end
 
 | 編號 | 內容 |
 |---|---|
-| P12-B1 | **第三層 catalog 完全沒做**，只有 `publications.catalog_id` 欄位。本檔講的「三層 AND」實作只有兩層——刻意分期（88 §3.2），不是漏做 |
+| P12-B1 | ~~**第三層 catalog 完全沒做**，只有 `publications.catalog_id` 欄位~~ ⇒ 🔴 **2026-08-26 S0 部分推翻**：`sales_catalogs` 表已建、每個 publication 都有 catalog（migration `20260826062000`）。仍未做的是**成員三值語義**（Included／Excluded／All）與 price list ⇒ `published_on` 的判定**仍是兩層**，第三層目前恆真。分期界線改由 `docs/plans/2026-08-26-S0-方案D-schema設計.md` §7.2 定義 |
 | P12-B2 | **publish／unpublish mutation 與 `Publishable` 讀取欄位不在本包**。契約形態已取證（第 12 包執行規格 §2.4），做的時候直接用 |
 | P12-B3 | **新增 publication 時是否回填既有商品**（`auto_publish` 的另一半）＝**未取得**。需安裝新管道 app 才測得到；v1 也沒有新增管道的流程 |
 | P12-B4 | **`auto_publish` 在 admin UI 哪裡設定**＝**未取得**。只在 Markets › Catalogs 找到 "Automatically include new products in this catalog"，與 `Publication.autoPublish` 是否同一個開關**官方兩邊都沒互相指名** |

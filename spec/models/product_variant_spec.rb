@@ -146,7 +146,10 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
     #    Collection 的 after_create 會建 resource_publications，而本幫手用的是
     #    `delete_all`（繞過 dependent: :destroy）⇒ 殘列讓 fk_res_pub_publication_id 擋住刪除。
     ResourcePublication.unscoped.delete_all if defined?(ResourcePublication)
-    Publication.unscoped.delete_all if defined?(Publication)
+    Publication.unscoped.delete_all
+    # 2026-08-26 S0：`sales_catalogs` 必須排在 `publications` **之後**
+    #   （FK `fk_publications_sales_catalog_id`；反過來刪會被外鍵擋住）。
+    SalesCatalog.unscoped.delete_all if defined?(Publication)
     # ML-0（2026-08-23）：Shop 建立 callback 另生 shop_locales（FK → shops），同理先刪。
     Translation.unscoped.delete_all
     TranslationStatus.unscoped.delete_all

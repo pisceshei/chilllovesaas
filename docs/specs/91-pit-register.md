@@ -2562,6 +2562,68 @@
   【F2；來源＝第 12 包對抗審查；複驗：
   `grep -rn "published?" app/ --include=*.rb`；取證日期＝2026-08-26】
 
+### 3.19 S0（catalog 一級表）的範圍外觀察（2026-08-26）
+
+<!-- 編號取 3.19：本節新增時 §3 的最大編號是 3.18。既有失序不動（理由見 3.18 的編號說明）。
+     複驗現況：`grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- **六份手工維護的「FK 順序 `delete_all`」清單**：六支非交易 spec 各自帶一份 `purge!`，
+  逐表 `delete_all` 且**順序必須符合外鍵依賴**。S0 新增 `sales_catalogs` 後六份全部撞
+  `Cannot delete or update a parent row`，六處逐一補行才修好。
+  ⇒ **任何新增租戶表都會再犯一次**，而且症狀出現在與該表無關的併發測試上、根因不明顯。
+  修法方向：抽一支共用的 `purge_tenant_data!` helper（需處理各檔目前只清自己需要的表
+  這個差異，改成全清會拖慢併發 spec）。屬跨元件重構，不在本根因影響圖內（鐵律 20.5）
+  ⇒ 登記不改。
+  【F2；來源＝S0 實作實踩；複驗：
+  `grep -rln "unscoped.delete_all" spec/`（應為六檔，各含一份 FK 順序清單）；
+  取證日期＝2026-08-26】
+
+- **`create_table ... if_not_exists: true` 會送出真的 DDL ⇒ MySQL 隱式提交，打斷 RSpec
+  測試交易**：任何在 spec 裡直接呼叫含 `create_table` 的 migration `up` 的做法，
+  都會讓**該檔第二格起**看到前一格的殘留（實測症狀＝`Subdomain has already been taken`，
+  而且錯誤指向 `let!`，看不出根因是 DDL）。S0 的解法是把資料段抽成具名方法讓 spec 呼叫、
+  DDL 往返另立非交易群組。⚠️ 既有的 `spec/migrations/p12_backfill_publications_spec.rb`
+  沒踩到只是因為那支 migration **純資料無 DDL**。
+  【F2；來源＝S0 實作實踩；複驗：見 `spec/migrations/s0_backfill_sales_catalogs_spec.rb` 檔頭；
+  取證日期＝2026-08-26】
+
+- **`migration.down` 直呼不會設定方向，`strong_migrations` 會把 `down` 裡的 `remove_column`
+  當成正在新增的危險操作而擋下**（實測 `StrongMigrations::UnsafeMigration`）。
+  正確入口是 `migration.migrate(:down)`，與 `bin/rails db:rollback` 同路徑。
+  【F2；來源＝S0 實作實踩；複驗：見同檔 `def migration` 的註釋；取證日期＝2026-08-26】
+
+- **`db:rollback` 沒有把 `db/schema.rb` 回退**：S0 實作中 rollback 成功（表確實被 drop）
+  但 `git diff db/schema.rb` 仍有 +15 行（含已刪除的表與索引）。若照著那份 schema
+  `db:schema:load` 建測試庫，會得到一個**資料庫有、migration 沒有**的表。
+  ⇒ 回滾後一律 `git checkout -- db/schema.rb` 再重新 migrate，不要相信 rollback 後的 schema。
+  ⚠️ 未查證這是 Rails 行為、多資料庫設定還是本倉庫設定造成 ⇒ **未取得**。
+  【F2；來源＝S0 實作實踩；複驗：rollback 後跑 `git diff --stat -- db/schema.rb`；
+  取證日期＝2026-08-26】
+
+- 🔴 **附錄 A 的「同 commit 補列」紀律自 2026-08-22 起實質停擺**：D40 改直接開發之後，
+  新增的 tracked worklog 大量沒有補進附錄 A 的清單。S0 本輪實跑差集，得到**一批**
+  未列檔（起自 `docs/worklog/2026-08-23-*`，止於 `docs/worklog/2026-08-26-第12包發布模型.md`）。
+  🔴 **不寫死數量**：這個集合每加一支 worklog 就變一次。實跑取得現值：
+
+  ```bash
+  comm -23 <(git -c core.quotepath=false ls-files 'docs/worklog/*.md' | sort) \
+           <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md | grep '^docs/worklog/' | sort)
+  ```
+
+  ⚠️ **`docs/handoff/` 同病**（D47 之後 handoff 也入庫，同受這條紀律約束）。同式改路徑即得：
+
+  ```bash
+  comm -23 <(git -c core.quotepath=false ls-files 'docs/handoff/*.md' | sort) \
+           <(grep -oP '^- \[[x ]\] `\K[^`]+' docs/specs/91-pit-register.md | grep '^docs/handoff/' | sort)
+  ```
+
+  根因是**規則有、機制沒有**：附錄 A 上方那組 md5 比對是**人工複驗**，不是 CI 閘門
+  ⇒ 漏列不會被任何機械檢查擋下（本輪 `check-doc-claims.rb` 全綠而差集非空，即為證據）。
+  同型教訓在本檔與 CLAUDE.md 鐵律 2 白名單處各記過一次：「紀律守不住就改成機制」。
+  修法要新增 CI 判準 ⇒ 依鐵律 20.4 只登記候選與代價，取得使用者裁定後另開 18.3 PR。
+  補齊既有漏列屬跨包歷史回填，不在 S0 根因影響圖內（鐵律 20.5）⇒ 一併登記不改。
+  【F2；來源＝S0 送驗前稽核實跑；複驗＝上方指令；取證日期＝2026-08-26】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -2756,6 +2818,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-25-第28包檔案庫.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-25-D48-列表對齊三項.md`（本包新增；D40 直接開發，待後續輪次收割）
+- [ ] `docs/worklog/2026-08-26-S0-catalog一級表與能力旗標.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -2913,6 +2976,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-25-第28包檔案庫.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 - [ ] `docs/handoff/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 - [ ] `docs/handoff/2026-08-25-D48-列表對齊三項.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
+- [ ] `docs/handoff/2026-08-26-S0-管道身分模型.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 
