@@ -437,19 +437,14 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
     expect(data["userErrors"].first["field"]).to include("rules")
   end
 
-  it "exclusionMatch: any ⇒ 命中**任一**排除條件即剔除（OR joiner 的公開契約）" do
+  it "block 非法值 ⇒ INVALID（`block` 在 GraphQL 是自由字串，不是 enum）" do
     login!
-    data = set!({ title: "any 排除", collectionType: "smart",
-                  sources: [ { inclusionMatch: "all", exclusionMatch: "any", rules: [
-                    { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
-                    { block: "exclusion", conditionType: "product_type", relation: "eq", valueText: "香水" },
-                    { block: "exclusion", conditionType: "product_vendor", relation: "eq", valueText: "ACME" }
-                  ] } ] })
+    data = set!(smart_input(rules: [
+      { block: "maybe", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ]))
 
-    expect(data["userErrors"]).to eq([])
-    ActsAsTenant.with_tenant(shop) do
-      expect(CollectionSource.sole.exclusion_match).to eq("any")
-    end
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(data["userErrors"].first["field"]).to include("block")
   end
 
   it "targetType 只收 products；inclusionMatch／exclusionMatch 只收 all／any" do

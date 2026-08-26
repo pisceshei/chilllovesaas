@@ -120,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_058000) do
     t.bigint "value_cents", comment: "金額規則值唯一合法欄（鐵律 3）"
     t.bigint "value_int"
     t.string "value_text"
+    t.index ["shop_id", "block", "condition_type", "value_int"], name: "ix_collection_source_rules_reference"
     t.index ["shop_id", "collection_source_id", "block", "position"], name: "uq_collection_source_rules_position", unique: true
   end
 

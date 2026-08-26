@@ -888,6 +888,25 @@ RSpec.describe "智慧系列求值引擎" do
       expect(collection.reload.rebuild_status).to eq("ERROR")
     end
 
+    it "🔴 O2（第十輪）：`condition_type` 正常但**編不出來**的來源也算不支援" do
+      # `RuleCompiler` 對 condition_type 完全正常的列也會丟 Unsupported（金額缺
+      # value_cents、數值缺 value_int、collection 排除缺引用 id⋯⋯）。列舉式判準比
+      # 實際會丟的集合窄 ⇒ 同一條繞過路徑仍在（`any?` 短路），resync 照常物化而
+      # Rebuild 標 ERROR。判準必須是「編得出來嗎」。
+      product = product!(title: "紅4", tags: [ "red" ])
+      collection = two_source_collection!(title: "缺金額", handle: "o2-money", second_rules: [
+        { block: "inclusion", condition_type: "variant_price", relation: "gt", value_cents: nil }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "編不出來的來源繞過了守衛 ⇒ resync 物化、Rebuild 標 ERROR（O2）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
     it "🔴 `raw_payload` 也算不支援（判準不能只看 condition_type）" do
       product = product!(title: "紅3", tags: [ "red" ])
       collection = two_source_collection!(title: "raw", handle: "n3-raw", second_rules: [
@@ -902,6 +921,45 @@ RSpec.describe "智慧系列求值引擎" do
       expect(resync_members).to be_empty,
         "raw_payload 列被當成可編譯 ⇒ 兩支引擎再度分岔（N3）"
       expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+  end
+
+  describe "🔴 O3（2026-08-26 第十輪）：exclusion_match 的 all／any 是**行為**分支" do
+    # 🔴 第九輪補的那格只斷言欄位落庫（沒有商品、沒有 rebuild）⇒ 把 `ex_joiner` 改成
+    #   恆 " AND " 也不會轉紅。exclusion_match 直接改變成員集合，必須用行為測。
+    let(:perfume) { product!(title: "香水", tags: [ "red" ], type: "香水", vendor: "CHILL") }
+    let(:acme) { product!(title: "ACME 貨", tags: [ "red" ], type: "蠟燭", vendor: "ACME") }
+    let(:neither) { product!(title: "都不是", tags: [ "red" ], type: "蠟燭", vendor: "CHILL") }
+
+    def collection_with(exclusion_match:)
+      smart!(title: "ex-#{exclusion_match}", sources: [ {
+        inclusion_match: "all", exclusion_match:,
+        rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "product_type", relation: "eq", value_text: "香水" },
+          { block: "exclusion", condition_type: "product_vendor", relation: "eq", value_text: "ACME" }
+        ]
+      } ])
+    end
+
+    it "any ⇒ 命中**任一**排除條件即剔除（OR）" do
+      perfume && acme && neither
+      collection = collection_with(exclusion_match: "any")
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ neither.id ]),
+        "any 應剔除香水（型別中）與 ACME（廠商中），只留兩者都不中的那個"
+    end
+
+    it "all ⇒ 必須**同時**命中全部排除條件才剔除（AND）" do
+      perfume && acme && neither
+      both = product!(title: "ACME 香水", tags: [ "red" ], type: "香水", vendor: "ACME")
+      collection = collection_with(exclusion_match: "all")
+
+      rebuild!(collection)
+      expect(members(collection)).to contain_exactly(perfume.id, acme.id, neither.id),
+        "all 只該剔除同時命中兩條的那一個"
+      expect(members(collection)).not_to include(both.id)
     end
   end
 end

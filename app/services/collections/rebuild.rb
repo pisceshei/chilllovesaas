@@ -124,7 +124,19 @@ module Collections
       #   resync 開頭就跳過 ERROR），而 `compile_collection_exclusion` 讀的就是這張表。
       #   ⇒ 判準抽成這一支，兩邊都在**編譯之前**先問它。
       def unsupported_source?(source)
-        source.rules.any? { |rule| rule.condition_type == "unknown" || rule.raw_payload.present? }
+        return true if source.rules.any? { |rule| rule.condition_type == "unknown" || rule.raw_payload.present? }
+
+        # 🔴 判準必須是「**編得出來嗎**」而不是列舉兩種 unknown 形態（第十輪 O2）：
+        #   `RuleCompiler` 對 `condition_type` 完全正常的列也會丟 `Unsupported`
+        #   （金額缺 `value_cents`、數值缺 `value_int`、collection 排除缺引用 id、
+        #   型別不在該區塊的白名單⋯⋯）。列舉式判準比實際會丟的集合**窄**，
+        #   於是同一條繞過路徑仍在：resync 的 `any?` 短路讓那個來源不被編譯 ⇒
+        #   resync 照常物化、Rebuild 標 ERROR ⇒ H4 根因復發且幽靈列無自癒。
+        #   ⇒ 直接**試編一次**：編得出來就不是 unsupported。
+        RuleCompiler.where_sql(source)
+        false
+      rescue RuleCompiler::Unsupported
+        true
       end
 
       # 標記整系列 ERROR（`ResyncProduct` 也用——同一份「遇 unknown ⇒ ERROR」契約）。

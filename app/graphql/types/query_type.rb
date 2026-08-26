@@ -250,8 +250,6 @@ module Types
       rows
     end
 
-    # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。
-    #
     # 執行期的條件值域對照表（前端不得硬編——`limits.condition_relations_source`）。
     #
     # @return [Array<Hash>] 每型一列：ruleType／allowedRelations／defaultRelation／allowedInExclusion

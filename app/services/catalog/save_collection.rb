@@ -343,6 +343,21 @@ module Catalog
       def replace_sources!(shop, collection, sources)
         return if sources.nil?
 
+        # 🔴 **鎖序一致：動 rules 之前一律先取店鎖**（2026-08-26 第十輪 O5，InnoDB 實測死鎖）。
+        #   在此之前只有「本次含 collection 型 exclusion」的存檔才取店鎖，於是兩條路徑
+        #   對「shops 列 ↔ collection_source_rules 列」的取得順序**相反**：
+        #     P1（含引用）：collections(self) X → **shops X** → rules X（ancestors FOR UPDATE）
+        #     P2（不含引用）：collections(self) X → **rules X**（destroy_all）→ 子表 INSERT
+        #                    因 shop_id 外鍵而要 **shops S**
+        #   ⇒ 真死鎖環（InnoDB 逐字：TRX1 HOLDS shops X／WAITING rules X；
+        #     TRX2 HOLDS rules X／WAITING shops S）。而 `ActiveRecord::Deadlocked` 不在
+        #   本服務的 rescue 清單裡 ⇒ 穿到 controller 變成去敏的 INTERNAL，
+        #   **沒有 userErrors、沒有重試、商家這次的條件編輯整份丟失**。
+        #   🔴 退回普通讀**救不了**：環在 insert-intention 撞 next-key gap 上依然成立
+        #   （`uq_collection_source_rules_position` 以 shop_id 開頭，同店不同系列共用 gap）。
+        #   ⇒ 唯一的解是**讓兩條路徑同向**：只要會動 rules 就先取店鎖，無條件。
+        Catalog::HandleChange.serialize!(shop)
+
         # 🔴 環的複查必須在**序列化點內**再做一次（2026-08-26 第八輪 M2）：
         #   `normalize` 的 `cycle_ancestors` 是純讀的 pre-flight，跑在 transaction 與
         #   `Collection.lock` **之外**，而那個列鎖只鎖被編輯的**這一列**——被引用方
@@ -354,7 +369,6 @@ module Catalog
                             .select { |rule| rule[:condition_type] == "collection" }
                             .filter_map { |rule| rule[:value_int] }
         if referenced.any?
-          Catalog::HandleChange.serialize!(shop)
           # 🔴 `lock: true`（第九輪 N1）：普通讀吃的是本 txn 在**取得店鎖之前**建立的
           #   快照，看不到我們排隊期間對方提交的邊 ⇒ 這道複查會整個失效、環照樣落庫。
           ancestors = Collections::ReferenceGraph.ancestors(shop, collection.id, lock: true)
@@ -447,6 +461,11 @@ module Catalog
         Result.new(collection: collection.reload, user_errors: [])
       rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)
+      rescue ActiveRecord::Deadlocked
+        # 鎖序已統一（O5），這裡是保險：死鎖是**可重試**的暫時性衝突，
+        # 不得漏成去敏的 INTERNAL（鐵律 4①：業務可理解的錯誤走 userErrors）。
+        Result.new(collection: nil,
+                   user_errors: [ error(nil, I18n.t("errors.collection.handle_raced"), "RACED") ])
       rescue ActiveRecord::RecordNotUnique
         Result.new(collection: nil, user_errors: [ error([ "handle" ], I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ])
       rescue ActiveRecord::RecordInvalid => invalid
@@ -531,6 +550,11 @@ module Catalog
         Result.new(collection: nil, user_errors: [ error([ "id" ], I18n.t("errors.collection.not_found"), "NOT_FOUND") ])
       rescue ActiveRecord::StaleObjectError
         Result.new(collection: nil, user_errors: [ error(nil, I18n.t("errors.collection.stale"), "STALE_OBJECT") ])
+      rescue ActiveRecord::Deadlocked
+        # 鎖序已統一（O5），這裡是保險：死鎖是**可重試**的暫時性衝突，
+        # 不得漏成去敏的 INTERNAL（鐵律 4①：業務可理解的錯誤走 userErrors）。
+        Result.new(collection: nil,
+                   user_errors: [ error(nil, I18n.t("errors.collection.handle_raced"), "RACED") ])
       rescue ActiveRecord::RecordNotUnique
         # 併發窗：輸家撞 `uq_collections_handle`（審查 R6-2，與商品同型）。
         Result.new(collection: nil,

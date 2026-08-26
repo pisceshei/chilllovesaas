@@ -81,6 +81,14 @@ class CreateSmartCollectionFoundation < ActiveRecord::Migration[8.1]
       t.integer :position, null: false, default: 0
       t.timestamps
 
+      # 🔴 引用圖查詢的專用索引（2026-08-26 第十輪 O1）：`ReferenceGraph.ancestors`
+      #   的 WHERE 是 (shop_id, block, condition_type, value_int)，而唯一索引以
+      #   `collection_source_id` 為第二欄 ⇒ 那個查詢 `type=ALL, key=NULL`。
+      #   在序列化點內它是 `FOR UPDATE` ⇒ **全店 next-key X 鎖**（實測 122 列的表
+      #   一次持有 123 個 X record lock，含與引用圖完全無關的系列），
+      #   受害者是全店任何一個正在改 sources 的請求。有了本索引，鎖只落在引用列上。
+      t.index [ :shop_id, :block, :condition_type, :value_int ],
+              name: "ix_collection_source_rules_reference"
       t.index [ :shop_id, :collection_source_id, :block, :position ],
               unique: true, name: "uq_collection_source_rules_position"
     end
