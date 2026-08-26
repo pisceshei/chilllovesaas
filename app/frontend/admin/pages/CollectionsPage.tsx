@@ -17,7 +17,8 @@ import { useCursorPagination } from "../lib/useCursorPagination";
 /**
  * 商品系列列表（ML-3）。與商品列表同一套 keyset 分頁與 IndexTable。
  *
- * 🔴 智慧系列的商品數顯示 `—` 而不是 0：規則引擎落地前我方**不知道**成員數，
+ * 🔴 智慧系列的商品數：引擎（第 11 包）落地後由物化表計數；**尚未成功 rebuild**
+ *    （rebuildStatus ≠ OK）時後端回 null、這裡顯示 `—`——「未求值」不是 0，
  * 顯示 0 是在說一件假的事（13 §F4；同 91 §5「未知與零是兩件事」）。
  */
 const COLLECTIONS_QUERY = `

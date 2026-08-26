@@ -48,6 +48,11 @@ module Types
       argument :first, Integer, required: false
     end
 
+    # 第 11 包：條件 × relation 的執行期對照（`condition_relations_source: runtime_query`；
+    # 對齊本尊 `collectionRulesConditions` 的形狀）。🔴 前端不得硬編這張表。
+    field :collection_rule_conditions, [ Types::CollectionRuleConditionType ], null: false,
+      description: "智慧系列可用的條件型別與各自的合法 relation（執行期查詢，前端不得硬編）。"
+
     field :collections, CollectionConnectionType, null: false, connection: false do
       description "商品系列列表（keyset 分頁，與商品同一套實作）。"
       argument :first, Integer, required: false
@@ -245,7 +250,28 @@ module Types
       rows
     end
 
-    # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。
+    # 執行期的條件值域對照表（前端不得硬編——`limits.condition_relations_source`）。
+    #
+    # @return [Array<Hash>] 每型一列：ruleType／allowedRelations／defaultRelation／allowedInExclusion
+    # @note 副作用：無（純讀常數表）。
+    def collection_rule_conditions
+      authorize_products!
+      # 🔴 聯集，不是只有 INCLUSION_TYPES（2026-08-26 收斂輪 J6）：`collection`
+      #   是 **exclusion 專用**型別，不在 INCLUSION_TYPES 裡 ⇒ 只走 inclusion 的話
+      #   這支 query 永遠不回傳它，前端就拿不到它的 allowedRelations。而契約檔頭與
+      #   `limits.condition_relations_source: runtime_query` 明文「前端不得硬編這張表」
+      #   ⇒ 規則編輯器只剩「違反明文硬編」或「做不出 collection 排除」兩條路。
+      (Collections::RuleCompiler::INCLUSION_TYPES | Collections::RuleCompiler::EXCLUSION_TYPES).map do |type|
+        {
+          rule_type: type,
+          allowed_relations: Collections::RuleCompiler.relations_for(type),
+          default_relation: Collections::RuleCompiler.default_relation(type),
+          allowed_in_exclusion: Collections::RuleCompiler::EXCLUSION_TYPES.include?(type)
+        }
+      end
+    end
+
+    # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`）。
     #
     # @return [Hash] Relay-shaped connection
     # @note 副作用：tenant-scoped SELECT，不寫入資料。

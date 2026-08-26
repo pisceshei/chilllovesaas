@@ -341,6 +341,7 @@
   "collections.type.smart": "智慧",
   "collections.type.manualHint": "由你挑選商品與順序。",
   "collections.type.smartHint": "成員由規則決定；規則編輯器在後續里程碑開放。",
+  "collections.type.immutableHint": "系列型別建立後不可變更。",
   "collections.count": "{count, plural, other {# 件}}",
   "collections.card.type": "系列類型",
   "collections.sortOrder": "排序方式",

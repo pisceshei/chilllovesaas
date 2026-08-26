@@ -224,7 +224,6 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
       const input: Record<string, unknown> = {
         title: values.title.trim(),
         descriptionHtml: values.description,
-        collectionType: values.collectionType,
         sortOrder: values.sortOrder,
         seo: { title: values.seoTitle.trim(), description: values.seoDescription.trim() },
         translations: translationEntries(values.translations, sourceLocale),
@@ -233,6 +232,12 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
       // 🔴 服務端在本包已解鎖，前端不同步的話 hintEdit 會在一個鎖死的欄位上
       //    描述「改 handle 會建立 301」——文案與可操作性互相矛盾（審查 P6-4）。
       if (values.handle) input.handle = values.handle.trim();
+      // 🔴 型別**只在建立時**送：伺服端自 2026-08-26 起把它做成建立後不可變
+      //    （本尊官方語義，save_collection.rb 的 immutable 守衛）。更新照送的話，
+      //    被拒的值會留在表單狀態裡，**之後每一次存檔**（改標題、改 SEO⋯⋯）都被
+      //    同一個 INVALID 擋下——商家看到「改標題卻說型別不可變」且永遠存不進去。
+      //    宣告式契約下「缺席＝保持現值」，不送才是正解。
+      if (isNew) input.collectionType = values.collectionType;
       if (!isNew) {
         input.id = gid;
         input.lockVersion = lockVersion;
@@ -413,8 +418,13 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
               <label className="cl-field__label" htmlFor="collection-type">
                 {t("collections.col.type")}
               </label>
+              {/* 🔴 建立後不可變（本尊官方語義；伺服端硬拒）⇒ 既有系列上這個下拉必須
+                  停用。留著顯示（而非隱藏）是為了讓商家看得到目前型別；停用理由寫在
+                  hint 裡。**不得**讓它可翻——可翻的控件配上必定失敗的伺服端＝
+                  「改標題卻跳型別錯誤」的死路（2026-08-26 delta 審查 F4）。 */}
               <select
                 className="cl-field__input"
+                disabled={!isNew}
                 id="collection-type"
                 onChange={(event) => setValues((current) => ({ ...current, collectionType: event.target.value }))}
                 value={values.collectionType}
@@ -424,7 +434,9 @@ export function CollectionDetailPage({ isNew }: { isNew: boolean }) {
               </select>
               {/* 🔴 智慧系列的條件編輯屬規則引擎包；現在只存型別，不假裝能編條件。 */}
               <p className="cl-field__hint">
-                {values.collectionType === "smart" ? t("collections.type.smartHint") : t("collections.type.manualHint")}
+                {isNew
+                  ? values.collectionType === "smart" ? t("collections.type.smartHint") : t("collections.type.manualHint")
+                  : t("collections.type.immutableHint")}
               </p>
             </div>
             <div className="cl-field">

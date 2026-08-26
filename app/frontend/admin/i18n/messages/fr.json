@@ -341,6 +341,7 @@
   "collections.type.smart": "Automatique",
   "collections.type.manualHint": "Vous choisissez les produits et leur ordre.",
   "collections.type.smartHint": "L’appartenance vient des règles ; l’éditeur de règles arrive dans un jalon ultérieur.",
+  "collections.type.immutableHint": "Le type d’une collection ne peut plus être modifié après sa création.",
   "collections.count": "{count, plural, one {# produit} other {# produits}}",
   "collections.card.type": "Type de collection",
   "collections.sortOrder": "Ordre de tri",

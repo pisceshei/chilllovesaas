@@ -15,14 +15,17 @@ module Types
       argument :title, String, required: false, description: "系列標題（建立時必填）。"
       argument :description_html, String, required: false, description: "說明（服務端白名單 sanitize）。"
       argument :handle, String, required: false, description: "URL handle；省略時由標題生成。"
-      argument :collection_type, String, required: false, description: "manual／smart（13 §F4）。"
-      argument :sort_order, String, required: false, description: "前台排序（manual／best_selling／title_asc…）。"
+      argument :collection_type, String, required: false, description: "manual／smart（13 §F4）。建立時缺席＝manual；🔴 建立後不可變（本尊官方，取證 2026-08-26），更新帶不同值＝INVALID。"
+      argument :sort_order, String, required: false, description: "前台排序（manual／best_selling／title_asc…）。更新時缺席＝保持現值（宣告式家族語義）。"
       argument :seo, Types::Inputs::SeoInput, required: false
       # 🔴 只對手動系列生效：智慧系列的成員是規則的函數，收下它等於製造第二個真相。
       argument :product_ids, [ ID ], required: false,
         description: "手動系列成員（宣告式：未列出＝移除；順序＝陣列順序）。"
       argument :translations, [ Types::Inputs::TranslationInput ], required: false,
         description: "非來源語言的譯文（與商品共用同一張 translations 表）。"
+      # 第 11 包（D50）：智慧系列的來源／條件（宣告式：整份取代；缺席＝保持現值）。
+      argument :sources, [ Types::Inputs::CollectionSourceInput ], required: false,
+        description: "智慧系列的條件來源（只對 collectionType=smart 生效）。"
     end
   end
 end

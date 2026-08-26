@@ -72,6 +72,29 @@ module Catalog
         end
       end
 
+      # 第 11 包：規則契約的金額邊界（公開）——十進位字串 → cents，走與變體價格
+      # 完全相同的 `Money::Decimal` 路（鐵律 3：折換只在這一個邊界發生）。
+      #
+      # @param raw [String, nil]
+      # @param path [Array<String>] userError 欄位路徑
+      # @return [Integer, nil] cents；nil＝已寫入 errors
+      def parse_money_for(raw, shop, path, errors)
+        if raw.blank?
+          errors << error(path, I18n.t("errors.product.price_required"), "BLANK")
+          return nil
+        end
+        decimal = Money::Decimal.from_string(raw.to_s, shop.store_currency)
+        storage = decimal.to_storage
+        if storage.cents.negative?
+          errors << error(path, I18n.t("errors.product.amount_negative"), "GREATER_THAN_OR_EQUAL_TO")
+          return nil
+        end
+        storage.cents
+      rescue ArgumentError, Money::ExcessPrecision
+        errors << error(path, I18n.t("errors.product.amount_invalid"), "INVALID")
+        nil
+      end
+
       # ML-3：系列的說明走同一套白名單 sanitize（公開；實作仍在 private 的 sanitize_description）。
       #
       # @param html [String]
@@ -216,7 +239,16 @@ module Catalog
           if tags.length > Limits.fetch(:product, :max_tags)
             errors << error([ "tags" ], I18n.t("errors.product.tags_too_many"), "TOO_LONG")
           end
-          if tags.any? { |tag| tag.length > Limits.fetch(:product, :tag_max_chars) }
+          # 🔴 **原字串與正規化後的 key 都要驗**（2026-08-26 收斂輪 J2）：落庫的是
+          #   `Tags::Normalize.key(raw)`，而正規化會把字串**變長**——NFKC 展開相容字
+          #   （㍿→株式会社、Ⅷ→viii、…→...）、`downcase(:fold)` 全摺疊（ß→ss、™→tm）。
+          #   `product_tags.tag_key` 是 varchar(255)、上限也是 255 ⇒ 任何膨脹都必然溢位，
+          #   而 `ValueTooLong` 不在 SaveProduct 的 rescue 清單裡 ⇒ **整筆商品**回
+          #   top-level INTERNAL、商家看不到任何 userError（違反鐵律 4① 與本檔檔頭的
+          #   「不得漏成 500」）。本包之前 product_tags 不存在，同一輸入存得進去 ⇒
+          #   這是本包引入的回歸，必須在寫入層擋。
+          tag_limit = Limits.fetch(:product, :tag_max_chars)
+          if tags.any? { |tag| tag.length > tag_limit || Tags::Normalize.key(tag).length > tag_limit }
             errors << error([ "tags" ], I18n.t("errors.product.tag_too_long"), "TOO_LONG")
           end
           organization[:tags] = tags
@@ -374,6 +406,7 @@ module Catalog
             ActiveRecord::Base.transaction do
               product = create_product!(shop, attributes)
               sync_variants!(shop, product, attributes)
+              sync_product_tags!(shop, product)
               translation_errors = save_translations!(shop, product, attributes)
               # ⚠️ 現行 `Upsert.commit` 只回空 user_errors（驗證全在 normalize 的 prepare
               #   完成）⇒ 這條 raise **目前構造上不可達**（審查 F7）。留著是 fail-closed：
@@ -489,6 +522,7 @@ module Catalog
             Catalog::CacheStamps.bump_variants!(shop.id, product.id)
 
             sync_variants!(shop, product, attributes)
+            sync_product_tags!(shop, product)
             translation_errors = save_translations!(shop, product, attributes)
             # ⚠️ 同 create 路徑：現行構造上不可達的 fail-closed 網（審查 F7）。
             raise TranslationRejected, translation_errors if translation_errors.any?
@@ -608,6 +642,43 @@ module Catalog
       # 🔴 內部 product.updated／product.variant.updated 本包不發（PR #115 §4.5 射程；
       #    留給接消費者的包，前置＝event_deliveries，63 §L-4 門檻）。
       NOISE_FIELDS = %w[id shop_id created_at updated_at lock_version].freeze
+
+      # 🔴 第 11 包：`product_tags` 正規化表與 `products.tags`（JSON，顯示順序權威）
+      #   **同一 transaction** 同步（13 §F4.4）。key 撞（兩個原字串同 key）＝同一標籤，
+      #   只留首次的 display；正規化唯一實作＝`Tags::Normalize`。
+      #   讀取者＝智慧系列 tag 條件的 EXISTS（RuleCompiler）。
+      def sync_product_tags!(shop, product)
+        # 🔴 超出欄寬的**既有**標籤一律跳過並記稽核 log（2026-08-26 第六輪 K5）：
+        #   `products.tags` 是本包之前就存在的欄位，可能留著正規化後 >255 的標籤
+        #   （`Tags::Normalize` 會展開，J2）。寫入層自 J2 起會拒收新的這種標籤，
+        #   但**既有**的還在——而本方法每次商品更新都從 `product.tags` 重算並補建，
+        #   撞上 J2 新增的 model 長度驗證 ⇒ `RecordInvalid` ⇒ 整筆 productSet 回滾，
+        #   商品變成**唯讀**（即使商家完全沒帶 tags——宣告式「缺席＝保持現值」）。
+        #   ⇒ 跳過（與 migration 回填同一種處置），分岔登記於 dev doc §5 P11-B12。
+        #   判準引 limits，不硬編（鐵律 6；migration 與 model 同步）。
+        limit = Limits.fetch(:product, :tag_max_chars)
+        wanted = {}
+        Array(product.tags).each do |raw|
+          key = Tags::Normalize.key(raw)
+          next if key.empty? || wanted.key?(key)
+
+          if key.length > limit || raw.to_s.length > limit
+            Rails.logger.warn({ event: "product_tag_skipped_oversize", shop_id: shop.id,
+                                product_id: product.id, key_length: key.length,
+                                raw_length: raw.to_s.length }.to_json)
+            next
+          end
+
+          wanted[key] = raw
+        end
+
+        existing = ProductTag.where(shop_id: shop.id, product_id: product.id).index_by(&:tag_key)
+        (existing.keys - wanted.keys).each { |key| existing.fetch(key).destroy! }
+        (wanted.keys - existing.keys).each do |key|
+          ProductTag.create!(shop_id: shop.id, product_id: product.id,
+                             tag_key: key, tag_display: wanted.fetch(key))
+        end
+      end
 
       def enqueue_event!(shop, product, topic)
         changed = product.saved_changes.keys - NOISE_FIELDS

@@ -1015,6 +1015,64 @@ collection:
   # 手動排序的移動操作。出處：P26（help）
   manual_move_actions: [move_to_front, move_to_back, move_to_position]
 
+  # --- 第 11 包（D50）新鍵 ---------------------------------------------------------
+  # contains／not_contains 的最小值長。官方逐字 "You need to specify a value that is at
+  # least 3 characters long"（help /smart-collections/conditions，2026-08-25）。
+  condition_value_contains_min_length: 3
+  # 🔴 規則值上限＝欄寬（`collection_source_rules.value_text` varchar(255)）
+  #   （2026-08-26 收斂輪 J1；ours——本尊未取得）。**必須有寫入層檢查**：少了它，
+  #   >255 字的規則值讓 `create!` 拋 `ActiveRecord::ValueTooLong`（`StatementInvalid`
+  #   子類、不在 SaveCollection 的 rescue 清單）⇒ 漏成 top-level INTERNAL、
+  #   userErrors 為空，違反鐵律 4①。同 normalize 的 title／description／seo／handle
+  #   都有上限，只有規則值沒有——與 F5→G3 同一個「只封被點名那幾格」形態。
+  condition_value_max_chars: 255
+  # 🔴 金額規則值的上界（2026-08-26 第六輪 K3；ours）。`value_cents` 是 BIGINT，
+  #   而 `parse_money_for` 只擋格式與負數、不限位數 ⇒ 超大數在 `create!` 落庫時拋
+  #   `ActiveModel::RangeError`——它**既不是** `ActiveRecord::StatementInvalid`
+  #   **也不是** `ActiveRecordError`，所以連 GraphQL controller 的兜底 rescue 都接不到
+  #   ⇒ 直接 500、userErrors 為空。這是 J1／J2「欄寬鏡射到寫入層」的殘留面：
+  #   varchar 那兩格補了，同一個 normalize_rule 裡的 BIGINT 這格沒補。
+  #   值＝BIGINT 上限（9223372036854775807）除以 100 再留一位安全邊際。
+  condition_value_max_cents: 92233720368547758
+  # 單一系列的來源數上限（ours；本尊未取得）。與 `max_rules_per_collection` 是兩件事：
+  # 空來源不貢獻條件數，少了這一條就沒有任何東西擋得住無限量的 source 列（K6）。
+  max_sources_per_collection: 10
+  # 60 條上限的口徑：官方 "A single collection can have a maximum of 60 total conditions"
+  # 傾向 per-collection；新模型 per-source 口徑未實測（P11-U18）⇒ fail-closed 取嚴的一側
+  # （三道裁定 :289 的既定判準）。
+  rule_limit_scope: per_collection
+  # 超限舊系列可續用但不得再加條件。官方逐字 "If you already have a collection that has
+  # more than 60 conditions, then you can still use it…you can't add any conditions when
+  # it's over the limit."（/smart-collections/create，2026-08-25）。v1 整份取代語義下
+  # 自然成立（超限的新輸入整份被拒），鍵先落供 UI 端引用。
+  over_limit_grace_editable: false
+  # inclusion 條件 19 型（95 §1.2；補齊「只有 exclusion 側落了鍵」的不對稱）。
+  # 🔴 v1 引擎支援其中 10 型（RuleCompiler::INCLUSION_TYPES）；metafield **七型**與
+  #    product_category 待 metafield／taxonomy 系統（寫入層拒收，登記於 dev doc）。
+  #    算術：10（v1）＋7（metafield）＋product_category＋unknown＝19，與 95 §1.2 一致
+  #    （95 §1.2 逐字：「19 種扣掉 7 個 Metafield* 與 Unknown」）。
+  #    2026-08-26 收斂輪 H9：原文寫「六型」，被它自己下方的 value 列舉推翻（列了 7 個）。
+  inclusion_condition_types: [metafield_boolean, metafield_decimal, metafield_integer,
+                              metafield_metaobject, metafield_metaobject_list,
+                              metafield_string, metafield_string_list,
+                              product_category, product_status, product_tag, product_title,
+                              product_type, product_vendor, unknown,
+                              variant_compare_at_price, variant_inventory,
+                              variant_price, variant_title, variant_weight]
+  # rebuild 的商品 id 批次大小（ours：批間不持鎖、前台讀舊物化列——13 §F4.9）。
+  rebuild_batch_size: 1000
+  # rebuild 對 rebuild 的整程序列化（2026-08-26 審查 F2；ours——本尊內部排程不可觀測）：
+  # advisory lock 等待預算與讓位後的重排延遲。
+  rebuild_lock_wait_seconds: 60
+  rebuild_lock_requeue_delay_seconds: 30
+  # 🔴 compare_at 的 is_set 是 ALL-variants 語義。官方逐字 "all variants must have a
+  # compare-at price value (including 0) for the product to match."（2026-08-25）——
+  # 寫成 any-variant EXISTS 是靜默語義錯（研究 §9-5）。
+  compare_at_is_set_variant_scope: all_variants
+  # 數值/字串變體條件的比對基準＝任一變體。官方逐字 "the condition is true if any
+  # variant matches the condition."（/collections/conditions，2026-08-25）——V-58 據此結案。
+  variant_match_scope: any_variant
+
 media:
   # 出處：docs/research/22:160（live）
   csv_max_upload_mb: 15

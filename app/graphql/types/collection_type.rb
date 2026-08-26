@@ -14,10 +14,13 @@ module Types
     # 任何求值都不得讀它）；本欄位只供列表檢視篩選，sources 模型落地後改為衍生。
     field :collection_type, String, null: false,
       description: "manual／smart（legacy 檢視標籤；sources 模型落地後為衍生值）。"
-    # 手動系列＝成員數；智慧系列的求值屬規則引擎包 ⇒ null（不是 0——「未求值」
-    # 與「恰好沒有商品」是兩件事，同金額 null≠0 的原則）。
+    # 手動＝collection_products 數；智慧＝物化 memberships 數（第 11 包引擎）。
+    # 🔴 null 仍然存在：智慧系列**尚未成功 rebuild**（rebuild_status ≠ OK）時回 null
+    #   ——「未求值」與「恰好沒有商品」是兩件事（同金額 null≠0 原則），前端照舊顯示「—」。
     field :products_count, Integer, null: true,
-      description: "商品數；智慧系列在規則引擎落地前為 null。"
+      description: "商品數；智慧系列在首次成功 rebuild 前為 null。"
+    field :rebuild_status, String, null: true,
+      description: "智慧系列物化狀態：OK／PENDING／ERROR；手動系列為 null。"
     field :description_html, String, null: false
     field :sort_order, String, null: false, description: "前台排序（13 §F4）。"
     field :lock_version, Integer, null: false, description: "全樹樂觀鎖（含譯文）。"
@@ -66,11 +69,18 @@ module Types
     end
 
     # @return [Integer, nil]
-    # 智慧系列回 nil（規則引擎未落地，回 0 是在斷言一件我方不知道的事）。
+    # 智慧系列在**尚未成功重建**（rebuild_status ≠ OK）時回 nil——回 0 是在斷言一件
+    # 我方不知道的事。（2026-08-26 第七輪 L7 更正：原文寫「規則引擎未落地」，
+    # 而該引擎正是第 11 包交付的；判準已改成看 rebuild_status。）
     # 手動系列優先用列表 select 帶下來的 `member_count`（見 `Collection::MEMBER_COUNT_SELECT`），
     # 單筆讀取沒有該欄時才退回自己 COUNT。
     def products_count
-      return nil unless object.collection_type == "manual"
+      if object.collection_type == "smart"
+        return nil unless object.rebuild_status == "OK"
+        return object.read_attribute("member_count").to_i if object.has_attribute?("member_count")
+
+        return CollectionMembership.where(shop_id: object.shop_id, collection_id: object.id).count
+      end
       return object.read_attribute("member_count").to_i if object.has_attribute?("member_count")
 
       CollectionProduct.where(shop_id: object.shop_id, collection_id: object.id).count

@@ -1,0 +1,965 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+# 第 11 包：求值引擎整合測試（rebuild／resync／求值公式；13 §F4.2 的三條必測）。
+RSpec.describe "智慧系列求值引擎" do
+  let(:shop) { create(:shop, subdomain: "smart-engine") }
+
+  def product!(title:, tags: [], type: "香水", vendor: "CHILL", status: "active", price_cents: 12_800, compare_at: nil)
+    ActsAsTenant.with_tenant(shop) do
+      product = create(:product, shop:, title:, tags:, product_type: type, vendor:, status:)
+      create(:product_variant, shop:, product:, price_cents:, compare_at_price_cents: compare_at)
+      tags.each do |raw|
+        key = Tags::Normalize.key(raw)
+        ProductTag.find_or_create_by!(shop_id: shop.id, product_id: product.id, tag_key: key) { |t| t.tag_display = raw }
+      end
+      product
+    end
+  end
+
+  def smart!(title: "測試系列", sources:)
+    ActsAsTenant.with_tenant(shop) do
+      collection = Collection.create!(shop_id: shop.id, title:, handle: title.parameterize.presence || "c#{SecureRandom.hex(3)}",
+                                      collection_type: "smart", sort_order: "manual", description_html: "")
+      sources.each_with_index do |src, index|
+        source = CollectionSource.create!(
+          shop_id: shop.id, collection_id: collection.id, source_type: "conditions",
+          target_type: "products", inclusion_match: src.fetch(:inclusion_match, "all"),
+          exclusion_match: src[:exclusion_match], position: index
+        )
+        src.fetch(:rules).each_with_index do |rule, r_index|
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: source.id,
+                                       position: r_index, **rule)
+        end
+      end
+      collection
+    end
+  end
+
+  def members(collection)
+    ActsAsTenant.with_tenant(shop) do
+      CollectionMembership.where(shop_id: shop.id, collection_id: collection.id).pluck(:product_id)
+    end
+  end
+
+  def rebuild!(collection) = Collections::Rebuild.call(shop:, collection:)
+
+  describe "🔴 求值公式：最終集 = ⋃ₛ ( inclusion(s) − exclusion(s) )（13 §F4.2 三條必測）" do
+    it "①同一來源：條件命中＋明確排除同商品 ⇒ 不在系列內" do
+      hit = product!(title: "紅玫瑰", tags: [ "red", "clearance" ])
+      keep = product!(title: "白玫瑰", tags: [ "red" ])
+      collection = smart!(sources: [ {
+        rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "product_tag", relation: "includes", value_text: "clearance" }
+        ]
+      } ])
+
+      rebuild!(collection)
+
+      expect(members(collection)).to contain_exactly(keep.id)
+      expect(members(collection)).not_to include(hit.id)
+    end
+
+    it "🔴 ③A 來源排除商品 X ＋ B 來源包含 X ⇒ X **仍在**系列內（per-source 相減；全域相減會判反）" do
+      x = product!(title: "X", tags: [ "red", "sale" ], type: "蠟燭")
+      collection = smart!(sources: [
+        { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "product_tag", relation: "includes", value_text: "sale" }
+        ] },   # A：包含 red 但排除 sale ⇒ X 被 A 剔除
+        { rules: [
+          { block: "inclusion", condition_type: "product_type", relation: "eq", value_text: "蠟燭" }
+        ] }    # B：包含蠟燭 ⇒ X 由 B 進來
+      ])
+
+      rebuild!(collection)
+
+      expect(members(collection)).to include(x.id),
+        "X 被判出局＝全域相減（V-57 已撤銷的靜默錯誤形態）；正解＝排除只在自己的來源內結算"
+    end
+  end
+
+  describe "rebuild 的收斂性與世代掃尾" do
+    it "🔴 連跑兩次：列數不變、inserted=0 swept=0、不重發快取失效" do
+      product!(title: "紅", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      first = rebuild!(collection)
+      expect(first.inserted).to eq(1)
+
+      stamp = ActsAsTenant.with_tenant(shop) { collection.reload.products_updated_at }
+      outbox_before = ActsAsTenant.with_tenant(shop) { EventOutbox.where(topic: "collections/update").count }
+
+      second = travel(2.seconds) { rebuild!(collection) }
+
+      expect(second.inserted).to eq(0)
+      expect(second.swept).to eq(0)
+      expect(members(collection).length).to eq(1)
+      ActsAsTenant.with_tenant(shop) do
+        expect(collection.reload.products_updated_at).to eq(stamp),
+          "零變更的 rebuild 不得推 cache stamp（初版用 affected_rows 判變更，每輪都白打快取）"
+        expect(EventOutbox.where(topic: "collections/update").count).to eq(outbox_before)
+      end
+    end
+
+    it "規則改了 ⇒ 掃尾移除不再命中的、rebuild_status=OK、stamp 推進" do
+      red = product!(title: "紅", tags: [ "red" ])
+      blue = product!(title: "藍", tags: [ "blue" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(collection)
+      expect(members(collection)).to contain_exactly(red.id)
+
+      ActsAsTenant.with_tenant(shop) do
+        CollectionSourceRule.where(shop_id: shop.id).update_all(value_text: "blue")
+      end
+      result = travel(2.seconds) { rebuild!(collection) }
+
+      expect(result.inserted).to eq(1)
+      expect(result.swept).to eq(1)
+      expect(members(collection)).to contain_exactly(blue.id)
+      expect(ActsAsTenant.with_tenant(shop) { collection.reload.rebuild_status }).to eq("OK")
+    end
+
+    it "🔴 編不了的規則 ⇒ 整系列 ERROR、零寫入（不部分物化）" do
+      product!(title: "紅", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+        { block: "inclusion", condition_type: "metafield_boolean", relation: "eq", value_text: "1" }
+      ] } ])
+
+      result = rebuild!(collection)
+
+      expect(result.status).to eq(:error)
+      expect(members(collection)).to be_empty
+      expect(ActsAsTenant.with_tenant(shop) { collection.reload.rebuild_status }).to eq("ERROR")
+    end
+
+    it "🔴 智慧成員**不**寫 collection_products（兩個真相的紅線）" do
+      product!(title: "紅", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      rebuild!(collection)
+
+      ActsAsTenant.with_tenant(shop) do
+        expect(CollectionProduct.where(collection_id: collection.id)).to be_empty
+        expect(CollectionMembership.where(collection_id: collection.id).count).to eq(1)
+      end
+    end
+  end
+
+  describe "resync（增量；與 rebuild 同一段 SQL）" do
+    it "商品變得命中 ⇒ 進；變得不命中 ⇒ 出；ARCHIVED ⇒ 出" do
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_type", relation: "eq", value_text: "香水" }
+      ] } ])
+      rebuild!(collection)
+      product = product!(title: "新品", type: "香水")
+
+      r1 = Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(r1.joined).to eq(1)
+      expect(members(collection)).to include(product.id)
+
+      ActsAsTenant.with_tenant(shop) { product.update!(product_type: "蠟燭") }
+      r2 = Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(r2.left).to eq(1)
+      expect(members(collection)).not_to include(product.id)
+
+      ActsAsTenant.with_tenant(shop) { product.update!(product_type: "香水") }
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      ActsAsTenant.with_tenant(shop) { product.update!(status: "archived") }
+      r3 = Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(r3.left).to eq(1)
+      expect(members(collection)).not_to include(product.id)
+    end
+
+    it "🔴 UNLISTED **不**移出（只是前台不可見，成員資格照舊——13 §F1.2(f)）" do
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_type", relation: "eq", value_text: "香水" }
+      ] } ])
+      product = product!(title: "隱藏款", type: "香水")
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+      ActsAsTenant.with_tenant(shop) { product.update!(status: "unlisted") }
+      result = Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+      expect(result.left).to eq(0)
+      expect(members(collection)).to include(product.id)
+    end
+
+    it "商品刪除 ⇒ 從所有系列移出" do
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_type", relation: "eq", value_text: "香水" }
+      ] } ])
+      product = product!(title: "將刪", type: "香水")
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(members(collection)).to include(product.id)
+
+      product_id = product.id
+      ActsAsTenant.with_tenant(shop) do
+        # 依 FK 序清掉整棵樹再刪商品（91 §3.15 已登記 Product#destroy 的 FK 順序）。
+        variant_ids = ProductVariant.where(shop_id: shop.id, product_id:).select(:id)
+        item_ids = InventoryItem.where(shop_id: shop.id, product_variant_id: variant_ids).select(:id)
+        InventoryLevel.where(shop_id: shop.id, inventory_item_id: item_ids).delete_all
+        InventoryItem.where(shop_id: shop.id, product_variant_id: variant_ids).delete_all
+        ProductVariant.where(shop_id: shop.id, product_id:).delete_all
+        Product.where(id: product_id).delete_all
+      end
+      result = Collections::ResyncProduct.call(shop:, product_id:)
+
+      expect(result.left).to eq(1)
+      expect(members(collection)).not_to include(product_id)
+    end
+
+    it "ERROR 系列跳過（不對著壞規則亂算）" do
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "metafield_boolean", relation: "eq", value_text: "1" }
+      ] } ])
+      rebuild!(collection)   # → ERROR
+      product = product!(title: "任意", type: "香水")
+
+      result = Collections::ResyncProduct.call(shop:, product_id: product.id)
+
+      expect(result.skipped_error).to eq(1)
+      expect(members(collection)).to be_empty
+    end
+  end
+
+  describe "exclusion 的 collection 型（減去被引用系列的最終成員——V-140）" do
+    it "被引用系列的物化成員被剔除" do
+      excluded_product = product!(title: "冬季款", tags: [ "red" ])
+      normal = product!(title: "常態款", tags: [ "red" ])
+      winter = ActsAsTenant.with_tenant(shop) do
+        c = Collection.create!(shop_id: shop.id, title: "冬季", handle: "winter",
+                               collection_type: "manual", sort_order: "manual", description_html: "")
+        CollectionProduct.create!(shop_id: shop.id, collection_id: c.id, product_id: excluded_product.id, position: 0)
+        # 手動系列的「最終成員」對 exclusion 而言＝memberships？手動走 collection_products
+        # ——v1 的 collection exclusion 讀 memberships（物化）⇒ 手動系列要先有物化列。
+        # 🔴 這是 v1 已知邊界：exclusion 引用**手動**系列時讀不到成員（登記 dev doc）。
+        c
+      end
+      smart_ref = ActsAsTenant.with_tenant(shop) do
+        c = Collection.create!(shop_id: shop.id, title: "紅色引用", handle: "reds-ref",
+                               collection_type: "smart", sort_order: "manual", description_html: "")
+        s = CollectionSource.create!(shop_id: shop.id, collection_id: c.id, source_type: "conditions",
+                                     target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: s.id, block: "inclusion",
+                                     condition_type: "product_title", relation: "eq", value_text: "冬季款", position: 0)
+        c
+      end
+      rebuild!(smart_ref)   # 物化：冬季款
+
+      main = smart!(title: "主系列", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+        { block: "exclusion", condition_type: "collection", relation: "includes", value_int: smart_ref.id }
+      ] } ])
+      rebuild!(main)
+
+      expect(members(main)).to contain_exactly(normal.id)
+      expect(winter).to be_present   # 手動系列僅作上面紅字邊界的敘事錨
+    end
+  end
+
+  it "🔴 F1（2026-08-26 審查）：not_eq 納入 NULL 欄商品——與 tag does_not_include 的空值語義一致" do
+    typed = product!(title: "有型", type: "香水")
+    untyped = product!(title: "無型", type: nil, vendor: nil)
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_type", relation: "not_eq", value_text: "香水" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(untyped.id)
+    expect(members(collection)).not_to include(typed.id)
+  end
+
+  describe "🔴 G1（2026-08-26 收斂輪）：條件清空後物化成員必須被回收" do
+    it "sources 清成空陣列 ⇒ 掃尾清空成員、rebuild_status 回 OK" do
+      product = product!(title: "紅玫瑰", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(collection)
+      expect(members(collection)).to eq([ product.id ])
+
+      # 契約明文的「空陣列＝清除」（request spec 自己在測的合法輸入）。
+      ActsAsTenant.with_tenant(shop) do
+        CollectionSource.where(shop_id: shop.id, collection_id: collection.id).destroy_all
+        collection.update_columns(rebuild_status: "PENDING")
+      end
+
+      result = rebuild!(collection.reload)
+      expect(result.status).to eq(:ok),
+        "零 source 的智慧系列被當成『與本服務無關』早退 ⇒ 掃尾不執行、成員永久殘留"
+      expect(result.swept).to eq(1)
+      expect(members(collection)).to be_empty
+      expect(collection.reload.rebuild_status).to eq("OK")
+    end
+
+    it "🔴 殘留成員會污染**別的**系列：X 清空後，「排除 X」的 Y 必須算得出正確成員" do
+      product = product!(title: "紅玫瑰2", tags: [ "red" ])
+      x = smart!(title: "X", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(x)
+      expect(members(x)).to eq([ product.id ])
+
+      ActsAsTenant.with_tenant(shop) do
+        CollectionSource.where(shop_id: shop.id, collection_id: x.id).destroy_all
+      end
+      rebuild!(x.reload)
+
+      # Y＝tag red 減去 X 的成員。X 已無條件 ⇒ X 無成員 ⇒ Y 應含該商品。
+      y = smart!(title: "Y", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+        { block: "exclusion", condition_type: "collection", relation: "includes", value_int: x.id }
+      ] } ])
+      rebuild!(y)
+      expect(members(y)).to eq([ product.id ]),
+        "Y 被 X 的幽靈成員錯誤排除——殘留列不是死資料，compile_collection_exclusion 讀它"
+    end
+
+    it "非智慧系列照舊跳過（手動成員不歸本服務管）" do
+      manual = ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: "手動", handle: "manual-one",
+                           collection_type: "manual", sort_order: "manual", description_html: "")
+      end
+      expect(rebuild!(manual).status).to eq(:skipped)
+    end
+  end
+
+  it "🔴 F7（2026-08-26 自查）：NULL 世代戳的列既要能被蓋上戳，也要能被掃掉" do
+    product = product!(title: "紅3", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    rebuild!(collection)
+
+    # 模擬未帶世代戳的物化列（日後 manual／nested／app origin 的形態；欄位可空）。
+    ActsAsTenant.with_tenant(shop) { CollectionMembership.update_all(rebuilt_at: nil) }
+
+    result = rebuild!(collection)
+    expect(members(collection)).to eq([ product.id ]),
+      "仍命中規則的列被掃掉了"
+    stamp = ActsAsTenant.with_tenant(shop) { CollectionMembership.sole.rebuilt_at }
+    expect(stamp).not_to be_nil,
+      "GREATEST(NULL, 世代) 回 NULL ⇒ 這一列再也蓋不上戳、也掃不掉（不死列）"
+    expect(result.status).to eq(:ok)
+  end
+
+  it "🔴 F7 對偶：NULL 戳且**不再命中**規則的列必須被掃掉" do
+    product = product!(title: "紅4", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    rebuild!(collection)
+    ActsAsTenant.with_tenant(shop) do
+      CollectionMembership.update_all(rebuilt_at: nil)
+      # 規則改成藍：這個商品不再命中。
+      CollectionSourceRule.where(shop_id: shop.id).update_all(value_text: "blue")
+    end
+
+    rebuild!(collection)
+    expect(members(collection)).to be_empty,
+      "掃尾的 `< 世代` 在三值邏輯下漏掉 NULL ⇒ 陳舊列永遠留在系列裡"
+    expect(product).to be_present
+  end
+
+  it "🔴 G2 行為面：沒設過比價的商品必須被『比價不等於 X』納入" do
+    without_compare = product!(title: "沒比價", compare_at: nil)
+    with_compare = product!(title: "有比價", compare_at: 19_800)
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "variant_compare_at_price", relation: "not_eq", value_cents: 19_800 }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(without_compare.id)
+    expect(members(collection)).not_to include(with_compare.id)
+  end
+
+  describe "🔴 H1／H2（2026-08-26 收斂輪）：已 quote 的片段不得再被當成 SQL 模板" do
+    it "條件值含 `?` 的系列必須能重建（不是 PreparedStatementInvalid）" do
+      # `sanitize_sql_array` 用 count("?") 對位、不分引號內外 ⇒ 商家值裡的一個問號
+      # 就讓 arity 不符。寫入層不濾 `?`（自由文字），所以這是可達輸入。
+      hit = product!(title: "Why not?")
+      miss = product!(title: "Why not")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "Why not?" }
+      ] } ])
+
+      result = rebuild!(collection)
+      expect(result.status).to eq(:ok)
+      expect(members(collection)).to eq([ hit.id ])
+      expect(members(collection)).not_to include(miss.id)
+    end
+
+    it "tag 值含 `?`（Tags::Normalize 原樣保留）同樣要能重建" do
+      hit = product!(title: "問號標籤", tags: [ "Sale? Item" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "Sale? Item" }
+      ] } ])
+
+      expect(rebuild!(collection).status).to eq(:ok)
+      expect(members(collection)).to eq([ hit.id ])
+    end
+
+    it "🔴 resync 端同樣（一個問號規則不得讓整店的增量重算停擺）" do
+      other = product!(title: "無關商品", tags: [ "red" ])
+      product!(title: "Why not?")
+      smart!(title: "問號系列", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "Why not?" }
+      ] } ])
+      red = smart!(title: "紅", sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      expect { Collections::ResyncProduct.call(shop:, product_id: other.id) }.not_to raise_error
+      expect(members(red)).to eq([ other.id ]),
+        "問號系列拋例外 ⇒ 迴圈中排在它後面的無辜系列拿不到增量更新"
+    end
+
+    it "🔴 條件值內部的連續空白必須原樣比對（squish 不得改寫商家值）" do
+      # `<<~SQL.squish` 在內插之後才跑 ⇒ 會把 '紅玫瑰  禮盒'（兩空白）壓成一個，
+      # 而 resync 端沒有 squish ⇒ 兩支引擎對同一條規則給出不同答案。
+      double_space = product!(title: "紅玫瑰  禮盒")
+      single_space = product!(title: "紅玫瑰 禮盒")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: "紅玫瑰  禮盒" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ double_space.id ])
+      expect(members(collection)).not_to include(single_space.id)
+
+      # 兩支引擎必須同答案（13 §F4.9「求值只有 SQL 一套」）。
+      Collections::ResyncProduct.call(shop:, product_id: single_space.id)
+      Collections::ResyncProduct.call(shop:, product_id: double_space.id)
+      expect(members(collection)).to eq([ double_space.id ])
+
+      # 連跑兩次列數不變（13:716 的驗收錨）。
+      second = rebuild!(collection)
+      expect([ second.inserted, second.swept ]).to eq([ 0, 0 ])
+    end
+  end
+
+  it "🔴 條件值含反斜線＋數字必須原樣比對（`sub` 的反向參照不得解讀商家值）" do
+    # `where_sql` 是用 `sub` 代入模板的。`sub(pattern, replacement)` 的**字串形式**
+    # 把替換字串裡的 `\0`／`\1`／`\&` 當反向參照 ⇒ mysql2 為了跳脫而產生的
+    # `\\`（SQL 裡的兩個字元）被折回一個 ⇒ SQL 變成 `'折扣\1號'`，
+    # 而 MySQL 讀 `\1` 就是 `1` ⇒ 比對到完全不同的字串。**block 形式**不做這個解讀。
+    # （值用 `92.chr` 組，避免 Ruby 字面值把 `\1` 讀成八進位跳脫。）
+    backslash_title = "折扣" + 92.chr + "1號"
+    hit = product!(title: backslash_title)
+    miss = product!(title: "折扣1號")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_title", relation: "eq", value_text: backslash_title }
+    ] } ])
+
+    result = rebuild!(collection)
+    expect(result.status).to eq(:ok)
+    expect(members(collection)).to eq([ hit.id ])
+    expect(members(collection)).not_to include(miss.id)
+  end
+
+  describe "🔴 H4（2026-08-26 收斂輪）：ARCHIVED 的判定兩支引擎必須一致" do
+    it "全量 rebuild 不得把封存商品塞回物化表" do
+      active = product!(title: "在架", tags: [ "red" ])
+      archived = product!(title: "已封存", tags: [ "red" ], status: "archived")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ active.id ]),
+        "rebuild 的 INSERT…SELECT 沒有 archived 守衛 ⇒ 封存品被塞回、掃尾也刪不掉"
+      expect(members(collection)).not_to include(archived.id)
+    end
+
+    it "resync 移出封存品之後，rake 兜底的 rebuild 不得又把它加回來" do
+      product = product!(title: "先在架", tags: [ "red" ])
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+      rebuild!(collection)
+      expect(members(collection)).to eq([ product.id ])
+
+      ActsAsTenant.with_tenant(shop) { product.update_columns(status: "archived") }
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      expect(members(collection)).to be_empty
+
+      rebuild!(collection)
+      expect(members(collection)).to be_empty,
+        "成員集合不得取決於『最後跑的是哪一支引擎』"
+    end
+
+    it "UNLISTED 照舊是成員（前台不可見≠非成員）" do
+      unlisted = product!(title: "未列出", tags: [ "red" ], status: "unlisted")
+      collection = smart!(sources: [ { rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+      ] } ])
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ unlisted.id ])
+    end
+  end
+
+  it "🔴 J2 商品側（2026-08-26 收斂輪）：正規化後超長的標籤 ⇒ userError，不得漏成 500" do
+    # `product_tags.tag_key` 是 varchar(255)，而 `Tags::Normalize.key` 會展開
+    # （ß→ss）⇒ 原字串 255 但 key 510。少了 key 側的檢查，`sync_product_tags!` 的
+    # `create!` 會拋 ValueTooLong，而它不在 SaveProduct 的 rescue 清單裡 ⇒
+    # **整筆商品**回 top-level INTERNAL、商家看不到任何 userError（鐵律 4①）。
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveProduct.call(shop:, input: { title: "膨脹標籤", tags: [ "ß" * 255 ],
+                                                variants: [ { price: "10.00" } ] })
+    end
+
+    expect(result.user_errors.map { |e| e[:code] }).to eq([ "TOO_LONG" ])
+    expect(result.user_errors.first[:field]).to include("tags")
+    expect(ActsAsTenant.with_tenant(shop) { Product.where(title: "膨脹標籤").count }).to eq(0)
+  end
+
+  it "J2 對照組：正規化後仍在欄寬內的標籤照常存檔" do
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveProduct.call(shop:, input: { title: "正常標籤", tags: [ "ß" * 100 ],
+                                                variants: [ { price: "10.00" } ] })
+    end
+
+    expect(result.user_errors).to eq([])
+    key = ActsAsTenant.with_tenant(shop) { ProductTag.where(tag_display: "ß" * 100).pick(:tag_key) }
+    expect(key.length).to eq(200)
+  end
+
+  describe "🔴 K2／K8（2026-08-26 第六輪）：三條求值路徑必須給同一個答案" do
+    # A 排除 B、B 排除 C、C＝tag blue（商品沒有）⇒ C 空、B 含商品、A 應為空。
+    # id 序 a < b < c（最壞情況：與需要的計算序相反）。
+    def chain!
+      product = product!(title: "紅玫瑰", tags: [ "red" ])
+      a, b, c = %w[k2-a k2-b k2-c].map do |handle|
+        ActsAsTenant.with_tenant(shop) do
+          Collection.create!(shop_id: shop.id, title: handle, handle:,
+                             collection_type: "smart", sort_order: "manual", description_html: "")
+        end
+      end
+      ActsAsTenant.with_tenant(shop) do
+        [ [ a, b ], [ b, c ] ].each do |(owner, referenced)|
+          src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                         target_type: "products", inclusion_match: "all", position: 0)
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                       condition_type: "product_tag", relation: "includes",
+                                       value_text: "red", position: 0)
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                       condition_type: "collection", relation: "includes",
+                                       value_int: referenced.id, position: 1)
+        end
+        src_c = CollectionSource.create!(shop_id: shop.id, collection_id: c.id, source_type: "conditions",
+                                         target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src_c.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "blue", position: 0)
+      end
+      [ product, a, b, c ]
+    end
+
+    it "🔴 全量兜底（rake 的逐系列 rebuild）依拓樸序 ⇒ 與 resync 同答案" do
+      product, a, b, c = chain!
+
+      # rake 的工作：拓樸序 → 逐一 Rebuild。
+      ids = ActsAsTenant.with_tenant(shop) do
+        Collections::ReferenceGraph.topological(
+          shop, Collection.where(shop_id: shop.id, collection_type: "smart").pluck(:id)
+        )
+      end
+      ids.each do |id|
+        col = ActsAsTenant.with_tenant(shop) { Collection.find_by(shop_id: shop.id, id:) }
+        Collections::Rebuild.call(shop:, collection: col)
+      end
+
+      expect(members(c)).to be_empty
+      expect(members(b)).to eq([ product.id ])
+      expect(members(a)).to be_empty,
+        "兜底照 id 序跑 ⇒ A 讀到還沒重建的 B ⇒ 與 resync 給出不同答案（H4 的根因重開）"
+    end
+
+    it "🔴 K8：B 的成員一變，引用 B 的 A 必須被排進重建（反向傳播）" do
+      _product, a, b, _c = chain!
+
+      expect {
+        ActsAsTenant.with_tenant(shop) do
+          Collections::Rebuild.notify_members_changed!(shop, b.reload)
+        end
+      }.to have_enqueued_job(Collections::RebuildJob).with(shop.id, a.id, [ b.id ])
+    end
+
+    it "沒有人引用時不排任何額外重建" do
+      # 🔴 鏈是 A→B→C（A 排除 B、B 排除 C）⇒ **沒有人引用 A**（A 是鏈頭）。
+      #   C 被 B 引用，拿 C 來測會期望錯方向。
+      _product, a, _b, _c = chain!
+
+      expect {
+        ActsAsTenant.with_tenant(shop) do
+          Collections::Rebuild.notify_members_changed!(shop, a.reload)
+        end
+      }.not_to have_enqueued_job(Collections::RebuildJob)
+    end
+  end
+
+  it "🔴 K5（2026-08-26 第六輪）：既有的超長標籤不得讓商品變成唯讀" do
+    # `products.tags` 是本包之前就存在的欄位，可能留著正規化後 >上限 的標籤。
+    # `sync_product_tags!` 每次更新都重算並補建 ⇒ 撞上 J2 的 model 驗證 ⇒
+    # RecordInvalid ⇒ 整筆 productSet 回滾，商品再也存不進去（即使沒帶 tags）。
+    product = product!(title: "舊商品")
+    ActsAsTenant.with_tenant(shop) do
+      product.update_column(:tags, [ "ß" * 200 ])   # key 長 400 > 255
+      ProductTag.where(shop_id: shop.id, product_id: product.id).delete_all
+    end
+
+    result = ActsAsTenant.with_tenant(shop) do
+      variant = ProductVariant.find_by!(shop_id: shop.id, product_id: product.id)
+      Catalog::SaveProduct.call(shop:, input: {
+        id: "gid://chilllove/Product/#{product.id}",
+        lock_version: product.reload.lock_version,
+        title: "改個標題",
+        variants: [ { id: "gid://chilllove/ProductVariant/#{variant.id}", price: "128.00" } ]
+      })
+    end
+
+    expect(result.user_errors).to eq([]), "既有超長標籤讓商品變唯讀"
+    expect(ActsAsTenant.with_tenant(shop) { product.reload.title }).to eq("改個標題")
+  end
+
+  it "🔴 L2（2026-08-26 第七輪）：exclusion 區塊的**正向**謂詞不得把 NULL 欄商品整列丟掉" do
+    # `NOT (p.product_type = 'X')` 在 product_type IS NULL 時回 NULL ⇒ WHERE 丟掉該列。
+    # F1／G2 兩次只封了「否定 relation」，沒封真正產生否定的區塊層 NOT。
+    untyped = product!(title: "沒類型", tags: [ "red" ], type: nil)
+    perfume = product!(title: "香水", tags: [ "red" ], type: "香水")
+    other = product!(title: "蠟燭", tags: [ "red" ], type: "蠟燭")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+      { block: "exclusion", condition_type: "product_type", relation: "eq", value_text: "香水" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to contain_exactly(untyped.id, other.id),
+      "沒設類型的商品被一個根本不該命中它的排除條件剔除了（三值邏輯）"
+    expect(members(collection)).not_to include(perfume.id)
+  end
+
+  it "🔴 L2 對偶：contains 型的 exclusion 同樣不得丟掉 NULL 欄商品" do
+    untyped = product!(title: "沒廠商", tags: [ "red" ], vendor: nil)
+    acme = product!(title: "acme 貨", tags: [ "red" ], vendor: "ACME Ltd")
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+      { block: "exclusion", condition_type: "product_vendor", relation: "contains", value_text: "ACME" }
+    ] } ])
+
+    rebuild!(collection)
+    expect(members(collection)).to eq([ untyped.id ])
+    expect(members(collection)).not_to include(acme.id)
+  end
+
+  it "🔴 L1 安全帶（2026-08-26 第七輪）：**既有**的奇數環不得產生無界的 job 鏈" do
+    # 環自本輪起在寫入層一律拒收，但守衛上線前建立的環仍可能存在 ⇒ 直接寫 DB 造出
+    # 三元環（繞過寫入層），驗證傳播鏈到上限就停。
+    # 為什麼是奇數環：「A 排除 B」讀 B 的物化成員 ⇒ 反單調函數 a := ¬b。
+    # 奇數次反單調的合成仍是反單調 ⇒ 沒有不動點 ⇒ 成員週期震盪 ⇒ 每一輪都「有變」
+    # ⇒ 傳播條件恆真。（偶數環是單調、有不動點，實測 1〜2 個 job 就停。）
+    product = product!(title: "紅", tags: [ "red" ])
+    a, b, c = %w[cyc-a cyc-b cyc-c].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    ActsAsTenant.with_tenant(shop) do
+      [ [ a, b ], [ b, c ], [ c, a ] ].each do |(owner, referenced)|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: owner.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: referenced.id, position: 1)
+      end
+    end
+    smart_count = ActsAsTenant.with_tenant(shop) { Collection.where(shop_id: shop.id, collection_type: "smart").count }
+    # 🔴 起始狀態必須落在**震盪軌道上**，否則第一步就收斂、測不到東西
+    #   （軌道＝(a,b,c) 週期 6：100→110→010→011→001→101）。
+    #   種下 a=1、b=c=0，再從 B 起跑：b←¬c=1（變）→傳給 A；a←¬b=0（變）→傳給 C；
+    #   c←¬a=1（變）→傳給 B⋯⋯每一步都「有變」，沒有深度上限就永遠停不下來。
+    ActsAsTenant.with_tenant(shop) do
+      CollectionMembership.create!(shop_id: shop.id, collection_id: a.id, product_id: product.id,
+                                   origin: "conditions", rebuilt_at: Time.current)
+    end
+    queue = ActiveJob::Base.queue_adapter.enqueued_jobs
+    queue.clear
+    Collections::Rebuild.call(shop:, collection: b.reload)
+
+    # 逐一執行到佇列空。**沒有 visited 集合時這個迴圈永遠不會停**（實測 n=3 週期 6）。
+    #   有 visited 時鏈長天然有界於「這家店的智慧系列數」。
+    budget = (smart_count + 5) * 3
+    ran = 0
+    while (job = queue.shift)
+      ran += 1
+      break if ran > budget
+
+      args = ActiveJob::Arguments.deserialize(job[:args])
+      Collections::RebuildJob.perform_now(*args)
+    end
+
+    expect(queue).to be_empty,
+      "傳播鏈在預算內沒有停 ⇒ 既有環會產生無界 job 鏈與無界 outbox（visited 集合失效）"
+    expect(ran).to be <= budget
+  end
+
+  it "🔴 M1（2026-08-26 第八輪）：合法的**無環長鏈**必須整條走完，不得被截斷" do
+    # 第七輪用「深度上限」當安全帶，但它擋的是**路徑長度**不是環 ⇒ 一條合法的長鏈
+    # 尾端變動時，前段永遠收不到重建通知、成員停在錯值（K8 的症狀在長鏈上重開）。
+    # visited 集合精確：只跳過**這條鏈上已算過的**，無環長鏈照走完。
+    depth = 24
+    cols = Array.new(depth) do |i|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: "chain#{i}", handle: "m1-chain-#{i}",
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+    # c[i+1] 排除 c[i] ⇒ 反向傳播從 c0 一路傳到 c23。
+    ActsAsTenant.with_tenant(shop) do
+      cols.each_with_index do |col, i|
+        src = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                       target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        next if i.zero?
+
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: src.id, block: "exclusion",
+                                     condition_type: "collection", relation: "includes",
+                                     value_int: cols[i - 1].id, position: 1)
+      end
+    end
+
+    # 🔴 起始狀態必須讓**每一層都會變**，否則第一層算完就收斂、傳播根本不會往下走
+    #   （與第七輪 ML1c 同一課）。正解是偶數層＝[商品]、奇數層＝[]；種相反的。
+    product = product!(title: "紅鏈", tags: [ "red" ])
+    ActsAsTenant.with_tenant(shop) do
+      cols.each_with_index do |col, i|
+        next if i.even?
+
+        CollectionMembership.create!(shop_id: shop.id, collection_id: col.id, product_id: product.id,
+                                     origin: "conditions", rebuilt_at: Time.current)
+      end
+    end
+
+    queue = ActiveJob::Base.queue_adapter.enqueued_jobs
+    queue.clear
+    seen_ids = []
+    Collections::Rebuild.call(shop:, collection: cols.first.reload)
+    budget = depth * 4
+    ran = 0
+    while (job = queue.shift)
+      ran += 1
+      break if ran > budget
+
+      args = ActiveJob::Arguments.deserialize(job[:args])
+      seen_ids << args[1]
+      Collections::RebuildJob.perform_now(*args)
+    end
+
+    expect(queue).to be_empty
+    # 鏈尾（最後一層）必須被造訪過——深度上限會讓它永遠收不到通知。
+    expect(seen_ids).to include(cols.last.id),
+      "無環長鏈被截斷 ⇒ 尾端系列永遠停在錯值且無自癒（M1）"
+  end
+
+  it "🔴 M5（2026-08-26 第八輪）：notify 失敗必須讓整筆重建回滾——對外面不得永久遺失" do
+    # 對外面（cache stamp／outbox／反向傳播）原本在 txn **外**。變更判定是「本輪有沒有
+    # 新列或掃掉的列」，所以只要 notify 失敗一次，成員已落庫、status 已 OK，
+    # **重跑一律 inserted=0／swept=0** ⇒ 三個對外面永久遺失（K8 的症狀原樣復發）。
+    product = product!(title: "紅", tags: [ "red" ])
+    collection = smart!(sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+
+    allow(Catalog::CacheStamps).to receive(:bump_collection_members!).and_raise(ActiveRecord::LockWaitTimeout)
+    expect { rebuild!(collection) }.to raise_error(ActiveRecord::LockWaitTimeout)
+
+    # notify 在 txn 內 ⇒ 掃尾那一段整段回滾 ⇒ status 不會停在 OK。
+    expect(collection.reload.rebuild_status).not_to eq("OK")
+
+    # 🔴 關鍵斷言：解除故障後重跑**必須補上對外面**。批次 upsert 是逐批各自的 txn，
+    #   成員列還在 ⇒ 重跑的 inserted／swept 都是 0；若變更判定只看這兩個數字，
+    #   對外面就永遠補不回來（M5 的第二半，實跑才發現）。
+    allow(Catalog::CacheStamps).to receive(:bump_collection_members!).and_call_original
+    outbox_before = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.where(shop_id: shop.id, topic: Events::Topics::COLLECTIONS_UPDATE).count
+    end
+    rebuild!(collection)
+
+    expect(members(collection)).to eq([ product.id ])
+    expect(collection.reload.rebuild_status).to eq("OK")
+    outbox_after = ActsAsTenant.with_tenant(shop) do
+      EventOutbox.where(shop_id: shop.id, topic: Events::Topics::COLLECTIONS_UPDATE).count
+    end
+    expect(outbox_after).to be > outbox_before,
+      "重跑得到 inserted=0／swept=0 ⇒ 對外面永遠補不回來（M5 第二半）"
+  end
+
+  it "🔴 M4（2026-08-26 第八輪）：unknown 條件只讓**該系列** ERROR，不得中止整個迴圈" do
+    # `Rebuild` 有這道守衛、`ResyncProduct` 沒有 ⇒ 例外穿出逐系列迴圈，
+    # 拓樸序中排在它後面、與該壞系列無關的系列整批漏算且無自癒。
+    product = product!(title: "紅", tags: [ "red" ])
+    broken = smart!(title: "壞的", sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    healthy = smart!(title: "好的", sources: [ { rules: [
+      { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+    ] } ])
+    # 直接改成 unknown（寫入層拒收，只能由匯入／console 產生——P11-B4）。
+    ActsAsTenant.with_tenant(shop) do
+      rule = CollectionSourceRule.joins(:source)
+                                 .find_by(collection_sources: { collection_id: broken.id })
+      rule.update_columns(condition_type: "unknown")
+    end
+
+    result = nil
+    expect { result = Collections::ResyncProduct.call(shop:, product_id: product.id) }.not_to raise_error
+    expect(result.skipped_error).to be_positive
+    expect(members(healthy)).to eq([ product.id ]),
+      "壞系列的例外中止了整個迴圈 ⇒ 無關的系列漏算（M4）"
+    expect(broken.reload.rebuild_status).to eq("ERROR")
+  end
+
+  describe "🔴 N3（2026-08-26 第九輪）：unknown⇒ERROR 契約，兩支引擎必須同口徑" do
+    # 第八輪把守衛放在**例外發生點**（rescue），而 Rebuild 是**先掃一遍再決定**。
+    # 兩個口徑不等價 ⇒ resync 有兩條繞過路徑，繞過後 resync 照常物化、Rebuild 標 ERROR，
+    # 成員又變成「取決於最後跑的是哪一支引擎」，而且幽靈列沒有自癒路徑。
+    def two_source_collection!(title:, handle:, second_rules:)
+      ActsAsTenant.with_tenant(shop) do
+        col = Collection.create!(shop_id: shop.id, title:, handle:,
+                                 collection_type: "smart", sort_order: "manual", description_html: "")
+        s0 = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                      target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: s0.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        s1 = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                      target_type: "products", inclusion_match: "all", position: 1)
+        second_rules.each_with_index do |attrs, i|
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: s1.id, position: i, **attrs)
+        end
+        col
+      end
+    end
+
+    it "🔴 繞過路徑①：`any?` 在前一個來源命中時短路，後面含 unknown 的來源不會被編譯" do
+      product = product!(title: "紅", tags: [ "red" ])
+      collection = two_source_collection!(title: "短路", handle: "n3-short", second_rules: [
+        { block: "inclusion", condition_type: "unknown", relation: "eq", value_text: "x" }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "resync 短路繞過 unknown 守衛 ⇒ 照常物化，而 Rebuild 對同一份規則標 ERROR（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
+    it "🔴 繞過路徑②：只有 exclusion 的來源 `where_sql` 回 nil，unknown 列同樣不會被編譯" do
+      product = product!(title: "紅2", tags: [ "red" ])
+      collection = two_source_collection!(title: "只排除", handle: "n3-excl", second_rules: [
+        { block: "exclusion", condition_type: "unknown", relation: "eq", value_text: "x" }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "只有 exclusion 的來源讓 unknown 列繞過守衛（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
+    it "🔴 O2（第十輪）：`condition_type` 正常但**編不出來**的來源也算不支援" do
+      # `RuleCompiler` 對 condition_type 完全正常的列也會丟 Unsupported（金額缺
+      # value_cents、數值缺 value_int、collection 排除缺引用 id⋯⋯）。列舉式判準比
+      # 實際會丟的集合窄 ⇒ 同一條繞過路徑仍在（`any?` 短路），resync 照常物化而
+      # Rebuild 標 ERROR。判準必須是「編得出來嗎」。
+      product = product!(title: "紅4", tags: [ "red" ])
+      collection = two_source_collection!(title: "缺金額", handle: "o2-money", second_rules: [
+        { block: "inclusion", condition_type: "variant_price", relation: "gt", value_cents: nil }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "編不出來的來源繞過了守衛 ⇒ resync 物化、Rebuild 標 ERROR（O2）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
+    it "🔴 `raw_payload` 也算不支援（判準不能只看 condition_type）" do
+      product = product!(title: "紅3", tags: [ "red" ])
+      collection = two_source_collection!(title: "raw", handle: "n3-raw", second_rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes",
+          value_text: "red", raw_payload: { "unmapped" => true } }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "raw_payload 列被當成可編譯 ⇒ 兩支引擎再度分岔（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+  end
+
+  describe "🔴 O3（2026-08-26 第十輪）：exclusion_match 的 all／any 是**行為**分支" do
+    # 🔴 第九輪補的那格只斷言欄位落庫（沒有商品、沒有 rebuild）⇒ 把 `ex_joiner` 改成
+    #   恆 " AND " 也不會轉紅。exclusion_match 直接改變成員集合，必須用行為測。
+    let(:perfume) { product!(title: "香水", tags: [ "red" ], type: "香水", vendor: "CHILL") }
+    let(:acme) { product!(title: "ACME 貨", tags: [ "red" ], type: "蠟燭", vendor: "ACME") }
+    let(:neither) { product!(title: "都不是", tags: [ "red" ], type: "蠟燭", vendor: "CHILL") }
+
+    def collection_with(exclusion_match:)
+      smart!(title: "ex-#{exclusion_match}", sources: [ {
+        inclusion_match: "all", exclusion_match:,
+        rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "product_type", relation: "eq", value_text: "香水" },
+          { block: "exclusion", condition_type: "product_vendor", relation: "eq", value_text: "ACME" }
+        ]
+      } ])
+    end
+
+    it "any ⇒ 命中**任一**排除條件即剔除（OR）" do
+      perfume && acme && neither
+      collection = collection_with(exclusion_match: "any")
+
+      rebuild!(collection)
+      expect(members(collection)).to eq([ neither.id ]),
+        "any 應剔除香水（型別中）與 ACME（廠商中），只留兩者都不中的那個"
+    end
+
+    it "all ⇒ 必須**同時**命中全部排除條件才剔除（AND）" do
+      perfume && acme && neither
+      both = product!(title: "ACME 香水", tags: [ "red" ], type: "香水", vendor: "ACME")
+      collection = collection_with(exclusion_match: "all")
+
+      rebuild!(collection)
+      expect(members(collection)).to contain_exactly(perfume.id, acme.id, neither.id),
+        "all 只該剔除同時命中兩條的那一個"
+      expect(members(collection)).not_to include(both.id)
+    end
+  end
+end

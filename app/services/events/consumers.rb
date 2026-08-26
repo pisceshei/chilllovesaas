@@ -13,7 +13,12 @@ module Events
   #   跳過——一個消費者失敗不連累另一個重放（本包判準，spec 釘住）。
   module Consumers
     REGISTRY = {
-      Events::Topics::MEDIA_UPLOADED => [ MediaPipeline::ProcessConsumer ]
+      Events::Topics::MEDIA_UPLOADED => [ MediaPipeline::ProcessConsumer ],
+      # 第 11 包（D50）：商品/庫存變動 → 智慧系列增量重算（P11-U17 的 ours 裁定——
+      # 走 outbox 消費者而非寫路徑同步，鐵律 5＋不掛在商品儲存的鎖持有時間上）。
+      Events::Topics::PRODUCTS_CREATE => [ Collections::ResyncConsumer ],
+      Events::Topics::PRODUCTS_UPDATE => [ Collections::ResyncConsumer ],
+      Events::Topics::INVENTORY_ADJUSTED => [ Collections::ResyncConsumer ]
     }.freeze
 
     # @param topic [String]

@@ -336,31 +336,42 @@ collections(shop_id, id, title, handle, sort_order, published_at, publish_at,
 
 collection_sources(
   shop_id, id, collection_id,
-  source_type ENUM('products','variants','collections','apps'),
-  mode        ENUM('include','exclude'),
-  selection   ENUM('manual','conditions'),
-  logic       ENUM('all','any') DEFAULT 'all',   -- 該來源**內部**條件的 AND/OR
-  app_id      NULL,                              -- 僅 source_type='apps'
+  -- 🔴 2026-08-25 回寫（D50 配套；依 limits collection.source_types 的 2026-08-24 修正）：
+  --    本塊原為 UI 形態（四型 × include/exclude 極性 × selection），與 GraphQL 資料模型
+  --    不符（95 §1.1）。落地形＝兩型來源；include/exclude 是 conditions 來源**內部的
+  --    兩個區塊**（見 collection_source_rules.block 與本表的兩個 match 欄）。
+  source_type VARCHAR(32),          -- 'conditions' | 'sub_collections'（值域在 limits，不用 DB ENUM）
+  target_type VARCHAR(16) NULL,     -- 'products' | 'variants'（僅 conditions 型）
+  referenced_collection_id NULL,    -- 僅 sub_collections 型
+  app_id      NULL,                 -- app 是欄位不是型別（95 §1.1）
+  shareable   BOOLEAN NULL,         -- 95 §1.1 記載的真實維度；語義未取證（P11 登記）
+  inclusion_match VARCHAR(8) DEFAULT 'all',   -- per-block matchType
+  exclusion_match VARCHAR(8) NULL,            -- 三態：all/any/NULL（三道裁定 :58-59）
   position    INT,
-  INDEX (shop_id, collection_id, position),      -- 鐵律 2
-  INDEX (shop_id, source_type, mode)             -- 支撐 §F4.5 的 per-shop 上限計數
+  INDEX (shop_id, collection_id, position),               -- 鐵律 2
+  INDEX (shop_id, source_type, referenced_collection_id)  -- 反向傳播＋per-shop 上限計數
 )
 
-collection_source_members(                       -- selection='manual'
-  shop_id, collection_source_id,
-  member_type ENUM('product','variant','collection'),
-  member_id, position,
-  UNIQUE (shop_id, collection_source_id, member_type, member_id)
+collection_source_members(          -- 手選（selections；與條件同在 inclusion/exclusion 區塊內共存）
+  -- 🔴 第 11 包**未建**此表（D50 只建引擎必要的最小地基；手動系列仍走 collection_products）。
+  --    sources 模型的手選遷入屬 UI 包（見 dev doc m2-smart-collections「延後項」）。
+  shop_id, collection_source_id, block,
+  member_type, member_id, position,
+  UNIQUE (shop_id, collection_source_id, block, member_type, member_id)
 )
 
-collection_source_rules(                         -- selection='conditions'
+collection_source_rules(            -- 條件（typed value；2026-08-25 已落地，D50）
   shop_id, collection_source_id, position,
-  field    ENUM(…§F4.7 的 17 個值…),
-  relation ENUM(…§F4.7…),
+  block VARCHAR(12),                -- 'inclusion' | 'exclusion'——🔴 值域是「哪個區塊有哪些
+                                    -- 型別」（exclusion 只有 6 型子集），單一 ENUM 表達不了，
+                                    -- 白名單在寫入層（95 §1.2/1.3）
+  condition_type VARCHAR(64),       -- 開放集：未知型別原樣保留（condition_unknown_passthrough）
+  relation VARCHAR(32) NULL,
   value_text VARCHAR(255) NULL, value_cents BIGINT NULL,   -- 金額一律 R1（鐵律 3／65 §A）
   value_int BIGINT NULL, value_bool BOOLEAN NULL,
   metafield_definition_id NULL,
-  UNIQUE (shop_id, collection_source_id, position)
+  raw_payload JSON NULL,            -- unknown passthrough 的原樣載體
+  UNIQUE (shop_id, collection_source_id, block, position)
 )
 
 collection_memberships(                          -- 物化結果，**前台唯一查詢對象**
@@ -555,7 +566,13 @@ product_tags(shop_id, product_id,
 | **Metaobject 參照** | 等於／不等於 | 🔴 **原缺** |
 
 - **邏輯連接只有「符合所有條件（AND）／符合任一條件（OR）」**；官方**未提供**混合 AND/OR 或分組括號（`limits.collection.condition_grouping_supported: false`）。不要自作主張加分組——加了就不是 1:1 對齊，而且匯入 Shopify 時無法表達。
-- 🔴 **`Price` / `Weight` / `Inventory stock` 的比對基準＝任一變體**〔**我方假設**〕。原文寫「定死：任一變體」讀起來像官方規則，其實官方 P24 只列運算子、**未定義多變體時的比對基準**（61 §4.2 ⚠ **V-58**）。本輪改標為假設並寫進測試。
+- **`Price` / `Weight` / `Inventory stock` 的比對基準＝任一變體**——✅ **V-58 已結案**
+  （2026-08-25，第 11 包研究輪）：兩路官方證據齊——95:37 的 `CollectionSourceTargetType.PRODUCTS`
+  描述（任一變體符合則整個商品納入）＋ help /collections/conditions 逐字
+  "the condition is true if any variant matches the condition."。落鍵
+  `limits.collection.variant_match_scope: any_variant`；引擎＝EXISTS 形（RuleCompiler）。
+  🔴 **例外一條**：compare_at 的 `is set` 是 **ALL variants** 語義（官方逐字 "all variants
+  must have a compare-at price value (including 0)"）＝`compare_at_is_set_variant_scope`。
 
 ### F4.8 排序（`limits.collection.sort_orders`，九種）
 

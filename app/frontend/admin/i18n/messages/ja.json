@@ -341,6 +341,7 @@
   "collections.type.smart": "自動",
   "collections.type.manualHint": "商品と並び順を手動で選びます。",
   "collections.type.smartHint": "メンバーはルールで決まります。ルールエディタは今後のマイルストーンで公開します。",
+  "collections.type.immutableHint": "コレクションのタイプは作成後に変更できません。",
   "collections.count": "{count, plural, other {# 点}}",
   "collections.card.type": "コレクションタイプ",
   "collections.sortOrder": "並び順",

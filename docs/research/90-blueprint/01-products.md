@@ -3,6 +3,10 @@
 > **性質**：Shopify 官方文檔考掘（shopify.dev `latest`＝2026-07 版 GraphQL Admin API ＋ help.shopify.com），供 CHILL LOVE 落地開發。全部規則性斷言附來源（§G），除特別標注外**取證日一律 2026-08-14**。
 > **與倉庫的關係**：本檔是 `docs/research/61`（2026-08-12 考掘）的同域增量更新——61 已確立的事實不重抄，只補新證據、解衝突、標差異；裁定衝突以 `docs/specs/13`／`63`／`88` 與 CLAUDE.md 鐵律為準（差異全列 §F）。
 > **本檔的兩個新結論**（61 沒有的）：①Collection 於 **2026-07 版轉為 sources 新模型**，`ruleSet` 正式棄用（§A.5）；②**exclude 恆勝過一切 include 已由官方明文化**，倉庫 V-57 假設獲證實（§C.5）。
+  <!-- 🔴 2026-08-25 更正（第 11 包）：上句已被 13 §F4.2 的 2026-08-24 修訂推翻——official
+       原文「evaluated per source and reconciled…」⇒ per-source 相減，V-57 撤銷；
+       全域相減是靜默錯誤（A 排除 X＋B 包含 X 時判反）。正典＝13 §F4.2＋limits
+       membership_formula。本句保留供沿革，不得再引用。 -->
 
 ---
 
