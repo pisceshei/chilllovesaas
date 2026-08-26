@@ -1298,3 +1298,150 @@ S10 做 catalog 成員語義時必須先解掉這個對應關係（**未取得**
 | S2-U4 | 到點時商品若已不符條件（例如被改成 Draft）會怎樣 | 同上，且需在到點前改狀態 |
 | S2-U5 | Agentic `Pending` 之外的完整狀態值域 | 需要一個已通過審核的商品 |
 | S2-U6 | 排程是否可套用到 catalog 成員（`Regions` 節沒有日曆圖示，但未逐列 hover 窮舉） | 回該節逐列 hover |
+
+---
+
+## §13 🔴 S5 地基：逐商品發布的**寫入路徑**（2026-08-27 實測）
+
+> 射程＝分步方案的 **S5**（寫入 API：publish／unpublish）。
+> 測試店 `chill-love-u5q5mnzq`（鐵律 12.2 全權寫入授權）。
+> 🔴 本節**真的改了資料再改回來**：把商品 `9907158778091` 發布到 Shop 管道、存檔、
+> 再取消發布、存檔。最終 Publishing 卡回到只有 `Online Store`，與開始時相同。
+> 🔴 admin 走 persisted-query API ⇒ **query 全文與 POST 的 variables 不可觀測**（鐵律 14.3）；
+> 本節只記 operation name、persisted-query hash、GET 的 variables 與可觀察的副作用。
+
+### §13.1 🔴 逐商品發布 modal 的 `Done` **不寫入任何東西**
+
+**觸發步驟**：商品詳情頁 → `Publishing` 卡右上設定圖示 → 開 modal → 撥開 `Shop` 的 toggle
+→ 按 `Done`。
+
+**實測結果**：
+
+- **沒有送出任何 `api/operations` 請求**（清空 network log 後只捕到 `monorail-edge`
+  遙測與 `.well-known/dux` 兩類非 GraphQL 請求）
+- `Publishing` 卡的內容**樂觀更新**成 `Online Store, Shop`
+- 🔴 頁面頂端出現 **`Unsaved changes` SaveBar**（`Discard` ／ `Save`）
+
+⇒ **逐商品發布是商品表單 dirty state 的一部分，不是即時寫入。**
+真正的寫入發生在商家按頁面層級的 `Save`。
+
+⚠️ **這與批次流程直接對比**（§11.2）：批次 modal 按下 `Include products` 就**立刻**
+送 `ProductBulkPublish` 並回一個 `Job`。**同一件事，兩種交付時機。**
+
+⚠️ 與我方 `docs/specs/71` §A **G30** 的裁定相關：G30 明文「商品頁庫存卡用卡內自己的儲存鈕，
+不掛頁面 SaveBar」是**我方對本尊的刻意差異**。本節證實**發布這一塊本尊是掛 SaveBar 的**
+——G30 的射程只涵蓋庫存卡，不得外推成「發布也該有自己的儲存鈕」。
+
+### §13.2 🔴🔴 發布是**獨立的 mutation**，不是 `productSet` 的一部分
+
+按 `Save` 之後捕到的 POST（method 如標，取證 2026-08-27）：
+
+**第一次（同時改了商品欄位 ＋ 發布）**：
+
+| # | operation name | method | persisted-query hash（前 12 碼） |
+|---|---|---|---|
+| 1 | `ProductSaveUpdate` | POST | `902c5766b011` |
+| 2 | 🔴 **`ProductSavePublishablePublishUnpublish`** | POST | `82c6b52173dc` |
+
+**第二次（**只**改發布，商品欄位沒動）**：
+
+| # | operation name | method | persisted-query hash（前 12 碼） |
+|---|---|---|---|
+| 1 | 🔴 **`ProductSavePublishablePublishUnpublish`** | POST | `82c6b52173dc` |
+
+🔴 **三條結論**：
+
+1. **發布永遠是獨立的 mutation**，即使由同一顆 `Save` 觸發。
+   `ProductSaveUpdate` 與發布那一支是**兩個 HTTP 請求**，不是一個複合 mutation。
+   ⇒ 我方**不得**把 publish／unpublish 併進 `productSet`。
+2. **一支 operation 同時涵蓋 publish 與 unpublish 兩個方向**——
+   operation name 逐字含 `PublishUnpublish`，而且**兩次的 persisted-query hash 完全相同**
+   （`82c6b52173dc…`），第一次是純新增、第二次是純移除。
+   ⇒ 本尊的 admin 把兩個方向放在**同一個 GraphQL document** 裡
+   （推測是同時呼叫 `publishablePublish` 與 `publishableUnpublish` 兩個 field；
+   **document 內容不可觀測**，這是推論不是實測，照鐵律 19 標明）。
+3. **只在該部分 dirty 時才送**：第二次沒有 `ProductSaveUpdate`
+   ⇒ admin 逐區塊判斷 dirty，不是無腦全送。
+
+⚠️ **不可觀測**：這支 mutation 的 variables（哪些 publicationId 進 publish、哪些進 unpublish、
+有沒有帶 publishDate）在 POST body 內，本工具讀不到（鐵律 14.3）。
+
+### §13.3 存檔後的讀回：本尊自己用的是 **V2 投影**
+
+`Save` 之後 admin 依序發出的 GET（節錄，取證 2026-08-27）：
+
+| operation name | 可觀測的關鍵 variables |
+|---|---|
+| `FetchAppliedMetafieldsForUpdate` | `{ownerId, ownerType: PRODUCT / PRODUCTVARIANT, limit: 50}`（商品與變體各一次） |
+| `AdminProductDetails` | `{locationsFirst: 250, **supportedChannelsFirst: 50**, …}` |
+| `AdminProductDetailsFirstVariant` | `{maxBarcodesPerVariant: 20, contextualPricingContext: {}, …}` |
+| 🔴 **`ProductPublicationsV2`** | 見下 |
+| `ProductsAgenticChannels` | `{}` |
+
+🔴 **讀回發布狀態的 operation 名字裡就帶 `V2`**——本尊自己的 admin 用的是
+**`ResourcePublicationV2` 投影**，不是 V1。這是我方 S2「只實作 V2」那個裁定的**直接實測支持**
+（S2 當時的依據是官方文檔與功能超集分析，本節補上「本尊自己也這樣用」）。
+
+`ProductPublicationsV2` 的 variables 逐字節錄：
+
+```
+resourceLimit: 250
+contextualPublicationContext: {}
+contextualPublicationContextTypes: ["REGION","COMPANY_LOCATION","LOCATION"]
+allCatalogsQuery: "market_type:REGION OR market_type:LOCATION OR market_type:COMPANY_LOCATION
+                   OR catalog_type:COMPANY_LOCATION OR (catalog_type:MARKET AND market_type:app)"
+skipMarketsPro: true   skipCatalogs: false
+skipMarketCountries: false   skipChannelMarketCatalogs: false
+```
+
+三條可用的事實：
+
+1. **`resourceLimit: 250`** 與我方鐵律 4 的「分頁 ≤250」一致。
+2. 🔴 **`contextualPublicationContextTypes` 恰三值 `REGION`／`COMPANY_LOCATION`／`LOCATION`**
+   ——這是**目錄的市場型別**維度，與 §11.6 的四種 catalog 查詢維度
+   （Region／Retail／B2B／ChannelMarket）**不是同一組**。兩者的對應關係＝**未取得**。
+3. `allCatalogsQuery` 用的是**搜尋語法字串**（`market_type:REGION OR …`）
+   ⇒ 本尊的 catalog 篩選走查詢語言而非結構化參數。屬 S10 的輸入。
+
+### §13.4 S5 尚未取得
+
+| # | 未取得 | 取得方式 |
+|---|---|---|
+| S5-U1 | `ProductSavePublishablePublishUnpublish` 的 variables 與回應形狀 | persisted query ＋ POST body，現有工具不可觀測（鐵律 14.3）。需要能讀 request body 的抓包工具 |
+| S5-U2 | 該 document 內部到底是呼叫 `publishablePublish`＋`publishableUnpublish` 兩個 field，還是別的內部 mutation | 同上；本節的推測**不得**當事實 |
+| S5-U3 | **取消發布之後那筆紀錄的資料去向**（刪列 vs 保留列設 null） | admin 不可觀測；需官方文檔正面陳述，或用公開 API 對測試店實測前後查 `resourcePublicationsV2(onlyPublished: false)` |
+| S5-U4 | **變體層**的 publish／unpublish 送什麼 operation | §8.3 曾記到 `ProductVariantUnpublish`；本輪只做唯讀觀察（見 §13.5），未觸發寫入以免動到已登記的變體 fixture |
+| S5-U5 | 一次打多個 publication 時**部分失敗**的形態 | 需要能製造失敗的 publication（例如不支援該資源型別的管道） |
+| S5-U6 | `contextualPublicationContextTypes` 三值與 §11.6 四種 catalog 維度的對應 | 屬 S10 |
+
+### §13.5 變體層的發布面（唯讀觀察，2026-08-27）
+
+**觸發步驟**：商品 `9907126370539`（`實測用 T恤 多變體（測試資料）`）→ 左欄變體清單點 `S`
+→ 變體詳情頁 → 點標題列的 `2 channels`。
+🔴 全程唯讀：最後以 `Cancel` 關閉，未改動任何值（該變體是已登記的 fixture）。
+
+**變體詳情頁的發布面**：
+
+- 標題列內嵌兩個指示器：`⛓ 2 channels` 與 `⛓ All catalogs`
+  🔴 **變體是 2 個管道、父商品是 3 個** ⇒ 變體層的發布狀態**獨立於父商品**，
+  這正是既有 fixture 登記的狀態（變體 S 關掉 Point of Sale）。
+- 左欄變體清單帶三個篩選：`尺寸 ⌄`、**`Sales channels ⌄`**、**`Catalogs ⌄`**
+  ⇒ 變體清單可以按發布狀態篩選。
+
+**點 `2 channels` 開出的 modal**：
+
+- 標題逐字 **`Manage publishing for 1 variant`**
+  🔴 「**1 variant**」這個計數措辭 ⇒ 該 modal 設計上支援 **N 個變體批次**
+  （從變體清單多選後開啟），不是單一變體專屬。
+- 結構與商品版**完全相同**：左欄 `Sales Channels`(3)／`Agentic`(1)／`Catalogs` › `Regions`(1)，
+  右側三個管道 toggle ＋ 群組半選態，頁尾 `Cancel`／`Done`。
+- 實測 toggle：`Online Store` 開、`Point of Sale` **關**、`Shop` 開（與 fixture 一致）。
+
+🔴 **關鍵對比：變體的 `Online Store` 列 hover 之後，`Schedule publishing` 圖示不出現。**
+商品版同樣的 hover 會出現該圖示 ＋ tooltip（§12.3）。
+⇒ **變體不能排程發布**的直接實測，與 help 逐字
+`You can't set a future publishing date for individual product variants.`
+及我方 `ResourcePublication#variant_cannot_be_scheduled` 三者一致。
+
+⚠️ **仍未取得**：變體層送出的 operation name 與 variables——需要真的按下 `Done` ＋ `Save`
+才會發出，而那會改動已登記的 fixture。若要取得，應另建一個拋棄式多變體商品再測。

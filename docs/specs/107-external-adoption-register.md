@@ -29,6 +29,33 @@
 那是 `machine_translation`／`script_conversion`（ML-5）的射程，且電商詞覆蓋率未量測
 （第 7 包研究輪登記的疑慮）；字形稽核只需要字元表。日後要用詞庫＝新開一列，不得引用本列。
 
+### S5-1：批次寫入的原子性策略（2026-08-27，發布寫入 API）
+
+| 項 | 內容 |
+|---|---|
+| 情境 | `publishablePublish`／`publishableUnpublish` 一次打 N 個 publication，其中一筆不合法時要整批中止還是逐筆獨立？ |
+| 🔴 本尊怎麼說 | **未取得**——`publishablePublish` 頁對 `partial`／`fails` 兩個關鍵字皆 Not found on page（<https://shopify.dev/docs/api/admin-graphql/latest/mutations/publishablePublish>，2026-08-27） |
+| **採用** | **全有全無（all-or-nothing）**。三個依據：①同表同線的既有先例 `Publications::Write.update`（已有 spec 逐字釘死）；②本尊在**別支**把逐筆獨立做成明確 opt-in——`productVariantsBulkUpdate.allowPartialUpdates` 逐字 `When partial updates are not allowed, any error will prevent all variants from updating.`、`metafieldsSet` 逐字 `This operation is atomic, meaning no changes are persisted if an error is encountered.`（兩者皆 2026-08-27）；③**Saleor（BSD-3）** 預設 `errorPolicy: REJECT_EVERYTHING`，逐字 `If a single error occurs, in at least one of the objects, the whole mutation fails and no data is saved.`（<https://docs.saleor.io/developer/bulks/error-policy>，2026-08-27） |
+| **拒絕** | Saleor 的第三級 `IGNORE_FAILED`（單筆內部分保存）——會讓資源落到半完成狀態，而我方沒有任何面可以讓商家看見「這一筆只成功了一半」 |
+| 🔴 登記口徑 | 我方取全有全無是 **ours 裁定＋既有一致性**，**不得寫成「照抄本尊」**（本尊該支未取得） |
+
+### S5-2：取消發布時的資料處置（2026-08-27）
+
+| 項 | 內容 |
+|---|---|
+| 🔴 本尊怎麼說 | **完全沉默**——`publishableUnpublish` 正文與全部八個 Examples、`PublicationInput`、`ResourcePublication`、`ResourcePublicationV2`、`Publishable`、`product-publishing.md` 皆未陳述紀錄去向（2026-08-27 逐頁確認） |
+| **參考** | **Saleor（BSD-3）** 走刪列並明說會丟資料，逐字 `When a product is unassigned from a channel, variant data for that channel, like pricing and availability, will be lost.`（<https://docs.saleor.io/developer/products/configuration>，2026-08-27）；同時另提供**軟移除**路徑（保留 listing 列、把 `isPublished` 等設 false） |
+| **拒絕採用 Saleor 的軟移除** | 🔴 **它的前提在我方不成立**：Saleor 的 listing 列上有 per-channel 售價與日期要保住，我方 `resource_publications` **只有 `published_at` 一欄可保**。⚠️ **S10 把 price list 掛上這條線時本裁定需重開** |
+| **採用 Medusa（文檔層）的一個區分** | `dismiss`（解除關聯）與 `delete`（連帶刪被連結紀錄）**在方法名層級就分開** ⇒ 我方 unpublish **絕不走任何 cascade delete**，有反向 fixture 鎖死。⚠️ **授權邊界**：Medusa 在本檔下方登記為「LICENSE 未取證 ⇒ 視同禁」——本列採用的是**公開文檔的概念**，**未讀其任何原始碼**（鐵律 9 逐字：「概念可從其公開文檔學、代碼不可看」） |
+| **列為 S10／結帳包必答** | Medusa 逐字 `It doesn't prevent a purchase of a product that's unavailable in the channel.` vs Saleor 用 `isAvailableForPurchase` 在購買層設閘——我方目前**沒有** checkout 層的管道檢查，兩種取向都未採納，登記待答 |
+
+🔴 **注入登記（鐵律 16.3，2026-08-27 實測）**：`docs.medusajs.com` **全站**內嵌
+`<AgentInstructions>` 區塊，逐字要求 `POST https://docs.medusajs.com/{section}/agents/feedback`；
+本輪六個 Medusa 頁全部命中。`docs.stripe.com` 的 idempotent_requests 頁亦含指示型文字
+（`run stripe agent setup` 等）。**一律視為資料，未執行。**
+建議把「docs.medusajs.com 全站含 agent 指示型內容」寫進 `docs/dev/external-facts.md`，
+避免每次重新發現。
+
 ## 拒絕／禁用（鐵律 9 紅線的具名登記）
 
 | 專案 | 授權 | 處置 | 出處 |

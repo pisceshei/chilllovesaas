@@ -116,6 +116,49 @@ class ResourcePublication < ApplicationRecord
     SQL
   end
 
+  # ── 排程能力的兩道判準（🔴 公開謂詞：validation 與服務層預檢共用同一份）─────────
+  #
+  # 🔴 **為什麼要公開**（S5，鐵律 7）：這兩條規則原本只活在 `validate` 裡，
+  #   而 S5 的批次寫入走「形態 A：先驗證全收集 → 任一錯整批不寫」——收集階段必須
+  #   **在 `save` 之前**就知道該筆會不會被擋，才給得出帶索引的 `userErrors`
+  #   與**分得開的 code**（`FEATURE_NOT_ENABLED` vs `INVALID_STATE`）。
+  #   ⚠️ 反面做法是在服務層照抄一份同樣的條件式 ⇒ 兩份判準，日後改一邊靜默分岔。
+  #   ⚠️ 另一個反面做法是 rescue `RecordInvalid` 再比對中文訊息字串 ⇒ 訊息一改就失效。
+  #   ⇒ 判準留在本檔（唯一產生處），兩個消費者都呼叫下面兩個方法。
+
+  # `publishable_type`（駝峰）是否落在正典的「不支援排程」清單（底線小寫）裡。
+  #
+  # 🔴 兩邊的命名慣例不同：limits 用 `variant`，model 用 `ProductVariant`
+  #   ⇒ 這裡做一次明確的對照，**不用 `underscore` 之類的字串魔法**——
+  #   `ProductVariant.underscore` 是 `product_variant` 不是 `variant`，
+  #   靠推導會靜默對不上而且沒有任何測試會紅。
+  UNSCHEDULABLE_LIMIT_KEYS = { "ProductVariant" => "variant" }.freeze
+
+  # @param publishable_type [String] 駝峰型別名
+  # @return [Boolean] 該型別不支援排程發布時為 true
+  # @note 副作用：無（讀 `config/limits.yml` 的已載入常數表）。
+  def self.unschedulable_publishable_type?(publishable_type)
+    key = UNSCHEDULABLE_LIMIT_KEYS[publishable_type]
+    return false if key.nil?
+
+    Limits.fetch(:sales_channels, :future_publishing_unsupported).include?(key)
+  end
+
+  # 這個時間值是否構成「排程」（＝落在未來）。
+  #
+  # 🔴 **兩道守衛的觸發條件都是「未來」而不是「非空」**，這個謂詞是那句話的唯一產生處。
+  #   官方逐字：`Setting this to a date in the future will schedule the resource to be
+  #   published.`（`PublicationInput.publishDate`，取證 2026-08-27）
+  #   ⇒ 過去時間不是排程，它就是「已發布，發布時刻在那時」。
+  #
+  # @param value [Time, nil]
+  # @param at [Time] 判定時點
+  # @return [Boolean]
+  # @note 副作用：無。
+  def self.scheduled?(value, at: Time.current)
+    value.present? && value > at
+  end
+
   # 此關聯在指定時點是否算「已上架到本管道」。
   #
   # 🔴 注意這只是**三層 AND 的第二層**——完整的上架判定還要加上 catalog 條件（88 §1）。
@@ -177,7 +220,7 @@ class ResourcePublication < ApplicationRecord
 
   # 本尊：Shop 管道不支援排程發布（82 §0.2）——能力旗標在 publication 上。
   def future_publishing_supported_by_channel
-    return if published_at.nil? || published_at <= Time.current
+    return unless self.class.scheduled?(published_at)
     return if publication.nil? || publication.supports_future_publishing
 
     errors.add(:published_at, "此銷售管道不支援排程發布")
@@ -202,25 +245,12 @@ class ResourcePublication < ApplicationRecord
   #   `published_at: at`）。照 V-4 字面收緊會打爛既有生產者。已登記 `docs/specs/91` §3.21。
   def variant_cannot_be_scheduled
     return unless unschedulable_publishable_type?
-    return if published_at.nil? || published_at <= Time.current
+    return unless self.class.scheduled?(published_at)
 
     errors.add(:published_at, "不支援為單一子類選項排程發布")
   end
 
-  # `publishable_type`（駝峰）是否落在正典的「不支援排程」清單（底線小寫）裡。
-  #
-  # 🔴 兩邊的命名慣例不同：limits 用 `variant`，model 用 `ProductVariant`
-  #   ⇒ 這裡做一次明確的對照，**不用 `underscore` 之類的字串魔法**——
-  #   `ProductVariant.underscore` 是 `product_variant` 不是 `variant`，
-  #   靠推導會靜默對不上而且沒有任何測試會紅。
-  #
-  # @return [Boolean]
-  UNSCHEDULABLE_LIMIT_KEYS = { "ProductVariant" => "variant" }.freeze
-
   def unschedulable_publishable_type?
-    key = UNSCHEDULABLE_LIMIT_KEYS[publishable_type]
-    return false if key.nil?
-
-    Limits.fetch(:sales_channels, :future_publishing_unsupported).include?(key)
+    self.class.unschedulable_publishable_type?(publishable_type)
   end
 end

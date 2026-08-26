@@ -10,6 +10,12 @@
       channel_bound: "Cette publication appartient à un canal installé. Désinstallez le canal au lieu de la supprimer."
       catalog_not_found: "Le catalogue n'existe pas."
       not_found: "La publication n'existe pas."
+      entries_too_big: "Vous pouvez publier sur %{cap} publications au maximum par appel."
+      publication_id_required: "publicationId est obligatoire."
+      publish_date_null: "publishDate ne peut pas être null. Omettez ce champ pour publier maintenant, indiquez une date pour programmer, ou utilisez publishableUnpublish pour retirer la ressource du canal."
+      future_publishing_unsupported: "Ce canal de vente ne prend pas en charge la publication programmée."
+      variant_not_schedulable: "Vous ne pouvez pas programmer la publication d'une variante individuelle."
+      publishable_not_found_by_id: "Cette ressource n'existe pas dans cette boutique."
     files:
       batch_too_large: "Trop de fichiers dans un même appel."
       alt_too_long: "Le texte alternatif dépasse 512 caractères."

@@ -70,5 +70,15 @@ module Types
       description: "更新 publication：autoPublish 與批次加／減 publishable（🔴 累加語義，非宣告式全量）。"
     field :publication_delete, mutation: Mutations::PublicationDelete,
       description: "刪除一個 publication（綁著管道的不可刪）。"
+
+    # S5：逐資源的發布寫入面。🔴 **這兩支才是 `resource_publications.published_at` 的
+    #   第一條 UPDATE 路徑**——S1 的 `publicationUpdate` 走 create-only 區塊，
+    #   結構上改不到既有列，所以設排程／改期／取消排程在 S5 之前無路可達。
+    # 🔴 **排程只能經 `publishablePublish` 進入系統**：`PublicationUpdateInput`
+    #   官方恰三欄且沒有 `publishDate`（取證 2026-08-27）。這是本尊的功能邊界。
+    field :publishable_publish, mutation: Mutations::PublishablePublish,
+      description: "把一個資源發布到一或多個銷售管道（未來時間＝排程發布）。"
+    field :publishable_unpublish, mutation: Mutations::PublishableUnpublish,
+      description: "把一個資源自一或多個銷售管道取消發布（🔴 其中的 publishDate 一律無效果）。"
   end
 end
