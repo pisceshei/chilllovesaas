@@ -123,7 +123,20 @@ class CreateSmartCollectionFoundation < ActiveRecord::Migration[8.1]
     # --- product_tags 回填（正式環境 2026-08-25 實查：帶標籤商品 3 筆——量級極小）------
     # 🔴 迴圈走 Ruby 端 Tags::Normalize（唯一實作；不在 SQL 裡重寫一份正規化）。
     #    正規化撞鍵（兩個原字串同 key）⇒ 只留首次、記稽核 log——不靜默丟（13 §F4.4）。
+    # 🔴 **整段包 `ActsAsTenant.without_tenant`**（2026-08-26 部署實測才發現）：
+    #   `config/initializers/acts_as_tenant.rb` 設 `require_tenant = true`，而
+    #   `ProductTag` 宣告 `acts_as_tenant :shop` ⇒ **寫入**在沒有 current_tenant 時
+    #   一律 raise `NoTenantSet`。`.unscoped` 只拿掉 default scope，擋不住這個。
+    #   本迴圈逐筆明確帶 `shop_id:`，所以不需要 gem 從 current_tenant 幫忙填
+    #   （`shop.rb:113` 記載的「without_tenant 不會填 shop_id」那個坑在這裡不適用）。
+    #
+    #   🔴 **為什麼十一輪對抗審查與 CI 全都抓不到**：這一行只有在「**已經存在帶標籤的
+    #   商品**」時才會被執行到。CI 的 `db:migrate` 跑在**空資料庫**上（零商品），
+    #   我的開發庫也剛好沒有帶標籤的商品 ⇒ 迴圈本體從未執行；正式環境有 1 筆
+    #   ⇒ 一上去就炸。這是「只有帶著既有資料部署才測得到」的一類，
+    #   **綠燈的 CI 與再多輪的程式碼審查在結構上都證明不了它**。
     say_with_time "backfill product_tags from products.tags" do
+      ActsAsTenant.without_tenant do
       Product.unscoped.where.not(tags: []).find_each do |product|
         seen = {}
         Array(product.tags).each do |raw|
@@ -151,6 +164,7 @@ class CreateSmartCollectionFoundation < ActiveRecord::Migration[8.1]
             shop_id: product.shop_id, product_id: product.id, tag_key: key
           ) { |row| row.tag_display = raw }
         end
+      end
       end
     end
   end
