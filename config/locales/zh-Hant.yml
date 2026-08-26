@@ -10,6 +10,12 @@
       channel_bound: "這個 publication 屬於一個已安裝的管道；要移除請卸載該管道，而不是刪除它。"
       catalog_not_found: "指定的 catalog 不存在。"
       not_found: "找不到指定的 publication。"
+      entries_too_big: "一次最多只能發布到 %{cap} 個銷售管道。"
+      publication_id_required: "必須指定 publicationId。"
+      publish_date_null: "publishDate 不得為 null。要立即發布請省略此欄，要排程請給一個時間，要下架請改用 publishableUnpublish。"
+      future_publishing_unsupported: "此銷售管道不支援排程發布。"
+      variant_not_schedulable: "不支援為單一子類選項設定排程發布日期。"
+      publishable_not_found_by_id: "本店沒有這個資源。"
     files:
       batch_too_large: "單次檔案數量超過上限。"
       alt_too_long: "alt 文字超過 512 字元。"

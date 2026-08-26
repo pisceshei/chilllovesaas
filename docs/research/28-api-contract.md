@@ -127,13 +127,26 @@
   🔴 **不得自創 `field` 欄位、不得丟掉 `target`**：那樣就變成自創語義而不是搬用既有機制。
 - 本尊對重複 SKU 是**靜默行為**（無錯誤也無提醒）；我方判定靜默合併是可用性缺陷 ⇒ 這是加嚴。
 
-#### §0.3.6 假設清單（本節唯一沒有官方範例的一條）
+#### §0.3.6 假設清單
 
 - ⚠️ **具名參數形下的多段 path**：官方只有單段 `["productId"]`、剝殼後的 `["id"]`、
   以及 `["variants","0",...]`。「剝殼規則只針對名為 `input` 的參數，還是針對所有單一資料本體參數」
   沒有官方範例可證。我方採**只剝 `input`**（三個官方實例都相容）。
   補證方式＝拿真實 Admin API token 打三發（productDelete 壞 id／productCreate 空 title／
   productVariantsBulkCreate 多筆其一壞），把 field 陣列原樣抄回本節。
+  <!-- 2026-08-27 更正（S5，鐵律 19.5）：本小節標題原為「本節唯一沒有官方範例的一條」，
+       而下面這條新增的 fixture 使該全稱句不再成立 ⇒ 標題去掉「唯一」。
+       上面那條假設**本身仍然成立**（它問的是「非 input 的具名參數要不要剝殼」，
+       與下面那條問的不是同一件事），故保留原文不動。 -->
+- 🔴 **`input` 為陣列時，索引與欄位名都保留、`input` 這一層不剝殼**——**已有官方 fixture**
+  （2026-08-27 補）：`publishableUnpublish` 頁 Examples 的回應逐字含
+  `["input","0","publicationId"]`
+  （<https://shopify.dev/docs/api/admin-graphql/latest/mutations/publishableUnpublish>）。
+  ⚠️ **層級聲明**：這是**形狀**證據（頁內範例的 response 原文），不是規則宣告——
+  官方沒有一句話說「陣列型 input 一律不剝殼」。形狀已足以定 path 慣例，
+  但不得引用它去斷言任何未被範例涵蓋的形狀。
+  ⇒ 我方 `publishablePublish`／`publishableUnpublish` 照此實作，
+  有 spec 逐字釘死（`spec/requests/publishable_write_spec.rb`）。
 - **標量**：`DateTime`（ISO8601 UTC）、`Date`、`Decimal`（字串）、`URL`、`HTML`、`JSON`；金額一律 **`MoneyV2{amount: Decimal, currencyCode}`**，多幣雙記 **`MoneyBag{shopMoney, presentmentMoney}`**（29 §3）。內部儲存仍 integer cents，序列化層轉 Decimal 字串。
 - **陣列型 input 上限 250**。
 
@@ -195,7 +208,7 @@
 | 類別 | Queries | Mutations |
 |---|---|---|
 | 系列 | `collections`, `collection(id)`, `collectionByHandle` | `collectionCreate(input{title, descriptionHtml, image, ruleSet{appliedDisjunctively, rules[{column, relation, condition}]}, sortOrder, seo})`, `collectionUpdate`, `collectionDelete`, `collectionAddProducts`, `collectionRemoveProducts`, `collectionReorderProducts(moves)` |
-| 發佈 | `publications` | `publishablePublish/Unpublish(id, publicationIds)`（online store／POS／市場 catalog 皆是 publication——與 29 §1.3 銜接）｜🔴 **2026-08-26 S1 補**：`publicationCreate(input)`、`publicationUpdate(id, input)`、`publicationDelete(id)` |
+| 發佈 | `publications` | `publishablePublish/Unpublish(id, input)`（online store／POS／市場 catalog 皆是 publication——與 29 §1.3 銜接）｜🔴 **2026-08-26 S1 補**：`publicationCreate(input)`、`publicationUpdate(id, input)`、`publicationDelete(id)`｜🔴 **2026-08-27 S5 更正**：本格原寫 `publishablePublish/Unpublish(id, **publicationIds**)`，官方實際是 `(id: ID!, input: [PublicationInput!]!)`——是 **input object 的陣列**，不是裸 ID 陣列。`PublicationInput` 恰三欄 `channelId`（deprecated）／`publicationId`／`publishDate`（<https://shopify.dev/docs/api/admin-graphql/latest/input-objects/PublicationInput>，取證 2026-08-27）。🔴 **差別不只是寫法**：`publishDate` 掛在陣列的**每一個元素**上 ⇒ 排程是 per-publication 的，照原文實作會做出一個「整批共用一個日期」的 API。實作＝`docs/dev/m2-publishable-write.md` |
 
 規則：智慧系列規則變更 → 背景重算 membership（Solid Queue，5000 上限）；手動系列 position 排序。
 

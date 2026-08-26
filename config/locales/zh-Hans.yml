@@ -10,6 +10,12 @@
       channel_bound: "这个 publication 属于一个已安装的渠道；要移除请卸载该渠道，而不是删除它。"
       catalog_not_found: "指定的 catalog 不存在。"
       not_found: "找不到指定的 publication。"
+      entries_too_big: "一次最多只能发布到 %{cap} 个销售渠道。"
+      publication_id_required: "必须指定 publicationId。"
+      publish_date_null: "publishDate 不得为 null。要立即发布请省略此栏，要排程请给一个时间，要下架请改用 publishableUnpublish。"
+      future_publishing_unsupported: "此销售渠道不支持排程发布。"
+      variant_not_schedulable: "不支持为单一子类选项设定排程发布日期。"
+      publishable_not_found_by_id: "本店没有这个资源。"
     files:
       batch_too_large: "单次文件数量超过上限。"
       alt_too_long: "alt 文本超过 512 字符。"

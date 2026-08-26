@@ -2783,6 +2783,61 @@
   同輪 shopify.dev（20+ URL）與 help.shopify.com（5 頁）**未發現**注入文字。
   【F5；來源＝S2 研究工作流 external 路；取證日期＝2026-08-26】
 
+### 3.22 S5（發布寫入 API）的範圍外觀察（2026-08-27）
+
+<!-- 編號取 3.22：本節新增時 §3 的最大編號是 3.21。既有失序不動（理由見 3.18 的編號說明）。
+     複驗現況：`grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- 🔴 **`config/limits.yml` 的免冪等理由對 publication 線不成立**（引用了一條不存在的保護）：
+  該處註釋寫「那一類的併發防線是 `lock_version` 樂觀鎖」，而 `publications` 與
+  `resource_publications` **都沒有 `lock_version` 欄**。
+  ⇒ 結論（不進 `required_for`）**維持**，但**理由必須換**成本線真正的三條防線
+  （唯一索引／全有全無／S5 新增的顯式列鎖，見 `docs/dev/m2-publishable-write.md` §7）。
+  🔴 **不改 `config/limits.yml`**——判準面變更，依鐵律 18.3＋20.4 先登記候選。
+  【F2；來源＝S5 研究階段；複驗：
+  `grep -n "lock_version" db/schema.rb | wc -l` 與
+  `grep -rn "required_for" config/limits.yml`；取證日期＝2026-08-27】
+
+- **`resource_publications` 要不要加 `lock_version`**：S5 **繞開**了這個問題（改用顯式
+  `SELECT ... FOR UPDATE`，無 schema 成本），所以它不是阻塞項。但若日後有跨列不變量需要
+  樂觀鎖，要先評估：本表是關聯表，加 `lock_version` 會打穿**所有** `update_all` 路徑
+  （含 migration `20260814200000` 的原生 SQL 與 `Materialize` 的批量回填）。
+  【F2；來源＝S5 §4.4；複驗：`grep -n "lock_version" db/schema.rb`；取證日期＝2026-08-27】
+
+- **`collections` 沒有 `publications_updated_at` 欄** ⇒ 系列的發布變動**目前沒有任何
+  cache stamp 表達**。S5 不順手加欄（schema 變更＋鐵律 18.3）。
+  消費端（W6 前台包）出現時必須一併處理，否則系列頁的快取失效會缺一角。
+  【F2；來源＝S5 §4.1；複驗：
+  `grep -n "publications_updated_at" db/schema.rb`；取證日期＝2026-08-27】
+
+- 🔴 **`publications.operation_status` 仍然空掛**：欄位、validation、`operation_in_progress?`
+  謂詞都在，**零寫入者、恆為 null**。S1 的檔頭註釋把消費者劃給「S1／S5」，S5 **沒有接**
+  ——理由是它的實地形態（進度數字、鎖住的範圍）需要安裝一個真實管道 app 才觀測得到，
+  而使用者已裁定不安裝（S1-U2）⇒ 形態只能是 ours 裁定，本包不猜。
+  🔴 **這是誠實登記，不是宣稱它守住了什麼**（20.2 第 5 類）。
+  【F5；來源＝S5 §9；複驗：
+  `grep -rn "operation_status\|operation_in_progress" app/ --include=*.rb`；取證日期＝2026-08-27】
+
+- **`Publications::Write` 檔頭的「兩支 migration 的原生 SQL」不精確**：實際只有
+  `20260814200000` 有原生 SQL（**兩段**：Product／Collection）；`20260826060000` 是薄殼、
+  委派 `Materialize.backfill_all!`；`20260815000010` 對本表一列都不寫。
+  ⚪ 級文字缺陷，S5 未順手改（不在本包改動的那幾行附近）。
+  【F3；來源＝S5 研究階段；複驗：
+  `grep -rn "resource_publications" db/migrate/`；取證日期＝2026-08-27】
+
+- **`Publishable` 的 GraphQL 型別解析沒有結構性守衛**：`ChillloveSchema.resolve_type`
+  是一串 `is_a?` 分支，與 `ResourcePublication::PUBLISHABLE_TYPES` 是**兩份清單**。
+  S5 補上了漏掉的 `ProductVariant` 分支並加了一格行為守衛（`spec/requests/publishable_write_spec.rb`
+  的三型別迴圈），但**沒有做成機制**——加第四種 publishable 時仍要靠人記得改兩處。
+  機制化屬 `scripts/` 判準面（鐵律 18.3＋20.4），先登記候選。
+  【F5；來源＝S5 突變測試實跑抓到的真缺陷；複驗：
+  `grep -n "resolve_type" -A 12 app/graphql/chilllove_schema.rb`；取證日期＝2026-08-27】
+
+- **Medusa 的「可見性不擋購買」與 Saleor 的「可購買性是獨立閘」在我方尚無對應層**：
+  我方目前**沒有** checkout 層的管道檢查。不屬 S5 射程（S5 只做發布關聯的寫入），
+  但屬 S10／結帳包的必答項。取捨已登記 `docs/specs/107-external-adoption-register.md`。
+  【F2；來源＝S5 外部研究；取證日期＝2026-08-27】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -2982,6 +3037,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-26-S1-publication生命週期.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S1-孤兒catalog與catalog獨佔.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S2-發布語義與排程態.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/worklog/2026-08-27-S5發布寫入API.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -3142,6 +3198,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-26-S0-管道身分模型.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/handoff/2026-08-26-S1-publication生命週期.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/handoff/2026-08-26-S2-發布語義與排程態.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/handoff/2026-08-27-S5-發布寫入API.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 

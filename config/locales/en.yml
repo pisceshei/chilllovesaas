@@ -10,6 +10,12 @@
       channel_bound: "This publication belongs to an installed channel. Uninstall the channel instead of deleting it."
       catalog_not_found: "The catalog doesn't exist."
       not_found: "The publication doesn't exist."
+      entries_too_big: "You can publish to at most %{cap} publications per call."
+      publication_id_required: "publicationId is required."
+      publish_date_null: "publishDate can't be null. Omit it to publish now, give a date to schedule, or use publishableUnpublish to remove the resource from the channel."
+      future_publishing_unsupported: "This sales channel doesn't support scheduled publishing."
+      variant_not_schedulable: "You can't set a future publishing date for an individual variant."
+      publishable_not_found_by_id: "That resource doesn't exist in this shop."
     files:
       batch_too_large: "Too many files in one call."
       alt_too_long: "Alt text exceeds 512 characters."

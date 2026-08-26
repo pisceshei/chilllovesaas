@@ -66,6 +66,14 @@ class ChillloveSchema < GraphQL::Schema
   def self.resolve_type(_abstract_type, object, _context)
     return Types::ProductType if object.is_a?(Product)
     return Types::CollectionType if object.is_a?(Collection)
+    # 🔴 S5 補上：`Publishable` 的實作者恰三個（Product／Collection／**ProductVariant**），
+    #   但在 S5 之前**沒有任何欄位以 interface 型別回傳一個變體** ⇒ 這條分支缺了兩包
+    #   都沒有人發現。`publishableUnpublish` 對變體成功時會回它，缺這行就是 500
+    #   （`RequiredImplementationMissingError`），而且 userErrors 那條路完全測不到它
+    #   ——只有「變體真的成功走完」那一格會踩到。
+    #   ⚠️ 集合正典＝`ResourcePublication::PUBLISHABLE_TYPES`；日後加第四種
+    #   publishable **必須同時補這裡**，否則同樣形態的 500 會再來一次。
+    return Types::ProductVariantType if object.is_a?(ProductVariant)
     return Types::FileType if object.is_a?(StoredFile)
 
     raise GraphQL::RequiredImplementationMissingError, "Unsupported GraphQL object: #{object.class.name}"
