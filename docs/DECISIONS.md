@@ -1100,3 +1100,39 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   一旦引入任何 per-locale 發布概念，就與 67 §E.3 直接衝突。**
   （語言自己的 `shop_locales.published` 是**另一個軸**，作用在路由層 404 與
   `Translations::Resolve` 的 scope，不在商品可見性計算內。）
+
+### D52
+
+**S0 管道身分模型走方案 D（本尊全形），`platform_apps` 建成平台字典表（2026-08-26 使用者裁定）**
+
+- **裁定原文（逐字，兩次選擇）**：
+  - 方案選擇：「**D：C 再加 catalogs 一級表（本尊全形）**」
+  - `apps` 的形態：「**建 `platform_apps` 平台字典表（忠於本尊）**」
+- **背景**：2026-08-14 的 **R13-V2**（`docs/specs/71` §A）逐字寫過「資料模型應是 `App` 之下的
+  `Channel`（帶 channel capability），不是兩張平行表」，**至今無人動過**。
+  我方把整個「銷售管道」概念壓成 `publications` 一張表的一個字串欄；
+  `publications.catalog_id` 自 `20260814200000` 起存在但**無外鍵、無寫入者、恆為 NULL**。
+  決策文件列了 C-1～C-13 十三條代價與四個方案（A／B／C／D），我方建議是 **B**；
+  使用者選了 **D**（射程最大的那個）。
+- **本裁定明文接受的鐵律變更**：`platform_apps` 是**第三類「平台字典表」**（無 `shop_id`），
+  依鐵律 2 配套條款③必須同步改三處，本裁定即該變更的授權：
+  ① CLAUDE.md 鐵律 2 的平台字典表段（改為逐表列舉）
+  ② `docs/specs/71` §A G24 的第三類登記註
+  ③ `scripts/check-tenant-isolation.rb` 的 `NON_TENANT_TABLES`
+  ⇒ 該 PR 同時落入 **鐵律 18.3**（改 `scripts/` 與規範本文）⇒ **人工合併**。
+- **判準是滿足的**：鐵律 2 逐字「表裡**一列都不屬於任何一家店**才算平台字典表」。
+  本尊的 `App` 是 App Store 的目錄、全域共用（官方 `App.shopifyDeveloped`／`developerName`
+  都是 app 自身屬性，與商店無關）；每店的部分是 `AppInstallation`
+  ——後者**帶 `shop_id`、是業務資料**，與 `user_store_assignments` 必須帶 `shop_id` 同一個判斷。
+- **落地拆兩個 PR**：
+  - **PR A**（#146，已合併，main `2a91b5c`）：`sales_catalogs` ＋ 五能力旗標 ＋ `operation_status`。
+    零鐵律變更 ⇒ D40 自合併。
+  - **PR B**：`platform_apps` ＋ `app_installations` ＋ `channels` ＋ 上述三處規則變更
+    ⇒ 鐵律 18.3 人工合併。
+- **本裁定**不**涵蓋的部分**（實作時仍受未取得約束，逐條登記於
+  `docs/plans/2026-08-26-S0-管道身分模型-決策文件.md` §7）：安裝管道時平台自動建立什麼（U-2）、
+  卸載後 publication 與發布列的去向（U-3）、新增管道後既有商品是否立刻可見（U-4）。
+  三條都需要**安裝一個管道 app** 才測得到，而使用者 2026-08-26 已裁定不安裝
+  ⇒ `app_installations` 的 `installed_at`／`uninstalled_at` 兩欄是**我方定義的語義**，
+  官方 `AppInstallation` 沒有任何時間戳、也沒有卸載狀態欄（取證 2026-08-26）。
+  ⚠️ 下一輪 parity **不得**把那兩欄當成「與本尊不一致的缺口」修掉——要改須推翻本條。

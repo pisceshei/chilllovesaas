@@ -38,13 +38,24 @@ class Shop < ApplicationRecord
   # ⚠️ 原文寫「另外**三**個」並把 `staff_members` 算進去——它是
   # `has_many :through`，**沒有也不能有 `dependent:`**（擋刪店的是它底下的
   # `user_store_assignments`）。數錯不影響本條的裁定，但會讓人去找一個不存在的第三個。
-  has_many :publications, dependent: :destroy
-  # 🔴 宣告順序：`sales_catalogs` 必須排在 `publications` **之後**——`dependent` 是按宣告
-  #   順序註冊成 `before_destroy` 的，而 `publications.sales_catalog_id` 有指向
-  #   `sales_catalogs` 的外鍵 ⇒ 先刪 catalog 會被 FK 擋住，錯誤訊息只會說
-  #   「無法刪除 catalog」，看不出根因。
+  #
+  # 🔴 **這四個關聯的宣告順序是外鍵決定的，不可任意調換。**
+  #   `dependent:` 是按**宣告順序**註冊成 `before_destroy` 的，而外鍵要求
+  #   「指向別人的那一方先刪」⇒ 宣告順序＝建立順序的**反序**：
+  #
+  #     建立（`create_default_publication`）：
+  #       app_installation → sales_catalog → publication → channel
+  #     刪除（本處宣告順序）：
+  #       channel → publication → sales_catalog → app_installation
+  #
+  #   調換的後果不是「刪不掉」這麼明顯，而是**錯誤訊息指不出根因**——
+  #   會變成「無法刪除 catalog」或「無法刪除 app_installation」，
+  #   而真正的原因是還有 publication／channel 指著它。
   #   （同 `Product` 那組 `product_variants` 必須排在 `product_options` 之前的理由。）
+  has_many :channels, dependent: :destroy
+  has_many :publications, dependent: :destroy
   has_many :sales_catalogs, dependent: :destroy
+  has_many :app_installations, dependent: :destroy
   # 🔴 三張 i18n 表用 `delete_all` 不用 `destroy`：ShopLocale#before_destroy 擋「刪來源語言」
   #    （SOURCE_LOCALE_IMMUTABLE）——那是保護**活著的店**；整店刪除時語言列必須跟著走，
   #    走 destroy 會被自己的守門擋住變成「空店刪不掉」（shop_spec 三條即此）。
@@ -140,8 +151,13 @@ class Shop < ApplicationRecord
     end
   end
 
-  # 🔴 **2026-08-26 S0**：從建 1 列變成建 **2 列**（catalog → publication），
-  #   順序不可倒——`publications.sales_catalog_id` 有指向 `sales_catalogs` 的複合外鍵。
+  # 🔴 **2026-08-26 S0**：從建 1 列變成建 **4 列**
+  #   （app_installation → catalog → publication → channel）。
+  #   順序**不可倒**，每一步都是外鍵決定的：
+  #     ①`channels.app_installation_id` 指向 `app_installations`；
+  #     ②`publications.sales_catalog_id` 指向 `sales_catalogs`；
+  #     ③`channels.publication_id` 指向 `publications`。
+  #   （第一批 `20260826062000` 時是 2 列，第二批 `20260826070000` 補上頭尾兩列。）
   #
   #   為什麼要 catalog：本尊**每個 publication 都有一個 catalog**
   #   （`docs/research/82` §9.5b／§10.3 兩次抓包：Online Store 與 Shop 的 catalog 都是
@@ -149,28 +165,44 @@ class Shop < ApplicationRecord
   #   我方的 catalog 外鍵欄自 `20260814200000` 起存在但**恆為 NULL、無寫入者兩週**
   #   ⇒ 三層 AND 的第三層永遠是 no-op。使用者 2026-08-26 裁定方案 D（本尊全形）後補上。
   #
-  #   ⚠️ 兩列在**同一個 transaction** 內：`after_create` 本身跑在 `Shop.create!` 的
-  #   transaction 裡，所以這裡不另開。catalog 建失敗 ⇒ 整間店回滾，不會留下
-  #   「有 publication 但沒有 catalog」的半成品。
+  #   ⚠️ 四列在**同一個 transaction** 內：`after_create` 本身跑在 `Shop.create!` 的
+  #   transaction 裡，所以這裡不另開。任何一步失敗 ⇒ 整間店回滾，不會留下
+  #   「有 publication 但沒有 catalog」或「有 publication 但沒有 channel」的半成品。
+  #   🔴 後者特別重要：`Publication.online_store` 自 S0 第二批起**經 `channels.handle` 解析**
+  #   ⇒ 少了 channel 的 publication 在該方法眼中不存在。
   #
   # @return [Publication] 本店的線上商店管道
-  # @note 副作用：INSERT 一列 `sales_catalogs` ＋ 一列 `publications`。
+  # @note 副作用：INSERT 各一列 `app_installations`／`sales_catalogs`／`publications`／`channels`。
   # @see docs/plans/2026-08-26-S0-方案D-schema設計.md §2
   def create_default_publication
     ActsAsTenant.with_tenant(self) do
+      installation = app_installations.create!(
+        app_handle: DEFAULT_CHANNEL_HANDLE,
+        installed_at: Time.current
+      )
+
       catalog = sales_catalogs.create!(
         catalog_type: "app",
         title: SalesCatalog.channel_catalog_title(DEFAULT_CHANNEL_NAME),
         status: "active"
       )
 
-      publications.create!(
+      publication = publications.create!(
         sales_catalog: catalog,
         name: DEFAULT_CHANNEL_NAME,
         channel_handle: DEFAULT_CHANNEL_HANDLE,
         auto_publish: true,
         supports_future_publishing: true
       )
+
+      channels.create!(
+        publication:,
+        app_installation: installation,
+        handle: DEFAULT_CHANNEL_HANDLE,
+        channel_type: "app"
+      )
+
+      publication
     end
   end
 

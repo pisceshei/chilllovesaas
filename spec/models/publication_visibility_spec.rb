@@ -58,12 +58,38 @@ RSpec.describe "發布可見性（Publishable 三型別）" do
 
     it "🔴 `.online_store!` 在缺管道時大聲失敗（不得回 nil 讓呼叫端炸在別處）" do
       ActsAsTenant.without_tenant do
+        # 🔴 順序：先刪 channel 再刪 publication。反過來會被
+        #   `fk_channels_publication_id` 擋住（S0 第二批起 channels 指向 publications）。
+        Channel.where(shop_id: shop.id).delete_all
         Publication.where(shop_id: shop.id, channel_handle: Shop::DEFAULT_CHANNEL_HANDLE).delete_all
       end
 
       expect(Publication.online_store).to be_nil
       expect { Publication.online_store! }
         .to raise_error(ActiveRecord::RecordNotFound, /沒有 online_store publication/)
+    end
+
+    # 🔴 **S0 第二批的權威遷移**：handle 的權威是 `channels.handle`，
+    #   `publications.channel_handle` 已降級為 legacy 快照。這一格證明遷移**真的發生了**
+    #   ——只留快照、沒有 channel 的 publication，在 `.online_store` 眼中不存在。
+    #   拿掉 `joins(:channel)` 改回讀 `channel_handle`，這一格會轉紅。
+    it "🔴 只有 legacy 快照、沒有 channel 的 publication 不算管道" do
+      ActsAsTenant.without_tenant { Channel.where(shop_id: shop.id).delete_all }
+
+      # 快照欄還在，值也還對——但權威來源沒了。
+      orphan = ActsAsTenant.without_tenant { Publication.find_by(shop_id: shop.id) }
+      expect(orphan.channel_handle).to eq(Shop::DEFAULT_CHANNEL_HANDLE)
+
+      expect(Publication.online_store).to be_nil
+      expect { Publication.online_store! }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    # 🔴 兩處 handle 必須一致。本尊的 handle 帶每店後綴（`shop-72`，`82` §10.3），
+    #   我方 v1 用固定值——但快照與權威分岔的形態現在就要擋住，
+    #   否則 S1 刪 `channel_handle` 欄時會發現兩邊早就不一樣了。
+    it "🔴 channels.handle 與 publications.channel_handle 一致（快照不得漂移）" do
+      publication = Publication.online_store!
+      expect(publication.channel.handle).to eq(publication.channel_handle)
     end
   end
 

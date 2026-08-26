@@ -29,11 +29,20 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
         🔴 **`shops` 不是豁免項**，它是租戶根本身（shop_id 指向的那張表）。
         白名單以外**一律照舊**（含所有商品·訂單·顧客·庫存·折扣·內容·分析 rollup 表）。
         <!-- 2026-08-23 新增第三類「**平台字典表**」（ML-0，docs/plans/2026-08-23-多語言方案.md §3.1）：
-             `platform_locales`——跨租戶共用的語言字典，隨版本部署、**無任何租戶資料**。
-             它既不是身分表（不進 G24 白名單）也不是業務資料；與 `schema_migrations`／`solid_*` 同類
+             跨租戶共用、隨版本部署、**無任何租戶資料**。
+             這類表既不是身分表（不進 G24 白名單）也不是業務資料；與 `schema_migrations`／`solid_*` 同類
              （`scripts/check-tenant-isolation.rb` 的 NON_TENANT_TABLES）。
+             🔴 **逐表列舉，不得口頭擴充**（與 G24 白名單同紀律）：
+               `platform_locales`——跨租戶共用的語言字典（2026-08-23，ML-0）
+               `platform_apps`——跨租戶共用的 app 字典（2026-08-26，S0；使用者裁定「建 platform_apps
+                 平台字典表（忠於本尊）」。本尊的 `App` 是 App Store 的目錄、全域共用，
+                 每店的部分是 `AppInstallation`——後者**帶 shop_id、是業務資料**，不在本清單）
              🔴 判準：表裡**一列都不屬於任何一家店**才算平台字典表；`shop_locales`（租戶啟用哪些語言）
-             與 `translations`（租戶譯文）都是業務資料，**必須帶 shop_id**。新增平台字典表同樣走配套條款③。 -->
+             與 `translations`（租戶譯文）都是業務資料，**必須帶 shop_id**。新增平台字典表同樣走配套條款③。
+             ⚠️ 這一類表有一個**與豁免無關但每次都會踩**的配套：`db:schema:load` 不跑 migration 的
+             種子段 ⇒ 從 schema 建起來的測試庫字典是空的。倉庫的解法是 `spec/support/platform_*_seed.rb`
+             （before(:suite) 呼叫該 model 的 `seed!`）。新增平台字典表時一併補一支，
+             否則症狀會是一堆**與該表無關**的 spec 一起紅（S0 實測）。 -->
         <!-- 2026-08-14 修正（寫 docs/dev/m1-identity-tenancy.md 對照 db/schema.rb 時發現）。
              原文清單抄自 R12 對本尊的觀察，用的是**本尊表名**，與我方實作三處對不上：
              ①`organizations`/`users`/`user_roles`/`user_groups`/`user_group_roles` **我方尚未建**；
