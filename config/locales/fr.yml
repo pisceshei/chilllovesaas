@@ -3,6 +3,7 @@
 "fr":
   errors:
     publication:
+      catalog_taken: "Ce catalogue possède déjà une publication."
       all_products_unsupported: "Le préremplissage d'une publication avec tous les produits n'est pas encore pris en charge."
       batch_too_big: "Vous pouvez ajouter ou retirer au maximum %{cap} publishables par appel (ajouts et retraits cumulés)."
       publishable_not_found: "%{gid} n'est pas une ressource publishable de cette boutique."

@@ -2917,6 +2917,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-26-S0-catalog一級表與能力旗標.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S0-管道身分三表.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S1-publication生命週期.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/worklog/2026-08-26-S1-孤兒catalog與catalog獨佔.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方

@@ -3,6 +3,7 @@
 "ja":
   errors:
     publication:
+      catalog_taken: "このカタログにはすでに publication があります。"
       all_products_unsupported: "全商品での初期化はまだ対応していません。"
       batch_too_big: "1 回の操作で追加・削除できる publishable は合計 %{cap} 件までです。"
       publishable_not_found: "%{gid} はこのショップの publishable リソースではありません。"

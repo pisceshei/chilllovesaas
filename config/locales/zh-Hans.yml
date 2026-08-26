@@ -3,6 +3,7 @@
 "zh-Hans":
   errors:
     publication:
+      catalog_taken: "这个 catalog 已经有一个 publication 了。"
       all_products_unsupported: "尚未支持「以全部商品预先填满」。"
       batch_too_big: "单次最多加／减 %{cap} 个 publishable（加与减合计）。"
       publishable_not_found: "%{gid} 不是本店的 publishable 资源。"
