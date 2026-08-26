@@ -37,6 +37,36 @@ RSpec.describe "發布可見性（Publishable 三型別）" do
 
   around { |example| ActsAsTenant.with_tenant(shop) { example.run } }
 
+  # ── ⓪ 預設管道的查法（S0 修）─────────────────────────────────────────────
+  describe "Publication.online_store / .online_store!" do
+    it "取得建店時自動建立的那一個" do
+      expect(Publication.online_store).to be_present
+      expect(Publication.online_store.channel_handle).to eq(Shop::DEFAULT_CHANNEL_HANDLE)
+    end
+
+    # 🔴 分岔點：把 `Shop::DEFAULT_CHANNEL_HANDLE` 改回硬寫的字面量，這一格仍會綠，
+    #    所以另外加下面那格**結構性斷言**盯著它。
+    it "🔴 handle 來自 `Shop::DEFAULT_CHANNEL_HANDLE`，不是自己再寫一次字面量" do
+      source = File.read(Rails.root.join("app/models/publication.rb"), encoding: "UTF-8")
+      body = source[/def self\.online_store\b.*?\n  end/m]
+
+      expect(body).to be_present
+      expect(body).to include("Shop::DEFAULT_CHANNEL_HANDLE")
+      expect(body).not_to include('"online_store"'),
+        "同一個值有兩個產生處：改了常數而沒改這裡 ⇒ 本方法靜默回 nil ⇒ 整店商品前台不可見且不拋錯"
+    end
+
+    it "🔴 `.online_store!` 在缺管道時大聲失敗（不得回 nil 讓呼叫端炸在別處）" do
+      ActsAsTenant.without_tenant do
+        Publication.where(shop_id: shop.id, channel_handle: Shop::DEFAULT_CHANNEL_HANDLE).delete_all
+      end
+
+      expect(Publication.online_store).to be_nil
+      expect { Publication.online_store! }
+        .to raise_error(ActiveRecord::RecordNotFound, /沒有 online_store publication/)
+    end
+  end
+
   # ── ① 謂詞的唯一產生處 ──────────────────────────────────────────────────
   describe "ResourcePublication.published_exists_sql" do
     it "🔴 target 是封閉集合——未知鍵直接拋，不得靜默產生錯誤 SQL" do

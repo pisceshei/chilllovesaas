@@ -22,10 +22,40 @@ class Publication < ApplicationRecord
   #
   # M1 階段只有這一個管道；建立商店時必須連帶建立它（見 88 §4）。
   #
+  # 🔴 **handle 取自 `Shop::DEFAULT_CHANNEL_HANDLE`，不在這裡再寫一次字面量**
+  # （2026-08-26 S0 修）。原本這裡硬寫 `"online_store"`，與 `Shop` 的常數**同值但兩個來源**
+  # ⇒ 改了常數而沒改這裡，本方法就靜默回 `nil`，而 `nil` 的後果是
+  # 「整店商品前台不可見且不拋任何錯」（`shop.rb` 的 `create_default_publication`
+  # 註釋第 ③ 條已經記過這個症狀）。鐵律 7：同一個值只能有一個產生處。
+  #
+  # ⚠️ **本尊的 channel handle 不是全域常數**（`docs/research/82` §10.3 實測）：
+  # Shop 管道的 `Channel.handle` 是 **`shop-72`**，帶每店產生的後綴。
+  # 我方目前用固定 handle 是**簡化**，不是對齊——S0 的身分模型裁定會處理這件事。
+  #
   # @return [Publication, nil] 線上商店管道；尚未建立時為 nil
   # @note 副作用：一次 tenant-scoped SELECT。
   # @see docs/specs/88-publication-model.md §4
+  # @see docs/research/82-admin-channels.md §10.3
   def self.online_store
-    find_by(channel_handle: "online_store")
+    find_by(channel_handle: Shop::DEFAULT_CHANNEL_HANDLE)
+  end
+
+  # 同 `.online_store`，但**沒有就炸**。
+  #
+  # 🔴 兩個方法並存是刻意的，因為呼叫端分成兩類：
+  #   - **可以沒有前台**的（例如系列列表的「前台可見件數」——沒有管道就顯示 null＝不知道）
+  #     ⇒ 用 `.online_store`，自己處理 nil；
+  #   - **沒有就是資料損壞**的（例如發布寫入路徑）⇒ 用本方法，讓它大聲失敗。
+  # 讓第二類呼叫端拿到 `nil` 是最糟的形態：`Product.purchasable(publication: nil)`
+  # 會在 `publication.shop_id` 上炸成 `NoMethodError`，訊息完全指不出根因。
+  #
+  # @return [Publication]
+  # @raise [ActiveRecord::RecordNotFound] 本店沒有線上商店管道
+  # @note 副作用：一次 tenant-scoped SELECT。
+  def self.online_store!
+    online_store || raise(ActiveRecord::RecordNotFound,
+      "本店沒有 #{Shop::DEFAULT_CHANNEL_HANDLE} publication——" \
+      "建店流程應由 Shop#after_create 建立它（88 §4）。" \
+      "缺了它，所有商品都不可能通過三層 AND 的第二層。")
   end
 end
