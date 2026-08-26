@@ -2,6 +2,13 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "en":
   errors:
+    publication:
+      all_products_unsupported: "Prefilling a publication with all products isn't supported yet."
+      batch_too_big: "You can add or remove at most %{cap} publishables per call (add and remove counted together)."
+      publishable_not_found: "%{gid} isn't a publishable resource in this shop."
+      channel_bound: "This publication belongs to an installed channel. Uninstall the channel instead of deleting it."
+      catalog_not_found: "The catalog doesn't exist."
+      not_found: "The publication doesn't exist."
     files:
       batch_too_large: "Too many files in one call."
       alt_too_long: "Alt text exceeds 512 characters."

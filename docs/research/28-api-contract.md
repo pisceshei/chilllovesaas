@@ -195,9 +195,22 @@
 | 類別 | Queries | Mutations |
 |---|---|---|
 | 系列 | `collections`, `collection(id)`, `collectionByHandle` | `collectionCreate(input{title, descriptionHtml, image, ruleSet{appliedDisjunctively, rules[{column, relation, condition}]}, sortOrder, seo})`, `collectionUpdate`, `collectionDelete`, `collectionAddProducts`, `collectionRemoveProducts`, `collectionReorderProducts(moves)` |
-| 發佈 | `publications` | `publishablePublish/Unpublish(id, publicationIds)`（online store／POS／市場 catalog 皆是 publication——與 29 §1.3 銜接） |
+| 發佈 | `publications` | `publishablePublish/Unpublish(id, publicationIds)`（online store／POS／市場 catalog 皆是 publication——與 29 §1.3 銜接）｜🔴 **2026-08-26 S1 補**：`publicationCreate(input)`、`publicationUpdate(id, input)`、`publicationDelete(id)` |
 
 規則：智慧系列規則變更 → 背景重算 membership（Solid Queue，5000 上限）；手動系列 position 排序。
+
+🔴 **發佈線的三條契約細節**（2026-08-26 S1 落地，全文＝`docs/dev/m2-publication-lifecycle.md`）：
+
+1. **參數形態刻意不照 §0.3.4 的具名參數**：本尊 publication 線至今仍是舊式
+   （`publicationCreate(input:)`、`publicationUpdate(id:, input:)`、`publicationDelete(id:)`），
+   鐵律 12 的 1:1 對齊優先。⚠️ 連帶後果：create／update 的 `userErrors.field` path 第一段是
+   `input`，**delete 是 `id`**（本尊 delete 沒有 input object）。
+2. 🔴 **`publishablesToAdd`／`publishablesToRemove` 是累加／扣除，不是宣告式全量**
+   ——與本檔同節的 `collectionCreate/Update`（`productSet` 家族）語義**相反**。
+   實測依據＝`docs/research/82-admin-channels.md` §11.5。
+3. **批次上限取「合計」是 ours 加嚴**：官方兩句措辭不同且都未指明切分（各自 vs 合計）
+   ⇒ fail-closed。上限值引 `config/limits.yml` 的 `sales_channels.publication_bulk_products_max`。
+   超限碼取共用池的 `TOO_BIG`（**不自創 `LIMIT_EXCEEDED`**，§0.3.2 的值域紀律）。
 
 ## 3. 庫存與地點（read_inventory/write_inventory）
 

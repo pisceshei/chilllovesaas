@@ -2,6 +2,13 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "zh-Hant":
   errors:
+    publication:
+      all_products_unsupported: "尚未支援「以全部商品預先填滿」。"
+      batch_too_big: "單次最多加／減 %{cap} 個 publishable（加與減合計）。"
+      publishable_not_found: "%{gid} 不是本店的 publishable 資源。"
+      channel_bound: "這個 publication 屬於一個已安裝的管道；要移除請卸載該管道，而不是刪除它。"
+      catalog_not_found: "指定的 catalog 不存在。"
+      not_found: "找不到指定的 publication。"
     files:
       batch_too_large: "單次檔案數量超過上限。"
       alt_too_long: "alt 文字超過 512 字元。"

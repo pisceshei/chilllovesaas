@@ -41,6 +41,16 @@ module Types
       description "本店地點（priority 序）；庫存頁的地點選擇器來源。"
     end
 
+    # ── 發布管道讀取面（S1）──
+    #
+    # 🔴 **不做 connection 分頁**，回單純的 list。理由不是偷懶：
+    #   `config/limits.yml` 的 `sales_channels.max_channels` 是 **null（文檔未載）**，
+    #   而實測本尊測試店恰三個管道（`docs/research/82` §11.1）。
+    #   為一個實際只有個位數的集合套 keyset 分頁，會讓前端多寫一整套 cursor 處理
+    #   卻永遠只有一頁。⚠️ 若日後 catalog publication 大量出現（S10），這裡要改成 connection。
+    field :publications, [ Types::PublicationType ], null: false,
+      description: "本店的 publication（管道與 catalog 的發布容器）。"
+
     field :inventory_history, [ InventoryHistoryRowType ], null: false do
       description "某 (品項, 地點) 的調整歷程（新→舊，保留窗見 limits.inventory.adjustment_history_retention_days）。"
       argument :inventory_item_id, GraphQL::Types::ID, required: true
@@ -215,6 +225,21 @@ module Types
       authorize_inventory!
       ActsAsTenant.with_tenant(context.fetch(:current_shop)) do
         Location.where(shop_id: context.fetch(:current_shop).id).order(:priority, :id).to_a
+      end
+    end
+
+    # 本店的 publication 列表（S1）。
+    #
+    # 🔴 preload `sales_catalog` 與 `channel`：`PublicationType` 的 `title` 走
+    #   `display_title`（讀 catalog）、`handle` 走 `channel.handle`。不 preload 就是
+    #   每列兩次額外 SELECT——集合小所以不會痛，但那正是 N+1 最容易長進來的地方。
+    #
+    # @return [Array<Publication>] 依 id 序（穩定順序；建店那一個恆為最早）
+    # @note 副作用：一次 tenant-scoped SELECT ＋ 兩次 preload SELECT。
+    def publications
+      shop = context.fetch(:current_shop)
+      ActsAsTenant.with_tenant(shop) do
+        Publication.where(shop_id: shop.id).includes(:sales_catalog, :channel).order(:id).to_a
       end
     end
 

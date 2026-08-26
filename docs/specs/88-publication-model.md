@@ -144,6 +144,28 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 | ~~2~~ | ~~**`auto_publish` 的實際行為**~~ | ✅ **2026-08-26 結案（第 12 包）**，見下方批註 |
 | 3 | **排程發布要求商品為 Active** | 跨表條件，隨商品狀態機一起做 |
 | 4 | **商品表單的「上架管道」區塊** | UI，前端包 |
+| ~~6~~ | ~~**publication 的建立／更新／刪除 API**~~ | ✅ **2026-08-26 結案（S1）**，見下方批註 |
+
+<!-- 2026-08-26 結案（#6，S1）。交付＝`publicationCreate`／`publicationUpdate`／
+     `publicationDelete` 三支 mutation ＋ `Publication` type ＋ `publications` query
+     ＋ `Publications::Write`（唯一寫入入口）。全文＝`docs/dev/m2-publication-lifecycle.md`。
+
+     🔴 **本條原本不在本節清單裡**，是 S1 的研究階段掃描倉庫時才浮現的缺口：
+     `resource_publications.published_at` 在 S1 之前**只在建立時被寫入**
+     （`Publications::Materialize` 兩條路徑 ＋ 兩支 migration 的原生 SQL），
+     全倉**零 UPDATE、零 DELETE、零 publish／unpublish 入口**。
+     ⇒ §2.1 指派給 S1 的「`sales_catalog_id` 轉 NOT NULL」與「進行中的鎖」
+     都建立在一個**還不存在的動作**上。S1 先補那個動作。
+
+     ⚠️ **仍未做**（逐條理由見 dev doc §6）：`defaultState: ALL_PRODUCTS`（非同步 add-all）、
+     `operation_status` 的寫入者、`sales_catalog_id` 轉 NOT NULL、逐資源的
+     `publishablePublish`／`publishableUnpublish`（分步方案劃給 S5）。 -->
+
+<!-- 🔴 2026-08-26 S1 對本檔 §2.1 的一處更正：該節寫「`catalog_id` 三層 AND 的第三層；
+     **暫無外鍵**，M5 建 catalogs 時補」——外鍵已於 S0 PR A 補上
+     （`fk_publications_sales_catalog_id`），欄位也已改名 `sales_catalog_id`。
+     ⚠️ `db/schema.rb` 該欄的**欄位註釋**仍是舊文（改註釋要一支 migration）
+     ⇒ 登記於 `docs/specs/91-pit-register.md` §3.20，隨下一支動 publications 的 migration 一併更正。 -->
 | ~~5~~ | ~~**`ProductVariant` / `Collection` 展開**~~ | ✅ **2026-08-26 結案（第 12 包）**，見下方批註 |
 
 <!-- 2026-08-26 結案（#2 與 #5，第 12 包）。交付＝`Publications::Materialize`

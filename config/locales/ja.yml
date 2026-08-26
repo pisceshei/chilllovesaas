@@ -2,6 +2,13 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "ja":
   errors:
+    publication:
+      all_products_unsupported: "全商品での初期化はまだ対応していません。"
+      batch_too_big: "1 回の操作で追加・削除できる publishable は合計 %{cap} 件までです。"
+      publishable_not_found: "%{gid} はこのショップの publishable リソースではありません。"
+      channel_bound: "この publication はインストール済みチャネルに属しています。削除ではなくチャネルのアンインストールを行ってください。"
+      catalog_not_found: "指定されたカタログが存在しません。"
+      not_found: "指定された publication が見つかりません。"
     files:
       batch_too_large: "一度に処理できるファイル数を超えています。"
       alt_too_long: "alt テキストが 512 文字を超えています。"
