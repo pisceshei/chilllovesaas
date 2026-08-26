@@ -1153,3 +1153,148 @@ S10 做 catalog 成員語義時必須先解掉這個對應關係（**未取得**
 | S1-U4 | 卸載管道後 publication 與發布列的去向 | 官方沉默 ＋ 不可實測（破壞性） |
 | S1-U5 | `Job` 的 id 為何是 UUID、以及 `Job` 與 `ResourceOperation` 的關係 | 官方文檔對兩者的關係完全沉默 |
 | S1-U6 | admin 四種 catalog 查詢維度與官方 `CatalogType` 三值 enum 的對應 | 需 catalog 相關頁面的抓包（屬 S10） |
+
+---
+
+## §12 🔴 S2 地基：逐商品發布 modal 與排程發布（2026-08-26 實測）
+
+> 射程＝分步方案的 **S2**（`resource_publications` 的完整語義）。
+> 測試店 `chill-love-u5q5mnzq`（鐵律 12.2 全權寫入授權）。
+> 🔴 本節全程**沒有變更任何資料**：所有 toggle 動作都在同一個 modal 內還原，
+> 最後以 `Cancel` 關閉（`Done` 全程 disabled ＝ 沒有待儲存的變更）。
+
+### §12.1 `Manage publishing for <product>` — 逐商品的發布狀態編輯器
+
+**觸發步驟**：商品詳情頁 → 捲到 `Publishing` 卡 → 點該卡**右上角的設定圖示**。
+（⚠️ 視窗寬 1024 時 admin 收成單欄，`Publishing` 卡在 `Status` 卡下方、`Sales` 卡上方，
+不在右側欄——鐵律 13 的形態記錄。）
+
+**modal 結構**：標題 `Manage publishing for <商品標題>`；左欄導航 ＋ 右側內容 ＋ 頁尾 `Cancel`／`Done`。
+
+左欄恰**三個可點項 ＋ 一個群組標題**（逐字）：
+
+| 項目 | 徽章數 | 說明 |
+|---|---|---|
+| `Sales Channels` | 3 | 管道清單 |
+| `Agentic` | 1 | 代理式（見 §12.3） |
+| **`Catalogs`**（群組標題，不可點） | — | |
+| `Regions` | 1 | catalog 成員（見 §12.4） |
+
+🔴 **`Catalogs` 是群組標題而 `Regions` 是它底下的項目** ⇒ admin 把 catalog 依種類分節，
+與 `ProductIndex` 變數揭露的四種 catalog（Region／Retail／B2B／ChannelMarket，§11.6）
+同一套分類。本店只有 Region 一種 ⇒ 只顯示一項。
+
+### §12.2 🔴 逐商品 modal **顯示目前狀態**——與批次 modal 語義相反
+
+`Sales Channels` 節內容：`Search channels` 輸入框、群組列 `Sales Channels`（帶自己的 toggle）、
+三列管道各帶 toggle：
+
+| 管道 | 實測狀態 |
+|---|---|
+| `Online Store` | **開** |
+| `Point of Sale` | 關 |
+| `Shop` | 關 |
+
+群組列的 toggle 呈**半選態**（橫線而非勾／叉），因為三個管道只有一個開著。
+
+🔴 **這與 §11.5 的批次 modal 直接對比，是 S2 最重要的一條**：
+
+| | 批次 modal（`/products/sales-channels/publish`） | 逐商品 modal（本節） |
+|---|---|---|
+| 開場狀態 | **一律全部未勾**，即使商品已在某些管道上 | **顯示目前狀態**（Online Store 開著） |
+| 語義 | **累加／扣除**（`publishablesToAdd`／`ToRemove`） | **狀態編輯器**（勾掉＝取消發布） |
+| 群組列 | 全選 checkbox | **半選態** toggle |
+
+⇒ **同一件事在本尊有兩種語義的入口**，我方實作**不得**把兩者做成同一個元件。
+把逐商品 modal 做成累加語義 ⇒ 商家取消勾選不會生效；
+把批次 modal 做成狀態編輯器 ⇒ 商家的一次勾選會清空整個管道。
+
+### §12.3 🔴 排程發布只掛在 **Online Store** 一個管道上
+
+**觸發步驟**：在 `Sales Channels` 節把游標移到 `Online Store` 那一列
+→ 列上出現一個**日曆＋時鐘**圖示（tooltip 逐字 **`Schedule publishing`**）→ 點它。
+
+🔴 **對 `Point of Sale` 與 `Shop` 兩列做同樣的 hover，都不會出現該圖示**。
+⇒ 排程能力是**逐管道**的，實測與官方那句
+`Only online store channels support scheduled publishing` 一致，
+也與我方 `publications.supports_future_publishing` 旗標對位。
+
+**`Schedule publishing` 彈層的完整內容**（由上而下）：
+
+| # | 元件 | 實測值／形態 |
+|---|---|---|
+| 1 | 標題 | `Schedule publishing` |
+| 2 | 日期欄（日曆 icon） | `August 26, 2026` |
+| 3 | 時間欄（時鐘 icon） | `10:35 PM`，右側**內嵌時區徽章 `GMT+8`** |
+| 4 | 月曆 | `‹ August 2026 ›` ＋ Sun–Sat 表頭；🔴 **當日之前的日期全部灰掉不可選** |
+| 5 | 頁尾 | `Remove schedule`（本例 disabled——尚未設排程）／`Cancel`／`Done`（未改動時 disabled） |
+
+🔴 **四條規則性結論**：
+
+1. **排程的粒度是 (publishable × publication)**，不是 publishable 層——圖示掛在管道列上。
+2. **不能排程到過去**：月曆把當日之前的日期全部禁用。
+   ⚠️ 這是 **UI 層**的限制；API 層是否同樣拒絕過去時間＝**未取得**。
+3. **`Remove schedule` 是一等操作**，不是「把日期清空」——取消排程有專屬入口。
+4. **時區內嵌顯示（`GMT+8`）**，且 help 明文要求商家先確認它：
+   `Verify that the date and time in the Store defaults section of your General settings page
+   is set to your time zone so that your products publish at the correct time.`
+   （<https://help.shopify.com/en/manual/shopify-admin/productivity-tools/future-publishing>，取證 2026-08-26）
+   ⇒ **時區來源＝店鋪設定的 Store defaults**，不是使用者層、不是瀏覽器。
+
+**同頁 help 的射程句逐字**（同上 URL）：
+
+> Future publishing allows you to hide parts of your online store until a specific date and time.
+> You can set up future publishing for products, collections, blog posts, and pages.
+> Your online store publishes the content at the dates and times that you specify.
+
+⇒ 適用資源恰四類（products／collections／blog posts／pages）。
+⚠️ **變體不在內**——與我方 `ResourcePublication#variant_cannot_be_scheduled` 既有 validation 一致。
+
+### §12.4 Agentic 是**唯讀的資格審核態**，不是發布開關
+
+`Agentic` 節恰一列：
+
+- 標題 `Shopify Catalog`
+- 副標逐字：`Your product is being reviewed for Shopify Catalog eligibility. This can take a few days.`
+- 右側徽章 **`Pending`**（藍色）
+- 🔴 **沒有 toggle**
+
+⇒ 代理式管道在商品層是**平台審核出來的狀態**，商家不能自己開關。
+這解掉 §10.5 登記的一部分未取得：Agentic 在**商品層**的形態是
+「eligibility ＋ 狀態徽章」，不是 publication toggle。
+⚠️ 該徽章的**完整值域**（Pending 之外還有哪些）＝**未取得**——本店只有這一個狀態可觀察。
+
+### §12.5 Catalog 成員是逐商品 toggle，`Status` 篩選恰三值
+
+`Regions` 節內容：`Search catalogs` 輸入框、**`Status ⌄` 篩選**、群組列 `Catalogs`（toggle 開）、
+一列 `P12 第三層實測 catalog`／副標 `Region`／toggle **開**。
+
+`Status` 下拉展開後**恰三個 checkbox ＋ 一個動作**（逐字）：
+
+| 值 |
+|---|
+| `Active` |
+| `Draft` |
+| `Archived` |
+| `Clear`（清除篩選，未選時 disabled） |
+
+🔴 **這更正了 S0 的一句話**：`app/models/sales_catalog.rb` 的 `STATUSES` 註釋原寫
+「admin UI 只曝露 active／archived 兩個（`82` §9.5c 實測的表單沒有 draft）」。
+正確表述是：**catalog 的建立表單**只給兩個，**篩選器三個都給**。
+原句把「建立表單」的觀察寫成了「admin UI」的全稱，射程過寬。
+（更正落點：`app/models/sales_catalog.rb` 的 `STATUSES` 註釋。）
+
+🔴 **第三層是真的逐資源成員關係**：這一列 toggle 證實 catalog 不只是容器，
+它有 (publishable × catalog) 的成員狀態 ⇒ `docs/specs/88` §1 的三層 AND
+第三層在本尊是有實體的，我方目前恆真只是因為還沒有成員表（屬 S10）。
+
+### §12.6 S2 尚未取得
+
+| # | 未取得 | 取得方式 |
+|---|---|---|
+| S2-U1 | 設了排程之後 `Publishing` 卡與商品列表怎麼顯示（是否有「已排程」徽章、顯示哪個時間） | 在測試店真的設一次排程並觀察（本輪刻意不改資料；要做需先確認可完整還原） |
+| S2-U2 | API 層是否也拒絕「過去的時間」，還是只有 UI 擋 | 直接呼叫 `publishablePublish` 帶過去的 `publishDate` 並抓 payload |
+| S2-U3 | 排程到點的**實際生效機制**（背景任務翻狀態 vs 查詢時動態判定） | 官方沉默；需設一個近未來排程並觀察前台與 API 在到點前後的差異 |
+| S2-U4 | 到點時商品若已不符條件（例如被改成 Draft）會怎樣 | 同上，且需在到點前改狀態 |
+| S2-U5 | Agentic `Pending` 之外的完整狀態值域 | 需要一個已通過審核的商品 |
+| S2-U6 | 排程是否可套用到 catalog 成員（`Regions` 節沒有日曆圖示，但未逐列 hover 窮舉） | 回該節逐列 hover |

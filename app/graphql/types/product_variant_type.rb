@@ -11,6 +11,11 @@ module Types
     graphql_name "ProductVariant"
     description "商品變體。"
 
+    # S2：本尊 ProductVariant 實作 `Publishable` 介面。
+    # ⚠️ 變體**不支援排程發布**（`ResourcePublication#variant_cannot_be_scheduled`）
+    #   ⇒ 這裡的 `onlyPublished: false` 對變體不會多回任何列，那是預期行為不是 bug。
+    implements Types::Interfaces::Publishable
+
     field :id, ID, null: false, description: "gid://chilllove/ProductVariant/{id}"
     field :legacy_resource_id, ID, null: false
     field :title, String, null: false,

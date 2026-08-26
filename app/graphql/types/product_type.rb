@@ -6,6 +6,8 @@ module Types
   # docs/research/28 §0.3。
   class ProductType < BaseObject
     implements Interfaces::Node
+    # S2：本尊 Product 實作 `Publishable` 介面。實作者恰三個，與 `ResourcePublication::PUBLISHABLE_TYPES` 同一份集合。
+    implements Interfaces::Publishable
 
     field :legacy_resource_id, ID, null: false
     field :title, String, null: false

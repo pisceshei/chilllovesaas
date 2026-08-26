@@ -6,6 +6,9 @@ module Types
     graphql_name "Collection"
     description "商品系列。"
 
+    # S2：本尊 Collection 實作 `Publishable` 介面。
+    implements Types::Interfaces::Publishable
+
     field :id, ID, null: false, description: "gid://chilllove/Collection/{id}"
     field :legacy_resource_id, ID, null: false
     field :title, String, null: false
