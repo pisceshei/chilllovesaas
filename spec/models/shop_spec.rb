@@ -22,8 +22,35 @@ RSpec.describe Shop, type: :model do
       expect(publication.auto_publish).to be(true)
       # 線上商店支援排程發布（Shop 管道才是 false，82 §0.2）。
       expect(publication.supports_future_publishing).to be(true)
-      # catalog 是第三層，M5 才建。
-      expect(publication.catalog_id).to be_nil
+      # 🔴 **2026-08-26 S0 反轉的斷言**：原本這裡斷言 `catalog_id` 為 nil，
+      #   註釋寫「catalog 是第三層，M5 才建」。實測本尊**每個 publication 都有 catalog**
+      #   （`docs/research/82` §9.5b／§10.3 兩次抓包）⇒ 恆為 nil 的第三層等於三層 AND
+      #   永遠 no-op。使用者 2026-08-26 裁定方案 D 後，建店即建 catalog。
+      # ⚠️ 這幾格必須包 `with_tenant`：`SalesCatalog` 也宣告 `acts_as_tenant`，
+      #   而 `require_tenant = true` ⇒ 在租戶外載入這個關聯會拋 `NoTenantSet`
+      #   （不是回 nil）。這是 fail-closed，本身就是鐵律 2 要的行為。
+      ActsAsTenant.with_tenant(shop) do
+        expect(publication.sales_catalog).to be_present
+        expect(publication.sales_catalog.shop_id).to eq(shop.id)
+        expect(publication.sales_catalog.catalog_type).to eq("app")
+        expect(publication.sales_catalog.status).to eq("active")
+        expect(publication.display_title).to eq("線上商店")
+      end
+    end
+
+    it "本尊的五個能力旗標都有預設值（82 §10.4：線上商店六個旗標全 true）" do
+      shop = create(:shop)
+
+      publication = ActsAsTenant.with_tenant(shop) { Publication.online_store }
+      expect(publication.supports_bundles).to be(true)
+      expect(publication.supports_combined_listings).to be(true)
+      expect(publication.supports_variant_fixed_bundles).to be(true)
+      expect(publication.supports_subscriptions).to be(true)
+      expect(publication.supports_publication_for_unlisted_products).to be(true)
+      # 🔴 建店當下沒有進行中的發布操作 ⇒ NULL。本尊 ResourceOperationStatus 恰三值，
+      #   「沒有操作」不是其中之一（不得落成 "none"）。
+      expect(publication.operation_status).to be_nil
+      expect(publication.operation_in_progress?).to be(false)
     end
 
     it "只建一個管道，不多建" do
