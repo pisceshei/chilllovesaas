@@ -693,6 +693,15 @@ a {
   font-weight: 500;
 }
 
+/* 系列列表「後台 N 件（前台可見 M 件）」的第二個數字（第 12 包）。
+   🔴 同一格內的次要資訊：降一級字重與顏色，讓主數字仍然是掃視時先看到的那個。
+   色值取自 tokens（鐵律 8），不自創。 */
+.cl-collections-visible {
+  color: var(--text-2);
+  font-weight: 400;
+  margin-inline-start: 4px;
+}
+
 .cl-products-empty {
   min-height: 360px;
 }

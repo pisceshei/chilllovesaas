@@ -19,6 +19,16 @@ module Types
     #   ——「未求值」與「恰好沒有商品」是兩件事（同金額 null≠0 原則），前端照舊顯示「—」。
     field :products_count, Integer, null: true,
       description: "商品數；智慧系列在首次成功 rebuild 前為 null。"
+    # 「前台可見件數」——計畫表第 12 列逐字的可見交付。
+    #
+    # 🔴 判準是 **discoverable** 不是 purchasable，依據本尊對 UNLISTED 的官方定義：
+    #   「An unlisted product doesn't display in Shopify-powered collection pages…」
+    #   ⇒ Unlisted 商品可購買，但**不出現在系列頁**。
+    # 🔴 null 的語義是「**不知道**」，不是 0：①單筆讀取沒帶這個 select；
+    #   ②店裡還沒有 online_store 管道（沒有前台可談）。與 `products_count` 的
+    #   null≠0 原則一致。
+    field :visible_products_count, Integer, null: true,
+      description: "在線上商店前台可見的商品數（discoverable）；未帶列表 select 或無管道時為 null。"
     field :rebuild_status, String, null: true,
       description: "智慧系列物化狀態：OK／PENDING／ERROR；手動系列為 null。"
     field :description_html, String, null: false
@@ -84,6 +94,22 @@ module Types
       return object.read_attribute("member_count").to_i if object.has_attribute?("member_count")
 
       CollectionProduct.where(shop_id: object.shop_id, collection_id: object.id).count
+    end
+
+    # 「前台可見件數」。
+    #
+    # 🔴 **只從列表 select 讀，不做逐筆 fallback**——與 `products_count` 刻意不同。
+    # 理由：這個數字的算式含三層 EXISTS，逐筆退回等於在單筆讀取上跑一個
+    # 昂貴查詢，而單筆頁（系列編輯頁）根本不顯示它。
+    # 沒有這個欄 ⇒ 回 nil＝「本次查詢沒問這個數字」，**不是 0**。
+    #
+    # @return [Integer, nil]
+    def visible_products_count
+      return nil unless object.has_attribute?("visible_member_count")
+      # 智慧系列尚未成功 rebuild 時，成員本身就是「未求值」⇒ 與 products_count 同口徑回 nil。
+      return nil if object.collection_type == "smart" && object.rebuild_status != "OK"
+
+      object.read_attribute("visible_member_count").to_i
     end
   end
 end

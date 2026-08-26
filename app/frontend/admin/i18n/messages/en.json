@@ -343,6 +343,7 @@
   "collections.type.smartHint": "Membership comes from rules; the rule editor opens in a later milestone.",
   "collections.type.immutableHint": "A collection's type can't be changed after it's created.",
   "collections.count": "{count, plural, one {# product} other {# products}}",
+  "collections.visibleCount": "（{count} visible）",
   "collections.card.type": "Collection type",
   "collections.sortOrder": "Sort order",
   "collections.sort.manual": "Manual",

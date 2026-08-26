@@ -24,7 +24,7 @@ import { useCursorPagination } from "../lib/useCursorPagination";
 const COLLECTIONS_QUERY = `
   query collectionsList($first: Int!, $after: String) {
     collections(first: $first, after: $after) {
-      nodes { id title handle collectionType productsCount }
+      nodes { id title handle collectionType productsCount visibleProductsCount }
       pageInfo { hasNextPage endCursor }
     }
   }
@@ -36,6 +36,13 @@ interface CollectionNode {
   handle: string;
   collectionType: string;
   productsCount: number | null;
+  /**
+   * 前台可見件數（第 12 包）。判準是 **discoverable** 不是 purchasable——
+   * 本尊官方：「An unlisted product doesn't display in Shopify-powered collection pages」
+   * ⇒ Unlisted 商品可購買但不出現在系列頁。
+   * null＝不知道（沒有 online_store 管道／智慧系列尚未 rebuild），**不是 0**。
+   */
+  visibleProductsCount: number | null;
 }
 
 interface CollectionsData {
@@ -77,8 +84,25 @@ export function CollectionsPage() {
       align: "right",
       key: "products",
       header: t("collections.col.products"),
-      // 🔴 智慧系列＝未知（規則引擎未落地），不是 0。
-      render: (row) => (row.productsCount === null ? "—" : t("collections.count", { count: row.productsCount })),
+      // 🔴 智慧系列尚未成功 rebuild ＝未知，不是 0。
+      //
+      // 第 12 包：同一格再顯示「（前台可見 M）」——計畫表第 12 列逐字的可見交付
+      // 「系列列表出現『後台 N 件（前台可見 M 件）』兩個數字」。
+      // 🔴 兩個數字放同一格而不是兩欄：它們是**同一個成員集合的兩個口徑**，
+      //    分欄會讓人以為是兩組不同的東西（本尊的商品列表也把 Channels 做成單一格）。
+      render: (row) => {
+        if (row.productsCount === null) return "—";
+        const total = t("collections.count", { count: row.productsCount });
+        if (row.visibleProductsCount === null) return total;
+        return (
+          <>
+            {total}
+            <span className="cl-collections-visible">
+              {t("collections.visibleCount", { count: row.visibleProductsCount })}
+            </span>
+          </>
+        );
+      },
     },
     { key: "handle", header: t("collections.col.handle"), render: (row) => row.handle },
   ];

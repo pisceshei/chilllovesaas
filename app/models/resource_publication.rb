@@ -27,10 +27,69 @@ class ResourcePublication < ApplicationRecord
   validate :future_publishing_supported_by_channel
   validate :variant_cannot_be_scheduled
 
+  # 「已發布」謂詞的**唯一產生處**（鐵律 7）——SQL 側與 Ruby 側都從這裡長出來。
+  #
+  # 🔴 2026-08-26 收斂（第二輪對抗審查 G29／P12-B13）：第 12 包初版讓
+  # `ResourcePublication#published?`（Ruby）與 `Product.published_on`（SQL）
+  # **各寫一份**同一條規則。那不是既有問題，是本包新增 `published_on` 時造成的分叉
+  # ⇒ 屬鐵律 20.5 的「同一元件狀態矩陣」，本輪收斂。
+  #
+  # 語義：`published_at` 非 NULL **且**不在未來（未來時間＝排程發布，到點前不算上架）。
+  PUBLISHED_SQL = "%<a>s.published_at IS NOT NULL AND %<a>s.published_at <= :at"
+
+  # 可以放進 EXISTS 的發布目標。**鍵是封閉集合**，值全部是本檔的字面常數
+  # ⇒ 下面的字串插值不可能被外部輸入影響（`fetch` 對未知鍵直接拋）。
+  #
+  # 命名：`{要找的 publishable 型別}_{它的 id 在外層 SQL 裡怎麼稱呼}`
+  VISIBILITY_TARGETS = {
+    # 商品自己（外層是 products 表）
+    product: { type: "Product", id: "products.id" },
+    # 系列自己（外層是 collections 表）
+    collection: { type: "Collection", id: "collections.id" },
+    # 變體自己（外層是 product_variants 表）
+    variant: { type: "ProductVariant", id: "product_variants.id" },
+    # 某商品底下的變體（外層已把 product_variants 別名成 pv）
+    variant_of_pv: { type: "ProductVariant", id: "pv.id" },
+    # 某成員商品（外層已把 products 別名成 p，例如系列成員數的子查詢）
+    product_of_p: { type: "Product", id: "p.id" }
+  }.freeze
+
+  # 「這個 publishable 在該管道上、在該時點已發布」的 SQL `EXISTS` 片段。
+  #
+  # 產生的片段帶三個具名 bind：`:shop_id`／`:publication_id`／`:at`，
+  # 由呼叫端在 `where` 一起提供。別名固定 `rp`——每個 EXISTS 是獨立的子查詢作用域，
+  # 同名不衝突（實測：`Product.published_on` 的兩個 EXISTS 都用 `rp`）。
+  #
+  # 🔴 **這裡是正向 EXISTS，NULL 安全**：`published_at IS NULL` 的列單純不匹配。
+  # 日後若要「未發布」的反向謂詞，**必須** `NOT COALESCE(<expr>, FALSE)`，
+  # 不得直接對本片段取反——第 11 包在三值邏輯上踩過三次。
+  #
+  # @param target [Symbol] `VISIBILITY_TARGETS` 的鍵
+  # @return [String] 可直接嵌進 `where` 的 SQL 片段
+  # @raise [KeyError] target 不在封閉集合內
+  def self.published_exists_sql(target)
+    spec = VISIBILITY_TARGETS.fetch(target)
+
+    <<~SQL.squish
+      EXISTS (
+        SELECT 1 FROM resource_publications rp
+        WHERE rp.shop_id = :shop_id
+          AND rp.publication_id = :publication_id
+          AND rp.publishable_type = '#{spec[:type]}'
+          AND rp.publishable_id = #{spec[:id]}
+          AND #{format(PUBLISHED_SQL, a: 'rp')}
+      )
+    SQL
+  end
+
   # 此關聯在指定時點是否算「已上架到本管道」。
   #
   # 🔴 注意這只是**三層 AND 的第二層**——完整的上架判定還要加上 catalog 條件（88 §1）。
   # 只用這個方法當「商品是否可購買」會漏掉市場目錄那一層。
+  #
+  # ⚠️ 這是 `PUBLISHED_SQL` 的 Ruby 對偶。兩者必須同義，
+  # `spec/models/resource_publication_spec.rb` 有一格用**同一批時點**同時跑兩側比對，
+  # 只改一邊會轉紅。
   #
   # @param at [Time] 判定時點，預設現在
   # @return [Boolean] 已發布且發布時間已到時為 true

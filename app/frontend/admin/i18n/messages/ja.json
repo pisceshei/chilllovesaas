@@ -343,6 +343,7 @@
   "collections.type.smartHint": "メンバーはルールで決まります。ルールエディタは今後のマイルストーンで公開します。",
   "collections.type.immutableHint": "コレクションのタイプは作成後に変更できません。",
   "collections.count": "{count, plural, other {# 点}}",
+  "collections.visibleCount": "（表示 {count} 点）",
   "collections.card.type": "コレクションタイプ",
   "collections.sortOrder": "並び順",
   "collections.sort.manual": "手動",

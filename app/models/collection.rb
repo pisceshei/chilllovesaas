@@ -57,6 +57,102 @@ class Collection < ApplicationRecord
 
   scope :manual, -> { where(collection_type: "manual") }
 
+  # 「這個系列在該管道上可見」——**系列只有一層**。
+  #
+  # 🔴 與商品不同，系列**沒有 status 欄**，也**沒有變體層**
+  # ⇒ 它的可見性判定就是 publication 那一層，沒有別的。
+  #
+  # 🔴 而且本尊的系列**只能發布到 APP 型 catalog**（官方 `resourcePublicationsV2` 逐字：
+  # 「`Collection` only supports publications to `APP` catalog types.」），
+  # 後台也照這個實作：系列的發布控件是一個**只有銷售管道的輕量 popover**，
+  # 沒有商品那個 modal 的 `Agentic` 與 `Catalogs` 兩組（`docs/research/82` §9.3／§9.10 實測）。
+  # ⇒ 日後補第三層時，**系列不得接 market／B2B catalog**。
+  #
+  # @param publication [Publication] 目標管道
+  # @param at [Time] 判定時點（排程發布：`published_at` 在未來者尚未上架）
+  # @return [ActiveRecord::Relation]
+  # @note 副作用：無；只組 relation。
+  # @see docs/research/82-admin-channels.md §9.10
+  # 組合在類別載入時完成並凍結（理由同 `Product::PUBLISHED_ON_SQL`）。
+  PUBLISHED_ON_SQL = ResourcePublication.published_exists_sql(:collection).freeze
+
+  def self.published_on(publication, at: Time.current)
+    where(shop_id: publication.shop_id)
+      .where(Arel.sql(sanitize_sql_array([
+        PUBLISHED_ON_SQL,
+        { shop_id: publication.shop_id, publication_id: publication.id, at: }
+      ])))
+  end
+
+  # 系列列表的第二個數字：**前台可見的成員數**。
+  #
+  # 🔴 這是第 12 包在權威計畫表（`docs/plans/2026-08-24-三方向執行順序.md` §3 第 12 列）
+  # 上「部署後看得到什麼」欄的**逐字交付**：
+  #   > 系列列表出現「後台 N 件（前台可見 M 件）」兩個數字
+  # 初版只交付了讀取面 scope、零消費者 ⇒ 部署後其實什麼都看不到（第二輪對抗審查 §3.1③）。
+  #
+  # 🔴 **判準是 `discoverable` 不是 `purchasable`**，依據是本尊對 UNLISTED 的官方定義：
+  #   > An unlisted product doesn't display in Shopify-powered collection pages,
+  #   > search results including predictive search, or product recommendations.
+  # ⇒ Unlisted 商品**可購買但不出現在系列頁**，所以系列的「前台可見」要用可發現那一維。
+  #
+  # 🔴 **與 `MEMBER_COUNT_SELECT` 同構且同源**：一樣走相關子查詢（列表上限 250，
+  # 逐列 COUNT ＝ 單一請求打 250 次 DB）、一樣用 `collection_type` 的 CASE 分流
+  # （手動＝`collection_products`／智慧＝`collection_memberships`）。
+  # 兩個數字**共用同一個成員定義**，只差在多套一層可見性——這是鐵律 7 要的形態。
+  #
+  # @param publication [Publication] 用哪個管道判定「前台」。v1 傳 `Publication.online_store`
+  # @param at [Time] 判定時點
+  # @return [Array(String, Hash)] `select` 用的 SQL 片段與具名 bind
+  # @note 副作用：無。
+  # @see docs/dev/m2-publication-model.md §5
+  def self.visible_member_count_select(publication, at: Time.current)
+    # 一個成員商品「在前台可見」＝狀態可發現 ∧ 商品層已發布 ∧ 至少一個變體已發布。
+    # 三個條件與 `Product.discoverable` **同一組謂詞**（EXISTS 片段來自
+    # `ResourcePublication.published_exists_sql`，狀態集合來自 `Product::DISCOVERABLE_STATUSES`）。
+    member_visible = <<~SQL.squish
+      p.status IN (:discoverable_statuses)
+      AND #{ResourcePublication.published_exists_sql(:product_of_p)}
+      AND EXISTS (
+        SELECT 1 FROM product_variants pv
+        WHERE pv.shop_id = p.shop_id AND pv.product_id = p.id
+          AND #{ResourcePublication.published_exists_sql(:variant_of_pv)}
+      )
+    SQL
+
+    sql = <<~SQL.squish
+      (CASE WHEN collections.collection_type = 'smart' THEN
+        (SELECT COUNT(*) FROM collection_memberships cm
+           JOIN products p ON p.shop_id = cm.shop_id AND p.id = cm.product_id
+          WHERE cm.shop_id = collections.shop_id
+            AND cm.collection_id = collections.id
+            AND #{member_visible})
+       ELSE
+        (SELECT COUNT(*) FROM collection_products cp
+           JOIN products p ON p.shop_id = cp.shop_id AND p.id = cp.product_id
+          WHERE cp.shop_id = collections.shop_id
+            AND cp.collection_id = collections.id
+            AND #{member_visible})
+       END) AS visible_member_count
+    SQL
+
+    [ sql, { shop_id: publication.shop_id, publication_id: publication.id, at:,
+             discoverable_statuses: Product::DISCOVERABLE_STATUSES } ]
+  end
+
+  # 列表用：一次帶上「後台 N 件」與「前台可見 M 件」兩個數字。
+  #
+  # @param publication [Publication, nil] nil ⇒ 只帶 `member_count`（沒有管道就沒有前台）
+  # @return [ActiveRecord::Relation]
+  # @note 副作用：無；只組 relation。
+  def self.with_member_counts(publication: nil, at: Time.current)
+    base = select(arel_table[Arel.star], Arel.sql(MEMBER_COUNT_SELECT))
+    return base if publication.nil?
+
+    sql, binds = visible_member_count_select(publication, at:)
+    base.select(Arel.sql(sanitize_sql_array([ sql, binds ])))
+  end
+
   private
 
   # @see Publications::Materialize

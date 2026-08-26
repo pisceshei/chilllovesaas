@@ -57,6 +57,42 @@ class ProductVariant < ApplicationRecord
   # 掛 callback 的理由與上一行的 `create_inventory_item` 完全相同（見該方法註釋）。
   after_create :materialize_publications
 
+  # 「這個**變體**在該管道上可購買」——本尊真值表的第三條。
+  #
+  # 🔴 本尊官方的可見性真值表（`shopify.dev/docs/apps/build/sales-channels/product-publishing`，
+  # 取證 2026-08-26，逐字）：
+  #
+  #   | Product state | Variant state | Visible to buyers |
+  #   | Published     | Published     | Yes |
+  #   | Published     | Unpublished   | No  |
+  #   | Unpublished   | Published     | No  |
+  #   | Unpublished   | Unpublished   | No  |
+  #
+  # ⇒ 變體可見 ⟺ **父商品可購買** ∧ **這個變體自己已發布到該管道**。
+  #
+  # 🔴 **刻意用 `merge(Product.purchasable(...))` 而不是重寫一份判定**（鐵律 7）：
+  # 父商品那一半（狀態層 ∧ 商品發布層 ∧ 至少一個變體已發布）已經有唯一產生處，
+  # 這裡只加「**這一個**變體已發布」的收窄。
+  # 父商品判定裡那個「至少一個變體」在這裡是**冗餘但無害**的——
+  # 本變體已發布就必然滿足它。
+  #
+  # @param publication [Publication] 目標管道
+  # @param at [Time] 判定時點
+  # @return [ActiveRecord::Relation]
+  # @note 副作用：無；只組 relation。
+  # @see docs/dev/m2-publication-model.md §5
+  # 組合在類別載入時完成並凍結（理由同 `Product::PUBLISHED_ON_SQL`）。
+  PUBLISHED_ON_SQL = ResourcePublication.published_exists_sql(:variant).freeze
+
+  def self.purchasable_on(publication:, at: Time.current)
+    joins(:product)
+      .merge(Product.purchasable(publication:, at:))
+      .where(Arel.sql(sanitize_sql_array([
+        PUBLISHED_ON_SQL,
+        { shop_id: publication.shop_id, publication_id: publication.id, at: }
+      ])))
+  end
+
   private
 
   # 🔴 **這裡刻意不讀父商品的 publication 集合。這是我方裁定（ours），不是照抄本尊。**

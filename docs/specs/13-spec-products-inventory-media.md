@@ -162,13 +162,17 @@
 
 ```
 purchasable  := status ∈ {ACTIVE, UNLISTED}
-                ∧ 商品已發布到該管道       （product_publications.status = 'PUBLISHED'）
-                ∧ 該變體已發布到該管道     （variant_publications.published = true）   ← §(c) 的 AND
+                ∧ 商品已發布到該管道       （resource_publications, publishable_type='Product'）
+                ∧ 該變體已發布到該管道     （同表, publishable_type='ProductVariant'）   ← §(c) 的 AND
 
 discoverable := status = ACTIVE
                 ∧ 商品已發布到該管道
                 ∧ 該變體已發布到該管道
 ```
+
+<!-- 2026-08-26 回寫：原文寫 `product_publications.status='PUBLISHED'` 與
+     `variant_publications.published=true` 兩張表——那兩張表**從未存在於本倉庫**。
+     我方落地的是單一多型表 `resource_publications`（88 §2.2）。完整對照見 §(d)。 -->
 
 | status | 已發布 | 變體已發布 | purchasable | discoverable |
 |---|:---:|:---:|:---:|:---:|
@@ -194,35 +198,78 @@ discoverable ⊆ purchasable        # 恆成立
 官方明載（61 §2.2 引 help P16）：可**逐變體**對各銷售管道／目錄發布或取消發布，且**「要在某管道顯示，父商品與該變體必須都發布到該管道」**。另：**不能為個別變體設定排程發布日期**（排程只有商品級）。
 
 ```
-變體 v 在管道 c 可見 := product_publications(product, c).status = 'PUBLISHED'
-                       ∧ variant_publications(v, c).published = true
+變體 v 在管道 c 可見 := 商品 p 已發布到 c ∧ 變體 v 已發布到 c
+                       （同一張 resource_publications，publishable_type 分別為
+                         'Product' 與 'ProductVariant'）
 
 商品 p 在管道 c purchasable  := p.status ∈ {ACTIVE, UNLISTED} ∧ ∃v ∈ p.variants : v 在 c 可見
 商品 p 在管道 c discoverable := p.status = ACTIVE              ∧ ∃v ∈ p.variants : v 在 c 可見
 ```
 
+🔴 **本尊官方的可見性真值表**（`shopify.dev/docs/apps/build/sales-channels/product-publishing`，
+取證 2026-08-26，逐字）與上式一致，四格全對：
+`Published/Published=Yes`；`Published/Unpublished=No`；`Unpublished/Published=No`；`Unpublished/Unpublished=No`。
+另一條同源官方句（help）：「If every variant of a product is unpublished from a channel or catalog,
+then the parent product itself is entirely hidden from that channel or catalog until you
+republish at least one variant.」
+
+落地：`Product.purchasable` / `Product.discoverable`（商品層）、
+`ProductVariant.purchasable_on`（變體層）、`Collection.published_on`（系列只有一層，
+沒有 status 也沒有變體）。
+
 - **商品級 scope 需要「至少一個變體可見」**，不是「商品已發布」就夠——一個所有變體都被取消發布的商品，頁面上沒有任何東西可買。
-- 表結構見 63 §H.2（`product_publications` ＋ `variant_publications`；後者**沒有** `publish_at` 欄位，因為官方明載變體不可排程）。`limits.catalog_flow.variant_level_publishing: true`、`variant_publish_scheduling_allowed: false`。
+- ~~表結構見 63 §H.2（`product_publications` ＋ `variant_publications`；後者**沒有** `publish_at` 欄位，因為官方明載變體不可排程）~~
+  🔴 **2026-08-26 更正**：實際落地的是**單一多型表 `resource_publications`**（88 §2.2），
+  不是兩張表；變體與商品**共用**同一個 `published_at` 欄，「變體不可排程」由 model validation
+  `ResourcePublication#variant_cannot_be_scheduled` 保證，**不是靠缺欄位**。
+  原文保留供追溯。`limits.catalog_flow.variant_level_publishing: true`、
+  `variant_publish_scheduling_allowed: false` 兩鍵不變。
 - 🔴 **連帶影響物化欄**：`products.min_price_cents` 的 `MIN()` **必須只算該管道可見的變體**，否則會出現「集合頁顯示 HK$938 起，點進去最低只有 HK$1,200」（63 §H.2 已定 `product_publication_price_ranges`）。
 - 🔴 **連帶影響目錄定價**：未發布到某目錄的變體**不套用**該目錄的定價調整（`limits.catalog_flow.catalog_pricing_requires_variant_publication: true`）⇒ `Pricing::PresentmentResolver`（63 §G.2）收集 catalog price 前必須先過 `variant_publications` 過濾。
 
 #### (d) scope 的 SQL 形態（一處定義，全站重用）
 
+🔴 **2026-08-26 回寫（第 12 包落地後的終態；鐵律 20.2②「生產者已改、終態未同步」）。**
+本節原本用 `product_publications` ＋ `variant_publications` **兩張表**描述，
+而我方實際落地的是**單一多型表 `resource_publications`**（`docs/specs/88` §2.2：
+Publishable 介面由 Product／Collection／ProductVariant 三者實作，叫 `product_*`
+會讓後兩者看起來像硬塞進來的）。原文的兩表形態**從未存在於本倉庫**，
+照它寫的 SQL 一行都跑不起來——這正是「規格終態沒跟著生產者走」的形態。
+原文保留於 git 歷史；本節以下為 HEAD 現值。
+
 ```sql
--- Product.purchasable(channel) —— 鐵律 2：複合索引以 shop_id 開頭
-WHERE p.shop_id = :shop_id
-  AND p.status IN ('ACTIVE','UNLISTED')                 -- ← discoverable 版本此處為 = 'ACTIVE'
-  AND EXISTS (SELECT 1 FROM product_publications pp
-              WHERE pp.shop_id = p.shop_id AND pp.product_id = p.id
-                AND pp.publication_id = :channel AND pp.status = 'PUBLISHED')
-  AND EXISTS (SELECT 1 FROM product_variants v
-              JOIN variant_publications vp
-                ON vp.shop_id = v.shop_id AND vp.product_variant_id = v.id
-                AND vp.publication_id = :channel AND vp.published = TRUE
-              WHERE v.shop_id = p.shop_id AND v.product_id = p.id)
+-- Product.purchasable(publication:) —— 鐵律 2：複合索引以 shop_id 開頭
+--   索引：uq_res_pub_target (shop_id, publication_id, publishable_type, publishable_id)
+WHERE products.shop_id = :shop_id
+  AND products.status IN ('active','unlisted')          -- ← discoverable 版本此處為 = 'active'
+  AND EXISTS (SELECT 1 FROM resource_publications rp
+              WHERE rp.shop_id = :shop_id
+                AND rp.publication_id = :publication_id
+                AND rp.publishable_type = 'Product'
+                AND rp.publishable_id = products.id
+                AND rp.published_at IS NOT NULL AND rp.published_at <= :at)
+  AND EXISTS (SELECT 1 FROM product_variants pv
+              WHERE pv.shop_id = :shop_id AND pv.product_id = products.id
+                AND EXISTS (SELECT 1 FROM resource_publications rp
+                            WHERE rp.shop_id = :shop_id
+                              AND rp.publication_id = :publication_id
+                              AND rp.publishable_type = 'ProductVariant'
+                              AND rp.publishable_id = pv.id
+                              AND rp.published_at IS NOT NULL AND rp.published_at <= :at))
 ```
 
-**兩個 scope 只差 `status` 那一行**——所以實作上是同一支 scope 產生器吃不同的 status 集合（`limits.product.purchasable_statuses` / `discoverable_statuses`），**不是兩份複製貼上的 SQL**。複製貼上的第三個消費者出現時，一定只有一份會被改到。
+三處與原文的實質差異（不只是換表名）：
+
+| 原文 | 現值 | 為什麼 |
+|---|---|---|
+| `pp.status = 'PUBLISHED'` | `published_at IS NOT NULL AND published_at <= :at` | 沒有 status 欄；`published_at` 一欄三態（NULL＝未發布／過去＝已發布／**未來＝排程發布**），排程需要時點比較 |
+| `vp.published = TRUE` | 同上 | 同一張表同一個欄，變體不另立布林 |
+| `vp` 沒有 `publish_at` 欄 | 變體**共用**同一個 `published_at` 欄 | 「變體不可排程」改由 model validation `variant_cannot_be_scheduled` 保證，不靠缺欄位 |
+
+**兩個 scope 只差 `status` 那一行**——實作上 `discoverable` **由 `purchasable` 導出**
+再收窄狀態集合（`Product.discoverable`），所以不變量 `discoverable ⊆ purchasable`
+是**定理不是測試項**。上面那段 EXISTS 也只有一個產生處
+（`ResourcePublication.published_exists_sql`），三個 Publishable 共用。
 
 #### (e) 影響面掃描：`UNLISTED` 不得出現在這些地方，但直接連結必須能買
 
