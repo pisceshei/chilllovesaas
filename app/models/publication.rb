@@ -29,6 +29,15 @@ class Publication < ApplicationRecord
 
   has_many :resource_publications, dependent: :destroy
 
+  # 🔴 **管道身分**（S0 第二批）。本尊官方 SDL 是 `Publication : Channel = 1 : N`，
+  #   但 `82` §10.3 實測第一方管道上 `Channel.id == Publication.id` ⇒ 退化成 1:1。
+  #   我方取實測的 1:1（`uq_channels_publication` 唯一索引釘住），理由與放寬方法
+  #   見該索引的 migration 註釋。
+  # ⚠️ **沒有 `dependent:`**：`channels` 的刪除由 `Shop` 的關聯宣告順序處理；
+  #   單獨刪 publication 應該被 `fk_channels_publication_id` 擋下來——
+  #   少了 channel 的 publication 在 `.online_store` 眼中根本不存在（見下）。
+  has_one :channel, inverse_of: :publication
+
   validates :name, :channel_handle, presence: true
   validates :channel_handle, uniqueness: { scope: :shop_id }
   validates :operation_status, inclusion: { in: OPERATION_STATUSES }, allow_nil: true
@@ -66,16 +75,23 @@ class Publication < ApplicationRecord
   # 「整店商品前台不可見且不拋任何錯」（`shop.rb` 的 `create_default_publication`
   # 註釋第 ③ 條已經記過這個症狀）。鐵律 7：同一個值只能有一個產生處。
   #
-  # ⚠️ **本尊的 channel handle 不是全域常數**（`docs/research/82` §10.3 實測）：
-  # Shop 管道的 `Channel.handle` 是 **`shop-72`**，帶每店產生的後綴。
-  # 我方目前用固定 handle 是**簡化**，不是對齊——S0 的身分模型裁定會處理這件事。
+  # 🔴 **權威來源是 `channels.handle`，不是 `publications.channel_handle`**（S0 第二批改）。
+  # 本尊的 handle 屬於 `Channel`——官方逐字「A unique, human-readable identifier for the
+  # channel **within the shop**」（取證 2026-08-26），而且**帶每店後綴**：
+  # `82` §10.3 實測 Shop 管道的 handle 是 **`shop-72`** 不是乾淨的 `shop`。
+  # ⇒ `publications.channel_handle` 自本次起降級為 **legacy 快照**（不刪欄，刪欄要改所有
+  #   讀取端，屬 S1）。兩者的一致性由 `spec/models/channel_spec.rb` 的不變式守著。
+  #
+  # ⚠️ **少了 channel 的 publication 在本方法眼中不存在**——這是刻意的：
+  #   channel 是管道的身分，沒有身分的 publication 是資料損壞，不該被當成可用管道回傳。
+  #   建店路徑（`Shop#create_default_publication`）與回填（`20260826070000`）都保證有 channel。
   #
   # @return [Publication, nil] 線上商店管道；尚未建立時為 nil
-  # @note 副作用：一次 tenant-scoped SELECT。
+  # @note 副作用：一次 tenant-scoped SELECT（JOIN channels）。
   # @see docs/specs/88-publication-model.md §4
   # @see docs/research/82-admin-channels.md §10.3
   def self.online_store
-    find_by(channel_handle: Shop::DEFAULT_CHANNEL_HANDLE)
+    joins(:channel).find_by(channels: { handle: Shop::DEFAULT_CHANNEL_HANDLE })
   end
 
   # 同 `.online_store`，但**沒有就炸**。

@@ -2578,6 +2578,35 @@
   `grep -rln "unscoped.delete_all" spec/`（應為六檔，各含一份 FK 順序清單）；
   取證日期＝2026-08-26】
 
+  🔴 **同日復發一次（鐵律 20.4 記錄）**：S0 PR A 才剛補過（加 `SalesCatalog`），
+  PR B 加 `Channel` 與 `AppInstallation` 時六處**又全部紅**。
+  既有防線為何沒擋住：**上面這條登記不是機制**——沒有任何檢查會在新增租戶表時
+  提醒去改那六份清單，而 CI 只會在跑到那六支 spec 時以 FK 違反的形態表現出來
+  （症狀出現在與新表完全無關的併發測試上）。
+  本輪處置：六處都補，順序＝`Channel → Publication → SalesCatalog → AppInstallation`
+  （外鍵反序，與 `app/models/shop.rb` 的關聯宣告順序同一份理由，兩處註釋互相指向）。
+  斷根需新增 CI 判準 ⇒ 依鐵律 20.4 只登記候選與代價，取得使用者裁定後另開 18.3 PR。
+
+- **`db:schema:load` 不跑 migration 的種子段 ⇒ 平台字典表在測試庫是空的**：
+  症狀是**一堆與該表無關的 spec 一起紅**（S0 實測 24 個失敗，多數在 translations），
+  而直接訊息是 `Validation failed: Platform app must exist`——看不出根因是「少了種子」。
+  倉庫既有解法＝`spec/support/platform_locales_seed.rb`（`before(:suite)` 呼叫 `seed!`），
+  S0 照抄成 `spec/support/platform_apps_seed.rb`。
+  ⚠️ 這條已寫進 CLAUDE.md 鐵律 2 的平台字典表段（新增字典表時一併補一支 support 檔），
+  所以它**不只是登記**——下一張字典表有規則可循。
+  【F2；來源＝S0 PR B 實作實踩；複驗：`ls spec/support/platform_*_seed.rb`；
+  取證日期＝2026-08-26】
+
+- **測試拓樸沒涵蓋「唯一可達的那個情境」時，突變會假綠**：S0 PR B 的第四個突變
+  （把回填的 `find_or_create_by!` 換成 `create!`）第一次跑**全綠**——因為當時的 spec
+  只測「乾淨起點」與「完全跑完」，而該去重唯一會被用到的情境是
+  **「installation 已建、channel 還沒建」**，也就是 **migration 半途死掉**留下的狀態
+  （MySQL DDL 非交易；第 11 包就是這樣炸的）。補上那一格之後突變才轉紅。
+  ⇒ 教訓與第 11 包的「測依賴順序必須讓被依賴方非空」同族：
+  **突變測的是防線，而防線只在它要防的那個狀態下才會被觸發**。
+  【F2；來源＝S0 PR B 突變複驗；複驗：見
+  `spec/migrations/s0_backfill_channels_spec.rb` 那一格的註釋；取證日期＝2026-08-26】
+
 - **`create_table ... if_not_exists: true` 會送出真的 DDL ⇒ MySQL 隱式提交，打斷 RSpec
   測試交易**：任何在 spec 裡直接呼叫含 `create_table` 的 migration `up` 的做法，
   都會讓**該檔第二格起**看到前一格的殘留（實測症狀＝`Subdomain has already been taken`，
@@ -2819,6 +2848,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-25-D48-列表對齊三項.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S0-catalog一級表與能力旗標.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/worklog/2026-08-26-S0-管道身分三表.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方

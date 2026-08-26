@@ -68,6 +68,7 @@ NON_TENANT_TABLES = %w[
   solid_queue_jobs
   solid_cache_entries
   platform_locales
+  platform_apps
 ].freeze
 
 # 身分表的 model 不得再宣告 acts_as_tenant。

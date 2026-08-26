@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_062000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_070000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -27,6 +27,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_062000) do
     t.index ["shop_id", "staff_member_id"], name: "ix_api_tokens_staff_member_id"
     t.index ["shop_id", "token_digest"], name: "uq_api_tokens_token_digest", unique: true
     t.index ["staff_member_id"], name: "fk_api_tokens_staff_member_id"
+  end
+
+  create_table "app_installations", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "app 在本店的安裝狀態（本尊 AppInstallation）", force: :cascade do |t|
+    t.string "app_handle", limit: 64, null: false, comment: "指向 platform_apps.handle"
+    t.datetime "created_at", null: false
+    t.datetime "installed_at", null: false, comment: "? ours：本尊 AppInstallation 沒有時間戳"
+    t.bigint "shop_id", null: false
+    t.datetime "uninstalled_at", comment: "? ours：軟刪。NULL＝仍安裝中。讀取端一律帶 installed scope"
+    t.datetime "updated_at", null: false
+    t.index ["app_handle"], name: "fk_app_installations_app_handle"
+    t.index ["shop_id", "app_handle"], name: "uq_app_installations_app", unique: true
+    t.index ["shop_id", "id"], name: "uq_app_installations_tenant_id", unique: true
+  end
+
+  create_table "channels", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "銷售管道身分（本尊 Channel）：handle 的權威來源", force: :cascade do |t|
+    t.bigint "app_installation_id", comment: "可 NULL：agentic 型管道無安裝實體（82 §10.1 實測）。⚠️ 本尊 Channel.app 是非 null"
+    t.string "channel_type", limit: 24, default: "app", null: false, comment: "app／agentic（對位本尊 Channel vs AgenticChannel 兩個不同型別）"
+    t.datetime "created_at", null: false
+    t.string "handle", limit: 64, null: false, comment: "本尊 Channel.handle（String!／\"...identifier for the channel within the shop\"）；每店唯一、可帶後綴"
+    t.bigint "publication_id", null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "app_installation_id"], name: "fk_channels_app_installation_id"
+    t.index ["shop_id", "handle"], name: "uq_channels_handle", unique: true
+    t.index ["shop_id", "id"], name: "uq_channels_tenant_id", unique: true
+    t.index ["shop_id", "publication_id"], name: "uq_channels_publication", unique: true
   end
 
   create_table "checkouts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "結帳快照及棄單來源", force: :cascade do |t|
@@ -781,6 +807,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_062000) do
     t.index ["shop_id", "published_at", "id"], name: "ix_pages_published_at_id"
   end
 
+  create_table "platform_apps", primary_key: "handle", id: { type: :string, limit: 64, comment: "本尊 App.handle（String／\"Handle of the app.\"）；我方作自然主鍵故 NOT NULL" }, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "平台 app 字典（跨租戶共用；非租戶資料，無 shop_id——鐵律 2 平台字典表）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "developer_name", comment: "本尊 App.developerName（String／\"The name of the app developer.\"）"
+    t.boolean "shopify_developed", default: false, null: false, comment: "本尊 App.shopifyDeveloped（Boolean!／\"Whether the app was developed by Shopify.\"）；我方文檔慣稱「第一方」"
+    t.string "title", null: false, comment: "本尊 App.title（String!／\"Name of the app.\"）"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "platform_locales", primary_key: "tag", id: { type: :string, limit: 35, comment: "BCP-47，寫入層正規化：zh-Hant / zh-Hans / en / ja / fr" }, charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "平台語言字典（跨租戶共用；非租戶資料，無 shop_id——鐵律 2 平台字典表）", force: :cascade do |t|
     t.string "collation", limit: 64, null: false, comment: "該語言排序用 collation（67 §C.7）"
     t.datetime "created_at", null: false
@@ -1231,6 +1265,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_062000) do
 
   add_foreign_key "api_tokens", "shops", name: "fk_api_tokens_shop"
   add_foreign_key "api_tokens", "staff_members", name: "fk_api_tokens_staff_member_id"
+  add_foreign_key "app_installations", "platform_apps", column: "app_handle", primary_key: "handle", name: "fk_app_installations_app_handle"
+  add_foreign_key "app_installations", "shops", name: "fk_app_installations_shop"
+  add_foreign_key "channels", "app_installations", column: ["shop_id", "app_installation_id"], primary_key: ["shop_id", "id"], name: "fk_channels_app_installation_id"
+  add_foreign_key "channels", "publications", column: ["shop_id", "publication_id"], primary_key: ["shop_id", "id"], name: "fk_channels_publication_id"
+  add_foreign_key "channels", "shops", name: "fk_channels_shop"
   add_foreign_key "checkouts", "customers", column: ["shop_id", "customer_id"], primary_key: ["shop_id", "id"], name: "fk_checkouts_customer_id"
   add_foreign_key "checkouts", "shops", name: "fk_checkouts_shop"
   add_foreign_key "collection_products", "collections", column: ["shop_id", "collection_id"], primary_key: ["shop_id", "id"], name: "fk_collection_products_collection_id"
