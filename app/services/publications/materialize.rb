@@ -15,12 +15,30 @@ module Publications
   # 全部證據＝`docs/research/82-admin-channels.md` §8（2026-08-26，測試店 chill-love-u5q5mnzq）。
   # 三條直接寫成程式碼的：
   #
-  # 1. **建立當下就物化，不是第一次讀取時 lazy 建**（82 §8.4①）：
-  #    新增商品表單在存檔前就顯示 `All channels`，存檔後預設變體即有 3 列。
-  # 2. **稠密，不是「無列＝繼承父層」**（82 §8.2）：
-  #    未被觸碰過的變體回傳 3 列並逐一具名——若是繼承模型應該回 0 列。
+  # 1. **建立後即在全部 auto_publish 管道上「已發布」**（82 §8.4①）：
+  #    新增商品表單在存檔前就顯示 `All channels`，存檔後預設變體 `channelPublicationCount = 3`。
+  #    ⚠️ **2026-08-26 更正**：這一條**只斷言可觀測的那一半**。原本寫成
+  #    「本尊在建立當下就**寫列**」——那是把不可觀測的推論當成本尊事實。
+  #    從 admin UI 與 Admin API **都分不出**「建立時寫列」與「讀取時以 auto_publish 展開」
+  #    （兩者的 `resourcePublications` 回應完全一樣）。
+  #    🔴 ⇒ **稠密物化是我方裁定（ours）**，見下方「為什麼我方選稠密物化」。
+  # 2. **變體有自己的、與父商品不同的發布集合**（82 §8.2）：
+  #    未被觸碰過的變體回傳 3 個管道並逐一具名，且商品層取消發布後變體層原封不動（82 §8.4③）
+  #    ⇒ 變體不是「繼承父層」，它是獨立的一層。
   # 3. **變體跟的是「全部 auto_publish 的 publication」，不是父商品的集合**（82 §8.4②）。
-  #    ⚠️ 這一條是**我方裁定（ours）**，證據三方拉扯，全文見 `docs/dev/m2-publication-model.md` §4。
+  #    ⚠️ 這一條也是**我方裁定（ours）**，證據三方拉扯，全文見 `docs/dev/m2-publication-model.md` §4。
+  #
+  # ## 🔴 為什麼我方選稠密物化（ours，不是照抄）
+  #
+  # 本尊的**儲存形態未取得**（上面第 1 條），所以這是我方的選擇，理由是後果不是權威：
+  #   ①**讀取端簡單且可索引**：`Product.published_on` 的兩個 EXISTS 走
+  #     `uq_res_pub_target` 複合索引；若改成「讀取時展開 auto_publish」，
+  #     「這個商品在這個管道發布了嗎」就變成「有沒有明確的**取消**列」的反向查詢，
+  #     而那是對可空謂詞取反——第 11 包在三值邏輯上踩過三次的形態。
+  #   ②**每一層的意圖都保留得住**：商品層開開關關不會損失變體層的設定（82 §8.4③ 的本尊行為）。
+  #   ③v1 每店只有一個 publication，列數＝資源數，成本可忽略。
+  # ⚠️ **代價**：寫入是 O(publishable × publication)。管道數長到 5 以上時
+  #    `after_create` 的成本會變成主導項（實測數字見 `docs/specs/91-pit-register.md` §3.18）。
   #
   # ## 兩條寫入路徑，**規則只有一份**
   #
@@ -89,6 +107,8 @@ module Publications
             publishable_type: type, publishable_id:, published_at: at
           )
         end
+
+        bump_publications_stamp!(shop_id:, type:, publishable:, at:)
       end
 
       pairs.size
@@ -161,6 +181,38 @@ module Publications
       end
 
       created
+    end
+
+    # 把 `products.publications_updated_at` 推到 `at`（cache stamp）。
+    #
+    # 🔴 **這個欄位的寫入者由 `db/schema.rb` 的欄位註釋逐字指名「隨第 12 包」**，
+    # 且 `config/limits.yml` 的 `cache_stamp_sources` 已把它列為正典
+    # ⇒ 正典宣告與實作不符就是鐵律 19 要防的形態。第 12 包初版沒交付（理由是零讀取者），
+    # 第二輪對抗審查指出：**正典已經宣告了，就不能用「還沒有人讀」當理由不寫**。
+    #
+    # **哪些變動要 bump**：
+    #   - `Product` 自己的發布列變動 ⇒ bump 它自己
+    #   - `ProductVariant` 的發布列變動 ⇒ bump **父商品**（變體發布狀態會改變商品的
+    #     有效可購買性，見 `Product.published_on` 的第二個 EXISTS）
+    #   - `Collection` ⇒ **不 bump**：`collections` 表沒有這個欄位，
+    #     系列自己的成員集合戳是 `products_updated_at`（第 3 包），語義不同，不得挪用。
+    #
+    # 🔴 實際的 UPDATE 在 `Product.bump_publications_stamp!`——那裡有一段
+    # **不得動 `lock_version`** 的說明，理由是實測踩到的：`update_all` 的 hash 形式
+    # 會替啟用樂觀鎖的 model 自動遞增鎖版本，於是「建立發布列」會把商家手上開著的
+    # 商品編輯表單直接作廢（`StaleObjectError`），而商家什麼都沒做。
+    #
+    # @return [void]
+    # @note 副作用：對 `products` 做一次 UPDATE（Collection 時為 no-op）。
+    def bump_publications_stamp!(shop_id:, type:, publishable:, at:)
+      product_id =
+        case type
+        when "Product" then publishable.id
+        when "ProductVariant" then publishable.product_id
+        end
+      return if product_id.nil?
+
+      Product.bump_publications_stamp!(shop_id:, id: product_id, at:)
     end
 
     # 該店所有「新資源要自動納入」的管道。**規則的唯一產生處**（鐵律 7）。

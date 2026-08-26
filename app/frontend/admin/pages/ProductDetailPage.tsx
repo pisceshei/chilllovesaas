@@ -295,7 +295,20 @@ const STATUS_PRESENTATION: Record<string, { labelKey: string; progress: BadgePro
   UNLISTED: { labelKey: "status.unlisted", progress: "empty", tone: "attention" },
 };
 
-/** 兩維真值表（13 §F1.2：discoverable ⊆ purchasable 恆成立）。 */
+/**
+ * 兩維真值表的**狀態那一層**（13 §F1.2：discoverable ⊆ purchasable 恆成立）。
+ *
+ * 🔴 **這不是「這個商品可不可購買」的完整判定，只是狀態層**。
+ * 完整判定＝狀態層 ∧ 商品發布層 ∧ 變體發布層，唯一產生處在伺服器端的
+ * `Product.purchasable` / `Product.discoverable`（第 12 包）。
+ *
+ * ⚠️ 這裡刻意**只**保留狀態層而不在前端重算完整判定（鐵律 7）：
+ * 前端沒有 publication 資料，硬算出來的第二個答案遲早與伺服器分岔，
+ * 而分岔的症狀是「後台說可購買、前台買不到」。
+ * 本表的**唯一用途**是狀態卡底下那句「這個狀態代表什麼」的說明文案。
+ * 🔴 要顯示真正的可購買性，必須從 GraphQL 取（例如系列列表的 `visibleProductsCount`），
+ * 不得在這裡擴充本表。
+ */
 const STATUS_DIMENSIONS: Record<string, { purchasable: boolean; discoverable: boolean }> = {
   ACTIVE: { purchasable: true, discoverable: true },
   UNLISTED: { purchasable: true, discoverable: false },

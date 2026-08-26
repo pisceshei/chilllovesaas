@@ -162,25 +162,53 @@ class Product < ApplicationRecord
   # 而靜默漏掉整批列。**日後若要加「未發布」的反向 scope，必須用
   # `NOT COALESCE(<expr>, FALSE)`**，不能直接對這段取反。
   #
+  # ⚠️ **2026-08-26 收斂**：EXISTS 片段本身已抽到
+  # `ResourcePublication.published_exists_sql`（謂詞的唯一產生處，鐵律 7），
+  # 本常數只負責「商品層 ∧ 變體層」這個**組合**。
+  #
+  # 🔴 **在類別載入時就組好並凍結**，不在每次呼叫時插值：
+  #   ①片段全部來自 `ResourcePublication::VISIBILITY_TARGETS` 這個封閉常數，
+  #     沒有任何外部輸入進得來；
+  #   ②組好之後呼叫端只做 `sanitize_sql_array` 的具名 bind 代入
+  #     （與 `MEMBER_COUNT_SELECT` 同一個既有形態），Brakeman 才追得動。
+  PUBLISHED_ON_SQL = <<~SQL.squish.freeze
+    #{ResourcePublication.published_exists_sql(:product)}
+    AND EXISTS (
+      SELECT 1 FROM product_variants pv
+      WHERE pv.shop_id = :shop_id AND pv.product_id = products.id
+        AND #{ResourcePublication.published_exists_sql(:variant_of_pv)}
+    )
+  SQL
+
   # @api private 由 `purchasable` 使用；不建議直接呼叫（它不含狀態層）
   def self.published_on(publication, at: Time.current)
-    published = "rp.published_at IS NOT NULL AND rp.published_at <= :at"
+    where(Arel.sql(sanitize_sql_array([
+      PUBLISHED_ON_SQL,
+      { shop_id: publication.shop_id, publication_id: publication.id, at: }
+    ])))
+  end
 
-    where(<<~SQL.squish, shop_id: publication.shop_id, publication_id: publication.id, at:)
-      EXISTS (
-        SELECT 1 FROM resource_publications rp
-        WHERE rp.shop_id = :shop_id AND rp.publication_id = :publication_id
-          AND rp.publishable_type = 'Product' AND rp.publishable_id = products.id
-          AND #{published}
-      ) AND EXISTS (
-        SELECT 1 FROM product_variants pv
-        JOIN resource_publications rp
-          ON rp.shop_id = pv.shop_id AND rp.publication_id = :publication_id
-         AND rp.publishable_type = 'ProductVariant' AND rp.publishable_id = pv.id
-        WHERE pv.shop_id = :shop_id AND pv.product_id = products.id
-          AND #{published}
-      )
-    SQL
+  # 把 `publications_updated_at`（cache stamp）推到 `at`。
+  #
+  # 🔴 **不得動 `lock_version`**，而 `update_all` 的 **hash 形式會自動遞增它**
+  # （Rails 對啟用樂觀鎖的 model 如此，實測：發布列一建立，商家手上的
+  # `product` 物件立刻 `StaleObjectError`）。
+  # 兩者的用途完全不同：
+  #   - `lock_version`＝**使用者面**的全樹樂觀鎖（含譯文），用來擋兩個人同時編輯；
+  #   - `publications_updated_at`＝**系統面**的 cache stamp，用來讓前台快取失效。
+  # 讓系統戳去推使用者鎖 ⇒ 每次發布變動都會把商家**開著的編輯表單作廢**，
+  # 而商家什麼都沒做錯。
+  # ⇒ 改用 `update_all` 的**字串形式**（不走那段樂觀鎖邏輯），只動那一欄。
+  #
+  # @param shop_id [Integer] 明確帶租戶（defense in depth）
+  # @param id [Integer] 商品 id
+  # @param at [Time]
+  # @return [Integer] 受影響列數
+  # @note 副作用：對 `products` 做一次 UPDATE。不觸發 callback／validation。
+  # @see docs/dev/m2-publication-model.md §8（P12-B11 的結案）
+  def self.bump_publications_stamp!(shop_id:, id:, at:)
+    where(shop_id:, id:)
+      .update_all(sanitize_sql_array([ "publications_updated_at = ?", at ]))
   end
 
   private

@@ -277,9 +277,16 @@ module Types
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
     def collections(first: nil, after: nil, last: nil, before: nil)
       authorize_products!
+      shop = context.fetch(:current_shop)
+
+      # 🔴 兩個數字一次撈完（計畫表第 12 列逐字：「系列列表出現『後台 N 件
+      #   （前台可見 M 件）』兩個數字」）。相關子查詢而非逐列 COUNT——列表上限 250。
+      # `publication` 為 nil（店還沒有 online_store 管道）⇒ 只帶後台那個數字，
+      #   `visibleProductsCount` 回 null＝「不知道」，不是 0。
+      publication = ActsAsTenant.with_tenant(shop) { Publication.online_store }
       scope = Collection
-        .where(shop_id: context.fetch(:current_shop).id)
-        .select(Arel.sql("collections.*"), Arel.sql(Collection::MEMBER_COUNT_SELECT))
+        .where(shop_id: shop.id)
+        .with_member_counts(publication:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 

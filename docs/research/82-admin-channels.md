@@ -350,10 +350,26 @@ catalogs that you assign to the channel market, **and** it must be published to 
 
 ### §8.4 🔴 生產者規則（本節最重的四條，help 完全沒有）
 
-**① 新商品：建立當下即物化，且預設全開**
+**① 新商品：建立後即在全部管道上「已發布」，且預設全開**
 新增商品表單在**存檔前**就顯示 `Active` ＋ `All channels`；存檔後其預設變體
 `channelPublicationCount = 3`。⇒ 「auto\_publish」不只是「新增管道時回填既有商品」，
-**它同時是「新增商品時填滿既有管道」**。
+**它同時是「新增商品時對既有管道全部生效」**。
+
+<!-- 🔴 **2026-08-26 更正（第二輪對抗審查 M28）。原文寫的是「建立當下即物化（寫列）」——
+     那是把一個不可觀測的推論寫成本尊事實。**
+     從 admin UI 與 Admin API **都無法區分**這兩種實作：
+       (a) 建立時就寫 publishable × publication 的列；
+       (b) 不寫列，讀取時以 `auto_publish` 展開。
+     兩者的 `resourcePublications` 回應**完全一樣**，`channelPublicationCount` 也一樣。
+     官方原文只有 "Whether new products are automatically published to this publication."，
+     同樣推不出儲存形態。
+     ⇒ 本條現在只斷言**可觀測的那一半**（「建立後即已發布」），
+     **儲存形態＝未取得**（§9.12）。我方選擇稠密物化是**我方裁定（ours）**，
+     理由在 `docs/dev/m2-publication-model.md`，不是「本尊這樣所以照抄」。
+     🔴 這很重要，因為那條推論撐著我方整個 O(publishable × publication) 的寫入成本。
+     **唯一能取到的證據（只能證偽不能證實）**：若本尊在**新增一個管道之後**，
+     既有商品立刻在該管道可見，就與「只在 create 時寫列」不相容。
+     那一測同時解掉 §8.7／§9.12 的「新增 publication 是否回填既有商品」。 -->
 
 <!-- 🔴 這一條直接結掉 88 §5 的待辦 #2。88 §2.1 原本把 auto_publish 寫成
      「新增管道時既有商品自動可用」——那只是它的一半，而且是我方**不會先遇到**的那一半
@@ -458,3 +474,302 @@ variant visibility **before** publishing the product」）；③它的商家後�
   `ProductVariantUnpublish` 存在，公開 API 面未取證。
 - **`Unlisted` 的前台實際行為**（直連可買／搜尋隱藏／`noindex`）：本輪只取得下拉內的一行說明，
   未在前台驗證。
+
+---
+
+## §9 🔴 第二輪窮盡實測（2026-08-26，全權寫入授權）
+
+> 使用者裁定「即使已經顯示完成了的，都要重新做一次，避免有遺漏或者邏輯錯誤」＋
+> 「本尊後台我授權你可以任意操作，新增，編輯，刪除等等所有步驟」。
+> 本節只記 §8 **沒有**的東西。§8 的六條結論本輪全部複驗成立，不重複。
+>
+> 🔴 本輪**實際建立了一個 catalog**（`MarketCatalog/103379370219`），
+> 因此第一次觀測到第三層（catalog）的真實形態——`docs/specs/88` §3.2 把它整層延後，
+> 過去從來沒有人量過它。
+
+### §9.1 商品列表：批量動作的完整值域
+
+**欄位**：`Product ｜ Status ｜ Inventory ｜ Category ｜ Channels ｜ Product type ｜ Vendor`
+🔴 建立 catalog 之後**自動多出 `Catalogs` 欄**——列表欄位是**動態**的，隨店鋪是否有 catalog 而變。
+
+Status 徽章：Active＝綠、**Unlisted＝灰**（中性）。
+
+**批量列**：`N selected ˅ ｜ Bulk edit ｜ Set as active ｜ Set as draft ｜ ⋯` ＋ `Show all selected`
+
+**溢出選單完整值域（13 項，依序）**：
+
+| # | 項目 |
+|---|---|
+| 1 | Archive products |
+| 2 | **Unlist products** |
+| 3 | Delete products（紅字） |
+| 4 | **Include in sales channels** |
+| 5 | **Exclude from sales channels** |
+| 6 | **Include in catalogs** |
+| 7 | **Exclude from catalogs** |
+| 8 | Add tags |
+| 9 | Remove tags |
+| 10 | Add to collection(s) |
+| 11 | Remove from collection(s) |
+| 12 | Apps（分組標題） |
+| 13 | Create email campaign |
+
+🔴 **兩個軸各有兩個方向**：管道與目錄是**獨立的兩組**動作，各有 include／exclude。
+用詞是 **Include／Exclude**，不是 Publish／Unpublish。
+
+### §9.2 🔴 四個狀態的可及性是**三個面各不相同**的
+
+| 面 | Active | Draft | Unlisted | Archived |
+|---|---|---|---|---|
+| 商品頁 Status 下拉 | ✅ | ✅ | ✅ | ❌ |
+| 商品頁 `More actions` | ❌ | ❌ | ❌ | ✅ `Archive product` |
+| 列表批量**頂層按鈕** | ✅ `Set as active` | ✅ `Set as draft` | ❌ | ❌ |
+| 列表批量**溢出選單** | ❌ | ❌ | ✅ `Unlist products` | ✅ `Archive products` |
+
+商品頁 `More actions` 完整值域（5 項）：
+`Duplicate product` ｜ `Archive product` ｜ `Delete product`（紅） ｜ `Create email campaign` ｜ `Localize`（app 提供）
+
+### §9.3 🔴 發布控件有**三種不同的 affordance**
+
+| 位置 | 形態 | 可編輯 | 內容 |
+|---|---|---|---|
+| 商品詳情頁 Publishing 卡的齒輪 | **全 modal** | ✅ | 左側導覽：`Sales Channels (3)` ／ `Agentic (1)` ／ `Catalogs › Regions (1)` |
+| 系列詳情頁的 `N channel ˅` | **輕量 popover** | ✅ | 只有三個銷售管道，**無 Agentic、無 Catalogs** |
+| 商品列表選中列的 `N ˅` | **popover** | ❌ **唯讀** | 只列出已發布的管道名 |
+
+🔴 系列沒有 Agentic／Catalogs 組，精確對應官方那句：
+> `Collection` only supports publications to `APP` catalog types.
+
+我方 `ResourcePublication::PUBLISHABLE_TYPES` 三型別**一視同仁**，沒有這個區分（登記）。
+
+🔴 商品頁的 modal 左側導覽是**動態**的：建 catalog 前只有兩組，建了之後長出
+`Catalogs` 區段並依 catalog 型別分組。
+
+### §9.4 批量發布對話框：**checkbox 不是 toggle**
+
+- 路由（真實 href）：`/products/sales-channels/publish?includesBundle=false&selectedProductIds=<CSV>`
+  🔴 帶 **`includesBundle`** 參數 ⇒ **組合商品（bundle）在發布上另有規則**（**未取得**）
+- 標題 `Include {N} product(s) in sales channels`；按鈕 `Cancel` ／ `Include products`
+- catalog 版路由：`/products/catalogs-next/publishcatalogs?selectedProductIds=...`，
+  🔴 **三個分頁 Regions｜B2B｜Retail（無 Channels）**；空態
+  `Your store doesn't have any catalogs of this type yet.`
+
+🔴 **互動語義的關鍵差異**：
+
+| 面 | 控件 | 語義 |
+|---|---|---|
+| 單一資源的發布 modal／popover | **toggle** | **狀態設定**（顯示目前開／關） |
+| 批量 Include／Exclude | **checkbox** | **累加／扣除**（不顯示目前狀態） |
+
+⇒ 與官方 `publishablePublish(id, input: [PublicationInput!]!)` **收「要加的清單」**的語義一致。
+我方若做批量面，**不得**做成「送完整集合、伺服器算差集」。
+
+### §9.5 🔴 第三層（Catalog）的真實形態——本節是本輪最大的新增
+
+#### §9.5a 何時生效：本尊自己的話
+
+建立 catalog 存檔時彈出確認框，**逐字**：
+> **This catalog won't change products or prices**
+> Customers will see your store's products and default prices in the assigned markets,
+> converted by each market's currency settings.
+> **You only need a catalog if you want different products or prices.**
+
+按鈕：`Discard` ／ `Save anyway`
+
+🔴 ⇒ **第三層是 opt-in 的**：catalog 若沒有「不同的商品或價格」就是 **no-op**。
+與官方 `publicationCreate` 頁同義（「When a publication isn't associated with a catalog,
+product availability is determined by the sales channel.」）。
+**這給了 `docs/specs/88` §3.2「第三層延後」一個實證依據，而不只是分期的說法。**
+
+另：`Assign markets` 對話框的 `Channels` 分頁空態是
+`Your store doesn't have any markets of this type yet.`
+⇒ **channel market 預設不存在，要商家自己建** ⇒ 預設店鋪根本沒有 catalog 約束。
+
+#### §9.5b 建立 catalog 觸發**四支** operation（網路抓包，依序）
+
+| # | operation | payload（逐字節錄） |
+|---|---|---|
+| 1 | `CatalogCreate` | `{"input":{"title":"…","status":"ACTIVE","context":{"marketIds":["gid://shopify/Market/40566653163"]}}}` |
+| 2 | `CatalogPriceListCreate` | `{"input":{"currency":"HKD","parent":{"adjustment":{"value":0,"type":"PERCENTAGE_DECREASE"},"settings":{"compareAtMode":"ADJUSTED"}},"catalogId":"gid://shopify/MarketCatalog/103379370219","name":"…"}}` |
+| 3 | **`PublicationCreate`** | `{"input":{"defaultState":"EMPTY","autoPublish":true,"catalogId":"gid://shopify/MarketCatalog/103379370219"}}` |
+| 4 | **`PublicationChangesCommit`** | admin 內部批次提交操作，**不在公開 API 文檔** |
+
+`PublicationCreate` 的 response 揭露結構：`Publication/214892183787` → `catalog: MarketCatalog/103379370219`
+→ `priceList: PriceList/21058420971`（currency HKD、adjustment `PERCENTAGE_DECREASE`）。
+
+🔴 **結構結論**：
+
+```
+Catalog（AppCatalog／MarketCatalog／CompanyLocationCatalog）
+  ├─ has one ─> Publication（autoPublish, defaultState）
+  └─ has one ─> PriceList（currency, adjustment, compareAtMode）
+```
+
+- catalog、priceList、publication 是**三支獨立的建立操作**
+- `catalogId` 是**傳進** `publicationCreate` 的 ⇒ **publication 屬於 catalog**
+  ⇒ 我方 `publications.catalog_id` 的**方向正確**
+- 🔴 **每個管道 publication 也有 catalog**：§8 抓到的 Online Store 讀取 payload 顯示
+  `catalog: { id: "gid://shopify/AppCatalog/…", title: "Channel Catalog {publicationId} for Online Store" }`
+  ⇒ **本尊的每個 publication 都有 catalog**，只是型別不同。
+  我方的 `online_store` publication **沒有 catalog**（結構差異，v1 無影響，登記）。
+
+#### §9.5c catalog 表單的完整控件與上限
+
+| 區 | 控件 | 值／上限 |
+|---|---|---|
+| Title | 文字 | **0/255** 字元計數 |
+| （同列） | 狀態下拉 | 預設 `Active` |
+| Markets | 選擇器 ＋ `Add a market` | 對話框**四分頁** `Regions｜B2B｜Retail｜Channels` |
+| Pricing | `Set prices in` | `Store currency (HKD HK$)` |
+| Pricing | `Price adjustment` | 數字 ＋ `%` ＋ 方向下拉 `Decrease` ＋ toggle `Include compare-at price`（預設**開**） |
+| Products | toggle **`Automatically include new products`** | **預設開** |
+| Products | 分頁 | **`Included｜Excluded｜All`** |
+
+catalog 內商品表欄位：`Image｜Product｜Publishing｜Price in HKD｜Compare at price｜Rules`
+
+- 商品列可展開成**變體列**，每個變體有自己的 `Price`／`Compare-at price`
+  ⇒ **catalog 的價格是變體粒度**
+- 商品列副標 `2 of 2 variants` ⇒ **catalog 成員也有變體粒度**
+- 每列帶 `Included`／`Excluded` 徽章 ⇒ **成員是三值的**（含明確的排除集合），不是布林
+- 篩選器：`Status ˅｜Product vendor ˅｜Tagged with ˅`
+
+#### §9.5d 🔴 catalog 成員是**非同步計算**的，且進行中會**鎖住**逐商品切換
+
+建立後 Products 卡長時間顯示 `Loading products…`；剛建立時
+`No products included`／`Include products to sell them in the assigned markets.`，重載後才有內容。
+
+而商品頁 modal 的 `Catalogs › Regions` 組裡，該 catalog 那一列 toggle **灰掉**並附訊息：
+> ⓘ **Publishing for this catalog can't be changed while updates are in progress.**
+
+🔴 對應官方 `Publication.operation: PublicationOperation`
+（`AddAllProductsOperation`／`CatalogCsvOperation`／`PublicationResourceOperation`）。
+⇒ **批量發布變更是非同步的，進行中必須鎖住逐資源切換並說明原因。**
+我方模型**沒有「進行中的發布操作」這個概念**。
+
+⚠️ **本輪未解的矛盾**：建立 catalog 後用 persisted query 量到兩個不同商品的變體
+`catalogPublicationCount` 都是 **1**，但商品列表的 `Catalogs` 欄顯示 **0**。
+兩者不一致（可能是「publication 列」vs「明確 Included」的差別，或列表快取）⇒ **未取得**。
+
+### §9.6 🔴 密碼保護是**第四道閘門**，且是分享的前置條件
+
+商品頁點 `Share` 彈出：
+> **Remove password protection**
+> To make products available to share, remove your online store password protection.
+
+按鈕：`Cancel` ／ `Go to preferences`
+
+實測 `https://chill.deals/products/<handle>` → 302 到 `/password`：
+> This store is password protected. Use the password to enter the store.
+
+🔴 **Online Store 的密碼保護獨立於 status／publication／catalog，且優先於它們**——
+本尊連「直連分享」都不給。我方模型沒有這一層。
+⚠️ 本輪**刻意不移除密碼**（那會讓一個真實網域對外公開，性質與改測試資料不同）
+⇒ 「Unlisted 直連是否真的可購買／是否真有 `noindex`」**仍為未取得**。
+
+#### §9.6a 設定位置與**同一區的第五道閘門**
+
+`Online Store › Preferences › Store access`（Online Store 管道是**跨域 iframe app**
+`online-store-web.shopifyapps.com`，JS 讀不進去——工具限制照鐵律 14.3 登記，本節靠截圖取證）：
+
+| 控件 | 形態 / 上限 | 說明文字（逐字） |
+|---|---|---|
+| **Password protection** | toggle（本店**呈停用態**） | `Restrict access to visitors with the password` |
+| （橫幅） | 資訊條 | **`Your online store is in development. To let visitors access your store, give them the password.`** |
+| Password | 文字，**6 of 100 characters used** | — |
+| Message to your visitors | textarea，**0 of 5,000 characters used** | — |
+| 🔴 **Restrict access to B2B customers only** | toggle | `B2B customers will need to log in and verify their account to access your store.` ＋ `Manage companies` |
+
+🔴 **兩條新結論**：
+1. **店鋪處於「development」狀態時，密碼保護是被強制的**（toggle 停用）
+   ⇒ 「店鋪生命週期狀態」本身也參與可見性判定。
+2. **`Restrict access to B2B customers only` 是第五道閘門**——整店層級、與商品無關，
+   但會讓所有商品對非 B2B 訪客不可見。
+
+⇒ 合計本尊的可見性閘門至少五層，我方模型只做了其中兩層：
+
+| # | 閘門 | 層級 | 我方 |
+|---|---|---|---|
+| 1 | 店鋪 development／密碼保護 | 店 | ❌ 無 |
+| 2 | B2B-only 限制 | 店 | ❌ 無 |
+| 3 | 商品 `status`（含平台施加的 `Suspended`） | 商品 | ✅ 有（`Suspended` 缺） |
+| 4 | Publication（商品層 ∧ 變體層） | 商品／變體 | ✅ **本包做的就是這一層** |
+| 5 | Catalog（含 Included／Excluded 三值成員） | 商品／變體 | ❌ 延後（88 §3.2） |
+
+（第 1、2 層屬 Online Store 前台包＝第 30／33 包；第 5 層屬 M5。）
+
+### §9.7 🔴 存在**商家不能設定**的 publication——狀態是審核結果
+
+商品 modal 的 `Agentic` 組不是 toggle，是**唯讀狀態標籤**。
+同一個商品**只改 status**，顯示就變：
+
+| 商品 status | `Agentic › Shopify Catalog` 顯示 |
+|---|---|
+| `Unlisted` | `Learn more about Shopify Catalog requirements` ｜ 狀態 **`Unpublished`** |
+| `Active` | **`Your product is being reviewed for Shopify Catalog eligibility. This can take a few days.`** ｜ 狀態 **`Pending`** |
+
+🔴 ⇒ 至少三態（`Unpublished`／`Pending`／推測有 `Published`），由**商品狀態 ＋ 資格審核**推導。
+對應官方的 `ResourceFeedback` 與 sales-channel app 的 product publishing 回報機制。
+
+**我方模型只有一個 `published_at` 時間戳**，沒有：
+①商家不可設定的 publication ②pending／審核中狀態 ③per-resource 的資格／回饋原因。
+
+### §9.8 🔴 `Suspended`：官方 enum 之外的第五個狀態值
+
+系列頁 `Collection items` 的 `Status` 篩選器逐項展開：
+
+| 值 | 預設勾選 |
+|---|---|
+| Active | ☑ |
+| Draft | ☑ |
+| Unlisted | ☑ |
+| **Archived** | ☐ |
+| **Suspended** | ☑ |
+
+🔴 `Suspended` **不在官方 `ProductStatus` enum**（官方恰四值）。
+它**預設勾選**（與 Archived 相反）⇒ 判斷是**平台施加的狀態**（違規／審核凍結類），
+與 §9.7 的 `Pending` 同族。⚠️ **確切語義＝未取得**。
+
+### §9.9 `autoPublish` 的商家入口——第一輪未取得的收斂
+
+`Settings › Sales channels` 三個已安裝管道（`Online Store｜Point of Sale｜Shop`），
+`⋯` 選單值域三項：`Open app｜View details｜Uninstall`。
+`View details` 是 app 安裝詳情面板（說明／Billing／權限 scope／Privacy／Recent activity），
+**沒有任何發布設定**。
+
+🔴 **在上述已查介面中未找到**「每個管道一個自動發布新商品」的商家開關
+（依鐵律 12.1 不寫「本尊沒有這個設定」）。
+商家層級的等價控件**只存在於 catalog**：`Automatically include new products in this catalog`（預設開）。
+
+🔴 另一條：**`Agentic` 不在 `Settings › Sales channels` 的已安裝清單**，
+但它出現在側欄與發布 modal ⇒ **「已安裝管道」與「可發布目標」不是同一個集合**。
+
+### §9.10 系列（Collection）面的差異
+
+- 列表欄位：`Title｜Products｜Conditions｜Sales channels`
+  🔴 **命名不一致**：商品列表那一欄叫 `Channels`，系列列表叫 `Sales channels`
+- 既有 `Home page` 系列：**Sales channels = 1**（只有 Online Store，POS 與 Shop 皆 OFF），
+  而新建系列表單存檔前顯示 **`3 channels`** ⇒ **既有系列不會被追加到新管道**
+- 頁首：`Duplicate｜View｜More actions`（商品頁是 `Preview｜Share`）⇒ 分享語義不同
+- 右欄 Sources：`Products ˅` ＋ `Add condition`（帶規則數徽章）＋ `Exclude` ＋ `+`
+  ⇒ 與我方第 11 包實作的 sources／rules 模型同構
+
+### §9.11 本輪在測試店留下的東西
+
+| 物件 | GID | 狀態 |
+|---|---|---|
+| catalog | `MarketCatalog/103379370219`「P12 第三層實測 catalog」 | 綁 United States 市場，Active |
+| ↑ 的 price list | `PriceList/21058420971` | HKD，0% |
+| ↑ 的 publication | `Publication/214892183787` | autoPublish=true |
+| 商品 | `Product/9911273160939`「P12 發布模型實測用商品」 | 本輪由 Unlisted 改回 **Active**；商品層 2 管道 |
+| 變體 | `Product/9907126370539` 的變體 S | Point of Sale 關閉 |
+
+### §9.12 本輪**未取得**清單
+
+- **`Suspended` 的確切語義**（官方 enum 沒有它）
+- **bundle 在發布上的特殊規則**（`includesBundle` 參數的來源）
+- **`Unlisted` 的前台實際行為**（受密碼保護阻擋，刻意不移除密碼）
+- **`Agentic › Shopify Catalog` 的第三態**是否為 `Published`，以及審核的實際條件
+- **`catalogPublicationCount=1` 與列表 `Catalogs=0` 的矛盾**
+- **「Automatically include new products」與 `defaultState` 的確切關係**
+  （送出的是 `EMPTY`，最終卻納入了商品）
+- **新增 publication 時是否回填既有商品**（§8.7 那條仍未取得；本輪建的是 catalog 不是管道）

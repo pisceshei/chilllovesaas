@@ -343,6 +343,7 @@
   "collections.type.smartHint": "成员由规则决定；规则编辑器在后续里程碑开放。",
   "collections.type.immutableHint": "系列类型创建后不可更改。",
   "collections.count": "{count, plural, other {# 件}}",
+  "collections.visibleCount": "（前台可见 {count} 件）",
   "collections.card.type": "系列类型",
   "collections.sortOrder": "排序方式",
   "collections.sort.manual": "手动",
