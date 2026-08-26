@@ -27,6 +27,40 @@ class ResourcePublication < ApplicationRecord
   validate :future_publishing_supported_by_channel
   validate :variant_cannot_be_scheduled
 
+  # ── S2：三種狀態的 scope（對位本尊 V2 投影的 `onlyPublished` 參數）─────────────
+  #
+  # 🔴 **本尊的兩種讀出投影在「已排程未到點」這一格語義相反**，官方原文逐字：
+  #   - `ResourcePublication`（V1）：`Whether the resource publication is published.
+  #     **Also returns true if the resource publication is scheduled to be published.**
+  #     If false, then the resource publication is neither published nor scheduled to be published.`
+  #   - `ResourcePublicationV2`：`Whether the resource publication is published. If true,
+  #     then the resource publication is published to the publication. **If false, then the
+  #     resource publication is staged to be published to the publication.**`
+  #   （<https://shopify.dev/docs/api/admin-graphql/latest/objects/ResourcePublication>
+  #     與 `.../ResourcePublicationV2`，取證 2026-08-26）
+  #
+  # ⇒ 同一個布林在兩個投影上對「排程中」給出相反的答案。我方**只實作 V2 語義**
+  #   （理由見 `Types::ResourcePublicationV2Type` 檔頭），本組 scope 就是它的資料面。
+  #
+  # ⚠️ 「相反」這兩個字是**由上面兩段原文導出的判斷**，不是官方原文——
+  #   任何引用這個結論的地方都要一併附原文（鐵律 19.1）。
+
+  # 已發布（到點）。
+  scope :currently_published, ->(at: Time.current) {
+    where.not(published_at: nil).where(published_at: ..at)
+  }
+
+  # 🔴 已排程但**尚未**到點＝本尊 V2 的 `isPublished == false`（`staged`）。
+  # ⚠️ 官方在**欄位描述**用 `staged`、在**物件描述**用 `scheduled`，且從未把兩詞等同
+  #   ⇒ 我方註釋兩詞並列，不合併成單一術語。
+  scope :staged, ->(at: Time.current) { where(published_at: (at + 1.second)..) }
+
+  # V2 的成員集合：已發布 ∪ 已排程。
+  # 🔴 `published_at IS NULL` 的列**不在 V2 裡**——官方逐字
+  #   `Unlike ResourcePublication, an instance of ResourcePublicationV2 can't be unpublished.
+  #    It must either be published or scheduled to be published.`
+  scope :published_or_staged, -> { where.not(published_at: nil) }
+
   # 「已發布」謂詞的**唯一產生處**（鐵律 7）——SQL 側與 Ruby 側都從這裡長出來。
   #
   # 🔴 2026-08-26 收斂（第二輪對抗審查 G29／P12-B13）：第 12 包初版讓
@@ -149,11 +183,44 @@ class ResourcePublication < ApplicationRecord
     errors.add(:published_at, "此銷售管道不支援排程發布")
   end
 
-  # 本尊：不能為單一 variant 排程發布（82 §0.2）。
+  # 本尊：不能為單一 variant 排程發布。
+  #
+  # 🔴 **2026-08-26 S2 改：判準從硬編字面值改成引 `config/limits.yml`**（鐵律 6）。
+  #   原本硬編 `publishable_type == "ProductVariant"`，而正典是
+  #   `sales_channels.future_publishing_unsupported: [variant, shop_channel]`——
+  #   兩份清單。日後照正典加第三種不支援的資源，這條 validation **不會跟著變**，
+  #   而且不會有任何測試轉紅（靜默分岔）。
+  #   ⚠️ 該正典鍵在此之前是**零消費者**（正典宣告與實作不符，鐵律 19）；本方法是它的第一個消費者。
+  #
+  # 官方依據（help，取證 2026-08-26）：`You can't set a future publishing date for
+  # individual product variants.`
+  # （<https://help.shopify.com/en/manual/shopify-admin/productivity-tools/future-publishing>）
+  #
+  # ⚠️ **與 `docs/research/90` 的 V-4 字面不符，本輪維持現行**：V-4 寫「variant 不得排程發布
+  #   （**publishDate 必須為空**）」，而本方法只擋**未來**時間、允許 variant 帶過去時間的
+  #   `published_at`——那正是 `Publications::Materialize` 的既有寫法（它對 variant 也寫
+  #   `published_at: at`）。照 V-4 字面收緊會打爛既有生產者。已登記 `docs/specs/91` §3.21。
   def variant_cannot_be_scheduled
-    return unless publishable_type == "ProductVariant"
+    return unless unschedulable_publishable_type?
     return if published_at.nil? || published_at <= Time.current
 
     errors.add(:published_at, "不支援為單一子類選項排程發布")
+  end
+
+  # `publishable_type`（駝峰）是否落在正典的「不支援排程」清單（底線小寫）裡。
+  #
+  # 🔴 兩邊的命名慣例不同：limits 用 `variant`，model 用 `ProductVariant`
+  #   ⇒ 這裡做一次明確的對照，**不用 `underscore` 之類的字串魔法**——
+  #   `ProductVariant.underscore` 是 `product_variant` 不是 `variant`，
+  #   靠推導會靜默對不上而且沒有任何測試會紅。
+  #
+  # @return [Boolean]
+  UNSCHEDULABLE_LIMIT_KEYS = { "ProductVariant" => "variant" }.freeze
+
+  def unschedulable_publishable_type?
+    key = UNSCHEDULABLE_LIMIT_KEYS[publishable_type]
+    return false if key.nil?
+
+    Limits.fetch(:sales_channels, :future_publishing_unsupported).include?(key)
   end
 end

@@ -38,8 +38,15 @@ class SalesCatalog < ApplicationRecord
   TYPES = %w[app market company_location].freeze
 
   # 本尊 `CatalogStatus` 恰三值。
-  # ⚠️ admin UI 只曝露 active／archived 兩個（`82` §9.5c 實測的表單沒有 draft），
-  #   `draft` 只在 API 層出現 ⇒ 我方保留三值但 UI 同樣只給兩個。
+  # ⚠️ ~~admin UI 只曝露 active／archived 兩個（`82` §9.5c 實測的表單沒有 draft），~~
+  #   ~~`draft` 只在 API 層出現 ⇒ 我方保留三值但 UI 同樣只給兩個。~~
+  # 🔴 **2026-08-26 更正（實測推翻，`docs/research/82` §12.5）**：原句把「**建立表單**只給兩個」
+  #   的觀察寫成了「**admin UI** 只曝露兩個」的全稱，射程過寬。正確表述分兩處：
+  #     - **catalog 建立表單**（`82` §9.5c）確實只給 active／archived；
+  #     - **逐商品發布 modal 的 `Status` 篩選器**（`82` §12.5）**三個都給**——
+  #       實測展開後恰為 `Active`／`Draft`／`Archived` 三個 checkbox ＋ 一個 `Clear`。
+  #   ⇒ 我方保留三值是對的；**UI 該不該給 draft 要看是哪一個 UI**，
+  #     建立表單不給、篩選器要給。
   STATUSES = %w[active archived draft].freeze
 
   acts_as_tenant :shop

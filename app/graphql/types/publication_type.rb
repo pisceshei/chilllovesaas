@@ -57,8 +57,15 @@ module Types
     field :operation_status, String, null: true,
       description: "進行中的發布操作：created／active／complete；null＝無（本尊 ResourceOperationStatus 恰三值，無失敗態）。"
 
+    # 🔴 **2026-08-26 S2 修正的一個真 bug**：S1 交付的版本是
+    #   `object.resource_publications.count`——**完全不看 `published_at`**。
+    #   在 S1 當下無害（生產上 `published_at` 恆為過去），但**排程一存在就是錯值**：
+    #   一筆排程到下個月的商品會被算成「已發布」。
+    #   ⇒ 兩個欄位分開，語義各自明確，不再讓一個數字承擔兩種意思。
     field :published_resource_count, Integer, null: false,
-      description: "已發布到本 publication 的資源列數（Product／Collection／ProductVariant 合計）。"
+      description: "**已到點**發布到本 publication 的資源列數（Product／Collection／ProductVariant 合計）。不含排程中的。"
+    field :staged_resource_count, Integer, null: false,
+      description: "已排程但**尚未到點**的資源列數（本尊 V2 投影的 isPublished=false／staged）。"
 
     # @return [String] GID
     def id
@@ -89,10 +96,16 @@ module Types
     # @return [String, nil]
     def catalog_type = object.sales_catalog&.catalog_type
 
-    # @return [Integer]
+    # @return [Integer] 已到點的列數
     # @note 副作用：一次 COUNT。列表用請 preload 或改走相關子查詢。
     def published_resource_count
-      object.resource_publications.count
+      object.resource_publications.currently_published.count
+    end
+
+    # @return [Integer] 已排程未到點的列數
+    # @note 副作用：一次 COUNT。
+    def staged_resource_count
+      object.resource_publications.staged.count
     end
   end
 end
