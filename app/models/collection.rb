@@ -13,6 +13,11 @@ class Collection < ApplicationRecord
   acts_as_tenant :shop
 
   has_many :resource_publications, as: :publishable, dependent: :destroy
+
+  # 系列出生即物化發布列。Collection 與 Product／ProductVariant 同為本尊 `Publishable`
+  # 介面的實作者（82 §0.2），走同一支生產者、同一條規則。
+  # 掛 callback 而非 service 的理由見 `Publications::Materialize` 檔頭。
+  after_create :materialize_publications
   # 手動系列的成員；智慧系列不用這個關聯（成員是規則的函數，見 CollectionProduct）。
   has_many :collection_products, dependent: :delete_all
   has_many :products, through: :collection_products
@@ -51,4 +56,11 @@ class Collection < ApplicationRecord
   validates :sort_order, inclusion: { in: SORT_ORDERS }
 
   scope :manual, -> { where(collection_type: "manual") }
+
+  private
+
+  # @see Publications::Materialize
+  def materialize_publications
+    Publications::Materialize.for(self)
+  end
 end

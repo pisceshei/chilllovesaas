@@ -2481,6 +2481,49 @@
   【F2；來源＝D48 遷移的跨檔同步；複驗：
   `grep -rn "alt_source" docs/plans/ docs/specs/62-seo-geo.md`；取證日期＝2026-08-25】
 
+### 3.18 第 12 包（發布模型收口）的範圍外觀察（2026-08-26）
+
+<!-- 🔴 編號說明：本節取 3.18 是因為 §3 現有子節的最大編號是 3.17。
+     ⚠️ 既有編號有兩處失序（3.11–3.17 的行序與編號相反、且 **3.16 出現兩次**：
+     一次是裸 apex 憑證、一次是 title 缺席語義）。本輪**不動既有編號**——
+     重編會讓所有引用它們的外部文字失效，代價大於收益。複驗現況：
+     `grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- **`Collections::RuleCompiler` 的成員判定用 `p.status <> 'archived'`，不是 `purchasable`**：
+  第 12 包補上了 `Product.purchasable`（狀態層 ∧ 商品發布層 ∧ 變體發布層），但智慧系列的
+  `PRODUCT_ELIGIBLE_SQL` 仍只排除 archived。⇒ 未發布到任何管道的商品**仍會成為智慧系列的成員**。
+  改成 `purchasable` 是**語義變更**（會讓既有系列的成員數變動），需裁定，第 12 包刻意不改。
+  【F2；來源＝第 12 包實作時的消費者盤點；複驗：
+  `grep -n "PRODUCT_ELIGIBLE_SQL" app/services/collections/rule_compiler.rb`；取證日期＝2026-08-26】
+
+- **`publications.auto_publish` 欄位預設 `true`，本尊 `PublicationCreateInput.autoPublish`
+  官方 `Default:false`**：我方**唯一的建立點**（`Shop#after_create :create_default_publication`）
+  已明文傳 `auto_publish: true`，所以現況行為正確、無差異。改欄位預設是 schema 變更且不改行為
+  ⇒ 登記不改（鐵律 20.5）。日後若開放使用者自建 publication，這個預設就會產生差異。
+  【F2；來源＝shopify.dev `PublicationCreateInput`（取證 2026-08-26）對照 `db/schema.rb`；
+  複驗：`grep -n "auto_publish" db/schema.rb app/models/shop.rb`；取證日期＝2026-08-26】
+
+- **本尊的商品 Status 下拉沒有 `Archived`**：實測（測試店，2026-08-26）該下拉恰三項——
+  `Active` / `Draft` / `Unlisted`（各帶一行說明，逐字見 `docs/research/82` §8.5）。
+  **歸檔是 `More actions` 底下的獨立動作**，不是狀態選項。我方若把 archived 做成下拉第四項
+  就與本尊不一致。屬商品編輯頁的包。
+  【F5；來源＝82 §8.5 實測；複驗：見該節；取證日期＝2026-08-26】
+
+- **系列建立頁的 Collection items 篩選出現 `Suspended` 這個狀態值**：
+  實測本尊 `/collections/new` 的篩選器逐字為 `Status: Active, Draft, Unlisted, and Suspended`
+  ——`Suspended` **不在 `ProductStatus` 值域**（官方 enum 恰四值 ACTIVE/ARCHIVED/DRAFT/UNLISTED）。
+  它是什麼＝**未取得**（未點開該篩選器逐項展開）。
+  【F2；來源＝2026-08-26 測試店實測（頁面文字擷取）；取得方式＝回測試店點開該篩選器做值域窮舉；
+  取證日期＝2026-08-26】
+
+- **`insert_all`／`upsert_all` 繞過發布列生產者**：第 12 包的生產者掛在三個 model 的
+  `after_create` 上，批量寫入一律繞過 ⇒ 匯入器（第 20+ 包）若走批量路徑，匯進來的商品
+  **全部沒有發布列、前台全部看不到、且不拋任何錯**。與 `resource_publication.rb` 既有的
+  「本驗證擋不住 insert_all」限制聲明同族。已寫進 `docs/dev/m2-publication-model.md` §6
+  當作該包的前置條件，此處併記。
+  【F1；來源＝第 12 包實作；複驗：
+  `grep -n "materialize_publications" app/models/*.rb`；取證日期＝2026-08-26】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
