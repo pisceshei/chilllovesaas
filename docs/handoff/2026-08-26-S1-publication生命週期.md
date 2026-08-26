@@ -41,7 +41,7 @@
 
 ## ② 為什麼這樣改
 
-**為什麼三支 mutation 而不是先做鎖**：見上（C-12）。鎖與被鎖的動作必須同批設計，
+**為什麼先做 mutation（集合導出：`ls app/graphql/mutations/publication_*.rb`）而不是先做鎖**：見上（C-12）。鎖與被鎖的動作必須同批設計，
 而動作不存在時，鎖只會變成第二個零消費者欄位——正是 `publications.catalog_id`
 空轉兩週那個坑的同型情境，而 S0/S1 這整條線就是來收那個口的。
 
@@ -64,7 +64,7 @@
 | `publishablesToAdd/Remove` 應該像 `productSet` 一樣宣告式全量 | `82` §11.5 實測：本尊發布 modal 一律全部未勾開場 ⇒ 累加語義 |
 | 分步方案寫的「各 ≤50」 | 那個「各」是我方寫的，官方沒說 |
 | 「本尊 `AppInstallation` 沒有時間戳 ⇒ 那兩欄純 ours」（S0 PR B 的說法） | `82` §11.1 實測：admin UI 顯示 `Installed July 14` ＋ `App history` 時間軸 ⇒ 平台有存，只是不在公開 API 面上。已就地更正（`app_installation.rb`、D52） |
-| 批次寫入用 `insert_all` 比較快 | 它繞過唯一那道租戶守衛（多型側無 DB 外鍵）⇒ 改逐列 `find_or_create_by!` |
+| 批次寫入用 `insert_all` 比較快 | 它繞過 `ResourcePublication` 上那道 model 層租戶守衛（多型側無 DB 外鍵，所以那是該表僅有的一道；複驗：`grep -n "publishable_belongs_to_same_shop" app/models/resource_publication.rb`）⇒ 改逐列 `find_or_create_by!` |
 
 ---
 
@@ -101,8 +101,9 @@ bundle exec rspec spec/requests/publication_lifecycle_spec.rb
 1. 🔴 **不要把 `publishablesToAdd/Remove` 改成宣告式全量**（未列出＝移除）——
    那與本倉庫 `productSet`／`collectionSet` 家族的直覺相反，但本尊是累加語義。
    改了會讓商家一次勾選清空整個管道。有 spec 盯著。
-2. 🔴 **不要把批次寫入改成 `insert_all`／`upsert_all`**——它繞過唯一那道租戶守衛
-   （`ResourcePublication#publishable_belongs_to_same_shop`），會寫出跨租戶的列**而不拋錯**。
+2. 🔴 **不要把批次寫入改成 `insert_all`／`upsert_all`**——它繞過
+   `ResourcePublication#publishable_belongs_to_same_shop`，會寫出跨租戶的列**而不拋錯**。
+   （該表的租戶守衛集合：`grep -n "validate \|def publishable_belongs_to_same_shop" app/models/resource_publication.rb`；多型側無 DB 外鍵，複驗：`grep -n "publishable" db/schema.rb | grep -i foreign`）
 3. 🔴 **不要在刪除路徑省掉 cache stamp 的 bump，也不要改順序**——
    `dependent: :destroy` 不會 bump，而刪完就查不到受影響的是哪些商品了。
 4. 🔴 **不要把 `Product.bump_publications_stamp!` 改成 `update_all` 的 hash 形式**——

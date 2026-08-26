@@ -37,7 +37,7 @@
 ### 2. 交付：publication 生命週期 API
 
 - 讀取面：`Types::PublicationType` ＋ `QueryType#publications`
-- 寫入面：`publicationCreate`／`publicationUpdate`／`publicationDelete` 三支 mutation
+- 寫入面：`publicationCreate`／`publicationUpdate`／`publicationDelete`（集合導出：`ls app/graphql/mutations/publication_*.rb`）
 - 規則層：`Publications::Write`（唯一寫入入口）＋ `Publications::Lookup`（GID 解析）
 - 契約：`PublicationUserErrorCode`／`PublicationUserErrorType`／兩個 input／`PublicationDefaultState` enum
 - 五個語系的 `errors.publication.*` 文案（五檔 key 集合必須一致，有 spec 擋）
@@ -50,7 +50,7 @@
 |---|---|---|
 | 1 | `publishablesToAdd/Remove` 是**累加／扣除** | 本倉庫的 `productSet`／`collectionSet` 是宣告式全量（未列出＝移除）。照那個習慣做，商家一次勾選會**清空整個管道** |
 | 2 | 重複 add 是 **no-op success** | 回 `ALREADY_EXISTS` 會讓批次操作在正常情況下失敗 |
-| 3 | 逐列 `find_or_create_by!`，**不用 `insert_all`** | `insert_all` 繞過唯一那道租戶守衛（多型側無外鍵）⇒ 寫出跨租戶的列**而不拋錯** |
+| 3 | 逐列 `find_or_create_by!`，**不用 `insert_all`** | `insert_all` 繞過 `ResourcePublication#publishable_belongs_to_same_shop`（多型側無 DB 外鍵，所以那是該表僅有的一道；複驗：`grep -n "publishable_belongs_to_same_shop" app/models/resource_publication.rb`）⇒ 寫出跨租戶的列**而不拋錯** |
 | 4 | 批次上限取**合計**不是各自 | 官方兩句措辭不同且都未指明切分 ⇒ fail-closed 取較嚴側，登記為 ours 加嚴 |
 
 規則 1 的實測依據＝`docs/research/82` §11.5：本尊的發布 modal **一律以「全部未勾」開場**，
@@ -104,21 +104,21 @@ publication_lookup.rb：找不到 resolve 方法
 
 | 檔案 | 內容 |
 |---|---|
-| `app/services/publications/write.rb` | 新增。唯一寫入入口：create／update／delete ＋ 批次上限 ＋ 租戶解析 ＋ cache stamp |
+| `app/services/publications/write.rb` | 新增。publication 生命週期的寫入入口：create／update／delete ＋ 批次上限 ＋ 租戶解析 ＋ cache stamp（呼叫端集合：`grep -rn "Publications::Write" app/ --include=*.rb`）|
 | `app/services/publications/lookup.rb` | 新增。publication GID 解析與 not-found 錯誤（兩支 mutation 共用，避免 `field` path 分岔） |
 | `app/graphql/mutations/publication_{create,update,delete}.rb` | 新增。三支薄殼 |
 | `app/graphql/types/publication_type.rb` | 新增。🔴 `title` 取自 catalog、`handle` 取自 channel、`catalogId` 用本尊的 GID Type `AppCatalog` |
 | `app/graphql/types/publication_default_state_enum.rb` | 新增。恰兩值 |
 | `app/graphql/types/inputs/publication_{create,update}_input.rb` | 新增 |
 | `app/graphql/types/errors/publication_user_error_{code,type}.rb` | 新增 |
-| `app/graphql/types/mutation_type.rb` | 掛三支 mutation |
+| `app/graphql/types/mutation_type.rb` | 掛上 publication 那組 mutation（`grep -n "publication_" app/graphql/types/mutation_type.rb`）|
 | `app/graphql/types/query_type.rb` | 新增 `publications` 欄位與 resolver（preload catalog／channel） |
 | `config/locales/{en,zh-Hant,zh-Hans,ja,fr}.yml` | `errors.publication.*` 六個 key × 五語系 |
 | `spec/requests/publication_lifecycle_spec.rb` | 新增，29 格 |
 | `docs/dev/m2-publication-lifecycle.md` | 新增。dev doc |
 | `docs/plans/2026-08-26-S1-規格草案.md` | 新增。研究工作流的合成產出（自帶證據地位聲明） |
 | `docs/research/82-admin-channels.md` | 新增 §11（實測 ＋ 抓包） |
-| `docs/research/28-api-contract.md` | §2 補三支 mutation ＋ 三條契約細節 |
+| `docs/research/28-api-contract.md` | §2 的發佈列補上 publication mutation，另加一段契約細節（`grep -n "publicationCreate" docs/research/28-api-contract.md`）|
 | `docs/specs/88-publication-model.md` | §5 結案 #6；§2.1 的外鍵更正註 |
 | `docs/dev/m2-publication-model.md` | P12-B11 撤回（cache stamp 的寫入者已交付） |
 | `docs/plans/2026-08-26-發布與可見性-分步執行方案.md` | S1 節兩處過期陳述就地更正 |
