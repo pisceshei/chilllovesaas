@@ -129,6 +129,12 @@ module Collections
       def member_by_rules?(shop, collection, product)
         sources = CollectionSource.where(shop_id: shop.id, collection_id: collection.id)
                                   .conditions_type.includes(:rules).order(:position)
+        # 🔴 **編譯之前先問共用的 pre-scan**（第九輪 N3）：把守衛放在 rescue 上不等價
+        #   ——`any?` 會短路、`where_sql` 對只有 exclusion 的來源直接回 nil，兩條路都
+        #   繞過 rescue，於是 resync 照常物化而 Rebuild 標 ERROR（H4 根因復發）。
+        raise RuleCompiler::Unsupported, "來源含未知條件型別（passthrough 列）" if
+          sources.any? { |source| Rebuild.unsupported_source?(source) }
+
         sources.any? do |source|
           where_sql = RuleCompiler.where_sql(source)
           next false if where_sql.nil?

@@ -116,6 +116,7 @@
       status_value_invalid: "不是有效的商品状态。"
       reference_self: "系列不能排除自己。"
       reference_cycle: "不能排除一个（直接或间接）排除了自己的系列。"
+      inclusion_required: "条件来源至少需要一条包含规则。"
       sort_order_invalid: "不支持的排序方式。"
       handle_invalid: "handle 只能包含小写字母、数字与连字符。"
       handle_redirected: "这个 handle 是既有网址转向的来源——旧 handle 不回收。"

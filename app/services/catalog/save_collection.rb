@@ -131,6 +131,15 @@ module Catalog
       end
 
       def normalize_sources(shop, input, errors, current_id = nil)
+        # 🔴 祖先集合**每個請求算一次，而且只活在這個呼叫堆疊裡**（第九輪 N2）：
+        #   第八輪把它記在 `class << self` 的 `@cycle_ancestors` ⇒ 那是**類別物件**的
+        #   ivar，在 Puma 進程存活期間永不清除。後果有三：①被引用方的邊後來被刪掉
+        #   之後，同一個 worker 對該系列的每一次合法存檔都被回一個**假的**
+        #   `reference_cycle` INVALID（且 `normalize` 一有 errors 就 return ⇒
+        #   `replace_sources!` 的第二道複查根本走不到，商家無自救路徑）；
+        #   ②跨租戶無界成長、無淘汰；③多執行緒共用一個裸 Hash。
+        #   ⇒ 改成純區域變數，一次請求算一次、隨堆疊消失。
+        ancestors_memo = current_id ? Collections::ReferenceGraph.ancestors(shop, current_id) : nil
         raw_sources = input[:sources]
         return nil if raw_sources.nil?   # 缺席＝保持現值（宣告式家族語義）
 
@@ -138,7 +147,7 @@ module Catalog
         # normalize 這一層看不見更新目標的**現行**型別（F3 改制後 collection_type 缺席＝nil），
         # 在這裡判會把「更新智慧系列、沒帶 collectionType、帶 sources」誤殺。
         sources = Array(raw_sources).each_with_index.map do |src, s_index|
-          normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors, current_id)
+          normalize_source(shop, src.respond_to?(:to_h) ? src.to_h.symbolize_keys : src, s_index, errors, current_id, ancestors_memo)
         end
         # 🔴 來源陣列本身也要有上限（2026-08-26 第六輪 K6）：60 條上限只算**條件總數**，
         #   而空來源（`{rules: []}`，契約允許）貢獻 0 條 ⇒ 一次請求可無限量建 source 列，
@@ -157,12 +166,6 @@ module Catalog
         sources
       end
 
-      # 「能走到本系列」的祖先集合，**每個請求只算一次**（第八輪 M3）。
-      def cycle_ancestors(shop, current_id)
-        @cycle_ancestors ||= {}
-        @cycle_ancestors[[ shop.id, current_id ]] ||= Collections::ReferenceGraph.ancestors(shop, current_id)
-      end
-
       # 更新態的本系列 id（J5 的自我引用判準）；建立態沒有 id ⇒ nil。
       def current_collection_id(input)
         match = GID_PATTERN.match(input[:id].to_s)
@@ -179,7 +182,7 @@ module Catalog
         false
       end
 
-      def normalize_source(shop, src, s_index, errors, current_id = nil)
+      def normalize_source(shop, src, s_index, errors, current_id = nil, ancestors_memo = nil)
         path = [ "sources", s_index.to_s ]
         target = (src[:target_type] || "products").to_s
         # v1 只收 products：variants／sub_collections 的機制屬後續包（schema 已就位）。
@@ -192,14 +195,23 @@ module Catalog
           errors << error(path + [ "exclusionMatch" ], I18n.t("errors.collection.match_invalid"), "INVALID")
         end
 
-        rules = Array(src[:rules]).each_with_index.map do |rule, r_index|
+        # 🔴 只有 exclusion、沒有任何 inclusion 的來源一律拒（第九輪）：求值時
+        #   `where_sql` 對空 inclusion 回 nil ⇒ 該來源貢獻空集合，於是商家存了一組
+        #   「看起來設定好了」的規則卻永遠 0 成員、零錯誤訊息——與 J4（status 打錯字）
+        #   同一形態的靜默無效輸入。
+        raw_rules = Array(src[:rules])
+        if raw_rules.any? && raw_rules.none? { |rule| (rule.respond_to?(:to_h) ? rule.to_h.symbolize_keys : rule)[:block].to_s != "exclusion" }
+          errors << error(path + [ "rules" ], I18n.t("errors.collection.inclusion_required"), "INVALID")
+        end
+
+        rules = raw_rules.each_with_index.map do |rule, r_index|
           normalize_rule(shop, rule.respond_to?(:to_h) ? rule.to_h.symbolize_keys : rule,
-                         path + [ "rules", r_index.to_s ], errors, current_id)
+                         path + [ "rules", r_index.to_s ], errors, current_id, ancestors_memo)
         end
         { target_type: target, inclusion_match:, exclusion_match:, rules: rules.compact }
       end
 
-      def normalize_rule(shop, rule, path, errors, current_id = nil)
+      def normalize_rule(shop, rule, path, errors, current_id = nil, ancestors_memo = nil)
         block = rule[:block].to_s
         type = rule[:condition_type].to_s
         relation = rule[:relation].to_s
@@ -315,7 +327,7 @@ module Catalog
           #   震盪，而反向傳播（K8）以「有沒有變」為傳播條件 ⇒ **無界 job 鏈與無界
           #   outbox**（實測 n=3 週期 6、永不終止）。偶數環雖會停，答案卻取決於起始
           #   狀態——環在這個語義下沒有一個「對」的答案，所以不分奇偶一律拒。
-          if current_id && cycle_ancestors(shop, current_id).include?(referenced_id)
+          if current_id && ancestors_memo && ancestors_memo.include?(referenced_id)
             errors << error(path + [ "referencedCollectionId" ], I18n.t("errors.collection.reference_cycle"), "INVALID")
             return nil
           end
@@ -343,7 +355,9 @@ module Catalog
                             .filter_map { |rule| rule[:value_int] }
         if referenced.any?
           Catalog::HandleChange.serialize!(shop)
-          ancestors = Collections::ReferenceGraph.ancestors(shop, collection.id)
+          # 🔴 `lock: true`（第九輪 N1）：普通讀吃的是本 txn 在**取得店鎖之前**建立的
+          #   快照，看不到我們排隊期間對方提交的邊 ⇒ 這道複查會整個失效、環照樣落庫。
+          ancestors = Collections::ReferenceGraph.ancestors(shop, collection.id, lock: true)
           offender = referenced.find { |id| id == collection.id || ancestors.include?(id) }
           if offender
             raise TreeRejected, [ error([ "sources" ], I18n.t("errors.collection.reference_cycle"), "INVALID") ]

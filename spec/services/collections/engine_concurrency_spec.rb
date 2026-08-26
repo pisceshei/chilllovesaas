@@ -203,10 +203,12 @@ RSpec.describe "智慧系列引擎併發" do
     first = ActsAsTenant.with_tenant(shop) { save_edge.call(a, b) }
     expect(first.user_errors).to eq([])
 
-    # 🔴 模擬 TOCTOU：把 **pre-flight** 那一道打瞎（等同「檢查時對方的邊還沒提交」），
-    #   只留序列化點內的複查。少了複查，環就會落庫——那正是並行下真實會發生的事。
-    #   （序列化測試裡兩個請求本來就不會交錯，所以必須把第一道拿掉才測得到第二道。）
-    allow(Catalog::SaveCollection).to receive(:cycle_ancestors).and_return(Set.new)
+    # 🔴 模擬 TOCTOU：把 **pre-flight**（非鎖定讀那一次）打瞎，只留序列化點內的複查。
+    #   少了複查，環就會落庫——那正是並行下真實會發生的事。
+    #   （序列化測試裡兩個請求本來就不會交錯，必須把第一道拿掉才測得到第二道。）
+    allow(Collections::ReferenceGraph).to receive(:ancestors).and_wrap_original do |orig, *args, **kwargs|
+      kwargs[:lock] ? orig.call(*args, **kwargs) : Set.new
+    end
 
     second = ActsAsTenant.with_tenant(shop) { save_edge.call(b, a) }
     expect(second.user_errors.map { |e| e[:code] }).to eq([ "INVALID" ]),
@@ -216,5 +218,69 @@ RSpec.describe "智慧系列引擎併發" do
       CollectionSourceRule.where(shop_id: shop.id, condition_type: "collection").count
     end
     expect(edges).to eq(1), "環落庫了（M2）"
+  end
+
+  it "🔴 N1（2026-08-26 第九輪）：序列化點內的複查必須是**鎖定讀**——真交錯下環不得落庫" do
+    # 🔴 這一格用**真的兩條連線交錯**，不 stub 任何東西：
+    #   主執行緒開 txn 持 `Shop.lock`；T1 送 A→B，會卡在 `HandleChange.serialize!`；
+    #   主執行緒此時提交 B→A 並釋放店鎖；T1 才拿到鎖繼續。
+    #   T1 的 read view 早在它自己的 `collection.save!` 時就建立（**在等鎖之前**），
+    #   所以**普通讀看不到**主執行緒剛提交的 B→A ⇒ 少了 `lock: true` 這道複查會整個
+    #   失效、環照樣落庫。鎖定讀一律讀最新已提交版本。
+    a, b = %w[n1-a n1-b].map do |handle|
+      ActsAsTenant.with_tenant(shop) do
+        Collection.create!(shop_id: shop.id, title: handle, handle:,
+                           collection_type: "smart", sort_order: "manual", description_html: "")
+      end
+    end
+
+    save_edge = lambda do |owner, referenced|
+      Catalog::SaveCollection.call(shop:, input: {
+        id: "gid://chilllove/Collection/#{owner.id}",
+        lock_version: owner.reload.lock_version,
+        title: owner.title,
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" },
+          { block: "exclusion", condition_type: "collection", relation: "includes",
+            referenced_collection_id: "gid://chilllove/Collection/#{referenced.id}" }
+        ] } ]
+      })
+    end
+
+    # 把 T1 的 pre-flight 打瞎（等同「檢查時對方還沒提交」），只留序列化點內那一道。
+    allow(Collections::ReferenceGraph).to receive(:ancestors).and_wrap_original do |orig, *args, **kwargs|
+      kwargs[:lock] ? orig.call(*args, **kwargs) : Set.new
+    end
+
+    t1_result = nil
+    gate = Queue.new
+    holder = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        Shop.transaction do
+          Shop.lock.find(shop.id)          # 先占住店級序列化點
+          gate << :locked
+          ActsAsTenant.with_tenant(shop) { save_edge.call(b, a) }   # B→A，同 txn 內提交
+        end
+      end
+    end
+    gate.pop
+
+    t1 = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        # A→B：會卡在 serialize! 直到 holder 提交並釋放店鎖。
+        t1_result = ActsAsTenant.with_tenant(shop) { save_edge.call(a, b) }
+      end
+    end
+
+    holder.join
+    t1.join
+
+    edges = ActsAsTenant.with_tenant(shop) do
+      CollectionSourceRule.where(shop_id: shop.id, condition_type: "collection")
+                          .joins(:source).pluck("collection_sources.collection_id", :value_int)
+    end
+    expect(edges.length).to eq(1),
+      "普通讀吃的是等鎖之前的快照 ⇒ 複查看不到對方剛提交的邊，環落庫了（N1）：#{edges.inspect}"
+    expect(t1_result.user_errors.map { |e| e[:code] }).to eq([ "INVALID" ])
   end
 end

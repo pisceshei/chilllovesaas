@@ -116,6 +116,7 @@
       status_value_invalid: "商品ステータスが正しくありません。"
       reference_self: "コレクションは自分自身を除外できません。"
       reference_cycle: "自分を（間接的にでも）除外しているコレクションは除外できません。"
+      inclusion_required: "条件ソースには少なくとも 1 つの includes ルールが必要です。"
       sort_order_invalid: "サポートされていない並び順です。"
       handle_invalid: "handle に使えるのは小文字英字・数字・ハイフンのみです。"
       handle_redirected: "この handle は既存 URL リダイレクトの転送元です。旧 handle は再利用されません。"

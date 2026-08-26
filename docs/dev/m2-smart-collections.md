@@ -73,7 +73,9 @@ unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 �
   （🔴 `COALESCE` 不可省：`rebuilt_at` 可空而 MySQL `GREATEST(NULL, x)` 回 NULL ⇒
   NULL 戳的列會變成「再也蓋不上戳、也掃不掉」的不死列；掃尾同理必須顯式收 `IS NULL`）
   （單調帶——即使鎖被繞過，舊世代也降不了現任列的戳）＋世代掃尾。
-  🔴 變更判定＝`created_at >= generation`（新列）＋swept>0——**不是** affected_rows
+  🔴 變更判定＝`created_at >= generation`（新列）＋swept>0＋**`resumed`**（上一輪沒走到
+  OK 就強制發——M5：批次 upsert 是逐批各自的 txn，失敗後成員列還在，重跑的
+  inserted／swept 都是 0，少了這一項對外面就永遠補不回來）——**不是** affected_rows
   （ON DUPLICATE 對既有列每輪記 2 ⇒ 拿它判會讓零變更的 rebuild 白打快取，初版實測踩到）。
   編不了（unknown／unsupported）⇒ 整系列 ERROR、零寫入。
 - `ResyncProduct`：同一段 WHERE ＋ `p.id = ?` 的單商品判定；逐系列短 txn ＋
@@ -87,9 +89,12 @@ unknown（passthrough 存欄就位、寫入白名單暫不放行——見 §5 �
   ——`RebuildJob` 延後重排、`catalog:rebuild:collections` 單獨計數並非零結束
   （2026-08-26 delta 審查 F6：兜底靜默回報成功＝fail-open；守衛在
   `spec/lib/tasks/catalog_rebuild_spec.rb`）。
-- 成員變動的對外面（一處實作 `Rebuild.notify_members_changed!`）：
+- 成員變動的**三個**對外面（一處實作 `Rebuild.notify_members_changed!`）：
   `CacheStamps.bump_collection_members!`（collections.products_updated_at）＋
-  outbox `collections/update`（blueprint D.4；鐵律 5）。
+  outbox `collections/update`（blueprint D.4；鐵律 5）＋🔴 **反向傳播**
+  `enqueue_referrers!`（引用本系列做 exclusion 的那些要跟著重算——K8；缺了它
+  「A 永久錯誤且無自癒」）。前兩者與成員寫入**同一個 transaction**；第三者走
+  Solid Queue 的**獨立資料庫**，不在該原子範圍內（冪等，多跑一次只是白工——N4）。
 
 ## 4. 觸發鏈（P11-U17 的 ours 裁定；官方時機未取得 P11-U3）
 

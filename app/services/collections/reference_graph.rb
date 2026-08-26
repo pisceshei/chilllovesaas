@@ -28,7 +28,7 @@ module Collections
   #   （永久毒丸），且同一批 `claim_batch` 內**其他商店**的事件一起不投遞。
   #   ⇒ 本檔一律用**顯式堆疊**的迭代 DFS，深度只受記憶體限制。
   #
-  # ④🔴 **環在寫入層就被拒**（2026-08-26 第七輪 L1，`reaches?` ＋ `SaveCollection`）：
+  # ④🔴 **環在寫入層就被拒**（2026-08-26 第七輪 L1；判準＝`ancestors`，第九輪 N2 起
   #   自引（J5）之外，**任何長度的環**一律 INVALID。理由是 J5 那句話的一般化——
   #   「A 排除 B」讀的是 B 的**物化成員**，所以它是一個**反單調**函數 a := ¬b。
   #   奇數長度的環是奇數次反單調的合成 ⇒ **沒有不動點**，成員週期震盪；
@@ -38,6 +38,9 @@ module Collections
   #   n=2／n=4 各 1／2 個 job 就停——偶數環是兩次反單調的合成＝單調，有不動點。
   #   ⇒ 判準不是「偶數放行奇數拒收」（那只是碰巧收斂，答案仍取決於起始狀態），
   #   而是**全部拒收**：環在這個語義下沒有一個「對」的答案可言。
+  #   由 `SaveCollection` 每請求算一次、並在 `replace_sources!` 的店級序列化點內
+  #   用 `ancestors(..., lock: true)` **鎖定讀**複查一次——普通讀吃的是等鎖之前的
+  #   快照，看不到對方剛提交的邊（第九輪 N1）。
   #   本模組因此在正常資料上不會遇到環；`visiting` 標記只為**既有資料**（守衛上線前
   #   建立的）留一條不無窮迴圈的路。
   module ReferenceGraph
@@ -109,16 +112,24 @@ module Collections
     #   呼叫端算一次、所有規則共用。
     #   判準等價：「加 current→referenced 這條邊會成環」⇔「referenced 走得回 current」
     #   ⇔ `referenced ∈ ancestors(current)`。
+    # @param lock [Boolean] 🔴 **在序列化點內複查時必須傳 `true`**（2026-08-26 第九輪 N1）：
+    #   REPEATABLE READ 下普通讀吃的是**本 transaction 的快照**，而那個快照早在
+    #   `collection.save!`（handle uniqueness 的 SELECT）時就建立了——**位於取得店鎖之前**
+    #   ⇒ 在店鎖上排隊期間對方提交的邊，普通讀**看不到**，環照樣落庫。
+    #   這正是 `Catalog::HandleChange#register!` 檔內明文警告過的坑（「兩道複查都用
+    #   鎖定讀不用普通讀…那正是要防的那個到達順序」）——第八輪 M2 引用了它當範本，
+    #   卻沒抄這一條。鎖定讀一律讀**最新已提交版本**。
     # @return [Set<Integer>]
-    def ancestors(shop, target_id)
+    def ancestors(shop, target_id, lock: false)
       seen = Set.new
       frontier = [ target_id ]
       until frontier.empty?
-        parents = CollectionSourceRule
-                  .joins(:source)
-                  .where(shop_id: shop.id, block: "exclusion", condition_type: "collection",
-                         value_int: frontier)
-                  .distinct.pluck("collection_sources.collection_id")
+        scope = CollectionSourceRule
+                .joins(:source)
+                .where(shop_id: shop.id, block: "exclusion", condition_type: "collection",
+                       value_int: frontier)
+        scope = scope.lock if lock
+        parents = scope.distinct.pluck("collection_sources.collection_id")
         frontier = parents.reject { |id| seen.include?(id) }
         seen.merge(frontier)
       end

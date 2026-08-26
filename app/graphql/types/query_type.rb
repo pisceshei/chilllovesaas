@@ -252,8 +252,10 @@ module Types
 
     # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`——泛化後只差 scope）。
     #
-    # @return [Hash] Relay-shaped connection
-    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    # 執行期的條件值域對照表（前端不得硬編——`limits.condition_relations_source`）。
+    #
+    # @return [Array<Hash>] 每型一列：ruleType／allowedRelations／defaultRelation／allowedInExclusion
+    # @note 副作用：無（純讀常數表）。
     def collection_rule_conditions
       authorize_products!
       # 🔴 聯集，不是只有 INCLUSION_TYPES（2026-08-26 收斂輪 J6）：`collection`
@@ -271,6 +273,10 @@ module Types
       end
     end
 
+    # 一頁商品系列（keyset；與商品共用 `Products::KeysetConnection`）。
+    #
+    # @return [Hash] Relay-shaped connection
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
     def collections(first: nil, after: nil, last: nil, before: nil)
       authorize_products!
       scope = Collection

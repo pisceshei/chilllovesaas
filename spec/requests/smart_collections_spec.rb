@@ -372,4 +372,110 @@ RSpec.describe "Admin GraphQL smart collection sources", type: :request do
       expect(ProductTag.find_by(tag_key: "red-new").tag_display).to eq("Red_New")
     end
   end
+
+  it "🔴 N2（2026-08-26 第九輪）：祖先集合的記憶化不得跨請求存活" do
+    login!
+    # C 與 D 兩個系列；先讓 D 引用 C（此時 ancestors(C) 含 D）。
+    c = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { title: "C" }))
+    d = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { title: "D" }))
+    c_id = c.dig("collection", "id")
+    d_id = d.dig("collection", "id")
+
+    linked = set!({ id: d_id, lockVersion: d.dig("collection", "lockVersion"), title: "D",
+                    sources: [ { rules: [
+                      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                      { block: "exclusion", conditionType: "collection", relation: "includes",
+                        referencedCollectionId: c_id }
+                    ] } ] })
+    expect(linked["userErrors"]).to eq([])
+
+    # 一次會算出 ancestors(C) = {D} 的請求（C 排除 D ⇒ 成環 ⇒ 正確地被拒）。
+    rejected = set!({ id: c_id, lockVersion: c.dig("collection", "lockVersion"), title: "C",
+                      sources: [ { rules: [
+                        { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                        { block: "exclusion", conditionType: "collection", relation: "includes",
+                          referencedCollectionId: d_id }
+                      ] } ] })
+    expect(rejected["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+
+    # 把 D 的引用拿掉 ⇒ 現在**沒有環**了。
+    cleared = set!({ id: d_id, lockVersion: linked.dig("collection", "lockVersion"), title: "D",
+                     sources: [ { rules: [
+                       { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+                     ] } ] })
+    expect(cleared["userErrors"]).to eq([])
+
+    # 🔴 同一個 process 內再送一次「C 排除 D」——現在合法，必須成功。
+    #   記憶化若掛在類別物件上，這裡會回一個**假的** reference_cycle，
+    #   而且 `normalize` 一有 errors 就 return ⇒ 第二道複查根本走不到，無自救路徑。
+    now_legal = set!({ id: c_id, lockVersion: c.dig("collection", "lockVersion"), title: "C",
+                       sources: [ { rules: [
+                         { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                         { block: "exclusion", conditionType: "collection", relation: "includes",
+                           referencedCollectionId: d_id }
+                       ] } ] })
+    expect(now_legal["userErrors"]).to eq([]),
+      "祖先集合被記在類別物件上 ⇒ 邊刪掉之後合法輸入仍被永久誤拒（N2）"
+  end
+
+  it "🔴 只有 exclusion、沒有 inclusion 的來源必須被拒（否則靜默變成永久空系列）" do
+    login!
+    other = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+    ], extra: { title: "被引用" }))
+
+    data = set!(smart_input(rules: [
+      { block: "exclusion", conditionType: "collection", relation: "includes",
+        referencedCollectionId: other.dig("collection", "id") }
+    ], extra: { title: "只有排除" }))
+
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(data["userErrors"].first["field"]).to include("rules")
+  end
+
+  it "exclusionMatch: any ⇒ 命中**任一**排除條件即剔除（OR joiner 的公開契約）" do
+    login!
+    data = set!({ title: "any 排除", collectionType: "smart",
+                  sources: [ { inclusionMatch: "all", exclusionMatch: "any", rules: [
+                    { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+                    { block: "exclusion", conditionType: "product_type", relation: "eq", valueText: "香水" },
+                    { block: "exclusion", conditionType: "product_vendor", relation: "eq", valueText: "ACME" }
+                  ] } ] })
+
+    expect(data["userErrors"]).to eq([])
+    ActsAsTenant.with_tenant(shop) do
+      expect(CollectionSource.sole.exclusion_match).to eq("any")
+    end
+  end
+
+  it "targetType 只收 products；inclusionMatch／exclusionMatch 只收 all／any" do
+    login!
+    bad_target = set!({ title: "壞 target", collectionType: "smart",
+                        sources: [ { targetType: "variants", rules: [
+                          { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+                        ] } ] })
+    expect(bad_target["userErrors"].map { |e| e["code"] }).to include("INVALID")
+
+    bad_match = set!({ title: "壞 match", collectionType: "smart",
+                       sources: [ { inclusionMatch: "either", rules: [
+                         { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" }
+                       ] } ] })
+    expect(bad_match["userErrors"].map { |e| e["code"] }).to include("INVALID")
+  end
+
+  it "referencedCollectionId 指向不存在的系列 ⇒ INVALID" do
+    login!
+    data = set!(smart_input(rules: [
+      { block: "inclusion", conditionType: "product_tag", relation: "includes", valueText: "red" },
+      { block: "exclusion", conditionType: "collection", relation: "includes",
+        referencedCollectionId: "gid://chilllove/Collection/999999" }
+    ]))
+
+    expect(data["userErrors"].map { |e| e["code"] }).to eq([ "INVALID" ])
+    expect(data["userErrors"].first["field"]).to include("referencedCollectionId")
+  end
 end

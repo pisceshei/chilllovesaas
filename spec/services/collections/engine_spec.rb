@@ -835,4 +835,73 @@ RSpec.describe "智慧系列求值引擎" do
       "壞系列的例外中止了整個迴圈 ⇒ 無關的系列漏算（M4）"
     expect(broken.reload.rebuild_status).to eq("ERROR")
   end
+
+  describe "🔴 N3（2026-08-26 第九輪）：unknown⇒ERROR 契約，兩支引擎必須同口徑" do
+    # 第八輪把守衛放在**例外發生點**（rescue），而 Rebuild 是**先掃一遍再決定**。
+    # 兩個口徑不等價 ⇒ resync 有兩條繞過路徑，繞過後 resync 照常物化、Rebuild 標 ERROR，
+    # 成員又變成「取決於最後跑的是哪一支引擎」，而且幽靈列沒有自癒路徑。
+    def two_source_collection!(title:, handle:, second_rules:)
+      ActsAsTenant.with_tenant(shop) do
+        col = Collection.create!(shop_id: shop.id, title:, handle:,
+                                 collection_type: "smart", sort_order: "manual", description_html: "")
+        s0 = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                      target_type: "products", inclusion_match: "all", position: 0)
+        CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: s0.id, block: "inclusion",
+                                     condition_type: "product_tag", relation: "includes",
+                                     value_text: "red", position: 0)
+        s1 = CollectionSource.create!(shop_id: shop.id, collection_id: col.id, source_type: "conditions",
+                                      target_type: "products", inclusion_match: "all", position: 1)
+        second_rules.each_with_index do |attrs, i|
+          CollectionSourceRule.create!(shop_id: shop.id, collection_source_id: s1.id, position: i, **attrs)
+        end
+        col
+      end
+    end
+
+    it "🔴 繞過路徑①：`any?` 在前一個來源命中時短路，後面含 unknown 的來源不會被編譯" do
+      product = product!(title: "紅", tags: [ "red" ])
+      collection = two_source_collection!(title: "短路", handle: "n3-short", second_rules: [
+        { block: "inclusion", condition_type: "unknown", relation: "eq", value_text: "x" }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "resync 短路繞過 unknown 守衛 ⇒ 照常物化，而 Rebuild 對同一份規則標 ERROR（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
+    it "🔴 繞過路徑②：只有 exclusion 的來源 `where_sql` 回 nil，unknown 列同樣不會被編譯" do
+      product = product!(title: "紅2", tags: [ "red" ])
+      collection = two_source_collection!(title: "只排除", handle: "n3-excl", second_rules: [
+        { block: "exclusion", condition_type: "unknown", relation: "eq", value_text: "x" }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "只有 exclusion 的來源讓 unknown 列繞過守衛（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+
+    it "🔴 `raw_payload` 也算不支援（判準不能只看 condition_type）" do
+      product = product!(title: "紅3", tags: [ "red" ])
+      collection = two_source_collection!(title: "raw", handle: "n3-raw", second_rules: [
+        { block: "inclusion", condition_type: "product_tag", relation: "includes",
+          value_text: "red", raw_payload: { "unmapped" => true } }
+      ])
+
+      Collections::ResyncProduct.call(shop:, product_id: product.id)
+      resync_members = members(collection)
+      rebuild!(collection)
+
+      expect(resync_members).to be_empty,
+        "raw_payload 列被當成可編譯 ⇒ 兩支引擎再度分岔（N3）"
+      expect(collection.reload.rebuild_status).to eq("ERROR")
+    end
+  end
 end

@@ -113,6 +113,20 @@ module Collections
         end
       end
 
+      # 🔴 「這個來源含引擎不會算的列嗎」——**兩支引擎共用的 pre-scan**（第九輪 N3）。
+      #   第八輪把 `ResyncProduct` 的守衛放在**例外發生點**（rescue `Unsupported`），
+      #   而本服務是**先掃一遍再決定**，兩個口徑不等價 ⇒ resync 有兩條繞過路徑：
+      #   ①`sources.any?` 在前一個 source 命中時**短路**，後面含 unknown 的根本不編譯；
+      #   ②`where_sql` 對「只有 exclusion」的來源直接回 nil，那條 unknown 也不會編譯。
+      #   兩種情況下 resync 照常物化成員、status 停在 PENDING，而本服務對同一份規則
+      #   標 ERROR 零寫入 ⇒ 成員又變成「取決於最後跑的是哪一支引擎」（H4 根因），
+      #   且 resync 種下的幽靈列在 ERROR 後**沒有自癒路徑**（本服務對 ERROR 零寫入、
+      #   resync 開頭就跳過 ERROR），而 `compile_collection_exclusion` 讀的就是這張表。
+      #   ⇒ 判準抽成這一支，兩邊都在**編譯之前**先問它。
+      def unsupported_source?(source)
+        source.rules.any? { |rule| rule.condition_type == "unknown" || rule.raw_payload.present? }
+      end
+
       # 標記整系列 ERROR（`ResyncProduct` 也用——同一份「遇 unknown ⇒ ERROR」契約）。
       def mark_error_for(shop, collection, message)
         mark_error!(shop, collection, message)
@@ -214,9 +228,19 @@ module Collections
           #   `rebuild_status` 已是 OK，**重跑一律得到 inserted=0／swept=0**
           #   ⇒ cache stamp 永不推進、`collections/update` 永不外發、反向傳播永不發生
           #   ＝ K8 修掉的「引用者永久錯誤且無自癒」原樣復發。
-          #   三者都是**同一個資料庫**的寫入（outbox 列／stamp／Solid Queue 的 job 列），
-          #   不是鐵律 5 禁止的「txn 內外部 IO」——外部呼叫本來就由 outbox 之後才發。
-          #   同倉庫慣例亦同：`SaveProduct#commit` 的 `enqueue_event!` 在 txn 內。
+          #   🔴 **precisely：前兩者與成員同庫同 txn，第三者不是**（第九輪 N4 更正）。
+          #   `CacheStamps` 與 outbox 都寫主庫 ⇒ 與成員寫入同一個 transaction、真原子。
+          #   但 `enqueue_referrers!` 的 `RebuildJob.perform_later` 走 **Solid Queue**，
+          #   而本專案把它配在**獨立資料庫**（`config/environments/production.rb` 的
+          #   `solid_queue.connects_to = { database: { writing: :queue } }`＋
+          #   `database.yml` 的 `queue:`）⇒ 那筆 job 列**不在**本 txn 的原子範圍內：
+          #   外層回滾時 job 可能已提交。這是可接受的——`Rebuild`／`ResyncProduct`
+          #   都是冪等的收斂運算，多跑一次只是白工，不會算錯。
+          #   （第八輪的原註釋把三者一併說成「同一個資料庫」，那句話是錯的；
+          #   下一個要加第四個對外面的人請以本段為準——**要原子性就走 outbox**。）
+          #   不是鐵律 5 禁止的「txn 內外部 IO」：三者都是 DB 寫入，真正的外部呼叫
+          #   由 outbox 之後才發。同倉庫慣例亦同：`SaveProduct#commit` 的
+          #   `enqueue_event!` 在 txn 內。
           # 🔴 變更訊號還要**跨重試存活**（第八輪 M5 的第二半，實跑才發現）：
           #   把 notify 移進 txn 只解決了「原子性」，沒解決「重試不會補」。
           #   批次 upsert 是**逐批各自的 txn**，所以 notify 失敗回滾的只有掃尾這一段，
@@ -238,7 +262,7 @@ module Collections
           # 🔴 unknown 型別＝存而不編（passthrough），但**引擎不能假裝會算**：
           #   含 unknown 的來源照 all/any 語義都無法既忠實又靜默 ⇒ 整系列 ERROR＋告警，
           #   不做「跳過那一條」那種會靜默放寬/收窄集合的事。
-          if source.rules.any? { |rule| rule.condition_type == "unknown" || rule.raw_payload.present? }
+          if unsupported_source?(source)
             mark_error!(shop, collection, "來源 #{source.id} 含未知條件型別（passthrough 列）")
             return Result.new(status: :error, inserted: 0, swept: 0,
                               error: "unknown condition type")
