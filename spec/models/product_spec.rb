@@ -162,6 +162,8 @@ RSpec.describe Product, type: :model do
         before_at = ActsAsTenant.without_tenant do
           ResourcePublication.where(publishable_type: "Product", publishable_id: product.id).pick(:published_at)
         end
+        # 🔴 沒有這一句，`published_at: nil` 的突變會讓下面變成 `nil == nil` 靜默通過。
+        expect(before_at).to be_present
 
         expect(Publications::Materialize.for(product)).to eq(0)
         after_at = ActsAsTenant.without_tenant do
@@ -174,6 +176,12 @@ RSpec.describe Product, type: :model do
 
       # 🔴 生產者不得依賴 `ActsAsTenant.current_tenant`——它會在 seeds／factory／rake／
       #    資料 migration 底下被觸發，那些路徑沒有租戶。第 11 包的部署事故同一家族。
+      #
+      # ⚠️ 下面**三格缺一不可**，理由是 2026-08-26 突變測試的實測結果：
+      #    原本只有第一格，而它把建立動作包在 `ActsAsTenant.without_tenant` 裡
+      #    ⇒ **環境已經提供了實作要提供的東西**，兩種實作在那一格不分岔
+      #    ⇒ 把 `Materialize` 裡的 `without_tenant` 整個拿掉，spec 照樣全綠。
+      #    第二、三格才分別覆蓋註釋自陳的兩條真實危害路徑。
       it "🔴 沒有 current_tenant 時照樣建列（不得 NoTenantSet）" do
         target = online_store.id # 先在有租戶時取，避免測試自己踩到要驗的那個坑
 
@@ -183,6 +191,55 @@ RSpec.describe Product, type: :model do
         end
 
         expect(publications_of(product)).to eq([ target ])
+      end
+
+      # `with_tenant(nil)` 才是 seeds／rake 的真實形態：租戶是 nil，但**沒有** unscoped
+      # ⇒ default scope 的 `NoTenantSet` raise 是活的。`without_tenant` 兩者都設，測不出來。
+      it "🔴 `current_tenant` 為 nil 且**不在 without_tenant 內**時不得 NoTenantSet" do
+        target = online_store.id
+        product = create(:product, shop:)
+        ActsAsTenant.without_tenant do
+          ResourcePublication.where(publishable_type: "Product", publishable_id: product.id).delete_all
+        end
+
+        ActsAsTenant.with_tenant(nil) do
+          expect(ActsAsTenant.current_tenant).to be_nil
+          expect { Publications::Materialize.for(product) }.not_to raise_error
+        end
+
+        expect(publications_of(product)).to eq([ target ])
+      end
+
+      # 🔴 這一格守的是註釋裡自陳「比直接炸危險得多」的那一型：
+      #    current_tenant 是別間店 ⇒ default scope 把管道過濾成 0 列
+      #    ⇒ **一列都不建、而且不拋任何錯**。
+      it "🔴 `current_tenant` 是**別間店**時仍照 publishable.shop_id 建列（不得靜默建 0 列）" do
+        target = online_store.id
+        product = create(:product, shop:)
+        ActsAsTenant.without_tenant do
+          ResourcePublication.where(publishable_type: "Product", publishable_id: product.id).delete_all
+        end
+
+        other = create(:shop)
+        ActsAsTenant.with_tenant(other) do
+          expect(Publications::Materialize.for(product)).to eq(1)
+        end
+
+        expect(publications_of(product)).to eq([ target ])
+      end
+
+      # 🔴 型別白名單：**raise 而非靜默回 0**。
+      #    日後某包新增第四個 Publishable 卻忘了加進 `PUBLISHABLE_TYPES` 時，
+      #    靜默回 0 會讓那個型別全部建不出發布列、前台看不到、且沒有任何 spec 會紅
+      #    （三個 caller 都不看回傳值）。
+      it "🔴 非 Publishable 型別一律 raise，不得靜默回 0" do
+        expect { Publications::Materialize.for(online_store) }
+          .to raise_error(ArgumentError, /不是 Publishable/)
+
+        count = ActsAsTenant.without_tenant do
+          ResourcePublication.where(publishable_type: "Publication").count
+        end
+        expect(count).to eq(0)
       end
     end
 
@@ -271,6 +328,36 @@ RSpec.describe Product, type: :model do
         expect(described_class.purchasable(publication: pos)).to contain_exactly(product)
       end
 
+      # 🔴 **上面那一格只殺得掉「兩側同時漏掉 publication_id」的實作**——它把 online_store
+      #    的列整批刪光，兩個 EXISTS 同時失去目標管道的列，於是只動一側的實作會被另一側的
+      #    AND 擋下來、測不出分岔（2026-08-26 突變測試實測：只動商品層仍綠、只動變體層仍綠、
+      #    兩側都動才紅）。而真實的漂移形態就是**只動一側**（改 SQL 時漏抄一個條件）。
+      #    ⇒ 下面兩格各自只讓一側失去目標管道。
+      it "🔴 商品層只發布到**別的管道** ⇒ 目標管道不可購買（守商品層 EXISTS 的 publication_id）" do
+        pos = second_channel
+        product = sellable
+        ActsAsTenant.without_tenant do
+          ResourcePublication.where(publishable_type: "Product", publishable_id: product.id,
+                                    publication_id: online_store.id).delete_all
+        end
+        expect(publications_of(product)).to eq([ pos.id ])
+
+        expect(described_class.purchasable(publication: online_store)).to be_empty
+      end
+
+      it "🔴 變體層只發布到**別的管道** ⇒ 目標管道不可購買（守變體層 JOIN 的 publication_id）" do
+        pos = second_channel
+        product = sellable
+        variant = product.product_variants.first
+        ActsAsTenant.without_tenant do
+          ResourcePublication.where(publishable_type: "ProductVariant", publishable_id: variant.id,
+                                    publication_id: online_store.id).delete_all
+        end
+        expect(publications_of(variant)).to eq([ pos.id ])
+
+        expect(described_class.purchasable(publication: online_store)).to be_empty
+      end
+
       it "跨租戶：別間店的商品不會進來" do
         sellable
         other = create(:shop)
@@ -284,23 +371,32 @@ RSpec.describe Product, type: :model do
       end
 
       # 🔴 **結構性斷言**：不變量必須由構造保證，不是靠兩份 SQL 各自寫對。
-      # 分岔點：有人把 `discoverable` 改寫成獨立 SQL 時，這一格轉紅。
+      #
+      # ⚠️ 前一版是掃 `product.rb` 的原始碼看有沒有 `purchasable(` 字樣——
+      #    2026-08-26 突變測試證明那**可以被一行註釋騙過**（把 `discoverable` 改寫成
+      #    獨立 SQL，再在方法內加一行 `# equivalent to purchasable( ... )` ⇒ 守衛照樣過）。
+      #    ⇒ 改成比對**產生出來的 SQL**，註釋騙不了。
       it "🔴 discoverable 由 purchasable 導出（不變量是定理不是測試項）" do
-        source = File.read(Rails.root.join("app/models/product.rb"), encoding: "UTF-8")
-        body = source[/def self\.discoverable.*?\n  end/m]
+        # `at:` 必須釘死：兩次呼叫各自取 `Time.current` 會讓 SQL 的時間字面值差幾微秒。
+        at = Time.utc(2026, 8, 26, 12, 0, 0)
+        expected = described_class.purchasable(publication: online_store, at:)
+                                  .where(status: described_class::DISCOVERABLE_STATUSES).to_sql
 
-        expect(body).to be_present
-        expect(body).to include("purchasable("),
+        expect(described_class.discoverable(publication: online_store, at:).to_sql).to eq(expected),
           "discoverable 必須由 purchasable 導出，否則 discoverable ⊆ purchasable 會退化成要靠測試盯的性質"
       end
     end
 
     describe "層與層不連動（82 §8.4③）" do
       # 分岔點：有人日後加上「商品層取消發布時連動取消變體層」的串聯時，這一格轉紅。
+      # 🔴 兩格都必須先斷言 `before_rows` 非空——否則在「一列都沒有」的世界裡
+      #    `[] == []` 會靜默通過（2026-08-26 突變測試實測：拿掉任一個 `after_create`
+      #    之後這兩格照樣綠）。
       it "🔴 商品層取消發布後，變體層的列原封不動" do
         product = create(:product, shop:)
         variant = create(:product_variant, product:)
         before_rows = publications_of(variant)
+        expect(before_rows).not_to be_empty
 
         ActsAsTenant.without_tenant do
           ResourcePublication.where(publishable_type: "Product", publishable_id: product.id).destroy_all
@@ -312,6 +408,7 @@ RSpec.describe Product, type: :model do
       it "🔴 改變 status 不影響發布列（82 §8.4④：兩者正交）" do
         product = create(:product, shop:, status: "active")
         before_rows = publications_of(product)
+        expect(before_rows).not_to be_empty
 
         ActsAsTenant.with_tenant(shop) { product.update!(status: "unlisted") }
 

@@ -179,24 +179,64 @@ end
 
 ## §7 回填 migration 與它的 spec
 
-`20260826060000_backfill_resource_publications`：補齊既有 Product／ProductVariant／Collection。
+`20260826060000_backfill_resource_publications` **是一個薄呼叫端**，實作在
+`Publications::Materialize.backfill_all!`。
 
 🔴 **callback 修未來、migration 修歷史，兩半缺一等於沒修**——這與 `88` §5 #1
 （建店預設 publication）是同一條教訓，那次也是兩半。
 
-🔴 **配對 spec 非有不可，而且必須「先種既有資料」**：回填迴圈的本體只有在資料庫已有資料時
-才會被執行到。**本次當場複驗到了**——同一支 migration 在本機開發庫回填 **3 列**（有既有資料）、
-在測試庫回填 **0 列**（空庫），**兩次都 exit 0**。若回填有 bug，測試庫那次不會發現。
-`spec/migrations/p12_backfill_publications_spec.rb` 另含一格 **source-guard**：盯著
-migration 檔案本身有沒有 `ActsAsTenant.without_tenant`——因為 spec 用的是邏輯副本，
-把那一行從 migration 拿掉，其他格全部仍會綠。
+### §7.1 🔴 為什麼實作不在 migration 裡（對抗審查換來的）
 
-回填用 `insert_all` 而生產者用 `create!`，是**刻意的不對稱**：`insert_all` 繞過 validation
+初版把回填邏輯**抄一份**寫在 migration 裡，而它的 spec 又抄了第三份
+⇒ **規則有三份實作，而測試守的是它自己那一份**。兩位審查員以不同方法各自實測證明：
+
+| 對 migration 施的突變 | 後果 | 當時的 spec |
+|---|---|---|
+| 把 `where(shop_id:)` 刪掉一個 token | 寫出跨租戶的列（實測 `mismatched=2`）——`insert_all` 繞過 validation、多型欄位無外鍵，**兩層都不擋**，而 `down` 不可逆 | **38 examples 0 failures** |
+| 把 `auto_publish: true` 拿掉 | 回填成完全相反的管道集合 | **全綠** |
+
+當時副本與本體之間唯一的機械連結是一個掃字串的 source-guard，而那種守衛**可以被一行註釋
+騙過**（實測：`ActsAsTenant.without_tenant do` → `begin # ActsAsTenant.without_tenant`，守衛照樣過）。
+
+⇒ 現在：邏輯一份（服務層）、**spec 載入並執行真的 migration 類別**、字串守衛全數退場改由行為守住。
+
+### §7.2 🔴 一句被證偽的因果（保留原文並更正）
+
+初版的 migration 與 spec 都宣稱：
+
+> 拿掉 `ActsAsTenant.without_tenant` ⇒ 正式環境只要有既有商品就 `NoTenantSet`。
+
+**那是錯的。** 審查員實測：初版的讀取全走 `.unscoped`（`unscoped` 把 default scope 連同它的
+`NoTenantSet` raise 一起拿掉）、寫入全走 `insert_all`（不經 model 寫入路徑）
+⇒ 拿掉 `without_tenant` 照樣跑完、正確回填。那句因果是從第 11 包 `20260826058000`
+**誤植**過來的——該包成立（它用 `find_or_create_by!` 走 model 寫入），本支不成立。
+
+⇒ 現行版**刻意移除 `.unscoped`**，讓 `without_tenant` 真正承重，並由行為測試守住
+（`spec/migrations/p12_backfill_publications_spec.rb` 有一格用 `with_tenant(nil)` 跑真 migration）。
+
+### §7.3 仍然成立的兩條
+
+🔴 **配對 spec 必須「先種既有資料」**：回填迴圈的本體只有在資料庫已有資料時才會被執行到。
+**本次當場複驗到**——同一支 migration 在本機開發庫回填 **3 列**（有既有資料）、
+在測試庫回填 **0 列**（空庫），**兩次都 exit 0**。
+
+回填用 `insert_all` 而 `.for` 用 `create!`，是**刻意的不對稱**：`insert_all` 繞過 validation
 （含 `publishable_belongs_to_same_shop`），在一般寫入路徑上那是漏洞——但回填的
 `publishable_id` 是**從同一個 `shop_id` 的表裡查出來的**，租戶歸屬由查詢本身保證。
 ⚠️ 任何人把那段複製到**非回填**的路徑，那個保證就不存在了。
 
 `down` 是 `IrreversibleMigration`：無法區分「本次回填建的列」與「使用者後來手動發布的列」。
+
+### §7.4 測試有效性的驗收方式
+
+本包的測試不是「寫完跑綠就算」，而是**逐條突變驗證守得住**。第二輪對 14 個突變
+（含前一輪找到的全部七個假綠）實跑，**14/14 轉紅**。突變清單與結果見
+`docs/worklog/2026-08-26-第12包發布模型.md`。
+
+🔴 **下一個人改這組測試時請照做**：改完後至少對「拿掉 `after_create`」「拿掉
+`publication_id` 條件（**單側**）」「拿掉 `where(shop_id:)`」「`published_at` 改 nil」
+四個突變重跑一次。前一輪七個假綠裡有三個的根因都是同一個——
+**測資落在兩種實作不會分岔的那一格**（例如把兩側的列一起刪掉，就測不出只漏一側的實作）。
 
 ---
 
@@ -214,3 +254,7 @@ migration 檔案本身有沒有 `ActsAsTenant.without_tenant`——因為 spec �
 | P12-B8 | **`publications.auto_publish` 欄位預設 `true` vs 本尊 `PublicationCreateInput` 官方 Default:false**。我方唯一建立點已明文傳 `true`，現況行為正確 ⇒ 登記不改（`91` §3） |
 | P12-B9 | 本尊 admin 的 Status 下拉**沒有 Archived**（歸檔是 More actions 的獨立動作）。我方若把 archived 做成下拉第四項就與本尊不一致 ⇒ 登記 `91` §3，屬商品編輯頁的包 |
 | P12-B10 | 系列建立頁的 Collection items 篩選出現 **Suspended** 這個值（`Status: Active, Draft, Unlisted, and Suspended`），不在 `ProductStatus` 值域內——**未取得**它是什麼 ⇒ 登記 `91` §3 |
+| P12-B11 | **`products.publications_updated_at` 沒有寫入者**。`db/schema.rb` 該欄的註釋指名寫入者「隨第 12 包」交付，本包**沒有交付**——`Materialize` 建不建列都不碰它。理由：那個 cache stamp 目前**零讀取者**，而真正的寫入者是 publish／unpublish mutation（不在本包，見 P12-B2）；只為它加一個「每建一個變體就 UPDATE 一次父商品」的機制，是第 11 包「為沒有入口的功能蓋機制」的重演 ⇒ 登記 `91` §3，由做 mutation 的那一包一起交付 |
+| P12-B12 | **變體建立的 N+1**：`after_create` 每個變體多 **8 次查詢**（單管道），且**隨管道數線性增長**（每多一個管道 +6）。對抗審查實測：20 個變體 280→440 queries、200 個變體 3.44s→4.06s（+3.1 ms/variant，佔基線 18%）。v1 只有一個管道且 `VariantSync` 本來就有更大的 N+1 基線 ⇒ 本包不優化，登記 `91` §3。**管道數長到 5 以上時本項會變成主導項**，屆時把 `auto_publish_publication_ids` 的結果在 `VariantSync` 層一次撈完即可 |
+| P12-B13 | **同一條規則有兩份實作**：`ResourcePublication#published?`（Ruby）與 `Product.published_on` 的 SQL 謂詞。目前 `published?` **零生產呼叫端**（只有一支 spec）⇒ 不改。⚠️ M5 補第三層 catalog 時只改一邊會靜默分叉 |
+| P12-B14 | **`published_on` 寫死 `products.` 表名**：`Product.from("products AS p").purchasable(...)` 會 `Unknown column 'products.shop_id'`。是**大聲失敗**不是靜默錯誤，且目前零 caller ⇒ 不處理，登記備查 |

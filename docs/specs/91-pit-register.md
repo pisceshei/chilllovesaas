@@ -2524,6 +2524,44 @@
   【F1；來源＝第 12 包實作；複驗：
   `grep -n "materialize_publications" app/models/*.rb`；取證日期＝2026-08-26】
 
+- **`products.publications_updated_at` 沒有寫入者，而 schema 註釋指名「隨第 12 包」交付**：
+  第 12 包沒有交付。該 cache stamp 目前**零讀取者**，真正的寫入者是 publish／unpublish
+  mutation（不在第 12 包射程）。只為它加「每建一個變體就 UPDATE 一次父商品」的機制，
+  是第 11 包「為沒有入口的功能蓋機制」的重演 ⇒ 由做 mutation 的那一包一起交付，
+  屆時**一併更正 schema 的欄位註釋**（改註釋需要一支 migration）。
+  【F2；來源＝第 12 包對抗審查；複驗：
+  `grep -rn "publications_updated_at" app/ db/schema.rb`（應只有 schema 與 migration，零寫入者）；
+  取證日期＝2026-08-26】
+
+- **變體建立的 N+1：每個變體 +8 次查詢，且隨管道數線性增長（每多一管道 +6）**：
+  對抗審查實測——20 個變體 280→440 queries；200 個變體 3.436s→4.062s
+  （+3.1 ms/variant，佔基線 18%）。`config/limits.yml` 的 `product.max_variants` 是 2048，
+  5 個管道時單次 `productSet` 會多出約 65,000 次查詢，**全部在 `SaveProduct` 的同一個寫入
+  交易內**。v1 只有一個管道、且 `VariantSync#create_new!` 本來就有更大的 N+1 基線
+  （`create_inventory_item`、選項座標、`apply_initial_quantities!`）⇒ 第 12 包不優化。
+  修法方向：把 `Publications::Materialize.auto_publish_publication_ids` 的結果在
+  `VariantSync` 層一次撈完再逐變體套用。
+  【F2；來源＝第 12 包對抗審查實測；複驗：見該輪 worklog 的量測表；取證日期＝2026-08-26】
+
+- **`Shop#enable_launch_locales` 在測試環境偶發死鎖，令整支 spec 檔連鎖失敗**：
+  乾淨樹（`ed077e5`）連跑 5 次，第 5 次 11 個失敗；根因固定在
+  `ActiveRecord::Deadlocked` @ `app/models/shop.rb` 的 `enable_launch_locales`，
+  之後同一 run 的後續 example 連鎖爆 `SAVEPOINT active_record_2 does not exist` 與
+  `Subdomain has already been taken`，失敗位置**隨機落在與改動無關的格子**。
+  這是**既有問題**（第 11 包引入），不是第 12 包造成；但第 12 包的發布層新增了多個
+  `create(:shop)`，把觸發率推高到約 12–20%／run ⇒ CI 上會表現成隨機紅。
+  另有 `spec/services/catalog/handle_change_concurrency_spec.rb` 的 `purge!` 死鎖，
+  審查員做過交錯對照（12 輪：main 側 24 個失敗、`ed077e5` 側 11 個）**方向不一致且 main 更差**
+  ⇒ 同樣是既有 flake。修法方向：`shop.rb` 的逐列 `shop_locales.create!` 改批量寫入。
+  【F1；來源＝第 12 包對抗審查（兩位審查員各自獨立觀察到）；
+  複驗：`bundle exec rspec spec/models/product_spec.rb` 連跑 5 次；取證日期＝2026-08-26】
+
+- **同一條「已發布」規則有兩份實作**：`ResourcePublication#published?`（Ruby）與
+  `Product.published_on` 的 SQL 謂詞。目前 `published?` **零生產呼叫端**（只有一支 spec）
+  ⇒ 第 12 包不合併。⚠️ M5 補第三層 catalog 時只改一邊會靜默分叉（鐵律 7）。
+  【F2；來源＝第 12 包對抗審查；複驗：
+  `grep -rn "published?" app/ --include=*.rb`；取證日期＝2026-08-26】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
