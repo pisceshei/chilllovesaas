@@ -10,7 +10,7 @@
 
 ### 1. 🔴 缺陷一：刪 publication 留下孤兒 catalog（線上實跑抓到）
 
-S1 合併部署後，在**正式庫**實跑三支 mutation 的服務層做線上驗證，輸出逐字：
+S1 合併部署後，在**正式庫**實跑 publication 生命週期的服務層做線上驗證（覆蓋的斷言集合＝驗證腳本本身，見本節下方輸出），輸出逐字（**快照**，取證 2026-08-26）：
 
 ```
 delete ok=true
@@ -44,16 +44,16 @@ expected: []
             "message" => "has already been taken"}]
 ```
 
-⇒ 兩個 publication 共用 catalog 會撞 `channel_handle` 的唯一性（佔位值由 catalog id 導出）。
+⇒ 兩個 publication 共用 catalog 會撞 `channel_handle` 的唯一性（佔位值由 catalog id 導出；複驗該唯一性宣告：`grep -n "channel_handle" app/models/publication.rb`）。
 但那是**症狀不是根因**：我方 `SalesCatalog has_one :publication` 是 **1:1**，
 「共用 catalog」本來就不該被接受，而在此之前**沒有任何東西擋它**
-（`publications.sales_catalog_id` 沒有唯一索引）。
+（`publications.sales_catalog_id` 上沒有唯一索引（複驗有沒有唯一索引：`grep -n "sales_catalog_id" db/schema.rb`））。
 
 而且錯誤訊息指向 `input.channelHandle`——一個**呼叫端根本沒有傳的欄位**。
 
 **修法**：`Publications::Write.create` 在源頭擋，回 `TAKEN`，`field` 指向 `input.catalogId`。
 
-🔴 **不加 DB 唯一索引**：本尊的 `Publication : Catalog` 是 1:1 還是 1:N ＝**官方未取得**
+🔴 **不加 DB 唯一索引**（複驗有沒有唯一索引：`grep -n "sales_catalog_id" db/schema.rb`）：本尊的 `Publication : Catalog` 是 1:1 還是 1:N ＝**官方未取得**
 （S1 規格草案 U-19）。在那之前把 1:1 硬寫進 schema 是把未取得寫成事實。
 
 ### 3. 🔴 突變複驗把一條死碼揪出來
@@ -97,7 +97,7 @@ M9 全綠代表：**有了 M8 那道守衛之後，孤兒判準在服務層已�
 
 | # | 內容 |
 |---|---|
-| F1 | **`publications.sales_catalog_id` 沒有 DB 唯一索引**。1:1 目前只由服務層守衛擔保，`update_columns`／`insert_all`／raw SQL 都繞得過（本輪的測試就是這樣構造出共用狀態的）。加索引的前提是 U-19（本尊 1:1 還是 1:N）解掉 |
+| F1 | **`publications.sales_catalog_id` 上沒有 DB 唯一索引**（複驗有沒有唯一索引：`grep -n "sales_catalog_id" db/schema.rb`）。1:1 目前只由服務層守衛擔保，`update_columns`／`insert_all`／raw SQL 都繞得過（本輪的測試就是這樣構造出共用狀態的）。加索引的前提是 U-19（本尊 1:1 還是 1:N）解掉 |
 | F2 | **孤兒清理只涵蓋 `publicationDelete` 這條路徑**。若日後出現別的刪 publication 的入口（例如卸載管道），要各自呼叫 `destroy_orphan_catalog!`，或把它移到 model callback。目前只有一個入口 ⇒ 不預先抽象 |
 | F3 | **正式庫在本輪之前漏掉的那一列 catalog 已由驗證腳本清掉**（線上驗證的 `cleanup` 段），不需要資料修復 migration。⚠️ 這是因為缺陷從引入到發現只隔了一次部署；隔久了就得寫回填 |
 | F4 | 🔴 **教訓：29 格全綠 ＋ 六個突變全紅，仍然漏掉了「有沒有人數 catalog」這件事**。突變測試證明的是「已寫下的斷言擋得住對應的實作錯誤」，不是「斷言覆蓋了全部後果」。線上驗證是最後一道，且它這次真的抓到了東西 |

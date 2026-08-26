@@ -82,7 +82,7 @@
 | H-8 | 六條未取得（S1-U1～U6）逐條在 dev doc §7；其中 U-1（`ProductBulkPublish` 的 POST body）受現有抓包工具限制（鐵律 14.3 誠實登記） |
 | ~~H-9~~ | ~~本 PR 尚未 push、尚未部署、尚未線上驗證~~ ⇒ **已結案**：PR #148 合併（main `2d6abc9`）、部署 bt3、`/up` 綠，線上驗證十二條斷言逐條通過。🔴 **並抓到兩個缺陷**，見 H-10 |
 | H-10 | 🔴 **線上驗證抓到兩個缺陷，已在後續 PR 修掉**（worklog＝`docs/worklog/2026-08-26-S1-孤兒catalog與catalog獨佔.md`）：①刪 publication **留下孤兒 catalog**（正式庫逐字輸出 `cleanup: publication_left=0 catalog_left=1`）；②兩個 publication **可以共用一個 catalog**，違反我方 `SalesCatalog has_one :publication` 的 1:1 宣告，而且錯誤訊息指向一個呼叫端沒有傳的欄位。⚠️ **教訓**：29 格全綠 ＋ 六個突變全紅仍然漏掉「有沒有人數 catalog」——突變證明的是「已寫下的斷言擋得住對應的實作錯誤」，不是「斷言覆蓋了全部後果」 |
-| H-11 | **`publications.sales_catalog_id` 沒有 DB 唯一索引**：1:1 目前只由服務層守衛擔保，`update_columns`／`insert_all`／raw SQL 都繞得過。加索引的前提是 U-19（本尊 1:1 還是 1:N）解掉 |
+| H-11 | **`publications.sales_catalog_id` 上沒有 DB 唯一索引**（複驗有沒有唯一索引：`grep -n "sales_catalog_id" db/schema.rb`）：1:1 目前只由服務層守衛擔保，`update_columns`／`insert_all`／raw SQL 都繞得過。加索引的前提是 U-19（本尊 1:1 還是 1:N）解掉 |
 
 ---
 
