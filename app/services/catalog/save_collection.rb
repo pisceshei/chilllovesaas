@@ -340,7 +340,8 @@ module Catalog
       # 🔴 在呼叫端 transaction 內執行；update 路徑已持 `Collection.lock`（create 是新列
       #   無競爭）——這正是研究 §5 的序列化點：規則編輯與 rebuild/resync 都以
       #   collection 列鎖為界，後到者必見前者已提交的規則。
-      def replace_sources!(shop, collection, sources)
+      # @param serialize [Boolean] 是否取店級序列化點。🔴 **只有 update 傳 true**（P1）。
+      def replace_sources!(shop, collection, sources, serialize: false)
         return if sources.nil?
 
         # 🔴 **鎖序一致：動 rules 之前一律先取店鎖**（2026-08-26 第十輪 O5，InnoDB 實測死鎖）。
@@ -355,8 +356,17 @@ module Catalog
         #   **沒有 userErrors、沒有重試、商家這次的條件編輯整份丟失**。
         #   🔴 退回普通讀**救不了**：環在 insert-intention 撞 next-key gap 上依然成立
         #   （`uq_collection_source_rules_position` 以 shop_id 開頭，同店不同系列共用 gap）。
-        #   ⇒ 唯一的解是**讓兩條路徑同向**：只要會動 rules 就先取店鎖，無條件。
-        Catalog::HandleChange.serialize!(shop)
+        #   ⇒ 讓**同時存在的兩條 update 路徑同向**：兩者都先取店鎖。
+        #
+        # 🔴 **但 create 路徑一律不取**（2026-08-26 第十一輪 P1，InnoDB 實測）：
+        #   `create` 的 txn 先 `Collection.create!` INSERT collections，InnoDB 因
+        #   `fk_collections_shop` 對 shops 該列取 **S 鎖**；若這裡再要 **X**，就是
+        #   同一列的 S→X 升級 ⇒ 兩個併發建立各持相容的 S、各等對方放掉才能升級
+        #   ⇒ **必死鎖**（實測 24 次建立丟失 13 次；第十輪之前是 24/24 成功）。
+        #   而 create **構造上不可能成環**：新系列的 id 在 commit 前無人能引用它。
+        #   ⇒ 取店鎖對 create 既無必要、又製造一個比 O5 更常見的死鎖（O5 只在
+        #   「含 collection 引用的 update」上發生，本項在**任何帶 sources 的建立**上發生）。
+        Catalog::HandleChange.serialize!(shop) if serialize
 
         # 🔴 環的複查必須在**序列化點內**再做一次（2026-08-26 第八輪 M2）：
         #   `normalize` 的 `cycle_ancestors` 是純讀的 pre-flight，跑在 transaction 與
@@ -462,10 +472,16 @@ module Catalog
       rescue TreeRejected => rejected
         Result.new(collection: nil, user_errors: rejected.user_errors)
       rescue ActiveRecord::Deadlocked
-        # 鎖序已統一（O5），這裡是保險：死鎖是**可重試**的暫時性衝突，
-        # 不得漏成去敏的 INTERNAL（鐵律 4①：業務可理解的錯誤走 userErrors）。
+        # 死鎖是**可重試**的暫時性衝突，不得漏成去敏的 INTERNAL（鐵律 4①）。
+        # 🔴 碼必須是 `CollectionSetUserErrorCode` 的合法值（第十一輪 P2）：
+        #   第十輪用了 `RACED`，而該 enum 沒有這個值、`code` 又是 `null: false`
+        #   ⇒ graphql-ruby 丟 `UnresolvedValueError`，而它**不是** `StatementInvalid`
+        #   ⇒ controller 的去敏 rescue 接不到 ⇒ **HTTP 500、連 body 都沒有**，
+        #   比它要取代的「200＋extensions.code INTERNAL」更糟。
+        #   `STALE_OBJECT` 已在 enum 內且語義正確：另一個變更撞上了，重載後再存。
+        #   訊息也不能沿用 `handle_raced`（那是在講 handle 被搶走，本路徑可能完全沒碰 handle）。
         Result.new(collection: nil,
-                   user_errors: [ error(nil, I18n.t("errors.collection.handle_raced"), "RACED") ])
+                   user_errors: [ error(nil, I18n.t("errors.collection.write_conflict"), "STALE_OBJECT") ])
       rescue ActiveRecord::RecordNotUnique
         Result.new(collection: nil, user_errors: [ error([ "handle" ], I18n.t("errors.collection.handle_taken"), "HANDLE_TAKEN") ])
       rescue ActiveRecord::RecordInvalid => invalid
@@ -538,7 +554,7 @@ module Catalog
                                               old_handle:, new_handle:)
             end
             sync_members!(shop, collection, attributes[:product_ids])
-            replace_sources!(shop, collection, attributes[:sources])
+            replace_sources!(shop, collection, attributes[:sources], serialize: true)
             reject_translations!(shop, collection, attributes)
           end
         end
@@ -551,10 +567,16 @@ module Catalog
       rescue ActiveRecord::StaleObjectError
         Result.new(collection: nil, user_errors: [ error(nil, I18n.t("errors.collection.stale"), "STALE_OBJECT") ])
       rescue ActiveRecord::Deadlocked
-        # 鎖序已統一（O5），這裡是保險：死鎖是**可重試**的暫時性衝突，
-        # 不得漏成去敏的 INTERNAL（鐵律 4①：業務可理解的錯誤走 userErrors）。
+        # 死鎖是**可重試**的暫時性衝突，不得漏成去敏的 INTERNAL（鐵律 4①）。
+        # 🔴 碼必須是 `CollectionSetUserErrorCode` 的合法值（第十一輪 P2）：
+        #   第十輪用了 `RACED`，而該 enum 沒有這個值、`code` 又是 `null: false`
+        #   ⇒ graphql-ruby 丟 `UnresolvedValueError`，而它**不是** `StatementInvalid`
+        #   ⇒ controller 的去敏 rescue 接不到 ⇒ **HTTP 500、連 body 都沒有**，
+        #   比它要取代的「200＋extensions.code INTERNAL」更糟。
+        #   `STALE_OBJECT` 已在 enum 內且語義正確：另一個變更撞上了，重載後再存。
+        #   訊息也不能沿用 `handle_raced`（那是在講 handle 被搶走，本路徑可能完全沒碰 handle）。
         Result.new(collection: nil,
-                   user_errors: [ error(nil, I18n.t("errors.collection.handle_raced"), "RACED") ])
+                   user_errors: [ error(nil, I18n.t("errors.collection.write_conflict"), "STALE_OBJECT") ])
       rescue ActiveRecord::RecordNotUnique
         # 併發窗：輸家撞 `uq_collections_handle`（審查 R6-2，與商品同型）。
         Result.new(collection: nil,

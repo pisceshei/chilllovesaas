@@ -123,6 +123,7 @@
       handle_too_long: "handle が長すぎます。"
       handle_reserved: "この handle はプラットフォームの予約語です。"
       handle_raced: "この handle は直前の別の変更で使用されました。再読み込みしてやり直してください。"
+      write_conflict: "別の変更と競合しました。再読み込みしてから保存してください。"
       handle_taken: "この handle は既に使用されています。"
       product_gid_invalid: "有効な商品 ID ではありません：%{gid}"
       product_not_found: "商品 %{id} が見つかりません（削除済み、または別ストアの商品です）。"

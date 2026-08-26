@@ -123,6 +123,7 @@
       handle_too_long: "handle 超过长度上限。"
       handle_reserved: "这个 handle 是平台保留字。"
       handle_raced: "这个 handle 刚刚被另一次变更取走了，请重新载入后再试。"
+      write_conflict: "与另一次更改发生冲突。请重新加载后再保存。"
       handle_taken: "handle 已被使用。"
       product_gid_invalid: "不是有效的商品 ID：%{gid}"
       product_not_found: "找不到商品 %{id}（可能已被删除或不属于本店）。"

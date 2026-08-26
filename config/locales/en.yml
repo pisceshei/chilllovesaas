@@ -123,6 +123,7 @@
       handle_too_long: "Handle is too long."
       handle_reserved: "This handle is reserved by the platform."
       handle_raced: "Another change took this handle just now. Reload and try again."
+      write_conflict: "Another change collided with this one. Reload and save again."
       handle_taken: "This handle is already in use."
       product_gid_invalid: "Not a valid product ID: %{gid}"
       product_not_found: "Product %{id} was not found in this store."

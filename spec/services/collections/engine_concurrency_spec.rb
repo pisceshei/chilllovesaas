@@ -283,4 +283,122 @@ RSpec.describe "智慧系列引擎併發" do
       "普通讀吃的是等鎖之前的快照 ⇒ 複查看不到對方剛提交的邊，環落庫了（N1）：#{edges.inspect}"
     expect(t1_result.user_errors.map { |e| e[:code] }).to eq([ "INVALID" ])
   end
+
+  it "🔴 P1（2026-08-26 第十一輪）：併發**建立**帶 sources 的智慧系列不得死鎖" do
+    # 第十輪把店鎖改成「只要動 rules 就無條件取」，於是 create 變成同一列的 S→X 升級：
+    #   `Collection.create!` 因 `fk_collections_shop` 先取 shops 的 **S**，
+    #   `serialize!` 再要 **X** ⇒ 兩個併發建立各持相容的 S、各等對方放掉才能升級 ⇒ 必死鎖。
+    #   實測（審查方）24 次建立丟失 13 次。修法＝create 一律不取店鎖
+    #   （新系列的 id 在 commit 前無人能引用它 ⇒ 構造上不可能成環）。
+    threads = 4
+    results = Array.new(threads)
+    barrier = Queue.new
+    workers = Array.new(threads) do |i|
+      Thread.new do
+        barrier.pop
+        ActiveRecord::Base.connection_pool.with_connection do
+          results[i] = ActsAsTenant.with_tenant(shop) do
+            Catalog::SaveCollection.call(shop:, input: {
+              title: "併發建立 #{i}", collection_type: "smart",
+              sources: [ { rules: [
+                { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+              ] } ]
+            })
+          end
+        end
+      rescue StandardError => e
+        results[i] = e
+      end
+    end
+    threads.times { barrier << :go }
+    workers.each(&:join)
+
+    failures = results.reject { |r| r.respond_to?(:user_errors) && r.user_errors.empty? }
+    expect(failures).to be_empty,
+      "併發建立死鎖／失敗：#{failures.map { |f| f.is_a?(Exception) ? f.class : f.user_errors }.inspect}"
+    created = ActsAsTenant.with_tenant(shop) { Collection.where(shop_id: shop.id, collection_type: "smart").count }
+    expect(created).to eq(threads), "有建立請求整份丟失（P1）"
+  end
+
+  it "🔴 P2（同上）：死鎖被 rescue 後回的 code 必須是 enum 合法值，不得穿出成 500" do
+    # 第十輪回的是 `RACED`，而 `CollectionSetUserErrorCode` 沒有這個值、`code` 又是
+    # `null: false` ⇒ graphql-ruby 丟 UnresolvedValueError，controller 的去敏 rescue
+    # 接不到 ⇒ HTTP 500 連 body 都沒有，比它要取代的「200＋INTERNAL」更糟。
+    collection = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "P2", handle: "p2-code",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+    allow(Catalog::HandleChange).to receive(:serialize!).and_raise(ActiveRecord::Deadlocked, "boom")
+
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveCollection.call(shop:, input: {
+        id: "gid://chilllove/Collection/#{collection.id}",
+        lock_version: collection.reload.lock_version,
+        title: "P2",
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+        ] } ]
+      })
+    end
+
+    codes = result.user_errors.map { |e| e[:code] }
+    expect(codes).to eq([ "STALE_OBJECT" ])
+    valid = Types::Errors::CollectionSetUserErrorCode.values.keys
+    expect(valid).to include(*codes),
+      "回了不在 enum 裡的 code ⇒ graphql-ruby 會丟 UnresolvedValueError、穿出成 500（P2）"
+  end
+
+  it "🔴 P2 對偶：**create** 路徑的死鎖 rescue 也必須回合法 code（兩個 site 都要看著）" do
+    # 🔴 兩個 rescue site（create／update）必須各有一格盯著——第一次跑突變時只改了
+    #   create 那一個就整套全綠，因為當時只有 update 有測試。
+    allow(Collection).to receive(:create!).and_raise(ActiveRecord::Deadlocked, "boom")
+
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveCollection.call(shop:, input: {
+        title: "建立時死鎖", collection_type: "smart",
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+        ] } ]
+      })
+    end
+
+    codes = result.user_errors.map { |e| e[:code] }
+    expect(codes).to eq([ "STALE_OBJECT" ])
+    expect(Types::Errors::CollectionSetUserErrorCode.values.keys).to include(*codes)
+  end
+
+
+  it "🔴 P3（同上）：update 路徑的店鎖必須有回歸保護——拿掉它這一格要紅" do
+    # 第十輪宣稱 MO5 的反向複驗是「併發 spec 紅」，實測拿掉店鎖全套 1008 例全綠
+    # ⇒ 那個 🔴 修法零回歸保護。本格直接盯著「update 走 serialize!」這件事。
+    collection = ActsAsTenant.with_tenant(shop) do
+      Collection.create!(shop_id: shop.id, title: "P3", handle: "p3-lock",
+                         collection_type: "smart", sort_order: "manual", description_html: "")
+    end
+
+    expect(Catalog::HandleChange).to receive(:serialize!).with(shop).at_least(:once).and_call_original
+    ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveCollection.call(shop:, input: {
+        id: "gid://chilllove/Collection/#{collection.id}",
+        lock_version: collection.reload.lock_version,
+        title: "P3",
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+        ] } ]
+      })
+    end
+  end
+
+  it "create 路徑**不得**取店鎖（P1 的對偶：取了就是 S→X 升級死鎖）" do
+    expect(Catalog::HandleChange).not_to receive(:serialize!)
+    result = ActsAsTenant.with_tenant(shop) do
+      Catalog::SaveCollection.call(shop:, input: {
+        title: "建立不取店鎖", collection_type: "smart",
+        sources: [ { rules: [
+          { block: "inclusion", condition_type: "product_tag", relation: "includes", value_text: "red" }
+        ] } ]
+      })
+    end
+    expect(result.user_errors).to eq([])
+  end
 end
