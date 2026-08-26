@@ -2653,6 +2653,73 @@
   補齊既有漏列屬跨包歷史回填，不在 S0 根因影響圖內（鐵律 20.5）⇒ 一併登記不改。
   【F2；來源＝S0 送驗前稽核實跑；複驗＝上方指令；取證日期＝2026-08-26】
 
+### 3.20 S1（publication 生命週期）的範圍外觀察（2026-08-26）
+
+<!-- 編號取 3.20：本節新增時 §3 的最大編號是 3.19。既有失序不動（理由見 3.18 的編號說明）。
+     複驗現況：`grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- **`db/schema.rb` 的 `publications.sales_catalog_id` 欄位註釋仍寫「M5 建 catalogs 時補外鍵」**：
+  外鍵已於 S0 PR A 補上（`fk_publications_sales_catalog_id`），欄位也已改名。
+  改欄位註釋**要一支 migration**（MySQL 的 column comment 是 DDL）⇒ 為一句註釋單開 migration
+  不划算，隨下一支本來就會動 `publications` 的 migration 一併更正（最近的候選＝
+  `sales_catalog_id` 轉 NOT NULL 那一包）。
+  【F2；來源＝S1 研究階段的倉庫掃描；複驗：
+  `grep -n "sales_catalog_id" db/schema.rb`；取證日期＝2026-08-26】
+
+- **`config/limits.yml` 宣告了 `catalog_flow.projection_rebuild_tasks` 含
+  `catalog:resync:publications`，但 `lib/tasks/catalog.rake` 沒有這個 task**：
+  且該鍵註釋宣稱的「CI 斷言清單與 rake task 一一對應」在倉庫內找不到實作
+  ⇒ **既有的正典-實作不符**（不是 S1 造成的）。S1 不順手補（鐵律 20.5：不在本根因影響圖內）。
+  ⚠️ 補的時候要連「那條 CI 斷言」一起補，否則同一個坑會再開一次。
+  【F2；來源＝S1 研究階段掃描；複驗：
+  `grep -n "projection_rebuild_tasks" -A6 config/limits.yml` 對照 `grep -rn "resync" lib/tasks/`；
+  取證日期＝2026-08-26】
+
+- 🔴 **`insert_all`／`upsert_all` 繞過 `resource_publications` 唯一那道租戶守衛**：
+  多型的 `publishable` 側**沒有資料庫外鍵**，`acts_as_tenant` 也明確排除多型外鍵驗證
+  ⇒ 唯一防線是 model validation `publishable_belongs_to_same_shop`，而批量 API 一律跳過 validation。
+  這條**已在三處登記過**（`resource_publication.rb`、`docs/dev/m2-publication-model.md` §6、
+  `app/models/product.rb`），本輪的新資訊是：**S1 是第一個真的會踩到它的批次寫入者**
+  （50 筆一批很自然會寫 `insert_all`）。S1 自己那條路徑改走逐列 `find_or_create_by!` 避開，
+  但**全域缺口仍在**——下一個批次寫入者（匯入器）會再遇到一次。
+  斷根需要 DB 層守衛或一條 CI 斷言 ⇒ 依鐵律 20.4 登記候選，取得裁定後另開 18.3 PR。
+  【F1；來源＝S1 實作；複驗：`grep -rn "insert_all\|upsert_all" app/ --include=*.rb`；
+  取證日期＝2026-08-26】
+
+- **倉庫沒有共用的 GID parser**：`Storage::FileWrite`、`Mutations::BaseMediaMutation`、
+  `Catalog::SaveProduct`、以及本輪新增的 `Publications::Lookup`／`Publications::Write`
+  各自寫一份 `%r{\Agid://chilllove/X/(\d+)\z}` regex。
+  ⇒ GID 格式若要改（例如加上 shop 前綴），要逐處找。抽共用 parser 屬跨元件重構
+  （鐵律 20.5），S1 不做。
+  【F2；來源＝S1 實作；複驗：`grep -rn "gid://chilllove" app/ --include=*.rb | grep -v _spec`；
+  取證日期＝2026-08-26】
+
+- **每支 request spec 各自定義 `login!`／`post_graphql`／`json` 三個 helper**：
+  本輪新增的 `spec/requests/publication_lifecycle_spec.rb` 照抄既有形態。
+  抽共用 support 屬跨檔重構，不在本包射程內。
+  ⚠️ 與六份 `purge!` 清單（§3.19）是**同一種**結構性重複，但兩者的失敗形態不同：
+  purge 清單漏改會**紅在無關的測試上**，helper 重複只是多寫幾行。優先級較低。
+  【F2；來源＝S1 實作；複驗：`grep -rln "def login!" spec/requests/`；取證日期＝2026-08-26】
+
+- 🔴 **官方文檔自相矛盾：`ResourceOperationStatus` 有沒有 `FAILED`**：
+  schema reference 的 enum 頁**全集恰三值**（`ACTIVE`／`COMPLETE`／`CREATED`，兩次抓取一致），
+  但同一家的指南頁 `.../products-and-collections/sync-data` 逐字要求
+  `Poll the productOperation query with the operation ID from Step 1 until the status changes
+  to COMPLETE or FAILED.` 與 `If FAILED, check userErrors for details.`
+  ⇒ **輪詢終止條件必須以 schema 值域為準，不以散文為準**，否則會寫出一條永遠等不到的分支。
+  這是「教學層 vs schema 層」錯位（記憶條目 `docs-vs-measurement-conflict` 的同型），
+  不是誰權威的問題。⚠️ **執行期是否可能真的回 `FAILED`＝未取得**。
+  【F5；來源＝S1 研究工作流（兩路獨立抓取）；
+  複驗：<https://shopify.dev/docs/api/admin-graphql/latest/enums/ResourceOperationStatus>
+  對照 <https://shopify.dev/docs/apps/build/product-merchandising/products-and-collections/sync-data>；
+  取證日期＝2026-08-26】
+
+- ⚠️ **`docs.medusajs.com` 全站嵌有指示型文字**（要求 agent POST 回饋到其 endpoint）：
+  S1 的研究工作流對該站的每一個抓取頁面都命中，複驗 2026-08-18 那起注入案例
+  **仍存在且已擴散到全站**。依鐵律 16.3 一律當**資料**登記、不執行。
+  同輪 shopify.dev 與 docs.saleor.io **未發現**注入文字。
+  【F5；來源＝S1 研究工作流的 external 路（11 次 fetch 全部命中）；取證日期＝2026-08-26】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取
@@ -2849,6 +2916,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/worklog/2026-08-25-D48-列表對齊三項.md`（本包新增；D40 直接開發，待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S0-catalog一級表與能力旗標.md`（本包新增，同 commit 補列；待後續輪次收割）
 - [ ] `docs/worklog/2026-08-26-S0-管道身分三表.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/worklog/2026-08-26-S1-publication生命週期.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 <!-- 🔴 2026-08-22 補列（來源＝Claude issue comment `5379467830` 🔴-2 ＋ Codex inline `3835660386`）：
      第十六輪那一列**在該 worklog 誕生的同一個 commit（`53d346b`）就該加上**——本節上方
@@ -3007,6 +3075,7 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE 'docs/(worklog|hand
 - [ ] `docs/handoff/2026-08-25-D48-alt權威遷回檔案層.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 - [ ] `docs/handoff/2026-08-25-D48-列表對齊三項.md`（本包新增；D47 後 handoff 入庫，待後續輪次收割）
 - [ ] `docs/handoff/2026-08-26-S0-管道身分模型.md`（本包新增，同 commit 補列；待後續輪次收割）
+- [ ] `docs/handoff/2026-08-26-S1-publication生命週期.md`（本包新增，同 commit 補列；待後續輪次收割）
 
 ### A.3 事故密集檔（specs／機制檔）
 

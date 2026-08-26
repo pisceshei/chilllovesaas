@@ -62,5 +62,13 @@ module Types
       description: "更新已啟用語言的發布狀態與排序。"
     field :shop_locale_disable, mutation: Mutations::ShopLocaleDisable,
       description: "停用一個內容語言（保留譯文）。"
+    # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**
+    #   `resource_publications` 的非建立寫入路徑（在它之前發布列只在建立時被寫入）。
+    field :publication_create, mutation: Mutations::PublicationCreate,
+      description: "建立一個 publication（銷售管道的發布容器）。"
+    field :publication_update, mutation: Mutations::PublicationUpdate,
+      description: "更新 publication：autoPublish 與批次加／減 publishable（🔴 累加語義，非宣告式全量）。"
+    field :publication_delete, mutation: Mutations::PublicationDelete,
+      description: "刪除一個 publication（綁著管道的不可刪）。"
   end
 end

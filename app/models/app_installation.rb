@@ -15,12 +15,24 @@
 # `launchUrl`／`uninstallUrl`／`metafield(s)`／`allSubscriptions`／`oneTimePurchases`／
 # `revenueAttributionRecords`，另有三個 **deprecated**：`channel`／`publication`／`subscriptions`。
 #
-# 1. 🔴 **`installed_at`／`uninstalled_at` 是我方加的，本尊沒有。**
-#    官方該型別**沒有任何時間戳**，也**沒有表達卸載狀態的欄位**（同上來源）。
-#    我方要它們的理由：軟刪是本輪四家外部平台的共同做法（無一硬刪管道），
+# 1. ~~🔴 **`installed_at`／`uninstalled_at` 是我方加的，本尊沒有。**~~
+#    ~~官方該型別**沒有任何時間戳**，也**沒有表達卸載狀態的欄位**（同上來源）。~~
+#    🔴 **2026-08-26 更正（實測推翻，`docs/research/82` §11.1）**：原文說「本尊沒有」**過窄**。
+#    正確表述分兩層：
+#      - **官方公開 GraphQL 的 `AppInstallation` 型別確實沒有任何時間戳欄位**（原判斷成立）；
+#      - **但 admin UI 顯示得出來**——app installation 詳情頁
+#        （`/settings/sales_channels/app_installations/app/<handle>`）逐字印
+#        `Installed July 14`，且另有 `App history` 時間軸逐字印
+#        `App installed by KEN LEE` ＋ 時間 ＋ 日期分組。
+#      ⇒ **平台有存，只是不在公開 API 面上。** 我方 `installed_at` 因此是
+#        **與本尊實質對齊**，不是憑空發明的欄位。
+#    我方要這兩欄的理由（不變）：軟刪是本輪四家外部平台的共同做法（無一硬刪管道），
 #    而「已卸載但保留發布紀錄」這個狀態必須落表才存在。
-#    ⚠️ **卸載後 publication 與發布列的實際去向＝未取得**（決策文件 U-3，需安裝管道才測得到，
-#    使用者已裁定不安裝）⇒ 本欄的**語義**是我方定義的，不是照抄。
+#    ⚠️ **卸載後 publication 與發布列的實際去向仍＝未取得**（決策文件 U-3，需安裝管道才測得到，
+#    使用者已裁定不安裝）⇒ **卸載的語義**仍是我方定義的。
+#    ⚠️ 另一條實測後果：本尊的 `App history` 是**帶操作者的事件時間軸**，不是一個布林狀態
+#    ⇒ 我方「不留安裝歷史」（每店每 app 恆一列）是**已證實的缺口**，不是假設。
+#    需要歷史時另開事件表，登記於 S0 PR B worklog 的 S0B-3。
 # 2. 🔴 **不建 `app_installation.channel` / `.publication` 的對應欄**——官方**已 deprecated**。
 #    現行模型的連結方向是 `App.channels`，所以我方的外鍵掛在 `channels.app_installation_id`
 #    這一側（與本尊同向）。

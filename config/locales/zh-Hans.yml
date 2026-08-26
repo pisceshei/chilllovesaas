@@ -2,6 +2,13 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "zh-Hans":
   errors:
+    publication:
+      all_products_unsupported: "尚未支持「以全部商品预先填满」。"
+      batch_too_big: "单次最多加／减 %{cap} 个 publishable（加与减合计）。"
+      publishable_not_found: "%{gid} 不是本店的 publishable 资源。"
+      channel_bound: "这个 publication 属于一个已安装的渠道；要移除请卸载该渠道，而不是删除它。"
+      catalog_not_found: "指定的 catalog 不存在。"
+      not_found: "找不到指定的 publication。"
     files:
       batch_too_large: "单次文件数量超过上限。"
       alt_too_long: "alt 文本超过 512 字符。"

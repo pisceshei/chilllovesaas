@@ -960,3 +960,196 @@ Publication/209681744107   name:"Shop"
 - Agentic UI 第四項 `Other channels` 對應哪個實體
 - `Publication : Channel` 在**多帳號連線**管道上是否真的 1:N（需要多連線管道才測得到）
 - `Shop` 管道的 `⋯` 選單（兩次誤點導航走，待補）
+
+---
+
+## §11 🔴 S1 地基：Publication 的生命週期與非同步模型（2026-08-26 實測）
+
+> 射程＝分步方案的 **S1**。測試店 `chill-love-u5q5mnzq`（鐵律 12.2 全權寫入授權）。
+> 本節每一條都附鐵律 14.4 的證據五件套（URL 去 token／method／觸發步驟／形狀節錄／取證日期）。
+> 🔴 本尊 admin 走 persisted-query API ⇒ **query 全文不可觀測**（鐵律 14.3）：
+> 只記 operation name ＋ GET 的 variables ＋ 可觀察的副作用；POST 的 variables 在 body 內，
+> 本工具讀不到，逐條標「不可觀測」。
+
+### §11.1 `Settings › Sales channels` 與 app installation 詳情頁
+
+**觸發步驟**：Settings（`/settings/apps`）→ 左欄 `Sales channels` → 清單列的 `⋯` → `View details`。
+🔴 路徑一律點真實連結取得，未猜 URL（鐵律 12.1）。
+
+- 清單恰三列：`Point of Sale`／`Online Store`／`Shop`（與 §0.1 一致）。
+- 每列 `⋯` 選單**恰三項**：`Open app`／`View details`／`Uninstall`（第三項紅色）。
+  🔴 這證實 **R13-V2** 的觀察：管道與 app 的選單完全相同 ⇒ 管道就是一種 app。
+  ⚠️ **`Uninstall` 未點**——破壞性且會毀掉測試店的管道設定，不在授權的「假資料」射程內。
+
+**詳情頁 URL**（method GET，取證 2026-08-26）：
+
+```
+/store/chill-love-u5q5mnzq/settings/sales_channels/app_installations/app/online_store
+```
+
+🔴 **路徑逐字含 `app_installations/app/<handle>`** ⇒ 本尊**用 handle 定址一個 app 的安裝**。
+這是我方 `platform_apps`（自然主鍵 `handle`）＋ `app_installations` 形狀的**直接實測支持**
+（S0 PR B，migration `20260826070000`）。
+
+**頁面分區**（由上而下，逐區逐字）：
+
+| # | 區塊 | 內容（逐字節錄） |
+|---|---|---|
+| 1 | 頁首 | app 名 ＋ `by Shopify`；右側兩鈕 `Uninstall app`（外框）／`Open app`（實心） |
+| 2 | app 卡 | icon ＋ 名稱 ＋ 🔴 `Installed July 14` ＋ 描述 |
+| 3 | `Channel connections` | 副標 `View and manage your connections on Online Store`；一列 `Online Store` ＋ 綠色徽章 `Active` |
+| 4 | `Billing` | `No plan selected` ＋ 右上 `⋯` |
+| 5 | `Activity and permissions` | 逐字：`Apps made by Shopify are trusted to work securely with your store data. These apps are closely linked to Shopify features, so their activity cannot currently be tracked like third-party apps.`（原文用 can’t） |
+| 6 | `Privacy` | 副標 `This app can access personal data in your store`；可展開 `Customers`（`Sensitive data`＝Name／Email address／Phone number／Physical address；`Device and activity data`＝Geolocation）＋ 逐字 `Shopify has confirmed this app meets data handling and privacy requirements`；另一可展開 `Staff and contributors` |
+| 7 | `App history` | 時間軸：日期分組 `July 14` ＋ 條目 `App installed by KEN LEE` ＋ 時間 `9:40 PM` |
+| 8 | 頁尾 | 右下紅色 `Uninstall app` |
+
+🔴 **兩條與我方 S0 設計直接相關的更正**：
+
+1. **`Installed July 14` ⇒ 本尊有安裝時間，只是公開 GraphQL 沒曝露。**
+   官方 `AppInstallation` 型別確實**沒有任何時間戳欄位**
+   （<https://shopify.dev/docs/api/admin-graphql/latest/objects/AppInstallation>，取證 2026-08-26），
+   但 admin UI 顯示得出來 ⇒ **平台有存，只是不在公開 API 面上**。
+   ⚠️ 我方 `app_installations.installed_at` 先前登記為「純 ours、本尊沒有」——
+   **該說法過窄**，正確表述是「官方公開 GraphQL 未曝露；admin UI 證實平台有存」。
+   （更正落點：`app/models/app_installation.rb` 檔頭、`docs/DECISIONS.md` D52。）
+2. **`App history` 是帶操作者的事件時間軸**，不是一個布林狀態。
+   ⇒ 我方 S0 PR B 登記的 **S0B-3「不留安裝歷史」是真的缺口**，不是假設。
+   本尊至少記錄「事件類型 ＋ 時間 ＋ 操作者（staff member）」。
+
+**仍未取得**：`Channel connections` 的 `Active` 徽章來源。官方 `Channel` 型別**沒有 `status` 欄**
+（<https://shopify.dev/docs/api/admin-graphql/latest/objects/Channel>，取證 2026-08-26），
+故該徽章可能來自 installation、可能來自 connection 概念。取得方式＝抓該頁的 persisted query 回應
+（本次未取得：該頁只捕到 `ManagedPricingPlans` 一支 GraphQL 請求）。
+
+### §11.2 🔴 批次發布是**非同步**的，回一個 `Job` 給 admin 輪詢
+
+**觸發步驟**：`/products` → 勾選 2 個商品 → 批次列 `⋯` → `Include in sales channels`
+→ 勾 `Shop` → `Include products`。
+
+**操作序列**（method 如標，取證 2026-08-26）：
+
+| # | operation name | method | 可觀測的 variables |
+|---|---|---|---|
+| 1 | `SalesChannelsBulkModal` | GET | `{"isProduct":true,"limit":250}` |
+| 2 | **`ProductBulkPublish`** | POST | **不可觀測**（persisted query，變數在 body） |
+| 3 | `ContextPickerQuery` | GET | `{"channelCount":100,"companiesCount":10,"catalogChannelFirst":1,"locationsCount":10,"shouldFetchCountries":true,"shouldFetchCatalogs":true,"shouldFetchCompanies":true,"shouldFetchRetail":true,…}` |
+| 4 | 🔴 **`JobPoller`** | GET | `{"id":"gid://shopify/Job/98e987b4-b3a2-4a13-9fee-c59eccf98034"}` |
+| 5 | `ProductIndex` | GET | 見 §11.6 |
+
+**反向操作**（`Exclude from sales channels` → 勾 `Shop` → `Exclude products`）序列對稱：
+`ProductBulkUnpublish`（POST）→ `ContextPickerQuery` → `JobPoller`
+（**新的** Job id `gid://shopify/Job/e52a7dff-77b4-47b4-9647-30fcd2bfaed8`）→ `ProductIndex`。
+
+🔴 **四條結論**：
+
+1. **批次發布／取消發布都是非同步的**，即使只有 2 個商品。
+2. **非同步的載體是 `Job`**（官方 `Job` 型別恰三欄：`done: Boolean!`／`id: ID!`／`query: QueryRoot`，
+   逐字 `A job corresponds to some long running task that the client should poll for status.`
+   ——<https://shopify.dev/docs/api/admin-graphql/latest/objects/Job>，取證 2026-08-26）。
+3. 🔴 **`Job` 的 id 是 UUID 不是數字**（`gid://shopify/Job/98e987b4-…`），與本尊其他 GID 全部用數字 id 相反。
+   官方文檔**沒有**說明它是 UUID（未取得），這是實測形態。
+4. 🔴 **這與 `Publication.operation`（`ResourceOperation`）是兩個不同的機制**，見 §11.3。
+
+### §11.3 🔴 三種非同步／發布路徑，不得混為一談
+
+| 路徑 | 形態 | 回傳 | 證據 |
+|---|---|---|---|
+| **公開 API `publishablePublish`** | **同步**、**逐資源**（`id: ID!` 單一資源）、input 是 `[PublicationInput!]!` | `publishable`／`shop`／`userErrors`，**不回 Job** | <https://shopify.dev/docs/api/admin-graphql/latest/mutations/publishablePublish>，取證 2026-08-26 |
+| **admin 內部 `ProductBulkPublish`／`ProductBulkUnpublish`** | **非同步**、**批次多資源** | **`Job` GID**，由 `JobPoller` 輪詢 | §11.2 實測 |
+| **`Publication.operation`（`ResourceOperation`）** | publication **整體**層級的操作（`AddAllProductsOperation` 等） | `ResourceOperationStatus` 恰三值、**無失敗態** | §9.5d 實測訊息 ＋ 官方 SDL |
+
+⚠️ **`Publication.operation` 本輪未能實地觸發**：它的 admin 觸發點是「把**全部**商品加入一個管道」，
+而那是安裝管道時的流程（使用者裁定不安裝）。已有證據僅 §9.5d 的鎖定訊息逐字
+`Publishing for this catalog cannot be changed while updates are in progress.`（原文用 can’t）
+取得方式＝安裝一個管道 app，或找到 catalog 的 add-all-products 入口。
+
+另有一條官方逐字，同時是 S2 的輸入：
+`publishablePublish` 的 `PublicationInput.publishDate` 說明中寫
+`Only online store channels support scheduled publishing`
+——這正是 `supportsFuturePublishing` 旗標的語義來源。
+
+### §11.4 商品批次 `⋯` 選單的完整值域（鐵律 12.2 值域窮舉）
+
+**觸發步驟**：`/products` → 勾選 ≥1 個商品 → 批次列的 `⋯`。批次列本身是
+`[N selected ▾] [Bulk edit] [Set as draft] [⋯]` ＋ 右側 `Show all selected` 開關。
+
+選單**恰 11 項**，分 6 組（組間有分隔線），逐字：
+
+| 組 | 項目 |
+|---|---|
+| 1 | `Archive products`／`Unlist products`／`Delete products`（紅色） |
+| 2 | `Include in sales channels`／`Exclude from sales channels` |
+| 3 | `Include in catalogs`／`Exclude from catalogs` |
+| 4 | `Add tags`／`Remove tags` |
+| 5 | `Add to collection(s)`／`Remove from collection(s)` |
+| 6 | 區塊標題 `Apps` ＋ `Create email campaign` |
+
+🔴 **三條語義結論**：
+
+1. **UI 用詞是 `Include in` / `Exclude from`，不是 publish/unpublish**——
+   但 **URL 的動詞仍是 publish/unpublish**：
+   `/products/sales-channels/publish?…` 與 `/products/sales-channels/unpublish?…`。
+   ⇒ 我方 admin 的**文案**應對齊「加入／移除」，**API 命名**仍走 publish 語義（鐵律 4 的 `resourceVerb`）。
+2. **sales channels 與 catalogs 是兩組獨立操作**（第 2 組與第 3 組），
+   再次證實 `docs/specs/88` §1 的三層 AND 中第二層與第三層彼此獨立。
+3. 🔴 **`Archived` 不在這個選單裡當狀態選項，`Archive products` 是一個動作**——
+   與 §8.5 記過的「商品 Status 下拉沒有 Archived」同一件事的批次面對應。
+
+### §11.5 🔴 發布 modal 的形態：**累加／扣除**，不是狀態編輯器
+
+**URL**（GET，取證 2026-08-26）：
+
+```
+/products/sales-channels/publish?includesBundle=false&selectedProductIds=<id1>,<id2>
+/products/sales-channels/unpublish?includesBundle=false&selectedProductIds=<id1>,<id2>
+```
+
+🔴 **`includesBundle=false` 這個參數解掉了 §9.4 登記的未取得**：發布 modal 需要知道
+「這批選取的內容含不含組合商品」，因為**管道有 `supportsBundles` 能力旗標**
+（我方已於 S0 PR A 的 `20260826062000` 補上該旗標）。⇒ 那個旗標的**用途**至此有實測支持。
+
+**modal 內容**：標題 `Include 2 products in sales channels`／`Exclude 2 products from sales channels`；
+一個 `Search` 輸入框；一個群組列 `Sales channel`（帶自己的全選 checkbox）；
+三列管道各帶 checkbox（`Online Store`／`Point of Sale`／`Shop`）；
+頁尾 `Cancel` ＋ `Include products`／`Exclude products`（未選任何管道時**禁用**）。
+勾選後群組列變成 `N selected ▾` ＋ `Show all selected` 開關。
+
+🔴 **兩個 modal 的 checkbox 一律以「全部未勾」開場，即使選取的商品已經在某些管道上**
+（實測：兩個商品的 `Channels` 欄都是 1，modal 仍全空）。
+⇒ 這是 **`publishablesToAdd` / `publishablesToRemove` 的累加／扣除語義**，
+**不是**「把目前狀態讀出來讓你編輯」。我方實作**不得**做成狀態編輯器，否則
+「取消勾選」會被誤解成「移除」，而本尊的取消勾選只是「這次不動它」。
+
+**實測副作用**（可複驗）：Include→Shop 之後兩個商品的 `Channels` 欄 1→2；
+Exclude→Shop 之後回到 1。兩個 fixture 商品（`P12 發布模型實測用商品`＝2、
+`實測用 T恤 多變體（測試資料）`＝3）**全程未受影響**，測試店狀態已還原。
+
+### §11.6 `ProductIndex` 變數揭露的四種 catalog（S10 的輸入）
+
+`ProductIndex`（GET）的 variables 逐字含：
+
+```
+"shouldQueryRegionCatalogs":true, "shouldQueryRetailCatalogs":true,
+"shouldQueryB2BCatalogs":true,   "shouldQueryChannelMarketCatalogs":true,
+"productsFirst":50, "contextualPublicationContext":{}
+```
+
+🔴 **admin 區分四種 catalog：Region／Retail／B2B／ChannelMarket**，
+而官方 `CatalogType` enum 只有三值（`APP`／`MARKET`／`COMPANY_LOCATION`，另有讀取態 `NONE`）。
+⇒ 兩者**不是同一層**：enum 是資料模型的種類，這四個是 admin 的查詢維度。
+S10 做 catalog 成員語義時必須先解掉這個對應關係（**未取得**）。
+
+另：`"productsFirst":50` 是商品列表的頁大小；`SalesChannelsBulkModal` 的 `"limit":250`
+與我方鐵律 4 的「分頁 ≤250」上限一致。
+
+### §11.7 S1 尚未取得
+
+| # | 未取得 | 取得方式 |
+|---|---|---|
+| S1-U1 | `ProductBulkPublish`／`ProductBulkUnpublish` 的 variables 與回應形狀 | persisted query ＋ POST body，本工具不可觀測（鐵律 14.3）。需要能讀 request body 的抓包工具 |
+| S1-U2 | `Publication.operation` 的實地形態（進行中的鎖、進度數字） | 需安裝一個管道 app（使用者裁定不安裝），或找到 catalog 的 add-all-products 入口 |
+| S1-U3 | `Channel connections` 的 `Active` 徽章由哪個欄位驅動 | 官方 `Channel` 無 `status` 欄；需抓該頁 persisted query 的回應 |
+| S1-U4 | 卸載管道後 publication 與發布列的去向 | 官方沉默 ＋ 不可實測（破壞性） |
+| S1-U5 | `Job` 的 id 為何是 UUID、以及 `Job` 與 `ResourceOperation` 的關係 | 官方文檔對兩者的關係完全沉默 |
+| S1-U6 | admin 四種 catalog 查詢維度與官方 `CatalogType` 三值 enum 的對應 | 需 catalog 相關頁面的抓包（屬 S10） |

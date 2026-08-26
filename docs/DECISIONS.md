@@ -1136,3 +1136,15 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   ⇒ `app_installations` 的 `installed_at`／`uninstalled_at` 兩欄是**我方定義的語義**，
   官方 `AppInstallation` 沒有任何時間戳、也沒有卸載狀態欄（取證 2026-08-26）。
   ⚠️ 下一輪 parity **不得**把那兩欄當成「與本尊不一致的缺口」修掉——要改須推翻本條。
+
+  🔴 **2026-08-26 稍晚更正（S1 實測，`docs/research/82` §11.1）**：上一段「官方 `AppInstallation`
+  沒有任何時間戳」**本身沒錯**（公開 GraphQL 型別確實沒有），但由它推出的
+  「⇒ 兩欄是我方定義的語義」**過窄**。實測 app installation 詳情頁
+  （`/settings/sales_channels/app_installations/app/<handle>`）逐字顯示 `Installed July 14`，
+  且有 `App history` 時間軸逐字顯示 `App installed by KEN LEE` ＋ 時間
+  ⇒ **平台有存安裝時間與帶操作者的事件歷史，只是不在公開 API 面上**。
+  ⇒ 正確的分界是：**`installed_at` 與本尊實質對齊**；**卸載的語義**（`uninstalled_at` 代表什麼、
+  卸載後發布列去向）才是我方定義的、且仍受 U-3 未取得約束。
+  本條的保護射程不變（下一輪 parity 仍不得刪那兩欄），改的是**理由的準確性**。
+  同批發現：本尊保留安裝／卸載**歷史**，我方每店每 app 恆一列的設計是**已證實的缺口**
+  （登記於 S0 PR B worklog 的 S0B-3），不是假設。
