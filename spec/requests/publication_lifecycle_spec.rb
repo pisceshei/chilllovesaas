@@ -469,6 +469,85 @@ RSpec.describe "Admin GraphQL publication lifecycle", type: :request do
       expect(after_stamp).to be > before_stamp
     end
 
+    # 🔴 **這一格是線上驗證抓到的缺陷**（2026-08-26 正式庫實跑，逐字輸出
+    #   `cleanup: publication_left=0 catalog_left=1`）：刪 publication 之後
+    #   `sales_catalogs` 那一列留在庫裡，每建一次刪一次就漏一列、而且不拋任何錯。
+    #   ⚠️ 上面那些格子抓不到它——它們數的是 publication 與發布列，**沒有人數 catalog**。
+    it "🔴 刪掉自建的 publication 會一併清掉它的 catalog（不留孤兒列）" do
+      catalog_id = ActsAsTenant.without_tenant { target.sales_catalog_id }
+      expect(catalog_id).to be_present
+
+      post_graphql(delete_mutation, variables: { id: gid(target) })
+
+      expect(json.dig("data", "publicationDelete", "userErrors")).to eq([])
+      expect(ActsAsTenant.without_tenant { SalesCatalog.where(id: catalog_id).count }).to eq(0)
+    end
+
+    # 🔴 **這一格是上一格帶出來的第二個缺陷**：本來想測「共用 catalog 時不得誤刪」，
+    #   寫出來才發現**共用 catalog 這件事本身就不該被接受**——我方
+    #   `SalesCatalog has_one :publication` 是 1:1，但在此之前沒有任何東西擋它，
+    #   第二個 publication 會撞到 `channel_handle` 的唯一性（佔位值由 catalog id 導出），
+    #   錯誤訊息指向一個呼叫端**根本沒有傳的欄位**（`input.channelHandle`）。
+    #   ⇒ 改成在源頭擋，錯誤指向真正的輸入欄位。
+    it "🔴 catalogId 指向已經有 publication 的 catalog ⇒ TAKEN（一個 catalog 最多一個 publication）" do
+      taken_catalog_id = ActsAsTenant.without_tenant { target.sales_catalog_id }
+
+      post_graphql(create_mutation, variables: {
+        input: { title: "想共用 catalog", catalogId: "gid://chilllove/AppCatalog/#{taken_catalog_id}" }
+      })
+
+      errors = json.dig("data", "publicationCreate", "userErrors")
+      expect(errors.size).to eq(1)
+      expect(errors.first["code"]).to eq("TAKEN")
+      expect(errors.first["field"]).to eq([ "input", "catalogId" ]),
+        "錯誤必須指向呼叫端真的傳了的欄位，不是 channelHandle 那個內部佔位欄"
+    end
+
+    # 🔴 **孤兒清理的判準是「沒有 publication 指著」，不是「這是不是我們建的」。**
+    #   有了上面那道 TAKEN 守衛之後，共用 catalog 在**服務層**已經不可達
+    #   ⇒ 這一格刻意繞過服務層、直接在 model 層構造該狀態，證明那道判準真的在做事。
+    #   ⚠️ 沒有這一格，`destroy_orphan_catalog!` 的 `exists?` 判準是**沒人看著的死碼**：
+    #   把它整行拿掉，上面所有格子照樣全綠（本輪突變實測 M9 得到 `0 failures`）。
+    #   ⚠️ 它不是多餘的：`Publication : Catalog` 是 1:1 還是 1:N ＝**官方未取得**
+    #   （S1 規格草案 U-19）。哪天放寬成 1:N，這道判準就從防禦變成承重。
+    it "🔴 catalog 仍被別的 publication 指著時，刪除**不得**把它一併清掉" do
+      shared_catalog_id = ActsAsTenant.without_tenant { target.sales_catalog_id }
+
+      # 繞過服務層與 validation，直接造出「兩個 publication 共用一個 catalog」。
+      squatter = ActsAsTenant.without_tenant do
+        Publication.create!(shop_id: shop.id, name: "借用者", channel_handle: "squatter",
+                            auto_publish: false, supports_future_publishing: true)
+      end
+      ActsAsTenant.without_tenant { squatter.update_columns(sales_catalog_id: shared_catalog_id) }
+
+      post_graphql(delete_mutation, variables: { id: gid(target) })
+
+      expect(json.dig("data", "publicationDelete", "userErrors")).to eq([])
+      expect(ActsAsTenant.without_tenant { SalesCatalog.where(id: shared_catalog_id).count }).to eq(1),
+        "catalog 還被 publication ##{squatter.id} 指著卻被刪了——那會留下一個指向不存在 catalog 的外鍵"
+    end
+
+    # 建店那個 catalog 同樣受保護（它的 publication 綁著 channel）。
+    it "🔴 catalogId 指向建店的 catalog 也是 TAKEN" do
+      online_catalog_id = ActsAsTenant.without_tenant { online_store.sales_catalog_id }
+
+      post_graphql(create_mutation, variables: {
+        input: { title: "想借線上商店的 catalog", catalogId: "gid://chilllove/AppCatalog/#{online_catalog_id}" }
+      })
+
+      expect(json.dig("data", "publicationCreate", "userErrors").first["code"]).to eq("TAKEN")
+    end
+
+    # 線上驗證同時證實：建店那個 catalog 不會被誤刪（它的 publication 綁著 channel、刪不掉）。
+    it "🔴 建店的 catalog 不受影響" do
+      before_count = ActsAsTenant.without_tenant { SalesCatalog.where(shop_id: shop.id).count }
+      post_graphql(delete_mutation, variables: { id: gid(target) })
+
+      after_count = ActsAsTenant.without_tenant { SalesCatalog.where(shop_id: shop.id).count }
+      expect(after_count).to eq(before_count - 1)
+      expect(ActsAsTenant.with_tenant(shop) { Publication.online_store!.sales_catalog }).to be_present
+    end
+
     it "GID 查不到 ⇒ NOT_FOUND，deletedId 為 null" do
       post_graphql(delete_mutation, variables: { id: "gid://chilllove/Publication/999999" })
 

@@ -73,7 +73,21 @@ module Publications
         return reject("defaultState", I18n.t("errors.publication.all_products_unsupported"), "FEATURE_NOT_ENABLED")
       end
 
+      # 🔴 **一個 catalog 最多一個 publication**，這是我方 `SalesCatalog has_one :publication`
+      #   的模型宣告，但**在此之前沒有任何東西擋它**（`publications.sales_catalog_id`
+      #   沒有唯一索引）。第二個 publication 共用同一個 catalog 會撞到的是
+      #   `channel_handle` 的唯一性（佔位值由 catalog id 導出）——那是**症狀不是根因**，
+      #   而且錯誤訊息會指向一個呼叫端根本沒有傳的欄位。
+      #   ⚠️ 本輪由「catalog 還被別的 publication 用著時不得刪」那格 spec 當場抓到。
+      #   ⚠️ **不加 DB 唯一索引**：本尊的 `Publication : Catalog` 是 1:1 還是 1:N ＝**未取得**
+      #     （S1 規格草案 U-19）。在那之前把 1:1 硬寫進 schema 是把未取得寫成事實。
+      # 🔴 這段**必須在 `with_tenant` 之內**：`Publication` 宣告 `acts_as_tenant`，
+      #   而 `require_tenant = true` ⇒ 在租戶外查它是 `NoTenantSet` 而不是空集合。
       ActsAsTenant.with_tenant(shop) do
+        if sales_catalog && Publication.where(sales_catalog_id: sales_catalog.id).exists?
+          return reject("catalogId", I18n.t("errors.publication.catalog_taken"), "TAKEN")
+        end
+
         ApplicationRecord.transaction do
           catalog = sales_catalog || shop.sales_catalogs.create!(
             catalog_type: "app",
@@ -227,15 +241,50 @@ module Publications
           affected = ResourcePublication
             .where(shop_id: shop.id, publication_id: publication.id)
             .pluck(:publishable_type, :publishable_id)
+          catalog = publication.sales_catalog
 
           bump_stamps_for_pairs!(shop_id: shop.id, pairs: affected, at:)
           publication.destroy!
+          destroy_orphan_catalog!(catalog)
           Result.new(publication:, user_errors: [])
         end
       end
     end
 
     # ── 以下為內部規則產生器 ──────────────────────────────────────────────────
+
+    # 刪掉已經沒有任何 publication 指著的 catalog。
+    #
+    # 🔴 **這是線上驗證抓到的缺陷**（2026-08-26，正式庫實跑）：`publicationDelete` 只刪
+    #   publication，`sales_catalogs` 那一列**留在庫裡**——驗證腳本印出
+    #   `cleanup: publication_left=0 catalog_left=1`。每建一次刪一次就漏一列，
+    #   而且**不拋任何錯**。⚠️ 本機 spec 抓不到它：那些格子斷言的是 publication 與
+    #   發布列的數量，沒有人數 catalog。
+    #
+    # 🔴 **判準是「沒有 publication 指著」，不是「這個 catalog 是不是我們建的」**：
+    #   ①呼叫端可以傳 `catalogId` 指向一個既有 catalog——那時它**可能還被別的
+    #     publication 用著**，刪掉就是刪別人的東西；
+    #   ②反過來，一個沒有任何 publication 的 catalog 在我方模型裡是**不可達的**
+    #     （沒有建立裸 catalog 的 API，每一列都來自 `Shop#after_create` 或
+    #     `publicationCreate`）⇒ 它只能是垃圾。
+    #   兩條合起來就是這個判準。
+    #
+    # ⚠️ 本尊在同一個位置**留孤兒**：B2B 指南逐字
+    #   `When using catalogUpdate to change a catalog's publicationId, the previous
+    #   publication remains in the system and becomes orphaned unless you explicitly
+    #   delete it.`（取證 2026-08-26）——它孤兒的是 publication，方向相反。
+    #   我方選擇清理是 **ours**，理由是我方沒有 catalog 的管理介面，
+    #   孤兒列商家永遠看不到也刪不掉。
+    #
+    # @param catalog [SalesCatalog, nil]
+    # @return [void]
+    # @note 副作用：可能 DELETE 一列 `sales_catalogs`。
+    def destroy_orphan_catalog!(catalog)
+      return if catalog.nil?
+      return if Publication.where(sales_catalog_id: catalog.id).exists?
+
+      catalog.destroy!
+    end
 
     # 把 GID 陣列解析成本店的 publishable 記錄。
     #

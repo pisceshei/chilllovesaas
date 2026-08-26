@@ -3,6 +3,7 @@
 "en":
   errors:
     publication:
+      catalog_taken: "That catalog already has a publication."
       all_products_unsupported: "Prefilling a publication with all products isn't supported yet."
       batch_too_big: "You can add or remove at most %{cap} publishables per call (add and remove counted together)."
       publishable_not_found: "%{gid} isn't a publishable resource in this shop."
