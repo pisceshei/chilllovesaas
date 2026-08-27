@@ -18,16 +18,20 @@ module Publications
   #   `The product is active but you need a direct link to view it.`（ProductStatus enum，
   #   取證 2026-08-27）——寫 `!= ACTIVE` 的事故形態＝UNLISTED 商品到點後前台已可購買
   #   但快取永不失效（D53 F1）。
-  # ③怎麼做出來：唯一副作用＝`Product.bump_publications_stamp!`（at: 到點處理當刻，
-  #   不是 payload 的 publishDate——與 S5「stamp 寫現在不寫未來」同一條紀律）。
+  # ③怎麼做出來：兩個副作用——①`resource_publications.published_at` 依到點結果改寫
+  #   （合格⇒覆寫成實際處理時間；不合格⇒清 NULL，consume-and-drop，照本尊實測，見
+  #   `docs/dev/m2-publication-scheduling.md` §11）②`Product.bump_publications_stamp!`
+  #   （at: 到點處理當刻，不是 payload 的 publishDate——與 S5「stamp 寫現在不寫未來」同紀律；
+  #   **只在合格時 bump**，不合格時可見性沒變化故不 bump）。
   #   🔴 **不合格分支一律 return、禁止 raise**（D53「三條最容易做錯的」第 2 條）：
   #   `Events::Relay#deliver` 只有兩條出口，raise 表達「條件不合」會讓每筆不合格排程
   #   燒掉 2/4/8/16/32/64/128 秒的退避重試、在 `event_outbox.last_error` 留假錯誤、
   #   最終進 dead 表被營運當真事故。每個分支寫一行結構化 log（F1-⑤(d)：
   #   `event_id / topic / publishable_type / publishable_id / status / decision`），
   #   否則「條件不合 no-op」與「消費者沒被觸發」在測試上不可分辨（裁定書 §4.2）。
-  #   明確不做（D53 §3.2）：不 UPDATE `published_at`、不翻 `products.status`、
-  #   不建/刪發布列、不掃 due 列、不加 max-age、不改 `relay.rb`。
+  #   明確不做：不翻 `products.status`、不建/刪發布列、不掃 due 列、不加 max-age、
+  #   不改 `relay.rb`。（D53 §3.2 原本還列了「不 UPDATE published_at」——
+  #   2026-08-27 依本尊實測更正，見 §11 與本方法內註。）
   # ④跨功能影響：`Events::Consumers::REGISTRY`（本消費者的唯一掛載點）、
   #   `Publications::Write`／`Catalog::StatusTransition`（兩個生產者，契約不動）、
   #   `products.publications_updated_at`（前台快取 stamp 的唯一消費面）、
@@ -84,10 +88,22 @@ module Publications
         end
         return log(event, decision: :row_gone, product_id:) if status.nil?
 
+        # 🔴 **到點的欄位處置照本尊實測**（2026-08-27，D53 更正一）：
+        #   合格 ⇒ `published_at` **覆寫成實際到點處理時間**（本尊實測晚約 2 秒，
+        #     `05:58:00 → 05:58:02`）；不合格 ⇒ `published_at` **清成 NULL**
+        #     （consume-and-drop：排程物件消滅，之後不會復活）。
+        #   兩者與 D53 原文「不 UPDATE published_at」牴觸，已依使用者
+        #   「按照 shopify 的處理方式做」裁定改為照抄本尊。逐字證據見
+        #   `docs/dev/m2-publication-scheduling.md` §11。
+        at = Time.current
         if Product::PURCHASABLE_STATUSES.include?(status)
-          Product.bump_publications_stamp!(shop_id: event.shop_id, id: product_id, at: Time.current)
+          ActsAsTenant.without_tenant { row.update_columns(published_at: at, updated_at: at) }
+          Product.bump_publications_stamp!(shop_id: event.shop_id, id: product_id, at:)
           log(event, decision: :bumped, status:, product_id:)
         else
+          # 🔴 不 bump stamp：可見性沒有變化（排程前 `published_at` 在未來即不可見，
+          #   清成 NULL 後仍不可見）⇒ 前台快取無須失效。
+          ActsAsTenant.without_tenant { row.update_columns(published_at: nil, updated_at: at) }
           log(event, decision: :not_purchasable, status:, product_id:)
         end
       else
@@ -102,13 +118,34 @@ module Publications
       product_id = payload["product_id"]
       return log(event, decision: :unknown_payload) if product_id.nil?
 
-      exists = ActsAsTenant.without_tenant do
-        Product.where(shop_id: event.shop_id, id: product_id).exists?
+      # payload 只作定位，status 一律讀 DB 現值（與排程路徑同一條紀律）。
+      status = ActsAsTenant.without_tenant do
+        Product.where(shop_id: event.shop_id, id: product_id).pick(:status)
       end
-      return log(event, decision: :row_gone, product_id:) unless exists
+      return log(event, decision: :row_gone, product_id:) if status.nil?
 
-      Product.bump_publications_stamp!(shop_id: event.shop_id, id: product_id, at: Time.current)
-      log(event, decision: :bumped, product_id:)
+      at = Time.current
+      # 🔴 **轉為可購買狀態時補發布「在通路上但未發布」的列**（照本尊實測，D53 更正二）。
+      #   本尊逐字行為：錯過排程後把 status 改回 Active 存檔 ⇒ 三個通路的 publishDate
+      #   同時被寫成存檔當下時間（不是回填原排定時間）。機制是「Active ＋ 通路 toggle ON
+      #   ⇒ 立即發布」，不是排程補跑。
+      #   我方對位：`resource_publications` 列存在＝通路 toggle ON；`published_at IS NULL`
+      #   ＝在通路上但未發布。⇒ 兩者合起來就是本尊那個狀態。
+      #   🔴 NULL 列的**唯一**來源是本消費者的到點不合格分支（`Publications::Materialize`
+      #   建列時一律帶時間戳，見該檔 §for）⇒ 這個補發布是**針對性的**，不會誤發。
+      #   ⚠️ 與本尊的差異：本尊是存檔同步發生，我方經 outbox 非同步（production 的
+      #   relay 每 5 秒一輪 ⇒ 延遲上界≈一個輪詢間隔）。登記為架構差異，不是行為差異。
+      republished = 0
+      if Product::PURCHASABLE_STATUSES.include?(status)
+        republished = ActsAsTenant.without_tenant do
+          ResourcePublication.where(shop_id: event.shop_id, publishable_type: "Product",
+                                    publishable_id: product_id, published_at: nil)
+                             .update_all(published_at: at, updated_at: at)
+        end
+      end
+
+      Product.bump_publications_stamp!(shop_id: event.shop_id, id: product_id, at:)
+      log(event, decision: :bumped, product_id:, status:, republished:)
     end
 
     # 秒級等值（見 handle_scheduled 內註）。任一邊缺值＝不可比 ⇒ 視為已改期。

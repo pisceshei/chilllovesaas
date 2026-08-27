@@ -424,3 +424,70 @@ D53 與本檔多處寫「官方對到點的補償語義**全面沉默**」。本
 
 ⇒ 與本包 §2 的「`ProductVariant` 讀**父商品** status」不衝突：獨立的是**發布態**，
 而 status 是商品級屬性（變體無 status 欄）。兩件事不同軸。
+
+---
+
+## §11 🔴 關卡②③（後台實測）——D53 兩處更正的逐字依據（2026-08-27）
+
+前一輪因 Chrome 未登入而未取得（§8）。使用者登入後重跑，**結果推翻了 D53 的兩處裁定**，
+依使用者「按照 shopify 的處理方式做」改為照抄本尊。D53 已加日期更正註記（原文保留）。
+
+取證方式：測試店 `chill-love-u5q5mnzq` 建三個測試商品，設 3–5 分鐘後的排程，
+等真實時點過去後逐時點取 `AdminProductDetailsCatalogs` 的 API 回應並重載 UI 比對。
+
+### §11.1 到點的 `published_at` 處置＝consume-and-drop
+
+| 到點時 status | 本尊行為 | 逐字證據 |
+|---|---|---|
+| `ACTIVE` | `publishDate` **覆寫成實際發布時間** | 排定 `05:58:00Z` → 實得 `05:58:02Z`（晚 2 秒）；`product.publishedAt` 同值 |
+| `UNLISTED` | **同 ACTIVE，照常發布** | 排定 `06:02:00Z` → 實得 `06:02:02Z`；`status` 保持 `UNLISTED` 不被改動 |
+| `DRAFT` | **不發布，且 `publishDate` 清成 `null`** | `publishDate → null`、`publishedAt` 仍 null、`status` 仍 DRAFT、**列本身沒被刪** |
+
+🔴 **同一個欄位、兩種結局**：成功路徑寫入實際時間，失敗路徑寫 null。
+⇒ D53 §3.2 的「不 UPDATE `published_at`」**兩個方向都與本尊不符**，已更正。
+
+**可觀測性**：錯過後**沒有任何**使用者可見痕跡——`product.resourceAlerts=[]`、
+右上 Alerts feed 空（逐字 `Alerts about your store and account will show here`）、
+商品頁無 banner、Products 列表無標記、無 toast。
+⇒ 我方**保留**結構化 log（營運面），登記為 **ours 加嚴**，不是照抄本尊。
+
+### §11.2 catch-up：不補發布，但「Active ＋ 通路 ON ⇒ 立即發布」
+
+錯過排程後把 status 改回 Active 存檔（`06:05:33Z`）：
+
+- `product.publishedAt` → **`06:05:33Z`**（＝按下 Save 的當下），**不是**錯過的 `05:55:00Z`
+- **三個通路**（Online Store／Point of Sale／Shop）的 `publishDate` **同時**變成該值
+- 排程值**沒有復活**：Publishing 卡片無日曆 badge、popover 的 `Remove schedule` 仍 disabled
+- 送出的是 `ProductSaveUpdate`，**不是** publish 專用那支
+
+⇒ **D53 F2「不自動補發布」被正面證實**；但「改回 ACTIVE 的那一刻自然可見」在我方
+**原本做不到**（到點清空 `published_at` 後，光改 status 不會讓它可購買）。
+⇒ 更正二：status 轉為 `PURCHASABLE_STATUSES` 時，把 `published_at IS NULL` 的列寫成當下。
+我方對位：列存在＝通路 toggle ON、`published_at IS NULL`＝在通路上但未發布。
+
+### §11.3 本輪另外取得的四條狀態機事實（登記，部分屬 S6）
+
+1. **重新排程既有已發布商品** ⇒ `publishedAt` 立刻變 `null`，商品**先被下架**再等排程。
+2. **移除排程**（`Remove schedule` ＋ Save）⇒ 若 status=Active 且通路 ON，**立即發布**
+   （`publishedAt`＝存檔時間），不是回到未發布。mutation＝`ProductSavePublishablePublishUnpublish`。
+3. **Active→Draft 存檔**會把**沒有未來排程的通路** `publishDate` 清成 null（POS／Shop），
+   但**保留** Online Store 的未來排程值（跨多次重載、19 分鐘仍在）。
+4. **排程 UI 只存在於 Online Store 通路列**：POS 與 Shop 逐列 hover 皆無日曆 icon
+   （資料層 `publishDate` 確實 per-publication，但 UI 只暴露 Online Store）。
+
+### §11.4 本輪未取得（誠實登記）
+
+- **`ARCHIVED` 到點行為**——未測（避免對測試商品做不可逆歸檔）⇒ 我方 fail-closed
+  與 DRAFT 同處置，登記為 ours。
+- **所有 mutation 的 request／response body**——admin 走 persisted-query，POST body
+  不可觀測（鐵律 14.3）。只取得 operation name＋sha256 hash＋HTTP 狀態＋可觀察副作用。
+- **排程執行的基礎設施語義**（cron 掃描／delayed job／lazy evaluation）——本尊未暴露
+  任何可觀測介面；只能由外部行為推得「到點後 1–2 秒內生效、且會主動改寫欄位」。
+- **前台 storefront 的實際可見性**——`onlineStoreUrl` 三個商品全程為 null
+  （推測與商店網域／密碼保護有關），未進前台驗證。
+- **跨月／跨 DST 排程**、**秒級輸入是否被接受**、**批次操作是否提供排程**、
+  **Online Store toggle=off 時設排程的後果**——皆未測。
+
+⚠️ **本輪在測試店留下三個測試商品未刪**：`D53-QA-Draft-Schedule-Test`(9913006162155)、
+`D53-QB-Active-Schedule-Test`(9913007767787)、`D53-QC-Unlisted-Schedule-Test`(9913009438955)。
+指定保留的兩個 fixture（`9907126370539`／`9911273160939`）**未被觸及**。
