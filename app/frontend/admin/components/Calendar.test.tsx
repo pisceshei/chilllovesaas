@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -157,8 +157,90 @@ describe("Calendar 鍵盤（APG Date Picker Dialog）", () => {
 
     await userEvent.keyboard("{Shift>}{PageDown}{/Shift}");
     await waitFor(() => expect(screen.getByText("2027年8月")).toBeVisible());
+    // 🔴 APG 的契約是「換年後焦點落在**同號日**」。這一行原本沒有（鄰格的換月有），
+    //   於是這條路徑只驗了標籤、完全沒驗焦點——2026-08-28 的 CI 偶發紅就從這個缺口漏出來。
+    await waitFor(() => expect(cell(27)).toHaveFocus());
+
     await userEvent.keyboard("{Shift>}{PageUp}{/Shift}");
     await waitFor(() => expect(screen.getByText("2026年8月")).toBeVisible());
+    await waitFor(() => expect(cell(27)).toHaveFocus());
+  });
+
+  /**
+   * 🔴 跨月聚焦的四格競態測試（2026-08-28，PR #163 的 CI 偶發紅開出來）。
+   *
+   * 舊實作把跨月的補聚焦排進 `requestAnimationFrame`。跨月時 `<td key={day}>` 全部換 key
+   * ⇒ 原本被聚焦的那格被卸載 ⇒ `document.activeElement` 掉回 `document.body`；
+   * 而 `handleKeyDown` 逐格掛在 `<td>` 上、不在 body 的祖先鏈上
+   * ⇒ 該窗口內按下的鍵**不經過任何 handler、被整個吞掉**。
+   *
+   * ⚠️ **既有測試結構上看不見這個競態**——它們的焦點斷言全部包在 `waitFor` 裡，
+   * 而 `waitFor` 會重試到 1 秒，把 jsdom 的 16.7ms 幀完全吸收。下面四格刻意**不靠 `waitFor`
+   * 吸收時間**，才能釘住「聚焦必須同步完成」。
+   */
+  it("🔴 跨月聚焦不得依賴 requestAnimationFrame（rAF 永不執行也要對）", async () => {
+    // rAF 排了就再也不會回呼 ⇒ 任何把聚焦託付給它的實作都會失敗
+    const raf = vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 0);
+    try {
+      render(<Harness />);
+      cell(27).focus();
+
+      await userEvent.keyboard("{PageDown}");
+      expect(screen.getByText("2026年9月")).toBeVisible();
+      expect(cell(27)).toHaveFocus();          // 🔴 不用 waitFor：必須同步落地
+    } finally {
+      raf.mockRestore();
+    }
+  });
+
+  /**
+   * 🔴 用 `fireEvent` 而不是 `userEvent`——**兩次派發之間必須沒有任何 macrotask**。
+   *
+   * `userEvent` 每個按鍵步驟之間會插一次 `setTimeout(0)`；在 Windows 上該粒度約 15.5ms，
+   * 把兩次按鍵的間隔撐到 54–97ms，足夠讓 rAF 先跑完 ⇒ **這一格會在本機假綠**
+   * （2026-08-28 實測：改回 rAF 的突變在本機殺不掉 `userEvent` 版本）。
+   * `fireEvent` 是同步派發，窗口為 0，兩個平台都必紅。
+   */
+  it("🔴 連按兩次跨月不得吞掉第二次（同步連續派發，窗口為 0）", () => {
+    render(<Harness />);
+    cell(27).focus();
+
+    fireEvent.keyDown(cell(27), { key: "PageDown", shiftKey: true });
+    expect(screen.getByText("2027年8月")).toBeVisible();
+
+    // 🔴 這裡取 activeElement 而不是寫死某一格——重點就是「使用者的下一次按鍵會落到哪」。
+    //   舊實作此刻是 document.body（舊月份的格子已被卸載、補聚焦還排在 rAF 裡），
+    //   而 handleKeyDown 掛在 <td> 上、不在 body 的祖先鏈上 ⇒ 第二次按鍵被整個吞掉。
+    fireEvent.keyDown(document.activeElement as Element, { key: "PageUp", shiftKey: true });
+    expect(screen.getByText("2026年8月")).toBeVisible();
+    expect(cell(27)).toHaveFocus();
+  });
+
+  it("🔴 初次掛載不搶焦點（彈層的焦點進場由 Popover 負責）", () => {
+    render(<Harness />);
+    expect(document.body).toHaveFocus();
+  });
+
+  /**
+   * 兩種初始狀態都要驗：**沒動過鍵盤**（`roving` 為 null）與**動過鍵盤**（`roving` 落在舊月份）。
+   * 只驗前者的話，`roving === null` 那個守衛就足以讓測試綠，後者的路徑沒被踩到。
+   */
+  it("🔴 點換月鈕只換 cursor，不得把焦點拉進網格（roving 有無皆然）", async () => {
+    const { unmount } = render(<Harness />);
+    await userEvent.click(screen.getByRole("button", { name: "下個月" }));
+    await waitFor(() => expect(screen.getByText("2026年9月")).toBeVisible());
+    expect(screen.getByRole("button", { name: "下個月" })).toHaveFocus();
+    unmount();
+
+    // roving 已被鍵盤移動過，且停在舊月份 ⇒ 換月後 effect 不得去找它
+    render(<Harness />);
+    cell(27).focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await waitFor(() => expect(cell(26)).toHaveFocus());
+
+    await userEvent.click(screen.getByRole("button", { name: "下個月" }));
+    await waitFor(() => expect(screen.getByText("2026年9月")).toBeVisible());
+    expect(screen.getByRole("button", { name: "下個月" })).toHaveFocus();
   });
 
   /**
