@@ -322,3 +322,105 @@ WordPress WP-Cron 只採其「到點精度無保證」的術語層旁證，
 6. **`Publishable` interface 只實作 `resourcePublicationsV2`**；
    `publishedOnPublication`／`resourcePublicationsCount`／`availablePublicationsCount` 未實作。屬 S6。
 7. **平台總控後台**對「凍結租戶 ⇒ 全店前台下架」無機制（`shops.catalog_version` 欄在但零寫入者）。屬 M8。
+
+---
+
+## §10 關卡①複驗補完（shopify.dev API reference，2026-07 版，2026-08-27）
+
+30 條發現、**零條與本包實作牴觸**、17 條登記未取得。版本錨一律指名 `2026-07`，
+不用會漂移的 `latest`。
+
+### §10.1 🔴 拿到比 D53 更強的判準錨
+
+`product-publishing` 指南的可見性三條件，**逐字**：
+
+> A variant is visible to buyers on a given sales channel or catalog when the following are
+> all true: 1. The product has an **Active status (or Unlisted on supported channels)**.
+> 2. The product is published to that channel or catalog. 3. The variant is published to
+> that channel or catalog.
+> （<https://shopify.dev/docs/apps/build/sales-channels/product-publishing>，取證 2026-08-27）
+
+🔴 **官方在同一個判準句裡把 Active 與 Unlisted 並列**——這比 D53 當初依據的
+enum 描述（`The product is active but you need a direct link to view it.`）更直接：
+它不是「UNLISTED 也算 active」的推論，而是**可見性判準本身就寫了兩個值**。
+
+⇒ `Product::PURCHASABLE_STATUSES = {active, unlisted}` 現在有**三個獨立錨**
+（enum 描述／商家面 help 定義／此處判準句）。任何 `status == "active"` 的實作
+與這句逐字牴觸。
+
+同軸另一條獨立文字證據：`PRODUCT_LISTINGS_ADD` 的觸發述詞逐字帶
+`Occurs whenever **an active product** is listed on a channel`，
+而 `REMOVE`／`UPDATE` **無** active 限定。
+
+### §10.2 🔴 修正一處措辭：官方不是「全面沉默」，有**一句**
+
+D53 與本檔多處寫「官方對到點的補償語義**全面沉默**」。本輪掃了七頁後要收窄這個說法——
+官方有且僅有**一句**談到點時平台做什麼：
+
+> 8. At the scheduled datetime, Shopify sends a `product_listing/add` event.
+> （<https://shopify.dev/docs/apps/build/sales-channels/scheduled-product-publishing>，取證 2026-08-27）
+
+⚠️ 兩點限制，缺一就會誤用：
+- 該句寫 `product_listing/add`（**單數**），而 `WebhookSubscriptionTopic` enum 的正式
+  topic 是 `product_listings/add`（**複數**）——**文檔內部不一致**，不得挑一個當權威；
+- 該句**只講「發事件」**，對排程列去留／是否清 `publishDate`／是否報錯／是否通知商家
+  **仍然零陳述**。
+
+⇒ **精確的表述是「官方只說到點會發事件，對補償語義沉默」**，不是「全面沉默」。
+這不改變 D53 的任何裁定（補償語義確實沒有官方答案），但它**正面支持我方架構**：
+到點是事件驅動的，正是 S5 投事件＋PR-C 消費的形狀。
+
+### §10.3 V1／V2 在同一格回**相反**的值（未來接 V1 時的陷阱）
+
+| | 排程未到點時 `isPublished` | `publishDate` 型別 |
+|---|---|---|
+| `ResourcePublication`（V1） | **`true`**（逐字 `Also returns true if … scheduled to be published`） | `DateTime!` **non-null**，未發布時回 **epoch 時間戳當哨兵** |
+| `ResourcePublicationV2` | **`false`**（逐字 `staged to be published`） | `DateTime` nullable，無哨兵 |
+
+我方只實作 V2（`app/graphql/types/resource_publication_v2_type.rb`），與此一致。
+🔴 日後若有人補 V1，`isPublished` 的語義**是相反的**，且 `publishDate` 永遠有值
+（要自行辨識 epoch）。
+
+另：`onlyPublished` 兩者**預設皆 `true`** ⇒ 預設讀取**看不到排程中的列**；
+`resourcePublicationsV2(catalogType:)` 預設只回 `APP` catalog，
+且 **Collection 只支援 `APP`** ⇒ 第三層（market／B2B）發布狀態**只有 V2 讀得到**。
+
+### §10.4 本輪登記的本尊文檔內部不一致（三處）
+
+1. **變體排程**：help 逐字 `You can't set a future publishing date for individual product
+   variants.`（我方 R12 的依據），但 `product-publishing` 指南的變體 fixture **帶
+   `publishDate`**（C 層形狀證據）。⇒ 規則面與 fixture 面不一致。
+   **本包不改 R12**（規則面有逐字、fixture 只是形狀證據，依 §0.2 分層 C 不得當規則），
+   但登記此矛盾，`T08a` 測的是**我方的** R12 而不是本尊行為。
+2. **`Publishable` interface 描述**仍逐字寫 `can be either a Product or Collection`，
+   而 `ProductVariant` 的 Implements 清單**含 `Publishable`** 並有全套欄位。
+3. **集合排程的事件面缺席**：help 說 collection 可排程，但 enum 內
+   `^\* SCHEDULED` 精確命中**恰三支且全為 `PRODUCT_LISTINGS`**，
+   不存在任何 `SCHEDULED_COLLECTION_*`。🔴 依 R1 不得反推集合排程不發事件。
+
+### §10.5 對 S10（第三層 catalog）的硬約束
+
+🔴 **多 catalog 同時適用時沒有優先序，是「至少一個」的聯集（OR）**；
+**只有價格**才有優先序（取最低）。逐字：
+
+> Products must be published in **at least one** applicable publication catalog to be visible.
+> … Customer sees products from **any** applicable publication catalog, priced at the
+> **lowest** price from any applicable pricing catalog.
+
+⇒ **我方不得實作「market catalog 覆蓋 app catalog」這類優先序**。
+`product-publishing` 指南全文對 `precedence`／`priority`／`override`／`resolution`
+的正則計數皆為 **0**。
+
+另：`CatalogType` 四值 `APP`／`COMPANY_LOCATION`／`MARKET`／`NONE`，
+其中 `NONE` 逐字 `Not associated to a catalog.` ⇒ 它是**關聯缺失**的表達，
+不是一種 catalog 種類。`CatalogStatus`（`ACTIVE`／`ARCHIVED`／`DRAFT`）
+**與商品可見性的關係官方未說明**——Q5c 的三層 AND 判準不含 catalog status ⇒ 未取得。
+
+### §10.6 變體發布態與商品發布態**完全獨立**（逐字）
+
+> Variant and product publishing states are independent: Publishing or unpublishing a
+> variant doesn't affect the parent product's publication state. Publishing or unpublishing
+> a product doesn't change any variant's publication state.
+
+⇒ 與本包 §2 的「`ProductVariant` 讀**父商品** status」不衝突：獨立的是**發布態**，
+而 status 是商品級屬性（變體無 status 欄）。兩件事不同軸。
