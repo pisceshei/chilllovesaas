@@ -285,7 +285,10 @@ module Publications
     #   - ACTIVE 檢查：S2 §4.D 已裁定檢查層在**到點事件投遞層**而不是寫入層
     #     （寫入時商品可以是 draft，到點時才需要 active）⇒ 屬 S2 PR-C。
     #     🔴 且其正典鍵 `sales_channels.future_publishing_requires_active_status`
-    #     目前**無行內出處註釋**，把無出處常數變成生效判準違反鐵律 19。
+    #        當時**無行內出處註釋**，把無出處常數變成生效判準違反鐵律 19。
+    #        <!-- 2026-08-27 更正（D53）：出處已補（help 的 Caution 區塊，逐字見該鍵註釋）。
+    #             且 D53 F1 裁定我方**到點閘門不用這個鍵**——它登記的是本尊規則（射程僅 product），
+    #             我方走可見性軸 `Product::PURCHASABLE_STATUSES`（含 UNLISTED）。 -->
     #   - `requiresSellingPlan`：我方尚無訂閱制商品概念（欄位不存在）。
     #   兩條都在 `docs/dev/m2-publishable-write.md` §6 誠實登記為延後，不是靜默略過。
     #

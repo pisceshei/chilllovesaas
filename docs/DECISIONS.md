@@ -1148,3 +1148,81 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   本條的保護射程不變（下一輪 parity 仍不得刪那兩欄），改的是**理由的準確性**。
   同批發現：本尊保留安裝／卸載**歷史**，我方每店每 app 恆一列的設計是**已證實的缺口**
   （登記於 S0 PR B worklog 的 S0B-3），不是假設。
+
+### D53
+
+**排程發布到點的補償語義（ours，2026-08-27 使用者裁定；F1–F5 五格）**
+
+- **裁定原文（逐字）**：「**先把五格定下來，然後做好詳細的handoff，我要交給另外一個claude繼續開發，
+  然後給我寫給另外一個claude的指令，讓他接受繼續下去**」
+  （2026-08-27。此前的脈絡是執行方回報「S2 §4.F 五格補償語義卡住 PR-C，那節明文
+  『送使用者裁定，不得由執行方自定』」，使用者以此句授權把五格定案。）
+- **取證與依據全文**＝`docs/plans/2026-08-27-PR-C-五格裁定書.md`
+  （七路研究＋對抗複驗；🔴 **該檔 §0.3 列出 20 條被推翻的斷言，一律不得引用**）。
+- **背景**：S5（`publishablePublish`／`publishableUnpublish`，main `f86d76b`）已交付排程列的
+  outbox 生產者（topic `product.publication.changed`，`available_at` 精確等於 `published_at`），
+  消費者屬 PR-C。官方對到點的**補償語義**全面沉默。
+  🔴 **本條是 ours 裁定，不是照本尊；也不得反向斷言本尊沒有補償機制**
+  （形態同 `docs/specs/91-pit-register.md` §3 第 28 包 staged 保留期先例）。
+
+- **裁定（逐格）**：
+  - **F1｜到點時 status 不合格**：到點消費者以 **DB 現值**重新評估——列不存在或 `published_at`
+    已改期 ⇒ no-op；`status ∉ Product::PURCHASABLE_STATUSES`（＝{ACTIVE, UNLISTED}）⇒
+    **不 bump cache stamp、不改 `published_at`、不刪列、不 raise**；`Collection` 本規則不適用。
+    **全部 no-op 分支必須寫一行結構化 log。**
+    🔴 判準取 `Product::PURCHASABLE_STATUSES`（可見性軸），**不是** `== ACTIVE`——
+    官方逐字 `The product is active but you need a direct link to view it.`（`UNLISTED`，
+    <https://shopify.dev/docs/api/admin-graphql/latest/enums/ProductStatus>，取證 2026-08-27）
+    ⇒ 寫 `!= ACTIVE` 會讓 UNLISTED 商品「前台已可購買但快取未失效」。
+    🔴 S2 建議值寫的是「**不投遞事件**」，本輪改成「**到點消費者不執行副作用**」——
+    事件在 S5 建列時就已投出，到點必然被 relay 取出（`available_at <= now`，無上界），
+    「不投遞」在我方架構上做不到。
+  - **F2｜catch-up**：**不自動補發布**，射程分三層，缺一層就與機制實況矛盾——
+    ①**可見性層**不做也不需要做（查詢時判定，改回 ACTIVE 即自然可見）；
+    ②**事件補送層**既有 relay 必然補送，本裁定不改變它、不加 max-age 丟棄；
+    ③**補發布動作層**不存在也不新增（承接 `docs/dev/m2-resource-publication-semantics.md` §6 的既有禁令）。
+    業界術語＝Quartz `MISFIRE_INSTRUCTION_DO_NOTHING`（🔴 **不是** Airflow catchup——
+    後者關閉後仍跑最新一格，照字面搬會帶進相反語義）。
+    ⚠️ S2 把反直覺點寫成「錯過時點之後前台其實已經可見了」，**在 DRAFT 情境下是錯的**：
+    status 層先擋住（`PURCHASABLE_STATUSES` 不含 draft）⇒ 正確表述是
+    「**改回 ACTIVE 的那一刻自然可見**」。
+  - **F3｜到點事件的失敗重試**：沿用 `Events::Relay` 既有機制（`available_at = now + 2^attempts` 秒，
+    序列 2/4/8/16/32/64/128；`events.outbox_dead_letter_attempts` ⇒ `status=dead` ＋ `last_error`）。
+    🔴 **不得引用** `catalog_flow.publication_retry_*`——該兩鍵**已存在**（S2 說「不新增」與現況不符）、
+    零消費者，且其出處註釋自陳是**反推**，依鐵律 19.3 不得驅動實作。
+    🔴 重試期間不得改寫 payload 或 DB 的 `published_at`。
+  - **F4｜到點延遲的可接受窗**：**導出 SLO，不落新 limits 鍵**。正常路徑 ≈
+    `events.outbox_poll_interval_s`（牆鐘對齊 ⇒ 0–該值均勻分布）＋ worker `polling_interval`
+    ＋ drain 時間；含一次退避 ≈ 再加首次退避 2 秒＋一個輪詢間隔。
+    🔴 **ours 導出值、非官方 SLA、只在 `production` 成立、是 SLO 不是不變量**。
+    🔴 **寫成參數式不寫死數字**（`config/recurring.yml` 與 `events.outbox_poll_interval_s` 是雙寫點）。
+    🔴 **不設 max-age 丟棄**：我方事件的唯一載荷是 cache stamp bump，晚到仍正確且冪等。
+  - **F5｜不合格時的商家可見回饋**：**不做**，登記 `docs/specs/91-pit-register.md` §3.23 為 ⚪。
+    🔴 S2 的原理由（「本尊有、我方尚無」）**整個換掉**——本尊確有，且測試店實測到逐通路的
+    三層 channel error UI。正確的三條理由是：①官方唯一把 `ResourceFeedback` 與排程綁在一起的
+    句子落在**到點之前的驗證**，不是到點失敗回報；②我方是單體 SaaS、無管道 app 身分 ⇒ 缺 producer；
+    ③我方無三個排程生命週期事件 ⇒ 缺前置觸發點，做出來只能退化成本尊沒有的事後回報形態。
+    🔴 **可觀測性不隨之取消**：消費者每次 no-op 必寫結構化 log（營運可見，不是商家可見）。
+
+- **理由**（逐格一句）：
+  1. F1 取可見性軸：到點事件的唯一載荷是 cache stamp（可見性設施），不是發布動作。
+  2. F2 不補發布：可見性是查詢時判定，沒有「發布動作」可補；補發布會製造第二個事實來源（鐵律 7）
+     並抹掉商家設定的排程時刻。
+  3. F3 沿用：本尊平台層對所有 topic 用同一份重試政策，無 per-topic 參數；我方 outbox 四件事已備。
+  4. F4 不落鍵：倉庫已有多個零消費者死鍵；且該值是雙寫點，硬編會靜默失真。
+  5. F5 不做：缺 producer 與前置觸發點，做出來只能是空掛件或自創形態。
+
+- **🔴 這是與本尊的刻意差異（ours），不是照抄**：
+  - 重試放棄語義：本尊是**刪訂閱＋寄警告信**，我方是 dead-letter。
+  - 排程列去留：本尊行為**未取得**，我方選「不清除」。
+  - 發布計數：本尊有 `availablePublicationsCount`（排除 feedback error）與
+    `resourcePublicationsCount` 兩個數，我方無 feedback 維度 ⇒ 單一計數（已登記 `91` §3.23）。
+
+- **程序口徑（本條順帶定死，結掉 S2 規格草案 §5-C 的 C-7）**：
+  🔴 **改 `config/limits.yml` 不落鐵律 18.3**。判準寫在 `scripts/check-limits-keys.rb` 內
+  （規則＝「每一層 mapping 的鍵都必須解析成 String」），`config/limits.yml` 是它**被檢查的輸入**
+  ——與 `app/` 的 Ruby 檔被 rubocop 檢查同構，改它不可能讓 CI 由被改的檔自己定義。
+  複驗：`grep -n "limits" .github/workflows/ci.yml`（只有兩個 `run: ruby scripts/...`）與
+  `grep -n "limits" config/ci.rb`（同）。
+  ⚠️ `app/services/publications/write.rb` 內 S5 寫的「不改 `config/limits.yml`（判準面，鐵律 18.3）」
+  **是錯的口徑**，已於本批同步更正。

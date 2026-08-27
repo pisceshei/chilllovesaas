@@ -70,7 +70,14 @@ Product／Collection／ProductVariant 三者實作，叫 `product_*` 會讓後�
 2. 🔴 **不得為單一 variant 排程**。
 
 另有一條**本尊限制未實作**：排程發布要求商品為 `Active` 狀態才生效。
-那是**跨表**條件（要看 `products.status`），留待 M1 商品 CRUD 一併處理（§5）。
+那是**跨表**條件（要看 `products.status`）。
+<!-- 2026-08-27 更正（D53，鐵律 19.5）：原文寫「留待 M1 商品 CRUD 一併處理（§5）」。
+     M1 商品 CRUD 早已交付而本條未隨之落地 ⇒ 那個歸屬是錯的。正確歸屬＝**PR-C（到點副作用機制）**，
+     因為這個檢查需要「到點當下」這個檢查點，而該檢查點由 PR-C 建立（S2 §4.D 裁定）。
+     🔴 且 D53 F1 修改了判準：我方到點閘門走**可見性軸** `Product::PURCHASABLE_STATUSES`
+     （＝{ACTIVE, UNLISTED}），**不是** ACTIVE 單值——官方對 UNLISTED 逐字
+     「The product is active but you need a direct link to view it.」，
+     寫 `!= ACTIVE` 會讓 UNLISTED 商品「前台已可購買但快取未失效」。全文見 D53 F1。 -->
 
 ---
 
@@ -142,9 +149,16 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 |---|---|---|
 | ~~1~~ | ~~**建店時自動建 online_store publication**~~ | ✅ **2026-08-15 結案**，見下方批註 |
 | ~~2~~ | ~~**`auto_publish` 的實際行為**~~ | ✅ **2026-08-26 結案（第 12 包）**，見下方批註 |
-| 3 | **排程發布要求商品為 Active** | 跨表條件，隨商品狀態機一起做 |
+| 3 | **排程發布要求商品為 Active** | 跨表條件；🔴 **2026-08-27 D53 已裁定語義，PR-C 交付實作**——見下方批註 |
 | 4 | **商品表單的「上架管道」區塊** | UI，前端包 |
 | ~~6~~ | ~~**publication 的建立／更新／刪除 API**~~ | ✅ **2026-08-26 結案（S1）**，見下方批註 |
+
+<!-- 2026-08-27 裁定批註（#3，D53）。**語義已定、實作未交付**，故不劃刪除線。
+     D53 F1 裁定：到點消費者以 DB 現值重新評估——列不存在或 published_at 已改期 ⇒ no-op；
+     `status ∉ Product::PURCHASABLE_STATUSES` ⇒ 不 bump cache stamp、不改 published_at、
+     不刪列、**不 raise**；`Collection` 本規則不適用；全部 no-op 分支必須寫結構化 log。
+     🔴 判準是**可見性軸**不是 ACTIVE 單值（理由見 D53 F1 與該格的反面選項 D）。
+     實作歸 PR-C；取證全文＝`docs/plans/2026-08-27-PR-C-五格裁定書.md`。 -->
 
 <!-- 2026-08-26 結案（#6，S1）。交付＝`publicationCreate`／`publicationUpdate`／
      `publicationDelete` 三支 mutation ＋ `Publication` type ＋ `publications` query
