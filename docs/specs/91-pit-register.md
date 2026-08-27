@@ -79,6 +79,7 @@
 | G-03 | `claude-review.yml` prompt 的 ⚪ 處置段與 terminal-white 例外同步＋deferred ingestion checker——現行 prompt 無條件要求作者把 ⚪「搬進坑登記簿」並明文宣告「建立前登記於 PR 描述」的過渡辦法作廢，與鐵律 15.1／D38 的 exact-head `DEFERRED_WHITE` 例外正面相反；合規使用該例外的 terminal-white PR 會被讀 prompt 的驗收方判成未登記。ingestion 側另缺「下一個 tree-changing PR 首候選是否已把 merged PR body 的 pair 入籍」的機械檢查 | ⚪ 蒸發族（同 G-01）＋**判準型 consumer 漂移**（prompt 是驗收方實際讀的判準，散文 consumer 同步不涵蓋它；來源＝PR #66 Claude issue comment `5369828302` 🔴-1(b)） | 改 `.github/workflows/` 命中鐵律 18.3，且 `claude-review.yml` 反竄改會令該 PR 自身驗收失效 ⇒ 必須另開 workflow-only PR；ingestion checker 另需先定義「既有 merged PR」的查詢範圍與起點（與本節 §3 已登記的同名 ⚪ 同源） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4「需擴 workflow／CI 判準時先登記候選與代價、另開 18.3 PR」，本 PR 不得改 workflow，指派給 P-8 的 **0f workflow-only 接線**一併交付） |
 | G-04 | **表格列儲存格數的全樹檢查**——掃全部 `*.md` 的表格列，**先按 GFM 規則切出儲存格再比對格數**：去掉行首與行尾的邊界直線（邊界直線不代表額外欄）後以未跳脫 `\|` 分割，切出的格數多於表頭欄數即報錯（GFM tables extension 逐字：超額格 "the excess is ignored" ⇒ 該列末欄被靜默截斷）。🔴 **不得直接數未跳脫直線**——本表即反例：五欄的表頭列與本列各有 6 個未跳脫直線（首尾各一為邊界），照直線數比對會讓這道閘門開跑第一秒就否決自己所在的表、連基準線都建不出來（來源＝Codex inline `3831890277`，2026-08-21） | Markdown 假結果族（§3 已登記本 PR 與另四檔實例：`specs/52`（兩處）、`specs/83`、`specs/53`、`worklog/2026-08-18-P8-自動化基建`） | 低（一支 awk/ruby 即可）；需先裁定射程（全 `docs/` 或含 `*.md` 全樹）與既有違規的處置（一次修完 vs 建立基準線） | **提案／待**（🔴 使用者尚未裁定；本 PR 的結構斷言只涵蓋本輪改動檔，抓不到既有檔——依鐵律 20.4 先登記候選與代價，另開 18.3 PR 實作） |
 | G-05 | **alt 權威單一來源檢查**——D48 之後 `files.alt_text` 是唯一權威、`media.alt_text` 停用。擬掃 `app/` 全樹，禁止任何**寫入** `media.alt_text` 的敘述（`alt_text:` 出現在 Media 的 create!／update!／assign 之側），並禁止**讀取**面把它當 alt 來源（`\.alt_text` 掛在 media 列物件上）。🔴 判準必須排除三處合法殘留：資料遷移 `20260825120000`（原始值保留可救）、`db/schema.rb` 的欄位宣告、以及本表本列自己 | **權威分裂族**——同一語義兩個欄位各寫一半，症狀是「在 A 頁改了 B 頁沒變」，而兩邊各自的測試都綠（第 26／27 包 per-product 裁定被 D48 推翻即此形態的來源） | 低（一支 grep/ruby 即可）；需先裁定射程（只掃 `app/` 或含 `lib/`）與停用欄何時真正 drop（drop 之前這道閘門是唯一防線） | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4 不得在本 PR 逕自新增 `scripts/` 判準，另開 18.3 PR。在那之前的防線＝本包把每一條 per-product alt 斷言反轉成 per-file） |
+| G-06 | **CSS 幾何自洽檢查**——解析 `admin.css` 的開關類規則，斷言半選態 knob 在軌道內水平與垂直皆置中（依 `.cl-switch` 的 32×18 與 knob 的 width／height／top／translate 實算），並斷言邊框寬度一律走 `var(--hairline)`（`tokens.css` 明文「全站邊框一律 var(--hairline)」） | CSS 假綠族（§3.24 首例：把橫線改回直立短棒，全套 189 格仍全綠） | 需新增 `scripts/`（命中鐵律 18.3 人工合併），且與鐵律 13.3 的 `scripts/rwd-check.mjs` 射程重疊——應先裁定兩者是一支還是兩支；既有 `1px solid` 多處違規需先定基準線 | **提案／待**（🔴 使用者尚未裁定；依鐵律 20.4 本 PR 不得逕自新增判準，另開 18.3 PR） |
 | （其餘待收割輪填入） | | | | |
 
 ## §3 ⚪ 轉入暫存區（待展開成 §1 條目）
@@ -2896,6 +2897,39 @@
   我方 S2 已裁定只出 V2。若日後要補 V1 相容面，**必須用不同型別承載，不得共用 `isPublished` 欄名**。
   【F2；來源＝S2 既有裁定 ＋ 本輪 A 級複驗；複驗：
    `grep -n "isPublished\|is_published" app/graphql/types/resource_publication_v2_type.rb`；
+   取證日期＝2026-08-27】
+
+### 3.24 S6b（發布編輯 modal）的範圍外觀察（2026-08-27，PR #160 對抗性審查）
+
+<!-- 編號取 3.24：本節新增時 §3 的最大編號是 3.23。
+     複驗現況：`grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- ⚪ **CSS 幾何目前沒有任何機械防線**。本包把 `.cl-switch--mixed` 的 knob 從錯的直立短棒
+  改成正確的置中橫線；把它改回錯的（M25 突變）之後**全套 189 格仍然全綠**。
+  鐵律 13.3 要求的量測腳本 `scripts/rwd-check.mjs` 尚未建立（屬 PR-C0）。
+  【擬建閘門候選見 §2 的 G-06；來源＝PR #160 對抗性審查 crossmodule 維度；
+   複驗：`npx vitest run` 後把該規則改回 `width: 4px` 無 height，觀察是否仍全綠；
+   取證日期＝2026-08-27】
+
+- ⚪ **發布卡的 i18n 舊鍵在 S6a 之後成為孤兒**：`product.publishing.onlineStore`／
+  `.onlineStore.hint`／`.agent`／`.pos` 四個鍵在 S6a 把硬編碼 `SwitchRow` 換成
+  `PublishingCard` 之後已無消費端，五個語言檔各留一份。本包不清（S6a 引入、非本包射程）。
+  【複驗：`grep -rn "product.publishing.onlineStore\|product.publishing.agent\|product.publishing.pos" app/frontend/admin --include=*.tsx`
+   應為零命中；來源＝同上審查 crossmodule 維度；取證日期＝2026-08-27】
+
+- ⚪ **全站有既有的字面 `1px solid` 邊框，與 `tokens.css` 的明文規定分岔**。
+  `app/assets/tokens.css` 逐字「全站邊框一律 var(--hairline)；--bw-100:1px 依 51 表 6 作廢，
+  不落地」，而 `admin.css` 現存多處 `1px solid`。本包只修正自己新增的兩處，既有的不動
+  （鐵律 20.5）。
+  【複驗：`grep -c "1px solid" app/assets/stylesheets/admin.css`；
+   來源＝同上審查；取證日期＝2026-08-27】
+
+- ⚪ **`Query.publications` 沒有「只回銷售管道」的伺服器面**。本包在**前端**用
+  `handle != null` 過濾掉 catalog publication，但那是消費端各自為政的解法——
+  日後 S6c／S6d／批次流程都要各自記得濾一次，漏掉的那個會讓 catalog 混進銷售管道清單。
+  候選：在 `Query.publications` 加參數，或在 `PublicationType` 出一個明確的 `isChannel`。
+  【來源＝同上審查 parity＋crossmodule 兩維度獨立發現；
+   複驗：`grep -n "def publications" -A 6 app/graphql/types/query_type.rb` 看有無 channel 過濾；
    取證日期＝2026-08-27】
 
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）

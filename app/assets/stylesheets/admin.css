@@ -1813,3 +1813,38 @@ a {
 .cl-pubcard__row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
 .cl-pubcard__name { color: var(--text); font-size: 13px; }
 .cl-pubcard__empty { color: var(--text-3); font-size: 13px; margin: 0; }
+
+/* 發布編輯 modal（S6b）——逐管道 toggle。形態依 82 §12.1／§12.2。
+   🔴 群組總開關是 role="checkbox" 不是 switch（switch 不支援 aria-checked="mixed"，
+   會被 UA 降級成 false ⇒ 半選態對螢幕閱讀器讀成「關」）。視覺沿用 .cl-switch。 */
+.cl-pubmodal { display: flex; flex-direction: column; gap: var(--sp-300); }
+.cl-pubmodal__list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+/* 🔴 邊框寬度一律 var(--hairline)——tokens.css 明文「全站邊框一律 var(--hairline)；
+   --bw-100:1px 依 51 表 6 作廢，不落地」。寫字面 1px 會與緊鄰的 .cl-swrow 分隔線
+   （.66px）不同粗細，在同一個 modal 內看得出來。 */
+.cl-pubmodal__row { border-bottom: var(--hairline) solid var(--border-2); }
+.cl-pubmodal__row:last-child { border-bottom: 0; }
+.cl-pubmodal__group {
+  align-items: center;
+  border-bottom: var(--hairline) solid var(--border);
+  display: flex;
+  gap: var(--sp-200);
+  justify-content: space-between;
+  padding-bottom: var(--sp-200);
+}
+.cl-pubmodal__group-label { color: var(--text); font-size: var(--t-sm); font-weight: var(--fw-control); }
+
+/* 半選：knob 變成置中的短橫線（本尊實測逐字「深色軌＋置中短橫線（dash），不是圓鈕」，
+   82 §14.1）。
+   🔴 **橫線＝寬 14 高 4，不是寬 4**。基底 knob 是 14×14 圓鈕；只覆寫 width 會得到
+   4×14 的**直立**短棒（軌道裡看起來是「｜」而不是「—」），而那正好與本尊相反。
+   幾何：軌 32×18。水平 (32-14)/2 = 9，起始 left:2 ⇒ translate 7px；
+        垂直 (18-4)/2 = 7 ⇒ top 7px（覆寫基底的 top:2px）。 */
+.cl-switch--mixed { background: var(--brand); }
+.cl-switch--mixed .cl-switch__knob {
+  top: 7px;
+  width: 14px;
+  height: 4px;
+  translate: 7px 0;
+  border-radius: var(--r-pill);
+}
