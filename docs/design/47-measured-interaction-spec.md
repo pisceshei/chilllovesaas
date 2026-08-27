@@ -183,6 +183,10 @@
 
 → **只採用「中性階的層級關係」**（頁底 < 卡片、主文字 vs 次文字兩級、次級按鈕比頁底深一階），**色值改用 CHILL LOVE 自有調色**。層級關係是資訊設計事實，色值是品牌資產。
 
+> 🔴 **2026-08-28 起本段的處置已被 `docs/DECISIONS.md` **D54** 推翻**（使用者裁定「整體 UI 必須和 Shopify 完全 1:1，完全跟隨他的 CSS」）。
+> **原文保留備查**（文檔分層：不抹除歷史）。現行處置＝採用量測色值，本尊完整 token 值表見 `docs/design/111`，逐項差異見 `docs/design/110` §7。
+
+
 ## 6.5 桌機佈局首測（視口 3440px，根字級仍為 24px — 數值待重測，結構結論有效）
 
 使用者把視窗放大到超寬（`innerWidth = 3440`）後，桌機佈局首次現形。**以下結構結論不受根字級影響，可直接採用**：
@@ -211,6 +215,22 @@
 
 → **這個「白底 + 底緣內陰影 + 外投影」是次級按鈕的立體感來源**，我們原型目前只有純邊框，缺這兩層。字重 550 也是我們沒有的階（介於 500 與 600）。
 
+> 🔴 **2026-08-28 更正：上面這組配方與直接量測衝突，且極可能是「讀到 token、當成繪製盒」。**
+> 當日對 `s-internal-button[variant=secondary]` 的**繪製盒**直接量測（三個獨立樣本：
+> `/orders` 的 Export、`/orders/<id>` 的 Refund 與 Edit）一致得到：
+> **`background: #e3e3e3`（不是白）、`box-shadow: none`（完全沒有陰影）、`border: 0`**；
+> hover 變 `#d4d4d4`，仍然無陰影。
+>
+> 🔴 **兩層陰影的來源已定位**：`--p-shadow-button` 這個 token 的值是
+> `0 -1px 0 0 #b5b5b5 inset` / `0 0 0 1px #0000001a inset` / `0 .5px 0 1.5px #fff inset`
+> （`111` §9）——**①逐項吻合，②的 `rgba(0,0,0,.1)` 就是 `#0000001a`**，
+> 只是本節把它記成 drop 而 token 裡是 inset。
+> ⇒ 當時讀到的是 **token 表的值**，而該 token **並未套用在 `variant=secondary` 的繪製盒上**。
+>
+> ⚠️ **本節與同檔 §D 的表也互相矛盾**：§D 記 split 與 tertiary 都是「淺灰實心」，
+> 與本節的「白底」不一致。直接量測支持 §D 那一側。
+> 逐態值＝`docs/design/113` §1.2。**原文保留備查。**
+
 ---
 
 # 第三輪：根字級 16px 桌機正式量測（**本節數值為設計真值，無須換算**）
@@ -226,6 +246,17 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 → **按鈕與徽章的內部樣式無法由 JS 讀取**，`elementFromPoint` 一路穿到外層容器。
 → 這類元件改用**高倍率截圖目視判讀**（`computer.zoom`）。以下 §D 即為目視結果。
 → 可由 JS 讀取的是：原生 `<button>`（導航、欄位標題、檢視 tab）、佈局 `<div>`、表格儲存格。
+
+> 🔴🔴 **2026-08-28 更正：本節的前提是錯的，`shadowRoot` 是 open 不是 closed。**
+> 當日實測 `s-internal-button` / `s-internal-badge` / `s-internal-text-field` /
+> `s-internal-tooltip` / `s-banner` 的 `shadowRoot` **全部可直接取得並 `getComputedStyle`**
+> （`el.shadowRoot.querySelector(...)`）。`docs/design/113` 與 `docs/design/111` 的全部數值
+> 即由此法取得，`getBoundingClientRect()` 是 0×0 的只有**宿主**元素，繪製盒在 shadow 內。
+>
+> ⇒ **本節「無法由 JS 讀取」的結論作廢**，隨之作廢的還有「因此改用高倍率截圖目視判讀」
+> 這個處置——**§D 全部數值都是在這個錯誤前提下目視得到的**，逐項待直接量測複核，
+> 其中「次級按鈕配方」已證實有誤（見第三輪 §6.5 的更正註）。
+> **原文保留備查**（文檔分層：不抹除歷史）。
 
 ## B. 桌機佈局真值
 
@@ -397,6 +428,10 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 
 → **規則：`surface` 底色一律落在 L ≈ 94–97%（極淺染色），hover 降 2–3，active 降 4–7。**
 → 我方做法：取 CHILL LOVE 自有 5 個語意色相，套上這條明度公式生成 `surface / fill / border / icon / text` 五層 × 三態，共 **75 個 token**。色相是我們的，階梯關係來自量測。
+
+> 🔴 **2026-08-28 起本段的處置已被 `docs/DECISIONS.md` **D54** 推翻**（使用者裁定「整體 UI 必須和 Shopify 完全 1:1，完全跟隨他的 CSS」）。
+> **原文保留備查**（文檔分層：不抹除歷史）。現行處置＝採用量測色值，本尊完整 token 值表見 `docs/design/111`，逐項差異見 `docs/design/110` §7。
+
 → **`caution` 與 `warning` 是兩個不同的族**（黃 vs 橘），我們現有 token 只有一個「warning」，**少一族**。
 
 ### H2-2 浮層堆疊順序 —— **已解**
@@ -530,5 +565,5 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 | 86 | checkbox 16px＋**列級 32px 命中區**（不是放大 checkbox 本身） | `34` 觸控規格 |
 | 87 | 動效系統定案：**5 時長 × 3 曲線 + 7 條具名規則**；移除所有 `transition: all` | `23`、三份原型 |
 | 88 | 新增 **Modal 驗證失敗 shake** 動畫 | `23` 元件庫 |
-| 89 | 中性色只取層級關係，色值用自有調色 | `23` §1 |
+| 89 | ~~中性色只取層級關係，色值用自有調色~~ **已被 D54 推翻（2026-08-28）**：改為採用量測色值 | `23` §1、`docs/design/110` §7 |
 | 90 | 桌機三欄佈局待補測（6 項） | 本文件 §7 |

@@ -104,6 +104,17 @@ box-shadow:
 > ⚠️ 本輪只確認了「不在 input 上」，**外層盒的聚焦樣式沒量到**（focus 時父層 `box-shadow` 讀到 `none`，代表真正承載焦點環的是更外面或 pseudo-element 的節點）。登記為 **V-127**，下一輪用 `:focus-visible` 逐層往上掃。
 > 47 §H2-3′「outline 與 box-shadow 並用」的結論**不受影響**（那是全站 437 條規則的統計），但商品頁輸入框的**具體**焦點環仍未定。
 
+> ✅ **2026-08-28：V-127 結案。** 焦點環畫在
+> `s-internal-text-field` → shadowRoot → `div.input-wrapper` 上，值為
+> **`outline: 2px solid #005bd3` ＋ `outline-offset: 1px`**；同時該盒 background
+> `#fdfdfd`→`#f7f7f7`、inset 髮絲環 `#8a8a8a 0.66px`→`#1a1a1a 1px`。
+> `<input>` 自身的 outline 與 box-shadow 仍為 `none`（與本節原觀察一致）。
+> 取值法＝穿透 open shadow root（`47` §A 的「closed」前提已更正）。全表＝`docs/design/113` §1.2。
+>
+> ⚠️ **但焦點環不是全域一致**：設定區的側欄導覽項實測是**瀏覽器預設 `outline auto 1px`**，
+> 沒有 `#005bd3` 環（已在 `document.hasFocus()=true` 下複驗）。只有表單控件才有。
+> 這是本尊自身的不一致，見 `docs/research/81` §8.4。
+
 ---
 
 ## 6. 一個刻意不跟的地方
@@ -112,7 +123,17 @@ pill 與按鈕的 `transition` 實測是 **`all`**。
 
 我方 `scripts/lint-prototype.py` 有一條規則**禁止 `transition: all`**（依 47 §5：實站真正生效的只有 9 條具名 transition）。兩者衝突。
 
-**處置：維持我方禁令，不跟。** 理由：`transition: all` 會連帶動畫非預期屬性（例如 pill 展開時的 `height`），且無法對應 M1–M7 具名動效規則。這是**我方刻意偏離實測**，記在此處以免日後被當成漏抄。
+**處置：維持我方禁令，不跟。**
+
+> 🔴 **2026-08-28 補測：本節的前提在新層已不成立。**
+> `s-button`（web component 層）的 `transition` computed 實測是 **`none`**——primary／secondary／
+> tertiary 三者皆然。`all` 只出現在**舊 Polaris React 層**的容器與 slim tertiary 按鈕上
+> （`docs/design/111` §17.1：本尊有兩套設計系統世代並存）。
+> ⇒ **我方禁令與新層一致，不再是「刻意偏離」**。本節保留原文備查，但引用時必須標明適用層。
+> 本輪在商品列表頁另量到四處**具名** transition：勾選框（border-color／border-width／box-shadow
+> 各 .1s `cubic-bezier(.19,.91,.38,1)`）、排序圖示（opacity .1s）、switch（background-color／
+> border-color 各 .1s）、檢視活化鈕（max-width .3s）。詳見 `docs/research/77` §7。
+ 理由：`transition: all` 會連帶動畫非預期屬性（例如 pill 展開時的 `height`），且無法對應 M1–M7 具名動效規則。這是**我方刻意偏離實測**，記在此處以免日後被當成漏抄。
 
 ---
 

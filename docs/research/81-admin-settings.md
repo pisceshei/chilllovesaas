@@ -431,3 +431,117 @@ Legal notice／Subscription policy。**沒有 Contact information 這一項**。
   webhook 數量上限／活動記錄完整事件型錄與保留天數／使用者管理記錄保留與匯出／Users 清單完整欄位與狀態／
   重寄與取消邀請／角色數量上限／能否繞過角色直接授權個別使用者／General 各欄位字元上限／
   Brand 字體與讀取品牌資產的管道窮舉／自動翻譯支援語言正面清單。
+
+---
+
+## §8 🔴 設定區的 CSS 量測（補 §5）（層④ CSS 三段式，2026-08-28）
+
+> 全域 token 值表、頁面骨架與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
+> 涵蓋排查與缺口＝`docs/design/110-css-measurement-coverage.md`。
+> 🔴 **鐵律 9**：只記 `getComputedStyle` 算出來的值，不含本尊樣式表原始碼、選擇器定義或可執行片段。
+> 🔴 本尊設定區渲染在 `div#SettingsDialog` 內（**Dialog 形態，右上有 Close 鈕**），不是獨立頁面路由。
+
+### §8.0 量測環境
+
+> 量測日期 2026-08-28。測試店 chill-love-u5q5mnzq（Shopify Plus，dev store）。Chrome，自建分頁（未搶用其他代理的分頁）。`window.innerWidth = 1024`、`window.innerHeight = 551`（🔴 非 1280 桌機階，本輪未 resize——多代理共用同一視窗，resize 會污染他人量測；1024 下設定區仍為左右雙欄，未塌成單欄）。`getComputedStyle(document.documentElement).fontSize = 16px`（根字級預設，無 47 §F 記過的 24px 污染）。`getComputedStyle(document.body).fontSize = 13px`。取值一律 `getComputedStyle()` 之後的 computed 值；shadow DOM 以 `el.shadowRoot.querySelector()` 穿透，穿透路徑逐項記於 selector 欄。設定區整體渲染在 `div#SettingsDialog` 內（Dialog／modal 形態，右上有 Close 鈕），不是獨立頁面路由的一般頁框。
+
+### §8.1 本畫面用到的 token 值
+
+| 類別 | 量測值 | 取值選擇器 |
+|---|---|---|
+| 底色／表面 | --p-color-bg #f1f1f1；--p-color-bg-surface #fff；--p-color-bg-surface-secondary #f7f7f7；--p-color-bg-surface-tertiary #f3f3f3；--p-color-bg-surface-hover #f7f7f7；--p-color-bg-surface-active #f3f3f3；--p-color-bg-surface-selected #f1f1f1；--p-color-bg-surface-secondary-hover #f1f1f1；--p-color-bg-surface-secondary-active #ebebeb；--p-color-input-bg-surface #fdfdfd。body 實際底色量測＝rgb(241,241,241) | getComputedStyle(document.documentElement) |
+| 文字色 | --p-color-text #303030；--p-color-text-secondary #616161；--p-color-text-disabled #b5b5b5；--p-color-text-critical #8e0b21；--p-color-text-caution #4f4700；--p-color-text-success #014b40；--p-color-text-info #003a5a；--p-color-text-brand #4a4a4a。（--p-color-text-emphasis 取回空字串＝未定義） | :root |
+| 邊框／圖示色 | --p-color-border #e3e3e3；--p-color-border-secondary #ebebeb；--p-color-border-hover #ccc；--p-color-border-focus #005bd3；--p-color-icon #4a4a4a；--p-color-icon-secondary #8a8a8a；--p-color-icon-disabled #ccc；--p-color-nav-icon #4a4a4a | :root |
+| 語義填色 | --p-color-bg-fill-brand #303030；--p-color-bg-fill-success #047b5d；--p-color-bg-fill-critical #c70a24；--p-color-bg-fill-caution #ffe600；--p-color-bg-fill-info #91d0ff | :root |
+| 間距階（rem→px @16px 根） | 0/0；025/.0625rem(1)；050/.125rem(2)；100/.25rem(4)；150/.375rem(6)；200/.5rem(8)；250/.625rem(10)；300/.75rem(12)；400/1rem(16)；500/1.25rem(20)；600/1.5rem(24)；700/1.75rem(28)；800/2rem(32)；1000/2.5rem(40)；1200/3rem(48)；1600/4rem(64)；2000/5rem(80)；2400/6rem(96)；2800/7rem(112)；3200/8rem(128) | :root |
+| 字級階 | body-x-small .6875rem(11)；body-small .75rem(12)；body-medium .8125rem(13)；body-large .875rem(14)；heading-small .75rem(12)；heading-medium .8125rem(13)；heading-large .875rem(14)；display-small 1.125rem(18)；display-medium 1.5rem(24)；display-large 1.875rem(30) | :root |
+| 行高階 | body-x-small .75rem(12)；body-small 1rem(16)；body-medium 1.25rem(20)；body-large 1.25rem(20)；heading-small 1rem(16)；heading-medium 1.25rem(20)；heading-large 1.25rem(20)；display-small 1.5rem(24)；display-medium 2rem(32)；display-large 2.5rem(40) | :root |
+| 字重階 | regular 450；details-text 450；input-label 450；input-label-small 450；medium 550；button-label 550；semibold 600；heading-small/medium/large 600；display-small 600；display-medium/large 650；bold 650。🔴 這一階全部是非標準值（450/550/650），不是 400/500/600/700 | :root |
+| 圓角階 | 0/0rem；050/.125rem(2)；100/.25rem(4)；150/.375rem(6)；200/.5rem(8)；300/.75rem(12)；400/1rem(16)；500/1.25rem(20)；750/1.875rem(30)；full/624.9375rem | :root |
+| 陰影階 | shadow-100＝6 層堆疊（最外 0 0 0 1px #0000000f 邊框層＋5 層 y-offset 遞增的黑色低透明陰影）；shadow-200＝7 層；shadow-300＝6 層（最上層 0 8px 24px -8px #00000047）；shadow-400／shadow-500＝6／7 層；shadow-popover 同 shadow-300 值；shadow-button＝3 層 inset（0 -1px 0 0 #b5b5b5 inset、0 0 0 1px #0000001a inset、0 .5px 0 1.5px #FFF inset）；shadow-inset-100＝2 層 inset；--p-shadow-card 取回空字串（未定義）；--p-shadow-page-button＝none | :root |
+| 動效 | duration-100 100ms；duration-150 150ms；duration-200 200ms；duration-250 250ms；ease cubic-bezier(.25,.1,.25,1)；ease-in-out cubic-bezier(.42,0,.58,1) | :root |
+| 設定區佈局專用 | --pg-navigation-width 15rem(240)；--pg-layout-width-outer-spacing-max 2rem(32)；--pg-layout-relative-size 2；--pg-bottom-bar-height 0rem；--osui-nav-item-alignment-base-tight .75rem(12)；--osui_nav-item-alignment-common-icon calc(1.25rem + .5rem + .75rem) | :root |
+
+### §8.2 元件量測（33 項）
+
+| # | 元件 | 量測 | 狀態樣式 |
+|---:|---|---|---|
+| 1 | **設定殼層（Settings Dialog）** | 設定區整體是 Dialog：`div#SettingsDialog`。Layout padding 16px 0 0 32px；`_BodyMarkupContainer_` 內容欄 w=661 起點 x=320。右上 Close 鈕（`button._CloseButton_1ozj5_3`）32×32、padding 6px、圓角 8px、底色 rgba(0,0,0,0.05)、色 #303030、無陰影，位置 x=980 y=68。 | Close 鈕 hover／focus 未量（避免誤觸關閉）＝未取得 |
+| 2 | **左側導覽容器** | 容器 w=279（含 margin 8px 9px 48px 0），內部可視欄 x=32；導覽項目寬 255（左右各 12px 內縮）。字級繼承 13px / 行高 20px。無邊框、無陰影、底色透明（坐在 #f1f1f1 頁底上）。 | — |
+| 3 | **組織標頭（CHILLING TECH LIMITED / Organization）** | 容器：display flex、gap 8px、padding 12px 16px、h=61、底色 #f3f3f3、border-bottom 1px solid #e3e3e3、圓角 0。主標 h3._Heading_4wlt2_23：13px / 500 / lh 20px / #303030。副標：12px / 500 / lh 16px / #616161。 | — |
+| 4 | **導覽搜尋框** | 外框 h=56（含上下留白）；Backdrop h=32、w=255、圓角 8px、底色 #fdfdfd、border 1px solid #8a8a8a、無 box-shadow。input：13px / 500 / lh 24px / h=26 / w=215 / padding 1px 2px 1px 0。焦點環由 `._Backdrop_::after` 承擔：position absolute、inset -1px、圓角 5px、box-shadow 0 0 0 -1px #005bd3（未聚焦時擴散為負值＝不可見）。 | resting 已量；focus 環色 #005bd3（由 ::after spread 量得）。hover 未量＝未取得 |
+| 5 | **導覽項目（Settings nav item）** | 列高 28px、列距 32px（相鄰 li y 差 32 ⇒ 列間 4px）、寬 255。`a` 本身 display inline、padding 0、圓角 8px、背景透明。實際列盒＝`._LinkContent_`：display flex、padding 4px、h=28。圖示：`s-internal-icon` 20×20，穿透 `s-internal-icon.shadowRoot > span.icon.color-base.tone-neutral.size-base`（20×20）；圖示與文字間距 8px（`span._Label_` margin-left 8px）。文字 13px / 500 / lh 20px。未選取文字色 #303030；選取態文字＋圖示色 #4a4a4a。🔴 選取／hover 的灰底不是 background，而是 `._LinkContent_::before`：position absolute、inset 0、圓角 8px、w 255 h 28。20 個項目全部共用同一個 `id="settings-nav-item"`（重複 id）。 | resting：::before display none。selected（`._Active_a0klx_25`）：::before display block、底色 #f3f3f3；文字／圖示由 #303030 轉 #4a4a4a。hover（真滑鼠實測）：::before display block、底色 #f1f1f1，文字色不變（#303030），無邊框、無陰影、無底線。selected+hover：底色也是 #f1f1f1。focus-visible（document.hasFocus()=true 下實測）：outline = 瀏覽器預設 `auto 1px`、outline-offset 1px，`._LinkContent_` 與 ::before 皆無自訂焦點環 ⇒ 🔴 導覽項目沒有 Polaris 的 2px #005bd3 焦點環。disabled 態不存在（未見 disabled 導覽項） |
+| 6 | **組織區／商店區分隔線** | position absolute、top 68px、left/right 各 16px（w=247）、h=1px、底色 #e3e3e3。🔴 是 pseudo-element，不是 hr、也不是 border——DOM 內查不到對應元素。 | — |
+| 7 | **商店標頭（CL 頭像 / CHILL LOVE / chill.deals）** | h=48、margin-bottom 12px、display flex、gap 8px、padding 12px 16px 0、底色 #fff（Plain 變體）。店名 13px / 500 / lh 20px / #303030；網域 12px / 500 / lh 16px / #303030（🔴 與組織標頭副標的 #616161 不同）。頭像為 `s-avatar` 元件。 | — |
+| 8 | **導覽清單容器（ul）** | padding 0 0 4px；商店區 20 項共 h=580（20×28＋19×4＝580 吻合）。組織區 ul h=68（2 項）＋容器 margin-bottom 4px。 | — |
+| 9 | **底部帳號列** | 外層 Box：border-top 1px solid #e3e3e3、h=65。連結：w=263、h=48、padding 4px 8px、圓角 8px、背景透明。姓名 13px / 500 / lh 20px / #303030；Email 走 `s-internal-text`。 | hover／focus 未量＝未取得 |
+| 10 | **設定卡片（Card）** | 🔴 白底與陰影都在 shadow root 裡：`section` 底色 #fff、圓角 12px、padding 0、overflow clip、box-shadow 六層堆疊＝rgba(0,0,0,.03) 0 5px 5px -2.5px, rgba(0,0,0,.02) 0 3px 3px -1.5px, rgba(0,0,0,.02) 0 2px 2px -1px, rgba(0,0,0,.03) 0 1px 1px -.5px, rgba(0,0,0,.04) 0 .5px .5px 0, rgba(0,0,0,.06) 0 0 0 1px（值等同 --p-shadow-100）。外層 `._CardHighlightWrapper_` 本身背景透明、僅帶圓角 12px。卡片寬 629（1024 視窗下）。卡片間距：外層 `.Polaris-BlockStack` gap 16px。卡片內：標頭 Box padding 12px 16px、內容 Box padding 0 16px 16px ⇒ 內容欄寬 597。標題與說明的 BlockStack gap 2px。 | — |
+| 11 | **卡片分節標題 H2** | 13px / 500 / lh 20px / #303030 / letter-spacing normal / margin 0 / padding 0 / h=20。 | — |
+| 12 | **卡片說明段落（subdued）** | 13px / 450 / lh 20px / #616161。與標題間距 2px（BlockStack gap）。 | — |
+| 13 | **卡片底部說明條（footer strip）** | 底色 #f3f3f3、padding 12px 16px、h=45、圓角 0（由卡片 overflow:clip 切出下方圓角）。內含連結：`s-internal-link → shadowRoot > a.link.tone-auto`，圓角 4px（焦點環用）。 | — |
+| 14 | **設定列（可點擊 row，Notifications 型）** | 清單容器圓角 8px、背景透明。列：底色 #fff、h=64、列距 65px（含 1px 分隔線）、transition background-color 0.1s ease-in-out。內距 wrapper padding 12px。標題連結 `a._SettingsItem__clickableAction_6hwtm_136`：13px / 500 / #303030、無底線、cursor pointer、display block、h=20；用 ::before（content ""）撐滿整列做 stretched link。說明文字：`s-internal-text → shadowRoot > span.text.color-subdued` 13px / 450 / lh 20px / #616161。右側 chevron：`s-internal-icon` 20×20，穿透 shadow 後 `span.icon.color-base.tone-neutral` 色 #4a4a4a，貼右緣內縮 12px。 | 🔴 hover（真滑鼠移到列上與移到標題文字上，兩處都測）：列底色維持 rgb(255,255,255) 不變、連結不加底線、色不變 ⇒ 本清單沒有 hover 填色，只有 cursor 變化。（列上仍宣告 background-color transition，推測用於 active／focus-within，本輪未觸發＝未取得）。focus 未量＝未取得 |
+| 15 | **設定列分隔線** | 外層 h=1、padding 0 12px（inset 12px）；hr h=1、w=571、border-bottom 1px solid #e3e3e3、背景透明、其餘 border 0。外層 transition margin 0.1s ease-in-out。 | — |
+| 16 | **設定列（帶主/次兩行＋stretched link，General 型）** | 列內 `.Polaris-InlineGrid` gap 12px（外層）／16px（內層）；主區 `.Polaris-InlineStack` gap 8px；兩行區塊 h=40。可點擊元素同時有 `a`（導頁）與 `button`（開 modal）兩種形態，樣式一致。 | — |
+| 17 | **頁首（Page header）** | header-content：display flex、gap 8px、h=28、w=629。標題 `h1.heading`：18px / 600 / lh 24px / letter-spacing -0.14994px / #303030。標題左側圖示：`s-internal-icon` 20×20 外框，穿透 shadow 得 `span.icon`（20×20）內含 svg 16×16、fill #303030。動作區 `div.actions`：display flex、gap 6px、h=28、靠右。 | — |
+| 18 | **主要按鈕（Add language）** | h=28、padding 6px 12px、圓角 8px、gap 2px、底色 #303030、字色 #fff、12px / 550 / lh 16px、transition none。box-shadow 3 層 inset：rgba(0,0,0,.8) 0 -1px 0 1px inset、rgb(48,48,48) 0 0 0 1px inset、rgba(255,255,255,.25) 0 .5px 0 1.5px inset。 | hover／focus／active／disabled 未量＝未取得（避免誤觸開啟新增語言流程） |
+| 19 | **次要按鈕（Export / Import，頁首新元件系）** | h=28、w=62、padding 6px 12px、圓角 8px、gap 2px、底色 #e3e3e3、字色 #303030、12px / 550 / lh 16px、box-shadow none、transition none。 | hover／focus 未量＝未取得 |
+| 20 | **次要按鈕（Adapt / Translate / Open，卡內 Polaris 系）** | 🔴 與頁首次要鈕是兩套不同系統：底色 #fff（不是 #e3e3e3）、圓角 8px、13px / 500 / lh 20px（不是 12px/550）、gap 2px、h=28、padding 4px 12px（`a`）／6px 12px（`button`），box-shadow 3 層 inset＝rgb(181,181,181) 0 -1px 0 0 inset, rgba(0,0,0,.1) 0 0 0 1px inset, rgb(255,255,255) 0 .5px 0 1.5px inset（＝--p-shadow-button）。 | hover／focus 未量＝未取得 |
+| 21 | **圖示按鈕（列尾「⋯」More actions）** | 28×28、padding 4px、圓角 8px、底色 #fff、同上 3 層 inset bevel 陰影。 | 未開啟選單（避免誤觸破壞性項目）⇒ popover 樣式＝未取得 |
+| 22 | **Languages 語言表（IndexTable）** | 表寬 595（卡內容寬 597 減 1px 左右）。表頭 th：底色 #f7f7f7、12px / 500 / lh 20px / #616161、h=36.5、padding 8px 6px（首欄 8px 6px 8px 12px、末欄 8px 12px 8px 6px）。資料列：底色 #fff、`--unclickable`；兩行列 h=63、單行列 h=48.5。🔴 分隔線走 tr 的 border-top：首列（緊貼表頭）1px solid #e3e3e3、列間 1px solid #ebebeb（兩個不同色）。td padding 6px（首欄 6px 6px 6px 12px、末欄 6px 12px 6px 6px）。欄寬（1024 下）Language 179.86 / Status 133.13 / Domains 120.89 / Actions 161.13。 | 列 hover 未量（`--unclickable`）＝未取得 |
+| 23 | **語言名稱＋預設標記** | 語言名 13px / 450 / lh 20px / #303030；下方「Default」13px / 450 / lh 20px / #616161（color-subdued），兩行 y 差 22px。🔴 預設語言標記是純文字副標，不是 badge。 | — |
+| 24 | **狀態徽章（Published / Not published）** | 共通：h=20、padding 2px 8px、圓角 8px、gap 4px、12px / 550 / lh 16px、無邊框無陰影。Published（tone-success）底色 rgb(175,254,191)、字色 #014b40、w=72.97。Not published（中性）底色 rgba(0,0,0,0.06)、字色 #616161、w=96.34。 | — |
+| 25 | **Domains 揭露鈕（2 domains ⌄）** | h=32、w=110.39、padding 6px 12px、margin -6px -12px（負邊距抵銷內距使文字對齊格線）、圓角 8px、背景透明、字色 #616161、13px / 500 / lh 20px、gap 2px。 | 未展開＝popover 樣式未取得 |
+| 26 | **App 卡列（Shopify Translate & Adapt）** | App icon 40×40、圓角 8px。App 名 h3：13px / 500 / lh 20px / #303030。狀態文字「Installed」走 `s-internal-text`（color-subdued 系）。右側 Open 鈕同「卡內 Polaris 次要鈕」規格（h=28、padding 6px 12px、bevel 陰影）。 | — |
+| 27 | **頁尾說明段落（Learn more about languages.）** | 12px / 500 / lh 16px / #303030、置中、w=483.41。內嵌連結：`s-internal-link → shadowRoot > a.link.tone-auto`：13px / 450 / lh 20px、色 #303030（與內文同色）、text-decoration underline、圓角 4px。🔴 連結不換色，只加底線。 | 連結 hover／focus 未量＝未取得 |
+| 28 | **Radio（單選群組）** | fieldset：display flex、padding 0、無邊框。label.choice：display flex、gap 8px、padding 4px 0、h=28、13px / 450 / lh 20px / #303030；選項列距 28px（無額外 gap，靠 4px 上下內距分隔）。input.radio：16×16、圓角 50%、appearance none。未選：背景透明＋inset ring 0 0 0 0.66px rgb(138,138,138)；`::after` 為 16×16 圓、底色 #fdfdfd、transform scale(0.9375)。已選：底色 #303030、無 ring；`::after` 同圓但 transform scale(0.5) ⇒ 8px 白點。 | focus-visible（實測）：outline 2px solid #005bd3、outline-offset 2px，且 inset ring 由 #8a8a8a 轉 rgb(26,26,26)。hover 未單獨量＝未取得。disabled 本頁無實例＝未取得 |
+| 29 | **Checkbox（新元件系 s-checkbox）** | label：display inline-flex、gap 8px、padding 4px 0、h=28。視覺方塊 `div.checkbox`：16×16、圓角 4px、transition background-color .1s cubic-bezier(.19,.91,.38,1) ＋ box-shadow 同曲線。未勾：底色 #fff、inset ring 0 0 0 0.66px rgb(138,138,138)。已勾：底色 #303030、inset ring 0 0 0 0.66px #303030。內含 svg 16×16（fill none，勾號以 path 描邊）。label-text：13px / 450 / lh 20px / #303030，x 位移 24px（16 方塊＋8 gap）。說明列 `div.field-details`：12px / 450 / lh 16px / #616161、gap 2px、padding-left 24px（切齊 label 文字），無說明時整個容器 display:none（class 追加 `display-none`）。 | resting／checked 已量。focus-visible／hover 未單獨量＝未取得（僅量到舊版 Polaris checkbox 的 focus，見下） |
+| 30 | **Checkbox（舊 Polaris 系，同頁併存）** | 🔴 與 s-checkbox 併存於同一設定頁。input 16×16（視覺隱藏）。Backdrop 16×16、圓角 4px、已勾底色 #303030＋box-shadow 0 0 0 32px #303030 inset、transition border-color/border-width 0.1s cubic-bezier(.19,.91,.38,1)。Icon 12×12、margin 2px。 | focus-visible（實測）：Backdrop outline 2px solid #005bd3（offset 未取得）；input 自身為瀏覽器預設 auto 1px |
+| 31 | **Select（下拉）** | h=32、圓角 8px、底色 #fdfdfd、inset ring 0 0 0 0.66px rgb(138,138,138)、padding 6px 8px 6px 12px、display grid。值文字 `span.value` 13px / 450 / lh 20px / #303030；尾端 `s-icon` 20×20。label 可設 `outside`（顯示）或 `hidden`（配 span.visually-hidden 1×1）。 | hover／focus／disabled 未量＝未取得 |
+| 32 | **Text field（label / input / hint 三層）** | input-field（直欄）gap 4px。label.outside：13px / 450 / lh 20px / #303030、h=20；label-content h=16。input-wrapper：h=32、圓角 8px、底色 #fdfdfd、inset ring 0 0 0 0.66px rgb(138,138,138)、padding 0 12px、gap 8px。input：13px / 450 / lh 20px / #303030、h=20、padding 0。hint／error 容器 `div.field-details`：12px / 450 / lh 16px / #616161、gap 2px；無內容時 display:none。整組 label→框 垂直間距 4px（1242+20 → 1266）。另有 `div.prefix-suffix-wrapper` gap 4px。 | resting：底 #fdfdfd、ring 0.66px #8a8a8a。hover（真滑鼠實測）：底 rgb(250,250,250)、ring 0.66px rgb(97,97,97)。focus-visible（實測）：底 rgb(247,247,247)、inset ring 轉 0 0 0 1px rgb(26,26,26)、外加 outline 2px solid #005bd3、outline-offset 1px。🔴 error 態未取得——觸發需輸入非法值並嘗試儲存，違反本輪唯讀約束 |
+| 33 | **Banner（資訊橫幅，設定卡片內）** | 外框：底色 rgb(234,244,255)、圓角 8px、gap 8px、無邊框無陰影、w=563。body：display grid、padding 8px、gap 8px。文字／圖示色 #003a5a、13px / 450 / lh 20px。左側圖示區 20×20（圓角 8px）。右側 dismiss 區 w=24、margin -2px -2px -2px 0。 | dismiss 鈕未點（避免改變使用者可見狀態）；hover／focus 未取得 |
+
+### §8.3 觀察到的視覺規律
+
+1. 間距一律 4 的倍數：實測出現 2 / 4 / 6 / 8 / 12 / 16 / 24 px；唯一的 2px 出現在標題與說明的 BlockStack gap、徽章上下內距、field-details gap。6px 只出現在按鈕內距（6px 12px）與頁首動作列 gap。
+2. 圓角只有四階在設定區實際用到：4px（checkbox 方塊、連結焦點框、SettingsFlag）／8px（幾乎所有互動元件：按鈕、輸入框、select、徽章、導覽項目 pill、清單容器、banner）／12px（卡片）／50%（radio）。沒有出現 2px、6px、16px 以上的圓角。
+3. 控件高度只有兩階：28px（導覽項目、全部按鈕、choice label 列、徽章列所在列）與 32px（輸入框、select、搜尋框、揭露鈕、Close 鈕）。徽章本體 20px、圖示一律 20px 外框內含 16px svg。
+4. 🔴 選取／hover 的填色不是 background，而是絕對定位的 ::before 疊層（導覽項目）——複製時若直接寫 background，圓角 8px 的 pill 與 4px padding 的關係會對不上。
+5. hover 一律只改底色（與邊框色），不改文字色、不加邊框、不加陰影、不位移。導覽項目 hover #f1f1f1；輸入框 hover 底 #fafafa＋ring 由 #8a8a8a 轉 #616161。
+6. 🔴 焦點環有兩制併存：表單控件（text field / radio / Polaris checkbox）＝outline 2px solid #005bd3（offset 1–2px）＋內圈 ring 轉深（#1a1a1a）；導覽項目與 stretched link＝完全沒有自訂焦點環，落回瀏覽器預設 auto 1px。
+7. 卡片陰影是六層堆疊（五層 y-offset 遞增的低透明黑＋最外一層 0 0 0 1px rgba(0,0,0,.06) 當邊框），且整組陰影與白底都在 s-internal-section 的 shadow root 裡，外層 wrapper 只留圓角。
+8. 分隔線有三種色階，依語義分工：卡片標頭下方／組織區分隔／帳號列上方＝#e3e3e3；設定清單列間＝#e3e3e3（inset 12px）；表格列間＝#ebebeb（表頭下方那條則是 #e3e3e3）。
+9. 分隔線的實作有三種形態：真 hr（s-divider shadow 內 border-bottom）、border-top（表格 tr）、pseudo-element（組織／商店區分隔）。沒有統一寫法。
+10. 排版階梯（設定區實測，由大到小）：頁標題 18/600/24 → 卡片分節標題 13/500/20 → 正文與欄位 label 13/450/20 → 說明／副標 13/450/20（僅換 #616161）→ 表頭與 hint 與頁尾 12/(500 或 450)/16。🔴 主層級只靠字重＋色階拉開，字級只有 18 / 13 / 12 三階。
+11. 色階只有三段文字色在用：#303030（主）／#616161（次、hint、表頭）／#4a4a4a（圖示與選取態導覽文字）。#8a8a8a 只作 resting 邊框／ring。
+12. 新舊兩套設計系統在同一設定頁併存：新的 Web Component 系（s-*，shadow root，字重 450/550，次要鈕底 #e3e3e3、無陰影、transition none）與舊 Polaris 系（.Polaris-*，字重 500，次要鈕底 #fff＋三層 inset bevel 陰影）。同一頁的兩顆「次要按鈕」外觀不同。
+13. 設定區是 Dialog（div#SettingsDialog）不是獨立頁——複製時要決定我方 SettingsPage 是 modal 還是路由頁，這會連動 URL、返回鍵與 Close 鈕。
+14. 設定清單列（Notifications 型）沒有 hover 填色，只有 cursor 變化；整列可點是靠標題連結的 ::before 撐滿（stretched link），不是列本身綁事件。
+
+### §8.4 🔴 與既有量測文件的衝突（照登記，未逕行覆寫）
+
+1. 🔴 與 47／64 可能衝突（字重階）：`:root` 的字重 token 全是非標準值——regular 450、medium 550、semibold 600、bold 650。但 `document.body` 的 computed font-weight 實測是 **500**（`document.documentElement` 是 450），而設定區絕大多數 .Polaris-* 元素（H2、表頭、導覽項目、頁尾段落）繼承到的就是這個 500。也就是說「token 說 450/550/650」與「畫面上實際渲染 500」兩者並存。若 47／64 只登記了 token 值（450/550/650），實作照抄會與本尊畫面差一階字重。建議在 47／64 補一行：Polaris legacy 節點走 500，新 s-* 元件節點走 450/550。
+
+2. 🔴 字級階語義衝突：token `--p-font-size-heading-small` = .75rem(12px)、`--p-font-weight-heading-small` = 600，但設定卡片的分節標題 `h2.Polaris-Text--headingSm` 實測是 **13px / 500**。class 名（headingSm）與 token 名（heading-small）對不上值。實作若用 heading-small token 畫分節標題會偏小一階。
+
+3. 🔴 兩套按鈕系統的次要鈕不同色：頁首 `s-internal-button variant-secondary`（Export／Import）＝底色 #e3e3e3、12px/550、box-shadow none、transition none；卡內 `.Polaris-Button`（Adapt／Translate／Open）＝底色 #fff、13px/500、三層 inset bevel 陰影。若 47／64 只記了其中一套當作「次要按鈕」，另一套會被誤判成 bug。兩者在同一畫面同時可見（Languages 頁）。
+
+4. 🔴 焦點環不是全域一致：47／64 若登記「焦點環 = 2px solid #005bd3」，設定區的導覽項目（`a#settings-nav-item`）實測是**瀏覽器預設 outline auto 1px + offset 1px**，沒有 #005bd3 環（已在 document.hasFocus()=true 下複驗，排除背景分頁造成的假陰性）。表單控件才有 #005bd3。這是本尊自身的不一致，不是我方量測誤差。
+
+5. 🔴 hover 比 selected 更深：導覽項目 selected 底色 #f3f3f3（bg-surface-active），hover 底色 #f1f1f1（bg-surface-selected）。也就是 hover 的灰比選取態的灰更深，且 token 名稱與用途對調（`-selected` token 被用在 hover、`-active` token 被用在 selected）。照 token 名稱直覺實作會做反。
+
+6. 表格分隔線用了兩個不同色：表頭與首列之間 1px solid #e3e3e3，資料列之間 1px solid #ebebeb。若既有量測只記了單一「表格分隔線色」，需補成兩階。
+
+### §8.5 未取得（鐵律 19.3）
+
+- Toggle／Switch 控件的樣式——未取得。實測掃描 5 個設定頁（general / languages / checkout / privacy / notifications）的 light DOM ＋全部開放 shadow root，`[role=switch]` 命中數皆為 0，自訂元素清單中亦無 s-switch / s-toggle。這些頁的開關語義一律由 checkbox（s-checkbox 或 .Polaris-Checkbox）承擔。🔴 這只證明「這 5 頁沒有」，不等於整個 admin 沒有；取得方式＝續掃 shipping / taxes / locations / customer_accounts / sales_channels / domains / custom_data / apps / policies 與各子頁 modal。
+- 欄位 error 態（三層中的第三層）的字級／色／間距——未取得。error 容器已定位（`div.field-details`，與 hint 同一容器，無錯誤時 display:none），但要讓它上色需要輸入非法值並觸發驗證，違反本輪「只看不改、不按 Save」的硬約束。取得方式＝另開一輪並取得明示授權後，在測試店輸入非法值走完驗證流程，量 `div.field-details` 的 color 與 `div.input-wrapper` 的 ring 色。
+- 1280 桌機階的量測——未取得。本輪固定在 innerWidth=1024（多代理共用同一 Chrome 視窗，resize 會污染他人量測）。1024 下設定區仍為雙欄，但卡片寬 629、內容寬 597 這些值是 1024 專屬，不可外推到 1280。取得方式＝獨占視窗時 resize_window 到 1280×800 後重量卡片寬、內容寬與 actions 是否溢出成 ⋯ 選單。
+- 768 平板／390 手機階的形態——未取得（鐵律 13.1 要求三裝置對比，本輪只做一個寬度）。
+- 主要按鈕（Add language）、次要按鈕（Export/Import/Adapt/Translate/Open）、圖示按鈕（⋯）、Close 鈕、Domains 揭露鈕、banner dismiss 的 hover／focus／active／disabled 態——未取得。理由：這些控件一按就會開啟新增語言流程、匯出匯入、關閉設定或彈出破壞性選單，本輪唯讀約束下未觸發。取得方式＝hover 可安全補量（真滑鼠 hover 不觸發 click），focus 可用 element.focus() 在 document.hasFocus()=true 下補量；active 需按住不放再量。
+- 語言列「⋯ More actions」彈出選單（popover）的樣式——未取得。選單內含 Remove language 等破壞性項目，本輪未開啟。
+- s-checkbox 的 hover 與 focus-visible 態——未取得（只量到舊 Polaris checkbox 的 focus 環 2px solid #005bd3）。
+- Select（s-internal-select）的 hover／focus／open（選單展開）態——未取得。
+- 導覽搜尋框的 hover 與實際 focus 態數值——部分未取得：已由 `._Backdrop_::after` 讀到焦點環色 #005bd3、圓角 5px、inset -1px，但未在真正 focus 下量到 spread 的最終值。
+- disabled 態（任何控件）——未取得，本輪掃過的設定頁上沒有 disabled 實例。
+- 卡片 shadow 的 dark theme 版本——未量（僅量 light）。
+- Polaris checkbox focus 環的 outline-offset 數值——未取得（只讀到 outline 本身）。
