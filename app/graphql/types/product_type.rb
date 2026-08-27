@@ -64,6 +64,45 @@ module Types
     field :translation_status, [ Types::TranslationStatusType ], null: false,
       description: "各語言翻譯進度（鐵律 7：唯一來源 translation_status）。"
 
+    # ── 可見性兩維（S6a-2）──────────────────────────────────────────────
+    #
+    # 🔴 **為什麼要有這兩個欄位**：前端 `ProductDetailPage.tsx` 有一張硬編的
+    #   `STATUS_DIMENSIONS` 表（只看 status 算兩維），其註釋逐字寫著
+    #   「前端沒有 publication 資料，硬算出來的第二個答案遲早與伺服器分岔，
+    #   而分岔的症狀是後台說可購買、前台買不到」。S6a 把 publication 資料
+    #   送進前端之後，那個「順手擴充」的誘惑就是活的 ⇒ 由伺服器出唯一答案。
+    #
+    # 🔴 **判準完全復用 `Product.purchasable` / `.discoverable` 兩個 scope**，
+    #   **不在這裡寫任何 Ruby 版的比較**。`docs/specs/91` 已登記過同型事故：
+    #   「同一條『已發布』規則有兩份實作（`ResourcePublication#published?` 與
+    #   `Product.published_on`）」——本欄位若自己算就是**第三份**。
+    #   `discoverable ⊆ purchasable` 在 model 層是**定理**（由 purchasable 導出），
+    #   繞過 scope 會讓它退化成「要靠測試盯著別漂移」的性質。
+    field :purchasable, Boolean, null: false,
+      description: "在指定管道當下買不買得到（三層 AND 的前兩層；第三層 catalog 延後，見 88 §3.2）。" do
+      argument :publication_id, ID, required: false,
+        description: "gid://chilllove/Publication/{id}；省略＝線上商店（v1 唯一前台管道）。"
+    end
+    field :discoverable, Boolean, null: false,
+      description: "在指定管道可否被發現（搜尋／系列／推薦／sitemap／feed）。恆為 purchasable 的子集。" do
+      argument :publication_id, ID, required: false
+    end
+
+    # @param publication_id [String, nil] 省略＝線上商店
+    # @return [Boolean]
+    # @note 副作用：一次 `EXISTS` 查詢（scope + `where(id:)`）。
+    # @note ⚠️ **單筆路徑用**：列表上逐列取用會是 N+1。列表要用的話應另做
+    #   批次解析（一次查出整批的可購買集合），本包不做——`ProductsPage`
+    #   目前不顯示這兩維。
+    def purchasable(publication_id: nil)
+      visible_by(Product.method(:purchasable), publication_id)
+    end
+
+    # @see #purchasable
+    def discoverable(publication_id: nil)
+      visible_by(Product.method(:discoverable), publication_id)
+    end
+
     # 序列化 product 的穩定 global API identifier。
     #
     # @return [String] `gid://chilllove/Product/{id}`
@@ -193,6 +232,42 @@ module Types
         .take
         &.read_attribute("total_inventory_sum")
       value.nil? ? nil : value.to_i
+    end
+    private
+
+    # 兩個可見性欄位的共同骨架。
+    #
+    # 🔴 **scope 是唯一判準來源**：這裡只負責①解析 publication ②把 scope 套到
+    #   這一列上。任何「順手在 Ruby 裡比一下 status」的寫法都會製造第二份真相。
+    #
+    # 🔴 **租戶一律從 `context.fetch(:current_shop)` 取，不靠 thread-local**
+    #   （`spec/graphql/mutation_context_shop_spec.rb` 的靜態掃描＋直呼冒煙兩道守衛）。
+    #   第一版寫 `Publication.online_store`（無參數，靠 `acts_as_tenant` 的隱式租戶）
+    #   ⇒ **request spec 全綠**，但直呼 `ChillloveSchema.execute`（rails runner／背景
+    #   job／內部呼叫）時 thread-local 是 nil ⇒ 查不到管道、兩維靜默回 false。
+    #   那正是第 25 包線上驗收抓到的形態。
+    #
+    # 🔴 **管道不存在 ⇒ 回 false，不 raise**：缺管道代表「三層 AND 的第二層不可能
+    #   通過」⇒ 語義上就是買不到，回 false 是正確答案而不是錯誤
+    #   （`Publication.online_store!` 的檔頭把呼叫端分成兩類，讀取面屬
+    #   「沒有就當不可見」那一類）。
+    #
+    # @param scope_method [Method] `Product.method(:purchasable)` 或 `:discoverable`
+    # @param publication_id [String, nil]
+    # @return [Boolean]
+    def visible_by(scope_method, publication_id)
+      shop = context.fetch(:current_shop)
+      # GID 解析復用 `Publications::Lookup`（它同時**顯式**帶租戶）。理由是不再新增
+      #   第四份 GID parser——倉庫沒有共用 parser、各線各寫一份 regex（該檔檔頭已登記）。
+      publication =
+        if publication_id.present?
+          Publications::Lookup.call(shop:, gid: publication_id)
+        else
+          ActsAsTenant.with_tenant(shop) { Publication.online_store }
+        end
+      return false if publication.nil?
+
+      scope_method.call(publication:).where(id: object.id).exists?
     end
   end
 end
