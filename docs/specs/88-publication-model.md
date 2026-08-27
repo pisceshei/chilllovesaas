@@ -105,6 +105,34 @@ catalog 是**讀取時的過濾**，不是寫入時的結構：加上它等於�
 > 成員表屬 S10。在它存在之前第三層對每個 publishable 恆真，加進 SQL 只多一次 JOIN 不改結果。
 > 落地狀態表＝`docs/plans/2026-08-26-S0-方案D-schema設計.md` §7.2。
 
+### §3.3 🔴 多 catalog 同時適用時**沒有優先序**——是聯集（2026-08-27 取證）
+
+S10 建成員表時最容易做錯的一條。官方逐字（`catalogs-different-markets` 指南，
+取證 2026-08-27）：
+
+> Shopify resolves products: Products must be published in **at least one** applicable
+> publication catalog to be visible. … If multiple catalogs: Customer sees products from
+> **any** applicable publication catalog, priced at the **lowest** price from any applicable
+> pricing catalog.
+
+⇒ 兩條硬約束：
+1. **可見性＝OR（聯集）**：只要命中任一適用的 publication catalog 就可見。
+   🔴 **不得實作「market catalog 覆蓋 app catalog」這類優先序**——
+   `product-publishing` 指南全文對 `precedence`／`priority`／`override`／`resolution`
+   的正則計數皆為 **0**（2026-08-27 實掃）。
+2. **只有價格有優先序**，且方向是**取最低**（不是取最specific）。
+
+配套的 A 層事實（同日取證）：
+- `CatalogType` 四值 `APP`／`COMPANY_LOCATION`／`MARKET`／`NONE`；
+  🔴 `NONE` 逐字 `Not associated to a catalog.`——是**關聯缺失**的表達，不是一種 catalog 種類。
+- `Catalog.publication` **可為 null**，逐字：`When a publication isn't associated with a
+  catalog, product availability is determined by the sales channel.`
+  ⇒ catalog 對 publication 是**可選**的，第三層不是無條件存在。
+- `resourcePublicationsV2(catalogType:)` 預設只回 `APP`；**Collection 只支援 `APP`**
+  ⇒ market／B2B 的發布狀態**只有 V2 讀得到，V1 沒有這條路**。
+- ⚠️ `CatalogStatus`（`ACTIVE`／`ARCHIVED`／`DRAFT`）**與商品可見性的關係官方未說明**
+  ——可見性三條件判準句不含 catalog status ⇒ **未取得**，不得自行補成第四層。
+
 ---
 
 ## §4 `products.published_at` 與 `collections.published_at` 皆已移除
