@@ -1869,3 +1869,176 @@ request body（脫敏，去 client_context token）：
 | S6b2-U4 | toggle 關閉時彈層預設時間的規則（只有一個樣本） | 多次在不同時刻重複開啟觀察 |
 | S6b2-U5 | 月曆的真實上限（翻到 2078 仍無上限） | 程式化再翻更多；或查官方文檔 |
 | S6b2-U6 | 排程到點的實際生效機制 | 既有 S2-U3，未變 |
+
+---
+
+## §16 🔴 發布三面的 CSS 元件量測（層④，2026-08-28）
+
+> 量測環境、全域 token 值表與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
+> 本節只記**這三個畫面的元件級量測**：發布卡／`Manage publishing` modal／`Schedule publishing` 彈層。
+>
+> 取樣商品＝`9907123716331`（Active、非保護）。viewport 1024×607、根字級 16px。
+> 🔴 全程唯讀：`Done` 全程 disabled，以 Escape 關閉整個堆疊，關閉後複驗無 `Unsaved changes` bar。
+>
+> 🔴 **鐵律 9**：只記 computed 值，不含本尊樣式表原始碼。
+> ⚠️ **1024 寬**下商品詳情頁是單欄堆疊形態（`--p-breakpoints-lg`=1040px 之下），
+> 故「卡寬 736px」只在此寬成立；字級／色／內距／圓角／陰影不受寬度影響。
+
+### §16.1 商品詳情頁的 `Publishing` 卡
+
+| 元件 | 量測 |
+|---|---|
+| **卡容器** | 736×126｜bg `#fff`｜padding **16**｜radius **12**｜border **0**｜box-shadow ＝`--p-shadow-100`（6 層，末層 `0 0 0 1px` 即髮絲邊）｜outline none |
+| **卡標題** | 字 **13px / 600 / 20px**｜color `#303030`｜letter-spacing normal｜margin 0 padding 0 |
+| **標題列容器** | display flex｜gap **8 / 16**｜margin `0 0 8px` |
+| **內容容器** | padding **12 0 0**（＋標題列的 8px margin ⇒ 標題基線到首列共 **20px**） |
+| **內文列容器** | display flex｜**gap 8**（＝列距） |
+| **內文列（按鈕）** | 712×**28**｜padding **4 6**｜radius **8**｜bg transparent｜border 0｜外層負出血 margin `-6px 0 0 -8px` |
+| **內文列 hover** | bg → **`#f1f1f1`**；radius／border 不變，無 text-decoration |
+| **內文列文字** | **12px / 550 / 16px**｜`#303030` |
+| **內文列前導 icon** | 容器 20×20，svg **16×16**（margin 2px 置中）｜fill **`#4a4a4a`** |
+| **右上 icon 鈕（rest）** | **28×28**｜padding **4**｜radius **8**｜bg transparent｜border 0｜color **`#8a8a8a`**｜gap 2 |
+| **右上 icon 鈕（hover）** | bg → **`rgba(0,0,0,.05)`**｜color → **`#616161`**｜radius／border 不變 |
+| **鈕容器** | display flex｜gap 8｜margin `-4 -4 -4 0`（負邊距讓 28px 鈕對齊 20px 標題行） |
+
+🔴 **卡上的 badge 未取得**：該商品為「Active＋已發布＋無排程」，此狀態下卡片**不渲染任何 badge**。
+能觸發的狀態只存在於被禁止觸碰的 `D53-QB/QC` ⇒ 不量測。
+
+參考（非本卡，供 badge 配方對標）：**頁首狀態 badge** 52.5×20｜padding **2 8**｜radius **8**｜
+gap 4｜**12px / 550 / 16px**｜bg `#affebf`｜color `#014b40`。
+
+### §16.2 `Manage publishing` modal
+
+🔴 **這個 modal 的外殼是舊的 Polaris React 層**（light DOM，非 web component）——
+與卡片內容不是同一套設計系統。詳見 `111` §15.1。
+
+| 元件 | 量測 |
+|---|---|
+| **Backdrop** | 覆蓋全視口｜bg **`rgba(0,0,0,.5)`** |
+| **Modal 容器** | 960×471.6｜bg `#fff`｜radius **16**｜padding 0｜margin `0 32px`｜**max-width `calc(100% - 64px)`**｜**max-height 547**｜overflow hidden｜box-shadow **`rgba(26,26,26,.22) 0 8px 16px -4px`**（單層，**不在 `--p-shadow-*` 階上**）｜⚠️ 960 是 1024 觸頂 max-width 的結果，非 `sizeLarge` 的固有寬 |
+| **標題列** | 960×53｜bg **`#f3f3f3`**｜padding **16**｜border-bottom **1px `#e3e3e3`** |
+| **標題文字** | **14px / 500 / 20px**｜`#303030`（🔴 舊層值，新層同位是 13/600） |
+| **標題列 grid** | display grid｜gap **16** |
+| **關閉（✕）鈕** | **28×28**｜padding 4｜radius **8**｜margin **-4**｜bg transparent｜gap 2 |
+| **左欄導覽** | **245**×418.6｜bg **`#f7f7f7`**｜padding **12**｜border-right **1px `#e3e3e3`**｜寬度固定 |
+| **右欄** | 715×418.6｜bg transparent｜padding 0｜border-left **0**（分隔線只掛左欄的 border-right） |
+| **導覽項（未選）** | 220×**36**｜padding **8**｜radius **8**｜bg transparent |
+| **導覽項（選中）** | bg **`#ebebeb`** |
+| **導覽項（hover）** | bg **`#f1f1f1`**｜radius 不變，無 border／shadow |
+| **導覽項文字** | **12px / 600 / 16px**｜`#303030` |
+| **導覽項計數** | **12px / 450 / 16px**｜**`#616161`**｜🔴 純文字，**無 pill 底色** |
+| **導覽項前導 icon** | 容器 20×20，svg 16×16｜**`#4a4a4a`** |
+| **群組標籤（Catalogs）** | **12px / 500 / 16px**｜`#616161`｜wrapper 220×36，padding `8 0` |
+| **搜尋框** | 673×**32**｜min-height 32｜bg **`#fdfdfd`**｜radius **8**｜padding `0 12`｜gap 8｜**border 0** ⇒ 邊框以 **inset box-shadow `#8a8a8a 0 0 0 0.66px inset`** 實作 |
+| **搜尋 input** | **13px / 450 / 20px**｜`#303030`｜bg transparent｜padding 0 |
+| **placeholder** | **`#616161`**｜13px / 450｜**opacity 1**｜文案 `Search channels` |
+| **清單外框** | 673×189｜radius **8**｜**border 1px `#e3e3e3`**｜padding 0｜距搜尋框 **16** |
+| **群組列** | 671×**41**｜bg **`#f7f7f7`**｜padding `8 32 8 12`｜border-bottom 1px `#e3e3e3`，border-top 0 |
+| **群組列標籤** | **13px / 550 / 20px**｜**`#616161`** |
+| **管道列** | 671×**48**（首列）／**49**（後續＝48＋1px 分隔）｜padding 0｜內容框 padding **12**（12+24+12=48） |
+| **管道列分隔** | `li:not(:first-child)` 的 **border-top 1px `#e3e3e3`**（🔴 非 gap，**列距 0**） |
+| **管道列 hover** | 內容根 bg → **`#f1f1f1`** |
+| **管道列點擊區** | `position:absolute; inset:0; z-index:1; opacity:0` 的不可見命中層；可見內容在 z-index 2 |
+| **管道列標題** | **13px / 500 / 20px**｜`#303030` |
+| **管道列 icon** | 容器 20×20，svg 16×16｜**`#8a8a8a`**（🔴 比卡片內文 icon 淡一階） |
+| **icon↔文字 gap** | **8**，align-items center |
+
+#### Toggle 開關
+
+🔴 **穿透路徑**：`s-internal-switch` → shadowRoot → `s-grid` → shadowRoot → `label`／`input[type=checkbox]`。
+**軌道即 `input`**（`appearance:none`），**旋鈕即 `input::before`**。
+
+| 元件 | 量測 |
+|---|---|
+| **命中區** `label` | **32×24**｜display flex｜padding `4 0`｜gap 8 |
+| **軌道** | **32×16**｜radius 9999｜padding `0 2`｜transition **`background-color .1s`＋`border-color .1s`**（`cubic-bezier(.42,0,.58,1)`） |
+| **軌道 ON** | bg **`#303030`**｜border `1px solid transparent`（透明佔位） |
+| **軌道 OFF** | bg **`#fdfdfd`**｜border **`1px solid #8a8a8a`** |
+| **軌道 混合** | bg **`#303030`**｜border 透明 ⇒ 🔴 **與 ON 同色** |
+| **旋鈕** | radius 9999｜transition **`transform .25s linear(...)`**（逾越到 **1.077** ⇒ 彈簧回彈）＋ `background-color/width/height .15s` |
+| **旋鈕 ON** | **16×12**｜bg `#fff`｜`translateX(11px)` |
+| **旋鈕 OFF** | **16×12**｜bg **`#8a8a8a`**｜`translateX(0)` |
+| **旋鈕 混合** | **12×3**（白色短橫）｜bg `#fff`｜`translateX(8px)` |
+
+🔴 **旋鈕是膠囊不是圓**（16×12）。**混合態的軌道底色與 ON 完全相同**，
+唯一區別是旋鈕形狀——只看軌道色會判錯。
+**形變（250ms、帶超調）比色變（100ms、線性）慢**。
+
+#### 頁尾與按鈕
+
+| 元件 | 量測 |
+|---|---|
+| **頁尾** | 715×**61**｜padding **16**｜border-top 1px `#e3e3e3`｜bg transparent（61＝28＋16×2＋1） |
+| **按鈕群** | display flex｜**gap 8** |
+| **primary（enabled）** | 高 **28**｜padding **6 12**｜radius **8**｜**12px / 550 / 16px**｜gap 2｜bg **`#303030`**｜color `#fff`｜border **0**｜box-shadow `0 -1px 0 1px #000000cc inset` / `0 0 0 1px #303030 inset` / `0 .5px 0 1.5px #ffffff40 inset` |
+| **primary（disabled）** ＝本 modal 的 `Done` | 同尺寸｜bg **`rgba(0,0,0,.17)`**｜color `#fff`｜**box-shadow none** |
+| **secondary** ＝`Cancel` | 64.1×28｜padding 6 12｜radius 8｜12/550/16｜bg `#fff`｜color `#303030`｜border **0**｜box-shadow `0 -1px 0 0 #b5b5b5 inset` / `0 0 0 1px #0000001a inset` / `0 .5px 0 1.5px #fff inset` |
+| **critical** | padding 6 12｜radius 8｜12/550/16｜bg **`#c70a24`**｜color `#fffafb`｜box-shadow 同型（critical 色）｜⚠️ 取自頁內**未渲染**實例（0×0）⇒ **尺寸不可信、色與內距可信** |
+
+### §16.3 `Schedule publishing` 彈層
+
+彈層掛在 `body` 下的 theme provider 內，**不在 modal 子樹**。
+
+| 元件 | 量測 |
+|---|---|
+| **日曆觸發鈕**（列 hover 才出現） | **28×28**｜padding 4｜radius 8｜color **`#8a8a8a`**｜bg transparent｜gap 2 |
+| **定位層** | position absolute｜**z-index 520**（＝`--p-z-index-12`，最高階） |
+| **陰影層** | 328×293.3｜radius **12**｜margin `5 8 16`｜bg transparent｜box-shadow ＝**`--p-shadow-300`** |
+| **表面層** | bg `#fff`｜radius **12** |
+| **捲動容器** | overflow-y **auto**｜client 293／scroll **491** ⇒ **內建捲動** |
+| **內容 body** | padding **16** |
+| **內容直排** | display flex｜**gap 12** |
+| **標題** | **13px / 600 / 20px**｜`#303030` |
+| **欄位群** | display flex｜**gap 6** |
+| **日期欄** | 280×**32**｜bg `#fdfdfd`｜radius **8**｜padding `0 12`｜gap 8｜**border 0** ＋ **inset shadow `#8a8a8a 0 0 0 0.66px inset`**｜input **13/450/20** `#303030`，值 `August 28, 2026` |
+| **時間欄（rest）** | 280×**32**｜bg `#fdfdfd`｜radius 8｜🔴 **真 border `1px solid #8a8a8a`**（與日期欄不同實作）｜input padding `6 0`，**13/500/20**，值 `1:19 AM` |
+| **時間欄（focus）** | **outline `#005bd3` solid 2px，offset 1px**｜border → **`1px solid #1a1a1a`**｜bg → **`#f7f7f7`** |
+| **時區徽章** | 46.1×20｜**13px / 500 / 20px**｜**`#616161`**｜margin `0 8 0 4`｜🔴 **bg transparent、radius 0、無 padding ⇒ 是純文字尾綴，不是 pill** |
+| **時間下拉面板** | 189.9×322.7｜bg `#fff`｜radius **12**｜陰影層 margin `0 0 5px`、box-shadow ＝**`--p-shadow-300`**（與彈層同）｜**z-index 520** |
+| **下拉選項** | 173.9×**36**｜min-height 36｜**13px / 500 / 20px**｜`#303030`｜li padding 0，**內層 div padding `8 16`**｜radius 0 |
+| **下拉選項 hover** | bg → **`#f7f7f7`**｜文字色不變｜無 radius |
+| **選項值域** | **45 項，30 分鐘級距**，起點為當前時間之後的下一個半點 |
+
+#### 月曆
+
+| 元件 | 量測 |
+|---|---|
+| **容器** | 280×292｜padding **16**｜radius **8**｜**border 1px `#e3e3e3`** |
+| **上／下月鈕** | **28×28**｜padding 4｜radius 8｜color **`#8a8a8a`**｜bg transparent｜chevron svg 16×16 |
+| **月／年標籤** | **13px / 600 / 20px**｜`#303030` |
+| **表頭（Sun…Sat）** | **32×32**｜**11px / 450 / 12px**｜**`#616161`**｜padding 1｜7 欄，表 224×32 |
+| **日期格 一般** | **32×32**｜radius **8**｜**13px / 450 / 20px**｜`#303030`｜bg transparent｜border 0 |
+| **日期格 hover** | bg → **`#f7f7f7`**｜色／字重不變 |
+| **日期格 選中** | bg **`#303030`**｜color `#fff`｜🔴 **weight 600**（唯一改字重的態）｜radius 8 |
+| **日期格 disabled（過去）** | color **`#b5b5b5`**｜bg transparent｜🔴 **opacity 1**（用文字色降級，**不用 opacity**） |
+| **日期表** | 6 列 × 7 欄＝224×192 |
+| **分隔線** | 312×**1**｜margin `0 -16px`（負出血到容器邊）｜🔴 **是 1px 元素不是 border** |
+| **頁尾** | 280×28｜display flex｜**justify-content `space-between`** |
+| **`Remove schedule`**（plain, disabled） | 114.1×20｜padding `0 2`｜margin `0 -2`｜min-height 20｜radius 8｜**13px / 500 / 20px**｜color **`#b5b5b5`**｜bg transparent |
+| **`Cancel`** | 同 modal secondary |
+| **`Done`**（primary, disabled） | 54.3×28｜bg `rgba(0,0,0,.17)`｜color `#fff`｜shadow none |
+
+🔴 **月曆「今天」的單獨態未取得**：量測日 2026-08-28 恰為預設選中日，兩態重疊；
+日期格上**無 `aria-current`、`::before`／`::after` 的 content 皆為 `none`**，
+找不到可與選中態分離的今日標記。要分離需點選另一日改變選中態＝會改動彈層狀態，
+本次唯讀量測未執行。
+
+### §16.4 複驗與 selector 紀律
+
+🔴 **不得用 class 名定位**：本尊的 class 帶 build hash（形如 `_Wrapper_ax5zp_27`），
+**下一次部署即失效**。上表一律以**結構路徑＋文字錨**定位；
+`s-*` 自訂元素標籤名與 `role`／`aria-label` 是穩定錨。
+
+複驗需要一個穿透 shadow DOM 的走訪器（`TreeWalker` 逐層下鑽，遇 `shadowRoot` 遞迴），
+再以文字內容找到宿主元素、向上爬到 `S-INTERNAL-SECTION` 這類語義宿主，
+最後對其 `shadowRoot` 內的繪製盒取 `getComputedStyle`。
+
+### §16.5 未取得（→ `111` §17）
+
+| 項目 | 原因 |
+|---|---|
+| 發布卡的 **badge** | 該狀態不渲染 badge；能觸發者是保護 fixture |
+| 月曆 **today 單獨態** | 與選中態重疊，且無可分離標記 |
+| **1280 桌機寬**形態 | 量測機螢幕 1024×768，`resize_window` 被拒 |
+| critical 按鈕**盒尺寸** | 取自未渲染實例 |
+| primary 的 **hover／active** | 本流程 primary 全程 disabled |
