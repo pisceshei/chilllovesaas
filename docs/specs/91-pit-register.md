@@ -2838,6 +2838,66 @@
   但屬 S10／結帳包的必答項。取捨已登記 `docs/specs/107-external-adoption-register.md`。
   【F2；來源＝S5 外部研究；取證日期＝2026-08-27】
 
+### 3.23 PR-C（到點副作用機制）的範圍外觀察與候選（2026-08-27，D53 同批）
+
+<!-- 編號取 3.23：本節新增時 §3 的最大編號是 3.22。既有失序不動（理由見 3.18 的編號說明）。
+     複驗現況：`grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- ⚪ **排程到點不合格時無任何商家可見回饋**（D53 F5 裁定本包不做）。
+  🔴 **不得反向斷言本尊沒有** —— 本尊**確有**逐通路的商家可見錯誤回饋 UI，且官方唯一把
+  `ResourceFeedback` 與排程綁在一起的句子落在**到點之前的驗證**（逐字
+  `If the product fails validation, then the channel app sends feedback to the merchant using
+  the ResourceFeedback object.`，<https://shopify.dev/docs/apps/build/sales-channels/scheduled-product-publishing>，
+  取證 2026-08-27）。日後要做時的**目標形態**：兩態 enum `ACCEPTED`／`REQUIRES_ACTION`；
+  商品級最多 10 則、每則 ≤100 字元、批次 ≤50；upsert-latest（`Sending feedback replaces
+  previously sent feedback`）；`ACCEPTED` ＝清除訊號；去重靠 `feedbackGeneratedAt`。
+  **surface 兩處**（admin 首頁 ＋ 商品詳情頁的 bulleted list），不是「加一個 badge 就好」。
+  🔴 **隱藏代價**：本尊有 `availablePublicationsCount`（**排除** feedback error）與
+  `resourcePublicationsCount`（**包含**）兩個不同的數，商品查詢另有 `error_feedback` 篩選器
+  ⇒ **我方的發布計數與商品篩選在語義上與本尊不同源**；未來要做是**破壞性契約變更**。
+  ⚠️ 另有一條反向約束：`FEEDBACK_DATE_IN_FUTURE` 證明本尊**禁止**用 feedback 預告未來時點的問題
+  ⇒「排程建立時就預先警告商家」在本尊沒有對位做法，不得憑直覺自創。
+  【F5；來源＝D53 F5 與 `docs/plans/2026-08-27-PR-C-五格裁定書.md` §1；
+   複驗：`grep -rn "ResourceFeedback\|resource_feedback" app/ db/schema.rb`
+   ⇒ 預期命中集合＝`app/models/channel.rb` 的未實作註釋，`db/schema.rb` 零命中；取證日期＝2026-08-27】
+
+- 🔴 **`event_outbox` 的取件查詢不命中任何索引**（本輪對抗複驗新發現，S5 引入未來值後才成為問題）：
+  `ix_event_outbox_status_available_at` 的最左欄是 `shop_id`（`tenant_index` 一律前置），而
+  `Events::Relay.claim_batch` 在 `ActsAsTenant.without_tenant` 下執行、謂詞只有
+  `status` 與 `available_at` ⇒ 索引不可用，取件走 PRIMARY(id) 掃描＋謂詞過濾。
+  S5 之前所有事件都是 `available_at = Time.current`（幾乎立刻被取走），此問題不顯；
+  排程列會**長期停留在 pending**，使 `LIMIT` 無法提早終止 ⇒ 取件成本隨排程列堆積而劣化。
+  **修法二擇一，兩案都需先取得裁定**：①建**不以 `shop_id` 起頭**的索引（如
+  `(status, available_at, id)`）——踩鐵律 2，須走 71 §A G24 式明文豁免；
+  ②改逐店取件（`with_tenant` 迴圈）——命中現有索引，但失去跨店單批 `SKIP LOCKED` 的批次效率。
+  ⇒ 依鐵律 20.4／17.2 **登記為 §2 候選，不在 PR-C 做**。
+  【F5；來源＝本輪對抗複驗；複驗：
+   `grep -n "ix_event_outbox_status_available_at" db/schema.rb` 與
+   `grep -n "without_tenant" -A 20 app/services/events/relay.rb`；取證日期＝2026-08-27】
+
+- **`sales_channels.future_publishing_requires_active_status` 是正典登記鍵，不是生效判準**：
+  本批補上出處註釋後，它登記的是**本尊規則**（射程僅 product）；我方到點閘門走
+  `Product::PURCHASABLE_STATUSES`（含 UNLISTED）。日後做對外 webhook（本尊
+  `product_listings/add` 等價物）時該層才用 ACTIVE 閘門，屆時本鍵才有消費者。
+  【F2；來源＝D53 F1；複驗：`grep -rn "future_publishing_requires_active_status" app/ lib/`
+   ⇒ 預期零命中；取證日期＝2026-08-27】
+
+- **`lib/tasks/catalog.rake` 的 `catalog:resync:publications` 零實作**：
+  `config/limits.yml` 的 `catalog_flow.projection_rebuild_tasks` 宣告五項，實際只有
+  `catalog:rebuild:collections` 有實作，且該清單**沒有任何 CI 守衛**（其註釋自稱有「CI 斷言
+  清單與 rake task 一一對應」，倉庫內零實作）。
+  ⇒ PR-C 的一次性 backfill **不得掛到它上面**（會把不存在的東西發布成既有路線，違鐵律 19.1）。
+  【F5；來源＝本輪對抗複驗實跑；複驗：
+   `grep -n "namespace\|task " lib/tasks/catalog.rake` 與
+   `grep -rn "projection_rebuild" spec/ scripts/ .github/ config/ci.rb`；取證日期＝2026-08-27】
+
+- **GraphQL 面是否暴露 `isPublished` 與 V1／V2 分歧**：官方兩個型別對「已排程未到點」給出相反布林
+  （`ResourcePublication.isPublished` 排程中回 true；`ResourcePublicationV2.isPublished` 回 false）。
+  我方 S2 已裁定只出 V2。若日後要補 V1 相容面，**必須用不同型別承載，不得共用 `isPublished` 欄名**。
+  【F2；來源＝S2 既有裁定 ＋ 本輪 A 級複驗；複驗：
+   `grep -n "isPublished\|is_published" app/graphql/types/resource_publication_v2_type.rb`；
+   取證日期＝2026-08-27】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

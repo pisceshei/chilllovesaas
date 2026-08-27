@@ -4646,6 +4646,23 @@ sales_channels:
   catalog_types: [app, company_location, market]
   new_channel_publishes_existing_products_by_default: true
   publication_bulk_products_max: 50
+  # 🔴 本鍵是**本尊規則的登記**，不是我方生效判準（射程：僅 product）。D53 F1 補上出處。
+  #    出處：https://help.shopify.com/en/manual/shopify-admin/productivity-tools/future-publishing
+  #    （`## Set a publish date for a product` 段首的 `#### Caution` 區塊，取證 2026-08-27）
+  #    逐字：「Products must be in Active status for future publishing to work.
+  #           If a product is in Draft status at the scheduled publish time, then the product
+  #           won't be published to your online store or sales channels.」
+  #    🔴 射程限定：官方**只**點名 product；同頁 collection／blog post／page 三節無等價前提
+  #       ⇒ 不得外推到 future_publishing_supported_resources 的其餘三種。
+  #    🔴 官方**只**寫「不會被發布」，對排程列去留與是否報錯／通知**全面沉默**（見 D53）。
+  #    🔴 我方**到點閘門**採可見性軸 Product::PURCHASABLE_STATUSES（含 UNLISTED），不是 ACTIVE 單值
+  #       ——理由＝到點事件的載荷是 cache stamp 而非發布動作；且官方對 UNLISTED 逐字
+  #       「The product is active but you need a direct link to view it.」。全文見 D53 F1。
+  #    ⚠️ 本鍵目前**零程式消費者**（正典登記鍵）。日後做對外 webhook（本尊 product_listing/add
+  #       等價物，其官方定義逐字 "Occurs whenever an active product is listed on a channel."）
+  #       時，該層才用 ACTIVE 閘門，屆時本鍵才有消費者。已登記 91 §3.23。
+  #    ⚠️ 不得與 shopify.dev 的另一句「For products to be visible in a channel, they must have an
+  #       active ProductStatus.」混為同一出處——前者講排程到點不執行，後者講管道可見性。
   future_publishing_requires_active_status: true
   future_publishing_supported_resources: [product, collection, blog_post, page]
   future_publishing_unsupported: [variant, shop_channel]

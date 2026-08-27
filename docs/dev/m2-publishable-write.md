@@ -339,7 +339,15 @@ publish／unpublish 是**集合成員的 upsert／delete**，重放收斂到同�
 🔴 **但 `config/limits.yml` 現有的免冪等理由對本線不成立**：它說「那一類的併發防線是
 `lock_version` 樂觀鎖」，而 `publications` 與 `resource_publications` **都沒有 `lock_version` 欄**
 （`db/schema.rb` 只有 6 張表有）。引用它等於引用一條**不存在的保護**。
-⇒ 已登記 `docs/specs/91` §3；🔴 **不改 `config/limits.yml`**（判準面，鐵律 18.3＋20.4）。
+⇒ 已登記 `docs/specs/91` §3；S5 本包不改 `config/limits.yml`（未取得裁定，鐵律 20.4）。
+<!-- 2026-08-27 更正（D53，鐵律 19.5）：本句原寫「🔴 **不改 config/limits.yml**（**判準面**，
+     鐵律 18.3＋20.4）」。**「判準面」這個歸類是錯的**——判準寫在 `scripts/check-limits-keys.rb`
+     內（規則＝每一層 mapping 的鍵都必須解析成 String），`config/limits.yml` 是它**被檢查的輸入**，
+     與 `app/` 的 Ruby 檔被 rubocop 檢查同構 ⇒ 改它不可能讓 CI 由被改的檔自己定義，**不落 18.3**。
+     複驗：`grep -n "limits" .github/workflows/ci.yml` 與 `grep -n "limits" config/ci.rb`
+     ——兩處都只有 `ruby scripts/...` 的命令，沒有把 limits.yml 當判準來源。
+     🔴 S5 當時不改它的**結論仍然對**，但正確理由是 20.4（未取得裁定就先登記候選），不是 18.3。
+     D53 已順帶定死此口徑並結掉 S2 規格草案 §5-C 的 C-7。 -->
 
 **本線真正的併發防線**是三條：①`uq_res_pub_target` 唯一索引（擋重複列）
 ②全有全無（擋半套）③S5 新增的顯式列鎖（擋同列 `published_at` 的並發 UPDATE）。
