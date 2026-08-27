@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Settings, Sparkles, X } from "lucide-react";
+import { ArrowLeft, CalendarClock, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Settings, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
@@ -11,6 +11,7 @@ import { ConfirmDialog } from "../components/ConfirmDialog";
 import { InventoryCard } from "../components/InventoryCard";
 import { MediaCard } from "../components/MediaCard";
 import { Modal } from "../components/Modal";
+import { SchedulePopover } from "../components/SchedulePopover";
 import type { MediaCardItem } from "../components/MediaCard";
 import { LocalizedField } from "../components/LocalizedField";
 import type { LocaleOption } from "../components/LocalizedField";
@@ -93,6 +94,9 @@ const PRODUCT_QUERY = `
     #     publication.channel&.handle，API 建的 catalog publication 沒有 channel ⇒ null。
     #   ⚠️ 本區塊在 template literal 內，**不得用反引號**（會提前結束字串）。
     publications { id title handle supportsFuturePublishing }
+    # 🔴 排程的時區來源＝**店鋪設定**（help 明文 Store defaults），不是瀏覽器。
+    #   與商品同一次往返拿，避免開彈層時才查。
+    shop { ianaTimezone }
   }
 `;
 
@@ -187,10 +191,28 @@ function matchChannels(publications: PublicationOption[], query: string): Public
     pub.title.toLowerCase().split(/\s+/).some((word) => word.startsWith(needle)));
 }
 
+/**
+ * 一筆待送出的發布。
+ *
+ * 🔴 **排程不另存一份狀態，它就是 `publish` 的一種**——本尊沒有獨立的 schedule mutation，
+ * 「排程」＝帶未來 `publishDate` 的 `publishablePublish`（`docs/research/82` §15.8 抓包）。
+ * 另開一份 `schedule` map 的話，兩份狀態會出現「schedule 有 id 但 publish 沒有」的
+ * 不可能組合，而那種組合送出去就是一筆沒有目標的排程。
+ *
+ * `at`＝`null` 表示立即發布（送出時**不帶** `publishDate` 欄位——後端 R10 對明確傳 null
+ * 一律 reject，省略才是「立即」）。
+ */
+type PublishEntry = { publicationId: string; at: number | null };
+
 /** 待送出的發布變更（`FormValues.publicationDelta` 的型別別名，供純函式簽名使用）。 */
-type PublicationDelta = { publish: string[]; unpublish: string[] };
+type PublicationDelta = { publish: PublishEntry[]; unpublish: string[] };
 
 const EMPTY_DELTA: PublicationDelta = { publish: [], unpublish: [] };
+
+/** delta 的 publish 側是否含某管道。 */
+function publishEntry(delta: PublicationDelta, publicationId: string): PublishEntry | undefined {
+  return delta.publish.find((entry) => entry.publicationId === publicationId);
+}
 
 /**
  * 某管道在**伺服器上**是否開著。
@@ -206,7 +228,7 @@ function isPublishedOnServer(rows: PublicationRow[], publicationId: string): boo
 
 /** 某管道**畫面上**該顯示的開關狀態＝伺服器現況套上待送 delta。 */
 function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicationId: string): boolean {
-  if (delta.publish.includes(publicationId)) return true;
+  if (publishEntry(delta, publicationId)) return true;
   if (delta.unpublish.includes(publicationId)) return false;
   return isPublishedOnServer(rows, publicationId);
 }
@@ -230,9 +252,14 @@ function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicatio
  * 射程不涵蓋本情境（本尊在「已有暫存」時 Done 的狀態＝§14.10 未取得）。
  */
 function sameDelta(a: PublicationDelta, b: PublicationDelta): boolean {
-  const same = (x: string[], y: string[]) =>
+  const sameIds = (x: string[], y: string[]) =>
     x.length === y.length && [ ...x ].sort().every((id, i) => id === [ ...y ].sort()[i]);
-  return same(a.publish, b.publish) && same(a.unpublish, b.unpublish);
+  // 🔴 publish 側要比 **(id, at) 兩個欄位**——只比 id 的話「同一個管道改了排程時間」
+  //   會被判成沒變，`Done` 停在 disabled，商家改不了已暫存的排程。
+  const key = (entry: PublishEntry) => `${entry.publicationId}@${entry.at ?? "now"}`;
+  const samePublish = a.publish.length === b.publish.length
+    && a.publish.map(key).sort().every((k, i) => k === b.publish.map(key).sort()[i]);
+  return samePublish && sameIds(a.unpublish, b.unpublish);
 }
 
 /**
@@ -254,13 +281,48 @@ function toggleChannel(
   next: boolean,
 ): PublicationDelta {
   const withoutId = {
-    publish: delta.publish.filter((id) => id !== publicationId),
+    publish: delta.publish.filter((entry) => entry.publicationId !== publicationId),
     unpublish: delta.unpublish.filter((id) => id !== publicationId),
   };
+  // 🔴 **撥回伺服器現況只在「該管道沒有待送的排程」時才算歸零**：已排程未到點的管道
+  //   在伺服器上**有列**（V2 的 staged），把它撥開會被判成「回到現況」而清掉 delta
+  //   ——連同使用者剛設的排程一起。所以帶排程的情形一律重新記進 publish。
   if (next === isPublishedOnServer(rows, publicationId)) return withoutId;
   return next
-    ? { ...withoutId, publish: [ ...withoutId.publish, publicationId ] }
+    ? { ...withoutId, publish: [ ...withoutId.publish, { publicationId, at: null } ] }
     : { ...withoutId, unpublish: [ ...withoutId.unpublish, publicationId ] };
+}
+
+/**
+ * 某管道在**伺服器上**的排程時刻；未排程（或已到點）回 `null`。
+ *
+ * 🔴 判準是 **`isPublished === false`**——V2 的 `false` 就是「已排程未到點（staged）」。
+ * ⚠️ **不能只看 `publishDate` 非空**：每一列都有 `publishDate`（已發布的列存的是
+ * 「當初發布的時刻」，是過去值），只看非空會把所有已發布管道都當成排程中
+ * （本尊回應的實測形態，`82` §15.8 結論 3）。
+ */
+function serverScheduleOf(rows: PublicationRow[], publicationId: string): number | null {
+  const row = rows.find((candidate) => candidate.publication.id === publicationId);
+  if (!row || row.isPublished || !row.publishDate) return null;
+  const at = Date.parse(row.publishDate);
+  return Number.isNaN(at) ? null : at;
+}
+
+/**
+ * 設定（或更新）某管道的排程時刻。
+ *
+ * 🔴 **一律進 `publish` 側**，即使該管道在伺服器上已經開著——排程是一次 publish 寫入
+ * （§15.8：本尊送的就是 `publishablePublish` 帶 `publishDate`），不是「開關的附屬屬性」。
+ * 同理 `Remove schedule` 送的是 `at = <now>`（§15.7 抓包終態＝立即發布），不是清空。
+ */
+function scheduleChannel(delta: PublicationDelta, publicationId: string, at: number): PublicationDelta {
+  return {
+    publish: [
+      ...delta.publish.filter((entry) => entry.publicationId !== publicationId),
+      { publicationId, at },
+    ],
+    unpublish: delta.unpublish.filter((id) => id !== publicationId),
+  };
 }
 
 /**
@@ -299,13 +361,20 @@ function PublishingCard({
   const shown = [
     ...rows
       .filter((row) => !delta.unpublish.includes(row.publication.id))
-      .map((row) => ({ id: row.publication.id, title: row.publication.title, row })),
+      .map((row) => ({
+        id: row.publication.id,
+        title: row.publication.title,
+        row,
+        // 待送的排程覆蓋伺服器現值（本尊按 Done 後卡片樂觀更新，§13.1）
+        pendingAt: publishEntry(delta, row.publication.id)?.at ?? null,
+      })),
     ...delta.publish
-      .filter((id) => !isPublishedOnServer(rows, id))
-      .map((id) => ({
-        id,
-        title: publications.find((pub) => pub.id === id)?.title ?? id,
+      .filter((entry) => !isPublishedOnServer(rows, entry.publicationId))
+      .map((entry) => ({
+        id: entry.publicationId,
+        title: publications.find((pub) => pub.id === entry.publicationId)?.title ?? entry.publicationId,
         row: undefined as PublicationRow | undefined,
+        pendingAt: entry.at,
       })),
   ];
 
@@ -319,7 +388,13 @@ function PublishingCard({
           <span className="cl-pubcard__name">{entry.title}</span>
           {/* 🔴 三態，不是兩態。`row` 缺席＝本次 modal 剛開啟、尚未儲存的待發布管道
               （本尊實測 82 §13.1：按 Done 後卡片**樂觀更新**，SaveBar 才出現）。 */}
-          {entry.row === undefined ? (
+          {/* 🔴 待送的排程優先於伺服器現值——商家剛在彈層設好時間按了 Done，
+              卡片必須立刻反映它，否則看起來像沒生效（§13.1 的樂觀更新）。 */}
+          {entry.pendingAt !== null ? (
+            <Badge tone="attention">
+              {t("product.publishing.state.pendingAt", { at: formatPublishDate(new Date(entry.pendingAt).toISOString()) })}
+            </Badge>
+          ) : entry.row === undefined ? (
             <Badge tone="attention">{t("product.publishing.state.pending")}</Badge>
           ) : entry.row.isPublished ? (
             <Badge tone="success">{t("product.publishing.state.published")}</Badge>
@@ -400,6 +475,68 @@ function GroupToggle({
 }
 
 /**
+ * 管道列右側的排程入口（S6b-2b；本尊的日曆＋時鐘 icon，`docs/research/82` §12.3）。
+ *
+ * ①這是什麼：一顆 icon 鈕 ＋ 它開出的 `SchedulePopover`。
+ * ②🔴 **顯示條件是該 publication 的 `supportsFuturePublishing`，不是「目前已發布」**
+ *   （§15.10 實測：toggle 關掉時 icon 仍出現、彈層仍可開）。本尊只有 Online Store 有它。
+ * ③已排程時 icon **常駐顯示**並帶 tooltip（§15.9：`Publish on: …`）；未排程時本尊是
+ *   hover 才出現——⚠️ 我方**一律顯示**，登記為刻意偏離：hover-only 在觸控裝置上沒有
+ *   對應手勢，而本尊那個 icon 是唯一的排程入口。
+ * ④跨功能影響：`values.publicationDelta` 的 `at` 欄、送出的 `publishDate`、發布卡的 badge。
+ */
+function ChannelScheduleButton({
+  publicationId,
+  shopTimezone,
+  now,
+  scheduledAt,
+  hasSavedSchedule,
+  onSchedule,
+  t,
+}: {
+  publicationId: string;
+  shopTimezone: string;
+  now: number;
+  scheduledAt: number | null;
+  hasSavedSchedule: boolean;
+  onSchedule: (at: number) => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        aria-haspopup="true"
+        aria-label={scheduledAt === null
+          ? t("schedule.title")
+          : t("schedule.publishOn", { at: formatPublishDate(new Date(scheduledAt).toISOString()) })}
+        className={`cl-icon-button ${scheduledAt === null ? "" : "cl-icon-button--on"}`.trim()}
+        onClick={() => setOpen(true)}
+        ref={buttonRef}
+        type="button"
+      >
+        <CalendarClock aria-hidden="true" size={14} />
+      </button>
+      {/* 🔴 條件渲染而非 `open` prop——`SchedulePopover` 的 state 靠 unmount 清空
+          （本尊每次重開彈層完全重置，§15.10）。 */}
+      {open ? (
+        <SchedulePopover
+          anchorRef={buttonRef}
+          hasSavedSchedule={hasSavedSchedule}
+          now={now}
+          onApply={(at) => { onSchedule(at); setOpen(false); }}
+          onClose={() => setOpen(false)}
+          scheduledAt={scheduledAt}
+          shopTimezone={shopTimezone}
+        />
+      ) : null}
+    </>
+  );
+}
+
+/**
  * 逐商品的發布編輯 modal（S6b；`docs/research/82` §12.1 的第一種 affordance 的編輯部分）。
  *
  * ①這是什麼：商品詳情頁 `Publishing` 卡右上齒輪開啟的模態；列出**本店全部管道**，
@@ -426,6 +563,8 @@ function PublishingModal({
   publications,
   rows,
   delta,
+  shopTimezone,
+  now,
   onApply,
   onClose,
   restoreFocusTo,
@@ -435,6 +574,10 @@ function PublishingModal({
   publications: PublicationOption[];
   rows: PublicationRow[];
   delta: PublicationDelta;
+  shopTimezone: string;
+  /** 開啟這次 modal 時的「現在」。**開啟時取一次**，不是每次 render——
+   *  否則排程彈層的下限會在使用者填表期間一直往前跑。 */
+  now: number;
   onApply: (next: PublicationDelta) => void;
   onClose: () => void;
   restoreFocusTo: RefObject<HTMLElement | null>;
@@ -539,6 +682,19 @@ function PublishingModal({
                     label={pub.title}
                     onChange={(next) => setDraft((current) => toggleChannel(rows, current, pub.id, next))}
                   />
+                  {/* 🔴 只有 `supportsFuturePublishing` 的管道有排程入口（§12.3 實測：
+                      對 Point of Sale 與 Shop 做同樣 hover 都不會出現這個 icon）。 */}
+                  {pub.supportsFuturePublishing ? (
+                    <ChannelScheduleButton
+                      hasSavedSchedule={serverScheduleOf(rows, pub.id) !== null}
+                      now={now}
+                      onSchedule={(at) => setDraft((current) => scheduleChannel(current, pub.id, at))}
+                      publicationId={pub.id}
+                      scheduledAt={publishEntry(draft, pub.id)?.at ?? serverScheduleOf(rows, pub.id)}
+                      shopTimezone={shopTimezone}
+                      t={t}
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -765,6 +921,7 @@ interface ProductQueryData {
     };
   } | null;
   publications?: PublicationOption[];
+  shop?: { ianaTimezone: string };
 }
 
 /** 表單值（原型 PD_NEW 的對應子集；金額欄以原始輸入字串保存，送出才轉）。 */
@@ -812,7 +969,7 @@ interface FormValues {
    * 存完整期望狀態的話，送出前還要再與伺服器現況做一次差集——而那份現況可能
    * 已經被別的分頁改掉，差集會算錯。
    */
-  publicationDelta: { publish: string[]; unpublish: string[] };
+  publicationDelta: PublicationDelta;
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -1240,6 +1397,13 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // 本店全部管道（modal 的骨架；`publicationRows` 只有已發布／已排程的那些）。
   const [publications, setPublications] = useState<PublicationOption[]>([]);
   const [publishingOpen, setPublishingOpen] = useState(false);
+  // 🔴 排程一律用**店鋪時區**（`Query.shop.ianaTimezone`）。載入前先給 UTC——
+  //   此時彈層也開不起來（齒輪只在編輯態且資料載入後才可按），不會用瀏覽器時區算錯。
+  const [shopTimezone, setShopTimezone] = useState("UTC");
+  // 🔴 開啟 modal 那一刻的「現在」。**不能每次 render 取**——排程彈層用它算下限
+  //   （今天之前灰掉、過去時間夾到 now），每次 render 都新的話下限會在使用者填表期間
+  //   一直往前爬，剛選好的時間下一秒就變成「過去」。
+  const [publishingOpenedAt, setPublishingOpenedAt] = useState(0);
   // 🔴 重讀失敗的第三態。**不能用「空清單」代替**——那會冒充「沒有發布到任何管道」，
   //   與「不知道現在發布到哪些管道」是兩件完全不同的事。
   const [publicationsStale, setPublicationsStale] = useState(false);
@@ -1281,6 +1445,25 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
   const snapshot = useRef(JSON.stringify(INITIAL_VALUES));
   const dirty = useMemo(() => JSON.stringify(values) !== snapshot.current, [values]);
+
+  /**
+   * 有排程的管道數（發布卡標題列的 badge，本尊 §15.9）。
+   *
+   * 🔴 **伺服器現值套上待送 delta**，不是只數伺服器——商家剛在彈層設好時間按了 Done，
+   * badge 要立刻出現（§13.1 的樂觀更新）；同理被取消發布的管道要扣掉。
+   */
+  const scheduledCount = useMemo(() => {
+    const ids = new Set<string>();
+    for (const row of publicationRows) {
+      if (serverScheduleOf(publicationRows, row.publication.id) !== null) ids.add(row.publication.id);
+    }
+    for (const entry of values.publicationDelta.publish) {
+      if (entry.at === null) ids.delete(entry.publicationId);   // 改成立即發布 ⇒ 不再是排程
+      else ids.add(entry.publicationId);
+    }
+    for (const id of values.publicationDelta.unpublish) ids.delete(id);
+    return ids.size;
+  }, [publicationRows, values.publicationDelta]);
 
   // 編輯態：載入既有商品填表（隱含變體恆一筆，B1-2）。
   useEffect(() => {
@@ -1352,6 +1535,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         setValues(loaded);
         setPublicationRows(product.resourcePublicationsV2 ?? []);
         setPublications(salesChannelsOf(data.publications ?? []));
+        if (data.shop?.ianaTimezone) setShopTimezone(data.shop.ianaTimezone);
         setServerVisibility(
           typeof product.purchasable === "boolean" && typeof product.discoverable === "boolean"
             ? { purchasable: product.purchasable, discoverable: product.discoverable }
@@ -1757,7 +1941,14 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           PUBLISHING_MUTATION,
           {
             id: productGid,
-            publicationsToPublish: pubDelta.publish.map((id) => ({ publicationId: id })),
+            // 🔴 `publishDate` **只在有排程時才出現這個 key**——後端 R10 對「明確傳 null」
+            //    一律 reject（官方對 null 完全沉默，不得自行定義成「取消排程」），
+            //    省略才是「立即發布」。格式＝UTC 帶毫秒 `Z`（本尊抓包形態，82 §15.8）。
+            publicationsToPublish: pubDelta.publish.map((entry) => (
+              entry.at === null
+                ? { publicationId: entry.publicationId }
+                : { publicationId: entry.publicationId, publishDate: new Date(entry.at).toISOString() }
+            )),
             publicationsToUnpublish: pubDelta.unpublish.map((id) => ({ publicationId: id })),
             shouldPublish: pubDelta.publish.length > 0,
             shouldUnpublish: pubDelta.unpublish.length > 0,
@@ -2617,6 +2808,17 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                 → **右上角的設定圖示**，82 §12.1）。形態沿用 SEO 卡的標題列 icon 鈕。 */}
             <h3>
               {t("product.card.publishing")}
+              {/* 🔴 排程 badge（本尊 §15.9）：日曆-時鐘 icon ＋**有排程的管道數**。
+                  數字要把待送的排程也算進去——商家剛設好按了 Done，badge 必須立刻出現，
+                  否則看起來像沒生效。本尊同樣是存檔前就顯示（樂觀更新，§13.1）。 */}
+              {scheduledCount > 0 ? (
+                <span className="cl-card__head-badge">
+                  <Badge tone="attention">
+                    <CalendarClock aria-hidden="true" size={11} />
+                    {scheduledCount}
+                  </Badge>
+                </span>
+              ) : null}
               {/* 🔴 建立態不給齒輪：商品尚未存在 ⇒ 沒有可傳給 publishablePublish 的 GID，
                   且該態下管道清單根本沒查（PRODUCT_QUERY 只在編輯態跑）。 */}
               {isNew ? null : (
@@ -2637,7 +2839,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
                     aria-label={t("product.publishing.manage")}
                     className="cl-icon-button"
                     disabled={saving || variantOverflow}
-                    onClick={() => setPublishingOpen(true)}
+                    onClick={() => { setPublishingOpenedAt(Date.now()); setPublishingOpen(true); }}
                     ref={publishingButtonRef}
                     title={variantOverflow ? t("product.publishing.blockedByVariants") : undefined}
                     type="button"
@@ -2711,6 +2913,8 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       {publishingOpen ? (
         <PublishingModal
           delta={values.publicationDelta}
+          now={publishingOpenedAt}
+          shopTimezone={shopTimezone}
           onApply={(next) => {
             setValue("publicationDelta", next);
             setPublishingOpen(false);
