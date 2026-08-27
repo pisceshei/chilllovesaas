@@ -57,6 +57,14 @@ const PRODUCT_QUERY = `
       vendor productType tags
       seo { title description }
       translations { locale field value outdated }
+      # 🔴 **必須 onlyPublished: false**：預設 true 只回「已到點」的，
+      #   已排程未到點的管道會整列消失 ⇒ 發布卡少顯示一個管道，而這在
+      #   「沒有任何排程」的環境下 100% 測綠（S6 盤點的風險 #7）。
+      resourcePublicationsV2(onlyPublished: false) {
+        isPublished
+        publishDate
+        publication { id title supportsFuturePublishing }
+      }
       media { id position alt status image { thumbUrl url }
               externalVideo { host externalId embedUrl originUrl } }
       options { name position values { value position } }
@@ -71,6 +79,78 @@ const PRODUCT_QUERY = `
     }
   }
 `;
+
+/**
+ * 一列發布狀態（`resourcePublicationsV2` 的元素）。
+ *
+ * 🔴 **`isPublished` 不是「有沒有發布到這個管道」**——V2 的語義是
+ * `true`＝已到點、`false`＝**已排程未到點（staged）**；「既未發布也未排程」
+ * 的管道**該列根本不存在**（見 `app/graphql/types/resource_publication_v2_type.rb`
+ * 的真值表）。⇒ 「這個管道開著嗎」的正確判準是**列是否存在**，不是 `isPublished`。
+ * 把 toggle 綁 `isPublished` 會讓已排程的管道顯示成關閉，而該 bug 在沒有任何
+ * 排程的環境下 100% 測綠。
+ */
+type PublicationRow = {
+  isPublished: boolean;
+  publishDate: string | null;
+  publication: { id: string; title: string; supportsFuturePublishing: boolean };
+};
+
+/**
+ * 發布卡的內容（S6a；`docs/research/82` §9.3 的第一種 affordance 的唯讀部分）。
+ *
+ * ①這是什麼：商品目前發布到哪些管道，資料來自 `resourcePublicationsV2(onlyPublished: false)`。
+ * ②為什麼這樣判：🔴 **「這個管道開著嗎」＝該列是否存在**，不是 `isPublished`。
+ *   V2 的 `isPublished=false` 語義是「已排程未到點（staged）」而不是「未發布」；
+ *   既未發布也未排程的管道**該列根本不存在**。把開關綁 `isPublished` 會讓已排程的
+ *   管道顯示成關閉，而該 bug 在沒有任何排程的環境下 **100% 測綠**。
+ * ③排程列另標時間（本尊實測：Publishing 卡顯示日曆 badge ＋ tooltip 帶日期）。
+ * ④跨功能影響：S6b 會在同一張卡加齒輪開 modal 做**編輯**；本切片刻意**唯讀**，
+ *   因為編輯要走 `publishablePublish`／`publishableUnpublish` 且有 checkbox/toggle
+ *   兩種語義不得混用的陷阱（82 §9.4）。
+ */
+function PublishingCard({
+  rows,
+  t,
+}: {
+  rows: PublicationRow[];
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  if (rows.length === 0) {
+    return <p className="cl-pubcard__empty">{t("product.publishing.none")}</p>;
+  }
+  return (
+    <ul className="cl-pubcard">
+      {rows.map((row) => (
+        <li className="cl-pubcard__row" key={row.publication.id}>
+          <span className="cl-pubcard__name">{row.publication.title}</span>
+          {row.isPublished ? (
+            <Badge tone="success">{t("product.publishing.state.published")}</Badge>
+          ) : (
+            <Badge tone="info">
+              {row.publishDate
+                ? t("product.publishing.state.scheduledAt", { at: formatPublishDate(row.publishDate) })
+                : t("product.publishing.state.scheduled")}
+            </Badge>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * 排程時間的顯示格式。
+ *
+ * 🔴 用瀏覽器 locale 呈現，**不自己拼字串**——本尊實測排程輸入框右側常駐顯示
+ * 店鋪時區（`GMT+8`），時區語義屬 S6b 的排程編輯面；本切片只顯示，
+ * 不宣稱它換算到店鋪時區（那需要 shop timezone，目前前端沒有）。
+ */
+function formatPublishDate(iso: string): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return iso;
+  return at.toLocaleString();
+}
 
 /** 建立態的據點清單（初始數量欄的落點；v1 數量套用到第一個據點）。 */
 const LOCATIONS_QUERY = `
@@ -160,6 +240,7 @@ interface ProductQueryData {
     tags: string[];
     seo: { title: string | null; description: string | null };
     translations: { locale: string; field: string; value: string; outdated: boolean }[];
+    resourcePublicationsV2?: PublicationRow[];
     media?: MediaCardItem[];
     options?: { name: string; position: number; values: { value: string; position: number }[] }[];
     variants: {
@@ -624,6 +705,10 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // 破壞性動作確認（包 4）：null＝無待確認；封存走確認框、取消封存不用（可逆）。
   const [confirmAction, setConfirmAction] = useState<"discard" | "archive" | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionsData>({ productVendors: [], productTypes: [] });
+  // 發布狀態（唯讀顯示，S6a）。🔴 **不進 `values`／`snapshot`**——它不是本表單的欄位，
+  //   發布寫入走 `publishablePublish`／`publishableUnpublish` 獨立 mutation（S6b），
+  //   混進表單快照會讓 SaveBar 對「不是本表單負責的東西」報髒。
+  const [publicationRows, setPublicationRows] = useState<PublicationRow[]>([]);
   // 變體列的逐列錯誤（index → 訊息）；選項模式下取代 price/compare/cost 的欄位級映射
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
   // 建立態據點（初始數量欄；v1 套用到第一個據點）
@@ -724,6 +809,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
+        setPublicationRows(product.resourcePublicationsV2 ?? []);
         setMedia([ ...(product.media ?? []) ].sort((a, b) => a.position - b.position));
         rowGraveyard.current.clear();
         setVariantOverflow(product.variants.pageInfo?.hasNextPage ?? false);
@@ -1891,9 +1977,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           )}
           <Card padded>
             <h3>{t("product.card.publishing")}</h3>
-            <SwitchRow checked disabled hint={t("product.publishing.onlineStore.hint")} label={t("product.publishing.onlineStore")} />
-            <SwitchRow checked disabled label={t("product.publishing.agent")} />
-            <SwitchRow checked={false} disabled label={t("product.publishing.pos")} />
+            <PublishingCard rows={publicationRows} t={t} />
           </Card>
           {/* 組織分類卡（91 §12：類型 search-or-create、廠商 autocomplete、標籤 token、佈景範本）。 */}
           <Card padded>

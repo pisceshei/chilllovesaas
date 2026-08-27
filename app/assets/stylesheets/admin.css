@@ -1806,3 +1806,10 @@ a {
 .cl-variant-image__actions { display: flex; gap: var(--sp-150); flex-wrap: wrap; justify-content: center; }
 .cl-variant-inventory__empty,
 .cl-variant-inventory__note { margin: var(--sp-200) 0 0; color: var(--text-3); font-size: var(--t-sm); }
+
+/* 發布卡（S6a）——唯讀顯示商品目前發布到哪些管道。
+   形態依 82 §9.3：商品詳情頁的 Publishing 卡；編輯面（齒輪→modal）屬 S6b。 */
+.cl-pubcard { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.cl-pubcard__row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
+.cl-pubcard__name { color: var(--text); font-size: 13px; }
+.cl-pubcard__empty { color: var(--text-3); font-size: 13px; margin: 0; }

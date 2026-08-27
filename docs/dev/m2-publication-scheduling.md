@@ -477,8 +477,9 @@ D53 與本檔多處寫「官方對到點的補償語義**全面沉默**」。本
 
 ### §11.4 本輪未取得（誠實登記）
 
-- **`ARCHIVED` 到點行為**——未測（避免對測試商品做不可逆歸檔）⇒ 我方 fail-closed
-  與 DRAFT 同處置，登記為 ours。
+- ~~**`ARCHIVED` 到點行為**——未測~~ 🔴 **2026-08-27 已補測結案，見 §12**：
+  **與 DRAFT 相同的 consume-and-drop**（兩次獨立實測）⇒ 我方原本的 fail-closed
+  處置**從 ours 推定升格為實測證實**，實作無須改動。
 - **所有 mutation 的 request／response body**——admin 走 persisted-query，POST body
   不可觀測（鐵律 14.3）。只取得 operation name＋sha256 hash＋HTTP 狀態＋可觀察副作用。
 - **排程執行的基礎設施語義**（cron 掃描／delayed job／lazy evaluation）——本尊未暴露
@@ -491,3 +492,34 @@ D53 與本檔多處寫「官方對到點的補償語義**全面沉默**」。本
 ⚠️ **本輪在測試店留下三個測試商品未刪**：`D53-QA-Draft-Schedule-Test`(9913006162155)、
 `D53-QB-Active-Schedule-Test`(9913007767787)、`D53-QC-Unlisted-Schedule-Test`(9913009438955)。
 指定保留的兩個 fixture（`9907126370539`／`9911273160939`）**未被觸及**。
+
+
+---
+
+## §12 `ARCHIVED` 到點行為——補測結案（2026-08-27）
+
+§8／§11.4 原登記為未取得（當時為避免對測試商品做不可逆操作而略過）。
+複查確認 Shopify 的 Archive **是可逆的**（有 `Unarchive product`），故本輪補測。
+
+**兩次獨立實測**（新建商品 QD `9913120653547`、QE `9913130418411`，皆為
+「Active ＋ 對 Online Store 設未來排程 → 存檔 → Archive → 等過時點」）：
+
+| 階段 | 觀察 |
+|---|---|
+| Archive 當下 | 確認框逐字 `Archiving this product will hide it from your sales channels and Shopify admin.`——**完全沒提待生效的排程，無任何警告**；Publishing 卡的日曆 badge **仍在**，排程 UI 完全無變化、toggle 仍 enabled |
+| **到點** | 🔴 **`publishDate` 被清成 `null`、`isPublished` 維持 false、商品不被發布、零通知**。QE 緊窄取樣：`15:51:54` 與 `15:52:55` 仍讀到 `07:53:00Z`，`15:55:08` 讀到 `null` ⇒ 清除發生在到點之後、不早於到點 |
+| Unarchive | 確認框逐字 `Unarchiving this product sets its status to draft` ⇒ 🔴 **回到 DRAFT 不是原本的 Active**；三個管道 `isPublished=false`／`publishDate=null`，**不補發布、不還原排程** |
+
+**決定性對照組**（同店同日、同樣走排程但維持 ACTIVE 的 QA／QB／QC）：到點後
+`publishDate` 被寫成**實際發布時刻的過去時間戳**且 `isPublished=true`。
+
+⇒ **結論：`ARCHIVED` 與 `DRAFT` 同為 consume-and-drop。**
+我方 `Product::PURCHASABLE_STATUSES`＝`{active, unlisted}` 不含 archived，
+到點走不合格分支清 NULL——**與本尊一致，實作無須改動**。
+原本標「ours fail-closed」的登記**升格為實測證實**（D53 的 ⚠️ 未取得項可結案）。
+
+⚠️ **證據邊界**：兩次皆為 Online Store 單一管道、且皆為「商品原本已發布到該管道
+＋設未來 publishDate」的形態；**未測**「管道原本 unpublished 再設排程後封存」。
+
+🔴 **本輪另取得一條與 S7 直接相關的事實**：**Unarchive 回到 DRAFT 不是 Active**。
+這是狀態機的一條邊，屬 S7（狀態機交互），本包不實作，登記於此。
