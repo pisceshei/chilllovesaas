@@ -1813,3 +1813,31 @@ a {
 .cl-pubcard__row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
 .cl-pubcard__name { color: var(--text); font-size: 13px; }
 .cl-pubcard__empty { color: var(--text-3); font-size: 13px; margin: 0; }
+
+/* 發布編輯 modal（S6b）——逐管道 toggle。形態依 82 §12.1／§12.2。
+   🔴 群組總開關是 role="checkbox" 不是 switch（switch 不支援 aria-checked="mixed"，
+   會被 UA 降級成 false ⇒ 半選態對螢幕閱讀器讀成「關」）。視覺沿用 .cl-switch。 */
+.cl-pubmodal { display: flex; flex-direction: column; gap: var(--sp-300); }
+.cl-pubmodal__list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+.cl-pubmodal__row { border-bottom: 1px solid var(--border-2); }
+.cl-pubmodal__row:last-child { border-bottom: 0; }
+.cl-pubmodal__group {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: var(--sp-200);
+  justify-content: space-between;
+  padding-bottom: var(--sp-200);
+}
+.cl-pubmodal__group-label { color: var(--text); font-size: var(--t-sm); font-weight: var(--fw-control); }
+
+/* 半選：knob 停在中間並收窄成一橫（本尊實測為「深色軌＋置中短橫線」，82 §12.2／§14.1）。
+   🔴 translate 必須依**收窄後**的寬度重算：軌 32px、橫線 4px、knob 起始 left:2px
+   ⇒ 置中位置 (32-4)/2 = 14px ⇒ translate = 14-2 = 12px。
+   照 --on 那條的 14px、或按原 knob 寬 14px 算出的 7px，都會讓橫線偏一邊。 */
+.cl-switch--mixed { background: var(--brand); }
+.cl-switch--mixed .cl-switch__knob {
+  translate: 12px 0;
+  width: 4px;
+  border-radius: var(--r-pill);
+}

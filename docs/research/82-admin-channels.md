@@ -1445,3 +1445,214 @@ skipMarketCountries: false   skipChannelMarketCatalogs: false
 
 ⚠️ **仍未取得**：變體層送出的 operation name 與 variables——需要真的按下 `Done` ＋ `Save`
 才會發出，而那會改動已登記的 fixture。若要取得，應另建一個拋棄式多變體商品再測。
+
+---
+
+## §14 🔴 S6b 地基：發布 modal 的**交互契約**與寫入時序（2026-08-27 實測）
+
+> 射程＝分步方案的 **S6b**（逐商品發布 modal 的編輯面）。
+> 測試店 `chill-love-u5q5mnzq`（鐵律 12.2 全權寫入授權）。
+> 🔴 本節**自建拋棄式商品 `S6B-Probe-Publish`（id `9913213452523`）做全部破壞性實驗，做完刪除**；
+> 五個既有 fixture（`D53-QA/QB/QC`、`9907126370539`、`9911273160939`）**全程未觸碰**，
+> 終態逐一複驗完好。未點任何 `Uninstall`、未輸入密碼、未過 CAPTCHA、未授權 OAuth。
+
+### §14.0 toggle 的實作形態（決定了後面每一條怎麼取證）
+
+🔴 **全部 toggle 都是 Web Component `<s-internal-switch>`，狀態藏在 shadow root 裡的
+原生 `<input type="checkbox">`**。host 上只有 `label`／`labelaccessibilityvisibility="exclusive"`／`id`。
+
+- 管道列的 host `id` **直接就是 publication GID**（例 `gid://shopify/Publication/209681645803`）
+- **群組 toggle 沒有 `id`**
+- 每列另有 `button[aria-label="View details for Catalog"]`——🔴 對 sales channel 列而言
+  這個 aria-label 是**錯標**（本尊原文照登，不修正、不模仿）
+- Online Store 列獨有 `<s-internal-button icon="calendar-time" accessibilitylabel="Schedule publishing">`
+
+⚠️ **工具限制（V 項）**：瀏覽器 a11y tree **不穿透 shadow DOM**，`find` 直接回報
+「不存在群組 toggle」。全部 toggle 狀態改以 shadow root 內 `input` 的 `.checked`／
+`.indeterminate` DOM property 取得。**平台 AX tree 對外實際曝什麼值＝未取得**
+（需真實螢幕閱讀器或 DevTools Accessibility 面板）。
+
+### §14.1 🔴 群組總開關：mixed **一律 → 全開**，不是多數決
+
+| 起始態 | 點一下之後 |
+|---|---|
+| 半選（2/3 開） | **全開** |
+| 半選（1/3 開，少數態複驗） | **全開** |
+| 全開 | 全關 |
+| 全關 | 全開 |
+
+accessible name 來源＝host 的 `label` 屬性，`labelaccessibilityvisibility="exclusive"`
+⇒ **視覺隱藏、只給輔助技術**（畫面上看到的 `Sales Channels` 是另一個 DOM 節點）：
+
+| 狀態 | accessible name（逐字） | `input.checked` | `input.indeterminate` |
+|---|---|---|---|
+| 全開 | `Unpublish from all` | `true` | `false` |
+| 半選 | `Publish to all` | `false` | **`true`** |
+| 全關 | `Publish to all` | `false` | `false` |
+
+🔴 **半選與全關的 accessible name 完全相同**，只有 `indeterminate` 能區分——這是本尊的
+**無障礙落差**，登記但不照抄（我方用顯式 `aria-checked="mixed"`，AX 上兩態可區分；
+依 W3C html-aam，原生 `indeterminate` 本來就映射成 `mixed`，兩條路 AX 結果等價）。
+
+🔴 **本尊的 input 上 `aria-checked`／`role` 一個都沒有**——半選完全靠原生 DOM property
+承載，DOM 屬性上不留痕跡。視覺上 mixed ＝深色軌 ＋ **置中短橫線**（不是圓鈕）。
+
+### §14.2 🔴 群組開關的作用域＝**篩選後可見的子集**，不是全部管道
+
+複現：三管道中只有 Online Store 開啟（整體應為半選）→ 搜尋 `online` 篩到只剩一列
+→ **群組 toggle 立刻變全開態**（`label="Unpublish from all" checked=true indet=false`）。
+
+⇒ 照「群組 ＝ 全部管道」實作的話，商家在篩選狀態下按群組會**誤操作看不見的管道**。
+另複驗：**篩選狀態下按 `Done` 仍正常提交**（被篩掉的管道保持原狀）。
+
+### §14.3 搜尋框：詞首前綴、debounce、無結果文案
+
+| 項目 | 實測 | 證據 |
+|---|---|---|
+| 觸發 | **即時，不用按 Enter**；有 debounce | 輸入 `of` 後 2 秒仍是過渡態，5 秒才穩定 |
+| 大小寫 | 不敏感 | `SHO` → 命中 `Shop` |
+| 前後空白 | 會 trim | `"  shop  "` → 命中 |
+| 比對法 | 🔴 **詞首前綴**（word-prefix） | `store`→命中 `Online Store`（⇒非整串前綴）／`tore`→無（⇒非子字串）／`line`→無（`Online` 的子字串但非詞首）／`of`→命中 `Point of Sale`（虛詞也算一個詞） |
+| 無結果 | 逐字 **`No channels found`**（純文字，無圖示） | 群組列也一併消失 |
+| DOM | 不符的列**整個移除**，非 `display:none` | 篩 `SHO` 時 `s-internal-switch` 只剩 2 個 |
+| 左欄計數 | **不受搜尋影響**，恆為 3／1／1 | |
+| 清除鈕 | 右側 `⊗`，還原全部列且**保留已撥動的 toggle 狀態** | |
+
+⚠️ **debounce 的實際毫秒數＝未取得**（只確認「2 秒仍在過渡、5 秒已穩定」）。
+
+### §14.4 🔴 暫存是**兩層**：modal session（`Cancel`）與頁面 dirty（`Discard`）
+
+| # | 操作 | 結果 |
+|---|---|---|
+| a | 撥 toggle → `Done` → 重開 modal | 顯示**暫存值**，不是伺服器值 |
+| b | 撥 toggle → `Done` → SaveBar `Discard` → 重開 | 顯示**伺服器值**（暫存被完全重置） |
+| c | 撥 toggle → `Cancel` | Publishing 卡不變、SaveBar **不出現**；重開顯示伺服器值 |
+| d | 🔴 **已有暫存值**時再開 → 撥 → `Cancel` | **只丟棄本次 session 的改動，先前暫存值保留**（卡片仍顯示、SaveBar 仍在） |
+
+⇒ `Cancel` ≠ `Discard`：前者作用域是 **modal session**，後者是**整頁 dirty state**。
+
+🔴 **`Discard` 沒有二次確認對話框**，點下即生效。（我方 `Discard` 走確認框，是包 4 的
+既有裁定，屬刻意差異，不在 S6b 射程內改動。）
+
+### §14.5 🔴 沒有任何警告、確認或阻擋
+
+| 情境 | 結果 |
+|---|---|
+| 把**全部**管道關掉（含 Online Store），商品仍 `Active` | 正常存檔。無確認 modal、無 toast、無 banner |
+| 商品是 `Draft` 時開 modal | 全部 toggle `disabled=false`，可撥可存 |
+| 存檔後零管道 | `Publishing` 卡的**銷售管道那一列整列消失**（不是顯示「0 channels」） |
+| 關掉 Online Store 後 | 頁首 `Preview`／`Share` **仍可用**；全頁 `[role=status]`／`[role=alert]` **空集合** |
+
+全頁文字不含 `not published`／`isn't published`／`no sales channels`／`not visible`。
+
+### §14.6 錯誤態：琥珀 pill ＋ portal 小卡（**不是** mutation 的驗證錯誤）
+
+逐字：小卡標題 `1 error`；內文
+`This product isn't discoverable on Shop. Review your product's listing status in the Shop channel.`；
+頁面 `Publishing` 卡該列右側琥珀 badge `⚠ 1`。
+
+觸發元件（只在有錯誤時才存在於該列）：
+`button[aria-label="Channel Pill Button"][aria-expanded][data-state]`。
+
+🔴 **小卡是 portal 渲染在 dialog 之外**——`document.querySelector('[role=dialog]').innerText`
+**讀不到**這段文字（實作與測試的坑）。
+
+觸發條件矩陣（皆為**存檔後**狀態）：
+
+| 商品狀態 | Online Store | Shop | 琥珀警示 |
+|---|---|---|---|
+| `Active` | ON | ON | 無 |
+| `Draft` | ON | ON | 無 |
+| `Draft` | OFF | ON | 無 |
+| `Active` | **OFF** | ON | 🔴 **有** |
+| 任一 | 任一 | OFF | 無（列上沒有 `Channel Pill Button`） |
+
+⇒ 條件＝`status = Active` **∧** 已發布到 `Shop` **∧ 未**發布到 `Online Store`，三者同時成立。
+反向複驗：重新開啟 Online Store 並存檔 → badge 消失、按鈕從 DOM 移除。
+
+🔴 **時序**：警示是**伺服器算的**，只在存檔後的 refetch 更新。暫存階段把 Online Store
+撥回 ON 但尚未 `Save` 時，琥珀 badge **仍然掛著**（前端不做樂觀清除）。
+
+⚠️ **未取得：存檔時的驗證錯誤（`userErrors`／非 200）形態。** 三種嘗試
+（Draft 發布、全管道關閉、Draft+Shop）**皆正常存檔**，未能觸發。上述琥珀警示是
+伺服器回傳的 **publication 狀態告示**，不是 mutation 的驗證錯誤——兩者不得混為一談。
+
+### §14.7 🔴🔴 抓包：`@include` 開關，以及「兩支都帶 publications 陣列」
+
+端點形態 `POST /api/operations/<persisted-query-sha256>/<OperationName>/shopify/<store>`
+（persisted query ⇒ query 全文不可觀測，鐵律 14.3 的既有 V 項）。
+本輪以注入 `window.fetch`／`XMLHttpRequest` wrapper 錄到 **request body**
+（⚠️ **response body 形狀＝未取得**——攔截器只錄 request）。
+
+| 情境 | mutation（依序） |
+|---|---|
+| **只改發布**（複驗兩次） | 🔴 **只有** `ProductSavePublishablePublishUnpublish` |
+| 發布 ＋ 商品欄位同時改 | `ProductSaveUpdate` → `ProductSavePublishablePublishUnpublish` |
+
+兩支之後皆 refetch 五支 GET：`FetchAppliedMetafieldsForUpdate` ×2、`AdminProductDetails`、
+`AdminProductDetailsFirstVariant`、`ProductPublicationsV2`。
+
+`ProductSaveUpdate` 的 variables（脫敏節錄）：
+
+```
+"product": {"status":"DRAFT", "workflow":"product-details-update", "id":"gid://shopify/Product/…"},
+"publicationsToPublish": [{"publicationId":"gid://shopify/Publication/209681645803"}],
+"publicationsToUnpublish": [],
+"shouldPublish": false, "shouldUnpublish": false,
+"mediaToUpdate": [], "shouldUpdateMedia": false, "mediaToReorder": [], "shouldReorderMedia": false
+```
+
+`ProductSavePublishablePublishUnpublish` 的 variables：
+
+```
+"shouldPublish": true, "shouldUnpublish": false,
+"productId": "gid://shopify/Product/…", "productQuery": "id:…",
+"publicationsToPublish": [{"publicationId":"gid://shopify/Publication/209681645803"}],
+"publicationsToUnpublish": []
+```
+
+🔴 **三條結論**：
+
+1. **`ProductSaveUpdate` 也帶同樣那兩個 publications 陣列**，但它的
+   `shouldPublish`／`shouldUnpublish` **皆為 `false`** ⇒ 兩支 document 共用同一組變數，
+   靠 GraphQL **`@include` 開關**決定誰真的執行，**不會重複寫入**。
+   ——這解掉 §13.2 結論 2 當時只能寫成「推測」的那一半：本尊確實把兩個方向放在
+   同一份 document，而且**用 `@include` 逐向開關**。
+2. **媒體也是同一套 `@include` 模式**（`shouldUpdateMedia`／`shouldReorderMedia`）
+   ⇒ 這是本尊 admin 的通用形態，不是發布專有。
+3. 🔴 **只改發布時真的只送一支**（複驗兩次，皆無 `ProductSaveUpdate`）——§13.2 結論 3 複驗成立。
+
+### §14.8 `Done` 當下零寫入（複驗）
+
+- 撥動單一 toggle：只有 `POST /.well-known/dux`（遙測），**零 `api/operations`**
+- 按 `Done`：**零 `api/operations`**（`urlPattern="api/operations"` 過濾回報
+  `No requests matching`；注入式錄製同樣為空）
+- 開 modal 時唯一捕到的是 `AdminProductDetailsCatalogs` **GET**（載入 catalog 清單，非提交）
+
+⇒ §13.1 複驗成立：`Done` 純粹把 modal 暫存值提交到頁面 dirty state。
+
+### §14.9 附帶取得的逐字文案
+
+- SaveBar：`Unsaved changes`／`Discard`／`Save`；存檔成功 toast：`Product saved`
+- 商品狀態下拉：`Active` — `Sell via selected sales channels and markets`；
+  `Draft` — `Not visible on selected sales channels or markets`；
+  `Unlisted` — ⚠️ **說明被視窗高度截斷，未取得**
+- 刪除確認：`Delete <name>?` ／
+  `If you delete <name>, this can't be undone. Any media that's only used by this product will also be deleted.`
+
+### §14.10 S6b 尚未取得
+
+| # | 未取得 | 取得方式 |
+|---|---|---|
+| S6b-U1 | 平台 AX tree 對 mixed 態實際曝的值 | 真實螢幕閱讀器，或 DevTools Accessibility 面板檢視 shadow input |
+| S6b-U2 | GraphQL **response body** 形狀 | 改包 response clone，或用 DevTools Network 面板 |
+| S6b-U3 | 存檔時的驗證錯誤（`userErrors`／非 200）形態 | 需要找到會被拒絕的操作路徑（三種嘗試皆正常存檔） |
+| S6b-U4 | `Unlisted` 狀態的完整說明文案 | 加大視窗高度後重讀下拉 |
+| S6b-U5 | 搜尋框 debounce 的實際毫秒數 | 逐 100ms 取樣 |
+| S6b-U6 | persisted query 全文 | 不可觀測（鐵律 14.3 既有 V 項） |
+
+### §14.11 環境異常登記（鐵律 12.0）
+
+實測中途瀏覽器 viewport 被壓到 **896×302 CSS px / dpr 1.75**（Chrome 側邊欄佔用，
+`resize_window` 無法改變），modal 需捲動操作；另有多次 `Page.captureScreenshot` 逾時
+與一次擴充功能斷線——**皆依載入紀律重試後成功，無任何一項因此登記為「本尊沒有此功能」**。

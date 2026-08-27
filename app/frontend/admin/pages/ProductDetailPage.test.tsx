@@ -1227,3 +1227,459 @@ describe("商品媒體排序", () => {
     await waitFor(() => expect(tileAlts()).toEqual([ "狗", "貓", "鳥" ]));
   });
 });
+
+/**
+ * S6b：逐商品發布編輯 modal（`docs/research/82` §12.1／§13.1／§13.2 的實測形態）。
+ *
+ * 🔴 本組釘的是三個「在沒有排程、沒有未發布管道的環境下 100% 測綠」的陷阱：
+ *   ①**開關綁 `isPublished`**——V2 的 `false` 是「已排程未到點」，綁錯會讓已排程的
+ *     管道在 modal 內顯示成關閉，商家一存就把它取消發布了；
+ *   ②**撥開再撥回不歸零**——delta 留著會多送一支沒必要的 mutation，且 SaveBar 不消失；
+ *   ③**完成鍵真的寫入**——本尊實測按 Done 當下**零 GraphQL 請求**（§13.1）。
+ */
+describe("S6b 發布編輯 modal", () => {
+  const PUBS = [
+    { id: "gid://chilllove/Publication/1", title: "線上商店", supportsFuturePublishing: true },
+    { id: "gid://chilllove/Publication/2", title: "門市 POS", supportsFuturePublishing: false },
+    { id: "gid://chilllove/Publication/3", title: "Shop", supportsFuturePublishing: false },
+  ];
+
+  // 伺服器現況：①已發布 ②**已排程未到點**（isPublished=false 但列存在）③根本沒有列＝未發布
+  const ROWS = [
+    { isPublished: true, publishDate: "2026-08-01T00:00:00Z", publication: PUBS[0] },
+    { isPublished: false, publishDate: "2026-09-01T02:00:00Z", publication: PUBS[1] },
+  ];
+
+  const PRODUCT = {
+    id: "gid://chilllove/Product/9",
+    title: "既有商品",
+    descriptionHtml: "<p>舊說明</p>",
+    status: "ACTIVE",
+    handle: "existing-tee",
+    lockVersion: 3,
+    vendor: null,
+    productType: null,
+    tags: [],
+    seo: { title: null, description: null },
+    translations: [],
+    purchasable: true,
+    discoverable: true,
+    resourcePublicationsV2: ROWS,
+    variants: { nodes: [
+      { price: "128.00", compareAtPrice: null, cost: null, sku: "SKU-1", barcode: null, taxable: true },
+    ] },
+  };
+
+  const EDIT_ROUTES = [
+    ...BASE_ROUTES,
+    { match: "query productForEdit", body: { data: { product: PRODUCT, publications: PUBS } } },
+    { match: "mutation productSet", body: { data: { productSet: {
+      product: { id: PRODUCT.id, handle: PRODUCT.handle, status: PRODUCT.status, title: PRODUCT.title,
+                lockVersion: 4, variants: { nodes: [] } },
+      userErrors: [],
+    } } } },
+    { match: "mutation productPublishing", body: { data: {
+      publishablePublish: { userErrors: [] },
+      publishableUnpublish: { userErrors: [] },
+    } } },
+    { match: "query productPublications", body: { data: { product: {
+      purchasable: true, discoverable: true, resourcePublicationsV2: ROWS,
+    } } } },
+  ];
+
+  beforeEach(() => {
+    installCsrfMeta();
+  });
+
+  async function openModal() {
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    const main = within(await screen.findByRole("main"));
+    await waitFor(() => expect(main.getByRole("button", { name: "管理發布" })).toBeEnabled());
+    await userEvent.click(main.getByRole("button", { name: "管理發布" }));
+    return within(await screen.findByRole("dialog"));
+  }
+
+  it("🔴 modal 列出**全部**管道，未發布的那個也在（不是只列 resourcePublicationsV2）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    // 「Shop」在伺服器上沒有列 ⇒ 只讀 resourcePublicationsV2 的實作會讓它整個不出現
+    expect(dialog.getByRole("switch", { name: "Shop" })).toBeVisible();
+    expect(dialog.getByRole("switch", { name: "線上商店" })).toBeVisible();
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).toBeVisible();
+  });
+
+  it("🔴 開關綁「列是否存在」不是 isPublished：已排程未到點的管道顯示為**開**", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    expect(dialog.getByRole("switch", { name: "線上商店" })).toBeChecked();
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).toBeChecked();
+    expect(dialog.getByRole("switch", { name: "Shop" })).not.toBeChecked();
+  });
+
+  it("🔴 撥開再撥回 ⇒ 完成鍵回到 disabled（delta 歸零，不是記錄操作序列）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    const done = dialog.getByRole("button", { name: "完成" });
+    expect(done).toBeDisabled();
+
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    expect(done).toBeEnabled();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    expect(done).toBeDisabled();
+  });
+
+  it("🔴 完成鍵不送任何 GraphQL，只讓卡片樂觀更新並喚出 SaveBar（本尊 §13.1）", async () => {
+    const fetchMock = stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+
+    const before = fetchMock.mock.calls.length;
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    expect(fetchMock.mock.calls.length).toBe(before);
+    const main = within(screen.getByRole("main"));
+    expect(await main.findByText("待儲存")).toBeVisible();
+    expect(await screen.findByRole("region", { name: "未儲存的變更" })).toBeVisible();
+  });
+
+  it("取消鍵丟棄草稿：卡片不變、SaveBar 不出現", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("button", { name: "取消" }));
+
+    const main = within(screen.getByRole("main"));
+    expect(main.queryByText("待儲存")).toBeNull();
+    expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull();
+  });
+
+  it("🔴 儲存送出 publish／unpublish 兩組，且 id 分邊正確", async () => {
+    const fetchMock = stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("switch", { name: "線上商店" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "mutation productPublishing")[0].body)) as {
+      variables: {
+        publicationsToPublish: { publicationId: string }[];
+        publicationsToUnpublish: { publicationId: string }[];
+        shouldPublish: boolean;
+        shouldUnpublish: boolean;
+      };
+    };
+    expect(sent.variables.publicationsToPublish).toEqual([ { publicationId: PUBS[2].id } ]);
+    expect(sent.variables.publicationsToUnpublish).toEqual([ { publicationId: PUBS[0].id } ]);
+    // 🔴 `@include` 開關（本尊同名同形態，82 §14 抓包）
+    expect(sent.variables.shouldPublish).toBe(true);
+    expect(sent.variables.shouldUnpublish).toBe(true);
+  });
+
+  it("🔴 沒改發布就不送發布 mutation（本尊 §13.2 結論 3：逐區塊判 dirty）", async () => {
+    const fetchMock = stubRoutedFetch(EDIT_ROUTES);
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    const main = within(await screen.findByRole("main"));
+    const title = await main.findByLabelText("標題（English）");
+    await userEvent.type(title, "X");
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productSet")).toHaveLength(1));
+    expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(0);
+  });
+
+  it("🔴 unpublish 那半的 userErrors 也要顯示（只看 publish 會讓取消發布靜默失敗）", async () => {
+    stubRoutedFetch([
+      ...EDIT_ROUTES.filter((route) => route.match !== "mutation productPublishing"),
+      { match: "mutation productPublishing", body: { data: {
+        publishablePublish: { userErrors: [] },
+        publishableUnpublish: { userErrors: [ { field: [ "input" ], message: "管道拒絕取消發布", code: "INVALID_STATE" } ] },
+      } } },
+    ]);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "線上商店" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    expect(await screen.findByText("管道拒絕取消發布")).toBeVisible();
+  });
+
+  /**
+   * 群組總開關（本尊 82 §12.2：`Sales Channels` 群組列帶自己的 toggle，
+   * 三個管道只有一個開著時呈**半選態**）。
+   *
+   * 🔴 **它必須是 `role="checkbox"` 不是 `role="switch"`**——`switch` 規範上不支援
+   * `aria-checked="mixed"`，指定 mixed 會被 UA 降級成 `false`
+   * （MDN《ARIA: switch role》逐字 "assigning a value of `mixed` to a `switch`
+   * instead sets the value to `false`"，取證 2026-08-27）。
+   * ⇒ 若照各列的樣子寫成 switch，**半選態會被螢幕閱讀器讀成「關」**，
+   * 而畫面上完全正常、任何視覺測試都不會紅。本格就是釘這件事。
+   */
+  it("🔴 群組開關是 checkbox 而非 switch，半選時 aria-checked=mixed", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    // 現況：線上商店開、門市 POS 開（已排程）、Shop 關 ⇒ 半選
+    const group = dialog.getByRole("checkbox", { name: "發布到全部管道" });
+    expect(group).toHaveAttribute("aria-checked", "mixed");
+    // 各列仍是 switch（switch 只承載二態，這是規範允許的用法）
+    expect(dialog.getAllByRole("switch")).toHaveLength(3);
+  });
+
+  it("🔴 半選時點群組開關 ⇒ 全開（可及名稱同時翻成「取消發布」）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("checkbox", { name: "發布到全部管道" }));
+
+    expect(dialog.getByRole("switch", { name: "Shop" })).toBeChecked();
+    expect(dialog.getByRole("switch", { name: "線上商店" })).toBeChecked();
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).toBeChecked();
+    expect(dialog.getByRole("checkbox", { name: "自全部管道取消發布" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("全開時點群組開關 ⇒ 全關", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("checkbox", { name: "發布到全部管道" }));      // → 全開
+    await userEvent.click(dialog.getByRole("checkbox", { name: "自全部管道取消發布" }));  // → 全關
+
+    expect(dialog.getByRole("switch", { name: "Shop" })).not.toBeChecked();
+    expect(dialog.getByRole("switch", { name: "線上商店" })).not.toBeChecked();
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).not.toBeChecked();
+  });
+
+  it("🔴 群組開關全開後再全關 ⇒ 回到伺服器現況者不進 delta（完成鍵不會誤亮）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    const done = dialog.getByRole("button", { name: "完成" });
+
+    await userEvent.click(dialog.getByRole("checkbox", { name: "發布到全部管道" }));
+    await userEvent.click(dialog.getByRole("checkbox", { name: "自全部管道取消發布" }));
+    // 三個都變關：線上商店與門市 POS 是真的變了（伺服器上開著），Shop 本來就關
+    // ⇒ delta 應該恰是 {unpublish: [線上商店, 門市 POS]}，Shop 不在裡面
+    expect(done).toBeEnabled();
+
+    await userEvent.click(dialog.getByRole("switch", { name: "線上商店" }));
+    await userEvent.click(dialog.getByRole("switch", { name: "門市 POS" }));
+    // 兩個撥回原狀 ⇒ delta 歸零
+    expect(done).toBeDisabled();
+  });
+
+  it("🔴 aria-controls 指向的 id 真的存在於 DOM（GID 含 / 與 : ，直接當 id 會解析錯）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    const group = dialog.getByRole("checkbox", { name: "發布到全部管道" });
+    const ids = (group.getAttribute("aria-controls") ?? "").split(" ").filter(Boolean);
+
+    expect(ids).toHaveLength(3);
+    for (const id of ids) {
+      expect(document.getElementById(id)).not.toBeNull();
+      // 🔴 判準是「**不含空白**」——`aria-controls` 是空白分隔的 id 清單，GID 裡的
+      //   `/` 與 `:` 不會破壞它，空白才會（一個 id 會被拆成兩個指不到的 token）。
+      //   ⚠️ 不要斷言「以字母開頭」：那是 HTML4 的規則，HTML5 已放寬，而 React
+      //   `useId()` 產生的前綴正是底線開頭（`_r_…`）。
+      expect(id).not.toMatch(/\s/);
+    }
+  });
+
+  it("搜尋框即時篩選管道；無相符時顯示空態", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.type(dialog.getByRole("searchbox", { name: "搜尋管道" }), "Shop");
+    expect(dialog.getByRole("switch", { name: "Shop" })).toBeVisible();
+    expect(dialog.queryByRole("switch", { name: "門市 POS" })).toBeNull();
+
+    await userEvent.clear(dialog.getByRole("searchbox", { name: "搜尋管道" }));
+    await userEvent.type(dialog.getByRole("searchbox", { name: "搜尋管道" }), "zzz");
+    expect(dialog.getByText("找不到管道")).toBeVisible();
+  });
+
+  /**
+   * 🔴 本格由 **M5 突變**開出來（第一版測試集漏了它）。
+   *
+   * 移除 `savedValues` 的 `publicationDelta: EMPTY_DELTA` 之後，45 格**全綠**——
+   * 因為快照與 `values` 雙雙停在非空 delta、彼此相等，SaveBar 照樣消失。
+   * 唯一的症狀是**下次儲存重送同一份 delta**，而那是完全無聲的：伺服器會把同一個
+   * 管道再 publish 一次（`Publications::Write` 的 R5 是 no-op success ⇒ 連錯誤都沒有）。
+   *
+   * ⚠️ 這與 mediaOrder 的 C8/C20 **不是同一個失效形態**——那邊有 `reloadMedia`
+   * 把 `values.mediaOrder` 清成 `[]`，才會造成「永遠不相等」。照抄那句話會寫出一個
+   * 斷言 SaveBar 的測試，而那個斷言在 M5 下是綠的。
+   */
+  it("🔴 儲存成功後 delta 歸零：卡片不再顯示「待儲存」，再存一次不重送發布 mutation", async () => {
+    const fetchMock = stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1));
+
+    const main = within(screen.getByRole("main"));
+    // 卡片回到伺服器現值（reloadPublications 的結果），不再有待儲存 badge
+    await waitFor(() => expect(main.queryByText("待儲存")).toBeNull());
+
+    // 再改一次別的欄位並儲存 ⇒ 發布那支**不得**再送（delta 已消費掉）
+    await userEvent.type(main.getByLabelText("標題（English）"), "X");
+    const savebar2 = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar2).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productSet")).toHaveLength(2));
+    expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1);
+  });
+
+  it("🔴 只有 publish 方向時 shouldUnpublish=false（空的那個 field 不執行）", async () => {
+    const fetchMock = stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "mutation productPublishing")[0].body)) as {
+      variables: { shouldPublish: boolean; shouldUnpublish: boolean;
+                   publicationsToUnpublish: unknown[] };
+    };
+    expect(sent.variables.shouldPublish).toBe(true);
+    // 🔴 送空陣列而不關開關，會讓 Publications::Write 白跑一次 transaction 並 bump 一次 stamp
+    expect(sent.variables.shouldUnpublish).toBe(false);
+    expect(sent.variables.publicationsToUnpublish).toEqual([]);
+  });
+
+  /**
+   * 🔴 本格是**改寫過的**——第一版選錯初始狀態，讓兩種實作結果相同、M11 突變（群組改成
+   * 作用於 `publications` 而非 `visible`）**沒有轉紅**。
+   *
+   * 原因：第一版篩出關著的 `Shop` 再全開，而另外兩個管道**本來就開著** ⇒ 不論群組
+   * 作用於誰，斷言都通過。要能區分，必須讓「被波及」與「不被波及」產生不同結果：
+   * 篩出**開著**的管道再全關 ⇒ 正確實作只關它一個，M11 會把隱藏的那個也關掉。
+   *
+   * 本尊實測依據（82 §14）：篩選只剩一列時群組 toggle 立刻變全開態
+   * ⇒ 群組的語義是「**目前可見的子集**」，不是全部管道。
+   */
+  it("🔴 搜尋篩選時群組開關只作用於**可見**的管道（不波及被篩掉的）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    const search = dialog.getByRole("searchbox", { name: "搜尋管道" });
+
+    // 篩出「線上商店」——它在伺服器上是**開著**的 ⇒ 群組態＝全開
+    await userEvent.type(search, "線上商店");
+    expect(dialog.getByRole("checkbox", { name: "自全部管道取消發布" }))
+      .toHaveAttribute("aria-checked", "true");
+
+    // 全開 → 點群組 → 全關（只該關掉可見的那一個）
+    await userEvent.click(dialog.getByRole("checkbox", { name: "自全部管道取消發布" }));
+    await userEvent.clear(search);
+
+    expect(dialog.getByRole("switch", { name: "線上商店" })).not.toBeChecked();
+    // 🔴 被篩掉的「門市 POS」必須維持原狀（伺服器上開著）——M11 會讓它變關
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).toBeChecked();
+    expect(dialog.getByRole("switch", { name: "Shop" })).not.toBeChecked();
+  });
+
+  /**
+   * 🔴 本尊實測（82 §14，C.10 的補充格）：若**先前已有暫存值**（Done 過一次），
+   * 再開 modal 後按 `Cancel`，只丟棄本次 modal session 內的改動，
+   * **先前暫存值保留**（Publishing 卡仍顯示待儲存、SaveBar 仍在）。
+   * ⇒ `Cancel` 的作用域是 modal session，**不是**整頁 dirty state（那是 `Discard`）。
+   */
+  it("🔴 Cancel 只丟棄本次 modal session，先前已 Done 的暫存值保留", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const main = within(screen.getByRole("main"));
+    expect(await main.findByText("待儲存")).toBeVisible();
+
+    // 第二次開 modal：撥動另一個管道後按 Cancel
+    await userEvent.click(main.getByRole("button", { name: "管理發布" }));
+    const again = within(await screen.findByRole("dialog"));
+    // 🔴 開場顯示的是**暫存值**（Shop 已開），不是伺服器值
+    expect(again.getByRole("switch", { name: "Shop" })).toBeChecked();
+    await userEvent.click(again.getByRole("switch", { name: "線上商店" }));
+    await userEvent.click(again.getByRole("button", { name: "取消" }));
+
+    // 先前那筆暫存仍在
+    expect(main.getByText("待儲存")).toBeVisible();
+    expect(screen.getByRole("region", { name: "未儲存的變更" })).toBeVisible();
+  });
+
+  /**
+   * 🔴 本尊實測的比對法是**詞首前綴**，不是子字串（82 §14）：
+   *   `store` 命中 `Online Store`、`tore` 與 `line` 都無結果。
+   * 用 `includes()` 的話後兩格會多命中，而在「Shop」這種單詞管道上兩種實作**都會命中**
+   * ⇒ 只測 `Shop` 是分不出來的，必須測 `tore`／`line` 這兩個反例。
+   */
+  it("🔴 搜尋是詞首前綴而非子字串：store 命中、tore 與 line 都不命中", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    const search = dialog.getByRole("searchbox", { name: "搜尋管道" });
+
+    await userEvent.type(search, "POS");                  // 「門市 POS」的第二個詞的詞首
+    expect(dialog.getByRole("switch", { name: "門市 POS" })).toBeVisible();
+    expect(dialog.queryByRole("switch", { name: "線上商店" })).toBeNull();
+
+    await userEvent.clear(search);
+    await userEvent.type(search, "hop");                  // Shop 的子字串但非詞首 ⇒ 不命中
+    expect(dialog.getByText("找不到管道")).toBeVisible();
+
+    await userEvent.clear(search);
+    await userEvent.type(search, "Sho");                  // 詞首前綴 ⇒ 命中
+    expect(dialog.getByRole("switch", { name: "Shop" })).toBeVisible();
+
+    // ⚠️ **已知限制（照抄本尊的代價）**：中文管道名沒有空白 ⇒ 整個名字是一個詞，
+    //    只有整串前綴才命中。「線上商店」搜「商店」**不會**命中，搜「線上」才會。
+    //    這不是 bug，是本尊詞首前綴規則套到無空白書寫系統的必然結果。
+    await userEvent.clear(search);
+    await userEvent.type(search, "商店");
+    expect(dialog.getByText("找不到管道")).toBeVisible();
+
+    await userEvent.clear(search);
+    await userEvent.type(search, "線上");
+    expect(dialog.getByRole("switch", { name: "線上商店" })).toBeVisible();
+  });
+
+  it("建立態沒有齒輪（商品尚不存在＝沒有可傳給 publishablePublish 的 GID）", async () => {
+    stubRoutedFetch(BASE_ROUTES);
+    renderAt("/admin/products/new");
+    const main = within(await screen.findByRole("main"));
+    expect(main.queryByRole("button", { name: "管理發布" })).toBeNull();
+  });
+
+  /**
+   * 🔴 Microsoft Win32 UX Guide《Property Windows》對 owned property window 的逐字要求：
+   * "make sure users can cancel changes made in an owned property window by clicking Cancel"
+   * （<https://learn.microsoft.com/en-us/windows/win32/uxguide/win-property-win>，取證 2026-08-27）。
+   * 我方的 owner＝商品表單、owned＝本 modal ⇒ 頁面的「捨棄」必須連 modal 內做的變更一起撤銷。
+   *
+   * 這一格是 `publicationDelta` **放進 `values`** 的直接收益：`applyDiscard` 走
+   * `setValues(snapshot)` ⇒ delta 自動歸零。若當初把它另存成獨立 state，捨棄就會漏掉它，
+   * 而症狀是「按了捨棄，發布卡卻還顯示待儲存」。
+   */
+  it("🔴 頁面捨棄會一併撤銷 modal 內的發布變更（owned property window 語義）", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getByRole("switch", { name: "Shop" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const main = within(screen.getByRole("main"));
+    expect(await main.findByText("待儲存")).toBeVisible();
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "捨棄" }));
+    // 捨棄走確認框（包 4）
+    const confirm = within(await screen.findByRole("dialog"));
+    await userEvent.click(confirm.getByRole("button", { name: "捨棄變更" }));
+
+    await waitFor(() => expect(main.queryByText("待儲存")).toBeNull());
+    expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull();
+  });
+});

@@ -1,5 +1,6 @@
-import { ArrowLeft, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ImagePlus, MoreHorizontal, Pencil, Settings, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
 import { AdminGraphQLError, requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
@@ -9,6 +10,7 @@ import { Card } from "../components/Card";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { InventoryCard } from "../components/InventoryCard";
 import { MediaCard } from "../components/MediaCard";
+import { Modal } from "../components/Modal";
 import type { MediaCardItem } from "../components/MediaCard";
 import { LocalizedField } from "../components/LocalizedField";
 import type { LocaleOption } from "../components/LocalizedField";
@@ -81,6 +83,12 @@ const PRODUCT_QUERY = `
         pageInfo { hasNextPage }
       }
     }
+    # 🔴 **本店全部管道**（modal 要顯示「未發布」的管道，而 resourcePublicationsV2
+    #   只回已發布／已排程的列 ⇒ 未發布的管道在那裡**根本沒有列**）。
+    #   兩者做差集才是完整清單。本尊同樣在商品詳情查詢裡一起拿
+    #   （AdminProductDetails 帶 supportedChannelsFirst: 50，82 號 §13.3）。
+    #   ⚠️ 本區塊在 template literal 內，**不得用反引號**（會提前結束字串）。
+    publications { id title supportsFuturePublishing }
   }
 `;
 
@@ -101,6 +109,103 @@ type PublicationRow = {
 };
 
 /**
+ * 本店的一個管道（`publications` query 的元素）。
+ *
+ * 🔴 **與 `PublicationRow.publication` 是同一個東西的兩個來源**，但集合不同：
+ * 這裡是**全部管道**，`PublicationRow` 只有**該商品已發布或已排程**的那些。
+ * modal 要列出全部（含未發布的），⇒ 以本清單為骨架、用 `PublicationRow` 標狀態。
+ */
+type PublicationOption = { id: string; title: string; supportsFuturePublishing: boolean };
+
+/**
+ * 管道開關的 DOM id（群組總開關的 `aria-controls` 要指得到）。
+ *
+ * 🔴 GID 含 `/` 與 `:`，直接當 id 會讓 `aria-controls` 的**空白分隔清單**解析錯誤，
+ * 而且 `document.getElementById` 以外的選擇器也會炸 ⇒ 一律先轉成安全字元。
+ */
+function channelSwitchId(scope: string, publicationId: string): string {
+  return `${scope}-ch-${publicationId.replace(/[^a-zA-Z0-9]/g, "-")}`;
+}
+// ⚠️ **誠實登記：轉義目前是防禦性的，現有測試證明不了它必要**。GID 不含空白，
+//   所以 `aria-controls` 的空白分隔解析在不轉義時也不會壞（M12 突變確實沒轉紅）。
+//   它防的是「日後有人拿這個 id 去餵 `querySelector('#…')`」——`/` 與 `:` 在 CSS
+//   選擇器裡要跳脫。本尊在這裡是**直接用裸 GID 當 host id**（82 §14 實測），
+//   我方多一層 scope 前綴是因為 `useId()` 才保證得了同頁多實例的唯一性。
+
+/**
+ * 管道搜尋的比對法（本尊實測，取證 2026-08-27）。
+ *
+ * 🔴 **詞首前綴，不是子字串、也不是整串前綴**。實測四格：
+ *   `store` → 命中 `Online Store`（⇒ 不是整串前綴）；
+ *   `tore`  → 無結果（⇒ 不是子字串）；
+ *   `line`  → 無結果（`Online` 的子字串但非詞首 ⇒ 再次排除子字串）；
+ *   `of`    → 命中 `Point of Sale`（⇒ 中間的虛詞也算一個詞）。
+ * 另實測：大小寫不敏感、前後空白會 trim。
+ *
+ * ⚠️ 用 `includes()` 實作的話上面第 2、3 格會**多命中**，而那個差異在只有
+ * 「線上商店／門市 POS／Shop」這種短名清單上幾乎看不出來——`Shop` 這種
+ * 單詞管道兩種實作都會命中。
+ */
+function matchChannels(publications: PublicationOption[], query: string): PublicationOption[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return publications;
+  return publications.filter((pub) =>
+    pub.title.toLowerCase().split(/\s+/).some((word) => word.startsWith(needle)));
+}
+
+/** 待送出的發布變更（`FormValues.publicationDelta` 的型別別名，供純函式簽名使用）。 */
+type PublicationDelta = { publish: string[]; unpublish: string[] };
+
+const EMPTY_DELTA: PublicationDelta = { publish: [], unpublish: [] };
+
+/**
+ * 某管道在**伺服器上**是否開著。
+ *
+ * 🔴 **判準是「該列是否存在」，不是 `isPublished`**（S6a 已釘死的判準，S6b 沿用）：
+ * V2 的 `isPublished=false` 語義是「已排程未到點（staged）」而不是「未發布」；
+ * 既未發布也未排程的管道**該列根本不存在**。綁 `isPublished` 會讓已排程的管道
+ * 顯示成關閉，而該 bug 在沒有任何排程的環境下 **100% 測綠**。
+ */
+function isPublishedOnServer(rows: PublicationRow[], publicationId: string): boolean {
+  return rows.some((row) => row.publication.id === publicationId);
+}
+
+/** 某管道**畫面上**該顯示的開關狀態＝伺服器現況套上待送 delta。 */
+function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicationId: string): boolean {
+  if (delta.publish.includes(publicationId)) return true;
+  if (delta.unpublish.includes(publicationId)) return false;
+  return isPublishedOnServer(rows, publicationId);
+}
+
+/**
+ * 撥動一個管道，算出新的 delta。
+ *
+ * 🔴 **撥回伺服器現況時必須把該 id 從 delta 兩邊都移除，而不是記到另一邊**。
+ * 兩個後果，缺這條就都會發生：
+ * ①送出時會多送一支沒必要的 mutation（unpublish 一個伺服器上根本不存在的列）；
+ * ②`dirty` 會停在 true ⇒ SaveBar 不消失、離頁被攔，而使用者明明把它撥回原狀了。
+ *
+ * 本尊實測正面支持這條（82 §12：所有 toggle 動作在同一個 modal 內還原後，
+ * 頁尾 `Done` **全程 disabled**＝沒有待儲存的變更）⇒ 本尊也是**與現況比對**，
+ * 不是記錄操作序列。
+ */
+function toggleChannel(
+  rows: PublicationRow[],
+  delta: PublicationDelta,
+  publicationId: string,
+  next: boolean,
+): PublicationDelta {
+  const withoutId = {
+    publish: delta.publish.filter((id) => id !== publicationId),
+    unpublish: delta.unpublish.filter((id) => id !== publicationId),
+  };
+  if (next === isPublishedOnServer(rows, publicationId)) return withoutId;
+  return next
+    ? { ...withoutId, publish: [ ...withoutId.publish, publicationId ] }
+    : { ...withoutId, unpublish: [ ...withoutId.unpublish, publicationId ] };
+}
+
+/**
  * 發布卡的內容（S6a；`docs/research/82` §9.3 的第一種 affordance 的唯讀部分）。
  *
  * ①這是什麼：商品目前發布到哪些管道，資料來自 `resourcePublicationsV2(onlyPublished: false)`。
@@ -114,32 +219,250 @@ type PublicationRow = {
  *   兩種語義不得混用的陷阱（82 §9.4）。
  */
 function PublishingCard({
+  publications,
   rows,
+  delta,
   t,
 }: {
+  publications: PublicationOption[];
   rows: PublicationRow[];
+  delta: PublicationDelta;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
-  if (rows.length === 0) {
+  // 🔴 **以 `rows`（伺服器現況）為骨架，`publications` 只用來查待發布管道的標題**。
+  //   反過來以 `publications` 為骨架會讓卡片在該查詢缺席時整個空掉——那是 S6a 的回歸
+  //   （S6a 的卡片只靠 `rows` 就能顯示）。查不到標題時退回 id，不讓該列消失。
+  const shown = [
+    ...rows
+      .filter((row) => !delta.unpublish.includes(row.publication.id))
+      .map((row) => ({ id: row.publication.id, title: row.publication.title, row })),
+    ...delta.publish
+      .filter((id) => !isPublishedOnServer(rows, id))
+      .map((id) => ({
+        id,
+        title: publications.find((pub) => pub.id === id)?.title ?? id,
+        row: undefined as PublicationRow | undefined,
+      })),
+  ];
+
+  if (shown.length === 0) {
     return <p className="cl-pubcard__empty">{t("product.publishing.none")}</p>;
   }
   return (
     <ul className="cl-pubcard">
-      {rows.map((row) => (
-        <li className="cl-pubcard__row" key={row.publication.id}>
-          <span className="cl-pubcard__name">{row.publication.title}</span>
-          {row.isPublished ? (
+      {shown.map((entry) => (
+        <li className="cl-pubcard__row" key={entry.id}>
+          <span className="cl-pubcard__name">{entry.title}</span>
+          {/* 🔴 三態，不是兩態。`row` 缺席＝本次 modal 剛開啟、尚未儲存的待發布管道
+              （本尊實測 82 §13.1：按 Done 後卡片**樂觀更新**，SaveBar 才出現）。 */}
+          {entry.row === undefined ? (
+            <Badge tone="attention">{t("product.publishing.state.pending")}</Badge>
+          ) : entry.row.isPublished ? (
             <Badge tone="success">{t("product.publishing.state.published")}</Badge>
           ) : (
             <Badge tone="info">
-              {row.publishDate
-                ? t("product.publishing.state.scheduledAt", { at: formatPublishDate(row.publishDate) })
+              {entry.row.publishDate
+                ? t("product.publishing.state.scheduledAt", { at: formatPublishDate(entry.row.publishDate) })
                 : t("product.publishing.state.scheduled")}
             </Badge>
           )}
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * 群組總開關（modal 內「全部管道」那一列）。
+ *
+ * ①這是什麼：一顆控制整組管道的三態控制項——全開／全關／**半選**（各列不一致）。
+ * ②🔴 **它不是 `role="switch"`，這是刻意的**：`switch` 規範上**不支援**
+ *   `aria-checked="mixed"`，指定 mixed 會被 UA 降級成 `false`
+ *   （MDN《ARIA: switch role》逐字 "assigning a value of `mixed` to a `switch`
+ *   instead sets the value to `false`"，取證 2026-08-27
+ *   <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/switch_role>）。
+ *   ⇒ 若照各列的樣子也寫成 switch，**半選態會被螢幕閱讀器讀成「關」**，
+ *   視障使用者無從察覺子項不一致——而畫面上看起來完全正常，任何視覺測試都不會紅。
+ *   支援 mixed 的是 `checkbox`（MDN《ARIA: checkbox role》逐字
+ *   "The checkbox is partially checked, or indeterminate."）⇒ 本元件用 `role="checkbox"`。
+ * ③🔴 **本尊用的是另一條路，但兩者在 AX tree 上等價**——2026-08-27 實測
+ *   （`82` §14）：本尊的 toggle 是 Web Component `<s-internal-switch>`，狀態藏在
+ *   shadow root 裡的原生 `<input type="checkbox">`，半選**完全靠 DOM property
+ *   `input.indeterminate = true`** 承載，`aria-checked`／`role` 一個都沒有。
+ *   而 W3C html-aam 逐字 "aria-checked state set to 'mixed' if the element's
+ *   indeterminate IDL attribute is true"（<https://www.w3.org/TR/html-aam-1.0/>，
+ *   取證 2026-08-27）⇒ 原生 `indeterminate` 會被映射成 `mixed`，**AX 結果與本行相同**。
+ *   我方走顯式 `aria-checked="mixed"` 的兩個理由：①該 IDL 屬性只能經 DOM node 設定
+ *   （MDN 逐字 "it cannot be set using an HTML attribute"），而 React 官方文檔
+ *   **完全沒有記載** `indeterminate`（react.dev 與 legacy 兩頁皆無此字串，取證 2026-08-27）
+ *   ⇒ 那條路在 React 上沒有官方依據；②顯式屬性在 DOM 上可見 ⇒ 測得到
+ *   （本尊那條路連瀏覽器 a11y tree 都穿不透 shadow DOM，實測方只能改讀 DOM property）。
+ *
+ * ⚠️ **本尊的一個無障礙落差，我方不照抄**：實測本尊「半選」與「全關」的 accessible name
+ *   **完全相同**（都是 `Publish to all`），只有 `indeterminate` 能區分。我方同樣照抄了
+ *   那組 label（鐵律 12），但因為有顯式 `aria-checked="mixed"`，兩態在 AX 上仍可區分。
+ * ④跨功能影響：`aria-controls` 指向各列 switch 的 id（W3C ARIA APG
+ *   Checkbox (Mixed-State) Example 逐字 "identify the set of checkboxes controlled by
+ *   the mixed checkbox"）。視覺沿用我方 `.cl-switch` tokens（鐵律 8）。
+ *
+ * 🔴 **`checked` 由各列狀態於 render 期導出，不另存 state**——React 官方
+ *   《Choosing the State Structure》逐字 "Avoid contradictions in state."
+ *   （<https://react.dev/learn/choosing-the-state-structure>，取證 2026-08-27）。
+ */
+function GroupToggle({
+  checked,
+  label,
+  controls,
+  onChange,
+}: {
+  checked: boolean | "mixed";
+  label: string;
+  controls: string;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      aria-checked={checked === "mixed" ? "mixed" : checked}
+      aria-controls={controls}
+      aria-label={label}
+      className={`cl-switch ${checked === true ? "cl-switch--on" : ""} ${checked === "mixed" ? "cl-switch--mixed" : ""}`.trim()}
+      onClick={() => onChange(checked !== true)}
+      role="checkbox"
+      type="button"
+    >
+      <span aria-hidden="true" className="cl-switch__knob" />
+    </button>
+  );
+}
+
+/**
+ * 逐商品的發布編輯 modal（S6b；`docs/research/82` §12.1 的第一種 affordance 的編輯部分）。
+ *
+ * ①這是什麼：商品詳情頁 `Publishing` 卡右上齒輪開啟的模態；列出**本店全部管道**，
+ *   各帶一顆 toggle，開＝發布、關＝取消發布。標題逐字對位本尊
+ *   `Manage publishing for <商品標題>`（82 §12.1）。
+ * ②🔴 **語義是「狀態編輯器」不是「累加」**（82 §12.2 是 S2 最重要的一條）：
+ *   逐商品 modal **顯示目前狀態**、勾掉＝取消發布；而**批次** modal 開場一律全部未勾、
+ *   語義是累加／扣除。**兩者不得共用元件**——把逐商品做成累加語義，商家取消勾選不會生效；
+ *   把批次做成狀態編輯器，商家的一次勾選會清空整個管道。
+ * ③🔴 **`Done` 不寫入任何東西**（82 §13.1 實測：按 Done 當下**零 GraphQL 請求**，
+ *   只是讓頁面出現 `Unsaved changes`）。它把 modal 內的草稿提交到
+ *   `values.publicationDelta`，真正的寫入在頁面層級的 `Save`。
+ *   `Cancel` 丟棄草稿。無變更時 `Done` disabled（本尊同形態）。
+ * ④跨功能影響：`values.publicationDelta`（頁面 dirty／SaveBar）、
+ *   儲存路徑的兩支獨立 mutation、儲存後 `publicationRows` 重讀。
+ *   **排程（日曆 icon）屬 S6b-2**——本包不做，理由見下方 `supportsFuturePublishing` 的說明。
+ *
+ * ⚠️ **本尊四節我方只做一節**：本尊左欄有 `Sales Channels`／`Agentic`／`Catalogs›Regions`
+ *   （82 §12.1）。我方 **Agentic 無資料層、catalog 成員表未落地（S10）** ⇒ 只有一節，
+ *   故不渲染左欄導航（單項導航是噪音）。登記為 V，S10 落地時回頭補。
+ */
+function PublishingModal({
+  productTitle,
+  publications,
+  rows,
+  delta,
+  onApply,
+  onClose,
+  restoreFocusTo,
+  t,
+}: {
+  productTitle: string;
+  publications: PublicationOption[];
+  rows: PublicationRow[];
+  delta: PublicationDelta;
+  onApply: (next: PublicationDelta) => void;
+  onClose: () => void;
+  restoreFocusTo: RefObject<HTMLElement | null>;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  // 草稿＝modal 內的暫存。呼叫端條件渲染本元件 ⇒ 每次開啟都是新的初值，不需同步 effect。
+  const [draft, setDraft] = useState<PublicationDelta>(delta);
+  const [query, setQuery] = useState("");
+  const searchId = useId();
+
+  const visible = useMemo(() => matchChannels(publications, query), [publications, query]);
+
+  // 🔴 判斷「有沒有待儲存變更」看的是 **draft 兩邊皆空**，不是「使用者點過幾下」。
+  //   撥開再撥回會讓 `toggleChannel` 把該 id 從兩邊移除 ⇒ 這裡回到 false、Done 變回 disabled。
+  //   本尊同形態（82 §12：全程在 modal 內還原後 `Done` 全程 disabled）。
+  const changed = draft.publish.length > 0 || draft.unpublish.length > 0;
+
+  // 🔴 群組態**由各列導出，不另存 state**（React 官方《Choosing the State Structure》
+  //   逐字 "Avoid contradictions in state."）。全開／全關／半選三態。
+  const onCount = visible.filter((pub) => channelIsOn(rows, draft, pub.id)).length;
+  const groupState: boolean | "mixed" =
+    visible.length > 0 && onCount === visible.length ? true : onCount === 0 ? false : "mixed";
+  // 本尊實測：群組鈕的可及名稱隨狀態變（全開＝取消發布到全部；混合／全關＝發布到全部）
+  // ⇒ **半選時點下去是「全開」**，不是全關。
+  const groupLabel = groupState === true
+    ? t("product.publishing.modal.unpublishAll")
+    : t("product.publishing.modal.publishAll");
+
+  const applyGroup = (next: boolean) =>
+    setDraft((current) =>
+      visible.reduce((acc, pub) => toggleChannel(rows, acc, pub.id, next), current));
+
+  return (
+    <Modal
+      footer={
+        <>
+          <Button onClick={onClose}>{t("common.cancel")}</Button>
+          <Button disabled={!changed} onClick={() => onApply(draft)} variant="primary">
+            {t("common.done")}
+          </Button>
+        </>
+      }
+      onClose={onClose}
+      open
+      restoreFocusTo={restoreFocusTo}
+      title={t("product.publishing.modal.title", { title: productTitle })}
+    >
+      <div className="cl-pubmodal">
+        {/* 本尊形態（82 §12.2）：type=search、placeholder 可見、label 只給輔助科技。 */}
+        <TextField
+          id={searchId}
+          label={t("product.publishing.modal.search")}
+          labelHidden
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("product.publishing.modal.search")}
+          type="search"
+          value={query}
+        />
+        {/* 🔴 空態涵蓋**兩種**情況：搜尋無結果，以及本店根本沒有管道（`publications`
+            查詢缺席時）。文案因此取中性的「找不到管道」——本尊同樣是一句
+            `No channels found` 通吃兩者（82 §14.3）。 */}
+        {visible.length === 0 ? (
+          <p className="cl-pubcard__empty">{t("product.publishing.modal.noMatch")}</p>
+        ) : (
+          <>
+            {/* 群組列（本尊 82 §12.2：`Sales Channels` 群組列帶自己的 toggle，
+                三個管道只有一個開著時呈**半選態**）。 */}
+            <div className="cl-pubmodal__group">
+              <span className="cl-pubmodal__group-label">{t("product.publishing.modal.group")}</span>
+              <GroupToggle
+                checked={groupState}
+                controls={visible.map((pub) => channelSwitchId(searchId, pub.id)).join(" ")}
+                label={groupLabel}
+                onChange={applyGroup}
+              />
+            </div>
+            <ul className="cl-pubmodal__list">
+              {visible.map((pub) => (
+                <li className="cl-pubmodal__row" key={pub.id}>
+                  <SwitchRow
+                    checked={channelIsOn(rows, draft, pub.id)}
+                    id={channelSwitchId(searchId, pub.id)}
+                    label={pub.title}
+                    onChange={(next) => setDraft((current) => toggleChannel(rows, current, pub.id, next))}
+                  />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }
 
@@ -179,11 +502,95 @@ const REORDER_MEDIA_MUTATION = `
   }
 `;
 
+/**
+ * 發布／取消發布（S6b）。
+ *
+ * 🔴 **兩個方向是兩支獨立 mutation，且都不是 `productSet` 的一部分**——本尊實測
+ * （`docs/research/82` §13.2）：同一顆 `Save` 送出**兩個** POST，`ProductSaveUpdate`
+ * 與 `ProductSavePublishablePublishUnpublish`；只改發布時**只送後者**。
+ * ⇒ 我方不得把 publish／unpublish 併進 `productSet`。
+ *
+ * 🔴 **`publishDate` 本包一律不送**：排程屬 S6b-2（需要日期時間輸入面與店鋪時區）。
+ * 省略它＝立即發布（`Publications::Write` 的 R1／R3）；**傳 `null` 會被 reject**（R10），
+ * 所以不得為了「型別完整」而顯式送 null。
+ *
+ * 🔴 **兩個方向放在同一個 document，用 `@include` 各自開關**——這是本尊 admin 的
+ * 實際形態，2026-08-27 抓包取得 request variables 逐字（`82` §14）：
+ *
+ * ```
+ * "shouldPublish": true, "shouldUnpublish": false,
+ * "publicationsToPublish": [{"publicationId": "gid://shopify/Publication/209681645803"}],
+ * "publicationsToUnpublish": []
+ * ```
+ *
+ * 🔴 同次抓包還揭露一件單看 operation 名字看不出來的事：**`ProductSaveUpdate`
+ * 也帶同樣那兩個 publications 陣列，但它的 `shouldPublish`／`shouldUnpublish`
+ * 皆為 `false`** ⇒ 兩支 document 共用變數，靠 `@include` 決定誰真的執行，
+ * **不會重複寫入**。我方照這個形態做：變數名與開關名都對齊本尊，
+ * 空的那一邊**整個 field 不執行**（送空陣列會讓 `Publications::Write` 白跑一次
+ * transaction 並 bump 一次 stamp）。
+ *
+ * ⇒ 回應形狀因此是**可選的**：被 skip 的那個 field 在 `data` 裡根本不存在，
+ * 讀 `data.publishablePublish.userErrors` 會炸 ⇒ 消費端一律用可選鏈。
+ *
+ * GraphQL 規範對 mutation 的 top-level field 是**依序執行**，故一次往返即可。
+ *
+ * 🔴 **`publish` 排在 `unpublish` 前面是刻意的**：若順序相反且 publish 那半失敗，
+ * 商品會落在「舊管道已移除、新管道沒加上」＝**意外全下架**。反過來若 unpublish
+ * 那半失敗，最壞是多發布一個管道——「多可見」遠比「全不可見」輕。
+ *
+ * ⚠️ **與本尊的已知差異：我方兩個 field 各自一個 transaction，不是原子的。**
+ * graphql-ruby 的 mutation 各自開 transaction（`Publications::Write.write_publishable`
+ * 的 `ApplicationRecord.transaction` 在單支之內）⇒ 第二支失敗時第一支已提交。
+ * 本尊那份 document 內部是不是原子＝**不可觀測**（persisted query，鐵律 14.3）。
+ * 我方的收斂辦法是儲存後一律**重讀**伺服器現值（見 `save`），不做樂觀翻轉。
+ */
+const PUBLISHING_MUTATION = `
+  mutation productPublishing(
+    $id: ID!
+    $publicationsToPublish: [PublicationInput!]!
+    $publicationsToUnpublish: [PublicationInput!]!
+    $shouldPublish: Boolean!
+    $shouldUnpublish: Boolean!
+  ) {
+    publishablePublish(id: $id, input: $publicationsToPublish) @include(if: $shouldPublish) {
+      userErrors { field message code }
+    }
+    publishableUnpublish(id: $id, input: $publicationsToUnpublish) @include(if: $shouldUnpublish) {
+      userErrors { field message code }
+    }
+  }
+`;
+
 const MEDIA_QUERY = `
   query productMedia($id: ID!) {
     product(id: $id) {
       media { id position alt status image { thumbUrl url }
               externalVideo { host externalId embedUrl originUrl } }
+    }
+  }
+`;
+
+/**
+ * 發布狀態重讀（S6b；儲存後與失敗後都走這一支）。
+ *
+ * 🔴 **不做樂觀翻轉**：`unpublish` 在後端是**硬刪列**、`publish` 可能因商品狀態不合格
+ * 被拒，且兩支不在同一個 transaction ⇒ 本地翻轉會與伺服器真相分岔，而分岔的症狀是
+ * 「後台顯示已發布、前台看不到」。一律重讀。
+ *
+ * 兩維（purchasable／discoverable）也一起重讀：取消發布會讓它們變 false，
+ * 不重讀的話狀態卡會停在舊答案（S6a-2 的伺服器唯一答案原則）。
+ */
+const PUBLICATIONS_QUERY = `
+  query productPublications($id: ID!) {
+    product(id: $id) {
+      purchasable
+      discoverable
+      resourcePublicationsV2(onlyPublished: false) {
+        isPublished
+        publishDate
+        publication { id title supportsFuturePublishing }
+      }
     }
   }
 `;
@@ -231,6 +638,13 @@ interface ProductSetData {
   };
 }
 
+/** `PUBLISHING_MUTATION` 的回應（兩個 field 各自回 userErrors）。 */
+interface PublishingMutationData {
+  // 🔴 兩者都可選：`@include(if: false)` 的 field 在回應的 `data` 裡**不存在**。
+  publishablePublish?: { userErrors: { field: string[] | null; message: string; code: string }[] };
+  publishableUnpublish?: { userErrors: { field: string[] | null; message: string; code: string }[] };
+}
+
 interface ProductQueryData {
   product: {
     id: string;
@@ -267,6 +681,7 @@ interface ProductQueryData {
       pageInfo?: { hasNextPage: boolean };
     };
   } | null;
+  publications?: PublicationOption[];
 }
 
 /** 表單值（原型 PD_NEW 的對應子集；金額欄以原始輸入字串保存，送出才轉）。 */
@@ -297,6 +712,24 @@ interface FormValues {
   variantRows: VariantRowData[];
   /** 媒體展示序（第 27 包；拖曳後進 SaveBar，隨儲存送 mediaOrder）。空＝不動順序。 */
   mediaOrder: string[];
+  /**
+   * 待送出的發布變更（S6b）。兩邊都空＝發布這一塊沒有未儲存變更。
+   *
+   * 🔴 **形態完全比照 `mediaOrder`**：進 `values` 是為了讓 `dirty` 自動亮、
+   * SaveBar 自動出現（本尊實測 82 §13.1：modal 的 `Done` 不寫入任何東西，
+   * 只讓頁面出現 `Unsaved changes`）；但送出走**獨立 mutation**，不進 `productSet`
+   * （§13.2：本尊同一顆 Save 送兩個 POST，發布永遠是獨立的那一支）。
+   *
+   * 🔴 **這與 S6a「發布狀態不進 values」不衝突**：那句禁的是把**伺服器現況**
+   * （`publicationRows`）塞進快照，不是禁使用者的**待送變更**。現況仍在
+   * `publicationRows`，本欄只有 delta。
+   *
+   * 🔴 **是 delta 不是完整期望狀態**：後端就是 publish／unpublish 兩個方向的兩支
+   * mutation（`Publications::Write` 的 publish＝建列或更新、unpublish＝硬刪列）。
+   * 存完整期望狀態的話，送出前還要再與伺服器現況做一次差集——而那份現況可能
+   * 已經被別的分頁改掉，差集會算錯。
+   */
+  publicationDelta: { publish: string[]; unpublish: string[] };
 }
 
 /** 建立態預設值（原型 PD_NEW：金額 null＝空字串不是 0；taxable 預設 true）。 */
@@ -322,6 +755,7 @@ const INITIAL_VALUES: FormValues = {
   options: [],
   variantRows: [],
   mediaOrder: [],
+  publicationDelta: { publish: [], unpublish: [] },
 };
 
 type FieldKey =
@@ -470,12 +904,15 @@ function SwitchRow({
   hint,
   checked,
   disabled,
+  id,
   onChange,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
   disabled?: boolean;
+  /** 給群組總開關的 `aria-controls` 指得到（S6b）。 */
+  id?: string;
   onChange?: (next: boolean) => void;
 }) {
   return (
@@ -489,6 +926,7 @@ function SwitchRow({
         aria-label={label}
         className={`cl-switch ${checked ? "cl-switch--on" : ""}`}
         disabled={disabled}
+        id={id}
         onClick={onChange ? () => onChange(!checked) : undefined}
         role="switch"
         type="button"
@@ -716,6 +1154,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   //   發布寫入走 `publishablePublish`／`publishableUnpublish` 獨立 mutation（S6b），
   //   混進表單快照會讓 SaveBar 對「不是本表單負責的東西」報髒。
   const [publicationRows, setPublicationRows] = useState<PublicationRow[]>([]);
+  // 本店全部管道（modal 的骨架；`publicationRows` 只有已發布／已排程的那些）。
+  const [publications, setPublications] = useState<PublicationOption[]>([]);
+  const [publishingOpen, setPublishingOpen] = useState(false);
   // 伺服器算的可見性兩維（`null`＝尚未載入／建立態）。
   const [serverVisibility, setServerVisibility] =
     useState<{ purchasable: boolean; discoverable: boolean } | null>(null);
@@ -743,6 +1184,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   // modal 焦點還原目標（觸發鈕隨開框 unmount：選單項→更多動作鈕、SaveBar→頁標題）
   const actionsButtonRef = useRef<HTMLButtonElement | null>(null);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const publishingButtonRef = useRef<HTMLButtonElement | null>(null);
   const rowPriceRefs = useRef<(HTMLInputElement | null)[]>([]);
   // 本編輯階段被剔除的列（審查 C1：刪值再加回要復活原列，不是空白 freshRow
   // ——空白列會被後端 digest-match 後宣告式抹掉既有變體的回聲欄）
@@ -818,10 +1260,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           options: optionDrafts,
           variantRows,
           mediaOrder: [],
+          publicationDelta: { publish: [], unpublish: [] },
         };
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
         setPublicationRows(product.resourcePublicationsV2 ?? []);
+        setPublications(data.publications ?? []);
         setServerVisibility(
           typeof product.purchasable === "boolean" && typeof product.discoverable === "boolean"
             ? { purchasable: product.purchasable, discoverable: product.discoverable }
@@ -1038,6 +1482,24 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
 
   // 媒體重讀（上傳／刪除／alt 之後）。只重讀媒體不重讀整個表單——
   // 否則使用者打到一半的欄位會被伺服端值蓋掉。
+  /** 重讀發布狀態與可見性兩維（儲存後與失敗後都走這裡；見 `PUBLICATIONS_QUERY` 檔頭）。 */
+  const reloadPublications = useCallback(async () => {
+    if (!productGid) return;
+    try {
+      const data = await requestAdminGraphQL<ProductQueryData, { id: string }>(
+        PUBLICATIONS_QUERY, { id: productGid },
+      );
+      setPublicationRows(data.product?.resourcePublicationsV2 ?? []);
+      setServerVisibility(
+        typeof data.product?.purchasable === "boolean" && typeof data.product?.discoverable === "boolean"
+          ? { purchasable: data.product.purchasable, discoverable: data.product.discoverable }
+          : null,
+      );
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("product.publishing.reloadFailed"));
+    }
+  }, [productGid, showToast, t]);
+
   const reloadMedia = useCallback(async () => {
     if (!productGid) return;
 
@@ -1175,6 +1637,35 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         }
       }
 
+      // 🔴 發布變更（S6b）——**必須在 `productSet` 成功之後**（與 mediaOrder 的 C9/C19
+      //    同構：擺在 userErrors 檢查之前的話，商品儲存被伺服端拒絕時發布照樣被永久改掉，
+      //    而使用者看到的是「儲存失敗」）。
+      // 🔴 **只在該部分 dirty 時才送**——本尊同形態（82 §13.2 結論 3：只改發布的那次
+      //    沒有送 `ProductSaveUpdate`）。反過來也成立：沒改發布就不送這一支。
+      let publicationsTouched = false;
+      const pubDelta = values.publicationDelta;
+      if (!isNew && (pubDelta.publish.length > 0 || pubDelta.unpublish.length > 0)) {
+        publicationsTouched = true;
+        const applied = await requestAdminGraphQL<PublishingMutationData, Record<string, unknown>>(
+          PUBLISHING_MUTATION,
+          {
+            id: productGid,
+            publicationsToPublish: pubDelta.publish.map((id) => ({ publicationId: id })),
+            publicationsToUnpublish: pubDelta.unpublish.map((id) => ({ publicationId: id })),
+            shouldPublish: pubDelta.publish.length > 0,
+            shouldUnpublish: pubDelta.unpublish.length > 0,
+          },
+        );
+        // 🔴 兩支各自回 userErrors，**兩邊都要看**：只看 publish 的話，
+        //    「取消發布被拒」會靜默成功，而卡片重讀後會顯示那個管道還在——
+        //    使用者只會看到「存了但沒變」，沒有任何訊息。
+        const pubErrors = [
+          ...(applied.publishablePublish?.userErrors ?? []),
+          ...(applied.publishableUnpublish?.userErrors ?? []),
+        ];
+        if (pubErrors.length > 0) showToast(pubErrors[0].message);
+      }
+
       // 就地認 id（審查 C4）：本次新建的列在回應裡以座標對回 id——否則之後
       //    改名選項（改名＝後端刪＋加）時 id-less 列 digest 對不上、變體被換新。
       const savedNodes = product.variants?.nodes ?? [];
@@ -1188,7 +1679,18 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       // 🔴 快照必須是「順序已落地＝mediaOrder 清空」的形狀（審查 C8/C20）：
       //    存進舊的非空 mediaOrder，之後 reloadMedia 把它清成 [] 就永遠不相等，
       //    頁面停在 dirty、SaveBar 不消失、離頁還會被攔。
-      const savedValues = { ...values, variantRows: adoptedRows, mediaOrder: [] };
+      // 🔴 `publicationDelta` 一併歸零。**成敗都歸零**（mediaOrder 的 C13 同構）：
+      //    留著的後果是**下次儲存重送同一份 delta**，且發布卡一直掛著「待儲存」badge。
+      //    使用者看得到真實狀態——下面的 `reloadPublications` 會把伺服器現值拉回來，
+      //    部分成功的那一半也會如實顯示。
+      //    ⚠️ **這裡的失效形態與 mediaOrder 的 C8/C20 不同，不要照抄那句話**：
+      //    mediaOrder 有 `reloadMedia` 會把 `values.mediaOrder` 清成 `[]`，而快照記著
+      //    非空 ⇒ 兩者永遠不相等、SaveBar 不消失。delta **沒有**那個清空機制 ⇒ 漏掉歸零時
+      //    快照與 values 雙雙停在非空、彼此相等，**SaveBar 照樣消失**，症狀只剩「重送」
+      //    這一個且完全無聲。本包的 M5 突變就是在這裡發現我原本寫錯了機制。
+      const savedValues = {
+        ...values, variantRows: adoptedRows, mediaOrder: [], publicationDelta: EMPTY_DELTA,
+      };
       snapshot.current = JSON.stringify(savedValues);
       showToast(t("product.saved"));
       if (isNew) {
@@ -1198,6 +1700,9 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         setLockVersion(product.lockVersion);
         setValues(savedValues);
         if (mediaOrderApplied) void reloadMedia();
+        // 🔴 成敗都重讀：部分成功（publish 過了、unpublish 被拒）時，只有伺服器知道
+        //    真實組合。不重讀的話卡片會停在送出前的樂觀畫面。
+        if (publicationsTouched) void reloadPublications();
       }
     } catch (reason: unknown) {
       // 鐵律 4 三層的另外兩層：top-level（THROTTLED／ACCESS_DENIED／
@@ -1210,7 +1715,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
     } finally {
       setSaving(false);
     }
-  }, [applyServerErrors, isNew, locations, lockVersion, navigate, productGid, reloadMedia, saving, showToast, t, validate, values, variantOverflow]);
+  }, [applyServerErrors, isNew, locations, lockVersion, navigate, productGid, reloadMedia, reloadPublications, saving, showToast, t, validate, values, variantOverflow]);
 
   const applyDiscard = useCallback(() => {
     setValues(JSON.parse(snapshot.current) as FormValues);
@@ -2002,8 +2507,33 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
             </Card>
           )}
           <Card padded>
-            <h3>{t("product.card.publishing")}</h3>
-            <PublishingCard rows={publicationRows} t={t} />
+            {/* 齒輪開發布編輯 modal（本尊觸發步驟逐字：商品詳情頁 → Publishing 卡
+                → **右上角的設定圖示**，82 §12.1）。形態沿用 SEO 卡的標題列 icon 鈕。 */}
+            <h3>
+              {t("product.card.publishing")}
+              {/* 🔴 建立態不給齒輪：商品尚未存在 ⇒ 沒有可傳給 publishablePublish 的 GID，
+                  且該態下管道清單根本沒查（PRODUCT_QUERY 只在編輯態跑）。 */}
+              {isNew ? null : (
+                <span className="cl-card__head-action">
+                  <button
+                    aria-haspopup="dialog"
+                    aria-label={t("product.publishing.manage")}
+                    className="cl-icon-button"
+                    onClick={() => setPublishingOpen(true)}
+                    ref={publishingButtonRef}
+                    type="button"
+                  >
+                    <Settings aria-hidden="true" size={14} />
+                  </button>
+                </span>
+              )}
+            </h3>
+            <PublishingCard
+              delta={values.publicationDelta}
+              publications={publications}
+              rows={publicationRows}
+              t={t}
+            />
           </Card>
           {/* 組織分類卡（91 §12：類型 search-or-create、廠商 autocomplete、標籤 token、佈景範本）。 */}
           <Card padded>
@@ -2055,6 +2585,24 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
       </div>
 
       {/* 破壞性動作確認框（包 4）。封存確認後沿既有 applyStatusAction 通道自動儲存。 */}
+      {/* 🔴 條件渲染而非傳 `open`：modal 內的草稿是 local state，
+          每次開啟都要是 `values.publicationDelta` 的新鮮初值。Modal 原語的焦點還原
+          寫在 `useEffect` 的 cleanup ⇒ unmount 同樣會跑，不因此失效。 */}
+      {publishingOpen ? (
+        <PublishingModal
+          delta={values.publicationDelta}
+          onApply={(next) => {
+            setValue("publicationDelta", next);
+            setPublishingOpen(false);
+          }}
+          onClose={() => setPublishingOpen(false)}
+          productTitle={values.title}
+          publications={publications}
+          restoreFocusTo={publishingButtonRef}
+          rows={publicationRows}
+          t={t}
+        />
+      ) : null}
       <ConfirmDialog
         confirmLabel={t("confirm.discard.action")}
         danger
