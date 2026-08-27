@@ -1165,6 +1165,27 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
   🔴 **本條是 ours 裁定，不是照本尊；也不得反向斷言本尊沒有補償機制**
   （形態同 `docs/specs/91-pit-register.md` §3 第 28 包 staged 保留期先例）。
 
+- 🔴 **2026-08-27 更正（本尊實測；使用者裁定「按照 shopify 的處理方式做」）**：
+  本裁定原文有兩處與本尊實際行為牴觸，依使用者指示改為照抄本尊。逐字證據與取證步驟＝
+  `docs/dev/m2-publication-scheduling.md` §11（測試店三個商品、逐時點 API 取樣）。
+  **原文保留不改**（歷史層），生效判準以本更正為準：
+  - **更正一｜到點的 `published_at` 處置**：原文 §3.2 列「不 UPDATE
+    `resource_publications.published_at`」。實測本尊採 **consume-and-drop**——
+    到點**合格** ⇒ `publishDate` **覆寫成實際發布時間**（實測 `05:58:00 → 05:58:02`，
+    晚約 2 秒）；到點**不合格**（DRAFT）⇒ `publishDate` **清成 null**（排程物件消滅，
+    列本身不刪）。⇒ 我方改為同樣處置。
+  - **更正二｜轉回可購買狀態時補發布**：實測本尊在錯過排程後把 status 改回 Active 存檔，
+    **三個通路的 publishDate 同時寫成存檔當下時間**（不是回填錯過的排定時間）——機制是
+    「Active ＋ 通路 toggle ON ⇒ 立即發布」，**不是排程補跑**。我方對位：
+    `resource_publications` 列存在＝toggle ON、`published_at IS NULL`＝在通路上但未發布
+    ⇒ status 轉為 `PURCHASABLE_STATUSES` 時把該類列的 `published_at` 寫成當下。
+    ⚠️ 差異：本尊同步發生，我方經 outbox 非同步（延遲上界≈一個 relay 輪詢間隔）。
+  - 🔴 **被實測正面證實、維持不變的兩格**：①F1 的判準集合＝`{ACTIVE, UNLISTED}`
+    （實測 UNLISTED 商品排程**照常發布**、status 不被改動 ⇒ 不合格集合**只有 DRAFT**）；
+    ②F2「不自動補發布」（實測排程值不復活、不回填原排定時間）。
+  - ⚠️ **未取得**：`ARCHIVED` 到點行為本輪未測（避免對測試商品做不可逆歸檔）
+    ⇒ 我方 fail-closed，與 DRAFT 同處置並登記為 ours。
+
 - **裁定（逐格）**：
   - **F1｜到點時 status 不合格**：到點消費者以 **DB 現值**重新評估——列不存在或 `published_at`
     已改期 ⇒ no-op；`status ∉ Product::PURCHASABLE_STATUSES`（＝{ACTIVE, UNLISTED}）⇒

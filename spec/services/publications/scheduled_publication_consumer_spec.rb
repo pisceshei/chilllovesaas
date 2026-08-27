@@ -77,35 +77,43 @@ RSpec.describe Publications::ScheduledPublicationConsumer do
 
   # ── T01–T04：status 閘門（可見性軸，不是 == ACTIVE）───────────────────────
   describe "status 閘門" do
-    it "T01 active ⇒ stamp 前進" do
+    it "T01 active ⇒ stamp 前進，且 published_at **覆寫成實際到點處理時間**（照本尊）" do
       schedule!
       before_stamp = stamp
-      drain_at_due!
+      at = future + 1.minute
+      drain_at_due!(at:)
+
       expect(stamp).to be > before_stamp
+      # 🔴 本尊實測：成功路徑把 publishDate 覆寫成實際發布時間（05:58:00→05:58:02）
+      expect(row.published_at).not_to eq(future)
+      expect(row.published_at).to be_within(5.seconds).of(Time.current)
     end
 
-    it "🔴 T02 unlisted ⇒ stamp **前進**（判準是可見性軸，不是 == ACTIVE）" do
+    it "🔴 T02 unlisted ⇒ stamp **前進**（判準是可見性軸，不是 == ACTIVE；本尊實測 UNLISTED 照常發布）" do
       schedule!
       set_status!("unlisted")
       before_stamp = stamp
       drain_at_due!
+
       expect(stamp).to be > before_stamp
+      expect(row.published_at).not_to be_nil
+      expect(row.published_at).not_to eq(future)
     end
 
-    it "T03 draft ⇒ stamp 不動、未 raise、事件 published、published_at 未改寫、列仍在" do
+    it "🔴 T03 draft ⇒ **published_at 清成 NULL**（consume-and-drop，照本尊）、stamp 不動、未 raise、列仍在" do
       schedule!
       set_status!("draft")
       before_stamp = stamp
       event = scheduled_event
 
       expect { drain_at_due! }.not_to raise_error
-      expect(stamp).to eq(before_stamp)
+      expect(stamp).to eq(before_stamp)          # 可見性沒變化 ⇒ 不 bump
       expect(event.reload.status).to eq("published")
-      expect(row).to be_present
-      expect(row.published_at).to eq(future)
+      expect(row).to be_present                  # 🔴 清欄位值，不刪列
+      expect(row.published_at).to be_nil         # 🔴 排程物件消滅
     end
 
-    it "T04 archived ⇒ 同 T03" do
+    it "T04 archived ⇒ 同 T03（⚠️ 本尊未實測 ARCHIVED，我方 fail-closed 與 draft 同處置）" do
       schedule!
       set_status!("archived")
       before_stamp = stamp
@@ -114,7 +122,7 @@ RSpec.describe Publications::ScheduledPublicationConsumer do
       expect { drain_at_due! }.not_to raise_error
       expect(stamp).to eq(before_stamp)
       expect(event.reload.status).to eq("published")
-      expect(row.published_at).to eq(future)
+      expect(row.published_at).to be_nil
     end
   end
 
@@ -256,14 +264,19 @@ RSpec.describe Publications::ScheduledPublicationConsumer do
       expect(stamp).to be > after_missed
     end
 
-    it "🔴 T12 全程 resource_publications.published_at 未被改寫" do
+    it "🔴 T12 到點時 published_at 被清成 NULL，且改回 ACTIVE 後**不復活**（本尊實測：排程不會回來）" do
       schedule!
       set_status!("draft")
       drain_at_due!
+      expect(row.published_at).to be_nil          # 到點清空
+
       save_status!("ACTIVE")
       ActsAsTenant.without_tenant { Events::Relay.drain! }
-
-      expect(row.published_at).to eq(future)
+      # 🔴 本尊實測：改回 Active 是「Active＋通路 ON ⇒ 立即發布」，publishedAt 寫的是
+      #   **存檔當下**，不是回填錯過的排定時間 ⇒ 排程沒有復活、也沒有補跑。
+      expect(row.published_at).not_to be_nil
+      expect(row.published_at).not_to eq(future)
+      expect(row.published_at).to be_within(1.minute).of(Time.current)
     end
 
     it "🔴 T13 DRAFT 期間不可購買；改 ACTIVE 後同一查詢立即可購買，且未執行補發布" do
@@ -279,8 +292,10 @@ RSpec.describe Publications::ScheduledPublicationConsumer do
       save_status!("ACTIVE")
       ActsAsTenant.without_tenant { Events::Relay.drain! }
       expect(purchasable.call).to include(product.id)
-      # 「不補發布」＝沒有任何新的發布列被建立、published_at 保持商家設定的時刻
-      expect(row.published_at).to eq(future)
+      # 「不補發布」的精確語義（本尊實測）＝**不回填原排定時間、不新增發布列**；
+      #   商品可購買是因為「Active＋通路 ON ⇒ 立即發布」，publishedAt＝存檔當下。
+      expect(row.published_at).not_to eq(future)
+      expect(row.published_at).to be_within(1.minute).of(Time.current)
       # 「不補發布」＝沒有**新增**任何發布列（基線是 Materialize 為 product＋variant 各建的那些，
       #   不是絕對值 1——絕對值會隨 fixture 變動而假紅/假綠）。
       expect(ActsAsTenant.without_tenant { ResourcePublication.where(shop_id: shop.id).count }).to eq(baseline_rows)
