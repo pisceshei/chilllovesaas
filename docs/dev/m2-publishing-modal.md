@@ -97,11 +97,19 @@ V2 的 `isPublished=false` 是「已排程未到點（staged）」；綁錯會�
 ③🔴 **不是 `role="switch"`**：`switch` 規範上不支援 `aria-checked="mixed"`，指定 mixed 會被
 UA 降級成 `false` ⇒ 半選態會被螢幕閱讀器讀成「關」，而畫面完全正常、視覺測試不會紅。
 值由各列於 render 期導出，**不另存 state**。`aria-controls` 指向各列 switch 的 id。
+🔴 **accessible name 必須含可見文字「銷售管道」**（WCAG 2.5.3 Label in Name，Level A，
+逐字 "the name contains the text that is presented visually"）——只給狀態動詞的話，
+語音輸入使用者照畫面唸「點擊 銷售管道」找不到任何控件。本尊有同樣落差（§14.1），
+我方此處刻意偏離，理由與 mixed 態用顯式 `aria-checked` 相同。
 ④影響：一次改動多個管道的 delta；被篩掉的管道**不得**波及。
 
 ### 搜尋框
 
-①`type="search"`，placeholder 可見、label 只給輔助科技（本尊同形態）。
+①`type="search"`，placeholder 可見、label 只給輔助科技。
+🔴 **這三個屬性是 ours，不是實測結論**——§12.2 對這個控件的全部逐字只有「`Search channels`
+輸入框」，§14.3 補的是行為；type／placeholder 可見性／label 可見性**皆未取得**
+（已列入 §14.10 的 U7）。附帶已知偏離：清除鈕靠 `type=search` 的瀏覽器原生實作，
+Firefox 預設不渲染（本尊實測右側有 `⊗`，U8）。
 ②即時篩選（本尊有 debounce，⚠️ 毫秒數未取得；我方不做 debounce——清單是個位數）。
 🔴 **詞首前綴比對**，不是子字串（§14.3 四格實測）。大小寫不敏感、前後 trim。
 ③不符的列整個從 DOM 移除（本尊同形態，非 `display:none`）。
@@ -114,7 +122,10 @@ UA 降級成 `false` ⇒ 半選態會被螢幕閱讀器讀成「關」，而畫�
 ③🔴 **`Cancel` 的作用域是 modal session，不是整頁 dirty**（§14.4d：已有暫存值時再開再
 `Cancel`，先前暫存值**保留**）。我方靠條件渲染達成：`Cancel` 只 unmount 草稿，
 不碰 `values`。
-④`Done` 之後發布卡樂觀顯示「待儲存」badge，SaveBar 出現。
+④`Done` 之後發布卡樂觀顯示「待儲存」badge（新增方向）並**移除**被取消的管道（移除方向），
+SaveBar 出現。
+🔴 **`Done` 是否可按的判準＝「draft ≠ 開場暫存」，不是「draft 兩邊皆空」**——差別只在
+「開場就已有暫存」的 session 顯現，而後者會讓撤銷變成按不下去（見 `sameDelta` 檔頭）。
 
 ## API
 
@@ -145,10 +156,10 @@ mutation productPublishing(
 
 ## 測試
 
-`app/frontend/admin/pages/ProductDetailPage.test.tsx` 的 `S6b 發布編輯 modal`，21 格。
-本包全套 176 examples / 0 failures（本包前 155）。
+`app/frontend/admin/pages/ProductDetailPage.test.tsx` 的 `S6b 發布編輯 modal`，34 格
+（初版 21 格 ＋ 對抗性審查後補 13 格）。全套 189 examples / 0 failures（本包前 155）。
 
-**突變全部實跑轉紅**：
+**突變 M1–M27 逐個實跑**，只有兩個沒轉紅且兩個都已誠實登記（M12 預期內、M25 是防線缺口）：
 
 | 突變 | 轉紅的格 |
 |---|---|
@@ -165,6 +176,18 @@ mutation productPublishing(
 | **M11 群組作用於全部管道** | **搜尋篩選時的作用域**（🔴 見下） |
 | M13 搜尋改回子字串 | 詞首前綴 |
 | M14 `@include` 開關恆真 | 只有 publish 方向 |
+| M15 `changed` 改回「draft 兩邊皆空」 | 重開 modal 撤回暫存 |
+| M16 `setLockVersion` 移回發布 mutation 之後 | 發布失敗後重試的 lockVersion |
+| M17 齒輪拿掉 `disabled` | 儲存中／變體超過 250 時齒輪 |
+| M18 `salesChannelsOf` 改成恆真 | catalog 不得混進銷售管道 |
+| M19 不呼叫 `reloadPublications` | 儲存後真的重讀 |
+| M20 `shouldPublish` 硬編 `true` | 只取消發布時 `shouldPublish=false` |
+| M21 刪掉卡片的 unpublish 濾鏡 | 樂觀**移除**被取消的管道 |
+| M22 拿掉 `toLowerCase()` | 搜尋大小寫不敏感 |
+| M23 群組 label 拿掉可見文字前綴 | Label in Name |
+| M24 刪掉 `role="status"` | 搜尋結果的 status message |
+| M26 重讀失敗不標 stale | 不冒充伺服器真相 |
+| M27 modal 標題改成不帶商品名 | 標題逐字對位 |
 
 🔴 **M5 第一次沒轉紅，開出一個真缺口**，且證明我原本的註釋寫錯了機制。
 移除 `savedValues` 的 `publicationDelta: EMPTY_DELTA` 之後 45 格全綠——因為快照與 `values`
@@ -182,6 +205,37 @@ mutation productPublishing(
 `aria-controls` 的空白分隔解析在不轉義時也不會壞。轉義是**防禦性的**（防日後有人拿它餵
 `querySelector('#…')`，`/` 與 `:` 在 CSS 選擇器裡要跳脫），現有測試證明不了它必要
 ——已在程式碼註釋誠實登記。本尊在這裡是**直接用裸 GID 當 host id**。
+
+🔴 **M25（`.cl-switch--mixed` 的 knob 幾何改回錯的）沒轉紅，而這是一個真實的防線缺口**：
+把橫線改回「寬 4px、無 height 覆寫」（＝直立短棒）之後**全套 189 格仍然全綠**。
+⇒ **CSS 幾何在本倉庫目前沒有任何機械防線**。鐵律 13.3 要求的量測腳本
+`scripts/rwd-check.mjs` 尚未建立（屬 PR-C0），而新增 `scripts/` 屬 18.3 人工合併射程、
+且鐵律 20.4 要求先登記候選與代價再取得裁定 ⇒ **本包不自行新增判準**，
+候選已登記於 `docs/specs/91-pit-register.md` §2。
+
+## 對抗性審查（2026-08-27，PR #160）
+
+初始候選推出後對本包做了一次五維度對抗性審查（正確性／對齊本尊／無障礙／測試充分性／
+跨模組影響），每條 finding 再由兩個獨立 lens 嘗試推翻（一個實際讀碼推演、一個查是否已登記）。
+32 條 finding，**23 條通過雙 lens**，去重後 9 個真問題，本輪全部修復：
+
+| # | 級別 | 問題 | 修法 |
+|---|---|---|---|
+| 1 | 🔴 | `changed` 判準是「draft 非空」而非「draft ≠ 開場暫存」⇒ 重開 modal 撤回先前暫存時 `Done` **鎖死**，使用者撤銷不了，一存就真的下架 | `sameDelta` 集合比較 |
+| 2 | 🔴 | 儲存後的 `reloadPublications` **完全不可觀測**（重讀路由回同一份 fixture、零呼叫斷言）——刪掉那一行測試全綠 | 重讀路由改回不同的一份＋呼叫斷言＋兩維斷言 |
+| 3 | 🟡 | 發布 mutation 拋例外時 `lockVersion` 沒吸收 ⇒ 此後**每次**儲存都撞 `STALE_OBJECT`，連標題都存不回去 | `productSet` 成功當下就吸收 |
+| 4 | 🟡 | `variantOverflow` 連坐：發布變更可暫存但永遠存不進去 | 齒輪 disabled＋說明；更正被推翻的登記 |
+| 5 | 🟡 | `Query.publications` 含 catalog publication ⇒ 混進「銷售管道」節、被群組總開關一併寫入 | `salesChannelsOf` 依 `handle` 過濾（fail-closed） |
+| 6 | 🟡 | `.cl-switch--mixed` 只覆寫 `width` 未覆寫 `height` ⇒ 渲染成**直立短棒**而非實測的橫線 | `width:14 height:4 top:7 translate:7px` |
+| 7 | 🟡 | 齒輪沒有 `disabled={saving}` ⇒ 儲存中可重開 modal，之後的錯誤 toast 落在 `inert` 樹內、對輔助科技**完全靜默** | 齒輪 disabled＋儲存時關閉 modal |
+| 8 | 🟡 | 搜尋結果無 status message（WCAG 2.2 SC 4.1.3）／群組開關 accname 不含可見文字（SC 2.5.3） | 固定位置 live region＋accname 加前綴 |
+| 9 | 🟡 | 搜尋框把三個**未量測**的屬性寫成「本尊形態（§12.2）」 | 改標 ours＋新增 §14.10 的 U7／U8 |
+
+另修三條較輕的：卡片在重讀失敗時冒充伺服器真相（加 `stale` 第三態）、字面 `1px` 違反
+`tokens.css` 的「全站邊框一律 `var(--hairline)`」、群組列 en 文案大小寫（`Sales Channels`）。
+
+🔴 **審查也推翻了本文件原本的一句登記**（「只改發布仍送 productSet…無正確性問題」），
+更正見下方「刻意偏離本尊」第 6 條。
 
 ## 已知限制與 TODO
 
@@ -210,8 +264,20 @@ mutation productPublishing(
 5. **顯式 `aria-checked="mixed"`**——本尊用原生 `indeterminate`（AX 上等價，見 §14.1）。
    我方這條路可測，且避開「React 官方沒有記載 `indeterminate`」的無依據區。
 6. **只改發布時我方仍送 `productSet`**——本尊只送發布那一支（§14.7 結論 3）。
-   我方 `productSet` 是宣告式全量、同值 no-op，差異僅多一次寫入與 bump 一次 `lockVersion`，
-   無正確性問題。不在本包改既有 `save()` 的送出策略（鐵律 20.5）。
+   我方 `productSet` 是宣告式全量、同值 no-op，代價是多一次寫入與 bump 一次 `lockVersion`。
+   不在本包改既有 `save()` 的送出策略（鐵律 20.5）。
+
+   🔴 **2026-08-27 更正（對抗性審查推翻）**：本條原文結尾是「**無正確性問題**」，那句是錯的。
+   `save()` 開頭有 `if (variantOverflow) { … return; }`（審查 C0：變體超過 250 時整頁封鎖），
+   而發布寫入被這個閘門**連坐**——變體超過 250 的商品，發布變更可以撥、可以按完成、
+   卡片會掛「待儲存」badge、SaveBar 會亮，但按儲存**一個請求都不送**，使用者只看到一句
+   與發布無關的「變體太多」。審查以實跑複驗（fixture 加 `pageInfo.hasNextPage=true`）
+   得到 `PUBCALLS = 0 | SaveBar still = true`。
+   ⇒ 本輪處置：**齒輪在 `variantOverflow` 時 disabled 並帶說明**（見下方「刻意偏離」第 7 條），
+   讓使用者不會暫存出一個存不進去的變更。真正解除要等 variantOverflow 本身解除（變體子頁）。
+
+7. **`variantOverflow` 時齒輪 disabled**（ours）——本尊沒有這個狀態（它不封鎖整頁儲存）。
+   理由見上一條的更正。**代價誠實登記：超過 250 變體的商品目前無法從詳情頁改發布狀態。**
 
 ### 未落地的實測發現
 

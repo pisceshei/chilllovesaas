@@ -1650,6 +1650,8 @@ accessible name 來源＝host 的 `label` 屬性，`labelaccessibilityvisibility
 | S6b-U4 | `Unlisted` 狀態的完整說明文案 | 加大視窗高度後重讀下拉 |
 | S6b-U5 | 搜尋框 debounce 的實際毫秒數 | 逐 100ms 取樣 |
 | S6b-U6 | persisted query 全文 | 不可觀測（鐵律 14.3 既有 V 項） |
+| S6b-U7 | 搜尋框的 **input type**、placeholder 是否可見、label 是否只給輔助科技 | §12.2 只記到「有一個 `Search channels` 輸入框」、§14.3 只記行為 ⇒ 三者皆**未取得**。取得方式：回該 modal 讀該 input 的 DOM 屬性與 AX name |
+| S6b-U8 | 本尊清除鈕 `⊗` 是**自繪**還是 `type=search` 的瀏覽器原生鈕 | 同上；我方目前依賴原生實作（Firefox 預設不渲染），差異已在程式碼註釋登記 |
 
 ### §14.11 環境異常登記（鐵律 12.0）
 

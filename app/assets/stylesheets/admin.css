@@ -1819,11 +1819,14 @@ a {
    會被 UA 降級成 false ⇒ 半選態對螢幕閱讀器讀成「關」）。視覺沿用 .cl-switch。 */
 .cl-pubmodal { display: flex; flex-direction: column; gap: var(--sp-300); }
 .cl-pubmodal__list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
-.cl-pubmodal__row { border-bottom: 1px solid var(--border-2); }
+/* 🔴 邊框寬度一律 var(--hairline)——tokens.css 明文「全站邊框一律 var(--hairline)；
+   --bw-100:1px 依 51 表 6 作廢，不落地」。寫字面 1px 會與緊鄰的 .cl-swrow 分隔線
+   （.66px）不同粗細，在同一個 modal 內看得出來。 */
+.cl-pubmodal__row { border-bottom: var(--hairline) solid var(--border-2); }
 .cl-pubmodal__row:last-child { border-bottom: 0; }
 .cl-pubmodal__group {
   align-items: center;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--hairline) solid var(--border);
   display: flex;
   gap: var(--sp-200);
   justify-content: space-between;
@@ -1831,13 +1834,17 @@ a {
 }
 .cl-pubmodal__group-label { color: var(--text); font-size: var(--t-sm); font-weight: var(--fw-control); }
 
-/* 半選：knob 停在中間並收窄成一橫（本尊實測為「深色軌＋置中短橫線」，82 §12.2／§14.1）。
-   🔴 translate 必須依**收窄後**的寬度重算：軌 32px、橫線 4px、knob 起始 left:2px
-   ⇒ 置中位置 (32-4)/2 = 14px ⇒ translate = 14-2 = 12px。
-   照 --on 那條的 14px、或按原 knob 寬 14px 算出的 7px，都會讓橫線偏一邊。 */
+/* 半選：knob 變成置中的短橫線（本尊實測逐字「深色軌＋置中短橫線（dash），不是圓鈕」，
+   82 §14.1）。
+   🔴 **橫線＝寬 14 高 4，不是寬 4**。基底 knob 是 14×14 圓鈕；只覆寫 width 會得到
+   4×14 的**直立**短棒（軌道裡看起來是「｜」而不是「—」），而那正好與本尊相反。
+   幾何：軌 32×18。水平 (32-14)/2 = 9，起始 left:2 ⇒ translate 7px；
+        垂直 (18-4)/2 = 7 ⇒ top 7px（覆寫基底的 top:2px）。 */
 .cl-switch--mixed { background: var(--brand); }
 .cl-switch--mixed .cl-switch__knob {
-  translate: 12px 0;
-  width: 4px;
+  top: 7px;
+  width: 14px;
+  height: 4px;
+  translate: 7px 0;
   border-radius: var(--r-pill);
 }
