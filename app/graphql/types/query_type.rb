@@ -107,6 +107,11 @@ module Types
       argument :id, ID, required: true
     end
 
+    # 🔴 本店本身。建立於 S6b-2，當時唯一消費端是排程彈層要的時區
+    #   （欄位取捨與「為什麼是店鋪級不是使用者級」見 `Types::ShopType` 檔頭）。
+    field :shop, Types::ShopType, null: false,
+      description: "本店。"
+
     field :shop_locales, [ Types::ShopLocaleType ], null: false,
       description: "本店的內容語言（position 序，來源語言優先；ML-2）。" do
       argument :include_disabled, Boolean, required: false,
@@ -146,6 +151,15 @@ module Types
       # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
       scope = Products::SearchScope.apply(scope:, query:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
+    # @return [Shop] 目前租戶
+    # @note 授權沿用 `authorize_products!`——本 type 目前唯一的欄位（時區）是商品排程
+    #   發布的輸入，讀商品的人就該讀得到它。日後若加入與商品無關的欄位（帳務、方案），
+    #   必須改成該欄位自己的 policy，**不得讓 products 權限順帶開出去**。
+    def shop
+      authorize_products!
+      context.fetch(:current_shop)
     end
 
     # 本店已啟用的內容語言。語言集合是**資料**（67 §A.2）：新增語言不改程式碼、

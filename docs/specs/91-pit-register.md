@@ -2932,6 +2932,61 @@
    複驗：`grep -n "def publications" -A 6 app/graphql/types/query_type.rb` 看有無 channel 過濾；
    取證日期＝2026-08-27】
 
+### 3.25 S6b-2（排程彈層）的範圍外觀察（2026-08-27）
+
+- 🔴 **GraphQL 認證失敗回 HTTP 200，與鐵律 4 第三層直接衝突**。鐵律 4 明文
+  「認證失敗、租戶停用、payload 格式錯誤回**非 200**（401／402／403／423／400）」，
+  而本倉庫現況是 **200 ＋ top-level `errors` ＋ `code: ACCESS_DENIED`**。
+  這是**認證層的既有行為**（`Query.shop` 只是本輪新增的消費端），修它會動到每一支
+  GraphQL 端點與全部既有 request spec ⇒ 依鐵律 20.5 不在 S6b-2 擴修。
+  🔴 **這條是鐵律違反不是偏好差異**，不適用「裁定不修」的清法——要放行必須先改鐵律本文，
+  或另開一個專門的 PR 把三層錯誤模型補齊。
+  ⚠️ 附帶：對一個**完全沒帶憑證**的請求回「帳號或密碼錯誤。」是誤導訊息（它描述憑證錯誤，
+  不是憑證缺席）。
+  【複驗：`bundle exec rspec spec/requests/shop_timezone_query_spec.rb`——第二格的註釋記錄了
+   實測到的狀態碼與 body 形狀；來源＝S6b-2 建 `Query.shop` 時發現，全倉既有 request spec
+   **沒有任何一格測未登入**（`grep -rn "未登入\|:unauthorized" spec/requests/`）；
+   取證日期＝2026-08-27】
+
+- ⚪ **本尊同一筆排程在三個位置有三種日期寫法**（`82` §15.9）：modal 內
+  `Publish on: Aug 27, 2026 at 10:37 PM`（縮寫月）／`Publishing` 卡 tooltip
+  `Online Store: August 27 at 10:37 PM`（完整月、**無年份**）／列表頁
+  `Publish on: August 27, 2026 at 10:37 PM`（完整月＋年）。照登記不照抄。
+  【來源＝`82` §15.9；取證日期＝2026-08-27】
+
+- ⚪ **本尊按 `Escape` 會把排程 popover ＋ modal 一起關掉且丟棄 modal 內未存的改動**
+  （`82` §15.2，重現 2 次，無任何確認）。我方**刻意不照抄**——`Modal.tsx` 檔頭本來就
+  明文設計「Escape 尊重 `event.defaultPrevented`（內層 popover 先關自己）」，照抄等於
+  主動破壞既有的正確行為。這是本尊的資料遺失缺陷，不是特性。
+  【來源＝同上；我方偏離登記於 `docs/dev/m2-schedule-popover.md`；取證日期＝2026-08-27】
+
+### 3.26 S6b-2a（排程地基與原語）的範圍外觀察（2026-08-28）
+
+- 🔴 **登入節流的 spec 是時序敏感的既有 flake**：
+  `spec/requests/staff_authentication_spec.rb` 的
+  「throttles the eleventh login attempt from one IP even across accounts」
+  在全套執行時偶發紅（症狀：10 次都是 422、**第 11 次也沒被擋**，也就是計數不足）。
+
+  **機制（實測）**：`Rack::Attack` 的 throttle 是**固定窗口**，cache key 含
+  `time.to_i / period` 的 bucket；`admin_login_throttle_per_ip` 的 period 是 **60 秒**
+  （`config/limits.yml`）。實跑驗證 bucket 邊界：`08:00:59` 與 `08:01:00` 落在不同 bucket。
+  ⇒ 那格的 11 次請求只要跨越整分鐘邊界，計數就分裂到兩個 bucket，第 11 次自然不被擋。
+  單獨跑該檔 1.34 秒撞不到邊界（實測綠）；全套跑約 3 分鐘就有機會。
+
+  **證據**：同一棵樹連跑兩次全套——第一次 1277 examples / **1 failure**（就是這格）、
+  第二次 1277 / **0**；單獨跑該檔 7/7 綠；與新增的
+  `spec/requests/shop_timezone_query_spec.rb` 兩檔一起跑 10/10 綠。
+
+  ⚠️ **誠實邊界**：**未做「改動前連跑 N 次」的對照**，所以不宣稱「S6b-2a 完全沒有提高
+  觸發率」——本包新增了 3 格後端 spec 與 27 格前端，套件執行時間變長，機制上會微幅
+  提高撞邊界的機率（與 §3 已登記的 `enable_launch_locales` 死鎖那條同構：既有問題、
+  新包把觸發率推高）。但**根因是固定窗口，與改動內容無關**。
+
+  **修法方向**（不在本包做）：那格改成不依賴真實時鐘——用 `travel_to` 把 11 次請求
+  凍結在同一個 bucket 內，或改用 `Rack::Attack` 的 `reset!` 後注入固定時間。
+  【複驗：`bin/rails runner` 印出 `Rack::Attack.throttles["admin-login/ip"].period`
+   與相鄰秒數的 bucket；或連跑 `bundle exec rspec` 數次觀察該格；取證日期＝2026-08-28】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

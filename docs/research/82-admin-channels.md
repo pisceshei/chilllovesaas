@@ -1658,3 +1658,214 @@ accessible name 來源＝host 的 `label` 屬性，`labelaccessibilityvisibility
 實測中途瀏覽器 viewport 被壓到 **896×302 CSS px / dpr 1.75**（Chrome 側邊欄佔用，
 `resize_window` 無法改變），modal 需捲動操作；另有多次 `Page.captureScreenshot` 逾時
 與一次擴充功能斷線——**皆依載入紀律重試後成功，無任何一項因此登記為「本尊沒有此功能」**。
+
+---
+
+## §15 🔴 S6b-2 地基：`Schedule publishing` 彈層的完整契約（2026-08-27 實測＋抓包）
+
+> 射程＝分步方案的 **S6b-2**（排程發布的編輯面）。測試店 `chill-love-u5q5mnzq`。
+> 🔴 **自建拋棄式商品 `S6B2-Probe-Schedule`（id `9913809207531`）做全部破壞性實驗、做完刪除**；
+> `D53-QA/QB/QC` 全程未開啟其詳情頁，兩個 fixture 完全未觸碰，終態逐一複驗完好。
+> 量測環境：viewport 1024×551、根字級 16px、**瀏覽器時區 `Asia/Taipei`**、
+> 店鋪時區 `(GMT+08:00) Hong Kong`（兩者刻意不同，見 §15.6）。
+
+觸發路徑：商品詳情 → `Publishing` 卡齒輪 → modal → hover `Online Store` 列
+→ 日曆＋時鐘 icon（tooltip `Schedule publishing`）→ 點它。
+
+### §15.1 🔴 它是 **popover，不是巢狀 dialog**——三條判定式證據
+
+```
+DIV.Polaris-Popover__Content        tabindex=-1
+DIV.Polaris-Popover                 data-polaris-overlay=true
+DIV.Polaris-PositionedOverlay        z-index:520
+DIV#PolarisPortalsContainer  →  DIV#app  →  BODY
+```
+
+1. **沒有** `role="dialog"`、**沒有** `aria-modal`、**沒有** `open`。
+2. `modalDialog.contains(popoverOverlay) === false`——它與 modal 本體
+   （`div[role=dialog][aria-modal=true]`）是**同 portal 容器下的兄弟**，不是巢狀。
+3. **popover 開著時底下的 modal 完全可互動**：直接點 modal 的 `Search channels`
+   ⇒ popover 不關、該輸入框取得焦點（`activeElement` 落在它的 shadow input）。
+   modal 沒有 `inert`、沒有 `aria-hidden`；**沒有遮罩、沒有 click-outside 關閉、沒有 focus trap**。
+
+⚠️ popover 內容高 491 > 可視 pane 243 ⇒ 本輪 viewport 下頁尾按鈕**必須在 popover 內捲動**才看得到。
+
+### §15.2 🔴 關閉途徑三種，語義**不同**
+
+| 途徑 | 結果 |
+|---|---|
+| popover 的 `Cancel` | **只關 popover**，modal 留著、modal `Done` 維持 disabled |
+| **`Escape`（一次）** | 🔴 **popover ＋ modal 一起關**，且 **modal 內未存的改動全被丟棄**（實測：先關掉 Online Store toggle 再 Escape ⇒ 回頁面**沒有** `Unsaved changes`）。重現 2 次 |
+| **點 modal 外的遮罩** | 🔴 同 Escape，一次點擊兩層一起關 |
+| 點 modal **內部**（非 popover 區） | popover 不關 |
+
+🔴 **Escape 那條是本尊的資料遺失形態**：商家按 Escape 想關 popover，結果整個 modal 的
+未存編輯一起沒了，且沒有任何確認。我方**刻意不照抄**（見 `docs/dev/m2-schedule-popover.md`）。
+
+### §15.3 日期與時間輸入的值域
+
+**日期欄**＝可輸入文字框（`type="text"`、`placeholder="Date (YYYY-MM-DD)"`、`readOnly === false`），
+顯示格式是 `August 27, 2026`，但**只吃 ISO `YYYY-MM-DD`**：
+
+| 輸入 | blur 後 | |
+|---|---|---|
+| `2026-09-15` | `September 15, 2026` | ✅ blur 時正規化成顯示格式 |
+| `10/05/2026` | 回退上一個有效值 | ❌ |
+| `October 5, 2026`（它自己的顯示格式） | 輸入中被吃成 `52026`，blur 回退 | ❌ **不能回打** |
+| `banana` | 顯示 `anana`，blur 回退 | ❌ |
+
+🔴 **錯誤處理＝靜默回退到上一個有效值**：沒有錯誤訊息、沒有紅框。
+🔴 **打字選了非當前月份的日期時，月曆不跳頁**（打 `2026-10-05` 後表頭仍停在 `August 2026`）。
+⚠️ 字元過濾的精確規則＝**未取得**（`xOctober` → `October`，字母並非一律剔除）。
+
+**時間欄**＝`role="combobox"`＋`aria-autocomplete="list"`，可打字：
+
+| 輸入 | blur 後 |
+|---|---|
+| `11:00 PM` | `11:00 PM` |
+| `22:45`（24 小時制） | **`10:45 PM`**（自動轉 12 小時制） |
+| `10:37 PM` | `10:37 PM`（**不吸附**到半點） |
+
+下拉是 `role=option` 的 **30 分鐘刻度**：未來日期 **48 個**選項，第一個逐字
+`12:00 AM (start of day)`（只有它帶後綴），其餘 `12:30 AM`…`11:30 PM`。
+⇒ **刻度只存在於下拉建議，實際值域是分鐘級**。
+
+### §15.4 🔴 選「今天」時的下限＝**現在**，處置是**靜默吸附到 now**
+
+兩層都測：
+
+1. **下拉層**：日期＝今天、當下 21:17 ⇒ listbox 只剩 **5 個**選項
+   （`9:30 PM`／`10:00 PM`／`10:30 PM`／`11:00 PM`／`11:30 PM`），同元件在未來日期是 48 個。
+2. **打字層（決定性）**：先設 `11:00 PM` 並 blur（值確實變了）→ 再打 `1:00 PM`（今天的過去時間）
+   → blur ⇒ 值變成 **`9:28 PM`＝當下時刻**，**不是**回退到剛才的 `11:00 PM`。
+   ⇒ 證明它不是「回退上一個有效值」，而是**夾到 now**。
+3. 同因旁證：日期從 `September 15` 改回今天時，原本合法的 `3:30 AM` 被**自動改成 `9:27 PM`**。
+
+**全程沒有錯誤文案、沒有 disabled、沒有 toast。**
+
+⚠️ 這與外部研究建議的「在 grid 層擋（`aria-disabled`）」**不同**——本尊對**時間**是吸附，
+對**日期**才是 disabled（見下）。
+
+### §15.5 月曆：至少 50 年內無上限；過去的日子 disabled 但可翻頁
+
+- `Previous month`／`Next month` 的 `aria-label` 逐字即該兩字。
+- **可以往回翻到過去月份**（該月所有日期 disabled），`Previous month` 本身**不 disabled**。
+- 親手點 `Next month` 25 次 → `August 2028`；再程式化點同一顆 600 次 → **`August 2078`**，
+  `nextDisabled === false`。**未觀察到上限。**
+- 當月只有「今天之前」的日子 disabled。
+
+### §15.6 🔴 時區徽章取自**後端下發的 IANA 時區**，不是瀏覽器
+
+決定性證據：徽章 DOM 節點的 React fiber 祖先鏈上帶 prop **`timeZone: "Asia/Hong_Kong"`**
+（第 15／22／44 層各一次），而**瀏覽器時區是 `Asia/Taipei`**
+（`Intl.DateTimeFormat().resolvedOptions().timeZone` 實測）⇒ 該字串不可能來自瀏覽器。
+
+店鋪設定（`Settings › General`，**只讀查看**）：`Time zone = (GMT+08:00) Hong Kong`，
+說明逐字 `Sets the time for when orders and analytics are recorded`；
+下方另一行逐字 `To change your user level time zone and language visit your account settings`
+⇒ 🔴 **本尊有店鋪級與使用者級兩個時區**（與我方 `shops.timezone` / `staff_members.timezone` 對位）。
+
+徽章形態：逐字 `GMT+8`（**縮寫**，不是 `Asia/Hong_Kong`、不是 `HKT`、無前導零）；
+DOM 屬性只有 `class,id`——**沒有 `title`／`aria-label`／tooltip**，hover 2 秒不出現任何東西。
+
+⚠️ **未取得**：改店鋪時區後徽章是否跟著變——執行方**刻意未改店鋪設定**
+（改設定需要使用者本人在對話中明確同意，派工訊息不能代替）。
+補做方式：`Settings › General › Store defaults › Time zone` 改值 → 存檔 → 回商品開彈層看徽章 → 改回。
+⚠️ 同樣未取得：`Asia/Hong_Kong` 來自**店鋪級**還是**使用者級**（本店兩者可能都是香港，觀察無法區分）。
+
+### §15.7 🔴 `Remove schedule` 的終態＝**立即發布**，不是清空
+
+- 啟用條件＝**已存檔的排程存在**（在 popover 內設好但尚未按 Done 時仍 disabled）；
+  啟用後文字轉**紅色（critical）**。
+- 按下去 ⇒ **popover 立即關閉**、不需再按 popover 的 `Done`；tooltip 從
+  `Publish on: …` 變回 `Schedule publishing`；**modal 的 `Done` 由 disabled 變 enabled**；
+  **零網路請求**。
+- 按頁面 `Save` 後送出的 variables（脫敏節錄）：
+
+```
+publicationsToPublish = [{ "publicationId":"gid://shopify/Publication/209681645803",
+                           "publishDate":"2026-08-27T13:35:30.576Z" }]   ← 當下時刻，不是 null
+publicationsToUnpublish = []
+```
+
+回應：`"publishDate":"2026-08-27T13:35:30Z","isPublished":true`
+
+⇒ 🔴 **它把 `publishDate` 覆寫成「現在」，於是該管道變成已發布**。
+**不是**變未發布、**也不是**回到設排程之前的狀態。
+
+### §15.8 🔴 抓包：排程走 `publishablePublish` 本身，`publishDate` 送 **UTC 帶毫秒 Z**
+
+三個階段各自的請求數：
+
+| 動作 | `api/operations` 請求數 |
+|---|---|
+| popover 按 `Done` | **0** |
+| modal 按 `Done` | **0** |
+| 頁面按 `Save` | **1**（`ProductSavePublishablePublishUnpublish`） |
+
+request body（脫敏，去 client_context token）：
+
+```json
+{ "operationName": "ProductSavePublishablePublishUnpublish",
+  "variables": {
+    "shouldPublish": true, "shouldUnpublish": false,
+    "productId": "gid://shopify/Product/9913809207531",
+    "publicationsToPublish": [
+      { "publicationId": "gid://shopify/Publication/209681645803",
+        "publishDate": "2026-08-27T14:37:00.000Z" }],
+    "publicationsToUnpublish": [] } }
+```
+
+🔴 **本地輸入 `10:37 PM` @ GMT+8 → 送出 `2026-08-27T14:37:00.000Z`**
+⇒ ISO 8601、**UTC**、**帶毫秒**、`Z` 結尾，**不帶時區偏移量**。
+🔴 **「排程」＝帶未來 `publishDate` 的 publish**，沒有獨立的 schedule mutation。
+
+回應（同一支請求即回新狀態，**沒有另外的 refetch**）：
+
+```json
+{ "publishDate":"2026-08-27T14:37:00Z", "isPublished":false,
+  "publication":{ "name":"Online Store", "supportsFuturePublishing":true } }
+{ "publishDate":"2026-08-27T13:12:44Z", "isPublished":true,
+  "publication":{ "name":"Point of Sale", "supportsFuturePublishing":false } }
+```
+
+三條結論：
+
+1. **送出與回傳格式不對稱**：送 `…T14:37:00.000Z`，收 `…T14:37:00Z`（秒精度）。
+2. 🔴 **設未來排程會把已發布的管道立刻打成未發布**（`isPublished` true → false、
+   `onlineStoreUrl` 為 null），**而 UI 的 toggle 仍顯示「開」**
+   ⇒ **UI toggle ≠ `isPublished`**，本尊自己也是這樣。這正面複驗了 S6a／S6b 的判準。
+3. 🔴 **判斷「有排程」必須是 `supportsFuturePublishing && publishDate > now`**——
+   `publishDate` 每個管道都有（非排程管道存的是「當初發布的時刻」，是過去值），
+   只看它非空會把所有已發布管道都當成排程中。
+
+### §15.9 已設排程後的呈現：三個位置、**三種日期寫法**
+
+| 位置 | 形態 | tooltip 逐字 |
+|---|---|---|
+| modal 的 `Online Store` 列 | toggle 仍「開」；日曆 icon 從 hover 才出現變成**常駐** | `Publish on: Aug 27, 2026 at 10:37 PM`（**縮寫月**） |
+| 商品詳情 `Publishing` 卡 | 文案不變（仍 `All channels`／`All catalogs`），右側**新增日曆-時鐘 badge ＋ 數字**（＝有排程的管道數） | `Online Store: August 27 at 10:37 PM`（**完整月、無年份**） |
+| 商品**列表頁** | **沒有任何排程 badge**；`Status` 仍 `Active`（不是 `Scheduled`）、`Channels` 仍 `3`（沒扣掉待發布的）。只有展開 `3 ⌄` 後 `Online Store` 右側有 icon | `Publish on: August 27, 2026 at 10:37 PM`（**完整月＋年**） |
+
+🔴 **同一筆排程在三個位置有三種日期寫法**，這是本尊的不一致，照登記不照抄。
+
+### §15.10 彈層的預設值
+
+- Online Store toggle 為「開」時開啟 ⇒ 日期＝今天、時間＝**當下時刻到分**
+  （實測 5 次：9:17／9:23／9:27／9:39／9:43 PM，都等於當時的 wall clock）。
+- toggle 被關掉時開啟 ⇒ 一次觀察到預設 `10:00 PM`（當時 21:44，＝下一個半小時刻度）。
+  ⚠️ **只有一個樣本，不足以斷言規則**。
+- 每次重開彈層**完全重置**（月曆回當月、未按 Done 的編輯全丟）。
+- 🔴 **toggle 關掉時日曆 icon 仍出現、彈層仍可開**——icon 的顯示條件是該 publication
+  的 `supportsFuturePublishing`，**不是**「目前已發布」。
+
+### §15.11 S6b-2 尚未取得
+
+| # | 未取得 | 取得方式 |
+|---|---|---|
+| S6b2-U1 | 改店鋪時區後徽章是否跟著變 | 需使用者本人同意後改 `Settings › General` 的 Store defaults 再改回 |
+| S6b2-U2 | 徽章的 `Asia/Hong_Kong` 來自**店鋪級**還是**使用者級**設定 | 同上；需讓兩者不同值才能區分 |
+| S6b2-U3 | 日期欄字元過濾器的精確規則 | 逐字元窮舉輸入 |
+| S6b2-U4 | toggle 關閉時彈層預設時間的規則（只有一個樣本） | 多次在不同時刻重複開啟觀察 |
+| S6b2-U5 | 月曆的真實上限（翻到 2078 仍無上限） | 程式化再翻更多；或查官方文檔 |
+| S6b2-U6 | 排程到點的實際生效機制 | 既有 S2-U3，未變 |
