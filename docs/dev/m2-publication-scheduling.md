@@ -249,3 +249,76 @@ missed／skip／republish 等詞。逐條登記為未取得：
 **對本包的影響**：本包的實作依據是 D53（其 M 層證據來自前一輪已完成的實測），
 本輪的 help 複驗未推翻任何一條 ⇒ **不阻塞本包合併**；但 §7.4 的 S6 形態與
 「到點後商家面到底看到什麼」仍為未取得，**S6 動工前必須補做**。
+
+---
+
+## §9 關卡④⑤複驗（外部參考／關聯推理，2026-08-27 本輪）
+
+### §9.1 🔴 一條**與 D53 措辭牴觸**的發現（登記，未自行改裁定）
+
+D53 F2 與本檔 §3 末句寫「業界術語＝Quartz `MISFIRE_INSTRUCTION_DO_NOTHING`」。
+本輪直取 Quartz 官方文檔複驗，**該術語的官方逐字射程只涵蓋兩種情形**：
+scheduler 關機期間、以及 thread pool 無可用執行緒——**不涵蓋「業務前置條件在到點時不成立」**。
+
+而我方架構下，事件**永遠準時觸發**（`available_at <= now`，relay 必然取件），
+失敗的是**業務條件**而不是觸發本身 ⇒ 嚴格說**兩者都不是 misfire**。
+
+🔴 **本包不自行改 D53**（那是使用者裁定，改它要走裁定程序）。處置：
+- 本節登記證據，**D53 與 §3 的原文保留**（歷史層不回頭改）；
+- **更好的外部對位物**是 K8s 的 `concurrencyPolicy: Forbid` 三句
+  （逐字 `skipping next run`／`future occurrences are still scheduled`／只發 **Normal** 級事件），
+  與 D53 F1 的三句（不執行副作用／不清排程／不報錯但留痕）**逐句同側**；
+- 建議下一輪把 D53 的術語錨從 Quartz 換成 K8s，或改寫成「無精確業界對位物」。
+
+### §9.2 支持本包既有設計的第一方逐字（採用，進 `107`）
+
+| 來源 | 逐字要點 | 支持本包哪一條 |
+|---|---|---|
+| K8s CronJob | `jobs should be idempotent`——平台自承 exactly-once 做不到，可能建兩次或不建 | 消費者的 at-least-once 冪等前提；「重複投遞 bump 兩次不得產生不同結果」 |
+| 微軟 Idempotent Consumer | at-least-once ＋ 忽略重複 ＝ effectively exactly-once | 同上（第一性原則） |
+| 微軟 Retry pattern | **業務邏輯例外不適用重試**；`instead of silently discarding it`＋`Emit … in structured logs` | §2.2「一律 return 不 raise」**與** §2 每個 no-op 必寫 log——它同時擋住兩極 |
+| Google SRE / AWS | 重試乘法放大（4³＝64）、永久性錯誤不得重試 | §2.2 的量化代價論證 |
+| Rails `cache_version` | `recyclable caching scheme` | 63 §H.3「快取不需顯式失效（key-based 自然淘汰）」的第一方出處 |
+| 🔴 Rails Guides `touch: true` | 不接線就**靜默供 stale data** | **本輪最有實質作用的一條**——與 §6 的誠實登記同構：stamp 有寫入面但無讀取面時，症狀正是「靜默供舊內容」 |
+
+**拒絕採用**（證據不合格或已被推翻）：Contentful 三段式模型（`www.contentful.com` 連續 4 次
+HTTP 429，逐字只能自搜尋引擎轉述 ⇒ **Y 級**，鐵律 19.2 不得作依據）；
+Strapi 徽章（本輪直取官方 Releases 文檔**再次確認 R9 成立**）；
+「業界標準是把跳過的那次記為 failed」（**再次確認 R8 成立**）。
+WordPress WP-Cron 只採其「到點精度無保證」的術語層旁證，
+**拒絕引用其「到點時 post 已非 future 會怎樣」的行為**——該行為只存於 GPLv2 原始碼（鐵律 9）。
+
+### §9.3 🔴 關聯推理：本包的 stamp bump **目前是空動作**（量化）
+
+本輪逐點盤查 `products.publications_updated_at` 的消費面，結論比 §6 更嚴重也更精確：
+
+> **全倉零生產程式碼讀這一欄。**
+
+| 消費面 | 狀態 |
+|---|---|
+| 寫入側（本包＋`Catalog::CacheStamps`） | 已接 |
+| 讀取側（前台 Liquid 頁級快取 key、Admin GraphQL field、Admin SPA、sitemap、feed／IndexNow、搜尋索引、JSON-LD、CDN surrogate key） | **全部空掛或未來包** |
+| 正典清單（`config/limits.yml` 已列為必要快取維度） | 已接（**規範側**消費者，不是程式碼） |
+
+⇒ 本包履行的是 `config/limits.yml` 的正典義務與 D53 的裁定，
+**不是產生可觀察的前台效果**。這一點在 §6、worklog、PR 描述、本節四處一致登記。
+
+### §9.4 本輪新登記的跨模組缺口（各屬未來包，**不阻塞本包**）
+
+1. 🔴 **`collections` 表沒有 `publications_updated_at` 欄** ⇒ 系列的排程發布到點時，
+   消費者只能 log `:no_stamp_target`，**前台系列頁快取無失效手段**。屬 S8，需 schema 變更
+   ⇒ 落鐵律 18.3（人工合併）。
+2. 🔴 **stamp 有兩個寫入面且時鐘來源不同**：`Catalog::CacheStamps` 用 SQL 端
+   `UTC_TIMESTAMP(6)`，`Product.bump_publications_stamp!` 用 Ruby 傳入的 `at`
+   ⇒ 同一組 cache key 的組成有兩個時鐘。app server 與 DB 時鐘偏移時，
+   stamp 可能非單調。登記 `91` §3，收斂寫入面屬 S8。
+3. **排程到點不觸發智慧系列重算**：`Collections::ResyncConsumer` 未訂閱本 topic。
+   目前無害（`RuleCompiler` 白名單無發布維度條件），但一旦補上「已發布到管道」類條件
+   就變成真缺口。屬 S7。
+4. **排程到點不觸發 sitemap／feed／IndexNow／搜尋索引**——四者在 `app/`／`lib/` 完全零實作，
+   而 `90-blueprint/01-products.md` 逐字說 ACTIVE↔UNLISTED 會進出搜尋／系列／推薦／sitemap。屬 S9＋SEO 包。
+5. **三層 AND 的第三層未進 `Product.published_on`**：`sales_catalogs` 表已建但判定式沒變，
+   第三層對每個 publishable **恆真**。屬 S10。
+6. **`Publishable` interface 只實作 `resourcePublicationsV2`**；
+   `publishedOnPublication`／`resourcePublicationsCount`／`availablePublicationsCount` 未實作。屬 S6。
+7. **平台總控後台**對「凍結租戶 ⇒ 全店前台下架」無機制（`shops.catalog_version` 欄在但零寫入者）。屬 M8。
