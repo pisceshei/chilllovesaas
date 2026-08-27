@@ -1848,3 +1848,91 @@ a {
   translate: 7px 0;
   border-radius: var(--r-pill);
 }
+
+/* ══ Popover 原語（S6b-2）════════════════════════════════════════════════
+   portal 到 body ⇒ 定位由 JS 給 top/left（不受祖先 overflow 裁切）。
+   `--z-popover` 明文「必須 > dialog」⇒ 疊在 modal 之上，與本尊同（82 §15.1
+   實測 Polaris 的 PositionedOverlay 是 z-index:520）。 */
+.cl-popover {
+  position: fixed;
+  z-index: var(--z-popover);
+  /* 🔴 內容比視窗高時要能捲——本尊實測那個 popover 內容高 491 > 可視 pane 243，
+     頁尾按鈕必須捲動才看得到（82 §15.1）。沒有這兩行的話按鈕會被視窗邊緣切掉。 */
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-pop);
+  padding: var(--sp-400);
+}
+
+/* ══ 排程彈層（S6b-2）══════════════════════════════════════════════════ */
+.cl-sched { display: flex; flex-direction: column; gap: var(--sp-300); width: 280px; }
+.cl-sched__title { font-size: var(--t-sm); font-weight: var(--fw-title); margin: 0; }
+.cl-sched__time { position: relative; }
+/* 時區徽章內嵌在時間欄右側（本尊形態，82 §15.6：逐字 GMT+8、無 tooltip） */
+.cl-sched__tz {
+  position: absolute;
+  right: var(--sp-200);
+  bottom: 9px;
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  pointer-events: none;
+}
+.cl-sched__slots {
+  position: absolute;
+  z-index: var(--z-mid);
+  left: 0;
+  right: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-200);
+  box-shadow: var(--sh-pop);
+}
+.cl-sched__slot {
+  display: block;
+  width: 100%;
+  padding: 6px var(--sp-300);
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: var(--t-sm);
+  color: var(--text);
+  cursor: pointer;
+}
+.cl-sched__slot:hover { background: var(--surface-hover); }
+.cl-sched__foot { display: flex; gap: var(--sp-200); justify-content: flex-end; }
+
+/* ══ 月曆網格（S6b-2）══════════════════════════════════════════════════ */
+.cl-cal { display: flex; flex-direction: column; gap: var(--sp-200); }
+.cl-cal__head { align-items: center; display: flex; justify-content: space-between; }
+.cl-cal__month { font-size: var(--t-sm); font-weight: var(--fw-control); }
+.cl-cal__grid { border-collapse: collapse; width: 100%; }
+.cl-cal__grid th {
+  color: var(--text-3);
+  font-size: var(--t-xs);
+  font-weight: var(--fw-body);
+  padding: 4px 0;
+}
+.cl-cal__day {
+  border-radius: var(--r-100);
+  cursor: pointer;
+  font-size: var(--t-sm);
+  padding: 5px 0;
+  text-align: center;
+}
+.cl-cal__day:hover { background: var(--surface-hover); }
+/* 🔴 用 aria-disabled 不是 disabled（APG：composite widget 內保留可聚焦性），
+   所以視覺失效也要自己畫——沒有 :disabled 偽類可用。 */
+.cl-cal__day--off { color: var(--text-3); cursor: default; opacity: 0.45; }
+.cl-cal__day--off:hover { background: none; }
+.cl-cal__day--today { font-weight: var(--fw-title); }
+.cl-cal__day--on { background: var(--brand); color: var(--surface); }
+.cl-cal__day--on:hover { background: var(--brand); }
+.cl-cal__pad { padding: 5px 0; }
