@@ -1912,3 +1912,206 @@ describe("S6b 發布編輯 modal", () => {
     expect(screen.queryByRole("region", { name: "未儲存的變更" })).toBeNull();
   });
 });
+
+/**
+ * S6b-2b：排程接線（`docs/research/82` §15.8／§15.9／§15.10）。
+ *
+ * 🔴 這組釘的是三個「沒有排程資料就 100% 測綠」的判準：
+ *   ①排程入口的顯示條件是 `supportsFuturePublishing`，**不是**「目前已發布」；
+ *   ②「伺服器上有排程」的判準是 `isPublished === false`，**不是** `publishDate` 非空
+ *     （每一列都有 publishDate，已發布的存的是過去值）；
+ *   ③`publishDate` 只在有排程時才出現在 payload 裡（後端對明確 null 一律 reject）。
+ */
+describe("S6b-2b 排程接線", () => {
+  // 🔴 三個管道刻意把兩個維度**拆開**（supportsFuturePublishing × isPublished）：
+  //   少了「已發布 ∧ 可排程」那一格，`serverScheduleOf` 的 `isPublished` 判準
+  //   就永遠不會被呼叫到 ⇒ 拿掉它照樣全綠（MW2 突變當場證實）。
+  const PUBS = [
+    { id: "gid://chilllove/Publication/1", title: "線上商店", handle: "online_store", supportsFuturePublishing: true },
+    { id: "gid://chilllove/Publication/2", title: "門市 POS", handle: "pos", supportsFuturePublishing: false },
+    { id: "gid://chilllove/Publication/3", title: "Shop", handle: "shop", supportsFuturePublishing: true },
+  ];
+
+  const ROWS = [
+    // 可排程 ∧ 已排程未到點（isPublished=false）
+    { isPublished: false, publishDate: "2026-09-01T02:35:00Z", publication: PUBS[0] },
+    // 不可排程 ∧ 已發布
+    { isPublished: true, publishDate: "2026-08-01T00:00:00Z", publication: PUBS[1] },
+    // 🔴 **可排程 ∧ 已發布**（publishDate 是「當初發布的時刻」，過去值）
+    //    ——只看 publishDate 非空的實作會把它誤判成排程中
+    { isPublished: true, publishDate: "2026-08-01T00:00:00Z", publication: PUBS[2] },
+  ];
+
+  const PRODUCT = {
+    id: "gid://chilllove/Product/9", title: "既有商品", descriptionHtml: "<p>x</p>",
+    status: "ACTIVE", handle: "t", lockVersion: 3, vendor: null, productType: null, tags: [],
+    seo: { title: null, description: null }, translations: [],
+    purchasable: true, discoverable: true, resourcePublicationsV2: ROWS,
+    variants: { nodes: [ { price: "1.00", compareAtPrice: null, cost: null, sku: null, barcode: null, taxable: true } ] },
+  };
+
+  const ROUTES = [
+    ...BASE_ROUTES,
+    { match: "query productForEdit", body: { data: {
+      product: PRODUCT, publications: PUBS, shop: { ianaTimezone: "Asia/Hong_Kong" },
+    } } },
+    { match: "mutation productSet", body: { data: { productSet: {
+      product: { id: PRODUCT.id, handle: "t", status: "ACTIVE", title: "既有商品", lockVersion: 4, variants: { nodes: [] } },
+      userErrors: [],
+    } } } },
+    { match: "mutation productPublishing", body: { data: {
+      publishablePublish: { userErrors: [] }, publishableUnpublish: { userErrors: [] },
+    } } },
+    { match: "query productPublications", body: { data: { product: {
+      purchasable: true, discoverable: true, resourcePublicationsV2: ROWS,
+    } } } },
+  ];
+
+  beforeEach(() => { installCsrfMeta(); });
+
+  async function openModal() {
+    renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+    const main = within(await screen.findByRole("main"));
+    await waitFor(() => expect(main.getByRole("button", { name: "管理發布" })).toBeEnabled());
+    await userEvent.click(main.getByRole("button", { name: "管理發布" }));
+    return within(await screen.findByRole("dialog"));
+  }
+
+  it("🔴 排程入口只給 supportsFuturePublishing 的管道（不是「目前已發布」的）", async () => {
+    stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    // 線上商店 supportsFuturePublishing=true 但 isPublished=false（排程中）⇒ 仍有入口
+    expect(dialog.getByRole("button", { name: /發布於/ })).toBeVisible();
+    // 門市 POS 已發布但 supportsFuturePublishing=false ⇒ 沒有入口
+    // Shop 可排程但未排程 ⇒ 有入口、名稱是「排程發布」
+    expect(dialog.getByRole("button", { name: "排程發布" })).toBeVisible();
+    expect(dialog.getAllByRole("button", { name: /排程發布|發布於/ })).toHaveLength(2);
+  });
+
+  /**
+   * 🔴 由 MW2 突變開出：拿掉 `serverScheduleOf` 的 `row.isPublished` 檢查，73 格全綠。
+   * 原因是原本的測資裡「已發布」與「可排程」不會同時出現 ⇒ 那條判準根本沒被呼叫到。
+   * 本格用 Shop（可排程 ∧ 已發布 ∧ publishDate 是過去值）把它釘住。
+   */
+  it("🔴 已發布且可排程的管道**不算**排程中（判準是 isPublished，不是 publishDate 非空）", async () => {
+    stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    // Shop 的 publishDate 非空但 isPublished=true ⇒ 名稱必須是「排程發布」不是「發布於…」
+    const buttons = dialog.getAllByRole("button", { name: /排程發布|發布於/ });
+    const names = buttons.map((b) => b.getAttribute("aria-label"));
+    expect(names).toContain("排程發布");                       // Shop
+    expect(names.filter((n) => n?.startsWith("發布於"))).toHaveLength(1);   // 只有線上商店
+  });
+
+  /**
+   * 🔴 「伺服器上有排程」的判準是 `isPublished === false`。
+   * 只看 `publishDate` 非空的話，門市 POS（已發布、publishDate 是過去值）也會被當成排程中
+   * ——而它連排程入口都不該有。本組的兩列刻意做成這個對比。
+   */
+  it("🔴 已排程的管道帶出伺服器時刻（判準是 isPublished 不是 publishDate 非空）", async () => {
+    stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    // 香港 2026-09-01 10:35（＝02:35Z）
+    await userEvent.click(dialog.getByRole("button", { name: /發布於/ }));
+    const popover = within(await screen.findByRole("group", { name: "排程發布" }));
+    expect(popover.getByLabelText("日期")).toHaveValue("2026年9月1日");
+    expect(popover.getByLabelText("時間")).toHaveValue("10:35 AM");
+  });
+
+  it("🔴 設定排程後送出帶 publishDate（UTC 帶毫秒 Z），且只送給那一個管道", async () => {
+    const fetchMock = stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    await userEvent.click(dialog.getByRole("button", { name: /發布於/ }));
+    // 🔴 popover portal 在 dialog **之外** ⇒ 兩個「完成」必須分開定位，
+    //   否則 `screen.getByRole` 會抓到多個
+    const popover = within(await screen.findByRole("group", { name: "排程發布" }));
+    await userEvent.clear(popover.getByLabelText("時間"));
+    await userEvent.type(popover.getByLabelText("時間"), "3:00 PM");
+    await userEvent.tab();
+    await userEvent.click(popover.getByRole("button", { name: "完成" }));
+
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));   // modal 的完成
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "mutation productPublishing")[0].body)) as {
+      variables: { publicationsToPublish: { publicationId: string; publishDate?: string }[] };
+    };
+    expect(sent.variables.publicationsToPublish).toHaveLength(1);
+    expect(sent.variables.publicationsToPublish[0].publicationId).toBe(PUBS[0].id);
+    // 香港 15:00 → 07:00Z，格式帶毫秒 Z（本尊抓包形態 §15.8）
+    expect(sent.variables.publicationsToPublish[0].publishDate).toBe("2026-09-01T07:00:00.000Z");
+  });
+
+  /**
+   * 🔴 不排程時 payload **不得出現 `publishDate` 這個 key**——後端對「明確傳 null」
+   * 一律 reject（R10：官方對 null 完全沉默，不得自行定義成「取消排程」），
+   * 省略才是「立即發布」。
+   */
+  it("🔴 純開關（不排程）的 payload 不帶 publishDate key", async () => {
+    const fetchMock = stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    await userEvent.click(dialog.getByRole("switch", { name: "門市 POS" }));   // 已發布 → 取消
+    await userEvent.click(dialog.getByRole("switch", { name: "線上商店" }));   // 排程中 → 取消
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
+    await userEvent.click(within(savebar).getByRole("button", { name: "儲存" }));
+
+    await waitFor(() => expect(callsTo(fetchMock, "mutation productPublishing")).toHaveLength(1));
+    const body = String(callsTo(fetchMock, "mutation productPublishing")[0].body);
+    expect(body).not.toContain("publishDate");
+  });
+
+  /**
+   * 🔴 badge 的數字必須是「伺服器現值**套上** delta」。只數伺服器的話，商家剛設好的排程
+   * 要等存檔回來才看得到；只數 delta 的話，既有排程會消失。本組三個管道剛好構成
+   * 「已排程 1 個 ＋ 新設 1 個 ＋ 取消 1 個」的組合。
+   */
+  it("🔴 卡片的排程 badge 數＝伺服器現值套上待送 delta", async () => {
+    stubRoutedFetch(ROUTES);
+    const main0 = within(await (async () => {
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+      return screen.findByRole("main");
+    })());
+    // 伺服器上只有線上商店是排程中 ⇒ badge = 1
+    await waitFor(() => expect(main0.getByText("1")).toBeVisible());
+
+    await userEvent.click(main0.getByRole("button", { name: "管理發布" }));
+    const dialog = within(await screen.findByRole("dialog"));
+
+    // 再給 Shop 設一個排程 ⇒ badge 應變 2
+    await userEvent.click(dialog.getByRole("button", { name: "排程發布" }));
+    const popover = within(await screen.findByRole("group", { name: "排程發布" }));
+    // 🔴 未排程的管道開場值＝now ⇒ 不改時間的話「完成」是 disabled（那條 dirty 判準）
+    await userEvent.clear(popover.getByLabelText("日期"));
+    await userEvent.type(popover.getByLabelText("日期"), "2026-12-25");
+    await userEvent.tab();
+    await userEvent.click(popover.getByRole("button", { name: "完成" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    await waitFor(() => expect(main0.getByText("2")).toBeVisible());
+  });
+
+  it("🔴 設定排程後發布卡樂觀顯示該時刻（不是等儲存回來才顯示）", async () => {
+    stubRoutedFetch(ROUTES);
+    const dialog = await openModal();
+
+    await userEvent.click(dialog.getByRole("button", { name: /發布於/ }));
+    const popover = within(await screen.findByRole("group", { name: "排程發布" }));
+    await userEvent.clear(popover.getByLabelText("時間"));
+    await userEvent.type(popover.getByLabelText("時間"), "3:00 PM");
+    await userEvent.tab();
+    await userEvent.click(popover.getByRole("button", { name: "完成" }));
+    await userEvent.click(dialog.getByRole("button", { name: "完成" }));
+
+    const main = within(screen.getByRole("main"));
+    expect(await main.findByText(/待儲存/)).toBeVisible();
+  });
+});

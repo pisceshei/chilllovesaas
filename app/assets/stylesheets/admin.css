@@ -1066,6 +1066,10 @@ a {
 }
 
 .cl-card__head-action { margin-left: auto; font-weight: var(--fw-body); }
+/* 卡標題列的計數 badge（發布卡的排程數，82 §15.9）——在 head-action 之前，
+   所以不吃 margin-left:auto，靠標題文字右側。 */
+.cl-card__head-badge { margin-left: var(--sp-200); font-weight: var(--fw-body); }
+.cl-card__head-badge .cl-badge { align-items: center; display: inline-flex; gap: 3px; }
 
 .cl-product-detail .cl-field + .cl-field { margin-top: var(--sp-300); }
 
@@ -1822,7 +1826,15 @@ a {
 /* 🔴 邊框寬度一律 var(--hairline)——tokens.css 明文「全站邊框一律 var(--hairline)；
    --bw-100:1px 依 51 表 6 作廢，不落地」。寫字面 1px 會與緊鄰的 .cl-swrow 分隔線
    （.66px）不同粗細，在同一個 modal 內看得出來。 */
-.cl-pubmodal__row { border-bottom: var(--hairline) solid var(--border-2); }
+.cl-pubmodal__row {
+  align-items: center;
+  border-bottom: var(--hairline) solid var(--border-2);
+  display: flex;
+  gap: var(--sp-200);
+}
+/* 排程入口：已排程時高亮（本尊已排程時 icon 從 hover 才出現變成常駐，82 §15.9）。 */
+.cl-pubmodal__row .cl-swrow { flex: 1; min-width: 0; }
+.cl-icon-button--on { color: var(--brand); }
 .cl-pubmodal__row:last-child { border-bottom: 0; }
 .cl-pubmodal__group {
   align-items: center;
