@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useT, useUiLocale } from "../i18n/I18nContext";
 
@@ -125,21 +125,52 @@ export function Calendar({ value, cursor, onCursorChange, min, today, onSelect, 
   /**
    * 把焦點移到某一天；跨月時同時翻頁。
    *
-   * 🔴 **同月內同步聚焦，只有跨月才等一拍**。全部走 `requestAnimationFrame` 的話，
-   * 快速連按方向鍵時第二次按鍵讀到的還是**舊**的 activeElement
-   * ⇒ 位移從舊位置累加（連按兩次 ArrowRight 只前進一天）。同月的那格已經在 DOM 裡，
-   * 不需要等重渲染。
+   * 🔴 **這裡只更新 state，聚焦一律交給下面的 `useLayoutEffect`**——
+   * 兩條路徑（同月／跨月）不再分岔。理由見該 effect 的註釋。
    */
   const moveFocus = useCallback((day: string) => {
     setRoving(day);
-    if (inMonth(day)) {
-      cellRefs.current.get(day)?.focus();
-      return;
-    }
-    onCursorChange(day);
-    requestAnimationFrame(() => cellRefs.current.get(day)?.focus());
+    if (!inMonth(day)) onCursorChange(day);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor, onCursorChange]);
+
+  /**
+   * 把焦點放到 `roving` 那一格。
+   *
+   * 🔴 **必須是 `useLayoutEffect`，不得用 `requestAnimationFrame`。**
+   *
+   * `handleKeyDown` 是**逐格掛在 `<td>` 上**的，只有 `document.activeElement` 落在某一格時
+   * 才會觸發。跨月時 `<td key={day}>` 全部換 key ⇒ 原本被聚焦的那格被卸載
+   * ⇒ activeElement 掉回 `document.body`。若補聚焦排到 rAF，在它執行前的窗口內按下的鍵
+   * **不經過任何 `<td>`、被整個吞掉**——使用者連按（含鍵盤 auto-repeat）兩次 PageDown
+   * 只會生效一次，月曆等於失去鍵盤焦點（WCAG 2.1.1）。
+   *
+   * 🔴 **這個窗口是量出來的，不是理論值**：jsdom 的 rAF 是 `setInterval(…, 1000/60)`，
+   * 且只在 outstanding 數 0→1 時才建 interval ⇒ 每次跨月都要從零等一個新的 ≈16.7ms 週期。
+   * 同一台機器把兩次按鍵的間隔縮到 22.2／22.8ms 就必敗（activeElement＝BODY），
+   * 26.7／33.4ms 就會過——臨界值正好落在那個幀週期上（2026-08-28 實測）。
+   * 舊寫法在本機恆勝只是因為 Windows 的 `setTimeout(0)` 粒度約 15.5ms，
+   * 把 userEvent 的按鍵間隔撐到 54–97ms；Linux CI 上該粒度約 1ms ⇒ 偶發紅。
+   *
+   * `setRoving` 與 `onCursorChange` 在同一個事件裡被 React 批次成一次 render，
+   * 而 layout effect 在 DOM 變更後、繪製前**同步**執行，此時新月份的格子與 ref 都已就位
+   * ⇒ 窗口歸零。
+   *
+   * ⚠️ `roving === null`（初次掛載）時**不搶焦點**——彈層的焦點進場由 `Popover` 負責。
+   *   這一條**是承重的**：拿掉它，掛載與點換月鈕都會把焦點拉進網格（突變實測殺掉 2 格）。
+   *
+   * ⚠️ `inMonth(roving)` 守衛擋的是「只換 cursor 沒換 roving」（點上／下月鈕後 roving
+   *   還停在舊月份）。🔴 **它是純防禦、不可觀測**——下面的 `ref` 回呼在卸載時
+   *   `cellRefs.current.delete(day)`，所以舊月份的 key 早已不在 map 裡，`get()` 回
+   *   `undefined`；就算保留失效節點，對**已卸載元素**呼叫 `focus()` 依規範也是 no-op。
+   *   2026-08-28 實測兩個突變（只拿掉本守衛／再加上不刪 ref）**都殺不掉任何測試**。
+   *   保留它是因為它把前提寫成了程式碼，代價為零；但**不得**把它當成有測試覆蓋的防線。
+   */
+  useLayoutEffect(() => {
+    if (roving === null || !inMonth(roving)) return;
+    cellRefs.current.get(roving)?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roving, cursor]);
 
   const handleKeyDown = useCallback((event: KeyboardEvent<HTMLTableCellElement>, day: string) => {
     // 🔴 十三條照 APG（Tab／Shift+Tab 除外——本尊的排程面是 popover 不是 dialog，

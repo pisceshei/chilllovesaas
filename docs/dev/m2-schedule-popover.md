@@ -102,6 +102,14 @@ Store defaults，本尊設定頁也逐字證實店鋪級與使用者級並存。
 🔴 **`today` 由呼叫端用店鋪時區算好傳入**，本元件不碰 `Date.now()`。
 ④`SchedulePopover`；日後任何日期選擇面。
 
+🔴 **2026-08-28 修正：跨月聚焦不得依賴 `requestAnimationFrame`。**
+初版的 `moveFocus` 同月同步聚焦、**跨月排進 rAF**。跨月時 `<td key={day}>` 全部換 key
+⇒ 被聚焦的舊格被卸載 ⇒ `document.activeElement` 掉回 `document.body`；而 `handleKeyDown`
+逐格掛在 `<td>` 上、不在 body 的祖先鏈上 ⇒ **該窗口內按下的鍵被整個吞掉**
+（使用者連按或鍵盤 auto-repeat 兩次 PageDown 只生效一次，WCAG 2.1.1）。
+現改為 `useLayoutEffect` 在 DOM 變更後、繪製前同步聚焦，同月／跨月走同一條路徑。
+根因調查與量測＝`docs/worklog/2026-08-28-Calendar跨月聚焦競態.md`。
+
 ⚠️ **兩處刻意的冗餘與偏離，各自登記**：
 - **顯式寫 `role="gridcell"`**：ARIA in HTML 規定 `<td>` 在 `role=grid` 下隱含 gridcell，
   但那條**上下文推導依賴實作**——`dom-accessibility-api`（testing-library 的 role 計算）
@@ -129,9 +137,12 @@ Store defaults，本尊設定頁也逐字證實店鋪級與使用者級並存。
 
 ## 測試
 
-71 格：`app/frontend/admin/lib/timezone.test.ts` 19 ／ `Calendar.test.tsx` 18 ／ `SchedulePopover.test.tsx` 25
-／ `Popover.test.tsx` 9。後端 `spec/requests/shop_timezone_query_spec.rb` 3 格。
-全套前端 260／0，rspec 見 worklog。
+75 格：`app/frontend/admin/lib/timezone.test.ts` 19 ／ `Calendar.test.tsx` **22** ／
+`SchedulePopover.test.tsx` 25 ／ `Popover.test.tsx` 9。
+後端 `spec/requests/shop_timezone_query_spec.rb` 3 格。全套前端 271／0，rspec 見 worklog。
+
+> 逐檔複驗：`npx vitest run <該檔>`（數字為 2026-08-28 快照）。
+> `Calendar.test.tsx` 由 18 增為 22 ＝ 跨月聚焦競態修復新增的四格，見下方變更記錄。
 
 **突變逐個實跑**：
 
