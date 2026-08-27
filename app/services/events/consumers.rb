@@ -18,7 +18,10 @@ module Events
       # 走 outbox 消費者而非寫路徑同步，鐵律 5＋不掛在商品儲存的鎖持有時間上）。
       Events::Topics::PRODUCTS_CREATE => [ Collections::ResyncConsumer ],
       Events::Topics::PRODUCTS_UPDATE => [ Collections::ResyncConsumer ],
-      Events::Topics::INVENTORY_ADJUSTED => [ Collections::ResyncConsumer ]
+      Events::Topics::INVENTORY_ADJUSTED => [ Collections::ResyncConsumer ],
+      # PR-C（D53）：排程發布到點 → cache stamp bump。同 topic 兩種 payload 形狀
+      # （scheduled／status_transition），分流在消費者內（見其檔頭 ①）。
+      Events::Topics::PRODUCT_PUBLICATION_CHANGED => [ Publications::ScheduledPublicationConsumer ]
     }.freeze
 
     # @param topic [String]
