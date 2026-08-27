@@ -60,6 +60,10 @@ const PRODUCT_QUERY = `
       # 🔴 **必須 onlyPublished: false**：預設 true 只回「已到點」的，
       #   已排程未到點的管道會整列消失 ⇒ 發布卡少顯示一個管道，而這在
       #   「沒有任何排程」的環境下 100% 測綠（S6 盤點的風險 #7）。
+      # S6a-2：可見性兩維的**伺服器唯一答案**（三層 AND 的前兩層）。
+      #   省略 publicationId＝線上商店（v1 唯一前台管道）。
+      purchasable
+      discoverable
       resourcePublicationsV2(onlyPublished: false) {
         isPublished
         publishDate
@@ -240,6 +244,8 @@ interface ProductQueryData {
     tags: string[];
     seo: { title: string | null; description: string | null };
     translations: { locale: string; field: string; value: string; outdated: boolean }[];
+    purchasable?: boolean;
+    discoverable?: boolean;
     resourcePublicationsV2?: PublicationRow[];
     media?: MediaCardItem[];
     options?: { name: string; position: number; values: { value: string; position: number }[] }[];
@@ -379,16 +385,17 @@ const STATUS_PRESENTATION: Record<string, { labelKey: string; progress: BadgePro
 /**
  * 兩維真值表的**狀態那一層**（13 §F1.2：discoverable ⊆ purchasable 恆成立）。
  *
+ * 🔴 **2026-08-27（S6a-2）起本表只剩兩個用途**，完整判定已由伺服器提供：
+ *   ①**建立態**（商品還沒存檔 ⇒ 伺服器上不存在，問不到）；
+ *   ②**編輯態下使用者剛改了狀態下拉、尚未儲存**時的即時回饋
+ *     （伺服器答的是**已儲存**的狀態，不是草稿值）。
+ *
  * 🔴 **這不是「這個商品可不可購買」的完整判定，只是狀態層**。
  * 完整判定＝狀態層 ∧ 商品發布層 ∧ 變體發布層，唯一產生處在伺服器端的
- * `Product.purchasable` / `Product.discoverable`（第 12 包）。
+ * `Product.purchasable` / `Product.discoverable`（GraphQL 欄位，S6a-2 已接）。
  *
- * ⚠️ 這裡刻意**只**保留狀態層而不在前端重算完整判定（鐵律 7）：
- * 前端沒有 publication 資料，硬算出來的第二個答案遲早與伺服器分岔，
- * 而分岔的症狀是「後台說可購買、前台買不到」。
- * 本表的**唯一用途**是狀態卡底下那句「這個狀態代表什麼」的說明文案。
- * 🔴 要顯示真正的可購買性，必須從 GraphQL 取（例如系列列表的 `visibleProductsCount`），
- * 不得在這裡擴充本表。
+ * ⚠️ **不得在這裡擴充成完整判定**（鐵律 7）：前端硬算出來的第二個答案遲早與
+ * 伺服器分岔，而分岔的症狀是「後台說可購買、前台買不到」。
  */
 const STATUS_DIMENSIONS: Record<string, { purchasable: boolean; discoverable: boolean }> = {
   ACTIVE: { purchasable: true, discoverable: true },
@@ -709,6 +716,11 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   //   發布寫入走 `publishablePublish`／`publishableUnpublish` 獨立 mutation（S6b），
   //   混進表單快照會讓 SaveBar 對「不是本表單負責的東西」報髒。
   const [publicationRows, setPublicationRows] = useState<PublicationRow[]>([]);
+  // 伺服器算的可見性兩維（`null`＝尚未載入／建立態）。
+  const [serverVisibility, setServerVisibility] =
+    useState<{ purchasable: boolean; discoverable: boolean } | null>(null);
+  // 伺服器那份答案對應的**已儲存狀態**——用來判斷使用者是否改了下拉還沒存。
+  const [savedStatus, setSavedStatus] = useState<string>("DRAFT");
   // 變體列的逐列錯誤（index → 訊息）；選項模式下取代 price/compare/cost 的欄位級映射
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
   // 建立態據點（初始數量欄；v1 套用到第一個據點）
@@ -810,6 +822,12 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
         snapshot.current = JSON.stringify(loaded);
         setValues(loaded);
         setPublicationRows(product.resourcePublicationsV2 ?? []);
+        setServerVisibility(
+          typeof product.purchasable === "boolean" && typeof product.discoverable === "boolean"
+            ? { purchasable: product.purchasable, discoverable: product.discoverable }
+            : null,
+        );
+        setSavedStatus(product.status);
         setMedia([ ...(product.media ?? []) ].sort((a, b) => a.position - b.position));
         rowGraveyard.current.clear();
         setVariantOverflow(product.variants.pageInfo?.hasNextPage ?? false);
@@ -1318,7 +1336,15 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
   }
 
   const statusBadge = STATUS_PRESENTATION[values.status] ?? STATUS_PRESENTATION.DRAFT;
-  const dimensions = STATUS_DIMENSIONS[values.status] ?? STATUS_DIMENSIONS.DRAFT;
+  // 🔴 **伺服器答案優先**（三層 AND 的前兩層），三種情形退回狀態層 fallback：
+  //   ①建立態（伺服器上還不存在）②尚未載入 ③使用者剛改了狀態下拉還沒存
+  //     （伺服器答的是**已儲存**的狀態，此時顯示它會與畫面上的下拉矛盾）。
+  const statusDirty = values.status !== savedStatus;
+  const serverDimensions = serverVisibility;
+  const dimensions =
+    serverDimensions && !statusDirty
+      ? serverDimensions
+      : (STATUS_DIMENSIONS[values.status] ?? STATUS_DIMENSIONS.DRAFT);
 
   // SERP 預覽（91 §11）：覆寫值優先，留空 fallback 商品標題／說明摘要。
   const serpHost = window.location.host;

@@ -287,6 +287,62 @@ describe("新增商品頁", () => {
       expect(await main.findByText("尚未發布到任何銷售管道")).toBeVisible();
     });
 
+    /**
+     * S6a-2：可見性兩維改由伺服器回答。
+     *
+     * 🔴 **第 1 格是唯一能證明「真的接上了」的形態**：商品狀態是 ACTIVE
+     *   （狀態層會算出「可購買＝是」），但伺服器回 `purchasable: false`
+     *   （因為已取消發布／排程未到點）。只有讀伺服器答案才會顯示「否」。
+     *   若實作退回硬算表，這一格立刻紅。
+     */
+    it("🔴 S6a-2 兩維讀伺服器答案：ACTIVE 但伺服器說不可購買 ⇒ 顯示「否」", async () => {
+      stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: {
+            ...EXISTING.data.product, status: "ACTIVE",
+            purchasable: false, discoverable: false, resourcePublicationsV2: [],
+          } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      const purchasable = await main.findByText("可購買");
+      expect(purchasable.parentElement).toHaveTextContent("否");
+    });
+
+    it("S6a-2 伺服器說可購買但不可發現（UNLISTED 形態）⇒ 兩維各自呈現", async () => {
+      stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: {
+            ...EXISTING.data.product, status: "UNLISTED",
+            purchasable: true, discoverable: false, resourcePublicationsV2: [],
+          } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      expect((await main.findByText("可購買")).parentElement).toHaveTextContent("是");
+      expect(main.getByText("可被發現").parentElement).toHaveTextContent("否");
+    });
+
+    it("🔴 S6a-2 查詢必須帶 purchasable／discoverable 兩個欄位", async () => {
+      const fetchMock = stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: { ...EXISTING.data.product, purchasable: true, discoverable: true } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+      await screen.findByRole("main");
+
+      const sent = fetchMock.mock.calls
+        .map((call) => String((call[1] as RequestInit | undefined)?.body ?? ""))
+        .find((body) => body.includes("productForEdit"));
+      expect(sent).toContain("purchasable");
+      expect(sent).toContain("discoverable");
+    });
+
     const EDIT_ROUTES = [
       ...BASE_ROUTES,
       { match: "query productForEdit", body: EXISTING },
