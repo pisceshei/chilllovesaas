@@ -1180,6 +1180,17 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
     `resource_publications` 列存在＝toggle ON、`published_at IS NULL`＝在通路上但未發布
     ⇒ status 轉為 `PURCHASABLE_STATUSES` 時把該類列的 `published_at` 寫成當下。
     ⚠️ 差異：本尊同步發生，我方經 outbox 非同步（延遲上界≈一個 relay 輪詢間隔）。
+  - **更正三｜業界術語錨由 Quartz 換成 K8s**（2026-08-27 使用者裁定）：原文 F2 寫
+    「業界術語＝Quartz `MISFIRE_INSTRUCTION_DO_NOTHING`」。本輪直取 Quartz 官方文檔複驗，
+    該術語的官方逐字射程**只涵蓋兩種情形**——scheduler 關機期間、thread pool 無可用執行緒
+    ——**不涵蓋「業務前置條件在到點時不成立」**。而我方架構下事件**永遠準時觸發**
+    （`available_at <= now`，relay 必然取件），失敗的是業務條件而非觸發本身
+    ⇒ 嚴格說 F1／F2 **兩者都不是 misfire**。
+    🔴 **改用 K8s `concurrencyPolicy: Forbid`** 作為術語錨——其官方三句
+    （逐字 `skipping next run`／`future occurrences are still scheduled`／只發 **Normal** 級事件）
+    與 F1 三句（不執行副作用／不清排程／不報錯但留痕）**逐句同側**。
+    ⚠️ 原文「🔴 **不是** Airflow catchup」那半句**仍然成立且不得刪**（R10 的論證未被推翻）。
+
   - 🔴 **被實測正面證實、維持不變的兩格**：①F1 的判準集合＝`{ACTIVE, UNLISTED}`
     （實測 UNLISTED 商品排程**照常發布**、status 不被改動 ⇒ 不合格集合**只有 DRAFT**）；
     ②F2「不自動補發布」（實測排程值不復活、不回填原排定時間）。

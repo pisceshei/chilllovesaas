@@ -99,8 +99,14 @@ payload 走 `row.published_at.utc.iso8601`（**秒級**），DB 欄位是 `datet
 不是「錯過時點之後前台其實已經可見了」——DRAFT 情境下 status 層先擋住
 （`PURCHASABLE_STATUSES` 不含 draft）。spec `T13` 把兩件事分別釘住。
 
-業界術語＝Quartz `MISFIRE_INSTRUCTION_DO_NOTHING`。
-🔴 **不是** Airflow catchup——後者關閉後仍為最新 interval 建 run，照字面搬會帶進相反語義
+業界術語錨＝**K8s `concurrencyPolicy: Forbid`**（2026-08-27 使用者裁定，D53 更正三）：
+官方三句 `skipping next run`／`future occurrences are still scheduled`／只發 **Normal** 級事件，
+與 F1 三句（不執行副作用／不清排程／不報錯但留痕）逐句同側。
+
+🔴 **不是 Quartz misfire**：該術語的官方逐字射程只涵蓋 scheduler 關機與 thread pool 無執行緒，
+**不涵蓋「業務前置條件在到點時不成立」**；而我方事件永遠準時觸發，失敗的是業務條件
+⇒ 兩者都不是 misfire（證據見 §9.1）。
+🔴 **也不是** Airflow catchup——後者關閉後仍為最新 interval 建 run，照字面搬會帶進相反語義
 （裁定書 §0.3 R10）。
 
 ---
@@ -263,7 +269,8 @@ scheduler 關機期間、以及 thread pool 無可用執行緒——**不涵蓋�
 而我方架構下，事件**永遠準時觸發**（`available_at <= now`，relay 必然取件），
 失敗的是**業務條件**而不是觸發本身 ⇒ 嚴格說**兩者都不是 misfire**。
 
-🔴 **本包不自行改 D53**（那是使用者裁定，改它要走裁定程序）。處置：
+✅ **2026-08-27 已裁定**（使用者：「先处理」）：術語錨改用 K8s `concurrencyPolicy: Forbid`，
+D53 已加「更正三」。本節的證據與論證保留如下（歷史層）。原本的處置建議：
 - 本節登記證據，**D53 與 §3 的原文保留**（歷史層不回頭改）；
 - **更好的外部對位物**是 K8s 的 `concurrencyPolicy: Forbid` 三句
   （逐字 `skipping next run`／`future occurrences are still scheduled`／只發 **Normal** 級事件），
