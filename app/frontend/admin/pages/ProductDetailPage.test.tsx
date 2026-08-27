@@ -228,6 +228,65 @@ describe("新增商品頁", () => {
       },
     };
 
+    /**
+     * S6a 發布卡（`docs/research/82` §9.3 的第一種 affordance，唯讀部分）。
+     *
+     * 🔴 這三格釘的是**兩個「沒有排程就 100% 測綠」的陷阱**：
+     *   ①V2 的 `isPublished=false` 是「已排程未到點」不是「未發布」——
+     *     綁錯會讓已排程的管道顯示成關閉；
+     *   ②查詢必須帶 `onlyPublished: false`——忘了帶，已排程的列整個不回來，
+     *     卡片少顯示一個管道且不會有任何錯誤。
+     */
+    const PUBLICATIONS = [
+      { isPublished: true, publishDate: "2026-08-01T00:00:00Z",
+        publication: { id: "gid://chilllove/Publication/1", title: "線上商店", supportsFuturePublishing: true } },
+      { isPublished: false, publishDate: "2026-09-01T02:00:00Z",
+        publication: { id: "gid://chilllove/Publication/2", title: "門市 POS", supportsFuturePublishing: false } },
+    ];
+
+    it("🔴 S6a 發布卡顯示伺服器現值：已發布與**已排程**各自的狀態（不是寫死的假資料）", async () => {
+      stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: { ...EXISTING.data.product, resourcePublicationsV2: PUBLICATIONS } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+
+      const main = within(await screen.findByRole("main"));
+      expect(await main.findByText("線上商店")).toBeVisible();
+      expect(main.getByText("已發布")).toBeVisible();
+      // 🔴 isPublished=false 必須呈現為「已排程」，**不是**「未發布」也不是不顯示
+      expect(main.getByText(/排程於/)).toBeVisible();
+      expect(main.getByText("門市 POS")).toBeVisible();
+    });
+
+    it("🔴 S6a 查詢必須帶 onlyPublished: false（否則已排程的列不會回來）", async () => {
+      const fetchMock = stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: { ...EXISTING.data.product, resourcePublicationsV2: PUBLICATIONS } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2Fchilllove%2FProduct%2F9");
+      await screen.findByRole("main");
+
+      const sent = fetchMock.mock.calls
+        .map((call) => String((call[1] as RequestInit | undefined)?.body ?? ""))
+        .find((body) => body.includes("productForEdit"));
+      expect(sent).toContain("resourcePublicationsV2(onlyPublished: false)");
+    });
+
+    it("S6a 一個管道都沒有 ⇒ 顯示空態，而不是顯示成「全部關閉」", async () => {
+      stubRoutedFetch([
+        ...BASE_ROUTES,
+        { match: "query productForEdit",
+          body: { data: { product: { ...EXISTING.data.product, resourcePublicationsV2: [] } } } },
+      ]);
+      renderAt("/admin/products/gid%3A%2F%2FProduct%2F9".replace("gid://chilllove/Product", "gid://chilllove/Product"));
+
+      const main = within(await screen.findByRole("main"));
+      expect(await main.findByText("尚未發布到任何銷售管道")).toBeVisible();
+    });
+
     const EDIT_ROUTES = [
       ...BASE_ROUTES,
       { match: "query productForEdit", body: EXISTING },
