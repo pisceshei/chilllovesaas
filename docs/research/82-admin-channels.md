@@ -2042,3 +2042,72 @@ gap 4｜**12px / 550 / 16px**｜bg `#affebf`｜color `#014b40`。
 | **1280 桌機寬**形態 | 量測機螢幕 1024×768，`resize_window` 被拒 |
 | critical 按鈕**盒尺寸** | 取自未渲染實例 |
 | primary 的 **hover／active** | 本流程 primary 全程 disabled |
+
+---
+
+### §16.6 🔴 更正：量測環境污染與量錯層（2026-08-28）
+
+> 本節依**鐵律 19.5**（更正不得抹除歷史）追加。**上方原記載保留原文**，
+> 下表逐項給出乾淨值。更正的來源與方法＝`docs/design/111` §20。
+
+**兩類錯誤，逐項標明**：
+
+- **污染**：使用者 Chrome 的擴充功能注入 `<style id="font-bolder-style">`，
+  規則為 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas) { font-weight: 500 !important }`。
+  🔴 它是**固定值 500 加 `!important`** ⇒ 把 450 **拉高**、把 550 **壓低**，
+  **看到 500 無法回推真值**。
+  🔴 **shadow DOM 不是無條件免疫**：污染選擇器確實停在 shadow 邊界，但 `font-weight`
+  **是可繼承屬性**——shadow 內**未自宣告 font-weight** 的繪製盒，會沿 flattened tree
+  繼承宿主被改寫成 500 的值。判準是「**該元素自己有沒有宣告 font-weight**」，
+  不是「它在不在 shadow 裡」（實證＝`docs/design/113` §1.6 的 variant-plain 與
+  `docs/research/82` §16.6 的 Remove schedule）。
+- **量錯層**：記到的是**不繪製文字的包裹元素**（繼承值），而非實際繪製文字的元素。
+
+⚠️ **只有 `font-weight` 受污染**：全部受測元素的 font-size／line-height／color／
+letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
+
+| # | 元件 | 原記載 | 🔴 乾淨值 | 污染值 | 取值 |
+|---:|---|---|---|---|---|
+| 1 | Manage publishing modal — 標題文字「Manage publishing for <商品名>」 | 14px / 500 | **14px / 600（lh 20px, color rgb(48,48,48)）** | 14px / 500 | light DOM。選擇器 H2.Polaris-Text--root.Polaris-Text--headingMd.Polaris-Text--breakAlways；直接 querySelector 於 .Polaris-Modal-Dialog 內，無 shadow 穿透 |
+| 2 | Manage publishing modal — 左欄群組標籤「Catalogs」 | 12px / 500 | **12px / 550（lh 16px, color rgb(97,97,97) subdued）** | 12px / 500 | light DOM。STRONG.Polaris-Text--root.Polaris-Text--bodySm.Polaris-Text--medium.Polaris-Text--subdued，位於左欄 x≈44；無 shadow 穿透 |
+| 3 | Manage publishing modal — 管道列標題「Online Store」／「Point of Sale」／「Shop」 | 13px / 500 | **13px / 450（lh 20px, color rgb(48,48,48)）** | 13px / 500 | light DOM。H2.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--block.Polaris-Text--truncate（注意：無 --medium 修飾類，故基準即 450；任務簡報表中『.Polaris-Text--bodyMd 乾淨=550』那筆對應的是帶 --medium 的變體，不是本元素） |
+| 4 | Schedule publishing 彈層 — 時間欄 input（value「7:16 AM」，placeholder「Time」） | 13px / 500 | **13px / 450（lh 20px, color rgb(48,48,48)；placeholder 亦 13px/450, color rgb(97,97,97)）** | 13px / 500（placeholder 同步 13px/500） | 🔴 light DOM（與同一列的日期欄不同層）。取法：window.__walk(popover) 過濾 INPUT，以 e.placeholder==='Time' 命中；placeholder 用 getComputedStyle(el,'::placeholder') |
+| 5 | Schedule publishing 彈層 — 時區徽章「GMT+8」 | 13px / 500 | **13px / 450（lh 20px, color rgb(97,97,97)）** | 13px / 500 | light DOM，容器 tagName=DIV（class 為 CSS-module hash，工具回傳時被遮罩為 [BLOCKED: JWT token]，故以文字內容 'GMT+8' ＋扁平樹上溯定位） |
+| 6 | Schedule publishing 彈層 — 時間下拉選項（33 項，7:30 AM ～ 11:30 PM，30 分一階） | 13px / 500 | **13px / 450（lh 20px, color rgb(48,48,48)）** | 13px / 500 | light DOM。點擊時間欄 input 後 document.querySelectorAll('[role=option]')（外層 ._Option_a5ul2_6），文字繪製盒＝內層 DIV._SingleSelectOption_a5ul2_26 |
+| 7 | Schedule publishing 彈層 — 「Remove schedule」（本次為 disabled 態） | 13px / 500 | **13px / 450（lh 20px, color rgb(181,181,181)＝disabled）** | 13px / 500 | 🔴 shadow DOM 但仍被污染（本輪最重要的反例，見 patterns）。繪製盒＝s-button shadow 內 SPAN.text-wrapper；該 variant 未自宣告 font-weight，值由 light DOM 宿主 s-button 繼承而來 ⇒ !important 500 穿過 shadow 邊界。取法：__textNodes(popover) 找 'Remove schedule' → __rendered() 上溯 |
+
+#### §16.6.1 複驗後與原記載一致（13 項）
+
+- 【Publishing 卡】卡標題「Publishing」＝13px / 600（lh 20px, rgb(48,48,48)）。shadow DOM：S-HEADING 宿主 display:contents，真正繪製盒＝其 shadowRoot 內 H2.heading。clean 600／dirty 600 ⇒ 完全免疫。原記載正確。
+- 【Publishing 卡】內文列文字／通路列標籤「Online Store」「All catalogs」＝12px / 550（lh 16px, rgb(48,48,48)）。shadow DOM：s-text shadowRoot 內 STRONG.text.weight-medium.size-small（自宣告 550）。clean 550／dirty 550 ⇒ 免疫。原記載正確。
+- 【modal】左欄導覽項文字「Sales Channels」「Agentic」「Regions」＝12px / 600（lh 16px, rgb(48,48,48)）。shadow DOM：STRONG.text.weight-semibold.size-small。clean 600／dirty 600 ⇒ 免疫。原記載正確。
+- 【modal】導覽項計數「3」「1」「1」＝12px / 450（lh 16px, rgb(97,97,97) subdued, tabular-nums）。shadow DOM：SPAN.text.color-subdued.font-variant-numeric-tabular-nums.size-small。clean 450／dirty 450 ⇒ 免疫。原記載正確。
+- 【modal】搜尋框 input＝13px / 450（lh 20px, rgb(48,48,48)）；placeholder 文案「Search channels」＝13px / 450, color rgb(97,97,97)。shadow DOM（s-search-field 內 INPUT[type=search]，自宣告權重）。clean 450／dirty 450 ⇒ 免疫。原記載正確。
+- 【modal】群組列標籤（右欄群組列「Sales Channels」）＝13px / 550（lh 20px, rgb(97,97,97) subdued）。shadow DOM：P.paragraph.color-subdued.weight-medium。clean 550／dirty 550 ⇒ 免疫。原記載正確。
+- 【modal】頁尾按鈕「Cancel」（secondary）與「Done」（primary, 本次為 disabled）＝均 12px / 550（lh 16px；Cancel rgb(48,48,48)、Done rgb(255,255,255)）。shadow DOM：SPAN.text-wrapper（.button 類自宣告 550）。clean 550／dirty 550 ⇒ 免疫。原記載正確。
+- 【彈層】標題「Schedule publishing」＝13px / 600（lh 20px, rgb(48,48,48)）。shadow DOM：H6.heading。clean 600／dirty 600 ⇒ 免疫。原記載正確。
+- 【彈層】日期欄 input（value「August 28, 2026」，placeholder「Date (YYYY-MM-DD)」）＝13px / 450（lh 20px, rgb(48,48,48)）；placeholder 13px/450, rgb(97,97,97)。shadow DOM。clean 450／dirty 450 ⇒ 免疫。原記載正確。🔴 注意它與同一彈層的時間欄不同層（時間欄是 light DOM 且需更正）。
+- 【彈層】月曆表頭「Sun/Mon/Tue/Wed/Thu/Fri/Sat」＝11px / 450（lh 12px, rgb(97,97,97)）。shadow DOM：TH.weekday-header。clean 450／dirty 450 ⇒ 免疫。原記載正確。
+- 【彈層】一般日期格＝13px / 450（lh 20px；本月可選日 rgb(48,48,48)，過去日 disabled rgb(181,181,181)）。shadow DOM：BUTTON.day-button。clean 450／dirty 450 ⇒ 免疫。原記載正確。
+- 【彈層】選中日＝13px / 600（lh 20px, color rgb(255,255,255) 反白）。shadow DOM：BUTTON.day-button.is-today.selected.single-selected。clean 600／dirty 600 ⇒ 免疫。原記載正確。
+- 【彈層】頁尾「Cancel」「Done」＝12px / 550（lh 16px），shadow SPAN.text-wrapper，clean/dirty 皆 550 ⇒ 免疫（與 modal 頁尾同規格）。
+
+#### §16.6.2 本次更正帶出的規律
+
+1. 🔴 最重要：shadow DOM 不是無條件免疫——「繼承」會把污染帶進 shadow。擴充功能的選擇器 `body :not(svg)...` 確實停在 shadow 邊界，但 font-weight 是可繼承屬性：宿主（light DOM 的 s-button 等）被打成 !important 500 後，shadow 內「未自宣告 font-weight」的繪製盒會繼承到 500。實測反例＝「Remove schedule」：shadow SPAN.text-wrapper，clean 450／dirty 500，而同為 shadow SPAN.text-wrapper 的 Cancel／Done 因 .button 類自宣告 550 而不動。⇒ 任何『在 shadow 內所以不用重量』的判斷都不成立，必須逐項做 clean/dirty 配對。
+2. 🔴 s-* 元件的 computed 值必須走扁平樹（flat tree），不能用 textNode.parentElement。宿主多為 display:contents 且 rect 0×0，文字由 slot 投影進 shadow 的繪製盒；直接對宿主取值會拿到「繼承自外層」的假值。實例：S-HEADING 宿主回報 13px/450，真值是其 shadowRoot 內 H2.heading 的 13px/600——差 150 個權重級距。正確路徑＝textNode → assignedSlot → slot.parentElement → 上溯至第一個 display!=='contents'。
+3. 🔴 同一個彈層裡兩個外觀相同的欄位可以分屬不同層：Schedule publishing 的日期欄是 shadow DOM（450 免疫），時間欄是 light DOM（450 被打成 500）。⇒ 不得用「同一列／同一組件」推定層別，每個欄位都要個別驗 getRootNode() instanceof ShadowRoot。
+4. 🔴 `Polaris-Text--bodyMd` 這個類名單獨出現時基準是 450，不是 550；550 來自額外的 --medium 修飾類。任務簡報表列的「.Polaris-Text--bodyMd 乾淨=550」與本輪管道列標題（bodyMd + block + truncate，無 medium）的 450 不矛盾——是量到了兩個不同的類組合。引用該對照表時必須連完整 class list 一起比對，只比對主類名會誤判。
+5. 本次七項更正全部集中在 light DOM（Polaris React 舊層）＋一項 shadow 繼承漏網；十三項不變全部是 shadow 內自宣告權重者。與任務預判一致：Manage publishing modal 的 Polaris React 部分（標題、群組標籤、管道列標題）確實是誤記重災區，Schedule publishing 彈層則是 light/shadow 混層。
+6. 更正後的乾淨值全部落在既有直方圖桶（450／550／600），無一為 500——與「乾淨環境下不存在 font-weight:500」的先前結論一致，可作為本輪量測正確性的交叉檢查：凡最後仍量到 500 的都應懷疑污染未停用。
+7. 工具面：真實鍵盤 Escape 打不進離屏視窗（computer:key 回報成功但 modal 不關）。可用替代＝在頁面內 dispatch KeyboardEvent('Escape', {bubbles:true, composed:true})，一次即把時間下拉、Schedule 彈層、Manage publishing modal 三層全部關閉，且事後複驗無 Unsaved changes bar。
+8. 工具面：本 MCP 會把 CSS-module 的 hash 類名（如 _Container_jtp2s_1 一類）誤判成 JWT 並遮罩成 [BLOCKED: JWT token]，導致部分元素回報不到 class。應對＝改以文字內容＋幾何座標＋tagName 定位（本輪 GMT+8、Time 標籤、日期格即如此），不要依賴類名字串。
+
+#### §16.6.3 仍未取得
+
+- Publishing 卡的 badge 內計數字（任務所述「另一路量到 12px/550」）——本店此商品狀態下不存在該元件。證據：兩個非保護商品（9907121193195、9907116277995）的 Publishing 卡皆只有兩列純文字列（Online Store／All catalogs），卡片子樹標籤普查（BUTTON×4, DIV×31, H2×1, S-HEADING×1, S-INTERNAL-BUTTON×2, S-INTERNAL-ICON×4, S-INTERNAL-TEXT×4, SLOT×9, SPAN×14, STRONG×4, svg×4）無任何 badge／count／overflow 類名或 s-badge 元件；對列容器逐層 dump 亦無隱藏的計數節點。要取得需先讓商品發布到會觸發溢位計數的通路組合，屬寫入操作，本輪唯讀約束下未做。
+- Manage publishing modal「頁尾三種按鈕」的第三種——本輪頁尾只實測到兩顆（Cancel secondary 12px/550、Done primary-disabled 12px/550，皆 y≈473）。同 modal 另有兩顆按鈕但不在頁尾：右上 Close（X）＝light DOM BUTTON.Polaris-Button--variantTertiary.--iconOnly，clean 13px/450 ／ dirty 13px/500（🔴 若 82 §16 把它算成第三種，則原記 500 應更正為 450）；以及列內 Schedule publishing icon-only（shadow s-button，12px/550）。無法判定 82 §16 原文指的是哪一顆，故不逕自登記為更正。
+- 畫面截圖／視覺版面確認——工具限制：Chrome 視窗離屏（screenX≈-32000），computer screenshot 一律逾時。全部結論僅來自 DOM computed 值與 Range 幾何，未附視覺憑證。
+- 「Remove schedule」在 enabled 態的顏色與權重——本次商品未設排程，該鍵為 disabled（rgb(181,181,181)）。權重 450 已取得，enabled 態顏色未取得；啟用它需先設定排程（寫入），唯讀約束下未做。
+
+> 量測環境：測試店 chill-love-u5q5mnzq admin，Chrome（Claude in Chrome），自開分頁量測後已關閉。主樣本＝非保護商品 9907121193195「Acqua Di Parma Blu Mediterraneo Arancia Di Capri EDT 100ml」；Publishing 卡結構另以 9907116277995「POLA B.A MILK」複核（兩者結構一致）。取證日期 2026-08-28。  🔴 全部數值皆在「已停用污染源後量測」：每次導航後執行 `[...document.querySelectorAll('style')].find(s=>s.id==='font-bolder-style').sheet.disabled=true`；每一項再以 disabled=true → false → true 三段取得「乾淨／污染」配對值（下表 clean/dirty 皆為同一元素同一時刻的實測，非推算）。量測結束已 `disabled=false` 還原。  工具限制：視窗離屏（screenX≈-32000），screenshot 逾時、resize_window 無效 ⇒ 全程走 DOM/JS，無視覺截圖。真實鍵盤 Escape 不進離屏視窗，改以 dispatch KeyboardEvent('Esca

@@ -186,6 +186,19 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 
 ## 19 🔴 商品詳情頁表單與側欄的 CSS 量測（補 §15）（層④ CSS 三段式，2026-08-28）
 
+> 🔴🔴 **2026-08-28 引用守衛：本節的全部 `font-weight` 值一律待複驗，未複驗前不得引用。**
+>
+> 本節量測時，使用者 Chrome 的一個擴充功能正在注入
+> `body, body :not(svg)… { font-weight: 500 !important }`（全文＝`docs/design/111` §20）。
+> 它把字重**雙向**改寫（450 拉高、550 壓低成同一個 500）⇒ **看到 500 無法回推真值**。
+> 🔴 **shadow DOM 也不是無條件免疫**——`font-weight` 會沿 flattened tree 繼承進 shadow，
+> 未自宣告它的繪製盒同樣被污染（`111` §20.3）。
+>
+> ⚠️ **font-size／line-height／color／letter-spacing／間距／圓角／陰影不受影響**，那些值仍可引用。
+>
+> 🔴 **本節尚未做乾淨重量**（`docs/design/110` 的 **G12** 射程）。已重量的同型元件見 `docs/research/77` §7.6。
+
+
 > 全域 token 值表、頁面骨架與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
 > 涵蓋排查與缺口＝`docs/design/110-css-measurement-coverage.md`。
 > 🔴 **鐵律 9**：只記 `getComputedStyle` 算出來的值，不含本尊樣式表原始碼、選擇器定義或可執行片段。
@@ -251,7 +264,8 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 
 1. 🔴 **兩欄／單欄由 container query 決定，不是 viewport media query**：`s-internal-page::shadow > main` 帶 `container-type: inline-size; container-name: s-internal-page`。⇒ 我方 RWD 驗證若只掃 viewport 寬度會量錯斷點；正確的自變數是「頁面內容容器寬」＝viewport − 240(nav) − 16。1024 viewport → container 768 → 單欄。
 2. 🔴 **同一頁存在兩套 hairline 技法**：新的 web-component 層（s-internal-text-field／select／picker）用 **`0 0 0 0.66px inset` box-shadow**（對應 --p-border-width-0165 .04125rem），舊的商品表單自製欄位（金額、重量、textarea、URL handle）用 **真 `border: 1px solid`＋一個絕對定位的覆蓋 div**。兩者靜態視覺接近但 focus／hover 行為與盒模型不同 ⇒ 我方應**只選一套**（建議 inset ring，因為不吃盒寬）。
-3. 🔴 **字重 500 不在 token 階梯裡**（階梯是 450／550／600／650）。凡量到 fw 500 的元素（金額輸入、pill、metafield label、SERP 標題、SaveBar 文字、表格 cell）都是**舊 React 表單層的硬編碼**；新 web-component 層一律 450／600。這正好解釋 91 §15 的字重矛盾。
+3. 🔴 ~~**字重 500 不在 token 階梯裡**（階梯是 450／550／600／650）。凡量到 fw 500 的元素（金額輸入、pill、metafield label、SERP 標題、SaveBar 文字、表格 cell）都是**舊 React 表單層的硬編碼**；新 web-component 層一律 450／600。這正好解釋 91 §15 的字重矛盾。~~
+   > 🔴🔴 **2026-08-28 撤回整條**：那些 500 **不是舊 React 層的硬編碼**，是**量測環境污染**（`docs/design/111` §20）。本尊**沒有 500 這一階**，乾淨直方圖 `450×981 / 550×187 / 600×4`。同型元件的乾淨值見 `docs/research/77` §7.6 與 `docs/design/113` §1.6。
 4. 間距全部落在 4px 倍數上：卡片間距 16、卡片 padding 16、label↔控件 4、控件內距 6/8/10/12、pill 內距 4/8、工具列群組 4/8、媒體格線 6（**唯一的非 4 倍數**）。
 5. 圓角只有三階在用：**12px（卡片／SaveBar 膠囊／表格外框）、8px（所有控件、pill、badge、媒體 tile、圖示鈕的 8px）、4px（RTE 工具列鈕）**；另有 7px（媒體 tile 內層＝8−1 border）與 6px（Category 清除鈕 16×16）兩個補償值。
 6. 控件高度只有三階：**32px（輸入框／select／單選 picker，＝--p-height-field-min-block-size）、36px（多選 picker、RTE 工具列、SaveBar 膠囊）、28px（pill、SaveBar 按鈕、卡片 icon 鈕、通路列）**。表格：表頭 36 / 資料列 48。
@@ -272,7 +286,8 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 
 4. 與 `docs/research/91` §15「主色 ink rgb(48,48,48)＝#303030」＝吻合（token --p-color-text #303030）。
 
-5. ⚠️ **未與 `docs/design/47`／`docs/design/64` 逐項比對**（本輪未讀該兩檔，指派只要求讀 91）。本輪測到的全域階梯（間距 4 倍數、圓角 12/8/4、控件高 32/36/28、根字級 16px）與 --p-* token 原值已完整列在 §1，請主控代理拿去與 47 §F／64 §3 對表；若 47／64 記的字重階含 500，同樣適用上面的「兩層並存」翻案。
+5. ⚠️ **未與 `docs/design/47`／`docs/design/64` 逐項比對**（本輪未讀該兩檔，指派只要求讀 91）。本輪測到的全域階梯（間距 4 倍數、圓角 12/8/4、控件高 32/36/28、根字級 16px）與 --p-* token 原值已完整列在 §1，請主控代理拿去與 47 §F／64 §3 對表；~~若 47／64 記的字重階含 500，同樣適用上面的「兩層並存」翻案。~~
+   > 🔴🔴 **2026-08-28 撤回：方向正好相反。** 「兩層並存」翻案已被證明是污染造成的假象。`docs/design/110` 的 **G12** 明文：**未複驗前不得引用 `47`／`64` 的任何字重值**，更不得拿本節的結論去「翻案」它們。
 
 ### 19.5 未取得（鐵律 19.3）
 

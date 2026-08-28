@@ -3392,3 +3392,15 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-2 | **`userEvent` 在 Windows 上會把競態窗口撐寬到掩蓋缺陷**：每個按鍵步驟之間插一次 `setTimeout(0)`，而 Windows 的粒度 p50 ＝ 15.55ms ⇒ 兩次按鍵間隔 54–97ms | 本輪 C2 初版用 `userEvent` 寫，**突變 M-A 殺不掉**；改 `fireEvent` 同步派發後才轉紅 | 同 W-1，是通則問題。已在本包的測試註釋逐字記下這個陷阱 |
 | W-3 | **`!inMonth(roving)` 守衛不可觀測**：`ref` 卸載時已 `delete(day)`，且對已卸載元素呼叫 `focus()` 依規範是 no-op | 兩個突變（只拿掉守衛／再加上不刪 ref）**都殺不掉任何測試** | 保留（代價為零、把前提寫成程式碼），但已在 `Calendar.tsx` 註釋明記「不得當成有測試覆蓋的防線」 |
 | W-4 | **真實瀏覽器的鍵盤 auto-repeat 間隔未取證** | 本輪只在 jsdom 量到 16.7ms 幀週期 | 「真實使用者也會踩到」是從機制推得、**未在真瀏覽器取證**。要取證需真機實測，屬新工作單位 |
+
+### 3.29 量測環境污染的範圍外觀察（2026-08-28）
+
+| # | 觀察 | 證據 | 為什麼不在本包收口 |
+|---|---|---|---|
+| W-1 | 🔴 **瀏覽器擴充功能可以靜默污染量測，而且是雙向的**。使用者 Chrome 注入 `font-weight: 500 !important`，把 450 拉高、550 壓低成同一個值 ⇒ **看到 500 無法回推真值**。⇒ 污染呈現為「兩套設計系統值不同」的假象。🔴 **判準已於同日二次更正**：shadow DOM **不是**無條件免疫——`font-weight` 是可繼承屬性，shadow 內未自宣告它的繪製盒仍會繼承宿主被污染的值。判準是「該元素自己有沒有宣告 `font-weight`」，必須逐項做 clean/dirty 配對。全文＝`docs/design/111` §20.3。 | 同一元素停用前後對照：`.Polaris-Button` 450↔500、`.Polaris-Text--bodyMd` 550↔500；反向對照組 `html` 根元素兩種環境皆 450 | 根治需使用者在 `chrome://extensions` 停用擴充功能——**瀏覽器設定不在我的授權範圍**。已在 `111` §20.8 立紅線：每次量字重前先在 CSSOM 停用、每次導航後重做 |
+| W-2 | **量錯層**：`s-*` host 常是 `display: contents`（不產生繪製盒），量它會得到與外觀無關的值；包裹 `<a>` 只繼承 body | 側欄導航項 `<a>` 450 vs 繪製 `<span>` 550／作用中 600；分組標題 host 13.3333px/400 vs shadow 內 `<strong>` 12px/550 | 這是**量測方法通則**（判準：`childElementCount === 0` 且有非空 `textContent`），要收口需回頭掃過所有已登記的元件量測。已在 `111` §20.4 記下判準 |
+| W-3 | 🔴 **`resize_window` 會假成功**：視窗在 `screenX ≈ -32000` 離屏時渲染面凍結，工具仍回報 "Successfully resized" | 請求 700／1280／1500／2400 四種寬度，`innerWidth` 一律 945 | 工具層問題，無法從本倉庫修。已在 `110` G5 與 `111` §20 登記，並改用樣式表窮舉取證 |
+| W-4 | **`@container` 是被漏掉的第二條寬度軸** | 全站 90 條 `@container` 規則、33 個相異條件，幾乎全用 px | 本輪只取到單一資料點（視口 1024 → 容器 768）。要完整需在多個寬度下量容器寬，而寬度不可控（W-3） |
+| W-5 | **發現一條永久失效的 media block**：`(min-width: 46.75em + 18em)`——裸 `+` 不是合法語法（只有 `calc()` 是），Chrome 保留條件字串但**恆不匹配** | 對照實驗：`(min-width: 1em + 1em)` matches=false；`(min-width: calc(1em + 1em))` 序列化成 `calc(2em)` 且 matches=true | 這是 Shopify 自己的 bug。**對我方的意義是紅線**：我方 em 化時若寫出同型字串，本地檢查與 CI **都不會報錯，只會靜默失效** |
+| W-6 | **`--p-breakpoints-*` token 從未被任何 CSS 規則消費** | 162 份樣式表掃描 `consumedInProps=(none)` | ⇒ 照抄 token 去做 media query 會得到**一套沒人在跑的斷點**。已寫進 `110` G10 的射程 |
+| W-7 | 🔴 **前端測試沒有設 `testTimeout`，預設 5000ms，在負載下會咬人** | 2026-08-28 實測：本輪跑閘門時 `pnpm test` **紅過兩次，形態不同但同源**。①1 格紅：`Test timed out in 5000ms`（`ProductDetailPage.test.tsx` 的「建立態：popover 加尺寸」）。②3 格紅：一格 5039ms 越過預設 `testTimeout`，另兩格 1788ms／3009ms 是 **`findByRole` 自己的 1000ms 重試逾時**（找不到 `未儲存的變更` region）——**兩種都不是斷言失敗**。當時同機有多個瀏覽器代理在跑，整套耗時由平時的 ~42s 變成 **80–90s**（約 2×）。關掉負載後：單檔連跑 3 次全過（75/75，各 ~70s），閘門迴圈 23 支全 0。`vite.config.ts` 的 `test` 區塊**沒有 `testTimeout`** | 修法是提高 `testTimeout` 或拆該格，但 **`vite.config.ts` 的 `test` 區塊是 CI step 引用的判準檔 ⇒ 命中鐵律 18.3**，且本包是純文檔包。依鐵律 20.4，需先取得使用者裁定再另開 18.3 PR |

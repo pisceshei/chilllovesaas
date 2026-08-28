@@ -122,6 +122,13 @@ height 21 / width 20 / z 13 / breakpoints 5 / filter 2 ＝ **537**（加總相�
 
 ## 7. 🔴 字重 `--p-font-weight-*`：token 值域與實際 computed 不一致
 
+> 🔴🔴 **2026-08-28 更正：本節的立論是錯的，原因是量測環境污染。**
+> 下面的「computed 有 483 個 500」是使用者 Chrome 的擴充功能注入
+> `font-weight: 500 !important` 造成的，**不是 Shopify 的事實**。
+> 乾淨環境的直方圖是 `450×981 / 550×187 / 600×4 / 400×13`，**一個 500 都沒有**，
+> 完全落在 token 值域內。⇒ **「token 值 ≠ computed 值」這個結論撤回。**
+> 全文與逐項更正＝**§20**。**原文以下保留備查**（鐵律 19.5）。
+
 **token 值域只有 4 個相異值**：
 
 `regular`＝`details-text`＝`input-label`＝`input-label-small`＝**450**
@@ -395,7 +402,7 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 |---|---|
 | **頂欄** | `position: fixed`｜**z-index 517**｜**高 56px**｜寬 100%｜padding 0｜**border-bottom 0**｜**box-shadow none**｜自身 bg **透明**，著色在內層容器：**`#0a0a0a`**｜內層 **gap 24px**｜左區塊寬 **240px**（與側欄同寬，形成 L 型對齊）｜Logo 包裹層 padding `0 20px` |
 | **側欄** | x=0, y=**56**（緊貼頂欄，無重疊無間隙）｜**寬 240px**｜高＝視口減 56｜padding 0｜**border 0**｜**box-shadow none**（側欄與內容區**靠色差分隔**，不用邊框也不用陰影）｜bg **`#ebebeb`** |
-| **導航項** | **高 28px**｜寬 218px｜x=**10**（右側 240−10−218＝**12**，**左右不對稱**）｜**垂直節距 28px（無 gap、無 margin，項目彼此緊貼）**｜padding `0 4px 0 8px`｜radius **8**｜字 **13px / 500 / 20px**｜color `#303030`｜圖示容器 20×20 |
+| **導航項** | **高 28px**｜寬 218px｜x=**10**（右側 240−10−218＝**12**，**左右不對稱**）｜**垂直節距 28px（無 gap、無 margin，項目彼此緊貼）**｜padding `0 4px 0 8px`｜radius **8**｜🔴 字重見 §20.4：`<a>` 包裹層 13px/450（純繼承、不繪製文字），**實際繪製的 `<span>` 是 13px / 550 / 20px，作用中 600**｜color `#303030`｜圖示容器 20×20 |
 | **導航項 hover** | 父層 bg → **`#f1f1f1`**（＝`--p-color-nav-bg-surface-hover`）；**字色與圖示色不變** |
 | **main** | x=0, y=56｜寬滿版｜**padding `0 0 0 240px`**（🔴 用 **padding-left** 讓開側欄，不是 margin、不是 grid）｜bg **`#f1f1f1`** |
 | **捲動區** | x=240，寬 **784**（＝1024−240）；其內容器寬 **768** ⇒ **捲軸槽保留寬 16px** |
@@ -403,7 +410,7 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 | **內容欄** | x=**256**，寬 **736** ⇒ **左右各再內縮 16px** |
 | **卡片網格** | 三欄起點 x=256／507／757，欄寬 **235** ⇒ **水平間距 16**｜列間 **垂直間距一律 16**（三次取樣皆 16） |
 | **卡片** | bg `#fff`｜radius **12**｜padding **16**｜box-shadow **6 層**（＝`--p-shadow-100`） |
-| **body** | font 13px / **500** / 20px｜color `#303030`｜bg `#f1f1f1`｜`color-scheme: light`；`html` 自身 bg **透明**（底色由 body 提供） |
+| **body** | font 13px / ~~500~~ **450**（🔴 §20 更正）/ 20px｜color `#303030`｜bg `#f1f1f1`｜`color-scheme: light`；`html` 自身 bg **透明**（底色由 body 提供） |
 
 ### 16.1 🔴 內容區沒有 max-width
 
@@ -432,6 +439,12 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 | modal 遮罩 | `--p-color-backdrop-bg`=`#000000b5` | `rgba(0,0,0,.5)` |
 | 按鈕 transition | **`none`** | `all` |
 | 表單 label 字重 | **450** | 500 |
+
+> 🔴 **2026-08-28 更正**：上表「舊層」欄的 **`500`** 全部是污染值（§20），
+> 乾淨值需逐項重量。已重量的：`.Polaris-Button` ＝ **13px / 450**、
+> `.Polaris-Text--bodyMd` ＝ **13px / 550**、`.Polaris-Text--bodySm` ＝ **12px / 450**。
+> ⇒ **兩層在「字級」上確實不同（13 vs 12），但「字重」那一欄的差異是污染造出來的**，
+> 不得再引用。其餘維度（modal 陰影、遮罩色、transition）不受影響。
 
 ⇒ **這解釋了為什麼 `47` 與 `64` 本來就互相矛盾**（47 §6.5 記按鈕 12/16/550、
 64 §3 記 13/20/500）——**兩邊都對，量的是不同層**。
@@ -477,3 +490,118 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 | `info` 族的 **hover／active** fill | 只取到 base | 重跑逐 token 抽取 |
 | 捲軸 thumb 的 hover／active **實際著色** | 只有 token 值，未在實際捲軸上取樣 | 對捲軸元素直接取樣 |
 | `--pg-bottom-bar-max-height` 的**實際生效值** | `:root` 解析 350px、`body` 解析 384px，消費端讀哪一層未驗證 | 找實際有 bottom bar 的畫面量 |
+
+---
+
+## 20. 🔴 量測環境污染：所有 `font-weight` 值曾經失真（2026-08-28 發現並更正）
+
+> 本節依**鐵律 19.5**追加。上方 §7／§16／§17.1 的原文保留，各自加了指向本節的更正註。
+
+### 20.1 污染源
+
+使用者 Chrome 的一個擴充功能（「字體加粗」類）在 `<style id="font-bolder-style">` 注入一條規則：
+
+| 項 | 值 |
+|---|---|
+| 掛載位置 | `parentNode` 是 **`HTML`**（不是 `HEAD`） |
+| 選擇器 | `body, body :not(svg):not(svg *):not(img):not(video):not(canvas)` |
+| 宣告 | `font-weight: 500 !important`（另有 `text-shadow`／`-webkit-font-smoothing`／`text-rendering`） |
+
+### 20.2 🔴 為什麼「看到 500」無法回推真值
+
+它是**固定值 500 加 `!important`** ⇒ **雙向**改寫：
+
+| 元件 | 乾淨 | 污染 | 方向 |
+|---|---|---|---|
+| `.Polaris-Button` | **450** | 500 | 拉高 |
+| `.Polaris-Text--bodyMd` | **550** | 500 | **壓低** |
+| `.Polaris-Text--bodySm` | **450** | 500 | 拉高 |
+| 側欄導航項的繪製 `<span>` | **550**（作用中 **600**） | 500 | 壓低 |
+| `body` | **450** | 500 | 拉高 |
+
+⇒ 一個記到的 `500` 可能原本是 450 也可能是 550。**只能重量，不能換算。**
+
+### 20.3 為什麼不是全部元素都變 500
+
+選擇器是 `body` 的**後代選擇器**，**跨不過 shadow 邊界**：
+
+- **light DOM**（Polaris React 層、`s-*` 的 host 本身）⇒ **被污染**
+- **shadow DOM 內部**（`s-internal-*` 的繪製盒）⇒ 🔴 **不是無條件免疫，見下**
+
+🔴🔴 **2026-08-28 二次更正：「shadow DOM 免疫」這條判準本身是錯的。**
+
+污染選擇器 `body :not(svg)…` 確實**停在 shadow 邊界**（選擇器不跨 shadow），
+**但 `font-weight` 是可繼承屬性**——shadow 內**未自宣告 `font-weight`** 的繪製盒，
+會沿 **flattened tree** 繼承宿主（light DOM 的 `s-*` host）被打成 `!important 500` 的值。
+
+⇒ **判準是「該元素自己有沒有宣告 `font-weight`」，不是「它在不在 shadow 裡」。**
+
+實證（本批自己量到的兩個反例）：
+
+| 元件 | 位置 | 自宣告？ | 乾淨 | 污染 |
+|---|---|---|---|---|
+| `s-internal-button` shadow `.button`（primary／secondary／tertiary） | shadow | ✅ 12px/550 | 550 | 550（免疫） |
+| `s-internal-button` shadow `.button.variant-plain`（「View details」） | shadow | ❌ **未宣告** | **450** | **500** |
+| `s-button` shadow `SPAN.text-wrapper`（「Remove schedule」） | shadow | ❌ **未宣告** | **450** | **500** |
+| `s-button` shadow `SPAN.text-wrapper`（Cancel／Done） | shadow | ✅ `.button` 類宣告 550 | 550 | 550（免疫） |
+
+⇒ 🔴 **任何「在 shadow 內所以不用重量」的判斷都不成立**，必須**逐項做 clean/dirty 配對**。
+全文＝`docs/design/113` §1.6.2-1 與 `docs/research/82` §16.6.2-1。
+
+這正好解釋了污染環境下的直方圖「450×1359 / 500×483」——450 那批是 shadow 內、500 那批是 light DOM。
+
+🔴 **這也推翻了 §7 的整個立論**。§7 據此宣稱「token 值域沒有 500 但實際 computed 有 483 個 500，
+所以 token 值 ≠ computed 值」——**那個落差是污染造出來的**。
+乾淨直方圖（商品詳情頁 1335 個葉節點）：`450×981 / 550×187 / 600×4 / 400×13`，**一個 500 都沒有**，
+完全落在 `--p-font-weight-*` 的值域內。
+
+### 20.4 第二類錯誤：量錯層（與污染獨立）
+
+重量時另外發現一批與污染無關的錯誤——**記到的是不繪製文字的包裹元素**：
+
+| 例 | 包裹層（原記載量到的） | 實際繪製文字的元素 |
+|---|---|---|
+| 側欄導航項 | `<a>` 13px/**450**（純繼承 body） | `<span>` 13px/**550**；作用中 **600** |
+| 側欄分組標題 | host `s-internal-text` 13.3333px/400（`display: contents`，**不產生繪製盒**） | shadow 內 `<strong>` 12px/**550** |
+| 側欄徽章數字 | host `s-internal-badge` 13px/500 | shadow 內 `<span.number>` 12px/**600** |
+
+🔴 **量 `s-*` host 會得到與外觀完全無關的值**——它常是 `display: contents`。
+繪製盒一律在 shadow 內。
+
+### 20.5 一個結構事實（順帶更正）
+
+`.header-content` **位於 `s-internal-page` 的 shadowRoot 內** ⇒
+`document.querySelectorAll('.header-content').length === 0`。
+任何用 light DOM 選擇器查它的量測都會落空或量到別的東西。
+
+### 20.6 只有 font-weight 受影響
+
+全部受測元素的 **font-size／line-height／color／letter-spacing／font-family**
+在乾淨與污染環境下**逐項相同**。反向對照：`html` 根元素（不在選擇器射程內）
+兩種環境下皆 16px/450/20px。
+
+### 20.7 逐項更正落在哪
+
+| 文件 | 更正節 | 條數 |
+|---|---|---|
+| `docs/research/21` | §5.6 | 22 |
+| `docs/research/77` | §7.6 | 31 |
+| `docs/research/81` | §8.6 | 29 |
+| `docs/research/82` | §16.6 | 7 |
+| `docs/research/94` | 🔴 **無專屬更正節**——它的 12 條登記在 `docs/research/81` §8.6 #18–#29；其餘 47 項中未涵蓋者已加守衛 | （12，寄存於 81） |
+| `docs/design/113` | §1.6 | 29 |
+
+合計 **118 條**。
+
+### 20.8 🔴 對後續量測的紅線
+
+1. **每次量 `font-weight` 前先停用污染源**，且**每次導航後都要重做**（頁面重載會重新注入）：
+   `[...document.querySelectorAll('style')].find(s => s.id === 'font-bolder-style').sheet.disabled = true`
+   量完還原成 `false`。這只切換 CSSOM 旗標，不動使用者的擴充功能設定。
+2. **量文字樣式一律量「實際繪製文字的元素」**，不是它的包裹層。
+   判準：`childElementCount === 0` 且有非空 `textContent`。
+3. 🔴 **不得因為某元素在 shadow DOM 內就跳過重量**——見 §20.3 的二次更正。
+   `font-weight` 會沿 flattened tree 繼承進 shadow，**必須逐項做 clean/dirty 配對**。
+3. 🔴 **`docs/design/47` 與 `docs/design/64` 尚未複驗**——它們是更早的 session 在**同一台機器**量的，
+   `64` §3 記的「Pill、主要按鈕 13 / 20 / **500**」正是污染值的特徵。
+   **未複驗前不得引用那兩份的任何 font-weight 值。**
