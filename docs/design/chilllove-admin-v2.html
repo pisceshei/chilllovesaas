@@ -13,26 +13,50 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans+TC:wght@100..900&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* ══ 中性階（47 §6：只取層級關係，色值為 CHILL LOVE 自有）══════════════ */
-  /* 64 §1 實測頁面底色 rgb(241,241,241)。原值 #f4f4f5 是估計值，本輪換成量測值。 */
-  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
-  --surface-sunken:#e6e6e9;      /* 47 §6：次級按鈕底「比頁底深一階」（原 --surface-2 比頁底淺，層級反轉）*/
+  /* ══ 中性階：值一律取自本尊實測（D54 視覺 1:1；換值裁定＝D59）══════════
+     🔴 原文（「47 §6：只取層級關係，**色值為 CHILL LOVE 自有**」）已被 D54 推翻，保留於 git 歷史。
+
+     🔴 **換值前的指紋：我方 7 個中性 token 帶色偏，而本尊中性階飽和度一律 0.0（純灰）。**
+       最嚴重的是 `--text: #1a1c1e`（飽和 **13.3%** 藍偏）與 `--surface-inverse: #1a1b1d`（10.3%）。
+       主文字對白底的對比也過高：我方 **17.09** vs 本尊 **13.20** ⇒ 字更黑更硬。
+
+     🔴 **`--surface-selected` 是視覺變化最大的一項**：我方是品牌藍 `#f0f5ff`，
+       本尊是中性 `#f1f1f1`——**本尊的選取態不用品牌色**。表格選取列會從藍變灰。
+
+     ⚠️ **`--surface-hover` 與 `--surface-selected` 在本尊是兩個不同來源**
+       （`nav-bg-surface-hover` 與 `bg-surface-selected`）**但恰好同值 `#f1f1f1`**。
+       同值不代表同源。
+
+     ⚠️ **設定區導覽的 hover／selected 是對調的**（`81` §8.4：selected=`#f3f3f3`、hover=`#f1f1f1`，
+       即 **hover 比 selected 深**）⇒ 換值後必須逐畫面複驗，不能只信 token 名。 */
+  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f7;--surface-3:#f3f3f3;
+  --surface-sunken:#e3e3e3;      /* 本尊 bg-fill-tertiary（111 §14.4）*/
   --surface-sunken-hover:#dcdce0;--surface-sunken-active:#d2d2d7;
-  --surface-inverse:#1a1b1d;     /* 深色浮層底（toast／bulkbar／savebar／doc-pop）*/
-  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;
+  --surface-inverse:#1a1a1a;     /* 深色浮層底。本尊暗色 scope 的 bg-surface（111 §15）。
+                                    ⚠️ **本尊頂欄不是靠這顆**——它整個子樹套 colorscheme="dark" 的
+                                    theme scope，用該 scope 的 --p-color-bg（消融實驗＝111 §14.7 更正）。 */
+  --text:#303030;--text-2:#616161;--text-3:#616161;   /* 🔴 本尊 text-tertiary 與 -secondary **同值**（111 §14.8）*/
   --text-disabled:#b5b5b5;       /* 47 §E：disabled 只降文字色、底色不動 */
-  --text-inverse:#fff;           /* 47 §6：深底上的文字階 */
+  --text-inverse:#e3e3e3;        /* 深色**中性面板**上的文字（toast／tooltip／savebar／bulkbar／doc-pop）。
+                                    本尊 text-inverse（111 §14.8）。 */
+  --text-on-brand:#fff;          /* 🔴 深色**飽和填色**上的文字（brand／ai／focus 填底）。
+                                    本尊 text-brand-on-bg-fill = #fff，**與 text-inverse 不同值**。
+                                    原本我方只有一顆 --text-inverse 同時服務這兩種角色
+                                    ——與 `--t-lg` 同型的「一顆 token 服務多個角色」。拆開後：
+                                      深中性面板 #e3e3e3 於 #1a1a1a = 13.56（本尊配對）
+                                      brand 填色 #fff    於 #303030 = 13.20（本尊配對）
+                                    ⚠️ ai／focus 填底沿用本顆是**近似**，本尊那兩族的 on-fill 未取得。 */
   --icon:#4a4a4a;                /* 47 §6：圖示灰獨立一階 */
-  --border:#e3e3e6;--border-2:#ececef;--border-strong:#c9cace;
-  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
+  --border:#e3e3e3;--border-2:#ebebeb;--border-strong:#ccc;   /* strong ＝ 本尊 border-hover；`#ccc` 是本尊字面形式 */
+  --brand:#303030;--brand-hover:#1a1a1a;--link:#005bd3;/* 本尊 text-link（111 §14.8）；與 --focus 同值不是巧合 */--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
   --ai:#6d28d9;--ai-bg:#f3efff;
   --chart:#2a78d6;--grid:#ececef;
-  --surface-hover:#ededee;        /* 導航／列 hover 底 */
-  --surface-row-hover:#fafafc;    /* 表格列 hover */
-  --surface-selected:#f0f5ff;     /* 表格選取列 */
+  --surface-hover:#f1f1f1;        /* 導航 hover 底（本尊 nav-bg-surface-hover，111 §14.13）*/
+  --surface-row-hover:#f7f7f7;    /* 表格列 hover（本尊 bg-surface-hover，111 §14.2）*/
+  --surface-selected:#f1f1f1;     /* 🔴 原本是品牌藍 #f0f5ff——**本尊選取態不用品牌色** */
   --surface-chip:#eeeef0;--surface-count:#e8e8ea;
   --text-nav:#3f4144;--text-nav-2:#5c5e62;--text-quiet:#55575b;
-  --border-hover:#a9aaae;         /* 輸入框 hover 框色 */
+  --border-hover:#616161;         /* 輸入框 hover 框色（本尊 input-border-hover，111 §14.11）*/
   --scroll-thumb:#d2d3d7;
   --skeleton-1:#ededef;--skeleton-2:#f6f6f7;
   --ai-border:#e2d9f8;--danger-border:#e6b3bc;
@@ -283,7 +307,9 @@
   --z-scrim:518;     /* modal／drawer 遮罩 */
   --z-dialog:519;    /* 對話框本體 */
   --z-popover:520;   /* 下拉選單／popover／toast（必須 > dialog）*/
-  --scrim:rgba(0,0,0,.5);   /* 47 §H2-2 實測遮罩不透明度 = .5 */
+  --scrim:#000000b5;   /* 本尊 backdrop-bg（111 §14.7，≈71% 黑）。
+                          🔴 原值 rgba(0,0,0,.5) 出自 `82` §16.2，但那量的是**舊 Polaris React modal**；
+                          新層遮罩是 #000000b5。兩層各有自己的遮罩色（111 §17.1）。 */
 
   /* ══ 47 §H2-3 focus 環：outline:none ＋ 雙層 box-shadow ════════════════
      內層＝底色做出的留白間隙，外層＝環本身（環寬＝4 個實體像素）。
@@ -447,7 +473,7 @@ svg{flex:none}
 .dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
 .store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600}
 .store-chip:hover{background:var(--surface-2)}
-.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:var(--text-inverse);font-size:var(--t-2xs);font-weight:700;flex:none}
+.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:var(--text-on-brand);font-size:var(--t-2xs);font-weight:700;flex:none}
 .dev-tag{font-size:var(--t-2xs);color:var(--text-3);border:var(--hairline) solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
 
 /* ===== 版面 ===== */
@@ -489,7 +515,7 @@ h1{font-size:var(--type-display-sm-size);line-height:var(--type-display-sm-lh);f
 /* Chromium 的 UA 樣式對 disabled 的表單控件套 opacity:.7——那正是 47 §E 禁止的做法。
    明確覆寫回 1，全站的 disabled 一律只用文字色表達（53號 P0-17 灰化整卡時量到才發現）。*/
 input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disabled)}
-.btn-pri{background:var(--brand);color:var(--text-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
+.btn-pri{background:var(--brand);color:var(--text-on-brand);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 1px 2px rgba(26,28,30,.2)}
 .btn-pri:hover:not(:disabled){background:var(--brand-hover)}
 /* 47 §D：primary / secondary / tertiary 三層「只靠填色深淺」分，等高等圓角、無邊框。
    原本 secondary＝白底+邊框，47 §D 明指方向錯誤。 */
@@ -572,9 +598,9 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .hero-hello p{color:var(--text-2);margin-top:var(--sp-050);font-size:var(--t-sm)}
 .ai-box{max-width:640px;margin:var(--sp-400) auto var(--sp-200);background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
-.ai-badge{width:26px;height:26px;border-radius:var(--r-200);background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:var(--text-inverse);flex:none}
+.ai-badge{width:26px;height:26px;border-radius:var(--r-200);background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:var(--text-on-brand);flex:none}
 .ai-box input{flex:1;border:0;outline:0;font-size:var(--t-sm);background:none}
-.ai-send{width:var(--h-32);height:var(--h-32);border-radius:var(--r-200);background:var(--brand);color:var(--text-inverse);display:grid;place-items:center}
+.ai-send{width:var(--h-32);height:var(--h-32);border-radius:var(--r-200);background:var(--brand);color:var(--text-on-brand);display:grid;place-items:center}
 .ai-send:hover{opacity:.85}
 .ai-reply{max-width:640px;margin:0 auto var(--sp-200);background:var(--ai-bg);border:var(--hairline) solid var(--ai-border);border-radius:var(--r-300);padding:var(--sp-300) var(--sp-400);font-size:var(--t-sm);line-height:1.6;display:none}
 .ai-reply.show{display:block;animation:fade var(--dur-slow) var(--ease-decelerate)}
@@ -582,7 +608,7 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .task-chips{display:flex;justify-content:center;gap:var(--sp-200);margin:var(--sp-400) 0 calc(var(--sp-400)*2)}
 .task-chip{display:inline-flex;align-items:center;gap:var(--sp-200);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-pill);padding:var(--sp-150) var(--sp-400);font-size:var(--t-sm);font-weight:600;box-shadow:var(--sh)}
 .task-chip:hover{background:var(--surface-2);border-color:var(--border-strong)}
-.task-chip .n{background:var(--brand);color:var(--text-inverse);border-radius:var(--r-pill);min-width:20px;height:20px;display:grid;place-items:center;font-size:var(--t-2xs)}
+.task-chip .n{background:var(--brand);color:var(--text-on-brand);border-radius:var(--r-pill);min-width:20px;height:20px;display:grid;place-items:center;font-size:var(--t-2xs)}
 .setup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-400)}
 .setup-card{padding:var(--sp-400);display:flex;flex-direction:column;gap:var(--sp-200);min-height:168px;position:relative;overflow:hidden}
 .setup-card .sc-prog{font-size:var(--t-xs);color:var(--text-2);display:flex;align-items:center;gap:var(--sp-150)}
@@ -812,7 +838,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 /* ===== 開發註釋模式 ===== */
 body.annotate [data-doc]{outline:1.5px dashed var(--ai);outline-offset:2px;cursor:help}
 .annot-on{background:var(--ai-bg)!important;color:var(--ai)!important}
-.annot-bar{position:fixed;bottom:20px;left:20px;background:var(--ai);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-xs);z-index:var(--z-topbar);display:none;box-shadow:0 8px 24px rgba(109,40,217,.35);max-width:400px}
+.annot-bar{position:fixed;bottom:20px;left:20px;background:var(--ai);color:var(--text-on-brand);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-300);font-size:var(--t-xs);z-index:var(--z-topbar);display:none;box-shadow:0 8px 24px rgba(109,40,217,.35);max-width:400px}
 body.annotate .annot-bar{display:block}
 .doc-pop{position:fixed;max-width:380px;background:var(--surface-inverse);color:#e8e9ea;border-radius:var(--r-300);padding:var(--sp-300) calc(var(--sp-400)*2) var(--sp-300) var(--sp-400);font-size:var(--t-xs);line-height:1.65;z-index:var(--z-popover);box-shadow:var(--sh-doc);display:none}
 .doc-pop.show{display:block;animation:popin var(--dur-slow) var(--ease-decelerate)}
@@ -1006,7 +1032,7 @@ img{max-width:100%;height:auto}
   .set-store{flex:none;border:0;margin:0;padding:0 var(--sp-050)}   /* 只留頭像，當作組織／商店分隔 */
   .set-store div{display:none}
   .set-item{flex:none;width:auto;white-space:nowrap;border:var(--hairline) solid var(--border);border-radius:var(--r-pill);padding:var(--sp-150) var(--sp-300)}
-  .set-item.on{background:var(--brand);color:var(--text-inverse);border-color:var(--brand)}
+  .set-item.on{background:var(--brand);color:var(--text-on-brand);border-color:var(--brand)}
   .set-content{width:auto;max-width:none;padding:var(--sp-300) var(--sp-300);gap:var(--sp-300)}
   .plan-grid{grid-template-columns:1fr}
   /* ---- Modal → 貼底全寬 sheet ---- */
@@ -1158,7 +1184,8 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .cl-shake{animation:cl-shake var(--dur-shake) var(--ease-standard)}
 
 /* --- 危險動作 --- */
-.btn-danger{background:var(--critical);color:var(--text-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(26,28,30,.2)}
+/* critical 填色上的字用 D56 建的 --sem-critical-on-fill（#fffafb，本尊帶色偏的近白） */
+.btn-danger{background:var(--sem-critical-fill);color:var(--sem-critical-on-fill);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 1px 2px rgba(26,28,30,.2)}
 .btn-danger:hover:not(:disabled){background:#93131f}
 .btn-danger-o{background:var(--surface);border-color:var(--danger-border);color:var(--critical)}
 .btn-danger-o:hover:not(:disabled){background:var(--critical-bg)}
@@ -1171,7 +1198,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .seg button{padding:var(--sp-150) var(--sp-300);font-size:var(--t-xs);font-weight:600;color:var(--text-2);border-right:var(--hairline) solid var(--border);white-space:nowrap}
 .seg button:last-child{border-right:0}
 .seg button:hover{background:var(--surface-2)}
-.seg button.on{background:var(--brand);color:var(--text-inverse)}
+.seg button.on{background:var(--brand);color:var(--text-on-brand)}
 .fsel{height:var(--h-32);border:var(--hairline) solid var(--border);border-radius:var(--r-200);background:var(--surface);font-size:var(--t-xs);font-weight:600;
   color:var(--text);padding:0 var(--sp-600) 0 var(--sp-200);appearance:none;-webkit-appearance:none;cursor:pointer;max-width:100%;
   background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2367696e' stroke-width='2.6'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -1673,7 +1700,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .ck-node:hover{outline:var(--hairline) solid var(--sem-info-border)}
 .ck-node.sel{outline:var(--sp-050) solid var(--focus)}
 .ck-node.sel::before{content:attr(data-label);position:absolute;left:calc(var(--sp-050) * -1);top:0;
-  transform:translateY(-100%);background:var(--focus);color:var(--text-inverse);
+  transform:translateY(-100%);background:var(--focus);color:var(--text-on-brand);
   font-size:var(--t-2xs);line-height:var(--lh-2xs);font-weight:600;white-space:nowrap;
   padding:var(--sp-050) var(--sp-150);border-radius:var(--r-100) var(--r-100) 0 0;z-index:var(--z-base)}
 .ck-node.is-hid{opacity:.4}
@@ -12610,7 +12637,7 @@ function ckPrevAccount(){
   }[CK.page]||'';
   const ann=(CK_TREES[CK.page]||[]).some(s=>s.k==='announce');
   return `<div class="ck-prev">
-    ${ann?ckN('announce','公告列',`<div style="background:var(--brand);color:var(--text-inverse);border-radius:var(--r-200);
+    ${ann?ckN('announce','公告列',`<div style="background:var(--brand);color:var(--text-on-brand);border-radius:var(--r-200);
       padding:var(--sp-150);text-align:center;font-size:var(--t-2xs);margin-bottom:var(--sp-300)">全站滿 ${money(50000)} 免運</div>`):''}
     ${ckN('header','頁首',`<div class="ck-acct-top">
       ${ckN('logo','標誌','<b style="font-size:var(--t-lg);line-height:var(--lh-lg)">CHILL LOVE</b>')}
