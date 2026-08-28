@@ -84,8 +84,33 @@ a {
   min-height: 100vh;
 }
 
+/* 殼層底色＝亮域的 `--bg-inverse`（#0a0a0a）。本尊對應層是 `_AppFrame` / `_Frame`，
+   兩層都量到 #0a0a0a。它平常被 `.cl-app-frame` 的亮色面板完全蓋住，
+   只在面板上緣的 12px 圓角處露出來——那就是這個底色存在的唯一理由。 */
 .cl-admin-shell {
-  background: var(--bg);
+  background: var(--bg-inverse);
+}
+
+/* 暗色域 remap —— 本尊 `Polaris-ThemeProvider--themeContainer` 的等效物。
+   值全部在 `:root`（`--dk-*`，由 `scripts/sync-tokens.rb` 從原型同步）；
+   這裡**只做語意名重新指向**，不含任何色值 ⇒ 兩份檔案不會各自漂移。
+   完整的亮/暗對照表寫在原型 `:root` 的同名區塊（唯一來源）。 */
+.cl-scope-dark {
+  --bg: var(--dk-bg);
+  --surface: var(--dk-surface);
+  --surface-2: var(--dk-surface-2);
+  --surface-3: var(--dk-surface-3);
+  --surface-hover: var(--dk-surface-hover);
+  --text: var(--dk-text);
+  --text-2: var(--dk-text-2);
+  --text-3: var(--dk-text-2);
+  --icon: var(--dk-icon);
+  --border: var(--dk-border);
+  --border-2: var(--dk-border-2);
+  --brand: var(--dk-brand);
+  --brand-hover: var(--dk-brand-hover);
+
+  color: var(--text);
 }
 
 .cl-topbar {
@@ -96,8 +121,10 @@ a {
   height: var(--topbar-h); /* 47 §0 量測真值 56px（原 52，51 表 1 P0-11）*/
   gap: 16px;
   padding: 0 16px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  /* 在 `.cl-scope-dark` 裡，`--bg` 解析成 #0a0a0a。本尊頂欄寫的就是
+     `background: var(--p-color-bg)`——它不自己指定深色，是主題容器給的。
+     🔴 `border-bottom` 已刪：本尊實測 `border-bottom-width: 0`、`box-shadow: none`。 */
+  background: var(--bg);
 }
 
 .cl-topbar__menu {
@@ -238,9 +265,14 @@ a {
   font-weight: var(--fw-regular);
 }
 
+/* 內容面板：本尊 `main` 是 `background: var(--p-color-bg)` 加
+   **`border-radius: 12px 12px 0 0`**，背後是 #0a0a0a 的 `_Frame`
+   ⇒ 圓角處露出暗底。圓角、暗底、透明側欄三者是同一個視覺系統，缺一個就看不出效果。 */
 .cl-app-frame {
   display: flex;
   height: calc(100vh - var(--topbar-h));
+  background: var(--bg);
+  border-radius: var(--r-300) var(--r-300) 0 0;
 }
 
 .cl-sidebar {
@@ -251,8 +283,10 @@ a {
   gap: var(--sp-050);
   padding: var(--sp-200);
   overflow-y: auto;
-  border-right: var(--hairline) solid var(--border);
-  background: var(--surface-2);
+  /* 本尊側欄實測 `background: rgba(0,0,0,0)`、`border-width: 0`、寬 240
+     ——直接踩在內容面板的 #f1f1f1 上。舊寫法是 #f7f7f7 底 ＋ 右側髮絲線。
+     🔴 不透明的側欄會蓋住面板左上圓角，只剩右邊露暗底 ⇒ 不對稱。 */
+  background: transparent;
 }
 
 .cl-sidebar__navigation {
@@ -1002,6 +1036,11 @@ a {
     transform: translateX(-100%);
     box-shadow: var(--sh-pop);
     transition: transform var(--tr-big);
+    /* 桌機側欄已改透明；抽屜是浮在內容之上的覆蓋層，必須有自己的底色，
+       否則會透出下面的頁面內容。這裡沿用改動前的值（--surface-2），
+       🔴 **本尊行動版抽屜的底色未取得**——resize_window 不可用、
+       admin 不能 iframe ⇒ 窄寬度形態量不到（鐵律 13.4 已知限制，登記 91 §3.39）。 */
+    background: var(--surface-2);
   }
 
   .cl-sidebar--open {

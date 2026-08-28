@@ -1923,3 +1923,90 @@ root 依序設 8 / 13 / 16 / 26 / 32px，`(min-width: 48em)` **一律在 768px �
 把 `--t-*` / `--lh-*` 全改成 rem 是本尊的無障礙決定（使用者調大瀏覽器字級時整個後台等比放大），
 射程是整張 token 表 ＋ 所有消費端，且**在預設設定下零視覺差** ⇒ 無法用視覺回歸驗收，
 需要另設驗收方法。鐵律 20.5：不借「斷根」包裝跨元件擴修。
+
+---
+
+### D64. 頂欄改成本尊的「暗色主題容器」，內容面板加上圓角（2026-08-28）
+
+使用者裁定的五項執行順序中的**第 4 項**。🟢 不觸鐵律 18.3。
+
+#### 本尊不是「深色頂欄」，是主題容器
+
+2026-08-28 於 `/products`（本機 Chrome）實測：頂欄 `_TopBar_1scp5_1` 只寫
+`background: var(--p-color-bg)`——**它自己沒有指定任何深色**。深色來自它的父層
+`Polaris-ThemeProvider--themeContainer`，那一層把同一組語意 token 全部換成暗值。
+
+逐項對照（同一組名字，左亮右暗）：
+
+| token | 亮域 | 暗域 |
+|---|---|---|
+| `bg` | #f1f1f1 | **#0a0a0a** |
+| `bg-surface` | #fff | **#1a1a1a** |
+| `bg-surface-secondary` | #f7f7f7 | **#282828** |
+| `bg-surface-tertiary` | #f3f3f3 | **#2f2f2f** |
+| `bg-surface-hover` | #f7f7f7 | **#222** |
+| `text` | #303030 | **#eee** |
+| `text-secondary` | #616161 | **#aaa** |
+| `icon` | #4a4a4a | **#dcdcdc** |
+| `icon-secondary` | #8a8a8a | **#aaa** |
+| `border` | #e3e3e3 | **#ffffff17** |
+| `border-secondary` | #ebebeb | **#ffffff0f** |
+| `bg-fill-brand` | #303030 | **#fcfcfc** |
+| `bg-fill-brand-hover` | #1a1a1a | **#eee** |
+
+🔴 **`*-inverse` 家族兩邊完全相同**（`bg-inverse` #0a0a0a、`text-inverse` #e3e3e3、
+`icon-inverse` #e3e3e3、`border-inverse` #616161、`bg-surface-inverse` #303030）
+——它們是**絕對參照**，不隨主題翻。這一點很容易搞混：頂欄背景是**暗域的 `bg`**，
+殼層底色是**亮域的 `bg-inverse`**，兩者恰好都是 #0a0a0a 但來源不同、不可互代。
+
+#### 三件事是同一個視覺系統，缺一件就看不出效果
+
+實測 `main` 有 `border-radius: 12px 12px 0 0`，而它的祖鏈是
+`_DarkOverlay`（透明）→ **`_Frame` #0a0a0a** → `_AppFrame` #0a0a0a。
+⇒ **圓角處露出的就是那層暗底**。
+
+🔴 **我一度判它是 no-op。** `main` 的背景 #f1f1f1 與 `body` 的 #f1f1f1 相同，
+我只比到 body 就下了「同色 ⇒ 圓角看不見」的結論。**走完整條祖鏈才看到中間的
+`_Frame`**。教訓：問「背後是什麼顏色」時，要走到第一個**不透明**的祖先，不是跳到 body。
+
+同理，側欄實測 `background: rgba(0,0,0,0)`、`border-width: 0`、寬 240
+——它直接踩在內容面板上。若我方保留 #f7f7f7 不透明側欄，它會**蓋住面板左上圓角**，
+只剩右邊露暗底 ⇒ 不對稱。所以圓角、暗底、透明側欄**必須一起做**。
+
+#### 我方怎麼實作
+
+- **值全部放 `:root`**（`--dk-*` 14 個 ＋ `--bg-inverse`）。理由：
+  `scripts/check-tokens-sync.rb` 只同步 `:root`，值寫在別處會在原型與 `admin.css`
+  兩邊各自漂移——那正是 C-2 的事故形態。
+- **`.cl-scope-dark` 只做語意名重新指向**，不含任何色值。暗域裡的元件
+  **一行 CSS 都不用改**：寫 `var(--text)` 就自動拿到 #eee。這就是本尊那個
+  ThemeProvider 的等效物。
+- `.cl-topbar` 加上 `cl-scope-dark`、背景改 `var(--bg)`、**刪掉 `border-bottom`**
+  （本尊實測 `border-bottom-width: 0`、`box-shadow: none`）。
+- `.cl-admin-shell` 底色改 `var(--bg-inverse)`；`.cl-app-frame` 加
+  `background: var(--bg)` ＋ `border-radius: var(--r-300) var(--r-300) 0 0`。
+- `.cl-sidebar` 桌機改透明、無右框；**行動抽屜補上 `background: var(--surface-2)`**
+  （桌機那條改透明後，抽屜會透出下面的頁面）。
+
+#### 驗證（本機 Chrome、同源 iframe 控寬、擴充功能污染已停用）
+
+| | 1280 | 768 | 390 | 本尊 |
+|---|---|---|---|---|
+| `.cl-topbar` bg | rgb(10,10,10) | 同 | 同 | **rgb(10,10,10)** |
+| `.cl-topbar` color | rgb(238,238,238) | 同 | 同 | **rgb(238,238,238)** |
+| `.cl-topbar` border-bottom | 0px | 0px | 0px | **0px** |
+| `.cl-admin-shell` bg | rgb(10,10,10) | 同 | 同 | **rgb(10,10,10)** |
+| `.cl-app-frame` bg / radius | rgb(241,241,241) / 12px 12px 0px 0px | 同 | 同 | **同** |
+| `.cl-sidebar` bg | 透明 | 透明 | rgb(247,247,247)（抽屜） | 透明（桌機） |
+| `.cl-sidebar` 寬 | 240 | 240 | 272（抽屜） | **240**（桌機） |
+
+並以**放大截圖**逐一目視對照本尊同一角落：兩邊都是「暗色頂欄 → 亮色面板左上 12px 圓角
+露出暗底 → 導航項目直接坐在亮面板上、無側欄底色也無分隔線」。
+
+#### 未取得
+
+- 🔴 **本尊行動版（<768）的頂欄與抽屜形態量不到**：`resize_window` 不可用、
+  admin 不能 iframe。我方抽屜沿用改動前的 `--surface-2`，**不是對齊本尊的結果**。
+- 頂欄**內部元件**本輪只量、未實作（搜尋列 640×36 / #282828 / r12、
+  圖示鈕 18px 圖示 ＋ 6px 內距 / r12、商店 chip 154×36 / r12、
+  快捷鍵標籤 #2f2f2f 底 / #aaa 字 / 10px / 550 / r4）——登記 `91` §3.39。
