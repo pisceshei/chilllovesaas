@@ -473,23 +473,25 @@ svg{flex:none}
 .dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
 .store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600}
 .store-chip:hover{background:var(--surface-2)}
-.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;place-items:center;color:var(--text-on-brand);font-size:var(--t-2xs);font-weight:700;flex:none}
+.avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;/* 🔴 本尊頭像縮寫（s-avatar → text.text）= **16 / 20 / 450**。我方原本 11px/700
+   ——字級小 5px、字重重 250。盒 24×24 vs 本尊 28×28 屬幾何，不在本包射程。 */place-items:center;color:var(--text-on-brand);font-size:var(--type-avatar-initials-size);font-weight:var(--fw-regular);flex:none}
 .dev-tag{font-size:var(--t-2xs);color:var(--text-3);border:var(--hairline) solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
 
 /* ===== 版面 ===== */
 .frame{display:flex;height:calc(100vh - var(--topbar-h))}
 .sidebar{width:var(--sidebar-w);max-width:var(--sidebar-w);background:var(--surface-2);border-right:var(--hairline) solid var(--border);padding:var(--sp-200) var(--sp-200) var(--sp-200);display:flex;flex-direction:column;gap:var(--sp-050);overflow-y:auto;flex:none}
-.nav-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);color:var(--text-nav);font-size:var(--t-sm);font-weight:500;width:100%;text-align:left}
+.nav-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);color:var(--text-nav);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-medium);width:100%;text-align:left}
 .nav-item:hover{background:var(--surface-hover)}
 .nav-item.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-raised)}
 .nav-item svg{opacity:.75}
 .nav-item.on svg{opacity:1}
 .nav-count{margin-left:auto;font-size:var(--t-2xs);font-weight:600;background:var(--surface-count);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-150);color:var(--text-quiet)}
-.nav-sub{padding:var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300)*3);font-size:var(--t-sm);color:var(--text-nav-2);border-radius:var(--r-200);width:100%;text-align:left;display:none}
+.nav-sub{padding:var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300)*3);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-regular);color:var(--text-nav-2);border-radius:var(--r-200);width:100%;text-align:left;display:none}
 .nav-sub:hover{background:var(--surface-hover)}
 .nav-sub.show{display:block}
 .nav-sub.on{color:var(--text);font-weight:600;background:var(--surface);box-shadow:var(--sh-raised)}
-.nav-group{margin-top:var(--sp-400);padding:0 var(--sp-200) var(--sp-100);font-size:var(--t-2xs);font-weight:600;letter-spacing:.08em;color:var(--text-3)}
+/* 本尊側欄群組標題 = 12/16/550、**ls normal**、text-transform:none（不是大寫、不加字距）*/
+.nav-group{margin-top:var(--sp-400);padding:0 var(--sp-200) var(--sp-100);font-size:var(--type-body-sm-size);line-height:var(--type-body-sm-lh);font-weight:var(--fw-medium);letter-spacing:var(--ls-normal);color:var(--text-3)}
 .sidebar .spacer{flex:1}
 .nav-foot{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-200);padding-top:var(--sp-200)}
 .main{flex:1;overflow-y:auto;position:relative}
@@ -509,7 +511,7 @@ h1{font-size:var(--type-display-sm-size);line-height:var(--type-display-sm-lh);f
 /* 64 §4：主要按鈕高 28、圓角 8、內距 6/12；字重 500（64 §3，原本硬寫 600）。
    垂直內距 6 不寫進 padding——本站 line-height 是 20，height 28 + padding 6 會把盒撐成 32；
    實測的是「盒高 28、水平內距 12」這兩個事實，照它們落地（見 .btn-sm）。 */
-.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--t-sm);font-weight:var(--fw-control);border:var(--hairline) solid transparent}
+.btn{display:inline-flex;align-items:center;gap:var(--sp-150);height:var(--h-32);padding:0 var(--sp-300);border-radius:var(--r-btn);font-size:var(--type-button-label-size);line-height:var(--type-button-label-lh);font-weight:var(--type-button-label-fw);border:var(--hairline) solid transparent}
 /* 47 §E：disabled 只把文字色降到 --text-disabled，底色一律不動（降 opacity 會在深底發灰、淺底發白）*/
 .btn:disabled,.btn[aria-disabled="true"]{color:var(--text-disabled);cursor:not-allowed;box-shadow:none}
 /* Chromium 的 UA 樣式對 disabled 的表單控件套 opacity:.7——那正是 47 §E 禁止的做法。
@@ -525,7 +527,8 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .btn-split{font-weight:var(--fw-split)}   /* 47 §6.5：split 鈕字重 550 */
 .btn-ghost{color:var(--text-2)}
 .btn-ghost:hover{background:rgba(26,28,30,.06);color:var(--text)}
-.btn-sm{height:var(--h-28);padding:0 var(--sp-300);font-size:var(--t-sm)}   /* 64 §4：高 28、水平內距 12；字級 13（64 §3 pill/按鈕同階）*/
+/* 本尊 size-base 與 size-large 字型軸**完全相同**（12/16/550），large 只有幾何變大。 */
+.btn-sm{height:var(--h-28);padding:0 var(--sp-300)}   /* 64 §4：高 28、水平內距 12；字級 13（64 §3 pill/按鈕同階）*/
 .split{display:inline-flex}
 .split .btn:first-child{border-radius:var(--r-200) 0 0 var(--r-200)}
 .split .btn:last-child{border-radius:0 var(--r-200) var(--r-200) 0;border-left:var(--hairline) solid rgba(255,255,255,.25);padding:0 var(--sp-200)}
@@ -537,7 +540,7 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .card h3{font-size:var(--type-heading-md-size);line-height:var(--type-heading-md-lh);font-weight:var(--type-heading-md-fw);letter-spacing:var(--type-heading-md-ls);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .card h3 .h-act{margin-left:auto;color:var(--text-2);font-weight:var(--fw-body)}
 /* 64 §4：badge 高 20、圓角 8、內距 2/8；64 §3：12 / 16 / 550 */
-.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:var(--sp-050) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-badge);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:var(--sp-050) var(--sp-200);border-radius:var(--r-200);font-size:var(--type-body-sm-size);line-height:var(--type-body-sm-lh);font-weight:var(--fw-medium);white-space:nowrap}
 /* 47 §D 徽章狀態圖示——形狀本身即編碼狀態（WCAG 1.4.1 不以顏色單獨傳達）：
    ● 實心 = 完成／success｜○ 空心 = 未開始／attention｜⊘ 斜線圓 = 部分／受阻 */
 .badge .pip{width:7px;height:7px;border-radius:50%;border:var(--bw-150) solid currentColor;flex:none;position:relative}
@@ -565,7 +568,7 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
    —— 不佔 box model、可做次像素、與 §C 髮絲線同一套。 */
 /* 64 §4：控件盒 高 32、圓角 8、框 = inset 0.66px；輸入值字重 450（64 §3）。
    text-field 整組高 56 ＝ 標籤 20 ＋ 控件 32 ＋ 間距 4，由 .field 的 gap --sp-100 湊出。 */
-.input{width:100%;height:var(--h-32);border:0;border-radius:var(--r-btn);padding:0 var(--sp-200);background:var(--surface);font-size:var(--t-sm);font-weight:var(--fw-body);
+.input{width:100%;height:var(--h-32);border:0;border-radius:var(--r-btn);padding:0 var(--sp-200);background:var(--surface);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-regular);
   box-shadow:inset 0 0 0 var(--hairline) var(--border-strong)}
 .input:hover{box-shadow:inset 0 0 0 var(--hairline) var(--border-hover)}
 .input:focus{outline:none;box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
@@ -638,7 +641,9 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .filterbar:focus-within{box-shadow:inset 0 0 0 var(--hairline) var(--focus),0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
 .filterbar input{border:0;outline:0;flex:1;font-size:var(--t-sm);background:none}
 table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:var(--lh-xs)}
-.idx th{font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-xs);color:var(--text-2);text-align:left;padding:var(--sp-150) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);background:var(--surface-3);white-space:nowrap}
+/* 🔴 本尊表格欄位標題 = 12/16/**550**（body-sm ＋ medium）。我方原值 12+600 會撞上
+   heading-sm(12/16/600)——那是**巧合命中**，不是對應。 */
+.idx th{font-size:var(--type-body-sm-size);line-height:var(--type-body-sm-lh);font-weight:var(--fw-medium);color:var(--text-2);text-align:left;padding:var(--sp-150) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);background:var(--surface-3);white-space:nowrap}
 /* 47 §4 表格資料列 32：12/16 字級 + 8px 上下內距；整列 32px 皆為可點命中區 */
 .idx td{padding:var(--sp-200) var(--sp-300);border-bottom:var(--hairline) solid var(--border-2);vertical-align:middle;height:var(--h-32)}
 .idx tbody tr{cursor:pointer}
@@ -832,7 +837,7 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .pal-item:hover,.pal-item.on{background:var(--surface-2)}
 .pal-item .mut3{margin-left:auto}
 .pal-foot{padding:var(--sp-200) var(--sp-400);border-top:var(--hairline) solid var(--border);font-size:var(--t-2xs);color:var(--text-3);display:flex;gap:var(--sp-300)}
-.toast{position:fixed;bottom:var(--sp-600);left:50%;transform:translate(-50%,80px);background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-400);font-size:var(--t-sm);display:flex;align-items:center;gap:var(--sp-200);box-shadow:var(--sh-float);z-index:var(--z-popover);opacity:0}
+.toast{position:fixed;bottom:var(--sp-600);left:50%;transform:translate(-50%,80px);background:var(--surface-inverse);color:var(--text-inverse);border-radius:var(--r-300);padding:var(--sp-200) var(--sp-400);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-regular);display:flex;align-items:center;gap:var(--sp-200);box-shadow:var(--sh-float);z-index:var(--z-popover);opacity:0}
 .toast.show{transform:translate(-50%,0);opacity:1}
 
 /* ===== 開發註釋模式 ===== */
@@ -1257,7 +1262,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
      拿掉會讓一排 pill 完全沒有可點提示）。 */
 .pill{display:inline-flex;align-items:center;gap:var(--sp-150);max-width:100%;min-height:var(--h-28);
   padding:var(--sp-100) var(--sp-200);border:0;border-radius:var(--r-200);
-  background:transparent;font-size:var(--t-sm);font-weight:var(--fw-control);color:var(--text);text-align:left}
+  background:transparent;font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-regular);color:var(--text);text-align:left}
 .pill:hover{background:var(--surface-2)}
 /* 展開態用「沉下一階的底」表示這排 pill 對應的區域正開著（47 §6 --surface-sunken 的用途） */
 .pill[aria-expanded="true"]{background:var(--surface-sunken);color:var(--text)}
@@ -1377,7 +1382,10 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .progress{height:6px;border-radius:var(--r-pill);background:var(--border-2);overflow:hidden}
 .progress i{display:block;height:100%;background:var(--chart);border-radius:var(--r-pill);transition:width var(--dur-bar-grow) var(--ease-decelerate)}
 .serp{border:var(--hairline) solid var(--border-2);border-radius:var(--r-300);padding:var(--sp-300);background:var(--surface-3)}
-.serp .s-t{color:#1a0dab;font-size:var(--t-lg);line-height:1.3;overflow-wrap:anywhere}
+/* 🔴 本尊商品編輯頁「Search engine listing」預覽標題 = **18/24/450/dense**（span._LinkPreview_）。
+   原本以為這是 Google 模擬不該動——**錯的**，本尊有同一個元件。
+   ⚠️ 色仍用 #1a0dab（Google 連結藍）；本尊是 rgb(0,91,211)＝我方 --link，色的對齊另案。 */
+.serp .s-t{color:#1a0dab;font-size:var(--type-display-sm-size);line-height:var(--type-display-sm-lh);font-weight:var(--fw-regular);letter-spacing:var(--type-display-sm-ls);overflow-wrap:anywhere}
 .serp .s-u{color:#0a7a5c;font-size:var(--t-xs);margin:var(--sp-050) 0 var(--sp-100);overflow-wrap:anywhere}
 .serp .s-d{font-size:var(--t-xs);color:var(--text-2);line-height:1.5}
 .avatar-lg{width:var(--touch-min);height:var(--touch-min);border-radius:var(--r-300);font-size:var(--t-lg)}
