@@ -142,13 +142,35 @@
   --topbar-h:56px;    /* 47 §0／§B 量測真值（原 52，51 表 1 P0-11）*/
   --sidebar-w:240px;  /* 47 §B 桌機常駐側欄真值（原 220，51 表 1 P0-11）*/
   --sz-icon:20px;     /* 64 §4：圖示 20 × 20（我方原本散落 15／16，本輪收斂成一顆 token）*/
-  /* ══ 64 §1 詳情頁雙欄版面（實測）═══════════════════════════════════════
-     左欄（主）寬 633、右欄（次）寬 317；右欄內層盒 285 ⇒ 左右內距各 16
-     （317 − 285 = 32），恰好等於 .card-pad 的 --sp-400，不必另開內距 token。
-     主欄用 minmax(0, …) 只做「上限」不做「固定」——窄視口仍要能收縮，
-     否則 47 §F 的 em 斷點還沒生效就先撐破版面。 */
-  --col-main:633px;
-  --col-aside:317px;
+  /* ══ 詳情頁雙欄版面 ═══════════════════════════════════════════════════
+     🔴 2026-08-28 依 D54 換成本尊實測值（原 64 §1 的 633／317 保留於 git 歷史）。
+     本尊新層（s-grid）的 track function 是
+       @container s-internal-page (inline-size >= 784px)
+         "minmax(480px, 638px) minmax(240px, 312px)", "minmax(auto, 966px)"
+     ⇒ 主欄 minmax(480, 638)、次欄 minmax(240, 312)、單欄 minmax(auto, 966)。
+     🔴 **總寬沒變**：633 + 16 + 317 = 966 = 638 + 16 + 312，只是內部分配各挪 5px。
+     🔴 我方原本**沒有下限**（主欄 minmax(0,…)、次欄固定），本尊兩欄都有下限；
+        少了下限，窄容器下主欄會被壓到 0 而次欄不讓，那正是我方需要 1040px
+        media query 硬收的原因（改用下限＋容器查詢後該耦合消失）。
+     舊層（polaris-react，已封存）是 662／320／合計 998＝662+320+16；
+     新層沿用**同一條加總公式與同一個 16px 內側間距**，只把兩個上限各自重訂
+     （−24／−8，降幅不同 ⇒ 不是統一縮放）。出處：docs/design/111 §16.1 的 2026-08-28 更正。 */
+  --col-main:638px;      /* 主欄上限 */
+  --col-main-min:480px;  /* 主欄下限 */
+  --col-aside:312px;     /* 次欄上限 */
+  --col-aside-min:240px; /* 次欄下限 */
+  --col-content:966px;   /* 638 + 16 + 312：單欄與雙欄共用的內容上限 */
+  --col-narrow:630px;    /* 單欄表單階（44 §22.5 實測）。⚠️ **不是**本尊 s-page 的
+                            inlinesize="small"——官方文檔對 small 連數字都沒寫，
+                            且 s-page（app 用）與 admin 內部的 s-internal-page 是否同一
+                            **無任何證據**，不得互推（鐵律 19.3）。 */
+  /* 🔴 **收合門檻 752px 刻意不做成 token**——`@container` 與 `@media` 的條件式
+     **不能用 `var()`**，而且失敗方式是 fail-open：Chrome 151 實測
+     `@container t (width < var(--th))` 會**解析成 CSSContainerRule 且帶子規則**
+     （DevTools 看起來完全正常），但永遠不匹配。做成 token 只會製造一顆死 token
+     ＋一個看不出來的失效規則。本尊自己也踩同一條限制：`--p-breakpoints-*` 五顆
+     全站零消費，真正驅動響應的是建置期展開的字面 media query。
+     ⇒ 752 直接寫在 @container 現場，理由寫在那裡。 */
   /* 64 §1：卡片間距 16（同群）／52（跨群）。52 > 24 ⇒ 依 47 §1「>24px 一律以階梯的
      整數倍組合」寫成 calc（24×2 + 4），不得出現裸值。同群間距即 .col 的 gap（--sp-400）。 */
   --sp-group:calc(var(--sp-600)*2 + var(--sp-100));
@@ -347,9 +369,12 @@ svg{flex:none}
 .sidebar .spacer{flex:1}
 .nav-foot{border-top:var(--hairline) solid var(--border-2);margin-top:var(--sp-200);padding-top:var(--sp-200)}
 .main{flex:1;overflow-y:auto;position:relative}
-.page{max-width:1200px;margin:0 auto;padding:var(--sp-400) calc(var(--sp-400)*2) calc(var(--sp-600)*4);display:none}
+/* 🔴 D54（2026-08-28）：水平內距 calc(--sp-400*2)=32 → var(--sp-400)=16（本尊 main.page 是
+   padding:16px 0，16/側加在其內的 s-grid 上）；max-width 1200 → none（本尊列表頁 s-grid
+   是 max(100%)，無上限）。容器查詢掛在這裡，供 .od-grid／.vd-grid 的收合使用。 */
+.page{max-width:none;margin:0 auto;padding:var(--sp-400) var(--sp-400) calc(var(--sp-600)*4);display:none;container-type:inline-size;container-name:cl-page}
 .page.on{display:block;animation:fade var(--dur-slow) var(--ease-decelerate)}
-#page-home,#page-orderdetail{max-width:998px}
+#page-home,#page-orderdetail{max-width:calc(var(--col-content) + var(--sp-400)*2)}  /* 966 + 2×16 = 998 */
 @keyframes fade{from{opacity:0;scale:.98}to{opacity:1;scale:1}}
 .page-head{display:flex;align-items:center;gap:var(--sp-300);margin:var(--sp-100) 0 var(--sp-400)}
 h1{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:var(--fw-lg);letter-spacing:0}
@@ -517,9 +542,11 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .ai-row .x:hover{background:#e0d5fb}
 
 /* ===== 訂單詳情 ===== */
-/* 64 §1：左欄（主）633、右欄（次）317、欄間 16。主欄用 minmax(0,…) 只設上限——
-   固定寬會在窄視口撐破版面，而 47 §F 的 em 斷點要到 48em 才接手。 */
-.od-grid{display:grid;grid-template-columns:minmax(0,var(--col-main)) var(--col-aside);gap:var(--sp-400);align-items:start}
+/* 🔴 D55（2026-08-28）：主欄 480–638、次欄 240–312、欄間 16（本尊 s-grid track function）。
+   **兩欄都有下限**——原本主欄 minmax(0,…)、次欄固定 317，於是窄容器下主欄會被壓到 0
+   而次欄不讓；那正是原本需要視口 media query 硬收的原因。收合改由檔末的
+   @container cl-page (width < 752px) 接手，不再靠 47 §F 的 em 斷點。 */
+.od-grid{display:grid;grid-template-columns:minmax(var(--col-main-min),var(--col-main)) minmax(var(--col-aside-min),var(--col-aside));gap:var(--sp-400);align-items:start}
 /* 64 §1：同群卡片間距 16 */
 .col{display:flex;flex-direction:column;gap:var(--sp-400)}
 /* 64 §1：跨群 52。.col 已給 16，這裡只補差額 36，兩個機制不要重複相加。 */
@@ -768,7 +795,6 @@ img{max-width:100%;height:auto}
   .setup-grid{grid-template-columns:repeat(2,1fr)}
   .ana-grid,.ana-grid.g3{grid-template-columns:repeat(2,1fr)}
   .chart2,.chart2.c14,.live-wrap{grid-template-columns:1fr}
-  .od-grid{grid-template-columns:1fr}     /* 側欄（64 §1 實測 317）卡片落到主欄之後 */
   .setup-card p{max-width:none;padding-right:calc(var(--sp-400)*5)}
   .head-actions{flex-wrap:wrap}
   /* 設定 overlay：頂部讓出 var(--touch-min) 給關閉鈕，避免壓在卡片右上角 */
@@ -1122,7 +1148,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 
 /* --- 變體詳情次級視圖（60 §3：左側是變體切換側欄，不是回商品頁再點）------------
    側欄寬度沿用 --col-aside 這一階（64 §1 的次欄真值），主區吃剩下的空間。 */
-.vd-grid{display:grid;grid-template-columns:var(--col-aside) minmax(0,var(--col-main));gap:var(--sp-400);align-items:start}
+.vd-grid{display:grid;grid-template-columns:minmax(var(--col-aside-min),var(--col-aside)) minmax(var(--col-main-min),var(--col-main));gap:var(--sp-400);align-items:start}
 .vd-side{position:sticky;top:0}
 .vd-side .vd-head{padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border-2)}
 .vd-side .vd-count{font-size:var(--t-xs);color:var(--text-2);padding:var(--sp-200) var(--sp-400) 0}
@@ -1133,7 +1159,13 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .vd-item[aria-current="true"]{background:var(--surface-sunken);color:var(--text);font-weight:var(--fw-control)}
 .vd-item .vd-sw{width:20px;height:20px;border-radius:var(--r-100);flex:none}
 .vd-item .vd-q{margin-left:auto;font-size:var(--t-xs);color:var(--text-3)}
-@media (max-width:47.9975em){.vd-grid{grid-template-columns:1fr}.vd-side{position:static}}
+/* 🔴 D54：收合改用**容器**查詢，門檻 752（＝本尊 784 的 border-box 扣掉 band 的 16/側內距）。
+   原本 .od-grid 掛 64.9975em、.vd-grid 掛 47.9975em，**兩者不一致**；一併統一。 */
+@container cl-page (width < 752px){
+  .od-grid{grid-template-columns:1fr}
+  .vd-grid{grid-template-columns:1fr}
+  .vd-side{position:static}
+}
 
 /* --- 條件建構器（智慧系列／分群／折扣）--- */
 .rule{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.2fr) 34px;gap:var(--sp-200);align-items:center;margin-bottom:var(--sp-200)}
@@ -1391,16 +1423,17 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
   .card-note{padding:var(--sp-300)}
 }
 
-/* 64 §1：詳情頁內容寬＝主欄 633 ＋ 欄間 16 ＋ 次欄 317 ＝ 966，加上 .page 左右各
-   calc(--sp-400*2)=32 的內距 ⇒ 1030。原本寫死 998，會把主欄擠到 601（實測），
-   量起來就是「欄寬對不上 64 號」。用 calc 由欄寬 token 推導，日後改欄寬不會再漏這一處。 */
-#page-detail{max-width:calc(var(--col-main) + var(--sp-400) + var(--col-aside) + var(--sp-400)*4)}
+/* 詳情頁內容寬 966（＝主欄上限 638 ＋ 欄間 16 ＋ 次欄上限 312），加 .page 左右各 16 ⇒ 998。
+   🔴 2026-08-28（D54）：原式是 `+ --sp-400*4`（＝1030），因為當時 .page 的水平內距是 32/側。
+   內距改 16 後改用 --col-content 直接推導，數字回到與本尊舊層 .Polaris-Page 相同的 998。 */
+#page-detail{max-width:calc(var(--col-content) + var(--sp-400)*2)}
 
 /* ══════════════════════════════════════════════════════════════════════
    模組 C：B2B 公司與地點（49 P0-04／44 §22.5）
    ══════════════════════════════════════════════════════════════════════ */
-/* 44 §22.5：新增公司表單為單欄置中（實測 ~630px），不是兩欄 od-grid */
-.form1{max-width:630px;margin:0 auto;display:flex;flex-direction:column;gap:var(--sp-400)}
+/* 44 §22.5：新增公司表單為單欄置中（實測 ~630px），不是兩欄 od-grid。
+   630 與本尊主欄下限 480／上限 638 同一量級，但它是**單欄表單**的獨立階，不共用 --col-main。 */
+.form1{max-width:var(--col-narrow);margin:0 auto;display:flex;flex-direction:column;gap:var(--sp-400)}
 /* 44 §22.5 save bar 實測更正：dirty 時 save bar 佔用「搜尋框」那個 flex 槽位，把搜尋列換掉（不是疊加）。
    規則放在此處是因為必須排在 §1039／§1044 的 .savebar 響應式覆寫之後才吃得到；
    ≤767 頂欄只剩 icon 寬度塞不下三顆控件，退回既有的底部浮動條（刻意偏離，見 DOCS savebar）。*/

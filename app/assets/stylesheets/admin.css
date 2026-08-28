@@ -351,17 +351,36 @@ a {
 
 .cl-page {
   width: 100%;
-  padding: 16px 32px 90px;
+  /* 🔴 2026-08-28（D54）：水平內距 32 → 16。本尊 main.page 是 `padding: 16px 0`，
+     16px/側的內縮加在其內的 s-grid 上（docs/design/111 §16 的「內容欄 x=256 寬 736」
+     ⇒ 768 − 2×16）。我方原本 32/側，於是 .cl-page--detail 的 998 只剩 934 內容寬，
+     比本尊少 32——.cl-product-detail 的 1030 就是為了補償它而存在（見下方該規則的刪除）。 */
+  padding: 16px 16px 90px;
+  /* 雙欄收合改用容器查詢（見檔末 @container cl-page）。Chrome 151 實測：
+     container-type: inline-size **不會**讓本元素變成 fixed／absolute 後代的
+     containing block（computed contain = none；對照組 contain: layout 則會），
+     故 .cl-od-grid__aside 的 sticky、portal 到 body 的 popover／modal／toast／SaveBar
+     皆不受影響。⚠️ 但 inline-size containment 會讓 shrink-to-fit 元素塌成 0
+     ——.cl-page 是 width:100% 的 block（實測 900 → 900），若日後改成 inline-block／
+     float／靠內容撐寬的 grid item 就會瞬間塌掉。 */
+  container-type: inline-size;
+  container-name: cl-page;
   margin: 0 auto;
   animation: cl-page-enter 180ms ease-out;
 }
 
 .cl-page--index {
-  max-width: 1200px;
+  /* 🔴 2026-08-28（D54）：1200px → none。本尊列表頁的頁面層 s-grid 是 `max(100%)`，
+     **無上限**（實測 12 個列表頁一致）。這是本包唯一真正改變產品形態的一項：
+     寬螢幕下列表會變滿版。量測支持 none；若日後要恢復上限，須走 71 §A 保護清單登記。 */
+  max-width: none;
 }
 
 .cl-page--detail {
-  max-width: 998px;
+  /* 966 內容 + 2×16 內距 = 998。與本尊舊層 .Polaris-Page 的 max-width 同值
+     （41.375rem + 20rem + 1rem），新層沿用同一條加總公式。
+     🔴 改用 token 推導，避免再出現「998 這個字面值其實對不上」的情況。 */
+  max-width: calc(var(--col-content) + var(--sp-400) * 2);
 }
 
 .cl-page__header {
@@ -1001,12 +1020,13 @@ a {
    量測出處＝原型 productPage 家族：.page-head(:354-356)/.od-grid(:522)/
    .pill 家族(:1081-1112)/.swrow(:1001-1004)/.savebar(:1005-1018,:1409-1414)/
    .toast(:671-672)/.derow(:1106-1112)/.grid2(:984)。
-   值一律走 token（鐵律 8）；佈局常數 --col-main 633／--col-aside 317（64 §1）。 */
+   值一律走 token（鐵律 8）；佈局常數 --col-main 638／--col-aside 312（D54，本尊實測）。 */
 
-.cl-product-detail {
-  /* 64 §1：主 633＋間 16＋次 317＝966，加頁面左右內距推導（原型 :1394 同式） */
-  max-width: calc(var(--col-main) + var(--sp-400) + var(--col-aside) + var(--sp-400) * 4);
-}
+/* 🔴 2026-08-28（D54）：`.cl-product-detail { max-width: … *4 }`（＝1030）已刪除。
+   它與 .cl-page--detail 掛在同一個元素上（ProductDetailPage／CollectionDetailPage／
+   VariantDetailPage 皆 class="cl-page cl-page--detail cl-product-detail"），兩者
+   specificity 同為 (0,1,0)，靠源序決勝 ⇒ 後者的 1030 一直蓋掉前者的 998。
+   1030 = 966 + 4×16 是為了補償我方雙倍水平內距；內距改 16 後它就是重複且相衝的第二個上限。 */
 
 .cl-detail-head {
   display: flex;
@@ -1040,7 +1060,28 @@ a {
 
 .cl-od-grid {
   display: grid;
-  grid-template-columns: minmax(0, var(--col-main)) var(--col-aside);
+  /* 🔴 2026-08-28（D54）：本尊兩欄**都有下限** minmax(480,638) / minmax(240,312)。
+     我方原本主欄 minmax(0,…)、次欄固定 ⇒ 窄容器下主欄被壓到 0 而次欄不讓，
+     那正是原本需要 1040px media query 硬收的原因。 */
+  grid-template-columns:
+    minmax(var(--col-main-min), var(--col-main))
+    minmax(var(--col-aside-min), var(--col-aside));
+  gap: var(--sp-400);
+  align-items: start;
+}
+
+/* 🔴 2026-08-28（D54）：變體詳情頁是**次欄在左**（變體切換清單），與商品／系列相反。
+   原型早有專用的 .vd-grid（反向 template），但 React 端一直套 .cl-od-grid（主欄先），
+   而 VariantDetailPage 的 markup 又是 aside 先 ⇒ **兩欄左右顛倒**：
+   次欄吃到主欄那一軌、主內容被壓進次欄軌。改動前是 minmax(0,633) / 317（主內容 317px），
+   改動後會變成 480–638 / 240–312，兩種情況都顛倒。
+   ⇒ 這是既有缺陷，不是本次改動造成的；但它在本包所改的同一張 grid 上，故一併封閉
+   （鐵律 17.2「同一 producer／consumer 元件內可列舉的完整狀態矩陣」）。 */
+.cl-vd-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(var(--col-aside-min), var(--col-aside))
+    minmax(var(--col-main-min), var(--col-main));
   gap: var(--sp-400);
   align-items: start;
 }
@@ -1327,8 +1368,15 @@ a {
   to { transform: none; opacity: 1; }
 }
 
-@media (max-width: 64.9975em) {
-  .cl-od-grid { grid-template-columns: 1fr; }
+/* 🔴 2026-08-28（D54）：收合門檻從**視口** media query 改為**容器** query。
+   本尊寫 `@container s-internal-page (inline-size >= 784px)`，但那量的是 main.page 的
+   border-box、band 另有 16/側內距 ⇒ 觸發瞬間實際可用寬 784 − 32 = **752**。
+   我方容器掛在 .cl-page、其內 grid 無再一層內距，量到的就是可用寬，故門檻用 752。
+   舊值 64.9975em(1040px 視口) 的問題：側欄 240 + 內距 64 之下內容寬 = 736，
+   恰等於兩欄下限和 480+16+240 = 736 ⇒ **零餘裕臨界**，再窄一格就溢出。 */
+@container cl-page (width < 752px) {
+  .cl-od-grid,
+  .cl-vd-grid { grid-template-columns: 1fr; }
   .cl-od-grid__aside { position: static; }
 }
 
