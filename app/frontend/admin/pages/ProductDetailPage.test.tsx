@@ -639,7 +639,19 @@ describe("商品選項與變體表", () => {
     body: { data: { locations: [ { id: "gid://chilllove/Location/1", name: "Shop location" } ] } },
   };
 
-  it("建立態：popover 加「尺寸」→ 打 S,M,L ⇒ 表即時三列；儲存 payload 帶 options＋座標＋initialQuantities", async () => {
+  /**
+   * 建立態「加選項 → 三列 → 儲存」的共用 arrange。
+   *
+   * 🔴 **為什麼把純資料輸入換成 `fireEvent.change`（D62）**：`userEvent` 每一次擊鍵之間會插入
+   * 一個 `setTimeout(0)`，而 Windows 的計時器最小粒度約 15.5ms ⇒ 21 次擊鍵光是排程就 ~300ms。
+   * 那一格因此逼近 vitest 預設的 5000ms `testTimeout`，在同機並行負載下咬過三次
+   * （`Test timed out in 5000ms`，非斷言失敗；`docs/specs/91` §3.29 W-7／§2 G-07）。
+   *
+   * 🔴 **但 `S{Enter}M{Enter}L{Enter}` 刻意不換。** 那一段測的正是「逐鍵輸入 ＋ Enter 提交
+   * ⇒ 表即時長列」的互動語義；換成 `fireEvent.change` 會把**被測行為本身**改掉，
+   * 屬於「為了讓測試變快而降低測試強度」。標題與價格／數量則只是資料，換掉不損強度。
+   */
+  const setupThreeVariantRows = async () => {
     const fetchMock = stubRoutedFetch([
       ...BASE_ROUTES,
       LOCATIONS_ROUTE,
@@ -649,13 +661,19 @@ describe("商品選項與變體表", () => {
     renderAt("/admin/products/new");
 
     const main = within(await screen.findByRole("main"));
-    await user.type(await main.findByLabelText("標題（English）"), "帽T");
-    await user.type(main.getByLabelText("價格（HK$）"), "128.00");
+    fireEvent.change(await main.findByLabelText("標題（English）"), { target: { value: "帽T" } });
+    fireEvent.change(main.getByLabelText("價格（HK$）"), { target: { value: "128.00" } });
 
     await user.click(main.getByRole("button", { name: "＋ 新增選項" }));
     await user.click(main.getByRole("menuitem", { name: "尺寸" }));
-    const valuesInput = main.getByLabelText("選項值");
-    await user.type(valuesInput, "S{Enter}M{Enter}L{Enter}");
+    // 🔴 這一段保留 user.type：被測的就是逐鍵 ＋ Enter 的互動語義（見上方註釋）
+    await user.type(main.getByLabelText("選項值"), "S{Enter}M{Enter}L{Enter}");
+
+    return { fetchMock, user, main };
+  };
+
+  it("建立態：popover 加「尺寸」→ 打 S,M,L ⇒ 表即時三列", async () => {
+    const { main } = await setupThreeVariantRows();
 
     // 判準：值一打完表即時三列（列首＝座標 title）
     expect(main.getByRole("rowheader", { name: "S" })).toBeVisible();
@@ -664,12 +682,20 @@ describe("商品選項與變體表", () => {
     // 首列繼承定價卡價格；定價卡轉 per-variant note（商品級價格入口消失）
     expect(main.getByLabelText("價格（S）")).toHaveValue("128.00");
     expect(main.getByText("已啟用選項——價格改在下方子類表逐列設定。")).toBeVisible();
+  });
 
-    await user.clear(main.getByLabelText("價格（M）"));
-    await user.type(main.getByLabelText("價格（M）"), "138.00");
-    await user.clear(main.getByLabelText("價格（L）"));
-    await user.type(main.getByLabelText("價格（L）"), "148.00");
-    await user.type(main.getByLabelText("數量（S）"), "7");
+  it("建立態：三列改價改量 ⇒ 儲存 payload 帶 options＋座標＋initialQuantities", async () => {
+    const { fetchMock, user, main } = await setupThreeVariantRows();
+
+    // 🔴 前置斷言：三列真的長出來了才有下文可測。上一格驗的是「即時性」，
+    //    這一格只需要「存在」——但不能省，否則下面的 getByLabelText 失敗時
+    //    看起來會像 payload 問題而不是列沒長出來。
+    expect(main.getByRole("rowheader", { name: "S" })).toBeVisible();
+    expect(main.getByRole("rowheader", { name: "L" })).toBeVisible();
+
+    fireEvent.change(main.getByLabelText("價格（M）"), { target: { value: "138.00" } });
+    fireEvent.change(main.getByLabelText("價格（L）"), { target: { value: "148.00" } });
+    fireEvent.change(main.getByLabelText("數量（S）"), { target: { value: "7" } });
 
     const savebar = await screen.findByRole("region", { name: "未儲存的變更" });
     await user.click(within(savebar).getByRole("button", { name: "儲存" }));
