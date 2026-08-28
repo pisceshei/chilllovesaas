@@ -3507,3 +3507,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 **不是** sed 代換。射程約 32 處域外 ＋ 61 處域內但未 token 化。
 
 **前置**：`s-metric-card` 的取證阻塞要先解（需要有資料的分析頁）。
+
+### 3.36 D60 三寬度實測的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | 🔴 **390 寬的 `h1` 是 17.94 不是 18**，成因是既有規則 `@media (max-width:47.9975em){ h1{font-size:clamp(17px,4.6vw,20px)} }`（390×4.6vw = 17.94）；同一 media query 另把 `html` 從 13 提到 14（`var(--t-md)`） | `grep -n "clamp(17px,4.6vw,20px)" docs/design/chilllove-admin-v2.html` | **本尊在該閘門下的值未取得。** 本尊確有 mobile 覆蓋機制（`--p-when-mobile`），但閘門是 `@media (pointer: coarse) and (max-width: 47.9975em)`——**比我方多一個 `pointer: coarse` 條件**，且 `display-small` 是否有 mobile 覆蓋、覆蓋成多少，本輪未取得。取得方法：在本尊 admin 用同源 iframe ＋ 觸控模擬，或直接讀 `--s-token-font-size-display-small-when-mobile-p1s0` 的宣告 |
+| W-2 | **三寬度只驗了原型首頁**；`.od-grid`／`.vd-grid` 的收合是用**隔離探針**驗的（臨界點精確落在 752 ✅），不是頁面實況 | worklog §③ | 逐頁三寬度驗證是另一個工作包。本輪的目標是「證明三寬度量得到」與「補齊 C-2 的缺口」 |
+| W-3 | **未驗實作端（Rails app）的三寬度**。原型與實作的值都指向同一組 token，應該一致——但那是推論不是量測 | — | 需要跑 Rails dev server 並登入 demo 店。屬另一包 |
+| W-4 | **側欄在 768／390 是 272px**，本尊 767 以下側欄寬 0（`111` §16 的響應式四列） | worklog 的三寬度表 | 本尊窄版是抽屜式（overlay），我方是常駐 272。屬版面形態對齊，不在字型／顏色包的射程內 |
+| W-5 | 🔴 **`resize_window` 在本地 Chrome 回報「Successfully resized」但 `innerWidth` 不變**，且 `screenX = 0`（視窗在螢幕上）⇒ **先前登記的「離屏造成」歸因作廢** | worklog §② 的對照表 | 這是工具缺陷，不是我方程式問題。**替代方案已驗證可行＝同源 iframe**。登記是為了讓下一個人不要再花時間在 resize 上 |
+| W-6 | **MCP 回傳的鍵名含 `token` 會被安全過濾器吞成 `[BLOCKED: Sensitive key]` 且不報錯** | worklog §④ | 工具行為。固定處理＝改鍵名。登記是因為**它會讓量測靜默回空值**，屬 fail-open 族 |
