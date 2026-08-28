@@ -4,26 +4,50 @@
    為什麼不手改：值曾有三份拷貝並已漂移（23 §1 與本檔停在 2026-07 估計值、
    原型已換成研究 47／64 實測值），三份都自稱權威。見 docs/design/23 §1 的 dated 註。 */
 :root{
-  /* ══ 中性階（47 §6：只取層級關係，色值為 CHILL LOVE 自有）══════════════ */
-  /* 64 §1 實測頁面底色 rgb(241,241,241)。原值 #f4f4f5 是估計值，本輪換成量測值。 */
-  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f8;--surface-3:#fafafb;
-  --surface-sunken:#e6e6e9;      /* 47 §6：次級按鈕底「比頁底深一階」（原 --surface-2 比頁底淺，層級反轉）*/
+  /* ══ 中性階：值一律取自本尊實測（D54 視覺 1:1；換值裁定＝D59）══════════
+     🔴 原文（「47 §6：只取層級關係，**色值為 CHILL LOVE 自有**」）已被 D54 推翻，保留於 git 歷史。
+
+     🔴 **換值前的指紋：我方 7 個中性 token 帶色偏，而本尊中性階飽和度一律 0.0（純灰）。**
+       最嚴重的是 `--text: #1a1c1e`（飽和 **13.3%** 藍偏）與 `--surface-inverse: #1a1b1d`（10.3%）。
+       主文字對白底的對比也過高：我方 **17.09** vs 本尊 **13.20** ⇒ 字更黑更硬。
+
+     🔴 **`--surface-selected` 是視覺變化最大的一項**：我方是品牌藍 `#f0f5ff`，
+       本尊是中性 `#f1f1f1`——**本尊的選取態不用品牌色**。表格選取列會從藍變灰。
+
+     ⚠️ **`--surface-hover` 與 `--surface-selected` 在本尊是兩個不同來源**
+       （`nav-bg-surface-hover` 與 `bg-surface-selected`）**但恰好同值 `#f1f1f1`**。
+       同值不代表同源。
+
+     ⚠️ **設定區導覽的 hover／selected 是對調的**（`81` §8.4：selected=`#f3f3f3`、hover=`#f1f1f1`，
+       即 **hover 比 selected 深**）⇒ 換值後必須逐畫面複驗，不能只信 token 名。 */
+  --bg:#f1f1f1;--surface:#fff;--surface-2:#f7f7f7;--surface-3:#f3f3f3;
+  --surface-sunken:#e3e3e3;      /* 本尊 bg-fill-tertiary（111 §14.4）*/
   --surface-sunken-hover:#dcdce0;--surface-sunken-active:#d2d2d7;
-  --surface-inverse:#1a1b1d;     /* 深色浮層底（toast／bulkbar／savebar／doc-pop）*/
-  --text:#1a1c1e;--text-2:#6b6d71;--text-3:#67696e;
+  --surface-inverse:#1a1a1a;     /* 深色浮層底。本尊暗色 scope 的 bg-surface（111 §15）。
+                                    ⚠️ **本尊頂欄不是靠這顆**——它整個子樹套 colorscheme="dark" 的
+                                    theme scope，用該 scope 的 --p-color-bg（消融實驗＝111 §14.7 更正）。 */
+  --text:#303030;--text-2:#616161;--text-3:#616161;   /* 🔴 本尊 text-tertiary 與 -secondary **同值**（111 §14.8）*/
   --text-disabled:#b5b5b5;       /* 47 §E：disabled 只降文字色、底色不動 */
-  --text-inverse:#fff;           /* 47 §6：深底上的文字階 */
+  --text-inverse:#e3e3e3;        /* 深色**中性面板**上的文字（toast／tooltip／savebar／bulkbar／doc-pop）。
+                                    本尊 text-inverse（111 §14.8）。 */
+  --text-on-brand:#fff;          /* 🔴 深色**飽和填色**上的文字（brand／ai／focus 填底）。
+                                    本尊 text-brand-on-bg-fill = #fff，**與 text-inverse 不同值**。
+                                    原本我方只有一顆 --text-inverse 同時服務這兩種角色
+                                    ——與 `--t-lg` 同型的「一顆 token 服務多個角色」。拆開後：
+                                      深中性面板 #e3e3e3 於 #1a1a1a = 13.56（本尊配對）
+                                      brand 填色 #fff    於 #303030 = 13.20（本尊配對）
+                                    ⚠️ ai／focus 填底沿用本顆是**近似**，本尊那兩族的 on-fill 未取得。 */
   --icon:#4a4a4a;                /* 47 §6：圖示灰獨立一階 */
-  --border:#e3e3e6;--border-2:#ececef;--border-strong:#c9cace;
-  --brand:#2b2c2e;--brand-hover:#1f2022;--link:#2a5bd7;--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
+  --border:#e3e3e3;--border-2:#ebebeb;--border-strong:#ccc;   /* strong ＝ 本尊 border-hover；`#ccc` 是本尊字面形式 */
+  --brand:#303030;--brand-hover:#1a1a1a;--link:#005bd3;/* 本尊 text-link（111 §14.8）；與 --focus 同值不是巧合 */--focus:#005bd3;/* 47 §H2-3′ 量測值 --p-color-border-focus */--focus-inverse:#4b92e5/* 深色底反轉環 */;
   --ai:#6d28d9;--ai-bg:#f3efff;
   --chart:#2a78d6;--grid:#ececef;
-  --surface-hover:#ededee;        /* 導航／列 hover 底 */
-  --surface-row-hover:#fafafc;    /* 表格列 hover */
-  --surface-selected:#f0f5ff;     /* 表格選取列 */
+  --surface-hover:#f1f1f1;        /* 導航 hover 底（本尊 nav-bg-surface-hover，111 §14.13）*/
+  --surface-row-hover:#f7f7f7;    /* 表格列 hover（本尊 bg-surface-hover，111 §14.2）*/
+  --surface-selected:#f1f1f1;     /* 🔴 原本是品牌藍 #f0f5ff——**本尊選取態不用品牌色** */
   --surface-chip:#eeeef0;--surface-count:#e8e8ea;
   --text-nav:#3f4144;--text-nav-2:#5c5e62;--text-quiet:#55575b;
-  --border-hover:#a9aaae;         /* 輸入框 hover 框色 */
+  --border-hover:#616161;         /* 輸入框 hover 框色（本尊 input-border-hover，111 §14.11）*/
   --scroll-thumb:#d2d3d7;
   --skeleton-1:#ededef;--skeleton-2:#f6f6f7;
   --ai-border:#e2d9f8;--danger-border:#e6b3bc;
@@ -274,7 +298,9 @@
   --z-scrim:518;     /* modal／drawer 遮罩 */
   --z-dialog:519;    /* 對話框本體 */
   --z-popover:520;   /* 下拉選單／popover／toast（必須 > dialog）*/
-  --scrim:rgba(0,0,0,.5);   /* 47 §H2-2 實測遮罩不透明度 = .5 */
+  --scrim:#000000b5;   /* 本尊 backdrop-bg（111 §14.7，≈71% 黑）。
+                          🔴 原值 rgba(0,0,0,.5) 出自 `82` §16.2，但那量的是**舊 Polaris React modal**；
+                          新層遮罩是 #000000b5。兩層各有自己的遮罩色（111 §17.1）。 */
 
   /* ══ 47 §H2-3 focus 環：outline:none ＋ 雙層 box-shadow ════════════════
      內層＝底色做出的留白間隙，外層＝環本身（環寬＝4 個實體像素）。

@@ -3449,3 +3449,13 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-3 | **`.cl-empty-state h2` 與 `.cl-modal__title` 的層別判準不一致**：後者取新層（理由「我方掛載點在本尊是新層頁」），前者取舊層 Polaris `EmptyState` 的 14/20/600——但 `.cl-empty-state` 的掛載點（ProductsPage／CollectionsPage／FilesPage／InventoryPage）在本尊**也全是新層** | 反駁面 2（headings） | 反駁方試圖在本尊 Products 索引製造新層 no-results 態未成功 ⇒ **新層空態的值未取得**。取到之前不改判準 |
 | W-4 | 🔴 **`.hero-hello h2` 的本尊對應物量到 26px，而 26 不在本尊自己的 13 階字級表裡**（11/12/13/14/16/18/20/22/24/30/32/36/40） | D58「原型端的兩件系統性問題」 | 這是本尊自身的域外值，與 §3.32 W-4 的 admin-next 觀察同類。**需要複驗那個 26px 是不是量錯層**（可能是某個縮放容器內的視覺尺寸）。本輪照實登記，字級維持 24 |
 | W-5 | **`.setup-card h4` 的 16px/20px 在 L2 十六階裡不存在**——16px 只有 `avatar-initials`（unary，無 lh/fw 軸），本尊沒有「16px 卡片小標」這個角色 | `docs/design/chilllove-admin-v2.html` 該規則上方的註釋 | 已從 L1 組並**明確標示是我方自有組合、不是對齊結果**。要不要廢掉這個尺寸需先確認 setup 卡在本尊對應什麼（onboarding 卡片，本輪未量） |
+
+### 3.34 D59 中性階換值的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | **次級中性 token 未對照本尊**：`--surface-chip`／`--surface-count`／`--text-nav`／`--text-nav-2`／`--text-quiet`／`--scroll-thumb`／`--skeleton-1`／`--skeleton-2`／`--grid`／`--surface-sunken-hover`／`--surface-sunken-active` | `grep -n -- "--surface-chip\|--text-nav\|--skeleton" app/assets/tokens.css` | 本尊對應物未取得。`--text-nav*` 尤其可疑——本尊導航項的 text 三態**同色** `#303030`（111 §14.13），我方卻另立了 nav 專用文字階 |
+| W-2 | 🔴 **設定區導覽的 hover／selected 在本尊是對調的**（`81` §8.4 實測：selected `#f3f3f3`、hover `#f1f1f1`，**hover 比 selected 深**），且 `113` §1.2 第 17 列也記到側欄導航同型（hover `#f1f1f1` 比 selected `#fafafa` 深） | `docs/research/81` §8.4；`docs/design/113` §1.2 #17 | 本包只換 token 值，未動元件對這兩顆的**綁定**。要對齊得逐元件確認「這裡該用 hover 還是 selected」，屬元件包 |
+| W-3 | **`--text-on-brand` 用在 ai／focus 填底是近似** | `docs/design/chilllove-admin-v2.html` 該 token 的註釋 | 本尊 `ai`（源碼名 `magic`）與 focus 填底的 on-fill **未取得**。`--sem-ai-on-fill` 要等 §3.31 W-2 補 ai 族時一併處理 |
+| W-4 | **`--text-disabled: #b5b5b5` 於白卡對比 2.05**（本尊自己的值） | worklog 的對比稽核表 | WCAG 1.4.3 明文豁免停用控件。**照抄不修**。登記是為了讓下一個人知道那不是漏網 |
+| W-5 | 🔴 **本輪自己寫出偏移漂移的批次改檔 bug**，切掉三個選擇器的左大括號，由 `lint-prototype.py` 的大括號平衡檢查抓到 | worklog「本輪自己寫出一個會切壞檔案的 bug」節 | 已還原重做並記固定處理。登記是因為**這是可機械化的判準候選**：批次改檔工具可加「改前改後大括號計數必須相等」的斷言。屬工具改進，需另案 |
