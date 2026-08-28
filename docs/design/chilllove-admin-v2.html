@@ -599,6 +599,23 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
    原本的 `-.01em` 是裸值，不是任何 `--ls-*` 階。 */
 .hero-hello h2{font-size:var(--t-600);line-height:var(--lh-800);font-weight:var(--fw-medium);letter-spacing:var(--ls-denser)}
 .hero-hello p{color:var(--text-2);margin-top:var(--sp-050);font-size:var(--t-sm)}
+/* 🔴 D61：Home 問候語的窄版改用**容器**查詢，對齊本尊的機制與值。
+   本尊 `._TitleLine_,._SubtitleLine_`：base 26/32/550/-0.4316px（＝26×-.0166em＝denser），
+   `@container (max-width: 768px)` 分支 **20 / 24**（`1.25rem` ＋ `--p-font-line-height-600`）。
+   🔴 **它量的是容器寬不是視口寬**——原本我方那條 `clamp(19px,5.4vw,24px)` 寫在視口斷點
+   `47.9975em` 的區塊內，兩者都不對：機制不同（視口 vs 容器）、值也不同。
+   ⚠️ 上一句刻意不寫出視口 at-rule 的名稱：`scripts/lint-prototype.py` 的 `r_px_breakpoint`
+   **不剝註釋**，它會從註釋裡的那個 at-rule 名一路掃到下面容器查詢的 `768px`，判出假 ERROR。
+   同源的 `<style>` 大括號平衡檢查**也不剝註釋**（註釋裡寫一個左大括號就會判不平衡）。
+   兩者都登記於 `docs/specs/91` §3.37。
+   ⚠️ base 的字級**仍是 24 不是 26**：26px 不在本尊自己的 13 階字級表裡
+   （11/12/13/14/16/18/20/22/24/30/32/36/40），登記於 `docs/specs/91` §3.33 W-4 待複驗。
+   窄版的 20／24 則**兩個都在階內**，故可直接對齊。
+   容器＝`.page`（D55 已掛 `container-type: inline-size; container-name: cl-page`），
+   `.hero-hello` 位於 `#page-home` 內，容器關係已驗。 */
+@container cl-page (max-width: 768px){
+  .hero-hello h2{font-size:var(--t-500);line-height:var(--lh-600)}
+}
 .ai-box{max-width:640px;margin:var(--sp-400) auto var(--sp-200);background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
 .ai-badge{width:26px;height:26px;border-radius:var(--r-200);background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:grid;place-items:center;color:var(--text-on-brand);flex:none}
@@ -958,7 +975,17 @@ img{max-width:100%;height:auto}
   .store-chip .sc-txt,.store-chip .dev-tag{display:none}
   /* ---- 頁面框 ---- */
   .page{padding:var(--sp-300) var(--sp-300) calc(var(--sp-600)*4)}
-  h1{font-size:clamp(17px,4.6vw,20px);line-height:var(--lh-2xl)}
+  /* 🔴 D61（2026-08-28）：刪除 `h1{font-size:clamp(17px,4.6vw,20px);line-height:var(--lh-2xl)}`。
+     **本尊的頁面標題沒有 mobile 覆蓋**——全表只有 29 條 `*-when-mobile-p1s0`（25 字型 ＋ 4 圓角），
+     `display-small` 與所有 `font-weight` 一條都沒有。六個頁面實測（Products／Orders 列表／
+     Orders 詳情／Discounts／Metaobjects／Themes）在非 toolbar 頁首形態下一律 18/24/600/dense。
+     ⚠️ 射程限定：本尊另有 `.toolbar .heading` 形態走 `body-medium`，**那一階有 mobile 覆蓋**
+        （桌機 13 → 手機 16，消融實測）。我方 h1 是一般頁首形態，不適用那一支。
+     刪除是安全的：`line-height` 半條本來就是 **no-op**（`--lh-2xl` → `--lh-600` = 24px，
+     與 `--type-display-sm-lh` 逐值相同）；`letter-spacing` 與 `font-weight` 該規則根本沒設。
+     刪掉後基底 `h1` 規則接手 ⇒ 18 / 24 / 600 / -.00833em，四軸與本尊逐值相同。
+     🔴 保留的真實代價不是 390 的 0.06px，是 **435–768 寬會差 +2px**
+        （4.6vw 在 435 觸頂 20px），那落在鐵律 13.1 的 768 對比點附近。 */
   .page-head{gap:var(--sp-200);margin:var(--sp-050) 0 var(--sp-300);flex-wrap:wrap}
   .page-head .head-actions{margin-left:0;width:100%;gap:var(--sp-150)}
   /* ---- 首頁 ---- */
@@ -967,7 +994,6 @@ img{max-width:100%;height:auto}
   .p-item .p-label{flex:1 0 100%}
   .p-live{margin-left:0;text-align:left}
   .hero-hello{margin:var(--sp-600) 0 var(--sp-150)}
-  .hero-hello h2{font-size:clamp(19px,5.4vw,24px);line-height:var(--lh-3xl)}
   .hero-hello p{font-size:var(--t-sm)}
   .ai-box{padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);gap:var(--sp-200)}
   .task-chips{flex-wrap:wrap;margin:var(--sp-300) 0 var(--sp-600)}
