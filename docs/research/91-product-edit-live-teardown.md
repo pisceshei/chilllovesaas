@@ -142,6 +142,13 @@ select 展開＝3 選項，**每項帶描述副行**（我方現行只有純文�
 
 ## 15. CSS 量測（getComputedStyle，shadow-walk）
 
+> 🔴 **2026-08-28 引用守衛（G12b）：本節的 4 個 `500` 是污染值，未複驗前不得引用。**
+> 污染源與機制＝`docs/design/111` §20。**本尊沒有 500 這一階** ⇒ 「字重 500」本身就是污染指紋。
+> ⚠️ G12 的射程只點名「第 19 節」，**本節被漏掉了**。
+> 🔴 **本節的 label 那一列另有一個已被證偽的結論**：「⚠ 字重差 50，我方 `64` §3 定 450 …
+> **不改 token**，登記觀察」——本檔 **§19.6 row 2** 已量到該 label 的乾淨值就是 **450**，
+> **與我方 token 一致、根本沒有差異** ⇒ 該條建議作廢，**不得依它去「登記觀察」或維持任何差異**。
+
 | 元件 | 本尊實測 | 我方 token | 判定 |
 |---|---|---|---|
 | pill（帶值按鈕） | h 28px、radius 8px、padding 4px 8px、透明底、13px/500 | --h-28 / --r-200 / --sp-100 --sp-200 / --fw-control | ✅ 逐格吻合 |
@@ -196,7 +203,8 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 >
 > ⚠️ **font-size／line-height／color／letter-spacing／間距／圓角／陰影不受影響**，那些值仍可引用。
 >
-> 🔴 **本節尚未做乾淨重量**（`docs/design/110` 的 **G12** 射程）。已重量的同型元件見 `docs/research/77` §7.6。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §19.6**（24 列：更正 9／一致 14／未取得 1）。
+> **引用本節任何字重值前先對照 §19.6。** 同型元件另見 `docs/research/77` §7.6。
 
 
 > 全域 token 值表、頁面骨架與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
@@ -302,3 +310,81 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 - **Price／Inventory 摺疊 pill 列展開後的完整欄位群組**：右端 chevron 未點開。
 - **行動／平板寬度（390／768）下的商品表單形態**：本輪僅 1024 一個寬度（鐵律 13.1 的三裝置對比未做）。
 - **Shopify 主題色以外的暗色模式**：admin 目前為淺色，未量暗色 token（:root 上未見 dark 覆寫值）。
+
+---
+
+## 19.6 🔴 乾淨環境重量（2026-08-28，G12 補完）
+
+> 本節依**鐵律 19.5**追加，**上方原記載保留原文**。
+> 觸發＝`docs/design/110` 的 **G12**：本檔的 `font-weight` 值曾在受污染的環境下量測。
+> 污染源與機制＝`docs/design/111` §20。
+>
+> **全部數值以「停用污染源 → 讀 clean → 還原 → 讀 dirty」的同步配對取得**，
+> 收工已還原成使用者原狀並複驗。
+>
+> ⚠️ 只有 `font-weight` 受污染；font-size／line-height／color 等在兩種環境下相同——
+> 但本輪**一併複驗**了它們，因此下表也含非字重的更正（那些屬「量錯層」或原記載本身有誤）。
+
+**本節結果：24 列（更正 9／複驗一致 14／未取得 1）**
+
+| # | 項 | 判定 | 原記載 | 🔴 乾淨值 | 污染值 | 實際量的節點 |
+|---:|---|:--:|---|---|---|---|
+| 1 | 3 卡片標題（h2）與標題列（§19.2 #3） | ✅ 一致 | h2 13px/600/lh20/#303030；host s-heading 的 fw「是 450 或 500」；Modal 級 s-internal-heading 14px/600/lh20 | **卡標題 h2 600 / 13px / lh 20px / rgb(48,48,48)；卡中卡 h3 600 / 13px / 20px；Modal h2.heading.size-large 600 / 14px / 20px** | h2／h3 皆 600（未變，shadow 內自宣告故免疫）。host 則分裂：s-heading（本身就在 shadow 內）450→450；s-internal-heading（在 light DOM）450→500 ⇒ 原文「host 上的 fw 是 450 或 500」這個雙值就是這個差異造成的，不是本尊有兩種值。 | 新層＝s-heading → shadow h2.heading（sh2，自宣告 600，免疫）；Price／Inventory／Shipping 三張卡改走 s-internal-heading → shadow h2.heading（sh1，同樣自宣告 600，免疫）；卡中卡為 h3.heading（sh2）。兩種 host 都是 display:contents（0×0），不產生繪製盒。 |
+| 2 | 4 文字輸入框 Title（s-internal-text-field，§19.2 #4） | ✅ 一致 | label 13px/450/lh20；input 13px/450/lh20；placeholder 13px/450/rgb(97,97,97)；#describedby 12px/450/lh16 | **label／span.label-content 450 / 13px / 20px / rgb(48,48,48)；input 450 / 13px / 20px；::placeholder 450 / 13px / rgb(97,97,97)；div.field-details 450 / 12px / 16px / rgb(97,97,97)** | 四者全部與 clean 相同（免疫）。僅 host s-internal-text-field（light DOM，display:contents）450→500，但它不繪製文字。 | 全部在 shadow sh1：label.label.outside → span.label-content（葉，27×16，實際繪製）／input（葉，443×20）／input::placeholder／div.field-details（12px 容器，本例 display:none）。四者自身都不宣告 fw，但 shadow 根 div.internal-text-field 已宣告 450，阻斷了對被污染 host 的繼承 ⇒ 免疫。 |
+| 3 | 5 帶前綴的金額輸入 Price／Compare-at（§19.2 #5） | 🔴 更正 | 前綴「HK$」13px/500/rgb(97,97,97)；input 13px/500/#303030 | **前綴 HK$ **450** / 13px / 20px / rgb(97,97,97)；price input **450** / 13px / 20px / rgb(48,48,48)；Compare-at input **450** / 13px / 20px；Compare-at 前綴 HK$ 450 / 13px / 20px；欄位 label 450 / 13px / 20px** | 以上五者一律 500 ⇒ 原記載的 500 全部是污染值 | 全部 light DOM（sh0）舊 Polaris 層，且**都不自宣告 font-weight**：div.Polaris-TextField__Prefix（葉，27×20）／input.Polaris-TextField__Input[name=price]（葉，100×32）／input[name=compareAtPrice]（葉，153×32，點 Compare-at pill 展開後取得，已還原）／label.Polaris-Label__Text「Price」（32×20） |
+| 4 | 6 帶前綴的 URL handle 輸入（SEO 展開後，§19.2 #6） | 🔴 更正 | 前綴（網域段）13px/500/rgb(97,97,97)；input 13px/500/#303030 | **前綴 products/ **450** / 13px / 20px / rgb(97,97,97)；handle input **450** / 13px / 20px；seoTitle input **450** / 13px / 20px** | 三者一律 500 | light DOM（sh0），不自宣告 fw：div.Polaris-TextField__Prefix「products/」（60×20）／input.Polaris-TextField__Input[name=handle]（葉，395×32）。另同卡的 input[name=seoTitle]（葉，467×32）一併量。（SEO 卡以卡片右上 aria-label="Edit" 的鉛筆鈕展開，唯讀操作，收工重載已收合） |
+| 5 | 7 數字輸入 Shipping → Product weight（§19.2 #7） | 🔴 更正 | input 13px/500/#303030 | ****450** / 13px / lh 20px / rgb(48,48,48)** | 500 | light DOM（sh0）input.Polaris-TextField__Input[name=weight]（葉，105×32），不自宣告 fw |
+| 6 | 8 Textarea（SEO meta description，§19.2 #8） | 🔴 更正 | 13px/500/lh20/#303030 | ****450** / 13px / lh 20px / rgb(48,48,48)** | 500 | light DOM（sh0）textarea.Polaris-TextField__Input.Polaris-Scroll（葉，467×92），不自宣告 fw |
+| 7 | 9 Select（s-internal-select，重量單位 lb/oz/kg/g，§19.2 #9） | ✅ 一致 | 值文字 13px/450；label 13px/450/lh20（此例視覺隱藏 w=1px） | **值文字 450 / 13px / 20px / rgb(48,48,48)；label 450 / 13px / 20px** | 兩者皆與 clean 相同（免疫） | shadow sh1：span.value（葉，8×20，實際繪製值文字）／span.visually-hidden（葉，1×1，label）。皆免疫（shadow 根已宣告 450） |
+| 8 | 10 單選 Picker 欄位（Status／Type／Vendor／Category／Theme template，§19.2 #10） | ✅ 一致 | label 13px/450/lh20（值文字未記 fw） | **值文字（Active／Clinique／Default product）**450** / 13px / 20px / rgb(48,48,48)；label 450 / 13px / 20px** | 值文字 500；label 不變 | label＝shadow sh1 span.visually-hidden／div.label（免疫）；🔴 值文字的節點是 **s-internal-single-picker-field-value**，它在 **light DOM（sh0）且 display:contents（0×0）**——它被 slot 投射進 picker 的 shadow，但 CSS 選擇器是照 DOM 樹匹配的，所以擴充規則仍然打中它，其文字子節點再從它繼承 ⇒ 這一項不免疫。 |
+| 9 | 11 多選 Picker 欄位（Collections／Tags，§19.2 #11） | ✅ 一致 | 原文此列未記任何 font-weight（只記高度／padding／radius／placeholder 文字） | **label 450 / 13px / lh 20px / rgb(48,48,48)；chip「Add collections」／「Add tags」 **550** / 12px / lh 16px / rgb(97,97,97)** | 兩者皆與 clean 相同（免疫） | label＝shadow sh1 span.small-text（葉，69×20 / 30×20，免疫）；placeholder chip＝s-clickable-chip → shadow sh2 span.content（89×16，免疫） |
+| 10 | 12 Switch（Inventory tracked／Physical product，§19.2 #12） | ✅ 一致 | 輔助文字容器 12px/450/lh16/rgb(97,97,97) | **div.field-details 450 / 12px / 16px / rgb(97,97,97)（＝原記載，吻合）；可見標籤「Inventory tracked」／「Physical product」 **450 / 11px / lh 12px** / rgb(97,97,97)** | div.field-details 不變；可見標籤 450→500 | 原文所指的「輔助文字容器」＝s-internal-switch shadow sh1 的 div.field-details（本例 display:none）——免疫。🔴 另有一個原文未涵蓋的節點：畫面上真正看得到的開關標籤是 **light DOM** 的 span.Polaris-Text--bodyXs.Polaris-Text--subdued → div.Polaris-InlineStack（葉，92×12），它不免疫。 |
+| 11 | 13 Pill（Compare-at／Unit price／Charge tax／Cost per item／SKU／Barcode／Sell when out of stock／Country of origin／HS Code，§19.2 #13） | 🔴 更正 | 13px/500/lh20；標籤文字實際在內層 <p>，色 rgb(97,97,97) | **pill 標籤 <p> **450** / 13px / lh 20px / rgb(97,97,97)（Compare-at／Charge tax／SKU／Barcode／Sell when out of stock／Country of origin／HS Code 逐個相同）；pill button 本體 400 / 13px / 20px** | 標籤 <p> 500；button 本體 400→500 | 標籤實際繪製盒＝light DOM p.Polaris-Text--root.Polaris-Text--block.Polaris-Text--start（葉），**自宣告 450**（其父 button 是 400）但被 !important 蓋掉；pill 本體 button._UnstyledButton_1ey1r_88._BasePillButton_1ey1r_43 自身 clean=400（原生 <button> 的 UA 預設，未被重設） |
+| 12 | 14 Pill 內的值徽章（s-internal-badge，§19.2 #14） | ✅ 一致 | 文字 12px/550/lh16/rgb(97,97,97) | ****550** / 12px / lh 16px；pill 內徽章 rgb(97,97,97)、Status 卡 tone-success 徽章 rgb(1,75,64)** | pill 內徽章 550→**500**（🔴 這是「被壓低」方向的污染示範）；shadow 內的 div.badge／span.content 仍為 550（免疫） | 兩種投射形態都量了：①pill 內的徽章＝light DOM <span>（葉，如 16×15／83×15／18×15），**自宣告 550**；②Status 卡的「Active」徽章＝文字節點經 slot 投射，繪製盒是 shadow sh1 的 div.badge／span.content（53×20／37×16，550，免疫） |
+| 13 | 15 富文本編輯器容器（Description，TinyMCE iframe，§19.2 #15） | ✅ 一致 | iframe 內 body 14px / 400 / line-height 19.6px(1.4) / rgb(48,48,48) | **400 / 14px / lh 19.6px / rgb(48,48,48)** | 400 / 14px（完全相同——因為 iframe 未被注入） | iframe#product-description-rie_ifr 的 contentDocument.body（同源可讀）。🔴 該 iframe 的 document 內**沒有** font-bolder-style，擴充只注入頂層文件 ⇒ 這一項本來就是乾淨值。本例 body 內無非空文字葉節點（描述為空），只量到 body 本身。 |
+| 14 | 16 富文本工具列（§19.2 #16） | ✅ 一致 | 原文此列未記 font-weight（只記 fs 12px、24×24、色 rgb(74,74,74)） | ****550** / 12px / lh 12px / rgb(74,74,74)** | 550→500 | light DOM button._Button_ddsno_4（Paragraph 下拉，100×24）與 button._Button_ddsno_4._icon_ddsno_49（icon 鈕，24×24），**自宣告 550**（其父為 450）但被 !important 蓋掉 ⇒ 不免疫 |
+| 15 | 18 Inventory per-location 表（§19.2 #18） | 🔴 更正 | 表頭 12px/500/lh16/rgb(97,97,97)；資料列 12px/500/lh16/rgb(48,48,48) | **表頭 **550 / 12px / lh 16px** / rgb(97,97,97)；資料列 **450 / 13px / lh 20px** / rgb(48,48,48)。🔴 附帶更正：資料列的 12px/16px 是 host（不繪製）的值，實際繪製的 span 是 13px/20px。** | 表頭 host 550→500、繪製盒 550（免疫）；資料列 host 450→500、繪製盒 450（免疫） | 🔴 兩者的繪製盒都在 s-internal-text 的 shadow 裡，原文量到的是 light DOM 的 host（display:contents，0×0）。表頭繪製盒＝shadow sh1 span.text.interest.interest-text-underline（class 含 weight-medium size-small，48×18，免疫）；資料列繪製盒＝shadow sh1 span.text.tone-auto.color-base（85×16 等，免疫）。 |
+| 16 | 19 Metafield 列與卡片頁尾帶（§19.2 #19） | 🔴 更正 | metafield label 13px/500/lh20/#303030；頁尾「+ Disclosures」chip 13px/500/#303030 | **label **450** / 13px / 20px / rgb(48,48,48)；值 _ReadField **450** / 13px / 20px；頁尾 chip **450** / 13px / 20px / rgb(97,97,97)** | label 500；_ReadField 500；chip host 450→500 但繪製盒仍 450（免疫） | label＝light DOM p.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--breakAlways（葉，106×20），不自宣告；值＝light DOM div._ReadField_123bh_9（葉，317×24）；頁尾 chip 的繪製盒＝s-internal-text → shadow sh1 span.text.tone-auto.color-subdued（72×16，免疫） |
+| 17 | 20 SEO SERP 預覽（Search engine listing，§19.2 #20） | 🔴 更正 | 站名 14px/450；URL 麵包屑 12px/450；**標題連結 18px/500/lh24/rgb(0,91,211)**；描述 13px/450；價格行 13px/450 | **站名 450 / 14px / 20px / rgb(48,48,48)；URL 450 / 12px / 16px / rgb(97,97,97)；**標題連結 450 / 18px / lh 24px / rgb(0,91,211)**；描述 450 / 13px / 20px / rgb(97,97,97)；價格行 450 / 13px / 20px / rgb(97,97,97)** | 站名／URL／描述／價格行皆不變（免疫）；標題連結 450→500 ⇒ 原記載的 500 是污染值（本列五個值裡只有這一個要改） | 站名／URL／描述／價格行的繪製盒都在 s-internal-paragraph 的 shadow sh1（p.paragraph.color-base／color-subdued，免疫）；🔴 標題連結不同——它是 light DOM 的 span._LinkPreview_1azdy_17（葉，390×22），父為 p.Polaris-Text--headingLg.Polaris-Text--regular，兩者都不自宣告 fw |
+| 18 | 21 字元計數器（SEO Page title／Description，§19.2 #21） | 🔴 更正 | 12px/500/lh16/rgb(97,97,97)；超限仍不轉紅 | ****450** / 12px / lh 16px / rgb(97,97,97)（本例實測文字為「44 of 70 characters used」與「113 of 160 characters used」，均未超限，故本輪未複驗超限不變色那一句）** | 500 | light DOM p.Polaris-Text--root.Polaris-Text--bodySm.Polaris-Text--breakAlways（葉，467×16），不自宣告 fw |
+| 19 | 22 SaveBar（未儲存變更列，§19.2 #22） | ⚠ 未取得 | 「Unsaved changes」13px/500/rgb(238,238,238)；Discard 13px/500；Save 13px/500 | **未取得（見 not_obtained 第 1 條，含已嘗試的方法與失敗證據；試改欄位已全部還原並複驗）** | 未取得 | 未取得。SaveBar 在表單乾淨時**整段不存在於 DOM**（本輪搜到的 5 個「Unsaved changes」葉節點經祖先鏈確認全部屬於 s-internal-modal 的 div.unsaved-changes 頁尾，不是頁面 SaveBar，且 dialog.modal 為 display:none） |
+| 20 | 23 表單底部 Save 按鈕列（supplementalEnd，§19.2 #23） | ✅ 一致 | 原文此列未記 font-weight（只記 h28／w52.1／bg rgb(48,48,48)／radius 8／三層 inset 陰影） | **button 450 / 13px / 20px；實際繪製的標籤 span **600 / 12px / lh 16px** / rgb(255,255,255)** | button 450→500；標籤 span 600→**500**（又一個被壓低的例子） | button.Polaris-Button--variantPrimary（light DOM，52×28，不自宣告 fw）＋其內文葉 span.Polaris-Text--root.Polaris-Text--bodySm.Polaris-Text--semibold（葉，28×16，**自宣告 600**）。註：表單乾淨時此鈕為 disabled，原文記的 bg rgb(48,48,48) 是啟用態。 |
+| 21 | 24 卡片右上 icon 動作鈕（SEO 鉛筆／Publishing 設定／Product organization 資訊，§19.2 #24） | ✅ 一致 | 28×28、fs 12px / fw 550、圖示色 rgb(138,138,138) | ****550** / 12px / lh 16px（SEO 鉛筆鈕圖示色 rgb(138,138,138)、其他同族鈕 rgb(48,48,48)／rgb(255,255,255) 依 variant）** | 550（未變，免疫） | s-internal-button → shadow button.button.size-base.tone-auto（28×28），**自宣告 550**，免疫 |
+| 22 | 25 發布通路列（Publishing 卡：Online Store／All catalogs，§19.2 #25） | ✅ 一致 | 原文未記 fw；記「該 <button> 未重設字體，其子孫 computed font-size 13.3333px、color rgb(0,0,0)」並判為本尊樣式瑕疵、我方不應照抄 | **button 本體 **400** / 13.3333px / lh normal / rgb(0,0,0)（＝UA 預設外洩，複驗吻合）；「Online Store」 **550** / 13px / 20px / rgb(48,48,48)；「All catalogs」 **550** / 12px / 16px / rgb(48,48,48)。🔴 補充更正：13.3333px／rgb(0,0,0) 只停在 button 與 display:contents 的 s-internal-text host 上，**兩個真正繪製文字的節點都自己覆蓋掉了字級與顏色**，所以外洩值不會被使用者看見。** | button 400→500；「Online Store」550→500；「All catalogs」<strong> 仍 550（免疫） | button._Button_ax5zp_1（light DOM，475×28）；「Online Store」實際繪製盒＝light DOM span.Polaris-Text--bodyMd.Polaris-Text--medium（葉，76×16，自宣告 550）；「All catalogs」實際繪製盒＝s-internal-text → shadow sh1 **<strong>**.text（class 含 weight-medium size-small，67×15，自宣告 550，免疫） |
+| 23 | 26 Disabled 按鈕（primary，深色底，§19.2 #26） | ✅ 一致 | h28／w77／bg rgba(0,0,0,0.17)／文字 #fff／fs 12px / fw 550／opacity 1／cursor auto | ****550** / 12px / lh 16px / rgb(255,255,255)；同時複驗 bg rgba(0,0,0,0.17)、opacity 1、cursor auto、77×28 全部吻合** | 550（未變，免疫） | s-internal-button → shadow button.button.size-base.tone-auto（77×28，disabled=true），**自宣告 550**，免疫。本輪找到的實例是 Sidekick「Generate」鈕（與原文那顆離屏 modal 鈕同型同尺寸）。 |
+| 24 | 27 區塊說明段落（Sales 卡「No recent sales of this product」等，§19.2 #27） | ✅ 一致 | 13px/450/lh20/rgb(97,97,97)；「View adjustment history」同型；Media 文字為 paragraph 13px/450/#303030 | **450 / 13px / lh 20px / rgb(97,97,97)（Sales 空態、View adjustment history）；「Media」 450 / 13px / 20px / rgb(48,48,48)** | 繪製盒全部不變（免疫）；host 450→500 但不繪製 | s-internal-paragraph → shadow sh1 p.paragraph.color-subdued.tone-auto／p.paragraph.color-base.tone-auto（免疫）；host 在 light DOM、display:contents（0×0） |
+
+> 🔴 **2026-08-28 G13 定案補記（#15 per-location 表頭詞）**：本項結論 **12px / 550 / lh 16px 正確**，
+> `docs/research/77` §7.6.1 的「13px / 650」已撤回（它量到的是 tooltip 內文的粗體字）。
+> 補上完整節點身分以免下次對不上：四個詞的 rect 依序為
+> **Unavailable 67×18／Committed 63×18／Available 52×18／On hand 48×18**
+> ——原記的「48×18」精確對應 **On hand** 那一格，**不要拿它當唯一指紋**。
+> 🔴 **同一列有一個例外格**：`Locations` 欄表頭**沒有** `s-internal-text`，
+> 文字節點直接掛在 light DOM 的 cell 上 ⇒ **不免疫**（clean 550／dirty 500）。
+> 未停用污染源的量測會得到「Locations 500、其餘 550」的**假性不一致**。
+> ⚠️ per-location 表頭在 DOM 中有**兩份副本**（sticky 可見副本 ＋
+> `Polaris-Table-TableHeadingCell__Hidden` 版面量測副本）⇒ **節點計數要先除以 2**。
+
+### 19.6.a 本次重量帶出的規律
+
+1. 🔴 **§19.3 第 3 條與 §19.4 第 1／3／5 條的撤回全部成立，而且比撤回註寫得更強。** 撤回註說那些 500 是污染；本輪進一步證明**本尊這頁根本沒有任何一個文字元素是 500**：1334 個葉節點的乾淨直方圖 450×975／550×187／600×9／400×13，500＝**0**；擴大到全部 7744 個元素也只有 1 個 500（見下條，非文字元素且是快取殘留）。所謂「舊 React 表單層硬編碼 500 vs 新 web-component 層 450／600」的兩層並存假說**不存在**——兩層用的是同一組階梯 450／550／600／650，差別只在**免疫與否**，不在值。
+2. 🔴 **CSSOM 直接取證（回答『誰宣告的』）**：掃過 98 張全部可讀的樣式表、遞迴展開共 14042 個宣告區塊。設定 `font-weight: 500` 的宣告只有 8 條——1 條是擴充功能自己的 `!important` 規則，其餘 7 條全部落在 `pvi-*` 命名空間（分析圖表的 tooltip／legend／gauge／funnel／grid tooltip），**沒有任何一條能匹配商品詳情頁的元素，且該頁不含 pvi-* 元件**。本尊 admin 的字重宣告一律走 `var(--p-font-weight-regular|medium|semibold|bold)`（450／550／600／650，共 241 條）或字面 450／550／600／650／400／700／750。
+3. 🔴 **唯一的乾淨 500 已排除，不構成反例。** `div._BottomBarBackground_ejstq_30`（light DOM、787×0、**textContent 為空、不繪製任何文字**、position:fixed）在停用擴充後仍讀到 500。逐項排查：①以 el.matches() 掃全部 14042 條規則，唯一命中它的 font-weight 規則就是擴充自己那條；②其父元素乾淨值 450；③強制 reflow、加減 class、切換 documentElement class 都不回退。④**決定性測試：把同一個節點 cloneNode 後插回同一個父層，在乾淨環境下解析得到 450。** ⇒ 這是原節點的樣式快取殘留（本輪未能取得 Chrome 端的機制證據，故只登記現象與反證，不推測原因）；它不是本尊宣告的 500，也與排版無關。
+4. 🔴 **免疫的判準是「該元素或其 shadow 祖先有沒有自宣告」，不是「在不在 shadow 裡」——本輪逐項驗證了指派給的這條規則，並找到了機制。** 每個 `s-internal-*` 元件的 shadow 根元素（例：s-internal-text-field 的 div.internal-text-field）自己宣告了 font-weight（值＝token），於是整個 shadow 子樹與被污染的 host 斷開繼承 ⇒ 免疫。反之，**host 本身幾乎都在 light DOM 且是 `display:contents`（0×0）**，它們一律被污染成 500——`s-internal-heading`／`s-internal-paragraph`／`s-internal-text`／`s-internal-badge`／`s-internal-text-field` 的 host 全都如此。§19 的多數錯誤 500 就是量到了這些不繪製的 host（表格資料列連 font-size 都跟著錯，見 row 18）。
+5. 🔴 **例外一：被 slot 投射的 light DOM 元素不免疫。** `s-internal-single-picker-field-value`（picker 值文字，row 10）雖然最終畫在 picker 的 shadow 裡，但它自己是 light DOM 元素，選擇器照 DOM 樹匹配得到它，`!important` 直接改寫，再由它（display:contents）傳給文字節點 ⇒ 乾淨 450／污染 500。**例外二：純文字節點的投射反而免疫**——Status 卡「Active」徽章的文字是 host 的文字節點，flat tree 的父是 slot，繼承自 shadow 內的 span.content（550），故不受 host 被污染影響。兩種投射方向相反，量測時必須逐個確認繪製盒。
+6. 🔴 **雙向污染在本頁四種方向都實測到了**：450→500（Polaris 輸入框／前綴／pill 標籤／字元計數器／metafield label／SERP 標題連結／switch 可見標籤）、550→500（pill 值徽章、表格表頭、RTE 工具列鈕、Online Store 通路名）、600→500（底部 Save 的 semibold 標籤）、400→500（原生 <button> 的 UA 預設：pill 本體、發布通路列 button）。⇒ 「看到 500 無法回推真值」在這一節得到四種形態的佐證。
+7. 🔴 **順帶抓到兩個 font-size／line-height 錯記（不是污染造成，是量錯節點）**：①§19.2 #18 資料列記 12px/lh16，實際繪製的 shadow span 是 **13px/lh20**（12px/16px 是 display:contents host 的值）；②§19.2 #12 的「輔助文字容器 12px/lh16」指的是 shadow 內的 div.field-details（本例 display:none），畫面上真正看得到的開關標籤是 light DOM 的 Polaris bodyXs＝**11px/lh12**。其餘所有列的 font-size／line-height 逐項複驗與原記載一致（13px/20px、12px/16px、14px/20px、18px/24px、13.3333px/normal 等），符合指派所述「只污染 font-weight」。
+8. 🔴 **RTE iframe 完全在污染射程之外**：`product-description-rie_ifr` 的 document 內沒有 font-bolder-style（實測 extInside=false），其 body 400/14px/19.6px/rgb(48,48,48) 在兩種環境下逐位元組相同 ⇒ §19.2 #15 的 400 從一開始就是乾淨值，不需重量也不需修正。
+9. §19.2 的第 1（兩欄容器）、2（卡片 Section 容器）、17（媒體格線與 tile）三列**原文不含任何 font-weight，也沒有文字繪製盒**，故不在本輪重量射程內；它們記的幾何／顏色／陰影值不受本次污染影響（指派已聲明），本輪未動。
+10. 本輪量測寬度是 787px（§19.0 是 1024px）。字級階梯經逐項比對未隨寬度改變（h2 13/600、input 13/450、badge 12/550 等全部與 §19 一致），故 font-weight 結論不受寬度差異影響；但**幾何值（欄寬、grid-template-columns、卡片 padding）本輪一律未複驗、也不得拿本輪數字覆蓋 §19 的幾何記載**——例如 Inventory 表在 787px 下是 role=table 的 Polaris-Table sticky/scrollable 形態、grid-template-columns 為 none，與 §19 在 1024px 記的「ARIA grid＋155/149/127/134/137」不可直接比較。
+
+### 19.6.b 仍未取得
+
+- **§19.2 #22 SaveBar 的乾淨值（Unsaved changes 文字／Discard／Save）**。原因：表單乾淨時 SaveBar 整段不在 DOM（本輪搜到的 5 個「Unsaved changes」節點經祖先鏈確認全屬 s-internal-modal 的 footer，dialog 為 display:none，值 12px/rgb(2,38,34) 與原記載的 13px/rgb(238,238,238) 不同族，不得拿來充數）。已嘗試且失敗的兩條路：①**真實鍵盤輸入到不了這個離屏視窗**——JS 先 focus 到 input[name=seoTitle]，再用 computer 的 type 送出「 」與「Z」，兩次事後讀值都完全沒變（與指派已記的 screenshot 逾時、resize 無效同一組工具限制）；②改用 React 原生 setter＋_valueTracker 重置＋input/change 事件：欄位狀態確實更新了（字元計數器 44→45 可證），但頁面級 SaveBar 始終沒出現，推測 dirty 旗標不由該事件路徑驅動（未取得證據，不下定論）。兩次試改都已還原並複驗（值、計數器、Unsaved 數皆回原狀），全程未按儲存鍵。取得方式＝在鍵盤／滑鼠事件能真正送達頁面的瀏覽器工作階段做一次「改一欄 → 量 → Discard」。
+- **1280／768／390 三裝置寬度下的重量**。本輪視窗鎖在 787×372，指派已明示 resize_window 無效故未重試。不影響本輪 font-weight 結論（字級階梯不隨寬度變），但幾何值仍缺 §19.5 原本就登記的 1280 量測。
+- **變體表格（多變體商品的變體列表）的字重**。本輪商品 9907123716331 為單變體；店內唯一的多變體測試品 9907126370539 在禁止觸碰清單內，全程未導航。取得方式＝另找一個非保護的多變體商品，或沿用 docs/research/93 §1–2。
+- **§19.2 #21 超限態字元計數器的乾淨值**。本輪兩個計數器都在限額內（44/70、113/160），原文記的「296 of 160（已超限）仍為 rgb(97,97,97) 不轉紅」這一句本輪無法複驗；只取到未超限態的 450 / 12px / 16px / rgb(97,97,97)。
+- **表單欄位 disabled／error 態、Picker popover 面板、媒體 tile 與 pill 的 hover／active 態的字重**。本輪唯讀且未展開任何 popover，§19.5 原有的這幾條缺口照舊未補（其中 disabled primary button 一項已在 row 26 取得）。
+- **`div._BottomBarBackground_ejstq_30` 為何在停用擴充後仍解析成 500 的瀏覽器端機制**。已用 clone 反證它不是本尊宣告（clone 乾淨解析為 450），但造成原節點值不回退的確切機制未取得證據，僅登記現象與反證，不作推測。
+
+> 量測環境：量測日期 2026-08-28（本地時間），Claude in Chrome，測試店 chill-love-u5q5mnzq，自開分頁（收工時分頁群組已消失＝分頁已關閉）。window.innerWidth=787／innerHeight=372（🔴 與 §19.0 的 1024 不同，本輪視窗無法調整；resize_window 依指派說明不重試），devicePixelRatio=1.25，getComputedStyle(documentElement).fontSize=16px（無根字級污染）。  【污染源與停用聲明】頁面確認存在 <style id="font-bolder-style">，parentNode=HTML，位於 document.styleSheets[0]，唯一規則＝`body, body :not(svg):not(svg *):not(img):not(video):not(canvas)` 設 font-weight 500 並帶 !important。全部數值以 `ext.sheet.disabled = true`（clean）→ 讀值 →`= false`（dirty）→ 讀值的同步配對取得；只切 CSSOM 旗標，未動使用者的擴充功能設定。 【對照組驗證】html 根元素 clean=450／dirty=450（不在選擇器射程）；body clean=450／dirty=500。 【直方圖複驗】1334 個葉節點（childElementCount===0 且有非空文字）：clean 450×975／550×187／600×9／400×13／空字串×150，**500 為 0 個**；同一組 dirty 為 450×535／500×638／600×7／400×4。與指派提供的乾淨直方圖同型。 【全元素複驗】7744 個元素：clean 450×6471／550×485／600×87／650×12／400×212／500×1（該 1 個見 patterns 第 3 條，非文字元素且已證實為樣式快取殘

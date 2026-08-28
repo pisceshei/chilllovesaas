@@ -197,7 +197,8 @@ Jul 15       | Initial inventory  | Fecify  | 0 | 0 | (+9) 9  | (+9) 9
 >
 > ⚠️ **font-size／line-height／color／letter-spacing／間距／圓角／陰影不受影響**，那些值仍可引用。
 >
-> 🔴 **本節只有 6 項做過乾淨重量**，且那 6 條登記在 **`docs/research/81` §8.6 #18–#29**（不在本檔）。其餘 41 項**未複驗**。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §4.6**（49 列：更正 27／一致 22）。
+> **引用本節任何字重值前先對照 §4.6。** 另有 **12** 項更早的乾淨值寄存在 `docs/research/81` §8.6 #18–#29。
 
 
 > 全域 token 值表、頁面骨架與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
@@ -342,3 +343,102 @@ Jul 15       | Initial inventory  | Fecify  | 0 | 0 | (+9) 9  | (+9) 9
 - **Adjust by 選單（ul/li 型）與 Display options 選單的面板幾何**：只量到選項列，面板容器的 radius／陰影／內距未量。
 - **已勾選 / indeterminate 態的 checkbox 樣式**：為維持唯讀，全程未勾選任何列。
 - **平台字典層 token 的完整清單**：`getComputedStyle(document.documentElement)` 共 695 個 `--` 自訂屬性，本輪只導出與本任務相關的間距／字級／字重／圓角／色／陰影六類。其餘（motion、z-index、height/width 階、avatar、badge、nav 專屬）未導出。
+
+---
+
+## §4.6 🔴 乾淨環境重量（2026-08-28，G12 補完）
+
+> 本節依**鐵律 19.5**追加，**上方原記載保留原文**。
+> 觸發＝`docs/design/110` 的 **G12**：本檔的 `font-weight` 值曾在受污染的環境下量測。
+> 污染源與機制＝`docs/design/111` §20。
+>
+> **全部數值以「停用污染源 → 讀 clean → 還原 → 讀 dirty」的同步配對取得**，
+> 收工已還原成使用者原狀並複驗。
+>
+> ⚠️ 只有 `font-weight` 受污染；font-size／line-height／color 等在兩種環境下相同——
+> 但本輪**一併複驗**了它們，因此下表也含非字重的更正（那些屬「量錯層」或原記載本身有誤）。
+
+**本節結果：49 列（更正 27／複驗一致 22／未取得 0）**
+
+| # | 項 | 判定 | 原記載 | 🔴 乾淨值 | 污染值 | 實際量的節點 |
+|---:|---|:--:|---|---|---|---|
+| 1 | #1 系列列表 · 表格容器（ARIA table） | ✅ 一致 | grid 欄寬、[role=row] display:contents——原條目未記任何 font-weight | **不適用：該容器不繪製文字，無字重可量** | — | — |
+| 2 | #2 系列列表 · 欄位標題格（已有乾淨值，複驗） | 🔴 更正 | 高 36px、bg #f7f7f7、色 #616161、字 12px/16px、**字重 500** | ****550** \| 12px/16px \| #616161 \| ls normal** | 500 | light DOM。/collections 的 [role=columnheader]（div.Polaris-Table-TableHeadingCell）；Title 欄與 Products 欄實測同值。**不自宣告**（父 450、dirty 被改寫成 500 ⇒ 550 來自該元素自己的類，但仍受 !important 覆蓋） |
+| 3 | #3 系列列表 · 資料格（已有乾淨值，複驗） | 🔴 更正 | 高 52px、色 #303030、字 12px/16px、**字重 500** | **格盒 **450** \| 12px/16px \| #303030；Products 計數文字葉 **450** \| 12px/16px \| #303030** | 格盒 500 / 計數葉 500 | light DOM。格盒＝div.Polaris-Table-TableCell（[role=cell]）；計數文字葉＝span._Wrapper_10gjt_1。兩者皆**不自宣告**（繼承 body 的 450） |
+| 4 | #4 系列列表 · 縮圖 s-thumbnail | ✅ 一致 | 40×40、overflow hidden、border-radius clamp 公式——未記 font-weight | **不適用：圖形元件，無文字葉** | — | — |
+| 5 | #5 系列列表 · 系列名稱連結（已有乾淨值，複驗） | 🔴 更正 | 字 12px/16px、**字重 500**、色 #303030、text-decoration none | **文字葉 **550** \| 12px/16px \| #303030；其祖先 `a` 只有繼承的 **450**** | 葉 500 / a 500 | light DOM。文字葉＝span._Wrapper_10gjt_1._LineClamp_10gjt_8；祖先＝a._Link_lixg6_1。🔴 只量 <a> 會得到 450，畫面上讀到的是 550 |
+| 6 | #6 checkbox（視覺） | ✅ 一致 | 16×16、radius 4px、0.66px inset 環——未記 font-weight | **不適用：無文字葉（原生 input opacity 0，視覺由 span 繪製）** | — | — |
+| 7 | #7 頁面標題 h1（Collections／Adjustment history） | ✅ 一致 | 18px/24px/**字重 600**、#303030、letter-spacing -0.14994px | ****600** \| 18px/24px \| #303030 \| ls -0.14994px** | 600（免疫） | shadow DOM d1。s-internal-page → shadowRoot > h1.heading.has-breadcrumbs。**自宣告**（clean=dirty=600，shadow 邊界＋自宣告雙重免疫）。Collections 與 Adjustment history 兩頁各量一次同值 |
+| 8 | #8 主要按鈕（Add collection） | ✅ 一致 | 高 28、bg #303030、字 12px/16px、**字重 550** | ****550** \| 12px/16px \| #fff** | 550（免疫） | shadow DOM d1。s-internal-button → shadowRoot > a.button.size-base.tone-auto.variant-primary（含 span.content / span.text-wrapper / slot，四者同值 550）。**自宣告**（immune）。宿主 s-internal-button 本身只有繼承的 450（dirty 500） |
+| 9 | #9 卡片容器（Section） | ✅ 一致 | bg #fff、radius 12px、shadow-100——未記 font-weight | **不適用：容器不繪製文字** | — | — |
+| 10 | #10 Sources 卡片標頭列（可摺疊） | 🔴 更正 | 列高 44px、padding 8px 16px；**標題文字 13px/20px**（未記字重） | **標題 **600** \| **14px/20px** \| #303030** | 600（免疫）；宿主 450/500 | shadow DOM d1。s-internal-heading → shadowRoot > h2.heading.size-large。**自宣告**（immune）。🔴 原記的 13px/20px 是量在 display:contents 的宿主 s-internal-heading 上（繼承值）——量錯層，畫面上是 14px/20px/600 |
+| 11 | #11 條件群組內卡（Sources 內層） | ✅ 一致 | 寬 712、radius 12px、shadow-100——未記 font-weight | **不適用：容器不繪製文字** | — | — |
+| 12 | #12 資源類型選擇器（Products chip） | 🔴 更正 | 高 28、radius 8px、色 #303030、字 13px/20px、**字重 500** | ****550** \| 13px/20px \| #303030** | 500 | light DOM。span.Polaris-Text--root.Polaris-Text--bodyMd.**Polaris-Text--medium**（550 由 --medium 類提供）。**不自宣告免疫**（dirty 500）。系列詳情頁與 /collections/new 兩處各量一次同值 |
+| 13 | #13 Add condition 按鈕（條件列左） | 🔴 更正 | 高 28、bg #f7f7f7、色 #616161、字 13px/20px、**字重 500** | ****450** \| 13px/20px \| #616161** | 500 | light DOM。span._Content_2fkef_101（按鈕內文字葉） |
+| 14 | #14 條件列右側計數 badge（已選商品數） | 🔴 更正 | badge 高 20、bg rgba(0,0,0,.06)、色 #616161、字 12px/16px、**字重 500**；另記「獨立取得的 s-internal-badge → shadowRoot > div 同規格但字重 550」 | **badge 文字 **550** \| 12px/16px \| #616161** | 500 | light DOM。span._CountIndicator_11iej_1（系列詳情頁）。**不自宣告免疫**（dirty 500）。⚠️ 後半句的 s-internal-badge 本輪未在本頁重量（見未取得）；旁證＝81 §8.6.1 已複驗 s-internal-badge shadow div ＝ 550 immune，該半仍成立 |
+| 15 | #15 Exclude 按鈕 | 🔴 更正 | 高 30、bg #f7f7f7、border 1px solid #e3e3e3、色 #303030、字 13px/20px、**字重 500** | ****450** \| 13px/20px \| #303030** | 500 | light DOM。span._Content_2fkef_101 |
+| 16 | #16 新增 source 虛線列（+） | ✅ 一致 | 寬 712、border 1px dashed #ccc、內部 + icon——未記 font-weight | **不適用：實測該 dashed button（475×38 @787px）textContent 為空，只有 icon** | — | light DOM button（border-style 含 dashed） |
+| 17 | #17 屬性／運算子 popover 面板 | ✅ 一致 | 面板尺寸、bg #fff、radius 12px、shadow-popover——未記 font-weight | **不適用：面板容器不繪製文字（選項字重見 #18）** | — | — |
+| 18 | #18 popover 選項列 | ✅ 一致 | 字 13px/20px、**字重 450**；**selected：bg #f1f1f1 + font-weight 600** | **rest **450** \| 13px/20px \| #303030；selected **600** \| 13px/20px \| #303030** | 450 / 600（皆免疫） | shadow DOM d1。s-internal-picker-option → shadowRoot > div.option（selected 時 div.option.selected）與其內 span.label、slot，三者同值。**自宣告**（immune）。宿主 s-internal-picker-option 本身 450/500。三個 popover 各驗一次：Default sort（selected=Most relevant）、條件屬性（11 項全 rest）、調整原因（selected=Inventory addition） |
+| 19 | #19 智慧條件列（屬性 chip / 運算子 chip） | 🔴 更正 | 屬性 chip 與運算子 chip 樣式完全相同：字 13px/20px、**字重 500** | **Title chip **450** \| 13px/20px \| #303030；contains chip **450** \| 13px/20px \| #303030（兩者仍完全相同，這一半成立）** | 500 | light DOM。文字葉＝span._Content_2fkef_101；按鈕盒＝button._Button_2fkef_1._buttonEnabled_2fkef_55（亦 450）。於 /collections/new 建立 Title/contains 條件後量測，量完 Discard |
+| 20 | #20 條件刪除鈕（垃圾桶 icon） | ✅ 一致 | 28×28、icon 色 #8a8a8a、字 12px/16px、**字重 550** | ****550** \| 12px/16px \| #8a8a8a** | 550（免疫） | shadow DOM d1。s-internal-button（aria-label 'Remove condition'）→ shadowRoot > button.button.size-base。**自宣告**（immune） |
+| 21 | #21 條件值輸入列（Add value） | 🔴 更正 | input 678×24、bg transparent、無 border/shadow、字 13px/20px、色 #303030（**未記字重**） | ****450** \| 13px/20px \| #303030** | 500 | light DOM。input._Input_1247i_12[placeholder='Add value']。**不自宣告免疫**（dirty 500） |
+| 22 | #22 Collection items 區段標頭（含 Default sort 鈕） | 🔴 更正 | 標題列高 20、**字 13px/20px**；右側「Default sort: Most relevant ⌄」button 字 **13px/20px 字重 500** | **區段標題 **600 \| 14px/20px** \| #303030；Default sort 鈕：標籤『Default sort:』**450 \| 12px/16px** \| #616161，值『Most relevant』**600 \| 12px/16px** \| #303030** | 標題 600 免疫；鈕內兩段 450/600 免疫；按鈕盒 500 | 區段標題＝shadow d1，s-internal-heading → shadowRoot > h2.heading.size-large（immune）。鈕內兩段文字皆為 s-internal-text → shadowRoot > span.text.tone-auto（immune，自宣告）；按鈕盒 button._Button_1ywcs_1 本身只有繼承的 450（dirty 500）。🔴 原記的 13px/20px/500 是量在按鈕盒上（繼承字級＋污染字重），畫面文字是 12px/16px |
+| 23 | #23 檢視切換分段控制（格線／清單） | ✅ 一致 | 28×24、選中 bg #fff+shadow-100、未選中 icon #8a8a8a——未記 font-weight | **不適用：純 icon 鈕，無文字葉** | — | aria-label 'Grid view' / 'List view' 的 button |
+| 24 | #24 次級 icon／文字鈕（columns「4」、篩選 icon、Cancel、Done） | 🔴 更正 | 工具列鈕 12px/16px **字重 550**；modal Cancel／Done **13px/20px 字重 500** | **工具列『4 columns』鈕 **550 \| 12px/16px** \| #303030（原記載成立）；modal **Cancel 的文字葉 550 \| 12px/16px** \| #303030；adjust bar 的 **Done（icon 鈕）盒 450 \| 13px/20px**** | 工具列鈕 550 免疫；modal Cancel 葉 500；Done 盒 500 | 工具列鈕＝shadow d1，s-internal-button → shadowRoot > button.button.size-base（immune；span.text-wrapper 與 slot 同值 550）。modal Cancel 文字葉＝light DOM span.Polaris-Text--bodySm.**Polaris-Text--medium**（dirty 500）；按鈕盒 button.Polaris-Button 為 450/13px/20px。Done＝light DOM button.Polaris-Button（32×32，icon 鈕）。🔴 原記的『modal Cancel 13px/20px/500』是量在按鈕盒上，畫面文字是 12px/16px/550 |
+| 25 | #25 篩選 chip 與 Clear all | 🔴 更正 | chip button 高 22、寬 274.59、**字 13px/20px 字重 500** | **chip 文字葉 **450 \| 12px/16px** \| #303030；Clear all **450 \| 12px/16px** \| #303030** | 500 / 500 | light DOM。兩者皆 span.Polaris-Text--root.Polaris-Text--bodySm。🔴 原記的 13px/20px 是按鈕盒的繼承值，畫面文字是 12px/16px |
+| 26 | #26 手動選品 · 商品格線卡（grid 檢視） | 🔴 更正 | 標題 12px/16px、**字重 500**、色 #303030 | ****450** \| 12px/16px \| #303030** | 500 | light DOM。span._Title_ncpy2_133（Collection items 區的格線卡標題） |
+| 27 | #27 手動選品 · 商品列（list 檢視） | 🔴 更正 | 標題為 <a>：**14px/20px、字重 500**、色 #303030 | ****450** \| 14px/20px \| #303030（14px/20px 這半成立）** | 500 | light DOM。a._Link_1petw_95（其本身即文字葉，childElementCount 0）。切到 List view 量測後已切回 Grid view（aria-pressed 複驗） |
+| 28 | #28 手動選品 modal（Select products to include） | 🔴 更正 | 標題 h2 **14px/20px 字重 500**；商品列標題 **13px/20px 字重 500** | **標題 h2 **600 \| 14px/20px** \| #303030（14px/20px 成立）；商品列標題 **450 \| 13px/20px** \| #303030（13px/20px 成立）** | 500 / 500 | 皆 light DOM。h2.Polaris-Text--root.Polaris-Text--headingMd；商品列標題＝span.Polaris-Text--root.Polaris-Text--bodyMd。兩者皆不免疫 |
+| 29 | #29 modal 搜尋欄 · 焦點環 | ✅ 一致 | input outline none / box-shadow none，焦點環畫在外層 div（未記 font-weight） | **焦點環部分無字重可更正；順帶取得 input 文字 **450 \| 13px/20px** \| #303030** | input 500 | light DOM。input.Polaris-TextField__Input（modal 內）。搜尋欄標籤 span.Polaris-Text--bodyMd 亦為 450 \| 13px/20px |
+| 30 | #30 modal「Search by」— 原生 <select> | 🔴 更正 | 193×28、bg #fff、**字 13px、字重 500**、radius 0；值域 All／Product title／Product ID／Barcode／SKU | ****450** \| 13px/20px（select 本體 color rgb(0,0,0) 為瀏覽器預設）；顯示值 span **450 \| 13px/20px** \| #303030** | 500 / 500 | light DOM。select.Polaris-Select__Input 與 span.Polaris-Select__SelectedOption。🔴 兩者乾淨皆 450 ⇒ 原記的 500 是污染，不是原生控件預設（原生預設是 400，此處被 Polaris 覆寫成 450） |
+| 31 | #31 modal「Add filter +」虛線鈕 | 🔴 更正 | 85.92×24、border 1px dashed #e3e3e3、色 #4a4a4a、**字 13.3333px（未設字級，瀏覽器預設 medium）**、line-height normal（未記字重） | **按鈕盒 **400 \| 13.3333px/normal** \| #4a4a4a（UA 預設，設計系統未覆寫）；**畫面上的『Add filter』文字葉是 450 \| 12px/16px** \| #303030** | 盒 500 / 葉 500 | 按鈕盒＝light DOM button.Polaris-Filters__AddFilter；文字葉＝light DOM span.Polaris-Text--root.Polaris-Text--bodySm。🔴 原記的 13.3333px 是按鈕盒的值，畫面文字是 12px/16px |
+| 32 | #32 停用態主要按鈕（modal 的 Add） | 🔴 更正 | 47.27×28、bg rgba(0,0,0,.17)、色 #fff、box-shadow none、pointer-events none、aria-disabled true（**未記字重**） | **按鈕盒 **450 \| 13px/20px**；文字葉 **600 \| 12px/16px** \| #fff** | 盒 500 / 葉 500 | 皆 light DOM。button.Polaris-Button；文字葉＝span.Polaris-Text--bodySm.**Polaris-Text--semibold**。⇒ Polaris 主要鈕標籤用 600，與次要鈕的 550 分階 |
+| 33 | #33 單選欄位（Theme template） | ✅ 一致 | 704×32、bg #fdfdfd、0.66px inset 環、字 13px/20px、**字重 450** | ****450** \| 13px/20px \| #303030** | 450（免疫） | shadow DOM d1。s-internal-single-picker-field-value 的文字 slot 落在 shadowRoot > span.text（slot 與 span.text 同值 450）。**自宣告**（immune） |
+| 34 | #34 庫存列表 · 表格與欄寬 | ✅ 一致 | grid-template-columns 九欄、列高 52–53px、min-height 32px——本條未記 font-weight（字重記在 #37/#38） | **無字重記載可更正。順帶複驗同表資料格：格盒 **450 \| 12px/16px**；Product 名 **550 \| 12px/16px** \| #303030；SKU **450 \| 12px/16px** \| #616161** | 格盒 500；Product 550 免疫；SKU 450 免疫 | 格盒＝light DOM div.Polaris-Table-TableCell。Product 名與 SKU＝shadow d1，[role=cell] > s-internal-text → shadowRoot > span.text.tone-auto（**自宣告，immune**）。與 81 §8.6 #23／#24 一致 |
+| 35 | #35 庫存列表 · 凍結（sticky）欄 | ✅ 一致 | position sticky、z-index 100、無陰影——未記 font-weight | **不適用** | — | — |
+| 36 | #36 庫存列表 · 列分隔線 | ✅ 一致 | 每格 border-top 1px solid #e3e3e3——未記 font-weight | **不適用** | — | — |
+| 37 | #37 庫存列表 · 欄位標題（已有乾淨值，複驗） | 🔴 更正 | min-height 36、bg #f7f7f7、色 #616161、字 **12px/16px 字重 500** | ****550** \| 12px/16px \| #616161** | 500 | light DOM。/products/inventory 的 [role=columnheader]（div.Polaris-Table-TableHeadingCell）；Product 欄與 Available 欄實測同值 |
+| 38 | #38 庫存列表 · 可編輯數量格（已有乾淨值，複驗） | 🔴 更正 | 格 150×52、字 **12px/16px 字重 500**、tabular-nums | **格盒 **450 \| 12px/16px** \| #303030；畫面數字：Unavailable／Available／On hand **450 \| 13px/20px** \| #303030；Committed／Incoming **450 \| 12px/16px** \| #303030** | 格盒 500；數字 450 免疫 | 格盒＝light DOM div.Polaris-Table-TableCell(.__HasDialog)。數字＝shadow d1，[role=cell] > s-internal-text → shadowRoot > span.text.tone-auto（**自宣告，immune**；無 size-small 者 13px/20px、有 size-small 者 12px/16px）。🔴 原記的『12px/500』是格盒字級＋污染字重合成，畫面上不存在這個組合。與 81 §8.6 #25／#26 一致 |
+| 39 | #39 庫存 · 調整浮動列（adjust popover） | ✅ 一致 | 面板 615×58、bg #fff、radius 12px、shadow-popover——本條未記 font-weight（元件字重記在 #40–#44） | **無字重記載可更正；面板實測仍為 615×58（div._PopoverContent_1idl9_1）** | — | light DOM 容器。以真滑鼠點擊第 1 列 Available 格開啟（本輪成功，81 §8.6.3 記為未取得者已解），量畢 Escape 關閉、數量未改 |
+| 40 | #40 庫存 · adjust bar 欄位盒 + input | 🔴 更正 | input 36×32、type=number、inputmode numeric、**字 13px 字重 500** | **input **400 \| 13px/normal** \| #303030（UA 預設字重，設計系統未覆寫）；外層 div._Wrapper_1jv4t_1 **450 \| 13px/20px**** | 400→500 / 450→500 | 皆 light DOM。input._Input_1jv4t_10（type=number）。**不自宣告免疫**（dirty 500）。🔴 污染把 400 也拉成 500，所以原記載看不出這裡漏套 token |
+| 41 | #41 庫存 · Adjust by 模式 chip | 🔴 更正 | 88×24、radius 6px、bg rgb(240,240,240)、色 #616161、**字 12px、字重 500** | ****550** \| 12px/line-height normal \| #616161** | 500 | light DOM。button._SelectButton_1jv4t_28（文字為其直屬 text node，按鈕盒即繪製盒） |
+| 42 | #42 庫存 · Adjust by 選單（ul/li 型） | ✅ 一致 | 列 button 74×28、**字級 13.3333px、字重 400、line-height 20px**（未套設計系統的瀏覽器預設） | ****400 \| 13.3333px/20px** \| #303030（Set to 與 Adjust by 兩列同值）；容器 ul.menu 為 450 \| 13px/20px** | 400（免疫） | shadow DOM d1。shadowRoot > button.menu-item。**自宣告（UA button 預設）＋shadow 邊界 ⇒ immune**（clean=dirty=400）。原記載完全成立 |
+| 43 | #43 庫存 · 調整原因選擇器 | ✅ 一致 | 選項列字 13px/20px；**selected：bg #f1f1f1 + font-weight 600 + 勾記；rest 透明、字重 450** | **selected **600 \| 13px/20px** \| #303030；rest **450 \| 13px/20px** \| #303030** | 600 / 450（皆免疫） | shadow DOM d1。s-internal-picker-option → shadowRoot > div.option(.selected) 與 span.label。**自宣告**（immune）。6 個選項，selected＝Inventory addition |
+| 44 | #44 庫存 · adjust bar 右側兩鈕 | 🔴 更正 | 「Add adjustment reason」34×34、bg rgba(0,0,0,.06)、**字 13.3333px（預設字級）**（未記字重）；「Done」32×32、**字 13px/20px 字重 500** | **Add adjustment reason **400 \| 13.3333px/normal**（UA 預設）；Done **450 \| 13px/20px** \| #303030** | 400→500 / 450→500 | 皆 light DOM。button._Activator_1s86q_1（aria-label 'Add adjustment reason'）與 button.Polaris-Button（aria-label 'Done'，icon 鈕）。兩者皆不免疫 |
+| 45 | #45 庫存 · 欄位顯示選單（Display options）值域 | ✅ 一致 | 值域列舉（Hide SKU…Reset view、排序項、Export/Import）；明記「選單面板本身的尺寸樣式未量」——未記 font-weight | **無字重記載可更正；本輪亦未開啟該選單 ⇒ 其面板與選項字重仍為未取得** | — | — |
+| 46 | #46 庫存歷程頁（Adjustment history）· 表格（已有乾淨值，複驗） | 🔴 更正 | 標頭 **12px/16px/500**、色 #616161；資料格 **12px/16px/500**、色 #303030；**卡片標頭（商品名）13px/20px、字重 450**；頁尾「Learn more about adjustment history」段落 12px/16px、色 #303030、無底線 | **標頭 **550 \| 12px/16px** \| #616161（Date、On hand 兩欄同值）；資料格文字（Date／Activity／Created by）**450 \| 12px/16px** \| #303030；🔴 **卡片標頭（商品名）600 \| 13px/20px** \| #303030；頁尾 **550 \| 12px/16px** \| #303030、text-decoration none** | 標頭 500；資料格 500；卡片標頭 600 免疫；頁尾 550 免疫 | 標頭與資料格＝light DOM（div.Polaris-Table-TableHeadingCell／div.Polaris-Table-TableCell__TableCellContent／div.Polaris-Table-TableCell__DialogWrapper），皆不免疫。🔴 卡片標頭＝商品名文字 slot 進 s-heading 的 shadowRoot > **h2.heading（600@13px，immune）**——`s-heading` 宿主本身才是 450，量宿主會得到 450。**這與原記載的 450 不符，也與 `docs/research/81` §8.6.1「歷程頁卡片標頭（商品名）＝450」不符**，兩處都需更正。頁尾＝shadow d1，s-internal-button → shadowRoot > button.button（immune，550），與 81 §8.6 #29 一致 |
+| 47 | #47 庫存歷程 · 增減量（delta）字樣 | 🔴 更正 | delta 用 s-internal-text[color=subdued]，shadow span 色 #616161；結果值色 #303030；**兩者渲染字級皆繼承格子的 12px（host 為 display:contents）**（未記字重） | **delta『(+1)』**450 \| 13px/20px** \| #616161；結果值『10』**450 \| 13px/20px** \| #303030** | 450 / 450（皆免疫） | shadow DOM d1。s-internal-text → shadowRoot > span.text.tone-auto，**自宣告，immune**。🔴 字級不是「繼承格子的 12px」——shadow 內 span.text 自宣告 13px/20px（格盒才是 12px/16px）。色值兩項與原記載一致 |
+| 48 | §4.1 字重階列的 2026-08-28 撤回註（`body` 乾淨值＝450） | ✅ 一致 | 撤回註主張：原文『body computed font-weight 是 500，不在四階之內』是污染；乾淨 body ＝ 450 | ****成立**：body clean **450**（dirty 500）；對照組 html **450**（clean=dirty，免疫）。四階 token 值 --p-font-weight-regular/-medium/-semibold/-bold ＝ 450/550/600/650 亦複驗無誤（自訂屬性不受污染規則影響）** | body 500 / html 450 | light DOM body 與 html 根元素；三個頁面（collections、inventory、inventory_history）各量一次同值 |
+| 49 | §4.3 第 13 條「表格字級與 UI 字級是兩套」 | 🔴 更正 | 「表格內容一律 12px/16px、**字重 500**；一般 UI（按鈕、chip、popover 選項、輸入框）13px/20px、**字重 450–500**；清單型商品列標題升到 14px/20px；頁標題 18px/24px/600。同一頁面內同時存在三個字級層。」 | **🔴 **證實含污染指紋，需整條改寫**。乾淨替代敘述：「**表格字級與 UI 字級是兩套，且各自內部再分字重階**。①表格：欄位標題 12px/16px **550**（#616161）；名稱欄（系列名稱、庫存 Product）12px/16px **550**（#303030）；數值與次要欄（Products 計數、SKU、Committed／Incoming、歷程頁 Date／Activity／Created by）12px/16px **450**。②表格中的例外——庫存 Unavailable／Available／On hand 與歷程頁的 delta／結果值不繼承格盒字級，其 shadow 內 span.text 自宣告 **13px/20px 450**。③一般 UI：popover 選項 13px/20px **450**（selected **600**）；條件屬性／運算子 chip 13px/20px **450**；資源類型 chip 13px/20px **550**；文字輸入 13px/20px **450**；s-internal-button 標籤 12px/16px **550**；Polaris modal 次要鈕標籤 12px/16px **550**、主要鈕 12px/16px **600**。④清單型商品列標題 14px/20px **450**；卡片區段標題 13–14px/20px **600**；頁標題 h1 18px/24px **600**。⑤未被設計系統覆寫的原生控件保留 UA 預設 **400**：adjust bar 的 number input（13px）、ul/li 型選單項與 Add filter／Add adjustment reason 的按鈕盒（13.3333px）。⇒ 乾淨字重值域＝400／450／550／600，**沒有 500**。」** | 污染下上述 400/450/550 全部塌成 500，只有 shadow 內自宣告者（600 標題、550 s-internal-button、450 span.text、400 menu-item）維持原值 | 綜合本節 47 項的乾淨量測；三張表（系列列表、庫存列表、歷程頁）逐欄複驗 |
+
+### §4.6.a 本次重量帶出的規律
+
+1. 污染值域是單一 500；本輪乾淨值域＝**400 / 450 / 550 / 600**，三個頁面、47 個條目**沒有出現任何 500**。⇒ 文件裡出現「字重 500」就是污染指紋（與 81 §8.6.2-1 同結論，本輪在系列／庫存／歷程三頁獨立複驗成立）。
+2. shadow DOM 免疫的**判準是「該元素自己有沒有宣告 font-weight」**，不是「在不在 shadow 裡」——本輪 immune 的節點全部是 shadow 內自宣告者（h1.heading／h2.heading／a.button／button.button／div.option／span.label／span.text／button.menu-item）；而所有 `s-*` 宿主（display:contents）一律被改寫成 500。⇒ 量 s-* 元件必須穿透到 shadow，量宿主拿到的是污染值。
+3. 🔴 **「污染」與「量錯層」高度共伴，且量錯層會連字級一起錯**。本節多筆原記載寫成「13px/20px 字重 500」，實際是量在**按鈕盒**上（盒的字級 13px 由繼承而來、字重 500 由污染而來），而畫面上的文字葉是 **12px/16px 的 550 或 450**。命中者：#22 Default sort 鈕、#24 modal Cancel、#25 篩選 chip、#31 Add filter。⇒ 更正這些條目時**不能只改字重**。
+4. 反向的同一個坑：**shadow 內的文字葉會自宣告比格盒更大的字級**。#38 庫存數值（13px/20px vs 格盒 12px/16px）與 #47 歷程 delta／結果值（13px/20px，原記載寫成「繼承格子的 12px」）都是這一型。⇒「host 是 display:contents 所以繼承」這個推論在 s-internal-text 上不成立。
+5. 表格乾淨字重是**三階**：欄位標題 550 ／ 名稱欄 550 ／ 數值與次要欄 450，系列列表、庫存列表、歷程頁三張表一致；污染把三階壓成一階。（與 81 §8.6.2-4 同結論。）
+6. **選中態一律 600**：popover 選項 selected、調整原因 selected、Default sort 的目前值三處都是 600，rest 一律 450。這是設計系統刻意的階梯，污染下完全不可見。
+7. **兩套按鈕系統的字重差在主要鈕**：s-internal-button 一律 550@12px（含 primary 的 Add collection、tertiary 的 Learn more、icon 鈕 Remove condition）；Polaris button 的標籤則 **次要 550@12px（--medium）／主要 600@12px（--semibold）**。⇒ 「Polaris 與 s-internal 是兩套」的既有結論成立，但差距不是 13px/500 vs 12px/550，而是字級同為 12px、字重分 550/600 兩階。
+8. **未被設計系統覆寫的原生控件在乾淨環境下露出 UA 預設 400**：adjust bar 的 `input[type=number]`（13px）、ul/li 型選單項（13.3333px/20px，且因在 shadow 內而免疫）、Add filter 與 Add adjustment reason 的按鈕盒（13.3333px/normal）。污染把 400 也拉成 500 ⇒ 舊記載完全看不出「這幾處漏套 token」。
+9. 🔴 **跨文件衝突（需一併更正）**：`docs/research/81` §8.6.1 記「庫存歷程頁卡片標頭（商品名）＝450 | 13px/20px（s-heading shadow d1，免疫）」，本輪實測畫面上的商品名**繼承自 s-heading shadowRoot 內的 h2.heading ＝ 600 | 13px/20px（immune）**，450 是 `s-heading` 宿主（display:contents，不繪製）的值。同一個坑：81 那一列量的是宿主。
+   > 🔴 **2026-08-28 G13 定案補記**：本結論（**600**）已由獨立佐證確認——對商品名 text node 建 `Range` 量繪製寬度、與同字體 13px 的 `canvas measureText` 對比，兩個樣本都在 **600** 上吻合到 **Δ0.01px**（450／500 差 2–4px）。
+   > 🔴 **但 450 有「兩個」來源，本條只寫了一個**：除 `s-heading` 宿主外，還有 `div.section-heading-text`（在 `s-internal-section` 的 shadowRoot 內，**rect 與 `h2.heading` 逐像素重合**、`textContent` 也是商品名）——**它才是更陰險的誤量源**，rect 與文字都完全正確、值卻是 450。
+   > `docs/research/81` §8.6.1 已同批更正為 600。
+10. 方法學：**clean === dirty 可以直接當「該節點自宣告 font-weight（或在 shadow 內且自宣告）」的判定式**——因為污染規則帶 !important 且射程涵蓋 body 下全部 light DOM，light DOM 節點不可能 clean===dirty。本輪全部 immune 節點都可從 DOM 上找到對應的自宣告類（.button／.option／.heading／.text／.menu-item），互相印證。
+
+### §4.6.b 仍未取得
+
+- **鐵律 13.1 的三寬度（1280／768／390）字重複驗**：本輪固定 `innerWidth=787`（比 §4.0 原輪的 1024 更窄），`resize_window` 在此環境無效（視窗離屏、渲染面凍結），且多代理共用同一 Chrome 視窗不得調整。⇒ 「字重不隨寬度變化」**未取證**，下表所有值只對 787px 成立；同理一切幾何值本輪不作斷言。取得方式＝獨占視窗後逐寬重跑同一組腳本。
+- **hover／focus／active／disabled 態的字重**：全部未取得。唯讀約束下未觸發 hover 樣式取值；`active` 態受工具限制（click 是按下即放開，無法在按住時執行 getComputedStyle）。
+- **#45 Display options 選單面板與其選項的字重**：本輪未開啟該選單（原條目本來就沒有字重記載，非本次更正射程）。
+- **#14 後半的 `s-internal-badge` → shadowRoot > div（原記 550）本輪未在系列詳情頁重量**：該頁的計數 badge 實作為 light DOM 的 `span._CountIndicator_`（本輪已量＝550）。旁證＝`docs/research/81` §8.6.1 已複驗 s-internal-badge shadow div ＝ 550 且免疫，故該半句仍成立，但**本輪未獨立複驗**。
+- **系列列表 Conditions／Sales channels 兩欄有內容時的字重**：本店唯一系列「Home page」是手動系列，Conditions 欄為空；787px 下 Sales channels 欄需水平捲動。未取得。
+- **已勾選／indeterminate 態 checkbox、排序 active 態欄位標題的字重**：為維持唯讀全程未勾選、未點擊排序。
+- **Exclude 群組展開後的內容字重**、**Title 以外 10 個條件屬性各自的運算子清單與值控件字重**：只展開了 Title（6 個運算子、值控件為無框文字 input）。
+- **負向 delta（-N）的字重與顏色**：本店歷程頁只有 (+1)／(+9) 兩筆正向調整。
+- **Export／Import modal**：未開啟（避免產生匯出檔案／費用）。
+- **s-internal-picker-option 在 popover 關閉狀態下的字重是否與開啟時相同**：本輪三個 popover 皆在**開啟後**取值，未做關閉態對照（關閉時該元素 rect 為 0×0，getComputedStyle 仍有值，但未登記為證據）。
+
+> 量測環境：【停用污染源後量測的聲明】測試店 chill-love-u5q5mnzq（Shopify Plus），Chrome（Claude in Chrome），取證日 2026-08-28。污染源 `<style id="font-bolder-style">` 實測存在、`parentNode` 為 `HTML`；每次導航後重新以 `ext.sheet.disabled = true` 取 clean、`= false` 取 dirty，**同一組節點在同一次呼叫內先後各量一次**（`__M2`），所有下表的「乾淨值」皆為停用污染源後的實測值。反向對照組 `html` 根元素兩態皆 450（不在選擇器射程內）；`body` clean 450 / dirty 500，與已定讞事實一致。乾淨/污染直方圖（歷程頁 main 內 13 個 light-DOM 文字葉）：CLEAN 450@12×5 / 550@12×7 / 600@18×1，DIRTY 500@12×12 / 600@18×1（600 那個是 shadow 內免疫的 h1）——乾淨值域無任何 500。  【視窗差異，照登記不外推】本輪 `innerWidth=787`、`innerHeight=372`、`devicePixelRatio=1.25`、`getComputedStyle(document.documentElement).fontSize=16px`；§4.0 原輪是 1024×607、dpr 1。`resize_window` 在此環境無效（已知），且多代理共用同一 Chrome 視窗，未調整。⇒ 下表只採 font-weight / font-size / line-height / color 這四項（本輪未觀察到它們隨寬度變化，但**「字重不隨寬度變化」本身未取證**）；一切欄寬／容器寬／格線欄數／面板幾何**不作任何斷言**，原文的幾何值本輪不複驗也不推翻。  【收工還原複驗】最後一次呼叫顯式設 `ext.sheet.disabled = false`，複驗 `ge

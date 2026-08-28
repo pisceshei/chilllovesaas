@@ -546,7 +546,31 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 | `s-button` shadow `SPAN.text-wrapper`（Cancel／Done） | shadow | ✅ `.button` 類宣告 550 | 550 | 550（免疫） |
 
 ⇒ 🔴 **任何「在 shadow 內所以不用重量」的判斷都不成立**，必須**逐項做 clean/dirty 配對**。
-全文＝`docs/design/113` §1.6.2-1 與 `docs/research/82` §16.6.2-1。
+
+### 🔴 三次更正後的完整判準（2026-08-28，G12 補完時再細化）
+
+🔴 **有兩道防線，先前只寫了第二道。**
+
+**第一道＝樹範圍**：擴充的 `<style>` 掛在 **document tree**，
+而 **document 的樣式表根本不匹配 shadow tree 內的任何元素**——選擇器命中只發生在 document tree。
+⇒ shadow 內的元素**從來不會被 `body :not(svg)…` 直接命中**，被命中的只有 **host**。
+（先前的寫法「繼承鏈上有沒有宣告」會讓人誤以為 shadow 內元素也會被直接選中。）
+
+**第二道＝繼承**：`font-weight` 可繼承，會沿 flattened tree 從被污染的 host traverse 進 shadow。
+免疫與否取決於**「從被污染的 host 到該繪製盒的繼承鏈上，有沒有任何一環宣告了 `font-weight`」**：
+
+| 情形 | 免疫？ | 例 |
+|---|:--:|---|
+| 該元素**自己宣告** | ✅ | `s-internal-button` 的 `.button`（primary/secondary/tertiary，自宣告 550） |
+| 自己不宣告，但**shadow 內的祖先宣告了** | ✅ | `s-internal-text-field` 的 `input`／`label`——shadow 根 `div.internal-text-field` 宣告 450，**阻斷了對被污染 host 的繼承** |
+| 自己與 shadow 內祖先**都不宣告** | ❌ | `s-internal-button` 的 `.button.variant-plain`（450→500）、`s-button` 的 `SPAN.text-wrapper`（Remove schedule，450→500） |
+| 🔴 **light DOM 的元素被 `slot` 投射進 shadow** | ❌ | `s-internal-single-picker-field-value`——視覺上在 shadow 裡，但它**在 light DOM**，而 **CSS 選擇器照 DOM 樹匹配** ⇒ 照樣被打中（且它是 `display: contents`） |
+| **同源 iframe** 內的文件 | ✅ | 富文本編輯器 `product-description-rie_ifr`——擴充功能的 style **沒有注入該 document** |
+
+⇒ **「在 shadow 裡」既不充分也不必要**。唯一可靠的做法是**逐項 clean/dirty 配對**。
+
+全文＝`docs/design/113` §1.6.2-1、`docs/research/82` §16.6.2-1、
+`docs/research/91` §19.6 與 `docs/research/94` §4.6（後兩者是 G12 補完時取得的新機制）。
 
 這正好解釋了污染環境下的直方圖「450×1359 / 500×483」——450 那批是 shadow 內、500 那批是 light DOM。
 
@@ -582,16 +606,38 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 
 ### 20.7 逐項更正落在哪
 
+**第一批（2026-08-28，PR #165）**——污染發現當下的重量：
+
 | 文件 | 更正節 | 條數 |
 |---|---|---|
 | `docs/research/21` | §5.6 | 22 |
 | `docs/research/77` | §7.6 | 31 |
 | `docs/research/81` | §8.6 | 29 |
 | `docs/research/82` | §16.6 | 7 |
-| `docs/research/94` | 🔴 **無專屬更正節**——它的 12 條登記在 `docs/research/81` §8.6 #18–#29；其餘 47 項中未涵蓋者已加守衛 | （12，寄存於 81） |
 | `docs/design/113` | §1.6 | 29 |
 
 合計 **118 條**。
+（另有 12 條更早的乾淨值寄存在 `docs/research/81` §8.6 #18–#29，
+它們更正的是 `docs/research/94` §4.2 的記載，已計入上表 81 的 29 條內。）
+
+**第二批（2026-08-28，G12 補完）**——四處先前只加守衛、未重量者：
+
+| 文件 | 乾淨重量節 | 列數（更正／一致／未取得） |
+|---|---|---|
+| `docs/design/47` | §D.1 | 17（9／8／0） |
+| `docs/design/64` | §3.1 | 5（1／4／0） |
+| `docs/research/91` | §19.6 | 24（9／14／1） |
+| `docs/research/94` | §4.6 | 49（27／22／0） |
+
+合計 **95 列：更正 46／一致 48／未取得 1**。
+
+🔴 **`47` §D 的更正不只字重**——變體名（tertiary→**secondary**、split→**secondary**）
+與標籤圓角（全圓藥丸→**8px**）都記錯了。
+
+🔴 **兩批合計仍未涵蓋的（G12b，見 `docs/design/110`）**：
+`47` §3／§4／§B／§E 的 **10 個 500**（G12 只點名 §D，而 §D 實際上**一個字重值都沒有**）、
+`91` **§15** 的 **4 個 500**（獨立頂層節，不在「第 19 節」射程內）。
+
 
 ### 20.8 🔴 對後續量測的紅線
 
@@ -599,9 +645,22 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
    `[...document.querySelectorAll('style')].find(s => s.id === 'font-bolder-style').sheet.disabled = true`
    量完還原成 `false`。這只切換 CSSOM 旗標，不動使用者的擴充功能設定。
 2. **量文字樣式一律量「實際繪製文字的元素」**，不是它的包裹層。
-   判準：`childElementCount === 0` 且有非空 `textContent`。
+   ~~判準：`childElementCount === 0` 且有非空 `textContent`。~~
+   🔴🔴 **2026-08-28 更正：這個判準在 `slot` 投射結構下會選錯節點。**
+   實例（庫存歷程頁卡片標頭）：它唯一命中的是 `display: contents`、rect 0×0 的 `s-heading` **宿主**；
+   而真正繪製的 `h2.heading` 反而 **`textContent === ''`、`childElementCount === 1`**（唯一子元素是 `<slot>`）。
+   成因＝**文字是宿主的 light-DOM text node，被投射進 shadow 內的 slot；`textContent` 只走 DOM 樹、不走 flat tree**。
+   ✅ **改用**：以 `getBoundingClientRect()` **非 0** 為必要條件，
+   再沿 **flat tree**（`slot.assignedNodes()` / `Element.assignedSlot`）找 text node 的實際 flat-tree 父。
+   🔴 **rect 相同也不代表是同一個節點**：同例中 `div.section-heading-text` 的 rect 與 `h2.heading`
+   **逐像素重合**、`textContent` 也一樣，值卻是 450（block 包裝盒，文字不在它的 inline box 裡）。
+   ✅ **最可靠的獨立佐證**：對 text node 建 `Range` 量 `getClientRects()` 的實際繪製寬度，
+   與同字體同字級的 `canvas measureText` 在各候選字重下對比——實測可分辨到 **0.01px**。
 3. 🔴 **不得因為某元素在 shadow DOM 內就跳過重量**——見 §20.3 的二次更正。
    `font-weight` 會沿 flattened tree 繼承進 shadow，**必須逐項做 clean/dirty 配對**。
-3. 🔴 **`docs/design/47` 與 `docs/design/64` 尚未複驗**——它們是更早的 session 在**同一台機器**量的，
+3. ~~🔴 **`docs/design/47` 與 `docs/design/64` 尚未複驗**~~ **（2026-08-28 已補完，見 §20.7 第二批）**
+   ⚠️ **但射程不完整**：G12 只點名 `47` **§D**，而 §D 實際上**一個字重值都沒有**；
+   `47` 的 **§3／§4／§B／§E 共 10 個 500** 與 `91` **§15 的 4 個 500** 仍未複驗（G12b）。
+   以下原文保留備查——它們是更早的 session 在**同一台機器**量的，
    `64` §3 記的「Pill、主要按鈕 13 / 20 / **500**」正是污染值的特徵。
    **未複驗前不得引用那兩份的任何 font-weight 值。**

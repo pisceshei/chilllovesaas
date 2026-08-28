@@ -290,7 +290,17 @@ letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
 - 詳情頁 web-component 表單 label：span.label-content（Title）、span.label（Type / Vendor）、span.small-text（Collections / Tags）= 13px / 450 / lh 20px（**shadow**）
 - 詳情頁 標題 input（web component）= 13px / 450 / lh 20px（**shadow** input）
 - 詳情頁 Status 下拉選項 Active / Draft / Unlisted = 13px / 450 / lh 20px；選中值 = 13px / 600 / lh 20px（**shadow slot**）
-- 詳情頁 庫存表頭詞 unavailable / committed / available / on hand = 13px / **650** / lh 20px（**shadow slot**，6 個節點；650 是本輪新見字重）
+- ~~詳情頁 庫存表頭詞 unavailable / committed / available / on hand = 13px / **650** / lh 20px（**shadow slot**，6 個節點；650 是本輪新見字重）~~
+  > 🔴🔴 **2026-08-28 撤回整條（G13 定案）**：量錯節點。
+  > **表頭詞的乾淨值是 `12px / 550 / lh 16px`**，繪製盒＝`s-internal-text` → shadowRoot →
+  > `span.text.interest.interest-text-underline…weight-medium size-small`（clean 與 dirty 皆 550 ⇒ 免疫）。
+  > 🔴 **那 650 的真實出處是「On hand」表頭格 `s-internal-tooltip` 內文的粗體強調**
+  > （`strong…weight-bold`，13px/20px），而該 popover 預設 `display: none`、rect 0×0，**只有 hover／focus 才繪製**。
+  > 🔴 **「6 個節點」這個數字本身就是指紋**：表頭詞是 **4 個詞 × 2 份 DOM 副本 ＝ 8**；
+  > **3 個 tooltip 粗體字 × 2 份副本 ＝ 6**。per-location 表頭在 DOM 裡有兩份
+  > （sticky 可見副本 ＋ `Polaris-Table-TableHeadingCell__Hidden` 版面量測副本，後者 `visibility: hidden`）
+  > ⇒ **任何節點計數宣稱都要先除以 2**。
+  > ⇒ **「另立 650 token 條目」的建議一併撤回**（就本元件而言）。定案量測＝`docs/research/91` §19.6 #15。
 - 詳情頁「Add options like size or color」按鈕 = 12px / 550 / lh 16px（**shadow slot**）
 - 詳情頁 Manage publishing / View all / Add definition = 13px/450 與 12px/550（**shadow slot**）
 - 詳情頁「Rich text editor」提示 = 12px / 450 / lh 16px；富文字工具列 tooltip（Formatting / Bold / Italic…）= 13px / 450 / lh 20px（**shadow slot**，331 個節點）
