@@ -94,8 +94,12 @@
 > 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
 > （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
 > 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
-> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
-> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ 本節曾被漏掉。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §3b**（10 列：更正 9／未取得 1）。
+> 🔴 **更正不只字重**：`--t-xs` **一格塞了兩個字重**（表格內容 450／欄位標題鈕 550）；
+> `--t-sm` 的右欄用途「按鈕、tab」**根本不在這一階**（實測 12/16/550）；
+> `--t-xl`（18/24）**找不到對應元件、未取得**。**引用本節任何字重值前先對照 §3b。**
+> font-size／line-height／色／間距／圓角／陰影不受污染影響。
 
 
 | token | size/line-height/weight | 實測用途 |
@@ -119,8 +123,12 @@
 > 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
 > （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
 > 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
-> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
-> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ 本節曾被漏掉。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §3b**（10 列：更正 9／未取得 1）。
+> 🔴 **更正不只字重**：`--t-xs` **一格塞了兩個字重**（表格內容 450／欄位標題鈕 550）；
+> `--t-sm` 的右欄用途「按鈕、tab」**根本不在這一階**（實測 12/16/550）；
+> `--t-xl`（18/24）**找不到對應元件、未取得**。**引用本節任何字重值前先對照 §3b。**
+> font-size／line-height／色／間距／圓角／陰影不受污染影響。
 
 
 | 控件 | 高度 | 內距 | 圓角 | 備註 |
@@ -280,8 +288,12 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 > 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
 > （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
 > 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
-> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
-> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ 本節曾被漏掉。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §3b**（10 列：更正 9／未取得 1）。
+> 🔴 **更正不只字重**：`--t-xs` **一格塞了兩個字重**（表格內容 450／欄位標題鈕 550）；
+> `--t-sm` 的右欄用途「按鈕、tab」**根本不在這一階**（實測 12/16/550）；
+> `--t-xl`（18/24）**找不到對應元件、未取得**。**引用本節任何字重值前先對照 §3b。**
+> font-size／line-height／色／間距／圓角／陰影不受污染影響。
 
 
 | 項目 | 真值 |
@@ -381,8 +393,12 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 > 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
 > （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
 > 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
-> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
-> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ 本節曾被漏掉。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §3b**（10 列：更正 9／未取得 1）。
+> 🔴 **更正不只字重**：`--t-xs` **一格塞了兩個字重**（表格內容 450／欄位標題鈕 550）；
+> `--t-sm` 的右欄用途「按鈕、tab」**根本不在這一階**（實測 12/16/550）；
+> `--t-xl`（18/24）**找不到對應元件、未取得**。**引用本節任何字重值前先對照 §3b。**
+> font-size／line-height／色／間距／圓角／陰影不受污染影響。
 
 
 | 狀態 | 實測值 | 出處 |
@@ -670,3 +686,52 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 - **`+ 1` 展開後的完整標籤清單** —— 未取得（需點擊展開，屬狀態改變，本輪唯讀約束下未點）。
 
 > 量測環境：🔴【已停用污染源後量測】Claude in Chrome，自建分頁 tabId 1174402754（量畢時該 session 的 tab group 已不存在，分頁已不在；期間未動使用者原有分頁）。頁面＝https://admin.shopify.com/store/chill-love-u5q5mnzq/orders ，由首頁側欄真實 href「/store/chill-love-u5q5mnzq/orders」導航，未猜路徑。量測日期 2026-08-28。innerWidth=787、innerHeight=372、devicePixelRatio=1.25、getComputedStyle(document.documentElement).fontSize=16px（根字級預設，無 47 §F 記過的 root 24px 污染）。🔴 寬度 787 不是鐵律 13.1 的 1280：`resize_window` 依指派說明不可用，且該實體視窗與其他並行代理共用，未改動 ⇒ 本檔任何「桌機 1280 形態」宣稱不得引用本輪數值。  污染源：`<style id="font-bolder-style">`，`parentNode.nodeName === "HTML"`，初始 `sheet.disabled === false`。停用法＝該 sheet 的 `disabled` 旗標切換（只切 CSSOM 旗標，未動擴充功能設定）。每一列都做 clean（disabled=true）／dirty（disabled=false）配對量測，同一次 JS 呼叫內連續取值。 反向對照組（證明切換確實生效，每一輪都重取）：①`html` 根元素 clean/dirty 皆 450（不在選擇器射程）②light DOM 的 `s-internal-button` 宿主（Create order）clean 450 → dirty 500 ③light DOM 的 `s-internal-text` 宿主（`+ 1`）clean 450 → dirty 50
+
+---
+
+## 3b 🔴 G12b 乾淨環境重量（2026-08-28）
+
+> 依**鐵律 19.5**追加，**上方原記載保留原文**。
+> 觸發＝`docs/design/110` 的 **G12b**：G12 的射程只點名`47` **§D**（而 §D 一個字重值都沒有），漏掉了本節。
+> 污染源與機制＝`docs/design/111` §20。
+>
+> 全部數值以「停用污染源 → 讀 clean → 還原 → 讀 dirty」的**同步配對**取得，收工已還原並複驗。
+> 有疑義處另以 **`Range` 實際繪製寬度 vs `canvas measureText`** 做獨立佐證（Δ ≤ 0.009px）。
+
+**本節結果：10 列（更正 9／一致 0／未取得 1）**
+
+| # | 項 | 判定 | 原記載 | 🔴 乾淨值 | 污染值 | 實際量的節點 |
+|---:|---|:--:|---|---|---|---|
+| 1 | §3 字級階 · `--t-xs`（第 103 行），右欄用途＝「表格內容、欄位標題（最高頻的資料字級）」 | 🔴 更正 | 12 / 16 / 500 | **🔴 **一格塞了兩個字重，原記載的單一 500 兩邊都不是**：①表格內容＝12px / 16px / **450**（color rgb(48,48,48)）②欄位標題鈕＝12px / 16px / **550**（color rgb(97,97,97)）。字級 12 與行高 16 兩邊複驗一致。** | ①500（污染）②500（污染） | ①`span.Polaris-Text--root.Polaris-Text--bodySm`（Customer 欄「Darren Darren」）與 `s-internal-text > span._Wrapper_10gjt_1`（Date 欄「Friday at 9:39 pm」)——皆在 **light DOM**、**未自宣告** font-weight ⇒ 被污染。②`button.Polaris-Table-TableHeadingCell__SortableHeadingButton`——沿 flat tree 追 text node 的 `assignedSlot`／parent，paint node ＝ button **自身**（非內層 span），**light DOM**、**未自宣告** ⇒ 被污染。獨立佐證（Range 實繪寬 vs canvas measureText，同 Inter 同 12px）：'Darren Darren' clean 80.7500 對 450 的 80.7412（Δ −0.0088，500 是 81.0919）；'Order' clean 32.9000 對 550 的 32.8998（Δ −0.0002）。token 面佐證：`--p-font-size-body-small`=.75rem/`--p-font-weight-regular`=**450**、`--p-font-size-button-label`=.75rem/`--p-font-weight-button-label`=**550**。 |
+| 2 | §3 字級階 · `--t-sm`（第 104 行），右欄用途＝「UI 預設字級（按鈕、tab、輸入框、選單）」 | 🔴 更正 | 13 / 20 / 500 | **13px / 20px / **450**（該階的 UI 預設值）。同階另有兩個較重的用途值：側欄一級項 **550**、卡片／區段標題 **600**。🔴 右欄列的「按鈕、tab」**根本不在這一階**——頁首動作組按鈕與檢視 tab 的**標籤**實測是 12px/16px/550。** | 輸入框 450（免疫，未變）／檢視 tab 的 activator 盒 500（污染）／側欄二級項 500（污染） | 「輸入框」＝`/settings/general` 的 `input[name=order-id.orderPrefix]`、`input[name=order-id.orderSuffix]`：13px/20px/450，clean＝dirty ⇒ **自宣告、免疫**；token 佐證 `--p-font-size-input-label`=.8125rem(13px)／`--p-font-line-height-input-label`=1.25rem(20px)／`--p-font-weight-input-label`=**450**。「tab」＝`button._Activator_kx3a9_1`（light DOM，50.79×24，font 13px/20px），clean **450** / dirty 500（未自宣告）——但**它不繪製任何文字**，標籤在其後代 `s-internal-text` 的 open shadowRoot 內。側欄一級項 `span.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--medium`（Products）clean 13/20/**550**、dirty 500；二級項 `…Polaris-Text--regular`（Drafts）clean 13/20/**450**、dirty 500；頂欄搜尋啟動器 `span._Label_1fnvt_32` clean 13/20/**400**（UA 預設、未自宣告）、dirty 500。 |
+| 3 | §3 字級階 · `--t-md`（第 105 行），右欄用途＝「次要標題」 | 🔴 更正 | 14 / 20 / 500 | **14px / 20px / **600**（color rgb(48,48,48)、letter-spacing normal、盒 57.96×20）** | 600（免疫，未變） | 訂單詳情頁 `/orders/7116407570667` 的「Timeline」區段標題：host `s-internal-heading`（light DOM）→ **open shadowRoot** 內 `h2.heading.size-large` ＝繪製盒，shadow 內**自宣告** ⇒ clean/dirty 皆 600。token 佐證：`--p-font-size-heading-large`=.875rem(14px)／`--p-font-line-height-heading-large`=1.25rem(20px)／`--p-font-weight-heading-large`=**600**。⚠️ 全站 14/20 另有一個**非標題**元素：`span.Polaris-Text--root`「Skip to content」＝14/20/**550**（無障礙跳過連結，四頁皆出現且皆免疫）——若原記載量的是它，乾淨值是 550。本輪依右欄「次要標題」判給 Timeline，**無法證明**原作者量的就是它（見 not_obtained）。 |
+| 4 | §3 字級階 · `--t-xl`（第 107 行），右欄用途＝「區段標題」 | ⚠ 未取得 | 18 / 24 / 500 | ****未取得**（找不到對應元件，不推測）** | 未取得 | 在四個取樣頁（`/orders` 列表、`/orders/7116407570667` 詳情、後台首頁、`/settings/general`）逐頁掃描**全部**繪製文字的元素（沿 flat tree 取 paint node、排除 rect 0×0），18px/24px 這一階**只有一個渲染者＝頁面標題 `h1.heading`**，也就是下一列 `--t-2xl` 的對象；**不存在**任何 18/24 的「區段標題」。現行 UI 的區段標題實測是 13/20/600（`s-heading` → `h2.heading`／`h3.heading`：Notes／Customer／Contact information／Shipping address／Additional details）與 14/20/600（`s-internal-heading` → `h2.heading.size-large`：Timeline）。可佐證的只有這一階本身：18/24 ＝ `--p-font-size-display-small`=1.125rem／`--p-font-line-height-display-small`=1.5rem／`--p-font-weight-display-small`=**600** ⇒ 若 `--t-xl` 與 `--t-2xl` 其實是同一階，其字重是 600；但「區段標題」這個**用途歸屬本輪未能複現**。未能排除的假設（**未驗證**）：原量測在 683px 窄版取得，桌機 ≥1280 下頁面標題可能升到 display-medium(24/32/650) 而區段標題落到 18/24；本輪 innerWidth 固定 787、`resize_window` 依指派說明不可用。 |
+| 5 | §3 字級階 · `--t-2xl`（第 108 行），右欄用途＝「頁面標題（窄版）」 | 🔴 更正 | 27→18 / 24 / 500 | **18px / 24px / **600**（color rgb(48,48,48)、letter-spacing **-0.14994px**）** | 600（免疫，未變） | `h1.heading`：`/orders` 的「Orders」58.6×24、`/orders/7116407570667` 的「#1006」（`h1.heading.has-breadcrumbs`）53.71×24、`/settings/general` 的「General」。位於 page-header 元件的 **open shadowRoot** 內（host 鏈 `div.heading-wrapper > s-grid > «shadow»`），shadow 內**自宣告** ⇒ clean/dirty 皆 600。token 佐證 `--p-font-weight-display-small`=**600**。本輪 innerWidth 787、`html` 根字級 16px ⇒ computed 即真值，原記載的「27→18」除法在本環境不適用（本輪直接讀到 18）。全站唯一帶負字距的一階。 |
+| 6 | §4 控件高度階 · 「欄位標題按鈕（可排序 th）」列的備註欄「無背景，12/16/500」（第 129 行） | 🔴 更正 | 高 **28**｜內距 6px / 6px｜圓角 0｜無背景，12/16/**500** | **字 12px / 16px / **550**。同列其餘數值**複驗一致**：height 28、padding 6px（四邊）、border-radius 0px、border 0px none、background-color rgba(0,0,0,0)（＝無背景）、color rgb(97,97,97)。** | 500 | `button.Polaris-Table-TableHeadingCell__SortableHeadingButton`（`/orders` 表頭，4 顆逐一量：Order／Date／Customer／Fulfill by，clean 全部 550、dirty 全部 500）。文字**直接繪在 button 上**（flat-tree 追 text node 後 paint node ＝ button 自身，`sameAsButton === true`），**light DOM**、**未自宣告** ⇒ 被污染。獨立佐證（Range 實繪寬 vs canvas 12px Inter）：Order 32.9000→550 預測 32.8998（Δ −0.0002）；Date 26.6375→26.6309（Δ −0.0066）；Customer 56.4625→56.4551（Δ −0.0074）；Fulfill by 48.2625→48.2535（Δ −0.0090）。四筆 Δ 皆 ≤0.009px，而對 500 的預測差 0.15–0.4px ⇒ 550 唯一相符。 |
+| 7 | §B 桌機佈局真值 · 「儲存格字級」列（第 298 行） | 🔴 更正 | **12 / 16 / 500**，色 `#303030` | **12px / 16px / **450**；色 rgb(48,48,48)（＝#303030）**複驗一致**。⚠️ 同一表格內另有一種儲存格文字是 **550 且免疫**：訂單號連結（見 node 欄）——「儲存格字級」單一值無法涵蓋兩者。** | 450 的那批 → 500；550 的那批 → 550（未變） | 450 那批（被污染、light DOM、未自宣告）：`span.Polaris-Text--root.Polaris-Text--bodySm`（Customer「Darren Darren」80.75×16）、`s-internal-text > span._Wrapper_10gjt_1`（Date「Friday at 9:39 pm」99.83×16、Channel「Fecify」）、`a._Link_lixg6_1`（外部訂單號 12/16/450）。550 那批（免疫）：訂單號 `#1006` 的繪製盒＝host `s-internal-text` → **open shadowRoot** 內 `span.text.tone-auto.color-base.font-variant-numeric-auto.weight-medium.size-small`（36×15.2），shadow 內**自宣告**（`.weight-medium`）。獨立佐證：'Darren Darren' clean Range 80.7500 vs canvas 450＝80.7412（Δ −0.0088）；dirty Range 81.1000 vs canvas 500＝81.0919（Δ −0.008）⇒ 反向確認污染值精確等於 500。'#1006' clean/dirty Range 皆 36.0000 vs canvas 550＝35.9941。 |
+| 8 | §B 桌機佈局真值 · 「欄位標題鈕」列（第 299 行） | 🔴 更正 | 高 **28**，內距 **6/6**，圓角 **0**，字 **12/16/500**，色 `#616161` | **字 12px / 16px / **550**；高 28、padding 6px、border-radius 0px、border 0px none、background rgba(0,0,0,0)、色 rgb(97,97,97)（＝#616161）全部**複驗一致**。** | 500 | 與 §4 第 129 行**同一個元件**：`button.Polaris-Table-TableHeadingCell__SortableHeadingButton`（`/orders` 表頭 4 顆逐一量）。light DOM、未自宣告 ⇒ 被污染；文字直接繪在 button 上。佐證數據同 §4 那列（四筆 Range vs canvas Δ ≤0.009px）。🔴 §3 `--t-xs`、§4 第 129 行、§B 第 299 行三處指的是同一顆按鈕，修正必須三處同步，否則同一元件在同一份文件裡會留下兩種字重。 |
+| 9 | §B 桌機佈局真值 · 「檢視 tab（`全部`）」列（第 300 行） | 🔴 更正 | **60 × 24**，圓角 **8**，內距 **0/2**，字 **13/20/500** | **🔴 **量錯層——這一列字級、行高、字重三項全錯**。實際繪製標籤的元素＝**12px / 16px / 550**（免疫，clean＝dirty）。原記載的「13/20」是**外層 activator 按鈕盒**的字，而那個盒**不繪製任何文字**；該盒的乾淨字重是 **450**（dirty 500）。幾何：高 24、border-radius 8px **複驗一致**；padding 實測 `0px 2px 0px 8px`（原記「0/2」對到上下與右，**漏了左 8px**）；寬度不可比（本輪語系英文、標籤 `All` ⇒ 50.79 寬；原記 60 是中文「全部」）。** | 繪製元素 550（未變）／activator 盒 500 | host `s-internal-text`（**light DOM**、`display: contents`、rect **0×0**）→ **open shadowRoot** 內 `span.text.tone-auto.color-base.font-variant-numeric-auto.weight-medium.size-small` ＝繪製盒（14.79×15.2 @ (274,126.4)），shadow 內**自宣告**（`.weight-medium`）⇒ 免疫。外層 `button._Activator_kx3a9_1`（light DOM、50.79×24、font 13px/20px）**未自宣告** ⇒ 被污染。🔴 這正是指派提示的 **slot 投射陷阱**：文字 node 的 DOM 父是 `s-internal-text`（`textContent` 有字、rect 0×0），真正繪製的 span `textContent === ''`；用 `childElementCount===0 && textContent` 一定選錯，必須沿 `assignedSlot` 走 flat tree。獨立佐證：`All` 的 Range 實繪寬 **14.7875px**（clean 與 dirty 相同）；canvas measureText 12px/550＝14.7832（Δ −0.0043）、12px/500＝14.5547、13px/550＝16.0151、13px/450＝15.5137 ⇒ **12px/550 唯一相符**，13px 全數排除。 |
+| 10 | §E 已確認的狀態值 · 「**disabled（文字）**」列的出處欄：「停用的『儲存』鈕：`48×28, pad 4/6, r8, f12/16/500, fg rgb(181,181,181)`」（第 390 行） | 🔴 更正 | f12/16/**500**（該列左欄的色值 `#B5B5B5` 於透明底） | **12px / 16px / **550**；color rgb(181,181,181)（＝#B5B5B5）與 background-color rgba(0,0,0,0) **複驗一致** ⇒ 該節「disabled 只降文字對比、不改底色」的結論成立（opacity 亦為 1，非降透明度）。** | 500 | `/orders` 已儲存檢視列的 Save 鈕：`button._SlimTertiaryButton_j5l2d_29._SlimTertiaryButtonDisclosure_j5l2d_97`，`el.disabled === true`（🔴 只讀屬性，**未點擊**）→ 文字元素 `span._SlimTertiaryButtonText_j5l2d_112`（28.26×16），**light DOM**、**未自宣告** ⇒ 被污染。獨立佐證：`Save` clean Range 28.2625 vs canvas 12px/550＝28.2534（Δ −0.0091，500 是 28.0974）；dirty Range 28.1000 ⇒ 反向確認污染值就是 500。⚠️ 兩點非字重差異照實登記（不作本列更正主體）：實測盒 **52.26×28**（原記 48×28；本輪語系英文「Save」，中文「儲存」寬度不同 ⇒ **不可比**，見 not_obtained）；padding 實測 **`4px 6px 4px 12px`**（原記「4/6」對到上下與右，左 12px 是 disclosure 版型；min-height 28px、border-radius 8px、border 0px none、cursor default 複驗一致）。 |
+
+### 3b.a 本次重量帶出的規律
+
+1. 🔴 **「500」是 100% 的污染指紋，本輪同時拿到渲染面與 token 面兩份正面證據**：三個取樣頁在乾淨環境下逐一掃描**全部**繪製文字元素，(font-size/line-height/font-weight) 分佈中 **500 出現 0 次**；同時 `:root` 的 `--p-font-weight-*` 全套也沒有 500——regular **450**／medium **550**／semibold **600**／bold **650**／button-label 550／details-text 450／input-label 450／input-label-small 450／heading-small·medium·large 600／display-small 600／display-medium·large 650。渲染面與 token 面互相獨立且結論一致。
+2. 🔴 **免疫判準第三度成立，且判準確實是「自宣告」而不是「在 shadow 裡」**：本輪 10 個位置涉及的元素中，免疫的四類（檢視 tab 標籤 `span.text.weight-medium`、訂單號 `#1006`、Timeline `h2.heading.size-large`、頁面標題 `h1.heading`）全部**在 open shadowRoot 內且自宣告**；被污染的六類全部**在 light DOM 且未自宣告**（含表格儲存格、欄位標題鈕、disabled Save 文字、activator 盒、側欄項目、頂欄搜尋標籤）。本頁未出現「slot 投射進 shadow 又無 shadow 祖先阻斷」的反例，故那一格（判準表第 4 列）本輪無新證據。
+3. 🔴 **本輪最大宗的錯誤不是字重，是「量錯層」**：§B 檢視 tab 一列**字級、行高、字重三項全錯**（13→12、20→16、500→550），根因是量了 `display: contents`／rect 0×0 的 activator 盒與其 13/20 繼承字，而不是 shadow 內真正繪製的 span。這條錯誤**不會**被「停用擴充功能重量」單獨抓到——它在 clean 環境下也一樣錯，只有改用 flat-tree 找 paint node 才顯形。
+4. **一格塞兩個字重**：§3 `--t-xs` 右欄同時寫「表格內容、欄位標題」，但兩者乾淨值差一整階（450 vs 550）。12/16 這一階實際有**三個**字重：450（body-small／details-text，表格內容）、550（button-label，按鈕與可排序表頭與 tab 標籤）、600（heading-small 與計數徽章 `span.reel-digit`）。分界在 token 的**語意名**，不在字級——把字級當 key 的字級階表天生塞不下這個維度。
+5. **Range × canvas 能把字重做成客觀量，解析度綽綽有餘**：本輪 8 筆比對（Darren Darren／Friday at 9:39 pm／Order／Date／Customer／Fulfill by／Save／All／#1006）全部 Δ ≤ **0.009px**，而 12px Inter 下相鄰字重階的寬度差是 **0.15–0.35px** ⇒ 訊噪比約 20–40 倍。此法同時可用在 dirty 側**反向確認污染值精確等於 500**（'Darren Darren' dirty 81.1000 vs canvas 500 的 81.0919），比只讀 computed 多一層獨立性。
+6. **18/24 全站只有一個渲染者**：四個取樣頁裡 18px/24px 只出現在 `h1.heading`（display-small／600／letter-spacing **-0.14994px**，全站唯一帶負字距的一階）。§3 的 `--t-xl`（區段標題）與 `--t-2xl`（頁面標題窄版）在現行 UI 指向同一階，前者的用途歸屬無法複現。
+7. **標題階梯全部 600 起跳、沒有 550 的標題**：13/20/600（heading-medium，`s-heading` → h2/h3）→ 14/20/600（heading-large，`s-internal-heading` → `h2.heading.size-large`）→ 18/24/600（display-small，`h1.heading`）；再上去是 24/32/650、30/40/650（本輪四頁未出現）。550 是 **button-label 與側欄一級項**的「強調 body」字重，**不是**標題字重——把 550 讀成「小標題」會在整個標題系統上錯一階。
+8. **非字重值幾乎全部複驗一致**：color（#303030／#616161／#B5B5B5）、font-size、line-height、padding、border-radius、height、background、opacity 在 clean/dirty 兩環境**逐項相同**，也與原記載相符；`html` 根元素 clean/dirty 皆 450／500 之外不受影響。唯二與原記載對不上的非字重項是檢視 tab 與 disabled Save 的 **padding 左值**（原記把不對稱 padding 記成兩值）與**盒寬**（可由後台語系英文 vs 中文解釋，不可比）——與 §D.1 「擴充功能只污染 font-weight 這一點」的結論一致。
+9. **disabled 的做法再次被複驗**：`opacity: 1`、`background-color: rgba(0,0,0,0)`、只把 color 降到 rgb(181,181,181)、`cursor: default`、幾何（min-height 28、radius 8）與 enabled 態不變 ⇒ §E「只降文字對比、不改底色」成立；但**字重也不變**（enabled 的 button-label 與 disabled 同為 550），原記載的 500 純屬污染。
+
+### 3b.b 仍未取得
+
+- §3 `--t-xl`（第 107 行）「區段標題」對應的**實際元件** —— 四個取樣頁（/orders、/orders/7116407570667、後台首頁、/settings/general）掃遍所有繪製文字元素，18px/24px 只有 `h1.heading` 一個渲染者，而那是 `--t-2xl`（頁面標題）的對象。現行區段標題實測是 13/20/600 與 14/20/600。可確定的只有「18/24 這一階的字重是 600」（`--p-font-weight-display-small`=600），用途歸屬不推測。
+- **1280 桌機寬度的形態** —— 本輪 innerWidth 固定 **787**，`resize_window` 依指派說明假成功（視窗離屏、渲染面凍結）不可用，`screenshot` 逾時。因此無法檢驗「桌機 ≥1280 下頁面標題升到 display-medium(24/32/650)、區段標題落到 18/24」這個能同時解釋 `--t-xl`／`--t-2xl` 兩列都寫 18/24 的假設。§B 整節標題是「桌機佈局真值」，本輪只能在 787（已越過本尊主斷點 768）複驗其字重，鐵律 13.1 要求的 1280 形態仍缺。
+- §B 檢視 tab 與 §E disabled Save 的**盒寬**無法與原記載對比 —— 本輪後台語系為**英文**（`All`／`Save`），原記載為中文（`全部`／`儲存`），字串不同 ⇒ 60 vs 50.79、48 vs 52.26 的差異**不可歸因**。未切換後台語系（那會改使用者設定，違反唯讀約束）。字重／字級／行高／色／圓角／高度不受語系影響，仍為有效複驗。
+- §3／§4／§B／§E **原記載當時的量測環境** —— 不可回溯：四節都未載明擴充功能狀態，§3／§4 更是在根字級 24px、視口 683px 的第一輪環境下取得。本輪處置與 §D.1 相同：不去推測原值怎麼來的，直接對每一項重新量測。
+- §3 `--t-md`（第 105 行）的**原始取樣對象** —— 14/20 這一階存在兩個候選：Timeline 區段標題（`h2.heading.size-large`，600）與「Skip to content」跳過連結（`span.Polaris-Text--root`，550），兩者都免疫。本輪依右欄「次要標題」判給 Timeline，但**無法證明**原作者量的就是它；若日後證實是後者，乾淨值應為 550。
+- `+ 1` 標籤展開後的清單、以及三顆頁首按鈕的 `:active`／`:focus-visible` —— 本輪未量（不在 §3／§4／§B／§E 的 10 個 500 射程內，且展開屬狀態改變，唯讀約束下未點）。§D.1.b 已就同類項登記。
+
+> 量測環境：🔴【已停用污染源後量測】Claude in Chrome，自建分頁 tabId 1174402758（量畢已 tabs_close_mcp 關閉，分頁群組自動移除；期間未動使用者其他分頁）。取證日期 2026-08-28（最後一次讀值 UTC 2026-08-28T02:40:43.701Z）。商店＝chill-love-u5q5mnzq，🔴 **後台語系為英文**（原記載為中文，凡涉及文字寬度的比較一律不可比）。  取樣頁全部由**真實 `href`** 導航（先深掃側欄 `a[href]`（含 shadowRoot）取 href 再 navigate，全程未猜路徑）：①`/orders`（§B／§4／§E 主要取樣頁）②`/orders/7116407570667`（§3 `--t-md` 的 Timeline 區段標題；🔴 導航前已將該 id 與禁止清單 9907126370539／9911273160939／9913006162155／9913007767787／9913009438955 逐一比對，不在其中）③後台首頁 ④`/settings`（302 → `/settings/general`，`--t-sm` 的輸入框）。首次載入 `/settings` 時 body 只有 2000 字元、直方圖僅 2 列 ⇒ 依載入紀律續等 10 秒後重讀才拿到內容，**未登記成「該頁空白」**。  量測條件：innerWidth **787** / innerHeight 428 / devicePixelRatio 1.25 / `html` computed font-size **16px**（＝設計真值，無須任何 ÷1.5 換算，與 §0 的第一輪 24px 環境不同）。`resize_window` 依指派說明假成功 ⇒ 未使用，1280 形態未取得。  污染源處置：每次導航後重新確認 `<style id="font-bolder-style">` 存在（parentNode ＝ `HTML`）再操作；只切 CSSOM 的 `sheet.disabled` 旗標（`true` 讀 clean → `false` 讀 dirty，同一批同步配對），🔴 **未動使用者的擴充功能設定**。一段 JS 曾因 `getComputedStyle(null)` 中止在 clean 狀態，已改以 `try/finally` 保證還原，並在下一次呼叫立刻複驗還原成功。  🔴 **收工還原複驗（最後一次讀值，2026-

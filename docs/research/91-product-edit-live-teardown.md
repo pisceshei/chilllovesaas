@@ -148,6 +148,10 @@ select 展開＝3 選項，**每項帶描述副行**（我方現行只有純文�
 > 🔴 **本節的 label 那一列另有一個已被證偽的結論**：「⚠ 字重差 50，我方 `64` §3 定 450 …
 > **不改 token**，登記觀察」——本檔 **§19.6 row 2** 已量到該 label 的乾淨值就是 **450**，
 > **與我方 token 一致、根本沒有差異** ⇒ 該條建議作廢，**不得依它去「登記觀察」或維持任何差異**。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §15.1**（4 列，**全部更正**）。
+> 🔴 **兩項的錯不只字重**：pill 的單一「500」對應**兩個**真值（button 本體 **400**＝原生 UA 預設／
+> 標籤文字 **450**）；狀態 badge **字級也錯**（13px→**12px**，量到不繪製的 host），字重 500→**550**。
+> label 的乾淨值 **450** 已由本節與 §19.6 **兩條獨立路徑**各自量到。
 
 | 元件 | 本尊實測 | 我方 token | 判定 |
 |---|---|---|---|
@@ -388,3 +392,43 @@ P1 驗收單位＝「組織分類＋SEO＋狀態 picker 三合一」，走 D40�
 - **`div._BottomBarBackground_ejstq_30` 為何在停用擴充後仍解析成 500 的瀏覽器端機制**。已用 clone 反證它不是本尊宣告（clone 乾淨解析為 450），但造成原節點值不回退的確切機制未取得證據，僅登記現象與反證，不作推測。
 
 > 量測環境：量測日期 2026-08-28（本地時間），Claude in Chrome，測試店 chill-love-u5q5mnzq，自開分頁（收工時分頁群組已消失＝分頁已關閉）。window.innerWidth=787／innerHeight=372（🔴 與 §19.0 的 1024 不同，本輪視窗無法調整；resize_window 依指派說明不重試），devicePixelRatio=1.25，getComputedStyle(documentElement).fontSize=16px（無根字級污染）。  【污染源與停用聲明】頁面確認存在 <style id="font-bolder-style">，parentNode=HTML，位於 document.styleSheets[0]，唯一規則＝`body, body :not(svg):not(svg *):not(img):not(video):not(canvas)` 設 font-weight 500 並帶 !important。全部數值以 `ext.sheet.disabled = true`（clean）→ 讀值 →`= false`（dirty）→ 讀值的同步配對取得；只切 CSSOM 旗標，未動使用者的擴充功能設定。 【對照組驗證】html 根元素 clean=450／dirty=450（不在選擇器射程）；body clean=450／dirty=500。 【直方圖複驗】1334 個葉節點（childElementCount===0 且有非空文字）：clean 450×975／550×187／600×9／400×13／空字串×150，**500 為 0 個**；同一組 dirty 為 450×535／500×638／600×7／400×4。與指派提供的乾淨直方圖同型。 【全元素複驗】7744 個元素：clean 450×6471／550×485／600×87／650×12／400×212／500×1（該 1 個見 patterns 第 3 條，非文字元素且已證實為樣式快取殘
+
+---
+
+## 15.1 🔴 G12b 乾淨環境重量（2026-08-28）
+
+> 依**鐵律 19.5**追加，**上方原記載保留原文**。
+> 觸發＝`docs/design/110` 的 **G12b**：G12 的射程只點名`91` **第 19 節**，漏掉了本節。
+> 污染源與機制＝`docs/design/111` §20。
+>
+> 全部數值以「停用污染源 → 讀 clean → 還原 → 讀 dirty」的**同步配對**取得，收工已還原並複驗。
+> 有疑義處另以 **`Range` 實際繪製寬度 vs `canvas measureText`** 做獨立佐證（Δ ≤ 0.009px）。
+
+**本節結果：4 列（更正 4／一致 0／未取得 0）**
+
+| # | 項 | 判定 | 原記載 | 🔴 乾淨值 | 污染值 | 實際量的節點 |
+|---:|---|:--:|---|---|---|---|
+| 1 | pill（帶值按鈕）——§15 表格第 154 行 | 🔴 更正 | h 28px、radius 8px、padding 4px 8px、透明底、13px/500 | **🔴 一個「500」對應兩個不同真值，必須分開記：①pill **button 本體** = 400 / 13px / lh 20px / rgb(48,48,48)（＝原生 <button> 的 UA 預設，從未被重設）；②畫面上看得到的 **pill 標籤文字** = 450 / 13px / lh 20px / rgb(97,97,97)。附帶：pill 內的值徽章 <span> = 550 / 12px / lh 16px / rgb(97,97,97)。原記載的幾何（h 28px／radius 8px／padding 4px 8px／背景 rgba(0,0,0,0) 透明）逐格複驗吻合，未變。** | button 400→500；標籤 <p> 450→500；值徽章 550→500（壓低方向）。三者在污染下全部塌成同一個 500 | ①button._UnstyledButton_1ey1r_88._BasePillButton_1ey1r_43（**light DOM，sh=0**，rect 176.79×28）——自宣告解析為 `unset`，等於不宣告，**不免疫**。②標籤實際繪製盒＝p.Polaris-Text--root.Polaris-Text--block.Polaris-Text--start（**light DOM，sh=0**，葉，rect 74.29×20）——它**有**自宣告（解析為 450），但擴充規則帶 !important，light DOM 的自宣告擋不住，**不免疫**。③值徽章＝light DOM 的裸 <span>（sh=0，rect 66.5×15.2），經 s-internal-badge 的 slot 投射，同樣**不免疫**。三者皆無 shadow 祖先。【獨立佐證】對標籤文字節點建 Range：clean 實測 74.288px、dirty 74.712px；同字體同 13px 的 canvas measureText＝450→74.276／500→74.709／400→73.855 ⇒ clean 命中 450（Δ0.012px）、dirty 命中 500（Δ0.003px），可排除 400。 |
+| 2 | text input——§15 表格第 155 行 | 🔴 更正 | h 32px、13px/500、ink `#303030` | ****450** / 13px / lh 20px / rgb(48,48,48)（＝#303030，ink 部分原記載正確、未變；h 32px 亦複驗吻合）** | 500 | input.Polaris-TextField__Input[name="price"]（**light DOM，sh=0**，葉，rect 100.31×32 clean／100.16×32 dirty）。以 input[name="weight"]（100.68×32）複驗同結果（clean 450／dirty 500）。該 input **有**自宣告（解析為 450），但被擴充的 !important 蓋掉 ⇒ **不免疫**；無 shadow 祖先。🔴 **節點身分的排除法**：本頁另一個輸入框家族是 s-internal-text-field 的 shadow 內 input（sh=1，rect 443.2×20），實測 clean 450／**dirty 也是 450**（免疫）——既然 §15 記到 500，它**不可能**量的是那一個；且 §15 明記「h 32px」，只有 Polaris 這一族的控件盒是 32px（s-internal 那族 32px 的是 div.input-wrapper，不是繪製文字的 input）。兩族的乾淨值**同為 450**，故本項結論不受節點歧義影響。【獨立佐證】clean→dirty 寬度由 100.31→100.16 位移，證明 CSSOM 旗標確實觸發重繪，非讀到快取。 |
+| 3 | label（🔴 原記載附帶結論「⚠ 字重差 50，我方 64 §3 定 450 …不改 token，登記觀察」）——§15 表格第 156 行 | 🔴 更正 | 13px / **500** / lh 20px | ****450** / 13px / lh 20px / rgb(48,48,48)。🔴 **與我方 token `--fw-body 450` 完全一致，根本不存在「字重差 50」** ⇒ 該列的「登記觀察／不改 token」結論**作廢**，不得再依它維持或登記任何差異。** | 450（**不變**——本項免疫，dirty 環境下讀到的也是 450） | span.label-content（**shadow 內，sh=1**，host＝s-internal-text-field[name="title"]，葉，rect 26.81×16，實際繪製「Title」）；其父 label.label.outside（sh=1，rect 467.2×20）亦為 450。🔴 **免疫，且是雙重免疫**：①label.label.outside **自宣告** font-weight（token 解析 450）；②shadow 根元素 div.internal-text-field **自宣告**（token 解析 450），阻斷來自被污染 host 的繼承。span.label-content 自身宣告 `unset`（回落繼承）。對照：host s-internal-text-field 本身＝light DOM、display:contents、rect 0×0、dirty 500、fs 13px，**不繪製任何文字**。🔴 **關鍵推論**：本節點 clean 與 dirty 皆為 450，因此 §15 記到的 500 **不可能出自這個繪製節點**——只可能來自量到了那個 0×0 的 host。【獨立佐證】Range 實測「Title」寬度 clean 26.813／dirty 26.813（逐位元組相同）；canvas measureText 13px＝450→26.812（Δ0.001px）／500→27.110／550→27.401 ⇒ 排他性命中 450。【與 §19.6 row 2 的關係】本輪在**不同商品**（9907158778091 vs 9907123716331）上獨立取得同一結論、同一節點身分與同一免疫機制（24.81×16 對其記的 27×16，同一個 26.81 四捨五入），構成獨立複驗而非照抄。 |
+| 4 | 狀態 badge——§15 表格第 157 行（並見同檔第 28 行「『啟用中』綠底 pill，緊貼標題右側」） | 🔴 更正 | 13px/500、綠底 pill（收合於標題旁） | **🔴 **550 / 12px / lh 16px** / rgb(1,75,64)。**本列有兩個錯，不只字重**：字重 500→**550**，字級 13px→**12px**（原記載量到的是不繪製的 host，屬「量錯層」，與 §19.6 row 15／18 同型）。綠底 pill 形態複驗吻合：background rgb(175,254,191)、border-radius 8px、padding 2px 8px、div.badge rect 52.51×20。位置亦複驗吻合「收合於標題旁／緊貼標題右側」：badge 在 x=368.2, y=76，與頁面標題 h1.heading.has-breadcrumbs（x=294, y=74，18px/600，sh=1）同一列；本頁無另外的 Status select。** | 550（繪製盒**不變**，免疫）；被污染成 500 的是 host s-internal-badge（其 fs 恰為 13px）——原記載的「13px/500」正好就是這個 host 的那一組值 | 實際繪製盒在 **shadow 內（sh=1）**：div.badge（rect 52.51×20，12px/550/lh16，**自宣告** font-weight，token 解析 550）與其內 span.content（rect 36.51×16，12px/550，自身宣告 `unset` 回落繼承）。🔴 原記載量到的是 **host s-internal-badge[tone="success"]**：**light DOM（sh=0）**、display:contents、**rect 0×0、不繪製任何文字**、font-size 13px（頁面繼承值）、本身無自宣告、dirty fw 500。🔴 **投射方向的分辨**：「Active」是 host 的**純文字節點**，經 <slot> 投射進 shadow，其 flat-tree 父是 slot（sh=1、display:contents、computed 12px/550）⇒ 文字從 shadow 內的 span.content 繼承，**免疫**；這與同頁 pill 內值徽章那種「light DOM **元素**被投射 ⇒ 不免疫」方向相反，兩者在本輪同一頁都實測到了。【獨立佐證】對該文字節點建 Range：clean 36.513px／dirty 36.513px（相同）；canvas measureText 12px＝550→36.505（Δ0.008px）／500→36.167／600→36.831／450→35.811 ⇒ 排他性命中 550，明確排除 500。 |
+
+### 15.1.a 本次重量帶出的規律
+
+1. 🔴 **四項全部是污染值；§15 沒有任何一個 500 在乾淨環境下存活** ⇒ 本輪無「重大發現」型的殘留 500，不需追查宣告者。四項的乾淨真值分別是 **400／450／450／550**——同一個記下來的「500」在同一張四列的表裡就對應到三個不同真值，是「看到 500 無法回推真值」最緊湊的一組實證。
+2. 🔴 **獨立複驗了「本尊沒有 500 這一階」**：在**與 §19.6 不同的商品**上重跑直方圖，1334 個葉節點的乾淨分布＝450×974／550×188／600×9／400×13／空字串×150，**500 為 0 個**；同一集合 dirty 為 450×5115→500×1850（全元素口徑）。§19.6 在另一商品得到 450×975／550×187／600×9／400×13，兩組幾乎逐格相同 ⇒ 該結論不是單一商品的巧合。全部 7798 個元素中乾淨 500 只有 **1** 個，且正是 §19.6.a 第 3 條已登記的 `div._BottomBarBackground_ejstq_30`（787.2×0、textContent 空、不繪製文字）——在不同商品上復現，證明它不是該頁面實例的偶發，與該條「樣式快取殘留」的登記一致。
+3. 🔴 **免疫判準必須加一句限定：light DOM 的「自己宣告」根本不是防線。** 本輪兩個反例：price input **有**自宣告（解析 450）、pill 標籤 <p> **也有**自宣告（解析 450），兩者照樣被污染成 500——因為擴充規則帶 `!important`，會蓋過 light DOM 的一般作者宣告。真正的免疫只來自**樹範圍**：document 樣式表不匹配 shadow tree 內的任何元素，所以只有 shadow 內的自宣告（badge 的 div.badge 550、text-field 的 div.internal-text-field 450）才擋得住。指派免疫表「該元素自己宣告 ✅」這一格，只在 shadow tree 內成立；寫回規範時建議補上這個限定詞。
+4. 🔴 **兩個 slot 投射方向在同一頁同時出現、結果相反，必須逐個確認繪製盒**：①pill 內的值徽章是 light DOM 的 <span> **元素**被投射進 s-internal-badge 的 shadow ⇒ 選擇器照 DOM 樹打中它，**不免疫**（550→500）；②狀態 badge 的「Active」是 host 的**純文字節點**被投射 ⇒ flat-tree 父是 slot、繼承自 shadow 內的 span.content，**免疫**（550 不變）。同一個 s-internal-badge 元件，兩種投射載體命運相反。
+5. 🔴 **四項裡至少一項（badge，確定）、可能兩項（pill，視原節點而定）量到的是不繪製的 `display:contents` host；而量錯層會連 font-size 一起錯。** badge 的 host 是 13px、繪製盒是 12px，所以 §15 該列的「13px」也要改。這讓「只有 font-weight 受污染，其餘可照引」這條前提必須加條件：**它只在量對節點的前提下成立**——量錯層的列，非字重值同樣不可信。
+6. 🔴 **canvas measureText 對比達到了指派預期的分辨力，且是本輪唯一能排除相鄰階的手段**：badge「Active」實測 36.513 vs 550→36.505（Δ0.008px）而 500→36.167；pill「Compare-at」clean 74.288 vs 450→74.276（Δ0.012px）、dirty 74.712 vs 500→74.709（Δ0.003px）；label「Title」26.813 vs 450→26.812（Δ0.001px）。相鄰字重階之間的寬度差僅約 0.3–0.4px，靠 getComputedStyle 單讀無法交叉驗證，Range 寬度是必要的第二來源。
+7. 🔴 **clean/dirty 切換使不免疫節點的繪製寬度位移（price input 100.31→100.16、pill 標籤 74.288→74.712），這本身就是「旗標確實生效、不是讀到快取」的內建證據。** 反過來，label 與 badge 的 Range 寬度在 clean/dirty 下逐位元組相同，正是免疫的獨立佐證，不必只依賴 computed 值相等這一個讀數。
+8. 🔴 **§15 的四列判定欄也跟著錯了**：pill／text input／badge 三列原寫「✅ 逐格吻合」，但它們是拿污染值去對我方 token（--fw-control／--t-sm／badge tokens）得出的吻合；label 一列則反過來拿污染值判出一個**不存在的差異**。⇒ 污染不只會製造假陰性（假差異），也會製造假陽性（假吻合）；回寫時四列的**判定欄都需重新導出**，不能只換數字。
+
+### 15.1.b 仍未取得
+
+- §15 pill 那一列（L154）**原記載究竟量的是哪一個節點，無法從記錄判定** ⇒ 未取得單一判定，本項以雙值並列交付。理由：該列同時寫了幾何（h 28px／radius 8px／padding 4px 8px／透明底——逐格只吻合 button 本體）與「13px/500」（button 與標籤 <p> 的 font-size 都是 13px，dirty 下也都讀到 500）。兩個候選的乾淨值**不同**（button 400／標籤 450），不能合併成一個數字。回寫 §15 時必須把節點身分一併寫進去，否則同一個歧義會再發生一次。
+- 1280／768／390 三裝置寬度下的複驗——未取得。本輪視窗鎖在 787×372；依指派說明 resize_window 為假成功（視窗離屏、渲染面凍結）、screenshot 會逾時，故未重試。字重階梯不隨寬度改變（本輪 13px/450、12px/550、18px/600、13px/400 與 §19／§19.6 逐項一致），故四項 font-weight 結論不受影響；但**幾何值不得以本輪 787px 數字覆蓋 §15／§19 在其他寬度的記載**。
+- pill 的 hover／active 態、text input 的 disabled／error 態、badge 其他 tone 的字重——未取得。全程唯讀、未觸發任何互動態（未 hover、未聚焦、未展開 popover、未開 modal），依硬約束不試。
+- `div._BottomBarBackground_ejstq_30` 在停用擴充後仍解析為 500 的瀏覽器端機制——未取得（沿襲 §19.6.b 同一條缺口）。本輪只**復現了現象本身**（見 patterns 第 2 條），未做機制取證，不推測原因。它不屬於本次指派的四項，也不繪製任何文字。
+
+> 量測環境：量測日期 2026-08-28（本地時間），Claude in Chrome，自開分頁（收工已 tabs_close，未動使用者原有分頁）。測試店 chill-love-u5q5mnzq，商品 **9907158778091**（CHOICE Urate 120 capsules，Active、單變體）——🔴 **刻意選用與 §19.6 不同的商品**（§19.6 用 9907123716331），使 label 那一項成為真正的獨立複驗而非同頁重讀；導航全程從真實 href 取得（先於 admin 首頁取 Products 的 href `/store/chill-love-u5q5mnzq/products`，再從商品列表取該商品 href），未猜任何 URL。逐一比對五個禁止 id（9907126370539／9911273160939／9913006162155／9913007767787／9913009438955），本商品不在其中，且全程未導航至任何禁止 id。window.innerWidth=787／innerHeight=372，devicePixelRatio=1.25，getComputedStyle(documentElement).fontSize=16px（無根字級污染）。  【污染源確認】頁面存在 <style id="font-bolder-style">，parentNode=HTML，位於 document.styleSheets[0]，唯一規則對 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas)` 設 font-weight:500 !important（同一條並帶 text-shadow 與 -webkit-font-smoothing，兩者不影響 advance width）。  【已停用污染源後量測】全部數值以 `ext.sheet.disabled=true`（clean）→ 讀值 → `=false`（dirty）→ 讀值的同步配對取得；只切 CSSOM 旗標，未動使用者的擴充功能設定。對照組每輪複驗：html clean=450／dirty=450（不在選擇器射程）、body clean=450／dirty=500。CSSOM 索引涵蓋全部樣式表＋shadow adopted/inline sheets，共 2664 條含 font-weight 的規則，**unreadableSheets=0**（無不可讀表
