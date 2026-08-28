@@ -205,7 +205,12 @@
   --t-sm:var(--t-325);  --lh-sm:var(--lh-500);  --fw-sm:var(--fw-regular);
   --t-md:var(--t-350);  --lh-md:var(--lh-500);  --fw-md:var(--fw-medium);     /* 🔴 500→550：消費者＝變體表 thead/tbody th、刪檔警告 */
   --t-lg:var(--t-400);  --lh-lg:var(--lh-500);  --fw-lg:var(--fw-regular);    /* ⚠️ 16px：本尊此字級只有 avatar-initials。我方的 SERP 模擬（模仿 Google）合理用它，卡片標題則應改用 heading-md（C-2） */
-  --t-xl:var(--t-450);  --lh-xl:var(--lh-600);  --fw-xl:var(--fw-semibold);   /* 🔴 500→600：唯一消費者是原型 .modal-head，本尊 modal 標題走 display-small = 600 */
+  --t-xl:var(--t-450);  --lh-xl:var(--lh-600);  --fw-xl:var(--fw-semibold);   /* 🔴 500→600（D57）。⚠️ **D58 更正該註釋的理由**：原文寫「本尊 modal 標題走 display-small = 600」
+     ——**那是錯的**。D58 逐頁實測本尊 20 個 modal 標題（新層 17／舊層 3），**沒有一個是 18px**：
+     新層 `s-internal-modal` 的 `h2.heading` = **13/20/600**（＝heading-md）、
+     舊層 `h2.Polaris-Text--headingMd` = 14/20/600；`size="large"` 只改寬度不改字型。
+     字重 600 這個結論仍然成立（兩者皆 600），錯的是「哪一階」。
+     ⇒ `.modal-head` 已於 D58 改用 heading-md，本 token 的唯一消費者因此消失。 */
   --t-2xl:var(--t-500); --lh-2xl:var(--lh-600);                               /* ⚠️ 20px：本尊頁面標題是 18（display-sm），C-2 遷移 */
   --t-3xl:var(--t-600); --lh-3xl:var(--lh-800);
 
@@ -348,7 +353,7 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-size:var(--t-sm)}
-body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-body);letter-spacing:.01em;-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-body);letter-spacing:var(--ls-normal);-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::placeholder{color:var(--text-3)}
@@ -470,7 +475,8 @@ svg{flex:none}
 #page-home,#page-orderdetail{max-width:calc(var(--col-content) + var(--sp-400)*2)}  /* 966 + 2×16 = 998 */
 @keyframes fade{from{opacity:0;scale:.98}to{opacity:1;scale:1}}
 .page-head{display:flex;align-items:center;gap:var(--sp-300);margin:var(--sp-100) 0 var(--sp-400)}
-h1{font-size:var(--t-2xl);line-height:var(--lh-2xl);font-weight:var(--fw-lg);letter-spacing:0}
+/* 本尊頁面標題（索引與詳情**同值**，has-breadcrumbs 只改版面）= 18/24/600/dense */
+h1{font-size:var(--type-display-sm-size);line-height:var(--type-display-sm-lh);font-weight:var(--type-display-sm-fw);letter-spacing:var(--type-display-sm-ls)}
 .head-actions{margin-left:auto;display:flex;gap:var(--sp-200);align-items:center}
 
 /* ===== 元件 ===== */
@@ -502,7 +508,7 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .card{background:var(--surface);border:0;border-radius:var(--r-card);box-shadow:var(--sh-card)}
 .card-pad{padding:var(--sp-400)}
 /* 64 §3：卡片標題 13 / 20 / 600（原 16 / 20 / 450 是 47 §3 的舊判讀）*/
-.card h3{font-size:var(--t-sm);line-height:var(--lh-sm);font-weight:var(--fw-title);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
+.card h3{font-size:var(--type-heading-md-size);line-height:var(--type-heading-md-lh);font-weight:var(--type-heading-md-fw);letter-spacing:var(--type-heading-md-ls);margin-bottom:var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .card h3 .h-act{margin-left:auto;color:var(--text-2);font-weight:var(--fw-body)}
 /* 64 §4：badge 高 20、圓角 8、內距 2/8；64 §3：12 / 16 / 550 */
 .badge{display:inline-flex;align-items:center;gap:var(--sp-100);height:20px;padding:var(--sp-050) var(--sp-200);border-radius:var(--r-200);font-size:var(--t-xs);line-height:var(--lh-xs);font-weight:var(--fw-badge);white-space:nowrap}
@@ -558,7 +564,11 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .p-live .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22a06b;margin-left:var(--sp-150);animation:pulse var(--dur-pulse) var(--ease-in-out) infinite}
 @keyframes pulse{50%{opacity:.4}}
 .hero-hello{text-align:center;margin:calc(var(--sp-400)*2) 0 var(--sp-200)}
-.hero-hello h2{font-size:var(--t-3xl);line-height:var(--lh-3xl);font-weight:var(--fw-lg);letter-spacing:-.01em}
+/* 🔴 **字級無法 1:1**：本尊對應物量到 26px，而 26 不在本尊自己的 13 階字級表裡
+   （11/12/13/14/16/18/20/22/24/30/32/36/40），也不在我方 L1。⇒ 字級**維持 24**（`--t-600`）並登記。
+   其餘三軸有證據可對齊：lh 32（已對）、fw 550、ls denser。
+   原本的 `-.01em` 是裸值，不是任何 `--ls-*` 階。 */
+.hero-hello h2{font-size:var(--t-600);line-height:var(--lh-800);font-weight:var(--fw-medium);letter-spacing:var(--ls-denser)}
 .hero-hello p{color:var(--text-2);margin-top:var(--sp-050);font-size:var(--t-sm)}
 .ai-box{max-width:640px;margin:var(--sp-400) auto var(--sp-200);background:var(--surface);border:var(--hairline) solid var(--border);border-radius:var(--r-300);box-shadow:var(--sh);padding:var(--sp-150) var(--sp-150) var(--sp-150) var(--sp-300);display:flex;align-items:center;gap:var(--sp-200)}
 .ai-box:focus-within{border-color:var(--focus);box-shadow:0 0 0 var(--focus-gap-w) var(--focus-gap),0 0 0 var(--focus-ring-w) var(--focus-ring)}
@@ -578,7 +588,10 @@ input:disabled,select:disabled,textarea:disabled{opacity:1;color:var(--text-disa
 .setup-card .sc-prog{font-size:var(--t-xs);color:var(--text-2);display:flex;align-items:center;gap:var(--sp-150)}
 .ring{width:16px;height:16px;border-radius:50%;background:conic-gradient(var(--success) var(--deg,60deg),#e3e3e6 0);position:relative;flex:none}
 .ring::after{content:"";position:absolute;inset:3px;background:var(--surface);border-radius:50%}
-.setup-card h4{font-size:var(--t-lg);line-height:var(--lh-lg);font-weight:var(--fw-lg)}
+/* 🔴 16px/20px **不對應任何角色階**——L2 十六階裡 16px 只有 avatar-initials（unary，無 lh/fw 軸）。
+   本尊沒有「16px 卡片小標」這個角色。⇒ 從 L1 原語組，並明確標示這是**我方自有組合**，
+   不是對齊本尊的結果（鐵律 19.3：不硬套最接近的角色）。 */
+.setup-card h4{font-size:var(--t-400);line-height:var(--lh-500);font-weight:var(--fw-regular);letter-spacing:var(--ls-normal)}
 .setup-card p{font-size:var(--t-xs);color:var(--text-2);line-height:1.55;max-width:75%}
 .setup-card .btn{margin-top:auto;align-self:flex-start}
 .setup-art{position:absolute;right:-6px;bottom:-6px;width:84px;height:84px;border-radius:var(--r-400);transform:rotate(-8deg);opacity:.9}
@@ -775,7 +788,9 @@ table.idx{width:100%;border-collapse:collapse;font-size:var(--t-xs);line-height:
 .overlay{position:fixed;inset:0;background:var(--scrim);z-index:var(--z-dialog);display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
 .overlay.show{display:flex}
 .modal{width:520px;background:var(--surface);border-radius:var(--r-300);box-shadow:var(--sh-modal);overflow:hidden;animation:popin var(--dur-slow) var(--ease-decelerate)}
-.modal-head{padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border);font-size:var(--t-xl);line-height:var(--lh-xl);font-weight:var(--fw-xl);display:flex;align-items:center}
+/* 🔴 D58：本尊新層 modal 標題 = **13/20/600**（heading-md），不是 display-sm。
+   逐頁實測 20 個 modal 標題（新層 17／舊層 3）沒有一個是 18px；size="large" 只改寬度。 */
+.modal-head{padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border);font-size:var(--type-heading-md-size);line-height:var(--type-heading-md-lh);font-weight:var(--type-heading-md-fw);letter-spacing:var(--type-heading-md-ls);display:flex;align-items:center}
 .modal-head button{margin-left:auto;color:var(--text-3)}
 .dtype{display:flex;align-items:center;gap:var(--sp-300);width:100%;text-align:left;padding:var(--sp-300) var(--sp-400);border-bottom:var(--hairline) solid var(--border-2)}
 .dtype:hover{background:var(--surface-2)}
@@ -1487,7 +1502,7 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:var(--sp-600)
 .zone-head{display:flex;align-items:center;gap:var(--sp-200);min-width:0}
 .zone-head .z-ic{font-size:var(--t-lg);line-height:var(--lh-lg);flex:none}
 .zone-head .z-t{flex:1;min-width:0;overflow-wrap:anywhere}
-.zone-head .z-t b{display:block;font-size:var(--t-sm);font-weight:600}
+.zone-head .z-t b{display:block;font-size:var(--type-heading-md-size);line-height:var(--type-heading-md-lh);font-weight:var(--type-heading-md-fw);letter-spacing:var(--type-heading-md-ls)}
 .zone-head .z-t span{display:block;font-size:var(--t-xs);color:var(--text-2)}
 .zone-sub{font-size:var(--t-2xs);font-weight:600;letter-spacing:.08em;color:var(--text-3);
   padding:var(--sp-200) 0 var(--sp-100)}

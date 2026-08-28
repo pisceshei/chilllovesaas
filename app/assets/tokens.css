@@ -196,7 +196,12 @@
   --t-sm:var(--t-325);  --lh-sm:var(--lh-500);  --fw-sm:var(--fw-regular);
   --t-md:var(--t-350);  --lh-md:var(--lh-500);  --fw-md:var(--fw-medium);     /* 🔴 500→550：消費者＝變體表 thead/tbody th、刪檔警告 */
   --t-lg:var(--t-400);  --lh-lg:var(--lh-500);  --fw-lg:var(--fw-regular);    /* ⚠️ 16px：本尊此字級只有 avatar-initials。我方的 SERP 模擬（模仿 Google）合理用它，卡片標題則應改用 heading-md（C-2） */
-  --t-xl:var(--t-450);  --lh-xl:var(--lh-600);  --fw-xl:var(--fw-semibold);   /* 🔴 500→600：唯一消費者是原型 .modal-head，本尊 modal 標題走 display-small = 600 */
+  --t-xl:var(--t-450);  --lh-xl:var(--lh-600);  --fw-xl:var(--fw-semibold);   /* 🔴 500→600（D57）。⚠️ **D58 更正該註釋的理由**：原文寫「本尊 modal 標題走 display-small = 600」
+     ——**那是錯的**。D58 逐頁實測本尊 20 個 modal 標題（新層 17／舊層 3），**沒有一個是 18px**：
+     新層 `s-internal-modal` 的 `h2.heading` = **13/20/600**（＝heading-md）、
+     舊層 `h2.Polaris-Text--headingMd` = 14/20/600；`size="large"` 只改寬度不改字型。
+     字重 600 這個結論仍然成立（兩者皆 600），錯的是「哪一階」。
+     ⇒ `.modal-head` 已於 D58 改用 heading-md，本 token 的唯一消費者因此消失。 */
   --t-2xl:var(--t-500); --lh-2xl:var(--lh-600);                               /* ⚠️ 20px：本尊頁面標題是 18（display-sm），C-2 遷移 */
   --t-3xl:var(--t-600); --lh-3xl:var(--lh-800);
 
