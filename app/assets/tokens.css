@@ -358,4 +358,30 @@
      不受 root 宣告字級影響，故 px→em 換算安全
      （51 表 3.1 註 4；D63 實測複驗：root 8/13/16/26/32px 下 48em 一律在 768 翻轉）。
      CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
+
+  /* ══ 暗色域 token（D64）══════════════════════════════════════════════
+     本尊的頂欄不是「深色背景的頂欄」，是包在一個**主題容器**裡。
+     2026-08-28 實測（本機 Chrome，/products）：頂欄的父層是
+     `Polaris-ThemeProvider--themeContainer`，它把同一組語意 token 改成暗值，
+     頂欄本身只寫 `background: var(--p-color-bg)`。逐項對照（左亮右暗）：
+       bg #f1f1f1 / #0a0a0a｜surface #fff / #1a1a1a｜surface-2 #f7f7f7 / #282828
+       surface-3 #f3f3f3 / #2f2f2f｜surface-hover #f7f7f7 / #222
+       text #303030 / #eee｜text-2 #616161 / #aaa
+       icon #4a4a4a / #dcdcdc｜icon-2 #8a8a8a / #aaa
+       border #e3e3e3 / #ffffff17｜border-2 #ebebeb / #ffffff0f
+       brand #303030 / #fcfcfc｜brand-hover #1a1a1a / #eee
+     🔴 `*-inverse` 家族兩邊**完全相同**（bg-inverse #0a0a0a、text-inverse #e3e3e3、
+     icon-inverse #e3e3e3、border-inverse #616161、bg-surface-inverse #303030）——
+     它們是**絕對參照**，不隨主題翻。別把 `--dk-*` 跟 `*-inverse` 搞混：
+     頂欄背景是前者（暗域的 bg），殼層底色是後者（亮域的 bg-inverse），
+     兩者恰好都是 #0a0a0a，但**來源不同、不可互代**。
+     值放在這裡、不放在 `.cl-scope-dark`：`scripts/check-tokens-sync.rb` 只同步
+     `:root`，值寫在別處就會在原型與 admin.css 兩邊各自漂移（C-2 同型事故）。
+     ═══════════════════════════════════════════════════════════════ */
+  --bg-inverse:#0a0a0a;
+  --dk-bg:#0a0a0a;--dk-surface:#1a1a1a;--dk-surface-2:#282828;--dk-surface-3:#2f2f2f;
+  --dk-surface-hover:#222;
+  --dk-text:#eee;--dk-text-2:#aaa;--dk-icon:#dcdcdc;--dk-icon-2:#aaa;
+  --dk-border:#ffffff17;--dk-border-2:#ffffff0f;
+  --dk-brand:#fcfcfc;--dk-brand-hover:#eee;
 }

@@ -3539,3 +3539,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-3 | 🔴 **CSSOM 走訪在本尊頁上找不到 `html,body` 的基準規則**：45 張表、12077 條規則全走過（含 `@layer` 遞迴、`adoptedStyleSheets`），無 `@import`、無 CORS 阻擋、`matches()` 零拋錯，仍**一條都沒命中**；逐張 `disabled` 二分才定位到 sheet #4，`fetch` 原文才看見 | D63 取證段 | 這是**量測方法的坑**，不是我方程式問題。固定處理已寫進 D63：往後在本尊頁定位規則一律「消融（逐張 disabled）＋ 原文 fetch」，不信 CSSOM 走訪的空結果 |
 | W-4 | **我方的溢出稽核腳本沒有排除可橫捲容器**：768 下 `page-orders` / `page-products` 的 `table.idx` 右緣 937 / 895 > 768 被判溢出，但它躺在 `div.tscroll{overflow-x:auto}` 裡，是**設計上的橫捲**。以 `git show HEAD:` 的對照組複驗，改動前**完全相同**（同元素、同座標）⇒ 與 D63 無關 | D63 三寬度段的對照組輸出 | 是臨時量測腳本的判準缺口，不是倉庫內程式。下次做 `scripts/rwd-check.mjs`（鐵律 13.3 要求、尚未建立）時必須內建「祖鏈上有 `overflow-x: auto\|scroll` 就不算溢出」 |
 | W-5 | **`page-detail` / `page-module` / `page-orderdetail` 三頁在 `go()` 路由表裡沒有直接入口**，要靠 `openOrder()` / `openProduct()` 之類的二級動作才會渲染 ⇒ 本輪的 35 條路由掃描**沒有涵蓋詳情頁的內容** | D63 三寬度段（`n: 0`） | 詳情頁的內容仍會被 35 條路由裡的列表頁樣式覆蓋到大部分，但**嚴格說本輪對它們是未取得**。要補需要一組「二級動作也走一遍」的腳本，屬 rwd-check 那一包 |
+
+### 3.39 D64 的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | 🔴 **本尊行動版（<768）的頂欄與側欄抽屜形態未取得**：`resize_window` 回報成功但 `innerWidth` 不動，`admin.shopify.com` 又不能 iframe ⇒ 窄寬度**量不到**。我方抽屜沿用改動前的 `--surface-2`，那是**維持現狀**、不是對齊結果 | D64 驗證段；鐵律 13.4 已知限制 | 需要另一條控寬途徑（真機、或另一台能自由縮放的瀏覽器 profile）。在拿到之前寫任何「行動版已對齊」都違反鐵律 19 |
+| W-2 | **頂欄內部元件本輪只量、未實作**：搜尋列 640×36 / bg #282828 / radius 12；圖示鈕 18px 圖示 ＋ 6px 內距 / radius 12 / color #dcdcdc；商店 chip 154×36 / radius 12；快捷鍵標籤 bg #2f2f2f / color #aaa / 10px / 550 / radius 4 | D64 取證段 | 本包的射程是「頂欄的**色彩域**與殼層幾何」。內部元件是逐控件對齊，屬另一輪（與 C-3 同性質：要逐元件量測，不是機械替換） |
+| W-3 | 🔴 **`--surface-hover` 我方 #f1f1f1、本尊 `bg-surface-hover` #f7f7f7** | `grep -o -- "--surface-hover:[^;]*" docs/design/chilllove-admin-v2.html` 對 D64 取證段的對照表 | 我方另有 `--surface-row-hover: #f7f7f7`，兩者誰對應本尊哪一顆**未釐清**。要先做名稱對映表才能改，否則會把兩個角色併成一個（`--t-lg` 同型事故） |
+| W-4 | 🔴 **`--surface-inverse` 我方 #1a1a1a、本尊 `bg-surface-inverse` #303030**。我方那個值其實等於本尊**暗域的 `bg-surface`**，名字掛錯層 | 同上 | 同 W-3，屬名稱對映表那一包。本包新增的 `--dk-surface`（#1a1a1a）已經是正確承載體，`--surface-inverse` 的去留要一起裁 |
+| W-5 | **我方缺 `--icon-2`**（本尊 `icon-secondary` 亮 #8a8a8a / 暗 #aaa）。本包的 `.cl-scope-dark` 因此只 remap 了 `--icon` | D64 對照表 | 新增 token 要先確認消費端；目前沒有元件在用第二階圖示色 ⇒ 加了是死 token |
+| W-6 | 🔴 **「背後是什麼顏色」不能跳到 `body` 問**：`main` 與 `body` 同為 #f1f1f1，我因此一度判定 12px 圓角是 no-op；走完祖鏈才看到中間的 `_Frame` #0a0a0a | D64「三件事是同一個視覺系統」段 | 這是量測方法的坑。固定處理＝**走到第一個不透明的祖先**再判斷，已寫進 D64 |

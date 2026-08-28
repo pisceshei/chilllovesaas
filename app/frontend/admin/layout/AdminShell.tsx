@@ -205,7 +205,9 @@ export function AdminShell({ brandName }: AdminShellProps) {
 
   return (
     <div className="cl-admin-shell">
-      <header className="cl-topbar">
+      {/* cl-scope-dark：本尊把頂欄包在一個主題容器裡，容器改 token、頂欄只寫 var(--bg)。
+          見 admin.css 的 .cl-scope-dark 與原型 :root 的暗色域區塊。 */}
+      <header className="cl-topbar cl-scope-dark">
         <button
           aria-expanded={sidebarOpen}
           aria-label={sidebarOpen ? t("shell.nav.close") : t("shell.nav.open")}

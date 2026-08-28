@@ -367,6 +367,32 @@
      不受 root 宣告字級影響，故 px→em 換算安全
      （51 表 3.1 註 4；D63 實測複驗：root 8/13/16/26/32px 下 48em 一律在 768 翻轉）。
      CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
+
+  /* ══ 暗色域 token（D64）══════════════════════════════════════════════
+     本尊的頂欄不是「深色背景的頂欄」，是包在一個**主題容器**裡。
+     2026-08-28 實測（本機 Chrome，/products）：頂欄的父層是
+     `Polaris-ThemeProvider--themeContainer`，它把同一組語意 token 改成暗值，
+     頂欄本身只寫 `background: var(--p-color-bg)`。逐項對照（左亮右暗）：
+       bg #f1f1f1 / #0a0a0a｜surface #fff / #1a1a1a｜surface-2 #f7f7f7 / #282828
+       surface-3 #f3f3f3 / #2f2f2f｜surface-hover #f7f7f7 / #222
+       text #303030 / #eee｜text-2 #616161 / #aaa
+       icon #4a4a4a / #dcdcdc｜icon-2 #8a8a8a / #aaa
+       border #e3e3e3 / #ffffff17｜border-2 #ebebeb / #ffffff0f
+       brand #303030 / #fcfcfc｜brand-hover #1a1a1a / #eee
+     🔴 `*-inverse` 家族兩邊**完全相同**（bg-inverse #0a0a0a、text-inverse #e3e3e3、
+     icon-inverse #e3e3e3、border-inverse #616161、bg-surface-inverse #303030）——
+     它們是**絕對參照**，不隨主題翻。別把 `--dk-*` 跟 `*-inverse` 搞混：
+     頂欄背景是前者（暗域的 bg），殼層底色是後者（亮域的 bg-inverse），
+     兩者恰好都是 #0a0a0a，但**來源不同、不可互代**。
+     值放在這裡、不放在 `.cl-scope-dark`：`scripts/check-tokens-sync.rb` 只同步
+     `:root`，值寫在別處就會在原型與 admin.css 兩邊各自漂移（C-2 同型事故）。
+     ═══════════════════════════════════════════════════════════════ */
+  --bg-inverse:#0a0a0a;
+  --dk-bg:#0a0a0a;--dk-surface:#1a1a1a;--dk-surface-2:#282828;--dk-surface-3:#2f2f2f;
+  --dk-surface-hover:#222;
+  --dk-text:#eee;--dk-text-2:#aaa;--dk-icon:#dcdcdc;--dk-icon-2:#aaa;
+  --dk-border:#ffffff17;--dk-border-2:#ffffff0f;
+  --dk-brand:#fcfcfc;--dk-brand-hover:#eee;
 }
 
 /* 64 §4：此處原有兩條 (-webkit-min-device-pixel-ratio / min-resolution:…dppx) 媒體查詢，
@@ -411,7 +437,7 @@ html,body{font-size:var(--t-400);line-height:var(--lh-600);font-weight:var(--fw-
   html,body{font-size:var(--t-325);line-height:var(--lh-500)}
 }
 html{font-size:100%}
-body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden}
+body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg-inverse);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::placeholder{color:var(--text-3)}
@@ -487,7 +513,20 @@ svg{flex:none}
 .toggle::after,.tgl::after,.rate-row .r-caret{transition:transform var(--dur-fast) var(--ease-decelerate)}
 
 /* ===== 頂部列 ===== */
-.topbar{height:var(--topbar-h);background:var(--surface);border-bottom:var(--hairline) solid var(--border);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
+/* ══ 暗色域 remap（D64）—— 本尊 `Polaris-ThemeProvider--themeContainer` 的等效物。
+   它**不包含任何值**，只把語意名重新指向 `:root` 裡的 `--dk-*`。
+   這樣暗域裡的元件一行 CSS 都不用改——寫 var(--text) 就自動拿到 #eee。 */
+.cl-scope-dark{
+  --bg:var(--dk-bg);--surface:var(--dk-surface);--surface-2:var(--dk-surface-2);
+  --surface-3:var(--dk-surface-3);--surface-hover:var(--dk-surface-hover);
+  --text:var(--dk-text);--text-2:var(--dk-text-2);--text-3:var(--dk-text-2);
+  --icon:var(--dk-icon);--border:var(--dk-border);--border-2:var(--dk-border-2);
+  --brand:var(--dk-brand);--brand-hover:var(--dk-brand-hover);
+  color:var(--text)}
+
+/* 頂欄：本尊量測 56 高、background 取暗域的 bg（算成 #0a0a0a）、
+   **border-bottom-width 為 0、box-shadow 為 none**。舊寫法是白底加一條下框線。 */
+.topbar{height:var(--topbar-h);background:var(--bg);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
 .logo{display:flex;align-items:center;gap:var(--sp-200);font-weight:700;font-size:var(--t-md);line-height:var(--lh-md);letter-spacing:.05em;white-space:nowrap}
 .logo .heart{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#e9b8a2,#a9502c);display:grid;place-items:center}
 .ver{font-size:var(--t-2xs);font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-200)}
@@ -510,8 +549,17 @@ svg{flex:none}
 .dev-tag{font-size:var(--t-2xs);color:var(--text-3);border:var(--hairline) solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
 
 /* ===== 版面 ===== */
-.frame{display:flex;height:calc(100vh - var(--topbar-h))}
-.sidebar{width:var(--sidebar-w);max-width:var(--sidebar-w);background:var(--surface-2);border-right:var(--hairline) solid var(--border);padding:var(--sp-200) var(--sp-200) var(--sp-200);display:flex;flex-direction:column;gap:var(--sp-050);overflow-y:auto;flex:none}
+/* 內容面板：本尊 `main` 是 `background: var(--p-color-bg)` 加
+   **`border-radius: 12px 12px 0 0`**，而它背後的 `_Frame` / `_AppFrame` 是 #0a0a0a
+   （亮域的 `--p-color-bg-inverse`）⇒ **圓角處露出的就是那層暗底**。
+   這一條必須跟「殼層底色 = --bg-inverse」一起做：只加圓角、底層跟面板同色的話，
+   圓角是看不見的（我一度只比到 body 而誤判它是 no-op，走完祖鏈才看到 `_Frame`）。 */
+.frame{display:flex;height:calc(100vh - var(--topbar-h));background:var(--bg);border-radius:var(--r-300) var(--r-300) 0 0}
+/* 側欄：本尊實測 background 為完全透明、border-width 為 0、寬 240
+   ——它直接踩在內容面板的 #f1f1f1 上，沒有自己的底色也沒有分隔線。
+   🔴 這不是順手改：側欄若保留 #f7f7f7 不透明，它會**蓋住面板左上的圓角**，
+   變成只有右邊露出暗底的不對稱形態。圓角、暗底、透明側欄是同一個視覺系統。 */
+.sidebar{width:var(--sidebar-w);max-width:var(--sidebar-w);background:transparent;padding:var(--sp-200) var(--sp-200) var(--sp-200);display:flex;flex-direction:column;gap:var(--sp-050);overflow-y:auto;flex:none}
 .nav-item{display:flex;align-items:center;gap:var(--sp-200);padding:var(--sp-150) var(--sp-200);border-radius:var(--r-200);color:var(--text-nav);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-medium);width:100%;text-align:left}
 .nav-item:hover{background:var(--surface-hover)}
 .nav-item.on{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--sh-raised)}
@@ -972,6 +1020,11 @@ img{max-width:100%;height:auto}
   .hamb{display:grid}
   .sidebar{position:fixed;top:var(--topbar-h);bottom:0;left:0;width:min(272px,84vw);max-width:min(272px,84vw);z-index:var(--z-drawer);
     padding:var(--sp-200) var(--sp-200) var(--sp-400);overscroll-behavior:contain;box-shadow:var(--sh-drawer);
+    /* D64：桌機侧欄已改透明（本尊實測）；抽屜是浮在內容之上的覆蓋層，
+       必須有自己的底色，否則會透出下面的頁面。沿用改動前的值。
+       🔴 **本尊行動版抽屜的底色未取得**——resize_window 不可用、
+       admin 不能 iframe ⇒ 窄寬度形態量不到（鐵律 13.4，登記 91 §3.39）。 */
+    background:var(--surface-2);
     transform:translateX(-100%);visibility:hidden;
     transition:transform var(--dur-slower) var(--ease-standard),visibility 0s linear var(--dur-slower)}
   body.nav-open .sidebar{transform:none;visibility:visible;transition:transform var(--dur-slower) var(--ease-standard),visibility 0s}
@@ -1967,7 +2020,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 <!-- 53號 P0-16 / 48 §32.4：所有把手共用的操作說明（aria-describedby 指到這裡）-->
 <span class="vh" id="dragHelp">按 Enter 或空白鍵抓取這個項目，再用上下鍵移動、左右鍵調整層級，Enter 放下，Esc 取消並回到原位。</span>
 
-<header class="topbar">
+<header class="topbar cl-scope-dark">
   <button class="hamb" id="hambBtn" aria-label="開啟導航選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-txt">CHILL LOVE</span> <span class="ver">秋季 '26</span></div>
   <button class="searchbox" data-doc="search" aria-label="搜尋（CTRL K）" onclick="openPalette()">
