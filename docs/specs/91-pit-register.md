@@ -3439,3 +3439,13 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-3 | **`--lh-2xs: 14px` 在本尊行高階中不存在**（本尊只有 12/16/20/24/28/32/40/48） | worklog 導出命令 B，輸出 `行高域外 ['14px']` | 它服務 11px 微標籤（47 未量到、我方保留的階）。**保留並標明，不硬套最接近的 12 或 16**（鐵律 19.3）。要不要廢掉這一階需先確認那些微標籤在本尊對應什麼 |
 | W-4 | **`.p-partial-theme-admin-next` 會整組改寫字體**：字重域變 400/500/600/**600**（bold 也是 600）、body 與 heading 全部加上負字距 | `docs/design/111` §20.8 第 5 條 | 該 scope 三頁掃描**零元素在用**。只登記——但它與語義色的 admin-next 觀察（§3.31 W-6）指向同一件事：本尊正在準備一套新調色與新字重域 |
 | W-5 | **舊層與新層對「同一顆按鈕的標籤」給不同字重**：舊 `.Polaris-Button` 的標籤是 `bodySm + semibold` ＝ **600**，新 `s-internal-button` 的 `.button` 是 **550**（字級／行高／內距／底色四項全同） | `docs/design/111` §20.8 第 7 條 | 這是本尊自身的新舊層不一致。我方統一取 `button-label` **550**（新層＝官方方向，舊層 repo 已封存）。登記是為了讓下一個人知道那個 600 不是量錯 |
+
+### 3.33 D58 決定 C 包 C-2（元件角色遷移）的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | **原型仍有 93 處硬編 `font-weight`（32 處落在本尊值域外）、11 處硬編 `font-size`、26 處無單位 `line-height`**；`admin.css` 剩 5 處硬編字重（3 域外：`.cl-brand` 700／`.cl-login-brand` 700／`.cl-collections-visible` 400）、8 處硬編字級、4 處無單位行高 | worklog `2026-08-28-D58元件角色遷移.md` 導出命令 | 屬**包 C-3**。原型的 93 處多在執行期組出的 inline style 內，要逐段判斷；`.cl-brand`／`.cl-login-brand` 是**我方自有字標**（本尊字標是兩張 `<img>`，無文字可量）⇒ 那兩處的 700 不是對齊問題，是設計選擇，要另行裁定 |
+| W-2 | **6 列未取得**：`.cl-media-tile__tag`（本尊對應物未找到）／`.cl-variant-table`（本店多變體商品**只有兩個且都在禁止清單**，650 列翻頁確認）／toast／InlineError／TextField error（需觸發寫入，違反唯讀約束）／麵包屑文字型（1024 寬下渲染成 icon-only，文字在隱藏 `s-menu` 內、`getComputedStyle` 回空） | `91` 本節 | 取證通道被硬約束或環境限制封死。取得方法各列於對應表的 not_obtained |
+| W-3 | **`.cl-empty-state h2` 與 `.cl-modal__title` 的層別判準不一致**：後者取新層（理由「我方掛載點在本尊是新層頁」），前者取舊層 Polaris `EmptyState` 的 14/20/600——但 `.cl-empty-state` 的掛載點（ProductsPage／CollectionsPage／FilesPage／InventoryPage）在本尊**也全是新層** | 反駁面 2（headings） | 反駁方試圖在本尊 Products 索引製造新層 no-results 態未成功 ⇒ **新層空態的值未取得**。取到之前不改判準 |
+| W-4 | 🔴 **`.hero-hello h2` 的本尊對應物量到 26px，而 26 不在本尊自己的 13 階字級表裡**（11/12/13/14/16/18/20/22/24/30/32/36/40） | D58「原型端的兩件系統性問題」 | 這是本尊自身的域外值，與 §3.32 W-4 的 admin-next 觀察同類。**需要複驗那個 26px 是不是量錯層**（可能是某個縮放容器內的視覺尺寸）。本輪照實登記，字級維持 24 |
+| W-5 | **`.setup-card h4` 的 16px/20px 在 L2 十六階裡不存在**——16px 只有 `avatar-initials`（unary，無 lh/fw 軸），本尊沒有「16px 卡片小標」這個角色 | `docs/design/chilllove-admin-v2.html` 該規則上方的註釋 | 已從 L1 組並**明確標示是我方自有組合、不是對齊結果**。要不要廢掉這個尺寸需先確認 setup 卡在本尊對應什麼（onboarding 卡片，本輪未量） |

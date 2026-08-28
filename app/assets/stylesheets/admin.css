@@ -112,9 +112,10 @@ a {
   border-radius: var(--r-pill);
   background: var(--ai-bg);
   color: var(--ai);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
 }
 
 .cl-search-trigger {
@@ -209,8 +210,8 @@ a {
   border-radius: 7px;
   background: var(--success);
   color: var(--surface);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: var(--type-avatar-initials-size);
+  font-weight: var(--fw-regular);
 }
 
 .cl-app-frame {
@@ -241,9 +242,10 @@ a {
   margin: var(--sp-400) 0 0;
   padding: 0 var(--sp-200) var(--sp-100);
   color: var(--text-3);
-  font-size: var(--t-2xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--type-body-sm-ls);
 }
 
 .cl-sidebar__spacer {
@@ -269,11 +271,13 @@ a {
   padding: var(--sp-150) var(--sp-200);
   border-radius: var(--r-200);
   color: var(--text-nav);
-  font-size: var(--t-sm);
-  font-weight: 500;
   text-align: left;
   text-decoration: none;
   transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--type-body-md-ls);
 }
 
 .cl-nav-item:hover {
@@ -288,7 +292,8 @@ a {
   background: var(--surface);
   box-shadow: var(--sh-raised);
   color: var(--text);
-  font-weight: 600;
+  /* 本尊側欄一級選中 = 13/20/600（未選中 550）⇒ 只提一階字重 */
+  font-weight: var(--fw-semibold);
 }
 
 .cl-nav-item--active svg {
@@ -317,10 +322,13 @@ a {
   padding: var(--sp-100) var(--sp-200) var(--sp-100) calc(var(--sp-300) * 3);
   border-radius: var(--r-200);
   color: var(--text-nav-2);
-  font-size: var(--t-sm);
   text-align: left;
   text-decoration: none;
   transition: background-color var(--dur-base) ease, color var(--dur-base) ease;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 
 .cl-nav-sub--show {
@@ -335,7 +343,8 @@ a {
   background: var(--surface);
   box-shadow: var(--sh-raised);
   color: var(--text);
-  font-weight: 600;
+  /* 本尊側欄二級選中 = 13/20/600（未選中 450）；實測「二級選中不加粗父級」 */
+  font-weight: var(--fw-semibold);
 }
 
 .cl-main {
@@ -392,10 +401,10 @@ a {
 
 .cl-page__header h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.45;
+  font-size: var(--type-display-sm-size);
+  line-height: var(--type-display-sm-lh);
+  font-weight: var(--type-display-sm-fw);
+  letter-spacing: var(--type-display-sm-ls);
 }
 
 .cl-page__actions {
@@ -426,11 +435,11 @@ a {
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: var(--r-btn);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
   white-space: nowrap;
   transition: background var(--tr), border-color var(--tr), box-shadow var(--tr), transform var(--tr);
+  font-size: var(--type-button-label-size);
+  line-height: var(--type-button-label-lh);
+  font-weight: var(--type-button-label-fw);
 }
 
 .cl-button:active:not(:disabled) {
@@ -441,10 +450,11 @@ a {
   opacity: 0.45;
 }
 
+/* 本尊 size-base 與 size-large 的字型軸**完全相同**（12/16/550），
+   large 只有幾何變大 ⇒ 沒有「小按鈕字更小」這一階。刪掉字級覆蓋，只留幾何。 */
 .cl-button--small {
   height: 28px;
   padding: 0 10px;
-  font-size: 12px;
 }
 
 .cl-button--primary {
@@ -492,8 +502,12 @@ a {
   gap: 4px;
 }
 
+/* 🔴 本尊輸入框標籤（新舊兩層、兩種節點共 8 個實例）一律 **13/20/450**
+   ——我方原本 600，比本尊重了兩階。 */
 .cl-field__label {
-  font-weight: 600;
+  font-size: var(--type-input-label-size);
+  line-height: var(--type-input-label-lh);
+  font-weight: var(--type-input-label-fw);
 }
 
 .cl-field__input {
@@ -504,8 +518,11 @@ a {
   border-radius: var(--r-btn);
   outline: none;
   background: var(--surface);
-  font-size: 13px;
   transition: border-color var(--tr), box-shadow var(--tr);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 
 .cl-field__input::placeholder {
@@ -530,7 +547,9 @@ a {
 .cl-field__error,
 .cl-field__hint {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--type-details-size);
+  line-height: var(--type-details-lh);
+  font-weight: var(--type-details-fw);
 }
 
 .cl-field__error {
@@ -548,9 +567,11 @@ a {
   gap: 5px;
   padding: 0 8px;
   border-radius: var(--r-pill);
-  font-size: 12px;
-  font-weight: 500;
   white-space: nowrap;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--type-body-sm-ls);
 }
 
 .cl-badge__pip {
@@ -654,7 +675,10 @@ a {
 .cl-index-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
 }
 
 .cl-index-table th,
@@ -668,8 +692,10 @@ a {
 .cl-index-table th {
   background: var(--surface-3);
   color: var(--text-2);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--type-body-sm-ls);
 }
 
 .cl-index-table tbody tr {
@@ -708,8 +734,11 @@ a {
   accent-color: var(--focus);
 }
 
+/* 索引表列內主連結（商品名）。本尊實測：`<a>` 本身 12/16/450，
+   **真正繪製文字的 span 是 12/16/550** ——「rect 相同不代表同一節點」的典型。
+   ⇒ 主欄比一般儲存格重一階，靠 fw override 表達（body-sm 無字重軸）。 */
 .cl-product-title {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* 系列列表「後台 N 件（前台可見 M 件）」的第二個數字（第 12 包）。
@@ -751,8 +780,10 @@ a {
 .cl-empty-state h2 {
   margin: 0 0 4px;
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: var(--type-heading-lg-size);
+  line-height: var(--type-heading-lg-lh);
+  font-weight: var(--type-heading-lg-fw);
+  letter-spacing: var(--type-heading-lg-ls);
 }
 
 .cl-empty-state p {
@@ -1038,9 +1069,10 @@ a {
 
 .cl-detail-head h1 {
   margin: 0;
-  font-size: var(--t-2xl);
-  line-height: var(--lh-2xl);
-  font-weight: var(--fw-lg);
+  font-size: var(--type-display-sm-size);
+  line-height: var(--type-display-sm-lh);
+  font-weight: var(--type-display-sm-fw);
+  letter-spacing: var(--type-display-sm-ls);
 }
 
 .cl-detail-head__actions {
@@ -1096,14 +1128,23 @@ a {
 
 .cl-od-grid__aside { position: sticky; top: var(--sp-200); }
 
-.cl-product-detail .cl-card h3 {
+/* 🔴 2026-08-28（D58）：選擇器由 `.cl-product-detail .cl-card h3` **放寬為 `.cl-card h3`**。
+   原選擇器只覆蓋商品／變體詳情頁，而 `<Card padded>` 內的 `<h3>` 另有 **5 處**
+   祖鏈上沒有 `.cl-product-detail`（SettingsLanguagesPage ×3、TranslationCsvCard、
+   CollectionDetailPage 的 notFound 態）⇒ **完全沒有規則命中**，吃 Chrome UA 的
+   `h3{font-size:1.17em;font-weight:bold}` ＋ body 的 `line-height:1.5`，
+   在 `html{font-size:13px}` 下算出 **15.21px / 22.815px / 700**
+   ——**三軸同時落在我方與本尊兩邊的值域外**。
+   本尊有對應：Settings → Languages 的卡標題 `h2.Polaris-Text--headingSm` = 13/20/600。 */
+.cl-card h3 {
   display: flex;
   align-items: center;
   gap: var(--sp-200);
   margin: 0 0 var(--sp-300);
-  font-size: var(--t-sm);
-  line-height: var(--lh-sm);
-  font-weight: var(--fw-title);
+  font-size: var(--type-heading-md-size);
+  line-height: var(--type-heading-md-lh);
+  font-weight: var(--type-heading-md-fw);
+  letter-spacing: var(--type-heading-md-ls);
 }
 
 .cl-card__head-action { margin-left: auto; font-weight: var(--fw-body); }
@@ -1164,11 +1205,13 @@ a {
   border: 0;
   border-radius: var(--r-200);
   background: transparent;
-  font-size: var(--t-sm);
-  font-weight: var(--fw-control);
   color: var(--text);
   text-align: left;
   transition: background-color var(--dur-base) ease;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 
 .cl-pill:hover { background: var(--surface-2); }
@@ -1301,16 +1344,22 @@ a {
   animation: cl-pop var(--dur-base) var(--ease-decelerate);
 }
 
-.cl-savebar__text { flex: 1; font-size: var(--t-sm); font-weight: 500; white-space: nowrap; }
+.cl-savebar__text { flex: 1; white-space: nowrap;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
 
 .cl-savebar__button {
   min-height: var(--h-28);
   padding: var(--sp-100) var(--sp-300);
   border-radius: var(--r-200);
   border: 0;
-  font-size: var(--t-sm);
-  font-weight: var(--fw-control);
   transition: background-color var(--dur-base) ease;
+  font-size: var(--type-button-label-size);
+  line-height: var(--type-button-label-lh);
+  font-weight: var(--type-button-label-fw);
 }
 
 .cl-savebar__button--secondary {
@@ -1358,9 +1407,12 @@ a {
   color: var(--text-inverse);
   border-radius: var(--r-300);
   padding: var(--sp-200) var(--sp-400);
-  font-size: var(--t-sm);
   box-shadow: var(--sh-float);
   animation: cl-toast-in var(--dur-slow) var(--ease-decelerate);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 
 @keyframes cl-toast-in {
@@ -1427,11 +1479,36 @@ a {
 
 /* SERP 預覽（版式模仿搜尋結果的資訊層級；色值走我方 tokens，鐵律 8） */
 .cl-serp { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--sp-300); }
-.cl-serp__site { font-size: var(--t-sm); color: var(--text); font-weight: var(--fw-control); }
-.cl-serp__url { font-size: var(--t-xs); color: var(--text-2); overflow-wrap: anywhere; }
-.cl-serp__title { font-size: var(--t-lg); color: var(--link); line-height: 1.3; overflow-wrap: anywhere; }
-.cl-serp__desc { font-size: var(--t-sm); color: var(--text-2); }
-.cl-serp__price { font-size: var(--t-sm); color: var(--text); font-variant-numeric: tabular-nums; }
+.cl-serp__site { color: var(--text);
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-lg-ls);
+}
+.cl-serp__url { color: var(--text-2); overflow-wrap: anywhere;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
+.cl-serp__title { color: var(--link); overflow-wrap: anywhere;
+  font-size: var(--type-display-sm-size);
+  line-height: var(--type-display-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-display-sm-ls);
+}
+.cl-serp__desc { color: var(--text-2);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
+}
+.cl-serp__price { color: var(--text); font-variant-numeric: tabular-nums;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
+}
 
 .cl-chips { display: flex; flex-wrap: wrap; gap: var(--sp-100); margin-bottom: var(--sp-150); }
 .cl-chip {
@@ -1546,7 +1623,12 @@ a {
 
 /* 商品頁庫存卡（B 塊） */
 .cl-inventory-card { display: flex; flex-direction: column; gap: var(--sp-200); }
-.cl-inventory-card__table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.cl-inventory-card__table { width: 100%; border-collapse: collapse;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
 .cl-inventory-card__table th, .cl-inventory-card__table td {
   padding: var(--sp-150) var(--sp-100); border-bottom: 1px solid var(--border-2); text-align: left;
 }
@@ -1558,9 +1640,19 @@ a {
 .cl-inventory-card__actions { display: flex; gap: var(--sp-200); align-items: center; }
 
 /* 歷程頁儲存格 */
-.cl-history-note { margin: 0 0 var(--sp-200); font-size: var(--t-xs); color: var(--text-2); }
+.cl-history-note { margin: 0 0 var(--sp-200); color: var(--text-2);
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
 .cl-history-activity { display: inline-flex; flex-direction: column; gap: var(--sp-050); }
-.cl-history-activity__doc { color: var(--text-2); font-size: var(--t-xs); word-break: break-all; }
+.cl-history-activity__doc { color: var(--text-2); word-break: break-all;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
 /* delta 弱、期後值強：商家掃的是期後值，delta 是解釋 */
 .cl-history-delta { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .cl-history-delta small { color: var(--text-2); }
@@ -1589,7 +1681,12 @@ a {
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-200);
   padding: var(--sp-400) var(--sp-400) var(--sp-200);
 }
-.cl-modal__title { margin: 0; font-size: var(--t-lg); line-height: var(--lh-lg); font-weight: var(--fw-title); }
+.cl-modal__title { margin: 0;
+  font-size: var(--type-heading-md-size);
+  line-height: var(--type-heading-md-lh);
+  font-weight: var(--type-heading-md-fw);
+  letter-spacing: var(--type-heading-md-ls);
+}
 .cl-modal__close {
   display: inline-flex; border: 0; background: none; padding: var(--sp-100);
   border-radius: var(--r-200); color: var(--text-2); cursor: pointer;
@@ -1775,7 +1872,12 @@ a {
 .cl-file-tile__name {
   font-size: var(--t-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.cl-file-tile__meta { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.cl-file-tile__meta { color: var(--text-3); font-variant-numeric: tabular-nums;
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-sm-ls);
+}
 
 /* ── D48：列表載入更多＋檔案庫排序控件（值一律取 §1 tokens，鐵律 8）── */
 .cl-load-more {
@@ -1797,8 +1899,11 @@ a {
    不另立一套兩欄佈局。 */
 .cl-breadcrumb ol {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-100);
-  margin: 0 0 var(--sp-100); padding: 0; list-style: none;
-  font-size: var(--t-sm); color: var(--text-2);
+  margin: 0 0 var(--sp-100); padding: 0; list-style: none; color: var(--text-2);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 .cl-breadcrumb li { display: inline-flex; align-items: center; gap: var(--sp-100); }
 .cl-breadcrumb a { color: var(--text-2); }
@@ -1863,8 +1968,18 @@ a {
    形態依 82 §9.3：商品詳情頁的 Publishing 卡；編輯面（齒輪→modal）屬 S6b。 */
 .cl-pubcard { display: flex; flex-direction: column; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .cl-pubcard__row { align-items: center; display: flex; gap: 8px; justify-content: space-between; }
-.cl-pubcard__name { color: var(--text); font-size: 13px; }
-.cl-pubcard__empty { color: var(--text-3); font-size: 13px; margin: 0; }
+.cl-pubcard__name { color: var(--text);
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-lh);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--type-body-sm-ls);
+}
+.cl-pubcard__empty { color: var(--text-3); margin: 0;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
+}
 
 /* 發布編輯 modal（S6b）——逐管道 toggle。形態依 82 §12.1／§12.2。
    🔴 群組總開關是 role="checkbox" 不是 switch（switch 不支援 aria-checked="mixed"，
@@ -1929,7 +2044,12 @@ a {
 
 /* ══ 排程彈層（S6b-2）══════════════════════════════════════════════════ */
 .cl-sched { display: flex; flex-direction: column; gap: var(--sp-300); width: 280px; }
-.cl-sched__title { font-size: var(--t-sm); font-weight: var(--fw-title); margin: 0; }
+.cl-sched__title { margin: 0;
+  font-size: var(--type-heading-md-size);
+  line-height: var(--type-heading-md-lh);
+  font-weight: var(--type-heading-md-fw);
+  letter-spacing: var(--type-heading-md-ls);
+}
 .cl-sched__time { position: relative; }
 /* 時區徽章內嵌在時間欄右側（本尊形態，82 §15.6：逐字 GMT+8、無 tooltip） */
 .cl-sched__tz {
@@ -1972,27 +2092,50 @@ a {
 /* ══ 月曆網格（S6b-2）══════════════════════════════════════════════════ */
 .cl-cal { display: flex; flex-direction: column; gap: var(--sp-200); }
 .cl-cal__head { align-items: center; display: flex; justify-content: space-between; }
-.cl-cal__month { font-size: var(--t-sm); font-weight: var(--fw-control); }
+.cl-cal__month {
+  font-size: var(--type-heading-md-size);
+  line-height: var(--type-heading-md-lh);
+  font-weight: var(--type-heading-md-fw);
+  letter-spacing: var(--type-heading-md-ls);
+}
 .cl-cal__grid { border-collapse: collapse; width: 100%; }
 .cl-cal__grid th {
   color: var(--text-3);
-  font-size: var(--t-xs);
-  font-weight: var(--fw-body);
   padding: 4px 0;
+  font-size: var(--type-body-xs-size);
+  line-height: var(--type-body-xs-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-xs-ls);
 }
 .cl-cal__day {
   border-radius: var(--r-100);
   cursor: pointer;
-  font-size: var(--t-sm);
   padding: 5px 0;
   text-align: center;
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
 }
 .cl-cal__day:hover { background: var(--surface-hover); }
 /* 🔴 用 aria-disabled 不是 disabled（APG：composite widget 內保留可聚焦性），
    所以視覺失效也要自己畫——沒有 :disabled 偽類可用。 */
 .cl-cal__day--off { color: var(--text-3); cursor: default; opacity: 0.45; }
 .cl-cal__day--off:hover { background: none; }
-.cl-cal__day--today { font-weight: var(--fw-title); }
-.cl-cal__day--on { background: var(--brand); color: var(--surface); }
+/* 🔴 2026-08-28（D58）：today 與 selected 的字重原本綁反了。
+   本尊 `s-date-picker` 把 600 綁在 **`.selected`**，`.is-today` **只有一個 box-shadow 環、字重仍 450**：
+     .is-today  { box-shadow: var(--p-shadow-border-inset, …); }
+     .selected  { background-color: …; color: …; font-weight: var(--p-font-weight-semibold, 600); }
+   實測：`button.day-button.is-today`（8/28）= 13/20/**450** 且有 box-shadow；
+        `button.day-button.…selected`（8/27）= 13/20/**600**；57 顆普通日 13/20/450。
+   我方原本剛好相反——today 加粗、selected 完全不設字重。 */
+.cl-cal__day--today {
+  box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
+}
+.cl-cal__day--on {
+  background: var(--brand);
+  color: var(--surface);
+  font-weight: var(--fw-semibold);
+}
 .cl-cal__day--on:hover { background: var(--brand); }
 .cl-cal__pad { padding: 5px 0; }

@@ -1493,3 +1493,80 @@ size+lh+weight（**無 ls**）4 個｜四軸齊 6 個。
   只有 `.p-partial-theme-admin-next` 會整組改寫（字重域變 400/500/600/600、body/heading 全加負字距），
   而該 scope **零元素在用**。
 - `--lh-2xs: 14px`：本尊無此行高，我方保留（見上）。
+
+### D58. 決定 C（包 C-2）：元件層遷移到角色階（2026-08-28）
+
+D57 建好角色階之後，**真正改變畫面**的那一步。射程＝逐元件量本尊對應物，指到對的角色。
+
+依據＝**66 列逐元件實測對應表**（49 要改／8 無對應-維持現值／6 未取得／3 已對應），
+三族各經兩面對抗性反駁，**主結論全部成立**，三面反駁各抓到一個真問題（見下「反駁抓到的三件事」）。
+
+#### 主要視覺變更
+
+| 元件 | 我方（前） | 本尊實測 | 改成 |
+|---|---|---|---|
+| `.cl-page__header h1` | 20px / **1.45（無單位＝29px）** / **700** | **18 / 24 / 600 / dense** | display-sm |
+| `.cl-detail-head h1` | 20 / 24 / **450** | 同上（🔴 **索引與詳情同值**，`has-breadcrumbs` 只改版面） | display-sm |
+| `.cl-modal__title` | **16** / 20 / 600 | **13 / 20 / 600**（新層 17 個實例） | heading-md |
+| `.cl-button` | **13px / 1（無單位）/ 600** | **12 / 16 / 550**（新層 19 顆全同值，跨全部 variant） | button-label |
+| `.cl-button--small` | 另設 12px | 本尊 size-base 與 size-large **字型軸完全相同** | **刪掉字級覆蓋**，只留幾何 |
+| `.cl-badge` | 12 / **500** | **12 / 16 / 550**（products 51 + orders 25 全同值） | body-sm ＋ `--fw-medium` |
+| `.cl-index-table th` | **12 / 600** | **12 / 16 / 550** | body-sm ＋ `--fw-medium` |
+| `.cl-field__label` | **600** | **13 / 20 / 450**（新舊兩層 8 個實例） | input-label |
+| `.cl-nav-item` | 13 / **500** | 13 / 20 / **550** | body-md ＋ `--fw-medium` |
+| `.cl-nav-sub` | 13 / 繼承 | 13 / 20 / **450** | body-md ＋ `--fw-regular`（顯式） |
+| `.cl-store-chip__avatar` | **11px / 700** | **16 / 20 / 450** | avatar-initials ＋ `--fw-regular` |
+| `.cl-empty-state h2` | 14 / 1.45 / **700（UA 粗體）** | **14 / 20 / 600** | heading-lg |
+| `.cl-serp__title` | 16 / **1.3（無單位）** | **18 / 24 / 450 / dense** | display-sm 三軸 ＋ `--fw-regular` |
+
+🔴 **`.cl-serp__*` 原本被我判成「Google 模擬、不該動」——那是錯的。**
+本尊商品編輯頁就有「Search engine listing」預覽，版式與我方 1:1（站名／URL／藍標題／描述／價格），
+逐項實測：標題 18/24/450/dense、站名 14/20/450、URL 12/16/450、描述與價格 13/20/450。
+
+#### 🔴 反駁抓到的三件事（都不是細節）
+
+1. **漏掉 5 個完全沒有 CSS 規則的 `<h3>`**（`SettingsLanguagesPage` ×3、`TranslationCsvCard`、
+   `CollectionDetailPage` 的 notFound 態）。它們在 `<Card padded>` 內但祖鏈上沒有
+   `.cl-product-detail`，**沒有任何規則命中** ⇒ 吃 Chrome UA 的 `h3{font-size:1.17em;font-weight:bold}`
+   ＋ body 的 `line-height:1.5`，在 `html{font-size:13px}` 下算出 **15.21px / 22.815px / 700**
+   ——**三軸同時落在兩邊值域外**，比清單裡任何一列都嚴重。
+   ⇒ 選擇器 `.cl-product-detail .cl-card h3` **放寬為 `.cl-card h3`**。
+   本尊有對應：Settings → Languages 卡標題 `h2.Polaris-Text--headingSm` = 13/20/600。
+
+2. **`.cl-product-title` 存在**（`admin.css:728`，`font-weight: 500`，4 個呼叫點：
+   ProductsPage／InventoryPage／CollectionsPage／FilesPage）。對應表原本寫「我方無專用 class」。
+   本尊：`<a>` 本身 12/16/450，**真正繪製文字的 span 是 12/16/550**
+   ——「rect 相同不代表同一節點」的典型。⇒ 一行：`500 → var(--fw-medium)`。
+
+3. 🔴 **日曆的 today 與 selected 字重綁反了**。本尊 `s-date-picker`：
+   `.is-today` **只有一個 box-shadow 環、字重仍 450**；`.selected` 才是 **600**。
+   實測 `button.day-button.is-today`（8/28）= 13/20/450 且有 box-shadow；
+   `…selected`（8/27）= 13/20/600；57 顆普通日 13/20/450。
+   我方剛好相反（`--today` 加粗、`--on` 完全不設字重）⇒ 兩者對調。
+
+#### 🔴 更正 D57 的一句話
+
+D57 的 `--fw-xl` 註釋寫「本尊 modal 標題走 `display-small` = 600」——**那是錯的**。
+逐頁實測 20 個 modal 標題（新層 17／舊層 3），**沒有一個是 18px**：
+新層 `s-internal-modal` 的 `h2.heading` = **13/20/600**（heading-md）、舊層 = 14/20/600；
+`size="large"` 只改寬度不改字型。字重 600 的結論仍成立（兩者皆 600），**錯的是「哪一階」**。
+
+#### 原型端的兩件系統性問題
+
+1. **`body` 帶 `letter-spacing: .01em`**，多處元素繼承而未 reset。本尊 body 是 `normal`。
+   ⇒ 改成 `var(--ls-normal)`。
+2. **兩個元件的字級無對應階，照實登記不硬套**：
+   - `.setup-card h4` 的 **16px/20px** 在 L2 十六階裡不存在（16px 只有 `avatar-initials`，unary 無 lh/fw 軸）
+     ⇒ 從 L1 組，並標明是**我方自有組合**。
+   - `.hero-hello h2`：本尊對應物量到 **26px**，而 26 **不在本尊自己的 13 階字級表裡**
+     ⇒ 字級維持 24，只對齊有證據的三軸（lh 32、fw 550、ls denser）。
+
+#### 量化
+
+| | 前 | 後 |
+|---|---:|---:|
+| `admin.css` 硬編 `font-weight` | 18 | **5**（域外 3） |
+| `admin.css` 硬編 `font-size` px | 22 | **8** |
+| `admin.css` 消費角色階 `--type-*` | 0 | **116** |
+
+原型仍有 93 處硬編字重（32 域外）、11 處硬編字級、26 處無單位行高 ⇒ **包 C-3**。
