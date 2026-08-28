@@ -39,7 +39,14 @@ Token 家族一覽（值見 producer；此處只列**有哪些家族**，避免�
 間距七階 `--sp-050…--sp-600`｜字級九階 `--t-2xs…--t-3xl` 與字重四階｜
 圓角與陰影｜動效時長與 easing｜佈局常數（`--sidebar-w`／`--topbar-h`／`--hairline`）。
 
-- **字體**：`Inter,"Noto Sans TC",system-ui,sans-serif`；HTML 基準 `13px`。
+- **字體**：`Inter,"Noto Sans TC",system-ui,sans-serif`。
+- **基準字級**（🔴 2026-08-28 依 D63 重寫；原文＝「HTML 基準 `13px`」）：
+  本尊是**三條規則、順序即語義**，我方已逐條對齊（producer＝原型同位置）：
+  ① `html,body` 基準 **16/24**（mobile-first）；
+  ② `(hover) and (pointer:fine)` **或** 寬度 ≥ 48em 時收成 **13/20**；
+  ③ `html` 自己釘回 **100%** ⇒ **1rem 恆為 16px**，①② 實際只作用在 `body`。
+  ⇒ 桌機 Chrome 恆滿足 (pointer:fine)，**三個實測寬度（1280/768/390）下正文都是 13/20**；
+  16/24 只在**真觸控裝置且 < 48em** 時出現。舊的「手機把 root 推到 14px」已刪。
 - **字級 scale（只准用這些）**：11（kbd/hint/pal-foot）、12（badge/輔助/軸標）、13（正文/表格/按鈕）、14（強調正文/hero 副標）、16（保留）、20（頁標題 h1/圖表大數）、24（指標卡值/hero 標題）。行高 1.45–1.6；中文標題字距 0，數字用 `tabular-nums`。
 - **間距**：4px 網格。慣用：卡 padding 16、卡間 gap 16、表格 cell `8px 12px`、listbar `8px 12px`、頁邊 32、區塊間 24。
 - **z-index 階層**：content 0 < sticky listbar 3 < topbar/sidebar 40 < settings 50 < annot-bar 70 < overlay/modal 80 < toast 90 < doc-pop 95。

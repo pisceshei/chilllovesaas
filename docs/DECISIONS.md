@@ -1828,3 +1828,98 @@ hero 的容器查詢在 ≤768 正確切換，
 ⇒ **執行順序第 5 項（`testTimeout`）不是可選的優化，是這個問題的主要解。**
 以最壞的安靜值 1257ms 計，`testTimeout: 13000` 給約 **10×** 餘裕，
 能吃下實測到的 4–5× 負載放大並留一倍。該項 🔴 觸鐵律 18.3，需使用者裁定後另開人工合併 PR。
+
+---
+
+### D63. 基準字級對齊本尊：`html` 交回 100%，基準搬到 `body`（2026-08-28）
+
+使用者裁定的五項執行順序中的**第 3 項**。🟢 不觸鐵律 18.3。
+
+#### 本尊怎麼寫的（原文取證）
+
+2026-08-28 於 `admin.shopify.com/store/chill-love-u5q5mnzq/products`，
+本機 Chrome，`fetch` 取 `…/vite/client/en/assets/main-ec608a075296.css` 原文。
+🔴 **這一組規則用 CSSOM 走訪找不到**——45 張表、12077 條規則全走過、
+無 `@import`、無 CORS 阻擋，`document.body.matches(selectorText)` 一條都沒命中。
+是**逐張 `disabled = true` 二分**才定位到 sheet #4，再 `fetch` 原文才看見。
+⚠️ 這代表 **CSSOM 走訪在本尊頁上不可靠**，往後定位規則一律以「消融 ＋ 原文」為準。
+
+本尊三條規則，**順序就是語義**：
+
+| 序 | 選擇器／條件 | 宣告 |
+|---|---|---|
+| ① | `html,body` | size-400、line-height-600、weight-regular、`letter-spacing: initial` |
+| ② | `(hover) and (pointer:fine)` **或** `min-width: 48em` 下的 `html,body` | size-325、line-height-500 |
+| ③ | `html` | `position: relative`、**`font-size: 100%`**、字形平滑一組 |
+
+三條同特異度（型別選擇器）⇒ 源序後者勝 ⇒ **①② 的 font-size 實際只作用在 `body`，
+`html` 恆 16px**。實測 computed：`html` = 16px / 20px / 450 / normal，
+`body` = 13px / 20px / normal。
+
+token 宣告值（同一份原文）：`size-325: .8125rem`、`size-400: 1rem`、
+`line-height-500: 1.25rem`、`line-height-600: 1.5rem`。
+🔴 **本尊整套字級 token 是 rem**——`.8125rem` 要靠 `html = 16px` 才算得出 13px。
+`--p-font-weight-regular` 在這張表宣告 400，但 root 上的 live 值是 **450**
+（`:root.p-partial-theme-admin-next-light` 那一塊覆蓋掉），與我方 `--fw-regular: 450` 一致。
+
+#### 我方改了什麼
+
+原型 `chilllove-admin-v2.html` 與 `app/assets/stylesheets/admin.css` 同步改成同一組三條規則，
+並刪掉「`@media (max-width: 47.9975em)` 時把 root 推到 14px」那一階（本尊沒有這一階）。
+
+**改動前後（實測，本機 Chrome，同源 iframe 控寬，擴充功能污染已停用）**
+
+`admin.css`（＝使用者實際看到的 React app）：
+
+| | 改動前 | 改動後 | 本尊 |
+|---|---|---|---|
+| `html` font-size | **13px** | 16px | **16px** |
+| `html` line-height | normal | 20px | **20px** |
+| `body` font-size | 13px | 13px | 13px |
+| `body` line-height | **19.5px** | 20px | **20px** |
+| `body` font-weight | **400** | 450 | **450** |
+| letter-spacing | normal | normal | normal |
+
+🔴 **實作端有三個真分歧，不是只有 rem 基準**：
+①`line-height: 1.5` 在 13px 下是 **19.5px**，本尊 20px——它**繼承到每一個沒自己設行高的元素**；
+②`body` 根本沒設 font-weight ⇒ 吃 UA 的 **400**，而原型是 450
+⇒ **原型與實作對同一件事給了兩個答案**（C-2 同型：設計與實作各說各話）；
+③root 13px 讓 `1rem = 13px`。
+
+#### 三寬度回歸（原型，1280 / 768 / 390）
+
+以 `git show HEAD:` 導出改動前的原型作對照組，兩份同源並排，
+走完 `go()` 的 **35 條路由**，逐元素比 15 個 computed 屬性 ＋ bounding rect：
+
+| 寬度 | 比對元素 | 差異種類 |
+|---|---:|---:|
+| 1280 | 2792 | **0** |
+| 768 | 2792 | **0** |
+| 390 | 2792 | 44（**全部同一族**：`fontSize: 14px → 13px`） |
+
+390 的差異就是本包要的：舊的 root 14px 那一階被刪掉，改成跟本尊一樣由指標型態決定。
+🔴 **桌機 Chrome 恆滿足 `(hover) and (pointer:fine)`**（實測本尊頁 `matchMedia` 回 true），
+而 ② 的條件是 **OR** ⇒ 縮到 390 也仍是 13/20，與本尊在同一台機器上的行為一致。
+
+#### 未取得 / 已知限制
+
+- 🔴 **16/24 那一支在本 harness 測不到**（需真觸控裝置，鐵律 13.4）。
+  代測法＝在 390 強制 `html,body{font-size:16px;line-height:24px}` 跑溢出稽核：
+  7 個已渲染頁**溢出 0**。這證明「基準放大到 16 不會撐破版面」，
+  **不等於**證明真機形態與本尊一致。
+- **「使用者改瀏覽器預設字級會不會移動 em 斷點」本輪未實測**——它會移，
+  那正是 47 §F 選 em 的理由；本輪只證了「root **宣告**字級不影響」。
+- px→rem 的 token 改制**不在本包**（見下）。
+
+#### 順帶證實的一條
+
+`@media` 條件式裡的 `em` **不受 root 宣告字級影響**：本機 Chrome、同源 iframe 控寬，
+root 依序設 8 / 13 / 16 / 26 / 32px，`(min-width: 48em)` **一律在 768px 翻轉**，
+與 `(min-width: 768px)` 同格。`docs/design/48` 「三條硬規則」的第 3 條與原型兩處斷點階梯註釋原本只寫規格推論，已補上這組實測。
+
+#### 明確不做
+
+**px → rem 的 token 改制另案**（`91` §3.38）。本包只對齊三條規則的**結構與門檻**；
+把 `--t-*` / `--lh-*` 全改成 rem 是本尊的無障礙決定（使用者調大瀏覽器字級時整個後台等比放大），
+射程是整張 token 表 ＋ 所有消費端，且**在預設設定下零視覺差** ⇒ 無法用視覺回歸驗收，
+需要另設驗收方法。鐵律 20.5：不借「斷根」包裝跨元件擴修。

@@ -364,7 +364,8 @@
      22.5em=360 / 30.625em=490 / 41.6875em=667 / 48em=768（主斷點，用量 421）
      / 65em=1040 / 75em=1200 / 90em=1440 / 160em=2560
      max 配對一律 −0.0025em。media query 的 em 以初始字級 16px 計算，
-     不受 html{font-size:13px} 影響，故 px→em 換算安全（51 表 3.1 註 4）。
+     不受 root 宣告字級影響，故 px→em 換算安全
+     （51 表 3.1 註 4；D63 實測複驗：root 8/13/16/26/32px 下 48em 一律在 768 翻轉）。
      CSS 不允許在 @media 條件內用 var()，故此處僅為文件化，實際值寫在各 @media。 */
 }
 
@@ -378,8 +379,39 @@
 .cl-hairline-t{border-top:var(--hairline) solid var(--border)}
 
 *{box-sizing:border-box;margin:0;padding:0}
-html{font-size:var(--t-sm)}
-body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:var(--lh-sm);font-weight:var(--fw-body);letter-spacing:var(--ls-normal);-webkit-font-smoothing:antialiased;overflow:hidden}
+/* ══ 基準字級：三條規則的**順序就是語義**（D63）═════════════════
+   本尊寫法（2026-08-28 於 admin.shopify.com 取 main-ec608a075296.css 原文）：
+     ① 選擇器 `html,body` —— font-size: var(--p-font-size-400)、
+        line-height: var(--p-font-line-height-600)、font-weight: var(--p-font-weight-regular)、
+        letter-spacing: initial
+     ② 條件「(hover) and (pointer:fine)」**或**「寬度 ≥ 48em」下，同選擇器改成
+        font-size: var(--p-font-size-325)、line-height: var(--p-font-line-height-500)
+     ③ 選擇器 `html` —— position: relative、**font-size: 100%**、字形平滑化一組
+   ① 是 mobile-first 基準 16/24；② 在「有精確指標或寬度夠」時收成 13/20；
+   ③ 在 ①② 之後把 **html 自己**釘回 100%。三條同特異度（型別選擇器）⇒
+   後者勝 ⇒ **①② 的 font-size 實際只作用在 body，html 恆為 16px**。
+   🔴 這正是 rem 基準：本尊整套字級 token 是 rem（--p-font-size-325 實測宣告
+   值 .8125rem，×16 = 13px），**要靠 html=16px 才算得出 13**。我方 token 目前是 px，
+   **本包只對齊這三條規則的結構與門檻**；px→rem 的 token 改制是另一件事，
+   已登記 `docs/specs/91` §3.38。
+   🔴 ② 的條件是 **OR**：桌機 Chrome 恆滿足 (pointer:fine)（實測本尊頁
+   matchMedia 回 true）⇒ **縮到 390 也仍是 13/20**。16/24 那一支只有**真觸控
+   裝置**走得到（鐵律 13.4：harness 測不到）——已改用「強制 16px 基準跑
+   390 溢出稽核」代測，輸出在 worklog。
+   🔴 letter-spacing 用 normal、不用 var(--ls-normal)：本尊基準寫 initial，實測
+   body 的 computed 是 `normal`；`--ls-normal` 是 0rem、會算成 `0px`——兩者在
+   **每一個繼承元素**上都不同值。token 仍留給角色階用。
+   🔴 舊寫法「在 html 上直接設 13px」已刪：它讓 1rem = 13px，任何 rem 都
+   被暗中縮成 0.8125 倍。實測（2026-08-28、本機 Chrome、iframe 掃描）條件式
+   裡的 em **不受 root 宣告字級影響**——root 設 8/13/16/26/32px 時 48em 一律
+   在 768 翻轉 ⇒ **刪掉它不動任何斷點**。
+   ══════════════════════════════════════════════════════ */
+html,body{font-size:var(--t-400);line-height:var(--lh-600);font-weight:var(--fw-body);letter-spacing:normal}
+@media (hover) and (pointer:fine),(min-width:48em){
+  html,body{font-size:var(--t-325);line-height:var(--lh-500)}
+}
+html{font-size:100%}
+body{font-family:Inter,"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::placeholder{color:var(--text-3)}
@@ -896,7 +928,7 @@ img{max-width:100%;height:auto}
    用量 421 次，是唯一的「佈局換手線」）／65em=1040／75em=1200／90em=1440／160em=2560。
    max 配對一律 −0.0025em。改 em 是無障礙決定：使用者調大瀏覽器預設字型時，
    版面會提早換到寬鬆佈局（47 §F）。media query 的 em 以初始字級 16px 計算，
-   不受 html{font-size:13px} 影響（51 表 3.1 註 4）。
+   不受 root 宣告字級影響（51 表 3.1 註 4；D63 實測複驗）。
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ================= ≤1440（90em）：溢出防護層（無視覺位移）============== */
@@ -965,7 +997,9 @@ img{max-width:100%;height:auto}
 
 /* ========= ≤768（47.9975em，主斷點）：手機 — 表格卡片化、sheet、底部列 ========= */
 @media (max-width:47.9975em){
-  html{font-size:var(--t-md)}
+  /* 🔴 D63：原本這裡把 root 推到 14px。本尊沒有這一階——它的行動基準
+     只有兩檔（13/20 與 16/24），切換鍵是**指標型態或寬度**而不是純寬度，
+     且它改的是 body 不是 root。規則已搬到檔首基準區塊。 */
   /* ---- topbar ---- */
   .topbar{gap:var(--sp-200);padding:0 var(--sp-200)}
   .logo{font-size:var(--t-sm);gap:var(--sp-150)}
