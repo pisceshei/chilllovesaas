@@ -3459,3 +3459,51 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-3 | **`--text-on-brand` 用在 ai／focus 填底是近似** | `docs/design/chilllove-admin-v2.html` 該 token 的註釋 | 本尊 `ai`（源碼名 `magic`）與 focus 填底的 on-fill **未取得**。`--sem-ai-on-fill` 要等 §3.31 W-2 補 ai 族時一併處理 |
 | W-4 | **`--text-disabled: #b5b5b5` 於白卡對比 2.05**（本尊自己的值） | worklog 的對比稽核表 | WCAG 1.4.3 明文豁免停用控件。**照抄不修**。登記是為了讓下一個人知道那不是漏網 |
 | W-5 | 🔴 **本輪自己寫出偏移漂移的批次改檔 bug**，切掉三個選擇器的左大括號，由 `lint-prototype.py` 的大括號平衡檢查抓到 | worklog「本輪自己寫出一個會切壞檔案的 bug」節 | 已還原重做並記固定處理。登記是因為**這是可機械化的判準候選**：批次改檔工具可加「改前改後大括號計數必須相等」的斷言。屬工具改進，需另案 |
+
+### 3.35 🔴 包 C-3 的真實射程：**不是機械清理，是另一輪逐元件量測**（2026-08-28）
+
+D57／D58 之後，原型與實作端仍有硬編字型值。**曾經打算做成一次全域代換，經檢查後撤回**——
+理由寫在這裡，避免下一個人重蹈。
+
+#### 現況（導出見 `docs/worklog/2026-08-28-D58元件角色遷移.md` 文末）
+
+| 檔 | `font-weight` 硬編 | 其中**本尊值域外** | `font-size` px 硬編 | 無單位 `line-height` |
+|---|---:|---:|---:|---:|
+| `app/assets/stylesheets/admin.css` | 5 | **3**（`.cl-brand` 700／`.cl-login-brand` 700／`.cl-collections-visible` 400） | 8 | 4 |
+| 原型 `<style>` 區塊 | 70 | **22**（400×5／500×8／700×9） | — | — |
+| 原型 JS／markup inline | 23 | **10**（400×1／500×8／700×1） | — | — |
+
+#### 🔴 為什麼不能做全域代換
+
+**① `500 → 550` 是錯的假設。** D58 的逐元件量測證明我方的 `500`／`600` 對應到本尊時**分歧**：
+`.cl-field__label` 我方 **600** → 本尊 **450**（input-label）；
+`.cl-index-table th` 我方 **600** → 本尊 **550**（body-sm + medium，**不是** heading-sm）；
+`.cl-nav-item` 我方 **500** → 本尊 **550**；`.cl-nav-sub` 未設 → 本尊 **450**。
+⇒ **同一個原值映到不同目標**。一律 500→550 正是 D58「巧合命中」那一類錯誤。
+
+原型待處理的 500 也明顯混雜：`.tab`（控件，很可能 550）、`.view-menu .vm-sub`（次標籤，很可能 450）、
+`.idx td::before`（偽元素標籤）、`.od-line .li-name`（列項名）、`.cl-counter.is-warn`（狀態計數）
+——**沒有一條可以不量就決定**。
+
+**② `700` 那 10 處是「未取得」，不是「待代換」。** D58 的量測方在 **7 個頁面**
+（Home／Analytics／Analytics Live View／商品詳情／訂單詳情／Settings General／Settings Plan）
+掃全部 ≥14px 的繪製文字：**除頭像縮寫 16px 與 Home hero 26px 外，最大字級一律是 18px**。
+這**暗示**我方 20px/700 的統計數字整個沒有對應物，但那是 7 頁的全稱句，
+依鐵律 20.2③ **不寫成結論**。
+
+🔴 **取證阻塞點**：分析頁 `s-metric-card` 的數值區在本店**始終未渲染**
+（把日期範圍改成 Last 365 days 並 Apply 後，卡片仍只有 74px 高、只剩 13/16/600 的標題）；
+Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）其內容節點
+`getComputedStyle` 回空字串（尚未進 render tree）；Settings→Plan 為 Plus 自訂價、不顯示金額。
+**要收口需要一個 metric card 數值實際渲染成功的分析頁。**
+
+**③ `.cl-brand` 與 `.cl-login-brand` 的 700 不是對齊問題。** 本尊頂欄的品牌鎖定件是
+**兩張 `<img>`，沒有可量的文字**；登入面在 accounts.shopify.com（另一個產品面，
+且本專案硬約束**禁止輸入密碼**）。⇒ 那兩處是**我方自有字標**，屬設計選擇，需另行裁定。
+
+#### ⇒ C-3 的正確形態
+
+與 C-2 同規格的**逐元件量測輪**（給每個硬編值找出本尊對應物，或誠實記無對應／未取得），
+**不是** sed 代換。射程約 32 處域外 ＋ 61 處域內但未 token 化。
+
+**前置**：`s-metric-card` 的取證阻塞要先解（需要有資料的分析頁）。
