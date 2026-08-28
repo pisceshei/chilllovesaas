@@ -187,6 +187,19 @@ Jul 15       | Initial inventory  | Fecify  | 0 | 0 | (+9) 9  | (+9) 9
 
 ## §4 🔴 系列與庫存的 CSS 量測（層④ CSS 三段式，2026-08-28）
 
+> 🔴🔴 **2026-08-28 引用守衛：本節的全部 `font-weight` 值一律待複驗，未複驗前不得引用。**
+>
+> 本節量測時，使用者 Chrome 的一個擴充功能正在注入
+> `body, body :not(svg)… { font-weight: 500 !important }`（全文＝`docs/design/111` §20）。
+> 它把字重**雙向**改寫（450 拉高、550 壓低成同一個 500）⇒ **看到 500 無法回推真值**。
+> 🔴 **shadow DOM 也不是無條件免疫**——`font-weight` 會沿 flattened tree 繼承進 shadow，
+> 未自宣告它的繪製盒同樣被污染（`111` §20.3）。
+>
+> ⚠️ **font-size／line-height／color／letter-spacing／間距／圓角／陰影不受影響**，那些值仍可引用。
+>
+> 🔴 **本節只有 6 項做過乾淨重量**，且那 6 條登記在 **`docs/research/81` §8.6 #18–#29**（不在本檔）。其餘 41 項**未複驗**。
+
+
 > 全域 token 值表、頁面骨架與視覺規律＝`docs/design/111-shopify-token-baseline.md`。
 > 涵蓋排查與缺口＝`docs/design/110-css-measurement-coverage.md`。
 > 🔴 **鐵律 9**：只記 `getComputedStyle` 算出來的值，不含本尊樣式表原始碼、選擇器定義或可執行片段。
@@ -215,7 +228,7 @@ Jul 15       | Initial inventory  | Fecify  | 0 | 0 | (+9) 9  | (+9) 9
 | 焦點色 | #005bd3 | --p-color-border-focus（實測焦點環用色 rgb(0,91,211)，見 §2 焦點環條目） |
 | 間距階（rem→px @16px） | 0 / 1 / 2 / 4 / 6 / 8 / 10 / 12 / 16 / 20 / 24 / 28 / 32 / 40 / 48 / 64 / 80 / 96 / 112 / 128px | --p-space-0/025/050/100/150/200/250/300/400/500/600/700/800/1000/1200/1600/2000/2400/2800/3200 |
 | 字級階（rem→px @16px） | 11 / 12 / 13 / 14 / 16 / 18 / 20 / 22 / 24 / 30 / 32 / 36 / 40px | --p-font-size-275/300/325/350/400/450/500/550/600/750/800/900/1000 |
-| 字重階 | regular 450 / medium 550 / semibold 600 / bold 650 | --p-font-weight-regular / -medium / -semibold / -bold。⚠️ 實測 `document.body` 的 computed font-weight 是 **500**，不在這四階之內 |
+| 字重階 | regular 450 / medium 550 / semibold 600 / bold 650 | --p-font-weight-regular / -medium / -semibold / -bold。~~⚠️ 實測 `document.body` 的 computed font-weight 是 **500**，不在這四階之內~~ 🔴 **2026-08-28 撤回：那是量測環境污染**（`docs/design/111` §20）。`body` 的乾淨值就是 **450**，落在這四階之內 |
 | 圓角階（rem→px @16px） | 0 / 2 / 4 / 6(未列於 token，見 §3) / 8 / 12 / 16 / 20 / 30px；full = 624.9375rem | --p-border-radius-0/050/100/150/200/300/400/500/750/-full（150=6px 有 token，實測也用到） |
 | 陰影 · 卡片（--p-shadow-100） | 6 層：0 5px 5px -2.5px rgba(0,0,0,.03) / 0 3px 3px -1.5px rgba(0,0,0,.02) / 0 2px 2px -1px rgba(0,0,0,.02) / 0 1px 1px -.5px rgba(0,0,0,.03) / 0 .5px .5px 0 rgba(0,0,0,.04) / 0 0 0 1px rgba(0,0,0,.06) | --p-shadow-100；實測用於 s-internal-section 的 section、分段控制選中鈕 |
 | 陰影 · 抬升卡（--p-shadow-200） | 7 層，最外 0 8px 10px -5px rgba(0,0,0,.08)，其餘同 shadow-100 各層 | --p-shadow-200；實測用於 Collection items 的商品格線卡 |

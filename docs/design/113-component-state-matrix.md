@@ -114,3 +114,97 @@
 - **麵包屑返回連結的 hover／focus** 與 Modal 遮罩點擊行為。
 - **1280 / 768 / 390 三寬度的並排對比（鐵律 13.1）** —— 本輪僅在 innerWidth=1024 單一寬度量測，原因見 environment（多代理共用同一實體視窗，resize 會污染他人量測）。本檔所有數值**不得**被引用為「桌機 1280 已驗證」。
 - **s-* 元件的 CSS 規則來源** —— 依任務硬約束 6 與鐵律 9，全程只讀 getComputedStyle 的結果值，未讀取 styleSheets／cssText／class 定義，因此無法（也不應）陳述某個值「引用哪個 token 變數」；tokens 段落中的對應關係一律只是「量到的顏色等於該 token 的值」。
+
+---
+
+### §1.6 🔴 更正：量測環境污染與量錯層（2026-08-28）
+
+> 本節依**鐵律 19.5**（更正不得抹除歷史）追加。**上方原記載保留原文**，
+> 下表逐項給出乾淨值。更正的來源與方法＝`docs/design/111` §20。
+
+**兩類錯誤，逐項標明**：
+
+- **污染**：使用者 Chrome 的擴充功能注入 `<style id="font-bolder-style">`，
+  規則為 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas) { font-weight: 500 !important }`。
+  🔴 它是**固定值 500 加 `!important`** ⇒ 把 450 **拉高**、把 550 **壓低**，
+  **看到 500 無法回推真值**。
+  🔴 **shadow DOM 不是無條件免疫**：污染選擇器確實停在 shadow 邊界，但 `font-weight`
+  **是可繼承屬性**——shadow 內**未自宣告 font-weight** 的繪製盒，會沿 flattened tree
+  繼承宿主被改寫成 500 的值。判準是「**該元素自己有沒有宣告 font-weight**」，
+  不是「它在不在 shadow 裡」（實證＝`docs/design/113` §1.6 的 variant-plain 與
+  `docs/research/82` §16.6 的 Remove schedule）。
+- **量錯層**：記到的是**不繪製文字的包裹元素**（繼承值），而非實際繪製文字的元素。
+
+⚠️ **只有 `font-weight` 受污染**：全部受測元素的 font-size／line-height／color／
+letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
+
+| # | 元件 | 原記載 | 🔴 乾淨值 | 污染值 | 取值 |
+|---:|---|---|---|---|---|
+| 1 | 按鈕 · .Polaris-Button（按鈕框，variantPrimary/sizeMedium「Save」） | 未取得（docs/design/113 不在可存取工作區） | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。商品詳情頁底部 div.Polaris-PageActions > button.Polaris-Button（disabled 態） |
+| 2 | 🔴 按鈕 · .Polaris-Button 內層標籤 span.Polaris-Text--root.Polaris-Text--bodySm.Polaris-Text--semibold（primary 實際上色元素） | 未取得 | **12px / 600 / 16px** | 12px / 500 / 16px | light DOM。button.Polaris-Button > span（污染把 600 壓低成 500） |
+| 3 | 按鈕 · .Polaris-Button 內層標籤 span.Polaris-Text--bodySm.Polaris-Text--medium（variantSecondary/sizeMicro「View change log」「Get help」「Hire a Partner」） | 未取得 | **12px / 550 / 16px** | 12px / 500 / 16px | light DOM。/settings/general 頁 button.Polaris-Button--variantSecondary > span |
+| 4 | 按鈕 · .Polaris-Button--variantSecondary--sizeMicro（按鈕框） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。/settings/general |
+| 5 | 按鈕 · .Polaris-Button--variantTertiary--sizeSlim（列表列 icon-only；本頁 50 個實例值全一致） | 未取得 | **12px / 450 / 16px** | 12px / 500 / 16px | light DOM。/products 列表列操作鍵 |
+| 6 | 🔴 按鈕 · s-internal-button shadow button.button.variant-plain（「View details」）——**在 shadow 內但仍被污染** | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | e.shadowRoot.querySelector('.button')。variant-plain 未宣告 font-weight ⇒ 跨 shadow 邊界繼承宿主被污染的值；其內 <slot> 同樣 13/450→500 |
+| 7 | 按鈕 · web component 的 light-DOM 宿主 s-internal-button（各 variant 共通） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM 宿主。**不上色**，真值看 shadow .button（部分 secondary 宿主乾淨即 450、未變） |
+| 8 | Modal · 標題列文字 h2.Polaris-Text--root.Polaris-Text--headingMd | 未取得 | **14px / 600 / 20px** | 14px / 500 / 20px | light DOM。商品詳情 → 發布卡齒輪 aria-label='Manage publishing' → .Polaris-Modal-Dialog__Modal（sizeLarge，960×426）內 h2（污染把 600 壓低） |
+| 9 | Modal · 標題列關閉鍵 button.Polaris-Button--variantTertiary--sizeMedium（icon-only X）及其 span.Polaris-Button__Icon | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。Modal 標題列右側 |
+| 10 | Modal · div.Polaris-Modal__Body（內容區容器） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM |
+| 11 | Modal · 側欄項 button._SidebarButton_（「Sales Channels」選中、「Agentic」未選，兩者同值） | 未取得 | **13.3333px / 400 / normal（Arial，UA 預設，未設 font；不上色）** | 13.3333px / 500 / normal | light DOM。上色的是內層 s-text → shadow span.text |
+| 12 | Modal · 分組標題 strong.Polaris-Text--bodySm.Polaris-Text--medium（「Catalogs」） | 未取得 | **12px / 550 / 16px** | 12px / 500 / 16px | light DOM |
+| 13 | 輸入框 · label.Polaris-Label__Text（「Description」「Category」「Price」「Package」「Product weight」） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。商品詳情頁 |
+| 14 | 輸入框 · input.Polaris-TextField__Input（Price／Product weight） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM |
+| 15 | 輸入框 · input.Polaris-TextField__Input::placeholder（「0.00」） | 未取得 | **13px / 450 / normal** | 13px / 500 / normal | light DOM。getComputedStyle(el,'::placeholder') |
+| 16 | 輸入框 · textarea._Textarea_（Description 編輯器）及其 ::placeholder | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM |
+| 17 | 篩選列 · button._Activator_kx3a9（視圖 tab「All」外框）與 span._LabelWrapper_kx3a9 | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。/products 篩選列；**上色文字在 shadow，見 unchanged** |
+| 18 | 篩選列 · div._ContentEditable_12hbo_17（搜尋輸入，contenteditable）及其 ::before placeholder；容器 div._SearchBarPlus_ 同值 | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM |
+| 19 | 篩選列 · button._SlimTertiaryButton_j5l2d（Reset view，icon-only） | 未取得 | **12px / 550 / 16px** | 12px / 500 / 16px | light DOM（污染壓低） |
+| 20 | 分頁器 · button.Polaris-Button--variantSecondary--sizeMedium（aria-label Previous／Next，icon-only）；容器 div.Polaris-ButtonGroup__Item 與 span.Polaris-Button__Icon 同值 | 未取得 | **13px / 450 / 13px** | 13px / 500 / 13px | light DOM。/products 底部分頁區 |
+| 21 | 表格 · div.Polaris-Table-TableHeadingCell（「Status」）與 button.Polaris-Table-TableHeadingCell__SortableHeadingButton（「Product」） | 未取得 | **12px / 550 / 16px** | 12px / 500 / 16px | light DOM（污染壓低） |
+| 22 | 表格 · div.Polaris-Table-TableCell（內容格）與列內商品連結 a | 未取得 | **12px / 450 / 16px** | 12px / 500 / 16px | light DOM |
+| 23 | 表格 · 商品標題葉節點 span._Wrapper_10gjt_1._LineClamp_10gjt_8 | 未取得 | **12px / 550 / 16px** | 12px / 500 / 16px | light DOM（污染壓低） |
+| 24 | Badge · light-DOM 宿主 s-internal-badge | 未取得 | **13px / 450 / 20px（「5」「Active」）；13px / 400 / 20px（「No」「Off」「192333101230」）** | 13px / 500 / 20px | light DOM 宿主。**不上色**——文字經 slot 投影進 shadow .badge，依 flattened tree 繼承 12px/550/16px |
+| 25 | Badge · light DOM 的 div._Badge_xhno8_251（側欄 Orders 計數「5」） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM |
+| 26 | Badge · light DOM 的 span._DevBadge_oh3al_1（「dev」） | 未取得 | **13px / 550 / 20px** | 13px / 500 / 20px | light DOM（污染壓低） |
+| 27 | 側欄導航項 a._Item_xhno8_146（含 _Item-selected_ 態，兩者同值） | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM。與任務簡報校準表一致，複驗成立 |
+| 28 | 文字元件 · light-DOM 宿主 s-internal-text／s-internal-heading／s-internal-paragraph／s-internal-tooltip／s-internal-text-field | 未取得 | **13px / 450 / 20px** | 13px / 500 / 20px | light DOM 宿主，皆不上色；真值見 unchanged 的 shadow 條目 |
+| 29 | 校準參照 · .Polaris-Text 各變體（交叉驗證用） | 未取得 | **bodyMd 13/550/20；bodySm 12/450/16；medium 14/550/20；semibold 13/600/20；regular 13/450/20；subdued 12/450/16；body 13/450/20** | 全部 500 | light DOM。與任務簡報校準表逐項相符，證明本輪量測環境有效 |
+
+#### §1.6.1 複驗後與原記載一致（13 項）
+
+- 按鈕 · s-internal-button shadow `button.button` / `a.button`：**variant-primary（含 tone-critical、disabled）／variant-secondary／variant-tertiary（含 icon-only）一律 12px / 550 / 16px**，污染前後完全相同（size-base）。實例涵蓋 Generate／Add／Preview／Share／More actions／Add definition／Discard／View all／Export／Import／Add product／Learn more／Done／Cancel。
+- 按鈕 · 上述 shadow `.button` 內的 `<slot>` 與 `span.text-wrapper` 同為 12px/550/16px ⇒ 由 light DOM 投影進來的標籤文字依 flattened tree 繼承 slot，**不受污染**。
+- Modal · 頁尾按鈕（s-button → shadow button.button）：variant-primary(disabled)「Done」、variant-secondary「Cancel」、variant-tertiary ＝ 12px / 550 / 16px，污染前後相同。
+- Badge · s-internal-badge shadow `div.badge` ＝ **12px / 550 / 16px**；tone-auto／tone-success／tone-ai／color-base 全部同值；其 `<slot>` 同值。商品詳情 5 個實例＋列表頁狀態 badge 皆一致，污染前後相同。
+- 輸入框 · s-internal-text-field shadow：`label.label.outside`（「Title」）＝ 13px/450/20px；`input[type=text]` ＝ 13px/450/20px；`input::placeholder`（「Short sleeve t-shirt」）＝ 13px/450/normal。三者污染前後相同。
+- Popover 下拉 · s-menu shadow：`div.dialog[popover]` ＝ 13px/450/20px；`ul.menu` ＝ 13px/450/20px；`button.menu-item`（含 .critical）＝ 13.3333px/400/20px（Arial，UA 預設、不上色）；`a.menu-item` ＝ 13px/450/20px。**實際上色的選項文字 = menu-item 內的 `s-text` → shadow `span.text` ＝ 13px / 450 / 20px，Inter**。全部污染前後相同。
+- Tooltip · s-internal-tooltip shadow `div.tooltip` ＝ **13px / 450 / 20px**，污染前後相同；隱藏態（display:none）與 showPopover() 顯示態量得同值。文字為 div.tooltip 的直接文字節點，無內層元素。
+- 麵包屑 · 全部位於 s-internal-page 的 shadow 內，污染前後相同：`span.breadcrumb-links` 13px/450/20px；`s-link` 宿主 13px/450/20px；其 shadow `a.link` 14px/450/20px；`span.breadcrumb-divider` 13px/450/20px；icon `span.icon` 13px/450/13px。（1024 寬下此 s-link 為 icon-only（34×28，accessibilitylabel="Products"），不繪製文字——見 not_obtained #4）
+- 頁面標題 · s-internal-page shadow `h1.heading.has-breadcrumbs` ＝ **18px / 600 / 24px**，污染前後相同。
+- 卡片標題 · s-internal-heading shadow `h2.heading`（「Price」）＝ 13px / 600 / 20px，污染前後相同。
+- 文字元件 · s-internal-text shadow `span.text`（size-sm 實例）＝ 12px/450/16px；s-internal-paragraph shadow `p.paragraph`（color-subdued）＝ 13px/450/20px。污染前後相同。
+- 篩選列 · 視圖 tab「All」的**實際上色文字** `s-text → shadow span.text` ＝ **12px / 550 / 16px**，污染前後相同（外層 light DOM 容器被污染，見 corrections）。
+- 篩選列 · Sort by 按鈕 shadow `button.button.variant-tertiary.icon-only` ＝ 12px / 550 / 16px，污染前後相同。
+
+#### §1.6.2 本次更正帶出的規律
+
+1. 🔴 判準要更正：不是「shadow DOM 一律免疫」，而是「**該 shadow 元素自己有沒有宣告 font-weight**」。污染選擇器 `body :not(svg)…` 只匹配 light DOM 元素，但 **CSS 繼承會跨越 shadow 邊界**（依 flattened tree）——shadow 內未宣告 font-weight 的元素會繼承宿主被改寫成 500 的值。實證：`s-internal-button` 的 shadow `button.button` 在 variant-primary/secondary/tertiary 下宣告 12px/550 ⇒ 免疫；但 **variant-plain 未宣告 ⇒ 乾淨 13/450、污染 13/500，雖在 shadow 內仍被污染**。逐項標 shadow/light 不足以判斷，必須實測 toggle。
+2. 所有 web component 的 **light-DOM 宿主**（s-internal-button／badge／text／heading／paragraph／tooltip／text-field 等）一律被污染（13px/450→500，部分 badge 宿主 13px/400→500），**但通常不影響上色**：文字實際由 shadow 內另有宣告的元素繪製（`.button` 12/550、`.badge` 12/550、`span.text`）。⇒ 量宿主會得到假值，必須穿透到真正上色的那一層。
+3. 🔴 `.Polaris-Button` 的「按鈕框」與「標籤」是兩個不同的值，只量框會全錯：框永遠是繼承來的 13px/450/20px（icon-only 變體另為 12/450/16 或 13/450/13），**真正上色的是內層 `span.Polaris-Text--bodySm`**——primary 帶 `--semibold` ＝ 12px/**600**/16px，secondary 帶 `--medium` ＝ 12px/**550**/16px。兩者在污染下都被**壓低**成 500。
+4. 污染是雙向的，本輪實測到 6 類「被壓低」案例（乾淨 > 500）：`.Polaris-Text--bodyMd` 550、`--medium` 550、`--semibold` 600、Modal 標題 `headingMd` 600、`.Polaris-Table-TableHeadingCell` 550、`span._DevBadge_` 550。⇒ 看到 500 絕不可回推 450。
+5. 新舊兩層混用發生在**同一個元件內部**：Manage publishing Modal 的外框／標題／關閉 X／側欄／Body 全是 light DOM Polaris React（被污染），但**頁尾 Done／Cancel 按鈕是 s-button web component**（shadow，12/550/16，免疫）。Modal 不能整體歸類，必須分區量。
+6. 部分按鈕根本沒設 font，落到 UA 預設：Modal 側欄 `button._SidebarButton_`（light）＝ 13.3333px/400/normal（Arial）；s-menu shadow 的 `button.menu-item` 同樣是 13.3333px/400（Arial）。這兩者都不上色——真正的標籤在內層 `s-text → span.text`（13px/450/20px, Inter）。把 13.3333/400 登記成元件值即為誤記。
+7. `s-internal-button` shadow `.button` 的 12px/550/16px 在 primary／secondary／tertiary／tone-critical／icon-only／disabled 全部相同，size-base 下不隨 variant 或 tone 改變字級與字重（差異在色與框）。
+
+#### §1.6.3 仍未取得
+
+- docs/design/113 §1.2 的原記載值——本機三個工作區（C:\Users\pisce\Downloads\shopifysystem、C:\Users\pisce\Documents\ChatGPT\CHILL LOVE SYSTEM\chilllovesaas、…\chilllovesaas-pr60）的 docs/design/ 下皆無 113 號檔（最大編號 64）。⇒ 無法做「原記載 vs 乾淨量測」的逐項對照；本次改以「污染值 vs 乾淨值」分類，corrections 的 recorded 欄一律填「未取得」，不臆造原記載（鐵律 19）。請以本報告的 clean 欄直接回寫 113。
+- 🔴 **與任務簡報不符，工具限制清單需更正**：`computer` 的 `left_click`／`hover`／`key` 在此環境**同樣無效**（簡報寫「仍可用」）。實證：依 getBoundingClientRect 算出的座標點擊 More actions(862,86)、Manage publishing 齒輪(966,304) 皆無反應；`document.elementFromPoint(966,304)` 回傳正確的 s-internal-section（證明座標正確，是事件未送達）；`key Escape` 無法關閉已開 Modal。⇒ 本輪全部互動改用 DOM 事件派發（dispatchEvent pointerdown/mousedown/pointerup/mouseup + click）與 showPopover()/hidePopover()；Modal 以 dispatch 的 KeyboardEvent('Escape') 關閉成功並已複驗無 Unsaved changes。
+- 響應式三寬（768／390）下的形態與量測——`resize_window` 在此離屏視窗無效（實測 innerWidth 恆為 1024），本輪僅取得 **1024×551** 一個寬度。鐵律 13.1 的三裝置對比未完成。
+- 麵包屑「文字型」形態的字級距——1024 寬下麵包屑渲染為 icon-only 的 s-link（34×28）；帶「Products」字樣的文字型麵包屑位於隱藏的 `s-menu#P0-0-breadcrumb-menu` 內（該子樹 getComputedStyle 回傳空字串，屬未渲染），無法量測。需在能觸發文字型形態的寬度或狀態下補量。
+- Picker／combobox 下拉選項（`s-internal-picker-option`，商品詳情頁 251–272 個實例）——以 showPopover() 只開得了容器 `div.popover`（242×296），其 slotted 的 `s-internal-single-picker` 仍 display:none（元件自身的開啟邏輯未被觸發），選項一個都未渲染；真實點擊不可用。⇒ 選項列（含 s-option、選中態、內建搜尋框）的字級距未取得。**這與已取得的 s-menu 動作下拉是不同元件，不可互相外推。**
+- light DOM 的 Polaris Badge（`.Polaris-Badge*`）——商品詳情、商品列表、設定三頁皆無實例（查詢返回 0）；列表狀態 badge 已全面改用 `s-internal-badge`。是否仍有其他頁面使用舊 Polaris Badge 未查。
+- hover／focus／active 等互動態下的字重差異——本輪只量預設靜態（唯一例外：Modal 頁尾 Done 為 disabled 態，值與 enabled primary 相同）。因指標事件不可用而未取得。
+- 除 `s-internal-button` variant-plain 外，是否還有其他「shadow 內卻未宣告 font-weight、因而仍被污染」的元件——本輪只逐一驗證了列舉到的元件，未做全站 shadow 節點的 toggle 全量 diff 掃描。此為已知風險面，建議補一次全量掃描。
+
+> 量測環境：測試店 chill-love-u5q5mnzq，Claude in Chrome 自開分頁（用畢已關閉）。量測頁：商品詳情 /products/9907123716331（非禁用 id）、商品列表 /products、設定 /settings/general。視窗寬固定 1024×551。  【污染源處置】每次導航後重新以 `[...document.querySelectorAll('style')].find(s=>s.id==='font-bolder-style').sheet.disabled=true` 停用，量完立即還原 `=false`。**下列所有 clean 值皆為「已停用污染源後量測」**，dirty 值為同一元素在污染環境下的對照。收工複驗：extStyleDisabled=false、body font-weight 回到 500（污染態）、無 open popover／modal、無 Unsaved changes bar。  【污染反向校準（本次自證）】商品列表頁 1256 個可見葉節點的字重直方圖——乾淨：400×164／450×987／550×97／600×8，**沒有 500**；污染：450×335／500×912／550×2／600×7。與簡報所述一致，可作為本輪量測有效性的憑證。  【全程唯讀】未按任何儲

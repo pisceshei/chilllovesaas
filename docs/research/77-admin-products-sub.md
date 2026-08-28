@@ -166,7 +166,7 @@
 1. 🔴 **表格已不是 <table>，而是一張 CSS Grid**：全頁 `document.querySelectorAll('table').length === 0`；`.Polaris-Table` 是 `display:grid`，TableHead / TableHeadingRow / TableBody / TableRow 一律 `display:contents`。欄寬由 `grid-template-columns` 一次宣告（1024 寬下 11 條軌道），列高由 `grid-template-rows` 逐列給值。我方 IndexTable.tsx 若仍用 <table> 或 flex 列，sticky 欄、橫捲影子列、選取覆蓋層這三件事會做不出同樣行為。
 2. 🔴 **列分隔線畫在儲存格的 border-top，不是列的 border-bottom**（每格 `border-top: 1px solid #e3e3e3`）。因為列是 display:contents 不能承載邊框。第一列因此靠表頭的 border-bottom 收邊，形成「表頭 1 條 + 每列 1 條」的節奏。
 3. 🔴 **hover 底色與 selected 底色是同一個值 #f7f7f7**（--p-color-bg-surface-hover ≡ --p-color-bg-surface-secondary）。選取態只用 class `TableRow__Selected` 與勾選框填色區分，**不用底色分層**。我方若給選取態另一種底色即偏離本尊。
-4. **同一頁並存兩套設計系統，字重與按鈕視覺各不相同**。(a) Web Component 層（`s-*` + shadow root）：字重取自 --p-font-weight-* 的 450/550/600/650，secondary 按鈕是 **純 #e3e3e3 平面、box-shadow: none**；(b) Polaris React 層（`Polaris-*` class）：base font-weight computed 為 **500**（不在 --p-font-weight-* 階裡），secondary 按鈕帶 **三層浮雕 inset 陰影**（0 -1px 0 0 #b5b5b5 inset, 0 0 0 1px rgba(0,0,0,.1) inset, 0 .5px 0 1.5px #fff inset）。同一畫面上「Export」（e3e3e3 平面）與批次列「Bulk edit」（白底浮雕）就是這兩套的對照。我方要選一套並貫徹，不能兩邊各抄一半。
+4. **同一頁並存兩套設計系統，字重與按鈕視覺各不相同**。(a) Web Component 層（`s-*` + shadow root）：字重取自 --p-font-weight-* 的 450/550/600/650，secondary 按鈕是 **純 #e3e3e3 平面、box-shadow: none**；(b) Polaris React 層（`Polaris-*` class）：~~base font-weight computed 為 **500**（不在 --p-font-weight-* 階裡）~~ 🔴 **2026-08-28 撤回：那是量測環境污染，見 §7.6 與 `docs/design/111` §20**，secondary 按鈕帶 **三層浮雕 inset 陰影**（0 -1px 0 0 #b5b5b5 inset, 0 0 0 1px rgba(0,0,0,.1) inset, 0 .5px 0 1.5px #fff inset）。同一畫面上「Export」（e3e3e3 平面）與批次列「Bulk edit」（白底浮雕）就是這兩套的對照。我方要選一套並貫徹，不能兩邊各抄一半。
 5. **互動控件高度只有三階**：28px（頁首按鈕 / 篩選列圖示鈕 / 表頭排序鈕 / 分頁鈕 / 列尾動作鈕 / 空態主鈕）、24px（檢視活化鈕、批次列 sizeMicro 按鈕、Badge 是 20）、18px（勾選命中區）。**28 是絕對主力**。
 6. **圓角只用三階**：8px（一切互動控件：按鈕、輸入框、彈層項目、Badge、分頁外緣）、12px（容器：卡片 s-section、Popover、s-popover）、4px（勾選框、焦點環）。另有 9999px 只給 switch 軌道。**沒有 2px / 6px / 16px 出現在本頁**。
 7. **間距全部落在 4 的倍數**（實測出現值：2、4、6、8、12、16、20、24、32），且 6px 是表格儲存格的專用內距（--p-space-table-cell-padding = .375rem = 6px），12px 只出現在「列首欄的左內距」與「sticky 末欄的右內距」——**表格左右兩端比中間多 6px 的呼吸**。
@@ -195,6 +195,7 @@
 3. **與 64 §4「Switch 32×24（內距 4/0）」不完全一致**。我在批次列量到的 switch 是 `input[type=checkbox]` 本體 **32×16**、radius 9999px、padding `0 2px`、border 1px solid #8a8a8a，外層 label 高 28、padding `4px 0`。⇒ 64 的「24 高」可能是量到含上下 4px 內距的 label 盒（16+4+4=24）。**建議處置：把 64 的數字拆成「軌道 32×16 / 命中盒 32×24」兩行**，否則實作會把軌道畫成 24 高（過胖）。
 
 4. **47 §3 字級階把 `--t-xs` 定為「12 / 16 / 500」**。我實測儲存格確實是 12/16/**500**（Polaris React 層），但**同一頁的 Badge 是 12/16/550、頁首按鈕也是 12/16/550**（s-* web-component 層），而 `--p-font-weight-*` token 階裡**根本沒有 500 這一階**（只有 450/550/600/650）。⇒ 47 的「500」是 React 層的實測值沒錯，但它不是設計系統的 token 值。**建議處置：`--t-xs` 拆成 `--t-xs-data: 12/16/500`（表格資料，React 層）與 `--t-xs-control: 12/16/550`（Badge、按鈕，web-component 層）**，否則我方只會有一種 12px 字重，兩層之一必然對不上。
+   > 🔴🔴 **2026-08-28 撤回這個建議**：分階的依據「React 層 12/16/**500**」是**量測環境污染**（`docs/design/111` §20），不是本尊事實 ⇒ **不需要拆兩階**。乾淨值見本檔 **§7.6**。
 
 5. **47 §0 記載的量測環境根字級為 24px（污染）並警告「凡涉及 border-width 的數字一律作廢」**。本輪根字級為 **16px**，所有 rem 值 1:1，且 border 值直接實測（表頭 border-bottom 1px solid #e3e3e3、儲存格 border-top 1px solid #e3e3e3、髮絲線 0.66px）。⇒ 本檔的邊框數字可直接用來回填 47 §C 那批被作廢的值。
 
@@ -214,3 +215,107 @@
 - **排序啟用後（aria-sort=ascending/descending）的欄標題樣式**。原因：本輪未點擊排序（避免改變檢視狀態）。實測所有欄標題的 `aria-sort` 皆為 null。取得方式：點一次欄標題後讀 heading cell 的 aria-sort 與 SortIcon 的 opacity/transform，再點回原序。
 - **--s-token-* 系列（2026 新 web-component 設計系統的獨立 token 集）的完整值**。原因：讀取時被工具的敏感字串過濾器擋下（回傳 `[BLOCKED: Sensitive key]`），該過濾器對 `--s-token-...` 的鍵名誤判。已知它存在（例如 --s-token-font-size-body-large-when-mobile-p1s0、--s-condition-true-p1s0 等 698 條之中的一部分）。取得方式：改成逐鍵單獨讀值並以陣列回傳，或先對鍵名做 base64/切段再回傳。
 - **其他被 47/64 已涵蓋而本輪刻意未重複的項目**：全域斷點清單、動效具名 transition 全表、頂欄與側欄細節、卡片群組的單邊圓角用法。這些不是取不到，是依指派範圍排除。
+
+---
+
+### §7.6 🔴 更正：量測環境污染與量錯層（2026-08-28）
+
+> 本節依**鐵律 19.5**（更正不得抹除歷史）追加。**上方原記載保留原文**，
+> 下表逐項給出乾淨值。更正的來源與方法＝`docs/design/111` §20。
+
+**兩類錯誤，逐項標明**：
+
+- **污染**：使用者 Chrome 的擴充功能注入 `<style id="font-bolder-style">`，
+  規則為 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas) { font-weight: 500 !important }`。
+  🔴 它是**固定值 500 加 `!important`** ⇒ 把 450 **拉高**、把 550 **壓低**，
+  **看到 500 無法回推真值**。
+  🔴 **shadow DOM 不是無條件免疫**：污染選擇器確實停在 shadow 邊界，但 `font-weight`
+  **是可繼承屬性**——shadow 內**未自宣告 font-weight** 的繪製盒，會沿 flattened tree
+  繼承宿主被改寫成 500 的值。判準是「**該元素自己有沒有宣告 font-weight**」，
+  不是「它在不在 shadow 裡」（實證＝`docs/design/113` §1.6 的 variant-plain 與
+  `docs/research/82` §16.6 的 Remove schedule）。
+- **量錯層**：記到的是**不繪製文字的包裹元素**（繼承值），而非實際繪製文字的元素。
+
+⚠️ **只有 `font-weight` 受污染**：全部受測元素的 font-size／line-height／color／
+letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
+
+| # | 元件 | 原記載 | 🔴 乾淨值 | 污染值 | 取值 |
+|---:|---|---|---|---|---|
+| 1 | 詳情頁 表單 label（Polaris React 側，例「Description」） | 91 §15：label 13px / 500 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | .Polaris-Label__Text 與 .Polaris-Label 皆同值；light DOM，受污染。★ 這正是本輪指定複驗的那一條：500 是污染值，真值 450 |
+| 2 | 詳情頁 表單 label（web component 側，例「Title」） | 91 19：web-component input label = 450 | **13px / 450 / lh 20px** | 13px / 450 / lh 20px（不受影響） | span.label-content，位於 shadow root。原記載正確，且與 Polaris 側一致 ⇒「兩套設計系統的差異」不存在 |
+| 3 | 列表頁 表頭欄位（Product / Inventory / Product type / Vendor） | 未取得（本機 checkout 查無該條目原文） | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | button.Polaris-Table-TableHeading，light DOM |
+| 4 | 列表頁 表頭欄位（Status / Category / Channels / Catalogs） | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | div.Polaris-Table-TableHeading，light DOM |
+| 5 | 列表頁 表頭 Image / Actions | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span.Polaris-Text--root，light DOM |
+| 6 | 列表頁 資料列 商品名 | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span._Wrapper_10gjt_1 _LineClamp…，light DOM（50 列同值） |
+| 7 | 列表頁 資料列 一般儲存格值（Category / Channels / Catalogs / Vendor 值） | 未取得 | **12px / 450 / lh 16px** | 12px / 500 / lh 16px | span._Wrapper_10gjt_1，light DOM（157 個節點同值） |
+| 8 | 列表頁 資料列 副行「for N variants」 | 未取得 | **12px / 450 / lh 16px** | 12px / 500 / lh 16px | div，light DOM |
+| 9 | 列表頁 選取用隱藏標籤（Select all 50 on page / Select <gid>） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | span.Polaris-Text--root，light DOM（52 個節點） |
+| 10 | 列表頁 搜尋框（輸入區） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | div._ContentEditable_12hbo_17[contenteditable=true]，light DOM |
+| 11 | 列表頁 檢視列「Save」次要按鈕 | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span._SlimTertiaryButtonText_，light DOM |
+| 12 | 列表頁 分頁 Prev / Next 按鈕 | 未取得 | **13px / 450 / lh 13px** | 13px / 500 / lh 13px | button.Polaris-Button[aria-label=Previous\|Next]，light DOM，圖示按鈕（無文字） |
+| 13 | 列表頁 分頁計數「1-50」 | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span.Polaris-Text--root，light DOM |
+| 14 | 列表頁 批次操作列 計數「1 selected」 | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span.Polaris-Text--root，light DOM；勾選一列後出現，量完已取消勾選 |
+| 15 | 列表頁 批次操作按鈕（Bulk edit / Set as draft） | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span.Polaris-Text--root，light DOM |
+| 16 | 詳情頁 Polaris TextField input（價格 198.00、重量 0.2） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | input.Polaris-TextField__Input，light DOM。與 shadow 的標題 input 同值 |
+| 17 | 詳情頁 TextField 前綴「HK$」 | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | div.Polaris-TextField__Prefix，light DOM |
+| 18 | 詳情頁 textarea（描述編輯區底層） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | textarea._Textarea_gdhwb_96，light DOM |
+| 19 | 詳情頁 pill 標籤字（Compare-at / Unit price / Cost per item…） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | p.Polaris-Text--root，light DOM（12 個節點） |
+| 20 | 詳情頁 pill 值（HK$399.00 / No） | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | span，light DOM（5 個節點） |
+| 21 | 詳情頁 pill 容器與可點 pill 本體 | 未取得 | **容器 div._BasePill_ = 13px / 450 / 20px；按鈕 button._UnstyledButton_._BasePill_ = 13px / 400 / 20px** | 兩者皆 13px / 500 / 20px | light DOM。400 這格是本頁少數 400 之一，污染後與 450 那格變得無法區分 |
+| 22 | 詳情頁 可點標籤 .Polaris-Tag（Disclosures） | 未取得 | **13px / 400 / lh 20px** | 13px / 500 / lh 20px | button.Polaris-Tag.Polaris-Tag--clickable，light DOM |
+| 23 | 詳情頁 欄位說明小字 | 未取得 | **12px / 450 / lh 16px** | 12px / 500 / lh 16px | p.Polaris-Text--root（例：Determines tax rates…）與 div（Sell via selected sales channels…），light DOM |
+| 24 | 詳情頁 開關列標題（Inventory tracked / Physical product） | 未取得 | **11px / 450 / lh 12px** | 11px / 500 / lh 12px | div.Polaris-InlineStack，light DOM。11px 是本輪新見尺寸 |
+| 25 | 詳情頁 庫存 Locations 表頭 | 未取得 | **12px / 550 / lh 16px** | 12px / 500 / lh 16px | div.Polaris-Table-TableHeading，light DOM |
+| 26 | 詳情頁 唯讀欄位值（Fecify product ID 131666） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | div._ReadField_123bh_9，light DOM |
+| 27 | 詳情頁 Category 值（Uncategorized） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | span._Value_w0zhq_82，light DOM |
+| 28 | 詳情頁 SEO 連結預覽標題 | 未取得 | **18px / 450 / lh 24px** | 18px / 500 / lh 24px | span._LinkPreview_1azdy_17，light DOM |
+| 29 | 詳情頁 頁尾 PageActions「Save」主按鈕 | 未取得 | **label span.Polaris-Text--root = 12px / 600 / 16px；按鈕本體 .Polaris-Button = 13px / 450 / 20px** | label = 12px / 500（被壓低 100）；按鈕本體 = 13px / 500 | button.Polaris-Button > div.Polaris-InlineStack > div.Polaris-PageActions，light DOM。本輪落差最大的一項 |
+| 30 | 詳情頁 富文字工具列按鈕（Paragraph） | 未取得 | **12px / 550 / lh 12px** | 12px / 500 / lh 12px | button._Button_ddsno_4，light DOM |
+| 31 | 詳情頁 拖放提示（To pick up a draggable item…） | 未取得 | **13px / 450 / lh 20px** | 13px / 500 / lh 20px | div，light DOM |
+
+#### §7.6.1 複驗後與原記載一致（21 項）
+
+- 列表頁 頁首標題 h1「Products」= 18px / 600 / lh 24px（**shadow DOM**，h1.heading in s-internal-page；污染無效）
+- 列表頁 頁首按鈕 Add product / Export / Import / More actions 標籤 = 12px / 550 / lh 16px（**shadow slot** in s-button；56 個節點同值，clean=dirty）
+- 列表頁 篩選列「Columns」= 13px / 550 / lh 20px、「Reset view」= 13px / 450 / lh 20px（**shadow slot**）
+- 列表頁 檢視 tab「All」（＝當前選中態）繪製值 = 12px / 550 / lh 16px（**shadow** span.text.weight-medium.size-small）；⚠️ 其 light DOM 宿主 s-internal-text 讀出來是 13px/450（污染時 500），量宿主會錯
+- 列表頁 狀態 badge（Active / Unlisted）= 12px / 550 / lh 16px（**shadow** s-internal-badge > div.badge > span.content）
+- 列表頁 庫存欄「0 in stock」= 13px / 450 / lh 20px（**shadow slot**）
+- 列表頁 批次操作列「Show all selected」= 13px / 450 / lh 20px（**shadow** label）
+- 詳情頁 頁首 h1 商品名 = 18px / 600 / lh 24px（**shadow** h1.heading.has-breadcrumbs）
+- 詳情頁 頁首按鈕 Preview / Share / More actions 標籤 = 12px / 550 / lh 16px（**shadow slot**）
+- 詳情頁 頁首狀態 badge「Active」= 12px / 550 / lh 16px（**shadow**）
+- 詳情頁 卡標題 Price / Inventory / Shipping / Variants / Product metafields / Search engine listing / Status / Publishing / Product organization = 13px / 600 / lh 20px（**shadow slot**，17 個節點）
+- 詳情頁 卡標題 Media / Disclosures = 13px / 450 / lh 20px（**shadow slot**；🔴 與上面那組不同，登記時勿合併）
+- 詳情頁 web-component 表單 label：span.label-content（Title）、span.label（Type / Vendor）、span.small-text（Collections / Tags）= 13px / 450 / lh 20px（**shadow**）
+- 詳情頁 標題 input（web component）= 13px / 450 / lh 20px（**shadow** input）
+- 詳情頁 Status 下拉選項 Active / Draft / Unlisted = 13px / 450 / lh 20px；選中值 = 13px / 600 / lh 20px（**shadow slot**）
+- 詳情頁 庫存表頭詞 unavailable / committed / available / on hand = 13px / **650** / lh 20px（**shadow slot**，6 個節點；650 是本輪新見字重）
+- 詳情頁「Add options like size or color」按鈕 = 12px / 550 / lh 16px（**shadow slot**）
+- 詳情頁 Manage publishing / View all / Add definition = 13px/450 與 12px/550（**shadow slot**）
+- 詳情頁「Rich text editor」提示 = 12px / 450 / lh 16px；富文字工具列 tooltip（Formatting / Bold / Italic…）= 13px / 450 / lh 20px（**shadow slot**，331 個節點）
+- 詳情頁 Online Store / All catalogs 銷售通路列 = 12px / 550 / lh 16px（**shadow slot**）
+- 詳情頁 媒體拖放遮罩「Drop files to upload」= 13px / 600 / lh 20px（**shadow** div.overlay-text）
+
+#### §7.6.2 本次更正帶出的規律
+
+1. 🔴 **兩頁都是混合設計系統**：頁殼／頁首／按鈕／badge／卡標題／web-component 表單控件走 s-* web component（shadow DOM）；資料表格、Polaris 表單 label／TextField／pill／pagination／批次操作列仍是 Polaris React（light DOM）。登記每一項時必須標明歸屬，否則無法判斷該值可不可信。
+2. 🔴 ~~**污染只打得到 light DOM**~~ **（已於同日二次更正：`font-weight` 會沿 flattened tree 繼承進 shadow，見 `docs/design/111` §20.3）**。以下機制敘述在「選擇器匹配」這一層仍成立：擴充規則 `body :not(svg)…` 是**文件樹**選擇器，配不到 shadow 樹內元素；而 slotted 文字的繼承走**扁平樹**（從 `<slot>` 所在的 shadow 父元素繼承）。所以即使宿主 `<s-internal-text>` 被 !important 設成 500，實際繪製的 shadow `span.text` 仍是原值 ⇒ 所有 s-* 元件文字全部免疫，clean 與 dirty 完全相同。
+3. 🔴 **量測陷阱（可能污染既有記載，即使當時停用了擴充）**：對 `s-internal-text` 這類宿主呼叫 getComputedStyle 得到的是「從 light DOM 父層繼承來」的值，不是繪製值。實例：檢視 tab「All」宿主讀 13px/450，shadow 內真正繪製的是 12px/550——差一個尺寸又差 100 字重。正確做法是量文字節點的扁平樹父層：`getComputedStyle(textNode.assignedSlot || textNode.parentElement)`。凡是量宿主取得的舊記載，即使環境乾淨也要重量。
+4. **乾淨字重集合裡沒有 500**（與已知直方圖一致）：列表頁 main 內容 406 個承載文字的樣式 → 12px/450×163、12px/550×128、13px/450×103、13px/550×1、18px/600×1；詳情頁 473 個 → 450×382、550×35、600×20、650×6、400×5。⇒ **任何 500 都是污染**，可作為既有記載的機械篩查判準。
+5. **污染雙向，本輪最大落差 100**：頁尾 Save 按鈕 label 乾淨 12px/**600** 被壓成 500；同時 12px/450 與 13px/450 被拉高到 500。看到 500 完全無法回推原值（可能是 400、450、550 或 600），只能重量。
+6. **污染面積兩頁差很多**：列表頁 575 個承載樣式中 287 個被改（含 style 節點）；詳情頁只有 41/473 被改。原因是詳情頁 web-component 化程度高得多。這正好解釋了為何「Polaris label 500 vs web-component label 450」會被誤讀成兩套設計系統的差異——差異其實只存在於「哪一半被污染打到」。
+7. 🔴 **原「兩套設計系統差異」結論被推翻**：`.Polaris-Label__Text`（Description）與 `span.label-content`（Title）**乾淨值都是 13px / 450 / lh 20px**，一模一樣；input 亦然——`.Polaris-TextField__Input` 與 shadow input **都是 13px / 450 / lh 20px**。§15 的 500 是污染值，不是設計差異。
+8. **本輪新見、尚未見於已知 token 表的值**：11px/450/lh 12px（開關列標題，light DOM，會被污染）與 13px/650/lh 20px（庫存表頭詞 unavailable/committed/available/on hand，shadow，免疫）。650 這個字重先前未出現在乾淨直方圖裡，建議另立 token 條目。
+9. **免疫不等於可以不停用**：s-* 元件雖然免疫，但它們的 light DOM 宿主（s-internal-text 等）在污染下讀出 500，如果量測腳本走宿主，仍會把免疫元件記成 500。停用污染源＋量扁平樹父層，兩件事都要做。
+
+#### §7.6.3 仍未取得
+
+- **檢視 tab 的未選中態**：測試店的商品列表只有一個 view（「All」，實測 button[class^=_Activator_] 僅 1 個），建立第二個 view 屬寫入操作，違反唯讀約束 ⇒ 未取得。選中態已量（12px/550，shadow）。
+- **搜尋框 placeholder 文字字重**：搜尋框是 contenteditable（div._ContentEditable_12hbo_17），未命中任何可見的 placeholder 元素（`[class*=Placeholder]` 過濾可見框後為空）⇒ 未取得。輸入區本身已量（13px/450 → 污染 500）。
+- **變體表格（多變體資料列）**：測試店可及商品中，唯二的多變體商品是保護清單內的 9911273160939（3 變體）與 9907126370539（3 變體）；逐頁翻到 start=701（累計 750+ 個商品）仍無其他多變體商品 ⇒ 在不觸碰保護商品的前提下無法取得。已確認單變體商品的 Variants 卡只有卡標題（13px/600，shadow）＋「Add options like size or color」按鈕（12px/550，shadow），沒有表格。
+- **SaveBar（Unsaved changes 情境列）**：需先弄髒表單才會出現，違反唯讀約束 ⇒ 未取得。頁尾 Polaris-PageActions 的 Save 主按鈕已量（label 乾淨 12px/600，污染 500）。
+- **1280 / 768 / 390 三寬度對比（鐵律 13.1）**：resize_window 已知無效（視窗離屏 screenX≈-32000），本輪全部數值都在 innerWidth=1024 / dpr 1.5 / 根字級 16px 下取得 ⇒ 其他寬度未取得，不得外推。
+- **91 §15 / 91 19 / 77 §7 的原記載逐字內容**：本機 checkout（C:\\Users\\pisce\\Downloads\\shopifysystem\\chilllovesaas，HEAD=9954913）的 docs/specs/91-pit-register.md 與 docs/research/77-admin-products-sub.md 內 `grep -n 'font-weight|字重'` 皆無命中，§15／item 19 不存在於此工作副本 ⇒ 除任務內文引述的那一句外，其餘條目原文無法逐字核對。上表 corrections 的 recorded 欄凡標「未取得」者，即為此因；請以 clean 欄為準值、dirty 欄為「若在未停用擴充的環境量測會得到的值」。
+
+> 量測環境：Claude in Chrome，使用者 Chrome 已登入測試店 chill-love-u5q5mnzq。🔴 **每一筆數值都是停用污染源後量測**：每次導航後重新找 `<style id="font-bolder-style">`（parentNode 確認為 HTML）並設 `sheet.disabled=true`，量完以 `disabled=false` 還原（結束時複驗 body font-weight 已回到 500，未改動任何擴充功能設定）。對照的污染值以同一輪 disabled true/false 來回切換取得，故 clean/dirty 是同一組 DOM 節點的成對量測；列表頁另做 clean→dirty→clean 三次，575 項 clean 值完全可重現。視窗 innerWidth=1024 / innerHeight=551 / devicePixelRatio=1.5 / 根字級 16px（未偏離預設，em≈px）。resize_window 無效、screenshot 逾時（已知限制），全程走 DOM/JS。🔴 量測方法：對「文字節點的扁平樹父層」取 computed style（`textNode.assignedSlot \|\| textNode.parentElement`），不是對宿主元素——理由見 patterns 第 3 條。全程唯

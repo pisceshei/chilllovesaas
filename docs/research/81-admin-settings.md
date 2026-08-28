@@ -520,8 +520,10 @@ Legal notice／Subscription policy。**沒有 Contact information 這一項**。
 ### §8.4 🔴 與既有量測文件的衝突（照登記，未逕行覆寫）
 
 1. 🔴 與 47／64 可能衝突（字重階）：`:root` 的字重 token 全是非標準值——regular 450、medium 550、semibold 600、bold 650。但 `document.body` 的 computed font-weight 實測是 **500**（`document.documentElement` 是 450），而設定區絕大多數 .Polaris-* 元素（H2、表頭、導覽項目、頁尾段落）繼承到的就是這個 500。也就是說「token 說 450/550/650」與「畫面上實際渲染 500」兩者並存。若 47／64 只登記了 token 值（450/550/650），實作照抄會與本尊畫面差一階字重。建議在 47／64 補一行：Polaris legacy 節點走 500，新 s-* 元件節點走 450/550。
+   > 🔴🔴 **2026-08-28 撤回本條**：「Polaris 層 computed 是 500」是**量測環境污染**（`docs/design/111` §20），不是本尊事實。乾淨值見本檔 **§8.6**。**不得**依本條去改 47／64——`docs/design/110` 的 **G12** 明文：未複驗前不得引用那兩份的字重值。
 
 2. 🔴 字級階語義衝突：token `--p-font-size-heading-small` = .75rem(12px)、`--p-font-weight-heading-small` = 600，但設定卡片的分節標題 `h2.Polaris-Text--headingSm` 實測是 **13px / 500**。class 名（headingSm）與 token 名（heading-small）對不上值。實作若用 heading-small token 畫分節標題會偏小一階。
+   > 🔴 **2026-08-28 更正：字重那一半整條溶解**。乾淨量測是 **13px / 600**，與 `--p-font-weight-heading-small`=600 **完全吻合**（見 §8.6 第 1 列）。**字級那一半仍成立**（token 12px vs 實測 13px）。
 
 3. 🔴 兩套按鈕系統的次要鈕不同色：頁首 `s-internal-button variant-secondary`（Export／Import）＝底色 #e3e3e3、12px/550、box-shadow none、transition none；卡內 `.Polaris-Button`（Adapt／Translate／Open）＝底色 #fff、13px/500、三層 inset bevel 陰影。若 47／64 只記了其中一套當作「次要按鈕」，另一套會被誤判成 bug。兩者在同一畫面同時可見（Languages 頁）。
 
@@ -545,3 +547,98 @@ Legal notice／Subscription policy。**沒有 Contact information 這一項**。
 - disabled 態（任何控件）——未取得，本輪掃過的設定頁上沒有 disabled 實例。
 - 卡片 shadow 的 dark theme 版本——未量（僅量 light）。
 - Polaris checkbox focus 環的 outline-offset 數值——未取得（只讀到 outline 本身）。
+
+---
+
+### §8.6 🔴 更正：量測環境污染與量錯層（2026-08-28）
+
+> 本節依**鐵律 19.5**（更正不得抹除歷史）追加。**上方原記載保留原文**，
+> 下表逐項給出乾淨值。更正的來源與方法＝`docs/design/111` §20。
+
+**兩類錯誤，逐項標明**：
+
+- **污染**：使用者 Chrome 的擴充功能注入 `<style id="font-bolder-style">`，
+  規則為 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas) { font-weight: 500 !important }`。
+  🔴 它是**固定值 500 加 `!important`** ⇒ 把 450 **拉高**、把 550 **壓低**，
+  **看到 500 無法回推真值**。
+  🔴 **shadow DOM 不是無條件免疫**：污染選擇器確實停在 shadow 邊界，但 `font-weight`
+  **是可繼承屬性**——shadow 內**未自宣告 font-weight** 的繪製盒，會沿 flattened tree
+  繼承宿主被改寫成 500 的值。判準是「**該元素自己有沒有宣告 font-weight**」，
+  不是「它在不在 shadow 裡」（實證＝`docs/design/113` §1.6 的 variant-plain 與
+  `docs/research/82` §16.6 的 Remove schedule）。
+- **量錯層**：記到的是**不繪製文字的包裹元素**（繼承值），而非實際繪製文字的元素。
+
+⚠️ **只有 `font-weight` 受污染**：全部受測元素的 font-size／line-height／color／
+letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
+
+| # | 元件 | 原記載 | 🔴 乾淨值 | 污染值 | 取值 |
+|---:|---|---|---|---|---|
+| 1 | 設定卡分節標題 h2.Polaris-Text--headingSm（81 §8.2 #11）🔴 本輪關鍵 | 13px / 500 / lh 20px / #303030（並據此在 §8.4-2 登記「class 名 headingSm 與 token --p-font-weight-heading-small=600 對不上」） | **600 \| 13px/20px \| #303030 \| ls normal** | 500 \| 13px/20px \| #303030 | light DOM。document.querySelector('#SettingsDialog h2.Polaris-Text--headingSm')。同時複驗 token：--p-font-weight-heading-small = 600 ⇒ 值與 class 名**完全吻合**，§8.4-2 的字重矛盾整條溶解（字級那一半仍成立：--p-font-size-heading-small=.75rem(12px)，實測 13px） |
+| 2 | 左側導覽項文字 · 未選（81 §8.2 #5） | 文字 13px / 500 / lh 20px / #303030 | **550 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog a._Link_a0klx_8:not(._Active_a0klx_25) > span._Label_a0klx_75 > span（文字葉）。外層 a._Link_ 與 div._LinkContent_ 乾淨值只有繼承的 450（污染 500） |
+| 3 | 左側導覽項文字 · 選中（81 §8.2 #5） | （同上，13px / 500；選取態只記色 #4a4a4a） | **550 \| 13px/20px \| #4a4a4a** | 500 \| 13px/20px \| #4a4a4a | light DOM。#SettingsDialog a._Active_a0klx_25 > span._Label_a0klx_75 > span |
+| 4 | 組織標頭主標 h3._Heading_4wlt2_23（CHILLING TECH LIMITED）（81 §8.2 #3） | 13px / 500 / lh 20px / #303030 | **600 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog h3._Heading_4wlt2_23 第 1 個 |
+| 5 | 組織標頭副標 div._Subheader_4wlt2_32（Organization）（81 §8.2 #3） | 12px / 500 / lh 16px / #616161 | **450 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。#SettingsDialog div._Subheader_4wlt2_32 第 1 個 |
+| 6 | 商店標頭店名 h3._Heading_4wlt2_23（CHILL LOVE）（81 §8.2 #7） | 13px / 500 / lh 20px / #303030 | **600 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog h3._Heading_4wlt2_23 第 2 個 |
+| 7 | 商店網域 div._Subheader_4wlt2_32（chill.deals）（81 §8.2 #7） | 12px / 500 / lh 16px / #303030 | **450 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。#SettingsDialog div._Subheader_4wlt2_32 第 2 個。🔴 順帶：本輪量到色是 #616161，與 §8.2 #7 記的 #303030 不同（色不受污染影響，此為獨立差異，僅登記不逕行覆寫） |
+| 8 | 導覽搜尋框 input（81 §8.2 #4） | 13px / 500 / lh 24px | **400 \| 13px/24px \| #303030** | 500 \| 13px/24px \| #303030 | light DOM。#SettingsDialog input[type=text]。🔴 400 是瀏覽器預設字重（該 input 未被設計系統覆寫 font-weight），不是設計 token 值 |
+| 9 | 設定可點列標題 a._SettingsItem__clickableAction_6hwtm_136（81 §8.2 #14） | 13px / 500 / #303030 | **450 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog a._SettingsItem__clickableAction_6hwtm_136（settings/general 頁） |
+| 10 | Languages 語言表 表頭 th（81 §8.2 #22） | 12px / 500 / lh 20px / #616161 | **550 \| 12px/20px \| #616161** | 500 \| 12px/20px \| #616161 | light DOM。#SettingsDialog th（settings/languages） |
+| 11 | Domains 揭露鈕「2 domains ⌄」.Polaris-Button（81 §8.2 #25） | 13px / 500 / lh 20px / #616161 | **450 \| 13px/20px \| #616161** | 500 \| 13px/20px \| #616161 | light DOM。#SettingsDialog .Polaris-Button（textContent 含 domains） |
+| 12 | 卡內 Polaris 次要鈕（Adapt / Translate / Open）.Polaris-Button（81 §8.2 #20） | 13px / 500 / lh 20px（並據此在 §8.4-3 與 s-internal-button 的 12px/550 對比成「兩套系統」） | **450 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog .Polaris-Button[textContent=Adapt]。§8.4-3「兩套按鈕系統不同」的結論仍成立，但差距是 13px/450 vs 12px/550（不是 13px/500 vs 12px/550） |
+| 13 | App 名 h3.Polaris-Text--bodyMd（Shopify Translate & Adapt）（81 §8.2 #26） | 13px / 500 / lh 20px / #303030 | **450 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog h3.Polaris-Text--bodyMd |
+| 14 | 頁尾說明段落 p.Polaris-Text--bodySm（Learn more about languages.）（81 §8.2 #27） | 12px / 500 / lh 16px / #303030 | **450 \| 12px/16px \| #303030** | 500 \| 12px/16px \| #303030 | light DOM。#SettingsDialog p.Polaris-Text--bodySm |
+| 15 | Polaris-Text--bodySm.Polaris-Text--subdued（設定卡內次要小字，81 §8 通用） | （§8 各處以 12px/500 記錄此類次要小字） | **450 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。#SettingsDialog .Polaris-Text--bodySm.Polaris-Text--subdued（settings/general） |
+| 16 | Polaris-Text--bodySm.Polaris-Text--medium（設定卡內強調小字） | （81 §8 未單獨列項；污染下與其他小字同為 500 而無法分辨） | **550 \| 12px/16px \| #303030** | 500 \| 12px/16px \| #303030 | light DOM。#SettingsDialog .Polaris-Text--bodySm.Polaris-Text--medium。🔴 這一階在污染下完全看不見（與 --subdued 的 450 一起被壓成 500） |
+| 17 | Polaris-Text--bodyMd（設定卡內正文） | （81 §8 各處以 13px/500 記錄正文） | **450 \| 13px/20px \| #303030** | 500 \| 13px/20px \| #303030 | light DOM。#SettingsDialog .Polaris-Text--bodyMd |
+| 18 | 系列列表 · 欄位標題格 div.Polaris-Table-TableHeadingCell（94 §4.2 #2） | 12px/16px、字重 500、色 #616161 | **550 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。/collections 頁 [role=columnheader]（Image / Title / Products / Conditions / Sales channels 五欄實測皆同值） |
+| 19 | 系列列表 · 資料格盒 div.Polaris-Table-TableCell（94 §4.2 #3） | 12px/16px、字重 500、色 #303030 | **450 \| 12px/16px \| #303030** | 500 \| 12px/16px \| #303030 | light DOM。/collections 頁 [role=cell]。注意這是格盒的繼承值，實際文字葉見下一列 |
+| 20 | 系列名稱（Title 欄文字葉）span._Wrapper_10gjt_1._LineClamp_10gjt_8（94 §4.2 #5 系列名稱連結） | 字 12px/16px、字重 500、色 #303030 | **550 \| 12px/16px \| #303030** | 500 \| 12px/16px \| #303030 | light DOM。/collections 資料列 [role=cell] 內的 span._Wrapper_10gjt_1._LineClamp_10gjt_8（文字葉）。其祖先 a._Link_lixg6_1 本身乾淨值只有繼承的 450 ⇒ 🔴 只量 <a> 會得到 450，畫面上讀到的是 550 |
+| 21 | 系列列表 · Products 計數格文字 span._Wrapper_10gjt_1（94 §4.2 #3） | （併入資料格 12px/500） | **450 \| 12px/16px \| #303030** | 500 \| 12px/16px \| #303030 | light DOM。/collections 資料列 Products 欄文字葉 |
+| 22 | 庫存列表 · 欄位標題 div.Polaris-Table-TableHeadingCell（94 §4.2 #37） | 12px/16px 字重 500、色 #616161 | **550 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。/products/inventory 頁 [role=columnheader]（Product 與 Available 兩欄實測同值） |
+| 23 | 庫存列表 · 商品名稱欄文字（Product） | （94 §4.2 #38 之外的資料列，§4.3-13 概括為「表格內容一律 12px/16px、字重 500」） | **550 \| 12px/16px \| #303030** | 550（shadow 免疫） | shadow DOM d1。[role=cell] > s-internal-text → shadowRoot > span.text（class 含 weight-medium size-small）。同一格的 light DOM 包裝 span._Wrapper_._LineClamp_ 亦為乾淨 550 / 污染 500 |
+| 24 | 庫存列表 · SKU 欄文字 | （同上概括為 12px/500） | **450 \| 12px/16px \| #616161** | 450（shadow 免疫） | shadow DOM d1。[role=cell] > s-internal-text → shadowRoot > span.text（class 含 color-subdued size-small） |
+| 25 | 庫存數量儲存格（Unavailable / Available / On hand）（94 §4.2 #38） | 格 150×52、字 12px/16px 字重 500、font-variant-numeric: tabular-nums | **格盒（div.Polaris-Table-TableCell，light）450 \| 12px/16px；**畫面上的數字**（s-internal-text → shadowRoot > span.text，無 size-small）450 \| 13px/20px \| #303030** | 格盒 500 \| 12px/16px；數字 450 \| 13px/20px（shadow 免疫） | /products/inventory 第 1 資料列。🔴 原記載的「12px/500」既不是格盒乾淨值（450@12px）也不是數字乾淨值（450@13px）——12px 來自格盒、500 來自污染，兩者被合成了一個不存在的組合 |
+| 26 | 庫存數量儲存格（Committed / Incoming） | （94 §4.2 #38 記為不可編輯欄，純 span，併入 12px/500） | **450 \| 12px/16px \| #303030** | 450（shadow 免疫） | shadow DOM d1。[role=cell] > s-internal-text → shadowRoot > span.text（class 含 size-small）。🔴 本輪實測這幾欄同樣有 s-internal-text 宿主，與 #38「不可編輯欄是純 span ⇒ DOM 上可分辨可編輯性」不符，該判準需另行複驗（本輪未展開） |
+| 27 | 庫存歷程頁 · 表格標頭（Date / Activity / Created by / Unavailable / Committed / Available / On hand）（94 §4.2 #46） | 標頭 min-height 36px、bg #f7f7f7、色 #616161、12px/16px/500 | **550 \| 12px/16px \| #616161** | 500 \| 12px/16px \| #616161 | light DOM。/products/inventory/51159633494251/inventory_history 頁 [role=columnheader]（Date 與 On hand 兩欄實測同值） |
+| 28 | 庫存歷程頁 · 資料格與歷程列文字（94 §4.2 #46） | 資料格 min-height 32px、bg #fff、12px/16px/500、色 #303030 | **450 \| 12px/16px \| #303030** | 格盒與 s-internal-text 宿主 500；shadow 內 span.text 450（免疫） | Date / Created by 欄文字葉＝light DOM div.Polaris-Table-TableCell__TableCellContent（450 clean / 500 dirty）；Unavailable / Committed / Available / On hand 欄＝s-internal-text → shadowRoot > span.text（450，免疫）。兩條路徑乾淨值一致＝450 |
+| 29 | 庫存歷程頁 · 頁尾「Learn more about adjustment history」（94 §4.2 #46） | 頁尾段落 12px/16px、色 #303030、無底線 | **550 \| 12px/16px \| #303030 \| text-decoration none** | 550（shadow 免疫） | shadow DOM d1。s-internal-button → shadowRoot > button.button.size-base.tone-auto.variant-tertiary。🔴 它是 s-internal-button 不是段落；原記載未記字重，本輪補上 550 |
+
+#### §8.6.1 複驗後與原記載一致（14 項）
+
+- 🔴 頁標題 h1.heading（94 §4.2 #7、§4.4-4）＝600 | 18px/24px | #303030 | letter-spacing -0.14994px — 乾淨與污染**完全相同**，因為它在 s-internal-page 的 shadow root 內（shadow d1），污染選擇器 `body :not(...)` 進不去。Collections、Inventory、Adjustment history、設定區 Languages 四頁逐一複驗皆同值 ⇒ 原記載的 600 與 -0.14994px **經複驗成立，不需更正**；94 §4.4-4「47 §3 的 --t-xl=18/24/500 與『字距一律 normal』兩點與本輪不符」的結論同樣站得住。
+- 設定卡片說明段落（81 §8.2 #12）＝450 | 13px/20px | #616161（s-internal-text → shadowRoot > span.text，shadow 免疫）— 與原記載 13px/450 一致。
+- 表單控件 label（81 §8.2 #32）＝450 | 13px/20px | #303030（s-internal-text-field → shadowRoot > label，shadow 免疫）— 與原記載一致。
+- 表單控件 input（81 §8.2 #32）＝450 | 13px/20px | #303030（s-internal-text-field → shadowRoot > input，shadow 免疫）— 與原記載一致。
+- 表單控件 hint／error 容器 div.field-details（81 §8.2 #32）＝450 | 12px/16px | #616161（shadow 免疫）— 與原記載 12px/450 一致。
+- Select 控件 label 與 span.value（81 §8.2 #31）＝450 | 13px/20px | #303030（s-internal-select → shadowRoot，shadow 免疫）— 與原記載 13px/450 一致。
+- 狀態徽章（81 §8.2 #24）＝550 | 12px/16px（s-internal-badge → shadowRoot > div，shadow 免疫）；Published tone-success 色 #014b40、中性 badge 色 #616161 — 與原記載 12px/550 一致。
+- 主要按鈕 Add language／Close 鈕等 s-internal-button（81 §8.2 #18）＝550 | 12px/16px（shadow 免疫）— 與原記載 12px/550 一致。
+- s-internal-link → shadowRoot > a（81 §8.2 #13/#27 內嵌連結）＝450 | 13px/20px（shadow 免疫）— 與原記載 13px/450 一致。
+- s-internal-paragraph → 內層（設定卡說明變體）＝450 | 13px/20px | #616161（shadow 免疫）。
+- s-internal-heading → shadowRoot > h6.heading（底部帳號列姓名等）＝600 | 13px/20px | #303030（shadow 免疫）。
+- Languages 語言名與 Default 副標（81 §8.2 #23）＝450 | 13px/20px（#303030 / #616161），s-internal-text → shadowRoot > span.text，shadow 免疫 — 與原記載 13px/450 一致。
+- 庫存歷程頁卡片標頭（商品名）（94 §4.2 #46）＝450 | 13px/20px | #303030（s-heading shadow d1，免疫）— 與原記載 13px/450 一致。
+- 字重 token 值（81 §8.1、94 §4.1）：--p-font-weight-regular 450 / -medium 550 / -semibold 600 / -bold 650 / -heading-small 600 / -button-label 550 — 自訂屬性不受污染規則影響，原記載正確。
+
+#### §8.6.2 本次更正帶出的規律
+
+1. 污染值域是**單一值 500**，乾淨值域是 **450 / 550 / 600**（外加未被設計系統覆寫的瀏覽器預設 400）。設定 Dialog 內 214 個文字葉節點的乾淨直方圖＝450@13px×35、450@12px×3、550@13px×20、550@12px×3、600@13px×11、400@13.3333px×1，**沒有任何 500**；同一組節點在污染下塌成 500@13px×66、500@12px×6、500@13.3333px×1。Languages 頁同樣：乾淨 450/550/600 三階共 5 組，污染後只剩 500@12px×16、500@13px×40。⇒ 只要文件裡出現「字重 500」就是污染指紋。
+2. 🔴 81 §8.4-1 與 §8.4-2 的**字重那一半整條溶解**。§8.4-1 說「token 是 450/550/650，但畫面實際渲染 500」——實際上畫面渲染的是 450/550/600，token 與畫面完全對得上，不存在「兩者並存」。§8.4-2 說「class 名 headingSm 與 token 名 heading-small 對不上值」——字重完全吻合（實測 600 ＝ --p-font-weight-heading-small 600）；**只剩字級那一半仍成立**（--p-font-size-heading-small = .75rem/12px，實測 13px ＝ --p-font-size-heading-medium 的 .8125rem）。94 §4.4-7「body 的 computed font-weight 是 500，不屬於四階」同因同解：乾淨 body ＝ 450 ＝ --p-font-weight-regular。
+3. 🔴 shadow 邊界擋掉污染，但**宿主在 light DOM 會被改寫**，且 slotted 文字的繼承源是 shadow 內的 span 而非宿主。實測：s-internal-text 宿主 450→500（受污染），其 shadowRoot > span.text 恆為 450 或 550（免疫）；畫面上讀到的是 shadow 值。⇒ 量 s-* 元件**必須穿透到 shadow**，量宿主會拿到污染值並誤記成 500。本輪多筆「原記載 500」正是量在宿主或 light DOM 包裝層上。
+4. 表格有**三階字重**（乾淨），全部 12px，污染把三階壓成一階：表頭 550（#616161）／標題名稱欄 550（#303030）／數值與次要欄 450。系列列表、庫存列表、庫存歷程頁、Languages 表四張表一致。94 §4.3-13「表格內容一律 12px/16px、字重 500」因此要改寫為「表頭與名稱欄 550、數值與次要欄 450」。
+5. 頁標題 h1 一律渲染在 s-internal-page 的 shadow root 內 ⇒ **天生免疫污染**。這正好解釋了為什麼 94 §4.2 #7 的 600 與 letter-spacing -0.14994px 是乾淨的：600 不在污染值域內，而它免疫的原因不是巧合，是 shadow 邊界。同理，所有 s-internal-badge（550）、s-internal-button（550）、s-internal-select／text-field（450）的既有記載都不必更正。
+6. 庫存數值欄的**字級**本身就不一致（乾淨值，與污染無關）：Unavailable / Available / On hand 的 s-internal-text 沒有 size-small class ⇒ 13px/20px；Committed / Incoming 有 size-small ⇒ 12px/16px。同一列同一類數字兩個字級，複製時不能假設整列同階。
+7. 污染是雙向壓平，所以「原記載 500」無法回推真值：本輪同一份文件裡，500 的真值分別是 450（正文、可點列、資料格、次要鈕、頁尾段落、副標）、550（導覽項標籤、表頭、名稱欄、強調小字）、600（分節標題、組織／商店標頭）、400（搜尋框 input）四種。任何「照 500 實作」都會同時做錯四個層級，且把設計上刻意拉開的層級階梯抹平成一階。
+
+#### §8.6.3 仍未取得
+
+- 庫存 adjust bar 的 input[type=number]、Adjust by 模式 chip 與其 ul/li 選單、調整原因選擇器（94 §4.2 #40–#44，其中 #40 記「input 字 13px 字重 500」、#42 記「字重 400」、#43 記「rest 字重 450 / selected 600」）的乾淨字重 — 未取得。取證嘗試：先把 .Polaris-Table__TableScrollable 水平捲到底把 Available 格移進視窗（rect 中心 617,219），再以真滑鼠 left_click 點擊；等 3 秒後全頁（含全部 open shadow root）搜尋 input[type=number] 與 inputMode=numeric 命中 0，全頁 input 只剩 checkbox，也沒有任何 Set to／Adjust by／Add adjustment 文字節點 ⇒ 編輯器未開啟。判定為未取得而非「不存在」；不再加碼點擊以免違反本輪唯讀約束。取得方式＝另開一輪並取得明示授權後，走完 94 §2.5 的「點格→adjust bar→Escape」流程，在停用污染源下量 #40–#44。
+- 設定區底部帳號列姓名（81 §8.2 #9 記 13px/500）的乾淨值 — 本輪未重量（不在指派清單內）。旁證：該處姓名為 s-internal-heading，本輪量到同型元件 shadow 內 h6.heading＝600（免疫），但未對該具體節點取值，故不作斷言。
+- 頁首次要鈕 Export／Import（81 §8.2 #19，s-internal-button variant-secondary，記 12px/550）— 本輪 settings/languages 頁未渲染出該元件（全頁 s-internal-button 僅 Close 一顆），未取得。
+- 語言列「⋯ More actions」popover、以及全部按鈕／導覽項／輸入框的 hover／focus／active／disabled 態字重 — 未觸發，未取得（唯讀約束）。
+- 1280 桌機 / 768 平板 / 390 手機三寬度（鐵律 13.1）的字重複驗 — 未取得。本輪固定 innerWidth=1024；resize_window 已知在此環境無效（視窗離屏 screenX≈-32000，請求任何寬度都回同一值），且多代理共用同一 Chrome 視窗，resize 會污染他人量測。
+- 設定區「群組標籤」的字重 — **無此物可量**（非工具限制）：實測設定導覽是 <nav aria-label="Organization settings menu"> + 每個 li 內一層 div._Section_a0klx_3 包住 a#settings-nav-item，20 個項目之間**沒有任何純文字群組標籤**；分組視覺由組織標頭（h3._Heading_ + div._Subheader_）、商店標頭與 81 §8.2 #6 的 pseudo-element 分隔線承擔。這三者的乾淨字重已列在 corrections。
+- 81 §8.2 #7 的商店網域色 #303030 與本輪量到的 #616161 不一致 — 色不受污染影響，屬獨立差異，本輪僅登記、未進一步排查（可能是量測節點不同或本尊改版）。
+- 94 §4.2 #38 的「可編輯欄葉節點是 s-internal-text、不可編輯欄是純 span ⇒ DOM 上可分辨可編輯性」— 本輪實測 Unavailable/Committed/Available/On hand/Incoming 五個數值欄**全部**都有 s-internal-text 宿主，與該判準不符；本輪未展開複驗（超出指派射程），登記待查。
+
+> 量測環境：2026-08-28，測試店 chill-love-u5q5mnzq admin，Chrome（Claude in Chrome，自建分頁 tabId 1174402725，任務結束已關閉）。innerWidth=1024 / innerHeight=551 / devicePixelRatio=1.5 / getComputedStyle(document.documentElement).fontSize=16px（根字級預設，無 47 §F 記過的 24px 污染）。🔴 每次導航（含 SPA 轉場與重載）後都重新執行 `[...document.querySelectorAll('style')].find(s=>s.id==='font-bolder-style').sheet.disabled=true` 停用擴充功能污染源，量完以 `disabled=false` 還原並複驗 body font-weight 由 450 回到 500。**本檔全部回報值皆為「已停用污染源後量測」**，每筆並附同一元素在污染下的對照值。取值一律 getComputedStyle；shadow DOM 以 el.shadowRoot.querySelector 逐層穿透（本輪遇到的 s-* shadow root 皆為 open）。導航一律走真實 href：側欄 /settings → S

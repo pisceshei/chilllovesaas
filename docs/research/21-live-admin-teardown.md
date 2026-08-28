@@ -159,3 +159,86 @@
 - **行動版抽屜以 Escape 關閉的行為**：合成 KeyboardEvent 不觸發，未驗證。抽屜關閉改以再次點擊 Toggle menu 完成。
 - **卡片 490/491 門檻究竟是 media query 還是 container query**：只量到「容器寬 490 → 全出血、491 → 16px 內距」（對應視窗 506/507）。無法從 computed value 分辨判準掛在視窗還是容器上（依規定未讀樣式表原始碼）。取得方式：在有側欄（≥768）的情況下把內容容器擠到 490 附近觀察（例如開啟 356px 的右側 Sidekick 面板）即可分辨。
 - **深色主題（p-theme-dark）下的整套外框值**：本次 html.p-theme-light、prefers-color-scheme: dark = false，未切換主題。
+
+---
+
+### §5.6 🔴 更正：量測環境污染與量錯層（2026-08-28）
+
+> 本節依**鐵律 19.5**（更正不得抹除歷史）追加。**上方原記載保留原文**，
+> 下表逐項給出乾淨值。更正的來源與方法＝`docs/design/111` §20。
+
+**兩類錯誤，逐項標明**：
+
+- **污染**：使用者 Chrome 的擴充功能注入 `<style id="font-bolder-style">`，
+  規則為 `body, body :not(svg):not(svg *):not(img):not(video):not(canvas) { font-weight: 500 !important }`。
+  🔴 它是**固定值 500 加 `!important`** ⇒ 把 450 **拉高**、把 550 **壓低**，
+  **看到 500 無法回推真值**。
+  🔴 **shadow DOM 不是無條件免疫**：污染選擇器確實停在 shadow 邊界，但 `font-weight`
+  **是可繼承屬性**——shadow 內**未自宣告 font-weight** 的繪製盒，會沿 flattened tree
+  繼承宿主被改寫成 500 的值。判準是「**該元素自己有沒有宣告 font-weight**」，
+  不是「它在不在 shadow 裡」（實證＝`docs/design/113` §1.6 的 variant-plain 與
+  `docs/research/82` §16.6 的 Remove schedule）。
+- **量錯層**：記到的是**不繪製文字的包裹元素**（繼承值），而非實際繪製文字的元素。
+
+⚠️ **只有 `font-weight` 受污染**：全部受測元素的 font-size／line-height／color／
+letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
+
+| # | 元件 | 原記載 | 🔴 乾淨值 | 污染值 | 取值 |
+|---:|---|---|---|---|---|
+| 1 | body | 13px / 500 / 20px | **13px / 450 / 20px / rgb(48,48,48) / Inter / ls:normal** | 13px / 500 / 20px | getComputedStyle(document.body)；首頁與 Orders 兩頁各量一次，值相同 |
+| 2 | 側欄一級導覽項（非作用中）標籤 span.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--medium（Orders／Products／Customers／Growth／Discounts／Content／Markets／Finance／Analytics） | 13px / 500 / 20px | **13px / 550 / 20px / rgb(48,48,48) / ls:normal** | 13px / 500 / 20px | nav._Navigation_xhno8_1 內 span.Polaris-Text--root 依文字取；此 span 才是實際繪製文字的元素 |
+| 3 | 側欄一級導覽項（作用中）標籤 span.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--semibold（首頁的 Home／Orders 頁的 Orders） | 13px / 500 / 20px（原記載未區分作用態） | **13px / 600 / 20px / rgb(48,48,48)** | 13px / 500 / 20px | 作用態換 class 為 --semibold；首頁量 Home、Orders 頁量 Orders，兩頁互換驗證成立 |
+| 4 | 側欄一級導覽項的 <a> 外層包裹（a._Item…） | 13px / 500 / 20px（原記載未區分包裹層與標籤層） | **13px / 450 / 20px（＝繼承 body，本身不繪製文字）** | 13px / 500 / 20px | span.closest('a')。🔴 量錯層會得到 450，量對層是 550/600——原記載的單一 500 同時掩蓋了這兩者 |
+| 5 | 側欄次級（子）項標籤 span.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--regular（Orders 展開後的 Drafts／Shipping labels／Abandoned checkout） | 未登記 | **13px / 450 / 20px / rgb(97,97,97)（subdued 色，與一級的 rgb(48,48,48) 不同）** | 13px / 500 / 20px | 導航至 Orders 後作用區段自動展開子項；<a> 包裹層同為 13px/450/20px |
+| 6 | 側欄「銷售管道／App」類項目標籤（Online Store／Agentic／Point of Sale／Translate & Adapt） | 未登記 | **13px / 550 / 20px / rgb(48,48,48)（class 同一級的 --medium，非次級的 --regular）** | 13px / 500 / 20px | 這類項目掛在分組標題下但用一級的字重，與真正的次級子項（450/subdued）不同層 |
+| 7 | 側欄分組標題實際繪製元素 strong.text.weight-medium.size-small（在 s-internal-text 的 shadowRoot 內；Sales channels／Apps／Sidekick conversations） | 未登記 | **12px / 550 / 16px / rgb(48,48,48)** | 12px / 550 / 16px（🔴 完全未受污染） | host.shadowRoot.querySelector('strong')。shadow 內元素自帶 font-weight，host 的 !important 500 不會繼承進來 |
+| 8 | 側欄分組標題的 light DOM host s-internal-text（display:contents，不繪製任何文字） | 未登記 | **13.3333px / 400 / normal / rgb(0,0,0)** | 13.3333px / 500 / normal | host 本身被污染，但它 display:contents 不產生繪製盒；量 host 會得到與實際外觀無關的值 |
+| 9 | 側欄底部設定入口標籤 span.Polaris-Text--root.Polaris-Text--bodyMd.Polaris-Text--medium «Settings» | 未登記 | **13px / 550 / 20px / rgb(48,48,48)（與一級非作用項同一階）** | 13px / 500 / 20px | 獨立 ul._Section，量測時 y=511 疊在捲動列表之上（釘底），nav 容器 y=56 h=495 |
+| 10 | 側欄 Orders 徽章數字實際繪製元素 span.number.weight-semibold.size-small（在 s-internal-number 的 shadowRoot 內，«5»） | 未登記 | **12px / 600 / 16px / rgb(48,48,48)** | 12px / 600 / 16px（🔴 未受污染） | s-internal-number.shadowRoot.querySelector('span.number')；其 light host s-internal-badge 則被污染成 13px/500 |
+| 11 | 頂欄搜尋控件（靜止態）BUTTON._TopBarButton._SearchActivator_1fnvt_3 — 🔴 它是 button 不是 input，沒有 placeholder 屬性 | 未登記（原記載寫「搜尋框 placeholder」） | **13px / 400 / 20px / rgb(220,220,220)** | 13px / 500 / 20px | rect 240,10 518×36；全文件 input[type=search\|text] 數為 0，提示文字由子 span 承載 |
+| 12 | 頂欄搜尋提示文字 span._Label_1fnvt_32 «Search» | 未登記 | **13px / 400 / 20px / rgb(220,220,220)（頂欄為深底淺字）** | 13px / 500 / 20px | 搜尋按鈕內；44×20 |
+| 13 | 頂欄搜尋快捷鍵 kbd.Polaris-KeyboardKey «CTRL» / «K» | 未登記 | **10px / 550 / 16px / rgb(170,170,170)** | 10px / 500 / 16px | 搜尋按鈕內兩個 kbd，34×20 與 20×20 |
+| 14 | 頂欄店鋪／使用者選單按鈕 BUTTON._TopBarButton._Activator_k23bk（aria-label=KEN LEE） | 未登記 | **13px / 400 / 20px / rgb(220,220,220)** | 13px / 500 / 20px | rect 862,10 154×36；內含 s-avatar ＋ 店名 ＋ dev 徽章 |
+| 15 | 頂欄店鋪名 p.Polaris-Text--root.Polaris-Text--medium «CHILL LOVE» | 未登記 | **12px / 550 / 16px / rgb(220,220,220)** | 12px / 500 / 16px | 店鋪選單按鈕內，69×16 |
+| 16 | 頂欄環境徽章文字 span.Polaris-Text--root.Polaris-Text--bodySm «dev» | 未登記 | **12px / 450 / 16px / rgb(170,170,170)** | 12px / 500 / 16px | span._DevBadge_oh3al_1 內；徽章外殼本身 clean 13px/550/20px |
+| 17 | 頂欄頭像 s-avatar → shadow span.avatar.color-three.size-base（縮寫 CL） | 未登記 | **13px / 450 / 20px / rgb(3,60,57)，28×28** | 13px / 450 / 20px（🔴 未受污染） | 縮寫字元實際由 shadow 內 <svg><text> 繪製，既在 shadow 又被選擇器的 :not(svg *) 排除，雙重免疫；其 light host s-avatar 則被污染成 500 |
+| 18 | 頂欄 logo 區（a._LogoLink → img._ShopifyLogo 21×24 ＋ img._ShopifyWordmark 62×20） | 未登記 | **容器 13px / 450 / 20px / rgb(238,238,238)；區內無文字節點，純圖像** | 容器 13px / 500 / 20px（無可見影響） | 側欄 div._LogoContainer_xhno8_115 為 0×0；實際 logo 在頂欄 div#AppFrameTopBar 內 |
+| 19 | 內容區頁標題選擇器路徑 .header-content | 「.header-content 內 heading」（隱含為 light DOM 可直接查詢） | **🔴 div.header-content 確實存在，但位於 s-internal-page 的 shadowRoot 內 ⇒ document.querySelectorAll('.header-content').length === 0** | 同上（結構事實，與污染無關） | 需穿透 shadow 遞迴掃描才找得到（全頁含 shadow 共 4103 個元素）。div.header-content 本身 13px/450/20px，未受污染 |
+| 20 | 內容區頁標題 h1.heading（Orders 頁，在 s-internal-page 的 shadowRoot 內，容器鏈 div.header-content › div.heading-wrapper › s-grid › h1.heading） | 未登記 | **18px / 600 / 24px / rgb(48,48,48) / ls:-0.14994px，59×24 @ (278,74)** | 18px / 600 / 24px（🔴 未受污染） | shadow 穿透取得；此標題從來不曾被污染，原污染環境下的任何頁標題記載若寫 500 即為量錯元素 |
+| 21 | 首頁（Home）內容區標題 — 首頁不用 h1.heading／.header-content 那套 | 未登記 | **外層 h1._Heading_i633n_73 為 13px/450/20px（自身不繪製文字）；實際問候語 span._TitleLine_xfm0f_1 «Good morning!» ＝ 20px / 550 / 24px / rgb(97,97,97) / ls:-0.332px** | span._TitleLine ⇒ 20px / 500 / 24px | 首頁 main 內無 h1.heading；改用 greeting 版式，與 Orders 的頁標題不是同一元件 |
+| 22 | 首頁卡片標題 h3._Title_1f4a8_54 | 未登記 | **16px / 550 / 20px / rgb(48,48,48)** | 16px / 500 / 20px | 首頁 setup guide 卡片，共 8 個同類 |
+
+#### §5.6.1 複驗後與原記載一致（6 項）
+
+- body font-size ＝ 13px：與原記載一致，且 clean/dirty 相同（污染不影響字級）
+- body line-height ＝ 20px：與原記載一致，clean/dirty 相同
+- 側欄導航項 font-size ＝ 13px：與原記載一致（一級、次級、Settings 皆 13px），clean/dirty 相同
+- 側欄導航項 line-height ＝ 20px：與原記載一致，clean/dirty 相同
+- 全部受測元素的 font-size / line-height / color / letter-spacing / font-family 在 clean 與 dirty 下逐項相同 ⇒ 該擴充功能只污染 font-weight 一個軸，未發現另有問題
+- html 根元素 16px / 450 / 20px 在 clean 與 dirty 下完全相同 ⇒ 選擇器 body 與 body 後代不涵蓋 html，符合預期（可作為停用手法生效的反向對照）
+
+#### §5.6.2 本次更正帶出的規律
+
+1. 🔴 乾淨直方圖裡沒有 500：Orders 頁 shell（頂欄＋側欄）32 個實際繪製文字的葉節點，clean 分佈為 13px/550×17、12px/600×5、13px/450×3、10px/550×2、12px/450×1、12px/550×1、13px/400×1、13px/600×1、16px/450×1 —— 一個 500 都沒有。dirty 則塌成 13px/500×22、12px/500×2、10px/500×2，只剩 shadow 的 12px/600×5 與 svg 的 16px/450×1 倖存。這與商品詳情頁 1335 葉節點的既有結論一致。
+2. 權重階梯是 400 / 450 / 550 / 600（Inter 可變字重），500 在本 shell 從未被作者使用 ⇒ 任何記載成 500 的字重必定是污染值，不是真值。
+3. Polaris class → 字重對映（本次實測）：Polaris-Text--regular ＝ 450；Polaris-Text--medium ＝ 550；Polaris-Text--semibold ＝ 600。shadow 元件對映：weight-medium ＝ 550；weight-semibold ＝ 600。可直接作為 token 映射依據。
+4. 🔴 污染是雙向的，本輪再度實測到兩個方向：550／600 被壓低成 500（側欄一級項、分組標題外層、店名、kbd、頁面卡片標題），400／450 被抬高成 500（body、側欄次級項、a 包裹層、dev 徽章、搜尋標籤）。看到 500 完全無法回推真值。
+5. 🔴 ~~shadow DOM 全面免疫~~ **（已於同日二次更正：不是全面免疫，見 `docs/design/111` §20.3）**；本節列舉的這幾個之所以免疫，是因為它們**自己宣告了 `font-weight`**，且免疫的是「實際繪製的那個元素」：s-internal-text 的 strong、s-internal-number 的 span.number、s-internal-page 的 h1.heading／div.header-content、s-avatar 的 span.avatar，clean 與 dirty 逐字相同。機制是 shadow 內元素自帶 font-weight 宣告，host 上的 !important 500 只是繼承值、無法穿透已有宣告的後代。
+6. 🔴 這些 shadow 元件的 light DOM host（s-internal-text／s-internal-number／s-internal-page／s-avatar）本身都被污染成 500，但它們 display:contents 或 0×0、不產生繪製盒 ⇒ 量 host 會拿到與畫面無關的數字。量測必須穿透到 shadow 內的繪製元素。
+7. 🔴 「量哪一層」比「有沒有停用污染源」更容易出錯：側欄導航項的 <a> 包裹層 clean 是 450（繼承 body），標籤 span 才是 550／600。若在污染環境量包裹層（500）、在乾淨環境量 span（550），會憑空造出一個不存在的差異。原記載的單一「13px/500/20px」正好同時掩蓋了 450／550／600 三個真值。
+8. 側欄有四種不同的字重層級，原記載壓成一個值：一級作用中 600、一級非作用 550（rgb 48,48,48）、次級子項 450（rgb 97,97,97 subdued）、分組標題 12px/550（shadow）。次級子項同時用較低字重與較淺顏色兩個維度做降階。
+9. 「銷售管道／App」下的項目（Online Store、Point of Sale、Translate & Adapt）雖然掛在分組標題底下，字重卻是一級的 550 而非次級的 450 ⇒ 分組標題下的項目不等於次級項，兩者是不同層級，不可合併登記。
+10. 內容區頁標題在不同頁面是不同元件：Orders 用 s-internal-page shadow 內的 h1.heading（18px/600/24px, ls -0.14994px，完全免疫污染）；首頁不走這條路，用 span._TitleLine（20px/550/24px, ls -0.332px, rgb 97,97,97，會被污染）。以單一「頁標題」條目登記會錯。
+11. docs 記載的 .header-content 選擇器是對的但範圍寫漏了：它在 s-internal-page 的 shadowRoot 內，light DOM 查詢一律回傳 0。後續任何以該選擇器撰寫的量測腳本或斷言，必須帶 shadow 穿透，否則會得到「找不到 ⇒ 本尊沒有這個容器」的錯誤結論。
+12. 頂欄是深底淺字獨立配色區：文字 rgb(220,220,220)、次級文字 rgb(170,170,170)、logo 區 rgb(238,238,238)，與內容區的 rgb(48,48,48)／rgb(97,97,97) 是兩套。
+13. 頂欄「搜尋框」在靜止態根本不是輸入框，是一個 button 加 span 標籤加兩個 kbd；規格若寫成 input placeholder 會導致實作出錯誤的無障礙語義與錯誤的初始樣式。
+
+#### §5.6.3 仍未取得
+
+- 頂欄搜尋 overlay 展開後的真實輸入框與其 placeholder — 未取得。原因：視窗離屏凍結（已知工具限制），left_click 於 getBoundingClientRect() 算出的座標 (499,28) 與 computer key ctrl+k 兩種觸發都沒有開啟 overlay（複驗：無 [role=dialog]／[role=combobox]／[role=searchbox]，input[type=search|text] 數為 0，document.activeElement 仍為 S-INTERNAL-PAGE）。僅取得靜止態 activator（button ＋ span._Label «Search» ＋ kbd）。註：Orders 頁上唯一的 contenteditable «Search and filter»（594×28，_ContentEditable_12hbo_17）是訂單表格的篩選列，不是頂欄搜尋，未列入頂欄結果。
+- 頂欄店鋪／頭像選單「展開後」的選單項文字 — 未取得，同上離屏點擊限制；僅取得未展開的 activator、店名、dev 徽章、頭像。
+- 側欄各項的 hover／focus／pressed 狀態字重 — 未取得（未觸發狀態）。
+- 響應式三寬度（1280／768／390）下的形態與量值 — 未取得。resize_window 為已知失效項，量測視寬固定在 1024px；本次全部數值僅對 1024px 成立，不得外推至其他斷點。
+- 擴充功能同時注入的 text-shadow／-webkit-font-smoothing／text-rendering 三個屬性的污染值與乾淨值 — 未量測（本次僅複驗指派的 font-size／font-weight／line-height／color）。
+
+> 量測環境：測試店 chill-love-u5q5mnzq admin，Claude in Chrome 自開分頁（量畢已關閉）。取證日 2026-08-28。頁面：admin 首頁（/store/chill-love-u5q5mnzq）與 Orders（/store/chill-love-u5q5mnzq/orders，由側欄真實 href 導航）。視窗離屏凍結，量測視寬固定 1024×551（topbar 1024×56、nav 240×495），root font-size 16px，字族 Inter。全程唯讀：未按任何儲存鍵、未改資料；量畢複驗 Unsaved changes bar 節點數＝0。污染源 <style id="font-bolder-style">（parentNode=HTML）以 sheet.disabled=true 停用後取 clean、還原 true→false 後取 dirty，收工複驗 sheet.disabled=false 且 body 回到 500（＝已還原成使用者原狀）。每次導航後重新取得 style 節點再量。所有 clean 值皆為「已停用污染源後量測」。
