@@ -296,7 +296,20 @@ keyframes 名（6 個）：`appear-above`／`appear-below`／`bounce`／`fade-in
 
 ### 14.7 其他 bg
 
-`bg-inverse`=**`#0a0a0a`**（頂欄實測底色即此值）
+`bg-inverse`=**`#0a0a0a`**（~~頂欄實測底色即此值~~ 🔴 見下方 2026-08-28 更正）
+
+> 🔴 **2026-08-28 更正：「頂欄實測底色即此值」是誤歸因。**
+> 頂欄落在 `<s-internal-theme-provider theme="admin" colorscheme="dark">` 的子樹內，
+> 用的是**該 scope 的 `--p-color-bg`**（暗色主題下 ＝ `#0a0a0a`，見 §15），
+> 不是淺色主題的 `bg-inverse`。**兩個 token 剛好同值，所以這個錯在數值上察覺不出來。**
+>
+> **消融實驗證明**（不是相關性）：在 `div._TopBar_1scp5_1` 上解析成 `#0a0a0a` 的候選恰 4 個，
+> 逐一 inline 覆寫成 `rgb(1,2,3)` —— **只有 `--p-color-bg` 會改變底色**，
+> `-bg-inverse`／`-nav-bg`／`-nav-bg-surface` 皆不變；`removeProperty` 後還原。
+>
+> ⇒ **我方不得定義一個「頂欄專用 inverse 色」**。正確做法是頂欄整個子樹套暗色 scope，
+> 於是其內全部文字／圖示／hover 底自動跟著換。這也解釋了 `docs/design/112` §5 為什麼把
+> `--surface-inverse` 記成「本尊對應值未取得」——**那個對應關係根本不存在**。
 `backdrop-bg`=**`#000000b5`**（modal 遮罩，≈71% 黑）
 
 ⚠️ **與 `82` §16.2 的 `rgba(0,0,0,.5)` 不同**——後者量的是**舊 Polaris React modal** 的 backdrop。
@@ -413,6 +426,34 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
 | **body** | font 13px / ~~500~~ **450**（🔴 §20 更正）/ 20px｜color `#303030`｜bg `#f1f1f1`｜`color-scheme: light`；`html` 自身 bg **透明**（底色由 body 提供） |
 
 ### 16.1 🔴 內容區沒有 max-width
+
+> 🔴🔴 **2026-08-28 更正：本節結論錯誤——不是「沒有 max-width」，是「量錯了層」。**
+> 本節的**前提**（`main.page` 與 `.page-content` 的 computed 是 `max-width: none`）
+> **完全正確且已複驗**；錯的是由它導出的結論。上限確實存在，只是位在**再下一層 shadow root**：
+> `main.page` → `<s-grid>`（自身 `display: contents`）→ `<span class="grid">`，
+> 由 **s-grid 的元素屬性生成 per-instance `<style>`**。
+>
+> **track function（實測，兩個獨立樣本＋一個新樣本複驗）**：
+> ```
+> @container s-internal-page (inline-size >= 784px)
+>   "minmax(480px, 638px) minmax(240px, 312px)", "minmax(auto, 966px)"
+> ```
+> ⇒ 主欄 **480–638**、次欄 **240–312**、單欄上限 **966**（＝638 + 16 + 312）。
+> 搭配 `justify-content: center` ⇒ **所有寬度都置中**，不是某個斷點以上才出現。
+>
+> **與舊層的關係**：舊 `.Polaris-Page` 的 `max-width` ＝ `41.375rem + 20rem + 1rem` ＝ **998px**；
+> 新層 966 + 2×16 ＝ **998px**。**同一條加總公式、同一個 16px 內側間距，只把兩個上限
+> 各自重訂**（662→638 −24、320→312 −8，**降幅不同 ⇒ 不是統一縮放**）。
+>
+> ⇒ 下面兩段「不由本框架消費」與「>1040px 未取得」也一併更正：
+> 舊 token 確實零消費（那是對的），但**新層有自己的一組常數**；
+> 置中在所有寬度生效，「>1040 是否有置中容器」這個問題本身問錯了。
+>
+> 🔴 **教訓**：這是本專案第三次同型事故（G13 量到不繪製的節點、本次量錯 shadow 層、
+> §14.7 的頂欄誤歸因）。共同根因＝**取值前沒有問「我讀的這個值，對這個元素成立嗎」**。
+> 紀律條文見 §20.8。
+>
+> **原文以下保留備查**（鐵律 19.5）。
 
 `main.page` 與 `.page-content` 的 computed **`max-width: none`**。
 祖鏈全部是 `none` 或 `100%`。shadow root 內設定 max-width 的規則只有 3 條，
@@ -667,6 +708,63 @@ breakpoints／height／width／z 全部兩主題同值（差集為空）。**
    **逐像素重合**、`textContent` 也一樣，值卻是 450（block 包裝盒，文字不在它的 inline box 裡）。
    ✅ **最可靠的獨立佐證**：對 text node 建 `Range` 量 `getClientRects()` 的實際繪製寬度，
    與同字體同字級的 `canvas measureText` 在各候選字重下對比——實測可分辨到 **0.01px**。
+4. 🔴🔴 **`--p-*` 不是單一值——它隨 DOM 子樹而變**（2026-08-28 新增，第三次同型事故的斷根）。
+   同一個 `html.p-theme-light` 頁面上，`<s-internal-theme-provider theme="admin" colorscheme="dark">`
+   的 shadow root 內有 `<slot class="p-partial-theme-dark">`，把**深色 token 注入被投射的
+   light-DOM 子樹**。⇒ **只讀 root computed 的取值，在這些子樹上一律是錯的。**
+
+   **實測規模**（三頁一致，兩個獨立量測者）：
+   | 量項 | orders | products | settings/general |
+   |---|---|---|---|
+   | `s-internal-theme-provider` 總數 | 51 | 179 | — |
+   | 其中 `colorscheme="dark"` | 4 | 4 | 4 |
+   | 掛 `p-partial-theme-*` class 的 slot | — | 8（4 dark ＋ 4 light） | — |
+   | 算出 `--p-color-text === '#eee'` 的元素 | — | **113** | **113** |
+   （`/orders` 亦為 113，且 52 個分組名稱與計數與 products 逐項相同。）
+
+   **頂欄就在其中**（`div._TopBar_1scp5_1`）。§14.7 的誤歸因即由此而來。
+
+   ✅ **紀律（機械照做）**：
+   - 取任何 `--p-*` 都要**指定在哪個元素上取**，並回報該元素是否落在某個 provider 內；
+     沿 flat tree（`parentElement ?? getRootNode().host`）往上走，記下第一個
+     `s-internal-theme-provider` 的 `colorscheme` 與第一個 `p-theme-*` / `p-partial-theme-*`。
+   - 🔴 **要證明「這個 token 就是畫面上那個顏色的來源」，用消融不用相關性**：
+     把候選 token inline 覆寫成一個不可能的值（如 `rgb(1,2,3)`），看繪製色變不變，
+     再 `removeProperty` 還原。§14.7 就是這樣定案的（4 個候選同值 `#0a0a0a`，只有 1 個是真來源）。
+   - 掃描器**不得**用「排除 selectorText 含 `p-theme` 或 `:root`」當過濾器——
+     實測有 **恰 14 條** `--p-*` 宣告位於任何 theme／`:root` 選擇器**之外**
+     （Online-Store-UI 系 9、`[data-admin-next] _Badge` 3、`_SidekickField` 1、`_SectionWrapper` 1），
+     那個過濾器在構造上看不見這一整類。
+
+5. 🔴 **同名異值的 partial theme scope 至少有六組**，宣告數各不相同（實測，兩個獨立量測者一致）：
+   `:root, .p-theme-light` **451**｜`.p-theme-admin, .p-theme-light, :root` **552**｜
+   `.p-partial-theme-dark` **221**｜`.p-partial-theme-dark-experimental` **229**｜
+   `.p-partial-theme-admin-next` **398**｜`.p-partial-theme-admin-next-dark` **313**｜`.p-partial-theme-mobile` 7/6。
+
+   ⚠️ **但實際被使用的只有兩個**：三頁掃描的 scope class 使用數＝
+   `dark` **4**、`dark-experimental` **0**、`admin-next` **0**、`admin-next-dark` **0**、
+   `mobile` **0**、`[data-admin-next]` **0**。
+   ⇒ `admin-next` 那套（把 7 族 fill 全改成淺彩）**目前零元素在用**，是尚未啟用的調色板。
+   **我方對齊的是實際渲染的那一套**；`admin-next` 只登記、不實作
+   （但它透露本尊正在往「全族淺 fill」走，值得追蹤）。
+
+6. 🔴 **正規化器不能用「塞進 detached span 的 `color` 再讀 computed」**——
+   那個方法**解析不了字型堆疊與陰影**，兩邊都 unparsed 就回同一個繼承色，
+   於是那一類差異被**結構性地**歸成「記法差」。實測因此漏掉
+   `--p-font-family-sans`（新層多了 `'Noto Sans Arabic', 'Noto Sans Hebrew'`）與
+   `--p-shadow-nav-selected`（新層 `none` vs 舊層三層 inset）。
+   ✅ **改用逐類別正規化**：color→`color`、shadow→`box-shadow`、
+   radius→`border-top-left-radius`、family→`font-family`。
+
+7. 🔴 **「第一個命中」不是樣本，是巧合**（2026-08-28 新增）。
+   實例：有人用 `deep('button.Polaris-Button--variantSecondary')[0]` 取「舊層按鈕」基準——
+   而 `/products` 頁的 52 顆 `.Polaris-Button` **含文字者 0 顆**，取到的是一顆
+   **disabled、純圖示、無標籤**的鈕，於是把停用態底色記成該 variant 的底色、
+   把沒有任何文字在用的 13px 行高記成字體階。
+   改到 `/discounts` 取真正帶標籤的鈕後：舊層 primary 標籤 **12/600/16**、新層 **12/550/16**
+   ——**字級／行高／內距／底色四項全同，只差字重，且舊層比新層重**（原結論方向相反）。
+   ✅ **先枚舉母體、看它是什麼，再決定取哪一個**。
+
 3. 🔴 **不得因為某元素在 shadow DOM 內就跳過重量**——見 §20.3 的二次更正。
    `font-weight` 會沿 flattened tree 繼承進 shadow，**必須逐項做 clean/dirty 配對**。
 3. ~~🔴 **`docs/design/47` 與 `docs/design/64` 尚未複驗**~~ **（2026-08-28 已補完，見 §20.7 第二批）**

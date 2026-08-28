@@ -1287,3 +1287,73 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 - **為什麼不是「照抄 Shopify」**：鐵律 9 禁的是**複製其樣式表原始碼、圖片、文案、商標**；
   量測值（computed style 的數值）是**觀察到的事實**，記錄與對標一直是鐵律 12.3 層④的要求。
   本裁定改變的只是「量到之後要不要採用」，不是「可不可以量」。
+
+### D55. 照用 Polaris（授權風險轉交專責團隊）＋ 欄寬換成本尊 s-grid 常數（2026-08-28 使用者裁定）
+
+**兩件事同日裁定，合併一條記錄，因為第二件是第一件解鎖後才做成的。**
+
+#### ① 使用者裁定：照用 Polaris，版權問題由另一團隊處理
+
+使用者原文：「你給我照用 polaris。版權問題我另外有額外的團隊會解決」。
+
+**在此之前已向使用者完整攤開的四條事實**（取證 2026-08-28，全文＝該輪對話與
+`docs/dev/external-facts.md`；本條只記結論與出處）：
+
+| # | 事實 | 出處 |
+|---|---|---|
+| 1 | Polaris 的 `LICENSE.md` 是 **MIT 加一條 Shopify 自訂用途限制**，逐字含「dissimilar and visually distinct from Shopify products and services (**including the internal administration page of a Shopify merchant store**), as determined by Shopify in its sole discretion」 | `raw.githubusercontent.com/Shopify/polaris/main/LICENSE.md` |
+| 2 | 該限制屬 **field-of-endeavor**，不符 OSI Open Source Definition **第 6 條**（「The license must not restrict anyone from making use of the program in a specific field of endeavor.」）⇒ **source-available，非 open source** | `opensource.org/osd` |
+| 3 | npm metadata 的 `license` 欄是 **`"SEE LICENSE IN LICENSE.md"`**，**不是 `"MIT"`** | `registry.npmjs.org/@shopify/polaris/latest` |
+| 4 | GitHub 授權偵測器回 `key:"other"`／`name:"Other"`／`spdx_id:"NOASSERTION"` | `api.github.com/repos/Shopify/polaris` |
+
+🔴 **鐵律 9 的文本射程（精確，不是放寬）**：對 Polaris 只寫「**不用**」「**不抄**」，
+**沒有「禁讀」**——「禁讀」只寫給 GPLv3（2026-08-18 增補款）。
+⇒ **為研究而讀 Polaris 源碼本來就不在鐵律 9 的射程內**，本裁定沒有改變鐵律 9，
+先前把它當「禁讀」處理是執行方自己加嚴的。
+
+**仍然違反鐵律 9、本裁定未放行的兩件事**：
+- 安裝 `@shopify/polaris` 當依賴（違「不用」，另撞鐵律 1）
+- 把其 CSS 複製進我方倉庫（違「不抄」）
+
+要放行那兩件，依驗收基準「🔴 不適用②，**要放行先改鐵律本文**」，須先開 18.3 PR 改 `CLAUDE.md`。
+
+**產出約束（本裁定下仍然成立）**：讀源碼取得的是**事實與結構對照**
+（「X token = green ramp 第 12 階」），**不得大段複製其原始碼進倉庫**。
+
+#### ② 欄寬：換成本尊新層 s-grid 的常數
+
+**推翻** `docs/design/111` §16.1 的「本尊內容區沒有 max-width，內容欄是流體寬度」——
+那是**量錯層**：`main.page` 的 `max-width: none` 是真的，但上限在再下一層 shadow root 的
+`<s-grid>` → `<span class="grid">`，由元素屬性生成 per-instance `<style>`。
+
+| 項 | 舊層（polaris-react，已封存） | 新層（s-grid，實測） | 我方（本裁定前 → 後） |
+|---|---|---|---|
+| 主欄上限 | 662（`41.375rem`） | **638** | 633 → **638** |
+| 主欄下限 | 480 | **480**（相同） | **無** → **480** |
+| 次欄上限 | 320（`20rem`） | **312** | 317 → **312** |
+| 次欄下限 | 240 | **240**（相同） | **無** → **240** |
+| 內容合計 | 998 = 662+320+16 | **966** = 638+312+16 | — → `--col-content:966` |
+| 外框 | `.Polaris-Page` 998 | 966 + 2×16 = **998** | 998／1030 兩個打架 → **998** |
+| 列表頁上限 | — | **無**（`max(100%)`） | 1200 → **none** |
+
+🔴 **總寬沒變**：`633 + 16 + 317 = 966 = 638 + 16 + 312`。只是內部分配各挪 5px。
+🔴 **降幅不同**（−24 / −8）⇒ 新層不是統一縮放舊層，是各自重訂。
+
+**四項配套**：
+1. `.cl-page` 水平內距 **32 → 16**（本尊 `main.page` 是 `padding:16px 0`，16/側加在其內的 grid 上）。
+   改完 `.cl-page--detail` 的 998 才第一次是對的（966+32）；
+   `.cl-product-detail` 的 1030 是為補償雙倍內距而存在的第二個上限，**同批刪除**。
+2. **收合門檻改容器查詢** `@container cl-page (width < 752px)`（本尊 `784` 的 border-box
+   扣掉 band 的 16/側內距）。🔴 **門檻值刻意不做成 token**——`@container` 條件不能用 `var()`，
+   Chrome 151 實測會**解析成功但永遠不匹配**（fail-open）。本尊自己也踩同一條限制：
+   `--p-breakpoints-*` 五顆全站零消費。
+3. **列表頁上限改 `none`** ——本包唯一真正改變產品形態的一項（寬螢幕下列表變滿版）。
+   量測支持；若日後要恢復，須走 `docs/specs/71` §A 保護清單登記。
+4. **順帶封閉一個既有缺陷**：`VariantDetailPage` 的 `<aside>` 放在第一個子節點，
+   卻套主欄先的 `.cl-od-grid`（且無 `.cl-vd-grid`、無 `order:` 覆寫）⇒ **兩欄左右顛倒**。
+   原型早有反向 template 的 `.vd-grid`，React 端一直沒有對應 class。
+   新增 `.cl-vd-grid` 並改用之。屬本包所改的同一張 grid，依鐵律 17.2 一併封閉。
+
+**未取得**：`s-page` 的 `inlinesize` 三個值各自對應的寬度（官方文檔無數字）；
+`s-internal-page` 與公開 `s-page` 是否同一（**無任何證據，不得互推**）；
+Firefox／Safari 的容器查詢行為（只在 Chrome 151 量過）。

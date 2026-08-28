@@ -431,7 +431,9 @@ export function VariantDetailPage() {
         </div>
       </header>
 
-      <div className="cl-od-grid">
+      {/* 次欄在左（變體切換清單）⇒ 用反向 template 的 .cl-vd-grid，不是 .cl-od-grid。
+          兩欄的 __main／__aside 子類仍共用 .cl-od-grid__* 的間距與 sticky 設定。 */}
+      <div className="cl-vd-grid">
         <aside className="cl-od-grid__aside">
           <Card padded>
             <div className="cl-variant-nav__product">

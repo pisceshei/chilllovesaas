@@ -43,7 +43,20 @@ Token 家族一覽（值見 producer；此處只列**有哪些家族**，避免�
 - **字級 scale（只准用這些）**：11（kbd/hint/pal-foot）、12（badge/輔助/軸標）、13（正文/表格/按鈕）、14（強調正文/hero 副標）、16（保留）、20（頁標題 h1/圖表大數）、24（指標卡值/hero 標題）。行高 1.45–1.6；中文標題字距 0，數字用 `tabular-nums`。
 - **間距**：4px 網格。慣用：卡 padding 16、卡間 gap 16、表格 cell `8px 12px`、listbar `8px 12px`、頁邊 32、區塊間 24。
 - **z-index 階層**：content 0 < sticky listbar 3 < topbar/sidebar 40 < settings 50 < annot-bar 70 < overlay/modal 80 < toast 90 < doc-pop 95。
-- **版寬**：Index 頁 max 1200；Home/Detail 998；settings 內容欄 660、側欄 270。
+- **版寬**（🔴 2026-08-28 依 D55 重寫；原文＝「Index 頁 max 1200；Home/Detail 998；settings 內容欄 660、側欄 270」）：
+  - **列表頁**：**無上限**（`max-width: none`）。本尊頁面層 s-grid 是 `max(100%)`，實測 12 個列表頁一致。
+  - **詳情頁**：內容 **966**（＝主欄上限 638 ＋ 欄間 16 ＋ 次欄上限 312），加 `.cl-page` 左右各 16 ⇒ 外框 **998**。
+    與本尊舊層 `.Polaris-Page` 同值；新層沿用同一條加總公式，只重訂兩個上限。
+  - **雙欄軌**：主欄 `minmax(480, 638)`、次欄 `minmax(240, 312)`——**兩欄都有下限**。
+  - **收合門檻**：**容器**查詢 `@container cl-page (width < 752px)`，不是視口 media query。
+    752 ＝ 本尊 `784` 的 border-box 扣掉 band 的 16/側內距。
+    ⚠️ **門檻值不得做成 token**——`@container` 條件不能用 `var()`，且失敗方式是 fail-open
+    （Chrome 151 實測：規則會解析成 `CSSContainerRule` 並帶子規則，但永遠不匹配）。
+  - **變體詳情頁是次欄在左**，用反向 template 的 `.cl-vd-grid`，不是 `.cl-od-grid`。
+  - **單欄表單**：`--col-narrow: 630`（44 §22.5 實測）。⚠️ 這**不是**本尊 `s-page` 的 `inlinesize="small"`
+    ——官方文檔對 small 連數字都沒寫，且 `s-page`（app 用）與 `s-internal-page`（admin 內部）
+    是否同一**無任何證據**（鐵律 19.3）。
+  - settings 的 660／270 **未複驗**，維持原記載。
 - **佈局常數**：topbar 高 52；sidebar 寬 220；按鈕高 32（sm 28）；輸入高 32；表格列高 ~40（8px cell 上下）。
 - **Storefront 品牌 tokens**（另一套，見 20 §3b）：cream `#f6f1e9`、paper `#fffdf8`、ink `#221e1a`、clay `#a9502c`；serif=Fraunces/Noto Serif TC；按鈕方角 radius 2；區塊垂直 96–128px。
 
