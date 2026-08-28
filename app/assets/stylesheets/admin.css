@@ -2,8 +2,33 @@
   box-sizing: border-box;
 }
 
+/* 基準字級——三條規則的**順序就是語義**（D63）。
+   完整理由、本尊原文與實測證據寫在原型 `chilllove-admin-v2.html` 同位置（唯一來源）。
+   ① mobile-first 基準 16/24；② 「有精確指標 或 寬度 ≥ 48em」時收成 13/20；
+   ③ 最後把 html 自己釘回 100% ⇒ 同特異度後者勝，**①② 實際只作用在 body**。
+   🔴 舊寫法把 13px 直接設在 html 上，讓 1rem = 13px；本尊是 16px。
+   🔴 舊 `line-height: 1.5` 在 13px 下算出 **19.5px**，本尊是 **20px**。
+      這一條不是四捨五入誤差：它跟著繼承到**每一個沒自己設行高的元素**。
+   🔴 letter-spacing 寫 normal（本尊寫 initial，computed = normal），
+      不寫 var(--ls-normal)——後者是 0rem、computed = 0px，不是同一個值。 */
+html,
+body {
+  font-size: var(--t-400);
+  line-height: var(--lh-600);
+  font-weight: var(--fw-body);
+  letter-spacing: normal;
+}
+
+@media (hover) and (pointer: fine), (min-width: 48em) {
+  html,
+  body {
+    font-size: var(--t-325);
+    line-height: var(--lh-500);
+  }
+}
+
 html {
-  font-size: 13px;
+  font-size: 100%;
 }
 
 body {
@@ -11,7 +36,6 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: Inter, "Noto Sans TC", system-ui, sans-serif;
-  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1133,7 +1157,10 @@ a {
    祖鏈上沒有 `.cl-product-detail`（SettingsLanguagesPage ×3、TranslationCsvCard、
    CollectionDetailPage 的 notFound 態）⇒ **完全沒有規則命中**，吃 Chrome UA 的
    `h3{font-size:1.17em;font-weight:bold}` ＋ body 的 `line-height:1.5`，
-   在 `html{font-size:13px}` 下算出 **15.21px / 22.815px / 700**
+   在當時的 `html{font-size:13px}` 下算出 **15.21px / 22.815px / 700**
+   （🔴 2026-08-28 D63 補註：root 已改成 100%=16px，同一個 UA fallback
+   現在會是 18.72 / 28.08px。這句描述的是 **D58 當時**的現場，不改寫；
+   下面的規則早已命中，兩種 root 都不會再落到 UA fallback。）
    ——**三軸同時落在我方與本尊兩邊的值域外**。
    本尊有對應：Settings → Languages 的卡標題 `h2.Polaris-Text--headingSm` = 13/20/600。 */
 .cl-card h3 {
@@ -1615,7 +1642,11 @@ a {
   color: var(--text); cursor: pointer;
 }
 .cl-inventory-adjust input {
-  width: 5.5rem; height: var(--h-28); padding: 0 var(--sp-150);
+  /* 🔴 D63：原寫 `5.5rem`。在舊的 root=13px 下它是 **71.5px**；
+     root 改成 16px 後同一個字面值會變成 88px（+23%）。本檔其他尺寸一律是 px，
+     故改寫 72px（與舊渲染差 **+0.5px**）。全倉只有這一處真的用 rem；
+     px→rem 的 token 改制另案，見 `docs/specs/91` §3.38。 */
+  width: 72px; height: var(--h-28); padding: 0 var(--sp-150);
   font-size: var(--t-sm); font-variant-numeric: tabular-nums;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-200); color: var(--text);
 }

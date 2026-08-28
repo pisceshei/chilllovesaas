@@ -132,7 +132,11 @@
 4. 圖表 tooltip 仍是 hover-only，觸控替代是「檢視數據表格」。
 5. `env(safe-area-inset-*)` 無法在無瀏海模擬的 headless 環境驗證，需真機複查。
 6. 僅在 Chromium 驗證；Safari／Firefox 需真機或 BrowserStack 複查（`:has()`、`100dvh`、`mask-image` 有前綴 fallback，最壞只是少裝飾）。
-7. 商家後台 `html{font-size:13px}` 未改（23 §1 明訂為 token）；前台為 14px。若未來要在手機統一放大，屬 token 變更，須先改 23 號。
+7. ~~商家後台 `html{font-size:13px}` 未改（23 §1 明訂為 token）；前台為 14px。若未來要在手機統一放大，屬 token 變更，須先改 23 號。~~
+   🔴 **2026-08-28 D63 撤回上句**：商家後台已改成對齊本尊的三條規則
+   （`html` = 100% ⇒ 1rem = 16px；`body` 在有精確指標或 ≥ 48em 時 13/20，否則 16/24）。
+   「手機把 root 推到 14px」這一階**本尊沒有**，已刪。詳見 23 §1 基準字級條與 D63。
+   前台（Liquid 主題）不在 D63 射程內，仍為 14px。
 
 ## 9. 落到 M0 實作時的 checklist
 
