@@ -3429,3 +3429,13 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-4 | **鐵律 8 指向 `docs/design/23` §1，但該檔 `--sem-` 出現 0 次**——實際 token 表在原型 `:root` ＋ `app/assets/tokens.css`。23 §1 已於 2026-08-23 改為指標（有 dated 註），但鐵律 8 的條文未同步 | `grep -c -- "--sem-" docs/design/23-interaction-css-spec.md` ＝ 0 | 改 `CLAUDE.md` 鐵律本文 ⇒ **命中鐵律 18.3**，須另開人工合併 PR |
 | W-5 | **本尊 avatar 族 4 組配對不過 AA**（2.05／3.00／3.18／4.11，源碼與 live 量測互為交叉驗證）。槽位由 `xorHash(name) % 7` 決定 ⇒ **開發者無法控制哪個人落到低對比槽** | `docs/DECISIONS.md` D56「明確不跟的一項」 | 我方**不跟**（已裁定）。登記是為了讓下一個人知道「照抄本尊會抄到一個無障礙缺陷」 |
 | W-6 | **`.p-partial-theme-admin-next` 把 7 族 fill 全改成淺彩**（success `#c2f59e`／warning `#ffd1a4`／caution `#fee091`／info `#a0e5f7`／highlight `#a7c1f9`／ai `#c9b7f9`／critical `#d82019`），但三頁掃描該 scope **零元素在用** | `docs/design/111` §20.8 第 5 條 | 尚未啟用的調色板，只登記。但它透露本尊正往「全族淺 fill」走，值得追蹤 |
+
+### 3.32 D57 決定 C 包 C-1（字體三層）的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | **L3 過渡階尚未淘汰**，`--t-xs`（265 消費）與 `--t-300` 兩套命名並存 | worklog `2026-08-28-D57字體三層.md` 導出命令 A | 遷移 265 個消費點屬包 C-2，且要逐元件判斷該指到哪個角色（不能機械代換——一顆 size token 服務多個角色） |
+| W-2 | **class 層（`.t-{role}` ／ `.fw-{abstract}`）未建** | — | 本包只到 token 層。建的時候 `.t-body-*` **必須顯式寫 `--fw-regular`**，且字重 class 要宣告在全部 `.t-*` 之後（本尊靠 source order 恆勝，sheet 索引 70–80 vs 81–84） |
+| W-3 | **`--lh-2xs: 14px` 在本尊行高階中不存在**（本尊只有 12/16/20/24/28/32/40/48） | worklog 導出命令 B，輸出 `行高域外 ['14px']` | 它服務 11px 微標籤（47 未量到、我方保留的階）。**保留並標明，不硬套最接近的 12 或 16**（鐵律 19.3）。要不要廢掉這一階需先確認那些微標籤在本尊對應什麼 |
+| W-4 | **`.p-partial-theme-admin-next` 會整組改寫字體**：字重域變 400/500/600/**600**（bold 也是 600）、body 與 heading 全部加上負字距 | `docs/design/111` §20.8 第 5 條 | 該 scope 三頁掃描**零元素在用**。只登記——但它與語義色的 admin-next 觀察（§3.31 W-6）指向同一件事：本尊正在準備一套新調色與新字重域 |
+| W-5 | **舊層與新層對「同一顆按鈕的標籤」給不同字重**：舊 `.Polaris-Button` 的標籤是 `bodySm + semibold` ＝ **600**，新 `s-internal-button` 的 `.button` 是 **550**（字級／行高／內距／底色四項全同） | `docs/design/111` §20.8 第 7 條 | 這是本尊自身的新舊層不一致。我方統一取 `button-label` **550**（新層＝官方方向，舊層 repo 已封存）。登記是為了讓下一個人知道那個 600 不是量錯 |

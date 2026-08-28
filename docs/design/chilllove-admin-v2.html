@@ -139,28 +139,85 @@
   --sp-600:24px;  /* 區段之間 */
   /* >24px 一律以上列階梯的整數倍組合（calc），不得出現裸值 */
 
-  /* ══ 47 §3 字級階（size / line-height / weight）════════════════════════ */
-  --t-2xs:11px; --lh-2xs:14px; --fw-2xs:600;  /* 微標籤（47 未量到，我方保留階）*/
-  --t-xs:12px;  --lh-xs:16px;  --fw-xs:500;   /* 表格內容、欄位標題 */
-  --t-sm:13px;  --lh-sm:20px;  --fw-sm:var(--fw-body);  /* UI 預設 13/20；64 §3 把此階字重定為 450 */
-  --t-md:14px;  --lh-md:20px;  --fw-md:500;   /* 次要標題 */
-  --t-lg:16px;  --lh-lg:20px;  --fw-lg:450;   /* 卡片標題（weight 刻意降為 450） */
-  --t-xl:18px;  --lh-xl:24px;  --fw-xl:500;   /* 區段標題 */
-  --t-2xl:20px; --lh-2xl:24px;                /* 頁面標題 */
-  --t-3xl:24px; --lh-3xl:32px;                /* 統計數字 */
-  /* ══ 64 §3 字重四階（實測值，非估計）════════════════════════════════════
-     450 內文／輸入值／標籤｜500 pill 與按鈕｜550 badge｜600 卡片標題。
-     這四階是**同一條軸上的四格**，所以收斂成四顆 token，元件一律引用不再各寫數字。
-     47 §6.5 先前只發現 550 一階（--fw-split），64 補齊另外三階並改寫其用途表：
-       ・卡片標題原本是 --fw-lg:450（47 §3 的舊判讀），64 實測是 **13 / 20 / 600**——
-         字級變小、字重變大，兩處都要改，只改一處會得到「小而輕」的錯誤觀感。
-       ・badge 原本硬寫 500，實測 550（＝與 split 鈕同一階，故 --fw-badge 直接指向它）。
-     ⚠ 依賴可變字體軸，見 <head> 的字體載入註釋。 */
-  --fw-body:450;                              /* 64 §3：內文、輸入框文字、標籤、段落 */
-  --fw-control:500;                           /* 64 §3：pill 與按鈕（可點控件）*/
-  --fw-split:550;                             /* 47 §6.5：split 鈕字重 550（介於 500/600）*/
-  --fw-badge:var(--fw-split);                 /* 64 §3：badge 12/16/550 ＝ 與 split 同階 */
-  --fw-title:600;                             /* 64 §3：卡片標題 13/20/600 */
+  /* ══ 字體系統：三層（D57，2026-08-28）══════════════════════════════════
+     🔴 **為什麼要分層**——不是為了整潔，是因為舊的「一個字級配一個字重」在
+     數學上表達不了實測到的東西：本尊在 **12px 這一個字級上同時有 450／550／600**
+     （表格儲存格 450／欄位標題鈕與 badge 與按鈕標籤 550／heading-small 600），
+     13px 上同時有 450／550／600（側欄二級／一級／卡片標題）。
+
+     我方自己的程式碼早就在違反那個配對：**`--t-xs` 被消費 265 處，`--fw-xs` 只有 1 處、
+     `--fw-sm` 是 0 處** ⇒ 配對只活在註釋裡。這正是 G12b 量到「一格塞兩個值」的成因。
+
+     🔴 **一顆 size token 服務多個角色，所以不能靠改它的值來對齊**：
+     `--t-lg`（16px）同時是 SERP 模擬標題（**模仿 Google，不是 admin 元素**）、modal 標題、
+     帳目數字、統計數字。本尊卡片標題是 13px，但把 `--t-lg` 改成 13 會一起縮掉 SERP。
+     ⇒ 必須引入**角色階**，由元件指到角色，而不是指到尺寸。
+
+     三層：①L1 原語（純數值，不帶語義）②L2 角色階（本尊的 16 個 role，軸集 1:1）
+     ③舊的 `--t-{2xs..3xl}` 過渡階（265+ 個消費點，逐元件遷移到 L2，見 D57 的分包）。 */
+
+  /* ── L1 原語 ── 名稱沿用本尊編號，便於日後 teardown 機械對照 ──────────── */
+  /* 字級 13 階（＝本尊 --p-font-size-275…1000） */
+  --t-275:11px; --t-300:12px; --t-325:13px; --t-350:14px; --t-400:16px;
+  --t-450:18px; --t-500:20px; --t-550:22px; --t-600:24px; --t-750:30px;
+  --t-800:32px; --t-900:36px; --t-1000:40px;
+  /* 行高 8 階 —— 🔴 **獨立編號，不與字級對齊**（本尊如此：--lh-500 是 20px 不是 20 階） */
+  --lh-300:12px; --lh-400:16px; --lh-500:20px; --lh-600:24px;
+  --lh-700:28px; --lh-800:32px; --lh-1000:40px; --lh-1200:48px;
+  /* 字重 4 抽象階 —— 本尊淺色桌機主題的域，**只有這四個值** */
+  --fw-regular:450; --fw-medium:550; --fw-semibold:600; --fw-bold:650;
+  /* 字距 4 抽象階 —— 🔴 normal 用 **rem**、其餘用 **em**（本尊如此，不要統一） */
+  --ls-normal:0rem; --ls-dense:-.00833em; --ls-denser:-.0166em; --ls-densest:-.0291em;
+
+  /* ── L2 角色階（16 個，與本尊 1:1）──────────────────────────────────────
+     🔴 **軸集也是 1:1——沒有的軸就不建 token**，消費端才不會誤引。四種形狀：
+       unary（只 size）2 個｜size+lh+ls（**無 weight**）4 個｜
+       size+lh+weight（**無 ls**）4 個｜四軸齊 6 個。共 16 角色。
+     ⚠️ body-* 四階在 **token 層**沒有字重軸（本尊 --p-font-weight-body-* 不存在），
+        但**渲染層一定要 reset**——本尊的 `.Polaris-Text--bodySm` 等四個 class 都顯式
+        宣告 `font-weight: var(--p-font-weight-regular)`，live control 證實是 reset 不是繼承。
+        ⇒ 我方元件用 body-* 時**必須同時寫 `--fw-regular`**，否則放進粗體容器會被污染。
+     ⚠️ **6 個角色只被新 s-* 元件消費**（button-label／details-text／input-label(-small)／
+        avatar-initials(-long)），舊 Polaris CSS 一次都沒用過 ⇒ 只看 .Polaris-Text--* 只會看到 10 個。 */
+  --type-body-xs-size:var(--t-275);      --type-body-xs-lh:var(--lh-300);  --type-body-xs-ls:var(--ls-normal);
+  --type-body-sm-size:var(--t-300);      --type-body-sm-lh:var(--lh-400);  --type-body-sm-ls:var(--ls-normal);
+  --type-body-md-size:var(--t-325);      --type-body-md-lh:var(--lh-500);  --type-body-md-ls:var(--ls-normal);
+  --type-body-lg-size:var(--t-350);      --type-body-lg-lh:var(--lh-500);  --type-body-lg-ls:var(--ls-normal);
+  --type-heading-sm-size:var(--t-300);   --type-heading-sm-lh:var(--lh-400);  --type-heading-sm-fw:var(--fw-semibold);  --type-heading-sm-ls:var(--ls-normal);
+  --type-heading-md-size:var(--t-325);   --type-heading-md-lh:var(--lh-500);  --type-heading-md-fw:var(--fw-semibold);  --type-heading-md-ls:var(--ls-normal);
+  --type-heading-lg-size:var(--t-350);   --type-heading-lg-lh:var(--lh-500);  --type-heading-lg-fw:var(--fw-semibold);  --type-heading-lg-ls:var(--ls-normal);
+  --type-display-sm-size:var(--t-450);   --type-display-sm-lh:var(--lh-600);  --type-display-sm-fw:var(--fw-semibold);  --type-display-sm-ls:var(--ls-dense);
+  --type-display-md-size:var(--t-600);   --type-display-md-lh:var(--lh-800);  --type-display-md-fw:var(--fw-bold);      --type-display-md-ls:var(--ls-dense);
+  --type-display-lg-size:var(--t-750);   --type-display-lg-lh:var(--lh-1000); --type-display-lg-fw:var(--fw-bold);      --type-display-lg-ls:var(--ls-denser);
+  --type-button-label-size:var(--t-300); --type-button-label-lh:var(--lh-400); --type-button-label-fw:var(--fw-medium);
+  --type-details-size:var(--t-300);      --type-details-lh:var(--lh-400);      --type-details-fw:var(--fw-regular);
+  --type-input-label-size:var(--t-325);  --type-input-label-lh:var(--lh-500);  --type-input-label-fw:var(--fw-regular);
+  --type-input-label-sm-size:var(--t-300); --type-input-label-sm-lh:var(--lh-400); --type-input-label-sm-fw:var(--fw-regular);
+  --type-avatar-initials-size:var(--t-400);
+  --type-avatar-initials-long-size:var(--t-300);
+
+  /* ── L3 過渡階（舊的 --t-{2xs..3xl}，265+ 個消費點）─────────────────────
+     🔴 **這一層是要被淘汰的**，逐元件遷移到 L2（D57 分包 C-2）。
+     本輪只做兩件事：①把值指回 L1 原語，讓兩層不會漂移
+     ②**修掉四個落在本尊值域外的 500**（本尊字重只有 450/550/600/650）。 */
+  --t-2xs:var(--t-275); --lh-2xs:14px;          --fw-2xs:var(--fw-semibold);  /* 🔴 lh 14 本尊無此值，見下 */
+  --t-xs:var(--t-300);  --lh-xs:var(--lh-400);  --fw-xs:var(--fw-medium);     /* 🔴 500→550：唯一消費者是表格欄位標題鈕，本尊 .Polaris-Table-TableHeadingCell = 550 */
+  --t-sm:var(--t-325);  --lh-sm:var(--lh-500);  --fw-sm:var(--fw-regular);
+  --t-md:var(--t-350);  --lh-md:var(--lh-500);  --fw-md:var(--fw-medium);     /* 🔴 500→550：消費者＝變體表 thead/tbody th、刪檔警告 */
+  --t-lg:var(--t-400);  --lh-lg:var(--lh-500);  --fw-lg:var(--fw-regular);    /* ⚠️ 16px：本尊此字級只有 avatar-initials。我方的 SERP 模擬（模仿 Google）合理用它，卡片標題則應改用 heading-md（C-2） */
+  --t-xl:var(--t-450);  --lh-xl:var(--lh-600);  --fw-xl:var(--fw-semibold);   /* 🔴 500→600：唯一消費者是原型 .modal-head，本尊 modal 標題走 display-small = 600 */
+  --t-2xl:var(--t-500); --lh-2xl:var(--lh-600);                               /* ⚠️ 20px：本尊頁面標題是 18（display-sm），C-2 遷移 */
+  --t-3xl:var(--t-600); --lh-3xl:var(--lh-800);
+
+  /* ⚠️ **`--lh-2xs:14px` 是我方自有值**——本尊行高階只有 12/16/20/24/28/32/40/48，**沒有 14**。
+     它服務 11px 微標籤（47 未量到、我方保留的階）。保留並標明，不硬套最接近的 12 或 16。 */
+
+  /* ── 用途別名（保留既有消費點，值改為指向 L1／L2）───────────────────── */
+  --fw-body:var(--fw-regular);                /* 內文、輸入框文字、標籤、段落 */
+  --fw-control:var(--fw-medium);              /* 🔴 500→550：可點控件。本尊 .button{font-weight:var(--p-font-weight-button-label,550)}，且枚舉全部 .button* 字型規則**只有這一條**、無 variant 覆蓋 */
+  --fw-split:var(--fw-medium);                /* 47 §6.5 的 550 ＝ 本尊 medium 階 */
+  --fw-badge:var(--fw-medium);                /* badge 12/16/550 */
+  --fw-title:var(--fw-semibold);              /* 卡片／區段標題 600 */
 
   /* ══ 47 §2 圓角四階 ═══════════════════════════════════════════════════ */
   --r-100:4px;    /* 最小元素 */
