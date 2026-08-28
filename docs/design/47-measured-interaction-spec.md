@@ -90,6 +90,14 @@
 
 ## 3. 字級階
 
+> 🔴 **2026-08-28 引用守衛（G12b）：本節的 `font-weight` 值待複驗，未複驗前不得引用。**
+> 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
+> （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
+> 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
+> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+
+
 | token | size/line-height/weight | 實測用途 |
 |---|---|---|
 | `--t-xs` | 12 / 16 / 500 | **表格內容、欄位標題**（最高頻的資料字級） |
@@ -106,6 +114,14 @@
 字距一律 `normal`（未使用 letter-spacing 調整）。
 
 ## 4. 控件高度階
+
+> 🔴 **2026-08-28 引用守衛（G12b）：本節的 `font-weight` 值待複驗，未複驗前不得引用。**
+> 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
+> （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
+> 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
+> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+
 
 | 控件 | 高度 | 內距 | 圓角 | 備註 |
 |---|---|---|---|---|
@@ -260,6 +276,14 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 
 ## B. 桌機佈局真值
 
+> 🔴 **2026-08-28 引用守衛（G12b）：本節的 `font-weight` 值待複驗，未複驗前不得引用。**
+> 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
+> （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
+> 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
+> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+
+
 | 項目 | 真值 |
 |---|---|
 | 頂欄高 | **56px** |
@@ -309,7 +333,11 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 > 🔴 **2026-08-28 第二道守衛（第一道見 §A 的更正註）：本節的 `font-weight` 值一律待複驗。**
 > 本機的 Chrome 有一個擴充功能注入 `font-weight: 500 !important`，會把 light DOM 的字重
 > 雙向改寫（全文＝`docs/design/111` §20）。本節是**目視判讀**、未載明量測環境，
-> 無法判斷當時是否已受影響。**未複驗前不得引用本節任何字重值**（`110` 的 G12）。
+> 無法判斷當時是否已受影響。
+> ✅ **2026-08-28 已完成乾淨重量 ⇒ 見本檔 §D.1**（17 列：更正 9／一致 8）。
+> 🔴 **更正不只字重**：`Export` 的 variant 實測是 **secondary** 不是 tertiary、
+> `More actions` 也是 **secondary** 不是 split、標籤的 radius 是 **8px** 不是全圓藥丸形。
+> **引用本節任何數值前先對照 §D.1。**
 
 ### 頁首動作組（由左至右：匯出 → 更多動作 ⌄ → 建立訂單）
 
@@ -348,6 +376,14 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 | 溢出 | 不折疊 | **`+ 1` 收合計數**（實測第三列 `fecify`、`fecify-cancel-blocked`、`fecify-refund-review` `+ 1`） |
 
 ## E. 已確認的狀態值（補 48 號九態表的缺口）
+
+> 🔴 **2026-08-28 引用守衛（G12b）：本節的 `font-weight` 值待複驗，未複驗前不得引用。**
+> 本檔量測時，本機 Chrome 的擴充功能正在注入 `font-weight: 500 !important`
+> （**雙向**改寫：450 拉高、550 壓低；全文＝`docs/design/111` §20）。
+> 🔴 **本尊沒有 500 這一階**（`--p-font-weight-*` ＝ 450/550/600/650，乾淨直方圖 500 出現 **0** 次）⇒ **文件裡出現「字重 500」本身就是污染指紋**。
+> ⚠️ G12 的射程只點名 §D，而 §D 實際上一個字重值都沒有 ⇒ **本節被漏掉了**。
+> font-size／line-height／色／間距／圓角／陰影**不受影響**，那些值仍可引用。
+
 
 | 狀態 | 實測值 | 出處 |
 |---|---|---|
@@ -572,3 +608,65 @@ Shopify 已改用 `s-` 前綴的 web components（`<s-internal-button>`、`<s-in
 | 88 | 新增 **Modal 驗證失敗 shake** 動畫 | `23` 元件庫 |
 | 89 | ~~中性色只取層級關係，色值用自有調色~~ **已被 D54 推翻（2026-08-28）**：改為採用量測色值 | `23` §1、`docs/design/110` §7 |
 | 90 | 桌機三欄佈局待補測（6 項） | 本文件 §7 |
+
+---
+
+## D.1 🔴 乾淨環境重量（2026-08-28，G12 補完）
+
+> 本節依**鐵律 19.5**追加，**上方原記載保留原文**。
+> 觸發＝`docs/design/110` 的 **G12**：本檔的 `font-weight` 值曾在受污染的環境下量測。
+> 污染源與機制＝`docs/design/111` §20。
+>
+> **全部數值以「停用污染源 → 讀 clean → 還原 → 讀 dirty」的同步配對取得**，
+> 收工已還原成使用者原狀並複驗。
+>
+> ⚠️ 只有 `font-weight` 受污染；font-size／line-height／color 等在兩種環境下相同——
+> 但本輪**一併複驗**了它們，因此下表也含非字重的更正（那些屬「量錯層」或原記載本身有誤）。
+
+**本節結果：17 列（更正 9／複驗一致 8／未取得 0）**
+
+| # | 項 | 判定 | 原記載 | 🔴 乾淨值 | 污染值 | 實際量的節點 |
+|---:|---|:--:|---|---|---|---|
+| 1 | 頁首動作組 · 第一顆「Export／匯出」（§D 表第 1 列，記為 tertiary） | 🔴 更正 | 變體 tertiary｜填色「淺灰實心」｜文字「深色」｜圓角「~8px」｜備註「無邊框」（無尺寸、無字級/字重/行高、無 bg/color 具體值、無 box-shadow、無 hover） | **variant 屬性實測值 = **secondary**（不是 tertiary）。盒 61.81×28 @ (469.8,72)，min-height 28px、min-width auto｜padding 6px 12px｜border-radius 8px｜border 0px none｜**font-size 12px / font-weight 550 / line-height 16px**，letter-spacing normal，font-family 首選 Inter｜color rgb(48,48,48)｜background **rgb(227,227,227)**｜**box-shadow: none**｜gap 2px｜display flex｜cursor pointer｜transition none｜opacity 1。**hover**（matches(':hover')===true 驗證）：background → **rgb(212,212,212)**，其餘（尺寸／padding／radius／border／box-shadow／color／字級字重行高）**逐項不變**。** | 繪製盒 font-weight 550（與 clean 相同）、font-size 12px、line-height 16px、background rgb(227,227,227)、color rgb(48,48,48) 全部與 clean 相同；差異僅出現在 light DOM 宿主鏈（見 environment 對照組）。 | host `s-internal-button[variant="secondary"]`（light DOM 內、display:contents、0×0）→ **open shadowRoot** 內 `button.button.size-base.tone-auto.variant-secondary` ＝繪製盒。該 `.button` **自宣告 font-weight**（clean 550＝dirty 550）⇒ 對擴充功能免疫。文字葉節點鏈 `span.content` →『span.text-wrapper』(37.81×16) → slot，三者 clean/dirty 皆 550。 |
+| 2 | 頁首動作組 · 第二顆「More actions ⌄／更多動作」（§D 表第 2 列，記為 split） | 🔴 更正 | 變體 split｜填色「淺灰實心」｜文字「深色」｜圓角「~8px」｜備註「右側 chevron，與本體同一顆（非分離式）」 | **variant 屬性實測值 = **secondary**（不是 split），另帶 class `icon-with-text menu-activator`。盒 115.08×28 @ (537.61,72)，min-height 28px｜**padding 4px 6px 4px 12px（非對稱，與另兩顆的 6px 12px 不同）**｜border-radius 8px｜border 0px none｜**12px / 550 / 16px**｜color rgb(48,48,48)｜background rgb(227,227,227)｜**box-shadow: none**｜gap 2px｜display flex｜transition none。內部 `span.content` 97.08×20、`span.text-wrapper` 75.08×16。chevron：`s-internal-icon` 20×20 @ (626.69,76)，內 svg **16×16** @ (628.69,78)、color rgb(74,74,74)（比文字 rgb(48,48,48) 淺一階）。**hover**：background → rgb(212,212,212)，其餘逐項不變。** | 繪製盒 550／12px／16px、bg rgb(227,227,227)、color rgb(48,48,48)，與 clean 完全相同（免疫）。 | host `s-internal-button[variant="secondary"]`（本身位於某 shadow 內，故宿主 clean/dirty 皆 450）→ open shadowRoot 內 `button.button.size-base.tone-auto.variant-secondary.icon-with-text.menu-activator` ＝繪製盒，自宣告 font-weight 550 ⇒ 免疫。disclosure 鏈：`span.disclosure`（display:contents，不產生繪製盒）→ `s-internal-icon` 20×20 → 其 shadow 內 svg 16×16。 |
+| 3 | 頁首動作組 · 第三顆「Create order／建立訂單」（§D 表第 3 列，primary） | 🔴 更正 | 變體 primary｜填色「深色（近黑）實心」｜文字「白色」｜圓角「~8px」｜備註「三者等高、等圓角，只靠填色分層級」 | **盒 96.51×28 @ (658.69,72)，min-height 28px、min-width auto｜padding 6px 12px｜border-radius 8px｜border 0px none｜**12px / 550 / 16px**，letter-spacing normal｜color **rgb(255,255,255)**｜background **rgb(48,48,48)**（＝「近黑」的實測值）｜**box-shadow 3 層 inset：rgba(0,0,0,0.8) 0 -1px 0 1px inset, rgb(48,48,48) 0 0 0 1px inset, rgba(255,255,255,0.25) 0 0.5px 0 1.5px inset**｜gap 2px｜display flex｜cursor pointer｜transition none。**hover**：background → **rgb(26,26,26)**、color → **rgb(227,227,227)**；box-shadow／radius／尺寸／padding **不變**。** | 繪製盒與 text-wrapper 皆 550（與 clean 相同）、12px／16px 相同；宿主 `s-internal-button` 450→500（對照組）。 | host `s-internal-button[variant="primary"]`（**light DOM**，clean 450 → dirty 500＝本輪主要對照組）→ open shadowRoot 內 **`a.button.size-base.tone-auto.variant-primary`（是 `<a>`，不是 `<button>`）**＝繪製盒，自宣告 font-weight 550 ⇒ 免疫。`span.content` 72.51×16、`span.text-wrapper` 72.51×16 亦皆 550。 |
+| 4 | 頁首動作組 · §D 結論句「三個層級靠『填色深淺』區分，不靠邊框或尺寸」 | 🔴 更正 | 「三個層級靠『填色深淺』區分，不靠邊框或尺寸」；並據此推得「我們原型目前 secondary 用白底＋邊框，方向就不對」 | ****成立的半邊**：三顆 border 皆 `0px none`、高度皆 **28px**、border-radius 皆 **8px**、字皆 12/550/16 ⇒「不靠邊框或尺寸」複驗成立。**不成立的半邊**：①分層不是只靠填色——primary 另帶 3 層 inset box-shadow（rgba(0,0,0,0.8)／rgb(48,48,48)／rgba(255,255,255,0.25)），兩顆 secondary 的 box-shadow 是 **none**，這是一層 secondary 完全沒有的立體處理；②三顆的 padding 不齊（Export／Create order＝6px 12px，More actions＝4px 6px 4px 12px）；③**這一組裡根本沒有 tertiary**——兩顆左側鈕的 variant 屬性都是 secondary，§D 的「tertiary／split／primary 三層級」命名整組不成立（本頁確有 variant=tertiary 實例，但在表格工具列，28×28 icon-only、background rgba(0,0,0,0)，不屬頁首動作組）。** | 以上幾何／色值／陰影在 dirty 環境逐項相同（污染只作用於 font-weight，且三顆繪製盒皆免疫）。 | 三顆繪製盒（皆在 open shadow 內）逐項對照：variant-secondary ×2、variant-primary ×1。 |
+| 5 | 徽章 · `Paid／已付款`（§D 徽章表第 1 列） | ✅ 一致 | 底色「淺灰」｜前置圖示「● 實心圓點」｜語意「完成 / success」 | **盒 55.04×20，min-height auto｜padding **2px 8px 2px 4px**（有 icon 時左側 4px）｜border-radius **8px**｜gap **2px**｜border 0px none｜**box-shadow none**｜**12px / 550 / 16px**｜color **rgb(97,97,97)**｜background **rgba(0, 0, 0, 0.06)**（半透明，不是實色淺灰）｜display flex。圖示鏈：`s-internal-icon` 16×16 → 其 shadow 內 `span.icon.color-base.tone-auto.size-small` 16×16（padding 0）→ `svg` **12×12**，viewBox「0 0 12 12」，fill/color 皆 rgb(97,97,97)（＝跟文字同色）→ 單一 `<path>`，getBBox = x2 y2 w8 h8，fill-rule **nonzero**，getTotalLength **26.85**。** | 繪製盒 550／12px／16px、bg rgba(0,0,0,0.06)、color rgb(97,97,97) 與 clean 完全相同（免疫）。 | host `s-internal-badge[icon="enabled"][role="img"][aria-label="Complete Paid"]`（light DOM，clean 450 → dirty 500）→ open shadowRoot 內 `div.badge.size-base.tone-auto.color-base.with-icon` ＝繪製盒，**自宣告 font-weight 550** ⇒ 免疫；`span.content`（25.04×16）亦 550。 |
+| 6 | 徽章 · `Unfulfilled／未出貨`（§D 徽章表第 3 列） | ✅ 一致 | 底色「黃色」｜前置圖示「○ 空心圓」｜語意「未開始 / attention」 | **盒 89.55×20｜padding 2px 8px 2px 4px｜radius 8px｜gap 2px｜border 0px none｜box-shadow none｜**12px / 550 / 16px**｜background **rgb(255,235,120)**｜color **rgb(79,71,0)**｜圖示 svg 12×12、path bbox 8×8 @(2,2)、fill rgb(79,71,0)、fill-rule **evenodd**、getTotalLength **45.42**。tone 名稱是 **caution**（不是 warning）。** | 550／12px／16px／rgb(255,235,120)／rgb(79,71,0) 與 clean 相同（免疫）。 | host `s-internal-badge[icon="incomplete"][tone="caution"][aria-label="Incomplete Caution Unfulfilled"]`（light DOM，450→500）→ shadow 內 `div.badge.size-base.tone-caution.color-base.with-icon`，自宣告 550 ⇒ 免疫。 |
+| 7 | 徽章 · `Tracking added／已新增追蹤資訊`（§D 徽章表第 4 列） | 🔴 更正 | 底色「淺灰」｜前置圖示「⊘ 斜線圓」｜語意「**中性資訊**」 | **盒 119.64×20｜padding 2px 8px 2px 4px｜radius 8px｜gap 2px｜border 0｜box-shadow none｜**12px / 550 / 16px**｜background rgba(0,0,0,0.06)｜color rgb(97,97,97)｜圖示 svg 12×12、path bbox 8×8、fill-rule **evenodd**、getTotalLength **58.51**。底色與圖示形狀均與 §D 相符；🔴 **但語意登記錯**：本尊自己的 `aria-label` 前綴是「**Partially complete**」、`icon` 屬性值是「**in-progress**」，與 §D 寫的「中性資訊」不同——它與 §D 第 2 列想描述的「部分完成」是同一個語意槽，只是 tone 為 auto（灰）而非 caution。** | 550／12px／16px 與 clean 相同（免疫）。 | host `s-internal-badge[icon="in-progress"][aria-label="Partially complete Tracking added"]`（light DOM，450→500）→ shadow 內 `div.badge.size-base.tone-auto.color-base.with-icon`，自宣告 550 ⇒ 免疫。 |
+| 8 | 徽章 · `Fulfilled`（§D 徽章表未列，本輪補登） | ✅ 一致 | §D 未記載 | **盒 75.46×20｜padding 2px 8px 2px 4px｜radius 8px｜gap 2px｜box-shadow none｜**12px / 550 / 16px**｜background rgba(0,0,0,0.06)｜color rgb(97,97,97)｜圖示與 `Paid` 同一組（fill-rule nonzero、length 26.85、實心圓）。⇒ 證實「完成」語意在**出貨**與**付款**兩個維度共用同一個 icon=enabled。** | 550／12px／16px 與 clean 相同（免疫）。 | host `s-internal-badge[icon="enabled"][aria-label="Complete Fulfilled"]`（light DOM，450→500）→ shadow 內 `div.badge...with-icon`，自宣告 550 ⇒ 免疫。 |
+| 9 | 徽章 · 無圖示中性徽章（側欄計數「5」與標籤欄，§D 未單獨列） | ✅ 一致 | §D 未記載無圖示形態的盒模型 | **側欄計數「5」：23.77×20｜**padding 2px 8px 2px 8px（左右對稱）**｜radius 8px｜**gap 4px**｜min-height 0px｜border 0｜box-shadow none｜12px / 550 / 16px｜background rgba(0,0,0,0.06)｜color rgb(97,97,97)。⇒ 有／無圖示兩形態的**唯一**盒模型差異＝左內距 8px→4px、gap 4px→2px、min-height 0px→auto；高度 20px、radius 8px、右內距 8px、字 12/550/16、底色、文字色全部相同。** | 550／12px／16px 與 clean 相同（免疫）。 | host `s-internal-badge`（無 icon/tone 屬性，light DOM，450→500）→ shadow 內 `div.badge.size-base.tone-auto.color-base`（**無 `with-icon`**），自宣告 550 ⇒ 免疫。 |
+| 10 | 徽章 · §D「本輪最重要的發現」＝狀態圖示形狀編碼（實心 ●＝完成｜空心 ○＝未開始｜斜線 ⊘＝部分／受阻） | ✅ 一致 | 「每個徽章都帶一個前置狀態圖示，且圖示形狀本身就編碼了狀態」；來源為高倍率截圖**目視判讀** | **光柵結果（clean 環境；字重污染與 SVG 無關，但仍在 disabled=true 下取得）：**icon=enabled → 實心圓盤（中心全滿）**；**icon=incomplete → 圓環（中心鏤空，環寬約 1.2px @12 單位）**；**icon=in-progress → 圓環＋一條貫穿圓心的對角線（左上↔右下）**。三者外框同尺寸：svg 12×12、path bbox 8×8 @(2,2)、單一 `<path>`。輔證：fill-rule 分別為 nonzero / evenodd / evenodd；getTotalLength 分別 26.85 / 45.42 / 58.51；本尊自己的 aria-label 前綴分別是 **Complete / Incomplete / Partially complete**。⇒ §D 的形狀→語意對映**逐項成立**，且本輪首次以非目視方式取得佐證；圖示顏色一律等於該 tone 的文字色（Paid rgb(97,97,97)、Unfulfilled rgb(79,71,0)），不另有專用色。** | 圖示幾何與 fill 不受污染源影響（污染源只宣告 font-weight／text-shadow／font-smoothing／text-rendering，且選擇器以 `:not(svg):not(svg *)` 明文排除 svg）。 | 三種 `icon` 屬性值各取一個實例的 `svg > path`（在 `s-internal-badge` → `s-internal-icon` 的巢狀 open shadow 內），以 `Path2D` 依各自 computed `fill-rule` 重繪到 48×48 canvas，讀 alpha 通道自製光柵（本輪自繪的量測輸出，未記錄本尊 path 資料）。 |
+| 11 | 標籤 vs 徽章 · §D「視覺上是兩種不同元件，不可混用」總判 | 🔴 更正 | 表格四列：圓角（徽章 ~8px 圓角矩形／標籤**全圓藥丸形**）、圖示（徽章有／標籤無）、底色（徽章依語意／標籤一律淺灰）、溢出（徽章不折疊／標籤 `+ 1` 收合計數） | **標籤欄「fecify」：49.03×20｜padding **2px 8px**｜**border-radius 8px（不是全圓；藥丸形需 border-radius ≥ 10px 或 9999px）**｜gap 4px｜border 0px none｜box-shadow none｜**12px / 550 / 16px**｜background **rgba(0,0,0,0.06)**｜color rgb(97,97,97)｜無 `s-internal-icon`。與同頁狀態徽章 `Paid`（55.04×20｜padding 2px 8px 2px 4px｜radius 8px｜gap 2px｜同一組 12/550/16｜同一組底色與文字色｜有 icon）逐項對照 ⇒ **兩者是同一個 `s-internal-badge` 元件的『有／無 with-icon』兩種形態**，差異只有左內距與 gap。§D 四列判定：圓角 → **推翻**（8px，非全圓）；圖示有無 → 成立；底色「一律淺灰」→ 成立（值＝rgba(0,0,0,0.06)，與中性徽章同值）；溢出 `+ 1` → 成立（見下一列）。「兩種不同元件」這個總判 → **推翻**。** | 標籤欄繪製盒 550／12px／16px、底色與文字色皆與 clean 相同（免疫）。 | 標籤欄實例：`fecify`、`fecify:25`、`fecify-cancel-blocked`、`fecify-refund-review` 的 host 全部是 **`s-internal-badge`**，繪製盒為其 open shadow 內的 `div.badge.size-base.tone-auto.color-base`（自宣告 550 ⇒ 免疫；host 450→500）。另掃描全頁自訂元素標籤名，含 tag／chip／pill 者為**空集合**。 |
+| 12 | 標籤欄溢出計數 `+ 1`（§D 標籤表第 4 列「`+ 1` 收合計數」） | 🔴 更正 | 「標籤：`+ 1` 收合計數（實測第三列 `fecify`、`fecify-cancel-blocked`、`fecify-refund-review` `+ 1`）」——未記形態、未記它是不是 badge | **繪製盒 16.2×15.2｜display inline｜**font-size 12px / font-weight 450 / line-height 16px**｜color **rgb(97,97,97)**（color-subdued）｜background rgba(0,0,0,0)｜border-radius 0｜padding 0｜border 0｜box-shadow none。⇒ 溢出計數是**純文字**，沒有 badge 的底色、圓角與內距，字重也比 badge 的 550 輕一階。** | 繪製盒 450／12px／16px（與 clean 相同）；宿主 `s-internal-text` 450→500、其 Polaris 祖先鏈四層亦 450→500。 | 存在性複驗成立（同一列仍是三顆 badge ＋ 一個 `+ 1`）。但它**不是 badge**：host 是 **`s-internal-text`**（light DOM、display:contents、0×0、clean 450 → **dirty 500**）；繪製盒在其 open shadow 內＝`span.text.tone-auto.color-subdued.font-variant-numeric-auto.size-small`，**該 span 自宣告 font-weight 450** ⇒ 免疫（clean 450 ＝ dirty 450）。🔴 這是本輪唯一「宿主被污染、繪製盒靠自宣告擋下」的公開案例，若誤量宿主會登記成 500。 |
+| 13 | §6.5 次級按鈕（split）完整配方 · 幾何（高 28／內距 6 上下 · 12 左右／圓角 8） | ✅ 一致 | 「高 28（rem 類，真值待確認）／內距 6 上下 · 12 左右／圓角 8」 | **min-height **28px**、實際高 **28**｜padding **6px 12px**｜border-radius **8px**。三項逐項吻合，「真值待確認」可結案（根字級 16px，非 rem 換算污染）。⚠️ 但這組 padding **只對不帶 disclosure 的 secondary 成立**；帶 disclosure 的同 variant（More actions）是 4px 6px 4px 12px，而 §6.5 標題把配方掛在「split」名下 ⇒ 配方與它自己指名的按鈕對不上。** | 幾何值不受污染源影響，dirty 環境逐項相同。 | `s-internal-button[variant=secondary]`（Export）的 open shadow 繪製盒 `button.button...variant-secondary`。 |
+| 14 | §6.5 次級按鈕完整配方 · 字（字級 12/16、字重 **550**） | ✅ 一致 | 「字級 12/16，字重 550 ← 注意是 550，不是 500 或 600」 | ****font-size 12px / font-weight 550 / line-height 16px**，letter-spacing normal，font-family 首選 Inter，color rgb(48,48,48)。三個獨立佐證：①clean 直接量測 = 550；②dirty 直接量測 = 550（免疫，故此值本來就不曾被污染）；③`--p-font-weight-button-label` computed = **550**、`--p-font-size-button-label` computed = **.75rem**（＝12px @root 16px）。⇒ §D 開頭「本節 font-weight 一律待複驗」的守衛，對本項的複驗結果是**原值正確**。** | font-weight 550（與 clean 相同）、font-size 12px、line-height 16px 相同。 | 繪製盒 `button.button.size-base.tone-auto.variant-secondary`（open shadow 內），**自宣告 font-weight** ⇒ 對 `font-bolder-style` 免疫；其下 `span.content`、`span.text-wrapper` 皆繼承同值。 |
+| 15 | §6.5 次級按鈕完整配方 · 背景「#FFFFFF」 | 🔴 更正 | 「背景 #FFFFFF」（第三輪原文） | **background-color = **rgb(227,227,227)**（default）／**rgb(212,212,212)**（hover）。**推翻白底**。（此結果與同檔已存在的 2026-08-28 更正註一致，本輪為在**乾淨環境**下的第二次獨立複驗，樣本＝/orders 頁首 Export 與 More actions 兩顆。）** | rgb(227,227,227)／rgb(212,212,212)，與 clean 相同（背景色不受污染源影響）。 | 同上繪製盒；另複查全頁 14 個具 box-shadow 的繪製盒與頁首三顆按鈕，無任何白底按鈕。 |
+| 16 | §6.5 次級按鈕完整配方 · 「陰影兩層：① inset 0 -1px 0 0 #B5B5B5 ② drop rgba(0,0,0,.1)」 | 🔴 更正 | 「陰影兩層：① inset 0 -1px 0 0 #B5B5B5（底緣 1px 內陰影）② drop rgba(0,0,0,.1)（外投影）」，並據此推得「白底 + 底緣內陰影 + 外投影是次級按鈕的立體感來源」 | ****box-shadow: none**（default）；**hover 仍為 none**；border 亦為 `0px none` ⇒ **推翻兩層陰影**，「立體感來源」的推論隨之失效。對照：同一組頁首中**只有 primary** 有 inset 陰影（3 層，見上方 Create order 列）。全頁掃描：有 box-shadow 的繪製盒共 **14 個**，相異值只有 6 種——`rgb(138,138,138) 0 0 0 0.66px inset`（×7，輸入類髮絲環）、`rgb(227,227,227) 0 1px 0 0 inset`（×1）、`rgba(0,0,0,0) 0 0 0 0 inset`（×2，全透明）、一組 6 層 drop（×1）、`rgba(0,0,0,0.05) 1px 0 3px 0`（×2）、primary 按鈕那組 3 層 inset（×1）——**沒有任何一個**是 `#b5b5b5 inset ＋ #fff inset` 那組配方。** | box-shadow: none，與 clean 相同。 | 同上繪製盒（default 與 hover 兩態）。 |
+| 17 | §6.5 更正註的推斷：「錯誤來源是讀到 `--p-shadow-button` token 的值、但它沒套用在該繪製盒上」 | ✅ 一致 | 更正註原文：「①逐項吻合，②的 rgba(0,0,0,.1) 就是 #0000001a，只是本節把它記成 drop 而 token 裡是 inset ⇒ 當時讀到的是 token 表的值」 | **`--p-shadow-button` computed = `0rem -.0625rem 0rem 0rem #b5b5b5 inset, 0rem 0rem 0rem .0625rem #0000001a inset, 0rem .03125rem 0rem .09375rem #FFF inset`（@root 16px：.0625rem=1px、.03125rem=0.5px、.09375rem=1.5px）。逐項對照 §6.5 原文：**①完全吻合**（`0 -1px 0 0 #b5b5b5 inset`）；**②吻合**（`#0000001a` ＝ rgba(0,0,0,0.1)，原文記成 drop、token 為 inset）；🔴 **並且第三層 `0 0.5px 0 1.5px #FFF inset` 正好解釋原文的『背景 #FFFFFF』**——那不是背景，是這個 token 的第三層白色 inset。⇒ 更正註的推斷不但成立，還能一併解釋原文的白底來源（原更正註只對到 ①②）。同時取得：`--p-shadow-button-primary` = `0rem -.0625rem 0rem .0625rem #000000cc inset, 0rem 0rem 0rem .0625rem #303030 inset, 0rem .03125rem 0rem .09375rem #ffffff40 inset`，**與 Create order 繪製盒的 computed 3 層 inset 逐項相等**（#000000cc＝rgba(0,0,0,0.8)、#ffffff40＝rgba(255,255,255,0.25)）⇒ 該 token 家族確實在用，只是 `--p-shadow-button` 這一支沒有落在 variant=secondary 的繪製盒上。另：`--p-border-radius-button` computed = **空字串**（與 111 記載一致），故 radius 8px 不是來自這支 token。** | token computed 值與繪製盒 box-shadow 在 dirty 環境相同（污染源不涉及）。 | `getComputedStyle(document.documentElement)` 讀自訂屬性 computed 值（不是讀樣式表原始碼）；並與繪製盒 computed box-shadow 對照。 |
+
+### D.1.a 本次重量帶出的規律
+
+1. 🔴 **免疫判準再次被證實是「該元素自己有沒有宣告」而非「在不在 shadow 裡」**：本輪三顆頁首按鈕的 `.button`、六種 badge 的 `.badge`、`+ 1` 的 `span.text.size-small` 全部在 shadow 內且全部自宣告 font-weight（前兩者 550、後者 450）⇒ clean/dirty 完全相同；同時它們的 light DOM 宿主（`s-internal-button`、`s-internal-badge`、`s-internal-text`）與 Polaris 祖先鏈 clean 450 → dirty 500。**同一顆元件的宿主被污染、繪製盒沒有**，是本輪最容易誤量的形態。
+2. 🔴 **§D 整節的字重風險其實是空的，真正的問題是變體命名與元件歸類**：§D 三張表沒有任何 font-weight 值，故「字重待複驗」守衛在本節無對象；本輪推翻的四項全部是**目視判讀本身的誤判**——（a）Export 的 variant 是 secondary 不是 tertiary；（b）More actions 的 variant 是 secondary（class icon-with-text menu-activator）不是 split；（c）標籤欄的 tag 與狀態 badge 是**同一個 `s-internal-badge` 元件**，圓角同為 8px、非藥丸形；（d）`+ 1` 不是 badge 而是 `s-internal-text`。⇒ 目視判讀的失效模式是「把外觀相近的東西歸成不同元件、把同一元件的兩種 modifier 讀成不同變體」，不是讀錯數字。
+3. **Shopify 這一版的元件差異幾乎都靠 padding／gap 微調，不靠幾何分家**：badge 有無圖示＝左內距 8px↔4px、gap 4px↔2px（高度、radius、右內距、字全同）；secondary 按鈕有無 disclosure＝padding 6px 12px ↔ 4px 6px 4px 12px（高度、radius、字、底色全同）。任何「兩種不同元件」的判斷都必須先比 class modifier，不能比外觀。
+4. **28 / 20 / 8 三個數字繼續主導**：按鈕 min-height 28px（三變體皆是）、badge 高 20px、控件 radius 一律 8px；字則是按鈕與 badge 共用 12px/550/16px 這一組（`--p-font-size-button-label`=.75rem、`--p-font-weight-button-label`=550 佐證）。
+5. **狀態變化只換色、不換幾何**（本輪 hover 逐項複驗）：secondary #e3e3e3→#d4d4d4；primary #303030→#1a1a1a 且文字 #fff→#e3e3e3；三顆的 box-shadow／border-radius／padding／尺寸／字級字重行高在 hover 前後**逐字元相同**。primary 的 3 層 inset 陰影在 hover 時**不變**，與 `--p-shadow-button-hover` 那支 token 無關。
+6. 🔴 **token 值 ≠ 繪製盒值，這條在本輪再次拿到正面證據**：`--p-shadow-button`（白色 bevel 那組）在全頁 14 個有陰影的繪製盒中**一個都沒用上**，而 `--p-shadow-button-primary` 與 Create order 的 computed box-shadow **逐項相等**。同一個 token 家族，有的支在用、有的支不在用 ⇒ 引用任何 `--p-*` 值當實作依據前，必須先在繪製盒上找到相等的 computed 值。`--p-border-radius-button` 甚至是空字串。
+7. **本尊的狀態語意有機器可讀來源，不必靠目視猜**：`s-internal-badge` 的 `icon` 屬性（enabled／incomplete／in-progress）與 `aria-label` 前綴（Complete／Incomplete／Partially complete）成對出現，且與圖示形狀（實心圓／圓環／圓環＋對角斜線，本輪以 Path2D 自繪光柵取得）一一對應。⇒ 我方 badge 要補的不只是「加一個圖示」，而是這組三值 enum ＋ aria-label 前綴，才符合 §D 引的 WCAG 1.4.1（不以顏色單獨傳達狀態）。
+8. **圖示顏色沒有獨立色階**：Paid 的 svg fill = rgb(97,97,97) = 該 badge 的文字色；Unfulfilled 的 svg fill = rgb(79,71,0) = 該 badge 的文字色。圖示一律吃 currentColor，不另設 icon 專用色。
+9. **擴充功能只污染 font-weight 這一點在本輪再次逐項成立**：所有配對量測中 font-size（12px）、line-height（16px）、color、background-color、border-radius、padding、box-shadow、盒尺寸在 clean/dirty 兩環境**逐項相同**；`html` 根元素 clean/dirty 皆 450（反向對照組）。
+10. **方法論**：SVG 形狀可以在不複製本尊 path 資料的前提下取得客觀證據——把繪製中的 path 用 `Path2D` ＋ 各自的 computed `fill-rule` 重繪到自建 canvas，讀 alpha 通道輸出自製光柵。這是本輪唯一能把 §D「本輪最重要的發現」從目視升級成量測的手段（`screenshot` 在本環境逾時不可用）。
+
+### D.1.b 仍未取得
+
+- 三顆頁首按鈕的 **:active（按下態）** —— 未取得。原因＝工具限制，已實測非推測：對 document 掛 capture 監聽 pointerdown／mousedown／pointerup／mouseup／click 後執行 `computer.left_click`，五類事件觸發次數皆為 0；`left_click_drag` 期間只收到 2 次 mousemove（e.buttons&1 為真）而無 mousedown／mouseup，該時刻 `matches(':active')` 為 false。取得方式：換一個滑鼠按鍵事件能實際進入頁面的環境，於 document capture 掛 mousedown 監聽，在其中同步 `__X(true)` → `getComputedStyle` → `__X(false)`，並同時以 capture 階段 `stopImmediatePropagation` 擋掉 click 以維持唯讀。
+- 三顆頁首按鈕的 **:focus-visible 與 disabled** —— 本輪未量（不在 §D 原記載範圍內，且本輪重點在字重複驗）。`docs/design/113` §1.2 有這兩態，但其量測環境未聲明擴充功能狀態、且寬度為 1024 ⇒ 若要引用需另做乾淨環境複驗。
+- §D 徽章表第 2 列 `部分已履行`（Partially fulfilled，記為『橘／蜜桃色 ＋ ⊘ 斜線圓』）—— 未取得。原因＝本輪 /orders 列表 25 個 `s-internal-badge` 實例中不存在該狀態（實際出現的只有 icon=enabled/tone-auto、icon=incomplete/tone=caution、icon=in-progress/tone-auto 三種），亦即**沒有任何 tone=warning 的 badge 繪製盒**；`--p-color-bg-surface-warning` 這類 token 值不得拿來當繪製盒證據（§6.5 事故同型）。取得方式：找一張部分出貨的訂單（或在測試店對一張現有訂單只開啟 fulfillment 畫面而不送出），於列表或詳情頁量 tone=warning 的 badge。
+- **1280 桌機寬度的形態** —— 未取得。本輪 innerWidth 固定 787（`resize_window` 依指派說明無效，且該實體視窗與其他並行代理共用，未改動）。787 已在本尊主斷點 768 之上、頁首三顆按鈕皆完整渲染，但鐵律 13.1 要求的 1280 形態需另量；本檔任何數值不得外推成 1280 宣稱。
+- **§D 原記載當時的量測環境** —— 未取得且不可回溯。§D 全節未載明量測條件，故無法判定它是否在 `font-bolder-style` 生效下取得。本輪的處置是不去推測，改為對 §D 的每一項重新直接量測；結論是 §D 表中**本來就沒有任何 font-weight 值**（頁首動作組表只有填色／文字／圓角／備註，徽章與標籤表只有底色／圖示／語意／圓角／溢出），因此 §D 的字重守衛實際上是空集合。
+  🔴 **但這不表示本檔沒有污染字重**——`grep -nE "/ *500|字重 *500" docs/design/47-measured-interaction-spec.md` 在 **§3／§4／§B／§E** 共命中 **10 個 `500`**，那些才是本檔真正的污染面，**G12 的射程漏掉了它們**（已於同日補加守衛，並登記為 `docs/design/110` 的 **G12b**）。同檔 §6.5 的『字重 550』則已複驗為正確且免疫。
+- **第三輪 §6.5 作者實際的取值路徑（provenance）** —— 不可觀測。本輪能證明的是：`--p-shadow-button` 的 computed 值與 §6.5 記載的 ①②（外加可解釋『白底』的第三層 #FFF inset）逐項吻合，而該組值不存在於本頁任何繪製盒 ⇒『讀到 token、當成繪製盒』這個推斷與全部證據相容；但『當時是不是真的這樣操作』無法由現在的 DOM 取證，不得寫成已證實。
+- **`+ 1` 展開後的完整標籤清單** —— 未取得（需點擊展開，屬狀態改變，本輪唯讀約束下未點）。
+
+> 量測環境：🔴【已停用污染源後量測】Claude in Chrome，自建分頁 tabId 1174402754（量畢時該 session 的 tab group 已不存在，分頁已不在；期間未動使用者原有分頁）。頁面＝https://admin.shopify.com/store/chill-love-u5q5mnzq/orders ，由首頁側欄真實 href「/store/chill-love-u5q5mnzq/orders」導航，未猜路徑。量測日期 2026-08-28。innerWidth=787、innerHeight=372、devicePixelRatio=1.25、getComputedStyle(document.documentElement).fontSize=16px（根字級預設，無 47 §F 記過的 root 24px 污染）。🔴 寬度 787 不是鐵律 13.1 的 1280：`resize_window` 依指派說明不可用，且該實體視窗與其他並行代理共用，未改動 ⇒ 本檔任何「桌機 1280 形態」宣稱不得引用本輪數值。  污染源：`<style id="font-bolder-style">`，`parentNode.nodeName === "HTML"`，初始 `sheet.disabled === false`。停用法＝該 sheet 的 `disabled` 旗標切換（只切 CSSOM 旗標，未動擴充功能設定）。每一列都做 clean（disabled=true）／dirty（disabled=false）配對量測，同一次 JS 呼叫內連續取值。 反向對照組（證明切換確實生效，每一輪都重取）：①`html` 根元素 clean/dirty 皆 450（不在選擇器射程）②light DOM 的 `s-internal-button` 宿主（Create order）clean 450 → dirty 500 ③light DOM 的 `s-internal-text` 宿主（`+ 1`）clean 450 → dirty 50

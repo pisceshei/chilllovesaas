@@ -617,7 +617,20 @@ letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
 - s-internal-paragraph → 內層（設定卡說明變體）＝450 | 13px/20px | #616161（shadow 免疫）。
 - s-internal-heading → shadowRoot > h6.heading（底部帳號列姓名等）＝600 | 13px/20px | #303030（shadow 免疫）。
 - Languages 語言名與 Default 副標（81 §8.2 #23）＝450 | 13px/20px（#303030 / #616161），s-internal-text → shadowRoot > span.text，shadow 免疫 — 與原記載 13px/450 一致。
-- 庫存歷程頁卡片標頭（商品名）（94 §4.2 #46）＝450 | 13px/20px | #303030（s-heading shadow d1，免疫）— 與原記載 13px/450 一致。
+- ~~庫存歷程頁卡片標頭（商品名）（94 §4.2 #46）＝450 | 13px/20px | #303030（s-heading shadow d1，免疫）— 與原記載 13px/450 一致。~~
+  > 🔴🔴 **2026-08-28 更正（G13 定案）：字重是 600 不是 450，本條量錯層。**
+  > 實際繪製商品名的盒＝`s-heading` → **shadowRoot** → `h2.heading`（rect 272,128,268,20），乾淨值 **600**。
+  > 13px / 20px / `#303030` 三項照舊正確。
+  > 🔴 **450 有兩個來源，都不繪製文字**：①`s-heading` 宿主（`display: contents`，rect 0×0）；
+  > ②`div.section-heading-text`（在 `s-internal-section` 的 shadowRoot 內，**rect 與 `h2.heading` 逐像素重合**、
+  > `textContent` 也是商品名）——**後者才是更陰險的誤量來源**，rect 與文字都完全正確卻是 450。
+  > **獨立佐證**（不靠 `getComputedStyle`）：對商品名 text node 建 `Range` 量繪製寬度，
+  > 與同字體 13px 的 `canvas measureText` 對比——樣本一 267.94px vs 450→264.04／500→265.34／**600→267.93**；
+  > 樣本二 229.09px vs 450→225.93／500→226.99／**600→229.08**（皆 Δ0.01px）。
+  > **「免疫」的結論維持**（clean 與 dirty 的繪製寬度逐 0.01px 相同），但機制敘述要改成三層：
+  > ①擴充的 `<style>` 掛在 **document tree**，**文件樣式表根本不匹配 shadow tree 內的任何元素**；
+  > ②跨界繼承由 `s-internal-section` shadow 內的 `:host > *` 宣告（計算 450）在 `section.section` 攔下；
+  > ③`h2.heading` 另有自宣告（計算 600）**獨立免疫**。定案量測＝`docs/research/94` §4.6 #46。
 - 字重 token 值（81 §8.1、94 §4.1）：--p-font-weight-regular 450 / -medium 550 / -semibold 600 / -bold 650 / -heading-small 600 / -button-label 550 — 自訂屬性不受污染規則影響，原記載正確。
 
 #### §8.6.2 本次更正帶出的規律
