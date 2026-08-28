@@ -1357,3 +1357,70 @@ D14 定的是**契約**（與本尊對齊），本條記的是**實作時必須�
 **未取得**：`s-page` 的 `inlinesize` 三個值各自對應的寬度（官方文檔無數字）；
 `s-internal-page` 與公開 `s-page` 是否同一（**無任何證據，不得互推**）；
 Firefox／Safari 的容器查詢行為（只在 Chrome 151 量過）。
+
+### D56. 決定 A：語義色換成本尊值，並補上兩個缺失的槽位（2026-08-28）
+
+D54「視覺 1:1」的第二個落地包（第一個＝D55 欄寬）。
+
+#### 根因不是色值，是**槽位缺失導致的模型塌縮**
+
+我方每族只有 surface／fill／border／icon／text 五槽，**沒有「填色上的前景色」這個槽**
+⇒ 消費端只能硬編白字（原型 `.b-fill-*` 五處 `color: var(--text-inverse)`）
+⇒ fill 被反推成**必須夠深才能配白字**
+⇒ 產生器把每個色相壓暗到白字剛好過 4.5:1 就停
+⇒ **五族 fill 亮度全擠在 0.166–0.177（跨度 0.010）**，而本尊是 0.125–0.779（跨度 0.654，**65 倍**）。
+
+代價是 warning／caution／info 的**色相身分被毀**：亮琥珀 `#ffb800` → 深褐 `#af5c1d`、
+亮黃 `#ffe600` → 深橄欖 `#847115`、淺天藍 `#91d0ff` → 深藍 `#1e78b8`。
+
+#### 本尊的規則：兩個彼此獨立的配色系統，元件只綁一個
+
+| 系統 | 層 | 規則 |
+|---|---|---|
+| **① 淺層** | `surface`／`fill-secondary`／`border`／`icon`／`text` | 一律「同族深字配同族淺底」。text 在 surface 上 CR **8.09–10.77** |
+| **② 填色** | `fill` ＋ `on-fill` | **成對定義、成對消費**。前景依 WCAG 黑白對比交叉點 **L≈0.17913** 翻面 |
+
+**fill 的明度逐族不同不是失誤**——黃色只有在亮處才是黃色。
+**每一組的相反模型都失敗**：淺 fill 配白字 1.73／1.27／1.66；深 fill 配深字 2.51／2.20。
+
+#### 處置
+
+| 類 | 顆數 | 動作 |
+|---|---:|---|
+| 有本尊對應、值不同 | **52** | 逐格採用本尊 live computed 值 |
+| **本尊無此槽 ＋ 零消費** | **25** | **刪除** |
+| **本尊有、我方缺** | **10** | 新增 `-fill-secondary`／`-on-fill` × 5 族 |
+
+⇒ 77 − 25 + 10 = **62 顆**。另改原型 `.b-fill-*` 五處：`--text-inverse` → `--sem-{族}-on-fill`。
+
+**刪除的 25 顆**：5 族 × `border-hover`／`border-active`／`icon-hover`／`icon-active`（20）、
+`caution-text-hover`／`-active`、`info-text-active`（3）、
+`critical-button-fill`／`-button-gradient-fill`（2）。
+
+- 本尊只有 **`highlight`** 族有 icon／border 的 hover／active，其餘六族該格全空。
+- **按鈕那兩顆**：本尊 primary destructive ＝ `bg-fill-critical` ＋ `text-critical-on-bg-fill`
+  （⇒ 我方 `--sem-critical-fill` ＋ `--sem-critical-on-fill`，已存在）；
+  secondary destructive ＝ `button-bg-fill-critical` **`#fff`** ＋ `text-critical`。
+  我方原本那兩顆（紅底 `#c11f35` ＋漸層）是**相反模型**且零消費 ⇒ 不保留。
+
+#### 🔴 照實複製本尊自己的三處不一致（修正它就不是 1:1）
+
+1. **`info-text-hover` 與 `info-text` 同值** `#003a5a` ⇒ info 語氣連結 hover 無顏色變化。
+   七族中唯一相等者；已實測被 `s-text`／`s-paragraph`／`s-internal-text`／`s-internal-paragraph`／
+   `s-internal-number` 五個 shadow adopted sheet 綁為 `--s-link-color-hover`。
+2. **`border-caution` 與 `fill-secondary-caution` 同值** `#ffeb78` ⇒ 兩者同時用邊框隱形。
+   **本尊實際不會發生**（11169 條規則掃描，同時消費這兩顆的規則交集為空），但我方若同時用就會。
+3. **`icon` 在同族 surface 上只有 2.49–5.48**，五族在 WCAG 1.4.11 的 3:1 線上下擦邊
+   ⇒ **icon 不得作為承載語義的唯一線索**，必須伴隨文字。
+
+#### 明確不跟的一項
+
+本尊 **avatar 族有 4 組配對不過 AA**（`avatar` 2.05／`five` 3.00／`seven` 3.18／`one` 4.11，
+源碼與 live 量測逐一相同、互為交叉驗證）。判準：226 個 token 有 187 個帶 `description`，
+**16 個 avatar token 一個都沒有**；`light-high-contrast-experimental` 主題覆寫 8 個 token、
+**沒有一個是 avatar** ⇒ 本尊沒把它當待修問題。**我方不跟。**
+
+#### 未取得（照實留空，不用公式補）
+
+`caution` 的 `text-hover`／`text-active`、`info` 的 `text-active`——本尊 `:root` 上沒有這三顆。
+`.p-partial-theme-admin-next`（把 7 族 fill 全改成淺彩）**目前零元素在用**，只登記不實作。

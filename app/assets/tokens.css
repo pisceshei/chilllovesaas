@@ -29,42 +29,78 @@
   --ai-border:#e2d9f8;--danger-border:#e6b3bc;
   --touch-min:44px;               /* 34 §觸控：命中區下限（行為常數）*/
 
-  /* ══ 47 §H2-1 語意色：5 族 × 5 層 × 3 態 = 75 token ════════════════════
-     族：info / success / caution（黃）/ warning（橘）/ critical
-     層：surface（極淺染色底）/ fill（實色底）/ border / icon / text
-     態：base / hover / active
-     色相為 CHILL LOVE 自有；明度階梯取自 47 §H2-1 量測公式：
-       surface L≈94–97%，hover −2~3，active −4~7。
-     text 層一律驗過 ≥6.5:1（AA+）、icon 層 ≥3.5:1（WCAG 1.4.11）於同族 surface 上。
-     caution 與 warning 是兩族，不是同一族的兩階（47 §H2-1）。 */
-  --sem-info-surface:#ebf4fa;--sem-info-surface-hover:#e3eff8;--sem-info-surface-active:#d0e5f4;
-  --sem-info-fill:#1e78b8;--sem-info-fill-hover:#1c6fab;--sem-info-fill-active:#1a679e;
-  --sem-info-border:#bbd5e7;--sem-info-border-hover:#accbe2;--sem-info-border-active:#9dc2dd;
-  --sem-info-icon:#2486cc;--sem-info-icon-hover:#217aba;--sem-info-icon-active:#1e6fa9;
-  --sem-info-text:#195885;--sem-info-text-hover:#164d74;--sem-info-text-active:#134163;
-  --sem-success-surface:#e9f8f4;--sem-success-surface-hover:#ddf4ee;--sem-success-surface-active:#cff0e8;
-  --sem-success-fill:#158468;--sem-success-fill-hover:#13765e;--sem-success-fill-active:#116953;
-  --sem-success-border:#bbe7dc;--sem-success-border-hover:#ace2d4;--sem-success-border-active:#9dddcd;
-  --sem-success-icon:#1a9375;--sem-success-icon-hover:#178267;--sem-success-icon-active:#14715a;
-  --sem-success-text:#13634f;--sem-success-text-hover:#105141;--sem-success-text-active:#0c4033;
-  --sem-caution-surface:#fefcf1;--sem-caution-surface-hover:#fdfae8;--sem-caution-surface-active:#fcf7dd;
-  --sem-caution-fill:#847115;--sem-caution-fill-hover:#766613;--sem-caution-fill-active:#695b11;
-  --sem-caution-border:#e7e0bb;--sem-caution-border-hover:#e2d9ac;--sem-caution-border-active:#ddd29d;
-  --sem-caution-icon:#98831b;--sem-caution-icon-hover:#867418;--sem-caution-icon-active:#756515;
-  --sem-caution-text:#675914;--sem-caution-text-hover:#564a10;--sem-caution-text-active:#453b0d;
-  --sem-warning-surface:#fcf2ea;--sem-warning-surface-hover:#fbece0;--sem-warning-surface-active:#fae5d5;
-  --sem-warning-fill:#af5c1d;--sem-warning-fill-hover:#a2551a;--sem-warning-fill-active:#954e18;
-  --sem-warning-border:#e7cebb;--sem-warning-border-hover:#e2c3ac;--sem-warning-border-active:#ddb89d;
-  --sem-warning-icon:#c36822;--sem-warning-icon-hover:#b25f1f;--sem-warning-icon-active:#a0561c;
-  --sem-warning-text:#814618;--sem-warning-text-hover:#6f3c15;--sem-warning-text-active:#5e3312;
-  --sem-critical-surface:#fcebee;--sem-critical-surface-hover:#fae2e5;--sem-critical-surface-active:#f8d6da;
-  --sem-critical-fill:#db243c;--sem-critical-fill-hover:#ce2239;--sem-critical-fill-active:#c11f35;
-  --sem-critical-border:#e7bbc1;--sem-critical-border-hover:#e2acb3;--sem-critical-border-active:#dd9da5;
-  --sem-critical-icon:#d0253c;--sem-critical-icon-hover:#bf2237;--sem-critical-icon-active:#ad1f32;
-  --sem-critical-text:#921c2b;--sem-critical-text-hover:#811826;--sem-critical-text-active:#6f1521;
-  /* critical 專屬例外（47 §H2-1：只有 critical 多出按鈕填色）*/
-  --sem-critical-button-fill:#c11f35;
-  --sem-critical-button-gradient-fill:linear-gradient(180deg,#db243c,#b81c30);
+  /* ══ 語意色：5 族，值一律取自本尊實測（D54 視覺 1:1；換值裁定＝D56）══════════
+     🔴 原文（「色相為 CHILL LOVE 自有；明度階梯取自 47 §H2-1 量測公式」）已被 D54 推翻，
+     保留於 git 歷史。本區塊改為**逐格採用本尊 live computed 值**。
+
+     🔴 **本尊有兩個彼此獨立的配色系統，元件只綁一個、不混用**（第二輪 live 量測）：
+       ①**淺層系統** surface / fill-secondary / border / icon / text
+          —— 一律「同族深字配同族淺底」。text 在 surface 上 CR 8.09–10.77。
+       ②**填色系統** fill ＋ on-fill —— **成對定義**，前景依 WCAG 黑白對比交叉點
+          L≈0.17913 翻面：fill 較暗取近白、較亮取近黑。五族 fill↔on-fill 全部 ≥4.5:1。
+
+     🔴 **fill 的明度逐族不同（L 0.125–0.779），這不是失誤**：
+       黃色只有在亮處才是黃色。warning `#ffb800`／caution `#ffe600`／info `#91d0ff` 是**淺 fill**，
+       success `#047b5d`／critical `#c70a24` 是**深 fill**。
+       **每一組的相反模型都失敗**——淺 fill 配白字只有 1.73／1.27／1.66（AA 需 4.5），
+       深 fill 配深字只有 2.51／2.20。⇒ **fill 與 on-fill 必須成對換，只換 fill ＝ AA 失敗。**
+
+     🔴 **我方換值前 5 族 fill 的亮度全擠在 0.166–0.177（跨度 0.011）**，本尊是 0.125–0.779。
+       那個窄帶是自動產生器的指紋：把每個色相壓暗到白字剛好過 4.5 就停，
+       五族因此殊途同歸，代價是 warning／caution／info 的色相身分被毀（亮琥珀→深褐、
+       亮黃→深橄欖、淺天藍→深藍）。
+
+     🔴 **刪除了 25 顆「本尊沒有這個槽、且我方零消費」的 token**（D54：不得保留自創值）：
+       5 族 × border-hover／border-active／icon-hover／icon-active（20 顆）、
+       caution-text-hover／-active、info-text-active（3 顆）、
+       critical-button-fill／-button-gradient-fill（2 顆）。
+       本尊只有 `highlight` 族有 icon/border 的 hover/active，其餘六族該格全空。
+       **按鈕**：本尊 primary destructive ＝ `bg-fill-critical` ＋ `text-critical-on-bg-fill`
+       （⇒ 我方 `--sem-critical-fill` ＋ `--sem-critical-on-fill`）；
+       secondary destructive ＝ `button-bg-fill-critical` **`#fff`** ＋ `text-critical`
+       ——與我方原本那兩顆（紅底＋漸層）是**相反模型**，故不保留舊值。
+
+     ⚠️ **本尊自己的三處不一致，照實複製並標明**（不修正，否則就不是 1:1）：
+       ①`info-text-hover` 與 `info-text` **同值** ⇒ info 語氣連結 hover 無顏色變化
+         （七族中唯一相等者；已實測被 `s-text`／`s-paragraph` 等五個 shadow sheet 綁為 link hover）。
+       ②`border-caution` 與 `fill-secondary-caution` **同值** `#ffeb78`
+         ⇒ 兩者同時用會讓邊框隱形。**本尊實際不會發生**（11169 條規則掃描，
+         同時消費這兩顆的規則交集為空），但我方若同時用就會。
+       ③`icon` 在同族 surface 上只有 **2.49–5.48**，七族中五族在 WCAG 1.4.11 的 3:1 線上下擦邊。
+         ⇒ **icon 不得作為承載語義的唯一線索**，必須伴隨文字。
+
+     ⚠️ **未取得**（照實留空，不用公式補）：caution 的 text-hover／text-active、
+       info 的 text-active——本尊 `:root` 上沒有這三顆。 */
+  --sem-info-surface:#eaf4ff;--sem-info-surface-hover:#e0f0ff;--sem-info-surface-active:#cae6ff;
+  --sem-info-fill:#91d0ff;--sem-info-fill-hover:#51c0ff;--sem-info-fill-active:#0094d5;
+  --sem-info-fill-secondary:#d5ebff;--sem-info-on-fill:#002133;
+  --sem-info-border:#a8d8ff;
+  --sem-info-icon:#0094d5;
+  --sem-info-text:#003a5a;--sem-info-text-hover:#003a5a;   /* ⚠️ 本尊兩者同值，見上 ① */
+  --sem-success-surface:#cdfed4;--sem-success-surface-hover:#affebf;--sem-success-surface-active:#92fcac;
+  --sem-success-fill:#047b5d;--sem-success-fill-hover:#035e4c;--sem-success-fill-active:#014b40;
+  --sem-success-fill-secondary:#affebf;--sem-success-on-fill:#fafffb;
+  --sem-success-border:#92fcac;
+  --sem-success-icon:#047b5d;
+  --sem-success-text:#014b40;--sem-success-text-hover:#073630;--sem-success-text-active:#022622;
+  --sem-caution-surface:#fff8db;--sem-caution-surface-hover:#fff4bf;--sem-caution-surface-active:#ffef9d;
+  --sem-caution-fill:#ffe600;--sem-caution-fill-hover:#ead300;--sem-caution-fill-active:#e1cb00;
+  --sem-caution-fill-secondary:#ffeb78;--sem-caution-on-fill:#332e00;
+  --sem-caution-border:#ffeb78;   /* ⚠️ 與 fill-secondary 同值，見上 ② */
+  --sem-caution-icon:#998a00;
+  --sem-caution-text:#4f4700;
+  --sem-warning-surface:#fff1e3;--sem-warning-surface-hover:#ffebd5;--sem-warning-surface-active:#ffe4c6;
+  --sem-warning-fill:#ffb800;--sem-warning-fill-hover:#e5a500;--sem-warning-fill-active:#b28400;
+  --sem-warning-fill-secondary:#ffd6a4;--sem-warning-on-fill:#251a00;
+  --sem-warning-border:#ffc879;
+  --sem-warning-icon:#b28400;
+  --sem-warning-text:#5e4200;--sem-warning-text-hover:#412d00;--sem-warning-text-active:#251a00;
+  --sem-critical-surface:#fee8eb;--sem-critical-surface-hover:#fee1e6;--sem-critical-surface-active:#fed9df;
+  --sem-critical-fill:#c70a24;--sem-critical-fill-hover:#a30a24;--sem-critical-fill-active:#8e0b21;
+  --sem-critical-fill-secondary:#fed1d7;--sem-critical-on-fill:#fffafb;
+  --sem-critical-border:#fec1c7;
+  --sem-critical-icon:#e22c38;
+  --sem-critical-text:#8e0b21;--sem-critical-text-hover:#5f0716;--sem-critical-text-active:#2f040b;
 
   /* 相容別名（既有 markup 的 .b-* 與 --success 等仍可用）*/
   --success:var(--sem-success-text);--success-bg:var(--sem-success-surface);
