@@ -3418,3 +3418,14 @@ grep -E '^- \[.\] ' docs/specs/91-pit-register.md | grep -oE '(docs/specs|\.gith
 | W-4 | **我方 4 個 `--fw-*` token 持有 `500`**（`--fw-control` 14 處／`--fw-md` 3／`--fw-xl` 1／`--fw-xs` 1，合計 19 個消費點），本尊值域無此值；另 `--fw-sm` 是**死 token**（0 消費） | worklog `2026-08-28-D55欄寬對齊.md` 的導出命令改 `--fw-` 前綴即得 | 同 W-3，屬決定 C |
 | W-5 | **`.cl-topbar` 是白底 ＋ `1px solid` 底框**（`background: var(--surface)`），本尊頂欄是 `#0a0a0a`、`border-bottom: 0`、`box-shadow: none`。`docs/design/47` §6 L206 早就記了「頂欄文字（深色底上）`#DCDCDC`」——文檔知道是深底，實作是白底。成因＝47 §6 的舊處置「色值改用 CHILL LOVE 自有調色」，**該段已被 D54 推翻** | `sed -n '67,77p' app/assets/stylesheets/admin.css` | 屬決定 A（顏色）的射程。🔴 **本尊的做法不是「頂欄硬指深色」而是整個子樹套 `colorscheme="dark"` 的 theme scope**（`111` §14.7 的消融實驗）；我方若逐項硬指顏色會重演「把巧合當規則」 |
 | W-6 | **我方中性階有 7 項帶色偏，本尊飽和度一律 0.0**：`--text #1a1c1e`（飽和 **13.3%**）／`--text-2`／`--text-3`／`--border`／`--border-2`／`--border-strong`／`--surface-inverse`（**10.3%**）。主文字對白底對比 **17.09** vs 本尊 **13.20** | scratchpad `our-side-audit.md` §6 | 屬決定 A，另包（`112` §2.1 已列為「需換值，16 項」） |
+
+### 3.31 D56 決定 A（語義色）的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | **換值後仍有 35 顆死 `--sem-*`（56%）**。它們有本尊對應（故未刪），但我方零消費：主要是各族的 `surface-hover`／`surface-active`／`fill-hover`／`fill-active`／`text-hover`／`text-active` | worklog `2026-08-28-D56語義色對齊.md` 導出命令 A | 它們是**互動態**，等對應元件（Banner／Badge／Toast 的 hover 態）實作時才會被消費。刪掉會讓下一個人重新去量 |
+| W-2 | **`highlight`／`ai` 兩族未補**（本尊 7 族，我方 5 族）。`highlight` 是七族中**唯一帶 icon-hover／icon-active／border-hover／border-active** 的族 | `docs/design/111` §14.3／§14.9／§14.10 | 我方導航／選中態／focus ring 目前硬編藍色，補這族要連元件一起改 ⇒ 另包。`ai` 族我方無 AI 介面，優先度更低 |
+| W-3 | **Banner／Badge 的元件層綁定未改**。本尊 Banner 有**兩種形態**（頁層＝中性 `bg-surface` ＋語氣只在 28×28 icon chip；卡片／彈窗內嵌＝`bg-surface-{F}` ＋ `text-{F}`）；Badge 有 **base／strong 兩檔**（base ＝ `fill-secondary` ＋ `text`；strong ＝ `fill` ＋ `on-fill`）。我方 `docs/design/48` 契約各只有一種 | `docs/design/48-component-contract.md` §11.2、§22 | 屬元件契約包，不在 token 換值射程內（鐵律 20.5） |
+| W-4 | **鐵律 8 指向 `docs/design/23` §1，但該檔 `--sem-` 出現 0 次**——實際 token 表在原型 `:root` ＋ `app/assets/tokens.css`。23 §1 已於 2026-08-23 改為指標（有 dated 註），但鐵律 8 的條文未同步 | `grep -c -- "--sem-" docs/design/23-interaction-css-spec.md` ＝ 0 | 改 `CLAUDE.md` 鐵律本文 ⇒ **命中鐵律 18.3**，須另開人工合併 PR |
+| W-5 | **本尊 avatar 族 4 組配對不過 AA**（2.05／3.00／3.18／4.11，源碼與 live 量測互為交叉驗證）。槽位由 `xorHash(name) % 7` 決定 ⇒ **開發者無法控制哪個人落到低對比槽** | `docs/DECISIONS.md` D56「明確不跟的一項」 | 我方**不跟**（已裁定）。登記是為了讓下一個人知道「照抄本尊會抄到一個無障礙缺陷」 |
+| W-6 | **`.p-partial-theme-admin-next` 把 7 族 fill 全改成淺彩**（success `#c2f59e`／warning `#ffd1a4`／caution `#fee091`／info `#a0e5f7`／highlight `#a7c1f9`／ai `#c9b7f9`／critical `#d82019`），但三頁掃描該 scope **零元素在用** | `docs/design/111` §20.8 第 5 條 | 尚未啟用的調色板，只登記。但它透露本尊正往「全族淺 fill」走，值得追蹤 |
