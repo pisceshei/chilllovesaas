@@ -588,6 +588,12 @@ svg{flex:none}
    （宣告卻沒人用的 token 會在下一次稽核被當成已落地）。 */
 [data-form="prod"] .icon-btn>svg,[data-form="prod"] .media-add>svg{width:var(--sz-icon);height:var(--sz-icon)}
 .icon-btn:hover{background:var(--surface-2)}
+/* 頂欄（暗域）hover：三控件全收斂到 #222＝暗域 surface-hover（D70 實測；
+   機制＝本尊 `_Hover` 能力類＋:hover，見 admin.css 同位註）。
+   只在暗域覆寫：`.icon-btn` 在亮域到處都是，而亮域 `--surface-2` 恰等於
+   本尊亮域的 hover 值（名稱對映未解，91 §3.39 W-3）。 */
+.cl-scope-dark .icon-btn:hover{background:var(--surface-hover);color:var(--icon)}
+.cl-scope-dark .store-chip:hover{background:var(--surface-hover)}
 .dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
 /* 商店 chip（D66）。本尊 `_TopBarButton_ir1fb_1 _Act…` 實測：154x36、圓角 12、
    **邊框寬度 0、底色透明**、內距 0；內含頭像 28x28（距 chip 左緣 4）、

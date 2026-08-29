@@ -3579,3 +3579,12 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-1 | **`--sp-` / `--r-` / `--h-` / `--sz-` 四族仍是 px**，而本尊的 space 與 radius 也是 rem（`--p-space-*`、`--p-border-radius-100: .25rem`，113 §表）⇒ 使用者調大字級時本尊的間距與圓角等比放大、我方不動 | `grep -o -- "--sp-[0-9]*:[^;]*px" app/assets/tokens.css` | 射程與風險都比字級大（間距放大會改變版面斷行），且未經裁定。字級族先行是刻意的最小步 |
 | W-2 | 🔴 **CSS 註釋裡寫 `--x-*/--y-*` 這種字樣會提早終結註釋**，殘骸吞掉下一條宣告；lint-prototype 與 check-tokens-sync 都**結構上看不到**（前者只查大括號平衡，後者是逐位元組比對、兩邊一起壞）。本輪同一坑踩兩次：一次吞 `--t-275`（症狀＝`.dev-tag` 11→12px），一次吞 `html,body` 基準（症狀＝全站字重 450→400）。**兩次都是行為級驗收抓到的，不是靜態檢查** | D68 事故段；判準＝`grep -P '\*/\S'` 後人工分辨密排合法形 | 給 lint-prototype 加「註釋內容不得含 `*/`」規則要改 `scripts/`，觸 18.3。先登記；若日後常犯再立案 |
 | W-3 | **擾動法目前是臨時腳本**，root ×2 的量測沒有進倉庫、也沒有進 CI。D69 的靜態檢查只覆蓋 token 表本身，**消費端硬編 px（C-3 那批殘留）只有擾動法照得出來** | D68 驗收段 | 擾動法要跑瀏覽器 ⇒ 進 CI 需要 headless harness，那是 `scripts/rwd-check.mjs`（尚未建立）同一包的事 |
+
+### 3.43 D70 的範圍外觀察與處置補記（2026-08-28）
+
+| # | ⚪ 觀察／處置 | 導出／錨點 | 說明 |
+|---|---|---|---|
+| W-1 | **`:active` 按壓態未實作**：本尊有 `._Selected_bw2yn_109:active` 的按壓底色與 `._TopBarButton:active > ._Pressed` 的文字色降級（`--p-color-text-secondary`），另有 `[data-admin-next]` 閘門下的 scale 按壓與 rest 70% 不透明度機制（**該閘門在測試店頁面未啟用**，實測 rest opacity 恆 1） | D70 取證段；render-common-*.css 原文 | hover 弧只收 hover。`:active` 是下一層互動深度，且 `[data-admin-next]` 那套在本尊自己都還沒對此頁生效——先登記，等它上線再對齊 |
+| W-2 | 🔴 **`computer` 的座標框架是最近一次截圖的像素，不是頁面 CSS px**。頁寬 2560、截圖 1568（比例 0.6125）時，用 CSS 座標 hover 會落空**且不報錯**——讀回全是 rest 值，看起來像「hover 沒有效果」。判準＝操作後先斷言 `el.matches(':hover')` 再讀值 | D70 量測方法坑段 | 量測方法坑。固定處理＝先 `screenshot` 建立框架、座標乘比例、每次 hover 後驗 `matches(':hover')` |
+| — | **處置補記：§3.42 W-1（四族 rem）＝裁定擱置**，重啟條件見 D70 | D70 擱置① | 使用者 2026-08-28 採納 |
+| — | **處置補記：§3.41 W-3／§3.42 W-3（rwd-check.mjs）＝裁定擱置到下一個大 UI 輪開頭**，屆時作為首包（18.3 人工合併） | D70 擱置② | 同上 |
