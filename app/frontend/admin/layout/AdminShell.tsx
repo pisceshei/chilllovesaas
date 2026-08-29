@@ -208,6 +208,10 @@ export function AdminShell({ brandName }: AdminShellProps) {
       {/* cl-scope-dark：本尊把頂欄包在一個主題容器裡，容器改 token、頂欄只寫 var(--bg)。
           見 admin.css 的 .cl-scope-dark 與原型 :root 的暗色域區塊。 */}
       <header className="cl-topbar cl-scope-dark">
+        {/* 三欄 grid 的三個槽（D67）。中槽同時是搜尋列與存檔列的槽位——
+            dirty 時 SaveBar 取代搜尋列而不是疊加，兩者共用同一個槽 ⇒ 換手時中線不動。
+            本尊對應物是 `_LeftContent_` / `_SlotsContainer_` / `_RightContent_`。 */}
+        <div className="cl-topbar__zone">
         <button
           aria-expanded={sidebarOpen}
           aria-label={sidebarOpen ? t("shell.nav.close") : t("shell.nav.open")}
@@ -226,8 +230,13 @@ export function AdminShell({ brandName }: AdminShellProps) {
           <span className="cl-brand__version">{t("shell.version")}</span>
         </div>
 
-        <SearchOrSaveBar />
+        </div>
 
+        <div className="cl-topbar__zone">
+          <SearchOrSaveBar />
+        </div>
+
+        <div className="cl-topbar__zone cl-topbar__zone--right">
         <div className="cl-topbar__actions">
           <UiLocaleSwitcher />
           <button aria-label={t("shell.assistant")} className="cl-icon-button" type="button">
@@ -242,6 +251,7 @@ export function AdminShell({ brandName }: AdminShellProps) {
             </span>
             <span>{brandName}</span>
           </button>
+        </div>
         </div>
       </header>
 
