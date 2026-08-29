@@ -530,11 +530,29 @@ svg{flex:none}
 .logo{display:flex;align-items:center;gap:var(--sp-200);font-weight:700;font-size:var(--t-md);line-height:var(--lh-md);letter-spacing:.05em;white-space:nowrap}
 .logo .heart{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#e9b8a2,#a9502c);display:grid;place-items:center}
 .ver{font-size:var(--t-2xs);font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-200)}
-.searchbox{flex:1;max-width:640px;margin:0 auto;height:var(--h-36);background:var(--surface-2);border:var(--hairline) solid var(--border);border-radius:var(--r-300);display:flex;align-items:center;gap:var(--sp-200);padding:0 var(--sp-300);color:var(--text-3);font-size:var(--t-sm);cursor:pointer}
-.searchbox:hover{background:var(--surface-hover);border-color:var(--border-strong)}
-.kbd{margin-left:auto;font-size:var(--t-2xs);border:var(--hairline) solid var(--border);background:var(--surface);border-radius:var(--r-100);padding:var(--sp-050) var(--sp-150);color:var(--text-3)}
+/* 搜尋觸發鈕（D66）。本尊 `_TopBarButton_ir1fb_1 _SearchA…` 2026-08-28 於 /products 實測
+   （viewport 2560、暗色域內、擴充功能污染已停用）：幾何 545x36、圓角 12、
+   **邊框寬度 0**，底色來自內層 `_BorderGradient_bw2yn_1` = #282828（暗域的 surface-2），
+   文字 13 / 20、color #dcdcdc（暗域的 icon）。
+   🔴 邊框整條刪除——本尊沒有；連帶 hover 也不再換邊色（`--border-strong` 在暗域
+   根本沒有對應值，那條 hover 在頂欄改暗之後是壞的）。
+   🔴 545 是該視口下與「View as」鈕分掉中央 640 槽的結果，不是控件上限 ⇒ 取槽寬 640。
+   ⚠️ 內部圖示與間距的節奏**未取得**（標籤起點距鈕左緣 32，但沒量到圖示 rect）⇒ 沿用既有。 */
+.searchbox{flex:1;max-width:640px;margin:0 auto;height:var(--h-36);background:var(--surface-2);border:0;border-radius:var(--r-300);display:flex;align-items:center;gap:var(--sp-200);padding:0 var(--sp-300);color:var(--icon);font-size:var(--type-body-md-size);line-height:var(--type-body-md-lh);font-weight:var(--fw-regular);letter-spacing:var(--type-body-md-ls);cursor:pointer}
+.searchbox:hover{background:var(--surface-hover)}
+/* 快捷鍵標籤。本尊 `Polaris-KeyboardKey` 實測：34x20（CTRL）/ 20x20（K）、
+   bg #2f2f2f（暗域 surface-3）、color #aaa（暗域 text-2）、**邊框寬度 0**、圓角 4、
+   內距 2 4、**10px / 16 / 550**。
+   🔴 **10px 不在任何一方的字級階裡**——本尊自己最小的一階是 275 = 11px。
+   這是本尊的階外值，照實記錄、不硬湊到 11；也不建 token（單一用途，建了是死 token）。 */
+.kbd{margin-left:auto;font-size:10px;line-height:var(--lh-400);font-weight:var(--fw-medium);border:0;background:var(--surface-3);border-radius:var(--r-100);padding:var(--sp-050) var(--sp-100);color:var(--text-2)}
 .top-right{display:flex;align-items:center;gap:var(--sp-150)}
-.icon-btn{width:var(--h-28);height:var(--h-28);border-radius:var(--r-200);display:grid;place-items:center;color:var(--text-2);position:relative}
+/* 圖示鈕（D66）。本尊 `_TopBarButton_ir1fb_1` 實測：**36x36**、圓角 12、底透明、
+   color #dcdcdc（暗域 icon）；內距 6，圖示 20x20（Sidekick）或 16x16（Alerts）。
+   🔴 我先前把 18x18 記成鈕的尺寸是**量錯節點**（那是圖示不是鈕），
+   `docs/specs/91` §3.39 W-2 的舊記載以本條為準。
+   ⚠️ hover 態本尊未取得（需觸發 hover）⇒ 沿用既有。 */
+.icon-btn{width:var(--h-36);height:var(--h-36);border-radius:var(--r-300);display:grid;place-items:center;color:var(--icon);position:relative}
 /* 64 §4：圖示 20 × 20。本輪只套在**本輪對齊範圍內**的商品／變體詳情頁——
    其餘頁面的圖示仍是既有的 15／16，等各自對齊那一輪再收斂到同一顆 token。
    寫成 CSS 規則而不是只改 IC() 的參數，是為了讓 --sz-icon 有真正的消費者
@@ -542,10 +560,20 @@ svg{flex:none}
 [data-form="prod"] .icon-btn>svg,[data-form="prod"] .media-add>svg{width:var(--sz-icon);height:var(--sz-icon)}
 .icon-btn:hover{background:var(--surface-2)}
 .dot-n{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:#d03b3b;border:1.5px solid var(--surface)}
-.store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-200);border:var(--hairline) solid var(--border);border-radius:var(--r-200);padding:var(--sp-100) var(--sp-200) var(--sp-100) var(--sp-100);font-size:var(--t-sm);font-weight:600}
+/* 商店 chip（D66）。本尊 `_TopBarButton_ir1fb_1 _Act…` 實測：154x36、圓角 12、
+   **邊框寬度 0、底色透明**、內距 0；內含頭像 28x28（距 chip 左緣 4）、
+   店名 12 / 16 / **550** color #dcdcdc、間距 4（頭像右緣 2430 → 店名 2434）。
+   🔴 舊寫法的 1px 邊框 / 8 圓角 / `font-weight:600` 硬編**三項都不在本尊值域**。
+   字重改走 `--type-button-label-*`（12 / 16 / 550），該角色階三軸與本尊此處逐項相同。 */
+.store-chip{display:flex;align-items:center;height:var(--h-36);gap:var(--sp-100);border:0;border-radius:var(--r-300);background:transparent;padding:var(--sp-100);font-size:var(--type-button-label-size);line-height:var(--type-button-label-lh);font-weight:var(--type-button-label-fw)}
 .store-chip:hover{background:var(--surface-2)}
 .avatar{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#57c4b8,#1f8a7d);display:grid;/* 🔴 本尊頭像縮寫（s-avatar → text.text）= **16 / 20 / 450**。我方原本 11px/700
    ——字級小 5px、字重重 250。盒 24×24 vs 本尊 28×28 屬幾何，不在本包射程。 */place-items:center;color:var(--text-on-brand);font-size:var(--type-avatar-initials-size);font-weight:var(--fw-regular);flex:none}
+/* 🔴 頭像 28x28 只加在 chip 內：`.avatar` 是**通用類**（markup 內 9 個用點），
+   直接改它會把列表、顧客卡那些一起放大。本尊量到的 28 是頂欄那一顆。
+   圓角本尊求值 8（宣告是 `clamp(4px, round(25%, 2px), 8px)`：28 的 25% = 7，
+   round 到 2 的倍數 = 8，夾在 [4, 8] ⇒ 8）——`.avatar` 既有的 `--r-200` 已是 8，不動。 */
+.store-chip .avatar{width:var(--h-28);height:var(--h-28)}
 .dev-tag{font-size:var(--t-2xs);color:var(--text-3);border:var(--hairline) solid var(--border);border-radius:var(--r-100);padding:0 var(--sp-100)}
 
 /* ===== 版面 ===== */

@@ -3550,3 +3550,15 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-4 | 🔴 **`--surface-inverse` 我方 #1a1a1a、本尊 `bg-surface-inverse` #303030**。我方那個值其實等於本尊**暗域的 `bg-surface`**，名字掛錯層 | 同上 | 同 W-3，屬名稱對映表那一包。本包新增的 `--dk-surface`（#1a1a1a）已經是正確承載體，`--surface-inverse` 的去留要一起裁 |
 | W-5 | **我方缺 `--icon-2`**（本尊 `icon-secondary` 亮 #8a8a8a / 暗 #aaa）。本包的 `.cl-scope-dark` 因此只 remap 了 `--icon` | D64 對照表 | 新增 token 要先確認消費端；目前沒有元件在用第二階圖示色 ⇒ 加了是死 token |
 | W-6 | 🔴 **「背後是什麼顏色」不能跳到 `body` 問**：`main` 與 `body` 同為 #f1f1f1，我因此一度判定 12px 圓角是 no-op；走完祖鏈才看到中間的 `_Frame` #0a0a0a | D64「三件事是同一個視覺系統」段 | 這是量測方法的坑。固定處理＝**走到第一個不透明的祖先**再判斷，已寫進 D64 |
+
+### 3.40 D66 的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | 🔴 **本尊頂欄是三欄 grid，我方是 flex**：`_Container_1scp5_26` 實測 `display: grid`、`grid-template-columns: 960px 640px 960px`（viewport 2560 ⇒ 等效 `1fr 640px 1fr`），中央槽 `_SlotsContainer_s09xl_1` 另有 `padding: 0 14px` 且盒寬 668（比槽寬 640 多 28）⇒ 它用 **−14px 外距**把命中區往外撐。我方 `.cl-search-trigger` 是 `flex:1 + margin:0 auto`，**中線落在剩餘空間的中央、不是視口中央**；左右內容不等寬時會偏 | D66 取證段 | 改 grid 要動 `AdminShell.tsx` 的 markup（包三個 zone div），且窄寬度的分欄行為**本尊未取得**（無法縮放）。本包刻意限定在「控件本身」，不動版面骨架 |
+| W-2 | **本尊搜尋標籤的 `font-weight: 400` 是 UA button 預設漏出**（該 span 沒設 weight；同鈕 computed font 讀出 `13.3333px/normal/400/normal`）。400 不在我方值域也不在本尊 `--p-font-weight-*` 的常用值 | D66「明確不照抄的一項」 | 已裁定用 `--fw-regular`（450）。登記是為了讓下一個人看到 400 時**不要以為我方漏對齊** |
+| W-3 | **搜尋鈕內部的圖示與間距節奏未取得**：本尊標籤起點距鈕左緣 32px，但我沒有量到搜尋圖示的 rect，拆不出「內距 ＋ 圖示 ＋ gap」。右內距本尊 10、我方 12 | D66 取證段 | 要再一次量測且要能定位那顆圖示。差 2px，優先度低 |
+| W-4 | 🔴 **頭像底色：`admin.css` 是實色 `--success`（rgb(1,75,64)）、原型是 `linear-gradient`** ⇒ 同一顆頭像兩份檔給不同答案（C-2 同型：設計與實作各說各話）。本尊是每店生成色（`avatar color-three` ＝ #2ce0d4） | D66 驗證段兩份輸出的 `avatar.bg` | 「每店生成色」是一個功能（雜湊店名 → 配色），不是換一個值就好。屬另一包 |
+| W-5 | **行動覆寫用的是 px 斷點**：`admin.css` 的頂欄行動區塊寫 `@media (max-width: 760px)`，而 `docs/design/48`「三條硬規則」第 2、3 條要求主斷點只有 768（48em）且**單位是 em**。760 ≠ 767.9975 | `grep -n "max-width: 760px" app/assets/stylesheets/admin.css` | 改它會移動實際的換手點（8px），需要在三寬度下重驗整個頂欄的窄版形態，而**本尊窄版形態未取得**（`91` §3.39 W-1）⇒ 先登記 |
+| W-6 | **本尊左區是平台 logo（mark 21×24 ＋ wordmark 62×20，區寬 240 ＝ 側欄寬），店名在右側 chip；我方左區是品牌名 ＋ 版本 pill，右側也有 chip** | D66 取證段的 `leftKids` | 這是**資訊架構差異**不是控件差異，且鐵律 9 禁止使用本尊的 logo／wordmark ⇒ 不能照抄。要對齊得先裁定我方的頂欄身分擺法 |
+| W-7 | **hover 態全部未取得**（要真的觸發 hover 才量得到）：搜尋鈕、圖示鈕、chip 三者的 hover 底色我方沿用既有值 | D66 各控件註釋的 ⚠️ | 需要一輪 hover 專門量測（`computer` 的 hover ＋ 逐一讀 computed）。可與 W-3 同一輪做 |

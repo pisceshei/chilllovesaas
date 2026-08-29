@@ -169,37 +169,58 @@ a {
   letter-spacing: var(--type-body-sm-ls);
 }
 
+/* 搜尋觸發鈕（D66）。本尊 `_TopBarButton_ir1fb_1 _SearchA…`，2026-08-28 於 /products
+   實測（viewport 2560、暗色域內、擴充功能污染已停用）：
+     幾何 545×36、`border-radius: 12px`、**`border-width: 0`**
+     底色來自內層 `_BorderGradient_bw2yn_1` ＝ #282828（＝暗域的 surface-2）
+     文字 13 / 20、color #dcdcdc（＝暗域的 icon）
+   🔴 舊寫法的 34 高 / 9 圓角 / 1px 邊框 / `#c9cace` hover 邊色**四項都不在本尊值域**，
+   `#c9cace` 更是直接硬編色（違反鐵律 8）。
+   🔴 寬度 545 是**該視口下與「View as」鈕分掉中央 640 槽**的結果，不是控件本身的上限
+   ⇒ 這裡取槽寬 640，不取 545。中央槽的三欄 grid 未實作，見 `91` §3.40 W-1。
+   ⚠️ **內部圖示與間距的節奏未取得**：本尊標籤起點距鈕左緣 32px，但我沒有量到搜尋圖示的
+   rect，無法拆成「內距 ＋ 圖示 ＋ gap」⇒ 沿用我方 12 / 20 / 8。右內距本尊 10、我方 12。 */
 .cl-search-trigger {
   display: flex;
   flex: 1;
   align-items: center;
-  max-width: 600px;
-  height: 34px;
-  gap: 8px;
+  max-width: 640px;
+  height: var(--h-36);
+  gap: var(--sp-200);
   padding: 0 12px;
   margin: 0 auto;
-  border: 1px solid var(--border);
-  border-radius: 9px;
+  border: 0;
+  border-radius: var(--r-300);
   background: var(--surface-2);
-  color: var(--text-3);
+  color: var(--icon);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  letter-spacing: var(--type-body-md-ls);
   text-align: left;
-  transition: background var(--tr), border-color var(--tr);
+  transition: background var(--tr);
 }
 
 .cl-search-trigger:hover {
-  background: var(--surface-3);
-  border-color: #c9cace;
+  background: var(--surface-hover);
 }
 
+/* 快捷鍵標籤。本尊 `Polaris-KeyboardKey` 實測：34×20（CTRL）／20×20（K）、
+   bg #2f2f2f（＝暗域的 surface-3）、color #aaa（＝暗域的 text-2）、
+   `border-width: 0`、`border-radius: 4px`、`padding: 2px 4px`、**10px / 16 / 550**。
+   🔴 **10px 不在任何一方的字級階裡**——本尊自己的字級階最小是 275 ＝ 11px。
+   這是本尊的階外值，照實記錄、不硬湊到 11px；不建 token（單一用途，建了是死 token）。 */
 .cl-search-trigger kbd {
-  padding: 1px 6px;
+  padding: var(--sp-050) var(--sp-100);
   margin-left: auto;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--text-3);
+  border: 0;
+  border-radius: var(--r-100);
+  background: var(--surface-3);
+  color: var(--text-2);
   font-family: inherit;
-  font-size: 11px;
+  font-size: 10px;
+  line-height: var(--lh-400);
+  font-weight: var(--fw-medium);
 }
 
 .cl-topbar__actions {
@@ -208,17 +229,22 @@ a {
   gap: 6px;
 }
 
+/* 圖示鈕（D66）。本尊 `_TopBarButton_ir1fb_1` 實測：**36×36**、`border-radius: 12px`、
+   底色透明、color #dcdcdc（＝暗域的 icon）。內距 6px，圖示 20×20（Sidekick）或 16×16（Alerts）。
+   🔴 舊寫法 32×32 ＋ `--r-btn`（8px）。我先前把 18×18 記成鈕的尺寸是**量錯節點**
+   ——那是圖示，不是鈕；`91` §3.39 W-2 的舊記載以本條為準。
+   ⚠️ hover 態本尊未取得（要觸發 hover 才量得到）⇒ 沿用我方。 */
 .cl-icon-button {
   display: grid;
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: var(--h-36);
+  height: var(--h-36);
   padding: 0;
   place-items: center;
   border: 0;
-  border-radius: var(--r-btn);
+  border-radius: var(--r-300);
   background: transparent;
-  color: var(--text-2);
+  color: var(--icon);
   transition: background var(--tr), color var(--tr);
 }
 
@@ -227,18 +253,28 @@ a {
   color: var(--text);
 }
 
+/* 商店 chip（D66）。本尊 `_TopBarButton_ir1fb_1 _Act…` 實測：154×36、
+   `border-radius: 12px`、**`border-width: 0`、底色透明**、`padding: 0`；
+   內含頭像 28×28（距 chip 左緣 4）、店名 12 / 16 / **550** color #dcdcdc、
+   間距 4（頭像右緣 2430 → 店名 2434）。
+   🔴 舊寫法 34 高 / 9 圓角 / 1px 邊框 / 白底 / `font-weight: 600` 硬編
+   ——五項都不在本尊值域。字重改走 `--type-button-label-*`（12 / 16 / 550），
+   那組角色階的三軸與本尊此處**逐項相同**。
+   ⚠️ `max-width: 220px` 是我方的截斷保護，本尊未觀察到對應上限（其 154 是內容寬）⇒ 保留。 */
 .cl-store-chip {
   display: flex;
   align-items: center;
-  height: 34px;
+  height: var(--h-36);
   max-width: 220px;
-  gap: 8px;
-  padding: 4px 10px 4px 5px;
+  gap: var(--sp-100);
+  padding: var(--sp-100);
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
-  font-weight: 600;
+  border: 0;
+  border-radius: var(--r-300);
+  background: transparent;
+  font-size: var(--type-button-label-size);
+  line-height: var(--type-button-label-lh);
+  font-weight: var(--type-button-label-fw);
   white-space: nowrap;
   transition: background var(--tr);
 }
@@ -252,13 +288,17 @@ a {
   text-overflow: ellipsis;
 }
 
+/* 頭像：本尊實測 28×28、`border-radius` 求值為 8px
+   （其宣告是 `clamp(4px, round(25%, 2px), 8px)`——28 的 25% ＝ 7，round 到 2 的倍數 ＝ 8，
+   夾在 [4, 8] ⇒ 8）。我方直接寫 `--r-200`（8px）：同一個結果，不引進 `round()`
+   這個我方別處沒用過的函式。舊寫法 24×24 / 7px 圓角，兩項都不在值域。 */
 .cl-store-chip__avatar {
   display: grid;
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: var(--h-28);
+  height: var(--h-28);
   place-items: center;
-  border-radius: 7px;
+  border-radius: var(--r-200);
   background: var(--success);
   color: var(--surface);
   font-size: var(--type-avatar-initials-size);
