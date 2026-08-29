@@ -526,7 +526,25 @@ svg{flex:none}
 
 /* 頂欄：本尊量測 56 高、background 取暗域的 bg（算成 #0a0a0a）、
    **border-bottom-width 為 0、box-shadow 為 none**。舊寫法是白底加一條下框線。 */
-.topbar{height:var(--topbar-h);background:var(--bg);display:flex;align-items:center;gap:var(--sp-400);padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
+/* 頂欄骨架（D67）：本尊 `_Container_1scp5_26` 實測 `display: grid`、
+   `grid-template-columns: 960px 640px 960px`（viewport 2560 ⇒ 等效 `1fr 640px 1fr`）。
+   🔴 **這不是排版偏好，是行為差異**：舊寫法 `flex:1 + margin:0 auto` 讓搜尋框的中線
+   落在**剩餘空間**的中央；左右內容不等寬時（我方左邊品牌名、右邊三顆鈕 ＋ chip）會偏。
+   三欄 grid 的兩側是同一個 `1fr` ⇒ 中欄**恆在視口中央**，與本尊同。
+   🔴 中欄同時是**存檔列的槽位**：dirty 時 savebar 取代搜尋列（不是疊加），
+   兩者都住在中欄 ⇒ 換手時中線不動。這正是本尊 `_SlotsContainer_` 的角色。
+   ⚠️ 本尊中央槽另有 `padding: 0 14px` 配 **−14px 外距**（盒寬 668 vs 槽寬 640）
+   ——那是把命中區往外撐 14px，**沒有視覺效果**，不照抄。
+   🔴 兩側是 `minmax(max-content, 1fr)` 不是純 `1fr`：純 `1fr` 配上 zone 的
+   `min-width: 0` 會讓側槽被壓到比內容還窄，內容往**中槽重疊**。
+   768 實測過：側槽 48px、而 `.top-right` 實際占 414–752 ⇒ 跨進中槽。
+   ⚙ 那一次的溢出稽核回報 0，因為它只比視口邊緣——典型的 fail-open。
+   現行判準改成「每個 zone 的子元素必須在自己 zone 的矩形內」。
+   ⚠️ **本尊窄寬度的分欄行為未取得**（無法縮放本尊視窗）⇒ 中欄用 `minmax(0, 640px)`：
+   空的時候塌成 0、擠的時候讓步，不會把兩側推爆。 */
+.topbar{height:var(--topbar-h);background:var(--bg);display:grid;grid-template-columns:minmax(max-content,1fr) minmax(0,640px) minmax(max-content,1fr);align-items:center;padding:0 var(--sp-400);position:relative;z-index:var(--z-topbar)}
+.tb-zone{display:flex;align-items:center;min-width:0;gap:var(--sp-400)}
+.tb-zone--r{justify-content:flex-end}
 .logo{display:flex;align-items:center;gap:var(--sp-200);font-weight:700;font-size:var(--t-md);line-height:var(--lh-md);letter-spacing:.05em;white-space:nowrap}
 .logo .heart{width:24px;height:24px;border-radius:var(--r-200);background:linear-gradient(135deg,#e9b8a2,#a9502c);display:grid;place-items:center}
 .ver{font-size:var(--t-2xs);font-weight:600;color:var(--ai);background:var(--ai-bg);border-radius:var(--r-pill);padding:var(--sp-050) var(--sp-200)}
@@ -2049,8 +2067,11 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
 <span class="vh" id="dragHelp">按 Enter 或空白鍵抓取這個項目，再用上下鍵移動、左右鍵調整層級，Enter 放下，Esc 取消並回到原位。</span>
 
 <header class="topbar cl-scope-dark">
+  <div class="tb-zone tb-zone--l">
   <button class="hamb" id="hambBtn" aria-label="開啟導航選單" aria-controls="sidebar" aria-expanded="false" onclick="toggleNav()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="logo"><span class="heart"><svg width="12" height="12" viewBox="0 0 24 24" fill="#fff"><path d="M12 21C7 16.6 2 12.3 2 8.5 2 5.9 4 4 6.5 4c1.8 0 3.4 1 4.2 2.5h2.6C14.1 5 15.7 4 17.5 4 20 4 22 5.9 22 8.5c0 3.8-5 8.1-10 12.5z"/></svg></span><span class="logo-txt">CHILL LOVE</span> <span class="ver">秋季 '26</span></div>
+  </div>
+  <div class="tb-zone tb-zone--c">
   <button class="searchbox" data-doc="search" aria-label="搜尋（CTRL K）" onclick="openPalette()">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="sb-text" data-i18n="搜尋">搜尋</span><span class="kbd">CTRL K</span>
   </button>
@@ -2060,6 +2081,8 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <button class="btn btn-sec btn-sm" data-i18n="捨棄" onclick="formDiscard()">捨棄</button>
     <button class="btn btn-pri btn-sm" id="sbSave" data-i18n="儲存" onclick="formSave()">儲存</button>
   </div>
+  </div>
+  <div class="tb-zone tb-zone--r">
   <div class="top-right">
     <!-- 67 §E.1 介面語言（admin UI locale）：**員工屬性**，字串來自平台 i18n bundle。
          🔴 它與商品編輯頁的「內容語言」是兩個獨立控件，切這個**不會**動到正在編輯哪一份譯文。 -->
@@ -2073,6 +2096,7 @@ body:has(.settings.show) .savebar{position:fixed;top:auto;left:auto;right:var(--
     <button class="m-hover icon-btn" id="annotBtn" title="開發註釋模式" aria-label="開發註釋模式" onclick="toggleAnnot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"/></svg></button>
     <button class="m-hover icon-btn" data-doc="alerts-bell" title="通知" aria-label="通知" onclick="openAlerts()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span class="dot-n"></span></button>
     <button class="store-chip" data-doc="storechip" onclick="storeSwitch()" aria-label="商店：CHILL LOVE（demo）"><span class="avatar">CL</span><span class="sc-txt">CHILL LOVE</span><span class="dev-tag">demo</span></button>
+  </div>
   </div>
 </header>
 

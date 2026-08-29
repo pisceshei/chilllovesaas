@@ -113,18 +113,45 @@ a {
   color: var(--text);
 }
 
+/* 頂欄骨架（D67）：本尊 `_Container_1scp5_26` 實測 `display: grid`、
+   `grid-template-columns: 960px 640px 960px`（viewport 2560 ⇒ 等效 `1fr 640px 1fr`）。
+   🔴 **這不是排版偏好，是行為差異**：舊寫法 `flex:1 + margin:0 auto` 讓搜尋框的中線
+   落在**剩餘空間**的中央；左右內容不等寬時（我方左邊品牌名、右邊三顆鈕 ＋ chip）會偏。
+   三欄 grid 的兩側是同一個 `1fr` ⇒ 中欄**恆在視口中央**，與本尊同。
+   🔴 中欄同時是**存檔列的槽位**：dirty 時 savebar 取代搜尋列（不是疊加），
+   兩者都住在中欄 ⇒ 換手時中線不動。這正是本尊 `_SlotsContainer_` 的角色。
+   ⚠️ 本尊中央槽另有 `padding: 0 14px` 配 **−14px 外距**（盒寬 668 vs 槽寬 640）
+   ——那是把命中區往外撐 14px，**沒有視覺效果**，不照抄。
+   🔴 兩側是 `minmax(max-content, 1fr)` 不是純 `1fr`：純 `1fr` 配上 zone 的
+   `min-width: 0` 會讓側槽被壓到比內容還窄，內容往**中槽重疊**。
+   768 實測過：側槽 48px、而 `.top-right` 實際占 414–752 ⇒ 跨進中槽。
+   ⚙ 那一次的溢出稽核回報 0，因為它只比視口邊緣——典型的 fail-open。
+   現行判準改成「每個 zone 的子元素必須在自己 zone 的矩形內」。
+   ⚠️ **本尊窄寬度的分欄行為未取得**（無法縮放本尊視窗）⇒ 中欄用 `minmax(0, 640px)`：
+   空的時候塌成 0、擠的時候讓步，不會把兩側推爆。 */
 .cl-topbar {
   position: relative;
   z-index: 40;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, 640px) minmax(max-content, 1fr);
   align-items: center;
   height: var(--topbar-h); /* 47 §0 量測真值 56px（原 52，51 表 1 P0-11）*/
-  gap: 16px;
   padding: 0 16px;
   /* 在 `.cl-scope-dark` 裡，`--bg` 解析成 #0a0a0a。本尊頂欄寫的就是
      `background: var(--p-color-bg)`——它不自己指定深色，是主題容器給的。
      🔴 `border-bottom` 已刪：本尊實測 `border-bottom-width: 0`、`box-shadow: none`。 */
   background: var(--bg);
+}
+
+.cl-topbar__zone {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 16px;
+}
+
+.cl-topbar__zone--right {
+  justify-content: flex-end;
 }
 
 .cl-topbar__menu {
