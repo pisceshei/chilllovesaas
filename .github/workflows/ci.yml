@@ -283,6 +283,13 @@ jobs:
       - name: Regression-test limits key rules
         run: ruby scripts/test-limits-key-rules.rb
 
+      # rem token 完整性（D68／2026-08-28 使用者裁定的 B 道）：
+      # --t-*/--lh- 兩族必須全部 rem。px→rem 在預設 16px 下零視覺差
+      # ⇒ 渲染層驗收驗不出漏轉，只有靜態檢查對 token 表完整。
+      - name: Check rem token integrity
+        run: ruby scripts/check-rem-tokens.rb
+      - name: Regression-test rem token rules
+        run: ruby scripts/test-rem-token-rules.rb
       # 🔴 把 config/ci.rb 那條「兩邊要同步」的條款從紀律變成機制。
       # 那條條款寫下的隔天就被違反了：PR #33 往本 job 加了兩步、config/ci.rb 一行未動，
       # 於是本機 `bin/ci` 全綠但 CI 會紅——而擋下來的理由本機沒有機會發現。

@@ -2239,3 +2239,42 @@ token 消費端全 2.0，唯二的 1.0 是 kbd 的 10px（**階外字面值，�
 
 修復後終態：擾動法轉換前全 1.0 → 轉換後消費端全 2.0；
 全路由等價 **35 路由 × 2792 元素 × 12 屬性＝差異 0**；`--t-275` 兩份檔都解析出 `.6875rem`。
+
+---
+
+### D69. rem token 靜態完整性檢查（B 道）落地（2026-08-28）
+
+D68 裁定②的後半。🔴 **觸鐵律 18.3**（新增 `scripts/` 兩支 ＋ 改 `ci.yml` ＋ `config/ci.rb`
+＝機械閘門判準面）⇒ **人工審閱與人工合併**。
+
+#### 交付
+
+- `scripts/check-rem-tokens.rb`：producer（原型 `:root`）內 `--t-<數字>`／`--lh-<數字>`
+  兩族每顆必須是 rem。**別名（`--t-sm` 這類 var() 間接層）刻意不在射程**。
+  掃描前剝 CSS 註釋（D68 的 `*/` 事故同根：說明文字與宣告同形）。
+  退出碼三分：0＝通過／1＝有違規／2＝取證失敗（檔案或 `:root` 不在、**兩族任一掃到 0 顆**）。
+- `scripts/test-rem-token-rules.rb`：fixture 驅動回歸，8 格
+  （乾淨×2、px 字級、px 行高、em、家族空、註釋偽裝、無 root）＋真 producer 必過。
+- `spec/fixtures/rem_tokens/`：7 份 fixture。
+- 接線：`ci.yml` quality job ＋ `config/ci.rb` 同批（check-ci-parity 通過）。
+
+#### 🔴 突變實測（20.2⑤：改判準必須證明它殺得死）
+
+寫完後對 checker 做五個活突變，**每個都讓回歸轉紅**才算數：
+
+| 突變 | 殺手 |
+|---|---|
+| M1 判定反轉（`next if`→`unless`） | clean fixture 的反向斷言 |
+| M2 零掃描 canary 整段刪 | `family_empty` 期望碼 2 |
+| M3 FAMILIES 刪 `--lh-` 那條 | `px_lineheight` 期望碼 1 ＋ `family_empty` needle 指名 `--lh-` |
+| M4 剝註釋那行刪掉 | `comment_masked` 期望碼 0 |
+| M5 取證失敗 exit 2→0 | `no_root` 期望碼 2 |
+
+M3 是設計期就預判會存活的形態（刪掉一族後另一族照掃、canary 誤觸發也回 2）
+⇒ fixture 表因此加了 `px_lineheight` 單獨一格與指名家族的 needle。
+
+#### 誠實聲明（checker 檔頭同文）
+
+- `--sp-`／`--r-`／`--h-`／`--sz-` 維持 px 是現行裁定（`91` §3.42 W-1）⇒ 不掃。
+- **消費端硬編 px 本檢查看不到**——那要靠擾動法（`91` §3.42 W-3，未機械化）。
+- `tokens.css` 不另掃：與 producer 逐位元組同源由 `check-tokens-sync.rb` 守，再掃是第二份判準。

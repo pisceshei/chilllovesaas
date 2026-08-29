@@ -70,6 +70,10 @@ CI.run do
   # 鐵律 6 的鍵契約。與下一步是一組，同 65 §K.7 的理由。
   step "Invariants: Limits key types", "ruby scripts/check-limits-keys.rb"
   step "Invariants: Limits key rules regression", "ruby scripts/test-limits-key-rules.rb"
+  # D68 的 B 道：--t-/--lh- 兩族必須全部 rem（預設 16px 下零視覺差，
+  # 渲染層驗收驗不出漏轉 ⇒ 靜態檢查是唯一對 token 表完整的一道）。與下一步成對（65 §K.7）。
+  step "Invariants: Rem token integrity", "ruby scripts/check-rem-tokens.rb"
+  step "Invariants: Rem token rules regression", "ruby scripts/test-rem-token-rules.rb"
   # 🔴 本步驟守的就是上面那條同步條款本身。它必須同時出現在本檔與 ci.yml——
   #    只掛在 ci.yml 上的話，本機跑不到；只寫在本檔的話，CI 擋不住。
   # 🔴 方向別寫反（2026-08-15 依 PR #39 的 Claude 驗收更正，原文寫 `ci.yml ⊇ config/ci.rb`）：
