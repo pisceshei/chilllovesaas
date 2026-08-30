@@ -54,7 +54,7 @@ module Storefront
     def update
       authorize Theme, :index?
       CartWriter.update_meta(cart: current_cart, note: params[:note],
-                             attributes: params[:attributes]&.permit!&.to_h)
+                             attributes: free_form_hash(params[:attributes]))
       apply_updates_param
       render json: CartSerializer.cart_json(current_cart.reload).merge(sections_payload)
     end
@@ -110,8 +110,8 @@ module Storefront
       return if updates.blank?
 
       if updates.is_a?(ActionController::Parameters)
-        updates.permit!.to_h.each do |key, qty|
-          CartWriter.change(cart: current_cart, line_key: key.to_s, quantity: qty)
+        free_form_hash(updates).each do |key, qty|
+          CartWriter.change(cart: current_cart, line_key: key, quantity: qty)
         end
       else
         Array(updates).each_with_index do |qty, i|
@@ -119,6 +119,15 @@ module Storefront
           CartWriter.change(cart: current_cart, line_key: line.id.to_s, quantity: qty)
         end
       end
+    end
+
+    # 契約性自由表（Ajax attributes／updates map）的顯式淨化：逐鍵讀出、
+    # 值壓成字串——不用 permit!（Brakeman Mass Assignment；這些值只進 json
+    # 欄與數量解析，不觸 AR 屬性指派）。
+    def free_form_hash(raw)
+      return {} if raw.nil?
+
+      raw.keys.each_with_object({}) { |k, h| h[k.to_s] = raw[k].to_s }
     end
 
     # bundled section rendering（≤5 與缺失→null 的語義沿用 #203 fragment 端點）。
