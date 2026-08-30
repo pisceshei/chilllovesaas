@@ -62,6 +62,23 @@ RSpec.describe ThemeEngine::PageRenderer do
     expect(result.html).to include("404 not found page")
   end
 
+  it "E10 🔴 ?variant= 進選中態（缺口分析 A2）：帶參數選中該變體；壞值回退首可購變體" do
+    first, second = ActsAsTenant.with_tenant(shop) do
+      product = create(:product, shop:, status: "active", handle: "engine-sel", title: "選中測試")
+      option = create(:product_option, product:, shop:, name: "尺寸", position: 1)
+      ov1 = create(:option_value, product_option: option, shop:, value: "S", position: 1)
+      ov2 = create(:option_value, product_option: option, shop:, value: "M", position: 2)
+      [ create(:product_variant, product:, shop:, title: "S", position: 1, option_values: [ ov1 ]),
+        create(:product_variant, product:, shop:, title: "M", position: 2, option_values: [ ov2 ]) ]
+    end
+    html = renderer.render("/products/engine-sel", params: { "variant" => second.id.to_s }).html
+    expect(html).to include(%(<span id="pselected">#{second.id}</span>))
+    # 壞值 ⇒ 忽略（ours，未取證格照缺口分析 §D 登記）⇒ 回退首「可購」；
+    # 兩變體都 0 庫存 deny ⇒ 全售罄 fallback＝position 首位（S）。
+    html2 = renderer.render("/products/engine-sel", params: { "variant" => "not-a-number" }).html
+    expect(html2).to include(%(<span id="pselected">#{first.id}</span>))
+  end
+
   it "E4 查無 handle ⇒ 404 template；未知路由同" do
     expect(renderer.render("/products/no-such").status).to eq(404)
     expect(renderer.render("/no-such-route").status).to eq(404)

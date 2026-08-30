@@ -78,9 +78,39 @@ module ThemeEngine
     def id = @v.id
     def title = @v.title
     def sku = @v.sku
+    def barcode = @v.barcode
     def price = @v.price_cents
     def compare_at_price = @v.compare_at_price_cents
-    def available = true # v1：可購買性由 lookup 前置；庫存感知隨前台包
+
+    # 缺口分析 A1（docs/plans/2026-08-30-商品模塊-Liquid對接缺口分析.md）：
+    # 售罄感知。判準（本尊語義，13 §F1 同軸）：未追蹤 ⇒ 恆可購；追蹤 ⇒
+    # 可售量 > 0 ∨ inventory_policy=continue（缺貨續賣）。
+    # inventory_item 由變體 after_create 保證存在；nil 防衛＝未追蹤同義。
+    def available
+      item = @v.inventory_item
+      return true if item.nil? || !item.tracked
+
+      inventory_quantity.positive? || @v.inventory_policy == "continue"
+    end
+
+    # A′1：跨地點合計可售量（inventory_levels 需已 preload——PageRenderer 負責；
+    # 未載入時退化為單筆查詢的 sum 也正確，只是多一次 IO）。
+    def inventory_quantity
+      item = @v.inventory_item
+      return 0 if item.nil?
+
+      item.inventory_levels.sum(&:available)
+    end
+
+    # 🔴 值刻意用字串 "shopify"：主題 JS 硬編碼比對這個字串（Ella
+    # edit-cart.js:137 讀 currentVariant.inventory_management；83 §4 取證）——
+    # 這是相容層契約，不是「照抄品牌名」。未追蹤 ⇒ nil（本尊同形）。
+    def inventory_management
+      item = @v.inventory_item
+      item&.tracked ? "shopify" : nil
+    end
+
+    def inventory_policy = @v.inventory_policy
 
     # 選項值走 join（product_variant_option_values → option_values）；無 option1..3 欄。
     def options
@@ -94,11 +124,16 @@ module ThemeEngine
     def option1 = options[0]
     def option2 = options[1]
     def option3 = options[2]
-    def featured_image = @product.featured_image
-    def featured_media = @product.featured_image
-    def image = @product.featured_image
+    # A′2：變體專圖（media.product_variant_id）優先，無則回退商品首圖。
+    def featured_image = own_image || @product.featured_image
+    def featured_media = featured_image
+    def image = featured_image
     def requires_shipping = @v.requires_shipping
     def taxable = @v.taxable
+    # Liquid 契約：variant.weight 單位＝公克（我方儲存同尺度，免換算）。
+    def weight = @v.weight_grams
+    def url = "#{@product.url}?variant=#{@v.id}"
+    def selected = @product.selected_variant_id == @v.id
     def unit_price = nil
     def unit_price_measurement = nil
     def selected_selling_plan_allocation = nil
@@ -106,15 +141,126 @@ module ThemeEngine
     def quantity_rule = { "min" => 1, "max" => nil, "increment" => 1 }
     def matched = true
 
+    # @api private（A3 的分組鍵；不是 Liquid 面）
+    def option_value_ids
+      @option_value_ids ||= if @v.association(:product_variant_option_values).loaded?
+        @v.product_variant_option_values.map(&:option_value_id)
+      else
+        @v.product_variant_option_values.pluck(:option_value_id)
+      end
+    end
+
     def liquid_method_missing(name)
       ThemeEngine.count_miss("VariantDrop.#{name}")
       nil
     end
+
+    private
+
+    def own_image
+      return @own_image if defined?(@own_image)
+
+      @own_image = if @v.association(:media).loaded?
+        m = @v.media.select(&:stored_file).min_by(&:position)
+        m && ImageDrop.new(m)
+      end
+    end
+  end
+
+  # 選項 drop（缺口分析 A3；docs 26 §1 product_option T0 面）。
+  class ProductOptionDrop < Liquid::Drop
+    def initialize(option, product_drop)
+      super()
+      @o = option
+      @product = product_drop
+    end
+
+    def name = @o.name
+    def position = @o.position
+    def to_s = @o.name
+
+    def values
+      @values ||= @o.option_values.sort_by(&:position).map { |ov| OptionValueDrop.new(ov, @product) }
+    end
+
+    # 官方 T0：目前選中變體在本選項上的值（字串）；無可用變體 ⇒ nil。
+    def selected_value
+      current = @product.selected_or_first_available_variant
+      return nil if current.nil?
+
+      values.find { |v| current.option_value_ids.include?(v.id) }&.to_s
+    end
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("ProductOptionDrop.#{name}")
+      nil
+    end
+  end
+
+  # 選項值 drop（A3；docs 26 §1 product_option_value T0 面：id/name/available/
+  # selected/swatch/variant/product_url）。
+  # 🔴 Ella 消費形（fixture product-variant-options.liquid:25-66 實測）：
+  #   `value.available`（售罄劃線）、`color == value`（跨陣列比較）、
+  #   `{{ value | handle }}`（字串濾鏡）、`value.variant`／`value.id`／
+  #   `value.product_url`（swatch 導航 dataset）。== 因此按值語義覆寫。
+  class OptionValueDrop < Liquid::Drop
+    def initialize(option_value, product_drop)
+      super()
+      @ov = option_value
+      @product = product_drop
+    end
+
+    def id = @ov.id
+    def name = @ov.value
+    def to_s = @ov.value
+
+    # 本值參與的變體中任一可購 ⇒ 可選（售罄劃線的判準）。
+    def available = matching_variants.any?(&:available)
+
+    def selected
+      current = @product.selected_or_first_available_variant
+      current ? current.option_value_ids.include?(@ov.id) : false
+    end
+
+    # 代表變體＝首個可購命中者，全售罄退首命中（swatch 點擊導航目標）。
+    def variant = matching_variants.find(&:available) || matching_variants.first
+
+    # ours：本尊 product_url 服務 combined listings（跨商品導航）；我方無該
+    # 功能 ⇒ 回本商品＋代表變體參數（Ella 只把它塞進 data-product-url）。
+    def product_url
+      v = variant
+      v ? v.url : @product.url
+    end
+
+    def swatch = nil # 無 swatch 存儲（缺口分析 §B 登記）
+
+    # Liquid `==`：drop == drop（同值 id）與 drop == "字串"（值字串）都成立。
+    def ==(other)
+      case other
+      when OptionValueDrop then id == other.id
+      when String then @ov.value == other
+      else super
+      end
+    end
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("OptionValueDrop.#{name}")
+      nil
+    end
+
+    private
+
+    def matching_variants = @product.variants_by_value_id[@ov.id]
   end
 
   # DB-backed 商品 drop（白名單委派；輸入＝已 preload 關聯的 Product）。
   class ProductDrop < Liquid::Drop
-    def initialize(product, url_prefix: "")
+    # @param selected_variant_id [Integer, nil] `?variant=` URL 參數（缺口分析 A2）；
+    #   nil＝無選中（selected_variant 回 nil、selected_or_first… 走 first available）。
+    attr_reader :selected_variant_id
+
+    def initialize(product, url_prefix: "", selected_variant_id: nil)
+      @selected_variant_id = selected_variant_id
       super()
       @p = product
       @url_prefix = url_prefix
@@ -130,13 +276,23 @@ module ThemeEngine
     def content = @p.description_html
     def url = "#{@url_prefix}/products/#{@p.handle}"
 
+    # Liquid 契約：variants 依 position 排序（association 預設是 id 序——
+    # E10 抓到的真缺口；GraphQL 面的 keyset 同樣以 position 為第一鍵）。
     def variants
-      @variants ||= @p.product_variants.map { |v| VariantDrop.new(v, self) }
+      @variants ||= @p.product_variants.sort_by(&:position).map { |v| VariantDrop.new(v, self) }
     end
 
-    def selected_or_first_available_variant = variants.first
-    def first_available_variant = variants.first
-    def selected_variant = nil
+    # A2：官方語義＝選中變體 → 首個可購變體；全售罄 fallback 首變體
+    # （🔴 全售罄格的本尊行為未逐字取證——ours，缺口分析 §D 登記，CLI 探針後對表）。
+    def selected_or_first_available_variant
+      selected_variant || first_available_variant || variants.first
+    end
+
+    def first_available_variant = variants.find(&:available)
+
+    def selected_variant
+      @selected_variant_id && variants.find { |v| v.id == @selected_variant_id }
+    end
     def has_only_default_variant = variants.size <= 1
 
     def images
@@ -159,8 +315,9 @@ module ThemeEngine
     def compare_at_price = variants.filter_map(&:compare_at_price).min
     def compare_at_price_min = compare_at_price
     def compare_at_price_max = variants.filter_map(&:compare_at_price).max
-    def compare_at_price_varies = false
-    def available = true
+    def compare_at_price_varies = compare_at_price_min != compare_at_price_max
+    # A1：任一變體可購 ⇒ 商品可購（無變體＝資料層不變量違反，回 false 安全側）。
+    def available = variants.any?(&:available)
     def gift_card? = false
     def requires_selling_plan = false
     def selling_plan_groups = []
@@ -170,12 +327,18 @@ module ThemeEngine
     def category = nil
 
     def options_with_values
-      @p.product_options.sort_by(&:position).map do |o|
-        BaseDrop.new("name" => o.name, "position" => o.position,
-                     "values" => o.option_values.sort_by(&:position).map(&:value))
+      @options_with_values ||= @p.product_options.sort_by(&:position).map do |o|
+        ProductOptionDrop.new(o, self)
       end
     rescue StandardError
       []
+    end
+
+    # @api private（A3：value id → 命中該值的變體 drops；availability 投影用）
+    def variants_by_value_id
+      @variants_by_value_id ||= variants.each_with_object(Hash.new { |h, k| h[k] = [] }) do |vd, h|
+        vd.option_value_ids.each { |ovid| h[ovid] << vd }
+      end
     end
 
     def options = options_with_values.map { |o| o["name"] }

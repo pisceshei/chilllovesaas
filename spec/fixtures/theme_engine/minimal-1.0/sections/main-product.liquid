@@ -1,2 +1,2 @@
-<h1 id="ptitle">{{ product.title }}</h1><span id="pprice">{{ product.price | money }}</span><span id="pstatus">{{ product.status }}</span>{% render 'badge' %}
+<h1 id="ptitle">{{ product.title }}</h1><span id="pprice">{{ product.price | money }}</span><span id="pstatus">{{ product.status }}</span>{% render 'badge' %}<span id="pselected">{{ product.selected_or_first_available_variant.id }}</span>
 {% schema %}{ "name": "Main product" }{% endschema %}

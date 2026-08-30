@@ -20,10 +20,13 @@ module ThemeEngine
     end
 
     # @param path [String] 前綴已剝除的站內路徑（如 "/products/rose-serum"）
+    # @param params [Hash] query 參數（缺口分析 A2：`variant` 進選中態；
+    #   其餘參數目前忽略——`section_id`／`sections` 端點面歸包 33）。
     # @return [Result]
     # @note 整段在租戶脈絡內執行（引擎的全部 DB 讀取——templates／theme_settings／
     #   menus／lookup——都要 tenant；巢狀 with_tenant 冪等，controller 已設也無妨）。
-    def render(path)
+    def render(path, params: {})
+      @params = params || {}
       ActsAsTenant.with_tenant(@shop) { render_inside_tenant(path) }
     end
 
@@ -53,10 +56,19 @@ module ThemeEngine
       when %r{\A/products/([^/]+)\z}
         product = ActsAsTenant.with_tenant(@shop) do
           found = Storefront::Lookup.product_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
+          # preload 面＝drops 的讀取契約（缺口分析 A′）：庫存鏈（available/
+          # inventory_quantity）、變體選項座標（A3 分組）、變體專圖與商品媒體。
           found && Product.where(shop_id: @shop.id, id: found.id)
-                          .includes(:product_variants, :product_options).first
+                          .includes(
+                            product_variants: [ :product_variant_option_values,
+                                                { inventory_item: :inventory_levels },
+                                                { media: :stored_file } ],
+                            product_options: :option_values,
+                            media: :stored_file
+                          ).first
         end
-        product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix) }, 200 ] : not_found
+        product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
+                                                              selected_variant_id: selected_variant_id) }, 200 ] : not_found
       when %r{\A/collections/([^/]+)\z}
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
@@ -73,6 +85,13 @@ module ThemeEngine
     end
 
     def not_found = [ "404", {}, 404 ]
+
+    # A2：`?variant=` → Integer；非數字／缺席 ⇒ nil（壞值忽略＝ours，
+    # 本尊壞值行為未取證，缺口分析 §D 登記）。
+    def selected_variant_id
+      raw = @params["variant"] || @params[:variant]
+      raw.to_s =~ /\A\d+\z/ ? raw.to_i : nil
+    end
 
     def render_template_sections(runtime, key)
       tj = runtime.template_json(key)
