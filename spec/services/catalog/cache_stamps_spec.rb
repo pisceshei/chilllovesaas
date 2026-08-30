@@ -31,8 +31,8 @@ RSpec.describe Catalog::CacheStamps do
       # 🔴 known_pending 不只是登記——每一項綁它的**未來表**，表一建、這裡就紅
       #   （審查 DOC-3：第一版只斷言「∈ 清單」，第 32 包建表時什麼都不會轉紅，
       #   handoff 的「強制回頭對帳」是機械上不成立的宣稱）。
-      known_pending = { "market_settings_version" => "markets",
-                        "price_list_updated_at" => "price_lists" }
+      # S10（D76）：price_lists 已建、來源已改帶前綴寫法 ⇒ 自本清單移除（絆線完成使命）。
+      known_pending = { "market_settings_version" => "markets" }
       Limits.fetch(:catalog_flow, :cache_stamp_sources).each do |source|
         src = source.to_s
         if src.include?(".")

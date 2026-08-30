@@ -2847,12 +2847,15 @@ catalog_flow:
     - products.publications_updated_at
     - products.media_updated_at
     - shops.catalog_version
-    # 🔴 下兩項的**欄位尚未存在**（2026-08-25 依審查 D2 標註；複驗＝
-    #    `grep -c "market_settings_version\|price_list_updated_at" db/schema.rb` ⇒ 0）：
-    #    它們是第 32 包（市場／價格表）預告的來源名，列在這裡是**規劃**不是現況。
-    #    第 32 包立欄時把本註釋刪掉；在那之前 selfcheck 的接收端也尚未實作，不會誤 raise。
+    # 🔴 `market_settings_version` 的**欄位尚未存在**（2026-08-25 依審查 D2 標註）：
+    #    它是第 32 包（市場）預告的來源名，列在這裡是**規劃**不是現況。
+    #    第 32 包立欄時把本註釋改掉；在那之前 selfcheck 的接收端也尚未實作，不會誤 raise。
     - market_settings_version          # 🔴 市場繼承解析結果變了，商品 updated_at 一動也沒動（63 §G.5）
-    - price_list_updated_at
+    # S10（D76，2026-08-30）：`price_lists` 表已建 ⇒ 依 cache_stamps_spec 的絆線改帶前綴現況寫法。
+    # price list 是 catalog 級聚合（一 catalog 一張）⇒ 它自己的 updated_at 就是 stamp 欄，
+    # 任何調價（百分比／模式／幣別）都會推進它；變體級固定價（M5 的 price_list_prices）
+    # 落地時再加該表的 stamp 來源。
+    - price_lists.updated_at
   # render 期記錄 drop 讀過哪些表，結束時斷言 touched_sources ⊆ cache_stamp_sources。
   # 把「漏維度」從人工紀律變成可執行斷言。（ours，63 §D.3）
   cache_stamp_selfcheck_envs: [development, test, staging]

@@ -2339,3 +2339,42 @@ robots.txt 內容含 Shopify 對 agent 的指示型文字（UCP／shop.app skill
 無法在密碼牆內對真店面複驗，真店面語義以官方 A1 錨為準（specs/93 §A）。
 控制組：active 商品在預覽站同樣 `noindex,nofollow` ⇒ 預覽站全域 noindex，
 **unlisted 專屬 noindex 不可歸因**（specs/93 §F）。
+
+## §21 catalog 生命週期補測（S10，2026-08-30，本地 Chrome）
+
+五件套：測試店 chill-love-u5q5mnzq；`/catalogs` 路由（Markets 側欄子項）；
+建立→刪除各走一輪；取證日 2026-08-30。
+
+### §21.1 列表頁（層②）
+
+檢視分頁 `All｜Active｜Draft｜Archived`——🔴 **列表有 Draft 檢視**（§9.5c 的
+建立表單狀態下拉只有 Active，兩處值域不同，與商品建立表單 vs 篩選器同型）。
+欄：`Title｜Status｜Assigned to｜Price overrides｜Overall adjustment｜Products`；
+頂部 `Export｜Import｜Create catalog`。
+
+### §21.2 詳情頁 More actions 值域（更正 ＋ 窮舉）
+
+More actions ＝ **`Archive｜Delete` 恰二項**。
+🔴 更正：本輪曾把指派列的 `Markets ⌄` 切換器（值域 `Markets｜Company locations`，
+語義＝切換 context 型別）誤當 More actions——兩者是不同控件；
+頁面是 `s-internal-*` web component（shadow DOM），`find`／a11y tree 都看不到
+More actions 鈕，只能 shadow 遞迴獵取（`el.shadowRoot` 逐層）或截圖座標點擊。
+
+### §21.3 刪除流程（抓包）
+
+確認框逐字：`Delete <title>?`／`Are you sure you want to delete the catalog
+<title>? This can't be undone.`（`Cancel｜Delete catalog`）。
+確認後 POST `…/api/operations/<hash>/CatalogDelete/…` **200** → 302 回列表。
+🔴 variables **未取得**（claude-in-chrome 的 read_network_requests 無 body 讀取
+——工具限制，鐵律 14.3）⇒ admin 是否傳 `deleteDependentResources` 未知；
+官方輸入形（取證 2026-08-30）：`id!` ＋ `deleteDependentResources`（Boolean，
+預設 false，逐字 "Whether to also delete the price list and the publication
+owned by the catalog."）。
+
+### §21.4 空 context 建立（新發現）
+
+`Create catalog` 只填 title 存檔 ⇒ 「This catalog won't change products or
+prices」確認框（§9.5a 逐字再現）→ `Save anyway` ⇒ 建立成功
+（id 104018673899，**零 market 指派**、Active、商品照 auto-include 全量納入）
+⇒ **CatalogContextInput 實務上可空**，catalog 可先建後指派。
+兩顆測試 catalog（103379370219、104018673899）本輪已全部刪除，店內歸零。

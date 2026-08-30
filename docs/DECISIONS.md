@@ -2481,3 +2481,17 @@ direct-link）逐字取證；②測試店生命週期實測矩陣（A/B/C/D 四�
 collection_by_handle；判準＝purchasable，發現面另走 discoverable）。
 spec 9 格全綠；**四個活突變逐一實跑轉紅**（直連判準換 discoverable／繞過兩層閘／
 無視 at／系列繞過發布層）。未取得三項照登 91 §3.46，不外推。
+
+## D76（2026-08-30）S10 catalog 第三層：price_lists 資料層落地
+
+執行方＝Claude Code 工作階段（D40 模式）。依總方案 §S10（S0 已建 sales_catalogs
+與 publications FK，本包補最後一張表）：①官方錨四條（priceListCreate 輸入形／
+AdjustmentType 二值／CompareAtMode 二值／catalogDelete 的 deleteDependentResources
+語義，逐字）；②補測 catalog 列表值域、More actions（Archive/Delete）、刪除確認框
+逐字與 CatalogDelete op（82 §21）；③`price_lists` 表（一 catalog 一張、
+adjustment_basis_points 是整數 basis points 非金額（C3 判準禁 migration decimal，
+整數亦無累積誤差）、decrease 數學上限 10000bp）＋
+`PriceList` model ＋ `SalesCatalog has_one dependent: :destroy`（孤兒 price list
+結構性不存在——官方 deleteDependentResources:false 允許孤兒，我方刻意不對位，
+方向同 S1）。spec 6 格綠；突變 K1/K2/K3 實跑轉紅。變體級固定價
+（price_list_prices，金額欄）與 producer（catalog 表單／mutation）隨 M5。
