@@ -97,6 +97,7 @@ module Storefront
         theme: published_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
+        web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
         cart_json: nil # 🔴 個人化不進頁快取（14 §F1-4）
       ).render(rest, params: cache_params)
     end

@@ -49,8 +49,11 @@ Rack::Attack.throttle("storefront-cart/ip",
   limit: Integer(cart_ip.fetch(:limit)),
   period: Integer(cart_ip.fetch(:period_seconds)).seconds) do |request|
   next unless request.env["chilllove.shop_id"]
+  next unless request.post?
 
-  request.ip if request.post? && request.path.start_with?("/cart/")
+  # 帶前綴形（/en-hk/cart/add、/zh-hant-hk/localization——包 34 路由）同樣計數。
+  path = request.path.sub(%r{\A/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}(?=/)}, "")
+  request.ip if path.start_with?("/cart/") || path == "/localization"
 end
 
 Rack::Attack.throttle("storefront-page/ip",

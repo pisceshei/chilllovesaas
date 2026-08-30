@@ -63,6 +63,26 @@ Rails.application.routes.draw do
   constraints ->(request) { request.env["chilllove.shop_id"].present? } do
     get "robots.txt" => "storefront/pages#robots", format: false, as: :storefront_robots
     get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
+    # localization 表單（包 34；67 §F.2 country+language 兩欄位）：裸與帶前綴兩形。
+    post "localization" => "storefront/localization#create", format: false, as: :storefront_localization
+    # 🔴 帶前綴的 cart／localization（包 34）：RoutesDrop 對主題吐 `{prefix}/cart/add` 等
+    #   帶前綴 URL（67 §F.4），POST 不經 GET catch-all ⇒ 必須顯式收。
+    #   constraint 正則＝Markets::UrlPrefix::SEGMENT 的字面複本（routes 載入時機不宜
+    #   引用 autoload 常量；漂移由 storefront_i18n_spec 的路由格釘住）。
+    scope ":locale_prefix", constraints: { locale_prefix: /[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}/ },
+                            format: false do
+      get  "cart.js"        => "storefront/cart#show"
+      get  "cart.json"      => "storefront/cart#show"
+      post "cart/add.js"    => "storefront/cart#add"
+      post "cart/add"       => "storefront/cart#add"
+      post "cart/change.js" => "storefront/cart#change"
+      post "cart/change"    => "storefront/cart#change"
+      post "cart/update.js" => "storefront/cart#update"
+      post "cart/update"    => "storefront/cart#update"
+      post "cart/clear.js"  => "storefront/cart#clear"
+      post "cart/clear"     => "storefront/cart#clear"
+      post "localization"   => "storefront/localization#create"
+    end
     get "/" => "storefront/pages#root", as: :storefront_root
     get "*path" => "storefront/pages#show", format: false, as: :storefront_page
   end

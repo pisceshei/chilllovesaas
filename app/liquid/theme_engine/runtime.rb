@@ -38,18 +38,19 @@ module ThemeEngine
     attr_reader :theme, :shop, :errors, :warnings, :design_mode, :render_flags
     attr_accessor :closest
 
-    # 寬容 JSON（25 坑 #11：第三方原始碼包帶註解/尾逗號）。
+    # 寬容 JSON（25 坑 #11：第三方原始碼包帶註解/尾逗號；67 §F.3(b)1：locale 檔另見 BOM）。
     def self.tolerant_json(str)
       s = str.dup.force_encoding("UTF-8").scrub
+      s.delete_prefix!("\uFEFF") # BOM（Ella locale 檔實證形態之一）
       s.gsub!(%r{/\*.*?\*/}m, "")
       s.gsub!(/,(\s*[}\]])/, '\1')
       JSON.parse(s)
     end
 
-    # @param locale_dict [Hash] t filter 的字典（v1＝主題 locales/en.default.json；包 34 接真值鏈）
+    # locale ⇒ t filter 走三層字典（build_locale_dict）；web_presence ⇒ localization 真值。
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
-                   cart_json: nil, asset_base: nil)
+                   cart_json: nil, asset_base: nil, web_presence: nil)
       @theme, @shop = theme, shop
       @cart_json = cart_json
       # 公開店面傳 "/theme-assets"（包 33 後半）；預設維持登入預覽路徑（包 30 行為不變）。
@@ -69,7 +70,11 @@ module ThemeEngine
       @settings_data = db_settings || file_settings_current
       schema = load_json("config/settings_schema.json") || []
       @theme_types = extract_types(schema.flat_map { |c| c.is_a?(Hash) ? (c["settings"] || []) : [] })
-      @locale_dict = load_json("locales/en.default.json") || {}
+      # 三層字串（67 §F.3(a)；包 34）：③平台字串集 ← ②主題檔（default ← 截尾鏈 ← 精確）。
+      # ①商家覆寫層＝租戶 translations 的 THEME_LOCALE_CONTENT 型，Resolve 尚不支援 ⇒
+      # 待 ML 線擴 RESOURCE_TYPES 後接上（登記，包 34 worklog）。深併＝逐 key 解析
+      # （F.3(b)3 兩套語言清單不對稱 ⇒ fallback 必須逐檔獨立，不得單一布林）。
+      @locale_dict = build_locale_dict(locale)
 
       language = { "iso_code" => locale || "en", "endonym_name" => locale || "en", "root_url" => url_prefix.presence || "/" }
       @global_assigns = {
@@ -78,7 +83,10 @@ module ThemeEngine
         "cart" => CartDrop.new(currency: shop.store_currency, cart_json: @cart_json),
         "routes" => RoutesDrop.new(prefix: url_prefix),
         "request" => RequestDrop.new(page_type:, design_mode:, locale:, host:, path:),
-        "localization" => LocalizationDrop.new(language:, available_languages: [ language ]),
+        # localization 真值（67 §F.2 切換器規則）：有 presence（公開店面）＝開放∧已發布集；
+        # 無 presence（預覽面／fragment）＝維持合成單語（包 30 行為不變）。
+        "localization" => web_presence ? Storefront::LocalizationContext.drop(web_presence:, locale_tag: locale || "en")
+                                       : LocalizationDrop.new(language:, available_languages: [ language ]),
         "linklists" => LinkListsDrop.new(shop, url_prefix: url_prefix),
         "template" => TemplateDrop.new(page_type),
         "content_for_header" => "",
@@ -114,6 +122,30 @@ module ThemeEngine
     rescue JSON::ParserError => e
       @warnings << "JSON 解析失敗 #{rel}: #{e.message[0, 80]}"
       nil
+    end
+
+    # 三層字串字典（67 §F.3(a)；深併序＝越後越優先）：
+    #   平台字串集(en←鏈←精確) → 主題 *.default.json → 主題截尾鏈檔 → 主題精確 locale 檔。
+    # locale 檔一律走 tolerant_json（F.3(b)1：Ella 實證 JSONC——區塊註解／CRLF／BOM／尾逗號）。
+    def build_locale_dict(locale)
+      dict = Storefront::PlatformStrings.dict(locale || "en")
+      dict = deep_merge_dict(dict, load_json("locales/en.default.json") || {})
+      tag = locale.to_s
+      unless tag.blank? || tag == "en"
+        Storefront::PlatformStrings.chain(tag).reverse.each do |name|
+          next if name == "en" # default 檔已併
+
+          layer = load_json("locales/#{name}.json")
+          dict = deep_merge_dict(dict, layer) if layer
+        end
+      end
+      dict
+    end
+
+    def deep_merge_dict(base, over)
+      base.merge(over) do |_k, a, b|
+        a.is_a?(Hash) && b.is_a?(Hash) ? deep_merge_dict(a, b) : b
+      end
     end
 
     # DB 覆寫層：templates row → 來源檔 fallback（D77 讀取順序）。

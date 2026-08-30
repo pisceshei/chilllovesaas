@@ -18,13 +18,14 @@ module ThemeEngine
     end
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
-                   cart_json: nil, asset_base: nil, locale: nil)
+                   cart_json: nil, asset_base: nil, locale: nil, web_presence: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
       @source = source
       @cart_json = cart_json
       @asset_base = asset_base
       @locale = locale
+      @web_presence = web_presence
     end
 
     # @param path [String] 前綴已剝除的站內路徑（如 "/products/rose-serum"）
@@ -55,7 +56,7 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale)
+                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
@@ -89,7 +90,8 @@ module ThemeEngine
         end
         product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
                                                               selected_variant_id: selected_variant_id,
-                                                              publication: @publication) }, 200 ] : not_found
+                                                              publication: @publication,
+                                                              translations: translations_for(product)) }, 200 ] : not_found
       when %r{\A/collections/([^/]+)\z}
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
@@ -99,7 +101,8 @@ module ThemeEngine
           published_at: ResourcePublication.where(
             shop_id: @shop.id, publication_id: @publication.id,
             publishable_type: "Collection", publishable_id: collection.id
-          ).pick(:published_at)
+          ).pick(:published_at),
+          translations: translations_for(collection)
         ) }, 200 ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
@@ -112,6 +115,21 @@ module ThemeEngine
     end
 
     def not_found = [ "404", {}, 404 ]
+
+    # 內容翻譯 preload（67 §F.3(c)：走 drops 不走 t；一次批載不逐欄查——63 §D.1 N+1 防線）。
+    # 來源語言或未指定 locale ⇒ 空 overlay（drop 直讀 base row，零查詢）。
+    # @return [Hash{String => String}] field_key => 譯文（omitted 欄位不進 overlay）
+    def translations_for(record)
+      locale = @locale.to_s
+      return {} if locale.blank?
+
+      resolved = Translations::Resolve.batch(shop: @shop, resources: [ record ], locale:)
+      type = Translations::Resolve::RESOURCE_TYPE_BY_CLASS.fetch(record.class.name, nil)
+      fields = resolved[[ type, record.id ]] || {}
+      fields.each_with_object({}) do |(key, entry), acc|
+        acc[key] = entry.value unless entry.omitted?
+      end
+    end
 
     # ── Section Rendering API（包 33） ─────────────────────────────────────
     # 真店契約（83 §12.3，2026-08-31 乾淨態）：
@@ -149,7 +167,7 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: nil, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale)
+                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
