@@ -3597,3 +3597,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-2 | **複製商品的發布繼承規則**：我方 Duplicate 是 disabled 佔位（詳情頁 More actions），繼承規則（複製品的 publications／排程帶不帶）未取得 | ProductDetailPage 的 `product.duplicate.pending` | 隨 Duplicate 功能包一起實測＋實作 |
 | W-3 | **批量頂層鈕的完整切換規則未取得**（只取得「全 Active→Set as draft」一格）；我方混合選集出兩顆是 ours | 82 §19.1／§19.4 | 造混合選集再驗一輪即可補；規則已標 ours 可隨時被實測推翻 |
 | W-4 | **溢出選單其餘九項**（Delete／管道×2／型錄×2／標籤×2／系列×2／Create email campaign）與 **`Bulk edit` 獨立編輯器頁**（`/bulk/product?...` 真實 URL 已取得） | 82 §19.2 | 各自屬刪除／管道批量／型錄／標籤／系列功能線；編輯器是另一整個表面 |
+
+### 3.45 S8（D74）的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | **訂閱與投遞面不存在**：六個 listing topic 只進 outbox，無 webhookSubscriptionCreate、無對外 HTTP 投遞。EXTERNAL 陣列自始就是「未來訂閱白名單的種子」（topics.rb 檔頭） | topics.rb ②；D74 | 訂閱面＝獨立功能線（app／webhook 管理），與事件產生層解耦正是 outbox 架構的本意 |
+| W-2 | 🔴 **status 翻轉不產生逐管道 ADD/REMOVE**：DRAFT→ACTIVE 時已發布管道「重新可見」，本尊發不發 product_listings/add＝未取得（PRODUCT_LISTINGS_ADD 語義是 listed on a channel，status 翻轉不是 listing 動作）。我方 `status_transition` 形狀在 translator 中 no-op | translator ④ | 需 per-channel diff ＋ 本尊實測（把 Draft 已發布商品翻 Active 抓包）。fail-closed 比亂發安全 |
+| W-3 | **R6（已發布→改排程未來）不發任何事件**：訂閱者視角該 listing 是否該收 REMOVE＝未取得 | write.rb ② | 同上，待實測 |
+| W-4 | **UPDATE 語義收窄**：官方一句 `a product publication is updated` 很寬（可能含商品資料變更）；我方只在已發布列改 published_at 時發 | D74 | 寬解需要 SaveProduct 掛鉤與本尊抓包佐證；先窄後寬不破壞相容 |
+| W-5 | **`variant_listings/*` 是 ours**：官方 enum 無 variant listing topic（2026-08-28 掃描，variant 相關只有 in/out of stock）。日後本尊 ship 了正式 topic ⇒ 改名對齊並留 alias | topics.rb | 本尊 under development（82 §8.3）；等它 ship |

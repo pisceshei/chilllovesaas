@@ -2423,3 +2423,49 @@ consumer＋backfill＋spec 全在）⇒ 本包＝S7。🟢 不觸鐵律 18.3。
 
 批量 2 格（動態鈕唯一性＋逐筆 payload＋清空選取／溢出值域＋確認框攔截）＋
 banner 2 格（DRAFT 有且控件可用／ACTIVE 無）。
+
+---
+
+### D74. S8：上架事件層（`product_listings/*` ＋ ours 的 `variant_listings/*`）（2026-08-28）
+
+三包指示的第三包。🟢 不觸鐵律 18.3（服務層＋consumers 註冊表＋spec）。
+
+#### 官方錨（取證 2026-08-28，WebhookSubscriptionTopic enum，逐字）
+
+- ADD：`Occurs whenever an active product is listed on a channel.`
+- REMOVE：`Occurs whenever a product listing is removed from the channel.`
+- UPDATE：`Occurs whenever a product publication is updated.`
+- 到點：`At the scheduled datetime, Shopify sends a product_listing/add event.`（scheduled-product-publishing，2026-08-27 取證）
+
+🔴 **閘門逐 topic 不同**：ADD 有 active 限定、REMOVE／UPDATE 沒有。判準用
+`PURCHASABLE_STATUSES`（與 D53 同集合——UNLISTED 官方自述 is active）。
+
+#### 交付
+
+- `Events::Topics` 六個新 EXTERNAL topic（product×3 ＋ **variant×3＝ours**：官方 enum
+  無任何 variant listing topic、本尊自陳 under development ⇒ 命名鏡射自訂）。
+- **即時轉場**（`Write#emit_listing_transition!`／`remove_publication!`）：
+  未發布→已發布 ⇒ ADD（active 閘；變體看父商品）；已發布改期（過去→過去）⇒ UPDATE；
+  刪已發布列 ⇒ REMOVE（無閘，draft 也發）。同交易發射（鐵律 5）。
+- **到點轉譯** `Publications::ListingEventTranslator`：同 topic 第二個消費者
+  （逐消費者 delivery 隔離），到點依 **DB 現值**判定發 ADD。
+  🔴 **刻意不比對 payload 的 `published_at`**：PR-C 消費者到點會改寫該欄
+  （合格⇒處理當刻；不合格⇒NULL），兩消費者順序不保證——比對 payload 會讓
+  排在後面跑的那個把每筆合法事件誤判成 superseded。改用「列存在 ∧ 已生效 ∧ 閘」，
+  兩種順序收斂同一答案。冪等＝`dedupe_key = "listing-add:<event_id>"`。
+
+#### fail-closed（全部登記 `91` §3.45）
+
+- 已發布→改排程（R6）＝不發（該格本尊語義未取得）。
+- 刪「排程中未到點」列＝不發 REMOVE（從未 listed 過；發了會讓訂閱者收到
+  從未 ADD 過的 listing 的移除）。
+- `status_transition` 形狀＝不轉譯（狀態翻轉的逐管道 ADD/REMOVE 需 per-channel diff，未取得）。
+- Collection＝一律不發（本尊無 collection listing topic）。
+- UPDATE 的完整語義（官方一句話很寬）＝只在「已發布列改 published_at」時發，其餘形態未取得。
+
+#### 驗證
+
+spec 13 格（含 5 個 🔴 假綠殺手）全綠；**五個活突變逐一實跑全部轉紅**
+（ADD 閘改 `== active`／REMOVE 無條件化／ADD 提前到排程時／translator 閘刪除／dedupe 刪除）。
+PR-C 既有 24 格照綠（同 topic 掛第二消費者不相互干擾——T08b 曾因 translator 的
+關聯名寫錯而紅，修正即恢復，證明隔離斷言真的在守）。

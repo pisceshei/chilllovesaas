@@ -24,11 +24,30 @@ module Events
     COLLECTIONS_UPDATE = "collections/update"
     COLLECTIONS_DELETE = "collections/delete"
     INVENTORY_LEVELS_UPDATE = "inventory_levels/update"
+    # ── S8（D74）：上架事件家族 ─────────────────────────────────────────
+    # 本尊 WebhookSubscriptionTopic（取證 2026-08-28）三句逐字：
+    #   ADD    = "Occurs whenever an active product is listed on a channel."
+    #   REMOVE = "Occurs whenever a product listing is removed from the channel."
+    #   UPDATE = "Occurs whenever a product publication is updated."
+    # 🔴 ADD 有 active 限定、REMOVE 沒有——閘門在事件層逐 topic 不同，
+    #    不是統一的「非 active 一律不發」。
+    PRODUCT_LISTINGS_ADD = "product_listings/add"
+    PRODUCT_LISTINGS_REMOVE = "product_listings/remove"
+    PRODUCT_LISTINGS_UPDATE = "product_listings/update"
+    # 🔴 變體上架事件＝**ours**：官方 enum 無任何 variant listing topic
+    #    （2026-08-28 掃描 WebhookSubscriptionTopic，variant 相關只有 in/out of stock），
+    #    而本尊自陳 variant publication webhook「under development」（82 §8.3）。
+    #    我方 PUBLISHABLE_TYPES 含 ProductVariant ⇒ 對偶自訂，命名鏡射 product 家族。
+    VARIANT_LISTINGS_ADD = "variant_listings/add"
+    VARIANT_LISTINGS_REMOVE = "variant_listings/remove"
+    VARIANT_LISTINGS_UPDATE = "variant_listings/update"
 
     EXTERNAL = [
       PRODUCTS_CREATE, PRODUCTS_UPDATE, PRODUCTS_DELETE,
       COLLECTIONS_CREATE, COLLECTIONS_UPDATE, COLLECTIONS_DELETE,
-      INVENTORY_LEVELS_UPDATE
+      INVENTORY_LEVELS_UPDATE,
+      PRODUCT_LISTINGS_ADD, PRODUCT_LISTINGS_REMOVE, PRODUCT_LISTINGS_UPDATE,
+      VARIANT_LISTINGS_ADD, VARIANT_LISTINGS_REMOVE, VARIANT_LISTINGS_UPDATE
     ].freeze
 
     # 內部（63 §C.1 決議表；不對外開放訂閱）

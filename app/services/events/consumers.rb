@@ -21,7 +21,13 @@ module Events
       Events::Topics::INVENTORY_ADJUSTED => [ Collections::ResyncConsumer ],
       # PR-C（D53）：排程發布到點 → cache stamp bump。同 topic 兩種 payload 形狀
       # （scheduled／status_transition），分流在消費者內（見其檔頭 ①）。
-      Events::Topics::PRODUCT_PUBLICATION_CHANGED => [ Publications::ScheduledPublicationConsumer ]
+      # S8（D74）：同 topic 第二個消費者——到點時把排程轉成對外 ADD 事件
+      # （官方逐字 "At the scheduled datetime, Shopify sends a product_listing/add
+      # event"）。逐消費者 delivery 隔離（本表檔頭③）⇒ 兩者互不連累。
+      Events::Topics::PRODUCT_PUBLICATION_CHANGED => [
+        Publications::ScheduledPublicationConsumer,
+        Publications::ListingEventTranslator
+      ]
     }.freeze
 
     # @param topic [String]
