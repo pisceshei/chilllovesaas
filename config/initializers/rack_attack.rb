@@ -53,7 +53,7 @@ Rack::Attack.throttle("storefront-cart/ip",
 
   # 帶前綴形（/en-hk/cart/add、/zh-hant-hk/localization——包 34 路由）同樣計數。
   path = request.path.sub(%r{\A/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}(?=/)}, "")
-  request.ip if path.start_with?("/cart/") || path == "/localization"
+  request.ip if path.start_with?("/cart/") || path == "/localization" || path == "/checkout"
 end
 
 Rack::Attack.throttle("storefront-page/ip",
