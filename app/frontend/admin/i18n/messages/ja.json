@@ -552,5 +552,10 @@
   "product.media.embedVideoAdd": "動画を追加",
   "product.media.embedVideoUrl": "動画 URL",
   "product.media.embedVideoHint": "YouTube または Vimeo の動画ページ URL を貼り付けてください。動画はそのプラットフォーム上に残り、ストレージを消費しません。",
-  "product.media.embedVideoPrivacy": "プレーヤーは各プラットフォームのプライバシー強化モード（YouTube は youtube-nocookie、Vimeo は dnt パラメータ）で読み込まれ、トラッキング目的のデータ収集を抑えます。"
+  "product.media.embedVideoPrivacy": "プレーヤーは各プラットフォームのプライバシー強化モード（YouTube は youtube-nocookie、Vimeo は dnt パラメータ）で読み込まれ、トラッキング目的のデータ収集を抑えます。",
+  "collection.channels.trigger.one": "1 個のチャネル",
+  "collection.channels.trigger.many": "{count} 個のチャネル",
+  "collection.channels.triggerAria": "販売チャネルを管理：{count} 個のチャネルに公開済み",
+  "collection.channels.tooltip": "公開を管理",
+  "collection.channels.title": "販売チャネル"
 }

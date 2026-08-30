@@ -1460,6 +1460,76 @@ a {
 
 .cl-switch--on .cl-switch__knob { translate: 14px 0; }
 
+/* ── S6c（D71）：系列的銷售管道 popover ───────────────────────────────
+   本尊量測（2026-08-28，/collections/494143242475，本機 Chrome，
+   docs/research/82 §17）：觸發鈕 h28 / r8 / pad 4 / 13/20/450、圖示 20、
+   上下 caret；面板 w215 / r12 / --sh-pop 同族陰影；標頭列 h41（pad 8×12 ＋
+   髮絲線下框）；管道列 h40。顏色全走既有語意 token，不寫值。 */
+.cl-chpop-slot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sp-300);
+}
+
+.cl-chpop-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: var(--h-28);
+  gap: var(--sp-100);
+  padding: var(--sp-100);
+  border: 0;
+  border-radius: var(--r-200);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+  transition: background var(--tr);
+}
+
+.cl-chpop-trigger:hover {
+  background: var(--surface-2);
+}
+
+.cl-chpop {
+  width: 215px;
+}
+
+.cl-chpop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-200) var(--sp-300);
+  border-bottom: var(--hairline) solid var(--border);
+}
+
+.cl-chpop__head-label {
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-regular);
+}
+
+.cl-chpop__list {
+  padding: var(--sp-150);
+  margin: 0;
+  list-style: none;
+}
+
+.cl-chpop__row {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  gap: var(--sp-100);
+  padding: 0 var(--sp-150);
+}
+
+/* SwitchRow 在 popover 列內佔滿剩餘寬（名稱靠左、switch 靠右——與本尊同構） */
+.cl-chpop__row .cl-swrow {
+  flex: 1;
+  min-width: 0;
+}
+
+
 /* dropzone 空態（多媒體卡） */
 .cl-dropzone {
   display: flex;

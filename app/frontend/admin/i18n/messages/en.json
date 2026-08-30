@@ -552,5 +552,10 @@
   "product.media.embedVideoAdd": "Add video",
   "product.media.embedVideoUrl": "Video URL",
   "product.media.embedVideoHint": "Paste the video's page URL from YouTube or Vimeo. The video stays on that platform and doesn't use your storage.",
-  "product.media.embedVideoPrivacy": "The player loads in each platform's privacy-enhanced mode (youtube-nocookie for YouTube, the dnt parameter for Vimeo), which reduces data collected for tracking."
+  "product.media.embedVideoPrivacy": "The player loads in each platform's privacy-enhanced mode (youtube-nocookie for YouTube, the dnt parameter for Vimeo), which reduces data collected for tracking.",
+  "collection.channels.trigger.one": "1 channel",
+  "collection.channels.trigger.many": "{count} channels",
+  "collection.channels.triggerAria": "Manage sales channels: published to {count} channels",
+  "collection.channels.tooltip": "Manage publishing",
+  "collection.channels.title": "Sales channels"
 }

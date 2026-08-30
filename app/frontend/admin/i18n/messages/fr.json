@@ -552,5 +552,10 @@
   "product.media.embedVideoAdd": "Ajouter la vidéo",
   "product.media.embedVideoUrl": "URL de la vidéo",
   "product.media.embedVideoHint": "Collez l'URL de la page de la vidéo sur YouTube ou Vimeo. La vidéo reste sur cette plateforme et n'utilise pas votre stockage.",
-  "product.media.embedVideoPrivacy": "Le lecteur se charge dans le mode de confidentialité renforcée de chaque plateforme (youtube-nocookie pour YouTube, le paramètre dnt pour Vimeo), ce qui réduit les données collectées à des fins de suivi."
+  "product.media.embedVideoPrivacy": "Le lecteur se charge dans le mode de confidentialité renforcée de chaque plateforme (youtube-nocookie pour YouTube, le paramètre dnt pour Vimeo), ce qui réduit les données collectées à des fins de suivi.",
+  "collection.channels.trigger.one": "1 canal",
+  "collection.channels.trigger.many": "{count} canaux",
+  "collection.channels.triggerAria": "Gérer les canaux de vente : publié sur {count} canaux",
+  "collection.channels.tooltip": "Gérer la publication",
+  "collection.channels.title": "Canaux de vente"
 }

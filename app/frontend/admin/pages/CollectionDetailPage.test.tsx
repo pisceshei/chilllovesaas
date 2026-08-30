@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -55,13 +55,33 @@ const EXISTING = {
       lockVersion: 2,
       seo: { title: null, description: null },
       translations: [ { locale: "zh-Hant", field: "title", value: "春季精選", outdated: true } ],
+      resourcePublicationsV2: [
+        // S6c：Online Store 已發布（＝本尊測試店的初始形態，82 §17）
+        { isPublished: true, publishDate: "2026-07-14T13:40:55Z",
+          publication: { id: "gid://chilllove/Publication/1", title: "線上商店", supportsFuturePublishing: true } },
+      ],
     },
+  },
+};
+
+// S6c：本店管道清單（含一個 handle=null 的 app——salesChannelsOf 必須把它濾掉，
+// 濾不掉的話 popover 會多一列非管道 app；與商品 modal 同一條守衛）
+const CHANNELS = {
+  data: {
+    publications: [
+      { id: "gid://chilllove/Publication/1", title: "線上商店", handle: "online_store", supportsFuturePublishing: true },
+      { id: "gid://chilllove/Publication/2", title: "門市 POS", handle: "pos", supportsFuturePublishing: false },
+      { id: "gid://chilllove/Publication/3", title: "Shop", handle: "shop", supportsFuturePublishing: false },
+      { id: "gid://chilllove/Publication/9", title: "報表 App", handle: null, supportsFuturePublishing: false },
+    ],
+    shop: { ianaTimezone: "Asia/Hong_Kong" },
   },
 };
 
 const BASE = [
   { match: "query shopLocales", body: SHOP_LOCALES },
   { match: "query collectionForEdit", body: EXISTING },
+  { match: "query collectionChannels", body: CHANNELS },
 ];
 
 function renderAt(path: string) {
@@ -201,6 +221,85 @@ describe("商品系列編輯頁", () => {
     await user.click(within(savebar).getByRole("button", { name: "儲存" }));
 
     expect(await screen.findByText("系列已被其他人修改，請重新載入後再儲存。")).toBeVisible();
+  });
+
+  it("S6c 管道 popover：觸發鈕計數、三列開關態、排程入口只在 supportsFuturePublishing 列", async () => {
+    stubRoutedFetch(BASE);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+    // 觸發鈕文案＝伺服器已發布數（1）；App（handle=null）不算管道
+    const trigger = await screen.findByRole("button", { name: "管理銷售管道：已發布至 1 個管道" });
+    expect(trigger).toHaveTextContent("1 個管道");
+    await user.click(trigger);
+    // 三列：線上商店開、其餘關；總開關 mixed
+    const dialog = screen.getByRole("group", { name: "銷售管道" });
+    const rows = within(dialog).getAllByRole("switch");
+    expect(rows.map((node) => node.getAttribute("aria-checked"))).toEqual([ "true", "false", "false" ]);
+    expect(within(dialog).getByRole("checkbox").getAttribute("aria-checked")).toBe("mixed");
+    // 🔴 排程入口恰一顆（Online Store）；POS／Shop 沒有（82 §12.3 同款實測）
+    expect(within(dialog).getAllByRole("button", { name: /排程/ })).toHaveLength(1);
+  });
+
+  it("S6c toggle＝表單級 dirty：開 Shop → 儲存 → collectionSet 之後才送 publishablePublish", async () => {
+    const fetchMock = stubRoutedFetch([
+      ...BASE,
+      { match: "mutation collectionSet",
+        body: { data: { collectionSet: { collection: { id: "gid://chilllove/Collection/7", handle: "spring-picks", lockVersion: 3, title: "Spring Picks" }, userErrors: [] } } } },
+      { match: "mutation collectionPublishing",
+        body: { data: { publishablePublish: { userErrors: [] } } } },
+      { match: "query collectionPublications",
+        body: { data: { collection: { resourcePublicationsV2: EXISTING.data.collection.resourcePublicationsV2 } } } },
+    ]);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+    await user.click(await screen.findByRole("button", { name: "管理銷售管道：已發布至 1 個管道" }));
+    const dialog = screen.getByRole("group", { name: "銷售管道" });
+    await user.click(within(dialog).getByRole("switch", { name: "Shop" }));
+    // 觸發鈕即時反映（本尊 82 §17：aria 立即變 2）；此刻**還沒有任何 mutation**
+    expect(screen.getByRole("button", { name: "管理銷售管道：已發布至 2 個管道" })).toBeInTheDocument();
+    expect(callsTo(fetchMock, "mutation collectionPublishing")).toHaveLength(0);
+    // 儲存
+    await user.click(screen.getAllByRole("button", { name: "儲存" })[0]);
+    await waitFor(() => expect(callsTo(fetchMock, "mutation collectionPublishing")).toHaveLength(1));
+    const pubCall = JSON.parse(String(callsTo(fetchMock, "mutation collectionPublishing")[0].body)) as {
+      variables: { id: string; publicationsToPublish: unknown[]; shouldPublish: boolean; shouldUnpublish: boolean };
+    };
+    expect(pubCall.variables.id).toBe("gid://chilllove/Collection/7");
+    expect(pubCall.variables.publicationsToPublish).toEqual([ { publicationId: "gid://chilllove/Publication/3" } ]);
+    expect(pubCall.variables.shouldPublish).toBe(true);
+    expect(pubCall.variables.shouldUnpublish).toBe(false);
+    // 🔴 順序：collectionSet 在 publishing 之前（S6b 的先例：主體先存，發布後送）
+    const bodies = fetchMock.mock.calls.map((call) => String((call[1] as RequestInit).body));
+    expect(bodies.findIndex((body) => body.includes("mutation collectionSet")))
+      .toBeLessThan(bodies.findIndex((body) => body.includes("mutation collectionPublishing")));
+  });
+
+  it("S6c 總開關循環：mixed → 全開 → 全關（82 §17 實測語義）", async () => {
+    stubRoutedFetch(BASE);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+    await user.click(await screen.findByRole("button", { name: "管理銷售管道：已發布至 1 個管道" }));
+    const dialog = screen.getByRole("group", { name: "銷售管道" });
+    const master = within(dialog).getByRole("checkbox");
+    await user.click(master); // mixed → 全開
+    expect(master.getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("button", { name: "管理銷售管道：已發布至 3 個管道" })).toBeInTheDocument();
+    await user.click(master); // 全開 → 全關
+    expect(master.getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByRole("button", { name: "管理銷售管道：已發布至 0 個管道" })).toBeInTheDocument();
+  });
+
+  it("S6c 捨棄：toggle 後 Discard 還原計數且零 mutation", async () => {
+    const fetchMock = stubRoutedFetch(BASE);
+    const user = userEvent.setup();
+    renderAt("/admin/collections/gid%3A%2F%2Fchilllove%2FCollection%2F7");
+    await user.click(await screen.findByRole("button", { name: "管理銷售管道：已發布至 1 個管道" }));
+    const dialog = screen.getByRole("group", { name: "銷售管道" });
+    await user.click(within(dialog).getByRole("switch", { name: "Shop" }));
+    // SaveBar 出現（表單級 dirty——本尊 82 §17 的核心語義）
+    await user.click(await screen.findByRole("button", { name: "捨棄" }));
+    expect(screen.getByRole("button", { name: "管理銷售管道：已發布至 1 個管道" })).toBeInTheDocument();
+    expect(callsTo(fetchMock, "mutation collectionPublishing")).toHaveLength(0);
   });
 
   it("列表頁：智慧系列商品數顯示 — 而不是 0（未知與零是兩件事）", async () => {

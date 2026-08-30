@@ -110,7 +110,11 @@ const PRODUCT_QUERY = `
  * 把 toggle 綁 `isPublished` 會讓已排程的管道顯示成關閉，而該 bug 在沒有任何
  * 排程的環境下 100% 測綠。
  */
-type PublicationRow = {
+/* 🔴 S6c（D71）：以下發布機制（型別／delta helpers／SwitchRow／GroupToggle／
+ * ChannelScheduleButton）由本檔 export 給 CollectionDetailPage 共用。
+ * 單一來源的理由：這些是發布語義本體（serverScheduleOf 的判準、sameDelta 的
+ * 比較規則），複製一份就是 C-2 事故形態（設計與實作各說各話）。 */
+export type PublicationRow = {
   isPublished: boolean;
   publishDate: string | null;
   publication: { id: string; title: string; supportsFuturePublishing: boolean };
@@ -123,7 +127,7 @@ type PublicationRow = {
  * 這裡是**全部管道**，`PublicationRow` 只有**該商品已發布或已排程**的那些。
  * modal 要列出全部（含未發布的），⇒ 以本清單為骨架、用 `PublicationRow` 標狀態。
  */
-type PublicationOption = {
+export type PublicationOption = {
   id: string;
   title: string;
   /** `null`＝沒有綁 channel＝catalog publication，不是銷售管道（見 `salesChannelsOf`）。 */
@@ -148,7 +152,7 @@ type PublicationOption = {
  * ⚠️ 本尊在 modal 內是**分節**顯示（Sales Channels 一節、Catalogs › Regions 另一節，
  * 82 §12.1）。我方目前只做前者 ⇒ 濾掉後者而不是另起一節，屬已登記的射程邊界（S10 補）。
  */
-function salesChannelsOf(publications: PublicationOption[]): PublicationOption[] {
+export function salesChannelsOf(publications: PublicationOption[]): PublicationOption[] {
   // 🔴 `!= null`（寬鬆）不是 `!== null`：前者連 `undefined` 一起擋掉。差別在於「查詢忘了取
   //   handle」這個情境——嚴格比較會讓每一列都通過（`undefined !== null` 為真）⇒ catalog
   //   靜默混進銷售管道，正是本判準要防的事；寬鬆比較則讓 modal 直接變空，是**看得見**的失敗。
@@ -161,7 +165,7 @@ function salesChannelsOf(publications: PublicationOption[]): PublicationOption[]
  * 🔴 GID 含 `/` 與 `:`，直接當 id 會讓 `aria-controls` 的**空白分隔清單**解析錯誤，
  * 而且 `document.getElementById` 以外的選擇器也會炸 ⇒ 一律先轉成安全字元。
  */
-function channelSwitchId(scope: string, publicationId: string): string {
+export function channelSwitchId(scope: string, publicationId: string): string {
   return `${scope}-ch-${publicationId.replace(/[^a-zA-Z0-9]/g, "-")}`;
 }
 // ⚠️ **誠實登記：轉義目前是防禦性的，現有測試證明不了它必要**。GID 不含空白，
@@ -202,15 +206,15 @@ function matchChannels(publications: PublicationOption[], query: string): Public
  * `at`＝`null` 表示立即發布（送出時**不帶** `publishDate` 欄位——後端 R10 對明確傳 null
  * 一律 reject，省略才是「立即」）。
  */
-type PublishEntry = { publicationId: string; at: number | null };
+export type PublishEntry = { publicationId: string; at: number | null };
 
 /** 待送出的發布變更（`FormValues.publicationDelta` 的型別別名，供純函式簽名使用）。 */
-type PublicationDelta = { publish: PublishEntry[]; unpublish: string[] };
+export type PublicationDelta = { publish: PublishEntry[]; unpublish: string[] };
 
-const EMPTY_DELTA: PublicationDelta = { publish: [], unpublish: [] };
+export const EMPTY_DELTA: PublicationDelta = { publish: [], unpublish: [] };
 
 /** delta 的 publish 側是否含某管道。 */
-function publishEntry(delta: PublicationDelta, publicationId: string): PublishEntry | undefined {
+export function publishEntry(delta: PublicationDelta, publicationId: string): PublishEntry | undefined {
   return delta.publish.find((entry) => entry.publicationId === publicationId);
 }
 
@@ -227,7 +231,7 @@ function isPublishedOnServer(rows: PublicationRow[], publicationId: string): boo
 }
 
 /** 某管道**畫面上**該顯示的開關狀態＝伺服器現況套上待送 delta。 */
-function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicationId: string): boolean {
+export function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicationId: string): boolean {
   if (publishEntry(delta, publicationId)) return true;
   if (delta.unpublish.includes(publicationId)) return false;
   return isPublishedOnServer(rows, publicationId);
@@ -251,7 +255,7 @@ function channelIsOn(rows: PublicationRow[], delta: PublicationDelta, publicatio
  * 那次量測的 session **開場 delta 為空**，兩種判準在該情境下重合、分不出來，
  * 射程不涵蓋本情境（本尊在「已有暫存」時 Done 的狀態＝§14.10 未取得）。
  */
-function sameDelta(a: PublicationDelta, b: PublicationDelta): boolean {
+export function sameDelta(a: PublicationDelta, b: PublicationDelta): boolean {
   const sameIds = (x: string[], y: string[]) =>
     x.length === y.length && [ ...x ].sort().every((id, i) => id === [ ...y ].sort()[i]);
   // 🔴 publish 側要比 **(id, at) 兩個欄位**——只比 id 的話「同一個管道改了排程時間」
@@ -274,7 +278,7 @@ function sameDelta(a: PublicationDelta, b: PublicationDelta): boolean {
  * 頁尾 `Done` **全程 disabled**＝沒有待儲存的變更）⇒ 本尊也是**與現況比對**，
  * 不是記錄操作序列。
  */
-function toggleChannel(
+export function toggleChannel(
   rows: PublicationRow[],
   delta: PublicationDelta,
   publicationId: string,
@@ -301,7 +305,7 @@ function toggleChannel(
  * 「當初發布的時刻」，是過去值），只看非空會把所有已發布管道都當成排程中
  * （本尊回應的實測形態，`82` §15.8 結論 3）。
  */
-function serverScheduleOf(rows: PublicationRow[], publicationId: string): number | null {
+export function serverScheduleOf(rows: PublicationRow[], publicationId: string): number | null {
   const row = rows.find((candidate) => candidate.publication.id === publicationId);
   if (!row || row.isPublished || !row.publishDate) return null;
   const at = Date.parse(row.publishDate);
@@ -315,7 +319,7 @@ function serverScheduleOf(rows: PublicationRow[], publicationId: string): number
  * （§15.8：本尊送的就是 `publishablePublish` 帶 `publishDate`），不是「開關的附屬屬性」。
  * 同理 `Remove schedule` 送的是 `at = <now>`（§15.7 抓包終態＝立即發布），不是清空。
  */
-function scheduleChannel(delta: PublicationDelta, publicationId: string, at: number): PublicationDelta {
+export function scheduleChannel(delta: PublicationDelta, publicationId: string, at: number): PublicationDelta {
   return {
     publish: [
       ...delta.publish.filter((entry) => entry.publicationId !== publicationId),
@@ -448,7 +452,7 @@ function PublishingCard({
  *   《Choosing the State Structure》逐字 "Avoid contradictions in state."
  *   （<https://react.dev/learn/choosing-the-state-structure>，取證 2026-08-27）。
  */
-function GroupToggle({
+export function GroupToggle({
   checked,
   label,
   controls,
@@ -485,7 +489,7 @@ function GroupToggle({
  *   對應手勢，而本尊那個 icon 是唯一的排程入口。
  * ④跨功能影響：`values.publicationDelta` 的 `at` 欄、送出的 `publishDate`、發布卡的 badge。
  */
-function ChannelScheduleButton({
+export function ChannelScheduleButton({
   publicationId,
   shopTimezone,
   now,
@@ -1139,7 +1143,7 @@ function escapeHtml(raw: string): string {
 }
 
 /** 開關列（原型 .swrow；v1 多為未接線 ⇒ disabled）。 */
-function SwitchRow({
+export function SwitchRow({
   label,
   hint,
   checked,

@@ -2339,3 +2339,39 @@ M3 是設計期就預判會存活的形態（刪掉一族後另一族照掃、ca
 D54 立案的「整體 UI 不協調」四層診斷（中性階／語義色／字重／欄寬）加上後續的
 基準字級（D63）、殼層色彩域（D64）、頂欄控件與骨架（D66/D67）、字級 rem（D68/D69）、
 hover（本條）——**全部收口或有裁定處置**。下一步＝回 S6c（系列 popover）功能開發。
+
+---
+
+### D71. S6c：系列的銷售管道 popover（完整實測 → 落地）（2026-08-28）
+
+使用者指示「下一步，並且需要按鐵律，完整走一次實測和研究」。
+🟢 不觸鐵律 18.3（前端 ＋ CSS ＋ i18n ＋ 測試）。
+
+#### 實測（鐵律 12 全六層 ＋ 14 抓包 ＋ 12.3⑤ help 雙源）
+
+完整 teardown＝`docs/research/82` **§17**（觸發鈕／popover 形態／互動語義／網路五件套／
+help 互證／排程子視圖／寫入還原記錄）。三個決定性發現：
+
+1. 🔴 **toggle 是表單級 dirty**：不打即時 mutation，出 `Unsaved changes` 保存列，
+   Save 才送、Discard 還原、關 popover 不丟變更。help 官方步驟含 Save 步互證。
+2. 🔴 **底層就是我方 S5 的 mutation**：Save 送的 persisted op 其 response data key＝
+   `publishableUnpublish`／（Add 同構）⇒ 我方**零 schema 改動**直接接。
+   回讀 query 全文可見：`resourcePublicationsV2(first:250, onlyPublished:false,
+   catalogType: APP)` —— `catalogType: APP` 與 §9.3 官方語義互證。
+3. **總開關＝三態**（`input.indeterminate`），循環 mixed→全開→全關，全程本地。
+
+#### 落地
+
+- `CollectionDetailPage`：`CollectionChannelsControl`（觸發鈕＋popover），
+  delta 進 SaveBar dirty；save＝collectionSet 成功後套 delta（publish/unpublish 合一
+  mutation）→ **重讀不樂觀翻轉**；discard 一併還原。
+- **共用不複製**：SwitchRow／GroupToggle／ChannelScheduleButton／delta helpers 由
+  ProductDetailPage `export`（`serverScheduleOf` 判準有紅線，複製一份＝C-2 事故形態）。
+- i18n 五鍵 ×5 語系；CSS `.cl-chpop*`（值全走 token）。
+- 測試 4 格：形態＋排程入口唯一性／dirty 語義＋payload＋順序／總開關循環／Discard 歸零。
+
+#### 登記的偏離（全文 82 §17.8）
+
+排程入口一律顯示（觸控理由，沿用商品 modal 裁定）；排程面板＝錨定子彈層
+（本尊原地換頁；重用 SchedulePopover 原語）；icon 用 Lucide（鐵律 9）；
+新建表單隱藏觸發鈕（本尊該形態未取得）。

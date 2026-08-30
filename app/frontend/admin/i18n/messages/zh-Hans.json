@@ -552,5 +552,10 @@
   "product.media.embedVideoAdd": "加入视频",
   "product.media.embedVideoUrl": "视频网址",
   "product.media.embedVideoHint": "贴上 YouTube 或 Vimeo 的视频页网址。视频存放在该平台，不占用你的存储空间。",
-  "product.media.embedVideoPrivacy": "播放器会以平台的隐私强化模式载入（YouTube 用 youtube-nocookie、Vimeo 带 dnt 参数），减少追踪用途的数据收集。"
+  "product.media.embedVideoPrivacy": "播放器会以平台的隐私强化模式载入（YouTube 用 youtube-nocookie、Vimeo 带 dnt 参数），减少追踪用途的数据收集。",
+  "collection.channels.trigger.one": "1 个渠道",
+  "collection.channels.trigger.many": "{count} 个渠道",
+  "collection.channels.triggerAria": "管理销售渠道：已发布至 {count} 个渠道",
+  "collection.channels.tooltip": "管理发布",
+  "collection.channels.title": "销售渠道"
 }

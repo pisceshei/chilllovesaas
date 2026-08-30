@@ -2111,3 +2111,90 @@ letter-spacing／font-family 在乾淨與污染環境下**逐項相同**。
 - 「Remove schedule」在 enabled 態的顏色與權重——本次商品未設排程，該鍵為 disabled（rgb(181,181,181)）。權重 450 已取得，enabled 態顏色未取得；啟用它需先設定排程（寫入），唯讀約束下未做。
 
 > 量測環境：測試店 chill-love-u5q5mnzq admin，Chrome（Claude in Chrome），自開分頁量測後已關閉。主樣本＝非保護商品 9907121193195「Acqua Di Parma Blu Mediterraneo Arancia Di Capri EDT 100ml」；Publishing 卡結構另以 9907116277995「POLA B.A MILK」複核（兩者結構一致）。取證日期 2026-08-28。  🔴 全部數值皆在「已停用污染源後量測」：每次導航後執行 `[...document.querySelectorAll('style')].find(s=>s.id==='font-bolder-style').sheet.disabled=true`；每一項再以 disabled=true → false → true 三段取得「乾淨／污染」配對值（下表 clean/dirty 皆為同一元素同一時刻的實測，非推算）。量測結束已 `disabled=false` 還原。  工具限制：視窗離屏（screenX≈-32000），screenshot 逾時、resize_window 無效 ⇒ 全程走 DOM/JS，無視覺截圖。真實鍵盤 Escape 不進離屏視窗，改以 dispatch KeyboardEvent('Esca
+
+## §17 系列詳情頁的銷售管道 popover（S6c 實測，2026-08-28）
+
+> 量測環境：測試店 chill-love-u5q5mnzq（Plus），**本機 Chrome**（`mcp__claude-in-chrome__*`，
+> 非內嵌），viewport 2560×1279、dpr 1.5、根字級 16px。污染源 `font-bolder-style` 每次
+> 導航後停用。導航全程走側欄真實 href（`/collections` → `/collections/494143242475`）。
+> 寫入依鐵律 12.2 授權執行且**已全部還原**（詳 §17.4）。取證日期 2026-08-28。
+
+### §17.1 觸發鈕（標題卡右下）
+
+- 位置：標題卡（系列圖＋標題＋描述那張）**右下角**。
+- 組成：管道 icon 20×20 ＋ 文字 `1 channel` ＋ 上下 caret icon 20×20（`s-internal-icon` ×2）。
+- 幾何/字體：h 28、r 8、pad 4、13px/20px/450、色 `--text`（#303030）、底透明。
+- 可及名：`aria-label="Manage sales channels: published to 1 channel"`（**計數即時跟 delta**，
+  toggle 未存檔時就變 2）；tooltip（hover）＝`Manage publishing`。
+
+### §17.2 popover 形態（DOM 收割＋放大截圖雙證）
+
+- 根＝`<s-popover>`（light DOM 內容 ＋ shadow 面板）。面板：**215×162**、白底、r 12、
+  四層陰影（`rgba(0,0,0,.28) 0 8px 24px -8px` 起）、貼觸發鈕下緣。
+- 標頭列（h 41，pad 8×12，髮絲線下框 0.667px #e3e3e3）：`Sales channels` 13/20/450 ＋
+  **三態總開關**（`<input>`，實測 `indeterminate: true` 時視覺為深底短橫）。
+- 管道列 ×3（各 h 40，寬 200）：icon 20 ＋ 名稱 13/20/450 ＋ switch（軌 32×16、label 盒 32×24）。
+  值域＝**Online Store／Point of Sale／Shop 三個銷售管道**，無 Agentic、無 Catalogs
+  （§9.3 的官方語義「Collection only supports publications to APP catalog types」）。
+- 🔴 **排程入口只在 Online Store 列**（`supportsFuturePublishing`）：20×20 月曆時鐘 icon、
+  色 #8a8a8a，`aria-label="Schedule publishing"`，**hover 該列才現身**（rect 平時 0×0）。
+  help 雙源印證：官方明載排程「Online Store only」。
+
+### §17.3 🔴 互動語義：表單級 dirty，不是即時 mutation
+
+| 動作 | 觀察 |
+|---|---|
+| 點列 switch | **無任何網路請求**；觸發鈕 aria 計數立即更新；頂部出現 `Unsaved changes — Discard / Save` 保存列 |
+| Save | 才送 mutation（§17.5）；成功後保存列消失 |
+| Discard | 全部 toggle 還原、零請求 |
+| 總開關 | **mixed → 全開 → 全關** 循環（四 input 實測：mixed(indeterminate) → 4×true → 4×false），全程本地 |
+| 點 popover 外 | 關 popover；**未存檔的變更保留**（保存列仍在） |
+| Escape | ⚠️ 一次實測未關（焦點在 body）；焦點在內時的行為**未取得** ⇒ V，不下結論 |
+
+### §17.4 寫入與還原記錄（鐵律 12.2）
+
+Shop 開→Save（AddCollectionPublications 落庫）→ Shop 關→Save（Delete… 落庫）；
+總開關全開／全關兩態以 **Discard** 還原、未落庫。終態經重載複驗＝
+`published to 1 channel`（Online Store，publishDate 2026-07-14T13:40:55Z）——與初始完全相同。
+
+### §17.5 網路取證（鐵律 14.4 五件套）
+
+- **寫入**（POST `/api/operations/<hash>/AddCollectionPublications/...`／`DeleteCollectionPublications`；
+  觸發＝保存列 Save；取證 2026-08-28）。Delete 的 request body 全文（fetch 攔截）：
+  `{"operationName":"DeleteCollectionPublications","variables":{"id":"gid://shopify/Collection/494143242475","input":[{"publicationId":"gid://shopify/Publication/209681744107"}]}}`
+  response：`{"data":{"publishableUnpublish":{"userErrors":[],"__typename":"PublishableUnpublishPayload"}}}`
+  🔴 **data key＝`publishableUnpublish`** ⇒ 底層就是 S5 的同名 mutation。
+  Add 方向僅取得 operation name（發生在攔截器 armed 之前）⇒ 該 variables 形狀標 V。
+- **回讀**（Save 後自動）：`CollectionPublicationsQuery_resourcePublicationsV2_1`——
+  **query 全文可見（非 persisted）**：`collection(id).resourcePublicationsV2(first: 250,
+  onlyPublished: false, catalogType: APP) @split { edges { node { isPublished publishDate
+  publication { id app { id } } } } }`。🔴 `catalogType: APP` 與 §9.3 官方句互證。
+  另有 `CollectionPublicationsQuery_0`（shop { storefrontUrl resourceLimits } ＋ collection id）、
+  `CollectionDetailsQuery`／`CollectionDetailsPreviewItems`（GET，variables 在 URL）。
+
+### §17.6 help 雙源（12.3⑤，取證 2026-08-28）
+
+來源：help.shopify.com/en/manual/products/collections/make-collections-available。
+- 官方步驟含明確的 **Save** 步 ⇒ 與 §17.3「表單級 dirty」互證。
+- 排程「Online Store only」⇒ 與 §17.2 排程入口位置互證。
+- 🔴 官方規則原文：「Making a collection visible to the **Online Store** sales channel
+  doesn't automatically link the collection to your store's menus.」；系列可見性變更
+  「doesn't change the availability of the individual products within the collection」。
+- `Remove schedule` 鍵 help **未載** ⇒ 實測補（存在於排程面板左下，未設排程時 disabled 灰）。
+
+### §17.7 排程子視圖
+
+點 Schedule publishing 後 popover **原地換頁**：`←` ＋ `Online Store` 標頭、日期輸入
+（預設今天 `August 30, 2026`）、時間輸入（值 `11:00 AM`、placeholder `Time`、右側 **GMT+8**）、
+內嵌月曆（過去日灰、今天深底選中、‹›換月）、底列 `Remove schedule`（disabled 灰）／
+`Cancel`／`Done`（primary）。Cancel 返回管道列。
+（月曆內部細節在 shadow，未逐項展開——形態與商品 modal 的排程彈層同構，§16.3 已量。）
+
+### §17.8 我方落地（S6c）與登記的偏離
+
+實作＝`CollectionDetailPage` 的 `CollectionChannelsControl`（重用商品 modal 的
+SwitchRow／GroupToggle／ChannelScheduleButton——單一發布語義來源）。偏離：
+①排程入口**一律顯示**（本尊 hover 才現身；觸控無對應手勢——沿用商品 modal 的既有裁定）；
+②排程面板＝**錨定子彈層**（本尊在 popover 內原地換頁；我方重用 SchedulePopover 原語，
+形態隨商品 modal 先例）；③觸發鈕 icon 用 Lucide 同義字形（鐵律 9 不抄本尊 SVG）；
+④新建系列表單隱藏觸發鈕（**本尊新建表單的形態未取得** ⇒ V）。
