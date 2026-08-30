@@ -3607,3 +3607,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-3 | **R6（已發布→改排程未來）不發任何事件**：訂閱者視角該 listing 是否該收 REMOVE＝未取得 | write.rb ② | 同上，待實測 |
 | W-4 | **UPDATE 語義收窄**：官方一句 `a product publication is updated` 很寬（可能含商品資料變更）；我方只在已發布列改 published_at 時發 | D74 | 寬解需要 SaveProduct 掛鉤與本尊抓包佐證；先窄後寬不破壞相容 |
 | W-5 | **`variant_listings/*` 是 ours**：官方 enum 無 variant listing topic（2026-08-28 掃描，variant 相關只有 in/out of stock）。日後本尊 ship 了正式 topic ⇒ 改名對齊並留 alias | topics.rb | 本尊 under development（82 §8.3）；等它 ship |
+
+### 3.46 S9（D75）的範圍外觀察（2026-08-30）
+
+- ⚪ **預覽站 publication 閘未取得**：`*.shopifypreview.com` 對「active＋取消發布」
+  仍 200（+120s），status 變更卻 ≤6s 生效；真店面無法在密碼牆內複驗。
+  影響：無——W6 依官方 A1 錨實作（specs/93 §F.1）。複驗法＝解除密碼保護後
+  對真店面重量 C 格（該操作會公開真網域，需使用者裁定）。
+- ⚪ **unlisted 真店面 noindex 未取得**：預覽站全域 `noindex,nofollow`（active 控制組
+  同值）⇒ 不可歸因。D4 的 `unlisted_meta_robots` 維持 ours（specs/93 §F.2）。
+- ⚪ **系列頁排除面未直測**：該主題 `/collections/all` HTML 無商品連結可抽；
+  由 suggest／全文搜尋兩面代證（specs/93 §F.3）。
+- ⚪ **店級閘門（development／密碼、B2B-only）我方 schema 無承載欄**：屬包 30/33
+  射程（82 §9.6a 總表第 1/2 閘）；specs/93 §E 已定行為契約，實作時補欄。
