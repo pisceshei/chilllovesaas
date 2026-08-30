@@ -52,7 +52,7 @@ module ThemeEngine
     private
 
     def render_inside_tenant(path)
-      page_type, assigns, status = resolve(path)
+      page_type, assigns, status, record = resolve(path)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
@@ -61,6 +61,14 @@ module ThemeEngine
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
       end
+      # 平台 head 注入（包 35；62 §A.1 第 1 層）：canonical＋hreflang＋JSON-LD。
+      # 只在公開店面（有 presence）注入；預覽面（noindex 牆後）維持空字串（包 30 行為）。
+      if @web_presence
+        runtime.assign("content_for_header", Seo::HeadTags.build(
+          shop: @shop, presence: @web_presence, locale_tag: @locale.to_s,
+          canonical_path: path, params: @params, record:, status:
+        ))
+      end
 
       body = render_template_sections(runtime, page_type)
       html = render_layout(runtime, body)
@@ -68,7 +76,8 @@ module ThemeEngine
                  volatile: runtime.render_flags.include?(:volatile))
     end
 
-    # @return [Array(String, Hash, Integer)] [template key, 額外 assigns, HTTP status]
+    # @return [Array(String, Hash, Integer, Object)] [template key, 額外 assigns, HTTP status,
+    #   資源 record（head 注入用；404／index 為 nil）]
     def resolve(path)
       at = Time.current
       case path
@@ -91,7 +100,8 @@ module ThemeEngine
         product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
                                                               selected_variant_id: selected_variant_id,
                                                               publication: @publication,
-                                                              translations: translations_for(product)) }, 200 ] : not_found
+                                                              translations: translations_for(product)) },
+                   200, product ] : not_found
       when %r{\A/collections/([^/]+)\z}
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
@@ -103,12 +113,12 @@ module ThemeEngine
             publishable_type: "Collection", publishable_id: collection.id
           ).pick(:published_at),
           translations: translations_for(collection)
-        ) }, 200 ] : not_found
+        ) }, 200, collection ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
           Page.visible(at: at).find_by(shop_id: @shop.id, handle: Regexp.last_match(1))
         end
-        page ? [ "page", { "page" => PageDrop.new(page, url_prefix: @url_prefix) }, 200 ] : not_found
+        page ? [ "page", { "page" => PageDrop.new(page, url_prefix: @url_prefix) }, 200, page ] : not_found
       else
         not_found
       end

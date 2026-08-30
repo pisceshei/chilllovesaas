@@ -18,9 +18,17 @@ module Storefront
     # query 白名單（進快取 key 的維度；未列參數不參與 key＝同一快取頁）。
     CACHE_PARAMS = %w[variant page q sort_by].freeze
 
-    # GET /robots.txt（B13：步 4 前全面禁抓）
+    # GET /robots.txt（包 35 起開放；62 §D.2 預設 disallow 集合＋平台保底 Sitemap 行）。
+    # 主題 robots.txt.liquid 覆寫層（§D.1 本尊形態）與 AI 爬蟲三組開關（§D.3）待
+    # 後續包（登記）；B13 的全站 Disallow 已隨本包撤除。
     def robots
-      render plain: "User-agent: *\nDisallow: /\n", content_type: "text/plain"
+      lines = [ "User-agent: *" ]
+      %w[/cart /checkout /account /search].each { |path| lines << "Disallow: #{path}" }
+      lines << "Disallow: /*?*filter."
+      lines << "Disallow: /*?*sort_by="
+      lines << "Disallow: /*?*preview_theme_id="
+      lines << "Sitemap: https://#{request.host}/sitemap.xml"
+      render plain: lines.join("\n") + "\n", content_type: "text/plain"
     end
 
     # GET /（＝無前綴根路徑）
@@ -44,7 +52,8 @@ module Storefront
         locale_tag: hit.locale_tag, path: rest, params: cache_params
       ) { render_page(hit, rest) }
 
-      response.headers["X-Robots-Tag"] = "noindex, nofollow" # B13：隨步 4 摘除
+      # B13 的 X-Robots-Tag noindex 已隨包 35（SEO 開放）摘除；UNLISTED 的 noindex
+      # 由 Seo::HeadTags 以 meta robots 承接（limits `product.unlisted_meta_robots`）。
       render html: payload["html"].html_safe, status: payload["status"], layout: false
     end
 

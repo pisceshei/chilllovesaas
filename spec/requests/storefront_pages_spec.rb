@@ -38,11 +38,11 @@ RSpec.describe "Storefront pages", type: :request do
     expect(response.headers["Location"]).to end_with("/en-hk/products/rose?variant=9&x=1")
   end
 
-  it "S3 前綴命中 ⇒ 匿名 200 渲染主題頁；X-Robots-Tag noindex（B13 步 4 前）" do
+  it "S3 前綴命中 ⇒ 匿名 200 渲染主題頁（包 35 起不再帶 X-Robots-Tag noindex——B13 已撤）" do
     get "/en-hk/"
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("首頁英雄")
-    expect(response.headers["X-Robots-Tag"]).to include("noindex")
+    expect(response.headers["X-Robots-Tag"]).to be_nil
   end
 
   it "S4 🔴 長得像前綴但查無 ⇒ 404（unknown_prefix_status；不補預設前綴、不重導）" do
@@ -52,9 +52,11 @@ RSpec.describe "Storefront pages", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
-  it "S5 robots.txt ⇒ 全站 Disallow（B13：SEO 面步 4 才開放）" do
+  it "S5 robots.txt 由平台動態服務（包 35 起開放形——完整斷言在 storefront_seo SEO5）" do
     get "/robots.txt"
-    expect(response.body).to eq("User-agent: *\nDisallow: /\n")
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("User-agent: *")
+    expect(response.body).not_to include("Disallow: /\n") # B13 全站 Disallow 已撤
   end
 
   it "S6 🔴 頁級快取：同 key 第二請求不重渲染；資源 stamp 動 ⇒ 換 key 重渲染" do
