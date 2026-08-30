@@ -14,6 +14,9 @@ require "rails_helper"
 #   O3 value == value 跨陣列、value == "S"（殺：拿掉 == 覆寫——Ella
 #      product-variant-options.liquid:36-40 的 `color == value` 迴圈會全滅）
 #   SP stub 釘死（殺：把 nil/[]/false stub「順手」改成半真值）
+#   C1 collections 管道過濾（殺：不濾 publication——真引擎 S9-Col-Hidden 排除格）
+#   MF2/J1 json 黑名單（殺：把 root/單一 metafield 的拒絕「修好」成正常序列化）
+#   J2 variant json 無 quantity_price_breaks（殺：直接 dump drop 全屬性）
 RSpec.describe "ThemeEngine drops（商品前台補完）" do
   let(:shop) { create(:shop) }
 
@@ -237,6 +240,146 @@ RSpec.describe "ThemeEngine drops（商品前台補完）" do
       expect(d.selling_plan_groups).to eq([])
       expect(d.category).to be_nil
       expect(d.options_with_values.first.values.first.swatch).to be_nil
+    end
+  end
+
+  describe "資料出口：collections（A′5）" do
+    def with_collections(product)
+      ActsAsTenant.with_tenant(shop) do
+        online = Publication.online_store!
+        shown = Collection.create!(shop_id: shop.id, title: "出口測試-顯", handle: "outlet-shown",
+                                   description_html: "", collection_type: "manual", sort_order: "manual")
+        hidden = Collection.create!(shop_id: shop.id, title: "出口測試-隱", handle: "outlet-hidden",
+                                    description_html: "", collection_type: "manual", sort_order: "manual")
+        [ shown, hidden ].each do |c|
+          CollectionMembership.create!(shop_id: shop.id, collection_id: c.id, product_id: product.id,
+                                       origin: "manual", position: 1)
+        end
+        # 隱藏組：拔掉 online store 的發布列（materialize 建的）
+        ResourcePublication.where(shop_id: shop.id, publication_id: online.id,
+                                  publishable_type: "Collection", publishable_id: hidden.id).delete_all
+        [ online, shown, hidden ]
+      end
+    end
+
+    it "C1 🔴 只回渲染管道上已發布的系列（S9-Col-Hidden 排除格的本地鏡射）" do
+      product, = build_tshirt
+      online, shown, = with_collections(product)
+      d = ActsAsTenant.with_tenant(shop) do
+        ThemeEngine::ProductDrop.new(Product.find(product.id), publication: online)
+      end
+      expect(d.collections.map(&:handle)).to eq([ "outlet-shown" ])
+      expect(d.collections.first.id).to eq(shown.id)
+    end
+
+    it "C2 無管道語境 ⇒ 空陣列（安全側）；collection json＝真引擎 9 鍵序" do
+      product, = build_tshirt
+      online, = with_collections(product)
+      expect(drop_for(product).collections).to eq([])
+      d = ActsAsTenant.with_tenant(shop) do
+        ThemeEngine::ProductDrop.new(Product.find(product.id), publication: online)
+      end
+      j = JSON.parse(ThemeEngine::JsonSerializer.dump(d.collections))
+      expect(j.first.keys).to eq(%w[id handle updated_at published_at sort_order
+                                    template_suffix published_scope title body_html])
+      expect(j.first["published_at"]).to be_present # materialize 的已發布列
+      expect(j.first["body_html"]).to be_nil        # 空 description ⇒ null
+    end
+  end
+
+  describe "資料出口：metafields（A′6）" do
+    def define_metafield!(product, namespace:, key:, value:, value_type: "single_line_text_field")
+      ActsAsTenant.with_tenant(shop) do
+        definition = MetafieldDefinition.create!(shop_id: shop.id, namespace:, key:,
+                                                 name: key.humanize, owner_type: "Product",
+                                                 value_type:, validations: [])
+        Metafield.create!(shop_id: shop.id, metafield_definition: definition,
+                          owner_type: "Product", owner_id: product.id, value: value)
+      end
+    end
+
+    it "MF1 namespace.key 鏈：直接輸出＝值、.value＝值、.type＝定義型別；未知 key/namespace ⇒ nil 鏈安全" do
+      product, = build_tshirt
+      define_metafield!(product, namespace: "fecify", key: "product_id", value: "S9CAP-FEC-001", value_type: "id")
+      mf = drop_for(product).metafields.liquid_method_missing("fecify").liquid_method_missing("product_id")
+      expect(mf.to_s).to eq("S9CAP-FEC-001")
+      expect(mf.value).to eq("S9CAP-FEC-001")
+      expect(mf.type).to eq("id")
+      ns = drop_for(product).metafields.liquid_method_missing("nope")
+      expect(ns.liquid_method_missing("missing")).to be_nil
+    end
+
+    it "MF2 🔴 json 黑名單（真引擎 83 §12.4）：root 與單一 metafield 拒絕、namespace＝扁平 {key: value}" do
+      product, = build_tshirt
+      define_metafield!(product, namespace: "fecify", key: "product_id", value: "S9CAP-FEC-001")
+      root = drop_for(product).metafields
+      refusal = { "error" => "json not allowed for this object" }
+      expect(JSON.parse(ThemeEngine::JsonSerializer.dump(root))).to eq(refusal)
+      ns = root.liquid_method_missing("fecify")
+      expect(JSON.parse(ThemeEngine::JsonSerializer.dump(ns))).to eq("product_id" => "S9CAP-FEC-001")
+      one = ns.liquid_method_missing("product_id")
+      expect(JSON.parse(ThemeEngine::JsonSerializer.dump(one))).to eq(refusal)
+    end
+  end
+
+  describe "資料出口：category（A′7）" do
+    it "CT1 category_gid 導出 gid/id；name＝nil（taxonomy 字典未落庫，登記）；無值 ⇒ nil" do
+      product, = build_tshirt
+      expect(drop_for(product).category).to be_nil
+      ActsAsTenant.with_tenant(shop) do
+        product.update!(category_gid: "gid://shopify/TaxonomyCategory/aa-1-13-8")
+      end
+      cat = drop_for(product).category
+      expect(cat.id).to eq("aa-1-13-8")
+      expect(cat.gid).to eq("gid://shopify/TaxonomyCategory/aa-1-13-8")
+      expect(cat.name).to be_nil
+    end
+  end
+
+  describe "json parity（真引擎 83 §12.2 形）" do
+    it "J1 🔴 product | json：鍵序＝live .js 對照形（有 content 無 url；無 media 鍵；無圖 featured_image=null）" do
+      product, = build_tshirt
+      j = JSON.parse(ThemeEngine::JsonSerializer.dump(drop_for(product)))
+      expect(j.keys).to eq(%w[id title handle description published_at created_at vendor type tags
+                              price price_min price_max available price_varies compare_at_price
+                              compare_at_price_min compare_at_price_max compare_at_price_varies
+                              variants images featured_image options requires_selling_plan
+                              selling_plan_groups content])
+      expect(j).not_to have_key("url")
+      expect(j).not_to have_key("status")
+      expect(j["featured_image"]).to be_nil
+      expect(j["price"]).to eq(10_000) # integer cents（鐵律 3 同尺度直通）
+    end
+
+    it "J2 🔴 variant json＝21 鍵、無 quantity_price_breaks；name/public_title 拼裝規則" do
+      product, = build_tshirt
+      j = JSON.parse(ThemeEngine::JsonSerializer.dump(drop_for(product)))
+      v = j["variants"].first
+      expect(v.keys).to eq(%w[id title option1 option2 option3 sku requires_shipping taxable
+                              featured_image available name public_title options price weight
+                              compare_at_price inventory_management barcode requires_selling_plan
+                              selling_plan_allocations quantity_rule])
+      expect(v).not_to have_key("quantity_price_breaks")
+      expect(v["name"]).to eq("Drops Tee - S")
+      expect(v["public_title"]).to eq("S")
+    end
+
+    it "J3 options_with_values | json＝{name, position, values:[字串]}（值壓平）" do
+      product, = build_tshirt
+      j = JSON.parse(ThemeEngine::JsonSerializer.dump(drop_for(product).options_with_values))
+      expect(j).to eq([ { "name" => "尺寸", "position" => 1, "values" => %w[S M L] } ])
+    end
+
+    it "J5 🔴 濾鏡 wiring：`{{ p | json }}` 經 Liquid 渲染真的走 JsonSerializer（殺：濾鏡退回裸 JSON.generate）" do
+      product, = build_tshirt
+      out = Liquid::Template.parse("{{ p | json }}")
+                            .render({ "p" => drop_for(product) }, filters: [ ThemeEngine::Filters ])
+      expect(JSON.parse(out)["handle"]).to eq("drops-tee")
+    end
+
+    it "J4 兜底：未知 drop ⇒ to_s（gem 無 json 濾鏡，序列化全歸我方）" do
+      expect(ThemeEngine::JsonSerializer.dump("x")).to eq('"x"')
+      expect(ThemeEngine::JsonSerializer.dump([ 1, nil, true ])).to eq("[1,null,true]")
     end
   end
 end

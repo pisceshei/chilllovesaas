@@ -79,12 +79,19 @@ module ThemeEngine
                           ).first
         end
         product ? [ "product", { "product" => ProductDrop.new(product, url_prefix: @url_prefix,
-                                                              selected_variant_id: selected_variant_id) }, 200 ] : not_found
+                                                              selected_variant_id: selected_variant_id,
+                                                              publication: @publication) }, 200 ] : not_found
       when %r{\A/collections/([^/]+)\z}
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
         end
-        collection ? [ "collection", { "collection" => CollectionDrop.new(collection, url_prefix: @url_prefix) }, 200 ] : not_found
+        collection ? [ "collection", { "collection" => CollectionDrop.new(
+          collection, url_prefix: @url_prefix,
+          published_at: ResourcePublication.where(
+            shop_id: @shop.id, publication_id: @publication.id,
+            publishable_type: "Collection", publishable_id: collection.id
+          ).pick(:published_at)
+        ) }, 200 ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
           Page.visible(at: at).find_by(shop_id: @shop.id, handle: Regexp.last_match(1))

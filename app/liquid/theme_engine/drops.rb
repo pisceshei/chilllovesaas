@@ -64,6 +64,13 @@ module ThemeEngine
     def url = @file && Storage::LocalDisk.respond_to?(:url_for) ? Storage::LocalDisk.url_for(@file.storage_key) : nil
     def to_s = url.to_s
     def preview_image = self
+
+    # 🔴 ours：live「帶圖商品」的 image-json 形未量測（測試品全無圖）——
+    # 先出我方真欄位，探針補量後對表（資料出口包 worklog 登記）。
+    def as_storefront_json
+      { "id" => id, "position" => position, "alt" => alt, "width" => width,
+        "height" => height, "aspect_ratio" => aspect_ratio, "src" => url }
+    end
   end
 
   class VariantDrop < Liquid::Drop
@@ -139,9 +146,37 @@ module ThemeEngine
     def unit_price = nil
     def unit_price_measurement = nil
     def selected_selling_plan_allocation = nil
+    def requires_selling_plan = false
+    def selling_plan_allocations = []
     def quantity_price_breaks = []
     def quantity_rule = { "min" => 1, "max" => nil, "increment" => 1 }
     def matched = true
+
+    # 真引擎拼裝規則（83 §12：live payload）：預設變體 name＝商品名、
+    # public_title＝nil；具名變體 name＝"商品名 - 變體名"、public_title＝變體名。
+    def name
+      default_variant? ? @product.title : "#{@product.title} - #{@v.title}"
+    end
+
+    def public_title
+      default_variant? ? nil : @v.title
+    end
+
+    # 真引擎 variant json＝21 鍵（83 §12.2：🔴 **無 quantity_price_breaks**，
+    # 與 drop 面回 [] 不同——序列化面刻意排除該鍵）。
+    def as_storefront_json
+      {
+        "id" => id, "title" => title, "option1" => option1, "option2" => option2,
+        "option3" => option3, "sku" => sku, "requires_shipping" => requires_shipping,
+        "taxable" => taxable, "featured_image" => own_image_json, "available" => available,
+        "name" => name, "public_title" => public_title, "options" => options,
+        "price" => price, "weight" => weight, "compare_at_price" => compare_at_price,
+        "inventory_management" => inventory_management, "barcode" => barcode,
+        "requires_selling_plan" => requires_selling_plan,
+        "selling_plan_allocations" => selling_plan_allocations,
+        "quantity_rule" => quantity_rule
+      }
+    end
 
     # @api private（A3 的分組鍵；不是 Liquid 面）
     def option_value_ids
@@ -159,6 +194,14 @@ module ThemeEngine
 
     private
 
+    def default_variant? = @product.has_only_default_variant
+
+    # json 面的變體圖：只認變體專圖（無 ⇒ null；不回退商品首圖——live .js 同形）。
+    def own_image_json
+      img = own_image
+      img && JsonSerializer.coerce(img.as_storefront_json)
+    end
+
     def own_image
       return @own_image if defined?(@own_image)
 
@@ -166,6 +209,94 @@ module ThemeEngine
         m = @v.media.select(&:stored_file).min_by(&:position)
         m && ImageDrop.new(m)
       end
+    end
+  end
+
+  # 商品分類 drop（A′7；docs 26 taxonomy_category T2）。
+  # 真引擎（83 §12.4）：to_s＝名稱、`| json`＝名稱字串、.id＝路徑碼
+  # （"aa-1-13-8"）、.gid＝完整 GID。我方只存 category_gid ⇒ id/gid 可導出；
+  # 🔴 name＝nil（taxonomy 名稱字典未落庫——平台字典表候選，鐵律 2 ③ 程序）。
+  class CategoryDrop < Liquid::Drop
+    GID_PREFIX = "gid://shopify/TaxonomyCategory/"
+
+    def initialize(gid)
+      super()
+      @gid = gid
+    end
+
+    def gid = @gid
+    def id = @gid.to_s.delete_prefix(GID_PREFIX)
+    def name = nil
+    def to_s = name.to_s
+
+    def as_storefront_json = name
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("CategoryDrop.#{name}")
+      nil
+    end
+  end
+
+  # 單一 metafield drop（A′6；docs 26 §1.8：`.metafields.namespace.key`）。
+  # 真引擎（83 §12.4）：直接輸出＝值、.value＝值、.type＝definition 型別、
+  # 🔴 `| json` 拒絕（json_refused）。
+  class MetafieldDrop < Liquid::Drop
+    def initialize(row)
+      super()
+      @row = row
+    end
+
+    def value = @row.value
+    def type = @row.metafield_definition.value_type
+    def to_s = @row.value.to_s
+    def json_refused? = true
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("MetafieldDrop.#{name}")
+      nil
+    end
+  end
+
+  # namespace 層（真引擎：`| json`＝扁平 {key: value}；未知 key ⇒ nil 鏈安全）。
+  class MetafieldNamespaceDrop < Liquid::Drop
+    def initialize(owner, namespace)
+      super()
+      @owner = owner
+      @namespace = namespace.to_s
+    end
+
+    def liquid_method_missing(key)
+      rows[key.to_s]&.then { |row| MetafieldDrop.new(row) }
+    end
+
+    def as_storefront_json
+      rows.transform_values(&:value)
+    end
+
+    private
+
+    def rows
+      @rows ||= Metafield
+                .where(shop_id: @owner.shop_id, owner_type: @owner.class.name, owner_id: @owner.id)
+                .joins(:metafield_definition)
+                .where(metafield_definitions: { namespace: @namespace })
+                .includes(:metafield_definition)
+                .index_by { |m| m.metafield_definition.key }
+    end
+  end
+
+  # metafields 根（真引擎：任意 namespace 存取恆回 namespace drop；
+  # 🔴 root `| json` 拒絕、不可迭代——83 §12.4）。
+  class MetafieldsRootDrop < Liquid::Drop
+    def initialize(owner)
+      super()
+      @owner = owner
+    end
+
+    def json_refused? = true
+
+    def liquid_method_missing(namespace)
+      MetafieldNamespaceDrop.new(@owner, namespace)
     end
   end
 
@@ -183,6 +314,11 @@ module ThemeEngine
 
     def values
       @values ||= @o.option_values.sort_by(&:position).map { |ov| OptionValueDrop.new(ov, @product) }
+    end
+
+    # 真引擎 json 形（83 §12.4）：{name, position, values:[字串]}——值壓平。
+    def as_storefront_json
+      { "name" => name, "position" => position, "values" => values.map(&:to_s) }
     end
 
     # 官方 T0：目前選中變體在本選項上的值（字串）；無可用變體 ⇒ nil。
@@ -236,6 +372,8 @@ module ThemeEngine
 
     def swatch = nil # 無 swatch 存儲（缺口分析 §B 登記）
 
+    def as_storefront_json = @ov.value
+
     # Liquid `==`：drop == drop（同值 id）與 drop == "字串"（值字串）都成立。
     def ==(other)
       case other
@@ -259,10 +397,13 @@ module ThemeEngine
   class ProductDrop < Liquid::Drop
     # @param selected_variant_id [Integer, nil] `?variant=` URL 參數（缺口分析 A2）；
     #   nil＝無選中（selected_variant 回 nil、selected_or_first… 走 first available）。
+    # @param publication [Publication, nil] 渲染管道（A′5 collections 過濾與
+    #   published_at 的上下文）；nil＝無管道語境（collections 回空、published_at nil）。
     attr_reader :selected_variant_id
 
-    def initialize(product, url_prefix: "", selected_variant_id: nil)
+    def initialize(product, url_prefix: "", selected_variant_id: nil, publication: nil)
       @selected_variant_id = selected_variant_id
+      @publication = publication
       super()
       @p = product
       @url_prefix = url_prefix
@@ -326,9 +467,43 @@ module ThemeEngine
     def requires_selling_plan = false
     def selling_plan_groups = []
     def quantity_price_breaks_configured? = false
-    def collections = []
-    def metafields = {}
-    def category = nil
+
+    # A′5：物化成員（collection_memberships）∩ 渲染管道已發布系列。
+    # 真引擎格（83 §12.4）：🔴 未發布到本管道的系列**不出現**（S9-Col-Hidden
+    # 排除格，成員已存仍被濾掉）。無管道語境 ⇒ 空陣列（安全側）。
+    def collections
+      @collections ||= if @publication.nil?
+        []
+      else
+        ids = CollectionMembership.where(shop_id: @p.shop_id, product_id: @p.id)
+                                  .select(:collection_id)
+        rows = Collection.published_on(@publication).where(id: ids).order(:id).to_a
+        published = collection_published_at_map(rows)
+        rows.map do |c|
+          CollectionDrop.new(c, url_prefix: @url_prefix, published_at: published[c.id])
+        end
+      end
+    end
+
+    # A′6：metafields 根（namespace → key 惰性鏈；契約見 MetafieldsRootDrop）。
+    def metafields
+      @metafields ||= MetafieldsRootDrop.new(@p)
+    end
+
+    # A′7：taxonomy 分類（category_gid 既有欄；無值 ⇒ nil）。
+    def category
+      @p.category_gid.present? ? CategoryDrop.new(@p.category_gid) : nil
+    end
+
+    # 本商品在渲染管道上的發布時點（json 面用；無管道語境 ⇒ nil）。
+    def published_at
+      return nil if @publication.nil?
+
+      @published_at ||= ResourcePublication.where(
+        shop_id: @p.shop_id, publication_id: @publication.id,
+        publishable_type: "Product", publishable_id: @p.id
+      ).pick(:published_at)
+    end
 
     def options_with_values
       @options_with_values ||= @p.product_options.sort_by(&:position).map do |o|
@@ -348,6 +523,40 @@ module ThemeEngine
     def options = options_with_values.map { |o| o["name"] }
     def selected_or_first_available_selling_plan_allocation = nil
 
+    # 真引擎 product json（83 §12.2 鍵序）：有 `content` 無 `url`；無 media 鍵；
+    # featured_image 無圖 ⇒ null（不代入佔位圖）。
+    def as_storefront_json
+      image_jsons = images.map { |i| JsonSerializer.coerce(i.as_storefront_json) }
+      {
+        "id" => id, "title" => title, "handle" => handle, "description" => description,
+        "published_at" => JsonSerializer.coerce(published_at),
+        "created_at" => JsonSerializer.coerce(@p.created_at),
+        "vendor" => vendor, "type" => type, "tags" => tags,
+        "price" => price, "price_min" => price_min, "price_max" => price_max,
+        "available" => available, "price_varies" => price_varies,
+        "compare_at_price" => compare_at_price,
+        "compare_at_price_min" => compare_at_price_min,
+        "compare_at_price_max" => compare_at_price_max,
+        "compare_at_price_varies" => compare_at_price_varies,
+        "variants" => variants.map { |v| JsonSerializer.coerce(v.as_storefront_json) },
+        "images" => image_jsons, "featured_image" => image_jsons.first,
+        "options" => options_with_values.map { |o| JsonSerializer.coerce(o.as_storefront_json) },
+        "requires_selling_plan" => requires_selling_plan,
+        "selling_plan_groups" => selling_plan_groups,
+        "content" => content
+      }
+    end
+
+    # @api private（collections json 的 published_at 一次撈齊）
+    def collection_published_at_map(rows)
+      return {} if rows.empty?
+
+      ResourcePublication.where(
+        shop_id: @p.shop_id, publication_id: @publication.id,
+        publishable_type: "Collection", publishable_id: rows.map(&:id)
+      ).pluck(:publishable_id, :published_at).to_h
+    end
+
     # 🔴 specs/93 §D 紅線：Liquid `product` **沒有 `status` 屬性**（官方 44 屬性清單）。
     #   本 drop 刻意不定義它 ⇒ 落入 miss 遙測回 nil；後台語義不外洩到前台。
     def liquid_method_missing(name)
@@ -357,10 +566,11 @@ module ThemeEngine
   end
 
   class CollectionDrop < Liquid::Drop
-    def initialize(collection, url_prefix: "")
+    def initialize(collection, url_prefix: "", published_at: nil)
       super()
       @c = collection
       @url_prefix = url_prefix
+      @published_at = published_at
     end
 
     def id = @c.id
@@ -368,6 +578,21 @@ module ThemeEngine
     def handle = @c.handle
     def description = @c.description_html
     def url = "#{@url_prefix}/collections/#{@c.handle}"
+    def published_at = @published_at
+
+    # 真引擎 collection json＝9 鍵（83 §12.4 逐字鍵序）。
+    # 🔴 published_scope 恆 "global"、template_suffix nil＝我方常數
+    #   （無對應欄；live 同值，語義對表隨後續包）；body_html 空 ⇒ null。
+    def as_storefront_json
+      {
+        "id" => id, "handle" => handle,
+        "updated_at" => JsonSerializer.coerce(@c.updated_at),
+        "published_at" => JsonSerializer.coerce(@published_at),
+        "sort_order" => @c.sort_order, "template_suffix" => nil,
+        "published_scope" => "global", "title" => title,
+        "body_html" => @c.description_html.presence
+      }
+    end
 
     def liquid_method_missing(name)
       ThemeEngine.count_miss("CollectionDrop.#{name}")
