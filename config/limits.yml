@@ -4797,3 +4797,7 @@ theme_engine:
   max_templates_per_theme: 1000
   # 選單巢狀深度（78 §4：本尊 ≤3 層）。
   max_menu_depth: 3
+  # Section Rendering API 的 ?sections= 單請求 id 上限。官方逐字「render up to
+  # five sections」（shopify.dev/docs/api/ajax/section-rendering，2026-08-30）；
+  # 超限行為＝HTTP 400 空 body（83 §12.3 真店實測 2026-08-31）。
+  section_rendering_max_ids: 5

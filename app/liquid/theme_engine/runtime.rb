@@ -295,6 +295,11 @@ module ThemeEngine
       tpl.errors.each { |e| @errors << "#{label}: #{e.class}: #{e.message[0, 120]}" }
     end
 
+    # 包 33：layout 原文（fragment 端點解析 {% sections %} 群組名單用）。
+    def raw_layout_source
+      read("layout/theme.liquid")
+    end
+
     def comment(msg) = "<!-- theme-engine: #{ERB::Util.html_escape(msg)} -->"
 
     def compat_report

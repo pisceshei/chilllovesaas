@@ -11,7 +11,8 @@
 #   搜尋／購物車／帳戶等路由隨對應功能線（W6 後續包）。
 module ThemeEngine
   class PageRenderer
-    Result = Struct.new(:status, :html, :page_type, keyword_init: true)
+    # content_type：:html（整頁／單 section）或 :json（?sections= map）。
+    Result = Struct.new(:status, :html, :page_type, :content_type, keyword_init: true)
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil)
       @theme, @shop, @publication = theme, shop, publication
@@ -27,7 +28,17 @@ module ThemeEngine
     #   menus／lookup——都要 tenant；巢狀 with_tenant 冪等，controller 已設也無妨）。
     def render(path, params: {})
       @params = params || {}
-      ActsAsTenant.with_tenant(@shop) { render_inside_tenant(path) }
+      ActsAsTenant.with_tenant(@shop) do
+        # Section Rendering API（包 33；契約＝83 §3.4＋§12.3 真店逐格）：
+        # 兩參數並存時 `sections` 壓過 `section_id`（實測：回 JSON）。
+        if @params["sections"].present?
+          render_sections_json(path)
+        elsif @params["section_id"].present?
+          render_single_section(path)
+        else
+          render_inside_tenant(path)
+        end
+      end
     end
 
     private
@@ -85,6 +96,75 @@ module ThemeEngine
     end
 
     def not_found = [ "404", {}, 404 ]
+
+    # ── Section Rendering API（包 33） ─────────────────────────────────────
+    # 真店契約（83 §12.3，2026-08-31 乾淨態）：
+    #   單 id：200 text/html 帶 wrapper；未知 id ⇒ 404 **空 body**（不是主題 404 頁）。
+    #   多 id：200 application/json map；未知鍵值＝null；>5 ⇒ 400 空 body。
+    #   context 繼承請求頁（含 ?variant= 選中態——Ella 變體切換就靠這疊加）。
+    # 🔴 id 語義差異（登記）：本尊＝`template--N__key`／`sections--N__key` 動態
+    #   實例 id；我方 v1 無實例編號 ⇒ id＝template JSON 的 section 鍵或群組 JSON
+    #   的 section 鍵（DB 實例化隨編輯器寫入面）。
+    def render_single_section(path)
+      page_type, assigns, = resolve(path)
+      runtime = build_runtime(page_type, assigns)
+      sid = @params["section_id"].to_s
+      data = section_data_for(runtime, page_type, sid)
+      return Result.new(status: 404, html: "", page_type: page_type) if data.nil?
+
+      Result.new(status: 200, html: runtime.render_section(sid, data), page_type: page_type)
+    end
+
+    def render_sections_json(path)
+      ids = @params["sections"].to_s.split(",").map(&:strip).reject(&:empty?)
+      max = Limits.fetch(:theme_engine, :section_rendering_max_ids)
+      return Result.new(status: 400, html: "", page_type: nil) if ids.size > max
+
+      page_type, assigns, = resolve(path)
+      runtime = build_runtime(page_type, assigns)
+      map = ids.to_h do |sid|
+        data = section_data_for(runtime, page_type, sid)
+        [ sid, data && runtime.render_section(sid, data) ]
+      end
+      Result.new(status: 200, html: JSON.generate(map), page_type: page_type, content_type: :json)
+    end
+
+    def build_runtime(page_type, assigns)
+      runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
+                            design_mode: @design_mode, page_type: page_type,
+                            path: nil, host: @host, source: @source)
+      assigns.each { |k, v| runtime.assign(k, v) }
+      if (product = assigns["product"])
+        runtime.closest = ClosestDrop.new(product: product)
+      end
+      runtime
+    end
+
+    # id 解析：①請求頁 template 的 sections ②layout 引用的各群組 JSON 的 sections。
+    # 找不到 ⇒ nil（呼叫端依端點轉 404／null）。
+    def section_data_for(runtime, page_type, sid)
+      tj = runtime.template_json(page_type)
+      data = tj && (tj["sections"] || {})[sid]
+      return data if data
+
+      layout_group_names(runtime).each do |name|
+        g = runtime.load_json("sections/#{name}.json") or next
+        found = (g["sections"] || {})[sid]
+        return found if found
+      end
+      nil
+    end
+
+    # layout theme.liquid 裡 {% sections 'name' %} 的名單（引擎渲染群組的同一來源）。
+    def layout_group_names(runtime)
+      layout = runtime.compiled("layout/theme.liquid")
+      return [] if layout.nil?
+
+      src = runtime.raw_layout_source
+      return [] if src.nil?
+
+      src.scan(/\{%-?\s*sections\s+'([^']+)'/).flatten.uniq
+    end
 
     # A2：`?variant=` → Integer；非數字／缺席 ⇒ nil（壞值忽略＝ours，
     # 本尊壞值行為未取證，缺口分析 §D 登記）。
