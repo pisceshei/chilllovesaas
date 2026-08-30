@@ -20,6 +20,12 @@ gem "rack-attack"
 gem "strong_migrations"
 gem "vite_rails"
 
+# 包 30（D77）：Liquid 相容前台引擎（MIT；鐵律 9 合法清單）。
+# 🔴 strscan 下限是硬需求：liquid 5.6+ 用 `peek_byte`，Ruby 內建 strscan 3.0.x 會炸
+#   （poc/liquid-engine/README 坑 #4）；鎖 >= 3.1.1 讓它顯式進 lockfile。
+gem "liquid", "~> 5.13"
+gem "strscan", ">= 3.1.1"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

@@ -570,5 +570,18 @@
   "products.bulk.archiveConfirm": "選択した {count} 件の商品をアーカイブしますか？すべての販売チャネルから削除されます。いつでも解除できます。",
   "products.bulk.done": "{count} 件を更新しました",
   "products.bulk.partial": "{ok}/{total} 件を更新；最初のエラー：{error}",
-  "product.schedule.activeNotice": "スケジュールを適用するには、商品ステータスがアクティブである必要があります。"
+  "product.schedule.activeNotice": "スケジュールを適用するには、商品ステータスがアクティブである必要があります。",
+  "store.themes.publishedSection": "公開中のテーマ",
+  "store.themes.draftSection": "下書きテーマ",
+  "store.themes.publishedEmpty": "公開中のテーマはまだありません。",
+  "store.themes.draftEmpty": "下書きテーマはまだありません。",
+  "store.themes.rolePublished": "公開中",
+  "store.themes.roleDraft": "下書き",
+  "store.themes.preview": "プレビュー",
+  "store.themes.publish": "公開する",
+  "store.themes.published": "「{name}」を公開しました",
+  "store.themes.loadError": "テーマの読み込みに失敗しました。",
+  "store.themes.loadErrorTitle": "テーマを読み込めません",
+  "store.themes.emptyTitle": "テーマがありません",
+  "store.themes.emptyBody": "テーマのインポートは今後のマイルストーンで提供されます。"
 }

@@ -2,6 +2,9 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "en":
   errors:
+    theme:
+      not_found: "Theme not found."
+      source_missing: "The theme has no usable file source and cannot be published."
     publication:
       catalog_taken: "That catalog already has a publication."
       all_products_unsupported: "Prefilling a publication with all products isn't supported yet."

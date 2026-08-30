@@ -570,5 +570,18 @@
   "products.bulk.archiveConfirm": "Archiver les {count} produits sélectionnés ? Ils seront retirés de tous les canaux de vente ; vous pourrez annuler à tout moment.",
   "products.bulk.done": "{count} produits mis à jour",
   "products.bulk.partial": "{ok}/{total} mis à jour ; première erreur : {error}",
-  "product.schedule.activeNotice": "Le statut du produit doit être Actif pour que la planification s'applique."
+  "product.schedule.activeNotice": "Le statut du produit doit être Actif pour que la planification s'applique.",
+  "store.themes.publishedSection": "Thème publié",
+  "store.themes.draftSection": "Thèmes brouillons",
+  "store.themes.publishedEmpty": "Aucun thème publié pour l'instant.",
+  "store.themes.draftEmpty": "Aucun thème brouillon pour l'instant.",
+  "store.themes.rolePublished": "Publié",
+  "store.themes.roleDraft": "Brouillon",
+  "store.themes.preview": "Aperçu",
+  "store.themes.publish": "Publier",
+  "store.themes.published": "« {name} » publié",
+  "store.themes.loadError": "Échec du chargement des thèmes.",
+  "store.themes.loadErrorTitle": "Impossible de charger les thèmes",
+  "store.themes.emptyTitle": "Aucun thème",
+  "store.themes.emptyBody": "L'import de thèmes arrivera dans un jalon ultérieur."
 }

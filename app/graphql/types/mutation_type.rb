@@ -66,6 +66,10 @@ module Types
     #   `resource_publications` 的非建立寫入路徑（在它之前發布列只在建立時被寫入）。
     field :publication_create, mutation: Mutations::PublicationCreate,
       description: "建立一個 publication（銷售管道的發布容器）。"
+    # 包 30（D77）：主題發布（本尊 themePublish 對位）。
+    field :theme_publish, mutation: Mutations::ThemePublish,
+      description: "發布主題（現任已發布者自動降回草稿）。"
+
     field :publication_update, mutation: Mutations::PublicationUpdate,
       description: "更新 publication：autoPublish 與批次加／減 publishable（🔴 累加語義，非宣告式全量）。"
     field :publication_delete, mutation: Mutations::PublicationDelete,

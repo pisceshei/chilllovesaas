@@ -528,6 +528,18 @@ module Catalog
             raise TranslationRejected, translation_errors if translation_errors.any?
 
             enqueue_event!(shop, product, Events::Topics::PRODUCTS_UPDATE)
+            # 包 30（D77）：內部 topic 啟用（topics.rb ③的留位結清）。對外/對內分軌：
+            # products/update 走可訂閱面（ResyncConsumer 訂的是它）；product.updated
+            # 走內部消費（CacheStampBumper——系列頁快取失效）。同交易（鐵律 5）。
+            # 🔴 走 `enqueue_internal_event!` 不走 `enqueue_event!`：後者在 status
+            #   變更時會**再跑一次** StatusTransition ⇒ 重複的 publication.changed
+            #   ＋重複副作用（首版實踩：producers_spec 的 .sole 當場抓到）。
+            enqueue_internal_event!(shop, product, Events::Topics::PRODUCT_UPDATED)
+            if input.key?(:variants)
+              # 變體資料可能變了（價格/選項）⇒ 內部變體事件（粗粒度：不逐變體 diff，
+              # bump 是冪等單調操作，過度失效無害；細粒度隨編輯器包）。
+              enqueue_internal_event!(shop, product, Events::Topics::PRODUCT_VARIANT_UPDATED)
+            end
           end
         end
         Result.new(product: product.reload, user_errors: [])
@@ -678,6 +690,20 @@ module Catalog
           ProductTag.create!(shop_id: shop.id, product_id: product.id,
                              tag_key: key, tag_display: wanted.fetch(key))
         end
+      end
+
+      # 內部 topic 的精簡發射（包 30／D77）：只帶識別欄，**不**計算 status_transition
+      # ——那是對外事件與 PR-C 消費鏈的載荷，內部 cache 失效用不到，重算它有副作用。
+      def enqueue_internal_event!(shop, product, topic)
+        EventOutbox.create!(
+          event_id: SecureRandom.uuid,
+          topic: topic,
+          aggregate_type: "Product",
+          aggregate_id: product.id,
+          payload: { product_id: product.id, resource_version: product.lock_version },
+          available_at: Time.current,
+          status: "pending"
+        )
       end
 
       def enqueue_event!(shop, product, topic)

@@ -9,6 +9,7 @@ import { CollectionDetailPage } from "./pages/CollectionDetailPage";
 import { InventoryHistoryPage } from "./pages/InventoryHistoryPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { FilesPage } from "./pages/FilesPage";
+import { StorePage } from "./pages/StorePage";
 import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { VariantDetailPage } from "./pages/VariantDetailPage";
@@ -56,6 +57,7 @@ const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/collections", () => <CollectionsPage /> ],
   [ "/admin/inventory", () => <InventoryPage /> ],
   [ "/admin/content/files", () => <FilesPage /> ],
+  [ "/admin/store", () => <StorePage /> ],
 ]);
 
 /**

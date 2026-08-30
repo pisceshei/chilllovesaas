@@ -24,6 +24,9 @@ module Events
       # S8（D74）：同 topic 第二個消費者——到點時把排程轉成對外 ADD 事件
       # （官方逐字 "At the scheduled datetime, Shopify sends a product_listing/add
       # event"）。逐消費者 delivery 隔離（本表檔頭③）⇒ 兩者互不連累。
+      # 包 30（D77）：商品資料變動 → 所在系列頁 cache stamp（檔頭②預告的那一格）。
+      Events::Topics::PRODUCT_UPDATED => [ Catalog::CacheStampBumper ],
+      Events::Topics::PRODUCT_VARIANT_UPDATED => [ Catalog::CacheStampBumper ],
       Events::Topics::PRODUCT_PUBLICATION_CHANGED => [
         Publications::ScheduledPublicationConsumer,
         Publications::ListingEventTranslator

@@ -4784,3 +4784,16 @@ events:
   #    本包零真實消費者、單批 ≤100 筆秒級完成；300s 給未來慢消費者 60 倍餘裕，
   #    又讓 worker 死亡後的孤兒鎖在一兩輪輪詢內被回收。
   outbox_lock_timeout_s: 300
+
+# ── 包 30（D77）：Liquid 渲染 resource limits（25 §6 規則 3 的防 DoS 值；ours）──
+theme_engine:
+  # 單頁渲染輸出上限（bytes）。超過 ⇒ Liquid MemoryError（lax 下記錯不炸頁）。
+  liquid_render_length_limit: 2097152
+  # 渲染節點計分上限（防惡意迴圈模板）。
+  liquid_render_score_limit: 200000
+  # assign 計分上限。
+  liquid_assign_score_limit: 100000
+  # 範本總數上限（78 §4 官方逐字「範本總數上限 1,000」，help 取證 2026-08-25）。
+  max_templates_per_theme: 1000
+  # 選單巢狀深度（78 §4：本尊 ≤3 層）。
+  max_menu_depth: 3

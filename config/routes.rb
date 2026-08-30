@@ -20,6 +20,12 @@ Rails.application.routes.draw do
   post "admin/uploads/staged" => "admin/uploads#create_staged", as: :admin_staged_upload
   get "admin/files/:id/blob" => "admin/uploads#show_file", as: :admin_file_blob
 
+  # 包 30（D77）：登入後主題預覽（noindex）。assets 路由必須排在頁面 glob 之前。
+  get "admin/store/preview/:theme_id/assets/*file" => "admin/storefront_preview#asset",
+      format: false, as: :admin_theme_preview_asset
+  get "admin/store/preview/:theme_id(/*path)" => "admin/storefront_preview#show",
+      format: false, as: :admin_theme_preview
+
   get "admin" => "admin/spa#show", as: :admin_root
   # API namespace 不可 fall through 到 SPA；錯誤 method/version 必須維持
   # no-route 404，避免 client 把 HTML shell 誤判成 API success。

@@ -3630,3 +3630,20 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   隨 M5 成員模型（88 §3.2）。
 - ⚪ **price list 無 producer**：catalog 管理 UI（Markets 區）與 priceListCreate
   mutation 隨 M5；本包只交付資料層與不變量。
+
+### 3.48 包 30（D77）的範圍外觀察（2026-08-30）
+
+- ⚪ **AST cache 偏離 25 §6**：Solid Cache → process 級 mutex hash
+  （Liquid::Template AST 非可靠序列化物）。多 worker 各自暖身；頁級快取（包 33）
+  落地後這層只影響冷啟。
+- ⚪ **`{% render block %}` 動態名未實作**：本尊平台擴充、gem SyntaxError；
+  現行為＝該 section 記錯跳過。theme blocks 完整支援（content_for 路徑已有）
+  隨編輯器包補。
+- ⚪ **money 符號表 v1 只承諾 HKD**：完整 locale 格式鏈＝包 34（鐵律 10）。
+- ⚪ **drops 白名單缺口靠 miss 遙測**：未實作屬性回 nil＋計數
+  （`ThemeEngine.miss_report`）；上線前的 compat 報告面隨包 33。
+- ⚪ **Zeitwerk 例外**：drops.rb 多類單檔 ignore＋require ⇒ dev 改檔需重啟。
+- ⚪ **預覽語義＝ours**：本尊預覽站不執行 publication 閘（82 §20.4）、我方預覽
+  走 Lookup（買家將見）。若日後要「商家視角」預覽，另開 design_mode 分支，
+  不得直接放寬 Lookup。
+- ⚪ **paginate v1 單頁 drop**：真分頁隨包 33 keyset 接線。
