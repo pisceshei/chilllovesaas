@@ -17,6 +17,11 @@
 
 ## 1. 世代判定：三代混合（我們的引擎必須同時吃）
 
+> 2026-08-30 定量補充（83 §9）：fixture 有 `blocks/` 夾（`_*.liquid` theme
+> blocks）＋四個 section group JSON（type 值域 header/footer/aside/custom.popup）
+> ——第三代（2026 blocks 體系）成分實錘；live 店群組實例尾碼與 fixture 逐字元
+> 一致，golden parity 可直接以 fixture 為基準。
+
 | 證據 | 數字 | 含義 |
 |---|---|---|
 | `/blocks` 檔案 | 245 | **theme-blocks 世代**（Horizon 同代）為主體 |
@@ -97,6 +102,11 @@ main-product
 - **端點**（JS 內）：`/cart/add|update|change` ＋ `cart.js`、`section_id=`×8（SRA）、`?view=`×3、predictive search、`variant=`×6、**`/cart/shipping_rates`×3**（運費試算——要實作）。
 
 ## 6. 編輯器運行時契約（研究代理＋Ella 原始碼雙重驗證）
+
+> 2026-08-30 live 補充（83 §8.3）：真店 preview session 注入
+> `theme-hot-reload.js`（14.8KB），靜態特徵 postMessage＋message listener＋
+> `section_id`＋`shopify-section`——editor 以 section 粒度經 postMessage 熱替換
+> 的機制成立；訊息 schema 全文仍未取得（editor 互動被工具牆擋，83 §0）。
 
 這是「編輯器與 Shopify 完全一樣」的硬規格——主題 JS 監聽這些介面，錯一個 Ella 的互動就壞。
 
