@@ -38,7 +38,13 @@ module Admin
       ).render("/#{params[:path]}", params: request.query_parameters)
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
-      render html: result.html.html_safe, status: result.status, layout: false
+      # 包 33：?sections= 回 JSON（83 §12.3 真店＝application/json；單 section
+      # 與整頁維持 text/html）。
+      if result.content_type == :json
+        render json: result.html, status: result.status
+      else
+        render html: result.html.html_safe, status: result.status, layout: false
+      end
     rescue ThemeEngine::MissingSourceError => e
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
       render plain: e.message, status: :unprocessable_entity

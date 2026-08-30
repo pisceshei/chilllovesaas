@@ -395,6 +395,30 @@ display prices」含 Compare-at price＋**Unit price** 真控件。
 | compare_at **nil 混值**（A=15000、B=nil；S9-CAP-Mix-Test） | 單數／min／max 全＝**15000**（nil 排除、不當 0 參與）、varies=**false**（只比非 nil 集合） | 同款 ✓（filter_map 實作四項零分歧） |
 | compare_at **單數形**（全 nil） | **空（nil）**——與 min/max 的 0 **分裂** | 同款 ✓ |
 
+### §12.3 Section Rendering API 乾淨態全契約（2026-08-31 補；含一個新量測坑）
+
+🔴 **量測坑（先讀）**：`?preview_theme_id=` 是 **sticky cookie**——帶過一次之後，
+同 session **不帶參數的請求也繼續渲染該預覽主題**。本輪先在探針主題上量、
+再量 Section Rendering 時全表 404/null，全是 sticky 假象（探針主題沒有那些
+section id）。復位法＝帶一次正式主題 id（`?preview_theme_id={live id}`）。
+與 §7.3 同族：**任何不帶參數的量測前，先驗證當前渲染的是哪個主題**。
+
+乾淨態逐格（QB 商品頁，2026-08-31）：
+
+| 格 | 結果 |
+|---|---|
+| `?section_id=template--…__main` | 200 `text/html` 64590B 帶 wrapper |
+| `?section_id=sections--…__footer`（群組實例） | **200** 39495B——群組 id 可定址（上午的 404 是 sticky 假象） |
+| `?sections=main,footer,不存在` | 200 `application/json`；兩有效鍵＝wrapper 字串、未知鍵＝null |
+| `?sections=` 六個 id | **400、空 body、text/html** |
+| `?section_id=不存在` | **404、空 body**（不是主題 404 頁） |
+| 🔴 兩參數並存 | **`sections` 壓過 `section_id`**（回 JSON） |
+| `/search?section_id={群組實例}&q=…` | 200 23790B（Ella 自用形複驗） |
+
+我方落地（同日包 33 PR）：id 語義差異已登記——本尊用 `template--N__key`／
+`sections--N__key` 實例 id，我方 v1 用 template／群組 JSON 的 section 鍵
+（DB 實例化隨編輯器寫入面）。
+
 ## §11 對四件套的回寫索引
 
 - **25 §3**：window.Shopify stub 集加 Ella legacy 八件（→ §5）；坑13 更正註。

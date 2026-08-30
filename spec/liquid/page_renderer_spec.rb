@@ -79,6 +79,72 @@ RSpec.describe ThemeEngine::PageRenderer do
     expect(html2).to include(%(<span id="pselected">#{first.id}</span>))
   end
 
+  it "E11 🔴 ?section_id=<template 鍵> ⇒ 200、裸 wrapper 片段（不含 layout）；83 §12.3 單 id 格" do
+    sellable(handle: "engine-frag")
+    result = renderer.render("/products/engine-frag", params: { "section_id" => "main" })
+    expect(result.status).to eq(200)
+    expect(result.html).to start_with(%(<div id="shopify-section-main"))
+    expect(result.html).to include("引擎測試商品")
+    expect(result.html).not_to include("<!doctype html>")
+    expect(result.content_type).not_to eq(:json)
+  end
+
+  it "E12 🔴 ?section_id=未知 ⇒ 404＋空 body（真店：不是主題 404 頁——fallback 到 not_found template ⇒ 轉紅）" do
+    sellable(handle: "engine-frag-404")
+    result = renderer.render("/products/engine-frag-404", params: { "section_id" => "no-such" })
+    expect(result.status).to eq(404)
+    expect(result.html).to eq("")
+  end
+
+  it "E13 ?sections=main,no-such ⇒ 200 JSON map：有效鍵＝wrapper 字串、未知鍵＝null" do
+    sellable(handle: "engine-frag-multi")
+    result = renderer.render("/products/engine-frag-multi", params: { "sections" => "main,no-such" })
+    expect(result.status).to eq(200)
+    expect(result.content_type).to eq(:json)
+    map = JSON.parse(result.html)
+    expect(map.keys).to eq(%w[main no-such])
+    expect(map["main"]).to start_with(%(<div id="shopify-section-main"))
+    expect(map["no-such"]).to be_nil
+  end
+
+  it "E14 🔴 ?sections= 超過 limits 上限（5）⇒ 400 空 body（官方 up to five＋真店超限實測）" do
+    result = renderer.render("/", params: { "sections" => "a,b,c,d,e,f" })
+    expect(result.status).to eq(400)
+    expect(result.html).to eq("")
+  end
+
+  it "E15 兩參數並存 ⇒ sections 壓過 section_id（真店：回 JSON）" do
+    sellable(handle: "engine-frag-both")
+    result = renderer.render("/products/engine-frag-both",
+                             params: { "section_id" => "main", "sections" => "main" })
+    expect(result.content_type).to eq(:json)
+    expect(JSON.parse(result.html)["main"]).to be_a(String)
+  end
+
+  it "E16 🔴 fragment 繼承請求頁 context：?variant= 選中態疊加（Ella 變體切換的伺服端半邊）" do
+    product = sellable(handle: "engine-frag-var")
+    second = ActsAsTenant.with_tenant(shop) do
+      option = create(:product_option, product:, shop:, name: "尺寸", position: 1)
+      ov1 = create(:option_value, product_option: option, shop:, value: "S", position: 1)
+      ov2 = create(:option_value, product_option: option, shop:, value: "M", position: 2)
+      first = product.product_variants.sole
+      first.product_variant_option_values.build(shop:, product:, product_option: option, option_value: ov1)
+      first.save!
+      create(:product_variant, product:, shop:, title: "M", position: 2, option_values: [ ov2 ])
+    end
+    result = renderer.render("/products/engine-frag-var",
+                             params: { "section_id" => "main", "variant" => second.id.to_s })
+    expect(result.html).to include(%(<span id="pselected">#{second.id}</span>))
+  end
+
+  it "E17 群組 JSON 的 section 鍵可經兩端點定址（layout {% sections %} 名單解析）" do
+    single = renderer.render("/", params: { "section_id" => "grouped_hero_Ab12Cd" })
+    expect(single.status).to eq(200)
+    expect(single.html).to include("群組英雄")
+    multi = renderer.render("/", params: { "sections" => "grouped_hero_Ab12Cd" })
+    expect(JSON.parse(multi.html)["grouped_hero_Ab12Cd"]).to include("群組英雄")
+  end
+
   it "E4 查無 handle ⇒ 404 template；未知路由同" do
     expect(renderer.render("/products/no-such").status).to eq(404)
     expect(renderer.render("/no-such-route").status).to eq(404)
