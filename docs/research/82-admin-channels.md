@@ -2244,3 +2244,49 @@ SwitchRow／GroupToggle／ChannelScheduleButton——單一發布語義來源）
 - 🔴 落地時抓到的真缺陷：popover 點擊會**冒泡到列的 onRowActivate**（＝進商品詳情頁）；
   本尊點格只開 popover。修法＝格鈕與列鈕都 `stopPropagation`（IndexTable 的 select 格
   本來就是這個做法，同構）。
+
+## §19 商品列表的批量狀態動作（S7 實測，2026-08-28）
+
+> 量測環境：同 §18（本機 Chrome、測試店）。全程唯讀＋勾選（勾選不改資料，
+> 量畢已取消勾選複驗）；⋯ 選單以 Escape 關閉、未點任何動作項。取證 2026-08-28。
+
+### §19.1 選取列形態
+
+勾選一列後表頭列被**選取列**取代：
+`☑ 1 selected ˅`｜`Bulk edit`｜`Set as draft`｜`⋯`；右端另有 `Show all selected` 開關。
+
+- 🔴 **頂層動作鈕依選集狀態動態出現**：本次選集（1 筆 Active）頂層是 `Set as draft`。
+  其他組合（全 Draft／混合）的頂層形態**未取得**（造混合選集要多按幾列——時間內只驗了單一態；
+  82 §9.2 舊觀察記過 `Set as active` 存在 ⇒ 兩顆都真實存在，切換規則未完全取得）。
+- `Bulk edit` 導向**獨立批量編輯器頁**：真實 URL
+  `/bulk/product?resource_name=Product&edit=status%2C…&ids=<CSV>`（誤點實測；另一表面，未展開）。
+
+### §19.2 ⋯ 溢出選單完整值域（截圖逐項）
+
+`Archive products`｜`Unlist products`｜`Delete products`（紅）
+──`Include in sales channels`｜`Exclude from sales channels`
+──`Include in catalogs`｜`Exclude from catalogs`
+──`Add tags`｜`Remove tags`
+──`Add to collection(s)`｜`Remove from collection(s)`
+──`Apps`：`Create email campaign`
+
+⇒ 與 §9.2 舊表互證並擴充：狀態機四動作的批量面＝頂層動態鈕（active/draft 對）＋
+溢出的 `Unlist products`／`Archive products`。
+
+### §19.3 未取得（V）
+
+- 頂層鈕在「全 Draft」「混合」選集下的精確形態與規則。
+- 各動作執行後的網路 payload（未點；批量寫入未授權範圍內的必要性不足——
+  單筆同語義已由 productSet 契約覆蓋）。
+- 批量封存有無確認框（未點）。
+
+### §19.4 我方落地（S7）與登記
+
+`ProductsPage` 批量列：`已選 N 項`＋動態頂層鈕＋⋯（取消刊登／封存商品）。
+- 🔴 **頂層動態規則是 ours**（本尊只取得「全 Active→Set as draft」一格）：
+  全 ACTIVE→只出「設為草稿」；全非 ACTIVE→只出「設為啟用」；混合→兩顆都出。
+- 執行＝逐筆 `productSet {id, status}`（缺席＝保持現值是 save_product.rb 既有契約；
+  status 變更走 StatusTransition ⇒ 自動投 PR-C 依賴的內部事件）。
+- **批量封存加確認框是 ours**（本尊未取得；與詳情頁封存確認同紀律）。
+- 溢出其餘九項（Delete／管道／型錄／標籤／系列／Apps）＝各自功能線，未做。
+- `Bulk edit` 獨立編輯器頁＝另一表面，未做。

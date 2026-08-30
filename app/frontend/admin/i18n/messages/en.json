@@ -560,5 +560,15 @@
   "collection.channels.title": "Sales channels",
   "products.col.channels": "Channels",
   "products.channels.viewAria": "View sales channel details",
-  "products.channels.popover": "Published sales channels"
+  "products.channels.popover": "Published sales channels",
+  "products.bulk.toolbar": "Bulk actions",
+  "products.bulk.count": "{count} selected",
+  "products.bulk.setActive": "Set as active",
+  "products.bulk.setDraft": "Set as draft",
+  "products.bulk.unlist": "Unlist products",
+  "products.bulk.archive": "Archive products",
+  "products.bulk.archiveConfirm": "Archive the {count} selected products? They will be removed from all sales channels; you can unarchive at any time.",
+  "products.bulk.done": "Updated {count} products",
+  "products.bulk.partial": "Updated {ok}/{total}; first error: {error}",
+  "product.schedule.activeNotice": "Product status must be Active for the schedule to take effect."
 }

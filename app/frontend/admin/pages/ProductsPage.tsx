@@ -1,4 +1,4 @@
-import { ChevronDown, PackagePlus, Plus, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, MoreHorizontal, PackagePlus, Plus, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
@@ -16,6 +16,8 @@ import { useT, useUiLocale } from "../i18n/I18nContext";
 import { LoadMore } from "../components/LoadMore";
 import { useCursorPagination } from "../lib/useCursorPagination";
 import { Popover } from "../components/Popover";
+import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useToast } from "../lib/ToastContext";
 
 const PRODUCTS_QUERY = `
   query ProductsIndex($first: Int!, $after: String, $query: String) {
@@ -63,6 +65,21 @@ export interface ProductNode {
  * （Online Store → /themes）。我方對應面：online_store 與 pos 有路由；
  * 其餘 handle（shop 等）**尚無頁面** ⇒ 列出但不可點（登記 82 §18.5）。
  */
+/**
+ * S7（D73）：批量狀態變更。逐筆送 productSet {id, status}——
+ * 🔴 缺席＝保持現值是 save_product.rb 的既有契約（該檔 132 行起的紅字），
+ * 只帶 status 不會清掉其他欄。status 變更在服務端走 StatusTransition
+ * ⇒ 自動投 product.publication.changed 內部事件（PR-C 的 catch-up 靠它）。
+ */
+const BULK_STATUS_MUTATION = `
+  mutation productBulkStatus($input: ProductSetInput!) {
+    productSet(input: $input) {
+      product { id status }
+      userErrors { field message code }
+    }
+  }
+`;
+
 const CHANNEL_ROUTES: Record<string, string> = {
   online_store: "/admin/store",
   pos: "/admin/channels/pos",
@@ -254,6 +271,55 @@ export function ProductsPage() {
   } = useCursorPagination(fetchPage, [ debouncedQuery ], t("products.loadError"));
   const hasActiveFilter = composedQuery.length > 0;
 
+  // ── S7（D73）：批量狀態動作 ────────────────────────────────────────────
+  const { showToast } = useToast();
+  const [selectedRows, setSelectedRows] = useState<ProductNode[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const [confirmBulkArchive, setConfirmBulkArchive] = useState(false);
+  const [selectionResetSignal, setSelectionResetSignal] = useState(0);
+  const bulkMenuAnchorRef = useRef<HTMLButtonElement | null>(null);
+
+  /**
+   * 逐筆 productSet {id, status}（缺席＝保持現值，見 BULK_STATUS_MUTATION 檔頭）。
+   * 🔴 順序送不並發：後端逐筆有鎖與事件投遞，50 筆內的列表選集夠用；
+   *   任一筆 userErrors 即記錄，全部跑完一次回報（不因單筆失敗中斷其餘）。
+   */
+  const applyBulkStatus = useCallback(async (status: string) => {
+    if (bulkBusy || selectedRows.length === 0) return;
+    setBulkBusy(true);
+    setBulkMenuOpen(false);
+    let ok = 0;
+    let firstError: string | null = null;
+    for (const row of selectedRows) {
+      try {
+        const data = await requestAdminGraphQL<{
+          productSet: { product: { id: string } | null; userErrors: { message: string }[] };
+        }, { input: { id: string; status: string } }>(BULK_STATUS_MUTATION, { input: { id: row.id, status } });
+        if (data.productSet.userErrors.length > 0 || !data.productSet.product) {
+          firstError ??= data.productSet.userErrors[0]?.message ?? null;
+        } else {
+          ok += 1;
+        }
+      } catch (reason: unknown) {
+        firstError ??= reason instanceof Error ? reason.message : String(reason);
+      }
+    }
+    setBulkBusy(false);
+    setSelectionResetSignal((signal) => signal + 1);
+    setSelectedRows([]);
+    showToast(firstError !== null
+      ? t("products.bulk.partial", { ok, total: selectedRows.length, error: firstError })
+      : t("products.bulk.done", { count: ok }));
+    retry();
+  }, [bulkBusy, retry, selectedRows, showToast, t]);
+
+  // 🔴 頂層鈕依選集狀態動態出現（本尊實測 82 §19：全 Active 的選集頂層是
+  //   `Set as draft`；其餘組合的頂層形態**未取得** ⇒ 我方規則（ours，登記 §19.4）：
+  //   全 ACTIVE→設為草稿；全非 ACTIVE→設為啟用；混合→兩顆都出。
+  const everyActive = selectedRows.length > 0 && selectedRows.every((row) => row.status.toUpperCase() === "ACTIVE");
+  const everyNonActive = selectedRows.length > 0 && selectedRows.every((row) => row.status.toUpperCase() !== "ACTIVE");
+
   const columns = useMemo<readonly IndexTableColumn<ProductNode>[]>(
     () => [
       {
@@ -423,14 +489,76 @@ export function ProductsPage() {
             </label>
           </div>
           {products.length > 0 ? (
+            <>
+            {selectedRows.length > 0 ? (
+              <div className="cl-bulkbar" role="toolbar" aria-label={t("products.bulk.toolbar")}>
+                <span className="cl-bulkbar__count">{t("products.bulk.count", { count: selectedRows.length })}</span>
+                {!everyNonActive ? (
+                  <Button disabled={bulkBusy} onClick={() => void applyBulkStatus("DRAFT")}>
+                    {t("products.bulk.setDraft")}
+                  </Button>
+                ) : null}
+                {!everyActive ? (
+                  <Button disabled={bulkBusy} onClick={() => void applyBulkStatus("ACTIVE")}>
+                    {t("products.bulk.setActive")}
+                  </Button>
+                ) : null}
+                <div className="cl-actionsmenu">
+                  <Button
+                    aria-expanded={bulkMenuOpen}
+                    aria-haspopup="menu"
+                    disabled={bulkBusy}
+                    onClick={() => setBulkMenuOpen((current) => !current)}
+                    ref={bulkMenuAnchorRef}
+                  >
+                    <MoreHorizontal aria-hidden="true" size={14} />
+                  </Button>
+                  {bulkMenuOpen ? (
+                    <div className="cl-actionsmenu__list" role="menu">
+                      {/* 🔴 本尊溢出值域（82 §19 實測）＝Archive/Unlist/Delete＋管道/型錄/
+                          標籤/系列群組。本包只做狀態機那兩顆；其餘屬各自功能線（§19.4 登記）。 */}
+                      <button
+                        className="cl-actionsmenu__item"
+                        onClick={() => void applyBulkStatus("UNLISTED")}
+                        role="menuitem"
+                        type="button"
+                      >
+                        {t("products.bulk.unlist")}
+                      </button>
+                      <button
+                        className="cl-actionsmenu__item"
+                        onClick={() => { setBulkMenuOpen(false); setConfirmBulkArchive(true); }}
+                        role="menuitem"
+                        type="button"
+                      >
+                        {t("products.bulk.archive")}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             <IndexTable
               caption={t("products.caption")}
               columns={columns}
               getRowKey={(product) => product.id}
               getRowLabel={(product) => product.title}
               onRowActivate={(product) => navigate(`/admin/products/${encodeURIComponent(product.id)}`)}
+              onSelectionChange={setSelectedRows}
               rows={products}
+              selectionResetSignal={selectionResetSignal}
             />
+            {confirmBulkArchive ? (
+              <ConfirmDialog
+                open
+                confirmLabel={t("products.bulk.archive")}
+                message={t("products.bulk.archiveConfirm", { count: selectedRows.length })}
+                onCancel={() => setConfirmBulkArchive(false)}
+                onConfirm={() => { setConfirmBulkArchive(false); void applyBulkStatus("ARCHIVED"); }}
+                title={t("products.bulk.archive")}
+              />
+            ) : null}
+            </>
           ) : (
             <EmptyState
               action={

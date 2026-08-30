@@ -304,6 +304,85 @@ describe("商品頁", () => {
   });
 
   // 未知狀態的 fallback：GraphQL enum 之後若再擴值，前端不得整頁炸掉。
+  it("S7 批量：全 ACTIVE 選集頂層只有「設為草稿」；執行後逐筆 productSet、清空選取", async () => {
+    const user = userEvent.setup();
+    const nodes = [
+      { id: "gid://chilllove/Product/1", title: "甲", status: "ACTIVE" },
+      { id: "gid://chilllove/Product/2", title: "乙", status: "ACTIVE" },
+    ];
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = String(init?.body);
+      if (body.includes("mutation productBulkStatus")) {
+        const req = JSON.parse(body) as { variables: { input: { id: string; status: string } } };
+        return {
+          json: vi.fn().mockResolvedValue({ data: { productSet: { product: { id: req.variables.input.id, status: req.variables.input.status }, userErrors: [] } } }),
+          ok: true, status: 200,
+        } as unknown as Response;
+      }
+      return successfulResponse(nodes);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    await user.click(within(table).getByRole("checkbox", { name: "選取 甲" }));
+    await user.click(within(table).getByRole("checkbox", { name: "選取 乙" }));
+    const bar = screen.getByRole("toolbar", { name: "批量動作" });
+    expect(within(bar).getByText("已選 2 項")).toBeVisible();
+    // 🔴 全 ACTIVE ⇒ 頂層只有「設為草稿」（本尊 82 §19 實測），沒有「設為啟用」
+    expect(within(bar).queryByRole("button", { name: "設為啟用" })).toBeNull();
+    await user.click(within(bar).getByRole("button", { name: "設為草稿" }));
+    await waitFor(() => {
+      const calls = fetchMock.mock.calls.filter((call) => String((call[1] as RequestInit).body).includes("productBulkStatus"));
+      expect(calls).toHaveLength(2);
+    });
+    const payloads = fetchMock.mock.calls
+      .map((call) => String((call[1] as RequestInit).body))
+      .filter((body) => body.includes("productBulkStatus"))
+      .map((body) => (JSON.parse(body) as { variables: { input: { id: string; status: string } } }).variables.input);
+    expect(payloads).toEqual([
+      { id: "gid://chilllove/Product/1", status: "DRAFT" },
+      { id: "gid://chilllove/Product/2", status: "DRAFT" },
+    ]);
+    // 動作後清空選取 ⇒ 工具列消失
+    await waitFor(() => expect(screen.queryByRole("toolbar", { name: "批量動作" })).toBeNull());
+  });
+
+  it("S7 批量：溢出選單值域＝取消刊登＋封存（封存要確認框）", async () => {
+    const user = userEvent.setup();
+    const nodes = [ { id: "gid://chilllove/Product/1", title: "甲", status: "ACTIVE" } ];
+    const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      const body = String(init?.body);
+      if (body.includes("mutation productBulkStatus")) {
+        return { json: vi.fn().mockResolvedValue({ data: { productSet: { product: { id: "gid://chilllove/Product/1", status: "ARCHIVED" }, userErrors: [] } } }), ok: true, status: 200 } as unknown as Response;
+      }
+      return successfulResponse(nodes);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    await user.click(within(table).getByRole("checkbox", { name: "選取 甲" }));
+    const bar = screen.getByRole("toolbar", { name: "批量動作" });
+    await user.click(within(bar).getAllByRole("button").find((node) => node.getAttribute("aria-haspopup") === "menu")!);
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getAllByRole("menuitem").map((node) => node.textContent)).toEqual([ "取消刊登", "封存商品" ]);
+    await user.click(within(menu).getByRole("menuitem", { name: "封存商品" }));
+    // 確認框（與詳情頁封存同款紀律）——確認後才送 mutation
+    expect(fetchMock.mock.calls.some((call) => String((call[1] as RequestInit).body).includes("productBulkStatus"))).toBe(false);
+    await user.click(await screen.findByRole("button", { name: "封存商品" }));
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some((call) => String((call[1] as RequestInit).body).includes("ARCHIVED"))).toBe(true);
+    });
+  });
+
+
   it("S6c-2 管道格：計數＝已發布銷售管道數；popover 唯讀列名；有路由者導航、無路由者停用", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockResolvedValue(

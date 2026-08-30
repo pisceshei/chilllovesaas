@@ -560,5 +560,15 @@
   "collection.channels.title": "銷售管道",
   "products.col.channels": "管道",
   "products.channels.viewAria": "檢視銷售管道",
-  "products.channels.popover": "已發布的銷售管道"
+  "products.channels.popover": "已發布的銷售管道",
+  "products.bulk.toolbar": "批量動作",
+  "products.bulk.count": "已選 {count} 項",
+  "products.bulk.setActive": "設為啟用",
+  "products.bulk.setDraft": "設為草稿",
+  "products.bulk.unlist": "取消刊登",
+  "products.bulk.archive": "封存商品",
+  "products.bulk.archiveConfirm": "要封存已選的 {count} 項商品嗎？封存後將自所有銷售管道下架，可隨時取消封存。",
+  "products.bulk.done": "已更新 {count} 項商品",
+  "products.bulk.partial": "已更新 {ok}/{total} 項；首個錯誤：{error}",
+  "product.schedule.activeNotice": "商品狀態須為「啟用」，排程到點時才會生效。"
 }

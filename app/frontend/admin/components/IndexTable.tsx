@@ -34,6 +34,8 @@ export interface IndexTableProps<Row> {
   onRowActivate?: (row: Row) => void;
   /** 選取集合改變時回傳目前資料列。 */
   onSelectionChange?: (rows: Row[]) => void;
+  /** S7：值變動時清空選取（批量動作完成後由頁面遞增；不給就永不外部清空）。 */
+  selectionResetSignal?: number;
   /** 指定取消列；文字加刪除線但 Badge 不受影響。 */
   isCancelled?: (row: Row) => boolean;
 }
@@ -53,9 +55,21 @@ export function IndexTable<Row>({
   onRowActivate,
   onSelectionChange,
   rows,
+  selectionResetSignal,
 }: IndexTableProps<Row>) {
   const t = useT();
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set());
+
+  // S7：批量動作完成後清空選取（本尊實測：動作成功後選取列消失、回一般表頭）。
+  // 🔴 skip 首次 render：初值就是空集合，首掛載再清會多打一次 onSelectionChange([])。
+  const lastResetRef = useRef(selectionResetSignal);
+  useEffect(() => {
+    if (selectionResetSignal === lastResetRef.current) return;
+    lastResetRef.current = selectionResetSignal;
+    setSelectedKeys(new Set());
+    onSelectionChange?.([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onSelectionChange 由呼叫端穩定提供
+  }, [selectionResetSignal]);
   const selectAllRef = useRef<HTMLInputElement>(null);
   const rowKeys = rows.map(getRowKey);
   const allSelected = rowKeys.length > 0 && rowKeys.every((key) => selectedKeys.has(key));

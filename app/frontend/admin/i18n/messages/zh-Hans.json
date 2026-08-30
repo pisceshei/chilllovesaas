@@ -560,5 +560,15 @@
   "collection.channels.title": "销售渠道",
   "products.col.channels": "渠道",
   "products.channels.viewAria": "查看销售渠道",
-  "products.channels.popover": "已发布的销售渠道"
+  "products.channels.popover": "已发布的销售渠道",
+  "products.bulk.toolbar": "批量操作",
+  "products.bulk.count": "已选 {count} 项",
+  "products.bulk.setActive": "设为启用",
+  "products.bulk.setDraft": "设为草稿",
+  "products.bulk.unlist": "取消刊登",
+  "products.bulk.archive": "归档商品",
+  "products.bulk.archiveConfirm": "要归档已选的 {count} 项商品吗？归档后将从所有销售渠道下架，可随时取消归档。",
+  "products.bulk.done": "已更新 {count} 项商品",
+  "products.bulk.partial": "已更新 {ok}/{total} 项；首个错误：{error}",
+  "product.schedule.activeNotice": "商品状态须为“启用”，排程到点时才会生效。"
 }

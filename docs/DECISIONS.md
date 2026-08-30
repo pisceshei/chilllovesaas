@@ -2394,3 +2394,32 @@ teardown＝`docs/research/82` **§18**。
 🔴 落地抓到真缺陷：popover 點擊冒泡到列的 onRowActivate（＝進商品詳情）——
 本尊點格只開 popover。修＝`stopPropagation`（IndexTable select 格的既有同構做法）。
 測試 +2 格（10/10）。
+
+---
+
+### D73. S7：狀態機交互的收口（批量狀態動作＋排程 banner）（2026-08-28）
+
+使用者指示三包連做（S7／PR-C／S8）；**PR-C 經查已於 2026-08-27 完成**（#153/#155，
+consumer＋backfill＋spec 全在）⇒ 本包＝S7。🟢 不觸鐵律 18.3。
+實測＝`docs/research/82` **§19**（批量選取列與溢出值域）＋既有 §9.2／PR-C 裁定書 F1-②。
+
+#### S7 清單的逐項處置
+
+| 項 | 處置 |
+|---|---|
+| 四狀態三面不對稱（商品頁 dropdown／More actions） | ✅ **既有實作已覆蓋**（三值 listbox＋封存走更多動作＋確認框，包 4 交付）——本包零改動 |
+| 第三面（列表批量） | ✅ **本包交付**：選取列＋動態頂層鈕＋溢出（取消刊登／封存＋確認框），逐筆 `productSet {id, status}` |
+| 排程要求 Active（88 §5 #3 的 UI 面） | ✅ **本包交付**：`SchedulePopover.notice`——DRAFT／ARCHIVED 開排程面板見 `role=status` banner，**控件不禁用**（本尊 F1-② 形態：排程照存、到點才依 D53 閘門）。判準＝`status ∉ {ACTIVE, UNLISTED}`（與 D53 PURCHASABLE 對齊） |
+| `Suspended` 第五值 | ⚪ 登記（`91` §3.44 W-1）：平台施加、官方 enum 之外、語義未取得——不進我方 enum |
+| 複製商品的發布繼承 | ⚪ 登記（W-2）：我方 Duplicate 尚未實作（詳情頁該項 disabled 佔位），繼承規則隨該功能一起做 |
+
+#### ours 裁定（記錄在 82 §19.4）
+
+①頂層動態鈕規則（本尊只取得一格）：全 ACTIVE→設為草稿；全非 ACTIVE→設為啟用；混合→兩顆。
+②批量封存加確認框（本尊未取得；與詳情頁同紀律）。
+③banner 配色走 `--sem-info-*`（本尊 tone-auto 的實際色值未量 ⇒ V）。
+
+#### 測試
+
+批量 2 格（動態鈕唯一性＋逐筆 payload＋清空選取／溢出值域＋確認框攔截）＋
+banner 2 格（DRAFT 有且控件可用／ACTIVE 無）。
