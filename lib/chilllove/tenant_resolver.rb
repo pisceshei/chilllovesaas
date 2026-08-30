@@ -81,6 +81,13 @@ module Chilllove
       shop = shop_for(host)
       return not_found_response unless shop
 
+      # 包 33 後半：redirect 型網域（domains.domain_type，實測值域 84 §4）⇒ 301 到
+      # primary domain，保留路徑與 query（本尊逐字「Directs users to the primary
+      # domain」）。alias 型原樣服務（「doesn't redirect or update the address bar」）。
+      if (target = redirect_target(host, shop, request))
+        return redirect_response(target)
+      end
+
       Current.shop = shop
       ActsAsTenant.current_tenant = shop
       env["chilllove.shop_id"] = shop.id
@@ -128,10 +135,11 @@ module Chilllove
 
           Shop.find_by(subdomain: subdomain, status: "active")&.id
         else
-          # M0 只有網域驗證完成後才寫入 shops.custom_domain；正規化的
-          # custom_domains 表在 P1 才落地。停權商店一律不符合條件。
-          # 見 docs/specs/12 F1。
-          Shop.find_by(custom_domain: host, status: "active")&.id
+          # 包 33 後半：`domains` 表（包 32）是 host→shop 的權威（active 列才可路由；
+          # host 全域唯一索引反查租戶）。`shops.custom_domain` 保留為 M0 相容兜底
+          # ——舊資料仍解析、環境快照 host 失效也不斷路（包 32 worklog 登記）。
+          Domain.where(host:, status: "active").pick(:shop_id) ||
+            Shop.find_by(custom_domain: host, status: "active")&.id
         end
       end
     end
@@ -141,8 +149,41 @@ module Chilllove
       if subdomain
         shop.subdomain.to_s.casecmp?(subdomain)
       else
-        shop.custom_domain.to_s.casecmp?(host) && shop.custom_domain_verified?
+        domain_binding_exists?(host, shop) ||
+          (shop.custom_domain.to_s.casecmp?(host) && shop.custom_domain_verified?)
       end
+    end
+
+    def domain_binding_exists?(host, shop)
+      ActsAsTenant.without_tenant do
+        Domain.where(shop_id: shop.id, host:, status: "active").exists?
+      end
+    end
+
+    # @return [String, nil] redirect 型網域的轉址目標（primary domain 缺席 ⇒ 原樣服務）
+    def redirect_target(host, shop, request)
+      return nil if subdomain_for(host) # 平台子網域不套 domains 型別語義
+
+      row = ActsAsTenant.without_tenant do
+        Domain.where(shop_id: shop.id, host:, status: "active").pick(:domain_type)
+      end
+      return nil unless row == "redirect"
+
+      primary_host = ActsAsTenant.without_tenant do
+        Domain.where(shop_id: shop.id, domain_type: "primary", status: "active").pick(:host)
+      end
+      return nil if primary_host.nil? || primary_host == host
+
+      "#{request.scheme}://#{primary_host}#{request.fullpath}"
+    end
+
+    def redirect_response(target)
+      [
+        301,
+        { "Location" => target, "Content-Type" => "text/plain; charset=utf-8",
+          "Cache-Control" => "no-store" },
+        [ "" ]
+      ]
     end
 
     def not_found_response

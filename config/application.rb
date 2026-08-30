@@ -66,13 +66,20 @@ module Chilllove
     config.middleware.insert_after ActionDispatch::Executor, Chilllove::TenantResolver
     config.middleware.move_after Chilllove::TenantResolver, ActionDispatch::HostAuthorization
 
-    # 自訂網域只有在 TenantResolver 以完全相同且驗證過的 host 綁定
-    # Current.shop 後才放行；未知 host 已由 resolver 回傳規格要求的 404。
+    # 自訂網域只有在 TenantResolver 以完全相同的 host 綁定 Current.shop 後才放行；
+    # 未知 host 已由 resolver 回傳規格要求的 404。
     base_host = Chilllove::TenantResolver.base_host
     config.hosts << ".#{base_host}"
     config.hosts << lambda { |host|
       normalized_host = host.to_s.downcase.delete_suffix(".")
-      Current.shop&.custom_domain_verified? && Current.shop.custom_domain.casecmp?(normalized_host)
+      next false unless Current.shop
+      next true if Current.shop.custom_domain_verified? && Current.shop.custom_domain.casecmp?(normalized_host)
+
+      # 包 33 後半：domains 表（包 32）綁定的 host——redirect／alias／額外 host
+      # （www.chill.deals 形態）。resolver 已依同一張表選定 shop，這裡是第二道同表覆核。
+      ActsAsTenant.without_tenant do
+        Domain.where(shop_id: Current.shop.id, host: normalized_host, status: "active").exists?
+      end
     }
 
     # environment-specific 設定可在稍後載入的 config/environments 覆寫。

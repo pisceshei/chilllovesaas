@@ -1,0 +1,104 @@
+# frozen_string_literal: true
+
+module Storefront
+  # 公開店面頁面（包 33 後半；六步方案步 2）。
+  #
+  # ①路由紀律（67 §F.1(b)(c)；limits `i18n.locale_prefix.*`）：
+  #   - 根路徑與無前綴路徑 ⇒ **302** 到預設 (market, locale) 前綴、保留路徑與 query
+  #     （root_redirect_status: 302——不是 301，預設市場會變）。
+  #   - 第一段長得像前綴（FORMAT）⇒ 查 `Markets::PrefixIndex`；未命中 ⇒ 🔴 404
+  #     （unknown_prefix_status／unopened_prefix_status——§A.5(c) 情形 1/3/4 全走這裡）。
+  # ②頁級快取（63 §D.3）＝`Storefront::PageCache`；🔴 渲染快取頁不帶 cart_json
+  #   （14 §F1-4 個人化不進頁快取——買家 cart 態由 /cart.js 端點取）。
+  # ③🔴 B13：robots 全站 Disallow ＋ 頁面 X-Robots-Tag noindex——SEO 面（hreflang／
+  #   sitemap／開放索引）是步 4（包 35）的射程，開放時兩者一起摘除。
+  class PagesController < BaseController
+    before_action :require_published_theme!, except: %i[robots root] # root 只重導，不需主題
+
+    # query 白名單（進快取 key 的維度；未列參數不參與 key＝同一快取頁）。
+    CACHE_PARAMS = %w[variant page q sort_by].freeze
+
+    # GET /robots.txt（B13：步 4 前全面禁抓）
+    def robots
+      render plain: "User-agent: *\nDisallow: /\n", content_type: "text/plain"
+    end
+
+    # GET /（＝無前綴根路徑）
+    def root
+      redirect_to_default_prefix("/")
+    end
+
+    # GET /*path
+    def show
+      first, rest = split_path
+      unless first.match?(prefix_shape)
+        return redirect_to_default_prefix(request.path)
+      end
+
+      hit = Markets::PrefixIndex.resolve(shop: current_shop, domain: current_domain,
+                                         first_segment: first)
+      return head :not_found if hit.nil?
+
+      payload = PageCache.fetch(
+        shop: current_shop, theme: published_theme, market: hit.market,
+        locale_tag: hit.locale_tag, path: rest, params: cache_params
+      ) { render_page(hit, rest) }
+
+      response.headers["X-Robots-Tag"] = "noindex, nofollow" # B13：隨步 4 摘除
+      render html: payload["html"].html_safe, status: payload["status"], layout: false
+    end
+
+    private
+
+    # 前綴形＝Markets::UrlPrefix::SEGMENT（同一來源，不抄第二份）。
+    # 長得像前綴但查無 ⇒ 404（上面 show）；不像前綴（products 等一般路徑）⇒ 302 補預設前綴。
+    def prefix_shape
+      /\A#{Markets::UrlPrefix::SEGMENT.source}\z/
+    end
+
+    def split_path
+      segments = request.path.delete_prefix("/").split("/", 2)
+      [ segments[0].to_s.downcase, "/#{segments[1]}".chomp("/").presence || "/" ]
+    end
+
+    def redirect_to_default_prefix(path)
+      prefix = default_prefix
+      return head :not_found if prefix.nil?
+
+      target = path == "/" ? "#{prefix}/" : "#{prefix}#{path}"
+      target += "?#{request.query_string}" if request.query_string.present?
+      redirect_to target, status: Limits.fetch(:i18n, :locale_prefix, :root_redirect_status),
+                          allow_other_host: false
+    end
+
+    # 預設落點＝primary market 的 presence × 其預設 locale（67 §F.1(b) 根路徑處置）。
+    def default_prefix
+      ActsAsTenant.with_tenant(current_shop) do
+        market = Market.find_by(is_primary: true) or return nil
+        presence = market.market_web_presences.first or return nil
+        Markets::UrlPrefix.for(presence, presence.default_shop_locale)
+      end
+    rescue Markets::UrlPrefix::Error
+      nil
+    end
+
+    def current_domain
+      @current_domain ||= ActsAsTenant.with_tenant(current_shop) do
+        Domain.find_by(host: request.host.to_s.downcase) || Domain.primary.first
+      end
+    end
+
+    def cache_params
+      params.permit(*CACHE_PARAMS).to_h
+    end
+
+    def render_page(hit, rest)
+      ThemeEngine::PageRenderer.new(
+        theme: published_theme, shop: current_shop, publication: Publication.online_store!,
+        url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
+        host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
+        cart_json: nil # 🔴 個人化不進頁快取（14 §F1-4）
+      ).render(rest, params: cache_params)
+    end
+  end
+end

@@ -12,14 +12,19 @@
 module ThemeEngine
   class PageRenderer
     # content_type：:html（整頁／單 section）或 :json（?sections= map）。
-    Result = Struct.new(:status, :html, :page_type, :content_type, keyword_init: true)
+    # volatile：頁面讀到揮發欄位（inventory_quantity 等）⇒ 頁級快取 TTL 兜底（63 §D.5）。
+    Result = Struct.new(:status, :html, :page_type, :content_type, :volatile, keyword_init: true) do
+      def volatile? = !!volatile
+    end
 
     def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
-                   cart_json: nil)
+                   cart_json: nil, asset_base: nil, locale: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
       @source = source
       @cart_json = cart_json
+      @asset_base = asset_base
+      @locale = locale
     end
 
     # @param path [String] 前綴已剝除的站內路徑（如 "/products/rose-serum"）
@@ -49,7 +54,8 @@ module ThemeEngine
       page_type, assigns, status = resolve(path)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
-                            path: path, host: @host, source: @source, cart_json: @cart_json)
+                            path: path, host: @host, source: @source, cart_json: @cart_json,
+                            asset_base: @asset_base, locale: @locale)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
@@ -57,7 +63,8 @@ module ThemeEngine
 
       body = render_template_sections(runtime, page_type)
       html = render_layout(runtime, body)
-      Result.new(status: status, html: html, page_type: page_type)
+      Result.new(status: status, html: html, page_type: page_type,
+                 volatile: runtime.render_flags.include?(:volatile))
     end
 
     # @return [Array(String, Hash, Integer)] [template key, 額外 assigns, HTTP status]
@@ -141,7 +148,8 @@ module ThemeEngine
     def build_runtime(page_type, assigns)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
-                            path: nil, host: @host, source: @source, cart_json: @cart_json)
+                            path: nil, host: @host, source: @source, cart_json: @cart_json,
+                            asset_base: @asset_base, locale: @locale)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)

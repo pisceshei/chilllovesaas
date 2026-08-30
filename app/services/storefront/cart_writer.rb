@@ -30,6 +30,7 @@ module Storefront
       per_line_cap = Limits.fetch(:cart, :max_quantity_per_line)
       raise CartError, "單行數量不可超過 #{per_line_cap}。" if quantity > per_line_cap
 
+      enforce_item_limit!(cart:, adding: quantity)
       upsert_line!(cart:, variant:, quantity:, properties: properties || {})
     end
 
@@ -68,6 +69,20 @@ module Storefront
     end
 
     # ── 內部 ──────────────────────────────────────────────────────────────
+
+    # A2（包 33 後半）：cart_item_limit＝**總件數**上限，商家設定欄（shops 兩欄）。
+    # 與 max_quantity_per_line／max_lines（本專案防呆）是不同概念、並存（limits cart 註釋）。
+    # 豁免值域（pos/draft_order/b2b/untracked）＝其他通路的事，本端點只有 online store。
+    # 只擋 add 不擋 change 減量；change 加量走同一 cap 由 controller 契約自然涵蓋
+    # （change 是「改行數」語義，本尊上限文案掛在加入購物車——44:378）。
+    def enforce_item_limit!(cart:, adding:)
+      shop = Shop.find(cart.shop_id)
+      return unless shop.cart_item_limit_enabled
+
+      total = cart.cart_line_items.sum(:quantity) + adding
+      cap = shop.cart_item_limit
+      raise CartError, "購物車總件數不可超過 #{cap} 件。" if total > cap
+    end
 
     def upsert_line!(cart:, variant:, quantity:, properties:)
       max_lines = Limits.fetch(:cart, :max_lines)

@@ -39,6 +39,31 @@ rescue Rack::QueryParser::ParameterTypeError
   Digest::SHA256.hexdigest("#{shop_id}\0invalid-parameters")
 end
 
+# 公開店面限流（包 33 後半；limits `storefront.rate_limits`——本尊 cart 端點
+# 有 bot 牆 429，83 §12.5 實測，我方對位）。只作用於租戶 host（env 有 shop_id）。
+sf_limits = Rails.configuration.x.limits.fetch(:storefront).fetch(:rate_limits)
+cart_ip = sf_limits.fetch(:cart_writes_per_ip)
+page_ip = sf_limits.fetch(:page_views_per_ip)
+
+Rack::Attack.throttle("storefront-cart/ip",
+  limit: Integer(cart_ip.fetch(:limit)),
+  period: Integer(cart_ip.fetch(:period_seconds)).seconds) do |request|
+  next unless request.env["chilllove.shop_id"]
+
+  request.ip if request.post? && request.path.start_with?("/cart/")
+end
+
+Rack::Attack.throttle("storefront-page/ip",
+  limit: Integer(page_ip.fetch(:limit)),
+  period: Integer(page_ip.fetch(:period_seconds)).seconds) do |request|
+  next unless request.env["chilllove.shop_id"]
+  # 只數店面頁面（GET 非 /admin、非 /cart、非資產）；資產不限流（一頁數十個資產請求）。
+  next unless request.get?
+  next if request.path.start_with?("/admin", "/cart", "/theme-assets", "/login", "/up")
+
+  request.ip
+end
+
 Rack::Attack.throttled_responder = lambda do |request|
   match_data = request.env.fetch("rack.attack.match_data", {})
   retry_after = match_data.fetch(:period, 60).to_i

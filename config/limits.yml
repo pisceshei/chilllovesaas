@@ -4891,3 +4891,14 @@ naming_contract:
   docs_text_copy_forbidden: true
   # GID namespace 是我方的（鐵律 4 既有）。
   gid_namespace: chilllove
+
+# =============================================================================
+# 25. 公開店面（包 33 後半；hosting／限流）
+# =============================================================================
+storefront:
+  # 公開端點限流（本尊 cart 端點有 bot 牆——連續 JSON POST ⇒ 429 挑戰頁，
+  # 83 §12.5 實測 2026-08-31；我方以 Rack::Attack 對位，回應形＝既有 429 JSON）。
+  # 🔴 兩組數值皆為我方提案（ours；本尊閾值不可觀測）——壓測後調整，調整只改這裡。
+  rate_limits:
+    cart_writes_per_ip: { limit: 60, period_seconds: 60 }
+    page_views_per_ip: { limit: 300, period_seconds: 60 }

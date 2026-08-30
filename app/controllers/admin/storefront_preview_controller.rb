@@ -18,9 +18,14 @@ module Admin
     # GET /admin/store/preview/:theme_id/assets/*file
     def asset
       authorize Theme, :index?
+      rel = params[:file].to_s
+      # 同 Storefront::AssetsController：主題根**內**的 `assets/../…` 逃逸也要擋
+      # （FileSource 只擋根外——包 33 後半 S7 抓到後兩個 asset 端點同輪封閉）。
+      return head :not_found if rel.blank? || rel.include?("..") || rel.include?("\\")
+
       theme = Theme.find(params[:theme_id])
       source = ThemeEngine::Sources.resolve(theme)
-      body = source&.read(File.join("assets", params[:file].to_s))
+      body = source&.read(File.join("assets", rel))
       return head :not_found if body.nil?
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"

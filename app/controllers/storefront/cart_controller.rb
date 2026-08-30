@@ -7,17 +7,19 @@ module Storefront
   #   83 §4.4——兩形都收，皆回 JSON）。
   # ②錯誤形（真店 422 實測逐字結構）：`{"status":…,"message":…,"description":…}`；
   #   文案繁中（鐵律 10；不抄本尊英文文案——鐵律 9）。
-  # ③🔴 承載車（vehicle）：目前掛在 staff session 的主題預覽面上
-  #   （shop＝Current.shop）。公開店面的 host→shop 解析與買家匿名 session
-  #   歸 W6 hosting 包——屆時本控制器換 shop 解析器，契約不變（登記）。
+  # ③🔴 A1 已收口（包 33 後半）：vehicle＝**host 解析的公開端點**——shop 恆由
+  #   TenantResolver 依 host 寫入 `Current.shop`，匿名買家可用；不再要求 staff
+  #   session（原掛 Admin::BaseController 的 staff 閘已摘除；staff 預覽在同一
+  #   租戶 host，走同一組端點）。防濫用＝Rack::Attack `storefront-cart/ip`
+  #   （本尊 cart 端點有 bot 牆 429——83 §12.5 量測，我方對位）。
   # ④cookie `_cl_buyer`：簽名、host-only（F1 ⚠️坑：跨店共享防線——**不設
-  #   domain 屬性**）；值＝cart token。
+  #   domain 屬性**）；值＝cart token。落在真店網域＝host-only 語義自此真實。
   # ⑤bundled section rendering（官方句：cart 變更建議帶 sections 參數）：
   #   POST 帶 `sections` ⇒ 回應加 `sections` map（複用 #203 fragment 機制，
   #   context＝`sections_url` 參數指定的頁，預設 "/"）。
-  class CartController < Admin::BaseController
-    # 主題 JS 的 Ajax POST 無 CSRF token（storefront 語義）；本面靠 staff
-    # session 閘（vehicle）＋日後的買家 session 設計承接。
+  class CartController < BaseController
+    # 主題 JS 的 Ajax POST 無 CSRF token（storefront 語義；本尊同形）。
+    # 寫入面靠 host-only 簽名 cookie 綁車＋限流，不靠 CSRF。
     skip_forgery_protection
 
     rescue_from Storefront::CartError do |e|
@@ -26,13 +28,11 @@ module Storefront
 
     # GET /cart.js
     def show
-      authorize Theme, :index?
       render json: CartSerializer.cart_json(current_cart)
     end
 
     # POST /cart/add(.js)：回「被加入的行」陣列（官方形：非整車——83 官方句）
     def add
-      authorize Theme, :index?
       lines = add_params.map do |item|
         CartWriter.add(cart: current_cart, variant_id: item[:id],
                        quantity: item.fetch(:quantity, 1),
@@ -44,7 +44,6 @@ module Storefront
 
     # POST /cart/change(.js)：id/line ＋ quantity（0＝移除）⇒ 整車
     def change
-      authorize Theme, :index?
       key = params[:id].presence || line_key_from_line_param
       CartWriter.change(cart: current_cart, line_key: key, quantity: params.require(:quantity))
       render json: CartSerializer.cart_json(current_cart.reload).merge(sections_payload)
@@ -52,7 +51,6 @@ module Storefront
 
     # POST /cart/update(.js)：note／attributes／updates ⇒ 整車
     def update
-      authorize Theme, :index?
       CartWriter.update_meta(cart: current_cart, note: params[:note],
                              attributes: free_form_hash(params[:attributes]))
       apply_updates_param
@@ -61,7 +59,6 @@ module Storefront
 
     # POST /cart/clear(.js)：清行、保留 note/attributes ⇒ 整車
     def clear
-      authorize Theme, :index?
       CartWriter.clear(cart: current_cart)
       render json: CartSerializer.cart_json(current_cart.reload).merge(sections_payload)
     end
