@@ -405,22 +405,27 @@ module ThemeEngine
     #   published_at 的上下文）；nil＝無管道語境（collections 回空、published_at nil）。
     attr_reader :selected_variant_id
 
-    def initialize(product, url_prefix: "", selected_variant_id: nil, publication: nil)
+    # @param translations [Hash] 內容翻譯 overlay（包 34；67 §F.3(c) 走 drops 不走 t）：
+    #   field_key => 譯文，由 PageRenderer 以 Translations::Resolve **一次批載**。
+    #   空 hash＝來源語言／無譯文 ⇒ 直讀 base row。handle 不在值域（不可翻，§D.3）。
+    def initialize(product, url_prefix: "", selected_variant_id: nil, publication: nil,
+                   translations: {})
       @selected_variant_id = selected_variant_id
       @publication = publication
       super()
       @p = product
       @url_prefix = url_prefix
+      @tx = translations || {}
     end
 
     def id = @p.id
-    def title = @p.title
+    def title = @tx["title"] || @p.title
     def handle = @p.handle
     def vendor = @p.vendor
     def type = @p.product_type
     def tags = @p.tags.to_a
-    def description = @p.description_html
-    def content = @p.description_html
+    def description = @tx["body_html"] || @p.description_html
+    def content = description
     def url = "#{@url_prefix}/products/#{@p.handle}"
 
     # Liquid 契約：variants 依 position 排序（association 預設是 id 序——
@@ -570,17 +575,19 @@ module ThemeEngine
   end
 
   class CollectionDrop < Liquid::Drop
-    def initialize(collection, url_prefix: "", published_at: nil)
+    # translations：同 ProductDrop 的 overlay 契約（包 34）。
+    def initialize(collection, url_prefix: "", published_at: nil, translations: {})
       super()
       @c = collection
       @url_prefix = url_prefix
       @published_at = published_at
+      @tx = translations || {}
     end
 
     def id = @c.id
-    def title = @c.title
+    def title = @tx["title"] || @c.title
     def handle = @c.handle
-    def description = @c.description_html
+    def description = @tx["body_html"] || @c.description_html
     def url = "#{@url_prefix}/collections/#{@c.handle}"
     def published_at = @published_at
 

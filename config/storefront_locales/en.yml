@@ -1,0 +1,16 @@
+# 平台字串集（B14；67 §F.3(a) 第 ③ 層——只有主題完全沒有該 key 時才會用到）。
+# 🔴 平台字典：跨租戶共用、隨版本部署、無任何租戶資料（鐵律 2 配套③的字典形態，
+#    與 platform_locales 同類）；商家覆寫層（第 ① 層）在租戶 translations，不在這裡。
+# 🔴 文案自寫（鐵律 9——不抄本尊 locale 檔；鐵律 10——繁中為主、此檔為 en 版）。
+general:
+  continue_shopping: "Continue shopping"
+  page_not_found: "Page not found"
+  search: "Search"
+cart:
+  title: "Cart"
+  empty: "Your cart is empty"
+  add_to_cart: "Add to cart"
+  checkout: "Checkout"
+products:
+  sold_out: "Sold out"
+  unavailable: "Unavailable"

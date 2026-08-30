@@ -140,11 +140,21 @@ module Storefront
         theme:, shop: Current.shop, publication: Publication.online_store!,
         host: request.host, cart_json: CartSerializer.cart_json(current_cart.reload)
       )
-      result = renderer.render(params[:sections_url].presence || "/",
+      result = renderer.render(strip_locale_prefix(params[:sections_url].presence || "/"),
                                params: { "sections" => ids.join(",") })
       { "sections" => JSON.parse(result.html) }
     rescue JSON::ParserError
       {}
+    end
+
+    # sections_url 來自主題 JS 的 location.pathname ⇒ 帶前綴（/en-hk/products/x）；
+    # PageRenderer 收前綴已剝的站內路徑（包 34）。同 SEGMENT 單一來源。
+    def strip_locale_prefix(path)
+      segments = path.to_s.delete_prefix("/").split("/", 2)
+      return path unless segments[0].to_s.match?(/\A#{Markets::UrlPrefix::SEGMENT.source}\z/)
+
+      rest = segments[1].to_s
+      rest.empty? ? "/" : "/#{rest}"
     end
   end
 end

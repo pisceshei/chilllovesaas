@@ -1,0 +1,13 @@
+# 平台字串集 zh-Hant（B14；見 en.yml 檔頭）。文案自寫（鐵律 9／10）。
+general:
+  continue_shopping: "繼續購物"
+  page_not_found: "找不到頁面"
+  search: "搜尋"
+cart:
+  title: "購物車"
+  empty: "購物車是空的"
+  add_to_cart: "加入購物車"
+  checkout: "結帳"
+products:
+  sold_out: "已售罄"
+  unavailable: "無法購買"
