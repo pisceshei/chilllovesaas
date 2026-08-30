@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_010000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -830,6 +830,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_070000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "price_lists", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "catalog 的價格表（本尊 PriceList；百分比層，變體固定價隨 M5 另表）", force: :cascade do |t|
+    t.integer "adjustment_basis_points", default: 0, null: false, comment: "調整幅度（basis points，1bp=0.01%）；decrease 側數學上限 10000（低於零價不存在）"
+    t.string "adjustment_type", limit: 24, null: false, comment: "percentage_decrease／percentage_increase（本尊 PriceListAdjustmentType 恰二值）"
+    t.string "compare_at_mode", limit: 16, default: "adjusted", null: false, comment: "adjusted／nullify（本尊 PriceListCompareAtMode；admin 預設開 Include compare-at price ⇒ adjusted，82 §9.5c）"
+    t.datetime "created_at", null: false
+    t.string "currency", limit: 3, null: false, comment: "固定價所用幣別（官方 currency!）"
+    t.string "name", null: false, comment: "顯示名（官方 priceListCreate name!）"
+    t.bigint "sales_catalog_id", null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_price_lists_tenant_id", unique: true
+    t.index ["shop_id", "sales_catalog_id"], name: "uq_price_lists_catalog", unique: true
+  end
+
   create_table "product_options", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品選項，配額由 limits.yml 管理", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -1341,6 +1355,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_070000) do
   add_foreign_key "orders", "customers", column: ["shop_id", "customer_id"], primary_key: ["shop_id", "id"], name: "fk_orders_customer_id"
   add_foreign_key "orders", "shops", name: "fk_orders_shop"
   add_foreign_key "pages", "shops", name: "fk_pages_shop"
+  add_foreign_key "price_lists", "sales_catalogs", column: ["shop_id", "sales_catalog_id"], primary_key: ["shop_id", "id"], name: "fk_price_lists_sales_catalog"
+  add_foreign_key "price_lists", "shops", name: "fk_price_lists_shop"
   add_foreign_key "product_options", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_product_options_product_id"
   add_foreign_key "product_options", "shops", name: "fk_product_options_shop"
   add_foreign_key "product_variant_option_values", "option_values", column: ["shop_id", "product_option_id", "option_value_id"], primary_key: ["shop_id", "product_option_id", "id"], name: "fk_pvov_value"

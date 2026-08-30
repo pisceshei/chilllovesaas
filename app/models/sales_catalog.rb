@@ -51,6 +51,13 @@ class SalesCatalog < ApplicationRecord
 
   acts_as_tenant :shop
 
+  # S10（D76）：三件組的價格面。`dependent: :destroy`＝catalog 刪除必帶走 price list——
+  # 官方 catalogDelete 的 `deleteDependentResources: false` 允許留下孤兒 price list，
+  # 我方**刻意不對位**：`price_lists.sales_catalog_id` NOT NULL ＋ FK，孤兒結構上不存在
+  # （同 S1 對「孤兒 publication」的處置方向；官方語義差異登記 82 §21）。
+  has_one :price_list, dependent: :destroy
+
+
   # 🔴 **沒有 `dependent:`**，這是刻意的。
   #   catalog 被 publication 指著（FK `fk_publications_sales_catalog_id`）⇒ 直接刪
   #   應該被資料庫擋下來，那正是我們要的行為：**沒有 catalog 的 publication

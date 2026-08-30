@@ -2,6 +2,7 @@
 
 require "rails_helper"
 require Rails.root.join("db/migrate/20260826062000_create_sales_catalogs_and_publication_capabilities.rb").to_s
+require Rails.root.join("db/migrate/20260830010000_create_price_lists.rb").to_s
 
 # S0 migration 20260826062000 的 `sales_catalogs` 回填。
 #
@@ -189,6 +190,27 @@ RSpec.describe CreateSalesCatalogsAndPublicationCapabilities do
     #   與 `bin/rails db:rollback` 走同一條路。
     def migration
       described_class.new.tap { |m| m.verbose = false }
+    end
+
+    # 🔴 S10（D76）補：`price_lists` 以複合 FK 依賴 `sales_catalogs`。真實的
+    #   `db:rollback` 會**先**回滾較新的 price_lists 再輪到本支；本群組直接
+    #   `migrate(:down)` 跳過了那個順序 ⇒ 必須自己補上「先降依賴表、事後復原」，
+    #   否則 `drop_table :sales_catalogs` 被 `fk_price_lists_sales_catalog` 擋下、
+    #   down 半途中斷，測試庫被留在改名前狀態，**其後整個套件連鎖紅**
+    #   （2026-08-30 實踩：832 例失敗全是這一格的殘留）。
+    def price_lists_migration
+      CreatePriceLists.new.tap { |m| m.verbose = false }
+    end
+
+    # 🔴 用 before/after 而不是 around：本群組已有「銷毀 shop」的 after（宣告在前），
+    #   RSpec 的 after 依**宣告反序**執行 ⇒ 本對鉤宣告在後、還原先跑——
+    #   shop 銷毀的級聯（SalesCatalog → has_one :price_list）才查得到表。
+    before { price_lists_migration.migrate(:down) }
+
+    after do
+      # 兩格的終態都是 up（sales_catalogs 存在）⇒ 可安全重建 price_lists。
+      price_lists_migration.migrate(:up)
+      PriceList.reset_column_information
     end
 
     it "🔴 down 之後重跑 up：DDL 重建、回填照樣執行，不留懸空 id" do

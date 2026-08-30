@@ -3620,3 +3620,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   由 suggest／全文搜尋兩面代證（specs/93 §F.3）。
 - ⚪ **店級閘門（development／密碼、B2B-only）我方 schema 無承載欄**：屬包 30/33
   射程（82 §9.6a 總表第 1/2 閘）；specs/93 §E 已定行為契約，實作時補欄。
+
+### 3.47 S10（D76）的範圍外觀察（2026-08-30）
+
+- ⚪ **CatalogDelete 的 admin variables 未取得**：claude-in-chrome 網路工具無
+  body 讀取（82 §21.3）；官方輸入形已錨。複驗法＝本地 Chrome DevTools 手動抓包。
+- ⚪ **percentage_increase 官方上限未取得**：不發明；模型只驗 ≥0（82 §21 錨）。
+- ⚪ **price_list_prices（變體級固定價）未建**：金額欄、`*_cents`、鐵律 3 射程；
+  隨 M5 成員模型（88 §3.2）。
+- ⚪ **price list 無 producer**：catalog 管理 UI（Markets 區）與 priceListCreate
+  mutation 隨 M5；本包只交付資料層與不變量。
