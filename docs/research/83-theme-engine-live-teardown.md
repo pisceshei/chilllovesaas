@@ -353,6 +353,40 @@ session 注入）：`postMessage` ✓、message listener ✓、`section_id` ✓�
 | `?sections=` 上限 400 的 body 文案 | 誤差成本低未追 | 隨手補 |
 | Ella 自有 localization form 的 POST 形 | 排程取捨 | 下輪前台包補 |
 
+## §12 CLI 探針輪（2026-08-30 晚；Shopify CLI 4.7.0，使用者完成 OAuth）
+
+工具解鎖：`shopify theme list/pull/push`。店內主題：ella-7-2-0-theme-source
+[live] #165451858155、Horizon [unpublished] #164510695659（主題庫被 §0 iframe
+牆擋住看不到的，CLI 可見）。探針主題 **S9-Probe #166056231147**（unpublished，
+極簡 layout＋受控 product 模板，保留作長期儀器）。
+
+### §12.1 上傳驗證與正規化（pull 全量普查，884 檔）
+
+| 發現 | 逐字／數字 |
+|---|---|
+| layout 驗證錯誤文案 | `Missing {{content_for_header}} in the head section of the template`（缺 content_for_header 時 push 拒收該檔；theme 仍建立） |
+| 必備模板強制 | 新主題被平台自動補 `templates/gift_card.liquid` 且**拒絕刪除**（`templates/gift_card.liquid could not be deleted`） |
+| 🔴 平台把 JSON 寫成 JSONC | 53 個 JSON template／group／settings 檔被平台加上 `/* … auto-generated … */` 頭註——**平台自身的存檔格式就含註釋** ⇒ 我方 tolerant JSON 解析（25 §4）從寬容項升格為必要條件 |
+| 🔴 平台會改寫 Liquid 源碼 | 2 檔（blocks/_country-selector、_product-media-gallery）被修 typo（`loca lPosition:`→`lPosition:`）並在檔尾追加 `{% comment %} This file has been rewritten to preserve the original behavior… Changes: from…to…` 機器 changelog |
+| 其餘 | 828 檔逐位元組相同；唯一真語義差＝templates/index.json 的 media_gallery section settings（素材引用層，41KB blob）；檔案名單零增刪 |
+
+### §12.2 真引擎 drop 語義（受控模板逐格）
+
+| 格 | 真引擎行為 | 我方（#200） |
+|---|---|---|
+| 壞 `?variant=999999999` | 忽略，回退首可購變體 | **同款** ✓（原「ours」升格為已證同形） |
+| `?variant=` 指向售罄變體 | 選中生效（selection 壓過 availability） | 同款 ✓ |
+| 全售罄（單變體）sofav | 回該變體（非 nil） | 同款 ✓（多變體全售罄格仍未取證） |
+| `{{ product.status }}` | 空輸出 | 同款 ✓（93 §D 真引擎級驗證） |
+| 缺屬性／缺屬性 `\| money` | 空／空 | 同款 ✓ |
+| `inventory_quantity/policy/management` | 10／deny／shopify | 語義同款 ✓ |
+| `value.available/selected/id` | S=true,true,\<option_value_id\>；售罄值 false | 介面同款 ✓ |
+| `variant.url` | `/products/{handle}?variant={id}` | 同款 ✓ |
+| 🔴 全 nil compare_at 的 min/max | 印 **0** | 原回 nil ⇒ **已修**（0 fallback） |
+| 🔴 `weight_unit` | 預設 `kg` | 原 miss-nil ⇒ **已補**（常數 kg，ours） |
+| `product \| json` | ≈ `.js`：差 `url`↔`content`、variant 無 `quantity_price_breaks`、無 media | 登記（W6 json filter parity） |
+| `options_with_values \| json` | values＝**純字串陣列**（drop 面有屬性、json 面壓平） | 登記（W6 json filter parity） |
+
 ## §11 對四件套的回寫索引
 
 - **25 §3**：window.Shopify stub 集加 Ella legacy 八件（→ §5）；坑13 更正註。
