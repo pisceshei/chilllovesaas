@@ -552,5 +552,10 @@
   "product.media.embedVideoAdd": "加入影片",
   "product.media.embedVideoUrl": "影片網址",
   "product.media.embedVideoHint": "貼上 YouTube 或 Vimeo 的影片頁網址。影片存放在該平台，不佔用你的儲存空間。",
-  "product.media.embedVideoPrivacy": "播放器會以平台的隱私強化模式載入（YouTube 用 youtube-nocookie、Vimeo 帶 dnt 參數），減少追蹤用途的資料收集。"
+  "product.media.embedVideoPrivacy": "播放器會以平台的隱私強化模式載入（YouTube 用 youtube-nocookie、Vimeo 帶 dnt 參數），減少追蹤用途的資料收集。",
+  "collection.channels.trigger.one": "1 個管道",
+  "collection.channels.trigger.many": "{count} 個管道",
+  "collection.channels.triggerAria": "管理銷售管道：已發布至 {count} 個管道",
+  "collection.channels.tooltip": "管理發布",
+  "collection.channels.title": "銷售管道"
 }
