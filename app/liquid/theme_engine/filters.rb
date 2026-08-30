@@ -95,15 +95,8 @@ module ThemeEngine
     def handleize(input) = input.to_s.downcase.gsub(/[^a-z0-9\p{Han}]+/, "-").gsub(/\A-|-\z/, "")
     alias_method :handle, :handleize
 
-    def json(input)
-      JSON.generate(input)
-    rescue StandardError
-      begin
-        JSON.generate(input.to_s)
-      rescue StandardError
-        '""'
-      end
-    end
+    # drop 感知（資料出口包）：形狀契約與黑名單見 JsonSerializer 檔頭。
+    def json(input) = JsonSerializer.dump(input)
 
     def time_tag(input, _fmt = nil, _o = {}) = %(<time datetime="#{input}">#{input}</time>)
 

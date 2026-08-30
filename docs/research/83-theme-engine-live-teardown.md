@@ -419,6 +419,30 @@ section id）。復位法＝帶一次正式主題 id（`?preview_theme_id={live 
 `sections--N__key` 實例 id，我方 v1 用 template／群組 JSON 的 section 鍵
 （DB 實例化隨編輯器寫入面）。
 
+### §12.4 資料出口三格＋json 黑名單（2026-08-31 晚；S9-CAP 佈置後探針）
+
+店端佈置：S9-CAP 設 category（T-Shirts in Clothing Tops）＋metafield
+（`fecify.product_id`＝"S9CAP-FEC-001"，定義型別 `id`）＋加入兩系列
+（S9-Col-Test 已發布／S9-Col-Hidden 已拔 OS 發布——**先存成員再重測**，
+排除格乾淨）。
+
+| 面 | 真引擎行為（逐格） |
+|---|---|
+| `product.category` | to_s＝名稱；`\| json`＝名稱字串；`.id`＝路徑碼 `aa-1-13-8`；`.gid`＝`gid://shopify/TaxonomyCategory/aa-1-13-8`；`.name`＝名稱 |
+| category 副作用 | 選定 taxonomy 分類後 admin 解鎖「Category metafields」卡（本例 13 屬性：Neckline 等）——分類屬性面（值域登記） |
+| `product.collections` | 🔴 **只含渲染管道上已發布的系列**（Hidden 成員已存仍排除）；json 形＝9 鍵 `{id, handle, updated_at, published_at, sort_order, template_suffix, published_scope, title, body_html}`；body_html 空 ⇒ null；sort_order 見 "most-relevant"（新預設值域） |
+| `product.metafields` | root **不可迭代**、`\| json` ⇒ `{"error":"json not allowed for this object"}`；任意 namespace 存取回 namespace 物件（未知＝空） |
+| namespace 層 | `\| json`＝**扁平 {key: value}** |
+| 單一 metafield | 直接輸出＝值；`.value`＝值；`.type`＝定義型別（實測 "id"）；`\| json` **同樣拒絕**；缺 key ⇒ 空、`.value` 鏈安全 |
+| admin 佈置面 | 2026 系列編輯器＝ `s-*` web components（shadow DOM，light DOM 無 input——DOM 自動化要先點喚起再打字）；系列建立頁右欄一級 `+Exclude` 排除集合；商品加入已存系列＝即時提交（無 save bar）——但**新建時**成員掛 pending，存前量測會拿到假排除（本輪踩過，先存再測） |
+
+已落地（同日資料出口包）：CategoryDrop（name=nil 登記——taxonomy 名稱字典
+未落庫，平台字典表候選）／MetafieldsRoot+Namespace+MetafieldDrop（黑名單同形）／
+`product.collections` 接 memberships×published_on／json parity（product 25 鍵
+含 content 無 url、variant 21 鍵無 quantity_price_breaks、owv 壓平）。
+🔴 帶圖商品的 image-json 形仍未測（測試品無圖）——ImageDrop json＝ours 欄位，
+登記待探針對表。
+
 ## §11 對四件套的回寫索引
 
 - **25 §3**：window.Shopify stub 集加 Ella legacy 八件（→ §5）；坑13 更正註。
