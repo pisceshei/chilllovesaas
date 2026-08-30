@@ -35,7 +35,7 @@ module Admin
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
         design_mode: false, host: request.host
-      ).render("/#{params[:path]}")
+      ).render("/#{params[:path]}", params: request.query_parameters)
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
       render html: result.html.html_safe, status: result.status, layout: false
