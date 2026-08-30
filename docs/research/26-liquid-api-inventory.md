@@ -89,7 +89,7 @@
 | linklists | 全店選單集合（by handle） | `linklists['main-menu']` | 全域 | T0 |
 | linklist | 選單 | handle:string, title:string, links:array\<link>, levels:number | linklists | T0 |
 | link | 選單項（可 3 層巢狀） | title:string, url:string, active:boolean, child_active:boolean, current:boolean, child_current:boolean, links:array\<link>, handle:string, type:string, object, levels:number | linklist.links | T0 |
-| routes | 全部標準路徑 URL（共 19 屬性，全列） | root_url, account_url, account_login_url, account_logout_url, account_register_url, account_recover_url, account_addresses_url, account_profile_url, storefront_login_url, collections_url, all_products_collection_url, search_url, predictive_search_url, cart_url, cart_add_url, cart_change_url, cart_clear_url, cart_update_url, product_recommendations_url（皆 string） | 全域 | T0 |
+| routes | 全部標準路徑 URL（共 19 屬性，全列）<br><!-- 2026-08-30 live（83 §4.4）：平台 `window.Shopify.routes` 只注入 `root`；Ella 另自注入 `window.routes` 十鍵，其中 **`root` 字面 null**（`root_url` 才有值）——相容層照抄，勿「修正」。 --> | root_url, account_url, account_login_url, account_logout_url, account_register_url, account_recover_url, account_addresses_url, account_profile_url, storefront_login_url, collections_url, all_products_collection_url, search_url, predictive_search_url, cart_url, cart_add_url, cart_change_url, cart_clear_url, cart_update_url, product_recommendations_url（皆 string） | 全域 | T0 |
 
 ### 1.6 店面、請求與設定
 

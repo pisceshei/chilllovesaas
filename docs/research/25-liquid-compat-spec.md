@@ -64,6 +64,10 @@
 - **nil-stub 策略**：Dawn/Horizon 模板會引用大量 T1/T2 屬性；T0 階段所有 138 objects 的屬性都必須「存在且回 nil/空陣列」（用 `liquid_method_missing` 統一兜底＋遙測記錄），否則渲染直接炸。
 - **金額慣例**：所有 money 屬性回傳 **cents 整數**，由 money filters 格式化——與我們全站 integer cents 鐵律一致。
 - **`content_for_header` 注入**：主題 JS 依賴 `window.Shopify.*` 全域（實查 Dawn/Horizon 用到：`designMode / routes.root / loadFeatures / ModelViewerUI / CountryProvinceSelector / PaymentButton / postLink`）——我們的 header 注入要提供同名 API（自寫實作）。
+  <!-- 2026-08-30 live 更正（83 §5）：真店（Ella 7.2.0）實測 window.Shopify 共 32 鍵，
+       比本清單多出 legacy 八件：formatMoney / getCart / onCartUpdate / removeItem /
+       bind / setSelectorByValue / addListener / postLink（option_selection.js 世代）。
+       Ella 相容 stub 集以 83 §5 的 live 清單為準，本行 Dawn/Horizon 集是子集。 -->
 - **`routes` drop（19 個 URL 屬性）是第一相容層**：主題 JS 不硬編碼路徑、而是讀 `theme.liquid` 注入的 `window.routes`（cart_add_url…）。但**回應格式**仍是硬依賴（§5）。
 - 自動化：clone theme-liquid-docs 的 `data/*.json`（138 objects 全屬性+型別）→ 代碼生成 drop 骨架＋相容性測試表。
 
@@ -94,7 +98,7 @@
 
 | 端點 | 要點 |
 |---|---|
-| `GET /cart.js`（**及** `/cart.json`——Dawn 兩個都打） | 回 cart object：token/note/attributes/original_total_price/total_price/total_discount/total_weight/item_count/items[]/requires_shipping/currency/items_subtotal_price/cart_level_discount_applications[]。items[] 每項 30+ 欄位（id=variant_id、key=`{line_id}:{hash}`、price/final_price/final_line_price、properties、featured_image{url,alt,width,height,aspect_ratio}、options_with_values、url 含 ?variant=、quantity_rule…） |
+| `GET /cart.js`（**及** `/cart.json`——Dawn 兩個都打；2026-08-30 live 實測**兩端點頂層鍵序完全相同**，且比本列多一鍵 **`discount_codes`**——83 §3.3） | 回 cart object：token/note/attributes/original_total_price/total_price/total_discount/total_weight/item_count/items[]/requires_shipping/currency/items_subtotal_price/cart_level_discount_applications[]。items[] 每項 30+ 欄位（id=variant_id、key=`{line_id}:{hash}`、price/final_price/final_line_price、properties、featured_image{url,alt,width,height,aspect_ratio}、options_with_values、url 含 ?variant=、quantity_rule…） |
 | `POST /cart/add.js` | **同時支援** multipart/form-data（Dawn product form 原樣 FormData）與 JSON `{items:[{id,quantity,properties,selling_plan}]}`；支援 Bundled Section Rendering（`sections`≤5＋`sections_url`→回應加 `sections:{id:html}`）；**成功回「被加入的 items」非整車**（Dawn 會再打 /cart.js 取總計）；錯誤 422 `{status,message:"Cart Error",description}` |
 | `POST /cart/update.js` | `{updates:{variant_id_or_key:qty}\|[qty…], note, attributes, discount, sections}` → 完整 cart JSON |
 | `POST /cart/change.js` | `{id\|line(1 起算), quantity(0=移除), properties(整包覆蓋), selling_plan, sections}` → 完整 cart JSON；`{status:"bad_request"}` 或 422 |
@@ -188,6 +192,9 @@ end
 10. **授權 gate 跳過**：§8 的聲明勾選不是 nice-to-have，是上線前置條件。
 11. **寬容解析缺失**：第三方原始碼包的 schema/settings JSON 常帶註解與尾逗號（官方後台會清、原始碼不會）——匯入管線必須 tolerant parse＋規範化，否則 Ella 這類主題第一步就掛。
 12. **缺 group 檔要寬容**：Ella 的 theme.liquid 引用不存在的 `toolbar-mobile` group——渲染空＋警告，不可炸。
+    <!-- 2026-08-30 live 證實（83 §9）：真店跑同一份主題，該群組引用靜默空渲染、頁面照常
+         （warning 面未取得）。「渲染空」由推定升格為實證；同名 sections/toolbar-mobile.liquid
+         是 popup 群組的成員 section，與群組引用是兩回事。 -->
 13. **`Shopify.*` no-op stubs 不做**：主題 JS 引用 ShopifyXR/PaymentButton/loadFeatures/CountryProvinceSelector——沒有 stub 就是 console 炸裂＋功能連鎖失效。
 14. **（PoC 實測）`blank` 語義依賴 ActiveSupport**：gem 的 `x == blank` 走 `MethodLiteral(:blank?)`，裸 Ruby 無 `Object#blank?` → `undefined == blank` 恆 false——主題「`if x == blank` → assign」慣用法全滅（實測 Ella 全部標題消失）。Rails 環境自帶 ActiveSupport 即修復；**引擎啟動自檢必須驗證 blank?/present? 已載**。
 15. **（PoC 實測）strscan 版本鏈**：liquid 5.6+ 需 strscan ≥3.1.1（`peek_byte`）；Ruby 3.3 內建 3.0.x 直接炸——Gemfile 明鎖 `gem "strscan", ">= 3.1.1"`。
