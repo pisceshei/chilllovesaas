@@ -74,6 +74,9 @@ Rails.application.routes.draw do
     get "llms-full.txt" => "storefront/agents#show", format: false
     # localization 表單（包 34；67 §F.2 country+language 兩欄位）：裸與帶前綴兩形。
     post "localization" => "storefront/localization#create", format: false, as: :storefront_localization
+    # 結帳線第一包：cart→checkout 建立＋token URL（15 F3；one-page UI 隨後續包）。
+    post "checkout" => "storefront/checkouts#create", format: false, as: :storefront_checkout
+    get "checkouts/:token" => "storefront/checkouts#show", format: false, as: :storefront_checkout_show
     # 🔴 帶前綴的 cart／localization（包 34）：RoutesDrop 對主題吐 `{prefix}/cart/add` 等
     #   帶前綴 URL（67 §F.4），POST 不經 GET catch-all ⇒ 必須顯式收。
     #   constraint 正則＝Markets::UrlPrefix::SEGMENT 的字面複本（routes 載入時機不宜
@@ -91,6 +94,7 @@ Rails.application.routes.draw do
       post "cart/clear.js"  => "storefront/cart#clear"
       post "cart/clear"     => "storefront/cart#clear"
       post "localization"   => "storefront/localization#create"
+      post "checkout"       => "storefront/checkouts#create"
     end
     get "/" => "storefront/pages#root", as: :storefront_root
     get "*path" => "storefront/pages#show", format: false, as: :storefront_page
