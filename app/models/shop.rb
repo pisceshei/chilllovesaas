@@ -65,6 +65,15 @@ class Shop < ApplicationRecord
   has_many :locations, dependent: :delete_all
   has_many :inventory_items, dependent: :delete_all
   has_many :inventory_adjustment_groups, dependent: :delete_all
+  # 🔴 markets／domains 必須排在 shop_locales **之前**（dependent 依宣告順序執行）：
+  #    market_web_presence(_locale)s 有複合 FK restrict 指向 shop_locales——先清語言列會被
+  #    FK 擋下「空店刪不掉」。刪 markets 由 DB cascade 帶走 regions／presences／白名單列，
+  #    domains 隨後才無 presence 引用（fk_mwp_domain restrict）。
+  # ⚠️ 用 `delete_all` 而非 `destroy`：Market#before_destroy 擋 primary market——
+  #    那是保護**活著的店**；整店刪除時市場必須跟著走，走 destroy 會被自己的守門擋成
+  #    「空店刪不掉」，與 shop_locales 繞 SOURCE_LOCALE_IMMUTABLE 是同一條理由（見上方 i18n 註釋）。
+  has_many :markets, dependent: :delete_all
+  has_many :domains, dependent: :delete_all
   has_many :shop_locales, dependent: :delete_all
   has_many :translations, dependent: :delete_all
   has_many :translation_statuses, class_name: "TranslationStatus", dependent: :delete_all
@@ -84,6 +93,9 @@ class Shop < ApplicationRecord
   after_create :create_default_publication
   after_create :create_default_location
   after_create :enable_launch_locales
+  # 🔴 必須排在 enable_launch_locales 之後（after_create 依註冊順序執行）：
+  #    presence.default_shop_locale 與白名單列都有複合 FK 指向 shop_locales——語言列先存在。
+  after_create :provision_default_market
   # 🔴 `prepend: true` 不可省。`has_many ... dependent: :destroy` 是在**關聯宣告當下**
   # 註冊成 `before_destroy` 的，而本檔的關聯宣告在這行之上 ⇒ 不 prepend 的話，
   # dependent 的刪除會**先跑**、落在租戶包裹之外，`NoTenantSet` 照樣拋。
@@ -224,6 +236,14 @@ class Shop < ApplicationRecord
         )
       end
     end
+  end
+
+  # 建店預設市場鏈（包 32）：primary market HK ＋ primary domain ＋ presence ＋ 語言白名單。
+  # 🔴 薄呼叫端——實作只有 `Markets::ProvisionDefaults` 一份（既有店回填 migration 同一支）。
+  # 為什麼建店就要有：url_prefix 恆帶 region（67 §F.1(b)），region 來自市場——
+  # 沒有市場的店一條前台 URL 都組不出來（B11：v1 單一 HK 市場先接通整條鏈）。
+  def provision_default_market
+    Markets::ProvisionDefaults.call(shop: self)
   end
 
   # 判斷 M0 是否可路由已持久化的 custom domain。

@@ -1636,6 +1636,13 @@ cache_stamp = MAX(
 **2026-08-13 依 locale 碼裁定 ＋ per-market 白名單裁定 ＋ 鐵律 9 界線的鍵變更**
 🔴 **這一組的依據是「使用者裁定」，不是查證，也不是跟隨 Shopify。** 其中 `i18n.locale_prefix.*` 是本檔第二處明知偏離本尊（第一處＝handle 的 `ascii_only`，62 §F.3-1）。
 
+> 🔴 **2026-08-31 更正（包 32；鐵律 19.5）**：本節標題「本輪已落鍵」對下表這一組**當時不實**——
+> 2026-08-13 只改了規格文字，`i18n.locale_prefix.*`／`i18n.market_locales.*`／
+> `i18n.admin.translation_input_mode.*`／`naming_contract.*` 四組**從未寫進 `config/limits.yml`**
+> （可重跑驗證：對 2026-08-31 前任一 commit `git grep -c locale_prefix -- config/limits.yml` ＝ 0）。
+> 四組已隨包 32 於 2026-08-31 實際落鍵；`naming_contract` 落為 limits **§24**（原文寫 §23，
+> 該編號其時已被商品 CSV 區塊佔用）。原文照鐵律 19.5 保留不改。
+
 | 鍵 | 原值 → 新值 | 依據 | 本檔落點 |
 |---|---|---|---|
 | 🔴 `i18n.locale_prefix.*`（**新子區塊**） | 新增：`always_region_qualified: true`／`bare_language_prefix_forbidden: true`／`format`／`case: lowercase`／`root_path_behavior: redirect_to_default_prefix`／`root_redirect_status: 302`／`prefix_is_market_locale_identity: true`／`market_determined_by: url_only`／`unknown_prefix_status: 404`／`never_reused_as_hreflang_code: true`／`multi_country_region_source` | 裁定 2026-08-13（§F.1(b)）＋ 我方推導兩處（根路徑 ⇒ **V-221**、多國市場前綴 ⇒ **V-225**） | §F.1(b)(b-2)(c) |

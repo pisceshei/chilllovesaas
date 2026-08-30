@@ -156,6 +156,10 @@ RSpec.describe "唯一索引在併發下仍然有效", type: :model do
     # ML-0（2026-08-23）：Shop 建立 callback 另生 shop_locales（FK → shops），同理先刪。
     Translation.unscoped.delete_all
     TranslationStatus.unscoped.delete_all
+    # 包 32：markets 鏈先於 shop_locales（複合 FK fk_mwp_default_locale／fk_mwpl_shop_locale）；
+    # 刪 markets 由 DB cascade 帶走 regions／presences／白名單列，domains 隨後才無 presence 引用。
+    Market.unscoped.delete_all
+    Domain.unscoped.delete_all
     ShopLocale.unscoped.delete_all
     Shop.delete_all
   end

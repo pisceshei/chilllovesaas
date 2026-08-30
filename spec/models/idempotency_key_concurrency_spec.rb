@@ -38,6 +38,9 @@ RSpec.describe IdempotencyKey, "concurrency" do
       # ML-0（2026-08-23）：Shop 建立 callback 另生 shop_locales（FK → shops），同理先刪。
       Translation.unscoped.delete_all
       TranslationStatus.unscoped.delete_all
+      # 包 32：markets 鏈先於 shop_locales（複合 FK）；cascade 帶走 regions／presences／白名單列。
+      Market.unscoped.delete_all
+      Domain.unscoped.delete_all
       ShopLocale.unscoped.delete_all
       Shop.delete_all
     end

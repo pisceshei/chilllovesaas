@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_151000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -326,6 +326,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
     t.index ["shop_id", "method", "status"], name: "ix_discounts_method_status"
     t.index ["shop_id", "status", "ends_at"], name: "ix_discounts_status_ends_at"
     t.index ["shop_id", "status", "starts_at"], name: "ix_discounts_status_starts_at"
+  end
+
+  create_table "domains", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "網域（實測 2026-08-31 Settings→Domains）：host→shop 解析的權威表（步 2 消費）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "domain_type", limit: 16, default: "primary", null: false, comment: "primary|redirect|alias（實測 Change domain type 對話恰三值，逐字 Primary/Redirecting/Alias domain）"
+    t.string "host", limit: 253, null: false, comment: "小寫 FQDN，不含 scheme／port"
+    t.virtual "primary_guard", type: :integer, as: "if((`domain_type` = _utf8mb4'primary'),1,NULL)", stored: true
+    t.bigint "shop_id", null: false
+    t.string "status", limit: 16, default: "active", null: false, comment: "pending|active（本尊列表 Status=Connected；DNS 驗證 ops 隨 bt3 配套，v1 先兩值）"
+    t.datetime "updated_at", null: false
+    t.index ["host"], name: "uq_domains_host", unique: true
+    t.index ["shop_id", "id"], name: "uq_domains_tenant_id", unique: true
+    t.index ["shop_id", "primary_guard"], name: "uq_domains_single_primary", unique: true
   end
 
   create_table "einvoice_allowances", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "發票折讓（HK 恆空；tw pack 用）", force: :cascade do |t|
@@ -644,6 +657,68 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
     t.index ["shop_id", "active", "priority"], name: "ix_locations_active_priority"
     t.index ["shop_id", "id"], name: "uq_locations_tenant_id", unique: true
     t.index ["shop_id", "name"], name: "uq_locations_name", unique: true
+  end
+
+  create_table "market_regions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "市場的 region conditions（29 §1.4）：active 市場不得重疊（model 層驗證）", force: :cascade do |t|
+    t.string "country_code", limit: 2, null: false, comment: "ISO 3166-1 alpha-2，大寫"
+    t.datetime "created_at", null: false
+    t.bigint "market_id", null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["market_id"], name: "fk_market_regions_market"
+    t.index ["shop_id", "country_code"], name: "ix_market_regions_by_country", comment: "「這個國家屬於哪些市場」——active 重疊驗證與 buyer 命中都走這裡"
+    t.index ["shop_id", "market_id", "country_code"], name: "uq_market_regions_country", unique: true
+  end
+
+  create_table "market_web_presence_locales", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "per-market 語言白名單（67 §C.8）。? 粒度是 presence 不是 market：市場的開放語言＝resolved presences 的聯集，任何 UPDATE ... WHERE market_id 形態的寫入都是 bug", force: :cascade do |t|
+    t.datetime "closed_at", comment: "關閉時點——關閉是狀態轉換不是刪除（67 §C.8：404 與失效掛鉤要用）"
+    t.datetime "created_at", null: false
+    t.virtual "default_guard", type: :integer, as: "if(`is_market_default`,1,NULL)", stored: true
+    t.boolean "is_market_default", default: false, null: false, comment: "＝(locale_tag == presence.default_shop_locale)；為進複合唯一索引而物化（67 §C.8(b)）"
+    t.string "locale_tag", limit: 35, null: false
+    t.bigint "market_web_presence_id", null: false
+    t.boolean "open_to_buyers", default: true, null: false, comment: "白名單開關本身（67 §A.5）"
+    t.integer "position", default: 0, null: false, comment: "切換器顯示順序（商家唯一的排序控制點，鐵律 7）"
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["market_web_presence_id"], name: "fk_mwpl_presence"
+    t.index ["shop_id", "locale_tag"], name: "ix_mwpl_by_locale", comment: "「這個語言開給了哪些市場」（關語言前的影響評估，67 §C.8）"
+    t.index ["shop_id", "market_web_presence_id", "default_guard"], name: "uq_mwpl_single_default", unique: true
+    t.index ["shop_id", "market_web_presence_id", "locale_tag"], name: "uq_mwpl_locale", unique: true
+  end
+
+  create_table "market_web_presences", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "市場的網站呈現（29 §1.2）：domain XOR subfolder；沿 lineage 累加繼承（additive）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "default_shop_locale", limit: 35, null: false, comment: "該 presence 的預設 locale（29 §1.4 欄名沿用）；mwpl.is_market_default 與它同一真相（67 §C.8(b)）"
+    t.bigint "domain_id", comment: "獨立網域／子網域策略時指向 domains；與 subfolder_suffix 互斥"
+    t.bigint "market_id", null: false
+    t.bigint "shop_id", null: false
+    t.string "subfolder_suffix", limit: 8, comment: "子資料夾策略的識別字（小寫）；多國市場它兼任前綴 region 來源（67 §F.1(b-2) 暫案 C，V-225）"
+    t.datetime "updated_at", null: false
+    t.index ["domain_id"], name: "fk_mwp_domain"
+    t.index ["market_id"], name: "fk_mwp_market"
+    t.index ["shop_id", "default_shop_locale"], name: "fk_mwp_default_locale"
+    t.index ["shop_id", "domain_id", "subfolder_suffix"], name: "ix_mwp_domain_suffix"
+    t.index ["shop_id", "id"], name: "uq_mwp_tenant_id", unique: true
+    t.index ["shop_id", "market_id"], name: "ix_mwp_market"
+    t.check_constraint "(`domain_id` is null) <> (`subfolder_suffix` is null)", name: "ck_mwp_domain_xor_subfolder"
+  end
+
+  create_table "markets", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "市場（29 §1.1）：conditions 決定命中；parent 由推導不由欄位", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "derived_parent_market_id", comment: "? 推導快取不是權威欄位（29 §1.5(a)）：conditions 變更即重算；不得手動指定"
+    t.string "handle", null: false
+    t.boolean "is_primary", default: false, null: false, comment: "primary market：恰含一國、不可刪（29 §1.1）。29 原文欄名 primary＝MySQL 保留字，改 is_primary"
+    t.string "market_type", limit: 32, default: "region", null: false, comment: "region|company_location|location|channel|none（29 §1.1 MarketType；實測 Market conditions 四類＝Regions/POS locations/Company locations/Channels）"
+    t.string "name", null: false
+    t.virtual "primary_guard", type: :integer, as: "if(`is_primary`,1,NULL)", stored: true
+    t.bigint "shop_id", null: false
+    t.string "status", limit: 16, default: "active", null: false, comment: "active|draft（實測 2026-08-31：New market 表單原生 select 恰兩值 DRAFT/ACTIVE）"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "handle"], name: "uq_markets_handle", unique: true
+    t.index ["shop_id", "id"], name: "uq_markets_tenant_id", unique: true
+    t.index ["shop_id", "primary_guard"], name: "uq_markets_single_primary", unique: true
+    t.index ["shop_id", "status"], name: "ix_markets_status"
   end
 
   create_table "media", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "商品媒體 metadata；檔案本體走 object storage", force: :cascade do |t|
@@ -1336,6 +1411,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
   add_foreign_key "discount_applications", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_order_id"
   add_foreign_key "discount_applications", "shops", name: "fk_discount_applications_shop"
   add_foreign_key "discounts", "shops", name: "fk_discounts_shop"
+  add_foreign_key "domains", "shops", name: "fk_domains_shop"
   add_foreign_key "einvoice_allowances", "einvoices", column: ["shop_id", "einvoice_id"], primary_key: ["shop_id", "id"], name: "fk_einvoice_allowances_einvoice_id"
   add_foreign_key "einvoice_allowances", "shops", name: "fk_einvoice_allowances_shop"
   add_foreign_key "einvoices", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_einvoices_order_id"
@@ -1369,6 +1445,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
   add_foreign_key "line_items", "product_variants", column: ["shop_id", "product_variant_id"], primary_key: ["shop_id", "id"], name: "fk_line_items_product_variant_id"
   add_foreign_key "line_items", "shops", name: "fk_line_items_shop"
   add_foreign_key "locations", "shops", name: "fk_locations_shop"
+  add_foreign_key "market_regions", "markets", name: "fk_market_regions_market", on_delete: :cascade
+  add_foreign_key "market_web_presence_locales", "market_web_presences", name: "fk_mwpl_presence", on_delete: :cascade
+  add_foreign_key "market_web_presence_locales", "shop_locales", column: ["shop_id", "locale_tag"], primary_key: ["shop_id", "locale_tag"], name: "fk_mwpl_shop_locale"
+  add_foreign_key "market_web_presences", "domains", name: "fk_mwp_domain"
+  add_foreign_key "market_web_presences", "markets", name: "fk_mwp_market", on_delete: :cascade
+  add_foreign_key "market_web_presences", "shop_locales", column: ["shop_id", "default_shop_locale"], primary_key: ["shop_id", "locale_tag"], name: "fk_mwp_default_locale"
+  add_foreign_key "markets", "shops", name: "fk_markets_shop"
   add_foreign_key "media", "files", column: ["shop_id", "file_id"], primary_key: ["shop_id", "id"], name: "fk_media_file_id"
   add_foreign_key "media", "product_variants", column: ["shop_id", "product_variant_id"], primary_key: ["shop_id", "id"], name: "fk_media_product_variant_id"
   add_foreign_key "media", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_media_product_id"
