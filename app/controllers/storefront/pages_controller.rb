@@ -52,6 +52,22 @@ module Storefront
         locale_tag: hit.locale_tag, path: rest, params: cache_params
       ) { render_page(hit, rest) }
 
+      # 301 引擎（包 36）：掛在 404 之前、活頁面先贏（渲染 200 就不查表）。
+      # 查表用無前綴正規路徑，命中後**保留前綴** 301（/en-hk/products/舊 ⇒ /en-hk/products/新）。
+      if payload["status"] == 404
+        redirect = ActsAsTenant.with_tenant(current_shop) do
+          RedirectResolver.resolve(shop: current_shop, path: rest)
+        end
+        if redirect
+          return head :gone if redirect.status_code == 410
+
+          prefix = Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag)
+          target = "#{prefix}#{redirect.to_path}"
+          target += "?#{request.query_string}" if request.query_string.present?
+          return redirect_to target, status: redirect.status_code, allow_other_host: false
+        end
+      end
+
       # B13 的 X-Robots-Tag noindex 已隨包 35（SEO 開放）摘除；UNLISTED 的 noindex
       # 由 Seo::HeadTags 以 meta robots 承接（limits `product.unlisted_meta_robots`）。
       render html: payload["html"].html_safe, status: payload["status"], layout: false

@@ -62,6 +62,13 @@ module Types
       description: "更新已啟用語言的發布狀態與排序。"
     field :shop_locale_disable, mutation: Mutations::ShopLocaleDisable,
       description: "停用一個內容語言（保留譯文）。"
+    # 包 36：路徑級重導管理（62 §B.5；301 引擎的後台面）。
+    field :url_redirect_create, mutation: Mutations::UrlRedirectCreate,
+      description: "建立自訂 301 重導（無 locale 前綴正規形）。"
+    field :url_redirect_delete, mutation: Mutations::UrlRedirectDelete,
+      description: "刪除一筆重導（刪除＝釋放舊 handle，HDL-8）。"
+    field :url_redirect_update, mutation: Mutations::UrlRedirectUpdate,
+      description: "更新自訂重導（系統產生列不可改）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**
     #   `resource_publications` 的非建立寫入路徑（在它之前發布列只在建立時被寫入）。
     field :publication_create, mutation: Mutations::PublicationCreate,
