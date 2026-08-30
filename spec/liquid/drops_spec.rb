@@ -140,8 +140,6 @@ RSpec.describe "ThemeEngine drops（商品前台補完）" do
     end
 
     it "P4 compare_at_price_varies＝跨變體計算（兩個相異非 nil 值 ⇒ true；全 nil ⇒ false）" do
-      # 🔴 nil 混值（部分變體無 compare_at）的本尊 varies 語義未取證——本格刻意
-      #   只測無爭議端；混值格待 CLI 探針對表後補（缺口分析 §D 同軸）。
       product, variants, = build_tshirt
       base = drop_for(product)
       expect(base.compare_at_price_varies).to be(false)
@@ -153,6 +151,29 @@ RSpec.describe "ThemeEngine drops（商品前台補完）" do
         variants[1].update!(compare_at_price_cents: 30_000)
       end
       expect(drop_for(product).compare_at_price_varies).to be(true)
+    end
+
+    it "P4b 🔴 nil 混值（真引擎 2026-08-31 探針，83 §12.2）：nil 排除、不當 0 參與；varies 只比非 nil 集合" do
+      # live 對照組（S9-CAP-Mix-Test 9918007967979）：A=15000、B=nil ⇒
+      # 單數/min/max 全＝15000、varies=false。
+      product, variants, = build_tshirt
+      ActsAsTenant.with_tenant(shop) { variants[0].update!(compare_at_price_cents: 15_000) }
+      d = drop_for(product)
+      expect(d.compare_at_price).to eq(15_000)
+      expect(d.compare_at_price_min).to eq(15_000)
+      expect(d.compare_at_price_max).to eq(15_000)
+      expect(d.compare_at_price_varies).to be(false)
+    end
+
+    it "P5 🔴 多變體全售罄（真引擎雙商品證據，83 §12.2）：sofav＝position 首位、first_available_variant＝nil" do
+      product, variants, = build_tshirt
+      ActsAsTenant.with_tenant(shop) do
+        stock!(variants[0], 0)
+        variants[2].update!(inventory_policy: "deny")
+      end
+      d = drop_for(product)
+      expect(d.first_available_variant).to be_nil
+      expect(d.selected_or_first_available_variant.title).to eq("S")
     end
   end
 

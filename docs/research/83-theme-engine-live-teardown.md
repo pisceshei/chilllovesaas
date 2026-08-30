@@ -359,6 +359,11 @@ session 注入）：`postMessage` ✓、message listener ✓、`section_id` ✓�
 [live] #165451858155、Horizon [unpublished] #164510695659（主題庫被 §0 iframe
 牆擋住看不到的，CLI 可見）。探針主題 **S9-Probe #166056231147**（unpublished，
 極簡 layout＋受控 product 模板，保留作長期儀器）。
+2026-08-31 增：探針商品 **S9-CAP-Mix-Test 9918007967979**（Size A/B 兩變體
+全 0 庫存；A 帶 compare_at 15000、B 無——nil 混值與全售罄的長期對照組，
+**保持現狀勿改**）。順手值域：變體選項可綁 metafield（Add options popover
+先搜相容 metafields、無則 Create custom option）；變體詳情頁「Additional
+display prices」含 Compare-at price＋**Unit price** 真控件。
 
 ### §12.1 上傳驗證與正規化（pull 全量普查，884 檔）
 
@@ -386,6 +391,9 @@ session 注入）：`postMessage` ✓、message listener ✓、`section_id` ✓�
 | 🔴 `weight_unit` | 預設 `kg` | 原 miss-nil ⇒ **已補**（常數 kg，ours） |
 | `product \| json` | ≈ `.js`：差 `url`↔`content`、variant 無 `quantity_price_breaks`、無 media | 登記（W6 json filter parity） |
 | `options_with_values \| json` | values＝**純字串陣列**（drop 面有屬性、json 面壓平） | 登記（W6 json filter parity） |
+| 多變體全售罄 sofav／fav（2026-08-31 補量；P12＋S9-CAP 雙商品） | sofav＝position 首位變體、`first_available_variant`＝**nil** | 同款 ✓（`\|\| variants.first`／`find(&:available)`） |
+| compare_at **nil 混值**（A=15000、B=nil；S9-CAP-Mix-Test） | 單數／min／max 全＝**15000**（nil 排除、不當 0 參與）、varies=**false**（只比非 nil 集合） | 同款 ✓（filter_map 實作四項零分歧） |
+| compare_at **單數形**（全 nil） | **空（nil）**——與 min/max 的 0 **分裂** | 同款 ✓ |
 
 ## §11 對四件套的回寫索引
 
