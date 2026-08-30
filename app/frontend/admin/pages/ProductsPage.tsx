@@ -1,5 +1,5 @@
-import { PackagePlus, Plus, RefreshCw, Search } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ChevronDown, PackagePlus, Plus, RefreshCw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
 import { DEFAULT_PAGE_SIZE } from "../api/pagination";
@@ -15,6 +15,7 @@ import { TextField } from "../components/TextField";
 import { useT, useUiLocale } from "../i18n/I18nContext";
 import { LoadMore } from "../components/LoadMore";
 import { useCursorPagination } from "../lib/useCursorPagination";
+import { Popover } from "../components/Popover";
 
 const PRODUCTS_QUERY = `
   query ProductsIndex($first: Int!, $after: String, $query: String) {
@@ -28,6 +29,9 @@ const PRODUCTS_QUERY = `
         totalInventory
         mediaMissingAltCount
         featuredImage { thumbUrl status alt }
+        resourcePublicationsV2(onlyPublished: true) {
+          publication { id title handle }
+        }
       }
       pageInfo {
         hasNextPage
@@ -49,6 +53,92 @@ export interface ProductNode {
   mediaMissingAltCount?: number;
   /** 首圖；thumbUrl 為 null＝尚未處理完（不得改用原圖，20MB 原圖當縮圖會炸列表）。 */
   featuredImage?: { thumbUrl: string | null; status: string; alt: string | null } | null;
+  /** S6c-2：已發布的 publication 列（`onlyPublished: true`——列表只列已發布者，82 §18）。 */
+  resourcePublicationsV2?: { publication: { id: string; title: string; handle: string | null } }[];
+}
+
+/**
+ * S6c-2（D72）：管道 handle → 我方 admin 路由。
+ * 🔴 本尊實測（82 §18）：唯讀 popover 的每一列點下去**導航到該管道的 admin 首頁**
+ * （Online Store → /themes）。我方對應面：online_store 與 pos 有路由；
+ * 其餘 handle（shop 等）**尚無頁面** ⇒ 列出但不可點（登記 82 §18.5）。
+ */
+const CHANNEL_ROUTES: Record<string, string> = {
+  online_store: "/admin/store",
+  pos: "/admin/channels/pos",
+};
+
+/**
+ * 列表列的「Channels」格（本尊第三種 affordance：唯讀 popover，82 §9.3／§18）。
+ *
+ * ①這是什麼：格內顯示已發布管道**數**；hover／focus 露出 ˅；點開唯讀 popover。
+ * ②值域：**只列已發布的管道名**（onlyPublished: true；本尊 CHOICE 列實測只有 Online Store
+ *   一列，計數 1 ⇔ 列數 1）。無 toggle、無排程——寫入入口在詳情頁。
+ * ③實作：計數＝publication.handle 非 null 者（銷售管道；app 不算——與詳情頁
+ *   salesChannelsOf 同一判準）；popover 列＝button，有路由者導航、無路由者停用。
+ * ④跨功能：只讀，無 mutation；與詳情頁的發布狀態同源（同一 resourcePublicationsV2）。
+ */
+function ChannelsCell({ product, t, navigate }: {
+  product: ProductNode;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  navigate: (path: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const channels = (product.resourcePublicationsV2 ?? [])
+    .map((row) => row.publication)
+    .filter((pub) => pub.handle != null);
+
+  if (channels.length === 0) {
+    // 零管道：本尊的形態**未取得**（測試店全部列 ≥1，做出 0 需改資料）⇒ 純數字、無入口。
+    return <span className="cl-chcell__count">0</span>;
+  }
+
+  return (
+    <>
+      <button
+        aria-expanded={open}
+        aria-label={t("products.channels.viewAria")}
+        className="cl-chcell"
+        onClick={(event) => {
+          // 🔴 阻止冒泡：IndexTable 的列點擊＝進商品詳情頁；本尊點管道格不會進商品頁
+          //   （82 §18 實測：點格只開 popover）。不擋的話開個 popover 就被導航走。
+          event.stopPropagation();
+          setOpen((current) => !current);
+        }}
+        ref={anchorRef}
+        type="button"
+      >
+        <span className="cl-chcell__count">{channels.length}</span>
+        <ChevronDown aria-hidden="true" className="cl-chcell__caret" size={14} />
+      </button>
+      <Popover
+        anchorRef={anchorRef}
+        dismissOnOutsideClick
+        label={t("products.channels.popover")}
+        onClose={() => setOpen(false)}
+        open={open}
+      >
+        <ul className="cl-chcell-pop">
+          {channels.map((pub) => {
+            const target = pub.handle != null ? CHANNEL_ROUTES[pub.handle] : undefined;
+            return (
+              <li key={pub.id}>
+                <button
+                  className="cl-chcell-pop__item"
+                  disabled={target == null}
+                  onClick={target != null ? (event) => { event.stopPropagation(); navigate(target); } : undefined}
+                  type="button"
+                >
+                  {pub.title}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </Popover>
+    </>
+  );
 }
 
 interface ProductsQueryData {
@@ -231,6 +321,12 @@ export function ProductsPage() {
             : t("products.inventory.untracked"),
       },
       {
+        align: "right",
+        key: "channels",
+        header: t("products.col.channels"),
+        render: (product) => <ChannelsCell navigate={navigate} product={product} t={t} />,
+      },
+      {
         key: "type",
         header: t("products.col.type"),
         render: (product) => product.productType || "—",
@@ -241,7 +337,7 @@ export function ProductsPage() {
         render: (product) => product.vendor || "—",
       },
     ],
-    [locale, t],
+    [locale, navigate, t],
   );
 
   const actions = (

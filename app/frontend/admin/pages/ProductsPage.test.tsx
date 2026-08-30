@@ -304,6 +304,56 @@ describe("商品頁", () => {
   });
 
   // 未知狀態的 fallback：GraphQL enum 之後若再擴值，前端不得整頁炸掉。
+  it("S6c-2 管道格：計數＝已發布銷售管道數；popover 唯讀列名；有路由者導航、無路由者停用", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue(
+      successfulResponse([
+        { id: "gid://chilllove/Product/1", title: "多管道品", status: "ACTIVE",
+          resourcePublicationsV2: [
+            { publication: { id: "gid://chilllove/Publication/1", title: "線上商店", handle: "online_store" } },
+            { publication: { id: "gid://chilllove/Publication/3", title: "Shop", handle: "shop" } },
+            // handle=null 的 app 不算管道（與詳情頁 salesChannelsOf 同判準）
+            { publication: { id: "gid://chilllove/Publication/9", title: "報表 App", handle: null } },
+          ] },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+    // 計數 2（app 不算）
+    const cell = await screen.findByRole("button", { name: "檢視銷售管道" });
+    expect(cell).toHaveTextContent("2");
+    await user.click(cell);
+    const pop = screen.getByRole("group", { name: "已發布的銷售管道" });
+    const items = within(pop).getAllByRole("button");
+    expect(items.map((node) => node.textContent)).toEqual([ "線上商店", "Shop" ]);
+    // 🔴 無路由的管道（shop）停用（本尊點列＝導航；我方無該頁 ⇒ 82 §18.5 的登記形態）
+    expect(items[1]).toBeDisabled();
+    // 有路由者點擊導航到管道頁
+    await user.click(items[0]);
+    expect(await screen.findByRole("heading", { name: "線上商店" })).toBeVisible();
+  });
+
+  it("S6c-2 零管道：純數字 0、無 popover 入口", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      successfulResponse([
+        { id: "gid://chilllove/Product/1", title: "未發布品", status: "DRAFT", resourcePublicationsV2: [] },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <MemoryRouter initialEntries={["/admin/products"]}>
+        <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" />
+      </MemoryRouter>,
+    );
+    const table = await screen.findByRole("table", { name: "商品列表" });
+    expect(within(table).getByText("0")).toBeVisible();
+    expect(screen.queryByRole("button", { name: "檢視銷售管道" })).toBeNull();
+  });
+
   it("未知狀態退回顯示原始 token，不丟例外", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       successfulResponse([

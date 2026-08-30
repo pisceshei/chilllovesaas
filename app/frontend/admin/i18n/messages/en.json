@@ -557,5 +557,8 @@
   "collection.channels.trigger.many": "{count} channels",
   "collection.channels.triggerAria": "Manage sales channels: published to {count} channels",
   "collection.channels.tooltip": "Manage publishing",
-  "collection.channels.title": "Sales channels"
+  "collection.channels.title": "Sales channels",
+  "products.col.channels": "Channels",
+  "products.channels.viewAria": "View sales channel details",
+  "products.channels.popover": "Published sales channels"
 }

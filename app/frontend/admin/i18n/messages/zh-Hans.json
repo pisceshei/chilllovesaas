@@ -557,5 +557,8 @@
   "collection.channels.trigger.many": "{count} 个渠道",
   "collection.channels.triggerAria": "管理销售渠道：已发布至 {count} 个渠道",
   "collection.channels.tooltip": "管理发布",
-  "collection.channels.title": "销售渠道"
+  "collection.channels.title": "销售渠道",
+  "products.col.channels": "渠道",
+  "products.channels.viewAria": "查看销售渠道",
+  "products.channels.popover": "已发布的销售渠道"
 }

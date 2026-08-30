@@ -557,5 +557,8 @@
   "collection.channels.trigger.many": "{count} 個のチャネル",
   "collection.channels.triggerAria": "販売チャネルを管理：{count} 個のチャネルに公開済み",
   "collection.channels.tooltip": "公開を管理",
-  "collection.channels.title": "販売チャネル"
+  "collection.channels.title": "販売チャネル",
+  "products.col.channels": "チャネル",
+  "products.channels.viewAria": "販売チャネルの詳細を表示",
+  "products.channels.popover": "公開済みの販売チャネル"
 }

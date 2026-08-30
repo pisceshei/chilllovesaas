@@ -2375,3 +2375,22 @@ help 互證／排程子視圖／寫入還原記錄）。三個決定性發現：
 排程入口一律顯示（觸控理由，沿用商品 modal 裁定）；排程面板＝錨定子彈層
 （本尊原地換頁；重用 SchedulePopover 原語）；icon 用 Lucide（鐵律 9）；
 新建表單隱藏觸發鈕（本尊該形態未取得）。
+
+---
+
+### D72. S6c-2：商品列表的 Channels 欄與唯讀 popover（2026-08-28）
+
+S6c 的自然延伸（82 §9.3 第三種 affordance）。🟢 不觸鐵律 18.3。
+teardown＝`docs/research/82` **§18**。
+
+實測要點：格＝計數＋hover/focus 才露 `˅`（實體是整格透明覆蓋鈕）；popover 唯讀、
+只列**已發布**管道（計數 ⇔ 列數逐列驗證）；🔴 **點列＝導航到該管道的 admin 首頁**
+（Online Store → `/themes` 實測）。
+
+落地：`ProductsPage` 新增欄＋`ChannelsCell`；查詢帶 `resourcePublicationsV2(onlyPublished: true)`；
+計數判準與詳情頁 `salesChannelsOf` 同（handle 非 null）。
+偏離（82 §18.5）：無我方頁面的管道（shop）列出但停用；零管道形態本尊未取得 ⇒ 我方純 `0`。
+
+🔴 落地抓到真缺陷：popover 點擊冒泡到列的 onRowActivate（＝進商品詳情）——
+本尊點格只開 popover。修＝`stopPropagation`（IndexTable select 格的既有同構做法）。
+測試 +2 格（10/10）。

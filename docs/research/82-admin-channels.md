@@ -2198,3 +2198,49 @@ SwitchRow／GroupToggle／ChannelScheduleButton——單一發布語義來源）
 ②排程面板＝**錨定子彈層**（本尊在 popover 內原地換頁；我方重用 SchedulePopover 原語，
 形態隨商品 modal 先例）；③觸發鈕 icon 用 Lucide 同義字形（鐵律 9 不抄本尊 SVG）；
 ④新建系列表單隱藏觸發鈕（**本尊新建表單的形態未取得** ⇒ V）。
+
+## §18 商品列表的 Channels 欄與唯讀 popover（S6c-2 實測，2026-08-28）
+
+> 量測環境：同 §17（本機 Chrome、測試店、污染源停用）。viewport 於本輪量測期間被
+> 使用者調整過（2560 與 1045 兩態都出現），幾何值以取證當刻並記。全程唯讀：
+> 未點任何會寫入的控件；禁碰 fixture（9907126370539／9911273160939）未觸及，
+> 觀察用列＝9907158778091（CHOICE）與 9913006162155（D53-QA，可觀察）。取證 2026-08-28。
+
+### §18.1 欄與格
+
+- 列表欄序（表頭實測）：`Product｜Status｜Inventory｜Category｜Channels｜Catalogs｜Product type｜Vendor`。
+- Channels 格：平時**純數字**（右對齊）；hover／focus 該格才露出 `˅`。
+  實體＝**整格透明覆蓋鈕**（實測 84×52 蓋滿 cell、文字空、
+  `aria-label="View sales channel details"`、`aria-expanded` 兩態），數字是其兄弟節點。
+- 鄰欄 Catalogs 同構（`aria-label="View catalogs"`）——另一控件，本輪不展開。
+
+### §18.2 popover（唯讀）
+
+- 面板：白底、圓角＋陰影（與 §17.2 同族；一次快照 280×42＠單列）。
+- 列＝`button._menuItem`：管道 icon ＋ 名稱，**13px/20px/450**、#303030、h 32、pad 6、r 8、
+  `cursor: pointer`。**只列已發布的管道**（CHOICE 計數 1 ⇔ 恰一列 Online Store；
+  D53-QA 計數 3 ⇔ 三列 Online Store／Point of Sale／Shop，依此序）。
+- **無 toggle、無排程、無總開關**——與 §9.3 的「❌ 唯讀」一致；寫入入口在詳情頁。
+
+### §18.3 🔴 點列＝導航
+
+點 `Online Store` 列 ⇒ 導航到 **`/store/<handle>/themes`**（Online Store 管道的 admin 首頁）。
+⇒ 這些列不是純標籤，是**通往各管道 admin 面的捷徑**。
+
+### §18.4 未取得（V）
+
+- **零管道格的形態**：可見列全部 ≥1；造出 0 需寫入（把某品全下架）⇒ 未做。
+- POS／Shop 列的導航目標（只點了 Online Store；其餘推定同構但未實測）。
+- popover 面板的精確 radius/shadow 全值（viewport 變動與截圖逾時下只取得一次快照）。
+
+### §18.5 我方落地（S6c-2）與登記的偏離
+
+`ProductsPage` 新增 Channels 欄＋`ChannelsCell`（計數＋hover/focus 露 `˅`＋唯讀 popover）。
+- 計數判準＝`publication.handle != null`（銷售管道；app 不算——與詳情頁 `salesChannelsOf` 同判準）。
+- 點列導航：`online_store → /admin/store`、`pos → /admin/channels/pos`；
+  **shop 等尚無我方頁面 ⇒ 列出但停用**（47 §E disabled 只降文字色）——偏離登記：
+  本尊全部可點，我方以「有面才可點」收斂，等該管道頁落地時解除。
+- 零管道＝純數字 `0`、無入口（本尊該形態未取得 ⇒ 我方自定，標 V）。
+- 🔴 落地時抓到的真缺陷：popover 點擊會**冒泡到列的 onRowActivate**（＝進商品詳情頁）；
+  本尊點格只開 popover。修法＝格鈕與列鈕都 `stopPropagation`（IndexTable 的 select 格
+  本來就是這個做法，同構）。

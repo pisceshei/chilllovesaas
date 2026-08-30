@@ -557,5 +557,8 @@
   "collection.channels.trigger.many": "{count} canaux",
   "collection.channels.triggerAria": "Gérer les canaux de vente : publié sur {count} canaux",
   "collection.channels.tooltip": "Gérer la publication",
-  "collection.channels.title": "Canaux de vente"
+  "collection.channels.title": "Canaux de vente",
+  "products.col.channels": "Canaux",
+  "products.channels.viewAria": "Afficher les canaux de vente",
+  "products.channels.popover": "Canaux de vente publiés"
 }
