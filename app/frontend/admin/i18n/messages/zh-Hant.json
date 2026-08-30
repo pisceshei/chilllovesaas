@@ -557,5 +557,8 @@
   "collection.channels.trigger.many": "{count} 個管道",
   "collection.channels.triggerAria": "管理銷售管道：已發布至 {count} 個管道",
   "collection.channels.tooltip": "管理發布",
-  "collection.channels.title": "銷售管道"
+  "collection.channels.title": "銷售管道",
+  "products.col.channels": "管道",
+  "products.channels.viewAria": "檢視銷售管道",
+  "products.channels.popover": "已發布的銷售管道"
 }

@@ -1529,6 +1529,66 @@ a {
   min-width: 0;
 }
 
+/* ── S6c-2（D72）：列表列的 Channels 格與唯讀 popover ─────────────────────
+   本尊量測（82 §18）：格顯示計數，hover/focus 才露出 ˅（本尊是整格透明覆蓋鈕）；
+   popover 列 h32 / pad 6 / r8 / 13/20/450，點列導航到管道 admin 首頁。 */
+.cl-chcell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-050);
+  padding: var(--sp-050) var(--sp-100);
+  border: 0;
+  border-radius: var(--r-200);
+  background: transparent;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cl-chcell:hover {
+  background: var(--surface-2);
+}
+
+/* ˅ 只在 hover／focus 現身（本尊形態）；鍵盤 focus 也要露出，不然入口不可見 */
+.cl-chcell__caret {
+  opacity: 0;
+  transition: opacity var(--tr);
+}
+
+.cl-chcell:hover .cl-chcell__caret,
+.cl-chcell:focus-visible .cl-chcell__caret {
+  opacity: 1;
+}
+
+.cl-chcell-pop {
+  min-width: 180px;
+  padding: var(--sp-150);
+  margin: 0;
+  list-style: none;
+}
+
+.cl-chcell-pop__item {
+  display: block;
+  width: 100%;
+  padding: var(--sp-150);
+  border: 0;
+  border-radius: var(--r-200);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  text-align: left;
+}
+
+.cl-chcell-pop__item:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+/* 🔴 無路由的管道（例：Shop）列出但不可點（47 §E：disabled 只降文字色） */
+.cl-chcell-pop__item:disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
 
 /* dropzone 空態（多媒體卡） */
 .cl-dropzone {
