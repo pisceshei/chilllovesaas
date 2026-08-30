@@ -2469,3 +2469,15 @@ spec 13 格（含 5 個 🔴 假綠殺手）全綠；**五個活突變逐一實�
 （ADD 閘改 `== active`／REMOVE 無條件化／ADD 提前到排程時／translator 閘刪除／dedupe 刪除）。
 PR-C 既有 24 格照綠（同 topic 掛第二消費者不相互干擾——T08b 曾因 translator 的
 關聯名寫錯而紅，修正即恢復，證明隔離斷言真的在守）。
+
+## D75（2026-08-30）S9 前台消費介面契約落地
+
+執行方＝Claude Code 工作階段（D40 模式）。依總方案 §S9 完成：
+①官方四錨（Storefront API null／Liquid 44 屬性無 status／private mode／UNLISTED
+direct-link）逐字取證；②測試店生命週期實測矩陣（A/B/C/D 四格＋unlisted 三格＋
+密碼模式路徑矩陣，82 §20）；③契約文檔 `docs/specs/93-storefront-visibility-contract.md`
+（兩種查無語義、直連 vs 發現兩軸、Liquid 紅線、店級閘門行為）；
+④可執行落點 `Storefront::Lookup`（直連入口：product_by_handle/product_by_id/
+collection_by_handle；判準＝purchasable，發現面另走 discoverable）。
+spec 9 格全綠；**四個活突變逐一實跑轉紅**（直連判準換 discoverable／繞過兩層閘／
+無視 at／系列繞過發布層）。未取得三項照登 91 §3.46，不外推。

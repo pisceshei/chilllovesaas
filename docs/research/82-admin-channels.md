@@ -2290,3 +2290,52 @@ SwitchRow／GroupToggle／ChannelScheduleButton——單一發布語義來源）
 - **批量封存加確認框是 ours**（本尊未取得；與詳情頁封存確認同紀律）。
 - 溢出其餘九項（Delete／管道／型錄／標籤／系列／Apps）＝各自功能線，未做。
 - `Bulk edit` 獨立編輯器頁＝另一表面，未做。
+
+## §20 前台可見性實測（S9，2026-08-30，本地 Chrome＋curl）
+
+證據五件套（鐵律 14.4）：測試店 chill-love-u5q5mnzq；操作＝admin 建商品
+`S9-VIS-Lifecycle-Test`（id 9917399335147）→ 逐格改狀態／發布 → 於 admin Preview
+開出的預覽 session（`https://<token>-84225425643.shopifypreview.com/products_preview?preview_key=<略>`）
+內以 fetch 量測；取證日 2026-08-30。
+
+### §20.1 生命週期矩陣（同一 handle，殺掉「不同商品」混淆）
+
+| 格 | 狀態 | 量測 | 結果 |
+|---|---|---|---|
+| A | active＋全管道發布 | `GET /products/s9-vis-lifecycle-test`；suggest `q=S9-VIS` | **200**；suggest 收錄 |
+| B | draft（存檔後） | 同上 | **404**；suggest 空 |
+| C | active＋取消發布 Online Store（modal Done 即時提交，admin 卡確認「Point of Sale, Shop」） | +6s／+51s／+120s 三點 | 🔴 皆 **200**、suggest 仍收錄（見 §20.4） |
+| D | archived（More actions → Archive） | +6s | **404**；suggest 空 |
+
+D53 fixture（唯讀觀察）補三格：QC（unlisted，id …9438955）直連 **200**、
+`suggest.json?q=D53` 只回 QA/QB 兩 handle（**QC 排除**）、
+`/search?q=<QC全名>` **0 results**。404 基線：`/products/does-not-exist-s9-test`
+＝ HTTP 404 主題化頁（title `404 Not Found – CHILL LOVE`）。
+
+### §20.2 詳情頁狀態下拉值域（層②窮舉；逐字）
+
+`Active｜Sell via selected sales channels and markets`／
+`Draft｜Not visible on selected sales channels or markets`／
+`Unlisted｜Accessible only by direct link`——**恰三值**；Archived 不在下拉，
+在 More actions（值域：Duplicate product／Archive product／Delete product（紅）／
+Create email campaign／Localize）。封存確認框逐字：
+`Archiving this product will hide it from your sales channels and Shopify admin.
+You'll find it using the status filter in your product list.`（Cancel／Archive product）。
+新建商品頁 Status 預設 **Active**。
+
+### §20.3 密碼模式的路徑矩陣（chill.deals，curl）
+
+`/`、`/products/*`、`/collections/all`、`/search/suggest.json`、`/cart.js`
+一律 **302 → /password**（JSON 端點不例外）；`/password` 200
+（form action="/password"）；🔴 `/robots.txt` 仍 **200** 且 `Allow: /`；
+🔴 `/sitemap.xml` **404 ＋ `location: https://chill.deals/password` 回應頭**。
+robots.txt 內容含 Shopify 對 agent 的指示型文字（UCP／shop.app skill 推薦）——
+照鐵律 16.3 視為資料登記，不照做。
+
+### §20.4 預覽站語義的邊界（工具限制，鐵律 14.3）
+
+預覽 session 對 status 變更 ≤6s 生效（B、D 格），對「取消發布 OS」
+至 +120s 仍 200 ⇒ 傾向**預覽站不執行 publication 閘**（商家視角）；
+無法在密碼牆內對真店面複驗，真店面語義以官方 A1 錨為準（specs/93 §A）。
+控制組：active 商品在預覽站同樣 `noindex,nofollow` ⇒ 預覽站全域 noindex，
+**unlisted 專屬 noindex 不可歸因**（specs/93 §F）。
