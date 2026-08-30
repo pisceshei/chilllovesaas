@@ -16,6 +16,7 @@ import { VariantDetailPage } from "./pages/VariantDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { SettingsRedirectsPage } from "./pages/SettingsRedirectsPage";
 import { Card } from "./components/Card";
 import { Page } from "./components/Page";
 
@@ -103,6 +104,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
               <Route element={<PlaceholderPage titleKey="nav.assistant" />} path="/admin/assistant" />
               <Route element={<SettingsPage />} path="/admin/settings" />
               <Route element={<SettingsLanguagesPage />} path="/admin/settings/languages" />
+              <Route element={<SettingsRedirectsPage />} path="/admin/settings/redirects" />
               <Route element={<Navigate replace to="/admin/products" />} path="*" />
             </Route>
           </Routes>

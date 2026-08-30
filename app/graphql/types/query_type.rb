@@ -117,6 +117,15 @@ module Types
     field :shop, Types::ShopType, null: false,
       description: "本店。"
 
+    field :url_redirects, UrlRedirectConnectionType, null: false, connection: false do
+      description "路徑級重導列表（包 36；keyset 分頁 ≤250）。"
+      argument :after, String, required: false
+      argument :before, String, required: false
+      argument :first, Integer, required: false
+      argument :last, Integer, required: false
+      argument :query, String, required: false, description: "來源路徑子字串過濾。"
+    end
+
     field :shop_locales, [ Types::ShopLocaleType ], null: false,
       description: "本店的內容語言（position 序，來源語言優先；ML-2）。" do
       argument :include_disabled, Boolean, required: false,
@@ -165,6 +174,20 @@ module Types
     def shop
       authorize_products!
       context.fetch(:current_shop)
+    end
+
+    # 路徑級重導列表（包 36；62 §B.5）。列含 handle_change 系統列（唯讀）與 manual 列。
+    #
+    # @return [Hash] keyset connection
+    # @note 副作用：一條 tenant-scoped SELECT。
+    def url_redirects(first: nil, after: nil, last: nil, before: nil, query: nil)
+      authorize_products!
+      scope = UrlRedirect.where(shop_id: context.fetch(:current_shop).id)
+      if query.present?
+        escaped = UrlRedirect.sanitize_sql_like(query.to_s)
+        scope = scope.where("from_path LIKE ?", "%#{escaped}%")
+      end
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 
     # 本店已啟用的內容語言。語言集合是**資料**（67 §A.2）：新增語言不改程式碼、
