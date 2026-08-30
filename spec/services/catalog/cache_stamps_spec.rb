@@ -32,7 +32,9 @@ RSpec.describe Catalog::CacheStamps do
       #   （審查 DOC-3：第一版只斷言「∈ 清單」，第 32 包建表時什麼都不會轉紅，
       #   handoff 的「強制回頭對帳」是機械上不成立的宣稱）。
       # S10（D76）：price_lists 已建、來源已改帶前綴寫法 ⇒ 自本清單移除（絆線完成使命）。
-      known_pending = { "market_settings_version" => "markets" }
+      # 包 32（2026-08-31）：markets 已建、market_settings_version 改為 markets.updated_at ⇒ 同前例移除。
+      # 🔴 機制保留：未來加規劃中來源時照樣「登記未來表」，不得只斷言 ∈ 清單。
+      known_pending = {}
       Limits.fetch(:catalog_flow, :cache_stamp_sources).each do |source|
         src = source.to_s
         if src.include?(".")
@@ -248,6 +250,26 @@ RSpec.describe Catalog::CacheStamps do
         stamp = db_row("products", product.id, "media_updated_at")["media_updated_at"]
         expect((stamp - Time.current.utc).abs).to be < 60,
           "stamp 與 UTC 差 #{(stamp - Time.current.utc).round} 秒——時鐘域不一致"
+      end
+    end
+
+    it "🔴 市場鏈寫入 ⇒ bump markets.updated_at（market stamp；touch 級聯：mwpl→presence→market）" do
+      # 包 32：market_settings_version 落成 markets.updated_at 之後，「繼承解析結果變了」
+      # 的三類輸入（region／presence／白名單開關）都必須推進 stamp——漏一類＝該類變更後
+      # 前台永遠舊快取（63 §G.5 的靜默窗，本檔檔頭的失敗形態）。
+      ActsAsTenant.with_tenant(shop) do
+        market = Market.find_by!(is_primary: true)
+        stamp = -> { db_row("markets", market.id, "updated_at")["updated_at"] }
+        presence = market.market_web_presences.sole
+
+        ShopLocale.find_by!(locale_tag: "zh-Hant").update!(published: true)
+        row = nil
+        expect { travel(1.second) { row = presence.market_web_presence_locales.create!(locale_tag: "zh-Hant", position: 1) } }
+          .to(change { stamp.call })
+        expect { travel(2.seconds) { row.close! } }.to(change { stamp.call })
+        expect { travel(3.seconds) { Market.create!(name: "TW", handle: "tw", status: "active", market_type: "region")
+                                            .market_regions.create!(country_code: "TW") } }
+          .not_to(change { stamp.call }) # 對照：別的市場的寫入不動本市場的 stamp
       end
     end
 

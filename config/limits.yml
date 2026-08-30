@@ -2847,10 +2847,14 @@ catalog_flow:
     - products.publications_updated_at
     - products.media_updated_at
     - shops.catalog_version
-    # 🔴 `market_settings_version` 的**欄位尚未存在**（2026-08-25 依審查 D2 標註）：
-    #    它是第 32 包（市場）預告的來源名，列在這裡是**規劃**不是現況。
-    #    第 32 包立欄時把本註釋改掉；在那之前 selfcheck 的接收端也尚未實作，不會誤 raise。
-    - market_settings_version          # 🔴 市場繼承解析結果變了，商品 updated_at 一動也沒動（63 §G.5）
+    # 包 32（2026-08-31）：markets 表已建 ⇒ 依 cache_stamps_spec 絆線改帶前綴現況寫法
+    # （原規劃名 `market_settings_version`，2026-08-25 D2 曾標「欄位尚未存在」）。
+    # 市場鏈子表寫入（regions／presences／白名單開關）以 belongs_to touch 鏈 bump 到本欄——
+    # 市場繼承解析結果變了，商品 updated_at 一動也沒動（63 §G.5）。
+    # 🔴 消費端（步 2 頁級快取）取 stamp 要沿 **resolved lineage** 取 max(updated_at)，
+    #    不是只看當前 market 一列（父市場改設定，子市場的解析結果也變）；
+    #    market_settings 表（NULL=繼承）落地時沿同一欄，不另立來源。
+    - markets.updated_at
     # S10（D76，2026-08-30）：`price_lists` 表已建 ⇒ 依 cache_stamps_spec 的絆線改帶前綴現況寫法。
     # price list 是 catalog 級聚合（一 catalog 一張）⇒ 它自己的 updated_at 就是 stamp 欄，
     # 任何調價（百分比／模式／幣別）都會推進它；變體級固定價（M5 的 price_list_prices）
@@ -3795,6 +3799,59 @@ i18n:
     # 翻譯進度四個出口（列表徽章／翻譯後台／健康頁／GraphQL）讀**同一張** translation_status
     # 物化表（鐵律 7）；任一處不得現算 GROUP BY。
     progress_single_source: translation_status
+    # 翻譯輸入的兩種模式（67 §E.2-1；alt 觀察＋我方判準，V-226）。
+    # 🔴 模式只是 UI 形態，**不影響 schema**（驗收 AD-1b③：分頁式編輯後 translations 仍逐欄位一列，
+    #    不得出現「一個語言一份 JSON blob」的列）。
+    translation_input_mode:
+      stacked_for: [short_single_line]        # 短單行欄位（title 等）堆疊式，每框標題帶 endonym 後綴
+      tabbed_for: [rich_text, seo_group]      # 富文本／SEO 組分頁式
+      mode_does_not_affect_schema: true
+      stacked_label_suffix: endonym            # 「商品名稱 (English)」——用 endonym 不用國旗
+      no_flag_icons: true                      # 🔴 國旗≠語言（zh-Hant 沒有旗；掛旗必錯一種市場）
+
+  # --- URL locale 前綴（67 §F.1(b)(c)；2026-08-13 使用者裁定）--------------------
+  # 🔴 依據是「使用者裁定」，不是查證、不是跟隨 Shopify——本組是 67 號第二處**明知偏離本尊**
+  #    （第一處＝handle.ascii_only）。本尊：primary market 預設語言無前綴、其他語言裸語言前綴
+  #    （/en）；我方：恆帶地區、恆有前綴、無例外（裁定逐字「香港就是 en-HK……台灣就是 zh-Hant-TW」）。
+  # 🔴 裁定若改：本組、seo.hreflang.always_region_qualified／bare_language_code_forbidden、
+  #    67 §F.1 必須連帶重審——單獨改任何一個都是半套（62 §I.2-1「裁定若改」欄）。
+  locale_prefix:
+    always_region_qualified: true
+    bare_language_prefix_forbidden: true      # /en 這種裸語言前綴一律不存在
+    format: "/{lang(2-3)}[-{script(4)}]-{region(2)}"   # 正則 ^/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}$
+    case: lowercase                            # 🔴 與 hreflang 碼大小寫不同、不得互相借用（62 §I.2）
+    # 根路徑不是內容頁：302 到預設 (market, locale) 前綴（不是 301——預設市場會變）。
+    # 🔴 爬蟲不豁免此重導（它與 62 §K.2 地區重導是兩件事）。⚠ V-221（我方推導，非裁定明文）。
+    root_path_behavior: redirect_to_default_prefix
+    root_redirect_status: 302
+    # 🔴 前綴 ≡ (market, locale) 身分（67 §F.1(c)）：路由＝剝第一段查表，未命中一律 404。
+    prefix_is_market_locale_identity: true
+    market_determined_by: url_only             # 🔴 不得從 GeoIP／cookie 推市場（同一 URL 恆同一市場）
+    unknown_prefix_status: 404
+    # 🔴 前綴輸出永遠不得被當成 hreflang 值（兩者驗證器無交集，67 §F.1(a)；SF-9 型別分離）。
+    never_reused_as_hreflang_code: true
+    # 多國市場的 region 段來源＝presence 的 subfolder_suffix（暫案 C）。⚠ V-225 待裁定。
+    multi_country_region_source: web_presence_subfolder_suffix
+
+  # --- per-market 語言白名單（67 §A.5／§C.8；2026-08-13 使用者裁定）--------------
+  market_locales:
+    # 🔴 概念名 market_locales、實體沿用既有表——另建表會與 presence 粒度立刻不同步（§C.8(a)）。
+    entity: market_web_presence_locales
+    separate_table_forbidden: true
+    grain: web_presence                        # 🔴 市場的開放語言＝resolved presences 的聯集
+    inheritance: additive_only                 # 沿 market.inheritance_additive（web_presences）
+    subtractive_override_forbidden: true       # 子市場不可減掉父市場開放的語言（§A.5(d)）
+    # 白名單是曝光決策不是存取控制：其他市場的合法前綴仍 200（不做地域封鎖）。
+    whitelist_is_presentation_not_access_control: true
+    switcher_lists_open_locales_only: true
+    # 🔴 切換器是 country＋language 兩個控件（§F.2）；前綴 en-hk 字面像「一個下拉」，明文擋住合併。
+    switcher_is_two_controls: true
+    unopened_prefix_status: 404                # 未開放／已關閉的 (market, locale) 組合
+    other_market_prefix_status: 200            # 對照組：別的市場開放的前綴照常服務
+    close_requires_impact_counts: true         # 關閉確認對話三數字（§C.8(c)）
+    close_does_not_delete_translations: true   # 🔴 譯文是資產，曝光是決策（§A.5(a)）
+    # 沿用 i18n.max_shop_locales 作上界（③⊆② 已由 FK 保證；本鍵只讓錯誤訊息說得出話）。
+    max_per_market: 20
 
 # =============================================================================
 # 21. Handle 政策——規格見 docs/specs/67-multilingual.md §D（並取代 62 §F.3 的舊規則）
@@ -4801,3 +4858,36 @@ theme_engine:
   # five sections」（shopify.dev/docs/api/ajax/section-rendering，2026-08-30）；
   # 超限行為＝HTTP 400 空 body（83 §12.3 真店實測 2026-08-31）。
   section_rendering_max_ids: 5
+
+# =============================================================================
+# 24. 命名契約（鐵律 9 的界線；規格見 docs/specs/67-multilingual.md §H.5）
+# =============================================================================
+# 🔴 一句話版本（§H.5 逐字）：「介面（名字、形狀）可以一樣，內容（樣式值、文案、說明）
+#    一律自寫。判準是『這個字串有沒有被別人的程式碼比對』——是就是契約，不是就是文案。」
+# 🔴 獨立成頂層區塊的理由與 handle: 相同：同時被 14／25／27／31（主題）、28（API）、
+#    62／67 引用，塞進任一方都會讓其餘的人跨區塊引用「別人的鍵」。
+#    （67 §J 原文寫「§23」——該編號已被商品 CSV 佔用，落地為 §24；語義不變。）
+naming_contract:
+  # 判準（§H.5(b)，沿 §H.3）：被第三方資產（主題 Liquid／CSS／JS、商家自訂 CSS）比對＝契約字串。
+  contract_string_test: compared_by_third_party_code
+  # ① 主題端 class 名／DOM：渲染引擎**原樣輸出**主題寫的字串（相容性需求）——
+  #    改寫或加前綴＝商家自訂 CSS 靜默失效（§H.5(d) 反例 6）。
+  theme_class_names: preserve_verbatim
+  theme_class_rewrite_forbidden: true
+  # 🔴 class 名 ≠ 樣式：輸出 class="product-title" 可以；複製 .product-title { … } 的宣告與值
+  #    就是抄 CSS（鐵律 9 明文）。界線＝「有沒有帶著值」。
+  css_declarations_copy_forbidden: true
+  # 平台注入的節點只能新增、不得包壞主題的 class 與 DOM 層級（62 §A.1 同紀律）。
+  platform_injection_additive_only: true
+  # 🔴 不維護「Shopify class 名清單」——class 名的來源是主題不是平台（§H.5(b) 紅線 2）。
+  platform_class_name_list_forbidden: true
+  # ② API 契約層：欄位名／型別名／enum 值對齊本尊（鐵律 4 既有規則；bodyHtml 不是 descriptionHtml）。
+  api_field_names: align_with_shopify
+  # 錯誤碼：本尊已有的碼對齊；我方新增的碼自己命名（§H.4 五個）。
+  error_codes: align_existing_self_name_new
+  # 🔴 message 字串內容一律自寫（code 是契約、message 是文案——同一物件兩欄分屬兩邊）。
+  error_message_text: self_written
+  # 🔴 API 文檔描述不得逐句轉貼 shopify.dev；主題 locale 檔字串不得進我方 bundle（§H.3）。
+  docs_text_copy_forbidden: true
+  # GID namespace 是我方的（鐵律 4 既有）。
+  gid_namespace: chilllove

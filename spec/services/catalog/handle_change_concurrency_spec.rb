@@ -42,6 +42,10 @@ RSpec.describe Catalog::HandleChange, "concurrency" do
     AppInstallation.unscoped.delete_all
     Translation.unscoped.delete_all
     TranslationStatus.unscoped.delete_all
+    # 包 32：markets 鏈先於 shop_locales（複合 FK fk_mwp_default_locale／fk_mwpl_shop_locale）；
+    # 刪 markets 由 DB cascade 帶走 regions／presences／白名單列，domains 隨後才無 presence 引用。
+    Market.unscoped.delete_all
+    Domain.unscoped.delete_all
     ShopLocale.unscoped.delete_all
     UserStoreAssignment.unscoped.delete_all
     StaffMember.unscoped.delete_all
