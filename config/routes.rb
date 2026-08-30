@@ -63,6 +63,15 @@ Rails.application.routes.draw do
   constraints ->(request) { request.env["chilllove.shop_id"].present? } do
     get "robots.txt" => "storefront/pages#robots", format: false, as: :storefront_robots
     get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
+    # SEO 面（包 35）：sitemap 分片（83 §3.6 形）＋ agents/llms 三別名（62 §H.2 同一生成器）。
+    get "sitemap.xml" => "storefront/sitemaps#index", format: false, as: :storefront_sitemap
+    %w[products collections pages].each do |kind|
+      get "sitemap_#{kind}_:n.xml" => "storefront/sitemaps#show", format: false,
+          defaults: { kind: }, constraints: { n: /\d+/ }
+    end
+    get "agents.md" => "storefront/agents#show", format: false, as: :storefront_agents
+    get "llms.txt" => "storefront/agents#show", format: false
+    get "llms-full.txt" => "storefront/agents#show", format: false
     # localization 表單（包 34；67 §F.2 country+language 兩欄位）：裸與帶前綴兩形。
     post "localization" => "storefront/localization#create", format: false, as: :storefront_localization
     # 🔴 帶前綴的 cart／localization（包 34）：RoutesDrop 對主題吐 `{prefix}/cart/add` 等
