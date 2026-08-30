@@ -2,6 +2,9 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "ja":
   errors:
+    theme:
+      not_found: "テーマが見つかりません。"
+      source_missing: "テーマに利用可能なファイルソースがなく、公開できません。"
     publication:
       catalog_taken: "このカタログにはすでに publication があります。"
       all_products_unsupported: "全商品での初期化はまだ対応していません。"

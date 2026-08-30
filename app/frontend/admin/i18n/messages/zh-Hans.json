@@ -570,5 +570,18 @@
   "products.bulk.archiveConfirm": "要归档已选的 {count} 项商品吗？归档后将从所有销售渠道下架，可随时取消归档。",
   "products.bulk.done": "已更新 {count} 项商品",
   "products.bulk.partial": "已更新 {ok}/{total} 项；首个错误：{error}",
-  "product.schedule.activeNotice": "商品状态须为“启用”，排程到点时才会生效。"
+  "product.schedule.activeNotice": "商品状态须为“启用”，排程到点时才会生效。",
+  "store.themes.publishedSection": "已发布主题",
+  "store.themes.draftSection": "草稿主题",
+  "store.themes.publishedEmpty": "尚无已发布的主题。",
+  "store.themes.draftEmpty": "尚无草稿主题。",
+  "store.themes.rolePublished": "已发布",
+  "store.themes.roleDraft": "草稿",
+  "store.themes.preview": "预览",
+  "store.themes.publish": "发布",
+  "store.themes.published": "已发布“{name}”",
+  "store.themes.loadError": "加载主题列表失败。",
+  "store.themes.loadErrorTitle": "无法加载主题",
+  "store.themes.emptyTitle": "还没有主题",
+  "store.themes.emptyBody": "主题导入管线将在后续里程碑开放。"
 }

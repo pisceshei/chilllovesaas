@@ -2,6 +2,9 @@
 # 🔴 key 正典＝en.yml；五檔 key 集合必須一致（spec/config/locales_spec.rb 擋）。
 "zh-Hant":
   errors:
+    theme:
+      not_found: "找不到指定的主題。"
+      source_missing: "主題沒有可用的檔案來源，無法發布。"
     publication:
       catalog_taken: "這個 catalog 已經有一個 publication 了。"
       all_products_unsupported: "尚未支援「以全部商品預先填滿」。"

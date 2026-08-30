@@ -2495,3 +2495,18 @@ adjustment_basis_points 是整數 basis points 非金額（C3 判準禁 migratio
 結構性不存在——官方 deleteDependentResources:false 允許孤兒，我方刻意不對位，
 方向同 S1）。spec 6 格綠；突變 K1/K2/K3 實跑轉紅。變體級固定價
 （price_list_prices，金額欄）與 producer（catalog 表單／mutation）隨 M5。
+
+## D77（2026-08-30）包 30：Liquid 主題引擎生產化
+
+執行方＝Claude Code 工作階段（D40 模式）。W6 首包，工作卡六項全落：
+①liquid 5.13＋strscan≥3.1.1 進 Gemfile；②Theme／Template／ThemeSetting／Page／
+Menu（＋MenuItem）模型（表＝M0 既建——工作卡寫「建模型」時表早已在，本包不動 schema）；
+③PoC 引擎移植 app/liquid/theme_engine（三反例改掉：LocalizationDrop 參數化／
+RoutesDrop 帶 prefix／RequestDrop locale 真值；並新抓第四反例＝assigns 必須
+static_environments 否則 {% render %} 內消失）；④/admin/store 主題清單
+（published/draft 分區＋發布轉場）；⑤登入後預覽（noindex；可見性走 Storefront::Lookup
+＝ours，與本尊預覽站商家視角刻意不同）；⑥CacheStampBumper 啟用
+（product.updated／product.variant.updated 留位結清）。
+Ella 7.2.0 整頁冒煙通過。突變七格實跑轉紅（含兩輪「殺不死」triage：
+單條 registry 突變被變體事件冗餘遮蔽、drain 端到端被 ResyncConsumer bump 遮蔽
+——改接線斷言＋行為隔離）。偏離與未實作面登 91 §3.48。

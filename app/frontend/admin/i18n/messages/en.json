@@ -570,5 +570,18 @@
   "products.bulk.archiveConfirm": "Archive the {count} selected products? They will be removed from all sales channels; you can unarchive at any time.",
   "products.bulk.done": "Updated {count} products",
   "products.bulk.partial": "Updated {ok}/{total}; first error: {error}",
-  "product.schedule.activeNotice": "Product status must be Active for the schedule to take effect."
+  "product.schedule.activeNotice": "Product status must be Active for the schedule to take effect.",
+  "store.themes.publishedSection": "Published theme",
+  "store.themes.draftSection": "Draft themes",
+  "store.themes.publishedEmpty": "No published theme yet.",
+  "store.themes.draftEmpty": "No draft themes yet.",
+  "store.themes.rolePublished": "Published",
+  "store.themes.roleDraft": "Draft",
+  "store.themes.preview": "Preview",
+  "store.themes.publish": "Publish",
+  "store.themes.published": "Published “{name}”",
+  "store.themes.loadError": "Failed to load themes.",
+  "store.themes.loadErrorTitle": "Can't load themes",
+  "store.themes.emptyTitle": "No themes yet",
+  "store.themes.emptyBody": "Theme import arrives in a later milestone."
 }
