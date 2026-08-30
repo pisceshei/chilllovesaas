@@ -132,6 +132,8 @@ module ThemeEngine
     def taxable = @v.taxable
     # Liquid 契約：variant.weight 單位＝公克（我方儲存同尺度，免換算）。
     def weight = @v.weight_grams
+    # 真引擎預設顯示單位＝"kg"（83 §12 探針）；我方不存單位 ⇒ 常數（ours）。
+    def weight_unit = "kg"
     def url = "#{@product.url}?variant=#{@v.id}"
     def selected = @product.selected_variant_id == @v.id
     def unit_price = nil
@@ -313,8 +315,10 @@ module ThemeEngine
     def price_max = variants.filter_map(&:price).max || 0
     def price_varies = price_min != price_max
     def compare_at_price = variants.filter_map(&:compare_at_price).min
-    def compare_at_price_min = compare_at_price
-    def compare_at_price_max = variants.filter_map(&:compare_at_price).max
+    # 真引擎實測（83 §12 CLI 探針，2026-08-30）：全變體無 compare_at 時
+    # min/max 輸出 0（不是空）——0 fallback 是量測值不是猜測。
+    def compare_at_price_min = variants.filter_map(&:compare_at_price).min || 0
+    def compare_at_price_max = variants.filter_map(&:compare_at_price).max || 0
     def compare_at_price_varies = compare_at_price_min != compare_at_price_max
     # A1：任一變體可購 ⇒ 商品可購（無變體＝資料層不變量違反，回 false 安全側）。
     def available = variants.any?(&:available)

@@ -105,6 +105,7 @@ RSpec.describe "ThemeEngine drops（商品前台補完）" do
       s = drop_for(product).variants.find { |v| v.title == "S" }
       expect(s.url).to eq("/products/drops-tee?variant=#{variants[0].id}")
       expect(s.weight).to eq(250)
+      expect(s.weight_unit).to eq("kg")
       expect(s.barcode).to eq("4710000000001")
     end
   end
@@ -142,7 +143,11 @@ RSpec.describe "ThemeEngine drops（商品前台補完）" do
       # 🔴 nil 混值（部分變體無 compare_at）的本尊 varies 語義未取證——本格刻意
       #   只測無爭議端；混值格待 CLI 探針對表後補（缺口分析 §D 同軸）。
       product, variants, = build_tshirt
-      expect(drop_for(product).compare_at_price_varies).to be(false)
+      base = drop_for(product)
+      expect(base.compare_at_price_varies).to be(false)
+      # 真引擎（83 §12）：全 nil 時 min/max ＝ 0（不是 nil）
+      expect(base.compare_at_price_min).to eq(0)
+      expect(base.compare_at_price_max).to eq(0)
       ActsAsTenant.with_tenant(shop) do
         variants[0].update!(compare_at_price_cents: 20_000)
         variants[1].update!(compare_at_price_cents: 30_000)
