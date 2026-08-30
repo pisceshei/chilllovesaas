@@ -759,17 +759,25 @@ module ThemeEngine
     end
   end
 
+  # cart drop：無買家車 ⇒ 恆空形（包 30 原 stub）；有 ⇒ 直餵
+  # `Storefront::CartSerializer.cart_json`（金額 cents 直通；items＝hash 陣列，
+  # Liquid 點取即鍵取——契約同 `/cart.js`，83 §3.3）。
   class CartDrop < BaseDrop
-    def initialize(currency:)
-      super({ "item_count" => 0, "items" => [], "total_price" => 0,
-              "items_subtotal_price" => 0, "original_total_price" => 0,
-              "total_discount" => 0, "note" => nil, "attributes" => {},
-              "currency" => { "iso_code" => currency },
-              "cart_level_discount_applications" => [], "requires_shipping" => false,
-              "taxes_included" => false, "discount_applications" => [] })
+    def initialize(currency:, cart_json: nil)
+      if cart_json
+        super(cart_json.merge("currency" => { "iso_code" => cart_json["currency"] },
+                              "taxes_included" => false, "discount_applications" => []))
+      else
+        super({ "item_count" => 0, "items" => [], "total_price" => 0,
+                "items_subtotal_price" => 0, "original_total_price" => 0,
+                "total_discount" => 0, "note" => nil, "attributes" => {},
+                "currency" => { "iso_code" => currency },
+                "cart_level_discount_applications" => [], "requires_shipping" => false,
+                "taxes_included" => false, "discount_applications" => [] })
+      end
     end
 
-    def empty? = true
+    def empty? = @attrs["item_count"].to_i.zero?
   end
 
   # 🔴 反例①已修：語言資料由呼叫端供給（shop_locales；包 34 接真值鏈）。

@@ -26,6 +26,22 @@ Rails.application.routes.draw do
   get "admin/store/preview/:theme_id(/*path)" => "admin/storefront_preview#show",
       format: false, as: :admin_theme_preview
 
+  # 購物車 Ajax 端點（specs/15 F1；`.js` 與裸路徑同義——Ella 用裸形，83 §4.4）。
+  # 🔴 vehicle：目前掛 staff session（Storefront::CartController 檔頭③）；
+  #   公開店面的 host→shop 解析歸 W6 hosting 包。
+  scope format: false do
+    get  "cart.js"        => "storefront/cart#show"
+    get  "cart.json"      => "storefront/cart#show"
+    post "cart/add.js"    => "storefront/cart#add"
+    post "cart/add"       => "storefront/cart#add"
+    post "cart/change.js" => "storefront/cart#change"
+    post "cart/change"    => "storefront/cart#change"
+    post "cart/update.js" => "storefront/cart#update"
+    post "cart/update"    => "storefront/cart#update"
+    post "cart/clear.js"  => "storefront/cart#clear"
+    post "cart/clear"     => "storefront/cart#clear"
+  end
+
   get "admin" => "admin/spa#show", as: :admin_root
   # API namespace 不可 fall through 到 SPA；錯誤 method/version 必須維持
   # no-route 404，避免 client 把 HTML shell 誤判成 API success。

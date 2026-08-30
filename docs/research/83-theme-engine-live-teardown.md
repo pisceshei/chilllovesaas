@@ -443,6 +443,16 @@ section id）。復位法＝帶一次正式主題 id（`?preview_theme_id={live 
 🔴 帶圖商品的 image-json 形仍未測（測試品無圖）——ImageDrop json＝ours 欄位，
 登記待探針對表。
 
+### §12.5 cart 錯誤形探針（2026-08-31 晚）
+
+- 售罄 add（tracked 0 deny 變體、JSON items 形）⇒ **HTTP 422**、
+  content-type `text/javascript`、body 逐字結構：
+  `{"status":422,"message":"The product '… - M' is already sold out.","description":同 message}`
+  ——specs/15 裁定形 `{status,message,description}` 的真店實錘。
+- 🔴 壞 variant id 與超量兩格＝**未取得**：連續 JSON POST 觸發 Shopify
+  bot 防護，回 **429 + 「Verifying your connection…」挑戰頁**（cart 端點有
+  反自動化防線——量測紀律：cart 寫入探針要放慢節奏，不硬闖）。
+
 ## §11 對四件套的回寫索引
 
 - **25 §3**：window.Shopify stub 集加 Ella legacy 八件（→ §5）；坑13 更正註。

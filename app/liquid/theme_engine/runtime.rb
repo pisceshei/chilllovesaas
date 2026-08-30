@@ -48,8 +48,10 @@ module ThemeEngine
 
     # @param locale_dict [Hash] t filter 的字典（v1＝主題 locales/en.default.json；包 34 接真值鏈）
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
-                   design_mode: false, page_type: "index", path: "/", host: nil)
+                   design_mode: false, page_type: "index", path: "/", host: nil,
+                   cart_json: nil)
       @theme, @shop = theme, shop
+      @cart_json = cart_json
       @source = source || Sources.resolve(theme)
       raise MissingSourceError, "主題 #{theme.name} 無檔案來源（Sources.resolve 回 nil）" if @source.nil?
 
@@ -68,7 +70,7 @@ module ThemeEngine
       @global_assigns = {
         "settings" => SettingsDrop.new(@settings_data, @theme_types, label: "settings"),
         "shop" => ShopDrop.new(shop),
-        "cart" => CartDrop.new(currency: shop.store_currency),
+        "cart" => CartDrop.new(currency: shop.store_currency, cart_json: @cart_json),
         "routes" => RoutesDrop.new(prefix: url_prefix),
         "request" => RequestDrop.new(page_type:, design_mode:, locale:, host:, path:),
         "localization" => LocalizationDrop.new(language:, available_languages: [ language ]),

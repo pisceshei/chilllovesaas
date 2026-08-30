@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_120000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -39,6 +39,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_010000) do
     t.index ["app_handle"], name: "fk_app_installations_app_handle"
     t.index ["shop_id", "app_handle"], name: "uq_app_installations_app", unique: true
     t.index ["shop_id", "id"], name: "uq_app_installations_tenant_id", unique: true
+  end
+
+  create_table "cart_line_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "購物車行（specs/15 F1 #1/#5；merge_key_hash 承重合併）", force: :cascade do |t|
+    t.bigint "cart_id", null: false
+    t.datetime "created_at", null: false
+    t.string "merge_key_hash", limit: 64, null: false, comment: "SHA-256(variant＋properties＋selling_plan＋單價＋parent)——全同才併行"
+    t.bigint "parent_id", comment: "bundle 父行（Q-44 未決前暫定入鍵；v1 恆 NULL）"
+    t.bigint "product_variant_id", null: false
+    t.json "properties", null: false, comment: "客製屬性（合併鍵承重輸入；同 variant 不同屬性＝合法多行）"
+    t.integer "quantity", default: 1, null: false
+    t.bigint "selling_plan_id", comment: "訂閱方案（功能未落地；合併鍵承重輸入，恆 NULL）"
+    t.bigint "shop_id", null: false
+    t.bigint "unit_price_cents", null: false, comment: "加入當下價（合併鍵承重輸入；顯示用即時價另查——F1 #3）"
+    t.datetime "updated_at", null: false
+    t.index ["cart_id"], name: "fk_cart_line_items_cart"
+    t.index ["product_variant_id"], name: "fk_cart_line_items_variant"
+    t.index ["shop_id", "cart_id", "merge_key_hash"], name: "uq_cart_line_items_merge_key", unique: true
+    t.index ["shop_id", "cart_id"], name: "ix_cart_line_items_cart"
+    t.index ["shop_id", "id"], name: "uq_cart_line_items_tenant_id", unique: true
+    t.index ["shop_id", "product_variant_id"], name: "ix_cart_line_items_variant"
+  end
+
+  create_table "carts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "買家購物車（specs/15 F1；token 進 _cl_buyer 簽名 cookie）", force: :cascade do |t|
+    t.json "attributes_json", null: false, comment: "Ajax cart 契約的 attributes（clear 不清除）"
+    t.datetime "created_at", null: false
+    t.text "note", comment: "Ajax cart 契約的 note（clear 不清除——官方語義）"
+    t.bigint "shop_id", null: false
+    t.string "token", limit: 64, null: false, comment: "cookie 攜帶的識別（SecureRandom；不可枚舉）"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_carts_tenant_id", unique: true
+    t.index ["shop_id", "token"], name: "uq_carts_token", unique: true
+    t.index ["shop_id", "updated_at"], name: "ix_carts_updated_at", comment: "90 天未動 purge job 的掃描鍵（F1 #4）"
   end
 
   create_table "channels", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "銷售管道身分（本尊 Channel）：handle 的權威來源", force: :cascade do |t|
@@ -1281,6 +1313,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_010000) do
   add_foreign_key "api_tokens", "staff_members", name: "fk_api_tokens_staff_member_id"
   add_foreign_key "app_installations", "platform_apps", column: "app_handle", primary_key: "handle", name: "fk_app_installations_app_handle"
   add_foreign_key "app_installations", "shops", name: "fk_app_installations_shop"
+  add_foreign_key "cart_line_items", "carts", name: "fk_cart_line_items_cart", on_delete: :cascade
+  add_foreign_key "cart_line_items", "product_variants", name: "fk_cart_line_items_variant", on_delete: :cascade
+  add_foreign_key "carts", "shops", name: "fk_carts_shop"
   add_foreign_key "channels", "app_installations", column: ["shop_id", "app_installation_id"], primary_key: ["shop_id", "id"], name: "fk_channels_app_installation_id"
   add_foreign_key "channels", "publications", column: ["shop_id", "publication_id"], primary_key: ["shop_id", "id"], name: "fk_channels_publication_id"
   add_foreign_key "channels", "shops", name: "fk_channels_shop"

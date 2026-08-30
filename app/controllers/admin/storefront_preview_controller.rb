@@ -32,9 +32,14 @@ module Admin
       authorize Theme, :index?
       theme = Theme.find(params[:theme_id])
       publication = Publication.online_store!
+      cart = cookies.signed["_cl_buyer"].presence&.then do |token|
+        Cart.includes(cart_line_items: { product_variant: :product })
+            .find_by(shop_id: Current.shop.id, token: token)
+      end
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
-        design_mode: false, host: request.host
+        design_mode: false, host: request.host,
+        cart_json: cart && Storefront::CartSerializer.cart_json(cart)
       ).render("/#{params[:path]}", params: request.query_parameters)
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow"
