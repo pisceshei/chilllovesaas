@@ -196,7 +196,7 @@ module Publications
           end
 
           removed.each do |record|
-            remove_publication!(shop:, publication:, record:)
+            remove_publication!(shop:, publication:, record:, at:)
           end
 
           bump_stamps!(shop_id: shop.id, records: added + removed, at:)
@@ -410,7 +410,7 @@ module Publications
               apply_publication!(shop:, publication: target[:publication], record:,
                                  publish_date: target[:publish_date], at:)
             else
-              remove_publication!(shop:, publication: target[:publication], record:)
+              remove_publication!(shop:, publication: target[:publication], record:, at:)
             end
           end
 
@@ -494,7 +494,83 @@ module Publications
       # publish_date 省略且既有列非 NULL ⇒ 什麼都不做（R5／R7）
 
       enqueue_scheduled_event!(shop:, publication:, row:, at:) if row.published_at != before
+      emit_listing_transition!(shop:, publication:, record:, before:, after: row.published_at, at:)
       row
+    end
+
+    # S8（D74）：即時轉場的上架事件（`product_listings/*` 與 ours 的 `variant_listings/*`）。
+    #
+    # ①這是什麼：`apply_publication!` 矩陣落地後，依「發布邊界的跨越」發外部事件。
+    # ②轉場判定（before/after 皆為 `published_at`，`at` 為本次請求時刻）：
+    #   - 未發布→已發布（after ≤ at 且 before 為 nil 或 > at）⇒ **ADD**
+    #     🔴 ADD 有 active 閘（官方逐字 "an active product"）：判準＝
+    #     `PURCHASABLE_STATUSES`（與 D53 同一集合——UNLISTED 官方自述 is active）；
+    #     變體看**父商品** status（變體無 status 欄；ours，鏡射 D53 F1-⑤(b)(c)）。
+    #     不合格 ⇒ 不發（本尊語義：non-active 根本不會 listed ⇒ 無事件）。
+    #   - 已發布→已發布但 `published_at` 變（過去→另一個過去）⇒ **UPDATE**
+    #     （官方 "a product publication is updated"；REMOVE/UPDATE 無 active 限定）。
+    #   - 已發布→排程（after 變未來，R6）⇒ 🔴 **不發**（本尊該格語義未取得，
+    #     fail-closed；登記 91 §3.45）。到點後由 translator 依 DB 現值補 ADD。
+    #   - 排程相關其他轉場 ⇒ 不發（到點的 ADD 歸 `ListingEventTranslator`，
+    #     官方逐字 "At the scheduled datetime, Shopify sends a product_listing/add event"）。
+    #   - Collection ⇒ 一律不發（本尊無 collection listing topic；掃描 2026-08-28）。
+    # ③冪等：本方法在寫入交易內單次執行（鐵律 5：事件與業務寫入同交易），不需 dedupe。
+    #
+    # @note 副作用：INSERT 0 或 1 筆 `event_outbox`。
+    def emit_listing_transition!(shop:, publication:, record:, before:, after:, at:)
+      topics = listing_topics_for(record)
+      return if topics.nil?
+
+      was = before.present? && before <= at
+      now = after.present? && after <= at
+      if !was && now
+        return unless listing_addable?(record)
+
+        emit_listing_event!(shop:, publication:, record:, topic: topics.fetch(:add), at:)
+      elsif was && now && before != after
+        emit_listing_event!(shop:, publication:, record:, topic: topics.fetch(:update), at:)
+      end
+      # was && !now（R6 已發布改排程）＝未取得 ⇒ 不發（見②）。
+    end
+
+    # @return [Hash, nil] 該型別的上架 topic 三件組；Collection 回 nil（不適用）
+    def listing_topics_for(record)
+      case record.class.name
+      when "Product"
+        { add: Events::Topics::PRODUCT_LISTINGS_ADD,
+          remove: Events::Topics::PRODUCT_LISTINGS_REMOVE,
+          update: Events::Topics::PRODUCT_LISTINGS_UPDATE }
+      when "ProductVariant"
+        { add: Events::Topics::VARIANT_LISTINGS_ADD,
+          remove: Events::Topics::VARIANT_LISTINGS_REMOVE,
+          update: Events::Topics::VARIANT_LISTINGS_UPDATE }
+      end
+    end
+
+    # ADD 的 active 閘（僅 ADD；REMOVE/UPDATE 官方無限定）。
+    def listing_addable?(record)
+      status = record.is_a?(ProductVariant) ? record.product&.status : record.status
+      status.present? && Product::PURCHASABLE_STATUSES.include?(status.downcase)
+    end
+
+    # @note 副作用：INSERT 一筆 `event_outbox`（外部 topic；訂閱面＝未來包）。
+    def emit_listing_event!(shop:, publication:, record:, topic:, at:, dedupe_key: nil)
+      EventOutbox.create!(
+        shop_id: shop.id,
+        event_id: SecureRandom.uuid,
+        topic: topic,
+        aggregate_type: record.class.name,
+        aggregate_id: record.id,
+        payload: {
+          publication_id: publication.id,
+          publishable_type: record.class.name,
+          publishable_id: record.id,
+          occurred_at: at.utc.iso8601
+        },
+        available_at: at,
+        dedupe_key: dedupe_key,
+        status: "pending"
+      )
     end
 
     # 這個例外是不是「同鍵已存在」——**兩種形態都要認**。
@@ -547,13 +623,22 @@ module Publications
     #
     # @return [Integer] 實際刪掉的列數
     # @note 副作用：DELETE 0 或 1 列。
-    def remove_publication!(shop:, publication:, record:)
-      ResourcePublication.where(
+    def remove_publication!(shop:, publication:, record:, at: Time.current)
+      removed = ResourcePublication.where(
         shop_id: shop.id,
         publication_id: publication.id,
         publishable_type: record.class.name,
         publishable_id: record.id
-      ).destroy_all.size
+      ).destroy_all
+      # S8（D74）：刪到**已發布**列 ⇒ REMOVE（官方無 active 限定，Draft 也發）。
+      # 🔴 刪到「排程中未到點」列 ⇒ **不發**（ours fail-closed：本尊對「取消一個
+      #    還沒上架的排程」發不發 REMOVE 未取得——它從未 listed 過，發 REMOVE
+      #    會讓訂閱者收到一個從未 ADD 過的 listing 的移除；登記 91 §3.45）。
+      topics = listing_topics_for(record)
+      if topics && removed.any? { |row| row.published_at.present? && row.published_at <= at }
+        emit_listing_event!(shop:, publication:, record:, topic: topics.fetch(:remove), at:)
+      end
+      removed.size
     end
 
     # 排程列在同一個 transaction 內補一筆 outbox（鐵律 5：事件與業務寫入同交易）。
