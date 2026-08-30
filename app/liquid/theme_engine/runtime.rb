@@ -35,7 +35,7 @@ module ThemeEngine
 
     SCHEMA_RE = /\{%-?\s*schema\s*-?%\}(.*?)\{%-?\s*endschema\s*-?%\}/m
 
-    attr_reader :theme, :shop, :errors, :warnings, :design_mode
+    attr_reader :theme, :shop, :errors, :warnings, :design_mode, :render_flags
     attr_accessor :closest
 
     # 寬容 JSON（25 坑 #11：第三方原始碼包帶註解/尾逗號）。
@@ -49,9 +49,14 @@ module ThemeEngine
     # @param locale_dict [Hash] t filter 的字典（v1＝主題 locales/en.default.json；包 34 接真值鏈）
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
-                   cart_json: nil)
+                   cart_json: nil, asset_base: nil)
       @theme, @shop = theme, shop
       @cart_json = cart_json
+      # 公開店面傳 "/theme-assets"（包 33 後半）；預設維持登入預覽路徑（包 30 行為不變）。
+      @asset_base = asset_base
+      # 揮發旗標集（63 §D.5）：drop 讀到 volatile 欄位（inventory_quantity 等）時註冊，
+      # 頁級快取據此把該頁 TTL 壓到 volatile_section_ttl_seconds——價格類走 key、數量類走 TTL 兜底。
+      @render_flags = Set.new
       @source = source || Sources.resolve(theme)
       raise MissingSourceError, "主題 #{theme.name} 無檔案來源（Sources.resolve 回 nil）" if @source.nil?
 
@@ -285,7 +290,8 @@ module ThemeEngine
     def base_registers
       { runtime: self, locale_dict: @locale_dict, file_system: SnippetFS.new(@source),
         money_symbol: money_symbol, currency: @shop.store_currency,
-        asset_base: "/admin/store/preview/#{@theme.id}/assets" }
+        render_flags: @render_flags,
+        asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
     end
 
     # v1 符號表：只對店預設幣別 HKD 承諾正確（鐵律 10 的完整 locale 鏈＝包 34；91 §3.48）。

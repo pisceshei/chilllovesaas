@@ -103,6 +103,10 @@ module ThemeEngine
     # A′1：跨地點合計可售量（inventory_levels 需已 preload——PageRenderer 負責；
     # 未載入時退化為單筆查詢的 sum 也正確，只是多一次 IO）。
     def inventory_quantity
+      # 63 §D.5：volatile 欄位——讀到即註冊旗標，頁級快取把該頁 TTL 壓到
+      # volatile_section_ttl_seconds 兜底（價格類走 key-based、數量類走 TTL）。
+      # 在 drop 裡註冊而非人工標 section：主題是第三方的，這是唯一能自動偵測的位置。
+      @context&.registers&.[](:render_flags)&.add(:volatile)
       item = @v.inventory_item
       return 0 if item.nil?
 

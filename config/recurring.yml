@@ -32,3 +32,9 @@ production:
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
+  # 包 33 後半（A3）：90 天未動 cart 清理（specs/15 F1 #4）。
+  # 🔴 判準窗＝limits.cart.purge_days，**在 job 裡讀**；本檔只定頻率。排開 4 點檔清掃群。
+  storefront_cart_purge:
+    class: Storefront::CartPurgeJob
+    queue: background
+    schedule: at 5am every day

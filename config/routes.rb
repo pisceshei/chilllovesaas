@@ -27,8 +27,8 @@ Rails.application.routes.draw do
       format: false, as: :admin_theme_preview
 
   # 購物車 Ajax 端點（specs/15 F1；`.js` 與裸路徑同義——Ella 用裸形，83 §4.4）。
-  # 🔴 vehicle：目前掛 staff session（Storefront::CartController 檔頭③）；
-  #   公開店面的 host→shop 解析歸 W6 hosting 包。
+  # 包 33 後半（A1 收口）：vehicle＝**host 解析的公開端點**（租戶 host 上匿名可用；
+  # 平台 host 無租戶 ⇒ 404）。staff 預覽面在同一租戶 host ⇒ 同一組端點自然共用。
   scope format: false do
     get  "cart.js"        => "storefront/cart#show"
     get  "cart.json"      => "storefront/cart#show"
@@ -55,6 +55,17 @@ Rails.application.routes.draw do
   # PWA route 留待後續里程碑需要時啟用。
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+
+  # ── 公開店面（包 33 後半；六步方案步 2）───────────────────────────────────
+  # 🔴 只在租戶 host 上存在（TenantResolver 已把 shop_id 寫進 env）；平台 host
+  #   落到下面的 admin root。次序＝安全邊界：admin／cart／login 等具名路由在上面
+  #   先匹配，storefront catch-all 收尾——它**只**收 GET。
+  constraints ->(request) { request.env["chilllove.shop_id"].present? } do
+    get "robots.txt" => "storefront/pages#robots", format: false, as: :storefront_robots
+    get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
+    get "/" => "storefront/pages#root", as: :storefront_root
+    get "*path" => "storefront/pages#show", format: false, as: :storefront_page
+  end
 
   root to: redirect("/admin")
 end

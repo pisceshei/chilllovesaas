@@ -21,8 +21,11 @@ module Markets
     # 🔴 fail-closed：不得退回裸語言前綴（bare_language_prefix_forbidden）、不得猜「代表國」。
     class MissingRegionSource < Error; end
 
-    # 輸出必匹配（67 §F.1(b) 逐字正則）：/{lang(2-3)}[-{script(4)}]-{region(2)}
-    FORMAT = /\A\/[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}\z/
+    # 前綴段形（67 §F.1(b) 逐字正則的無斜線版）——路由層「像不像前綴」判別共用同一來源，
+    # 不得在 controller 抄第二份（雙份會在改正則時各跑各的）。
+    SEGMENT = /[a-z]{2,3}(-[a-z]{4})?-[a-z]{2}/
+    # 輸出必匹配：/{lang(2-3)}[-{script(4)}]-{region(2)}
+    FORMAT = %r{\A/#{SEGMENT.source}\z}
 
     module_function
 

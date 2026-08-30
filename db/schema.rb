@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_151000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1234,6 +1234,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_151000) do
   end
 
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|
+    t.integer "cart_item_limit", default: 50, null: false, comment: "cart 總件數上限（A2；建議值 50＝limits cart.item_limit_suggested）"
+    t.boolean "cart_item_limit_enabled", default: true, null: false, comment: "上限開關（limits cart.item_limit_enabled_default）"
     t.bigint "catalog_version", default: 1, null: false, comment: "目錄級版本（市場／價格表變動時 bump；寫入者隨第 32 包）"
     t.datetime "created_at", null: false
     t.string "custom_domain", limit: 253
