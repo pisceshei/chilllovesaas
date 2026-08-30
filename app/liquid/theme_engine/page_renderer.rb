@@ -14,10 +14,12 @@ module ThemeEngine
     # content_type：:html（整頁／單 section）或 :json（?sections= map）。
     Result = Struct.new(:status, :html, :page_type, :content_type, keyword_init: true)
 
-    def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil)
+    def initialize(theme:, shop:, publication:, url_prefix: "", design_mode: false, host: nil, source: nil,
+                   cart_json: nil)
       @theme, @shop, @publication = theme, shop, publication
       @url_prefix, @design_mode, @host = url_prefix, design_mode, host
       @source = source
+      @cart_json = cart_json
     end
 
     # @param path [String] 前綴已剝除的站內路徑（如 "/products/rose-serum"）
@@ -47,7 +49,7 @@ module ThemeEngine
       page_type, assigns, status = resolve(path)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
-                            path: path, host: @host, source: @source)
+                            path: path, host: @host, source: @source, cart_json: @cart_json)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
@@ -139,7 +141,7 @@ module ThemeEngine
     def build_runtime(page_type, assigns)
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
-                            path: nil, host: @host, source: @source)
+                            path: nil, host: @host, source: @source, cart_json: @cart_json)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
