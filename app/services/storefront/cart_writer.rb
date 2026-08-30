@@ -10,17 +10,6 @@ module Storefront
   # 🔴 併發（F1 #5）：add 走 upsert 撞 `(shop_id, cart_id, merge_key_hash)`
   #   唯一索引 ⇒ `quantity = quantity + ?` 收斂；兩分頁同時加購不丟量。
   # 🔴 不在 cart 階段扣庫存（F1 ⚠️坑：訂單成立時才扣）。
-  class CartError < StandardError
-    attr_reader :status
-
-    def initialize(message, status: 422)
-      super(message)
-      @status = status
-    end
-
-    def as_json_body = { "status" => status, "message" => message, "description" => message }
-  end
-
   module CartWriter
     module_function
 
