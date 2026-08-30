@@ -560,5 +560,15 @@
   "collection.channels.title": "Canaux de vente",
   "products.col.channels": "Canaux",
   "products.channels.viewAria": "Afficher les canaux de vente",
-  "products.channels.popover": "Canaux de vente publiés"
+  "products.channels.popover": "Canaux de vente publiés",
+  "products.bulk.toolbar": "Actions groupées",
+  "products.bulk.count": "{count} sélectionnés",
+  "products.bulk.setActive": "Définir comme actif",
+  "products.bulk.setDraft": "Définir comme brouillon",
+  "products.bulk.unlist": "Retirer de la liste",
+  "products.bulk.archive": "Archiver les produits",
+  "products.bulk.archiveConfirm": "Archiver les {count} produits sélectionnés ? Ils seront retirés de tous les canaux de vente ; vous pourrez annuler à tout moment.",
+  "products.bulk.done": "{count} produits mis à jour",
+  "products.bulk.partial": "{ok}/{total} mis à jour ; première erreur : {error}",
+  "product.schedule.activeNotice": "Le statut du produit doit être Actif pour que la planification s'applique."
 }

@@ -560,5 +560,15 @@
   "collection.channels.title": "販売チャネル",
   "products.col.channels": "チャネル",
   "products.channels.viewAria": "販売チャネルの詳細を表示",
-  "products.channels.popover": "公開済みの販売チャネル"
+  "products.channels.popover": "公開済みの販売チャネル",
+  "products.bulk.toolbar": "一括操作",
+  "products.bulk.count": "{count} 件選択中",
+  "products.bulk.setActive": "アクティブにする",
+  "products.bulk.setDraft": "下書きにする",
+  "products.bulk.unlist": "非掲載にする",
+  "products.bulk.archive": "商品をアーカイブ",
+  "products.bulk.archiveConfirm": "選択した {count} 件の商品をアーカイブしますか？すべての販売チャネルから削除されます。いつでも解除できます。",
+  "products.bulk.done": "{count} 件を更新しました",
+  "products.bulk.partial": "{ok}/{total} 件を更新；最初のエラー：{error}",
+  "product.schedule.activeNotice": "スケジュールを適用するには、商品ステータスがアクティブである必要があります。"
 }

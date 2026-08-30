@@ -3588,3 +3588,12 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 | W-2 | 🔴 **`computer` 的座標框架是最近一次截圖的像素，不是頁面 CSS px**。頁寬 2560、截圖 1568（比例 0.6125）時，用 CSS 座標 hover 會落空**且不報錯**——讀回全是 rest 值，看起來像「hover 沒有效果」。判準＝操作後先斷言 `el.matches(':hover')` 再讀值 | D70 量測方法坑段 | 量測方法坑。固定處理＝先 `screenshot` 建立框架、座標乘比例、每次 hover 後驗 `matches(':hover')` |
 | — | **處置補記：§3.42 W-1（四族 rem）＝裁定擱置**，重啟條件見 D70 | D70 擱置① | 使用者 2026-08-28 採納 |
 | — | **處置補記：§3.41 W-3／§3.42 W-3（rwd-check.mjs）＝裁定擱置到下一個大 UI 輪開頭**，屆時作為首包（18.3 人工合併） | D70 擱置② | 同上 |
+
+### 3.44 S7（D73）的範圍外觀察（2026-08-28）
+
+| # | ⚪ 觀察 | 導出／錨點 | 為什麼不在本包修 |
+|---|---|---|---|
+| W-1 | 🔴 **`Suspended` 第五狀態**：本尊列表篩選 chip 逐字 `Status: Active, Draft, Unlisted, and Suspended`（82 §18 量測時可見），但官方 `ProductStatus` enum 只有四值 ⇒ 平台施加的第五值，**語義未取得**（分步方案 §S7 原句）。我方 enum 不加 | 82 §18 的截圖；shopify.dev ProductStatus | 加一個語義未知的值＝把猜測寫進 enum。等取得官方語義或實測到形態再議 |
+| W-2 | **複製商品的發布繼承規則**：我方 Duplicate 是 disabled 佔位（詳情頁 More actions），繼承規則（複製品的 publications／排程帶不帶）未取得 | ProductDetailPage 的 `product.duplicate.pending` | 隨 Duplicate 功能包一起實測＋實作 |
+| W-3 | **批量頂層鈕的完整切換規則未取得**（只取得「全 Active→Set as draft」一格）；我方混合選集出兩顆是 ours | 82 §19.1／§19.4 | 造混合選集再驗一輪即可補；規則已標 ours 可隨時被實測推翻 |
+| W-4 | **溢出選單其餘九項**（Delete／管道×2／型錄×2／標籤×2／系列×2／Create email campaign）與 **`Bulk edit` 獨立編輯器頁**（`/bulk/product?...` 真實 URL 已取得） | 82 §19.2 | 各自屬刪除／管道批量／型錄／標籤／系列功能線；編輯器是另一整個表面 |

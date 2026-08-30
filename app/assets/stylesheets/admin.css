@@ -1589,6 +1589,33 @@ a {
   cursor: default;
 }
 
+/* ── S7（D73）：排程面板的資訊 banner ＋ 列表批量動作列 ──────────────────
+   banner＝本尊 Draft 商品實測形態（tone-auto、role=status、控件不禁用）；
+   我方用 info 語義族（tone-auto 的實際色值未逐項量測 ⇒ 走語義 token，登記 V）。 */
+.cl-sched__notice {
+  padding: var(--sp-150) var(--sp-200);
+  margin: 0 0 var(--sp-200);
+  border-radius: var(--r-200);
+  background: var(--sem-info-surface);
+  color: var(--sem-info-text);
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+}
+
+.cl-bulkbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  padding: var(--sp-150) var(--sp-300);
+  border-bottom: var(--hairline) solid var(--border);
+}
+
+.cl-bulkbar__count {
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-lh);
+  font-weight: var(--fw-medium);
+}
+
 
 /* dropzone 空態（多媒體卡） */
 .cl-dropzone {

@@ -496,6 +496,7 @@ export function ChannelScheduleButton({
   scheduledAt,
   hasSavedSchedule,
   onSchedule,
+  notice,
   t,
 }: {
   publicationId: string;
@@ -504,6 +505,8 @@ export function ChannelScheduleButton({
   scheduledAt: number | null;
   hasSavedSchedule: boolean;
   onSchedule: (at: number) => void;
+  /** S7：排程面板頂端的資訊 banner（見 SchedulePopover.notice）。 */
+  notice?: string;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -529,6 +532,7 @@ export function ChannelScheduleButton({
         <SchedulePopover
           anchorRef={buttonRef}
           hasSavedSchedule={hasSavedSchedule}
+          notice={notice}
           now={now}
           onApply={(at) => { onSchedule(at); setOpen(false); }}
           onClose={() => setOpen(false)}
@@ -572,6 +576,7 @@ function PublishingModal({
   onApply,
   onClose,
   restoreFocusTo,
+  scheduleNotice,
   t,
 }: {
   productTitle: string;
@@ -585,6 +590,8 @@ function PublishingModal({
   onApply: (next: PublicationDelta) => void;
   onClose: () => void;
   restoreFocusTo: RefObject<HTMLElement | null>;
+  /** S7（D73）：status ∉ PURCHASABLE 時的排程 banner 文案；undefined＝不顯示。 */
+  scheduleNotice?: string;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
   // 草稿＝modal 內的暫存。呼叫端條件渲染本元件 ⇒ 每次開啟都是新的初值，不需同步 effect。
@@ -691,6 +698,7 @@ function PublishingModal({
                   {pub.supportsFuturePublishing ? (
                     <ChannelScheduleButton
                       hasSavedSchedule={serverScheduleOf(rows, pub.id) !== null}
+                      notice={scheduleNotice}
                       now={now}
                       onSchedule={(at) => setDraft((current) => scheduleChannel(current, pub.id, at))}
                       publicationId={pub.id}
@@ -2928,6 +2936,7 @@ export function ProductDetailPage({ isNew }: ProductDetailPageProps) {
           publications={publications}
           restoreFocusTo={publishingButtonRef}
           rows={publicationRows}
+          scheduleNotice={[ "ACTIVE", "UNLISTED" ].includes(values.status) ? undefined : t("product.schedule.activeNotice")}
           t={t}
         />
       ) : null}

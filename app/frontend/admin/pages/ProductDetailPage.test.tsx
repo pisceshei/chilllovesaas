@@ -1332,6 +1332,28 @@ describe("S6b 發布編輯 modal", () => {
     return within(await screen.findByRole("dialog"));
   }
 
+  it("S7 排程 banner：DRAFT 商品開排程面板見資訊 banner；控件不禁用", async () => {
+    const draftProduct = { ...PRODUCT, status: "DRAFT" };
+    stubRoutedFetch([
+      ...BASE_ROUTES,
+      { match: "query productForEdit", body: { data: { product: draftProduct, publications: [ ...PUBS, CATALOG_PUB ] } } },
+    ]);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getAllByRole("button", { name: /排程發布|發布於/ })[0]);
+    const sched = within(await screen.findByRole("group", { name: "排程發布" }));
+    expect(sched.getByRole("status")).toHaveTextContent("商品狀態須為「啟用」，排程到點時才會生效。");
+    // 🔴 控件不禁用——本尊實測排程照樣能存，到點才依 status 閘門（D53 F1）
+    expect(sched.getByLabelText("日期")).toBeEnabled();
+  });
+
+  it("S7 排程 banner：ACTIVE 商品無 banner", async () => {
+    stubRoutedFetch(EDIT_ROUTES);
+    const dialog = await openModal();
+    await userEvent.click(dialog.getAllByRole("button", { name: /排程發布|發布於/ })[0]);
+    const sched = within(await screen.findByRole("group", { name: "排程發布" }));
+    expect(sched.queryByRole("status")).toBeNull();
+  });
+
   it("🔴 modal 列出**全部**管道，未發布的那個也在（不是只列 resourcePublicationsV2）", async () => {
     stubRoutedFetch(EDIT_ROUTES);
     const dialog = await openModal();

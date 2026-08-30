@@ -71,6 +71,14 @@ export interface SchedulePopoverProps {
    */
   onApply: (instant: number) => void;
   onClose: () => void;
+  /**
+   * S7（D73）：面板頂端的資訊性 banner 文案；undefined＝不渲染。
+   * 本尊實測（PR-C 裁定書 F1-②）：Draft 商品開排程面板時頂端多一則
+   * `role="status"` banner（逐字 `Product status must be set as active for
+   * scheduling to apply.`），**控件不禁用**——排程照樣能存，到點才依 status 閘門。
+   * 文案由呼叫端給（鐵律 9 不抄本尊文案；且 Collection 無 status ⇒ 該呼叫端不傳）。
+   */
+  notice?: string;
 }
 
 /** 30 分鐘刻度的時間選項（`HH:mm`）。 */
@@ -87,6 +95,7 @@ export function SchedulePopover({
   hasSavedSchedule,
   onApply,
   onClose,
+  notice,
 }: SchedulePopoverProps) {
   const t = useT();
   const uiLocale = useUiLocale();
@@ -245,6 +254,12 @@ export function SchedulePopover({
     >
       <div className="cl-sched">
         <h3 className="cl-sched__title">{t("schedule.title")}</h3>
+        {/* S7（D73）：資訊性 banner——本尊 Draft 商品的形態（role=status、控件不禁用）。 */}
+        {notice ? (
+          <p className="cl-sched__notice" role="status">
+            {notice}
+          </p>
+        ) : null}
 
         {/* 🔴 blur 後顯示**長格式**（本尊 §15.3 逐字「`2026-09-15` → blur 後
             `September 15, 2026`」）；**聚焦時切回 ISO** 供編輯。
