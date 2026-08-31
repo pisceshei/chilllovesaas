@@ -152,7 +152,10 @@ currency_display:
   #      Datatrans＝整數 minor units，自稱遵循 ISO；
   #      Stripe＝整數 minor units ＋ `Special cases` 表覆蓋 ISO（ISK／HUF／TWD／UGX），
   #              且 **HUF／TWD 的 payout 金額須整除 100**；
-  #      Airwallex＝🔴 **十進位主單位字串，根本不用 minor units**。
+  #      Airwallex＝🔴 **十進位主單位，根本不用 minor units**
+  #        <!-- 2026-08-31 更正：其 wire form 原記「字串」——一手複驗為 JSON **number**
+  #             （"$9.99 is represented as 9.99"，schema number）⇒ amount_format 第三值
+  #             decimal_number；decimal_string 的實證代表改由 PayPal 承接。65 §D.4。 -->
   #    ⇒ 正確讀法是「**`amount_format: minor_units` 的 pack 若選擇以 ISO 為底時，底表就是 ISO**」，
   #      **不是**「所有 PSP 都跟 ISO」，更**不是**「沒宣告就套 ISO」。
   #    🔴 換算基數的唯一來源是 `psp_packs.<code>` 的宣告（見 money_boundary.psp_pack_required_keys）。
@@ -224,17 +227,23 @@ money_boundary:
   psp_non_integral_conversion_action: raise
   psp_rounding_forbidden: true
 
-  # --- 🔴 R6／A0／A5／A6：PSP 的金額**格式**（依 69 號 §V-188 新增，2026-08-12）-------
+  # --- 🔴 R6／R7／A0／A5／A6：PSP 的金額**格式**（依 69 號 §V-188 新增，2026-08-12）-------
   # 🔴 **上面所有 psp_* 鍵的隱含前提是「PSP 收整數 minor unit」——那個前提是錯的。**
   #    69 號查到四家 PSP 四種算法（`alt` ＝ PSP 官方文檔，見 65 §D.4 實證表）：
   #      Adyen／Datatrans／Stripe ＝ 整數 minor units（且 Adyen 明文覆蓋 ISO、Stripe 有 Special cases 表）
-  #      Airwallex               ＝ 🔴 **十進位主單位字串**（`9.99` 就是九元九角九分）
+  #      Airwallex               ＝ 🔴 **十進位主單位**（`9.99` 就是九元九角九分）
   #    ⇒ `Money::PspMinor` 這個型別在 Airwallex 型 PSP 上**根本不適用**。這是**型別設計擋不住的形態**，
   #      不是參數問題 ⇒ 65 §A 新增 **R6（`Money::PspDecimal`）**，本區塊是它的鍵。
+  # 🔴 2026-08-31 增修（G6-0(b)，一手複驗兩家）：
+  #      Airwallex 的 wire form 是 JSON **number**（airwallex.com/docs/api/data_types 逐字
+  #      "$9.99 is represented as 9.99"、create schema `amount: number`）——**非 69 號原記的
+  #      decimal_string** ⇒ 第三值 **decimal_number（R7，Money::PspNumber）**；
+  #      PayPal＝**decimal_string**（developer.paypal.com：`value` 是 string、pattern
+  #      `^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$`）＝ R6 的現任實證代表。
   # 🔴🔴 **不得把本區塊讀成「鐵律 3 放寬了」。** 反過來：外部證據正面證實了「PSP 單位必須逐家宣告、
   #      不得套 ISO」是對的，只是**宣告的內容比原本想的多一個維度（格式）**。
   #      `psp_undeclared_currency_action: reject` 與 `max_supported_iso_exponent: 2` 一個字都沒動。
-  psp_amount_formats: [minor_units, decimal_string]
+  psp_amount_formats: [minor_units, decimal_string, decimal_number]
   # A0：pack 必須明文宣告 amount_format；未宣告 ⇒ reject，**且該 pack 不得 enable**。
   psp_amount_format_must_be_declared_by_pack: true
   psp_amount_format_undeclared_error_code: PSP_AMOUNT_FORMAT_UNDECLARED
@@ -280,7 +289,13 @@ money_boundary:
   psp_pack_required_keys: [amount_format, divisibility, divisibility_scope,
                            storage_precision_shortfall, enable_gate]
   psp_pack_required_keys_when_minor_units: [minor_unit_source, minor_unit_overrides]
-  psp_pack_required_keys_when_decimal_string: [decimal_places]
+  # 🔴 2026-08-31 增補 decimal_places_overrides（A7）：per-currency 位數覆蓋表，
+  #    與 minor_unit_overrides 同一條「空表＝已查證無例外；缺鍵＝沒人查過」紀律。
+  #    兩家實證都需要它：PayPal 官方逐字「This currency does not support decimals.」
+  #    （HUF/JPY/TWD，🔴 HUF 在 ISO 是 2 位）；Airwallex payments 側零小數 20 幣
+  #    （🔴 HUF/TWD/IDR 皆與 ISO 不同）。
+  psp_pack_required_keys_when_decimal_string: [decimal_places, decimal_places_overrides]
+  psp_pack_required_keys_when_decimal_number: [decimal_places, decimal_places_overrides]
   # ISO 4217 minor unit 表的來源：進 repo、版本釘死，不用未釘版的 gem。⚠ V-131
   iso4217_table_source: config/iso4217_minor_units.yml
   iso4217_table_unpinned_gem_forbidden: true
@@ -291,6 +306,7 @@ money_boundary:
     storage: Money::Storage          # R1
     psp_minor: Money::PspMinor       # R5  amount_format: minor_units
     psp_decimal: Money::PspDecimal   # R6  amount_format: decimal_string（依 69 §V-188 新增）
+    psp_number: Money::PspNumber     # R7  amount_format: decimal_number（2026-08-31 新增，Airwallex 型）
     decimal: Money::Decimal          # R4  🔴 無 :psp 欄位 ⇒ **不是**對 PSP 的表示法，傳進 adapter 即 TypeError
   # 🔴 值物件**不得**實作 to_i / to_int / coerce / 數值型 to_s——一旦有隱式轉換，防線等於不存在。
   #    🔴 R6 的等價陷阱是 **to_s／to_str**：它內含字串，`"#{amount}"` 在組 JSON body 時到處都是，
@@ -360,10 +376,11 @@ money_boundary:
   test_matrix_zero_decimal_required: [JPY, TWD, KRW]
   test_matrix_two_decimal_required: [HKD, USD]
   # 🔴 依 69 §V-188 新增：**格式也是一個測試維度，而且是目前零覆蓋的那一個。**
-  #    只測 minor_units 的矩陣，在 Airwallex 型 PSP 上等於沒有測試；而 decimal_string 的誤用
-  #    （把儲存值 148000 輸出成 "148000.00"）**在 HKD 上也會錯** ⇒ 它是唯一「基準法域測得到、
-  #    卻沒人在測」的送款事故形態。缺 decimal_string 的 fixture pack ⇒ CI fail。
-  test_matrix_amount_formats_required: [minor_units, decimal_string]
+  #    只測 minor_units 的矩陣，在 Airwallex 型 PSP 上等於沒有測試；而 decimal 兩格式的誤用
+  #    （把儲存值 148000 輸出成 "148000.00"／148000.0）**在 HKD 上也會錯** ⇒ 它是唯一「基準法域
+  #    測得到、卻沒人在測」的送款事故形態。缺任一格式的 fixture pack ⇒ CI fail。
+  #    （decimal_number 於 2026-08-31 隨 R7 加入本清單。）
+  test_matrix_amount_formats_required: [minor_units, decimal_string, decimal_number]
   test_matrix_missing_amount_format_action: ci_fail
   # 🔴 divisibility 至少要有一個 fixture pack（以 TWD／100 為原型，來源＝Stripe payout 的明文要求）。
   #    斷言必須同時檢查「有 raise」與「**沒有靜默湊整**」——只測前者的話，
@@ -378,8 +395,8 @@ money_boundary:
   test_matrix_boundary_values: [0, 1, smallest_representable, non_representable_remainder, bigint_max]
   # 金額路徑的測試檔若一個 zero-decimal 幣別都沒有 ⇒ 視為未涵蓋，CI fail。
   test_matrix_missing_zero_decimal_action: ci_fail
-  # 往返自檢：from_psp_amount(to_psp_amount(x)) == x（兩種 amount_format 各跑一次），
-  # 在非生產環境每次轉換都跑。<!-- 依 69 §V-188：原文只有 minor 一種 -->
+  # 往返自檢：from_psp_amount(to_psp_amount(x)) == x（三種 amount_format 各跑一次），
+  # 在非生產環境每次轉換都跑。<!-- 依 69 §V-188：原文只有 minor 一種；2026-08-31 隨 R7 增為三種 -->
   roundtrip_selfcheck_envs: [development, test, staging]
 
 # =============================================================================
@@ -388,33 +405,112 @@ money_boundary:
 # 依 69 號 §V-188 新增（2026-08-12）。**本區塊在 65 §D.3／§L V-132 早已被引用，但一直沒有落鍵**
 # ——這次把宣告契約落下來，順便把 69 號查到的「格式」這個維度補進去。
 #
-# 🔴 **本區塊目前沒有任何 enabled 的 pack，也不得有。** 我方不自建支付系統（open-decisions §F），
+# 🔴 **本區塊目前沒有任何 enabled 的 pack，也不得有**（airwallex／paypal 的 enable 時點見各自
+#    註釋：adapter 落地＋sandbox 實測後）。我方不自建支付系統（open-decisions §F），
 #    要接哪一家、該家對各幣別宣告什麼，一律等該家的官方文檔或合約文件到手才填（鐵律：未宣告 ⇒ reject）。
 # 🔴 **不得從 65 §D.4 的實證表把數值抄進來當宣告值。** 那張表記的是「外部世界長什麼樣」，
 #    用來證明 A0／A1／A5 三條斷言不是過度設計；**pack 的宣告值必須來自我方實際簽約那一家的一手文件**
 #    ——Adyen 明文說自家表覆蓋 ISO，就是「別家的表不能拿來推這一家」最好的反證。
+#    （下方 airwallex／paypal 兩個 pack 的每一個值都帶自己的一手出處＋取證日期，就是本條的執行形。）
 psp_packs:
   # --- 宣告契約（每個 pack 的必填鍵見 money_boundary.psp_pack_required_keys）-------
   # <psp_code>:
-  #   amount_format: minor_units | decimal_string   # 🔴 必填（A0）；未宣告 ⇒ 不得 enable，送款 reject
+  #   amount_format: minor_units | decimal_string | decimal_number
+  #                                                 # 🔴 必填（A0）；未宣告 ⇒ 不得 enable，送款 reject
   #   minor_unit_source: iso4217                    # minor_units 專用；「以 ISO 為底」也要明講
   #   minor_unit_overrides: {}                      # minor_units 專用；空表＝已查證無例外（≠ 未宣告）
-  #   decimal_places: 2                             # decimal_string 專用；> 2 ⇒ 不得 enable（A6）
+  #   decimal_places: 2                             # decimal 兩格式專用（基準位數）；> 2 ⇒ 不得 enable（A6）
+  #   decimal_places_overrides: {}                  # decimal 兩格式專用（A7 per-currency 覆蓋；
+  #                                                 #   空表＝已查證無例外；值域 0..2，>2 載入即拒）
   #   divisibility: {}                              # 幣別 → 倍數；空表＝已查證無此約束（≠ 未宣告）
   #   divisibility_scope: []                        # charge／refund／payout ⚠ V-206
   #   storage_precision_shortfall: reject           # 目前唯一合法值
   #   enable_gate: []                               # 未結案的 V 編號；非空 ⇒ enabled 必為 false
   #   enabled: false
   #
-  # 🔴 空表 ≠ 缺鍵（三處都適用：minor_unit_overrides／divisibility／enable_gate）：
-  #    明文空表＝「已查證、無例外」；沒有這個鍵＝「沒人查過」⇒ 不得 enable。58 §A.3 已吃過一次虧。
+  # 🔴 空表 ≠ 缺鍵（四處都適用：minor_unit_overrides／decimal_places_overrides／divisibility／
+  #    enable_gate）：明文空表＝「已查證、無例外」；沒有這個鍵＝「沒人查過」⇒ 不得 enable。
+  #    58 §A.3 已吃過一次虧。
   #
-  # --- 已登記的閘門（pack 本體未建立，先把閘門記著，免得日後有人直接開）-------------
-  # airwallex：⚠ V-132。單位面已由 69 號答出＝**十進位主單位字串**（amount_format: decimal_string），
-  #            但 **per-currency 位數、幣別欄位名、webhook 金額形態**仍未取得一手文檔 ⇒ 不得 enable。
   # ⚠ V-206：divisibility 的作用範圍（charge / refund / payout）未明 ⇒ `divisibility_scope`
   #          缺鍵的 pack 一律不得 enable；已宣告者以**最嚴格**解讀（charge 亦套用）。
-  enable_gates_registered: {airwallex: [V-132]}
+  #
+  # 歷史註記：本區塊 2026-08-12〜2026-08-31 間只有 `enable_gates_registered: {airwallex: [V-132]}`
+  # 一行（「pack 本體未建立，先把閘門記著」）。V-132 的三項缺口（per-currency 位數／幣別欄位名／
+  # webhook 金額形態）已於 2026-08-31 以一手文檔結案（見 65 §L V-132 與下方逐值出處）⇒ 閘門清空、
+  # pack 本體落鍵；enabled 仍為 false（等 G6-1 adapter＋sandbox 實測）。
+  enable_gates_registered: {}
+
+  # --- Airwallex（Payment Acceptance／pa API；G6-1 的收單通道）--------------------
+  # 取證 2026-08-31，逐值一手出處：
+  #   amount_format＝decimal_number：airwallex.com/docs/api/data_types 逐字
+  #     "Currency amounts specified in major units as defined by ISO 4217. For example,
+  #      $9.99 is represented as 9.99."；payment_intents create schema `amount: number`
+  #     （JSON number，非字串）。🔴 這推翻 69 號（2026-08-12）的 decimal_string 結論
+  #     ——69 號依 19.5 已追加有日期更正。
+  #   decimal_places_overrides＝payments 側零小數 20 幣：
+  #     airwallex.com/docs/payments__reporting__payments-and-fee-rounding 逐字
+  #     "All currencies will have 2 digit decimals as the smallest unit apart from zero
+  #      decimal currencies."＋"Zero decimal currencies" 清單全量（BIF…XPF，20 碼）。
+  #     🔴 HUF／TWD／IDR 在列＝Airwallex 明文偏離 ISO 4217（ISO 皆為 2 位）⇒
+  #        又一次證明「ISO 只是底表，不是換算基數」。
+  #     🔴 射程注意：payouts 產品線另有一張表（含 3 位小數幣別與 SAR/KES 零小數）——
+  #        **那是 payouts 不是 payments**，本 pack 只管收單，不得混用。
+  #   divisibility＝{}：payments 文檔無整除約束記載（已查證無）。
+  #   webhook 金額形態＝number（webhook payload 例 `16.66`）；幣別欄位名＝`currency`
+  #     （create 必填欄位表）。
+  airwallex:
+    amount_format: decimal_number
+    decimal_places: 2
+    decimal_places_overrides:
+      BIF: 0
+      CLP: 0
+      DJF: 0
+      GNF: 0
+      HUF: 0
+      IDR: 0
+      ISK: 0
+      JPY: 0
+      KMF: 0
+      KRW: 0
+      MGA: 0
+      PYG: 0
+      RWF: 0
+      TWD: 0
+      UGX: 0
+      VND: 0
+      VUV: 0
+      XAF: 0
+      XOF: 0
+      XPF: 0
+    divisibility: {}
+    divisibility_scope: []
+    storage_precision_shortfall: reject
+    enable_gate: []
+    enabled: false   # G6-1：adapter＋webhook＋sandbox 端到端實測後才翻
+
+  # --- PayPal（Orders v2／Payments v2；G6-2 的收單通道）---------------------------
+  # 取證 2026-08-31，逐值一手出處：
+  #   amount_format＝decimal_string：developer.paypal.com Orders v2 `amount.value` 型別
+  #     string、maxLength 32、pattern `^((-?[0-9]+)|(-?([0-9]+)?[.][0-9]+))$`。
+  #   decimal_places_overrides＝developer.paypal.com/api/rest/reference/currency-codes/
+  #     逐字 "This currency does not support decimals. If you pass a decimal amount,
+  #     an error occurs."——標註於 HUF／JPY／TWD 三幣。
+  #     🔴 HUF 在 ISO 4217 是 2 位 ⇒ PayPal 也覆蓋 ISO；其餘 22 個支援幣別無位數特註
+  #     （基準 2 位承接）。
+  #   divisibility＝{}：currency-codes 頁對 25 個支援幣別無整除約束記載（已查證無）。
+  paypal:
+    amount_format: decimal_string
+    decimal_places: 2
+    decimal_places_overrides:
+      HUF: 0
+      JPY: 0
+      TWD: 0
+    divisibility: {}
+    divisibility_scope: []
+    storage_precision_shortfall: reject
+    enable_gate: []
+    enabled: false   # G6-2：adapter＋webhook＋sandbox 端到端實測後才翻
 
 # =============================================================================
 # 1. API 契約（GraphQL）

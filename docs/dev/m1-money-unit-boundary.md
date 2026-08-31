@@ -2,15 +2,15 @@
 
 ## 概述
 
-金額在系統裡有**四種表示法**，彼此不可互換。這一層的職責是：讓「用錯表示法」在
+金額在系統裡有**五種值物件表示法**（R1/R4/R5/R6/R7；含顯示與內部共七種，65 §A），彼此不可互換。這一層的職責是：讓「用錯表示法」在
 **執行期第一次呼叫時就炸**，而不是在上線後的對帳日才被發現。
 
-對應本尊：`MoneyV2` 的 `amount` 是十進位字串，而各家 PSP 收的格式**四家四種**
-（`docs/specs/65` §D.4）。本層不是抄本尊的實作，是**滿足鐵律 3**。
+對應本尊：`MoneyV2` 的 `amount` 是十進位字串，而各家 PSP 收的格式**五家三種**
+（`docs/specs/65` §D.4；2026-08-31 起含 PayPal＝decimal_string、Airwallex＝decimal_number）。本層不是抄本尊的實作，是**滿足鐵律 3**。
 
 🔴 **本層目前沒有任何生產呼叫端**：`app/` 全庫 `Money::` 只出現在本層自己，
 `Types::ProductType` 連價格欄位都沒有，`Psp::BaseAdapter` 沒有任何子類。
-它的正確性靠三件事保證——規格逐行寫死的欄位形狀、六幣別 × 兩種格式的測試矩陣、
+它的正確性靠三件事保證——規格逐行寫死的欄位形狀、六幣別 × 三種格式的測試矩陣、
 以及六條帶「故意違反 fixture」的 CI 檢查。**這一點必須誠實揭露，不得假裝已被使用。**
 
 ## 規格出處
@@ -30,14 +30,19 @@ DB（*_cents，bigint）
                                  │                      └─ 物流商 payload
                                  ├─ #to_psp_amount(psp:) ── 依 pack.amount_format 分流
                                  │     ├─ minor_units    → Money::PspMinor（R5）
-                                 │     └─ decimal_string → Money::PspDecimal（R6）
+                                 │     ├─ decimal_string → Money::PspDecimal（R6；PayPal 型，
+                                 │     │                    per-currency 位數 A7＋不湊整 A6c）
+                                 │     └─ decimal_number → Money::PspNumber（R7；Airwallex 型，
+                                 │                          BigDecimal，wire＝JSON number）
                                  │              ↓
                                  │        Psp::BaseAdapter#to_payload
-                                 │              ↓（唯一變回 Integer／String 的地方）
+                                 │              ↓（唯一變回 Integer／String／BigDecimal 的地方）
                                  │           PSP HTTP body
                                  └─ Money::Display.call ─→ 顯示字串（R3；符號待 M5 markets）
 
-入向：PSP webhook → 依 pack.amount_format 包成 R5／R6 → #to_storage → R1 落庫
+入向：PSP webhook → Money.from_psp_amount（唯一入向閘門；形態不符宣告＝TypeError、
+      decimal_number 對 Float 恆拒——JSON.parse 必須 decimal_class: BigDecimal）
+      → 包成 R5／R6／R7 → #to_storage → R1 落庫
 ```
 
 🔴 **`Money::Decimal`（R4）與 `Money::PspDecimal`（R6）的線上形態完全相同**
@@ -60,10 +65,12 @@ DB（*_cents，bigint）
 
 ## 關鍵取捨
 
-### 為什麼是四個型別而不是一個帶單位欄位的類別
+### 為什麼是五個型別而不是一個帶單位欄位的類別
 
 一個 `Money(amount, unit)` 類別擋不住「把 storage 的實例傳給 PSP」——
-它們是同一個型別，靜態上看不出差別。**四個不同的類別讓誤用在 `is_a?` 就失敗**。
+它們是同一個型別，靜態上看不出差別。**不同的類別讓誤用在 `is_a?` 就失敗**。
+R6 與 R7 單位語義相同、只差 wire form（string vs number），仍分兩型：
+共用會讓「宣告與實際 wire form 不符」在我方側靜默通過（65 §A R7）。
 
 ### L2「唯一建構路徑」在 `Data` 上有**三條**後門
 
@@ -75,7 +82,7 @@ DB（*_cents，bigint）
 | `instance.with(...)` | 建得出完整實例 | 「換幣別、保留同一個數字」變成一行 |
 | `Klass.allocate` | 欄位全 nil，**但 `is_a?` 為 true** | 🔴 L3 的 adapter 斷言只看 `is_a?` |
 
-四個型別的三條後門全關（`app/models/money.rb` 檔尾），R5／R6 另外關 `.new`。
+五個型別的三條後門全關（`app/models/money.rb` 檔尾），R5／R6／R7 另外關 `.new`。
 
 ### `__build` 是 public——Ruby 表達不了「friend class」
 
@@ -121,8 +128,9 @@ BIGINT max 上 `9223372036854775807` 會變成 `92233720368547760.00`（差 2 �
 
 - `spec/models/money_spec.rb`（22）：L1 反射斷言、L2 三條後門、R1／R4／R3、
   鐵律 6 的 stub 驗法。
-- `spec/models/psp_amount_matrix_spec.rb`（32）：65 §H 的 T3–T19 全矩陣。
-- `spec/models/psp/registry_spec.rb`（13）：鍵型別收斂 ＋ 五個違規 pack 各自被擋。
+- `spec/models/psp_amount_matrix_spec.rb`：65 §H 的 T3–T24 全矩陣（2026-08-31 起含
+  decimal_number／per-currency 覆蓋／入向閘門格）。
+- `spec/models/psp/registry_spec.rb`：鍵型別收斂 ＋ 違規 pack 各自被擋（含 A7 兩格）。
 - `scripts/check-money-boundary.rb` ＋ `scripts/test-money-rules.rb`（10）：
   六條 CI 規則各自被故意違反的 fixture 打紅 ＋ 乾淨倉庫必須 exit 0。
 
@@ -138,11 +146,15 @@ bundle exec rspec spec/models/money_spec.rb spec/models/psp_amount_matrix_spec.r
 - 🔴 **`Money::Storage` 不能相加相減**。65 §F.3 只講 SQL rollup，值物件層是空白。
   現在猜一個實作，第一個使用者就會繞過它寫 `a.cents + b.cents`
   ⇒ 留給第一個需要小計／折扣的 PR。
-- 🔴 **往返自檢沒有掛在轉換路徑上**：`roundtrip_selfcheck_envs` 要的是
-  「非生產環境**每次轉換**都跑」，目前只有 T12 那條 spec 在跑。
+- ~~往返自檢沒有掛在轉換路徑上~~ ✅ 2026-08-31 已落地：`to_psp_amount` 內
+  `roundtrip_selfcheck!`（讀 `roundtrip_selfcheck_envs`，非生產每次轉換都跑）。
 - 🔴 **`divisibility_scope` 被完全忽略**（V-206 未結案）：當前處置是最嚴格解讀
   （charge 亦套用），scope 只進錯誤訊息。
-- 🔴 **入向的 `dead_letter` 未實作**：需要 webhook 接收端（M4）。
+- 🔴 **入向的 `dead_letter` 未實作**：`Money.from_psp_amount` 已是入向閘門
+  （raise 面完成），死信隊列本體需要 webhook 接收端（G6-1/G6-2）。
+- ⚠️ **C2 的後綴白名單尚未含 `_psp_number`**（scripts/ 改動歸 CLAUDE.md 同步 PR，
+  18.3 人工合併射程）：G6-1 adapter 用該後綴前必須先合入，否則 C2 會 fail-closed 拒收
+  ——方向安全（誤擋不誤放）。65 §C.2 有同一條註記。
 - ⚠️ **C2 只掃明顯的 kwarg 呼叫**，動態 `send` 與 `**payload` 看不到。
 - ⚠️ **`iso4217_minor_units.yml` 是手工輸入的**（V-131：一手來源與落地形式未取得）。
 - ⚠️ **`Psp::Registry`／`Pack`／`BaseAdapter` 是 65 號只有呼叫端、沒有定義端的三個類別**
@@ -165,4 +177,11 @@ bundle exec rspec spec/models/money_spec.rb spec/models/psp_amount_matrix_spec.r
   否則 `fixed_string` 會靜默四捨五入，HKD 14.85 送成 14.9）＋ `fixed_string` 的 `digits=0`
   格式 bug ＋ `Money::Storage#<=>` 改 public 且對非 `Storage` 回 `nil`（原本 `== nil` 會 raise）。
   規格出處：`65` §D.2 A6b／§D.5、`DECISIONS.md` D16。
+- 2026-08-31 G6-0(b)：**第三格式 `decimal_number`（R7／`Money::PspNumber`）**——Airwallex
+  wire form 一手複驗為 JSON number（推翻 69 號 decimal_string 結論，65 §D.4 更正）；
+  **A7 per-currency 位數覆蓋**（PayPal HUF/JPY/TWD＝0 位、Airwallex payments 零小數 20 幣，
+  兩家都覆蓋 ISO）＋**A6c 不湊整守衛**（decimal 側的 A3 等價物）；`Money.from_psp_amount`
+  入向閘門（Float 恆拒）；往返自檢掛上轉換路徑；真 pack `airwallex`／`paypal` 落
+  `limits.yml`（enabled: false，enable 時點＝adapter＋sandbox 後）；V-132 結案。
+  規格出處：65 §A R7／§D.2 A6c·A7／§D.4／§L。
 - 2026-08-16 PR #39：跨功能影響表 `config/ci.rb 與 ci.yml` 一列由紀律敘述改為機制指向——該同步自 PR #39 起由 `scripts/check-ci-parity.rb` 機器擋（漏同步 CI fail 並逐支點名）。

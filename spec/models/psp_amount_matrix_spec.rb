@@ -108,6 +108,99 @@ RSpec.describe "金額單位邊界測試矩陣（65 §H）" do
     end
   end
 
+  # ── decimal_number（Airwallex 型；R7，2026-08-31）───────────────────────────
+  #
+  # 🔴 假綠殺手：T20 殺「把儲存值直接當主單位數送出」（148000＝收款 100 倍，HKD 也錯）；
+  # T24 殺「webhook 用 `JSON.parse` 預設 Float」。
+  describe "amount_format: decimal_number" do
+    it "T20 🔴 JPY 儲存 148000 ⇒ 數值 1480（不是 148000＝收款 100 倍）" do
+      result = storage(148_000, "JPY").to_psp_amount(psp: :number_two)
+      expect(result).to be_a(Money::PspNumber)
+      expect(result.number).to eq(BigDecimal("1480"))
+    end
+
+    it "🔴 HKD 也會錯的那一條：儲存 4912 ⇒ 49.12（Airwallex 官方 HKD 退款例）" do
+      expect(storage(4_912, "HKD").to_psp_amount(psp: :number_two).number).to eq(BigDecimal("49.12"))
+    end
+
+    it "T22 入向：BigDecimal 16.66 ⇒ 落庫 1666（不是 16＝少記 99%）" do
+      expect(Money.from_psp_amount(BigDecimal("16.66"), currency: "HKD", psp: :number_two).cents)
+        .to eq(1_666)
+    end
+
+    it "T22 入向：JSON number 整數形（1480）也收（decimal_class 對整數仍回 Integer）" do
+      expect(Money.from_psp_amount(1480, currency: "JPY", psp: :zero_override_number).cents)
+        .to eq(148_000)
+    end
+
+    it "T24 🔴 Float ⇒ TypeError（JSON.parse 預設把 number 解成 Float——約定變機械限制）" do
+      expect { Money.from_psp_amount(16.66, currency: "HKD", psp: :number_two) }
+        .to raise_error(TypeError, /Float 即 bug/)
+    end
+
+    it "入向小數超過生效位數 ⇒ raise（不得 round）" do
+      expect { Money.from_psp_amount(BigDecimal("16.666"), currency: "HKD", psp: :number_two) }
+        .to raise_error(Money::ExcessPrecision)
+      expect { Money.from_psp_amount(BigDecimal("1480.5"), currency: "JPY", psp: :zero_override_number) }
+        .to raise_error(Money::ExcessPrecision)
+    end
+
+    it "L1 🔴 PspNumber 的 to_s 不回傳裸金額（與 R6 的 to_s 陷阱同一條）" do
+      r7 = storage(148_000, "HKD").to_psp_amount(psp: :number_two)
+      expect(r7.to_s).to include("PspNumber")
+      expect(r7).not_to respond_to(:to_str)
+    end
+  end
+
+  # ── A7 per-currency 位數覆蓋 ＋ A6c 不得湊整（PayPal／Airwallex 實證形）────────
+  #
+  # 🔴 兩家實證都覆蓋自己引用的底表：PayPal 官方逐字「This currency does not support
+  # decimals. If you pass a decimal amount, an error occurs.」（HUF/JPY/TWD）；
+  # Airwallex payments 側零小數 20 幣（HUF/TWD/IDR 皆與 ISO 不同）。取證 2026-08-31。
+  describe "A7 decimal_places_overrides ＋ A6c" do
+    it "T21 🔴 PayPal 形：JPY 覆蓋 0 位 ⇒ \"1480\" 無小數點（帶小數＝官方逐字 error）" do
+      result = storage(148_000, "JPY").to_psp_amount(psp: :zero_override_string)
+      expect(result.string).to eq("1480")
+    end
+
+    it "T21 未覆蓋幣別承接基準 2 位（HKD ⇒ \"1480.00\"）" do
+      expect(storage(148_000, "HKD").to_psp_amount(psp: :zero_override_string).string).to eq("1480.00")
+    end
+
+    it "T23 🔴 A6c：JPY 148050（¥1,480.50）對 0 位幣別 ⇒ raise，不得湊成 1481" do
+      # 湊整會讓送款與帳上差 0.50 而沒有任何一張表記得住——兩種 decimal 格式都要擋。
+      expect { storage(148_050, "JPY").to_psp_amount(psp: :zero_override_string) }
+        .to raise_error(Money::NonIntegralConversion, /不得四捨五入/)
+      expect { storage(148_050, "JPY").to_psp_amount(psp: :zero_override_number) }
+        .to raise_error(Money::NonIntegralConversion, /不得四捨五入/)
+    end
+
+    it "T21 入向：無小數點字串 \"1480\"（PayPal JPY 合法形）⇒ 148000" do
+      # 🔴 殺「split('.').last 對無點字串回整串」：修前 "1480" 會被數成 4 位小數而誤拒。
+      expect(Money.from_psp_amount("1480", currency: "JPY", psp: :zero_override_string).cents)
+        .to eq(148_000)
+    end
+
+    it "入向：JPY 收到 \"1480.00\"（超過生效 0 位）⇒ raise 進死信，不得就地猜" do
+      expect { Money.from_psp_amount("1480.00", currency: "JPY", psp: :zero_override_string) }
+        .to raise_error(Money::ExcessPrecision)
+    end
+  end
+
+  # ── X8 入向閘門（包不出來就不准進）──────────────────────────────────────────
+  describe "from_psp_amount 形態閘門" do
+    it "minor_units 只收 Integer；字串 ⇒ TypeError（宣告與形態不符＝死信）" do
+      expect(Money.from_psp_amount(1480, currency: "JPY", psp: :iso_minor).cents).to eq(148_000)
+      expect { Money.from_psp_amount("1480", currency: "JPY", psp: :iso_minor) }
+        .to raise_error(TypeError, /只收 Integer/)
+    end
+
+    it "decimal_string 只收 String；整數 ⇒ TypeError" do
+      expect { Money.from_psp_amount(1480, currency: "HKD", psp: :decimal_two) }
+        .to raise_error(TypeError, /只收 String/)
+    end
+  end
+
   # ── A5 整除約束（來源＝Stripe 對 HUF／TWD payout 的明文要求）─────────────────
   describe "A5 divisibility（T16）" do
     it "T16 🔴 違反時 raise，且**沒有靜默湊整**" do
@@ -134,12 +227,12 @@ RSpec.describe "金額單位邊界測試矩陣（65 §H）" do
     end
   end
 
-  # ── T12 往返自檢（兩種格式各跑）────────────────────────────────────────────
-  it "T12 from_psp_amount(to_psp_amount(x)) == x（兩種 amount_format 各跑）" do
+  # ── T12 往返自檢（三種格式各跑）────────────────────────────────────────────
+  it "T12 from_psp_amount(to_psp_amount(x)) == x（三種 amount_format 各跑）" do
     matrix = { "JPY" => 148_000, "KRW" => 1_200_000, "HKD" => 148_000, "USD" => 1 }
     matrix.each do |currency, cents|
       value = storage(cents, currency)
-      %i[iso_minor decimal_two].each do |psp|
+      %i[iso_minor decimal_two number_two].each do |psp|
         expect(value.to_psp_amount(psp:).to_storage).to eq(value), "#{currency}/#{psp} 往返不一致"
       end
     end
@@ -224,6 +317,8 @@ RSpec.describe "金額單位邊界測試矩陣（65 §H）" do
         .to raise_error(NoMethodError)
       expect { Money::PspDecimal.new(string: "1.00", currency: "JPY", psp: :decimal_two) }
         .to raise_error(NoMethodError)
+      expect { Money::PspNumber.new(number: BigDecimal("1"), currency: "HKD", psp: :number_two) }
+        .to raise_error(NoMethodError)
     end
 
     it "🔴 .[] / .allocate / #with 三條後門也全部關閉" do
@@ -254,7 +349,7 @@ RSpec.describe "金額單位邊界測試矩陣（65 §H）" do
       end
     end
 
-    it "兩種 amount_format 各有 fixture pack" do
+    it "三種 amount_format 各有 fixture pack" do
       packs = Psp.registry.codes.map { |code| Psp.registry.fetch(code).amount_format }
       Limits.enum(:money_boundary, :test_matrix_amount_formats_required).each do |format|
         expect(packs.map(&:to_s)).to include(format.downcase), "缺 #{format} 型 fixture pack"

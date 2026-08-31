@@ -44,6 +44,7 @@ override_minor:
 decimal_two:
   amount_format: decimal_string
   decimal_places: 2
+  decimal_places_overrides: {}  # 空表＝已查證無例外（≠ 未宣告）
   divisibility: {}
   divisibility_scope: []
   storage_precision_shortfall: reject
@@ -55,6 +56,7 @@ decimal_two:
 decimal_divisible:
   amount_format: decimal_string
   decimal_places: 2
+  decimal_places_overrides: {}
   divisibility:
     TWD: 100
   divisibility_scope: [payout]
@@ -73,6 +75,46 @@ lowercase_keys:
     twd: 2
   divisibility:
     twd: 100
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ⑥ decimal_number（Airwallex 型；wire form＝JSON number）。
+#    承載：T20（🔴 JPY 148000 ⇒ 1480；148000.0 就是收款 100 倍，HKD 上也會錯）／
+#          T22（入向 number）／T24（Float ⇒ TypeError）
+number_two:
+  amount_format: decimal_number
+  decimal_places: 2
+  decimal_places_overrides: {}
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ⑦ decimal_string ＋ per-currency 零小數覆蓋（PayPal 形：HUF/JPY/TWD 不支援小數）。
+#    承載：T21（🔴 JPY ⇒ "1480" 無小數點；"1480.00" 對 PayPal＝官方逐字 error）／
+#          T23（🔴 A6c：JPY 148050 ⇒ raise，不得湊成 "1481"）
+zero_override_string:
+  amount_format: decimal_string
+  decimal_places: 2
+  decimal_places_overrides:
+    JPY: 0
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+  enabled: false
+
+# ⑧ decimal_number ＋ per-currency 零小數覆蓋（Airwallex payments 零小數 20 幣的原型）。
+#    承載：T20 的 override 半邊＋T23 的 number 半邊
+zero_override_number:
+  amount_format: decimal_number
+  decimal_places: 2
+  decimal_places_overrides:
+    JPY: 0
+  divisibility: {}
   divisibility_scope: []
   storage_precision_shortfall: reject
   enable_gate: []

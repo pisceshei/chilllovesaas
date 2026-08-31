@@ -135,6 +135,53 @@ module Money
         "#{currency} 金額 #{value} 不是 #{multiple} 的倍數（pack #{pack.code}，" \
         "scope=#{pack.raw[:divisibility_scope].inspect}）——🔴 不得自動湊整"
     end
+
+    # 🔴 **PSP 回應／webhook 金額的唯一入向閘門**（65 §E X8）：
+    # 原始值先依 pack 宣告的 `amount_format` 包成對應值物件，再轉 R1。
+    # **包不出來就不准進**——形態與宣告不符（宣告 number 卻收到字串…）代表
+    # pack 宣告錯了或對方改了 API，呼叫端（webhook consumer）收到 raise 後進死信，
+    # 不得就地猜一個轉換。
+    #
+    # 🔴 `decimal_number` 側的 Float 陷阱：`JSON.parse` 預設把 JSON number 解成
+    # **Float**——adapter 解析 webhook body 必須 `JSON.parse(raw, decimal_class: BigDecimal)`，
+    # 本方法對 Float 一律 `TypeError`（鐵律 3：出現 float 即 bug），把這個約定變成機械限制。
+    #
+    # @param raw [Integer, String, BigDecimal] PSP 給的原始金額值
+    # @param currency [String, Symbol]
+    # @param psp [String, Symbol] pack 代碼
+    # @return [Money::Storage]
+    # @raise [TypeError] 形態與 pack 宣告的 `amount_format` 不符（Float 恆拒）
+    # @raise [Money::ExcessPrecision] 小數超過該幣別生效位數（🔴 不 round）
+    # @note 副作用：無。
+    # @see docs/specs/65-money-unit-boundary.md §E
+    def from_psp_amount(raw, currency:, psp:)
+      pack = Psp.registry.fetch(psp)
+      value =
+        case pack.amount_format
+        when :minor_units
+          unless raw.is_a?(Integer)
+            raise TypeError, "pack #{pack.code} 宣告 minor_units，只收 Integer，實得 #{raw.class}"
+          end
+
+          PspMinor.__build(minor: raw, currency: currency.to_s.upcase, psp: pack.code)
+        when :decimal_string
+          unless raw.is_a?(String)
+            raise TypeError, "pack #{pack.code} 宣告 decimal_string，只收 String，實得 #{raw.class}"
+          end
+
+          PspDecimal.__build(string: raw, currency: currency.to_s.upcase, psp: pack.code)
+        when :decimal_number
+          # Integer 也收：JSON number `1480` 即使帶 decimal_class 也解成 Integer。
+          unless raw.is_a?(BigDecimal) || raw.is_a?(Integer)
+            raise TypeError,
+              "pack #{pack.code} 宣告 decimal_number，只收 BigDecimal／Integer，實得 #{raw.class}" \
+              "（Float 即 bug——webhook 解析要 `JSON.parse(raw, decimal_class: BigDecimal)`）"
+          end
+
+          PspNumber.__build(number: BigDecimal(raw), currency: currency.to_s.upcase, psp: pack.code)
+        end
+      value.to_storage
+    end
   end
 
   # ── R1：儲存 cents ─────────────────────────────────────────────────────────
@@ -190,20 +237,23 @@ module Money
     # 「不看 `amount_format`」的路徑，而那正是 Airwallex 型 PSP 出事的形狀。
     #
     # @param psp [String, Symbol] pack 代碼
-    # @return [Money::PspMinor, Money::PspDecimal] 依 pack 宣告的格式
+    # @return [Money::PspMinor, Money::PspDecimal, Money::PspNumber] 依 pack 宣告的格式
     # @raise [Psp::AmountFormatUndeclared] pack 未宣告格式（A0；不得預設）
     # @raise [Psp::MinorUnitUndeclared] 該幣別的 minor unit 未宣告（A1）
     # @raise [Psp::UnsupportedCurrencyExponent] exponent > 2（A2）
-    # @raise [Money::NonIntegralConversion] 換算有餘數（A3；不四捨五入）
+    # @raise [Money::NonIntegralConversion] 換算有餘數（A3／A6c；不四捨五入）
     # @raise [Psp::DivisibilityViolation] 違反整除約束（A5；不自動湊整）
     # @note 副作用：無；只讀 pack 宣告。
     # @see docs/specs/65-money-unit-boundary.md §D.1、§D.2
     def to_psp_amount(psp:)
       pack = Psp.registry.fetch(psp)
-      case pack.amount_format
+      value = case pack.amount_format
       when :minor_units    then to_psp_minor(pack)
       when :decimal_string then to_psp_decimal(pack)
+      when :decimal_number then to_psp_number(pack)
       end
+      roundtrip_selfcheck!(value)
+      value
     end
 
     private
@@ -234,12 +284,57 @@ module Money
       PspMinor.__build(minor:, currency:, psp: pack.code)                              # A4
     end
 
-    # X7b：十進位主單位字串（Airwallex 型）。
+    # X7b：十進位主單位字串（PayPal 型）。
+    # <!-- 2026-08-31 更正：本分支的實證代表原寫 Airwallex——69 號 2026-08-12 的結論。
+    #      2026-08-31 一手複驗推翻：Airwallex amount 是 JSON **number**（走 X7c），
+    #      decimal_string 的現任實證代表＝PayPal（value 官方 pattern 是字串）。65 §D.4。-->
     def to_psp_decimal(pack)
+      places = declared_places_with_guard!(pack)                                       # A7＋A6c
       major = BigDecimal(cents).div(BigDecimal(Money.storage_scale), 40)               # 🔴 全程 BigDecimal
       Money.check_divisibility!(pack, currency, major)                                 # A5
-      string = Money.fixed_string(major, pack.decimal_places)                          # A6
+      string = Money.fixed_string(major, places)                                       # A6
       PspDecimal.__build(string:, currency:, psp: pack.code)                           # A4
+    end
+
+    # X7c：十進位主單位「數」（Airwallex 型；wire form＝JSON number）。
+    # 🔴 與 X7b 的差別只有線上形態（number vs string）——單位語義相同（主單位），
+    #    但兩者不得共用型別：共用會讓「宣告 number 的 pack 收到字串」這種
+    #    **宣告錯誤**在我方側靜默通過、留給對方 API 決定收不收。
+    def to_psp_number(pack)
+      places = declared_places_with_guard!(pack)                                       # A7＋A6c
+      major = BigDecimal(cents).div(BigDecimal(Money.storage_scale), 40)               # 🔴 全程 BigDecimal
+      Money.check_divisibility!(pack, currency, major)                                 # A5
+      PspNumber.__build(number: major, currency:, psp: pack.code)                      # A4
+    end
+
+    # A7：該幣別的生效位數（pack 基準位數＋per-currency 覆蓋，覆蓋優先——
+    #     PayPal 官方逐字「This currency does not support decimals.」對 HUF/JPY/TWD、
+    #     Airwallex payments 側零小數 20 幣，兩家都以逐幣別表覆蓋基準 2 位）。
+    # A6c：儲存 cents 無法無損表達為生效位數 ⇒ raise，🔴 **不得 round**——
+    #     這是 A3 在 decimal 兩格式下的等價物，補上 A6b 註明過的那條不對稱
+    #     （「decimal 側沒有 A3 等價物」自本條起不再成立）。
+    #     JPY 儲存 148050（¥1,480.50）對 0 位幣別 ⇒ raise；靜默湊成 1481 會讓
+    #     送款與帳上差 0.50 而沒有任何一張表記得住（65 §D.2 A5 同理由）。
+    def declared_places_with_guard!(pack)
+      places = pack.decimal_places_for(currency)
+      step = Money.storage_scale / (10**places)
+      unless (cents % step).zero?
+        raise Money::NonIntegralConversion,
+          "#{cents} 無法無損表達為 #{currency} 的 #{places} 位小數（pack #{pack.code}，"           "餘 #{cents % step}）——🔴 不得四捨五入抹掉（A6c）"
+      end
+
+      places
+    end
+
+    # 往返自檢（65 §D.1 末段；`limits.money_boundary.roundtrip_selfcheck_envs`）：
+    # 非生產環境每次轉換都驗 `from(to(x)) == x`。它不是防線本體（防線是 A 系斷言），
+    # 是「三種格式的出向與入向不成對」這一類實作腐壞的煙霧偵測器。
+    def roundtrip_selfcheck!(value)
+      return unless Limits.enum(:money_boundary, :roundtrip_selfcheck_envs).include?(Rails.env)
+      return if value.to_storage == self
+
+      raise Money::Error,
+        "往返自檢失敗：#{self.inspect} → #{value.inspect} → #{value.to_storage.inspect}"         "（65 §D.1：出向與入向不成對＝其中一側在湊整或掉位）"
     end
 
     # 🔴 **相同幣別才可比較**。跨幣別比較恆為 false 會讓「兩筆金額不同」
@@ -380,12 +475,56 @@ module Money
     # @note 副作用：無。
     def to_storage
       pack = Psp.registry.fetch(psp)
-      decimals = string.split(".").last.to_s.length
-      if decimals > pack.decimal_places
-        raise ExcessPrecision, "#{string} 小數 #{decimals} 位 > pack 宣告的 #{pack.decimal_places}（不得 round）"
+      # 🔴 無小數點的字串（PayPal 對 JPY/TWD/HUF 的合法形態，如 `"1480"`）＝0 位小數。
+      #    原寫法 `string.split(".").last` 對 `"1480"` 會回整串（長度 4 被當 4 位小數）
+      #    ——修於 2026-08-31（per-currency 位數落地時發現）。
+      decimals = string.include?(".") ? string.split(".").last.length : 0
+      places = pack.decimal_places_for(currency)
+      if decimals > places
+        raise ExcessPrecision,
+          "#{string} 小數 #{decimals} 位 > #{currency} 生效位數 #{places}（pack #{psp}；不得 round）"
       end
 
       Storage.from_cents((BigDecimal(string) * Money.storage_scale).to_i, currency)
+    end
+  end
+
+  # ── R7：PSP 十進位主單位「數」（`amount_format: decimal_number`）─────────────
+  #
+  # 🔴 **與 R6 的單位語義相同（主單位）、線上形態不同**：R6 是 JSON string、
+  # R7 是 JSON **number**（Airwallex 官方逐字 "$9.99 is represented as `9.99`"，
+  # schema `amount: number`，取證 2026-08-31）。兩者不得共用型別——共用會讓
+  # 「宣告與實際 wire form 不符」在我方側靜默通過。
+  #
+  # 🔴 R7 的等價陷阱是**算術**：它內含 `BigDecimal`，`+`／`*` 若被隱式參與
+  # 業務運算，就繞過了「運算一律在 R1」的鐵律。`Data` 沒有 `coerce`，
+  # 本檔不得補上（與 R1 不補 `to_i` 同一條理由）。
+  #
+  # ⚠️ 序列化成 JSON number 是 adapter `#to_payload` 之後的事——
+  # `BigDecimal#to_json` 預設吐**字串**，G6-1 的 adapter 必須自行以原文注入
+  # 數字字面（65 §E X8c 註記）；本類別只保證數值無損。
+  PspNumber = Data.define(:number, :currency, :psp) do
+    # @api private 只給 `Money::Storage#to_psp_amount`／`Money.from_psp_amount` 用
+    def self.__build(number:, currency:, psp:)
+      new(number:, currency:, psp:)
+    end
+
+    # 轉回 R1（入向 X8c）。
+    #
+    # @return [Money::Storage]
+    # @raise [Money::ExcessPrecision] 小數超過該幣別生效位數（不 round）
+    # @note 副作用：無。
+    def to_storage
+      pack = Psp.registry.fetch(psp)
+      scaled = number * Money.storage_scale
+      places = pack.decimal_places_for(currency)
+      step = Money.storage_scale / (10**places)
+      unless scaled.frac.zero? && (scaled.to_i % step).zero?
+        raise ExcessPrecision,
+          "#{number.to_s('F')} 超過 #{currency} 生效位數 #{places}（pack #{psp}；不得 round）"
+      end
+
+      Storage.from_cents(scaled.to_i, currency)
     end
   end
 
@@ -425,8 +564,8 @@ module Money
   #
   # `#with` 對金額特別危險：它讓「換一個幣別、保留同一個數字」變成一行程式碼，
   # 而那正是跨幣別事故的形狀。
-  # 🔴 **四個型別的 `.new` 全部設 private**，唯一入口是各自的 factory
-  # （`Storage.from_cents`／`Decimal.from_string`／R5・R6 的 `__build`）。
+  # 🔴 **五個型別的 `.new` 全部設 private**，唯一入口是各自的 factory
+  # （`Storage.from_cents`／`Decimal.from_string`／R5・R6・R7 的 `__build`）。
   #
   # ⚠️ **第一版只關了 R5／R6 的 `.new`**，理由是「R1／R4 是入口，要留著可建」
   # ——那個理由是錯的：**入口是 `from_cents`，不是 `.new`**。
@@ -440,7 +579,7 @@ module Money
   #
   # ⇒ `from_cents` 的 Integer 閘門與 `upcase` 正規化只有在 `.new` 也關掉之後才是**閘門**；
   #   在那之前它只是「建議走的那條路」。
-  [ Storage, Decimal, PspMinor, PspDecimal ].each do |klass|
+  [ Storage, Decimal, PspMinor, PspDecimal, PspNumber ].each do |klass|
     klass.singleton_class.send(:private, :new)
     klass.singleton_class.send(:private, :[])
     klass.singleton_class.send(:private, :allocate)

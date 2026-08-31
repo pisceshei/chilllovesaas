@@ -9,9 +9,14 @@
 # | Adyen | `minor_units` | exponent 3 | 🔴 **是**（官方明文列出與 ISO 不同的幣別） |
 # | Datatrans | `minor_units` | exponent 3 | 自稱遵循 ISO |
 # | Stripe | `minor_units` | ⚠ V-204 | 🔴 實質是（`Special cases` 表涵蓋 ISK／HUF／TWD／UGX） |
-# | Airwallex | 🔴 **`decimal_string`** | ⚠ V-132 | 引用 ISO 定義主單位 |
+# | Airwallex | 🔴 **`decimal_number`** | payments 側無（只有 2／0 兩檔） | 引用 ISO 定義主單位、🔴 但零小數表覆蓋 ISO（HUF/TWD/IDR） |
+# | PayPal | 🔴 **`decimal_string`** | 無（HUF/JPY/TWD 為 0 位） | 🔴 覆蓋（HUF 在 ISO 是 2 位） |
 #
-# ⇒「業界有共識、跟著 ISO 走就對了」這個假設**已被外部證據正面否定**。
+# <!-- 2026-08-31 更正：Airwallex 原記 decimal_string（69 號 2026-08-12）——一手複驗
+#      推翻：amount 是 JSON number（"$9.99 is represented as 9.99"，schema number）。
+#      decimal_string 的實證代表改由 PayPal 承接（value 官方 pattern 是字串）。65 §D.4。-->
+#
+# ⇒「業界有共識、跟著 ISO 走就對了」這個假設**已被外部證據正面否定**（五家五種）。
 #
 # 🔴 **`Psp::Registry` / `Psp::Pack` / `Psp::BaseAdapter` 三個類別，規格只有呼叫端、
 # 沒有定義端**——65 §D.1 寫的是 `Psp.registry.fetch(psp)` 怎麼被用，

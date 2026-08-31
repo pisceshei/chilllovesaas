@@ -38,15 +38,22 @@ class Psp::BaseAdapter
   # 🔴 要讓「唯一」成真，該加的是一條「`.minor`／`.string` 的讀取只准出現在本檔」
   # 的掃描（比照 C5 的形態）。**在那之前，讀到「唯一」請理解成「請只從這裡走」。**
   #
-  # @param amount [Money::PspMinor, Money::PspDecimal] 該 pack 宣告格式對應的值物件
-  # @return [Integer, String] 線上形態
+  # @param amount [Money::PspMinor, Money::PspDecimal, Money::PspNumber] 該 pack 宣告格式對應的值物件
+  # @return [Integer, String, BigDecimal] 線上形態
+  #   🔴 `decimal_number`（R7）回 `BigDecimal`——序列化成 JSON **number** 是
+  #   adapter 的責任且 `BigDecimal#to_json` 預設吐字串，G6-1 落地時必須以
+  #   原文注入數字字面（65 §E X8c 註記），不得經 `to_f`。
   # @raise [TypeError] 型別不符該 pack 宣告的格式，或 `psp` 不相符
   # @note 副作用：無。
   # @see docs/specs/65-money-unit-boundary.md §C.1 L3
   def to_payload(amount)
     assert_amount!(amount)
     assert_sign!(amount)
-    amount.is_a?(Money::PspMinor) ? amount.minor : amount.string
+    case amount
+    when Money::PspMinor  then amount.minor
+    when Money::PspNumber then amount.number
+    else amount.string
+    end
   end
 
   # 兩段斷言（65 §C.1 L3 逐字）。
@@ -89,7 +96,7 @@ class Psp::BaseAdapter
   # 而 $0 auth（卡片驗證）是真實形態。§A.7 末段自己的紀律就是「沒有官方依據，不得硬寫」
   # ⇒ 零值留給第一家真 PSP 的 pack 裁定，**不在這裡發明規則**。
   #
-  # @param amount [Money::PspMinor, Money::PspDecimal]
+  # @param amount [Money::PspMinor, Money::PspDecimal, Money::PspNumber]
   # @return [void]
   # @raise [TypeError] 金額為負
   # @note 副作用：無。
@@ -97,7 +104,11 @@ class Psp::BaseAdapter
   def assert_sign!(amount)
     # 🔴 用數值判，不看字串前置的 `-`：`decimal_string` 側拿到的是字串，
     # 而 `"-0.00"` 這種形態（極小負值捨入到零）**不是負值**，看前綴會誤擋。
-    value = amount.is_a?(Money::PspMinor) ? amount.minor : BigDecimal(amount.string)
+    value = case amount
+    when Money::PspMinor  then amount.minor
+    when Money::PspNumber then amount.number
+    else BigDecimal(amount.string)
+    end
     return unless value.negative?
 
     raise TypeError,

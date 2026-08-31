@@ -20,6 +20,7 @@ no_format:
 too_many_places:
   amount_format: decimal_string
   decimal_places: 3
+  decimal_places_overrides: {}  # 補齊必填鍵，讓本 fixture 只測自己的斷言
   divisibility: {}
   divisibility_scope: []
   storage_precision_shortfall: reject
@@ -37,6 +38,7 @@ too_many_places:
 too_few_places:
   amount_format: decimal_string
   decimal_places: 1
+  decimal_places_overrides: {}  # 補齊必填鍵，讓本 fixture 只測自己的斷言
   divisibility: {}
   divisibility_scope: []
   storage_precision_shortfall: reject
@@ -48,6 +50,7 @@ too_few_places:
 zero_places:
   amount_format: decimal_string
   decimal_places: 0
+  decimal_places_overrides: {}  # 補齊必填鍵，讓本 fixture 只測自己的斷言
   divisibility: {}
   divisibility_scope: []
   storage_precision_shortfall: reject
@@ -82,3 +85,28 @@ gated_but_enabled:
   storage_precision_shortfall: reject
   enable_gate: [V-999]
   enabled: true
+
+# 🔴 空表 ≠ 缺鍵（A7 的鍵面）：`decimal_places_overrides` 整個鍵不見了＝「沒人查過」
+# ⇒ 不得 enable。與 missing_divisibility 同一條紀律——PayPal/Airwallex 兩家實證
+# 都覆蓋自己引用的底表（HUF 在 ISO 是 2 位、PayPal/Airwallex 皆記 0），
+# 「沒查過覆蓋表」的 decimal pack 會對這些幣別送出帶小數的金額。
+missing_places_overrides:
+  amount_format: decimal_string
+  decimal_places: 2
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []
+
+# A7 值域：覆蓋 > 2 必須在**載入**就擋（不能等轉換）——places=3 時
+# `storage_scale / 10**places` 整數除法得 0，A6c 的 `% 0` 會 ZeroDivisionError，
+# 錯誤變得不可讀且晚爆。與 A2「儲存尺度表達不了」同一個理由。
+override_too_many_places:
+  amount_format: decimal_number
+  decimal_places: 2
+  decimal_places_overrides:
+    BHD: 3
+  divisibility: {}
+  divisibility_scope: []
+  storage_precision_shortfall: reject
+  enable_gate: []

@@ -126,6 +126,17 @@ RSpec.describe Psp::Pack do
     it "enable_gate 非空卻 enabled: true ⇒ raise" do
       expect { build("gated_but_enabled") }.to raise_error(Psp::PackInvalid, /V-999/)
     end
+
+    # ── A7（2026-08-31 隨 decimal_places_overrides 新增）─────────────────────
+    it "A7 🔴 空表 ≠ 缺鍵：decimal_places_overrides 整個鍵不見 ⇒ raise" do
+      expect { build("missing_places_overrides") }
+        .to raise_error(Psp::PackInvalid, /decimal_places_overrides/)
+    end
+
+    it "A7 覆蓋 > 2 ⇒ 載入即 raise（不能等到轉換時 ZeroDivision）" do
+      expect { build("override_too_many_places") }
+        .to raise_error(Psp::PackInvalid, /BHD.*不在 0\.\.2/)
+    end
   end
 
   describe "🔴 空表是合法的（已查證、無例外）" do
