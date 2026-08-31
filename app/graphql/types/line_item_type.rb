@@ -13,6 +13,8 @@ module Types
     field :sku, String, null: true
     field :vendor, String, null: true
     field :quantity, Integer, null: false
+    field :fulfillable_quantity, Integer, null: false,
+      description: "還可出貨的數量（G6-8；官方 LineItem.fulfillableQuantity 對位）"
     field :requires_shipping, Boolean, null: false
     field :unit_price_set, MoneyBagType, null: false, description: "單價（快照）"
     field :total_set, MoneyBagType, null: false, description: "行小計（含行折扣後）"

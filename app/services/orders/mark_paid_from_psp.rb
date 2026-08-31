@@ -31,6 +31,10 @@ module Orders
           )
         end
 
+        # G6-8：入帳同步遞增 captured 累計欄（16 F5.1 軟上限的分母）。
+        amount = transaction ? transaction.amount_cents : order.total_cents
+        Order.where(id: order.id)
+             .update_all([ "captured_total_cents = captured_total_cents + ?", amount ])
         order.update!(financial_status: "paid")
         Event.create!(shop_id: order.shop_id, order_id: order.id, kind: "order.paid",
                       happened_at: Time.current,

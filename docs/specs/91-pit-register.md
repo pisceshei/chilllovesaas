@@ -2988,6 +2988,43 @@
   【複驗：`bin/rails runner` 印出 `Rack::Attack.throttles["admin-login/ip"].period`
    與相鄰秒數的 bucket；或連跑 `bundle exec rspec` 數次觀察該格；取證日期＝2026-08-28】
 
+### 3.24 G6-8（步 5 履約退款）的範圍外觀察（2026-09-01）
+
+<!-- 編號取 3.24：本節新增時 §3 的最大編號是 3.23。複驗現況：
+     `grep -nE "^### 3\.[0-9]+" docs/specs/91-pit-register.md` -->
+
+- 🔴 **spec 頂層常數撞名＝雙向順序依賴（全倉同型未爆彈）**：`RSpec.describe` 的
+  block 沒有 lexical class scope ⇒ describe 內 `CREATE = <<~GQL` 這類常數落在
+  **Object 頂層**，兩檔同名時後載入者覆蓋先載入者——症狀是**全套紅、單獨綠，
+  且紅的是誰取決於載入順序**（步 5 實踩：fulfillment_lifecycle 與
+  external_video_media 的 `CREATE` 互蓋，第一輪前者紅、換組合跑後者紅）。
+  步 5 已把自己三檔改成檔案前綴常數名；**既有頂層 spec 常數仍是同型風險**
+  （複驗：`grep -rn "^  [A-Z_]* = <<~" spec/ --include="*.rb"`——目前無撞名但
+  無機制擋新增撞名）。機制化（rubocop cop 擋 describe 內裸常數）屬判準面
+  （鐵律 20.4），登記候選。
+  【F5；來源＝步 5 突變輪實踩；取證日期＝2026-09-01】
+
+- **FO hold/release 無寫入入口**：`fulfillment_orders.status` 的 on_hold 有
+  出貨守衛與讀出，但無 mutation 寫入（本尊 `fulfillmentOrderHold`／
+  `fulfillmentOrderReleaseHold`）。88 §3 實測的分裂鈕（Mark as on hold）
+  隨後續包；SCHEDULED 同（需 fulfill_at 入口）。
+  【F2；來源＝步 5 dev doc §7；複驗：
+  `grep -rn "on_hold" app/graphql/mutations/`；取證日期＝2026-09-01】
+
+- **退款 RECEIVED 停 pending 無收斂機制**：Airwallex 退款受理後（RECEIVED）
+  我方 refund 停 pending，退款 webhook／輪詢未做——長期 pending 列需人工對帳。
+  【F2；來源＝步 5 dev doc §5；複驗：
+  `grep -rn "RECEIVED" app/jobs/refunds/`；取證日期＝2026-09-01】
+
+- **免運折扣 ⇒ 運費完全不可退（16 §F5.1）無從判定**：v1 無免運折扣概念
+  （checkout 的 discount 是訂單級金額），折扣線落地時必須補這條規則。
+  【F2；來源＝步 5 dev doc §3；取證日期＝2026-09-01】
+
+- **restock 是否記 inventory ledger＝本尊行為未取證**：v1 與建單扣減同紀律
+  （訂單事件的庫存後果不產 adjustment 列）。若本尊實測證實 restock 進庫存
+  歷史，需評估補 ledger（屆時走 Inventory::Adjust 的射程重議）。
+  【F2；來源＝步 5 dev doc §4；取證日期＝2026-09-01】
+
 ## 附錄 A：歷史收割清單（逐檔打勾；勾＝已通讀並完成坑抽取）
 
 > 收割紀律：**去重按根因不按症狀**；每檔讀完在此打勾並在 §1/§3 落抽取結果（零抽取

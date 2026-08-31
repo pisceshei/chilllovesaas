@@ -40,6 +40,11 @@ module Orders
           )
         end
 
+        # G6-8：入帳同步遞增 captured 累計欄（16 F5.1 軟上限的分母；漏掉它
+        # 退款上限恆 0——步 5 整合時抓到的缺口）。持 order 鎖下的加法安全。
+        amount = transaction ? transaction.amount_cents : order.total_cents
+        Order.where(id: order.id)
+             .update_all([ "captured_total_cents = captured_total_cents + ?", amount ])
         order.update!(financial_status: "paid")
         Event.create!(shop_id: order.shop_id, order_id: order.id, kind: "order.paid",
                       happened_at: Time.current, metadata: { "source" => "mark_as_paid" })

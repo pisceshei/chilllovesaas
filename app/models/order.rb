@@ -17,7 +17,10 @@ class Order < ApplicationRecord
   STATUSES = %w[open closed cancelled].freeze
   FINANCIAL_STATUSES = %w[pending authorized paid partially_paid partially_refunded
                           refunded voided expired].freeze
-  FULFILLMENT_STATUSES = %w[unfulfilled partially_fulfilled fulfilled].freeze
+  # G6-8 擴值：in_progress/on_hold 由 FO 狀態推導（Orders::FulfillmentStatus 唯一
+  # 推導器）；官方 10 值中 SCHEDULED（需 fulfill_at 入口）與三個被取代舊值不落
+  # （88 §7：ours 刻意子集——先出現行狀態機能表達的值）。
+  FULFILLMENT_STATUSES = %w[unfulfilled partially_fulfilled fulfilled in_progress on_hold].freeze
 
   acts_as_tenant :shop
 
@@ -25,6 +28,9 @@ class Order < ApplicationRecord
   has_many :line_items, dependent: :destroy
   has_many :order_transactions, dependent: :destroy
   has_many :events, dependent: :destroy
+  has_many :fulfillment_orders, dependent: :destroy # G6-8：建單即物化（v1 每單一張）
+  has_many :fulfillments, through: :fulfillment_orders
+  has_many :refunds, dependent: :destroy
 
   validates :name, presence: true
   validates :order_number, presence: true, uniqueness: { scope: :shop_id }
