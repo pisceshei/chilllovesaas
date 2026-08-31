@@ -33,6 +33,8 @@
       still_processing: "This file is still processing. Delete it once processing finishes."
       not_ready: "This file is still being processed. Edit it once processing finishes."
       update_failed_state: "A file that failed processing can't be edited. Delete it instead."
+    orders:
+      access_denied: "You do not have permission to access orders."
     customers:
       access_denied: "You do not have permission to access customers."
     media:

@@ -34,6 +34,8 @@ module Types
     field :amount_spent, MoneyV2Type, null: false, description: "消費總額（rollup 快取）"
     field :last_order_at, GraphQL::Types::ISO8601DateTime, null: true
     field :default_address, CustomerAddressType, null: true
+    field :last_order, OrderType, null: true,
+          description: "最新一張訂單（G6-6a；詳情頁「最近訂單」卡的來源）"
     field :created_at, GraphQL::Types::ISO8601DateTime, null: false
     field :updated_at, GraphQL::Types::ISO8601DateTime, null: false
 
@@ -47,6 +49,10 @@ module Types
 
     def amount_spent
       { cents: object.total_spent_cents, currency: object.currency }
+    end
+
+    def last_order
+      object.orders.order(processed_at: :desc, id: :desc).first
     end
   end
 end

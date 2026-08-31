@@ -33,6 +33,8 @@
       still_processing: "Ce fichier est encore en cours de traitement. Supprimez-le une fois le traitement terminé."
       not_ready: "Ce fichier est encore en cours de traitement. Modifiez-le une fois le traitement terminé."
       update_failed_state: "Un fichier dont le traitement a échoué ne peut pas être modifié. Supprimez-le."
+    orders:
+      access_denied: "Vous n'avez pas l'autorisation d'accéder aux commandes."
     customers:
       access_denied: "Vous n'avez pas l'autorisation d'accéder aux clients."
     media:
