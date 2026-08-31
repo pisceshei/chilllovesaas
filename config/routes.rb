@@ -42,6 +42,10 @@ Rails.application.routes.draw do
     post "cart/clear"     => "storefront/cart#clear"
   end
 
+  # PSP webhook（G6-1a）：租戶 host 上的驗簽端點（HMAC fail-closed；事件收件匣冪等）。
+  # 🔴 URL 已對外承諾（使用者已在 Airwallex 後台以 /webhooks/airwallex 建立訂閱）——不得改路徑。
+  post "webhooks/airwallex" => "webhooks/airwallex#receive", format: false
+
   get "admin" => "admin/spa#show", as: :admin_root
   # API namespace 不可 fall through 到 SPA；錯誤 method/version 必須維持
   # no-route 404，避免 client 把 HTML shell 誤判成 API success。

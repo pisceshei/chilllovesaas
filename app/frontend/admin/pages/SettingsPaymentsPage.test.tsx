@@ -33,115 +33,126 @@ function callsTo(fetchMock: Mock, match: string): RequestInit[] {
     .filter((init) => String(init?.body).includes(match));
 }
 
-const EMPTY_LIST = { data: { shopPaymentProviders: [] } };
-const CONFIGURED_LIST = {
-  data: {
-    shopPaymentProviders: [
-      {
-        provider: "airwallex",
-        environment: "production",
-        status: "inactive",
-        clientId: "cid_live_1",
-        webhookId: null,
-        apiSecretFingerprint: "3229db23516d9173",
-        webhookSecretFingerprint: null,
-      },
-    ],
-  },
+const AIRWALLEX_ROW = {
+  provider: "airwallex",
+  environment: "sandbox",
+  status: "inactive",
+  clientId: "cid_live_1",
+  webhookId: null,
+  apiSecretFingerprint: "3229db23516d9173",
+  webhookSecretFingerprint: "c3efc2e0aca312a6",
+  enabledMethods: [ "card", "alipayhk" ],
 };
 
-function renderPayments() {
+const LIST = { data: { shopPaymentProviders: [ AIRWALLEX_ROW ] } };
+const EMPTY_LIST = { data: { shopPaymentProviders: [] } };
+const DICTIONARY = [
+  { code: "card", label: "Credit Card (Visa / Mastercard / Amex)" },
+  { code: "alipayhk", label: "AlipayHK" },
+  { code: "fps", label: "FPS" },
+];
+const DETAIL = { data: { shopPaymentProviders: [ AIRWALLEX_ROW ], pspMethodDictionary: DICTIONARY } };
+
+function renderAt(path: string) {
   const router = createMemoryRouter(
     [ { path: "*", element: <AdminRoutes brandName="測試品牌" uiLocale="zh-Hant" /> } ],
-    { initialEntries: [ "/admin/settings/payments" ] },
+    { initialEntries: [ path ] },
   );
   render(<RouterProvider router={router} />);
   return router;
 }
 
-// G6-3 前半：祕密 write-only（37 §6.3——後端只回指紋；留空＝省略參數＝保持不變）。
-describe("設定 › 付款", () => {
+// G6-3：主頁照 86 §1 三區；詳情頁照本尊 provider 頁形（憑證＋逐方法 toggle）。
+describe("設定 › 付款（主頁）", () => {
   beforeEach(() => installCsrfMeta());
 
-  it("兩個 provider 卡都渲染；未設定顯示「未設定」", async () => {
+  it("三區都渲染：主收單（Airwallex）／其他服務商（PayPal）／付款設定清單", async () => {
     stubRoutedFetch([ { match: "query shopPaymentProviderList", body: EMPTY_LIST } ]);
-    renderPayments();
+    renderAt("/admin/settings/payments");
 
     const main = within(await screen.findByRole("main"));
     expect(await main.findByText("Airwallex")).toBeVisible();
     expect(main.getByText("PayPal")).toBeVisible();
+    expect(main.getByText("收單服務商")).toBeVisible();
+    expect(main.getByText("其他付款服務商")).toBeVisible();
+    expect(main.getByText("付款設定")).toBeVisible();
+    expect(main.getByText("請款方式")).toBeVisible();
+    expect(main.getAllByText("即將推出").length).toBe(2);
     expect(main.getAllByText("未設定").length).toBe(2);
   });
 
-  it("已設定：顯示指紋提示與「已儲存憑證」；test mode 反映 production", async () => {
-    stubRoutedFetch([ { match: "query shopPaymentProviderList", body: CONFIGURED_LIST } ]);
-    renderPayments();
+  it("已設定 sandbox 憑證 ⇒ 測試模式橫幅＋method chips＋「已儲存憑證」", async () => {
+    stubRoutedFetch([ { match: "query shopPaymentProviderList", body: LIST } ]);
+    renderAt("/admin/settings/payments");
 
     const main = within(await screen.findByRole("main"));
-    expect(await main.findByText("已儲存憑證")).toBeVisible();
+    expect(await main.findByText(/測試模式生效中/)).toBeVisible();
+    expect(main.getByText("已儲存憑證")).toBeVisible();
+    expect(main.getByText("card")).toBeVisible();
+    expect(main.getByText("alipayhk")).toBeVisible();
+  });
+});
+
+describe("設定 › 付款（provider 詳情頁）", () => {
+  beforeEach(() => installCsrfMeta());
+
+  it("渲染 About／憑證／付款方式三卡；toggle 反映 enabledMethods", async () => {
+    stubRoutedFetch([ { match: "query shopPaymentProviderDetail", body: DETAIL } ]);
+    renderAt("/admin/settings/payments/airwallex");
+
+    const main = within(await screen.findByRole("main"));
+    expect(await main.findByText("關於")).toBeVisible();
+    expect(main.getByText("憑證")).toBeVisible();
+    expect(main.getByText("付款方式")).toBeVisible();
+    expect(main.getByRole("switch", { name: "AlipayHK" })).toHaveAttribute("aria-checked", "true");
+    expect(main.getByRole("switch", { name: "FPS" })).toHaveAttribute("aria-checked", "false");
     expect(main.getAllByText(/3229db23516d9173/).length).toBeGreaterThan(0);
-    // production 列的 test mode 開關為關（sandbox=false）
-    const switches = main.getAllByRole("switch", { name: /測試模式/ });
-    expect(switches[0]).toHaveAttribute("aria-checked", "false");
-    expect(switches[1]).toHaveAttribute("aria-checked", "true");
   });
 
-  it("🔴 祕密留空＝不送該參數（write-only：不得把既有 key 清掉）", async () => {
+  it("🔴 祕密留空＝不送參數；enabledMethods 隨 toggle 更新後送出", async () => {
     const fetchMock = stubRoutedFetch([
-      { match: "query shopPaymentProviderList", body: CONFIGURED_LIST },
+      { match: "query shopPaymentProviderDetail", body: DETAIL },
       { match: "mutation shopPaymentProviderSet", body: { data: { shopPaymentProviderSet: { shopPaymentProvider: { provider: "airwallex" }, userErrors: [] } } } },
     ]);
-    renderPayments();
+    renderAt("/admin/settings/payments/airwallex");
     const main = within(await screen.findByRole("main"));
-    await main.findByText("Airwallex");
+    await main.findByText("關於");
 
-    const saveButtons = main.getAllByRole("button", { name: "儲存" });
-    await userEvent.click(saveButtons[0]);
+    await userEvent.click(main.getByRole("switch", { name: "FPS" }));
+    await userEvent.click(main.getByRole("button", { name: "儲存" }));
 
     const sets = callsTo(fetchMock, "shopPaymentProviderSet");
     expect(sets.length).toBe(1);
     const variables = (JSON.parse(String(sets[0].body)) as { variables: Record<string, unknown> }).variables;
     expect(variables.provider).toBe("airwallex");
-    expect(variables.environment).toBe("production");
-    expect(variables.clientId).toBe("cid_live_1");
+    expect(variables.enabledMethods).toEqual([ "card", "alipayhk", "fps" ]);
     expect("apiSecret" in variables).toBe(false);
     expect("webhookSecret" in variables).toBe(false);
   });
 
-  it("填入祕密後儲存：送出 apiSecret，成功後重載且輸入框清空", async () => {
+  it("填入祕密後儲存 ⇒ 送 apiSecret；成功後重載且輸入框清空", async () => {
     const fetchMock = stubRoutedFetch([
-      { match: "query shopPaymentProviderList", body: EMPTY_LIST },
+      { match: "query shopPaymentProviderDetail", body: DETAIL },
       { match: "mutation shopPaymentProviderSet", body: { data: { shopPaymentProviderSet: { shopPaymentProvider: { provider: "airwallex" }, userErrors: [] } } } },
     ]);
-    renderPayments();
+    renderAt("/admin/settings/payments/airwallex");
     const main = within(await screen.findByRole("main"));
-    await main.findByText("Airwallex");
+    await main.findByText("關於");
 
-    await userEvent.type(main.getAllByLabelText("Client ID")[0], "cid_test");
-    await userEvent.type(main.getByLabelText("API key"), "sk_test_123");
-    await userEvent.click(main.getAllByRole("button", { name: "儲存" })[0]);
+    await userEvent.type(main.getByLabelText("API key"), "sk_new_1");
+    await userEvent.click(main.getByRole("button", { name: "儲存" }));
 
-    const sets = callsTo(fetchMock, "shopPaymentProviderSet");
-    expect(sets.length).toBe(1);
-    const variables = (JSON.parse(String(sets[0].body)) as { variables: Record<string, unknown> }).variables;
-    expect(variables.apiSecret).toBe("sk_test_123");
-    expect(variables.environment).toBe("sandbox");
-    // 成功後重載（初載＋重載＝2 次 query），祕密輸入框回空
-    expect(callsTo(fetchMock, "query shopPaymentProviderList").length).toBe(2);
+    const variables = (JSON.parse(String(callsTo(fetchMock, "shopPaymentProviderSet")[0].body)) as { variables: Record<string, unknown> }).variables;
+    expect(variables.apiSecret).toBe("sk_new_1");
+    expect(callsTo(fetchMock, "query shopPaymentProviderDetail").length).toBe(2);
     expect((main.getByLabelText("API key") as HTMLInputElement).value).toBe("");
   });
 
-  it("userError 走 toast，不重載列表", async () => {
-    const fetchMock = stubRoutedFetch([
-      { match: "query shopPaymentProviderList", body: EMPTY_LIST },
-      { match: "mutation shopPaymentProviderSet", body: { data: { shopPaymentProviderSet: { shopPaymentProvider: null, userErrors: [ { field: [ "provider" ], message: "provider 不在平台 pack 字典內", code: "PROVIDER_UNKNOWN" } ] } } } },
-    ]);
-    renderPayments();
+  it("未知 provider ⇒ 顯示錯誤與返回連結，不打 API", async () => {
+    const fetchMock = stubRoutedFetch([]);
+    renderAt("/admin/settings/payments/stripe");
     const main = within(await screen.findByRole("main"));
-    await main.findByText("Airwallex");
-
-    await userEvent.click(main.getAllByRole("button", { name: "儲存" })[0]);
-    expect(await screen.findByText("provider 不在平台 pack 字典內")).toBeVisible();
-    expect(callsTo(fetchMock, "query shopPaymentProviderList").length).toBe(1);
+    expect(await main.findByText("未知的付款服務商。")).toBeVisible();
+    expect(fetchMock.mock.calls.length).toBe(0);
   });
 });

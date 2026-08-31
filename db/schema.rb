@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_260000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_270000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1049,6 +1049,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_260000) do
     t.index ["shop_id", "status", "created_at"], name: "ix_products_status_created_at"
   end
 
+  create_table "psp_webhook_events", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "PSP webhook 收件匣（驗簽後收錄；event_id 冪等；消費在 G6-1b）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "event_id", null: false, comment: "PSP 側事件 id（冪等鍵；重複投遞被 UNIQUE 擋）"
+    t.string "event_type", null: false, comment: "如 payment_intent.succeeded（值域＝PSP 側，不做 enum）"
+    t.json "payload", null: false, comment: "原始事件 JSON（? 金額欄位消費時走 Money.from_psp_amount）"
+    t.datetime "processed_at"
+    t.string "provider", null: false, comment: "pack 代碼（airwallex／paypal）"
+    t.bigint "shop_id", null: false
+    t.string "status", default: "received", null: false, comment: "received|processed|failed（model 驗）"
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_psp_webhook_events_tenant_id", unique: true
+    t.index ["shop_id", "provider", "event_id"], name: "uq_psp_webhook_events_event", unique: true
+    t.index ["shop_id", "status"], name: "ix_psp_webhook_events_status"
+  end
+
   create_table "publications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "銷售管道在本店的發布容器（Publication）", force: :cascade do |t|
     t.boolean "auto_publish", default: true, null: false, comment: "新建的 publishable 是否自動納入本管道"
     t.string "channel_handle", limit: 64, null: false, comment: "管道識別（online_store／point_of_sale／agentic…）"
@@ -1532,6 +1547,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_260000) do
   add_foreign_key "product_variants", "shops", name: "fk_product_variants_shop"
   add_foreign_key "products", "shipping_profiles", on_delete: :nullify
   add_foreign_key "products", "shops", name: "fk_products_shop"
+  add_foreign_key "psp_webhook_events", "shops", name: "fk_psp_webhook_events_shop"
   add_foreign_key "publications", "sales_catalogs", column: ["shop_id", "sales_catalog_id"], primary_key: ["shop_id", "id"], name: "fk_publications_sales_catalog_id"
   add_foreign_key "publications", "shops", name: "fk_publications_shop"
   add_foreign_key "refund_line_items", "line_items", column: ["shop_id", "line_item_id"], primary_key: ["shop_id", "id"], name: "fk_refund_line_items_line_item_id"

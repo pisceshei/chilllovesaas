@@ -21,13 +21,15 @@ module Mutations
     argument :api_secret, String, required: false, description: "🔴 write-only：省略＝不變、空字串＝清空。"
     argument :webhook_secret, String, required: false, description: "🔴 write-only：同上。"
     argument :webhook_id, String, required: false, description: "非祕密識別；省略＝不變。"
+    argument :enabled_methods, [ String ], required: false,
+      description: "商家 method 白名單（⊆ 平台字典；86 詳情頁逐方法 toggle）；省略＝不變。"
 
     field :shop_payment_provider, Types::ShopPaymentProviderType, null: true
 
     # 🔴 required: false ⇒ 簽名一律 `arg: nil`（base_mutation.rb：省略呼叫時 kwargs 缺鍵）。
     # 「省略」與「明送 null」在 graphql-ruby 都到達 nil ⇒ 兩者同義＝保持不變；
     # 清空的協定是**空字串**（前端固定送 ""），不是 null——避免 nil 的雙義。
-    def resolve(provider:, environment: nil, client_id: nil, api_secret: nil, webhook_secret: nil, webhook_id: nil)
+    def resolve(provider:, environment: nil, client_id: nil, api_secret: nil, webhook_secret: nil, webhook_id: nil, enabled_methods: nil)
       enforce_idempotency_contract!(nil)
       shop = authorized_shop!
 
@@ -42,6 +44,7 @@ module Mutations
         record.api_secret = presence_or_nil(api_secret) unless api_secret.nil?
         record.webhook_secret = presence_or_nil(webhook_secret) unless webhook_secret.nil?
         record.webhook_id = webhook_id unless webhook_id.nil?
+        record.enabled_methods = enabled_methods unless enabled_methods.nil?
 
         begin
           record.save!

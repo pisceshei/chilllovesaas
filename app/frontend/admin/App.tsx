@@ -18,6 +18,7 @@ import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SettingsRedirectsPage } from "./pages/SettingsRedirectsPage";
 import { SettingsPaymentsPage } from "./pages/SettingsPaymentsPage";
+import { SettingsPaymentProviderPage } from "./pages/SettingsPaymentProviderPage";
 import { Card } from "./components/Card";
 import { Page } from "./components/Page";
 
@@ -107,6 +108,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
               <Route element={<SettingsLanguagesPage />} path="/admin/settings/languages" />
               <Route element={<SettingsRedirectsPage />} path="/admin/settings/redirects" />
               <Route element={<SettingsPaymentsPage />} path="/admin/settings/payments" />
+              <Route element={<SettingsPaymentProviderPage />} path="/admin/settings/payments/:provider" />
               <Route element={<Navigate replace to="/admin/products" />} path="*" />
             </Route>
           </Routes>

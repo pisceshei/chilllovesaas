@@ -180,7 +180,42 @@ module Money
 
           PspNumber.__build(number: BigDecimal(raw), currency: currency.to_s.upcase, psp: pack.code)
         end
-      value.to_storage
+      storage = value.to_storage
+      instrument_conversion(direction: :inbound, pack:, currency: storage.currency,
+                            storage_cents: storage.cents, value:)
+      storage
+    rescue Psp::Error, Money::Error, TypeError => error
+      instrument_failure(direction: :inbound, psp:, currency:, error:)
+      raise
+    end
+
+    # 65 §K.8：每次 X7／X8 轉換落結構化事件（subscriber 在
+    # config/initializers/money_conversion_logging.rb 寫 JSON 日誌；G6-1a 落地）。
+    # 對帳事故時這些欄位就是完整還原資訊；欄位集依 §K.8 逐項。
+    def instrument_conversion(direction:, pack:, currency:, storage_cents:, value:)
+      wire = case value
+      when PspMinor   then value.minor
+      when PspDecimal then value.string
+      when PspNumber  then value.number.to_s("F")
+      end
+      payload = { direction:, psp: pack.code, amount_format: pack.amount_format,
+                  currency:, storage_cents:, wire_value: wire,
+                  divisibility: pack.divisibility_for(currency) }
+      if pack.amount_format == :minor_units
+        payload[:exponent] = pack.minor_unit_exponent(currency)
+      else
+        payload[:decimal_places] = pack.decimal_places_for(currency)
+      end
+      ActiveSupport::Notifications.instrument("money.psp_conversion", payload)
+    end
+
+    # 65 §K.9：轉換失敗＝P1 級（代表上游算錯或 pack 沒宣告，不是使用者輸入錯）。
+    def instrument_failure(direction:, psp:, currency:, error:)
+      ActiveSupport::Notifications.instrument(
+        "money.psp_conversion_failure",
+        direction:, psp: psp.to_s, currency: currency.to_s,
+        error_class: error.class.name, error_message: error.message, severity: "P1"
+      )
     end
   end
 
@@ -253,7 +288,12 @@ module Money
       when :decimal_number then to_psp_number(pack)
       end
       roundtrip_selfcheck!(value)
+      Money.instrument_conversion(direction: :outbound, pack:, currency:,
+                                  storage_cents: cents, value:)
       value
+    rescue Psp::Error, Money::Error => error
+      Money.instrument_failure(direction: :outbound, psp:, currency:, error:)
+      raise
     end
 
     private
