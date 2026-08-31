@@ -1411,6 +1411,21 @@ a {
   margin-top: var(--sp-200);
 }
 
+/* 付款設定 provider 卡頭（G6-3 前半；標題＋狀態 badge 同列） */
+.cl-provider-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-300);
+  margin-bottom: var(--sp-300);
+}
+.cl-provider-head h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-200);
+  margin: 0;
+}
+
 /* 開關列（原型 .swrow :1001-1004） */
 .cl-swrow {
   display: flex;

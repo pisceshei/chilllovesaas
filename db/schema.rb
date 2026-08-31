@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_250000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_260000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1257,6 +1257,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_250000) do
     t.index ["shop_id", "name"], name: "uq_shop_payment_methods_name", unique: true
   end
 
+  create_table "shop_payment_providers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "PSP provider 的租戶側憑證與偏好（G6-3 前半；祕密欄一律 AR encryption 密文，37 §6.3）", force: :cascade do |t|
+    t.text "api_secret", comment: "? AR encryption 密文（Airwallex API key／PayPal client secret）；UI 永不回讀明文"
+    t.string "api_secret_fingerprint", limit: 16, comment: "SHA-256 前 16 hex（37 §6.3：UI 只顯示指紋）；祕密未設時 NULL"
+    t.string "client_id", comment: "非祕密識別（Airwallex x-client-id／PayPal client_id）；明文可回讀"
+    t.datetime "created_at", null: false
+    t.json "enabled_methods", default: -> { "(json_array())" }, null: false, comment: "商家啟用的 method code 白名單（86 詳情頁逐方法 toggle 的落點；空陣列＝尚未挑選）"
+    t.string "environment", default: "sandbox", null: false, comment: "sandbox|production（limits psp_credentials.environment_enum；跨環境禁用同 carrier 慣例）"
+    t.string "provider", null: false, comment: "pack 代碼（值域＝config/limits.yml psp_packs 的鍵；model 驗 inclusion）"
+    t.bigint "shop_id", null: false
+    t.string "status", default: "inactive", null: false, comment: "inactive|active；本切片恆 inactive——activation 狀態機（86 §1 一家 credit-card provider）隨 G6-3"
+    t.datetime "updated_at", null: false
+    t.string "webhook_id", comment: "非祕密識別（PayPal webhook_id，驗簽輸入之一；Airwallex 不用）"
+    t.text "webhook_secret", comment: "? AR encryption 密文（Airwallex webhook HMAC secret；PayPal 不用，留空）"
+    t.string "webhook_secret_fingerprint", limit: 16, comment: "同上"
+    t.index ["shop_id", "id"], name: "uq_shop_payment_providers_tenant_id", unique: true
+    t.index ["shop_id", "provider"], name: "uq_shop_payment_providers_provider", unique: true
+  end
+
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|
     t.integer "cart_item_limit", default: 50, null: false, comment: "cart 總件數上限（A2；建議值 50＝limits cart.item_limit_suggested）"
     t.boolean "cart_item_limit_enabled", default: true, null: false, comment: "上限開關（limits cart.item_limit_enabled_default）"
@@ -1535,6 +1553,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_250000) do
   add_foreign_key "shipping_zones", "shops", name: "fk_shipping_zones_shop"
   add_foreign_key "shop_locales", "platform_locales", column: "locale_tag", primary_key: "tag", name: "fk_shop_locales_locale"
   add_foreign_key "shop_locales", "shops", name: "fk_shop_locales_shop"
+  add_foreign_key "shop_payment_providers", "shops", name: "fk_shop_payment_providers_shop"
   add_foreign_key "tax_settings", "shops", name: "fk_tax_settings_shop"
   add_foreign_key "templates", "shops", name: "fk_templates_shop"
   add_foreign_key "templates", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_templates_theme_id"

@@ -1,4 +1,4 @@
-import { Languages, Link2 } from "lucide-react";
+import { CreditCard, Languages, Link2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card } from "../components/Card";
 import { Page } from "../components/Page";
@@ -21,6 +21,15 @@ export function SettingsPage() {
               <span className="cl-settings-item__text">
                 {t("settings.languages")}
                 <small>{t("settings.languages.desc")}</small>
+              </span>
+            </Link>
+          </li>
+          <li>
+            <Link className="cl-settings-item" to="/admin/settings/payments">
+              <CreditCard aria-hidden="true" size={18} />
+              <span className="cl-settings-item__text">
+                {t("settings.payments")}
+                <small>{t("settings.payments.desc")}</small>
               </span>
             </Link>
           </li>

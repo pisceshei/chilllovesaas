@@ -513,6 +513,26 @@ psp_packs:
     enabled: false   # G6-2：adapter＋webhook＋sandbox 端到端實測後才翻
 
 # =============================================================================
+# 0d. PSP 憑證儲存（G6-3 前半；規格出處＝docs/specs/37 §6.3＋carrier.credentials 慣例前例）
+# =============================================================================
+# 🔴 37 §6.3 三層：AR Encryption（non-deterministic）＝**最低標**（本區塊採用）；
+#    KMS 信封加密＝生產建議但「待定，需使用者確認採用哪一家 KMS」——**本區塊不代決**；
+#    UI 永不回傳明文，只回 SHA-256 前 N hex 指紋，寫入 write-only。
+# 金鑰載體＝env 三鍵（ACTIVE_RECORD_ENCRYPTION_*；config/initializers/
+# active_record_encryption.rb，production 缺鍵 boot 即 raise；docs/specs/120 §4 已同步）。
+psp_credentials:
+  storage: active_record_encryption
+  plaintext_forbidden: true
+  secret_fields_deterministic_forbidden: true
+  # UI 指紋位數（SHA-256 hex 前綴；37 §520 的 key_fingerprint CHAR(16) 同值）。
+  fingerprint_hex_chars: 16
+  # 🔴 Solid Queue job 參數落 DB 明文 ⇒ job 只帶 shop_payment_provider_id，
+  #    adapter 執行時自行解密（同 carrier.credentials.job_payload_forbidden_keys 的理由）。
+  job_payload_forbidden_keys: [api_secret, webhook_secret, client_secret]
+  environment_enum: [sandbox, production]
+  cross_environment_use_forbidden: true
+
+# =============================================================================
 # 1. API 契約（GraphQL）
 # =============================================================================
 api:
