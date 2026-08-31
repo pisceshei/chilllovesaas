@@ -53,16 +53,61 @@ RSpec.describe "Storefront PSP payment（G6-1c）", type: :request do
     ActsAsTenant.with_tenant(shop) { Checkout.find_by!(token:) }
   end
 
-  it "Q1 🔴 付款段三層交集：AlipayHK/FPS 出現；card（平台未實作）與白名單外**不出現**" do
+  it "Q1 🔴 付款段三層交集：AlipayHK/FPS/Credit Card 出現；白名單外**不出現**（hide 非 disable）" do
     checkout = ready_checkout!(psp: false)
     get "/checkouts/#{checkout.token}"
     expect(response.body).to include("psp:airwallex:alipayhk").and include("psp:airwallex:fps")
-    expect(response.body).not_to include("psp:airwallex:card")
+    expect(response.body).to include("psp:airwallex:card") # G6-1d 起平台已實作
     expect(response.body).to include("Bank Deposit") # manual 共存
 
     ActsAsTenant.with_tenant(shop) { provider.update!(enabled_methods: %w[fps]) }
     get "/checkouts/#{checkout.token}"
     expect(response.body).not_to include("psp:airwallex:alipayhk") # hide，不是 disable
+    expect(response.body).not_to include("psp:airwallex:card")
+  end
+
+  it "Q8 card ⇒ SDK 卡片頁：CDN script＋config（client_secret／env=demo）＋mount 容器；不打 confirm" do
+    checkout = ready_checkout!(psp: false)
+    post "/checkouts/#{checkout.token}/payment", params: { payment_method_id: "psp:airwallex:card" }
+    expect(intents).to receive(:create)
+      .with(hash_including(request_id: "pi-#{checkout.token}-20000"))
+      .and_return({ "id" => "int_c1", "client_secret" => "cs_abc", "status" => "REQUIRES_PAYMENT_METHOD" })
+    expect(intents).not_to receive(:confirm_qr)
+
+    post "/checkouts/#{checkout.token}/pay"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("static.airwallex.com/components/sdk/v1/index.js")
+    expect(response.body).to include('"client_secret":"cs_abc"').and include('"env":"demo"')
+    expect(response.body).to include("data-card-mount").and include("data-card-pay")
+    expect(ActsAsTenant.with_tenant(shop) { checkout.reload.psp_intent_id }).to eq("int_c1")
+  end
+
+  it "Q9 googlepay ⇒ wallet 頁：element 名＋amount JSON number（無引號）＋countryCode" do
+    ActsAsTenant.with_tenant(shop) do
+      provider.update!(enabled_methods: %w[card alipayhk fps googlepay],
+                       available_methods: %w[card alipayhk fps googlepay])
+    end
+    checkout = ready_checkout!(psp: false)
+    post "/checkouts/#{checkout.token}/payment", params: { payment_method_id: "psp:airwallex:googlepay" }
+    allow(intents).to receive(:create)
+      .and_return({ "id" => "int_w1", "client_secret" => "cs_w", "status" => "REQUIRES_PAYMENT_METHOD" })
+
+    post "/checkouts/#{checkout.token}/pay"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('"element":"googlePayButton"')
+    expect(response.body).to include('"amount_value":200').and satisfy { |b| !b.include?('"amount_value":"200"') }
+    expect(response.body).to include('"country_code":"HK"')
+    expect(response.body).to include("data-wallet-mount")
+  end
+
+  it "Q10 production 環境 ⇒ SDK env=prod（環境映射殺手格）" do
+    ActsAsTenant.with_tenant(shop) { provider.update!(environment: "production") }
+    checkout = ready_checkout!(psp: false)
+    post "/checkouts/#{checkout.token}/payment", params: { payment_method_id: "psp:airwallex:card" }
+    allow(intents).to receive(:create)
+      .and_return({ "id" => "int_c2", "client_secret" => "cs2", "status" => "REQUIRES_PAYMENT_METHOD" })
+    post "/checkouts/#{checkout.token}/pay"
+    expect(response.body).to include('"env":"prod"')
   end
 
   it "Q2 🔴 PSP 快照走 manual complete ⇒ 422 且不建單；完成鈕改「以 X 付款」指向 /pay" do

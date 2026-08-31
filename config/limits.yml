@@ -566,10 +566,18 @@ psp_integration:
     # 官方 webhook 文檔；G6-1a 實作於 Webhooks::AirwallexController）。
     webhook_signature_header: x-signature
     webhook_timestamp_header: x-timestamp
-    # 結帳頁**現階段已實作**可下單的方式（G6-1c＝QR 原生流雙式；card／wallets 隨
-    # G6-1d components-sdk 包擴充）。顯示＝enabled ∩ available ∩ 本清單——三層各自
-    # 語義：商家白名單／帳號能力／平台已實作（F4.2 的「不出現，不是 disable」）。
-    checkout_supported_methods: [alipayhk, fps]
+    # 結帳頁**現階段已實作**可下單的方式。G6-1c＝QR 原生流（alipayhk/fps）；
+    # G6-1d＝card（components-sdk 內嵌卡欄位）＋applepay/googlepay（SDK wallet 鈕）。
+    # 顯示＝enabled ∩ available ∩ 本清單——三層各自語義：商家白名單／帳號能力／
+    # 平台已實作（F4.2 的「不出現，不是 disable」）。
+    checkout_supported_methods: [alipayhk, fps, card, applepay, googlepay]
+    # components-sdk（G6-1d；取證 2026-08-31 官方 .md 鏡像＋CDN bundle 實物）：
+    # CDN＝下值（全域物件 window.AirwallexComponentsSDK；舊 airwallex-payment-elements
+    # 官方宣告 deprecated）。init env：非生產＝'demo'（quickstart 逐字用 'demo'；
+    # bundle enum 同時認 demo/sandbox——文檔三源矛盾已登記，以 quickstart＋bundle 為準）。
+    sdk_cdn_url: https://static.airwallex.com/components/sdk/v1/index.js
+    sdk_env_sandbox: demo
+    sdk_env_production: prod
     # QR 過期（digest §H：兩式皆 10 分鐘）；輪詢間隔（前端 status poll）。
     qr_expiry_seconds: 600
     status_poll_interval_seconds: 3

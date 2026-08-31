@@ -130,6 +130,9 @@ module Storefront
                                      status: :unprocessable_content)
       end
 
+      # card／wallets ⇒ SDK 頁（confirm 在瀏覽器）；alipayhk/fps ⇒ server confirm 出 QR。
+      return pay_sdk(checkout, snapshot, provider_row) if %w[card applepay googlepay].include?(snapshot["method_type"])
+
       intents = Psp::Airwallex::PaymentIntents.new(provider_row)
       amount = Money::Storage.from_cents(checkout.total_cents, checkout.currency)
       begin
@@ -155,6 +158,31 @@ module Storefront
       end
 
       render html: qr_page_html(checkout, snapshot["name"].to_s, qrcode).html_safe, layout: false
+    end
+
+    # G6-1d：card／wallet 走 components-sdk（confirm 在瀏覽器；QR 雙式走上面的
+    # server confirm）。intent 建立同一把 request_id ⇒ 兩型重按恆同 intent。
+    def pay_sdk(checkout, snapshot, provider_row)
+      intents = Psp::Airwallex::PaymentIntents.new(provider_row)
+      amount = Money::Storage.from_cents(checkout.total_cents, checkout.currency)
+      begin
+        intent = intents.create(
+          amount:, request_id: "pi-#{checkout.token}-#{checkout.total_cents}",
+          merchant_order_id: checkout.token
+        )
+      rescue Psp::Airwallex::Client::Error => error
+        return render_page(checkout, error: "付款服務回應異常：#{ERB::Util.html_escape(error.message)}",
+                                     status: :unprocessable_content)
+      end
+      ActsAsTenant.with_tenant(current_shop) { checkout.update!(psp_intent_id: intent.fetch("id")) }
+
+      html =
+        if snapshot["method_type"] == "card"
+          card_pay_page_html(checkout, intent, provider_row)
+        else
+          wallet_pay_page_html(checkout, intent, provider_row, snapshot)
+        end
+      render html: html.html_safe, layout: false
     end
 
     # GET /checkouts/:token/pay/status——輪詢終點（JSON；?html=1 供無 JS 後備導轉）。
@@ -565,6 +593,130 @@ module Storefront
 
       { "id" => option.first, "kind" => "psp", "provider" => provider,
         "method_type" => code, "name" => option.last }
+    end
+
+    # SDK 環境值（取證 2026-08-31：quickstart 逐字 env: 'demo'；bundle enum 同時認
+    # demo/sandbox——文檔三源矛盾以 quickstart＋bundle 實物為準，登記於 limits 註）。
+    def sdk_env(provider_row)
+      key = provider_row.environment == "production" ? :sdk_env_production : :sdk_env_sandbox
+      Limits.fetch(:psp_integration, :airwallex, key)
+    end
+
+    def sdk_cdn_url
+      Limits.fetch(:psp_integration, :airwallex, :sdk_cdn_url)
+    end
+
+    # 卡片付款頁（G6-1d；官方 guest-user-checkout quickstart 逐字形：
+    # init → createElement('card', {intent_id, client_secret, currency}) →
+    # mount('card') → card.confirm({intent_id, client_secret})）。
+    # 🔴 confirm resolve 後**不信客戶端結果**：導向 /pay/status?html=1，由 server
+    # 權威重取 intent → Finalize（與 QR／webhook 同終點）。
+    def card_pay_page_html(checkout, intent, provider_row)
+      total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
+      config = JSON.generate(
+        env: sdk_env(provider_row), intent_id: intent.fetch("id"),
+        client_secret: intent.fetch("client_secret"), currency: checkout.currency,
+        status_html_url: "/checkouts/#{checkout.token}/pay/status?html=1"
+      )
+      <<~HTML
+        <!DOCTYPE html><html lang="zh-Hant"><head>
+        <title>信用卡付款</title>#{checkout_head}
+        <script src="#{sdk_cdn_url}"></script></head><body class="ck">
+        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
+        <main data-psp-card class="ck-card">
+        <h1>信用卡付款</h1>
+        <p>應付金額：#{checkout.currency} #{total}</p>
+        <div id="card" data-card-mount></div>
+        <div id="awx-auth"></div>
+        <button type="button" data-card-pay class="ck-pay-btn">確認付款</button>
+        <p data-pay-state></p>
+        <p><a href="/checkouts/#{checkout.token}">返回結帳頁</a></p>
+        <script type="application/json" data-awx-config>#{config}</script>
+        <script>
+        (async function () {
+          var cfg = JSON.parse(document.querySelector("[data-awx-config]").textContent);
+          var state = document.querySelector("[data-pay-state]");
+          var btn = document.querySelector("[data-card-pay]");
+          try {
+            await window.AirwallexComponentsSDK.init({ env: cfg.env, enabledElements: ["payments"] });
+            var card = await window.AirwallexComponentsSDK.createElement("card", {
+              intent_id: cfg.intent_id, client_secret: cfg.client_secret, currency: cfg.currency,
+              authFormContainer: "awx-auth"
+            });
+            card.mount("card");
+          } catch (e) {
+            state.textContent = "付款元件載入失敗，請重新整理或換一種付款方式。";
+            btn.disabled = true;
+            return;
+          }
+          btn.addEventListener("click", function () {
+            btn.disabled = true;
+            state.textContent = "處理中…";
+            card.confirm({ intent_id: cfg.intent_id, client_secret: cfg.client_secret })
+              .then(function () { window.location = cfg.status_html_url; })
+              .catch(function (err) {
+                state.textContent = (err && err.message) ? err.message : "付款未完成，請確認卡片資訊後重試。";
+                btn.disabled = false;
+              });
+          });
+        })();
+        </script>
+        </main></body></html>
+      HTML
+    end
+
+    # 錢包付款頁（Apple Pay／Google Pay；SDK 參考頁：amount{currency, value:number}＋
+    # countryCode 必填；成功/失敗走 on('success')/on('error') 事件）。
+    # ⚠️ 端到端驗證留 sandbox（Apple Pay 另需網域註冊——well-known 檔已隨本包上線）。
+    def wallet_pay_page_html(checkout, intent, provider_row, snapshot)
+      element = snapshot["method_type"] == "applepay" ? "applePayButton" : "googlePayButton"
+      total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
+      amount_literal = Money::Storage.from_cents(checkout.total_cents, checkout.currency)
+                                     .to_psp_amount(psp: :airwallex).number
+                                     .then { |n| n.frac.zero? ? n.to_i.to_s : n.to_s("F") }
+      country = checkout.shipping_address["country_code"].presence || "HK"
+      config = JSON.generate(
+        env: sdk_env(provider_row), element:, intent_id: intent.fetch("id"),
+        client_secret: intent.fetch("client_secret"), currency: checkout.currency,
+        country_code: country,
+        status_html_url: "/checkouts/#{checkout.token}/pay/status?html=1"
+      ).sub(/\}\z/, %(,"amount_value":#{amount_literal}\}))
+      <<~HTML
+        <!DOCTYPE html><html lang="zh-Hant"><head>
+        <title>以 #{ERB::Util.html_escape(snapshot["name"].to_s)} 付款</title>#{checkout_head}
+        <script src="#{sdk_cdn_url}"></script></head><body class="ck">
+        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
+        <main data-psp-wallet class="ck-card">
+        <h1>以 #{ERB::Util.html_escape(snapshot["name"].to_s)} 付款</h1>
+        <p>應付金額：#{checkout.currency} #{total}</p>
+        <div id="wallet" data-wallet-mount></div>
+        <p data-pay-state></p>
+        <p><a href="/checkouts/#{checkout.token}">返回結帳頁</a></p>
+        <script type="application/json" data-awx-config>#{config}</script>
+        <script>
+        (async function () {
+          var cfg = JSON.parse(document.querySelector("[data-awx-config]").textContent);
+          var state = document.querySelector("[data-pay-state]");
+          try {
+            await window.AirwallexComponentsSDK.init({ env: cfg.env, enabledElements: ["payments"] });
+            var el = await window.AirwallexComponentsSDK.createElement(cfg.element, {
+              intent_id: cfg.intent_id, client_secret: cfg.client_secret,
+              amount: { currency: cfg.currency, value: cfg.amount_value },
+              countryCode: cfg.country_code, autoCapture: true
+            });
+            el.mount("wallet");
+            el.on("success", function () { window.location = cfg.status_html_url; });
+            el.on("error", function (e) {
+              var err = e && e.detail && e.detail.error;
+              state.textContent = (err && err.message) ? err.message : "付款未完成，請重試或換一種付款方式。";
+            });
+          } catch (e) {
+            state.textContent = "此裝置或瀏覽器不支援這種付款方式，請換一種付款方式。";
+          }
+        })();
+        </script>
+        </main></body></html>
+      HTML
     end
 
     # QR 付款頁（G6-1c）：伺服端 rqrcode 出 SVG；輪詢 GET /pay/status（🔴 GET 不吃

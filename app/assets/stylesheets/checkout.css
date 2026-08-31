@@ -107,3 +107,11 @@
 .ck-thanks [data-payment-instructions] { background: var(--surface-2);
   border-radius: var(--r-200); padding: var(--sp-400); margin-top: var(--sp-400); }
 .ck-thanks [data-payment-instructions] h2 { margin: 0 0 var(--sp-200); font-size: var(--t-md); }
+
+/* G6-1d：卡片／錢包付款頁 */
+.ck-card [data-card-mount], .ck-card [data-wallet-mount] {
+  margin: var(--sp-400) 0; min-height: 56px; text-align: left; }
+.ck-pay-btn { width: 100%; appearance: none; border: 0; cursor: pointer;
+  background: var(--text); color: var(--surface); border-radius: var(--r-btn, var(--r-200));
+  padding: var(--sp-300) var(--sp-600); font-size: var(--t-lg); font-weight: 600; }
+.ck-pay-btn[disabled] { opacity: .5; cursor: not-allowed; }
