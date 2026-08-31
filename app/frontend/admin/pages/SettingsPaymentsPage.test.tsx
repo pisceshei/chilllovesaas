@@ -46,8 +46,8 @@ const AIRWALLEX_ROW = {
   capabilitiesSyncedAt: "2026-08-31T10:00:00Z",
 };
 
-const LIST = { data: { shopPaymentProviders: [ AIRWALLEX_ROW ] } };
-const EMPTY_LIST = { data: { shopPaymentProviders: [] } };
+const LIST = { data: { shopPaymentProviders: [ AIRWALLEX_ROW ], paymentCaptureMethod: "automatic_at_checkout" } };
+const EMPTY_LIST = { data: { shopPaymentProviders: [], paymentCaptureMethod: "automatic_at_checkout" } };
 const DICTIONARY = [
   { code: "card", label: "Credit Card (Visa / Mastercard / Amex)" },
   { code: "alipayhk", label: "AlipayHK" },
@@ -79,8 +79,56 @@ describe("設定 › 付款（主頁）", () => {
     expect(main.getByText("其他付款服務商")).toBeVisible();
     expect(main.getByText("付款設定")).toBeVisible();
     expect(main.getByText("請款方式")).toBeVisible();
-    expect(main.getAllByText("即將推出").length).toBe(2);
+    // G6-3 步 2：capture 列顯示現值、manual methods 升格為真連結 ⇒「即將推出」只剩 customizations 一項。
+    expect(main.getByText("結帳時自動請款")).toBeVisible();
+    expect(main.getAllByText("即將推出").length).toBe(1);
+    expect(main.getByRole("link", { name: /手動付款方式/ })).toHaveAttribute(
+      "href", "/admin/settings/payments/manual-payment-methods");
     expect(main.getAllByText("未設定").length).toBe(2);
+  });
+
+  // G6-3 步 2：86 §2 modal——radio 恰三值、預設✓、儲存打 paymentCaptureMethodUpdate。
+  it("請款方式 modal：三 radio＋預設勾選＋儲存送 mutation", async () => {
+    const fetchMock = stubRoutedFetch([
+      { match: "query shopPaymentProviderList", body: EMPTY_LIST },
+      { match: "paymentCaptureMethodUpdate", body: { data: { paymentCaptureMethodUpdate: {
+        paymentCaptureMethod: "manual", userErrors: [] } } } },
+    ]);
+    renderAt("/admin/settings/payments");
+    const user = userEvent.setup();
+
+    const main = within(await screen.findByRole("main"));
+    await user.click(main.getByRole("button", { name: /請款方式/ }));
+
+    const dialog = within(await screen.findByRole("dialog"));
+    const radios = dialog.getAllByRole("radio");
+    expect(radios.length).toBe(3);
+    expect(dialog.getByRole("radio", { name: /結帳時自動請款/ })).toBeChecked();
+
+    await user.click(dialog.getByRole("radio", { name: /手動請款/ }));
+    await user.click(dialog.getByRole("button", { name: "儲存" }));
+
+    const calls = callsTo(fetchMock, "paymentCaptureMethodUpdate");
+    expect(calls.length).toBe(1);
+    expect(String(calls[0]?.body)).toContain('"captureMethod":"manual"');
+  });
+
+  // G6-3 步 2：activation 狀態機——憑證在＋inactive ⇒ Activate 鈕；按下打 activate mutation。
+  it("provider 憑證在但未啟用 ⇒ Activate 鈕＋mutation", async () => {
+    const fetchMock = stubRoutedFetch([
+      { match: "query shopPaymentProviderList", body: LIST },
+      { match: "shopPaymentProviderActivate", body: { data: { shopPaymentProviderActivate: {
+        shopPaymentProvider: { provider: "airwallex", status: "active" }, userErrors: [] } } } },
+    ]);
+    renderAt("/admin/settings/payments");
+    const user = userEvent.setup();
+
+    const main = within(await screen.findByRole("main"));
+    await user.click(await main.findByRole("button", { name: "啟用" }));
+
+    const calls = callsTo(fetchMock, "shopPaymentProviderActivate");
+    expect(calls.length).toBe(1);
+    expect(String(calls[0]?.body)).toContain('"provider":"airwallex"');
   });
 
   it("已設定 sandbox 憑證 ⇒ 測試模式橫幅＋method chips＋「已儲存憑證」", async () => {

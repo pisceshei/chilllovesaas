@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_030000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1310,6 +1310,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_020000) do
     t.json "feature_flags", default: -> { "(json_object())" }, null: false
     t.string "name", null: false
     t.bigint "order_counter", default: 1000, null: false, comment: "每店訂單連號計數器（15-F5；取號＝交易內 +1 後讀回，鎖序首位）"
+    t.string "payment_capture_method", limit: 40, default: "automatic_at_checkout", null: false, comment: "請款模式（limits capture.modes；86 §2 modal 三值 UI＋enum 四值保留）"
     t.string "plan", limit: 32, default: "basic", null: false
     t.boolean "split_shipping_enabled", default: true, null: false, comment: "split shipping（85 §5.3 Manage split shipping；預設 On）"
     t.string "status", limit: 32, default: "active", null: false

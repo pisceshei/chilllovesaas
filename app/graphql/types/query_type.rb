@@ -135,6 +135,12 @@ module Types
     field :available_locales, [ Types::PlatformLocaleType ], null: false,
       description: "平台字典中尚未被本店啟用的語言（設定 › 語言的「新增」候選；ML-4）。"
 
+    # G6-3（步 2）：manual 付款方式與請款模式（86 §2/§3）。
+    field :shop_payment_methods, [ Types::ShopPaymentMethodType ], null: false,
+      description: "manual 付款方式清單（含停用；86 §3）。"
+    field :payment_capture_method, String, null: false,
+      description: "請款模式（limits capture.modes；86 §2 modal）。"
+
     field :shop_payment_providers, [ Types::ShopPaymentProviderType ], null: false,
       description: "本店已落鍵的 PSP provider 設定列（G6-3 前半；祕密欄只回指紋，37 §6.3）。"
 
@@ -323,6 +329,25 @@ module Types
       ActsAsTenant.with_tenant(shop) do
         ShopPaymentProvider.order(:provider).to_a
       end
+    end
+
+    # manual 付款方式清單（G6-3 步 2；86 §3——含停用列，admin 端要顯示兩段）。
+    #
+    # @return [Array<ShopPaymentMethod>] position 序
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。授權同 shop_payment_providers。
+    def shop_payment_methods
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      ActsAsTenant.with_tenant(shop) { ShopPaymentMethod.ordered.to_a }
+    end
+
+    # 請款模式（G6-3 步 2；86 §2 modal 的讀端）。
+    #
+    # @return [String] limits capture.modes 之一
+    # @note 副作用：無；讀 shop 欄。
+    def payment_capture_method
+      authorize_products!
+      context.fetch(:current_shop).payment_capture_method
     end
 
     # 平台字典（無租戶資料，仍要求登入態——與其他 settings 查詢一致）。
