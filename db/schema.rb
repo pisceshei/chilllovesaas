@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_211000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -103,8 +103,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
     t.string "recovery_token", limit: 64
     t.json "shipping_address", default: -> { "(json_object())" }, null: false
     t.bigint "shipping_cents", default: 0, null: false
+    t.json "shipping_lines", default: -> { "(json_array())" }, null: false, comment: "選定運費快照：[{shipment_index,profile_id,rate_id,name,price_cents}]"
     t.bigint "shop_id", null: false
-    t.string "status", limit: 32, default: "active", null: false
+    t.string "status", limit: 32, default: "open", null: false
     t.bigint "subtotal_cents", default: 0, null: false
     t.bigint "tax_cents", default: 0, null: false
     t.string "token", limit: 64, null: false
@@ -1031,6 +1032,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
     t.datetime "publications_updated_at", comment: "發布狀態最後變動時刻（cache stamp；寫入者隨第 12 包）"
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
+    t.bigint "shipping_profile_id", comment: "自訂運送設定檔歸屬；NULL＝General 補集（85 §2）"
     t.bigint "shop_id", null: false
     t.string "status", limit: 32, default: "draft", null: false
     t.json "tags", default: -> { "(json_array())" }, null: false
@@ -1038,9 +1040,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
     t.datetime "updated_at", null: false
     t.datetime "variants_updated_at", comment: "變體樹最後變動時刻（cache stamp；null＝立欄前未變動過）"
     t.string "vendor"
+    t.index ["shipping_profile_id"], name: "fk_rails_d39e4d6fd1"
     t.index ["shop_id", "created_at", "id"], name: "ix_products_created_at_id"
     t.index ["shop_id", "handle"], name: "uq_products_handle", unique: true
     t.index ["shop_id", "id"], name: "uq_products_tenant_id", unique: true
+    t.index ["shop_id", "shipping_profile_id"], name: "ix_products_shipping_profile"
     t.index ["shop_id", "status", "created_at"], name: "ix_products_status_created_at"
   end
 
@@ -1189,8 +1193,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.string "currency", limit: 3, default: "HKD", null: false
+    t.bigint "max_transit_seconds"
     t.bigint "maximum_order_cents"
     t.integer "maximum_weight_grams"
+    t.bigint "min_transit_seconds", comment: "運達區間下限（秒；85 §3 base64 JSON {min,max}）；與 max 同 NULL＝None"
     t.bigint "minimum_order_cents"
     t.integer "minimum_weight_grams"
     t.string "name", null: false
@@ -1242,6 +1248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
     t.json "feature_flags", default: -> { "(json_object())" }, null: false
     t.string "name", null: false
     t.string "plan", limit: 32, default: "basic", null: false
+    t.boolean "split_shipping_enabled", default: true, null: false, comment: "split shipping（85 §5.3 Manage split shipping；預設 On）"
     t.string "status", limit: 32, default: "active", null: false
     t.string "store_currency", limit: 3, default: "HKD", null: false
     t.string "subdomain", limit: 63, null: false
@@ -1486,6 +1493,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_170000) do
   add_foreign_key "product_variant_option_values", "shops", name: "fk_pvov_shop"
   add_foreign_key "product_variants", "products", column: ["shop_id", "product_id"], primary_key: ["shop_id", "id"], name: "fk_product_variants_product_id"
   add_foreign_key "product_variants", "shops", name: "fk_product_variants_shop"
+  add_foreign_key "products", "shipping_profiles", on_delete: :nullify
   add_foreign_key "products", "shops", name: "fk_products_shop"
   add_foreign_key "publications", "sales_catalogs", column: ["shop_id", "sales_catalog_id"], primary_key: ["shop_id", "id"], name: "fk_publications_sales_catalog_id"
   add_foreign_key "publications", "shops", name: "fk_publications_shop"

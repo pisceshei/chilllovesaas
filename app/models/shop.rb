@@ -74,6 +74,14 @@ class Shop < ApplicationRecord
   #    「空店刪不掉」，與 shop_locales 繞 SOURCE_LOCALE_IMMUTABLE 是同一條理由（見上方 i18n 註釋）。
   has_many :markets, dependent: :delete_all
   has_many :domains, dependent: :delete_all
+  # 🔴 運送三表（結帳線第二包）也走 `delete_all`：ShippingProfile#before_destroy 擋
+  #    「刪 General」——保護活著的店；整店刪除必須繞過（同 markets 繞 primary 守門）。
+  #    順序＝FK 反序：rates → zones → profiles（fk_shipping_rates_shipping_zone_id／
+  #    fk_shipping_zones_shipping_profile_id 皆 restrict）。每家新店都有預設檔＋費率，
+  #    restrict 會讓空店永遠刪不掉（同 locations 註釋的理由）。
+  has_many :shipping_rates, dependent: :delete_all
+  has_many :shipping_zones, dependent: :delete_all
+  has_many :shipping_profiles, dependent: :delete_all
   has_many :shop_locales, dependent: :delete_all
   has_many :translations, dependent: :delete_all
   has_many :translation_statuses, class_name: "TranslationStatus", dependent: :delete_all
@@ -96,6 +104,8 @@ class Shop < ApplicationRecord
   # 🔴 必須排在 enable_launch_locales 之後（after_create 依註冊順序執行）：
   #    presence.default_shop_locale 與白名單列都有複合 FK 指向 shop_locales——語言列先存在。
   after_create :provision_default_market
+  # 🔴 必須排在 provision_default_market 之後：預設 zone 的國家取自 primary market regions。
+  after_create :provision_default_shipping
   # 🔴 `prepend: true` 不可省。`has_many ... dependent: :destroy` 是在**關聯宣告當下**
   # 註冊成 `before_destroy` 的，而本檔的關聯宣告在這行之上 ⇒ 不 prepend 的話，
   # dependent 的刪除會**先跑**、落在租戶包裹之外，`NoTenantSet` 照樣拋。
@@ -244,6 +254,13 @@ class Shop < ApplicationRecord
   # 沒有市場的店一條前台 URL 都組不出來（B11：v1 單一 HK 市場先接通整條鏈）。
   def provision_default_market
     Markets::ProvisionDefaults.call(shop: self)
+  end
+
+  # 建店預設運送鏈（General 檔＋primary market zone＋免運費率）。
+  # 為什麼建店就要有：Rates(p)=∅ 會整車擋結帳（15 §F2.1）——沒有這條，
+  # 新店的第一張結帳單在運送段就 :undeliverable，而且不拋錯、只是選不到運送方式。
+  def provision_default_shipping
+    Shipping::ProvisionDefaults.call(shop: self)
   end
 
   # 判斷 M0 是否可路由已持久化的 custom domain。

@@ -60,6 +60,9 @@ class Product < ApplicationRecord
   has_many :media, class_name: "Media", dependent: :destroy, inverse_of: :product
   # 多型：商品可獨立發布到各管道（docs/specs/88）。
   has_many :resource_publications, as: :publishable, dependent: :destroy
+  # 自訂運送設定檔歸屬（結帳線第二包）。🔴 nil＝General 補集（85 §2），所以
+  # optional 是語義不是偷懶；刪 profile 由 DB FK `on_delete: :nullify` 回落 General。
+  belongs_to :shipping_profile, optional: true
 
   # 建立當下即物化發布列（本尊實測 82 §8.4①：新商品存檔後預設變體即有全部管道的列）。
   #

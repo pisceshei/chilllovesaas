@@ -41,7 +41,7 @@ RSpec.describe "Storefront checkout（第一包）", type: :request do
     checkout = ActsAsTenant.with_tenant(shop) { Checkout.find_by!(token:) }
     expect(checkout.subtotal_cents).to eq(29_600)
     expect(checkout.total_cents).to eq(29_600)
-    expect(checkout.status).to eq("active")
+    expect(checkout.status).to eq("open") # 三值 enum（90-blueprint/03 §B.2；第二包更正）
     expect(checkout.line_items_snapshot.sole["quantity"]).to eq(2)
 
     get "/checkouts/#{token}"
