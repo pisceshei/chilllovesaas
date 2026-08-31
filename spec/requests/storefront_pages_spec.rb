@@ -162,3 +162,52 @@ RSpec.describe "Storefront pages", type: :request do
     expect(cart_block.call(cart_post)).to be_present
   end
 end
+
+# G6 打磨包：/cart 頁（G2 縫補——模板對映＋個人化不進快取＝繞過快取）。
+RSpec.describe "Storefront cart page", type: :request do
+  let(:shop) { create(:shop, subdomain: "sf-cart-shop") }
+  let(:variant) do
+    ActsAsTenant.with_tenant(shop) do
+      v = create(:product_variant, shop:, price_cents: 5_000,
+                 product: create(:product, shop:, status: "active", title: "車頁測品"))
+      v.inventory_item.inventory_levels.order(:id).first.update!(available: 9)
+      v
+    end
+  end
+
+  before do
+    host! "sf-cart-shop.lvh.me"
+    https!
+    Rack::Attack.cache.store.clear
+    ActsAsTenant.with_tenant(shop) do
+      Theme.create!(shop_id: shop.id, name: "Minimal", version: "1.0", role: "published",
+                    source: "first_party", license_attested: true)
+    end
+    allow(ThemeEngine::Sources).to receive(:resolve).and_return(
+      ThemeEngine::FileSource.new(Rails.root.join("spec/fixtures/theme_engine/minimal-1.0"))
+    )
+  end
+
+  it "C1 🔴 /cart 渲染真車（不再 404）；no-store；加車後重看數量更新（不吃頁快取）" do
+    get "/en-hk/cart"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("data-cart-empty")
+    expect(response.headers["Cache-Control"]).to include("no-store")
+
+    post "/cart/add.js", params: { items: [ { id: variant.id, quantity: 2 } ] }.to_json,
+                         headers: { "CONTENT_TYPE" => "application/json" }
+    get "/en-hk/cart"
+    expect(response.body).to match(/車頁測品.* × 2/).and include("購物車（2）")
+
+    post "/cart/add.js", params: { items: [ { id: variant.id, quantity: 1 } ] }.to_json,
+                         headers: { "CONTENT_TYPE" => "application/json" }
+    get "/en-hk/cart"
+    expect(response.body).to include("購物車（3）") # 🔴 殺「/cart 被頁快取吃掉」
+  end
+
+  it "C2 純瀏覽 /cart 不建車列（cookie 無車 ⇒ 空車渲染、零寫入）" do
+    expect { get "/en-hk/cart" }.not_to change {
+      ActsAsTenant.with_tenant(shop) { Cart.count }
+    }
+  end
+end

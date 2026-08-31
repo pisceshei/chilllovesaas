@@ -1,0 +1,109 @@
+/* 結帳線三頁（結帳／QR 付款／thank-you）的自寫樣式（G6 打磨包）。
+ * 🔴 鐵律 8/9：值取自我方 tokens（tokens.css 同頁載入）；結構對位本尊雙欄形
+ *   （24 §5／86 §4 實測），CSS 全自寫；87 號 1:1 量測輪後再校準到量測值。
+ * 佈局：≥ 990px 雙欄（主流程＋sticky 摘要欄）；窄幅單欄、摘要在前。 */
+
+.ck { margin: 0; background: var(--surface-2); color: var(--text);
+      font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      font-size: var(--t-md); line-height: 1.5; }
+.ck * { box-sizing: border-box; }
+
+.ck-header { background: var(--surface); border-bottom: 1px solid var(--border);
+             padding: var(--sp-400) var(--sp-600); }
+.ck-brand { color: var(--text); text-decoration: none; font-size: var(--t-lg); font-weight: 700; }
+
+.ck-layout { display: grid; grid-template-columns: 1fr; gap: var(--sp-600);
+             max-width: 1100px; margin: 0 auto; padding: var(--sp-600) var(--sp-400) var(--sp-600); }
+@media (min-width: 990px) {
+  .ck-layout { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
+  .ck-aside { position: sticky; top: var(--sp-600); order: 2; }
+  .ck-main { order: 1; }
+}
+.ck-aside { order: -1; }
+@media (min-width: 990px) { .ck-aside { order: 2; } }
+
+.ck-title { font-size: var(--t-xl); margin: 0 0 var(--sp-400); }
+
+/* 卡片化區塊：既有 data-* 容器直接吃樣式（HTML 零改動） */
+.ck [data-delivery], .ck [data-payment] {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-300);
+  padding: var(--sp-600); margin-bottom: var(--sp-400); }
+.ck [data-delivery] h2, .ck [data-payment] h2 { margin: 0 0 var(--sp-300); font-size: var(--t-lg); }
+
+.ck label { display: block; }
+.ck select, .ck input[type="text"] {
+  width: 100%; padding: var(--sp-200) var(--sp-300); margin-top: var(--sp-100);
+  border: 1px solid var(--border); border-radius: var(--r-200);
+  font-size: var(--t-md); background: var(--surface); color: var(--text); }
+.ck select:focus, .ck input:focus, .ck button:focus-visible {
+  outline: 2px solid var(--text); outline-offset: 1px; }
+
+/* 選項列（運送方式／付款方式）：邊框列＋選中高亮（本尊手風琴形的第一步） */
+.ck fieldset { border: 1px solid var(--border); border-radius: var(--r-200);
+               padding: 0; margin: var(--sp-300) 0; overflow: hidden; }
+.ck fieldset legend { padding: 0 var(--sp-200); margin-left: var(--sp-300);
+                      font-size: var(--t-sm); color: var(--text-2); }
+.ck fieldset label { display: flex; align-items: center; gap: var(--sp-300);
+                     padding: var(--sp-300) var(--sp-400); margin: 0; cursor: pointer;
+                     border-top: 1px solid var(--border); }
+.ck fieldset label:first-of-type { border-top: 0; }
+.ck fieldset label:has(input:checked) { background: var(--surface-2); }
+.ck fieldset input[type="radio"] { accent-color: var(--text); width: 16px; height: 16px; flex: none; }
+.ck [data-payment-details] { margin: 0 var(--sp-400) var(--sp-300) var(--sp-600);
+                             font-size: var(--t-sm); color: var(--text-2); }
+.ck [data-billing-address] label { padding: var(--sp-200) var(--sp-400); }
+
+.ck button[type="submit"], .ck button[data-complete-order] {
+  appearance: none; border: 0; border-radius: var(--r-btn, var(--r-200));
+  padding: var(--sp-300) var(--sp-600); font-size: var(--t-md); font-weight: 600;
+  cursor: pointer; background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--border); }
+.ck [data-complete-form] button, .ck [data-pay-form] button {
+  width: 100%; background: var(--text); color: var(--surface); border: 0;
+  padding: var(--sp-300) var(--sp-600); font-size: var(--t-lg); margin-top: var(--sp-300); }
+.ck button[disabled] { opacity: .5; cursor: not-allowed; width: 100%; margin-top: var(--sp-300); }
+.ck [data-complete-note], .ck [data-shipping-hint] { color: var(--text-2); font-size: var(--t-sm); }
+.ck [data-delivery-error], .ck [data-payment-unavailable], .ck [data-shipping-unavailable] {
+  background: var(--caution-bg); border: 1px solid var(--caution);
+  border-radius: var(--r-200); padding: var(--sp-200) var(--sp-300); font-size: var(--t-sm); }
+
+/* 摘要欄 */
+.ck-aside { background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-300); padding: var(--sp-600); }
+.ck-aside h2 { margin: 0 0 var(--sp-300); font-size: var(--t-lg); }
+.ck-lines { width: 100%; border-collapse: collapse; }
+.ck-lines td { padding: var(--sp-200) 0; border-bottom: 1px solid var(--border);
+               font-size: var(--t-sm); vertical-align: top; }
+.ck-lines td:last-child { text-align: right; white-space: nowrap;
+                          font-variant-numeric: tabular-nums; }
+.ck [data-checkout-shipping] { display: flex; justify-content: space-between;
+  margin: var(--sp-300) 0 0; font-size: var(--t-sm); color: var(--text-2); }
+.ck [data-checkout-total] { display: flex; justify-content: space-between;
+  margin: var(--sp-200) 0 0; padding-top: var(--sp-300); border-top: 1px solid var(--border);
+  font-size: var(--t-xl); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ck [data-checkout-total]::before { content: "合計"; font-size: var(--t-md); font-weight: 600; }
+
+/* QR 付款頁 */
+.ck-card { background: var(--surface); border: 1px solid var(--border);
+           border-radius: var(--r-300); padding: var(--sp-600);
+           max-width: 440px; margin: var(--sp-600) auto; text-align: center; }
+.ck-card h1 { font-size: var(--t-xl); margin: 0 0 var(--sp-300); }
+.ck-card [data-qrcode] { max-width: 260px; margin: var(--sp-400) auto;
+  padding: var(--sp-300); border: 1px solid var(--border); border-radius: var(--r-200);
+  background: #fff; }
+.ck-card [data-qrcode] svg { width: 100%; height: auto; display: block; }
+.ck-card [data-pay-state] { color: var(--text-2); font-size: var(--t-sm); }
+.ck-card a { color: var(--text); }
+
+/* thank-you 頁 */
+.ck-thanks { max-width: 560px; margin: var(--sp-600) auto; }
+.ck-thanks .ck-card { max-width: none; text-align: left; margin: 0; }
+.ck-thanks h1 { font-size: var(--t-xl); margin: 0 0 var(--sp-200); }
+.ck-thanks table { width: 100%; border-collapse: collapse; margin: var(--sp-400) 0; }
+.ck-thanks td { padding: var(--sp-200) 0; border-bottom: 1px solid var(--border);
+                font-size: var(--t-sm); }
+.ck-thanks td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.ck-thanks [data-order-total] { font-size: var(--t-lg); font-weight: 700; }
+.ck-thanks [data-payment-instructions] { background: var(--surface-2);
+  border-radius: var(--r-200); padding: var(--sp-400); margin-top: var(--sp-400); }
+.ck-thanks [data-payment-instructions] h2 { margin: 0 0 var(--sp-200); font-size: var(--t-md); }

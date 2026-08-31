@@ -83,6 +83,11 @@ module ThemeEngine
       case path
       when "/", ""
         [ "index", {}, 200 ]
+      when "/cart"
+        # G2 縫補（打磨包）：cart 頁模板對映——`cart` drop 走 global assigns
+        # （cart_json 由 pages controller 對本路徑**繞過頁快取**注入；14 §F1-4
+        # 個人化不進快取的紀律不變——是「不快取」，不是「快取空車」）。
+        [ "cart", {}, 200 ]
       when %r{\A/products/([^/]+)\z}
         product = ActsAsTenant.with_tenant(@shop) do
           found = Storefront::Lookup.product_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
