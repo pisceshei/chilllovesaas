@@ -36,6 +36,8 @@ module Types
     field :total_discounts_set, MoneyBagType, null: false
     field :total_price_set, MoneyBagType, null: false
     field :line_items, [ LineItemType ], null: false
+    field :item_count, Integer, null: false,
+          description: "行項數量合計（列表 Items 欄；88 §2）"
     field :transactions, [ OrderTransactionType ], null: false
     field :customer, CustomerType, null: true
     field :shipping_address, OrderAddressType, null: true
@@ -55,6 +57,10 @@ module Types
 
     def line_items
       object.line_items.order(:id)
+    end
+
+    def item_count
+      object.line_items.sum(&:quantity)
     end
 
     def transactions

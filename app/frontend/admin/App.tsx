@@ -15,6 +15,8 @@ import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { VariantDetailPage } from "./pages/VariantDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { CustomersPage } from "./pages/CustomersPage";
+import { OrdersPage } from "./pages/OrdersPage";
+import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SettingsRedirectsPage } from "./pages/SettingsRedirectsPage";
@@ -60,6 +62,7 @@ const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/products", () => <ProductsPage /> ],
   [ "/admin/collections", () => <CollectionsPage /> ],
   [ "/admin/customers", () => <CustomersPage /> ],
+  [ "/admin/orders", () => <OrdersPage /> ],
   [ "/admin/inventory", () => <InventoryPage /> ],
   [ "/admin/content/files", () => <FilesPage /> ],
   [ "/admin/store", () => <StorePage /> ],
@@ -99,6 +102,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
               <Route element={<CollectionDetailPage isNew={false} />} path="/admin/collections/:id" />
               <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
               <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
+              <Route element={<OrderDetailPage />} path="/admin/orders/:orderId" />
               {/* 變體子頁（第 29 包）。React Router v6 依明確度排序，不會被上一行遮住；
                   GID 在路徑裡是 URL-encoded（同 inventory history 路由的慣例）。 */}
               <Route

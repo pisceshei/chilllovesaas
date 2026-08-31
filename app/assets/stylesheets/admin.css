@@ -2578,3 +2578,21 @@ a {
 .cl-store-themes__preview { display: inline-flex; align-items: center; gap: 4px; color: var(--link); text-decoration: none; font-size: var(--t-300); }
 .cl-store-themes__preview:hover { text-decoration: underline; }
 .cl-store-themes__empty, .cl-store-themes__loading { color: var(--text-2); margin: 0; }
+
+/* ── G6-6 步 4：訂單詳情頁（88 §3 骨架的資料已備子集） ── */
+.cl-back-link { display: inline-flex; align-items: center; gap: 4px;
+  color: var(--text-2); font-size: var(--t-sm); text-decoration: none;
+  margin-bottom: var(--sp-200); }
+.cl-back-link:hover { color: var(--text); }
+.cl-order-line { display: flex; align-items: flex-start; gap: var(--sp-300);
+  padding: var(--sp-200) 0; border-bottom: 1px solid var(--border); font-size: var(--t-sm); }
+.cl-order-line:last-of-type { border-bottom: 0; }
+.cl-order-line > div:first-child { flex: 1; }
+.cl-order-line__qty { white-space: nowrap; color: var(--text-2); }
+.cl-order-line__total { min-width: 90px; text-align: right;
+  font-variant-numeric: tabular-nums; }
+.cl-order-cost { display: grid; grid-template-columns: 110px 1fr auto;
+  gap: var(--sp-200); padding: 3px 0; font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums; }
+.cl-order-cost--total { font-weight: 600; border-top: 1px solid var(--border);
+  margin-top: var(--sp-100); padding-top: var(--sp-200); }
