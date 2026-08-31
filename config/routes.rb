@@ -87,6 +87,10 @@ Rails.application.routes.draw do
     # 結帳線第三包：選付款方式（server 重驗 active；86 §4 實測形）。
     post "checkouts/:token/payment" => "storefront/checkouts#payment", format: false,
          as: :storefront_checkout_payment
+    # G6-4：整頁單表單提交（87 號實測：本尊 Pay now＝一次送出全部欄位）。
+    # refresh=1 ⇒ 只落庫重渲染（JS 對 select/radio 變更觸發）；否則接續 307 → /pay 或 /complete。
+    post "checkouts/:token/submit" => "storefront/checkouts#submit", format: false,
+         as: :storefront_checkout_submit
     # G6-0(a) 訂單成立（15-F5/F6）：POST 建單＋GET thank-you。
     # G6-1c：PSP 線上付款（QR 原生流）。/pay=POST（吃 storefront 寫入 throttle）；
     # /pay/status=GET（輪詢，刻意不落 POST throttle bucket）。

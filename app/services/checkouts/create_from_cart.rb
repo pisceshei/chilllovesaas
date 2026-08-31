@@ -20,6 +20,10 @@ module Checkouts
       raise Error, "購物車是空的。" if lines.empty?
 
       shop = Shop.find(cart.shop_id)
+      # G6-4：行項縮圖（87 §4 側欄 64px 縮圖）。product 首圖一次撈齊避免 N+1；
+      # 無圖＝nil ⇒ 渲染層灰底佔位（#ededed，與本尊無圖態同形）。
+      first_images = Media.where(shop_id: cart.shop_id, product_id: lines.map { |l| l.product_variant.product_id })
+                          .order(:position).group_by(&:product_id)
       snapshot = lines.map do |line|
         variant = line.product_variant
         {
@@ -35,6 +39,7 @@ module Checkouts
           "weight_grams" => variant.weight_grams,
           "requires_shipping" => variant.requires_shipping,
           "shipping_profile_id" => variant.product.shipping_profile_id,
+          "image_url" => first_images[variant.product_id]&.first&.source_url,
           "properties" => line.properties
         }
       end

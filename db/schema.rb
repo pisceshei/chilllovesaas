@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_290000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_300000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -90,6 +90,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_290000) do
   create_table "checkouts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "結帳快照及棄單來源", force: :cascade do |t|
     t.datetime "abandoned_at"
     t.json "billing_address", default: -> { "(json_object())" }, null: false
+    t.boolean "buyer_accepts_marketing", default: false, null: false, comment: "買家勾選行銷訂閱（87 §3；對位 Order API buyer_accepts_marketing）"
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.string "currency", limit: 3, default: "HKD", null: false

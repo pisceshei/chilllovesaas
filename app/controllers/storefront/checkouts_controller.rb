@@ -46,15 +46,15 @@ module Storefront
 
       country = params[:country_code].to_s.upcase
       unless sellable_countries.include?(country)
-        return render_page(checkout, error: "此地區目前無法配送。", status: :unprocessable_content)
+        return render_page(checkout, error: "We can't ship to this region.", status: :unprocessable_content)
       end
 
       result = resolve_rates(checkout, country)
       case result.status
       when :not_sellable
-        return render_page(checkout, error: "此地區目前無法配送。", status: :unprocessable_content)
+        return render_page(checkout, error: "We can't ship to this region.", status: :unprocessable_content)
       when :undeliverable
-        return render_page(checkout, error: "部分商品目前無法配送到此地區。", status: :unprocessable_content)
+        return render_page(checkout, error: "Some items can't be shipped to this region.", status: :unprocessable_content)
       end
 
       if result.shipments.empty? # 全數位車：無運送段，運費 0（85 §5.1 無 Shipping method 區塊的對位）
@@ -65,7 +65,7 @@ module Storefront
       chosen = pick_options(checkout, result)
       if chosen.nil? # 提交的選項已不在當前集合，或價格已變（F3-3 重驗失敗）
         persist_delivery!(checkout, country, result, default_selection(checkout, result))
-        return render_page(checkout, error: "運送選項已變更，請重新確認你的選擇。",
+        return render_page(checkout, error: "The shipping options have changed. Please review your selection.",
                                      status: :unprocessable_content)
       end
 
@@ -91,7 +91,7 @@ module Storefront
           method&.snapshot
         end
       if snapshot.nil?
-        return render_page(checkout, error: "付款方式已變更，請重新選擇。",
+        return render_page(checkout, error: "The payment methods have changed. Please choose again.",
                                      status: :unprocessable_content)
       end
 
@@ -104,6 +104,70 @@ module Storefront
         )
       end
       redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
+    end
+
+    # POST /checkouts/:token/submit——G6-4 整頁單表單提交（87 號實測：本尊
+    # Pay now＝一次送出全部欄位；欄位變更的 JS 自動儲存也走本路、帶 refresh=1）。
+    # 順序：contact → delivery（沿用 F3-3 重驗）→ payment（沿用 active 重驗）→
+    # refresh ⇒ 303 回頁；否則必填檢查 ⇒ 307 保 POST 接 /pay（psp）或 /complete（manual）。
+    def submit
+      checkout = find_checkout
+      return head :not_found if checkout.nil?
+
+      persist_contact!(checkout)
+
+      country = params[:country_code].to_s.upcase
+      if country.present?
+        unless sellable_countries.include?(country)
+          return render_page(checkout, error: "We can't ship to this region.", status: :unprocessable_content)
+        end
+
+        result = resolve_rates(checkout, country)
+        case result.status
+        when :not_sellable
+          return render_page(checkout, error: "We can't ship to this region.", status: :unprocessable_content)
+        when :undeliverable
+          return render_page(checkout, error: "Some items can't be shipped to this region.",
+                                       status: :unprocessable_content)
+        end
+        picks = result.shipments.empty? ? [] : (pick_options(checkout, result) || default_selection(checkout, result))
+        persist_delivery!(checkout, country, result, picks, address: address_params)
+      end
+
+      if params[:payment_method_id].present?
+        raw_id = params[:payment_method_id].to_s
+        snapshot =
+          if raw_id.start_with?("psp:")
+            psp_method_snapshot(raw_id)
+          else
+            method = ActsAsTenant.with_tenant(current_shop) do
+              ShopPaymentMethod.where(shop_id: current_shop.id).active.find_by(id: raw_id)
+            end
+            method&.snapshot
+          end
+        if snapshot.nil?
+          return render_page(checkout, error: "The payment methods have changed. Please choose again.",
+                                       status: :unprocessable_content)
+        end
+        ActsAsTenant.with_tenant(current_shop) { checkout.update!(payment_method_snapshot: snapshot) }
+      end
+      persist_billing!(checkout)
+
+      if params[:refresh].present? # JS 自動儲存：只落庫，不前進
+        return redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
+      end
+
+      checkout.reload
+      missing = missing_required_fields(checkout)
+      if missing.any?
+        return render_page(checkout, error: "Please fill in the required fields: #{missing.join(', ')}.",
+                                     status: :unprocessable_content)
+      end
+
+      # 307＝保 POST（Rails 官方 status 支援）：/pay 與 /complete 的既有重驗與冪等原樣生效。
+      target = checkout.payment_method_snapshot["kind"] == "psp" ? "pay" : "complete"
+      redirect_to "/checkouts/#{checkout.token}/#{target}", status: :temporary_redirect,
+                  allow_other_host: false
     end
 
     # POST /checkouts/:token/pay——PSP 線上付款起手（G6-1c：QR 原生流）。
@@ -120,13 +184,13 @@ module Storefront
       still_offered = snapshot["kind"] == "psp" &&
                       psp_payment_options.any? { |value, _| value == snapshot["id"] }
       unless still_offered
-        return render_page(checkout, error: "此付款方式不支援線上付款，請重新選擇。",
+        return render_page(checkout, error: "This payment method is no longer available. Please choose again.",
                                      status: :unprocessable_content)
       end
 
       provider_row = configured_provider(snapshot["provider"].to_s)
       if provider_row.nil?
-        return render_page(checkout, error: "付款服務暫時無法使用，請稍後再試。",
+        return render_page(checkout, error: "The payment service is temporarily unavailable. Please try again later.",
                                      status: :unprocessable_content)
       end
 
@@ -143,7 +207,7 @@ module Storefront
         ActsAsTenant.with_tenant(current_shop) { checkout.update!(psp_intent_id: intent.fetch("id")) }
         confirmed = intents.confirm_qr(intent.fetch("id"), method: snapshot["method_type"])
       rescue Psp::Airwallex::Client::Error => error
-        return render_page(checkout, error: "付款服務回應異常：#{ERB::Util.html_escape(error.message)}",
+        return render_page(checkout, error: "The payment service returned an error: #{ERB::Util.html_escape(error.message)}",
                                      status: :unprocessable_content)
       end
 
@@ -153,7 +217,7 @@ module Storefront
                            allow_other_host: false
       end
       if qrcode.blank?
-        return render_page(checkout, error: "未取得付款 QR code，請重試或換一種付款方式。",
+        return render_page(checkout, error: "We couldn't get a payment QR code. Please retry or choose another payment method.",
                                      status: :unprocessable_content)
       end
 
@@ -171,7 +235,7 @@ module Storefront
           merchant_order_id: checkout.token
         )
       rescue Psp::Airwallex::Client::Error => error
-        return render_page(checkout, error: "付款服務回應異常：#{ERB::Util.html_escape(error.message)}",
+        return render_page(checkout, error: "The payment service returned an error: #{ERB::Util.html_escape(error.message)}",
                                      status: :unprocessable_content)
       end
       ActsAsTenant.with_tenant(current_shop) { checkout.update!(psp_intent_id: intent.fetch("id")) }
@@ -243,7 +307,7 @@ module Storefront
 
       # 🔴 G6-1c：PSP 快照不得走 manual 成單——沒付錢就出單。線上付款一律 /pay。
       if checkout.payment_method_snapshot["kind"] == "psp"
-        return render_page(checkout, error: "此付款方式需完成線上付款。",
+        return render_page(checkout, error: "This payment method requires completing payment online.",
                                      status: :unprocessable_content)
       end
 
@@ -406,7 +470,8 @@ module Storefront
     end
 
     # 落庫＋重算（③後半）：shipping_lines 快照可回放（訂單成立／棄單挽回都要）。
-    def persist_delivery!(checkout, country, result, picks)
+    # address:（G6-4）＝整頁提交帶進來的收貨地址欄（87 §3），與國碼一起 merge。
+    def persist_delivery!(checkout, country, result, picks, address: {})
       shipping_lines = picks.map do |pick|
         shipment = split?(result) ? result.shipments[pick[:shipment_index]] : nil
         {
@@ -428,7 +493,7 @@ module Storefront
       )
       ActsAsTenant.with_tenant(current_shop) do
         checkout.update!(
-          shipping_address: checkout.shipping_address.merge("country_code" => country),
+          shipping_address: checkout.shipping_address.merge(address).merge("country_code" => country),
           shipping_lines: shipping_lines, shipping_cents: shipping_cents,
           subtotal_cents: calc.subtotal_cents, tax_cents: calc.tax_total_cents,
           total_cents: calc.total_cents, presentment_total_cents: calc.total_cents
@@ -441,30 +506,44 @@ module Storefront
       render html: page_html(checkout.reload, error:).html_safe, layout: false, status:
     end
 
-    # 非主題化結帳頁（85 §6；金額字串＝Money::Display 同一 cents 來源——鐵律 7）。
+    # 非主題化結帳頁（85 §6；G6-4 起 1:1 對位 87 號實測骨架：header 髮絲線＋
+    # 手機 accordion 摘要＋雙欄殼〔≥1006 分欄、左白右 #f5f5f5〕＋單表單主流程＋
+    # 側欄摘要）。文案＝英文字面對齊（2026-08-31 使用者裁定，登記 worklog）。
+    # 金額字串＝Money::Display 同一 cents 來源（鐵律 7）。
     def page_html(checkout, error: nil)
-      country = checkout.shipping_address["country_code"]
-      delivery = delivery_html(checkout, country, error)
-      total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
-      shipping = Money::Display.call(Money::Storage.from_cents(checkout.shipping_cents, checkout.currency))
+      shop_name = ERB::Util.html_escape(current_shop.name)
       <<~HTML
-        <!doctype html><html lang="zh-Hant"><head><title>結帳 — #{ERB::Util.html_escape(current_shop.name)}</title>
+        <!doctype html><html lang="en"><head><title>Checkout - #{shop_name}</title>
         #{checkout_head}</head>
         <body class="ck">
-        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
-        <main class="ck-layout">
-        <section class="ck-main">
-        <h1 class="ck-title">結帳</h1>
-        #{delivery}
+        <header class="ck-header"><div class="ck-hgrid"><div class="ck-hcell">
+        <a class="ck-brand" href="/">#{shop_name}</a>
+        <h1 class="ck-sr">#{shop_name} Checkout</h1>
+        </div></div></header>
+        <details class="ck-acc" data-summary-accordion>
+        <summary><span class="ck-acc-label">Order summary #{chevron_svg}</span>
+        <span class="ck-acc-total">#{money_str(checkout.total_cents, checkout.currency)}</span></summary>
+        <div class="ck-acc-panel">#{summary_html(checkout)}</div>
+        </details>
+        <div class="ck-shell">
+        <main class="ck-col-main"><div class="ck-colin ck-colin-main">
+        #{error ? "<p class=\"ck-banner\" data-delivery-error>#{ERB::Util.html_escape(error)}</p>" : ''}
+        <form method="post" action="/checkouts/#{checkout.token}/submit" data-ck-form>
+        #{contact_html(checkout)}
+        #{delivery_form_html(checkout)}
+        #{shipping_method_html(checkout)}
         #{payment_html(checkout)}
-        </section>
-        <aside class="ck-aside" aria-label="訂單摘要">
-        <h2>訂單摘要</h2>
-        <table class="ck-lines">#{line_rows(checkout)}</table>
-        <p data-checkout-shipping><span>運費</span><span>#{checkout.currency} #{shipping}</span></p>
-        <p data-checkout-total>#{checkout.currency} #{total}</p>
-        </aside>
-        </main></body></html>
+        #{billing_html(checkout)}
+        #{pay_button_html(checkout)}
+        </form>
+        <footer class="ck-footer">#{footer_links_html}</footer>
+        </div></main>
+        <div class="ck-col-aside"><div class="ck-colin ck-colin-aside">
+        <aside class="ck-aside"><h2 class="ck-sr">Order summary</h2>#{summary_html(checkout)}</aside>
+        </div></div>
+        </div>
+        #{autosave_js}
+        </body></html>
       HTML
     end
 
@@ -477,18 +556,17 @@ module Storefront
       HTML
     end
 
-    # 付款段（第三包；86 §4 實測形）：單一方法無 radio、多方法手風琴、
-    # 零方法＝無法接受付款（86 §4 官方字面的我方文案）；帳單地址 radio 恰兩值。
-    # 「完成訂單」鈕＝佔位 disabled（訂單成立走 F5 包——按鈕先立形，不接假流程）。
+    # 付款段（87 §1/§4 實測形）：h2＋「All transactions are secure and encrypted.」
+    # 副標＋方法盒（選中列藍環＋#f5f6ff、選中方法下掛面板：psp＝redirect 句、
+    # manual＝additional_details）；單一方法無可見 radio（87 實測——僅一組時本尊
+    # 不出 radio，值以 hidden input 傳遞）；零方法＝無法接受付款。
+    # F4.2 三層交集不變：PSP 選項＝enabled ∩ available ∩ 平台已實作（hide 非 disable）。
     def payment_html(checkout)
-      methods = ActsAsTenant.with_tenant(current_shop) do
-        ShopPaymentMethod.where(shop_id: current_shop.id).active.ordered.to_a
-      end
-      # G6-1c：PSP 選項＝enabled ∩ available ∩ 平台已實作（F4.2：不可用＝**不出現**）。
+      methods = manual_methods
       psp_options = psp_payment_options
       if methods.empty? && psp_options.empty?
-        return "<section data-payment><h2>付款</h2>" \
-               "<p data-payment-unavailable>此商店目前無法接受付款。</p></section>"
+        return "<section class=\"ck-sec\" data-payment><h2 class=\"ck-h2\">Payment</h2>" \
+               "<p class=\"ck-sub\" data-payment-unavailable>This store can't accept payments right now.</p></section>"
       end
 
       chosen_id = checkout.payment_method_snapshot["id"]
@@ -496,63 +574,77 @@ module Storefront
       first_value = psp_options.first&.first || methods.first&.id
       rows = psp_options.map do |value, label|
         selected = chosen_id ? chosen_id == value : value == first_value
-        radio = total_options > 1 ?
-                  "<input type=\"radio\" name=\"payment_method_id\" value=\"#{value}\"#{' checked' if selected}>" : ""
-        "<label data-psp-method>#{radio}#{ERB::Util.html_escape(label)}</label>"
+        panel = selected ?
+                  "<div class=\"ck-opt-panel\" data-psp-redirect>You'll be redirected to " \
+                  "#{ERB::Util.html_escape(label)} to complete your purchase.</div>" : ""
+        payment_option_row(value:, label:, selected:, radio: total_options > 1, panel:,
+                           extra_attr: " data-psp-method")
       end.join
       rows += methods.map do |m|
         selected = chosen_id ? chosen_id == m.id : (psp_options.empty? && m == methods.first)
-        details = selected && m.additional_details.present? ?
-                    "<p data-payment-details>#{ERB::Util.html_escape(m.additional_details)}</p>" : ""
-        radio = total_options > 1 ?
-                  "<input type=\"radio\" name=\"payment_method_id\" value=\"#{m.id}\"#{' checked' if selected}>" : ""
-        "<label>#{radio}#{ERB::Util.html_escape(m.name)}</label>#{details}"
+        panel = selected && m.additional_details.present? ?
+                  "<div class=\"ck-opt-panel\" data-payment-details>#{ERB::Util.html_escape(m.additional_details)}</div>" : ""
+        payment_option_row(value: m.id, label: m.name, selected:, radio: total_options > 1, panel:)
       end.join
-      billing_mode = checkout.billing_address["mode"] || "same_as_shipping"
       <<~HTML
-        <section data-payment><h2>付款</h2>
-        <p>所有交易均經安全加密。</p>
-        <form method="post" action="/checkouts/#{checkout.token}/payment">
+        <section class="ck-sec" data-payment><h2 class="ck-h2">Payment</h2>
+        <p class="ck-sub">All transactions are secure and encrypted.</p>
         #{total_options == 1 ? "<input type=\"hidden\" name=\"payment_method_id\" value=\"#{first_value}\">" : ''}
-        <fieldset data-payment-methods>#{rows}</fieldset>
-        <fieldset data-billing-address><legend>帳單地址</legend>
-        <label><input type="radio" name="billing_mode" value="same_as_shipping"#{' checked' if billing_mode == 'same_as_shipping'}>與收貨地址相同</label>
-        <label><input type="radio" name="billing_mode" value="different"#{' checked' if billing_mode == 'different'}>使用不同的帳單地址</label>
-        </fieldset>
-        <button type="submit">更新付款方式</button>
-        </form>
-        #{complete_button_html(checkout)}
+        <div class="ck-optbox" data-payment-methods>#{rows}</div>
         </section>
       HTML
     end
 
-    # 完成訂單鈕（G6-0(a) 點亮）：運送（需運送時）與付款方式都已選才可提交；
-    # 未就緒＝disabled＋原因（本尊同型：結帳鈕依前置灰化）。
-    def complete_button_html(checkout)
-      requires_shipping = checkout.line_items_snapshot.any? { |l| l.fetch("requires_shipping", true) }
-      missing =
-        if requires_shipping && checkout.shipping_lines.blank?
-          "請先選擇運送方式"
-        elsif checkout.payment_method_snapshot["method_type"].blank?
-          "請先選擇付款方式"
-        end
-      if missing
-        "<button type=\"button\" data-complete-order disabled>完成訂單</button>" \
-          "<p data-complete-note>#{missing}。</p>"
-      elsif checkout.payment_method_snapshot["kind"] == "psp"
-        # G6-1c：PSP 方式的完成鈕走 /pay（線上付款起手），文案帶方式名。
-        name = ERB::Util.html_escape(checkout.payment_method_snapshot["name"].to_s)
-        <<~HTML
-          <form method="post" action="/checkouts/#{checkout.token}/pay" data-pay-form>
-          <button type="submit" data-complete-order>以 #{name} 付款</button>
-          </form>
-        HTML
-      else
-        <<~HTML
-          <form method="post" action="/checkouts/#{checkout.token}/complete" data-complete-form>
-          <button type="submit" data-complete-order>完成訂單</button>
-          </form>
-        HTML
+    # 方法盒單列（87 §4：列 h50 pad14；選中＝.is-sel 藍環＋淺藍底；品牌 icon
+    # 資產待品牌包＝V-87-4，本輪純文字）。radio=false（單一方法）時不出圈。
+    def payment_option_row(value:, label:, selected:, radio:, panel:, extra_attr: "")
+      input = radio ?
+                "<input class=\"ck-radio\" type=\"radio\" name=\"payment_method_id\" " \
+                "value=\"#{value}\"#{' checked' if selected} data-ck-refresh>" : ""
+      "<div class=\"ck-opt#{' is-sel' if selected}\"#{extra_attr}>" \
+        "<label class=\"ck-opt-row\">#{input}<span class=\"ck-opt-name\">" \
+        "#{ERB::Util.html_escape(label)}</span></label>#{panel}</div>"
+    end
+
+    # 帳單段（87 §1/§4）：h3 16/600＋兩列組；different ⇒ 展開帳單地址表單
+    # （灰面板；欄位組同 Delivery，落 billing_address json）。
+    # 零付款方式 ⇒ 整段不渲染（沒有可付的東西就沒有帳單地址可談——與 pay 鈕同 gate）。
+    def billing_html(checkout)
+      return "" if manual_methods.empty? && psp_payment_options.empty?
+
+      billing = checkout.billing_address
+      mode = billing["mode"] || "same_as_shipping"
+      different = mode == "different"
+      form = different ? "<div class=\"ck-opt-panel ck-billing-form\">#{address_fields_html(billing, prefix: 'billing_')}</div>" : ""
+      <<~HTML
+        <section class="ck-sec" data-billing-address><h3 class="ck-h3">Billing address</h3>
+        <div class="ck-optbox">
+        <div class="ck-opt#{different ? '' : ' is-sel'}"><label class="ck-opt-row">
+        <input class="ck-radio" type="radio" name="billing_mode" value="same_as_shipping"#{different ? '' : ' checked'} data-ck-refresh>
+        <span class="ck-opt-name">Same as shipping address</span></label></div>
+        <div class="ck-opt#{different ? ' is-sel' : ''}"><label class="ck-opt-row">
+        <input class="ck-radio" type="radio" name="billing_mode" value="different"#{different ? ' checked' : ''} data-ck-refresh>
+        <span class="ck-opt-name">Use a different billing address</span></label>#{form}</div>
+        </div></section>
+      HTML
+    end
+
+    # 主提交鈕（87 §4：全寬 h50 藍 #005bd1 r12）。psp＝Pay now／manual＝Complete order
+    # （本尊字面：直連付「Pay now」、線下方式「Complete order」）；零方法不出鈕。
+    # 落庫與前進都在 /submit——missing 檢查移到 server（V-87-2：本尊行內錯誤態未測）。
+    def pay_button_html(checkout)
+      return "" if manual_methods.empty? && psp_payment_options.empty?
+
+      chosen = checkout.payment_method_snapshot
+      kind = chosen["kind"] || (psp_payment_options.any? ? "psp" : "manual")
+      text = kind == "psp" ? "Pay now" : "Complete order"
+      "<h2 class=\"ck-sr\">Finalize order</h2>" \
+        "<button type=\"submit\" class=\"ck-paybtn\" data-complete-order>#{text}</button>"
+    end
+
+    def manual_methods
+      @manual_methods ||= ActsAsTenant.with_tenant(current_shop) do
+        ShopPaymentMethod.where(shop_id: current_shop.id).active.ordered.to_a
       end
     end
 
@@ -561,14 +653,18 @@ module Storefront
     # checkout_supported_methods；provider 未存憑證（無指紋）＝未配置 ⇒ 空集合。
     # ⚠️ status 欄不參與（activation 狀態機隨 G6-3——本階段以「憑證已配置」為門）。
     def psp_payment_options
-      row = configured_provider("airwallex")
-      return [] if row.nil?
-
-      supported = supported_psp_codes
-      labels = ShopPaymentProvider.method_dictionary("airwallex").to_h { |m| [ m[:code].to_s, m[:label].to_s ] }
-      (row.enabled_methods & row.available_methods & supported).filter_map do |code|
-        label = labels[code]
-        label && [ "psp:airwallex:#{code}", label ]
+      @psp_payment_options ||= begin
+        row = configured_provider("airwallex")
+        if row.nil?
+          []
+        else
+          supported = supported_psp_codes
+          labels = ShopPaymentProvider.method_dictionary("airwallex").to_h { |m| [ m[:code].to_s, m[:label].to_s ] }
+          (row.enabled_methods & row.available_methods & supported).filter_map do |code|
+            label = labels[code]
+            label && [ "psp:airwallex:#{code}", label ]
+          end
+        end
       end
     end
 
@@ -759,75 +855,320 @@ module Storefront
       HTML
     end
 
-    def line_rows(checkout)
-      checkout.line_items_snapshot.map do |line|
-        amount = Money::Display.call(
-          Money::Storage.from_cents(line["unit_price_cents"] * line["quantity"], checkout.currency)
-        )
-        "<tr><td>#{ERB::Util.html_escape(line['title'])} × #{line['quantity']}</td>" \
-          "<td>#{checkout.currency} #{amount}</td></tr>"
+    # 側欄摘要（87 §4 側欄量測；手機 accordion 面板共用同一份）。
+    # 幣別符號＝display 層字典（鐵律 10：符號歸 locale——markets 幣別包接手前的
+    # 店幣最小集）；code 只在 Total 前綴出現（實測「HKD $188.00」形）。
+    def summary_html(checkout)
+      items = checkout.line_items_snapshot.map do |line|
+        amount = money_str(line["unit_price_cents"] * line["quantity"], checkout.currency)
+        thumb = line["image_url"].present? ?
+                  "<img src=\"#{ERB::Util.html_escape(line['image_url'])}\" alt=\"\" loading=\"lazy\">" : ""
+        variant = line["variant_title"].present? && line["variant_title"] != "Default Title" ?
+                    "<span class=\"ck-line-variant\">#{ERB::Util.html_escape(line['variant_title'])}</span>" : ""
+        <<~ROW
+          <div class="ck-line">
+          <div class="ck-thumb">#{thumb}<span class="ck-qty" aria-label="Quantity">#{line['quantity']}</span></div>
+          <div class="ck-line-title">#{ERB::Util.html_escape(line['title'])}#{variant}</div>
+          <div class="ck-line-price">#{amount}</div>
+          </div>
+        ROW
       end.join
-    end
-
-    # 運送段：國家表單＋（已選國時）選項清單。
-    def delivery_html(checkout, country, error)
-      options_html =
-        if country.present?
-          result = resolve_rates(checkout, country)
-          rates_html(checkout, result)
+      shipping_value =
+        if checkout.shipping_address["country_code"].blank? || checkout.shipping_lines.blank?
+          "<span class=\"ck-cost-muted\" data-checkout-shipping>Enter shipping address</span>"
         else
-          # 85 §5.1 本尊逐字語義的我方文案（地址未齊 ⇒ 不出費率）
-          "<p data-shipping-hint>請先選擇配送地區以查看可用的運送方式。</p>"
+          "<span data-checkout-shipping>#{money_str(checkout.shipping_cents, checkout.currency)}</span>"
         end
       <<~HTML
-        <section data-delivery>
-        <h2>配送</h2>
-        #{error ? "<p data-delivery-error>#{ERB::Util.html_escape(error)}</p>" : ''}
-        <form method="post" action="/checkouts/#{checkout.token}/delivery">
-        <label>配送地區
-        <select name="country_code">#{country_options(country)}</select></label>
-        #{options_html}
-        <button type="submit">更新運送方式</button>
-        </form></section>
+        <section class="ck-cart" aria-label="Shopping cart"><h3 class="ck-sr">Shopping cart</h3>#{items}</section>
+        <section class="ck-costs" aria-label="Cost summary"><h3 class="ck-sr">Cost summary</h3>
+        <div class="ck-cost-row"><span>Subtotal</span><span>#{money_str(checkout.subtotal_cents, checkout.currency)}</span></div>
+        <div class="ck-cost-row"><span>Shipping</span>#{shipping_value}</div>
+        <div class="ck-total-row"><span class="ck-total-label">Total</span>
+        <span class="ck-total-val" data-checkout-total><span class="ck-total-ccy">#{checkout.currency}</span> #{money_str(checkout.total_cents, checkout.currency)}</span></div>
+        </section>
       HTML
     end
 
-    def country_options(selected)
-      sellable_countries.map do |code|
-        %(<option value="#{code}"#{' selected' if code == selected}>#{code}</option>)
-      end.join
+    # 幣別符號最小集（display 層；符號未收錄回落「CODE 」前綴——鐵律 10 的
+    # locale 全表隨 markets 幣別包）。
+    CURRENCY_SYMBOLS = {
+      "HKD" => "$", "USD" => "$", "AUD" => "$", "CAD" => "$", "SGD" => "$", "TWD" => "$",
+      "EUR" => "€", "GBP" => "£", "JPY" => "¥", "CNY" => "¥", "KRW" => "₩"
+    }.freeze
+
+    def money_str(cents, currency)
+      "#{CURRENCY_SYMBOLS.fetch(currency) { "#{currency} " }}" \
+        "#{Money::Display.call(Money::Storage.from_cents(cents, currency))}"
     end
 
-    def rates_html(checkout, result)
-      return "<p data-shipping-unavailable>部分商品目前無法配送到此地區。</p>" unless result.ok?
-      return "" if result.shipments.empty? # 全數位商品：無運送段
+    # US 州值域（87 §3 實測 63 項：空白占位＋62 值；value=二碼、text=全名）。
+    US_ZONES = [
+      %w[AL Alabama], %w[AK Alaska], [ "AS", "American Samoa" ], %w[AZ Arizona],
+      %w[AR Arkansas], %w[CA California], %w[CO Colorado], %w[CT Connecticut],
+      %w[DE Delaware], %w[FM Micronesia], %w[FL Florida], %w[GA Georgia], %w[GU Guam],
+      %w[HI Hawaii], %w[ID Idaho], %w[IL Illinois], %w[IN Indiana], %w[IA Iowa],
+      %w[KS Kansas], %w[KY Kentucky], %w[LA Louisiana], %w[ME Maine],
+      [ "MH", "Marshall Islands" ], %w[MD Maryland], %w[MA Massachusetts], %w[MI Michigan],
+      %w[MN Minnesota], %w[MS Mississippi], %w[MO Missouri], %w[MT Montana],
+      %w[NE Nebraska], %w[NV Nevada], [ "NH", "New Hampshire" ], [ "NJ", "New Jersey" ],
+      [ "NM", "New Mexico" ], [ "NY", "New York" ], [ "NC", "North Carolina" ],
+      [ "ND", "North Dakota" ], [ "MP", "Northern Mariana Islands" ], %w[OH Ohio],
+      %w[OK Oklahoma], %w[OR Oregon], %w[PW Palau], %w[PA Pennsylvania],
+      [ "PR", "Puerto Rico" ], [ "RI", "Rhode Island" ], [ "SC", "South Carolina" ],
+      [ "SD", "South Dakota" ], %w[TN Tennessee], %w[TX Texas], %w[UT Utah],
+      %w[VT Vermont], %w[VA Virginia], %w[WA Washington], [ "DC", "Washington DC" ],
+      [ "WV", "West Virginia" ], %w[WI Wisconsin], %w[WY Wyoming],
+      [ "VI", "U.S. Virgin Islands" ], [ "AA", "Armed Forces Americas" ],
+      [ "AE", "Armed Forces Europe" ], [ "AP", "Armed Forces Pacific" ]
+    ].freeze
+
+    # 浮動 label 文字欄（87 §4：空值＝placeholder 形、填值＝12px 浮標；CSS 靠
+    # :placeholder-shown 切換——placeholder 恆設 label 字面）。
+    def text_field_html(name:, label:, value:, type: "text", autocomplete: nil, required: false, icon: nil)
+      esc_label = ERB::Util.html_escape(label)
+      "<div class=\"ck-field\">" \
+        "<input class=\"ck-input\" type=\"#{type}\" name=\"#{name}\" value=\"#{ERB::Util.html_escape(value.to_s)}\"" \
+        " placeholder=\"#{esc_label}\" aria-label=\"#{esc_label}\"" \
+        "#{autocomplete ? " autocomplete=\"#{autocomplete}\"" : ''}#{' required' if required}>" \
+        "<span class=\"ck-flabel\" aria-hidden=\"true\">#{esc_label}</span>#{icon}</div>"
+    end
+
+    def country_select_html(selected, prefix: "")
+      options = sellable_countries.map do |code|
+        label = ERB::Util.html_escape(Checkouts::CountryNames.label(code))
+        %(<option value="#{code}"#{' selected' if code == selected}>#{label}</option>)
+      end.join
+      "<div class=\"ck-field ck-field--select\">" \
+        "<select class=\"ck-select\" name=\"#{prefix.empty? ? 'country_code' : "#{prefix}country_code"}\"" \
+        " autocomplete=\"country\" required data-ck-refresh>#{options}</select>" \
+        "<span class=\"ck-flabel is-float\" aria-hidden=\"true\">Country/Region</span>#{chevron_svg}</div>"
+    end
+
+    def zone_select_html(selected, prefix: "")
+      options = [ %(<option value="">&nbsp;</option>) ] + US_ZONES.map do |code, label|
+        %(<option value="#{code}"#{' selected' if code == selected}>#{label}</option>)
+      end
+      "<div class=\"ck-field ck-field--select\">" \
+        "<select class=\"ck-select\" name=\"#{prefix}zone\" autocomplete=\"address-level1\" required>#{options.join}</select>" \
+        "<span class=\"ck-flabel is-float\" aria-hidden=\"true\">State</span>#{chevron_svg}</div>"
+    end
+
+    # 行內 svg 三枚（自繪；87 §4 的 ? 18×18／放大鏡／chevron 10×10 對位）。
+    def info_icon_svg(label)
+      "<button type=\"button\" class=\"ck-info\" aria-label=\"#{ERB::Util.html_escape(label)}\">" \
+        "<svg viewBox=\"0 0 18 18\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\">" \
+        "<circle cx=\"9\" cy=\"9\" r=\"7.5\" stroke-width=\"1.2\"/>" \
+        "<path d=\"M7.2 6.8a1.8 1.8 0 1 1 2.7 1.6c-.6.4-.9.7-.9 1.4v.4\" stroke-width=\"1.2\" stroke-linecap=\"round\"/>" \
+        "<circle cx=\"9\" cy=\"12.8\" r=\".9\" fill=\"currentColor\" stroke=\"none\"/></svg></button>"
+    end
+
+    def search_icon_svg
+      "<span class=\"ck-info\" aria-hidden=\"true\">" \
+        "<svg viewBox=\"0 0 18 18\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\">" \
+        "<circle cx=\"8\" cy=\"8\" r=\"5.5\" stroke-width=\"1.4\"/>" \
+        "<path d=\"M12.2 12.2 16 16\" stroke-width=\"1.4\" stroke-linecap=\"round\"/></svg></span>"
+    end
+
+    def chevron_svg
+      "<svg class=\"ck-chevron\" viewBox=\"0 0 10 10\" width=\"10\" height=\"10\" fill=\"none\" " \
+        "stroke=\"currentColor\" aria-hidden=\"true\"><path d=\"M1.5 3.5 5 7l3.5-3.5\" " \
+        "stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+    end
+
+    def footer_links_html
+      page = ActsAsTenant.with_tenant(current_shop) do
+        defined?(Page) ? Page.find_by(shop_id: current_shop.id, handle: "privacy-policy") : nil
+      end
+      page ? "<a class=\"ck-link\" href=\"/pages/privacy-policy\">Privacy policy</a>" : ""
+    end
+
+    # 欄位變更自動儲存（87 §7 對位：本尊欄位變更即協商；我方＝select/radio 變更
+    # 就以 refresh=1 送同一個表單重渲染。文字欄不自動送——整頁 POST 會打斷輸入）。
+    def autosave_js
+      <<~HTML
+        <script>
+        (function () {
+          var form = document.querySelector("[data-ck-form]");
+          if (!form) return;
+          form.addEventListener("change", function (e) {
+            if (!e.target.matches("[data-ck-refresh]")) return;
+            var flag = document.createElement("input");
+            flag.type = "hidden"; flag.name = "refresh"; flag.value = "1";
+            form.appendChild(flag);
+            form.submit();
+          });
+        })();
+        </script>
+      HTML
+    end
+
+    # /submit 的落庫三兄弟。
+    def persist_contact!(checkout)
+      updates = {}
+      updates[:email] = params[:email].to_s.strip.presence if params.key?(:email)
+      updates[:buyer_accepts_marketing] = params[:buyer_accepts_marketing].present? if params.key?(:email)
+      return if updates.empty?
+
+      ActsAsTenant.with_tenant(current_shop) { checkout.update!(**updates) }
+    end
+
+    ADDRESS_KEYS = %w[first_name last_name address1 address2 city zone postal_code phone].freeze
+
+    def address_params(prefix = "")
+      ADDRESS_KEYS.index_with { |k| params["#{prefix}#{k}"].to_s.strip }
+                  .select { |k, _| params.key?("#{prefix}#{k}") }
+    end
+
+    def persist_billing!(checkout)
+      mode = params[:billing_mode].to_s
+      return unless %w[same_as_shipping different].include?(mode)
+
+      merged = checkout.billing_address.merge("mode" => mode)
+      if mode == "different"
+        merged = merged.merge(address_params("billing_"))
+        country = params[:billing_country_code].to_s.upcase
+        merged = merged.merge("country_code" => country) if country.present?
+      end
+      ActsAsTenant.with_tenant(current_shop) { checkout.update!(billing_address: merged) }
+    end
+
+    # 前進閘（87 §3 required 欄；V-87-2：本尊行內錯誤態未測 ⇒ 本輪 banner 形）。
+    def missing_required_fields(checkout)
+      addr = checkout.shipping_address
+      requires_shipping = checkout.line_items_snapshot.any? { |l| l.fetch("requires_shipping", true) }
+      missing = []
+      missing << "Email" if checkout.email.blank?
+      if requires_shipping
+        missing << "Country/Region" if addr["country_code"].blank?
+        missing << "First name" if addr["first_name"].blank?
+        missing << "Last name" if addr["last_name"].blank?
+        missing << "Address" if addr["address1"].blank?
+        missing << "City" if addr["city"].blank?
+        if addr["country_code"].to_s.upcase == "US"
+          missing << "State" if addr["zone"].blank?
+          missing << "ZIP code" if addr["postal_code"].blank?
+        end
+        missing << "Shipping method" if checkout.shipping_lines.blank?
+      end
+      missing << "Payment" if checkout.payment_method_snapshot["method_type"].blank?
+      missing
+    end
+
+    # Contact 段（87 §1）：h2＋右側 Sign in 同列、email 浮標欄（? icon）、行銷勾選。
+    # ⚠ Sign in 連結對位視覺；買家帳戶線未建（點擊 404）——登記 worklog Pending。
+    def contact_html(checkout)
+      <<~HTML
+        <section class="ck-sec" data-contact>
+        <div class="ck-h2row"><h2 class="ck-h2">Contact</h2><a class="ck-link" href="/account/login">Sign in</a></div>
+        #{text_field_html(name: 'email', label: 'Email', value: checkout.email, type: 'email',
+                          autocomplete: 'shipping email', required: true, icon: info_icon_svg('More information about how your contact info is used'))}
+        <label class="ck-check"><input class="ck-checkbox" type="checkbox" name="buyer_accepts_marketing" value="1"#{' checked' if checkout.buyer_accepts_marketing}>
+        <span>Email me with news and offers</span></label>
+        </section>
+      HTML
+    end
+
+    # Delivery 段（87 §1/§3）：國家 select（值域＝sellable_countries、顯示名＝
+    # CountryNames）＋地址全欄位（US 格式有實測：State+ZIP；其他國家 V-87-1，
+    # 回落 City+Postal code 通用形）。
+    def delivery_form_html(checkout)
+      addr = checkout.shipping_address
+      <<~HTML
+        <section class="ck-sec" data-delivery><h2 class="ck-h2">Delivery</h2>
+        <div class="ck-fields">
+        #{country_select_html(addr['country_code'])}
+        #{address_fields_html(addr)}
+        </div>
+        <label class="ck-check"><input class="ck-checkbox" type="checkbox" name="save_shipping_information" value="1">
+        <span>Save this information for next time</span></label>
+        <noscript><button type="submit" name="refresh" value="1" class="ck-refreshbtn">Update</button></noscript>
+        </section>
+      HTML
+    end
+
+    # 地址欄位組（Delivery 與 Billing different 共用；prefix 區分參數命名空間）。
+    def address_fields_html(addr, prefix: "")
+      zone_row =
+        if addr["country_code"].to_s.upcase == "US"
+          "<div class=\"ck-row3\">" \
+            "#{text_field_html(name: "#{prefix}city", label: 'City', value: addr['city'], autocomplete: 'address-level2', required: true)}" \
+            "#{zone_select_html(addr['zone'], prefix:)}" \
+            "#{text_field_html(name: "#{prefix}postal_code", label: 'ZIP code', value: addr['postal_code'], autocomplete: 'postal-code', required: true)}</div>"
+        else
+          "<div class=\"ck-row2\">" \
+            "#{text_field_html(name: "#{prefix}city", label: 'City', value: addr['city'], autocomplete: 'address-level2', required: true)}" \
+            "#{text_field_html(name: "#{prefix}postal_code", label: 'Postal code', value: addr['postal_code'], autocomplete: 'postal-code')}</div>"
+        end
+      country = prefix.empty? ? "" : country_select_html(addr["country_code"], prefix:)
+      <<~HTML
+        #{country}
+        <div class="ck-row2">
+        #{text_field_html(name: "#{prefix}first_name", label: 'First name', value: addr['first_name'], autocomplete: 'given-name', required: true)}
+        #{text_field_html(name: "#{prefix}last_name", label: 'Last name', value: addr['last_name'], autocomplete: 'family-name', required: true)}
+        </div>
+        #{text_field_html(name: "#{prefix}address1", label: 'Address', value: addr['address1'], autocomplete: 'address-line1', required: true, icon: search_icon_svg)}
+        #{text_field_html(name: "#{prefix}address2", label: 'Apartment, suite, etc. (optional)', value: addr['address2'], autocomplete: 'address-line2')}
+        #{zone_row}
+        #{text_field_html(name: "#{prefix}phone", label: 'Phone (optional)', value: addr['phone'], type: 'tel', autocomplete: 'tel-national', icon: info_icon_svg('More information about Phone'))}
+      HTML
+    end
+
+    # Shipping method 段（87 §1/§4）：未選國＝灰盒占位（實測字面）；已選國＝
+    # 選項盒（選中列藍環；價格靠右；split 分組）。radio 值仍＝"name|price"（F3-3）。
+    def shipping_method_html(checkout)
+      country = checkout.shipping_address["country_code"]
+      body =
+        if country.blank?
+          "<div class=\"ck-placeholder\" data-shipping-hint>" \
+            "Enter your shipping address to view available shipping methods.</div>"
+        else
+          result = resolve_rates(checkout, country)
+          rates_box_html(checkout, result)
+        end
+      return "" if body.empty?
+
+      "<section class=\"ck-sec\" data-shipping-method><h2 class=\"ck-h2\">Shipping method</h2>#{body}</section>"
+    end
+
+    def rates_box_html(checkout, result)
+      unless result.ok?
+        return "<div class=\"ck-placeholder\" data-shipping-unavailable>" \
+               "Some items can't be shipped to this region.</div>"
+      end
+      return "" if result.shipments.empty? # 全數位商品：本尊無 Shipping method 區（85 §5.1）
 
       chosen = checkout.shipping_lines.to_h { |l| [ l["shipment_index"], l["name"] ] }
       if split?(result)
-        heading = "<p data-split-note>你的訂單將分 #{result.shipments.size} 件出貨，" \
-                  "每件可分別選擇運送方式。</p>"
-        heading + result.shipments.each_with_index.map do |shipment, index|
+        note = "<p class=\"ck-sub\" data-split-note>Your order ships in #{result.shipments.size} " \
+               "packages. Choose a shipping method for each.</p>"
+        note + result.shipments.each_with_index.map do |shipment, index|
           rows = shipment.options.map do |option|
-            radio(name: "selections[#{index}]", option:, checkout:,
-                  checked: chosen[index] ? chosen[index] == option.name : option == shipment.options.first)
+            rate_row(name: "selections[#{index}]", option:, checkout:,
+                     checked: chosen[index] ? chosen[index] == option.name : option == shipment.options.first)
           end.join
-          "<fieldset data-shipment=\"#{index}\"><legend>第 #{index + 1} 件（#{shipment.line_keys.size} 項商品）</legend>#{rows}</fieldset>"
+          "<div class=\"ck-optbox\" data-shipment=\"#{index}\"><div class=\"ck-opt-grouphead\">" \
+            "Package #{index + 1} (#{shipment.line_keys.size} items)</div>#{rows}</div>"
         end.join
       else
         rows = result.merged_options.map do |option|
-          radio(name: "option", option:, checkout:,
-                checked: chosen[0] ? chosen[0] == option.name : option == result.merged_options.first)
+          rate_row(name: "option", option:, checkout:,
+                   checked: chosen[0] ? chosen[0] == option.name : option == result.merged_options.first)
         end.join
-        "<fieldset data-shipping-options>#{rows}</fieldset>"
+        "<div class=\"ck-optbox\" data-shipping-options>#{rows}</div>"
       end
     end
 
-    def radio(name:, option:, checkout:, checked:)
-      price = option.price_cents.zero? ? "免運" :
-                "#{checkout.currency} #{Money::Display.call(Money::Storage.from_cents(option.price_cents, checkout.currency))}"
+    # 運送選項單列：radio＋名稱（＋transit 小字）左、價格右（Free＝免運對位字面）。
+    def rate_row(name:, option:, checkout:, checked:)
+      price = option.price_cents.zero? ? "Free" : money_str(option.price_cents, checkout.currency)
       value = ERB::Util.html_escape("#{option.name}|#{option.price_cents}")
-      "<label><input type=\"radio\" name=\"#{name}\" value=\"#{value}\"#{' checked' if checked}>" \
-        "#{ERB::Util.html_escape(option.name)}（#{price}）#{transit_label(option)}</label>"
+      transit = transit_label(option)
+      sub = transit.empty? ? "" : "<span class=\"ck-opt-sub\">#{transit}</span>"
+      "<div class=\"ck-opt#{' is-sel' if checked}\"><label class=\"ck-opt-row\">" \
+        "<input class=\"ck-radio\" type=\"radio\" name=\"#{name}\" value=\"#{value}\"#{' checked' if checked} data-ck-refresh>" \
+        "<span class=\"ck-opt-name\">#{ERB::Util.html_escape(option.name)}#{sub}</span>" \
+        "<span class=\"ck-opt-price\">#{price}</span></label></div>"
     end
 
     # transit 秒制區間 → 「N–M 個工作天」；None ⇒ 不顯示（85 §3）。

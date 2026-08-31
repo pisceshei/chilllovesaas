@@ -55,9 +55,9 @@ RSpec.describe "Storefront checkout delivery（第二包）", type: :request do
   it "D1 未選國：頁面出國家下拉（值域＝sellable_countries）＋提示，無費率 radio" do
     checkout = checkout!([ variant ])
     get "/checkouts/#{checkout.token}"
-    expect(response.body).to include('<select name="country_code">')
+    expect(response.body).to include('name="country_code"')
     expect(response.body).to include('<option value="HK">')
-    expect(response.body).to include("請先選擇配送地區")
+    expect(response.body).to include("Enter your shipping address to view available shipping methods.")
     expect(response.body).not_to include('type="radio"')
   end
 
@@ -90,7 +90,7 @@ RSpec.describe "Storefront checkout delivery（第二包）", type: :request do
     checkout = checkout!([ variant, probe_variant ])
     post "/checkouts/#{checkout.token}/delivery", params: { country_code: "HK" }
     get "/checkouts/#{checkout.token}"
-    expect(response.body).to include("將分 2 件出貨")
+    expect(response.body).to include("ships in 2 packages")
     expect(response.body).to include('data-shipment="0"').and include('data-shipment="1"')
 
     # 第二件改選快遞（第一件維持 標準）⇒ 2000 + 5000
@@ -130,7 +130,7 @@ RSpec.describe "Storefront checkout delivery（第二包）", type: :request do
     post "/checkouts/#{checkout.token}/delivery",
          params: { country_code: "HK", option: "標準|2000" } # 客戶端拿著舊價提交
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("運送選項已變更")
+    expect(response.body).to include("The shipping options have changed")
     checkout = reload!(checkout)
     expect(checkout.shipping_cents).to eq(3_000) # 🔴 落當前價，不是提交價
     expect(checkout.total_cents).to eq(14_800 + 3_000)
@@ -140,7 +140,7 @@ RSpec.describe "Storefront checkout delivery（第二包）", type: :request do
     checkout = checkout!([ variant ])
     post "/checkouts/#{checkout.token}/delivery", params: { country_code: "US" }
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("此地區目前無法配送")
+    expect(response.body).to include("We can&#39;t ship to this region")
     expect(reload!(checkout).shipping_cents).to eq(0)
   end
 
@@ -148,7 +148,7 @@ RSpec.describe "Storefront checkout delivery（第二包）", type: :request do
     checkout = checkout!([ variant, probe_variant ]) # custom_profile 無 zone
     post "/checkouts/#{checkout.token}/delivery", params: { country_code: "HK" }
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("部分商品目前無法配送")
+    expect(response.body).to include("Some items can&#39;t be shipped to this region")
     expect(reload!(checkout).shipping_lines).to eq([])
   end
 
