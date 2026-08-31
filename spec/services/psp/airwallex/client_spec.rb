@@ -63,6 +63,16 @@ RSpec.describe Psp::Airwallex::Client do
       .to raise_error(TypeError, /Float 即 bug/)
   end
 
+  it "🔴 JSON number 以 BigDecimal 落地（X8c：預設解析吐 Float＝鐵律 3 違規）" do
+    transport = transport_recording([], [
+      response_stub(201, { token: "t", expires_at: 25.minutes.from_now.iso8601 }),
+      response_stub(200, { amount: 16.66, currency: "HKD" })
+    ])
+    data = described_class.new(provider, transport:).get_json("/x")
+    expect(data["amount"]).to be_a(BigDecimal)
+    expect(data["amount"]).to eq(BigDecimal("16.66"))
+  end
+
   it "401 ⇒ Unauthorized（訊息帶 Airwallex code、不帶祕密）" do
     transport = transport_recording([], [ response_stub(401, { code: "credentials_invalid" }) ])
     client = described_class.new(provider, transport:)

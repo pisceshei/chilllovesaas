@@ -30,6 +30,7 @@ gem "strscan", ">= 3.1.1"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
+gem "rqrcode" # G6-1c：AlipayHK/FPS 的 QR 付款碼伺服端出 SVG（純 Ruby、MIT；免前端 JS 庫）
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"

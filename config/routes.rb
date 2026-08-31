@@ -88,6 +88,12 @@ Rails.application.routes.draw do
     post "checkouts/:token/payment" => "storefront/checkouts#payment", format: false,
          as: :storefront_checkout_payment
     # G6-0(a) 訂單成立（15-F5/F6）：POST 建單＋GET thank-you。
+    # G6-1c：PSP 線上付款（QR 原生流）。/pay=POST（吃 storefront 寫入 throttle）；
+    # /pay/status=GET（輪詢，刻意不落 POST throttle bucket）。
+    post "checkouts/:token/pay" => "storefront/checkouts#pay", format: false,
+         as: :storefront_checkout_pay
+    get "checkouts/:token/pay/status" => "storefront/checkouts#pay_status", format: false,
+        as: :storefront_checkout_pay_status
     post "checkouts/:token/complete" => "storefront/checkouts#complete", format: false,
          as: :storefront_checkout_complete
     get "checkouts/:token/complete" => "storefront/checkouts#thank_you", format: false,

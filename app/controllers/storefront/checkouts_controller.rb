@@ -80,11 +80,17 @@ module Storefront
       checkout = find_checkout
       return head :not_found if checkout.nil?
 
-      method = ActsAsTenant.with_tenant(current_shop) do
-        ShopPaymentMethod.where(shop_id: current_shop.id).active
-                         .find_by(id: params[:payment_method_id].to_s)
-      end
-      if method.nil?
+      raw_id = params[:payment_method_id].to_s
+      snapshot =
+        if raw_id.start_with?("psp:")
+          psp_method_snapshot(raw_id) # G6-1c：server 重驗三層交集（F4.2）
+        else
+          method = ActsAsTenant.with_tenant(current_shop) do
+            ShopPaymentMethod.where(shop_id: current_shop.id).active.find_by(id: raw_id)
+          end
+          method&.snapshot
+        end
+      if snapshot.nil?
         return render_page(checkout, error: "付款方式已變更，請重新選擇。",
                                      status: :unprocessable_content)
       end
@@ -93,11 +99,110 @@ module Storefront
       billing_mode = "same_as_shipping" unless %w[same_as_shipping different].include?(billing_mode)
       ActsAsTenant.with_tenant(current_shop) do
         checkout.update!(
-          payment_method_snapshot: method.snapshot,
+          payment_method_snapshot: snapshot,
           billing_address: checkout.billing_address.merge("mode" => billing_mode)
         )
       end
       redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
+    end
+
+    # POST /checkouts/:token/pay——PSP 線上付款起手（G6-1c：QR 原生流）。
+    # 建 intent（request_id="pi-<token>-<total_cents>"＝Airwallex 側冪等，15-F4-1；
+    # 同 checkout 重按恆同 intent）→ confirm(flow: qrcode) → 渲染 QR＋輪詢頁。
+    # 🔴 外部 IO 全在 DB 交易外（鐵律 5）；金額走 Money 契約唯一出口。
+    def pay
+      checkout = find_checkout
+      return head :not_found if checkout.nil?
+
+      snapshot = checkout.payment_method_snapshot
+      # 🔴 server 重驗＝與渲染同一個三層交集（enabled ∩ available ∩ 平台已實作）：
+      # 快照殘留（商家事後關閉該方式）不得起付（F3-3 同紀律；Q7 實紅過）。
+      still_offered = snapshot["kind"] == "psp" &&
+                      psp_payment_options.any? { |value, _| value == snapshot["id"] }
+      unless still_offered
+        return render_page(checkout, error: "此付款方式不支援線上付款，請重新選擇。",
+                                     status: :unprocessable_content)
+      end
+
+      provider_row = configured_provider(snapshot["provider"].to_s)
+      if provider_row.nil?
+        return render_page(checkout, error: "付款服務暫時無法使用，請稍後再試。",
+                                     status: :unprocessable_content)
+      end
+
+      intents = Psp::Airwallex::PaymentIntents.new(provider_row)
+      amount = Money::Storage.from_cents(checkout.total_cents, checkout.currency)
+      begin
+        intent = intents.create(
+          amount:, request_id: "pi-#{checkout.token}-#{checkout.total_cents}",
+          merchant_order_id: checkout.token
+        )
+        ActsAsTenant.with_tenant(current_shop) { checkout.update!(psp_intent_id: intent.fetch("id")) }
+        confirmed = intents.confirm_qr(intent.fetch("id"), method: snapshot["method_type"])
+      rescue Psp::Airwallex::Client::Error => error
+        return render_page(checkout, error: "付款服務回應異常：#{ERB::Util.html_escape(error.message)}",
+                                     status: :unprocessable_content)
+      end
+
+      qrcode = confirmed.dig("next_action", "qrcode").to_s
+      if confirmed["status"] == "SUCCEEDED"
+        return redirect_to "/checkouts/#{checkout.token}/pay/status?html=1", status: :see_other,
+                           allow_other_host: false
+      end
+      if qrcode.blank?
+        return render_page(checkout, error: "未取得付款 QR code，請重試或換一種付款方式。",
+                                     status: :unprocessable_content)
+      end
+
+      render html: qr_page_html(checkout, snapshot["name"].to_s, qrcode).html_safe, layout: false
+    end
+
+    # GET /checkouts/:token/pay/status——輪詢終點（JSON；?html=1 供無 JS 後備導轉）。
+    # SUCCEEDED ⇒ FinalizePspPayment（與 webhook 消費同終點、同冪等鍵——先到先贏）。
+    # 🔴 intent status 官方明言 not exhaustive ⇒ 未知值一律當 pending，不 raise。
+    def pay_status
+      checkout = find_checkout
+      checkout ||= ActsAsTenant.with_tenant(current_shop) { Checkout.find_by(token: params[:token].to_s) }
+      return head :not_found if checkout.nil? || checkout.psp_intent_id.blank?
+
+      snapshot = checkout.payment_method_snapshot
+      provider_row = configured_provider(snapshot["provider"].to_s)
+      return head :not_found if provider_row.nil?
+
+      intent = Psp::Airwallex::PaymentIntents.new(provider_row).get(checkout.psp_intent_id)
+      status = intent["status"].to_s
+      if status == "SUCCEEDED"
+        amount_storage = Money.from_psp_amount(intent.fetch("amount"),
+                                               currency: intent.fetch("currency"),
+                                               psp: snapshot["provider"])
+        begin
+          Orders::FinalizePspPayment.call(
+            shop: current_shop, checkout_token: checkout.token,
+            provider: snapshot["provider"], psp_reference: checkout.psp_intent_id,
+            amount_storage:
+          )
+        rescue Orders::FinalizePspPayment::AmountMismatch => error
+          Money.instrument_failure(direction: :inbound, psp: snapshot["provider"],
+                                   currency: checkout.currency, error:)
+          return render json: { status: "amount_mismatch" }, status: :unprocessable_content
+        end
+        target = "/checkouts/#{checkout.token}/complete"
+        return redirect_to target, status: :see_other, allow_other_host: false if params[:html].present?
+
+        return render json: { status: "succeeded", redirect: target }
+      end
+
+      attempt = intent.dig("latest_payment_attempt", "status").to_s
+      mapped =
+        if status == "CANCELLED" then "cancelled"
+        elsif attempt == "EXPIRED" then "expired"
+        else "pending"
+        end
+      return redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false if params[:html].present?
+
+      render json: { status: mapped }
+    rescue Psp::Airwallex::Client::Error
+      render json: { status: "pending" } # 上游暫時異常 ⇒ 客戶端續輪詢
     end
 
     # POST /checkouts/:token/complete——訂單成立（G6-0(a)；15-F5 manual 形）。
@@ -107,6 +212,12 @@ module Storefront
       return head :not_found if checkout.nil? && completed_order_for(params[:token].to_s).nil?
       # 已完成（重整/回上一頁再提交）⇒ 直接進 thank-you
       return redirect_to "/checkouts/#{params[:token]}/complete", status: :see_other if checkout.nil?
+
+      # 🔴 G6-1c：PSP 快照不得走 manual 成單——沒付錢就出單。線上付款一律 /pay。
+      if checkout.payment_method_snapshot["kind"] == "psp"
+        return render_page(checkout, error: "此付款方式需完成線上付款。",
+                                     status: :unprocessable_content)
+      end
 
       outcome = Orders::CreateFromCheckout.call(
         shop: current_shop, checkout_token: checkout.token,
@@ -319,17 +430,27 @@ module Storefront
       methods = ActsAsTenant.with_tenant(current_shop) do
         ShopPaymentMethod.where(shop_id: current_shop.id).active.ordered.to_a
       end
-      if methods.empty?
+      # G6-1c：PSP 選項＝enabled ∩ available ∩ 平台已實作（F4.2：不可用＝**不出現**）。
+      psp_options = psp_payment_options
+      if methods.empty? && psp_options.empty?
         return "<section data-payment><h2>付款</h2>" \
                "<p data-payment-unavailable>此商店目前無法接受付款。</p></section>"
       end
 
       chosen_id = checkout.payment_method_snapshot["id"]
-      rows = methods.map do |m|
-        selected = chosen_id ? chosen_id == m.id : m == methods.first
+      total_options = methods.size + psp_options.size
+      first_value = psp_options.first&.first || methods.first&.id
+      rows = psp_options.map do |value, label|
+        selected = chosen_id ? chosen_id == value : value == first_value
+        radio = total_options > 1 ?
+                  "<input type=\"radio\" name=\"payment_method_id\" value=\"#{value}\"#{' checked' if selected}>" : ""
+        "<label data-psp-method>#{radio}#{ERB::Util.html_escape(label)}</label>"
+      end.join
+      rows += methods.map do |m|
+        selected = chosen_id ? chosen_id == m.id : (psp_options.empty? && m == methods.first)
         details = selected && m.additional_details.present? ?
                     "<p data-payment-details>#{ERB::Util.html_escape(m.additional_details)}</p>" : ""
-        radio = methods.size > 1 ?
+        radio = total_options > 1 ?
                   "<input type=\"radio\" name=\"payment_method_id\" value=\"#{m.id}\"#{' checked' if selected}>" : ""
         "<label>#{radio}#{ERB::Util.html_escape(m.name)}</label>#{details}"
       end.join
@@ -338,7 +459,7 @@ module Storefront
         <section data-payment><h2>付款</h2>
         <p>所有交易均經安全加密。</p>
         <form method="post" action="/checkouts/#{checkout.token}/payment">
-        #{methods.size == 1 ? "<input type=\"hidden\" name=\"payment_method_id\" value=\"#{methods.first.id}\">" : ''}
+        #{total_options == 1 ? "<input type=\"hidden\" name=\"payment_method_id\" value=\"#{first_value}\">" : ''}
         <fieldset data-payment-methods>#{rows}</fieldset>
         <fieldset data-billing-address><legend>帳單地址</legend>
         <label><input type="radio" name="billing_mode" value="same_as_shipping"#{' checked' if billing_mode == 'same_as_shipping'}>與收貨地址相同</label>
@@ -364,6 +485,14 @@ module Storefront
       if missing
         "<button type=\"button\" data-complete-order disabled>完成訂單</button>" \
           "<p data-complete-note>#{missing}。</p>"
+      elsif checkout.payment_method_snapshot["kind"] == "psp"
+        # G6-1c：PSP 方式的完成鈕走 /pay（線上付款起手），文案帶方式名。
+        name = ERB::Util.html_escape(checkout.payment_method_snapshot["name"].to_s)
+        <<~HTML
+          <form method="post" action="/checkouts/#{checkout.token}/pay" data-pay-form>
+          <button type="submit" data-complete-order>以 #{name} 付款</button>
+          </form>
+        HTML
       else
         <<~HTML
           <form method="post" action="/checkouts/#{checkout.token}/complete" data-complete-form>
@@ -371,6 +500,86 @@ module Storefront
           </form>
         HTML
       end
+    end
+
+    # PSP 可下單選項（G6-1c）：[["psp:airwallex:alipayhk", "AlipayHK"], …]。
+    # 三層交集（F4.2）：商家白名單 enabled ∩ 帳號能力 available ∩ 平台已實作
+    # checkout_supported_methods；provider 未存憑證（無指紋）＝未配置 ⇒ 空集合。
+    # ⚠️ status 欄不參與（activation 狀態機隨 G6-3——本階段以「憑證已配置」為門）。
+    def psp_payment_options
+      row = configured_provider("airwallex")
+      return [] if row.nil?
+
+      supported = supported_psp_codes
+      labels = ShopPaymentProvider.method_dictionary("airwallex").to_h { |m| [ m[:code].to_s, m[:label].to_s ] }
+      (row.enabled_methods & row.available_methods & supported).filter_map do |code|
+        label = labels[code]
+        label && [ "psp:airwallex:#{code}", label ]
+      end
+    end
+
+    def supported_psp_codes
+      Limits.enum(:psp_integration, :airwallex, :checkout_supported_methods).map(&:downcase)
+    end
+
+    def configured_provider(provider)
+      return nil if provider.blank?
+
+      row = ActsAsTenant.with_tenant(current_shop) do
+        ShopPaymentProvider.find_by(provider:)
+      end
+      row&.api_secret_fingerprint.present? ? row : nil
+    end
+
+    # psp:<provider>:<code> → 快照（server 重驗三層交集；殘留 radio 不得落庫）。
+    def psp_method_snapshot(raw_id)
+      _, provider, code = raw_id.split(":", 3)
+      option = psp_payment_options.find { |value, _| value == "psp:#{provider}:#{code}" }
+      return nil if option.nil?
+
+      { "id" => option.first, "kind" => "psp", "provider" => provider,
+        "method_type" => code, "name" => option.last }
+    end
+
+    # QR 付款頁（G6-1c）：伺服端 rqrcode 出 SVG；輪詢 GET /pay/status（🔴 GET 不吃
+    # storefront-cart/ip 的 POST throttle——輪詢 3 秒一發、QR 十分鐘）。
+    # 🔴 本頁 inline <script> 是 storefront 第一個第一方 JS（先例登記於 worklog）。
+    def qr_page_html(checkout, method_name, qrcode)
+      svg = RQRCode::QRCode.new(qrcode).as_svg(module_size: 5, viewbox: true)
+      poll_ms = Limits.fetch(:psp_integration, :airwallex, :status_poll_interval_seconds) * 1000
+      total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
+      <<~HTML
+        <!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        <title>以 #{ERB::Util.html_escape(method_name)} 付款</title></head><body>
+        <main data-psp-qr style="max-width:420px;margin:40px auto;text-align:center;font-family:system-ui">
+        <h1>以 #{ERB::Util.html_escape(method_name)} 付款</h1>
+        <p>應付金額：#{checkout.currency} #{total}</p>
+        <div data-qrcode style="max-width:280px;margin:0 auto">#{svg}</div>
+        <p>請以 #{ERB::Util.html_escape(method_name)} App 掃描上方 QR code 完成付款。</p>
+        <p data-pay-state>等待付款中…（QR code 十分鐘內有效）</p>
+        <p><a href="/checkouts/#{checkout.token}">返回結帳頁</a></p>
+        <script>
+        (function () {
+          var url = "/checkouts/#{checkout.token}/pay/status";
+          var state = document.querySelector("[data-pay-state]");
+          function tick() {
+            fetch(url, { headers: { "Accept": "application/json" } })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (d.status === "succeeded" && d.redirect) { window.location = d.redirect; return; }
+                if (d.status === "cancelled") { state.textContent = "付款已取消。"; return; }
+                if (d.status === "expired") { state.textContent = "QR code 已過期，請返回結帳頁重試。"; return; }
+                setTimeout(tick, #{poll_ms});
+              })
+              .catch(function () { setTimeout(tick, #{poll_ms}); });
+          }
+          setTimeout(tick, #{poll_ms});
+        })();
+        </script>
+        </main></body></html>
+      HTML
     end
 
     def line_rows(checkout)

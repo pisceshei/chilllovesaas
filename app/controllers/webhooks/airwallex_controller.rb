@@ -22,7 +22,7 @@ module Webhooks
       return head :unauthorized unless verified?(raw, timestamp, signature)
 
       event = JSON.parse(raw)
-      ActsAsTenant.with_tenant(Current.shop) do
+      row = ActsAsTenant.with_tenant(Current.shop) do
         PspWebhookEvent.create!(
           provider: "airwallex",
           event_id: event.fetch("id"),
@@ -30,6 +30,9 @@ module Webhooks
           payload: event
         )
       end
+      # 消費走 job（G6-1c）：只帶 id（憑證不進 job payload——limits）；enqueue 在
+      # create 之後、無包裹交易 ⇒ 不違鐵律 5。
+      Psp::WebhookProcessJob.perform_later(Current.shop.id, row.id)
       head :ok
     rescue ActiveRecord::RecordNotUnique
       head :ok # 重複投遞＝已收（DB 兜底層）

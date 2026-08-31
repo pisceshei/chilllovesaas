@@ -566,6 +566,13 @@ psp_integration:
     # 官方 webhook 文檔；G6-1a 實作於 Webhooks::AirwallexController）。
     webhook_signature_header: x-signature
     webhook_timestamp_header: x-timestamp
+    # 結帳頁**現階段已實作**可下單的方式（G6-1c＝QR 原生流雙式；card／wallets 隨
+    # G6-1d components-sdk 包擴充）。顯示＝enabled ∩ available ∩ 本清單——三層各自
+    # 語義：商家白名單／帳號能力／平台已實作（F4.2 的「不出現，不是 disable」）。
+    checkout_supported_methods: [alipayhk, fps]
+    # QR 過期（digest §H：兩式皆 10 分鐘）；輪詢間隔（前端 status poll）。
+    qr_expiry_seconds: 600
+    status_poll_interval_seconds: 3
 
 # 方法字典（平台層；G6-3 分層裁定「字典平台層、白名單租戶層」）。
 # 🔴 v1＝G6-1/G6-2 實際要接的集合（digest §H HK 方法實測＋官方能力頁），

@@ -41,6 +41,27 @@ module Psp
         @client.get_json("#{base_path}/#{intent_id}")
       end
 
+      # QR 原生流 confirm（G6-1c；官方 confirm.md 逐字取證 2026-08-31）：
+      # alipayhk＝`{flow:"qrcode"}`（值域 qrcode|mobile_web|mobile_app；桌面取 qrcode）；
+      # fps＝`{flow:"qrcode"}`（逐字「Currently only support `qrcode`」——**不是** webqr，
+      # digest 舊記已更正）。回應 next_action 形＝`{type:"render_qrcode", qrcode:"…"}`
+      # （欄名逐字；無 qrcode_url、無 expiry 欄——過期以 attempt EXPIRED 承載）。
+      #
+      # @param intent_id [String]
+      # @param method [String] "alipayhk" | "fps"
+      # @return [Hash] confirm 回應（status＋next_action）
+      def confirm_qr(intent_id, method:)
+        unless %w[alipayhk fps].include?(method)
+          raise ArgumentError, "confirm_qr 只支援 alipayhk/fps（實得 #{method.inspect}）"
+        end
+
+        @client.post_json(
+          "#{base_path}/#{intent_id}/confirm",
+          { request_id: SecureRandom.uuid,
+            payment_method: { type: method, method => { flow: "qrcode" } } }
+        )
+      end
+
       # 🔴 **sandbox 專用**：以官方測試卡直接 confirm（走 API 送 PAN）。
       # production 一律 raise——真卡號只能走前端 Element（PCI 面），本方法存在的唯一
       # 理由是 sandbox 端到端實測（G6-1 enable 前置）。
