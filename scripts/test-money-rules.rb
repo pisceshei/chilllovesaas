@@ -29,8 +29,12 @@ FIXTURES = File.join(ROOT, "spec/fixtures/ci_violations")
 CASES = [
   [ "c1_cents_in_psp", "[C1]",
     "PSP 目錄裡出現 storage 尺度的識別字——看到 `_cents` 出現在送款呼叫點就是 bug" ],
+  # 🔴 2026-08-31 第四欄（forbidden）：輸出**不得**含該子串——c2 fixture 同時擺了一行
+  #    合法的 `amount_psp_number:` 呼叫，若白名單被縮回兩值，它會被 C2 誤點名 ⇒ 本案轉紅。
+  #    只斷言「[C2] 有命中」證明不了「合法後綴沒被誤擋」，兩個方向都要釘。
   [ "c2_bad_kwarg", "[C2]",
-    "不經 adapter、直接組 HTTP body（金額 kwarg 沒有 `_minor`／`_psp_decimal` 後綴）" ],
+    "不經 adapter、直接組 HTTP body（金額 kwarg 沒有 `_minor`／`_psp_decimal`／`_psp_number` 後綴）",
+    "amount_psp_number" ],
   [ "c3_decimal_column", "[C3]",
     "migration 用 `t.decimal` 建金額欄位——鐵律 3「出現 float 即 bug」的 migration 期執法點" ],
   [ "c3_integer_cents", "[C3]",
@@ -54,7 +58,7 @@ CASES = [
 
 failures = []
 
-CASES.each do |dir, label, why|
+CASES.each do |dir, label, why, forbidden|
   path = File.join(FIXTURES, dir)
   unless Dir.exist?(path)
     failures << "#{dir}：fixture 目錄不存在"
@@ -68,6 +72,8 @@ CASES.each do |dir, label, why|
     failures << "#{dir}：檢查器**沒有**擋下來（exit 0）——防的是：#{why}"
   elsif !output.include?(label)
     failures << "#{dir}：擋下來了但不是 #{label}（實得：#{output.lines.grep(/\[/).first&.strip}）"
+  elsif forbidden && output.include?(forbidden)
+    failures << "#{dir}：合法寫法被誤擋——輸出點名了 `#{forbidden}`（白名單被縮小了？）"
   end
 
   puts format("  %-4s %-26s %s", status.zero? ? "FAIL" : "PASS", dir, label)
