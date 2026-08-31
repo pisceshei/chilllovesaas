@@ -152,6 +152,23 @@ module Types
       argument :ids, [ ID ], required: true
     end
 
+    # ── 顧客讀取面（G6-7；契約＝28 §7 最小集）──
+    field :customers, CustomerConnectionType, null: false, connection: false do
+      description "本店顧客清單（keyset 分頁；預設序＝更新日期新到舊，74 §1 本尊預設鍵）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+      # v1 自由文字（姓名/email/電話 CONTAINS、多詞 AND）；ShopifyQL 查詢視圖
+      # 與 field filter 隨顧客模組全量包（Customers::SearchScope 檔頭）。
+      argument :query, String, required: false
+    end
+
+    field :customer, CustomerType, null: true do
+      description "以 GID 取單一顧客（不存在或非本店回 null）。"
+      argument :id, GraphQL::Types::ID, required: true
+    end
+
     # 回傳一頁已授權、tenant-isolated 的 product keyset connection。
     #
     # @param first [Integer, nil] 向後讀取的 page size
@@ -173,6 +190,32 @@ module Types
       # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
       scope = Products::SearchScope.apply(scope:, query:)
       Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+    end
+
+    # 回傳一頁已授權、tenant-isolated 的 customer keyset connection（G6-7）。
+    #
+    # 預設序＝updated_at desc（74 §1 本尊預設「顧客更新日期 由新到舊」；
+    # 排序鍵一般化——7×2 全值域——隨顧客模組全量包）。
+    #
+    # @return [Hash] Relay-shaped customer connection
+    # @note 副作用：政策檢查與 tenant-scoped SELECT，不寫入資料。
+    def customers(first: nil, after: nil, last: nil, before: nil, query: nil)
+      authorize_customers!
+      scope = Customer
+        .where(shop_id: context.fetch(:current_shop).id)
+        .preload(:customer_addresses) # 列表「地點」欄；不 preload 就是每列一查
+      scope = Customers::SearchScope.apply(scope:, query:)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :updated_at, direction: :desc)
+    end
+
+    # @return [Customer, nil] 跨店或不存在一律 null（不是錯誤——28 §0.3 慣例）
+    def customer(id:)
+      authorize_customers!
+      numeric = id.to_s[%r{\Agid://chilllove/Customer/(\d+)\z}, 1]
+      return nil if numeric.nil?
+
+      Customer.find_by(shop_id: context.fetch(:current_shop).id, id: numeric.to_i)
     end
 
     # @return [Shop] 目前租戶
@@ -524,6 +567,17 @@ module Types
 
       raise GraphQL::ExecutionError.new(
         I18n.t("errors.files.access_denied"),
+        extensions: { "code" => "ACCESS_DENIED" }
+      )
+    end
+
+    # 顧客線讀取授權（G6-7）。權限鍵 `customers.view`（12 F3 慣例）——
+    # 顧客資料是 PII（PDPO/GDPR 射程），不沿用商品/檔案權限（files 前例同理由）。
+    def authorize_customers!
+      return if CustomerPolicy.new(context[:current_staff], Customer).index?
+
+      raise GraphQL::ExecutionError.new(
+        I18n.t("errors.customers.access_denied"),
         extensions: { "code" => "ACCESS_DENIED" }
       )
     end
