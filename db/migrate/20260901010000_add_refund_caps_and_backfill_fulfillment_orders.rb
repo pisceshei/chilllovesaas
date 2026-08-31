@@ -13,7 +13,7 @@
 class AddRefundCapsAndBackfillFulfillmentOrders < ActiveRecord::Migration[8.1]
   def up
     # 防重入：DDL 在 MySQL 隱式提交，migration 中途失敗重跑會撞 duplicate column
-    #（本支第一版實踩：strong_migrations 擋 execute 時兩欄已加上）。
+    # （本支第一版實踩：strong_migrations 擋 execute 時兩欄已加上）。
     unless column_exists?(:orders, :captured_total_cents)
       add_column :orders, :captured_total_cents, :bigint, null: false, default: 0,
         comment: "Σ success 的 sale/capture 交易額（16 F5.1 軟上限的分母；nightly 與明細對帳）"

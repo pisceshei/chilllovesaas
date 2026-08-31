@@ -13,7 +13,7 @@ require "rails_helper"
 #   F6 已取消訂單不能出貨
 #   F7 跨店 NOT_FOUND
 RSpec.describe "fulfillment lifecycle", type: :request do
-  let(:shop) { create(:shop, subdomain: "fful" ) }
+  let(:shop) { create(:shop, subdomain: "fful") }
   let!(:staff) { ActsAsTenant.with_tenant(shop) { create(:staff_member, shop:, owner: true) } }
 
   before do

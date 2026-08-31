@@ -188,9 +188,9 @@ module Orders
     end
 
     # G6-8（步 5）：建單即物化 FO——本尊訂單一成立就有 FulfillmentOrder
-    #（官方句「Fulfillment orders represent the work which is intended to be done
+    # （官方句「Fulfillment orders represent the work which is intended to be done
     # in relation to an order.」，取證 2026-09-01）。v1＝每單一張、單地點
-    #（location 選擇同 deduct_inventory! 的 priority 規則）。既有訂單由
+    # （location 選擇同 deduct_inventory! 的 priority 規則）。既有訂單由
     # migration 20260901010000 回填。
     def materialize_fulfillment_order!(shop, order)
       location = Location.where(shop_id: shop.id).order(priority: :desc, id: :asc).first

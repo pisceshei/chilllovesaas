@@ -40,7 +40,7 @@ module Types
           description: "行項數量合計（列表 Items 欄；88 §2）"
     field :transactions, [ OrderTransactionType ], null: false
     # G6-8（步 5）：官方 Order.fulfillments 與 Order.refunds 都是 **list 非 connection**
-    #（ord-4 §7 逐字，取證 2026-09-01）——我方同形。
+    # （ord-4 §7 逐字，取證 2026-09-01）——我方同形。
     field :fulfillments, [ FulfillmentType ], null: false,
       description: "出貨清單（含已取消）"
     field :fulfillment_orders, [ FulfillmentOrderType ], null: false,

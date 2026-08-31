@@ -19,7 +19,7 @@ class Order < ApplicationRecord
                           refunded voided expired].freeze
   # G6-8 擴值：in_progress/on_hold 由 FO 狀態推導（Orders::FulfillmentStatus 唯一
   # 推導器）；官方 10 值中 SCHEDULED（需 fulfill_at 入口）與三個被取代舊值不落
-  #（88 §7：ours 刻意子集——先出現行狀態機能表達的值）。
+  # （88 §7：ours 刻意子集——先出現行狀態機能表達的值）。
   FULFILLMENT_STATUSES = %w[unfulfilled partially_fulfilled fulfilled in_progress on_hold].freeze
 
   acts_as_tenant :shop

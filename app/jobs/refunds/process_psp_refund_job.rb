@@ -82,7 +82,7 @@ module Refunds
     end
 
     # 🔴 退款失敗＝錢沒出去 ⇒ 累計欄必須補償回來，否則可退額度被永久佔用
-    #（Calculator 的行可退量已依 status=failure 排除——兩處同步恢復才一致）。
+    # （Calculator 的行可退量已依 status=failure 排除——兩處同步恢復才一致）。
     # 條件式 UPDATE 防負值（同一筆 refund 不會被補償兩次：呼叫端先驗 pending）。
     #
     # @note 副作用：UPDATE orders.refunded_total_cents。

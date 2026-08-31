@@ -74,7 +74,7 @@ module Types
       description: "把待付款訂單標記為已付款（G6-6 步 4；manual 收款確認）。"
 
     # G6-8（步 5）：履約與退款線。fulfillmentCreate 是本尊現行命名
-    #（fulfillmentCreateV2 官方標 Deprecated）；refundCreate 官方 2026-04 起強制冪等鍵。
+    # （fulfillmentCreateV2 官方標 Deprecated）；refundCreate 官方 2026-04 起強制冪等鍵。
     field :fulfillment_create, mutation: Mutations::FulfillmentCreate,
       description: "建立出貨（行項＋追蹤資訊；出貨釋放庫存承諾）。"
     field :fulfillment_tracking_info_update, mutation: Mutations::FulfillmentTrackingInfoUpdate,
