@@ -533,6 +533,31 @@ psp_credentials:
   cross_environment_use_forbidden: true
 
 # =============================================================================
+# 0e. PSP 整合常數（G6-1a；鐵律 6——host／版本不散落在代碼）
+# =============================================================================
+psp_integration:
+  airwallex:
+    # 環境 → API host。sandbox host＝api-demo.airwallex.com：2026-08-31 實測
+    # （壞憑證回 401 credentials_invalid＝endpoint 存在且路由正確；官方 env 命名
+    # demo/sandbox 的文檔矛盾已登記 V，host 面以實測為準）。
+    hosts:
+      sandbox: api-demo.airwallex.com
+      production: api.airwallex.com
+    # x-api-version pin。取證：使用者 Airwallex 帳號 webhook 建立頁逐字
+    # 「2026-02-27 (您当前的 API 版本)」（截圖 2026-08-31）——與帳號現值對齊，
+    # 避免平台無預告改版改變 payload 形。
+    api_version: "2026-02-27"
+    login_path: /api/v1/authentication/login
+    payment_intents_path: /api/v1/pa/payment_intents
+    # Bearer token 官方 30 分鐘（expires_at 為準——digest §H）；提前這麼多秒重登。
+    token_refresh_safety_seconds: 60
+    request_timeout_seconds: 30
+    # webhook 驗簽＝HMAC-SHA256(secret, x-timestamp + raw_body) 的 hex（digest §H，
+    # 官方 webhook 文檔；G6-1a 實作於 Webhooks::AirwallexController）。
+    webhook_signature_header: x-signature
+    webhook_timestamp_header: x-timestamp
+
+# =============================================================================
 # 1. API 契約（GraphQL）
 # =============================================================================
 api:
