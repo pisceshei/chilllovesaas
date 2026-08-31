@@ -97,6 +97,28 @@ RSpec.describe Refunds::Create, "concurrency" do
     end
   end
 
+  # 🔴 突變輪 M3 的守衛（故障注入——CONCURRENT 分支自然觸發不了：order lock
+  #   已序列化同單退款，重讀時上限「其實夠」只發生在 capture 併發上升的窗，
+  #   MRI 下無法穩定重現）。注入：條件式 UPDATE 回 0 但重讀顯示上限足夠
+  #   ⇒ 必須回 REFUND_CONCURRENT_MODIFIED（不是 EXCEEDS）——兩碼合一時前端
+  #   無從判斷要不要顯示超額二次確認（16 §F5.1(c)）。
+  it "🔴 M3 守衛：affected==0 且重讀上限足夠 ⇒ CONCURRENT（分類分支走真程式碼）" do
+    line = ActsAsTenant.without_tenant { LineItem.where(order_id: order.id).first! }
+    # 只注入 UPDATE 步（回 0＝沒搶到），分類邏輯（重讀＋兩碼分流）走真實路徑。
+    # 此時列上額度充足（refunded 0 < captured 100000）⇒ 真分類必回 CONCURRENT。
+    allow(Refunds::Create).to receive(:conditional_cap_update!).and_return(0)
+
+    result = ActsAsTenant.with_tenant(shop) do
+      Refunds::Create.call(
+        shop:, order_id: order.id,
+        refund_line_items: [ { line_item_id: line.id, quantity: 1, restock_type: "no_restock" } ],
+        idempotency_key: "m3-guard"
+      )
+    end
+    expect(result.error[2]).to eq("REFUND_CONCURRENT_MODIFIED"),
+      "上限足夠時回 EXCEEDS 會讓前端誤彈超額二次確認（16 F5.1(c) 兩碼必須分開）"
+  end
+
   # 🔴 gate 版第一稿死鎖實錄（誠實登記）：把 B 卡在 apply_cumulative_cap! 之前
   # 時 B 已持 order 行鎖，A 卡在 Order.lock 等 B ⇒ 三方互等超時。
   # 正確的理解：**order lock 已把兩筆退款序列化**，條件式 UPDATE 是序列化之後的

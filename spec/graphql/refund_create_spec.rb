@@ -149,6 +149,23 @@ RSpec.describe "refundCreate", type: :request do
     end
   end
 
+  # 🔴 突變輪 M2 的守衛：超額路徑的條件式在「第一次超額」數學上恆真
+  #   （refunded+x <= captured+x ⟺ refunded <= captured），把 WHERE 改恆真
+  #   單靠 R3 測不出來——**連續第二次超額**（refunded 已 > captured）才分辨得出
+  #   「上界＝本次核准額度」與「無上界」。
+  it "🔴 R3b 連續第二次超額 ⇒ EXCEEDS（超額路徑仍有上界，不是無限放行）" do
+    order = build_order(number: 9110)
+    ActsAsTenant.without_tenant { Order.where(id: order.id).update_all(refunded_total_cents: 3000) }
+    first = refund!(order, lines: [ { lineItemId: line_gid(order, 0), quantity: 2 } ],
+                    allow_over: true, key: "over-1")
+    expect(first.dig("data", "refundCreate", "userErrors")).to eq([])
+
+    second = refund!(order, lines: [ { lineItemId: line_gid(order, 1), quantity: 2 } ],
+                     allow_over: true, key: "over-2")
+    expect(second.dig("data", "refundCreate", "userErrors", 0, "code"))
+      .to eq("REFUND_EXCEEDS_MAXIMUM_REFUNDABLE")
+  end
+
   it "R4 冪等重放：同鍵第二次回既有 refund、累計欄不重扣" do
     order = build_order(number: 9104)
     lines = [ { lineItemId: line_gid(order, 0), quantity: 1 } ]

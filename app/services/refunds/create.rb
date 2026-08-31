@@ -143,13 +143,7 @@ module Refunds
     #
     # @note 副作用：UPDATE orders.refunded_total_cents（軟上限的唯一寫入點）。
     def apply_cumulative_cap!(shop, order, amount, allow_over_refund)
-      cap_expr = allow_over_refund ? "refunded_total_cents + ? <= captured_total_cents + ?" :
-                                     "refunded_total_cents + ? <= captured_total_cents"
-      binds = allow_over_refund ? [ amount, amount ] : [ amount ]
-      affected = Order.where(shop_id: shop.id, id: order.id)
-                      .where(cap_expr, *binds)
-                      .update_all([ "refunded_total_cents = refunded_total_cents + ?, updated_at = NOW(6)",
-                                    amount ])
+      affected = conditional_cap_update!(shop, order, amount, allow_over_refund)
       return order.reload if affected == 1
 
       # affected==0 ⇒ 重讀一次**只做分類**（16 §F5.1(c)；不得用重讀值做第二次寫入決策）
@@ -162,6 +156,22 @@ module Refunds
 
       raise Failure.new("REFUND_CONCURRENT_MODIFIED",
                         "訂單金額剛被其他操作修改，請以同一把冪等鍵重試。", field: "input")
+    end
+
+    # 條件式 UPDATE 本體（🔴 抽成獨立方法＝故障注入縫：CONCURRENT 分類分支
+    # 自然觸發不了（order lock 序列化＋重讀上限「其實夠」只在 capture 併發窗），
+    # spec 以 stub 本方法回 0 來測分類邏輯——分類程式碼本身走真實路徑）。
+    #
+    # @return [Integer] affected rows
+    # @note 副作用：UPDATE orders.refunded_total_cents（軟上限的唯一寫入點）。
+    def conditional_cap_update!(shop, order, amount, allow_over_refund)
+      cap_expr = allow_over_refund ? "refunded_total_cents + ? <= captured_total_cents + ?" :
+                                     "refunded_total_cents + ? <= captured_total_cents"
+      binds = allow_over_refund ? [ amount, amount ] : [ amount ]
+      Order.where(shop_id: shop.id, id: order.id)
+           .where(cap_expr, *binds)
+           .update_all([ "refunded_total_cents = refunded_total_cents + ?, updated_at = NOW(6)",
+                         amount ])
     end
 
     # restock（兩種 restock 的庫存語義見檔頭；level 選擇同建單規則；id 升冪鎖序）。
