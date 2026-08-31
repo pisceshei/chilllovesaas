@@ -96,6 +96,16 @@ RSpec.describe "Storefront pages", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "S10 🔴 .js 資產在 CSRF 防護開啟下仍 200（bt3 部署實錘：cross-origin JS 防護把 " \
+     "<script src> 的 GET 打成 422；test 環境預設關 forgery ⇒ 必須顯式開才測得到）" do
+    ActionController::Base.allow_forgery_protection = true
+    get "/theme-assets/site.js"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("console.log")
+  ensure
+    ActionController::Base.allow_forgery_protection = false
+  end
+
   it "S8 🔴 平台 host 上沒有店面：根仍導 /admin、storefront catch-all 不匹配" do
     host! "lvh.me"
     get "/"
