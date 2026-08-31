@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_300000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_310000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -266,8 +266,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_300000) do
     t.string "currency", limit: 3, default: "HKD", null: false
     t.string "email", limit: 320
     t.boolean "email_marketing_consent", default: false, null: false
+    t.string "email_marketing_consent_source", limit: 32, comment: "email 同意最後變更來源（08 §C.4 source；如 checkout）"
+    t.datetime "email_marketing_consent_updated_at", comment: "email 同意最後變更時間（08 §C.4 consentUpdatedAt）"
     t.string "first_name"
     t.string "last_name"
+    t.datetime "last_order_at", comment: "最新訂單時間（16 §F6.1 統計欄；訂單成立增量維護）"
     t.text "note"
     t.integer "orders_count", default: 0, null: false
     t.string "phone", limit: 32
@@ -866,6 +869,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_300000) do
   create_table "orders", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "訂單金額快照與彼此獨立的狀態機", force: :cascade do |t|
     t.datetime "archived_at"
     t.json "billing_address", default: -> { "(json_object())" }, null: false
+    t.boolean "buyer_accepts_marketing", default: false, null: false, comment: "成單當下的行銷勾選快照（checkout 同名欄傳導；對位 Order API）"
     t.string "buyer_jurisdiction", limit: 8, null: false
     t.datetime "canceled_at"
     t.bigint "checkout_id"

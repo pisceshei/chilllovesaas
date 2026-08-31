@@ -14,6 +14,7 @@ import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { VariantDetailPage } from "./pages/VariantDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
+import { CustomersPage } from "./pages/CustomersPage";
 import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { SettingsRedirectsPage } from "./pages/SettingsRedirectsPage";
@@ -58,6 +59,7 @@ function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
 const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/products", () => <ProductsPage /> ],
   [ "/admin/collections", () => <CollectionsPage /> ],
+  [ "/admin/customers", () => <CustomersPage /> ],
   [ "/admin/inventory", () => <InventoryPage /> ],
   [ "/admin/content/files", () => <FilesPage /> ],
   [ "/admin/store", () => <StorePage /> ],

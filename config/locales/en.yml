@@ -33,6 +33,8 @@
       still_processing: "This file is still processing. Delete it once processing finishes."
       not_ready: "This file is still being processed. Edit it once processing finishes."
       update_failed_state: "A file that failed processing can't be edited. Delete it instead."
+    customers:
+      access_denied: "You do not have permission to access customers."
     media:
       position_conflict: "Concurrent uploads collided on the same position; please retry."
       not_found: "Media not found."

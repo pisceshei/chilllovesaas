@@ -23,6 +23,12 @@ module Products
         dump: ->(v) { Integer(v) },
         load: ->(raw) { Integer(raw) }
       },
+      # G6-7 顧客列表預設序＝顧客更新日期新到舊（74 §1 本尊預設鍵）；
+      # 編解碼與 created_at 同構（Time ↔ iso8601(6)）。
+      updated_at: {
+        dump: ->(v) { v.utc.iso8601(6) },
+        load: ->(raw) { Time.iso8601(raw) }
+      },
       # ── D48「所有的都跟 Shopify」：檔案庫排序（本尊 Files 頁可依
       #    Date added／File name／Size 排序）──
       # 🔴 字串鍵的 load **必須自己驗型別**：`Integer(raw)` 遇到 "abc" 會 raise

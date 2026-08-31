@@ -33,6 +33,8 @@
       still_processing: "檔案還在處理中，完成後才能刪除。"
       not_ready: "檔案尚未處理完成，完成後才能編輯。"
       update_failed_state: "處理失敗的檔案無法編輯，只能刪除。"
+    customers:
+      access_denied: "你沒有權限存取顧客資料。"
     media:
       position_conflict: "多個上傳同時寫入同一個位置，請重試。"
       not_found: "找不到指定的媒體。"

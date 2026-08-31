@@ -83,6 +83,9 @@ module Orders
           order = build_order!(shop, checkout, number)
           build_line_items!(shop, order, checkout, variants)
           build_manual_transaction!(shop, order, checkout)
+          # G6-7（16 §F6.1）：email upsert 建檔＋統計增量＋consent／地址回寫；
+          # 同交易純 DB（鐵律 5）；無 email ⇒ 回 nil、訂單不掛 customer。
+          Customers::UpsertFromCheckout.call(checkout:, order:)
 
           Event.create!(shop_id: shop.id, order_id: order.id, kind: "order.placed",
                         happened_at: Time.current,
@@ -162,6 +165,7 @@ module Orders
         name: "##{number}",
         order_number: number,
         email: order_checkout.email,
+        buyer_accepts_marketing: order_checkout.buyer_accepts_marketing, # G6-7：勾選快照傳導
         currency: order_checkout.currency,
         presentment_currency: order_checkout.presentment_currency,
         subtotal_cents: order_checkout.subtotal_cents,
