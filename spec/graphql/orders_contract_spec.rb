@@ -8,7 +8,7 @@ require "rails_helper"
 #   O-G1 租戶隔離（殺：跨店訂單洩漏／order(id) 跨店回資料）
 #   O-G2 MoneyBag 序列化（殺：金額裸 cents／Float）
 #   O-G3 預設序 processed_at desc（殺：掉回 created_at——88 §1 實測鍵）
-#   O-G4 搜尋（殺：# 前綴不剝／非法 enum 值回全集不回空集）
+#   O-G4 搜尋（殺：非法 enum 值回全集不回空集——# 命中由「單號欄存 # 前綴」天然涵蓋）
 #   O-G5 未認證（殺：回資料不回 ACCESS_DENIED）
 #   O-G6 billing same_as_shipping 回落（殺：same 模式回 null 或回 mode 鍵）
 RSpec.describe "Admin GraphQL orders contract", type: :request do
@@ -98,7 +98,7 @@ RSpec.describe "Admin GraphQL orders contract", type: :request do
     expect(response.parsed_body.dig("data", "order")).to be_nil
   end
 
-  it "O-G4 搜尋：#1001 剝前綴命中單號；status:/financial_status: 白名單；非法值空集" do
+  it "O-G4 搜尋：#3001 命中單號；status:/financial_status: 白名單；非法值空集" do
     create_order(shop, number: 3001, status: "open")
     ActsAsTenant.with_tenant(shop) do
       Order.find_by!(order_number: 3001).update!(email: "buyer@example.com")

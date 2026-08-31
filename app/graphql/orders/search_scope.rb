@@ -5,8 +5,9 @@ module Orders
   #
   # ①這是什麼：搜尋字串 → tenant scope 上的 SQL 條件。
   # ②值域（v1）：
-  #   - 裸詞／引號片語 ⇒ **單號或 email** CONTAINS，多詞 AND（單號比對前
-  #     剝別名前綴 `#`——買家貼「#1001」是常態）。
+  #   - 裸詞／引號片語 ⇒ **單號或 email** CONTAINS，多詞 AND。「#1001」直接命中
+  #     ——單號欄本身就存 # 前綴，contains 比對天然涵蓋，不做剝前綴
+  #     （突變輪證實剝前綴不承重，刪除——20.4 反向複驗記錄在本包 worklog）。
   #   - `status:<v>` ⇒ 等值；合法值＝Order::STATUSES，非法值 ⇒ 整查詢空集。
   #   - `financial_status:<v>` ⇒ 等值；合法值＝Order::FINANCIAL_STATUSES。
   #   - `fulfillment_status:<v>` ⇒ 等值；合法值＝Order::FULFILLMENT_STATUSES。
@@ -49,7 +50,7 @@ module Orders
                     scope.where(filter[:column] => value) : scope.none
         else
           text = field ? "#{field}:#{term}" : term # 未知 prefix＝字面文字
-          like = "%#{ActiveRecord::Base.sanitize_sql_like(text.delete_prefix('#'))}%"
+          like = "%#{ActiveRecord::Base.sanitize_sql_like(text)}%"
           scope = scope.where("name LIKE :t OR email LIKE :t", t: like)
         end
       end
