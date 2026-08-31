@@ -100,9 +100,77 @@ module Storefront
       redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
     end
 
+    # POST /checkouts/:token/complete——訂單成立（G6-0(a)；15-F5 manual 形）。
+    # 冪等鍵＝per-checkout 穩定派生（雙擊/重試同 key ⇒ Guard replay 回同一張單）。
+    def complete
+      checkout = find_checkout
+      return head :not_found if checkout.nil? && completed_order_for(params[:token].to_s).nil?
+      # 已完成（重整/回上一頁再提交）⇒ 直接進 thank-you
+      return redirect_to "/checkouts/#{params[:token]}/complete", status: :see_other if checkout.nil?
+
+      outcome = Orders::CreateFromCheckout.call(
+        shop: current_shop, checkout_token: checkout.token,
+        idempotency_key: "order-#{checkout.token}", cart: current_cart
+      )
+      if outcome[:resource]
+        redirect_to "/checkouts/#{checkout.token}/complete", status: :see_other,
+                    allow_other_host: false
+      else
+        # replay 命中但訂單其後被刪（11 §2.1(b) 末列）：回結帳頁重走
+        redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
+      end
+    rescue Orders::CreateFromCheckout::Failure => e
+      render_page(checkout, error: e.message, status: :unprocessable_content)
+    rescue Idempotency::Guard::Conflict
+      # 另一個提交進行中：導回結帳頁，讓買家稍後重試（同 key）
+      redirect_to "/checkouts/#{params[:token]}", status: :see_other, allow_other_host: false
+    end
+
+    # GET /checkouts/:token/complete——thank-you 頁（15-F6：單號＋摘要＋付款指示）。
+    def thank_you
+      order = completed_order_for(params[:token].to_s)
+      return redirect_to "/checkouts/#{params[:token]}", status: :see_other, allow_other_host: false if order.nil?
+
+      response.headers["X-Robots-Tag"] = "noindex, nofollow"
+      render html: thank_you_html(order).html_safe, layout: false
+    end
+
     private
 
     COOKIE = "_cl_buyer"
+
+    def completed_order_for(token)
+      ActsAsTenant.with_tenant(current_shop) do
+        checkout = Checkout.find_by(shop_id: current_shop.id, token:, status: "completed")
+        checkout && Order.find_by(shop_id: current_shop.id, checkout_id: checkout.id)
+      end
+    end
+
+    # thank-you（非主題化；86 §3 helper②：payment_instructions 顯示在下單確認頁）。
+    def thank_you_html(order)
+      checkout = ActsAsTenant.with_tenant(current_shop) { Checkout.find(order.checkout_id) }
+      instructions = checkout.payment_method_snapshot["payment_instructions"]
+      method_name = checkout.payment_method_snapshot["name"]
+      total = Money::Display.call(Money::Storage.from_cents(order.total_cents, order.currency))
+      rows = ActsAsTenant.with_tenant(current_shop) do
+        order.line_items.order(:id).map do |li|
+          amount = Money::Display.call(Money::Storage.from_cents(li.total_cents, order.currency))
+          "<tr><td>#{ERB::Util.html_escape(li.title)} × #{li.quantity}</td>" \
+            "<td>#{order.currency} #{amount}</td></tr>"
+        end.join
+      end
+      <<~HTML
+        <!doctype html><html><head><title>Order #{ERB::Util.html_escape(order.name)}</title>
+        <meta name="robots" content="noindex"></head>
+        <body><h1>感謝你的訂購！</h1>
+        <p data-order-name>訂單編號：#{ERB::Util.html_escape(order.name)}</p>
+        <table>#{rows}</table>
+        <p data-order-total>合計：#{order.currency} #{total}</p>
+        <section data-payment-instructions><h2>付款方式：#{ERB::Util.html_escape(method_name.to_s)}</h2>
+        #{instructions.present? ? "<p>#{ERB::Util.html_escape(instructions)}</p>" : ''}</section>
+        <p>訂單確認信與後續出貨通知隨對應功能包接上。</p></body></html>
+      HTML
+    end
 
     def current_cart
       token = cookies.signed[COOKIE]
@@ -278,10 +346,31 @@ module Storefront
         </fieldset>
         <button type="submit">更新付款方式</button>
         </form>
-        <button type="button" data-complete-order disabled>完成訂單</button>
-        <p data-complete-note>訂單成立隨後續結帳包接上。</p>
+        #{complete_button_html(checkout)}
         </section>
       HTML
+    end
+
+    # 完成訂單鈕（G6-0(a) 點亮）：運送（需運送時）與付款方式都已選才可提交；
+    # 未就緒＝disabled＋原因（本尊同型：結帳鈕依前置灰化）。
+    def complete_button_html(checkout)
+      requires_shipping = checkout.line_items_snapshot.any? { |l| l.fetch("requires_shipping", true) }
+      missing =
+        if requires_shipping && checkout.shipping_lines.blank?
+          "請先選擇運送方式"
+        elsif checkout.payment_method_snapshot["method_type"].blank?
+          "請先選擇付款方式"
+        end
+      if missing
+        "<button type=\"button\" data-complete-order disabled>完成訂單</button>" \
+          "<p data-complete-note>#{missing}。</p>"
+      else
+        <<~HTML
+          <form method="post" action="/checkouts/#{checkout.token}/complete" data-complete-form>
+          <button type="submit" data-complete-order>完成訂單</button>
+          </form>
+        HTML
+      end
     end
 
     def line_rows(checkout)

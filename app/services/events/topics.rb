@@ -41,13 +41,19 @@ module Events
     VARIANT_LISTINGS_ADD = "variant_listings/add"
     VARIANT_LISTINGS_REMOVE = "variant_listings/remove"
     VARIANT_LISTINGS_UPDATE = "variant_listings/update"
+    # ── G6-0(a) F5 訂單成立 ──────────────────────────────────────────
+    # 🔴 orders/paid 是**另一個** topic、時點不同（15-F5 步 2）：manual／
+    #    authorize-only 成立時只發 orders/create，付清（markAsPaid／capture）才發 paid。
+    ORDERS_CREATE = "orders/create"
+    ORDERS_PAID = "orders/paid"
 
     EXTERNAL = [
       PRODUCTS_CREATE, PRODUCTS_UPDATE, PRODUCTS_DELETE,
       COLLECTIONS_CREATE, COLLECTIONS_UPDATE, COLLECTIONS_DELETE,
       INVENTORY_LEVELS_UPDATE,
       PRODUCT_LISTINGS_ADD, PRODUCT_LISTINGS_REMOVE, PRODUCT_LISTINGS_UPDATE,
-      VARIANT_LISTINGS_ADD, VARIANT_LISTINGS_REMOVE, VARIANT_LISTINGS_UPDATE
+      VARIANT_LISTINGS_ADD, VARIANT_LISTINGS_REMOVE, VARIANT_LISTINGS_UPDATE,
+      ORDERS_CREATE, ORDERS_PAID
     ].freeze
 
     # 內部（63 §C.1 決議表；不對外開放訂閱）

@@ -83,6 +83,11 @@ Rails.application.routes.draw do
     # 結帳線第三包：選付款方式（server 重驗 active；86 §4 實測形）。
     post "checkouts/:token/payment" => "storefront/checkouts#payment", format: false,
          as: :storefront_checkout_payment
+    # G6-0(a) 訂單成立（15-F5/F6）：POST 建單＋GET thank-you。
+    post "checkouts/:token/complete" => "storefront/checkouts#complete", format: false,
+         as: :storefront_checkout_complete
+    get "checkouts/:token/complete" => "storefront/checkouts#thank_you", format: false,
+        as: :storefront_checkout_thank_you
     # 結帳線第三包：cart 運費試算三支（86 §6 官方現值：prepare/async/同步；
     # price＝十進位主單位字串——鐵律 3 序列化層邊界）。
     get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates", format: false
