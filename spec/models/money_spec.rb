@@ -53,12 +53,13 @@ RSpec.describe Money do
       expect { described_class::Decimal.allocate }.to raise_error(NoMethodError)
     end
 
-    # 🔴 **四個型別的 `.new` 全部關掉**（PR #29 的 Codex review）。
+    # 🔴 **五個型別的 `.new` 全部關掉**（PR #29 的 Codex review；R7 於 2026-08-31 入列）。
     # 第一版只關 R5／R6，理由是「R1／R4 是入口」——那個理由是錯的：
     # **入口是 `from_cents`／`from_string`，不是 `.new`。**
-    it "四個型別的 .new 全部是 private（唯一入口是各自的 factory）" do
+    it "五個型別的 .new 全部是 private（唯一入口是各自的 factory）" do
       [ described_class::Storage, described_class::Decimal,
-        described_class::PspMinor, described_class::PspDecimal ].each do |klass|
+        described_class::PspMinor, described_class::PspDecimal,
+        described_class::PspNumber ].each do |klass|
         expect(klass).not_to respond_to(:new), "#{klass} 的 .new 必須是 private"
       end
     end

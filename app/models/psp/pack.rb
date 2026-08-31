@@ -23,6 +23,12 @@ class Psp::Pack
     Limits.enum(:money_boundary, :psp_pack_required_keys_when_decimal_string).map { |k| k.downcase.to_sym }
   end
 
+  # `decimal_number` 專用的必填鍵（2026-08-31 隨第三格式新增；與 decimal_string
+  # 同一組——兩者只差 wire form，位數宣告的維度相同）。
+  def self.required_keys_for_decimal_number
+    Limits.enum(:money_boundary, :psp_pack_required_keys_when_decimal_number).map { |k| k.downcase.to_sym }
+  end
+
   attr_reader :code, :raw
 
   # @param code [Symbol] pack 代碼（例：`:stripe`）
@@ -36,7 +42,7 @@ class Psp::Pack
 
   # 金額格式。
   #
-  # @return [Symbol] `:minor_units` 或 `:decimal_string`
+  # @return [Symbol] `:minor_units`／`:decimal_string`／`:decimal_number`
   # @raise [Psp::AmountFormatUndeclared] 未宣告（A0；🔴 不得預設）
   # @note 副作用：無。
   # @see docs/specs/65-money-unit-boundary.md §D.2 A0
@@ -46,11 +52,15 @@ class Psp::Pack
 
   # 該 pack 對應的值物件類別（L3 的 adapter 用它做型別斷言）。
   #
-  # @return [Class] `Money::PspMinor` 或 `Money::PspDecimal`
+  # @return [Class] `Money::PspMinor`／`Money::PspDecimal`／`Money::PspNumber`
   # @note 副作用：無。
   # @see docs/specs/65-money-unit-boundary.md §C.1 L3
   def amount_value_class
-    amount_format == :minor_units ? Money::PspMinor : Money::PspDecimal
+    case amount_format
+    when :minor_units    then Money::PspMinor
+    when :decimal_string then Money::PspDecimal
+    when :decimal_number then Money::PspNumber
+    end
   end
 
   # 該幣別的 minor unit exponent。
@@ -70,7 +80,7 @@ class Psp::Pack
     unless amount_format == :minor_units
       raise Psp::PackInvalid,
         "pack #{code} 的 amount_format 是 #{amount_format}，它不用 minor unit——" \
-        "問錯問題了（65 §D.4：Airwallex 型 PSP 收的是十進位主單位字串）"
+        "問錯問題了（65 §D.4：decimal 兩格式收的是十進位主單位，位數走 decimal_places_for）"
     end
 
     key = currency.to_s.upcase.to_sym
@@ -81,12 +91,35 @@ class Psp::Pack
     Psp.iso4217_exponents[key]
   end
 
-  # `decimal_string` 格式的小數位數。
+  # decimal 兩格式的**基準**小數位數（per-currency 生效值走 `decimal_places_for`）。
   #
   # @return [Integer]
   # @note 副作用：無。
   def decimal_places
     raw.fetch(:decimal_places)
+  end
+
+  # 該幣別的**生效**小數位數（A7）：`decimal_places_overrides` 覆蓋優先於基準。
+  #
+  # 🔴 覆蓋表存在的理由與 `minor_unit_overrides` 相同——兩家實證都覆蓋自己引用的底表：
+  # PayPal 官方逐字「This currency does not support decimals.」（HUF／JPY／TWD；
+  # 🔴 HUF 在 ISO 4217 是 2 位）；Airwallex payments 側零小數 20 幣
+  # （🔴 HUF／TWD／IDR 皆與 ISO 不同）。⇒ ISO 又一次只是底表、不是換算基數。
+  #
+  # @param currency [String, Symbol]
+  # @return [Integer] 0–2（>2 在載入時就被 A6 擋下）
+  # @raise [Psp::PackInvalid] 對 `minor_units` 型 pack 呼叫本方法
+  # @note 副作用：無。
+  # @see docs/specs/65-money-unit-boundary.md §D.2 A7
+  def decimal_places_for(currency)
+    if amount_format == :minor_units
+      raise Psp::PackInvalid,
+        "pack #{code} 的 amount_format 是 minor_units，它不用 decimal places——問錯問題了"
+    end
+
+    key = currency.to_s.upcase.to_sym
+    overrides = raw.fetch(:decimal_places_overrides)
+    overrides.key?(key) ? overrides[key] : decimal_places
   end
 
   # 該幣別的整除約束（A5）。
@@ -111,12 +144,13 @@ class Psp::Pack
 
   # 把**幣別對照表**的鍵一律轉成大寫 Symbol。
   #
-  # 只動 `minor_unit_overrides` 與 `divisibility` 兩個鍵——**這裡才知道它們的值是幣別表**。
+  # 只動 `minor_unit_overrides`／`divisibility`／`decimal_places_overrides` 三個鍵
+  # ——**這裡才知道它們的值是幣別表**。
   # pack 是人手寫的 YAML，`jpy:` 與 `JPY:` 遲早會同時出現；而查表端一律 `upcase`，
   # 不在這裡收斂的話，`jpy: 0` 這個宣告會被**靜默忽略**，
   # 然後對 JPY raise「該幣別未宣告」——**而 pack 裡逐字寫著 jpy: 0**。
   def upcase_currency_keys(raw)
-    %i[minor_unit_overrides divisibility].each_with_object(raw.dup) do |key, result|
+    %i[minor_unit_overrides divisibility decimal_places_overrides].each_with_object(raw.dup) do |key, result|
       next unless result[key].is_a?(Hash)
 
       result[key] = result[key].to_h { |code, value| [ code.to_s.upcase.to_sym, value ] }
@@ -138,7 +172,8 @@ class Psp::Pack
 
     case amount_format
     when :minor_units    then validate_minor_units!
-    when :decimal_string then validate_decimal_string!
+    when :decimal_string then validate_decimal_places!(self.class.required_keys_for_decimal_string)
+    when :decimal_number then validate_decimal_places!(self.class.required_keys_for_decimal_number)
     end
 
     validate_enable_gate!
@@ -149,9 +184,11 @@ class Psp::Pack
     raise Psp::PackInvalid, "pack #{code}（minor_units）缺鍵：#{missing.join(', ')}" if missing.any?
   end
 
-  def validate_decimal_string!
-    missing = self.class.required_keys_for_decimal_string.reject { |key| raw.key?(key) }
-    raise Psp::PackInvalid, "pack #{code}（decimal_string）缺鍵：#{missing.join(', ')}" if missing.any?
+  # decimal 兩格式（`decimal_string`／`decimal_number`）共用的宣告驗證——
+  # 兩者只差 wire form，位數宣告的維度與斷言完全相同。
+  def validate_decimal_places!(required)
+    missing = required.reject { |key| raw.key?(key) }
+    raise Psp::PackInvalid, "pack #{code}（#{amount_format}）缺鍵：#{missing.join(', ')}" if missing.any?
 
     # A6：我方儲存尺度 ×100 只能無損表達 2 位。宣告 3 位卻只給得出 2 位
     # ＝**靜默的精度謊報**（我方送 `"2.90"`，PSP 以為那是 `"2.900"`）。
@@ -182,11 +219,33 @@ class Psp::Pack
     # 那是**看得見**的失敗；不擋的代價是**靜默送錯金額**。
     # 全文與裁定：`docs/specs/65` §D.5、`docs/DECISIONS.md` D16。
     min = Limits.fetch(:money_boundary, :psp_decimal_min_places)
-    return if decimal_places >= min
+    if decimal_places < min
+      raise Psp::PackInvalid,
+        "pack #{code} 宣告 decimal_places=#{decimal_places} < #{min}（A6b：不得 enable）——" \
+        "位數不足會讓 `fixed_string` 靜默四捨五入，🔴 不得自動湊整（65 §D.2 A5）"
+    end
 
-    raise Psp::PackInvalid,
-      "pack #{code} 宣告 decimal_places=#{decimal_places} < #{min}（A6b：不得 enable）——" \
-      "位數不足會讓 `fixed_string` 靜默四捨五入，🔴 不得自動湊整（65 §D.2 A5）"
+    validate_decimal_places_overrides!(max)
+  end
+
+  # per-currency 覆蓋的值域（A7 的載入面）：整數、0 ≤ 覆蓋值 ≤ 上限。
+  #
+  # 🔴 **覆蓋允許 0／1、基準卻被 A6b 擋在 2**——不對稱是刻意的：
+  #   A6b 擋的是 `fixed_string` 靜默湊整，而覆蓋幣別在轉換層有 A6c
+  #   （cents 無法無損表達 ⇒ raise，不 round）先擋，湊整根本走不到；
+  #   基準位數沒有「哪個幣別」可言，A6c 也會生效，但 A6b 維持 D16 裁定不放寬
+  #   （sub-2 基準至今無任何一家實證需要，fail-closed）。
+  # 🔴 **覆蓋 > 上限必須在載入就擋**（不能等轉換）：places=3 時
+  #   `storage_scale / 10**places` 整數除法得 0，A6c 的 `% 0` 會直接
+  #   ZeroDivisionError——與 A2「我方儲存尺度表達不了」同一個理由，錯誤要可讀。
+  def validate_decimal_places_overrides!(max)
+    raw.fetch(:decimal_places_overrides).each do |cur, places|
+      next if places.is_a?(Integer) && places >= 0 && places <= max
+
+      raise Psp::PackInvalid,
+        "pack #{code} 的 decimal_places_overrides[#{cur}]=#{places.inspect} 不在 0..#{max}" \
+        "（A7：×#{Money.storage_scale} 儲存尺度最多無損表達 #{max} 位）"
+    end
   end
 
   # 🔴 `enable_gate` 非空 ⇒ `enabled` 必為 false。
