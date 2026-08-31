@@ -1210,7 +1210,7 @@ Shopify 模型的硬約束（29 §1.2）：`MarketWebPresence` 的 `domain` 與 
 | `naming_contract.*`（新頂層 §23） | **新增** | 鐵律 9 的界線：**可以對齊命名契約，不可以複製樣式表內容**（67 §H.5） | 67 §H.5 |
 
 🔴 **`money_boundary.*` 在 68 那一輪一個鍵都沒動**（鐵律 3／65 號）。D-3 改的是幣別清單，不是金額模型；`max_supported_iso_exponent: 2` 的**註釋**有更新（說明它已成為唯一執法點），**值不變**。
-⚠ **但 69 §V-188 那一輪動了 `money_boundary`**——新增 `psp_amount_formats`／`psp_divisibility_*` 等鍵（PSP 的金額**格式**是一個原本不存在的維度：Airwallex 用十進位主單位字串）。🔴 **那同樣不是放寬**：`psp_undeclared_currency_action: reject` 與 `max_supported_iso_exponent: 2` 一個字都沒動，全文見 **65 §A R6／§D**。
+⚠ **但 69 §V-188 那一輪動了 `money_boundary`**——新增 `psp_amount_formats`／`psp_divisibility_*` 等鍵（PSP 的金額**格式**是一個原本不存在的維度：Airwallex 用十進位主單位<!-- 2026-08-31 更正：wire form 為 JSON number（65 R7），非字串；本句其餘不變 -->）。🔴 **那同樣不是放寬**：`psp_undeclared_currency_action: reject` 與 `max_supported_iso_exponent: 2` 一個字都沒動，全文見 **65 §A R6／§D**。
 
 ---
 

@@ -248,10 +248,10 @@ module Money
     def to_psp_amount(psp:)
       pack = Psp.registry.fetch(psp)
       value = case pack.amount_format
-              when :minor_units    then to_psp_minor(pack)
-              when :decimal_string then to_psp_decimal(pack)
-              when :decimal_number then to_psp_number(pack)
-              end
+      when :minor_units    then to_psp_minor(pack)
+      when :decimal_string then to_psp_decimal(pack)
+      when :decimal_number then to_psp_number(pack)
+      end
       roundtrip_selfcheck!(value)
       value
     end

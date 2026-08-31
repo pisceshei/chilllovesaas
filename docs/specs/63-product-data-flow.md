@@ -945,7 +945,7 @@ cents  = Rounding.apply(cents, currency, market)           # 湊整規則（29 �
 
 裁定二（2026-08-12）＋ `limits.currency_display`：**所有國家一律顯示兩位小數，儲存一律 ×100**。所以 JPY 的 ¥1,480 顯示 `¥1,480.00`、儲存 `148000`。
 
-**但 PSP 的金額格式與參數由該 PSP pack 明文宣告**（`amount_format: minor_units | decimal_string`，65 §A R6／§D）：Stripe 收 JPY 時 `amount: 1480` 代表 ¥1,480（Stripe pack＝minor_units、JPY minor unit=1480 形態）；**Airwallex 根本不用 minor unit，收十進位主單位字串 `"1480"`**。**若把儲存的 `148000` 直接送出去，收款金額是 ¥148,000——100 倍**（兩種格式都會錯，只是字面不同）。**ISO 4217 只是 `minor_units` 格式下 pack 可以選擇的底表，不是換算基數**——Adyen 明文覆蓋 ISO、Stripe 對 HUF／TWD 另有整除約束（69 §V-188，`alt`×4＝PSP 官方文檔）。
+**但 PSP 的金額格式與參數由該 PSP pack 明文宣告**（`amount_format: minor_units | decimal_string`，65 §A R6／§D）：Stripe 收 JPY 時 `amount: 1480` 代表 ¥1,480（Stripe pack＝minor_units、JPY minor unit=1480 形態）；**Airwallex 根本不用 minor unit，收十進位主單位**<!-- 2026-08-31 更正：原文此處寫「字串 "1480"」——一手複驗為 JSON number（65 R7／§D.4）；「不用 minor unit」不變。 -->。**若把儲存的 `148000` 直接送出去，收款金額是 ¥148,000——100 倍**（兩種格式都會錯，只是字面不同）。**ISO 4217 只是 `minor_units` 格式下 pack 可以選擇的底表，不是換算基數**——Adyen 明文覆蓋 ISO、Stripe 對 HUF／TWD 另有整除約束（69 §V-188，`alt`×4＝PSP 官方文檔）。
 
 **硬規則**：跨界轉換的唯一出口＝`Money::Storage#to_psp_amount(psp:)`，**契約全文與參考實作見 65 §D.1，本檔不再自帶代碼**——依 pack 宣告的 `amount_format` 分流為 `Money::PspMinor`（R5）或 `Money::PspDecimal`（R6），斷言 A0–A6 逐條見 65 §D.2。
 

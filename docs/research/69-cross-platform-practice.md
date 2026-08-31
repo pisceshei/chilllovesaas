@@ -44,7 +44,7 @@
 | **V-185** | 顯示價≠結帳價的官方合規說明 | **結案（負面）** — Shopify 官方無此說明；但**外部主管機關有明文**，見 E-1 | `law` |
 | **V-186** | UCP default-on、`.well-known/ucp` | 🔴 **大部分結案** — `/.well-known/ucp` **確為規格明定路徑**（UCP spec 2026-04-08 ＋ Google Merchant 官方指引），且**必須公開可讀、不得要求驗證**。剩「Shopify 是否自動輸出」未知 | `std` ×2 |
 | **V-187** | Combined Listings 子商品 canonical | **縮小** — 唯一來源（1 個 `blog`，非 2 個）稱 child **self-canonical**；Google 官方對「multi-page 變體」的規範**不要求** child→parent canonical，與 self-canonical 相容 | `std` ＋ `blog` |
-| **V-188** | exponent=3 幣別的官方立場 | 🔴 **改由 PSP 側結案** — Shopify 側仍無立場；但 **PSP 側的答案完全確定且互相矛盾**：Adyen＝3 位、Datatrans＝3 位、Airwallex＝**十進位主單位字串**、Stripe＝自有表覆蓋 ISO。**這正面證實了鐵律 3「PSP 未宣告一律 reject」是對的** | `alt` ×4 |
+| **V-188** | exponent=3 幣別的官方立場 | 🔴 **改由 PSP 側結案** — Shopify 側仍無立場；但 **PSP 側的答案完全確定且互相矛盾**：Adyen＝3 位、Datatrans＝3 位、Airwallex＝**十進位主單位字串**、Stripe＝自有表覆蓋 ISO。**這正面證實了鐵律 3「PSP 未宣告一律 reject」是對的**<br>🔴 **2026-08-31 更正（19.5）**：Airwallex 的「字串」判定**有誤**——一手複驗（airwallex.com/docs/api/data_types 逐字 "$9.99 is represented as 9.99"＋payment_intents create schema `amount: number`）：wire form 是 JSON **number**、非字串（當日所讀 platforms 範例的字串形＝後端強制轉型容忍、非契約）。「十進位主單位、非 minor units」的核心結論**維持正確**；65 §D 已落成第三格式 `decimal_number`（R7），decimal_string 的實證代表改由 PayPal 承接（value 官方 pattern 為 string，取證 2026-08-31）。四家四種算法的總結不受影響（現為五家三格式，見 65 §D.4） | `alt` ×4 |
 | **B-5** | SKU 強制唯一 | 🔴 **結案** — **Shopify 是異類**。WooCommerce／BigCommerce／Magento／NetSuite **一律硬唯一**，且 NetSuite 明文說重複 SKU **會讓訂單同步失敗** | `src` ＋ `alt` ×3 |
 | **B-6** | 變體獨立 URL | 🔴 **結案（並補正 68 號）** — Google 官方**要求**每個變體有可識別的獨立 URL，並定義**兩種都合規**的模式；Shopify 預設＝Google 的 single-page 模式，Combined Listings＝Google 的 multi-page 模式。**兩者都是 Google 官方支援形態，不是「Shopify 刻意不做」** | `std` ×2 |
 | **C-3** | 地區重導的 recommendation banner | 🔴 **補正 68 號** — Shopify **曾經有第一方 banner**（Geolocation app），2025-03-24 移除；其預設值（裝了就開、關掉 14 天不再顯示）是可直接引用的參數。Google 官方**明確反對**自動重導 | `help` ＋ `std` ＋ `vendor` |
@@ -284,7 +284,7 @@
 **建議處置** — 🔴 **這是本輪對本專案最有價值的一條，因為它把鐵律 3 從「我方的保守設計」變成「有外部證據的必要設計」。**
 
 1. **鐵律 3 的「PSP 未宣告 minor unit 一律 reject，不得預設」＝正確，且現在有四份 PSP 官方文檔佐證。** Adyen 白紙黑字說自家表格覆蓋 ISO 4217；Stripe 的 special cases 表實質上也是覆蓋；**任何「拿 ISO 4217 exponent 當 PSP 換算基數」的實作，在 Adyen 的 CLP／CVE／IDR／ISK 與 Stripe 的 ISK／HUF／TWD／UGX 上就是錯的。** 而 **TWD 正好在鐵律 3 §H 要求的測試矩陣裡**。
-2. 🔴 **PSP pack 的宣告介面必須能表達「不是 minor units」這一種。** Airwallex 用十進位主單位 —— 我方目前的 `Money::PspMinor` 型別**在 Airwallex 這種 PSP 上根本不適用**。這是一個**現有型別設計擋不住的形態**，不是參數問題。建議 PSP pack 至少宣告：`amount_format: minor_units | decimal_string`、`exponent`（僅 minor_units 時）、`divisibility_constraint`（如 Stripe payout 的「必須整除 100」）。
+2. 🔴 **PSP pack 的宣告介面必須能表達「不是 minor units」這一種。** Airwallex 用十進位主單位 —— 我方目前的 `Money::PspMinor` 型別**在 Airwallex 這種 PSP 上根本不適用**。這是一個**現有型別設計擋不住的形態**，不是參數問題。建議 PSP pack 至少宣告：`amount_format: minor_units | decimal_string`、`exponent`（僅 minor_units 時）、`divisibility_constraint`（如 Stripe payout 的「必須整除 100」）。<!-- 2026-08-31 更正註：本句的兩值枚舉已隨 Airwallex wire form 更正擴為三值（65 §D.3：minor_units | decimal_string | decimal_number）；本句原文保留為當日結論的紀錄。 -->
 3. **`divisibility_constraint` 不是虛構需求**：Stripe 的 HUF／TWD payout 明文要求金額整除 100，否則不能出款。**我方若做 payout／對帳，這條會直接變成生產事故。**
 4. **exponent=3 幣別本身**：跟隨 68 號的裁定（幣別可選、顯示與儲存 2 位、精度損失明文登記）。**但要補一句**：若某 PSP pack 宣告 KWD exponent=3，我方 ×100 的儲存尺度**無法無損表達**該 PSP 的最小單位 ⇒ **該 pack 必須同時宣告「儲存精度不足時怎麼辦」**，否則 pack 不合法。
 5. **要改哪些檔案**（僅列清單）：`docs/specs/65-money-unit-boundary.md`（PSP pack 宣告介面新增 `amount_format` 與 `divisibility_constraint`；並記錄四家 PSP 的實證表）；`docs/specs/55-money-tax-event-inventory.md`（金額測試矩陣補「PSP 表覆蓋 ISO」的案例，至少 TWD payout 整除 100 一條）；`config/limits.yml` `currency_display`。

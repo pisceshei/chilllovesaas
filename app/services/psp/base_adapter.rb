@@ -105,10 +105,10 @@ class Psp::BaseAdapter
     # 🔴 用數值判，不看字串前置的 `-`：`decimal_string` 側拿到的是字串，
     # 而 `"-0.00"` 這種形態（極小負值捨入到零）**不是負值**，看前綴會誤擋。
     value = case amount
-            when Money::PspMinor  then amount.minor
-            when Money::PspNumber then amount.number
-            else BigDecimal(amount.string)
-            end
+    when Money::PspMinor  then amount.minor
+    when Money::PspNumber then amount.number
+    else BigDecimal(amount.string)
+    end
     return unless value.negative?
 
     raise TypeError,
