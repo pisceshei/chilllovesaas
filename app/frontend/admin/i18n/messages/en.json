@@ -643,5 +643,10 @@
   "settings.payments.methodsHint": "Only enabled methods appear at checkout (subject to provider availability).",
   "settings.payments.saving": "Saving…",
   "settings.payments.airwallex.about": "Airwallex processes credit cards and Hong Kong local wallets for your store. Enter the API credentials from your Airwallex account; secrets are encrypted and only a fingerprint is shown after saving.",
-  "settings.payments.paypal.about": "PayPal lets buyers pay with their PayPal balance, cards and wallets. Enter the REST app credentials from the PayPal Developer dashboard."
+  "settings.payments.paypal.about": "PayPal lets buyers pay with their PayPal balance, cards and wallets. Enter the REST app credentials from the PayPal Developer dashboard.",
+  "settings.payments.syncNow": "Refresh from provider",
+  "settings.payments.syncDone": "Available payment methods refreshed",
+  "settings.payments.syncedAt": "Synced from your provider account at {time}.",
+  "settings.payments.neverSynced": "Not synced yet — save valid credentials to load the methods enabled on your account automatically.",
+  "settings.payments.notOnAccount": "Not enabled on your provider account"
 }

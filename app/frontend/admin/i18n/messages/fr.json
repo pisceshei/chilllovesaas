@@ -643,5 +643,10 @@
   "settings.payments.methodsHint": "Seules les méthodes activées apparaissent au paiement (selon la disponibilité du prestataire).",
   "settings.payments.saving": "Enregistrement…",
   "settings.payments.airwallex.about": "Airwallex traite les cartes et portefeuilles locaux de Hong Kong pour votre boutique. Saisissez les identifiants API de votre compte Airwallex ; les secrets sont chiffrés et seule une empreinte est affichée.",
-  "settings.payments.paypal.about": "PayPal permet de payer avec le solde PayPal, les cartes et portefeuilles. Saisissez les identifiants de l'app REST du tableau de bord PayPal Developer."
+  "settings.payments.paypal.about": "PayPal permet de payer avec le solde PayPal, les cartes et portefeuilles. Saisissez les identifiants de l'app REST du tableau de bord PayPal Developer.",
+  "settings.payments.syncNow": "Actualiser depuis le prestataire",
+  "settings.payments.syncDone": "Méthodes disponibles actualisées",
+  "settings.payments.syncedAt": "Synchronisé depuis votre compte le {time}.",
+  "settings.payments.neverSynced": "Pas encore synchronisé — enregistrez des identifiants valides pour charger automatiquement les méthodes activées.",
+  "settings.payments.notOnAccount": "Non activé sur votre compte prestataire"
 }

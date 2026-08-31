@@ -537,11 +537,13 @@ psp_credentials:
 # =============================================================================
 psp_integration:
   airwallex:
-    # 環境 → API host。sandbox host＝api-demo.airwallex.com：2026-08-31 實測
-    # （壞憑證回 401 credentials_invalid＝endpoint 存在且路由正確；官方 env 命名
-    # demo/sandbox 的文檔矛盾已登記 V，host 面以實測為準）。
+    # 環境 → API host。🔴 2026-08-31 更正：官方 API 導覽頁現行逐字
+    # 「https://api.sandbox.airwallex.com｜Sandbox／https://api.airwallex.com｜Production」
+    # ＋config 端點 curl 範例同用 api.sandbox（取證 2026-08-31）⇒ sandbox host 以官方
+    # 現值為準。api-demo.airwallex.com 為舊 demo 環境（仍在線、對壞憑證同樣回 401
+    # credentials_invalid——當日實測），不再使用。
     hosts:
-      sandbox: api-demo.airwallex.com
+      sandbox: api.sandbox.airwallex.com
       production: api.airwallex.com
     # x-api-version pin。取證：使用者 Airwallex 帳號 webhook 建立頁逐字
     # 「2026-02-27 (您当前的 API 版本)」（截圖 2026-08-31）——與帳號現值對齊，
@@ -549,6 +551,14 @@ psp_integration:
     api_version: "2026-02-27"
     login_path: /api/v1/authentication/login
     payment_intents_path: /api/v1/pa/payment_intents
+    # capability 端點（官方逐字 schema 取證 2026-08-31：query＝active/country_code/
+    # page_num(從 0)/page_size(預設 100、上限 1000)/transaction_currency/transaction_mode
+    # (oneoff|recurring)；回應＝{has_more, items:[{active, flows, name,
+    # transaction_currencies, transaction_mode}]}；同名方法可因 transaction_mode 重複）。
+    payment_method_types_path: /api/v1/pa/config/payment_method_types
+    capability_page_size: 1000
+    # 結帳能力只看一次性交易（官方：oneoff→Payment Intent API；recurring→Consent API）。
+    capability_transaction_mode: oneoff
     # Bearer token 官方 30 分鐘（expires_at 為準——digest §H）；提前這麼多秒重登。
     token_refresh_safety_seconds: 60
     request_timeout_seconds: 30

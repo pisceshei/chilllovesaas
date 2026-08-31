@@ -23,6 +23,7 @@ const DETAIL_QUERY = `
     shopPaymentProviders {
       provider environment status clientId webhookId
       apiSecretFingerprint webhookSecretFingerprint enabledMethods
+      availableMethods capabilitiesSyncedAt
     }
     pspMethodDictionary(provider: $provider) { code label }
   }
@@ -35,6 +36,16 @@ const SET_MUTATION = `
     shopPaymentProviderSet(provider: $provider, environment: $environment,
         clientId: $clientId, apiSecret: $apiSecret, webhookSecret: $webhookSecret,
         webhookId: $webhookId, enabledMethods: $enabledMethods) {
+      shopPaymentProvider { provider }
+      capabilityWarning
+      userErrors { field message code }
+    }
+  }
+`;
+
+const SYNC_MUTATION = `
+  mutation shopPaymentProviderSyncCapabilities($provider: String!) {
+    shopPaymentProviderSyncCapabilities(provider: $provider) {
       shopPaymentProvider { provider }
       userErrors { field message code }
     }
@@ -50,6 +61,8 @@ interface ProviderRow {
   apiSecretFingerprint: string | null;
   webhookSecretFingerprint: string | null;
   enabledMethods: string[];
+  availableMethods: string[];
+  capabilitiesSyncedAt: string | null;
 }
 
 interface DetailData {
@@ -59,6 +72,7 @@ interface DetailData {
 
 interface SetPayload {
   shopPaymentProvider: { provider: string } | null;
+  capabilityWarning?: string | null;
   userErrors: { field: string[] | null; message: string; code: string }[];
 }
 
@@ -121,6 +135,28 @@ export function SettingsPaymentProviderPage() {
     return () => controller.abort();
   }, [load, meta]);
 
+  const syncCapabilities = useCallback(async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      const result = await requestAdminGraphQL<{ shopPaymentProviderSyncCapabilities: SetPayload }, { provider: string }>(
+        SYNC_MUTATION,
+        { provider: code },
+      );
+      const payload = result.shopPaymentProviderSyncCapabilities;
+      if (payload.userErrors.length > 0) {
+        showToast(payload.userErrors[0].message);
+        return;
+      }
+      showToast(t("settings.payments.syncDone"));
+      await load();
+    } catch (reason: unknown) {
+      showToast(reason instanceof Error ? reason.message : t("settings.payments.actionFailed"));
+    } finally {
+      setSaving(false);
+    }
+  }, [code, load, saving, showToast, t]);
+
   const save = useCallback(async () => {
     if (saving) return;
     setSaving(true);
@@ -144,7 +180,7 @@ export function SettingsPaymentProviderPage() {
         showToast(payload.userErrors[0].message);
         return;
       }
-      showToast(t("settings.payments.saved"));
+      showToast(payload.capabilityWarning ?? t("settings.payments.saved"));
       await load();
     } catch (reason: unknown) {
       showToast(
@@ -265,19 +301,34 @@ export function SettingsPaymentProviderPage() {
       </Card>
 
       <Card padded>
-        <h3 className="cl-section-title">{t("settings.payments.methodsTitle")}</h3>
+        <div className="cl-provider-head">
+          <h3 className="cl-section-title">{t("settings.payments.methodsTitle")}</h3>
+          <Button disabled={saving} onClick={() => void syncCapabilities()} size="small" variant="secondary">
+            {t("settings.payments.syncNow")}
+          </Button>
+        </div>
         <p className="cl-card-note">{t("settings.payments.methodsHint")}</p>
-        {data.pspMethodDictionary.map((entry) => (
-          <SwitchRow
-            checked={methods.includes(entry.code)}
-            key={entry.code}
-            label={entry.label}
-            onChange={(next) =>
-              setMethods((previous) =>
-                next ? [ ...previous, entry.code ] : previous.filter((item) => item !== entry.code))
-            }
-          />
-        ))}
+        <p className="cl-card-note">
+          {row?.capabilitiesSyncedAt
+            ? t("settings.payments.syncedAt").replace("{time}", new Date(row.capabilitiesSyncedAt).toLocaleString())
+            : t("settings.payments.neverSynced")}
+        </p>
+        {data.pspMethodDictionary.map((entry) => {
+          const unavailable = Boolean(row?.capabilitiesSyncedAt) && !row!.availableMethods.includes(entry.code);
+          return (
+            <SwitchRow
+              checked={methods.includes(entry.code)}
+              disabled={unavailable}
+              hint={unavailable ? t("settings.payments.notOnAccount") : undefined}
+              key={entry.code}
+              label={entry.label}
+              onChange={(next) =>
+                setMethods((previous) =>
+                  next ? [ ...previous, entry.code ] : previous.filter((item) => item !== entry.code))
+              }
+            />
+          );
+        })}
       </Card>
     </Page>
   );

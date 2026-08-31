@@ -643,5 +643,10 @@
   "settings.payments.methodsHint": "只有启用的方式会出现在结账页（仍受服务商可用性限制）。",
   "settings.payments.saving": "保存中…",
   "settings.payments.airwallex.about": "Airwallex 为你的商店处理信用卡与香港本地钱包收款。请填入你 Airwallex 账号的 API 凭证；秘密会加密存储，保存后只显示指纹。",
-  "settings.payments.paypal.about": "PayPal 让买家以 PayPal 余额、信用卡与钱包付款。请填入 PayPal Developer 后台的 REST app 凭证。"
+  "settings.payments.paypal.about": "PayPal 让买家以 PayPal 余额、信用卡与钱包付款。请填入 PayPal Developer 后台的 REST app 凭证。",
+  "settings.payments.syncNow": "重新读取可用方式",
+  "settings.payments.syncDone": "已重新读取可用付款方式",
+  "settings.payments.syncedAt": "已于 {time} 从服务商账号同步。",
+  "settings.payments.neverSynced": "尚未同步——保存有效凭证后会自动读入你账号已开通的方式。",
+  "settings.payments.notOnAccount": "你的服务商账号尚未开通此方式"
 }

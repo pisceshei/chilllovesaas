@@ -133,6 +133,49 @@ RSpec.describe "Admin GraphQL shop payment provider settings", type: :request do
     expect(response.parsed_body.dig("data", "pspMethodDictionary")).to eq([])
   end
 
+  it "P10 🔴 憑證存好 ⇒ 自動讀取帳號可用方式並自動啟用（使用者裁定）；回 availableMethods" do
+    allow(Psp::Airwallex::PaymentMethodTypes).to receive(:fetch).and_return(%w[alipayhk card])
+    post_graphql(set_full, variables: { provider: "airwallex", apiSecret: "sk_ok" })
+    row = response.parsed_body.dig("data", "shopPaymentProviderSet", "shopPaymentProvider")
+    expect(row["availableMethods"]).to eq(%w[alipayhk card])
+    expect(row["enabledMethods"]).to match_array(%w[card alipayhk])
+    expect(row["capabilitiesSyncedAt"]).to be_present
+    expect(response.parsed_body.dig("data", "shopPaymentProviderSet", "capabilityWarning")).to be_nil
+  end
+
+  it "P11 🔴 自動讀取失敗 fail-soft：儲存成立＋capabilityWarning，不出 userErrors" do
+    allow(Psp::Airwallex::PaymentMethodTypes).to receive(:fetch)
+      .and_raise(Psp::Airwallex::Client::Unauthorized, "401")
+    post_graphql(set_full, variables: { provider: "airwallex", apiSecret: "sk_bad" })
+    payload = response.parsed_body.dig("data", "shopPaymentProviderSet")
+    expect(payload["userErrors"]).to eq([])
+    expect(payload["capabilityWarning"]).to include("credentials_invalid")
+    ActsAsTenant.with_tenant(shop) do
+      expect(ShopPaymentProvider.sole.api_secret).to eq("sk_bad") # 儲存不被連坐
+      expect(ShopPaymentProvider.sole.capabilities_synced_at).to be_nil
+    end
+  end
+
+  it "P12 sync mutation：未存憑證 ⇒ NOT_CONFIGURED；上游 401 ⇒ UPSTREAM_UNAUTHORIZED；成功 ⇒ 更新快取" do
+    post_graphql(sync_mutation, variables: { provider: "airwallex" })
+    expect(response.parsed_body.dig("data", "shopPaymentProviderSyncCapabilities", "userErrors"))
+      .to contain_exactly(a_hash_including("code" => "NOT_CONFIGURED"))
+
+    allow(Psp::Airwallex::PaymentMethodTypes).to receive(:fetch).and_return(%w[fps])
+    post_graphql(set_full, variables: { provider: "airwallex", apiSecret: "sk_ok" })
+
+    allow(Psp::Airwallex::PaymentMethodTypes).to receive(:fetch)
+      .and_raise(Psp::Airwallex::Client::Unauthorized, "401")
+    post_graphql(sync_mutation, variables: { provider: "airwallex" })
+    expect(response.parsed_body.dig("data", "shopPaymentProviderSyncCapabilities", "userErrors"))
+      .to contain_exactly(a_hash_including("code" => "UPSTREAM_UNAUTHORIZED"))
+
+    allow(Psp::Airwallex::PaymentMethodTypes).to receive(:fetch).and_return(%w[card fps])
+    post_graphql(sync_mutation, variables: { provider: "airwallex" })
+    row = response.parsed_body.dig("data", "shopPaymentProviderSyncCapabilities", "shopPaymentProvider")
+    expect(row["availableMethods"]).to eq(%w[card fps])
+  end
+
   it "P7 租戶隔離：另一店看不到本店的 provider 列" do
     post_graphql(set_mutation, variables: { provider: "airwallex", apiSecret: "sk_shop_a" })
 
@@ -148,6 +191,25 @@ RSpec.describe "Admin GraphQL shop payment provider settings", type: :request do
     mutation shopPaymentProviderSet($provider: String!, $enabledMethods: [String!]) {
       shopPaymentProviderSet(provider: $provider, enabledMethods: $enabledMethods) {
         shopPaymentProvider { provider enabledMethods }
+        userErrors { field message code }
+      }
+    }
+  GRAPHQL
+
+  let(:set_full) { <<~GRAPHQL }
+    mutation shopPaymentProviderSet($provider: String!, $apiSecret: String) {
+      shopPaymentProviderSet(provider: $provider, apiSecret: $apiSecret) {
+        shopPaymentProvider { provider enabledMethods availableMethods capabilitiesSyncedAt }
+        capabilityWarning
+        userErrors { field message code }
+      }
+    }
+  GRAPHQL
+
+  let(:sync_mutation) { <<~GRAPHQL }
+    mutation shopPaymentProviderSyncCapabilities($provider: String!) {
+      shopPaymentProviderSyncCapabilities(provider: $provider) {
+        shopPaymentProvider { availableMethods enabledMethods capabilitiesSyncedAt }
         userErrors { field message code }
       }
     }

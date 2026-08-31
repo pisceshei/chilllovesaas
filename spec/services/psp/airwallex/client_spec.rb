@@ -26,7 +26,7 @@ RSpec.describe Psp::Airwallex::Client do
     end
   end
 
-  it "登入用列上憑證、host 依 environment（sandbox ⇒ api-demo）、token 進後續請求" do
+  it "登入用列上憑證、host 依 environment（sandbox ⇒ api.sandbox，官方現值 2026-08-31）、token 進後續請求" do
     calls = []
     transport = transport_recording(calls, [
       response_stub(201, { token: "tok_1", expires_at: 25.minutes.from_now.iso8601 }),
@@ -35,7 +35,7 @@ RSpec.describe Psp::Airwallex::Client do
     client = described_class.new(provider, transport:)
     client.get_json("/api/v1/pa/payment_intents/int_1")
 
-    expect(calls[0][:host]).to eq("api-demo.airwallex.com")
+    expect(calls[0][:host]).to eq("api.sandbox.airwallex.com")
     expect(calls[0][:headers]["x-client-id"]).to eq([ "cid_test" ])
     expect(calls[0][:headers]["x-api-key"]).to eq([ "key_test" ])
     expect(calls[1][:headers]["authorization"]).to eq([ "Bearer tok_1" ])
