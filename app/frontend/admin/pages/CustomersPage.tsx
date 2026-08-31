@@ -186,6 +186,7 @@ export function CustomersPage() {
       ) : customers.length === 0 && !searching ? (
         <Card>
           <EmptyState
+            action={null}
             description={t("customers.empty.description")}
             illustration={<UserPlus size={30} strokeWidth={1.7} />}
             title={t("customers.empty.title")}
@@ -217,6 +218,7 @@ export function CustomersPage() {
             />
           ) : (
             <EmptyState
+              action={null}
               description={t("customers.noMatch.description")}
               illustration={<Search size={28} strokeWidth={1.7} />}
               title={t("customers.noMatch.title")}

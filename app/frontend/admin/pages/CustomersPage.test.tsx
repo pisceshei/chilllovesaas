@@ -138,7 +138,7 @@ describe("顧客頁", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("顧客資料載入失敗");
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "重試" }));
+    await user.click(screen.getByRole("button", { name: "再試一次" }));
     expect(await screen.findByRole("heading", { name: "還沒有顧客" })).toBeVisible();
   });
 });

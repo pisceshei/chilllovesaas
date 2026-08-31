@@ -36,9 +36,14 @@ RSpec.describe "Admin GraphQL customers contract", type: :request do
   end
 
   it "G1+G2+G4 列表：GID／MoneyV2 字串金額／預設序 updated_at desc／跨店不洩漏" do
+    # 🔴 G4 殺手格前置：updated_at 序必須與 created_at 序**反向**——old_one 先建
+    # （created_at 較舊）但其後被 touch（updated_at 較新）。若兩序同向，
+    # 「掉回 created_at 預設鍵」的突變殺不動斷言（本輪實紅過的教訓）。
     old_one = create_customer(shop, email: "old@example.com", total_spent_cents: 148_000,
-                                    orders_count: 2, updated_at: 2.hours.ago)
-    new_one = create_customer(shop, email: "new@example.com", first_name: "新", last_name: "客")
+                                    orders_count: 2, created_at: 3.hours.ago, updated_at: 3.hours.ago)
+    new_one = create_customer(shop, email: "new@example.com", first_name: "新", last_name: "客",
+                                    created_at: 2.hours.ago, updated_at: 2.hours.ago)
+    ActsAsTenant.with_tenant(shop) { old_one.update!(note: "touched") } # updated_at 推到最新
     create_customer(other_shop, email: "leak@example.com")
     login!
 
@@ -50,15 +55,16 @@ RSpec.describe "Admin GraphQL customers contract", type: :request do
     GQL
     data = response.parsed_body.dig("data", "customers")
     emails = data.fetch("nodes").map { |n| n.fetch("email") }
-    expect(emails).to eq([ "new@example.com", "old@example.com" ]) # updated_at desc
+    # updated_at desc：old_one 剛被 touch ⇒ 排最前（created_at desc 會反過來——G4 殺手格）
+    expect(emails).to eq([ "old@example.com", "new@example.com" ])
     expect(emails).not_to include("leak@example.com")
 
-    node = data.fetch("nodes").last
+    node = data.fetch("nodes").first # = old_one
     expect(node.fetch("id")).to eq("gid://chilllove/Customer/#{old_one.id}")
     expect(node.dig("amountSpent", "amount")).to eq("1480.00") # 🔴 字串、兩位小數、非裸 cents
     expect(node.dig("amountSpent", "currencyCode")).to eq("HKD")
-    expect(response.parsed_body.dig("data", "customers", "nodes").first.fetch("displayName")).to eq("新 客")
     expect(node.fetch("displayName")).to eq("old@example.com") # 姓名缺項回落 email
+    expect(data.fetch("nodes").last.fetch("displayName")).to eq("新 客")
 
     # customer(id) 單抓＋跨店 null
     post_graphql(%({ customer(id: "gid://chilllove/Customer/#{new_one.id}") { email } }))
@@ -71,6 +77,9 @@ RSpec.describe "Admin GraphQL customers contract", type: :request do
   it "G3 搜尋：姓名/email/電話 CONTAINS、多詞 AND；`%` 經跳脫不得萬用匹配" do
     create_customer(shop, email: "chan.tai@example.com", first_name: "大文", last_name: "陳")
     create_customer(shop, email: "wong@example.com", first_name: "小明", phone: "+85291234567")
+    # 🔴 G3 殺手格前置：必須有「含 0 但不含字面 0%」的列——未跳脫的 `%0%%`＝
+    # 含 0 即中，會撈到它；跳脫後找字面「0%」＝空。沒有這列，殺手殺不動（本輪實紅過）。
+    create_customer(shop, email: "zero0@example.com")
     login!
 
     post_graphql(%({ customers(first: 10, query: "chan.tai") { nodes { email } } }))
