@@ -171,18 +171,29 @@ RSpec.describe "Storefront order creation（G6-0a）", type: :request do
     expect(response).to redirect_to("/checkouts/#{checkout.token}")
   end
 
-  it "O10 完成鈕點亮邏輯：前置未齊＝disabled＋原因；齊備＝真 form" do
+  it "O10 前進閘（G6-4 改制）：鈕恆在、/submit server 驗必填；未齊 ⇒ 422 banner；齊備 ⇒ 307 續 POST" do
     post "/cart/add.js", params: { items: [ { id: variant.id, quantity: 1 } ] }.to_json,
                          headers: { "CONTENT_TYPE" => "application/json" }
     post "/checkout"
     token = response.headers["Location"][%r{/checkouts/(\h{48})}, 1]
     get "/checkouts/#{token}"
-    expect(response.body).to include("請先選擇運送方式。")
-    expect(response.body).not_to include("data-complete-form")
+    expect(response.body).to include("data-complete-order").and include("Complete order")
 
-    post "/checkouts/#{token}/delivery", params: { country_code: "HK" }
-    post "/checkouts/#{token}/payment", params: { payment_method_id: pay_method.id }
-    get "/checkouts/#{token}"
-    expect(response.body).to include("data-complete-form")
+    post "/checkouts/#{token}/submit", params: { email: "buyer@example.com" } # 地址與付款未齊
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(response.body).to include("Please fill in the required fields")
+
+    post "/checkouts/#{token}/submit", params: {
+      email: "buyer@example.com", country_code: "HK", first_name: "測", last_name: "買",
+      address1: "1 Queen's Road", city: "Central", payment_method_id: pay_method.id,
+      billing_mode: "same_as_shipping"
+    }
+    expect(response).to have_http_status(:temporary_redirect) # 307＝保 POST 接 /complete
+    expect(response.headers["Location"]).to end_with("/checkouts/#{token}/complete")
+    checkout = ActsAsTenant.with_tenant(shop) { Checkout.find_by!(token:) }
+    expect(checkout.email).to eq("buyer@example.com")
+    expect(checkout.shipping_address).to include("first_name" => "測", "address1" => "1 Queen's Road",
+                                                 "city" => "Central", "country_code" => "HK")
+    expect(checkout.shipping_lines).to be_present # 預設選最便宜（85 §5.2）
   end
 end

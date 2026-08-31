@@ -1,117 +1,215 @@
-/* 結帳線三頁（結帳／QR 付款／thank-you）的自寫樣式（G6 打磨包）。
- * 🔴 鐵律 8/9：值取自我方 tokens（tokens.css 同頁載入）；結構對位本尊雙欄形
- *   （24 §5／86 §4 實測），CSS 全自寫；87 號 1:1 量測輪後再校準到量測值。
- * 佈局：≥ 990px 雙欄（主流程＋sticky 摘要欄）；窄幅單欄、摘要在前。 */
+/* 結帳線樣式（G6-4 重寫）。
+ * 🔴 值來源＝docs/research/87-checkout-page-full-teardown.md（2026-08-31 六層實測）；
+ *   CSS 全自寫（同值不同碼——鐵律 9），量測錨逐段註記 87 §N。
+ * 佈局：≥1006px 雙欄（87 §6 實測斷點；左白右 #f5f5f5、分欄線＝左半 border-right）；
+ *   <1006 單欄＋摘要 accordion；≥586 表單併欄。
+ * QR／卡片／錢包／thank-you 頁沿用檔尾既有類（本輪不動那四頁）。 */
 
-.ck { margin: 0; background: var(--surface-2); color: var(--text);
-      font-family: -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
-      font-size: var(--t-md); line-height: 1.5; }
-.ck * { box-sizing: border-box; }
-
-.ck-header { background: var(--surface); border-bottom: 1px solid var(--border);
-             padding: var(--sp-400) var(--sp-600); }
-.ck-brand { color: var(--text); text-decoration: none; font-size: var(--t-lg); font-weight: 700; }
-
-.ck-layout { display: grid; grid-template-columns: 1fr; gap: var(--sp-600);
-             max-width: 1100px; margin: 0 auto; padding: var(--sp-600) var(--sp-400) var(--sp-600); }
-@media (min-width: 990px) {
-  .ck-layout { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
-  .ck-aside { position: sticky; top: var(--sp-600); order: 2; }
-  .ck-main { order: 1; }
+.ck {
+  /* 87 §4 色板／字域 */
+  --ck-ink: #000;
+  --ck-muted: #707070;      /* 左欄次要字 */
+  --ck-muted-2: #666;       /* 側欄次要字 */
+  --ck-line: #dedede;       /* 髮絲線 */
+  --ck-surface: #f5f5f5;    /* 右欄底／占位盒 */
+  --ck-panel: rgba(0, 0, 0, 0.043); /* redirect 面板 */
+  --ck-accent: #005bd1;     /* 藍：連結／主鈕／選中環 */
+  --ck-sel-bg: #f5f6ff;     /* 選中列底 */
+  --ck-thumb-bg: #ededed;   /* 縮圖底 */
+  --ck-r: 12px;             /* 欄位／盒／主鈕圓角 */
+  --ck-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+             sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  margin: 0; background: #fff; color: var(--ck-ink);
+  font-family: var(--ck-font); font-size: 14px; line-height: 1.35;
 }
-.ck-aside { order: -1; }
-@media (min-width: 990px) { .ck-aside { order: 2; } }
+.ck * { box-sizing: border-box; }
+.ck-sr { position: absolute; width: 1px; height: 1px; overflow: hidden;
+         clip: rect(0 0 0 0); white-space: nowrap; }
 
-.ck-title { font-size: var(--t-xl); margin: 0 0 var(--sp-400); }
+/* ── header（87 §5：h65、髮絲線；logo 對齊左欄內容左緣） ── */
+.ck-header { height: 65px; background: #fff; border-bottom: 1px solid var(--ck-line);
+             display: flex; align-items: center; }
+.ck-header > .ck-brand { margin-left: 14px; } /* QR/卡/thank-you 舊頁殼（無 hgrid）沿用 */
+.ck-hgrid { height: 100%; width: 100%; display: flex; align-items: center; }
+.ck-hcell { width: 100%; max-width: 552px; margin: 0 auto; padding: 0 14px; }
+.ck-brand { color: var(--ck-ink); text-decoration: none; font-size: 20px;
+            font-weight: 600; line-height: 24px; }
 
-/* 卡片化區塊：既有 data-* 容器直接吃樣式（HTML 零改動） */
-.ck [data-delivery], .ck [data-payment] {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-300);
-  padding: var(--sp-600); margin-bottom: var(--sp-400); }
-.ck [data-delivery] h2, .ck [data-payment] h2 { margin: 0 0 var(--sp-300); font-size: var(--t-lg); }
+/* ── 手機摘要 accordion（87 §6：h64、#f5f5f5、上下髮絲線） ── */
+.ck-acc { background: var(--ck-surface); border-bottom: 1px solid var(--ck-line); }
+.ck-acc summary { list-style: none; cursor: pointer; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 552px; margin: 0 auto; padding: 0 14px; }
+.ck-acc summary::-webkit-details-marker { display: none; }
+.ck-acc-label { color: var(--ck-accent); font-size: 14px;
+  display: inline-flex; align-items: center; gap: 6px; }
+.ck-acc[open] .ck-acc-label .ck-chevron { transform: rotate(180deg); }
+.ck-acc-total { font-size: 14px; font-weight: 600; color: var(--ck-ink); }
+.ck-acc-panel { max-width: 552px; margin: 0 auto; padding: 0 14px 21px; }
 
-.ck label { display: block; }
-.ck select, .ck input[type="text"] {
-  width: 100%; padding: var(--sp-200) var(--sp-300); margin-top: var(--sp-100);
-  border: 1px solid var(--border); border-radius: var(--r-200);
-  font-size: var(--t-md); background: var(--surface); color: var(--text); }
-.ck select:focus, .ck input:focus, .ck button:focus-visible {
-  outline: 2px solid var(--text); outline-offset: 1px; }
+/* ── 雙欄殼（87 §5：分欄線＝calc(50% + 50px)；灰底延伸到右緣） ── */
+.ck-shell { display: block; }
+.ck-colin { max-width: 552px; margin: 0 auto; padding: 21px 14px 0; }
+.ck-col-aside { display: none; }
+@media (min-width: 1006px) {
+  .ck-acc { display: none; }
+  .ck-shell { display: grid; grid-template-columns: calc(50% + 50px) calc(50% - 50px);
+              align-items: stretch; min-height: calc(100vh - 66px); }
+  .ck-col-main { background: #fff; border-right: 1px solid var(--ck-line); }
+  .ck-col-aside { display: block; background: var(--ck-surface); }
+  .ck-colin-main { max-width: 500px; margin: 0 0 0 auto; padding: 38px 41px 38px 14px; }
+  .ck-colin-aside { max-width: 480px; margin: 0; padding: 38px 40px; }
+  .ck-hcell { max-width: none; padding: 0;
+    width: calc(50% + 50px); padding-right: 41px; }
+  .ck-hcell > .ck-brand { display: block; max-width: 500px; margin-left: auto; }
+}
 
-/* 選項列（運送方式／付款方式）：邊框列＋選中高亮（本尊手風琴形的第一步） */
-.ck fieldset { border: 1px solid var(--border); border-radius: var(--r-200);
-               padding: 0; margin: var(--sp-300) 0; overflow: hidden; }
-.ck fieldset legend { padding: 0 var(--sp-200); margin-left: var(--sp-300);
-                      font-size: var(--t-sm); color: var(--text-2); }
-.ck fieldset label { display: flex; align-items: center; gap: var(--sp-300);
-                     padding: var(--sp-300) var(--sp-400); margin: 0; cursor: pointer;
-                     border-top: 1px solid var(--border); }
-.ck fieldset label:first-of-type { border-top: 0; }
-.ck fieldset label:has(input:checked) { background: var(--surface-2); }
-.ck fieldset input[type="radio"] { accent-color: var(--text); width: 16px; height: 16px; flex: none; }
-.ck [data-payment-details] { margin: 0 var(--sp-400) var(--sp-300) var(--sp-600);
-                             font-size: var(--t-sm); color: var(--text-2); }
-.ck [data-billing-address] label { padding: var(--sp-200) var(--sp-400); }
+/* ── 區塊節奏（87 §4：stack 20px、視覺區距 ~38px） ── */
+.ck-sec { margin: 0 0 38px; }
+.ck-h2 { font-size: 20px; font-weight: 600; line-height: 24px; margin: 0 0 14px; }
+.ck-h3 { font-size: 16px; font-weight: 600; line-height: 1.2; margin: 0 0 14px; }
+.ck-h2row { display: flex; align-items: baseline; justify-content: space-between; }
+.ck-h2row .ck-h2 { margin-bottom: 14px; }
+.ck-sub { color: var(--ck-muted); font-size: 14px; margin: -10px 0 14px; }
+.ck-link { color: var(--ck-accent); font-size: 14px; text-decoration: underline; }
+.ck-banner { background: var(--ck-surface); border: 1px solid var(--ck-line);
+  border-radius: var(--ck-r); padding: 12px 16px; margin: 0 0 21px; font-size: 14px; }
 
-.ck button[type="submit"], .ck button[data-complete-order] {
-  appearance: none; border: 0; border-radius: var(--r-btn, var(--r-200));
-  padding: var(--sp-300) var(--sp-600); font-size: var(--t-md); font-weight: 600;
-  cursor: pointer; background: var(--surface-2); color: var(--text);
-  border: 1px solid var(--border); }
-.ck [data-complete-form] button, .ck [data-pay-form] button {
-  width: 100%; background: var(--text); color: var(--surface); border: 0;
-  padding: var(--sp-300) var(--sp-600); font-size: var(--t-lg); margin-top: var(--sp-300); }
-.ck button[disabled] { opacity: .5; cursor: not-allowed; width: 100%; margin-top: var(--sp-300); }
-.ck [data-complete-note], .ck [data-shipping-hint] { color: var(--text-2); font-size: var(--t-sm); }
-.ck [data-delivery-error], .ck [data-payment-unavailable], .ck [data-shipping-unavailable] {
-  background: var(--caution-bg); border: 1px solid var(--caution);
-  border-radius: var(--r-200); padding: var(--sp-200) var(--sp-300); font-size: var(--t-sm); }
+/* ── 浮動 label 欄位（87 §4：h47/49、r12、1px #dedede、值 14/500、浮標 12px） ── */
+.ck-fields { display: grid; row-gap: 11px; }
+.ck-row2 { display: grid; grid-template-columns: 1fr; gap: 11px; }
+.ck-row3 { display: grid; grid-template-columns: 1fr; gap: 11px; }
+@media (min-width: 586px) {
+  .ck-row2 { grid-template-columns: 1fr 1fr; }
+  .ck-row3 { grid-template-columns: 1fr 1fr 1fr; }
+}
+.ck-field { position: relative; }
+.ck-input, .ck-select { width: 100%; height: 47px; padding: 13px 10px;
+  border: 1px solid var(--ck-line); border-radius: var(--ck-r); background: #fff;
+  color: var(--ck-ink); font-family: var(--ck-font); font-size: 14px; font-weight: 500;
+  line-height: 1.35; appearance: none; }
+.ck-input::placeholder { color: var(--ck-muted); font-weight: 400; }
+.ck-flabel { position: absolute; left: 11px; top: 6px; font-size: 12px;
+  color: var(--ck-muted); pointer-events: none; opacity: 0; transition: opacity .1s; }
+.ck-input:not(:placeholder-shown) { padding: 21px 10px 6px; }
+.ck-input:not(:placeholder-shown) + .ck-flabel { opacity: 1; }
+.ck-field--select .ck-select { height: 49px; padding: 21px 30px 6px 10px; }
+.ck-flabel.is-float { opacity: 1; }
+.ck-chevron { flex: none; }
+.ck-field--select .ck-chevron { position: absolute; right: 12px; top: 50%;
+  margin-top: -5px; pointer-events: none; }
+.ck-info { position: absolute; right: 12px; top: 50%; margin-top: -9px;
+  width: 18px; height: 18px; padding: 0; border: 0; background: none;
+  color: var(--ck-ink); cursor: pointer; }
+.ck-field:has(.ck-info) .ck-input { padding-right: 40px; }
+.ck-input:focus-visible, .ck-select:focus-visible,
+.ck-checkbox:focus-visible, .ck-radio:focus-visible,
+.ck-paybtn:focus-visible { outline: 3px solid var(--ck-ink); }
 
-/* 摘要欄 */
-.ck-aside { background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--r-300); padding: var(--sp-600); }
-.ck-aside h2 { margin: 0 0 var(--sp-300); font-size: var(--t-lg); }
-.ck-lines { width: 100%; border-collapse: collapse; }
-.ck-lines td { padding: var(--sp-200) 0; border-bottom: 1px solid var(--border);
-               font-size: var(--t-sm); vertical-align: top; }
-.ck-lines td:last-child { text-align: right; white-space: nowrap;
-                          font-variant-numeric: tabular-nums; }
-.ck [data-checkout-shipping] { display: flex; justify-content: space-between;
-  margin: var(--sp-300) 0 0; font-size: var(--t-sm); color: var(--text-2); }
-.ck [data-checkout-total] { display: flex; justify-content: space-between;
-  margin: var(--sp-200) 0 0; padding-top: var(--sp-300); border-top: 1px solid var(--border);
-  font-size: var(--t-xl); font-weight: 700; font-variant-numeric: tabular-nums; }
-.ck [data-checkout-total]::before { content: "合計"; font-size: var(--t-md); font-weight: 600; }
+/* ── checkbox（87 §4：18×18 自繪、勾選藍） ── */
+.ck-check { display: flex; align-items: center; gap: 11px; margin: 14px 0 0;
+  font-size: 14px; cursor: pointer; }
+.ck-checkbox { appearance: none; width: 18px; height: 18px; margin: 0; flex: none;
+  border: 1px solid var(--ck-line); border-radius: 5px; background: #fff; cursor: pointer;
+  display: inline-grid; place-content: center; }
+.ck-checkbox:checked { background: var(--ck-accent); border-color: var(--ck-accent); }
+.ck-checkbox:checked::before { content: ""; width: 10px; height: 10px;
+  background: #fff; clip-path: polygon(14% 52%, 38% 74%, 88% 20%, 100% 32%, 39% 95%, 2% 62%); }
 
-/* QR 付款頁 */
-.ck-card { background: var(--surface); border: 1px solid var(--border);
-           border-radius: var(--r-300); padding: var(--sp-600);
-           max-width: 440px; margin: var(--sp-600) auto; text-align: center; }
-.ck-card h1 { font-size: var(--t-xl); margin: 0 0 var(--sp-300); }
-.ck-card [data-qrcode] { max-width: 260px; margin: var(--sp-400) auto;
-  padding: var(--sp-300); border: 1px solid var(--border); border-radius: var(--r-200);
+/* ── 占位盒（87 §4：#f5f5f5、r12、pad16、字 #707070） ── */
+.ck-placeholder { background: var(--ck-surface); border-radius: var(--ck-r);
+  padding: 16px; color: var(--ck-muted); font-size: 14px; }
+
+/* ── 選項盒（87 §4：1px #dedede r12；列 h~50 pad14；選中＝藍環＋#f5f6ff） ── */
+.ck-optbox { border: 1px solid var(--ck-line); border-radius: var(--ck-r);
+  background: #fff; }
+.ck-opt { position: relative; border-top: 1px solid var(--ck-line); }
+.ck-opt:first-child { border-top: 0; border-radius: var(--ck-r) var(--ck-r) 0 0; }
+.ck-opt:last-child { border-radius: 0 0 var(--ck-r) var(--ck-r); }
+.ck-opt:only-child { border-radius: var(--ck-r); }
+.ck-opt.is-sel { background: var(--ck-sel-bg); }
+.ck-opt.is-sel::before { content: ""; position: absolute; inset: -1px;
+  border: 1px solid var(--ck-accent); border-radius: inherit; pointer-events: none; }
+.ck-opt-row { display: flex; align-items: center; gap: 11px; padding: 14px;
+  cursor: pointer; font-size: 14px; }
+.ck-opt-name { flex: 1; font-weight: 600; display: flex; flex-direction: column; gap: 2px; }
+.ck-opt-sub { color: var(--ck-muted); font-size: 12px; font-weight: 400; }
+.ck-opt-price { font-variant-numeric: tabular-nums; }
+.ck-opt-grouphead { padding: 12px 14px 0; font-size: 12px; color: var(--ck-muted); }
+.ck-opt-panel { padding: 14px; border-top: 1px solid var(--ck-line);
+  background: var(--ck-panel); font-size: 14px; text-align: center; }
+.ck-opt:last-child .ck-opt-panel { border-radius: 0 0 var(--ck-r) var(--ck-r); }
+.ck-billing-form { text-align: left; display: grid; row-gap: 11px; }
+[data-payment-methods] .ck-opt-panel[data-psp-redirect] { min-height: 66px;
+  display: grid; place-content: center; }
+
+/* ── radio（87 §4：18×18；選中＝6px 藍環白心） ── */
+.ck-radio { appearance: none; width: 18px; height: 18px; margin: 0; flex: none;
+  border: 1px solid var(--ck-line); border-radius: 50%; background: #fff; cursor: pointer; }
+.ck-radio:checked { border: 6px solid var(--ck-accent); }
+
+/* ── 主鈕（87 §4：全寬 h50、#005bd1、白 14/600、r12） ── */
+.ck-paybtn { display: block; width: 100%; height: 50px; border: 0;
+  border-radius: var(--ck-r); background: var(--ck-accent); color: #fff;
+  font-family: var(--ck-font); font-size: 14px; font-weight: 600; cursor: pointer; }
+.ck-refreshbtn { margin-top: 11px; padding: 10px 16px; border: 1px solid var(--ck-line);
+  border-radius: var(--ck-r); background: #fff; font-size: 14px; cursor: pointer; }
+
+/* ── footer（87 §4：頂部髮絲線＋藍連結） ── */
+.ck-footer { border-top: 1px solid var(--ck-line); margin-top: 38px;
+  padding: 21px 0 38px; }
+
+/* ── 側欄摘要（87 §4：縮圖 64 r16、badge 20 黑 r8、Total 18/600、HKD 12 灰） ── */
+.ck-line { display: flex; align-items: center; gap: 15px; margin-bottom: 14px; }
+.ck-thumb { position: relative; flex: none; width: 64px; height: 64px;
+  border-radius: 16px; background: var(--ck-thumb-bg); }
+.ck-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+.ck-qty { position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px;
+  padding: 0 5px; border-radius: 8px; background: #000; color: #fff;
+  font-size: 12px; line-height: 20px; text-align: center; }
+.ck-line-title { flex: 1; font-size: 14px; line-height: 1.35;
+  display: flex; flex-direction: column; gap: 2px; }
+.ck-line-variant { color: var(--ck-muted-2); font-size: 12px; }
+.ck-line-price { font-size: 14px; font-variant-numeric: tabular-nums; }
+.ck-costs { margin-top: 21px; }
+.ck-cost-row { display: flex; justify-content: space-between; margin-bottom: 7px;
+  font-size: 14px; }
+.ck-cost-row > span:last-child { font-variant-numeric: tabular-nums; }
+.ck-cost-muted { color: var(--ck-muted-2); }
+.ck-total-row { display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 14px; }
+.ck-total-label, .ck-total-val { font-size: 18px; font-weight: 600;
+  font-variant-numeric: tabular-nums; }
+.ck-total-ccy { font-size: 12px; font-weight: 400; color: var(--ck-muted-2); }
+
+/* ════ 以下＝QR／卡片／錢包／thank-you 頁沿用類（G6-1c/1d 立形；本輪不改動 UI，
+ * 87 號只涵蓋結帳主頁——四頁的對位輪另開）。 ════ */
+.ck-card { background: #fff; border: 1px solid var(--ck-line);
+           border-radius: var(--ck-r); padding: 24px;
+           max-width: 440px; margin: 24px auto; text-align: center; }
+.ck-card h1 { font-size: 20px; margin: 0 0 12px; }
+.ck-card [data-qrcode] { max-width: 260px; margin: 16px auto;
+  padding: 12px; border: 1px solid var(--ck-line); border-radius: var(--ck-r);
   background: #fff; }
 .ck-card [data-qrcode] svg { width: 100%; height: auto; display: block; }
-.ck-card [data-pay-state] { color: var(--text-2); font-size: var(--t-sm); }
-.ck-card a { color: var(--text); }
-
-/* thank-you 頁 */
-.ck-thanks { max-width: 560px; margin: var(--sp-600) auto; }
-.ck-thanks .ck-card { max-width: none; text-align: left; margin: 0; }
-.ck-thanks h1 { font-size: var(--t-xl); margin: 0 0 var(--sp-200); }
-.ck-thanks table { width: 100%; border-collapse: collapse; margin: var(--sp-400) 0; }
-.ck-thanks td { padding: var(--sp-200) 0; border-bottom: 1px solid var(--border);
-                font-size: var(--t-sm); }
-.ck-thanks td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
-.ck-thanks [data-order-total] { font-size: var(--t-lg); font-weight: 700; }
-.ck-thanks [data-payment-instructions] { background: var(--surface-2);
-  border-radius: var(--r-200); padding: var(--sp-400); margin-top: var(--sp-400); }
-.ck-thanks [data-payment-instructions] h2 { margin: 0 0 var(--sp-200); font-size: var(--t-md); }
-
-/* G6-1d：卡片／錢包付款頁 */
+.ck-card [data-pay-state] { color: var(--ck-muted); font-size: 12px; }
+.ck-card a { color: var(--ck-ink); }
 .ck-card [data-card-mount], .ck-card [data-wallet-mount] {
-  margin: var(--sp-400) 0; min-height: 56px; text-align: left; }
+  margin: 16px 0; min-height: 56px; text-align: left; }
 .ck-pay-btn { width: 100%; appearance: none; border: 0; cursor: pointer;
-  background: var(--text); color: var(--surface); border-radius: var(--r-btn, var(--r-200));
-  padding: var(--sp-300) var(--sp-600); font-size: var(--t-lg); font-weight: 600; }
+  background: var(--ck-accent); color: #fff; border-radius: var(--ck-r);
+  padding: 12px 24px; font-size: 16px; font-weight: 600; }
 .ck-pay-btn[disabled] { opacity: .5; cursor: not-allowed; }
+.ck-thanks { max-width: 560px; margin: 24px auto; padding: 0 14px; }
+.ck-thanks .ck-card { max-width: none; text-align: left; margin: 0; }
+.ck-thanks h1 { font-size: 20px; margin: 0 0 8px; }
+.ck-thanks table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+.ck-thanks td { padding: 8px 0; border-bottom: 1px solid var(--ck-line);
+                font-size: 14px; }
+.ck-thanks td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.ck-thanks [data-order-total] { font-size: 16px; font-weight: 600; }
+.ck-thanks [data-payment-instructions] { background: var(--ck-surface);
+  border-radius: var(--ck-r); padding: 16px; margin-top: 16px; }
+.ck-thanks [data-payment-instructions] h2 { margin: 0 0 8px; font-size: 14px; }
+/* 舊頁殼沿用類（QR/卡/thank-you 頁 header） */
+.ck-layout { display: block; max-width: 1100px; margin: 0 auto; padding: 24px 14px; }

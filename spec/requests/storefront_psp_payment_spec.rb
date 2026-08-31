@@ -113,7 +113,7 @@ RSpec.describe "Storefront PSP payment（G6-1c）", type: :request do
   it "Q2 🔴 PSP 快照走 manual complete ⇒ 422 且不建單；完成鈕改「以 X 付款」指向 /pay" do
     checkout = ready_checkout!
     get "/checkouts/#{checkout.token}"
-    expect(response.body).to include("data-pay-form").and include("以 AlipayHK 付款")
+    expect(response.body).to include("data-ck-form").and include("Pay now")
     expect(response.body).not_to include("data-complete-form")
 
     post "/checkouts/#{checkout.token}/complete"

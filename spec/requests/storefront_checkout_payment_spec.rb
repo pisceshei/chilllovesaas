@@ -44,7 +44,7 @@ RSpec.describe "Storefront checkout payment（第三包）", type: :request do
   it "P1 零付款方式 ⇒ 無法接受付款（86 §4 官方字面對位）；無 radio、無完成鈕以外表單" do
     checkout = checkout!
     get "/checkouts/#{checkout.token}"
-    expect(response.body).to include("此商店目前無法接受付款")
+    expect(response.body).to include("This store can't accept payments right now.")
     expect(response.body).not_to include('name="payment_method_id"')
   end
 
@@ -54,7 +54,7 @@ RSpec.describe "Storefront checkout payment（第三包）", type: :request do
     get "/checkouts/#{checkout.token}"
     expect(response.body).to include("Bank Deposit").and include("轉帳至 000-000")
     expect(response.body).not_to include('type="radio" name="payment_method_id"')
-    expect(response.body).to include("完成訂單")
+    expect(response.body).to include("Complete order")
 
     post "/checkouts/#{checkout.token}/payment", params: { payment_method_id: m.id }
     expect(response).to have_http_status(:see_other)
@@ -87,7 +87,7 @@ RSpec.describe "Storefront checkout payment（第三包）", type: :request do
     ActsAsTenant.with_tenant(shop) { m.update!(active: false) }
     post "/checkouts/#{checkout.token}/payment", params: { payment_method_id: m.id }
     expect(response).to have_http_status(:unprocessable_content)
-    expect(response.body).to include("付款方式已變更")
+    expect(response.body).to include("The payment methods have changed")
     expect(reload!(checkout).payment_method_snapshot).to eq({})
   end
 
@@ -95,7 +95,7 @@ RSpec.describe "Storefront checkout payment（第三包）", type: :request do
     m = method!("money_order")
     checkout = checkout!
     get "/checkouts/#{checkout.token}"
-    expect(response.body).to include("與收貨地址相同").and include("使用不同的帳單地址")
+    expect(response.body).to include("Same as shipping address").and include("Use a different billing address")
 
     post "/checkouts/#{checkout.token}/payment",
          params: { payment_method_id: m.id, billing_mode: "different" }
