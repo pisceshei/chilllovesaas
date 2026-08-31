@@ -62,7 +62,7 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
    <!-- 依 63 號 §G.4 / 61 號 §1.3 修正，原文：「**金額**：全程 **integer cents**，出現 float 即 bug；序列化層才轉 `MoneyV2` / `MoneyBag`。」
         原文只擋住「float」，擋不住「單位」——2026-08-12 裁定二讓儲存一律 ×100 之後，
         把儲存值直接送 PSP 就是 100 倍收款，而原文對此完全沉默。🔴 任何人不得把本條縮回一行。 -->
-   - 🔴 **儲存尺度 ≠ 顯示位數 ≠ 對外單位，這是三件事**：儲存一律 ×100／顯示一律兩位小數（2026-08-12 裁定二）／**送 PSP 依該 PSP pack 明文宣告的「格式 ＋ 該格式的參數」**——`amount_format: minor_units | decimal_string`**兩種都存在**（Stripe／Adyen／Datatrans＝整數 minor unit；**Airwallex＝十進位主單位字串，根本不用 minor unit**），格式與參數**任一未宣告一律 reject，不得預設**；`minor_units` 的 exponent 正常值＝ISO 4217，但 **Adyen 明文覆蓋 ISO、Stripe 對 HUF／TWD 另有「整除 100」約束** ⇒ **ISO 只是 pack 可以選擇的底表，不是換算基數**。物流商走十進位字串（58 §G.3），與 PSP 的**任何一種**格式**都不是同一件事**，不得合併成一個「對外轉換」。
+   - 🔴 **儲存尺度 ≠ 顯示位數 ≠ 對外單位，這是三件事**：儲存一律 ×100／顯示一律兩位小數（2026-08-12 裁定二）／**送 PSP 依該 PSP pack 明文宣告的「格式 ＋ 該格式的參數」**——`amount_format: minor_units | decimal_string | decimal_number`**三種都存在**（Stripe／Adyen／Datatrans＝整數 minor unit；**PayPal＝十進位主單位字串**；**Airwallex＝十進位主單位 JSON number，根本不用 minor unit**），格式與參數**任一未宣告一律 reject，不得預設**；`minor_units` 的 exponent 正常值＝ISO 4217，但 **Adyen 明文覆蓋 ISO、Stripe 對 HUF／TWD 另有「整除 100」約束、🔴 decimal 兩格式的 per-currency 位數同樣逐家宣告（PayPal 與 Airwallex 都明文把 ISO 為 2 位的幣別記成 0 位——HUF 兩家皆是）** ⇒ **ISO 只是 pack 可以選擇的底表，不是換算基數**。物流商走十進位字串（58 §G.3），與 PSP 的**任何一種**格式**都不是同一件事**，不得合併成一個「對外轉換」。
      <!-- 依 69 號 §V-188 修正（2026-08-12），原文：「送 PSP 依該 PSP pack 明文宣告的 minor unit
           （正常值＝ISO 4217 exponent；**未宣告一律 reject，不得預設**）。」
           原文**不完整**：它假設所有 PSP 都收整數 minor unit，而 69 號查到四家 PSP 四種算法
@@ -70,9 +70,16 @@ CHILL LOVE——多租戶電商 SaaS，功能邏輯與交互 1:1 對齊 Shopify 
           這個型別在該類 PSP 上根本不適用，照原文實作的人只能繞過型別自己組字串。
           🔴 **不得把本次修正讀成鐵律 3 放寬。** 恰恰相反：外部證據正面證實了「PSP 單位必須逐家宣告、
              不得套 ISO」是對的，只是**宣告的內容比原本想的多一個維度（格式）**。全文＝65 §A R6／§D。 -->
+     <!-- 2026-08-31 再修正（G6-0(b) 一手複驗，PR #217 已落 65 全文）：上一段 69 號記的
+          「Airwallex＝十進位主單位**字串**」其 wire form 判定有誤——官方 data_types 逐字
+          "$9.99 is represented as 9.99"＋create schema `amount: number`＝JSON **number**
+          ⇒ 第三格式 `decimal_number`（R7／`Money::PspNumber`）；decimal_string 仍真實存在，
+          實證代表改由 PayPal 承接（value 官方 pattern 為 string）。
+          🔴 同樣不得讀成放寬：格式維度從二值變三值，「未宣告一律 reject」一字未鬆；
+          且 per-currency 位數也證實必須逐家宣告（65 §D.2 A7）。全文＝65 §A R7／§D。 -->
    - 🔴 **把儲存值直接送 PSP＝收款 100 倍**（JPY ¥1,480 儲存 `148000`，送出必須是 `1480`）；**把 PSP 回報值直接落庫＝少記 99%**；**拿 PSP 金額直接比對 checkout 金額＝每張 JPY 訂單被判成金額不符而自動退款**。三種形態同一個根因，**且在 HKD／USD 這些 exponent=2 的幣別下全部測試皆綠**。
-   - 不同單位用**不同型別**（`Money::Storage` / `Money::PspMinor` / **`Money::PspDecimal`** / `Money::Decimal`，無隱式 `to_i`／`to_s`）與**不同識別字後綴**（`*_cents` / `*_minor` / `*_psp_decimal` / `*_decimal`）；PSP adapter 簽名**只收該 pack 宣告格式對應的那一個值物件**，傳裸 Integer／裸 String／**或傳 `Money::Decimal`（物流商與 JSON-LD 用的那個，字串長得一模一樣）**一律 `TypeError`。**註釋不算防呆**（65 §C）。
-   - **zero-decimal 幣別必須進金額測試矩陣**（至少 **JPY／TWD／KRW**），缺者 CI fail（65 §H）。沒有這一條，這個 bug 只會在上線後的對帳日出現。**`amount_format` 兩種格式也各必須有 fixture pack**，且 **TWD 要測「整除 100 違反 ⇒ raise 且不得自動湊整」**（65 §H.1／T16／T19，依 69 號）——`decimal_string` 型的誤用**在 HKD 上也會錯**，它是唯一基準法域測得到卻沒人在測的送款事故形態。
+   - 不同單位用**不同型別**（`Money::Storage` / `Money::PspMinor` / **`Money::PspDecimal`** / **`Money::PspNumber`** / `Money::Decimal`，無隱式 `to_i`／`to_s`）與**不同識別字後綴**（`*_cents` / `*_minor` / `*_psp_decimal` / `*_psp_number` / `*_decimal`）；PSP adapter 簽名**只收該 pack 宣告格式對應的那一個值物件**，傳裸 Integer／裸 String／**或傳 `Money::Decimal`（物流商與 JSON-LD 用的那個，字串長得一模一樣）**一律 `TypeError`。**註釋不算防呆**（65 §C）。
+   - **zero-decimal 幣別必須進金額測試矩陣**（至少 **JPY／TWD／KRW**），缺者 CI fail（65 §H）。沒有這一條，這個 bug 只會在上線後的對帳日出現。**`amount_format` 三種格式也各必須有 fixture pack**（2026-08-31 起含 `decimal_number`；另需 per-currency 零位覆蓋 pack——65 §H.1），且 **TWD 要測「整除 100 違反 ⇒ raise 且不得自動湊整」**（65 §H.1／T16／T19，依 69 號）——主單位兩格式的誤用**在 HKD 上也會錯**，它是唯一基準法域測得到卻沒人在測的送款事故形態。
    - **不得**用 `jurisdictions.<code>.currency_format.exponent` 或 `currency_display.iso4217_zero_decimal_overridden` 當換算基數——前者自 2026-08-12 起語義是**顯示位數**（58 §G.3），後者是**被覆蓋的顯示清單**，兩者都不是 PSP 單位來源。
 4. **API-first（D5）**：admin SPA 只打 `/admin/api/{version}/graphql.json`；命名 `resourceVerb`；分頁用 cursor＋`pageInfo`（≤250）；GID 格式 `gid://chilllove/{Type}/{id}`。契約見 `docs/research/28`。
    - **錯誤分三層，不是「HTTP 恆 200」**：

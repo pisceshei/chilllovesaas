@@ -109,7 +109,8 @@ files("app/services/psp/**/*.rb").each do |path|
   end
 end
 
-# ── C2：對 `Psp::*` 的呼叫，金額 kwarg 名須以 `_minor` 或 `_psp_decimal` 結尾 ────
+# ── C2：對 `Psp::*` 的呼叫，金額 kwarg 名須以 `_minor`／`_psp_decimal`／`_psp_number` 結尾 ──
+# （`_psp_number`＝R7 的後綴，2026-08-31 隨 65 §C.2 增補；G6-1 的 Airwallex adapter 用它。）
 #
 # 擋住「不經 adapter、直接組 HTTP body」的繞過。
 AMOUNT_KWARG = /\b(?<name>\w*(?:amount|price|total|fee|charge|refund)\w*):\s/i
@@ -119,12 +120,12 @@ files("app/**/*.rb").each do |path|
 
     line.scan(AMOUNT_KWARG) do
       name = Regexp.last_match[:name]
-      next if name.end_with?("_minor", "_psp_decimal")
+      next if name.end_with?("_minor", "_psp_decimal", "_psp_number")
       # 值物件本身當參數傳是合法的（adapter 會驗型別）。
-      next if line.match?(/#{Regexp.escape(name)}:\s*(amount|\w*_(minor|psp_decimal))\b/)
+      next if line.match?(/#{Regexp.escape(name)}:\s*(amount|\w*_(minor|psp_decimal|psp_number))\b/)
 
       violations << "[C2] #{rel(path)}:#{no} 對 Psp::* 的呼叫用了金額 kwarg `#{name}:`——" \
-        "須以 `_minor` 或 `_psp_decimal` 結尾（65 §C.3 C2）"
+        "須以 `_minor`／`_psp_decimal`／`_psp_number` 結尾（65 §C.3 C2）"
     end
   end
 end
@@ -194,12 +195,12 @@ end
 if violations.empty?
   puts "OK：金額單位邊界檢查通過"
   puts "  - C1 PSP 目錄無 `_cents`"
-  puts "  - C2 對 Psp::* 的金額 kwarg 皆為 `_minor`／`_psp_decimal`"
+  puts "  - C2 對 Psp::* 的金額 kwarg 皆為 `_minor`／`_psp_decimal`／`_psp_number`"
   puts "  - C3 migration 無 `t.decimal`／`t.float`，`_cents` 皆為 bigint"
   puts "  - C4 PSP 目錄無 `Money::Decimal` 與裸 `_decimal`"
   puts "  - C5 `__build` 只出現在 #{BUILD_ALLOWED.join(', ')}"
   puts "  - 矩陣：zero-decimal 幣別 #{boundary.fetch('test_matrix_zero_decimal_required').join('／')} 皆有涵蓋；" \
-       "兩種 amount_format 皆有 fixture pack"
+       "#{boundary.fetch('test_matrix_amount_formats_required').size} 種 amount_format 皆有 fixture pack"
   exit 0
 end
 
