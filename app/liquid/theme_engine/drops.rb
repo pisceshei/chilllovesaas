@@ -656,6 +656,13 @@ module ThemeEngine
     def types = []
     def vendors = []
 
+    # 付款圖示值域（第三包；86 §5 實錘）：本尊語義＝「enabled payment providers」
+    # 導出的**卡別**清單；🔴 manual methods 不進圖示列（Bank Deposit 啟用期間
+    # footer 圖示仍空——86 §5 實測），且我方 v1 無信用卡 provider ⇒ **顯式空集合**
+    # （Ella payment-icons/footer-bottom 的 for 迴圈零次＝正確渲染；PSP pack 落地時
+    # 由 provider 能力導出卡別，完整 enum 官方未載——86 §5 V）。
+    def enabled_payment_types = []
+
     def liquid_method_missing(name)
       ThemeEngine.count_miss("ShopDrop.#{name}")
       nil
@@ -775,16 +782,22 @@ module ThemeEngine
   # Liquid 點取即鍵取——契約同 `/cart.js`，83 §3.3）。
   class CartDrop < BaseDrop
     def initialize(currency:, cart_json: nil)
+      # 🔴 `duties_included` 必須**顯式 false**（第三包；86 §7 差距 #1）：Ella 的
+      # tax-note 四分支用 `== false` 顯式比較（cart-drawer:380 等），Liquid 的
+      # `nil == false` 為假 ⇒ 缺鍵時四分支全不命中、整段稅注（含「未含稅」文案）
+      # 靜默空白。taxes_included 同理保持顯式（真值接 tax_settings 隨法域包）。
       if cart_json
         super(cart_json.merge("currency" => { "iso_code" => cart_json["currency"] },
-                              "taxes_included" => false, "discount_applications" => []))
+                              "taxes_included" => false, "duties_included" => false,
+                              "discount_applications" => []))
       else
         super({ "item_count" => 0, "items" => [], "total_price" => 0,
                 "items_subtotal_price" => 0, "original_total_price" => 0,
                 "total_discount" => 0, "note" => nil, "attributes" => {},
                 "currency" => { "iso_code" => currency },
                 "cart_level_discount_applications" => [], "requires_shipping" => false,
-                "taxes_included" => false, "discount_applications" => [] })
+                "taxes_included" => false, "duties_included" => false,
+                "discount_applications" => [] })
       end
     end
 

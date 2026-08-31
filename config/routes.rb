@@ -80,6 +80,14 @@ Rails.application.routes.draw do
     # 結帳線第二包：選國＋選運送方式（server 重驗 F3-3；85 §5.3 per-shipment 形）。
     post "checkouts/:token/delivery" => "storefront/checkouts#delivery", format: false,
          as: :storefront_checkout_delivery
+    # 結帳線第三包：選付款方式（server 重驗 active；86 §4 實測形）。
+    post "checkouts/:token/payment" => "storefront/checkouts#payment", format: false,
+         as: :storefront_checkout_payment
+    # 結帳線第三包：cart 運費試算三支（86 §6 官方現值：prepare/async/同步；
+    # price＝十進位主單位字串——鐵律 3 序列化層邊界）。
+    get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates", format: false
+    post "cart/prepare_shipping_rates.json" => "storefront/cart#prepare_shipping_rates", format: false
+    get  "cart/async_shipping_rates.json" => "storefront/cart#async_shipping_rates", format: false
     # 🔴 帶前綴的 cart／localization（包 34）：RoutesDrop 對主題吐 `{prefix}/cart/add` 等
     #   帶前綴 URL（67 §F.4），POST 不經 GET catch-all ⇒ 必須顯式收。
     #   constraint 正則＝Markets::UrlPrefix::SEGMENT 的字面複本（routes 載入時機不宜
@@ -98,6 +106,10 @@ Rails.application.routes.draw do
       post "cart/clear"     => "storefront/cart#clear"
       post "localization"   => "storefront/localization#create"
       post "checkout"       => "storefront/checkouts#create"
+      # 86 §6：官方端點形自帶 {locale} 前綴段——帶前綴形必須收。
+      get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates"
+      post "cart/prepare_shipping_rates.json" => "storefront/cart#prepare_shipping_rates"
+      get  "cart/async_shipping_rates.json" => "storefront/cart#async_shipping_rates"
     end
     get "/" => "storefront/pages#root", as: :storefront_root
     get "*path" => "storefront/pages#show", format: false, as: :storefront_page
