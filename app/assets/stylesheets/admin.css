@@ -1411,6 +1411,95 @@ a {
   margin-top: var(--sp-200);
 }
 
+/* 付款設定（G6-3；86 §1 版面）──────────────────────────────────────── */
+.cl-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-200);
+  padding: var(--sp-300) var(--sp-400);
+  border-radius: var(--r-200);
+  font-size: var(--t-sm);
+  margin-bottom: var(--sp-400);
+}
+.cl-banner--warning {
+  background: var(--caution-bg);
+  border: 1px solid var(--caution);
+  color: var(--text);
+}
+.cl-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-200);
+  margin: 0 0 var(--sp-300);
+  font-size: var(--t-md);
+}
+.cl-provider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-400);
+}
+.cl-provider-row__icon {
+  display: inline-flex;
+  padding: var(--sp-200);
+  border: 1px solid var(--border);
+  border-radius: var(--r-200);
+  color: var(--text-2);
+}
+.cl-provider-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-050);
+  flex: 1;
+  min-width: 0;
+}
+.cl-provider-row__text small {
+  color: var(--text-2);
+  font-size: var(--t-sm);
+}
+.cl-method-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-100);
+  margin-top: var(--sp-100);
+}
+.cl-method-chip {
+  font-size: var(--t-xs);
+  padding: 0 var(--sp-200);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  color: var(--text-2);
+}
+.cl-config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cl-config-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-400);
+  padding: var(--sp-300) 0;
+  border-top: 1px solid var(--border);
+}
+.cl-config-list__row:first-child { border-top: 0; }
+.cl-config-list__row--soon { opacity: 0.6; }
+.cl-config-list__chevron { color: var(--text-2); }
+.cl-provider-back {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-300);
+}
+.cl-provider-back__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-100);
+  font-size: var(--t-sm);
+  color: var(--text-2);
+  text-decoration: none;
+}
+.cl-provider-back__link:hover { color: var(--text); }
+
 /* 付款設定 provider 卡頭（G6-3 前半；標題＋狀態 badge 同列） */
 .cl-provider-head {
   display: flex;

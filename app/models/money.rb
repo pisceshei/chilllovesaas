@@ -194,10 +194,10 @@ module Money
     # 對帳事故時這些欄位就是完整還原資訊；欄位集依 §K.8 逐項。
     def instrument_conversion(direction:, pack:, currency:, storage_cents:, value:)
       wire = case value
-             when PspMinor   then value.minor
-             when PspDecimal then value.string
-             when PspNumber  then value.number.to_s("F")
-             end
+      when PspMinor   then value.minor
+      when PspDecimal then value.string
+      when PspNumber  then value.number.to_s("F")
+      end
       payload = { direction:, psp: pack.code, amount_format: pack.amount_format,
                   currency:, storage_cents:, wire_value: wire,
                   divisibility: pack.divisibility_for(currency) }

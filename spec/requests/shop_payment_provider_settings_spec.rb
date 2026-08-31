@@ -105,6 +105,34 @@ RSpec.describe "Admin GraphQL shop payment provider settings", type: :request do
     )
   end
 
+  it "P8 enabled_methods：字典內子集可存；🔴 字典外 code ⇒ INVALID（G6-1 白名單複驗的前提）" do
+    post_graphql(set_with_methods, variables: { provider: "airwallex", enabledMethods: [ "card", "alipayhk", "fps" ] })
+    expect(response.parsed_body.dig("data", "shopPaymentProviderSet", "userErrors")).to eq([])
+    ActsAsTenant.with_tenant(shop) do
+      expect(ShopPaymentProvider.sole.enabled_methods).to eq(%w[card alipayhk fps])
+    end
+
+    post_graphql(set_with_methods, variables: { provider: "airwallex", enabledMethods: [ "card", "AlipayHK" ] })
+    payload = response.parsed_body.dig("data", "shopPaymentProviderSet")
+    expect(payload["userErrors"]).to contain_exactly(
+      a_hash_including("field" => [ "enabled_methods" ], "code" => "INVALID")
+    )
+    # 🔴 失敗批不落任何變更（存顯示名會讓 webhook 白名單複驗永遠不命中）
+    ActsAsTenant.with_tenant(shop) do
+      expect(ShopPaymentProvider.sole.enabled_methods).to eq(%w[card alipayhk fps])
+    end
+  end
+
+  it "P9 pspMethodDictionary：平台字典逐項（code＋label）；未知 provider ⇒ []" do
+    post_graphql('query { pspMethodDictionary(provider: "airwallex") { code label } }')
+    entries = response.parsed_body.dig("data", "pspMethodDictionary")
+    expect(entries.map { |e| e["code"] }).to include("card", "alipayhk", "fps")
+    expect(entries.find { |e| e["code"] == "alipayhk" }["label"]).to eq("AlipayHK")
+
+    post_graphql('query { pspMethodDictionary(provider: "stripe") { code } }')
+    expect(response.parsed_body.dig("data", "pspMethodDictionary")).to eq([])
+  end
+
   it "P7 租戶隔離：另一店看不到本店的 provider 列" do
     post_graphql(set_mutation, variables: { provider: "airwallex", apiSecret: "sk_shop_a" })
 
@@ -115,6 +143,15 @@ RSpec.describe "Admin GraphQL shop payment provider settings", type: :request do
     post_graphql(list_query)
     expect(response.parsed_body.dig("data", "shopPaymentProviders")).to eq([])
   end
+
+  let(:set_with_methods) { <<~GRAPHQL }
+    mutation shopPaymentProviderSet($provider: String!, $enabledMethods: [String!]) {
+      shopPaymentProviderSet(provider: $provider, enabledMethods: $enabledMethods) {
+        shopPaymentProvider { provider enabledMethods }
+        userErrors { field message code }
+      }
+    }
+  GRAPHQL
 
   def login!
     post login_path, params: { email: staff.email, password: "long-password-123" }

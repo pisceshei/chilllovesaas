@@ -138,6 +138,11 @@ module Types
     field :shop_payment_providers, [ Types::ShopPaymentProviderType ], null: false,
       description: "本店已落鍵的 PSP provider 設定列（G6-3 前半；祕密欄只回指紋，37 §6.3）。"
 
+    field :psp_method_dictionary, [ Types::PspMethodDictEntryType ], null: false,
+      description: "平台層 method 字典（limits psp_method_dictionary；詳情頁 toggle 清單的來源）。" do
+      argument :provider, String, required: true
+    end
+
     field :product_vendors, [ String ], null: false,
       description: "本店既有廠商（去重、字母序；組織分類卡 autocomplete 用，91 §12）。"
     field :product_types, [ String ], null: false,
@@ -231,6 +236,15 @@ module Types
       ActsAsTenant.with_tenant(shop) do
         ShopPaymentProvider.order(:provider).to_a
       end
+    end
+
+    # 平台字典（無租戶資料，仍要求登入態——與其他 settings 查詢一致）。
+    #
+    # @return [Array<Hash>] [{code:, label:}, …]
+    # @note 副作用：無；只讀 limits。
+    def psp_method_dictionary(provider:)
+      authorize_products!
+      ShopPaymentProvider.method_dictionary(provider)
     end
 
     # 本店既有廠商清單（distinct、排序、上限引 api.pagination_max_page_size）。

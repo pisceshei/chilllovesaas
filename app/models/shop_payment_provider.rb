@@ -49,6 +49,16 @@ class ShopPaymentProvider < ApplicationRecord
     Limits.enum(:psp_credentials, :environment_enum).map(&:downcase)
   end
 
+  # 平台層 method 字典（G6-3 分層：字典平台層、白名單租戶層）。
+  #
+  # @param provider [String]
+  # @return [Array<Hash>] [{code:, label:}, …]；未知 provider ⇒ []
+  def self.method_dictionary(provider)
+    Limits.fetch(:psp_method_dictionary, provider.to_sym)
+  rescue KeyError
+    []
+  end
+
   private
 
   def provider_in_platform_dictionary
@@ -64,9 +74,17 @@ class ShopPaymentProvider < ApplicationRecord
   end
 
   def enabled_methods_are_strings
-    return if enabled_methods.is_a?(Array) && enabled_methods.all?(String)
+    unless enabled_methods.is_a?(Array) && enabled_methods.all?(String)
+      return errors.add(:enabled_methods, "必須是字串陣列（method code 白名單）")
+    end
 
-    errors.add(:enabled_methods, "必須是字串陣列（method code 白名單）")
+    # 🔴 白名單 ⊆ 平台字典（存顯示名而非字典 code 會讓 G6-1 的
+    # 「webhook type ∈ 白名單」server 側複驗永遠不命中——canon-specs 風險項）。
+    dictionary = self.class.method_dictionary(provider.to_s).map { |m| m[:code].to_s }
+    unknown = enabled_methods - dictionary
+    return if unknown.empty?
+
+    errors.add(:enabled_methods, "含字典外的 method code：#{unknown.join('、')}")
   end
 
   # 37 §6.3：UI 只顯示指紋。祕密欄變更時同步刷新；清空祕密 ⇒ 指紋一併清空。
