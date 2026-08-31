@@ -12,7 +12,8 @@
   地址簿/統計增量/關聯回寫）＋`customers`/`customer` GraphQL query（keyset＋
   MoneyV2 首發）＋`/admin/customers` 真列表頁（74 §1 五欄）。
 - 驗證：後端 9 例＋前端 4 例新測全綠；八格突變全紅；全套 rspec/vitest/rubocop/
-  typecheck/build/brakeman/audit/20 支 invariant 腳本 exit 0。
+  typecheck/build/brakeman/audit 與 `config/ci.rb` 所列 invariant 腳本逐支 exit 0
+  （清單導出：`grep -c "Invariants:" config/ci.rb`）。
 
 ## ② 為什麼這樣改
 
