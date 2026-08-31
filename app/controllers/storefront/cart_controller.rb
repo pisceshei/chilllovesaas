@@ -63,9 +63,65 @@ module Storefront
       render json: CartSerializer.cart_json(current_cart.reload).merge(sections_payload)
     end
 
+    # GET /cart/shipping_rates.json——運費試算（第三包；86 §6 官方三支的同步形）。
+    # 回應形＝官方逐字結構：{"shipping_rates":[{"name","price","source"}]}；
+    # 🔴 price＝**十進位主單位字串**（"62.73"）——序列化層邊界（鐵律 3），
+    #   cents 在這裡經 divmod 轉字串、不得把 cents 裸值放進 JSON。
+    # 費率集合＝46c 合併形（試算是單一清單，split 呈現屬 checkout 頁）；
+    # 不可配送／不在 market ⇒ 空陣列（官方錯誤形未取得——ours，登記 86）。
+    def shipping_rates
+      render json: { "shipping_rates" => estimate_rates }
+    end
+
+    # POST /cart/prepare_shipping_rates.json——官方「發起計算」支。我方同步引擎
+    # 一次算完（官方 prepare 的回應形未取得——ours：回與同步支相同結果）。
+    def prepare_shipping_rates
+      render json: { "shipping_rates" => estimate_rates }
+    end
+
+    # GET /cart/async_shipping_rates.json——官方「取結果」支（未完成回 null；
+    # 我方同步引擎恆已完成）。
+    def async_shipping_rates
+      render json: { "shipping_rates" => estimate_rates }
+    end
+
     private
 
     COOKIE = "_cl_buyer"
+
+    # 試算輸入＝cart 行的即時快照（與 CreateFromCart 同源欄）；目的地取
+    # `shipping_address[country]`（86 §6 官方參數形；zip/province 收下不用——
+    # 我方 zone 為國級，州級登記 85 §4 V）。
+    def estimate_rates
+      country = params.dig(:shipping_address, :country).to_s.upcase
+      return [] if country.blank?
+
+      cart = current_cart
+      lines = ActsAsTenant.with_tenant(Current.shop) do
+        cart.cart_line_items.includes(product_variant: :product).order(:id).map do |line|
+          variant = line.product_variant
+          { key: line.id.to_s, quantity: line.quantity, unit_price_cents: variant.price_cents,
+            weight_grams: variant.weight_grams, requires_shipping: variant.requires_shipping,
+            shipping_profile_id: variant.product.shipping_profile_id }
+        end
+      end
+      return [] if lines.empty?
+
+      result = ActsAsTenant.with_tenant(Current.shop) do
+        Checkouts::RateResolver.call(shop: Current.shop, country_code: country, lines:)
+      end
+      return [] unless result.ok?
+
+      result.merged_options.map do |option|
+        { "name" => option.name, "price" => decimal_string(option.price_cents),
+          "source" => "chilllove" }
+      end
+    end
+
+    # cents → 十進位主單位字串（"6.00" 形；同 Seo::JsonLd 的 divmod 紀律——不走 float）。
+    def decimal_string(cents)
+      format("%d.%02d", cents / 100, cents % 100)
+    end
 
     def current_cart
       @current_cart ||= ActsAsTenant.with_tenant(Current.shop) do

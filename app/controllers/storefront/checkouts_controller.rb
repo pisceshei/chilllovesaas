@@ -73,6 +73,33 @@ module Storefront
       redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
     end
 
+    # POST /checkouts/:token/payment——選付款方式＋帳單地址模式（第三包；86 §4）。
+    # 🔴 server 重驗：提交的 method id 必須是本店**現行 active** 的方法（商家停用後
+    #   客戶端殘留的 radio 不得落庫——與 delivery 的 F3-3 重驗同一紀律）。
+    def payment
+      checkout = find_checkout
+      return head :not_found if checkout.nil?
+
+      method = ActsAsTenant.with_tenant(current_shop) do
+        ShopPaymentMethod.where(shop_id: current_shop.id).active
+                         .find_by(id: params[:payment_method_id].to_s)
+      end
+      if method.nil?
+        return render_page(checkout, error: "付款方式已變更，請重新選擇。",
+                                     status: :unprocessable_content)
+      end
+
+      billing_mode = params[:billing_mode].to_s
+      billing_mode = "same_as_shipping" unless %w[same_as_shipping different].include?(billing_mode)
+      ActsAsTenant.with_tenant(current_shop) do
+        checkout.update!(
+          payment_method_snapshot: method.snapshot,
+          billing_address: checkout.billing_address.merge("mode" => billing_mode)
+        )
+      end
+      redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
+    end
+
     private
 
     COOKIE = "_cl_buyer"
@@ -213,7 +240,47 @@ module Storefront
         #{delivery}
         <p data-checkout-shipping>運費：#{checkout.currency} #{Money::Display.call(Money::Storage.from_cents(checkout.shipping_cents, checkout.currency))}</p>
         <p data-checkout-total>#{checkout.currency} #{total}</p>
-        <p>付款步驟隨後續結帳包接上。</p></body></html>
+        #{payment_html(checkout)}</body></html>
+      HTML
+    end
+
+    # 付款段（第三包；86 §4 實測形）：單一方法無 radio、多方法手風琴、
+    # 零方法＝無法接受付款（86 §4 官方字面的我方文案）；帳單地址 radio 恰兩值。
+    # 「完成訂單」鈕＝佔位 disabled（訂單成立走 F5 包——按鈕先立形，不接假流程）。
+    def payment_html(checkout)
+      methods = ActsAsTenant.with_tenant(current_shop) do
+        ShopPaymentMethod.where(shop_id: current_shop.id).active.ordered.to_a
+      end
+      if methods.empty?
+        return "<section data-payment><h2>付款</h2>" \
+               "<p data-payment-unavailable>此商店目前無法接受付款。</p></section>"
+      end
+
+      chosen_id = checkout.payment_method_snapshot["id"]
+      rows = methods.map do |m|
+        selected = chosen_id ? chosen_id == m.id : m == methods.first
+        details = selected && m.additional_details.present? ?
+                    "<p data-payment-details>#{ERB::Util.html_escape(m.additional_details)}</p>" : ""
+        radio = methods.size > 1 ?
+                  "<input type=\"radio\" name=\"payment_method_id\" value=\"#{m.id}\"#{' checked' if selected}>" : ""
+        "<label>#{radio}#{ERB::Util.html_escape(m.name)}</label>#{details}"
+      end.join
+      billing_mode = checkout.billing_address["mode"] || "same_as_shipping"
+      <<~HTML
+        <section data-payment><h2>付款</h2>
+        <p>所有交易均經安全加密。</p>
+        <form method="post" action="/checkouts/#{checkout.token}/payment">
+        #{methods.size == 1 ? "<input type=\"hidden\" name=\"payment_method_id\" value=\"#{methods.first.id}\">" : ''}
+        <fieldset data-payment-methods>#{rows}</fieldset>
+        <fieldset data-billing-address><legend>帳單地址</legend>
+        <label><input type="radio" name="billing_mode" value="same_as_shipping"#{' checked' if billing_mode == 'same_as_shipping'}>與收貨地址相同</label>
+        <label><input type="radio" name="billing_mode" value="different"#{' checked' if billing_mode == 'different'}>使用不同的帳單地址</label>
+        </fieldset>
+        <button type="submit">更新付款方式</button>
+        </form>
+        <button type="button" data-complete-order disabled>完成訂單</button>
+        <p data-complete-note>訂單成立隨後續結帳包接上。</p>
+        </section>
       HTML
     end
 

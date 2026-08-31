@@ -82,6 +82,8 @@ class Shop < ApplicationRecord
   has_many :shipping_rates, dependent: :delete_all
   has_many :shipping_zones, dependent: :delete_all
   has_many :shipping_profiles, dependent: :delete_all
+  # manual 付款方式（第三包）：附屬設定，店沒了它就沒有意義（同 publications 的理由）。
+  has_many :shop_payment_methods, dependent: :delete_all
   has_many :shop_locales, dependent: :delete_all
   has_many :translations, dependent: :delete_all
   has_many :translation_statuses, class_name: "TranslationStatus", dependent: :delete_all

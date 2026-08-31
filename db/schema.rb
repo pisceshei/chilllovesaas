@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_211000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_230000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -98,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_211000) do
     t.string "email", limit: 320
     t.datetime "expires_at"
     t.json "line_items_snapshot", default: -> { "(json_array())" }, null: false
+    t.json "payment_method_snapshot", default: -> { "(json_object())" }, null: false, comment: "選定付款方式快照：{id,method_type,name,additional_details,payment_instructions}"
     t.string "presentment_currency", limit: 3, default: "HKD", null: false
     t.bigint "presentment_total_cents", default: 0, null: false
     t.string "recovery_token", limit: 64
@@ -1237,6 +1238,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_211000) do
     t.index ["shop_id", "id"], name: "uq_shop_locales_tenant_id", unique: true
     t.index ["shop_id", "locale_tag"], name: "uq_shop_locales_locale_tag", unique: true
     t.index ["shop_id", "source_guard"], name: "uq_shop_locales_single_source", unique: true
+  end
+
+  create_table "shop_payment_methods", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "manual 付款方式（86 §3；PSP 方式不落表——15-F4.2 capability 查詢）", force: :cascade do |t|
+    t.boolean "active", default: true, null: false, comment: "停用不刪列（86 §3 Deactivate 語義）"
+    t.text "additional_details", comment: "checkout 選擇付款方式時顯示（86 §3 helper①）"
+    t.virtual "builtin_guard", type: :string, limit: 32, comment: "內建型別每店唯一的物化 guard（custom 多列合法）", as: "if((`method_type` = _utf8mb4'custom'),NULL,`method_type`)", stored: true
+    t.datetime "created_at", null: false
+    t.string "method_type", limit: 32, null: false, comment: "恰四值 bank_deposit/money_order/cash_on_delivery/custom（86 §3 DOM）"
+    t.string "name", null: false, comment: "顯示名；內建型別＝正典名，custom＝商家自訂（保留名單擋）"
+    t.text "payment_instructions", comment: "下單確認頁顯示（86 §3 helper②）"
+    t.integer "position", default: 0, null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "active", "position"], name: "ix_shop_payment_methods_active_position"
+    t.index ["shop_id", "builtin_guard"], name: "uq_shop_payment_methods_builtin", unique: true
+    t.index ["shop_id", "id"], name: "uq_shop_payment_methods_tenant_id", unique: true
+    t.index ["shop_id", "name"], name: "uq_shop_payment_methods_name", unique: true
   end
 
   create_table "shops", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "租戶根；依規格明確豁免 shop_id", force: :cascade do |t|

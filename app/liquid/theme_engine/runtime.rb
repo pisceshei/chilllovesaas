@@ -97,7 +97,15 @@ module ThemeEngine
         "collections" => nil,
         "all_products" => nil,
         "predictive_search" => nil,
-        "recommendations" => nil
+        "recommendations" => nil,
+        # 第三包（86 §7 差距 #3/#4）：快捷結帳鈕全域**顯式** stub（26 行 48/647 契約
+        # ——v1 無 offsite provider ⇒ false/空；先前靠 miss-nil 碰巧 falsy，現落實）。
+        "additional_checkout_buttons" => false,
+        "content_for_additional_checkout_buttons" => "",
+        # 運費試算表單的國家 select（Ella cart-shipping-calculator:28）：值域＝
+        # active market ∩ 有費率 zone（85 §6 官方交集句，與結帳頁國家下拉同源——鐵律 7）。
+        # ⚠ 顯示名暫用國碼（國家名字典隨 markets 幣別/在地化包，登記 86）。
+        "all_country_option_tags" => country_option_tags(shop)
       }
     end
 
@@ -105,6 +113,14 @@ module ThemeEngine
 
     def assign(key, value)
       @global_assigns[key.to_s] = value
+    end
+
+    # `<option>` 串（86 §6 官方 all_country_option_tags 對位）。HTML escape 不需要
+    # ——值域是 RateResolver 驗過形的大寫 ISO 國碼。
+    def country_option_tags(shop)
+      ActsAsTenant.with_tenant(shop) { Checkouts::RateResolver.sellable_countries(shop:) }
+                  .map { |code| %(<option value="#{code}">#{code}</option>) }
+                  .join
     end
 
     # ---- 來源讀取與快取 -----------------------------------------------------
