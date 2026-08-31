@@ -39,6 +39,11 @@ Node 22.22.1＋pnpm 11.16.0（`packageManager` 同值）｜libvips 8.18.0（Acti
 master.key，credentials 未使用）、`CHILLLOVE_DATABASE_PASSWORD`、`SOLID_QUEUE_IN_PUMA=1`、
 `DISABLE_FORCE_SSL=1`（🔴 明文過渡期專用——TLS 終結就緒後**必須移除**，Rails 側
 fail-secure：未設定＝force_ssl＋assume_ssl 全開，見 `config/environments/production.rb`）。
+加密（2026-08-31 隨 G6-3a PSP 憑證層新增，`config/initializers/active_record_encryption.rb`）：
+`ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY`、`ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY`、
+`ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT`（各＝`openssl rand -hex 32`；🔴 production
+缺任一鍵 boot 即 raise——fail-closed，換鍵＝既有密文永久不可解，**只生成一次、只放 env、
+不進 Git**；bt3 已於 2026-08-31 伺服器端生成落檔）。
 Seed 專用（跑 seed 那次才帶）：`SEED_DEMO_SHOP=1`、`SEED_ADMIN_PASSWORD`。
 
 ## 5. 部署程序

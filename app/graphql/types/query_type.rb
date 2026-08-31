@@ -135,6 +135,9 @@ module Types
     field :available_locales, [ Types::PlatformLocaleType ], null: false,
       description: "平台字典中尚未被本店啟用的語言（設定 › 語言的「新增」候選；ML-4）。"
 
+    field :shop_payment_providers, [ Types::ShopPaymentProviderType ], null: false,
+      description: "本店已落鍵的 PSP provider 設定列（G6-3 前半；祕密欄只回指紋，37 §6.3）。"
+
     field :product_vendors, [ String ], null: false,
       description: "本店既有廠商（去重、字母序；組織分類卡 autocomplete 用，91 §12）。"
     field :product_types, [ String ], null: false,
@@ -214,6 +217,20 @@ module Types
       shop = context.fetch(:current_shop)
       taken = ActsAsTenant.with_tenant(shop) { ShopLocale.pluck(:locale_tag) }
       PlatformLocale.available.where.not(tag: taken)
+    end
+
+    # PSP provider 設定列（G6-3 前半）。只回**已落鍵**的列——未設定的 provider
+    # 由前端以 pack 字典（airwallex／paypal）補空卡，避免後端替每店預生資料列。
+    #
+    # @return [Array<ShopPaymentProvider>] provider 字母序；祕密欄不在 type 上（37 §6.3）
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。授權沿用 `authorize_products!`
+    #   （與 shop_locales／timezone 同一現況：settings 細粒度權限隨 M5 RBAC 展開）。
+    def shop_payment_providers
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      ActsAsTenant.with_tenant(shop) do
+        ShopPaymentProvider.order(:provider).to_a
+      end
     end
 
     # 本店既有廠商清單（distinct、排序、上限引 api.pagination_max_page_size）。

@@ -69,6 +69,9 @@ module Types
       description: "刪除一筆重導（刪除＝釋放舊 handle，HDL-8）。"
     field :url_redirect_update, mutation: Mutations::UrlRedirectUpdate,
       description: "更新自訂重導（系統產生列不可改）。"
+    # G6-3 前半：PSP provider 憑證層（祕密 write-only、payload 只回指紋——37 §6.3）。
+    field :shop_payment_provider_set, mutation: Mutations::ShopPaymentProviderSet,
+      description: "宣告式寫入 PSP provider 的憑證與偏好。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**
     #   `resource_publications` 的非建立寫入路徑（在它之前發布列只在建立時被寫入）。
     field :publication_create, mutation: Mutations::PublicationCreate,
