@@ -70,6 +70,8 @@ module Types
     field :url_redirect_update, mutation: Mutations::UrlRedirectUpdate,
       description: "更新自訂重導（系統產生列不可改）。"
     # G6-3 前半：PSP provider 憑證層（祕密 write-only、payload 只回指紋——37 §6.3）。
+    field :order_mark_as_paid, mutation: Mutations::OrderMarkAsPaid,
+      description: "把待付款訂單標記為已付款（G6-6 步 4；manual 收款確認）。"
     field :shop_payment_provider_set, mutation: Mutations::ShopPaymentProviderSet,
       description: "宣告式寫入 PSP provider 的憑證與偏好。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,

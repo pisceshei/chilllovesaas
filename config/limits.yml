@@ -694,6 +694,7 @@ idempotency:
     - refundCreate
     - returnProcess        # Shopify 文檔未載明其冪等；本專案強制（46a:620、46a:1062，ours）
     - orderCancel          # 非同步 job，本專案強制（46a:877 async；ours）
+    - orderMarkAsPaid      # 本尊 orderMarkAsPaid(idempotencyKey!) 同形（28 §4；G6-6 步 4）
     - orderEditCommit      # 🔴 46a:962 逐字「不在強制冪等名單內」，但它產生應收/退款＝金流寫入，
                            #    與 returnProcess 同性質；重覆 commit ⇒ 重複扣款或重複退款。
                            #    **本專案強制**（NP1-D，50 號漏列；見 docs/specs/16 F8.1(c)、docs/specs/54 §4）
