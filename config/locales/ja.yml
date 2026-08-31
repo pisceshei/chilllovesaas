@@ -33,6 +33,8 @@
       still_processing: "このファイルは処理中です。処理の完了後に削除してください。"
       not_ready: "このファイルはまだ処理中です。処理の完了後に編集してください。"
       update_failed_state: "処理に失敗したファイルは編集できません。削除してください。"
+    orders:
+      access_denied: "注文情報にアクセスする権限がありません。"
     customers:
       access_denied: "顧客情報にアクセスする権限がありません。"
     media:

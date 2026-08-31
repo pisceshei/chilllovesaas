@@ -169,6 +169,24 @@ module Types
       argument :id, GraphQL::Types::ID, required: true
     end
 
+    # ── 訂單讀取面（G6-6a；契約＝28 §4 最小集＋88 號實測）──
+    field :orders, OrderConnectionType, null: false, connection: false do
+      description "本店訂單清單（keyset 分頁；預設序＝processed_at desc＝官方 sortKey 預設）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+      # v1 語法：裸詞→單號/email CONTAINS；status:/financial_status:/
+      # fulfillment_status: 白名單（Orders::SearchScope）。sortKey 全值域（88 §2
+      # 十二鍵）隨列表排序包——與 products 同姿勢登記 V。
+      argument :query, String, required: false
+    end
+
+    field :order, OrderType, null: true do
+      description "以 GID 取單一訂單（不存在或非本店回 null）。"
+      argument :id, GraphQL::Types::ID, required: true
+    end
+
     # 回傳一頁已授權、tenant-isolated 的 product keyset connection。
     #
     # @param first [Integer, nil] 向後讀取的 page size
@@ -216,6 +234,32 @@ module Types
       return nil if numeric.nil?
 
       Customer.find_by(shop_id: context.fetch(:current_shop).id, id: numeric.to_i)
+    end
+
+    # 回傳一頁已授權、tenant-isolated 的 order keyset connection（G6-6a）。
+    #
+    # 預設序＝processed_at desc（88 §1 實測＝官方預設）；preload 行項/交易/顧客
+    # ——列表卡與詳情欄不 preload 就是每列三查。
+    #
+    # @return [Hash] Relay-shaped order connection
+    # @note 副作用：政策檢查與 tenant-scoped SELECT，不寫入資料。
+    def orders(first: nil, after: nil, last: nil, before: nil, query: nil)
+      authorize_orders!
+      scope = Order
+        .where(shop_id: context.fetch(:current_shop).id)
+        .preload(:line_items, :order_transactions, :customer)
+      scope = Orders::SearchScope.apply(scope:, query:)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :processed_at, direction: :desc)
+    end
+
+    # @return [Order, nil] 跨店或不存在一律 null
+    def order(id:)
+      authorize_orders!
+      numeric = id.to_s[%r{\Agid://chilllove/Order/(\d+)\z}, 1]
+      return nil if numeric.nil?
+
+      Order.find_by(shop_id: context.fetch(:current_shop).id, id: numeric.to_i)
     end
 
     # @return [Shop] 目前租戶
@@ -578,6 +622,16 @@ module Types
 
       raise GraphQL::ExecutionError.new(
         I18n.t("errors.customers.access_denied"),
+        extensions: { "code" => "ACCESS_DENIED" }
+      )
+    end
+
+    # 訂單線讀取授權（G6-6a）。權限鍵 `orders.view`（12 F3；金額與收件 PII 獨立格）。
+    def authorize_orders!
+      return if OrderPolicy.new(context[:current_staff], Order).index?
+
+      raise GraphQL::ExecutionError.new(
+        I18n.t("errors.orders.access_denied"),
         extensions: { "code" => "ACCESS_DENIED" }
       )
     end

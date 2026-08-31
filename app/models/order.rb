@@ -21,6 +21,7 @@ class Order < ApplicationRecord
 
   acts_as_tenant :shop
 
+  belongs_to :customer, optional: true # guest 單無歸戶（G6-7 管線只在有 email 時掛）
   has_many :line_items, dependent: :destroy
   has_many :order_transactions, dependent: :destroy
   has_many :events, dependent: :destroy

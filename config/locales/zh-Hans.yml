@@ -33,6 +33,8 @@
       still_processing: "文件还在处理中，完成后才能删除。"
       not_ready: "文件尚未处理完成，完成后才能编辑。"
       update_failed_state: "处理失败的文件无法编辑，只能删除。"
+    orders:
+      access_denied: "你没有权限存取订单资料。"
     customers:
       access_denied: "你没有权限存取顾客资料。"
     media:

@@ -31,7 +31,9 @@ class ChillloveSchema < GraphQL::Schema
     # 🔴 鍵是對外的 `File`、值是 model `StoredFile`（類名避開 Ruby core）。
     "File" => -> { StoredFile },
     # G6-7 顧客線（customer(id)／node 解析）；resolve_type 分支同批補——見上警告。
-    "Customer" => -> { Customer }
+    "Customer" => -> { Customer },
+    # G6-6a 訂單線（order(id)／node 解析；resolve_type 同批）。
+    "Order" => -> { Order }
   }.freeze
 
   def self.object_from_id(global_id, context)
@@ -78,6 +80,7 @@ class ChillloveSchema < GraphQL::Schema
     return Types::ProductVariantType if object.is_a?(ProductVariant)
     return Types::FileType if object.is_a?(StoredFile)
     return Types::CustomerType if object.is_a?(Customer) # G6-7（RESOLVABLE_TYPES 同批）
+    return Types::OrderType if object.is_a?(Order) # G6-6a（RESOLVABLE_TYPES 同批）
 
     raise GraphQL::RequiredImplementationMissingError, "Unsupported GraphQL object: #{object.class.name}"
   end

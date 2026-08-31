@@ -29,6 +29,13 @@ module Products
         dump: ->(v) { v.utc.iso8601(6) },
         load: ->(raw) { Time.iso8601(raw) }
       },
+      # G6-6a 訂單列表預設序＝processed_at desc（88 §1 URL 實測＝官方 sortKey
+      # 預設 PROCESSED_AT）；nil 保護——manual 建單恆寫 processed_at，快照回放
+      # 不會有 nil，但 dump 前置 utc 需要真 Time。
+      processed_at: {
+        dump: ->(v) { v.utc.iso8601(6) },
+        load: ->(raw) { Time.iso8601(raw) }
+      },
       # ── D48「所有的都跟 Shopify」：檔案庫排序（本尊 Files 頁可依
       #    Date added／File name／Size 排序）──
       # 🔴 字串鍵的 load **必須自己驗型別**：`Integer(raw)` 遇到 "abc" 會 raise
