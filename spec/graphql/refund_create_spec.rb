@@ -123,6 +123,35 @@ RSpec.describe "refundCreate", type: :request do
     end
   end
 
+  # 🔴 突變輪 M6 的守衛：無稅 fixture 下 total == subtotal + shipping，
+  #   「實退漏加稅」的突變殺不掉 ⇒ 專設帶稅訂單（tax 130 按行分攤）。
+  it "🔴 R1b 帶稅訂單：實退含稅且與預覽一致（漏稅突變在此轉紅）" do
+    order = ActsAsTenant.with_tenant(shop) do
+      o = Order.create!(
+        shop_id: shop.id, name: "#9111", order_number: 9111, currency: "HKD",
+        presentment_currency: "HKD", subtotal_cents: 2000, shipping_cents: 0,
+        tax_cents: 130, total_cents: 2130, presentment_total_cents: 2130,
+        financial_status: "paid", fulfillment_status: "unfulfilled", status: "open",
+        seller_jurisdiction: "hk", buyer_jurisdiction: "hk",
+        shipping_address: {}, billing_address: {}, processed_at: Time.current,
+        captured_total_cents: 2130, refunded_total_cents: 0
+      )
+      LineItem.create!(shop_id: shop.id, order_id: o.id, title: "含稅品",
+                       quantity: 2, fulfillable_quantity: 2, taxable: true,
+                       unit_price_cents: 1000, total_cents: 2000, currency: "HKD")
+      o
+    end
+    line = ActsAsTenant.without_tenant { order.line_items.first! }
+
+    payload = refund!(order, lines: [ { lineItemId: "gid://chilllove/LineItem/#{line.id}",
+                                        quantity: 2 } ], key: "taxed-1")
+    expect(payload.dig("data", "refundCreate", "userErrors")).to eq([])
+    # 2000（行）＋130（稅全額分攤）＝2130——漏稅的實退會是 2000
+    expect(payload.dig("data", "refundCreate", "refund", "totalRefundedSet", "shopMoney", "amount"))
+      .to eq("21.30")
+    ActsAsTenant.with_tenant(shop) { expect(order.reload.refunded_total_cents).to eq(2130) }
+  end
+
   it "R2 超上限 ⇒ REFUND_EXCEEDS_MAXIMUM_REFUNDABLE 且不寫任何列" do
     order = build_order(number: 9102)
     ActsAsTenant.without_tenant { Order.where(id: order.id).update_all(refunded_total_cents: 3000) }
