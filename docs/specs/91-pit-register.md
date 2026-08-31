@@ -3684,3 +3684,17 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   走 Lookup（買家將見）。若日後要「商家視角」預覽，另開 design_mode 分支，
   不得直接放寬 Lookup。
 - ⚪ **paginate v1 單頁 drop**：真分頁隨包 33 keyset 接線。
+
+### 3.49 G6-3（步 2 付款設定本體）的範圍外觀察（2026-09-01）
+
+- ⚪ **capture 模式＝設定面先行，行為面缺 authorization 流**：G6-1 Airwallex 為即時
+  capture（intent 直接 confirm），`automatic_after_fulfilled`／`manual` 的兩段式
+  請款（授權→請款、`authorization_days` 逾期）待 orderCapture 完整版；在那之前
+  改此設定不改變結帳行為（`docs/dev/g6-payment-settings.md` §1④ 同記）。
+- ⚪ **provider activation 的部署遷移是一次性人工步驟**：既有「有指紋」的列部署後
+  status 仍 inactive ⇒ 需生產跑 update_all 翻 active（handoff §③ 指令形）；未跑則
+  該店結帳頁 PSP 選項消失。此形態（schema 語義升級＋存量資料補值）每次「隱式判定
+  升格為顯式狀態欄」都會出現，列此供後續同型改動比對。
+- ⚪ **86 §2 官方 help 四值 vs modal 三值**（V 項照舊）：limits `capture.modes`
+  維持四值、modal 展示三值；待本尊改版再複測。
+

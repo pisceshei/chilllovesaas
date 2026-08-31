@@ -1494,6 +1494,61 @@ a {
 }
 .cl-config-list__row:first-child { border-top: 0; }
 .cl-config-list__row--soon { opacity: 0.6; }
+
+/* config 列的可點形態（capture modal 觸發鈕／manual methods 連結）——
+   佈局承接列本體，reset 掉按鈕與連結的 UA 外觀（G6-3 步 2）。 */
+.cl-config-list__button {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cl-config-list__button:hover strong { text-decoration: underline; }
+
+/* radio 選項行（86 §2 capture modal：主標＋說明句兩層）。 */
+.cl-choice {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  padding: var(--sp-2) 0;
+  cursor: pointer;
+}
+.cl-choice input[type="radio"] { margin-top: 3px; accent-color: var(--color-primary); }
+.cl-choice__text { display: flex; flex-direction: column; gap: 2px; }
+.cl-choice__text small { color: var(--color-text-secondary); font-size: var(--fs-caption); }
+
+/* ⊕ 選單（manual methods 子頁；popover 內的 menu 列表）。 */
+.cl-menu-list { list-style: none; margin: 0; padding: var(--sp-1); min-width: 240px; }
+.cl-menu-list__item {
+  display: block;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cl-menu-list__item:hover { background: var(--color-bg-hover); }
+
+/* 標題列＋動作鈕的同列排（manual methods 子頁說明句與 ⊕ 鈕）。 */
+.cl-section-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
 .cl-config-list__chevron { color: var(--text-2); }
 .cl-provider-back {
   display: flex;

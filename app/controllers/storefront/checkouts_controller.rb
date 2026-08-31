@@ -650,8 +650,8 @@ module Storefront
 
     # PSP 可下單選項（G6-1c）：[["psp:airwallex:alipayhk", "AlipayHK"], …]。
     # 三層交集（F4.2）：商家白名單 enabled ∩ 帳號能力 available ∩ 平台已實作
-    # checkout_supported_methods；provider 未存憑證（無指紋）＝未配置 ⇒ 空集合。
-    # ⚠️ status 欄不參與（activation 狀態機隨 G6-3——本階段以「憑證已配置」為門）。
+    # checkout_supported_methods；provider 未啟用（status != active）⇒ 空集合。
+    # 🔴 G6-3 步 2 起 status 欄是唯一啟用真相（activate 的前置已驗過憑證指紋）。
     def psp_payment_options
       @psp_payment_options ||= begin
         row = configured_provider("airwallex")
@@ -678,7 +678,11 @@ module Storefront
       row = ActsAsTenant.with_tenant(current_shop) do
         ShopPaymentProvider.find_by(provider:)
       end
-      row&.api_secret_fingerprint.present? ? row : nil
+      # G6-3（步 2）：activation 狀態機取代「有指紋即啟用」——status 是唯一啟用
+      # 真相（指紋只證明憑證存在；activate mutation 的前置已驗過指紋）。
+      # ⚠️ 遷移相容：既有已設憑證的店在 activate 補跑前 status 仍 inactive ⇒
+      # 部署後需一次性把「有指紋的列」翻 active（deploy 後生產腳本，worklog 記）。
+      row && row.status == "active" ? row : nil
     end
 
     # psp:<provider>:<code> → 快照（server 重驗三層交集；殘留 radio 不得落庫）。

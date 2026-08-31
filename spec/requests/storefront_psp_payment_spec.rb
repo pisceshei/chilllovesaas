@@ -18,8 +18,10 @@ RSpec.describe "Storefront PSP payment（G6-1c）", type: :request do
   end
   let!(:provider) do
     ActsAsTenant.with_tenant(shop) do
+      # G6-3 步 2 起 status 是唯一啟用真相（configured_provider 改讀它）⇒ 顯式 active。
       ShopPaymentProvider.create!(
         provider: "airwallex", client_id: "cid", api_secret: "key", webhook_secret: "whsec",
+        status: "active",
         enabled_methods: %w[card alipayhk fps], available_methods: %w[card alipayhk fps],
         capabilities_synced_at: Time.current
       )
@@ -208,5 +210,14 @@ RSpec.describe "Storefront PSP payment（G6-1c）", type: :request do
     ActsAsTenant.with_tenant(shop) { provider.update!(enabled_methods: %w[fps]) }
     post "/checkouts/#{checkout.token}/pay"
     expect(response).to have_http_status(:unprocessable_content)
+  end
+  # 🔴 G6-3 步 2 的 M4 守衛：憑證在但 status=inactive ⇒ PSP 選項不出現在付款段
+  #   （殺：configured_provider 退回「有指紋即啟用」——admin 的停用鈕變成裝飾）。
+  it "🔴 M4 provider 停用（status=inactive）⇒ 付款段不出 PSP 選項；manual 不受影響" do
+    checkout = ready_checkout!(psp: false)
+    ActsAsTenant.with_tenant(shop) { provider.update!(status: "inactive") }
+    get "/checkouts/#{checkout.token}"
+    expect(response.body).not_to include("psp:airwallex:")
+    expect(response.body).to include("Bank Deposit")
   end
 end

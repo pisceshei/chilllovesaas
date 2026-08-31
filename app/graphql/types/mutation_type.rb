@@ -85,6 +85,22 @@ module Types
       description: "建立退款（軟上限條件式 UPDATE＋restock；idempotencyKey 必帶）。"
     field :shop_payment_provider_set, mutation: Mutations::ShopPaymentProviderSet,
       description: "宣告式寫入 PSP provider 的憑證與偏好。"
+
+    # G6-3（步 2）：付款設定本體（86 §2/§3——capture modal／manual methods／activation）。
+    field :payment_capture_method_update, mutation: Mutations::PaymentCaptureMethodUpdate,
+      description: "更新請款模式（三值 modal 對位；Plus 專屬值誠實拒絕）。"
+    field :shop_payment_method_create, mutation: Mutations::ShopPaymentMethodCreate,
+      description: "建立 manual 付款方式。"
+    field :shop_payment_method_update, mutation: Mutations::ShopPaymentMethodUpdate,
+      description: "更新 manual 付款方式文案。"
+    field :shop_payment_method_activate, mutation: Mutations::ShopPaymentMethodActivate,
+      description: "啟用 manual 付款方式。"
+    field :shop_payment_method_deactivate, mutation: Mutations::ShopPaymentMethodDeactivate,
+      description: "停用 manual 付款方式（設定保留）。"
+    field :shop_payment_provider_activate, mutation: Mutations::ShopPaymentProviderActivate,
+      description: "啟用 PSP provider（前置＝憑證已設定）。"
+    field :shop_payment_provider_deactivate, mutation: Mutations::ShopPaymentProviderDeactivate,
+      description: "停用 PSP provider（憑證保留）。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,
       description: "重新讀取 PSP 帳號已開通的付款方式（G6-1b；首次成功自動啟用可用方式）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**
