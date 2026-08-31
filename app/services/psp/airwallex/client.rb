@@ -89,7 +89,9 @@ module Psp
       def parse!(res, path)
         code = res.code.to_i
         data = begin
-          JSON.parse(res.body.to_s)
+          # 🔴 X8c（65 §E）：JSON number 必須以 BigDecimal 落地——預設解析吐 Float，
+          # 金額一路 Float 就是鐵律 3 違規；integer 形仍回 Integer。
+          JSON.parse(res.body.to_s, decimal_class: BigDecimal)
         rescue JSON::ParserError
           {}
         end

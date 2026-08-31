@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_280000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_290000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -101,6 +101,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_280000) do
     t.json "payment_method_snapshot", default: -> { "(json_object())" }, null: false, comment: "選定付款方式快照：{id,method_type,name,additional_details,payment_instructions}"
     t.string "presentment_currency", limit: 3, default: "HKD", null: false
     t.bigint "presentment_total_cents", default: 0, null: false
+    t.string "psp_intent_id", comment: "PSP payment intent id（輪詢／對帳引用；request_id 冪等使同 checkout 恆同 intent）"
     t.string "recovery_token", limit: 64
     t.json "shipping_address", default: -> { "(json_object())" }, null: false
     t.bigint "shipping_cents", default: 0, null: false

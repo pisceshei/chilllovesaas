@@ -219,7 +219,9 @@ module Orders
         order_id: order.id,
         kind: "sale",
         status: "pending",
-        gateway: order_checkout.payment_method_snapshot.fetch("method_type"),
+        # G6-1c：PSP 快照 gateway＝實際承作方（provider）；manual 沿用 method_type。
+        gateway: order_checkout.payment_method_snapshot["provider"] ||
+                 order_checkout.payment_method_snapshot.fetch("method_type"),
         amount_cents: order_checkout.total_cents,
         currency: order_checkout.currency,
         idempotency_key: "sale-#{order_checkout.token}"
