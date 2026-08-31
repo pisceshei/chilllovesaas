@@ -1542,6 +1542,11 @@ a {
 .cl-menu-list__item:hover { background: var(--color-bg-hover); }
 
 /* 標題列＋動作鈕的同列排（manual methods 子頁說明句與 ⊕ 鈕）。 */
+/* 通知設定（G6 步 6）：sender email 同列＋模板代碼編輯區。 */
+.cl-sender-row { display: flex; gap: var(--sp-2); align-items: flex-start; max-width: 480px; }
+.cl-sender-row > :first-child { flex: 1; }
+.cl-code-textarea { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; line-height: 1.5; }
+
 .cl-section-title-row {
   display: flex;
   align-items: flex-start;

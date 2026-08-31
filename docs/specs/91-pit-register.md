@@ -3698,3 +3698,18 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **86 §2 官方 help 四值 vs modal 三值**（V 項照舊）：limits `capture.modes`
   維持四值、modal 展示三值；待本尊改版再複測。
 
+### 3.50 G6 步 6（通知基座）的範圍外觀察（2026-09-01）
+
+- ⚪ **M0 孤兒表風險家族**：M0 core schema 預建了大量尚無 model 的表
+  （notification_templates 這次差點被平行重建——靠 migration 的 table_exists?
+  守衛才爆出）。後續步驟開新資料層前，先 `grep db/schema.rb` 確認 M0 是否已建
+  同名表；有就採用其形，不建平行表。
+- ⚪ **通知信 at-least-once 重複窗**：event_deliveries done 帳與寄送成功之間的
+  crash 窗會重寄同一封信（DeliverJob 檔頭②誠實登記）；若日後要收斂，方案＝
+  per-mail 冪等表（idempotency_key = event_id + kind），登記待裁定。
+- ⚪ **V-236**：官方 help 列 Shipping confirmation 等四模板可停用，2026 admin
+  清單該列無 toggle——兩源不一致（89 §2）；v1 不做停用開關，待本尊複測。
+- ⚪ **通知模板的 ML 對位**：本尊 TranslatableResourceType 有 EMAIL_TEMPLATE
+  （title/body_html 可譯）——ML 線擴 RESOURCE_TYPES 時把 notification_templates
+  納入（89 §6）。
+
