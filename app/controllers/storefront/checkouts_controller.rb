@@ -271,15 +271,20 @@ module Storefront
         end.join
       end
       <<~HTML
-        <!doctype html><html><head><title>Order #{ERB::Util.html_escape(order.name)}</title>
-        <meta name="robots" content="noindex"></head>
-        <body><h1>感謝你的訂購！</h1>
+        <!doctype html><html lang="zh-Hant"><head><title>Order #{ERB::Util.html_escape(order.name)}</title>
+        #{checkout_head}</head>
+        <body class="ck">
+        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
+        <main class="ck-thanks"><div class="ck-card">
+        <h1>感謝你的訂購！</h1>
         <p data-order-name>訂單編號：#{ERB::Util.html_escape(order.name)}</p>
         <table>#{rows}</table>
         <p data-order-total>合計：#{order.currency} #{total}</p>
         <section data-payment-instructions><h2>付款方式：#{ERB::Util.html_escape(method_name.to_s)}</h2>
         #{instructions.present? ? "<p>#{ERB::Util.html_escape(instructions)}</p>" : ''}</section>
-        <p>訂單確認信與後續出貨通知隨對應功能包接上。</p></body></html>
+        <p>訂單確認信與後續出貨通知隨對應功能包接上。</p>
+        <p><a href="/">繼續購物</a></p>
+        </div></main></body></html>
       HTML
     end
 
@@ -413,13 +418,34 @@ module Storefront
       country = checkout.shipping_address["country_code"]
       delivery = delivery_html(checkout, country, error)
       total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
+      shipping = Money::Display.call(Money::Storage.from_cents(checkout.shipping_cents, checkout.currency))
       <<~HTML
-        <!doctype html><html><head><title>Checkout</title><meta name="robots" content="noindex"></head>
-        <body><h1>結帳</h1><table>#{line_rows(checkout)}</table>
+        <!doctype html><html lang="zh-Hant"><head><title>結帳 — #{ERB::Util.html_escape(current_shop.name)}</title>
+        #{checkout_head}</head>
+        <body class="ck">
+        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
+        <main class="ck-layout">
+        <section class="ck-main">
+        <h1 class="ck-title">結帳</h1>
         #{delivery}
-        <p data-checkout-shipping>運費：#{checkout.currency} #{Money::Display.call(Money::Storage.from_cents(checkout.shipping_cents, checkout.currency))}</p>
+        #{payment_html(checkout)}
+        </section>
+        <aside class="ck-aside" aria-label="訂單摘要">
+        <h2>訂單摘要</h2>
+        <table class="ck-lines">#{line_rows(checkout)}</table>
+        <p data-checkout-shipping><span>運費</span><span>#{checkout.currency} #{shipping}</span></p>
         <p data-checkout-total>#{checkout.currency} #{total}</p>
-        #{payment_html(checkout)}</body></html>
+        </aside>
+        </main></body></html>
+      HTML
+    end
+
+    # 結帳線三頁共用 head（viewport＋noindex＋tokens/checkout 樣式——propshaft digest 路徑）。
+    def checkout_head
+      <<~HTML
+        <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        #{view_context.stylesheet_link_tag("tokens", "stylesheets/checkout")}
       HTML
     end
 
@@ -549,14 +575,13 @@ module Storefront
       poll_ms = Limits.fetch(:psp_integration, :airwallex, :status_poll_interval_seconds) * 1000
       total = Money::Display.call(Money::Storage.from_cents(checkout.total_cents, checkout.currency))
       <<~HTML
-        <!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="robots" content="noindex">
-        <title>以 #{ERB::Util.html_escape(method_name)} 付款</title></head><body>
-        <main data-psp-qr style="max-width:420px;margin:40px auto;text-align:center;font-family:system-ui">
+        <!DOCTYPE html><html lang="zh-Hant"><head>
+        <title>以 #{ERB::Util.html_escape(method_name)} 付款</title>#{checkout_head}</head><body class="ck">
+        <header class="ck-header"><a class="ck-brand" href="/">#{ERB::Util.html_escape(current_shop.name)}</a></header>
+        <main data-psp-qr class="ck-card">
         <h1>以 #{ERB::Util.html_escape(method_name)} 付款</h1>
         <p>應付金額：#{checkout.currency} #{total}</p>
-        <div data-qrcode style="max-width:280px;margin:0 auto">#{svg}</div>
+        <div data-qrcode>#{svg}</div>
         <p>請以 #{ERB::Util.html_escape(method_name)} App 掃描上方 QR code 完成付款。</p>
         <p data-pay-state>等待付款中…（QR code 十分鐘內有效）</p>
         <p><a href="/checkouts/#{checkout.token}">返回結帳頁</a></p>
@@ -604,6 +629,7 @@ module Storefront
         end
       <<~HTML
         <section data-delivery>
+        <h2>配送</h2>
         #{error ? "<p data-delivery-error>#{ERB::Util.html_escape(error)}</p>" : ''}
         <form method="post" action="/checkouts/#{checkout.token}/delivery">
         <label>配送地區

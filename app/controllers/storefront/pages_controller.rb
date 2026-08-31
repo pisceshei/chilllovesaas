@@ -47,10 +47,17 @@ module Storefront
                                          first_segment: first)
       return head :not_found if hit.nil?
 
-      payload = PageCache.fetch(
-        shop: current_shop, theme: published_theme, market: hit.market,
-        locale_tag: hit.locale_tag, path: rest, params: cache_params
-      ) { render_page(hit, rest) }
+      # G6 打磨包：/cart 是個人化頁——**繞過頁快取**、以買家 cookie 的真車渲染
+      # （14 §F1-4「個人化不進頁快取」＝不快取本頁，而不是快取一台空車）。
+      if rest == "/cart"
+        response.headers["Cache-Control"] = "no-store"
+        payload = render_page(hit, rest, cart_json: buyer_cart_json)
+      else
+        payload = PageCache.fetch(
+          shop: current_shop, theme: published_theme, market: hit.market,
+          locale_tag: hit.locale_tag, path: rest, params: cache_params
+        ) { render_page(hit, rest) }
+      end
 
       # 301 引擎（包 36）：掛在 404 之前、活頁面先贏（渲染 200 就不查表）。
       # 查表用無前綴正規路徑，命中後**保留前綴** 301（/en-hk/products/舊 ⇒ /en-hk/products/新）。
@@ -117,14 +124,27 @@ module Storefront
       params.permit(*CACHE_PARAMS).to_h
     end
 
-    def render_page(hit, rest)
+    def render_page(hit, rest, cart_json: nil)
       ThemeEngine::PageRenderer.new(
         theme: published_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
-        cart_json: nil # 🔴 個人化不進頁快取（14 §F1-4）
+        cart_json: # 🔴 個人化不進頁快取（14 §F1-4）——只有繞過快取的 /cart 會傳非 nil
       ).render(rest, params: cache_params)
+    end
+
+    # 買家真車（/cart 頁專用）：只讀 cookie **不建車**（純瀏覽不得生車列）；
+    # 無車 ⇒ nil（CartDrop 以空車渲染）。
+    def buyer_cart_json
+      token = cookies.signed[Storefront::CartController::COOKIE]
+      return nil if token.blank?
+
+      cart = ActsAsTenant.with_tenant(current_shop) do
+        Cart.includes(cart_line_items: { product_variant: :product })
+            .find_by(shop_id: current_shop.id, token: token)
+      end
+      cart && Storefront::CartSerializer.cart_json(cart)
     end
   end
 end
