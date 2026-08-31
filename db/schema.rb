@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_270000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_280000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1275,6 +1275,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_270000) do
   create_table "shop_payment_providers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "PSP provider 的租戶側憑證與偏好（G6-3 前半；祕密欄一律 AR encryption 密文，37 §6.3）", force: :cascade do |t|
     t.text "api_secret", comment: "? AR encryption 密文（Airwallex API key／PayPal client secret）；UI 永不回讀明文"
     t.string "api_secret_fingerprint", limit: 16, comment: "SHA-256 前 16 hex（37 §6.3：UI 只顯示指紋）；祕密未設時 NULL"
+    t.json "available_methods", default: -> { "(json_array())" }, null: false, comment: "PSP capability API 回報的 active oneoff 方法名快取（原樣 name；15-F4.2 條件 2）"
+    t.datetime "capabilities_synced_at", comment: "上次成功同步 capability 的時點；NULL＝從未成功（UI 顯示未同步態）"
     t.string "client_id", comment: "非祕密識別（Airwallex x-client-id／PayPal client_id）；明文可回讀"
     t.datetime "created_at", null: false
     t.json "enabled_methods", default: -> { "(json_array())" }, null: false, comment: "商家啟用的 method code 白名單（86 詳情頁逐方法 toggle 的落點；空陣列＝尚未挑選）"

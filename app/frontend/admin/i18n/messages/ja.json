@@ -643,5 +643,10 @@
   "settings.payments.methodsHint": "有効化した方法のみチェックアウトに表示されます（プロバイダーの可用性に依存）。",
   "settings.payments.saving": "保存中…",
   "settings.payments.airwallex.about": "Airwallex はクレジットカードと香港ローカルウォレットの決済を処理します。Airwallex アカウントの API 資格情報を入力してください。シークレットは暗号化され、保存後はフィンガープリントのみ表示されます。",
-  "settings.payments.paypal.about": "PayPal では残高・カード・ウォレットでの支払いが可能です。PayPal Developer ダッシュボードの REST アプリ資格情報を入力してください。"
+  "settings.payments.paypal.about": "PayPal では残高・カード・ウォレットでの支払いが可能です。PayPal Developer ダッシュボードの REST アプリ資格情報を入力してください。",
+  "settings.payments.syncNow": "プロバイダーから再取得",
+  "settings.payments.syncDone": "利用可能な決済方法を再取得しました",
+  "settings.payments.syncedAt": "{time} にプロバイダーアカウントから同期しました。",
+  "settings.payments.neverSynced": "未同期です——有効な資格情報を保存すると、アカウントで有効な方法を自動で読み込みます。",
+  "settings.payments.notOnAccount": "プロバイダーアカウントで未開通です"
 }

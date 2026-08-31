@@ -42,6 +42,8 @@ const AIRWALLEX_ROW = {
   apiSecretFingerprint: "3229db23516d9173",
   webhookSecretFingerprint: "c3efc2e0aca312a6",
   enabledMethods: [ "card", "alipayhk" ],
+  availableMethods: [ "card", "alipayhk" ],
+  capabilitiesSyncedAt: "2026-08-31T10:00:00Z",
 };
 
 const LIST = { data: { shopPaymentProviders: [ AIRWALLEX_ROW ] } };
@@ -118,14 +120,15 @@ describe("設定 › 付款（provider 詳情頁）", () => {
     const main = within(await screen.findByRole("main"));
     await main.findByText("關於");
 
-    await userEvent.click(main.getByRole("switch", { name: "FPS" }));
+    // 關掉 alipayhk（可用且開啟中）；FPS 是帳號未開通 ⇒ disabled，另有專屬測試格
+    await userEvent.click(main.getByRole("switch", { name: "AlipayHK" }));
     await userEvent.click(main.getByRole("button", { name: "儲存" }));
 
     const sets = callsTo(fetchMock, "shopPaymentProviderSet");
     expect(sets.length).toBe(1);
     const variables = (JSON.parse(String(sets[0].body)) as { variables: Record<string, unknown> }).variables;
     expect(variables.provider).toBe("airwallex");
-    expect(variables.enabledMethods).toEqual([ "card", "alipayhk", "fps" ]);
+    expect(variables.enabledMethods).toEqual([ "card" ]);
     expect("apiSecret" in variables).toBe(false);
     expect("webhookSecret" in variables).toBe(false);
   });
@@ -146,6 +149,25 @@ describe("設定 › 付款（provider 詳情頁）", () => {
     expect(variables.apiSecret).toBe("sk_new_1");
     expect(callsTo(fetchMock, "query shopPaymentProviderDetail").length).toBe(2);
     expect((main.getByLabelText("API key") as HTMLInputElement).value).toBe("");
+  });
+
+  it("🔴 帳號未開通的方式：toggle disabled＋提示；「重新讀取」送 sync mutation", async () => {
+    const fetchMock = stubRoutedFetch([
+      { match: "query shopPaymentProviderDetail", body: DETAIL },
+      { match: "mutation shopPaymentProviderSyncCapabilities", body: { data: { shopPaymentProviderSyncCapabilities: { shopPaymentProvider: { provider: "airwallex" }, userErrors: [] } } } },
+    ]);
+    renderAt("/admin/settings/payments/airwallex");
+    const main = within(await screen.findByRole("main"));
+    await main.findByText("關於");
+
+    // FPS 不在 availableMethods（已同步）⇒ disabled＋帳號未開通提示
+    expect(main.getByRole("switch", { name: "FPS" })).toBeDisabled();
+    expect(main.getAllByText("你的服務商帳號尚未開通此方式").length).toBe(1);
+
+    await userEvent.click(main.getByRole("button", { name: "重新讀取可用方式" }));
+    expect(callsTo(fetchMock, "shopPaymentProviderSyncCapabilities").length).toBe(1);
+    // 成功後重載
+    expect(callsTo(fetchMock, "query shopPaymentProviderDetail").length).toBe(2);
   });
 
   it("未知 provider ⇒ 顯示錯誤與返回連結，不打 API", async () => {

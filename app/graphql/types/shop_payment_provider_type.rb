@@ -20,6 +20,10 @@ module Types
     field :webhook_secret_fingerprint, String, null: true, description: "同上。"
     field :enabled_methods, [ String ], null: false,
       description: "商家 method 白名單（結帳顯示＝白名單 ∩ PSP capability，15-F4.2）。"
+    field :available_methods, [ String ], null: false,
+      description: "PSP capability 快取（帳號實際開通的 active oneoff 方法；15-F4.2 條件 2）。"
+    field :capabilities_synced_at, GraphQL::Types::ISO8601DateTime, null: true,
+      description: "上次成功同步 capability 的時點；null＝從未成功。"
     field :updated_at, GraphQL::Types::ISO8601DateTime, null: false
   end
 end

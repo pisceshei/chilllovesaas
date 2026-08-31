@@ -25,6 +25,8 @@ module Mutations
       description: "商家 method 白名單（⊆ 平台字典；86 詳情頁逐方法 toggle）；省略＝不變。"
 
     field :shop_payment_provider, Types::ShopPaymentProviderType, null: true
+    field :capability_warning, String, null: true,
+      description: "憑證已存但自動讀取可用方式失敗時的提示（fail-soft；不擋儲存）。"
 
     # 🔴 required: false ⇒ 簽名一律 `arg: nil`（base_mutation.rb：省略呼叫時 kwargs 缺鍵）。
     # 「省略」與「明送 null」在 graphql-ruby 都到達 nil ⇒ 兩者同義＝保持不變；
@@ -57,11 +59,33 @@ module Mutations
           return invalid(field_name, record.errors.full_messages.first, "INVALID")
         end
 
-        { shop_payment_provider: record, user_errors: [] }
-      end
+        { record:, user_errors: [] }
+      end.then { |outcome| finalize(outcome) }
     end
 
     private
+
+    # 🔴 外部 IO（capability 讀取）在 with_tenant/交易**之外**（鐵律 5）：
+    # 憑證剛存好或從未同步 ⇒ 自動讀取帳號已開通的方式（使用者裁定「配置成功後自動
+    # 讀取」）。失敗 fail-soft：儲存已成立，只回 capability_warning 讓 UI 提示。
+    def finalize(outcome)
+      return outcome unless outcome.is_a?(Hash) && outcome[:record]
+
+      record = outcome.delete(:record)
+      warning = nil
+      if record.provider == "airwallex" && record.api_secret.present? &&
+         (record.saved_change_to_api_secret? || record.capabilities_synced_at.nil?)
+        begin
+          # with_tenant 只是 thread-local scope、非 DB 交易——HTTP 仍在交易外（鐵律 5）。
+          ActsAsTenant.with_tenant(record.shop) { Psp::ProviderCapabilities.sync!(record) }
+        rescue Psp::Airwallex::Client::Unauthorized
+          warning = "已儲存，但 Airwallex 拒絕了這組憑證（credentials_invalid）——可用付款方式未能讀取。"
+        rescue Psp::Airwallex::Client::Error => error
+          warning = "已儲存，但讀取可用付款方式失敗：#{error.message}"
+        end
+      end
+      { shop_payment_provider: record, capability_warning: warning, user_errors: [] }
+    end
 
     def authorized_shop!
       unless context[:current_staff]
