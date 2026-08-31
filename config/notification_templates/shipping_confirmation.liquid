@@ -1,0 +1,46 @@
+{%- comment -%}
+  CHILL LOVE 平台預設模板（G6 步 6；自寫，鐵律 9）。變數契約＝docs/research/89 §5：
+  order 屬性攤平（name/order_number/line_items/…），金額為 integer cents 經 money filter。
+{%- endcomment -%}
+<div style="max-width:600px;margin:0 auto;font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#1a1a1a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px 8px;">
+    <tr>
+      <td style="font-size:20px;font-weight:700;">{{ shop.name }}</td>
+      <td align="right" style="font-size:13px;color:#6b6b6b;">{% if name %}ORDER {{ name }}{% endif %}</td>
+    </tr>
+  </table>
+  <div style="padding:8px 16px 24px;">
+    <h1 style="font-size:22px;margin:8px 0;">Your order is on the way</h1>
+    <p style="font-size:14px;color:#444;">Your order is on the way. Track your shipment to see the delivery status.</p>
+    {% if order_status_url %}
+    <p style="margin:20px 0;">
+      <a href="{{ order_status_url }}" style="background:#1a73e8;color:#fff;text-decoration:none;padding:12px 22px;border-radius:6px;font-size:14px;display:inline-block;">View your order</a>
+    </p>
+    {% endif %}
+    {% if fulfillment.tracking_numbers.size > 0 %}
+    <p style="font-size:14px;color:#444;">
+      {{ fulfillment.tracking_company }} tracking number:
+      {% for number in fulfillment.tracking_numbers %}
+        {% assign turl = fulfillment.tracking_urls[forloop.index0] %}
+        {% if turl %}<a href="{{ turl }}" style="color:#1a73e8;">{{ number }}</a>{% else %}{{ number }}{% endif %}{% unless forloop.last %}, {% endunless %}
+      {% endfor %}
+    </p>
+    {% endif %}
+    <h2 style="font-size:16px;margin:24px 0 4px;">Items in this shipment</h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+      {% for line in line_items %}
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;">
+          {{ line.title }} × {{ line.quantity }}
+        </td>
+        <td align="right" style="padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;">
+          {{ line.final_line_price | money }}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div style="padding:16px;border-top:1px solid #e5e5e5;font-size:12px;color:#6b6b6b;">
+    {{ shop.name }}{% if shop.url %} · <a href="{{ shop.url }}" style="color:#6b6b6b;">{{ shop.url | remove: 'https://' }}</a>{% endif %}
+  </div>
+</div>

@@ -101,6 +101,12 @@ module Types
       description: "啟用 PSP provider（前置＝憑證已設定）。"
     field :shop_payment_provider_deactivate, mutation: Mutations::ShopPaymentProviderDeactivate,
       description: "停用 PSP provider（憑證保留）。"
+
+    # G6 步 6：通知基座（89 號 teardown——編輯器兩欄＋sender email）。
+    field :notification_template_update, mutation: Mutations::NotificationTemplateUpdate,
+      description: "更新通知模板（subject＋bodyLiquid；revertToDefault 回平台預設）。"
+    field :notification_sender_email_update, mutation: Mutations::NotificationSenderEmailUpdate,
+      description: "更新通知信寄件人位址。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,
       description: "重新讀取 PSP 帳號已開通的付款方式（G6-1b；首次成功自動啟用可用方式）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**

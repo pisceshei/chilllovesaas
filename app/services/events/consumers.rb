@@ -30,7 +30,11 @@ module Events
       Events::Topics::PRODUCT_PUBLICATION_CHANGED => [
         Publications::ScheduledPublicationConsumer,
         Publications::ListingEventTranslator
-      ]
+      ],
+      # G6 步 6（89 號）：訂單事件 → 通知信（鐵律 5：寄送走 outbox→job，交易外 IO）。
+      # order.fulfilled 消費者自審 notify 旗標（false＝商家勾掉「通知顧客」）。
+      Events::Topics::ORDERS_CREATE => [ Notifications::OrderConfirmationConsumer ],
+      Events::Topics::ORDER_FULFILLED => [ Notifications::ShippingConfirmationConsumer ]
     }.freeze
 
     # @param topic [String]

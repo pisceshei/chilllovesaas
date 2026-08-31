@@ -136,6 +136,12 @@ module Types
       description: "平台字典中尚未被本店啟用的語言（設定 › 語言的「新增」候選；ML-4）。"
 
     # G6-3（步 2）：manual 付款方式與請款模式（86 §2/§3）。
+    # G6 步 6：通知模板（89 號 teardown）。
+    field :notification_templates, [ Types::NotificationTemplateType ], null: false,
+      description: "通知模板合併視圖（覆寫或平台預設；v1 三支）。"
+    field :notification_sender_email, String, null: true,
+      description: "通知信寄件人位址（89 §6；null＝未設定走平台預設）。"
+
     field :shop_payment_methods, [ Types::ShopPaymentMethodType ], null: false,
       description: "manual 付款方式清單（含停用；86 §3）。"
     field :payment_capture_method, String, null: false,
@@ -335,6 +341,31 @@ module Types
     #
     # @return [Array<ShopPaymentMethod>] position 序
     # @note 副作用：tenant-scoped SELECT，不寫入資料。授權同 shop_payment_providers。
+    # 合併視圖（89 §7.3：無覆寫列＝平台預設）。
+    #
+    # @return [Array<Hash>] kind 序（Catalog::KINDS）
+    # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    def notification_templates
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      overlays = ActsAsTenant.with_tenant(shop) do
+        NotificationTemplate.where(channel: "email").index_by(&:key)
+      end
+      Notifications::Catalog::KINDS.map do |kind|
+        overlay = overlays[kind]
+        entry = Notifications::Catalog.entry(kind)
+        { key: kind, subject: overlay&.subject || entry.default_subject,
+          body_liquid: overlay&.body || Notifications::Catalog.default_body(kind),
+          is_default: overlay.nil? }
+      end
+    end
+
+    # @return [String, nil]
+    def notification_sender_email
+      authorize_products!
+      context.fetch(:current_shop).sender_email
+    end
+
     def shop_payment_methods
       authorize_products!
       shop = context.fetch(:current_shop)

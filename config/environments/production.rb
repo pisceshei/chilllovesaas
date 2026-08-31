@@ -72,6 +72,24 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  # G6 步 6（89 號）：SMTP 由 /etc/chilllove/env 提供（SMTP_ADDRESS 等四鍵）。
+  # 🔴 未設 SMTP_ADDRESS ⇒ perform_deliveries=false（demo 紅線「不對外發信」；
+  # 明文降級，非靜默——啟動 log 一行）。
+  if ENV["SMTP_ADDRESS"].present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address: ENV["SMTP_ADDRESS"],
+      port: ENV.fetch("SMTP_PORT", 587).to_i,
+      user_name: ENV["SMTP_USER_NAME"],
+      password: ENV["SMTP_PASSWORD"],
+      authentication: :login,
+      enable_starttls_auto: true
+    }.compact
+  else
+    config.action_mailer.perform_deliveries = false
+    Rails.logger&.info("action_mailer: SMTP_ADDRESS 未設 ⇒ perform_deliveries=false（通知信只渲染不外寄）")
+  end
+
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
 
