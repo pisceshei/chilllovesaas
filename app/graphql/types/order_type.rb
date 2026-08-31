@@ -39,6 +39,21 @@ module Types
     field :item_count, Integer, null: false,
           description: "行項數量合計（列表 Items 欄；88 §2）"
     field :transactions, [ OrderTransactionType ], null: false
+    # G6-8（步 5）：官方 Order.fulfillments 與 Order.refunds 都是 **list 非 connection**
+    #（ord-4 §7 逐字，取證 2026-09-01）——我方同形。
+    field :fulfillments, [ FulfillmentType ], null: false,
+      description: "出貨清單（含已取消）"
+    field :fulfillment_orders, [ FulfillmentOrderType ], null: false,
+      description: "履約工作單（v1 每單一張）"
+    field :refunds, [ RefundType ], null: false, description: "退款清單"
+    field :suggested_refund, SuggestedRefundType, null: true,
+      description: "退款金額預覽（與 refundCreate 實退共用同一份計算——鐵律 7）" do
+      argument :refund_line_items, [ Inputs::RefundLineItemInput ], required: false
+      argument :refund_shipping, Boolean, required: false, default_value: false,
+        description: "全退剩餘可退運費（官方 refundShipping 對位）"
+      argument :shipping_amount_cents, Integer, required: false,
+        description: "指定退運費額（integer cents；官方 shippingAmount 對位——覆蓋 refundShipping）"
+    end
     field :customer, CustomerType, null: true
     field :shipping_address, OrderAddressType, null: true
     field :billing_address, OrderAddressType, null: true
@@ -90,5 +105,38 @@ module Types
           presentment_currency: object.presentment_currency }
       end
     end
+
+  # ── G6-8：履約與退款讀出 ─────────────────────────────────────────────────
+
+  def fulfillments
+    Fulfillment.joins(:fulfillment_order)
+               .where(shop_id: object.shop_id, fulfillment_orders: { order_id: object.id })
+               .order(:id)
+  end
+
+  def fulfillment_orders
+    object.fulfillment_orders.order(:id)
+  end
+
+  def refunds
+    object.refunds.order(:id)
+  end
+
+  # 預覽與實退同一份計算（Refunds::Calculator；鐵律 7）。
+  def suggested_refund(refund_line_items: [], refund_shipping: false, shipping_amount_cents: nil)
+    lines = Array(refund_line_items).map do |li|
+      numeric = li[:line_item_id].to_s[%r{\Agid://chilllove/LineItem/(\d+)\z}, 1]
+      return nil if numeric.nil?
+
+      { line_item_id: numeric.to_i, quantity: li[:quantity], restock_type: li[:restock_type] }
+    end
+    suggestion = Refunds::Calculator.suggest(
+      order: object, refund_line_items: lines,
+      shipping_cents: shipping_amount_cents, full_shipping: refund_shipping && shipping_amount_cents.nil?
+    )
+    return nil if suggestion.error
+
+    { suggestion:, currency: object.currency }
+  end
   end
 end

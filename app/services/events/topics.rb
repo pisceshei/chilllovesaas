@@ -46,6 +46,11 @@ module Events
     #    authorize-only 成立時只發 orders/create，付清（markAsPaid／capture）才發 paid。
     ORDERS_CREATE = "orders/create"
     ORDERS_PAID = "orders/paid"
+    # G6-8（步 5）：出貨與退款。🔴 用**內部命名空間**（點號形）不冒本尊 webhook
+    # topic 名——本尊出貨/退款的 webhook topic 逐字未取證（鐵律 19 不憑記憶補）；
+    # 對外 webhook 面隨通知/webhook 線取證後另立對位（届時本組作 INTERNAL 保留）。
+    ORDER_FULFILLED = "order.fulfilled"
+    ORDER_REFUNDED = "order.refunded"
 
     EXTERNAL = [
       PRODUCTS_CREATE, PRODUCTS_UPDATE, PRODUCTS_DELETE,
@@ -67,7 +72,8 @@ module Events
 
     INTERNAL = [
       PRODUCT_UPDATED, PRODUCT_VARIANT_UPDATED, PRODUCT_PUBLICATION_CHANGED,
-      INVENTORY_LEVEL_CHANGED, INVENTORY_ADJUSTED, MEDIA_UPLOADED
+      INVENTORY_LEVEL_CHANGED, INVENTORY_ADJUSTED, MEDIA_UPLOADED,
+      ORDER_FULFILLED, ORDER_REFUNDED
     ].freeze
 
     ALL = (EXTERNAL + INTERNAL).freeze

@@ -29,10 +29,13 @@ const ORDER = {
   totalPriceSet: { shopMoney: { amount: "168.00", currencyCode: "HKD" } },
   lineItems: [ {
     id: "gid://chilllove/LineItem/1", title: "測品", variantTitle: null, sku: "SKU-1",
-    quantity: 2,
+    quantity: 2, fulfillableQuantity: 2,
     unitPriceSet: { shopMoney: { amount: "74.00", currencyCode: "HKD" } },
     totalSet: { shopMoney: { amount: "148.00", currencyCode: "HKD" } },
   } ],
+  fulfillmentOrders: [ { id: "gid://chilllove/FulfillmentOrder/9", status: "open" } ],
+  fulfillments: [],
+  refunds: [],
   transactions: [ {
     id: "gid://chilllove/OrderTransaction/1", kind: "SALE", status: "PENDING",
     gateway: "manual_bank_deposit",

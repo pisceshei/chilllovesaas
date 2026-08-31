@@ -30,14 +30,39 @@ const ORDER_QUERY = `
       totalDiscountsSet { shopMoney { amount currencyCode } }
       totalPriceSet { shopMoney { amount currencyCode } }
       lineItems {
-        id title variantTitle sku quantity
+        id title variantTitle sku quantity fulfillableQuantity
         unitPriceSet { shopMoney { amount currencyCode } }
         totalSet { shopMoney { amount currencyCode } }
       }
+      fulfillmentOrders { id status }
+      fulfillments {
+        id status trackingCompany shippedAt
+        trackingInfo { number url }
+        lineItems { quantity lineItem { id title } }
+      }
+      refunds { id status processedAt totalRefundedSet { shopMoney { amount currencyCode } } }
       transactions { id kind status gateway amountSet { shopMoney { amount currencyCode } } }
       customer { id displayName email }
       shippingAddress { firstName lastName address1 address2 city province postalCode countryCode phone }
       billingAddress { firstName lastName address1 address2 city province postalCode countryCode phone }
+    }
+  }
+`;
+
+const FULFILLMENT_CREATE_MUTATION = `
+  mutation FulfillmentCreate($fulfillment: FulfillmentInput!) {
+    fulfillmentCreate(fulfillment: $fulfillment) {
+      fulfillment { id status }
+      userErrors { field message code }
+    }
+  }
+`;
+
+const FULFILLMENT_CANCEL_MUTATION = `
+  mutation FulfillmentCancel($id: ID!) {
+    fulfillmentCancel(id: $id) {
+      fulfillment { id status }
+      userErrors { field message code }
     }
   }
 `;
@@ -77,7 +102,18 @@ export interface OrderDetail {
   totalPriceSet: { shopMoney: Money };
   lineItems: {
     id: string; title: string; variantTitle: string | null; sku: string | null;
-    quantity: number; unitPriceSet: { shopMoney: Money }; totalSet: { shopMoney: Money };
+    quantity: number; fulfillableQuantity: number;
+    unitPriceSet: { shopMoney: Money }; totalSet: { shopMoney: Money };
+  }[];
+  fulfillmentOrders: { id: string; status: string }[];
+  fulfillments: {
+    id: string; status: string; trackingCompany: string | null; shippedAt: string | null;
+    trackingInfo: { number: string | null; url: string | null }[];
+    lineItems: { quantity: number; lineItem: { id: string; title: string } | null }[];
+  }[];
+  refunds: {
+    id: string; status: string; processedAt: string | null;
+    totalRefundedSet: { shopMoney: Money };
   }[];
   transactions: {
     id: string; kind: string; status: string; gateway: string;
@@ -117,6 +153,14 @@ export function OrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [confirmMarkPaid, setConfirmMarkPaid] = useState(false);
+  const [fulfillDialog, setFulfillDialog] = useState(false);
+  const [fulfilling, setFulfilling] = useState(false);
+  const [trackingCompany, setTrackingCompany] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingUrl, setTrackingUrl] = useState("");
+  const [notifyCustomer, setNotifyCustomer] = useState(false);
+  const [cancelFulfillmentId, setCancelFulfillmentId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
 
@@ -166,6 +210,64 @@ export function OrderDetailPage() {
     }
   }, [order, markingPaid, showToast, t]);
 
+  const fulfill = useCallback(async () => {
+    if (!order || fulfilling) return;
+    setFulfilling(true);
+    try {
+      const fo = order.fulfillmentOrders.find((candidate) => candidate.status === "open" || candidate.status === "in_progress");
+      if (!fo) {
+        showToast(t("orders.fulfill.noFo"));
+        return;
+      }
+      const trackingInfo = trackingNumber
+        ? { company: trackingCompany || null, number: trackingNumber, url: trackingUrl || null }
+        : (trackingCompany ? { company: trackingCompany } : null);
+      const data = await requestAdminGraphQL<{
+        fulfillmentCreate: { fulfillment: { id: string } | null; userErrors: { message: string }[] };
+      }, Record<string, unknown>>(FULFILLMENT_CREATE_MUTATION, {
+        fulfillment: {
+          lineItemsByFulfillmentOrder: [ { fulfillmentOrderId: fo.id } ],
+          notifyCustomer: notifyCustomer,
+          trackingInfo,
+        },
+      });
+      const payload = data.fulfillmentCreate;
+      if (payload.userErrors.length > 0 || !payload.fulfillment) {
+        showToast(payload.userErrors[0]?.message ?? t("orders.fulfill.failed"));
+      } else {
+        showToast(t("orders.fulfill.done"));
+        setFulfillDialog(false);
+        setReloadNonce((nonce) => nonce + 1);
+      }
+    } catch (mutationError: unknown) {
+      showToast(mutationError instanceof Error ? mutationError.message : t("orders.fulfill.failed"));
+    } finally {
+      setFulfilling(false);
+    }
+  }, [order, fulfilling, trackingCompany, trackingNumber, trackingUrl, notifyCustomer, showToast, t]);
+
+  const cancelFulfillment = useCallback(async () => {
+    if (!cancelFulfillmentId || cancelling) return;
+    setCancelling(true);
+    try {
+      const data = await requestAdminGraphQL<{
+        fulfillmentCancel: { fulfillment: { id: string } | null; userErrors: { message: string }[] };
+      }, { id: string }>(FULFILLMENT_CANCEL_MUTATION, { id: cancelFulfillmentId });
+      const payload = data.fulfillmentCancel;
+      if (payload.userErrors.length > 0) {
+        showToast(payload.userErrors[0]?.message ?? t("orders.fulfillCancel.failed"));
+      } else {
+        showToast(t("orders.fulfillCancel.done"));
+        setReloadNonce((nonce) => nonce + 1);
+      }
+    } catch (mutationError: unknown) {
+      showToast(mutationError instanceof Error ? mutationError.message : t("orders.fulfillCancel.failed"));
+    } finally {
+      setCancelling(false);
+      setCancelFulfillmentId(null);
+    }
+  }, [cancelFulfillmentId, cancelling, showToast, t]);
+
   const backLink = (
     <Link className="cl-back-link" to="/admin/orders">
       <ArrowLeft aria-hidden="true" size={14} /> {t("orders.title")}
@@ -211,13 +313,27 @@ export function OrderDetailPage() {
   }
 
   const canMarkPaid = order.displayFinancialStatus === "PENDING" && order.status === "open";
+  // 88 §3 實測：Refund 鈕存在性是金額狀態函數（$0 已付單無 Refund）
+  const canRefund = order.status !== "cancelled" &&
+    [ "PAID", "PARTIALLY_PAID", "PARTIALLY_REFUNDED" ].includes(order.displayFinancialStatus);
+  const unfulfilledLines = order.lineItems.filter((line) => line.fulfillableQuantity > 0);
+  const activeFulfillments = order.fulfillments.filter((fulfillment) => fulfillment.status === "success");
 
   return (
     <Page
-      actions={canMarkPaid ? (
-        <Button disabled={markingPaid} onClick={() => setConfirmMarkPaid(true)} variant="primary">
-          {t("orders.markPaid.action")}
-        </Button>
+      actions={(canMarkPaid || canRefund) ? (
+        <>
+          {canRefund ? (
+            <Link className="cl-button cl-button--secondary" to={`/admin/orders/${orderId}/refund`}>
+              {t("orders.refund.title")}
+            </Link>
+          ) : null}
+          {canMarkPaid ? (
+            <Button disabled={markingPaid} onClick={() => setConfirmMarkPaid(true)} variant="primary">
+              {t("orders.markPaid.action")}
+            </Button>
+          ) : null}
+        </>
       ) : undefined}
       title={order.name}
       width="detail"
@@ -234,24 +350,79 @@ export function OrderDetailPage() {
       </p>
       <div className="cl-od-grid">
         <div className="cl-od-grid__main">
-          <Card>
-            <h3>{t("orders.detail.items")}</h3>
-            {order.lineItems.map((line) => (
-              <div className="cl-order-line" key={line.id}>
-                <div>
-                  <strong>{line.title}</strong>
-                  {line.variantTitle && line.variantTitle !== "Default Title" ? (
-                    <div className="cl-muted">{line.variantTitle}</div>
-                  ) : null}
-                  {line.sku ? <div className="cl-muted">SKU: {line.sku}</div> : null}
+          {unfulfilledLines.length > 0 ? (
+            <Card>
+              <h3>
+                <Badge tone="warning">{t("orders.fulfillment.UNFULFILLED")}</Badge>{" "}
+                ({unfulfilledLines.reduce((sum, line) => sum + line.fulfillableQuantity, 0)})
+              </h3>
+              {unfulfilledLines.map((line) => (
+                <div className="cl-order-line" key={line.id}>
+                  <div>
+                    <strong>{line.title}</strong>
+                    {line.variantTitle && line.variantTitle !== "Default Title" ? (
+                      <div className="cl-muted">{line.variantTitle}</div>
+                    ) : null}
+                    {line.sku ? <div className="cl-muted">SKU: {line.sku}</div> : null}
+                  </div>
+                  <div className="cl-order-line__qty">
+                    {formatMoney(line.unitPriceSet.shopMoney)} × {line.fulfillableQuantity}
+                  </div>
+                  <div className="cl-order-line__total">{formatMoney(line.totalSet.shopMoney)}</div>
                 </div>
-                <div className="cl-order-line__qty">
-                  {formatMoney(line.unitPriceSet.shopMoney)} × {line.quantity}
+              ))}
+              {order.status !== "cancelled" ? (
+                <Button onClick={() => setFulfillDialog(true)} variant="primary">
+                  {t("orders.fulfill.action")}
+                </Button>
+              ) : null}
+            </Card>
+          ) : null}
+
+          {activeFulfillments.map((fulfillment, index) => (
+            <Card key={fulfillment.id}>
+              <h3>
+                <Badge tone="success">{t("orders.fulfillment.FULFILLED")}</Badge>{" "}
+                {order.name}-F{index + 1}
+              </h3>
+              {fulfillment.shippedAt ? (
+                <p className="cl-muted">{new Date(fulfillment.shippedAt).toLocaleString()}</p>
+              ) : null}
+              {fulfillment.trackingCompany ? (
+                <p className="cl-muted">{fulfillment.trackingCompany}</p>
+              ) : null}
+              {fulfillment.trackingInfo.map((info) => (
+                <p className="cl-muted" key={info.number ?? ""}>
+                  {info.url ? (
+                    <a href={info.url} rel="noreferrer" target="_blank">{info.number}</a>
+                  ) : info.number}
+                </p>
+              ))}
+              {fulfillment.lineItems.map((entry, entryIndex) => (
+                <div className="cl-order-line" key={entryIndex}>
+                  <div><strong>{entry.lineItem?.title ?? t("orders.fulfill.removedItem")}</strong></div>
+                  <div className="cl-order-line__qty">× {entry.quantity}</div>
+                  <div />
                 </div>
-                <div className="cl-order-line__total">{formatMoney(line.totalSet.shopMoney)}</div>
-              </div>
-            ))}
-          </Card>
+              ))}
+              <Button onClick={() => setCancelFulfillmentId(fulfillment.id)} size="small" variant="secondary">
+                {t("orders.fulfillCancel.action")}
+              </Button>
+            </Card>
+          ))}
+
+          {order.refunds.length > 0 ? (
+            <Card>
+              <h3>{t("orders.refund.historyTitle")}</h3>
+              {order.refunds.map((refund) => (
+                <div className="cl-order-cost" key={refund.id}>
+                  <span>{refund.processedAt ? new Date(refund.processedAt).toLocaleString() : ""}</span>
+                  <span className="cl-muted">{t(`orders.refundStatus.${refund.status}`)}</span>
+                  <span>-{formatMoney(refund.totalRefundedSet.shopMoney)}</span>
+                </div>
+              ))}
+            </Card>
+          ) : null}
 
           <Card>
             <h3>{t(`orders.financial.${order.displayFinancialStatus}`)}</h3>
@@ -325,6 +496,43 @@ export function OrderDetailPage() {
         </div>
       </div>
 
+      <ConfirmDialog
+        busy={fulfilling}
+        confirmLabel={t("orders.fulfill.confirm")}
+        message={(
+          <div className="cl-form-stack">
+            <label>
+              {t("orders.fulfill.trackingCompany")}
+              <input className="cl-input" onChange={(event) => setTrackingCompany(event.target.value)} type="text" value={trackingCompany} />
+            </label>
+            <label>
+              {t("orders.fulfill.trackingNumber")}
+              <input className="cl-input" onChange={(event) => setTrackingNumber(event.target.value)} type="text" value={trackingNumber} />
+            </label>
+            <label>
+              {t("orders.fulfill.trackingUrl")}
+              <input className="cl-input" onChange={(event) => setTrackingUrl(event.target.value)} type="text" value={trackingUrl} />
+            </label>
+            <label className="cl-checkbox">
+              <input checked={notifyCustomer} onChange={(event) => setNotifyCustomer(event.target.checked)} type="checkbox" />
+              {t("orders.fulfill.notify")}
+            </label>
+          </div>
+        )}
+        onCancel={() => setFulfillDialog(false)}
+        onConfirm={() => void fulfill()}
+        open={fulfillDialog}
+        title={t("orders.fulfill.title")}
+      />
+      <ConfirmDialog
+        busy={cancelling}
+        confirmLabel={t("orders.fulfillCancel.confirm")}
+        message={<p>{t("orders.fulfillCancel.body")}</p>}
+        onCancel={() => setCancelFulfillmentId(null)}
+        onConfirm={() => void cancelFulfillment()}
+        open={cancelFulfillmentId !== null}
+        title={t("orders.fulfillCancel.action")}
+      />
       <ConfirmDialog
         busy={markingPaid}
         confirmLabel={t("orders.markPaid.confirm")}

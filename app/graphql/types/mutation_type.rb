@@ -72,6 +72,17 @@ module Types
     # G6-3 前半：PSP provider 憑證層（祕密 write-only、payload 只回指紋——37 §6.3）。
     field :order_mark_as_paid, mutation: Mutations::OrderMarkAsPaid,
       description: "把待付款訂單標記為已付款（G6-6 步 4；manual 收款確認）。"
+
+    # G6-8（步 5）：履約與退款線。fulfillmentCreate 是本尊現行命名
+    #（fulfillmentCreateV2 官方標 Deprecated）；refundCreate 官方 2026-04 起強制冪等鍵。
+    field :fulfillment_create, mutation: Mutations::FulfillmentCreate,
+      description: "建立出貨（行項＋追蹤資訊；出貨釋放庫存承諾）。"
+    field :fulfillment_tracking_info_update, mutation: Mutations::FulfillmentTrackingInfoUpdate,
+      description: "更新出貨追蹤資訊（整組取代）。"
+    field :fulfillment_cancel, mutation: Mutations::FulfillmentCancel,
+      description: "取消出貨（品項回到可出貨、庫存承諾回加）。"
+    field :refund_create, mutation: Mutations::RefundCreate,
+      description: "建立退款（軟上限條件式 UPDATE＋restock；idempotencyKey 必帶）。"
     field :shop_payment_provider_set, mutation: Mutations::ShopPaymentProviderSet,
       description: "宣告式寫入 PSP provider 的憑證與偏好。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,

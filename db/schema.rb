@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_310000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_020000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -495,6 +495,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_310000) do
     t.boolean "customer_notified", default: true, null: false
     t.datetime "delivered_at"
     t.bigint "fulfillment_order_id", null: false
+    t.json "line_items_snapshot", null: false, comment: "出貨行項明細 [{line_item_id, quantity}]（cancel 回加與 UI 顯示的依據）"
     t.datetime "shipped_at"
     t.bigint "shop_id", null: false
     t.string "status", limit: 32, default: "pending", null: false
@@ -872,6 +873,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_310000) do
     t.boolean "buyer_accepts_marketing", default: false, null: false, comment: "成單當下的行銷勾選快照（checkout 同名欄傳導；對位 Order API）"
     t.string "buyer_jurisdiction", limit: 8, null: false
     t.datetime "canceled_at"
+    t.bigint "captured_total_cents", default: 0, null: false, comment: "Σ success 的 sale/capture 交易額（16 F5.1 軟上限的分母；nightly 與明細對帳）"
     t.bigint "checkout_id"
     t.datetime "created_at", null: false
     t.string "currency", limit: 3, default: "HKD", null: false
@@ -888,6 +890,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_310000) do
     t.string "presentment_currency", limit: 3, default: "HKD", null: false
     t.bigint "presentment_total_cents", default: 0, null: false
     t.datetime "processed_at"
+    t.bigint "refunded_total_cents", default: 0, null: false, comment: "Σ 已退金額（16 F5.1 條件式 UPDATE 的累計欄；不加 DB CHECK——軟上限）"
     t.string "seller_jurisdiction", limit: 8, null: false
     t.json "shipping_address", default: -> { "(json_object())" }, null: false
     t.bigint "shipping_cents", default: 0, null: false
