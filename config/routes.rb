@@ -77,6 +77,9 @@ Rails.application.routes.draw do
     # 結帳線第一包：cart→checkout 建立＋token URL（15 F3；one-page UI 隨後續包）。
     post "checkout" => "storefront/checkouts#create", format: false, as: :storefront_checkout
     get "checkouts/:token" => "storefront/checkouts#show", format: false, as: :storefront_checkout_show
+    # 結帳線第二包：選國＋選運送方式（server 重驗 F3-3；85 §5.3 per-shipment 形）。
+    post "checkouts/:token/delivery" => "storefront/checkouts#delivery", format: false,
+         as: :storefront_checkout_delivery
     # 🔴 帶前綴的 cart／localization（包 34）：RoutesDrop 對主題吐 `{prefix}/cart/add` 等
     #   帶前綴 URL（67 §F.4），POST 不經 GET catch-all ⇒ 必須顯式收。
     #   constraint 正則＝Markets::UrlPrefix::SEGMENT 的字面複本（routes 載入時機不宜

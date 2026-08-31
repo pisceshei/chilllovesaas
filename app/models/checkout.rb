@@ -11,7 +11,10 @@
 # ④金額欄全 integer cents（鐵律 3）；presentment 雙欄 v1 與店幣同值（多幣別
 #   隨 markets 幣別包）。
 class Checkout < ApplicationRecord
-  STATUSES = %w[active completed expired].freeze
+  # 🔴 三值 enum＝open／completed／deleted（90-blueprint/03 §B.2；85 §6 末條）。
+  # abandoned 不是狀態、是 abandoned_at 時戳旗標；「expired」同理走 expires_at。
+  # 第一包誤用 "active"——migration 20260831210000 已同步更正預設值與既有列。
+  STATUSES = %w[open completed deleted].freeze
 
   acts_as_tenant :shop
 

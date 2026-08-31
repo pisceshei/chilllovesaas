@@ -1333,6 +1333,22 @@ shipping:
   # UI 硬要求（46c:876 明確點名）：跨設定檔的近似但不相同名稱要出警示
   warn_on_near_duplicate_rate_names: true
   near_duplicate_edit_distance: 2
+  # 官方合併顯示名＝字面 `Shipping`（85 §6，help combined-shipping-rates 逐字，2026-08-31）
+  # ⇒ V-15 的「顯示名未載明」半格已關閉；merged_option_fallback_label 是我方繁中文案
+  # （鐵律 10），語義對齊官方、字面不抄。正規化半格（大小寫敏感）仍 V。
+  # --- 結帳線第二包（85 號實測正典，2026-08-31）---
+  # 店預設包裹重量（克）：重量制 basis 的 per-participant 加項（46c:869–876）。
+  # ⚠ 本尊 Settings→Packages「1 box」的具體重量本輪未展開量測（85 §1）→ 預設 0（V）。
+  default_package_weight_grams: 0
+  # split shipping 開關預設值（85 §5.3 admin「Manage split shipping [On]」；shops 欄位預設同源）
+  split_shipping_default: true
+  # 費率型別四值（85 §3 DOM 逐字 flat_rate/carrier/order_amount/weight；我方內部名
+  # flat＝flat_rate；carrier 隨 58 物流商對接包，RateResolver v1 不產出 carrier 選項）
+  rate_types: [flat, order_amount, weight, carrier]
+  # transit 預設檔（秒制區間；85 §3 select value＝base64 JSON {min,max}）：
+  # 1–2／3–5／5–8 個工作天；None＝雙 NULL；必填（85 §3「Transit time is required」）
+  transit_presets_seconds: [[86400, 172800], [259200, 432000], [432000, 691200]]
+  transit_required: true
 
   # --- zone ≠ market（P1-24／H-112）---
   # 出處：44:524（live，zone 頁黃色警示橫幅逐字「若要在此區域開始銷售至 27 個國家/地區，請將這些國家/地區加入市場」）

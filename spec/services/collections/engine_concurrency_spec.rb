@@ -46,6 +46,10 @@ RSpec.describe "智慧系列引擎併發" do
     Market.unscoped.delete_all
     Domain.unscoped.delete_all
     ShopLocale.unscoped.delete_all
+    # 結帳線第二包：Shop callback 另生運送鏈（FK → shops），反序清（rates→zones→profiles）。
+    ShippingRate.unscoped.delete_all
+    ShippingZone.unscoped.delete_all
+    ShippingProfile.unscoped.delete_all
     UserStoreAssignment.unscoped.delete_all
     StaffMember.unscoped.delete_all
     Shop.delete_all

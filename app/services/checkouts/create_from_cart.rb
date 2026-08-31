@@ -29,6 +29,12 @@ module Checkouts
           "title" => variant.product.title,
           "variant_title" => variant.title,
           "unit_price_cents" => variant.price_cents, # 🔴 即時價定格（F1 #3）
+          # 運送解析輸入（第二包）：重量／是否需運送／設定檔歸屬（nil＝General 補集）
+          # 一起定格——結帳中商家改歸屬不重分組（85 §5.3 的「options have changed」
+          # 警示走重選閘，不走快照漂移）。
+          "weight_grams" => variant.weight_grams,
+          "requires_shipping" => variant.requires_shipping,
+          "shipping_profile_id" => variant.product.shipping_profile_id,
           "properties" => line.properties
         }
       end
@@ -51,7 +57,7 @@ module Checkouts
         tax_cents: result.tax_total_cents,
         total_cents: result.total_cents,
         presentment_total_cents: result.total_cents,
-        status: "active"
+        status: "open" # 三值 enum（90-blueprint/03 §B.2）；第一包誤寫 active 已更正
       )
     end
   end
