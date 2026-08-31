@@ -7,6 +7,14 @@ module Storefront
   # 快取：主題資產檔名**未指紋化**（第三方主題原樣檔名）⇒ 不能 immutable；
   # 短 max-age 折衷（發布新主題後最多 300s 舊資產窗）。指紋化管線登記為後續改善。
   class AssetsController < BaseController
+    # 🔴 必須跳過 CSRF：Rails 的 cross-origin JavaScript 防護（verify_same_origin_request）
+    # 會對「未帶 CSRF token 的 GET ＋ JS content-type 回應」拋
+    # InvalidCrossOriginRequest ⇒ 前台 <script src> 載主題 .js 一律 422、整站無腳本。
+    # bt3 部署預覽實錘（2026-08-31）：.css 200、.js 全 422——content-type 選擇性觸發；
+    # 🔴 test 環境 allow_forgery_protection=false ⇒ 既有 request spec 結構上測不到，
+    # 對應殺手格（S10）顯式開 forgery 再打。純讀端點無狀態變更，CSRF 語義不適用。
+    skip_forgery_protection
+
     before_action :require_published_theme!
 
     # GET /theme-assets/*file
