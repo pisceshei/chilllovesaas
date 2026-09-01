@@ -3888,3 +3888,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - 🔴 **教訓（mutation-not-red 新形：recomputed-value masking）**：drop 屬性在
   下游被重建（render_block 重算 children）⇒ 純渲染斷言殺不掉構造點退化；
   要 drop 面直讀（size/直接輸出）才封——同軸見 equality-trap-in-tests。
+
+### 3.64 G2 步 14a（內容線 API）的範圍外觀察（2026-09-01）
+
+- ⚪ **article image／metafields**：官方 Article 有 image(Image)／metafields；
+  v1 未落欄（媒體管線接法隨 14b/14c 需求）。
+- ⚪ **留言管理 API**（approve/spam/delete；admin Manage comments 頁）：狀態機
+  三態已落表，管理面隨 14b。
+- ⚪ **MenuItemType 三值延後**：METAOBJECT（admin picker 實測未露出）／
+  SHOP_POLICY／CUSTOMER_ACCOUNT_PAGE（實測 picker 有 Orders/Profile 兩項）。
+- ⚪ **blog feed（FeedBurner 遺產欄）**：官方 Blog.feed 不實作。
+- ⚪ **article 搜尋接線**：SearchQuery 的 article 分支（12b 留空）隨 14c 一起接。

@@ -6,7 +6,12 @@
 # `resource_type`＋`resource_id`，渲染期解析成當下 URL，handle 改名不斷鏈）。
 # 巢狀深度上限走 limits `max_menu_depth`（本尊選單 ≤3 層）。
 class MenuItem < ApplicationRecord
-  ITEM_TYPES = %w[http product collection page].freeze
+  # 步 14a 擴充（98 §3 官方 MenuItemType 子集）：資源型需 resource_id、靜態型
+  # （frontpage/search/catalog/collections）免 url 免 resource——渲染期由 RoutesDrop
+  # 對映固定路徑。METAOBJECT/SHOP_POLICY/CUSTOMER_ACCOUNT_PAGE 延後（91 §3.64）。
+  RESOURCE_TYPES = %w[product collection page blog article].freeze
+  STATIC_TYPES = %w[frontpage search catalog collections].freeze
+  ITEM_TYPES = ([ "http" ] + RESOURCE_TYPES + STATIC_TYPES).freeze
 
   acts_as_tenant :shop
 
@@ -19,5 +24,6 @@ class MenuItem < ApplicationRecord
   validates :item_type, inclusion: { in: ITEM_TYPES }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :url, presence: true, if: -> { item_type == "http" }
-  validates :resource_type, :resource_id, presence: true, if: -> { item_type != "http" }
+  validates :resource_type, :resource_id, presence: true,
+            if: -> { RESOURCE_TYPES.include?(item_type) }
 end

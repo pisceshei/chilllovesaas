@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_140000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -39,6 +39,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_110000) do
     t.index ["app_handle"], name: "fk_app_installations_app_handle"
     t.index ["shop_id", "app_handle"], name: "uq_app_installations_app", unique: true
     t.index ["shop_id", "id"], name: "uq_app_installations_tenant_id", unique: true
+  end
+
+  create_table "article_comments", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "文章留言（三態；Liquid 只見 published）", force: :cascade do |t|
+    t.bigint "article_id", null: false
+    t.string "author_name", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "email", limit: 320, null: false
+    t.bigint "shop_id", null: false
+    t.string "status", limit: 12, default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["article_id"], name: "fk_rails_67982717fa"
+    t.index ["shop_id", "article_id", "status"], name: "ix_article_comments_status"
+    t.index ["shop_id", "id"], name: "uq_article_comments_tenant_id", unique: true
+  end
+
+  create_table "articles", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "部落格文章（98 §1/§4；published_at NULL＝Hidden）", force: :cascade do |t|
+    t.string "author_name", comment: "顯示名（98 §4 byline『By KEN LEE』形；不掛 staff FK）"
+    t.bigint "blog_id", null: false
+    t.text "body_html", size: :long, null: false
+    t.datetime "created_at", null: false
+    t.text "excerpt_html", comment: "摘要（官方 summary/excerpt——列表與 excerpt_or_content 用）"
+    t.string "handle", null: false
+    t.datetime "published_at", comment: "NULL＝Hidden；未來時刻＝排程（Page.visible 同紀律）"
+    t.bigint "shop_id", null: false
+    t.json "tags", default: -> { "(json_array())" }, null: false
+    t.string "template_suffix"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blog_id"], name: "fk_rails_5fea85476e"
+    t.index ["shop_id", "blog_id", "handle"], name: "uq_articles_handle", unique: true
+    t.index ["shop_id", "blog_id", "published_at"], name: "ix_articles_published"
+    t.index ["shop_id", "id"], name: "uq_articles_tenant_id", unique: true
+  end
+
+  create_table "blogs", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "部落格（98 §3；comment_policy 官方三值）", force: :cascade do |t|
+    t.string "comment_policy", limit: 20, default: "closed", null: false
+    t.datetime "created_at", null: false
+    t.string "handle", null: false
+    t.bigint "shop_id", null: false
+    t.string "template_suffix"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "handle"], name: "uq_blogs_handle", unique: true
+    t.index ["shop_id", "id"], name: "uq_blogs_tenant_id", unique: true
   end
 
   create_table "cart_line_items", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "購物車行（specs/15 F1 #1/#5；merge_key_hash 承重合併）", force: :cascade do |t|
@@ -983,6 +1028,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_110000) do
     t.string "seo_description", limit: 320
     t.string "seo_title", limit: 70
     t.bigint "shop_id", null: false
+    t.string "template_suffix"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["shop_id", "handle"], name: "uq_pages_handle", unique: true
@@ -1527,6 +1573,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_110000) do
   add_foreign_key "api_tokens", "staff_members", name: "fk_api_tokens_staff_member_id"
   add_foreign_key "app_installations", "platform_apps", column: "app_handle", primary_key: "handle", name: "fk_app_installations_app_handle"
   add_foreign_key "app_installations", "shops", name: "fk_app_installations_shop"
+  add_foreign_key "article_comments", "articles"
+  add_foreign_key "articles", "blogs"
   add_foreign_key "cart_line_items", "carts", name: "fk_cart_line_items_cart", on_delete: :cascade
   add_foreign_key "cart_line_items", "product_variants", name: "fk_cart_line_items_variant", on_delete: :cascade
   add_foreign_key "carts", "shops", name: "fk_carts_shop"

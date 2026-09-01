@@ -173,6 +173,20 @@ module Types
     #   結構上改不到既有列，所以設排程／改期／取消排程在 S5 之前無路可達。
     # 🔴 **排程只能經 `publishablePublish` 進入系統**：`PublicationUpdateInput`
     #   官方恰三欄且沒有 `publishDate`（取證 2026-08-27）。這是本尊的功能邊界。
+    # ── 內容線（步 14a；98 §3 官方 CRUD 對位）──────────────────────────────
+    field :article_create, mutation: Mutations::ArticleCreate, description: "建立部落格文章。"
+    field :article_delete, mutation: Mutations::ArticleDelete, description: "永久刪除部落格文章。"
+    field :article_update, mutation: Mutations::ArticleUpdate, description: "更新部落格文章。"
+    field :blog_create, mutation: Mutations::BlogCreate, description: "建立部落格。"
+    field :blog_delete, mutation: Mutations::BlogDelete, description: "永久刪除部落格（含文章）。"
+    field :blog_update, mutation: Mutations::BlogUpdate, description: "更新部落格。"
+    field :menu_create, mutation: Mutations::MenuCreate, description: "建立導覽選單。"
+    field :menu_delete, mutation: Mutations::MenuDelete, description: "刪除導覽選單（預設選單除外）。"
+    field :menu_update, mutation: Mutations::MenuUpdate, description: "更新導覽選單（items 整棵替換）。"
+    field :page_create, mutation: Mutations::PageCreate, description: "建立自訂頁面。"
+    field :page_delete, mutation: Mutations::PageDelete, description: "永久刪除自訂頁面。"
+    field :page_update, mutation: Mutations::PageUpdate, description: "更新自訂頁面。"
+
     field :publishable_publish, mutation: Mutations::PublishablePublish,
       description: "把一個資源發布到一或多個銷售管道（未來時間＝排程發布）。"
     field :publishable_unpublish, mutation: Mutations::PublishableUnpublish,
