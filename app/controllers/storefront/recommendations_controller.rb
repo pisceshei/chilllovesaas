@@ -147,7 +147,7 @@ module Storefront
 
     def renderer
       ThemeEngine::PageRenderer.new(
-        theme: published_theme, shop: current_shop, publication: Publication.online_store!,
+        theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix:, host: request.host, asset_base: "/theme-assets", locale: nil
       )
     end

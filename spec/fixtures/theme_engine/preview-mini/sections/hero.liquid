@@ -1,0 +1,4 @@
+<h1>{{ section.settings.heading }}</h1><p>{{ 148000 | money }}</p><a href="{{ routes.cart_url }}">cart</a>
+<span data-t-theme>{{ 'general.hello' | t }}</span><span data-t-platform>{{ 'cart.checkout' | t }}</span>
+<nav data-switcher>{% for l in localization.available_languages %}<a href="{{ l.root_url }}">{{ l.iso_code }}|{{ l.endonym_name }}</a>{% endfor %}</nav>
+{% schema %}{ "name": "Hero", "settings": [ { "id": "heading", "type": "text", "default": "預設標題" } ] }{% endschema %}

@@ -1,0 +1,8 @@
+{
+  "general": {
+    "hello": "Hello shopper"
+  },
+  "probe": {
+    "tight": "Only {{ n}} left"
+  }
+}

@@ -1,0 +1,2 @@
+<div id="ps">{% if predictive_search.performed %}<span id="psterms">{{ predictive_search.terms }}</span><ul>{% for p in predictive_search.resources.products %}<li class="psp">{{ p.title }}|{{ p.url }}</li>{% endfor %}</ul><ul>{% for c in predictive_search.resources.collections %}<li class="psc">{{ c.title }}</li>{% endfor %}</ul>{% endif %}</div>
+{% schema %}{ "name": "Predictive search" }{% endschema %}

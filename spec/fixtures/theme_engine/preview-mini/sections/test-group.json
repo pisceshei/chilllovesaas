@@ -1,0 +1,11 @@
+{
+  "name": "Test group",
+  "type": "header",
+  "sections": {
+    "grouped_hero_Ab12Cd": {
+      "type": "hero",
+      "settings": { "heading": "群組英雄" }
+    }
+  },
+  "order": ["grouped_hero_Ab12Cd"]
+}

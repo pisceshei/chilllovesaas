@@ -1,0 +1,2 @@
+<div id="rec">{% if recommendations.performed? %}<span id="rint">{{ recommendations.intent }}</span><span id="rcount">{{ recommendations.products_count }}</span><ul>{% for p in recommendations.products %}<li class="rp">{{ p.title }}</li>{% endfor %}</ul>{% endif %}</div>
+{% schema %}{ "name": "Related products" }{% endschema %}

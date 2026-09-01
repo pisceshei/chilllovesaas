@@ -1,0 +1,2 @@
+﻿/* JSONC fixture: BOM+comment+trailing comma (67 F.3(b)1) */
+{ "general": { "hello": "你好買家", } }

@@ -41,10 +41,52 @@ module Storefront
       @published_theme ||= ActsAsTenant.with_tenant(current_shop) { Theme.published.first }
     end
 
+    # PR-12：渲染用主題＝預覽釘選優先，否則已發布（83 §12.3 sticky 對位）。
+    def current_theme
+      return @current_theme if defined?(@current_theme)
+
+      @current_theme = resolve_preview_theme || published_theme
+    end
+
+    def preview_theme_active?
+      current_theme.present? && current_theme != published_theme
+    end
+
     def require_published_theme!
-      return if published_theme
+      # PR-12：釘住預覽主題時放行（本尊可在未發布店預覽主題）
+      return if current_theme
 
       render plain: "商店尚未發布主題。", status: :service_unavailable
+    end
+
+    # 佈景主題預覽釘選（Ella 修復 PR-12）：`?preview_theme_id=` 帶一次 ⇒ 簽名
+    # cookie 釘住，之後**不帶參數的請求也繼續渲染預覽主題**（本尊 sticky cookie
+    # 行為，83 §12.3 live 實測 2026-08-31）；帶正式主題 id 或無效 id ⇒ 解除
+    # （同節「復位法＝帶一次正式主題 id」）。跨租戶 id 經 with_tenant 查詢天然
+    # 落空 ⇒ 視同無效解除。robots 已 Disallow `/*?*preview_theme_id=`（62 §366）。
+    PREVIEW_COOKIE = "_cl_preview_theme"
+
+    def resolve_preview_theme
+      raw = params[:preview_theme_id].presence
+      if raw
+        theme = ActsAsTenant.with_tenant(current_shop) { Theme.find_by(id: raw.to_i) }
+        if theme.nil? || theme.role == "published"
+          cookies.delete(PREVIEW_COOKIE)
+          return nil
+        end
+        cookies.signed[PREVIEW_COOKIE] = { value: theme.id, httponly: true }
+        return theme
+      end
+
+      pinned = cookies.signed[PREVIEW_COOKIE].presence
+      return nil if pinned.nil?
+
+      theme = ActsAsTenant.with_tenant(current_shop) { Theme.find_by(id: pinned) }
+      if theme.nil? || theme.role == "published"
+        cookies.delete(PREVIEW_COOKIE) # 釘的主題已被刪／已轉正 ⇒ 解除
+        return nil
+      end
+      theme
     end
   end
 end
