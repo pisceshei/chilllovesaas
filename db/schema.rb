@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_150000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1479,6 +1479,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_140000) do
     t.index ["shop_id", "theme_id"], name: "ix_templates_theme_id"
   end
 
+  create_table "theme_import_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "主題 zip 匯入報告（99 §5；含相容掃描）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error_code", limit: 40, comment: "失敗碼（INVALID_ZIP 等——對齊官方碼形）"
+    t.json "report", null: false, comment: "相容掃描（檔數/警告/未知 tag/Liquid 錯誤）"
+    t.bigint "shop_id", null: false
+    t.string "status", limit: 12, null: false, comment: "ok / failed"
+    t.bigint "theme_id", comment: "成功建立的主題；失敗為 NULL"
+    t.string "zip_filename", null: false
+    t.index ["shop_id", "created_at"], name: "ix_theme_import_reports_created"
+    t.index ["shop_id", "id"], name: "uq_theme_import_reports_tenant_id", unique: true
+  end
+
   create_table "theme_settings", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "主題全域 settings_data", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "settings", default: -> { "(json_object())" }, null: false
@@ -1490,6 +1502,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_140000) do
   end
 
   create_table "themes", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "主題庫項目；主題是資料而非可執行程式碼", force: :cascade do |t|
+    t.string "content_checksum", limit: 64, comment: "匯入主題的內容 SHA-256（storage/themes/{checksum}；first_party 為 NULL）"
     t.datetime "created_at", null: false
     t.boolean "license_attested", default: false, null: false
     t.string "name", null: false
