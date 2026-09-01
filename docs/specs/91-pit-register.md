@@ -3838,3 +3838,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - 更正：72 號「16 指標挑選器」＝舊版形；現行官方 "any number of the available
   cards"＋metric library sidebar（95 §6）。
 
+
+### 3.60 G2 步 12a（系列線）的範圍外觀察（2026-09-01）
+
+- ⚪ **best_selling 排序無排名資料**：v1 降級 created_desc（96 §2 的 9 值 select
+  含 best-selling）；接分析線的銷售排名 rollup 後改真排名。
+- ⚪ **paginate `window_size:` 參數吞掉不實作**：parts 窗形固定（首尾＋當前±1＋
+  省略號，ours——官方窗算法未逐字記載）。
+- ⚪ **storefront filter（`filter.p.*`）整條未動**：96 §8 未取得項；隨 filter 包
+  另行三源取證（search.filters 亦回空陣列——12b 同款）。
+- ⚪ **collection.image 無 schema 欄**：collections 表無圖片欄 ⇒ drop 回 nil，
+  主題走首商品圖 fallback（官方建議形恰好吃得到）；補欄隨 admin 系列圖片包。
+- ⚪ **/collections 清單逐卡 products_count N+1**：每卡一條 COUNT；系列數大時
+  需聚合查詢（v1 系列數小，登記不修）。

@@ -48,11 +48,19 @@ module ThemeEngine
     end
 
     # locale ⇒ t filter 走三層字典（build_locale_dict）；web_presence ⇒ localization 真值。
+    # publication ⇒ collections/all_products 全域（步 12；nil＝維持 nil stub）；
+    # params ⇒ paginate 頁碼與 sort_by（registers 過境，不進 assigns）；
+    # template_suffix ⇒ `?view=` 替代模板的 template.suffix（96 §6）。
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
-                   cart_json: nil, asset_base: nil, web_presence: nil)
+                   cart_json: nil, asset_base: nil, web_presence: nil,
+                   publication: nil, params: {}, template_suffix: nil)
       @theme, @shop = theme, shop
       @cart_json = cart_json
+      @publication = publication
+      @params = params || {}
+      @template_suffix = template_suffix
+      @path = path
       # 公開店面傳 "/theme-assets"（包 33 後半）；預設維持登入預覽路徑（包 30 行為不變）。
       @asset_base = asset_base
       # 揮發旗標集（63 §D.5）：drop 讀到 volatile 欄位（inventory_quantity 等）時註冊，
@@ -88,14 +96,15 @@ module ThemeEngine
         "localization" => web_presence ? Storefront::LocalizationContext.drop(web_presence:, locale_tag: locale || "en")
                                        : LocalizationDrop.new(language:, available_languages: [ language ]),
         "linklists" => LinkListsDrop.new(shop, url_prefix: url_prefix),
-        "template" => TemplateDrop.new(page_type),
+        "template" => TemplateDrop.new(page_type, suffix: @template_suffix),
         "content_for_header" => "",
         "canonical_url" => host ? "https://#{host}#{path}" : path,
         "page_title" => shop.name,
         "page_description" => nil,
         "current_tags" => nil,
-        "collections" => nil,
-        "all_products" => nil,
+        # 步 12（96 §1/§7）：有管道語境＝真 drop；無（舊呼叫面）＝維持 nil stub。
+        "collections" => publication ? CollectionsDrop.new(shop:, publication:, url_prefix:, locale:) : nil,
+        "all_products" => publication ? AllProductsDrop.new(publication:, url_prefix:, locale:) : nil,
         "predictive_search" => nil,
         "recommendations" => nil,
         # 步 11：customer 顯式 nil stub——主題頁走頁快取（14 §F1-4 個人化不進
@@ -343,6 +352,9 @@ module ThemeEngine
       { runtime: self, locale_dict: @locale_dict, file_system: SnippetFS.new(@source),
         money_symbol: money_symbol, currency: @shop.store_currency,
         render_flags: @render_flags,
+        # paginate tag 的頁碼與 parts URL 來源（步 12）：request_params＝字串鍵
+        # query 參數；request_path＝**帶前綴**的站內路徑（parts 連結是買家可點 URL）。
+        request_params: @params, request_path: "#{@url_prefix}#{@path}",
         asset_base: @asset_base || "/admin/store/preview/#{@theme.id}/assets" }
     end
 

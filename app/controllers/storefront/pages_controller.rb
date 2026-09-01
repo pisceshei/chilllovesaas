@@ -16,7 +16,8 @@ module Storefront
     before_action :require_published_theme!, except: %i[robots root] # root 只重導，不需主題
 
     # query 白名單（進快取 key 的維度；未列參數不參與 key＝同一快取頁）。
-    CACHE_PARAMS = %w[variant page q sort_by].freeze
+    # view＝?view= 替代模板（步 12）——不進 key 會讓替代模板頁污染預設頁快取。
+    CACHE_PARAMS = %w[variant page q sort_by view].freeze
 
     # GET /robots.txt（包 35 起開放；62 §D.2 預設 disallow 集合＋平台保底 Sitemap 行）。
     # 主題 robots.txt.liquid 覆寫層（§D.1 本尊形態）與 AI 爬蟲三組開關（§D.3）待
