@@ -11,6 +11,8 @@ module Storefront
   # ③🔴 市場只由 URL 決定（limits `i18n.locale_prefix.market_determined_by`）：
   #   本層不讀 GeoIP／cookie 推市場。
   class BaseController < ActionController::Base
+    include ThemeCsp # 主題渲染面 CSP（Ella 修復 PR-1；concern 檔頭有完整理由）
+
     before_action :require_shop!
 
     private
