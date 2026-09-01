@@ -421,6 +421,8 @@ module ThemeEngine
     def id = @p.id
     def title = @tx["title"] || @p.title
     def handle = @p.handle
+    # 96 §3.1 官方："Search results have an additional `object_type` property"
+    def object_type = "product"
     def vendor = @p.vendor
     def type = @p.product_type
     def tags = @p.tags.to_a
@@ -871,6 +873,162 @@ module ThemeEngine
     end
   end
 
+  # 搜尋結果的混型懶載出口（步 12b；96 §3——official `search.results`，item 可為
+  # product／page／article、多帶 object_type）。
+  #
+  # ①排序：relevance＝商品在前（建立序新在前）→ 頁面（ours——官方 relevance 算法
+  #   未公開）；price-±＝商品按 MIN(variant price)、**非商品結果推到尾**（官方句）。
+  # ②分頁窗跨型別連續切（商品段先、頁面段後）；paginate 上限同 collection.products。
+  class SearchResultsDrop < Liquid::Drop
+    include Enumerable
+
+    DEFAULT_LIMIT = 50
+
+    PRODUCT_ORDER_SQL = {
+      "relevance" => "products.created_at DESC, products.id DESC",
+      "price-ascending" => "#{CollectionProductsDrop::MIN_PRICE_SQL} ASC, products.id ASC",
+      "price-descending" => "#{CollectionProductsDrop::MIN_PRICE_SQL} DESC, products.id DESC"
+    }.freeze
+
+    def initialize(shop:, publication:, query:, types:, sort_key:, url_prefix: "", locale: nil)
+      super()
+      @shop, @publication = shop, publication
+      @query = query
+      @types = types
+      @sort_key = PRODUCT_ORDER_SQL.key?(sort_key) ? sort_key : "relevance"
+      @url_prefix = url_prefix
+      @locale = locale
+      @page, @per = 1, nil
+    end
+
+    def paginate!(page:, per:)
+      @page, @per = page, per
+      @drops = nil
+      total
+    end
+
+    def each(&) = drops.each(&)
+    def size = drops.size
+    def first = drops.first
+
+    def total
+      @total ||= products_total + pages_total
+    end
+
+    private
+
+    def products_total
+      @products_total ||= @types.include?("product") ? product_relation.count : 0
+    end
+
+    def pages_total
+      @pages_total ||= @types.include?("page") ? page_relation.count : 0
+    end
+
+    def product_relation
+      Storefront::SearchQuery.products(shop: @shop, publication: @publication, query: @query)
+    end
+
+    def page_relation
+      Storefront::SearchQuery.pages(shop: @shop, query: @query)
+    end
+
+    def drops
+      @drops ||= begin
+        per = @per || DEFAULT_LIMIT
+        offset = (@page - 1) * per
+        items = []
+        if @types.include?("product") && offset < products_total
+          products = product_relation.order(Arel.sql(PRODUCT_ORDER_SQL.fetch(@sort_key)))
+                                     .offset(offset).limit(per)
+                                     .includes(product_variants: [ :product_variant_option_values,
+                                                                   { inventory_item: :inventory_levels },
+                                                                   { media: :stored_file } ],
+                                               product_options: :option_values,
+                                               media: :stored_file).to_a
+          overlay = DropTranslations.overlay_by_id(records: products, locale: @locale)
+          items.concat(products.map do |product|
+            ProductDrop.new(product, url_prefix: @url_prefix, publication: @publication,
+                            translations: overlay[product.id] || {})
+          end)
+        end
+        if @types.include?("page") && items.size < per
+          page_offset = [ offset - products_total, 0 ].max
+          pages = page_relation.order(:title, :id).offset(page_offset).limit(per - items.size).to_a
+          items.concat(pages.map { |page| PageDrop.new(page, url_prefix: @url_prefix) })
+        end
+        items
+      end
+    end
+  end
+
+  # `search` 全域（96 §3.1——official search object 九屬性；filters v1 恆空陣列，
+  # storefront filter 隨 filter 包＝91 §3.61）。
+  class SearchDrop < Liquid::Drop
+    SORT_VALUES = %w[relevance price-ascending price-descending].freeze # 96 §3.2 真店恰 3 值
+    TYPE_VALUES = %w[article page product].freeze
+
+    def initialize(shop:, publication:, url_prefix: "", locale: nil, params: {})
+      super()
+      @shop, @publication = shop, publication
+      @url_prefix = url_prefix
+      @locale = locale
+      @params = params || {}
+    end
+
+    def terms = @params["q"].to_s
+    def performed = terms.present?
+    def default_sort_by = "relevance"
+
+    def sort_by
+      value = @params["sort_by"].to_s
+      SORT_VALUES.include?(value) ? value : default_sort_by
+    end
+
+    def sort_options
+      SORT_VALUES.map { |value| BaseDrop.new({ "value" => value, "name" => value }) }
+    end
+
+    # 官方："The types are determined by the `type` query parameter."（CSV；預設全部）
+    def types
+      requested = @params["type"].to_s.split(",").map(&:strip) & TYPE_VALUES
+      requested.presence || TYPE_VALUES
+    end
+
+    def filters = []
+    def results_count = results.total
+
+    def results
+      return [] unless performed
+
+      @results ||= SearchResultsDrop.new(
+        shop: @shop, publication: @publication, query: terms, types:,
+        sort_key: sort_by, url_prefix: @url_prefix, locale: @locale
+      )
+    end
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("SearchDrop.#{name}")
+      nil
+    end
+  end
+
+  # `predictive_search` 物件（96 §4.3；official：performed／resources／terms／types，
+  # resources＝四型陣列——**無 queries**，query suggestions 屬 Ajax 層）。
+  class PredictiveSearchDrop < Liquid::Drop
+    def initialize(terms:, resources:, types:)
+      super()
+      @terms = terms
+      @resources = resources
+      @types = types
+    end
+
+    def performed = true
+    def terms = @terms
+    def types = @types
+    def resources = BaseDrop.new(@resources)
+  end
+
   class PageDrop < Liquid::Drop
     def initialize(page, url_prefix: "")
       super()
@@ -882,6 +1040,7 @@ module ThemeEngine
     def title = @page.title
     def handle = @page.handle
     def content = @page.body_html
+    def object_type = "page" # 96 §3.1 搜尋結果混型判別
     def url = "#{@url_prefix}/pages/#{@page.handle}"
     def published_at = @page.published_at&.iso8601
 

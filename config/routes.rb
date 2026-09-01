@@ -119,6 +119,12 @@ Rails.application.routes.draw do
          as: :storefront_checkout_complete
     get "checkouts/:token/complete" => "storefront/checkouts#thank_you", format: false,
         as: :storefront_checkout_thank_you
+    # 步 12b：predictive search 雙形＋recommendations 雙形（96 §4/§5；
+    # .json 形回 JSON、裸形收 section_id 回 HTML——25 §5「兩形都要」）。
+    get "search/suggest.json" => "storefront/search#suggest_json", format: false
+    get "search/suggest" => "storefront/search#suggest_section", format: false
+    get "recommendations/products.json" => "storefront/recommendations#products_json", format: false
+    get "recommendations/products" => "storefront/recommendations#products_section", format: false
     # 結帳線第三包：cart 運費試算三支（86 §6 官方現值：prepare/async/同步；
     # price＝十進位主單位字串——鐵律 3 序列化層邊界）。
     get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates", format: false
@@ -146,6 +152,11 @@ Rails.application.routes.draw do
       get  "cart/shipping_rates.json" => "storefront/cart#shipping_rates"
       post "cart/prepare_shipping_rates.json" => "storefront/cart#prepare_shipping_rates"
       get  "cart/async_shipping_rates.json" => "storefront/cart#async_shipping_rates"
+      # 步 12b：Ajax API 官方形自帶 {locale} 前綴（96 §4.1 locale-aware URLs）。
+      get "search/suggest.json" => "storefront/search#suggest_json"
+      get "search/suggest" => "storefront/search#suggest_section"
+      get "recommendations/products.json" => "storefront/recommendations#products_json"
+      get "recommendations/products" => "storefront/recommendations#products_section"
     end
     get "/" => "storefront/pages#root", as: :storefront_root
     get "*path" => "storefront/pages#show", format: false, as: :storefront_page

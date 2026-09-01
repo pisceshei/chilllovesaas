@@ -3851,3 +3851,17 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   主題走首商品圖 fallback（官方建議形恰好吃得到）；補欄隨 admin 系列圖片包。
 - ⚪ **/collections 清單逐卡 products_count N+1**：每卡一條 COUNT；系列數大時
   需聚合查詢（v1 系列數小，登記不修）。
+
+### 3.61 G2 步 12b（搜尋線）的範圍外觀察（2026-09-01）
+
+- ⚪ **整頁搜尋欄位集＝ours**（title/vendor/product_type/body/variants.title/
+  variants.sku）：官方未逐字列整頁搜尋欄位；predictive 預設四欄位照官方。
+- ⚪ **options[prefix]／options[unavailable_products] 不改變匹配**：LIKE %term%
+  是官方末詞前綴比對的超集；unavailable 排序後置未實作。
+- ⚪ **query 型建議恆空陣列**：官方僅英文＋內部 ML；Ella UI 的 Suggestions chips
+  在我方 demo 不出現（合法空形）。
+- ⚪ **relevance 排序＝ours**（商品建立序新在前→頁面）：官方演算法未公開。
+- ⚪ **422 body 細形**：官方僅記 "Invalid parameter error" 訊息；body 對位 cart
+  三鍵形（status/message/description）。
+- ⚪ **suggest section 形 locale 用預設字典**：完整 locale 解析需 PrefixIndex
+  域名鏈；預測下拉字串面小。
