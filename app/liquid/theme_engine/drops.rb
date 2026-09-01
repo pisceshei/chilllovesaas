@@ -1304,7 +1304,13 @@ module ThemeEngine
     def url = "https://#{domain}"
     def secure_url = url
     def email = nil
-    def money_format = nil # 顯示格式由 locale 決定（鐵律 10）；money filter 走 registers
+    # PR-8（對表軸）：Ella JS 動態價格全靠 window.money_format pattern——
+    # 恆 nil ⇒ 全部退 fallback 錯形。回 Shopify 形 cents pattern，與 money
+    # filter 同一符號源（鐵律 7/10：格式邏輯一份）。
+    def money_format
+      symbol = { "HKD" => "HK$" }.fetch(@shop.store_currency, "#{@shop.store_currency} ")
+      "#{symbol}{{amount}}"
+    end
     def enabled_currencies = [ @shop.store_currency ]
     def published_locales = []
     def customer_accounts_enabled = false
@@ -1443,10 +1449,13 @@ module ThemeEngine
   # 🔴 反例③已修：locale／host 是真值參數。
   class RequestDrop < BaseDrop
     def initialize(page_type: "index", design_mode: false, locale: nil, host: nil, path: "/")
+      # PR-8：locale 物件化（本尊 request.locale＝shop_locale 物件——
+      # 裸字串令 `<html lang="{{ request.locale.iso_code }}">` 吐空）。
+      locale_obj = locale.is_a?(Hash) ? locale : { "iso_code" => locale.to_s, "primary" => true }
       super({ "design_mode" => design_mode, "visual_preview_mode" => false,
               "page_type" => page_type, "host" => host,
               "origin" => host ? "https://#{host}" : nil, "path" => path,
-              "locale" => locale })
+              "locale" => locale_obj })
     end
   end
 

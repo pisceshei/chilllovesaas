@@ -75,9 +75,14 @@ module ThemeEngine
       @assets = {}
       @closest = ClosestDrop.new
 
-      @settings_data = db_settings || file_settings_current
+      # 🔴 PR-8（對表軸實錘）：全域 settings 與 section/block 同款三層解析——
+      # schema defaults ← 檔案 current ← DB 覆寫。缺 defaults 時 Ella 的 inline
+      # theme.config 塊會產出 `show: ,`（值缺失）⇒ SyntaxError ⇒ 整塊全滅、
+      # 頁面停在 no-js（header 高 0 的真兇——本地 Chrome console 實錘）。
       schema = load_json("config/settings_schema.json") || []
-      @theme_types = extract_types(schema.flat_map { |c| c.is_a?(Hash) ? (c["settings"] || []) : [] })
+      all_defs = schema.flat_map { |c| c.is_a?(Hash) ? (c["settings"] || []) : [] }
+      @settings_data = schema_defaults(all_defs).merge(db_settings || file_settings_current)
+      @theme_types = extract_types(all_defs)
       # 三層字串（67 §F.3(a)；包 34）：③平台字串集 ← ②主題檔（default ← 截尾鏈 ← 精確）。
       # ①商家覆寫層＝租戶 translations 的 THEME_LOCALE_CONTENT 型，Resolve 尚不支援 ⇒
       # 待 ML 線擴 RESOURCE_TYPES 後接上（登記，包 34 worklog）。深併＝逐 key 解析

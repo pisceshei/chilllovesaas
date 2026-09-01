@@ -30,10 +30,10 @@ module ThemeEngine
           if (typeof cents === "string") cents = cents.replace(/[^0-9.-]/g, "");
           var value = (parseFloat(cents) / 100).toFixed(2);
           var parts = value.split(".");
-          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          parts[0] = parts[0].replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",");
           var amount = parts.join(".");
           var pattern = (format || "${{amount}}");
-          return pattern.replace(/\{\{\s*(\w+)\s*\}\}/, amount);
+          return pattern.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/, amount);
         };
         Shopify.postLink = function(path, options) {
           options = options || {}; var method = options.method || "post"; var params = options.parameters || {};
