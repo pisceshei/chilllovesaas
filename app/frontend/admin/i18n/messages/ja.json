@@ -1128,5 +1128,8 @@
   "settings.webhooks.secretDismiss": "保存しました",
   "editor.headerBand": "ヘッダー",
   "editor.templateBand": "テンプレート",
-  "editor.footerBand": "フッター"
+  "editor.footerBand": "フッター",
+  "editor.blockUp": "ブロック {id} を上へ",
+  "editor.blockDown": "ブロック {id} を下へ",
+  "editor.blockRemove": "ブロック {id} を削除"
 }

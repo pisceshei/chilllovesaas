@@ -40,6 +40,10 @@ const BOOTSTRAP = {
       themeSettingsJson: { brand_color: "#a9502c" },
       themeSettingsLockVersion: null,
       sectionSchemas: {
+        "blocks-demo": { name: "Blocks demo", settings: [], max_blocks: 3, blocks: [
+          { type: "_parent", name: "父塊", settings: [
+            { id: "label", type: "text", label: "標籤", default: "P" } ] },
+        ] },
         hero: { name: "Hero", settings: [
           { type: "header", content: "版面" },
           { id: "heading", type: "text", label: "標題" },
@@ -109,8 +113,8 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
     const nodes = tree.getAllByRole("button").filter((node) => node.hasAttribute("aria-pressed"));
-    // PR-5 三帶：頁首帶 hero ＋ 範本帶 hero/blocks-demo
-    expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "hero", "blocks-demo" ]);
+    // PR-5 三帶＋PR-6 block 節點：頁首帶 hero ＋ 範本帶 hero/blocks-demo（含其 _parent block）
+    expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
     expect(tree.getByLabelText("顯示 demo")).toBeInTheDocument(); // disabled ⇒ 眼睛顯示「顯示」op
     expect(tree.getByText("_parent")).toBeInTheDocument(); // block 子層
     const switcher = screen.getByLabelText("頁面模板") as HTMLSelectElement;
@@ -299,5 +303,37 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(JSON.parse(sent.variables.content).sections.gh.settings.heading).toBe("改過的頁首");
     expect(sent.variables.lockVersion).toBeNull();
     expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(0); // 模板未動不發
+  });
+
+  it("ED12 🔴 block 級：選 block 出 def 面板；改值＋add-block 帶 default；save 全入 payload", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    // 既有 _parent block（blocks-demo 之下）
+    fireEvent.click(tree.getByRole("button", { name: "_parent" }));
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByText("（block）", { exact: false })).toBeInTheDocument();
+    const labelInput = settings.getByLabelText("標籤");
+    fireEvent.change(labelInput, { target: { value: "改標籤" } });
+
+    // add-block（＋父塊）——def default 帶入新 block
+    fireEvent.click(tree.getByRole("button", { name: "＋ 父塊" }));
+
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, {
+        blocks?: Record<string, { type: string; settings?: Record<string, unknown> }>;
+        block_order?: string[] } > } };
+    };
+    const demo = sent.variables.content.sections.demo;
+    const blockIds = demo.block_order ?? [];
+    expect(blockIds.length).toBe(2); // 原 _parent ＋ 新增
+    const original = demo.blocks?.[blockIds[0]];
+    const added = demo.blocks?.[blockIds[1]];
+    expect(original?.settings?.label).toBe("改標籤");     // 🔴 block 設定寫入
+    expect(added?.type).toBe("_parent");
+    expect(added?.settings?.label).toBe("P");            // 🔴 add-block 帶 def default
   });
 });

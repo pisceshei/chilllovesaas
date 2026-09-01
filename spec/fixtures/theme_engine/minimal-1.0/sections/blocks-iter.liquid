@@ -1,2 +1,2 @@
 <div id="bi">{% for block in section.blocks %}{% render block %}{% endfor %}</div><span id="bic">{{ section.blocks.first.blocks.size }}</span>
-{% schema %}{ "name": "Blocks iter" }{% endschema %}
+{% schema %}{ "name": "Blocks iter", "blocks": [ { "type": "@theme" } ] }{% endschema %}

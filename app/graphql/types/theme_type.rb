@@ -101,9 +101,48 @@ module Types
       return {} if source.nil?
 
       translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      theme_blocks = theme_block_defs(source, translate) # blocks/*.liquid（@theme 白名單展開）
       each_section_schema(source).to_h do |type, schema|
         [ type, { "name" => translate.call(schema["name"] || type),
-                  "settings" => translate_defs(Array(schema["settings"]), translate) } ]
+                  "settings" => translate_defs(Array(schema["settings"]), translate),
+                  "max_blocks" => schema["max_blocks"],
+                  "blocks" => block_defs_for(schema, theme_blocks, translate) } ]
+      end
+    end
+
+    # PR-6：section schema 的 block 定義面（樹的 add-block 白名單＋block 設定
+    # 面板資料源）。本地 blocks＝逐 def 帶 settings；`{"type":"@theme"}`＝
+    # 展開 blocks/*.liquid 全集（24 §2.4：presets 必須有才進 picker——但
+    # add-block 白名單是 blocks 定義本身，不看 preset）。@app 先跳過（無 app 層）。
+    def block_defs_for(schema, theme_blocks, translate)
+      Array(schema["blocks"]).flat_map do |bdef|
+        next [] unless bdef.is_a?(Hash)
+        next theme_blocks if bdef["type"] == "@theme"
+        next [] if bdef["type"] == "@app"
+
+        [ { "type" => bdef["type"],
+            "name" => translate.call(bdef["name"] || bdef["type"]),
+            "limit" => bdef["limit"],
+            "settings" => translate_defs(Array(bdef["settings"]), translate) } ]
+      end
+    end
+
+    def theme_block_defs(source, translate)
+      source.list.filter_map do |rel|
+        next unless rel.start_with?("blocks/") && rel.end_with?(".liquid")
+
+        raw = source.read(rel)
+        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
+        schema = begin
+          schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
+        rescue JSON::ParserError
+          nil
+        end
+        next if schema.nil?
+
+        type = File.basename(rel, ".liquid")
+        { "type" => type, "name" => translate.call(schema["name"] || type),
+          "settings" => translate_defs(Array(schema["settings"]), translate) }
       end
     end
 

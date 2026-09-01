@@ -146,6 +146,24 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(html).to include("群組頁尾")
   end
 
+  it "E8 sectionSchemas 的 blocks 面：本地 def 帶 settings＋max_blocks；@theme 展開 blocks/*.liquid" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    schemas = response.parsed_body.dig("data", "theme", "sectionSchemas")
+
+    promo = schemas["promo"]
+    expect(promo["maxBlocks"] || promo["max_blocks"]).to eq(3)
+    badge = promo["blocks"].find { |b| b["type"] == "badge" }
+    expect(badge["name"]).to eq("徽章")
+    expect(badge["settings"].first).to include("id" => "label", "default" => "NEW")
+
+    # blocks-iter 的 schema 用 @theme（既有 fixture）⇒ 展開 blocks/*.liquid 全集
+    themed = schemas.values.find { |sc| sc["blocks"]&.any? { |b| b["type"] == "_card" } }
+    expect(themed).not_to be_nil, "@theme 展開應含 blocks/_card.liquid"
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })

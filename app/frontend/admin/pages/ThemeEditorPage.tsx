@@ -91,6 +91,13 @@ interface SettingDef {
   options?: { value: string; label: string }[];
 }
 
+interface BlockDef {
+  type: string;
+  name?: string;
+  limit?: number;
+  settings?: SettingDef[];
+}
+
 interface EditorData {
   theme: {
     id: string;
@@ -103,7 +110,8 @@ interface EditorData {
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
     sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null }[];
-    sectionSchemas: Record<string, { name: string; settings: SettingDef[] }>;
+    sectionSchemas: Record<string, { name: string; settings: SettingDef[];
+                                     max_blocks?: number | null; blocks?: BlockDef[] }>;
     settingsSchema: { name: string; settings: SettingDef[] }[];
     themeSettingsJson: Record<string, unknown>;
     themeSettingsLockVersion: number | null;
@@ -268,6 +276,7 @@ export function ThemeEditorPage() {
   const [data, setData] = useState<EditorData["theme"]>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [draft, setDraft] = useState<TemplateJson | null>(null);
   // PR-5：三帶（24 §1 本尊樹形＝Header group／Template／Footer group）——
   // 群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
@@ -465,6 +474,50 @@ export function ThemeEditorPage() {
     setPickerOpen(false);
   };
 
+  // ── PR-6：block 級操作（24 §3 同語義向下一層；全部走 applyOp 快照棧）──
+  const addBlock = (band: string, sectionId: string, def: BlockDef) => applyOp(band, (tpl) => {
+    const entry = tpl.sections?.[sectionId];
+    if (!entry) return;
+    entry.blocks ??= {};
+    entry.block_order ??= [];
+    let newId = def.type;
+    let n = 1;
+    while (entry.blocks[newId]) newId = `${def.type}-${n++}`;
+    const defaults = Object.fromEntries((def.settings ?? [])
+      .filter((d) => d.id && d.default !== undefined)
+      .map((d) => [ d.id as string, d.default ]));
+    entry.blocks[newId] = { type: def.type, settings: defaults };
+    entry.block_order = [ ...entry.block_order, newId ];
+    setSelectedBand(band);
+    setSelectedId(sectionId);
+    setSelectedBlockId(newId);
+  });
+
+  const removeBlock = (band: string, sectionId: string, blockId: string) => applyOp(band, (tpl) => {
+    const entry = tpl.sections?.[sectionId];
+    if (!entry?.blocks) return;
+    delete entry.blocks[blockId];
+    entry.block_order = (entry.block_order ?? []).filter((id) => id !== blockId);
+    if (selectedBlockId === blockId) setSelectedBlockId(null);
+  });
+
+  const moveBlock = (band: string, sectionId: string, blockId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
+    const entry = tpl.sections?.[sectionId];
+    const order = [ ...(entry?.block_order ?? []) ];
+    const index = order.indexOf(blockId);
+    const target = index + direction;
+    if (!entry || index < 0 || target < 0 || target >= order.length) return;
+    [ order[index], order[target] ] = [ order[target], order[index] ];
+    entry.block_order = order;
+  });
+
+  const setBlockSetting = (settingKey: string, value: unknown) => applyOp(selectedBand, (tpl) => {
+    const block = selectedId && selectedBlockId
+      ? tpl.sections?.[selectedId]?.blocks?.[selectedBlockId] : null;
+    if (!block) return;
+    block.settings = { ...(block.settings ?? {}), [settingKey]: value };
+  });
+
   /** 佈景設定寫值（16d2）：獨立 draft，不進模板快照棧（undo 整合＝16e）。 */
   const setThemeSetting = (settingKey: string, value: unknown) => {
     setSettingsDraft((current) => (current ? { ...current, [settingKey]: value } : current));
@@ -642,7 +695,7 @@ export function ThemeEditorPage() {
                           <button
                             aria-pressed={isActive}
                             className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setThemeMode(false); }}
+                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(null); setThemeMode(false); }}
                             type="button"
                           >
                             {entry.type}
@@ -655,15 +708,47 @@ export function ThemeEditorPage() {
                           <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(band, sectionId)} type="button"><Copy size={13} /></button>
                           <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(band, sectionId)} type="button"><Trash2 size={13} /></button>
                         </div>
-                        {entry.block_order && entry.block_order.length > 0 ? (
-                          <ul>
-                            {entry.block_order.map((blockId) => (
-                              <li className="cl-editor__block" key={blockId}>
-                                {entry.blocks?.[blockId]?.type ?? blockId}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
+                        {(() => {
+                          const blockDefs = data?.sectionSchemas?.[entry.type]?.blocks ?? [];
+                          const maxBlocks = data?.sectionSchemas?.[entry.type]?.max_blocks ?? 50;
+                          const blockOrder = entry.block_order ?? [];
+                          return (
+                            <ul>
+                              {blockOrder.map((blockId, blockIndex) => {
+                                const blockActive = selectedBand === band && selectedId === sectionId && selectedBlockId === blockId;
+                                return (
+                                  <li className="cl-editor__block" key={blockId}>
+                                    <button
+                                      aria-pressed={blockActive}
+                                      className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
+                                      onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(blockId); setThemeMode(false); }}
+                                      type="button"
+                                    >
+                                      {entry.blocks?.[blockId]?.type ?? blockId}
+                                    </button>
+                                    <button aria-label={t("editor.blockUp", { id: blockId })} className="cl-editor__op" disabled={blockIndex === 0} onClick={() => moveBlock(band, sectionId, blockId, -1)} type="button"><ArrowUp size={12} /></button>
+                                    <button aria-label={t("editor.blockDown", { id: blockId })} className="cl-editor__op" disabled={blockIndex === blockOrder.length - 1} onClick={() => moveBlock(band, sectionId, blockId, 1)} type="button"><ArrowDown size={12} /></button>
+                                    <button aria-label={t("editor.blockRemove", { id: blockId })} className="cl-editor__op" onClick={() => removeBlock(band, sectionId, blockId)} type="button"><Trash2 size={12} /></button>
+                                  </li>
+                                );
+                              })}
+                              {blockDefs.length > 0 && blockOrder.length < maxBlocks ? (
+                                <li className="cl-editor__block">
+                                  {blockDefs.map((def) => (
+                                    <button
+                                      className="cl-editor__addblock"
+                                      key={def.type}
+                                      onClick={() => addBlock(band, sectionId, def)}
+                                      type="button"
+                                    >
+                                      ＋ {def.name ?? def.type}
+                                    </button>
+                                  ))}
+                                </li>
+                              ) : null}
+                            </ul>
+                          );
+                        })()}
                       </li>
                     );
                   })}
@@ -703,7 +788,34 @@ export function ThemeEditorPage() {
 
         <aside aria-label={themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")} className="cl-editor__settings">
           <h3>{themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")}</h3>
-          {themeMode ? (
+          {!themeMode && selected && selectedId && selectedBlockId ? (
+            (() => {
+              const block = selected.blocks?.[selectedBlockId];
+              const blockDef = (data?.sectionSchemas?.[selected.type]?.blocks ?? [])
+                .find((d) => d.type === block?.type);
+              if (!block) return <p className="cl-card-note">{t("editor.selectHint")}</p>;
+              const defs = blockDef?.settings ?? [];
+              const covered = new Set(defs.map((d) => d.id).filter(Boolean));
+              const extras = Object.entries(block.settings ?? {}).filter(([ key ]) => !covered.has(key));
+              return (
+                <>
+                  <p className="cl-card-note"><code>{block.type}</code>（block）</p>
+                  {defs.map((def, index) => (
+                    <SettingControl
+                      def={def}
+                      key={def.id ?? `static-${index}`}
+                      onChange={(value) => def.id && setBlockSetting(def.id, value)}
+                      value={def.id ? (block.settings ?? {})[def.id] : undefined}
+                    />
+                  ))}
+                  {extras.map(([ key, value ]) => (
+                    <FallbackControl key={key} name={key}
+                      onChange={(next) => setBlockSetting(key, next)} value={value} />
+                  ))}
+                </>
+              );
+            })()
+          ) : themeMode ? (
             (data?.settingsSchema ?? []).map((group) => (
               <section key={group.name}>
                 <h4 className="cl-editor__group">{group.name}</h4>
