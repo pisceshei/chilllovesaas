@@ -65,7 +65,7 @@ const BOOTSTRAP = {
   },
 };
 
-function stubFetch(saveErrors: { message: string; code: string }[] = []) {
+function stubFetch(saveErrors: { message: string; code: string }[] = [], bootstrap: typeof BOOTSTRAP = BOOTSTRAP) {
   const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
     const request = JSON.parse(String(init?.body)) as { query: string };
     if (request.query.includes("themeFileUpsert")) {
@@ -80,7 +80,7 @@ function stubFetch(saveErrors: { message: string; code: string }[] = []) {
           userErrors: saveErrors } } }
       : request.query.includes("themeSettingsUpsert")
         ? { data: { themeSettingsUpsert: { lockVersion: 0, userErrors: [] } } }
-        : BOOTSTRAP;
+        : bootstrap;
     return { json: vi.fn().mockResolvedValue(body), ok: true, status: 200 } as unknown as Response;
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -560,6 +560,43 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.dragStart(heroRow);
     fireEvent.drop(headerRow);
     expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
+  });
+
+  it("ED26 🔴 block 拖放重排：同 section 內重排 block_order；跨 section 忽略", async () => {
+    const twoBlocks = JSON.parse(JSON.stringify(BOOTSTRAP)) as typeof BOOTSTRAP;
+    const demo = twoBlocks.data.theme!.templateJson!.sections!.demo as {
+      block_order?: string[]; blocks?: Record<string, { type: string }> };
+    demo.block_order = [ "p1", "p2" ];
+    demo.blocks = { p1: { type: "_parent" }, p2: { type: "_parent" } };
+    stubFetch([], twoBlocks);
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    const rows = () => tree.getAllByRole("button")
+      .filter((node) => node.hasAttribute("aria-pressed"))
+      .map((node) => node.textContent?.trim());
+    expect(rows()).toEqual([ "hero", "hero", "blocks-demo", "_parent", "_parent" ]);
+
+    const blockLis = tree.getAllByText("_parent").map((node) => node.closest("li")!);
+    // p2 拖到 p1 位置 ⇒ block_order 反轉（可視面：眼睛序不變、但 payload 序變——
+    // 以 Save payload 斷言真序）
+    fireEvent.dragStart(blockLis[1]);
+    fireEvent.dragOver(blockLis[0]);
+    fireEvent.drop(blockLis[0]);
+
+    // 跨 section 嘗試（儲存前）：拖到 hero 的 section 列 ⇒ 忽略——若誤動，
+    // 下面單次 Save 的 payload 會露餡
+    const heroRow = tree.getAllByRole("button", { name: "hero" })[1].closest("li")!;
+    fireEvent.dragStart(blockLis[0]);
+    fireEvent.drop(heroRow);
+
+    const fetchMock = window.fetch as ReturnType<typeof vi.fn>;
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { block_order?: string[] }> } };
+    };
+    expect(sent.variables.content.sections.demo.block_order).toEqual([ "p2", "p1" ]); // 🔴 真重排＋跨區無汙染
   });
 
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
