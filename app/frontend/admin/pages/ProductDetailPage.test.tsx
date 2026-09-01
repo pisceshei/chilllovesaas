@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Mock } from "vitest";
 import { AdminRoutes } from "../App";
 import { ADMIN_GRAPHQL_ENDPOINT } from "../api/graphql";
@@ -1971,6 +1971,19 @@ describe("S6b 發布編輯 modal", () => {
  *   ③`publishDate` 只在有排程時才出現在 payload 裡（後端對明確 null 一律 reject）。
  */
 describe("S6b-2b 排程接線", () => {
+  // 🔴 釘死 Date（只 fake Date、不動 timers——userEvent/waitFor 靠真 setTimeout）：
+  //   SchedulePopover 對「今天的過去時間」**設計上吸附到 now**（元件檔頭 🔴 註記），
+  //   測試打的「3:00 PM」＝15:00 HKT ⇒ 任何在 15:00 HKT 後執行的 run 都被吸附成
+  //   當下分鐘（2026-09-01 CI 07:01Z 實錘假紅）。釘在 01:00Z＝09:00 HKT，下午三點
+  //   恆為未來。
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: [ "Date" ] });
+    vi.setSystemTime(new Date("2026-09-01T01:00:00Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // 🔴 三個管道刻意把兩個維度**拆開**（supportsFuturePublishing × isPublished）：
   //   少了「已發布 ∧ 可排程」那一格，`serverScheduleOf` 的 `isPublished` 判準
   //   就永遠不會被呼叫到 ⇒ 拿掉它照樣全綠（MW2 突變當場證實）。
@@ -2077,9 +2090,12 @@ describe("S6b-2b 排程接線", () => {
     // 🔴 popover portal 在 dialog **之外** ⇒ 兩個「完成」必須分開定位，
     //   否則 `screen.getByRole` 會抓到多個
     const popover = within(await screen.findByRole("group", { name: "排程發布" }));
-    await userEvent.clear(popover.getByLabelText("時間"));
-    await userEvent.type(popover.getByLabelText("時間"), "3:00 PM");
-    await userEvent.tab();
+    // 🔴 D62 同款：時間欄是純資料輸入，userEvent 逐鍵打字在 CI 會與「預設值＝當下
+    //   時刻」賽跑（2026-09-01 CI 實錘：分鐘跳動 ⇒ 07:01 冒充 07:00）；
+    //   fireEvent.change 同步派發一次到位，blur 觸發解析。
+    const timeInput = popover.getByLabelText("時間");
+    fireEvent.change(timeInput, { target: { value: "3:00 PM" } });
+    fireEvent.blur(timeInput);
     await userEvent.click(popover.getByRole("button", { name: "完成" }));
 
     await userEvent.click(dialog.getByRole("button", { name: "完成" }));   // modal 的完成
@@ -2153,9 +2169,12 @@ describe("S6b-2b 排程接線", () => {
 
     await userEvent.click(dialog.getByRole("button", { name: /發布於/ }));
     const popover = within(await screen.findByRole("group", { name: "排程發布" }));
-    await userEvent.clear(popover.getByLabelText("時間"));
-    await userEvent.type(popover.getByLabelText("時間"), "3:00 PM");
-    await userEvent.tab();
+    // 🔴 D62 同款：時間欄是純資料輸入，userEvent 逐鍵打字在 CI 會與「預設值＝當下
+    //   時刻」賽跑（2026-09-01 CI 實錘：分鐘跳動 ⇒ 07:01 冒充 07:00）；
+    //   fireEvent.change 同步派發一次到位，blur 觸發解析。
+    const timeInput = popover.getByLabelText("時間");
+    fireEvent.change(timeInput, { target: { value: "3:00 PM" } });
+    fireEvent.blur(timeInput);
     await userEvent.click(popover.getByRole("button", { name: "完成" }));
     await userEvent.click(dialog.getByRole("button", { name: "完成" }));
 
