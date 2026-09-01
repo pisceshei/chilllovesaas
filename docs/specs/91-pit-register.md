@@ -3753,3 +3753,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **行銷 modal 的 Save 形**：本尊勾選後按 Save 生效；我方即時打 mutation
   （ours）——對齊輪點名時改批次 Save 形。
 
+### 3.54 G6 步 9a（折扣引擎核心）的範圍外觀察（2026-09-01）
+
+- ⚪ **entitlements 正規化表**：v1 走 conditions.entitled_variant_ids JSON；
+  17-F1.3 的 discount_entitlements 多對多（products/collections 展開＋快取）
+  隨 amount-off-products 完整版。
+- ⚪ **min_subtotal 判定分層**：v1＝原始小計；官方「order 級門檻看 product 折後
+  小計」在有 product 折扣疊加時會偏嚴——entitlements 展開時一併切換基準。
+- ⚪ **BxGy／多 code（5+1）／批量產碼／碼輸入限流**：17-F2.2/F4 後置。
+- ⚪ **threads 併發實測**：usage 超發防線＝條件式 UPDATE（refunds C1 同構）；
+  本包以快照繞軟檢模擬 TOCTOU，100 執行緒實跑（17 驗收句）未做。
+- ⚪ **limits discount.* 鍵消費面**：max_active_automatic_per_shop 已接；
+  其餘（max_codes_per_shop 等）隨 9b CRUD 閘。
+

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_080000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_090000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -95,7 +95,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_080000) do
     t.datetime "created_at", null: false
     t.string "currency", limit: 3, default: "HKD", null: false
     t.bigint "customer_id"
+    t.json "discount_applications_snapshot", comment: "求值結果快照 [{discount_id,title,class,amount_cents,allocations}]（成單時回放成 discount_applications 列）"
     t.bigint "discount_cents", default: 0, null: false
+    t.string "discount_code", limit: 64, comment: "結帳輸入的折扣碼（正規化後快照；NULL＝未輸入）"
     t.string "email", limit: 320
     t.datetime "expires_at"
     t.json "line_items_snapshot", default: -> { "(json_array())" }, null: false
@@ -321,6 +323,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_080000) do
     t.index ["shop_id", "line_item_id"], name: "ix_discount_applications_line_item_id"
     t.index ["shop_id", "order_id", "discount_id", "line_item_scope_id"], name: "uq_discount_apps_order_discount_line_scope", unique: true
     t.index ["shop_id", "order_id"], name: "ix_discount_applications_order_id"
+  end
+
+  create_table "discount_redemptions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "折扣兌換帳（once_per_customer 唯一索引硬保證；17-F3）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "customer_key", limit: 128, null: false, comment: "customer_id 或正規化 email 的 sha256（17-F3：正規化後再 hash）"
+    t.bigint "discount_id", null: false
+    t.bigint "order_id", null: false
+    t.bigint "shop_id", null: false
+    t.index ["discount_id"], name: "fk_rails_7e73f632da"
+    t.index ["shop_id", "discount_id", "customer_key"], name: "uq_discount_redemptions_customer", unique: true
+    t.index ["shop_id", "order_id"], name: "ix_discount_redemptions_order"
   end
 
   create_table "discounts", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "碼或自動折扣規則", force: :cascade do |t|
@@ -1503,6 +1516,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_080000) do
   add_foreign_key "discount_applications", "line_items", column: ["shop_id", "line_item_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_line_item_id"
   add_foreign_key "discount_applications", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_order_id"
   add_foreign_key "discount_applications", "shops", name: "fk_discount_applications_shop"
+  add_foreign_key "discount_redemptions", "discounts"
   add_foreign_key "discounts", "shops", name: "fk_discounts_shop"
   add_foreign_key "domains", "shops", name: "fk_domains_shop"
   add_foreign_key "einvoice_allowances", "einvoices", column: ["shop_id", "einvoice_id"], primary_key: ["shop_id", "id"], name: "fk_einvoice_allowances_einvoice_id"
