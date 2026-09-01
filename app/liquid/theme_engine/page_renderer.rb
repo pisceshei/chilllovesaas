@@ -198,7 +198,9 @@ module ThemeEngine
           virtual = VirtualAllCollection.new("Products", "all", "title_asc", nil, nil)
           return [ "collection", { "collection" => CollectionDrop.new(
             virtual, url_prefix: @url_prefix, publication: @publication,
-            locale: @locale, sort_param: @params["sort_by"]
+            locale: @locale, sort_param: @params["sort_by"],
+            filter_query: @params["_facets_qs"].to_s,
+            request_path: "#{@url_prefix}/collections/all"
           ) }, 200 ]
         end
         collection ? [ "collection", { "collection" => CollectionDrop.new(
@@ -208,7 +210,9 @@ module ThemeEngine
             publishable_type: "Collection", publishable_id: collection.id
           ).pick(:published_at),
           translations: translations_for(collection),
-          publication: @publication, locale: @locale, sort_param: @params["sort_by"]
+          publication: @publication, locale: @locale, sort_param: @params["sort_by"],
+          filter_query: @params["_facets_qs"].to_s,
+          request_path: "#{@url_prefix}/collections/#{collection.handle}"
         ) }, 200, collection ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do

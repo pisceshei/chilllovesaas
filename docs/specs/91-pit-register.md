@@ -3847,6 +3847,10 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   省略號，ours——官方窗算法未逐字記載）。
 - ⚪ **storefront filter（`filter.p.*`）整條未動**：96 §8 未取得項；隨 filter 包
   另行三源取證（search.filters 亦回空陣列——12b 同款）。
+  <!-- 2026-09-02 更新：collection 面已由 Ella 修復 PR-20 收口（Facets 服務＋
+       collection.filters 官方 drop 面＋列表真過濾＋頁快取鍵；殘餘＝
+       search.filters 仍 []、配置面、5000/1000 上限、param 精確字串四 V——
+       見 docs/worklog/2026-09-02-ella修復20-facets整包v1.md Pending）。 -->
 - ⚪ **collection.image 無 schema 欄**：collections 表無圖片欄 ⇒ drop 回 nil，
   主題走首商品圖 fallback（官方建議形恰好吃得到）；補欄隨 admin 系列圖片包。
 - ⚪ **/collections 清單逐卡 products_count N+1**：每卡一條 COUNT；系列數大時
