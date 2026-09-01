@@ -1,8 +1,8 @@
 # G6 步 11：買家帳戶線（passwordless OTP＋/account 家族）
 
-> 正典＝`docs/research/74-admin-customers.md` §7（新版帳號形：無密碼、6 位驗證碼、
-> 刪除後同 email 再登入自動重建、365 天上限）。OTP 信走步 6 通知鏈
-> （`docs/dev/g6-notifications.md`）。
+> 正典＝`docs/research/74-admin-customers.md` §7＋`docs/research/89` §9（步 11
+> 補課：官方硬數字三個〔6 位碼/365 天/30 天回退〕、hosted 登入頁實測逐字、
+> customer Liquid 物件屬性正典、NIST/OWASP 取值依據）。OTP 信走步 6 通知鏈。
 
 ## 1. 流程
 
@@ -15,9 +15,10 @@ attempts／consumed_at 四防線）→ 未註冊 email **自動建 profile**（n
 
 ## 2. 防線（突變紅證逐條）
 
-- 嘗試上限（otp_max_attempts=5；6 位碼空間小，不限次＝可枚舉——MO1）。
-- 重發冷卻（otp_resend_cooldown_s=60——MO2）；效期（otp_expiry_minutes=10——MO3）。
-  🔴 三值＝ours 保守值（官方數字未取得，19.3 誠實標註 limits 註釋）。
+- 嘗試上限（otp_max_attempts=5；6 位碼 ≈19.9 bits＝NIST 熵下限邊緣，不限次＝
+  可枚舉——MO1）。重發冷卻（60s——MO2）；效期（10 分——MO3）。
+  🔴 三值官方未公布 ⇒ 取值依 **NIST SP 800-63B**（≤10 分失效/失敗節流）＋
+  **OWASP**（per-account 限流）——89 §9（步 11 補課升級「ours 保守」為有據值）。
 - consumed_at 防重放（MO4）；**session 過期雙防線**：cookie expires（客戶端）＋
   DB expires_at（`CustomerSession.authenticate`——被竊 token 的唯一防線；MO5 的
   測試教訓：travel 下 rack-test cookie 先過期會遮蔽 DB 層 ⇒ model 級直測）。

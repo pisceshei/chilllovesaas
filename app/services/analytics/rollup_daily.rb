@@ -10,7 +10,10 @@ module Analytics
   #   returns＝Σ refunds.total_cents（**落退款日**，不回改訂單日——19-F1 必測②同構）
   #   net_sales＝gross − discounts − returns（同日各項相減；跨日由查詢端 Σ）
   #   total_sales＝net ＋ shipping ＋ taxes（🔴 可為負）
-  #   aov_numerator/denominator＝成立日的 Σtotal 與單數（分子**不含**退款——紅線①）
+  #   aov_numerator/denominator＝成立日的 Σ(gross−discounts) 與單數——官方公式
+  #   逐字（95 §4）："((gross sales - discounts ) / orders)", excluding post-order
+  #   adjustments ⇒ 分子＝我方 subtotal_cents（**不含運費稅**；步 10 首版誤用
+  #   order total，補課修正）；退款不回改（紅線①）
   # ②日界線＝**shop 時區**（19-F2 坑；23:59:59/00:00 有測試釘住）。
   # ③冪等：整日重算 + upsert 覆蓋（不是累加——重跑同值）。
   class RollupDaily
@@ -33,7 +36,6 @@ module Analytics
         taxes = orders.sum(:tax_cents)
         returns = refunds.sum(:total_cents)
         orders_count = orders.count
-        totals = orders.sum(:total_cents)
         units = LineItem.joins(:order)
                         .where(orders: { shop_id: shop.id, processed_at: day_range })
                         .where(shop_id: shop.id).sum(:quantity)
@@ -45,7 +47,7 @@ module Analytics
           "net_sales" => net, "shipping_charges" => shipping, "taxes" => taxes,
           "total_sales" => net + shipping + taxes,
           "orders_count" => orders_count, "units_sold" => units,
-          "aov_numerator" => totals, "aov_denominator" => orders_count
+          "aov_numerator" => subtotal, "aov_denominator" => orders_count
         }
         upsert_all!(shop, date, values)
         values

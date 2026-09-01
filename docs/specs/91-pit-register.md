@@ -3822,3 +3822,19 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - **反向複驗**：本包 CI 綠後，主張「main 全綠」以 main 分支 run 的 conclusion
   為準（`gh run list --branch main -L 1`）。
 
+### 3.59 步 10/11 補課（2026-09-01；95 號＋89 §9 落庫）的登記
+
+- 🔴 **AOV 分子口徑錯已修**（本包）：首版用 order total（含運費稅）——官方公式
+  分子＝gross−discounts；深研補課抓到的實質錯（方法律的直接效益錨）。
+- ⚪ **shipping 組成切分**：官方 Shipping＝charges−shipping discounts−refunded
+  shipping；我方 orders.shipping_cents＝折前、運費折扣在 discount_cents——
+  total 恆等但組成列與官方不同；隨報表細分包對齊。
+- ⚪ **官方兩頁 Total sales 公式不一致**（Sales 頁含 duties、Finance 頁無）：
+  實作取含 duties 版（duties v1=0）；照登不裁。
+- ⚪ **訂單編輯的 rollup 契約**（官方："the edit displays as a separate order"）：
+  訂單編輯落地時 edits 落編輯日獨立列，不回改原日。
+- ⚪ **sales reversals 術語**：官方已以 sales reversals 取代 returns 欄位族；
+  我方 metric 名 returns 對位其「returned items value」子集，改名隨報表包。
+- 更正：72 號「16 指標挑選器」＝舊版形；現行官方 "any number of the available
+  cards"＋metric library sidebar（95 §6）。
+

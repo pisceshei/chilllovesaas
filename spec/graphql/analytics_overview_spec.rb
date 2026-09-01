@@ -60,7 +60,7 @@ RSpec.describe "analyticsOverview", type: :request do
     expect(data["ordersCount"]).to eq(1)
     expect(data["returnsCents"]).to eq(4000)
     expect(data["totalSalesCents"]).to eq(6000) # 10000 − 4000
-    expect(data["aovCents"]).to eq(10_000)      # 分子不含退款（官方紅線①）
+    expect(data["aovCents"]).to eq(10_000)      # 分子＝subtotal（此單無運無稅 ⇒ 同 total）；不含退款
     expect(data["aovCents"] * data["ordersCount"]).not_to eq(data["totalSalesCents"]),
       "兩者相等＝AOV 被反推——G25 例外崩了"
     expect(data["series"]).to eq([ { "date" => "2026-09-10", "totalSalesCents" => 6000 } ])
