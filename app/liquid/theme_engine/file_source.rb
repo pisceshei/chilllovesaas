@@ -11,9 +11,16 @@ module ThemeEngine
     end
 
     # @return [String, nil] 檔案內容；不存在或路徑逃逸 ⇒ nil（引擎層寬容處理）
+    # PR-2：binread（Windows 文字模式會譯壞二進位）＋合法 UTF-8 才標記編碼
+    # ——Liquid 模板要 UTF-8（BINARY 會與中文插值撞 CompatibilityError），
+    # 圖檔等二進位維持 BINARY 原樣。
     def read(rel)
       f = resolve(rel)
-      f && File.file?(f) ? File.read(f) : nil
+      return nil unless f && File.file?(f)
+
+      raw = File.binread(f)
+      utf8 = raw.dup.force_encoding(Encoding::UTF_8)
+      utf8.valid_encoding? ? utf8 : raw
     end
 
     def exist?(rel)

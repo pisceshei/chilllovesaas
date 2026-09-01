@@ -198,6 +198,19 @@ module ThemeEngine
       load_json("templates/#{key}.json")
     end
 
+    # settings image_picker 值 → StoredFile（PR-2）。接受兩形：
+    # `shopify://shopify/files/{filename}`（本尊 settings_data 慣用形）與裸檔名。
+    # 其他 shopify:// 資源形（如 shopify://collections/…）不在此解析 ⇒ nil。
+    def resolve_settings_file(value)
+      s = value.to_s
+      filename = s.delete_prefix("shopify://shopify/files/")
+      return nil if filename.empty? || filename.start_with?("shopify://")
+
+      ActsAsTenant.without_tenant do
+        StoredFile.find_by(shop_id: @shop.id, filename: CGI.unescape(filename))
+      end
+    end
+
     def db_settings
       row = ThemeSetting.find_by(shop_id: @shop.id, theme_id: @theme.id)
       row&.settings
