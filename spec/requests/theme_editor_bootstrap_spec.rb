@@ -225,6 +225,35 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).not_to include("data-shopify-custom-css") # 未設 ⇒ 零殘留
   end
 
+  it "TCC1 🔴 theme 級 Custom CSS：platform_customizations 出 head style；設定值面不被汙染" do
+    ActsAsTenant.with_tenant(shop) do
+      ThemeSetting.create!(shop_id: shop.id, theme_id: theme.id,
+                           settings: { "brand_color" => "#e2e2e2",
+                                       "platform_customizations" => { "custom_css" => "body { outline: 1px solid lime; }" } })
+    end
+    get "/admin/store/preview/#{theme.id}"
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("<style data-shopify-custom-css-theme>body { outline: 1px solid lime; }</style>")
+    expect(response.body).to include(%(content="#e2e2e2")) # 一般設定照舊生效
+
+    # 值面不曝露：platform_customizations 不是 setting id（官方＝settings_data
+    # 兄弟物件）——SettingsDrop 取不到
+    ActsAsTenant.with_tenant(shop) do
+      runtime = ThemeEngine::Runtime.new(
+        theme: theme, shop: shop,
+        source: ThemeEngine::FileSource.new(Rails.root.join("spec/fixtures/theme_engine/minimal-1.0")))
+      expect(runtime.global_assigns["settings"].liquid_method_missing("platform_customizations")).to be_nil
+      expect(runtime.theme_custom_css_style).to include("outline: 1px solid lime")
+    end
+
+    # 編輯器 draft 路徑同通道
+    post "/admin/store/preview/#{theme.id}/draft_page",
+         params: { path: "/", sections: {},
+                   settings: { platform_customizations: { custom_css: ".draft-x { color: red }" } } }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response.body).to include(".draft-x { color: red }")
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })

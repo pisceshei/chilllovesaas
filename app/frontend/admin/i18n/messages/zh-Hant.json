@@ -1078,6 +1078,7 @@
   "editor.hidden": "已隱藏",
   "editor.saveComing": "儲存管線隨 16b（op-stack）",
   "editor.undo": "復原",
+  "editor.pickerSearch": "搜尋區段",
   "editor.customCss": "自訂 CSS",
   "editor.active": "作用中",
   "editor.mobilePreview": "行動版",

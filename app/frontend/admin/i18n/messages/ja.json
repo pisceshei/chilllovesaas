@@ -1078,6 +1078,7 @@
   "editor.hidden": "非表示",
   "editor.saveComing": "保存は編集パイプライン（16b）で提供",
   "editor.undo": "元に戻す",
+  "editor.pickerSearch": "セクションを検索",
   "editor.customCss": "カスタムCSS",
   "editor.active": "公開中",
   "editor.mobilePreview": "モバイル",

@@ -93,6 +93,9 @@ module ThemeEngine
           currency: @shop.store_currency, root: root_prefix_path,
           design_mode: @design_mode) + "</head>"
       end
+      # PR-19：theme 級 Custom CSS（head 尾；官方全站生效語義）
+      theme_css = runtime.theme_custom_css_style
+      html = html.sub("</head>") { theme_css + "</head>" } if theme_css.present?
       # PR-3：{% javascript %}/{% stylesheet %} 聚合輸出（本尊語義＝逐 section
       # 收集、全頁去重、頁尾一次輸出；先前整塊吞掉）
       aggregated = runtime.aggregated_section_assets
