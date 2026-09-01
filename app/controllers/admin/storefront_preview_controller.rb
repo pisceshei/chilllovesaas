@@ -15,6 +15,8 @@ module Admin
   # ④資產：主題 assets 由 `asset` action 供給（同 staff 閘；路徑逃逸由
   #   FileSource 防線擋——spec E7）。
   class StorefrontPreviewController < BaseController
+    include ThemeCsp # 編輯器 iframe 的主題預覽同樣要主題面 CSP
+
     # GET /admin/store/preview/:theme_id/assets/*file
     def asset
       authorize Theme, :index?
