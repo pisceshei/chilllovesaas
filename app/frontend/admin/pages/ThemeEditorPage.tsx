@@ -595,6 +595,19 @@ export function ThemeEditorPage() {
     if (selectedId === sectionId) setSelectedId(null);
   });
 
+  // PR-26：拖放的任意位置插入（同帶；applyOp ⇒ undo/改即見/儲存全繼承）
+  const moveSectionTo = (band: string, sectionId: string, targetIndex: number) => applyOp(band, (tpl) => {
+    const order = [ ...orderOf(tpl) ];
+    const from = order.indexOf(sectionId);
+    if (from < 0) return;
+    order.splice(from, 1);
+    const bounded = Math.max(0, Math.min(targetIndex, order.length));
+    order.splice(bounded, 0, sectionId);
+    tpl.order = order;
+  });
+
+  const dragRef = useRef<{ band: string; sectionId: string } | null>(null);
+
   const moveSection = (band: string, sectionId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
     const order = [ ...orderOf(tpl) ];
     const index = order.indexOf(sectionId);
@@ -881,7 +894,21 @@ export function ThemeEditorPage() {
                     if (!entry) return null;
                     const isActive = selectedBand === band && selectedId === sectionId;
                     return (
-                      <li key={`${band}:${sectionId}`}>
+                      <li
+                        draggable
+                        key={`${band}:${sectionId}`}
+                        onDragOver={(event) => {
+                          if (dragRef.current?.band === band) event.preventDefault();
+                        }}
+                        onDragStart={() => { dragRef.current = { band, sectionId }; }}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          const drag = dragRef.current;
+                          dragRef.current = null;
+                          if (!drag || drag.band !== band || drag.sectionId === sectionId) return;
+                          moveSectionTo(band, drag.sectionId, index); // 放到目標列位置
+                        }}
+                      >
                         <div className="cl-editor__noderow">
                           <button
                             aria-pressed={isActive}

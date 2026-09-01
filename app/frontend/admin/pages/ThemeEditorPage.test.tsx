@@ -534,6 +534,34 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(iframe.src).not.toContain("/cart");
   });
 
+  it("ED25 🔴 拖放重排：同帶 drop 重排 order（undo 可還原）；跨帶 drop 忽略", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    const nodeText = () => tree.getAllByRole("button")
+      .filter((node) => node.hasAttribute("aria-pressed"))
+      .map((node) => node.textContent?.trim());
+    expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
+
+    // 範本帶：把 demo（blocks-demo）拖到 hero 的位置 ⇒ 範本帶序反轉
+    const demoRow = tree.getByText("blocks-demo").closest("li")!;
+    const heroRow = tree.getAllByRole("button", { name: "hero" })[1].closest("li")!;
+    fireEvent.dragStart(demoRow);
+    fireEvent.dragOver(heroRow);
+    fireEvent.drop(heroRow);
+    expect(nodeText()).toEqual([ "hero", "blocks-demo", "_parent", "hero" ]);
+
+    fireEvent.click(screen.getByRole("button", { name: /復原/ }));
+    expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]); // undo 還原
+
+    // 跨帶：把範本帶 hero 拖到頁首帶列 ⇒ 忽略（本尊同帶語義）
+    const headerRow = tree.getAllByRole("button", { name: "hero" })[0].closest("li")!;
+    fireEvent.dragStart(heroRow);
+    fireEvent.drop(headerRow);
+    expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
+  });
+
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
     stubFetch();
     renderEditor();
