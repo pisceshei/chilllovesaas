@@ -138,6 +138,19 @@ module Types
     # G6-3（步 2）：manual 付款方式與請款模式（86 §2/§3）。
     # G6 步 6：通知模板（89 號 teardown）。
     # G6 步 7：棄單清單（89 §8 七欄）。
+    # G6 步 9b：折扣清單（17-F4.3 列表）。
+    field :discounts, DiscountConnectionType, null: false, connection: false do
+      description "折扣 keyset connection（建立日新到舊）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+    end
+    field :discount, DiscountType, null: true do
+      description "單一折扣。"
+      argument :id, GraphQL::Types::ID, required: true
+    end
+
     field :abandoned_checkouts, AbandonedCheckoutConnectionType, null: false, connection: false do
       description "棄單 keyset connection（abandoned_at 新到舊）。"
       argument :first, Integer, required: false
@@ -356,6 +369,23 @@ module Types
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
     # @return [Hash] keyset connection（只列已標 abandoned_at 者）
     # @note 副作用：政策檢查與 tenant-scoped SELECT，不寫入資料。授權同 orders。
+    # @return [Hash] keyset connection
+    # @note 副作用：政策檢查與 tenant-scoped SELECT。授權沿 orders（discounts.view
+    #   細粒度隨 M5 RBAC）。
+    def discounts(first: nil, after: nil, last: nil, before: nil)
+      authorize_orders!
+      scope = Discount.where(shop_id: context.fetch(:current_shop).id)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :created_at, direction: :desc)
+    end
+
+    # @return [Discount, nil]
+    def discount(id:)
+      authorize_orders!
+      numeric = id.to_s[%r{\Agid://chilllove/Discount/(\d+)\z}, 1]
+      numeric && Discount.find_by(shop_id: context.fetch(:current_shop).id, id: numeric.to_i)
+    end
+
     def abandoned_checkouts(first: nil, after: nil, last: nil, before: nil)
       authorize_orders!
       scope = Checkout.where(shop_id: context.fetch(:current_shop).id)

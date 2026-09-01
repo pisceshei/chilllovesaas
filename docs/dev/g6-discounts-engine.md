@@ -44,3 +44,45 @@ entitlements 走 conditions.entitled_variant_ids（正規化表 ⚪）；BxGy／
 批量產碼／limits 全鍵消費 ⚪；min_subtotal 判定基準 v1＝原始小計（product 折扣
 疊加場景的官方「product 折後」分層隨 entitlements 展開）；併發實測＝條件式
 UPDATE 同 refunds C1 序列化先例（threads 實跑 ⚪）。
+
+## 5. 步 9b：API／admin／前台（同檔續章；實測 2026-09-01 親點）
+
+### 實測正典（測試店 chill-love-u5q5mnzq）
+
+- 空態逐字：「Manage discounts and promotions」＋「Add discount codes and automatic
+  discounts that apply at checkout. You can also use discounts with compare at
+  prices.」＋Create discount／Export（disabled）。
+- 型別選擇 modal **恰四值**（DOM 逐字）：Amount off products（"Discount specific
+  products or collections of products"）／Buy X get Y（同句）／Amount off order
+  （"Discount the total order amount"）／Free shipping（"Offer free shipping on an
+  order"）。
+- Amount off order 表單（路由 `/discounts/new/amount-off-order`）：Method 分段
+  ［Discount code｜Automatic discount］＋code 欄＋「Generate random code」＋helper
+  「Customers must enter this code at checkout.」；Discount value（Percentage ⌄＋
+  值欄）；Eligibility（All customers ⌄）；Minimum purchase requirements radio 三值
+  （No minimum requirements✓／Minimum purchase amount (HK$)／Minimum quantity of
+  items）；Maximum discount uses 勾選兩枚（Limit number of times…in total／Limit
+  to one use per customer）；Combinations 卡（收合句「This discount won't combine
+  with other product, order, or shipping discounts in the customer's cart.」）；
+  Active dates（Start date/time HKT＋Set end date）。右欄摘要卡＋Sales channel
+  access＋Tags。
+- 🔴 Combinations 展開逐字：「Allow this discount to combine with other discounts」
+  ＋Product discounts（"Multiple can apply per order"）＋Order discounts（同句）＋
+  **Shipping discounts（"Only one can apply per order (best value wins)"）**——
+  引擎硬規則＋best-wins 的官方 UI 實錘。
+
+### 我方落地
+
+- GraphQL：discounts/discount query（keyset created_at desc）＋官方同名四支
+  （discountCodeBasicCreate/Update、discountAutomaticBasicCreate/Update；輸入＝
+  ours 合流 DiscountBasicInput，basisPoints Integer——鐵律 3 禁 Float 的 API 面）
+  ＋lifecycle 三支 ours 合一（Activate/Deactivate/Delete——官方分 code/automatic
+  兩套；admin SPA 唯一客戶端）。Delete 擋有 applications 者（17-F4.4）。
+- admin：/admin/discounts（佔位轉正；列表五欄＋空態＋四值型別 modal，BxGy
+  disabled ⚪）＋表單頁（實測形對位；eligibility segment/銷售通路/Tags ⚪）。
+- 前台：結帳摘要折扣輸入欄＋折扣列（−金額）；`POST /checkouts/:token/discount`
+  （空碼＝移除；壞碼＝統一文案＋**碼不留殘**）；`GET /discount/:code` 分享連結
+  （cookie 1 天 → 建結帳兌現＋清 cookie＋重算）。
+- 突變輪 9b：MB1 正規化／MB2 TAKEN／MB3 刪除閘／MB4 壞碼殘留／MB5 cookie 不清／
+  MB6 套碼不重算——全紅＋canary。
+

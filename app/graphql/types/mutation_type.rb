@@ -137,6 +137,22 @@ module Types
       description: "取消待執行的個資抹除。"
     field :customer_merge, mutation: Mutations::CustomerMerge,
       description: "合併兩位顧客（步 8b；不可復原）。"
+
+    # G6 步 9b：折扣 CRUD（官方 Basic 四支同名＋lifecycle 三支 ours 合一）。
+    field :discount_code_basic_create, mutation: Mutations::DiscountCodeBasicCreate,
+      description: "建立折扣碼。"
+    field :discount_code_basic_update, mutation: Mutations::DiscountCodeBasicUpdate,
+      description: "更新折扣碼。"
+    field :discount_automatic_basic_create, mutation: Mutations::DiscountAutomaticBasicCreate,
+      description: "建立自動折扣。"
+    field :discount_automatic_basic_update, mutation: Mutations::DiscountAutomaticBasicUpdate,
+      description: "更新自動折扣。"
+    field :discount_activate, mutation: Mutations::DiscountActivate,
+      description: "啟用折扣。"
+    field :discount_deactivate, mutation: Mutations::DiscountDeactivate,
+      description: "停用折扣（archived；設定保留）。"
+    field :discount_delete, mutation: Mutations::DiscountDelete,
+      description: "刪除折扣（曾被使用者擋下）。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,
       description: "重新讀取 PSP 帳號已開通的付款方式（G6-1b；首次成功自動啟用可用方式）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**
