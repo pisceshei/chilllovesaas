@@ -31,10 +31,10 @@ RSpec.describe Products::KeysetCursor do
   end
 
   it "白名單外的 key 拒絕（fail-closed）" do
-    # 樣本鍵曾用 :updated_at——G6-7 把它登記進白名單後改用真正不在名單的鍵；
-    # 斷言語義（未知鍵 KeyError）不變。
+    # 樣本鍵曾用 :updated_at（G6-7 入單）與 :title（20c 入單）——兩度因入單失效；
+    # 一律用永不入單的鍵。斷言語義（未知鍵 KeyError）不變。
     expect { described_class.encode(product, key: :total_spent_cents) }.to raise_error(KeyError)
-    expect { described_class.decode("whatever", key: :title) }.to raise_error(KeyError)
+    expect { described_class.decode("whatever", key: :total_spent_cents) }.to raise_error(KeyError)
   end
 
   it "壞 cursor 回 BAD_USER_INPUT（既有語義不變）" do

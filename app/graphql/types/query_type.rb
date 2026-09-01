@@ -15,11 +15,12 @@ module Types
       argument :last, Integer, required: false
       argument :before, String, required: false
       # 伺服器端搜尋（28 §1 契約的 query 參數；v1 白名單子集見 Products::SearchScope）。
-      # 🔴 **products 的 `sortKey` 仍未上**（登記 V）。第 21 包已把排序鍵一般化、
-      #    D48 也已把 `files` 的排序補齊，但 products 的排序值域要對齊本尊
-      #    （PRODUCT_TITLE／INVENTORY_TOTAL／PUBLISHED_AT…）是另一份值域窮舉，
-      #    不在 D48 射程內。這句話**只對 products 成立**，不要讀成全站沒有排序。
       argument :query, String, required: false
+      # 20c：sortKey V 項收口（官方值域 enum；v1 支援子集＋fail-closed——
+      # 91 §3.74）。官方語義：sortKey 升冪為底、reverse 反轉；不帶 sortKey
+      # ＝維持既有 created_at desc（零回歸）。
+      argument :reverse, Boolean, required: false
+      argument :sort_key, ProductSortKeysEnum, required: false
     end
 
     # ── 庫存讀取面（排程第 18 包）──
@@ -274,7 +275,14 @@ module Types
     # @return [Hash] Relay-shaped product connection
     # @note 副作用：執行 Pundit 等價政策檢查與 tenant-scoped SELECT，不寫入資料。
     # @see docs/research/28-api-contract.md §0.2–0.3
-    def products(first: nil, after: nil, last: nil, before: nil, query: nil)
+    # v1 支援的 sortKey → keyset order_key 對映（enum 檔頭；白名單外 fail-closed）。
+    PRODUCT_SORT_KEY_MAP = {
+      "CREATED_AT" => :created_at, "UPDATED_AT" => :updated_at,
+      "TITLE" => :title, "ID" => :id
+    }.freeze
+
+    def products(first: nil, after: nil, last: nil, before: nil, query: nil,
+                 sort_key: nil, reverse: false)
       authorize_products!
       scope = Product
         .where(shop_id: context.fetch(:current_shop).id)
@@ -285,7 +293,20 @@ module Types
         .preload(media: :stored_file)
       # filter 先於 cursor：同一 query 跨頁傳遞時 keyset 語義不變。
       scope = Products::SearchScope.apply(scope:, query:)
-      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+
+      if sort_key.nil?
+        # 零回歸：不帶 sortKey＝既有預設（created_at desc）
+        return Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
+      end
+
+      order_key = PRODUCT_SORT_KEY_MAP[sort_key]
+      if order_key.nil?
+        raise GraphQL::ExecutionError.new(
+          "sortKey #{sort_key} 尚未支援（v1 支援 #{PRODUCT_SORT_KEY_MAP.keys.join('/')}）。",
+          extensions: { "code" => "SORT_KEY_NOT_SUPPORTED" })
+      end
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key:, direction: reverse ? :desc : :asc)
     end
 
     # 回傳一頁已授權、tenant-isolated 的 customer keyset connection（G6-7）。
