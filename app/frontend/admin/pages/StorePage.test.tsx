@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StorePage } from "./StorePage";
 import { I18nProvider } from "../i18n/I18nContext";
@@ -91,8 +91,36 @@ describe("StorePage", () => {
     renderPage();
     await screen.findByText("Second");
     fireEvent.click(screen.getByRole("button", { name: "發布" }));
+    // 步 15c：Publish 有確認 dialog（41 §634）——在 dialog 內按確認才真的送出
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "發布" }));
     expect(await screen.findByText("主題沒有可用的檔案來源，無法發布。")).toBeInTheDocument();
     // 失敗不重載：themes query 只打過一次
-    expect(calls.filter((c) => c.query.includes("themesList"))).toHaveLength(1);
+    expect(calls.filter((c) => c.query.includes("storeThemes"))).toHaveLength(1);
+  });
+
+  it("T4 🔴 匯入面板：授權未勾 ⇒ 送出鈕鎖定（鐵律 9 gate 前端半）", async () => {
+    stubGraphql([ theme() ]);
+    renderPage();
+    await screen.findByText("Minimal");
+    fireEvent.click(screen.getByRole("button", { name: /匯入主題/ }));
+    const submit = await screen.findByRole("button", { name: "上傳並匯入" });
+    expect(submit).toBeDisabled();
+    fireEvent.click(screen.getByLabelText(/我聲明已合法取得/));
+    expect(submit).not.toBeDisabled();
+  });
+
+  it("T5 🔴 刪除走確認 dialog（danger）且 published 列沒有刪除鈕", async () => {
+    stubGraphql([
+      theme(),
+      theme({ id: "gid://chilllove/Theme/2", name: "Second", role: "draft" }),
+    ]);
+    renderPage();
+    await screen.findByText("Minimal");
+    // published（Minimal）列無刪除；draft（Second）列有
+    expect(screen.getAllByRole("button", { name: /刪除/ })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: /刪除/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(/將被永久刪除/)).toBeInTheDocument();
   });
 });
