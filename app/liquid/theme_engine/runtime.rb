@@ -277,18 +277,30 @@ module ThemeEngine
     end
 
     # ---- block 渲染（content_for 呼叫；27 §6.4 隔離語義）--------------------
-    def render_block(id, bdata, context, static: false)
+    # closest_overrides：content_for "block" 的 `closest.*` 參數（Ella 商品卡傳遞形）
+    #   ——覆寫進 block 子樹的 closest；nil 值不覆蓋既有。
+    # extra_assigns：其餘任意參數（官方 static block 參數契約）——不得撞保留鍵。
+    def render_block(id, bdata, context, static: false, closest_overrides: nil, extra_assigns: nil)
       type = bdata["type"]
       c = compiled("blocks/#{type}.liquid") or return comment("缺 block #{type}")
       resolved = resolve_dynamic(bdata["settings"] || {}, context)
       settings = schema_defaults(c[:schema]["settings"] || []).merge(resolved)
       bdrop = BlockDrop.new(id: id, type: type, settings: settings, types: c[:types],
                             data: bdata, design_mode: @design_mode)
+      closest = context["closest"] || @closest
+      if closest_overrides.present?
+        closest = ClosestDrop.merged(closest, closest_overrides)
+      end
       assigns = @global_assigns.merge(
         "section" => context.registers[:section_drop],
         "block" => bdrop,
-        "closest" => context["closest"] || @closest
+        "closest" => closest
       )
+      if extra_assigns.present?
+        extra_assigns.each do |key, value|
+          assigns[key] = value unless %w[block section closest settings shop cart].include?(key)
+        end
+      end
       html = c[:tpl].render(build_context(assigns, base_registers.merge(
         frame: bdata, section_drop: context.registers[:section_drop]
       )))

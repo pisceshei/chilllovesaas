@@ -1118,11 +1118,31 @@ module ThemeEngine
       @h = { "product" => product, "collection" => collection, "article" => article }
     end
 
+    # content_for "block" 的 `closest.*` 覆寫層（步 12a-fix）：base 的既有值保留、
+    # overrides 非 nil 者蓋上；未知鍵照收（liquid_method_missing 直讀 @h）。
+    # 經 send 取私有 @h——不開 public reader，Liquid 只派發 public 方法，
+    # 主題代碼拿不到整個 hash。
+    def self.merged(base, overrides)
+      merged = base.is_a?(ClosestDrop) ? base.send(:attrs).dup : {}
+      overrides.each { |key, value| merged[key.to_s] = value unless value.nil? }
+      drop = new
+      drop.send(:attrs=, merged)
+      drop
+    end
+
     def liquid_method_missing(name)
       @h.fetch(name.to_s) do
         ThemeEngine.count_miss("closest.#{name}")
         nil
       end
+    end
+
+    private
+
+    def attrs = @h
+
+    def attrs=(value)
+      @h = value
     end
   end
 

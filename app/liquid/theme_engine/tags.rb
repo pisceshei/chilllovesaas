@@ -12,7 +12,10 @@ module ThemeEngine
         m = markup.match(SYNTAX) or raise Liquid::SyntaxError, "content_for 語法錯誤: #{markup}"
         @kind = m[2]
         @attrs = {}
-        (m[3] || "").scan(/(\w+)\s*:\s*(?:(['"])(.*?)\2|([\w.\-]+))/) do |k, _q, str, var|
+        # 🔴 鍵允許帶點（`closest.product: product`——Ella 商品卡的傳遞形；官方
+        #   content_for 可傳任意參數給 static block）。原 `\w+` 會把
+        #   `closest.product` 錯切成 `product`，商品卡整卡拿不到商品（步 12a 生產實錘）。
+        (m[3] || "").scan(/([\w.]+)\s*:\s*(?:(['"])(.*?)\2|([\w.\-]+))/) do |k, _q, str, var|
           @attrs[k] = str || Liquid::Expression.parse(var)
         end
       end
@@ -33,7 +36,22 @@ module ThemeEngine
           id   = evaluate_attr(@attrs["id"], context).to_s
           type = evaluate_attr(@attrs["type"], context).to_s
           bdata = (frame["blocks"] || {})[id] || { "type" => type, "settings" => {} }
-          runtime.render_block(id, bdata, context, static: true)
+          # `closest.*` 參數 ⇒ block 子樹的 closest 覆寫層；其餘任意參數 ⇒ block 內
+          # 變數（官方："You can pass additional arbitrary parameters (such as
+          # `color`) that will be accessible within the static block."）。
+          closest_overrides = {}
+          extra_assigns = {}
+          @attrs.each do |key, value|
+            next if %w[id type].include?(key)
+
+            if key.start_with?("closest.")
+              closest_overrides[key.delete_prefix("closest.")] = evaluate_attr(value, context)
+            else
+              extra_assigns[key] = evaluate_attr(value, context)
+            end
+          end
+          runtime.render_block(id, bdata, context, static: true,
+                               closest_overrides:, extra_assigns:)
         else ""
         end
       end
