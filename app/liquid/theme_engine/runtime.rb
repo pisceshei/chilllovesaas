@@ -198,6 +198,23 @@ module ThemeEngine
       load_json("templates/#{key}.json")
     end
 
+    # {% javascript %}/{% stylesheet %} 聚合桶（PR-3；tags.rb SectionAssetTag
+    # 餵入、PageRenderer 頁尾輸出）。Set 去重＝同型 section 多實例只出一份
+    # （本尊語義：per section type 一份）。
+    def collect_section_asset(kind, content)
+      return if content.to_s.strip.empty?
+
+      (@section_assets ||= { js: Set.new, css: Set.new })[kind] << content
+    end
+
+    def aggregated_section_assets
+      return "" if @section_assets.nil?
+
+      css = @section_assets[:css].map { |c| "<style>#{c}</style>" }.join
+      js = @section_assets[:js].map { |c| "<script>#{c}</script>" }.join
+      css + js
+    end
+
     # settings image_picker 值 → StoredFile（PR-2）。接受兩形：
     # `shopify://shopify/files/{filename}`（本尊 settings_data 慣用形）與裸檔名。
     # 其他 shopify:// 資源形（如 shopify://collections/…）不在此解析 ⇒ nil。

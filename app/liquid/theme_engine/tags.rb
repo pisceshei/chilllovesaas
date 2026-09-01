@@ -64,9 +64,26 @@ module ThemeEngine
       def render(context) = "<style>#{super}</style>"
     end
 
-    # {% stylesheet %}／{% javascript %}：section 級資產（由 asset_url 載入 ⇒ 渲染期吞掉）。
+    # {% stylesheet %}／{% javascript %}：section 級資產（PR-3——本尊語義＝
+    # 逐 section 收集、全頁去重、聚合輸出；先前整塊吞掉 ⇒ 商品頁 tabs 等
+    # 互動 JS 與裝飾 CSS 遺失，coverage 軸點名）。收進 runtime 聚合桶，
+    # PageRenderer 頁尾一次輸出。
+    # {% schema %} 的載入期剝離保險網仍用吞掉語義。
     class Swallow < Liquid::Block
       def render(_context) = ""
+    end
+
+    class SectionAssetTag < Liquid::Block
+      def initialize(tag_name, markup, options)
+        super
+        @kind = tag_name == "javascript" ? :js : :css
+      end
+
+      def render(context)
+        content = super.to_s
+        context.registers[:runtime]&.collect_section_asset(@kind, content)
+        ""
+      end
     end
 
     # {% doc %}…{% enddoc %}（LiquidDoc）。內容非合法 Liquid ⇒ 逐 token 吞掉。
@@ -252,8 +269,8 @@ module ThemeEngine
     def self.register!(target)
       target.register_tag("content_for", ContentFor)
       target.register_tag("style", StyleTag)
-      target.register_tag("stylesheet", Swallow)
-      target.register_tag("javascript", Swallow)
+      target.register_tag("stylesheet", SectionAssetTag)
+      target.register_tag("javascript", SectionAssetTag)
       target.register_tag("doc", DocTag)
       target.register_tag("form", FormTag)
       target.register_tag("paginate", PaginateTag)

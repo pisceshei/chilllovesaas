@@ -103,7 +103,16 @@ module ThemeEngine
     # drop 感知（資料出口包）：形狀契約與黑名單見 JsonSerializer 檔頭。
     def json(input) = JsonSerializer.dump(input)
 
-    def time_tag(input, _fmt = nil, _o = {}) = %(<time datetime="#{input}">#{input}</time>)
+    # PR-3：接 format 參數（先前忽略 ⇒ 文章日期出原始 timestamp）。
+    def time_tag(input, fmt = nil, *_rest)
+      t = input.respond_to?(:strftime) ? input : Time.zone.parse(input.to_s)
+      return input.to_s if t.nil?
+
+      display = fmt.to_s.include?("%") ? t.strftime(fmt.to_s) : t.strftime("%B %d, %Y")
+      %(<time datetime="#{t.iso8601}">#{display}</time>)
+    rescue StandardError
+      input.to_s
+    end
 
     def date(input, fmt = "%Y-%m-%d")
       t = input.is_a?(String) ? Time.zone.parse(input) : input
@@ -170,7 +179,16 @@ module ThemeEngine
       ((r * 299 + g * 587 + b * 114) / 1000.0).round(2)
     end
 
-    def color_modify(input, _k = nil, _v = nil) = input
+    # PR-3：alpha 分支實作（overlay 漸層關鍵——coverage 軸最高視覺缺口）；
+    # 其餘鍵維持原樣（登記）。
+    def color_modify(input, key = nil, value = nil)
+      return input.to_s unless key.to_s == "alpha"
+
+      drop = input.is_a?(ThemeEngine::ColorDrop) ? input : ThemeEngine::ColorDrop.new(input.to_s)
+      "rgba(#{drop.red}, #{drop.green}, #{drop.blue}, #{value.to_f})"
+    rescue StandardError
+      input.to_s
+    end
     def color_to_rgb(input) = input
     def color_lighten(input, _p = 0) = input
     def color_darken(input, _p = 0) = input
@@ -192,7 +210,19 @@ module ThemeEngine
     def media_tag(_input, _o = {}) = ""
     def model_viewer_tag(_input, _o = {}) = ""
     def article_img_url(_i, _s = nil) = ""
-    def item_count_for_variant(_cart, _vid) = 0
+    # PR-3：從 cart items 加總（先前恆 0——「已在購物車 N 件」全失真）。
+    def item_count_for_variant(cart, variant_id)
+      items = if cart.respond_to?(:items) then cart.items
+      elsif cart.is_a?(Hash) then cart["items"]
+      end
+      Array(items).sum do |item|
+        vid = item.respond_to?(:variant_id) ? item.variant_id : item["variant_id"]
+        qty = item.respond_to?(:quantity) ? item.quantity : item["quantity"]
+        vid.to_i == variant_id.to_i ? qty.to_i : 0
+      end
+    rescue StandardError
+      0
+    end
     def line_items_for(_cart, _obj) = []
     def format_address(_a) = ""
     def unit_price_with_measurement(_u) = ""
