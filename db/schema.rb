@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_080000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -286,6 +286,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_070000) do
     t.string "first_name"
     t.string "last_name"
     t.datetime "last_order_at", comment: "最新訂單時間（16 §F6.1 統計欄；訂單成立增量維護）"
+    t.string "locale", limit: 16, comment: "通知語言（BCP-47；NULL＝店預設。Edit customer modal 的 Language 欄）"
     t.text "note"
     t.integer "orders_count", default: 0, null: false
     t.string "phone", limit: 32

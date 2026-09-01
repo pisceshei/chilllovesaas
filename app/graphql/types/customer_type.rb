@@ -23,6 +23,7 @@ module Types
     field :phone, String, null: true
     field :state, String, null: false, description: "enabled/disabled/invited/declined"
     field :note, String, null: true
+    field :locale, String, null: true, description: "通知語言（null＝店預設）"
     field :tags, [ String ], null: false
     field :tax_exempt, Boolean, null: false
     field :email_marketing_consent, Boolean, null: false,

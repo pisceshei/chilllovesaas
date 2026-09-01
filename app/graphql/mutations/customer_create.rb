@@ -18,6 +18,7 @@ module Mutations
     argument :email, String, required: false
     argument :phone, String, required: false
     argument :note, String, required: false
+    argument :locale, String, required: false, description: "通知語言（BCP-47；null＝店預設）"
     argument :tags, [ String ], required: false
     argument :tax_exempt, Boolean, required: false
     argument :email_marketing_consent, Types::Inputs::MarketingConsentInput, required: false
@@ -44,7 +45,7 @@ module Mutations
         Customer.new(shop_id: shop.id,
                      first_name: args[:first_name], last_name: args[:last_name],
                      email: args[:email].presence, phone: args[:phone].presence,
-                     note: args[:note], tags: args[:tags] || [],
+                     note: args[:note], tags: args[:tags] || [], locale: args[:locale].presence,
                      tax_exempt: args.fetch(:tax_exempt, false))
       end
       return invalid_record(customer) unless ActsAsTenant.with_tenant(shop) { customer.save }

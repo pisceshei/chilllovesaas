@@ -3738,3 +3738,18 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **GraphQL 重複 email 的本尊逐字 message**：僅 REST 422 有 "has already been
   taken"；GraphQL userError 實測抓包（鐵律 14）待測試店建重複顧客時取。
 
+### 3.53 G6 步 8b（顧客詳情與合併）的範圍外觀察（2026-09-01）
+
+- ⚪ **merge blockers 的後補義務**：官方 11 類 hard blockers 中八類對應子系統
+  未建（gift cards/store credit/subscriptions/company contact/payment methods/
+  multipass/merge-in-progress/override fields）——**每個子系統落地包必須回
+  Customers::Merge 補對應 blocker**，否則合併會走過官方該擋的單。
+- ⚪ **詳情頁 ⚪ 家族**：時間軸 composer（74 §4 有完整規格）／寄送 email 表單／
+  商店抵用金（Issue store credit）／Request customer data／建立訂單鈕——
+  各隨對應線（事件/通知/抵用金/隱私/草稿單）補。
+- ⚪ **地址編輯 UI**：後端四支 mutation 已在（8a），詳情頁只展示預設地址；
+  Manage addresses modal（實測形在 dev doc §5）待補。
+- ⚪ **RFM 群組**：KPI 第四格佔位「—」；RFM 分群引擎隨分析線（步 10）。
+- ⚪ **行銷 modal 的 Save 形**：本尊勾選後按 Save 生效；我方即時打 mutation
+  （ours）——對齊輪點名時改批次 Save 形。
+

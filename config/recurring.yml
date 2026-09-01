@@ -27,6 +27,12 @@ production:
     class: Customers::RedactDueJob
     queue: background
     schedule: every hour
+  # G6 步 8b：顧客統計 nightly 對帳（鐵律 7 守門員；漂移＝log 訊號）。
+  customers_reconcile_stats:
+    class: Customers::ReconcileStatsJob
+    queue: background
+    schedule: every day at 4am
+
   events_outbox_purge:
     class: Events::OutboxPurgeJob
     queue: background

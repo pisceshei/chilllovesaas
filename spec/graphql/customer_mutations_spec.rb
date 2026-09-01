@@ -193,4 +193,47 @@ RSpec.describe "customer mutations", type: :request do
     expect(payload.dig("data", "customerSmsMarketingConsentUpdate", "userErrors", 0, "code"))
       .to eq("INVALID_STATE")
   end
+
+
+  it "🔴 步 8b customerMerge：搬移＋保留 email 方；待抹除方 ⇒ INVALID_STATE" do
+    kept_gid = create_customer!(email: "merge-kept@example.com")
+    gone_gid = create_customer!(email: "merge-gone@example.com")
+    gone_numeric = gone_gid[%r{/(\d+)\z}, 1].to_i
+    ActsAsTenant.without_tenant do
+      Customer.where(id: gone_numeric).update_all(email: nil) # 變成無 email 方
+    end
+
+    m = <<~GQL
+      mutation($customerOneId: ID!, $customerTwoId: ID!) {
+        customerMerge(customerOneId: $customerOneId, customerTwoId: $customerTwoId) {
+          customer { id }
+          userErrors { field message code }
+        }
+      }
+    GQL
+    ok = gql!(m, { customerOneId: gone_gid, customerTwoId: kept_gid })
+    expect(ok.dig("data", "customerMerge", "userErrors")).to eq([])
+    expect(ok.dig("data", "customerMerge", "customer", "id")).to eq(kept_gid)
+
+    blocked_gid = create_customer!(email: "merge-blocked@example.com")
+    blocked_numeric = blocked_gid[%r{/(\d+)\z}, 1].to_i
+    ActsAsTenant.without_tenant do
+      Customer.where(id: blocked_numeric).update_all(redaction_scheduled_at: 3.days.from_now)
+    end
+    blocked = gql!(m, { customerOneId: kept_gid, customerTwoId: blocked_gid })
+    expect(blocked.dig("data", "customerMerge", "userErrors", 0, "code")).to eq("INVALID_STATE")
+  end
+
+  it "步 8b locale：create 帶 locale 落庫、update 可改（Edit customer modal 對位）" do
+    gid = create_customer!(email: "locale@example.com")
+    payload = gql!(<<~GQL, { id: gid, locale: "zh-Hant" })
+      mutation($id: ID!, $locale: String) {
+        customerUpdate(id: $id, locale: $locale) {
+          customer { locale }
+          userErrors { field message code }
+        }
+      }
+    GQL
+    expect(payload.dig("data", "customerUpdate", "customer", "locale")).to eq("zh-Hant")
+  end
 end

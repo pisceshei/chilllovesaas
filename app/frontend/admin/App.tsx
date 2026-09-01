@@ -15,6 +15,7 @@ import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { VariantDetailPage } from "./pages/VariantDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { CustomersPage } from "./pages/CustomersPage";
+import { CustomerDetailPage } from "./pages/CustomerDetailPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { AbandonedCheckoutsPage } from "./pages/AbandonedCheckoutsPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
@@ -109,6 +110,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
               <Route element={<ProductDetailPage isNew />} path="/admin/products/new" />
               <Route element={<ProductDetailPage isNew={false} />} path="/admin/products/:id" />
               <Route element={<OrderDetailPage />} path="/admin/orders/:orderId" />
+              <Route element={<CustomerDetailPage />} path="/admin/customers/:customerId" />
               <Route element={<RefundPage />} path="/admin/orders/:orderId/refund" />
               {/* 變體子頁（第 29 包）。React Router v6 依明確度排序，不會被上一行遮住；
                   GID 在路徑裡是 URL-encoded（同 inventory history 路由的慣例）。 */}

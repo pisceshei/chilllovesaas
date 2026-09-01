@@ -1,4 +1,5 @@
 import { RefreshCw, Search, UserPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { requestAdminGraphQL } from "../api/graphql";
 import { DEFAULT_PAGE_SIZE } from "../api/pagination";
@@ -96,6 +97,7 @@ function formatAmount(money: { amount: string; currencyCode: string }): string {
  * - 欄位選擇器（18 欄）、排序鍵 7×2、分群、匯入匯出＝顧客模組全量包（74 §1）。
  */
 export function CustomersPage() {
+  const navigate = useNavigate();
   const t = useT();
   const [searchValue, setSearchValue] = useState("");
 
@@ -210,6 +212,8 @@ export function CustomersPage() {
           </div>
           {customers.length > 0 ? (
             <IndexTable
+
+              onRowActivate={(row) => navigate(`/admin/customers/${row.id.replace("gid://chilllove/Customer/", "")}`)}
               caption={t("customers.title")}
               columns={columns}
               getRowKey={(row) => row.id}
