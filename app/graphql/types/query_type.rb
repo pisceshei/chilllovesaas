@@ -53,6 +53,9 @@ module Types
 
     # ── 主題讀取面（包 30）──
     # 集合＝個位數（本尊 theme library 上限 20），不做 connection（與 publications 同理）。
+    field :theme, Types::ThemeType, null: true do
+      argument :id, ID, required: true
+    end
     field :themes, [ Types::ThemeType ], null: false,
       description: "本店主題庫（published 在前、再依更新時間新→舊）。"
 
@@ -616,6 +619,17 @@ module Types
       ActsAsTenant.with_tenant(shop) do
         Publication.where(shop_id: shop.id).includes(:sales_catalog, :channel).order(:id).to_a
       end
+    end
+
+    # 單一主題（步 15b；theme.files／importReport 的入口）。
+    def theme(id:)
+      shop = context.fetch(:current_shop)
+      unless ThemePolicy.new(context[:current_staff], Theme).index?
+        raise GraphQL::ExecutionError.new("沒有權限讀取主題。", extensions: { "code" => "ACCESS_DENIED" })
+      end
+
+      numeric = id.to_s[%r{\Agid://chilllove/Theme/(\d+)\z}, 1]
+      numeric && ActsAsTenant.with_tenant(shop) { Theme.find_by(shop_id: shop.id, id: numeric) }
     end
 
     # 主題清單（包 30）。授權＝ThemePolicy#index?（themes.view；形態同 authorize_products!）。

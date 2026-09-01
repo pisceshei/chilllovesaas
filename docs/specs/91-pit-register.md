@@ -3930,3 +3930,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   查歸屬）；②反向複驗式＝`BUNDLE_WITHOUT="development:test" bundle install &&
   BUNDLE_WITHOUT="development:test" bundle exec ruby -e "require '<gem>'"`
   （本輪已實跑 OK）；③回滾法＝deploy.sh 接任意 ref（本輪實證）。
+
+### 3.68 G3 步 15b（主題 CRUD API）的範圍外觀察（2026-09-01）
+
+- ⚪ **GraphQL themeCreate 未做**：官方收 staged upload URL；我方 staged uploads
+  content-type 白名單只收圖片 ⇒ 匯入走 /admin/themes/import multipart；staged
+  放寬 zip 後補 GraphQL 對位。
+- ⚪ **Download（寄信 zip）不實作**：41 §634 動作有、匯出管線（zip 打包＋寄信）
+  另立包。
+- ⚪ **theme.files 的 body 三形 union**（Text/Base64/Url——99 §1）：清單 v1 只回
+  filename/size；讀取面隨步 16 編輯器。

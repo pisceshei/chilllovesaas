@@ -21,6 +21,17 @@ module ThemeEngine
       !f.nil? && File.file?(f)
     end
 
+    # 全部相對路徑（步 15b theme.files 清單；排序穩定）。
+    def list
+      Dir.glob("**/*", base: @root).select { |rel| File.file?(File.join(@root, rel)) }.sort
+    end
+
+    # @return [Integer, nil] 檔案 bytes（清單列尺寸欄用）
+    def size_of(rel)
+      f = resolve(rel)
+      f && File.file?(f) ? File.size(f) : nil
+    end
+
     private
 
     def resolve(rel)
