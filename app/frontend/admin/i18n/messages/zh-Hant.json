@@ -1128,5 +1128,8 @@
   "settings.webhooks.secretDismiss": "我已保存",
   "editor.headerBand": "頁首",
   "editor.templateBand": "範本",
-  "editor.footerBand": "頁尾"
+  "editor.footerBand": "頁尾",
+  "editor.blockUp": "上移 block {id}",
+  "editor.blockDown": "下移 block {id}",
+  "editor.blockRemove": "移除 block {id}"
 }

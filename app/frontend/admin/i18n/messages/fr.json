@@ -1128,5 +1128,8 @@
   "settings.webhooks.secretDismiss": "Enregistrée",
   "editor.headerBand": "En-tête",
   "editor.templateBand": "Modèle",
-  "editor.footerBand": "Pied de page"
+  "editor.footerBand": "Pied de page",
+  "editor.blockUp": "Monter le bloc {id}",
+  "editor.blockDown": "Descendre le bloc {id}",
+  "editor.blockRemove": "Supprimer le bloc {id}"
 }

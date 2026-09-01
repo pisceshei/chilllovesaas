@@ -1,6 +1,10 @@
-<div class="promo">{{ section.settings.text }}</div>
+<div class="promo">{{ section.settings.text }}{% content_for 'blocks' %}</div>
 {% schema %}{
   "name": "t:names.promo",
   "settings": [ { "id": "text", "type": "text", "label": "t:promo.text_label", "default": "預設促銷文案" } ],
+  "max_blocks": 3,
+  "blocks": [
+    { "type": "badge", "name": "徽章", "settings": [ { "id": "label", "type": "text", "label": "徽章文字", "default": "NEW" } ] }
+  ],
   "presets": [ { "name": "t:names.promo", "settings": { "text": "預設促銷文案" } } ]
 }{% endschema %}

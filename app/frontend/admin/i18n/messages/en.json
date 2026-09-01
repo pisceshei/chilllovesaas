@@ -1128,5 +1128,8 @@
   "settings.webhooks.secretDismiss": "I saved it",
   "editor.headerBand": "Header",
   "editor.templateBand": "Template",
-  "editor.footerBand": "Footer"
+  "editor.footerBand": "Footer",
+  "editor.blockUp": "Move block {id} up",
+  "editor.blockDown": "Move block {id} down",
+  "editor.blockRemove": "Remove block {id}"
 }
