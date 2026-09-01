@@ -955,14 +955,17 @@ module ThemeEngine
       "price-descending" => "#{CollectionProductsDrop::MIN_PRICE_SQL} DESC, products.id DESC"
     }.freeze
 
-    def initialize(shop:, publication:, query:, types:, sort_key:, url_prefix: "", locale: nil)
+    def initialize(shop:, publication:, query:, types:, sort_key:, url_prefix: "", locale: nil,
+                   facets: nil)
       super()
       @shop, @publication = shop, publication
       @query = query
-      @types = types
+      # PR-21 官方：filter 啟用 ⇒ 非商品結果全濾除
+      @types = facets&.active? ? (types & [ "product" ]) : types
       @sort_key = PRODUCT_ORDER_SQL.key?(sort_key) ? sort_key : "relevance"
       @url_prefix = url_prefix
       @locale = locale
+      @facets = facets
       @page, @per = 1, nil
     end
 
@@ -999,7 +1002,9 @@ module ThemeEngine
     end
 
     def product_relation
-      Storefront::SearchQuery.products(shop: @shop, publication: @publication, query: @query)
+      base = Storefront::SearchQuery.products(shop: @shop, publication: @publication, query: @query)
+      base = @facets.apply(base) if @facets # PR-21：storefront filter
+      base
     end
 
     def page_relation
@@ -1074,7 +1079,22 @@ module ThemeEngine
       requested.presence || TYPE_VALUES
     end
 
-    def filters = []
+    # PR-21：search facets——同一 Facets 服務（base＝商品搜尋結果集合）。
+    # 官方：filter 啟用時「all non-product results are filtered out」。
+    def filters
+      facets ? facets.filters : []
+    end
+
+    def facets
+      return nil unless performed && @publication && @params.key?("_facets_qs")
+
+      @facets ||= ThemeEngine::Facets.new(
+        base_relation: Storefront::SearchQuery.products(
+          shop: @shop, publication: @publication, query: terms),
+        query_string: @params["_facets_qs"].to_s,
+        path: "#{@url_prefix}/search")
+    end
+
     def results_count = results.total
 
     def results
@@ -1082,7 +1102,8 @@ module ThemeEngine
 
       @results ||= SearchResultsDrop.new(
         shop: @shop, publication: @publication, query: terms, types:,
-        sort_key: sort_by, url_prefix: @url_prefix, locale: @locale
+        sort_key: sort_by, url_prefix: @url_prefix, locale: @locale,
+        facets: facets
       )
     end
 
