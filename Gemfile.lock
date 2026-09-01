@@ -414,6 +414,7 @@ DEPENDENCIES
   rqrcode
   rspec-rails
   rubocop-rails-omakase
+  rubyzip (~> 3.4)
   selenium-webdriver
   solid_cable
   solid_cache

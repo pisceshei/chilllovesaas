@@ -3917,3 +3917,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **單根剝除＝ours**（99 §3 官方未取得）；多根或根名撞白名單目錄時不剝。
 - ⚪ **storage 孤兒目錄清理**：Theme 刪除不動目錄（同內容共享）；引用計數
   清理 job 未做。theme_import_reports 亦無保留期清理。
+
+### 3.67 🔴 生產 boot LoadError 事故（2026-09-01；15a 部署）
+
+- **事故**：`Themes::ImportZip` 頂層 `require "zip"`——rubyzip 本地經 dev/test
+  群組 gem 傳遞可用、production bundle `--without development test` 不裝 ⇒
+  puma boot LoadError、服務中斷約 3 分鐘。deploy.sh /up 健檢當場抓到（fail 響亮）
+  ；恢復＝`bash scripts/deploy.sh cc0d0f8` 回滾前一 SHA。
+- **根因家族**：本地綠 ≠ 生產 boot——bundle 群組差異是 spec 測不到的環境維
+  （trap-check-own-fixtures 的 runner 環境軸新例）。
+- **固定處理**：①新頂層 require 的 gem 必須在**預設群組**（`bundle info <gem>`
+  查歸屬）；②反向複驗式＝`BUNDLE_WITHOUT="development:test" bundle install &&
+  BUNDLE_WITHOUT="development:test" bundle exec ruby -e "require '<gem>'"`
+  （本輪已實跑 OK）；③回滾法＝deploy.sh 接任意 ref（本輪實證）。
