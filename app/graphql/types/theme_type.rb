@@ -44,6 +44,9 @@ module Types
     # 16d：全部區段的 settings 定義（schema 驅動控件；26 §5 型別全表）。
     # 與 catalog 不同：**不過濾 presets**——樹上選中的 main-* 也要有控件。
     field :section_schemas, GraphQL::Types::JSON, null: false
+    # PR-11：模板→預覽路徑對映（資源語境——product 模板編輯帶真商品）。
+    # 取各型第一個已發布資源；無資源的型不出鍵（前端回落首頁）。
+    field :preview_paths, GraphQL::Types::JSON, null: false
     # 16d2：佈景設定三件——分組定義（settings_schema.json 去 theme_info）、
     # 生效值（DB 覆寫 → 檔案 current，與 Runtime 同讀序）、樂觀鎖底版。
     field :settings_schema, GraphQL::Types::JSON, null: false
@@ -73,6 +76,23 @@ module Types
           "name" => translate.call(schema["name"] || type),
           "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"] } }
       end
+    end
+
+    def preview_paths
+      shop_id = object.shop_id
+      paths = {}
+      product = Product.where(shop_id:, status: "active").order(:id).pick(:handle)
+      paths["product"] = "/products/#{product}" if product
+      collection = Collection.where(shop_id:).order(:id).pick(:handle)
+      paths["collection"] = "/collections/#{collection}" if collection
+      page = Page.where(shop_id:).order(:id).pick(:handle) if defined?(Page)
+      paths["page"] = "/pages/#{page}" if page
+      blog = Blog.where(shop_id:).order(:id).pick(:handle) if defined?(Blog)
+      paths["blog"] = "/blogs/#{blog}" if blog
+      paths["cart"] = "/cart"
+      paths["search"] = "/search"
+      paths["list-collections"] = "/collections"
+      paths
     end
 
     def section_groups

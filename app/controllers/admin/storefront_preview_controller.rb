@@ -53,6 +53,27 @@ module Admin
       render html: result.html.html_safe, status: result.status, layout: false
     end
 
+    # POST /admin/store/preview/:theme_id/draft_page（PR-11 改即見全面化）
+    # body: { path, sections: {sid=>entry}, settings: {} }——以全部未儲存
+    # draft（全帶 sections＋佈景設定）渲染整頁 ⇒ 編輯器 iframe srcdoc 換入。
+    # 佈景設定/結構操作/undo 三類變更共用此通道（fleet editor-live 軸①②③）。
+    def draft_page
+      authorize Theme, :index?
+      theme = Theme.find(params[:theme_id])
+      sections = params[:sections].respond_to?(:to_unsafe_h) ? params[:sections].to_unsafe_h : params[:sections]
+      settings = params[:settings].respond_to?(:to_unsafe_h) ? params[:settings].to_unsafe_h : params[:settings]
+
+      result = ThemeEngine::PageRenderer.new(
+        theme: theme, shop: Current.shop, publication: Publication.online_store!,
+        design_mode: true, host: request.host
+      ).render(params[:path].presence || "/",
+               draft_sections: sections.is_a?(Hash) ? sections : {},
+               draft_settings: settings.is_a?(Hash) ? settings : nil)
+
+      response.headers["X-Robots-Tag"] = "noindex, nofollow"
+      render html: result.html.html_safe, status: result.status, layout: false
+    end
+
     # GET /admin/store/preview/:theme_id(/*path)
     def show
       authorize Theme, :index?

@@ -372,4 +372,68 @@ describe("ThemeEditorPage（步 16a shell）", () => {
         expect.objectContaining({ type: "cl:replace", id: "hero" }), window.location.origin);
     }, { timeout: 2000 });
   });
+
+  it("ED14 🔴 全頁草稿刷新：改佈景設定 → debounce 後 POST draft_page（帶 settings）→ srcdoc 換入", async () => {
+    const fetchMock = stubFetch();
+    fetchMock.mockImplementation(async (url: unknown, init?: RequestInit) => {
+      if (String(url).includes("/draft_page")) {
+        return { ok: true, status: 200,
+                 text: vi.fn().mockResolvedValue("<html><body>DRAFT-PAGE</body></html>"),
+                 json: vi.fn() } as unknown as Response;
+      }
+      void init;
+      return { json: vi.fn().mockResolvedValue(BOOTSTRAP), ok: true, status: 200 } as unknown as Response;
+    });
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    Object.defineProperty(iframe, "contentWindow", { value: { postMessage: vi.fn(), scrollY: 0 } });
+
+    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
+    fireEvent.change(settings.getByLabelText("品牌色"), { target: { value: "#123456" } });
+
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page"));
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      const body = JSON.parse(String((calls[0][1] as RequestInit).body)) as {
+        path: string; settings: Record<string, unknown> };
+      expect(body.settings.brand_color).toBe("#123456"); // 🔴 未儲存佈景設定值進通道
+      expect(body.path).toBe("/"); // index 無樣本路徑 ⇒ 回落首頁
+    }, { timeout: 3000 });
+    await vi.waitFor(() => {
+      expect(iframe.srcdoc).toContain("DRAFT-PAGE"); // 🔴 全頁換入
+    }, { timeout: 3000 });
+  });
+
+  it("ED15 🔴 undo 也驅動全頁刷新（快照棧 → draftsVersion bump）", async () => {
+    const fetchMock = stubFetch();
+    fetchMock.mockImplementation(async (url: unknown, init?: RequestInit) => {
+      if (String(url).includes("/draft_page") || String(url).includes("/draft_section")) {
+        return { ok: true, status: 200,
+                 text: vi.fn().mockResolvedValue("<html><body>X</body></html>"),
+                 json: vi.fn() } as unknown as Response;
+      }
+      void init;
+      return { json: vi.fn().mockResolvedValue(BOOTSTRAP), ok: true, status: 200 } as unknown as Response;
+    });
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    Object.defineProperty(iframe, "contentWindow", { value: { postMessage: vi.fn(), scrollY: 0 } });
+
+    // 一個結構 op（隱藏 hero）→ undo：兩次都應觸發 draft_page
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+    await vi.waitFor(() => {
+      expect(fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page")).length)
+        .toBeGreaterThanOrEqual(1);
+    }, { timeout: 3000 });
+    const before = fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page")).length;
+
+    fireEvent.click(screen.getByRole("button", { name: /復原/ }));
+    await vi.waitFor(() => {
+      expect(fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page")).length)
+        .toBeGreaterThan(before); // 🔴 undo 驅動預覽（fleet 軸③）
+    }, { timeout: 3000 });
+  });
 });

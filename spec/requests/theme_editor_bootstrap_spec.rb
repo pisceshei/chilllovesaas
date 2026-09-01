@@ -180,6 +180,35 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response).to have_http_status(:unprocessable_entity)
   end
 
+  it "DP1 🔴 draft_page：未儲存佈景設定＋結構草稿整頁生效（不落 DB；design_mode）" do
+    post "/admin/store/preview/#{theme.id}/draft_page",
+         params: { path: "/",
+                   sections: { "hero" => { type: "hero", settings: { heading: "整頁草稿標題" } } },
+                   settings: { brand_color: "#123456" } }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(%(content="#123456")) # 🔴 draft 佈景設定蓋過檔案 current
+    expect(response.body).to include("整頁草稿標題")        # 結構草稿同通道生效
+    expect(response.body).to include("cl:highlight")        # 編輯器語境（design_mode 橋）
+    expect(ActsAsTenant.with_tenant(shop) { Template.count + ThemeSetting.count }).to eq(0)
+  end
+
+  it "DP2 draft_page 不帶 settings ⇒ 檔案 current 照舊；previewPaths 出樣本路徑" do
+    post "/admin/store/preview/#{theme.id}/draft_page",
+         params: { path: "/", sections: {} }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(%(content="#a9502c")) # 檔案 current 不受影響
+
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { previewPaths } }
+    GQL
+    paths = response.parsed_body.dig("data", "theme", "previewPaths")
+    expect(paths["cart"]).to eq("/cart")
+    expect(paths).not_to have_key("product") # 無商品 ⇒ 不出鍵（前端回落首頁）
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })
