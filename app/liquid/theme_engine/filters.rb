@@ -118,10 +118,45 @@ module ThemeEngine
     def link_to_tag(input, tag) = %(<a href="#{tag}">#{input}</a>)
     def within(input, _c) = input.to_s
 
-    # ---- fonts -------------------------------------------------------------
-    def font_face(input, _o = {}) = "/* @font-face #{input} */"
-    def font_url(_input, _f = nil) = ""
-    def font_modify(input, _p = nil, _v = nil) = input
+    # ---- fonts（步 13a 真實作；97 §1）--------------------------------------
+    # 輸出形對齊真店實測（97 §1.2）：family 無引號＋weight＋style＋（有傳才出）
+    # font-display＋src。我方單 woff2 src（live 雙 src 的 woff 退路 ⚪ 97 §1.3）；
+    # system font／nil（font_modify 的合法缺席值）⇒ 空輸出。
+    def font_face(input, opts = {})
+      return "" unless input.is_a?(ThemeEngine::FontDrop) && input.file
+
+      display = opts.is_a?(Hash) ? (opts["font_display"] || opts[:font_display]) : nil
+      lines = [ "  font-family: #{input.family};",
+                "  font-weight: #{input.weight};",
+                "  font-style: #{input.style};" ]
+      lines << "  font-display: #{display};" if display
+      lines << %(  src: url("#{input.file}") format("woff2");)
+      "@font-face {\n#{lines.join("\n")}\n}"
+    end
+
+    # 官方預設 woff2；我方只 host woff2 ⇒ 'woff' 請求同回 woff2 URL（⚪ 97 §1.3）。
+    def font_url(input, _format = "woff2")
+      input.is_a?(ThemeEngine::FontDrop) ? input.file.to_s : ""
+    end
+
+    # 官方值域（97 §1.1）：style＝normal/italic/oblique；weight＝100..900/normal/
+    # bold/±100..±900/lighter/bolder（CSS font-weight 相對規則）。
+    # 🔴 變體不存在 ⇒ **nil**（官方逐字；Ella italic 缺席鏈靠這個 nil 靜默——
+    # font_face(nil) 空輸出）。
+    def font_modify(input, prop = nil, value = nil)
+      return nil unless input.is_a?(ThemeEngine::FontDrop)
+
+      case prop.to_s
+      when "style"
+        target = value.to_s
+        return nil unless %w[normal italic oblique].include?(target)
+
+        ThemeEngine::FontLibrary.variant(input, style: target, weight: input.weight)
+      when "weight"
+        target = modify_weight(input.weight, value.to_s)
+        target && ThemeEngine::FontLibrary.variant(input, style: input.style, weight: target)
+      end
+    end
 
     # ---- color -------------------------------------------------------------
     def color_brightness(input)
@@ -160,5 +195,30 @@ module ThemeEngine
     def stylesheet(_input) = ""
     def distance_from(_i, _o) = nil
     def sort_natural(input, _p = nil) = input.respond_to?(:sort) ? Array(input).sort_by { |x| x.to_s.downcase } : input
+
+    private
+
+    # font_modify weight 值 → 目標 weight（97 §1.1 官方值域；lighter/bolder＝CSS
+    # font-weight 相對規則表）。非法值 ⇒ nil（fail-closed，font_modify 回 nil）。
+    def modify_weight(current, value)
+      case value
+      when /\A[+-]\d00\z/ then current + value.to_i
+      when /\A\d00\z/ then value.to_i
+      when "normal" then 400
+      when "bold" then 700
+      when "lighter"
+        case current
+        when 100..500 then 100
+        when 600..700 then 400
+        else 700
+        end
+      when "bolder"
+        case current
+        when 100..300 then 400
+        when 400..500 then 700
+        else 900
+        end
+      end
+    end
   end
 end
