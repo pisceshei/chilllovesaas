@@ -962,5 +962,17 @@
   "discounts.notFound": "Discount not found.",
   "discounts.activate": "Activate",
   "discounts.deactivate": "Deactivate",
-  "discounts.delete": "Delete"
+  "discounts.delete": "Delete",
+  "home.title": "Home",
+  "home.loadFailed": "Failed to load analytics",
+  "home.range.today": "Today",
+  "home.range.7d": "Last 7 days",
+  "home.range.30d": "Last 30 days",
+  "home.kpi.totalSales": "Total sales",
+  "home.kpi.orders": "Orders",
+  "home.kpi.aov": "Average order value",
+  "home.kpi.netSales": "Net sales",
+  "home.freshness": "Figures refresh every 15 minutes from daily rollups.",
+  "home.seriesTitle": "Total sales by day",
+  "home.seriesEmpty": "No data in this range yet."
 }

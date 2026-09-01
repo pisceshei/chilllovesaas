@@ -3779,3 +3779,15 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **多 code（5+1）**（17-F2 坑 3）：單一 code 起步；limits
   max_codes_per_checkout_* 鍵未消費。
 
+### 3.56 G6 步 10（分析地基）的範圍外觀察（2026-09-01）
+
+- ⚪ **sessions 追蹤**（19-F3 /collect 四事件漏斗＋bot 過濾＋限流）：轉換率分母
+  隨分析頁完整版。
+- ⚪ **16 指標挑選器（72 號）／Top products dimension 列／compareRange**：
+  overview v1 單範圍；dimension 欄已留。
+- ⚪ **rebuild rake＋nightly 抽樣對帳**（19-F2.2：隨機 3 天全量 vs rollup 漂移
+  告警）：對帳 job 隨指標增多補。
+- ⚪ **HomePage vitest**：薄讀出層本輪未寫前端測試。
+- ⚪ **MySQL upsert_all 無 :unique_by 家族**：adapter 明文拒收——之後所有 upsert
+  一律靠 uq 索引驅動 ON DUPLICATE（本包實踩；PG 遷移時要回補 unique_by）。
+

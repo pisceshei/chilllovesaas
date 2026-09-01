@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_100000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -305,6 +305,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_090000) do
     t.index ["shop_id", "id"], name: "uq_customers_tenant_id", unique: true
     t.index ["shop_id", "phone"], name: "uq_customers_phone", unique: true
     t.index ["shop_id", "state", "created_at"], name: "ix_customers_state_created_at"
+  end
+
+  create_table "daily_rollups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "分析日聚合（19-F2；upsert 冪等；金額=cents 計數=原值）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false, comment: "shop 時區的日界線（19-F2 坑：不是 UTC）"
+    t.string "dimension", limit: 64, default: "", null: false, comment: "維度值（如 product_id；無維度＝空字串——uq 需非 NULL）"
+    t.string "metric", limit: 64, null: false
+    t.bigint "shop_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "value", default: 0, null: false
+    t.index ["shop_id", "date", "metric", "dimension"], name: "uq_daily_rollups_key", unique: true
+    t.index ["shop_id", "metric", "date"], name: "ix_daily_rollups_metric_date"
   end
 
   create_table "discount_applications", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "下單當下的折扣分攤快照", force: :cascade do |t|
@@ -1512,6 +1524,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_090000) do
   add_foreign_key "customer_addresses", "shops", name: "fk_customer_addresses_shop"
   add_foreign_key "customer_marketing_consents", "customers"
   add_foreign_key "customers", "shops", name: "fk_customers_shop"
+  add_foreign_key "daily_rollups", "shops"
   add_foreign_key "discount_applications", "discounts", column: ["shop_id", "discount_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_discount_id"
   add_foreign_key "discount_applications", "line_items", column: ["shop_id", "line_item_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_line_item_id"
   add_foreign_key "discount_applications", "orders", column: ["shop_id", "order_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_order_id"

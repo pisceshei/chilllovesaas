@@ -962,5 +962,17 @@
   "discounts.notFound": "Introuvable.",
   "discounts.activate": "Activer",
   "discounts.deactivate": "Désactiver",
-  "discounts.delete": "Supprimer"
+  "discounts.delete": "Supprimer",
+  "home.title": "Accueil",
+  "home.loadFailed": "Échec du chargement",
+  "home.range.today": "Aujourd'hui",
+  "home.range.7d": "7 derniers jours",
+  "home.range.30d": "30 derniers jours",
+  "home.kpi.totalSales": "Ventes totales",
+  "home.kpi.orders": "Commandes",
+  "home.kpi.aov": "Panier moyen",
+  "home.kpi.netSales": "Ventes nettes",
+  "home.freshness": "Actualisation toutes les 15 minutes.",
+  "home.seriesTitle": "Ventes par jour",
+  "home.seriesEmpty": "Aucune donnée."
 }
