@@ -25,6 +25,12 @@ module Storefront
       return redirect_to_cart if cart.nil? || cart.cart_line_items.none?
 
       checkout = ActsAsTenant.with_tenant(current_shop) { Checkouts::CreateFromCart.call(cart:) }
+      # 步 9b：/discount/:code 分享連結落的 cookie 在此兌現（官方同形：進站帶碼）。
+      if (pending = Discount.normalize_code(cookies[:pending_discount_code]))
+        ActsAsTenant.with_tenant(current_shop) { checkout.update!(discount_code: pending) }
+        cookies.delete(:pending_discount_code)
+        refresh_discounts!(checkout.reload)
+      end
       redirect_to "/checkouts/#{checkout.token}", status: :see_other, allow_other_host: false
     rescue Checkouts::CreateFromCart::Error
       redirect_to_cart
@@ -338,6 +344,33 @@ module Storefront
       render html: thank_you_html(order).html_safe, layout: false
     end
 
+    # G6 步 9b：折扣碼套用/移除（結帳頁輸入欄；17-F4.1 統一錯誤文案）。
+    # 空 code＝移除。重算走 refresh_discounts!（delivery 重算的同一條 Engine→
+    # Calculator 鏈——鐵律 7 不開第二條）。
+    def apply_discount
+      checkout = find_checkout
+      return head :not_found if checkout.nil? || checkout.status != "open"
+
+      code = Discount.normalize_code(params[:code])
+      ActsAsTenant.with_tenant(current_shop) { checkout.update!(discount_code: code) }
+      error = refresh_discounts!(checkout.reload)
+      if error
+        ActsAsTenant.with_tenant(current_shop) { checkout.update!(discount_code: nil) }
+        refresh_discounts!(checkout.reload)
+        return render_page(checkout, error:, status: :unprocessable_content)
+      end
+
+      redirect_to storefront_checkout_show_path(token: checkout.token)
+    end
+
+    # G6 步 9b：/discount/:code 分享連結——碼落 cookie，結帳建立時套用
+    # （官方同形：連結進站 → 結帳自動帶碼）。
+    def discount_link
+      code = Discount.normalize_code(params[:code])
+      cookies[:pending_discount_code] = { value: code, expires: 1.day } if code
+      redirect_to "/"
+    end
+
     # G6 步 7：挽回連結（89 §8）。token 不存在 ⇒ 404；已成單 ⇒ thank-you 頁
     # （官方 recovered 後連結仍可看訂單狀態）；活單 ⇒ 302 回結帳頁續走。
     def recover
@@ -528,6 +561,39 @@ module Storefront
           total_cents: calc.total_cents, presentment_total_cents: calc.total_cents
         )
       end
+    end
+
+    # 折扣重算（步 9b；delivery 重算之外的第二個呼叫點——同一條鏈）。
+    # @return [String, nil] code 錯誤文案（統一句）；nil＝成功
+    def refresh_discounts!(checkout)
+      lines = checkout.line_items_snapshot.map { |l|
+        { key: l["key"], quantity: l["quantity"], unit_price_cents: l["unit_price_cents"],
+          variant_id: l["variant_id"] }
+      }
+      evaluation = ActsAsTenant.with_tenant(current_shop) do
+        Discounts::Engine.evaluate(shop: current_shop, lines:,
+                                   code: checkout.discount_code,
+                                   customer_key: checkout.customer_id&.to_s)
+      end
+      return evaluation.code_error if evaluation.code_error
+
+      calc = Checkouts::Calculator.call(
+        lines:, currency: checkout.currency, shipping_cents: checkout.shipping_cents,
+        discounts: evaluation.discounts
+      )
+      snapshot = calc.discount_applications.map do |app|
+        { "discount_id" => app.id, "title" => app.title, "class" => app.discount_class,
+          "amount_cents" => app.amount_cents, "allocations" => app.line_allocations }
+      end
+      ActsAsTenant.with_tenant(current_shop) do
+        checkout.update!(
+          discount_cents: calc.discount_total_cents + calc.shipping_discount_cents,
+          discount_applications_snapshot: snapshot,
+          subtotal_cents: calc.subtotal_cents,
+          total_cents: calc.total_cents, presentment_total_cents: calc.total_cents
+        )
+      end
+      nil
     end
 
     def render_page(checkout, error: nil, status: :ok)
@@ -915,7 +981,17 @@ module Storefront
       <<~HTML
         <section class="ck-cart" aria-label="Shopping cart"><h3 class="ck-sr">Shopping cart</h3>#{items}</section>
         <section class="ck-costs" aria-label="Cost summary"><h3 class="ck-sr">Cost summary</h3>
+        <form class="ck-discount-form" method="post" action="/checkouts/#{checkout.token}/discount">
+        <input type="hidden" name="authenticity_token" value="#{form_authenticity_token}">
+        <input class="ck-input ck-discount-input" type="text" name="code" placeholder="Discount code"
+               value="#{ERB::Util.html_escape(checkout.discount_code.to_s)}" aria-label="Discount code">
+        <button class="ck-btn-secondary" type="submit">Apply</button>
+        </form>
         <div class="ck-cost-row"><span>Subtotal</span><span>#{money_str(checkout.subtotal_cents, checkout.currency)}</span></div>
+        #{if checkout.discount_cents.positive?
+            label = checkout.discount_code.present? ? "Discount (#{ERB::Util.html_escape(checkout.discount_code)})" : "Discount"
+            "<div class=\"ck-cost-row\"><span>#{label}</span><span>−#{money_str(checkout.discount_cents, checkout.currency)}</span></div>"
+          end}
         <div class="ck-cost-row"><span>Shipping</span>#{shipping_value}</div>
         <div class="ck-total-row"><span class="ck-total-label">Total</span>
         <span class="ck-total-val" data-checkout-total><span class="ck-total-ccy">#{checkout.currency}</span> #{money_str(checkout.total_cents, checkout.currency)}</span></div>

@@ -3766,3 +3766,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **limits discount.* 鍵消費面**：max_active_automatic_per_shop 已接；
   其餘（max_codes_per_shop 等）隨 9b CRUD 閘。
 
+### 3.55 G6 步 9b（折扣 UI 與 API）的範圍外觀察（2026-09-01）
+
+- ⚪ **eligibility segment／Sales channel access／Tags 卡**：實測表單三區未落地
+  （All customers 恆值）；segment 隨顧客分群線。
+- ⚪ **BxGy**：型別 modal 第二值 disabled；17-F2 坑（buys/gets 集合分割）隨專包。
+- ⚪ **碼輸入限流**（17-F4.1：每 checkout 10 次/分、每 IP 30 次/分）：
+  Rack::Attack storefront 節流表已有先例（limits §25），隨濫用防護包。
+- ⚪ **per-type lifecycle 官方分拆**（discountCodeActivate 等）：ours 合一已載
+  PR；若 API 對外開放（非 admin SPA 客戶端）需回官方形。
+- ⚪ **折扣 performance 區**（17-F4.3）：applications 聚合報表隨分析線（步 10）。
+- ⚪ **多 code（5+1）**（17-F2 坑 3）：單一 code 起步；limits
+  max_codes_per_checkout_* 鍵未消費。
+

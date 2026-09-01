@@ -84,6 +84,11 @@ Rails.application.routes.draw do
     # 🔴 放在 :token 之前——"recover" 會被 :token 段吃掉。
     get "checkouts/recover/:recovery_token" => "storefront/checkouts#recover", format: false,
         as: :storefront_checkout_recover
+    # G6 步 9b：折扣碼（結帳頁輸入＋分享連結）。
+    post "checkouts/:token/discount" => "storefront/checkouts#apply_discount", format: false,
+         as: :storefront_checkout_discount
+    get "discount/:code" => "storefront/checkouts#discount_link", format: false,
+        as: :storefront_discount_link
     get "checkouts/:token" => "storefront/checkouts#show", format: false, as: :storefront_checkout_show
     # 結帳線第二包：選國＋選運送方式（server 重驗 F3-3；85 §5.3 per-shipment 形）。
     post "checkouts/:token/delivery" => "storefront/checkouts#delivery", format: false,
