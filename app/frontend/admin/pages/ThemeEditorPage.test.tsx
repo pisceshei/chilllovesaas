@@ -515,6 +515,25 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(picker.getByText("促銷條")).toBeInTheDocument();
   });
 
+  it("ED24 🔴 預覽內導航：cl:navigate 換 iframe src＋左欄模板同步（不逃出編輯器）", async () => {
+    stubFetch();
+    const router = renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:navigate", path: "/products/rose-serum" }, origin: window.location.origin,
+    }));
+    expect(iframe.src).toContain("/admin/store/preview/7/products/rose-serum?editor=1");
+    expect(router.state.location.search).toContain("template=product"); // 路徑→模板推斷
+
+    // 異 origin 不處理（ED3 同軸）
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:navigate", path: "/cart" }, origin: "https://evil.example",
+    }));
+    expect(iframe.src).not.toContain("/cart");
+  });
+
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
     stubFetch();
     renderEditor();
