@@ -32,6 +32,11 @@ production:
     class: Customers::ReconcileStatsJob
     queue: background
     schedule: every day at 4am
+  # G6 步 10：分析 rollup（今日＋昨日整日重算；upsert 冪等——19-F2）。
+  analytics_rollup:
+    class: Analytics::RollupJob
+    queue: background
+    schedule: every 15 minutes
 
   events_outbox_purge:
     class: Events::OutboxPurgeJob

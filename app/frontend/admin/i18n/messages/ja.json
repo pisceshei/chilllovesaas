@@ -962,5 +962,17 @@
   "discounts.notFound": "見つかりません。",
   "discounts.activate": "有効化",
   "discounts.deactivate": "無効化",
-  "discounts.delete": "削除"
+  "discounts.delete": "削除",
+  "home.title": "ホーム",
+  "home.loadFailed": "分析の読み込みに失敗",
+  "home.range.today": "今日",
+  "home.range.7d": "過去 7 日",
+  "home.range.30d": "過去 30 日",
+  "home.kpi.totalSales": "合計売上",
+  "home.kpi.orders": "注文",
+  "home.kpi.aov": "平均注文額",
+  "home.kpi.netSales": "純売上",
+  "home.freshness": "数値は 15 分ごとに更新されます。",
+  "home.seriesTitle": "日別売上",
+  "home.seriesEmpty": "データがありません。"
 }

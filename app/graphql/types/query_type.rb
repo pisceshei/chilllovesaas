@@ -139,6 +139,13 @@ module Types
     # G6 步 6：通知模板（89 號 teardown）。
     # G6 步 7：棄單清單（89 §8 七欄）。
     # G6 步 9b：折扣清單（17-F4.3 列表）。
+    # G6 步 10：分析總覽（19-F2.3——一支 endpoint 回全部卡片）。
+    field :analytics_overview, AnalyticsOverviewType, null: false do
+      description "期間指標卡＋走勢（讀 rollup；80 §3 紅線見 type 註）。"
+      argument :from, GraphQL::Types::ISO8601Date, required: true
+      argument :to, GraphQL::Types::ISO8601Date, required: true
+    end
+
     field :discounts, DiscountConnectionType, null: false, connection: false do
       description "折扣 keyset connection（建立日新到舊）。"
       argument :first, Integer, required: false
@@ -372,6 +379,32 @@ module Types
     # @return [Hash] keyset connection
     # @note 副作用：政策檢查與 tenant-scoped SELECT。授權沿 orders（discounts.view
     #   細粒度隨 M5 RBAC）。
+    # @return [Hash] 指標卡（Σ rollup）；aov＝分子/分母（G25：不得以 total/orders 反推）
+    # @note 副作用：tenant-scoped SELECT（daily_rollups），不寫入資料。
+    def analytics_overview(from:, to:)
+      authorize_orders!
+      shop_id = context.fetch(:current_shop).id
+      rows = DailyRollup.where(shop_id:, date: from..to, dimension: "")
+                        .group(:metric).sum(:value)
+      series = DailyRollup.where(shop_id:, date: from..to, metric: "total_sales", dimension: "")
+                          .order(:date).pluck(:date, :value)
+                          .map { |date, value| { date:, total_sales_cents: value } }
+      denominator = rows.fetch("aov_denominator", 0)
+      {
+        total_sales_cents: rows.fetch("total_sales", 0),
+        net_sales_cents: rows.fetch("net_sales", 0),
+        gross_sales_cents: rows.fetch("gross_sales", 0),
+        discounts_cents: rows.fetch("discounts", 0),
+        returns_cents: rows.fetch("returns", 0),
+        shipping_cents: rows.fetch("shipping_charges", 0),
+        taxes_cents: rows.fetch("taxes", 0),
+        orders_count: rows.fetch("orders_count", 0),
+        units_sold: rows.fetch("units_sold", 0),
+        aov_cents: denominator.zero? ? 0 : rows.fetch("aov_numerator", 0) / denominator,
+        series:
+      }
+    end
+
     def discounts(first: nil, after: nil, last: nil, before: nil)
       authorize_orders!
       scope = Discount.where(shop_id: context.fetch(:current_shop).id)

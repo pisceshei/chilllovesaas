@@ -962,5 +962,17 @@
   "discounts.notFound": "找不到這個折扣。",
   "discounts.activate": "啟用",
   "discounts.deactivate": "停用",
-  "discounts.delete": "刪除"
+  "discounts.delete": "刪除",
+  "home.title": "首頁",
+  "home.loadFailed": "載入分析失敗",
+  "home.range.today": "今天",
+  "home.range.7d": "近 7 天",
+  "home.range.30d": "近 30 天",
+  "home.kpi.totalSales": "總銷售額",
+  "home.kpi.orders": "訂單",
+  "home.kpi.aov": "平均訂單價值",
+  "home.kpi.netSales": "銷貨淨額",
+  "home.freshness": "數字每 15 分鐘自日聚合更新。",
+  "home.seriesTitle": "逐日總銷售額",
+  "home.seriesEmpty": "此期間尚無資料。"
 }

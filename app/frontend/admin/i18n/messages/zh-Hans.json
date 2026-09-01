@@ -962,5 +962,17 @@
   "discounts.notFound": "找不到这个折扣。",
   "discounts.activate": "启用",
   "discounts.deactivate": "停用",
-  "discounts.delete": "删除"
+  "discounts.delete": "删除",
+  "home.title": "首页",
+  "home.loadFailed": "载入分析失败",
+  "home.range.today": "今天",
+  "home.range.7d": "近 7 天",
+  "home.range.30d": "近 30 天",
+  "home.kpi.totalSales": "总销售额",
+  "home.kpi.orders": "订单",
+  "home.kpi.aov": "平均订单价值",
+  "home.kpi.netSales": "销货净额",
+  "home.freshness": "数字每 15 分钟自日聚合更新。",
+  "home.seriesTitle": "逐日总销售额",
+  "home.seriesEmpty": "此期间尚无数据。"
 }
