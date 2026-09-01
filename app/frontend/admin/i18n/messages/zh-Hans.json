@@ -1078,6 +1078,7 @@
   "editor.hidden": "已隐藏",
   "editor.saveComing": "保存管线随 16b",
   "editor.undo": "撤销",
+  "editor.customCss": "自定义 CSS",
   "editor.active": "生效中",
   "editor.mobilePreview": "移动版",
   "editor.removeSection": "移除分区",

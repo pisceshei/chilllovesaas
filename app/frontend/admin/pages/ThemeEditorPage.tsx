@@ -66,6 +66,7 @@ const SAVE_MUTATION = `
 interface SectionEntry {
   type: string;
   disabled?: boolean;
+  custom_css?: string;
   settings?: Record<string, unknown>;
   blocks?: Record<string, { type: string; settings?: Record<string, unknown> }>;
   block_order?: string[];
@@ -1011,6 +1012,27 @@ export function ThemeEditorPage() {
                   </>
                 );
               })()}
+              {/* PR-18：官方「At the bottom of section properties, click Custom CSS」；
+                  section 級上限 500 字（help add-css 逐字） */}
+              <details className="cl-editor__customcss">
+                <summary>{t("editor.customCss")}</summary>
+                <textarea
+                  aria-label={t("editor.customCss")}
+                  className="cl-field__input"
+                  maxLength={500}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    applyOp(selectedBand, (tpl) => {
+                      const entry = tpl.sections?.[selectedId];
+                      if (!entry) return;
+                      if (value) entry.custom_css = value;
+                      else delete entry.custom_css;
+                    });
+                  }}
+                  rows={4}
+                  value={selected.custom_css ?? ""}
+                />
+              </details>
               <Button
                 onClick={() => { removeSection(selectedBand, selectedId); setSelectedId(null); syncStateParams({ section: null }); }}
                 size="small"

@@ -1078,6 +1078,7 @@
   "editor.hidden": "Masqué",
   "editor.saveComing": "L'enregistrement arrive avec 16b",
   "editor.undo": "Annuler",
+  "editor.customCss": "CSS personnalisé",
   "editor.active": "Actif",
   "editor.mobilePreview": "Mobile",
   "editor.removeSection": "Supprimer la section",

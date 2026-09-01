@@ -340,7 +340,21 @@ module ThemeEngine
       tag = c[:schema]["tag"] || "div"
       cls = [ "shopify-section", c[:schema]["class"] ].compact.join(" ")
       editor_attr = @design_mode ? %( data-shopify-editor-section='#{JSON.generate(id: key, type: data['type'])}') : ""
-      %(<#{tag} id="shopify-section-#{key}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>)
+      %(<#{tag} id="shopify-section-#{key}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>#{custom_css_style(key, data)})
+    end
+
+    # PR-18：section 級 Custom CSS（官方：存 section data 的 custom_css、
+    # 「scoped to that section」——help add-css＋dev json-templates 取證
+    # 2026-09-02）。作用域用 CSS 巢狀（#shopify-section-{id} { rules }）——
+    # 後代選擇器語義與官方一致；「規則選 wrapper 標籤本身」的邊角＝巢狀下是
+    # 後代不含自身，登記 V。儲存型別官方未載 ⇒ String/Array 雙收（V）。
+    def custom_css_style(key, data)
+      raw = data["custom_css"]
+      css = raw.is_a?(Array) ? raw.join("\n") : raw.to_s
+      return "" if css.strip.empty?
+
+      safe = css.gsub("</", "<\\/") # style 內容防斷（HTML 不逸出 CSS，只擋閉合）
+      %(<style data-shopify-custom-css>#shopify-section-#{key} {\n#{safe}\n}</style>)
     end
 
     # depth：巢狀 children 遞迴上限（官方 "nested up to 8 levels deep"）——
