@@ -32,9 +32,36 @@ module Types
     field :template_lock_version, Integer, null: true do
       argument :key, String, required: true
     end
+    # 16c：add-section picker 目錄——🔴 只列**帶 presets** 的區段（24 §1.4：
+    # 本尊「加入區段」清單＝presets 驅動；main-*/hero 這類骨架區段無 preset
+    # 不可手加）。preset 取第一個（我方 minimal 每區段至多一個）。
+    field :section_catalog, GraphQL::Types::JSON, null: false
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
+
+    def section_catalog
+      source = ThemeEngine::Sources.resolve(object)
+      return [] if source.nil?
+
+      source.list.filter_map do |rel|
+        next unless rel.start_with?("sections/") && rel.end_with?(".liquid")
+
+        raw = source.read(rel)
+        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
+        schema = begin
+          schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
+        rescue JSON::ParserError
+          nil
+        end
+        next if schema.nil? || schema["presets"].blank?
+
+        preset = schema["presets"].first || {}
+        { "type" => File.basename(rel, ".liquid"),
+          "name" => schema["name"] || File.basename(rel, ".liquid"),
+          "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"] } }
+      end
+    end
 
     def files(filenames: nil, first: nil)
       source = ThemeEngine::Sources.resolve(object)

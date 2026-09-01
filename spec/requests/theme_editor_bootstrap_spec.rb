@@ -68,6 +68,20 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(overridden["order"]).to eq([ "custom" ]) # DB 覆寫贏
   end
 
+  it "E4 sectionCatalog 只列帶 presets 的區段（24 §1.4）＋preset settings 帶出" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionCatalog } }
+    GQL
+    catalog = response.parsed_body.dig("data", "theme", "sectionCatalog")
+    types = catalog.map { |entry| entry["type"] }
+    expect(types).to include("promo")
+    expect(types).not_to include("hero") # 無 presets ⇒ 不進 picker
+    promo = catalog.find { |entry| entry["type"] == "promo" }
+    expect(promo["name"]).to eq("促銷條")
+    expect(promo.dig("preset", "settings", "text")).to eq("預設促銷文案")
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })

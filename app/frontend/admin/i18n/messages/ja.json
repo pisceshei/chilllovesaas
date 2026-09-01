@@ -1087,5 +1087,8 @@
   "editor.hide": "{id} を非表示",
   "editor.show": "{id} を表示",
   "editor.duplicateOp": "{id} を複製",
-  "editor.removeOp": "{id} を削除"
+  "editor.removeOp": "{id} を削除",
+  "editor.addSection": "セクションを追加",
+  "editor.sectionPicker": "追加可能なセクション",
+  "editor.pickerEmpty": "追加可能なセクションがありません"
 }

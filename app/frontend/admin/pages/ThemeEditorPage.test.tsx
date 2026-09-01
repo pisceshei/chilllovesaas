@@ -24,6 +24,9 @@ const BOOTSTRAP = {
       name: "Minimal",
       role: "published",
       templates: [ { filename: "templates/index.json" }, { filename: "templates/product.json" } ],
+      sectionCatalog: [
+        { type: "promo", name: "促銷條", preset: { settings: { text: "預設促銷文案" }, blocks: null } },
+      ],
       templateJson: {
         order: [ "hero", "demo" ],
         sections: {
@@ -157,5 +160,27 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     fireEvent.click(tree.getByLabelText("隱藏 hero"));
     fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
     expect(await screen.findByText(/模板已被其他人修改/)).toBeInTheDocument();
+  });
+
+  it("ED7 🔴 picker 只列 preset 區段；加入＝preset settings＋插尾＋選中；儲存帶新區段", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByRole("button", { name: "新增區段" }));
+    const picker = within(tree.getByLabelText("可新增的區段"));
+    fireEvent.click(picker.getByRole("button", { name: "促銷條" }));
+
+    // 插尾＋選中：設定面板出 preset 值
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByDisplayValue("預設促銷文案")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { order: string[]; sections: Record<string, { type: string; settings: { text?: string } }> } };
+    };
+    expect(sent.variables.content.order).toEqual([ "hero", "demo", "promo" ]);
+    expect(sent.variables.content.sections.promo.settings.text).toBe("預設促銷文案");
   });
 });

@@ -1087,5 +1087,8 @@
   "editor.hide": "隐藏 {id}",
   "editor.show": "显示 {id}",
   "editor.duplicateOp": "复制 {id}",
-  "editor.removeOp": "移除 {id}"
+  "editor.removeOp": "移除 {id}",
+  "editor.addSection": "新增区段",
+  "editor.sectionPicker": "可新增的区段",
+  "editor.pickerEmpty": "此主题没有可新增的区段"
 }
