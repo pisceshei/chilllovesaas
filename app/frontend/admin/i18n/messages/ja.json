@@ -1094,5 +1094,19 @@
   "editor.alignLeft": "左揃え",
   "editor.alignCenter": "中央揃え",
   "editor.alignRight": "右揃え",
-  "editor.themeSettings": "テーマ設定"
+  "editor.themeSettings": "テーマ設定",
+  "store.themes.editCode": "コードを編集",
+  "code.title": "コードエディタ",
+  "code.back": "オンラインストアに戻る",
+  "code.fileTree": "ファイル",
+  "code.selectHint": "ファイルを選択して編集",
+  "code.unsaved": "未保存",
+  "code.saved": "保存しました",
+  "code.saveFailed": "保存に失敗しました",
+  "code.loadFailed": "読み込みに失敗しました",
+  "code.notFound": "テーマが見つかりません",
+  "code.staleConflict": "他のユーザーが変更しました——再読み込みしてください",
+  "code.readonlyTemplates": "テンプレート JSON はテーマエディタで管理（読み取り専用）",
+  "code.readonlySettings": "設定データはテーマ設定で管理（読み取り専用）",
+  "code.readonlyBinary": "バイナリファイルは編集不可（読み取り専用）"
 }

@@ -1094,5 +1094,19 @@
   "editor.alignLeft": "靠左",
   "editor.alignCenter": "置中",
   "editor.alignRight": "靠右",
-  "editor.themeSettings": "佈景主題設定"
+  "editor.themeSettings": "佈景主題設定",
+  "store.themes.editCode": "編輯代碼",
+  "code.title": "代碼編輯器",
+  "code.back": "返回線上商店",
+  "code.fileTree": "檔案",
+  "code.selectHint": "從左側選擇檔案開始編輯",
+  "code.unsaved": "未儲存",
+  "code.saved": "已儲存",
+  "code.saveFailed": "儲存失敗",
+  "code.loadFailed": "載入失敗",
+  "code.notFound": "找不到主題",
+  "code.staleConflict": "檔案已被其他人修改——請重載後再編輯",
+  "code.readonlyTemplates": "模板 JSON 由主題編輯器管理（唯讀）",
+  "code.readonlySettings": "佈景設定由編輯器的佈景主題設定管理（唯讀）",
+  "code.readonlyBinary": "二進位檔案不可在此編輯（唯讀）"
 }

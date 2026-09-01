@@ -14,6 +14,7 @@ import { MenusPage } from "./pages/MenusPage";
 import { PagesPage } from "./pages/PagesPage";
 import { StorePage } from "./pages/StorePage";
 import { ThemeEditorPage } from "./pages/ThemeEditorPage";
+import { CodeEditorPage } from "./pages/CodeEditorPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { VariantDetailPage } from "./pages/VariantDetailPage";
@@ -145,6 +146,7 @@ export function AdminRoutes({ brandName, uiLocale }: AdminRoutesProps) {
             </Route>
             {/* 步 16a：編輯器全螢幕 shell（AdminShell 之外——24 §1.1 本尊編輯器無側欄） */}
             <Route element={<ThemeEditorPage />} path="/admin/themes/:themeId/editor" />
+            <Route element={<CodeEditorPage />} path="/admin/themes/:themeId/code" />
           </Routes>
         </SaveBarProvider>
       </ToastProvider>
