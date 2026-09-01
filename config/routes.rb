@@ -71,6 +71,9 @@ Rails.application.routes.draw do
   #   先匹配，storefront catch-all 收尾——它**只**收 GET。
   constraints ->(request) { request.env["chilllove.shop_id"].present? } do
     get "robots.txt" => "storefront/pages#robots", format: false, as: :storefront_robots
+    # PR-10：storefront 密碼保護（本尊 private mode）
+    get "password" => "storefront/password#show", format: false, as: :storefront_password
+    post "password" => "storefront/password#create", format: false
     get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
     # Ella 修復 PR-2：買家面媒體（真圖鏈輸出端；MediaUrl 產這個形）
     get "media/:id/:filename" => "storefront/media#show", format: false,

@@ -102,6 +102,11 @@ module ThemeEngine
                                        : LocalizationDrop.new(language:, available_languages: [ language ]),
         "linklists" => LinkListsDrop.new(shop, url_prefix: url_prefix),
         "template" => TemplateDrop.new(page_type, suffix: @template_suffix),
+        # PR-10（對表軸實錘）：官方逐字「非分頁資源恆 1」——缺此全域時
+        # nil != 1 令每頁 title 長出「– Page 」尾巴（密碼頁 diff 抓到的全頁性 bug）。
+        "current_page" => (@params["page"].presence || 1).to_i,
+        # PR-10（對表軸實錘）：官方逐字「非分頁資源恆 1」——缺此全域時
+        # nil != 1 令每頁 title 長出「– Page 」尾巴（密碼頁 diff 抓到的全頁性 bug）。
         "content_for_header" => "",
         "canonical_url" => host ? "https://#{host}#{path}" : path,
         "page_title" => shop.name,
