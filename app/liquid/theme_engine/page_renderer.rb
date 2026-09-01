@@ -81,6 +81,17 @@ module ThemeEngine
 
       body = render_template_sections(runtime, template_key)
       html = render_layout(runtime, body)
+      # PR-3：window.Shopify bootstrap（主題 JS 生態依賴；shopify_global.rb 檔頭）
+      html = html.sub("</head>") do
+        ThemeEngine::ShopifyGlobal.script(
+          shop: @shop, theme: @theme, locale: @locale.to_s,
+          currency: @shop.store_currency, root: root_prefix_path,
+          design_mode: @design_mode) + "</head>"
+      end
+      # PR-3：{% javascript %}/{% stylesheet %} 聚合輸出（本尊語義＝逐 section
+      # 收集、全頁去重、頁尾一次輸出；先前整塊吞掉）
+      aggregated = runtime.aggregated_section_assets
+      html = html.sub("</body>", "#{aggregated}</body>") if aggregated.present?
       # 步 16a：design_mode 注入編輯器橋（selection 雙向——14 §F3）
       html = html.sub("</body>", "#{ThemeEngine::Runtime::EDITOR_BRIDGE_JS}</body>") if @design_mode
       Result.new(status: status, html: html, page_type: page_type,
@@ -90,6 +101,12 @@ module ThemeEngine
     # `?view=` 替代模板（96 §6）：suffix 合法且模板存在 ⇒ `{type}.{suffix}`；
     # 🔴 不存在 ⇒ 靜默 fallback 預設模板（真店實證：?view=不存在 suffix 回 200
     # 渲染預設，不是 404）。404 頁不吃 view。
+    # buyer 面根路徑（Shopify.routes.root；帶語言前綴＋尾斜線——本尊形）
+    def root_prefix_path
+      prefix = @url_prefix.to_s
+      prefix.empty? ? "/" : "/#{prefix.delete_prefix('/')}/"
+    end
+
     def template_key_for(runtime, page_type)
       view = @params["view"].to_s
       return page_type if page_type == "404" || view.blank? ||
