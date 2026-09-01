@@ -296,6 +296,7 @@ export function ThemeEditorPage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState(""); // PR-19：⑤a picker 搜尋
   // 16d2：佈景設定（settings_data current）——獨立 draft；undo 整合＝16e（91 §3.70）
   const [themeMode, setThemeMode] = useState(false);
   // PR-15：📱 行動版預覽切換（24 §1.1 頂列實測；iframe 收窄 390px 置中）
@@ -814,10 +815,24 @@ export function ThemeEditorPage() {
           </Button>
           {pickerOpen ? (
             <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
+              <li>
+                <input
+                  aria-label={t("editor.pickerSearch")}
+                  className="cl-field__input"
+                  onChange={(event) => setPickerQuery(event.target.value)}
+                  placeholder={t("editor.pickerSearch")}
+                  value={pickerQuery}
+                />
+              </li>
               {(data?.sectionCatalog ?? []).length === 0 ? (
                 <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
               ) : (
-                (data?.sectionCatalog ?? []).map((entry) => (
+                (data?.sectionCatalog ?? [])
+                  .filter((entry) => {
+                    const q = pickerQuery.trim().toLowerCase();
+                    return !q || entry.name.toLowerCase().includes(q) || entry.type.toLowerCase().includes(q);
+                  })
+                  .map((entry) => (
                   <li key={entry.type}>
                     <button className="cl-editor__node" onClick={() => addSection(entry)} type="button">
                       {entry.name}
@@ -970,19 +985,38 @@ export function ThemeEditorPage() {
               );
             })()
           ) : themeMode ? (
-            (data?.settingsSchema ?? []).map((group) => (
-              <section key={group.name}>
-                <h4 className="cl-editor__group">{group.name}</h4>
-                {group.settings.map((def, index) => (
-                  <SettingControl
-                    def={def}
-                    key={def.id ?? `static-${index}`}
-                    onChange={(value) => def.id && setThemeSetting(def.id, value)}
-                    value={def.id ? (settingsDraft ?? {})[def.id] : undefined}
-                  />
-                ))}
-              </section>
-            ))
+            <>
+              {(data?.settingsSchema ?? []).map((group) => (
+                <section key={group.name}>
+                  <h4 className="cl-editor__group">{group.name}</h4>
+                  {group.settings.map((def, index) => (
+                    <SettingControl
+                      def={def}
+                      key={def.id ?? `static-${index}`}
+                      onChange={(value) => def.id && setThemeSetting(def.id, value)}
+                      value={def.id ? (settingsDraft ?? {})[def.id] : undefined}
+                    />
+                  ))}
+                </section>
+              ))}
+              {/* PR-19：theme 級 Custom CSS（官方 Theme settings → Custom CSS；
+                  1500 字上限；存 platform_customizations 對位） */}
+              <details className="cl-editor__customcss">
+                <summary>{t("editor.customCss")}</summary>
+                <textarea
+                  aria-label={t("editor.customCss")}
+                  className="cl-field__input"
+                  maxLength={1500}
+                  onChange={(event) =>
+                    setThemeSetting("platform_customizations", { custom_css: event.target.value })}
+                  rows={5}
+                  value={String(
+                    ((settingsDraft ?? {}).platform_customizations as { custom_css?: string } | undefined)
+                      ?.custom_css ?? "",
+                  )}
+                />
+              </details>
+            </>
           ) : selected && selectedId ? (
             <>
               <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>

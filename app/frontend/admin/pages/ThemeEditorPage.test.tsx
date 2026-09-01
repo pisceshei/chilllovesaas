@@ -480,6 +480,41 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sent.variables.content.sections.hero.custom_css).toBe("p { color: red; }");
   });
 
+  it("ED22 🔴 theme 級 Custom CSS：佈景設定面板底部輸入 ⇒ save payload 帶 platform_customizations", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+
+    const panel = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
+    fireEvent.change(panel.getByLabelText("自訂 CSS"), {
+      target: { value: "body { color: blue; }" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeSettingsUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeSettingsUpsert")[0].body)) as {
+      variables: { settings: { platform_customizations?: { custom_css?: string } } };
+    };
+    expect(sent.variables.settings.platform_customizations?.custom_css).toBe("body { color: blue; }");
+  });
+
+  it("ED23 picker 搜尋：無匹配隱藏、匹配顯示（⑤a）", async () => {
+    stubFetch();
+    renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+    fireEvent.click(screen.getByRole("button", { name: "新增區段" }));
+
+    const picker = within(screen.getByRole("list", { name: "可新增的區段" }));
+    expect(picker.getByText("促銷條")).toBeInTheDocument();
+
+    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "zzz" } });
+    expect(picker.queryByText("促銷條")).toBeNull();
+
+    fireEvent.change(picker.getByLabelText("搜尋區段"), { target: { value: "促銷" } });
+    expect(picker.getByText("促銷條")).toBeInTheDocument();
+  });
+
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
     stubFetch();
     renderEditor();

@@ -85,6 +85,10 @@ module ThemeEngine
       @settings_data = schema_defaults(all_defs).merge(db_settings || file_settings_current)
       # PR-11：編輯器未儲存佈景設定的即時覆蓋（draft_page 全頁草稿渲染）
       @settings_data = @settings_data.merge(draft_settings) if draft_settings.is_a?(Hash)
+      # PR-19：platform_customizations 不是 setting id——官方存於 settings_data
+      # 的兄弟物件（dev json-templates 逐字）；我方收納在同一 settings hash 內
+      # 但抽離出值面，SettingsDrop 不得曝露它。
+      @platform_customizations = @settings_data.delete("platform_customizations") || {}
       # PR-11：未儲存 section entry 覆蓋（群組帶 {% sections %} 渲染也要吃到）
       @draft_sections = draft_sections.is_a?(Hash) ? draft_sections : {}
       @theme_types = extract_types(all_defs)
@@ -341,6 +345,16 @@ module ThemeEngine
       cls = [ "shopify-section", c[:schema]["class"] ].compact.join(" ")
       editor_attr = @design_mode ? %( data-shopify-editor-section='#{JSON.generate(id: key, type: data['type'])}') : ""
       %(<#{tag} id="shopify-section-#{key}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>#{custom_css_style(key, data)})
+    end
+
+    # PR-19：theme 級 Custom CSS（官方：Theme settings → Custom CSS、1500 字、
+    # 全頁生效——help add-css 取證 2026-09-02）。無 scope 前綴（全站語義）。
+    def theme_custom_css_style
+      raw = (@platform_customizations || {})["custom_css"]
+      css = raw.is_a?(Array) ? raw.join("\n") : raw.to_s
+      return "" if css.strip.empty?
+
+      %(<style data-shopify-custom-css-theme>#{css.gsub("</", "<\\/")}</style>)
     end
 
     # PR-18：section 級 Custom CSS（官方：存 section data 的 custom_css、
