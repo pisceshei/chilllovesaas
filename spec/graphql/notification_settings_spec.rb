@@ -34,11 +34,13 @@ RSpec.describe "notification settings GraphQL", type: :request do
     }
   GQL
 
-  it "query：三支模板、初始皆 isDefault=true 且 subject＝平台預設" do
+  it "query：模板清單＝Catalog::KINDS 全集、初始皆 isDefault=true 且 subject＝平台預設" do
     payload = gql!("query { notificationTemplates { key subject isDefault } }")
     rows = payload.dig("data", "notificationTemplates")
-    expect(rows.map { |row| row["key"] })
-      .to eq(%w[order_confirmation shipping_confirmation abandoned_checkout])
+    # 🔴 對 Catalog::KINDS 斷言而非硬編碼清單——步 11 加 customer_otp 時本格
+    # 曾把紅測帶進 main（#239 事故：本地管道吞退出碼＋合併鏈未閘 CI 判定，
+    # 91 §3.58）。新 kind 進 Catalog 即自動納入本斷言。
+    expect(rows.map { |row| row["key"] }).to eq(Notifications::Catalog::KINDS)
     expect(rows.map { |row| row["isDefault"] }).to all(be(true))
     expect(rows.first["subject"]).to eq("Order {{ name }} confirmed")
   end
