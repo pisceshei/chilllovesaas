@@ -48,6 +48,9 @@ module Types
     field :file_lock_version, Integer, null: true do
       argument :path, String, required: true
     end
+    # 16e3：覆寫狀態圖——path → "overlaid"（base 檔被蓋＝可還原）｜"new"
+    # （overlay-only 新檔＝可刪除）。未覆寫檔不出現。
+    field :overlay_state, GraphQL::Types::JSON, null: false
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -126,6 +129,14 @@ module Types
         {}
       end
       data["current"] || {}
+    end
+
+    def overlay_state
+      base = ThemeEngine::Sources.base_resolve(object)
+      base_list = base ? base.list : []
+      ThemeFileOverlay.where(shop_id: object.shop_id, theme_id: object.id)
+                      .pluck(:path)
+                      .to_h { |path| [ path, base_list.include?(path) ? "overlaid" : "new" ] }
     end
 
     def file_lock_version(path:)

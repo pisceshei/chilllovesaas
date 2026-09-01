@@ -1108,5 +1108,11 @@
   "code.staleConflict": "文件已被他人修改——请重载后再编辑",
   "code.readonlyTemplates": "模板 JSON 由主题编辑器管理（只读）",
   "code.readonlySettings": "主题设置由编辑器管理（只读）",
-  "code.readonlyBinary": "二进制文件不可在此编辑（只读）"
+  "code.readonlyBinary": "二进制文件不可在此编辑（只读）",
+  "code.newFile": "新增文件",
+  "code.newFilePrompt": "文件名（将建立于 {dir}/）",
+  "code.revert": "还原原始版本",
+  "code.delete": "删除文件",
+  "code.reverted": "已还原原始版本",
+  "code.deleted": "已删除文件"
 }

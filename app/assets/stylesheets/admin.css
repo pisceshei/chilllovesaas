@@ -2721,3 +2721,6 @@ a {
 .cl-code__tab.is-active { background: #f1f1f1; font-weight: 600; }
 .cl-code__dot { margin-left: 4px; color: #a9502c; }
 .cl-code__textarea { flex: 1; width: 100%; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; line-height: 1.5; border: 1px solid #e3e3e3; border-radius: 8px; padding: 10px; resize: none; }
+
+.cl-code__newfile { color: #666; font-style: italic; }
+.cl-code__revert { border: 0; background: none; color: #a9502c; cursor: pointer; padding: 0; font-size: 12.5px; text-decoration: underline; }

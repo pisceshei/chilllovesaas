@@ -1108,5 +1108,11 @@
   "code.staleConflict": "檔案已被其他人修改——請重載後再編輯",
   "code.readonlyTemplates": "模板 JSON 由主題編輯器管理（唯讀）",
   "code.readonlySettings": "佈景設定由編輯器的佈景主題設定管理（唯讀）",
-  "code.readonlyBinary": "二進位檔案不可在此編輯（唯讀）"
+  "code.readonlyBinary": "二進位檔案不可在此編輯（唯讀）",
+  "code.newFile": "新增檔案",
+  "code.newFilePrompt": "檔名（將建立於 {dir}/）",
+  "code.revert": "還原原始版本",
+  "code.delete": "刪除檔案",
+  "code.reverted": "已還原原始版本",
+  "code.deleted": "已刪除檔案"
 }
