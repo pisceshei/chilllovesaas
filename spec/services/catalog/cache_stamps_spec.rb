@@ -21,7 +21,7 @@ RSpec.describe Catalog::CacheStamps do
     Storage::LocalDisk.write(key, StringIO.new("BYTES"))
     StoredFile.create!(filename: "s-#{SecureRandom.hex(3)}.png", content_type: "image/png",
                        byte_size: 5, checksum: SecureRandom.hex(32), storage_key: key,
-                       status: "ready")
+                       status: "ready", width: 100, height: 80)
   end
 
   describe "schema ↔ limits 的機械連動" do

@@ -29,6 +29,15 @@ class StoredFile < ApplicationRecord
   validates :checksum, presence: true
   validates :storage_key, presence: true, uniqueness: { scope: :shop_id }
   validates :status, inclusion: { in: STATUSES }
+  # PR-14：圖片尺寸不變量——官方 image 物件 width/height/aspect_ratio 恆 number、
+  # 文檔無 nil 態（shopify.dev objects/image，取證 2026-09-01）；「有圖無尺寸」
+  # 是我方獨有炸點（Ella if-image 守衛內除法 30 位點審計，6 軸艦隊 divided-by-0
+  # 軸④）。ready 的圖片列必須有正尺寸；非圖片與 pipeline 中間態不受限
+  # （ProcessFile 在 ready 轉場時寫入 source.width/height，本驗證封的是
+  # 繞過管線直寫的路徑）。
+  validates :width, :height,
+    presence: true, numericality: { only_integer: true, greater_than: 0 },
+    if: :requires_dimensions?
   # 512 原本是硬編（鐵律 6 違反，與 Media 同型、第 37 包已修過那邊）——正典在
   # limits `media.alt_max_length`，`MediaSync::ALT_MAX` 也引同一鍵。
   validates :alt_text, length: { maximum: Limits.fetch(:media, :alt_max_length) }, allow_nil: true
@@ -44,6 +53,10 @@ class StoredFile < ApplicationRecord
   #   **必須顯式帶 alt_source**（本 callback 看到顯式值就不動）——若它們忘了帶，
   #   會被錯標成 human，這是已登記的殘餘風險（worklog Pending），代價換來的是
   #   「所有現行路徑零改動即正確」。
+  def requires_dimensions?
+    content_type.to_s.start_with?("image/") && status == "ready"
+  end
+
   def stamp_alt_source
     return unless will_save_change_to_alt_text?
     return if will_save_change_to_alt_source?

@@ -64,7 +64,7 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
       Storage::LocalDisk.write(key, StringIO.new("BYTES"))
       StoredFile.create!(filename:, content_type: "image/png", byte_size: 5,
                          checksum: SecureRandom.hex(32), storage_key: key,
-                         status:, alt_text: alt, derivatives:)
+                         status:, alt_text: alt, derivatives:, width: 100, height: 80)
     end
   end
 
@@ -108,7 +108,8 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
         key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
         Storage::LocalDisk.write(key, StringIO.new("B" * size))
         StoredFile.create!(filename: name, content_type: "image/png", byte_size: size,
-                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                           width: 100, height: 80)
       end
     end
     login!
@@ -138,7 +139,7 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
         Storage::LocalDisk.write(key, StringIO.new("B"))
         StoredFile.create!(filename: "#{name}.png", content_type: "image/png",
                            byte_size: 10 + index, checksum: SecureRandom.hex(32),
-                           storage_key: key, status: "ready")
+                           storage_key: key, status: "ready", width: 100, height: 80)
       end
     end
     login!
@@ -172,7 +173,8 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
         key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
         Storage::LocalDisk.write(key, StringIO.new("B"))
         StoredFile.create!(filename: name, content_type: "image/png", byte_size: 10,
-                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+                           checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                           width: 100, height: 80)
       end
     end
     login!
@@ -342,7 +344,8 @@ RSpec.describe "Admin GraphQL 檔案庫", type: :request do
       key = "shops/#{other.id}/files/#{SecureRandom.uuid}.png"
       Storage::LocalDisk.write(key, StringIO.new("BYTES"))
       StoredFile.create!(filename: "other.png", content_type: "image/png", byte_size: 5,
-                         checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+                         checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                         width: 100, height: 80)
     end
     login!
 
