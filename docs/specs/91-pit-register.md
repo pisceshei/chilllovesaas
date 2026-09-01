@@ -3805,3 +3805,20 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - 🔴 **SMTP 前置**：買家登入鏈在生產 SMTP 未配置時只渲染不外寄——功能性阻塞
   直到 /etc/chilllove/env 補 SMTP 四鍵（使用者輸入項）。
 
+### 3.58 🔴 #239 紅測入 main 事故（2026-09-01；修復＝spec 對 Catalog 斷言）
+
+- **事故**：步 11 在 Catalog 加 customer_otp，步 6 spec 硬編碼「恰三支」未同步
+  （20.2② producer/consumer 漏）——CI test 紅；但 PR 照樣被合併部署。
+- **兩層防線同時失守（20.4 重犯登記）**：
+  ①**管道吞退出碼再犯**（F 家族既有登記；#226 首錨）：本地全套跑
+  `bundle exec rspec | tail -3`，背景鏈以 tail 的 exit 0 回報「完成」，且本輪
+  沒有親讀 tally 行（前十輪都讀了、這輪漏）——既有防線是「記憶條目」，
+  防不住模板化背景鏈的重新引入。
+  ②**合併鏈未閘 CI 判定**：輪詢印出 fail 後，後續 `gh pr merge` 只驗 head SHA
+  照跑——判定在輸出裡、不在控制流裡。
+- **固定處理（本輪起）**：①套件跑法一律 `rspec > file; echo exit=$?`＋斷言
+  tally 行（管道形禁用於判定路徑）；②合併鏈必須解析輪詢 JSON、
+  `fail==0 && pending==0 && total>0` 才執行 merge——判定進控制流。
+- **反向複驗**：本包 CI 綠後，主張「main 全綠」以 main 分支 run 的 conclusion
+  為準（`gh run list --branch main -L 1`）。
+
