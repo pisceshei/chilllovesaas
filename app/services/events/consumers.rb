@@ -39,8 +39,13 @@ module Events
 
     # @param topic [String]
     # @return [Array<#name, #call>]
+    # 20a：EXTERNAL topic 一律追加 webhook 扇出（28 §15「outbox 驅動」）；
+    # 內部 topic 永不進（可訂閱白名單同軸——本表②）。
     def self.for(topic)
-      REGISTRY.fetch(topic, [])
+      base = REGISTRY.fetch(topic, [])
+      return base unless Events::Topics::EXTERNAL.include?(topic)
+
+      base + [ Webhooks::FanoutConsumer ]
     end
   end
 end

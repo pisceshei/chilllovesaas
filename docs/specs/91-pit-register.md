@@ -3984,3 +3984,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   Template 覆寫層另管——雙真相源禁令）。開放需走 themeTemplateUpsert 通道
   ＋lock 對映，不得直通 theme_file_overlays。
 - ⚪ 無 beforeunload 未儲存攔截（關頁丟編輯）。
+
+### 3.73 G5 步 20a（webhooks）的範圍外觀察（2026-09-01）
+
+- ⚪ 訂閱 disabled 時未通知商家（18 F4 後半）：接通知基座（步 6 管線）另輪。
+- ⚪ 無 per-host circuit breaker（18 F4 ⚠：同一壞 endpoint 的多 topic 訂閱
+  會各自重試）——重試風暴防線候選。
+- ⚪ webhook_deliveries 無 purge job（欄位與 ix_webhook_deliveries_purge 索引
+  已備；7 天窗＝18 F4）——掛 low queue recurring 隨運維輪。
+- ⚪ admin UI（設定頁 webhooks 卡）＝20b。
+- ⚪ 重試尺度 demo 3 次（28 §15 括號逐字「demo 3 次；規格目標 8 次/4 小時」）
+  ——升級時改 limits webhook.delivery_max_attempts 並補退避曲線。

@@ -5106,6 +5106,23 @@ theme_editor:
   # ours——官方對 asset 無單檔上限（250MB 總量且 assets 除外）；防呆值，偏嚴不偏鬆。
   asset_text_max_kb: 2048
 
+# 步 20a：對外 webhooks（28 §15＋specs/18 F4；取證錨在該兩檔）。
+webhook:
+  # 28 §15：「5 秒內 2xx」。
+  delivery_timeout_seconds: 5
+  # specs/18 F4：「回應 body 讀取上限 64KB」。
+  response_read_max_kb: 64
+  # 28 §15：「重試指數退避（demo 3 次；規格目標 8 次/4 小時）」——demo 值先行，
+  # 規格目標值以註記保留（部署形態升級時改本鍵）。
+  delivery_max_attempts: 3
+  # specs/18 F4「24 小時窗口持續失敗 → 訂閱 disabled」的 demo 折算（ours）：
+  # 連續失敗投遞次數門檻（成功即歸零）。
+  disable_after_failures: 12
+  # 投遞紀錄保留天數（specs/18 F4：「保留 7 天供除錯」）。
+  delivery_log_retention_days: 7
+  # 每店訂閱數上限（ours 防呆）。
+  max_subscriptions_per_shop: 50
+
 # =============================================================================
 # 24. 命名契約（鐵律 9 的界線；規格見 docs/specs/67-multilingual.md §H.5）
 # =============================================================================
