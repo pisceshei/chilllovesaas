@@ -60,6 +60,9 @@ class Product < ApplicationRecord
   has_many :media, class_name: "Media", dependent: :destroy, inverse_of: :product
   # 多型：商品可獨立發布到各管道（docs/specs/88）。
   has_many :resource_publications, as: :publishable, dependent: :destroy
+  # 系列成員關係（步 12 前台系列頁 join 用；刪除面既有行為不變——成員列的清理
+  # 由 Collection 側 dependent: :delete_all 與寫入服務負責，這裡不重複掛 dependent）。
+  has_many :collection_products
   # 自訂運送設定檔歸屬（結帳線第二包）。🔴 nil＝General 補集（85 §2），所以
   # optional 是語義不是偷懶；刪 profile 由 DB FK `on_delete: :nullify` 回落 General。
   belongs_to :shipping_profile, optional: true

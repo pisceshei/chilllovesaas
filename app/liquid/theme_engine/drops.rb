@@ -576,13 +576,29 @@ module ThemeEngine
 
   class CollectionDrop < Liquid::Drop
     # translations：同 ProductDrop 的 overlay 契約（包 34）。
-    def initialize(collection, url_prefix: "", published_at: nil, translations: {})
+    # publication/locale/sort_param：步 12 商品出口（96 §1/§2）的渲染語境；
+    #   publication nil＝無管道語境（products 回 nil——舊呼叫面行為不變）。
+    def initialize(collection, url_prefix: "", published_at: nil, translations: {},
+                   publication: nil, locale: nil, sort_param: nil)
       super()
       @c = collection
       @url_prefix = url_prefix
       @published_at = published_at
       @tx = translations || {}
+      @publication = publication
+      @locale = locale
+      @sort_param = sort_param
     end
+
+    # 前台 sort_by 參數值 ↔ Collection.SORT_ORDERS 內部值（96 §2 真店 9 值 select；
+    # `most-relevant` 只在 filter 語境有意義 ⇒ 對映到預設）。
+    STOREFRONT_SORT = {
+      "manual" => "manual", "best-selling" => "best_selling",
+      "title-ascending" => "title_asc", "title-descending" => "title_desc",
+      "price-ascending" => "price_asc", "price-descending" => "price_desc",
+      "created-ascending" => "created_asc", "created-descending" => "created_desc"
+    }.freeze
+    INTERNAL_TO_STOREFRONT = STOREFRONT_SORT.invert.freeze
 
     def id = @c.id
     def title = @tx["title"] || @c.title
@@ -590,6 +606,27 @@ module ThemeEngine
     def description = @tx["body_html"] || @c.description_html
     def url = "#{@url_prefix}/collections/#{@c.handle}"
     def published_at = @published_at
+
+    # 官方（96 §3.1 同構）：default_sort_by＝系列自身排序設定的前台鍵；
+    # sort_by＝URL `sort_by` 覆寫（非法值忽略＝回預設）。
+    def default_sort_by = INTERNAL_TO_STOREFRONT.fetch(@c.sort_order, "manual")
+    def sort_by = STOREFRONT_SORT.key?(@sort_param.to_s) ? @sort_param.to_s : default_sort_by
+
+    # 系列商品出口（96 §2）：懶載；paginate tag 呼叫 paginate! 設頁窗，
+    # 不在 paginate 內＝前 50（官方 "up to a limit of 50"）。
+    def products
+      return nil if @publication.nil?
+
+      @products ||= CollectionProductsDrop.new(
+        collection: @c, publication: @publication, url_prefix: @url_prefix,
+        locale: @locale, sort_key: STOREFRONT_SORT[sort_by]
+      )
+    end
+
+    # 官方語義（96 §2）：products_count＝當前檢視；all_products_count＝含被
+    # storefront filter 濾掉者。v1 無 storefront filter ⇒ 兩者同值（同一 count）。
+    def products_count = products&.total || 0
+    def all_products_count = products_count
 
     # 真引擎 collection json＝9 鍵（83 §12.4 逐字鍵序）。
     # 🔴 published_scope 恆 "global"、template_suffix nil＝我方常數
@@ -608,6 +645,229 @@ module ThemeEngine
     def liquid_method_missing(name)
       ThemeEngine.count_miss("CollectionDrop.#{name}")
       nil
+    end
+  end
+
+  # 虛擬全商品系列（96 §2：/collections/all 真店實證——無 handle=all 手動系列時
+  # 仍 200，title＝Products、預設字母序）。商家自建 handle=all 的系列優先
+  # （PageRenderer resolve 先查真系列）。id=0：無 DB 列（不可被 GID 引用）。
+  VirtualAllCollection = Struct.new(:title, :handle, :sort_order, :description_html, :updated_at) do
+    def id = 0
+    def virtual_all? = true
+  end
+
+  # 內容翻譯批載（63 §D.1 N+1 防線：整頁商品一次 batch，不逐商品查）。
+  # @return [Hash{Integer => Hash{String => String}}] product_id => overlay
+  module DropTranslations
+    module_function
+
+    def overlay_by_id(records:, locale:)
+      return {} if locale.blank? || records.empty?
+
+      shop = records.first.shop
+      resolved = Translations::Resolve.batch(shop:, resources: records, locale: locale.to_s)
+      records.each_with_object({}) do |record, acc|
+        type = Translations::Resolve::RESOURCE_TYPE_BY_CLASS.fetch(record.class.name, nil)
+        fields = resolved[[ type, record.id ]] || {}
+        acc[record.id] = fields.each_with_object({}) do |(key, entry), inner|
+          inner[key] = entry.value unless entry.omitted?
+        end
+      end
+    end
+  end
+
+  # 系列商品的懶載出口（96 §2；official `collection.products`）。
+  #
+  # ①射程＝discoverable（模型註釋正典：搜尋、系列、推薦、sitemap、feed 用
+  #   discoverable；商品詳情頁才是 purchasable）。
+  # ②預設（不在 paginate 內）＝前 50（官方 "fetch up to 50 products by default"）；
+  #   {% paginate %} 呼叫 paginate!(page:, per:) 後同一 drop 改回該頁窗。
+  # ③排序：manual＝collection_products.position；price 走 MIN(variant price) 相關
+  #   子查詢；best_selling v1 降級 created_desc（無銷售排名資料——91 §3 登記）。
+  class CollectionProductsDrop < Liquid::Drop
+    include Enumerable
+
+    DEFAULT_LIMIT = 50 # 官方：paginate 外預設上限
+    MAX_DEPTH = 25_000 # 官方："paginate to the 25,000th item in the array and no further"
+
+    MIN_PRICE_SQL = "(SELECT MIN(pv.price_cents) FROM product_variants pv " \
+                    "WHERE pv.product_id = products.id)"
+    ORDER_SQL = {
+      "manual" => "collection_products.position ASC, collection_products.id ASC",
+      "title_asc" => "products.title ASC, products.id ASC",
+      "title_desc" => "products.title DESC, products.id DESC",
+      "price_asc" => "#{MIN_PRICE_SQL} ASC, products.id ASC",
+      "price_desc" => "#{MIN_PRICE_SQL} DESC, products.id DESC",
+      "created_desc" => "products.created_at DESC, products.id DESC",
+      "created_asc" => "products.created_at ASC, products.id ASC",
+      # v1 降級：無銷售排名 rollup ⇒ 以上新代位（91 §3 登記；接分析線後改真排名）
+      "best_selling" => "products.created_at DESC, products.id DESC"
+    }.freeze
+
+    def initialize(collection:, publication:, url_prefix: "", locale: nil, sort_key: nil)
+      super()
+      @collection = collection
+      @publication = publication
+      @url_prefix = url_prefix
+      @locale = locale
+      @sort_key = sort_key
+      @page, @per = 1, nil
+    end
+
+    # paginate tag 的接線點：設頁窗並回總數（PaginateDrop 需要 items）。
+    def paginate!(page:, per:)
+      @page, @per = page, per
+      @drops = nil
+      total
+    end
+
+    def each(&) = drops.each(&)
+    def size = drops.size
+    def first = drops.first
+
+    def total
+      @total ||= relation.count
+    end
+
+    private
+
+    def virtual_all? = @collection.respond_to?(:virtual_all?)
+
+    def relation
+      base = Product.discoverable(publication: @publication)
+      base = base.joins(:collection_products)
+                 .where(collection_products: { collection_id: @collection.id }) unless virtual_all?
+      base
+    end
+
+    def sort_key
+      key = @sort_key.presence || @collection.sort_order
+      # manual 對虛擬 all 無意義（無 position 列）⇒ 字母序（96 §2 真店預設形）
+      key = "title_asc" if virtual_all? && key == "manual"
+      ORDER_SQL.key?(key) ? key : "title_asc"
+    end
+
+    def offset
+      per = @per || DEFAULT_LIMIT
+      [ (@page - 1) * per, MAX_DEPTH ].min
+    end
+
+    def drops
+      @drops ||= begin
+        per = @per || DEFAULT_LIMIT
+        products = relation.order(Arel.sql(ORDER_SQL.fetch(sort_key)))
+                           .offset(offset).limit(per)
+                           .includes(
+                             product_variants: [ :product_variant_option_values,
+                                                 { inventory_item: :inventory_levels },
+                                                 { media: :stored_file } ],
+                             product_options: :option_values,
+                             media: :stored_file
+                           ).to_a
+        overlay = DropTranslations.overlay_by_id(records: products, locale: @locale)
+        products.map do |product|
+          ProductDrop.new(product, url_prefix: @url_prefix, publication: @publication,
+                          translations: overlay[product.id] || {})
+        end
+      end
+    end
+  end
+
+  # `collections` 全域（96 §1：official "All of the collections on a store."）。
+  # 射程＝該管道已發布集（真店實證：OS 未發布系列不出現在 /collections）；
+  # 迭代＝字母序（官方 "outputs the collections in alphabetical order"）；
+  # `collections['handle']` 取單個；`size`＝Ella 消費形（官方頁未記載，96 §8）。
+  class CollectionsDrop < Liquid::Drop
+    include Enumerable
+
+    def initialize(shop:, publication:, url_prefix: "", locale: nil)
+      super()
+      @shop = shop
+      @publication = publication
+      @url_prefix = url_prefix
+      @locale = locale
+      @page, @per = 1, nil
+    end
+
+    # 🔴 handle 存取走 liquid_method_missing、**不覆寫 `[]`**：Liquid::Drop#key? 恆
+    # true ⇒ VariableLookup 對 drop 一律走 `[]`（＝invoke_drop 屬性派發）；覆寫 []
+    # 會把 `collections.size` 劫持成 handle 查詢（本輪紅測實錘）。代價＝與
+    # Enumerable 方法重名的 handle（map/first…）被方法遮蔽——本尊同型限制。
+    def liquid_method_missing(handle)
+      h = handle.to_s
+      return nil if h.blank?
+
+      @by_handle ||= {}
+      return @by_handle[h] if @by_handle.key?(h)
+
+      collection = Storefront::Lookup.collection_by_handle(publication: @publication, handle: h)
+      @by_handle[h] = collection && wrap(collection)
+    end
+
+    def each(&) = drops.each(&)
+    def size = total
+    def first = drops.first
+
+    def paginate!(page:, per:)
+      @page, @per = page, per
+      @drops = nil
+      total
+    end
+
+    def total
+      @total ||= relation.count
+    end
+
+    private
+
+    def relation
+      Collection.published_on(@publication).order(:title, :id)
+    end
+
+    def drops
+      @drops ||= begin
+        scope = relation
+        scope = scope.offset((@page - 1) * @per).limit(@per) if @per
+        scope.map { |collection| wrap(collection) }
+      end
+    end
+
+    def wrap(collection)
+      CollectionDrop.new(collection, url_prefix: @url_prefix, publication: @publication,
+                         locale: @locale)
+    end
+  end
+
+  # `all_products` 全域（96 §7）：handle 取商品；官方上限＝"a limit of 20 unique
+  # handles per page"——第 21 個唯一 handle 回 nil＋遙測（官方未記載超限行為，
+  # fail-quiet 是 ours；96 §8）。未命中官方回 `empty` ⇒ 我方 nil（{% if %} 同 falsy）。
+  class AllProductsDrop < Liquid::Drop
+    UNIQUE_HANDLE_LIMIT = 20
+
+    def initialize(publication:, url_prefix: "", locale: nil)
+      super()
+      @publication = publication
+      @url_prefix = url_prefix
+      @locale = locale
+      @cache = {}
+    end
+
+    # handle 存取走 liquid_method_missing（不覆寫 `[]`——理由見 CollectionsDrop 同註）。
+    def liquid_method_missing(handle)
+      h = handle.to_s
+      return nil if h.blank?
+      return @cache[h] if @cache.key?(h)
+
+      if @cache.size >= UNIQUE_HANDLE_LIMIT
+        ThemeEngine.count_miss("all_products.unique_handle_limit")
+        return nil
+      end
+
+      product = Storefront::Lookup.product_by_handle(publication: @publication, handle: h)
+      @cache[h] = product && ProductDrop.new(
+        product, url_prefix: @url_prefix, publication: @publication,
+        translations: DropTranslations.overlay_by_id(records: [ product ], locale: @locale)[product.id] || {}
+      )
     end
   end
 
@@ -814,8 +1074,10 @@ module ThemeEngine
   end
 
   class TemplateDrop < BaseDrop
-    def initialize(name)
-      super({ "name" => name, "suffix" => nil, "directory" => nil })
+    # suffix：`?view=` 替代模板的 template-suffix（96 §6；官方 "identify which
+    # template is currently being used with the `template` object"）。
+    def initialize(name, suffix: nil)
+      super({ "name" => name, "suffix" => suffix, "directory" => nil })
     end
 
     def to_s = @attrs["name"]
@@ -864,11 +1126,49 @@ module ThemeEngine
     end
   end
 
+  # paginate.parts 的單一分頁件（official part：title/url/is_link）。
+  class PartDrop < BaseDrop
+    def initialize(title:, url: nil, is_link: false)
+      super({ "title" => title.to_s, "url" => url, "is_link" => is_link })
+    end
+  end
+
+  # 真分頁 drop（步 12；96 §1 paginate 契約）。items＝總數、pages＝ceil、
+  # parts＝窗式分頁列（頁數多時首尾＋當前±1＋省略號——窗形是 ours，官方演算法
+  # 未逐字記載）。url_builder：page N → 帶 page 參數的當前路徑 URL。
   class PaginateDrop < BaseDrop
-    def initialize(items: 0, page_size: 24)
-      super({ "current_page" => 1, "current_offset" => 0, "items" => items,
-              "parts" => [], "next" => nil, "previous" => nil,
-              "page_size" => page_size, "pages" => 1, "page_param" => "page" })
+    def initialize(items: 0, page_size: 24, current_page: 1, url_builder: nil)
+      pages = [ (items.to_f / page_size).ceil, 1 ].max
+      build = url_builder || ->(_n) { nil }
+      super({
+        "current_page" => current_page,
+        "current_offset" => (current_page - 1) * page_size,
+        "items" => items,
+        "parts" => build_parts(pages, current_page, build),
+        "next" => current_page < pages ? PartDrop.new(title: "&raquo;", url: build.call(current_page + 1), is_link: true) : nil,
+        "previous" => current_page > 1 ? PartDrop.new(title: "&laquo;", url: build.call(current_page - 1), is_link: true) : nil,
+        "page_size" => page_size,
+        "pages" => pages,
+        "page_param" => "page"
+      })
+    end
+
+    private
+
+    def build_parts(pages, current, build)
+      return [] if pages <= 1
+
+      numbers = if pages <= 7
+        (1..pages).to_a
+      else
+        ([ 1, pages, current - 1, current, current + 1 ].select { |n| n.between?(1, pages) }).uniq.sort
+      end
+      parts = []
+      numbers.each_with_index do |n, i|
+        parts << PartDrop.new(title: "&hellip;") if i.positive? && n > numbers[i - 1] + 1
+        parts << (n == current ? PartDrop.new(title: n) : PartDrop.new(title: n, url: build.call(n), is_link: true))
+      end
+      parts
     end
   end
 

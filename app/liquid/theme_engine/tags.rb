@@ -86,17 +86,63 @@ module ThemeEngine
       end
     end
 
-    # {% paginate expr by N %}（v1 單頁 drop；真分頁隨前台包 33 keyset 接線）。
+    # {% paginate expr by size %}（步 12 真分頁；96 §1）。
+    #
+    # ①`by` 的右值可為變數（Ella：`by limit`、`by section.settings.products_per_page`）
+    #   ⇒ 渲染期求值；clamp 1..250（官方 "between 1 and 250"）。
+    # ②expr 求值出的物件若支援 `paginate!(page:, per:)`（CollectionProductsDrop／
+    #   CollectionsDrop 等懶載 drop），同一物件改回該頁窗——block 內
+    #   `{% for x in expr %}` 重新求值拿到的是同一 memoized drop ⇒ 迭代頁窗。
+    # ③頁碼＝`page` URL 參數（registers[:request_params]）；深度上限 25,000
+    #   （官方）由 drop 端 offset clamp 承擔。
+    # ④`window_size:` 參數吞掉不實作（Dawn 有用；窗形由 PaginateDrop 固定——登記）。
     class PaginateTag < Liquid::Block
+      MAX_PAGE_SIZE = 250
+
       def initialize(tag_name, markup, options)
         super
-        @size = markup[/by\s+(\d+)/, 1]&.to_i || 24
+        body = markup.sub(/window_size:\s*\S+/, "")
+        if body =~ /\A\s*(.+?)\s+by\s+(\S+)\s*\z/m
+          @expr = Liquid::Expression.parse(Regexp.last_match(1).strip)
+          @by = Liquid::Expression.parse(Regexp.last_match(2))
+        else
+          @expr = Liquid::Expression.parse(body.strip)
+          @by = 24
+        end
       end
 
       def render(context)
+        target = context.evaluate(@expr)
+        per = context.evaluate(@by).to_i
+        per = 24 unless per.positive?
+        per = MAX_PAGE_SIZE if per > MAX_PAGE_SIZE
+
+        request_params = context.registers[:request_params] || {}
+        page = request_params["page"].to_s[/\A\d+\z/]&.to_i || 1
+        page = 1 unless page.positive?
+
+        items = if target.respond_to?(:paginate!)
+          target.paginate!(page: page, per: per)
+        elsif target.respond_to?(:size)
+          target.size
+        else
+          0
+        end
+
+        path = context.registers[:request_path].to_s
+        builder = lambda do |n|
+          # sections/section_id＝Section Rendering 內部參數，不進買家可點 URL；
+          # view/sort_by/q 等要跨頁保留（替代模板與排序在翻頁後不得掉）。
+          query = request_params.except("sections", "section_id").merge("page" => n.to_s)
+          query.delete("page") if n == 1
+          query.empty? ? path : "#{path}?#{Rack::Utils.build_query(query)}"
+        end
+
         inner = nil
         context.stack do
-          context["paginate"] = ThemeEngine::PaginateDrop.new(page_size: @size)
+          context["paginate"] = ThemeEngine::PaginateDrop.new(
+            items: items, page_size: per, current_page: page, url_builder: builder
+          )
           inner = super
         end
         inner

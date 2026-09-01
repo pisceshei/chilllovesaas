@@ -56,7 +56,12 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence)
+                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            publication: @publication, params: @params)
+      template_key = template_key_for(runtime, page_type)
+      if template_key != page_type
+        runtime.assign("template", TemplateDrop.new(page_type, suffix: template_key.delete_prefix("#{page_type}.")))
+      end
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
@@ -70,10 +75,22 @@ module ThemeEngine
         ))
       end
 
-      body = render_template_sections(runtime, page_type)
+      body = render_template_sections(runtime, template_key)
       html = render_layout(runtime, body)
       Result.new(status: status, html: html, page_type: page_type,
                  volatile: runtime.render_flags.include?(:volatile))
+    end
+
+    # `?view=` 替代模板（96 §6）：suffix 合法且模板存在 ⇒ `{type}.{suffix}`；
+    # 🔴 不存在 ⇒ 靜默 fallback 預設模板（真店實證：?view=不存在 suffix 回 200
+    # 渲染預設，不是 404）。404 頁不吃 view。
+    def template_key_for(runtime, page_type)
+      view = @params["view"].to_s
+      return page_type if page_type == "404" || view.blank? ||
+                          !view.match?(/\A[a-z0-9][a-z0-9\-_.]{0,64}\z/i)
+
+      candidate = "#{page_type}.#{view}"
+      runtime.template_json(candidate) ? candidate : page_type
     end
 
     # @return [Array(String, Hash, Integer, Object)] [template key, 額外 assigns, HTTP status,
@@ -107,9 +124,22 @@ module ThemeEngine
                                                               publication: @publication,
                                                               translations: translations_for(product)) },
                    200, product ] : not_found
+      when "/collections"
+        # 步 12（96 §1）：集合列表頁。內容全由 `collections` 全域供給（Runtime 已備）。
+        [ "list-collections", {}, 200 ]
       when %r{\A/collections/([^/]+)\z}
+        handle = Regexp.last_match(1)
         collection = ActsAsTenant.with_tenant(@shop) do
-          Storefront::Lookup.collection_by_handle(publication: @publication, handle: Regexp.last_match(1), at: at)
+          Storefront::Lookup.collection_by_handle(publication: @publication, handle:, at: at)
+        end
+        # 96 §2：/collections/all 虛擬全商品系列（真店實證 title=Products、字母序）；
+        # 商家自建 handle=all 的真系列優先（上面已查、命中即走真系列分支）。
+        if collection.nil? && handle.downcase == "all"
+          virtual = VirtualAllCollection.new("Products", "all", "title_asc", nil, nil)
+          return [ "collection", { "collection" => CollectionDrop.new(
+            virtual, url_prefix: @url_prefix, publication: @publication,
+            locale: @locale, sort_param: @params["sort_by"]
+          ) }, 200 ]
         end
         collection ? [ "collection", { "collection" => CollectionDrop.new(
           collection, url_prefix: @url_prefix,
@@ -117,7 +147,8 @@ module ThemeEngine
             shop_id: @shop.id, publication_id: @publication.id,
             publishable_type: "Collection", publishable_id: collection.id
           ).pick(:published_at),
-          translations: translations_for(collection)
+          translations: translations_for(collection),
+          publication: @publication, locale: @locale, sort_param: @params["sort_by"]
         ) }, 200, collection ] : not_found
       when %r{\A/pages/([^/]+)\z}
         page = ActsAsTenant.with_tenant(@shop) do
@@ -182,7 +213,8 @@ module ThemeEngine
       runtime = Runtime.new(theme: @theme, shop: @shop, url_prefix: @url_prefix,
                             design_mode: @design_mode, page_type: page_type,
                             path: nil, host: @host, source: @source, cart_json: @cart_json,
-                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence)
+                            asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
+                            publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
@@ -191,9 +223,10 @@ module ThemeEngine
     end
 
     # id 解析：①請求頁 template 的 sections ②layout 引用的各群組 JSON 的 sections。
-    # 找不到 ⇒ nil（呼叫端依端點轉 404／null）。
+    # 找不到 ⇒ nil（呼叫端依端點轉 404／null）。?view= 語境下先查替代模板
+    # （section 請求繼承請求頁 context——83 §12.3；替代模板頁的 section 也要找得到）。
     def section_data_for(runtime, page_type, sid)
-      tj = runtime.template_json(page_type)
+      tj = runtime.template_json(template_key_for(runtime, page_type))
       data = tj && (tj["sections"] || {})[sid]
       return data if data
 
