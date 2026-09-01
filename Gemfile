@@ -51,6 +51,11 @@ gem "image_processing", "~> 1.14"
 # CSV 自 Ruby 3.4 起是 bundled gem，不再預設 require（翻譯 CSV 匯入匯出用，ML-5b）。
 gem "csv"
 
+# 主題 zip 匯入（G3 步 15a；Themes::ImportZip）。🔴 必須在預設群組——production
+# bundle 帶 --without development test，群組錯置＝boot LoadError（2026-09-01
+# 生產事故實錘，91 §3.67）。
+gem "rubyzip", "~> 3.4"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
