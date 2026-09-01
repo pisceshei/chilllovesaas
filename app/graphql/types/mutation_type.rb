@@ -160,6 +160,12 @@ module Types
     field :publication_create, mutation: Mutations::PublicationCreate,
       description: "建立一個 publication（銷售管道的發布容器）。"
     # 包 30（D77）：主題發布（本尊 themePublish 對位）。
+    field :theme_delete, mutation: Mutations::ThemeDelete,
+      description: "刪除未發布主題（官方行為：已發布主題拒刪）。"
+    field :theme_duplicate, mutation: Mutations::ThemeDuplicate,
+      description: "複製主題（零複製共享內容＋DB 覆寫層拷貝）。"
+    field :theme_rename, mutation: Mutations::ThemeRename,
+      description: "重新命名主題。"
     field :theme_publish, mutation: Mutations::ThemePublish,
       description: "發布主題（現任已發布者自動降回草稿）。"
 

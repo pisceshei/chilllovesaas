@@ -18,6 +18,8 @@ Rails.application.routes.draw do
   # 檔案通道（第 25 包；B6 presigned POST 的 HTTP 端）。同 CSV 通道：二進位走 HTTP、
   # 資料仍只走 GraphQL（D5）。🔴 必須在 SPA catch-all 之前。
   post "admin/uploads/staged" => "admin/uploads#create_staged", as: :admin_staged_upload
+  # 步 15b：主題 zip 匯入（multipart；99 §4 Import theme 對位）。
+  post "admin/themes/import" => "admin/themes#import", as: :admin_theme_import
   get "admin/files/:id/blob" => "admin/uploads#show_file", as: :admin_file_blob
 
   # 包 30（D77）：登入後主題預覽（noindex）。assets 路由必須排在頁面 glob 之前。
