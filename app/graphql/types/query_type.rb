@@ -117,6 +117,31 @@ module Types
     field :shop, Types::ShopType, null: false,
       description: "本店。"
 
+    # ── 內容線（步 14a）────────────────────────────────────────────────────
+    field :article, ArticleType, null: true do
+      argument :id, ID, required: true
+    end
+    field :articles, ArticleConnectionType, null: false, connection: false do
+      argument :after, String, required: false
+      argument :before, String, required: false
+      argument :blog_id, ID, required: false
+      argument :first, Integer, required: false
+      argument :last, Integer, required: false
+      argument :query, String, required: false
+    end
+    field :blogs, [ BlogType ], null: false, description: "全部部落格（店內數量小，不分頁）。"
+    field :page, PageType, null: true, resolver_method: :content_page do
+      argument :id, ID, required: true
+    end
+    field :menus, [ MenuType ], null: false, description: "全部導覽選單。"
+    field :pages, PageConnectionType, null: false, connection: false do
+      argument :after, String, required: false
+      argument :before, String, required: false
+      argument :first, Integer, required: false
+      argument :last, Integer, required: false
+      argument :query, String, required: false
+    end
+
     field :url_redirects, UrlRedirectConnectionType, null: false, connection: false do
       description "路徑級重導列表（包 36；keyset 分頁 ≤250）。"
       argument :after, String, required: false
@@ -316,6 +341,58 @@ module Types
     #
     # @return [Hash] keyset connection
     # @note 副作用：一條 tenant-scoped SELECT。
+    # ── 內容線 resolvers（步 14a；updated_at desc＝admin 列表 Updated 欄序）──
+    def pages(first: nil, after: nil, last: nil, before: nil, query: nil)
+      authorize_products!
+      scope = Page.where(shop_id: context.fetch(:current_shop).id)
+      if query.present?
+        escaped = Page.sanitize_sql_like(query.to_s)
+        scope = scope.where("title LIKE :like OR handle LIKE :like", like: "%#{escaped}%")
+      end
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :updated_at, direction: :desc)
+    end
+
+    def articles(first: nil, after: nil, last: nil, before: nil, blog_id: nil, query: nil)
+      authorize_products!
+      scope = Article.where(shop_id: context.fetch(:current_shop).id)
+      if blog_id.present?
+        numeric = blog_id.to_s[%r{\Agid://chilllove/Blog/(\d+)\z}, 1]
+        scope = scope.where(blog_id: numeric.to_i)
+      end
+      if query.present?
+        escaped = Article.sanitize_sql_like(query.to_s)
+        scope = scope.where("title LIKE :like OR handle LIKE :like", like: "%#{escaped}%")
+      end
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :updated_at, direction: :desc)
+    end
+
+    def article(id:)
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      numeric = id.to_s[%r{\Agid://chilllove/Article/(\d+)\z}, 1]
+      numeric && Article.find_by(shop_id: shop.id, id: numeric)
+    end
+
+    def content_page(id:)
+      authorize_products!
+      shop = context.fetch(:current_shop)
+      numeric = id.to_s[%r{\Agid://chilllove/Page/(\d+)\z}, 1]
+      numeric && Page.find_by(shop_id: shop.id, id: numeric)
+    end
+
+    def blogs
+      authorize_products!
+      Blog.where(shop_id: context.fetch(:current_shop).id).order(:title)
+    end
+
+    def menus
+      authorize_products!
+      Menu.includes(menu_items: :children)
+          .where(shop_id: context.fetch(:current_shop).id).order(:title)
+    end
+
     def url_redirects(first: nil, after: nil, last: nil, before: nil, query: nil)
       authorize_products!
       scope = UrlRedirect.where(shop_id: context.fetch(:current_shop).id)
