@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_160000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1470,6 +1470,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_150000) do
     t.json "content", default: -> { "(json_object())" }, null: false
     t.datetime "created_at", null: false
     t.string "key", null: false
+    t.integer "lock_version", default: 0, null: false
     t.bigint "shop_id", null: false
     t.string "template_type", limit: 64, null: false
     t.bigint "theme_id", null: false

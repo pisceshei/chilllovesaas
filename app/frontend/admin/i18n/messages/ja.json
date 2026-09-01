@@ -1076,5 +1076,16 @@
   "editor.selectHint": "ツリーまたはプレビューでセクションを選択",
   "editor.previewTitle": "テーマプレビュー",
   "editor.hidden": "非表示",
-  "editor.saveComing": "保存は編集パイプライン（16b）で提供"
+  "editor.saveComing": "保存は編集パイプライン（16b）で提供",
+  "editor.undo": "元に戻す",
+  "editor.redo": "やり直す",
+  "editor.saved": "保存しました。プレビューを更新",
+  "editor.saveFailed": "保存に失敗しました",
+  "editor.staleConflict": "テンプレートが他の人に変更されました。再読み込みしてください",
+  "editor.moveUp": "{id} を上へ",
+  "editor.moveDown": "{id} を下へ",
+  "editor.hide": "{id} を非表示",
+  "editor.show": "{id} を表示",
+  "editor.duplicateOp": "{id} を複製",
+  "editor.removeOp": "{id} を削除"
 }

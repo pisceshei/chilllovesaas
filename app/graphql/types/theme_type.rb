@@ -28,6 +28,10 @@ module Types
     field :template_json, GraphQL::Types::JSON, null: true do
       argument :key, String, required: true
     end
+    # 16b：編輯器樂觀鎖底值（DB 列不存在＝null——首存免帶）。
+    field :template_lock_version, Integer, null: true do
+      argument :key, String, required: true
+    end
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -49,6 +53,12 @@ module Types
       report = ThemeImportReport.where(shop_id: object.shop_id, theme_id: object.id)
                                 .order(:id).last
       report&.report
+    end
+
+    def template_lock_version(key:)
+      return nil unless key.match?(/\A[\w.\-]+\z/)
+
+      Template.where(shop_id: object.shop_id, theme_id: object.id, key:).pick(:lock_version)
     end
 
     def template_json(key:)

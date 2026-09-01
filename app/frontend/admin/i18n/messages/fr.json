@@ -1076,5 +1076,16 @@
   "editor.selectHint": "Sélectionnez une section",
   "editor.previewTitle": "Aperçu du thème",
   "editor.hidden": "Masqué",
-  "editor.saveComing": "L'enregistrement arrive avec 16b"
+  "editor.saveComing": "L'enregistrement arrive avec 16b",
+  "editor.undo": "Annuler",
+  "editor.redo": "Rétablir",
+  "editor.saved": "Enregistré ; aperçu actualisé",
+  "editor.saveFailed": "Échec de l'enregistrement",
+  "editor.staleConflict": "Modèle modifié par quelqu'un d'autre — rechargez avant de modifier",
+  "editor.moveUp": "Monter {id}",
+  "editor.moveDown": "Descendre {id}",
+  "editor.hide": "Masquer {id}",
+  "editor.show": "Afficher {id}",
+  "editor.duplicateOp": "Dupliquer {id}",
+  "editor.removeOp": "Supprimer {id}"
 }
