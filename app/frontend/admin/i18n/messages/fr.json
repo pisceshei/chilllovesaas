@@ -1108,5 +1108,11 @@
   "code.staleConflict": "Fichier modifié par un autre utilisateur",
   "code.readonlyTemplates": "JSON de modèle géré par l'éditeur de thème (lecture seule)",
   "code.readonlySettings": "Données de paramètres gérées par les réglages du thème (lecture seule)",
-  "code.readonlyBinary": "Fichier binaire non modifiable (lecture seule)"
+  "code.readonlyBinary": "Fichier binaire non modifiable (lecture seule)",
+  "code.newFile": "Nouveau fichier",
+  "code.newFilePrompt": "Nom du fichier (créé dans {dir}/)",
+  "code.revert": "Rétablir la version d'origine",
+  "code.delete": "Supprimer le fichier",
+  "code.reverted": "Version d'origine rétablie",
+  "code.deleted": "Fichier supprimé"
 }

@@ -56,6 +56,18 @@ RSpec.describe "Theme file overlay", type: :request do
     response.parsed_body.dig("data", "themeFileUpsert")
   end
 
+  def delete_file(path:)
+    post admin_graphql_path, params: {
+      query: <<~GQL,
+        mutation($themeId: ID!, $path: String!) {
+          themeFileDelete(themeId: $themeId, path: $path) { path userErrors { message code } }
+        }
+      GQL
+      variables: { themeId: gid, path: }
+    }.to_json, headers: { "CONTENT_TYPE" => "application/json" }
+    response.parsed_body.dig("data", "themeFileDelete")
+  end
+
   def render_home(owner, owner_theme)
     publication = ActsAsTenant.with_tenant(owner) { Publication.online_store! }
     ThemeEngine::PageRenderer.new(theme: owner_theme, shop: owner, publication:).render("/")
@@ -138,6 +150,36 @@ RSpec.describe "Theme file overlay", type: :request do
     post admin_graphql_path, params: { query:, variables: { id: gid, path: "snippets/cl-l.liquid" } }.to_json,
                              headers: { "CONTENT_TYPE" => "application/json" }
     expect(response.parsed_body.dig("data", "theme", "fileLockVersion")).to eq(0)
+  end
+
+  it "F9 🔴 themeFileDelete：被覆寫檔還原 base 渲染＋touch theme；無列 NOT_FOUND" do
+    upsert(path: "sections/hero.liquid",
+           content: %(<h1 data-ovl>{{ section.settings.heading }}</h1>{% schema %}{ "name": "Hero", "settings": [] }{% endschema %}))
+    expect(render_home(shop, theme).html).to include("data-ovl")
+
+    before_touch = theme.reload.updated_at
+    result = nil
+    travel(2.seconds) { result = delete_file(path: "sections/hero.liquid") }
+    expect(result["userErrors"]).to eq([])
+    expect(render_home(shop, theme).html).not_to include("data-ovl") # 還原 base
+    expect(theme.reload.updated_at).to be > before_touch             # 🔴 touch
+
+    missing = delete_file(path: "sections/hero.liquid")
+    expect(missing.dig("userErrors", 0, "code")).to eq("NOT_FOUND")
+  end
+
+  it "F10 overlayState：被覆寫 base 檔＝overlaid、新檔＝new、未覆寫不出現" do
+    upsert(path: "sections/hero.liquid",
+           content: %(<h1>{{ section.settings.heading }}</h1>{% schema %}{ "name": "Hero", "settings": [] }{% endschema %}))
+    upsert(path: "snippets/cl-brandnew.liquid", content: "x")
+    post admin_graphql_path, params: {
+      query: "query($id: ID!) { theme(id: $id) { overlayState } }",
+      variables: { id: gid }
+    }.to_json, headers: { "CONTENT_TYPE" => "application/json" }
+    state = response.parsed_body.dig("data", "theme", "overlayState")
+    expect(state["sections/hero.liquid"]).to eq("overlaid")
+    expect(state["snippets/cl-brandnew.liquid"]).to eq("new")
+    expect(state).not_to have_key("layout/theme.liquid")
   end
 
   it "F7 themeDuplicate 一併拷 overlay 列（零複製副本不得丟編輯）" do

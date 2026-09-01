@@ -25,6 +25,16 @@ const FILES_QUERY = `
       id
       name
       files { filename size }
+      overlayState
+    }
+  }
+`;
+
+const FILE_DELETE_MUTATION = `
+  mutation themeFileDelete($themeId: ID!, $path: String!) {
+    themeFileDelete(themeId: $themeId, path: $path) {
+      path
+      userErrors { field message code }
     }
   }
 `;
@@ -77,17 +87,20 @@ export function CodeEditorPage() {
   const [tabs, setTabs] = useState<OpenTab[]>([]);
   const [activePath, setActivePath] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [overlayState, setOverlayState] = useState<Record<string, "overlaid" | "new">>({});
 
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
       try {
         const result = await requestAdminGraphQL<{
-          theme: { name: string; files: { filename: string }[] } | null;
+          theme: { name: string; files: { filename: string }[];
+                   overlayState: Record<string, "overlaid" | "new"> } | null;
         }, { id: string }>(FILES_QUERY, { id: gid }, controller.signal);
         if (!result.theme) { setError(t("code.notFound")); return; }
         setThemeName(result.theme.name);
         setFilenames(result.theme.files.map((file) => file.filename));
+        setOverlayState(result.theme.overlayState);
       } catch (reason: unknown) {
         if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : t("code.notFound"));
       }
@@ -138,6 +151,11 @@ export function CodeEditorPage() {
       setTabs((current) => current.map((entry) => (entry.path === tab.path
         ? { ...entry, savedContent: entry.content, lockVersion: payload.lockVersion }
         : entry)));
+      // 16e3：首存新檔＝入樹＋標 overlay 狀態（base 有無決定 overlaid/new）
+      setFilenames((current) => (current.includes(tab.path) ? current : [ ...current, tab.path ]));
+      setOverlayState((current) => (current[tab.path]
+        ? current
+        : { ...current, [tab.path]: filenames.includes(tab.path) ? "overlaid" : "new" }));
       showToast(t("code.saved"));
     } catch (reason: unknown) {
       showToast(reason instanceof Error ? reason.message : t("code.saveFailed"));
@@ -207,6 +225,26 @@ export function CodeEditorPage() {
               </button>
               {openDirs.has(group.dir) ? (
                 <ul className="cl-code__files">
+                  {group.dir !== "templates" ? (
+                    <li>
+                      <button
+                        className="cl-code__file cl-code__newfile"
+                        onClick={() => {
+                          // 官方形：選資料夾→New file→輸入檔名（16e3）
+                          const name = window.prompt(t("code.newFilePrompt", { dir: group.dir }));
+                          if (!name) return;
+                          const path = `${group.dir}/${name.trim()}`;
+                          setTabs((current) => (current.some((tab) => tab.path === path)
+                            ? current
+                            : [ ...current, { path, content: "", savedContent: "\u0000", lockVersion: null, readonly: false } ]));
+                          setActivePath(path);
+                        }}
+                        type="button"
+                      >
+                        ＋ {t("code.newFile")}
+                      </button>
+                    </li>
+                  ) : null}
                   {group.files.map((name) => (
                     <li key={name}>
                       <button
@@ -253,6 +291,41 @@ export function CodeEditorPage() {
                     : active.path === "config/settings_data.json"
                       ? t("code.readonlySettings")
                       : t("code.readonlyBinary")}
+                </p>
+              ) : null}
+              {overlayState[active.path] ? (
+                <p className="cl-card-note">
+                  <button
+                    className="cl-code__revert"
+                    onClick={() => void (async () => {
+                      try {
+                        const result = await requestAdminGraphQL<{
+                          themeFileDelete: { path: string | null; userErrors: { message: string }[] };
+                        }, Record<string, unknown>>(FILE_DELETE_MUTATION, { themeId: gid, path: active.path });
+                        if (result.themeFileDelete.userErrors.length > 0) {
+                          showToast(result.themeFileDelete.userErrors[0].message);
+                          return;
+                        }
+                        // 還原＝關 tab＋刷 overlayState；刪除同（清單重拉）
+                        setTabs((current) => current.filter((tab) => tab.path !== active.path));
+                        setActivePath(null);
+                        setOverlayState((current) => {
+                          const next = { ...current };
+                          delete next[active.path];
+                          return next;
+                        });
+                        if (overlayState[active.path] === "new") {
+                          setFilenames((current) => current.filter((name) => name !== active.path));
+                        }
+                        showToast(t(overlayState[active.path] === "overlaid" ? "code.reverted" : "code.deleted"));
+                      } catch (reason: unknown) {
+                        showToast(reason instanceof Error ? reason.message : t("code.saveFailed"));
+                      }
+                    })()}
+                    type="button"
+                  >
+                    {overlayState[active.path] === "overlaid" ? t("code.revert") : t("code.delete")}
+                  </button>
                 </p>
               ) : null}
               <textarea

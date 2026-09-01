@@ -1108,5 +1108,11 @@
   "code.staleConflict": "File was modified by someone else — reload to edit",
   "code.readonlyTemplates": "Template JSON is managed by the theme editor (read-only)",
   "code.readonlySettings": "Settings data is managed by theme settings (read-only)",
-  "code.readonlyBinary": "Binary file cannot be edited here (read-only)"
+  "code.readonlyBinary": "Binary file cannot be edited here (read-only)",
+  "code.newFile": "New file",
+  "code.newFilePrompt": "Filename (created under {dir}/)",
+  "code.revert": "Revert to original",
+  "code.delete": "Delete file",
+  "code.reverted": "Reverted to original",
+  "code.deleted": "File deleted"
 }

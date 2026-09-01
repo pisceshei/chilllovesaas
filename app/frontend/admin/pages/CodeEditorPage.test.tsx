@@ -29,6 +29,7 @@ const FILES = {
         { filename: "sections/hero.liquid", size: 80 },
         { filename: "templates/index.json", size: 40 },
       ],
+      overlayState: { "sections/hero.liquid": "overlaid" },
     },
   },
 };
@@ -44,6 +45,8 @@ function stubFetch() {
     let body: unknown = FILES;
     if (request.query.includes("themeFileUpsert")) {
       body = { data: { themeFileUpsert: { path: "sections/hero.liquid", lockVersion: 0, userErrors: [] } } };
+    } else if (request.query.includes("themeFileDelete")) {
+      body = { data: { themeFileDelete: { path: "sections/hero.liquid", userErrors: [] } } };
     } else if (request.query.includes("codeEditorBody")) {
       const path = request.variables?.paths?.[0] ?? "";
       body = { data: { theme: {
@@ -124,5 +127,45 @@ describe("CodeEditorPage（步 16e2）", () => {
     expect(textarea).toBeDisabled();
     expect(screen.getByText(/模板 JSON 由主題編輯器管理/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "儲存" })).toBeDisabled();
+  });
+
+  it("CE4 新增檔案：資料夾 New file → 空 tab 即 dirty → 儲存以新路徑走 themeFileUpsert", async () => {
+    const fetchMock = stubFetch();
+    vi.stubGlobal("prompt", vi.fn().mockReturnValue("cl-new.liquid"));
+    renderPage();
+    const tree = within(await screen.findByRole("complementary", { name: "檔案" }));
+    fireEvent.click(tree.getByRole("button", { name: /layout/ })); // 收合預設展開的 layout
+    fireEvent.click(tree.getByRole("button", { name: /sections/ }));
+    fireEvent.click(tree.getByRole("button", { name: /新增檔案/ }));
+
+    const textarea = await screen.findByLabelText("sections/cl-new.liquid");
+    expect(screen.getByLabelText("未儲存")).toBeInTheDocument(); // 新檔未存＝dirty
+    fireEvent.change(textarea, { target: { value: "NEW-CONTENT" } });
+    fireEvent.click(screen.getByRole("button", { name: "儲存" }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeFileUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeFileUpsert")[0].body)) as {
+      variables: { path: string; content: string; lockVersion: number | null };
+    };
+    expect(sent.variables.path).toBe("sections/cl-new.liquid");
+    expect(sent.variables.content).toBe("NEW-CONTENT");
+    expect(sent.variables.lockVersion).toBeNull(); // 首存免帶底版
+  });
+
+  it("CE5 🔴 被覆寫檔出「還原原始版本」；點擊走 themeFileDelete＋關 tab", async () => {
+    const fetchMock = stubFetch();
+    renderPage();
+    const tree = within(await screen.findByRole("complementary", { name: "檔案" }));
+    fireEvent.click(tree.getByRole("button", { name: /sections/ }));
+    fireEvent.click(tree.getByRole("button", { name: /hero\.liquid/ }));
+    await screen.findByLabelText("sections/hero.liquid");
+
+    fireEvent.click(screen.getByRole("button", { name: "還原原始版本" }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeFileDelete")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeFileDelete")[0].body)) as {
+      variables: { path: string };
+    };
+    expect(sent.variables.path).toBe("sections/hero.liquid");
+    await vi.waitFor(() => expect(screen.queryByLabelText("sections/hero.liquid")).not.toBeInTheDocument());
   });
 });

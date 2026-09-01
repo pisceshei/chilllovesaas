@@ -1108,5 +1108,11 @@
   "code.staleConflict": "他のユーザーが変更しました——再読み込みしてください",
   "code.readonlyTemplates": "テンプレート JSON はテーマエディタで管理（読み取り専用）",
   "code.readonlySettings": "設定データはテーマ設定で管理（読み取り専用）",
-  "code.readonlyBinary": "バイナリファイルは編集不可（読み取り専用）"
+  "code.readonlyBinary": "バイナリファイルは編集不可（読み取り専用）",
+  "code.newFile": "新規ファイル",
+  "code.newFilePrompt": "ファイル名（{dir}/ に作成）",
+  "code.revert": "元のバージョンに戻す",
+  "code.delete": "ファイルを削除",
+  "code.reverted": "元のバージョンに戻しました",
+  "code.deleted": "ファイルを削除しました"
 }

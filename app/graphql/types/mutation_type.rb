@@ -172,6 +172,8 @@ module Types
       description: "整份寫回佈景設定（編輯器儲存；樂觀鎖＋touch theme）。"
     field :theme_file_upsert, mutation: Mutations::ThemeFileUpsert,
       description: "整份寫回主題檔案（code editor；DB 覆寫層＋樂觀鎖＋touch theme）。"
+    field :theme_file_delete, mutation: Mutations::ThemeFileDelete,
+      description: "刪除主題檔案覆寫列（被覆寫檔＝還原原始版本；新檔＝刪除）。"
     field :theme_publish, mutation: Mutations::ThemePublish,
       description: "發布主題（現任已發布者自動降回草稿）。"
 
