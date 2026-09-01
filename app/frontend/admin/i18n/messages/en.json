@@ -1078,6 +1078,7 @@
   "editor.hidden": "Hidden",
   "editor.saveComing": "Saving arrives with the edit pipeline (16b)",
   "editor.undo": "Undo",
+  "editor.customCss": "Custom CSS",
   "editor.active": "Live",
   "editor.mobilePreview": "Mobile",
   "editor.removeSection": "Remove section",

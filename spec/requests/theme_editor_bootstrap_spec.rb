@@ -209,6 +209,22 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(paths).not_to have_key("product") # 無商品 ⇒ 不出鍵（前端回落首頁）
   end
 
+  it "CC1 🔴 custom_css：section data 帶 custom_css ⇒ scoped style 輸出；未帶 ⇒ 無" do
+    post "/admin/store/preview/#{theme.id}/draft_page",
+         params: { path: "/",
+                   sections: { "hero" => { type: "hero", settings: {},
+                                           custom_css: "p { color: red; }" } } }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("<style data-shopify-custom-css>#shopify-section-hero {")
+    expect(response.body).to include("p { color: red; }") # 官方「scoped to that section」
+
+    post "/admin/store/preview/#{theme.id}/draft_page",
+         params: { path: "/", sections: {} }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response.body).not_to include("data-shopify-custom-css") # 未設 ⇒ 零殘留
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })

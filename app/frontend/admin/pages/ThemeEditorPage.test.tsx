@@ -461,6 +461,25 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     });
   });
 
+  it("ED21 🔴 Custom CSS：面板底部輸入 ⇒ 進 draft 與 save payload（官方 section properties 底部）", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]); // 範本帶
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    fireEvent.change(settings.getByLabelText("自訂 CSS"), {
+      target: { value: "p { color: red; }" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { custom_css?: string }> } };
+    };
+    expect(sent.variables.content.sections.hero.custom_css).toBe("p { color: red; }");
+  });
+
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
     stubFetch();
     renderEditor();
