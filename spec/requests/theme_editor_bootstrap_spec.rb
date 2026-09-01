@@ -230,4 +230,11 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     get "/en-hk/" # 公開店面（design_mode 恆 false）
     expect(response.body).not_to include("cl:highlight")
   end
+
+  it "BR1 🔴 橋 block 級（PR-17）：editor 預覽的橋含 blockId 點選/高亮處理" do
+    get "/admin/store/preview/#{theme.id}?editor=1"
+    expect(response.body).to include("msg.blockId")            # 點選上報 block id
+    expect(response.body).to include("d.blockId")              # 高亮縮到 block 元素
+    expect(response.body).to include("data-shopify-editor-block")
+  end
 end

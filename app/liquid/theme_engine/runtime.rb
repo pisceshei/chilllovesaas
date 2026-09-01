@@ -454,6 +454,13 @@ module ThemeEngine
           var d=ev.data||{};
           if(d.type==="cl:highlight"){
             var el=document.getElementById("shopify-section-"+d.id);
+            if(d.blockId && el){
+              var hit=null;
+              el.querySelectorAll("[data-shopify-editor-block]").forEach(function(b){
+                try{ if(JSON.parse(b.getAttribute("data-shopify-editor-block")).id===d.blockId) hit=b; }catch(e){}
+              });
+              if(hit) el=hit; // PR-17：block 級錨點——高亮縮到 block 元素
+            }
             outline(current,false); current=el; outline(el,true);
             if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
           }
@@ -470,7 +477,12 @@ module ThemeEngine
         document.addEventListener("click",function(ev){
           var host=ev.target.closest("[id^='shopify-section-']");
           if(!host) return;
-          parent.postMessage({type:"cl:select",id:host.id.replace("shopify-section-","")},location.origin);
+          var msg={type:"cl:select",id:host.id.replace("shopify-section-","")};
+          var blockEl=ev.target.closest("[data-shopify-editor-block]");
+          if(blockEl && host.contains(blockEl)){
+            try{ msg.blockId=JSON.parse(blockEl.getAttribute("data-shopify-editor-block")).id; }catch(e){}
+          }
+          parent.postMessage(msg,location.origin);
         },true);
       })();</script>
     JS
