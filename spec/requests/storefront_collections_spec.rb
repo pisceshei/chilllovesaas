@@ -146,6 +146,16 @@ RSpec.describe "Storefront G2 collections", type: :request do
       expect(response.body).to include('<h1 id="ctitle">Picks</h1>')
     end
 
+    it "C6 🔴 content_for block 的 closest.product 與任意參數到達 block（Ella 商品卡形）" do
+      get "/en-hk/collections/picks"
+      # closest.product：卡內拿到當前迭代商品（不是 nil、不是頁面 closest）
+      expect(response.body).to include('<b class="cardtitle">中品</b>')
+      expect(response.body).to include('<b class="cardtitle">平品</b>')
+      # 任意參數（官方 static block 參數契約）：note 變數進 block
+      expect(response.body).to include('<i class="cardnote">hot</i>')
+      expect(response.body).not_to include('<i class="cardnote">none</i>')
+    end
+
     it "V2 🔴 view 進快取 key：替代頁與預設頁各自快取、互不污染" do
       memory = ActiveSupport::Cache::MemoryStore.new
       allow(Rails).to receive(:cache).and_return(memory)
