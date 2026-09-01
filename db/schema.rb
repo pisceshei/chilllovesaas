@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_190000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1597,6 +1597,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_180000) do
     t.index ["staff_member_id", "shop_id"], name: "uq_usa_member_shop", unique: true
   end
 
+  create_table "webhook_deliveries", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "webhook 投遞紀錄（7 天除錯窗——18 F4）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_ms"
+    t.string "event_id", limit: 36, null: false
+    t.string "response_excerpt", limit: 1024, comment: "截斷回應（讀取上限 64KB、存 1KB）"
+    t.bigint "shop_id", null: false
+    t.string "state", limit: 16, null: false, comment: "sent | failed"
+    t.integer "status_code"
+    t.bigint "webhook_subscription_id", null: false
+    t.index ["created_at"], name: "ix_webhook_deliveries_purge"
+    t.index ["shop_id", "id"], name: "uq_webhook_deliveries_tenant_id", unique: true
+    t.index ["shop_id", "webhook_subscription_id", "created_at"], name: "ix_webhook_deliveries_sub"
+    t.index ["webhook_subscription_id"], name: "fk_rails_c0876b906b"
+  end
+
+  create_table "webhook_subscriptions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "對外 webhook 訂閱（28 §15／18 F4）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "failure_count", default: 0, null: false
+    t.integer "lock_version", default: 0, null: false
+    t.string "secret", limit: 64, null: false, comment: "per-subscription HMAC 簽章密鑰"
+    t.bigint "shop_id", null: false
+    t.string "status", limit: 16, default: "active", null: false
+    t.string "topic", limit: 100, null: false
+    t.datetime "updated_at", null: false
+    t.string "url", limit: 1024, null: false
+    t.index ["shop_id", "id"], name: "uq_webhook_subscriptions_tenant_id", unique: true
+    t.index ["shop_id", "topic", "status"], name: "ix_webhook_subscriptions_topic"
+  end
+
   add_foreign_key "api_tokens", "shops", name: "fk_api_tokens_shop"
   add_foreign_key "api_tokens", "staff_members", name: "fk_api_tokens_staff_member_id"
   add_foreign_key "app_installations", "platform_apps", column: "app_handle", primary_key: "handle", name: "fk_app_installations_app_handle"
@@ -1741,4 +1770,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_180000) do
   add_foreign_key "user_store_assignments", "roles", name: "fk_usa_role_id"
   add_foreign_key "user_store_assignments", "shops", name: "fk_usa_shop_id"
   add_foreign_key "user_store_assignments", "staff_members", name: "fk_usa_staff_member_id"
+  add_foreign_key "webhook_deliveries", "webhook_subscriptions", on_delete: :cascade
 end

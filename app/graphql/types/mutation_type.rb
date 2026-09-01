@@ -174,6 +174,13 @@ module Types
       description: "整份寫回主題檔案（code editor；DB 覆寫層＋樂觀鎖＋touch theme）。"
     field :theme_file_delete, mutation: Mutations::ThemeFileDelete,
       description: "刪除主題檔案覆寫列（被覆寫檔＝還原原始版本；新檔＝刪除）。"
+
+    field :webhook_subscription_create, mutation: Mutations::WebhookSubscriptionCreate,
+      description: "建立 webhook 訂閱（topic 白名單＋SSRF 紅線；secret 一次性回傳）。"
+    field :webhook_subscription_update, mutation: Mutations::WebhookSubscriptionUpdate,
+      description: "更新 webhook 訂閱（URL 重驗紅線；re-enable 歸零失敗計數）。"
+    field :webhook_subscription_delete, mutation: Mutations::WebhookSubscriptionDelete,
+      description: "刪除 webhook 訂閱。"
     field :theme_publish, mutation: Mutations::ThemePublish,
       description: "發布主題（現任已發布者自動降回草稿）。"
 

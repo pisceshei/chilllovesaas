@@ -145,6 +145,13 @@ module Types
       argument :query, String, required: false
     end
 
+    # 20a：webhook 訂閱清單（28 §15）。
+    field :webhook_subscriptions, WebhookSubscriptionConnectionType, null: false, connection: false do
+      argument :after, String, required: false
+      argument :before, String, required: false
+      argument :first, Integer, required: false
+      argument :last, Integer, required: false
+    end
     field :url_redirects, UrlRedirectConnectionType, null: false, connection: false do
       description "路徑級重導列表（包 36；keyset 分頁 ≤250）。"
       argument :after, String, required: false
@@ -394,6 +401,12 @@ module Types
       authorize_products!
       Menu.includes(menu_items: :children)
           .where(shop_id: context.fetch(:current_shop).id).order(:title)
+    end
+
+    def webhook_subscriptions(first: nil, after: nil, last: nil, before: nil)
+      authorize_products!
+      scope = WebhookSubscription.where(shop_id: context.fetch(:current_shop).id)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:)
     end
 
     def url_redirects(first: nil, after: nil, last: nil, before: nil, query: nil)
