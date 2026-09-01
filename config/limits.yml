@@ -5067,6 +5067,34 @@ theme_engine:
   section_rendering_max_ids: 5
 
 # =============================================================================
+# 23b. 主題匯入（G3 步 15；99 §2 官方 limits 表逐字值，取證 2026-09-01）
+# =============================================================================
+theme_import:
+  # zip（壓縮後）上限 MB。官方："Uploaded theme package (compressed): 50 MB"＋
+  # ZIP_TOO_LARGE 錯誤逐字 "May not be used to fetch a file bigger than 50MB."
+  zip_max_mb: 50
+  # 全部代碼（assets 除外）合計上限 MB——官方 250 MB。我方 v1 以**全檔合計**
+  # 從嚴（assets 一併計入；偏嚴不偏鬆，99 §2）。
+  total_uncompressed_mb: 250
+  # 每主題檔案數上限（官方 100,000）。
+  max_files: 100000
+  # 🔴 壓縮比炸彈防線（ours——官方無此值；zip bomb 的業界慣用閾值級別）：
+  # 單檔解壓後/壓縮前比值超過即拒。
+  max_compression_ratio: 200
+  # 允許的頂層目錄白名單（官方目錄樹——99 §3；CLI package 同白名單行為）。
+  allowed_top_dirs:
+    - assets
+    - blocks
+    - config
+    - layout
+    - locales
+    - sections
+    - snippets
+    - templates
+  # 主題名上限（官方 50 characters）。
+  theme_name_max: 50
+
+# =============================================================================
 # 24. 命名契約（鐵律 9 的界線；規格見 docs/specs/67-multilingual.md §H.5）
 # =============================================================================
 # 🔴 一句話版本（§H.5 逐字）：「介面（名字、形狀）可以一樣，內容（樣式值、文案、說明）

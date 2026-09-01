@@ -11,12 +11,22 @@ module ThemeEngine
   module Sources
     module_function
 
+    # 🔴 AST cache 的鍵同源自此（runtime AST_CACHE 鍵＝[key_for, rel]）：匯入主題
+    # 一律回 content_checksum（內容定址 ⇒ 同鍵恆同內容——跨租戶 AST 汙染根治，
+    # 99 §5；storage 目錄不可變）。first_party/fixture 維持名稱鍵（共用唯讀目錄）。
     def key_for(theme)
+      return "sha256-#{theme.content_checksum}" if theme.content_checksum.present?
+
       [ theme.name.to_s.parameterize, theme.version.to_s.presence ].compact.join("-")
     end
 
     # @return [FileSource, nil] 解析不到 ⇒ nil（呼叫端 fail-closed）
     def resolve(theme)
+      if theme.content_checksum.present?
+        imported = Rails.root.join("storage", "themes", theme.content_checksum)
+        return File.directory?(imported) ? FileSource.new(imported) : nil
+      end
+
       key = key_for(theme)
       first_party = Rails.root.join("themes", key)
       return FileSource.new(first_party) if File.directory?(first_party)

@@ -3907,3 +3907,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **留言 CAPTCHA**：本尊 hCaptcha；v1 靠 Rack::Attack throttle 承擔濫用面。
 - ⚪ **blog.next_article／previous_article**：官方相對序屬性；v1 miss 遙測。
 - ⚪ **sitemap blogs/articles 分片**：sitemap kind 三值未擴（62 §D 射程另補）。
+
+### 3.66 G3 步 15a（主題匯入）的範圍外觀察（2026-09-01）
+
+- ⚪ **theme_files 表延後**：內容定址目錄制＝步 15 共用地基本體；逐檔表隨
+  步 16 編輯器寫入層（roadmap 兩表併列，實作裁定拆開——目錄制先行）。
+- ⚪ **symlink 防線無正向測試**：entry.symlink? 拒收在管線；rubyzip 構造
+  symlink 條目繁瑣 ⇒ 測試 V（防線代碼在、fixture 待補）。
+- ⚪ **單根剝除＝ours**（99 §3 官方未取得）；多根或根名撞白名單目錄時不剝。
+- ⚪ **storage 孤兒目錄清理**：Theme 刪除不動目錄（同內容共享）；引用計數
+  清理 job 未做。theme_import_reports 亦無保留期清理。
