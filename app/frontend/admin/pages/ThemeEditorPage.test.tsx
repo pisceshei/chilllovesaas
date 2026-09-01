@@ -436,4 +436,59 @@ describe("ThemeEditorPage（步 16a shell）", () => {
         .toBeGreaterThan(before); // 🔴 undo 驅動預覽（fleet 軸③）
     }, { timeout: 3000 });
   });
+
+  it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
+    stubFetch();
+    renderEditor();
+    await screen.findByRole("complementary", { name: "區段" });
+    expect(screen.getByText("作用中")).toBeInTheDocument(); // 24 §1.1 badge
+
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    fireEvent.click(screen.getByRole("button", { name: /行動版/ }));
+    expect(iframe.style.width).toBe("390px"); // 24 §1.1 📱 行動版
+    fireEvent.click(screen.getByRole("button", { name: /行動版/ }));
+    expect(iframe.style.width).toBe("");
+  });
+
+  it("ED17 🔴 Ctrl+Z/Ctrl+Shift+Z＝undo/redo（輸入框內不攔）", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "z", ctrlKey: true });
+    expect(tree.getByLabelText("隱藏 hero")).toBeInTheDocument(); // undo
+
+    fireEvent.keyDown(window, { key: "z", ctrlKey: true, shiftKey: true });
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument(); // redo
+  });
+
+  it("ED18 🔴 狀態 URL 化：點選 section 帶 ?section=；佈景設定帶 ?context=theme（24 §1.1）", async () => {
+    stubFetch();
+    const router = renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]);
+    expect(router.state.location.search).toContain("section=hero");
+
+    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+    expect(router.state.location.search).toContain("context=theme");
+    expect(router.state.location.search).not.toContain("section=hero");
+  });
+
+  it("ED19 設定面板底部「移除區段」：移除選中 section 並清選取", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]); // 範本帶 hero
+    fireEvent.click(screen.getByRole("button", { name: /移除區段/ }));
+
+    // 範本帶只剩 blocks-demo（頁首帶的 hero 不受影響）
+    const nodes = tree.getAllByRole("button").filter((node) => node.hasAttribute("aria-pressed"));
+    expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "blocks-demo", "_parent" ]);
+    expect(screen.getByText("在左欄或預覽中點選一個區段")).toBeInTheDocument();
+  });
 });
