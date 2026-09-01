@@ -1,0 +1,3 @@
+<h1 id="btitle">{{ blog.title }}</h1><span id="bcount">{{ blog.articles_count }}</span><span id="btags">{{ blog.all_tags | join: "," }}</span><span id="bcur">{{ current_tags | join: "+" }}</span>
+{% paginate blog.articles by 2 %}<ul id="bgrid">{% for article in blog.articles %}<li data-h="{{ article.handle }}">{{ article.title }}|{{ article.author }}|{{ article.excerpt_or_content }}</li>{% endfor %}</ul><span id="bpages">{{ paginate.pages }}</span>{% endpaginate %}
+{% schema %}{ "name": "Main blog" }{% endschema %}

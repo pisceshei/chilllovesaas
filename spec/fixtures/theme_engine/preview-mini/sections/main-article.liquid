@@ -1,0 +1,4 @@
+<h1 id="atitle">{{ article.title }}</h1><span id="aauthor">{{ article.author }}</span><div id="abody">{{ article.content }}</div><span id="acount">{{ article.comments_count }} 則留言</span><span id="amod">{{ article.moderated? }}</span>
+<ul id="acomments">{% for comment in article.comments %}<li>{{ comment.author }}:{{ comment.content }}</li>{% endfor %}</ul>
+{% if article.comments_enabled? %}{% form 'new_comment', article %}<input name="comment[author]"><input name="comment[email]"><textarea name="comment[body]"></textarea><button type="submit">送出留言</button>{% endform %}{% endif %}
+{% schema %}{ "name": "Main article" }{% endschema %}

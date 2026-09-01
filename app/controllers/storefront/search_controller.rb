@@ -33,7 +33,7 @@ module Storefront
     # GET /search/suggest（section 形）
     def suggest_section
       sid = params[:section_id].to_s
-      if sid.blank? || published_theme.nil?
+      if sid.blank? || current_theme.nil?
         return render plain: "", status: :not_found
       end
 
@@ -262,7 +262,7 @@ module Storefront
     # 鏈，預測下拉的字串面小；91 §3.61 ⚪。
     def renderer
       ThemeEngine::PageRenderer.new(
-        theme: published_theme, shop: current_shop, publication: Publication.online_store!,
+        theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix:, host: request.host, asset_base: "/theme-assets", locale: nil
       )
     end

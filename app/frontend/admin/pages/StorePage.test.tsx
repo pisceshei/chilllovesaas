@@ -57,7 +57,7 @@ describe("StorePage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("T1 published／draft 分區各就各位；預覽連結指向 noindex 端點", async () => {
+  it("T1 published／draft 分區各就各位；預覽連結＝店面釘選 URL（PR-12）", async () => {
     stubGraphql([
       theme(),
       theme({ id: "gid://chilllove/Theme/2", name: "Second", role: "draft", previewUrl: "/admin/store/preview/2" }),
@@ -68,8 +68,9 @@ describe("StorePage", () => {
     expect(screen.getByText("已發布佈景主題")).toBeInTheDocument();
     expect(screen.getByText("草稿佈景主題")).toBeInTheDocument();
     const links = screen.getAllByRole("link", { name: /預覽/ });
+    // PR-12：店面 ?preview_theme_id=（sticky＋預覽列；83 §12.3 對位）
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "/admin/store/preview/1", "/admin/store/preview/2",
+      "/?preview_theme_id=1", "/?preview_theme_id=2",
     ]);
   });
 

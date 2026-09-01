@@ -1,0 +1,5 @@
+<section data-cart-page>
+  <h1>購物車（{{ cart.item_count }}）</h1>
+  {% for item in cart.items %}<p data-cart-line>{{ item.title }} × {{ item.quantity }}</p>{% endfor %}
+  {% if cart.item_count == 0 %}<p data-cart-empty>你的購物車是空的。</p>{% endif %}
+</section>

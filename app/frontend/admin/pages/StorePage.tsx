@@ -250,8 +250,11 @@ export function StorePage() {
                   <FileCode2 aria-hidden="true" size={14} />
                   {t("store.themes.editCode")}
                 </a>
-                {/* 預覽開新分頁：noindex 端點、admin session 內有效 */}
-                <a className="cl-store-themes__preview" href={theme.previewUrl} rel="noreferrer" target="_blank">
+                {/* PR-12：預覽開店面釘選 URL（?preview_theme_id= sticky＋預覽列，
+                    83 §12.3 對位）；admin 與店面同 host ⇒ 相對路徑即可 */}
+                <a className="cl-store-themes__preview"
+                   href={`/?preview_theme_id=${theme.id.split("/").pop() ?? ""}`}
+                   rel="noreferrer" target="_blank">
                   <ExternalLink aria-hidden="true" size={14} />
                   {t("store.themes.preview")}
                 </a>

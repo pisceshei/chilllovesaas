@@ -24,11 +24,13 @@ module Storefront
       # `assets/../config/settings_data.json` 仍在根內 ⇒ 商家設定與模板原始碼會被公開讀走。
       return head :not_found if rel.blank? || rel.include?("..") || rel.include?("\\")
 
-      source = ThemeEngine::Sources.resolve(published_theme)
+      # PR-12：預覽釘選時供預覽主題的資產（同 URL 不同主題 ⇒ 必須 no-store，
+      # 否則瀏覽器/代理把預覽版 CSS 快取進正式路徑，解除預覽後仍髒 300s）
+      source = ThemeEngine::Sources.resolve(current_theme)
       body = source&.read(File.join("assets", rel))
       return head :not_found if body.nil?
 
-      response.headers["Cache-Control"] = "public, max-age=300"
+      response.headers["Cache-Control"] = preview_theme_active? ? "no-store" : "public, max-age=300"
       send_data body, type: Marcel::MimeType.for(name: params[:file].to_s), disposition: "inline"
     end
   end

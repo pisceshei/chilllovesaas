@@ -1,0 +1,4 @@
+<h1 id="lctitle">全部系列</h1><span id="lcsize">{{ collections.size }}</span>
+<ul id="lcgrid">{% for collection in collections %}<li data-ch="{{ collection.handle }}">{{ collection.title }}({{ collection.products_count }})</li>{% endfor %}</ul>
+<span id="lcbyhandle">{{ collections['spring'].title }}</span><span id="lcap">{{ all_products['rose-serum'].title }}</span>
+{% schema %}{ "name": "List collections" }{% endschema %}

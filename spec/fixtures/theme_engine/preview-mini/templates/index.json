@@ -1,0 +1,75 @@
+{
+ "sections": {
+  "hero": {
+   "type": "hero",
+   "settings": {
+    "heading": "首頁英雄"
+   }
+  },
+  "demo": {
+   "type": "blocks-demo",
+   "settings": {
+    "color_scheme": "scheme-2"
+   },
+   "block_order": [
+    "p1"
+   ],
+   "blocks": {
+    "p1": {
+     "type": "_parent",
+     "settings": {
+      "tone": "warm"
+     },
+     "block_order": [
+      "c1",
+      "c2"
+     ],
+     "blocks": {
+      "c1": {
+       "type": "_leaf",
+       "settings": {
+        "label": "子一"
+       }
+      },
+      "c2": {
+       "type": "_leaf",
+       "settings": {
+        "label": "子二"
+       }
+      }
+     }
+    }
+   }
+  },
+  "iter": {
+   "type": "blocks-iter",
+   "block_order": [
+    "q1"
+   ],
+   "blocks": {
+    "q1": {
+     "type": "_parent",
+     "settings": {
+      "tone": "iter"
+     },
+     "block_order": [
+      "d1"
+     ],
+     "blocks": {
+      "d1": {
+       "type": "_leaf",
+       "settings": {
+        "label": "迭代子"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "order": [
+  "hero",
+  "demo",
+  "iter"
+ ]
+}

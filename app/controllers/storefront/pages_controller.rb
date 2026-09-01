@@ -54,6 +54,12 @@ module Storefront
       if rest == "/cart"
         response.headers["Cache-Control"] = "no-store"
         payload = render_page(hit, rest, cart_json: buyer_cart_json)
+      elsif preview_theme_active?
+        # PR-12：🔴 預覽不進頁快取（不讀不寫）——快取鍵含 theme 擋得住互汙，
+        # 但預覽的意義是看未儲存中的主題現狀，命中舊 entry 即假象。
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        payload = render_page(hit, rest, cart_json: rest == "/cart" ? buyer_cart_json : nil)
       elsif rest == "/search"
         # 步 12b：搜尋頁**不進頁快取**——q 鍵空間無界（S6b 同型防灌爆），
         # 且結果隨庫存/發布即時變。robots 已 Disallow /search（既有）。
@@ -83,6 +89,11 @@ module Storefront
 
       # B13 的 X-Robots-Tag noindex 已隨包 35（SEO 開放）摘除；UNLISTED 的 noindex
       # 由 Seo::HeadTags 以 meta robots 承接（limits `product.unlisted_meta_robots`）。
+      # PR-12：預覽列——僅整頁 HTML（片段/JSON 不注）；自有樣式（鐵律 9：
+      # 功能對位本尊 preview bar，視覺用我方設計語言）。
+      if preview_theme_active? && payload["html"].to_s.include?("</body>")
+        payload["html"] = payload["html"].sub("</body>", "#{preview_bar_html}</body>")
+      end
       render html: payload["html"].html_safe, status: payload["status"], layout: false
     end
 
@@ -132,12 +143,25 @@ module Storefront
 
     def render_page(hit, rest, cart_json: nil)
       ThemeEngine::PageRenderer.new(
-        theme: published_theme, shop: current_shop, publication: Publication.online_store!,
+        theme: current_theme, shop: current_shop, publication: Publication.online_store!,
         url_prefix: Markets::UrlPrefix.for(hit.web_presence, hit.locale_tag),
         host: request.host, locale: hit.locale_tag, asset_base: "/theme-assets",
         web_presence: hit.web_presence, # localization 真值（切換器只列開放∧已發布——67 §F.2）
         cart_json: # 🔴 個人化不進頁快取（14 §F1-4）——只有繞過快取的 /cart 會傳非 nil
       ).render(rest, params: cache_params)
+    end
+
+    # PR-12 預覽列：主題名＋結束預覽（href 帶正式主題 id＝83 §12.3 復位法；
+    # 無正式主題時帶 0——查無 ⇒ 一樣解除釘選）。inline style 由 ThemeCsp 放行。
+    def preview_bar_html
+      name = ERB::Util.html_escape(current_theme.name)
+      exit_href = "/?preview_theme_id=#{published_theme&.id || 0}"
+      %(<div id="cl-preview-bar" style="position:fixed;bottom:0;left:0;right:0;) +
+        %(z-index:2147483647;display:flex;align-items:center;justify-content:space-between;) +
+        %(gap:12px;padding:10px 16px;background:#14151a;color:#fff;) +
+        %(font:13px/1.4 system-ui,sans-serif;">) +
+        %(<span>正在預覽佈景主題：<strong>#{name}</strong>（尚未發布）</span>) +
+        %(<a href="#{exit_href}" style="color:#9db8ff;text-decoration:underline;">結束預覽</a></div>)
     end
 
     # 買家真車（/cart 頁專用）：只讀 cookie **不建車**（純瀏覽不得生車列）；

@@ -1,0 +1,3 @@
+<h1 id="sterms">{{ search.terms }}</h1><span id="sperf">{{ search.performed }}</span><span id="scount">{{ search.results_count }}</span><span id="ssort">{{ search.sort_by }}</span><span id="sdef">{{ search.default_sort_by }}</span><span id="stypes">{{ search.types | join: "," }}</span><span id="sopts">{% for o in search.sort_options %}{{ o.value }};{% endfor %}</span>
+{% if search.performed %}{% paginate search.results by 2 %}<ul id="sgrid">{% for item in search.results %}<li data-ot="{{ item.object_type }}" data-h="{{ item.handle }}">{{ item.title }}</li>{% endfor %}</ul><span id="spages">{{ paginate.pages }}</span>{% endpaginate %}{% endif %}
+{% schema %}{ "name": "Main search" }{% endschema %}
