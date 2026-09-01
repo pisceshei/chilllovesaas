@@ -1094,5 +1094,19 @@
   "editor.alignLeft": "Gauche",
   "editor.alignCenter": "Centre",
   "editor.alignRight": "Droite",
-  "editor.themeSettings": "Paramètres du thème"
+  "editor.themeSettings": "Paramètres du thème",
+  "store.themes.editCode": "Modifier le code",
+  "code.title": "Éditeur de code",
+  "code.back": "Retour à la boutique",
+  "code.fileTree": "Fichiers",
+  "code.selectHint": "Sélectionnez un fichier",
+  "code.unsaved": "Non enregistré",
+  "code.saved": "Enregistré",
+  "code.saveFailed": "Échec de l'enregistrement",
+  "code.loadFailed": "Échec du chargement",
+  "code.notFound": "Thème introuvable",
+  "code.staleConflict": "Fichier modifié par un autre utilisateur",
+  "code.readonlyTemplates": "JSON de modèle géré par l'éditeur de thème (lecture seule)",
+  "code.readonlySettings": "Données de paramètres gérées par les réglages du thème (lecture seule)",
+  "code.readonlyBinary": "Fichier binaire non modifiable (lecture seule)"
 }

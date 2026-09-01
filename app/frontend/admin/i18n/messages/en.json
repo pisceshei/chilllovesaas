@@ -1094,5 +1094,19 @@
   "editor.alignLeft": "Left",
   "editor.alignCenter": "Center",
   "editor.alignRight": "Right",
-  "editor.themeSettings": "Theme settings"
+  "editor.themeSettings": "Theme settings",
+  "store.themes.editCode": "Edit code",
+  "code.title": "Code editor",
+  "code.back": "Back to Online Store",
+  "code.fileTree": "Files",
+  "code.selectHint": "Select a file to start editing",
+  "code.unsaved": "Unsaved",
+  "code.saved": "Saved",
+  "code.saveFailed": "Save failed",
+  "code.loadFailed": "Load failed",
+  "code.notFound": "Theme not found",
+  "code.staleConflict": "File was modified by someone else — reload to edit",
+  "code.readonlyTemplates": "Template JSON is managed by the theme editor (read-only)",
+  "code.readonlySettings": "Settings data is managed by theme settings (read-only)",
+  "code.readonlyBinary": "Binary file cannot be edited here (read-only)"
 }

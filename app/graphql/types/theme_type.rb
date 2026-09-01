@@ -44,6 +44,10 @@ module Types
     field :settings_schema, GraphQL::Types::JSON, null: false
     field :theme_settings_json, GraphQL::Types::JSON, null: false
     field :theme_settings_lock_version, Integer, null: true
+    # 16e2：code editor 的檔案鎖底版（overlay 列不存在＝null——首存免帶）。
+    field :file_lock_version, Integer, null: true do
+      argument :path, String, required: true
+    end
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -122,6 +126,10 @@ module Types
         {}
       end
       data["current"] || {}
+    end
+
+    def file_lock_version(path:)
+      ThemeFileOverlay.where(shop_id: object.shop_id, theme_id: object.id, path:).pick(:lock_version)
     end
 
     def theme_settings_lock_version

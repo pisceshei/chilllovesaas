@@ -126,6 +126,20 @@ RSpec.describe "Theme file overlay", type: :request do
     expect(row.content).to eq("v1")
   end
 
+  it "F8 fileLockVersion：無列 null（首存免帶）；有列回底版" do
+    query = <<~GQL
+      query($id: ID!, $path: String!) { theme(id: $id) { fileLockVersion(path: $path) } }
+    GQL
+    post admin_graphql_path, params: { query:, variables: { id: gid, path: "snippets/cl-l.liquid" } }.to_json,
+                             headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response.parsed_body.dig("data", "theme", "fileLockVersion")).to be_nil
+
+    upsert(path: "snippets/cl-l.liquid", content: "x")
+    post admin_graphql_path, params: { query:, variables: { id: gid, path: "snippets/cl-l.liquid" } }.to_json,
+                             headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response.parsed_body.dig("data", "theme", "fileLockVersion")).to eq(0)
+  end
+
   it "F7 themeDuplicate 一併拷 overlay 列（零複製副本不得丟編輯）" do
     upsert(path: "snippets/cl-dup.liquid", content: "dup-me")
     post admin_graphql_path, params: {

@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Pencil, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Copy, ExternalLink, Pencil, RefreshCw, Trash2, Upload, FileCode2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { requestAdminGraphQL } from "../api/graphql";
 import { Badge } from "../components/Badge";
@@ -244,6 +244,11 @@ export function StorePage() {
                 <a className="cl-store-themes__preview" href={`/admin/themes/${theme.id.split("/").pop() ?? ""}/editor`}>
                   <Pencil aria-hidden="true" size={14} />
                   {t("store.themes.customize")}
+                </a>
+                {/* Edit code＝41 §634 動作選單項（步 16e2） */}
+                <a className="cl-store-themes__preview" href={`/admin/themes/${theme.id.split("/").pop() ?? ""}/code`}>
+                  <FileCode2 aria-hidden="true" size={14} />
+                  {t("store.themes.editCode")}
                 </a>
                 {/* 預覽開新分頁：noindex 端點、admin session 內有效 */}
                 <a className="cl-store-themes__preview" href={theme.previewUrl} rel="noreferrer" target="_blank">

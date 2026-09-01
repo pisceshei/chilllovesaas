@@ -3974,3 +3974,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - V 項：本尊 Edit code 頁親點受阻（online-store-web 跨域 iframe＋Chrome 視窗
   最小化 viewport 0×0，2026-09-01 三探）；現行契約取自官方雙源＋41 §634 既有
   枚舉，視窗恢復後補逐按鈕實測。
+
+### 3.72 G4 步 16e2（code editor UI）的範圍外觀察（2026-09-01）
+
+- ⚪ textarea 素編輯器：語法高亮／自動完成／Theme Check 紅線／格式化
+  （官方 Format document）／跨檔搜尋 regex——編輯器依賴（monaco/codemirror）
+  屬鐵律 1 未討論重依賴，先取使用者裁定再上。
+- ⚪ templates/*.json 在我方 code editor 唯讀＝架構差異（本尊可編輯；我方
+  Template 覆寫層另管——雙真相源禁令）。開放需走 themeTemplateUpsert 通道
+  ＋lock 對映，不得直通 theme_file_overlays。
+- ⚪ 無 beforeunload 未儲存攔截（關頁丟編輯）。

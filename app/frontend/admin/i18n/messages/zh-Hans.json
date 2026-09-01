@@ -1094,5 +1094,19 @@
   "editor.alignLeft": "靠左",
   "editor.alignCenter": "居中",
   "editor.alignRight": "靠右",
-  "editor.themeSettings": "主题设置"
+  "editor.themeSettings": "主题设置",
+  "store.themes.editCode": "编辑代码",
+  "code.title": "代码编辑器",
+  "code.back": "返回在线商店",
+  "code.fileTree": "文件",
+  "code.selectHint": "从左侧选择文件开始编辑",
+  "code.unsaved": "未保存",
+  "code.saved": "已保存",
+  "code.saveFailed": "保存失败",
+  "code.loadFailed": "加载失败",
+  "code.notFound": "找不到主题",
+  "code.staleConflict": "文件已被他人修改——请重载后再编辑",
+  "code.readonlyTemplates": "模板 JSON 由主题编辑器管理（只读）",
+  "code.readonlySettings": "主题设置由编辑器管理（只读）",
+  "code.readonlyBinary": "二进制文件不可在此编辑（只读）"
 }
