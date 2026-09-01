@@ -23,6 +23,16 @@ module Products
         dump: ->(v) { Integer(v) },
         load: ->(raw) { Integer(raw) }
       },
+      # 20c products sortKey：TITLE（title NOT NULL——nullable 欄不得進 keyset，
+      # NULL 在 WHERE col > ? 會整列消失）；ID＝主鍵直排。
+      title: {
+        dump: ->(v) { v.to_s },
+        load: ->(raw) { raw.to_s }
+      },
+      id: {
+        dump: ->(v) { Integer(v) },
+        load: ->(raw) { Integer(raw) }
+      },
       # G6-7 顧客列表預設序＝顧客更新日期新到舊（74 §1 本尊預設鍵）；
       # 編解碼與 created_at 同構（Time ↔ iso8601(6)）。
       # G6 步 7 棄單清單序（abandoned_at 新到舊；89 §8 列表）；同構 Time 鍵。

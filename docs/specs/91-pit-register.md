@@ -3995,3 +3995,19 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ admin UI（設定頁 webhooks 卡）＝20b。
 - ⚪ 重試尺度 demo 3 次（28 §15 括號逐字「demo 3 次；規格目標 8 次/4 小時」）
   ——升級時改 limits webhook.delivery_max_attempts 並補退避曲線。
+
+### 3.74 G5 步 20c（sortKey／壓測）的登記與補正（2026-09-01）
+
+- ⚪ products sortKey v1 未支援子集：INVENTORY_TOTAL（計算欄無 keyset 編解碼）／
+  RELEVANCE（搜尋分）／PUBLISHED_AT·VENDOR（products 無此欄）／PRODUCT_TYPE
+  （nullable——NULL 在 keyset `WHERE col > ?` 整列消失，需 COALESCE 設計）。
+  fail-closed 拒絕（SORT_KEY_NOT_SUPPORTED），不靜默退預設（SK3 釘死）。
+- 補正（20 步 roadmap 步 20 原文「91 登記缺漏補正：/collections G2 條——
+  worklog 宣稱有、實物無」）：該缺口已於同日由步 12a/12b（#242/#244）交付
+  （/collections 清單＋collections 全域 drop＋/collections/all），生產煙測
+  過（12a 條目）。複驗：`bundle exec rspec spec/requests/ -e "collections"`
+  或生產 `curl -s https://demo.chilling.com.hk/en-hk/collections -o /dev/null
+  -w "%{http_code}"`＝200。roadmap 時點的缺口登記至此收口，非現值。
+- 壓測防線分層登記：訂單恰一由三層各自可擋（FOR UPDATE／open→completed
+  條件轉移／uq_orders_checkout_id）——單層突變被其餘層接住＝預期內殺不掉
+  （defense-in-depth）；壓測輪以複合突變（鎖＋條件轉移同時退化）證紅（MS-1）。
