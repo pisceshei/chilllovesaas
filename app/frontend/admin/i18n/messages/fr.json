@@ -1125,5 +1125,8 @@
   "settings.webhooks.deleted": "Webhook supprimé",
   "settings.webhooks.failed": "Échec de l'opération",
   "settings.webhooks.secretOnce": "Clé de signature (affichée une seule fois) : ",
-  "settings.webhooks.secretDismiss": "Enregistrée"
+  "settings.webhooks.secretDismiss": "Enregistrée",
+  "editor.headerBand": "En-tête",
+  "editor.templateBand": "Modèle",
+  "editor.footerBand": "Pied de page"
 }

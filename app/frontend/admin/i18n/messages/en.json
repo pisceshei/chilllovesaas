@@ -1125,5 +1125,8 @@
   "settings.webhooks.deleted": "Webhook deleted",
   "settings.webhooks.failed": "Operation failed",
   "settings.webhooks.secretOnce": "Signing secret (shown only once — save it now): ",
-  "settings.webhooks.secretDismiss": "I saved it"
+  "settings.webhooks.secretDismiss": "I saved it",
+  "editor.headerBand": "Header",
+  "editor.templateBand": "Template",
+  "editor.footerBand": "Footer"
 }

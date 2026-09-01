@@ -23,11 +23,22 @@ const EDITOR_QUERY = `
       templates: files(filenames: ["templates/*.json"]) { filename }
       templateJson(key: $key)
       templateLockVersion(key: $key)
+      sectionGroups
       sectionCatalog
       sectionSchemas
       settingsSchema
       themeSettingsJson
       themeSettingsLockVersion
+    }
+  }
+`;
+
+const GROUP_SAVE_MUTATION = `
+  mutation themeFileUpsert($themeId: ID!, $path: String!, $content: String!, $lockVersion: Int) {
+    themeFileUpsert(themeId: $themeId, path: $path, content: $content, lockVersion: $lockVersion) {
+      path
+      lockVersion
+      userErrors { field message code }
     }
   }
 `;
@@ -91,6 +102,7 @@ interface EditorData {
     sectionCatalog: { type: string; name: string;
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
+    sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null }[];
     sectionSchemas: Record<string, { name: string; settings: SettingDef[] }>;
     settingsSchema: { name: string; settings: SettingDef[] }[];
     themeSettingsJson: Record<string, unknown>;
@@ -257,8 +269,14 @@ export function ThemeEditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<TemplateJson | null>(null);
-  const [undoStack, setUndoStack] = useState<TemplateJson[]>([]);
-  const [redoStack, setRedoStack] = useState<TemplateJson[]>([]);
+  // PR-5：三帶（24 §1 本尊樹形＝Header group／Template／Footer group）——
+  // 群組 draft 與模板同語義（{sections, order}），寫回走 themeFileUpsert。
+  const [groupDrafts, setGroupDrafts] = useState<Record<string, TemplateJson>>({});
+  const [groupLocks, setGroupLocks] = useState<Record<string, number | null>>({});
+  const [dirtyGroups, setDirtyGroups] = useState<string[]>([]);
+  const [selectedBand, setSelectedBand] = useState<string>("template");
+  const [undoStack, setUndoStack] = useState<{ band: string; snap: TemplateJson }[]>([]);
+  const [redoStack, setRedoStack] = useState<{ band: string; snap: TemplateJson }[]>([]);
   const [lockVersion, setLockVersion] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -269,6 +287,10 @@ export function ThemeEditorPage() {
   const [settingsLock, setSettingsLock] = useState<number | null>(null);
   const [settingsDirty, setSettingsDirty] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const draftRef = useRef<TemplateJson | null>(null);
+  const groupDraftsRef = useRef<Record<string, TemplateJson>>({});
+  draftRef.current = draft;
+  groupDraftsRef.current = groupDrafts;
 
   const gid = `gid://chilllove/Theme/${themeId}`;
 
@@ -279,6 +301,11 @@ export function ThemeEditorPage() {
       setData(result.theme);
       setDraft(result.theme?.templateJson ? cloneTpl(result.theme.templateJson) : null);
       setLockVersion(result.theme?.templateLockVersion ?? null);
+      const groups = result.theme?.sectionGroups ?? [];
+      setGroupDrafts(Object.fromEntries(groups.map((g) => [ g.name, cloneTpl(g.json) ])));
+      setGroupLocks(Object.fromEntries(groups.map((g) => [ g.name, g.lockVersion ])));
+      setDirtyGroups([]);
+      setSelectedBand("template");
       setSettingsDraft(result.theme ? { ...result.theme.themeSettingsJson } : null);
       setSettingsLock(result.theme?.themeSettingsLockVersion ?? null);
       setSettingsDirty(false);
@@ -304,6 +331,13 @@ export function ThemeEditorPage() {
       const payload = event.data as { type?: string; id?: string };
       if (payload?.type === "cl:select" && payload.id) {
         setSelectedId(payload.id);
+        // PR-5：預覽點選可能是群組 section——跨帶定位
+        setSelectedBand((current) => {
+          if (draftRef.current?.sections?.[payload.id!]) return "template";
+          const hit = Object.entries(groupDraftsRef.current)
+            .find(([ , tpl ]) => tpl.sections?.[payload.id!]);
+          return hit ? hit[0] : current;
+        });
         setThemeMode(false);
       }
     };
@@ -317,28 +351,49 @@ export function ThemeEditorPage() {
       { type: "cl:highlight", id: selectedId }, window.location.origin);
   }, [selectedId]);
 
-  /** 每個 op 先推快照（undo 棧）再改 draft；redo 棧清空（14 §F3 快照棧語義）。 */
-  const applyOp = useCallback((mutator: (tpl: TemplateJson) => void) => {
-    setDraft((current) => {
+  /** 每個 op 先推快照（undo 棧＝跨帶 {band, snap}）再改該帶 draft；
+   *  redo 棧清空（14 §F3 快照棧語義；PR-5 band 化——群組與模板同一棧）。 */
+  const applyOp = useCallback((band: string, mutator: (tpl: TemplateJson) => void) => {
+    const write = (current: TemplateJson | null): TemplateJson | null => {
       if (!current) return current;
-      setUndoStack((stack) => [ ...stack.slice(-49), cloneTpl(current) ]);
+      setUndoStack((stack) => [ ...stack.slice(-49), { band, snap: cloneTpl(current) } ]);
       setRedoStack([]);
       const next = cloneTpl(current);
       mutator(next);
-      setDirty(true);
       return next;
-    });
+    };
+    if (band === "template") {
+      setDraft((current) => write(current));
+      setDirty(true);
+    } else {
+      setGroupDrafts((current) => {
+        const next = write(current[band] ?? null);
+        return next ? { ...current, [band]: next } : current;
+      });
+      setDirtyGroups((current) => (current.includes(band) ? current : [ ...current, band ]));
+    }
   }, []);
+
+  const restoreBand = (band: string, snap: TemplateJson): TemplateJson | null => {
+    // 回傳被覆蓋前的現值（推入對向棧）
+    if (band === "template") {
+      const current = draftRef.current;
+      setDraft(snap);
+      setDirty(true);
+      return current;
+    }
+    const current = groupDraftsRef.current[band] ?? null;
+    setGroupDrafts((all) => ({ ...all, [band]: snap }));
+    setDirtyGroups((all) => (all.includes(band) ? all : [ ...all, band ]));
+    return current;
+  };
 
   const undo = () => {
     setUndoStack((stack) => {
       if (stack.length === 0) return stack;
-      const previous = stack[stack.length - 1];
-      setDraft((current) => {
-        if (current) setRedoStack((redo) => [ ...redo, cloneTpl(current) ]);
-        return previous;
-      });
-      setDirty(true);
+      const { band, snap } = stack[stack.length - 1];
+      const previous = restoreBand(band, snap);
+      if (previous) setRedoStack((redoS) => [ ...redoS, { band, snap: cloneTpl(previous) } ]);
       return stack.slice(0, -1);
     });
   };
@@ -346,30 +401,27 @@ export function ThemeEditorPage() {
   const redo = () => {
     setRedoStack((stack) => {
       if (stack.length === 0) return stack;
-      const next = stack[stack.length - 1];
-      setDraft((current) => {
-        if (current) setUndoStack((undoS) => [ ...undoS, cloneTpl(current) ]);
-        return next;
-      });
-      setDirty(true);
+      const { band, snap } = stack[stack.length - 1];
+      const previous = restoreBand(band, snap);
+      if (previous) setUndoStack((undoS) => [ ...undoS, { band, snap: cloneTpl(previous) } ]);
       return stack.slice(0, -1);
     });
   };
 
   const orderOf = (tpl: TemplateJson) => tpl.order ?? Object.keys(tpl.sections ?? {});
 
-  const toggleDisabled = (sectionId: string) => applyOp((tpl) => {
+  const toggleDisabled = (band: string, sectionId: string) => applyOp(band, (tpl) => {
     const entry = tpl.sections?.[sectionId];
     if (entry) entry.disabled = !entry.disabled; // 隱藏不是刪除（24 §3）
   });
 
-  const removeSection = (sectionId: string) => applyOp((tpl) => {
+  const removeSection = (band: string, sectionId: string) => applyOp(band, (tpl) => {
     if (tpl.sections) delete tpl.sections[sectionId];
     tpl.order = orderOf(tpl).filter((id) => id !== sectionId);
     if (selectedId === sectionId) setSelectedId(null);
   });
 
-  const moveSection = (sectionId: string, direction: -1 | 1) => applyOp((tpl) => {
+  const moveSection = (band: string, sectionId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
     const order = [ ...orderOf(tpl) ];
     const index = order.indexOf(sectionId);
     const target = index + direction;
@@ -378,7 +430,7 @@ export function ThemeEditorPage() {
     tpl.order = order;
   });
 
-  const duplicateSection = (sectionId: string) => applyOp((tpl) => {
+  const duplicateSection = (band: string, sectionId: string) => applyOp(band, (tpl) => {
     const entry = tpl.sections?.[sectionId];
     if (!entry || !tpl.sections) return;
     let copyId = `${sectionId}-copy`;
@@ -392,7 +444,7 @@ export function ThemeEditorPage() {
 
   /** add-section（24 §3：新 entry 內容取 preset；插到尾端＋order）。 */
   const addSection = (catalogEntry: NonNullable<EditorData["theme"]>["sectionCatalog"][number]) => {
-    applyOp((tpl) => {
+    applyOp("template", (tpl) => {
       tpl.sections ??= {};
       let newId = catalogEntry.type;
       let n = 1;
@@ -408,6 +460,7 @@ export function ThemeEditorPage() {
       tpl.sections[newId] = entry;
       tpl.order = [ ...orderOf(tpl), newId ];
       setSelectedId(newId);
+      setSelectedBand("template");
     });
     setPickerOpen(false);
   };
@@ -418,14 +471,14 @@ export function ThemeEditorPage() {
     setSettingsDirty(true);
   };
 
-  const setSetting = (sectionId: string, settingKey: string, value: unknown) => applyOp((tpl) => {
+  const setSetting = (sectionId: string, settingKey: string, value: unknown) => applyOp(selectedBand, (tpl) => {
     const entry = tpl.sections?.[sectionId];
     if (!entry) return;
     entry.settings = { ...(entry.settings ?? {}), [settingKey]: value };
   });
 
   const save = async () => {
-    if (saving || (!dirty && !settingsDirty)) return;
+    if (saving || (!dirty && !settingsDirty && dirtyGroups.length === 0)) return;
     setSaving(true);
     try {
       if (dirty && draft) {
@@ -463,6 +516,27 @@ export function ThemeEditorPage() {
         setSettingsLock(payload.lockVersion);
         setSettingsDirty(false);
       }
+      // PR-5：群組 JSON 寫回（16e1 檔案覆寫層——後端 touch theme 同軸）
+      for (const name of dirtyGroups) {
+        const tpl = groupDrafts[name];
+        if (!tpl) continue;
+        const result = await requestAdminGraphQL<{
+          themeFileUpsert: { path: string | null; lockVersion: number | null;
+                             userErrors: { message: string; code: string }[] };
+        }, Record<string, unknown>>(GROUP_SAVE_MUTATION, {
+          themeId: gid, path: `sections/${name}.json`,
+          content: JSON.stringify({ sections: tpl.sections ?? {}, order: tpl.order ?? [] }, null, 2),
+          lockVersion: groupLocks[name] ?? null,
+        });
+        const payload = result.themeFileUpsert;
+        if (payload.userErrors.length > 0) {
+          const firstError = payload.userErrors[0];
+          showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
+          return;
+        }
+        setGroupLocks((locks) => ({ ...locks, [name]: payload.lockVersion }));
+      }
+      setDirtyGroups([]);
       showToast(t("editor.saved"));
       // 後端已 touch theme（頁快取鍵旋轉）；重載 iframe 看到存檔後渲染
       iframeRef.current?.contentWindow?.location.reload();
@@ -478,7 +552,8 @@ export function ThemeEditorPage() {
     .sort(), [data]);
 
   const order = draft ? orderOf(draft) : [];
-  const selected = selectedId && draft?.sections ? draft.sections[selectedId] : null;
+  const activeDraft = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
+  const selected = selectedId && activeDraft?.sections ? activeDraft.sections[selectedId] : null;
   const previewSrc = `/admin/store/preview/${themeId}?editor=1`;
 
   if (error) {
@@ -513,8 +588,12 @@ export function ThemeEditorPage() {
         <Button disabled={redoStack.length === 0} onClick={redo} size="small" variant="ghost">
           <Redo2 aria-hidden="true" size={14} /> {t("editor.redo")}
         </Button>
-        <Button disabled={(!dirty && !settingsDirty) || saving} onClick={() => void save()} variant="primary">
-          {t("common.save")}{dirty || settingsDirty ? " •" : ""}
+        <Button
+          disabled={(!dirty && !settingsDirty && dirtyGroups.length === 0) || saving}
+          onClick={() => void save()}
+          variant="primary"
+        >
+          {t("common.save")}{dirty || settingsDirty || dirtyGroups.length > 0 ? " •" : ""}
         </Button>
       </header>
 
@@ -542,46 +621,75 @@ export function ThemeEditorPage() {
               )}
             </ul>
           ) : null}
-          {order.length === 0 ? (
-            <p className="cl-card-note">{t("editor.noSections")}</p>
-          ) : (
-            <ul>
-              {order.map((sectionId, index) => {
-                const entry = draft?.sections?.[sectionId];
-                if (!entry) return null;
-                return (
-                  <li key={sectionId}>
-                    <div className="cl-editor__noderow">
-                      <button
-                        aria-pressed={selectedId === sectionId}
-                        className={selectedId === sectionId ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                        onClick={() => setSelectedId(sectionId)}
-                        type="button"
-                      >
-                        {entry.type}
-                      </button>
-                      <button aria-label={t("editor.moveUp", { id: sectionId })} className="cl-editor__op" disabled={index === 0} onClick={() => moveSection(sectionId, -1)} type="button"><ArrowUp size={13} /></button>
-                      <button aria-label={t("editor.moveDown", { id: sectionId })} className="cl-editor__op" disabled={index === order.length - 1} onClick={() => moveSection(sectionId, 1)} type="button"><ArrowDown size={13} /></button>
-                      <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className="cl-editor__op" onClick={() => toggleDisabled(sectionId)} type="button">
-                        {entry.disabled ? <EyeOff size={13} /> : <Eye size={13} />}
-                      </button>
-                      <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(sectionId)} type="button"><Copy size={13} /></button>
-                      <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(sectionId)} type="button"><Trash2 size={13} /></button>
-                    </div>
-                    {entry.block_order && entry.block_order.length > 0 ? (
-                      <ul>
-                        {entry.block_order.map((blockId) => (
-                          <li className="cl-editor__block" key={blockId}>
-                            {entry.blocks?.[blockId]?.type ?? blockId}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {(() => {
+            // PR-5 三帶（24 §1 本尊樹形）：header 群組帶 → 範本帶 → 其餘群組帶
+            const groups = data?.sectionGroups ?? [];
+            const headerGroups = groups.filter((g) => g.name.includes("header"));
+            const otherGroups = groups.filter((g) => !g.name.includes("header"));
+
+            const renderRows = (band: string, tpl: TemplateJson | null) => {
+              const rows = tpl ? (tpl.order ?? Object.keys(tpl.sections ?? {})) : [];
+              if (rows.length === 0) return <p className="cl-card-note">{t("editor.noSections")}</p>;
+              return (
+                <ul>
+                  {rows.map((sectionId, index) => {
+                    const entry = tpl?.sections?.[sectionId];
+                    if (!entry) return null;
+                    const isActive = selectedBand === band && selectedId === sectionId;
+                    return (
+                      <li key={`${band}:${sectionId}`}>
+                        <div className="cl-editor__noderow">
+                          <button
+                            aria-pressed={isActive}
+                            className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
+                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setThemeMode(false); }}
+                            type="button"
+                          >
+                            {entry.type}
+                          </button>
+                          <button aria-label={t("editor.moveUp", { id: sectionId })} className="cl-editor__op" disabled={index === 0} onClick={() => moveSection(band, sectionId, -1)} type="button"><ArrowUp size={13} /></button>
+                          <button aria-label={t("editor.moveDown", { id: sectionId })} className="cl-editor__op" disabled={index === rows.length - 1} onClick={() => moveSection(band, sectionId, 1)} type="button"><ArrowDown size={13} /></button>
+                          <button aria-label={entry.disabled ? t("editor.show", { id: sectionId }) : t("editor.hide", { id: sectionId })} className="cl-editor__op" onClick={() => toggleDisabled(band, sectionId)} type="button">
+                            {entry.disabled ? <EyeOff size={13} /> : <Eye size={13} />}
+                          </button>
+                          <button aria-label={t("editor.duplicateOp", { id: sectionId })} className="cl-editor__op" onClick={() => duplicateSection(band, sectionId)} type="button"><Copy size={13} /></button>
+                          <button aria-label={t("editor.removeOp", { id: sectionId })} className="cl-editor__op" onClick={() => removeSection(band, sectionId)} type="button"><Trash2 size={13} /></button>
+                        </div>
+                        {entry.block_order && entry.block_order.length > 0 ? (
+                          <ul>
+                            {entry.block_order.map((blockId) => (
+                              <li className="cl-editor__block" key={blockId}>
+                                {entry.blocks?.[blockId]?.type ?? blockId}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              );
+            };
+
+            return (
+              <>
+                {headerGroups.map((g) => (
+                  <section key={g.name}>
+                    <h4 className="cl-editor__band">{t("editor.headerBand")}</h4>
+                    {renderRows(g.name, groupDrafts[g.name] ?? null)}
+                  </section>
+                ))}
+                <h4 className="cl-editor__band">{t("editor.templateBand")}</h4>
+                {renderRows("template", draft)}
+                {otherGroups.map((g) => (
+                  <section key={g.name}>
+                    <h4 className="cl-editor__band">{g.name.includes("footer") ? t("editor.footerBand") : g.name}</h4>
+                    {renderRows(g.name, groupDrafts[g.name] ?? null)}
+                  </section>
+                ))}
+              </>
+            );
+          })()}
         </aside>
 
         <main className="cl-editor__preview">

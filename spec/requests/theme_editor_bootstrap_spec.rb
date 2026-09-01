@@ -124,6 +124,28 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(overlay["themeSettingsLockVersion"]).to eq(0)
   end
 
+  it "E7 sectionGroups：layout {% sections %} 掃描＋group JSON＋overlay lock；渲染帶群組" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionGroups } }
+    GQL
+    groups = response.parsed_body.dig("data", "theme", "sectionGroups")
+    # 既有 fixture 已引用 test-group；本輪加的 header/footer 依 layout 序在後
+    expect(groups.map { |g| g["name"] }).to eq(%w[test-group header-group footer-group])
+    header = groups.find { |g| g["name"] == "header-group" }
+    expect(header["path"]).to eq("sections/header-group.json")
+    expect(header.dig("json", "order")).to eq([ "header" ])
+    expect(header["lockVersion"]).to be_nil # 無 overlay ⇒ 首存免帶
+
+    # 渲染整頁帶群組 sections（前台契約同軸——群組編輯的可視面）
+    html = ActsAsTenant.with_tenant(shop) do
+      ThemeEngine::PageRenderer.new(theme:, shop:, publication: Publication.online_store!)
+                               .render("/").html
+    end
+    expect(html).to include("群組頁首")
+    expect(html).to include("群組頁尾")
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })
