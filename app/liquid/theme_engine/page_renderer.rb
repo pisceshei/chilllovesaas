@@ -84,8 +84,19 @@ module ThemeEngine
         ))
       end
 
-      body = render_template_sections(runtime, template_key)
-      html = render_layout(runtime, body, template_key: template_key)
+      if liquid_template?(runtime, template_key)
+        body, layout_override = render_liquid_template(runtime, template_key)
+        html = if layout_override == false
+          body # {% layout none %}＝片段直出（官方）
+        elsif layout_override.is_a?(String)
+          render_named_layout(runtime, body, layout_override)
+        else
+          render_layout(runtime, body, template_key: nil)
+        end
+      else
+        body = render_template_sections(runtime, template_key)
+        html = render_layout(runtime, body, template_key: template_key)
+      end
       # PR-3：window.Shopify bootstrap（主題 JS 生態依賴；shopify_global.rb 檔頭）
       html = html.sub("</head>") do
         ThemeEngine::ShopifyGlobal.script(
@@ -121,7 +132,14 @@ module ThemeEngine
                           !view.match?(/\A[a-z0-9][a-z0-9\-_.]{0,64}\z/i)
 
       candidate = "#{page_type}.#{view}"
-      runtime.template_json(candidate) ? candidate : page_type
+      return candidate if runtime.template_json(candidate)
+
+      # PR-25：.liquid 替代模板（Ella ajax_side_cart 等 Ajax view 全是這形）
+      liquid_template?(runtime, candidate) ? candidate : page_type
+    end
+
+    def liquid_template?(runtime, key)
+      runtime.template_json(key).nil? && runtime.read("templates/#{key}.liquid").present?
     end
 
     # @return [Array(String, Hash, Integer, Object)] [template key, 額外 assigns, HTTP status,
@@ -340,6 +358,29 @@ module ThemeEngine
     def selected_variant_id
       raw = @params["variant"] || @params[:variant]
       raw.to_s =~ /\A\d+\z/ ? raw.to_i : nil
+    end
+
+    # PR-25：.liquid 模板 body 渲染；回 [html, layout_override]
+    # （override 由 {% layout %} tag 寫進本次 render 的 registers）。
+    def render_liquid_template(runtime, key)
+      tpl = runtime.compiled("templates/#{key}.liquid")
+      return [ runtime.comment("缺 template #{key}"), nil ] if tpl.nil?
+
+      capture = {}
+      registers = runtime.base_registers.merge(frame: {}, layout_capture: capture)
+      html = tpl[:tpl].render(runtime.build_context(runtime.global_assigns, registers))
+      runtime.collect_errors("templates/#{key}.liquid", tpl[:tpl])
+      [ html, capture[:value] ]
+    end
+
+    def render_named_layout(runtime, content, name)
+      layout = runtime.compiled("layout/#{name}.liquid")
+      return render_layout(runtime, content, template_key: nil) if layout.nil? # 缺檔回落預設
+
+      assigns = runtime.global_assigns.merge("content_for_layout" => content)
+      html = layout[:tpl].render(runtime.build_context(assigns, runtime.base_registers.merge(frame: {})))
+      runtime.collect_errors("layout/#{name}.liquid", layout[:tpl])
+      html
     end
 
     def render_template_sections(runtime, key)

@@ -226,8 +226,25 @@ module ThemeEngine
     end
 
     # {% layout none %} → 路由層職責，渲染期 no-op。
+    # {% layout 'name' %}／{% layout none %}（官方 tags/layout；預設 theme.liquid）。
+    # render 時把選擇寫進 registers[:layout_override]——PageRenderer 的
+    # .liquid 模板路徑於 body 渲染後讀取：false＝不包 layout、字串＝指名
+    # layout/{name}.liquid。JSON 模板走 "layout" 鍵（PR-10），互不相涉。
     class LayoutTag < Liquid::Tag
-      def render(_context) = ""
+      def initialize(tag_name, markup, options)
+        super
+        m = markup.strip
+        @value = if m == "none" then false
+        elsif (q = m[/\A['"]([^'"]+)['"]\z/, 1]) then q
+        end
+      end
+
+      def render(context)
+        # 🔴 Liquid 5 Registers#[]= 寫 overlay、外層 hash 讀不回 ⇒ 經可變載體
+        carrier = context.registers[:layout_capture]
+        carrier[:value] = @value if carrier && !@value.nil?
+        ""
+      end
     end
 
     # {% render <var> %} 變數形（步 13b；97 §2）。
