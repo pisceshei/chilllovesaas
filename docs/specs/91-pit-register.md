@@ -3865,3 +3865,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   三鍵形（status/message/description）。
 - ⚪ **suggest section 形 locale 用預設字典**：完整 locale 解析需 PrefixIndex
   域名鏈；預測下拉字串面小。
+
+### 3.62 G2 步 13a（字型管線）的範圍外觀察（2026-09-01）
+
+- ⚪ **@font-face 單 woff2 src**：live 是 woff2+woff 雙 src；woff 退路對 2026
+  瀏覽器面可忽略，要補＝registry 加 woff 檔位。
+- ⚪ **font_url 'woff' 同回 woff2 URL**：我方只 host woff2；Ella 只用預設。
+- ⚪ **latin subset**：CJK 標題字型不在庫（demo 中文文案走 fallback 系統字）；
+  上 CJK 家族時注意 woff2 體積（MB 級，考慮 unicode-range 分片）。
+- ⚪ **庫僅 Jost/Poppins 八變體**：主題引用庫外 handle ⇒ system fallback＋
+  miss 遙測（font_library.* 計數可觀測）。

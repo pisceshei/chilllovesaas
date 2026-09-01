@@ -1262,13 +1262,31 @@ module ThemeEngine
     def to_s = @hex
   end
 
-  class FontDrop < BaseDrop
-    def initialize(family: "Assistant", weight: 400, style: "normal")
-      super({ "family" => family, "weight" => weight, "style" => style,
-              "fallback_families" => "sans-serif", "baseline_ratio" => 0.1, "system?" => true })
+  # `font` object（步 13a 真實作；97 §1.1 官方七屬性）。file＝自 host woff2 路徑
+  # （system font nil ⇒ font_face 空輸出——97 §4-5）。baseline_ratio：官方無公開
+  # 數值來源 ⇒ 常數 0.1 維持（ours；僅排版微調用）。
+  class FontDrop < Liquid::Drop
+    attr_reader :family_key, :file
+
+    def initialize(family_key:, family:, fallback_families:, weight:, style:, file:, system:)
+      super()
+      @family_key = family_key
+      @family = family
+      @fallback = fallback_families
+      @weight = weight
+      @style = style
+      @file = file
+      @system = system
     end
 
-    def to_s = @attrs["family"]
+    def family = @family
+    def fallback_families = @fallback
+    def weight = @weight
+    def style = @style
+    def system? = @system
+    def baseline_ratio = 0.1
+    def variants = FontLibrary.variants_for(@family_key)
+    def to_s = @family
   end
 
   class ClosestDrop < Liquid::Drop
@@ -1383,7 +1401,7 @@ module ThemeEngine
         val.to_s.start_with?("#") ? ColorDrop.new(val) : val
       when "image_picker"
         val.nil? || val == "" ? nil : PlaceholderImageDrop.new(label: File.basename(val.to_s), w: 1200, h: 800)
-      when "font_picker" then FontDrop.new(family: val.to_s.split("_").first.to_s.capitalize)
+      when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
       else val
       end
     end

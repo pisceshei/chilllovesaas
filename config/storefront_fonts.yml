@@ -1,0 +1,28 @@
+# 平台字型庫（步 13a；97 §1.3）。
+#
+# 自 host woff2 最小集：Google Fonts **OFL 授權**（latin subset），檔在
+# public/fonts/{family}/{handle}.woff2 由靜態層服務。handle 形＝觀察到的
+# `{family}_{n|i}{weight/100}`（官方無正式定義——97 §4-2 標 V）。
+# system 家族：無檔、system?=true、font_face 空輸出（97 §4-5）。
+families:
+  jost:
+    display_name: Jost
+    fallback: sans-serif
+    variants:
+      n4: { weight: 400, style: normal, file: /fonts/jost/jost_n4.woff2 }
+      n5: { weight: 500, style: normal, file: /fonts/jost/jost_n5.woff2 }
+      n6: { weight: 600, style: normal, file: /fonts/jost/jost_n6.woff2 }
+      n7: { weight: 700, style: normal, file: /fonts/jost/jost_n7.woff2 }
+  poppins:
+    display_name: Poppins
+    fallback: sans-serif
+    variants:
+      n4: { weight: 400, style: normal, file: /fonts/poppins/poppins_n4.woff2 }
+      n5: { weight: 500, style: normal, file: /fonts/poppins/poppins_n5.woff2 }
+      n6: { weight: 600, style: normal, file: /fonts/poppins/poppins_n6.woff2 }
+      n7: { weight: 700, style: normal, file: /fonts/poppins/poppins_n7.woff2 }
+system:
+  sans_serif: { display_name: sans-serif, fallback: sans-serif }
+  serif: { display_name: serif, fallback: serif }
+  mono: { display_name: monospace, fallback: monospace }
+  monospace: { display_name: monospace, fallback: monospace }
