@@ -173,3 +173,35 @@
   token 形）；recovered v1＝該 checkout 已成單（不追連結歸因＝ours 簡化）；
   詳情頁＋Export ⚪ 後置。
 
+## §9 新版顧客帳戶面（步 11 補課；實測＋官方 2026-09-01）
+
+- **實測（chill.deals/account）**：302 → `shopify.com/authentication/{shop_id}/login`
+  （hosted）。頁面逐字：店名標＋「Sign in」＋「Sign in or create an account」＋
+  ［Continue with shop］紫鈕＋「or」＋Email 欄（→ 送出）＋☑「Email me with news
+  and offers」（**預勾**）＋Privacy policy 足鏈。未提交 email（會真寄碼＝對外
+  發信紅線）；驗證碼畫面 V-240（官方文字補位）。
+- **官方硬數字恰三個**：6 位碼（"a one-time 6-digit verification code"）／
+  session "Sign-in sessions persist for up to 365 days"／升級回退 "You can revert
+  within 30 days."。🔴 碼效期／重發冷卻／嘗試上限官方皆未公布（admin 登入面的
+  「10 位碼 30 分鐘」不得外推）。
+- **自動重建雙錨**："With customer accounts, you can't deactivate an individual
+  account."＋"if your customer signs in again with that email, then a customer
+  profile is created again."＋新 email 自動建檔句。
+- **託管**："your customer accounts pages…use a `shopify.com` URL format…similar
+  to `shopify.com/1234567890/account`"；可綁 `account.your-store.com` 子網域
+  （branded URLs changelog 2025-05-21）。⇒ 帳戶頁不在主題內、theme 只轉向
+  （routes.account_url／account_login_url："Redirects to customer accounts when
+  enabled."）——我方非主題化 /account 架構有官方同構支撐。
+- **customer Liquid 物件**（登入時全域）：addresses/addresses_count/b2b?/
+  default_address/email/first_name/has_account/id/last_name/last_order/metafields/
+  name/orders/orders_count/payment_methods/phone/store_credit_account/tags/
+  tax_exempt/total_spent——主題 customer 注入（91 §3.57）落地時的屬性正典。
+- **第三方安全依據（非 GPL）**：NIST SP 800-63B——"the authentication SHALL be
+  considered invalid if not completed within 10 minutes."／"at least 20 bits of
+  entropy"（6 位數字 ≈19.9 bits＝下限邊緣）／連續失敗 "no more than 100"；
+  OWASP Forgot Password——6–12 位 PIN＋per-account 限流。⇒ 我方 limits 三值
+  （10 分/60 秒/5 次）由 NIST/OWASP 背書（原「ours 保守值」升級為有依據值）。
+- 設定面：toggle 現名 "Show sign-in links"；新版獨有 Store credit／Subscriptions
+  ／Saved payment methods／Self-serve returns（compare-features）；Multipass
+  "isn't supported"。
+

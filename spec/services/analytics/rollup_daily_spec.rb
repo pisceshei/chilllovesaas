@@ -63,7 +63,9 @@ RSpec.describe Analytics::RollupDaily do
     day4 = ActsAsTenant.with_tenant(shop) { described_class.call(shop:, date: Date.new(2026, 9, 4)) }
     day5 = ActsAsTenant.with_tenant(shop) { described_class.call(shop:, date: Date.new(2026, 9, 5)) }
 
-    expect(day4["aov_numerator"]).to eq(10_000) # 分子＝成立時 total，退款不回改（官方紅線①）
+    # 官方公式（95 §4 逐字）：AOV 分子＝gross−discounts＝subtotal（不含運費 800
+    # 稅 200——步 10 首版誤用 total 10000，補課修正）；退款不回改（紅線①）。
+    expect(day4["aov_numerator"]).to eq(9000)
     # 🔴 equality-trap 補格：**同日**退款才分得出「分子扣退款」的突變——
     # 隔日案例裡 returns=0，錯實作與對實作同值（MA3 首輪存活的原因）。
     same_day_order = build_order(processed_at: tz.parse("2026-09-07 09:00"), total: 20_000)
@@ -73,8 +75,8 @@ RSpec.describe Analytics::RollupDaily do
                      idempotency_key: "a3same", processed_at: tz.parse("2026-09-07 18:00"))
     end
     day7 = ActsAsTenant.with_tenant(shop) { described_class.call(shop:, date: Date.new(2026, 9, 7)) }
-    expect(day7["aov_numerator"]).to eq(20_000),
-      "同日退款扣進分子＝官方口徑反向（80 §3 紅線①）"
+    expect(day7["aov_numerator"]).to eq(9000),
+      "同日退款扣進分子＝官方口徑反向（80 §3 紅線①；分子＝subtotal 官方公式）"
     expect(day7["returns"]).to eq(8000)
     expect(day4["total_sales"]).to eq(10_000)
     expect(day5["returns"]).to eq(50_000)

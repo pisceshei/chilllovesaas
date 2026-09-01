@@ -19,10 +19,10 @@
 - gross＝subtotal＋discounts（我方 subtotal 存折後）；net＝gross−discounts−returns；
   total＝net＋shipping＋taxes——🔴 **可為負**（撤銷日；MA4 紅證）。
 - returns **落退款日**、不回改訂單日。
-- 🔴 **AOV 分子排除 post-order adjustments**（官方例外）：aov_numerator＝成立時
-  Σtotal（同日退款也不扣——MA3 紅證，equality-trap 補了同日退款格）；
-  查詢端 aov＝分子/分母，**不得**由 total/orders 反推（MA5 紅證；
-  `AOV × Orders ≠ Total sales` 在退款期間成立＝O2 反向斷言）。
+- 🔴 **AOV＝((gross sales − discounts) / orders)**（官方公式逐字——95 §4；
+  步 10 首版分子誤用 order total〔含運費稅〕，**補課研究抓到的實質口徑錯**，
+  已修）：aov_numerator＝Σsubtotal_cents（成立日；同日退款也不扣——MA3 紅證）；
+  查詢端不反推（MA5 紅證；`AOV × Orders ≠ Total sales` O2 反向斷言）。
 
 ## 3. 讀面
 
