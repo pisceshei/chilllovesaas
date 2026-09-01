@@ -1090,5 +1090,8 @@
   "editor.removeOp": "{id} を削除",
   "editor.addSection": "セクションを追加",
   "editor.sectionPicker": "追加可能なセクション",
-  "editor.pickerEmpty": "追加可能なセクションがありません"
+  "editor.pickerEmpty": "追加可能なセクションがありません",
+  "editor.alignLeft": "左揃え",
+  "editor.alignCenter": "中央揃え",
+  "editor.alignRight": "右揃え"
 }

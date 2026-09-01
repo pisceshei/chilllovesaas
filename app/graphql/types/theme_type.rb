@@ -36,6 +36,9 @@ module Types
     # 本尊「加入區段」清單＝presets 驅動；main-*/hero 這類骨架區段無 preset
     # 不可手加）。preset 取第一個（我方 minimal 每區段至多一個）。
     field :section_catalog, GraphQL::Types::JSON, null: false
+    # 16d：全部區段的 settings 定義（schema 驅動控件；26 §5 型別全表）。
+    # 與 catalog 不同：**不過濾 presets**——樹上選中的 main-* 也要有控件。
+    field :section_schemas, GraphQL::Types::JSON, null: false
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -44,22 +47,39 @@ module Types
       source = ThemeEngine::Sources.resolve(object)
       return [] if source.nil?
 
-      source.list.filter_map do |rel|
-        next unless rel.start_with?("sections/") && rel.end_with?(".liquid")
-
-        raw = source.read(rel)
-        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
-        schema = begin
-          schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
-        rescue JSON::ParserError
-          nil
-        end
-        next if schema.nil? || schema["presets"].blank?
+      translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      each_section_schema(source).filter_map do |type, schema|
+        next if schema["presets"].blank?
 
         preset = schema["presets"].first || {}
-        { "type" => File.basename(rel, ".liquid"),
-          "name" => schema["name"] || File.basename(rel, ".liquid"),
+        { "type" => type,
+          "name" => translate.call(schema["name"] || type),
           "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"] } }
+      end
+    end
+
+    def section_schemas
+      source = ThemeEngine::Sources.resolve(object)
+      return {} if source.nil?
+
+      translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      each_section_schema(source).to_h do |type, schema|
+        settings = Array(schema["settings"]).filter_map do |setting|
+          next unless setting.is_a?(Hash)
+
+          translated = setting.slice("id", "type", "label", "info", "content", "default",
+                                     "placeholder", "min", "max", "step", "unit", "options", "limit")
+          %w[label info content].each do |key|
+            translated[key] = translate.call(translated[key]) if translated[key]
+          end
+          if translated["options"].is_a?(Array)
+            translated["options"] = translated["options"].map do |option|
+              option.is_a?(Hash) ? option.merge("label" => translate.call(option["label"])) : option
+            end
+          end
+          translated
+        end
+        [ type, { "name" => translate.call(schema["name"] || type), "settings" => settings } ]
       end
     end
 
@@ -74,6 +94,24 @@ module Types
       end
       rels = rels.first([ first || 250, 2500 ].min) # 官方 "At most 2500"
       rels.map { |rel| { filename: rel, size: source.size_of(rel).to_i, source: } }
+    end
+
+    # @return [Enumerator] (type, parsed schema) —— schema-less 檔跳過
+    def each_section_schema(source)
+      return to_enum(:each_section_schema, source) unless block_given?
+
+      source.list.each do |rel|
+        next unless rel.start_with?("sections/") && rel.end_with?(".liquid")
+
+        raw = source.read(rel)
+        schema_json = raw && raw[ThemeEngine::Runtime::SCHEMA_RE, 1]
+        schema = begin
+          schema_json && ThemeEngine::Runtime.tolerant_json(schema_json)
+        rescue JSON::ParserError
+          nil
+        end
+        yield File.basename(rel, ".liquid"), schema unless schema.nil?
+      end
     end
 
     def import_report

@@ -27,6 +27,16 @@ const BOOTSTRAP = {
       sectionCatalog: [
         { type: "promo", name: "促銷條", preset: { settings: { text: "預設促銷文案" }, blocks: null } },
       ],
+      sectionSchemas: {
+        hero: { name: "Hero", settings: [
+          { type: "header", content: "版面" },
+          { id: "heading", type: "text", label: "標題" },
+          { id: "spacing", type: "range", label: "間距", min: 0, max: 100, step: 4, unit: "px", default: 24 },
+          { id: "align", type: "select", label: "對齊",
+            options: [ { value: "left", label: "靠左" }, { value: "center", label: "置中" } ], default: "left" },
+          { id: "image", type: "image_picker", label: "圖片" },
+        ] },
+      },
       templateJson: {
         order: [ "hero", "demo" ],
         sections: {
@@ -182,5 +192,29 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     };
     expect(sent.variables.content.order).toEqual([ "hero", "demo", "promo" ]);
     expect(sent.variables.content.sections.promo.settings.text).toBe("預設促銷文案");
+  });
+
+  it("ED8 🔴 schema 驅動控件：range 未覆寫顯示 default；select 改值入 payload、default 不物化", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "hero" }));
+
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByText("版面")).toBeInTheDocument(); // header 結構元素
+    expect(settings.getByLabelText("標題")).toHaveValue("首頁英雄"); // schema label＋實例值
+    expect(settings.getByLabelText("間距")).toHaveValue("24"); // 🔴 default 補位
+    expect(settings.getByText(/圖片/)).toBeInTheDocument(); // 資源型唯讀（16e）
+
+    fireEvent.change(settings.getByLabelText("對齊"), { target: { value: "center" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { content: { sections: Record<string, { settings: Record<string, unknown> }> } };
+    };
+    expect(sent.variables.content.sections.hero.settings.align).toBe("center");
+    // 🔴 default 只補顯示、不物化落庫（本尊語義：settings_data 只存覆寫）
+    expect(sent.variables.content.sections.hero.settings.spacing).toBeUndefined();
   });
 });

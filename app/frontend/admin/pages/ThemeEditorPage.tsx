@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, Eye, EyeOff, Redo2, Trash2, Undo2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
 import { Button } from "../components/Button";
@@ -24,6 +24,7 @@ const EDITOR_QUERY = `
       templateJson(key: $key)
       templateLockVersion(key: $key)
       sectionCatalog
+      sectionSchemas
     }
   }
 `;
@@ -51,6 +52,22 @@ interface TemplateJson {
   order?: string[];
 }
 
+/** 26 §5 型別子集：16d 先接 T0 純值控件；資源選擇器唯讀（16e 射程）。 */
+interface SettingDef {
+  id?: string;
+  type: string;
+  label?: string;
+  info?: string;
+  content?: string;
+  default?: unknown;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  options?: { value: string; label: string }[];
+}
+
 interface EditorData {
   theme: {
     id: string;
@@ -62,11 +79,157 @@ interface EditorData {
     sectionCatalog: { type: string; name: string;
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
+    sectionSchemas: Record<string, { name: string; settings: SettingDef[] }>;
   } | null;
 }
 
 function cloneTpl(tpl: TemplateJson): TemplateJson {
   return JSON.parse(JSON.stringify(tpl)) as TemplateJson;
+}
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/** schema 驅動控件（26 §5 對映）：T0 純值型可編輯；資源選擇器唯讀（16e）。 */
+function SettingControl({ def, value, onChange }: {
+  def: SettingDef;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const t = useT();
+  // header/paragraph＝側欄結構元素，無值（26 §5「schema 解析必須接受」）
+  if (def.type === "header") return <h4 className="cl-editor__group">{def.content}</h4>;
+  if (def.type === "paragraph") return <p className="cl-card-note">{def.content}</p>;
+  if (!def.id) return null;
+
+  // 🔴 值解析＝實例值 ?? schema default（本尊語義：未覆寫顯示預設）
+  const effective = value ?? def.default;
+  const inputId = `setting-${def.id}`;
+  const label = def.label ?? def.id;
+
+  let control: ReactNode;
+  switch (def.type) {
+    case "checkbox":
+      control = (
+        <input checked={Boolean(effective)} id={inputId}
+          onChange={(event) => onChange(event.target.checked)} type="checkbox" />
+      );
+      break;
+    case "number":
+      control = (
+        <input className="cl-field__input" id={inputId} max={def.max} min={def.min}
+          onChange={(event) => onChange(event.target.value === "" ? null : Number(event.target.value))}
+          placeholder={def.placeholder} type="number" value={effective == null ? "" : Number(effective)} />
+      );
+      break;
+    case "range":
+      control = (
+        <span className="cl-editor__range">
+          <input id={inputId} max={def.max} min={def.min}
+            onChange={(event) => onChange(Number(event.target.value))}
+            step={def.step} type="range" value={Number(effective ?? def.min ?? 0)} />
+          <span className="cl-card-note">{String(effective ?? "")}{def.unit ?? ""}</span>
+        </span>
+      );
+      break;
+    case "select":
+    case "text_alignment": {
+      const options = def.type === "text_alignment"
+        ? [ { value: "left", label: t("editor.alignLeft") },
+            { value: "center", label: t("editor.alignCenter") },
+            { value: "right", label: t("editor.alignRight") } ]
+        : def.options ?? [];
+      control = (
+        <select className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(event.target.value)} value={String(effective ?? "")}>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      );
+      break;
+    }
+    case "radio":
+      control = (
+        <span role="radiogroup">
+          {(def.options ?? []).map((option) => (
+            <label className="cl-editor__radio" key={option.value}>
+              <input checked={String(effective ?? "") === option.value} name={inputId}
+                onChange={() => onChange(option.value)} type="radio" value={option.value} />
+              {option.label}
+            </label>
+          ))}
+        </span>
+      );
+      break;
+    case "textarea":
+    case "richtext":
+    case "inline_richtext":
+    case "html":
+    case "liquid":
+      control = (
+        <textarea className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={def.placeholder} rows={3} value={String(effective ?? "")} />
+      );
+      break;
+    case "color":
+      control = HEX_RE.test(String(effective ?? "")) ? (
+        <input id={inputId} onChange={(event) => onChange(event.target.value)}
+          type="color" value={String(effective)} />
+      ) : (
+        <input className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(event.target.value)} value={String(effective ?? "")} />
+      );
+      break;
+    case "text":
+    case "url":
+    case "video_url":
+    case "color_background":
+    case "font_picker":
+      control = (
+        <input className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={def.placeholder} value={String(effective ?? "")} />
+      );
+      break;
+    default:
+      // 資源選擇器（image_picker/product/collection/*_list…）＝16e 射程，先唯讀
+      control = <code>{JSON.stringify(effective ?? null)}</code>;
+  }
+
+  return (
+    <div className="cl-field">
+      <label className="cl-field__label" htmlFor={inputId}>{label}</label>
+      {control}
+      {def.info ? <p className="cl-card-note">{def.info}</p> : null}
+    </div>
+  );
+}
+
+/** schema 未覆蓋鍵（或整型缺 schema）＝16b 原 typeof 分派，保持可編輯。 */
+function FallbackControl({ name, value, onChange }: {
+  name: string;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}) {
+  const inputId = `setting-${name}`;
+  return (
+    <div className="cl-field">
+      <label className="cl-field__label" htmlFor={inputId}>{name}</label>
+      {typeof value === "boolean" ? (
+        <input checked={value} id={inputId}
+          onChange={(event) => onChange(event.target.checked)} type="checkbox" />
+      ) : typeof value === "number" ? (
+        <input className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(Number(event.target.value))} type="number" value={value} />
+      ) : typeof value === "string" ? (
+        <input className="cl-field__input" id={inputId}
+          onChange={(event) => onChange(event.target.value)} value={value} />
+      ) : (
+        <code>{JSON.stringify(value)}</code>
+      )}
+    </div>
+  );
 }
 
 export function ThemeEditorPage() {
@@ -381,37 +544,32 @@ export function ThemeEditorPage() {
           {selected && selectedId ? (
             <>
               <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
-              {Object.entries(selected.settings ?? {}).map(([ key, value ]) => (
-                <div className="cl-field" key={key}>
-                  <label className="cl-field__label" htmlFor={`setting-${key}`}>{key}</label>
-                  {typeof value === "boolean" ? (
-                    <input
-                      checked={value}
-                      id={`setting-${key}`}
-                      onChange={(event) => setSetting(selectedId, key, event.target.checked)}
-                      type="checkbox"
-                    />
-                  ) : typeof value === "number" ? (
-                    <input
-                      className="cl-field__input"
-                      id={`setting-${key}`}
-                      onChange={(event) => setSetting(selectedId, key, Number(event.target.value))}
-                      type="number"
-                      value={value}
-                    />
-                  ) : typeof value === "string" ? (
-                    <input
-                      className="cl-field__input"
-                      id={`setting-${key}`}
-                      onChange={(event) => setSetting(selectedId, key, event.target.value)}
-                      value={value}
-                    />
-                  ) : (
-                    // 複合值（image/list 等）＝16d 控件對映表射程；先唯讀
-                    <code>{JSON.stringify(value)}</code>
-                  )}
-                </div>
-              ))}
+              {(() => {
+                const schema = data?.sectionSchemas?.[selected.type];
+                const defs = schema?.settings ?? [];
+                const covered = new Set(defs.map((def) => def.id).filter(Boolean));
+                const extras = Object.entries(selected.settings ?? {}).filter(([ key ]) => !covered.has(key));
+                return (
+                  <>
+                    {defs.map((def, index) => (
+                      <SettingControl
+                        def={def}
+                        key={def.id ?? `static-${index}`}
+                        onChange={(value) => def.id && setSetting(selectedId, def.id, value)}
+                        value={def.id ? (selected.settings ?? {})[def.id] : undefined}
+                      />
+                    ))}
+                    {extras.map(([ key, value ]) => (
+                      <FallbackControl
+                        key={key}
+                        name={key}
+                        onChange={(next) => setSetting(selectedId, key, next)}
+                        value={value}
+                      />
+                    ))}
+                  </>
+                );
+              })()}
             </>
           ) : (
             <p className="cl-card-note">{t("editor.selectHint")}</p>
