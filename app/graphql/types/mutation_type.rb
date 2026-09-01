@@ -111,6 +111,30 @@ module Types
     # G6 步 7：棄單挽回。
     field :abandoned_checkout_send_recovery, mutation: Mutations::AbandonedCheckoutSendRecovery,
       description: "對棄單手動寄挽回信（自動排程 ⚪ 後置）。"
+
+    # G6 步 8a：顧客模組寫入面（官方 mutation 面逐支對位；consent 走事件鏈）。
+    field :customer_create, mutation: Mutations::CustomerCreate,
+      description: "建立顧客。"
+    field :customer_update, mutation: Mutations::CustomerUpdate,
+      description: "更新顧客（consent 走專用 mutation——官方同規則）。"
+    field :customer_delete, mutation: Mutations::CustomerDelete,
+      description: "刪除顧客（有訂單/待抹除者擋下）。"
+    field :customer_address_create, mutation: Mutations::CustomerAddressCreate,
+      description: "建立顧客地址。"
+    field :customer_address_update, mutation: Mutations::CustomerAddressUpdate,
+      description: "更新顧客地址。"
+    field :customer_address_delete, mutation: Mutations::CustomerAddressDelete,
+      description: "刪除顧客地址。"
+    field :customer_update_default_address, mutation: Mutations::CustomerUpdateDefaultAddress,
+      description: "切換預設地址。"
+    field :customer_email_marketing_consent_update, mutation: Mutations::CustomerEmailMarketingConsentUpdate,
+      description: "更新 email 行銷同意（latest-wins）。"
+    field :customer_sms_marketing_consent_update, mutation: Mutations::CustomerSmsMarketingConsentUpdate,
+      description: "更新 SMS 行銷同意。"
+    field :customer_request_data_erasure, mutation: Mutations::CustomerRequestDataErasure,
+      description: "排程個資抹除（10 天可取消）。"
+    field :customer_cancel_data_erasure, mutation: Mutations::CustomerCancelDataErasure,
+      description: "取消待執行的個資抹除。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,
       description: "重新讀取 PSP 帳號已開通的付款方式（G6-1b；首次成功自動啟用可用方式）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**

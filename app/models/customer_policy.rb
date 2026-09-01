@@ -21,4 +21,9 @@ class CustomerPolicy < ApplicationPolicy
   def create?
     authenticated? && staff.can?("customers.edit")
   end
+
+  # 寫入類（update/addresses/consent/erasure）與刪除共用 edit 鍵——
+  # 細分（如 customers.erase 獨立權限格）隨 M5 RBAC 展開。
+  def update? = create?
+  def destroy? = create?
 end

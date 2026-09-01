@@ -3725,3 +3725,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   都會重置計時；若日後出現非顧客行為的 touch 源（如後台批次），要改顯式
   last_activity_at 欄。
 
+### 3.52 G6 步 8a（顧客寫入面）的範圍外觀察（2026-09-01）
+
+- ⚪ **order 層個資遮蔽缺口**：RedactDueJob 清 customer 列與地址簿，但
+  orders.email／訂單上的地址快照仍在（官方「訂單保留供報表」但個資欄是否遮蔽
+  ＝未取得逐字）；PDPO 完整射程需 order 層遮蔽裁定後補。
+- ⚪ **WhatsApp 通道**：本尊 marketing modal 三通道（實測 2026-09-01）；
+  consent 事件表 channel 欄已留位，UI 與狀態機隨通知線擴充。
+- ⚪ **migration re-entry 守衛粒度家族**：`unless table_exists?` 包多語句時，
+  首跑失敗在第 N 句 ⇒ 重跑整塊被跳過、後續語句永久缺席（本包 FK 事故）。
+  既有帶塊級守衛的 migration 同型風險未逐一複查；新 migration 一律語句級守衛。
+- ⚪ **GraphQL 重複 email 的本尊逐字 message**：僅 REST 422 有 "has already been
+  taken"；GraphQL userError 實測抓包（鐵律 14）待測試店建重複顧客時取。
+

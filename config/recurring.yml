@@ -22,6 +22,11 @@ production:
     class: Checkouts::MarkAbandonedJob
     queue: background
     schedule: every 5 minutes
+  # G6 步 8a：到點個資抹除（官方 10 天窗到期執行；limits customer.erasure_cancel_days）。
+  customers_redact_due:
+    class: Customers::RedactDueJob
+    queue: background
+    schedule: every hour
   events_outbox_purge:
     class: Events::OutboxPurgeJob
     queue: background
