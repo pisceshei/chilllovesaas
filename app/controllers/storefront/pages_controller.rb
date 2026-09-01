@@ -138,7 +138,21 @@ module Storefront
     end
 
     def cache_params
-      params.permit(*CACHE_PARAMS).to_h
+      base = params.permit(*CACHE_PARAMS).to_h
+      qs = facets_query_string
+      base = base.merge("_facets_qs" => qs) if qs.present?
+      base
+    end
+
+    # PR-20：filter.* 參數正規化子串——🔴 從 query string 解析（Rack parse_query
+    # 保留重複鍵＝多值 OR；Rails params 對重複裸鍵 last-wins 丟值）＋排序重建
+    # （頁快取鍵穩定：同組過濾不同順序＝同 key）。sort_by 併入（URL 重建保留）。
+    def facets_query_string
+      pairs = Rack::Utils.parse_query(request.query_string.to_s)
+                         .flat_map { |k, v| Array(v).map { |one| [ k, one.to_s ] } }
+                         .select { |k, _| k == "sort_by" || k.start_with?("filter.") }
+                         .sort
+      pairs.empty? ? nil : Rack::Utils.build_query(pairs)
     end
 
     def render_page(hit, rest, cart_json: nil)

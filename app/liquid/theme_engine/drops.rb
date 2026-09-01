@@ -612,7 +612,8 @@ module ThemeEngine
     # publication/locale/sort_param：步 12 商品出口（96 §1/§2）的渲染語境；
     #   publication nil＝無管道語境（products 回 nil——舊呼叫面行為不變）。
     def initialize(collection, url_prefix: "", published_at: nil, translations: {},
-                   publication: nil, locale: nil, sort_param: nil)
+                   publication: nil, locale: nil, sort_param: nil,
+                   filter_query: nil, request_path: nil)
       super()
       @c = collection
       @url_prefix = url_prefix
@@ -621,6 +622,8 @@ module ThemeEngine
       @publication = publication
       @locale = locale
       @sort_param = sort_param
+      @filter_query = filter_query
+      @request_path = request_path
     end
 
     # 前台 sort_by 參數值 ↔ Collection.SORT_ORDERS 內部值（96 §2 真店 9 值 select；
@@ -633,10 +636,19 @@ module ThemeEngine
     }.freeze
     INTERNAL_TO_STOREFRONT = STOREFRONT_SORT.invert.freeze
 
-    # PR-13：storefront filtering 未接（facets 整包＝91 §3.61）⇒ 顯式空集合，
-    # 與 SearchDrop#filters 一致——Ella facets.liquid:90 `nil != empty` 為真時
-    # 會渲染空容器，[] 才走正確的零迭代分支。
-    def filters = []
+    # PR-20：storefront filtering（91 §3.61 收口）——facets 語境齊備時出官方
+    # filter 物件陣列；片段/editor 舊呼叫面無語境 ⇒ 照舊 []（零迭代分支）。
+    def filters
+      facets ? facets.filters : []
+    end
+
+    def facets
+      return nil if @publication.nil? || @filter_query.nil?
+
+      @facets ||= ThemeEngine::Facets.new(
+        base_relation: CollectionProductsDrop.base_relation(collection: @c, publication: @publication),
+        query_string: @filter_query, path: @request_path || url)
+    end
 
     def id = @c.id
     def title = @tx["title"] || @c.title
@@ -657,14 +669,14 @@ module ThemeEngine
 
       @products ||= CollectionProductsDrop.new(
         collection: @c, publication: @publication, url_prefix: @url_prefix,
-        locale: @locale, sort_key: STOREFRONT_SORT[sort_by]
+        locale: @locale, sort_key: STOREFRONT_SORT[sort_by], facets: facets
       )
     end
 
-    # 官方語義（96 §2）：products_count＝當前檢視；all_products_count＝含被
-    # storefront filter 濾掉者。v1 無 storefront filter ⇒ 兩者同值（同一 count）。
+    # 官方語義（96 §2）：products_count＝當前檢視（含 filter）；
+    # all_products_count＝未過濾全集（PR-20 起兩值真分家）。
     def products_count = products&.total || 0
-    def all_products_count = products_count
+    def all_products_count = products&.unfiltered_total || 0
 
     # 真引擎 collection json＝9 鍵（83 §12.4 逐字鍵序）。
     # 🔴 published_scope 恆 "global"、template_suffix nil＝我方常數
@@ -742,14 +754,32 @@ module ThemeEngine
       "best_selling" => "products.created_at DESC, products.id DESC"
     }.freeze
 
-    def initialize(collection:, publication:, url_prefix: "", locale: nil, sort_key: nil)
+    def initialize(collection:, publication:, url_prefix: "", locale: nil, sort_key: nil,
+                   facets: nil)
       super()
       @collection = collection
       @publication = publication
       @url_prefix = url_prefix
       @locale = locale
       @sort_key = sort_key
+      @facets = facets
       @page, @per = 1, nil
+    end
+
+    # PR-20：base 集合抽成類方法——Facets 與列表共用同一定義（雙處漂移即
+    # 「篩選器數字對不上列表」型 bug）
+    def self.base_relation(collection:, publication:)
+      base = Product.discoverable(publication: publication)
+      unless collection.respond_to?(:virtual_all?)
+        base = base.joins(:collection_products)
+                   .where(collection_products: { collection_id: collection.id })
+      end
+      base
+    end
+
+    # 官方 all_products_count 的資料面（未過濾全集）
+    def unfiltered_total
+      @unfiltered_total ||= self.class.base_relation(collection: @collection, publication: @publication).count
     end
 
     # paginate tag 的接線點：設頁窗並回總數（PaginateDrop 需要 items）。
@@ -772,9 +802,8 @@ module ThemeEngine
     def virtual_all? = @collection.respond_to?(:virtual_all?)
 
     def relation
-      base = Product.discoverable(publication: @publication)
-      base = base.joins(:collection_products)
-                 .where(collection_products: { collection_id: @collection.id }) unless virtual_all?
+      base = self.class.base_relation(collection: @collection, publication: @publication)
+      base = @facets.apply(base) if @facets # PR-20：storefront filter 過濾
       base
     end
 
