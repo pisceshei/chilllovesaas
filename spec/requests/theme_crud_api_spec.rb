@@ -38,6 +38,12 @@ RSpec.describe "Theme CRUD API", type: :request do
 
   def build_zip
     path = tmp.join("probe.zip")
+    # 🔴 釘死 zip 條目 DOS-time（2026-09-02 事故）：時戳 bytes 落在特定值窗時，
+    # multipart 檔案內容在本地 Windows 的 Rails 整合層被截斷成 11 bytes ⇒
+    # INVALID_ZIP 假紅（時窗過後同 spec 自綠；CI Linux 不受影響）。選值使
+    # DOS time/date 四 bytes 均避開 0x0D/0x0A。
+    allow(Zip::DOSTime).to receive(:now)
+      .and_return(Zip::DOSTime.new(2026, 1, 2, 3, 4, 4))
     Zip::File.open(path.to_s, create: true) do |zip|
       zip.get_output_stream("layout/theme.liquid") { |io| io.write("<html>{{ content_for_layout }}</html>") }
       zip.get_output_stream("sections/hero.liquid") { |io| io.write("<h1>hi</h1>") }
