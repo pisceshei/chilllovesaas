@@ -679,6 +679,20 @@ export function ThemeEditorPage() {
     if (selectedBlockId === blockId) setSelectedBlockId(null);
   });
 
+  // PR-27：block 拖放任意位置（同 section；applyOp 全繼承——PR-26 同構）
+  const moveBlockTo = (band: string, sectionId: string, blockId: string, targetIndex: number) => applyOp(band, (tpl) => {
+    const entry = tpl.sections?.[sectionId];
+    const order = [ ...(entry?.block_order ?? []) ];
+    const from = order.indexOf(blockId);
+    if (!entry || from < 0) return;
+    order.splice(from, 1);
+    const bounded = Math.max(0, Math.min(targetIndex, order.length));
+    order.splice(bounded, 0, blockId);
+    entry.block_order = order;
+  });
+
+  const blockDragRef = useRef<{ band: string; sectionId: string; blockId: string } | null>(null);
+
   const moveBlock = (band: string, sectionId: string, blockId: string, direction: -1 | 1) => applyOp(band, (tpl) => {
     const entry = tpl.sections?.[sectionId];
     const order = [ ...(entry?.block_order ?? []) ];
@@ -935,7 +949,31 @@ export function ThemeEditorPage() {
                               {blockOrder.map((blockId, blockIndex) => {
                                 const blockActive = selectedBand === band && selectedId === sectionId && selectedBlockId === blockId;
                                 return (
-                                  <li className="cl-editor__block" key={blockId}>
+                                  <li
+                                    className="cl-editor__block"
+                                    draggable
+                                    key={blockId}
+                                    onDragOver={(event) => {
+                                      const drag = blockDragRef.current;
+                                      if (drag && drag.band === band && drag.sectionId === sectionId) {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                      }
+                                    }}
+                                    onDragStart={(event) => {
+                                      event.stopPropagation(); // 別讓 section li 也進入拖曳
+                                      blockDragRef.current = { band, sectionId, blockId };
+                                    }}
+                                    onDrop={(event) => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      const drag = blockDragRef.current;
+                                      blockDragRef.current = null;
+                                      if (!drag || drag.band !== band || drag.sectionId !== sectionId ||
+                                          drag.blockId === blockId) return;
+                                      moveBlockTo(band, sectionId, drag.blockId, blockIndex);
+                                    }}
+                                  >
                                     <button
                                       aria-pressed={blockActive}
                                       className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
