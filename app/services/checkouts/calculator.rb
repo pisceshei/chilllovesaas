@@ -22,7 +22,10 @@ module Checkouts
     Line = Data.define(:key, :quantity, :unit_price_cents, :line_total_cents)
     Result = Data.define(:currency, :lines, :subtotal_cents, :discount_total_cents,
                          :discount_allocations, :shipping_cents, :tax_included,
-                         :tax_total_cents, :tax_lines, :total_cents)
+                         :tax_total_cents, :tax_lines, :total_cents,
+                         :discount_applications, :shipping_discount_cents)
+    # 步 9a：單一折扣（17-F2.5 分攤快照的 Result 位）。
+    Application = Data.define(:id, :title, :discount_class, :amount_cents, :line_allocations)
 
     class << self
       # @param lines [Array<Hash>] `{key:, quantity:, unit_price_cents:}`（快照值，不讀 DB）
@@ -34,23 +37,40 @@ module Checkouts
       # @return [Result] 不可變；全 Integer cents
       # @raise [TypeError] 任何金額為 Float／比率為 Float（鐵律 3）
       # @raise [ArgumentError] 數量非正、金額為負、折扣型別未知
-      def call(lines:, currency:, shipping_cents: 0, discount: nil, tax: nil)
+      # @param discounts [Array<Hash>, nil] 步 9a 多級清單（Engine 產物；與 discount: 互斥）：
+      #   `{id:, title:, discount_class: "product"|"order"|"shipping",
+      #     value_type: "percentage"|"fixed_amount", basis_points:, value_cents:,
+      #     entitled_line_keys: nil|[String]}`——組合裁決已由 Engine 完成，本函式只算錢
+      #   （17-F2.1：order 級同基數不複利＋鉗制；product→order→shipping 跨級管線）。
+      def call(lines:, currency:, shipping_cents: 0, discount: nil, tax: nil, discounts: nil)
+        raise ArgumentError, "discount: 與 discounts: 互斥（舊單折扣 vs 步 9a 多級清單）" if discount && discounts
+
         built = build_lines(lines)
         shipping = money!(shipping_cents, "shipping_cents")
         raise ArgumentError, "shipping_cents 不得為負" if shipping.negative?
 
         subtotal = built.sum(&:line_total_cents)
-        discount_total = discount_total_for(discount, subtotal)
-        allocations = allocate(discount_total, built)
+
+        if discounts
+          applications, allocations, discount_total, shipping_discount =
+            evaluate_discounts(discounts, built, subtotal, shipping)
+        else
+          discount_total = discount_total_for(discount, subtotal)
+          allocations = allocate(discount_total, built)
+          applications = []
+          shipping_discount = 0
+        end
         tax_lines, tax_total, included = tax_for(tax, built, allocations)
 
-        total = subtotal - discount_total + shipping + (included ? 0 : tax_total)
+        total = subtotal - discount_total + (shipping - shipping_discount) +
+                (included ? 0 : tax_total)
         Result.new(
           currency: currency.to_s.upcase, lines: built.freeze,
           subtotal_cents: subtotal, discount_total_cents: discount_total,
           discount_allocations: allocations.freeze, shipping_cents: shipping,
           tax_included: included, tax_total_cents: tax_total, tax_lines: tax_lines.freeze,
-          total_cents: total
+          total_cents: total,
+          discount_applications: applications.freeze, shipping_discount_cents: shipping_discount
         )
       end
 
@@ -105,6 +125,114 @@ module Checkouts
           raise TypeError, "#{label} 必須是 Integer／Rational／BigDecimal，實得 #{value.class}" \
                            "（Float 的十進位表示不穩定——鐵律 3）"
         end
+      end
+
+      # ── 步 9a：多級折扣管線（17-F2/F2.1）─────────────────────────────
+      #
+      # product 級 → order 級 → shipping 級；🔴 同級（order）多百分比**同基數 S₀
+      # 相加、逐筆 floor、合計鉗制 ≤ S₀**（官方 "both percentages are calculated
+      # on the original subtotal"——不複利、可交換）。product 級同理以**原始行金額**
+      # 為基數（同級同基數的一致讀法）；跨級仍序列（order 基數＝product 折後小計）。
+      def evaluate_discounts(discounts, built, subtotal, shipping)
+        applications = []
+        line_totals = built.to_h { |line| [ line.key, line.line_total_cents ] }
+        allocations = built.to_h { |line| [ line.key, 0 ] }
+
+        product_total = 0
+        discounts.select { |d| d[:discount_class] == "product" }.each do |d|
+          entitled = entitled_lines(built, d)
+          next if entitled.empty?
+
+          base = entitled.sum { |line| line_totals.fetch(line.key) }
+          amount = discount_amount(d, base)
+          # 行級鉗制：該級累計分攤不得超過行金額（line_total ≥ 0 不變量）
+          headroom = entitled.sum { |line| line_totals.fetch(line.key) - allocations.fetch(line.key) }
+          amount = [ amount, headroom ].min
+          next if amount.zero?
+
+          per_line = allocate_over(amount, entitled, line_totals)
+          per_line.each { |key, cents| allocations[key] += cents }
+          product_total += amount
+          applications << Application.new(id: d[:id], title: d[:title],
+                                          discount_class: "product", amount_cents: amount,
+                                          line_allocations: per_line)
+        end
+
+        s0 = subtotal - product_total
+        order_discounts = discounts.select { |d| d[:discount_class] == "order" }
+        raw_amounts = order_discounts.map { |d| discount_amount(d, s0) } # 🔴 全部以 S₀ 為基數
+        order_total = [ raw_amounts.sum, s0 ].min                        # 鉗制（60%+60% ⇒ 付 0）
+        remaining = order_total
+        order_discounts.each_with_index do |d, i|
+          amount = [ raw_amounts[i], remaining ].min
+          remaining -= amount
+          next if amount.zero?
+
+          weights = built.to_h { |line| [ line.key, line_totals.fetch(line.key) - allocations.fetch(line.key) ] }
+          per_line = allocate_by_weight(amount, weights)
+          per_line.each { |key, cents| allocations[key] += cents }
+          applications << Application.new(id: d[:id], title: d[:title],
+                                          discount_class: "order", amount_cents: amount,
+                                          line_allocations: per_line)
+        end
+
+        shipping_discount = 0
+        shipping_candidates = discounts.select { |d| d[:discount_class] == "shipping" }
+        raise ArgumentError, "運費折扣不可疊運費折扣（引擎硬規則；Engine 應已裁決）" if shipping_candidates.size > 1
+        if (d = shipping_candidates.first)
+          shipping_discount = [ discount_amount(d, shipping), shipping ].min
+          applications << Application.new(id: d[:id], title: d[:title],
+                                          discount_class: "shipping",
+                                          amount_cents: shipping_discount, line_allocations: {})
+        end
+
+        [ applications, allocations, product_total + order_total, shipping_discount ]
+      end
+
+      # F2.1：percentage＝floor(基數 × bp / 10000)；fixed＝面額鉗制基數。
+      def discount_amount(d, base)
+        case d.fetch(:value_type).to_s
+        when "percentage"
+          bp = d.fetch(:basis_points)
+          raise TypeError, "basis_points 必須是 Integer（鐵律 3）" unless bp.is_a?(Integer)
+          raise ArgumentError, "basis points 值域 0..10000" unless (0..10_000).cover?(bp)
+
+          base * bp / 10_000 # 整數除法＝floor（F2.1 逐筆 floor 到分）
+        when "fixed_amount"
+          amount = money!(d.fetch(:value_cents), "discounts[].value_cents")
+          raise ArgumentError, "固定折扣不得為負" if amount.negative?
+
+          [ amount, base ].min
+        else
+          raise ArgumentError, "未知折扣型別 #{d[:value_type].inspect}"
+        end
+      end
+
+      def entitled_lines(built, d)
+        keys = d[:entitled_line_keys]
+        return built if keys.nil?
+
+        built.select { |line| keys.include?(line.key) }
+      end
+
+      def allocate_over(amount, entitled, line_totals)
+        weights = entitled.to_h { |line| [ line.key, line_totals.fetch(line.key) ] }
+        allocate_by_weight(amount, weights)
+      end
+
+      # 最大餘數法的權重版（allocate 的 Hash 權重形；Σ == amount 恆等）。
+      def allocate_by_weight(amount, weights)
+        keys = weights.keys
+        weight_sum = weights.values.sum
+        return keys.to_h { |key| [ key, 0 ] } if amount.zero? || weight_sum.zero?
+
+        base = keys.to_h { |key| [ key, amount * weights[key] / weight_sum ] }
+        remainder = amount - base.values.sum
+        order = keys.sort_by do |key|
+          [ -(weights[key] * amount % weight_sum), -weights[key], keys.index(key) ]
+        end
+        order.first(remainder).each { |key| base[key] += 1 }
+        base
       end
 
       # 折扣總額（🔴 上限＝小計：折扣大於小計 ⇒ 收斂，總計非負不變量）。

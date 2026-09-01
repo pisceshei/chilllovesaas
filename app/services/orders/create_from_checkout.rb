@@ -83,6 +83,7 @@ module Orders
           order = build_order!(shop, checkout, number)
           build_line_items!(shop, order, checkout, variants)
           build_manual_transaction!(shop, order, checkout)
+          claim_discounts!(shop, order, checkout)
           # G6-7（16 §F6.1）：email upsert 建檔＋統計增量＋consent／地址回寫；
           # 同交易純 DB（鐵律 5）；無 email ⇒ 回 nil、訂單不掛 customer。
           Customers::UpsertFromCheckout.call(checkout:, order:)
@@ -227,6 +228,61 @@ module Orders
           taxable: true,
           properties: line["properties"] || {}
         )
+      end
+    end
+
+    # 折扣認領（步 9a；17-F3——**成立期原子操作才是真相**，求值期只是軟檢）：
+    # ①usage_limit：條件式 UPDATE `times_used < usage_limit` 進 WHERE，affected 0
+    #   ⇒ 整單 raise（rollback；「折扣已被用完」）；無上限者仍 +1（報表）。
+    # ②once_per_customer：redemption insert 撞唯一索引 ⇒ 整單 raise（已用過）。
+    # ③applications 快照回放成 discount_applications 列（退款 16-F5 與報表讀它）。
+    def claim_discounts!(shop, order, order_checkout)
+      snapshot = Array(order_checkout.discount_applications_snapshot)
+      return if snapshot.empty?
+
+      # 快照 key → 訂單行對映：行以快照序建立（build_line_items! 同一迴圈）⇒
+      # id 升冪 zip 快照即還原（跨表無 key 欄的 v1 對映；ours 誠實形）。
+      ordered_lines = order.line_items.sort_by(&:id)
+      key_to_line = Array(order_checkout.line_items_snapshot)
+                    .each_with_index.to_h { |line, i| [ line["key"], ordered_lines[i] ] }
+
+      snapshot.each do |app|
+        discount_id = app["discount_id"]
+        affected = Discount.where(shop_id: shop.id, id: discount_id)
+                           .where("usage_limit IS NULL OR times_used < usage_limit")
+                           .update_all("times_used = times_used + 1")
+        raise Failure.new("DISCOUNT_USAGE_LIMIT", "折扣「#{app['title']}」已被用完") if affected.zero?
+
+        discount = Discount.find_by(shop_id: shop.id, id: discount_id)
+        if discount&.once_per_customer
+          customer_key = order_checkout.customer_id&.to_s ||
+                         DiscountRedemption.email_key(order_checkout.email)
+          begin
+            DiscountRedemption.create!(shop_id: shop.id, discount_id:, customer_key:,
+                                       order_id: order.id)
+          rescue ActiveRecord::RecordNotUnique
+            raise Failure.new("DISCOUNT_ALREADY_USED", "折扣「#{app['title']}」每位顧客限用一次")
+          end
+        end
+
+        DiscountApplication.create!(
+          shop_id: shop.id, order_id: order.id, discount_id:,
+          line_item_id: nil, allocation_method: "across",
+          amount_cents: app["amount_cents"], currency: order.currency
+        )
+        Array(app["allocations"]).each do |line_key, cents|
+          next if cents.to_i.zero?
+
+          line = key_to_line[line_key]
+          # 行級列（key 對映走快照序 zip；對不上時只留 order 級列——v1 誠實降級）
+          next if line.nil?
+
+          DiscountApplication.create!(
+            shop_id: shop.id, order_id: order.id, discount_id:,
+            line_item_id: line.id, allocation_method: "across",
+            amount_cents: cents.to_i, currency: order.currency
+          )
+        end
       end
     end
 

@@ -500,17 +500,31 @@ module Storefront
       end
       shipping_cents = shipping_lines.sum { |l| l["price_cents"] }
 
+      lines = checkout.line_items_snapshot.map { |l|
+        { key: l["key"], quantity: l["quantity"], unit_price_cents: l["unit_price_cents"],
+          variant_id: l["variant_id"] }
+      }
+      # 步 9a：折扣求值（Engine 解析 → Calculator 算錢＝鐵律 7 唯一金額計算點）。
+      evaluation = ActsAsTenant.with_tenant(current_shop) do
+        Discounts::Engine.evaluate(shop: current_shop, lines:,
+                                   code: checkout.discount_code,
+                                   customer_key: checkout.customer_id&.to_s)
+      end
       calc = Checkouts::Calculator.call(
-        lines: checkout.line_items_snapshot.map { |l|
-          { key: l["key"], quantity: l["quantity"], unit_price_cents: l["unit_price_cents"] }
-        },
-        currency: checkout.currency, shipping_cents: shipping_cents
+        lines:, currency: checkout.currency, shipping_cents: shipping_cents,
+        discounts: evaluation.discounts
       )
+      snapshot = calc.discount_applications.map do |app|
+        { "discount_id" => app.id, "title" => app.title, "class" => app.discount_class,
+          "amount_cents" => app.amount_cents, "allocations" => app.line_allocations }
+      end
       ActsAsTenant.with_tenant(current_shop) do
         checkout.update!(
           shipping_address: checkout.shipping_address.merge(address).merge("country_code" => country),
           shipping_lines: shipping_lines, shipping_cents: shipping_cents,
           subtotal_cents: calc.subtotal_cents, tax_cents: calc.tax_total_cents,
+          discount_cents: calc.discount_total_cents + calc.shipping_discount_cents,
+          discount_applications_snapshot: snapshot,
           total_cents: calc.total_cents, presentment_total_cents: calc.total_cents
         )
       end
