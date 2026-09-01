@@ -19,7 +19,13 @@ module ThemeEngine
         val = count.to_i == 1 ? (val["one"] || val["other"]) : (val["other"] || val["one"])
       end
       s = val.to_s
-      opts.each { |k, v| s = s.gsub("%{#{k}}", v.to_s).gsub("{{ #{k} }}", v.to_s) } if opts.is_a?(Hash)
+      # PR-8：{{ key }} 佔位空白寬容（Ella 有 `{{ inventory}}` 無尾空格形——實錘）
+      if opts.is_a?(Hash)
+        opts.each do |k, v|
+          s = s.gsub("%{#{k}}", v.to_s)
+               .gsub(/\{\{\s*#{Regexp.escape(k.to_s)}\s*\}\}/, v.to_s)
+        end
+      end
       s
     end
 

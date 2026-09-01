@@ -2,6 +2,7 @@
   { "name": "theme_info", "theme_name": "minimal", "theme_version": "1.0", "theme_author": "CHILL LOVE" },
   { "name": "Colors", "settings": [
     { "id": "brand_color", "type": "color", "default": "#000000" },
+    { "id": "show_probe", "type": "checkbox", "default": true },
     { "id": "color_schemes", "type": "color_scheme_group", "definition": [
       { "id": "background", "type": "color", "default": "#ffffff" },
       { "id": "text", "type": "color", "default": "#111111" }
