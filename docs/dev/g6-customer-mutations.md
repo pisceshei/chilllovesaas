@@ -74,3 +74,22 @@ M5 預設讓渡/M6 抹除窗）。突變輪 MU1–MU9 全紅＋canary。
 - Edit customer modal：First/Last Name＋Language（"This customer will receive
   notifications in this language."）＋Email＋Phone（國碼選擇器）。
   ⚪ notification language 欄（customers.locale）隨步 8b。
+
+## 6. 步 8b：合併／詳情頁／對帳（同檔續章）
+
+- **customerMerge**（`Customers::Merge`）：保留規則＝恰一方有 email 留該方；雙無
+  留 two（官方唯一明文）；雙有留 one（ours——官方 "don't guarantee"）。blockers
+  我方現制可判三類（REDACTED_AT/PENDING_DATA_REQUEST/DELETED_AT），其餘八類對應
+  子系統未建＝結構性不可能（91 §3.53）。搬移＝orders/checkouts/地址（轉非預設）/
+  consent 事件；note 串接 ≤5000、tags 聯集 ≤250（74 §4 官方上限）；統計由訂單重算
+  （鐵律 7）。🔴 序＝先算 merged_attrs → 刪被併方 → 寫保留方（email/phone uq
+  索引撞名的實紅教訓，MB6 回歸格釘住）。v1 同步交易制（官方 async job ⇒ ours）。
+- **詳情頁**（`/admin/customers/:id`）：KPI 四格（RFM ⚪ 佔位）／最近訂單卡／
+  聯絡卡（Edit contact modal 含 locale）／行銷 modal（email/SMS 勾選走 consent
+  mutation；WhatsApp ⚪）／稅務 taxExempt／標籤／備註／More actions（Merge 搜尋
+  dialog／Erase 確認（官方文案對位）／Cancel erasure／Delete）。
+  ⚪：時間軸 composer/寄送 email/商店抵用金/Request customer data/建立訂單。
+- **customers.locale**：通知語言（Edit customer modal 實測欄）；create/update 可寫。
+- **ReconcileStatsJob**（recurring 每日 4am）：全量重算三統計欄，漂移＝log 一行
+  ＋修正（鐵律 7 守門員，非第二寫入端）。
+

@@ -19,6 +19,7 @@ module Mutations
     argument :email, String, required: false
     argument :phone, String, required: false
     argument :note, String, required: false
+    argument :locale, String, required: false
     argument :tags, [ String ], required: false
     argument :tax_exempt, Boolean, required: false
 
@@ -34,7 +35,7 @@ module Mutations
       end
 
       attrs = {}
-      %i[first_name last_name email phone note tags tax_exempt].each do |key|
+      %i[first_name last_name email phone note tags tax_exempt locale].each do |key|
         attrs[key] = args[key] if args.key?(key)
       end
       ok = ActsAsTenant.with_tenant(shop) { customer.update(attrs) }
