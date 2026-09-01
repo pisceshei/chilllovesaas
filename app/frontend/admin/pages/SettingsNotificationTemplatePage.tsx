@@ -85,7 +85,9 @@ export function SettingsNotificationTemplatePage() {
       ? t("settings.notifications.kind.orderConfirmation")
       : kind === "shipping_confirmation"
         ? t("settings.notifications.kind.shippingConfirmation")
-        : t("settings.notifications.kind.abandonedCheckout");
+        : kind === "customer_otp"
+          ? t("settings.notifications.kind.customerOtp")
+          : t("settings.notifications.kind.abandonedCheckout");
 
   const mutate = async (variables: Record<string, unknown>, successMessage: string) => {
     setBusy(true);

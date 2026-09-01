@@ -3791,3 +3791,17 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
 - ⚪ **MySQL upsert_all 無 :unique_by 家族**：adapter 明文拒收——之後所有 upsert
   一律靠 uq 索引驅動 ON DUPLICATE（本包實踩；PG 遷移時要回補 unique_by）。
 
+### 3.57 G6 步 11（買家帳戶線）的範圍外觀察（2026-09-01）
+
+- ⚪ **主題頁 customer 注入**：現為顯式 nil stub（頁快取正確形）；真注入需
+  快取鍵按登入態分票（cart 的 cart_json 旁路同型工程）。
+- ⚪ **storefront 地址 CRUD**：/account/addresses 唯讀；增改刪＋設預設走 8a
+  既有四 mutation 的前台面。
+- ⚪ **其餘登入形**（74 §7）：Shop／社群／passkey／OIDC（Plus）／升級 30 天還原
+  ／Multipass——全部收斂到 CustomerSession.issue! 單一載體。
+- ⚪ **OTP code 過境 Solid Queue arguments**：DeliverJob 參數含明文碼（效期
+  10 分＋digest 驗證緩解）；若提升＝改 job 只帶 otp_id、寄送時重生碼。
+- ⚪ **customer_sessions/otps purge job**：過期列不刪（留痕）；量級大再上清理。
+- 🔴 **SMTP 前置**：買家登入鏈在生產 SMTP 未配置時只渲染不外寄——功能性阻塞
+  直到 /etc/chilllove/env 補 SMTP 四鍵（使用者輸入項）。
+

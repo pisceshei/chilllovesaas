@@ -18,7 +18,10 @@ module Notifications
     # @param order_id [Integer, nil]
     # @param fulfillment_id [Integer, nil]
     # @param checkout_id [Integer, nil] abandoned_checkout 分支（步 7）
-    def perform(shop_id:, kind:, order_id: nil, fulfillment_id: nil, checkout_id: nil)
+    # @param otp_email [String, nil] customer_otp 分支（步 11）
+    # @param otp_code [String, nil] 同上（僅過境不落庫——digest 在表）
+    def perform(shop_id:, kind:, order_id: nil, fulfillment_id: nil, checkout_id: nil,
+                otp_email: nil, otp_code: nil)
       shop = Shop.find_by(id: shop_id)
       return if shop.nil?
 
@@ -27,6 +30,7 @@ module Notifications
         when "order_confirmation" then deliver_order_confirmation(shop, order_id)
         when "shipping_confirmation" then deliver_shipping_confirmation(shop, order_id, fulfillment_id)
         when "abandoned_checkout" then deliver_abandoned_checkout(shop, checkout_id)
+        when "customer_otp" then deliver_customer_otp(shop, otp_email, otp_code)
         else
           raise ArgumentError, "unknown notification kind: #{kind}"
         end
@@ -58,6 +62,17 @@ module Notifications
       NotificationMailer.notify(shop_id: shop.id, kind: "abandoned_checkout",
                                 to: checkout.email, payload:).deliver_now
       checkout.update_column(:recovery_email_sent_at, Time.current)
+    end
+
+    # 登入驗證碼（步 11）：payload 極薄（shop＋code）；無資料重讀（code 只在
+    # job 參數過境；Solid Queue 落 arguments——與 admin 密碼重設同風險面，
+    # 效期 10 分鐘＋digest 驗證緩解，91 §3.57 登記）。
+    def deliver_customer_otp(shop, otp_email, otp_code)
+      return if otp_email.blank? || otp_code.blank?
+
+      payload = { shop: { name: shop.name, url: nil, email: shop.sender_email }, code: otp_code }
+      NotificationMailer.notify(shop_id: shop.id, kind: "customer_otp",
+                                to: otp_email, payload:).deliver_now
     end
 
     def deliver_shipping_confirmation(shop, order_id, fulfillment_id)

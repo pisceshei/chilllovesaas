@@ -84,6 +84,14 @@ Rails.application.routes.draw do
     # 🔴 放在 :token 之前——"recover" 會被 :token 段吃掉。
     get "checkouts/recover/:recovery_token" => "storefront/checkouts#recover", format: false,
         as: :storefront_checkout_recover
+    # G6 步 11：買家帳戶（74 §7 passwordless；非主題化頁——checkout 同法）。
+    get "account/login" => "storefront/accounts#login_form", format: false
+    post "account/login" => "storefront/accounts#send_code", format: false
+    post "account/verify" => "storefront/accounts#verify", format: false
+    post "account/logout" => "storefront/accounts#logout", format: false
+    get "account" => "storefront/accounts#show", format: false
+    get "account/addresses" => "storefront/accounts#addresses", format: false
+
     # G6 步 9b：折扣碼（結帳頁輸入＋分享連結）。
     post "checkouts/:token/discount" => "storefront/checkouts#apply_discount", format: false,
          as: :storefront_checkout_discount
