@@ -1090,5 +1090,8 @@
   "editor.removeOp": "Remove {id}",
   "editor.addSection": "Add section",
   "editor.sectionPicker": "Available sections",
-  "editor.pickerEmpty": "No addable sections (only sections with presets can be added)"
+  "editor.pickerEmpty": "No addable sections (only sections with presets can be added)",
+  "editor.alignLeft": "Left",
+  "editor.alignCenter": "Center",
+  "editor.alignRight": "Right"
 }

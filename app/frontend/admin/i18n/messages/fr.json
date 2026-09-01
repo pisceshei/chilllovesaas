@@ -1090,5 +1090,8 @@
   "editor.removeOp": "Supprimer {id}",
   "editor.addSection": "Ajouter une section",
   "editor.sectionPicker": "Sections disponibles",
-  "editor.pickerEmpty": "Aucune section ajoutable"
+  "editor.pickerEmpty": "Aucune section ajoutable",
+  "editor.alignLeft": "Gauche",
+  "editor.alignCenter": "Centre",
+  "editor.alignRight": "Droite"
 }

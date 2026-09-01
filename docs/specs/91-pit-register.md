@@ -3940,3 +3940,14 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   另立包。
 - ⚪ **theme.files 的 body 三形 union**（Text/Base64/Url——99 §1）：清單 v1 只回
   filename/size；讀取面隨步 16 編輯器。
+
+### 3.69 G4 步 16d（schema 驅動控件）的範圍外觀察（2026-09-01）
+
+- ⚪ 資源選擇器控件未實作（image_picker/product/collection/*_list/blog/article/
+  page/link_list/metaobject/video——26 §5 的資源型）：編輯器先唯讀顯示現值，
+  16e 接 picker UI（需資源搜尋 API 對接）。
+- ⚪ `visible_if` 條件顯示未評估（26 §5 共通欄位）：控件恆顯示。
+- ⚪ font_picker 先當 text 控件：字型庫 handle 下拉（config/storefront_fonts.yml
+  值域）可後補。
+- ⚪ SchemaLocale 只取第一個 `locales/*.default.schema.json`：多 schema locale
+  的語系挑選（依 staff locale）未做。

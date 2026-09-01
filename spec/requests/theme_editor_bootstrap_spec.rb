@@ -82,6 +82,21 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(promo.dig("preset", "settings", "text")).to eq("預設促銷文案")
   end
 
+  it "E5 sectionSchemas 全區段（不過濾 presets）＋ t: 鍵經 *.default.schema.json 解析" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { sectionSchemas } }
+    GQL
+    schemas = response.parsed_body.dig("data", "theme", "sectionSchemas")
+    expect(schemas).to have_key("hero") # 無 presets 也要有（樹上選中要控件）
+    heading = schemas.dig("hero", "settings").find { |d| d["id"] == "heading" }
+    expect(heading).to include("type" => "text", "default" => "預設標題")
+
+    promo_label = schemas.dig("promo", "settings").find { |d| d["id"] == "text" }["label"]
+    expect(promo_label).to eq("促銷文案") # t:promo.text_label 解析
+    expect(schemas.dig("promo", "name")).to eq("促銷條") # t:names.promo 解析
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })
