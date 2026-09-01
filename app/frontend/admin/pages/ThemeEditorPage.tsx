@@ -121,6 +121,21 @@ interface EditorData {
   } | null;
 }
 
+/** PR-23：買家路徑 → 模板型（預覽內導航同步左欄模板；99/96 路由對映） */
+export function templateForPath(path: string): string {
+  const clean = path.replace(/^\/[a-z]{2}(-[a-z]{2})?(?=\/|$)/i, "").split("?")[0] || "/";
+  if (clean === "/" || clean === "") return "index";
+  if (clean.startsWith("/products/")) return "product";
+  if (clean === "/collections") return "list-collections";
+  if (clean.startsWith("/collections/")) return "collection";
+  if (clean === "/cart") return "cart";
+  if (clean.startsWith("/pages/")) return "page";
+  if (/^\/blogs\/[^/]+\/.+/.test(clean)) return "article";
+  if (clean.startsWith("/blogs/")) return "blog";
+  if (clean.startsWith("/search")) return "search";
+  return "index";
+}
+
 function cloneTpl(tpl: TemplateJson): TemplateJson {
   return JSON.parse(JSON.stringify(tpl)) as TemplateJson;
 }
@@ -400,6 +415,14 @@ export function ThemeEditorPage() {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       const payload = event.data as { type?: string; id?: string; blockId?: string };
+      if (payload?.type === "cl:navigate" && typeof (payload as { path?: string }).path === "string") {
+        const path = (payload as { path: string }).path;
+        const frame = iframeRef.current;
+        if (frame) frame.src = `/admin/store/preview/${themeId}${path}?editor=1`;
+        const inferred = templateForPath(path);
+        if (inferred !== templateKey) syncStateParams({ template: inferred, section: null });
+        return;
+      }
       if (payload?.type === "cl:select" && payload.id) {
         setSelectedId(payload.id);
         setSelectedBlockId(payload.blockId ?? null); // PR-17：預覽點 block ⇒ 直開 block 面板

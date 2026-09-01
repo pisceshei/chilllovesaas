@@ -503,6 +503,15 @@ module ThemeEngine
           }
         });
         document.addEventListener("click",function(ev){
+          // PR-23：站內連結不逃出編輯器——攔下改由父頁換預覽 src
+          var link=ev.target.closest("a[href]");
+          if(link){
+            var href=link.getAttribute("href")||"";
+            if(href.charAt(0)==="/" && href.indexOf("/admin/")!==0){
+              ev.preventDefault();
+              parent.postMessage({type:"cl:navigate",path:href},location.origin);
+            }
+          }
           var host=ev.target.closest("[id^='shopify-section-']");
           if(!host) return;
           var msg={type:"cl:select",id:host.id.replace("shopify-section-","")};

@@ -276,6 +276,15 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).not_to include("cl:highlight")
   end
 
+  it "BR2 🔴 橋導航攔截（PR-23）：editor 預覽的橋含 cl:navigate 與 preventDefault" do
+    get "/admin/store/preview/#{theme.id}?editor=1"
+    expect(response.body).to include("cl:navigate")
+    expect(response.body).to include("preventDefault")
+
+    get "/en-hk/" # 公開店面不帶橋（既有 E3 語義的延伸面）
+    expect(response.body).not_to include("cl:navigate")
+  end
+
   it "BR1 🔴 橋 block 級（PR-17）：editor 預覽的橋含 blockId 點選/高亮處理" do
     get "/admin/store/preview/#{theme.id}?editor=1"
     expect(response.body).to include("msg.blockId")            # 點選上報 block id
