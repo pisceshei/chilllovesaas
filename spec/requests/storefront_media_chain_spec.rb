@@ -92,6 +92,44 @@ RSpec.describe "Storefront media chain", type: :request do
     expect(drop.liquid_method_missing("empty")).to be_nil # 🔴 M4 官方契約
   end
 
+  it "SR1 🔴 媒體端點變體選擇：?width= 取最小 ≥ 請求的 fit 變體；超原圖回原圖；衍生缺檔回落原圖" do
+    thumb = "THUMB".b
+    key = "shops/#{shop.id}/files/#{SecureRandom.uuid}-thumb.webp"
+    Storage::LocalDisk.write(key, StringIO.new(thumb))
+    ActsAsTenant.with_tenant(shop) do
+      file.update!(derivatives: {
+        "thumb" => { "key" => key, "width" => 200, "height" => 133 },
+        "card" => { "key" => "missing/card.webp", "width" => 600, "height" => 400 },
+        "og" => { "key" => "og/should-not-be-used.webp", "width" => 1200, "height" => 630 }
+      })
+    end
+
+    get "/media/#{file.id}/hero.png?width=150"
+    expect(response.media_type).to eq("image/webp") # thumb（200 ≥ 150 的最小者）
+    expect(response.body.b).to eq(thumb)
+
+    get "/media/#{file.id}/hero.png?width=300" # card（600）命中但 blob 缺 ⇒ 回落原圖
+    expect(response.media_type).to eq("image/png")
+    expect(response.body.b).to eq(png)
+
+    get "/media/#{file.id}/hero.png?width=5000" # 全部不足 ⇒ 原圖（永不放大）
+    expect(response.media_type).to eq("image/png")
+    expect(response.body.b).to eq(png)
+  end
+
+  it "SR2 🔴 image_tag widths：逐寬換 width 參數組 srcset、只取 ≤ src width；widths 不落 HTML 屬性" do
+    ActsAsTenant.with_tenant(shop) { file.update!(alt_text: "hero") }
+    filters = Class.new { include ThemeEngine::Filters }.new
+    url = ThemeEngine::ImageUrlResult.new("/media/9/x.png?width=800",
+                                          source_drop: ThemeEngine::FileImageDrop.new(file),
+                                          requested_width: 800)
+    tag = filters.image_tag(url, { "widths" => "200, 400, 800, 1600" })
+    expect(tag).to include('srcset="/media/9/x.png?width=200 200w, /media/9/x.png?width=400 400w, /media/9/x.png?width=800 800w"')
+    expect(tag).not_to include("1600w")        # 🔴 官方：只到 src width 上限
+    expect(tag).not_to include("widths=")      # 🔴 widths 不落 HTML 屬性（先前實錘誤輸出）
+    expect(tag).to include('alt="hero"')       # drop alt 推導
+  end
+
   it "M5 渲染級：section 設定帶真檔值 ⇒ 頁面出真 <img src=/media/...>" do
     ActsAsTenant.with_tenant(shop) do
       theme = Theme.create!(shop_id: shop.id, name: "Minimal", version: "1.0", role: "published",
@@ -111,7 +149,11 @@ RSpec.describe "Storefront media chain", type: :request do
                                LIQUID
       html = ThemeEngine::PageRenderer.new(theme:, shop:, publication: Publication.online_store!)
                                       .render("/").html
-      expect(html).to include(%(src="/media/#{file.id}/hero.png"))
+      # PR-9 升級斷言：官方 image_url/image_tag 形——width 參數＋height 推導
+      # （1200×800 ⇒ 800÷1.5=533）＋srcset（官方例證同形）
+      expect(html).to include(%(src="/media/#{file.id}/hero.png?width=800"))
+      expect(html).to include(%(width="800" height="533"))
+      expect(html).to include(%(srcset="/media/#{file.id}/hero.png?width=800 800w"))
     end
   end
 end

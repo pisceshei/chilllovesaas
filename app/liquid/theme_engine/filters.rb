@@ -53,20 +53,26 @@ module ThemeEngine
     end
 
     # ---- image -------------------------------------------------------------
+    # PR-9（官方 image_url 文檔取證 2026-09-01）：width/height 以 query 參數逐字
+    # 編進 URL（例 `...jpg?v=…&width=450`）；'800x' 類字串 to_i 係數化；format
+    # 參數吞掉不編出（我方衍生恆 webp＝ours；官方值域僅 pjpg/jpg、webp 走自動
+    # 協商）。回傳 ImageUrlResult（攜 drop＋請求尺寸——image_tag 推導用）。
     def image_url(input, opts = {})
-      w = opts.is_a?(Hash) ? opts["width"] : nil
-      h = opts.is_a?(Hash) ? opts["height"] : nil
+      w = opts.is_a?(Hash) ? opts["width"].to_i : 0
+      h = opts.is_a?(Hash) ? opts["height"].to_i : 0
       case input
-      when ThemeEngine::ImageDrop, ThemeEngine::FileImageDrop, ThemeEngine::PlaceholderImageDrop
-        # PR-2 nil 防線：真圖 drop 但 url 缺（檔案列壞）⇒ 佔位，不出空 src
-        input.url.presence ||
-          ThemeEngine::PlaceholderImageDrop.new(label: "image", w: (w || 800).to_i, h: (h || w || 800).to_i).url
-      when nil then ThemeEngine::PlaceholderImageDrop.new(label: "image", w: (w || 800).to_i, h: (h || w || 800).to_i).url
+      when ThemeEngine::ImageDrop, ThemeEngine::FileImageDrop
+        base = input.url.presence
+        return placeholder_url(w, h, "image") if base.nil? # PR-2 nil 防線不動
+        ThemeEngine::ImageUrlResult.new(
+          sized_media_url(base, width: w, height: h), source_drop: input,
+          requested_width: w.positive? ? w : nil, requested_height: h.positive? ? h : nil)
+      when ThemeEngine::PlaceholderImageDrop then input.url
+      when nil then placeholder_url(w, h, "image")
       else
         s = input.to_s
         if s.start_with?("shopify://") || s.empty?
-          ThemeEngine::PlaceholderImageDrop.new(label: File.basename(s.sub("shopify://", "")),
-                                                w: (w || 800).to_i, h: (h || w || 800).to_i).url
+          placeholder_url(w, h, File.basename(s.sub("shopify://", "")))
         else
           s
         end
@@ -74,14 +80,76 @@ module ThemeEngine
     end
     alias_method :img_url, :image_url
 
+    # PR-9（官方 image_tag 文檔取證 2026-09-01）：
+    # - srcset：明示 srcset ＞ widths（CSV→逐寬換 src 的 width 參數＋" Nw"，
+    #   只取 ≤ src width 者——官方 "up to the maximum defined in the image URL"）
+    #   ＞ 預設（src 帶 width 時出單條 `src Nw`；官方 smart set 未取得＝V）。
+    # - width 屬性＝明示 ＞ src width 參數；height＝明示 ＞ width÷aspect_ratio
+    #   （官方例證 200→133）；alt＝明示 ＞ drop alt。widths/preload 不落 HTML
+    #   屬性（先前 widths 誤輸出成屬性——對表軸實錘）。
     def image_tag(input, opts = {})
-      attrs = opts.is_a?(Hash) ? opts.map { |k, v| %(#{k.to_s.tr('_', '-')}="#{CGI.escapeHTML(v.to_s)}") }.join(" ") : ""
-      src = input.respond_to?(:url) ? input.url : input.to_s
-      # PR-2 nil 防線：空 src 出佔位（半殘鏈不出壞 <img src="">）
-      src = ThemeEngine::PlaceholderImageDrop.new(label: "image", w: 800, h: 800).url if src.to_s.empty?
+      opts = opts.is_a?(Hash) ? opts.dup : {}
+      widths = opts.delete("widths")
+      explicit_srcset = opts.key?("srcset") ? opts.delete("srcset") : :auto
+      opts.delete("preload") # 載入優先權面未接（V）
+      src = input.respond_to?(:to_s) ? input.to_s : ""
+      src = placeholder_url(800, 800, "image") if src.empty?
+
+      meta = input.is_a?(ThemeEngine::ImageUrlResult) ? input : nil
+      src_width = meta&.requested_width || url_width_param(src)
+      drop = meta&.source_drop
+
+      unless opts.key?("width")
+        opts["width"] = src_width if src_width
+      end
+      if !opts.key?("height") && opts["width"] && drop&.aspect_ratio&.positive?
+        opts["height"] = (opts["width"].to_i / drop.aspect_ratio).round
+      end
+      opts["alt"] = drop.alt if !opts.key?("alt") && drop.respond_to?(:alt) && drop.alt
+
+      srcset = build_srcset(src, src_width, widths, explicit_srcset)
+      opts["srcset"] = srcset if srcset
+
+      attrs = opts.filter_map { |k, v| v.nil? ? nil : %(#{k.to_s.tr('_', '-')}="#{CGI.escapeHTML(v.to_s)}") }.join(" ")
       %(<img src="#{src}" #{attrs}>)
     end
     alias_method :img_tag, :image_tag
+
+    # 逐寬換 src query 的 width 鍵（只動 width、其餘參數與順序保留——與官方
+    # `?v=…&width=N` 換值形同構）。
+    def build_srcset(src, src_width, widths, explicit_srcset)
+      return explicit_srcset if explicit_srcset != :auto # 明示（nil ⇒ 省略）
+      if widths.present?
+        candidates = widths.to_s.split(",").map { |x| x.to_i }.select(&:positive?)
+        candidates = candidates.select { |x| x <= src_width } if src_width
+        return nil if candidates.empty?
+        return candidates.map { |x| "#{swap_width(src, x)} #{x}w" }.join(", ")
+      end
+      src_width ? "#{src} #{src_width}w" : nil
+    end
+
+    def swap_width(src, width)
+      src.include?("width=") ? src.sub(/width=\d+/, "width=#{width}") :
+        (src.include?("?") ? "#{src}&width=#{width}" : "#{src}?width=#{width}")
+    end
+
+    def url_width_param(src)
+      m = src.to_s.match(/[?&]width=(\d+)/)
+      m && m[1].to_i
+    end
+
+    def sized_media_url(base, width: 0, height: 0)
+      query = []
+      query << "width=#{width}" if width.positive?
+      query << "height=#{height}" if height.positive?
+      query.empty? ? base : "#{base}#{base.include?('?') ? '&' : '?'}#{query.join('&')}"
+    end
+
+    def placeholder_url(w, h, label)
+      ThemeEngine::PlaceholderImageDrop.new(label: label.to_s.presence || "image",
+                                            w: (w.positive? ? w : 800),
+                                            h: (h.positive? ? h : (w.positive? ? w : 800))).url
+    end
 
     def placeholder_svg_tag(input, cls = nil)
       %(<svg class="#{cls} placeholder-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#e8ded2"/><title>#{CGI.escapeHTML(input.to_s)}</title></svg>)
