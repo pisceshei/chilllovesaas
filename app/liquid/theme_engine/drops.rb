@@ -46,6 +46,26 @@ module ThemeEngine
   end
 
   # 媒體 drop（DB：Media＋StoredFile）。
+  # 直接包 StoredFile 的 image drop（settings image_picker 命中檔案庫時用；
+  # Ella 修復 PR-2）。與 ImageDrop 同介面（本尊 image 物件子集）。
+  class FileImageDrop < Liquid::Drop
+    def initialize(stored_file)
+      super()
+      @file = stored_file
+    end
+
+    def id = @file.id
+    def alt = @file.alt_text
+    def width = @file.width
+    def height = @file.height
+    def aspect_ratio = width && height && height.positive? ? width.to_f / height : nil
+    def media_type = "image"
+    def src = url
+    def url = MediaUrl.for(@file)
+    def to_s = url.to_s
+    def preview_image = self
+  end
+
   class ImageDrop < Liquid::Drop
     def initialize(media)
       super()
@@ -61,7 +81,8 @@ module ThemeEngine
     def media_type = "image"
     def position = @media.position
     def src = url
-    def url = @file && Storage::LocalDisk.respond_to?(:url_for) ? Storage::LocalDisk.url_for(@file.storage_key) : nil
+    # Ella 修復 PR-2：接買家面媒體端點（先前恆 nil＝0 <img> 根因 A）。
+    def url = MediaUrl.for(@file)
     def to_s = url.to_s
     def preview_image = self
 
@@ -1685,6 +1706,16 @@ module ThemeEngine
 
     # @t 值通常是型別字串；`color_scheme_group` 存整個 def（definition 子 schema
     # 是 scheme.settings 的型別來源——runtime.extract_types 同批改）。
+    # @context 由 Liquid 渲染期注入（drop.context=）；無 context（單元測試）
+    # ⇒ 直接佔位。查找走 Runtime#resolve_settings_file（帶 shop 語境）。
+    def resolve_settings_image(val)
+      rt = @context&.registers&.[](:runtime)
+      file = rt.respond_to?(:resolve_settings_file) ? rt&.resolve_settings_file(val) : nil
+      return FileImageDrop.new(file) if file
+
+      PlaceholderImageDrop.new(label: File.basename(val.to_s), w: 1200, h: 800)
+    end
+
     def coerce(key, val)
       type_entry = @t[key]
       type_name = type_entry.is_a?(Hash) ? type_entry["type"] : type_entry
@@ -1694,7 +1725,12 @@ module ThemeEngine
 
         val.to_s.start_with?("#") ? ColorDrop.new(val) : val
       when "image_picker"
-        val.nil? || val == "" ? nil : PlaceholderImageDrop.new(label: File.basename(val.to_s), w: 1200, h: 800)
+        # 空值＝nil（官方契約：blank image setting 回 nil——除零診斷實錘，勿改）。
+        # 非空 ⇒ 先解析檔案庫（shopify://shopify/files/{name} 或裸檔名 →
+        # StoredFile by filename），命中出真圖 drop；未命中退佔位（PR-2）。
+        return nil if val.nil? || val == ""
+
+        resolve_settings_image(val)
       when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
       when "color_scheme_group"
         ColorSchemeGroupDrop.new(val, definition: type_entry.is_a?(Hash) ? (type_entry["definition"] || []) : [])

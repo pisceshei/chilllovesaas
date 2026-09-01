@@ -69,6 +69,9 @@ Rails.application.routes.draw do
   constraints ->(request) { request.env["chilllove.shop_id"].present? } do
     get "robots.txt" => "storefront/pages#robots", format: false, as: :storefront_robots
     get "theme-assets/*file" => "storefront/assets#show", format: false, as: :storefront_asset
+    # Ella 修復 PR-2：買家面媒體（真圖鏈輸出端；MediaUrl 產這個形）
+    get "media/:id/:filename" => "storefront/media#show", format: false,
+        constraints: { id: /\d+/, filename: /[^\/]+/ }, as: :storefront_media
     # SEO 面（包 35）：sitemap 分片（83 §3.6 形）＋ agents/llms 三別名（62 §H.2 同一生成器）。
     get "sitemap.xml" => "storefront/sitemaps#index", format: false, as: :storefront_sitemap
     %w[products collections pages].each do |kind|

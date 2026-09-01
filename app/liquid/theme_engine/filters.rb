@@ -51,7 +51,10 @@ module ThemeEngine
       w = opts.is_a?(Hash) ? opts["width"] : nil
       h = opts.is_a?(Hash) ? opts["height"] : nil
       case input
-      when ThemeEngine::ImageDrop, ThemeEngine::PlaceholderImageDrop then input.url
+      when ThemeEngine::ImageDrop, ThemeEngine::FileImageDrop, ThemeEngine::PlaceholderImageDrop
+        # PR-2 nil 防線：真圖 drop 但 url 缺（檔案列壞）⇒ 佔位，不出空 src
+        input.url.presence ||
+          ThemeEngine::PlaceholderImageDrop.new(label: "image", w: (w || 800).to_i, h: (h || w || 800).to_i).url
       when nil then ThemeEngine::PlaceholderImageDrop.new(label: "image", w: (w || 800).to_i, h: (h || w || 800).to_i).url
       else
         s = input.to_s
@@ -68,6 +71,8 @@ module ThemeEngine
     def image_tag(input, opts = {})
       attrs = opts.is_a?(Hash) ? opts.map { |k, v| %(#{k.to_s.tr('_', '-')}="#{CGI.escapeHTML(v.to_s)}") }.join(" ") : ""
       src = input.respond_to?(:url) ? input.url : input.to_s
+      # PR-2 nil 防線：空 src 出佔位（半殘鏈不出壞 <img src="">）
+      src = ThemeEngine::PlaceholderImageDrop.new(label: "image", w: 800, h: 800).url if src.to_s.empty?
       %(<img src="#{src}" #{attrs}>)
     end
     alias_method :img_tag, :image_tag
