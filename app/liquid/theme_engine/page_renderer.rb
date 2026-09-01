@@ -34,8 +34,11 @@ module ThemeEngine
     # @return [Result]
     # @note 整段在租戶脈絡內執行（引擎的全部 DB 讀取——templates／theme_settings／
     #   menus／lookup——都要 tenant；巢狀 with_tenant 冪等，controller 已設也無妨）。
-    def render(path, params: {})
+    # @param assigns [Hash] 額外全域 assigns（步 12b：suggest／recommendations 的
+    #   section 形把 predictive_search／recommendations 疊進渲染語境）。
+    def render(path, params: {}, assigns: {})
       @params = params || {}
+      @extra_assigns = assigns || {}
       ActsAsTenant.with_tenant(@shop) do
         # Section Rendering API（包 33；契約＝83 §3.4＋§12.3 真店逐格）：
         # 兩參數並存時 `sections` 壓過 `section_id`（實測：回 JSON）。
@@ -63,6 +66,7 @@ module ThemeEngine
         runtime.assign("template", TemplateDrop.new(page_type, suffix: template_key.delete_prefix("#{page_type}.")))
       end
       assigns.each { |k, v| runtime.assign(k, v) }
+      @extra_assigns&.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
       end
@@ -127,6 +131,12 @@ module ThemeEngine
       when "/collections"
         # 步 12（96 §1）：集合列表頁。內容全由 `collections` 全域供給（Runtime 已備）。
         [ "list-collections", {}, 200 ]
+      when "/search"
+        # 步 12b（96 §3）：搜尋頁。search 物件自帶懶載——無 q ⇒ performed=false 空表單頁。
+        [ "search", { "search" => SearchDrop.new(
+          shop: @shop, publication: @publication, url_prefix: @url_prefix,
+          locale: @locale, params: @params
+        ) }, 200 ]
       when %r{\A/collections/([^/]+)\z}
         handle = Regexp.last_match(1)
         collection = ActsAsTenant.with_tenant(@shop) do
@@ -216,6 +226,7 @@ module ThemeEngine
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
                             publication: @publication, params: @params)
       assigns.each { |k, v| runtime.assign(k, v) }
+      @extra_assigns&.each { |k, v| runtime.assign(k, v) }
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
       end
@@ -234,6 +245,13 @@ module ThemeEngine
         g = runtime.load_json("sections/#{name}.json") or next
         found = (g["sections"] || {})[sid]
         return found if found
+      end
+      # ③檔名直渲染（步 12b）：Ajax API 的 section_id＝**section 檔名**（官方
+      # "the section file that you want render"；Dawn/Ella 實際請求 predictive-search
+      # ／related-products／cart-drawer 全是檔名——25 §5＋96 §4.3 live 200 實證）。
+      # 檔存在 ⇒ 合成空設定 data（schema defaults 生效）；名限 [\w-]（防路徑逃逸）。
+      if sid.match?(/\A[\w-]+\z/) && runtime.read("sections/#{sid}.liquid")
+        return { "type" => sid, "settings" => {} }
       end
       nil
     end

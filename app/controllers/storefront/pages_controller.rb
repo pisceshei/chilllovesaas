@@ -17,7 +17,8 @@ module Storefront
 
     # query 白名單（進快取 key 的維度；未列參數不參與 key＝同一快取頁）。
     # view＝?view= 替代模板（步 12）——不進 key 會讓替代模板頁污染預設頁快取。
-    CACHE_PARAMS = %w[variant page q sort_by view].freeze
+    # type＝搜尋頁型別過濾（步 12b）——不進 key 會讓 type=page 污染全型搜尋頁。
+    CACHE_PARAMS = %w[variant page q sort_by view type].freeze
 
     # GET /robots.txt（包 35 起開放；62 §D.2 預設 disallow 集合＋平台保底 Sitemap 行）。
     # 主題 robots.txt.liquid 覆寫層（§D.1 本尊形態）與 AI 爬蟲三組開關（§D.3）待
@@ -53,6 +54,10 @@ module Storefront
       if rest == "/cart"
         response.headers["Cache-Control"] = "no-store"
         payload = render_page(hit, rest, cart_json: buyer_cart_json)
+      elsif rest == "/search"
+        # 步 12b：搜尋頁**不進頁快取**——q 鍵空間無界（S6b 同型防灌爆），
+        # 且結果隨庫存/發布即時變。robots 已 Disallow /search（既有）。
+        payload = render_page(hit, rest)
       else
         payload = PageCache.fetch(
           shop: current_shop, theme: published_theme, market: hit.market,
