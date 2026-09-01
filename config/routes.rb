@@ -25,6 +25,9 @@ Rails.application.routes.draw do
   # 包 30（D77）：登入後主題預覽（noindex）。assets 路由必須排在頁面 glob 之前。
   get "admin/store/preview/:theme_id/assets/*file" => "admin/storefront_preview#asset",
       format: false, as: :admin_theme_preview_asset
+  # PR-7 即時預覽：未儲存 entry 的單 section 片段渲染
+  post "admin/store/preview/:theme_id/draft_section" => "admin/storefront_preview#draft_section",
+       as: :admin_preview_draft_section
   get "admin/store/preview/:theme_id(/*path)" => "admin/storefront_preview#show",
       format: false, as: :admin_theme_preview
 

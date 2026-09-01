@@ -34,6 +34,25 @@ module Admin
       send_data body, type: Marcel::MimeType.for(name: params[:file].to_s), disposition: "inline"
     end
 
+    # POST /admin/store/preview/:theme_id/draft_section（PR-7 即時預覽）
+    # body: { path, section_id, entry }——以未儲存 entry 渲染單 section 片段。
+    def draft_section
+      authorize Theme, :index?
+      theme = Theme.find(params[:theme_id])
+      sid = params[:section_id].to_s
+      entry = params[:entry].respond_to?(:to_unsafe_h) ? params[:entry].to_unsafe_h : params[:entry]
+      return head :unprocessable_entity if sid.blank? || !entry.is_a?(Hash)
+
+      result = ThemeEngine::PageRenderer.new(
+        theme: theme, shop: Current.shop, publication: Publication.online_store!,
+        design_mode: true, host: request.host
+      ).render(params[:path].presence || "/", params: { "section_id" => sid },
+               draft_sections: { sid => entry })
+
+      response.headers["X-Robots-Tag"] = "noindex, nofollow"
+      render html: result.html.html_safe, status: result.status, layout: false
+    end
+
     # GET /admin/store/preview/:theme_id(/*path)
     def show
       authorize Theme, :index?

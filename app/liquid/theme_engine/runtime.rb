@@ -436,6 +436,15 @@ module ThemeEngine
             outline(current,false); current=el; outline(el,true);
             if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
           }
+          if(d.type==="cl:replace"){
+            var target=document.getElementById("shopify-section-"+d.id);
+            if(target && typeof d.html==="string"){
+              var tpl=document.createElement("template");
+              tpl.innerHTML=d.html;
+              var next=tpl.content.querySelector("[id^='shopify-section-']")||tpl.content.firstElementChild;
+              if(next){ target.replaceWith(next); if(current===target) { current=next; outline(next,true); } }
+            }
+          }
         });
         document.addEventListener("click",function(ev){
           var host=ev.target.closest("[id^='shopify-section-']");

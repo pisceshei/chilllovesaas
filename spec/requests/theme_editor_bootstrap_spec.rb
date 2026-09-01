@@ -164,6 +164,22 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(themed).not_to be_nil, "@theme 展開應含 blocks/_card.liquid"
   end
 
+  it "DS1 🔴 draft_section：未儲存 entry 渲染片段（不落 DB）；缺參 422" do
+    post "/admin/store/preview/#{theme.id}/draft_section",
+         params: { path: "/", section_id: "hero",
+                   entry: { type: "hero", settings: { heading: "草稿即時值" } } }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("草稿即時值")           # 🔴 draft 覆蓋生效
+    expect(response.body).to include(%(id="shopify-section-hero")) # 片段含 wrapper（cl:replace 錨）
+    expect(ActsAsTenant.with_tenant(shop) { Template.count }).to eq(0) # 不落 DB
+
+    post "/admin/store/preview/#{theme.id}/draft_section",
+         params: { path: "/", section_id: "", entry: {} }.to_json,
+         headers: { "CONTENT_TYPE" => "application/json" }
+    expect(response).to have_http_status(:unprocessable_entity)
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })
