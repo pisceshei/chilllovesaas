@@ -1125,5 +1125,8 @@
   "settings.webhooks.deleted": "Webhook を削除しました",
   "settings.webhooks.failed": "操作に失敗しました",
   "settings.webhooks.secretOnce": "署名キー（今回のみ表示——今すぐ保存）：",
-  "settings.webhooks.secretDismiss": "保存しました"
+  "settings.webhooks.secretDismiss": "保存しました",
+  "editor.headerBand": "ヘッダー",
+  "editor.templateBand": "テンプレート",
+  "editor.footerBand": "フッター"
 }

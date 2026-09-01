@@ -24,6 +24,11 @@ const BOOTSTRAP = {
       name: "Minimal",
       role: "published",
       templates: [ { filename: "templates/index.json" }, { filename: "templates/product.json" } ],
+      sectionGroups: [
+        { name: "header-group", path: "sections/header-group.json",
+          json: { sections: { gh: { type: "hero", settings: { heading: "群組頁首" } } }, order: [ "gh" ] },
+          lockVersion: null },
+      ],
       sectionCatalog: [
         { type: "promo", name: "促銷條", preset: { settings: { text: "預設促銷文案" }, blocks: null } },
       ],
@@ -59,6 +64,11 @@ const BOOTSTRAP = {
 function stubFetch(saveErrors: { message: string; code: string }[] = []) {
   const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
     const request = JSON.parse(String(init?.body)) as { query: string };
+    if (request.query.includes("themeFileUpsert")) {
+      const fileBody = { data: { themeFileUpsert: {
+        path: "sections/header-group.json", lockVersion: 0, userErrors: [] } } };
+      return { json: vi.fn().mockResolvedValue(fileBody), ok: true, status: 200 } as unknown as Response;
+    }
     const body = request.query.includes("themeTemplateUpsert")
       ? { data: { themeTemplateUpsert: {
           templateKey: saveErrors.length > 0 ? null : "index",
@@ -99,7 +109,8 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
     const nodes = tree.getAllByRole("button").filter((node) => node.hasAttribute("aria-pressed"));
-    expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "blocks-demo" ]);
+    // PR-5 三帶：頁首帶 hero ＋ 範本帶 hero/blocks-demo
+    expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "hero", "blocks-demo" ]);
     expect(tree.getByLabelText("顯示 demo")).toBeInTheDocument(); // disabled ⇒ 眼睛顯示「顯示」op
     expect(tree.getByText("_parent")).toBeInTheDocument(); // block 子層
     const switcher = screen.getByLabelText("頁面模板") as HTMLSelectElement;
@@ -115,7 +126,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const postSpy = vi.fn();
     Object.defineProperty(iframe, "contentWindow", { value: { postMessage: postSpy } });
 
-    fireEvent.click(tree.getByRole("button", { name: "hero" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]); // 範本帶（頁首帶在前）
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
     expect(settings.getByDisplayValue("首頁英雄")).toBeInTheDocument();
     expect(postSpy).toHaveBeenCalledWith(
@@ -207,7 +218,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const fetchMock = stubFetch();
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
-    fireEvent.click(tree.getByRole("button", { name: "hero" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]); // 範本帶（頁首帶在前）
 
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
     expect(settings.getByText("版面")).toBeInTheDocument(); // header 結構元素
@@ -247,5 +258,46 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sent.variables.settings.brand_color).toBe("#123456");
     // 模板未動 ⇒ 不應多發 templateUpsert
     expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(0);
+  });
+
+  it("ED10 🔴 三帶樹：頁首帶出群組 section；點選出群組設定面板", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    expect(tree.getByText("頁首")).toBeInTheDocument();
+    expect(tree.getByText("範本")).toBeInTheDocument();
+
+    // 頁首帶的 hero 列（與範本帶的 hero 區分：取第一個＝頁首帶在前）
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[0]);
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    expect(settings.getByDisplayValue("群組頁首")).toBeInTheDocument();
+  });
+
+  it("ED11 🔴 群組編輯：改值→undo 復原→redo→Save 走 themeFileUpsert（模板不發）", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[0]);
+
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    const input = settings.getByDisplayValue("群組頁首");
+    fireEvent.change(input, { target: { value: "改過的頁首" } });
+    expect(settings.getByDisplayValue("改過的頁首")).toBeInTheDocument();
+
+    // 跨帶 undo/redo（群組與模板同一棧）
+    fireEvent.click(screen.getByRole("button", { name: /復原|Undo/i }));
+    expect(settings.getByDisplayValue("群組頁首")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /重做|Redo/i }));
+    expect(settings.getByDisplayValue("改過的頁首")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeFileUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeFileUpsert")[0].body)) as {
+      variables: { path: string; content: string; lockVersion: number | null };
+    };
+    expect(sent.variables.path).toBe("sections/header-group.json");
+    expect(JSON.parse(sent.variables.content).sections.gh.settings.heading).toBe("改過的頁首");
+    expect(sent.variables.lockVersion).toBeNull();
+    expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(0); // 模板未動不發
   });
 });

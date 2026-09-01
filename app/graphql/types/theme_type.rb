@@ -36,6 +36,11 @@ module Types
     # 本尊「加入區段」清單＝presets 驅動；main-*/hero 這類骨架區段無 preset
     # 不可手加）。preset 取第一個（我方 minimal 每區段至多一個）。
     field :section_catalog, GraphQL::Types::JSON, null: false
+    # PR-5（編輯器群組）：layout `{% sections '...' %}` 引用的 section groups
+    # ——樹的 Header/Footer 帶（24 §1：本尊樹形＝Header group／Template／
+    # Footer group 三段）。內容經 source 讀（吃 16e1 檔案覆寫層）；
+    # lockVersion＝該 JSON 檔的 overlay 鎖底版（寫回走 themeFileUpsert）。
+    field :section_groups, GraphQL::Types::JSON, null: false
     # 16d：全部區段的 settings 定義（schema 驅動控件；26 §5 型別全表）。
     # 與 catalog 不同：**不過濾 presets**——樹上選中的 main-* 也要有控件。
     field :section_schemas, GraphQL::Types::JSON, null: false
@@ -67,6 +72,27 @@ module Types
         { "type" => type,
           "name" => translate.call(schema["name"] || type),
           "preset" => { "settings" => preset["settings"] || {}, "blocks" => preset["blocks"] } }
+      end
+    end
+
+    def section_groups
+      source = ThemeEngine::Sources.resolve(object)
+      return [] if source.nil?
+
+      layout = source.read("layout/theme.liquid").to_s
+      layout.scan(/\{%-?\s*sections\s+'([^']+)'/).flatten.uniq.filter_map do |name|
+        raw = source.read("sections/#{name}.json")
+        json = begin
+          raw ? ThemeEngine::Runtime.tolerant_json(raw) : nil
+        rescue JSON::ParserError
+          nil
+        end
+        next if json.nil?
+
+        path = "sections/#{name}.json"
+        { "name" => name, "path" => path, "json" => json.slice("sections", "order"),
+          "lockVersion" => ThemeFileOverlay.where(shop_id: object.shop_id, theme_id: object.id,
+                                                  path:).pick(:lock_version) }
       end
     end
 

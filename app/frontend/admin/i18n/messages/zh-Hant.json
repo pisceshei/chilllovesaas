@@ -1125,5 +1125,8 @@
   "settings.webhooks.deleted": "已刪除 webhook",
   "settings.webhooks.failed": "操作失敗",
   "settings.webhooks.secretOnce": "簽章密鑰（只顯示這一次，請立即保存）：",
-  "settings.webhooks.secretDismiss": "我已保存"
+  "settings.webhooks.secretDismiss": "我已保存",
+  "editor.headerBand": "頁首",
+  "editor.templateBand": "範本",
+  "editor.footerBand": "頁尾"
 }
