@@ -1114,5 +1114,16 @@
   "code.revert": "元のバージョンに戻す",
   "code.delete": "ファイルを削除",
   "code.reverted": "元のバージョンに戻しました",
-  "code.deleted": "ファイルを削除しました"
+  "code.deleted": "ファイルを削除しました",
+  "settings.webhooks.title": "Webhook",
+  "settings.webhooks.hint": "イベント発生時に HTTPS POST で外部システムへ通知",
+  "settings.webhooks.topic": "トピック",
+  "settings.webhooks.topicPlaceholder": "トピックを選択…",
+  "settings.webhooks.url": "コールバック URL",
+  "settings.webhooks.add": "Webhook を追加",
+  "settings.webhooks.created": "Webhook を作成しました",
+  "settings.webhooks.deleted": "Webhook を削除しました",
+  "settings.webhooks.failed": "操作に失敗しました",
+  "settings.webhooks.secretOnce": "署名キー（今回のみ表示——今すぐ保存）：",
+  "settings.webhooks.secretDismiss": "保存しました"
 }

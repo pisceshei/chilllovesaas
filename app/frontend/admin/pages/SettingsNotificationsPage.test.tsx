@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -39,7 +39,15 @@ const TEMPLATES = [
   { key: "abandoned_checkout", subject: "Complete your Purchase", isDefault: true },
 ];
 
-const SETTINGS_BODY = { data: { notificationSenderEmail: "eshop@chilling.example", notificationTemplates: TEMPLATES } };
+const SETTINGS_BODY = { data: {
+  notificationSenderEmail: "eshop@chilling.example",
+  notificationTemplates: TEMPLATES,
+  webhookTopics: [ "orders/create", "products/update" ],
+  webhookSubscriptions: { nodes: [
+    { id: "gid://chilllove/WebhookSubscription/3", topic: "orders/create",
+      callbackUrl: "https://hook.example.com/a", status: "active", failureCount: 0 },
+  ] },
+} };
 
 function renderAt(path: string) {
   const router = createMemoryRouter(
@@ -87,6 +95,46 @@ describe("設定 › 通知", () => {
     const calls = callsTo(fetchMock, "notificationSenderEmailUpdate");
     expect(calls.length).toBe(1);
     expect(String(calls[0]?.body)).toContain('"senderEmail":"new@chilling.example"');
+  });
+
+  it("WH1 🔴 webhooks 卡：列表＋建立（帶 topic/url）＋secret 一次性顯示＋刪除", async () => {
+    const fetchMock = stubRoutedFetch([
+      { match: "query notificationSettings", body: SETTINGS_BODY },
+      { match: "webhookSubscriptionCreate", body: { data: { webhookSubscriptionCreate: {
+        secret: "a".repeat(48),
+        webhookSubscription: { id: "gid://chilllove/WebhookSubscription/9", topic: "products/update",
+          callbackUrl: "https://hook.example.com/b", status: "active", failureCount: 0 },
+        userErrors: [],
+      } } } },
+      { match: "webhookSubscriptionDelete", body: { data: { webhookSubscriptionDelete: {
+        deletedId: "gid://chilllove/WebhookSubscription/3", userErrors: [],
+      } } } },
+    ]);
+    renderAt("/admin/settings/notifications");
+    const main = within(await screen.findByRole("main"));
+
+    // 列表現值（select option 也含同字串——鎖列表容器）
+    const list = within(await main.findByTestId("webhook-list"));
+    expect(list.getByText("orders/create")).toBeVisible();
+    expect(list.getByText("https://hook.example.com/a")).toBeVisible();
+
+    // 建立：選 topic＋填 URL ⇒ mutation 帶兩參數；secret 一次性條出現
+    fireEvent.change(main.getByLabelText("主題"), { target: { value: "products/update" } });
+    fireEvent.change(main.getByPlaceholderText("https://example.com/webhooks"),
+      { target: { value: "https://hook.example.com/b" } });
+    fireEvent.click(main.getByRole("button", { name: "新增 webhook" }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "webhookSubscriptionCreate")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "webhookSubscriptionCreate")[0].body)) as {
+      variables: { topic: string; callbackUrl: string };
+    };
+    expect(sent.variables).toEqual({ topic: "products/update", callbackUrl: "https://hook.example.com/b" });
+    expect(await main.findByText("a".repeat(48))).toBeVisible(); // 🔴 一次性 secret
+    fireEvent.click(main.getByRole("button", { name: "我已保存" }));
+    expect(main.queryByText("a".repeat(48))).not.toBeInTheDocument();
+
+    // 刪除
+    fireEvent.click(main.getAllByRole("button", { name: "刪除" })[0]);
+    await vi.waitFor(() => expect(callsTo(fetchMock, "webhookSubscriptionDelete")).toHaveLength(1));
   });
 });
 

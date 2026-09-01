@@ -1114,5 +1114,16 @@
   "code.revert": "Rétablir la version d'origine",
   "code.delete": "Supprimer le fichier",
   "code.reverted": "Version d'origine rétablie",
-  "code.deleted": "Fichier supprimé"
+  "code.deleted": "Fichier supprimé",
+  "settings.webhooks.title": "Webhooks",
+  "settings.webhooks.hint": "Notifier les systèmes externes via HTTPS POST",
+  "settings.webhooks.topic": "Sujet",
+  "settings.webhooks.topicPlaceholder": "Choisir un sujet…",
+  "settings.webhooks.url": "URL de rappel",
+  "settings.webhooks.add": "Ajouter un webhook",
+  "settings.webhooks.created": "Webhook créé",
+  "settings.webhooks.deleted": "Webhook supprimé",
+  "settings.webhooks.failed": "Échec de l'opération",
+  "settings.webhooks.secretOnce": "Clé de signature (affichée une seule fois) : ",
+  "settings.webhooks.secretDismiss": "Enregistrée"
 }

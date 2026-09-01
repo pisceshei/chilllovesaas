@@ -145,6 +145,8 @@ module Types
       argument :query, String, required: false
     end
 
+    # 20b：可訂閱 topic 白名單（＝Events::Topics::EXTERNAL；UI select 資料源）。
+    field :webhook_topics, [ String ], null: false
     # 20a：webhook 訂閱清單（28 §15）。
     field :webhook_subscriptions, WebhookSubscriptionConnectionType, null: false, connection: false do
       argument :after, String, required: false
@@ -401,6 +403,11 @@ module Types
       authorize_products!
       Menu.includes(menu_items: :children)
           .where(shop_id: context.fetch(:current_shop).id).order(:title)
+    end
+
+    def webhook_topics
+      authorize_products!
+      Events::Topics::EXTERNAL
     end
 
     def webhook_subscriptions(first: nil, after: nil, last: nil, before: nil)

@@ -1114,5 +1114,16 @@
   "code.revert": "Revert to original",
   "code.delete": "Delete file",
   "code.reverted": "Reverted to original",
-  "code.deleted": "File deleted"
+  "code.deleted": "File deleted",
+  "settings.webhooks.title": "Webhooks",
+  "settings.webhooks.hint": "Notify external systems via HTTPS POST when events occur (verify X-CL-Hmac-Sha256)",
+  "settings.webhooks.topic": "Topic",
+  "settings.webhooks.topicPlaceholder": "Select a topic…",
+  "settings.webhooks.url": "Callback URL",
+  "settings.webhooks.add": "Add webhook",
+  "settings.webhooks.created": "Webhook created",
+  "settings.webhooks.deleted": "Webhook deleted",
+  "settings.webhooks.failed": "Operation failed",
+  "settings.webhooks.secretOnce": "Signing secret (shown only once — save it now): ",
+  "settings.webhooks.secretDismiss": "I saved it"
 }
