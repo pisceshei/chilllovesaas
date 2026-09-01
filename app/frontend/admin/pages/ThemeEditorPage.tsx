@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeft, ArrowUp, Copy, Eye, EyeOff, Redo2, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Copy, Eye, EyeOff, Redo2, Smartphone, Trash2, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { requestAdminGraphQL } from "../api/graphql";
@@ -297,6 +297,8 @@ export function ThemeEditorPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   // 16d2：佈景設定（settings_data current）——獨立 draft；undo 整合＝16e（91 §3.70）
   const [themeMode, setThemeMode] = useState(false);
+  // PR-15：📱 行動版預覽切換（24 §1.1 頂列實測；iframe 收窄 390px 置中）
+  const [mobilePreview, setMobilePreview] = useState(false);
   const [settingsDraft, setSettingsDraft] = useState<Record<string, unknown> | null>(null);
   const [settingsLock, setSettingsLock] = useState<number | null>(null);
   const [settingsDirty, setSettingsDirty] = useState(false);
@@ -345,6 +347,52 @@ export function ThemeEditorPage() {
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
+
+  // PR-15：編輯器狀態 URL 化（24 §1.1——本尊選中帶 ?section=、佈景設定帶
+  // ?context=theme；我方同形但 section 值用我方 section 鍵）。初載還原一次。
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || !data) return;
+    restoredRef.current = true;
+    const section = searchParams.get("section");
+    if (searchParams.get("context") === "theme") {
+      setThemeMode(true);
+    } else if (section) {
+      setSelectedId(section);
+      setSelectedBand(
+        draftRef.current?.sections?.[section]
+          ? "template"
+          : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[section])?.[0] ?? "template",
+      );
+    }
+  }, [data, searchParams]);
+
+  const syncStateParams = (patch: Record<string, string | null>) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      for (const [ key, value ] of Object.entries(patch)) {
+        if (value === null) next.delete(key);
+        else next.set(key, value);
+      }
+      return next;
+    }, { replace: true });
+  };
+
+  // PR-15：undo/redo 鍵盤快捷鍵（Cmd/Ctrl+Z／Cmd/Ctrl+Shift+Z；24 §1.1 頂列
+  // ↺↻ 的鍵盤面）。輸入控件內不攔——讓瀏覽器原生文字 undo 先行。
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName ?? "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable) return;
+      event.preventDefault();
+      if (event.shiftKey) redoRef.current();
+      else undoRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -479,6 +527,10 @@ export function ThemeEditorPage() {
   // undo/redo 也驅動預覽（fleet editor-live 軸③）
   const bumpDrafts = () => setDraftsVersion((v) => v + 1);
 
+  // PR-15：快捷鍵 effect 只掛一次，經 ref 取最新 undo/redo
+  const undoRef = useRef<() => void>(() => {});
+  const redoRef = useRef<() => void>(() => {});
+
   const undo = () => {
     setUndoStack((stack) => {
       if (stack.length === 0) return stack;
@@ -500,6 +552,9 @@ export function ThemeEditorPage() {
     });
   bumpDrafts();
   };
+
+  undoRef.current = undo;
+  redoRef.current = redo;
 
   const orderOf = (tpl: TemplateJson) => tpl.order ?? Object.keys(tpl.sections ?? {});
 
@@ -709,6 +764,9 @@ export function ThemeEditorPage() {
         <Link className="cl-editor__back" to="/admin/store">
           <ArrowLeft aria-hidden="true" size={16} /> {data?.name ?? t("common.loading")}
         </Link>
+        {data?.role === "published" ? (
+          <span className="cl-editor__badge">{t("editor.active")}</span>
+        ) : null}
         <select
           aria-label={t("editor.templateSwitcher")}
           className="cl-field__input cl-editor__switcher"
@@ -720,6 +778,14 @@ export function ThemeEditorPage() {
           ))}
         </select>
         <span className="cl-editor__spacer" />
+        <Button
+          aria-pressed={mobilePreview}
+          onClick={() => setMobilePreview((on) => !on)}
+          size="small"
+          variant={mobilePreview ? "primary" : "ghost"}
+        >
+          <Smartphone aria-hidden="true" size={14} /> {t("editor.mobilePreview")}
+        </Button>
         <Button disabled={undoStack.length === 0} onClick={undo} size="small" variant="ghost">
           <Undo2 aria-hidden="true" size={14} /> {t("editor.undo")}
         </Button>
@@ -741,7 +807,7 @@ export function ThemeEditorPage() {
           <Button onClick={() => setPickerOpen((open) => !open)} size="small">
             {t("editor.addSection")}
           </Button>
-          <Button onClick={() => { setThemeMode(true); setSelectedId(null); }} size="small" variant="ghost">
+          <Button onClick={() => { setThemeMode(true); setSelectedId(null); syncStateParams({ context: "theme", section: null }); }} size="small" variant="ghost">
             {t("editor.themeSettings")}
           </Button>
           {pickerOpen ? (
@@ -780,7 +846,7 @@ export function ThemeEditorPage() {
                           <button
                             aria-pressed={isActive}
                             className={isActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(null); setThemeMode(false); }}
+                            onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(null); setThemeMode(false); syncStateParams({ section: sectionId, context: null }); }}
                             type="button"
                           >
                             {entry.type}
@@ -806,7 +872,7 @@ export function ThemeEditorPage() {
                                     <button
                                       aria-pressed={blockActive}
                                       className={blockActive ? "cl-editor__node cl-editor__node--active" : "cl-editor__node"}
-                                      onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(blockId); setThemeMode(false); }}
+                                      onClick={() => { setSelectedBand(band); setSelectedId(sectionId); setSelectedBlockId(blockId); setThemeMode(false); syncStateParams({ section: sectionId, context: null }); }}
                                       type="button"
                                     >
                                       {entry.blocks?.[blockId]?.type ?? blockId}
@@ -867,6 +933,7 @@ export function ThemeEditorPage() {
             className="cl-editor__iframe"
             ref={iframeRef}
             src={previewSrc}
+            style={mobilePreview ? { display: "block", margin: "0 auto", width: 390 } : undefined}
             title={t("editor.previewTitle")}
           />
         </main>
@@ -943,6 +1010,13 @@ export function ThemeEditorPage() {
                   </>
                 );
               })()}
+              <Button
+                onClick={() => { removeSection(selectedBand, selectedId); setSelectedId(null); syncStateParams({ section: null }); }}
+                size="small"
+                variant="critical"
+              >
+                <Trash2 aria-hidden="true" size={13} /> {t("editor.removeSection")}
+              </Button>
             </>
           ) : (
             <p className="cl-card-note">{t("editor.selectHint")}</p>
