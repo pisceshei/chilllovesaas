@@ -150,7 +150,7 @@ module Storefront
     def facets_query_string
       pairs = Rack::Utils.parse_query(request.query_string.to_s)
                          .flat_map { |k, v| Array(v).map { |one| [ k, one.to_s ] } }
-                         .select { |k, _| k == "sort_by" || k.start_with?("filter.") }
+                         .select { |k, _| %w[sort_by q type].include?(k) || k.start_with?("filter.") }
                          .sort
       pairs.empty? ? nil : Rack::Utils.build_query(pairs)
     end

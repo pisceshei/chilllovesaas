@@ -117,6 +117,28 @@ RSpec.describe "Storefront facets", type: :request do
     expect(body).not_to match(/data-(add|rm)="[^"]*page=2[^"]*"/)
   end
 
+  it "FS1 🔴 search facets：商品被過濾＋官方「filter 啟用 ⇒ 非商品結果全濾除」；URL 保 q" do
+    make_product(handle: "probe-acme", price: 1000, vendor: "Acme")
+    make_product(handle: "probe-zeta", price: 1000, vendor: "Zeta")
+    ActsAsTenant.with_tenant(shop) do
+      Page.create!(shop_id: shop.id, title: "probe page", handle: "probe-page",
+                   body_html: "<p>probe</p>", published_at: 1.hour.ago)
+    end
+
+    get "/en-hk/search?q=probe"
+    expect(response.body).to include('data-h="probe-acme"')
+    expect(response.body).to include('data-h="probe-zeta"')
+    get "/en-hk/search?q=probe&page=2" # fixture paginate by 2 ⇒ 混型在第 2 頁
+    expect(response.body).to include('data-ot="page"') # 未過濾＝混型
+
+    get "/en-hk/search?q=probe&filter.p.vendor=Acme"
+    expect(response.body).to include('data-h="probe-acme"')
+    expect(response.body).not_to include('data-h="probe-zeta"') # 商品被過濾
+    expect(response.body).not_to include('data-ot="page"')      # 🔴 非商品全濾除（官方逐字）
+    # url_to_add 保 q（搜尋語境不丟）
+    expect(response.body).to match(/data-add="[^"]*q=probe[^"]*"/)
+  end
+
   it "FA5 🔴 filter 參數進頁快取鍵：過濾頁與未過濾頁互不污染" do
     a = make_product(handle: "cache-a", price: 1000, stock: 5)
     b = make_product(handle: "cache-b", price: 1000, stock: 0)
