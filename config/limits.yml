@@ -5054,9 +5054,13 @@ theme_engine:
   # 單頁渲染輸出上限（bytes）。超過 ⇒ Liquid MemoryError（lax 下記錯不炸頁）。
   liquid_render_length_limit: 2097152
   # 渲染節點計分上限（防惡意迴圈模板）。
-  liquid_render_score_limit: 200000
-  # assign 計分上限。
-  liquid_assign_score_limit: 100000
+  # 2026-09-02 校準：bt3 真 Ella 商品頁（3 媒體）實測 max_render_score=405/
+  # context、max_assign_score=100,138——原 100,000 撞線令 gallery 半途
+  # 「Liquid error: Memory limits exceeded」（生產實錘）。新值＝實測需求 ×10
+  # 餘裕，仍為 DoS 界（ours；本尊值未公開）。
+  liquid_render_score_limit: 2000000
+  # assign 計分上限（校準沿革同上）。
+  liquid_assign_score_limit: 1000000
   # 範本總數上限（78 §4 官方逐字「範本總數上限 1,000」，help 取證 2026-08-25）。
   max_templates_per_theme: 1000
   # 選單巢狀深度（78 §4：本尊 ≤3 層）。
