@@ -20,8 +20,22 @@ module ThemeEngine
       [ theme.name.to_s.parameterize, theme.version.to_s.presence ].compact.join("-")
     end
 
-    # @return [FileSource, nil] 解析不到 ⇒ nil（呼叫端 fail-closed）
+    # @return [FileSource, OverlaySource, nil] 解析不到 ⇒ nil（呼叫端 fail-closed）。
+    # 16e1：該主題存在檔案覆寫列 ⇒ 包 OverlaySource（overlay 優先、缺列回落）；
+    # AST cache 鍵的租戶安全見 OverlaySource 檔頭與 Runtime#compiled。
     def resolve(theme)
+      base = base_resolve(theme)
+      return nil if base.nil?
+
+      # 🔴 without_tenant＋顯式 shop_id（鐵律 2 條款②）：resolve 可能在租戶
+      # context 外被叫（引擎層、資產端點）；查詢仍逐條帶 shop_id。
+      overlaid = ActsAsTenant.without_tenant do
+        ThemeFileOverlay.where(shop_id: theme.shop_id, theme_id: theme.id).exists?
+      end
+      overlaid ? OverlaySource.new(base, shop_id: theme.shop_id, theme_id: theme.id) : base
+    end
+
+    def base_resolve(theme)
       if theme.content_checksum.present?
         imported = Rails.root.join("storage", "themes", theme.content_checksum)
         return File.directory?(imported) ? FileSource.new(imported) : nil

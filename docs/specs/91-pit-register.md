@@ -3961,3 +3961,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   我方 Save→iframe 重載才可見。需 postMessage 把 draft settings 推進預覽端
   CSS variables——16e 射程。
 - ⚪ color_scheme_group 在佈景面板唯讀（JSON 顯示）：scheme 色票編輯器＝16e。
+
+### 3.71 G4 步 16e1（檔案覆寫層）的範圍外觀察（2026-09-01）
+
+- ⚪ 覆寫層無版本歷史：本尊 code editor 有 per-file Timeline（官方：finite、
+  asset 檔無 Timeline、不可恢復刪檔——help edit-theme-code，取證 2026-09-01）；
+  我方 overlay 只存現值。版本表（append-only）候選隨 16e 後續輪。
+- ⚪ binary asset 不支援：content mediumtext＝文字檔限定；圖片/字型上傳需另走
+  blob 存儲（activestorage 候選——鐵律 1 依賴裁定先問）。
+- ⚪ base 檔刪除無 tombstone：官方 code editor 可永久刪檔；我方 overlay 只能
+  蓋內容不能標刪。tombstone 欄（deleted boolean）候選隨 16e3。
+- V 項：本尊 Edit code 頁親點受阻（online-store-web 跨域 iframe＋Chrome 視窗
+  最小化 viewport 0×0，2026-09-01 三探）；現行契約取自官方雙源＋41 §634 既有
+  枚舉，視窗恢復後補逐按鈕實測。

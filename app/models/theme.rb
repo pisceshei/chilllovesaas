@@ -18,6 +18,7 @@ class Theme < ApplicationRecord
   acts_as_tenant :shop
 
   has_many :templates, dependent: :destroy
+  has_many :theme_file_overlays, dependent: :destroy
   has_one :theme_setting, dependent: :destroy
 
   validates :name, presence: true, length: { maximum: 255 },
