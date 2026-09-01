@@ -1087,5 +1087,8 @@
   "editor.hide": "隱藏 {id}",
   "editor.show": "顯示 {id}",
   "editor.duplicateOp": "複製 {id}",
-  "editor.removeOp": "移除 {id}"
+  "editor.removeOp": "移除 {id}",
+  "editor.addSection": "新增區段",
+  "editor.sectionPicker": "可新增的區段",
+  "editor.pickerEmpty": "此主題沒有可新增的區段（僅帶 preset 的區段可加入）"
 }

@@ -1087,5 +1087,8 @@
   "editor.hide": "Masquer {id}",
   "editor.show": "Afficher {id}",
   "editor.duplicateOp": "Dupliquer {id}",
-  "editor.removeOp": "Supprimer {id}"
+  "editor.removeOp": "Supprimer {id}",
+  "editor.addSection": "Ajouter une section",
+  "editor.sectionPicker": "Sections disponibles",
+  "editor.pickerEmpty": "Aucune section ajoutable"
 }

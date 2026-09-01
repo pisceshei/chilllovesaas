@@ -23,6 +23,7 @@ const EDITOR_QUERY = `
       templates: files(filenames: ["templates/*.json"]) { filename }
       templateJson(key: $key)
       templateLockVersion(key: $key)
+      sectionCatalog
     }
   }
 `;
@@ -58,6 +59,9 @@ interface EditorData {
     templates: { filename: string }[];
     templateJson: TemplateJson | null;
     templateLockVersion: number | null;
+    sectionCatalog: { type: string; name: string;
+                      preset: { settings: Record<string, unknown>;
+                                blocks: Record<string, unknown> | null } }[];
   } | null;
 }
 
@@ -80,6 +84,7 @@ export function ThemeEditorPage() {
   const [lockVersion, setLockVersion] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const gid = `gid://chilllove/Theme/${themeId}`;
@@ -196,6 +201,28 @@ export function ThemeEditorPage() {
     tpl.order = order;
   });
 
+  /** add-section（24 §3：新 entry 內容取 preset；插到尾端＋order）。 */
+  const addSection = (catalogEntry: NonNullable<EditorData["theme"]>["sectionCatalog"][number]) => {
+    applyOp((tpl) => {
+      tpl.sections ??= {};
+      let newId = catalogEntry.type;
+      let n = 1;
+      while (tpl.sections[newId]) newId = `${catalogEntry.type}-${n++}`;
+      const entry: SectionEntry = {
+        type: catalogEntry.type,
+        settings: JSON.parse(JSON.stringify(catalogEntry.preset.settings)) as Record<string, unknown>,
+      };
+      if (catalogEntry.preset.blocks) {
+        entry.blocks = JSON.parse(JSON.stringify(catalogEntry.preset.blocks)) as SectionEntry["blocks"];
+        entry.block_order = Object.keys(entry.blocks ?? {});
+      }
+      tpl.sections[newId] = entry;
+      tpl.order = [ ...orderOf(tpl), newId ];
+      setSelectedId(newId);
+    });
+    setPickerOpen(false);
+  };
+
   const setSetting = (sectionId: string, settingKey: string, value: unknown) => applyOp((tpl) => {
     const entry = tpl.sections?.[sectionId];
     if (!entry) return;
@@ -280,6 +307,24 @@ export function ThemeEditorPage() {
       <div className="cl-editor__panels">
         <aside aria-label={t("editor.sectionsTree")} className="cl-editor__tree">
           <h3>{t("editor.sectionsTree")}</h3>
+          <Button onClick={() => setPickerOpen((open) => !open)} size="small">
+            {t("editor.addSection")}
+          </Button>
+          {pickerOpen ? (
+            <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
+              {(data?.sectionCatalog ?? []).length === 0 ? (
+                <li className="cl-card-note">{t("editor.pickerEmpty")}</li>
+              ) : (
+                (data?.sectionCatalog ?? []).map((entry) => (
+                  <li key={entry.type}>
+                    <button className="cl-editor__node" onClick={() => addSection(entry)} type="button">
+                      {entry.name}
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          ) : null}
           {order.length === 0 ? (
             <p className="cl-card-note">{t("editor.noSections")}</p>
           ) : (

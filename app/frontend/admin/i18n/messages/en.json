@@ -1087,5 +1087,8 @@
   "editor.hide": "Hide {id}",
   "editor.show": "Show {id}",
   "editor.duplicateOp": "Duplicate {id}",
-  "editor.removeOp": "Remove {id}"
+  "editor.removeOp": "Remove {id}",
+  "editor.addSection": "Add section",
+  "editor.sectionPicker": "Available sections",
+  "editor.pickerEmpty": "No addable sections (only sections with presets can be added)"
 }
