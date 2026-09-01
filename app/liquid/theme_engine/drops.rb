@@ -623,6 +623,11 @@ module ThemeEngine
     }.freeze
     INTERNAL_TO_STOREFRONT = STOREFRONT_SORT.invert.freeze
 
+    # PR-13：storefront filtering 未接（facets 整包＝91 §3.61）⇒ 顯式空集合，
+    # 與 SearchDrop#filters 一致——Ella facets.liquid:90 `nil != empty` 為真時
+    # 會渲染空容器，[] 才走正確的零迭代分支。
+    def filters = []
+
     def id = @c.id
     def title = @tx["title"] || @c.title
     def handle = @c.handle
@@ -1269,6 +1274,48 @@ module ThemeEngine
     end
   end
 
+  # PR-13：pages 全域（官方 "All of the pages on a store."，by-handle 取用形
+  # `pages['about-us'].title`，shopify.dev objects/pages 2026-09-02）。
+  # Ella 消費點：header/toolbar 的 `pages['wish-list'].url`（toolbar-mobile:187、
+  # header-functions:52、menu-drawer-utility:57）。
+  class PagesDrop < Liquid::Drop
+    def initialize(shop:, url_prefix: "")
+      super()
+      @shop = shop
+      @url_prefix = url_prefix
+    end
+
+    def liquid_method_missing(name)
+      page = Page.find_by(shop_id: @shop.id, handle: name.to_s)
+      return PageDrop.new(page, url_prefix: @url_prefix) if page
+
+      ThemeEngine.count_miss("pages.#{name}")
+      nil
+    end
+  end
+
+  # PR-13：images 全域（官方 "All of the images that have been uploaded to a
+  # store."，by-filename 取用形 `images['potions-header.png']`，shopify.dev
+  # objects/images 2026-09-02）。Ella 消費點：品牌/vendor 圖卡
+  # `images[vendor_image_name_png]`（_card-product-vendor-flex:18 等 20 用/6 檔）。
+  class ImagesDrop < Liquid::Drop
+    def initialize(shop:)
+      super()
+      @shop = shop
+    end
+
+    def liquid_method_missing(name)
+      # 🔴 without_tenant＋顯式 shop_id（鐵律 2 條款②）——同 resolve_settings_file
+      file = ActsAsTenant.without_tenant do
+        StoredFile.find_by(shop_id: @shop.id, filename: name.to_s)
+      end
+      return FileImageDrop.new(file) if file
+
+      ThemeEngine.count_miss("images.#{name}")
+      nil
+    end
+  end
+
   class PageDrop < Liquid::Drop
     def initialize(page, url_prefix: "")
       super()
@@ -1318,8 +1365,18 @@ module ThemeEngine
     def metafields = {}
     def brand = nil
     def products_count = Product.where(shop_id: @shop.id).count
-    def types = []
-    def vendors = []
+    # PR-13（官方 shop.types＝"All of the product types in the store."／
+    # shop.vendors＝"All of the product vendors for the store."，array of string，
+    # shopify.dev objects/shop 2026-09-02）。空值剔除＋不分大小寫排序。
+    def types
+      Product.where(shop_id: @shop.id).distinct.pluck(:product_type)
+             .filter_map(&:presence).sort_by(&:downcase)
+    end
+
+    def vendors
+      Product.where(shop_id: @shop.id).distinct.pluck(:vendor)
+             .filter_map(&:presence).sort_by(&:downcase)
+    end
 
     # 付款圖示值域（第三包；86 §5 實錘）：本尊語義＝「enabled payment providers」
     # 導出的**卡別**清單；🔴 manual methods 不進圖示列（Bank Deposit 啟用期間

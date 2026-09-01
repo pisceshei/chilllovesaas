@@ -299,11 +299,32 @@ module ThemeEngine
     end
     def line_items_for(_cart, _obj) = []
     def format_address(_a) = ""
-    def unit_price_with_measurement(_u) = ""
+    # PR-13（官方 "Formats a given unit price and measurement"，輸出形
+    # `$50.00/kg`；reference_value>1 ⇒ `/100ml`。shopify.dev filters/
+    # unit_price_with_measurement 2026-09-02）。輸入＝integer cents（鐵律 3）；
+    # measurement 收 Hash/Drop（reference_value/reference_unit），nil 寬容回空。
+    def unit_price_with_measurement(input, measurement = nil)
+      return "" if input.nil?
+
+      price = format_money(input, "%<sym>s%<amt>s")
+      ref_value = dig_measurement(measurement, "reference_value")
+      ref_unit = dig_measurement(measurement, "reference_unit")
+      return price if ref_unit.to_s.empty?
+
+      ref = ref_value.to_i > 1 ? "#{ref_value.to_i}#{ref_unit}" : ref_unit.to_s
+      "#{price}/#{ref}"
+    end
     def weight_with_unit(input, _u = nil) = "#{input} g"
     def stylesheet(_input) = ""
     def distance_from(_i, _o) = nil
     def sort_natural(input, _p = nil) = input.respond_to?(:sort) ? Array(input).sort_by { |x| x.to_s.downcase } : input
+
+    def dig_measurement(measurement, key)
+      return nil if measurement.nil?
+      return measurement[key] if measurement.respond_to?(:[])
+
+      measurement.respond_to?(key) ? measurement.public_send(key) : nil
+    end
 
     private
 

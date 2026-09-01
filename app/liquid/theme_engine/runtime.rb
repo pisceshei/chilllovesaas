@@ -116,6 +116,12 @@ module ThemeEngine
         "collections" => publication ? CollectionsDrop.new(shop:, publication:, url_prefix:, locale:) : nil,
         # 步 14c（98 §1）：blogs by-handle 全域。
         "blogs" => BlogsDrop.new(shop:, url_prefix:),
+        # PR-13：pages/images by-key 全域（官方形，取證 2026-09-02）
+        "pages" => PagesDrop.new(shop:, url_prefix:),
+        "images" => ImagesDrop.new(shop:),
+        # PR-13：powered_by_link——官方＝連 shopify.com 的署名連結；🔴 ours：
+        # 品牌與連結換我方（鐵律 9），HTML 形對位（target/rel/文案結構）。
+        "powered_by_link" => %(<a target="_blank" rel="nofollow" href="https://chilling.com.hk">Powered by CHILL LOVE</a>),
         "all_products" => publication ? AllProductsDrop.new(publication:, url_prefix:, locale:) : nil,
         "predictive_search" => nil,
         "recommendations" => nil,

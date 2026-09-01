@@ -275,7 +275,18 @@ module ThemeEngine
       if (product = assigns["product"])
         runtime.closest = ClosestDrop.new(product: product)
       end
+      # PR-13：page_image（官方＝product/collection/article 用資源 featured
+      # image，其餘退 social sharing image——後者我方無資料面 ⇒ nil，主題
+      # `!= blank` 閘走無圖分支；shopify.dev objects/page_image 2026-09-02）
+      if (img = page_image_for(assigns))
+        runtime.assign("page_image", img)
+      end
       runtime
+    end
+
+    def page_image_for(assigns)
+      resource = assigns["product"] || assigns["collection"] || assigns["article"]
+      resource.respond_to?(:featured_image) ? resource.featured_image : nil
     end
 
     # id 解析：①請求頁 template 的 sections ②layout 引用的各群組 JSON 的 sections。
