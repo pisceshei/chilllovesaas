@@ -76,6 +76,31 @@ module ThemeEngine
     def preview_image = self
   end
 
+  # PR-22：external_video media 的 Liquid 面（官方 media 物件依 media_type
+  # 分派；external_video 帶 host/external_id——PR-16 的 external_video_url/tag
+  # duck-type 直接吃）。preview_image：資料面無縮圖 ⇒ nil（主題
+  # `media.preview_image.aspect_ratio | default: 1.0` 形對 nil 寬容）。
+  class ExternalVideoMediaDrop < Liquid::Drop
+    def initialize(media)
+      super()
+      @m = media
+    end
+
+    def id = @m.id
+    def media_type = "external_video"
+    def host = @m.external_host
+    def external_id = @m.external_id
+    def alt = @m.alt_text
+    def position = @m.position
+    def aspect_ratio = nil
+    def preview_image = nil
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("ExternalVideoMediaDrop.#{name}")
+      nil
+    end
+  end
+
   class ImageDrop < Liquid::Drop
     def initialize(media)
       super()
@@ -488,8 +513,20 @@ module ThemeEngine
       end
     end
 
-    def media = images
-    def media_count = images.size
+    # PR-22 官方語義：media＝全部媒體依 position 排序（image＋external_video）；
+    # images 照舊只出圖片（官方 images 屬性本就是圖片子集）。
+    def media
+      @media_all ||= begin
+        vids = if @p.respond_to?(:media) && @p.association(:media).loaded?
+          @p.media.filter_map { |m| ExternalVideoMediaDrop.new(m) if m.external_video? }
+        else
+          []
+        end
+        (images + vids).sort_by { |m| [ m.position || 0, m.id || 0 ] }
+      end
+    end
+
+    def media_count = media.size
     def featured_image = images.first || PlaceholderImageDrop.new(label: title)
     def featured_media = featured_image
 
