@@ -1093,5 +1093,6 @@
   "editor.pickerEmpty": "此主題沒有可新增的區段（僅帶 preset 的區段可加入）",
   "editor.alignLeft": "靠左",
   "editor.alignCenter": "置中",
-  "editor.alignRight": "靠右"
+  "editor.alignRight": "靠右",
+  "editor.themeSettings": "佈景主題設定"
 }

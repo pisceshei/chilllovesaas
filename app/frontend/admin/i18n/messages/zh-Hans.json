@@ -1093,5 +1093,6 @@
   "editor.pickerEmpty": "此主题没有可新增的区段",
   "editor.alignLeft": "靠左",
   "editor.alignCenter": "居中",
-  "editor.alignRight": "靠右"
+  "editor.alignRight": "靠右",
+  "editor.themeSettings": "主题设置"
 }
