@@ -56,13 +56,17 @@ module Customers
       customer.update!(**updates) if updates.any?
     end
 
+    # 步 8a 起改走事件鏈（append-only＋latest-wins 快取投影；boolean 由服務同步）。
+    # 「只升不降」語義保留：checkout 只在勾了行銷框時發 subscribed 事件，
+    # 已訂閱者跳過（不重寫最早同意時點）。
     def apply_consent!(customer, checkout)
       return unless checkout.buyer_accepts_marketing
-      return if customer.email_marketing_consent # 已訂閱：不重寫時間戳（最早同意時點保留）
+      return if customer.email_marketing_state == "subscribed"
 
-      customer.update!(email_marketing_consent: true,
-                       email_marketing_consent_updated_at: Time.current,
-                       email_marketing_consent_source: "checkout")
+      UpdateMarketingConsent.call(
+        shop: customer.shop, customer:, channel: "email",
+        state: "subscribed", opt_in_level: "single_opt_in", source: "checkout"
+      )
     end
 
     def ensure_address!(customer, address)

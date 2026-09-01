@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_070000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -261,6 +261,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_060000) do
     t.index ["shop_id", "id"], name: "uq_customer_addresses_tenant_id", unique: true
   end
 
+  create_table "customer_marketing_consents", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "行銷同意事件（append-only；快取在 customers 狀態欄）", force: :cascade do |t|
+    t.string "channel", limit: 16, null: false, comment: "email/sms（WhatsApp 隨後續）"
+    t.datetime "consent_updated_at", null: false, comment: "官方 latest-wins 合併鍵（缺值時＝寫入當下，官方同規則）"
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.string "opt_in_level", limit: 32, comment: "single_opt_in/confirmed_opt_in/unknown（官方三值）"
+    t.bigint "shop_id", null: false
+    t.string "source", limit: 32, null: false, comment: "checkout/admin/api（08 §C.4）"
+    t.string "state", limit: 32, null: false, comment: "官方 enum 小寫形（subscribed/unsubscribed/pending/not_subscribed/redacted/invalid）"
+    t.index ["customer_id"], name: "fk_rails_fda6406f2c"
+    t.index ["shop_id", "customer_id", "channel", "consent_updated_at"], name: "ix_cmc_customer_channel_time"
+  end
+
   create_table "customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "顧客主檔與隱私狀態", force: :cascade do |t|
     t.datetime "anonymized_at"
     t.datetime "created_at", null: false
@@ -269,14 +282,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_060000) do
     t.boolean "email_marketing_consent", default: false, null: false
     t.string "email_marketing_consent_source", limit: 32, comment: "email 同意最後變更來源（08 §C.4 source；如 checkout）"
     t.datetime "email_marketing_consent_updated_at", comment: "email 同意最後變更時間（08 §C.4 consentUpdatedAt）"
+    t.string "email_marketing_state", limit: 32, default: "not_subscribed", null: false, comment: "email 同意狀態快取（事件表 latest-wins 投影；官方六值）"
     t.string "first_name"
     t.string "last_name"
     t.datetime "last_order_at", comment: "最新訂單時間（16 §F6.1 統計欄；訂單成立增量維護）"
     t.text "note"
     t.integer "orders_count", default: 0, null: false
     t.string "phone", limit: 32
+    t.datetime "redaction_scheduled_at", comment: "個資抹除排程時點（官方 10 天可取消；RedactDueJob 到點執行）"
     t.bigint "shop_id", null: false
     t.boolean "sms_marketing_consent", default: false, null: false
+    t.string "sms_marketing_state", limit: 32, default: "not_subscribed", null: false, comment: "SMS 同意狀態快取（官方五值）"
     t.string "state", limit: 32, default: "enabled", null: false
     t.json "tags", default: -> { "(json_array())" }, null: false
     t.boolean "tax_exempt", default: false, null: false
@@ -284,7 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_060000) do
     t.datetime "updated_at", null: false
     t.index ["shop_id", "email"], name: "uq_customers_email", unique: true
     t.index ["shop_id", "id"], name: "uq_customers_tenant_id", unique: true
-    t.index ["shop_id", "phone"], name: "ix_customers_phone"
+    t.index ["shop_id", "phone"], name: "uq_customers_phone", unique: true
     t.index ["shop_id", "state", "created_at"], name: "ix_customers_state_created_at"
   end
 
@@ -1480,6 +1496,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_060000) do
   add_foreign_key "contract_liability_entries", "shops", name: "fk_contract_liability_entries_shop"
   add_foreign_key "customer_addresses", "customers", column: ["shop_id", "customer_id"], primary_key: ["shop_id", "id"], name: "fk_customer_addresses_customer_id"
   add_foreign_key "customer_addresses", "shops", name: "fk_customer_addresses_shop"
+  add_foreign_key "customer_marketing_consents", "customers"
   add_foreign_key "customers", "shops", name: "fk_customers_shop"
   add_foreign_key "discount_applications", "discounts", column: ["shop_id", "discount_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_discount_id"
   add_foreign_key "discount_applications", "line_items", column: ["shop_id", "line_item_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_line_item_id"

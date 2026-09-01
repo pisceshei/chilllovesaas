@@ -5109,3 +5109,10 @@ storefront:
   rate_limits:
     cart_writes_per_ip: { limit: 60, period_seconds: 60 }
     page_views_per_ip: { limit: 300, period_seconds: 60 }
+
+customer:
+  # 個資抹除的可取消窗（天）。官方逐字："After you submit a request to erase your
+  # customer's personal information from your store, you have 10 days to cancel the
+  # request."（help.shopify.com/en/manual/privacy-and-security/privacy/
+  # processing-customer-data-requests，取證 2026-09-01；測試店 modal 實測 9/1→9/11 同值）
+  erasure_cancel_days: 10
