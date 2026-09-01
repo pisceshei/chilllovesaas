@@ -81,6 +81,8 @@ module ThemeEngine
 
       body = render_template_sections(runtime, template_key)
       html = render_layout(runtime, body)
+      # 步 16a：design_mode 注入編輯器橋（selection 雙向——14 §F3）
+      html = html.sub("</body>", "#{ThemeEngine::Runtime::EDITOR_BRIDGE_JS}</body>") if @design_mode
       Result.new(status: status, html: html, page_type: page_type,
                  volatile: runtime.render_flags.include?(:volatile))
     end

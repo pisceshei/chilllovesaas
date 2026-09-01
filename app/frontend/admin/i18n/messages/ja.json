@@ -1064,5 +1064,17 @@
   "store.themes.publishConfirmTitle": "このテーマを公開しますか？",
   "store.themes.publishConfirmBody": "「{name}」が公開テーマになり、現在のテーマは下書きに戻ります。",
   "store.themes.deleteConfirmTitle": "このテーマを削除しますか？",
-  "store.themes.deleteConfirmBody": "「{name}」は完全に削除され、元に戻せません。"
+  "store.themes.deleteConfirmBody": "「{name}」は完全に削除され、元に戻せません。",
+  "store.themes.customize": "カスタマイズ",
+  "editor.back": "テーマに戻る",
+  "editor.notFound": "テーマが見つかりません",
+  "editor.templateSwitcher": "ページテンプレート",
+  "editor.sectionsTree": "セクション",
+  "editor.noSections": "このテンプレートにセクションはありません",
+  "editor.settingsPanel": "設定",
+  "editor.sectionType": "セクション種別",
+  "editor.selectHint": "ツリーまたはプレビューでセクションを選択",
+  "editor.previewTitle": "テーマプレビュー",
+  "editor.hidden": "非表示",
+  "editor.saveComing": "保存は編集パイプライン（16b）で提供"
 }

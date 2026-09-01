@@ -1064,5 +1064,17 @@
   "store.themes.publishConfirmTitle": "发布这个主题？",
   "store.themes.publishConfirmBody": "「{name}」将成为买家看到的主题；原已发布主题会退回草稿区。",
   "store.themes.deleteConfirmTitle": "删除这个主题？",
-  "store.themes.deleteConfirmBody": "「{name}」将被永久删除，无法恢复。"
+  "store.themes.deleteConfirmBody": "「{name}」将被永久删除，无法恢复。",
+  "store.themes.customize": "自定义",
+  "editor.back": "返回主题页",
+  "editor.notFound": "找不到主题",
+  "editor.templateSwitcher": "页面模板",
+  "editor.sectionsTree": "区段",
+  "editor.noSections": "此模板没有区段",
+  "editor.settingsPanel": "设置",
+  "editor.sectionType": "区段类型",
+  "editor.selectHint": "在左栏或预览中点选一个区段",
+  "editor.previewTitle": "主题预览",
+  "editor.hidden": "已隐藏",
+  "editor.saveComing": "保存管线随 16b"
 }

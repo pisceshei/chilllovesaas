@@ -385,6 +385,29 @@ module ThemeEngine
       end
     end
 
+    # 步 16a：編輯器橋（design_mode 專屬；14 §F3 postMessage 契約——同源 iframe，
+    # origin 用 location.origin 嚴格比對、不用 *）。
+    EDITOR_BRIDGE_JS = <<~JS.freeze
+      <script>(function(){
+        var current=null;
+        function outline(el,on){ if(el) el.style.outline = on ? "2px solid #005bd1" : ""; }
+        window.addEventListener("message",function(ev){
+          if(ev.origin !== location.origin) return;
+          var d=ev.data||{};
+          if(d.type==="cl:highlight"){
+            var el=document.getElementById("shopify-section-"+d.id);
+            outline(current,false); current=el; outline(el,true);
+            if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
+          }
+        });
+        document.addEventListener("click",function(ev){
+          var host=ev.target.closest("[id^='shopify-section-']");
+          if(!host) return;
+          parent.postMessage({type:"cl:select",id:host.id.replace("shopify-section-","")},location.origin);
+        },true);
+      })();</script>
+    JS
+
     def base_registers
       { runtime: self, locale_dict: @locale_dict, file_system: SnippetFS.new(@source),
         money_symbol: money_symbol, currency: @shop.store_currency,

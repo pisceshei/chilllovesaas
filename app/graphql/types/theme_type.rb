@@ -23,6 +23,11 @@ module Types
     end
     field :import_report, GraphQL::Types::JSON, null: true,
       description: "最近一次匯入的相容掃描報告（非匯入主題為 null）。"
+    # 步 16a：編輯器 bootstrap——🔴 DB 覆寫優先（Template row → 來源檔；
+    # Runtime#template_json 同一讀序）。key 白名單防逃逸。
+    field :template_json, GraphQL::Types::JSON, null: true do
+      argument :key, String, required: true
+    end
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -37,13 +42,25 @@ module Types
         rels = rels.select { |rel| patterns.any? { |pattern| File.fnmatch?(pattern, rel) } }
       end
       rels = rels.first([ first || 250, 2500 ].min) # 官方 "At most 2500"
-      rels.map { |rel| { filename: rel, size: source.size_of(rel).to_i } }
+      rels.map { |rel| { filename: rel, size: source.size_of(rel).to_i, source: } }
     end
 
     def import_report
       report = ThemeImportReport.where(shop_id: object.shop_id, theme_id: object.id)
                                 .order(:id).last
       report&.report
+    end
+
+    def template_json(key:)
+      return nil unless key.match?(/\A[\w.\-]+\z/) # 防路徑逃逸
+
+      row = Template.find_by(shop_id: object.shop_id, theme_id: object.id, key:)
+      return row.content if row
+
+      raw = ThemeEngine::Sources.resolve(object)&.read("templates/#{key}.json")
+      raw && ThemeEngine::Runtime.tolerant_json(raw)
+    rescue JSON::ParserError
+      nil
     end
   end
 end
