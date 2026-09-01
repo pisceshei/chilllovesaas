@@ -1064,5 +1064,17 @@
   "store.themes.publishConfirmTitle": "發布這個主題？",
   "store.themes.publishConfirmBody": "「{name}」將成為買家看到的主題；原本已發布的主題會退回草稿區。",
   "store.themes.deleteConfirmTitle": "刪除這個主題？",
-  "store.themes.deleteConfirmBody": "「{name}」將被永久刪除，無法復原。"
+  "store.themes.deleteConfirmBody": "「{name}」將被永久刪除，無法復原。",
+  "store.themes.customize": "自訂",
+  "editor.back": "返回主題頁",
+  "editor.notFound": "找不到主題",
+  "editor.templateSwitcher": "頁面模板",
+  "editor.sectionsTree": "區段",
+  "editor.noSections": "此模板沒有區段",
+  "editor.settingsPanel": "設定",
+  "editor.sectionType": "區段類型",
+  "editor.selectHint": "在左欄或預覽中點選一個區段",
+  "editor.previewTitle": "主題預覽",
+  "editor.hidden": "已隱藏",
+  "editor.saveComing": "儲存管線隨 16b（op-stack）"
 }

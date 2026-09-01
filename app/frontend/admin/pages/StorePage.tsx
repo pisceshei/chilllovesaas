@@ -240,6 +240,11 @@ export function StorePage() {
                 )}
               </div>
               <div className="cl-store-themes__actions">
+                {/* Customize＝進編輯器（41 §634 首位動作；步 16a shell） */}
+                <a className="cl-store-themes__preview" href={`/admin/themes/${theme.id.split("/").pop() ?? ""}/editor`}>
+                  <Pencil aria-hidden="true" size={14} />
+                  {t("store.themes.customize")}
+                </a>
                 {/* 預覽開新分頁：noindex 端點、admin session 內有效 */}
                 <a className="cl-store-themes__preview" href={theme.previewUrl} rel="noreferrer" target="_blank">
                   <ExternalLink aria-hidden="true" size={14} />

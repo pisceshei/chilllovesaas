@@ -1064,5 +1064,17 @@
   "store.themes.publishConfirmTitle": "Publish this theme?",
   "store.themes.publishConfirmBody": "“{name}” will become the live theme; the current one moves back to drafts.",
   "store.themes.deleteConfirmTitle": "Delete this theme?",
-  "store.themes.deleteConfirmBody": "“{name}” will be permanently deleted. This cannot be undone."
+  "store.themes.deleteConfirmBody": "“{name}” will be permanently deleted. This cannot be undone.",
+  "store.themes.customize": "Customize",
+  "editor.back": "Back to themes",
+  "editor.notFound": "Theme not found",
+  "editor.templateSwitcher": "Page template",
+  "editor.sectionsTree": "Sections",
+  "editor.noSections": "No sections in this template",
+  "editor.settingsPanel": "Settings",
+  "editor.sectionType": "Section type",
+  "editor.selectHint": "Select a section in the tree or preview",
+  "editor.previewTitle": "Theme preview",
+  "editor.hidden": "Hidden",
+  "editor.saveComing": "Saving arrives with the edit pipeline (16b)"
 }

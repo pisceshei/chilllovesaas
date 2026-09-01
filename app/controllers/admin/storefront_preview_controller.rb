@@ -43,7 +43,7 @@ module Admin
       end
       result = ThemeEngine::PageRenderer.new(
         theme: theme, shop: Current.shop, publication: publication,
-        design_mode: false, host: request.host,
+        design_mode: params[:editor] == "1", host: request.host, # 步 16a：編輯器 iframe 開 design_mode
         cart_json: cart && Storefront::CartSerializer.cart_json(cart)
       ).render("/#{params[:path]}", params: request.query_parameters)
 

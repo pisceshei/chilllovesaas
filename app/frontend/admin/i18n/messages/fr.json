@@ -1064,5 +1064,17 @@
   "store.themes.publishConfirmTitle": "Publier ce thème ?",
   "store.themes.publishConfirmBody": "« {name} » deviendra le thème actif ; l'actuel retournera aux brouillons.",
   "store.themes.deleteConfirmTitle": "Supprimer ce thème ?",
-  "store.themes.deleteConfirmBody": "« {name} » sera supprimé définitivement."
+  "store.themes.deleteConfirmBody": "« {name} » sera supprimé définitivement.",
+  "store.themes.customize": "Personnaliser",
+  "editor.back": "Retour aux thèmes",
+  "editor.notFound": "Thème introuvable",
+  "editor.templateSwitcher": "Modèle de page",
+  "editor.sectionsTree": "Sections",
+  "editor.noSections": "Aucune section",
+  "editor.settingsPanel": "Paramètres",
+  "editor.sectionType": "Type de section",
+  "editor.selectHint": "Sélectionnez une section",
+  "editor.previewTitle": "Aperçu du thème",
+  "editor.hidden": "Masqué",
+  "editor.saveComing": "L'enregistrement arrive avec 16b"
 }
