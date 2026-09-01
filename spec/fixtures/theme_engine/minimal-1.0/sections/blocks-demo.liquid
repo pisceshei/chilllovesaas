@@ -1,0 +1,4 @@
+<div id="bd">{% content_for 'blocks' %}</div>
+<style id="schemecss">{% for scheme in settings.color_schemes %}.color-{{ scheme.id }}{--bg:{{ scheme.settings.background }};--fg:{{ scheme.settings.text }};}{% endfor %}</style>
+<span id="pick">{{ section.settings.color_scheme }}</span><span id="pickbg">{{ section.settings.color_scheme.settings.background }}</span>
+{% schema %}{ "name": "Blocks demo", "settings": [ { "id": "color_scheme", "type": "color_scheme", "default": "scheme-1" } ] }{% endschema %}

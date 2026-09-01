@@ -1262,6 +1262,60 @@ module ThemeEngine
     def to_s = @hex
   end
 
+  # 色階（步 13b；97 §3——official `color_scheme`：`id`＋`settings`；直接輸出＝id，
+  # 官方範例 `{{ settings.card_color_scheme }}` → `background-2`）。
+  class ColorSchemeDrop < Liquid::Drop
+    def initialize(id:, settings:, types: {})
+      super()
+      @id = id
+      @settings = SettingsDrop.new(settings, types, label: "color_scheme(#{id})")
+    end
+
+    def id = @id
+    def settings = @settings
+    def to_s = @id
+  end
+
+  # 色階群組（97 §3——official 迭代形 `{% for scheme in settings.color_schemes %}`）。
+  # 取單個走 `scheme(id)`／liquid_method_missing（🔴 不覆寫 `[]`——12a 教訓：
+  # Drop#key? 恆 true 會把屬性派發劫持掉）。
+  class ColorSchemeGroupDrop < Liquid::Drop
+    include Enumerable
+
+    def initialize(value, definition: [])
+      super()
+      @value = value.is_a?(Hash) ? value : {}
+      @types = definition.each_with_object({}) do |d, h|
+        h[d["id"]] = d["type"] if d.is_a?(Hash) && d["id"]
+      end
+    end
+
+    def each(&) = drops.each(&)
+    def size = drops.size
+    def first = drops.first
+
+    # color_scheme 型 setting 的解引用點（SettingsDrop coerce 用）。
+    def scheme(id)
+      drops.find { |s| s.id == id.to_s }
+    end
+
+    def liquid_method_missing(name)
+      scheme(name) || begin
+        ThemeEngine.count_miss("color_scheme_group.#{name}")
+        nil
+      end
+    end
+
+    private
+
+    def drops
+      @drops ||= @value.map do |id, raw|
+        settings = raw.is_a?(Hash) ? (raw["settings"] || raw) : {}
+        ColorSchemeDrop.new(id: id.to_s, settings:, types: @types)
+      end
+    end
+  end
+
   # `font` object（步 13a 真實作；97 §1.1 官方七屬性）。file＝自 host woff2 路徑
   # （system font nil ⇒ font_face 空輸出——97 §4-5）。baseline_ratio：官方無公開
   # 數值來源 ⇒ 常數 0.1 維持（ours；僅排版微調用）。
@@ -1377,9 +1431,12 @@ module ThemeEngine
 
   # settings（schema 型別感知強轉；25 坑 #6——color 必須是 color 物件）。
   class SettingsDrop < Liquid::Drop
-    def initialize(values, types = {}, label: "settings")
+    # schemes：色階群組 drop（步 13b）——`color_scheme` 型 setting 解引用用；
+    #   nil＝無群組語境（值原樣回 id 字串，to_s 語義相同）。
+    def initialize(values, types = {}, label: "settings", schemes: nil)
       super()
       @v, @t, @label = values || {}, types, label
+      @schemes = schemes
     end
 
     def liquid_method_missing(name)
@@ -1393,8 +1450,12 @@ module ThemeEngine
 
     private
 
+    # @t 值通常是型別字串；`color_scheme_group` 存整個 def（definition 子 schema
+    # 是 scheme.settings 的型別來源——runtime.extract_types 同批改）。
     def coerce(key, val)
-      case @t[key]
+      type_entry = @t[key]
+      type_name = type_entry.is_a?(Hash) ? type_entry["type"] : type_entry
+      case type_name
       when "color", "color_background"
         return nil if val.nil? || val == ""
 
@@ -1402,6 +1463,11 @@ module ThemeEngine
       when "image_picker"
         val.nil? || val == "" ? nil : PlaceholderImageDrop.new(label: File.basename(val.to_s), w: 1200, h: 800)
       when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
+      when "color_scheme_group"
+        ColorSchemeGroupDrop.new(val, definition: type_entry.is_a?(Hash) ? (type_entry["definition"] || []) : [])
+      when "color_scheme"
+        # official："returns the selected color_scheme object from color_scheme_group"
+        (@schemes && @schemes.scheme(val.to_s)) || val
       else val
       end
     end
@@ -1410,15 +1476,20 @@ module ThemeEngine
   class BlockDrop < Liquid::Drop
     attr_reader :id, :type, :settings_hash, :data
 
-    def initialize(id:, type:, settings:, types:, data:, design_mode: false)
+    # children：巢狀子 block drops（步 13b；官方 ≤8 層）——Ella
+    # `{% for child_block in block.blocks %}{% render child_block %}` 消費形。
+    def initialize(id:, type:, settings:, types:, data:, design_mode: false,
+                   children: [], schemes: nil)
       super()
       @id, @type, @data = id, type, data
       @settings_hash = settings
-      @settings = SettingsDrop.new(settings, types, label: "block(#{type})")
+      @settings = SettingsDrop.new(settings, types, label: "block(#{type})", schemes:)
       @design_mode = design_mode
+      @children = children
     end
 
     def settings = @settings
+    def blocks = @children
 
     def shopify_attributes
       return "" unless @design_mode
@@ -1432,10 +1503,10 @@ module ThemeEngine
   class SectionDrop < Liquid::Drop
     attr_reader :id
 
-    def initialize(id:, data:, types:, blocks: [])
+    def initialize(id:, data:, types:, blocks: [], schemes: nil)
       super()
       @id, @data = id, data
-      @settings = SettingsDrop.new(data["settings"] || {}, types, label: "section(#{data['type']})")
+      @settings = SettingsDrop.new(data["settings"] || {}, types, label: "section(#{data['type']})", schemes:)
       @blocks = blocks
     end
 

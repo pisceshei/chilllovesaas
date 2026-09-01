@@ -3875,3 +3875,16 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   上 CJK 家族時注意 woff2 體積（MB 級，考慮 unicode-range 分片）。
 - ⚪ **庫僅 Jost/Poppins 八變體**：主題引用庫外 handle ⇒ system fallback＋
   miss 遙測（font_library.* 計數可觀測）。
+
+### 3.63 G2 步 13b（blocks 與色階）的範圍外觀察（2026-09-01）
+
+- ⚪ **block 內 `{% content_for 'blocks' %}`（官方巢狀正典形）無專測**：frame
+  機制（render_block 傳 frame: bdata）結構上覆蓋，Ella 消費形走的是
+  for+render 變數形——正典形補測隨步 16 編輯器包。
+- ⚪ **color_scheme_group 的 `role` 欄未實作**：editor 色階預覽用（96/97 官方
+  範例含 role 映射）；渲染面不需要，隨步 16。
+- ⚪ **BOOT_STAMP＝重啟即清倉**：頁快取跨重啟不保留（回暖成本小）；若要保留
+  改 git SHA 維（讀部署 ref）。
+- 🔴 **教訓（mutation-not-red 新形：recomputed-value masking）**：drop 屬性在
+  下游被重建（render_block 重算 children）⇒ 純渲染斷言殺不掉構造點退化；
+  要 drop 面直讀（size/直接輸出）才封——同軸見 equality-trap-in-tests。

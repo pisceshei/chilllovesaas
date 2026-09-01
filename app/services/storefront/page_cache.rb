@@ -18,6 +18,11 @@ module Storefront
     # 非 volatile 頁的 entry 壽命上限：純粹是儲存層回收輔助（key-based 下語義上可無限）。
     DEFAULT_TTL = 1.day
 
+    # 引擎版本維度（步 13b；生產實錘：13a 部署後首頁仍吐舊 stub @font-face——
+    # key 無代碼版本維，快取頁跨部署存活到 TTL）。boot 時戳＝每次部署重啟自然
+    # 換 key；重啟即清倉的代價可接受（快取即時回暖）。
+    BOOT_STAMP = Time.now.to_i
+
     module_function
 
     # @param shop [Shop]
@@ -53,7 +58,7 @@ module Storefront
       # 自帶租戶脈絡：resource_stamp 查的是 tenant-scoped model（require_tenant 下
       # 呼叫端沒設租戶會 NoTenantSet）；with_tenant 冪等，middleware 已設也無妨。
       kind, stamp = ActsAsTenant.with_tenant(shop) { resource_stamp(shop, path) }
-      [ NAMESPACE, shop.id, theme.id, theme.updated_at.to_i,
+      [ NAMESPACE, BOOT_STAMP, shop.id, theme.id, theme.updated_at.to_i,
         locale_tag, market.id, market.updated_at.to_i,
         shop.store_currency, shop.catalog_version,
         kind, stamp, path, params.sort.flatten.join(":") ].join("/")

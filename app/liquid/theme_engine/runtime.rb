@@ -86,7 +86,7 @@ module ThemeEngine
 
       language = { "iso_code" => locale || "en", "endonym_name" => locale || "en", "root_url" => url_prefix.presence || "/" }
       @global_assigns = {
-        "settings" => SettingsDrop.new(@settings_data, @theme_types, label: "settings"),
+        "settings" => SettingsDrop.new(@settings_data, @theme_types, label: "settings", schemes: schemes_drop),
         "shop" => ShopDrop.new(shop),
         "cart" => CartDrop.new(currency: shop.store_currency, cart_json: @cart_json),
         "routes" => RoutesDrop.new(prefix: url_prefix),
@@ -123,6 +123,17 @@ module ThemeEngine
     end
 
     def global_assigns = @global_assigns
+
+    # 色階群組（步 13b）：settings_schema 的 color_scheme_group setting（Ella id＝
+    # color_schemes）× settings_data 值 ⇒ 群組 drop。查無 ⇒ nil（scheme id 原樣字串）。
+    def schemes_drop
+      return @schemes_drop if defined?(@schemes_drop)
+
+      @schemes_drop = begin
+        key, entry = @theme_types.find { |_k, t| t.is_a?(Hash) && t["type"] == "color_scheme_group" }
+        key && ColorSchemeGroupDrop.new(@settings_data[key] || {}, definition: entry["definition"] || [])
+      end
+    end
 
     def assign(key, value)
       @global_assigns[key.to_s] = value
@@ -243,8 +254,14 @@ module ThemeEngine
       defs
     end
 
+    # color_scheme_group 存整個 def（definition 子 schema＝scheme.settings 型別
+    # 來源——SettingsDrop.coerce 對表；步 13b）；其餘維持型別字串。
     def extract_types(defs)
-      defs.each_with_object({}) { |d, h| h[d["id"]] = d["type"] if d.is_a?(Hash) && d["id"] }
+      defs.each_with_object({}) do |d, h|
+        next unless d.is_a?(Hash) && d["id"]
+
+        h[d["id"]] = d["type"] == "color_scheme_group" ? d : d["type"]
+      end
     end
 
     def schema_defaults(defs)
@@ -256,7 +273,7 @@ module ThemeEngine
       c = compiled("sections/#{data['type']}.liquid") or return comment("缺 section #{data['type']}")
       merged = schema_defaults(c[:schema]["settings"] || []).merge(data["settings"] || {})
       sdrop = SectionDrop.new(id: key, data: data.merge("settings" => merged), types: c[:types],
-                              blocks: ordered_block_drops(data))
+                              blocks: ordered_block_drops(data), schemes: schemes_drop)
       assigns = @global_assigns.merge("section" => sdrop, "closest" => @closest)
       html = c[:tpl].render(build_context(assigns, base_registers.merge(frame: data, section_drop: sdrop)))
       collect_errors("sections/#{data['type']}", c[:tpl])
@@ -266,13 +283,18 @@ module ThemeEngine
       %(<#{tag} id="shopify-section-#{key}" class="#{cls}"#{editor_attr}>#{html}</#{tag}>)
     end
 
-    def ordered_block_drops(data)
+    # depth：巢狀 children 遞迴上限（官方 "nested up to 8 levels deep"）——
+    # 循環資料兜底，超層＝空 children 不炸。
+    def ordered_block_drops(data, depth: 0)
+      return [] if depth > 8
+
       (data["block_order"] || []).filter_map do |bid|
         bdata = (data["blocks"] || {})[bid] or next
         bc = compiled("blocks/#{bdata['type']}.liquid") or next
         settings = schema_defaults(bc[:schema]["settings"] || []).merge(bdata["settings"] || {})
         BlockDrop.new(id: bid, type: bdata["type"], settings: settings, types: bc[:types],
-                      data: bdata, design_mode: @design_mode)
+                      data: bdata, design_mode: @design_mode, schemes: schemes_drop,
+                      children: ordered_block_drops(bdata, depth: depth + 1))
       end
     end
 
@@ -286,7 +308,8 @@ module ThemeEngine
       resolved = resolve_dynamic(bdata["settings"] || {}, context)
       settings = schema_defaults(c[:schema]["settings"] || []).merge(resolved)
       bdrop = BlockDrop.new(id: id, type: type, settings: settings, types: c[:types],
-                            data: bdata, design_mode: @design_mode)
+                            data: bdata, design_mode: @design_mode, schemes: schemes_drop,
+                            children: ordered_block_drops(bdata, depth: 1))
       closest = context["closest"] || @closest
       if closest_overrides.present?
         closest = ClosestDrop.merged(closest, closest_overrides)
