@@ -166,6 +166,8 @@ module Types
       description: "複製主題（零複製共享內容＋DB 覆寫層拷貝）。"
     field :theme_rename, mutation: Mutations::ThemeRename,
       description: "重新命名主題。"
+    field :theme_template_upsert, mutation: Mutations::ThemeTemplateUpsert,
+      description: "整份寫回模板 JSON（編輯器儲存；樂觀鎖＋touch theme）。"
     field :theme_publish, mutation: Mutations::ThemePublish,
       description: "發布主題（現任已發布者自動降回草稿）。"
 

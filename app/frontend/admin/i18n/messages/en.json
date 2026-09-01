@@ -1076,5 +1076,16 @@
   "editor.selectHint": "Select a section in the tree or preview",
   "editor.previewTitle": "Theme preview",
   "editor.hidden": "Hidden",
-  "editor.saveComing": "Saving arrives with the edit pipeline (16b)"
+  "editor.saveComing": "Saving arrives with the edit pipeline (16b)",
+  "editor.undo": "Undo",
+  "editor.redo": "Redo",
+  "editor.saved": "Saved; preview refreshed",
+  "editor.saveFailed": "Save failed",
+  "editor.staleConflict": "Template was changed by someone else — reload before editing again",
+  "editor.moveUp": "Move {id} up",
+  "editor.moveDown": "Move {id} down",
+  "editor.hide": "Hide {id}",
+  "editor.show": "Show {id}",
+  "editor.duplicateOp": "Duplicate {id}",
+  "editor.removeOp": "Remove {id}"
 }

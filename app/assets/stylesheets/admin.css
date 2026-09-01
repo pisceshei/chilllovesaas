@@ -2691,3 +2691,10 @@ a {
 .cl-editor__preview { min-width: 0; }
 .cl-editor__iframe { width: 100%; height: 100%; border: 0; background: #fff; }
 .cl-editor--error { align-items: center; justify-content: center; gap: 8px; }
+
+.cl-editor__spacer { flex: 1; }
+.cl-editor__noderow { display: flex; align-items: center; gap: 2px; }
+.cl-editor__noderow .cl-editor__node { flex: 1; }
+.cl-editor__op { border: 0; background: transparent; cursor: pointer; padding: 4px; border-radius: 4px; color: #616161; }
+.cl-editor__op:hover { background: #f1f1f1; }
+.cl-editor__op:disabled { opacity: .35; cursor: default; }

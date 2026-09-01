@@ -1076,5 +1076,16 @@
   "editor.selectHint": "在左欄或預覽中點選一個區段",
   "editor.previewTitle": "主題預覽",
   "editor.hidden": "已隱藏",
-  "editor.saveComing": "儲存管線隨 16b（op-stack）"
+  "editor.saveComing": "儲存管線隨 16b（op-stack）",
+  "editor.undo": "復原",
+  "editor.redo": "重做",
+  "editor.saved": "已儲存；預覽已更新",
+  "editor.saveFailed": "儲存失敗",
+  "editor.staleConflict": "模板已被其他人修改——請重新整理後再編輯（你的變更仍在畫面上，可先複製）",
+  "editor.moveUp": "上移 {id}",
+  "editor.moveDown": "下移 {id}",
+  "editor.hide": "隱藏 {id}",
+  "editor.show": "顯示 {id}",
+  "editor.duplicateOp": "複製 {id}",
+  "editor.removeOp": "移除 {id}"
 }

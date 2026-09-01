@@ -36,12 +36,25 @@ const BOOTSTRAP = {
   },
 };
 
-function stubFetch() {
-  const fetchMock = vi.fn(async () => ({
-    json: vi.fn().mockResolvedValue(BOOTSTRAP), ok: true, status: 200,
-  } as unknown as Response));
+function stubFetch(saveErrors: { message: string; code: string }[] = []) {
+  const fetchMock = vi.fn(async (_url: unknown, init?: RequestInit) => {
+    const request = JSON.parse(String(init?.body)) as { query: string };
+    const body = request.query.includes("themeTemplateUpsert")
+      ? { data: { themeTemplateUpsert: {
+          templateKey: saveErrors.length > 0 ? null : "index",
+          lockVersion: saveErrors.length > 0 ? null : 1,
+          userErrors: saveErrors } } }
+      : BOOTSTRAP;
+    return { json: vi.fn().mockResolvedValue(body), ok: true, status: 200 } as unknown as Response;
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
+}
+
+function callsTo(fetchMock: ReturnType<typeof vi.fn>, match: string): RequestInit[] {
+  return fetchMock.mock.calls
+    .map((call) => call[1] as RequestInit)
+    .filter((init) => String(init?.body).includes(match));
 }
 
 function renderEditor() {
@@ -63,9 +76,9 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     stubFetch();
     renderEditor();
     const tree = within(await screen.findByRole("complementary", { name: "區段" }));
-    const nodes = tree.getAllByRole("button");
+    const nodes = tree.getAllByRole("button").filter((node) => node.hasAttribute("aria-pressed"));
     expect(nodes.map((node) => node.textContent?.trim())).toEqual([ "hero", "blocks-demo" ]);
-    expect(tree.getByLabelText("已隱藏")).toBeInTheDocument(); // disabled 眼睛態
+    expect(tree.getByLabelText("顯示 demo")).toBeInTheDocument(); // disabled ⇒ 眼睛顯示「顯示」op
     expect(tree.getByText("_parent")).toBeInTheDocument(); // block 子層
     const switcher = screen.getByLabelText("頁面模板") as HTMLSelectElement;
     expect([ ...switcher.options ].map((o) => o.value)).toEqual([ "index", "product" ]);
@@ -80,9 +93,9 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const postSpy = vi.fn();
     Object.defineProperty(iframe, "contentWindow", { value: { postMessage: postSpy } });
 
-    fireEvent.click(tree.getByRole("button", { name: /hero/ }));
+    fireEvent.click(tree.getByRole("button", { name: "hero" }));
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
-    expect(settings.getByText("首頁英雄")).toBeInTheDocument();
+    expect(settings.getByDisplayValue("首頁英雄")).toBeInTheDocument();
     expect(postSpy).toHaveBeenCalledWith(
       { type: "cl:highlight", id: "hero" }, window.location.origin);
   });
@@ -103,6 +116,46 @@ describe("ThemeEditorPage（步 16a shell）", () => {
       data: { type: "cl:select", id: "hero" }, origin: window.location.origin,
     }));
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
-    expect(await settings.findByText("首頁英雄")).toBeInTheDocument();
+    expect(await settings.findByDisplayValue("首頁英雄")).toBeInTheDocument();
+  });
+
+  it("ED4 🔴 op-stack：隱藏 op 改 draft、Undo 還原、Redo 重做（快照棧語義）", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument(); // 已隱藏
+
+    fireEvent.click(screen.getByRole("button", { name: /復原/ }));
+    expect(tree.getByLabelText("隱藏 hero")).toBeInTheDocument(); // 還原
+
+    fireEvent.click(screen.getByRole("button", { name: /重做/ }));
+    expect(tree.getByLabelText("顯示 hero")).toBeInTheDocument(); // 重做
+  });
+
+  it("ED5 🔴 儲存送整份 draft＋lockVersion；STALE_OBJECT ⇒ 衝突 toast", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeTemplateUpsert")[0].body)) as {
+      variables: { key: string; content: { sections: Record<string, { disabled?: boolean }> } };
+    };
+    expect(sent.variables.key).toBe("index");
+    expect(sent.variables.content.sections.hero.disabled).toBe(true); // 整份 draft
+    expect(sent.variables.content.sections.demo).toBeDefined(); // 未動的 section 也在
+  });
+
+  it("ED6 STALE_OBJECT ⇒ 衝突提示（不清 dirty）", async () => {
+    stubFetch([ { message: "conflict", code: "STALE_OBJECT" } ]);
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByLabelText("隱藏 hero"));
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    expect(await screen.findByText(/模板已被其他人修改/)).toBeInTheDocument();
   });
 });
