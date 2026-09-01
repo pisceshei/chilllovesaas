@@ -83,7 +83,7 @@ module ThemeEngine
       end
 
       body = render_template_sections(runtime, template_key)
-      html = render_layout(runtime, body)
+      html = render_layout(runtime, body, template_key: template_key)
       # PR-3：window.Shopify bootstrap（主題 JS 生態依賴；shopify_global.rb 檔頭）
       html = html.sub("</head>") do
         ThemeEngine::ShopifyGlobal.script(
@@ -333,13 +333,24 @@ module ThemeEngine
       end.join
     end
 
-    def render_layout(runtime, content)
-      layout = runtime.compiled("layout/theme.liquid")
-      return content if layout.nil? # 缺 layout 寬容（測試最小主題可無 layout）
+    # PR-10：template JSON `layout` 鍵（官方三值語義逐字取證 2026-09-01：
+    # 字串＝"The filename of the layout to use…specify \"full-width\" to render
+    # layout/full-width.liquid"；false＝無 layout（且 "Templates without a
+    # layout can't be customized in the theme editor"）；缺鍵＝"The default
+    # layout is theme.liquid."）。`wrapper` 屬性未接（登記 V）。
+    def render_layout(runtime, content, template_key: nil)
+      layout_key = template_key ? runtime.template_json(template_key)&.fetch("layout", nil) : nil
+      return content if layout_key == false
+
+      name = layout_key.is_a?(String) && layout_key.present? ? layout_key : "theme"
+      layout = runtime.compiled("layout/#{name}.liquid")
+      # 指名 layout 缺檔 ⇒ 回落 theme.liquid（寬容）；theme 也缺 ⇒ 裸 content
+      layout = runtime.compiled("layout/theme.liquid") if layout.nil? && name != "theme"
+      return content if layout.nil?
 
       assigns = runtime.global_assigns.merge("content_for_layout" => content)
       html = layout[:tpl].render(runtime.build_context(assigns, runtime.base_registers.merge(frame: {})))
-      runtime.collect_errors("layout/theme.liquid", layout[:tpl])
+      runtime.collect_errors("layout/#{name}.liquid", layout[:tpl])
       html
     end
   end

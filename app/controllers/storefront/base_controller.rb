@@ -14,6 +14,17 @@ module Storefront
     include ThemeCsp # 主題渲染面 CSP（Ella 修復 PR-1；concern 檔頭有完整理由）
 
     before_action :require_shop!
+    before_action :require_storefront_password
+
+    # PR-10：密碼閘（本尊 private mode——啟用時全站 302 → /password；
+    # digest 綁密碼雜湊 ⇒ 改密碼即失效全部既有通行 cookie）。
+    def require_storefront_password
+      digest = current_shop&.storefront_password_digest
+      return if digest.blank?
+      return if cookies.signed[:cl_storefront_digest] == Digest::SHA256.hexdigest(digest)
+
+      redirect_to "/password"
+    end
 
     private
 
