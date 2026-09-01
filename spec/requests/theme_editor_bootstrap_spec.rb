@@ -276,6 +276,16 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(response.body).not_to include("cl:highlight")
   end
 
+  it "BR3 🔴 hover 工具列（PR-28）：editor 橋含 cl:op 與四鈕；公開店面不帶" do
+    get "/admin/store/preview/#{theme.id}?editor=1"
+    expect(response.body).to include("cl-preview-toolbar")
+    expect(response.body).to include("cl:op")
+    expect(response.body).to include(%(data-cl-op))
+
+    get "/en-hk/"
+    expect(response.body).not_to include("cl-preview-toolbar")
+  end
+
   it "BR2 🔴 橋導航攔截（PR-23）：editor 預覽的橋含 cl:navigate 與 preventDefault" do
     get "/admin/store/preview/#{theme.id}?editor=1"
     expect(response.body).to include("cl:navigate")

@@ -476,6 +476,34 @@ module ThemeEngine
     EDITOR_BRIDGE_JS = <<~JS.freeze
       <script>(function(){
         var current=null;
+        // PR-28：hover 工具列（四 op 直達；視覺自有——鐵律 9）
+        var bar=document.createElement("div");
+        bar.id="cl-preview-toolbar";
+        bar.style.cssText="position:absolute;z-index:2147483646;display:none;gap:2px;background:#1a1a2e;border-radius:6px;padding:2px;";
+        [["up","\u2191"],["down","\u2193"],["duplicate","\u29c9"],["remove","\u2715"]].forEach(function(pair){
+          var b=document.createElement("button");
+          b.type="button"; b.textContent=pair[1];
+          b.setAttribute("data-cl-op",pair[0]);
+          b.style.cssText="all:unset;cursor:pointer;color:#fff;font:12px system-ui;padding:3px 6px;";
+          bar.appendChild(b);
+        });
+        document.addEventListener("DOMContentLoaded",function(){ document.body.appendChild(bar); });
+        var barTarget=null;
+        document.addEventListener("mouseover",function(ev){
+          var host=ev.target.closest("[id^='shopify-section-']");
+          if(!host){ if(!bar.contains(ev.target)){ bar.style.display="none"; barTarget=null; } return; }
+          barTarget=host.id.replace("shopify-section-","");
+          var r=host.getBoundingClientRect();
+          bar.style.display="flex";
+          bar.style.top=(window.scrollY+r.top+4)+"px";
+          bar.style.left=(window.scrollX+r.right-96)+"px";
+        });
+        bar.addEventListener("click",function(ev){
+          var op=ev.target && ev.target.getAttribute && ev.target.getAttribute("data-cl-op");
+          if(!op||!barTarget) return;
+          ev.preventDefault(); ev.stopPropagation();
+          parent.postMessage({type:"cl:op",op:op,id:barTarget},location.origin);
+        });
         function outline(el,on){ if(el) el.style.outline = on ? "2px solid #005bd1" : ""; }
         window.addEventListener("message",function(ev){
           if(ev.origin !== location.origin) return;

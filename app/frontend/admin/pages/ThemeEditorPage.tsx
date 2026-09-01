@@ -423,6 +423,19 @@ export function ThemeEditorPage() {
         if (inferred !== templateKey) syncStateParams({ template: inferred, section: null });
         return;
       }
+      if (payload?.type === "cl:op" && payload.id) {
+        const op = (payload as { op?: string }).op;
+        const id = payload.id;
+        const band = draftRef.current?.sections?.[id]
+          ? "template"
+          : Object.entries(groupDraftsRef.current).find(([ , tpl ]) => tpl.sections?.[id])?.[0];
+        if (!band) return;
+        if (op === "up") moveSection(band, id, -1);
+        else if (op === "down") moveSection(band, id, 1);
+        else if (op === "duplicate") duplicateSection(band, id);
+        else if (op === "remove") { removeSection(band, id); setSelectedId((cur) => (cur === id ? null : cur)); }
+        return;
+      }
       if (payload?.type === "cl:select" && payload.id) {
         setSelectedId(payload.id);
         setSelectedBlockId(payload.blockId ?? null); // PR-17：預覽點 block ⇒ 直開 block 面板
