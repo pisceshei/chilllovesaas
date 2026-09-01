@@ -1443,6 +1443,11 @@ abandoned_checkout:
   retention_days: 90
 
 checkout:
+  # 棄單判定（分鐘）。官方逐字："A checkout is considered abandoned if it remains
+  # incomplete for more than ten minutes after the customer has provided their email
+  # information."（help.shopify.com/en/manual/promoting-marketing/create-marketing/
+  # abandoned-checkouts，取證 2026-09-01；89 §6）
+  abandoned_after_minutes: 10
   # 表單欄位三態。出處：46c:756–768（help）、44:369–371（live）
   field_visibility_modes: [hidden, optional, required]
   # --- 地址欄位形態：法域給**預設值**，商家逐市場覆寫（2026-08-12 使用者裁定）---

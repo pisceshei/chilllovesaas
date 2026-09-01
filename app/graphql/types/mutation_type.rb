@@ -107,6 +107,10 @@ module Types
       description: "更新通知模板（subject＋bodyLiquid；revertToDefault 回平台預設）。"
     field :notification_sender_email_update, mutation: Mutations::NotificationSenderEmailUpdate,
       description: "更新通知信寄件人位址。"
+
+    # G6 步 7：棄單挽回。
+    field :abandoned_checkout_send_recovery, mutation: Mutations::AbandonedCheckoutSendRecovery,
+      description: "對棄單手動寄挽回信（自動排程 ⚪ 後置）。"
     field :shop_payment_provider_sync_capabilities, mutation: Mutations::ShopPaymentProviderSyncCapabilities,
       description: "重新讀取 PSP 帳號已開通的付款方式（G6-1b；首次成功自動啟用可用方式）。"
     # S1：publication 生命週期。🔴 `publicationUpdate` 是本倉庫**第一條**

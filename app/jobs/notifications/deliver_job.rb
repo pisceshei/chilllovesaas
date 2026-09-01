@@ -17,7 +17,8 @@ module Notifications
     # @param kind [String]
     # @param order_id [Integer, nil]
     # @param fulfillment_id [Integer, nil]
-    def perform(shop_id:, kind:, order_id: nil, fulfillment_id: nil)
+    # @param checkout_id [Integer, nil] abandoned_checkout 分支（步 7）
+    def perform(shop_id:, kind:, order_id: nil, fulfillment_id: nil, checkout_id: nil)
       shop = Shop.find_by(id: shop_id)
       return if shop.nil?
 
@@ -25,6 +26,7 @@ module Notifications
         case kind
         when "order_confirmation" then deliver_order_confirmation(shop, order_id)
         when "shipping_confirmation" then deliver_shipping_confirmation(shop, order_id, fulfillment_id)
+        when "abandoned_checkout" then deliver_abandoned_checkout(shop, checkout_id)
         else
           raise ArgumentError, "unknown notification kind: #{kind}"
         end
@@ -40,6 +42,22 @@ module Notifications
       payload = Payloads.order_confirmation(order:)
       NotificationMailer.notify(shop_id: shop.id, kind: "order_confirmation",
                                 to: order.email, payload:).deliver_now
+    end
+
+    # 挽回信（步 7）：寄出後回填 recovery_email_sent_at（列表 Email status 的
+    # 唯一寫入者）。寄送在前、回填在後——crash 窗偏「已寄未記」＝重寄風險
+    # 與檔頭②同型（誠實登記，方向選「寧多寄不漏記寄過」的反向：漏記→可再手動寄，
+    # 比記了沒寄（顧客永遠收不到）安全）。
+    def deliver_abandoned_checkout(shop, checkout_id)
+      checkout = Checkout.find_by(id: checkout_id)
+      return if checkout.nil? || checkout.email.blank?
+
+      payload = Payloads.abandoned_checkout(
+        checkout:, url: Notifications::RecoveryUrl.for(checkout)
+      )
+      NotificationMailer.notify(shop_id: shop.id, kind: "abandoned_checkout",
+                                to: checkout.email, payload:).deliver_now
+      checkout.update_column(:recovery_email_sent_at, Time.current)
     end
 
     def deliver_shipping_confirmation(shop, order_id, fulfillment_id)

@@ -3713,3 +3713,15 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   （title/body_html 可譯）——ML 線擴 RESOURCE_TYPES 時把 notification_templates
   納入（89 §6）。
 
+### 3.51 G6 步 7（棄單挽回）的範圍外觀察（2026-09-01）
+
+- ⚪ **recovered 不追連結歸因**：v1＝orders.checkout_id 存在即 recovered；官方語義
+  是「經挽回連結完成」才計（89 §6 逐字）。歸因需在 recover 端點落 visit 記號＋
+  成單時比對——隨分析線（步 10）一併裁定。
+- ⚪ **抑制情形覆蓋兩/六**：官方六種不寄情形（89 §6）中 v1 只實作「已完成」「無
+  email」；付款錯誤／不可運送／全免費三種依賴的判定資料面到位後補
+  （只留電話＝我方 checkout 必收 email，天然不適用）。
+- ⚪ **棄單判定的「最後活動」＝updated_at 近似**：任何 touch checkout 的旁路寫入
+  都會重置計時；若日後出現非顧客行為的 touch 源（如後台批次），要改顯式
+  last_activity_at 欄。
+

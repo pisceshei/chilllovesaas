@@ -338,6 +338,21 @@ module Storefront
       render html: thank_you_html(order).html_safe, layout: false
     end
 
+    # G6 步 7：挽回連結（89 §8）。token 不存在 ⇒ 404；已成單 ⇒ thank-you 頁
+    # （官方 recovered 後連結仍可看訂單狀態）；活單 ⇒ 302 回結帳頁續走。
+    def recover
+      checkout = ActsAsTenant.with_tenant(current_shop) do
+        Checkout.find_by(recovery_token: params[:recovery_token].to_s)
+      end
+      return head :not_found if checkout.nil?
+
+      if ActsAsTenant.with_tenant(current_shop) { Order.where(checkout_id: checkout.id).exists? }
+        redirect_to storefront_checkout_thank_you_path(token: checkout.token)
+      else
+        redirect_to storefront_checkout_show_path(token: checkout.token)
+      end
+    end
+
     private
 
     COOKIE = "_cl_buyer"

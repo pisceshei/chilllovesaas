@@ -147,3 +147,29 @@
    →出貨通知）→ Solid Queue job → mailer（鐵律 5 交易外 IO）。棄單觸發器＝步 7。
 5. ⚪ 後置：模板停用開關（V-236）／Send test／per-template Translate／全店
    logo+accent 外觀層／sender email 確認流（官方前置）／unsubscribe 連結。
+
+## §8 Abandoned checkouts admin 面（實測 2026-09-01；步 7 正典）
+
+- 路由（側欄真實 href）：清單＝`/checkouts`（Orders › Abandoned checkouts）；
+  詳情＝`/checkouts/{id}`。
+- 清單七欄（DOM 逐字）：**Checkout／Created／Customer name／Email status／Region／
+  Recovery status／Total price**；右上 Export。狀態徽章實測值：Email status＝
+  `Sent`（綠）；Recovery status＝`Not recovered`（黃）。頂部藍條「Upgrade to the
+  new abandoned checkout automation…（View automation）」＝發送排程已遷
+  Messaging automation（§6 官方一致）。
+- 詳情頁：header `#39030038102251`＋Not Recovered／Sent 徽章＋「United States,
+  August 31, 2026 at 7:56 am」＋Print＋上下筆箭頭。
+  🔴 綠色橫幅「✓ Cart recovery email sent — A reminder email was sent to the
+  customer yesterday at 5:58 pm.」＋**挽回 URL 拷貝框**，URL 形逐字（去密鑰）：
+  `https://chill.deals/84225425643/checkouts/ac/<token>/recover?key=<hex>&locale=en-…`。
+- 詳情卡：Checkout details（From Online Store；行項 title+SKU＋價×量；Subtotal
+  「1 item」／Estimated tax／Total／「To be paid by customer」）＋Notes 卡＋右欄
+  Customer（No orders）／Contact information（No account）／Shipping address
+  （No shipping address provided）／Billing address／Marketing subscriptions
+  （Not subscribed to any channels）。
+- V-237：未寄出狀態下詳情頁的「寄送」控件形＝未實測（店內唯一棄單已 Sent；
+  官方手動路徑＝點顧客 email，§6）。
+- 我方對位（步 7 v1）：挽回 URL＝`/checkouts/recover/<recovery_token>`（ours 單段
+  token 形）；recovered v1＝該 checkout 已成單（不追連結歸因＝ours 簡化）；
+  詳情頁＋Export ⚪ 後置。
+
