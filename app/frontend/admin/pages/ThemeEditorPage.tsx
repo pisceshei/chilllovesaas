@@ -397,9 +397,10 @@ export function ThemeEditorPage() {
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      const payload = event.data as { type?: string; id?: string };
+      const payload = event.data as { type?: string; id?: string; blockId?: string };
       if (payload?.type === "cl:select" && payload.id) {
         setSelectedId(payload.id);
+        setSelectedBlockId(payload.blockId ?? null); // PR-17：預覽點 block ⇒ 直開 block 面板
         // PR-5：預覽點選可能是群組 section——跨帶定位
         setSelectedBand((current) => {
           if (draftRef.current?.sections?.[payload.id!]) return "template";
@@ -417,8 +418,8 @@ export function ThemeEditorPage() {
   useEffect(() => {
     if (!selectedId) return;
     iframeRef.current?.contentWindow?.postMessage(
-      { type: "cl:highlight", id: selectedId }, window.location.origin);
-  }, [selectedId]);
+      { type: "cl:highlight", id: selectedId, blockId: selectedBlockId }, window.location.origin);
+  }, [selectedId, selectedBlockId]);
 
   // PR-7 即時預覽：選中 section 的 entry 一變（設定/block 操作），debounce 400ms
   // 以未儲存 entry 渲染片段 → cl:replace 換進 iframe（本尊「改即見」對位）。

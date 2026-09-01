@@ -134,7 +134,7 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     const settings = within(screen.getByRole("complementary", { name: "設定" }));
     expect(settings.getByDisplayValue("首頁英雄")).toBeInTheDocument();
     expect(postSpy).toHaveBeenCalledWith(
-      { type: "cl:highlight", id: "hero" }, window.location.origin);
+      { type: "cl:highlight", id: "hero", blockId: null }, window.location.origin); // PR-17 起帶 blockId
   });
 
   it("ED3 🔴 iframe cl:select 反選左樹；異 origin 訊息被忽略", async () => {
@@ -435,6 +435,30 @@ describe("ThemeEditorPage（步 16a shell）", () => {
       expect(fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_page")).length)
         .toBeGreaterThan(before); // 🔴 undo 驅動預覽（fleet 軸③）
     }, { timeout: 3000 });
+  });
+
+  it("ED20 🔴 block 錨點：cl:select 帶 blockId ⇒ 直開 block 面板；樹選 block ⇒ highlight 帶 blockId", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    const postSpy = vi.fn();
+    Object.defineProperty(iframe, "contentWindow", { value: { postMessage: postSpy } });
+
+    // 預覽點 block（demo 的 p1）⇒ 選中 section＋block，面板出 block def 控件
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:select", id: "demo", blockId: "p1" }, origin: window.location.origin,
+    }));
+    const settings = within(await screen.findByRole("complementary", { name: "設定" }));
+    expect(await settings.findByLabelText("標籤")).toBeInTheDocument(); // _parent def 的控件
+
+    // 樹選 block ⇒ highlight postMessage 帶 blockId（橋縮到 block 元素）
+    fireEvent.click(tree.getByRole("button", { name: "_parent" }));
+    await vi.waitFor(() => {
+      expect(postSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "cl:highlight", id: "demo", blockId: "p1" }),
+        window.location.origin);
+    });
   });
 
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
