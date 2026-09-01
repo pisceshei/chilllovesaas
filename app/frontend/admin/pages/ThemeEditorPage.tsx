@@ -25,6 +25,18 @@ const EDITOR_QUERY = `
       templateLockVersion(key: $key)
       sectionCatalog
       sectionSchemas
+      settingsSchema
+      themeSettingsJson
+      themeSettingsLockVersion
+    }
+  }
+`;
+
+const SETTINGS_MUTATION = `
+  mutation themeSettingsUpsert($themeId: ID!, $settings: JSON!, $lockVersion: Int) {
+    themeSettingsUpsert(themeId: $themeId, settings: $settings, lockVersion: $lockVersion) {
+      lockVersion
+      userErrors { field message code }
     }
   }
 `;
@@ -80,6 +92,9 @@ interface EditorData {
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
     sectionSchemas: Record<string, { name: string; settings: SettingDef[] }>;
+    settingsSchema: { name: string; settings: SettingDef[] }[];
+    themeSettingsJson: Record<string, unknown>;
+    themeSettingsLockVersion: number | null;
   } | null;
 }
 
@@ -248,6 +263,11 @@ export function ThemeEditorPage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  // 16d2：佈景設定（settings_data current）——獨立 draft；undo 整合＝16e（91 §3.70）
+  const [themeMode, setThemeMode] = useState(false);
+  const [settingsDraft, setSettingsDraft] = useState<Record<string, unknown> | null>(null);
+  const [settingsLock, setSettingsLock] = useState<number | null>(null);
+  const [settingsDirty, setSettingsDirty] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const gid = `gid://chilllove/Theme/${themeId}`;
@@ -259,6 +279,9 @@ export function ThemeEditorPage() {
       setData(result.theme);
       setDraft(result.theme?.templateJson ? cloneTpl(result.theme.templateJson) : null);
       setLockVersion(result.theme?.templateLockVersion ?? null);
+      setSettingsDraft(result.theme ? { ...result.theme.themeSettingsJson } : null);
+      setSettingsLock(result.theme?.themeSettingsLockVersion ?? null);
+      setSettingsDirty(false);
       setUndoStack([]);
       setRedoStack([]);
       setDirty(false);
@@ -279,7 +302,10 @@ export function ThemeEditorPage() {
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       const payload = event.data as { type?: string; id?: string };
-      if (payload?.type === "cl:select" && payload.id) setSelectedId(payload.id);
+      if (payload?.type === "cl:select" && payload.id) {
+        setSelectedId(payload.id);
+        setThemeMode(false);
+      }
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -386,6 +412,12 @@ export function ThemeEditorPage() {
     setPickerOpen(false);
   };
 
+  /** 佈景設定寫值（16d2）：獨立 draft，不進模板快照棧（undo 整合＝16e）。 */
+  const setThemeSetting = (settingKey: string, value: unknown) => {
+    setSettingsDraft((current) => (current ? { ...current, [settingKey]: value } : current));
+    setSettingsDirty(true);
+  };
+
   const setSetting = (sectionId: string, settingKey: string, value: unknown) => applyOp((tpl) => {
     const entry = tpl.sections?.[sectionId];
     if (!entry) return;
@@ -393,25 +425,44 @@ export function ThemeEditorPage() {
   });
 
   const save = async () => {
-    if (!draft || saving) return;
+    if (saving || (!dirty && !settingsDirty)) return;
     setSaving(true);
     try {
-      const result = await requestAdminGraphQL<{
-        themeTemplateUpsert: { templateKey: string | null; lockVersion: number | null;
-                               userErrors: { message: string; code: string }[] };
-      }, Record<string, unknown>>(SAVE_MUTATION, {
-        themeId: gid, key: templateKey, content: draft, lockVersion,
-      });
-      const payload = result.themeTemplateUpsert;
-      if (payload.userErrors.length > 0) {
-        const firstError = payload.userErrors[0];
-        showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
-        return;
+      if (dirty && draft) {
+        const result = await requestAdminGraphQL<{
+          themeTemplateUpsert: { templateKey: string | null; lockVersion: number | null;
+                                 userErrors: { message: string; code: string }[] };
+        }, Record<string, unknown>>(SAVE_MUTATION, {
+          themeId: gid, key: templateKey, content: draft, lockVersion,
+        });
+        const payload = result.themeTemplateUpsert;
+        if (payload.userErrors.length > 0) {
+          const firstError = payload.userErrors[0];
+          showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
+          return;
+        }
+        setLockVersion(payload.lockVersion);
+        setUndoStack([]); // Save 後清空（24 §3 Undo 僅未儲存變更）
+        setRedoStack([]);
+        setDirty(false);
       }
-      setLockVersion(payload.lockVersion);
-      setUndoStack([]); // Save 後清空（24 §3 Undo 僅未儲存變更）
-      setRedoStack([]);
-      setDirty(false);
+      // 16d2：佈景設定另走 themeSettingsUpsert（同樣後端 touch theme）
+      if (settingsDirty && settingsDraft) {
+        const result = await requestAdminGraphQL<{
+          themeSettingsUpsert: { lockVersion: number | null;
+                                 userErrors: { message: string; code: string }[] };
+        }, Record<string, unknown>>(SETTINGS_MUTATION, {
+          themeId: gid, settings: settingsDraft, lockVersion: settingsLock,
+        });
+        const payload = result.themeSettingsUpsert;
+        if (payload.userErrors.length > 0) {
+          const firstError = payload.userErrors[0];
+          showToast(firstError.code === "STALE_OBJECT" ? t("editor.staleConflict") : firstError.message);
+          return;
+        }
+        setSettingsLock(payload.lockVersion);
+        setSettingsDirty(false);
+      }
       showToast(t("editor.saved"));
       // 後端已 touch theme（頁快取鍵旋轉）；重載 iframe 看到存檔後渲染
       iframeRef.current?.contentWindow?.location.reload();
@@ -462,8 +513,8 @@ export function ThemeEditorPage() {
         <Button disabled={redoStack.length === 0} onClick={redo} size="small" variant="ghost">
           <Redo2 aria-hidden="true" size={14} /> {t("editor.redo")}
         </Button>
-        <Button disabled={!dirty || saving} onClick={() => void save()} variant="primary">
-          {t("common.save")}{dirty ? " •" : ""}
+        <Button disabled={(!dirty && !settingsDirty) || saving} onClick={() => void save()} variant="primary">
+          {t("common.save")}{dirty || settingsDirty ? " •" : ""}
         </Button>
       </header>
 
@@ -472,6 +523,9 @@ export function ThemeEditorPage() {
           <h3>{t("editor.sectionsTree")}</h3>
           <Button onClick={() => setPickerOpen((open) => !open)} size="small">
             {t("editor.addSection")}
+          </Button>
+          <Button onClick={() => { setThemeMode(true); setSelectedId(null); }} size="small" variant="ghost">
+            {t("editor.themeSettings")}
           </Button>
           {pickerOpen ? (
             <ul aria-label={t("editor.sectionPicker")} className="cl-editor__picker">
@@ -539,9 +593,23 @@ export function ThemeEditorPage() {
           />
         </main>
 
-        <aside aria-label={t("editor.settingsPanel")} className="cl-editor__settings">
-          <h3>{t("editor.settingsPanel")}</h3>
-          {selected && selectedId ? (
+        <aside aria-label={themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")} className="cl-editor__settings">
+          <h3>{themeMode ? t("editor.themeSettings") : t("editor.settingsPanel")}</h3>
+          {themeMode ? (
+            (data?.settingsSchema ?? []).map((group) => (
+              <section key={group.name}>
+                <h4 className="cl-editor__group">{group.name}</h4>
+                {group.settings.map((def, index) => (
+                  <SettingControl
+                    def={def}
+                    key={def.id ?? `static-${index}`}
+                    onChange={(value) => def.id && setThemeSetting(def.id, value)}
+                    value={def.id ? (settingsDraft ?? {})[def.id] : undefined}
+                  />
+                ))}
+              </section>
+            ))
+          ) : selected && selectedId ? (
             <>
               <p className="cl-card-note"><code>{selected.type}</code>{selected.disabled ? ` — ${t("editor.hidden")}` : ""}</p>
               {(() => {

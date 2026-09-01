@@ -1093,5 +1093,6 @@
   "editor.pickerEmpty": "追加可能なセクションがありません",
   "editor.alignLeft": "左揃え",
   "editor.alignCenter": "中央揃え",
-  "editor.alignRight": "右揃え"
+  "editor.alignRight": "右揃え",
+  "editor.themeSettings": "テーマ設定"
 }

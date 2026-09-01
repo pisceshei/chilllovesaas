@@ -168,6 +168,8 @@ module Types
       description: "重新命名主題。"
     field :theme_template_upsert, mutation: Mutations::ThemeTemplateUpsert,
       description: "整份寫回模板 JSON（編輯器儲存；樂觀鎖＋touch theme）。"
+    field :theme_settings_upsert, mutation: Mutations::ThemeSettingsUpsert,
+      description: "整份寫回佈景設定（編輯器儲存；樂觀鎖＋touch theme）。"
     field :theme_publish, mutation: Mutations::ThemePublish,
       description: "發布主題（現任已發布者自動降回草稿）。"
 

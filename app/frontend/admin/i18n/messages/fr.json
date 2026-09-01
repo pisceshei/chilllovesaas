@@ -1093,5 +1093,6 @@
   "editor.pickerEmpty": "Aucune section ajoutable",
   "editor.alignLeft": "Gauche",
   "editor.alignCenter": "Centre",
-  "editor.alignRight": "Droite"
+  "editor.alignRight": "Droite",
+  "editor.themeSettings": "Paramètres du thème"
 }

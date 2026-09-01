@@ -1093,5 +1093,6 @@
   "editor.pickerEmpty": "No addable sections (only sections with presets can be added)",
   "editor.alignLeft": "Left",
   "editor.alignCenter": "Center",
-  "editor.alignRight": "Right"
+  "editor.alignRight": "Right",
+  "editor.themeSettings": "Theme settings"
 }

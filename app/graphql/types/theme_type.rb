@@ -39,6 +39,11 @@ module Types
     # 16d：全部區段的 settings 定義（schema 驅動控件；26 §5 型別全表）。
     # 與 catalog 不同：**不過濾 presets**——樹上選中的 main-* 也要有控件。
     field :section_schemas, GraphQL::Types::JSON, null: false
+    # 16d2：佈景設定三件——分組定義（settings_schema.json 去 theme_info）、
+    # 生效值（DB 覆寫 → 檔案 current，與 Runtime 同讀序）、樂觀鎖底版。
+    field :settings_schema, GraphQL::Types::JSON, null: false
+    field :theme_settings_json, GraphQL::Types::JSON, null: false
+    field :theme_settings_lock_version, Integer, null: true
 
     def id = "gid://chilllove/Theme/#{object.id}"
     def preview_url = "/admin/store/preview/#{object.id}"
@@ -64,22 +69,8 @@ module Types
 
       translate = ThemeEngine::SchemaLocale.resolver_for(source)
       each_section_schema(source).to_h do |type, schema|
-        settings = Array(schema["settings"]).filter_map do |setting|
-          next unless setting.is_a?(Hash)
-
-          translated = setting.slice("id", "type", "label", "info", "content", "default",
-                                     "placeholder", "min", "max", "step", "unit", "options", "limit")
-          %w[label info content].each do |key|
-            translated[key] = translate.call(translated[key]) if translated[key]
-          end
-          if translated["options"].is_a?(Array)
-            translated["options"] = translated["options"].map do |option|
-              option.is_a?(Hash) ? option.merge("label" => translate.call(option["label"])) : option
-            end
-          end
-          translated
-        end
-        [ type, { "name" => translate.call(schema["name"] || type), "settings" => settings } ]
+        [ type, { "name" => translate.call(schema["name"] || type),
+                  "settings" => translate_defs(Array(schema["settings"]), translate) } ]
       end
     end
 
@@ -94,6 +85,66 @@ module Types
       end
       rels = rels.first([ first || 250, 2500 ].min) # 官方 "At most 2500"
       rels.map { |rel| { filename: rel, size: source.size_of(rel).to_i, source: } }
+    end
+
+    def settings_schema
+      source = ThemeEngine::Sources.resolve(object)
+      return [] if source.nil?
+
+      raw = source.read("config/settings_schema.json")
+      groups = begin
+        raw ? ThemeEngine::Runtime.tolerant_json(raw) : []
+      rescue JSON::ParserError
+        []
+      end
+      return [] unless groups.is_a?(Array)
+
+      translate = ThemeEngine::SchemaLocale.resolver_for(source)
+      groups.filter_map do |group|
+        next unless group.is_a?(Hash)
+        next if group["name"] == "theme_info" # 首項中繼資料，非設定分組（24 §2.5）
+
+        { "name" => translate.call(group["name"].to_s),
+          "settings" => translate_defs(Array(group["settings"]), translate) }
+      end
+    end
+
+    # 生效值＝DB 覆寫層優先（與 Runtime#db_settings → file current 同讀序）。
+    def theme_settings_json
+      row = ThemeSetting.find_by(shop_id: object.shop_id, theme_id: object.id)
+      return row.settings if row
+
+      source = ThemeEngine::Sources.resolve(object)
+      raw = source&.read("config/settings_data.json")
+      data = begin
+        raw ? ThemeEngine::Runtime.tolerant_json(raw) : {}
+      rescue JSON::ParserError
+        {}
+      end
+      data["current"] || {}
+    end
+
+    def theme_settings_lock_version
+      ThemeSetting.where(shop_id: object.shop_id, theme_id: object.id).pick(:lock_version)
+    end
+
+    # 控件定義子集化＋label/info/content 與 options[].label 的 t: 解析（26 §5）。
+    def translate_defs(defs, translate)
+      defs.filter_map do |setting|
+        next unless setting.is_a?(Hash)
+
+        translated = setting.slice("id", "type", "label", "info", "content", "default",
+                                   "placeholder", "min", "max", "step", "unit", "options", "limit")
+        %w[label info content].each do |key|
+          translated[key] = translate.call(translated[key]) if translated[key]
+        end
+        if translated["options"].is_a?(Array)
+          translated["options"] = translated["options"].map do |option|
+            option.is_a?(Hash) ? option.merge("label" => translate.call(option["label"])) : option
+          end
+        end
+        translated
+      end
     end
 
     # @return [Enumerator] (type, parsed schema) —— schema-less 檔跳過

@@ -27,6 +27,13 @@ const BOOTSTRAP = {
       sectionCatalog: [
         { type: "promo", name: "促銷條", preset: { settings: { text: "預設促銷文案" }, blocks: null } },
       ],
+      settingsSchema: [
+        { name: "Colors", settings: [
+          { id: "brand_color", type: "color", label: "品牌色", default: "#000000" },
+        ] },
+      ],
+      themeSettingsJson: { brand_color: "#a9502c" },
+      themeSettingsLockVersion: null,
       sectionSchemas: {
         hero: { name: "Hero", settings: [
           { type: "header", content: "版面" },
@@ -57,7 +64,9 @@ function stubFetch(saveErrors: { message: string; code: string }[] = []) {
           templateKey: saveErrors.length > 0 ? null : "index",
           lockVersion: saveErrors.length > 0 ? null : 1,
           userErrors: saveErrors } } }
-      : BOOTSTRAP;
+      : request.query.includes("themeSettingsUpsert")
+        ? { data: { themeSettingsUpsert: { lockVersion: 0, userErrors: [] } } }
+        : BOOTSTRAP;
     return { json: vi.fn().mockResolvedValue(body), ok: true, status: 200 } as unknown as Response;
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -216,5 +225,27 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sent.variables.content.sections.hero.settings.align).toBe("center");
     // 🔴 default 只補顯示、不物化落庫（本尊語義：settings_data 只存覆寫）
     expect(sent.variables.content.sections.hero.settings.spacing).toBeUndefined();
+  });
+
+  it("ED9 🔴 佈景設定：入口開分組面板、改值 Save 走 themeSettingsUpsert 整份", async () => {
+    const fetchMock = stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    fireEvent.click(tree.getByRole("button", { name: "佈景主題設定" }));
+
+    const settings = within(screen.getByRole("complementary", { name: "佈景主題設定" }));
+    expect(settings.getByText("Colors")).toBeInTheDocument();
+    const control = settings.getByLabelText("品牌色");
+    expect(control).toHaveValue("#a9502c"); // 生效值（DB/檔案 current）
+
+    fireEvent.change(control, { target: { value: "#123456" } });
+    fireEvent.click(screen.getByRole("button", { name: /儲存/ }));
+    await vi.waitFor(() => expect(callsTo(fetchMock, "themeSettingsUpsert")).toHaveLength(1));
+    const sent = JSON.parse(String(callsTo(fetchMock, "themeSettingsUpsert")[0].body)) as {
+      variables: { settings: Record<string, unknown>; lockVersion: number | null };
+    };
+    expect(sent.variables.settings.brand_color).toBe("#123456");
+    // 模板未動 ⇒ 不應多發 templateUpsert
+    expect(callsTo(fetchMock, "themeTemplateUpsert")).toHaveLength(0);
   });
 });

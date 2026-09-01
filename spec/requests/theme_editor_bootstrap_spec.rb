@@ -97,6 +97,33 @@ RSpec.describe "Theme editor bootstrap", type: :request do
     expect(schemas.dig("promo", "name")).to eq("促銷條") # t:names.promo 解析
   end
 
+  it "E6 settingsSchema 分組（theme_info 跳過）＋themeSettingsJson 讀序 DB 覆寫優先" do
+    gid = "gid://chilllove/Theme/#{theme.id}"
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { settingsSchema themeSettingsJson themeSettingsLockVersion } }
+    GQL
+    body = response.parsed_body.dig("data", "theme")
+    names = body["settingsSchema"].map { |group| group["name"] }
+    expect(names).to eq([ "Colors" ]) # theme_info 首項不是設定分組（24 §2.5）
+    brand = body["settingsSchema"].first["settings"].find { |d| d["id"] == "brand_color" }
+    expect(brand).to include("type" => "color", "default" => "#000000")
+
+    # 無 DB 列 ⇒ 檔案 current；lockVersion null（首存免帶）
+    expect(body.dig("themeSettingsJson", "brand_color")).to eq("#a9502c")
+    expect(body["themeSettingsLockVersion"]).to be_nil
+
+    ActsAsTenant.with_tenant(shop) do
+      ThemeSetting.create!(shop_id: shop.id, theme_id: theme.id,
+                           settings: { "brand_color" => "#e2e2e2" })
+    end
+    post_graphql(<<~GQL, variables: { id: gid })
+      query($id: ID!) { theme(id: $id) { themeSettingsJson themeSettingsLockVersion } }
+    GQL
+    overlay = response.parsed_body.dig("data", "theme")
+    expect(overlay.dig("themeSettingsJson", "brand_color")).to eq("#e2e2e2") # DB 蓋檔案
+    expect(overlay["themeSettingsLockVersion"]).to eq(0)
+  end
+
   it "E2 🔴 templateJson key 逃逸 ⇒ null" do
     gid = "gid://chilllove/Theme/#{theme.id}"
     post_graphql(<<~GQL, variables: { id: gid })

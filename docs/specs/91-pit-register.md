@@ -3951,3 +3951,13 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   值域）可後補。
 - ⚪ SchemaLocale 只取第一個 `locales/*.default.schema.json`：多 schema locale
   的語系挑選（依 staff locale）未做。
+
+### 3.70 G4 步 16d2（佈景設定寫回）的範圍外觀察（2026-09-01）
+
+- ⚪ 佈景設定不進 undo/redo 快照棧：本尊 ↺ 涵蓋 theme settings（24 §1.5 親測
+  ——改色 undo 即復原）；我方 settingsDraft 獨立、無 undo。整合＝把快照棧改
+  {tpl, settings} 複合形，隨 16e 一次做。
+- ⚪ 設定變更無 client-side 即時預覽：本尊改色即時重渲染整個預覽（24 §1.5）；
+  我方 Save→iframe 重載才可見。需 postMessage 把 draft settings 推進預覽端
+  CSS variables——16e 射程。
+- ⚪ color_scheme_group 在佈景面板唯讀（JSON 顯示）：scheme 色票編輯器＝16e。
