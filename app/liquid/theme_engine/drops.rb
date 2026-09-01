@@ -1347,6 +1347,33 @@ module ThemeEngine
     end
   end
 
+  # PR-16：video_url setting 的值物件（官方：回「a string that contains the
+  # entered URL」＋ `id`/`type` 屬性，type ∈ youtube/vimeo；空 ⇒ nil。
+  # shopify.dev input-settings#video_url 取證 2026-09-02）。
+  # 🔴 用 Drop 不用 String 子類：Liquid 對非 Drop 走 `[]`，而 String#[]("id")
+  # 是子字串搜尋——`url['id']` 會回 "id" 假值。
+  class VideoUrlDrop < Liquid::Drop
+    YOUTUBE_RE = %r{(?:youtube\.com/watch\?v=|youtube\.com/embed/|youtu\.be/)([\w-]{6,})}
+    VIMEO_RE = %r{vimeo\.com/(?:video/)?(\d+)}
+
+    def self.parse(url)
+      s = url.to_s
+      if (m = s.match(YOUTUBE_RE)) then new(url: s, id: m[1], type: "youtube")
+      elsif (m = s.match(VIMEO_RE)) then new(url: s, id: m[1], type: "vimeo")
+      end
+    end
+
+    def initialize(url:, id:, type:)
+      super()
+      @url, @id, @type = url, id, type
+    end
+
+    attr_reader :id, :type
+
+    def url = @url
+    def to_s = @url
+  end
+
   class ShopDrop < Liquid::Drop
     def initialize(shop)
       super()
@@ -1808,6 +1835,10 @@ module ThemeEngine
 
         resolve_settings_image(val)
       when "font_picker" then FontLibrary.drop(val) # 步 13a：handle → 真 font drop（97 §1）
+      when "video_url"
+        # 官方：空 ⇒ nil；非空 ⇒ URL 字串＋id/type（PR-16；解析不出 host 的
+        # 值一樣回 nil——不可播的 URL 對主題等同未填）
+        val.to_s.empty? ? nil : VideoUrlDrop.parse(val)
       when "color_scheme_group"
         ColorSchemeGroupDrop.new(val, definition: type_entry.is_a?(Hash) ? (type_entry["definition"] || []) : [])
       when "color_scheme"

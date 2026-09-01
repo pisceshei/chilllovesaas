@@ -278,9 +278,61 @@ module ThemeEngine
     def avatar(_input) = ""
     def customer_login_link(input) = link_to(input, "/account/login")
     def customer_logout_link(input) = link_to(input, "/account/logout")
-    def external_video_url(input, _o = {}) = input.to_s
-    def external_video_tag(_input, _o = {}) = ""
-    def video_tag(_input, _o = {}) = ""
+    # PR-16（官方 "Returns the URL for a given external video…specify
+    # parameters for the external video player"；YouTube embed 官方例
+    # `youtube.com/embed/{id}?…`，取證 2026-09-02。Vimeo embed host＝
+    # player.vimeo.com/video/{id}——Vimeo 官方嵌入形，Shopify 頁未逐字給出，
+    # 標 V）。輸入收 external_video media drop（host/external_id）或
+    # video_url setting drop（type/id）；參數原樣編 query。
+    def external_video_url(input, params = {})
+      type, vid, title = video_identity(input)
+      return input.to_s if vid.nil?
+
+      base = type == "vimeo" ? "https://player.vimeo.com/video/#{vid}"
+                             : "https://www.youtube.com/embed/#{vid}"
+      query = (params || {}).map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+      ExternalVideoUrlResult.new(query.empty? ? base : "#{base}?#{query}",
+                                 video_type: type, title: title)
+    end
+
+    # 官方 iframe 形（例輸出逐字：frameborder="0"、allow="accelerometer;
+    # autoplay; encrypted-media; gyroscope; picture-in-picture"、
+    # allowfullscreen、src、title）；額外參數 ⇒ HTML 屬性。
+    def external_video_tag(input, attrs = {})
+      url = input.is_a?(ExternalVideoUrlResult) ? input : external_video_url(input)
+      return "" unless url.is_a?(ExternalVideoUrlResult)
+
+      extra = (attrs || {}).map { |k, v| %( #{k}="#{ERB::Util.html_escape(v.to_s)}") }.join
+      title = ERB::Util.html_escape(url.title.to_s)
+      %(<iframe frameborder="0" allow="accelerometer; autoplay; encrypted-media; ) +
+        %(gyroscope; picture-in-picture" allowfullscreen="allowfullscreen" ) +
+        %(src="#{ERB::Util.html_escape(url)}" title="#{title}"#{extra}></iframe>)
+    end
+
+    # video 媒體物件（sources）或 URL 字串（ours 救援形——Ella video snippet
+    # 支援 URL 形）⇒ <video>。布林參數出布林屬性；nil 值略過。
+    def video_tag(input, opts = {})
+      src = if input.respond_to?(:sources) && input.sources.respond_to?(:first)
+              entry = input.sources.first
+              entry.respond_to?(:url) ? entry.url : entry && entry["url"]
+      else
+              s = input.to_s
+              s if s.match?(%r{\Ahttps?://|\A/})
+      end
+      return "" if src.to_s.empty?
+
+      attrs = +""
+      (opts || {}).each do |k, v|
+        next if v.nil?
+        key = k.to_s
+        next if key == "image_size" # 媒體管線參數，不落 HTML
+        if v == true then attrs << %( #{key})
+        elsif v == false then next
+        else attrs << %( #{key}="#{ERB::Util.html_escape(v.to_s)}")
+        end
+      end
+      %(<video src="#{ERB::Util.html_escape(src)}"#{attrs}></video>)
+    end
     def media_tag(_input, _o = {}) = ""
     def model_viewer_tag(_input, _o = {}) = ""
     def article_img_url(_i, _s = nil) = ""
@@ -318,6 +370,19 @@ module ThemeEngine
     def stylesheet(_input) = ""
     def distance_from(_i, _o) = nil
     def sort_natural(input, _p = nil) = input.respond_to?(:sort) ? Array(input).sort_by { |x| x.to_s.downcase } : input
+
+    # (type, id, title)；認得 external_video media drop 與 video_url drop
+    def video_identity(input)
+      if input.respond_to?(:external_id) && input.external_id
+        [ input.respond_to?(:host) ? input.host.to_s : "youtube", input.external_id,
+          input.respond_to?(:alt) ? input.alt : nil ]
+      elsif input.respond_to?(:type) && input.respond_to?(:id) &&
+            %w[youtube vimeo].include?(input.type.to_s)
+        [ input.type.to_s, input.id, nil ]
+      else
+        [ nil, nil, nil ]
+      end
+    end
 
     def dig_measurement(measurement, key)
       return nil if measurement.nil?
