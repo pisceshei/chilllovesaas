@@ -36,9 +36,12 @@ module ThemeEngine
     #   menus／lookup——都要 tenant；巢狀 with_tenant 冪等，controller 已設也無妨）。
     # @param assigns [Hash] 額外全域 assigns（步 12b：suggest／recommendations 的
     #   section 形把 predictive_search／recommendations 疊進渲染語境）。
-    def render(path, params: {}, assigns: {})
+    # PR-7：draft_sections＝編輯器未儲存 entry 的覆蓋（sid → entry）——
+    # SRA 單 section 渲染吃它 ⇒ 右側即時預覽（本尊改設定即時重渲染的對位）。
+    def render(path, params: {}, assigns: {}, draft_sections: nil)
       @params = params || {}
       @extra_assigns = assigns || {}
+      @draft_sections = draft_sections || {}
       ActsAsTenant.with_tenant(@shop) do
         # Section Rendering API（包 33；契約＝83 §3.4＋§12.3 真店逐格）：
         # 兩參數並存時 `sections` 壓過 `section_id`（實測：回 JSON）。
@@ -279,6 +282,9 @@ module ThemeEngine
     # 找不到 ⇒ nil（呼叫端依端點轉 404／null）。?view= 語境下先查替代模板
     # （section 請求繼承請求頁 context——83 §12.3；替代模板頁的 section 也要找得到）。
     def section_data_for(runtime, page_type, sid)
+      # PR-7：編輯器 draft 覆蓋最優先（未儲存的即時預覽）
+      return @draft_sections[sid] if @draft_sections&.key?(sid)
+
       tj = runtime.template_json(template_key_for(runtime, page_type))
       data = tj && (tj["sections"] || {})[sid]
       return data if data

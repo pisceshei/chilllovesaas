@@ -298,8 +298,10 @@ export function ThemeEditorPage() {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const draftRef = useRef<TemplateJson | null>(null);
   const groupDraftsRef = useRef<Record<string, TemplateJson>>({});
+  const activeDraftRef = useRef<TemplateJson | null>(null);
   draftRef.current = draft;
   groupDraftsRef.current = groupDrafts;
+  activeDraftRef.current = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
 
   const gid = `gid://chilllove/Theme/${themeId}`;
 
@@ -359,6 +361,36 @@ export function ThemeEditorPage() {
     iframeRef.current?.contentWindow?.postMessage(
       { type: "cl:highlight", id: selectedId }, window.location.origin);
   }, [selectedId]);
+
+  // PR-7 即時預覽：選中 section 的 entry 一變（設定/block 操作），debounce 400ms
+  // 以未儲存 entry 渲染片段 → cl:replace 換進 iframe（本尊「改即見」對位）。
+  const selectedEntryJson = selectedId && activeDraftRef.current?.sections?.[selectedId]
+    ? JSON.stringify(activeDraftRef.current.sections[selectedId]) : null;
+  useEffect(() => {
+    if (!selectedId || !selectedEntryJson || themeMode) return;
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? "";
+          // v1 一律以首頁語境渲染片段（非 index 模板的資源語境＝登記限制）
+          const path = "/";
+          const response = await fetch(`/admin/store/preview/${themeId}/draft_section`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+            body: JSON.stringify({ path, section_id: selectedId,
+                                   entry: JSON.parse(selectedEntryJson) as unknown }),
+          });
+          if (!response.ok) return;
+          const html = await response.text();
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: "cl:replace", id: selectedId, html }, window.location.origin);
+        } catch {
+          // 即時預覽是增強面——失敗靜默（儲存路徑不受影響）
+        }
+      })();
+    }, 400);
+    return () => window.clearTimeout(handle);
+  }, [selectedEntryJson, selectedId, selectedBand, themeMode, themeId]);
 
   /** 每個 op 先推快照（undo 棧＝跨帶 {band, snap}）再改該帶 draft；
    *  redo 棧清空（14 §F3 快照棧語義；PR-5 band 化——群組與模板同一棧）。 */

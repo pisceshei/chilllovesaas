@@ -336,4 +336,40 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(added?.type).toBe("_parent");
     expect(added?.settings?.label).toBe("P");            // 🔴 add-block 帶 def default
   });
+
+  it("ED13 🔴 即時預覽：改設定 → debounce 後 POST draft_section → cl:replace 進 iframe", async () => {
+    const fetchMock = stubFetch();
+    fetchMock.mockImplementation(async (url: unknown, init?: RequestInit) => {
+      if (String(url).includes("/draft_section")) {
+        return { ok: true, status: 200,
+                 text: vi.fn().mockResolvedValue('<div id="shopify-section-hero">RE-RENDERED</div>'),
+                 json: vi.fn() } as unknown as Response;
+      }
+      const request = JSON.parse(String(init?.body)) as { query: string };
+      void request;
+      return { json: vi.fn().mockResolvedValue(BOOTSTRAP), ok: true, status: 200 } as unknown as Response;
+    });
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const iframe = screen.getByTitle("主題預覽") as HTMLIFrameElement;
+    const postSpy = vi.fn();
+    Object.defineProperty(iframe, "contentWindow", { value: { postMessage: postSpy } });
+
+    fireEvent.click(tree.getAllByRole("button", { name: "hero" })[1]); // 範本帶
+    const settings = within(screen.getByRole("complementary", { name: "設定" }));
+    fireEvent.change(settings.getByLabelText("標題"), { target: { value: "即時標題" } });
+
+    await vi.waitFor(() => {
+      const calls = fetchMock.mock.calls.filter((c) => String(c[0]).includes("/draft_section"));
+      expect(calls.length).toBeGreaterThanOrEqual(1);
+      const body = JSON.parse(String((calls[0][1] as RequestInit).body)) as {
+        section_id: string; entry: { settings: { heading: string } } };
+      expect(body.section_id).toBe("hero");
+      expect(body.entry.settings.heading).toBe("即時標題"); // 🔴 未儲存 draft 值
+    }, { timeout: 2000 });
+    await vi.waitFor(() => {
+      expect(postSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "cl:replace", id: "hero" }), window.location.origin);
+    }, { timeout: 2000 });
+  });
 });
