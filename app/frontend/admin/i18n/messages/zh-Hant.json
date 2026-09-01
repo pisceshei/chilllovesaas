@@ -1114,5 +1114,16 @@
   "code.revert": "還原原始版本",
   "code.delete": "刪除檔案",
   "code.reverted": "已還原原始版本",
-  "code.deleted": "已刪除檔案"
+  "code.deleted": "已刪除檔案",
+  "settings.webhooks.title": "Webhooks",
+  "settings.webhooks.hint": "事件發生時以 HTTPS POST 通知外部系統（簽章驗證＝X-CL-Hmac-Sha256）",
+  "settings.webhooks.topic": "主題",
+  "settings.webhooks.topicPlaceholder": "選擇事件主題…",
+  "settings.webhooks.url": "回呼 URL",
+  "settings.webhooks.add": "新增 webhook",
+  "settings.webhooks.created": "已建立 webhook",
+  "settings.webhooks.deleted": "已刪除 webhook",
+  "settings.webhooks.failed": "操作失敗",
+  "settings.webhooks.secretOnce": "簽章密鑰（只顯示這一次，請立即保存）：",
+  "settings.webhooks.secretDismiss": "我已保存"
 }

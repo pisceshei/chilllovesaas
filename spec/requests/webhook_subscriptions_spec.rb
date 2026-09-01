@@ -87,6 +87,9 @@ RSpec.describe "Webhook subscriptions", type: :request do
     created = create_sub
     gid = created.dig("webhookSubscription", "id")
 
+    topics = gql("query { webhookTopics }").dig("data", "webhookTopics")
+    expect(topics).to eq(Events::Topics::EXTERNAL) # UI select 資料源＝白名單同源
+
     listing = gql("query { webhookSubscriptions(first: 10) { nodes { id topic } } }")
     expect(listing.dig("data", "webhookSubscriptions", "nodes").map { |n| n["topic"] }).to eq([ "orders/create" ])
 

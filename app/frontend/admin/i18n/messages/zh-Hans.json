@@ -1114,5 +1114,16 @@
   "code.revert": "还原原始版本",
   "code.delete": "删除文件",
   "code.reverted": "已还原原始版本",
-  "code.deleted": "已删除文件"
+  "code.deleted": "已删除文件",
+  "settings.webhooks.title": "Webhooks",
+  "settings.webhooks.hint": "事件发生时以 HTTPS POST 通知外部系统",
+  "settings.webhooks.topic": "主题",
+  "settings.webhooks.topicPlaceholder": "选择事件主题…",
+  "settings.webhooks.url": "回调 URL",
+  "settings.webhooks.add": "新增 webhook",
+  "settings.webhooks.created": "已建立 webhook",
+  "settings.webhooks.deleted": "已删除 webhook",
+  "settings.webhooks.failed": "操作失败",
+  "settings.webhooks.secretOnce": "签章密钥（只显示这一次，请立即保存）：",
+  "settings.webhooks.secretDismiss": "我已保存"
 }

@@ -2724,3 +2724,6 @@ a {
 
 .cl-code__newfile { color: #666; font-style: italic; }
 .cl-code__revert { border: 0; background: none; color: #a9502c; cursor: pointer; padding: 0; font-size: 12.5px; text-decoration: underline; }
+
+.cl-webhook-secret { background: #fff8ec; border: 1px solid #f0dcb8; border-radius: 8px; padding: 8px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cl-webhook-secret code { word-break: break-all; }
