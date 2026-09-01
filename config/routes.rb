@@ -28,6 +28,9 @@ Rails.application.routes.draw do
   # PR-7 即時預覽：未儲存 entry 的單 section 片段渲染
   post "admin/store/preview/:theme_id/draft_section" => "admin/storefront_preview#draft_section",
        as: :admin_preview_draft_section
+  # PR-11：全頁草稿渲染（佈景設定/結構/undo 改即見）
+  post "admin/store/preview/:theme_id/draft_page" => "admin/storefront_preview#draft_page",
+       as: :admin_preview_draft_page
   get "admin/store/preview/:theme_id(/*path)" => "admin/storefront_preview#show",
       format: false, as: :admin_theme_preview
 

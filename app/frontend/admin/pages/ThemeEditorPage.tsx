@@ -23,6 +23,7 @@ const EDITOR_QUERY = `
       templates: files(filenames: ["templates/*.json"]) { filename }
       templateJson(key: $key)
       templateLockVersion(key: $key)
+      previewPaths
       sectionGroups
       sectionCatalog
       sectionSchemas
@@ -109,6 +110,7 @@ interface EditorData {
     sectionCatalog: { type: string; name: string;
                       preset: { settings: Record<string, unknown>;
                                 blocks: Record<string, unknown> | null } }[];
+    previewPaths: Record<string, string>;
     sectionGroups: { name: string; path: string; json: TemplateJson; lockVersion: number | null }[];
     sectionSchemas: Record<string, { name: string; settings: SettingDef[];
                                      max_blocks?: number | null; blocks?: BlockDef[] }>;
@@ -283,6 +285,9 @@ export function ThemeEditorPage() {
   const [groupDrafts, setGroupDrafts] = useState<Record<string, TemplateJson>>({});
   const [groupLocks, setGroupLocks] = useState<Record<string, number | null>>({});
   const [dirtyGroups, setDirtyGroups] = useState<string[]>([]);
+  // PR-11：任何 draft 變更（section op／佈景設定／undo/redo）都 bump ⇒
+  // 全頁草稿刷新 effect 的單一觸發源
+  const [draftsVersion, setDraftsVersion] = useState(0);
   const [selectedBand, setSelectedBand] = useState<string>("template");
   const [undoStack, setUndoStack] = useState<{ band: string; snap: TemplateJson }[]>([]);
   const [redoStack, setRedoStack] = useState<{ band: string; snap: TemplateJson }[]>([]);
@@ -299,11 +304,16 @@ export function ThemeEditorPage() {
   const draftRef = useRef<TemplateJson | null>(null);
   const groupDraftsRef = useRef<Record<string, TemplateJson>>({});
   const activeDraftRef = useRef<TemplateJson | null>(null);
+  const settingsDraftRef = useRef<Record<string, unknown> | null>(null);
   draftRef.current = draft;
   groupDraftsRef.current = groupDrafts;
   activeDraftRef.current = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
+  settingsDraftRef.current = settingsDraft;
 
   const gid = `gid://chilllove/Theme/${themeId}`;
+
+  // PR-11 資源語境：模板型 → 樣本路徑（product 模板帶真商品）；無樣本回落首頁
+  const previewPath = data?.previewPaths?.[templateKey.split(".")[0]] ?? "/";
 
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -372,8 +382,7 @@ export function ThemeEditorPage() {
       void (async () => {
         try {
           const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? "";
-          // v1 一律以首頁語境渲染片段（非 index 模板的資源語境＝登記限制）
-          const path = "/";
+          const path = previewPath;
           const response = await fetch(`/admin/store/preview/${themeId}/draft_section`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
@@ -390,7 +399,44 @@ export function ThemeEditorPage() {
       })();
     }, 400);
     return () => window.clearTimeout(handle);
-  }, [selectedEntryJson, selectedId, selectedBand, themeMode, themeId]);
+  }, [selectedEntryJson, selectedId, selectedBand, themeMode, themeId, previewPath]);
+
+  // PR-11：全頁草稿刷新——結構操作/佈景設定/undo/redo 的改即見（fleet
+  // editor-live 軸①②③統一通道）。debounce 600ms；srcdoc 換入（srcdoc 繼承父
+  // origin ⇒ postMessage 橋照常）；保留捲動位置。單 section 設定變更另有
+  // draft_section 片段 fast-path（400ms）先行，全頁刷新殿後兜底。失敗靜默。
+  useEffect(() => {
+    if (draftsVersion === 0) return;
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ?? "";
+          const merged: Record<string, unknown> = { ...(draftRef.current?.sections ?? {}) };
+          for (const tpl of Object.values(groupDraftsRef.current)) {
+            Object.assign(merged, tpl.sections ?? {});
+          }
+          const response = await fetch(`/admin/store/preview/${themeId}/draft_page`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf },
+            body: JSON.stringify({ path: previewPath, sections: merged,
+                                   settings: settingsDraftRef.current ?? {} }),
+          });
+          if (!response.ok) return;
+          const html = await response.text();
+          const frame = iframeRef.current;
+          if (!frame) return;
+          const scrollY = frame.contentWindow?.scrollY ?? 0;
+          frame.srcdoc = html;
+          frame.addEventListener("load", () => {
+            frame.contentWindow?.scrollTo(0, scrollY);
+          }, { once: true });
+        } catch {
+          // 靜默：改即見是增強面
+        }
+      })();
+    }, 600);
+    return () => window.clearTimeout(handle);
+  }, [draftsVersion, themeId, previewPath]);
 
   /** 每個 op 先推快照（undo 棧＝跨帶 {band, snap}）再改該帶 draft；
    *  redo 棧清空（14 §F3 快照棧語義；PR-5 band 化——群組與模板同一棧）。 */
@@ -413,6 +459,7 @@ export function ThemeEditorPage() {
       });
       setDirtyGroups((current) => (current.includes(band) ? current : [ ...current, band ]));
     }
+    setDraftsVersion((v) => v + 1);
   }, []);
 
   const restoreBand = (band: string, snap: TemplateJson): TemplateJson | null => {
@@ -429,6 +476,9 @@ export function ThemeEditorPage() {
     return current;
   };
 
+  // undo/redo 也驅動預覽（fleet editor-live 軸③）
+  const bumpDrafts = () => setDraftsVersion((v) => v + 1);
+
   const undo = () => {
     setUndoStack((stack) => {
       if (stack.length === 0) return stack;
@@ -437,6 +487,7 @@ export function ThemeEditorPage() {
       if (previous) setRedoStack((redoS) => [ ...redoS, { band, snap: cloneTpl(previous) } ]);
       return stack.slice(0, -1);
     });
+    bumpDrafts();
   };
 
   const redo = () => {
@@ -447,6 +498,7 @@ export function ThemeEditorPage() {
       if (previous) setUndoStack((undoS) => [ ...undoS, { band, snap: cloneTpl(previous) } ]);
       return stack.slice(0, -1);
     });
+  bumpDrafts();
   };
 
   const orderOf = (tpl: TemplateJson) => tpl.order ?? Object.keys(tpl.sections ?? {});
@@ -554,6 +606,7 @@ export function ThemeEditorPage() {
   const setThemeSetting = (settingKey: string, value: unknown) => {
     setSettingsDraft((current) => (current ? { ...current, [settingKey]: value } : current));
     setSettingsDirty(true);
+    setDraftsVersion((v) => v + 1); // PR-11：佈景設定也改即見
   };
 
   const setSetting = (sectionId: string, settingKey: string, value: unknown) => applyOp(selectedBand, (tpl) => {
@@ -639,7 +692,7 @@ export function ThemeEditorPage() {
   const order = draft ? orderOf(draft) : [];
   const activeDraft = selectedBand === "template" ? draft : groupDrafts[selectedBand] ?? null;
   const selected = selectedId && activeDraft?.sections ? activeDraft.sections[selectedId] : null;
-  const previewSrc = `/admin/store/preview/${themeId}?editor=1`;
+  const previewSrc = `/admin/store/preview/${themeId}${previewPath === "/" ? "" : previewPath}?editor=1`;
 
   if (error) {
     return (

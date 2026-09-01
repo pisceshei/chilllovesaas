@@ -54,7 +54,8 @@ module ThemeEngine
     def initialize(theme:, shop:, source: nil, url_prefix: "", locale: nil,
                    design_mode: false, page_type: "index", path: "/", host: nil,
                    cart_json: nil, asset_base: nil, web_presence: nil,
-                   publication: nil, params: {}, template_suffix: nil)
+                   publication: nil, params: {}, template_suffix: nil,
+                   draft_settings: nil, draft_sections: nil)
       @theme, @shop = theme, shop
       @cart_json = cart_json
       @publication = publication
@@ -82,6 +83,10 @@ module ThemeEngine
       schema = load_json("config/settings_schema.json") || []
       all_defs = schema.flat_map { |c| c.is_a?(Hash) ? (c["settings"] || []) : [] }
       @settings_data = schema_defaults(all_defs).merge(db_settings || file_settings_current)
+      # PR-11：編輯器未儲存佈景設定的即時覆蓋（draft_page 全頁草稿渲染）
+      @settings_data = @settings_data.merge(draft_settings) if draft_settings.is_a?(Hash)
+      # PR-11：未儲存 section entry 覆蓋（群組帶 {% sections %} 渲染也要吃到）
+      @draft_sections = draft_sections.is_a?(Hash) ? draft_sections : {}
       @theme_types = extract_types(all_defs)
       # 三層字串（67 §F.3(a)；包 34）：③平台字串集 ← ②主題檔（default ← 截尾鏈 ← 精確）。
       # ①商家覆寫層＝租戶 translations 的 THEME_LOCALE_CONTENT 型，Resolve 尚不支援 ⇒
@@ -407,7 +412,7 @@ module ThemeEngine
         return comment("group #{name} 缺檔")
       end
       (g["order"] || []).map do |k|
-        s = g["sections"][k] or next ""
+        s = @draft_sections[k] || g["sections"][k] or next ""
         s["disabled"] ? "" : render_section(k, s)
       end.join
     end

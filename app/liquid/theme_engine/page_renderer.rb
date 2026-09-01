@@ -38,10 +38,11 @@ module ThemeEngine
     #   section 形把 predictive_search／recommendations 疊進渲染語境）。
     # PR-7：draft_sections＝編輯器未儲存 entry 的覆蓋（sid → entry）——
     # SRA 單 section 渲染吃它 ⇒ 右側即時預覽（本尊改設定即時重渲染的對位）。
-    def render(path, params: {}, assigns: {}, draft_sections: nil)
+    def render(path, params: {}, assigns: {}, draft_sections: nil, draft_settings: nil)
       @params = params || {}
       @extra_assigns = assigns || {}
       @draft_sections = draft_sections || {}
+      @draft_settings = draft_settings
       ActsAsTenant.with_tenant(@shop) do
         # Section Rendering API（包 33；契約＝83 §3.4＋§12.3 真店逐格）：
         # 兩參數並存時 `sections` 壓過 `section_id`（實測：回 JSON）。
@@ -63,7 +64,8 @@ module ThemeEngine
                             design_mode: @design_mode, page_type: page_type,
                             path: path, host: @host, source: @source, cart_json: @cart_json,
                             asset_base: @asset_base, locale: @locale, web_presence: @web_presence,
-                            publication: @publication, params: @params)
+                            publication: @publication, params: @params,
+                            draft_settings: @draft_settings, draft_sections: @draft_sections)
       template_key = template_key_for(runtime, page_type)
       if template_key != page_type
         runtime.assign("template", TemplateDrop.new(page_type, suffix: template_key.delete_prefix("#{page_type}.")))
@@ -328,7 +330,8 @@ module ThemeEngine
 
       order = tj["order"] || tj.dig("sections") && tj["sections"].keys || []
       Array(order).map do |k|
-        data = (tj["sections"] || {})[k] or next ""
+        # PR-11：draft 覆蓋最優先（編輯器整頁草稿）——與 section_data_for 同序
+        data = @draft_sections[k] || (tj["sections"] || {})[k] or next ""
         data["disabled"] ? "" : runtime.render_section(k, data)
       end.join
     end
