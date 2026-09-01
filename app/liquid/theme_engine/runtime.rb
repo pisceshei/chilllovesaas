@@ -208,7 +208,14 @@ module ThemeEngine
     end
 
     def compiled(rel)
-      cache_key = [ Sources.key_for(@theme), rel ]
+      # 🔴 overlay 檔改 per-row 版本鍵（含 shop/theme/stamp）——共用鍵會讓 A 店
+      # 編輯汙染 B 店編譯結果（15a 跨租戶汙染同軸；OverlaySource 檔頭）。
+      stamp = @source.respond_to?(:overlay_stamp) ? @source.overlay_stamp(rel) : nil
+      cache_key = if stamp
+        [ "ovl", @shop.id, @theme.id, stamp, rel ]
+      else
+        [ Sources.key_for(@theme), rel ]
+      end
       AST_MUTEX.synchronize do
         AST_CACHE.clear if AST_CACHE.size > AST_CACHE_MAX
         return AST_CACHE[cache_key] if AST_CACHE.key?(cache_key)

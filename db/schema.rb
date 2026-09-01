@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_180000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -1480,6 +1480,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_170000) do
     t.index ["shop_id", "theme_id"], name: "ix_templates_theme_id"
   end
 
+  create_table "theme_file_overlays", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "主題檔案 DB 覆寫層（code editor）", force: :cascade do |t|
+    t.text "content", size: :medium, null: false
+    t.datetime "created_at", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.string "path", limit: 512, null: false, comment: "主題相對路徑（top_dir/檔名）"
+    t.bigint "shop_id", null: false
+    t.bigint "theme_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shop_id", "id"], name: "uq_theme_file_overlays_tenant_id", unique: true
+    t.index ["shop_id", "theme_id", "path"], name: "uq_theme_file_overlays_path", unique: true
+    t.index ["theme_id"], name: "fk_rails_89a5ce9fba"
+  end
+
   create_table "theme_import_reports", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "主題 zip 匯入報告（99 §5；含相容掃描）", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "error_code", limit: 40, comment: "失敗碼（INVALID_ZIP 等——對齊官方碼形）"
@@ -1718,6 +1731,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_170000) do
   add_foreign_key "tax_settings", "shops", name: "fk_tax_settings_shop"
   add_foreign_key "templates", "shops", name: "fk_templates_shop"
   add_foreign_key "templates", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_templates_theme_id"
+  add_foreign_key "theme_file_overlays", "themes"
   add_foreign_key "theme_settings", "shops", name: "fk_theme_settings_shop"
   add_foreign_key "theme_settings", "themes", column: ["shop_id", "theme_id"], primary_key: ["shop_id", "id"], name: "fk_theme_settings_theme_id"
   add_foreign_key "themes", "shops", name: "fk_themes_shop"

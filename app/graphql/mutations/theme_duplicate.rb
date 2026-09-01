@@ -35,6 +35,10 @@ module Mutations
             Template.create!(shop_id: shop.id, theme_id: copy.id, key: row.key,
                              template_type: row.template_type, content: row.content)
           end
+          ThemeFileOverlay.where(shop_id: shop.id, theme_id: source.id).find_each do |row|
+            ThemeFileOverlay.create!(shop_id: shop.id, theme_id: copy.id,
+                                     path: row.path, content: row.content)
+          end
           if (setting = ThemeSetting.find_by(shop_id: shop.id, theme_id: source.id))
             ThemeSetting.create!(shop_id: shop.id, theme_id: copy.id, settings: setting.settings)
           end

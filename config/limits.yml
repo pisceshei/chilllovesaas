@@ -5094,6 +5094,18 @@ theme_import:
   # 主題名上限（官方 50 characters）。
   theme_name_max: 50
 
+# 步 16e1：code editor 檔案覆寫層的單檔上限（官方 Theme limits 頁逐字，取證 2026-09-01，
+# https://shopify.dev/docs/storefronts/themes/architecture/limits）。
+theme_editor:
+  # 官方 "256 KB"——sections/snippets/layouts 等 Liquid 檔。
+  liquid_file_max_kb: 256
+  # 官方 "512 KB"——JSON template／section group／settings_schema.json 同值。
+  json_file_max_kb: 512
+  # 官方 "1.5 MB"——settings_data.json 與 locale files 同值。
+  locale_file_max_kb: 1536
+  # ours——官方對 asset 無單檔上限（250MB 總量且 assets 除外）；防呆值，偏嚴不偏鬆。
+  asset_text_max_kb: 2048
+
 # =============================================================================
 # 24. 命名契約（鐵律 9 的界線；規格見 docs/specs/67-multilingual.md §H.5）
 # =============================================================================
