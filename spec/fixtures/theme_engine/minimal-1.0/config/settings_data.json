@@ -1,1 +1,5 @@
-{ "current": { "brand_color": "#a9502c" } }
+{ "current": { "brand_color": "#a9502c",
+  "color_schemes": {
+    "scheme-1": { "settings": { "background": "#ffffff", "text": "#111111" } },
+    "scheme-2": { "settings": { "background": "#101010", "text": "#fafafa" } }
+  } } }

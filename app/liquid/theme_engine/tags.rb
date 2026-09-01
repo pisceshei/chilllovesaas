@@ -198,6 +198,41 @@ module ThemeEngine
       def render(_context) = ""
     end
 
+    # {% render <var> %} 變數形（步 13b；97 §2）。
+    #
+    # ①Liquid 原生 Render 只收 quoted string ⇒ Ella `{% render child_block %}`
+    #   **parse fatal**（97 §2 實測），整檔編譯失敗。live 真引擎接受變數形且值
+    #   可為 block（app blocks 官方頁的 `{% render block %}` 同形）。
+    # ②語義：值＝BlockDrop ⇒ 以該 block 自身 data 走 runtime.render_block
+    #   （隔離語義同 content_for "block"）；其他值 ⇒ 空輸出＋遙測（不炸頁）。
+    # ③quoted string 形完全走原生 super（snippet 隔離語義不動）。
+    class RenderTag < Liquid::Render
+      BARE_VAR = /\A\s*([a-zA-Z_][\w-]*(?:\.[\w-]+)*)\s*\z/
+
+      def initialize(tag_name, markup, options)
+        if (m = markup.match(BARE_VAR))
+          @block_expr = Liquid::Expression.parse(m[1])
+          # 跳過 Render 的 quoted-string 解析（會 raise）——直接 Tag 層初始化。
+          Liquid::Tag.instance_method(:initialize).bind_call(self, tag_name, markup, options)
+        else
+          super
+        end
+      end
+
+      def render_to_output_buffer(context, output)
+        return super if @block_expr.nil?
+
+        target = context.evaluate(@block_expr)
+        runtime = context.registers[:runtime]
+        if target.is_a?(ThemeEngine::BlockDrop) && runtime
+          output << runtime.render_block(target.id, target.data, context)
+        else
+          ThemeEngine.count_miss("render.non_block_variable")
+        end
+        output
+      end
+    end
+
     # @param target [Liquid::Environment]
     def self.register!(target)
       target.register_tag("content_for", ContentFor)
@@ -210,6 +245,7 @@ module ThemeEngine
       target.register_tag("section", SectionTag)
       target.register_tag("sections", SectionsTag)
       target.register_tag("layout", LayoutTag)
+      target.register_tag("render", RenderTag) # 步 13b：覆蓋原生——加變數形（block）
       target.register_tag("schema", Swallow) # 保險網——正常已於載入期剝離
     end
   end

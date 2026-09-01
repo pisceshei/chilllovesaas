@@ -1,1 +1,9 @@
-[ { "name": "Colors", "settings": [ { "id": "brand_color", "type": "color", "default": "#000000" } ] } ]
+[
+  { "name": "Colors", "settings": [
+    { "id": "brand_color", "type": "color", "default": "#000000" },
+    { "id": "color_schemes", "type": "color_scheme_group", "definition": [
+      { "id": "background", "type": "color", "default": "#ffffff" },
+      { "id": "text", "type": "color", "default": "#111111" }
+    ] }
+  ] }
+]
