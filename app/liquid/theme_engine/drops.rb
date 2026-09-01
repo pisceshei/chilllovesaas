@@ -912,7 +912,7 @@ module ThemeEngine
     def first = drops.first
 
     def total
-      @total ||= products_total + pages_total
+      @total ||= products_total + pages_total + articles_total
     end
 
     private
@@ -923,6 +923,14 @@ module ThemeEngine
 
     def pages_total
       @pages_total ||= @types.include?("page") ? page_relation.count : 0
+    end
+
+    def articles_total
+      @articles_total ||= @types.include?("article") ? article_relation.count : 0
+    end
+
+    def article_relation
+      Storefront::SearchQuery.articles(shop: @shop, query: @query)
     end
 
     def product_relation
@@ -956,6 +964,12 @@ module ThemeEngine
           page_offset = [ offset - products_total, 0 ].max
           pages = page_relation.order(:title, :id).offset(page_offset).limit(per - items.size).to_a
           items.concat(pages.map { |page| PageDrop.new(page, url_prefix: @url_prefix) })
+        end
+        if @types.include?("article") && items.size < per
+          article_offset = [ offset - products_total - pages_total, 0 ].max
+          articles = article_relation.includes(:blog).order(:title, :id)
+                                     .offset(article_offset).limit(per - items.size).to_a
+          items.concat(articles.map { |article| ArticleDrop.new(article, url_prefix: @url_prefix) })
         end
         items
       end
@@ -1029,6 +1043,211 @@ module ThemeEngine
     def resources = BaseDrop.new(@resources)
   end
 
+  # 文章留言（98 §1 官方：Liquid 只見 published——status 恆 "published"）。
+  class CommentDrop < Liquid::Drop
+    def initialize(comment, article_url: "")
+      super()
+      @c = comment
+      @article_url = article_url
+    end
+
+    def id = @c.id
+    def author = @c.author_name
+    def content = @c.body
+    def status = "published"
+    def created_at = @c.created_at&.iso8601
+    def url = "#{@article_url}#comment-#{@c.id}"
+  end
+
+  # 部落格文章（98 §1 官方 21 屬性的 v1 對位）。
+  #
+  # 🔴 `handle`/`url`＝**複合形**（官方範例值 `{blog}/{article}`）；`id` 官方型別
+  #   string、我方整數（登記）；image/metafields/user v1 nil（91 §3.64）。
+  class ArticleDrop < Liquid::Drop
+    def initialize(article, url_prefix: "", blog: nil)
+      super()
+      @a = article
+      @url_prefix = url_prefix
+      @blog = blog || article.blog
+    end
+
+    def id = @a.id
+    def title = @a.title
+    def author = @a.author_name
+    def handle = "#{@blog.handle}/#{@a.handle}"
+    def url = "#{@url_prefix}/blogs/#{@blog.handle}/#{@a.handle}"
+    def content = @a.body_html
+    def excerpt = @a.excerpt_html
+    def excerpt_or_content = @a.excerpt_html.presence || @a.body_html
+    def tags = @a.tags.to_a
+    def template_suffix = @a.template_suffix
+    def published_at = @a.published_at&.iso8601
+    def created_at = @a.created_at&.iso8601
+    def updated_at = @a.updated_at&.iso8601
+    def comments_enabled? = @blog.comments_enabled?
+    def moderated? = @blog.moderated?
+    def comments_count = @a.published_comments.count
+    def comment_post_url = "#{url}/comments"
+    def object_type = "article" # 96 §3.1 搜尋結果混型判別
+
+    # 官方："The **published** comments for the article."（分頁上限 50 官方句——
+    # paginate! 由 tag 接線；預設前 50）
+    def comments
+      @comments ||= CommentsDrop.new(article: @a, article_url: url)
+    end
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("ArticleDrop.#{name}")
+      nil
+    end
+  end
+
+  # 文章留言集合（paginate 支援；官方 50/頁上限）。
+  class CommentsDrop < Liquid::Drop
+    include Enumerable
+
+    DEFAULT_LIMIT = 50
+
+    def initialize(article:, article_url:)
+      super()
+      @article = article
+      @article_url = article_url
+      @page, @per = 1, nil
+    end
+
+    def paginate!(page:, per:)
+      @page, @per = [ page, 1 ].max, [ per, DEFAULT_LIMIT ].min
+      @rows = nil
+      total
+    end
+
+    def each(&) = rows.each(&)
+    def size = rows.size
+
+    def total
+      @total ||= @article.published_comments.count
+    end
+
+    private
+
+    def rows
+      @rows ||= begin
+        per = @per || DEFAULT_LIMIT
+        @article.published_comments.order(:created_at, :id)
+                .offset((@page - 1) * per).limit(per)
+                .map { |comment| CommentDrop.new(comment, article_url: @article_url) }
+      end
+    end
+  end
+
+  # 部落格（98 §1 官方 14 屬性的 v1 對位；articles 可分頁）。
+  class BlogDrop < Liquid::Drop
+    def initialize(blog, url_prefix: "", current_tags: nil)
+      super()
+      @b = blog
+      @url_prefix = url_prefix
+      @current_tags = current_tags
+    end
+
+    def id = @b.id
+    def title = @b.title
+    def handle = @b.handle
+    def url = "#{@url_prefix}/blogs/#{@b.handle}"
+    def comments_enabled? = @b.comments_enabled?
+    def moderated? = @b.moderated?
+    def template_suffix = @b.template_suffix
+
+    # 官方："This total doesn't include hidden articles."
+    def articles_count = articles.total
+
+    def articles
+      @articles ||= BlogArticlesDrop.new(blog: @b, url_prefix: @url_prefix,
+                                         current_tags: @current_tags)
+    end
+
+    # 兩欄官方皆存在且描述近同（98 §5-5：語義差異明文未取得 ⇒ 同值）。
+    def all_tags
+      @all_tags ||= Article.visible.where(shop_id: @b.shop_id, blog_id: @b.id)
+                           .pluck(:tags).flatten.uniq.sort
+    end
+
+    def tags = all_tags
+
+    def liquid_method_missing(name)
+      ThemeEngine.count_miss("BlogDrop.#{name}")
+      nil
+    end
+  end
+
+  # 部落格文章集合（visible 閘＋tagged 過濾＋paginate；新到舊）。
+  class BlogArticlesDrop < Liquid::Drop
+    include Enumerable
+
+    DEFAULT_LIMIT = 50
+
+    def initialize(blog:, url_prefix: "", current_tags: nil)
+      super()
+      @blog = blog
+      @url_prefix = url_prefix
+      @current_tags = Array(current_tags).reject(&:blank?)
+      @page, @per = 1, nil
+    end
+
+    def paginate!(page:, per:)
+      @page, @per = [ page, 1 ].max, per
+      @rows = nil
+      total
+    end
+
+    def each(&) = rows.each(&)
+    def size = rows.size
+    def first = rows.first
+
+    def total
+      @total ||= relation.count
+    end
+
+    private
+
+    # tagged 過濾（98 §2 官方：/tagged/{tag}＋`+` 多 tag——AND 語義照官方
+    # "filter by multiple tags by combining"）。
+    def relation
+      scope = Article.visible.where(shop_id: @blog.shop_id, blog_id: @blog.id)
+      @current_tags.each do |tag|
+        scope = scope.where("JSON_SEARCH(articles.tags, 'one', ?) IS NOT NULL", tag)
+      end
+      scope
+    end
+
+    def rows
+      @rows ||= begin
+        per = @per || DEFAULT_LIMIT
+        relation.order(published_at: :desc, id: :desc)
+                .offset((@page - 1) * per).limit(per)
+                .includes(:blog)
+                .map { |article| ArticleDrop.new(article, url_prefix: @url_prefix, blog: @blog) }
+      end
+    end
+  end
+
+  # `blogs` 全域（98 §1 官方：by handle 存取）。handle 查詢走 liquid_method_missing
+  # （12a 教訓：不覆寫 `[]`）。
+  class BlogsDrop < Liquid::Drop
+    def initialize(shop:, url_prefix: "")
+      super()
+      @shop = shop
+      @url_prefix = url_prefix
+    end
+
+    def liquid_method_missing(name)
+      blog = Blog.find_by(shop_id: @shop.id, handle: name.to_s)
+      return BlogDrop.new(blog, url_prefix: @url_prefix) if blog
+
+      ThemeEngine.count_miss("blogs.#{name}")
+      nil
+    end
+  end
+
   class PageDrop < Liquid::Drop
     def initialize(page, url_prefix: "")
       super()
@@ -1097,15 +1316,29 @@ module ThemeEngine
     end
 
     def title = @item.title
-    def type = @item.item_type
+
+    # 官方 link.type 值形＝`{kind}_link`（98 §1 逐字 13 值；我方子集同名對映）。
+    def type = "#{@item.item_type}_link"
 
     def url
       case @item.item_type
       when "http" then @item.url
+      when "frontpage" then @url_prefix.presence || "/"
+      when "search" then "#{@url_prefix}/search"
+      when "catalog" then "#{@url_prefix}/collections/all"
+      when "collections" then "#{@url_prefix}/collections"
       when "product" then "#{@url_prefix}/products/#{resource_handle(Product)}"
       when "collection" then "#{@url_prefix}/collections/#{resource_handle(Collection)}"
       when "page" then "#{@url_prefix}/pages/#{resource_handle(Page)}"
+      when "blog" then "#{@url_prefix}/blogs/#{resource_handle(Blog)}"
+      when "article" then article_url
       end
+    end
+
+    # 文章連結＝複合路徑（98 §1：/blogs/{blog}/{article}）。
+    def article_url
+      article = Article.includes(:blog).find_by(shop_id: @item.shop_id, id: @item.resource_id)
+      article && "#{@url_prefix}/blogs/#{article.blog.handle}/#{article.handle}"
     end
 
     def links

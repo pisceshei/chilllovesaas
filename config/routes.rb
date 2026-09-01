@@ -119,6 +119,9 @@ Rails.application.routes.draw do
          as: :storefront_checkout_complete
     get "checkouts/:token/complete" => "storefront/checkouts#thank_you", format: false,
         as: :storefront_checkout_thank_you
+    # 步 14c：文章留言 POST（98 §2 真店形；handle 帶點/中文 ⇒ 寬鬆段限制）。
+    post "blogs/:blog_handle/:article_handle/comments" => "storefront/comments#create",
+         format: false, as: :storefront_article_comments
     # 步 12b：predictive search 雙形＋recommendations 雙形（96 §4/§5；
     # .json 形回 JSON、裸形收 section_id 回 HTML——25 §5「兩形都要」）。
     get "search/suggest.json" => "storefront/search#suggest_json", format: false
@@ -157,6 +160,7 @@ Rails.application.routes.draw do
       get "search/suggest" => "storefront/search#suggest_section"
       get "recommendations/products.json" => "storefront/recommendations#products_json"
       get "recommendations/products" => "storefront/recommendations#products_section"
+      post "blogs/:blog_handle/:article_handle/comments" => "storefront/comments#create"
     end
     get "/" => "storefront/pages#root", as: :storefront_root
     get "*path" => "storefront/pages#show", format: false, as: :storefront_page

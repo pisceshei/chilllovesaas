@@ -90,6 +90,10 @@ module ThemeEngine
       def initialize(tag_name, markup, options)
         super
         @type = markup[/\A\s*(['"])(\w+)\1/, 2] || "contact"
+        # 位置參數（官方 `{% form 'new_comment', article %}`——步 14c）：
+        # 逗號後第一個裸識別字＝資源變數，渲染期求值。
+        @resource_expr = markup[/\A\s*(?:['"])\w+(?:['"])\s*,\s*([a-zA-Z_][\w.]*)/, 1]
+          &.then { |raw| Liquid::Expression.parse(raw) }
         @attrs = markup.scan(/(?:,|\s)(\w+)\s*:\s*(['"])(.*?)\2/).map { |k, _q, v| [ k, v ] }.to_h
       end
 
@@ -100,7 +104,18 @@ module ThemeEngine
           inner = super
         end
         extra = @attrs.map { |k, v| %(#{k.tr('_', '-')}="#{v}") }.join(" ")
-        %(<form method="post" action="#{ACTIONS.fetch(@type, '/')}" accept-charset="UTF-8" #{extra}><input type="hidden" name="form_type" value="#{@type}"><input type="hidden" name="utf8" value="✓">#{inner}</form>)
+        action = form_action(context)
+        %(<form method="post" action="#{action}" accept-charset="UTF-8" #{extra}><input type="hidden" name="form_type" value="#{@type}"><input type="hidden" name="utf8" value="✓">#{inner}</form>)
+      end
+
+      # new_comment 的 action＝該文章的 comment_post_url（98 §2 真店抓包形：
+      # /blogs/{blog}/{article}/comments）；其餘型維持靜態表。
+      def form_action(context)
+        if @type == "new_comment" && @resource_expr
+          target = context.evaluate(@resource_expr)
+          return target.comment_post_url if target.respond_to?(:comment_post_url)
+        end
+        ACTIONS.fetch(@type, "/")
       end
     end
 

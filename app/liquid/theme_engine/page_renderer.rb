@@ -131,6 +131,29 @@ module ThemeEngine
       when "/collections"
         # 步 12（96 §1）：集合列表頁。內容全由 `collections` 全域供給（Runtime 已備）。
         [ "list-collections", {}, 200 ]
+      when %r{\A/blogs/([^/]+)\z}
+        blog = ActsAsTenant.with_tenant(@shop) { Blog.find_by(shop_id: @shop.id, handle: Regexp.last_match(1)) }
+        blog ? [ "blog", { "blog" => BlogDrop.new(blog, url_prefix: @url_prefix) }, 200, blog ] : not_found
+      when %r{\A/blogs/([^/]+)/tagged/([^/]+)\z}
+        # 98 §2 官方：/tagged/{tag-handle}＋`+` 多 tag；current_tags 於 blog 模板可用
+        blog = ActsAsTenant.with_tenant(@shop) { Blog.find_by(shop_id: @shop.id, handle: Regexp.last_match(1)) }
+        tags = Regexp.last_match(2).split("+").map { |raw| CGI.unescape(raw) }
+        blog ? [ "blog", { "blog" => BlogDrop.new(blog, url_prefix: @url_prefix, current_tags: tags),
+                           "current_tags" => tags }, 200, blog ] : not_found
+      when %r{\A/blogs/([^/]+)/([^/]+)\z}
+        found = ActsAsTenant.with_tenant(@shop) do
+          blog = Blog.find_by(shop_id: @shop.id, handle: Regexp.last_match(1))
+          article = blog && Article.visible.includes(:blog)
+                                   .find_by(shop_id: @shop.id, blog_id: blog.id, handle: Regexp.last_match(2))
+          article && [ blog, article ]
+        end
+        if found
+          blog, article = found
+          [ "article", { "article" => ArticleDrop.new(article, url_prefix: @url_prefix, blog:),
+                         "blog" => BlogDrop.new(blog, url_prefix: @url_prefix) }, 200, article ]
+        else
+          not_found
+        end
       when "/search"
         # 步 12b（96 §3）：搜尋頁。search 物件自帶懶載——無 q ⇒ performed=false 空表單頁。
         [ "search", { "search" => SearchDrop.new(

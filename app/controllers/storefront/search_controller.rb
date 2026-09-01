@@ -115,7 +115,11 @@ module Storefront
             query_param.present? && cap.positive? ? SearchQuery.pages(
               shop: current_shop, query: query_param
             ).order(:title, :id).limit(cap).to_a : []
-          else [] # query 建議 v1 空；article v1 無表
+          when "article"
+            query_param.present? && cap.positive? ? SearchQuery.articles(
+              shop: current_shop, query: query_param
+            ).includes(:blog).order(:title, :id).limit(cap).to_a : []
+          else [] # query 建議 v1 空（91 §3.61）
           end
           rows[type] = list
           remaining = [ remaining - list.size, 0 ].max if remaining
@@ -140,6 +144,8 @@ module Storefront
           rows.fetch("collection", []).map { |c| collection_suggestion_json(c) }
         when "page"
           rows.fetch("page", []).map { |p| page_suggestion_json(p) }
+        when "article"
+          rows.fetch("article", []).map { |a| article_suggestion_json(a) }
         else []
         end
       end
@@ -158,7 +164,9 @@ module Storefront
           ThemeEngine::CollectionDrop.new(collection, url_prefix:, publication:)
         end,
         "pages" => rows.fetch("page", []).map { |page| ThemeEngine::PageDrop.new(page, url_prefix:) },
-        "articles" => []
+        "articles" => rows.fetch("article", []).map do |article|
+          ThemeEngine::ArticleDrop.new(article, url_prefix:)
+        end
       }
     end
 
@@ -204,6 +212,12 @@ module Storefront
       { "id" => collection.id, "handle" => collection.handle, "title" => collection.title,
         "body" => collection.description_html.presence,
         "url" => "#{url_prefix}/collections/#{collection.handle}" }
+    end
+
+    def article_suggestion_json(article)
+      { "id" => article.id, "handle" => "#{article.blog.handle}/#{article.handle}",
+        "title" => article.title, "body" => article.body_html,
+        "url" => "#{url_prefix}/blogs/#{article.blog.handle}/#{article.handle}" }
     end
 
     def page_suggestion_json(page)

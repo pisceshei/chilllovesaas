@@ -104,6 +104,8 @@ module ThemeEngine
         "current_tags" => nil,
         # 步 12（96 §1/§7）：有管道語境＝真 drop；無（舊呼叫面）＝維持 nil stub。
         "collections" => publication ? CollectionsDrop.new(shop:, publication:, url_prefix:, locale:) : nil,
+        # 步 14c（98 §1）：blogs by-handle 全域。
+        "blogs" => BlogsDrop.new(shop:, url_prefix:),
         "all_products" => publication ? AllProductsDrop.new(publication:, url_prefix:, locale:) : nil,
         "predictive_search" => nil,
         "recommendations" => nil,

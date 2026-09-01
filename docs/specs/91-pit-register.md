@@ -3899,3 +3899,11 @@ Live View 無流量；Home 的 `s-metric-card`（含 Gross sales HK$7,302.11）�
   SHOP_POLICY／CUSTOMER_ACCOUNT_PAGE（實測 picker 有 Orders/Profile 兩項）。
 - ⚪ **blog feed（FeedBurner 遺產欄）**：官方 Blog.feed 不實作。
 - ⚪ **article 搜尋接線**：SearchQuery 的 article 分支（12b 留空）隨 14c 一起接。
+
+### 3.65 G2 步 14c（前台 blog 線）的範圍外觀察（2026-09-01）
+
+- ⚪ **留言表單成功/失敗態 form drop 狀態機**：本尊回應三層被 CAPTCHA 紅線擋住
+  未取證（98 §5-4 V 項）；我方 302 回 #comment_form 錨＝ours 最小形。
+- ⚪ **留言 CAPTCHA**：本尊 hCaptcha；v1 靠 Rack::Attack throttle 承擔濫用面。
+- ⚪ **blog.next_article／previous_article**：官方相對序屬性；v1 miss 遙測。
+- ⚪ **sitemap blogs/articles 分片**：sitemap kind 三值未擴（62 §D 射程另補）。

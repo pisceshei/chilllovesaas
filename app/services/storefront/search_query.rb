@@ -58,6 +58,16 @@ module Storefront
       relation
     end
 
+    def articles(shop:, query:, at: Time.current)
+      relation = Article.visible(at:).where(shop_id: shop.id)
+      terms_of(query).each do |term|
+        relation = relation.where(Article.sanitize_sql_array(
+          [ "(articles.title LIKE :like OR articles.body_html LIKE :like)", { like: like(term) } ]
+        ))
+      end
+      relation
+    end
+
     def pages(shop:, query:, at: Time.current)
       relation = Page.visible(at:).where(shop_id: shop.id)
       terms_of(query).each do |term|
