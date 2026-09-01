@@ -974,5 +974,7 @@
   "home.kpi.netSales": "销货净额",
   "home.freshness": "数字每 15 分钟自日聚合更新。",
   "home.seriesTitle": "逐日总销售额",
-  "home.seriesEmpty": "此期间尚无数据。"
+  "home.seriesEmpty": "此期间尚无数据。",
+  "settings.notifications.kind.customerOtp": "顾客登录验证码",
+  "settings.notifications.kindDesc.customerOtp": "顾客以一次性验证码登录时寄出"
 }

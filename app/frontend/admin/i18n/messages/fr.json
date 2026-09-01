@@ -974,5 +974,7 @@
   "home.kpi.netSales": "Ventes nettes",
   "home.freshness": "Actualisation toutes les 15 minutes.",
   "home.seriesTitle": "Ventes par jour",
-  "home.seriesEmpty": "Aucune donnée."
+  "home.seriesEmpty": "Aucune donnée.",
+  "settings.notifications.kind.customerOtp": "Code de connexion",
+  "settings.notifications.kindDesc.customerOtp": "Envoyé lors de la connexion par code"
 }

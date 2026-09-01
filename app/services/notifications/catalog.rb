@@ -32,6 +32,13 @@ module Notifications
         default_subject: "Complete your Purchase",
         default_name: "Abandoned checkout",
         title_key: "settings.notifications.kind.abandonedCheckout"
+      ),
+      # 步 11：登入驗證碼（74 §7 passwordless；訂閱主題不可自訂主旨中的 code 變數）。
+      "customer_otp" => Entry.new(
+        kind: "customer_otp",
+        default_subject: "Your login code",
+        default_name: "Customer login code",
+        title_key: "settings.notifications.kind.customerOtp"
       )
     }.freeze
 

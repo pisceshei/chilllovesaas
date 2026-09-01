@@ -17,6 +17,7 @@ module Storefront
   #   同源：頁面顯示與落庫金額同一個 Result）。
   # ④限流沿 storefront-cart/ip（rack_attack 路徑清單含 /checkout 與 /checkouts/）。
   class CheckoutsController < BaseController
+    include CustomerAuth
     skip_forgery_protection
 
     # POST /checkout
@@ -40,6 +41,31 @@ module Storefront
     def show
       checkout = find_checkout
       return head :not_found if checkout.nil?
+
+      # 步 11：登入態預填（email 空才填——不覆蓋買家手動輸入；地址預填走
+      # 預設地址，僅 shipping_address 全空時）。
+      if checkout.status == "open" && (buyer = current_customer)
+        updates = {}
+        updates[:email] = buyer.email if checkout.email.blank? && buyer.email.present?
+        updates[:customer_id] = buyer.id if checkout.customer_id.nil?
+        if checkout.shipping_address.blank? || checkout.shipping_address["address1"].blank?
+          default_address = ActsAsTenant.with_tenant(current_shop) do
+            CustomerAddress.find_by(customer_id: buyer.id, default_address: true)
+          end
+          if default_address
+            updates[:shipping_address] = (checkout.shipping_address || {}).merge(
+              "first_name" => default_address.first_name, "last_name" => default_address.last_name,
+              "address1" => default_address.address1, "address2" => default_address.address2,
+              "city" => default_address.city, "zone" => default_address.province,
+              "postal_code" => default_address.postal_code,
+              "country_code" => default_address.country_code,
+              "phone" => default_address.phone
+            )
+          end
+        end
+        ActsAsTenant.with_tenant(current_shop) { checkout.update!(updates) } if updates.any?
+        checkout.reload
+      end
 
       response.headers["X-Robots-Tag"] = "noindex, nofollow" # 結帳頁永不索引（62 §D.2 disallow 同軸）
       render html: page_html(checkout).html_safe, layout: false
@@ -1165,7 +1191,8 @@ module Storefront
     end
 
     # Contact 段（87 §1）：h2＋右側 Sign in 同列、email 浮標欄（? icon）、行銷勾選。
-    # ⚠ Sign in 連結對位視覺；買家帳戶線未建（點擊 404）——登記 worklog Pending。
+    # 步 11 起 Sign in 連結接通 /account/login；登入態在 show 預填 email＋掛
+    # customer_id（下段）。
     def contact_html(checkout)
       <<~HTML
         <section class="ck-sec" data-contact>

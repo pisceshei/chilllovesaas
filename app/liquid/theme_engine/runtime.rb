@@ -98,6 +98,10 @@ module ThemeEngine
         "all_products" => nil,
         "predictive_search" => nil,
         "recommendations" => nil,
+        # 步 11：customer 顯式 nil stub——主題頁走頁快取（14 §F1-4 個人化不進
+        # 快取），登入態注入需快取鍵分票，91 §3.57 登記；nil＝Ella 的
+        # {% if customer %} 全走未登入分支（快取頁的正確形）。
+        "customer" => nil,
         # 第三包（86 §7 差距 #3/#4）：快捷結帳鈕全域**顯式** stub（26 行 48/647 契約
         # ——v1 無 offsite provider ⇒ false/空；先前靠 miss-nil 碰巧 falsy，現落實）。
         "additional_checkout_buttons" => false,

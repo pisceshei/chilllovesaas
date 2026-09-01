@@ -96,14 +96,18 @@ export function SettingsNotificationsPage() {
       ? t("settings.notifications.kind.orderConfirmation")
       : kind === "shipping_confirmation"
         ? t("settings.notifications.kind.shippingConfirmation")
-        : t("settings.notifications.kind.abandonedCheckout");
+        : kind === "customer_otp"
+          ? t("settings.notifications.kind.customerOtp")
+          : t("settings.notifications.kind.abandonedCheckout");
 
   const kindDesc = (kind: string) =>
     kind === "order_confirmation"
       ? t("settings.notifications.kindDesc.orderConfirmation")
       : kind === "shipping_confirmation"
         ? t("settings.notifications.kindDesc.shippingConfirmation")
-        : t("settings.notifications.kindDesc.abandonedCheckout");
+        : kind === "customer_otp"
+          ? t("settings.notifications.kindDesc.customerOtp")
+          : t("settings.notifications.kindDesc.abandonedCheckout");
 
   if (error) {
     return (

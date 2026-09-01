@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_01_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_110000) do
   create_table "api_tokens", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "外部整合的雜湊 access token", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "expires_at"
@@ -274,6 +274,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_100000) do
     t.string "state", limit: 32, null: false, comment: "官方 enum 小寫形（subscribed/unsubscribed/pending/not_subscribed/redacted/invalid）"
     t.index ["customer_id"], name: "fk_rails_fda6406f2c"
     t.index ["shop_id", "customer_id", "channel", "consent_updated_at"], name: "ix_cmc_customer_channel_time"
+  end
+
+  create_table "customer_otps", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "登入驗證碼（74 §7 六位；digest＋attempts）", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.string "code_digest", limit: 64, null: false
+    t.datetime "consumed_at"
+    t.datetime "created_at", null: false
+    t.string "email", limit: 320, null: false, comment: "正規化後（normalize_email 同一定義點）"
+    t.datetime "expires_at", null: false
+    t.bigint "shop_id", null: false
+    t.index ["shop_id", "email"], name: "ix_customer_otps_email"
+  end
+
+  create_table "customer_sessions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "買家登入 session（365 天；token digest）", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "customer_id", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "shop_id", null: false
+    t.string "token_digest", limit: 64, null: false
+    t.index ["customer_id"], name: "fk_rails_213ac6f490"
+    t.index ["shop_id", "customer_id"], name: "ix_customer_sessions_customer"
+    t.index ["token_digest"], name: "uq_customer_sessions_token", unique: true
   end
 
   create_table "customers", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", comment: "顧客主檔與隱私狀態", force: :cascade do |t|
@@ -1523,6 +1545,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_01_100000) do
   add_foreign_key "customer_addresses", "customers", column: ["shop_id", "customer_id"], primary_key: ["shop_id", "id"], name: "fk_customer_addresses_customer_id"
   add_foreign_key "customer_addresses", "shops", name: "fk_customer_addresses_shop"
   add_foreign_key "customer_marketing_consents", "customers"
+  add_foreign_key "customer_sessions", "customers"
   add_foreign_key "customers", "shops", name: "fk_customers_shop"
   add_foreign_key "daily_rollups", "shops"
   add_foreign_key "discount_applications", "discounts", column: ["shop_id", "discount_id"], primary_key: ["shop_id", "id"], name: "fk_discount_applications_discount_id"

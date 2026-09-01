@@ -5116,3 +5116,10 @@ customer:
   # request."（help.shopify.com/en/manual/privacy-and-security/privacy/
   # processing-customer-data-requests，取證 2026-09-01；測試店 modal 實測 9/1→9/11 同值）
   erasure_cancel_days: 10
+  # 買家 session 上限（天）。出處：74 §7（新版帳號 365 天上限，help 實測輪）
+  session_days: 365
+  # OTP 形＝6 位數字（74 §7 官方形）。效期／重發冷卻／嘗試上限＝ours 保守值
+  # （官方數字未取得——19.3 誠實標註；取到官方值再改）
+  otp_expiry_minutes: 10
+  otp_resend_cooldown_s: 60
+  otp_max_attempts: 5

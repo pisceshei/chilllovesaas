@@ -974,5 +974,7 @@
   "home.kpi.netSales": "Net sales",
   "home.freshness": "Figures refresh every 15 minutes from daily rollups.",
   "home.seriesTitle": "Total sales by day",
-  "home.seriesEmpty": "No data in this range yet."
+  "home.seriesEmpty": "No data in this range yet.",
+  "settings.notifications.kind.customerOtp": "Customer login code",
+  "settings.notifications.kindDesc.customerOtp": "Sent when a customer signs in with a one-time code"
 }

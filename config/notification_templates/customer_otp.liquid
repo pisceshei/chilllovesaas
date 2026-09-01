@@ -1,0 +1,11 @@
+{%- comment -%}
+  登入驗證碼信（G6 步 11；74 §7 passwordless）。變數：code（六位）／shop。
+{%- endcomment -%}
+<div style="max-width:600px;margin:0 auto;font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;color:#1a1a1a;">
+  <div style="padding:24px 16px;">
+    <h1 style="font-size:20px;margin:0 0 8px;">{{ shop.name }}</h1>
+    <p style="font-size:14px;color:#444;">Use this code to sign in. It expires in 10 minutes.</p>
+    <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:20px 0;">{{ code }}</p>
+    <p style="font-size:12px;color:#6b6b6b;">If you didn't request this, you can ignore this email.</p>
+  </div>
+</div>

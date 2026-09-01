@@ -974,5 +974,7 @@
   "home.kpi.netSales": "純売上",
   "home.freshness": "数値は 15 分ごとに更新されます。",
   "home.seriesTitle": "日別売上",
-  "home.seriesEmpty": "データがありません。"
+  "home.seriesEmpty": "データがありません。",
+  "settings.notifications.kind.customerOtp": "ログインコード",
+  "settings.notifications.kindDesc.customerOtp": "ワンタイムコードでのログイン時に送信"
 }
