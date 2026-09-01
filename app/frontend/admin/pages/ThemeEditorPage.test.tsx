@@ -599,6 +599,35 @@ describe("ThemeEditorPage（步 16a shell）", () => {
     expect(sent.variables.content.sections.demo.block_order).toEqual([ "p2", "p1" ]); // 🔴 真重排＋跨區無汙染
   });
 
+  it("ED27 🔴 預覽 hover 工具列 cl:op：remove/duplicate 映射既有 op（undo 可還原）；異 origin 忽略", async () => {
+    stubFetch();
+    renderEditor();
+    const tree = within(await screen.findByRole("complementary", { name: "區段" }));
+    const nodeText = () => tree.getAllByRole("button")
+      .filter((node) => node.hasAttribute("aria-pressed"))
+      .map((node) => node.textContent?.trim());
+    expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]);
+
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:op", op: "remove", id: "demo" }, origin: window.location.origin,
+    }));
+    expect(nodeText()).toEqual([ "hero", "hero" ]); // demo（含其 block）移除
+
+    fireEvent.click(screen.getByRole("button", { name: /復原/ }));
+    expect(nodeText()).toEqual([ "hero", "hero", "blocks-demo", "_parent" ]); // applyOp ⇒ undo 直達
+
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:op", op: "duplicate", id: "hero" }, origin: window.location.origin,
+    }));
+    expect(nodeText()?.filter((x) => x === "hero")).toHaveLength(3); // 範本帶 hero 複本
+
+    // 異 origin ⇒ 忽略（ED3 同軸）
+    fireEvent(window, new MessageEvent("message", {
+      data: { type: "cl:op", op: "remove", id: "hero" }, origin: "https://evil.example",
+    }));
+    expect(nodeText()?.filter((x) => x === "hero")).toHaveLength(3);
+  });
+
   it("ED16 行動版切換：iframe 收窄 390px、再按還原；published 出「作用中」badge", async () => {
     stubFetch();
     renderEditor();
