@@ -56,8 +56,18 @@ module ThemeEngine
 
     def id = @file.id
     def alt = @file.alt_text
-    def width = @file.width
-    def height = @file.height
+
+    # PR-14：官方 image 物件 width/height 恆 number；nil＝資料層不變量被繞過
+    # （StoredFile 驗證＋BackfillDimensions 之後不應再現）——遙測不改契約。
+    def width
+      ThemeEngine.count_miss("image.width_nil") if @file.width.nil?
+      @file.width
+    end
+
+    def height
+      ThemeEngine.count_miss("image.height_nil") if @file.height.nil?
+      @file.height
+    end
     def aspect_ratio = width && height && height.positive? ? width.to_f / height : nil
     def media_type = "image"
     def src = url

@@ -155,7 +155,7 @@ RSpec.describe "Admin GraphQL 變體子頁讀寫面", type: :request do
       # D48：alt 掛在**檔案**上（`media.alt_text` 已停用）。
       file = StoredFile.create!(filename: "v.png", content_type: "image/png", byte_size: 5,
                                 checksum: SecureRandom.hex(32), storage_key: key,
-                                status: "ready", alt_text: "變體圖")
+                                status: "ready", alt_text: "變體圖", width: 100, height: 80)
       Media.create!(shop_id: shop.id, product_id: product.id, product_variant_id: variant.id,
                     file_id: file.id, media_type: "image", position: 1,
                     source_url: "/admin/files/#{file.id}/blob", status: "ready")

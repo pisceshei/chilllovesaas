@@ -130,7 +130,8 @@ RSpec.describe "Admin GraphQL 外嵌影片", type: :request do
       key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
       Storage::LocalDisk.write(key, StringIO.new("B"))
       file = StoredFile.create!(filename: "f.png", content_type: "image/png", byte_size: 1,
-                                checksum: SecureRandom.hex(32), storage_key: key, status: "ready")
+                                checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                                width: 100, height: 80)
       Media.create!(shop_id: shop.id, product_id: product.id, file_id: file.id,
                     media_type: "image", position: 2, source_url: "/x", status: "ready")
     end

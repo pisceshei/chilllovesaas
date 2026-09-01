@@ -14,7 +14,8 @@ RSpec.describe Catalog::MediaSync do
       key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
       Storage::LocalDisk.write(key, StringIO.new("BYTES"))
       StoredFile.create!(filename: "a.png", content_type: "image/png", byte_size: 5,
-                         checksum: SecureRandom.hex(32), storage_key: key, status:)
+                         checksum: SecureRandom.hex(32), storage_key: key, status:,
+                         width: 100, height: 80)
     end
   end
 

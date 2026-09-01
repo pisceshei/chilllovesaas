@@ -46,7 +46,9 @@ RSpec.describe MediaPipeline::ProcessFile do
       key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
       Storage::LocalDisk.write(key, StringIO.new("ORIGINALBYTES"))
       StoredFile.create!(filename: "a.png", content_type: "image/png", byte_size: 13,
-                         checksum: "x" * 64, storage_key: key, status:)
+                         checksum: "x" * 64, storage_key: key, status:,
+                         width: status == "ready" ? 100 : nil,
+                         height: status == "ready" ? 80 : nil)
     end
   end
 

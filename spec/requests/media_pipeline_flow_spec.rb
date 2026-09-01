@@ -166,7 +166,7 @@ RSpec.describe "媒體處理管線端到端", type: :request do
         key = "shops/#{shop.id}/files/#{SecureRandom.uuid}.png"
         Storage::LocalDisk.write(key, StringIO.new(MPF_PNG))
         f = StoredFile.create!(filename: "s#{index}.png", content_type: "image/png", byte_size: 10,
-                               checksum: SecureRandom.hex(32), storage_key: key, status: "ready",
+                               checksum: SecureRandom.hex(32), storage_key: key, status: "ready", width: 100, height: 80,
                                alt_text: index.zero? ? nil : "alt")
         Media.create!(shop_id: shop.id, product_id: product.id, position: index + 1,
                       media_type: "image", source_url: "/admin/files/#{f.id}/blob",
@@ -204,7 +204,7 @@ RSpec.describe "媒體處理管線端到端", type: :request do
           Storage::LocalDisk.write(key, StringIO.new(MPF_PNG))
           StoredFile.create!(filename: "n#{index}.png", content_type: "image/png", byte_size: 10,
                              checksum: SecureRandom.hex(32), storage_key: key,
-                             status: "ready", alt_text: "alt")
+                             status: "ready", alt_text: "alt", width: 100, height: 80)
         end
         Media.create!(shop_id: shop.id, product_id: product.id, position: 1, media_type: "image",
                       source_url: "/admin/files/#{own_file.id}/blob", file_id: own_file.id,
