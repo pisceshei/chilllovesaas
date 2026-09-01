@@ -80,6 +80,10 @@ Rails.application.routes.draw do
     post "localization" => "storefront/localization#create", format: false, as: :storefront_localization
     # 結帳線第一包：cart→checkout 建立＋token URL（15 F3；one-page UI 隨後續包）。
     post "checkout" => "storefront/checkouts#create", format: false, as: :storefront_checkout
+    # G6 步 7：挽回連結入口（302 回活結帳頁；快照還原＝checkout 本就落庫）。
+    # 🔴 放在 :token 之前——"recover" 會被 :token 段吃掉。
+    get "checkouts/recover/:recovery_token" => "storefront/checkouts#recover", format: false,
+        as: :storefront_checkout_recover
     get "checkouts/:token" => "storefront/checkouts#show", format: false, as: :storefront_checkout_show
     # 結帳線第二包：選國＋選運送方式（server 重驗 F3-3；85 §5.3 per-shipment 形）。
     post "checkouts/:token/delivery" => "storefront/checkouts#delivery", format: false,

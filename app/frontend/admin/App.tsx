@@ -16,6 +16,7 @@ import { VariantDetailPage } from "./pages/VariantDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { OrdersPage } from "./pages/OrdersPage";
+import { AbandonedCheckoutsPage } from "./pages/AbandonedCheckoutsPage";
 import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { RefundPage } from "./pages/RefundPage";
 import { SettingsLanguagesPage } from "./pages/SettingsLanguagesPage";
@@ -67,6 +68,7 @@ const IMPLEMENTED: ReadonlyMap<string, () => ReactElement> = new Map([
   [ "/admin/collections", () => <CollectionsPage /> ],
   [ "/admin/customers", () => <CustomersPage /> ],
   [ "/admin/orders", () => <OrdersPage /> ],
+  [ "/admin/orders/abandoned", () => <AbandonedCheckoutsPage /> ],
   [ "/admin/inventory", () => <InventoryPage /> ],
   [ "/admin/content/files", () => <FilesPage /> ],
   [ "/admin/store", () => <StorePage /> ],

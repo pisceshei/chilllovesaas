@@ -137,6 +137,15 @@ module Types
 
     # G6-3（步 2）：manual 付款方式與請款模式（86 §2/§3）。
     # G6 步 6：通知模板（89 號 teardown）。
+    # G6 步 7：棄單清單（89 §8 七欄）。
+    field :abandoned_checkouts, AbandonedCheckoutConnectionType, null: false, connection: false do
+      description "棄單 keyset connection（abandoned_at 新到舊）。"
+      argument :first, Integer, required: false
+      argument :after, String, required: false
+      argument :last, Integer, required: false
+      argument :before, String, required: false
+    end
+
     field :notification_templates, [ Types::NotificationTemplateType ], null: false,
       description: "通知模板合併視圖（覆寫或平台預設；v1 三支）。"
     field :notification_sender_email, String, null: true,
@@ -345,6 +354,16 @@ module Types
     #
     # @return [Array<Hash>] kind 序（Catalog::KINDS）
     # @note 副作用：tenant-scoped SELECT，不寫入資料。
+    # @return [Hash] keyset connection（只列已標 abandoned_at 者）
+    # @note 副作用：政策檢查與 tenant-scoped SELECT，不寫入資料。授權同 orders。
+    def abandoned_checkouts(first: nil, after: nil, last: nil, before: nil)
+      authorize_orders!
+      scope = Checkout.where(shop_id: context.fetch(:current_shop).id)
+                      .where.not(abandoned_at: nil)
+      Products::KeysetConnection.call(scope:, first:, after:, last:, before:,
+                                      order_key: :abandoned_at, direction: :desc)
+    end
+
     def notification_templates
       authorize_products!
       shop = context.fetch(:current_shop)

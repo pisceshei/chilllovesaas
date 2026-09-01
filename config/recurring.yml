@@ -17,6 +17,11 @@ production:
     class: Events::RelayJob
     queue: default
     schedule: every 5 seconds
+  # G6 步 7：棄單標記（判定閾值＝limits checkout.abandoned_after_minutes）。
+  checkouts_mark_abandoned:
+    class: Checkouts::MarkAbandonedJob
+    queue: background
+    schedule: every 5 minutes
   events_outbox_purge:
     class: Events::OutboxPurgeJob
     queue: background
