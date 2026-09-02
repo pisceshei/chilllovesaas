@@ -337,7 +337,8 @@ module ThemeEngine
       c = compiled("sections/#{data['type']}.liquid") or return comment("缺 section #{data['type']}")
       merged = schema_defaults(c[:schema]["settings"] || []).merge(data["settings"] || {})
       sdrop = SectionDrop.new(id: key, data: data.merge("settings" => merged), types: c[:types],
-                              blocks: ordered_block_drops(data), schemes: schemes_drop)
+                              blocks: ordered_block_drops(data, local_defs: c[:schema]["blocks"]),
+                              schemes: schemes_drop)
       assigns = @global_assigns.merge("section" => sdrop, "closest" => @closest)
       html = c[:tpl].render(build_context(assigns, base_registers.merge(frame: data, section_drop: sdrop)))
       collect_errors("sections/#{data['type']}", c[:tpl])
@@ -373,17 +374,40 @@ module ThemeEngine
 
     # depth：巢狀 children 遞迴上限（官方 "nested up to 8 levels deep"）——
     # 循環資料兜底，超層＝空 children 不炸。
-    def ordered_block_drops(data, depth: 0)
+    # local_defs：section schema 的 `blocks` 陣列（section 本地 block 定義——官方 section-schema
+    #   "Blocks are reusable modules of content that can be added, removed, and reordered within a
+    #   section"，每型有自己的 `settings`）。無 `blocks/{type}.liquid` 檔的 type 以本地定義建 drop
+    #   （settings 預設取自該定義）——原實作只認 theme block 檔 ⇒ Kalles／Minimog 幾十個
+    #   `{% for block in section.blocks %}` 的 section 靜默空掉（hoko 稽核候選）。
+    # 🔴 `disabled: true` 的 block 不進 `section.blocks`（help.shopify.com sections-and-blocks：
+    #   "To hide a section or block from your online store … click the Hide button"；JSON 形＝
+    #   Kalles Demo Data 匯出的 block 級 `"disabled": true`，與 section 級同鍵同義）。
+    def ordered_block_drops(data, depth: 0, local_defs: nil)
       return [] if depth > 8
 
       (data["block_order"] || []).filter_map do |bid|
         bdata = (data["blocks"] || {})[bid] or next
-        bc = compiled("blocks/#{bdata['type']}.liquid") or next
-        settings = schema_defaults(bc[:schema]["settings"] || []).merge(bdata["settings"] || {})
-        BlockDrop.new(id: bid, type: bdata["type"], settings: settings, types: bc[:types],
-                      data: bdata, design_mode: @design_mode, schemes: schemes_drop,
-                      children: ordered_block_drops(bdata, depth: depth + 1))
+        next if bdata["disabled"]
+
+        type = bdata["type"]
+        if (bc = compiled("blocks/#{type}.liquid"))
+          settings = schema_defaults(bc[:schema]["settings"] || []).merge(bdata["settings"] || {})
+          BlockDrop.new(id: bid, type: type, settings: settings, types: bc[:types],
+                        data: bdata, design_mode: @design_mode, schemes: schemes_drop,
+                        children: ordered_block_drops(bdata, depth: depth + 1))
+        elsif (local = local_block_def(local_defs, type))
+          defs = local["settings"] || []
+          BlockDrop.new(id: bid, type: type, settings: schema_defaults(defs).merge(bdata["settings"] || {}),
+                        types: extract_types(defs), data: bdata, design_mode: @design_mode,
+                        schemes: schemes_drop)
+        end
       end
+    end
+
+    def local_block_def(defs, type)
+      return nil unless defs.is_a?(Array)
+
+      defs.find { |d| d.is_a?(Hash) && d["type"] == type && !d["type"].to_s.start_with?("@") }
     end
 
     # ---- block 渲染（content_for 呼叫；27 §6.4 隔離語義）--------------------
@@ -391,6 +415,8 @@ module ThemeEngine
     #   ——覆寫進 block 子樹的 closest；nil 值不覆蓋既有。
     # extra_assigns：其餘任意參數（官方 static block 參數契約）——不得撞保留鍵。
     def render_block(id, bdata, context, static: false, closest_overrides: nil, extra_assigns: nil)
+      return "" if bdata["disabled"] # 隱藏的 block 不渲染（同 ordered_block_drops 註）
+
       type = bdata["type"]
       c = compiled("blocks/#{type}.liquid") or return comment("缺 block #{type}")
       resolved = resolve_dynamic(bdata["settings"] || {}, context)
@@ -416,8 +442,23 @@ module ThemeEngine
         frame: bdata, section_drop: context.registers[:section_drop]
       )))
       collect_errors("blocks/#{type}", c[:tpl])
-      wrap = c[:schema].key?("tag") ? c[:schema]["tag"] : nil
-      wrap ? %(<#{wrap} class="shopify-block #{c[:schema]['class']}">#{html}</#{wrap}>) : html
+      block_wrapper(id, c[:schema], html)
+    end
+
+    # theme block 包裝（官方 theme-blocks/schema，取證 2026-09-02）：
+    #   tag 預設 "By default, when Shopify renders a block, it's wrapped in a `<div>` element with a
+    #   unique `id` attribute"（`<div id="shopify-block-[id]" class="shopify-block">`）；
+    #   `"tag": null` ⇒ "Shopify doesn't wrap the contents of the block in a wrapper element"；
+    #   class ⇒ "You can append other classes by using the class attribute"。
+    # 真店 hoko.vip（Ella，2026-09-02）逐字：`<div id="shopify-block-{id}" class="shopify-block icon-block">`，
+    #   包裝上沒有其他屬性；`{% render child_block %}` 的子塊同樣帶包裝。
+    # 原實作＝無 `tag` 鍵就不包、包時也沒有 id ⇒ 主題 JS／CSS 以 `#shopify-block-…` 定位全失效。
+    def block_wrapper(id, schema, html)
+      tag = schema.key?("tag") ? schema["tag"] : "div"
+      return html if tag.nil?
+
+      cls = [ "shopify-block", schema["class"].presence ].compact.join(" ")
+      %(<#{tag} id="shopify-block-#{id}" class="#{cls}">#{html}</#{tag}>)
     end
 
     # 動態來源（"{{ closest.product }}"）→ 物件；混合內容 → 迷你渲染（27 §2）。
