@@ -195,7 +195,8 @@ module ThemeEngine
         if found
           blog, article = found
           [ "article", { "article" => ArticleDrop.new(article, url_prefix: @url_prefix, blog:),
-                         "blog" => BlogDrop.new(blog, url_prefix: @url_prefix) }, 200, article ]
+                         "blog" => BlogDrop.new(blog, url_prefix: @url_prefix, current_article: article) },
+            200, article ]
         else
           not_found
         end
@@ -209,6 +210,22 @@ module ThemeEngine
         handle = Regexp.last_match(1)
         collection = ActsAsTenant.with_tenant(@shop) do
           Storefront::Lookup.collection_by_handle(publication: @publication, handle:, at: at)
+        end
+        # 引擎缺口 PR-4：/collections/vendors?q=／/collections/types?q=（官方 objects/collection
+        # current_vendor／current_type 句＋url_for_vendor／url_for_type 例）——虛擬系列，title＝q，
+        # 商品以 vendor／product_type 過濾；商家自建同 handle 真系列優先（同 all）。
+        # q 空白時的官方形＝未取得，先照 /collections/all（全商品）處理並登記。
+        if collection.nil? && %w[vendors types].include?(handle.downcase)
+          kind = handle.downcase
+          q = @params["q"].to_s.strip.presence
+          virtual = VirtualAllCollection.new(q || "Products", kind, "title_asc", nil, nil,
+                                             kind == "vendors" ? q : nil, kind == "types" ? q : nil)
+          return [ "collection", { "collection" => CollectionDrop.new(
+            virtual, url_prefix: @url_prefix, publication: @publication,
+            locale: @locale, sort_param: @params["sort_by"],
+            filter_query: @params["_facets_qs"].to_s,
+            request_path: "#{@url_prefix}/collections/#{kind}"
+          ) }, 200 ]
         end
         # 96 §2：/collections/all 虛擬全商品系列（真店實證 title=Products、字母序）；
         # 商家自建 handle=all 的真系列優先（上面已查、命中即走真系列分支）。

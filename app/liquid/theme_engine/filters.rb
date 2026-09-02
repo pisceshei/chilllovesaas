@@ -200,9 +200,15 @@ module ThemeEngine
     def highlight(input, _q = nil) = input
     def url_param_escape(input) = CGI.escape(input.to_s)
     def link_to(input, url, _title = nil) = %(<a href="#{url}">#{input}</a>)
-    def link_to_vendor(input) = %(<a href="/collections/vendors?q=#{CGI.escape(input.to_s)}">#{input}</a>)
-    def url_for_vendor(input) = "/collections/vendors?q=#{CGI.escape(input.to_s)}"
-    def link_to_type(input) = %(<a href="/collections/types?q=#{CGI.escape(input.to_s)}">#{input}</a>)
+    # vendor／type 連結四支（引擎缺口 PR-4）：官方 url_for_vendor 例逐字
+    # `/collections/vendors?q=Polina%27s%20Potent%20Potions`（filters/url_for_vendor，取證 2026-09-02）
+    # ⇒ 空白編成 `%20`（percent-encoding），不是 CGI.escape 的 `+`。
+    # url_for_type："Generates a URL for a collection page that lists all products of the given product
+    # type."，例 `/collections/types?q=health`。
+    def link_to_vendor(input) = %(<a href="#{url_for_vendor(input)}">#{input}</a>)
+    def url_for_vendor(input) = "/collections/vendors?q=#{ERB::Util.url_encode(input.to_s)}"
+    def url_for_type(input) = "/collections/types?q=#{ERB::Util.url_encode(input.to_s)}"
+    def link_to_type(input) = %(<a href="#{url_for_type(input)}">#{input}</a>)
     def link_to_tag(input, tag) = %(<a href="#{tag}">#{input}</a>)
     def within(input, _c) = input.to_s
 

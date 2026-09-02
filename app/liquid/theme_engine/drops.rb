@@ -584,6 +584,10 @@ module ThemeEngine
       ).pick(:published_at)
     end
 
+    # 官方："A timestamp for when the product was created."（objects/product，取證 2026-09-02；
+    # 引擎缺口 PR-4——Ella／Minimog 用 `product.created_at` 算「新品」標）。
+    def created_at = @p.created_at&.iso8601
+
     def options_with_values
       @options_with_values ||= @p.product_options.sort_by(&:position).map do |o|
         ProductOptionDrop.new(o, self)
@@ -715,6 +719,68 @@ module ThemeEngine
     def products_count = products&.total || 0
     def all_products_count = products&.unfiltered_total || 0
 
+    # ---- 引擎缺口 PR-4（objects/collection 逐字，取證 2026-09-02）------------------
+    # image："The image for the collection. This image is added on the collection's page in the
+    #   Shopify admin."——我方 collections 表無圖欄 ⇒ nil（宣告、不計 miss；圖欄隨系列線補）。
+    # featured_image："The default is the collection image. If this image isn't available, then
+    #   Shopify falls back to the featured image of the first product in the collection. If the
+    #   first product in the collection doesn't have a featured image, then `nil` is returned."
+    def image = nil
+
+    def featured_image
+      first = products&.first
+      first.respond_to?(:featured_image) ? first.featured_image : nil
+    end
+
+    # all_tags："All of the tags applied to the products in the collection. This includes tags for
+    #   products that have been filtered out of the current view. A maximum of 1,000 tags can be
+    #   returned."；tags："The tags that are currently applied to the collection. This doesn't
+    #   include tags for products that have been filtered out."；all_types／all_vendors："All of
+    #   the product types／vendors in a collection."。無管道語境 ⇒ 空陣列。
+    def all_tags = @all_tags ||= distinct_values(:tags, unfiltered_relation).first(1000)
+    def tags = @tags ||= distinct_values(:tags, filtered_relation)
+    def all_types = @all_types ||= distinct_values(:product_type, unfiltered_relation)
+    def all_vendors = @all_vendors ||= distinct_values(:vendor, unfiltered_relation)
+
+    # current_vendor："The vendor name on a vendor collection page. You can query for products from
+    #   a certain vendor at the `/collections/vendors` URL with a query parameter in the format of
+    #   `?q=[vendor]`"；current_type 同形（`/collections/types`）。只有 PageRenderer 建的虛擬
+    #   vendor／type 系列有值，真系列與 /collections/all 為 nil。
+    def current_vendor = @c.respond_to?(:vendor) ? @c.vendor : nil
+    def current_type = @c.respond_to?(:product_type) ? @c.product_type : nil
+
+    # sort_options："The available sorting options for the collection."——官方頁輸出例的九項
+    #   （name 官方註明「可由語言編輯器改」；我方先用官方英文名，語言表隨多語言線）。
+    SORT_OPTIONS = [
+      [ "Featured", "manual" ], [ "Most relevant", "most-relevant" ], [ "Best selling", "best-selling" ],
+      [ "Alphabetically, A-Z", "title-ascending" ], [ "Alphabetically, Z-A", "title-descending" ],
+      [ "Price, low to high", "price-ascending" ], [ "Price, high to low", "price-descending" ],
+      [ "Date, old to new", "created-ascending" ], [ "Date, new to old", "created-descending" ]
+    ].freeze
+
+    def sort_options
+      SORT_OPTIONS.map { |name, value| BaseDrop.new({ "name" => name, "value" => value }) }
+    end
+
+    # metafields："The metafields applied to the collection."（虛擬系列無 DB 列 ⇒ 空根）
+    def metafields
+      @metafields ||= @c.respond_to?(:virtual_all?) ? {} : MetafieldsRootDrop.new(@c)
+    end
+
+    def unfiltered_relation
+      return Product.none if @publication.nil?
+
+      CollectionProductsDrop.base_relation(collection: @c, publication: @publication)
+    end
+
+    def filtered_relation
+      facets ? facets.apply(unfiltered_relation) : unfiltered_relation
+    end
+
+    def distinct_values(column, relation)
+      relation.pluck(column).flatten.filter_map(&:presence).uniq.sort_by(&:downcase)
+    end
+
     # 真引擎 collection json＝9 鍵（83 §12.4 逐字鍵序）。
     # 🔴 published_scope 恆 "global"、template_suffix nil＝我方常數
     #   （無對應欄；live 同值，語義對表隨後續包）；body_html 空 ⇒ null。
@@ -738,7 +804,11 @@ module ThemeEngine
   # 虛擬全商品系列（96 §2：/collections/all 真店實證——無 handle=all 手動系列時
   # 仍 200，title＝Products、預設字母序）。商家自建 handle=all 的系列優先
   # （PageRenderer resolve 先查真系列）。id=0：無 DB 列（不可被 GID 引用）。
-  VirtualAllCollection = Struct.new(:title, :handle, :sort_order, :description_html, :updated_at) do
+  # vendor／product_type：`/collections/vendors?q=`／`/collections/types?q=` 的虛擬系列（官方
+  # objects/collection current_vendor／current_type 句；引擎缺口 PR-4）——有值時
+  # CollectionProductsDrop.base_relation 以該欄過濾；/collections/all 兩者皆 nil。
+  VirtualAllCollection = Struct.new(:title, :handle, :sort_order, :description_html, :updated_at,
+                                    :vendor, :product_type) do
     def id = 0
     def virtual_all? = true
   end
@@ -807,7 +877,10 @@ module ThemeEngine
     # 「篩選器數字對不上列表」型 bug）
     def self.base_relation(collection:, publication:)
       base = Product.discoverable(publication: publication)
-      unless collection.respond_to?(:virtual_all?)
+      if collection.respond_to?(:virtual_all?)
+        base = base.where(vendor: collection.vendor) if collection.vendor.present?
+        base = base.where(product_type: collection.product_type) if collection.product_type.present?
+      else
         base = base.joins(:collection_products)
                    .where(collection_products: { collection_id: collection.id })
       end
@@ -1213,6 +1286,15 @@ module ThemeEngine
     def comment_post_url = "#{url}/comments"
     def object_type = "article" # 96 §3.1 搜尋結果混型判別
 
+    # 引擎缺口 PR-4（objects/article，取證 2026-09-02）：image "The featured image for the article."
+    #   ——我方 articles 表無圖欄 ⇒ nil（宣告、不計 miss；圖欄隨內容線補）；
+    #   metafields "The metafields applied to the article."
+    def image = nil
+
+    def metafields
+      @metafields ||= MetafieldsRootDrop.new(@a)
+    end
+
     # 官方："The **published** comments for the article."（分頁上限 50 官方句——
     # paginate! 由 tag 接線；預設前 50）
     def comments
@@ -1265,11 +1347,34 @@ module ThemeEngine
 
   # 部落格（98 §1 官方 14 屬性的 v1 對位；articles 可分頁）。
   class BlogDrop < Liquid::Drop
-    def initialize(blog, url_prefix: "", current_tags: nil)
+    # current_article：文章頁的錨（next_article／previous_article 相對於它）；非文章頁 nil。
+    def initialize(blog, url_prefix: "", current_tags: nil, current_article: nil)
       super()
       @b = blog
       @url_prefix = url_prefix
       @current_tags = current_tags
+      @current_article = current_article
+    end
+
+    # 官方（objects/blog，取證 2026-09-02；引擎缺口 PR-4）：
+    #   next_article "The next (older) article in the blog. Returns `nil` if there is no next article."
+    #   previous_article "The previous (newer) article in the blog. Returns `nil` if there is no
+    #   previous article."——以 published_at（同刻以 id）為序，只看 visible 文章。
+    def next_article
+      return nil unless @current_article
+
+      @next_article ||= neighbour_article(older: true)
+    end
+
+    def previous_article
+      return nil unless @current_article
+
+      @previous_article ||= neighbour_article(older: false)
+    end
+
+    # 官方："The metafields applied to the blog."
+    def metafields
+      @metafields ||= MetafieldsRootDrop.new(@b)
     end
 
     def id = @b.id
@@ -1299,6 +1404,22 @@ module ThemeEngine
     def liquid_method_missing(name)
       ThemeEngine.count_miss("BlogDrop.#{name}")
       nil
+    end
+
+    private
+
+    def neighbour_article(older:)
+      anchor = @current_article
+      at = anchor.published_at
+      scope = Article.visible.where(shop_id: @b.shop_id, blog_id: @b.id).where.not(id: anchor.id)
+      row = if older
+        scope.where("published_at < ? OR (published_at = ? AND id < ?)", at, at, anchor.id)
+             .order(published_at: :desc, id: :desc).first
+      else
+        scope.where("published_at > ? OR (published_at = ? AND id > ?)", at, at, anchor.id)
+             .order(published_at: :asc, id: :asc).first
+      end
+      row && ArticleDrop.new(row, url_prefix: @url_prefix, blog: @b)
     end
   end
 
@@ -1427,6 +1548,11 @@ module ThemeEngine
     def object_type = "page" # 96 §3.1 搜尋結果混型判別
     def url = "#{@url_prefix}/pages/#{@page.handle}"
     def published_at = @page.published_at&.iso8601
+
+    # 官方："The metafields applied to the page."（objects/page；引擎缺口 PR-4——原為 miss）
+    def metafields
+      @metafields ||= MetafieldsRootDrop.new(@page)
+    end
 
     def liquid_method_missing(name)
       ThemeEngine.count_miss("PageDrop.#{name}")
