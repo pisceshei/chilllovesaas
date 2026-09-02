@@ -319,17 +319,39 @@ module ThemeEngine
     end
 
     # color_scheme_group 存整個 def（definition 子 schema＝scheme.settings 型別
-    # 來源——SettingsDrop.coerce 對表；步 13b）；其餘維持型別字串。
+    # 來源——SettingsDrop.coerce 對表；步 13b）；color_scheme 也存整個 def（coerce 的
+    # 三段退回需要 `default`——引擎缺口 PR-3）；其餘維持型別字串。
     def extract_types(defs)
       defs.each_with_object({}) do |d, h|
         next unless d.is_a?(Hash) && d["id"]
 
-        h[d["id"]] = d["type"] == "color_scheme_group" ? d : d["type"]
+        h[d["id"]] = %w[color_scheme_group color_scheme].include?(d["type"]) ? d : d["type"]
       end
     end
 
+    # 無 `default` 鍵時的官方隱含預設（shopify.dev settings/input-settings，取證 2026-09-02）：
+    #   checkbox "If `default` is unspecified, then the value is `false` by default."
+    #   select／radio "If `default` is unspecified, then the first option is selected by default."
+    #   color_scheme：先佔 nil 鍵讓 SettingsDrop 走 coerce 的三段退回（default → 第一組）。
+    # 原實作只搬 `default` ⇒ 這三型在主題沒寫 default 時拿到 nil／被計成 miss
+    # （Minimog `settings.loading_design_mode`／`settings.drawer_popup_color_scheme`、
+    # Kalles `settings.enable_scroll_badge` 等，`tools/theme-conformance/evidence/preclassify-*.json`）。
     def schema_defaults(defs)
-      defs.each_with_object({}) { |d, h| h[d["id"]] = d["default"] if d.is_a?(Hash) && d.key?("default") && d["id"] }
+      defs.each_with_object({}) do |d, h|
+        next unless d.is_a?(Hash) && d["id"]
+
+        if d.key?("default")
+          h[d["id"]] = d["default"]
+        else
+          case d["type"]
+          when "checkbox" then h[d["id"]] = false
+          when "select", "radio"
+            first = Array(d["options"]).find { |o| o.is_a?(Hash) && o.key?("value") }
+            h[d["id"]] = first["value"] if first
+          when "color_scheme" then h[d["id"]] = nil
+          end
+        end
+      end
     end
 
     # ---- section 渲染 -------------------------------------------------------

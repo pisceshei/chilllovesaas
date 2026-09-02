@@ -1958,8 +1958,15 @@ module ThemeEngine
       when "color_scheme_group"
         ColorSchemeGroupDrop.new(val, definition: type_entry.is_a?(Hash) ? (type_entry["definition"] || []) : [])
       when "color_scheme"
-        # official："returns the selected color_scheme object from color_scheme_group"
-        (@schemes && @schemes.scheme(val.to_s)) || val
+        # official："returns the selected color_scheme object from color_scheme_group"；
+        # 三段退回（input-settings 逐字，取證 2026-09-02）："If no value was entered, or the value
+        # was invalid, then the default value from `color_scheme` is returned. If the default value
+        # is also invalid, then the first `color_scheme` from `color_scheme_group` is returned."
+        # 無群組語境（@schemes nil）⇒ 值原樣（既有語義）。
+        return val unless @schemes
+
+        default = type_entry.is_a?(Hash) ? type_entry["default"] : nil
+        @schemes.scheme(val.to_s) || (default && @schemes.scheme(default.to_s)) || @schemes.first || val
       else val
       end
     end

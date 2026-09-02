@@ -1,0 +1,13 @@
+<span id="sd">{{ section.settings.flag }}|{{ section.settings.layout }}|{{ section.settings.align }}|{{ section.settings.scheme_nd }}|{{ section.settings.scheme_dflt }}|{{ section.settings.scheme_bad }}|{{ section.settings.scheme_empty }}</span><span id="sdf">{% if section.settings.flag == false %}F{% endif %}{% if section.settings.flag %}T{% endif %}</span><span id="sdb">{% for block in section.blocks %}{{ block.settings.on }}|{{ block.settings.mode }};{% endfor %}</span>
+{% schema %}{ "name": "Settings defaults", "settings": [
+ { "id": "flag", "type": "checkbox", "label": "flag" },
+ { "id": "layout", "type": "select", "label": "layout", "options": [ { "value": "grid", "label": "Grid" }, { "value": "list", "label": "List" } ] },
+ { "id": "align", "type": "radio", "label": "align", "options": [ { "value": "left", "label": "L" }, { "value": "right", "label": "R" } ] },
+ { "id": "scheme_nd", "type": "color_scheme", "label": "nd" },
+ { "id": "scheme_dflt", "type": "color_scheme", "label": "dflt", "default": "scheme-2" },
+ { "id": "scheme_bad", "type": "color_scheme", "label": "bad", "default": "nope" },
+ { "id": "scheme_empty", "type": "color_scheme", "label": "empty", "default": "scheme-2" }
+], "blocks": [ { "type": "row", "name": "Row", "settings": [
+ { "id": "on", "type": "checkbox", "label": "on" },
+ { "id": "mode", "type": "select", "label": "mode", "options": [ { "value": "a", "label": "A" }, { "value": "b", "label": "B" } ] }
+] } ] }{% endschema %}

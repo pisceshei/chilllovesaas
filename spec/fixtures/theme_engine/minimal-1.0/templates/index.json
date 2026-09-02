@@ -97,6 +97,29 @@
     }
    }
   },
+  "sd": {
+   "type": "settings-defaults",
+   "settings": {
+    "scheme_empty": ""
+   },
+   "block_order": [
+    "r1",
+    "r2"
+   ],
+   "blocks": {
+    "r1": {
+     "type": "row",
+     "settings": {}
+    },
+    "r2": {
+     "type": "row",
+     "settings": {
+      "on": true,
+      "mode": "b"
+     }
+    }
+   }
+  },
   "iter": {
    "type": "blocks-iter",
    "block_order": [
@@ -127,6 +150,7 @@
   "hero",
   "demo",
   "local",
+  "sd",
   "iter"
  ]
 }
