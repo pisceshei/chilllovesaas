@@ -1,0 +1,83 @@
+<!-- blocks/_space_html.liquid -->
+<div class="hdt-wrap{% if block.settings.hide_on_mobile %} hdt-hidden md:hdt-block{% endif %}" hdt-reveal="slide-in">
+  <div class="hdt-space-html hdt-block-spacing" style="--color: {{ block.settings.color }};--height: {{ block.settings.height }}px;--height-mobile: {{ block.settings.height_mobile }}px;--margin-bottom: {{ block.settings.margin_bottom }}px;--margin-bottom-mobile: {{ block.settings.margin_bottom_mobile }}px;--width: {{ block.settings.width }}px;--width-mobile: {{ block.settings.width_mobile }}px;">
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.space_htmlx.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "color",
+        "id": "color",
+        "label": "t:blocks.space_htmlx.settings.color",
+        "default": "#fff",
+        "alpha": true
+      },
+      {
+        "type": "number",
+        "id": "width",
+        "label": "t:blocks.space_htmlx.settings.width",
+        "default": 100
+      },
+      {
+        "type": "range",
+        "id": "height",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.space_htmlx.settings.height",
+        "default": 100
+      },  
+      {
+        "type": "number",
+        "id": "margin_bottom",
+        "label": "t:blocks.space_htmlx.settings.margin_bottom",
+        "default":0
+      },
+      {
+        "type": "paragraph",
+        "content": "--------------------------------"
+      },
+      {
+        "type": "range",
+        "id": "width_mobile",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.space_htmlx.settings.width_mobile",
+        "default": 100
+      },
+      {
+        "type": "range",
+        "id": "height_mobile",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.space_htmlx.settings.height_mobile",
+        "default": 100
+      }, 
+      {
+        "type": "checkbox",
+        "id": "hide_on_mobile",
+        "label": "t:blocks.space_htmlx.settings.hide_on_mobile",
+        "default": false
+      },
+      {
+        "type": "number",
+        "id": "margin_bottom_mobile",
+        "label": "t:blocks.space_htmlx.settings.margin_bottom_mobile",
+        "default":0
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.space_htmlx.name"
+      }
+    ]
+  }
+{% endschema %}

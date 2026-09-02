@@ -1,0 +1,161 @@
+<!-- blocks/lookbook-custom.liquid -->
+<div class="hdt-lookbook-item hdt-slider__slide hdt-w-full hdt-ratio--{{ block.settings.image_ratio }}" {{ block.shopify_attributes }}>
+  
+  <div class="hdt-item-inner hdt-relative hdt-eff-{{ block.settings.b_effect }} hdt-eff-img-{{ block.settings.img_effect }} hdt-oh">
+    <div calc-nav class="hdt-image hdt-ratio"{% if block.settings.image_ratio == 'adapt_image' %}style="--aspect-ratioapt: {{ block.settings.image.aspect_ratio | default: 1.7777 }}"{% endif %}>
+      {%-liquid
+        if block.settings.image != blank
+          echo block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: 'hdt-obj-eff', widths: '200,300,400,500,600,700,800,900,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,3400,3800'
+        else 
+          echo 'blog-apparel-1' | placeholder_svg_tag: 'placeholder-svg hdt-obj-eff'
+          endif
+      -%}
+    </div>
+    <div class="hdt-pin-group hdt-full-width-link hdt-pe-none">
+      {% content_for "blocks" %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "t:blocks.lookbook.name",
+    "tag": null,
+    "blocks": [{ "type": "_pin-product" }, { "type": "_pin-text" }],
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:blocks.image.settings.image.label"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "options": [
+          {
+            "value": "adapt_image",
+            "label": "t:sections.all.images.ratio.adapt_image.label"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.images.ratio.square.label"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.images.ratio.portrait.label"
+          },
+          {
+            "value": "asos",
+            "label": "t:sections.all.images.ratio.asos.label"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.images.ratio.landscape.label"
+          },
+          {
+            "value": "custom-pr",
+            "label": "t:sections.all.images.ratio.custom.label"
+          }
+        ],
+        "label": "t:sections.all.images.ratio.label",
+        "default": "adapt_image"
+      },
+      {
+        "type": "select",
+        "id": "img_effect",
+        "label": "t:sections.all.image_effect.image_hover_eff.label",
+        "info": "t:sections.all.image_effect.image_hover_eff.info",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.none"
+          },
+          {
+            "value": "zoom",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.zoom"
+          },
+          {
+            "value": "rotate",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.rotate"
+          },
+          {
+            "value": "translateToTop",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToTop"
+          },
+          {
+            "value": "translateToRight",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToRight"
+          },
+          {
+            "value": "translateToBottom",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToBottom"
+          },
+          {
+            "value": "translateToLeft",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.translateToLeft"
+          },
+          {
+            "value": "filter",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.filter"
+          },
+          {
+            "value": "bounceIn",
+            "label": "t:sections.all.image_effect.image_hover_eff.options.bounceIn"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "b_effect",
+        "label": "t:sections.all.image_effect.item_eff.label",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.all.image_effect.item_eff.options.none"
+          },
+          {
+            "value": "border-run",
+            "label": "t:sections.all.image_effect.item_eff.options.border_run"
+          },
+          {
+            "value": "pervasive-circle",
+            "label": "t:sections.all.image_effect.item_eff.options.pervasive_circle"
+          },
+          {
+            "value": "plus-zoom-overlay",
+            "label": "t:sections.all.image_effect.item_eff.options.plus_zoom_overlay"
+          },
+          {
+            "value": "overlay",
+            "label": "t:sections.all.image_effect.item_eff.options.overlay"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.lookbook.name",
+        "blocks": [
+          {
+            "type": "_pin-product",
+            "settings": {
+              "left": 50,
+              "top": 50,
+              "pin_size": "medium",
+              "pin_type": "showtext",
+              "text": "1",
+              "product": "",
+              "product_des": "1",
+              "image_ratio": "adapt_image",
+              "image_size": true,
+              "show_vendor": false,
+              "placement": "top"
+            }
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

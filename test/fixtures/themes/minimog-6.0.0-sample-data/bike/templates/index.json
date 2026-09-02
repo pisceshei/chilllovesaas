@@ -1,0 +1,446 @@
+{
+  "sections": {
+    "165968222024e616cf": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-product-card__price {\n  font-style: italic;\n}\n.m-custom-newsletters {\n\tbackground-image: url('https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/newsletter_bg.jpg?v=1659683642');\n\tbackground-size: cover;\n\tbackground-repeat: no-repeat;\n\tbackground-position: center;\n}\n\n.m-custom-newsletters .m-newsletter-section__form {\n  width: 570px;\n  max-width: 100%;\n}\n\n.m-custom-newsletters .m-newsletter-form__input {\n  color: #000 !important;\n}\n\n.m-custom-newsletters .m-newsletter-form__input::placeholder {\n  color: #666;\n}\n.sf-home__icon-box .m-icon-box__heading {\n  font-size: 20px;\n}\n.sf-home__icon-box {\n  border-top: 1px solid #eee;\n}\n.sf-home__product-tabs .m-tab-header { \n  letter-spacing: 1px;\n}\n\n.m-scrolling-promotion .sf-icon-box__icon {\n\toverflow: visible !important;\n}\n\n@media (min-width: 1536px) {\n  .sf-home__hero .m-hero__content {\n    padding-top: 80px;\n  }\n}"
+      }
+    },
+    "165959683132f7888b": {
+      "type": "image-with-text-2",
+      "settings": {
+        
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center top",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center top",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "dark",
+        "title": "Part bicycle. <br>\nPart philosophy.",
+        "subtitle": "",
+        
+        "button_label": "SHOP NOW",
+        
+        "button_style": "m-button--primary",
+        
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1659671479ffdcde05": {
+      "type": "icon-box",
+      "blocks": {
+        "1659671479cd396471-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Heritage Bikes",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659671479cd396471-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Comfort Bikes",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659671479cd396471-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Transit Bikes",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659671479cd396471-0",
+        "1659671479cd396471-1",
+        "1659671479cd396471-2"
+      ],
+      "settings": {
+        "heading": "Cyling Bike Series",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "left",
+        "container": "container",
+        
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "427px",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-scrolling-promotion",
+        "animations": "inherit"
+      }
+    },
+    "165967175177e14963": {
+      "type": "product-tabs",
+      "blocks": {
+        "1659671751a40bf658-0": {
+          "type": "tab",
+          "settings": {
+            "title": "HOT ITEMS"
+          }
+        },
+        "1659671751a40bf658-1": {
+          "type": "tab",
+          "settings": {
+            "title": "BEST SELLERS"
+          }
+        },
+        "3775418d-936a-43aa-b802-b30191fa6480": {
+          "type": "tab",
+          "settings": {
+            "title": "ON SALE"
+          }
+        }
+      },
+      "block_order": [
+        "1659671751a40bf658-0",
+        "1659671751a40bf658-1",
+        "3775418d-936a-43aa-b802-b30191fa6480"
+      ],
+      "settings": {
+        "heading": "Cyling bike",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        
+        "tab_header": "horizontal",
+        "limit": 9,
+        "show_button": false,
+        "button_type": "link",
+        "button_label": "View all",
+        "button_style": "sf__btn-primary",
+        
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__product-tabs",
+        "animations": "inherit"
+      }
+    },
+    "16596727245b12f9d3": {
+      "type": "testimonials",
+      "blocks": {
+        "1659672723824aa9ba-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“Super class, cute, comfortable. You can wear them with just about anything.”<\/p>",
+            "footer": "<p>Oliver, <em>Starling City<\/em><\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1659672723824aa9ba-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>\"Clothes are addictive! Love this brand and shoe. The narrow heel is wonderfully !\"<\/p>",
+            "footer": "<p>Iris, <em>Central City<\/em><\/p>",
+            "image_text": "<p>Iris, <em>Central City<\/em><\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1659672723824aa9ba-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Thanks for the lovely time shopping and all the good work you do.\"<\/p>",
+            "footer": "<p>Dean D. , <em>Roadset Sport<\/em><\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1659672723824aa9ba-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>“Super class, cute, comfortable. You can wear them with just about anything.”<\/p>",
+            "footer": "<p>Oliver, <em>Starling City<\/em><\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1659672723824aa9ba-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>\"Clothes are addictive! Love this brand and shoe. The narrow heel is wonderfully !\"<\/p>",
+            "footer": "<p>Iris, <em>Central City<\/em><\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1659672723824aa9ba-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Thanks for the lovely time shopping and all the good work you do.\"<\/p>",
+            "footer": "<p>Dean D. , <em>Roadset Sport<\/em><\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659672723824aa9ba-1",
+        "1659672723824aa9ba-2",
+        "1659672723824aa9ba-0",
+        "1659672723824aa9ba-3",
+        "1659672723824aa9ba-4",
+        "1659672723824aa9ba-5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "THE REVIEW ARE IN",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-5ba34f0a-ff1e-48d1-8635-6cee7e285e5d",
+        "design": "testimonials-4",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "star_color": "#b23b21",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        
+        "animations": "inherit"
+      }
+    },
+    "165967349765db5865": {
+      "type": "custom-content",
+      "blocks": {
+        "16596734969f89b200-1": {
+          "type": "image",
+          "settings": {
+            
+            "width": "50%",
+            "alignment": "center",
+            
+            "animations": "inherit"
+          }
+        },
+        "16596734969f89b200-0": {
+          "type": "text",
+          "settings": {
+            "title": "Inspiration for <br>\nEvery Age.",
+            "subheading": "OUR STORY",
+            "text": "<p>After a lifetime on bicycles, we are still in awe of the small<br\/> miracle of physics that enables you to balance on two <br\/>wheels and silently zip along.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "ABOUT US",
+            "button_link": "#",
+            "button_style": "m-button--primary",
+            
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16596734969f89b200-1",
+        "16596734969f89b200-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "1659673667d9e72751": {
+      "type": "icon-box",
+      "blocks": {
+        "1659673667e258816a-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Touring saddle",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659673667e258816a-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Hand-stitched",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1659673667e258816a-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Low-maintenance",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "0b789345-94c9-4ca4-88d9-ccc8417e079f": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Painted steel",
+            "description": "<p>Reliable and low-maintenance 3-speed <br\/>internal gears for easy shifting<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1659673667e258816a-0",
+        "1659673667e258816a-1",
+        "1659673667e258816a-2",
+        "0b789345-94c9-4ca4-88d9-ccc8417e079f"
+      ],
+      "settings": {
+        "heading": "Why shop with Cyling?",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "76px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__icon-box",
+        "animations": "inherit"
+      }
+    },
+    "165967444440b826ac": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "10% off & the best indie art ever!",
+        "description": "",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "",
+        "text_color": "white",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-newsletters",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "165968222024e616cf",
+    "165959683132f7888b",
+    "1659671479ffdcde05",
+    "165967175177e14963",
+    "16596727245b12f9d3",
+    "165967349765db5865",
+    "1659673667d9e72751",
+    "165967444440b826ac"
+  ]
+}

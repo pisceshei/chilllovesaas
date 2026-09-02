@@ -1,0 +1,47 @@
+{%- comment -%}
+  Renders a btn wishlist
+
+  Accepts:
+  - class: {String} a list class. (optional)
+  - disable_sr_only: {Boolean} remove class sr_only (optional)
+  - placement: {String} position tooltip (optional)
+  - is_remove_on_page: render a button remove on wishlist page
+
+  Usage:
+  {%- render 'btn-wishlist', class: 'xxx' -%}
+{%- endcomment -%}
+{%- liquid
+  assign tooltip_inner = tooltip_inner | default: false
+  if section.id contains 'quick-view' or section.id contains 'quick-add' or section.id contains 'search'
+    assign tooltip_inner = true
+  endif
+-%}
+{%- if is_remove_on_page -%}
+  <hdt-wishlist class="{{ class }}" role="button" data-id="19041994" data-handle="handle_nt_94" action="remove" remove-on-page placement="{{ placement | default: 'none' }}"{% if tooltip_inner %} inner{% endif %}>
+    <svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis-remove-onpage"></use></svg>
+    <span {% unless disable_sr_only %}class="sr-only"{% endunless %}>{{ 'general.wishlist.remove_wishlist' | t }}</span>
+  </hdt-wishlist>
+{%- elsif settings.wishlist_mode == "1" -%}
+  <hdt-wishlist class="{{ class }}" role="button" data-id="19041994" action="add" placement="{{ placement | default: 'none' }}"{% if tooltip_inner %} inner{% endif %}>
+    <svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis"></use></svg>
+    <span {% unless disable_sr_only %}class="sr-only"{% endunless %}>{{ 'general.wishlist.add_to_wishlist' | t }}</span>
+  </hdt-wishlist>
+{%- elsif settings.wishlist_mode == "2" and shop.customer_accounts_enabled -%}
+  {%- if customer -%}
+    <hdt-wishlist role="button" class="{{ class }}" data-id="19041994" data-handle="handle_nt_94" action="add" placement="{{ placement | default: 'none' }}"{% if tooltip_inner %} inner{% endif %}>
+      <svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis"></use></svg>
+      <span {% unless disable_sr_only %}class="sr-only"{% endunless %}>{{ 'general.wishlist.add_to_wishlist' | t }}</span>
+    </hdt-wishlist>
+  {%- else -%}
+    <hdt-tooltip placement="{{ placement | default: 'none' }}"{% if tooltip_inner %} inner{% endif %}>
+      <div class="{{ class }}">
+        <shopify-account class="hdt-svg-wis" {% if settings.customer_account_menu != blank %} menu="{{ settings.customer_account_menu }}" {% endif %}>
+          <div slot="signed-out-avatar">
+            <svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis"></use></svg>
+          </div>
+        </shopify-account>
+        <span {% unless disable_sr_only %}class="sr-only"{% endunless %}>{{ 'general.wishlist.login_to_use_wishlist' | t }}</span>
+      </div>
+    </hdt-tooltip>
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,26 @@
+<div class="hdt-col-block hdt-flex hdt-flex-col hdt-w-full">
+  <div class="hdt-heading-f collapsible hdt-flex hdt-align-center hdt-justify-between hdt-w-full">
+    <h6 class="{{ section.settings.heading_fs }} hdt-s-text {{ section.settings.text_weight }}"> {{ block.settings.heading }}</h6>
+    <span class="hdt-collapse-icon hdt-relative"></span>
+  </div>
+  <div class="hdt-collapse-content">{%  content_for "blocks" %}</div>
+</div>
+{% schema %}
+{
+  "name": "Collapsible",
+  "tag": null,
+  "blocks": [{ "type": "@theme" }, { "type": "@app" }],
+  "settings": [
+    {
+      "type":"text",
+      "id":"heading",
+      "label":"Heading"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collapsible [footer]"
+    }
+  ]
+}
+{% endschema %}

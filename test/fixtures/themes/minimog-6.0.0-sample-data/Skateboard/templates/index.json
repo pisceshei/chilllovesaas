@@ -1,0 +1,337 @@
+{
+  "sections": {
+    "16233155804447b3cd": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "<span class=\"sf__custom-heading\">SKATEBOARDS<\/span>",
+        "subtitle": "",
+        "text": "",
+        "button_label": "",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162331592929d77268": {
+      "type": "collection-list",
+      "blocks": {
+        "16233159290d865c19-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "DECKS"
+          }
+        },
+        "16233159290d865c19-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "TRUCKS"
+          }
+        },
+        "16233159290d865c19-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "WHEELS"
+          }
+        },
+        "a3ed898f-0ab7-4659-b995-19c0fc394532": {
+          "type": "collection_block",
+          "settings": {
+            "title": "COMPLETE"
+          }
+        }
+      },
+      "block_order": [
+        "16233159290d865c19-0",
+        "16233159290d865c19-1",
+        "16233159290d865c19-2",
+        "a3ed898f-0ab7-4659-b995-19c0fc394532"
+      ],
+      "settings": {
+        "heading": "SKATEBOARD",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16233161277e19c68e": {
+      "type": "custom-content",
+      "blocks": {
+        "11534ace-0ac9-4c80-ab8e-d00dc4fb33a6": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "dark",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "link": "",
+            "title": "PENNY SKATE",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "1221d638-f473-4731-b058-a253a2db6aa0": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "dark",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "link": "",
+            "title": "POLAR SKATE",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "11534ace-0ac9-4c80-ab8e-d00dc4fb33a6",
+        "1221d638-f473-4731-b058-a253a2db6aa0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1623316486084b868c": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "2",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1623316569501ae093": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "SUPERSKATE<br>\nBACK IN STOCK",
+        "sub_title": "",
+        "text": "<p>We strive for quality, aesthetic and mixing our shared<br\/>passions for skateboarding, design, photography &<br\/>cinematography. We are based in Los Angeles. <br\/>We come from all over.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "SHOP NOW",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16233167086477272b": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "NEW ARRIVALS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16281589059878d692": {
+      "type": "video",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "",
+        "video_type": "shopify",
+        "ratio": "21:9",
+        "video_title": "THE NEW <br> MINT SURFSKATE",
+        "text_size": "large",
+        "text_color": "white",
+        "play_style": "solid",
+        "play_size": "large",
+        "width": "100%",
+        "autoplay": false,
+        "loop": false,
+        "muted": false,
+        "show_controls": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16233172436cc42da9": {
+      "type": "blog-posts",
+      "custom_css": [
+        "@media (min-width: 1280px) {.m-article-card__tags {font-size: 14px; }}"
+      ],
+      "settings": {
+        "heading": "NEWS & MORE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "blog": "skateboard",
+        "limit": 4,
+        "column": 4,
+        "column_gap": 30,
+        "mobile_gap": 10,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-center",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "16233155804447b3cd",
+    "162331592929d77268",
+    "16233161277e19c68e",
+    "1623316486084b868c",
+    "1623316569501ae093",
+    "16233167086477272b",
+    "16281589059878d692",
+    "16233172436cc42da9"
+  ]
+}

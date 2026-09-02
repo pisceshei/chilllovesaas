@@ -1,0 +1,207 @@
+<!-- blocks/text_custom.liquid -->
+{%- liquid
+  assign html_tag = block.settings.html_tag
+  assign effect = 'hdt-reveal="slide-in" timeline'
+  if section.id contains 'slideshow'
+    assign effect = 'reval'
+  endif   
+  if section.id contains 'footer' or section.location contains 'footer'
+    assign effect = ''
+  endif
+-%}
+{% if block.settings.text != blank %}
+  <{{ html_tag }} {{ effect }} class="hdt-block-text__custom hdt-hidden-br__mobile-{{ block.settings.remove_br_mobile }} {{ block.settings.font_family }}{% if block.settings.enable_italic %} hdt-italic{% endif %} {% if block.settings.enable_text_shadow %}hdt-text-shadow{% endif %} hdt-hidden-mobile-{{ block.settings.hide_on_mobile }}" style="{% render 'hdt-block-style', block: block, type: 'text' %}">
+    {{ block.settings.text }}
+  </{{ html_tag }}>
+{% endif %}
+{% schema %}
+  {
+    "name": "t:blocks.text_custom.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "textarea",
+        "id": "text",
+        "label": "t:blocks.text_custom.settings.text.label",
+        "info": "t:blocks.text_custom.settings.text.info",
+      },
+      {
+        "type": "checkbox",
+        "id": "remove_br_mobile",
+        "label": "t:blocks.text_custom.settings.remove_br_mobile",
+        "default": false,
+      },
+      {
+        "type": "select",
+        "id": "html_tag",
+        "label": "t:blocks.text_custom.settings.html_tag.label",
+        "options": [
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.h2",
+            "value": "h2"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.h3",
+            "value": "h3"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.h4",
+            "value": "h4"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.h5",
+            "value": "h5"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.h6",
+            "value": "h6"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.p",
+            "value": "p"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.html_tag.options.div",
+            "value": "div"
+          }
+        ],
+        "default": "p"
+      },
+      {
+        "type": "select",
+        "id": "font_family",
+        "label": "t:blocks.text_custom.settings.font_family.label",
+        "options": [
+          {
+            "label": "t:blocks.text_custom.settings.font_family.options.inherit",
+            "value": ""
+          },
+          {
+            "label": "t:blocks.text_custom.settings.font_family.options.font_1",
+            "value": "hdt-font-1"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.font_family.options.font_2",
+            "value": "hdt-font-2"
+          },
+          {
+            "label": "t:blocks.text_custom.settings.font_family.options.font_3",
+            "value": "hdt-font-3"
+          }
+        ],
+        "default": ""
+      },
+      {
+        "type": "color",
+        "id": "color_text",
+        "label": "t:blocks.text_custom.settings.color_text.label",
+        "default": "#000",
+        "alpha": true
+      },
+      {
+        "type": "range",
+        "id": "font_size",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.text_custom.settings.font_size.label",
+        "default": 14
+      },
+      {
+        "type": "range",
+        "id": "line_height",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "label": "t:blocks.text_custom.settings.line_height.label",
+        "default": 24,
+        "info": "t:blocks.text_custom.settings.line_height.info"
+      },
+      {
+        "type": "range",
+        "id": "font_weight",
+        "min": 100,
+        "max": 900,
+        "step": 100,
+        "label": "t:blocks.text_custom.settings.font_weight.label",
+        "default": 400
+      },
+      {
+        "type": "number",
+        "id": "letter_spacing",
+        "label": "t:blocks.text_custom.settings.letter_spacing.label",
+        "default": 0,
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_italic",
+        "label": "t:blocks.text_custom.settings.enable_italic.label",
+        "default": false,
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_text_shadow",
+        "label": "t:blocks.text_custom.settings.enable_text_shadow.label",
+        "default": false,
+      },
+      {
+        "type": "number",
+        "id": "margin_bottom",
+        "label": "t:blocks.text_custom.settings.margin_bottom.label",
+        "default": 0,
+      },
+      {
+        "type": "header",
+        "content": "t:blocks.text_custom.settings.header_mobile.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_on_mobile",
+        "label": "t:blocks.text_custom.settings.hide_on_mobile.label",
+        "default": false,
+      },
+      {
+        "type": "range",
+        "id": "font_size_mobile",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.text_custom.settings.font_size_mobile.label",
+        "default": 14
+      },
+      {
+        "type": "range",
+        "id": "line_height_mobile",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "label": "t:blocks.text_custom.settings.line_height_mobile.label",
+        "default": 0,
+        "info": "t:blocks.text_custom.settings.line_height_mobile.info"
+      },
+      {
+        "type": "number",
+        "id": "letter_spacing_mobile",
+        "label": "t:blocks.text_custom.settings.letter_spacing_mobile.label",
+        "default": 0,
+      },
+      {
+        "type": "number",
+        "id": "margin_bottom_mobile",
+        "label": "t:blocks.text_custom.settings.margin_bottom_mobile.label",
+        "default": 0,
+      },
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.text_custom.name",
+        "category": "t:blocks_categories.custom.name",
+        "settings": {
+          "text": "Share information about your brand with your customers.<br> Describe a product, make announcements, or welcome customers to your store."
+        }
+      }
+    ]
+  }
+{% endschema %}

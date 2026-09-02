@@ -1,0 +1,130 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "d8236fc7-5c51-4cfc-83ec-323e039da755": {
+          "type": "custom_text",
+          "settings": {
+            "title": "",
+            "image_max": "180px",
+            "description": "",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "8bf591d8-a3ca-4dc1-914b-6a01c18f31c7": {
+          "type": "our_store",
+          "settings": {
+            "title": "GET IN TOUCH",
+            "description": "<p>184 Main Rd E, St Albans<br\/>VIC 3021, Australia<\/p>",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": true,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "ad3c3166-8ef1-441a-832a-e4c7b30d78ab": {
+          "type": "menu",
+          "settings": {
+            "menu": "information",
+            "title": "INFORMATION",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "9191e286-5f7f-4a14-8e7a-3f66ca11cc88": {
+          "type": "menu",
+          "settings": {
+            "menu": "services",
+            "title": "SERVICES",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "d8236fc7-5c51-4cfc-83ec-323e039da755",
+        "8bf591d8-a3ca-4dc1-914b-6a01c18f31c7",
+        "ad3c3166-8ef1-441a-832a-e4c7b30d78ab",
+        "9191e286-5f7f-4a14-8e7a-3f66ca11cc88"
+      ],
+      "settings": {
+        "color_scheme": "dark",
+        "design": "footer-1",
+        "container": "container",
+        "bordered": false,
+        "copyright": "© 2024, Minimog. All Rights Reserved.",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "dark"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

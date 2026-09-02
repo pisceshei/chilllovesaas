@@ -1,0 +1,301 @@
+/* table layout */
+
+/* 
+ unavailable variant
+*/
+.hdt-qol tr td {
+  width: 25%;
+}
+
+.hdt-qol .hdt-price__list {
+  justify-content: flex-end;
+}
+
+.hdt-qol .hdt-qol-head {
+  /* border-bottom: 1px solid rgb(var(--color-line-border)); */
+  padding-bottom: 2rem;
+  .hdt-col > *{
+    padding: 1rem;
+  }
+}
+
+.hdt-qol tbody tr td {
+  padding: 1rem;
+}
+
+.hdt-qol tbody tr:not(:last-child) {
+  border-bottom: 1px dashed rgb(var(--color-line-border));
+}
+
+/* media */
+.hdt-qol .hdt-variant-item__media {
+  gap: 1.8rem;
+}
+
+.hdt-qol .hdt-variant-item__image-container {
+  max-width: 8rem;
+  width: 8rem;
+}
+
+/* quantity */
+.hdt-qol .hdt-variant-item__quantity .hdt-variant_inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  .hdt-product-info__item{
+    width: fit-content;
+  }
+}
+
+.hdt-qol .hdt-variant-item__quantity .hdt-variant_inner :where(.hdt-quantity__label, .hdt-quantity__rules) {
+  display: none;
+}
+
+.hdt-qol .hdt-product__form-qty input[type=number] {
+  height: 3rem;
+}
+
+.hdt-qol .hdt-product__form-qty button {
+  width: 3.9rem;
+  height: 3rem;
+  line-height: 3rem;
+}
+
+.hdt-qol .hdt-product__form-qty {
+  min-width: 14.3rem;
+  width: 14.3rem;
+  height: 3rem;
+  border-radius: 5px !important;
+  background-color: rgb(var(--color-line-border));
+  border-color: rgb(var(--color-line-border));
+  
+}
+.hdt-qol .hdt-product-form__quantity button svg{
+  width: 9px;
+  height: 9px;
+}
+
+/* price */
+
+.hdt-qol .hdt-price{
+  font-size: var(--text-base);
+  color: rgb(var(--color-foreground2));
+}
+/* total */
+.hdt-qol :where(.hdt-total_wrap.hdt-row-flex, .hdt-row-flex.hdt-qol-head) {
+  --spacing-x: 0px;
+  --spacing-y: 0.5rem;
+}
+
+.hdt-qol .hdt-total-item_inner {
+  /* width: 10.9rem; */
+  gap: 5px;
+  [update_items_in_cart]{
+    font-weight: 600;
+    font-size: 15px;
+  }
+}
+
+.hdt-qol .hdt-total_wrap {
+  > *{
+    padding: 10px;
+  }
+}
+.hdt-qol .hdt-totals__subtotal-value{
+  margin-bottom: 1.6rem;
+  display: inline-block;
+}
+
+/* loading */
+.hdt-qol .hdt-btn-loading__svg[aria-busy=true] .hdt-qol-text {
+  opacity: 0;
+}
+
+.hdt-qol hdt-quick-order-list-remove-button {
+  cursor: pointer;
+  transition: color .25s ease,text-decoration .25s ease;
+  &:hover{
+    color: rgb(var(--color-accent));
+    text-decoration: underline;
+  }
+}
+.hdt-qol:has([qty-cart-show]) .hdt-viewcart-inner{
+  display: flex !important;
+}
+
+#hdt-quick-order-list-total {
+  position: sticky;
+  position: -webkit-sticky;
+  bottom: 0;
+  background: rgb(var(--color-background));
+  /* box-shadow: 0 -1px 1px rgb(var(--color-overlay) / .1); */
+  /* border-top: 1px solid rgb(var(--color-line-border)); */
+}
+.hdt-qol hdt-quick-order-list{
+  transition: opacity .25s ease;
+}
+.hdt-qol hdt-quick-order-list .is-fetching{
+  pointer-events: none;
+  opacity: 0.6;
+}
+.hdt-qol .hdt-viewcart-inner{
+  &:has(hdt-quick-order-list-remove-all-button[hidden]){
+    display: none;
+  }
+  gap: 1rem;
+  a{
+    border-radius: 5px;
+    max-width: 9rem;
+    height: 4rem;
+    width: 9rem;
+    padding: 0;
+  }
+  button{
+    padding: 11px 15px;
+    margin-inline-start: 0rem;
+    color: rgb(var(--color-foreground));
+    padding-left: 0 !important;
+    transition: color .25s ease;
+    &:hover{
+      color: rgb(var(--color-accent));
+    }
+  }
+}
+#hdt-quick-order-list-total {
+  bottom: var(--hdt-qol-position,0px)
+}
+html{
+  --toolbar-height: 0rem;
+  --hdt-qol-position: calc(var(--toolbar-height,0px));
+}
+html:has(.sticky-shown){
+  --hdt-qol-position: calc(var(--toolbar-height,0px) + var(--hdt-sticky-atc-height,0px));
+}
+@media (max-width: 1024px) {
+
+  html{
+    --toolbar-height: 5.5rem;
+  }
+}
+/* 
+@media (max-width: 767px) {
+  .hdt-qol .hdt-qol-head{
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+  .hdt-qol .hdt-qol-showimage-true tr {
+    padding-inline-start: 9rem;
+    display: block;
+    position: relative;
+    margin-bottom: 1.5rem;
+  }
+
+  .hdt-qol tr td {
+    width: 100%;
+    display: flex;
+  }
+
+  .hdt-qol .hdt-variant-item__image-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .hdt-qol [qol-data-title]::before {
+    content: attr(qol-data-title);
+    color: rgb(var(--color-foreground));
+    text-align: start;
+    flex: 1 1 auto;
+  }
+
+  .hdt-qol .hdt-price {
+    font-size: var(--text-base);
+
+  }
+
+  .hdt-qol tbody tr td {
+    padding: 1rem 0;
+  }
+  .hdt-qol tbody tr td:first-child{
+    padding: 0;
+  }
+
+  .hdt-qol tbody tr td:not(:first-child, :last-child) {
+    border-bottom: 1px dashed rgb(var(--color-line-border));
+  }
+
+  .hdt-qol .hdt-variant-item__price .hdt-variant_inner {
+    display: flex;
+    align-items: center;
+  }
+
+  .hdt-qol .hdt-product__form-qty {
+    width: 9rem;
+    min-width: 9rem;
+  }
+
+  .hdt-qol .hdt-total-item_inner {
+    width: 100%;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    font-size: var(--text-xl);
+  }
+
+  .hdt-qol .hdt-total_wrap {
+    padding: 1rem 0;
+  }
+
+  .hdt-qol .hdt-totals__variant-total {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+  }
+
+  .hdt-qol .hdt-totals__subtotal {
+    font-size: var(--text-xl);
+  }
+
+  .hdt-qol .hdt-viewcart {
+    margin-top: 1rem;
+  }
+
+} */
+
+@media (width < 767px){
+  .hdt-qol tbody tr{
+    display: flex;
+    flex-direction: column;
+    td{
+      width: 100%;
+      .hdt-variant-item__media{
+        flex-direction: column;
+        align-items: flex-start;
+        .hdt-variant-item__image-container {
+          max-width: 15rem;
+          width: 100%;
+        }
+      }
+      
+    }
+    .hdt-variant-item__quantity .hdt-variant_inner{
+      justify-content: space-between;
+    }
+    .hdt-product__form-qty{
+      min-width: 10rem;
+      width: 10rem;
+    }
+    .hdt-variant_inner{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+  .hdt-qol .hdt-totals__subtotal-value{
+    margin-bottom: 2rem;
+  }
+  .hdt-qol .hdt-total_wrap {
+    > * {
+      padding-top: 2rem;
+    }
+  }
+}

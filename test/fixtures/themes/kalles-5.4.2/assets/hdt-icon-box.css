@@ -1,0 +1,215 @@
+.hdt-iconbox-item-wrapper {
+  padding: var(--padding-content);
+  border-radius: 10px;
+  transition: .3s all linear;
+  background-color: var(--color-box);
+}
+
+.hdt-iconbox-shadow__true .hdt-iconbox-item-wrapper {
+  box-shadow: 7px 7px 12.22px 0.78px rgb(85 123 208 / 7%);
+}
+
+.hdt-iconbox-border__true .hdt-iconbox-item-wrapper {
+  border: 1px solid var(--border-color);
+}
+
+.hdt-iconbox-head {
+  margin-bottom: 30px;
+  gap: 30px;
+  @media (width < 767px){
+    gap: 15px;
+  }
+}
+
+.hdt-iconbox-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hdt-iconbox-icon {
+  color: var(--icon-color);
+}
+
+.hdt-iconbox-icon__svg svg {
+  fill: currentColor;
+  width: var(--w-image-svg);
+  height: auto;
+}
+
+.hdt-iconbox-icon__image img {
+  width: 100%;
+  max-width: var(--width);
+  display: inline-block;
+  vertical-align: top;
+}
+
+.hdt-iconbox-icon__image[style*="--width:0px"] img {
+  max-width: var(--max-width);
+}
+
+.hdt-iconbox-heading {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--heading-color);
+}
+
+.hdt-iconbox-des {
+  font-size: 20px;
+  color: var(--description-color);
+  line-height: 24px;
+  font-weight: 400;
+  margin-bottom: 0px;
+}
+
+.hdt-iconbox-item-wrapper:hover {
+  background-color: var(--color-box-hover);
+  border-color: var(--color-box-hover);
+}
+
+.hdt-iconbox-item-wrapper:hover * {
+  color: var(--color-content-hover);
+}
+
+.hdt-iconbox-item:hover .hdt-iconbox-icon {
+  -webkit-animation: bounceIn .5s ease;
+  -o-animation: bounceIn .5s ease;
+  animation: bounceIn .5s ease;
+}
+
+@-webkit-keyframes bounceIn {
+
+  from,
+  20%,
+  40%,
+  60%,
+  80%,
+  to {
+    opacity: 1;
+    -webkit-animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  0% {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  20% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1);
+    transform: scale3d(1.1, 1.1, 1.1);
+  }
+
+  40% {
+    -webkit-transform: scale3d(0.9, 0.9, 0.9);
+    transform: scale3d(0.9, 0.9, 0.9);
+  }
+
+  60% {
+    opacity: 1;
+    -webkit-transform: scale3d(1.03, 1.03, 1.03);
+    transform: scale3d(1.03, 1.03, 1.03);
+  }
+
+  80% {
+    -webkit-transform: scale3d(0.97, 0.97, 0.97);
+    transform: scale3d(0.97, 0.97, 0.97);
+  }
+
+  to {
+    opacity: 1;
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes bounceIn {
+
+  from,
+  20%,
+  40%,
+  60%,
+  80%,
+  to {
+    opacity: 1;
+    -webkit-animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  0% {
+    opacity: 0;
+    -webkit-transform: scale3d(0.3, 0.3, 0.3);
+    transform: scale3d(0.3, 0.3, 0.3);
+  }
+
+  20% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1);
+    transform: scale3d(1.1, 1.1, 1.1);
+  }
+
+  40% {
+    -webkit-transform: scale3d(0.9, 0.9, 0.9);
+    transform: scale3d(0.9, 0.9, 0.9);
+  }
+
+  60% {
+    opacity: 1;
+    -webkit-transform: scale3d(1.03, 1.03, 1.03);
+    transform: scale3d(1.03, 1.03, 1.03);
+  }
+
+  80% {
+    -webkit-transform: scale3d(0.97, 0.97, 0.97);
+    transform: scale3d(0.97, 0.97, 0.97);
+  }
+
+  to {
+    opacity: 1;
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.hdt-icon-box .hdt-slider .hdt-iconbox-item {
+  padding-top: 10px;
+  padding-bottom: 30px;
+}
+
+@media (max-width:767px) {
+  .hdt-icon-box .hdt-iconbox-icon__svg svg {
+    width: var(--w-image-svg-mb);
+  }
+
+  .hdt-icon-box .hdt-iconbox-des {
+    font-size: 14px;
+  }
+}
+
+
+.hdt-icon-box{
+  .hdt-prent{
+    row-gap: var(--row-gap);
+    column-gap: var(--column-gap);
+    .hdt-slider__viewport{
+      padding: var(--padding-y) var(--padding-x);
+      --slide-spacing: var(--column-gap);
+    }
+    --column-gap: var(--spacing-horizontal);
+    --row-gap: var(--spacing-vertical);
+    --padding-y: 0;
+    --padding-x: 0;
+    --slide-spacing: 0;
+    @media (width < 767px){
+      &{
+        --column-gap: var(--spacing-horizontal-mb);
+        --row-gap: var(--spacing-vertical-mb);
+      }
+    }
+  }
+  div:empty{
+    display: none;
+  }
+
+}

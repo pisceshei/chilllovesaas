@@ -1,0 +1,112 @@
+<!-- blocks/_ourteam_item.liquid -->
+{%- liquid
+  assign image = block.settings.image
+  if section.settings.section_layout == 'full_width'
+    assign page_width = '100vw'
+  else 
+    assign page_width = settings.page_width
+  endif
+  assign socials = "facebook x instagram dribbble behance tiktok" | split: ' '
+  assign socials_icon = "facebook x instagram dribbble behance tiktok" | split: ' '
+-%}
+{%- capture sizes -%}
+'(min-width: 1150px) calc({{ page_width }}px / {{ section.settings.col_dk }}), (min-width: 768px) calc(100vw / {{ section.settings.col_tb }}), calc(100vw / {{ section.settings.col_mb }})'
+{%- endcapture -%}
+{%- capture socials_content -%}
+  {% for social in socials %}
+    {%- if block.settings[social] != blank -%}
+      {%- assign has_social = true -%}
+      <a href="{{ block.settings[social] | escape }}" class="hdt-inline-flex" target="_blank">
+        {% render 'icon_socials', icon_name: socials_icon[forloop.index0] %}
+      </a>
+    {%- endif -%}
+  {% endfor %}
+{%- endcapture -%}
+<div class="hdt-member-inner" hdt-reveal="slide-in" timeline>
+  <div class="hdt-member-media hdt-ratio" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 0.777 }}">
+    {%- if image != blank -%}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-object-cover hdt-object-center' }}
+    {%- else -%}
+      {{ 'hero-apparel-1' | placeholder_svg_tag: 'placeholder-svg hdt-placeholder' }}
+    {%- endif -%}
+  </div> 
+  {%- if block.settings.name != blank -%}
+    <h3 class="hdt-member-name hdt-s-text hdt-text-xl">{{ block.settings.name }}</h3>
+  {%- endif -%}
+  {%- if block.settings.position != blank -%}
+    <p class="hdt-member-position hdt-text-base hdt-s-text2">{{ block.settings.position }}</p> 
+  {%- endif -%}
+  {%- if has_social -%}
+    <div class="hdt-member-social_wrapper">
+      {{ socials_content }}
+    </div>
+  {%- endif -%}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.our-team.blocks.member.name",
+    "class": "hdt-slider__slide hdt-member",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.our-team.blocks.member.settings.image"
+      },
+      {
+        "type": "text",
+        "id": "name",
+        "label": "t:sections.our-team.blocks.member.settings.name"
+      },
+      {
+        "type": "text",
+        "id": "position",
+        "label": "t:sections.our-team.blocks.member.settings.position"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.our-team.blocks.member.settings.header"
+      },
+      {
+        "type": "text",
+        "id": "facebook",
+        "label": "Facebook",
+        "info": "https://facebook.com/shopify"
+      },
+      {
+        "type": "text",
+        "id": "x",
+        "label": "Twitter",
+        "info": "https://x.com/shopify"
+      },
+      {
+        "type": "text",
+        "id": "instagram",
+        "label": "Instagram",
+        "info": "https://instagram.com/shopify"
+      },
+      {
+        "type": "text",
+        "id": "dribbble",
+        "label": "Dribbble",
+        "info": "https://dribbble.com/shopify"
+      },
+      {
+        "type": "text",
+        "id": "behance",
+        "label": "Behance",
+        "info": "https://behance.net/shopify"
+      },
+      {
+        "type": "text",
+        "id": "tiktok",
+        "label": "Tiktok",
+        "info": "https://tiktok.com/@shopify"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.our-team.blocks.member.name"
+      }
+    ]
+  }
+{% endschema %}

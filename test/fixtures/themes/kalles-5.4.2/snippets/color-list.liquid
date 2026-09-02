@@ -1,0 +1,142 @@
+{%- liquid  
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+-%}
+
+{%- for option in product.options_with_values -%}
+  {%- liquid
+    assign option_downcase = option.name | downcase
+    assign is_color = false
+    if color_list contains option_downcase
+      assign is_color = true
+    endif
+    assign is_size = false
+    if size_list contains option_downcase
+      assign is_size = true
+    endif
+  -%}
+  {%- if is_color -%}
+    {%- if settings.color_mode == 'color' -%}
+      {%- liquid
+        assign color_white = 'products.theme_settings.color_white' | t | downcase | strip
+        assign index = 0
+        assign color_maximum = settings.color_maximum
+        if settings.color_maximum == 0
+          assign color_maximum = 2
+        endif
+        assign first = true
+        assign colors = shop.metafields.ecomrise.colors.value
+        assign color_values = shop.metaobjects.theme_swatch.values | first
+        assign colors_2 = color_values.colors.value
+      -%}
+      <hdt-variant-option class="hdt-variant-option--{%- if is_color -%} color{%- elsif is_size -%} size{%- else -%} default{%- endif -%}" data-option-position="{{ forloop.index }}"{%- if is_color -%} maximum="{{ color_maximum }}" event="{{ settings.color_event }}"{% if settings.enable_color_limit and option.values.size > color_maximum %} action-{{ settings.color_action }}{% endif %}{% if settings.enable_color_limit and settings.color_maximum == 0 %} auto-limit{% endif %}{%- endif -%}>
+        <span class="hdt-variant-label">{{ option.name }}:</span>
+        <span class="hdt-variant-selected" update-value>{{ option.selected_value }}</span>
+        
+        <fieldset class="hdt-variants-list">
+          {%- for value in option.values -%}
+            {%- liquid
+              unless value.variant
+                continue
+              endunless
+              if settings.color_type == 'only' and value.variant.available == false
+                continue
+              endif
+              assign index = index | plus: 1
+              assign variant_key = product.variants | where: "option1", value | first
+              assign featured_image = value.variant.featured_image | default: variant_key.featured_image
+              assign color_handle = value | handle
+              assign color_downcase = value | downcase
+              assign color_obj = colors[color_handle] | default: colors_2[color_handle]
+              if color_obj.imageName != blank and featured_image == blank
+                assign featured_image = images[color_obj.imageName]
+              endif
+            -%}
+            {%- capture color_style -%}
+              {%- if value.swatch.color -%}--hdt-bg-color: {{ value.swatch.color }};{%- endif -%}
+              {%- if featured_image != null and settings.image_source == 'variant_img' -%}--hdt-bg-image: url('{{ featured_image | image_url: width: 80 }}'){%- elsif value.swatch.image != blank -%}--hdt-bg-image: url('{{ value.swatch.image | image_url: width: 80 }}'){%- elsif color_obj.colorsCSS != blank -%}{{ color_obj.colorsCSS }}{%- endif -%}
+            {%- endcapture -%}
+            {%- comment -%} {%- if value == option.selected_value %} active{% endif %} {%- endcomment -%}
+            <hdt-tooltip class="hdt-swatch-item {%- if value == option.selected_value %} active{% endif %} {%- if settings.enable_color_limit and index > color_maximum and first %}{% assign first = false %} is--swatch-limit{% endif %}" data-available="{{ value.variant.available | json }}" {%- if section.id contains 'search' or section.id contains 'exit' %} inner{% endif %} placement="top" {% if settings.color_type == 'only' and value.variant.available == false %} hidden{% endif %}>
+              <hdt-swatch-card class="hdt-swatch-card {%- if is_color and settings.color_shape == 'cricle' %} hdt-radius-full{% endif %} {%- if color_white == color_downcase %} hdt-bg-color-white{% endif %}" data-opt="{{ option.position }}" data-vrid="{{ value.variant.id }}" data-product-url="{{ value.product_url }}" data-value-id="{{ value.id }}" {% if featured_image != null %} data-vimg="{{ featured_image | image_url: width: 80 }}"{% endif %} title="{{ value }}" {%- if color_list contains option_downcase %} style="{{ color_style }}"{% endif %}>
+                <span class="hdt-swatch-title {%- if color_list contains option_downcase %} sr-only{% endif %}">{{ value }}</span>
+              </hdt-swatch-card>
+            </hdt-tooltip>
+          {%- endfor -%}
+          {%- if color_list contains option_downcase and settings.enable_color_limit and index > color_maximum -%}
+            <hdt-tooltip class="hdt-swatch-item is--swatch-link">
+              <a data-pr-url href="{{ product.url }}" title="{{ 'products.product.show_more_colors' | t | escape }}">+{{ index | minus: color_maximum | abs }}</a>
+            </hdt-tooltip>
+          {%- endif -%}
+        </fieldset>
+      </hdt-variant-option>
+    {%- elsif settings.color_mode == 'count' -%}
+      <div class="hdt-color-list">
+        <p class="hdt-color-count">{{- 'products.product.colors_count' | t: count: option.values.size -}}</p>
+      </div>
+    {%- endif -%}
+  {%- elsif is_size and settings.size_position == '2' -%}
+    {%- if settings.size_mode == 'size' -%}    
+      {%- liquid
+        assign index = 0
+        assign size_maximum = settings.size_maximum
+        if settings.size_maximum == 0
+          assign size_maximum = 2
+        endif
+        assign first = true
+      -%}
+      <hdt-variant-option class="hdt-variant-option--{%- if is_size -%} size hdt-pe-none{%- else -%} default{%- endif -%}" data-option-position="{{ forloop.index }}" event="click" {%- if is_size %} maximum="{{ size_maximum }}"{% if settings.enable_size_limit and option.values.size > size_maximum %} action-{{ settings.size_action }}{% endif %}{% if settings.enable_size_limit and settings.size_maximum == 0 %} auto-limit{% endif %}{%- endif -%}>
+        <span class="hdt-variant-label">{{ option.name }}:</span>
+        <span class="hdt-variant-selected" update-value>{{ option.selected_value }}</span>
+        
+        <fieldset class="hdt-size-list hdt-variants-list">
+          {%- for value in option.values -%}
+            {%- liquid
+              unless value.variant
+                continue
+              endunless
+              if settings.size_type == 'only' and value.variant.available == false
+                continue
+              endif
+              assign index = index | plus: 1
+            -%}
+            <div class="hdt-swatch-item {%- if value == option.selected_value %} active{% endif %} {%- if settings.enable_size_limit and index > size_maximum and first %}{% assign first = false %} is--swatch-limit{% endif %}" data-available="{{ value.variant.available | json }}" {%- if section.id contains 'search' or section.id contains 'exit' %} inner{% endif %} placement="top" {% if settings.size_type == 'only' and value.variant.available == false %} hidden{% endif %}>
+              <hdt-swatch-card class="hdt-swatch-card" data-opt="{{ option.position }}" data-vrid="{{ variant.id }}" data-product-url="{{ value.product_url }}" data-value-id="{{ value.id }}">
+                <span class="hdt-swatch-title">{{ value }}</span>
+              </hdt-swatch-card>
+            </div>
+          {%- endfor -%}
+          {%- if size_list contains option_downcase and settings.enable_size_limit and index > size_maximum -%}
+            <hdt-tooltip class="hdt-swatch-item is--swatch-link">
+              <a data-pr-url href="{{ product_url }}" title="{{ 'products.product.show_more_sizes' | t | escape }}">+{{ index | minus: size_maximum | abs }}</a>
+            </hdt-tooltip>
+          {%- endif -%}
+        </fieldset>
+      </hdt-variant-option>
+    {%- elsif settings.size_mode == 'count' -%}
+      <div class="hdt-size-list">
+        <p class="hdt-size-count">{{- 'products.product.sizes_count' | t: count: option.values.size -}}</p>
+      </div>
+    {%- endif -%}
+  {%- else  -%}
+    <hdt-variant-option class="hdt-variant-option--default" hidden data-option-position="{{ forloop.index }}" event="click">
+      <span class="hdt-variant-label">{{ option.name }}:</span>
+      <span class="hdt-variant-selected" update-value>{{ option.selected_value }}</span>
+      
+      <fieldset class="hdt-variants-list">
+        {%- for value in option.values -%}
+          {%- liquid
+            unless value.variant
+              continue
+            endunless
+          -%}
+          <div class="hdt-swatch-item {%- if value == option.selected_value %} active{% endif %}" data-available="{%- if value.variant -%}true{%- else -%}false{%- endif -%}">
+            <hdt-swatch-card class="hdt-swatch-card {% if is_color and settings.color_shape == 'cricle' %} hdt-radius-full{% endif %}" data-opt="{{ option.position }}" data-vrid="{{ variant.id }}" data-product-url="{{ value.product_url }}" data-value-id="{{ value.id }}">
+              <span class="hdt-swatch-title">{{ value }}</span>
+            </hdt-swatch-card>
+          </div>
+        {%- endfor -%}
+      </fieldset>
+    </hdt-variant-option>
+  {%- endif -%}
+{%- endfor -%}

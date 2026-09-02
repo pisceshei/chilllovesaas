@@ -1,0 +1,434 @@
+{
+  "sections": {
+    "166030916025f51775": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ":where(h1,h2,h3).m\\:text-black {\n  color: #0F4226;\n}\n\n.m-slider--home .m-slider-controls {\n  --swiper-controls-color: #0F4226 !important;\n}\n.m-slider--home .m-slide__title {\n  margin-bottom: 16px;\n}\n.m-slider--home .m-slide__description {\n  color: rgb(var(--color-button));\n  font-size: 20px;\n  margin-bottom: 38px;\n  font-weight: 600;\n  font-family: 'M-Body-Font';\n}\n\n.m-featured-collection--home .m-product-card.m-product-card--style-4 {\n  padding: 20px 20px 28px;\n  background-color: #fff;\n}\n.m-featured-collection--home .m-product-card.m-product-card--style-4:hover {\n  box-shadow: 0px 10px 30px 0px rgba(0,0,0,0.08);\n}\n\n.m-icon-box--home .m-icon-box__heading {\n  font-size: 20px;\n  line-height: 1.2;\n  color: rgb(var(--color-forceground));\n  margin-bottom: 15px;\n}\n\n.m-collection-card__title {\n  font-weight: var(--font-weight-header) !important;\n}\n.m-collection-list--home .m-collection-card__link {\n  color: #000;\n}\n.m-collection-list--home .m-collection-card__link:hover {\n  color: var(--color-primary);\n}\n\n.m-testimonial--home .m-section__heading {\n  font-size: 20px;\n  line-height: 1.2;\n}\n.m-testimonial--home .m-testimonial__description {\n  font-family: 'M-Heading-Font';\n  font-size: 34px;\n  margin-bottom: 34px;\n  line-height: 1.5;\n  color: #0F4226;\n}\n.m-testimonial--home .m-testimonial__name,\n.m-testimonial--home .m-testimonial__fraction {\n  font-weight: 700 !important;\n}\n.sf-instagram-description__button {\n  margin-top: 40px;\n}\n.sf-instagram-description__button a {\n  text-decoration: none;\n  font-weight: 700;\n  display: inline-flex;\n  align-items: center;\npadding: 10px 20px;\ncolor: rgb(var(--color-button-text));\n}\n.sf-instagram-description__button a img {\n  width: 16px;\n  height: 16px;\n  margin-right: 8px;\n}\n\n.sf-btn--follow {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  font-weight: 700;\n  text-decoration: none;\n}\n\n@media(max-width: 767px) {\n  .m-iwt--home .m-richtext {\n  \ttext-align: center;\n  } \n  .m-testimonial--home .sf-testimonials-description { \n    font-size: 24px;\n  }\n  .m-testimonial--home .section__header {\n    margin-bottom: 40px;\n  }\n  .sf-instagram-description__button {\n    margin-top: 30px;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Every dog has<br>\ntheir dish",
+            "description": "<p>Great food starts with natural ingredients.</p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Every dog has<br>\ntheir dish",
+            "description": "<p>Great food starts with natural ingredients.</p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Every dog has<br>\ntheir dish",
+            "description": "<p>Great food starts with natural ingredients.</p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "custom_css": [".slide__block-title {color: #0f4226;}"],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1626366077b1048cd5": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "Organic, Plant-Based<br> \nSuperfoods",
+        "sub_title": "",
+        "text": "<p>We’ll make some perfectly personalised recommendations,<br/> tailored to your pet's needs. Flea protection from £6.50 a <br/>month and delicious food, delivered free.</p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Read More",
+        "button_link": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-iwt--home",
+        "animations": "inherit"
+      }
+    },
+    "1630658749b620aaca": {
+      "type": "icon-box",
+      "blocks": {
+        "1630658749772df696-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Fussy eaters love",
+            "description": "<p>The smell and taste of fresh meat is utterly<br/> irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1630658749772df696-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Good food, good looks",
+            "description": "<p>The smell and taste of fresh meat is utterly <br/>irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1630658749772df696-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Easy on the tummy",
+            "description": "<p>The smell and taste of fresh meat is utterly <br/>irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1630658749772df696-0",
+        "1630658749772df696-1",
+        "1630658749772df696-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "120px",
+        "content_alignment": "center",
+        "hover_effect": "zoom-in",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "1626365858fd9bd41d": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Our Products",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "We’ll make some perfectly personalised recommendations",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "pet",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "4",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1626366206dd6e4f93": {
+      "type": "collection-list",
+      "blocks": {
+        "1626366206dd6e4f93-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "For Baby Dogs"
+          }
+        },
+        "1626366206dd6e4f93-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "For 2-3 Years old"
+          }
+        },
+        "1626366206dd6e4f93-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "For 4-6 Years old"
+          }
+        }
+      },
+      "block_order": [
+        "1626366206dd6e4f93-0",
+        "1626366206dd6e4f93-1",
+        "1626366206dd6e4f93-2"
+      ],
+      "settings": {
+        "heading": "That's Right For Your Pet",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "We’ll make some perfectly personalised recommendations",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "16306608556b47daf7": {
+      "type": "testimonials",
+      "blocks": {
+        "16306608559f021ea5-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“I’m so blown away how he loves to eat all  his food right away”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16306608559f021ea5-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ Super class, cute, comfortable. You can wear them with just about anything.”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16306608559f021ea5-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“I’m so blown away how he loves to eat all  his food right away”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16306608559f021ea5-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ Super class, cute, comfortable. You can wear them with just about anything.”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16306608559f021ea5-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“I’m so blown away how he loves to eat all <br/>his food right away”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "16306608559f021ea5-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“ Super class, cute, comfortable. You can wear them with just about anything.”</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "16306608559f021ea5-0",
+        "16306608559f021ea5-1",
+        "16306608559f021ea5-2",
+        "16306608559f021ea5-3",
+        "16306608559f021ea5-4",
+        "16306608559f021ea5-5"
+      ],
+      "settings": {
+        "heading": "The review are in",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-4d14063e-d950-42f2-9695-f69e587ddd7b",
+        "design": "testimonials-4",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "star_color": "#feba2c",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-testimonial--home",
+        "animations": "inherit"
+      }
+    },
+    "16306617043627cfe6": {
+      "type": "instagram",
+      "custom_css": [],
+      "settings": {
+        "heading": "Share Your Story With <span style=\"color: rgb(var(--color-button));\">#Petbowl</span>",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "We’ll make some perfectly personalised recommendations",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 4,
+        "grid_columns": 4,
+        "gap": 30,
+        "mobile_gap": 16,
+        "button_label": "Follow @Petbowl",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-instagram--home"
+      }
+    }
+  },
+  "order": [
+    "166030916025f51775",
+    "1621243260e1af0c20",
+    "1626366077b1048cd5",
+    "1630658749b620aaca",
+    "1626365858fd9bd41d",
+    "1626366206dd6e4f93",
+    "16306608556b47daf7",
+    "16306617043627cfe6"
+  ]
+}

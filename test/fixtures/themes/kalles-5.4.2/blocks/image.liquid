@@ -1,0 +1,235 @@
+<!-- blocks/image.liquid -->
+<div class="hdt-block-image_{{ block.id }} hdt-ratio--{{ block.settings.image_ratio }}  hdt-eff-{{ block.settings.b_effect }} hdt-eff-img-{{ block.settings.img_effect }} hdt-relative">
+  {%- if section.settings.enable_border_corners -%}
+    <div class="hdt-about-us-border">
+      <span class="hdt-border-corners hdt-br-1 hdt-absolute"> </span>
+      <span class="hdt-border-corners hdt-br-2 hdt-absolute"> </span>
+      <span class="hdt-border-corners hdt-br-3 hdt-absolute"> </span>
+      <span class="hdt-border-corners hdt-br-4 hdt-absolute"> </span>
+    </div>
+  {%- endif -%}
+  {%- style -%}
+    {%- if block.settings.custom_width == 'custom' -%}
+      .hdt-block-image_{{ block.id }}{
+        width:{{ block.settings.image_w_mb }}%;
+      }
+      @media(min-width:768px){
+        .hdt-block-image_{{ block.id }}{
+          width:100%;
+          max-width:{{ block.settings.image_w }}%;
+        }
+      }
+    {% else %}
+      .hdt-block-image_{{ block.id }}{
+        width:100%;
+        max-width:100%;
+      }
+    {%- endif -%}
+    {%- if section.settings.hdt_disable_zoom -%}
+      .hdt-block-image_{{ block.id }} .hdt-image-wrap img {
+        pointer-events: none;
+        cursor: default;
+      } 
+    {%- endif -%}
+  {%- endstyle -%}
+  {%- if block.settings.img != blank -%}
+    <div class="hdt-image-wrap hdt-ratio hdt-oh {{ block.settings.rounded }}"{% if block.settings.image_ratio == 'adapt_image' %} style="--aspect-ratioapt:{{ block.settings.img.aspect_ratio | default: 1.777 }}"{% endif %}> 
+      {{ block.settings.img | image_url: width: block.settings.img.width | image_tag: loading: "lazy", width: block.settings.img.width, height: block.settings.img.height, class: "hdt-object-cover hdt-obj-eff", widths: '375,550,720,1100,1500,1780,1920,2000,2400,2600' }}
+    </div>
+  {%- else -%}
+    <div class="hdt-image-wrap hdt-ratio hdt-oh {{ block.settings.rounded }}" style="--aspect-ratioapt:{{ block.settings.img.aspect_ratio | default: 1.2 }}">
+      {{ 'detailed-apparel-1' | placeholder_svg_tag: 'hdt-placeholder-svg hdt-svg-bg hdt-obj-eff' }} 
+    </div>
+  {%- endif -%}
+</div>
+{% schema %}
+{
+  "name": "t:blocks.image.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "img",
+      "label": "t:blocks.image.settings.image.label"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt_image",
+          "label": "t:sections.all.images.ratio.adapt_image.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.all.images.ratio.square.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.all.images.ratio.portrait.label"
+        },
+        {
+          "value": "asos",
+          "label": "t:sections.all.images.ratio.asos.label"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.all.images.ratio.landscape.label"
+        }
+      ],
+      "label": "t:sections.all.images.ratio.label",
+      "default": "adapt_image"
+    },
+    {
+      "type": "select",
+      "id": "img_effect",
+      "label": "t:sections.all.image_effect.image_hover_eff.label",
+      "info": "t:sections.all.image_effect.image_hover_eff.info",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.none"
+        },
+        {
+          "value": "zoom",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.zoom"
+        },
+        {
+          "value": "rotate",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.rotate"
+        },
+        {
+          "value": "translateToTop",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.translateToTop"
+        },
+        {
+          "value": "translateToRight",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.translateToRight"
+        },
+        {
+          "value": "translateToBottom",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.translateToBottom"
+        },
+        {
+          "value": "translateToLeft",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.translateToLeft"
+        },
+        {
+          "value": "filter",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.filter"
+        },
+        {
+          "value": "bounceIn",
+          "label": "t:sections.all.image_effect.image_hover_eff.options.bounceIn"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "b_effect",
+      "label": "t:sections.all.image_effect.item_eff.label",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.all.image_effect.item_eff.options.none"
+        },
+        {
+          "value": "border-run",
+          "label": "t:sections.all.image_effect.item_eff.options.border_run"
+        },
+        {
+          "value": "pervasive-circle",
+          "label": "t:sections.all.image_effect.item_eff.options.pervasive_circle"
+        },
+        {
+          "value": "plus-zoom-overlay",
+          "label": "t:sections.all.image_effect.item_eff.options.plus_zoom_overlay"
+        },
+        {
+          "value": "overlay",
+          "label": "t:sections.all.image_effect.item_eff.options.overlay"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "custom_width",
+      "label": "t:blocks.image.settings.custom_width.label",
+      "options": [
+        {
+          "value": "full",
+          "label": "t:blocks.image.settings.custom_width.options.full"
+        },
+        {
+          "value": "custom",
+          "label": "t:blocks.image.settings.custom_width.options.custom"
+        }
+      ],
+      "default": "full"
+    },
+    {
+      "type": "range",
+      "id": "image_w",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "t:blocks.image.settings.image_w.label",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "image_w_mb",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "t:blocks.image.settings.image_w_mb.label",
+      "default": 50
+    },
+    {
+      "type": "select",
+      "id": "rounded",
+      "label": "t:blocks.column.settings.rounded.label",
+      "options": [
+        {
+          "value": "",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-opt-radius-none",
+          "label": "t:none"
+        },
+        {
+          "value": "hdt-opt-radius-xs",
+          "label": "t:blocks.column.settings.rounded.options.xs"
+        },
+        {
+          "value": "hdt-opt-radius-sm",
+          "label": "t:blocks.column.settings.rounded.options.sm"
+        },
+        {
+          "value": "hdt-opt-radius",
+          "label": "t:blocks.column.settings.rounded.options.medium"
+        },
+        {
+          "value": "hdt-opt-radius-lg",
+          "label": "t:blocks.column.settings.rounded.options.large"
+        },
+        {
+          "value": "hdt-opt-radius-full",
+          "label": "t:blocks.column.settings.rounded.options.full"
+        }
+      ],
+      "default": ""
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.image.name"
+    }
+  ]
+}
+{% endschema %} 

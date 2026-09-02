@@ -1,0 +1,143 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "blocks": {
+        "item_WcKXTw": {
+          "type": "item",
+          "settings": {
+            "message": "Free Delivery on orders over $200",
+            "message_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "item_WcKXTw"
+      ],
+      "disabled": true,
+      "settings": {
+        "container": "container",
+        "color_scheme": "dark",
+        "show_announcement": true,
+        "homepage_only": false,
+        "show_close": false,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "5e153016-a9d7-46c9-a10e-30d16446793d": {
+          "type": "topbar",
+          "settings": {
+            "color_scheme": "dark",
+            "show_divider": true,
+            "transparent_on_top": false,
+            "show_phone_numb": false,
+            "show_email": false,
+            "show_social_links": true,
+            "show_stores_page": false,
+            "show_currency_switcher": false,
+            "show_country_selector": true,
+            "show_language_switcher": true,
+            "alert_message": "<span>Open Doors To A World Of Fashion  |  <a class=\"sf__text-link  ml-1 underline\" href=\"\/collections\/all-products\">Discover More<\/a><span><\/span><\/span>"
+          }
+        },
+        "5b9aec5f-b955-4765-9a87-1962d613e909": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Home",
+            "container": "container-fluid",
+            "html": ""
+          }
+        },
+        "a820a1bc-dfc4-4e61-8c8a-de23659759a6": {
+          "type": "banner",
+          "settings": {
+            "heading": "Shops",
+            "container": "container-fluid",
+            "banner_style": "outside",
+            "banner_link": "",
+            "banner_title": "",
+            "banner_desc": "",
+            "banner_button_text": ""
+          }
+        },
+        "31481022-f698-4968-bf06-3c24f36b09e7": {
+          "type": "product-list",
+          "settings": {
+            "heading": "Products",
+            "container": "container-fluid",
+            "stretch_width": false,
+            "limit": 6,
+            "columns": 2
+          }
+        },
+        "55f22e17-5ac6-4383-a4af-e0e373c99b7a": {
+          "type": "banner",
+          "settings": {
+            "heading": "FoxKit",
+            "container": "inherit",
+            "banner_style": "outside",
+            "banner_title": "",
+            "banner_desc": "",
+            "banner_button_text": ""
+          }
+        }
+      },
+      "block_order": [
+        "5e153016-a9d7-46c9-a10e-30d16446793d",
+        "5b9aec5f-b955-4765-9a87-1962d613e909",
+        "a820a1bc-dfc4-4e61-8c8a-de23659759a6",
+        "31481022-f698-4968-bf06-3c24f36b09e7",
+        "55f22e17-5ac6-4383-a4af-e0e373c99b7a"
+      ],
+      "custom_css": [
+        ".logo-center__2l .m-header__left .m-search-form--full {min-width: 300px; flex-direction: row-reverse; border-radius: 0; border-width: 0 0 2px 0;}",
+        ".logo-center__2l .m-header__left .m-search-form--full .m-search-form__label {padding-left: 0;}",
+        ".logo-center__2l .m-header__left .m-search-form--full .m-search-form__button {padding-right: 0;}",
+        ".logo-center__2l .m-header__top .m-header__container {padding-top: 20px;}"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "color_scheme_menu": "default",
+        "header_design": "logo-center__2l",
+        "container": "container-fluid",
+        "sticky_header": "on_scroll_up",
+        "transparent_on_top": false,
+        "transparent_text_color": "#222222",
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 145,
+        "sticky_logo_max_width": 145,
+        "mobile_logo_max_width": 110,
+        "secondary_menu": "",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": false,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

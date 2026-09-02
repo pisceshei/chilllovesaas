@@ -1,0 +1,121 @@
+{% liquid
+  assign widths = '100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000'
+%}
+<div class="hdt-before-after-image hdt-ratio--{{ block.settings.image_ratio }}">
+  <hdt-before-after class="hdt-bf hdt-grid hdt-relative hdt-radius hdt-oh">
+    <div class="hdt-bf__img hdt-bf__img-before hdt-grid-1x1 hdt-relative" >
+      {%- if block.settings.first_img != blank -%}
+        <div class="hdt-ratio" style="--aspect-ratioapt:{{ block.settings.first_img.aspect_ratio }}">
+          {{ block.settings.first_img | image_url: width: block.settings.first_img.width | image_tag: loading: 'lazy', width: block.settings.first_img.width, height: block.settings.first_img.height, sizes: sizes, widths: widths }}
+        </div>
+        {%- else -%}
+            <div class="hdt-ratio" style="--aspect-ratioapt:1.2">{{ 'hero-apparel-1' | placeholder_svg_tag: 'hdt-placeholder-svg' }}</div>
+        {%- endif -%}
+      {% if block.settings.first_text != blank %}
+        <div class="hdt-first-text hdt-ba-text hdt-absolute">
+          <span class="hdt-text-center">{{ block.settings.first_text }}</span>
+        </div>
+      {% endif %}
+    </div>
+    <div class="hdt-bf__img hdt-bf__img-after hdt-grid-1x1 hdt-relative">
+      {%- if block.settings.second_img != blank -%}
+        <div class="hdt-ratio" style="--aspect-ratioapt:{{ block.settings.second_img.aspect_ratio }}">
+            {{ block.settings.second_img | image_url: width: block.settings.second_img.width | image_tag: loading: 'lazy', width: block.settings.second_img.width, height: block.settings.second_img.height, sizes: sizes, widths: widths }}
+        </div>
+      {%- else -%}
+        <div class="hdt-ratio" style="--aspect-ratioapt:1.2 ">
+          {{ 'hero-apparel-1' | placeholder_svg_tag: 'hdt-placeholder-svg' }}
+        </div>
+      {%- endif -%}
+      {% if block.settings.second_text != blank %}
+        <div class="hdt-second-text hdt-ba-text hdt-absolute">
+          <span class="hdt-text-center">{{ block.settings.second_text }}</span>
+        </div>
+      {% endif %}
+    </div>
+    <input type="range" min="0" max="100" value="{{ block.settings.initial_drag_pos }}" aria-label="{{ 'accessibility.before_after' | t | escape }}" class="hdt-bf__range hdt-full-width-link" />
+    <div class="hdt-bf__line hdt-grid-1x1" aria-hidden="true"></div>
+    <div class="hdt-testimonial-bf_button hdt-bf__button hdt-grid-1x1 hdt-flex hdt-justify-center hdt-align-center hdt-relative" aria-hidden="true">
+      <svg width="6" height="8" viewBox="0 0 6 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1" height="8" fill="currentColor"/>
+        <rect x="2.5" width="1" height="8" fill="currentColor"/>
+        <rect x="5" width="1" height="8" fill="currentColor"/>
+        </svg>      
+    </div>
+  </hdt-before-after>
+</div>
+{% schema %}
+  {
+    "name": "Before After",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "first_img",
+        "label": "First Image"
+      },
+      {
+        "type": "image_picker",
+        "id": "second_img",
+        "label": "Second Image"
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "options": [
+          {
+            "value": "adapt_image",
+            "label": "t:sections.all.images.ratio.adapt_image.label"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.images.ratio.square.label"
+          },
+          {
+            "value": "asos",
+            "label": "t:sections.all.images.ratio.asos.label"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.images.ratio.landscape.label"
+          }
+        ],
+        "label": "t:sections.all.images.ratio.label",
+        "default": "square"
+      },
+      {
+        "type": "checkbox",
+        "id": "image_size",
+        "label": "t:sections.all.images.size.cover",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "first_text",
+        "label": "First Text",
+        "default": "Before"
+      },
+      {
+        "type": "text",
+        "id": "second_text",
+        "label": "Second Text",
+        "default": "After"
+      },
+      {
+        "type": "range",
+        "id": "initial_drag_pos",
+        "label": "Initial Drag Position",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "default": 50
+      },
+    ],
+    "presets": [
+      {
+        "name": "Before After"
+      }
+    ]
+  }
+{% endschema %}

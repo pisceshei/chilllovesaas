@@ -1,0 +1,914 @@
+<hdt-accordion class="hdt-contents" {{ block.shopify_attributes }}>
+  <details class="hdt-widget hdt-widget-iconbox" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content">
+      <div class="hdt-iconbox-list hdt-row-grid hdt-ratio--square hdt-object-cover lg:hdt-grid-cols-1">
+        {%- for i in (1..4) -%}
+          {%- liquid
+            assign icon_svg = 'icon_svg' | append: i
+            assign custom_svg = 'custom_svg' | append: i
+            assign iconbox_icon_img = 'iconbox_icon_img' | append: i
+            assign iconbox_content = 'iconbox_content' | append: i
+            assign link_item = 'link_item' | append: i
+            assign icon_svg = block.settings[icon_svg]
+            assign custom_svg = block.settings[custom_svg]
+            assign iconbox_icon_img = block.settings[iconbox_icon_img]
+            assign iconbox_content = block.settings[iconbox_content]
+            assign link_item = block.settings[link_item] -%}
+          {%- if iconbox_content != blank -%}
+            {%- assign iconbox_content = iconbox_content | replace: ' _', '_' | replace: '_ ', '_' | split: '_' -%}
+            <div class="hdt-iconbox-item hdt-flex hdt-align-center hdt-relative">
+              {% if link_item != blank %}<a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ link_item }}"></a>{% endif %}
+              <span class="hdt-iconbox-icon hdt-flex hdt-align-center hdt-justify-center">
+                {%- if iconbox_icon_img != blank -%}
+                  {{ iconbox_icon_img | image_url: width: iconbox_icon_img.width | image_tag: loading: 'lazy', width: iconbox_icon_img.width, height: iconbox_icon_img.height, class: '' , sizes: sizes, widths: "24, 52, 48, 104, 120, 240" }}
+                {%- elsif custom_svg != blank  -%}
+                  {{ custom_svg }}
+                {%- else -%}
+                  {%- render 'icons', icon: icon_svg -%}
+                {%- endif -%}
+              </span>
+              <div class="hdt-iconbox-content">
+                <h4 class="hdt-sidebar-iconbox-title hdt-text-lg hdt-font-semibold">{{ iconbox_content[0] }}</h4>
+                <p class="hdt-sidebar-iconbox-desc hdt-text-base hdt-font-normal">{{ iconbox_content[1] }}</p>
+              </div>
+            </div>
+          {%- endif -%}
+      {%- endfor -%}
+      </div>
+    </div>
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:sections.main-collection.blocks.iconbox.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "widget_heading",
+        "label": "t:sections.main-collection.blocks.heading",
+        "default": "Shipping & Delivery"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.main-collection.blocks.iconbox.iconbox_item1.label"
+      },
+      {
+        "type": "select",
+        "id": "icon_svg1",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.icon_svg1",
+        "default": "truck",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:blocks.icon.options.none"
+          },
+          {
+            "value": "arrow_right",
+            "label": "t:blocks.icon.options.arrow_right"
+          },
+          {
+            "value": "arrow_simple",
+            "label": "t:blocks.icon.options.arrow_simple"
+          },
+          {
+            "value": "arrow_bottom",
+            "label": "t:blocks.icon.options.arrow_bottom"
+          },
+          {
+            "value": "arrow_stretch",
+            "label": "t:blocks.icon.options.arrow_stretch"
+          },
+          {
+            "value": "car",
+            "label": "t:blocks.icon.options.car"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "diamond",
+            "label": "t:blocks.icon.options.diamond"
+          },
+          {
+            "value": "door-lock",
+            "label": "t:blocks.icon.options.door_lock"
+          },
+          {
+            "value": "gym",
+            "label": "t:blocks.icon.options.gym"
+          },
+          {
+            "value": "hammer",
+            "label": "t:blocks.icon.options.hammer"
+          },
+          {
+            "value": "headphones",
+            "label": "t:blocks.icon.options.headphones"
+          },
+          {
+            "value": "helm",
+            "label": "t:blocks.icon.options.helm"
+          },
+          {
+            "value": "hourglass",
+            "label": "t:blocks.icon.options.hourglass"
+          },
+          {
+            "value": "map",
+            "label": "t:blocks.icon.options.map"
+          },
+          {
+            "value": "piggy",
+            "label": "t:blocks.icon.options.piggy"
+          },
+          {
+            "value": "refesh",
+            "label": "t:blocks.icon.options.refesh"
+          },
+          {
+            "value": "rocket",
+            "label": "t:blocks.icon.options.rocket"
+          },
+          {
+            "value": "shield",
+            "label": "t:blocks.icon.options.shield"
+          },
+          {
+            "value": "shield2",
+            "label": "t:blocks.icon.options.shield_2"
+          },
+          {
+            "value": "smile",
+            "label": "t:blocks.icon.options.smile"
+          },
+          {
+            "value": "scissors",
+            "label": "t:blocks.icon.options.scissors"
+          },
+          {
+            "value": "shuffle",
+            "label": "t:blocks.icon.options.shuffle"
+          },
+          {
+            "value": "cloud_upload",
+            "label": "t:blocks.icon.options.cloud_upload"
+          },
+          {
+            "value": "cash",
+            "label": "t:blocks.icon.options.cash"
+          },
+          {
+            "value": "way",
+            "label": "t:blocks.icon.options.way"
+          },
+          {
+            "value": "wristwatch",
+            "label": "t:blocks.icon.options.wristwatch"
+          },
+          {
+            "value": "world",
+            "label": "t:blocks.icon.options.world"
+          },
+          {
+            "value": "wallet",
+            "label": "t:blocks.icon.options.wallet"
+          },
+          {
+            "value": "unlock",
+            "label": "t:blocks.icon.options.unlock"
+          },
+          {
+            "value": "umbrella",
+            "label": "t:blocks.icon.options.umbrella"
+          },
+          {
+            "value": "repeat",
+            "label": "t:blocks.icon.options.repeat"
+          },
+          {
+            "value": "refesh-2",
+            "label": "t:blocks.icon.options.refesh_2"
+          },
+          {
+            "value": "medal",
+            "label": "t:blocks.icon.options.medal"
+          },
+          {
+            "value": "portfolio",
+            "label": "t:blocks.icon.options.portfolio"
+          },
+          {
+            "value": "like",
+            "label": "t:blocks.icon.options.like"
+          },
+          {
+            "value": "plance",
+            "label": "t:blocks.icon.options.plance"
+          },
+          {
+            "value": "map-maker",
+            "label": "t:blocks.icon.options.map_maker"
+          },
+          {
+            "value": "help",
+            "label": "t:blocks.icon.options.help"
+          },
+          {
+            "value": "gift",
+            "label": "t:blocks.icon.options.gift"
+          },
+          {
+            "value": "cart",
+            "label": "t:blocks.icon.options.cart"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "back",
+            "label": "t:blocks.icon.options.back"
+          },
+          {
+            "value": "back2",
+            "label": "t:blocks.icon.options.back2"
+          }
+        ],
+      },
+      {
+        "type": "textarea",
+        "id": "custom_svg1",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.custom_svg1",
+        "info": "[Remixicon](https://remixicon.com/)"
+      },
+      {
+        "type": "image_picker",
+        "id": "iconbox_icon_img1",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_icon_img1.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_icon_img1.info"
+      },
+      {
+        "type": "textarea",
+        "id": "iconbox_content1",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_content1.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item1.iconbox_content1.info",
+        "default": "FREE SHIPPING_ Free shipping for all US orders"
+      },
+      {
+        "type": "url",
+        "id": "link_item1",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item1.link_item1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.main-collection.blocks.iconbox.iconbox_item2.label"
+      },
+      {
+        "type": "select",
+        "id": "icon_svg2",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.icon_svg2",
+        "default": "headphones",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:blocks.icon.options.none"
+          },
+          {
+            "value": "arrow_right",
+            "label": "t:blocks.icon.options.arrow_right"
+          },
+          {
+            "value": "arrow_simple",
+            "label": "t:blocks.icon.options.arrow_simple"
+          },
+          {
+            "value": "arrow_bottom",
+            "label": "t:blocks.icon.options.arrow_bottom"
+          },
+          {
+            "value": "arrow_stretch",
+            "label": "t:blocks.icon.options.arrow_stretch"
+          },
+          {
+            "value": "car",
+            "label": "t:blocks.icon.options.car"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "diamond",
+            "label": "t:blocks.icon.options.diamond"
+          },
+          {
+            "value": "door-lock",
+            "label": "t:blocks.icon.options.door_lock"
+          },
+          {
+            "value": "gym",
+            "label": "t:blocks.icon.options.gym"
+          },
+          {
+            "value": "hammer",
+            "label": "t:blocks.icon.options.hammer"
+          },
+          {
+            "value": "headphones",
+            "label": "t:blocks.icon.options.headphones"
+          },
+          {
+            "value": "helm",
+            "label": "t:blocks.icon.options.helm"
+          },
+          {
+            "value": "hourglass",
+            "label": "t:blocks.icon.options.hourglass"
+          },
+          {
+            "value": "map",
+            "label": "t:blocks.icon.options.map"
+          },
+          {
+            "value": "piggy",
+            "label": "t:blocks.icon.options.piggy"
+          },
+          {
+            "value": "refesh",
+            "label": "t:blocks.icon.options.refesh"
+          },
+          {
+            "value": "rocket",
+            "label": "t:blocks.icon.options.rocket"
+          },
+          {
+            "value": "shield",
+            "label": "t:blocks.icon.options.shield"
+          },
+          {
+            "value": "shield2",
+            "label": "t:blocks.icon.options.shield_2"
+          },
+          {
+            "value": "smile",
+            "label": "t:blocks.icon.options.smile"
+          },
+          {
+            "value": "scissors",
+            "label": "t:blocks.icon.options.scissors"
+          },
+          {
+            "value": "shuffle",
+            "label": "t:blocks.icon.options.shuffle"
+          },
+          {
+            "value": "cloud_upload",
+            "label": "t:blocks.icon.options.cloud_upload"
+          },
+          {
+            "value": "cash",
+            "label": "t:blocks.icon.options.cash"
+          },
+          {
+            "value": "way",
+            "label": "t:blocks.icon.options.way"
+          },
+          {
+            "value": "wristwatch",
+            "label": "t:blocks.icon.options.wristwatch"
+          },
+          {
+            "value": "world",
+            "label": "t:blocks.icon.options.world"
+          },
+          {
+            "value": "wallet",
+            "label": "t:blocks.icon.options.wallet"
+          },
+          {
+            "value": "unlock",
+            "label": "t:blocks.icon.options.unlock"
+          },
+          {
+            "value": "umbrella",
+            "label": "t:blocks.icon.options.umbrella"
+          },
+          {
+            "value": "repeat",
+            "label": "t:blocks.icon.options.repeat"
+          },
+          {
+            "value": "refesh-2",
+            "label": "t:blocks.icon.options.refesh_2"
+          },
+          {
+            "value": "medal",
+            "label": "t:blocks.icon.options.medal"
+          },
+          {
+            "value": "portfolio",
+            "label": "t:blocks.icon.options.portfolio"
+          },
+          {
+            "value": "like",
+            "label": "t:blocks.icon.options.like"
+          },
+          {
+            "value": "plance",
+            "label": "t:blocks.icon.options.plance"
+          },
+          {
+            "value": "map-maker",
+            "label": "t:blocks.icon.options.map_maker"
+          },
+          {
+            "value": "help",
+            "label": "t:blocks.icon.options.help"
+          },
+          {
+            "value": "gift",
+            "label": "t:blocks.icon.options.gift"
+          },
+          {
+            "value": "cart",
+            "label": "t:blocks.icon.options.cart"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "back",
+            "label": "t:blocks.icon.options.back"
+          },
+          {
+            "value": "back2",
+            "label": "t:blocks.icon.options.back2"
+          }
+        ],
+      },
+      {
+        "type": "textarea",
+        "id": "custom_svg2",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.custom_svg2",
+        "info": "[Remixicon](https://remixicon.com/)"
+      },
+      {
+        "type": "image_picker",
+        "id": "iconbox_icon_img2",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_icon_img2.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_icon_img2.info"
+      },
+      {
+        "type": "textarea",
+        "id": "iconbox_content2",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_content2.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item2.iconbox_content2.info",
+        "default": "SUPPORT 24/7_ We support 24 hours a day"
+      },
+      {
+        "type": "url",
+        "id": "link_item2",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item2.link_item2"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.main-collection.blocks.iconbox.iconbox_item3.label"
+      },
+      {
+        "type": "select",
+        "id": "icon_svg3",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.icon_svg3",
+        "default": "refesh-2",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:blocks.icon.options.none"
+          },
+          {
+            "value": "arrow_right",
+            "label": "t:blocks.icon.options.arrow_right"
+          },
+          {
+            "value": "arrow_simple",
+            "label": "t:blocks.icon.options.arrow_simple"
+          },
+          {
+            "value": "arrow_bottom",
+            "label": "t:blocks.icon.options.arrow_bottom"
+          },
+          {
+            "value": "arrow_stretch",
+            "label": "t:blocks.icon.options.arrow_stretch"
+          },
+          {
+            "value": "car",
+            "label": "t:blocks.icon.options.car"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "diamond",
+            "label": "t:blocks.icon.options.diamond"
+          },
+          {
+            "value": "door-lock",
+            "label": "t:blocks.icon.options.door_lock"
+          },
+          {
+            "value": "gym",
+            "label": "t:blocks.icon.options.gym"
+          },
+          {
+            "value": "hammer",
+            "label": "t:blocks.icon.options.hammer"
+          },
+          {
+            "value": "headphones",
+            "label": "t:blocks.icon.options.headphones"
+          },
+          {
+            "value": "helm",
+            "label": "t:blocks.icon.options.helm"
+          },
+          {
+            "value": "hourglass",
+            "label": "t:blocks.icon.options.hourglass"
+          },
+          {
+            "value": "map",
+            "label": "t:blocks.icon.options.map"
+          },
+          {
+            "value": "piggy",
+            "label": "t:blocks.icon.options.piggy"
+          },
+          {
+            "value": "refesh",
+            "label": "t:blocks.icon.options.refesh"
+          },
+          {
+            "value": "rocket",
+            "label": "t:blocks.icon.options.rocket"
+          },
+          {
+            "value": "shield",
+            "label": "t:blocks.icon.options.shield"
+          },
+          {
+            "value": "shield2",
+            "label": "t:blocks.icon.options.shield_2"
+          },
+          {
+            "value": "smile",
+            "label": "t:blocks.icon.options.smile"
+          },
+          {
+            "value": "scissors",
+            "label": "t:blocks.icon.options.scissors"
+          },
+          {
+            "value": "shuffle",
+            "label": "t:blocks.icon.options.shuffle"
+          },
+          {
+            "value": "cloud_upload",
+            "label": "t:blocks.icon.options.cloud_upload"
+          },
+          {
+            "value": "cash",
+            "label": "t:blocks.icon.options.cash"
+          },
+          {
+            "value": "way",
+            "label": "t:blocks.icon.options.way"
+          },
+          {
+            "value": "wristwatch",
+            "label": "t:blocks.icon.options.wristwatch"
+          },
+          {
+            "value": "world",
+            "label": "t:blocks.icon.options.world"
+          },
+          {
+            "value": "wallet",
+            "label": "t:blocks.icon.options.wallet"
+          },
+          {
+            "value": "unlock",
+            "label": "t:blocks.icon.options.unlock"
+          },
+          {
+            "value": "umbrella",
+            "label": "t:blocks.icon.options.umbrella"
+          },
+          {
+            "value": "repeat",
+            "label": "t:blocks.icon.options.repeat"
+          },
+          {
+            "value": "refesh-2",
+            "label": "t:blocks.icon.options.refesh_2"
+          },
+          {
+            "value": "medal",
+            "label": "t:blocks.icon.options.medal"
+          },
+          {
+            "value": "portfolio",
+            "label": "t:blocks.icon.options.portfolio"
+          },
+          {
+            "value": "like",
+            "label": "t:blocks.icon.options.like"
+          },
+          {
+            "value": "plance",
+            "label": "t:blocks.icon.options.plance"
+          },
+          {
+            "value": "map-maker",
+            "label": "t:blocks.icon.options.map_maker"
+          },
+          {
+            "value": "help",
+            "label": "t:blocks.icon.options.help"
+          },
+          {
+            "value": "gift",
+            "label": "t:blocks.icon.options.gift"
+          },
+          {
+            "value": "cart",
+            "label": "t:blocks.icon.options.cart"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "back",
+            "label": "t:blocks.icon.options.back"
+          },
+          {
+            "value": "back2",
+            "label": "t:blocks.icon.options.back2"
+          }
+        ],
+      },
+      {
+        "type": "textarea",
+        "id": "custom_svg3",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.custom_svg3",
+        "info": "[Remixicon](https://remixicon.com/)"
+      },
+      {
+        "type": "image_picker",
+        "id": "iconbox_icon_img3",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_icon_img3.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_icon_img3.info"
+      },
+      {
+        "type": "textarea",
+        "id": "iconbox_content3",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_content3.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item3.iconbox_content3.info",
+        "default": "30 DAYS RETURN_ You have 30 days to return"
+      },
+      {
+        "type": "url",
+        "id": "link_item3",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item3.link_item3"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.main-collection.blocks.iconbox.iconbox_item4.label"
+      },
+      {
+        "type": "select",
+        "id": "icon_svg4",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.icon_svg4",
+        "default": "car",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:blocks.icon.options.none"
+          },
+          {
+            "value": "arrow_right",
+            "label": "t:blocks.icon.options.arrow_right"
+          },
+          {
+            "value": "arrow_simple",
+            "label": "t:blocks.icon.options.arrow_simple"
+          },
+          {
+            "value": "arrow_bottom",
+            "label": "t:blocks.icon.options.arrow_bottom"
+          },
+          {
+            "value": "arrow_stretch",
+            "label": "t:blocks.icon.options.arrow_stretch"
+          },
+          {
+            "value": "car",
+            "label": "t:blocks.icon.options.car"
+          },
+          {
+            "value": "truck",
+            "label": "t:blocks.icon.options.truck"
+          },
+          {
+            "value": "diamond",
+            "label": "t:blocks.icon.options.diamond"
+          },
+          {
+            "value": "door-lock",
+            "label": "t:blocks.icon.options.door_lock"
+          },
+          {
+            "value": "gym",
+            "label": "t:blocks.icon.options.gym"
+          },
+          {
+            "value": "hammer",
+            "label": "t:blocks.icon.options.hammer"
+          },
+          {
+            "value": "headphones",
+            "label": "t:blocks.icon.options.headphones"
+          },
+          {
+            "value": "helm",
+            "label": "t:blocks.icon.options.helm"
+          },
+          {
+            "value": "hourglass",
+            "label": "t:blocks.icon.options.hourglass"
+          },
+          {
+            "value": "map",
+            "label": "t:blocks.icon.options.map"
+          },
+          {
+            "value": "piggy",
+            "label": "t:blocks.icon.options.piggy"
+          },
+          {
+            "value": "refesh",
+            "label": "t:blocks.icon.options.refesh"
+          },
+          {
+            "value": "rocket",
+            "label": "t:blocks.icon.options.rocket"
+          },
+          {
+            "value": "shield",
+            "label": "t:blocks.icon.options.shield"
+          },
+          {
+            "value": "shield2",
+            "label": "t:blocks.icon.options.shield_2"
+          },
+          {
+            "value": "smile",
+            "label": "t:blocks.icon.options.smile"
+          },
+          {
+            "value": "scissors",
+            "label": "t:blocks.icon.options.scissors"
+          },
+          {
+            "value": "shuffle",
+            "label": "t:blocks.icon.options.shuffle"
+          },
+          {
+            "value": "cloud_upload",
+            "label": "t:blocks.icon.options.cloud_upload"
+          },
+          {
+            "value": "cash",
+            "label": "t:blocks.icon.options.cash"
+          },
+          {
+            "value": "way",
+            "label": "t:blocks.icon.options.way"
+          },
+          {
+            "value": "wristwatch",
+            "label": "t:blocks.icon.options.wristwatch"
+          },
+          {
+            "value": "world",
+            "label": "t:blocks.icon.options.world"
+          },
+          {
+            "value": "wallet",
+            "label": "t:blocks.icon.options.wallet"
+          },
+          {
+            "value": "unlock",
+            "label": "t:blocks.icon.options.unlock"
+          },
+          {
+            "value": "umbrella",
+            "label": "t:blocks.icon.options.umbrella"
+          },
+          {
+            "value": "repeat",
+            "label": "t:blocks.icon.options.repeat"
+          },
+          {
+            "value": "refesh-2",
+            "label": "t:blocks.icon.options.refesh_2"
+          },
+          {
+            "value": "medal",
+            "label": "t:blocks.icon.options.medal"
+          },
+          {
+            "value": "portfolio",
+            "label": "t:blocks.icon.options.portfolio"
+          },
+          {
+            "value": "like",
+            "label": "t:blocks.icon.options.like"
+          },
+          {
+            "value": "plance",
+            "label": "t:blocks.icon.options.plance"
+          },
+          {
+            "value": "map-maker",
+            "label": "t:blocks.icon.options.map_maker"
+          },
+          {
+            "value": "help",
+            "label": "t:blocks.icon.options.help"
+          },
+          {
+            "value": "gift",
+            "label": "t:blocks.icon.options.gift"
+          },
+          {
+            "value": "cart",
+            "label": "t:blocks.icon.options.cart"
+          },
+          {
+            "value": "box",
+            "label": "t:blocks.icon.options.box"
+          },
+          {
+            "value": "back",
+            "label": "t:blocks.icon.options.back"
+          },
+          {
+            "value": "back2",
+            "label": "t:blocks.icon.options.back2"
+          }
+        ],
+      },
+      {
+        "type": "textarea",
+        "id": "custom_svg4",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.custom_svg4",
+        "info": "[Remixicon](https://remixicon.com/)"
+      },
+      {
+        "type": "image_picker",
+        "id": "iconbox_icon_img4",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_icon_img4.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_icon_img4.info"
+      },
+      {
+        "type": "textarea",
+        "id": "iconbox_content4",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_content4.label",
+        "info": "t:sections.main-collection.blocks.iconbox.iconbox_item4.iconbox_content4.info"
+      },
+      {
+        "type": "url",
+        "id": "link_item4",
+        "label": "t:sections.main-collection.blocks.iconbox.iconbox_item4.link_item4"
+      }
+    ],
+    "presets":[ 
+      {
+        "name":"t:sections.main-collection.blocks.iconbox.name"
+      }
+    ]
+  }
+{% endschema %}

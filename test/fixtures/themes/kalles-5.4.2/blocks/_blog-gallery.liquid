@@ -1,0 +1,172 @@
+
+{%- liquid
+  assign open_link = block.settings.open_link
+  assign ARRhtml1 = 'a,,' | split: ','
+  assign ARRhtml2 = 'div,data-' | split: ','
+-%}
+<hdt-accordion class="hdt-contents" {{ block.shopify_attributes }}>
+  <details class="hdt-widget hdt-widget-gallery" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content">
+      <div class="hdt-gallery-list hdt-row-grid hdt-justify-center hdt-ratio--square hdt-object-cover hdt-grid-cols-3">
+        {%- capture sizes -%}
+          (100% - 8px) * 1 / 3)
+        {%- endcapture -%}
+        {%- for i in (1..9) -%}
+          {%- liquid
+            assign image_list = 'img' | append: i
+            assign image_url_list = 'link' | append: i
+            assign url = block.settings[image_url_list]
+            assign image = block.settings[image_list]
+            if url == blank
+                assign ARRhtml = ARRhtml2
+            else
+                assign ARRhtml = ARRhtml1
+            endif
+          -%}
+          {%- if image != blank -%}
+            <div class="hdt-col-item hdt-gallery-item">
+              <{{ ARRhtml[0] }} {{ ARRhtml[1] }}href="{{ url }}" {{ ARRhtml[2] }}target="{{ open_link }}" class="hdt-effect hdt-relative hdt-oh hdt-d-block">
+                <div class="hdt-ratio" style="background: url({{ image | image_url: width: 1 }});">
+                  {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: '' , sizes: sizes, widths: "110, 150, 200, 300, 400, 500, 600" }}
+                </div>
+              </{{ ARRhtml[0] }}>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:sections.main-blogs.blocks.gallery.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "widget_heading",
+        "label": "t:sections.main-blogs.blocks.heading",
+        "default": "Gallery"
+      },
+      {
+        "type": "image_picker",
+        "id": "img1",
+        "label": "t:sections.main-blogs.blocks.gallery.img1"
+      },
+      {
+        "type": "url",
+        "id": "link1",
+        "label": "t:sections.main-blogs.blocks.gallery.link1"
+      },
+      {
+        "type": "image_picker",
+        "id": "img2",
+        "label": "t:sections.main-blogs.blocks.gallery.img2"
+      },
+      {
+        "type": "url",
+        "id": "link2",
+        "label": "t:sections.main-blogs.blocks.gallery.link2"
+      },
+      {
+        "type": "image_picker",
+        "id": "img3",
+        "label": "t:sections.main-blogs.blocks.gallery.img3"
+      },
+      {
+        "type": "url",
+        "id": "link3",
+        "label": "t:sections.main-blogs.blocks.gallery.link3"
+      },
+      {
+        "type": "image_picker",
+        "id": "img4",
+        "label": "t:sections.main-blogs.blocks.gallery.img4"
+      },
+      {
+        "type": "url",
+        "id": "link4",
+        "label": "t:sections.main-blogs.blocks.gallery.link4"
+      },
+      {
+        "type": "image_picker",
+        "id": "img5",
+        "label": "t:sections.main-blogs.blocks.gallery.img5"
+      },
+      {
+        "type": "url",
+        "id": "link5",
+        "label": "t:sections.main-blogs.blocks.gallery.link5"
+      },
+      {
+        "type": "image_picker",
+        "id": "img6",
+        "label": "t:sections.main-blogs.blocks.gallery.img6"
+      },
+      {
+        "type": "url",
+        "id": "link6",
+        "label": "t:sections.main-blogs.blocks.gallery.link6"
+      },
+      {
+        "type": "image_picker",
+        "id": "img7",
+        "label": "t:sections.main-blogs.blocks.gallery.img7"
+      },
+      {
+        "type": "url",
+        "id": "link7",
+        "label": "t:sections.main-blogs.blocks.gallery.link7"
+      },
+      {
+        "type": "image_picker",
+        "id": "img8",
+        "label": "t:sections.main-blogs.blocks.gallery.img8"
+      },
+      {
+        "type": "url",
+        "id": "link8",
+        "label": "t:sections.main-blogs.blocks.gallery.link8"
+      },
+      {
+        "type": "image_picker",
+        "id": "img9",
+        "label": "t:sections.main-blogs.blocks.gallery.img9"
+      },
+      {
+        "type": "url",
+        "id": "link9",
+        "label": "t:sections.main-blogs.blocks.gallery.link9"
+      },
+      {
+        "type": "select",
+        "id": "open_link",
+        "options": [
+          {
+            "value": "_self",
+            "label": "t:sections.main-blogs.blocks.gallery.open_link.current"
+          },
+          {
+            "value": "_blank",
+            "label": "t:sections.main-blogs.blocks.gallery.open_link.blank"
+          }
+        ],
+        "label": "t:sections.main-blogs.blocks.gallery.open_link.label",
+        "default": "_blank"
+      }
+    ],
+    "presets":[ 
+      {
+        "name":"t:sections.main-blogs.blocks.gallery.name"
+      }
+    ]
+  }
+{% endschema %}

@@ -1,0 +1,302 @@
+{% unless blog.articles.size > 0 %}
+  {% continue %}
+{% endunless %}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+
+  assign all_tags = blog.all_tags
+%}
+<div class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %}>
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+        {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    {% content_for 'block', type: 'section-heading', id: 'our-team' %}
+    <div class="">
+      <hdt-filter-sorting class="hdt-block" config='{ "selector": ".hdt-masonry-item" }'>
+        {%- if section.settings.filter_by_tag == '1' -%}
+          <div class="hdt-filter-sorting" style="--mgb: {{ section.settings.spacing_tab }}px;">
+            <button class="hdt-filter-item hdt-font-medium hdt-active" data-category="all">All</button>
+            {%- for tag in all_tags -%}
+              <button class="hdt-filter-item hdt-font-medium" data-category="{{ tag | handleize }}">{{ tag | remove: 'category' | strip }}</button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+        <hdt-masonry-layout class="hdt-block" config='{"col_dk": {{ section.settings.col_dk }}, "col_tb": {{ section.settings.col_tb }}, "col_mb": {{ section.settings.col_mb }}, "gap": {{ section.settings.spacing_dk }}, "gap_mb": {{ section.settings.spacing_mb }}, "selector": ".hdt-masonry-item" }'>
+          {%- for article in blog.articles -%}
+            {% assign image = article.image %}
+            <article class="hdt-masonry-item{% for tag in article.tags %} {{tag | handleize }}{% endfor %}">
+              <div class="hdt-masonry-item-inner">
+                {%- if image != blank -%}
+                  <a href="{{ article.url }}" class="hdt-portfolio-thumb hdt-flex hdt-items-center">
+                    <div class="hdt-masonry-item-image">
+                      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', class: 'hdt-masonry-item-image-inner' }}
+                    </div>
+                  </a>
+                {%- endif -%}
+                <div class="hdt-portfolio-info hdt-pe-none hdt-text-center">
+                  <h4 class="hdt-post-title hdt-s-text2">
+                    <a href="{{ article.url }}" class="hdt-uppercase hdt-block">{{ article.title }}</a>
+                  </h4>
+                  <div class="hdt-post-tags">
+                    {%- for tag in article.tags -%}
+                      <a href="{{ blog.url }}/tagged/{{ tag | handleize }}" class="hdt-post-tag hdt-s-text2">{{ tag | remove: 'category' | strip }}</a>
+                      {%- unless forloop.last -%} , {% endunless -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              </div>
+            </article>
+          {%- endfor -%}
+        </hdt-masonry-layout>
+      </hdt-filter-sorting>
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.portfolio.name",
+    "class": "hdt-portfolio",
+    "enabled_on": {
+      "templates": [
+        "blog"
+      ]
+    },
+    "settings": [
+      {
+        "type": "range",
+        "id": "spacing_tab",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.portfolio.spacing",
+        "default": 30
+      },
+      {
+        "type": "select",
+        "id": "col_dk",
+        "label": "t:sections.all.items_row.desktop",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          },
+          {
+            "value": "4",
+            "label": "4"
+          },
+        ],
+        "default": "3"
+      },
+      {
+        "type": "select",
+        "id": "col_tb",
+        "label": "t:sections.all.items_row.tablet",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          },
+          {
+            "value": "4",
+            "label": "4"
+          },
+        ],
+        "default": "2"
+      },
+      {
+        "type": "select",
+        "id": "col_mb",
+        "label": "t:sections.all.items_row.mobile",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          },
+        ],
+        "default": "2"
+      },
+      {
+        "type": "range",
+        "id": "spacing_dk",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.space_items.desktop",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "spacing_mb",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.space_items.mobile",
+        "default": 15
+      },
+      {
+        "type": "header",
+        "content": "t:sections.portfolio.settings.filter_by_tag.label"
+      },
+      {
+        "type": "select",
+        "id": "filter_by_tag",
+        "label": "t:sections.portfolio.settings.filter_by_tag.label",
+        "options": [
+          { "value": "0", "label": "t:sections.portfolio.settings.filter_by_tag.options.0" },
+          { "value": "1", "label": "t:sections.portfolio.settings.filter_by_tag.options.1" },
+          /*{ "value": "2", "label": "Manually block" }*/
+        ],
+        "default": "0"
+      },
+      /*{
+        "type": "checkbox",
+        "id": "show_count",
+        "label": "Show count",
+        "default": false,
+        "visible_if": "{{ section.settings.filter_by_tag == '1' }}"
+      },*/
+      {
+        "type": "header",
+        "content": "t:sections.all.section_layout.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.color_scheme",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "select",
+        "id": "section_layout",
+        "label": "t:sections.all.section_layout.width.label",
+        "options": [
+          {
+            "value": "container",
+            "label": "t:sections.all.section_layout.width.container"
+          },
+          {
+            "value": "wrapper_container",
+            "label": "t:sections.all.section_layout.width.wrapper_container"
+          },
+          {
+            "value": "full_width",
+            "label": "t:sections.all.section_layout.width.full_width"
+          }
+        ],
+        "default": "container"
+      },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+      
+    ],
+    "presets": [
+      {
+        "name": "t:sections.portfolio.name",
+        "category": "t:sections_categories.05_section.name"
+      }
+    ]
+  }
+{% endschema %}

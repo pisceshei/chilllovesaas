@@ -1,0 +1,253 @@
+{{ 'about-us.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign sizes = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+-%}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+  .hdt-about-us-container {
+    --button-video-pos-mobile: {{ section.settings.button_video_pos_mobile }}%;
+  }
+  @media (min-width: 768px) {
+    .hdt-about-us-container {
+      --button-video-pos-des: {{ section.settings.button_video_pos_des }}%;
+    }
+  }
+{% endstyle %}
+<div
+  class="hdt-container{% if section.settings.full_width %}-full{% endif %} hdt-about-us hdt-relative{% unless section.settings.section_background != blank %} hdt-no-background-image{% endunless %} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-section-spacing hdt-flex hdt-flex-col hdt-justify-center hdt-align-center hdt-section-spacing-{{ section.id }}">
+    {% content_for "block", type: "_button_video", id: 'button-video' %}
+    {% content_for 'blocks' %}
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{
+        image
+        | image_url: width: image.width
+        | image_tag:
+          width: image.width,
+          height: image.height,
+          sizes: sizes,
+          widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000',
+          loading: 'lazy',
+          class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center'
+      }}
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "About us",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer",
+      "custom.system"
+    ]
+  },
+  "class": "hdt-about-us-container",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false,
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_border_corners",
+      "label": "Enable border",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "button_video_pos_des",
+      "label": "Button video position",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 30,
+      "unit": "%"
+    },
+    {
+      "type": "range",
+      "id": "button_video_pos_mobile",
+      "label": "Button video position (Mobile)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 30,
+      "unit": "%"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image"
+    },
+    {
+      "type": "signature"
+    },
+    {
+      "type": "spacer"
+    },
+    
+  ],
+  "presets": [
+    {
+      "blocks": [
+        {
+          "type": "image",
+          "settings": {
+            "img": "shopify://shop_images/pexels-marcelochagas-2229490.jpg",
+            "image_ratio": "adapt_image",
+            "img_effect": "none",
+            "b_effect": "none",
+            "custom_width": "custom",
+            "image_w": 74,
+            "image_w_mb": 74
+          },
+        },
+        {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 16,
+            "space_md": 16,
+            "space": 16
+          },
+        },
+        {
+          "type": "signature",
+          "settings": {
+            "content_alignment": "center"
+          },
+          "blocks": [
+            {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 26
+              },
+            },
+            {
+              "type": "text",
+              "settings": {
+                "text": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+            }
+          ],
+        },
+        {
+          "id": "button-video",
+          "type": "_button_video",
+          "static": true,
+          "settings": {
+            "source": "youtube",
+            "external_video_url": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+            "click_action": "inline",
+            "enable_close": false,
+            "label": "",
+            "btn_style": "",
+            "size": "m",
+            "font_weight": "normal",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "icon": "play",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+        },
+      ],
+      "name": "About us",
+      "category": "t:sections_categories.05_section.name",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "full_width": false,
+        "enable_border_corners": true,
+        "button_video_pos_des": 48,
+        "button_video_pos_mobile": 26,
+        "mg": "50px,0px,50px, 0px",
+        "mg_mb": ",,0px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  ]
+}
+{% endschema %}

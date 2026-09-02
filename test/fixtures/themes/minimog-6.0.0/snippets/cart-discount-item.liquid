@@ -1,0 +1,48 @@
+<li
+  class="m-cart__discount--item m:inline-flex m:items-center"
+  data-discount-code="{{ discount.title }}"
+>
+  <svg
+    aria-hidden="true"
+    width="20"
+    height="20"
+    focusable="false"
+    role="presentation"
+    viewBox="0 0 12 13"
+  >
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M7 .5h3a2 2 0 0 1 2 2v3a.995.995 0 0 1-.293.707l-6 6a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 0-1.414l6-6A.995.995 0 0 1 7 .5zm2 2a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill="currentColor"></path>
+  </svg>
+  <span>{{ discount.title | upcase }}&nbsp;(-{{ discount.total_allocated_amount | money }})</span>
+  <input type="hidden" name="discount" value="{{ discount.code }}">
+  {% if discount.type == 'discount_code' %}
+    <button
+      is="m-cart-discount-remove"
+      type="button"
+      aria-label="{{ 'cart.general.remove_discount' | t: code: discount.title }}"
+      class="m-spinner-button m:inline-flex m:items-center m:justify-center"
+    >
+      <span class="m-spinner-icon">
+        <svg
+          class="animate-spin m-svg-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </span>
+      <span>
+        <svg
+          class="m-svg-icon--small"
+          fill="currentColor"
+          stroke="currentColor"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 320 512"
+        >
+          <path d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"/>
+        </svg>
+      </span>
+    </button>
+  {% endif %}
+</li>

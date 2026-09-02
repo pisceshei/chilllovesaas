@@ -1,0 +1,118 @@
+
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+-%}
+{%- capture sizes -%}
+  (min-width: 1150px) calc(({{ current_width }} -  (( {{ block.settings.col_dk }} - 1 ))) * 1 / {{ block.settings.col_dk }}),(min-width: 768px) calc( ({{ current_width_tb }} - (( {{ block.settings.col_tb }} - 1 ))) * 1 / {{ block.settings.col_tb }}), calc( ({{ current_width_mb }} - (( {{ block.settings.col_mb }} - 1 ) )) * 1 / {{ block.settings.col_mb }})
+{%- endcapture -%}
+{% render 'product-card-masonry', product: block.settings.product, col_w: block.settings.col_w, col_w_mb: block.settings.col_w_mb, row_count: block.settings.row_count, row_count_mb: block.settings.row_count_mb, colors_by_section: block.settings.colors_by_section, color_scheme: block.settings.color_scheme, background_opacity: block.settings.background_opacity, show_vendor: block.settings.show_vendor,sizes: sizes, color_list: color_list, size_list: size_list %}
+
+{% schema %}
+  {
+    "name": "t:blocks.item_masonry.name_product",
+    "tag": null,
+    "blocks": [
+    ],
+    "settings": [
+      {
+        "type": "product",
+        "id": "product",
+        "label": "t:sections.main-product.settings.product.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+      },
+      {
+        "type": "header",
+        "content": "t:sections.banner.settings.desktop"
+      },
+      {
+        "type": "select",
+        "id": "col_w",
+        "label": "t:sections.banner.blocks.common.col_w",
+        "options": [
+          {
+            "value": "3",
+            "label": "25%"
+          },
+          {
+            "value": "4",
+            "label": "33%"
+          },
+          {
+            "value": "6",
+            "label": "50%"
+          },
+          {
+            "value": "8",
+            "label": "67%"
+          },
+          {
+            "value": "9",
+            "label": "75%"
+          },
+          {
+            "value": "12",
+            "label": "100%"
+          }
+        ],
+        "default": "6"
+      },
+      {
+        "type": "range",
+        "id": "row_count",
+        "label": "t:sections.banner.blocks.common.row_count",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 1
+      },
+      {
+        "type": "header",
+        "content": "t:sections.banner.settings.mobile"
+      },
+      {
+        "type": "select",
+        "id": "col_w_mb",
+        "label": "t:sections.banner.blocks.common.col_w",
+        "options": [
+          {
+            "value": "1",
+            "label": "50%"
+          },
+          {
+            "value": "2",
+            "label": "100%"
+          }
+        ],
+        "default": "2"
+      },
+      {
+        "type": "range",
+        "id": "row_count_mb",
+        "label": "t:sections.banner.blocks.common.row_count",
+        "min": 1,
+        "max": 3,
+        "step": 1,
+        "default": 1
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.item_masonry.name_product"
+      }
+    ]
+  }
+{% endschema %}

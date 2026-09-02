@@ -1,0 +1,670 @@
+{
+  "sections": {
+    "image_with_text_2_LXgMCM": {
+      "type": "image-with-text-2",
+      "custom_css": [
+        ".m-hero__title {text-transform: uppercase; font-size: 50px;}",
+        ".m-hero__text {max-width: 372px;}",
+        ".m-hero__text + .m-hero__btn {margin-top: 24px;}",
+        ".m-hero__inner {padding-bottom: 70px;}",
+        "@media (max-width: 1023px) {.m-hero__title {font-size: 40px; }}"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "image": "",
+        "image_link": "",
+        "parallax": false,
+        "parallax_direction": "vertical",
+        "content_in_container": true,
+        "content_position": "left bottom",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "Share the<br>\nJoy of X-mas<br>\ndropping soon",
+        "subtitle": "",
+        "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "left",
+        "mb_image": "",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "scrolling_promotion_CWCzrj": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "announcement_CJJfGV": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "<svg width=\"30\" height=\"30\" viewbox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M15 0L17.2502 9.56759L25.6066 4.3934L20.4324 12.7498L30 15L20.4324 17.2502L25.6066 25.6066L17.2502 20.4324L15 30L12.7498 20.4324L4.3934 25.6066L9.56759 17.2502L0 15L9.56759 12.7498L4.3934 4.3934L12.7498 9.56759L15 0Z\" fill=\"#F79FDC\"></path>\n</svg>",
+            "icon_size": "large",
+            "text": "grab the deals",
+            "text_size": 30,
+            "text_link": ""
+          }
+        },
+        "announcement_rKqzLA": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "<svg width=\"30\" height=\"30\" viewbox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M15 0L17.2502 9.56759L25.6066 4.3934L20.4324 12.7498L30 15L20.4324 17.2502L25.6066 25.6066L17.2502 20.4324L15 30L12.7498 20.4324L4.3934 25.6066L9.56759 17.2502L0 15L9.56759 12.7498L4.3934 4.3934L12.7498 9.56759L15 0Z\" fill=\"#C41932\"></path>\n</svg>",
+            "icon_size": "medium",
+            "text": "bundle sale",
+            "text_size": 30,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "announcement_CJJfGV",
+        "announcement_rKqzLA"
+      ],
+      "custom_css": [
+        ".m-promotion__icon {margin-right: 30px;}",
+        ".m-promotion__text {font-family: var(--font-stack-header); line-height: 1.2; text-transform: uppercase;}",
+        "@media (max-width: 767px) {.m-promotion__text {font-size: 26px; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 30,
+        "item_gap_mobile": 20,
+        "color_scheme": "dark",
+        "padding_top": 18,
+        "padding_bottom": 18,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_8YmyhW": {
+      "type": "featured-collection",
+      "custom_css": [
+        ".m-section__heading {text-transform: uppercase;}",
+        "@media (max-width: 767px) {.m-section__heading {font-size: 26px; }}"
+      ],
+      "settings": {
+        "heading": "the hot deals",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "original",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 12,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_A3iPr9": {
+      "type": "custom-content",
+      "blocks": {
+        "text_card_with_image_DV3PRe": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "50%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "x-mas family sweaters",
+            "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+            "text_size": "small",
+            "button_label": "Shop sweaters",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_card_with_image_UFiqD6": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "50%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "Christmas accessories",
+            "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+            "text_size": "small",
+            "button_label": "Shop accessories",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_card_with_image_DV3PRe",
+        "text_card_with_image_UFiqD6"
+      ],
+      "custom_css": [
+        ".m-richtext__title {text-transform: uppercase;}",
+        ".m-richtext__description {max-width: 372px;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 24,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "custom_content_JQmRCr": {
+      "type": "custom-content",
+      "blocks": {
+        "image_jPndRj": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "countdown_Ubf6z3": {
+          "type": "countdown",
+          "settings": {
+            "width": "33%",
+            "alignment": "center",
+            "align": "start",
+            "text_alignment": "left",
+            "time": "2024-12-26 23:00:00",
+            "heading": "basic x-mas sweater",
+            "heading_size": "h3",
+            "subheading": "HOT THIS WEEK",
+            "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+            "button_label": "add to cart     |     $20.00",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_jPndRj",
+        "countdown_Ubf6z3"
+      ],
+      "custom_css": [
+        ".container {--container-width: 1200px;}",
+        ".m-richtext__subtitle {font-family: var(--font-stack-header); font-size: 14px;}",
+        ".m-countdown__heading {font-size: 50px; line-height: 1.2; text-transform: uppercase;}",
+        ".m-countdown-timer__box {min-width: 40px;}",
+        ".m-countdown-timer__digit {font-size: 40px; line-height: inherit;}",
+        ".m-countdown-timer__wrapper {gap: 15px;}",
+        ".m-countdown-timer__text {display: none;}",
+        "@media (max-width: 1279px) {.m-countdown__heading {font-size: 40px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container",
+        "color_scheme": "badge-sale",
+        "content_color_scheme": "badge-sale",
+        "background_image": "",
+        "background_image_mobile": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 60,
+        "gap_mobile": 32,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "custom_content_idqp4y": {
+      "type": "custom-content",
+      "blocks": {
+        "text_Vkd3gH": {
+          "type": "text",
+          "settings": {
+            "title": "get on<br>\nsanta’s xmas <br>\nsleight",
+            "subheading": "special holiday",
+            "text": "",
+            "width": "33%",
+            "alignment": "start",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "Shop now",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_card_with_image_LPzdNp": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "33%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "animal slippers",
+            "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+            "text_size": "small",
+            "button_label": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_card_with_image_7Qnqhz": {
+          "type": "text_card_with_image",
+          "settings": {
+            "width": "33%",
+            "link": "",
+            "text_alignment": "left",
+            "image": "",
+            "title": "family pijama",
+            "text": "<p>Dive into the holiday spirit with Christmas clothing sales that adorn you in style</p>",
+            "text_size": "small",
+            "button_label": "",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_Vkd3gH",
+        "text_card_with_image_LPzdNp",
+        "text_card_with_image_7Qnqhz"
+      ],
+      "custom_css": [
+        ".m-richtext__subtitle {font-size: 14px; line-height: 16.8px; font-family: var(--font-stack-header); text-transform: uppercase; margin-bottom: 24px;}",
+        ".m-richtext__title {font-size: 50px; line-height: 1.2; text-transform: uppercase; margin-bottom: 8px;}",
+        ".text-card-with-image__content .m-richtext__title {font-size: 20px; margin-bottom: 12px;}",
+        ".m-richtext__description {margin: 0; max-width: 372px;}",
+        "@media (max-width: 767px) {.m-richtext__title {font-size: 40px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "content_color_scheme": "default",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 32,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_BxBi6h": {
+      "type": "featured-collection",
+      "custom_css": [
+        ".m-section__heading {text-transform: uppercase;}"
+      ],
+      "settings": {
+        "heading": "X-mas Colletion",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container",
+        "collection": "",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": false,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "scrolling_promotion_jeiB4X": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "announcement_Ekeakb": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "Santa is coming to town",
+            "text_size": 30,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "announcement_Ekeakb"
+      ],
+      "custom_css": [
+        ".m-promotion__text {font-size: 110px; font-weight: 400; line-height: 1.28; text-transform: uppercase; color: rgb(var(--color-border));}",
+        "@media (max-width: 767px) {.m-promotion__text {font-size: 60px; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 50,
+        "item_gap_mobile": 30,
+        "color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "multiple_image_with_text_4RETpJ": {
+      "type": "multiple-image-with-text",
+      "blocks": {
+        "image_with_text_QMEGDa": {
+          "type": "image_with_text",
+          "settings": {
+            "color_scheme": "",
+            "image": "",
+            "title": "naughty <br>or nice? <br>\nup to you",
+            "sub_title": "collection",
+            "text": "<p>You'll get to indulge in the world of handcrafted cookies freshly baked at the Last Crumb HQ.</p>",
+            "text_size": "large",
+            "text_alignment": "left",
+            "button_label": "Shop collection",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "image_with_text_CBMEyW": {
+          "type": "image_with_text",
+          "settings": {
+            "color_scheme": "",
+            "image": "",
+            "title": "Playful  <br>or polite? <br>\nThe choice is yours!",
+            "sub_title": "Choose your vibe",
+            "text": "<p>Once the box reaches your doorstep, you'll get to indulge in the world of handcrafted cookies freshly baked at the Last Crumb HQ.</p>",
+            "text_size": "large",
+            "text_alignment": "left",
+            "button_label": "Shop sweaters",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "image_with_text_WjQHaC": {
+          "type": "image_with_text",
+          "settings": {
+            "color_scheme": "",
+            "image": "",
+            "title": "Sweet <br>or sassy?<br>\nYou decide!",
+            "sub_title": "Set the tone with style",
+            "text": "<p>Explore a World of Flavor with our Selection of Sweet and Sassy Delights.</p>",
+            "text_size": "large",
+            "text_alignment": "left",
+            "button_label": "Shop collection",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        },
+        "image_with_text_tHnAXM": {
+          "type": "image_with_text",
+          "settings": {
+            "color_scheme": "",
+            "image": "",
+            "title": "Charming <br>or daring?<br>\nIt’s up to you!",
+            "sub_title": "Pick your path, bold or bright",
+            "text": "<p>Once the box reaches your doorstep, you'll get to indulge in the world of handcrafted cookies freshly baked at the Last Crumb HQ.</p>",
+            "text_size": "large",
+            "text_alignment": "left",
+            "button_label": "Shop sweaters",
+            "button_link": "",
+            "button_style": "m-button--link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "image_with_text_QMEGDa",
+        "image_with_text_CBMEyW",
+        "image_with_text_WjQHaC",
+        "image_with_text_tHnAXM"
+      ],
+      "custom_css": [
+        ".m-richtext__subtitle {font-size: 14px; font-family: var(--font-stack-header); text-transform: uppercase;}",
+        ".m-richtext__title {font-size: 50px; text-transform: uppercase;}",
+        ".m-richtext__description {color: rgb(var(--color-foreground-secondary)); --text-margin-top: 24px; max-width: 370px;}",
+        ".m-slider-controls {margin-top: 24px;}",
+        ".m-slider-controls__button {border-radius: 0;}",
+        "@media (max-width: 767px) {.m-richtext__title {font-size: 40px; } .m-richtext__description {--text-margin-top: 16px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "column_gap": 100,
+        "column_gap_mobile": 12,
+        "show_pagination": false,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_product_slider_RgkaKg": {
+      "type": "featured-product-slider",
+      "blocks": {
+        "product_gYr4qh": {
+          "type": "product",
+          "settings": {
+            "heading": "FEATURED ITEMS",
+            "description": "<p>You'll get to indulge in the world of handcrafted cookies freshly baked at the</p>",
+            "product": "",
+            "image": ""
+          }
+        },
+        "product_Patf7W": {
+          "type": "product",
+          "settings": {
+            "heading": "FEATURED ITEMS",
+            "description": "<p>You'll get to indulge in the world of handcrafted cookies freshly baked at the</p>",
+            "product": "",
+            "image": ""
+          }
+        }
+      },
+      "block_order": [
+        "product_gYr4qh",
+        "product_Patf7W"
+      ],
+      "custom_css": [
+        ".m-featured-slider__product-item {padding: 14px 14px 24px; background: white;}",
+        ".container-full,.m-featured-slider__col-right {padding: 0;}",
+        ".m-slider-controls {text-align: center; margin-top: 20px;}",
+        ".swiper-pagination-bullets {position: static; flex-direction: row; transform: unset;}",
+        ".m-slider-controls__button {border-radius: 0;}",
+        "@media (max-width: 1023px) {.m-featured-slider__col-left {padding: 48px 15px; order: -1; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "footer",
+        "image_placement": "right",
+        "slide_autoplay": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "autorotate_speed": 5,
+        "show_featured_image": true,
+        "pcard_layout": "1",
+        "pcard_alignment": "left",
+        "pcard_image_ratio": "1/1",
+        "show_vendor": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "gallery_Fzq8Rw": {
+      "type": "gallery",
+      "blocks": {
+        "image_gfAFrE": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": ""
+          }
+        },
+        "image_WEAQTM": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": ""
+          }
+        },
+        "image_RepezM": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": ""
+          }
+        },
+        "image_xkDLGt": {
+          "type": "image",
+          "settings": {
+            "image": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "image_gfAFrE",
+        "image_WEAQTM",
+        "image_RepezM",
+        "image_xkDLGt"
+      ],
+      "custom_css": [
+        ".m-section__heading {text-transform: uppercase;}",
+        ".m-section__button {margin: 0;}",
+        "@media (min-width: 768px) {.m-section__header {display: flex; align-items: end; justify-content: space-between; }}",
+        "@media (max-width: 767px) {.m-section__header {--m-section-header-spacing-bottom-mobile: 32px; } .m-section__heading {font-size: 26px; } .m-section__button {margin-top: 12px; }}"
+      ],
+      "settings": {
+        "heading": "we’re on instagram",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "button_label": "@foxify.holiday",
+        "button_link": "",
+        "button_style": "m-button--link",
+        "header_alignment": "left",
+        "container": "container",
+        "color_scheme": "",
+        "color_scheme_content": "",
+        "icon": "none",
+        "layout": "grid",
+        "grid_columns": 4,
+        "column_gap": 10,
+        "row_gap": 0,
+        "columns_mobile": "1",
+        "mobile_gap": 10,
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "image_with_text_2_LXgMCM",
+    "scrolling_promotion_CWCzrj",
+    "featured_collection_8YmyhW",
+    "custom_content_A3iPr9",
+    "custom_content_JQmRCr",
+    "custom_content_idqp4y",
+    "featured_collection_BxBi6h",
+    "scrolling_promotion_jeiB4X",
+    "multiple_image_with_text_4RETpJ",
+    "featured_product_slider_RgkaKg",
+    "gallery_Fzq8Rw"
+  ]
+}

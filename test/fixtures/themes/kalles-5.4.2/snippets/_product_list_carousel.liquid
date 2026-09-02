@@ -1,0 +1,171 @@
+{%- if request.visual_preview_mode or block.settings.product_list == blank and block.settings.collection == blank and block.settings.source != 'from_block' %}  
+  <div class="hdt-product-carousel">
+    <hdt-slider id="Slider-{{ section.id }}" class="hdt-collection-products hdt-slider__products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slider hdt-slider-parent hdt-slide-spacing-{{ block.settings.space_items }} hdt-relative {% if block.settings.navUI %}hdt-slider-has-nav{% endif %} {% if block.settings.dotUI %}hdt-slider-has-dots-dk{% endif %} lg:hdt-slides-{{ block.settings.col_dk | default: "auto" }} md:hdt-slides-{{ block.settings.col_tb | default: "auto" }} hdt-slides-{{ block.settings.col_mb | default: "auto" }}" config='{ "id": "Slider-{{ block.id }}", "navUI": {{ block.settings.navUI }}, "dotUI": true, "loop": {{ block.settings.loop }}, "autoPlay": {{ block.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ block.settings.pauseOnHover }} }'>
+      <div class="hdt-slider__viewport hdt-relative">
+        <div class="hdt-slider__container">
+          {%- liquid 
+            for i in (1..block.settings.products_count)
+              capture current
+              cycle 1, 2 , 3, 4
+              endcapture
+              assign placeholder_image = 'product-apparel-' | append: current
+              render 'card-product-list-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: section.id, class: "hdt-slider__slide"
+            endfor
+          -%}
+        </div>
+      </div>
+      {%- if block.settings.navUI -%}
+        <div class="hdt-navigation hdt-position-{{ block.settings.nav_position }} hdt-visible-{{ block.settings.nav_visible }} hdt-style-{{ block.settings.nav_style }} hdt-shape-{{ block.settings.nav_shape }} hdt-size-{{ block.settings.nav_size }} hdt-hide-mobile-{{ block.settings.nav_hide_mobile }}">
+          <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+            <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+          </button>
+          <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+            <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      {%- endif -%}
+      {%- if block.settings.dotUI -%}
+        <div hdt-slider-dots aria-controls="Slider-{{ block.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ block.settings.pag_style }} hdt-radius-{{ block.settings.pag_rounded }}{% if block.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ block.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ block.settings.pag_space }}px; --margin-top: {{ block.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+      {%- endif -%}
+    </hdt-slider>
+  </div>
+{%- elsif block.settings.source == 'from_block' and content_blocks != blank -%}
+  <hdt-slider id="Slider-{{ block.id }}" class="hdt-collection-products hdt-slider__products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slider hdt-slider-parent hdt-slide-spacing-{{ block.settings.space_items }} hdt-relative {% if block.settings.navUI %}hdt-slider-has-nav{% endif %} {% if block.settings.dotUI %}hdt-slider-has-dots-dk{% endif %} lg:hdt-slides-{{ block.settings.col_dk | default: "auto" }} md:hdt-slides-{{ block.settings.col_tb | default: "auto" }} hdt-slides-{{ block.settings.col_mb | default: "auto" }}"  config='{ "id": "Slider-{{ block.id }}", "navUI": {{ block.settings.navUI }}, "dotUI": true, "loop": {{ block.settings.loop }}, "autoPlay": {{ block.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ block.settings.pauseOnHover }} }'>
+    <div class="hdt-slider__viewport hdt-relative">
+      <div class="hdt-slider__container">
+        {%- liquid 
+          echo content_blocks
+        -%}
+      </div>
+    </div>
+    {%- if block.settings.navUI -%}
+      <div class="hdt-navigation hdt-position-{{ block.settings.nav_position }} hdt-visible-{{ block.settings.nav_visible }} hdt-style-{{ block.settings.nav_style }} hdt-shape-{{ block.settings.nav_shape }} hdt-size-{{ block.settings.nav_size }} hdt-hide-mobile-{{ block.settings.nav_hide_mobile }}">
+        <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+          <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+        </button>
+        <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+          <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    {%- endif -%}
+    {%- if block.settings.dotUI -%}
+      <div hdt-slider-dots aria-controls="Slider-{{ block.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ block.settings.pag_style }} hdt-radius-{{ block.settings.pag_rounded }}{% if block.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ block.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ block.settings.pag_space }}px; --margin-top: {{ block.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+    {%- endif -%}
+  </hdt-slider>
+{%- else -%}
+  {%- if block.settings.product_list != blank %}
+    {%- paginate block.settings.product_list by block.settings.products_count -%}
+      <div class="hdt-product-carousel">
+        <hdt-slider id="Slider-{{ block.id }}" class="hdt-collection-products hdt-slider__products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slider hdt-slider-parent hdt-slide-spacing-{{ block.settings.space_items }} hdt-relative {% if block.settings.navUI %}hdt-slider-has-nav{% endif %} {% if block.settings.dotUI %}hdt-slider-has-dots-dk{% endif %} lg:hdt-slides-{{ block.settings.col_dk | default: "auto" }} md:hdt-slides-{{ block.settings.col_tb | default: "auto" }} hdt-slides-{{ block.settings.col_mb | default: "auto" }}"  config='{ "id": "Slider-{{ block.id }}", "navUI": {{ block.settings.navUI }}, "dotUI": true, "loop": {{ block.settings.loop }}, "autoPlay": {{ block.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ block.settings.pauseOnHover }} }'>
+          <div class="hdt-slider__viewport hdt-relative">
+            <div class="hdt-slider__container">
+              {%- liquid 
+                if block.settings.product_list != blank
+                  for product in block.settings.product_list
+                    render '_product-list-item', product: product
+                  endfor
+                else
+                  for i in (1..block.settings.products_count)
+                    capture current
+                    cycle 1, 2 , 3, 4
+                    endcapture
+                    assign placeholder_image = 'product-apparel-' | append: current
+                    render 'card-product-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: section.id, class: "hdt-slider__slide"
+                  endfor
+                endif
+              -%}
+            </div>
+          </div>
+          {%- if block.settings.navUI -%}
+            <div class="hdt-navigation hdt-position-{{ block.settings.nav_position }} hdt-visible-{{ block.settings.nav_visible }} hdt-style-{{ block.settings.nav_style }} hdt-shape-{{ block.settings.nav_shape }} hdt-size-{{ block.settings.nav_size }} hdt-hide-mobile-{{ block.settings.nav_hide_mobile }}">
+              <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+                <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+              </button>
+              <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+                <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+              </button>
+            </div>
+          {%- endif -%}
+          {%- if block.settings.dotUI -%}
+            <div hdt-slider-dots aria-controls="Slider-{{ block.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ block.settings.pag_style }} hdt-radius-{{ block.settings.pag_rounded }}{% if block.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ block.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ block.settings.pag_space }}px; --margin-top: {{ block.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+          {%- endif -%}
+        </hdt-slider>
+        {%- if block.settings.pagination and paginate.next -%}
+          <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-view_all hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in"  style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+            <a id="btn-view-all-{{ block.id }}" class="hdt-view-all-btn hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ block.settings.collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+              {% assign view_all_df = 'general.pagination.view_all' | t %}
+              <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+              {% liquid
+                if block.settings.icon != 'none'
+                render 'icons', icon: block.settings.icon
+              endif
+              %}
+            </a>
+          </div>
+        {%- endif -%}
+      </div>
+    {%- endpaginate -%}
+  {%- else -%}
+    {%- assign collection = collections[block.settings.collection] -%}
+    {%- paginate collection.products by block.settings.products_count -%}
+      <div class="hdt-product-carousel">
+        <hdt-slider id="Slider-{{ block.id }}" class="hdt-collection-products hdt-slider__products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slider hdt-slider-parent hdt-slide-spacing-{{ block.settings.space_items }} hdt-relative {% if block.settings.navUI %}hdt-slider-has-nav{% endif %} {% if block.settings.dotUI %}hdt-slider-has-dots-dk{% endif %} lg:hdt-slides-{{ block.settings.col_dk | default: "auto" }} md:hdt-slides-{{ block.settings.col_tb | default: "auto" }} hdt-slides-{{ block.settings.col_mb | default: "auto" }}"  config='{ "id": "Slider-{{ block.id }}", "navUI": {{ block.settings.navUI }}, "dotUI": true, "loop": {{ block.settings.loop }}, "autoPlay": {{ block.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ block.settings.pauseOnHover }} }'>
+          <div class="hdt-slider__viewport hdt-relative">
+            <div class="hdt-slider__container">
+              {%- liquid 
+                if collection != blank
+                  for product in collection.products
+                    render '_product-list-item', product: product
+                  endfor
+                else
+                  for i in (1..block.settings.products_count)
+                    capture current
+                    cycle 1, 2 , 3, 4
+                    endcapture
+                    assign placeholder_image = 'product-apparel-' | append: current
+                    render 'card-product-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: section.id, class: "hdt-slider__slide"
+                  endfor
+                endif
+              -%}
+            </div>
+          </div>
+          {%- if block.settings.navUI -%}
+            <div class="hdt-navigation hdt-position-{{ block.settings.nav_position }} hdt-visible-{{ block.settings.nav_visible }} hdt-style-{{ block.settings.nav_style }} hdt-shape-{{ block.settings.nav_shape }} hdt-size-{{ block.settings.nav_size }} hdt-hide-mobile-{{ block.settings.nav_hide_mobile }}">
+              <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+                <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+              </button>
+              <button aria-controls="Slider-{{ block.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+                <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+              </button>
+            </div>
+          {%- endif -%}
+          {%- if block.settings.dotUI -%}
+            <div hdt-slider-dots aria-controls="Slider-{{ block.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ block.settings.pag_style }} hdt-radius-{{ block.settings.pag_rounded }}{% if block.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ block.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ block.settings.pag_space }}px; --margin-top: {{ block.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+          {%- endif -%}
+        </hdt-slider>
+      {%- if block.settings.product_list.count == 0 and collection.products.size > 0 -%} 
+        {%- if block.settings.pagination and paginate.next -%}
+          <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-view_all hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in" style="--pagination-distance:{{ block.settings.dis_pagination }}px;">
+            <a id="btn-view-all-{{ block.id }}" class="hdt-view-all-btn hdt-btn hdt-oh hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ block.settings.collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+              {% assign view_all_df = 'general.pagination.view_all' | t %}
+              <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+              {% liquid
+                if block.settings.icon != 'none'
+                render 'icons', icon: block.settings.icon
+              endif
+              %}
+            </a>
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+      </div>
+    {%- endpaginate -%}
+  {%- endif -%}
+  {%- if block.settings.size == "custom custom-inline" -%}
+    {%- style -%}
+      #btn-view-all-{{ block.id }} {
+        --hdt-btn-padding-x: {{ block.settings.padding_btn }}px; --hdt-btn-line-height: {{ block.settings.min_height_btn }}px; --hdt-btn-font-size: {{ block.settings.font_size_btn }}px;--minw-button: {{ block.settings.min_width_btn }}px; --minwdt-button: {{ block.settings.min_width_dt_btn }}px;
+      }
+    {%- endstyle -%}
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,196 @@
+
+{%- style -%}
+  {% render 'spacing-vars', box: section %}
+  hdt-tooltip {
+   display: inline-flex;
+  }
+{%- endstyle -%}
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative hdt-px-15'
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+  unless collection
+    if settings.remove_collection_url == false  
+      assign collection = product.collections.first
+      assign product_index = collection.products | find_index: 'id', product.id
+      assign next_index = product_index | plus: 1
+      assign prev_index = product_index | minus: 1
+      assign next_pr_p = collection.products[next_index]
+      assign prev_pr_p = collection.products[prev_index]
+    endif
+  endunless
+%}
+<div id="{{ section.id }}" class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %} hdt-reveal="fade-in">
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    <div class="hdt-breadcrumb__wrap">
+      <div class="hdt-breadcrumb__list">
+        <a href="{{ routes.root_url }}" class="hdt-inline-block">{{ 'products.breadcrumb.home' | t }}</a>
+        <svg class="hdt-inline-block" xmlns="http://www.w3.org/2000/svg" width="5" height="8" viewBox="0 0 5 8" fill="currentColor">
+          <path d="M0.886718 3.49691e-07L4.88672 4L0.886719 8L0.176719 7.29L3.46672 4L0.176719 0.71L0.886718 3.49691e-07Z"/>
+        </svg> 
+        {% if collection.url != blank %}
+          <a href="{{ collection.url }}" class="hdt-d-inline-block">{{ collection.title }}</a>
+          <svg class="hdt-inline-block" xmlns="http://www.w3.org/2000/svg" width="5" height="8" viewBox="0 0 5 8" fill="currentColor">
+            <path d="M0.886718 3.49691e-07L4.88672 4L0.886719 8L0.176719 7.29L3.46672 4L0.176719 0.71L0.886718 3.49691e-07Z"/>
+          </svg>
+        {%- endif -%}
+        <span class="hdt-breadcrumb-item hdt-s-text2">{{ product.title }}</span> 
+      </div>
+      {%- if section.settings.back_next_pr and collection != blank -%}
+        {%- assign next_pr = collection.next_product | default: next_pr_p -%}
+        {%- assign prev_pr = collection.previous_product | default: prev_pr_p -%}
+        <div class="hdt-breadcrumb__prev-next hdt-flex hdt-align-center">
+          {%- if prev_pr -%}
+          <hdt-tooltip placement="top">
+            <a href="{{ prev_pr.url }}" class="hdt-inline-flex hdt-breadcrumb__prev hdt-align-center hdt-justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="18" height="18" fill="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M 19.03125 4.28125 L 8.03125 15.28125 L 7.34375 16 L 8.03125 16.71875 L 19.03125 27.71875 L 20.46875 26.28125 L 10.1875 16 L 20.46875 5.71875 Z"></path>
+              </svg>
+              <span class="sr-only">{{ prev_pr.title }}</span>
+            </a>
+          </hdt-tooltip>
+          {%- endif -%}
+          <hdt-tooltip placement="top">
+            <a href="{{ collection.url }}" class="hdt-inline-flex hdt-breadcrumb__back">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-grid">
+                <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span class="sr-only">{{ 'products.breadcrumb.back_to' | t: title: collection.title }}</span>
+            </a>
+          </hdt-tooltip>
+          {%- if next_pr -%}  
+            <hdt-tooltip placement="top">
+              <a href="{{ next_pr.url }}" class="hdt-inline-flex hdt-breadcrumb__next hdt-align-center hdt-justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" fill="currentColor" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M 12.96875 4.28125 L 11.53125 5.71875 L 21.8125 16 L 11.53125 26.28125 L 12.96875 27.71875 L 23.96875 16.71875 L 24.65625 16 L 23.96875 15.28125 Z"></path>
+                </svg>
+                <span class="sr-only">{{ next_pr.title }}</span>
+              </a>
+            </hdt-tooltip>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.brc-nav.name",
+    "class": "hdt-section hdt-section-brc-nav-product",
+    "settings": [
+      {
+        "type":"checkbox",
+        "id":"back_next_pr",
+        "label":"t:sections.brc-nav.settings.back_next_pr.label",
+        "info": "t:sections.brc-nav.settings.back_next_pr.info"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_layout.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0
+      },
+      {
+        "type": "select",
+        "id": "section_layout",
+        "label": "t:sections.all.section_layout.width.label",
+        "options": [
+          {
+            "value": "container",
+            "label": "t:sections.all.section_layout.width.container"
+          },
+          {
+            "value": "wrapper_container",
+            "label": "t:sections.all.section_layout.width.wrapper_container"
+          },
+          {
+            "value": "full_width",
+            "label": "t:sections.all.section_layout.width.full_width"
+          }
+        ],
+        "default": "container"
+      },
+      {
+        "type": "image_picker",
+        "id": "section_background",
+        "label": "t:sections.all.background.image"
+      },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+    ] 
+  }
+{% endschema %}

@@ -1,0 +1,87 @@
+{%- liquid
+  assign image = article.image
+  assign settings = block.settings | default: section.settings
+-%}
+<article class="hdt-slider__slide hdt-main-article-item hdt-article-style-{{ block.settings.article_des }} hdt-ratio-{{ settings.image_ratio }} {% unless settings.image_size %} hdt-ratio--contain{% endunless %}">
+  <div class="hdt-article-inner hdt-relative" hdt-reveal="slide-in" timeline>
+    <div class="hdt-article-thumb hdt-relative hdt-oh">
+      {%- if image != blank -%}
+        <a href="{{ article.url }}" class="hdt-block hdt-eff-{{ block.settings.b_effect }} hdt-eff-img-{{ block.settings.img_effect }} hdt-eff hdt-oh">
+          <div calc-nav class="hdt-article-img hdt-oh hdt-ratio " style="--aspect-ratioapt-md:{{ image.aspect_ratio }};--aspect-ratioapt:{{ image.aspect_ratio }}">
+            {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-full-image hdt-object-cover hdt-obj-eff images-full_width', sizes: sizes, widths: widths }}
+          </div>
+        </a>
+      {%- endif -%}
+      <div class="hdt-article-label hdt-absolute">
+        {%- if settings.show_cate -%}
+					{%- assign post_tags = article.tags | join: ';' | split: ';' -%}
+					{%- assign tag_category = post_tags | where: 'category_' | first -%}
+					<div class="hdt-article-category hdt-row-flex">
+						{%- if tag_category != blank -%} 
+							<a href="{{ blog.url }}/tagged/{{ tag_category | handle }}" class="hdt-btn hdt-oh hdt-btn-solid hdt-relative hdt-text-xs hdt-font-bold">{{ tag_category | remove : 'category_' | strip }}</a> 
+						{%- else -%}
+							<a href="{{ blog.url }}" class="hdt-btn hdt-oh hdt-relative hdt-btn-solid hdt-text-xs hdt-font-bold">{{ blog.title }}</a> 
+						{%- endif -%}
+					</div> 
+				{%- endif -%}
+      </div>
+    </div>
+    <div class="hdt-article-content_wapper">
+      <div class="hdt-article-info hdt-flex hdt-flex-col hdt-align-{{ settings.content_align }} hdt-text-{{ settings.content_align }}">
+        {%- if settings.show_tags -%}
+          {%- assign article_tags = article.tags | join: ';' | split: ';' -%}
+          {%- if article_tags != blank -%}
+            <div class="hdt-article-tags hdt-text-base hdt-font-normal hdt-s-text2">
+              {%- for tag in article_tags -%} 
+                <a href="{{ blog.url }}/tagged/{{ tag | handle }}">{{ tag | remove : 'category_' | strip }}</a> {%- unless forloop.last -%} ,  {% endunless -%}
+              {%- endfor -%} 
+            </div>
+          {%- endif -%}
+        {%- endif -%}
+        <div class="hdt-article-metas hdt-inline-block">
+          {%- if settings.show_author -%}
+            <span class="hdt-article-author hdt-s-text2 hdt-text-base">
+              <span class="hdt-article-author__name"> {{ 'blogs.article.by' | t }} <span class="hdt-s-text">{{ article.author | replace_first: 'ad clnt', 'admin' }}</span></span>
+            </span>
+          {%- endif -%}
+          {%- if settings.show_date -%}
+            {%- assign date = settings.date -%}
+            <span class="hdt-article-time hdt-s-text2 hdt-text-base">{{ 'blogs.article.on' | t }}
+              <span class="hdt-s-text">
+                {%- if date contains "%" -%}
+                  {{ article.published_at | time_tag: date }}
+                {%- else -%}	
+                  {{ article.published_at | time_tag: format: date }}
+                {%- endif -%}
+              </span>
+            </span>
+          {%- endif -%}
+          {%- if settings.show_comment -%}
+            {%- if article.comments_count > 0 %}{% assign cm_link = '#comments' %}{% else %}{% assign cm_link = '#CommentForm' %}{% endif -%}
+            <span class="hdt-article-comment hdt-s-text2 hdt-text-base">
+              <a href="{{ article.url }}{{ cm_link }}" class="hdt-inline-block">
+                <span class="hdt-article-comment__count">{{ 'blogs.article.comments_html' | t: count: article.comments_count }}</span>
+              </a>
+            </span>
+          {%- endif -%}
+        </div>
+        <h3 class="hdt-article-title hdt-line-clamp hdt-h6 hdt-font-medium hdt-font-1 hdt-text-lg hdt-s-text"><a href="{{ article.url }}">{{ article.title }}</a></h3>
+        {%- if settings.show_content -%}
+          {%- if  article.content != blank or article.excerpt != blank -%}
+            <div class="hdt-article-content hdt-s-text2 hdt-text-base hdt-text-{{ settings.content_align }} hdt-rte">{%- if article.excerpt.size > 0 -%}{{ article.excerpt }}{%- else -%}{{ article.content | strip_html | truncate: 118 }}{%- endif -%}</div>
+          {%- endif -%}
+        {%- endif -%}
+        {%- if settings.show_readmore -%}
+          <div class="hdt-article-btn">
+            <a href="{{ article.url }}" class="hdt-btn hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn-link hdt-text-base hdt-font-semibold hdt-article-btn__readmore">{{ 'blogs.article.read_more' | t }}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="transparent" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 12H15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M12 8L16 12L12 16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </a>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</article>

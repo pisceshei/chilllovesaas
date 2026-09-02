@@ -1,0 +1,27 @@
+<style>
+  #box-{{ box.id }} {
+    --spacing-x: {{ box.settings.item_spacing_mb_x }}px;
+    --spacing-y: {{ box.settings.item_spacing_mb_y }}px;
+    &.hdt-grid-system{
+      row-gap: var(--spacing-y);
+      column-gap: var(--spacing-x);
+    }
+  }
+  @media (min-width: 1150px) {
+    #box-{{ box.id }} {
+      --spacing-x: {{ box.settings.item_spacing_x }}px;
+      --spacing-y: {{ box.settings.item_spacing_y }}px;
+    }
+  }
+</style>
+{%- if request.visual_preview_mode -%}
+  <style>
+    .hdt-grid-system{
+      row-gap: 15px;
+      column-gap: 15px;
+    }
+  </style>
+{%- endif -%}
+<div id="box-{{ box.id }}" class="{% unless is_section_2 %}hdt-row-grid hdt-row-grid--modify hdt-grid-cols-{{ box.settings.col_mb }} md:hdt-grid-cols-{{ box.settings.col_tb }} lg:hdt-grid-cols-{{ box.settings.col_dk }}{% else %}hdt-grid-system hdt-grid-system-12{% endunless %}">
+  {{ content_blocks }}
+</div>

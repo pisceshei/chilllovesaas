@@ -1,0 +1,137 @@
+<!-- blocks/_icon_box.liquid -->
+<div class="hdt-iconbox-item hdt-relative" {{ block.shopify_attributes }}>
+  <div class="hdt-iconbox-item-wrapper hdt-text-center">
+    {% if block.settings.url != blank %}<a class="hdt-full-width-link"  aria-label="link" href="{{ block.settings.url }}"></a>{% endif %}
+    <span class="hdt-iconbox-head hdt-flex hdt-align-center hdt-justify-center">
+      <div class="hdt-iconbox-icon" >
+        {%- if block.settings.image != blank and section.settings.source == 'image' -%}
+          <span class="hdt-iconbox-icon__image " style="--max-width:{{ block.settings.image.width }}px;--width:{{ block.settings.image_width }}px;">
+          {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: '' , sizes: sizes, widths: "24, 52, 48, 104, 120, 240, 360, 480, 600" }}
+          </span>
+        {%- elsif block.settings.svg_upload != blank and section.settings.source == 'svg' -%}
+          <span class="hdt-iconbox-icon__svg" style="--w-image-svg:{{ block.settings.svg_width }}px;--w-image-svg-mb:{{ block.settings.svg_width_mb }}px;">
+            {{ block.settings.svg_upload }}
+          </span>
+        {%- else -%}
+          {%- render 'icons', icon: block.settings.icon -%}
+        {%- endif -%}
+      </div>
+      {%- if block.settings.heading != blank -%}
+        <h5 class="hdt-iconbox-heading {% if block.settings.icon_position == 'right' %} hdt-order-first{% endif %}">{{ block.settings.heading }}</h5>
+      {%- endif -%}
+    </span>
+    {% if block.settings.description != blank %}
+      <div class="hdt-iconbox-des">
+        {{ block.settings.description }}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Icon box",
+    "class": "hdt-slider__slide",
+    "settings": [
+      {
+        "type": "url",
+        "id": "url",
+        "label": "Link to"
+      },
+      {
+        "type": "checkbox",
+        "id": "open_in_new_tab",
+        "label": "Open in new tab",
+        "default": false
+      },
+      {
+        "type": "select",
+        "id": "icon_position",
+        "label": "Icon position",
+        "options": [
+          {
+            "value": "left",
+            "label": "Left"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
+        ],
+        "default": "left",
+      },
+      {
+        "type": "header",
+        "content": "Icon settings"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image",
+        "visible_if": "{{ section.settings.source == 'image' }}"
+      },
+      {
+        "type": "number",
+        "id": "image_width",
+        "label": "Image width (Unit: px)",
+        "default": 50,
+        "info": "Set 0 to use width default",
+        "visible_if": "{{ section.settings.source == 'image' }}"
+      },
+      {
+        "type": "liquid",
+        "id": "svg_upload",
+        "label": "Svg",
+        "visible_if": "{{ section.settings.source == 'svg' }}"
+      },
+      {
+        "type": "paragraph",
+        "content": "t:blocks.icon.custom_svg_icon.content",
+        "visible_if": "{{ section.settings.source == 'svg' }}"
+      },
+      {
+        "type": "range",
+        "id": "svg_width",
+        "min": 20,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "Svg width",
+        "default": 60,
+        "visible_if": "{{ section.settings.source == 'svg' }}"
+      },
+      {
+        "type": "range",
+        "id": "svg_width_mb",
+        "min": 20,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "Svg width (Mobile)",
+        "default": 40,
+        "visible_if": "{{ section.settings.source == 'svg' }}"
+      },
+      {
+        "type": "header",
+        "content": "Content settings"
+      },
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "Heading",
+        "default": "Heading"
+      },
+      {
+        "type": "text",
+        "id": "description",
+        "label": "Description",
+        "default": "Description"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Icon box"
+      }
+    ]
+  }
+{% endschema %}

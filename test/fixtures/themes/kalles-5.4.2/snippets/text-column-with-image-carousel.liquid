@@ -1,0 +1,20 @@
+<hdt-slider id="Slider-{{ box.id }}" class="hdt-slider lg:hdt-slides-{{ box.settings.col_dk }} md:hdt-slides-{{ box.settings.col_tb }} hdt-slides-{{ box.settings.col_mb }} hdt-slide-spacing-{{ box.settings.space_items }}" config='{ "id": "Slider-{{ box.id }}", "navUI": {{ box.settings.navUI }}, "dotUI": {{ box.settings.dotUI }}, "loop": {{ box.settings.loop }}, "autoPlay": {{ box.settings.autoplay | times: 1000 }}, "pauseOnHover": {{ box.settings.pauseOnHover }}, "navUICenter": {{ box.settings.navUICenter | default: false }} }'>
+  <div class="hdt-slider__viewport hdt-relative">
+    <div class="hdt-slider__container">
+      {{ content_blocks }}  
+    </div>
+  </div>
+  {%- if box.settings.navUI -%}
+    <div class="hdt-navigation hdt-position-{{ box.settings.nav_position }} hdt-visible-{{ box.settings.nav_visible }} hdt-style-{{ box.settings.nav_style }} hdt-shape-{{ box.settings.nav_shape }} hdt-size-{{ box.settings.nav_size }} hdt-hide-mobile-{{ box.settings.nav_hide_mobile }}">
+      <button aria-controls="Slider-{{ box.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+        <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+      </button>
+      <button aria-controls="Slider-{{ box.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+        <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  {%- endif -%}
+  {%- if box.settings.dotUI -%}
+    <div hdt-slider-dots aria-controls="Slider-{{ box.id }}" class="hdt-slider__dots hdt-pagination hdt-style-{{ box.settings.pag_style }} hdt-radius-{{ box.settings.pag_rounded }}{% if box.settings.only_show_mobile %} hdt-only-show-mobile{% else %} hdt-hide-mobile-{{ box.settings.pag_hide_mobile }}{% endif %}" style="--space-between: {{ box.settings.pag_space }}px; --margin-top: {{ box.settings.pag_mgt }}px;" hdt-reveal="slide-in" timeline></div>
+  {%- endif -%}
+</hdt-slider>

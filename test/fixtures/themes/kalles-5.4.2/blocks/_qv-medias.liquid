@@ -1,0 +1,302 @@
+{% liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+  assign un_no_pick = true
+  if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+    unless selected_variant
+      assign un_no_pick = false
+    endunless
+  elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+    assign selected_variant = product.selected_variant | default: product.variants.first
+  else
+    assign selected_variant = product.selected_or_first_available_variant
+  endif
+  assign product_form_id = 'product-form-'| append: section.id | append: product.id
+  assign selected_variant_featured_media = selected_variant.featured_media
+  assign group_media_obj = product.metafields.theme.group_media_obj.value
+  assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src'
+  assign desktop_media_layout = block.settings.desktop_media_layout
+  assign mobile_media_layout = block.settings.mobile_media_layout
+  if product.media.size < 1
+    assign desktop_media_layout = 'no_media_size'
+  elsif product.media.size == 1
+    assign desktop_media_layout = 'one_media_size'
+  endif
+  if section.settings.image != blank
+    assign desktop_media_layout = 'no_media_size'
+  endif
+  assign models = product.media | where: 'media_type', 'model'
+  assign first_3d_model = models | first
+%}
+<div class="hdt-product-media-wrapps hdt-group-block hdt-s-gradient hdt-group-block--{{ block.id }}">
+  {%- if product != blank -%}
+    {%- capture start_index -%}
+    {%- unless group_media_obj.size > 0 %}, "startIndex": {% if block.settings.show_first_media or un_no_pick == false %}0{% else %}{{ selected_variant_featured_media.position | default: 1 | minus: 1 }}{% endif %}{% endunless -%}
+    {%- endcapture -%}
+
+    {%- if first_3d_model -%}
+    <link rel="stylesheet" href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css" media="print" onload="this.media='all'; this.onload = null">
+    {%- endif -%}
+    <hdt-product-media show-thumb section-id="{{ section.id }}" class="hdt-product-media hdt-product-media__layout-{{ desktop_media_layout }} hdt-product-thumb-size__{{ block.settings.media_size }} hdt-mobile-media-layout--{{ mobile_media_layout }}" form="{{ product_form_id }}"{% if block.settings.enable_media_autoplay %} autoplay-media{% endif %}{% if variant_images.size > 0 and product.images.size > 1 and block.settings.use_select_varaint_change_media %} update-when-variant-change{% endif %} image-zoom="no" max-zoom="{{ block.settings.max_zoom_lightbox }}" zoom-options='{"type": "{{ block.settings.image_zoom_type }}","magnify": {{ block.settings.zoom_level }}}'{% if group_media_obj.size > 0 %} can-has-media-group{% endif %}>
+      {%- case desktop_media_layout -%}
+        {%- when 'no_media_size' -%}
+          {%- assign image = section.settings.image | default: settings.placeholder_img -%}
+          {%- if image != blank -%}
+            <div class="hdt-product-media__main hdt-ratio--{{ block.settings.image_ratio }}{% unless block.settings.image_size %} hdt-ratio--contain{% endunless %}">
+              <div class="hdt-ratio hdt-product__media" style="{% if block.settings.image_ratio == 'adapt_image' %}--aspect-ratioapt:{{ image.aspect_ratio }};{% endif %}--mw-media:{{ image.width }}px">
+                {{ image | image_url: width: image.width | image_tag: widths: '246, 493, 600, 713, 823, 990, 1100, 1206, 1346, 1426, 1646, 1946' }}
+              </div>
+            </div>
+          {%- endif -%}
+        {%- when 'one_media_size' -%}
+          <div class="hdt-product-media__main hdt-ratio--{{ block.settings.image_ratio }}{% unless block.settings.image_size %} hdt-ratio--contain{% endunless %}">
+            {%- render 'media', media: product.media.first, lazy_load: false, autoplay: block.settings.enable_media_autoplay, loop: block.settings.enable_video_looping -%}
+          </div>
+        {%- else -%}
+          <div class="hdt-product-media__main">
+            <hdt-slider modal-reint id="slider-{{ block.id }}-{{ product.id }}" aria-controls="slider-thumb-{{ block.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--{{ block.settings.image_ratio }}{% unless block.settings.image_size %} hdt-ratio--contain{% endunless %}" config='{ "active": true{{ start_index }}, "autoHeight": true, "slidesToScroll": 1, "watchDrag": "onlyTypeImage", "slides": ".hdt-slider__slide:not([hidden])","navUI": true }'>
+              <div class="hdt-slider__viewport">
+                <div class="hdt-slider__container">
+                    {%- liquid
+                    for media in product.media
+                      assign lazy_load = false
+                      if media.position > 1
+                        assign lazy_load = true
+                      endif
+                      render 'media', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, position: media.position, group_media_obj: group_media_obj, variant_images: variant_images, class: 'hdt-slider__slide', autoplay: block.settings.enable_media_autoplay, loop: block.settings.enable_video_looping, lazy_load: lazy_load
+                    endfor
+                    -%}
+                </div>
+              </div>
+              {%- if block.settings.navUI -%}
+                <div class="hdt-navigation{% if mobile_media_layout == 'fraction' %} hdt-hide-mobile-true{% endif %} hdt-position-{{ block.settings.nav_position }} hdt-visible-{{ block.settings.nav_visible }} hdt-style-{{ block.settings.nav_style }} hdt-shape-{{ block.settings.nav_shape }} hdt-size-{{ block.settings.nav_size }} hdt-hide-mobile-{{ block.settings.nav_hide_mobile }}">
+                  <button aria-controls="slider-{{ block.id }}-{{ product.id }}" class="hdt-slider__button hdt-slider__button--prev" type="button" disabled name="previous" aria-label="previous">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M5.5 11L0 5.5L5.5 0L6.47625 0.97625L1.9525 5.5L6.47625 10.0238L5.5 11Z" fill="currentColor"/></svg>
+                  </button>
+                  <button aria-controls="slider-{{ block.id }}-{{ product.id }}" class="hdt-slider__button hdt-slider__button--next" type="button" disabled name="next" aria-label="next">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="7" height="11" viewBox="0 0 7 11" fill="none"><path d="M1.5 11L7 5.5L1.5 0L0.52375 0.97625L5.0475 5.5L0.52375 10.0238L1.5 11Z" fill="currentColor"/></svg>
+                  </button>
+                </div>
+              {%- endif -%}
+            </hdt-slider>
+          </div>
+          <div class="hdt-product-media__thumb hdt-text-center md:hdt-hidden">
+            {%- if mobile_media_layout == 'thumbnails' -%}
+              <hdt-slider-thumb {% if block.settings.enable_thumb_efect %} stagger {% endif %} id="slider-thumb-{{ block.id }}-{{ product.id }}" aria-controls="slider-{{ block.id }}-{{ product.id }}" autoheight class="hdt-slider hdt-ratio--{{ block.settings.image_ratio }}{% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slides-5 hdt-slide-spacing-10" config='{ "active": true{{ start_index }}, "autoHeight": false, "classNames": false, "containScroll": "trimSnaps", "dragFree": false, "slidesToScroll": 1, "align": "center", "axis": "x", "slides": ".hdt-slider__slide:not([hidden])", "breakpoints": { "(min-width: 1150px)": { "active": false } } }'>
+                <div class="hdt-slider__viewport">
+                  <div class="hdt-slider__container">
+                      {%- liquid
+                        for media in product.media
+                          render 'media-thumb', media: media, selected_variant: selected_variant, un_no_pick: un_no_pick, group_media_obj: group_media_obj, variant_images: variant_images, class: 'hdt-slider__slide', autoplay: block.settings.enable_media_autoplay, loop: block.settings.enable_video_looping, lazy_load: lazy_load
+                        endfor
+                      -%}
+                  </div>
+                </div>
+              </hdt-slider-thumb>
+            {%- elsif mobile_media_layout == 'fraction' -%}
+            <hdt-slider-counter class="hdt-slider-counter hdt-slider-fraction hdt-inline-flex hdt-align-center" slider="slider-{{ block.id }}-{{ product.id }}">
+              <button disabled name="previous" aria-label="previous" aria-controls="slider-{{ block.id }}-{{ product.id }}" class="no-js-hidden">
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+              </button>
+              <span>
+                <span update-current class="hdt-slider-counter--current">1</span>
+                <span aria-hidden="true"> / </span>
+                <span class="sr-only">{{ 'general.slider.of' | t }}</span>
+                <span update-total class="hdt-slider-counter--total">{{ product.media.size }}</span>
+              </span>
+              <button disabled name="next" aria-label="next" aria-controls="slider-{{ block.id }}-{{ product.id }}" class="no-js-hidden">
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 10 6"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.354.646a.5.5 0 00-.708 0L5 4.293 1.354.646a.5.5 0 00-.708.708l4 4a.5.5 0 00.708 0l4-4a.5.5 0 000-.708z" fill="currentColor"></path></svg>
+              </button>
+            </hdt-slider-counter>
+            {%- endif -%}
+          </div>
+
+      {%- endcase -%}
+    </hdt-product-media>
+    {%- if first_3d_model -%}<script type="application/json" id="ModelJson-{{ section.id }}">{{ models | json }}</script>{% endif -%}
+  {%- else -%}
+    <div class="hdt-product-media-placeholder-wrap">
+      <div class="hdt-product-media-placeholder hdt-relative">
+        {{ 'product-apparel-2' | placeholder_svg_tag: 'hdt-product-media-placeholder-svg' }}
+        <style>.hdt-product-media-placeholder-wrap{flex:1}.hdt-product-media-placeholder{width: 100%;aspect-ratio: 1 / 1;overflow: hidden;}.hdt-product-media-placeholder-svg{position: absolute;width: 100%;height: 100%;}</style>
+      </div>
+    </div>
+  {%- endif -%}
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.medias.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.main-product.settings.header.content",
+      "info": "t:sections.main-product.settings.header.info"
+    },
+    {
+      "type": "select",
+      "id": "mobile_media_layout",
+      "options": [
+        {
+          "value": "fraction",
+          "label": "t:sections.main-product.settings.mobile_media_layout.options__1.label"
+        },
+
+        /*{
+          "value": "thumbnails",
+          "label": "t:sections.main-product.settings.mobile_media_layout.options__2.label"
+        }*/
+        {
+          "value": "none",
+          "label": "t:sections.main-product.settings.mobile_media_layout.options__3.label"
+        }
+      ],
+      "default": "none",
+      "label": "t:sections.main-product.settings.mobile_media_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_first_media",
+      "default": false,
+      "label": "t:sections.main-product.settings.show_first_media.label",
+      "info": "t:sections.main-product.settings.show_first_media.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_select_varaint_change_media",
+      "default": true,
+      "label": "t:sections.main-product.settings.use_select_varaint_change_media.label",
+      "info": "t:sections.main-product.settings.use_select_varaint_change_media.info"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_media_autoplay",
+      "default": false,
+      "label": "t:sections.main-product.settings.enable_media_autoplay.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_video_looping",
+      "default": false,
+      "label": "t:sections.main-product.settings.enable_video_looping.label"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt_image",
+          "label": "t:sections.all.images.ratio.adapt_image.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.all.images.ratio.square.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.all.images.ratio.portrait.label"
+        },
+        {
+          "value": "asos",
+          "label": "t:sections.all.images.ratio.asos.label"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.all.images.ratio.landscape.label"
+        },
+        {
+          "value": "custom-pr",
+          "label": "t:sections.all.images.ratio.custom.label"
+        }
+      ],
+      "label": "t:sections.all.images.ratio.label",
+      "default": "adapt_image"
+    },
+    {
+      "type": "checkbox",
+      "id": "image_size",
+      "label": "t:sections.all.images.size.cover",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.carousel.name"
+    },
+    {
+      "type": "checkbox",
+      "id": "navUI",
+      "label": "t:blocks.carousel.settings.navigation.label",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "nav_style",
+      "label": "t:blocks.carousel.settings.navigation.nav_style.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "outline",
+          "label": "t:blocks.carousel.settings.navigation.nav_style.options.outline"
+        },
+        {
+          "value": "simple",
+          "label": "Simple"
+        }
+      ],
+      "default": "default",
+      "visible_if": "{{ block.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_shape",
+      "label": "t:blocks.carousel.settings.navigation.nav_shape.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:default"
+        },
+        {
+          "value": "rounded",
+          "label": "Rounded"
+        },
+      ],
+      "default": "default",
+      "info": "t:blocks.carousel.settings.navigation.nav_shape.info",
+      "visible_if": "{{ block.settings.navUI }}"
+    },
+    {
+      "type": "select",
+      "id": "nav_size",
+      "label": "t:blocks.carousel.settings.navigation.nav_size.label",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "small",
+      "visible_if": "{{ block.settings.navUI }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "nav_hide_mobile",
+      "label": "t:blocks.carousel.settings.navigation.nav_hide_mobile",
+      "default": false,
+      "visible_if": "{{ block.settings.navUI }}",
+    },
+  ],
+  /*"presets": [{ "name": "t:sections.main-product.blocks.medias.name" }]*/
+}
+{% endschema %}

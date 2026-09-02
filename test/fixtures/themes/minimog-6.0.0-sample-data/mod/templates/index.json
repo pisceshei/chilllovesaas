@@ -1,0 +1,779 @@
+{
+  "sections": {
+    "custom_code_d89NVP": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": "@media(max-width: 767px) {\n.m-custom-collection-image .m-image-card--button-fixed .m-button--fixed {\nborder: none;\njustify-content: center;\ngap:  12px;\npadding-bottom: 26px;\n}\n}\n@media(min-width:768px) and (max-width: 1023px) {\n.m-custom-collection_tabs .m-collection-tab__content {\n--layout-column-gap: 30px;\n}\n.m-collection-tabs .collapsible__item {\npadding: 10px;\n}\n.m-section__header {\nmargin-bottom: 24px;\n}\n}"
+      }
+    },
+    "custom_content_ewVftB": {
+      "type": "custom-content",
+      "blocks": {
+        "image_card_ztMVLh": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "title": "Filled Shirt Jacket",
+            "subtitle": "New Arrivals",
+            "description": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_FrPHXP": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "title": "Merino Hoodie",
+            "subtitle": "New Arrivals",
+            "description": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_ztMVLh",
+        "image_card_FrPHXP"
+      ],
+      "custom_css": [
+        ".m-image-card__content {padding: 30px 20px;}",
+        "@media (max-width: 767px) {.m-image-card__content .m-image-card__heading-group + .m-richtext__button {margin-top: 24px; }}",
+        "@media (min-width: 1024px) {.m-image-card__content {padding: 74px 69px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_8pDAWB": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 7,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_tabs_3PHV74": {
+      "type": "collection-tabs",
+      "blocks": {
+        "collection_pPrphE": {
+          "type": "collection",
+          "settings": {
+            "heading": "Performance Blazer",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        },
+        "collection_gY3g43": {
+          "type": "collection",
+          "settings": {
+            "heading": "The Bomber Jackets",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        },
+        "collection_7nxpb8": {
+          "type": "collection",
+          "settings": {
+            "heading": "Corduroy Shirts",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "collection_pPrphE",
+        "collection_gY3g43",
+        "collection_7nxpb8"
+      ],
+      "custom_css": [
+        ".m-collection-tabs {--layout-column-gap: 123px;}",
+        ".m-collection-tabs .collapsible__button-icon {font-weight: 500;}",
+        "@media (max-width: 1023px) {.m-collection-tabs {--layout-column-gap: 32px; }}",
+        "@media (max-width: 767px) {.m-collection-tabs {--layout-column-gap: 22px; } .m-section__header {margin-bottom: 32px; } .m-collection-tabs .collapsible__item {padding: 14px 0; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "header_alignment": "left",
+        "heading": "Beautifully functional <br>consciously crafted",
+        "heading_size": "h2",
+        "subheading": "Hot This Week",
+        "description": "",
+        "image_position": "right",
+        "image_ratio": "adapt",
+        "prefix_header": "ordinal_number",
+        "trigger_behavior": "hover",
+        "autoplay": true,
+        "autoplay_duration": 5,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-collection_tabs",
+        "animations": "inherit"
+      }
+    },
+    "promotion_banner_d9NkB3": {
+      "type": "promotion-banner",
+      "blocks": {
+        "promotion_E4PCJi": {
+          "type": "promotion",
+          "settings": {
+            "subheading": "Sale up to 20%  all items",
+            "heading": "SALE",
+            "text_alignment": "center"
+          }
+        }
+      },
+      "block_order": [
+        "promotion_E4PCJi"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "badge-sale",
+        "heading": "The Bigger Markdowns",
+        "heading_size": "h2",
+        "text": "<p>We've refreshed our sale with discounts of up to 50% on select styles.<\/p>",
+        "content_alignment": "left",
+        "button_label": "Shop The Sale",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 70,
+        "padding_bottom": 70,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "icon_box_bAPkeW": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_rcVBwA": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "60% Off on Selected Jeans",
+            "description": "<p>Add a free personalized note during checkout.<\/p>",
+            "link": "",
+            "button_label": "Shop Jeans[arrow]",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "iconbox_wba4d8": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Up to 30% Off on Shirts",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop Shirts[arrow]",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "iconbox_wHrYi3": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Up to 20% Off on Coats",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop Coats[arrow]",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_rcVBwA",
+        "iconbox_wba4d8",
+        "iconbox_wHrYi3"
+      ],
+      "custom_css": [
+        ".m-icon-box__heading {font-weight: 400;}",
+        ".m-icon-box .m-button {margin-top: 24px;}",
+        ".m-button--secondary {border-color: rgba(var(--color-outline-button), 0.1);}",
+        "@media (min-width: 768px) {.m-icon-box--vertical .m-icon-box__content {margin-top: 30px; }}"
+      ],
+      "settings": {
+        "heading": "Season Sale Collections",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_jRhRcx": {
+      "type": "custom-content",
+      "blocks": {
+        "image_TEy9cR": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_rVR8N6": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "scheme-15aa538e-2943-4e50-853e-17644d49b630",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "title": "The Renew Transit  <br>Fanny Pack",
+            "subtitle": "New collection",
+            "description": "",
+            "button_label": "Shop New Collection",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": true,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_TEy9cR",
+        "image_card_rVR8N6"
+      ],
+      "custom_css": [
+        ".m-image-card--button-fixed .m-button--fixed {border-color: rgb(var(--color-border));}",
+        ".m-image-card--button-fixed .m-button--fixed:hover {color: rgb(var(--color-outline-button));}",
+        ".m-image-card__content {padding-top: 30px;}",
+        "@media (min-width: 768px) {.m-image-card__content {padding: 100px 45px; } .m-image-card--button-fixed .m-button--fixed {padding-top: 24px; padding-bottom: 48px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "default",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-collection-image"
+      }
+    },
+    "featured_collection_GLr7A7": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 7,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "image_with_text_TcXCQD": {
+      "type": "image-with-text",
+      "custom_css": [
+        ".m-image-with-text--multiple {gap: 5px;}",
+        ".m-image-with-text--multiple .m-image-with-text__image-first,.m-image-with-text--multiple .m-image-with-text__image-second {flex: 1;}",
+        "@media (max-width: 900px) {br {display: none; }}",
+        "@media (max-width: 767px) {.m-image-with-text__inner {flex-direction: column-reverse; row-gap: 48px; } .m-richtext__description + .m-richtext__button {margin-top: 32px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 0,
+        "item_gap_mobile": 0,
+        "layout": "right",
+        "image_column_size": "7",
+        "image_overlap": false,
+        "show_image_reverse": false,
+        "hover_effect": false,
+        "image_animation": "none",
+        "link": "",
+        "link_2": "",
+        "second_image_offset_top": 10,
+        "title": "Get Moving with 60% Off <br>on Heavyweight Shirt",
+        "sub_title": "On Sale",
+        "text": "<p>The perfect blend of comfort and durability is now at your <br\/>fingertips, all at a price that's hard to resist.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "brands_list_cGkRbH": {
+      "type": "brands-list",
+      "blocks": {
+        "image_PzpKED": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        },
+        "image_eXihzR": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        },
+        "image_YXYEhc": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        },
+        "image_Fen7Tq": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        },
+        "image_yQdKiz": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        },
+        "image_ADGbh6": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "160px"
+          }
+        }
+      },
+      "block_order": [
+        "image_PzpKED",
+        "image_eXihzR",
+        "image_YXYEhc",
+        "image_Fen7Tq",
+        "image_yQdKiz",
+        "image_ADGbh6"
+      ],
+      "custom_css": [
+        ".m-section__heading {font-size: calc(((var(--font-h5-desktop)) \/ (var(--font-base-size))) * 1rem); font-weight: 500;}",
+        "@media (max-width: 767px) {.m-brands-list__inner.m\\:grid-2-cols:not(.swiper-wrapper) {grid-template-columns: repeat(3, minmax(0, 1fr)); }}"
+      ],
+      "settings": {
+        "heading": "Featured in Press",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 6,
+        "column_gap": 50,
+        "row_gap": 30,
+        "column_gap_mobile": 18,
+        "row_gap_mobile": 20,
+        "enable_slider": false,
+        "show_nav": false,
+        "show_pagination": false,
+        "autorotate": false,
+        "autorotate_speed": 3,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "empty_space_A3pDfh": {
+      "type": "empty-space",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "show_divider_line": true,
+        "divider_style": "solid",
+        "divider_height": 1,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "custom_class": ""
+      }
+    },
+    "custom_content_hxyMmr": {
+      "type": "custom-content",
+      "blocks": {
+        "text_PLeXbM": {
+          "type": "text",
+          "settings": {
+            "title": "The Coastal Edition",
+            "subheading": "",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials <br\/>and simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop Now",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_PLeXbM"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-richtext__description br {display: none; } .m-richtext__description + .m-richtext__button {margin-top: 32px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 92,
+        "custom_class": ""
+      }
+    },
+    "custom_content_yGhWAA": {
+      "type": "custom-content",
+      "blocks": {
+        "lookbook_TTAaYK": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 44,
+            "left_1": 59,
+            "top_2": 26,
+            "left_2": 50,
+            "product_2": "",
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "lookbook_UgrNQE": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 51,
+            "left_1": 61,
+            "top_2": 19,
+            "left_2": 41,
+            "top_3": 61,
+            "left_3": 48,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "lookbook_TTAaYK",
+        "lookbook_UgrNQE"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "custom_content_XG73A6": {
+      "type": "custom-content",
+      "blocks": {
+        "text_iAW44i": {
+          "type": "text",
+          "settings": {
+            "title": "Happy Customers",
+            "subheading": "",
+            "text": "<p>A world of luxury without labels. Show us your world & tag <strong>@minimog<\/strong><\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_iAW44i"
+      ],
+      "custom_css": [
+        ".m-custom-content__wrapper {background-color: rgb(var(--color-background));}",
+        "@media (max-width: 767px) {.m-richtext__description {margin-top: 12px; } .m-section-py {padding-bottom: 32px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "scheme-e33fe85b-801b-4d1b-acf8-83a4462fdcb7",
+        "content_color_scheme": "scheme-e33fe85b-801b-4d1b-acf8-83a4462fdcb7",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 60,
+        "custom_class": ""
+      }
+    },
+    "scrolling_promotion_jaXB3p": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "testimonial_AArAwV": {
+          "type": "testimonial",
+          "settings": {
+            "text": "<p>“Cotton top with ruffled sleeves and embroidery.”<\/p>",
+            "author": "Christa B.",
+            "icon": "5-stars"
+          }
+        },
+        "testimonial_UMQYzU": {
+          "type": "testimonial",
+          "settings": {
+            "text": "<p>“It runs true to size and I love that the neutral collars match many different sets.”<\/p>",
+            "author": "Christa G.",
+            "icon": "5-stars"
+          }
+        },
+        "testimonial_gYXNz4": {
+          "type": "testimonial",
+          "settings": {
+            "text": "<p>“Cotton top with ruffled sleeves and embroidery.”<\/p>",
+            "author": "Christa B.",
+            "icon": "5-stars"
+          }
+        },
+        "testimonial_Md3zBn": {
+          "type": "testimonial",
+          "settings": {
+            "text": "<p>“Absolutely love these joggers - so flattering and fantastic quality!”<\/p>",
+            "author": "Janie H.",
+            "icon": "5-stars"
+          }
+        },
+        "testimonial_yii3Pj": {
+          "type": "testimonial",
+          "settings": {
+            "text": "<p>“Absolutely love these joggers - so flattering and fantastic quality!”<\/p>",
+            "author": "Janie H.",
+            "icon": "5-stars"
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_AArAwV",
+        "testimonial_UMQYzU",
+        "testimonial_gYXNz4",
+        "testimonial_Md3zBn",
+        "testimonial_yii3Pj"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 80,
+        "item_gap_mobile": 40,
+        "color_scheme": "scheme-e33fe85b-801b-4d1b-acf8-83a4462fdcb7",
+        "padding_top": 0,
+        "padding_bottom": 80,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "custom_code_d89NVP",
+    "custom_content_ewVftB",
+    "featured_collection_8pDAWB",
+    "collection_tabs_3PHV74",
+    "promotion_banner_d9NkB3",
+    "icon_box_bAPkeW",
+    "custom_content_jRhRcx",
+    "featured_collection_GLr7A7",
+    "image_with_text_TcXCQD",
+    "brands_list_cGkRbH",
+    "empty_space_A3pDfh",
+    "custom_content_hxyMmr",
+    "custom_content_yGhWAA",
+    "custom_content_XG73A6",
+    "scrolling_promotion_jaXB3p"
+  ]
+}

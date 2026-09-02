@@ -1,0 +1,276 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "top_bar_BJYbA4": {
+      "type": "top-bar",
+      "blocks": {
+        "text_aPJHYj": {
+          "type": "text",
+          "settings": {
+            "text1": "Start earning Octopus Rewards points when you shop! 50% off! <a href=\"\/collections\/cosmetic\" title=\"Cosmetic\"><strong>JOIN NOW<\/strong><\/a>",
+            "text2": "",
+            "text3": "",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days",
+            "effect": "carousel",
+            "au_time": 3,
+            "pause_when_hover": true,
+            "hide": false
+          }
+        },
+        "cur_X4AqyQ": {
+          "type": "cur",
+          "settings": {
+            "show_currency": true,
+            "show_language": true,
+            "use_location": false,
+            "txt_location": "Location",
+            "url_location": "",
+            "open_link": "_self",
+            "hide": true
+          }
+        }
+      },
+      "block_order": [
+        "text_aPJHYj",
+        "cur_X4AqyQ"
+      ],
+      "custom_css": [
+        ".hdt-top-bar__text a {color: rgb(var(--color-foreground)) !important;}",
+        ".hdt-top-bar__text a:hover {color: rgb(var(--color-accent)) !important;}",
+        ".hdt-top-bar__wrap {padding: 0rem 0px;}",
+        "@media (width < 768px) {.hdt-container {padding-block: 1rem; }}"
+      ],
+      "name": "t:sections.top-bar.name",
+      "settings": {
+        "height": 41,
+        "fontsize": 12,
+        "show_line_separator": false,
+        "full_width": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-e5722079-0dbf-41c6-ad55-ce02cecddafd",
+        "background_opacity": 1
+      }
+    },
+    "header_menu_bottom_blocks_9Nj9NY": {
+      "type": "header-menu-bottom-blocks",
+      "blocks": {
+        "mega_block_ipt8zL": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_4AYnHY": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "cosmetic"
+            ],
+            "limit": 8,
+            "image_ratio": "landscape",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_rqDaFy": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_UXwdzA": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "3ce-body-whitening-shampoo",
+              "advanced-hydrating-conditioner",
+              "advanced-hydrating-shampoo",
+              "my-foundation-all-day-long-wear",
+              "les-beiges-water-fresh-tint-light"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_KaYNbN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_ipt8zL",
+        "mega_block_4AYnHY",
+        "mega_block_rqDaFy",
+        "mega_block_UXwdzA",
+        "mega_block_KaYNbN"
+      ],
+      "custom_css": [
+        "@media (width >= 1150px) {.hdt-main-header [data-header-height] {border-bottom: 1px solid rgba(34, 34, 34, 0.15); }}"
+      ],
+      "name": "t:sections.header.header_bottom.name",
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": false,
+        "header_border_bottom": false,
+        "logo": "shopify:\/\/shop_images\/kalles_green_d961f06e-6c52-4f8b-87a4-28901c8c794c.png",
+        "logo_width": 160,
+        "header_height": 90,
+        "header_colors": "scheme-1833362d-e06d-4cb2-b4ee-5cc8787b4012",
+        "content_left_box": "hdt_liquid_html",
+        "search_form_radius": 0,
+        "other_main_header_content": "Welcome to our store!",
+        "hdt_liquid_html": "<div class=\"hdt-logo-list-group\">\n <div class=\"hdt-logo__item\">\n  <a href=\"https:\/\/www.facebook.com\/login.php\">\n    <svg role=\"presentation\" fill=\"currentColor\" viewBox=\"0 0 320 512\"><path d=\"M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z\"><\/path>\n    <\/svg>\n  <\/a>\n <\/div>\n <div class=\"hdt-logo__item\">\n  <a href=\"https:\/\/x.com\/\">\n    <svg role=\"presentation\" fill=\"currentColor\" viewBox=\"0 0 512 512\"><path d=\"M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z\"><\/path><\/svg>\n  <\/a>\n <\/div>\n  <div class=\"hdt-logo__item\">\n    <a href=\"https:\/\/www.pinterest.com\/\">\n      <svg role=\"presentation\" fill=\"currentColor\" viewBox=\"0 0 384 512\"><path d=\"M204 6.5C101.4 6.5 0 74.9 0 185.6 0 256 39.6 296 63.6 296c9.9 0 15.6-27.6 15.6-35.4 0-9.3-23.7-29.1-23.7-67.8 0-80.4 61.2-137.4 140.4-137.4 68.1 0 118.5 38.7 118.5 109.8 0 53.1-21.3 152.7-90.3 152.7-24.9 0-46.2-18-46.2-43.8 0-37.8 26.4-74.4 26.4-113.4 0-66.2-93.9-54.2-93.9 25.8 0 16.8 2.1 35.4 9.6 50.7-13.8 59.4-42 147.9-42 209.1 0 18.9 2.7 37.5 4.5 56.4 3.4 3.8 1.7 3.4 6.9 1.5 50.4-69 48.6-82.5 71.4-172.8 12.3 23.4 44.1 36 69.3 36 106.2 0 153.9-103.5 153.9-196.8C384 71.3 298.2 6.5 204 6.5z\"><\/path>\n      <\/svg>\n    <\/a>\n  <\/div>\n  <div class=\"hdt-logo__item\">\n    <a href=\"https:\/\/web.telegram.org\/\">\n      <svg class=\" t4s-icon-telegram\" fill=\"currentColor\" role=\"presentation\" viewBox=\"0 0 496 512\"><path d=\"M248,8C111.033,8,0,119.033,0,256S111.033,504,248,504,496,392.967,496,256,384.967,8,248,8ZM362.952,176.66c-3.732,39.215-19.881,134.378-28.1,178.3-3.476,18.584-10.322,24.816-16.948,25.425-14.4,1.326-25.338-9.517-39.287-18.661-21.827-14.308-34.158-23.215-55.346-37.177-24.485-16.135-8.612-25,5.342-39.5,3.652-3.793,67.107-61.51,68.335-66.746.153-.655.3-3.1-1.154-4.384s-3.59-.849-5.135-.5q-3.283.746-104.608,69.142-14.845,10.194-26.894,9.934c-8.855-.191-25.888-5.006-38.551-9.123-15.531-5.048-27.875-7.717-26.8-16.291q.84-6.7,18.45-13.7,108.446-47.248,144.628-62.3c68.872-28.647,83.183-33.623,92.511-33.789,2.052-.034,6.639.474,9.61,2.885a10.452,10.452,0,0,1,3.53,6.716A43.765,43.765,0,0,1,362.952,176.66Z\"><\/path>\n    <\/svg>\n    <\/a>\n  <\/div>\n  <div class=\"hdt-logo__item\">\n    <a href=\"https:\/\/mail.google.com\/\">\n      <svg class=\" t4s-icon-mail\" fill=\"currentColor\" role=\"presentation\" viewBox=\"0 0 512 512\"><path d=\"M464 64C490.5 64 512 85.49 512 112C512 127.1 504.9 141.3 492.8 150.4L275.2 313.6C263.8 322.1 248.2 322.1 236.8 313.6L19.2 150.4C7.113 141.3 0 127.1 0 112C0 85.49 21.49 64 48 64H464zM217.6 339.2C240.4 356.3 271.6 356.3 294.4 339.2L512 176V384C512 419.3 483.3 448 448 448H64C28.65 448 0 419.3 0 384V176L217.6 339.2z\"><\/path><\/svg>\n    <\/a>\n  <\/div>\n<\/div>\n\n<style>\n  .hdt-logo-list-group {\n    display: flex;\n    gap: 15px;\n    align-items: center;\n  }\n\n  .hdt-logo__item {\n    width: 1.8rem;\n    height: 1.8rem;\n  }\n\n  .hdt-logo__item svg {\n    width: 100%;\n    height: 100%;\n    fill: currentColor;\n    display: block;\n  }\n<\/style>",
+        "header_bottom_height": 64,
+        "header_bottom_colors": "",
+        "main_menu": "main-menu",
+        "lazy_mn": true,
+        "menu_position": "center",
+        "menu_size": "sm",
+        "menu_weight": "medium",
+        "text_transform": true,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "header_menu_colors": "scheme-1",
+        "header_categories": false,
+        "title_categories": "All Categories",
+        "menu_categories": "",
+        "header_border": "none",
+        "h_icon": "kalles",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "hdt-text-menu--right": "",
+        "cart_des": "1",
+        "header_height_mb": 60,
+        "logo_width_mb": 130,
+        "sticky_type": "on_scroll_up",
+        "sticky_glass": false
+      }
+    },
+    "custom_liquid_zXKiXd": {
+      "type": "custom-liquid",
+      "name": "t:sections.custom-liquid.name",
+      "settings": {
+        "custom_liquid": "{%-liquid \n  assign demos = pages['demos'].metafields.home.menu.value | default: pages['demo'].metafields.home.menu.value\n  assign demo_size = demos.size | plus: 0\n  if demo_size < 1\n    continue\n  endif\n-%}\n<style>\n  html:has(#drawer-demo-themes:checked){\n    overflow: hidden;\n    padding-inline-end: var(--scrollbar-w);\n  }\n  .hdt-demoo-container {\n    --container-w: min(700px,70vw);\n    --spacing-x: 20px;\n    --spacing-y: 20px;\n    z-index: 9999;\n    position: relative;\n    .backdrop{\n      position:fixed;\n      inset: 0;\n      width:100%;\n      height:100%;\n      background-color: rgb(0 0 0 \/ 0.3);\n      content: \"\";\n      cursor: var(--cursor-close-svg-url) 28 28,auto;\n      opacity: 0;\n      content-visibility: hidden;\n      pointer-events: none;\n    }\n  \n    &:has(#drawer-demo-themes:checked){\n      .backdrop{\n        opacity: 1;\n        content-visibility: visible;\n        pointer-events: auto;\n      }\n      .hdt-demoo-buy-theme{\n        right: var(--container-w);\n        .hdt-demoos-btn{\n          .hdt-demoo-close-icon{\n            transform: translateY(0);\n            opacity: 1;\n          }\n        }\n        .hdt-demoos-count{\n          opacity: 0;\n          pointer-events: none;\n          transform: translateY(-15px);\n        }\n      }\n      .hdt-demoo-wrap{\n        transform: translateX(0);\n        opacity: 1;\n      }\n    }\n    .hdt-demoo-wrap{\n      max-width: var(--container-w);\n      position: fixed;\n      right: 0;\n      transition: 0.3s ease-in-out;\n      z-index: 999;\n      top: 0;\n      bottom: 0;\n      overflow-y: auto;\n      background-color: #fafafa;\n      color: #000;\n      padding: 40px 20px;\n      transform: translateX(100%);\n      opacity: 0;\n      @media (750px < width < 1300px){\n        padding: 40px 20px 80px;\n      }\n    }\n    .hdt-demoo-header{\n      margin-bottom: 30px;\n      h3{ \n        font-size: clamp(28px, 4vw, 40px);\n        font-weight: 600;\n        span {\n          font-size: clamp(16px, 2vw, 24px);\n        }\n      }\n    }\n    .hdt-demoo-item{\n      .hdt-demoo-wrap-title{\n        margin-top: 15px;\n      }\n      .hdt-demoo-item-image{\n        transition: .3s ;\n        box-shadow: 3px 5px 25px 0 rgba(0,0,0,.1);\n        &:hover{\n          box-shadow: 3px 5px 35px 0 rgba(0,0,0,.15);\n          transform: translateY(-5px);\n        }\n      }\n    }\n    .hdt-demoo-buy-theme{\n      position: fixed;\n      right: 0;\n      transition: 0.3s ease-in-out;\n      z-index: 1;\n      top: 0;\n      bottom: 0;\n      height: 100%;\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n      justify-content: center;\n      gap: 20px;\n    }\n    .hdt-demoos-btn {\n      pointer-events: auto;\n      a&{\n        .hdt-demoos-count{\n          gap: 5px;\n        }\n      }\n      &.hdt-purschase-btn{\n        .hdt-btn-wrappp{\n          background: #f21e4e;\n          color: #fff;\n        }\n      }\n      .hdt-btn-wrappp{\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        padding: 10px 20px;\n        min-width: 150px;\n        color: #000;\n        background: #fafafa;\n        position: relative;\n        min-height: 44px;\n        font-size: clamp(14px, 2vw, 18px);\n        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.1);\n        overflow: hidden;\n        &:hover{\n          box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.2);\n        }\n      }\n      .hdt-demoos-count{\n        white-space: nowrap;\n        display: flex;\n        align-items: center;\n        justify-content: space-between;\n        transition: 0.2s ease-in-out;\n        opacity: 1;\n        position: absolute;\n        left: 0;\n        top: 0;\n        height: 100%;\n        width: fit-content;\n        right: 0;\n        bottom: 0;\n        margin: 0 auto;\n        transition-delay: 0.5s;\n      }\n      .hdt-demoos-num{\n        font-weight: 600;\n      }\n      .hdt-demoo-close-icon{\n        position: absolute;\n        left: 0;\n        top: 0;\n        height: 100%;\n        width: 100%;\n        transition: 0.2s ease-in-out;\n        display: flex;\n        align-items: center;\n        justify-content: center;\n        opacity: 0;\n        transform: translateY(15px);\n        transition-delay: 0.5s;\n      }\n    }\n  }\n  @keyframes dmoo-count {\n    0%{\n      opacity: 1;\n      \n    }\n    100%{\n      opacity: 0;\n      width: 0;\n      opacity: 0;\n    }\n  }\n  \n<\/style>\n<div class=\"hdt-demoo-container hdt-hidden md:hdt-block\">\n  <div class=\"backdrop\" onclick=\"document.getElementById('drawer-demo-themes').checked = false;\"><\/div>\n  <div class=\"hdt-demoo-buy-theme hdt-pe-none\">\n    <label for=\"drawer-demo-themes\" class=\"hdt-demoos-btn\" aria-controls=\"drawer-demo-themes\" aria-label=\"Open demo themes\">\n      <div class=\"hdt-btn-wrappp\">\n        <div class=\"hdt-demoos-count\">\n          <div class=\"hdt-demoos-num\">{{ demo_size }}+<\/div>\n          <span style=\"width:3px\"><\/span>\n          <span class=\"hdt-demoos-label\">demos<\/span>\n        <\/div>\n        <div class=\"hdt-demoo-close-icon\">\n          Close\n        <\/div>\n      <\/div>\n    <\/label>\n    <a href=\"https:\/\/1.envato.market\/nL6xBa\" target=\"_blank\" class=\"hdt-demoos-btn hdt-purschase-btn\">\n      <div class=\"hdt-btn-wrappp\">\n        <div class=\"hdt-demoos-count\">\n          <div class=\"hdt-icon-plus\">\n            <svg x=\"0px\" y=\"0px\" width=\"16px\" height=\"20px\" viewBox=\"0 0 16 20\" enable-background=\"new 0 0 16 20\" xml:space=\"preserve\">\n              <path fill=\"currentColor\" d=\"M16.097,5.831v12.751c0,0.232-0.084,0.434-0.251,0.602c-0.168,0.17-0.368,0.254-0.601,0.254H1.852\n                c-0.231,0-0.433-0.084-0.601-0.254C1.083,19.016,1,18.814,1,18.582V5.87c0-0.259,0.083-0.473,0.251-0.642\n                C1.419,5.06,1.62,4.976,1.852,4.976H4.02V4.587c0-1.269,0.445-2.352,1.335-3.246C6.245,0.447,7.296,0,8.51,0h0.077\n                c1.213,0,2.265,0.447,3.155,1.341s1.336,1.977,1.336,3.246v0.389h2.167c0.232,0,0.426,0.078,0.581,0.233\n                C16.007,5.391,16.097,5.598,16.097,5.831L16.097,5.831z M14.355,6.686h-1.277v1.478c0,0.259-0.084,0.473-0.252,0.641\n                c-0.168,0.169-0.368,0.253-0.6,0.253c-0.259,0-0.472-0.084-0.64-0.253c-0.168-0.168-0.251-0.382-0.251-0.641V6.686H5.761v1.478\n                c0,0.259-0.084,0.473-0.251,0.641C5.342,8.974,5.129,9.058,4.871,9.058c-0.232,0-0.433-0.084-0.601-0.253\n                C4.103,8.637,4.02,8.423,4.02,8.164V6.686H2.742v11.041h11.613V6.686z M5.761,4.976h5.575V4.587c0-0.803-0.271-1.483-0.813-2.041\n                C9.98,1.989,9.336,1.71,8.587,1.71H8.51c-0.749,0-1.394,0.279-1.936,0.836C6.032,3.104,5.761,3.784,5.761,4.587V4.976z\"><\/path>\n              <\/svg>\n          <\/div>\n          <span class=\"hdt-demoos-label\">Buy now<\/span>\n        <\/div>\n        <div class=\"hdt-demoo-close-icon\">\n          Buy now\n        <\/div>\n      <\/div>\n    <\/a>\n  <\/div>\n  <input type=\"checkbox\" class=\"hdt-hidden\" id=\"drawer-demo-themes\">\n  <div class=\"hdt-demoo-wrap\">\n    <div class=\"hdt-demoo-inner\">\n      <div class=\"hdt-demoo-header\">\n        <h3 class=\"hdt-text-center\">{{ demo_size }} <span>demos<\/span><\/h3>\n        <p class=\"hdt-text-center hdt-body-base\">Can't decide on one demo? Features from different demos can be<br class=\"hdt-hidden md:hdt-block\"> combined! Start creating your website<\/p>\n      <\/div>\n      <div class=\"hdt-demoo-grid hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2 lg:hdt-grid-cols-3\">\n        {%- for demo in demos -%}\n          {% liquid\n            assign image = demo.image \n            assign labels = demo.label\n            assign url = demo.url.value.url\n            assign name = demo.name\n          %}\n          <div class=\"hdt-demoo-item\">\n            <a href=\"{{ url }}\" class=\"hdt-demoo-inner\">\n              <div class=\"hdt-demoo-item-image\">\n                {%- if image != blank -%}\n                  {{ image | image_url: width: image.width, height: image.height | image_tag: loading: 'lazy', width: image.width, widths:'100,200,300,400,500,600,700,800,900,1000,1200,1400',\n                    loading: 'lazy', sizes: '', class: 'hdt-object-cover hdt-obj-eff' }}\n                {%- endif -%}\n              <\/div>\n              <div class=\"hdt-demoo-wrap-title hdt-flex hdt-justify-between hdt-align-center\">\n                <div class=\"hdt-demoo-item-title\">{{ name }}<\/div>\n                <div class=\"hdt-demo-label hdt-flex\">\n                  {%- for label in labels.value -%}\n                    <span class=\"hdt-demo_{{ label | handle }} hdt-flex hdt-align-center hdt-justify-center hdt-text-xs hdt-font-medium\">{{ label }}<\/span>\n                  {%- endfor -%}\n                <\/div>\n              <\/div>\n            <\/a>\n          <\/div>\n        {%- endfor -%}\n      <\/div>\n  \n    <\/div>\n  <\/div>\n<\/div>",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "top_bar_BJYbA4",
+    "header_menu_bottom_blocks_9Nj9NY",
+    "custom_liquid_zXKiXd"
+  ]
+}

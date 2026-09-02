@@ -1,0 +1,17 @@
+<div class="hdt-article-content hdt-rte" timeline hdt-reveal="slide-in">
+  <article id="hdt-article-{{ article.id }}" class="article-{{ article.id }}">{{ article.content }}</article>
+</div> 
+{% schema %}
+  {
+    "name": "t:sections.main-article.content_name",
+    "tag": null,
+    "settings": [
+    
+    ],
+    "presets":[
+      {
+        "name": "t:sections.main-article.content_name"
+      }
+    ]
+  }
+{% endschema %}

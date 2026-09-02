@@ -1,0 +1,207 @@
+
+{%- liquid
+	assign target = product
+	assign product = section.settings.product | default: target
+	if product == blank
+		continue
+	endif
+-%}
+{%- if block.settings.heading_size == "h_custom" -%}
+  {%- style -%}
+    #block-{{ block.id }} {
+      --heading-fs-lg: {{ block.settings.font_size_heading_lg }}px; --heading-fs-mb: {{ block.settings.font_size_heading }}px; --heading-ls: {{ block.settings.letter_spacing_heading }}px; 
+    }
+  {%- endstyle -%}
+{%- endif -%}
+<div id="block-{{ block.id }}" class="hdt-product-info__item hdt-product__title" {{ block.shopify_attributes }} style="text-transform: {{ block.settings.txt_tr_pr }}">
+  {%- if block.settings.create_link -%}
+    <a href="{{ product.url }}" class="hdt-inline-block hdt-s-text">
+      <{{ block.settings.tag }} class="hdt-{{ block.settings.heading_size }} hdt-font-{{ block.settings.font_weight }}">{{ product.title }}</{{ block.settings.tag }}>
+    </a>
+  {%- else -%}
+    <{{ block.settings.tag }} class="hdt-{{ block.settings.heading_size }} hdt-font-{{ block.settings.font_weight }}">{{ product.title }}</{{ block.settings.tag }}>
+  {%- endif -%}
+</div>
+{% schema %}
+	{
+		"name": "t:sections.main-product.blocks.title.name",
+		"tag": null,
+    "settings":[
+      {
+        "type": "select",
+        "id": "txt_tr_pr",
+        "default": "none",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__0.label"
+          },
+          {
+            "value": "lowercase",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__1.label"
+          },
+          {
+            "value": "capitalize",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__2.label"
+          },
+          {
+            "value": "uppercase",
+            "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.options__3.label"
+          }
+        ],
+        "label": "t:sections.main-product.blocks.title.settings.txt_tr_pr.label"
+      },
+      {
+        "type": "select",
+        "id": "tag",
+        "label": "t:settings_schema.heading.html_tag",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          },
+          {
+            "value": "h4",
+            "label": "H4"
+          },
+          {
+            "value": "h5",
+            "label": "H5"
+          },
+          {
+            "value": "h6",
+            "label": "H6"
+          },
+          {
+            "value": "div",
+            "label": "div"
+          }
+        ],
+        "default": "h2"
+      },
+      {
+        "type": "select",
+        "id": "heading_size",
+        "label": "t:settings_schema.heading.settings.label",
+        "options": [
+          {
+            "value": "h6",
+            "label": "t:settings_schema.heading.settings.h6_size"
+          },
+          {
+            "value": "h5",
+            "label": "t:settings_schema.heading.settings.h5_size"
+          },
+          {
+            "value": "h4",
+            "label": "t:settings_schema.heading.settings.h4_size"
+          },
+          {
+            "value": "h3",
+            "label": "t:settings_schema.heading.settings.h3_size"
+          },
+          {
+            "value": "h2",
+            "label": "t:settings_schema.heading.settings.h2_size"
+          },
+          {
+            "value": "h1",
+            "label": "t:settings_schema.heading.settings.h1_size"
+          },
+          {
+            "value": "h0",
+            "label": "t:settings_schema.heading.settings.h0_size"
+          },
+          {
+            "value": "h_custom",
+            "label": "t:settings_schema.typography.settings.font_size.custom"
+          }
+        ],
+        "default": "h2"
+      },
+      {
+        "type": "header",
+        "content": "t:blocks.text.custom_size_options.label",
+        "visible_if": "{{ block.settings.heading_size == 'custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_heading_lg",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.label",
+        "default": 50,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      },
+      {
+        "type": "range",
+        "id": "font_size_heading",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "px",
+        "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+        "default": 24,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      },
+      {
+        "type": "select",
+        "id": "font_weight",
+        "label": "t:settings_schema.typography.settings.font_weight.label",
+        "options": [
+          {
+            "value": "light",
+            "label": "t:settings_schema.typography.settings.font_weight.light"
+          },
+          {
+            "value": "normal",
+            "label": "t:settings_schema.typography.settings.font_weight.normal"
+          },
+          {
+            "value": "medium",
+            "label": "t:settings_schema.typography.settings.font_weight.medium"
+          },
+          {
+            "value": "semibold",
+            "label": "t:settings_schema.typography.settings.font_weight.semibold"
+          },
+          {
+            "value": "bold",
+            "label": "t:settings_schema.typography.settings.font_weight.bold"
+          },
+        ],
+        "default": "normal"
+      },
+      {
+        "type": "range",
+        "id": "letter_spacing_heading",
+        "min": -10,
+        "max": 10,
+        "step": 0.2,
+        "label": "t:settings_schema.typography.settings.letter_spacing",
+        "default": 0,
+        "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+      },
+      {
+        "type":"checkbox",
+        "id":"create_link",
+        "label": "t:sections.main-product.blocks.title.settings.create_link.label",
+      }
+    ],
+		"presets": [
+      {
+        "name": "t:sections.main-product.blocks.title.name"
+      }
+    ]
+	}
+{% endschema %}

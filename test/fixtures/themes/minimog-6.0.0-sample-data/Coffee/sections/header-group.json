@@ -1,0 +1,74 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "blocks": {
+        "item_hRtGyQ": {
+          "type": "item",
+          "settings": {
+            "message": "SAVE 15% WHEN YOU SUBSCRIBE \/\/ ALL SUBSCRIPTIONS SHIP FREE!",
+            "message_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "item_hRtGyQ"
+      ],
+      "custom_css": [
+        ".m-announcement-bar__item {letter-spacing: 2px;}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "dark2",
+        "show_announcement": true,
+        "homepage_only": true,
+        "show_close": true,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "color_scheme": "",
+        "color_scheme_menu": "",
+        "header_design": "logo-center-menu-left",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 90,
+        "sticky_logo_max_width": 75,
+        "mobile_logo_max_width": 50,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_icon",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": true,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

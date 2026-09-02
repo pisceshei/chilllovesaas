@@ -1,0 +1,251 @@
+{
+  "sections": {
+    "0608c312-4fee-4e9e-a697-78e81c793fd2": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__collection-list sup {\n  top: -1em;\n  right: -0.2em;\n}\n.sf-home__collection-list .m-collection-card__link:hover {\n  color: #666666;\n}\n.sf-home__iconbox {\n  border-top: 1px solid #eeeeee;\n}\n.sf-home__iconbox .m-icon-box__heading {\n  font-weight: 500;\n  font-size: 20px;\n}\n.m-featured-collection--home .m-section__description div p {\n  margin-top: 20px;\n}\n@media (min-width: 768px) {\n  .sf-home__collection-list .m-section-my {\n    margin-top: 30px;\n  }\n}\n@media (min-width: 1024px) {\n  .m-featured-collection--home .m-section__description div p {\n    margin-top: 40px;\n    margin-bottom: 32px;\n  }\n}\n@media (max-width: 767px) {\n  .sf-home__collection-list .m-section-my {\n    margin-top: 15px;\n  }\n}"
+      }
+    },
+    "16184552193b4706ec": {
+      "type": "slider",
+      "blocks": {
+        "16184552193b4706ec-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "",
+            "description": "",
+            "image_link": "",
+            "button_text": "",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "",
+            "footer_button": "Show Now",
+            "footer_link": "shopify:\/\/collections\/braided-sandals"
+          }
+        }
+      },
+      "block_order": [
+        "16184552193b4706ec-0"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "#000",
+        "show_dots": false,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 2,
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16184584660def4136": {
+      "type": "collection-list",
+      "blocks": {
+        "16184584660def4136-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jeans"
+          }
+        },
+        "16184584660def4136-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Handbags"
+          }
+        },
+        "16184584660def4136-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shoes"
+          }
+        }
+      },
+      "block_order": [
+        "16184584660def4136-0",
+        "16184584660def4136-2",
+        "16184584660def4136-1"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "1618459461b6f9a6ca": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Living out every single day and be brave to show off your own true colors",
+        "heading_size": "h3",
+        "subheading": "<span class=\"block text-center\"><img class=\"mx-auto\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/icon.svg?v=1626514244\"><\/span>",
+        "description": "<div>\n<p class=\"font-medium m:text-black mb-4 lg:mb-8 mt-5 lg:mt-10\">Check Our Items<\/p>\n<img class=\"mx-auto\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/icon2.svg?v=1626514541\">\n<\/div>",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "load",
+        "button_text": "Load More",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "162651357727ca7322": {
+      "type": "icon-box",
+      "blocks": {
+        "162651357727ca7322-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162651357727ca7322-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Guarantee",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162651357727ca7322-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Online Support",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "b90b52fa-63bc-4c14-ad2a-1e4bce26be68": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Flexible Payment",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "162651357727ca7322-0",
+        "162651357727ca7322-1",
+        "162651357727ca7322-2",
+        "b90b52fa-63bc-4c14-ad2a-1e4bce26be68"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "30px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "sf-home__iconbox",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "0608c312-4fee-4e9e-a697-78e81c793fd2",
+    "16184552193b4706ec",
+    "16184584660def4136",
+    "1618459461b6f9a6ca",
+    "162651357727ca7322"
+  ]
+}

@@ -1,0 +1,683 @@
+{
+  "sections": {
+    "c72959ad-9620-4e94-ae33-1bde908e9701": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-lookbook .m-slider-controls--absolute .swiper-pagination {\nmargin-top: 0;\n}\n.m-custom-lookbook  .m-slider-controls--full .m-slider-controls__button-next {\nright: -80px;\n}\n.m-custom-lookbook  .m-slider-controls__button-prev {\nleft:-80px;\n}\n.m-custom-lookbook .m-slider-controls__button {\nbackground-color: rgb(var(--color-background-secondary));\ncolor: rgb(var(--color-foreground));\n}\n.m-custom-lookbook .m-slider-controls__button:hover{\nbackground-color: rgb(var(--color-button-hover));\ncolor: rgb(var(--color-button-text-hover));\nborder-color: rgb(var(--color-button-hover)); \n}\n\n@media(max-width: 1440px) {\n\n.m-custom-lookbook .m-lookbook__header {\nmargin-bottom: 24px;\n}\n.m-custom-lookbook .m-lookbook__heading {\nfont-size: 32px;\n}\n.m-custom-lookbook .m-lookbook__header {\nmargin-bottom: 12px;\n}\n}\n@media(max-width: 1280px) {\n.m-custom-lookbook .m-lookbook__heading {\nfont-size: 28px;\n}\n.m-lookbook-slider--image-right .m-lookbook-slider__wrapper--col-1 {\n  --offset-x: 15%;\n}\n}\n@media(max-width: 1023px) {\n .m-custom-lookbook .m-lookbook-card__image {\n    width: 100%;\nheight: 100%;\n  }\n.m-lookbook-slider--image-right .m-lookbook-slider__wrapper--col-1 {\npadding-bottom: 48px;\n}\n\n .m-custom-lookbook  .m-lookbook-slider>* {\nmax-width: 100% !important;\n}\n\n}\n@media (max-width: 1023px) and (min-width: 768px) {\n.m-custom-lookbook .m-lookbook__heading {\n  font-size: calc(((var(--font-h2-tablet)) \/(var(--font-base-size)))* 1rem);\n}\n.m-lookbook-slider--image-right .m-lookbook-slider__wrapper--col-1 {\n  --offset-x: 25%;\npadding-bottom: 48px;\n}\n}\n@media (max-width: 767px) {\n  .m-custom-lookbook .m-lookbook-slider__wrapper {\nmargin-top: 48px;\n}\n  .m-custom-lookbook .m-lookbook__heading {\n    font-size: calc(((var(--font-h2-mobile)) \/ (var(--font-base-size))) * 1rem);\n  }\n.m-lookbook-slider--image-right .m-lookbook-slider__wrapper--col-1 {\n  --offset-x: 23%;\n}\n    .m-custom-lookbook  .m-lookbook-slider__wrapper--col-1 .m-product-card {\n    display: block;\n  }\n  .m-custom-lookbook   .m-lookbook-slider__wrapper--col-1 .m-product-card__media {\n    width: 100%;\n  }\n\n.m-custom-lookbook  .m-slider-controls__button {\nposition:absolute;\n}\n.m-custom-lookbook  .m-lookbook__header {\ndisplay: none;\n\n}\n.m-custom-lookbook  .m-lookbook-slider .m-lookbook__header  {\ndisplay: block;\n}\n}\n@media(max-width: 280px) {\n.m-custom-lookbook  .m-slider-controls--full .m-slider-controls__button-next {\nright: -50px;\n\n}\n.m-custom-lookbook  .m-slider-controls__button-prev {\nleft:-50px;\n}\n\n}"
+      }
+    },
+    "cascading_collection_98kqRT": {
+      "type": "cascading-collection",
+      "blocks": {
+        "collection_EAcGqw": {
+          "type": "collection",
+          "settings": {
+            "collection_title": "Shop Shirts"
+          }
+        },
+        "collection_TfDkwJ": {
+          "type": "collection",
+          "settings": {
+            "collection_title": "Shop Shorts"
+          }
+        },
+        "collection_3qxDTU": {
+          "type": "collection",
+          "settings": {
+            "collection_title": "Shop Bags"
+          }
+        },
+        "collection_cBqUiQ": {
+          "type": "collection",
+          "settings": {
+            "collection_title": "Shop Shoes"
+          }
+        },
+        "collection_UWe7kA": {
+          "type": "collection",
+          "settings": {
+            "collection_title": "Shop T-Shirts"
+          }
+        }
+      },
+      "block_order": [
+        "collection_EAcGqw",
+        "collection_TfDkwJ",
+        "collection_3qxDTU",
+        "collection_cBqUiQ",
+        "collection_UWe7kA"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "heading": "Shop by collections",
+        "heading_size": "h1",
+        "heading_alignment": "center",
+        "overlay_heading": true,
+        "spacing": "large",
+        "variance": "medium",
+        "sequence": 5,
+        "column_gap": 180,
+        "cascade_enable_parallax": true,
+        "cascade_parallax_intensity": 42,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "rich_text_kRyHiB": {
+      "type": "rich-text",
+      "blocks": {
+        "subheading_Jiypde": {
+          "type": "subheading",
+          "settings": {
+            "subheading": "The product idea"
+          }
+        },
+        "heading_QKQGbW": {
+          "type": "heading",
+          "settings": {
+            "heading": "Fashion with a focus on green <br>materials, ethical manufacturing  <br>and less-waste.",
+            "heading_size": "h2"
+          }
+        },
+        "button_MgT8JL": {
+          "type": "button",
+          "settings": {
+            "button_label": "Our Mission",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "subheading_Jiypde",
+        "heading_QKQGbW",
+        "button_MgT8JL"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; } .m-richtext__title + .m-richtext__button {margin-top: 32px; } .m-section-py {--section-padding-top-mobile: 120px; --section-padding-bottom-mobile: 120px; }}"
+      ],
+      "settings": {
+        "container": "container",
+        "color_scheme": "default",
+        "content_alignment": "center",
+        "padding_top": 200,
+        "padding_bottom": 200,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_mRiy4D": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Hot this week",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 7,
+        "items_per_row": 4,
+        "item_gap": 50,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": true,
+        "button_type": "link",
+        "button_text": "Shop All Items[arrow]",
+        "button_style": "m-button--plain",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_image_showcase_iDCAp9": {
+      "type": "collection-image-showcase",
+      "blocks": {
+        "collection_ftmBGM": {
+          "type": "collection",
+          "settings": {
+            "title": "Basic Style"
+          }
+        },
+        "collection_thyHYK": {
+          "type": "collection",
+          "settings": {
+            "title": "Essential Outfit"
+          }
+        },
+        "collection_DfHdBe": {
+          "type": "collection",
+          "settings": {
+            "title": "Heavyweight"
+          }
+        }
+      },
+      "block_order": [
+        "collection_ftmBGM",
+        "collection_thyHYK",
+        "collection_DfHdBe"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "scheme-942ac172-22f9-4128-a5e4-42f89f24976b",
+        "heading": "Shop by Collection",
+        "heading_size": "h5",
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "cascading_product_cch6X8": {
+      "type": "cascading-product",
+      "custom_css": [
+
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "product_to_show": 6,
+        "heading": "New Arrivals",
+        "heading_size": "h1",
+        "heading_alignment": "left",
+        "overlay_heading": true,
+        "spacing": "large",
+        "variance": "medium",
+        "sequence": 5,
+        "column_gap": 180,
+        "cascade_enable_parallax": true,
+        "cascade_parallax_intensity": 50,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "lookbook_MrzxNk": {
+      "type": "lookbook",
+      "blocks": {
+        "lookbook_slider_fkXebk": {
+          "type": "lookbook-slider",
+          "settings": {
+            "color_scheme": "footer",
+            "sub_title": "",
+            "title": "Shop this look",
+            "heading_size": "h2",
+            "text": "",
+            "content_alignment": "center",
+            "text_color": "inherit",
+            "image_position": "right",
+            "button_style": "light",
+            "color_scheme_hovered": "default",
+            "top_1": 34,
+            "left_1": 15,
+            "top_2": 45,
+            "left_2": 88,
+            "top_3": 67,
+            "left_3": 17,
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "product_per_view": "1",
+            "show_pagination": true,
+            "pagination_style": "bullets",
+            "show_navigation": true,
+            "pcard_layout": "",
+            "pcard_image_ratio": "",
+            "show_vendor": false,
+            "hide_title": false
+          }
+        }
+      },
+      "block_order": [
+        "lookbook_slider_fkXebk"
+      ],
+      "custom_css": [
+        ".container-full {padding-left: 0; padding-right: 0;}",
+        ".m-lookbook-slider {flex-direction: row;}",
+        "@media (max-width: 1024px) and (min-width: 768px) {.m-lookbook-slider {flex-direction: column; row-gap: 48px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "image_aspect_ratio": "original",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-lookbook",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "custom_content_qCQcCx": {
+      "type": "custom-content",
+      "blocks": {
+        "text_8wFzXG": {
+          "type": "text",
+          "settings": {
+            "title": "The Coastal Edition",
+            "subheading": "",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and <br\/>simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop Collection",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_8wFzXG"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-richtext__description br {display: none; } .m-richtext__description + .m-richtext__button {margin-top: 32px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "custom_content_G7X4g7": {
+      "type": "custom-content",
+      "blocks": {
+        "image_card_76hwqU": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Overshirts",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_kPeqEU": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Uniform",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_Nx8QTE": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Sweaters",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_76hwqU",
+        "image_card_kPeqEU",
+        "image_card_Nx8QTE"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 50,
+        "gap_mobile": 20,
+        "use_scroll_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "testimonials_bzU636": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_JrQTB7": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Was I in Hawaii?! No. Did I feel like I was in Hawaii?! No, because it’s snowing outside. But, would I wear this in Hawaii ❤️<\/p>",
+            "footer": "<p>Jared S.<\/p>",
+            "image_text": ""
+          }
+        },
+        "testimonial_Ax89pn": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Always getting compliments from family, friends, and strangers. 🤗 🙌<\/p>",
+            "footer": "<p>Alyssa A.<\/p>",
+            "image_text": ""
+          }
+        },
+        "testimonial_XJEpTU": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Hands down one of the best shirts I’ve ever owned.  Fits great, feels amazing, seems to stay cool and is somewhat water resistant. <\/p>",
+            "footer": "<p>Ben B.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "testimonial_nGPbrd": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Love Love Love this dress!It is extremely comfortable<\/p>",
+            "footer": "<p>Katie D.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_JrQTB7",
+        "testimonial_Ax89pn",
+        "testimonial_XJEpTU",
+        "testimonial_nGPbrd"
+      ],
+      "custom_css": [
+        ".m-testimonials--layout-6 .m-stars {margin-top: 21px; margin-bottom: 14px;}",
+        "@media (max-width: 767px) {.m-section__header {text-align: center; } .m-testimonials--layout-6 .m-stars {margin-top: 19px; margin-bottom: 13px; } .m-testimonials--layout-6.m-slider--pagination-fraction .m-slider-controls {margin-top: 24px; }}"
+      ],
+      "settings": {
+        "heading": "Happy Customers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container-fluid",
+        "color_scheme": "scheme-5c51585f-7c21-411d-a963-8f6c26d0f0ee",
+        "design": "testimonials-6",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "video_hero_FKXe43": {
+      "type": "video-hero",
+      "custom_css": [
+        "@media (max-width: 767px) {.m-hero__bg {height: 550px; }}",
+        ".m-video__bg video {object-fit: cover;}"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "video_ratio": "21\/9",
+        "show_overlay": true,
+        "video_type": "shopify",
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "New Summer Markdowns",
+        "subtitle": "Up to 60% OFF",
+        "text": "",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "button_label_2": "",
+        "button_link_2": "",
+        "button_style_2": "m-button--primary",
+        "button_size_2": "",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collage_tabs_GeGQ3b": {
+      "type": "collage-tabs",
+      "blocks": {
+        "tab_W9jfnb": {
+          "type": "tab",
+          "settings": {
+            "tab_color_scheme": "",
+            "navigation_title": "Antwerpen",
+            "heading": "Antwerpen <br> Boutique",
+            "heading_size": "h1",
+            "subheading": "",
+            "description": "<p>Address: 4b\/39 James <br\/>St, Fortitude Valley QLD 4006<\/p><p>+391 (0)35 2568<\/p><p>Mon-Sat: 10am-8pm<\/p>",
+            "text_alignment": "center",
+            "button_label": "Keep in Touch",
+            "button_style": "m-button--primary"
+          }
+        },
+        "tab_h63rGK": {
+          "type": "tab",
+          "settings": {
+            "tab_color_scheme": "",
+            "navigation_title": "Chicago",
+            "heading": "Chicago <br> Boutique",
+            "heading_size": "h1",
+            "subheading": "",
+            "description": "<p>Address: 4b\/39 James <br\/>St, Fortitude Valley QLD 4006<\/p><p>+391 (0)35 2568<\/p><p>Mon-Sat: 10am-8pm<\/p>",
+            "text_alignment": "center",
+            "button_label": "Keep in Touch",
+            "button_style": "m-button--primary"
+          }
+        },
+        "tab_yrriJB": {
+          "type": "tab",
+          "settings": {
+            "tab_color_scheme": "",
+            "navigation_title": "New York",
+            "heading": "New York <br> Boutique",
+            "heading_size": "h1",
+            "subheading": "",
+            "description": "<p>Address: 4b\/39 James <br\/>St, Fortitude Valley QLD 4006<\/p><p>+391 (0)35 2568<\/p><p>Mon-Sat: 10am-8pm<\/p>",
+            "text_alignment": "center",
+            "button_label": "Keep in Touch",
+            "button_style": "m-button--primary"
+          }
+        }
+      },
+      "block_order": [
+        "tab_W9jfnb",
+        "tab_h63rGK",
+        "tab_yrriJB"
+      ],
+      "custom_css": [
+        ".m-section__header {margin-bottom: 40px;}",
+        "@media (min-width: 768px) and (max-width: 1023px) {[style*=\"--tab-image-width\"] {--tab-image-width: 60% !important; }}",
+        "@media (max-width: 767px) {.m-collage-tab--content {padding-bottom: 24px; padding-top: 24px; } .m-section__header {margin-bottom: 24px; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "desktop_navigation_alignment": "start",
+        "desktop_image_position": "left",
+        "desktop_image_width": 65,
+        "image_aspect_ratio": "adapt",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-tabs",
+        "animations": "inherit"
+      }
+    },
+    "scrolling_promotion_nWVx9B": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "announcement_ib4Lfj": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "Fast & Free Delivery",
+            "text_size": 24,
+            "text_link": ""
+          }
+        },
+        "image_qxFWXq": {
+          "type": "image",
+          "settings": {
+            "image_height": 60,
+            "image_link": ""
+          }
+        },
+        "announcement_U3Q3jt": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "Customers Services",
+            "text_size": 24,
+            "text_link": ""
+          }
+        },
+        "image_bagiw8": {
+          "type": "image",
+          "settings": {
+            "image_height": 60,
+            "image_link": ""
+          }
+        },
+        "announcement_JpWgpN": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "large",
+            "text": "Lifetime Warranty",
+            "text_size": 24,
+            "text_link": ""
+          }
+        },
+        "image_fiWd83": {
+          "type": "image",
+          "settings": {
+            "image_height": 60,
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "announcement_ib4Lfj",
+        "image_qxFWXq",
+        "announcement_U3Q3jt",
+        "image_bagiw8",
+        "announcement_JpWgpN",
+        "image_fiWd83"
+      ],
+      "custom_css": [
+        ".m-scrolling-promotion-section {border-top: 1px solid rgb(var(--color-border));}",
+        "@media (max-width: 767px) {.m-promotion__text {font-size: 20px; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 30,
+        "item_gap": 44,
+        "item_gap_mobile": 20,
+        "color_scheme": "",
+        "padding_top": 22,
+        "padding_bottom": 14,
+        "custom_class": ""
+      }
+    }
+  },
+  "order": [
+    "c72959ad-9620-4e94-ae33-1bde908e9701",
+    "cascading_collection_98kqRT",
+    "rich_text_kRyHiB",
+    "featured_collection_mRiy4D",
+    "collection_image_showcase_iDCAp9",
+    "cascading_product_cch6X8",
+    "lookbook_MrzxNk",
+    "custom_content_qCQcCx",
+    "custom_content_G7X4g7",
+    "testimonials_bzU636",
+    "video_hero_FKXe43",
+    "collage_tabs_GeGQ3b",
+    "scrolling_promotion_nWVx9B"
+  ]
+}

@@ -1,0 +1,104 @@
+<hdt-accordion class="hdt-contents" {{ block.shopify_attributes }}>
+  <details class="hdt-widget hdt-widget-categories" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content hdt-current-scrollbar">
+      <div class="hdt-blog-categories-list hdt-font-medium hdt-text-base">
+        {%- for link in linklists[block.settings.cat_link_list].links -%}
+          {%- if link.type == 'blog_link' -%}
+            {%- if link.links != blank -%}
+              <hdt-accordion class="hdt-contents" only-click-icon>
+                <details class="hdt-pr hdt-menu_nested hdt-cate-item hdt-relative hdt-relative">
+                  <summary id="hdt-menu-{{ link.handle }}" data-url="{{ link.url }}" class="has_cats_toggle hdt-flex hdt-align-center hdt-justify-between hdt-relative">
+                    <span class="hdt-link_sm hdt-relative{%- if link.active %} hdt-current-cate{%- endif -%}">
+                      {{ link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ link.object.articles_count | default: shop.products_count }})</span>{%- endif -%}
+                    </span>
+                    {% if link.links != blank %}
+                      <span class="hdt-btn-open-sub hdt-relative" accordion-icon></span>
+                    {% endif %}
+                  </summary>
+                  <div class="hdt-sub-menu hdt-children">
+                    {%- for child_link in link.links -%}
+                      {%- if child_link.type == 'collection_link' or child_link.type == 'catalog_link' -%}
+                        {%- if child_link.links != blank -%}
+                          <hdt-accordion class="hdt-contents" only-click-icon>
+                            <details class="hdt-pr hdt-menu_nested2 hdt-cate-item hdt-relative">
+                              <summary id="hdt-menu-{{ child_link.handle }}" data-url="{{ child_link.url }}" class="hdt-cat-count hdt-flex hdt-align-center hdt-justify-between hdt-relative">
+                                <span class="hdt-link_sm hdt-relative{%- if child_link.active %} hdt-current-cate{%- endif -%}">
+                                  {{ child_link.title }}
+                                {%- if block.settings.count == true -%}
+                                  <span class="hdt-count">({{ child_link.object.articles_count | default: shop.products_count }})</span>
+                                {%- endif -%}
+                                </span>
+                                {% if link.links != blank %}
+                                  <span class="hdt-btn-open-sub hdt-relative" accordion-icon></span>
+                                {% endif %}
+                              </summary>
+                              <div class="hdt-sub-menu hdt-children">
+                                {%- for third_link in child_link.links -%}
+                                  {%- if third_link.type == 'collection_link' or third_link.type == 'catalog_link' -%}
+                                    <a href="{{ third_link.url }}" class="hdt-link_sm hdt-relative{%- if third_link.active %} hdt-current-cate{%- endif -%}">{{ third_link.title }}
+                                      {%- if block.settings.count == true -%}
+                                        <span class="hdt-count">({{ third_link.object.articles_count | default: shop.products_count }})</span>
+                                      {%- endif -%}
+                                    </a>
+                                  {%- endif -%}
+                                {%- endfor -%}
+                              </div>
+                            </details>
+                          </hdt-accordion>
+                        {%- else -%}
+                          <div class="hdt-cate-item hdt-relative{%- if child_link.active %} hdt-current-cate{%- endif -%}">
+                            <a href="{{ child_link.url }}">{{ child_link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ child_link.object.articles_count | default: shop.products_count }})</span> {%- endif -%}</a>
+                          </div>
+                        {%- endif -%}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                </details>
+              </hdt-accordion>
+            {%- else -%}
+              <div class="hdt-cate-item hdt-relative{%- if link.active %} hdt-current-cate{%- endif -%}"><a href="{{ link.url }}">{{ link.title }} {%- if block.settings.count == true -%} <span class="hdt-count">({{ link.object.articles_count | default: shop.products_count }})</span>{%- endif -%}</a></div>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:sections.sidebar_blog.categories.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "widget_heading",
+        "label": "t:sections.main-blogs.blocks.heading",
+        "default": "t:sections.sidebar_blog.categories.name"
+      },
+      {
+        "type": "link_list",
+        "id": "cat_link_list",
+        "label": "t:sections.main-blogs.blocks.categories.menu"
+      },
+      {
+        "type": "checkbox",
+        "id": "count",
+        "label": "t:sections.main-blogs.blocks.categories.count",
+        "default": false
+      }
+    ],
+    "presets":[
+      {
+        "name":"t:sections.sidebar_blog.categories.name"
+      }
+    ]
+  }
+{% endschema %}

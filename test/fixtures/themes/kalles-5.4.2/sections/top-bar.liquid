@@ -1,0 +1,467 @@
+<!-- sections/top-bar.liquid -->
+{%- style -%}
+.hdt-top-bar__wrap {
+  min-height: {{ section.settings.height | divided_by: 10.0 }}rem;
+  font-size: {{ section.settings.fontsize | divided_by: 10.0 }}rem;
+  padding:1rem 0;
+}
+.hdt-top-bar--bottom-border{
+  border-bottom: 0.1rem solid rgb(var(--color-line-border));
+}
+.hdt-top-bar__text a {
+  color: rgb(var(--color-link))!important;
+  text-decoration-thickness: 0.1rem!important;
+  transition: all 0.3s ease;
+}
+.hdt-top-bar__text a:hover,
+.hdt-top-bar__location a:hover{
+  color: rgb(var(--color-accent))!important;
+  transition: all 0.3s ease;
+}
+.hdt-top-bar__location {
+  gap: 7px;
+}
+.hdt-top-bar__cur > div {
+  display: inline-flex !important;
+  align-items: center;
+  vertical-align: middle;
+}
+.hdt-top-bar__email, .hdt-top-bar__phone {
+  display: inline-flex;
+  vertical-align: middle;
+  gap: 8px;
+  align-items: center;
+
+}
+.hdt-top-bar__email:not(:last-child), .hdt-top-bar__phone:not(:last-child) {
+  margin-inline-end: 2rem;
+}
+:where(.hdt-top-bar__email, .hdt-top-bar__phone) a:hover{
+  color: rgb(var(--color-accent));
+  transition: all 0.3s ease;
+}
+.hdt-top-bar__text .hdt-cd--hide{display:none}
+/* .hdt-top-bar__cur>div {vertical-align: text-top;} */
+.hdt-top-bar__cur div:not(:last-child){margin-inline-end: 2rem;}
+@media (min-width:1150px){
+  .lg\:hdt-grid-cols-2 .hdt-top-bar__item:first-child,
+  .lg\:hdt-grid-cols-3 .hdt-top-bar__item:first-child{
+    text-align: start;
+  }
+  .lg\:hdt-grid-cols-2 .hdt-top-bar__item:last-child,
+  .lg\:hdt-grid-cols-3 .hdt-top-bar__item:last-child{
+    text-align: end;
+  }
+  .lg\:hdt-grid-cols-2 .hdt-top-bar__item:first-child .hdt-socials__list,
+  .lg\:hdt-grid-cols-3 .hdt-top-bar__item:first-child .hdt-socials__list{
+    justify-content: start;
+  }
+  .lg\:hdt-grid-cols-2 .hdt-top-bar__item:last-child .hdt-socials__list,
+  .lg\:hdt-grid-cols-3 .hdt-top-bar__item:last-child .hdt-socials__list{
+    justify-content: end;
+  }
+}
+@media (max-width:1149px){
+  .hdt-top-bar__wrap{row-gap:0}
+}
+@media (-moz-touch-enabled: 0), (hover: hover) and (min-width: 1150px){
+  .hdt-top-bar__text a:hover{
+    opacity: 0.65;
+  }
+}
+{%- endstyle -%}
+{%- if section.settings.background_opacity != 1 %}
+  <hdt-height-observer prefix="top-bar" class="hdt-top-bar hdt-s-gradient {%- if section.settings.show_line_separator and section.blocks.size > 0 %} hdt-top-bar--bottom-border{% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}"{%- endif %} style="--background-opacity: {{ section.settings.background_opacity }};">
+{%- else -%}
+  <div class="hdt-top-bar hdt-s-gradient {%- if section.settings.show_line_separator and section.blocks.size > 0 %} hdt-top-bar--bottom-border{% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}"{%- endif %} style="--background-opacity: {{ section.settings.background_opacity }};">
+{% endif %}
+  <div class="hdt-container {%- if section.settings.full_width %}-full hdt-px-15{% endif %}">
+    {%- if section.blocks.size > 0 -%}
+      <div class="hdt-top-bar__wrap hdt-s-text hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-1 lg:hdt-grid-cols-{{ section.blocks.size }} hdt-align-center">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'text' -%}
+              {%- capture cap_date -%}
+                <hdt-countdown config='{"month":"{{ block.settings.countdown | date: '%m' | plus: 0 }}", "date":"{{ block.settings.countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+                  <hdt-countdown-amount data-days>00</hdt-countdown-amount> {{ block.settings.txt_day }} <hdt-countdown-amount data-hours>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-minutes>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-seconds>00</hdt-countdown-amount>
+                </hdt-countdown>
+              {%- endcapture -%}
+              {%- capture class_format_richtext -%}{% if block.settings.adding_border %} hdt-rte{% else %} hdt-tag-list{% endif %}{%- endcapture -%}
+              <div class="hdt-top-bar__item hdt-top-bar__text hdt-text-center{% if block.settings.hide %} hdt-hidden md:hdt-hidden lg:hdt-block{% endif %}">
+                {%- if block.settings.text1 != blank or block.settings.text2 != blank or block.settings.text3 != blank -%}
+                  <hdt-slider autoHeight{% if block.settings.effect == 'fade' %} isfade{% endif %} class="hdt-top-bar-text__slider hdt-slider lg:hdt-slides-1 hdt-relative hdt-oh"  config='{ "loop": true, "autoPlay": {{ block.settings.au_time | times: 1000 }}, "pauseOnHover": {{ block.settings.pause_when_hover }}, "autoHeight": true }'>
+                    <div class="hdt-slider__viewport">
+                      <div class="hdt-slider__container">
+                        {%- if block.settings.text1 != blank -%}<div class="hdt-slider__slide hdt-top-bar-text__item{{ class_format_richtext }}">{{- block.settings.text1 | replace: '[countdown]', cap_date -}}</div>{%- endif -%}
+                        {%- if block.settings.text2 != blank -%}<div class="hdt-slider__slide hdt-top-bar-text__item{{ class_format_richtext }}">{{- block.settings.text2 | replace: '[countdown]', cap_date -}}</div>{%- endif -%}
+                        {%- if block.settings.text3 != blank -%}<div class="hdt-slider__slide hdt-top-bar-text__item{{ class_format_richtext }}">{{- block.settings.text3 | replace: '[countdown]', cap_date -}}</div>{%- endif -%}
+                      </div>
+                    </div>
+                  </hdt-slider>
+                {%- endif -%}
+              </div>
+            {%- when 'liquid' -%}
+              <div class="hdt-top-bar__item hdt-top-bar__custom-liquid hdt-text-center{% if block.settings.hide %} hdt-hidden md:hdt-hidden lg:hdt-block{% endif %}">{%- if block.settings.custom_liquid != blank -%} {{ block.settings.custom_liquid }} {%- endif -%}</div>
+            {%- when 'info' -%}
+              <div class="hdt-top-bar__item hdt-top-bar__info hdt-text-center{% if block.settings.hide %} hdt-hidden md:hdt-hidden lg:hdt-block{% endif %}">
+                {%- if block.settings.show_phone -%}
+                  <div class="hdt-top-bar__phone hdt-inline-block">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" xmlns:xlink="http://www.w3.org/1999/xlink">
+                      <path d="M23.407 30.394c-2.431 0-8.341-3.109-13.303-9.783-4.641-6.242-6.898-10.751-6.898-13.785 0-2.389 1.65-3.529 2.536-4.142l0.219-0.153c0.979-0.7 2.502-0.927 3.086-0.927 1.024 0 1.455 0.599 1.716 1.121 0.222 0.442 2.061 4.39 2.247 4.881 0.286 0.755 0.192 1.855-0.692 2.488l-0.155 0.108c-0.439 0.304-1.255 0.869-1.368 1.557-0.055 0.334 0.057 0.684 0.342 1.068 1.423 1.918 5.968 7.55 6.787 8.314 0.642 0.6 1.455 0.685 2.009 0.218 0.573-0.483 0.828-0.768 0.83-0.772l0.059-0.057c0.048-0.041 0.496-0.396 1.228-0.396 0.528 0 1.065 0.182 1.596 0.541 1.378 0.931 4.487 3.011 4.487 3.011l0.050 0.038c0.398 0.341 0.973 1.323 0.302 2.601-0.695 1.327-2.85 4.066-5.079 4.066zM9.046 2.672c-0.505 0-1.746 0.213-2.466 0.728l-0.232 0.162c-0.827 0.572-2.076 1.435-2.076 3.265 0 2.797 2.188 7.098 6.687 13.149 4.914 6.609 10.532 9.353 12.447 9.353 1.629 0 3.497-2.276 4.135-3.494 0.392-0.748 0.071-1.17-0.040-1.284-0.36-0.241-3.164-2.117-4.453-2.988-0.351-0.238-0.688-0.358-0.999-0.358-0.283 0-0.469 0.1-0.532 0.14-0.104 0.111-0.39 0.405-0.899 0.833-0.951 0.801-2.398 0.704-3.424-0.254-0.923-0.862-5.585-6.666-6.916-8.459-0.46-0.62-0.641-1.252-0.538-1.877 0.187-1.133 1.245-1.866 1.813-2.26l0.142-0.099c0.508-0.363 0.4-1.020 0.316-1.242-0.157-0.414-1.973-4.322-2.203-4.781-0.188-0.376-0.336-0.533-0.764-0.533z" fill="currentColor"></path>
+                    </svg>
+                    <a href="tel:{{ block.settings.phone }}">{{ block.settings.phone }}</a>
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.show_email -%}
+                  <div class="hdt-top-bar__email hdt-inline-block">
+                    <svg class="ml__15" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" xmlns:xlink="http://www.w3.org/1999/xlink ">
+                      <path d="M28.244 7.47h-25.572v17.060h26.656v-17.060h-1.084zM27.177 8.536l-10.298 10.298c-0.47 0.47-1.289 0.47-1.759 0l-10.3-10.298h22.356zM3.738 8.961l6.923 6.922-6.923 6.923v-13.846zM4.589 23.464l6.827-6.826 2.951 2.95c0.436 0.436 1.016 0.677 1.633 0.677s1.197-0.241 1.633-0.677l2.951-2.951 6.826 6.826h-22.822zM28.262 22.807l-6.923-6.924 6.923-6.924v13.848z" fill="currentColor"></path>
+                    </svg>
+                    <a href="mailto:{{ block.settings.email }}">{{ block.settings.email }}</a>
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- when 'cur' -%}
+              <div class="hdt-top-bar__item hdt-top-bar__cur hdt-text-center{% if block.settings.hide %} hdt-hidden md:hdt-hidden lg:hdt-block{% endif %}">
+                {%- if block.settings.use_location and block.settings.url_location != blank -%}
+                  <div class="hdt-top-bar__location hdt-inline-flex hdt-align-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M16.001 1.072c5.291 0 9.596 4.305 9.596 9.597 0 1.683-0.446 3.341-1.29 4.799l-8.307 14.394-8.308-14.395c-0.843-1.456-1.289-3.115-1.289-4.798 0-5.292 4.305-9.597 9.597-9.597zM16.001 14.4c2.058 0 3.731-1.674 3.731-3.731s-1.674-3.731-3.731-3.731c-2.058 0-3.732 1.674-3.732 3.731s1.674 3.731 3.732 3.731zM16.001 0.006c-5.889 0-10.663 4.775-10.663 10.663 0 1.945 0.523 3.762 1.432 5.332l9.23 15.994 9.23-15.994c0.909-1.57 1.432-3.387 1.432-5.332 0-5.888-4.774-10.663-10.662-10.663v0zM16.001 13.334c-1.472 0-2.666-1.193-2.666-2.665 0-1.471 1.194-2.665 2.666-2.665s2.665 1.194 2.665 2.665c0 1.472-1.193 2.665-2.665 2.665v0z" fill="currentColor"/></svg>
+                    <a href="{{ block.settings.url_location }}" target="{{ block.settings.open_link }}">{{ block.settings.txt_location }}</a>
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.show_currency -%}
+                  {%- unless localization.available_countries.size <= 1 and settings.currency_type == "1" -%}
+                    {%- render 'hdt_currency' -%}
+                  {%- endunless -%}
+                {%- endif -%}
+                {%- if block.settings.show_language and localization.available_languages.size > 1 -%}
+                    {%- render 'hdt_language' -%}
+                {%- endif -%}
+              </div>
+            {%- when 'socials' -%}
+              <div class="hdt-top-bar__item hdt-top-bar__socials hdt-text-center{% if block.settings.hide %} hdt-hidden md:hdt-hidden lg:hdt-block{% endif %}">
+                {%- render 'social_sharing', socials_style: 'simple', socials_size: 'small' -%}
+              </div>
+            {%- when '@app' -%}
+              <div class="hdt-top-bar__item hdt-top-bar__app hdt-text-center">{%- render block -%}</div>
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+  {%- if section.settings.background_opacity != 1 %}
+    <script>document.documentElement.style.setProperty('--top-bar-height', `${Math.round(document.getElementById('shopify-section-{{ section.id }}').clientHeight)}px`);</script>
+  {%- endif -%}
+{%- if section.settings.background_opacity != 1 %}
+  </hdt-height-observer>
+{%- else -%}
+  </div>
+{% endif %}
+{% schema %}
+{
+  "name": "t:sections.top-bar.name",
+  "class": "hdt-section-group hdt-section-top-bar",
+  "max_blocks": 3,
+  "limit": 1,
+  "enabled_on": {
+    "groups": [
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "range",
+      "id": "height",
+      "label": "t:sections.top-bar.settings.height.label",
+      "default": 41,
+      "min": 20,
+      "max": 120,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "fontsize",
+      "label": "t:sections.top-bar.settings.fontsize.label",
+      "default": 12,
+      "min": 12,
+      "max": 18,
+      "step": 0.5,
+      "unit": "px"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_line_separator",
+      "label": "t:sections.top-bar.settings.show_line_separator.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "info": "Topbar transparent will work if background opacity is not 1",
+      "default": 0
+    },
+  ],
+  "blocks": [
+    {
+      "type": "info",
+      "name": "t:sections.top-bar.blocks.info.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_email",
+          "label": "t:sections.top-bar.blocks.info.settings.email.label",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "email",
+          "label": "t:sections.top-bar.blocks.info.settings.email.email",
+          "default": "kalles@domain.com",
+          "visible_if": "{{ block.settings.show_email }}",
+        },
+        {
+          "type": "checkbox",
+          "id": "show_phone",
+          "label": "t:sections.top-bar.blocks.info.settings.phone.label",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "phone",
+          "label": "t:sections.top-bar.blocks.info.settings.phone.phone",
+          "default": "+0123456789",
+          "visible_if": "{{ block.settings.show_phone }}",
+        },
+        {
+          "type": "checkbox",
+          "id": "hide",
+          "label": "t:sections.top-bar.blocks.hide",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "t:sections.top-bar.blocks.text.name",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "t:sections.top-bar.blocks.text.settings.countdown.info"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "text1",
+          "label": "t:sections.top-bar.blocks.text.settings.text1",
+          "default": "Spring sale discount off 50%"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "text2",
+          "label": "t:sections.top-bar.blocks.text.settings.text2",
+          "default": "Summer sale discount off 70%"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "text3",
+          "label": "t:sections.top-bar.blocks.text.settings.text3"
+        },
+        {
+          "type": "checkbox",
+          "id": "adding_border",
+          "label": "t:sections.all.adding_border.label"
+        },
+        {
+          "type": "text",
+          "id": "countdown",
+          "label": "t:sections.top-bar.blocks.text.settings.countdown.label",
+          "default": "2024-12-30 15:00:00",
+          "placeholder": "2024-12-30 15:00:00",
+          "info": "t:sections.top-bar.blocks.text.settings.countdown.info",
+          "visible_if": "{{ block.settings.text1 contains '[countdown]' or block.settings.text2 contains '[countdown]' or block.settings.text3 contains '[countdown]' }}"
+        },
+        {
+          "type": "text",
+          "id": "txt_day",
+          "label": "t:sections.top-bar.blocks.text.settings.txt_day.label",
+          "default": "days",
+          "visible_if": "{{ block.settings.text1 contains '[countdown]' or block.settings.text2 contains '[countdown]' or block.settings.text3 contains '[countdown]' }}"
+        },
+        {
+          "type": "select",
+          "id": "effect",
+          "label": "t:sections.top-bar.blocks.text.settings.effect.label",
+          "default": "carousel",
+          "options": [
+            {
+              "value": "fade",
+              "label": "t:sections.top-bar.blocks.text.settings.effect.options_1.label"
+            },
+            {
+              "value": "carousel",
+              "label": "t:sections.top-bar.blocks.text.settings.effect.options_2.label"
+            }
+          ]
+        },
+        {
+          "type": "range",
+          "id": "au_time",
+          "min": 0,
+          "max": 30,
+          "step": 1,
+          "label": "t:sections.top-bar.blocks.text.settings.au_time.label",
+          "info": "t:sections.top-bar.blocks.text.settings.au_time.info",
+          "unit": "sec",
+          "default": 3
+        },
+        {
+          "type": "checkbox",
+          "id": "pause_when_hover",
+          "default": false,
+          "label": "t:sections.top-bar.blocks.text.settings.au_time.pause_when_hover"
+        },
+        {
+          "type": "checkbox",
+          "id": "hide",
+          "label": "t:sections.top-bar.blocks.hide",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "liquid",
+      "name": "t:sections.top-bar.blocks.liquid.name",
+      "settings": [
+        {
+          "type": "liquid",
+          "id": "custom_liquid",
+          "label": "t:sections.top-bar.blocks.liquid.settings.label",
+          "info": "t:sections.top-bar.blocks.liquid.settings.info"
+        },
+        {
+          "type": "checkbox",
+          "id": "hide",
+          "label": "t:sections.top-bar.blocks.hide",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "cur",
+      "name": "t:sections.top-bar.blocks.cur.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_currency",
+          "label": "t:sections.top-bar.blocks.cur.settings.show_currency.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_language",
+          "label": "t:sections.top-bar.blocks.cur.settings.show_language.label",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "use_location",
+          "label": "t:sections.top-bar.blocks.cur.settings.use_location.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "txt_location",
+          "label": "t:sections.top-bar.blocks.cur.settings.txt_location.label",
+          "default": "Location"
+        },
+        {
+          "type": "url",
+          "id": "url_location",
+          "label": "t:sections.top-bar.blocks.cur.settings.url_location.label"
+        },
+        {
+          "type": "select",
+          "id": "open_link",
+          "options": [
+            {
+              "value": "_self",
+              "label": "t:sections.all.open_link.options_1.label"
+            },
+           {
+              "value": "_blank",
+              "label": "t:sections.all.open_link.options_2.label"
+            }
+          ],
+          "label": "t:sections.all.open_link.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "hide",
+          "label": "t:sections.top-bar.blocks.hide",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type":"socials",
+      "name":"Socials",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "hide",
+          "label": "t:sections.top-bar.blocks.hide",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "@app"
+    }
+  ],
+  "presets": [
+    {
+      "name":"t:sections.top-bar.name",
+      "blocks": [
+        {
+          "type": "liquid",
+          "settings": {
+            "hide": true,
+            "custom_liquid": "Welcome customers to your store"
+          }
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "cur",
+          "settings": {
+            "hide": true
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

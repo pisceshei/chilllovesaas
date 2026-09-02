@@ -1,0 +1,11 @@
+{
+  "name": "Page product compare",
+  "sections": {
+    "main": {
+      "type": "page-product-compare"
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

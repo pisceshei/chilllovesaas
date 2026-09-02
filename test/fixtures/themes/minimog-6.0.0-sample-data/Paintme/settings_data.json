@@ -1,0 +1,110 @@
+{
+  "current": {
+    "favicon": "",
+    "container_width": 1410,
+    "container_fluid_width": 1620,
+    "container_fluid_offset": 100,
+    "type_base_font": "roboto_condensed_n4",
+    "use_custom_font_body": true,
+    "custom_body_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Rubik-Regular.ttf?v=1622776767@400\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Rubik-Medium.ttf?v=1622776767@500",
+    "custom_body_weight": "400",
+    "type_header_font": "roboto_condensed_n7",
+    "use_custom_font_heading": true,
+    "custom_heading_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Rubik-Regular.ttf?v=1622776767@400\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Rubik-Medium.ttf?v=1622776767@500",
+    "custom_heading_weight": "500",
+    "btn_base_size": 16,
+    "img_overlay_opacity": 20,
+    "spacing_sections": 0,
+    "spacing_sections_mobile": 0,
+    "animations": "fade-in-up",
+    "pcard_layout": "1",
+    "pcard_alignment": "left",
+    "pcard_image_ratio": "1\/1",
+    "show_vendor": false,
+    "variant_option_design3": "color",
+    "product_colors": "red: #FF6961,\nyellow: #FDDA76,\nblack: #000000,\nblue: #8DB4D2,\ngreen: #C1E1C1,\npurple: #B19CD9,\nsilver: #EEEEEF,\nwhite: #FFFFFF,\nbrown: #836953,\nlight-brown: #feb035,\ndark-turquoise: #23cddc,\norange: #FFB347,\ntan: #E9D1BF,\nviolet: #B490B0,\npink: #FFD1DC,\ngrey: #E0E0E0,\nsky: #96BDC6,\npale-leaf: #CCD4BF",
+    "filter_color1": "",
+    "share_facebook": true,
+    "social_twitter_link": "https:\/\/twitter.com\/home",
+    "social_facebook_link": "https:\/\/facebook.com\/",
+    "social_pinterest_link": "https:\/\/pinterest.com\/",
+    "social_instagram_link": "https:\/\/instagram.com\/",
+    "wishlist_page": "wishlist",
+    "product_compare_page": "product-compare",
+    "custom_css": ".m-custom-promotion {\nborder: 1px solid var(--color-border);\n}\n.m-custom-promotion .m-icon-box__content .m-icon-box__heading {\nfont-size: 18px;\n}\n.m-custom-newsletters {\nbackground-image: url(\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/4_24d98319-1af4-4931-a427-66996cc259e3.jpg?v=1622780212\");\n  background-repeat: no-repeat;\n  background-size: cover;\n}\n.m-custom-newsletters .m-newsletter-form__wrapper {\nbackground: var(--color-field-background);\n}\n.m-custom-newsletters .m-newsletter-form--bordered .m-newsletter-form__input, .m-custom-newsletters  .m-newsletter-form--bordered .m-newsletter-form__button--icon {\nborder: none;\n}\n.m-custom-newsletters .m-newsletter-section__header {\nmargin-bottom: 30px;\n}\n@media (min-width: 1536px) {\n.m-custom-slideshow .m-slide__content .m-slide__title {\nfont-size: 100px;\n}\n}\n@media (max-width: 767px) {\n.m-custom-image-with-text {\npadding: 40px 0;\n}\n}",
+    "show_variant_swatch_image": true,
+    "use_theme_currencies": true,
+    "theme_currencies": "USD | EUR | GBP | VND",
+    "content_for_index": [
+
+    ],
+    "color_schemes": {
+      "default": {
+        "settings": {
+          "background": "#ffffff",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#222222",
+          "subtext": "#666666",
+          "heading_text": "#222222",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      },
+      "dark": {
+        "settings": {
+          "background": "#000000",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#c9c9c9",
+          "heading_text": "#ffffff",
+          "button": "#ffffff",
+          "button_label": "#222222",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#222222",
+          "price_sale": "#e84e4e",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#222222",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#222222",
+          "border": "#4b4b4b"
+        }
+      },
+      "scheme-8b84e54d-7736-46ef-9a67-3a4829822d7b": {
+        "settings": {
+          "background": "#f2f2f2",
+          "background_secondary": "#cccccc",
+          "background_gradient": "",
+          "text": "#222222",
+          "subtext": "#666666",
+          "heading_text": "#222222",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      }
+    }
+  }
+}

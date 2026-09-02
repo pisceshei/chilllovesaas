@@ -1,0 +1,673 @@
+<!--sections/catalog_card.liquid-->
+{{ 'catalog_card.css' | asset_url | stylesheet_tag }}
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+{% liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+%}
+<div id="{{ section.id }}" class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %} hdt-reveal="fade-in">
+  <div class="{{ child }}">
+    {% comment %} hdt-animate--parallax {% endcomment %}
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center'  }}
+    {%- endif -%}
+    {% content_for 'block', type: 'section-heading', id: 'catalog-card-heading' %}
+    <div class="hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-spacing-{{ section.settings.space_items_mb }} md:hdt-spacing-{{ section.settings.space_items_tb }} lg:hdt-spacing-{{ section.settings.space_items }} lg:hdt-grid-cols-{{ section.settings.col_dk }} md:hdt-grid-cols-{{ section.settings.col_tb }} hdt-grid-cols-{{ section.settings.col_mb }} hdt-ratio--{{ section.settings.image_ratio }} {% unless section.settings.image_size %} hdt-ratio--contain{% endunless %}">
+      {% content_for 'blocks' %}
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Catalog",
+    "tag": "section",
+    "class": "hdt-section hdt-catalog-card",
+    "disabled_on": {
+      "groups": ["custom.system", "header", "footer"]
+    },
+    "settings": [
+      {
+        "type": "select",
+        "id": "col_dk",
+        "label": "t:sections.all.items_row.desktop",
+        "default": "3",
+        "options": [
+          {
+            "label": "2",
+            "value": "2"
+          },
+          {
+            "label": "3",
+            "value": "3"
+          },
+          {
+            "label": "4",
+            "value": "4"
+          },
+          {
+            "label": "5",
+            "value": "5"
+          },
+          {
+            "label": "6",
+            "value": "6"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "col_tb",
+        "label": "t:sections.all.items_row.tablet",
+        "default": "2",
+        "options": [
+          {
+            "label": "1",
+            "value": "1"
+          },
+          {
+            "label": "2",
+            "value": "2"
+          },
+          {
+            "label": "3",
+            "value": "3"
+          },
+          {
+            "label": "4",
+            "value": "4"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "col_mb",
+        "label": "t:sections.all.items_row.mobile",
+        "default": "1",
+        "options": [
+          {
+            "label": "1",
+            "value": "1"
+          },
+          {
+            "label": "2",
+            "value": "2"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "id": "space_items",
+        "label": "t:sections.all.space_items.desktop",
+        "default": "30",
+        "options": [
+          {
+            "label": "0",
+            "value": "0"
+          },
+          {
+            "label": "5px",
+            "value": "5"
+          },
+          {
+            "label": "10px",
+            "value": "10"
+          },
+          {
+            "label": "20px",
+            "value": "20"
+          },
+          {
+            "label": "30px",
+            "value": "30"
+          },
+          { 
+            "label": "40px",
+            "value": "40"
+          }
+        ],
+      },
+      {
+        "type": "select",
+        "id": "space_items_tb",
+        "label": "t:sections.all.space_items.tablet",
+        "default": "20",
+        "options": [
+          {
+            "label": "0",
+            "value": "0"
+          },
+          {
+            "label": "5px",
+            "value": "5"
+          },
+          {
+            "label": "10px",
+            "value": "10"
+          },
+          {
+            "label": "20px",
+            "value": "20"
+          },
+          {
+            "label": "30px",
+            "value": "30"
+          },
+          {
+            "label": "40px",
+            "value": "40"
+          }
+        ],
+      },
+      {
+        "type": "select",
+        "id": "space_items_mb",
+        "label": "t:sections.all.space_items.mobile",
+        "default": "10",
+        "options": [
+          {
+            "label": "0",
+            "value": "0"
+          },
+          {
+            "label": "5px",
+            "value": "5"
+          },
+          {
+            "label": "10px",
+            "value": "10"
+          },
+          {
+            "label": "20px",
+            "value": "20"
+          },
+          {
+            "label": "30px",
+            "value": "30"
+          },
+          { 
+            "label": "40px",
+            "value": "40"
+          },
+        ],
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "options": [
+          {
+            "value": "adapt_image",
+            "label": "t:sections.all.images.ratio.adapt_image.label"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.images.ratio.square.label"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.images.ratio.portrait.label"
+          },
+          {
+            "value": "asos",
+            "label": "t:sections.all.images.ratio.asos.label"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.images.ratio.landscape.label"
+          },
+          {
+            "value": "custom-pr",
+            "label": "t:sections.all.images.ratio.custom.label"
+          }
+        ],
+        "label": "t:sections.all.images.ratio.label",
+        "default": "adapt_image"
+      },
+      {
+        "type": "checkbox",
+        "id": "image_size",
+        "label": "t:sections.all.images.size.cover",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.section_layout.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "select",
+        "id": "section_layout",
+        "label": "t:sections.all.section_layout.width.label",
+        "options": [
+          {
+            "value": "container",
+            "label": "t:sections.all.section_layout.width.container"
+          },
+          {
+            "value": "wrapper_container",
+            "label": "t:sections.all.section_layout.width.wrapper_container"
+          },
+          {
+            "value": "full_width",
+            "label": "t:sections.all.section_layout.width.full_width"
+          }
+        ],
+        "default": "container"
+      },
+      {
+        "type": "image_picker",
+        "id": "section_background",
+        "label": "t:sections.all.background.image"
+      },
+      {
+        "type": "checkbox",
+        "id": "hdt_background_parallax",
+        "label": "Using parallax for background",
+        "visible_if": "{{ section.settings.section_background != blank }}",
+        "default": false,
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.padding.section_spacing"
+      },
+      {
+        "type": "text",
+        "id": "mg",
+        "label": "Margin",
+        "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+        "default": ",,50px,",
+        "placeholder": ",,50px,"
+      },
+      {
+        "type": "text",
+        "id": "mg_mb",
+        "label": "Margin (Mobile)",
+        "default": ",,30px,",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ section.settings.mg != blank }}"
+      },
+      {
+        "type": "text",
+        "id": "pd",
+        "label": "Padding",
+        "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+        "placeholder": "50px,,50px,"
+      },
+      {
+        "type": "text",
+        "id": "pd_mb",
+        "label": "Padding (Mobile)",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ section.settings.pd != blank }}"
+      },
+    ],
+    "blocks": [
+      {
+        "type": "_catalog_card",
+      },
+    ],
+    "presets": [
+      {
+        "name": "Catalog card",
+        "category": "t:sections_categories.05_section.name",
+        "blocks": [
+          {
+            "type": "_catalog_card",
+            "name": "Card",
+            "blocks": [
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Tennis –",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 24,
+                  "line_height": 29,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 10,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 10
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Excellence in<br> Every Swing",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 40,
+                  "line_height": 48,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 15,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 20,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Figma ipsum component variant main layer. Follower bullet outline.",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 16,
+                  "line_height": 19,
+                  "font_weight": 400,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 20,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "button",
+                "name": "t:blocks.button.name",
+                "settings": {
+                  "label": "See all",
+                  "link": "shopify://collections",
+                  "open_in_new_tab": false,
+                  "full_width": false,
+                  "btn_style": "",
+                  "color_btn": "#ffffff",
+                  "color_hover_btn": "#ffffff",
+                  "background_btn": "#222222",
+                  "background_hover_btn": "#333333",
+                  "border_w_btn": "",
+                  "border_btn": "#222222",
+                  "border_hover_btn": "#333333",
+                  "size": "custom custom-inline",
+                  "text_size": "hdt-text-lg",
+                  "font_weight": "normal",
+                  "font_size_btn": 16,
+                  "padding_btn": 20,
+                  "min_width_btn": 100,
+                  "min_width_dt_btn": 100,
+                  "min_height_btn": 20,
+                  "rounded": "",
+                  "icon": "arrow_simple",
+                  "icon_position": "after",
+                  "icon_height": 12,
+                  "icon_spacing": 5
+                },
+              }
+            ]
+          },
+          {
+            "type": "_catalog_card",
+            "name": "Card",
+            "blocks": [
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Tennis –",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 24,
+                  "line_height": 29,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 10,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 10
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Excellence in<br> Every Swing",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 40,
+                  "line_height": 48,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 15,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 20,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Figma ipsum component variant main layer. Follower bullet outline.",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 16,
+                  "line_height": 19,
+                  "font_weight": 400,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 20,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "button",
+                "name": "t:blocks.button.name",
+                "settings": {
+                  "label": "See all",
+                  "link": "shopify://collections",
+                  "open_in_new_tab": false,
+                  "full_width": false,
+                  "btn_style": "",
+                  "color_btn": "#ffffff",
+                  "color_hover_btn": "#ffffff",
+                  "background_btn": "#222222",
+                  "background_hover_btn": "#333333",
+                  "border_w_btn": "",
+                  "border_btn": "#222222",
+                  "border_hover_btn": "#333333",
+                  "size": "custom custom-inline",
+                  "text_size": "hdt-text-lg",
+                  "font_weight": "normal",
+                  "font_size_btn": 16,
+                  "padding_btn": 20,
+                  "min_width_btn": 100,
+                  "min_width_dt_btn": 100,
+                  "min_height_btn": 20,
+                  "rounded": "",
+                  "icon": "arrow_simple",
+                  "icon_position": "after",
+                  "icon_height": 12,
+                  "icon_spacing": 5
+                },
+              }
+            ]
+          },
+          {
+            "type": "_catalog_card",
+            "name": "Card",
+            "blocks": [
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Tennis –",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 24,
+                  "line_height": 29,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 10,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 10
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Excellence in<br> Every Swing",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 40,
+                  "line_height": 48,
+                  "font_weight": 600,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 15,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 20,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "text_custom",
+                "name": "t:blocks.text_custom.name",
+                "settings": {
+                  "text": "Figma ipsum component variant main layer. Follower bullet outline.",
+                  "remove_br_mobile": false,
+                  "html_tag": "p",
+                  "font_family": "",
+                  "color_text": "#ffffff",
+                  "font_size": 16,
+                  "line_height": 19,
+                  "font_weight": 400,
+                  "letter_spacing": 0,
+                  "enable_italic": false,
+                  "enable_text_shadow": false,
+                  "margin_bottom": 20,
+                  "hide_on_mobile": false,
+                  "font_size_mobile": 14,
+                  "line_height_mobile": 0,
+                  "letter_spacing_mobile": 0,
+                  "margin_bottom_mobile": 15
+                },
+              },
+              {
+                "type": "button",
+                "name": "t:blocks.button.name",
+                "settings": {
+                  "label": "See all",
+                  "link": "shopify://collections",
+                  "open_in_new_tab": false,
+                  "full_width": false,
+                  "btn_style": "",
+                  "color_btn": "#ffffff",
+                  "color_hover_btn": "#ffffff",
+                  "background_btn": "#222222",
+                  "background_hover_btn": "#333333",
+                  "border_w_btn": "",
+                  "border_btn": "#222222",
+                  "border_hover_btn": "#333333",
+                  "size": "custom custom-inline",
+                  "text_size": "hdt-text-lg",
+                  "font_weight": "normal",
+                  "font_size_btn": 16,
+                  "padding_btn": 20,
+                  "min_width_btn": 100,
+                  "min_width_dt_btn": 100,
+                  "min_height_btn": 20,
+                  "rounded": "",
+                  "icon": "arrow_simple",
+                  "icon_position": "after",
+                  "icon_height": 12,
+                  "icon_spacing": 5
+                },
+              }
+            ]
+          },
+        ]
+      }
+    ]
+  }
+{% endschema %}

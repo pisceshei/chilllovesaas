@@ -1,0 +1,213 @@
+{
+  "current": {
+    "container_width": 1280,
+    "container_fluid_offset": 65,
+    "type_base_font": "rubik_n4",
+    "use_custom_font_body": true,
+    "custom_body_font": "https://cdn.shopify.com/s/files/1/0595/7291/2305/files/Rubik-Regular.ttf?v=1634195770@400\nhttps://cdn.shopify.com/s/files/1/0595/7291/2305/files/Rubik-Medium.ttf?v=1634195770@500",
+    "use_custom_font_heading": true,
+    "custom_heading_font": "https://cdn.shopify.com/s/files/1/0595/7291/2305/files/Sentient-Regular.woff2?v=1634182764@400",
+    "type_header_base_size": 35,
+    "btn_border_radius": 0,
+    "btn_weight": "400",
+    "bg_cart_wishlist_count": "#dc6545",
+    "img_overlay_opacity": 20,
+    "spacing_sections": 0,
+    "spacing_sections_mobile": 0,
+    "animations": "fade-in-up",
+    "pcard_alignment": "center",
+    "collection_card_color_scheme": "default",
+    "variant_option_design1": "dropdown",
+    "variant_option_design2": "dropdown",
+    "product_colors": "red: #FF6961,\nyellow: #FDDA76,\nblack: #000000,\nblack band: #000000,\nblue: #8DB4D2,\ngreen: #C1E1C1,\npurple: #B19CD9,\nsilver: #EEEEEF,\nwhite: #FFFFFF,\nbrown: #836953,\nlight brown: #B5651D,\ndark turquoise: #23cddc,\norange: #FFB347,\ntan: #E9D1BF,\nviolet: #B490B0,\npink: #FFD1DC,\ngrey: #E0E0E0,\nsky: #96BDC6,\npale leaf: #CCD4BF,\nlight blue: #b1c5d4,\ndark grey: #aca69f,\nbeige: #EBE6DB,\nbeige band: #EED9C4,\ndark blue: #063e66,\ncream: #FFFFCC,\nlight pink: #FBCFCD,\nmint: #bedce3,\ndark gray: #3A3B3C,\nrosy brown: #c4a287,\nlight grey:#D3D3D3,\ncopper: #B87333,\nrose gold: #ECC5C0,\nnight blue: #151B54,\ncoral: #FF7F50,\nlight purple: #C6AEC7",
+    "filter_color1": "gingham",
+    "filter_color2": "flannel",
+    "sale_badge_color_scheme": "badge-sale",
+    "social_twitter_link": "https://twitter.com/home",
+    "social_facebook_link": "https://facebook.com/",
+    "social_pinterest_link": "https://pinterest.com/",
+    "social_instagram_link": "https://instagram.com/",
+    "wishlist_page": "",
+    "product_compare_page": "",
+    "gm_api": "",
+    "instagram_token": "",
+    "custom_css": ".m-button.m-button--link {\n  --btn-link-border: 1px;\n  --btn-line-height: 19px;\n}\n.m-richtext__subtitle, .m-hero__subtitle {\n  font-size: 18px;\n  font-style: italic;\n}\n.m-custom-newsletters .m-newsletter-form__wrapper {\n--input-rounded: 0;\n}\n.m-custom-newsletters .m-newsletter-section__header {\nmargin-bottom: 30px;\n}",
+    "size_chart": "size-guide",
+    "content_for_index": [],
+    "blocks": {
+      "6868439170666289573": {
+        "type": "shopify://apps/foxkit-upsells-cross-sells/blocks/foxkit-theme-helper/13f41957-6b79-47c1-99a2-e52431f06fff",
+        "disabled": false,
+        "settings": {}
+      }
+    },
+    "color_schemes": {
+      "default": {
+        "settings": {
+          "background": "#ffffff",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#000000",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#f1f1f1",
+          "form_field_label": "#000000",
+          "tooltip": "#000000",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      },
+      "dark": {
+        "settings": {
+          "background": "#f8f6f7",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#000000",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#000000",
+          "border": "#4b4b4b"
+        }
+      },
+      "footer": {
+        "settings": {
+          "background": "#ecedee",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#000000",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#000000",
+          "tooltip_label": "#ffffff",
+          "border": "#dedede"
+        }
+      },
+      "badge-hot": {
+        "settings": {
+          "background": "#da3f3f",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#ffffff",
+          "heading_text": "#ffffff",
+          "button": "#ffffff",
+          "button_label": "#222222",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#222222",
+          "price_sale": "#ffffff",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#222222",
+          "border": "#dedede"
+        }
+      },
+      "badge-new": {
+        "settings": {
+          "background": "#98d8ca",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#ffffff",
+          "heading_text": "#ffffff",
+          "button": "#ffffff",
+          "button_label": "#222222",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#222222",
+          "price_sale": "#ffffff",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#222222",
+          "border": "#dedede"
+        }
+      },
+      "badge-sale": {
+        "settings": {
+          "background": "#dc6545",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#ffffff",
+          "heading_text": "#ffffff",
+          "button": "#dc6545",
+          "button_label": "#ffffff",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#dc6545",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#ffffff",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#666666",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#000000",
+          "border": "#ffffff"
+        }
+      },
+      "scheme-687d7297-e05a-40cc-91d1-4a30a7bcffe4": {
+        "settings": {
+          "background": "#ffffff",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#000000",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#000000",
+          "border": "#d2d2d2"
+        }
+      }
+    }
+  },
+  "presets": {
+    "Default": {
+      "sections": {
+        "featured-collection": {
+          "type": "featured-collection",
+          "settings": {}
+        },
+        "featured-product": { "type": "featured-product", "settings": {} }
+      },
+      "content_for_index": ["featured-collection", "featured-product"]
+    }
+  }
+}

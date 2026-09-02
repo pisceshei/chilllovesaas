@@ -1,0 +1,11 @@
+{
+  "name": "Page wishlist",
+  "sections": {
+    "main": {
+      "type": "page-wishlist"
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

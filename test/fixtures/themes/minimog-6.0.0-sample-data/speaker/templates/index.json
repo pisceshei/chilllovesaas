@@ -1,0 +1,403 @@
+{
+  "sections": {
+    "26f31422-bb5a-4833-854c-60a0c2bc7a77": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-section__subheading,\n.m-richtext__subtitle,\n.m-hero__subtitle {\n  font-size: 15px;\n  line-height: 1.2;\n  letter-spacing: 0.1em;\n  margin-bottom: 25px;\n  font-weight: 600;\n}\n\n.sf__index-icon-box-1 .m-icon-box {\n  padding: 50px 30px;\n  border-radius: 15px;\n}\n.sf__index-icon-box-1 .m-icon-box__heading {\n  font-size: 24px;\n  line-height: 1.5;\n  margin-bottom: 12px;\n  font-weight: 600;\n}\n\n.sf__index-img-with-text .m-richtext__subtitle {\n  margin-bottom: 56px;\n}\n\n.sf__index-custom-content {\n  background-image: url(\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/bg-1.jpg?v=1631810354\");\n  background-size: cover;\n  background-position: bottom center;\n  background-repeat: no-repeat;\n}\n\n.sf__index-custom-content ul.sf__custom-list li {\n  display: grid;\n  grid-template-columns: 48px auto;\n  grid-gap: 40px;\n  margin-bottom: 50px;\n}\n.sf__index-custom-content ul.sf__custom-list li:last-child {\n  margin-bottom: 0;\n}\n.sf__index-custom-content ul.sf__custom-list .content_box h3 {\n  margin-bottom: 10px;\n  margin-top: 0;\n}\n\n.sf__index-custom-content-1 .sf__tab-item-content,\n.sf__index-custom-content ul.sf__custom-list .content_box p {\n--color-sub-text: #696969;\ncolor: #696969 !important;\n}\n\n.sf__index-hero .m-hero {\n  border-radius: 15px;\n}\n.sf__index-hero .m-hero__content h3 {\n  font-size: 40px;\n  line-height: 1.3;\n  font-weight: 600;\n  margin-bottom: 15px;\n}\n.sf__index-hero .m-hero__content .m-hero__text {\n  margin-bottom: 0;\n}\n.sf__index-custom-content-1 .m-custom-content__block-text {\n  align-items: flex-start;\n}\n.sf__index-custom-content-1\n  .sf__tabs-custom\n  .sf__tab-item\n  .sf__tab-item-label::before {\n  right: 5px;\n}\n.sf__index-custom-content-1 .sf__tabs-custom .sf__tab-item .sf__tab-item-label {\n  font-weight: 600;\n  font-size: 20px;\n  line-height: 1.6;\n  padding: 3px 0;\n}\n.sf__index-custom-content-1\n  .sf__tabs-custom\n  .sf__tab-item\n  .sf__tab-item-content {\n  color: var(--color-sub-text);\n}\n.sf__index-hero-2 .m-hero__content h3 {\n  font-size: 40px;\n  font-weight: 600;\n  margin-bottom: 10px;\n  line-height: 1.3;\n}\n.sf__index-hero-2 .m-hero__content .m-hero__text {\n  margin-bottom: 50px;\n}\n\n@media (min-width: 768px) {\n  .sf__index-hero-2 .m-hero__content {\n    padding: 70px 55px 80px;\n    background: #fff;\n    border-radius: 15px;\n  }\n}\n\n@media (min-width: 1536px) {\n  .sf__index-custom-content .m-section__header {\n    margin-bottom: 100px;\n  }\n  .sf__index-custom-content .m-section-py {\n    padding-bottom: 200px;\n  }\n}\n\n@media (min-width: 1921px) {\n  .sf__index-custom-content {\n    background-position: top;\n  }\n}\n\n@media (max-width: 767px) {\n  .sf__index-icon-box-1 .m-icon-box {\n    padding: 30px 16px;\n  }\n  .sf__index-icon-box-1 .m-icon-box__heading {\n    font-size: 20px;\n  }\n  .sf__index-icon-box-1 .m-icon-box__inner {\n    align-items: flex-start;\n  }\n  .m-section__subheading,\n  .m-richtext__subtitle,\n  .m-hero__subtitle {\n    font-size: 12px;\n    margin-bottom: 10px;\n  }\n  .sf__index-img-with-text .m-richtext__subtitle {\n    margin-bottom: 30px;\n  }\n  .sf__index-img-with-text .m-richtext__subtitle img {\n    max-width: 60px;\n  }\n  .sf__index-custom-content {\n    background-image: none;\n  }\n  .sf__index-custom-content ul.sf__custom-list .content_box h3 {\n    font-size: 18px;\n    margin-bottom: 5px;\n  }\n  .sf__index-custom-content ul.sf__custom-list li {\n    grid-template-columns: 30px auto;\n    grid-gap: 20px;\n    margin-bottom: 30px;\n  }\n  .sf__index-custom-content-1\n    .sf__tabs-custom\n    .sf__tab-item\n    .sf__tab-item-label {\n    font-size: 18px;\n    padding-right: 15px;\n  }\n  .sf__index-custom-content-1 .sf__tabs-custom .sf__tab-item {\n    margin-bottom: 20px;\n  }\n  .sf__index-hero .m-hero__content h3,\n  .sf__index-hero-2 .m-hero__content h3 {\n    font-size: 30px;\n  }\n  .sf__index-hero-2 .m-hero__content .m-hero__text {\n    margin-bottom: 30px;\n  }\n}"
+      }
+    },
+    "1631802205ac1ab2f1": {
+      "type": "slider",
+      "blocks": {
+        "1631802205ac1ab2f1-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "",
+            "title": "Innovative,<br> wireless home <br> speaker",
+            "description": "<p>Designed to be positioned up against the wall on <br/>a shelf or side table.</p>",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "start",
+            "footer_text": "Call: +32 9006868",
+            "footer_button": "contact@regler.com",
+            "footer_link": "#"
+          }
+        }
+      },
+      "block_order": ["1631802205ac1ab2f1-0"],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": false,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf__index-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1631805028fe3b9d59": {
+      "type": "icon-box",
+      "blocks": {
+        "1631805028fe3b9d59-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Track focus",
+            "description": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolr sint occaecat cupidatat non proiden</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1631805028fe3b9d59-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Hear more",
+            "description": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolr sint occaecat cupidatat non proiden</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1631805028fe3b9d59-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Listion longer",
+            "description": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolr sint occaecat cupidatat non proiden</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "a36f1cef-dcf1-4437-ba0c-9aceb3c8b1a1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Roam free",
+            "description": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolr sint occaecat cupidatat non proiden</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "980831ad-4119-4054-98be-649f7f33ee24": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Filter more",
+            "description": "<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolr sint occaecat cupidatat non proiden</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1631805028fe3b9d59-0",
+        "1631805028fe3b9d59-1",
+        "1631805028fe3b9d59-2",
+        "a36f1cef-dcf1-4437-ba0c-9aceb3c8b1a1",
+        "980831ad-4119-4054-98be-649f7f33ee24"
+      ],
+      "settings": {
+        "heading": "Find the right connected<br> speaker for you",
+        "heading_size": "h2",
+        "subheading": "SIGNATURE SOUND, ALL AROUND",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "item_per_row": 5,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "footer",
+        "card_style": "vertical",
+        "image_max_width": "80px",
+        "content_alignment": "start",
+        "hover_effect": "scaling-down",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-icon-box-1",
+        "animations": "inherit"
+      }
+    },
+    "1631805039afcfc3fc": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 60,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "Find the right connected<br> speaker for you",
+        "sub_title": "<img src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/Group1.svg?v=1631809007\">",
+        "text": "<p>Enjoy rich, immersive sound in every room. Each speaker is carefully<br/> hand tuned by our engineers to give you the best quality listening<br/> experience in your space. Hear the difference.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum<br/> dolore eu fugiat nulla pariatur.</p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "<span class=\"flex items-center\"> Read more <img style=\"height:16px; margin-left: 8px;margin-bottom: 3px;\" src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/ArrowRight.svg?v=1631808590\"> <span></span></span>",
+        "button_link": "",
+        "button_style": "sf__btn-link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-img-with-text",
+        "animations": "inherit"
+      }
+    },
+    "1631808055ce5991f0": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 60,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "Welcomes you with a<br>\n human touch",
+        "sub_title": "<img src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/Group2.svg?v=1631809600\">",
+        "text": "<p>Enjoy rich, immersive sound in every room. Each speaker is carefully<br/> hand tuned by our engineers to give you the best quality listening<br/> experience in your space. Hear the difference.</p><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum<br/> dolore eu fugiat nulla pariatur.</p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "<span class=\"flex items-center\"> Read more <img style=\"height:16px; margin-left: 8px;margin-bottom: 3px;\" src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/ArrowRight.svg?v=1631808590\"> <span></span></span>",
+        "button_link": "",
+        "button_style": "sf__btn-link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__index-img-with-text",
+        "animations": "inherit"
+      }
+    },
+    "16318096993d3ed88e": {
+      "type": "custom-content",
+      "blocks": {
+        "738fcb4e-f5f8-4f2f-bd48-84198bac2a3e": {
+          "type": "html",
+          "settings": {
+            "code": "<ul class=\"sf__custom-list\">\n<li>\n<div class=\"img_box\"><img src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/icon-6.svg?v=1631810887\"></div>\n<div class=\"content_box rte\">\n<h3 class=\"h4\">Different Sound Experiences</h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.</p>\n</div>\n</li>\n<li>\n<div class=\"img_box\"><img src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/icon-7.svg?v=1631810887\"></div>\n<div class=\"content_box rte\">\n<h3 class=\"h4\">Sound Performance</h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.</p>\n</div>\n</li>\n<li>\n<div class=\"img_box\"><img src=\"https://cdn.shopify.com/s/files/1/0595/7291/2305/files/icon-8.svg?v=1631810887\"></div>\n<div class=\"content_box rte\">\n<h3 class=\"h4\">Active Room Compensation</h3>\n<p>Designed to be positioned up against<br> the wall on a shelf or side table.</p>\n</div>\n</li>\n</ul>",
+            "width": "33%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": ["738fcb4e-f5f8-4f2f-bd48-84198bac2a3e"],
+      "settings": {
+        "heading": "A wireless speaker with a<br> dynamic acoustic performance",
+        "heading_size": "h2",
+        "subheading": "A PREMIUM SOUND.",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__index-custom-content"
+      }
+    },
+    "1631810164e4ab2bd9": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Choose your style",
+        "heading_size": "h2",
+        "subheading": "BEAUTIFUL DESIGN",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 3,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1631841290755fde40": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "Maximise the sound <br>performance",
+        "subtitle": "BEAUTIFUL DESIGN",
+        "text": "<p>Designed to be positioned up against the wall on a <br/>shelf or side table.</p>",
+        "button_label": "",
+        "button_link": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf__index-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1631863891926e1aa4": {
+      "type": "custom-content",
+      "blocks": {
+        "1631863891926e1aa4-0": {
+          "type": "text",
+          "settings": {
+            "title": "Frequently<br> asked questions",
+            "subheading": "A PREMIUM SOUND.",
+            "text": "",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "f86ce6b2-e375-41aa-aa81-6d858b52208a": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"sf__tabs-custom\">\n  <div class=\"sf__tab-item\">\n        <input type=\"checkbox\" id=\"chck1\" checked>\n        <label class=\"sf__tab-item-label\" for=\"chck1\">How did my package ship?</label>\n        <div class=\"sf__tab-item-content\">\n          Complexion-perfecting natural foundation enriched with antioxidant-packed superfruits, vitamins, and other skin-nourishing nutrients. Creamy liquid formula sets with a pristine matte finish for soft, velvety smooth skin.<br><br>Say hello to flawless, long-lasting foundation that comes in 7 melt-into-your-skin shades.\n        </div>\n      </div>\n  <div class=\"sf__tab-item\">\n        <input type=\"checkbox\" id=\"chck2\">\n        <label class=\"sf__tab-item-label\" for=\"chck2\">Why does my USPS tracking number state 1-Day, 2-Day, 3-Day Delivery?</label>\n        <div class=\"sf__tab-item-content\">\n          Complexion-perfecting natural foundation enriched with antioxidant-packed superfruits, vitamins, and other skin-nourishing nutrients. Creamy liquid formula sets with a pristine matte finish for soft, velvety smooth skin.<br><br>Say hello to flawless, long-lasting foundation that comes in 7 melt-into-your-skin shades.\n        </div>\n      </div>\n  <div class=\"sf__tab-item\">\n        <input type=\"checkbox\" id=\"chck3\">\n        <label class=\"sf__tab-item-label\" for=\"chck3\">How long will my package take to arrive?</label>\n        <div class=\"sf__tab-item-content\">\n          Complexion-perfecting natural foundation enriched with antioxidant-packed superfruits, vitamins, and other skin-nourishing nutrients. Creamy liquid formula sets with a pristine matte finish for soft, velvety smooth skin.<br><br>Say hello to flawless, long-lasting foundation that comes in 7 melt-into-your-skin shades.\n        </div>\n      </div>\n  <div class=\"sf__tab-item\">\n        <input type=\"checkbox\" id=\"chck4\">\n        <label class=\"sf__tab-item-label\" for=\"chck4\">What are business days?</label>\n        <div class=\"sf__tab-item-content\">\n          Complexion-perfecting natural foundation enriched with antioxidant-packed superfruits, vitamins, and other skin-nourishing nutrients. Creamy liquid formula sets with a pristine matte finish for soft, velvety smooth skin.<br><br>Say hello to flawless, long-lasting foundation that comes in 7 melt-into-your-skin shades.\n        </div>\n      </div>\n</div>",
+            "width": "66%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1631863891926e1aa4-0",
+        "f86ce6b2-e375-41aa-aa81-6d858b52208a"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 100,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__index-custom-content-1"
+      }
+    },
+    "1631869646e87b6ada": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "right middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "Sound and style for<br> every home",
+        "subtitle": "",
+        "text": "<p>Each speaker is carefully hand tuned by our engineers to<br/> give you the best quality listening experience in your <br/>space. Hear the difference.</p>",
+        "button_label": "download product sheet",
+        "button_link": "",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf__index-hero-2",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    }
+  },
+  "order": [
+    "26f31422-bb5a-4833-854c-60a0c2bc7a77",
+    "1631802205ac1ab2f1",
+    "1631805028fe3b9d59",
+    "1631805039afcfc3fc",
+    "1631808055ce5991f0",
+    "16318096993d3ed88e",
+    "1631810164e4ab2bd9",
+    "1631841290755fde40",
+    "1631863891926e1aa4",
+    "1631869646e87b6ada"
+  ]
+}

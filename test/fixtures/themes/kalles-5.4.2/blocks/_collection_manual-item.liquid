@@ -1,0 +1,192 @@
+{%- liquid
+  assign collection = block.settings.collection
+  assign collection_des = section.settings.collection_des | default: collection_des
+  assign image = block.settings.image | default: collection.metafields.theme.featured_image_collection.value | default: collection.image | default: collection.products.first.featured_image
+  assign title = block.settings.title | default: collection.title
+  assign count_label = section.settings.count_label | default: count_label
+  assign collection_link = block.settings.collection_link | default: collection.url
+  
+  assign current_width = settings.page_width | append: 'px'
+  
+  capture name_img
+    cycle 'collection-apparel-1', 'collection-apparel-2', 'collection-apparel-3', 'collection-apparel-4'
+  endcapture
+-%}
+
+<div id="{{ block.id }}" class="hdt-masonry-collection__item" style="--item-column-span: {{ block.settings.column_width }}; --item-row-span: {{ block.settings.row_count }};--item-column-span-tb: {{ block.settings.tb_column_width }}; --item-row-span-tb: {{ block.settings.tb_row_count }};--item-column-span-mb: {{ block.settings.mb_column_width }}; --item-row-span-mb: {{ block.settings.mb_row_count }}" hdt-reveal="slide-in" timeline {{ block.shopify_attributes }}> 
+  <div class="hdt-collection-item hdt-collection-manual-item hdt-collection-style{{ collection_des }}">
+    <div class="hdt-collection-inner hdt-relative hdt-oh hdt-grid">
+      <div class="hdt-collection-img hdt-relative hdt-oh hdt-grid hdt-eff-{{ section.settings.b_effect | default: b_effect }} hdt-eff-img-{{ section.settings.img_effect | default: img_effect }}">
+        <div class="hdt-ratio hdt-relative" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1.2 }};">
+          {% if collection_des == "9" %}
+            <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> 
+          {% endif %}
+          {%- if image != blank -%}
+            {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: 'hdt-obj-eff', widths: '100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000' }}
+          {%- else -%}
+            {{ name_img | placeholder_svg_tag: 'hdt-placeholder-svg hdt-obj-eff' }}  
+          {%- endif -%}
+          <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+        </div>
+      </div>
+      {%- if title != blank and collection_des != '8' -%}
+        <div class="hdt-collection-content hdt-absolute hdt-place-self-{{ section.settings.content_position | default: content_position }} {%- if section.settings.show_count or show_count %} hdt-collection-has-count{%- endif -%}">
+          <div class="hdt-collection-wrapper hdt-flex hdt-flex-col hdt-justify-center hdt-align-center {{ section.settings.rounded }}">
+            <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ collection_link }}"></a>
+            <a class="hdt-collection-title hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-{{ section.settings.content_size }} hdt-font-{{ section.settings.content_weight }}" href="{{ collection_link }}">
+              <span class="hdt-collection-title-text hdt-truncate">{{ title }}</span>
+              {% if collection_des == "10" %} <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> {% endif %}
+            </a>
+            {%- if section.settings.show_count or show_count -%}
+              <a class="hdt-collection-count {%- if section.settings.content_size == "sm" or content_size == "sm" %} hdt-text-sm{%- else %} hdt-text-base{% endif %} hdt-inline-flex hdt-align-center hdt-justify-center" href="{{ collection_link }}">
+                <span class="hdt-count">{{ collection.all_products_count | default: 0 }}</span> <span class="hdt-text">{{ count_label }}</span>
+              </a>
+            {%- endif -%}
+          </div>
+        </div>
+      {%- endif -%}
+    </div> 
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.collections-list.blocks.collection_item",
+  "tag": null,
+  "settings": [
+    {
+      "id": "collection",
+      "type": "collection",
+      "label": "t:sections.collections-list.blocks.collection"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.collections-list.blocks.image",
+      "info": "t:sections.collections-list.blocks.image_info"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.collections-list.blocks.title",
+      "info": "t:sections.collections-list.blocks.title_info",
+      "default": "Collection name"
+    },
+    {
+      "type": "url",
+      "id": "collection_link",
+      "label": "t:sections.collections-list.blocks.link",
+      "info": "t:sections.collections-list.blocks.link_info"
+    },
+    {
+      "type": "select",
+      "id": "column_width",
+      "label": "t:sections.collections-list.blocks.column_width",
+      "options": [
+        {
+          "value": "3",
+          "label": "25%"
+        },
+        {
+          "value": "4",
+          "label": "33%"
+        },
+        {
+          "value": "6",
+          "label": "50%"
+        },
+        {
+          "value": "8",
+          "label": "67%"
+        },
+        {
+          "value": "12",
+          "label": "100%"
+        }
+      ],
+      "default": "6"
+    },
+    {
+      "type": "range",
+      "id": "row_count",
+      "label": "t:sections.collections-list.blocks.row_count",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "select",
+      "id": "tb_column_width",
+      "label": "t:sections.collections-list.blocks.column_width_tb",
+      "options": [
+        {
+          "value": "3",
+          "label": "25%"
+        },
+        {
+          "value": "4",
+          "label": "33%"
+        },
+        {
+          "value": "6",
+          "label": "50%"
+        },
+        {
+          "value": "8",
+          "label": "67%"
+        },
+        {
+          "value": "12",
+          "label": "100%"
+        }
+      ],
+      "default": "6"
+    },
+    {
+      "type": "range",
+      "id": "tb_row_count",
+      "label": "t:sections.collections-list.blocks.row_count_tb",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "select",
+      "id": "mb_column_width",
+      "label": "t:sections.collections-list.blocks.column_width_mb",
+      "options": [
+        {
+          "value": "1",
+          "label": "50%"
+        },
+        {
+          "value": "2",
+          "label": "100%"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "range",
+      "id": "mb_row_count",
+      "label": "t:sections.collections-list.blocks.row_count_mb",
+      "min": 1,
+      "max": 3,
+      "step": 1,
+      "default": 1
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.collections-list.blocks.collection_item",
+      "settings": {
+        "column_width": "4",
+        "row_count": 2,
+        "mb_column_width": "2",
+        "mb_row_count": 1
+      }
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,442 @@
+{
+  "sections": {
+    "85eeb821-386b-4bb2-8635-c93ebe0daa6d": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__iconbox {\n  border-top: 1px solid #eeeeee;\n}\n.sf-home__iconbox .m-icon-box__heading {\n  font-weight: 500;\n  font-size: 20px;\n}\n.sf-home__blog-post .m-article-card__tags {\n  letter-spacing: 0.5px;\n  font-weight: 500;\n}\n.sf-home__slideshow .m-slide__description {\n  color: #666;\n}\n.sf-home__image-card .m-richtext__button {\n  margin-top: 0;\n}\n@media (min-width: 1536px) {\n  .sf-home__slideshow .m-slide__title {\n    font-size: 100px;\n    line-height: 111px;\n  }\n}"
+      }
+    },
+    "16184552193b4706ec": {
+      "type": "slider",
+      "blocks": {
+        "16184552193b4706ec-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "The Perfect<br>\nMatch",
+            "description": "<p>Here is your chance to upgrade your wardrobe <br\/>with a variation of styles and fits that are both<br\/>feminine and relaxed.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        },
+        "16184552193b4706ec-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "Everyday<br>\nFashion",
+            "description": "<p>Be your own label.<\/p><p>We’re unique no matter how you put it.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        },
+        "16184552193b4706ec-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "<span class=\"font-semibold\">New Arrivals<\/span>",
+            "title": "We Promise<br>\nComfort",
+            "description": "<p>The ultimate clothing to see the world in. <\/p><p>Keep calm & surround yourself with fashion.<\/p>",
+            "image_link": "",
+            "button_text": "Shop Collection",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "",
+            "footer_button": "",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16184552193b4706ec-0",
+        "16184552193b4706ec-1",
+        "16184552193b4706ec-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1618459461b6f9a6ca": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "The boutique style guide",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162649701252644156": {
+      "type": "image-with-text-1",
+      "blocks": {
+        "162649701252644156-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "link": "shopify:\/\/collections\/accessories",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Accessories",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162649701252644156-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Coats & Jackets",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162649701252644156-3": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Handbags",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162649701252644156-2": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Glasses",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "162649701252644156-4": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sandals",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        }
+      },
+      "block_order": [
+        "162649701252644156-0",
+        "162649701252644156-1",
+        "162649701252644156-3",
+        "162649701252644156-2",
+        "162649701252644156-4"
+      ],
+      "settings": {
+        "heading": "Featured collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "layout": "layout_2",
+        "gap": 30,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__image-card",
+        "animations": "inherit"
+      }
+    },
+    "1626497692ca134a24": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Apparels on air this week",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1626504467903b69a1": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "",
+        "item_gap": 70,
+        "item_gap_mobile": 16,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "7",
+        "hover_effect": false,
+        "title": "<span class=\"leading-snug\">Poplin top with <br>ruffle trim<\/span>",
+        "sub_title": "",
+        "text": "<p>We believe in crafting pieces where sustainability and<br\/> style go hand in hand. Made from materials like<br\/> recycled cashmere and sust.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Collection",
+        "button_style": "m-button--link",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162650455429881ee3": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "Mix and Match",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-left",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_text": "More Posts",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__blog-post",
+        "animations": "inherit"
+      }
+    },
+    "162650467894cbb75d": {
+      "type": "icon-box",
+      "blocks": {
+        "162650467894cbb75d-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162650467894cbb75d-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Guarantee",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162650467894cbb75d-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Online Support",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "f65a24b6-5101-479e-830e-0f7ca5263630": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Flexible Payment",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "162650467894cbb75d-0",
+        "162650467894cbb75d-1",
+        "162650467894cbb75d-2",
+        "f65a24b6-5101-479e-830e-0f7ca5263630"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "30px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "sf-home__iconbox",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "85eeb821-386b-4bb2-8635-c93ebe0daa6d",
+    "16184552193b4706ec",
+    "1618459461b6f9a6ca",
+    "162649701252644156",
+    "1626497692ca134a24",
+    "1626504467903b69a1",
+    "162650455429881ee3",
+    "162650467894cbb75d"
+  ]
+}

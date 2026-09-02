@@ -1,0 +1,302 @@
+{%- liquid
+  assign search_terms = search.terms
+  assign key_terms = search_terms
+  if search_terms contains 'product_type:'
+    assign arr_terms = search_terms | remove: 'product_type:' | replace_first: ' AND', ' AND ' | replace_first: '  ', ' ' | split: ' AND '
+    assign product_type = arr_terms[0] | strip
+    assign search_terms = arr_terms[1] | strip
+    if search_terms == blank
+      assign key_terms = key_terms | remove: ' AND '
+      assign search_terms = product_type
+    endif
+  endif
+
+	if linklists.theme_brands.links
+	capture brand
+		case template.name
+			when "collection"
+				echo collection.metafields.theme.brand.value.name
+			when "product"
+				if product.metafields.theme.brand
+					echo product.metafields.theme.brand.value.name
+				else
+					for collection in product.collections
+						if collection.metafields.theme.brand
+							echo collection.metafields.theme.brand.value.name
+							break
+						endif
+					endfor
+				endif
+			when "page"
+				echo page.metafields.theme.brand.value.name
+			when "blog" or "article"
+				echo blog.metafields.theme.brand.value.name
+		endcase
+	endcapture
+
+	assign index_active = 0
+	assign count = 0
+	for link in linklists.theme_brands.links
+		if link.active or link.child_active or link.child_current or link.title == brand and index_active == 0
+			assign count = count | plus: 1
+			assign index_active = forloop.index0
+			assign page_handle = link.handle
+		endif
+	endfor
+endif
+if count != 1
+	assign page_handle = linklists.theme_brands.links[0].handle
+endif
+
+	assign products_suggests = pages[page_handle].metafields.theme.brand.value.search.value | default: settings.products_suggest
+-%}
+<link href="{{ 'hdt-search-form.css' | asset_url }}" rel="stylesheet" media="print" onload="this.media='all'">
+{%- comment -%}{{ 'hdt-card-products.css' | asset_url | stylesheet_tag }}{%- endcomment -%}
+ {%- if settings.search_fullwidth -%}
+  <hdt-predictive-search data-section-id-results="hdt_predictive-search-full"{% if settings.predictive_search_enabled %} enabled{% endif %} class="hdt-drawer hdt-drawer-search hdt-contents hdt-search-hidden hdt-search-full" effect="top" color-scheme="{{ settings.color_scheme_search }}">
+		<hdt-drawer class="hdt-contents">
+			<dialog id="drawer-search-form-full" class="hdt-dialog hdt-dialog-drawer" scroll-lock pos="top">
+				<div class="hdt-dialog-drawer__header">
+					<div class="hdt-search-head">
+						{%- if settings.logo_search_full != blank -%}
+							<a class="hdt-inline-block hdt-logo-seach" href="{{ page_brand.metafields.theme.brand.value.url.value.url | default: routes.root_url }}">
+								{{ settings.logo_search_full | image_url: width: image.width | image_tag: loading: 'lazy', width: settings.logo_search_full.width, height: settings.logo_search_full.height, sizes: '(max-width: 767px) 134px, 268px', widths: '134, 268', class: 'hdt-logo-seach-fullwidth' }}
+							</a>
+						{%- else -%}
+									<h5 class="hdt-text-lg hdt-font-medium">{{ 'general.search.search_our_site' | t }}</h5>
+						{%- endif -%}
+						<div class="hdt-search-header__form-wrap">
+							<form data-frm-search action="{{ routes.search_url }}" method="get" class="hdt-mini-search__frm" role="search">
+								{%- if settings.search_form_by_type %}
+									<div data-cat-search class="hdt-search__categories">
+										<select data-name="product_type">
+											<option value="*">{{ 'general.search.search_categories' | t }}</option>
+											{%- for product_type in shop.types -%}{%- if product_type == blank %}{% continue -%}{% endif -%}<option value="{{ product_type }}">{{ product_type }}</option>{%- endfor -%}
+										</select>
+									</div>
+									<div class="hdt-search-line-separate"></div>
+								{%- endif -%}
+								<input type="hidden" name="resources[limit_scope]" value="each">
+								<input type="hidden" name="resources[options][fields]" value="title,body,tag,product_type,variants.title,vendor,variants.sku">
+								<div class="hdt-search-inner hdt-relative hdt-oh hdt-flex">
+									<input data-input-search class="hdt-input hdt-search-input hdt-text-base hdt-font-normal" autocomplete="off" type="search" name="q" placeholder="{{ 'general.search.search' | t }}">
+									<button data-submit-search class="hdt-mini-search__submit" type="submit">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16"  viewBox="0 0 18 19" fill="none" class="hdt-icon-search">
+											<path fill-rule="evenodd" clip-rule="evenodd" d="M11.03 11.68A5.784 5.784 0 112.85 3.5a5.784 5.784 0 018.18 8.18zm.26 1.12a6.78 6.78 0 11.72-.7l5.4 5.4a.5.5 0 11-.71.7l-5.41-5.4z" fill="currentColor"></path>
+										</svg>
+										<div class="hdt-loading__spinner hdt-hidden">
+											<svg width="16" height="16" aria-hidden="true" focusable="false" role="presentation" class="hdt-svg__spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="hdt-path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle></svg>
+										</div>
+									</button>
+								</div>
+							</form>
+							{%- if settings.search_quick_search != blank -%}
+								{% assign quick_searchs = settings.search_quick_search | split: ',' %}
+								{%- capture link_suggest -%}
+									{{ routes.search_url }}?type=product&options[unavailable_products]=last&options[prefix]=last&q=
+								{%- endcapture -%}
+								<div class="hdt-search-full__quicklink hdt-s-text2">
+									<h5 class="hdt-s-text hdt-text-base hdt-inline-block hdt-quicksearch-title">{{ 'general.search.quicklink_title' | t }}:</h5>
+									{%- for title in quick_searchs %} <a href="{{ link_suggest }}{{ title | strip | url_encode }}" class="hdt-s-text2">{{ title }}{%- if forloop.last == false -%},{%- endif -%}</a> {%- endfor -%}
+								</div>
+							{%- endif -%}
+						</div>
+						{% comment %} <button action-close class="close-button-search-full" aria-label="Close"><svg part="hdt-close-icon" class="hdt-icon hdt-icon-close" role="presentation" fill="none" focusable="false" width="16" height="16" viewBox="0 0 16 16">
+								<path d="M16 1.4L14.6 0L8 6.6L1.4 0L0 1.4L6.6 8L0 14.6L1.4 16L8 9.4L14.6 16L16 14.6L9.4 8L16 1.4Z" fill="currentColor"></path>
+							</svg>
+						</button> {% endcomment %}
+					</div>
+					<button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer-search-form-full" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+				</div>
+				<div class="hdt-dialog-drawer__inner">
+					<div class="hdt-search-content hdt-container">
+						<div class="hdt-cart-hide-has-results">
+							<div class="hdt-col-content">
+								<h6 class="hdt-search-full__top-title hdt-font-medium">{{ 'general.search.search_content_site' | t }}</h6>
+								<div class="hdt-search-hidden-inner">
+									<div data-products_suggest class="hdt-show-pr-price-{{ settings.predictive_search_show_price }} hdt-ratio--custom-pr hdt-object-cover ">
+										<div class="hdt-row-grid hdt-row-products-full lg:hdt-grid-cols-5 md:hdt-grid-cols-3 hdt-grid-cols-2">
+											{%- liquid
+												capture btn_wishlist_code
+													if settings.wishlist_mode != '0'
+														render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right', tooltip_inner: true
+													endif
+												endcapture
+												if products_suggests != blank
+													case settings.predictive_search_product_des
+														when '1'
+															for product in products_suggests limit: 5
+																render 'card-product1', card_product: product, class: "hdt-pr-style1", section_id: section.id, sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '2'
+															for product in products_suggests limit: 5
+																render 'card-product2', card_product: product, section_id: section.id, class: "hdt-pr-style2", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '3'
+															for product in products_suggests limit: 5
+																render 'card-product3', card_product: product, section_id: section.id, class: "hdt-pr-style3", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '4'
+															for product in products_suggests limit: 5
+																render 'card-product4', card_product: product, section_id: section.id, class: "hdt-pr-style4", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '5'
+															for product in products_suggests limit: 5
+																render 'card-product5', card_product: product, section_id: section.id, class: "hdt-pr-style5", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '6'
+															for product in products_suggests limit: 5
+																render 'card-product6', card_product: product, section_id: section.id, class: "hdt-pr-style6", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '7'
+															for product in products_suggests limit: 5
+																render 'card-product7', card_product: product, section_id: section.id, class: "hdt-pr-style7", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '8'
+															for product in products_suggests limit: 5
+																render 'card-product8', card_product: product, section_id: section.id, class: "hdt-pr-style8", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '9'
+															for product in products_suggests limit: 5
+																render 'card-product9', card_product: product, section_id: section.id, class: "hdt-pr-style9", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+														when '10'
+															for product in products_suggests limit: 5
+																render 'card-product10', card_product: product, section_id: section.id, class: "hdt-pr-style10", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: settings.predictive_search_show_vendor, show_price: settings.predictive_search_show_price, tooltip_inner: true
+															endfor
+													endcase
+												endif -%}
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="hdt-cart-show-has-results">
+							<div data-skeleton-search class="hdt-skeleton_wrap hdt-hidden">
+								<div class="hdt-row-grid hdt-row-products hdt-grid-cols-1">
+									{%- for i in (1..5) -%}
+										<div class="hdt-product hdt-pr-loop">
+											<div class="hdt-card-product__wrapper hdt-flex ">
+												<div class="hdt-skeleton_img"></div>
+												<div class="hdt-card-product__info">
+													<div class="hdt-skeleton_txt1"></div>
+													<div class="hdt-skeleton_txt2"></div>
+												</div>
+											</div>
+										</div>
+									{%- endfor -%}
+								</div>
+							</div>
+							<div data-results-search class="hdt-show-pr-price-{{ settings.predictive_search_show_price }} hdt-ratio--custom-pr hdt-object-cover"></div>
+						</div>
+					</div>
+					<div slot="footer" class="hdt-search-bottom hdt-px-20 hdt-align-center hdt-justify-end hdt-hidden">
+						<a class="hdt-view_all hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-base hdt-font-semibold" href="{{ routes.search_url | append: "?q=" | append: search_terms }}">{{ 'sections.featured_collection.view_all' | t }}<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">  <path d="M0.861539 8L0 7.13846L5.90769 1.23077H0.615385V0H8V7.38462H6.76923V2.09231L0.861539 8Z" fill="currentColor"/></svg></a>
+					</div>
+				</div>
+			</dialog>
+		</hdt-drawer>
+	</hdt-predictive-search>
+  {%- else -%}
+  <hdt-predictive-search data-section-id-results="hdt_predictive-search"{% if settings.predictive_search_enabled %} enabled{% endif %} class="hdt-drawer with-slot-sticky hdt-drawer-search hdt-contents hdt-fixed hdt-search-hidden" color-scheme="{{ settings.color_scheme_search }}">
+		<hdt-drawer class="hdt-contents">
+			<dialog id="drawer-search-form" class="hdt-dialog hdt-dialog-drawer" scroll-lock pos="right">
+					<div class="hdt-dialog-drawer__header">
+						<h5 class="hdt-text-lg hdt-font-medium hdt-uppercase">{{ 'general.search.search_our_site' | t }}</h5>
+						<button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer-search-form" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+					</div>
+					<div class="hdt-dialog-drawer__inner">
+						<div class="hdt-search-sticky hdt-px-20">
+							<form data-frm-search action="{{ routes.search_url }}" method="get" class="hdt-mini-search__frm hdt-pr" role="search">
+								{%- if settings.search_form_by_type %}
+									<div data-cat-search class="hdt-search__categories">
+										<select data-name="product_type">
+											<option value="*">{{ 'general.search.search_categories' | t }}</option>
+											{%- for product_type in shop.types -%}{%- if product_type == blank %}{% continue -%}{% endif -%}<option value="{{ product_type }}">{{ product_type }}</option>{%- endfor -%}
+										</select>
+									</div>
+								{%- endif -%}
+								<input type="hidden" name="resources[limit_scope]" value="each">
+								<input type="hidden" name="resources[options][fields]" value="title,body,tag,product_type,variants.title,vendor,variants.sku">
+								<div class="hdt-search-inner hdt-relative hdt-oh hdt-flex">
+									<input data-input-search class="hdt-input hdt-search-input hdt-text-base hdt-font-normal" autocomplete="off" type="search" name="q" placeholder="{{ 'general.search.search' | t }}">
+									<button data-submit-search class="hdt-mini-search__submit" type="submit">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16"  viewBox="0 0 18 19" fill="none" class="hdt-icon-search">
+											<path fill-rule="evenodd" clip-rule="evenodd" d="M11.03 11.68A5.784 5.784 0 112.85 3.5a5.784 5.784 0 018.18 8.18zm.26 1.12a6.78 6.78 0 11.72-.7l5.4 5.4a.5.5 0 11-.71.7l-5.41-5.4z" fill="currentColor"></path>
+										</svg>
+										<div class="hdt-loading__spinner hdt-hidden">
+											<svg width="16" height="16" aria-hidden="true" focusable="false" role="presentation" class="hdt-svg__spinner" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="hdt-path" fill="none" stroke-width="6" cx="33" cy="33" r="30"></circle></svg>
+										</div>
+									</button>
+								</div>
+								{%- assign list_hotkey = settings.list_hotkey -%}
+								{%- if settings.show_search_hotkey and list_hotkey != blank -%}
+									{%- assign arr_keys = list_hotkey | replace: ' ,', ',' | replace: ', ', ',' | split: ',' -%}
+									{%- assign arr_keys2 = arr_keys | join: ',|nt' | split: '|nt' -%}
+				
+									<div data-listKey class="hdt-mini-search__keys">
+										<span class="hdt-mini-search__label">{{ 'general.search.quick_search' | t }}</span>
+										<ul class="hdt-mini-search__listKey hdt-d-inline-block">
+											{%- for key in arr_keys %}{% assign key_strip = key | strip -%}
+											<li class="hdt-d-inline-block"><a data-key='{{ key_strip | escape }}' href="{{ routes.predictive_search_url }}?q={{ key | strip | url_encode }}">{{ arr_keys2[forloop.index0] }} </a></li>
+											{% endfor -%}
+										</ul>
+									</div>
+								{%- endif -%}
+							</form>
+							{% if settings.search_quick_search != blank %}
+								{% assign quick_searchs = settings.search_quick_search | split: ',' %}
+								{%- capture link_suggest -%}
+									{{ routes.search_url }}?type=product&options[unavailable_products]=last&options[prefix]=last&q=
+								{%- endcapture -%}
+								<div class="hdt-search-full__quicklink hdt-s-text2">
+									<h5 class="hdt-s-text hdt-text-xs hdt-inline-block hdt-quicksearch-title">{{ 'general.search.quicklink_title' | t }}:</h5>
+									{%- for title in quick_searchs %} <a href="{{ link_suggest }}{{ title | strip | url_encode }}" class="hdt-text-xs">{{ title }}{%- if forloop.last == false -%},{%- endif -%}</a> {%- endfor -%}
+								</div>
+							{% endif %}
+						</div>
+						<div class="hdt-search-content hdt-px-20">
+							<div class="hdt-cart-hide-has-results">
+								<h6 class="hdt-search-content-title hdt-text-base hdt-font-medium">{{ 'general.search.search_content_site' | t }}</h6>
+								<div class="hdt-col-content">
+									<div class="hdt-search-hidden-inner">
+										<div data-products_suggest class="hdt-mini-search__content hdt-show-pr-price-{{ settings.predictive_search_show_price }} hdt-ratio--custom-pr hdt-object-cover ">
+											<div class="hdt-row-grid hdt-row-products hdt-grid-cols-1">
+												{%- liquid
+													 if products_suggests != blank
+														for product in products_suggests limit: 5
+															render 'pr_loop_item', section_id: section.id, product: product, show_vendor: settings.predictive_search_show_vendor, sizes: "80px", widths: "80, 160, 240, 320"
+														endfor
+													endif -%}
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="hdt-cart-show-has-results">
+								<div data-skeleton-search class="hdt-skeleton_wrap hdt-hidden">
+									<div class="hdt-row-grid hdt-row-products hdt-grid-cols-1">
+										{%- for i in (1..5) -%}
+											<div class="hdt-product hdt-pr-loop">
+												<div class="hdt-card-product__wrapper hdt-flex ">
+													<div class="hdt-skeleton_img"></div>
+													<div class="hdt-card-product__info">
+														<div class="hdt-skeleton_txt1"></div>
+														<div class="hdt-skeleton_txt2"></div>
+													</div>
+												</div>
+											</div>
+										{%- endfor -%}
+									</div>
+								</div>
+								<div data-results-search class="hdt-mini-search__content hdt-show-pr-price-{{ settings.predictive_search_show_price }} hdt-ratio--custom-pr hdt-object-cover"></div>
+							</div>
+						</div>
+						<div slot="footer" class="hdt-search-bottom hdt-px-20 hdt-align-center hdt-justify-end hdt-hidden">
+							<a class="hdt-view_all hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-base hdt-font-semibold" href="{{ routes.search_url | append: "?q=" | append: search_terms }}">{{ 'sections.featured_collection.view_all' | t }}<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8" fill="none">  <path d="M0.861539 8L0 7.13846L5.90769 1.23077H0.615385V0H8V7.38462H6.76923V2.09231L0.861539 8Z" fill="currentColor"/></svg></a>
+						</div>
+					</div>
+			</dialog>
+		</hdt-drawer>
+	</hdt-predictive-search>
+ {%- endif -%}

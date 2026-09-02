@@ -1,0 +1,47 @@
+{%- if protect_product != blank and settings.enable_shipping_protection -%}
+  {%- liquid
+    assign protect_image = protect_product.featured_image | default: protect_product.media[0]
+    assign protect_title = settings.protect_title | default: protect_product.title
+    assign protect_content = settings.protect_content | default: protect_product.description
+    assign protect_price = protect_product.selected_or_first_available_variant.price | default: protect_product.variants.first.price
+  -%}
+  <shipping-protection class="hdt-contents" section-id="{{ section.id }}" data-page-id="{{ data_page_id }}">
+    <input type="checkbox" id="protect-{{ section.id }}" class="toggle-checkbox sr-only" name="shipping_protection" {% if is_protect_active %} checked{% endif %}>
+    <input type="hidden" class="hdt-contents" name="shipping_protect_id" value="{{ protect_product.selected_or_first_available_variant.id | default: protect_product.variants.first.id | default: protect_product.id }}">
+    <label for="protect-{{ section.id }}">
+      <div class="hdt-mini-cart__shipping-protection hdt-protect-wrap hdt-ratio--adapt_image hdt-ratio--contain">
+        {%- if protect_image != blank -%}
+          <div class="hdt-protect-image hdt-ratio hdt-h-full" style="--aspect-ratioapt: {{ protect_image.aspect_ratio }}">
+           {{ protect_image  | image_url: width: protect_image.width | image_tag: width: protect_image.width, height: protect_image.height, sizes: '40,80,120,160,200', class: '', loading: 'lazy' }}
+          </div>
+        {%- endif -%}
+        <div class="hdt-protect-content">
+          {% if protect_title != blank %}
+            <h3 class="hdt-protect-title hdt-text-base hdt-font-semibold hdt-s-text">{{ protect_title }}</h3>
+          {% endif %}
+          {% if protect_content != blank %}
+            <div class="hdt-protect-content hdt-s-text2 hdt-rte">{{ protect_content }}</div>
+          {% endif %}
+        </div>
+        <div class="hdt-protect-price">
+          <div class="hdt-money hdt-font-semibold hdt-s-text">
+            {%- if settings.currency_code_enabled -%}
+              {{ protect_price | money_with_currency }}
+            {%- else -%}
+              {{ protect_price | money }}
+            {%- endif -%}
+          </div>
+        </div>
+        <div class="hdt-protect-toggle-label">
+          <div class="toggle-label">
+            <span class="toggle-button">
+              <svg class="hdt-icon-check icon-check" viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+    </label>
+  </shipping-protection>
+{%- endif -%}

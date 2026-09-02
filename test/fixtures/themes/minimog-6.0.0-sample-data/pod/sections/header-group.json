@@ -1,0 +1,117 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "a6389b6c-8b98-4168-945c-7a485daeb368": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Home",
+            "container": "container-fluid",
+            "html": ""
+          }
+        },
+        "aa3a461e-6b78-4ad1-9c05-30ef313f0de1": {
+          "type": "banner",
+          "settings": {
+            "heading": "Shops",
+            "container": "container",
+            "banner_style": "outside",
+            "banner_link": "",
+            "banner_title": "The new - Season Shoes Edit",
+            "banner_desc": "",
+            "banner_button_text": "Shop Now"
+          }
+        },
+        "fcd6c3e1-856c-44a4-a10f-60c34a25c540": {
+          "type": "topbar",
+          "settings": {
+            "color_scheme": "dark",
+            "show_divider": false,
+            "show_phone_numb": false,
+            "show_email": true,
+            "show_social_links": false,
+            "show_stores_page": true,
+            "show_currency_switcher": true,
+            "show_country_selector": false,
+            "show_language_switcher": false,
+            "alert_message": "✌🏼 Free Express Shipping on orders $120!"
+          }
+        },
+        "479f67bc-c4a9-49d7-b48e-4fa820ad4f42": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Products",
+            "container": "inherit",
+            "html": ""
+          }
+        },
+        "a902885d-3caf-4ef8-8f9f-a394394d67e8": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Foxkit",
+            "container": "inherit",
+            "html": ""
+          }
+        }
+      },
+      "block_order": [
+        "a6389b6c-8b98-4168-945c-7a485daeb368",
+        "aa3a461e-6b78-4ad1-9c05-30ef313f0de1",
+        "fcd6c3e1-856c-44a4-a10f-60c34a25c540",
+        "479f67bc-c4a9-49d7-b48e-4fa820ad4f42",
+        "a902885d-3caf-4ef8-8f9f-a394394d67e8"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "color_scheme_menu": "default",
+        "header_design": "logo-left__2l",
+        "container": "container",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "MINIMOG",
+        "logo": "shopify://shop_images/logo_14c37361-df40-4c27-9865-5c3ac5938d14.png",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 125,
+        "sticky_logo_max_width": 125,
+        "mobile_logo_max_width": 115,
+        "main_menu": "main-menu",
+        "secondary_menu": "",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": false,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": ["annoucement", "header"]
+}

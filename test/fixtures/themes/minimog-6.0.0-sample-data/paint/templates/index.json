@@ -1,0 +1,352 @@
+{
+  "sections": {
+    "f8b51454-d1ed-4ead-9e7b-a57f3b0b0b71": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": "@media (min-width: 1280px) {\n  .sf__index-hero .m-hero__title {\n    font-size: 72px;\n  }\n}\n@media (min-width: 1530px) {\n  .sf__index-hero .m-hero__title {\n    font-size: 120px;\n  }\n}"
+      }
+    },
+    "16342661549dea4bc6": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "dark",
+        "title": "Headspace.",
+        "subtitle": "",
+        "text": "<p>Update your home with the seasons.</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf__index-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1634267247d2444681": {
+      "type": "icon-box",
+      "blocks": {
+        "1634267247d2444681-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Curated colors",
+            "description": "<p>The smell and taste of fresh meat is utterly<br/> irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1634267247d2444681-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Zereo voc paint",
+            "description": "<p>The smell and taste of fresh meat is utterly <br/>irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1634267247d2444681-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Easy to paint",
+            "description": "<p>The smell and taste of fresh meat is utterly <br/>irresistible, so there’ll be no leftovers.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1634267247d2444681-0",
+        "1634267247d2444681-1",
+        "1634267247d2444681-2"
+      ],
+      "settings": {
+        "heading": "Stress-free paint shopping",
+        "heading_size": "h2",
+        "subheading": "our puddle",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "110px",
+        "content_alignment": "center",
+        "hover_effect": "zoom-in",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-icon-box",
+        "animations": "inherit"
+      }
+    },
+    "16342679743cf2dfd8": {
+      "type": "custom-content",
+      "blocks": {
+        "6135b140-f444-4c81-be28-3d5f80c2cd04": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "link": "",
+            "title": "Creamy Beige",
+            "subtitle": "Get the sample",
+            "button_label": "Shop now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "sf__index-image-card",
+            "animations": "inherit"
+          }
+        },
+        "dd280758-196a-4224-aad5-ffd1787f3142": {
+          "type": "product",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "m-custom-content-block-product",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "6135b140-f444-4c81-be28-3d5f80c2cd04",
+        "dd280758-196a-4224-aad5-ffd1787f3142"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "16342680195fbf8d6b": {
+      "type": "custom-content",
+      "blocks": {
+        "dd5261b1-eecd-4d84-a60f-4ee9d3d00530": {
+          "type": "product",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "block_custom_class": "m-custom-content-block-product",
+            "animations": "inherit"
+          }
+        },
+        "5adbd8c3-07df-4005-a419-7c0791c05da0": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "top_center",
+            "content_alignment": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "link": "",
+            "title": "Universal Blue",
+            "subtitle": "Get the sample",
+            "button_label": "Shop now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "sf__index-image-card",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "dd5261b1-eecd-4d84-a60f-4ee9d3d00530",
+        "5adbd8c3-07df-4005-a419-7c0791c05da0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "1634269049d6dfc1d2": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "large",
+        "text_color": "dark",
+        "title": "Bedroom.",
+        "subtitle": "",
+        "text": "<p>Update your home with the seasons.</p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf__index-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1626365858fd9bd41d": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Shop the color range",
+        "heading_size": "h2",
+        "subheading": "our shop",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop Now",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16342692490b0bd37b": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "Get inspired to get rolling",
+        "heading_size": "h2",
+        "subheading": "inspiration",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 10,
+        "article_image_aspect_ratio": "original",
+        "article_align_content": "text-center",
+        "article_show_tags": true,
+        "article_show_date": false,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1634271218a4dda3f7": {
+      "type": "instagram",
+      "custom_css": [".container-full {padding-left: 0; padding-right: 0;}"],
+      "settings": {
+        "heading": "Share your story with #puddle",
+        "heading_size": "h3",
+        "subheading": "<span style=\"display:flex;justify-content: center;\"><svg width=\"27\" height=\"27\" viewbox=\"0 0 27 27\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"> <path d=\"M8.75391 9.00391C10.082 7.67578 11.6836 7.01172 13.5586 7.01172C15.4336 7.01172 17.0156 7.67578 18.3047 9.00391C19.6328 10.293 20.2969 11.875 20.2969 13.75C20.2969 15.625 19.6328 17.2266 18.3047 18.5547C17.0156 19.8438 15.4336 20.4883 13.5586 20.4883C11.6836 20.4883 10.082 19.8438 8.75391 18.5547C7.46484 17.2266 6.82031 15.625 6.82031 13.75C6.82031 11.875 7.46484 10.293 8.75391 9.00391ZM10.4531 16.8555C11.3125 17.7148 12.3477 18.1445 13.5586 18.1445C14.7695 18.1445 15.8047 17.7148 16.6641 16.8555C17.5234 15.9961 17.9531 14.9609 17.9531 13.75C17.9531 12.5391 17.5234 11.5039 16.6641 10.6445C15.8047 9.78516 14.7695 9.35547 13.5586 9.35547C12.3477 9.35547 11.3125 9.78516 10.4531 10.6445C9.59375 11.5039 9.16406 12.5391 9.16406 13.75C9.16406 14.9609 9.59375 15.9961 10.4531 16.8555ZM21.6445 5.66406C21.957 5.9375 22.1133 6.28906 22.1133 6.71875C22.1133 7.14844 21.957 7.51953 21.6445 7.83203C21.3711 8.14453 21.0195 8.30078 20.5898 8.30078C20.1602 8.30078 19.7891 8.14453 19.4766 7.83203C19.1641 7.51953 19.0078 7.14844 19.0078 6.71875C19.0078 6.28906 19.1641 5.9375 19.4766 5.66406C19.7891 5.35156 20.1602 5.19531 20.5898 5.19531C21.0195 5.19531 21.3711 5.35156 21.6445 5.66406ZM26.625 8.35938C26.6641 9.41406 26.6836 11.2109 26.6836 13.75C26.6836 16.2891 26.6641 18.0859 26.625 19.1406C26.5078 21.5234 25.7852 23.3789 24.457 24.707C23.168 25.9961 21.332 26.6797 18.9492 26.7578C17.8945 26.8359 16.0977 26.875 13.5586 26.875C11.0195 26.875 9.22266 26.8359 8.16797 26.7578C5.78516 26.6406 3.94922 25.9375 2.66016 24.6484C2.15234 24.1797 1.74219 23.6328 1.42969 23.0078C1.11719 22.3828 0.882812 21.7773 0.726562 21.1914C0.609375 20.6055 0.550781 19.9219 0.550781 19.1406C0.472656 18.0859 0.433594 16.2891 0.433594 13.75C0.433594 11.2109 0.472656 9.39453 0.550781 8.30078C0.667969 5.95703 1.37109 4.14062 2.66016 2.85156C3.94922 1.52344 5.78516 0.800781 8.16797 0.683594C9.22266 0.644531 11.0195 0.625 13.5586 0.625C16.0977 0.625 17.8945 0.644531 18.9492 0.683594C21.332 0.800781 23.168 1.52344 24.457 2.85156C25.7852 4.14062 26.5078 5.97656 26.625 8.35938ZM23.8125 21.4844C23.9297 21.1719 24.0273 20.7812 24.1055 20.3125C24.1836 19.8047 24.2422 19.2188 24.2812 18.5547C24.3203 17.8516 24.3398 17.2852 24.3398 16.8555C24.3398 16.4258 24.3398 15.8203 24.3398 15.0391C24.3398 14.2578 24.3398 13.8281 24.3398 13.75C24.3398 13.6328 24.3398 13.2031 24.3398 12.4609C24.3398 11.6797 24.3398 11.0742 24.3398 10.6445C24.3398 10.2148 24.3203 9.66797 24.2812 9.00391C24.2422 8.30078 24.1836 7.71484 24.1055 7.24609C24.0273 6.73828 23.9297 6.32812 23.8125 6.01562C23.3438 4.80469 22.5039 3.96484 21.293 3.49609C20.9805 3.37891 20.5703 3.28125 20.0625 3.20312C19.5938 3.125 19.0078 3.06641 18.3047 3.02734C17.6406 2.98828 17.0938 2.96875 16.6641 2.96875C16.2734 2.96875 15.668 2.96875 14.8477 2.96875C14.0664 2.96875 13.6367 2.96875 13.5586 2.96875C13.4805 2.96875 13.0508 2.96875 12.2695 2.96875C11.4883 2.96875 10.8828 2.96875 10.4531 2.96875C10.0234 2.96875 9.45703 2.98828 8.75391 3.02734C8.08984 3.06641 7.50391 3.125 6.99609 3.20312C6.52734 3.28125 6.13672 3.37891 5.82422 3.49609C4.61328 3.96484 3.77344 4.80469 3.30469 6.01562C3.1875 6.32812 3.08984 6.73828 3.01172 7.24609C2.93359 7.71484 2.875 8.30078 2.83594 9.00391C2.79688 9.66797 2.77734 10.2148 2.77734 10.6445C2.77734 11.0352 2.77734 11.6406 2.77734 12.4609C2.77734 13.2422 2.77734 13.6719 2.77734 13.75C2.77734 13.9062 2.77734 14.2773 2.77734 14.8633C2.77734 15.4102 2.77734 15.8789 2.77734 16.2695C2.77734 16.6211 2.77734 17.0898 2.77734 17.6758C2.81641 18.2617 2.85547 18.7695 2.89453 19.1992C2.93359 19.5898 2.99219 20 3.07031 20.4297C3.14844 20.8594 3.22656 21.2109 3.30469 21.4844C3.8125 22.6953 4.65234 23.5352 5.82422 24.0039C6.13672 24.1211 6.52734 24.2188 6.99609 24.2969C7.50391 24.375 8.08984 24.4336 8.75391 24.4727C9.45703 24.5117 10.0039 24.5312 10.3945 24.5312C10.8242 24.5312 11.4297 24.5312 12.2109 24.5312C13.0312 24.5312 13.4805 24.5312 13.5586 24.5312C13.6758 24.5312 14.1055 24.5312 14.8477 24.5312C15.6289 24.5312 16.2344 24.5312 16.6641 24.5312C17.0938 24.5312 17.6406 24.5117 18.3047 24.4727C19.0078 24.4336 19.5938 24.375 20.0625 24.2969C20.5703 24.2188 20.9805 24.1211 21.293 24.0039C22.5039 23.4961 23.3438 22.6562 23.8125 21.4844Z\" fill=\"black\"></path> </svg></span>",
+        "description": "We’ll make some perfectly personalised recommendations",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "footer",
+        "layout": "grid",
+        "images_count": 6,
+        "grid_columns": 6,
+        "gap": 0,
+        "mobile_gap": 0,
+        "button_label": "",
+        "padding_top": 80,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-instagram"
+      }
+    }
+  },
+  "order": [
+    "f8b51454-d1ed-4ead-9e7b-a57f3b0b0b71",
+    "16342661549dea4bc6",
+    "1634267247d2444681",
+    "16342679743cf2dfd8",
+    "16342680195fbf8d6b",
+    "1634269049d6dfc1d2",
+    "1626365858fd9bd41d",
+    "16342692490b0bd37b",
+    "1634271218a4dda3f7"
+  ]
+}

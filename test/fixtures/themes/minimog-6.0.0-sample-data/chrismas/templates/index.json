@@ -1,0 +1,480 @@
+{
+  "sections": {
+    "ba58beec-9f8e-4896-be80-9ef2362c25ac": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-hero--custom .m-hero__subtitle {\nfont-size: 18px;\nletter-spacing: 2px;\nfont-weight: 700;\ntext-transform: uppercase;\ncolor: #C02C30 !important;\n}\n.sf__custom-countdown-1 {\nmargin-top: 100px;\n}"
+      }
+    },
+    "1636166657aef1fe7c": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "dark",
+        "title": "Special offer<br>\nfor X-mas holiday",
+        "subtitle": "Sale up to 50%",
+        "text": "<p>Here is your chance to upgrade your wardrobe with a<br/>variation of styles and fits that are both</p>",
+        "button_label": "Shop Now",
+        "button_link": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--custom",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1636169340386ac7e0": {
+      "type": "countdown-timer",
+      "settings": {
+        "container": "container-fluid",
+        "section_height": "small",
+        "align": "center",
+        "color_scheme": "badge-sale",
+        "heading": "<div class=\"m:display-flex m:justify-center m:items-center font-medium\"> <span><svg width=\"19\" height=\"19\" viewbox=\"0 0 19 19\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"> <rect width=\"19\" height=\"19\" fill=\"url(#pattern0)\"></rect> <defs> <pattern id=\"pattern0\" patterncontentunits=\"objectBoundingBox\" width=\"1\" height=\"1\"> <use xlink:href=\"#image0_9:369\" transform=\"scale(0.0106383)\"></use> </pattern> <image id=\"image0_9:369\" width=\"94\" height=\"94\" xlink:href=\"data:image/png;base64,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\"></image> </defs> </svg> </span> <span class=\"px-3\">Hurry up! Sale end in</span> <span><svg width=\"19\" height=\"19\" viewbox=\"0 0 19 19\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"> <rect width=\"19\" height=\"19\" fill=\"url(#pattern0)\"></rect> <defs> <pattern id=\"pattern0\" patterncontentunits=\"objectBoundingBox\" width=\"1\" height=\"1\"> <use xlink:href=\"#image0_9:369\" transform=\"scale(0.0106383)\"></use> </pattern> <image id=\"image0_9:369\" width=\"94\" height=\"94\" xlink:href=\"data:image/png;base64,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\"></image> </defs> </svg> </span> </div>",
+        "time": "2024-01-26 23:00:00",
+        "button_label": "",
+        "button_link": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "padding_top": 50,
+        "padding_bottom": 50,
+        "custom_class": "sf__custom-countdown-1",
+        "animations": "inherit"
+      }
+    },
+    "16225302875c09dac4": {
+      "type": "collection-list",
+      "blocks": {
+        "16225302875c09dac4-0": {
+          "type": "collection_block",
+          "settings": {
+           
+          }
+        },
+        "16225302875c09dac4-1": {
+          "type": "collection_block",
+          "settings": {
+          
+          }
+        },
+        "16225302875c09dac4-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Accessories"
+          }
+        },
+        "9acf97db-fe53-4ad5-bb52-8af0e1507064": {
+          "type": "collection_block",
+          "settings": {
+          }
+        },
+        "4286b78a-e8ac-4168-aa74-0c0979d73c0c": {
+          "type": "collection_block",
+          "settings": {
+          }
+        }
+      },
+      "block_order": [
+        "16225302875c09dac4-0",
+        "16225302875c09dac4-1",
+        "16225302875c09dac4-2",
+        "9acf97db-fe53-4ad5-bb52-8af0e1507064",
+        "4286b78a-e8ac-4168-aa74-0c0979d73c0c"
+      ],
+      "settings": {
+        "heading": "Sale Categories",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Here is your chance to upgrade your wardrobe with a",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": false,
+        "image_rounded": true,
+        "items_per_row": 5,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "16225208417f633bd7": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Sale Products",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Here is your chance to upgrade your wardrobe with a",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "load",
+        "button_text": "Load More",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf__index-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "16361727304b8eba42": {
+      "type": "icon-box",
+      "blocks": {
+        "16361727304b8eba42-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Ship Worldwide",
+            "description": "<p>Get complimentary ground shipping on every order.Don’t love it? Send it back, on us.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16361727304b8eba42-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "100% Moneyback Guaranty",
+            "description": "<p>Get complimentary ground shipping on every order.Don’t love it? Send it back, on us.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16361727304b8eba42-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Member Special Reward",
+            "description": "<p>Get complimentary ground shipping on every order.Don’t love it? Send it back, on us.</p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16361727304b8eba42-0",
+        "16361727304b8eba42-1",
+        "16361727304b8eba42-2"
+      ],
+      "settings": {
+        "heading": "Why Minimog?",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Here is your chance to upgrade your wardrobe with a",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-8cad6700-7303-4e83-aa07-fb65e1366c48",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "default",
+        "card_style": "vertical",
+        "image_max_width": "90px",
+        "content_alignment": "center",
+        "hover_effect": "zoom-in",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-promotion",
+        "animations": "inherit"
+      }
+    },
+    "16225209780bac15ca": {
+      "type": "icon-box",
+      "blocks": {
+        "16225209780bac15ca-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "The New - Season Shoes Edit",
+            "description": "<p>From comfortable flats to statement heels, there’s a shoe style <br/>for every occasion this season.</p>",
+            "link": "",
+            "button_label": "Shop Now",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16225209780bac15ca-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Christmas Sale 2021",
+            "description": "<p>From comfortable flats to statement heels, there’s a shoe style <br/>for every occasion this season.</p>",
+            "link": "",
+            "button_label": "Shop Now",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": ["16225209780bac15ca-0", "16225209780bac15ca-1"],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 2,
+        "item_gap": 30,
+        "item_gap_mobile": 16,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf__index-icon-box-1",
+        "animations": "inherit"
+      }
+    },
+    "1636173160972b8790": {
+      "type": "custom-content",
+      "blocks": {
+        "1636173160972b8790-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "sf__img-no-effect-hover",
+            "animations": "inherit"
+          }
+        },
+        "02943ae2-7cd4-48e4-af24-fa6c5dd41136": {
+          "type": "product_form",
+          "settings": {
+            "show_quantity_selector": true,
+            "show_vendor": true,
+            "show_price": true,
+            "show_add_to_cart": true,
+            "show_product_review": false,
+            "enable_payment_button": false,
+            "width": "33%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "1636173160972b8790-1",
+        "02943ae2-7cd4-48e4-af24-fa6c5dd41136"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 50,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1636184002c1ab007f": {
+      "type": "testimonials",
+      "blocks": {
+        "1636184002c1ab007f-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1636184002c1ab007f-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1636184002c1ab007f-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1636184002c1ab007f-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1636184002c1ab007f-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1636184002c1ab007f-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>\"Short dress in a printed viscose weave with a round neckline, opening with a button at the back of the Seams with small frill trims at the waist and on the sleeves and skirt. Unlined.\"</p>",
+            "footer": "<p>Dean D. US</p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "1636184002c1ab007f-0",
+        "1636184002c1ab007f-1",
+        "1636184002c1ab007f-2",
+        "1636184002c1ab007f-3",
+        "1636184002c1ab007f-4",
+        "1636184002c1ab007f-5"
+      ],
+      "settings": {
+        "heading": "What People Are Saying",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "dark",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "163618435527ddf124": {
+      "type": "newsletter",
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "badge-hot",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "Subscription email box",
+        "description": "",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "",
+        "text_color": "white",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": true,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "custom_class": "m-custom-newsletters",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "ba58beec-9f8e-4896-be80-9ef2362c25ac",
+    "1636166657aef1fe7c",
+    "1636169340386ac7e0",
+    "16225302875c09dac4",
+    "16225208417f633bd7",
+    "16361727304b8eba42",
+    "16225209780bac15ca",
+    "1636173160972b8790",
+    "1636184002c1ab007f",
+    "163618435527ddf124"
+  ]
+}

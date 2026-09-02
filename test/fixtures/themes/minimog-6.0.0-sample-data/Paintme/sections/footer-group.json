@@ -1,0 +1,135 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "ef421649-1db8-4971-846e-296539c031d3": {
+          "type": "custom_text",
+          "settings": {
+            "title": "",
+            "image_max": "150px",
+            "description": "<p>Super class, cute, comfortable.<br\/> You can wear them with <br\/>just about anything.<\/p>",
+            "width": "50%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "2a2c2a14-7dbc-4e27-8971-845a56e34cce": {
+          "type": "our_store",
+          "settings": {
+            "title": "Our store",
+            "description": "<p>Find a location nearest you.<\/p>",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": true,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "64cfb823-d4c7-4779-a9f4-b8bd8e7d9094": {
+          "type": "menu",
+          "settings": {
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "523faac7-2fa4-4639-a10d-36646cb3c59b": {
+          "type": "menu",
+          "settings": {
+            "title": "Contact",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "a3e44a89-d3f9-41aa-bd48-768dec019fca": {
+          "type": "menu",
+          "settings": {
+            "title": "Services",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "ef421649-1db8-4971-846e-296539c031d3",
+        "2a2c2a14-7dbc-4e27-8971-845a56e34cce",
+        "64cfb823-d4c7-4779-a9f4-b8bd8e7d9094",
+        "523faac7-2fa4-4639-a10d-36646cb3c59b",
+        "a3e44a89-d3f9-41aa-bd48-768dec019fca"
+      ],
+      "settings": {
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© Paintme 2021",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "show_payment_icons": true,
+        "payment_icons_width": 300
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

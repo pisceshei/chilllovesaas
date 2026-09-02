@@ -1,0 +1,486 @@
+{
+  "sections": {
+    "078d8d29-88db-460b-85fb-5493d24f02ec": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom--image-card .m-richtext__title {\n  font-size: 26px;\n  line-height: 1.38;\n}\n.m-custom--image-card .m-image-card__content {\n  padding: 25px;\n}\n.m-custom--image-card .m-image-card__content-inner {\n  display: grid;\n  height: 100%;\n}\n.m-custom--image-card .m-richtext__button {\n  align-self: end;\n  justify-self: baseline;\n  margin-top: 12px;\n}\n.m-custom--image-card .m-section-my {\n  margin-top: 30px;\n}\n\n.m-custom--banner .custom__html-block {\n  padding: 56px 48px;\n  background-image: url(\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/10_caf6ff67-7343-426b-9fdb-b61dd702f87a.jpg?v=1623059274\");\n  background-repeat: no-repeat;\n  background-size: cover;\n  display: flex;\n  border-radius: 10px;\n}\n.m-custom--banner .left__content h3 {\n  font-size: 36px;\n  line-height: 50px;\n  margin-bottom: 15px;\n}\n.m-custom--banner .left__content p {\n  color: var(--color-sub-text);\n}\n.m-custom--banner .right__content span {\n  font-size: 18px;\n  color: #777;\n  text-decoration: line-through;\n  margin-bottom: 15px;\n  display: block;\n}\n.m-custom--banner .right__content h3 {\n  color: #e02b2b;\n  font-size: 30px;\n  margin-bottom: 25px;\n}\n\n.m-slide__subtitle {\n  color: #e02b2b;\n  font-weight: 600;\n}\n\n@media (min-width: 768px) {\n  .m-custom--image-card .image__card-heading {\n    font-size: 1.625rem;\n    line-height: 1.4;\n  }\n  body .m-slider .m-slider-controls--absolute[class*=-bottom-] .swiper-pagination {\n    bottom: 40px;\n  }\n}\n@media (min-width: 1024px) {\n  .m-custom--banner .left__content {\n    margin-right: 150px;\n  }\n}\n\n@media(min-width: 1536px) {\n  .m-collection-list--home{\n    --column-gap: 100px;\n  }\n}\n\n@media (max-width: 767px) {\n  .m-collection-list--home {\n    --mobile-column-width: 37vw;\n  }\n  .m-custom--banner .custom__html-block {\n    display: flex;\n    flex-direction: column;\n    padding: 2rem 0;\n    text-align: center;\n  }\n  .m-icon-box--home .m-icon-box__inner {\n    display: flex;\n    flex-direction: row;\n    align-items: flex-start;\n  }\n  .m-icon-box--home .m-icon-box__content {\n    text-align: left;\n    margin-top: 0 !important;\n    margin-left: 15px;\n  }\n  .m-icon-box--home .m-icon-box__content br {\n    display: none;\n  }\n  .m-icon-box--home .m-icon-box__heading {\n    font-size: 18px;\n  }\n  .m-icon-box--home .m-icon-box__icon {\n    width: 50px !important;\n  }\n}"
+      }
+    },
+    "1623055262061579c3": {
+      "type": "slider",
+      "blocks": {
+        "1623055262061579c3-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "🔥  Hot Deal This Week",
+            "title": "Bluetooth Wireless <br>Earbuds Headphone",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1623055262061579c3-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "🔥  Hot Deal This Week",
+            "title": "Camera AI Human<br> Detection Waterproof",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1623055262061579c3-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "🔥  Hot Deal This Week",
+            "title": "Portable Bluetooth<br> \n4.2 Speaker",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            "button_link": "",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1623055262061579c3-2",
+        "1623055262061579c3-0",
+        "1623055262061579c3-1"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1623056509cc5f2f37": {
+      "type": "custom-content",
+      "blocks": {
+        "677e8671-7419-4933-810d-c694da920731": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            "link": "",
+            "title": "New Generation<br> Power Bank",
+            "subtitle": "",
+            "button_label": "Show Now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "a151d252-bb83-45fd-9854-7d10b257a0c1": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "Sonos Radio HD<br>  is here",
+            "subtitle": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "406a0be3-a072-4c74-8646-36736f2bb14f": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "Modern & Style<br>  Headphones",
+            "subtitle": "",
+            "button_label": "Shop Now",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "677e8671-7419-4933-810d-c694da920731",
+        "a151d252-bb83-45fd-9854-7d10b257a0c1",
+        "406a0be3-a072-4c74-8646-36736f2bb14f"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--image-card"
+      }
+    },
+    "16230573097bab1619": {
+      "type": "collection-list",
+      "blocks": {
+        "16230573097bab1619-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Headphones"
+          }
+        },
+        "16230573097bab1619-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Speakers"
+          }
+        },
+        "16230573097bab1619-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Smart Phones"
+          }
+        },
+        "2724c962-617f-4c41-8a30-8834bcef13ae": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Computers"
+          }
+        },
+        "f467e035-a014-44d0-a353-0368afb17bc0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Cameras"
+          }
+        }
+      },
+      "block_order": [
+        "16230573097bab1619-0",
+        "16230573097bab1619-1",
+        "16230573097bab1619-2",
+        "2724c962-617f-4c41-8a30-8834bcef13ae",
+        "f467e035-a014-44d0-a353-0368afb17bc0"
+      ],
+      "settings": {
+        "heading": "Trending Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 5,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 20,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "1623057547d473c79b": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This week’s highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": true,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162305759480740d9f": {
+      "type": "custom-content",
+      "blocks": {
+        "020ebf91-d5c2-4af0-bdd1-dc852a4cd288": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"custom__html-block\">\n<div class=\"left__content\">\n<h3>Sony Headphone<br>\nDiscount 20%<\/h3>\n<p>Whether you’re out to play or stepping out to<br> make a fashionable statement.<\/p>\n<\/div>\n<div class=\"right__content\">\n<span>$139.00<\/span><h3>$129.00<\/h3>\n<a href=\"#\" class=\"m-button m-button--primary\">Shop Now<\/a>\n<\/div>\n<\/div>",
+            "width": "100%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "020ebf91-d5c2-4af0-bdd1-dc852a4cd288"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--banner"
+      }
+    },
+    "1623057611ccc6abc2": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Recommend for you",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 8,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "162305793116716ca0": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container",
+        "color_scheme": "scheme-7967ade5-7ccd-4c6e-9584-c2e68cc33773",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "Get the Ultimate Desktop<br> Setup for Productivity",
+        "sub_title": "",
+        "text": "<p>Explore our latest and greatest electronics and <br\/>accessories  their new features will be sure to blow <br\/>your mind and your workflow.<\/p>",
+        "text_size": "small",
+        "content_alignment": "left",
+        "button_label": "Shop Setup",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16230587832da0d130": {
+      "type": "icon-box",
+      "blocks": {
+        "16230587832da0d130-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Free Shipping",
+            "description": "<p>Get complimentary ground shipping on every<br\/> order.Don’t love it? Send it back, on us.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16230587832da0d130-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Earn Points",
+            "description": "<p>Join Minimog Rewards to earn gift cards<br\/>and enjoy exclusive member benefits.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16230587832da0d130-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Money Back Gurantee",
+            "description": "<p>We believe getting dressed should be the<br\/> easiest part of your day.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16230587832da0d130-0",
+        "16230587832da0d130-1",
+        "16230587832da0d130-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "70px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 80,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "078d8d29-88db-460b-85fb-5493d24f02ec",
+    "1623055262061579c3",
+    "1623056509cc5f2f37",
+    "16230573097bab1619",
+    "1623057547d473c79b",
+    "162305759480740d9f",
+    "1623057611ccc6abc2",
+    "162305793116716ca0",
+    "16230587832da0d130"
+  ]
+}

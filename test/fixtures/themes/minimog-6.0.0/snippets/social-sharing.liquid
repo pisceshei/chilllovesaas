@@ -1,0 +1,91 @@
+{% if url == blank %}
+  {% assign url = shop.url | append: product.url %}
+{% endif %}
+
+<div class="m-sharing-social {{ class }}">
+  <label>{{ 'products.product.social_share' | t }}:</label>
+  <div class="m:flex">
+    {% if settings.share_facebook %}
+      <a
+        href="https://www.facebook.com/sharer/sharer.php?u={{ url }}"
+        target="_blank"
+        aria-label="Facebook"
+        class="m-facebook"
+      >
+        <svg class="m-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+          <path fill="currentColor" d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z"></path>
+        </svg>
+      </a>
+    {% endif %}
+    {% if settings.share_pinterest %}
+      <a
+        href="https://pinterest.com/pin/create/button/?url={{ url }}&amp;media={{ share_image | image_url: width: 1024, height: 1024 }}&amp;description={{ share_title | url_param_escape }}"
+        target="_blank"
+        aria-label="Pinterest"
+        class="m-pinterest"
+      >
+        <svg class="m-svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+          <path fill="currentColor" d="M204 6.5C101.4 6.5 0 74.9 0 185.6 0 256 39.6 296 63.6 296c9.9 0 15.6-27.6 15.6-35.4 0-9.3-23.7-29.1-23.7-67.8 0-80.4 61.2-137.4 140.4-137.4 68.1 0 118.5 38.7 118.5 109.8 0 53.1-21.3 152.7-90.3 152.7-24.9 0-46.2-18-46.2-43.8 0-37.8 26.4-74.4 26.4-113.4 0-66.2-93.9-54.2-93.9 25.8 0 16.8 2.1 35.4 9.6 50.7-13.8 59.4-42 147.9-42 209.1 0 18.9 2.7 37.5 4.5 56.4 3.4 3.8 1.7 3.4 6.9 1.5 50.4-69 48.6-82.5 71.4-172.8 12.3 23.4 44.1 36 69.3 36 106.2 0 153.9-103.5 153.9-196.8C384 71.3 298.2 6.5 204 6.5z"></path>
+        </svg>
+      </a>
+    {% endif %}
+    {% if settings.share_twitter %}
+      <a
+        href="https://twitter.com/intent/tweet?text={{ share_title | url_param_escape }}&amp;url={{ url }}"
+        target="_blank"
+        aria-label="Twitter"
+        class="m-twitter"
+      >
+        <svg class="m-svg-icon" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0.0385131 0L6.1373 8.15756L0 14.79H1.38126L6.75446 8.9832L11.0959 14.79H15.7963L9.3544 6.17359L15.067 0H13.6857L8.73725 5.34795L4.739 0H0.0385131ZM2.06976 1.0178H4.22917L13.7648 13.772H11.6054L2.06976 1.0178Z" fill="currentColor"/>
+        </svg>
+      </a>
+    {% endif %}
+    {% if settings.share_telegram %}
+      <a
+        href="https://telegram.me/share/url?url={{ url }}&amp;media={{ share_image | image_url: width: 1024, height: 1024 }}"
+        target="_blank"
+        aria-label="Telegram"
+        class="m-telegram"
+      >
+        <svg
+          class="m-svg-icon"
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          viewBox="0 0 256 256"
+        >
+          <path transform="scale(1.15)"
+            transform-origin="center" d="M228.88,26.19a9,9,0,0,0-9.16-1.57L17.06,103.93a14.22,14.22,0,0,0,2.43,27.21L72,141.45V200a15.92,15.92,0,0,0,10,14.83,15.91,15.91,0,0,0,17.51-3.73l25.32-26.26L165,220a15.88,15.88,0,0,0,10.51,4,16.3,16.3,0,0,0,5-.79,15.85,15.85,0,0,0,10.67-11.63L231.77,35A9,9,0,0,0,228.88,26.19Zm-61.14,36L78.15,126.35l-49.6-9.73ZM88,200V152.52l24.79,21.74Zm87.53,8L92.85,135.5l119-85.29Z"></path>
+        </svg>
+      </a>
+    {% endif %}
+    {% if settings.share_whatsApp %}
+      <a
+        href="https://web.whatsapp.com/send?text={{ url }}"
+        target="_blank"
+        aria-label="WhatsApp"
+        class="m-whatsApp"
+      >
+        <svg class="m-svg-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
+          <path transform="scale(1.15)"
+            transform-origin="center" d="M187.58,144.84l-32-16a8,8,0,0,0-8,.5l-14.69,9.8a40.55,40.55,0,0,1-16-16l9.8-14.69a8,8,0,0,0,.5-8l-16-32A8,8,0,0,0,104,64a40,40,0,0,0-40,40,88.1,88.1,0,0,0,88,88,40,40,0,0,0,40-40A8,8,0,0,0,187.58,144.84ZM152,176a72.08,72.08,0,0,1-72-72A24,24,0,0,1,99.29,80.46l11.48,23L101,118a8,8,0,0,0-.73,7.51,56.47,56.47,0,0,0,30.15,30.15A8,8,0,0,0,138,155l14.61-9.74,23,11.48A24,24,0,0,1,152,176ZM128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"></path>
+        </svg>
+      </a>
+    {% endif %}
+    {% if settings.share_email %}
+      <a
+        href="mailto:?subject={{ share_title | url_param_escape }}&body={{ url }}"
+        target="_blank"
+        aria-label="Email"
+        class="m-email"
+      >
+        <svg class="m-svg-icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 256 256">
+          <path transform="scale(1.15)"
+            transform-origin="center" d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM203.43,64,128,133.15,52.57,64ZM216,192H40V74.19l82.59,75.71a8,8,0,0,0,10.82,0L216,74.19V192Z"></path>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+</div>

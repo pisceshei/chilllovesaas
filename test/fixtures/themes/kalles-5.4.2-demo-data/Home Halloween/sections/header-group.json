@@ -1,0 +1,295 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "announcement_bar_QKnWCh": {
+      "type": "announcement-bar",
+      "blocks": {
+        "announcement_izeF7X": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Sign up & Snag 10% OFF Your First Haunting Order",
+            "adding_border": false,
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days"
+          }
+        },
+        "announcement_fekMnb": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Free Shipping on Orders Over $120 – No Tricks, Just Treats!",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days"
+          }
+        },
+        "announcement_4mtUQQ": {
+          "type": "announcement",
+          "settings": {
+            "link": "",
+            "text": "Spook-tacular Sale – Up to 50% OFF Costumes!",
+            "adding_border": false,
+            "countdown": "2024-12-30 15:00:00",
+            "txt_day": "days"
+          }
+        }
+      },
+      "block_order": [
+        "announcement_izeF7X",
+        "announcement_fekMnb",
+        "announcement_4mtUQQ"
+      ],
+      "custom_css": [
+        ".hdt-announcement-bar__text {font-size: 1.4rem; font-weight: 500; text-transform: uppercase; line-height: 1.2;}",
+        ".hdt-marquee__item,.hdt-marquee-inner {display: flex;}"
+      ],
+      "settings": {
+        "show_line_separator": false,
+        "close_btn": "0",
+        "height": 60,
+        "fontsize": 12,
+        "design": "marquee",
+        "hdt_using_image_icon": true,
+        "hdt_image_icon": "shopify:\/\/shop_images\/END_YEAR_SALE_UP_TO_50_OFF.png",
+        "space_item": 30,
+        "speed": 0.1,
+        "direction": "rtl",
+        "pausable": true,
+        "effect": "carousel",
+        "au_time": 5,
+        "pause_when_hover": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c4ab0871-ee0e-418b-80ff-4b35e70d08e2",
+        "background_opacity": 1,
+        "full_width": true
+      }
+    },
+    "header_inline_blocks_xePFbC": {
+      "type": "header-inline-blocks",
+      "blocks": {
+        "mega_block_7DJYPE": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_PKdDaN": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "halloween",
+              "decoration"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "scheme-1",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_ntakNQ": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_7qDM6U": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "halloween-cake-cupcake-topper",
+              "halloween-quilted-round-mat",
+              "hat-outfit-cosplay-halloween-costume",
+              "personalized-halloween-candy-baskets",
+              "set-of-4-modern-3d-printed-halloween-pumpkins"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_MtwFkx": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1300,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_Jbe4K9": {
+          "type": "_mega_block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "scheme-1",
+            "mega_width": "custom",
+            "mega_position": "bottom",
+            "mega_custom_width": 600,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_7DJYPE",
+        "mega_block_PKdDaN",
+        "mega_block_ntakNQ",
+        "mega_block_7qDM6U",
+        "mega_block_MtwFkx",
+        "mega_block_Jbe4K9"
+      ],
+      "custom_css": [
+        "[data-index=\"6\"] {display: none;}",
+        "@media (width >= 768px) {.hdt-container-full {padding-inline: 50px; }}",
+        "@media (width > 1440px) {.hdt-navigation {--spacing-menu-item: 55px; }}"
+      ],
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": true,
+        "header_height": 84,
+        "logo": "shopify:\/\/shop_images\/kalles.svg",
+        "logo_width": 135,
+        "header_colors": "",
+        "main_menu": "main-menu",
+        "lazy_mn": false,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 25,
+        "open_event": "hover",
+        "menu_type": "default",
+        "header_menu_colors": "",
+        "h_icon": "kalles",
+        "hover_icon": "2",
+        "search_type": "icon",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_socials": false,
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "header_transparent": false,
+        "header_transparent_colors": "",
+        "background_opacity_transparent": 0,
+        "header_space_top": 0,
+        "header_space_top_mobile": 0,
+        "sticky_type": "on_scroll_up",
+        "header_sticky_colors": "",
+        "background_opacity_sticky": 1,
+        "sticky_glass": false
+      }
+    }
+  },
+  "order": [
+    "announcement_bar_QKnWCh",
+    "header_inline_blocks_xePFbC"
+  ]
+}

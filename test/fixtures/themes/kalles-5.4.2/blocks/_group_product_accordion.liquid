@@ -1,0 +1,96 @@
+{% style %}
+   {% if block.settings.accordion_des != '3' %}
+    #{{ block.id }} {
+      gap: {{ block.settings.spacing }}px;
+    }
+   {% else %}
+    #{{ block.id }} {
+      gap: 0px;
+    }
+   {% endif %}
+{% endstyle %}
+{% liquid
+  capture  content_blocks 
+    content_for 'blocks'
+  endcapture
+  if block.settings.open
+    assign content_blocks = content_blocks | replace_first: 'is_open', 'open' | replace_first: 'aria-expanded="false"', 'aria-expanded="true"'
+  endif
+%}  
+<div id="{{ block.id }}" class="hdt-accordion-style{{ block.settings.accordion_des }} hdt-row-grid hdt-grid-cols-1">
+  {{ content_blocks }}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.accordion.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "open",
+        "label": "t:sections.accordion.settings.expand_collapse"
+      },
+      {
+        "type": "select",
+        "id": "accordion_des",
+        "label": "t:sections.accordion.settings.accordion_des",
+        "options": [
+          {
+            "value": "1",
+            "label": "1"
+          },
+          {
+            "value": "2",
+            "label": "2"
+          },
+          {
+            "value": "3",
+            "label": "3"
+          }
+        ],
+        "default": "1"
+      },
+      {
+        "type": "range",
+        "id": "spacing",
+        "min": 0,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:sections.all.spacing",
+        "default": 15,
+        "visible_if": "{{ block.settings.accordion_des != '3' }}"
+      },
+    ],
+    "blocks": [
+      {
+        "type": "_accordion_des_item"
+      },
+      {
+        "type": "_accordion_adt_item"
+      },
+      {
+        "type": "_accordion_html_item"
+      },
+      {
+        "type": "_accordion_liquid_item"
+      },
+      {
+        "type": "@app"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.accordion.name",
+        "blocks": [
+          {
+            "type": "_accordion_des_item"
+          },
+          {
+            "type": "_accordion_adt_item"
+          }
+        ]
+      }
+    ]
+  }
+{% endschema %}

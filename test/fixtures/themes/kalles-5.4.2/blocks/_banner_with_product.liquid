@@ -1,0 +1,70 @@
+<!-- blocks/_banner_with_product.liquid -->
+{% liquid
+  unless block.settings.image
+    continue
+  endunless
+%}
+<div class="hdt-banner-with-product hdt-block-spacing{% if block.settings.hide_on_mobile %} hdt-hidden md:hdt-block{% else %} hdt-block{% endif %}" style="--margin-bottom: {{ block.settings.margin_bottom }}px;--margin-bottom-mobile: {{ block.settings.margin_bottom_mobile }}px;">
+  <div class="hdt-banner-with-product__image">
+    {% liquid
+      assign image = block.settings.image
+      echo image | image_url: width: image.width | image_tag: width: image.width, height: image.height, widths: '100,200,300,400,500,600,700,800,900,1000,1200,1400,1600,1800,2000,2200,2400,2600,2800,3000,3200', class: 'w-full h-full object-cover', loading: 'lazy'
+    %}
+    {% if block.settings.product != blank %}
+      {% assign product = block.settings.product %}
+      <div class="hdt-product-wrapper">
+        <div class="hdt-product-info">
+          <a href="{{ product.url }}" class="hdt-product-info__title">
+            {{ product.title }}
+          </a>
+          {% render 'card-price', section_id: block.id, product: product, show_volume_note: true %}
+        </div>
+        <div class="hdt-product-media hdt-ratio--adapt_image">
+          {% render 'banner-pr-btn-quick-view', class: 'hdt-flex', product: product, section_id: block.id, disable_sr_only: false, placement: 'top', tooltip_auto: '' %}
+        </div>
+      </div>
+    {% endif %}
+    
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.banner_with_product.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:blocks.banner_with_product.settings.image"
+      },
+      {
+        "type": "product",
+        "id": "product",
+        "label": "t:blocks.banner_with_product.settings.product"
+      },
+      {
+        "type": "checkbox",
+        "id": "hide_on_mobile",
+        "label": "t:blocks.banner_with_product.settings.hide_on_mobile",
+        "default": false
+      },
+      {
+        "type": "number",
+        "id": "margin_bottom",
+        "label": "t:blocks.banner_with_product.settings.margin_bottom",
+        "default":0
+      },
+      {
+        "type": "number",
+        "id": "margin_bottom_mobile",
+        "label": "t:blocks.banner_with_product.settings.margin_bottom_mobile",
+        "default":0
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.banner_with_product.name"
+      }
+    ]
+  }
+{% endschema %}

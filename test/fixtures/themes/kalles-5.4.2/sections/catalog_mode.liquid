@@ -1,0 +1,30 @@
+<!-- sections/catalog_mode.liquid -->
+
+<script>document.documentElement.className += ' hdt-catalog__mode-true'</script>
+{%- style -%}
+  wrapp-hdt-pr-frm, .hdt-card-product__btn-ultra, .hdt-site-nav_cart, .hdt-toolbart-cart {
+    display: none !important;
+  }
+{%- endstyle -%}
+{%- schema -%}
+{
+  "name": "t:sections.catalog_mode.name",
+  "limit": 1,
+  "presets": [
+    {
+      "name": "t:sections.catalog_mode.name"
+    }
+  ],
+  "enabled_on": {
+    "groups": [
+      "custom.system"
+    ]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.catalog_mode.settings.paragraph"
+    }
+  ]
+}
+{% endschema %}

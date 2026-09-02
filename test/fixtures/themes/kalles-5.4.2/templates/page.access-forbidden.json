@@ -1,0 +1,27 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {}
+    },
+    "access_forbidden": {
+      "type": "custom-liquid",
+      "settings": {
+        "custom_liquid": "<div class='hdt-container hdt-mx-auto hdt-px-4 hdt-py-16 hdt-text-center'>\n  <div class='hdt-max-w-md hdt-mx-auto'>\n    <div class='hdt-mb-8'>\n      <svg class='hdt-w-24 hdt-h-24 hdt-mx-auto hdt-text-red-500' fill='currentColor' viewBox='0 0 20 20'>\n        <path fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clip-rule='evenodd'></path>\n      </svg>\n    </div>\n    <h1 class='hdt-text-4xl hdt-font-bold hdt-text-gray-900 hdt-mb-4'>Access Forbidden</h1>\n    <p class='hdt-text-lg hdt-text-gray-600 hdt-mb-8'>You must be at least 18 years old to access this website.</p>\n    <div class='hdt-space-y-4'>\n      <a href='/' class='hdt-inline-block hdt-bg-primary hdt-text-white hdt-px-6 hdt-py-3 hdt-rounded-lg hdt-font-medium hdt-transition-colors hover:hdt-bg-primary-dark'>Return to Homepage</a>\n      <br>\n      <button onclick='history.back()' class='hdt-inline-block hdt-border hdt-border-gray-300 hdt-text-gray-700 hdt-px-6 hdt-py-3 hdt-rounded-lg hdt-font-medium hdt-transition-colors hover:hdt-bg-gray-50'>Go Back</button>\n    </div>\n  </div>\n</div>"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "access_forbidden"
+  ]
+}

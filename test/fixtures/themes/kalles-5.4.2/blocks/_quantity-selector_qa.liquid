@@ -1,0 +1,142 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+  unless product.available
+    continue
+  endunless
+  if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+  elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+    assign selected_variant = product.selected_variant | default: product.variants.first
+  else
+    assign selected_variant = product.selected_or_first_available_variant
+  endif
+  assign product_form_id = 'product-form-'| append: section.id | append: product.id
+
+  assign quantity_rule = selected_variant.quantity_rule 
+  # theme-check-disable
+  assign cart_qty = cart | item_count_for_variant: selected_variant.id
+  # theme-check-enable
+  assign current_inventory_quantity = selected_variant.inventory_quantity
+  if selected_variant.inventory_management != null and current_inventory_quantity > 0 and selected_variant.inventory_policy != 'continue'
+    assign max_qty = current_inventory_quantity
+  endif
+  if selected_variant.quantity_rule.max and max_qty > selected_variant.quantity_rule.max
+    assign max_qty = selected_variant.quantity_rule.max
+  endif
+-%}
+<div class="hdt-product-info__item hdt-flex" {{ block.shopify_attributes }} style="gap: 10px;">
+  <div id="Quantity-Form-{{ section.id }}" class="hdt-product-form__quantity hdt-s-text"{% comment %}{% unless selected_variant.available %} hidden{% endunless %}{% endcomment %}>
+    {% comment %} <label class="hdt-quantity__label hdt-font-bold" for="Quantity-{{ section.id }}">{{ 'products.product.quantity.label' | t }} <span class="hdt-quantity__rules-cart no-js-hidden"{% if cart_qty == 0 %} hidden{% endif %}>({{- 'products.product.quantity.in_cart_html' | t: quantity: cart_qty -}})</span></label> {% endcomment %}
+    <hdt-quantity-wrapp class="hdt-quantity-wrapp hdt-relative" section-id="{{ section.id }}">
+      <button class="hdt-quantity__button no-js-hidden disabled hdt-absolute hdt-p-0 hdt-top-0 hdt-left-0 hdt-text-star" name="minus" type="button">
+        <span class="sr-only">{{ 'products.product.quantity.decrease' | t: product: product.title }}</span>
+        {%- render 'icon' with 'minus' -%}
+      </button>
+      <input form="{{ product_form_id }}" class="hdt-quantity__input hdt-text-center hdt-text-lg hdt-font-semibold" type="number" name="quantity" id="Quantity-{{ section.id }}" data-cart-quantity="{{ cart_qty }}" min="{{ quantity_rule.min | default: 1 }}" {% if max_qty %}max="{{ max_qty }}"{% endif %} step="{{ quantity_rule.increment }}" value="{{ quantity_rule.min | default: 1 }}">
+      <button class="hdt-quantity__button no-js-hidden hdt-absolute hdt-p-0 hdt-top-0 hdt-right-0 hdt-text-end" name="plus" type="button">
+        <span class="sr-only">{{ 'products.product.quantity.increase' | t: product: product.title }}</span>
+        {%- render 'icon' with 'plus' -%}
+      </button>
+    </hdt-quantity-wrapp>
+    <div class="hdt-quantity__rules no-js-hidden" id="Quantity-Rules-{{ section.id }}">
+        {%- if quantity_rule.increment > 1 -%}
+          <span class="hdt-divider">{{- 'products.product.quantity.multiples_of' | t: quantity: quantity_rule.increment -}}</span>
+        {%- endif -%}
+        {%- if quantity_rule.min > 1 -%}
+          <span class="hdt-divider">{{- 'products.product.quantity.minimum_of' | t: quantity: quantity_rule.min -}}</span>
+        {%- endif -%}
+        {%- if quantity_rule.max != null -%}
+          <span class="hdt-divider">{{- 'products.product.quantity.maximum_of' | t: quantity: quantity_rule.max -}}</span>
+        {%- endif -%}
+    </div>
+  </div>
+  {%- if block.settings.show_wishlist -%}
+    {%- capture btn_wishlist_code -%}
+      {%- if settings.wishlist_mode != '0' -%}
+      <div class="hdt-product-form__btn-wishlist-wrapper" style="--color: {{ block.settings.color_wishlist }}; --color-hover: {{ block.settings.color_hover_wishlist }}; --color-active: {{ block.settings.color_active_wishlist }};">
+        {%- render 'btn-wishlist', class: 'hdt-product-form__btn-wishlist hdt-flex hdt-align-center hdt-justify-center hdt-relative hdt-s-text', placement: 'top' -%}
+      </div>
+      {%- endif -%}
+    {%- endcapture -%}
+    {%- echo btn_wishlist_code | replace_first: '19041994', product.id | replace_first: 'handle_nt_94', product.handle -%}
+  {%- endif -%}
+  {%- if block.settings.show_compare and settings.compare_mode != "0" -%}
+    <div class="hdt-product-form__btn-wishlist-wrapper" style="--color: {{ block.settings.color_compare }}; --color-hover: {{ block.settings.color_hover_compare }}; --color-active: {{ block.settings.color_active_compare }};">
+      {%- render 'btn-compare', product_id: product.id, product_handle: product.handle, class: 'hdt-product-form__btn-compare hdt-flex hdt-align-center hdt-justify-center hdt-relative hdt-s-text', placement: 'top' -%}
+    </div>
+  {%- endif -%}
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.quantity_selector.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.main-product.blocks.quantity_selector.settings.info.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_wishlist",
+      "default": true,
+      "label": "t:sections.main-product.blocks.buy_buttons.settings.show_wishlist.label",
+      "visible_if": "{{ settings.wishlist_mode != '0' }}"
+    },
+    {
+      "type": "color",
+      "id": "color_wishlist",
+      "label": "Color",
+      "default": "#222222",
+      "visible_if": "{{ block.settings.show_wishlist }}"
+    },
+    {
+      "type": "color",
+      "id": "color_hover_wishlist",
+      "label": "Color hover",
+      "default": "#56CFE1",
+      "visible_if": "{{ block.settings.show_wishlist }}"
+    },
+    {
+      "type": "color",
+      "id": "color_active_wishlist",
+      "label": "Color active",
+      "default": "#E81E1E",
+      "visible_if": "{{ block.settings.show_wishlist }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_compare",
+      "default": false,
+      "label": "t:sections.main-product.blocks.buy_buttons.settings.show_compare.label",
+      "visible_if": "{{ settings.compare_mode != '0' }}"
+    },
+    {
+      "type": "color",
+      "id": "color_compare",
+      "label": "Color",
+      "default": "#222222",
+      "visible_if": "{{ block.settings.show_compare }}"
+    },
+    {
+      "type": "color",
+      "id": "color_hover_compare",
+      "label": "Color hover",
+      "default": "#56CFE1",
+      "visible_if": "{{ block.settings.show_compare }}"
+    },
+    {
+      "type": "color",
+      "id": "color_active_compare",
+      "label": "Color active",
+      "default": "#E81E1E",
+      "visible_if": "{{ block.settings.show_compare }}"
+    },
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main-product.blocks.quantity_selector.name"
+    }
+  ]
+}
+{% endschema %}

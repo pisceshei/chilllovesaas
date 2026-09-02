@@ -1,0 +1,356 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "header_e_commerce_blocks_GTUKeX": {
+      "type": "header-e-commerce-blocks",
+      "blocks": {
+        "mega_block_wRKHbB": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_VwpEN8": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "women",
+              "men"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_WPQbPa": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_LjC3qR": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "black-shouder-dress",
+              "cute-jean-sets",
+              "wash-me-bag",
+              "pink-bangle-bracelet"
+            ],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_UMYtpT": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_gmXcaF": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 980,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "fashion",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>"
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_wRKHbB",
+        "mega_block_VwpEN8",
+        "mega_block_WPQbPa",
+        "mega_block_LjC3qR",
+        "mega_block_UMYtpT",
+        "mega_block_gmXcaF"
+      ],
+      "name": "t:sections.header.header_e_commerce.name",
+      "settings": {
+        "header_by_brand": true,
+        "brand_name": "women",
+        "header_fullwidth": true,
+        "logo": "shopify://shop_images/Kalles-women.svg",
+        "logo_width": 190,
+        "brand_transform": true,
+        "header_height": 80,
+        "header_colors": "scheme-1",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_bottom_height": 50,
+        "lazy_mn": true,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "header_menu_colors": "",
+        "header_border": "none",
+        "header_height_mb": 60,
+        "logo_width_mb": 135,
+        "main_menu_mobile": "",
+        "header_categories": false,
+        "menu_categories": "",
+        "lazy_mn_mb": true,
+        "only_click_icon": false,
+        "header_mobile_colors": "",
+        "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>",
+        "sticky_type": "on_scroll_up",
+        "sticky_glass": false
+      }
+    },
+    "header_e_commerce_blocks_thBUn6": {
+      "type": "header-e-commerce-blocks",
+      "blocks": {
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>"
+          },
+          "blocks": {}
+        }
+      },
+      "name": "t:sections.header.header_e_commerce.name",
+      "settings": {
+        "header_by_brand": true,
+        "brand_name": "men",
+        "header_fullwidth": true,
+        "logo": "shopify://shop_images/Kalles-men.svg",
+        "logo_width": 190,
+        "brand_transform": true,
+        "header_height": 80,
+        "header_colors": "",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_bottom_height": 50,
+        "lazy_mn": true,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "header_menu_colors": "",
+        "header_border": "none",
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "main_menu_mobile": "",
+        "header_categories": false,
+        "menu_categories": "",
+        "lazy_mn_mb": true,
+        "only_click_icon": false,
+        "header_mobile_colors": "",
+        "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>",
+        "sticky_type": "on_scroll_up",
+        "sticky_glass": false
+      }
+    },
+    "header_e_commerce_blocks_kaxJAT": {
+      "type": "header-e-commerce-blocks",
+      "blocks": {
+        "menu_mobile": {
+          "type": "_menu_mobile",
+          "static": true,
+          "settings": {
+            "main_menu_mobile": "",
+            "menu_categories": "",
+            "only_click_icon": false,
+            "header_mobile_colors": "",
+            "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>"
+          },
+          "blocks": {}
+        }
+      },
+      "name": "t:sections.header.header_e_commerce.name",
+      "settings": {
+        "header_by_brand": true,
+        "brand_name": "kids",
+        "header_fullwidth": true,
+        "logo": "shopify://shop_images/Kalles-kids.svg",
+        "logo_width": 190,
+        "brand_transform": true,
+        "header_height": 80,
+        "header_colors": "scheme-1",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_cart": true,
+        "cart_des": "1",
+        "header_bottom_height": 50,
+        "lazy_mn": true,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "medium",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "header_menu_colors": "",
+        "header_border": "none",
+        "header_height_mb": 60,
+        "logo_width_mb": 95,
+        "main_menu_mobile": "",
+        "header_categories": false,
+        "menu_categories": "",
+        "lazy_mn_mb": true,
+        "only_click_icon": false,
+        "header_mobile_colors": "",
+        "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base\" style=\"margin-bottom: 10px\">Need help ? </span><span class=\"hdt-flex hdt-flex-col hdt-text-base\" style=\"line-height: 24px;\"><span>Email: <b>info@fashionshop.com</b></span><span>Phone: <b>(212) 555-1234</b></span></span>",
+        "sticky_type": "on_scroll_up",
+        "sticky_glass": false
+      }
+    },
+    "custom_liquid_zc3iVE": {
+      "type": "custom-liquid",
+      "name": "t:sections.custom-liquid.name",
+      "settings": {
+        "custom_liquid": "{% render 'sticky-demos' %}",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    }
+  },
+  "order": [
+    "header_e_commerce_blocks_GTUKeX",
+    "header_e_commerce_blocks_thBUn6",
+    "header_e_commerce_blocks_kaxJAT",
+    "custom_liquid_zc3iVE"
+  ]
+}

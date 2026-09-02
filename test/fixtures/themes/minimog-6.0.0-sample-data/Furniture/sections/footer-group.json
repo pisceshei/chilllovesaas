@@ -1,0 +1,122 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84": {
+          "type": "menu",
+          "settings": {
+            "title": "Company",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "c85629c7-7aae-4666-b5f0-150990439c91": {
+          "type": "menu",
+          "settings": {
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "8c703d19-ac3c-4ed5-ab33-ad72083ece6f": {
+          "type": "menu",
+          "settings": {
+            "title": "Contact",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "054bc4f0-afef-4699-a678-60098b8ad10e": {
+          "type": "menu",
+          "settings": {
+            "title": "Services",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84",
+        "c85629c7-7aae-4666-b5f0-150990439c91",
+        "8c703d19-ac3c-4ed5-ab33-ad72083ece6f",
+        "054bc4f0-afef-4699-a678-60098b8ad10e"
+      ],
+      "settings": {
+        "color_scheme": "scheme-a477d655-4883-4503-a3fa-b6e590201a36",
+        "design": "footer-1",
+        "container": "container",
+        "bordered": false,
+        "copyright": "© Minimog 2024",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "scheme-a477d655-4883-4503-a3fa-b6e590201a36"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

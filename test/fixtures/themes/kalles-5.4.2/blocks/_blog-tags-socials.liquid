@@ -1,0 +1,77 @@
+
+{{ 'hdt-icon-social.css' | asset_url | stylesheet_tag }}
+<hdt-accordion class="hdt-contents" {{ block.shopify_attributes }}>
+  <details class="hdt-widget hdt-widget-social" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content">
+      {%- render 'social_sharing', socials_style: block.settings.socials_style, socials_size: block.settings.socials_size -%}
+    </div>
+  </details>
+</hdt-accordion>
+  {% schema %}
+    {
+      "name": "t:blocks.social-media.name",
+      "tag":null,
+      "settings": [
+        {
+          "type": "text",
+          "id": "widget_heading",
+          "label": "t:blocks.social-media.settings.heading",
+          "default": "Follow us"
+        },
+        {
+          "type": "select",
+          "id": "socials_style",
+          "label": "t:blocks.social-media.settings.socials_style.label",
+          "default": "default",
+          "options": [
+            {
+              "value": "default",
+              "label": "t:blocks.social-media.settings.socials_style.options__1.label"
+            },
+            {
+              "value": "outline",
+              "label": "t:blocks.social-media.settings.socials_style.options__2.label"
+            },
+            {
+              "value": "simple",
+              "label": "t:blocks.social-media.settings.socials_style.options__3.label"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "socials_size",
+          "label": "t:blocks.social-media.settings.socials_size.label",
+          "default": "medium",
+          "options": [
+            {
+              "value": "small",
+              "label": "t:blocks.social-media.settings.socials_size.options__1.label"
+            },
+            {
+              "value": "medium",
+              "label": "t:blocks.social-media.settings.socials_size.options__2.label"
+            },
+            {
+              "value": "large",
+              "label": "t:blocks.social-media.settings.socials_size.options__3.label"
+            }
+          ]
+        }
+      ],
+      "presets":[
+        {
+          "name":"t:blocks.social-media.name"
+        }
+      ]
+    }
+  {% endschema %}
+  

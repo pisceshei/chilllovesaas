@@ -1,0 +1,121 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "85209d5e-c364-489f-8320-73d204b3ed46": {
+          "type": "menu",
+          "settings": {
+            "menu": "main-menu",
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "d5978e13-bd48-4f66-bbbe-5b0e5bb800f5": {
+          "type": "menu",
+          "settings": {
+            "menu": "main-menu",
+            "title": "Quick links",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "00b1bff8-85ae-4ba3-9eaf-d474a1cf2c93": {
+          "type": "our_store",
+          "settings": {
+            "title": "Our store",
+            "description": "<p>Find a location nearest<br/>you. <a href=\"#\" title=\"#\"><span style=\"text-decoration:underline\">See our stores</span></a></p>",
+            "show_email": true,
+            "show_phone": true,
+            "show_socials_link": false,
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "eaa940f2-97bf-4d69-bf66-db32b8e661bf": {
+          "type": "newsletter",
+          "settings": {
+            "title": "Subscribe",
+            "description": "Enter your email below to be the first to know about new collections and product launches.",
+            "email_placeholder": "Enter your email",
+            "form_style": "bordered",
+            "show_social": false,
+            "show_agree_checkbox": false,
+            "width": "25%",
+            "order_first": true,
+            "open_default": true
+          }
+        }
+      },
+      "block_order": [
+        "85209d5e-c364-489f-8320-73d204b3ed46",
+        "d5978e13-bd48-4f66-bbbe-5b0e5bb800f5",
+        "00b1bff8-85ae-4ba3-9eaf-d474a1cf2c93",
+        "eaa940f2-97bf-4d69-bf66-db32b8e661bf"
+      ],
+      "settings": {
+        "color_scheme": "scheme-3d05a3e7-8639-4b19-b857-6793c2cf29d6",
+        "design": "footer-2",
+        "container": "container-fluid",
+        "bordered": true,
+        "copyright": "© MINIMOG 2024",
+        "show_country_selector": false,
+        "show_currency_selector": true,
+        "show_language_selector": true,
+        "show_social_links": true,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "scheme-3d05a3e7-8639-4b19-b857-6793c2cf29d6"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": { "heading": "Confirm your age" }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": { "text": "<p>Are you 18 years old or older?</p>" }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": ["block-1", "block-2", "block-3"],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.</p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": ["footer", "mobile-sticky-bar", "age-verifier-popup"]
+}

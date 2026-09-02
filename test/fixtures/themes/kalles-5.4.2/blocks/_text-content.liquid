@@ -1,0 +1,129 @@
+<{{ block.settings.tag }} id="block-{{ block.id }}" class="hdt-heading-block hdt-s-text hdt-text-{{ block.settings.alignment }}" {{ block.shopify_attributes }}>{{ block.settings.heading }}</{{ block.settings.tag }}>
+<style>
+  #block-{{ block.id }} {
+    font-size: {{ block.settings.heading_size_mb }}px;
+  }
+  @media(min-width: 768px) {
+    #block-{{ block.id }} {
+      font-size: {{ block.settings.heading_size_tb }}px;
+    }
+  }
+  @media(min-width: 1150px) {
+    #block-{{ block.id }} {
+      font-size: {{ block.settings.heading_size }}px;
+    }
+  }
+</style>
+{% schema %}
+{
+  "name": "Heading",
+  "tag": null,
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "tag",
+      "label": "HTML tag",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "h6",
+          "label": "H6"
+        },
+        {
+          "value": "div",
+          "label": "div"
+        },
+        {
+          "value": "span",
+          "label": "span"
+        },
+        {
+          "value": "p",
+          "label": "p"
+        }
+      ],
+      "default": "h2"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "min": 16,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size",
+      "default": 50
+    },
+    {
+      "type": "range",
+      "id": "heading_size_tb",
+      "min": 14,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size (Tablet)",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "heading_size_mb",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading size (Mobile)",
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        {
+          "value": "start",
+          "label": "Start"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "end",
+          "label": "End"
+        }
+      ],
+      "default": "start"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Heading"
+    }
+  ]
+}
+{% endschema %}

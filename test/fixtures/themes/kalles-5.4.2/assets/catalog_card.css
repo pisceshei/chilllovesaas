@@ -1,0 +1,31 @@
+.hdt-catalog-card{
+  .hdt-box-wrap{
+    .hdt-box-inner{
+      --box-radius: clamp(2rem, 2.5vw, 4rem);
+      --image-radius: calc(var(--box-radius) - 1rem);
+      border-radius: var(--box-radius);
+      background-color: var(--bg-color);
+      overflow: hidden;
+      transition: all .15s ease-in;
+      .hdt-box-content{
+        padding: 4rem 4rem 3rem;
+        @media (width < 767px){
+          padding: 2rem;
+        }
+      }
+      .hdt-box-image{
+        border-radius: var(--image-radius);
+        overflow: hidden;
+      }
+      @media (hover: hover) and (width > 1150px){
+        &:hover{
+          transform: translateY(-15px);
+          background-color: var(--bg-hover-color);
+          .hdt-box-content > *:not(.hdt-btn){
+            color: var(--color-text-hover);
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,527 @@
+{
+  "sections": {
+    "16196057528db9413f": {
+      "type": "slider",
+      "blocks": {
+        "16196057528db9413f-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "GYM COLLECTION",
+            "title": "DUFFEL<br>\nPACK",
+            "description": "<p>Shapes and proportions are for your intellect. I’ve treated the<br\/> waistcoat as if it were a corset.<\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "16196057528db9413f-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "NEW COLLECTION",
+            "title": "URBAN<br>\nCARRIER",
+            "description": "<p>From nothing to something. <br\/>Coolest styles for the cool you. <\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1e517e08-bd98-427c-b791-611bcd0af90b": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "MAKE WAVES",
+            "title": "ADVENTURE<br>\nBAGS",
+            "description": "<p>For your Style Journey. Satisfying designs for <br\/>the beautiful you. <\/p>",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "16196057528db9413f-0",
+        "16196057528db9413f-1",
+        "1e517e08-bd98-427c-b791-611bcd0af90b"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow-section",
+        "animations": "inherit"
+      }
+    },
+    "1619659262548f4ce9": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "CORE ESSENTIALS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "161966743755a8fe19": {
+      "type": "custom-content",
+      "blocks": {
+        "16aa2fd4-e6cc-4c4f-9b75-a64b1ae3b0d9": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "TRAVEL BAG",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "5603eab2-efc3-45a8-a1d5-0404a1831ae9": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "WORK BAG",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "8dab5657-7d40-4b72-b522-72d2d6e0978f": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "dark",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "SLING BAG",
+            "subtitle": "",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "16aa2fd4-e6cc-4c4f-9b75-a64b1ae3b0d9",
+        "5603eab2-efc3-45a8-a1d5-0404a1831ae9",
+        "8dab5657-7d40-4b72-b522-72d2d6e0978f"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": true,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-content-3"
+      }
+    },
+    "1619667765d67d88ee": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 10,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1620183867ddcc7bc8": {
+      "type": "custom-content",
+      "blocks": {
+        "d1d6f582-d4ab-4337-8a20-1b5a846b16e9": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "TECH FOLIO",
+            "subtitle": "<span class=\"font-bold\">NEW - IN<\/span>",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "d89af32d-9b98-4dd9-aeec-3d35cf293d09": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            "color_scheme": "",
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "SLIM POUCH",
+            "subtitle": "<span class=\"font-bold\">NEW - IN<\/span>",
+            "button_label": "SHOP NOW",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "d1d6f582-d4ab-4337-8a20-1b5a846b16e9",
+        "d89af32d-9b98-4dd9-aeec-3d35cf293d09"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 40,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content-1"
+      }
+    },
+    "1621580486c1fdc73e": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "medium",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": true,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "CAPSULE BAGS",
+        "subtitle": "<div style=\"font-weight: bold; letter-spacing: 0.5px;\">JUST DROPPED<\/div>",
+        "text": "",
+        "button_label": "SHOP NOW",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": true,
+        "custom_class": "m-custom-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1621580978cb89e4d0": {
+      "type": "testimonials",
+      "blocks": {
+        "1621580978cb89e4d0-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my purchase",
+            "description": "<p>“I was recently at your store, what a delight to find you!”<\/p>",
+            "footer": "<p>Shane T. US<\/p>",
+            "image_text": "<p>Scoop-Back Cotton<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1621580978cb89e4d0-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Thanks for your help",
+            "description": "<p>“I just wanted to thank you for the impeccable service from you and your staff...I will always look forward to shopping at your store.”<\/p>",
+            "footer": "<p>Zeferino G. US<\/p>",
+            "image_text": "<p>Hoodie with pocket<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1621580978cb89e4d0-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "The products are great",
+            "description": "<p>\"I had a wonderful experience shopping in your store today. Thank you for your help and for the story that your shop has to tell\"<\/p>",
+            "footer": "<p>Marco C. Turkey<\/p>",
+            "image_text": "<p>Ladder-Lace Linen<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1621580978cb89e4d0-4": {
+          "type": "testimonial",
+          "settings": {
+            "title": "I will recommend it",
+            "description": "<p>“You have been a real help and you have a great products and service, which I will certainly recommend to others.”<\/p>",
+            "footer": "<p>Denzil A. Portugal<\/p>",
+            "image_text": "<p>Scoop-Back Cotton<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1621580978cb89e4d0-5": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Great quality bags",
+            "description": "<p>\"If we ever have an opportunity to recommend you, we definitely would do so as we felt your service was excellent.\"<\/p>",
+            "footer": "<p>Jayce M. US<\/p>",
+            "image_text": "<p>Ladder-Lace Linen<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "1621580978cb89e4d0-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>“I was thrilled to be able to visit your store again! Love my new purchase.”<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "<p>Hoodie with pocket<\/p>",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "1621580978cb89e4d0-1",
+        "1621580978cb89e4d0-3",
+        "1621580978cb89e4d0-2",
+        "1621580978cb89e4d0-4",
+        "1621580978cb89e4d0-5",
+        "1621580978cb89e4d0-0"
+      ],
+      "settings": {
+        "heading": "LOVELY CUSTOMERS",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "design": "testimonials-2",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-testimonial",
+        "animations": "inherit"
+      }
+    },
+    "1621582270d5f472b6": {
+      "type": "instagram",
+      "settings": {
+        "heading": "ON THE GRAM",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "<span class=\"m:text-black\">@minimog.trendy<\/span>",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 0,
+        "mobile_gap": 16,
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "162158075715c2a4fe": {
+      "type": "custom-content",
+      "blocks": {
+        "5e9246ae-ce1f-46ca-8581-28d53a228293": {
+          "type": "social",
+          "settings": {
+            "heading": "FOLLOW US ON",
+            "description": "<p>Don't miss out the latest news and<br\/> promotions posted on our social media.<\/p>",
+            "width": "50%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "12c439ac-be3c-464b-b4ea-08f08a60d79c": {
+          "type": "newsletter",
+          "settings": {
+            "heading": "LET’S STAY IN TOUCH",
+            "text_size": "h3",
+            "description": "<p>We’ll shout you $10 off your first order.<\/p>",
+            "form_design": "1",
+            "placeholder": "Enter your email address",
+            "submit_button": "Subscribe",
+            "width": "50%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "5e9246ae-ce1f-46ca-8581-28d53a228293",
+        "12c439ac-be3c-464b-b4ea-08f08a60d79c"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content-2"
+      }
+    }
+  },
+  "order": [
+    "16196057528db9413f",
+    "1619659262548f4ce9",
+    "161966743755a8fe19",
+    "1619667765d67d88ee",
+    "1620183867ddcc7bc8",
+    "1621580486c1fdc73e",
+    "1621580978cb89e4d0",
+    "1621582270d5f472b6",
+    "162158075715c2a4fe"
+  ]
+}

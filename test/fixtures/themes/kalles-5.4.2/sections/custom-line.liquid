@@ -1,0 +1,152 @@
+<!-- sections/custom-line.liquid -->
+{%- style -%}#{{section.id}} .hdt-custom-line{width:{{section.settings.line_width}}%;border-style:{{section.settings.line_style}};border-top-width:{{section.settings.line_height}}px;border-color:{{section.settings.line_cl}}}
+  {% render 'spacing-vars', box: section %}
+{%- endstyle -%}
+<div id="{{ section.id }}" class="hdt-section-spacing hdt-s-gradient hdt-section-spacing-{{ section.id }}">
+  <div class="hdt-container{%- if section.settings.full_width -%}-full{% endif %} hdt-flex hdt-justify-{{ section.settings.line_pos }}">
+    <div class="hdt-custom-line"></div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.custom_line.name",
+  "tag": "section",
+  "class": "hdt-section hdt-line-section",
+  "disabled_on": {
+    "groups": [
+      "*"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.custom_line.settings.general_options.label"
+    },
+    {
+      "type": "select",
+      "id": "line_style",
+      "label": "t:sections.timeline.settings.line_style.label",
+      "default": "solid",
+      "options": [
+        {
+          "value": "solid",
+          "label": "t:sections.custom_line.settings.line_style.options.solid"
+        },
+        {
+          "value": "dotted",
+          "label": "t:sections.custom_line.settings.line_style.options.dotted"
+        },
+        {
+          "value": "dashed",
+          "label": "t:sections.custom_line.settings.line_style.options.dashed"
+        },
+        {
+          "value": "double",
+          "label": "t:sections.custom_line.settings.line_style.options.double"
+        },
+        {
+          "value": "groove",
+          "label": "t:sections.custom_line.settings.line_style.options.groove"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "line_width",
+      "min": 1,
+      "max": 100,
+      "step": 1,
+      "label": "t:sections.custom_line.settings.line_width.label",
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "line_height",
+      "min": 1,
+      "max": 15,
+      "step": 0.5,
+      "label": "t:sections.custom_line.settings.line_height.label",
+      "unit": "px",
+      "default": 1
+    },
+    {
+      "type": "color",
+      "id": "line_cl",
+      "label": "t:sections.custom_line.settings.line_cl.label",
+      "default": "#EBEBEB"
+    },
+    {
+      "type": "select",
+      "id": "line_pos",
+      "label": "t:sections.custom_line.settings.line_pos.label",
+      "default": "center",
+      "options": [
+        {
+          "value": "start",
+          "label": "t:sections.custom_line.settings.line_pos.options.start"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.custom_line.settings.line_pos.options.center"
+        },
+        {
+          "value": "end",
+          "label": "t:sections.custom_line.settings.line_pos.options.right"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.custom_line.name",
+      "category": "t:sections_categories.05_section.name"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,22 @@
+<script type="importmap">
+  {
+    "imports": {
+      "@theme/libs": "{{ 'libs.min.js' | asset_url }}",
+      "@theme/events": "{{ 'events.js' | asset_url }}",
+      "@theme/utilities": "{{ 'utilities.js' | asset_url }}",
+      "@theme/global": "{{ 'global.min.js' | asset_url }}",
+      "@theme/floating": "{{ 'floating.min.js' | asset_url }}",
+      "@theme/zoom-psw": "{{ 'zoom-psw.min.js' | asset_url }}",
+      "@theme/psw": "{{ 'es-psw.min.js' | asset_url }}",
+      "@theme/dayjs": "{{ 'day.min.js' | asset_url }}"
+    }
+  }
+</script>
+<link rel="modulepreload" href="{{ 'libs.min.js' | asset_url }}">
+<link rel="modulepreload" href="{{ 'global.min.js' | asset_url }}">
+<script type="module" src="{{ 'libs.min.js' | asset_url }}" fetchpriority="high"></script>
+<link rel="modulepreload" href="{{ 'events.js' | asset_url }}">
+<link rel="modulepreload" href="{{ 'utilities.js' | asset_url }}">
+<link rel="modulepreload" href="{{ 'floating.min.js' | asset_url }}">
+<link rel="modulepreload" href="{{ 'zoom-psw.min.js' | asset_url }}">
+<link rel="modulepreload" href="{{ 'es-psw.min.js' | asset_url }}">

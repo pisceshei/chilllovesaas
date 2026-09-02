@@ -1,0 +1,174 @@
+<!-- sections/banner.liquid -->
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+<div class="hdt-banner-wrapper hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};" {%- endif %}>
+  <div class="hdt-container{% if section.settings.section_layout == "full_width" %}-full{% endif %}">
+    {% content_for "block", type: "section-heading", id: "banner-heading" %}
+  </div>
+  <div class="hdt-container{% if section.settings.section_layout == "full_width" %}-full{% endif %}">
+    <div class="hdt-banner-row hdt-flex hdt-flex-wrap"{% if section.settings.space_items != 'x' %} style="--spacing-x:{{ section.settings.space_items }}px;--spacing-y:{{ section.settings.space_items }}px;"{% endif %}>
+      {% content_for "blocks" %}
+    </div>
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:sections.banner.name",
+    "class": "hdt-banner",
+    "tag": "section",
+    "disabled_on": {
+      "groups": [
+        "*"
+      ]
+    },
+    "blocks": [
+      {
+        "type": "_banner-item"
+      }
+    ],
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.banner.headers.label"
+      },
+      {
+        "type": "select",
+        "id": "space_items",
+        "label": "t:sections.all.space_items.desktop",
+        "default": "x",
+        "options": [
+          {
+            "label": "t:sections.all.space_items.default",
+            "value": "x"
+          },
+          {
+            "label": "0",
+            "value": "0"
+          },
+          {
+            "label": "5px",
+            "value": "5"
+          },
+          {
+            "label": "10px",
+            "value": "10"
+          },
+          {
+            "label": "15px",
+            "value": "15"
+          },
+          {
+            "label": "20px",
+            "value": "20"
+          },
+          {
+            "label": "25px",
+            "value": "25"
+          }
+        ]
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_section",
+        "label": "t:sections.all.colors.display_colors_by_section"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "range",
+        "id": "background_opacity",
+        "min": 0,
+        "max": 1,
+        "step": 0.1,
+        "label": "t:sections.all.background.opacity",
+        "default": 0,
+        "visible_if": "{{ section.settings.colors_by_section }}"
+      },
+      {
+        "type": "checkbox",
+        "id": "full_width",
+        "label": "t:sections.all.full_width.label",
+        "default": false
+      },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    }
+    ]/*,
+    "presets": [
+      {
+        "name": "t:sections.banner.name",
+        "blocks": [
+          {
+            "type": "banner-item",
+            "blocks": [
+              {
+                "type": "heading",
+                "settings": {
+                  "heading": "<p>SALE OFF UP TO 70%</p>",
+                  "heading_size": "h2"
+                }
+              },
+              {
+                "type": "text",
+                "settings": {
+                  "text": "<p>SS 2024 New Arrival<\/p>",
+                  "text_size": "4xl"
+                }
+              },
+              {
+                "type": "button",
+                "settings": {
+                  "label": "Button label",
+                  "link": "",
+                  "open_in_new_tab": false,
+                  "full_width": false,
+                  "btn_style": "",
+                  "icon": "truck",
+                  "icon_position": "before",
+                  "icon_height": 16,
+                  "icon_spacing": 5
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]*/
+  }
+{% endschema %}

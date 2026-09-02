@@ -1,0 +1,1425 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrO": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/Image_0f80380a-7697-449a-8854-d0435025b891.jpg",
+            "image_mb": "shopify:\/\/shop_images\/slide-1_f104fdd3-ba95-4daa-baeb-86a9030476b5.png",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 14,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_RATJFk": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "$395.70",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#f92c2c",
+                "font_size": 32,
+                "line_height": 0,
+                "font_weight": 500,
+                "letter_spacing": 1,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 20,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "text_custom_Uak9wG": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "B6 Electric Scooter",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 65,
+                "line_height": 48,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 34,
+                "line_height_mobile": 35,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 30
+              },
+              "blocks": {}
+            },
+            "text_custom_Rf4BBh": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Powerful Motor & Long Battery Life - The 500W powerful<br> electric brushless hub motor allows for speeds up to 19mph.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#7d7d7d",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_jgLTEq": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "<div style=\"display: flex;\ngap: 23px;\nmargin: 30px 0px;\ncolor: #222222;\nalign-item: center;\nline-height: 1;\n\">\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M19.0899 12.5899C18.9299 12.5899 18.7699 12.5399 18.6299 12.4299C14.5999 9.3199 9.38993 9.3199 5.35993 12.4299C5.02993 12.6799 4.55993 12.6199 4.30993 12.2999C4.05993 11.9699 4.11994 11.4999 4.43994 11.2499C9.02994 7.6999 14.9599 7.6999 19.5399 11.2499C19.8699 11.4999 19.9299 11.9699 19.6699 12.2999C19.5399 12.4899 19.3199 12.5899 19.0899 12.5899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M22 9.1099C21.84 9.1099 21.68 9.05993 21.54 8.94993C15.74 4.46993 8.25004 4.46993 2.46004 8.94993C2.13004 9.19993 1.66003 9.13992 1.41003 8.81992C1.16003 8.48992 1.22002 8.0199 1.54002 7.7699C7.89002 2.8599 16.1 2.8599 22.46 7.7699C22.79 8.0199 22.85 8.48992 22.59 8.81992C22.45 9.00992 22.22 9.1099 22 9.1099Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M17.2101 16.24C17.0501 16.24 16.8901 16.19 16.7501 16.08C13.8701 13.85 10.1401 13.85 7.25007 16.08C6.92007 16.33 6.45007 16.27 6.20007 15.95C5.95007 15.62 6.01007 15.15 6.33007 14.9C9.77007 12.24 14.2201 12.24 17.6601 14.9C17.9901 15.15 18.0501 15.62 17.7901 15.95C17.6501 16.14 17.4301 16.24 17.2101 16.24Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M14.6002 19.9C14.4402 19.9 14.2802 19.85 14.1402 19.74C12.8402 18.73 11.1502 18.73 9.85017 19.74C9.52017 19.99 9.05017 19.93 8.80017 19.61C8.55017 19.28 8.61016 18.81 8.93016 18.56C10.7902 17.12 13.1902 17.12 15.0502 18.56C15.3802 18.81 15.4402 19.28 15.1802 19.61C15.0502 19.79 14.8302 19.9 14.6002 19.9Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"font-size: 14px;\n\">WIRELESS CONNECT<\/span>\n<\/div>\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M20.5 15.25C20.09 15.25 19.75 14.91 19.75 14.5C19.75 14.09 20.09 13.75 20.5 13.75C21.09 13.75 21.22 13.66 21.23 13.66C21.25 13.6 21.25 13.25 21.25 13V11C21.25 10.75 21.25 10.41 21.21 10.32C21.2 10.33 21.05 10.25 20.5 10.25C20.09 10.25 19.75 9.91 19.75 9.5C19.75 9.09 20.09 8.75 20.5 8.75C22.58 8.75 22.75 9.77 22.75 11V13C22.75 14.23 22.58 15.25 20.5 15.25Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M9.99996 16.75C9.82996 16.75 9.64996 16.69 9.50996 16.57C9.19996 16.3 9.15996 15.83 9.42996 15.51L11.51 13.08C11.54 12.99 11.51 12.91 11.49 12.87C11.46 12.82 11.4 12.75 11.27 12.75H8.96996C8.33996 12.75 7.76996 12.42 7.44996 11.88C7.12996 11.34 7.12996 10.68 7.44996 10.13L9.39996 7.55003C9.64996 7.22003 10.12 7.15003 10.45 7.40003C10.78 7.65003 10.85 8.12003 10.6 8.45003L8.70996 10.95C8.69996 10.98 8.73996 11.07 8.75996 11.12C8.78996 11.17 8.84996 11.24 8.97996 11.24H11.28C11.91 11.24 12.48 11.57 12.8 12.11C13.12 12.65 13.12 13.31 12.8 13.86C12.78 13.9 12.75 13.94 12.72 13.97L10.58 16.47C10.42 16.66 10.21 16.75 9.99996 16.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M7 19.75C2.59 19.75 1.25 18.41 1.25 14V10C1.25 5.59 2.59 4.25 7 4.25C7.41 4.25 7.75 4.59 7.75 5C7.75 5.41 7.41 5.75 7 5.75C3.43 5.75 2.75 6.43 2.75 10V14C2.75 17.57 3.43 18.25 7 18.25C7.41 18.25 7.75 18.59 7.75 19C7.75 19.41 7.41 19.75 7 19.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M13 19.75C12.59 19.75 12.25 19.41 12.25 19C12.25 18.59 12.59 18.25 13 18.25C16.57 18.25 17.25 17.57 17.25 14V10C17.25 6.43 16.57 5.75 13 5.75C12.59 5.75 12.25 5.41 12.25 5C12.25 4.59 12.59 4.25 13 4.25C17.41 4.25 18.75 5.59 18.75 10V14C18.75 18.41 17.41 19.75 13 19.75Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">POWERFULL BATTERY<\/span>\n<\/div>   \n\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M12 19.3701C10.21 19.3701 8.41994 18.6901 7.04994 17.3201C4.31994 14.5901 4.31994 10.1501 7.04994 7.42006C9.77994 4.69006 14.22 4.69006 16.95 7.42006C19.68 10.1501 19.68 14.5901 16.95 17.3201C15.58 18.6901 13.79 19.3701 12 19.3701ZM12 6.87007C10.59 6.87007 9.17994 7.41006 8.10994 8.48006C5.96994 10.6301 5.96994 14.1101 8.10994 16.2601C10.2599 18.4101 13.75 18.4001 15.89 16.2601C18.03 14.1101 18.03 10.6301 15.89 8.48006C14.82 7.41006 13.41 6.87007 12 6.87007Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M8.25003 22.3899C8.16003 22.3899 8.06004 22.3699 7.97004 22.3399C5.72004 21.4399 3.90003 19.8499 2.68003 17.7499C1.50003 15.6999 1.03003 13.3799 1.34003 11.0199C1.39003 10.6099 1.77003 10.3199 2.18003 10.3699C2.59003 10.4199 2.88002 10.7999 2.83002 11.2099C2.57002 13.2299 2.97005 15.2299 3.98005 16.9899C5.02005 18.7899 6.59002 20.1599 8.52002 20.9299C8.90002 21.0899 9.09004 21.5198 8.94004 21.9098C8.83004 22.2098 8.54003 22.3899 8.25003 22.3899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M5.8501 5.22986C5.6301 5.22986 5.4101 5.12988 5.2601 4.93988C5.0001 4.60988 5.06011 4.13989 5.39011 3.88989C7.30011 2.39989 9.58009 1.60986 12.0001 1.60986C14.3601 1.60986 16.6101 2.36988 18.5001 3.80988C18.8301 4.05988 18.8901 4.52986 18.6401 4.85986C18.3901 5.18986 17.9201 5.24988 17.5901 4.99988C15.9701 3.75988 14.0401 3.10986 12.0001 3.10986C9.92009 3.10986 7.95009 3.78989 6.31009 5.06989C6.17009 5.17989 6.0101 5.22986 5.8501 5.22986Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M15.7502 22.3901C15.4502 22.3901 15.1702 22.2101 15.0502 21.9201C14.9002 21.5401 15.0802 21.1001 15.4702 20.9401C17.4002 20.1601 18.9702 18.8001 20.0102 17.0001C21.0302 15.2401 21.4302 13.2401 21.1602 11.2201C21.1102 10.8101 21.4002 10.4301 21.8102 10.3801C22.2102 10.3301 22.6002 10.6201 22.6502 11.0301C22.9502 13.3801 22.4902 15.7101 21.3102 17.7601C20.1002 19.8601 18.2702 21.4401 16.0202 22.3501C15.9402 22.3701 15.8502 22.3901 15.7502 22.3901Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">LONG RANGE<\/span>\n<\/div>\n<\/div>\n<style>\n\n.t4s-item-inf {\n    margin-inline-start: 10px;\n}\n<\/style>",
+                "remove_br_mobile": false,
+                "html_tag": "div",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 14,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": true,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_74DND9": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shopping Now",
+                "link": "shopify:\/\/products\/s4-electric-scooter-3",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 21,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#f92c2c",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#f70000",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 60,
+                "border_radius": 40,
+                "padding_left_right": 32,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_RATJFk",
+            "text_custom_Uak9wG",
+            "text_custom_Rf4BBh",
+            "text_custom_jgLTEq",
+            "button_custom_74DND9"
+          ]
+        },
+        "slide_item_CJqi88": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide-2_e34d79d6-cbf7-45df-9f5c-5968f93fcbf1.jpg",
+            "image_mb": "shopify:\/\/shop_images\/slide-2_938f7328-2039-4baf-98e3-fd5f6950bea1.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 14,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_VXJqea": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "$397.07",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#f92c2c",
+                "font_size": 32,
+                "line_height": 0,
+                "font_weight": 500,
+                "letter_spacing": 1,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 20,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "text_custom_TdfiEd": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Ninebot Mini Pro",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 65,
+                "line_height": 48,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 34,
+                "line_height_mobile": 35,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 30
+              },
+              "blocks": {}
+            },
+            "text_custom_GTxfy6": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Powerful Motor & Long Battery Life - The 500W powerful<br> electric brushless hub motor allows for speeds up to 19mph.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#7d7d7d",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_t968PF": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "<div style=\"display: flex;\ngap: 23px;\nmargin: 30px 0px;\ncolor: #222222;\nalign-item: center;\nline-height: 1;\n\">\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M19.0899 12.5899C18.9299 12.5899 18.7699 12.5399 18.6299 12.4299C14.5999 9.3199 9.38993 9.3199 5.35993 12.4299C5.02993 12.6799 4.55993 12.6199 4.30993 12.2999C4.05993 11.9699 4.11994 11.4999 4.43994 11.2499C9.02994 7.6999 14.9599 7.6999 19.5399 11.2499C19.8699 11.4999 19.9299 11.9699 19.6699 12.2999C19.5399 12.4899 19.3199 12.5899 19.0899 12.5899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M22 9.1099C21.84 9.1099 21.68 9.05993 21.54 8.94993C15.74 4.46993 8.25004 4.46993 2.46004 8.94993C2.13004 9.19993 1.66003 9.13992 1.41003 8.81992C1.16003 8.48992 1.22002 8.0199 1.54002 7.7699C7.89002 2.8599 16.1 2.8599 22.46 7.7699C22.79 8.0199 22.85 8.48992 22.59 8.81992C22.45 9.00992 22.22 9.1099 22 9.1099Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M17.2101 16.24C17.0501 16.24 16.8901 16.19 16.7501 16.08C13.8701 13.85 10.1401 13.85 7.25007 16.08C6.92007 16.33 6.45007 16.27 6.20007 15.95C5.95007 15.62 6.01007 15.15 6.33007 14.9C9.77007 12.24 14.2201 12.24 17.6601 14.9C17.9901 15.15 18.0501 15.62 17.7901 15.95C17.6501 16.14 17.4301 16.24 17.2101 16.24Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M14.6002 19.9C14.4402 19.9 14.2802 19.85 14.1402 19.74C12.8402 18.73 11.1502 18.73 9.85017 19.74C9.52017 19.99 9.05017 19.93 8.80017 19.61C8.55017 19.28 8.61016 18.81 8.93016 18.56C10.7902 17.12 13.1902 17.12 15.0502 18.56C15.3802 18.81 15.4402 19.28 15.1802 19.61C15.0502 19.79 14.8302 19.9 14.6002 19.9Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"font-size: 14px;\n\">WIRELESS CONNECT<\/span>\n<\/div>\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M20.5 15.25C20.09 15.25 19.75 14.91 19.75 14.5C19.75 14.09 20.09 13.75 20.5 13.75C21.09 13.75 21.22 13.66 21.23 13.66C21.25 13.6 21.25 13.25 21.25 13V11C21.25 10.75 21.25 10.41 21.21 10.32C21.2 10.33 21.05 10.25 20.5 10.25C20.09 10.25 19.75 9.91 19.75 9.5C19.75 9.09 20.09 8.75 20.5 8.75C22.58 8.75 22.75 9.77 22.75 11V13C22.75 14.23 22.58 15.25 20.5 15.25Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M9.99996 16.75C9.82996 16.75 9.64996 16.69 9.50996 16.57C9.19996 16.3 9.15996 15.83 9.42996 15.51L11.51 13.08C11.54 12.99 11.51 12.91 11.49 12.87C11.46 12.82 11.4 12.75 11.27 12.75H8.96996C8.33996 12.75 7.76996 12.42 7.44996 11.88C7.12996 11.34 7.12996 10.68 7.44996 10.13L9.39996 7.55003C9.64996 7.22003 10.12 7.15003 10.45 7.40003C10.78 7.65003 10.85 8.12003 10.6 8.45003L8.70996 10.95C8.69996 10.98 8.73996 11.07 8.75996 11.12C8.78996 11.17 8.84996 11.24 8.97996 11.24H11.28C11.91 11.24 12.48 11.57 12.8 12.11C13.12 12.65 13.12 13.31 12.8 13.86C12.78 13.9 12.75 13.94 12.72 13.97L10.58 16.47C10.42 16.66 10.21 16.75 9.99996 16.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M7 19.75C2.59 19.75 1.25 18.41 1.25 14V10C1.25 5.59 2.59 4.25 7 4.25C7.41 4.25 7.75 4.59 7.75 5C7.75 5.41 7.41 5.75 7 5.75C3.43 5.75 2.75 6.43 2.75 10V14C2.75 17.57 3.43 18.25 7 18.25C7.41 18.25 7.75 18.59 7.75 19C7.75 19.41 7.41 19.75 7 19.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M13 19.75C12.59 19.75 12.25 19.41 12.25 19C12.25 18.59 12.59 18.25 13 18.25C16.57 18.25 17.25 17.57 17.25 14V10C17.25 6.43 16.57 5.75 13 5.75C12.59 5.75 12.25 5.41 12.25 5C12.25 4.59 12.59 4.25 13 4.25C17.41 4.25 18.75 5.59 18.75 10V14C18.75 18.41 17.41 19.75 13 19.75Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">POWERFULL BATTERY<\/span>\n<\/div>   \n\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M12 19.3701C10.21 19.3701 8.41994 18.6901 7.04994 17.3201C4.31994 14.5901 4.31994 10.1501 7.04994 7.42006C9.77994 4.69006 14.22 4.69006 16.95 7.42006C19.68 10.1501 19.68 14.5901 16.95 17.3201C15.58 18.6901 13.79 19.3701 12 19.3701ZM12 6.87007C10.59 6.87007 9.17994 7.41006 8.10994 8.48006C5.96994 10.6301 5.96994 14.1101 8.10994 16.2601C10.2599 18.4101 13.75 18.4001 15.89 16.2601C18.03 14.1101 18.03 10.6301 15.89 8.48006C14.82 7.41006 13.41 6.87007 12 6.87007Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M8.25003 22.3899C8.16003 22.3899 8.06004 22.3699 7.97004 22.3399C5.72004 21.4399 3.90003 19.8499 2.68003 17.7499C1.50003 15.6999 1.03003 13.3799 1.34003 11.0199C1.39003 10.6099 1.77003 10.3199 2.18003 10.3699C2.59003 10.4199 2.88002 10.7999 2.83002 11.2099C2.57002 13.2299 2.97005 15.2299 3.98005 16.9899C5.02005 18.7899 6.59002 20.1599 8.52002 20.9299C8.90002 21.0899 9.09004 21.5198 8.94004 21.9098C8.83004 22.2098 8.54003 22.3899 8.25003 22.3899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M5.8501 5.22986C5.6301 5.22986 5.4101 5.12988 5.2601 4.93988C5.0001 4.60988 5.06011 4.13989 5.39011 3.88989C7.30011 2.39989 9.58009 1.60986 12.0001 1.60986C14.3601 1.60986 16.6101 2.36988 18.5001 3.80988C18.8301 4.05988 18.8901 4.52986 18.6401 4.85986C18.3901 5.18986 17.9201 5.24988 17.5901 4.99988C15.9701 3.75988 14.0401 3.10986 12.0001 3.10986C9.92009 3.10986 7.95009 3.78989 6.31009 5.06989C6.17009 5.17989 6.0101 5.22986 5.8501 5.22986Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M15.7502 22.3901C15.4502 22.3901 15.1702 22.2101 15.0502 21.9201C14.9002 21.5401 15.0802 21.1001 15.4702 20.9401C17.4002 20.1601 18.9702 18.8001 20.0102 17.0001C21.0302 15.2401 21.4302 13.2401 21.1602 11.2201C21.1102 10.8101 21.4002 10.4301 21.8102 10.3801C22.2102 10.3301 22.6002 10.6201 22.6502 11.0301C22.9502 13.3801 22.4902 15.7101 21.3102 17.7601C20.1002 19.8601 18.2702 21.4401 16.0202 22.3501C15.9402 22.3701 15.8502 22.3901 15.7502 22.3901Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">LONG RANGE<\/span>\n<\/div>\n<\/div>\n<style>\n\n.t4s-item-inf {\n    margin-inline-start: 10px;\n}\n\n<\/style>",
+                "remove_br_mobile": false,
+                "html_tag": "div",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 14,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": true,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_m77aUm": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shopping Now",
+                "link": "shopify:\/\/products\/ninebot-mini-pro",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 21,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#f92c2c",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#f70000",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 60,
+                "border_radius": 40,
+                "padding_left_right": 32,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_VXJqea",
+            "text_custom_TdfiEd",
+            "text_custom_GTxfy6",
+            "text_custom_t968PF",
+            "button_custom_m77aUm"
+          ]
+        },
+        "slide_item_cFAGhB": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide-3_fc65269a-c80d-4266-b926-55eea5292d76.jpg",
+            "image_mb": "shopify:\/\/shop_images\/slide-3.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 14,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "center",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_bk3tGA": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "$395.07",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#f92c2c",
+                "font_size": 32,
+                "line_height": 0,
+                "font_weight": 500,
+                "letter_spacing": 1,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 20,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "text_custom_dwk49g": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "G3 Electric Scooter",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 65,
+                "line_height": 48,
+                "font_weight": 700,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": false,
+                "font_size_mobile": 34,
+                "line_height_mobile": 35,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 30
+              },
+              "blocks": {}
+            },
+            "text_custom_qELYJC": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Powerful Motor & Long Battery Life - The 500W powerful<br> electric brushless hub motor allows for speeds up to 19mph.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#7d7d7d",
+                "font_size": 16,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 30,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_Bwibtx": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "<div style=\"display: flex;\ngap: 23px;\nmargin: 30px 0px;\ncolor: #222222;\nalign-item: center;\nline-height: 1;\n\">\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M19.0899 12.5899C18.9299 12.5899 18.7699 12.5399 18.6299 12.4299C14.5999 9.3199 9.38993 9.3199 5.35993 12.4299C5.02993 12.6799 4.55993 12.6199 4.30993 12.2999C4.05993 11.9699 4.11994 11.4999 4.43994 11.2499C9.02994 7.6999 14.9599 7.6999 19.5399 11.2499C19.8699 11.4999 19.9299 11.9699 19.6699 12.2999C19.5399 12.4899 19.3199 12.5899 19.0899 12.5899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M22 9.1099C21.84 9.1099 21.68 9.05993 21.54 8.94993C15.74 4.46993 8.25004 4.46993 2.46004 8.94993C2.13004 9.19993 1.66003 9.13992 1.41003 8.81992C1.16003 8.48992 1.22002 8.0199 1.54002 7.7699C7.89002 2.8599 16.1 2.8599 22.46 7.7699C22.79 8.0199 22.85 8.48992 22.59 8.81992C22.45 9.00992 22.22 9.1099 22 9.1099Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M17.2101 16.24C17.0501 16.24 16.8901 16.19 16.7501 16.08C13.8701 13.85 10.1401 13.85 7.25007 16.08C6.92007 16.33 6.45007 16.27 6.20007 15.95C5.95007 15.62 6.01007 15.15 6.33007 14.9C9.77007 12.24 14.2201 12.24 17.6601 14.9C17.9901 15.15 18.0501 15.62 17.7901 15.95C17.6501 16.14 17.4301 16.24 17.2101 16.24Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M14.6002 19.9C14.4402 19.9 14.2802 19.85 14.1402 19.74C12.8402 18.73 11.1502 18.73 9.85017 19.74C9.52017 19.99 9.05017 19.93 8.80017 19.61C8.55017 19.28 8.61016 18.81 8.93016 18.56C10.7902 17.12 13.1902 17.12 15.0502 18.56C15.3802 18.81 15.4402 19.28 15.1802 19.61C15.0502 19.79 14.8302 19.9 14.6002 19.9Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"font-size: 14px;\n\">WIRELESS CONNECT<\/span>\n<\/div>\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M20.5 15.25C20.09 15.25 19.75 14.91 19.75 14.5C19.75 14.09 20.09 13.75 20.5 13.75C21.09 13.75 21.22 13.66 21.23 13.66C21.25 13.6 21.25 13.25 21.25 13V11C21.25 10.75 21.25 10.41 21.21 10.32C21.2 10.33 21.05 10.25 20.5 10.25C20.09 10.25 19.75 9.91 19.75 9.5C19.75 9.09 20.09 8.75 20.5 8.75C22.58 8.75 22.75 9.77 22.75 11V13C22.75 14.23 22.58 15.25 20.5 15.25Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M9.99996 16.75C9.82996 16.75 9.64996 16.69 9.50996 16.57C9.19996 16.3 9.15996 15.83 9.42996 15.51L11.51 13.08C11.54 12.99 11.51 12.91 11.49 12.87C11.46 12.82 11.4 12.75 11.27 12.75H8.96996C8.33996 12.75 7.76996 12.42 7.44996 11.88C7.12996 11.34 7.12996 10.68 7.44996 10.13L9.39996 7.55003C9.64996 7.22003 10.12 7.15003 10.45 7.40003C10.78 7.65003 10.85 8.12003 10.6 8.45003L8.70996 10.95C8.69996 10.98 8.73996 11.07 8.75996 11.12C8.78996 11.17 8.84996 11.24 8.97996 11.24H11.28C11.91 11.24 12.48 11.57 12.8 12.11C13.12 12.65 13.12 13.31 12.8 13.86C12.78 13.9 12.75 13.94 12.72 13.97L10.58 16.47C10.42 16.66 10.21 16.75 9.99996 16.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M7 19.75C2.59 19.75 1.25 18.41 1.25 14V10C1.25 5.59 2.59 4.25 7 4.25C7.41 4.25 7.75 4.59 7.75 5C7.75 5.41 7.41 5.75 7 5.75C3.43 5.75 2.75 6.43 2.75 10V14C2.75 17.57 3.43 18.25 7 18.25C7.41 18.25 7.75 18.59 7.75 19C7.75 19.41 7.41 19.75 7 19.75Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M13 19.75C12.59 19.75 12.25 19.41 12.25 19C12.25 18.59 12.59 18.25 13 18.25C16.57 18.25 17.25 17.57 17.25 14V10C17.25 6.43 16.57 5.75 13 5.75C12.59 5.75 12.25 5.41 12.25 5C12.25 4.59 12.59 4.25 13 4.25C17.41 4.25 18.75 5.59 18.75 10V14C18.75 18.41 17.41 19.75 13 19.75Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">POWERFULL BATTERY<\/span>\n<\/div>   \n\n<div style=\"display: flex; align-items: center;\" class=\"t4s-item__carousel\">\n<svg width=\"24\" height=\"24\" viewbox=\"0 0 24 24\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M12 19.3701C10.21 19.3701 8.41994 18.6901 7.04994 17.3201C4.31994 14.5901 4.31994 10.1501 7.04994 7.42006C9.77994 4.69006 14.22 4.69006 16.95 7.42006C19.68 10.1501 19.68 14.5901 16.95 17.3201C15.58 18.6901 13.79 19.3701 12 19.3701ZM12 6.87007C10.59 6.87007 9.17994 7.41006 8.10994 8.48006C5.96994 10.6301 5.96994 14.1101 8.10994 16.2601C10.2599 18.4101 13.75 18.4001 15.89 16.2601C18.03 14.1101 18.03 10.6301 15.89 8.48006C14.82 7.41006 13.41 6.87007 12 6.87007Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M8.25003 22.3899C8.16003 22.3899 8.06004 22.3699 7.97004 22.3399C5.72004 21.4399 3.90003 19.8499 2.68003 17.7499C1.50003 15.6999 1.03003 13.3799 1.34003 11.0199C1.39003 10.6099 1.77003 10.3199 2.18003 10.3699C2.59003 10.4199 2.88002 10.7999 2.83002 11.2099C2.57002 13.2299 2.97005 15.2299 3.98005 16.9899C5.02005 18.7899 6.59002 20.1599 8.52002 20.9299C8.90002 21.0899 9.09004 21.5198 8.94004 21.9098C8.83004 22.2098 8.54003 22.3899 8.25003 22.3899Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M5.8501 5.22986C5.6301 5.22986 5.4101 5.12988 5.2601 4.93988C5.0001 4.60988 5.06011 4.13989 5.39011 3.88989C7.30011 2.39989 9.58009 1.60986 12.0001 1.60986C14.3601 1.60986 16.6101 2.36988 18.5001 3.80988C18.8301 4.05988 18.8901 4.52986 18.6401 4.85986C18.3901 5.18986 17.9201 5.24988 17.5901 4.99988C15.9701 3.75988 14.0401 3.10986 12.0001 3.10986C9.92009 3.10986 7.95009 3.78989 6.31009 5.06989C6.17009 5.17989 6.0101 5.22986 5.8501 5.22986Z\" fill=\"#F92C2C\"><\/path>\n<path d=\"M15.7502 22.3901C15.4502 22.3901 15.1702 22.2101 15.0502 21.9201C14.9002 21.5401 15.0802 21.1001 15.4702 20.9401C17.4002 20.1601 18.9702 18.8001 20.0102 17.0001C21.0302 15.2401 21.4302 13.2401 21.1602 11.2201C21.1102 10.8101 21.4002 10.4301 21.8102 10.3801C22.2102 10.3301 22.6002 10.6201 22.6502 11.0301C22.9502 13.3801 22.4902 15.7101 21.3102 17.7601C20.1002 19.8601 18.2702 21.4401 16.0202 22.3501C15.9402 22.3701 15.8502 22.3901 15.7502 22.3901Z\" fill=\"#F92C2C\"><\/path>\n<\/svg>\n<span class=\"t4s-item-inf\" style=\"\n    font-size: 14px;\n\">LONG RANGE<\/span>\n<\/div>\n<\/div>\n<style>\n\n.t4s-item-inf {\n    margin-inline-start: 10px;\n}\n\n<\/style>",
+                "remove_br_mobile": false,
+                "html_tag": "div",
+                "font_family": "",
+                "color_text": "#000000",
+                "font_size": 14,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": true,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_DzCT4x": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shopping Now",
+                "link": "shopify:\/\/products\/g3-electric-scooter",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 21,
+                "button_style": "default",
+                "button_effect": "default",
+                "primary_color": "#f92c2c",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#f70000",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 16,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "min_height": 60,
+                "border_radius": 40,
+                "padding_left_right": 32,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 22,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_bk3tGA",
+            "text_custom_dwk49g",
+            "text_custom_qELYJC",
+            "text_custom_Bwibtx",
+            "button_custom_DzCT4x"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrO",
+        "slide_item_CJqi88",
+        "slide_item_cFAGhB"
+      ],
+      "custom_css": [
+        ".hdt-block-button__custom {border-radius: 60px; width: clamp(200px, 20vw, 280px);}",
+        "@media (width > 1150px) {.hdt-slideshow .hdt-slider .hdt-pagination {left: 82%; bottom: 50%; flex-direction: column; width: fit-content; gap: 20px; } .hdt-slider__dot--selected::before {display: flex; border: 1px solid #bdbbbb; display: flex; border-radius: 50%; width: calc(var(--pag-w-active) * 2); height: calc(var(--pag-h-active) * 2); padding: 13px; transform: translate(calc(var(--value-logical-flip) * -11px), -11px); }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 850,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 600,
+        "is_fade": true,
+        "loop": true,
+        "autoplay": 0,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "outline",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "featured_collection_PTq36A": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_JJ7DRU": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "scooter",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "4",
+            "col_mb": "2",
+            "space_items": "20",
+            "pagination": true,
+            "pagination_color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "LOAD MORE",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "semibold"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 5,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_rgjWE7": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New In Products",
+                "line_height": "",
+                "heading_size": "h3",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_URb48x": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_rgjWE7",
+            "sub_heading_section_URb48x"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_JJ7DRU"
+      ],
+      "custom_css": [
+        "@media (width> 1150px) {hdt-reval-items {row-gap: 4rem; } .hdt-pagination-wrapper .hdt-btn {min-width: 18rem; min-height: 5.5rem; }}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,60px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "featured_product_2_itfbpw": {
+      "type": "featured-product-2",
+      "blocks": {
+        "product_info_ntiQYU": {
+          "type": "_product_info",
+          "name": "Product info",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": "",
+            "hdt_text_title": "Top Speed",
+            "hdt_description": "<p>60mph<\/p>"
+          },
+          "blocks": {}
+        },
+        "product_info_3BkMK7": {
+          "type": "_product_info",
+          "name": "Product info",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": "",
+            "hdt_text_title": "Range",
+            "hdt_description": "<p>65-70miles<\/p>"
+          },
+          "blocks": {}
+        },
+        "product_info_A8aYyC": {
+          "type": "_product_info",
+          "name": "Product info",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": "",
+            "hdt_text_title": "Power",
+            "hdt_description": "<p>70kW<\/p>"
+          },
+          "blocks": {}
+        },
+        "hdt_button_custom_price": {
+          "type": "button",
+          "static": true,
+          "settings": {
+            "label": "Order now",
+            "link": "shopify:\/\/products\/s4-electric-scooter-3",
+            "open_in_new_tab": false,
+            "full_width": false,
+            "btn_style": "",
+            "color_btn": "#ffffff",
+            "color_hover_btn": "#ffffff",
+            "background_btn": "#222222",
+            "background_hover_btn": "#333333",
+            "border_w_btn": "",
+            "border_btn": "#222222",
+            "border_hover_btn": "#333333",
+            "size": "custom custom-inline",
+            "text_size": "hdt-text-base",
+            "font_weight": "medium",
+            "font_size_btn": 20,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 186,
+            "min_height_btn": 36,
+            "rounded": "hdt-btn-radius",
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+          "blocks": {}
+        },
+        "hdt-featured-product-2-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 65
+          },
+          "blocks": {
+            "heading_section_i3yNyT": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Get Big Deal Buy Them Together",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_mGHUfB": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_i3yNyT",
+            "sub_heading_section_mGHUfB"
+          ]
+        }
+      },
+      "block_order": [
+        "product_info_ntiQYU",
+        "product_info_3BkMK7",
+        "product_info_A8aYyC"
+      ],
+      "custom_css": [
+        "strong {color: rgb(var(--color-foreground));}",
+        ".hdt-product__fbt-submit {background-color: #f92c2c; border-color: #f92c2c; font-weight: 400; font-size: 16px;}",
+        ".hdt-info--product-left-content .hdt-pr-price {line-height: 6.8rem;}",
+        ".hdt_info_product .hdt-info--product .hdt-text-description--pr {line-height: 1.5;}",
+        ".hdt-text-secondary {color: rgb(105, 105, 105);}"
+      ],
+      "name": "Featured product 2",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-e3f1de66-f6b9-4361-912a-5b889df6a754",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_image_picker": "shopify:\/\/shop_images\/image_12_ee86a61c-fd86-4e36-bbbb-8492fb016128.png",
+        "hdt_image_height_mb": 620,
+        "hdt_top_position_content": 85,
+        "hdt_spacing_between_content": 100,
+        "hdt_spacing_content_heading": 150,
+        "hdt_product": "s4-electric-scooter-3",
+        "hdt_product_list": [
+          "fullface-helmet",
+          "scooter-light-set",
+          "scooter-chain-lock"
+        ],
+        "mg": ",,200px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_hkQLU3": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_4dkGYE": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "scooter-2",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "4",
+            "col_mb": "2",
+            "space_items": "20",
+            "pagination": true,
+            "pagination_color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "LOAD MORE",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "semibold"
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 5,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_kEQWN3": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Hot Products",
+                "line_height": "",
+                "heading_size": "h3",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_tEHtMn": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_kEQWN3",
+            "sub_heading_section_tEHtMn"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_4dkGYE"
+      ],
+      "custom_css": [
+        "@media (width> 1150px) {hdt-reval-items {row-gap: 4rem; } .hdt-pagination-wrapper .hdt-btn {min-width: 18rem; min-height: 5.5rem; }}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,60px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "blog_post_DcUjga": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_wnf68V": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "scooter-blog",
+            "limit": 8,
+            "col_dk": "3",
+            "col_tb": "2",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "hover",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "2",
+                "show_cate": false,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": true,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": true,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-adapt_image",
+                "image_size": true,
+                "img_effect": "zoom",
+                "b_effect": "overlay"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 5,
+            "margin_bottom": 45
+          },
+          "blocks": {
+            "heading_section_3PGWdB": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Latest News",
+                "line_height": "",
+                "heading_size": "h3",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_RxP9X7": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>The freshest and most exciting news about fashion trending.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_3PGWdB",
+            "sub_heading_section_RxP9X7"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_wnf68V"
+      ],
+      "custom_css": [
+        "@media (width > 1150px) {.hdt-container {--container-max-width: 162rem; } .hdt-article-content {font-size: 1.6rem; margin-top: 5px; } .hdt-slide-spacing-x {--slide-spacing: 20px; }}",
+        ".hdt-article-title {font-size: 18px;}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ",,75px,"
+      }
+    },
+    "custom_section_mardMh": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_pnjKzd": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_custom_WnHz8g": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Signup to be the first to hear about exclusive deals",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#222222",
+                "font_size": 36,
+                "line_height": 43,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 40,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "newsletter_VehtbJ": {
+              "type": "_newsletter",
+              "name": "t:blocks.newsletter.name",
+              "settings": {
+                "color_scheme": "scheme-6707cc8e-6558-49d9-8759-f7d934d9fe4f",
+                "des_newsletter": "5",
+                "alignment": "left",
+                "button_lb": "Subscribe",
+                "size": "xl",
+                "btn_fw": "normal",
+                "agree_form": false,
+                "content": "I agree with the terms and conditions",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_WnHz8g",
+            "newsletter_VehtbJ"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_pnjKzd"
+      ],
+      "custom_css": [
+        ".hdt-newsletter-main {max-width: 830px; margin: 0 auto;}",
+        ".hdt-column {padding: 50px 0;}",
+        ".hdt-newsletter__submit {border-radius: 0; min-width: auto; padding-inline: 72px; font-weight: 500; width: clamp(100px, 10vw, 200px); height: 50px; display: flex; justify-content: center; align-items: center;}",
+        ".hdt-newsletter__email {height: 50px; font-size: 16px; margin-inline-end: 20px; border-inline-end: 0px;}",
+        "@media (width > 1150px) {.hdt-column {padding: 120px 0; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 0,
+        "item_spacing_tb": 0,
+        "item_spacing_mb": 0,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": "",
+        "pd": "50px,,0px,",
+        "pd_mb": "0px,,0px,"
+      }
+    },
+    "shipping_aRcaiB": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_DbBQjV": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M17.3332 19.6667H2.6665C2.11984 19.6667 1.6665 19.2134 1.6665 18.6667V8.00008C1.6665 4.50675 4.5065 1.66675 7.99984 1.66675H19.9998C20.5465 1.66675 20.9998 2.12008 20.9998 2.66675V16.0001C20.9998 18.0267 19.3598 19.6667 17.3332 19.6667ZM3.6665 17.6667H17.3332C18.2532 17.6667 18.9998 16.9201 18.9998 16.0001V3.66675H7.99984C5.61317 3.66675 3.6665 5.61341 3.6665 8.00008V17.6667Z\" fill=\"#292D32\"><\/path>\n<path d=\"M25.3332 27.6667H23.9998C23.4532 27.6667 22.9998 27.2134 22.9998 26.6667C22.9998 25.7467 22.2532 25.0001 21.3332 25.0001C20.4132 25.0001 19.6665 25.7467 19.6665 26.6667C19.6665 27.2134 19.2132 27.6667 18.6665 27.6667H13.3332C12.7865 27.6667 12.3332 27.2134 12.3332 26.6667C12.3332 25.7467 11.5865 25.0001 10.6665 25.0001C9.7465 25.0001 8.99984 25.7467 8.99984 26.6667C8.99984 27.2134 8.5465 27.6667 7.99984 27.6667H6.6665C3.9065 27.6667 1.6665 25.4267 1.6665 22.6667V18.6667C1.6665 18.1201 2.11984 17.6667 2.6665 17.6667H17.3332C18.2532 17.6667 18.9998 16.9201 18.9998 16.0001V6.66675C18.9998 6.12008 19.4532 5.66675 19.9998 5.66675H22.4532C23.7732 5.66675 24.9865 6.37343 25.6399 7.5201L27.9198 11.5068C28.0932 11.8134 28.0932 12.2001 27.9198 12.5068C27.7465 12.8134 27.4132 13.0001 27.0532 13.0001H25.3332C25.1465 13.0001 24.9998 13.1467 24.9998 13.3334V17.3334C24.9998 17.5201 25.1465 17.6667 25.3332 17.6667H29.3332C29.8798 17.6667 30.3332 18.1201 30.3332 18.6667V22.6667C30.3332 25.4267 28.0932 27.6667 25.3332 27.6667ZM24.8665 25.6667H25.3332C26.9865 25.6667 28.3332 24.3201 28.3332 22.6667V19.6667H25.3332C24.0532 19.6667 22.9998 18.6134 22.9998 17.3334V13.3334C22.9998 12.0534 24.0398 11.0001 25.3332 11.0001L23.9065 8.50675C23.6132 7.98675 23.0532 7.66675 22.4532 7.66675H20.9998V16.0001C20.9998 18.0267 19.3598 19.6667 17.3332 19.6667H3.6665V22.6667C3.6665 24.3201 5.01317 25.6667 6.6665 25.6667H7.13318C7.57318 24.1334 8.9865 23.0001 10.6665 23.0001C12.3465 23.0001 13.7598 24.1334 14.1998 25.6667H17.8132C18.2532 24.1334 19.6665 23.0001 21.3465 23.0001C23.0265 23.0001 24.4265 24.1334 24.8665 25.6667Z\" fill=\"#292D32\"><\/path>\n<path d=\"M10.6667 30.3333C8.64 30.3333 7 28.6933 7 26.6667C7 24.64 8.64 23 10.6667 23C12.6933 23 14.3333 24.64 14.3333 26.6667C14.3333 28.6933 12.6933 30.3333 10.6667 30.3333ZM10.6667 25C9.74667 25 9 25.7467 9 26.6667C9 27.5867 9.74667 28.3333 10.6667 28.3333C11.5867 28.3333 12.3333 27.5867 12.3333 26.6667C12.3333 25.7467 11.5867 25 10.6667 25Z\" fill=\"#292D32\"><\/path>\n<path d=\"M21.3332 30.3333C19.3065 30.3333 17.6665 28.6933 17.6665 26.6667C17.6665 24.64 19.3065 23 21.3332 23C23.3598 23 24.9998 24.64 24.9998 26.6667C24.9998 28.6933 23.3598 30.3333 21.3332 30.3333ZM21.3332 25C20.4132 25 19.6665 25.7467 19.6665 26.6667C19.6665 27.5867 20.4132 28.3333 21.3332 28.3333C22.2532 28.3333 22.9998 27.5867 22.9998 26.6667C22.9998 25.7467 22.2532 25 21.3332 25Z\" fill=\"#292D32\"><\/path>\n<path d=\"M29.3333 19.6667H25.3333C24.0533 19.6667 23 18.6133 23 17.3333V13.3333C23 12.0533 24.0533 11 25.3333 11H27.0533C27.4133 11 27.7467 11.1867 27.92 11.5067L30.2 15.5067C30.28 15.6533 30.3333 15.8267 30.3333 16V18.6667C30.3333 19.2133 29.88 19.6667 29.3333 19.6667ZM25.3333 13C25.1467 13 25 13.1467 25 13.3333V17.3333C25 17.52 25.1467 17.6667 25.3333 17.6667H28.3333V16.2667L26.4667 13H25.3333Z\" fill=\"#292D32\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "heading_BUJRF9": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Fast Delivery<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_m4waP6": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_kiyVKM": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US orders<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_BUJRF9",
+            "spacer_m4waP6",
+            "text_kiyVKM"
+          ]
+        },
+        "shipping_NeKTfg": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M5.23983 22.1734C4.9865 22.1734 4.73316 22.0801 4.53316 21.8801C4.1465 21.4934 4.1465 20.8534 4.53316 20.4667L20.4665 4.53341C20.8532 4.14674 21.4932 4.14674 21.8798 4.53341C22.2665 4.92007 22.2665 5.56007 21.8798 5.94674L5.9465 21.8934C5.75983 22.0801 5.49316 22.1734 5.23983 22.1734Z\" fill=\"#292D32\"><\/path>\n<path d=\"M14.7999 25.3733C14.5466 25.3733 14.2932 25.2799 14.0932 25.0799C13.7066 24.6933 13.7066 24.0533 14.0932 23.6666L15.6932 22.0666C16.0799 21.6799 16.7199 21.6799 17.1066 22.0666C17.4932 22.4533 17.4932 23.0933 17.1066 23.4799L15.5066 25.0799C15.3199 25.2666 15.0666 25.3733 14.7999 25.3733Z\" fill=\"#292D32\"><\/path>\n<path d=\"M18.3868 21.7866C18.1335 21.7866 17.8801 21.6933 17.6801 21.4933C17.2935 21.1066 17.2935 20.4666 17.6801 20.0799L20.8668 16.8933C21.2535 16.5066 21.8935 16.5066 22.2801 16.8933C22.6668 17.2799 22.6668 17.9199 22.2801 18.3066L19.0935 21.4933C18.9068 21.6799 18.6401 21.7866 18.3868 21.7866Z\" fill=\"#292D32\"><\/path>\n<path d=\"M14.8 30.3334C13.4934 30.3334 12.1867 29.5334 10.6 27.9467L4.05338 21.4C0.866715 18.2134 0.880048 16.16 4.09338 12.9467L12.9467 4.09338C16.16 0.880048 18.2134 0.866715 21.4 4.05338L27.9467 10.6C31.1334 13.7867 31.1201 15.84 27.9067 19.0534L19.0534 27.9067C17.44 29.5201 16.12 30.3334 14.8 30.3334ZM17.2 3.66672C16.5067 3.66672 15.6267 4.24005 14.36 5.50672L5.50672 14.36C4.24005 15.6267 3.66672 16.5067 3.66672 17.1867C3.66672 17.88 4.20005 18.72 5.46671 19.9867L12.0134 26.5334C13.28 27.8 14.1067 28.3334 14.8 28.3334C14.8 28.3334 14.8 28.3334 14.8134 28.3334C15.5067 28.3334 16.3734 27.76 17.64 26.4934L26.4934 17.64C27.76 16.3734 28.3334 15.4934 28.3334 14.8134C28.3334 14.12 27.8 13.28 26.5334 12.0134L19.9867 5.46671C18.7334 4.20005 17.8934 3.66672 17.2 3.66672Z\" fill=\"#292D32\"><\/path>\n<path d=\"M29.3332 30.3333H2.6665C2.11984 30.3333 1.6665 29.8799 1.6665 29.3333C1.6665 28.7866 2.11984 28.3333 2.6665 28.3333H29.3332C29.8798 28.3333 30.3332 28.7866 30.3332 29.3333C30.3332 29.8799 29.8798 30.3333 29.3332 30.3333Z\" fill=\"#292D32\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "heading_8VPAkc": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Safe Payment<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_U7dPDM": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_KhAVcY": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment with PEV<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_8VPAkc",
+            "spacer_U7dPDM",
+            "text_KhAVcY"
+          ]
+        },
+        "shipping_K97f3f": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M22.5332 25.3466C22.1198 25.3466 21.7065 25.2266 21.3465 24.9866L20.0665 24.1466C19.7065 23.9066 19.5332 23.4533 19.6532 23.04C19.7465 22.7333 19.7865 22.3732 19.7865 21.9732V16.5465C19.7865 14.3732 18.4265 13.0133 16.2532 13.0133H7.19983C7.03983 13.0133 6.89317 13.0266 6.7465 13.04C6.4665 13.0533 6.19984 12.9599 5.98651 12.7733C5.77318 12.5866 5.6665 12.32 5.6665 12.04V8.3466C5.6665 4.4266 8.41317 1.67993 12.3332 1.67993H23.6665C27.5865 1.67993 30.3332 4.4266 30.3332 8.3466V15.1466C30.3332 17.0799 29.6798 18.7865 28.4798 19.9599C27.5198 20.9332 26.1865 21.5599 24.6665 21.7466V23.2266C24.6665 24.0266 24.2265 24.7466 23.5332 25.12C23.2132 25.2666 22.8665 25.3466 22.5332 25.3466ZM21.7332 22.8399L22.5998 23.3333C22.6798 23.2933 22.6798 23.2265 22.6798 23.2132V20.7999C22.6798 20.2532 23.1332 19.7999 23.6798 19.7999C25.0798 19.7999 26.2665 19.36 27.0798 18.5333C27.9198 17.7066 28.3465 16.5332 28.3465 15.1332V8.33325C28.3465 5.49325 26.5198 3.66659 23.6798 3.66659H12.3465C9.5065 3.66659 7.67983 5.49325 7.67983 8.33325V10.9999H16.2665C19.5198 10.9999 21.7998 13.28 21.7998 16.5333V21.9599C21.7865 22.2665 21.7732 22.5599 21.7332 22.8399Z\" fill=\"#292D32\"><\/path>\n<path d=\"M8.09318 30.3333C7.79985 30.3333 7.49318 30.2667 7.21318 30.12C6.58651 29.7867 6.19983 29.1467 6.19983 28.4267V27.4133C5.0265 27.2267 3.98651 26.7333 3.21318 25.96C2.19984 24.9466 1.6665 23.56 1.6665 21.96V16.5334C1.6665 13.52 3.63983 11.3067 6.57316 11.0267C6.78649 11.0134 6.9865 11 7.19983 11H16.2532C19.5065 11 21.7865 13.28 21.7865 16.5334V21.96C21.7865 22.5466 21.7198 23.0933 21.5732 23.5867C20.9732 25.9867 18.9332 27.4933 16.2532 27.4933H12.9332L9.15983 30C8.83983 30.2267 8.46651 30.3333 8.09318 30.3333ZM7.19983 13C7.03983 13 6.89317 13.0134 6.7465 13.0267C4.8265 13.2 3.6665 14.52 3.6665 16.5334V21.96C3.6665 23.0266 3.99984 23.92 4.62651 24.5466C5.23984 25.16 6.13316 25.4933 7.19983 25.4933C7.7465 25.4933 8.19983 25.9467 8.19983 26.4933V28.24L12.0665 25.6667C12.2265 25.56 12.4265 25.4933 12.6265 25.4933H16.2532C18.0132 25.4933 19.2532 24.6133 19.6398 23.0667C19.7332 22.7333 19.7865 22.36 19.7865 21.96V16.5334C19.7865 14.36 18.4265 13 16.2532 13H7.19983Z\" fill=\"#292D32\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "heading_a3mYre": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>24\/7 Online Support<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_VhaXz6": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_arb9Ww": {
+              "type": "text",
+              "settings": {
+                "text": "<p>24 hours a day, 7 days a week<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_a3mYre",
+            "spacer_VhaXz6",
+            "text_arb9Ww"
+          ]
+        },
+        "shipping_4LR9xq": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "icon": "<svg width=\"32\" height=\"32\" viewbox=\"0 0 32 32\" fill=\"none\" xmlns=\"http:\/\/www.w3.org\/2000\/svg\">\n<path d=\"M15.9999 24.0134C11.7733 24.0134 8.33325 20.5734 8.33325 16.3468C8.33325 14.8268 8.77325 13.3467 9.62659 12.0934C9.93325 11.6401 10.5599 11.5067 11.0132 11.8134C11.4666 12.1201 11.5999 12.7467 11.2933 13.2001C10.6666 14.1334 10.3466 15.2268 10.3466 16.3468C10.3466 19.4668 12.8932 22.0134 16.0132 22.0134C19.1332 22.0134 21.6799 19.4668 21.6799 16.3468C21.6799 13.2268 19.1332 10.6801 16.0132 10.6801C15.3466 10.6801 14.7066 10.7734 14.0799 10.9601C13.5599 11.1201 12.9999 10.8267 12.8266 10.2934C12.6666 9.76008 12.9599 9.20008 13.4932 9.04008C14.3066 8.78675 15.1466 8.66675 16.0132 8.66675C20.2399 8.66675 23.6799 12.1067 23.6799 16.3334C23.6799 20.5601 20.2266 24.0134 15.9999 24.0134Z\" fill=\"#292D32\"><\/path>\n<path d=\"M12.8269 11.2C12.6002 11.2 12.3602 11.12 12.1735 10.96C11.7602 10.6 11.7202 9.95999 12.0802 9.54666L14.3069 6.99999C14.6669 6.58665 15.3069 6.53332 15.7202 6.90665C16.1335 7.26665 16.1735 7.90665 15.8135 8.31998L13.5869 10.8667C13.3735 11.08 13.1069 11.2 12.8269 11.2Z\" fill=\"#292D32\"><\/path>\n<path d=\"M15.4131 13.0933C15.2131 13.0933 14.9998 13.0266 14.8264 12.9066L12.2398 11.0133C11.7998 10.6933 11.6931 10.0666 12.0264 9.61331C12.3464 9.17331 12.9731 9.06665 13.4265 9.39998L16.0131 11.2933C16.4531 11.6133 16.5598 12.24 16.2264 12.6933C16.0264 12.9466 15.7198 13.0933 15.4131 13.0933Z\" fill=\"#292D32\"><\/path>\n<path d=\"M20.0001 30.3334H12.0001C4.76008 30.3334 1.66675 27.2401 1.66675 20.0001V12.0001C1.66675 4.76008 4.76008 1.66675 12.0001 1.66675H20.0001C27.2401 1.66675 30.3334 4.76008 30.3334 12.0001V20.0001C30.3334 27.2401 27.2401 30.3334 20.0001 30.3334ZM12.0001 3.66675C5.85341 3.66675 3.66675 5.85341 3.66675 12.0001V20.0001C3.66675 26.1467 5.85341 28.3334 12.0001 28.3334H20.0001C26.1467 28.3334 28.3334 26.1467 28.3334 20.0001V12.0001C28.3334 5.85341 26.1467 3.66675 20.0001 3.66675H12.0001Z\" fill=\"#292D32\"><\/path>\n<\/svg>"
+          },
+          "blocks": {
+            "heading_6QQnqX": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Free Returns<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_t4qW36": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_WahNJE": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_6QQnqX",
+            "spacer_t4qW36",
+            "text_WahNJE"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_DbBQjV",
+        "shipping_NeKTfg",
+        "shipping_K97f3f",
+        "shipping_4LR9xq"
+      ],
+      "custom_css": [
+        ".hdt-shipping .hdt-ship-item-wrap {background: transparent; border: none;}"
+      ],
+      "settings": {
+        "content_align": "center",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": true,
+        "space_padding": false,
+        "icon_size": "medium",
+        "icon_color": "",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "130px,,130px,",
+        "pd_mb": "30px,,30px,"
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "featured_collection_PTq36A",
+    "featured_product_2_itfbpw",
+    "featured_collection_hkQLU3",
+    "blog_post_DcUjga",
+    "custom_section_mardMh",
+    "shipping_aRcaiB"
+  ]
+}

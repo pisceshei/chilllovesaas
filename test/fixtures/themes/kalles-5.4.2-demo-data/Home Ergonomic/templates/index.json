@@ -1,0 +1,1384 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify://shop_images/ergonomic_hero_banner.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-097102a4-54f1-4f21-97e6-3f9af5d9786d",
+            "content_position_type": "auto",
+            "position_x": 8,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YrQhtV": {
+              "type": "text",
+              "settings": {
+                "text": "<p>The perfect balance of ergonomics and comfort.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0.8
+              },
+              "blocks": {}
+            },
+            "spacer_gnPapa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 6
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Ergonomic Chair</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 34,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_fFNyjC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 22,
+                "space_md": 22,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "SHOP NOW",
+                "link": "shopify://collections/ergonomic",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "medium",
+                "font_size_btn": 16,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 200,
+                "min_height_btn": 36,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YrQhtV",
+            "spacer_gnPapa",
+            "heading_MzV9Ty",
+            "spacer_fFNyjC",
+            "button_3yEDmG"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM"
+      ],
+      "custom_css": [
+        "@media (width < 768px) {.hdt-button-block {--hdt-btn-padding-x: 30px; --hdt-btn-line-height: 16px !important; font-size: 14px !important; --minw-button: 100px; --minwdt-button: 200px; }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 950,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,0px,",
+        "pd_mb": ",,0px,"
+      }
+    },
+    "shipping_ycityP": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_fhTkNm": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "car",
+            "image_icon": "shopify://shop_images/truck.svg",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_yRp9TX": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Fast Delivery</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_kPDMaP": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_EpCfW4": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Free shipping on all US orders</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_yRp9TX",
+            "spacer_kPDMaP",
+            "text_EpCfW4"
+          ]
+        },
+        "shipping_XpWTzf": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "image_icon": "shopify://shop_images/card-pos.svg",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_wWAKAd": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Safe Payment</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_qRVGaN": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_pCcnWy": {
+              "type": "text",
+              "settings": {
+                "text": "<p>We ensure secure payment with PEV</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_wWAKAd",
+            "spacer_qRVGaN",
+            "text_pCcnWy"
+          ]
+        },
+        "shipping_WpbEMr": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "refesh",
+            "image_icon": "shopify://shop_images/messages-3.svg",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_cMeJbJ": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>24/7 Online Support</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_mPtwGj": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_dhHYyN": {
+              "type": "text",
+              "settings": {
+                "text": "<p>24 hours a day, 7 days a week</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_cMeJbJ",
+            "spacer_mPtwGj",
+            "text_dhHYyN"
+          ]
+        },
+        "shipping_CPWTkt": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "door-lock",
+            "image_icon": "shopify://shop_images/refresh-left-square.svg",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_qiYydG": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Free Returns</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 18,
+                "font_size_heading": 18,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_ka8Er9": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_YapdVJ": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Simply return it within 30 days</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_qiYydG",
+            "spacer_ka8Er9",
+            "text_YapdVJ"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_fhTkNm",
+        "shipping_XpWTzf",
+        "shipping_WpbEMr",
+        "shipping_CPWTkt"
+      ],
+      "name": "t:sections.shipping.name",
+      "settings": {
+        "content_align": "center",
+        "align_center": false,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "medium",
+        "icon_color": "hdt-icon-secondary",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "125px,,150px,",
+        "pd_mb": "20px,,20px,"
+      }
+    },
+    "custom_line_xkELTM": {
+      "type": "custom-line",
+      "name": "t:sections.custom_line.name",
+      "settings": {
+        "line_style": "solid",
+        "line_width": 100,
+        "line_height": 1,
+        "line_cl": "#cccccc",
+        "line_pos": "start",
+        "full_width": true,
+        "mg": ",,218px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "custom_section_XUgG4N": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_tiqpRA": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "12",
+            "column_tb": "12",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "text_ih9qTn": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>INTRODUCTION</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 20,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_KjyqUb": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "heading_hQ9ary": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Sit in style, work in comfort</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 48,
+                "font_size_heading": 26,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_UPgUcC": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 60,
+                "space_md": 50,
+                "space": 16
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_ih9qTn",
+            "spacer_KjyqUb",
+            "heading_hQ9ary",
+            "spacer_UPgUcC"
+          ]
+        },
+        "multi_column_4Ywrye": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "3",
+            "column_tb": "12",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "right",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_BFxwMt": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Sustainable from the start</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 20,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_ycqXNh": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_WjKbaK": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Office chairs are meticulously crafted to prioritize both comfort and support, adhering to ergonomic principles. Not only do they provide unmatched levels of comfort, but they also boast a sophisticated and contemporary design that complements any space flawlessly.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_c6c4Lm": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 100,
+                "space_md": 50,
+                "space": 36
+              },
+              "blocks": {}
+            },
+            "heading_L6RTUx": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Where comfort meets support</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 20,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_NMMYUX": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_89RPzK": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Experience ultimate comfort and unparalleled support with our ergonomic chair, where design meets wellness</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_BFxwMt",
+            "spacer_ycqXNh",
+            "text_WjKbaK",
+            "spacer_c6c4Lm",
+            "heading_L6RTUx",
+            "spacer_NMMYUX",
+            "text_89RPzK"
+          ]
+        },
+        "multi_column_VhUkX9": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "12",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "image_pKWWEt": {
+              "type": "image",
+              "name": "t:blocks.image.name",
+              "settings": {
+                "img": "shopify://shop_images/ergonomic_banner_72df0ceb-2a23-48dc-acbc-12f9c828ead0.jpg",
+                "image_ratio": "adapt_image",
+                "img_effect": "none",
+                "b_effect": "plus-zoom-overlay",
+                "custom_width": "full",
+                "image_w": 100,
+                "image_w_mb": 50
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "image_pKWWEt"
+          ]
+        },
+        "multi_column_VMnpaj": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "3",
+            "column_tb": "12",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center",
+            "alignment": "left",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_E3RwHY": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Designed for the elements</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 20,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_XEfhNQ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_AyMVfw": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Aeron’s legacy of sustainability and innovation continues since its introduction nearly 30 years ago. It proved pioneering in both ergonomics and material innovation, without relying on the standard use of foam, fabric or leather found.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_96mpdV": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 100,
+                "space_md": 50,
+                "space": 36
+              },
+              "blocks": {}
+            },
+            "heading_HPJpUE": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>A more inclusive chair</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 20,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_pYz6D8": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_HUrfDe": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Experience superior comfort and support with our ergonomic chair, designed to be more inclusive for everyone.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_6kDPeT": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 50,
+                "space": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_E3RwHY",
+            "spacer_XEfhNQ",
+            "text_AyMVfw",
+            "spacer_96mpdV",
+            "heading_HPJpUE",
+            "spacer_pYz6D8",
+            "text_HUrfDe",
+            "spacer_6kDPeT"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_tiqpRA",
+        "multi_column_4Ywrye",
+        "multi_column_VhUkX9",
+        "multi_column_VMnpaj"
+      ],
+      "custom_css": [
+        "@media (min-width: 1150px) {.hdt-container {--container-max-width-padding-lg: 1700px; padding: 0 5rem; } .hdt-text-custom {line-height: 24px; }}",
+        "@media (min-width: 768px) and (max-width: 1150px) {.hdt-column_inner {text-align: center; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "12",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,100px,",
+        "mg_mb": ",,40px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_PTq36A": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_JJ7DRU": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "ergonomic",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "LOAD MORE",
+            "btn_style": "hdt-btn-accent",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "medium",
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_rgjWE7": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "New In Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_URb48x": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_rgjWE7",
+            "sub_heading_section_URb48x"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_JJ7DRU"
+      ],
+      "custom_css": [
+        "@media (width < 768px) {.hdt-loamore-btn {width: 124px; height: 44px; font-size: 13px; white-space: nowrap; }}",
+        "@media (width >= 1150px) {.hdt-card-product__title {font-size: 1.6rem; }}",
+        "@media (width < 768px) {.hdt-row-grid {--spacing-y: 3rem; }}"
+      ],
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "90px,,150px,",
+        "mg_mb": "40px,,50px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "lookbook_grid_8Bc9yB": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook_kmFA43": {
+          "type": "_lookbook",
+          "settings": {
+            "image": "shopify://shop_images/c2251c42f6035ccaff7d532e6fdc4ae5_1.png",
+            "img_effect": "none",
+            "b_effect": "none"
+          },
+          "blocks": {
+            "pin_product_NTLPVj": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#f92c2c",
+                "pin_text": "#ffffff",
+                "left": 34,
+                "top": 20,
+                "pin_size": "large",
+                "pin_type": "1",
+                "text": "1",
+                "product": "ergo-wireless-trackball-mouse-2",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_JjGF4i": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#f92c2c",
+                "pin_text": "#ffffff",
+                "left": 61,
+                "top": 47,
+                "pin_size": "large",
+                "pin_type": "1",
+                "text": "1",
+                "product": "office-chair-ergonomic",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_qWPVLK": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#f92c2c",
+                "pin_text": "#ffffff",
+                "left": 87,
+                "top": 66,
+                "pin_size": "large",
+                "pin_type": "1",
+                "text": "1",
+                "product": "3-seater-sofa-w-chaiselong",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_YGnN67": {
+              "type": "_pin-product",
+              "settings": {
+                "pin_bg": "#f92c2c",
+                "pin_text": "#ffffff",
+                "left": 25,
+                "top": 55,
+                "pin_size": "large",
+                "pin_type": "1",
+                "text": "1",
+                "product": "ergonomic-desk-st51",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "pin_product_NTLPVj",
+            "pin_product_JjGF4i",
+            "pin_product_qWPVLK",
+            "pin_product_YGnN67"
+          ]
+        },
+        "lookbook-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "lookbook_kmFA43"
+      ],
+      "custom_css": [
+        "@media (width >= 1150px) {.hdt-card-product__title {font-size: 1.6rem; }}",
+        "hdt-popover *,.hdt-lookbook_pin.hdt-popover {border-radius: 0 !important;}"
+      ],
+      "name": "t:sections.lookbook.name_2",
+      "settings": {
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "space_items": "x",
+        "space_items_mb": "0",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,40px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_GBcBc3": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_QCtAmm": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "ergonomic-hot",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "3",
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": true,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "paginate_pos": "center",
+            "dis_pagination": 60,
+            "btn_label": "LOAD MORE",
+            "btn_style": "hdt-btn-accent",
+            "endable_btn_icon": false,
+            "size": "xl",
+            "btn_fw": "medium",
+            "rounded": ""
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_Rd7KYT": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Hot Products",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_mGJzwg": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>Here’s some of our most popular products people are in love with.</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_Rd7KYT",
+            "sub_heading_section_mGJzwg"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_QCtAmm"
+      ],
+      "custom_css": [
+        "@media (width < 768px) {.hdt-row-grid {--spacing-y: 3rem; }}",
+        "@media (width >= 1150px) {.hdt-card-product__title {font-size: 1.6rem; }}"
+      ],
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "0px,,150px,",
+        "mg_mb": "0px,,40px,",
+        "pd": "",
+        "pd_mb": ",,67px,"
+      }
+    },
+    "blog_post_DcUjga": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_wnf68V": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "orgonomic",
+            "limit": 8,
+            "col_dk": "3",
+            "col_tb": "2",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "hover",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "2",
+                "show_cate": false,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": true,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": true,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-adapt_image",
+                "image_size": true,
+                "img_effect": "none",
+                "b_effect": "none"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 10,
+            "margin_bottom": 40
+          },
+          "blocks": {
+            "heading_section_UMR9jJ": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Latest News",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 36,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_W6n6Q4": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p>The Importance of Ergonomics in the Modern Workplace</p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 16,
+                "font_size_text": 16,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_UMR9jJ",
+            "sub_heading_section_W6n6Q4"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_wnf68V"
+      ],
+      "custom_css": [
+        "@media (width >= 1150px) {.hdt-article-content {font-size: 16px; } .hdt-article-title {font-size: 1.8rem; line-height: 25px; } .hdt-article-metas {line-height: 0; } .hdt-article-thumb {margin-bottom: 25px; } .hdt-container {--container-max-width-padding-lg: 1700px; }}"
+      ],
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,40px,",
+        "pd": "",
+        "pd_mb": ",,75px,"
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "shipping_ycityP",
+    "custom_line_xkELTM",
+    "custom_section_XUgG4N",
+    "featured_collection_PTq36A",
+    "lookbook_grid_8Bc9yB",
+    "featured_collection_GBcBc3",
+    "blog_post_DcUjga"
+  ]
+}

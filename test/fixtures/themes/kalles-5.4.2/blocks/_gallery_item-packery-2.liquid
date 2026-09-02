@@ -1,0 +1,182 @@
+<div item-selector class="hdt-masonry-image__item hdt-relative hdt-oh {{ block.settings.col_dk }} {{ block.settings.col_tb }} {{ block.settings.col_mb }}" {{ block.shopify_attributes }}> 
+  <div class="hdt-gallery-item hdt-masonry-gallery__item hdt-relative hdt-oh hdt-radius hdt-eff-img-{{ section.settings.img_effect }} hdt-eff-{{ section.settings.b_effect }}"  hdt-reveal="slide-in" timeline>
+    <div class="hdt-gallery-img" style="--aspect-ratioapt: {{ block.settings.image.aspect_ratio | default: 1.2 }};">
+      <div class="{% if section.settings.image_ratio != "custom" %}hdt-ratio {% endif %}hdt-oh hdt-radius">
+      {%- if block.settings.image != blank -%}
+        {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: loading: 'lazy', width: block.settings.image.width, height: block.settings.image.height, class: 'hdt-obj-eff', sizes: 'auto' }}
+      {%- else -%}
+        {{ 'collection-apparel-1' | placeholder_svg_tag: 'hdt-placeholder-svg' }}  
+      {%- endif -%}
+      {% if block.settings.item_link != blank and section.settings.click_action == "go_link" %}<a class="hdt-full-width-link"  aria-label="link" href="{{ block.settings.item_link }}"></a>{% endif %}
+    </div>
+    </div>
+  </div> 
+</div>
+{% schema %}
+  {
+    "name": "t:sections.gallery.blocks.gallery_item.label",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:sections.gallery.blocks.gallery_item.image"
+      },
+      {
+        "type": "url",
+        "id": "item_link",
+        "label": "t:sections.gallery.blocks.gallery_item.link",
+        "visible_if": "{{ section.settings.click_action == 'go_link' }}"
+      },
+      {
+        "type": "select",
+        "id": "col_dk",
+        "label": "Item width",
+        "options": [
+          {
+            "value": "lg:hdt-custom-col-12",
+            "label": "100%"
+          },
+          {
+            "value": "lg:hdt-custom-col-11",
+            "label": "91.67%"
+          },
+          {
+            "value": "lg:hdt-custom-col-10",
+            "label": "83.33%"
+          },
+          {
+            "value": "lg:hdt-custom-col-9",
+            "label": "75%"
+          },
+          {
+            "value": "lg:hdt-custom-col-8",
+            "label": "66.67%"
+          },
+          {
+            "value": "lg:hdt-custom-col-6",
+            "label": "50%"
+          },
+          {
+            "value": "lg:hdt-custom-col-4",
+            "label": "33%"
+          },
+          {
+            "value": "lg:hdt-custom-col-3",
+            "label": "25%"
+          },
+          {
+            "value": "lg:hdt-custom-col-2",
+            "label": "16.67%"
+          },
+          {
+            "value": "lg:hdt-custom-col-1",
+            "label": "8.33%"
+          }
+        ],
+        "default": "lg:hdt-custom-col-6",
+      },
+      {
+        "type": "select",
+        "id": "col_tb",
+        "label": "Item width (Tablet)",
+        "options": [
+          {
+            "value": "md:hdt-custom-col-12",
+            "label": "100%"
+          },
+          {
+            "value": "md:hdt-custom-col-11",
+            "label": "91.67%"
+          },
+          {
+            "value": "md:hdt-custom-col-10",
+            "label": "83.33%"
+          },
+          {
+            "value": "md:hdt-custom-col-9",
+            "label": "75%"
+          },
+          {
+            "value": "md:hdt-custom-col-8",
+            "label": "66.67%"
+          },
+          {
+            "value": "md:hdt-custom-col-6",
+            "label": "50%"
+          },
+          {
+            "value": "md:hdt-custom-col-4",
+            "label": "33%"
+          },
+          {
+            "value": "md:hdt-custom-col-3",
+            "label": "25%"
+          },
+          {
+            "value": "md:hdt-custom-col-2",
+            "label": "16.67%"
+          },
+          {
+            "value": "md:hdt-custom-col-1",
+            "label": "8.33%"
+          }
+        ],
+        "default": "md:hdt-custom-col-6",
+      },
+      {
+        "type": "select",
+        "id": "col_mb",
+        "label": "Item width (Mobile)",
+        "options": [
+          {
+            "value": "hdt-custom-col-12",
+            "label": "100%"
+          },
+          {
+            "value": "hdt-custom-col-11",
+            "label": "91.67%"
+          },
+          {
+            "value": "hdt-custom-col-10",
+            "label": "83.33%"
+          },
+          {
+            "value": "hdt-custom-col-9",
+            "label": "75%"
+          },
+          {
+            "value": "hdt-custom-col-8",
+            "label": "66.67%"
+          },
+          {
+            "value": "hdt-custom-col-6",
+            "label": "50%"
+          },
+          {
+            "value": "hdt-custom-col-4",
+            "label": "33%"
+          },
+          {
+            "value": "hdt-custom-col-3",
+            "label": "25%"
+          },
+          {
+            "value": "hdt-custom-col-2",
+            "label": "16.67%"
+          },
+          {
+            "value": "hdt-custom-col-1",
+            "label": "8.33%"
+          }
+        ],
+        "default": "hdt-custom-col-12",
+      },
+    ],
+    "presets": [
+      {
+        "name": "t:sections.gallery.blocks.gallery_item.label"
+      }
+    ]
+  }
+{% endschema %}

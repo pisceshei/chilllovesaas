@@ -1,0 +1,52 @@
+.hdt-modal-newsletter.hdt-modal .hdt-dialog-modal__inner {
+  padding: 0;
+}
+.sys-newsletter .hdt-content{
+  padding: 20px;
+}
+.sys-newsletter .hdt-newsletter-parent{
+  display: block;
+}
+
+.sys-newsletter .hdt-modal-ver .hdt-dialog {
+  width: 53rem;
+}
+@media (min-width: 768px){
+  .sys-newsletter .hdt-content{
+    padding: 30px 37px;
+  }
+
+  .sys-newsletter .hdt-content * + :where(.hdt-text,.hdt-subtext){
+    margin-top: 17px;
+  }
+  .sys-newsletter .hdt-content * + .hdt-newsletter{
+    margin-top: 26px;
+  }
+  .hdt-modal-newsletter-image_mb{
+    display:none;
+  }
+  .hdt-modal-hor .hdt-img_wrap{
+    width:50%;
+    flex:1 0 auto;
+    object-fit: cover;
+    object-position: center;
+  }
+  .hdt-modal-hor .hdt-ratio{
+    --ratio-percent: 100%;
+  }
+}
+@media (min-width: 1025px){
+}
+@media (max-width: 1024px){
+  .sys-newsletter .hdt-text-2xl{
+    font-size: var(--text-xl);
+  }
+}
+@media (max-width: 767px){
+  .sys-newsletter .hdt-text-2xl{
+    font-size: var(--text-base);
+  }
+  .hdt-modal-newsletter .hdt-wrapper{
+    display:block;
+  }
+}

@@ -1,0 +1,198 @@
+.hdt-socials-demo{margin:50px 0;}
+.hdt-socials-demo .hdt-socials{padding:10px 0;}
+:root {
+  --facebook-cl: rgb(59, 89, 152);
+  --x-cl: rgb(85, 85, 85);
+  --instagram-cl: rgb(224, 53, 102);
+  --threads-cl: rgb(224, 53, 102);
+  --youtube-cl: rgb(205, 32, 31);
+  --tiktok-cl: rgb(254, 44, 85);
+  --pinterest-cl: rgb(203, 32, 39);
+  --tumblr-cl: rgb(55, 69, 92);
+  --vimeo-cl: rgb(26, 183, 234);
+  --snapchat-cl: rgb(255, 221, 0);
+  --whatsapp-cl: rgb(0, 230, 118);
+  --linked_in-cl: rgb(23, 106, 255);
+  --wechat-cl:rgb(26, 173, 24);
+  --reddit-cl:rgb(255, 69, 0);
+  --line-cl:rgb(0, 195, 77);
+  --spotify-cl:rgb(30, 125, 96);
+}
+.hdt-socials__list{
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap:1rem calc(var(--space-item)/2);
+}
+.hdt-socials__list li.hdt-socials__item {
+  line-height: 1;
+}
+.hdt-socials__list li a{
+  width: var(--width);
+  height: var(--height);
+  transition: all .3s ease;
+  /* color: rgb(var(--color-foreground)); */
+}   
+.hdt-socials__style-default li a {
+  background-color: rgb(var(--color-foreground) / .1);
+  .hdt-main-blogs-content &{
+    background-color: rgb(var(--color-foreground));
+    color: rgb(var(--color-background));
+  }
+}
+.hdt-socials__style-outline li a {
+  border: 0.1rem solid rgb(var(--color-foreground));
+}
+.hdt-socials__style-outline-background li a{
+  background-color: rgb(var(--color-foreground) / .1);
+  border: 0.1rem solid rgb(var(--color-foreground));
+}
+.hdt-socials__list:not(.hdt-socials__style-simple) li a{
+  border-radius: var(--socials-radius);
+}
+.hdt-socials__list li a svg{
+  width: var(--width-icon);
+  height: var(--height-icon);
+  fill: currentColor;
+  &:where(.hdt-icon-kick,.hdt-icon-twitch){
+    fill: none;
+  }
+}
+.hdt-socials__size-small{
+  --width-icon:1.8rem;
+  --height-icon:1.8rem;
+  --width:3.4rem;
+  --height:3.4rem;
+}
+.hdt-socials__size-medium{
+  --width-icon:2rem;
+  --height-icon:2rem;
+  --width:4rem;
+  --height:4rem;
+  @media (width < 768px){
+    --width-icon:1.8rem;
+    --height-icon:1.8rem;
+    --width:3.4rem;
+    --height:3.4rem;
+  }
+}
+.hdt-socials__size-large{
+  --width-icon:3.3rem;
+  --height-icon:3.3rem;
+  --width:5rem;
+  --height:5rem;
+}
+.hdt-socials__size-header-normal{
+  --width-icon:18px;
+  --height-icon:18px;
+  --width:40px;
+  --height:40px;
+  --spacing-social-item:15px;
+}
+.hdt-socials__style-simple{
+  --width: auto !important;
+  --height: auto !important;
+  margin-inline-start: -0.2rem;
+}
+.hdt-text-start .hdt-socials__list {
+	justify-content: start;
+}
+.hdt-text-center .hdt-socials__list {
+	justify-content: center;
+}
+.hdt-text-end .hdt-socials__list {
+	justify-content: end;
+}
+.hdt-article-socials-m{
+  margin-top: 15px;
+}
+@media (min-width:768px){
+  .md\:hdt-text-start .hdt-socials__list {
+    justify-content: start;
+  }
+  .md\:hdt-text-center .hdt-socials__list {
+    justify-content: center;
+  }
+  .md\:hdt-text-end .hdt-socials__list {
+    justify-content: end;
+  }
+}
+@media (min-width:1150px){
+  .lg\:hdt-text-start .hdt-socials__list {
+    justify-content: start;
+  }
+  .lg\:hdt-text-center .hdt-socials__list {
+    justify-content: center;
+  }
+  .lg\:hdt-text-end .hdt-socials__list {
+    justify-content: end;
+  }
+}
+@media (-moz-touch-enabled: 0), (hover: hover) and (min-width: 1150px){
+  .hdt-socials__style-default a.hdt-social-facebook:hover {color:#fff;background-color: var(--facebook-cl);}
+  .hdt-socials__style-default a.hdt-social-x:hover {color:#fff;background-color: var(--x-cl);}
+  .hdt-socials__style-default a.hdt-social-instagram:hover {color:#fff;background: linear-gradient(#8a3ab9,#e95950,#fccc63);}
+  .hdt-socials__style-default a.hdt-social-threads:hover {color:#fff;background: linear-gradient(135deg,#8a3ab9,#e95950,#fccc63);}
+  .hdt-socials__style-default a.hdt-social-youtube:hover {color:#fff;background-color: var(--youtube-cl);}
+  .hdt-socials__style-default a.hdt-social-tiktok:hover {color:#fff;background: linear-gradient(#25F4EE,#000000,#FE2C55);}
+  .hdt-socials__style-default a.hdt-social-pinterest:hover {color:#fff;background-color: var(--pinterest-cl);}
+  .hdt-socials__style-default a.hdt-social-tumblr:hover {color:#fff;background-color: var(--tumblr-cl);}
+  .hdt-socials__style-default a.hdt-social-vimeo:hover {color:#fff;background-color: var(--vimeo-cl);}
+  .hdt-socials__style-default a.hdt-social-snapchat:hover {color:#fff;background-color: var(--snapchat-cl);}
+  .hdt-socials__style-default a.hdt-social-whatsapp:hover {color:#fff;background-color: var(--whatsapp-cl);}
+  .hdt-socials__style-default a.hdt-social-linked_in:hover {color:#fff;background-color: var(--linked_in-cl);}
+  .hdt-socials__style-default a.hdt-social-wechat:hover {color:#fff;background-color: var(--wechat-cl);}
+  .hdt-socials__style-default a.hdt-social-reddit:hover {color:#fff;background-color: var(--reddit-cl);}
+  .hdt-socials__style-default a.hdt-social-line:hover {color:#fff;background-color: var(--line-cl);}
+  .hdt-socials__style-default a.hdt-social-spotify:hover {color:#fff;background-color: var(--spotify-cl);}
+
+  .hdt-socials__style-outline a.hdt-social-facebook:hover {color:var(--facebook-cl);border-color: var(--facebook-cl);}
+  .hdt-socials__style-outline a.hdt-social-x:hover {color:var(--x-cl);border-color: var(--x-cl);}
+  .hdt-socials__style-outline a.hdt-social-instagram:hover {color:var(--instagram-cl);border-color: var(--instagram-cl);}
+  .hdt-socials__style-outline a.hdt-social-threads:hover {color:var(--instagram-cl);border-color: var(--threads-cl);}
+  .hdt-socials__style-outline a.hdt-social-youtube:hover {color:var(--youtube-cl);border-color: var(--youtube-cl);}
+  .hdt-socials__style-outline a.hdt-social-tiktok:hover {color:var(--tiktok-cl);border-color: var(--tiktok-cl);}
+  .hdt-socials__style-outline a.hdt-social-pinterest:hover {color:var(--pinterest-cl);border-color: var(--pinterest-cl);}
+  .hdt-socials__style-outline a.hdt-social-tumblr:hover {color:var(--tumblr-cl);border-color: var(--tumblr-cl);}
+  .hdt-socials__style-outline a.hdt-social-vimeo:hover {color:var(--vimeo-cl);border-color: var(--vimeo-cl);}
+  .hdt-socials__style-outline a.hdt-social-snapchat:hover {color:var(--snapchat-cl);border-color: var(--snapchat-cl);}
+  .hdt-socials__style-outline a.hdt-social-whatsapp:hover {color:var(--whatsapp-cl);border-color: var(--whatsapp-cl);}
+  .hdt-socials__style-outline a.hdt-social-linked_in:hover {color:var(--linked_in-cl);border-color: var(--linked_in-cl);}
+  .hdt-socials__style-outline a.hdt-social-wechat:hover {color:var(--wechat-cl);border-color: var(--wechat-cl);}
+  .hdt-socials__style-outline a.hdt-social-reddit:hover {color:var(--reddit-cl);border-color: var(--reddit-cl);}
+  .hdt-socials__style-outline a.hdt-social-line:hover {color:var(--line-cl);border-color: var(--line-cl);}
+  .hdt-socials__style-outline a.hdt-social-spotify:hover {color:var(--spotify-cl);border-color: var(--spotify-cl);}
+
+  .hdt-socials__style-outline-background a.hdt-social-facebook:hover {color:#fff;border-color: var(--facebook-cl);background-color: var(--facebook-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-x:hover {color:#fff;border-color: var(--x-cl);background-color: var(--x-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-instagram:hover {color:#fff;border-color: var(--instagram-cl);background-color: var(--instagram-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-threads:hover {color:#fff;border-color: var(--threads-cl);background-color: var(--threads-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-youtube:hover {color:#fff;border-color: var(--youtube-cl);background-color: var(--youtube-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-tiktok:hover {color:#fff;border-color: var(--tiktok-cl);background-color: var(--tiktok-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-pinterest:hover {color:#fff;border-color: var(--pinterest-cl);background-color: var(--pinterest-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-tumblr:hover {color:#fff;border-color: var(--tumblr-cl);background-color: var(--tumblr-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-vimeo:hover {color:#fff;border-color: var(--vimeo-cl);background-color: var(--vimeo-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-snapchat:hover {color:#fff;border-color: var(--snapchat-cl);background-color: var(--snapchat-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-whatsapp:hover {color:#fff;border-color: var(--whatsapp-cl);background-color: var(--whatsapp-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-linked_in:hover {color:#fff;border-color: var(--linked_in-cl);background-color: var(--linked_in-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-wechat:hover {color:#fff;border-color: var(--wechat-cl);background-color: var(--wechat-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-reddit:hover {color:#fff;border-color: var(--reddit-cl);background-color: var(--reddit-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-line:hover {color:#fff;border-color: var(--line-cl);background-color: var(--line-cl);}
+  .hdt-socials__style-outline-background a.hdt-social-spotify:hover {color:#fff;border-color: var(--spotify-cl);background-color: var(--spotify-cl);}
+
+  .hdt-socials__style-simple a.hdt-social-facebook:hover {color:var(--facebook-cl);}
+  .hdt-socials__style-simple a.hdt-social-x:hover {color:var(--x-cl);}
+  .hdt-socials__style-simple a.hdt-social-instagram:hover {color:var(--instagram-cl);}
+  .hdt-socials__style-simple a.hdt-social-threads:hover {color:var(--threads-cl);}
+  .hdt-socials__style-simple a.hdt-social-youtube:hover {color:var(--youtube-cl);}
+  .hdt-socials__style-simple a.hdt-social-tiktok:hover {color:var(--tiktok-cl);}
+  .hdt-socials__style-simple a.hdt-social-pinterest:hover {color:var(--pinterest-cl);}
+  .hdt-socials__style-simple a.hdt-social-tumblr:hover {color:var(--tumblr-cl);}
+  .hdt-socials__style-simple a.hdt-social-vimeo:hover {color:var(--vimeo-cl);}
+  .hdt-socials__style-simple a.hdt-social-snapchat:hover {color:var(--snapchat-cl);}
+  .hdt-socials__style-simple a.hdt-social-whatsapp:hover {color:var(--whatsapp-cl);}
+  .hdt-socials__style-simple a.hdt-social-linked_in:hover {color:var(--linked_in-cl);}
+  .hdt-socials__style-simple a.hdt-social-wechat:hover {color:var(--wechat-cl);}
+  .hdt-socials__style-simple a.hdt-social-reddit:hover {color:var(--reddit-cl);}
+  .hdt-socials__style-simple a.hdt-social-line:hover {color:var(--line-cl);}
+  .hdt-socials__style-simple a.hdt-social-spotify:hover {color:var(--spotify-cl);}
+}

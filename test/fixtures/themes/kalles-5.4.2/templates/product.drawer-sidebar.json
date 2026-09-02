@@ -1,0 +1,501 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "breadcrumb": {
+      "type": "brc-nav-product",
+      "settings": {
+        "back_next_pr": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1,
+        "section_layout": "wrapper_container",
+        "pd": "20px,,20px,",
+        "pd_mb": "15px,,15px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main-product": {
+      "type": "main-product",
+      "blocks": {
+        "group_TCGxaM": {
+          "type": "_group-product",
+          "settings": {
+            "colors_by_block": false,
+            "color_scheme": ""
+          },
+          "blocks": {
+            "product_title_XKDUgB": {
+              "type": "_product-title",
+              "settings": {
+                "txt_tr_pr": "none",
+                "tag": "h2",
+                "heading_size": "h_custom",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "font_weight": "semibold",
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "product_price_7rjr6H": {
+              "type": "_product-price",
+              "settings": {},
+              "blocks": {}
+            },
+            "product_description_D8E7z7": {
+              "type": "_product-description",
+              "settings": {
+                
+                "short_des": "<p>Go kalles this summer with this vintage navy and white striped v-neck t-shirt from the Nike. Perfect for pairing with denim and white kicks for a stylish kalles vibe.</p>",
+                "readm": false,
+                "length": 31,
+                "readm_txt": "Read more",
+                "readl_txt": "Read less"
+              },
+              "blocks": {}
+            },
+            "product_variant_picker_4nzDp7": {
+              "type": "_product-variant-picker",
+              "settings": {
+                "color_picker_type": "color_rounded",
+                "color_size": "medium",
+                "picker_type": "circle",
+                "size_chart_source": "page",
+                "size_chart_page": ""
+              },
+              "blocks": {}
+            },
+            "quantity_selector_j7zXC3": {
+              "type": "_quantity-selector",
+              "disabled": true,
+              "settings": {},
+              "blocks": {}
+            },
+            "product_buy_button_RgHjCy": {
+              "type": "_product-buy-button",
+              "settings": {
+                "show_quantity_selector": true,
+                "show_dynamic_checkout": false,
+                "show_gift_card_recipient": false,
+                "show_wishlist": true,
+                "show_compare": true,
+                "ani": "hdt-ani-shake is--infinite",
+                "time": 6,
+                "btn_transform": "hdt-uppercase",
+                "btn_style": "hdt-btn-accent",
+                "btn_fullwidth": false
+              },
+              "blocks": {}
+            },
+            "product_trust_badge_aW4FMM": {
+              "type": "_product-trust-badge",
+              "settings": {
+                "mess": "",
+                "size": 16,
+                "source": "1",
+                "image": "shopify://shop_images/trust_img.png",
+                "wimg": 400,
+                "svg": "amazon,american_express,apple_pay,bitcoin,dankort,diners_club,discover,dogecoin,dwolla,forbrugsforeningen,interac,google_pay,jcb,klarna,klarna-pay-later,litecoin,maestro,master,paypal,shopify_pay,sofort,visa",
+                "height": 30
+              },
+              "blocks": {}
+            },
+            "product_extra_link_xbhCPW": {
+              "type": "_product-extra-link",
+              "settings": {},
+              "blocks": {
+                "product_size_chart_bRNUqJ": {
+                  "type": "_product-size-chart",
+                  "settings": {
+                    "size_chart": "3",
+                    "size_chart_source": "page",
+                    "size_chart_page": "size-chart"
+                  },
+                  "blocks": {}
+                },
+                "product_delivery_return_8zTJkE": {
+                  "type": "_product-delivery-return",
+                  "settings": {
+                    "page_delivery": "delivery-return"
+                  },
+                  "blocks": {}
+                },
+                "product_ask_question_6ieTcM": {
+                  "type": "_product-ask-question",
+                  "settings": {},
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "product_size_chart_bRNUqJ",
+                "product_delivery_return_8zTJkE",
+                "product_ask_question_6ieTcM"
+              ]
+            },
+            "product_meta_regw68": {
+              "type": "_product-meta",
+              "settings": {},
+              "blocks": {
+                "product_meta_sku_PVXph3": {
+                  "type": "_product-meta-sku",
+                  "settings": {},
+                  "blocks": {}
+                },
+                "product_meta_category_rCPcmF": {
+                  "type": "_product-meta-category",
+                  "settings": {},
+                  "blocks": {}
+                },
+                "product_meta_tags_xE9F64": {
+                  "type": "_product-meta-tags",
+                  "settings": {},
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "product_meta_sku_PVXph3",
+                "product_meta_category_rCPcmF",
+                "product_meta_tags_xE9F64"
+              ]
+            }
+          },
+          "block_order": [
+            "product_title_XKDUgB",
+            "product_price_7rjr6H",
+            "product_description_D8E7z7",
+            "product_variant_picker_4nzDp7",
+            "quantity_selector_j7zXC3",
+            "product_buy_button_RgHjCy",
+            "product_trust_badge_aW4FMM",
+            "product_extra_link_xbhCPW",
+            "product_meta_regw68"
+          ]
+        },
+        "main-product-medias": {
+          "type": "_product-medias",
+          "static": true,
+          "settings": {
+            "desktop_media_layout": "thumbnail_left",
+            "media_size": "medium",
+            "mobile_media_layout": "thumbnails",
+            "show_first_media": false,
+            "use_select_varaint_change_media": true,
+            "enable_media_autoplay": false,
+            "enable_video_looping": false,
+            "enable_thumb_efect": true,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "image_zoom": "zoom_lightbox",
+            "enable_lightbox_icon": false,
+            "image_zoom_type": "external",
+            "zoom_level": 2,
+            "max_zoom_lightbox": 3,
+            "navUI": true,
+            "nav_style": "outline",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": true
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "group_TCGxaM"
+      ],
+      "settings": {
+        "product_list_fbt": [],
+        "sticky_atc": true,
+        "ani": "hdt-ani-shake is--infinite",
+        "time": 6,
+        "btn_transform": "hdt-uppercase",
+        "btn_style": "hdt-btn-accent",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 1,
+        "fullwidth": false,
+        "pd": "30px,,60px,",
+        "pd_mb": "22px,,45px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "tabs": {
+      "type": "main-product-tabs",
+      "blocks": {
+        "tab_des_tKqkJj": {
+          "type": "tab_des",
+          "settings": {
+            "title": "Description"
+          }
+        },
+        "tab_add_HXf3yk": {
+          "type": "tab_add",
+          "settings": {
+            "title": "Additional Information"
+          }
+        },
+        "tab_html_7dKb7L": {
+          "type": "tab_html",
+          "settings": {
+            "title": "Tab Custom HTML",
+            "content": "",
+            "page": "wash-care"
+          }
+        }
+      },
+      "block_order": [
+        "tab_des_tKqkJj",
+        "tab_add_HXf3yk",
+        "tab_html_7dKb7L"
+      ],
+      "settings": {
+        "tabs_design": "tab",
+        "enable_first_tab": false,
+        "full_width": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1,
+        "pd": "50px,,30px,",
+        "pd_mb": "25px,,15px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "sidebar": {
+      "type": "sidebar-product",
+      "blocks": {
+        "iconbox_4aeEja": {
+          "type": "iconbox",
+          "settings": {
+            "widget_heading": "Shipping & Delivery",
+            "icon_svg1": "truck",
+            "custom_svg1": "",
+            "iconbox_content1": "FREE SHIPPING_ Free shipping for all US orders",
+            "link_item1": "",
+            "icon_svg2": "headphones",
+            "custom_svg2": "",
+            "iconbox_content2": "SUPPORT 24/7_ We support 24 hours a day",
+            "link_item2": "",
+            "icon_svg3": "refesh-2",
+            "custom_svg3": "",
+            "iconbox_content3": "30 DAYS RETURN_ You have 30 days to return",
+            "link_item3": "",
+            "icon_svg4": "car",
+            "custom_svg4": "",
+            "iconbox_content4": "",
+            "link_item4": ""
+          }
+        },
+        "featured_products_dAkF6F": {
+          "type": "featured_products",
+          "settings": {
+            "widget_heading": "Sale products",
+            "collection": "",
+            "product_list": [
+              "combat-hoodie",
+              "combat-dop-arm-tank",
+              "combat-long-sleeve-rashguard"
+            ],
+            "products_count": 3,
+            "image_ratio": "adapt_image",
+            "image_size": true
+          }
+        },
+        "gallery_8p848x": {
+          "type": "gallery",
+          "settings": {
+            "widget_heading": "Gallery",
+            "img1": "shopify://shop_images/ins1_2022-03-02.jpg",
+            "link1": "shopify://products/analogue-resin-strap",
+            "img2": "shopify://shop_images/ins2_2022-03-02.jpg",
+            "link2": "shopify://products/91-short-sleeve-shirt",
+            "img3": "shopify://shop_images/ins3_2022-03-02.jpg",
+            "link3": "shopify://products/athlete-seamless-gym-vest",
+            "img4": "shopify://shop_images/ins4_2022-03-02.jpg",
+            "link4": "shopify://products/carissa-baby-doll-mini-dress",
+            "img5": "shopify://shop_images/ins5_2022-03-02.jpg",
+            "link5": "shopify://products/copy-of-seamless-fitness-leggings-white",
+            "img6": "shopify://shop_images/ins6_2022-03-02.jpg",
+            "link6": "shopify://products/classic-band-t-shirt",
+            "img7": "shopify://shop_images/ins7_2022-03-02.jpg",
+            "link7": "shopify://products/91-short-sleeve-shirt",
+            "img8": "shopify://shop_images/ins8_2022-03-02.jpg",
+            "link8": "shopify://products/blush-beanie",
+            "img9": "shopify://shop_images/bg-pin-02.jpg",
+            "link9": "shopify://products/cord-grazer-flare",
+            "open_link": "_blank"
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_4aeEja",
+        "featured_products_dAkF6F",
+        "gallery_8p848x"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "space": 50
+      }
+    },
+    "related-products": {
+      "type": "related-products",
+      "blocks": {
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 18,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_nLFWkr": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "You may also like",
+                "line_height": "",
+                "heading_size": "h5",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_nLFWkr"
+          ]
+        }
+      },
+      "settings": {
+        "product_des": "1",
+        "image_ratio": "portrait",
+        "image_size": true,
+        "show_vendor": false,
+        "display_type": "4",
+        "pr_border": "none",
+        "limit": 10,
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": true,
+        "nav_position": "default",
+        "nav_visible": "hover",
+        "nav_style": "outline",
+        "nav_shape": "rounded",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": false,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "only_show_mobile": false,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": "60px,,60px,",
+        "pd_mb": "45px,,45px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "recently-products": {
+      "type": "recently-products",
+      "blocks": {
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 18,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_JdADpx": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Recently viewed products",
+                "line_height": "",
+                "heading_size": "h5",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_JdADpx"
+          ]
+        }
+      },
+      "settings": {
+        "product_des": "1",
+        "image_ratio": "portrait",
+        "image_size": true,
+        "show_vendor": false,
+        "pr_border": "none",
+        "limit": 10,
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": true,
+        "nav_position": "default",
+        "nav_visible": "hover",
+        "nav_style": "outline",
+        "nav_shape": "rounded",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": false,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "only_show_mobile": false,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "pd": ",,60px,",
+        "pd_mb": ",,45px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "breadcrumb",
+    "main-product",
+    "tabs",
+    "sidebar",
+    "related-products",
+    "recently-products"
+  ]
+}

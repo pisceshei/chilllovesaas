@@ -1,0 +1,47 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+  if settings.pick_mode == 'no' and product.variants.size > 1
+    assign selected_variant = product.selected_variant
+  elsif settings.pick_mode == 'first' and settings.hide_sold_out == false
+    assign selected_variant = product.selected_variant | default: product.variants.first
+  else
+    assign selected_variant = product.selected_or_first_available_variant
+  endif
+  assign product_form_id = 'product-form-' | append: section.id | append: product.id 
+  assign in_stock = false
+  assign pre_order_stock = false
+  assign inventory_out_of_stock = false
+  if selected_variant.available
+    if selected_variant.inventory_quantity > 0
+      assign in_stock = true
+    else
+      if selected_variant.inventory_management == 'shopify'
+        assign pre_order_stock = true
+      else
+        assign in_stock = true
+      endif
+    endif  
+  else
+    assign inventory_out_of_stock = true
+  endif
+-%}
+<hdt-variant-inventory class="hdt-available-wrapper hdt-product__meta-item hdt-s-text2" form="{{ product_form_id }}" role="status">
+  {{ 'products.product.available' | t }} 
+  <span class="hdt-inline-flex hdt-align-center hdt-stock-status hdt-stock-success" in-stock{% unless in_stock %} hidden{% endunless %}>
+    <span class="hdt-s-text">{{- 'products.product.inventory_in_stock' | t -}}</span>
+  </span>
+  <span class="hdt-inline-flex hdt-align-center hdt-stock-status hdt-stock-warning" pre-order-stock{% unless pre_order_stock %} hidden{% endunless %}>
+    <span class="hdt-s-text">{{- 'products.product.inventory_out_of_stock_continue_selling' | t -}}</span>
+  </span>
+  <span class="hdt-inline-flex hdt-align-center hdt-stock-status hdt-stock-error" out-of-stock{% unless inventory_out_of_stock %} hidden{% endunless %}>
+    <span class="hdt-s-text">{{- 'products.product.inventory_out_of_stock' | t -}}</span>
+  </span>
+</hdt-variant-inventory>
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.meta.settings.show_available.label",
+  "tag": null,
+  "presets": [{ "name": "t:sections.main-product.blocks.meta.settings.show_available.label" }]
+}
+{% endschema %}

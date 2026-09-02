@@ -1,0 +1,121 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "1efddc02-4edd-4d28-a9c2-cbcb3cc9d0a5": {
+          "type": "custom_text",
+          "settings": {
+            "title": "<span class=\"lg:text-5xl lg:leading-tight lg:font-semibold\">Save Lives and<br> Money.<\/span>",
+            "image_max": "200px",
+            "description": "<p>Clean hands make the world go round.<\/p>",
+            "width": "66%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "5201fa23-26c8-4c1b-a263-060101a7e575": {
+          "type": "spacing",
+          "settings": {
+            "width": "25%"
+          }
+        },
+        "c85629c7-7aae-4666-b5f0-150990439c91": {
+          "type": "menu",
+          "settings": {
+            "title": "About",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "527ccf44-18d9-45d0-a2a0-c992da866024": {
+          "type": "menu",
+          "settings": {
+            "title": "Information",
+            "width": "25%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "1efddc02-4edd-4d28-a9c2-cbcb3cc9d0a5",
+        "5201fa23-26c8-4c1b-a263-060101a7e575",
+        "c85629c7-7aae-4666-b5f0-150990439c91",
+        "527ccf44-18d9-45d0-a2a0-c992da866024"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "design": "footer-3",
+        "container": "container",
+        "bordered": false,
+        "copyright": "<span class=\"text-base\">© Handle 2024<\/span>",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": true,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": ""
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

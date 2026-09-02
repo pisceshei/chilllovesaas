@@ -1,0 +1,91 @@
+<!-- blocks/contact-form.liquid -->
+{{ 'hdt-contact-form.css' | asset_url | stylesheet_tag }}
+<div class="hdt-contact-form hdt-w-full" hdt-reveal="slide-in" timeline>
+  {% liquid
+    assign formId = block.id
+    assign default_success_message = 'templates.contact.form.post_success' | t
+  %}
+  {%- form 'contact', id: formId -%}
+    
+    {% assign error_order = "author, email, body, password, form" | split: ", " %}
+    {%- if form.errors -%}
+        {%- if form.errors.translated_fields.size == 1 and form.errors.first == 'form' -%}
+            <p class="hdt-form-message" tabindex="-1" data-form-status>{{ form.errors.messages['form'] }}</p>
+        {%- else -%}
+            <div class="hdt-form-message hdt-form-message--error">
+                <h2 class="hdt-form-message__title hdt-text-base" tabindex="-1" data-form-status>{{ 'templates.contact.form.error_heading' | t }}</h2>
+                <ul>
+                    {% for error in error_order %}
+                        {% for field in form.errors %}
+                            {% if error == field %}
+                                {% capture field_label %}
+                                    {% case field %}
+                                        {% when 'author' %}
+                                            {{ 'templates.contact.form.name' | t }}
+                                        {% when 'body' %}
+                                            {{ 'templates.contact.form.message' | t }}
+                                        {% else %}
+                                            {{ form.errors.translated_fields[field] }}
+                                    {% endcase %}
+                                {% endcapture %}
+                                <li>
+                                    {%- if field == 'form' -%}
+                                        {{ form.errors.messages[field] }}
+                                    {%- else -%}
+                                        <a href="#{{ formId }}-{{ field }}" class="hdt-form-message__link">{{ field_label | strip | capitalize }} {{ form.errors.messages[field] }}</a>
+                                    {%- endif -%}
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {%- endif -%}
+    {%- endif -%}
+    <div class="hdt-form-input_wrap">
+        <label for="{{ formId }}-name">{{ 'templates.contact.form.name' | t }}</label>
+        <input required="required" type="text" id="{{ formId }}-name" name="contact[name]" value="{% if form[name] %}{{ form[name] }}{% elsif customer %}{{ customer.name }}{% endif %}">
+    </div>
+    <div class="hdt-form-input_wrap">
+        <label for="{{ formId }}-email">{{ 'templates.contact.form.email' | t }}</label>
+        <input required="required" type="email" id="{{ formId }}-email" name="contact[email]" autocorrect="off" autocapitalize="off" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" aria-required="true" required="required"
+        {%- if form.errors contains 'email' -%}class="hdt-input--error" aria-invalid="true" aria-describedby="{{ formId }}-email-error"{%- endif -%}
+    >
+        {%- if form.errors contains 'email' -%}
+            <span id="{{ formId }}-email-error" class="hdt-input-error-message"><i class="las la-exclamation-triangle"></i>{{ form.errors.translated_fields['email'] | capitalize }} {{ form.errors.messages['email'] }}.</span>
+        {%- endif -%}
+    </div>
+    <div class="hdt-form-input_wrap">
+        <label for="{{ formId }}-phone">{{ 'templates.contact.form.phone' | t }}</label>
+        <input required="required" type="tel" id="{{ formId }}-phone" name="contact[phone]" pattern="[0-9\-]*" value="{% if form[phone] %}{{ form[phone] }}{% elsif customer %}{{ customer.phone }}{% endif %}">
+    </div>
+    <div class="hdt-form-input_wrap">
+        <label for="{{ formId }}-message">{{ 'templates.contact.form.message' | t }}</label>
+        <textarea rows="20" id="{{ formId }}-message" name="contact[body]" required="required" class="hdt-input-textarea">{% if form.body %}{{ form.body }}{% endif %}</textarea>
+    </div>
+    <input type="submit" class="hdt-btn hdt-btn-outline hdt-btn-full-width hdt-contact-form_btn hdt-font-semibold" value="{{ 'templates.contact.form.send' | t }}">
+    {%- if form.posted_successfully? -%}
+        <div class="hdt-form-message hdt-form-message--success hdt-rte" tabindex="-1" data-form-status style="margin-top:20px">
+            {{ block.settings.success_message | default: default_success_message }}
+        </div>
+    {%- endif -%}
+{%- endform -%}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.contact_form.name",
+    "tag":null,
+    "settings": [
+      {
+        "type": "richtext",
+        "id": "success_message",
+        "label": "t:sections.contact_form.settings.success_message.label",
+      }
+    ],
+    "presets":[
+      {
+        "name": "t:sections.contact_form.name"
+      }
+    ]
+  }
+{% endschema %}

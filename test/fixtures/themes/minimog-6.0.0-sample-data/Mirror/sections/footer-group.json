@@ -1,0 +1,123 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "763755e6-f137-4d09-99ef-81a4819c0791": {
+          "type": "our_store",
+          "settings": {
+            "title": "",
+            "description": "<p>Our unique mirror will enhance <br\/>the warmth and light in your <br\/>living space!<\/p>",
+            "show_email": false,
+            "show_phone": false,
+            "show_socials_link": true,
+            "width": "50%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "2bd3b7d0-e898-4720-82ab-227b7e3815b4": {
+          "type": "spacing",
+          "settings": {
+            "width": "16%"
+          }
+        },
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84": {
+          "type": "menu",
+          "settings": {
+            "title": "About",
+            "width": "33%",
+            "order_first": true,
+            "open_default": false
+          }
+        },
+        "c85629c7-7aae-4666-b5f0-150990439c91": {
+          "type": "menu",
+          "settings": {
+            "title": "Information",
+            "width": "33%",
+            "order_first": true,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "763755e6-f137-4d09-99ef-81a4819c0791",
+        "2bd3b7d0-e898-4720-82ab-227b7e3815b4",
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84",
+        "c85629c7-7aae-4666-b5f0-150990439c91"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© Mirrior_twinkle 2024",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": ""
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

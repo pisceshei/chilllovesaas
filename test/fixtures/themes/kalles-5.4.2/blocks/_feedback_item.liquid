@@ -1,0 +1,91 @@
+<!-- blocks/_feedback_item.liquid -->
+{%-liquid
+  assign style = block.settings.style
+  assign image = block.settings.image
+  assign image_2 = block.settings.image_2
+  assign title = block.settings.title
+  assign content = block.settings.content
+-%}
+<div class="hdt-feedback-item hdt-fb-style-{{ style }}" {{ block.shopify_attributes }}>
+  <div class="hdt-feedback-inner">
+    {%- if image != blank -%}
+       <div class="hdt-image-1 hdt-image">
+        {{ image | image_url: width: image.width, height: image.height | image_tag: loading: "lazy", width: image.width, height: image.height, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', class: "hdt-object-cover hdt-object-center" }}
+       </div>
+    {%- endif -%}
+    {%- if image_2 != blank -%}
+       <div class="hdt-image-2 hdt-image">
+        {{ image_2 | image_url: width: image_2.width, height: image_2.height | image_tag: loading: "lazy", width: image_2.width, height: image_2.height, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', class: "hdt-object-cover hdt-object-center" }}
+       </div>
+    {%- endif -%}
+    {%- if title != blank or content != blank -%}
+       <div class="hdt-content-wrap">
+         {%- if title != blank -%}
+           <h6 class="hdt-text-title hdt-font-bold hdt-s-text">
+            {{ title }}
+           </h6>
+         {%- endif -%}
+         {%- if content != blank -%}
+           <p class="hdt-text-content hdt-s-text">
+            {{ content }}
+           </p>
+         {%- endif -%}
+       </div>
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Feedback item",
+    "tag": null,
+    "settings": [
+      {
+        "type": "select",
+        "id": "style",
+        "label": "Style",
+        "options": [
+          {
+            "value": "1",
+            "label": "Style 1"
+          },
+          {
+            "value": "2",
+            "label": "Style 2"
+          },
+          {
+            "value": "3",
+            "label": "Style 3"
+          }
+        ],
+        "default": "1",
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Image"
+      }, 
+      {
+        "type": "image_picker",
+        "id": "image_2",
+        "label": "Second image"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title",
+        "default": "Flores, Juanita"
+      },
+      {
+        "type": "textarea",
+        "id": "content",
+        "label": "Content",
+        "default": "Figma ipsum component variant main layer. Flatten."
+      },
+    ],
+    "presets": [
+      {
+        "name": "Feedback item"
+      }
+    ]
+  }
+{% endschema %}

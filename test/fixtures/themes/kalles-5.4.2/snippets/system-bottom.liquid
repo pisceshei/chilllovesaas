@@ -1,0 +1,143 @@
+<ul hidden>
+  <li id="a11y-refresh-page-message">{{ 'accessibility.refresh_page' | t }}</li>
+  <li id="a11y-new-window-message">{{ 'accessibility.link_messages.new_window' | t }}</li>
+  <li id="a11y-external-message">{{ 'accessibility.link_messages.external' | t }}</li>
+  <li id="a11y-new-window-external-message">{{ 'accessibility.link_messages.new_window_and_external' | t }}</li>
+</ul>
+
+<script>
+  window.themeHDN.routes = {
+    search_url: "{{ routes.search_url }}",
+    predictive_search_url: '{{ routes.predictive_search_url }}'
+  };
+  window.themeHDN.extras = {
+    addToCart: `{{ 'products.product.add_to_cart' | t }}`,
+    soldOut: `{{ 'products.product.sold_out' | t }}`,
+    preOrder: `{{ 'products.product.pre_order' | t }}`,
+    unavailable: `{{ 'products.product.unavailable' | t }}`,
+    savePercent: `{{ 'products.product.save_percent' | t: percent: '[sale]' }}`,
+    quantity: {
+      increment: `{{ 'products.product.quantity.multiples_of' | t: quantity: 1904 }}`,
+      min: `{{ 'products.product.quantity.minimum_of' | t: quantity: 1904 }}`,
+      max: `{{ 'products.product.quantity.maximum_of' | t: quantity: 1904 }}`,
+      notAvailable: `{{ 'products.product.quantity_not_available' | t }}`
+    },
+    pswp: {
+      close: `{{ 'light_box_image.close' | t }}`,
+      zoom: `{{ 'light_box_image.zoom' | t }}`,
+      prev: `{{ 'light_box_image.prev' | t }}`,
+      next: `{{ 'light_box_image.next' | t }}`,
+      errorMsg: `{{ 'light_box_image.errorMsg' | t }}`
+    },
+    exit_popup:{
+      copy: `{{ 'general.aria.exit_popup.copy' | t }}`,
+      copied: `{{ 'general.aria.exit_popup.copied' | t }}`
+    },
+    timezone: {{ settings.countdown_timezone | json }},
+    order: {
+      dayNames  : {{ 'products.product.product_single.order_dayNames' | t | json }},
+      monthNames: {{ 'products.product.product_single.order_monthNames' | t | json }}
+    },
+    search: {
+      view_all : {{ 'general.search.search_for' | t | json }}
+    },
+    cart: {
+      error_message: `{{ 'general.cart.error_message' | t }}`,
+      toast_title: `{{ 'general.cart.toast_title' | t }}`
+    },
+    AddedWishlistRemove: {% if settings.wis_atc_added == '1' %}false{% else %}true{% endif %},
+    text_wis_add: `{{ 'general.wishlist.add_to_wishlist' | t }}`,
+    text_wis_adding: `{{ 'general.wishlist.adding_to_wishlist' | t }}`,
+    text_wis_added: `{{ 'general.wishlist.browse_wishlist' | t }}`,
+    text_wis_remove: `{{ 'general.wishlist.remove_wishlist' | t }}`,
+    enableComparePopup: {{ settings.enable_compare_popup }},
+    text_cp_add: `{{ 'general.compare.add_to_compare' | t }}`,
+    text_cp_added: `{{ 'general.compare.browse_compare' | t }}`,
+    icon_cp_add : `<svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-cp" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-cp"></use></svg>`,
+    icon_cp_added : `<svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-cp is-ic--added" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-cp-added"></use></svg>`,
+    icon_wis_add : `<svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis"></use></svg>`,
+    icon_wis_added: `<svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis is-ic--added" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis-added"></use></svg>`,
+    icon_wis_remove: `<svg widht="24" height="24" aria-hidden="true" focusable="false" class="hdt-svg-pr-icon hdt-svg-wis is-ic--remove" viewBox="0 0 24 24"><use xlink:href="#hdt-icon-pr-wis-remove"></use></svg>`
+  }
+</script>
+
+<svg aria-hidden="true" focusable="false" role="presentation" xmlns="http://www.w3.org/2000/svg" class="hdt-d-none" hidden><defs>
+  <symbol id="hdt-icon-pr-cp" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></symbol>
+  <symbol id="hdt-icon-pr-cp-added" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></symbol>
+  <symbol id="hdt-icon-pr-wis" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></symbol>
+  <symbol id="hdt-icon-pr-wis-added" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></symbol>
+  <symbol id="hdt-icon-pr-wis-remove" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></symbol>
+  <symbol id="hdt-icon-pr-wis-remove-onpage" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line> </symbol>
+  <symbol id="hdt_star"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M329.6 176H488C498.3 176 507.4 182.5 510.7 192.2C514 201.9 510.8 212.6 502.7 218.9L371.9 320.7L422.9 480.7C426.1 490.7 422.4 501.7 413.7 507.7C405.1 513.7 393.6 513.4 385.3 506.9L256 406.4L126.7 506.9C118.4 513.4 106.9 513.7 98.27 507.7C89.65 501.7 85.94 490.7 89.13 480.7L140.1 320.7L9.267 218.9C1.174 212.6-2.027 201.9 1.3 192.2C4.628 182.5 13.75 176 24 176H182.5L233.1 16.72C236.3 6.764 245.6 0 256 0C266.5 0 275.7 6.764 278.9 16.72L329.6 176z"/></svg></symbol>
+  <symbol id="hdt_star_half"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M233.1 16.72C236.3 6.764 245.5 .0006 256 0V406.4L126.7 506.9C118.4 513.4 106.9 513.7 98.27 507.7C89.65 501.7 85.94 490.7 89.13 480.7L140.1 320.7L9.267 218.9C1.174 212.6-2.027 201.9 1.3 192.2C4.628 182.5 13.75 175.1 24 175.1H182.5L233.1 16.72z"/><path style="fill: #dedede;" d="M278.9 16.72C275.7 6.764 266.5 .0006 255.1 0V406.4L385.3 506.9C393.6 513.4 405.1 513.7 413.7 507.7C422.4 501.7 426.1 490.7 422.9 480.7L371.9 320.7L502.7 218.9C510.8 212.6 514 201.9 510.7 192.2C507.4 182.5 498.3 175.1 488 175.1H329.5L278.9 16.72z"/></svg></symbol>
+</defs></svg>
+
+{%- render 'search-form' -%}
+{%- render 'hdt_customer_form_sidebar' -%}
+{%- render 'product-ask-question' -%}
+
+<script type="module" src="{{ 'custom.js' | asset_url }}"></script>
+
+{%- assign arr_page_type = 'collection, search, blog, list-collections' | split: ', ' -%}
+{%- if arr_page_type contains request.page_type %}
+  <script type="module" src="{{ 'facets.min.js' | asset_url }}"></script>
+{% endif -%}
+
+{%- if settings.currency_type == "2" -%}
+  <script id="shopify-currencies-js" src="{{ 'currencies.js' | shopify_asset_url }}" defer></script>
+  <script type="module" src="{{ 'hdt-currencies.js' | asset_url }}"></script>
+{%- endif -%}
+
+{%- if settings.wishlist_mode == "2" %}
+  {%- assign customer_meta_wis_prs = customer.metafields.ecomrise.wishlist.value.ecomrise_ids -%}
+  <script type="application/json" id="hdt_wishlist_list">{% if customer_meta_wis_prs != blank %}{{- customer_meta_wis_prs | join: ' ' | strip -}}{% endif %}</script>
+{% endif -%}
+
+{%- if settings.compare_mode == "2" %}
+  {%- assign customer_meta_compare_prs = customer.metafields.ecomrise.compare.value.ecomrise_ids -%}
+  <script type="application/json" id="hdt_compare_list">{% if customer_meta_compare_prs != blank %}{{- customer_meta_compare_prs | join: ' ' | strip -}}{% endif %}</script>
+{% endif -%}
+
+{%- if request.design_mode -%}{%- render 'var_adm' -%}{% endif -%}
+{%- unless template.name == "password" -%}
+  {%- if settings.show_quick_view or settings.show_quick_add %}<hdt-tmp-quick hidden></hdt-tmp-quick>{% endif -%}
+
+  {%- comment -%} begin popover currencies {%- endcomment -%}
+  {%- liquid
+    assign supported_codes = settings.supported_currencies | newline_to_br | split: '<br />'
+    if settings.currency_type == "1" and localization.available_countries.size > 9
+        echo '<hdt-lazy-html section-id="popover-currencies" current-url> </hdt-lazy-html>'
+    elsif settings.currency_type == "2" and supported_codes.size > 9
+      echo '<hdt-lazy-html section-id="popover-currencies" current-url> </hdt-lazy-html>'
+    else
+      render 'popover-currencies'
+    endif
+  -%}
+  {%- comment -%} end popover currencies {%- endcomment -%}
+  {%- comment -%} begin popover language {%- endcomment -%}
+  {%- style -%} @media(min-width: 768px) {.hdt-popover-language{ box-shadow: 0 0 1.8rem 0 rgb(var(--color-overlay, 0 0 0) / .2); }} .hdt-languages{ vertical-align: middle; line-height: normal; } .hdt-languages>button { background: transparent; color: rgb(var(--color-foreground)); transition: all .3s ease; display:inline-flex; align-items:center } .hdt-languages>button svg { width: 0.8rem; height: auto; margin-inline-start: 0.5rem; } :where(.hdt-popover-language)::part(content) { padding: 1.5rem 2rem } :where(.hdt-popover-language)::part(body) { padding: 0; } .hdt-popover-language button { line-height:2.6rem; background: transparent; color: rgb(var(--color-foreground)); transition: all .3s ease; } .hdt-popover-language button[aria-selected="true"] { color: rgb(var(--color-accent)) !important; } @media(max-width:767px){ .hdt-popover-language button {line-height:3rem;} } @media (-moz-touch-enabled: 0), (hover: hover) and (min-width: 1150px) { .hdt-languages>button:hover, .hdt-popover-language button:hover { background: transparent; color: rgb(var(--color-accent)); } }{%- endstyle -%}
+  {%- liquid
+    assign current_locale = request.locale
+    assign current_locale_iso_code = current_locale.iso_code
+  -%}
+  <hdt-popover popover-active-min-width="1150" data-auto-close="desktop" placement="bottom" color-scheme="{{ settings.color_scheme_dialog }}">
+    <dialog id="popover-languages" class="hdt-popover hdt-popover-language hdt-dropdown hdt-text-start hdt-flag-size-{{ settings.size_currency }}" scroll-lock>
+      <div class="hdt-popover__arrow"></div>
+      <div class="hdt-popover__body">
+        {% comment %} <div class="hdt-popover__header"></div> {% endcomment %}
+        <div class="hdt-popover__inner hdt-current-scrollbar">
+          {%- form 'localization', id: 'localization_form_language' -%}
+            <hdt-richlist role="listbox" selected="{{ current_locale_iso_code }}">
+              {%- for locale in localization.available_languages -%}
+                <button type="submit" name="language_code" role="option" value="{{ locale.iso_code }}" aria-selected="{% if locale.iso_code == current_locale_iso_code %}true{% else %}false{% endif %}">{{ locale.endonym_name | escape }}</button>
+              {%- endfor -%}
+            </hdt-richlist>
+          {%- endform -%}
+        </div>
+      </div>
+    </dialog>
+  </hdt-popover>
+{%- endunless -%}
+{% if settings.enable_confetti %}
+<confetti-element popover="auto" class="hdt-contents"></confetti-element>
+{% endif %}

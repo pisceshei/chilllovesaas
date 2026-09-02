@@ -1,0 +1,234 @@
+{{ 'contact-bar.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  assign container = section.settings.container
+  if container == 'w-full'
+    assign container = 'container-full'
+  endif
+
+  assign classes = 'm-section m-contact-bar-section'
+  if section.settings.custom_class != blank
+    assign classes = classes | append: ' ' | append: section.settings.custom_class
+  endif
+  assign classes = classes | append: ' m-gradient' | append: ' m-color-' | append: section.settings.color_scheme
+%}
+
+<style>
+  #m-section--{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --item-gap: {{ section.settings.item_gap }}px;
+  }
+</style>
+
+<section
+  id="m-section--{{ section.id }}"
+  class="{{ classes }}"
+  data-section-type="contact-bar"
+  data-section-id="{{ section.id }}"
+>
+  <div class="{{ container }} m-section-my m-section-py">
+    <div class="m-contact-bar__list">
+      {% if section.settings.heading != blank %}
+        <h2 class="m-contact-bar__heading h6">{{ section.settings.heading }}</h2>
+      {% endif %}
+
+      {% for block in section.blocks %}
+        <div
+          class="m-contact-bar__item"
+          {{ block.shopify_attributes }}
+        >
+          {% if block.settings.label != blank %}
+            <span class="m-contact-bar__label">{{ block.settings.label }}</span>
+          {% endif %}
+          {% if block.type == 'working_hours' and block.settings.hour != blank %}
+            <span class="m-contact-bar__content">{{ block.settings.hour }}</span>
+          {% elsif block.type == 'email' and block.settings.email != blank %}
+            <a href="mailto:{{ block.settings.email }}" class="m-contact-bar__content">{{ block.settings.email }}</a>
+          {% elsif block.type == 'phone' and block.settings.phone != blank %}
+            <a href="tel:{{ block.settings.phone | replace: ' ', '' }}" class="m-contact-bar__content">
+              {{- block.settings.phone -}}
+            </a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Contact bar",
+  "disabled_on": {
+    "groups": ["header"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "General"
+    },
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Contact Us"
+    },
+    {
+      "type": "range",
+      "id": "item_gap",
+      "label": "Item gap",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "default": 15,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "default": 50,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "default": 50,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Custom Attributes"
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom classes"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "working_hours",
+      "name": "Working hours",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Working Hours"
+        },
+        {
+          "type": "text",
+          "id": "hour",
+          "label": "Hour",
+          "default": "Mon - Fri: 8am - 5pm"
+        }
+      ]
+    },
+    {
+      "type": "email",
+      "name": "Email",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Email"
+        },
+        {
+          "type": "text",
+          "id": "email",
+          "label": "Email",
+          "default": "hello@example.com"
+        }
+      ]
+    },
+    {
+      "type": "phone",
+      "name": "Phone",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label",
+          "default": "Phone"
+        },
+        {
+          "type": "text",
+          "id": "phone",
+          "label": "Phone",
+          "default": "+1 234 567 890"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Contact bar",
+      "category": "Information",
+      "blocks": [
+        {
+          "type": "working_hours",
+          "settings": {
+            "label": "Working Hours",
+            "hour": "Mon - Fri: 8am - 5pm"
+          }
+        },
+        {
+          "type": "email",
+          "settings": {
+            "label": "Email",
+            "email": "hello@example.com"
+          }
+        },
+        {
+          "type": "phone",
+          "settings": {
+            "label": "Phone",
+            "phone": "+1 234 567 890"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,101 @@
+<!-- blocks/footer-image.liquid -->
+<div class="hdt-block-footer-image hdt-block-image_{{ block.id }}">
+  {%- style -%}
+    .hdt-block-image_{{ block.id }} {
+      width:100%;
+      max-width:100%;
+    }
+    {%- if block.settings.custom_width == 'custom' -%}
+      .hdt-block-image_{{ block.id }} .hdt-image-wrap img {
+        width: 100%;
+      }
+      .hdt-block-image_{{ block.id }} .hdt-image-wrap{
+        width:{{ block.settings.image_w_mb }}px;
+      }
+      @media(min-width:768px){
+        .hdt-block-image_{{ block.id }}  .hdt-image-wrap{
+          width:100%;
+          max-width:{{ block.settings.image_w_tb }}px;
+        }
+      }
+      @media(min-width:1150px){
+        .hdt-block-image_{{ block.id }} .hdt-image-wrap {
+          width:100%;
+          max-width:{{ block.settings.image_w }}px;
+        }
+      }
+    {%- endif -%}
+  {%- endstyle -%}
+  {%- if block.settings.img != blank -%}
+    <div class="hdt-image-wrap hdt-oh"> 
+      {{ block.settings.img | image_url: width: block.settings.img.width | image_tag: loading: "lazy", width: block.settings.img.width, height: block.settings.img.height, class: "hdt-object-cover" }}
+    </div>
+  {%- endif -%}
+</div>
+{% schema %}
+{
+  "name": "t:blocks.footer_image.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "img",
+      "label": "t:blocks.footer_image.settings.image.label"
+    },
+    {
+      "type": "select",
+      "id": "custom_width",
+      "label": "t:blocks.footer_image.settings.custom_width.label",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:blocks.footer_image.settings.custom_width.options.default"
+        },
+        {
+          "value": "custom",
+          "label": "t:blocks.footer_image.settings.custom_width.options.custom"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "range",
+      "id": "image_w",
+      "min": 50,
+      "max": 250,
+      "step": 2,
+      "unit": "px",
+      "label": "t:blocks.footer_image.settings.image_w.label",
+      "default": 100,
+      "visible_if": "{{ block.settings.custom_width == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "image_w_tb",
+      "min": 50,
+      "max": 250,
+      "step": 2,
+      "unit": "px",
+      "label": "t:blocks.footer_image.settings.image_w_tb.label",
+      "default": 100,
+      "visible_if": "{{ block.settings.custom_width == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "image_w_mb",
+      "min": 50,
+      "max": 250,
+      "step": 2,
+      "unit": "px",
+      "label": "t:blocks.footer_image.settings.image_w_mb.label",
+      "default": 100,
+      "visible_if": "{{ block.settings.custom_width == 'custom' }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.footer_image.name"
+    }
+  ]
+}
+{% endschema %} 

@@ -1,0 +1,538 @@
+{
+  "sections": {
+    "c1a76eb2-dd3f-480b-b02d-9220f7862ee7": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-slider--home .m-slide__description,\n.m-hero--home .m-hero__text {\n  font-size: 18px;\n  color: var(--color-sub-text);\n}\n.sf-custom--01 .m-section-my {\n  margin-top: 30px;\n}\n.sf-custom--01 .m-richtext__button:before,\n.sf-custom--01 .m-richtext__button:after {\n  display: none !important;\n}\n.sf-custom--01 .m-image-card__content-inner {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  justify-content: space-between;\n}\n.m-product-tabs--home .m-tab-header {\n  font-weight: 500;\n}\n\n.m-press--home .m-section-my {\n  margin-top: 0;\n  margin-bottom: 0;\n}\n.m-press--home .m-press__inner {\n  background: #e7f2f4;\n  padding: 40px;\n}\n.m-press--home .m-press__title {\n  font-size: 24px;\n  line-height: 36px;\n}\n\n.m-icon-box--home .m-icon-box__heading {\n  font-size: 20px;\n  line-height: 32px;\n  margin-bottom: 7px;\n}\n.subheading-hot__label {\n  padding: 6px 20px;\n  border-radius: 5px;\n  font-size: 18px;\n  line-height: 28px;\n  color: #e56137;\n  background-color: rgba(229, 97, 55, 0.1);\n}\n\n.m-instagram--home .m-section-my {\n  margin-bottom: 50px;\n}\n.m-instagram--home .m-section__description {\n  font-weight: 500;\n  color: #000;\n}\n@media (min-width: 1280px) {\n  .sf-custom--02 .col-3 {\n    padding-left: 100px;\n  }\n}\n@media (min-width: 1024px) {\n  .m-press--home .m-press__inner {\n    padding: 95px 150px;\n  }\n}\n@media ( min-width: 768px ) {\n  .m-product-tabs--home .m-section__header {\n    margin-bottom: 53px;\n  }\n  .m-icon-box--home .m-icon-box__content {\n    margin-top: 28px;\n  }\n  .sf-custom--01 .m-richtext__title {\n    font-size: 34px;\n    line-height: 44px;\n  }\n  .m-instagram--home .m-section__description {\n    font-size: 20px;\n  }\n}\n@media (max-width: 767px) {\n  .sf-custom--02 .col-1 {\n    display: none;\n  }\n  .sf-footer .sf-footer__center span img {\n    margin: 0;\n    width: 5rem;\n  }\n  .m-instagram--home .m-section__description {\n    margin-top: 0;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "Give a makeover<br> to your hands.",
+            "description": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "Fall in love with<br> your nails!",
+            "description": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "Bringing Joy in life<br> with colors.",
+            "description": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+            "image_link": "",
+            "button_text": "Shop Now",
+            
+            "button_style": "sf__btn-primary",
+            
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "1623402591881bd3d0": {
+      "type": "custom-content",
+      "blocks": {
+        "a55d023f-4a4a-4055-a670-688311e9f6b0": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "Summer collection",
+            "subtitle": "",
+            "button_label": "<p class=\"flex items-center\">Shop now <span class=\"ml-2\"><img class=\"w-4 h-4\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/ArrowRight.png?v=1623634915\"><\/span><\/p>",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        },
+        "1f7a65f7-6a32-4057-bd82-79fdb2e7dc7f": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "What’s new?",
+            "subtitle": "",
+            "button_label": "<p class=\"flex items-center\">Discover now <span class=\"ml-2\"><img class=\"w-4 h-4\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/ArrowRight.png?v=1623634915\"><\/span><\/p>",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        },
+        "8660626a-e74b-4cdc-9967-ea96da466765": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            
+            "content_position": "top_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            
+            "title": "Tips & trends",
+            "subtitle": "",
+            "button_label": "<p class=\"flex items-center\">Discover now <span class=\"ml-2\"><img class=\"w-4 h-4\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/ArrowRight.png?v=1623634915\"><\/span><\/p>",
+            "button_style": "m-button--link",
+            
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "a55d023f-4a4a-4055-a670-688311e9f6b0",
+        "1f7a65f7-6a32-4057-bd82-79fdb2e7dc7f",
+        "8660626a-e74b-4cdc-9967-ea96da466765"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--01"
+      }
+    },
+    "162340289098676a87": {
+      "type": "product-tabs",
+      "blocks": {
+        "162340289098676a87-0": {
+          "type": "tab",
+          "settings": {
+            "title": "Nail polish"
+          }
+        },
+        "162340289098676a87-1": {
+          "type": "tab",
+          "settings": {
+            "title": "Nail care"
+          }
+        },
+        "157c21e7-40ed-41e7-bc07-e9e9989c9123": {
+          "type": "tab",
+          "settings": {
+            "title": "The systems"
+          }
+        }
+      },
+      "block_order": [
+        "162340289098676a87-0",
+        "162340289098676a87-1",
+        "157c21e7-40ed-41e7-bc07-e9e9989c9123"
+      ],
+      "settings": {
+        "heading": "Shop bestsellers",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "tab_header": "horizontal",
+        "limit": 8,
+        "show_button": false,
+        "button_type": "link",
+        "button_label": "View all",
+        "button_style": "sf__btn-primary",
+        
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-product-tabs--home",
+        "animations": "inherit"
+      }
+    },
+    "16234029203ab354b1": {
+      "type": "press",
+      "blocks": {
+        "16234029203ab354b1-0": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "130px"
+          }
+        },
+        "16234029203ab354b1-1": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "130px"
+          }
+        },
+        "16234029203ab354b1-2": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "16234029203ab354b1-3": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "16234029203ab354b1-4": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "150px"
+          }
+        },
+        "16234029203ab354b1-5": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“ Millions of combinations, meaning you get a totally unique piece of furniture exactly the way you want it.”<\/p>",
+            "image_width": "140px"
+          }
+        }
+      },
+      "block_order": [
+        "16234029203ab354b1-0",
+        "16234029203ab354b1-1",
+        "16234029203ab354b1-2",
+        "16234029203ab354b1-3",
+        "16234029203ab354b1-4",
+        "16234029203ab354b1-5"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "show_divider": false,
+        "autoplay": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-press--home",
+        "animations": "inherit"
+      }
+    },
+    "1623403186efcbaba1": {
+      "type": "icon-box",
+      "blocks": {
+        "16234031860362bffa-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Cruelty free & Vegan",
+            "description": "<p>High shine, long-lasting, vegan nail<br\/> polishes in a range of fashion colours<br\/> and finishes <\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16234031860362bffa-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Carbon neutral",
+            "description": "<p>High shine, long-lasting, vegan nail<br\/> polishes in a range of fashion colours<br\/> and finishes <\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16234031860362bffa-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "B Corp",
+            "description": "<p>High shine, long-lasting, vegan nail<br\/> polishes in a range of fashion colours<br\/> and finishes <\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "cc7106de-22af-4f98-8f92-2161f84dd2cf": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "We give back",
+            "description": "<p>High shine, long-lasting, vegan nail<br\/> polishes in a range of fashion colours<br\/> and finishes <\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16234031860362bffa-0",
+        "16234031860362bffa-1",
+        "16234031860362bffa-2",
+        "cc7106de-22af-4f98-8f92-2161f84dd2cf"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "Why shop with Sally?",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 14,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "60px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-icon-box--home",
+        "animations": "inherit"
+      }
+    },
+    "162340349987ddcc8f": {
+      "type": "custom-content",
+      "blocks": {
+        "162340349987ddcc8f-1": {
+          "type": "image",
+          "settings": {
+            
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "col-1",
+            "animations": "inherit"
+          }
+        },
+        "7b16cdec-ef87-4d07-b5b7-5fe7eaaa6ab9": {
+          "type": "image",
+          "settings": {
+            
+            "width": "33%",
+            "alignment": "center",
+            "block_custom_class": "col-2",
+            "animations": "inherit"
+          }
+        },
+        "162340349987ddcc8f-0": {
+          "type": "text",
+          "settings": {
+            "title": "We’re fixing nail<br> polish for good.",
+            "subheading": "<span class=\"subheading-hot__label\">Hot Deals<\/span>",
+            "text": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop The Look",
+            
+            "button_style": "m-button--primary",
+            
+            "block_custom_class": "col-3",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "162340349987ddcc8f-1",
+        "7b16cdec-ef87-4d07-b5b7-5fe7eaaa6ab9",
+        "162340349987ddcc8f-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 50,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-custom--02"
+      }
+    },
+    "1623403718c335aec4": {
+      "type": "image-with-text-2",
+      "settings": {
+        
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "Freshly picked<br>\nis here!",
+        "subtitle": "",
+        "text": "<p>High shine, long-lasting, vegan nail polishes in a<br\/> range of fashion colours and finishes <\/p>",
+        "button_label": "Shop now",
+        
+        "button_style": "m-button--primary",
+        
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "1623403822b813a780": {
+      "type": "instagram",
+      "settings": {
+        "heading": "Give us your best shot!",
+        "heading_size": "h2",
+        
+        "description": "@sally_nailspolish",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "layout": "grid",
+        "images_count": 4,
+        "grid_columns": 4,
+        "gap": 50,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-instagram--home"
+      }
+    }
+  },
+  "order": [
+    "c1a76eb2-dd3f-480b-b02d-9220f7862ee7",
+    "1621243260e1af0c20",
+    "1623402591881bd3d0",
+    "162340289098676a87",
+    "16234029203ab354b1",
+    "1623403186efcbaba1",
+    "162340349987ddcc8f",
+    "1623403718c335aec4",
+    "1623403822b813a780"
+  ]
+}

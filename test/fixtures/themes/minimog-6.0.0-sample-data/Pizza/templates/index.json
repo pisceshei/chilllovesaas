@@ -1,0 +1,327 @@
+{
+  "sections": {
+    "1623299451ebddfdef": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "<span class=\"sf__custom-heading\">PIZZA<br>\nHOMEMADE<\/span>",
+        "subtitle": "",
+        "text": "",
+        "button_label": "ORDER NOW",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162329976910776af4": {
+      "type": "custom-content",
+      "blocks": {
+        "162329976910776af4-1": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "20859654-fbe7-46df-b85e-a1f7622aecd6": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "25%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "162329976910776af4-0": {
+          "type": "text",
+          "settings": {
+            "title": "THE REAL ITALIAN TASTES",
+            "subheading": "OUR PIZZA",
+            "text": "<p>We work closely with our team of artisan shoemakers in Italy, utilizing<br\/> sustainable materials and processes to develop a new kind of luxury - a luxury<br\/> that seeks to slow the fashion cycle, a luxury that focuses on craftsmanship<br\/> and a luxury that helps to increase <\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "ABOUT US",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "m-custom-content-block-text",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "162329976910776af4-1",
+        "20859654-fbe7-46df-b85e-a1f7622aecd6",
+        "162329976910776af4-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "1623307299b5e2ad4e": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "CUSTOMER FAVORITES",
+        "heading_size": "h2",
+        "subheading": "GOOD TASTE",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1623307467fcdb42f8": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "<span class=\"sf__custom-heading-content\">EAT PIZZA FROM HOME<\/span>",
+        "subtitle": "<img width=\"64\" style=\"margin:0 auto;\" class=\"m:hidden md:m:block\" src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/10.png?v=1623307694\">",
+        "text": "",
+        "button_label": "VIEW MENU",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16233078254c934704": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "THIS WEEK’S PIZZAS",
+        "heading_size": "h2",
+        "subheading": "GOOD TASTE",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1623307884189e0a5c": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        "link": "",
+        "layout": "right",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "BUY ONE GET ONE FREE",
+        "sub_title": "PROMOTION",
+        "text": "<p>We work closely with our team of artisan shoemakers in Italy, utilizing <br\/>sustainable materials and processes to develop a new kind of luxury - a luxury<br\/> that seeks to slow the fashion cycle, a luxury that focuses on craftsmanship<br\/> and a luxury that helps to increase <\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "VIEW MENU",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-iwt--home",
+        "animations": "inherit"
+      }
+    },
+    "162330833405deda07": {
+      "type": "icon-box",
+      "blocks": {
+        "162330833405deda07-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "FAST DELIVERY",
+            "description": "<p>Free Shipping for orders over £130<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162330833405deda07-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "PICKUP IN STORE",
+            "description": "<p>Within 30 days for an exchange.<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162330833405deda07-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "SEAT RESERVATION",
+            "description": "<p>24 hours a day, 7 days a week<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "380c3537-6c18-4f06-a408-71041c5c185c": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "PRO SERVICES",
+            "description": "<p>Pay with Multiple Credit Cards<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "162330833405deda07-0",
+        "162330833405deda07-1",
+        "162330833405deda07-2",
+        "380c3537-6c18-4f06-a408-71041c5c185c"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 4,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "horizontal",
+        "image_max_width": "40px",
+        "content_alignment": "start",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": false,
+        "use_grid_column_mb": false,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "m-custom-promotion",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "1623299451ebddfdef",
+    "162329976910776af4",
+    "1623307299b5e2ad4e",
+    "1623307467fcdb42f8",
+    "16233078254c934704",
+    "1623307884189e0a5c",
+    "162330833405deda07"
+  ]
+}

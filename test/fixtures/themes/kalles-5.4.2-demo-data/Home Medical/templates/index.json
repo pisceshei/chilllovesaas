@@ -1,0 +1,2468 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slide-02-bg.jpg",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_kjLznn": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "3M 6000 Series",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#e4573d",
+                "font_size": 22,
+                "line_height": 26,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "text_custom_GVqXQF": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Search Lab<br>\nN95 Face Mask",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#222222",
+                "font_size": 45,
+                "line_height": 50,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": false,
+                "font_size_mobile": 30,
+                "line_height_mobile": 40,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "text_custom_cAeT9n": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "This mask provides comfortable, reliable worker respiratory <br>protection against certain non oil based particles.",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#696969",
+                "font_size": 16,
+                "line_height": 26,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "button_custom_xjQngx": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Explore Now",
+                "link": "shopify:\/\/collections\/medical",
+                "target": "_self",
+                "font_family": "hdt-font-1",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#458bec",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 46,
+                "border_radius": 0,
+                "padding_left_right": 35,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 40,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_kjLznn",
+            "text_custom_GVqXQF",
+            "text_custom_cAeT9n",
+            "button_custom_xjQngx"
+          ]
+        },
+        "slide_item_4KHMRY": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slider-bg-3.png",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_qQ7QQT": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Price just $14",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#e4573d",
+                "font_size": 22,
+                "line_height": 26,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "text_custom_7BWDzT": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Botanical Hand<br>\nSanitizer Gel",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#222222",
+                "font_size": 45,
+                "line_height": 50,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": false,
+                "font_size_mobile": 30,
+                "line_height_mobile": 40,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "text_custom_QQXyWd": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Soft and non-irritating, does not hurt the skin, has a water<br>\nretention and hydration function",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#696969",
+                "font_size": 16,
+                "line_height": 26,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "button_custom_Y9pNdD": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop now",
+                "link": "shopify:\/\/collections\/medical",
+                "target": "_self",
+                "font_family": "hdt-font-1",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#458bec",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 46,
+                "border_radius": 0,
+                "padding_left_right": 35,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 40,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_qQ7QQT",
+            "text_custom_7BWDzT",
+            "text_custom_QQXyWd",
+            "button_custom_Y9pNdD"
+          ]
+        },
+        "slide_item_cqzUtp": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/slider-bg-1.png",
+            "url": "",
+            "banner_target": false,
+            "color_scheme": "scheme-1",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_KcxNnN": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Only $1000",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#e4573d",
+                "font_size": 22,
+                "line_height": 26,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "text_custom_g6zzwx": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Fast Reading Digital<br>for Ear & Forehead",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#222222",
+                "font_size": 45,
+                "line_height": 50,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": false,
+                "font_size_mobile": 30,
+                "line_height_mobile": 40,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "text_custom_akgUNB": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "In 3 seconds, you'll get the exact number of your body's <br>temperature. Suitable for both baby & adult",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#696969",
+                "font_size": 16,
+                "line_height": 26,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 20,
+                "hide_on_mobile": true,
+                "font_size_mobile": 16,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 20
+              },
+              "blocks": {}
+            },
+            "button_custom_HFwAFT": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop now",
+                "link": "shopify:\/\/collections\/medical",
+                "target": "_self",
+                "font_family": "hdt-font-1",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#458bec",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 46,
+                "border_radius": 0,
+                "padding_left_right": 35,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 40,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_KcxNnN",
+            "text_custom_g6zzwx",
+            "text_custom_akgUNB",
+            "button_custom_HFwAFT"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_4KHMRY",
+        "slide_item_cqzUtp"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 620,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 400,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": "",
+        "mg_mb": "",
+        "pd": ",,30px,",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "banners_VBAyFx": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_mw4chP": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 11,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 11,
+            "position_y_mb": 49,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_pW3pDQ": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "PERSONAL",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 14,
+                "line_height": 18,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 18,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_HD7bXU": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Temperature Gun",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 23,
+                "line_height": 30,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 4,
+                "hide_on_mobile": false,
+                "font_size_mobile": 23,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "liquid_negaeV": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<p style=\"margin-bottom:5px\">\n<strong style=\"font-size: 25px;  color:#e4573d\">$35.00<\/strong> <del style=\"color:#222\">$45.00<\/del><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_qGTVn6": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Now",
+                "link": "shopify:\/\/products\/temperature-gun",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#23508e",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 25,
+                "padding_left_right": 20,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/product-banner-04.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_pW3pDQ",
+            "text_custom_HD7bXU",
+            "liquid_negaeV",
+            "button_custom_qGTVn6"
+          ]
+        },
+        "banner_item_BnEBfU": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 11,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 11,
+            "position_y_mb": 49,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_qraAPY": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "HOME MEDICAL SUPPLIES",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 14,
+                "line_height": 18,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 18,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_ayDJ8z": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Steam Vaporizer",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 23,
+                "line_height": 30,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 4,
+                "hide_on_mobile": false,
+                "font_size_mobile": 23,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "text_custom_Cnt4hM": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "$86.00",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#e4573d",
+                "font_size": 25,
+                "line_height": 24,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 15,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "button_custom_8WhQaf": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Now",
+                "link": "shopify:\/\/products\/copy-of-surgical-face-mask",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#23508e",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 25,
+                "padding_left_right": 20,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/product-banner-01.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_qraAPY",
+            "text_custom_ayDJ8z",
+            "text_custom_Cnt4hM",
+            "button_custom_8WhQaf"
+          ]
+        },
+        "banner_item_nWBww4": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 11,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "start",
+            "alignment": "left",
+            "position_x_mb": 11,
+            "position_y_mb": 49,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_kdPrp4": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "HOSPITAL EQUIPMENT",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 14,
+                "line_height": 18,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 10,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 18,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_iPdT6w": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Stainless Steel Scissors",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 23,
+                "line_height": 30,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 4,
+                "hide_on_mobile": false,
+                "font_size_mobile": 23,
+                "line_height_mobile": 24,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 5
+              },
+              "blocks": {}
+            },
+            "liquid_9np6WA": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<p style=\"margin-bottom:5px\">\n<strong style=\"font-size: 25px;  color:#e4573d\">$35.00<\/strong> <del style=\"color:#222\">$16.00<\/del><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_Arr9EQ": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Now",
+                "link": "shopify:\/\/products\/copy-of-surgical-cap-scrub-hat",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#23508e",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 25,
+                "padding_left_right": 20,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 14,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/product-banner-05.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_kdPrp4",
+            "text_custom_iPdT6w",
+            "liquid_9np6WA",
+            "button_custom_Arr9EQ"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_mw4chP",
+        "banner_item_BnEBfU",
+        "banner_item_nWBww4"
+      ],
+      "custom_css": [],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 270,
+        "image_height_mb": "adapt_image",
+        "fixed_height_mb": 300,
+        "space_items": "30px",
+        "space_items_tb": "20px",
+        "space_items_mb": "15px",
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,70px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ",,26px,"
+      }
+    },
+    "collections_list_aqecLw": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_3WafzN": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical-02",
+            "image": "shopify:\/\/shop_images\/Categories-image-4.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Hospital Equipment",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_64Aynx": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical",
+            "image": "shopify:\/\/shop_images\/Categories-image-1.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Blood Pressure",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_yb6EBi": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical-2",
+            "image": "shopify:\/\/shop_images\/Categories-image-3.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Medical Accessories",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_kRWwUB": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical",
+            "image": "shopify:\/\/shop_images\/Categories-image-2.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Personal",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_DcfLye": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical-02",
+            "image": "shopify:\/\/shop_images\/Categories-image.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Independent Living",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_Mx6qQc": {
+          "type": "_collection_item",
+          "name": "t:sections.collections-list.blocks.collection_item",
+          "settings": {
+            "collection": "medical-2",
+            "image": "shopify:\/\/shop_images\/Categories-image-5.jpg",
+            "hdt_collection_list_svg": "",
+            "svg_width": 60,
+            "svg_width_mb": 40,
+            "title": "Pharmacy",
+            "collection_link": "",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_66YfkQ": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop by categories",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 26,
+                "font_size_heading": 26,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_66YfkQ"
+          ]
+        }
+      },
+      "block_order": [
+        "collection_item_3WafzN",
+        "collection_item_64Aynx",
+        "collection_item_yb6EBi",
+        "collection_item_kRWwUB",
+        "collection_item_DcfLye",
+        "collection_item_Mx6qQc"
+      ],
+      "custom_css": [
+        "@media (width >= 1350px) {.hdt-collection-wrapper {padding: 5px; text-align: center; }}",
+        ".hdt-heading-block {font-weight: 500;}",
+        "@media (width < 768px) {.hdt-heading-block {text-align: center; }}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "12",
+        "content_size": "xl",
+        "content_weight": "medium",
+        "content_position": "center",
+        "content_space": 20,
+        "show_count": true,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 20,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "translateToTop",
+        "b_effect": "none",
+        "col_dk": "6",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "20",
+        "layout_mode": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": true,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "outline",
+        "nav_shape": "rounded",
+        "nav_size": "medium",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,150px,",
+        "mg_mb": ",,80px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "custom_section_TTCTNR": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_wrdTjr": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "product_deals_L3ntqN": {
+              "type": "product-deals",
+              "name": "Product deals",
+              "settings": {
+                "colors_by_block": false,
+                "color_scheme": "",
+                "layout": "1",
+                "show_border": true,
+                "rounded": "hdt-radius",
+                "alignment": "left",
+                "alignment_mb": "center",
+                "countdown_text": "",
+                "date_countdown": "",
+                "countdown_content_color": "#ffffff",
+                "countdown_background_color": "#e4573d",
+                "space_bottom": 0,
+                "product_list": [
+                  "copy-of-portable-mesh-atomizer-1",
+                  "copy-of-medical-nurses-scissors-1",
+                  "copy-of-blood-pressure-monitor",
+                  "copy-of-arms-blood-pressure-monitor",
+                  "copy-of-anti-septic-dry-hand-gel-2",
+                  "copy-of-automatic-digital-arm-blood-pressure-1",
+                  "copy-of-blood-pressure-monitor-1",
+                  "copy-of-ecg-blood-pressure-monitor",
+                  "copy-of-dental-tools-kit-1"
+                ],
+                "products_count": 8,
+                "col_dk": "4",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "box_layout": "carousel",
+                "hdt_slide_center": true,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "on_border",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "small",
+                "nav_hide_mobile": true,
+                "dotUI": true,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 30,
+                "only_show_mobile": true,
+                "pag_hide_mobile": false
+              },
+              "blocks": {
+                "deals-title": {
+                  "type": "heading",
+                  "static": true,
+                  "settings": {
+                    "heading": "<p>Product deals of the day<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "",
+                    "font_weight": "medium",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 26,
+                    "font_size_heading": 26,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                },
+                "product-deals-product": {
+                  "type": "_deals_product",
+                  "static": true,
+                  "settings": {
+                    "product": "{{ closest.product }}",
+                    "product_design": "1",
+                    "show_vendor": false,
+                    "show_countdown": false,
+                    "image_ratio": "adapt_image",
+                    "image_size": true,
+                    "show_stock_bar": true,
+                    "text_sold": "Sold:",
+                    "text_available": "Available:",
+                    "background_color_1": "#77ccfd",
+                    "background_color_2": "#4e97fd"
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": []
+            }
+          },
+          "block_order": [
+            "product_deals_L3ntqN"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_wrdTjr"
+      ],
+      "custom_css": [
+        ".show-border-true {border: 2px solid rgb(var(--color-line-border));}",
+        ".hdt-product-deals .hdt-stock-bar--status {font-size: 15px; font-weight: 500;}",
+        "@media (width < 768px) {.hdt-h_custom {text-align: center; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-db682a96-4317-4e25-990e-1cb012b955db",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,80px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banner_masonry_f4eWda": {
+      "type": "banner-masonry",
+      "blocks": {
+        "item_masonry_mAUbqd": {
+          "type": "_item-masonry",
+          "settings": {
+            "colors_by_section": false,
+            "color_scheme": "",
+            "background_opacity": 0,
+            "banner_url": "shopify:\/\/products\/copy-of-arms-blood-pressure-monitor",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "content_pd_y": 100,
+            "content_pd_x": 100,
+            "col_w": "8",
+            "row_count": 1,
+            "content_position": "center-start",
+            "alignment": "left",
+            "col_w_tb": "6",
+            "row_count_tb": 1,
+            "content_position_tb": "center",
+            "alignment_tb": "center",
+            "col_w_mb": "2",
+            "row_count_mb": 2,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_UawPAE": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Independent Living",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 26,
+                "line_height": 34,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 5,
+                "hide_on_mobile": false,
+                "font_size_mobile": 23,
+                "line_height_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_rxfJiY": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Classic Personal Vaporizer",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "hdt-font-1",
+                "color_text": "#696969",
+                "font_size": 14,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "font_size_mobile": 14,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "liquid_GwmVqt": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<p style=\"margin-bottom:5px\">\n<strong style=\"font-size: 25px;  color:#e4573d\">$35.00<\/strong> <del>$45.00<\/del><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "banner-masonry-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/product-banner-05.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_UawPAE",
+            "text_custom_rxfJiY",
+            "liquid_GwmVqt"
+          ]
+        },
+        "item_masonry_XXDnhA": {
+          "type": "_item-masonry",
+          "settings": {
+            "colors_by_section": false,
+            "color_scheme": "",
+            "background_opacity": 0,
+            "banner_url": "shopify:\/\/products\/temperature-gun",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "overlay",
+            "content_pd_y": 100,
+            "content_pd_x": 75,
+            "col_w": "4",
+            "row_count": 1,
+            "content_position": "center-start",
+            "alignment": "left",
+            "col_w_tb": "6",
+            "row_count_tb": 1,
+            "content_position_tb": "center",
+            "alignment_tb": "center",
+            "col_w_mb": "2",
+            "row_count_mb": 2,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_custom_NA7QHx": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "PERSONAL",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 14,
+                "line_height": 24,
+                "font_weight": 400,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 5,
+                "hide_on_mobile": false,
+                "font_size_mobile": 16,
+                "line_height_mobile": 0,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_custom_mKMaYY": {
+              "type": "text_custom",
+              "name": "t:blocks.text_custom.name",
+              "settings": {
+                "text": "Temperature Gun",
+                "remove_br_mobile": false,
+                "html_tag": "p",
+                "font_family": "",
+                "color_text": "#222222",
+                "font_size": 26,
+                "line_height": 34,
+                "font_weight": 600,
+                "letter_spacing": 0,
+                "enable_italic": false,
+                "enable_text_shadow": false,
+                "margin_bottom": 5,
+                "hide_on_mobile": false,
+                "font_size_mobile": 23,
+                "line_height_mobile": 30,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "liquid_a8pgca": {
+              "type": "_liquid",
+              "name": "t:blocks.liquid.name",
+              "settings": {
+                "option_type": "liquid",
+                "page": "",
+                "text": "<p style=\"margin-bottom:5px\">\n<strong style=\"font-size: 25px;  color:#e4573d\">$35.00<\/strong> <del>$45.00<\/del><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "base",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "button_custom_dPaBc3": {
+              "type": "button_custom",
+              "name": "t:blocks.button_custom.name",
+              "settings": {
+                "text": "Shop Now",
+                "link": "shopify:\/\/products\/temperature-gun",
+                "target": "_self",
+                "font_family": "",
+                "icon_width": 0,
+                "button_style": "default",
+                "button_effect": "fade",
+                "primary_color": "#4e97fd",
+                "secondary_color": "#ffffff",
+                "primary_color_hover": "#458bec",
+                "secondary_color_hover": "#ffffff",
+                "font_size": 14,
+                "font_weight": 500,
+                "letter_spacing": 0,
+                "min_height": 40,
+                "border_radius": 21,
+                "padding_left_right": 25,
+                "margin_bottom": 0,
+                "hide_on_mobile": false,
+                "icon_width_mobile": 0,
+                "font_size_mobile": 12,
+                "min_height_mobile": 36,
+                "padding_left_right_mobile": 15,
+                "letter_spacing_mobile": 0,
+                "margin_bottom_mobile": 0
+              },
+              "blocks": {}
+            },
+            "banner-masonry-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/bottom-banner.png",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_custom_NA7QHx",
+            "text_custom_mKMaYY",
+            "liquid_a8pgca",
+            "button_custom_dPaBc3"
+          ]
+        }
+      },
+      "block_order": [
+        "item_masonry_mAUbqd",
+        "item_masonry_XXDnhA"
+      ],
+      "custom_css": [
+        "img {object-fit: fill;}"
+      ],
+      "name": "t:sections.banner.name_masonry",
+      "settings": {
+        "row_height": 340,
+        "row_height_mb": 150,
+        "space_items": "30px",
+        "space_items_tb": "20px",
+        "space_items_mb": "15px",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,80px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_aGXxdT": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_grid_yBRPya": {
+          "type": "_product-grid",
+          "settings": {
+            "collection": "medical",
+            "products_count": 10,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "1",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "5",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "enable_progressbar": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium",
+            "rounded": "",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": true,
+            "alignment": "left",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_9kWrBa": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Best selling items",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 26,
+                "font_size_heading": 26,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_WxhmtM": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "See all products",
+                "link": "shopify:\/\/collections\/medical",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-link",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "xs",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_9kWrBa",
+            "button_WxhmtM"
+          ]
+        }
+      },
+      "block_order": [
+        "product_grid_yBRPya"
+      ],
+      "custom_css": [
+        "@media (width < 1350px) {.hdt-heading-block {text-align: center; } .hdt-button-block {justify-self: center; width: 110px; }}",
+        ".hdt-mini-cart__title:hover {color: rgb(var(--hdt-btn-bg));}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-db682a96-4317-4e25-990e-1cb012b955db",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,80px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "logo_list_NNyq4Q": {
+      "type": "logo-list",
+      "blocks": {
+        "logo_item_W8UXLK": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo2.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_yCkUaj": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo7.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_iex4Nb": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo3.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_MQfxGE": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo1.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_8CKMpC": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo9.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_pB9hFQ": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo6.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_TtXtfh": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-pharmacy8.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_m7jABE": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo4.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_bTTyNN": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo5.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_wrECCV": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo8.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_FKnqdt": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo-2_add2a257-8b22-4df9-bd41-af66682032f4.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "logo_item_7Vw8VR": {
+          "type": "_logo-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/brand-logo-healthcare_10.png",
+            "url": "",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": false,
+            "hdt_max_width_image": 250
+          },
+          "blocks": {}
+        },
+        "section-heading-logo-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_NtHJwJ": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Shop by brands",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 26,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_NtHJwJ"
+          ]
+        }
+      },
+      "block_order": [
+        "logo_item_W8UXLK",
+        "logo_item_yCkUaj",
+        "logo_item_iex4Nb",
+        "logo_item_MQfxGE",
+        "logo_item_8CKMpC",
+        "logo_item_pB9hFQ",
+        "logo_item_TtXtfh",
+        "logo_item_m7jABE",
+        "logo_item_bTTyNN",
+        "logo_item_wrECCV",
+        "logo_item_FKnqdt",
+        "logo_item_7Vw8VR"
+      ],
+      "custom_css": [
+        "@media (width < 1350px) {.hdt-heading-block {text-align: center; }}"
+      ],
+      "name": "t:sections.logo_list.name",
+      "settings": {
+        "image_ratio": "adapt_image",
+        "col_dk": "6",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "layout_mode": "grid",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "navUICenter": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": false,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-e37759c2-b328-4173-9778-072abf814424",
+        "background_opacity": 1,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "80px,,80px,",
+        "pd_mb": ""
+      }
+    },
+    "blog_post_fGK7dC": {
+      "type": "blog-post",
+      "blocks": {
+        "article_carousel_7y7pgJ": {
+          "type": "_article-carousel",
+          "settings": {
+            "blog": "medical",
+            "limit": 8,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "1",
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": false,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "pag_hide_mobile": false
+          },
+          "blocks": {
+            "article-carousel": {
+              "type": "_article-card",
+              "static": true,
+              "settings": {
+                "article_des": "1",
+                "show_cate": true,
+                "show_content": true,
+                "show_tags": false,
+                "show_author": false,
+                "show_comment": false,
+                "show_readmore": false,
+                "show_date": true,
+                "date": "%b %d",
+                "content_align": "start",
+                "image_ratio": "-landscape",
+                "image_size": true,
+                "img_effect": "none",
+                "b_effect": "none"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        },
+        "feature-blog-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": true,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_QkWBE7": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "From our Blog",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 26,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_TY7dDB": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "See all posts",
+                "link": "shopify:\/\/blogs\/medical",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-link",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "xs",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_QkWBE7",
+            "button_TY7dDB"
+          ]
+        }
+      },
+      "block_order": [
+        "article_carousel_7y7pgJ"
+      ],
+      "custom_css": [
+        "@media (width < 1350px) {.hdt-heading-block {text-align: center; } .hdt-button-block {justify-self: center; width: 110px; }}",
+        ".hdt-article-content {color: rgb(var(--color-foreground));}"
+      ],
+      "name": "t:sections.feature-blog.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,65px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "shipping_UNVL6y": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_Y3ymfA": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "map-maker",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_4MeWYA": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Store location<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_b4hxjB": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_LLkyBD": {
+              "type": "text",
+              "settings": {
+                "text": "<p>219 Amara Fort Apt. 394<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 13,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_4MeWYA",
+            "spacer_b4hxjB",
+            "text_LLkyBD"
+          ]
+        },
+        "shipping_Pi9aef": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "portfolio",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_fGfpc7": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Work inquiries<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_dp36TD": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_wyFVEA": {
+              "type": "text",
+              "settings": {
+                "text": "<p>hello@kalles.com<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 13,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_fGfpc7",
+            "spacer_dp36TD",
+            "text_wyFVEA"
+          ]
+        },
+        "shipping_Wbwfbp": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "headphones",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_k9zMmx": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Call us<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_pE64Uf": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_AE7YgW": {
+              "type": "text",
+              "settings": {
+                "text": "<p>800 388 80 90<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 13,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_k9zMmx",
+            "spacer_pE64Uf",
+            "text_AE7YgW"
+          ]
+        },
+        "shipping_ggtTGD": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "map",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_k3kkYM": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Open hours<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_8Pdq6J": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_X7JbYP": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Mon-Sat : 08.00 - 18.00<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 13,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_k3kkYM",
+            "spacer_8Pdq6J",
+            "text_X7JbYP"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_Y3ymfA",
+        "shipping_Pi9aef",
+        "shipping_Wbwfbp",
+        "shipping_ggtTGD"
+      ],
+      "custom_css": [
+        ".hdt-icon {height: var(--icon-width, auto);}"
+      ],
+      "name": "t:sections.shipping.name",
+      "settings": {
+        "content_align": "center",
+        "align_center": true,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "medium",
+        "icon_color": "hdt-icon-secondary",
+        "col_dk": "4",
+        "col_tb": "2",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c9476b69-abc7-454f-a946-2d5a9f5f3a37",
+        "background_opacity": 1,
+        "section_layout": "wrapper_container",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "40px,,40px,",
+        "pd_mb": "20px,,20px,"
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "banners_VBAyFx",
+    "collections_list_aqecLw",
+    "custom_section_TTCTNR",
+    "banner_masonry_f4eWda",
+    "featured_collection_aGXxdT",
+    "logo_list_NNyq4Q",
+    "blog_post_fGK7dC",
+    "shipping_UNVL6y"
+  ]
+}

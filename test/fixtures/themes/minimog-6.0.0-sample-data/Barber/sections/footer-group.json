@@ -1,0 +1,136 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84": {
+          "type": "menu",
+          "settings": {
+            "title": "COMPANY",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "c85629c7-7aae-4666-b5f0-150990439c91": {
+          "type": "menu",
+          "settings": {
+            "title": "INFORMATION",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "965431d4-b01d-46dd-8006-b4633bfbc521": {
+          "type": "menu",
+          "settings": {
+            "title": "CONTACT",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "989e30e2-16f4-4ba5-a729-fd7fba08dd37": {
+          "type": "menu",
+          "settings": {
+            "title": "COLLECTION",
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        },
+        "6a405be2-4446-4cbe-9ccb-94f9e2d7760c": {
+          "type": "our_store",
+          "settings": {
+            "title": "FOLLOW CEREMONY",
+            "description": "",
+            "show_email": false,
+            "show_phone": false,
+            "show_socials_link": true,
+            "width": "33%",
+            "order_first": false,
+            "open_default": false
+          }
+        }
+      },
+      "block_order": [
+        "7527ffa4-1a31-4e5c-b642-96aa834daf84",
+        "c85629c7-7aae-4666-b5f0-150990439c91",
+        "965431d4-b01d-46dd-8006-b4633bfbc521",
+        "989e30e2-16f4-4ba5-a729-fd7fba08dd37",
+        "6a405be2-4446-4cbe-9ccb-94f9e2d7760c"
+      ],
+      "settings": {
+        "color_scheme": "scheme-648b175e-fac2-4399-8630-e9ff5f2fc274",
+        "design": "footer-1",
+        "container": "container-fluid",
+        "bordered": false,
+        "copyright": "© MINIMOG 2024",
+        "show_country_selector": false,
+        "show_currency_selector": false,
+        "show_language_selector": false,
+        "show_social_links": false,
+        "enable_follow_on_shop": true,
+        "show_payment_icons": true,
+        "payment_icons_width": 300,
+        "footer_bottom_color_scheme": "scheme-648b175e-fac2-4399-8630-e9ff5f2fc274"
+      }
+    },
+    "mobile-sticky-bar": {
+      "type": "mobile-sticky-bar",
+      "settings": {
+        "show_mobile_sticky": true,
+        "show_home_icon": true,
+        "show_collection_icon": true,
+        "show_cart_icon": true,
+        "show_search_icon": true,
+        "show_account_icon": false,
+        "show_wishlist_icon": false
+      }
+    },
+    "age-verifier-popup": {
+      "type": "age-verifier-popup",
+      "blocks": {
+        "block-1": {
+          "type": "heading",
+          "settings": {
+            "heading": "Confirm your age"
+          }
+        },
+        "block-2": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Are you 18 years old or older?<\/p>"
+          }
+        },
+        "block-3": {
+          "type": "buttons",
+          "settings": {
+            "decline_button": "No, I'm not",
+            "approve_button": "Yes, I am"
+          }
+        }
+      },
+      "block_order": [
+        "block-1",
+        "block-2",
+        "block-3"
+      ],
+      "settings": {
+        "design_mode": false,
+        "enable": false,
+        "bg_blur": true,
+        "decline_heading": "Come back when you're older",
+        "decline_content": "<p>Sorry, the content of this store can't be seen by a younger audience. Come back when you're older.<\/p>",
+        "return_button": "Oops, I entered incorrectly"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "mobile-sticky-bar",
+    "age-verifier-popup"
+  ]
+}

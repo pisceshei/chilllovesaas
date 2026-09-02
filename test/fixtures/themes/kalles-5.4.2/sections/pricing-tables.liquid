@@ -1,0 +1,817 @@
+<!-- sections/icon-box.liquid -->
+{{ 'hdt-pricing-tables.css' | asset_url | stylesheet_tag }}
+{%- assign array_package_des = '1,2,3' | split: ',' -%} 
+{%-  assign array_package_des2 = '4,5' | split: ',' -%} 
+{% style %}
+  {% render 'spacing-vars', box: section %}
+{% endstyle %}
+
+{%- liquid
+  #Section layout
+  assign sizes  = '(min-width: 1150px) ' | append: settings.page_width | append: 'px,(min-width: 750px) calc(100vw - 60px), calc(100vw - 30px)'
+
+  case section.settings.section_layout 
+    when 'container'
+      assign parent = 'hdt-container'
+      assign child  = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+    when 'wrapper_container'
+      assign parent = 'hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = 'hdt-container'
+    when 'full_width'
+      assign parent = 'hdt-container-full hdt-section-spacing hdt-s-gradient hdt-relative' | append: ' hdt-section-spacing-' | append: section.id
+      assign child  = ''
+      assign sizes  = '100vw'
+  endcase
+-%}
+<div id="section-{{ section.id }}" class="{{ parent }} {% if section.settings.hdt_background_parallax %} hdt-animate--parallax-bg {% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %}>
+  <div class="{{ child }}">
+    {%- if section.settings.section_background != blank -%}
+      {% liquid
+        assign image = section.settings.section_background
+      %}
+      {{ image | image_url: width: image.width | image_tag: width: image.width, height: image.height, sizes: sizes, widths: '200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000', loading: 'lazy', class: 'hdt-section-background hdt-absolute hdt-top-0 hdt-left-0 hdt-w-full hdt-h-full hdt-pe-none hdt-object-cover hdt-object-center' }}
+    {%- endif -%}
+    <div class="hdt-row-flex lg:hdt-flex-cols-{{ section.settings.col_dk }} md:hdt-flex-cols-{{ section.settings.col_tb }} hdt-flex-cols-{{ section.settings.col_mb }} hdt-text-{{ section.settings.content_align }}">
+      {%- for block in section.blocks -%}
+        <div class="hdt-col hdt-price-tables-item hdt-price-tables-style{{ section.settings.package_des }} hdt-item-highlights-{{ block.settings.highlights_item }}" color-scheme="{{ block.settings.color_scheme }}">
+          <div class="hdt-price-tables-inner">
+            {%- if array_package_des contains section.settings.package_des -%}
+              {%- if block.settings.title != blank -%}
+                <h3 class="hdt-price-tables-title hdt-text-2xl hdt-font-semibold hdt-relative">{{ block.settings.title }}</h3>
+              {%- endif -%}
+            {%- endif -%}
+            <div class="hdt-price-tables-wrap">
+              <div class="hdt-price-tables-head hdt-relative hdt-oh">
+                {%- if  array_package_des2 contains section.settings.package_des -%}
+                  {%- if block.settings.title != blank -%}
+                    <h3 class="hdt-price-tables-title hdt-text-2xl hdt-font-semibold hdt-relative">
+                      {{ block.settings.title }}
+                      {%- if block.settings.package_label != blank -%}<span class="hdt-package-label hdt-absolute"><span> {{ block.settings.package_label }}</span></span>{%- endif -%}
+                    </h3>
+                  {%- endif -%}
+                {%- else -%}
+                  <span class="hdt-package-label hdt-absolute"><span> {{ block.settings.package_label }}</span></span>
+                {%- endif -%}
+                {%- if block.settings.price != blank -%}
+                  <div class="hdt-price-tables-price hdt-font-semibold">{{ block.settings.price | money }}</div>
+                {%- endif -%}
+                {%- if block.settings.des != blank -%}
+                  <p class="hdt-price-tables-des hdt-text-lg">{{ block.settings.des }}</p>
+                {%- endif -%}
+              </div>
+              {%- assign array_txt = block.settings.txt | newline_to_br | split: '<br />' -%}
+              {%- if array_txt != blank -%}
+                {%- assign item_size = array_txt.size | minus: 1 -%}
+                <ul class="hdt-price-tables-content">
+                  {%- for i in (0..item_size) -%}
+                    {%- if array_txt[i] contains '??' -%}
+                      <li class="hdt-price-tables-item{% if array_txt[i] contains '--' %} hdt-blur-text{% endif %}">
+                        {%- assign array_txt2 = array_txt[i] | split: '??' -%}
+                        <hdt-tooltip placement="top" data-txt-tt="{{ array_txt2[1] }}">
+                          <label class="hdt-price-tables-item{% if array_txt[i] contains '--' %} hdt-blur-text{% endif %}">
+                            {{ array_txt2[0] | remove: '--' }} 
+                            <svg version="1.0" width="16px" height="16px" class="hdt-inline-block" xmlns="http://www.w3.org/2000/svg" width="300.000000pt" height="300.000000pt" viewBox="0 0 300.000000 300.000000" preserveAspectRatio="xMidYMid meet"><g transform="translate(0.000000,300.000000) scale(0.050000,-0.050000)" fill="#000000" stroke="none"><path d="M2760 5991 c-16 -4 -111 -18 -210 -32 -1577 -211 -2746 -1766 -2520
+                              -3353 92 -646 482 -1476 651 -1385 55 29 48 95 -22 199 -1264 1875 75 4387
+                              2341 4390 2362 2 3679 -2721 2209 -4570 -894 -1125 -2538 -1394 -3739 -612
+                              -184 120 -143 130 -714 -179 -667 -362 -669 -361 -386 162 200 371 208 396
+                              135 444 -63 42 -91 4 -317 -415 -226 -421 -233 -484 -70 -594 103 -70 148 -59
+                              472 116 165 90 390 211 501 270 l200 107 90 -61 c1068 -723 2617 -603 3606
+                              281 1846 1649 1031 4671 -1397 5180 -183 39 -742 73 -830 52z"/><path d="M2765 5200 c-562 -119 -998 -602 -1039 -1151 -24 -311 91 -474 336
+                              -474 202 0 320 126 355 381 88 638 863 775 1154 204 149 -293 -5 -645 -358
+                              -818 -398 -196 -539 -445 -541 -956 -2 -316 14 -364 114 -339 l50 13 8 315
+                              c11 476 105 639 475 825 511 256 639 840 271 1237 -460 497 -1281 222 -1344
+                              -451 -30 -322 -362 -345 -352 -25 24 843 972 1362 1696 929 778 -466 734
+                              -1597 -76 -1989 -278 -135 -314 -195 -314 -523 0 -295 -21 -333 -215 -388 -68
+                              -19 -64 -125 6 -142 226 -57 369 117 369 452 0 312 11 333 243 452 896 462
+                              968 1701 131 2255 -259 171 -679 255 -969 193z"/><path d="M2910 1450 c-385 -136 -265 -699 141 -666 378 32 425 575 59 674 -99
+                              27 -102 27 -200 -8z m232 -208 c65 -66 72 -117 29 -201 -61 -117 -242 -115
+                              -303 3 -92 179 131 340 274 198z"/></g></svg>
+                        
+                          </label>
+                        </hdt-tooltip>
+                      </li>
+                    {%- else -%}
+                      <li class="hdt-price-tables-item{% if array_txt[i] contains '--' %} hdt-blur-text{% endif %}">
+                        {{ array_txt[i] | remove: '--' }} 
+                      </li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+              <div class="hdt-price-tables-footer">
+                <a {% if block.settings.link == blank %}role="link" aria-disabled="true"{% else %}href="{{ block.settings.link }}"{% endif %} class="hdt-button-block hdt-btn hdt-btn--size-{{ block.settings.size }} {{ block.settings.btn_style }}{% if block.settings.full_width %} hdt-btn-full-width{% endif %}{% if block.settings.icon != "none" %} hdt-btn--with-icon  hdt-btn--pos-icon-{{ block.settings.icon_position }}{% endif %}"{% if block.settings.icon != "none" %} style="--gap-btn-icon: {{ block.settings.icon_spacing }}px; --height-btn-icon: {{ block.settings.icon_height }}px"{% endif %} {% if block.settings.open_in_new_tab %} target="_blank" rel="noopener noreferrer"{% endif -%} {{ block.shopify_attributes }}>
+                  {%- liquid
+                  if block.settings.icon != 'none'
+                    render 'icons', icon: block.settings.icon
+                  endif
+                  echo block.settings.label
+                  -%}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+{%- schema -%}
+{
+  "name": "t:sections.price-tables.name",
+  "tag": "section",
+  "disabled_on": {
+    "groups": [
+      "*"
+    ]
+  },
+  "class": "hdt-section hdt-section-all hdt_tp_cdt hdt-price-tables",
+  "settings": [
+    {
+      "type": "select",
+      "id": "package_des",
+      "label": "t:sections.price-tables.settings.package_des.label",
+      "default": "1",
+      "options": [
+        {
+          "label": "t:sections.price-tables.settings.package_des.options_1.label",
+          "value": "1"
+        },
+        {
+          "label": "t:sections.price-tables.settings.package_des.options_2.label",
+          "value": "2"
+        },
+        {
+          "label": "t:sections.price-tables.settings.package_des.options_3.label",
+          "value": "3"
+        },
+        {
+          "label": "t:sections.price-tables.settings.package_des.options_4.label",
+          "value": "4"
+        },
+        {
+          "label": "t:sections.price-tables.settings.package_des.options_5.label",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "content_align",
+      "label": "t:sections.price-tables.settings.content_align.label",
+      "default": "center",
+      "options": [
+        {
+          "label": "t:sections.price-tables.settings.content_align.options_1.label",
+          "value": "start"
+        },
+        {
+          "label": "t:sections.price-tables.settings.content_align.options_2.label",
+          "value": "center"
+        },
+        {
+          "label": "t:sections.price-tables.settings.content_align.options_3.label",
+          "value": "end"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "1",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0
+    },
+    {
+      "type": "select",
+      "id": "section_layout",
+      "label": "t:sections.all.section_layout.width.label",
+      "options": [
+        {
+          "value": "container",
+          "label": "t:sections.all.section_layout.width.container"
+        },
+        {
+          "value": "wrapper_container",
+          "label": "t:sections.all.section_layout.width.wrapper_container"
+        },
+        {
+          "value": "full_width",
+          "label": "t:sections.all.section_layout.width.full_width"
+        }
+      ],
+      "default": "container"
+    },
+    {
+      "type": "image_picker",
+      "id": "section_background",
+      "label": "t:sections.all.background.image"
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_background_parallax",
+      "label": "Using parallax for background",
+      "visible_if": "{{ section.settings.section_background != blank }}",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "package",
+      "name": "t:sections.price-tables.blocks.package.name",
+      "settings": [
+        {
+          "type": "color_scheme",
+          "id": "color_scheme",
+          "label": "t:sections.all.colors.label"
+        },
+        {
+          "type": "checkbox",
+          "id": "highlights_item",
+          "label": "t:sections.price-tables.blocks.package.settings.highlights_item.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.price-tables.blocks.package.settings.title.label",
+          "default": "Gold"
+        },
+        {
+          "type": "text",
+          "id": "package_label",
+          "label": "t:sections.price-tables.blocks.package.settings.package_label.label",
+          "default": "Hot"
+        },
+        {
+          "type": "number",
+          "id": "price",
+          "label": "t:sections.price-tables.blocks.package.settings.price.label",
+          "default": 99
+        },
+        {
+          "type": "textarea",
+          "id": "des",
+          "label": "t:sections.price-tables.blocks.package.settings.des.label",
+          "default": "Enter description here..."
+        },
+        {
+          "type": "textarea",
+          "id": "txt",
+          "label": "t:sections.price-tables.blocks.package.settings.txt.label",
+          "info": "t:sections.price-tables.blocks.package.settings.txt.info",
+          "default": "Enter text here...\n Enter text here..??[Tooltip here]\nStrikethrough text--"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "t:blocks.button.settings.label",
+          "default": "Button label"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:blocks.button.settings.link"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_in_new_tab",
+          "label": "t:blocks.button.settings.open_in_new_tab",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "full_width",
+          "label": "t:blocks.button.settings.full_width",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "btn_style",
+          "label": "t:blocks.button.settings.button_style.label",
+          "default": "",
+          "options": [
+            {
+              "value": "",
+              "label": "t:blocks.button.settings.button_style.options.default"
+            },
+            {
+              "value": "hdt-btn-outline",
+              "label": "t:blocks.button.settings.button_style.options.outline"
+            },
+            {
+              "value": "hdt-btn-link",
+              "label": "t:blocks.button.settings.button_style.options.link"
+            },
+            {
+              "value": "hdt-btn-secondary",
+              "label": "t:blocks.button.settings.button_style.options.secondary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.tertiary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-accent",
+              "label": "t:blocks.button.settings.button_style.options.accent",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-secondary",
+              "label": "t:blocks.button.settings.button_style.options.hover_secondary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.hover_tertiary",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-hover-accent",
+              "label": "t:blocks.button.settings.button_style.options.hover_accent",
+              "group": "t:blocks.button.settings.button_style.solid"
+            },
+            {
+              "value": "hdt-btn-outline-secondary",
+              "label": "t:blocks.button.settings.button_style.options.outline_secondary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.outline_tertiary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-accent",
+              "label": "t:blocks.button.settings.button_style.options.outline_accent",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-secondary",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_secondary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-tertiary",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_tertiary",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-outline-hover-accent",
+              "label": "t:blocks.button.settings.button_style.options.outline_hover_accent",
+              "group": "t:blocks.button.settings.button_style.outline"
+            },
+            {
+              "value": "hdt-btn-link-secondary",
+              "label": "t:blocks.button.settings.button_style.options.link_secondary",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-accent",
+              "label": "t:blocks.button.settings.button_style.options.link_accent",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-secondary-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_secondary_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+            {
+              "value": "hdt-btn-link-accent-hover",
+              "label": "t:blocks.button.settings.button_style.options.link_accent_hover",
+              "group": "t:blocks.button.settings.button_style.link"
+            },
+          ]
+        },
+        {
+          "type": "select",
+          "id": "size",
+          "label": "t:blocks.button.settings.button_size.label",
+          "options": [
+            {
+              "value": "xs",
+              "label": "t:blocks.button.settings.button_size.options.xs"
+            },
+            {
+              "value": "s",
+              "label": "t:blocks.button.settings.button_size.options.s"
+            },
+            {
+              "value": "m",
+              "label": "t:blocks.button.settings.button_size.options.m"
+            },
+            {
+              "value": "l",
+              "label": "t:blocks.button.settings.button_size.options.l"
+            },
+            {
+              "value": "xl",
+              "label": "t:blocks.button.settings.button_size.options.xl"
+            },
+            {
+              "value": "custom hdt-btn--size-custom-1",
+              "label": "t:blocks.button.settings.button_size.options.custom_1"
+            },
+            {
+              "value": "custom custom-inline",
+              "label": "t:blocks.button.settings.button_size.options.custom_inline"
+            }
+          ],
+          "default": "m"
+        },
+        {
+          "type": "header",
+          "content": "t:blocks.icon.name"
+        },
+        {
+          "type": "select",
+          "id": "icon",
+          "label": "t:blocks.icon.name",
+          "options": [
+            {
+              "value": "none",
+              "label": "t:blocks.icon.options.none"
+            },
+            {
+              "value": "arrow_right",
+              "label": "t:blocks.icon.options.arrow_right"
+            },
+            {
+              "value": "arrow_simple",
+              "label": "t:blocks.icon.options.arrow_simple"
+            },
+            {
+              "value": "arrow_bottom",
+              "label": "t:blocks.icon.options.arrow_bottom"
+            },
+            {
+              "value": "arrow_stretch",
+              "label": "t:blocks.icon.options.arrow_stretch"
+            },
+            {
+              "value": "car",
+              "label": "t:blocks.icon.options.car"
+            },
+            {
+              "value": "truck",
+              "label": "t:blocks.icon.options.truck"
+            },
+            {
+              "value": "diamond",
+              "label": "t:blocks.icon.options.diamond"
+            },
+            {
+              "value": "door-lock",
+              "label": "t:blocks.icon.options.door_lock"
+            },
+            {
+              "value": "gym",
+              "label": "t:blocks.icon.options.gym"
+            },
+            {
+              "value": "hammer",
+              "label": "t:blocks.icon.options.hammer"
+            },
+            {
+              "value": "headphones",
+              "label": "t:blocks.icon.options.headphones"
+            },
+            {
+              "value": "helm",
+              "label": "t:blocks.icon.options.helm"
+            },
+            {
+              "value": "hourglass",
+              "label": "t:blocks.icon.options.hourglass"
+            },
+            {
+              "value": "map",
+              "label": "t:blocks.icon.options.map"
+            },
+            {
+              "value": "piggy",
+              "label": "t:blocks.icon.options.piggy"
+            },
+            {
+              "value": "refesh",
+              "label": "t:blocks.icon.options.refesh"
+            },
+            {
+              "value": "rocket",
+              "label": "t:blocks.icon.options.rocket"
+            },
+            {
+              "value": "shield",
+              "label": "t:blocks.icon.options.shield"
+            },
+            {
+              "value": "shield2",
+              "label": "t:blocks.icon.options.shield_2"
+            },
+            {
+              "value": "smile",
+              "label": "t:blocks.icon.options.smile"
+            },
+            {
+              "value": "scissors",
+              "label": "t:blocks.icon.options.scissors"
+            },
+            {
+              "value": "shuffle",
+              "label": "t:blocks.icon.options.shuffle"
+            },
+            {
+              "value": "cloud_upload",
+              "label": "t:blocks.icon.options.cloud_upload"
+            },
+            {
+              "value": "cash",
+              "label": "t:blocks.icon.options.cash"
+            },
+            {
+              "value": "way",
+              "label": "t:blocks.icon.options.way"
+            },
+            {
+              "value": "wristwatch",
+              "label": "t:blocks.icon.options.wristwatch"
+            },
+            {
+              "value": "world",
+              "label": "t:blocks.icon.options.world"
+            },
+            {
+              "value": "wallet",
+              "label": "t:blocks.icon.options.wallet"
+            },
+            {
+              "value": "unlock",
+              "label": "t:blocks.icon.options.unlock"
+            },
+            {
+              "value": "umbrella",
+              "label": "t:blocks.icon.options.umbrella"
+            },
+            {
+              "value": "repeat",
+              "label": "t:blocks.icon.options.repeat"
+            },
+            {
+              "value": "refesh-2",
+              "label": "t:blocks.icon.options.refesh_2"
+            },
+            {
+              "value": "medal",
+              "label": "t:blocks.icon.options.medal"
+            },
+            {
+              "value": "portfolio",
+              "label": "t:blocks.icon.options.portfolio"
+            },
+            {
+              "value": "like",
+              "label": "t:blocks.icon.options.like"
+            },
+            {
+              "value": "plance",
+              "label": "t:blocks.icon.options.plance"
+            },
+            {
+              "value": "map-maker",
+              "label": "t:blocks.icon.options.map_maker"
+            },
+            {
+              "value": "help",
+              "label": "t:blocks.icon.options.help"
+            },
+            {
+              "value": "gift",
+              "label": "t:blocks.icon.options.gift"
+            },
+            {
+              "value": "cart",
+              "label": "t:blocks.icon.options.cart"
+            },
+            {
+              "value": "box",
+              "label": "t:blocks.icon.options.box"
+            },
+            {
+              "value": "back",
+              "label": "t:blocks.icon.options.back"
+            },
+            {
+              "value": "back2",
+              "label": "t:blocks.icon.options.back2"
+            }
+          ],
+          "default": "truck"
+        },
+        {
+          "type": "select",
+          "id": "icon_position",
+          "label": "t:blocks.icon.icon_position.label",
+          "options": [
+            {
+              "value": "before",
+              "label": "t:blocks.icon.icon_position.before"
+            },
+            {
+              "value": "after",
+              "label": "t:blocks.icon.icon_position.after"
+            }
+          ],
+          "default": "after",
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        },
+        {
+          "type": "range",
+          "id": "icon_height",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "unit": "px",
+          "label": "t:blocks.icon.icon_size.label",
+          "default": 14,
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        },
+        {
+          "type": "range",
+          "id": "icon_spacing",
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "unit": "px",
+          "label": "t:blocks.icon.settings.icon_spacing.label",
+          "default": 5,
+          "visible_if": "{{ block.settings.icon != 'none' }}"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.price-tables.name",
+      "category": "t:sections_categories.05_section.name",
+      "blocks": [
+        {
+          "type": "package",
+          "settings": {
+            "title": "SILVER",
+            "price": 99,
+            "des": "Enter description here",
+            "txt": "Enter text here... \nEnter text here..??[Tooltip here]\nStrikethrough text--"
+          }
+        },
+        {
+          "type": "package",
+          "settings": {
+            "title": "GOLD",
+            "price": 199,
+            "highlights_item": true,
+            "des": "Enter description here",
+            "txt": "Enter text here... \nEnter text here..??[Tooltip here]\nStrikethrough text--"
+          }
+        },
+        {
+          "type": "package",
+          "settings": {
+            "title": "PLATINIUM",
+            "price": 299,
+            "des": "Enter description here",
+            "txt": "Enter text here... \nEnter text here..??[Tooltip here]\nStrikethrough text--"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

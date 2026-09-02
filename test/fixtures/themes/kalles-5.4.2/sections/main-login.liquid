@@ -1,0 +1,159 @@
+
+<!-- sections/main-login.liquid -->
+
+{%- style -%}
+{% render 'spacing-vars', box: section %}
+{%- endstyle -%}
+{{ 'hdt-customer.css' | asset_url | stylesheet_tag }}
+<div timeline hdt-reveal="slide-in" class="hdt-main-login hdt-section-spacing hdt-s-gradient hdt-section-spacing-{{ section.id }}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};" {%- endif %}>
+  <div class="hdt-container hdt-customer">
+    <div timeline hdt-reveal="slide-in" class="hdt-login-form">
+      <div id="recover">
+        <h3 class="hdt-recover-form__heading hdt-text-2xl hdt-font-semibold">{{ 'customer.recover_password.title' | t }}</h3>
+        <p>{{ 'customer.recover_password.subtext' | t }}</p>
+        {%- form 'recover_customer_password' -%}
+          {%- assign recover_success = form.posted_successfully? -%}
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="email" name="email" id="RecoverEmail-{{ section.id }}" autocomplete="email" autocorrect="off" autocapitalize="off" {% if form.errors contains 'form' %} aria-invalid="true" aria-describedby="RecoverEmail-email-error" autofocus {% endif %} placeholder="{{ 'customer.login_page.email' | t }}">
+            <label for="RecoverEmail-{{ section.id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.email' | t }}<span class="hdt-required hdt-s-text">*</span></label>
+          </div>
+          {%- if form.errors -%}
+            <div id="RecoverEmail-email-error" class="hdt-form__message hdt-flex hdt-align-center">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13" style="color:rgb(var(--color-error-text));position: relative;top: -0.2rem;">
+                <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
+                <circle cx="6.5" cy="6.5" r="5.5" fill="currentColor" stroke="currentColor" stroke-width="0.7"/>
+                <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
+                <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+              </svg>
+              {{ form.errors.messages.form }}
+            </div>
+          {%- endif -%}
+          <div class="hdt-field">
+            <button class="hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-btn-accent hdt-oh hdt-btn-solid hdt-font-semibold hdt-btn-full-width"><span class="hdt-truncate">{{ 'customer.recover_password.submit' | t }}</span></button>
+          </div>
+          <a href="#login" class="hdt-inline-block hdt-link-cancel hdt-link-underline">{{ 'customer.login_page.cancel' | t }}</a>
+        {%- endform -%}
+      </div>
+      <div id="login">
+        {%- if recover_success == true -%}
+          <h3 class="hdt-form__message hdt-flex hdt-align-center">
+            <svg aria-hidden="true" class="hdt-inline-block" focusable="false" viewBox="0 0 13 13" style="color:rgb(var(--color-success-text));">
+              <path d="M6.5 12.35C9.73087 12.35 12.35 9.73086 12.35 6.5C12.35 3.26913 9.73087 0.65 6.5 0.65C3.26913 0.65 0.65 3.26913 0.65 6.5C0.65 9.73086 3.26913 12.35 6.5 12.35Z" fill="currentColor" stroke="white" stroke-width="0.7"/>
+              <path d="M5.53271 8.66357L9.25213 4.68197" stroke="white"/>
+              <path d="M4.10645 6.7688L6.13766 8.62553" stroke="white">
+            </svg>{{ 'customer.recover_password.success' | t }}
+          </h3>
+          <p style="margin-top:1rem;margin-bottom:3rem">{{ 'customer.recover_password.content_success' | t }}</p>
+        {%- endif -%}
+        {%- form 'customer_login', novalidate: 'novalidate' -%}
+          {%- if form.errors -%}
+            <div class="hdt-form__message hdt-form-message--error">
+              <h2 class="hdt-form__message-title hdt-text-lg hdt-font-normal hdt-flex hdt-align-center">
+                <span class="sr-only">{{ 'accessibility.error' | t }} </span>
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 13 13" style="color:rgb(var(--color-error-text));">
+                  <circle cx="6.5" cy="6.50049" r="5.5" stroke="white" stroke-width="2"/>
+                  <circle cx="6.5" cy="6.5" r="5.5" fill="currentColor" stroke="currentColor" stroke-width="0.7"/>
+                  <path d="M5.87413 3.52832L5.97439 7.57216H7.02713L7.12739 3.52832H5.87413ZM6.50076 9.66091C6.88091 9.66091 7.18169 9.37267 7.18169 9.00504C7.18169 8.63742 6.88091 8.34917 6.50076 8.34917C6.12061 8.34917 5.81982 8.63742 5.81982 9.00504C5.81982 9.37267 6.12061 9.66091 6.50076 9.66091Z" fill="white"/>
+                  <path d="M5.87413 3.17832H5.51535L5.52424 3.537L5.6245 7.58083L5.63296 7.92216H5.97439H7.02713H7.36856L7.37702 7.58083L7.47728 3.537L7.48617 3.17832H7.12739H5.87413ZM6.50076 10.0109C7.06121 10.0109 7.5317 9.57872 7.5317 9.00504C7.5317 8.43137 7.06121 7.99918 6.50076 7.99918C5.94031 7.99918 5.46982 8.43137 5.46982 9.00504C5.46982 9.57872 5.94031 10.0109 6.50076 10.0109Z" fill="white" stroke="#EB001B" stroke-width="0.7">
+                </svg>
+                {{ 'templates.contact.form.error_heading' | t }}
+              </h2>
+              <ul class="hdt-form-message--list">
+                {%- for field in form.errors -%}
+                  <li>
+                    {%- if field == 'form' -%}
+                      {{ form.errors.messages[field] }}
+                    {%- else -%}
+                      <a href="#{{ field }}">
+                        {{ form.errors.translated_fields[field] | capitalize }}
+                        {{ form.errors.messages[field] }}
+                      </a>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+          <div class="hdt-field hdt-relative">
+            <input class="hdt-input" type="email" name="customer[email]" id="CustomerEmail-{{ section.id }}" autocomplete="email" autocorrect="off" autocapitalize="off" {% if form.errors contains 'form' %} aria-invalid="true" {% endif %} placeholder="{{ 'customer.login_page.email' | t }}">
+            <label for="CustomerEmail-{{ section.id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.email' | t }}<span class="hdt-required hdt-s-text">*</span></label>
+          </div>
+          {%- if form.password_needed -%}
+            <div class="hdt-field hdt-relative">
+              <input class="hdt-input" type="password" value="" name="customer[password]" id="CustomerPassword-{{ section.id }}" autocomplete="current-password" placeholder="{{ 'customer.login_page.password' | t }}">
+              <label for="CustomerPassword-{{ section.id }}" class="hdt-absolute hdt-top-0 hdt-pe-none hdt-flex hdt-align-center">{{ 'customer.login_page.password' | t }}<span class="hdt-required hdt-s-text">*</span></label>
+            </div>
+          {%- endif -%}
+          <a href="#recover" class="hdt-inline-block hdt-link-recover hdt-link-underline hdt-s-text2">{{ 'customer.login_page.forgot_password' | t }}</a>
+          <div class="hdt-field">
+            <button class="hdt-login-form__submit hdt-btn hdt-btn-accent hdt-oh hdt-btn-full-width"><span class="hdt-truncate">{{ 'customer.login_page.sign_in' | t }}</span></button>
+            <a href="{{ routes.account_register_url }}" class="hdt-inline-block hdt-link-register hdt-link-underline hdt-s-text2">{{ 'customer.login_page.create_account' | t }}</a>
+          </div>
+        {%- endform -%}
+      </div>
+    </div>
+  </div>
+</div>
+{% schema %}
+{
+  "name": "t:sections.main-login.name",
+  "class": "hdt-section hdt-login-section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0,
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ]
+}
+{% endschema %}

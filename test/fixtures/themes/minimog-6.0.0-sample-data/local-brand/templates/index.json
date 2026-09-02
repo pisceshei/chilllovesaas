@@ -1,0 +1,567 @@
+{
+  "sections": {
+    "c72959ad-9620-4e94-ae33-1bde908e9701": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-richtext__subtitle {\n  font-weight: 500;\n}\n.sf-home__collection-list .m-collection-card__link {\n  font-size: 18px;\n  font-weight: 500;\n}\n\n.sf-home__collection-list .m-collection-card__info sup {\n  font-weight: 500;\n}\n\n.sf-home__collection-list {\n  --mobile-column-width: 40vw;\n}\nbody .m-image-comparison__heading {\n  font-size: 16px;\n  text-transform: CAPITALIZE;\n  font-weight: 500;\n  border-radius: 5px;\n  letter-spacing: 0;\n}\n.sf-custom--image-comparision .m-richtext__title {\n  line-height: 1.33;\n}\n\n.sf-custom--promotion-banner .m-custom-content__wrapper {\n  background-repeat: no-repeat;\n  background-size: cover;\n  background-position: center center;\n  background-image: url(\"https:\/\/cdn.shopify.com\/s\/files\/1\/0595\/7291\/2305\/files\/banner-bg.jpg?v=1678680079\");\n  padding: 48px 15px;\n}\n.sf-promotion-banner--col-left {\n  margin-bottom: 24px;\n}\n\n.sf-promotion-banner--col-left .m-richtext__title  {\n  line-height: 1;\n  font-weight: 500;\n  font-size: 100px;\n  letter-spacing: 10px;\n}\n\n.sf-promotion-banner--col-right {\n  position: relative;\n}\n.sf-promotion-banner--col-right .content__heading {\n  font-size: 24px;\n  line-height: 1.4;\n}\n.sf-promotion-banner--col-right:before {\n  content: \"\";\n  left: 0;\n  top: 0;\n  background-color: #222;\n  width: 100%;\n  height: 1px;\n  position: absolute;\n}\n.sf-promotion-banner--col-right .m-custom-content__block-inner {\n  padding-top: 24px;\n}\n.sf-custom-text--large .prose {\n  color: var(--color-heading-text);\n}\n\n.sf-custom--image-comparision .m-richtext__title,\n.sf-favorite-product-slider__heading {\n  font-size: 36px;\n}\n\nbody .m-footer {\n  border-top-color: #fafafa !important;\n}\n\n@media (min-width: 768px) {\n  .sf-custom--promotion-banner .m-custom-content__wrapper {\n    padding: 60px 15px;\n  }\n  .sf-promotion-banner--col-left .m-richtext__subtitle {\n    font-size: 20px;\n  }\n  .sf-promotion-banner--col-right .m-richtext__title {\n    font-size: 36px;\n    line-height: 1.4;\n  }\n}\n@media (min-width: 1024px) {\n  .m-richtext__subtitle {\n    font-size: 20px;\n  }\n  .m-footer--block-newsletter .m-footer--block-title {\n    font-size: 28px;\n    font-weight: 400;\n  }\n  .sf-custom--promotion-banner .m-custom-content__wrapper {\n    padding: 70px 15px;\n  }\n  .sf-promotion-banner--col-left .m-richtext__title  {\n    font-size: 130px;\n  }\n  .sf-promotion-banner--col-left {\n    margin-bottom: 0;\n  }\n  .sf-promotion-banner--col-right:before {\n    width: 1px;\n    height: 100%;\n  }\n  .sf-promotion-banner--col-right .m-custom-content__block-inner {\n    padding-left: 60px;\n    padding-top: 0;\n  }\n}\n@media (min-width: 1280px) {\n  body .m-slide__subtitle {\n    margin-bottom: 24px;\n  }\n  \n  .sf-custom--image-comparision .m-richtext__title {\n    font-size: 60px;\n  }\n  .sf-promotion-banner--col-right .m-richtext__title {\n    font-size: 42px;\n    line-height: 1.4;\n  }\n}\n@media (min-width: 1536px) {\n  body .m-slide__title {\n    font-size: 70px;\n    line-height: 80px;\n    margin-bottom: 40px;\n  }\n  .sf-promotion-banner--col-right .m-custom-content__block-inner {\n    padding-left: 120px;\n  }\n}\n@media (max-width: 1023px) {\n  .sf-promotion-banner--col-right .m-custom-content__block-inner > div {\n    text-align: center;\n  }\n\n  .sf-custom--image-comparision .m-custom-content__block-text {\n    margin-bottom: 40px;\n  }\n}\n@media (max-width: 767px) {\n  .sf-icon-box--large .m-icon-box__heading {\n    font-size: 20px;\n  }\n  .m-collection-list .m-section__description {\n\t\tmargin-top: 0.3rem;\n\t}\n\n  .m-testimonials .m-section__header,\n  .m-collection-list .m-section__header {\n    text-align: center;\n  }\n  \n  .m-slider--content-stack .m-slide__wrapper {\n    padding-top: 32px;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "New Arrivals",
+            "title": "High Polish <br>\nLow Effort",
+            "description": "",
+            "image_link": "",
+            "button_text": "Discover Now",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "Simply Elegant",
+            "title": "Discover <br>\nYour Color",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left middle",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "black",
+            "subheading": "Hot Trend",
+            "title": "Get Ready <br>\nStay Classic",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop Now",
+            "button_style": "sf__btn-secondary",
+            "button_size": "",
+            "show_footer": true,
+            "footer_alignment": "end",
+            "footer_text": "The ReCotton Tee",
+            "footer_button": "Shop Now"
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-2",
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 4,
+        "use_content_above": false,
+        "custom_class": "sf-home__slideshow",
+        "animations": "inherit"
+      }
+    },
+    "16225316461d1cff80": {
+      "type": "collection-list",
+      "blocks": {
+        "7a571158-7686-4e66-a693-4716fc905604": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Tops"
+          }
+        },
+        "6d4abb37-5aa2-4499-a2b0-5d85f0d36eec": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shirts"
+          }
+        },
+        "694c01c9-a95f-4c09-9cf0-ec75f0131e98": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Glasses"
+          }
+        },
+        "16225316461d1cff80-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Short"
+          }
+        },
+        "16225316461d1cff80-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Leather Bag"
+          }
+        },
+        "65e38235-f03b-43c9-8590-38c9c656e51c": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sandals"
+          }
+        },
+        "12985deb-0775-45ce-80f6-6be7f3150a91": {
+          "type": "collection_block",
+          "disabled": true,
+          "settings": {
+            "title": "Blazers"
+          }
+        },
+        "07ebf095-1da2-4546-87f3-97e73a789e8d": {
+          "type": "collection_block",
+          "disabled": true,
+          "settings": {
+            "title": "Basic"
+          }
+        }
+      },
+      "block_order": [
+        "7a571158-7686-4e66-a693-4716fc905604",
+        "6d4abb37-5aa2-4499-a2b0-5d85f0d36eec",
+        "694c01c9-a95f-4c09-9cf0-ec75f0131e98",
+        "16225316461d1cff80-2",
+        "16225316461d1cff80-1",
+        "65e38235-f03b-43c9-8590-38c9c656e51c",
+        "12985deb-0775-45ce-80f6-6be7f3150a91",
+        "07ebf095-1da2-4546-87f3-97e73a789e8d"
+      ],
+      "settings": {
+        "heading": "Season Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Must-have pieces selected \nevery month",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "left-side",
+        "expanded": false,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 6,
+        "item_gap": 50,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 4,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__collection-list",
+        "animations": "inherit"
+      }
+    },
+    "d475abd7-2ac4-464c-a589-10d95ddc7a4a": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "This week’s highlights",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 10,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop All Products",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "57f127ac-3e5c-4aa3-aa47-80705e48391e": {
+      "type": "custom-content",
+      "blocks": {
+        "template--15991556571313__57f127ac-3e5c-4aa3-aa47-80705e48391e-16786792419d8f23e5-0": {
+          "type": "text",
+          "settings": {
+            "title": "SALE",
+            "subheading": "Sale up to 20%  All items",
+            "text": "",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "black",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-primary",
+            "button_size": "",
+            "block_custom_class": "sf-promotion-banner--col-left",
+            "animations": "inherit"
+          }
+        },
+        "b456698a-6b6d-4eab-aebb-1efa1e64b3c7": {
+          "type": "text",
+          "settings": {
+            "title": "The Bigger Markdowns",
+            "subheading": "",
+            "text": "<p>We've refreshed our sale with discounts of up to 50% on select styles.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop The Sale",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "block_custom_class": "sf-promotion-banner--col-right",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "template--15991556571313__57f127ac-3e5c-4aa3-aa47-80705e48391e-16786792419d8f23e5-0",
+        "b456698a-6b6d-4eab-aebb-1efa1e64b3c7"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 0,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--promotion-banner"
+      }
+    },
+    "7ea56e8d-5794-4708-8812-8ee9604a3a21": {
+      "type": "custom-content",
+      "blocks": {
+        "72ab74ee-38c1-4fb5-bdef-f887c30442a3": {
+          "type": "text",
+          "settings": {
+            "title": "Layer up with <br>\npieces designed",
+            "subheading": "Mix & Match",
+            "text": "<p>Here is your chance to upgrade your wardrobe<br\/> with a variation of styles and fits that are both.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "Shop Mix & Match",
+            "button_style": "m-button--secondary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "4dc63939-869b-40d4-b23f-65b219d084b6": {
+          "type": "image_comparison",
+          "settings": {
+            "width": "50%",
+            "subtitle": "",
+            "title": "",
+            "text": "",
+            "text_size": "medium",
+            "content_alignment": "left",
+            "text_color": "black",
+            "layout": "horizontal",
+            "image_height": "adapt",
+            "before_heading": "Before",
+            "after_heading": "After",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "72ab74ee-38c1-4fb5-bdef-f887c30442a3",
+        "4dc63939-869b-40d4-b23f-65b219d084b6"
+      ],
+      "custom_css": [
+
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 0,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "sf-custom--image-comparision"
+      }
+    },
+    "7731d6df-9d53-4c34-9efb-98fac2fa365d": {
+      "type": "icon-box",
+      "blocks": {
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "The Italian Chelsea Boot",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop bags",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "The Cashmere Cardigan",
+            "description": "<p>Add a free personalized note during checkout.<\/p>",
+            "link": "",
+            "button_label": "Shop Cardigans",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        },
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Transit Fanny Pack",
+            "description": "<p>Brittany Bathgate shows how less is more.<\/p>",
+            "link": "",
+            "button_label": "Shop Shirts",
+            "button_style": "m-button--secondary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-0",
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-1",
+        "template--15977492021425__7731d6df-9d53-4c34-9efb-98fac2fa365d-16769649642102c2d8-2"
+      ],
+      "custom_css": [
+        ".m-button {margin-top: 24px; padding-left: 25px; padding-right: 25px;}",
+        ".m-button:not(:hover) {border-color: #dadada;}"
+      ],
+      "settings": {
+        "heading": "Season Collection",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "100%",
+        "content_alignment": "start",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-icon-box--large",
+        "animations": "inherit"
+      }
+    },
+    "273e2f28-dde2-4cc2-a354-881bf950fd70": {
+      "type": "image-with-text-2",
+      "disabled": true,
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": true,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "white",
+        "title": "Wear Now, Love Forever",
+        "subtitle": "Video Section",
+        "text": "",
+        "button_label": "Shop now",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": true,
+        "custom_class": "sf-hero--home",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "e243159c-2974-4faf-ab11-c7eed84740a4": {
+      "type": "favorite-product-slider",
+      "disabled": true,
+      "custom_css": [
+        ".prose {color: var(--color-sub-text);}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "featured_product": "adjustable-straight-fit-cargo-pants",
+        "heading": "Adjustable cargo",
+        "subheading": "Featured item",
+        "description": "These pieces can be easily mixed and matched to <br>\ncreate totally different looks.",
+        "header_alignment": "center",
+        "text_color": "black",
+        "button_label": "Get it only $40.00",
+        "button_style": "sf__btn-secondary",
+        "button_size": "",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "46f793f6-4c6e-47c0-b4a4-463be3c28afd": {
+      "type": "testimonials",
+      "blocks": {
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Was I in Hawaii?! No. Did I feel like I was in Hawaii?! No, because it’s snowing outside.<\/p>",
+            "footer": "<p>Jared S.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Always getting compliments from family, friends, and strangers. 🤗 🙌<\/p>",
+            "footer": "<p>Diggle D<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Hands down one of the best shirts I’ve ever owned.  Fits great, feels amazing. <\/p>",
+            "footer": "<p>Oliver Q<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-3": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Love Love Love this dress!It is extremely comfortable<\/p>",
+            "footer": "<p>Sara L<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-0",
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-1",
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-2",
+        "template--15991556571313__46f793f6-4c6e-47c0-b4a4-463be3c28afd-1678677808749aa7ab-3"
+      ],
+      "settings": {
+        "heading": "Happy Customers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container-fluid",
+        "color_scheme": "scheme-2fbe97b2-da22-47b0-9ecf-5b77d51db1b5",
+        "design": "testimonials-6",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "c72959ad-9620-4e94-ae33-1bde908e9701",
+    "1621243260e1af0c20",
+    "16225316461d1cff80",
+    "d475abd7-2ac4-464c-a589-10d95ddc7a4a",
+    "57f127ac-3e5c-4aa3-aa47-80705e48391e",
+    "7ea56e8d-5794-4708-8812-8ee9604a3a21",
+    "7731d6df-9d53-4c34-9efb-98fac2fa365d",
+    "273e2f28-dde2-4cc2-a354-881bf950fd70",
+    "e243159c-2974-4faf-ab11-c7eed84740a4",
+    "46f793f6-4c6e-47c0-b4a4-463be3c28afd"
+  ]
+}

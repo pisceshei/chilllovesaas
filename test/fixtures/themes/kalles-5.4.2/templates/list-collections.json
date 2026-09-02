@@ -1,0 +1,96 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main_heading_UKnKXk": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_liquid_xRY97Y": {
+          "type": "_heading_liquid",
+          "settings": {
+            "text": "{{ page_title }}",
+            "line_height": "",
+            "font_family": "hdt-font-1",
+            "text_size": "4xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "heading_brc_TzkeBC": {
+          "type": "_heading_brc",
+          "settings": {},
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_liquid_xRY97Y",
+        "heading_brc_TzkeBC"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/bg-heading.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 56,
+        "space_item": 0,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "50px,,50px,",
+        "pd_mb": "50px,,50px,"
+      }
+    },
+    "main": {
+      "type": "main-list-collections",
+      "settings": {
+        "display_type": "all",
+        "collection_list": [],
+        "limit": 6,
+        "collection_des": "1",
+        "content_size": "base",
+        "content_weight": "semibold",
+        "content_position": "end-center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "square",
+        "img_effect": "none",
+        "b_effect": "none",
+        "image_size": true,
+        "col_dk": "3",
+        "col_tb": "2",
+        "col_mb": "2",
+        "space_items": "x",
+        "pagination_type": "links",
+        "enable_progressbar": false,
+        "paginate_pos": "center",
+        "dis_pagination": 60,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "mg": "",
+        "mg_mb": "",
+        "pd": "60px,,80px,",
+        "pd_mb": "37px,,50px,"
+      }
+    }
+  },
+  "order": [
+    "main_heading_UKnKXk",
+    "main"
+  ]
+}

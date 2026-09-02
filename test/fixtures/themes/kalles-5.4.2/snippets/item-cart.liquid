@@ -1,0 +1,104 @@
+{%- comment -%}
+  Renders a item cart
+
+  Accepts:
+  - item: {Object} (required)
+  - form_id: {String} (required)
+  - gift_wrap_pr_id: {Number} (required)
+
+  Usage:
+  {%- render 'item-cart', item: item, form_id: form_id -%}
+{%- endcomment -%}
+{%- liquid
+  assign quantity_rule = item.variant.quantity_rule
+  assign image    = item.image | default: settings.placeholder_img 
+  if item.variant.inventory_management != null and item.variant.inventory_quantity > 0 and item.variant.inventory_policy != 'continue'
+    assign qty = item.variant.inventory_quantity
+  else
+    assign qty = 9999
+  endif
+  assign qty_rule_max = quantity_rule.max | default: 0
+  assign max_qty = qty | at_least: qty_rule_max
+-%}
+<hdt-line-item class="hdt-mini-cart__item hdt-cart-item hdt-flex hdt-relative hdt-oh hdt-line-item{% if item.variant.id == settings.gift_card_pr.selected_or_first_available_variant.id or item.variant.id == gift_wrap_pr_id or item.gift_card %} is-gift-wrap{% endif %}">
+  <div class="hdt-quantity--error hdt-form-message--error">{% render 'icon' with 'error' %} <span class="hdt-error-message">{{ 'products.product.quantity_not_available' | t }}</span></div>
+  <div class="hdt-mini-cart__image">
+    <a href="{{ item.url }}" data-no-instant class="hdt-mini-cart__img hdt-block hdt-relative hdt-oh hdt-ratio" style="--aspect-ratioapt:{{ image.aspect_ratio | default: 0.6811989100817438 }}">
+      {%- if image != blank -%}
+        {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, sizes: '(max-width: 767px) 80px, 160px', widths: '80, 160' }}
+        {% else %}
+          <span class="hdt-mini-cart__img-placeholder"></span>
+      {%- endif -%}
+    </a>
+  </div>
+  <div class="hdt-mini-cart__info hdt-s-text hdt-relative hdt-oh">
+    <a href="{{ item.url }}" data-no-instant class="hdt-mini-cart__title hdt-truncate hdt-block hdt-s-text hdt-font-medium">{{ item.product.title }}</a>
+    {%- unless item.product.has_only_default_variant -%}<div class="hdt-mini-cart__meta-variant hdt-text-secondary hdt-text-sm hdt-font-normal hdt-block">{{ item.variant.title | escape }}</div>{%- endunless -%}
+    <div class="hdt-mini-cart__price">{%- render 'line-item-price', line_item: item, price_class: 'hdt-price-wrapp' -%}</div>
+    {%- if item.properties.size != 0 -%}
+      <ul class="hdt-mini-cart_meta_propertyList">
+        {%- for property in item.properties -%}
+          {%- assign property_first_char = property.first | slice: 0 -%}
+          {%- if property.last != blank and property_first_char != '_' -%}
+            <li class="hdt-product-details__item hdt-product-details__item--property hdt-text-sm hdt-s-text2">
+              <span class="hdt-product-details__item-label"><span class="hdt-font-normal">{{ property.first }}: </span></span>
+              <span>
+                {%- if property.last contains '/uploads/' -%}
+                  <a href="{{ property.last }}" target="_blank" aria-describedby="a11y-new-window-message">{{ property.last | split: '/' | last }}</a>
+                {%- else -%}
+                  {{ property.last }}
+                {%- endif -%}
+              </span>
+            </li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+    {%- if item.line_level_discount_allocations.size != 0 -%}
+      <ul class="hdt-discounts hdt-mini-cart__discount-price hdt-font-normal hdt-cart_discounts">
+        {%- for discount in item.line_level_discount_allocations -%}
+          <li class="hdt-discounts__discount">{% render 'icon' with 'discount' %} {{ discount.discount_application.title }}</li>
+        {%- endfor -%}
+      </ul>
+      {%- endif -%}
+    {%- if item.selling_plan_allocation != null %}<p class="hdt-product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>{% endif -%}
+    <div class="hdt-mini-cart__actions">
+      <hdt-quantity-wrapp class="hdt-mini-cart__quantity" form="id:{{ form_id }}">
+        <div data-quantity-wrapper class="hdt-quantity-wrapper hdt-quantity-cart-item hdt-block hdt-text-center hdt-relative hdt-align-center">
+          <button class="hdt-quantity__button no-js-hidden is--minus hdt-absolute hdt-p-0 hdt-top-0 hdt-left-0 hdt-text-start" name="minus" type="button"  {%- if item.quantity == 1 -%} style="top: 5px" {%- endif -%}>
+            <span class="sr-only">{{- 'products.product.quantity.decrease' | t: product: item.product.title | escape -}}</span>
+            {%- if item.quantity == 1 -%}
+              <wrapp-remove-item-oncart placement="none" class="hdt-inline-block" style="margin-inline-end: 10px" data-index="{{ item.index | plus: 1 }}" form="id:{{ form_id }}"><a href="{{ routes.cart_change_url }}?line={{ item.index | plus: 1 }}&quantity=0" class="hdt-mini-cart__remove hdt-s-text" style="width: 20px; height: 20px;"><svg viewBox="0 0 24 24" width="20" height="20" style="width: 18px; height: 18px;"><use href="#icon-cart-remove"></use></svg></a></wrapp-remove-item-oncart>
+            {%- else -%}
+              {%- render 'icon' with 'minus' -%}
+            {%- endif -%}
+          </button>
+          <input will-change-cart class="hdt-quantity-input hdt-text-center hdt-text-lg hdt-font-semibold hdt-p-0" type="number" name="updates[]" min="{{ quantity_rule.min }}" data-max="{{ max_qty }}" max="{{ max_qty }}" value="{{ item.quantity }}" aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}" data-index="{{ item.index | plus: 1 }}">
+          <button class="hdt-quantity__button is--plus hdt-absolute hdt-p-0 hdt-top-0 hdt-right-0 hdt-text-end no-js-hidden" name="plus" type="button">
+            <span class="sr-only">{{- 'products.product.quantity.increase' | t: product: item.product.title | escape -}}</span>
+            {%- render 'icon' with 'plus' -%}
+          </button>
+        </div>
+      </hdt-quantity-wrapp>
+      <div class="hdt-flex hdt-align-center hdt-justify-start">
+        <wrapp-remove-item-oncart inner placement="top" class="hdt-inline-flex hdt-align-center" data-index="{{ item.index | plus: 1 }}" form="id:{{ form_id }}" style="margin-inline-end: 10px">
+          <a href="{{ routes.cart_change_url }}?line={{ item.index | plus: 1 }}&quantity=0" class="hdt-mini-cart__remove hdt-s-text">
+            <svg viewBox="0 0 24 24" width="17"><use href="#icon-cart-remove"></use></svg>
+            <span class="sr-only">{{ 'sections.cart.remove_item' | t }}</span>
+          </a>
+        </wrapp-remove-item-oncart>
+        {% comment %} {%- if item.product.variants.size > 1 or qty_rules or item.product.selling_plan_groups.size > 0 -%}
+          <wrapp-hdt-open-modal-btn class="hdt-ultra_btn_parent hdt-inline-flex hdt-align-center {{ class }}" placement="{{ placement | default: 'none' }}" {{ tooltip_auto }} style="margin-inline-end: 10px">
+            <button type="button" handle="{{ item.product.handle }}" data-variant-id="{{ item.variant.id }}" aria-controls="hdt-quick-add-modal" aria-expanded="false" class="hdt-card-product__btn-ultra">
+              <span class="hdt-pr-card-icon">
+                <svg viewBox="0 0 24 24" width="20"><use href="#icon-cart-edit"/></svg>
+              </span>
+              <span class="hdt-truncate{% unless disable_sr_only %} sr-only{% endunless %}">{{ 'products.product.quick_add' | t }}</span>
+            </button>
+          </wrapp-hdt-open-modal-btn>
+        {%- endif -%} {% endcomment %}
+      </div>
+      
+    </div>
+  </div>
+</hdt-line-item>

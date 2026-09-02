@@ -1,0 +1,515 @@
+{
+  "sections": {
+    "162080663620b95195": {
+      "type": "slider",
+      "blocks": {
+        "162080663620b95195-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "NEW ARRIVALS",
+            "title": "DYNAMIC OUTFIT",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "162080663620b95195-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "SUMMER SALE",
+            "title": "PERFORMER",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "162080663620b95195-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "large",
+            "text_color": "white",
+            "subheading": "NEW COLLECTION",
+            "title": "ENERGY 2-PIECE",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "162080663620b95195-1",
+        "162080663620b95195-0",
+        "162080663620b95195-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "16208058842d075672": {
+      "type": "custom-content",
+      "blocks": {
+        "ac4d9413-8ad0-48ec-8eb4-03e42983f625": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "CROPTOPS",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "c7894ae7-1d1d-4f78-aa96-693499f80c68": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "LEGGING",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": false,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "16208058842d075672-0": {
+          "type": "text",
+          "settings": {
+            "title": "HOT THIS WEEK",
+            "subheading": "CATEGORIES",
+            "text": "<p>Luxe, lightweight, and made with the perfect blend<br\/> of cashmere and cotton, our Sonoma Pillows and<br\/> Throws are inspired by the basics.<\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "SHOP ALL ITEMS",
+            "button_link": "shopify:\/\/collections\/active-wear",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "ac4d9413-8ad0-48ec-8eb4-03e42983f625",
+        "c7894ae7-1d1d-4f78-aa96-693499f80c68",
+        "16208058842d075672-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 40,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "1620805637438b372e": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "BEST SELLERS",
+        "heading_size": "h3",
+        "subheading": "IN SEASON",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "footer",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 12,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "button_type": "link",
+        "button_text": "SHOP NOW",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-featured-collection",
+        "animations": "inherit"
+      }
+    },
+    "162079482605c70500": {
+      "type": "custom-content",
+      "blocks": {
+        "798c3f4b-3856-4a42-8aea-af90f9d5f0e4": {
+          "type": "product_bundles",
+          "settings": {
+            "width": "50%",
+            "alignment": "center",
+            "title": "BUNDLE & SAVE",
+            "subheading": "SHOP THIS LOOK",
+            "text_size": "h2",
+            "show_reviews": false,
+            "product_1": "",
+            "product_2": "",
+            "product_3": "",
+            "product_4": "",
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "e9c848bf-9663-4761-86ce-78523afbfcd3": {
+          "type": "lookbook",
+          "settings": {
+            "color_scheme": "",
+            "width": "50%",
+            "top_1": 37,
+            "left_1": 55,
+            "product_1": "",
+            "top_2": 56,
+            "left_2": 9,
+            "product_2": "",
+            "top_3": 86,
+            "left_3": 73,
+            "product_3": "",
+            "top_4": 0,
+            "left_4": 0,
+            "product_4": "",
+            "top_5": 20,
+            "left_5": 0,
+            "product_5": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "798c3f4b-3856-4a42-8aea-af90f9d5f0e4",
+        "e9c848bf-9663-4761-86ce-78523afbfcd3"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 130,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "162676501106f4b388": {
+      "type": "testimonials",
+      "blocks": {
+        "162676501106f4b388-0": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love it so much",
+            "description": "<p>\"I've been getting good wear out of the shirt. It's very light and soft, comfortable to wear.\"<\/p>",
+            "footer": "<p>Dean D. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162676501106f4b388-1": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Love my new purchase",
+            "description": "<p>\"Thanks for being so fabulous...and continuing to provide such a wonderful service.\"<\/p>",
+            "footer": "<p>Gloria T. US<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        },
+        "162676501106f4b388-2": {
+          "type": "testimonial",
+          "settings": {
+            "title": "Great products and services",
+            "description": "<p>\"Thank you so much for your help in finding some new clothes that I needed desperately.\"<\/p>",
+            "footer": "<p>Zeferino G. Canada<\/p>",
+            "image_text": "",
+            "image_link": "",
+            "product": ""
+          }
+        }
+      },
+      "block_order": [
+        "162676501106f4b388-0",
+        "162676501106f4b388-1",
+        "162676501106f4b388-2"
+      ],
+      "settings": {
+        "heading": "OVER 10.000 REVIEWS",
+        "heading_size": "h3",
+        "subheading": "OUR REVIEWS",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "scheme-a7ba9968-0ea0-42a0-be2b-f74e88dc2144",
+        "design": "testimonials-3",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1620805367beb697d9": {
+      "type": "blog-posts",
+      "settings": {
+        "heading": "LATEST POST",
+        "heading_size": "h3",
+        "subheading": "OUR BLOG",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "limit": 3,
+        "column": 3,
+        "column_gap": 30,
+        "mobile_gap": 16,
+        "article_image_aspect_ratio": "16\/9",
+        "article_align_content": "text-center",
+        "article_show_tags": false,
+        "article_show_date": true,
+        "article_show_excerpt": false,
+        "article_show_button": false,
+        "button_link": "",
+        "button_text": "View More",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-blog-post",
+        "animations": "inherit"
+      }
+    },
+    "162079537838c4574f": {
+      "type": "brands-list",
+      "blocks": {
+        "162079537838c4574f-0": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "100px"
+          }
+        },
+        "fb8b9e24-e778-4de1-8f73-44cf726bdba4": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "130px"
+          }
+        },
+        "162079537838c4574f-2": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "120px"
+          }
+        },
+        "162079537838c4574f-3": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "120px"
+          }
+        },
+        "162079537838c4574f-1": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "110px"
+          }
+        },
+        "32e0ff0d-468b-49d4-9cd9-4165a37d7e07": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "120px"
+          }
+        }
+      },
+      "block_order": [
+        "162079537838c4574f-0",
+        "fb8b9e24-e778-4de1-8f73-44cf726bdba4",
+        "162079537838c4574f-2",
+        "162079537838c4574f-3",
+        "162079537838c4574f-1",
+        "32e0ff0d-468b-49d4-9cd9-4165a37d7e07"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 6,
+        "column_gap": 30,
+        "row_gap": 30,
+        "column_gap_mobile": 10,
+        "row_gap_mobile": 10,
+        "enable_slider": true,
+        "show_nav": false,
+        "show_pagination": false,
+        "autorotate": true,
+        "autorotate_speed": 3,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "m-custom-brand",
+        "animations": "inherit"
+      }
+    },
+    "16207951391d921d60": {
+      "type": "instagram",
+      "settings": {
+        "heading": "SHARE IN THE<br> LOVE.",
+        "heading_size": "h3",
+        "subheading": "#MINIMOG.TRENDY",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "footer",
+        "layout": "metro",
+        "images_count": 8,
+        "grid_columns": 4,
+        "gap": 0,
+        "mobile_gap": 16,
+        "button_label": "Follow us on Instagram",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-instagram"
+      }
+    },
+    "162080618174803be6": {
+      "type": "newsletter",
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "form_layout": "horizontal",
+        "form_design": "2",
+        "heading": "LET'S STAY IN TOUCH",
+        "description": "<p>We’ll shout you $10 off your first order.<\/p>",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email address",
+        "submit_button": "SUBSCRIBE",
+        "text_color": "black",
+        "show_icon": true,
+        "icon_img_width": "30",
+        "show_agreement": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-newsletters",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "162080663620b95195",
+    "16208058842d075672",
+    "1620805637438b372e",
+    "162079482605c70500",
+    "162676501106f4b388",
+    "1620805367beb697d9",
+    "162079537838c4574f",
+    "16207951391d921d60",
+    "162080618174803be6"
+  ]
+}

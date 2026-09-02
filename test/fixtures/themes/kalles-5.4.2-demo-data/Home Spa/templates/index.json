@@ -1,0 +1,1689 @@
+{
+  "sections": {
+    "slideshow_EVrUzi": {
+      "type": "slideshow",
+      "blocks": {
+        "slide_item_GJUjrM": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/ss1.jpg",
+            "url": "",
+            "banner_target": true,
+            "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_YrQhtV": {
+              "type": "text",
+              "settings": {
+                "text": "<p>PRACTICE, CLASSES THAT MOVE YOU:<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "--f_family_3",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "heading_MzV9Ty": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Discover Beauty<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 40,
+                "letter_spacing_heading": 0.4
+              },
+              "blocks": {}
+            },
+            "spacer_gnPapa": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "space_html_dBJfjA": {
+              "type": "_space_html",
+              "name": "t:blocks.space_htmlx.name",
+              "settings": {
+                "color": "#d9a181",
+                "width": 70,
+                "height": 3,
+                "margin_bottom": 30,
+                "width_mobile": 40,
+                "height_mobile": 2,
+                "hide_on_mobile": false,
+                "margin_bottom_mobile": 15
+              },
+              "blocks": {}
+            },
+            "text_FPU3Y3": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Dermaesthetics products are suitable for all skin types and<br\/>ethnicities in every geographic location.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_fFNyjC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "button_3yEDmG": {
+              "type": "button",
+              "settings": {
+                "label": "Explore More",
+                "link": "shopify:\/\/collections\/spa",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 13,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_YrQhtV",
+            "heading_MzV9Ty",
+            "spacer_gnPapa",
+            "space_html_dBJfjA",
+            "text_FPU3Y3",
+            "spacer_fFNyjC",
+            "button_3yEDmG"
+          ]
+        },
+        "slide_item_ri9Ver": {
+          "type": "_slide-item",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/ss2.jpg",
+            "url": "",
+            "banner_target": true,
+            "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "content_position_mb": "center-start",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "text_HgytGJ": {
+              "type": "text",
+              "settings": {
+                "text": "<p>PRACTICE, CLASSES THAT MOVE YOU:<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "--f_family_3",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "heading_hQiXha": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Rose Petals Mask<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 65,
+                "font_size_heading": 40,
+                "letter_spacing_heading": 0.4
+              },
+              "blocks": {}
+            },
+            "spacer_LyWk8c": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "space_html_LcXYdh": {
+              "type": "_space_html",
+              "name": "t:blocks.space_htmlx.name",
+              "settings": {
+                "color": "#d9a181",
+                "width": 70,
+                "height": 3,
+                "margin_bottom": 30,
+                "width_mobile": 40,
+                "height_mobile": 2,
+                "hide_on_mobile": false,
+                "margin_bottom_mobile": 15
+              },
+              "blocks": {}
+            },
+            "text_UkniHj": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Dermaesthetics products are suitable for all skin types and<br\/>ethnicities in every geographic location.<\/p>",
+                "hidden_br_mobile": true,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_Lgz8CP": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "button_xKwGMH": {
+              "type": "button",
+              "settings": {
+                "label": "Shop now",
+                "link": "shopify:\/\/collections\/spa",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-hover-accent",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 13,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 20,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "text_HgytGJ",
+            "heading_hQiXha",
+            "spacer_LyWk8c",
+            "space_html_LcXYdh",
+            "text_UkniHj",
+            "spacer_Lgz8CP",
+            "button_xKwGMH"
+          ]
+        }
+      },
+      "block_order": [
+        "slide_item_GJUjrM",
+        "slide_item_ri9Ver"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--f_family_2); font-weight: 800;}",
+        "@media (width < 768px) {.hdt-button-block {width: 112px; padding-inline: 15px; height: 36px; white-space: nowrap; }}"
+      ],
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 860,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 480,
+        "is_fade": false,
+        "loop": true,
+        "autoplay": 7,
+        "pauseOnHover": true,
+        "navUI": false,
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_position": "center",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 20,
+        "pag_hide_mobile": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "full_width": true,
+        "mg": "0",
+        "mg_mb": ",,0px,",
+        "pd": "",
+        "pd_mb": ",,22px,"
+      }
+    },
+    "custom_section_hRHNcf": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_KRFBLy": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "7",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "6",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "image_cjDNjL": {
+              "type": "image",
+              "name": "t:blocks.image.name",
+              "settings": {
+                "img": "shopify:\/\/shop_images\/hi.png",
+                "image_ratio": "adapt_image",
+                "img_effect": "none",
+                "b_effect": "none",
+                "custom_width": "full",
+                "image_w": 50,
+                "image_w_mb": 50
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "image_cjDNjL"
+          ]
+        },
+        "multi_column_CRyzUk": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "5",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "4",
+            "column_tb_10": "5",
+            "column_mb_10": "10",
+            "spacing_h_dk": 0,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 0,
+            "spacing_v_mb": 0,
+            "content_position": "center",
+            "align_content": false,
+            "content_position_mb": "center-start",
+            "alignment": "left",
+            "alignment_mb": "left",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_DFXLVF": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>An Incredible Spa Product<br\/>Premium Quality<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 35,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_CH6kUz": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 20,
+                "space_md": 20,
+                "space": 16
+              },
+              "blocks": {}
+            },
+            "space_html_acjHTm": {
+              "type": "_space_html",
+              "name": "t:blocks.space_htmlx.name",
+              "settings": {
+                "color": "#c59a57",
+                "width": 60,
+                "height": 2,
+                "margin_bottom": 30,
+                "width_mobile": 40,
+                "height_mobile": 2,
+                "hide_on_mobile": false,
+                "margin_bottom_mobile": 30
+              },
+              "blocks": {}
+            },
+            "text_ftFJkn": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Body scrub Organic Shop removes dead skin cells to help skin clean and smooth, better absorb skin creams, regenerate skin and help skin soft and supple, refresh and increase skin tone.<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": true,
+                "ffamily": "",
+                "text_size": "base",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_cT3t3i": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 30,
+                "space_md": 30,
+                "space": 0
+              },
+              "blocks": {}
+            },
+            "button_7HUTbn": {
+              "type": "button",
+              "settings": {
+                "label": "View product",
+                "link": "shopify:\/\/collections\/spa",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 13,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 152,
+                "min_height_btn": 20,
+                "rounded": "hdt-btn-radius-none",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_DFXLVF",
+            "spacer_CH6kUz",
+            "space_html_acjHTm",
+            "text_ftFJkn",
+            "spacer_cT3t3i",
+            "button_7HUTbn"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_KRFBLy",
+        "multi_column_CRyzUk"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--f_family_2);}",
+        ".hdt-text-base {--color-foreground2: 34 34 34;}",
+        "@media (width >= 1350px) {.hdt-h_custom {line-height: 48px; }}",
+        "@media (width < 768px) {.hdt-button-block {width: 112px; padding-inline: 15px; height: 36px; white-space: nowrap; } .hdt-h_custom {line-height: 36px; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "12",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/Section-Custom-2.jpg",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "100px,,100px,",
+        "pd_mb": ",,50px,"
+      }
+    },
+    "custom_section_hbMTQU": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_rereqp": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_iGdKbX": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Black Friday Deals<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_XEHHfJ": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "space_html_WeQDEC": {
+              "type": "_space_html",
+              "name": "t:blocks.space_htmlx.name",
+              "settings": {
+                "color": "#ab7f3c",
+                "width": 40,
+                "height": 2,
+                "margin_bottom": 20,
+                "width_mobile": 40,
+                "height_mobile": 2,
+                "hide_on_mobile": false,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_YjkdXp": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Skin tight comfort levels activity, Lightweight, breathable fabric<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_x6G7CC": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 0,
+                "space": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_iGdKbX",
+            "spacer_XEHHfJ",
+            "space_html_WeQDEC",
+            "text_YjkdXp",
+            "spacer_x6G7CC"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_rereqp"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--f_family_2); font-weight: 800;}",
+        ".hdt-text-custom {--color-foreground2: 86 86 86;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "30px,0,0,0",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "product_banner_GPe7Qh": {
+      "type": "product_banner",
+      "blocks": {
+        "product_grid_iw8tXa": {
+          "type": "_product-grid",
+          "name": "t:blocks.product_grid.name",
+          "settings": {
+            "collection": "spa",
+            "products_count": 4,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "1",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "2",
+            "col_tb": "2",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "pagination_color_scheme": "",
+            "pagination_type": "load_more",
+            "enable_progressbar": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "endable_btn_icon": false,
+            "size": "m",
+            "btn_fw": "medium",
+            "rounded": "",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40
+          },
+          "blocks": {}
+        },
+        "banner_item_D3Chgw": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "none",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/Product-Banner.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": []
+        }
+      },
+      "block_order": [
+        "product_grid_iw8tXa",
+        "banner_item_D3Chgw"
+      ],
+      "name": "Product with banner",
+      "settings": {
+        "image_height": "fit-content",
+        "fixed_height": 860,
+        "image_height_mb": "adapt_image",
+        "fixed_height_mb": 300,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "0,0,80px,",
+        "mg_mb": ",,50px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "lookbook_grid_XWVe6k": {
+      "type": "lookbook-grid",
+      "blocks": {
+        "lookbook_eDrP6y": {
+          "type": "_lookbook",
+          "settings": {
+            "image": "shopify:\/\/shop_images\/Pin-Banner_adf4a673-4798-41a3-9ed3-f5340e43c3b1.jpg",
+            "img_effect": "none",
+            "b_effect": "none"
+          },
+          "blocks": {
+            "pin_product_UmXgMp": {
+              "type": "_pin-product",
+              "name": "t:blocks.pin_product.name",
+              "settings": {
+                "pin_bg": "#2c396b",
+                "pin_text": "#ffffff",
+                "left": 36,
+                "top": 26,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "an-incredible-spa-product-premium-quality",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_text_c3Rhgc": {
+              "type": "_pin-text",
+              "name": "t:blocks.pin_text.name",
+              "settings": {
+                "pin_bg": "#2c396b",
+                "pin_text": "#ffffff",
+                "left": 50,
+                "top": 50,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "$59",
+                "title": "01 - Water Resistance",
+                "content": "<p>With groundbreaking water resistant capabilities, The Mission has the highest waterproof rating of any smartwatch on the market.<\/p>",
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_6wQPmM": {
+              "type": "_pin-product",
+              "name": "t:blocks.pin_product.name",
+              "settings": {
+                "pin_bg": "#2c396b",
+                "pin_text": "#ffffff",
+                "left": 62,
+                "top": 26,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "juniper-body-wash-1",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            },
+            "pin_product_DWFHr9": {
+              "type": "_pin-product",
+              "name": "t:blocks.pin_product.name",
+              "settings": {
+                "pin_bg": "#2c396b",
+                "pin_text": "#ffffff",
+                "left": 76,
+                "top": 69,
+                "pin_size": "medium",
+                "pin_type": "2",
+                "text": "",
+                "product": "dbh-o2-hydra-mist",
+                "product_des": "1",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "placement": "top"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "pin_product_UmXgMp",
+            "pin_text_c3Rhgc",
+            "pin_product_6wQPmM",
+            "pin_product_DWFHr9"
+          ]
+        },
+        "lookbook-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "lookbook_eDrP6y"
+      ],
+      "name": "t:sections.lookbook.name_2",
+      "settings": {
+        "col_dk": "1",
+        "col_tb": "1",
+        "col_mb": "1",
+        "space_items": "x",
+        "space_items_mb": "0",
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_4mDhfp": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_g4rekP": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/Category-01.jpg",
+            "title": "Liton",
+            "collection_link": "shopify:\/\/collections\/spa",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_a8GVnz": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/Category-02.jpg",
+            "title": "Facial Cleanser",
+            "collection_link": "shopify:\/\/collections\/spa",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "collection_item_JB6fiB": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/Category-03.jpg",
+            "title": "Eye Cream",
+            "collection_link": "shopify:\/\/collections\/spa",
+            "col_dk": "6",
+            "col_tb": "6",
+            "col_mb": "6"
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "3",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 20
+          },
+          "blocks": {
+            "heading_section_TyJELr": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Premium Quality Product",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_biDybY": {
+              "type": "_sub_heading_section",
+              "name": "t:blocks.section_heading.sub_heading",
+              "settings": {
+                "text": "<p>Skin tight comfort levels activity, Lightweight, breathable fabric<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "custom",
+                "text_color": "hdt-text-secondary",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_CbWNWk": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 0,
+                "space": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_TyJELr",
+            "sub_heading_section_biDybY",
+            "spacer_CbWNWk"
+          ]
+        }
+      },
+      "block_order": [
+        "collection_item_g4rekP",
+        "collection_item_a8GVnz",
+        "collection_item_JB6fiB"
+      ],
+      "custom_css": [
+        ".hdt-text-custom {--color-foreground2: 86 86 86;}",
+        ".hdt-subheading-block {font-family: var(--f_family_1);}",
+        ".hdt-heading-block {font-family: var(--f_family_2); font-weight: 800;}",
+        ".hdt-heading-block:before {--text-color: rgb(217 161 129);}",
+        ".hdt-collection-title-text {color: #222222;}",
+        ".hdt-collection-wrapper:hover .hdt-collection-title-text {color: white;}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "1",
+        "content_size": "base",
+        "content_weight": "semibold",
+        "content_position": "end-center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": false,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "zoom",
+        "b_effect": "none",
+        "col_dk": "3",
+        "col_tb": "3",
+        "col_mb": "1",
+        "space_items": "x",
+        "layout_mode": "carousel",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": true,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 30,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+        "background_opacity": 0,
+        "section_layout": "wrapper_container",
+        "section_background": "shopify:\/\/shop_images\/Background-I.png",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "80px,0,80px",
+        "pd_mb": "50px,0,50px"
+      }
+    },
+    "custom_section_J9Uim8": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_GaEHKT": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 30,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_position": "auto",
+            "align_content": false,
+            "content_position_mb": "auto",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_P8DPGE": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Choose Your Product<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 34,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_CLyFwh": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "space_html_hxaCrp": {
+              "type": "_space_html",
+              "name": "t:blocks.space_htmlx.name",
+              "settings": {
+                "color": "#ab7f3c",
+                "width": 40,
+                "height": 2,
+                "margin_bottom": 20,
+                "width_mobile": 40,
+                "height_mobile": 2,
+                "hide_on_mobile": false,
+                "margin_bottom_mobile": 10
+              },
+              "blocks": {}
+            },
+            "text_9hKXmE": {
+              "type": "text",
+              "settings": {
+                "text": "<p>Skin tight comfort levels activity, Lightweight, breathable fabric<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "",
+                "font_weight": "normal",
+                "text_color": "hdt-text-secondary",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 15,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_P8DPGE",
+            "spacer_CLyFwh",
+            "space_html_hxaCrp",
+            "text_9hKXmE"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_GaEHKT"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--f_family_2); font-weight: 800;}",
+        ".hdt-text-custom {--color-foreground2: 86 86 86;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": "30px,0,0,0",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "featured_collection_tF7CVg": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_UzNxm3": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "spa",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "none",
+            "product_des": "1",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "hdt_slide_center": false,
+            "hdt_opacity_out_container": false,
+            "col_dk": "4",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "outline",
+            "nav_shape": "default",
+            "nav_size": "small",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "disabled": true,
+          "static": true,
+          "settings": {
+            "design_heading": "2",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_e64zAw": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "TRENDING",
+                "line_height": "",
+                "heading_size": "h5",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "sub_heading_section_XhpynJ": {
+              "type": "_sub_heading_section",
+              "settings": {
+                "text": "<p><em>Top view in this week<\/em><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "text_size": "base",
+                "text_color": "hdt-s-text",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_e64zAw",
+            "sub_heading_section_XhpynJ"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_UzNxm3"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "hero_image_r9E8wb": {
+      "type": "hero-image",
+      "blocks": {
+        "heading_ALn7Y9": {
+          "type": "heading",
+          "settings": {
+            "heading": "<p>Checkout Our Latest<br\/>Top Collection<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "line_height": "hdt-lh-1-2",
+            "font_weight": "semibold",
+            "heading_size": "h_custom",
+            "text_color": "hdt-s-text",
+            "font_size_heading_lg": 34,
+            "font_size_heading": 24,
+            "letter_spacing_heading": 0
+          },
+          "blocks": {}
+        },
+        "spacer_Wf4DVC": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 30,
+            "space_md": 30,
+            "space": 20
+          },
+          "blocks": {}
+        },
+        "space_html_GeptQN": {
+          "type": "_space_html",
+          "name": "t:blocks.space_htmlx.name",
+          "settings": {
+            "color": "#d9a181",
+            "width": 50,
+            "height": 2,
+            "margin_bottom": 21,
+            "width_mobile": 50,
+            "height_mobile": 2,
+            "hide_on_mobile": false,
+            "margin_bottom_mobile": 30
+          },
+          "blocks": {}
+        },
+        "text_waKgKn": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Skintight comfort level activity breathable fabric.<\/p>",
+            "hidden_br_mobile": false,
+            "hidden_on_mobile": false,
+            "ffamily": "",
+            "text_size": "custom",
+            "line_height": "",
+            "font_weight": "normal",
+            "text_color": "hdt-text-secondary",
+            "countdown": "2025-12-30 15:00:00",
+            "txt_day": "days",
+            "font_size_text_lg": 14,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        },
+        "spacer_rabbLw": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 26,
+            "space_md": 26,
+            "space": 10
+          },
+          "blocks": {}
+        },
+        "button_e8UfAm": {
+          "type": "button",
+          "name": "t:blocks.button.name",
+          "settings": {
+            "label": "Shop Now",
+            "link": "shopify:\/\/collections\/spa",
+            "open_in_new_tab": false,
+            "full_width": false,
+            "btn_style": "",
+            "color_btn": "#ffffff",
+            "color_hover_btn": "#ffffff",
+            "background_btn": "#222222",
+            "background_hover_btn": "#333333",
+            "border_w_btn": "",
+            "border_btn": "#222222",
+            "border_hover_btn": "#333333",
+            "size": "m",
+            "text_size": "hdt-text-base",
+            "font_weight": "normal",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "rounded": "hdt-btn-radius-none",
+            "icon": "none",
+            "icon_position": "after",
+            "icon_height": 14,
+            "icon_spacing": 5
+          },
+          "blocks": {}
+        },
+        "spacer_afMwpr": {
+          "type": "spacer",
+          "settings": {
+            "direction": false,
+            "space_lg": 10,
+            "space_md": 10,
+            "space": 10
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_ALn7Y9",
+        "spacer_Wf4DVC",
+        "space_html_GeptQN",
+        "text_waKgKn",
+        "spacer_rabbLw",
+        "button_e8UfAm",
+        "spacer_afMwpr"
+      ],
+      "custom_css": [
+        ".hdt-h_custom {font-family: var(--f_family_2);}",
+        ".hdt-text-custom {--color-foreground2: 86 86 86;}"
+      ],
+      "name": "t:sections.hero-image.name",
+      "settings": {
+        "image": "shopify:\/\/shop_images\/Sub-Banner.jpg",
+        "link_img": "",
+        "target": false,
+        "image_height": "adapt_image",
+        "fixed_height": 860,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 300,
+        "image_behavior": "none",
+        "content_position_type": "auto",
+        "position_x": 15,
+        "position_y": 50,
+        "content_position": "center-start",
+        "alignment": "left",
+        "position_x_mb": 50,
+        "position_y_mb": 50,
+        "content_position_mb": "center",
+        "alignment_mb": "left",
+        "overlay_content": false,
+        "overlay_color": "#000000",
+        "overlay_opacity": 0,
+        "background_content": false,
+        "background_content_color": "#ffffff",
+        "bg_opacity": 0,
+        "box_square": false,
+        "content_rounded": false,
+        "use_border_content": false,
+        "border_color": "#ffffff",
+        "background_border": "#ffffff",
+        "border_opacity": 0,
+        "border_style": "none",
+        "border_pd_dk": 0,
+        "padding_vertical": 30,
+        "padding_horizontal": 30,
+        "min_width_content": 350,
+        "border_pd": 0,
+        "colors_by_section": true,
+        "color_scheme": "scheme-c176c868-c395-48b7-8fb7-ff534f42d174",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "image_gallery_eGjKdV": {
+      "type": "image-gallery",
+      "blocks": {
+        "image_NnW4r8": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-1.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_ewFx6H": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-6.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_KwCUDw": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-3.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_YUWVcG": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-5.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_DbpPgF": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-2.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image_VMwigF": {
+          "type": "image",
+          "settings": {
+            "img": "shopify:\/\/shop_images\/Brand-logo-4.png",
+            "image_ratio": "adapt_image",
+            "img_effect": "bounceIn",
+            "b_effect": "none",
+            "custom_width": "full",
+            "image_w": 50,
+            "image_w_mb": 50
+          },
+          "blocks": {}
+        },
+        "image-gallery-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "image_NnW4r8",
+        "image_ewFx6H",
+        "image_KwCUDw",
+        "image_YUWVcG",
+        "image_DbpPgF",
+        "image_VMwigF"
+      ],
+      "custom_css": [
+        "@media (width <= 1350px) {[class^=\"hdt-block-image_\"] {width: 70%; justify-self: center; }}"
+      ],
+      "name": "t:sections.image_gallery.name",
+      "settings": {
+        "hdt_disable_zoom": true,
+        "col_dk": "6",
+        "col_tb": "2",
+        "col_mb": "2",
+        "space_items": "x",
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,50px,",
+        "mg_mb": ",,30px,",
+        "pd": "0,0,30px",
+        "pd_mb": "",
+        "border_radius": 0
+      }
+    }
+  },
+  "order": [
+    "slideshow_EVrUzi",
+    "custom_section_hRHNcf",
+    "custom_section_hbMTQU",
+    "product_banner_GPe7Qh",
+    "lookbook_grid_XWVe6k",
+    "collections_list_4mDhfp",
+    "custom_section_J9Uim8",
+    "featured_collection_tF7CVg",
+    "hero_image_r9E8wb",
+    "image_gallery_eGjKdV"
+  ]
+}

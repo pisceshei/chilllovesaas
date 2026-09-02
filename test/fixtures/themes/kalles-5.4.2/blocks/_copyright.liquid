@@ -1,0 +1,24 @@
+{%- assign now_y = 'now' | date: '%Y' -%}
+<div class="hdt-copyright">
+  {{- block.settings.text | replace: "[year]", now_y -}}
+</div>
+{% schema %}
+  {
+    "name": "Copyright",
+    "tag": null,
+    "settings": [
+      {
+        "type": "html",
+        "id": "text",
+        "label": "Copyrights",
+        "info": "Place here text you want to see in the copyrights area.",
+        "default": "<span class=\"hdt-text-secondary\">Copyright © [year] <span class=\"hdt-text-primary\">Kalles<\/span> all rights reserved. Powered by <a href=\"https:\/\/the4.co\" class=\"hdt-s-text\">The4<\/a></span>"
+      }
+    ],
+    "presets":[
+      {
+        "name":"Copyright"
+      }
+    ]
+  }
+{% endschema %}

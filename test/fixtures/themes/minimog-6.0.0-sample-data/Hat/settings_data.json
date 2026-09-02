@@ -1,0 +1,111 @@
+{
+  "current": {
+    "favicon": "",
+    "show_scroll_top_button": true,
+    "use_custom_font_body": true,
+    "custom_body_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Poppins-Medium.ttf?v=1621237713@500\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Poppins-Bold.ttf?v=1619606091@700",
+    "custom_body_weight": "500",
+    "type_base_size": 14,
+    "use_custom_font_heading": true,
+    "custom_heading_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Poppins-ExtraBold.ttf?v=1619606131@800\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Poppins-Bold.ttf?v=1619606091@700",
+    "custom_heading_weight": "700",
+    "type_header_base_size": 34,
+    "btn_border_radius": 0,
+    "btn_weight": "700",
+    "inputs_border_radius": 0,
+    "img_overlay_opacity": 20,
+    "spacing_sections": 0,
+    "spacing_sections_mobile": 0,
+    "animations": "fade-in-up",
+    "pcard_layout": "1",
+    "pcard_alignment": "center",
+    "pcard_image_ratio": "1\/1",
+    "show_second_img": true,
+    "show_vendor": false,
+    "uppercase_prd_name": true,
+    "variant_option_design1": "button",
+    "variant_option_design2": "color",
+    "product_colors": "red: #ff0000,\nyellow: #ffff00,\nblack: #000000,\nblue: #0000FF,\ngreen: #00ff00,\npurple: #800080,\nsilver: #c0c0c0,\nwhite: #F1F1F1,\nbrown: #7B3F00,\nlight-brown: #feb035,\ndark-turquoise: #23cddc,\norange: #fe9001,\ntan: #eacea7,\nviolet: #EE82EE,\npink: #FFC0CB,\ngrey: #808080,\npale: #888888",
+    "social_twitter_link": "https:\/\/twitter.com\/home",
+    "social_facebook_link": "https:\/\/facebook.com\/",
+    "social_pinterest_link": "https:\/\/pinterest.com\/",
+    "social_instagram_link": "https:\/\/instagram.com\/",
+    "popular_search_queries": "Cotton, Men, Backpack",
+    "wishlist_page": "wishlist",
+    "product_compare_page": "product-compare",
+    "custom_css": ".m-section__heading {\n  letter-spacing: 4px;\n}\n.m-product-card__title .m-product-card__name {\n  font-weight: 700;\n  letter-spacing: 1px;\n}\n.m-custom-blog-post  {\n  border-top: 1px solid rgb(var(--color-border));\n}\n.m-article-card__title {\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  font-size: 16px;\n}\n.m-footer--block-inner h3 {\n  letter-spacing: 0.5px;\n}\n.m-menu .m-menu__item .m-menu__link--main {\n  font-weight: 700;\n}\n\n@media (min-width: 1024px) {\n  .m-custom-content-block-product {\n    padding: 80px 130px;\n    background: #efefef;\n  }\n  .m-footer--bottom-inner {\n    border-top: 1px solid rgb(var(--color-border));\n  }\n  body .m-footer--block-newsletter .m-footer--block-title {\n    font-size: 34px;\n  }\n}\n.m-video .container-full,\n.m-custom-instagram .container-full {\n  padding-left: 0;\n  padding-right: 0;\n}",
+    "use_theme_currencies": true,
+    "size_chart": "size-guide",
+    "content_for_index": [
+
+    ],
+    "color_schemes": {
+      "default": {
+        "settings": {
+          "background": "#ffffff",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#222222",
+          "subtext": "#666666",
+          "heading_text": "#222222",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      },
+      "dark": {
+        "settings": {
+          "background": "#000000",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#c9c9c9",
+          "heading_text": "#ffffff",
+          "button": "#ffffff",
+          "button_label": "#222222",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#222222",
+          "price_sale": "#e84e4e",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#222222",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#222222",
+          "border": "#4b4b4b"
+        }
+      },
+      "scheme-3b1a8049-04ae-4f01-a22d-4c6a6c69f439": {
+        "settings": {
+          "background": "#efeded",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#222222",
+          "subtext": "#666666",
+          "heading_text": "#222222",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      }
+    }
+  }
+}

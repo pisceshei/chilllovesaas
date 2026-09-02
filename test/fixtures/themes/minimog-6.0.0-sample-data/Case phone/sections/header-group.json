@@ -1,0 +1,50 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": true,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "<p>🔥 Free shipping on all U.S orders $50+ 📦<\/p><p><\/p>",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "header_design": "logo-center-menu-left",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 35,
+        "sticky_logo_max_width": 35,
+        "mobile_logo_max_width": 35,
+        "main_menu": "main-menu",
+        "secondary_menu": "main-menu",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "annoucement",
+    "header"
+  ]
+}

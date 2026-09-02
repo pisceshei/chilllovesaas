@@ -1,0 +1,757 @@
+{
+  "sections": {
+    "custom_code_Wmhjii": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-countdown .m-countdown__heading {\n  font-size: calc(((var(--font-h2-desktop)) \/ (var(--font-base-size))) * 1rem);\n}\n@media (min-width: 768px) {\n  .m-custom-countdown .m-section-my {\n    --section-padding-top: 159px;\n    --section-padding-bottom: 159px;\n  --section-padding-top-laptop: 159px;\n  --section-padding-bottom-laptop: 159px;\n  --section-padding-top-tablet:159px;\n  --section-padding-bottom-tablet:159px;\n  }\n}\n@media (max-width: 767px) {\n  .m-custom-countdown .m-countdown__heading {\n    font-size: calc(((var(--font-h2-mobile)) \/ (var(--font-base-size))) * 1rem);\n  }\n  .m-custom-countdown .container-fluid {\n    padding: 0;\n  }\n  .m-custom-countdown .m-countdown-timer__digit {\n    font-size: calc(((var(--font-h1-mobile)) \/ (var(--font-base-size))) * 1rem);\n  }\n  .m-custom-countdown .m-countdown__inner {\n    width: 100%;\n  }\n  .m-custom-countdown .m-countdown-timer__wrapper {\n    justify-content: center;\n  }\n}"
+      }
+    },
+    "video_hero_hadgbb": {
+      "type": "video-hero",
+      "custom_css": [
+        "@media (max-width: 767px) {.m-hero__bg {height: 660px; }}"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "video_ratio": "21\/9",
+        "show_overlay": true,
+        "video_type": "shopify",
+        "content_in_container": false,
+        "content_position": "center middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "white",
+        "title": "Only the Essentials",
+        "subtitle": "New Arrivals",
+        "text": "",
+        "button_label": "Explore Now",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "button_label_2": "",
+        "button_link_2": "",
+        "button_style_2": "m-button--primary",
+        "button_size_2": "",
+        "use_content_above": true,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_4JqWQQ": {
+      "type": "custom-content",
+      "blocks": {
+        "text_ypGWLt": {
+          "type": "text",
+          "settings": {
+            "title": "Embrace comfort and style with this <br> wardrobe essential.",
+            "subheading": "",
+            "text": "",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "small",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_ypGWLt"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-richtext__title br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_banner_NfgKYP": {
+      "type": "featured-collection-banner",
+      "blocks": {
+        "image_card_FGYHwX": {
+          "type": "image_card",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_left",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subtitle": "New Arrivals",
+            "title": "T-Shirt Bundles Uniform",
+            "button_label": "Shop Now",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_FGYHwX"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-image-card__heading {font-size: 30px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "product_to_show": 6,
+        "item_gap": 30,
+        "row_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "use_scroll_mobile": false,
+        "item_gap_mobile": 16,
+        "row_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_RmALrR": {
+      "type": "custom-content",
+      "blocks": {
+        "image_card_tWkR3i": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Bottoms",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_EqW7LQ": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "white",
+            "title": "Tops",
+            "subtitle": "",
+            "description": "",
+            "button_label": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_card_hBjxc8": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "badge-hot",
+            "content_position": "center_center",
+            "content_alignment": "center",
+            "text_size": "large",
+            "text_color": "white",
+            "title": "20% OFF",
+            "subtitle": "In Store & Online",
+            "description": "<p>Save extra on our sale collection<br\/>*Runs until 11:59pm PST<\/p>",
+            "button_label": "Shop Sale",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_card_tWkR3i",
+        "image_card_EqW7LQ",
+        "image_card_hBjxc8"
+      ],
+      "custom_css": [
+        ".m-richtext__description {font-weight: 500;}",
+        "@media (max-width: 767px) {.m-image-card .m-button {margin-top: 32px; } .m-richtext__description {margin-top: 12px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 5,
+        "gap_mobile": 20,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "featured_collection_xK9xYJ": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_showcase_g8fREP": {
+      "type": "collection-showcase",
+      "blocks": {
+        "collection_3ijpgU": {
+          "type": "collection",
+          "settings": {
+            "title": "Shirts",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Shirts",
+            "heading_size": "h2",
+            "button_text": "Shop Shirts",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_ewhibn": {
+          "type": "collection",
+          "settings": {
+            "title": "T-Shirts",
+            "subheading": "New Collection",
+            "heading": "Organic Linen T-Shirts",
+            "heading_size": "h2",
+            "button_text": "Shop T-Shirts",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_B6RhPX": {
+          "type": "collection",
+          "settings": {
+            "title": "Outwear",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Outwear",
+            "heading_size": "h2",
+            "button_text": "Shop Outwear",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_ycPt8W": {
+          "type": "collection",
+          "settings": {
+            "title": "Pants",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Shirts",
+            "heading_size": "h2",
+            "button_text": "Shop Pants",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_3ijpgU",
+        "collection_ewhibn",
+        "collection_B6RhPX",
+        "collection_ycPt8W"
+      ],
+      "settings": {
+        "container": "container-full",
+        "color_scheme": "scheme-2f6a4338-aa17-41d9-9ebb-4306bc9c29b7",
+        "color_scheme_tab": "dark",
+        "image_position": "right",
+        "product_to_show": 3,
+        "pcard_image_ratio": "original",
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_gP6ABD": {
+      "type": "custom-content",
+      "blocks": {
+        "image_comparison_mRCdi4": {
+          "type": "image_comparison",
+          "settings": {
+            "width": "50%",
+            "subtitle": "",
+            "title": "",
+            "text": "",
+            "text_size": "small",
+            "content_alignment": "left",
+            "text_color": "black",
+            "layout": "horizontal",
+            "image_height": "adapt",
+            "before_heading": "Cocoa",
+            "after_heading": "Slate Grey",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "text_WadPgJ": {
+          "type": "text",
+          "settings": {
+            "title": "Performance chino <br> great in theory",
+            "subheading": "Compare Product",
+            "text": "<p>Here is your chance to upgrade your wardrobe <br\/>with a variation of styles and fits that are both.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop This Product",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "image_comparison_mRCdi4",
+        "text_WadPgJ"
+      ],
+      "custom_css": [
+        ".m-image-comparison__heading {box-shadow: none; height: 34px; border-radius: 5px; padding: 6px 12px;}",
+        ".m-image-comparison__after .m-image-comparison__heading {top: auto; bottom: 22px;}",
+        "@media (max-width: 1023px) {.m-custom-content__wrapper {row-gap: 48px; } br {display: none; } .m-richtext__description + .m-richtext__button {margin-top: 32px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "empty_space_qULYyn": {
+      "type": "empty-space",
+      "custom_css": [
+        "@media (max-width: 767px) {.m-section-py {--section-padding-top-mobile: 32px; --section-padding-bottom-mobile: 32px; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "show_divider_line": true,
+        "divider_style": "solid",
+        "divider_height": 1,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "custom_class": ""
+      }
+    },
+    "collection_list_x8Q4yb": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_NnfrKq": {
+          "type": "collection_block",
+          "settings": {
+            "title": "T-Shirts"
+          }
+        },
+        "collection_block_TbjYPD": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Pants"
+          }
+        },
+        "collection_block_iaNP8T": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sweaters"
+          }
+        },
+        "collection_block_NRDHtB": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Polo"
+          }
+        },
+        "collection_block_X37cKD": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shoes"
+          }
+        },
+        "collection_block_GCQgp7": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shorts"
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_NnfrKq",
+        "collection_block_TbjYPD",
+        "collection_block_iaNP8T",
+        "collection_block_NRDHtB",
+        "collection_block_X37cKD",
+        "collection_block_GCQgp7"
+      ],
+      "custom_css": [
+        ".m-mixed-layout--mobile-scroll .m-mixed-layout__inner > * {--mobile-column-width: 42vw;}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": false,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": true,
+        "items_per_row": 6,
+        "item_gap": 100,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "mobile_gap": 30,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "countdown_timer_UYaTYN": {
+      "type": "countdown-timer",
+      "custom_css": [
+        "@media (max-width: 767px) {.m-countdown-section__bg-mobile {margin-bottom: 48px; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "scheme-2f6a4338-aa17-41d9-9ebb-4306bc9c29b7",
+        "align": "start",
+        "background_in_container": false,
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "use_image_as_background": false,
+        "heading": "Organic Cotton Jean",
+        "description": "",
+        "time": "2024-03-30 23:00:00",
+        "heading_size": "h3",
+        "button_label": "Get Only $30",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-countdown",
+        "animations": "inherit"
+      }
+    },
+    "featured_collection_BT7LDj": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "A new season essential",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": true,
+        "show_pagination": false,
+        "show_navigation": true,
+        "show_button_on_header": false,
+        "button_type": "link",
+        "button_text": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "testimonials_34QhWF": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_LN9EwM": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Very comfortable. Feels like<br\/> a really good quality shirt and a beautiful color!<\/p>",
+            "footer": "<p>Jame W.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "testimonial_BdRpKw": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>My son loves these t shirts.<br\/> Awesome soft cotton and heavy weight. Good quality!<\/p>",
+            "footer": "<p>Shane W.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "testimonial_NpnaEV": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Very comfortable. Feels like<br\/> a really good quality shirt and a beautiful color!<\/p>",
+            "footer": "<p>Brian B.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "testimonial_MWB3Uw": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Very comfortable. Feels like<br\/> a really good quality shirt and a beautiful color!<\/p>",
+            "footer": "<p>Sam K.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_LN9EwM",
+        "testimonial_BdRpKw",
+        "testimonial_NpnaEV",
+        "testimonial_MWB3Uw"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "design": "testimonials-7",
+        "show_stars": true,
+        "autorotate": true,
+        "show_navigation": false,
+        "show_pagination": false,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "empty_space_xcTTcY": {
+      "type": "empty-space",
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "show_divider_line": true,
+        "divider_style": "solid",
+        "divider_height": 1,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "custom_class": ""
+      }
+    },
+    "16225125199f82d8fe": {
+      "type": "icon-box",
+      "blocks": {
+        "16225125199f82d8fe-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "100 Days Return",
+            "description": "<p>No question asked<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16225125199f82d8fe-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Lifetime Warranty",
+            "description": "<p>For original owners<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "16225125199f82d8fe-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Customers Services",
+            "description": "<p>Our priority<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "16225125199f82d8fe-0",
+        "16225125199f82d8fe-1",
+        "16225125199f82d8fe-2"
+      ],
+      "custom_css": [
+        ".m-icon-box--vertical .m-icon-box__content {margin-top: 12px;}",
+        ".m-mixed-layout--mobile-scroll .m-mixed-layout__inner > * {--mobile-column-width: 54vw;}"
+      ],
+      "settings": {
+        "heading": "Embrace comfort & style",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 0,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "76px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": true,
+        "show_navigation": true,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "m-icon-box--small",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "custom_code_Wmhjii",
+    "video_hero_hadgbb",
+    "custom_content_4JqWQQ",
+    "featured_collection_banner_NfgKYP",
+    "custom_content_RmALrR",
+    "featured_collection_xK9xYJ",
+    "collection_showcase_g8fREP",
+    "custom_content_gP6ABD",
+    "empty_space_qULYyn",
+    "collection_list_x8Q4yb",
+    "countdown_timer_UYaTYN",
+    "featured_collection_BT7LDj",
+    "testimonials_34QhWF",
+    "empty_space_xcTTcY",
+    "16225125199f82d8fe"
+  ]
+}

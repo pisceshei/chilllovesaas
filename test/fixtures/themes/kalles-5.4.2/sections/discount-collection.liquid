@@ -1,0 +1,811 @@
+<!-- discount-collection.liquid -->
+
+
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+  if section.settings.space_items == "x"
+    assign space_item = settings.spacing_grid_horizontal
+  else
+    assign space_item = section.settings.space_items
+  endif
+  
+  assign product_collection = section.settings.product_list | default: section.settings.collection.products
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq 
+-%}
+
+{%- capture sizes -%}
+  (min-width: 1150px) calc(({{ current_width }} -  ({{ space_item }} * ( {{ section.settings.col_dk }} - 1 ))) * 1 / {{ section.settings.col_dk }}),(min-width: 768px) calc( ({{ current_width_tb }} - ({{ space_item_tb }} * ( {{ section.settings.col_tb }} - 1 ))) * 1 / {{ section.settings.col_tb }}), calc( ({{ current_width_mb }} - ({{ space_item_mb }} * ( {{ section.settings.col_mb }} - 1 ) )) * 1 / {{ section.settings.col_mb }})
+{%- endcapture -%}
+{%-style-%}
+  {% render 'spacing-vars', box: section %}
+  #{{ section.id }} hdt-slider {
+    --slide-spacing: {{ space_item }}px;
+  } 
+  #{{section.id}} .hdt-discount-section-content {
+    --pd-tb: 30px;
+    --pd-lr: min(var(--spacing-x),10px);
+    --heading-gap: 10px;
+  }
+  @media(min-width: 1150px) {
+    #{{section.id}} .hdt-discount-section-content {
+      {%- if section.settings.space_items == "x" -%}
+        --pd-lr: var(--spacing-x);
+        --pd-tb: min(var(--spacing-x),30px);
+      {%- else -%}
+        --pd-lr: {{ section.settings.space_items }}px;
+      {%- endif -%}
+      --heading-gap: {{ section.settings.heading_gap }}px;
+    }
+  }
+  {% if section.settings.sec_heading_spacing > 50 %}
+    #{{section.id}} .hdt-discount-section-content {
+      --section-head-spacing: 30px;
+    }
+    @media(min-width:768px){
+      #{{section.id}} .hdt-discount-section-content{
+        --section-head-spacing:50px;
+      }
+    }
+    @media(min-width:1150px){
+      #{{section.id}} .hdt-discount-section-content{
+        --section-head-spacing:{{section.settings.sec_heading_spacing}}px;
+        }
+    }
+  {% elsif section.settings.sec_heading_spacing > 30 %}
+    #{{section.id}} .hdt-discount-section-content{
+      --section-head-spacing:30px;
+    }
+    @media(min-width:768px){
+      #{{section.id}} .hdt-discount-section-content{
+        --section-head-spacing: {{section.settings.sec_heading_spacing}}px;
+      }
+    }
+  {% else %}
+    #{{section.id}} .hdt-discount-section-content{
+      --section-head-spacing:{{section.settings.sec_heading_spacing}}px;
+    }
+  {% endif %}
+  #{{section.id}} .hdt-heading-size-h0 {
+    --line-height: calc( (var(--h0-size) * var(--font-heading-line-height)) / 2 + 5px);
+  }
+  #{{section.id}} .hdt-heading-size-h1 {
+    --line-height: calc( (var(--h1-size) * var(--font-heading-line-height)) / 2 + 5px);
+  }
+  #{{section.id}} .hdt-heading-size-h2 {
+    --line-height: calc( (var(--h2-size) * var(--font-heading-line-height)) / 2 + 5px);
+  }
+  #{{section.id}} :where(.hdt-heading-size-h3,.hdt-heading-size-h4,.hdt-heading-size-h5,.hdt-heading-size-h6) {
+    --line-height: calc(60px / 2 + 5px);
+  }
+  #{{section.id}} .hdt-section-head {
+    margin-top: calc(-1 * var(--line-height));
+  }
+{%-endstyle-%}
+<div id="{{ section.id }}" class="hdt-section-spacing hdt-s-gradient hdt-section-spacing-{{ section.id }}" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-container{%- if section.settings.section_layout == "full_width" -%}-full{% else %}{% if section.settings.half_item %}-full lg:hdt-ps-max {% endif %}{% endif %}">
+    <div class="hdt-discount-section-content hdt-box-layout{{ section.settings.box_layout }} hdt-box-border-{{ section.settings.box_border }} hdt-relative">
+      {%- if section.settings.sec_heading != blank -%}
+        <div class="hdt-section-head hdt-relative hdt-heading-size-{{ section.settings.sec_heading_size }} hdt-flex hdt-justify-{{ section.settings.heading_align }}">
+          <div class="hdt-section-main-heading hdt-flex hdt-align-center hdt-flex-col hdt-text-{{ section.settings.heading_align }} hdt-relative">
+            {%- if section.settings.sec_heading != blank -%}
+              <{{ section.settings.heading_tag }} class="hdt-sec-heading hdt-{{ section.settings.sec_heading_size }} hdt-flex hdt-align-center" hdt-reveal="slide-in" timeline>
+                {{ section.settings.sec_heading }}
+              </{{ section.settings.heading_tag }}>
+            {%- endif -%}
+            {%- for block in section.blocks -%}
+              <hdt-countdown class="hdt-countdown hdt-flex hdt-align-center hdt-justify-center" config='{"month":"{{ block.settings.month }}", "date":"{{ block.settings.day }}, {{ block.settings.year }} {{ block.settings.hour }}:{{ block.settings.minute }}", "hasTextPlural": true }' hdt-reveal="slide-in" timeline>
+                <span class="hdt-countdown-title">
+                  {{ block.settings.title }}
+                  {%- if block.settings.show_icon -%}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M13.5631 11.7661L10.7746 9.67465V5.41441C10.7746 4.98605 10.4283 4.6398 9.99996 4.6398C9.5716 4.6398 9.22535 4.98605 9.22535 5.41441V10.062C9.22535 10.306 9.34 10.5361 9.5352 10.6817L12.6336 13.0055C12.7673 13.1062 12.9302 13.1606 13.0975 13.1604C13.3338 13.1604 13.5662 13.0543 13.718 12.8498C13.9752 12.5081 13.9055 12.0225 13.5631 11.7661Z" fill="currentColor"/>
+                      <path d="M10 0C4.48566 0 0 4.48566 0 10C0 15.5143 4.48566 20 10 20C15.5143 20 20 15.5143 20 10C20 4.48566 15.5143 0 10 0ZM10 18.4508C5.34082 18.4508 1.54918 14.6592 1.54918 10C1.54918 5.34082 5.34082 1.54918 10 1.54918C14.66 1.54918 18.4508 5.34082 18.4508 10C18.4508 14.6592 14.6592 18.4508 10 18.4508Z" fill="currentColor"/>
+                    </svg>
+                  {%- endif -%}
+                </span>
+                {%- if section.settings.box_layout != "3" -%}
+                  <div class="hdt-countdown__inner hdt-flex hdt-align-center hdt-justify-center" aria-hidden="true">
+                    <div class="hdt-countdown-days">
+                      <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-days>00</hdt-countdown-amount>{{ 'sections.countdown_timmer.day_plural' | t }}
+                    </div>
+                    <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-hours>00</hdt-countdown-amount>
+                    <span>:</span>
+                    <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-minutes>00</hdt-countdown-amount>
+                    <span>:</span>
+                    <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-seconds>00</hdt-countdown-amount>
+                  </div>
+                {%- else -%}
+                  <div class="hdt-countdown__inner hdt-flex hdt-align-center hdt-justify-center" aria-hidden="true">
+                    <div class="hdt-countdown-days">
+                      <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-days>00</hdt-countdown-amount>{{ 'sections.countdown_timmer.day_m' | t }}
+                    </div>
+                    <span>:</span>
+                    <div class="hdt-countdown-hours">
+                      <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-hours>00</hdt-countdown-amount>{{ 'sections.countdown_timmer.hr_m' | t }}
+                    </div>
+                    <span>:</span>
+                    <div class="hdt-countdown-minutes">
+                      <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-minutes>00</hdt-countdown-amount>{{ 'sections.countdown_timmer.min_m' | t }}
+                    </div>
+                    <span>:</span>
+                    <div class="hdt-countdown-seconds">
+                      <hdt-countdown-amount effect="{{ block.settings.effect_cd }}" class="hdt-countdown__amount" data-seconds>00</hdt-countdown-amount>{{ 'sections.countdown_timmer.sec_m' | t }}
+                    </div>
+                  </div>
+                {%- endif -%}
+                {%- if block.settings.mess_complete != blank %}<div class="hdt-countdown__message hdt-hidden hdt-s-text">{{ block.settings.mess_complete }}</div>{% endif -%}
+              </hdt-countdown>
+            {% endfor %}
+          </div>  
+        </div>
+      {%- endif -%}
+      <hdt-slider id="Slider-{{ section.id }}" class="hdt-collection-products hdt-slider__products hdt-collection-has-pr{{ section.settings.product_des }} hdt-pr-border_{{ section.settings.pr_border }} hdt-ratio--{{ section.settings.image_ratio }} {% unless section.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-slider hdt-slider-parent hdt-slide-spacing-{{ section.settings.space_items }} hdt-relative {% if section.settings.navUI %}hdt-slider-has-nav hdt-nav-btns-{{ section.settings.nav_des }} hdt-nav-shape_{{ section.settings.nav_shape }} hdt-nav-{{ section.settings.nav_pos }} hdt-nav-{{ section.settings.nav_size }}{% endif %} {% if section.settings.dotUI %}hdt-slider-has-dots-dk{% endif %} hdt-dots-{{ section.settings.dots_des }} hdt-dots-rounded-{{ section.settings.dots_rounded }} lg:hdt-slides-{{ section.settings.col_dk }} md:hdt-slides-{{ section.settings.col_tb }} hdt-slides-{{ section.settings.col_mb }}" config='{ "id": "Slider-{{ section.id }}", "navUI": {{ section.settings.navUI }}, "dotUI": true, "navUICenter": true }'>
+        {% if section.settings.navUI %}
+          {%- if section.settings.nav_pos == "middle_in" or section.settings.nav_pos == "on_border" -%}
+            {%- render 'nav_slider', nav_des: section.settings.nav_des -%}
+          {%- endif -%}
+        {% endif %}
+        <div hdt-slider-dots class="hdt-slider__dots hdt-flex hdt-align-center hdt-justify-{{ section.settings.dots_align }} no-js-hidden" aria-controls="Slider-{{ section.id }}"></div>
+        <div class="hdt-slider__viewport hdt-relative">
+          <div class="hdt-slider__container">
+            {%- liquid 
+              if product_collection != blank
+                case section.settings.product_des
+                  when '1'
+                    capture btn_wishlist_code
+                      if settings.wishlist_mode != '0'
+                        render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                      endif
+                    endcapture
+                    for product in product_collection limit: section.settings.products_count
+                      unless settings.remove_collection_url or section.settings.product_list != blank
+                        assign product_url = product.url | within: section.settings.collection
+                      endunless
+                      render 'card-product-discount1', card_product: product, class: "hdt-slider__slide hdt-pr-style1 hdt-pr-discount-style1", section_id: section.id, sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                    endfor
+                  when '2'
+                    capture btn_wishlist_code
+                      if settings.wishlist_mode != '0'
+                        render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                      endif
+                    endcapture
+                    for product in product_collection limit: section.settings.products_count
+                      unless settings.remove_collection_url or section.settings.product_list != blank
+                        assign product_url = product.url | within: section.settings.collection
+                      endunless
+                      render 'card-product-discount2', card_product: product, section_id: section.id, class: "hdt-slider__slide hdt-pr-style1 hdt-pr-discount-style2", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                    endfor
+                  when '3'
+                    capture btn_wishlist_code
+                      if settings.wishlist_mode != '0'
+                        render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                      endif
+                    endcapture
+                    for product in product_collection limit: section.settings.products_count
+                      unless settings.remove_collection_url or section.settings.product_list != blank
+                        assign product_url = product.url | within: section.settings.collection
+                      endunless
+                      render 'card-product-discount3', card_product: product, section_id: section.id, class: "hdt-slider__slide hdt-pr-style1 hdt-pr-discount-style3", sizes: sizes, image_ratio: section.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: section.settings.show_vendor
+                    endfor
+                endcase
+              else
+                for i in (1..section.settings.products_count)
+                  capture current
+                  cycle 1, 2 , 3, 4
+                  endcapture
+                  assign placeholder_image = 'product-apparel-' | append: current
+                  render 'card-product-placeholder', image_ratio: section.settings.image_ratio, placeholder_image: placeholder_image, section_id: section.id, class: "hdt-slider__slide"
+                endfor
+              endif
+            -%}
+          </div>
+        </div>
+      </hdt-slider>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Discount collection",
+  "tag": "section",
+  "max_blocks": 1,
+  "class": "hdt-section hdt-featured-collection-grid",
+  "disabled_on": {
+    "groups": [
+      "*"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_align",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "text",
+      "id": "sec_heading",
+      "label": "Section heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading tag",
+      "default": "h3",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "h6",
+          "label": "H6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "sec_heading_size",
+      "options": [
+        {
+          "value": "h0",
+          "label": "H0"
+        },
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "h6",
+          "label": "H6"
+        }
+      ],
+      "label": "Heading size",
+      "default": "h4"
+    },
+    {
+      "type": "range",
+      "id": "heading_gap",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Heading gap",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "sec_heading_spacing",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Margin bottom",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "General options"
+    },
+    {
+      "type": "select",
+      "id": "box_layout",
+      "label": "Box layout",
+      "default": "1",
+      "options": [
+        {
+          "value": "1",
+          "label": "Layout 1"
+        },
+        {
+          "value": "2",
+          "label": "Layout 2"
+        },
+        {
+          "value": "3",
+          "label": "Layout 3"
+        }
+      ]
+    },
+    {
+      "id": "box_border",
+      "type": "checkbox",
+      "label": "Enable box border",
+      "default": true
+    },
+    {
+      "id": "collection",
+      "type": "collection",
+      "label": "Select collection"
+    },
+    {
+      "type": "product_list",
+      "id": "product_list",
+      "label": "Products list",
+      "info": "Replaces collection when selected."
+    },
+    {
+      "type": "select",
+      "id": "product_des",
+      "label": "Product design",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        
+      ],
+      "default": "1"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt_image",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "square",
+          "label": "Square"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait"
+        },
+        {
+          "value": "asos",
+          "label": "ASOS"
+        },
+        {
+          "value": "landscape",
+          "label": "Landscape"
+        },
+        {
+          "value": "custom-pr",
+          "label": "Custom"
+        }
+      ],
+      "label": "Image ratio",
+      "default": "adapt_image"
+    },
+    {
+      "type": "checkbox",
+      "id": "image_size",
+      "label": "Full image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Product layout"
+    },
+    {
+      "type": "range",
+      "id": "products_count",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "label": "Maximum items to show",
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "Items per row (Desktop)",
+      "default": "4",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "Items per row (Tablet)",
+      "default": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "Items per row (Mobile)",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "Spacing between items",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "15px",
+          "value": "15"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Slider settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "navUI",
+      "label": "Use navigation",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "nav_des",
+      "label": "Navigation design",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "outline",
+          "label": "Outline"
+        },
+        {
+          "value": "simple",
+          "label": "Simple"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "select",
+      "id": "nav_shape",
+      "label": "Navigation shape",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "rounded",
+          "label": "Rounded"
+        },
+        {
+          "value": "rotate",
+          "label": "Rotate"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "select",
+      "id": "nav_size",
+      "label": "Navigation size",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "small"
+    },
+    {
+      "type": "select",
+      "id": "nav_pos",
+      "label": "Navigation position",
+      "options": [
+        {
+          "value": "middle_in",
+          "label": "Inside content"
+        },
+        {
+          "value": "on_border",
+          "label": "On the border"
+        },
+        {
+          "value": "ontop_right",
+          "label": "On top heading"
+        }
+      ],
+      "default": "on_border"
+    },
+    {
+      "type": "checkbox",
+      "id": "dotUI",
+      "label": "Use dots",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "dots_des",
+      "label": "Dots design",
+      "options": [
+        {
+          "value": "default",
+          "label": "Default"
+        },
+        {
+          "value": "outline",
+          "label": "Outline"
+        },
+        {
+          "value": "elessi",
+          "label": "Elessi"
+        },
+        {
+          "value": "full",
+          "label": "Full"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "checkbox",
+      "id": "dots_rounded",
+      "label": "Dots rounded",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "dots_align",
+      "label": "Dots align",
+      "options": [
+        {
+          "value": "start",
+          "label": "Start"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "end",
+          "label": "End"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Section layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "default": "background-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+  ],
+  "blocks": [
+    {
+      "type": "countdown",
+      "limit": 1,
+      "name": "Countdown time",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "default": "End in:",
+          "label": "Title"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_icon",
+          "default": false,
+          "label": "Show icon"
+        },
+        {
+          "type": "number",
+          "id": "year",
+          "default": 2030,
+          "label": "Year"
+        },
+        {
+          "type": "range",
+          "id": "month",
+          "min": 1,
+          "max": 12,
+          "step": 1,
+          "default": 4,
+          "label": "Month"
+        },
+        {
+          "type": "range",
+          "id": "day",
+          "min": 1,
+          "max": 31,
+          "step": 1,
+          "default": 19,
+          "label": "Day"
+        },
+        {
+          "type": "range",
+          "id": "hour",
+          "min": 0,
+          "max": 23,
+          "step": 1,
+          "default": 12,
+          "label": "Hour"
+        },
+        {
+          "type": "range",
+          "id": "minute",
+          "min": 0,
+          "max": 59,
+          "step": 1,
+          "default": 0,
+          "label": "Minute"
+        }
+      ]
+    }
+  ],
+  /*"presets": [
+    {
+      "name": "Discount collection",
+      "category": "Collections",
+      "blocks": [
+        {
+          "type": "countdown"
+        }
+      ]
+    }
+  ]*/
+}
+{% endschema %}

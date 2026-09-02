@@ -1,0 +1,236 @@
+{
+  "name": "t:sections.name_group.header",
+  "type": "header",
+  "sections": {
+    "header_menu_bottom_blocks_cBXebY": {
+      "type": "header-menu-bottom-blocks",
+      "blocks": {
+        "mega_block_tqimP8": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Home",
+            "mega_menu_colors": "",
+            "mega_width": "full",
+            "mega_position": "bottom",
+            "mega_custom_width": 1200,
+            "mega_presets": "html",
+            "html": "",
+            "page": "demos",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "adapt_image",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_dQDrGm": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Shop",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_shop",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "women",
+              "men"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_CMxeCb": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Products",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_product",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_WmqANm": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Sale",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_sale",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [
+              "sunsets-lotus-bottom-1",
+              "sunsets-lotus-bottom",
+              "sunsets-lotus-kauai-keyhole-6",
+              "sunsets-lotus-kauai-keyhole-5",
+              "sunsets-lotus-kauai-keyhole-4",
+              "sunsets-lotus-kauai-keyhole-3",
+              "swim-systems-cayenne",
+              "sunsets-lotus-kauai-keyhole-2",
+              "sunsets-lotus-kauai-keyhole-1",
+              "sunsets-lotus-kauai-keyhole"
+            ],
+            "collection_list": [
+              "fashion-22"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_eiXP68": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Pages",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_page",
+            "html": "",
+            "page": "",
+            "blog": "",
+            "product_list": [],
+            "collection_list": [
+              "fashion-22"
+            ],
+            "limit": 8,
+            "image_ratio": "asos",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        },
+        "mega_block_R9UE7C": {
+          "type": "_mega_block",
+          "name": "Mega Block",
+          "settings": {
+            "title": "Blog",
+            "mega_menu_colors": "",
+            "mega_width": "custom",
+            "mega_position": "center_on_screen",
+            "mega_custom_width": 1200,
+            "mega_presets": "mega_blog",
+            "html": "",
+            "page": "",
+            "blog": "fashion-22",
+            "product_list": [],
+            "collection_list": [],
+            "limit": 8,
+            "image_ratio": "landscape",
+            "image_size": true,
+            "navUI": true,
+            "collection_colors": "",
+            "product_list_title": "BEST SELLER",
+            "child_menu": ""
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "mega_block_tqimP8",
+        "mega_block_dQDrGm",
+        "mega_block_CMxeCb",
+        "mega_block_WmqANm",
+        "mega_block_eiXP68",
+        "mega_block_R9UE7C"
+      ],
+      "custom_css": [
+        "@media (min-width: 1199px) {.hdt-container-full {padding-inline-start: 48px; padding-inline-end: 48px; } .hdt-search_form .hdt-search_input {font-size: 1.6rem; }}",
+        "@media (width >=768px) {.hdt-list-categories {display: none; }}"
+      ],
+      "name": "t:sections.header.header_bottom.name_new",
+      "settings": {
+        "header_layout": "logo_center",
+        "header_fullwidth": true,
+        "header_border_bottom": false,
+        "logo": "shopify:\/\/shop_images\/kalles.svg",
+        "logo_width": 136,
+        "header_height": 115,
+        "header_colors": "scheme-3a1d714f-d575-43d9-a28d-34da88e3bfa4",
+        "search_type": "none",
+        "enabled_user": true,
+        "enabled_wishlist": true,
+        "enabled_language_currency": false,
+        "content_left_box": "search_form",
+        "search_form_radius": 3,
+        "other_main_header_content": "",
+        "header_bottom_height": 60,
+        "header_bottom_colors": "",
+        "main_menu": "main-menu",
+        "lazy_mn": true,
+        "menu_position": "center",
+        "menu_size": "lg",
+        "menu_weight": "normal",
+        "text_transform": false,
+        "dropdown_arrow": false,
+        "spacing_nav": 30,
+        "open_event": "hover",
+        "header_menu_colors": "",
+        "header_categories": true,
+        "title_categories": "All Categories",
+        "menu_categories": "multi-brand-categories",
+        "header_border": "none",
+        "header_height_mb": 60,
+        "logo_width_mb": 96,
+        "main_menu_mobile": "",
+        "lazy_mn_mb": true,
+        "only_click_icon": false,
+        "header_mobile_colors": "",
+        "note_mobile": "<span class=\"hdt-inline-flex hdt-text-base hdt-font-medium\" style=\"border-bottom: solid 1px rgb(var(--color-line-border));margin-bottom: 11px\">Need help ? <\/span><span class=\"hdt-flex hdt-flex-col hdt-text-base hdt-font-medium\" style=\"line-height: 24px;\"><span>Address: 1234 Fashion Street, Suite 567,<br> New York, NY 10001<\/span><span>Email: <b>info@fashionshop.com<\/b><\/span><span>Phone: <b>(212) 555-1234<\/b><\/span><\/span>",
+        "sticky_type": "on_scroll_up",
+        "sticky_glass": false
+      }
+    }
+  },
+  "order": [
+    "header_menu_bottom_blocks_cBXebY"
+  ]
+}

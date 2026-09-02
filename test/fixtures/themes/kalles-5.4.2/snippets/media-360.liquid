@@ -1,0 +1,102 @@
+{%- liquid
+  if product.metafields.theme.media_360 != blank
+    assign images = product.metafields.theme.media_360.value
+    for image in images
+      if forloop.first
+        assign preview_image = image
+      endif
+    endfor
+  else
+    assign preview_image = product.media | where: 'alt', 'break--360' | first
+    assign index = product.media | find_index: 'alt', 'break--360'
+    assign images = product.media | slice: index, product.media.size
+  endif
+  
+  # Auto-detect RTL based on locale (Arabic, Hebrew, Persian, Urdu, Yiddish, etc.)
+  # To manually override, pass rtl parameter: render 'media-360', rtl: true
+  assign rtl_locales = 'ar,he,fa,ur,yi' | split: ','
+  assign current_locale = request.locale.iso_code | slice: 0, 2
+  assign is_rtl = rtl
+  unless is_rtl != blank
+    assign is_rtl = false
+    if rtl_locales contains current_locale
+      assign is_rtl = true
+    endif
+  endunless
+-%}
+{%- if type == 'media' -%}
+  <div class="{{ class }} hdt-product__media-item">
+    <div class="hdt-ratio hdt-product__media hdt-media-360-container" style="--aspect-ratioapt:{{ preview_image.aspect_ratio | default: 1 }};--mw-media: {{ preview_image.width }}px">
+      {%- comment -%}
+        data-rtl: Auto-detected for Right-to-Left languages (Arabic, Hebrew, Persian, Urdu, etc.)
+        data-button-step: Number of frames to move when clicking prev/next buttons (default: 2)
+        data-button-step-speed: Milliseconds between frames during button animation (default: 60)
+          - Lower value = faster animation (e.g., 40ms for quick)
+          - Higher value = slower animation (e.g., 80ms for smooth)
+        This will reverse the drag direction and scrubber orientation
+      {%- endcomment -%}
+      <hdt-360-viewer class="hdt-360-viewer" data-autoplay="true" data-autoplay-speed="100" data-rtl="{{ is_rtl }}" data-button-step="2" data-button-step-speed="60">
+        {%- for image in images -%}
+          <img 
+            src="{{ image | image_url: width: image.width }}" 
+            alt="360 view frame {{ forloop.index }}"
+            width="{{ image.width }}"
+            height="{{ image.height }}"
+            class="hdt-360-frame{% if forloop.first %} active{% endif %}"
+            data-frame="{{ forloop.index0 }}"
+            loading="{% if forloop.first %}eager{% else %}lazy{% endif %}"
+            sizes="{{ sizes }}"
+            srcset="{{ image | image_url: width: 335 }} 335w,
+                    {{ image | image_url: width: 500 }} 500w,
+                    {{ image | image_url: width: 700 }} 700w,
+                    {{ image | image_url: width: 850 }} 850w,
+                    {{ image | image_url: width: 900 }} 900w"
+          >
+        {%- endfor -%}
+        
+        <div class="hdt-360-controls-wrapper">
+          <div class="hdt-360-scrubber">
+            <div class="hdt-360-scrubber-track">
+              <div class="hdt-360-scrubber-progress"></div>
+              <button type="button" class="hdt-360-scrubber-thumb" aria-label="Scrub through frames">
+                <span class="hdt-360-scrubber-thumb-dot"></span>
+              </button>
+            </div>
+          </div>
+          
+          <div class="hdt-360-controls">
+            <button type="button" class="hdt-360-prev" aria-label="Previous frame">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+            </button>
+            <button type="button" class="hdt-360-play-pause" aria-label="Play/Pause">
+              <svg class="hdt-360-icon-play" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              <svg class="hdt-360-icon-pause" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+              </svg>
+            </button>
+            <button type="button" class="hdt-360-next" aria-label="Next frame">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </hdt-360-viewer>
+    </div>
+  </div>
+{%- else -%}
+  <div {% if block.settings.enable_thumb_efect %} reval {% endif %} class="{{ class }} hdt-thumbnail__media">
+    <div class="hdt-ratio" style="--aspect-ratioapt:{{ preview_image.aspect_ratio }};">
+      {%- liquid
+        echo '<span class="hdt-thumbnail__badge">'
+          render 'icon' with 'media_360_viewer'
+        echo '</span>'
+        echo preview_image | image_url: width: 300 | image_tag: class: image_class, sizes: '150px', widths: '100, 200, 300', loading: 'lazy'
+      -%}
+    </div>
+  </div>
+{%- endif -%}

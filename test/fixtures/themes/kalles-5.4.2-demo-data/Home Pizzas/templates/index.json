@@ -1,0 +1,1863 @@
+{
+  "sections": {
+    "banners_Kpnm4B": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_gNHtzj": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": true,
+            "overlay_color": "#000000",
+            "overlay_opacity": 85,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "heading_D6TeQh": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Pizza Sets<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_YqVeLt": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "Order Now",
+                "link": "shopify:\/\/collections\/pizzas",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-custom",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#fe4014",
+                "background_hover_btn": "#000000",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "m",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 18,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pizza.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_D6TeQh",
+            "button_YqVeLt"
+          ]
+        },
+        "banner_item_7D3hhB": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": true,
+            "overlay_color": "#000000",
+            "overlay_opacity": 88,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "heading_K4bMR4": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Burgers<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_9dzBQh": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "Order Now",
+                "link": "shopify:\/\/collections\/burgers",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-custom",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#fe4014",
+                "background_hover_btn": "#000000",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "m",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 18,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pizza2.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_K4bMR4",
+            "button_9dzBQh"
+          ]
+        },
+        "banner_item_FEgxqU": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "none",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+            "content_position_type": "container",
+            "position_x": 50,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "center",
+            "position_x_mb": 50,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "center",
+            "overlay_content": true,
+            "overlay_color": "#000000",
+            "overlay_opacity": 85,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "heading_6VKkwQ": {
+              "type": "heading",
+              "name": "t:blocks.heading.name",
+              "settings": {
+                "heading": "<p>Soft Drink<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_rknGzw": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "Order Now",
+                "link": "shopify:\/\/collections\/soft-drink",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-custom",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#fe4014",
+                "background_hover_btn": "#000000",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "m",
+                "text_size": "hdt-text-base",
+                "font_weight": "normal",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 18,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/pizza3_1.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_6VKkwQ",
+            "button_rknGzw"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_gNHtzj",
+        "banner_item_7D3hhB",
+        "banner_item_FEgxqU"
+      ],
+      "custom_css": [
+        ".hdt-slider__slide .hdt-overlay-wrap {--overlay-opacity: 0;}",
+        "@media (width >= 768px) {.hdt-slider__slide .hdt-content {display: none; --overlay-opacity: 0; } .hdt-slider__slide:hover .hdt-content {display: block; } .hdt-slider__slide:hover .hdt-overlay-wrap {--overlay-opacity: 0.65; } .hdt-slider__slide .hdt-overlay-wrap {--overlay-opacity: 0; transition: transform 3s ease-out; }}"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "adapt_image",
+        "fixed_height": 800,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 430,
+        "space_items": "0px",
+        "space_items_tb": "0px",
+        "space_items_mb": "0px",
+        "col_dk": "3",
+        "col_tb": "3",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,0px,",
+        "pd": ",,0px,",
+        "pd_mb": ",,0px,"
+      }
+    },
+    "custom_section_Mj4QkB": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_tm7nVa": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 57,
+            "spacing_v_dk": 32,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_width": "full",
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "right",
+            "alignment_mb": "center",
+            "background_image": "shopify:\/\/shop_images\/bg1.jpg",
+            "background_color": "#d2a2a2",
+            "rounded": "none"
+          },
+          "blocks": {
+            "group_xeCbNq": {
+              "type": "group",
+              "name": "Group",
+              "settings": {
+                "content_direction": "row",
+                "vertical_on_mobile": true,
+                "horizontal_alignment": "center",
+                "vertical_alignment": "center",
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 55,
+                "width": "fit-content",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100,
+                "colors_by_block": false,
+                "color_scheme": "scheme-1",
+                "group_rounded": "",
+                "padding_top": 0,
+                "padding_bottom": 0,
+                "padding_left": 0,
+                "padding_right": 0,
+                "padding_rate_mobile": 0
+              },
+              "blocks": {
+                "spacer_TJ4hQ9": {
+                  "type": "spacer",
+                  "name": "t:blocks.spacer.name",
+                  "settings": {
+                    "direction": false,
+                    "space_lg": 0,
+                    "space_md": 32,
+                    "space": 30
+                  },
+                  "blocks": {}
+                },
+                "heading_8YChRJ": {
+                  "type": "heading",
+                  "name": "t:blocks.heading.name",
+                  "settings": {
+                    "heading": "<p>Have an <strong>Order for Pizza<\/strong><\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 36,
+                    "font_size_heading": 20,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                },
+                "text_cCJh9F": {
+                  "type": "text",
+                  "name": "t:blocks.text.name",
+                  "settings": {
+                    "text": "<p>Get Free Shipping On All Orders<\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "ffamily": "",
+                    "text_size": "custom",
+                    "line_height": "",
+                    "font_weight": "normal",
+                    "text_color": "hdt-s-text",
+                    "countdown": "2025-12-30 15:00:00",
+                    "txt_day": "days",
+                    "font_size_text_lg": 16,
+                    "font_size_text": 16,
+                    "letter_spacing_text": 0
+                  },
+                  "blocks": {}
+                },
+                "spacer_CwfCgN": {
+                  "type": "spacer",
+                  "name": "t:blocks.spacer.name",
+                  "settings": {
+                    "direction": false,
+                    "space_lg": 0,
+                    "space_md": 0,
+                    "space": 16
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "spacer_TJ4hQ9",
+                "heading_8YChRJ",
+                "text_cCJh9F",
+                "spacer_CwfCgN"
+              ]
+            }
+          },
+          "block_order": [
+            "group_xeCbNq"
+          ]
+        },
+        "multi_column_9FfUh8": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "5",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 32,
+            "spacing_v_dk": 0,
+            "spacing_h_tb": 0,
+            "spacing_v_tb": 0,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 0,
+            "content_width": "auto",
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "left",
+            "alignment_mb": "center",
+            "background_image": "shopify:\/\/shop_images\/bg1.jpg",
+            "background_color": "#d2a2a2",
+            "rounded": "none"
+          },
+          "blocks": {
+            "group_8z7JDj": {
+              "type": "group",
+              "name": "Group",
+              "settings": {
+                "content_direction": "row",
+                "vertical_on_mobile": false,
+                "horizontal_alignment": "flex-start",
+                "vertical_alignment": "center",
+                "horizontal_alignment_flex_direction_column": "flex-start",
+                "vertical_alignment_flex_direction_column": "center",
+                "gap": 0,
+                "width": "fit-content",
+                "custom_width": 100,
+                "width_mobile": "fit-content",
+                "custom_width_mobile": 100,
+                "colors_by_block": false,
+                "color_scheme": "",
+                "group_rounded": "",
+                "padding_top": 0,
+                "padding_bottom": 0,
+                "padding_left": 0,
+                "padding_right": 0,
+                "padding_rate_mobile": 0
+              },
+              "blocks": {
+                "heading_GwCzMF": {
+                  "type": "heading",
+                  "name": "t:blocks.heading.name",
+                  "settings": {
+                    "heading": "<p>Call Us: <strong>1900-456-987<\/strong><\/p>",
+                    "hidden_br_mobile": false,
+                    "hidden_on_mobile": false,
+                    "line_height": "hdt-lh-1-2",
+                    "font_weight": "normal",
+                    "heading_size": "h_custom",
+                    "text_color": "hdt-s-text",
+                    "font_size_heading_lg": 36,
+                    "font_size_heading": 16,
+                    "letter_spacing_heading": 0
+                  },
+                  "blocks": {}
+                }
+              },
+              "block_order": [
+                "heading_GwCzMF"
+              ]
+            },
+            "spacer_t7traE": {
+              "type": "spacer",
+              "name": "t:blocks.spacer.name",
+              "settings": {
+                "direction": false,
+                "space_lg": 0,
+                "space_md": 32,
+                "space": 30
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "group_8z7JDj",
+            "spacer_t7traE"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_tm7nVa",
+        "multi_column_9FfUh8"
+      ],
+      "custom_css": [
+        "strong {font-weight: 700;}",
+        "@media (width < 768px) {.hdt-group-content {--gap: 0 !important; }}",
+        ".hdt-h_custom {font-weight: 500;}",
+        "@media (768px<=width<=1150px) {.hdt-layout-flex--row {flex-direction: column; } .hdt-group-block .hdt-layout-flex {gap: 10px !important; }}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 0,
+        "item_spacing_tb": 0,
+        "item_spacing_mb": 0,
+        "colors_by_section": true,
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,0px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "collections_list_pPNhgF": {
+      "type": "collections-list",
+      "blocks": {
+        "collection_item_iiHaRD": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "pizzas",
+            "image": "shopify:\/\/shop_images\/pizza_03.jpg",
+            "title": "Pizzas",
+            "collection_link": "shopify:\/\/collections\/pizzas"
+          },
+          "blocks": {}
+        },
+        "collection_item_XYLCmh": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "",
+            "image": "shopify:\/\/shop_images\/pizza_03-02.jpg",
+            "title": "Burgers",
+            "collection_link": "shopify:\/\/collections\/burgers"
+          },
+          "blocks": {}
+        },
+        "collection_item_39CQJE": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "pizzas",
+            "image": "shopify:\/\/shop_images\/pizza_07.jpg",
+            "title": "Fries",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_8x6i4r": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "soft-drink",
+            "image": "shopify:\/\/shop_images\/pizza_09.jpg",
+            "title": "Drinks",
+            "collection_link": "shopify:\/\/collections\/soft-drink"
+          },
+          "blocks": {}
+        },
+        "collection_item_mFNEKT": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "burgers",
+            "image": "shopify:\/\/shop_images\/pizza_11.jpg",
+            "title": "Sandwich",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "collection_item_TWE77y": {
+          "type": "_collection_item",
+          "settings": {
+            "collection": "pizzas",
+            "image": "shopify:\/\/shop_images\/pizza_13.jpg",
+            "title": "Chicken",
+            "collection_link": ""
+          },
+          "blocks": {}
+        },
+        "section-heading-collections-list": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "collection_item_iiHaRD",
+        "collection_item_XYLCmh",
+        "collection_item_39CQJE",
+        "collection_item_8x6i4r",
+        "collection_item_mFNEKT",
+        "collection_item_TWE77y"
+      ],
+      "custom_css": [
+        ".hdt-collection-img {border: 1px dashed;}"
+      ],
+      "name": "t:sections.collections-list.name",
+      "settings": {
+        "collection_list": [],
+        "collection_des": "5",
+        "content_size": "xl",
+        "content_weight": "semibold",
+        "content_position": "center",
+        "content_space": 20,
+        "show_count": false,
+        "count_label": "Products",
+        "image_rounded": true,
+        "enable_border": false,
+        "image_padding": 30,
+        "image_ratio": "adapt_image",
+        "image_size": true,
+        "img_effect": "zoom",
+        "b_effect": "none",
+        "col_dk": "6",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "layout_mode": "grid",
+        "loop": false,
+        "autoplay": 0,
+        "pauseOnHover": false,
+        "navUI": false,
+        "nav_position": "default",
+        "nav_visible": "always",
+        "nav_style": "default",
+        "nav_shape": "default",
+        "nav_size": "small",
+        "nav_hide_mobile": false,
+        "dotUI": false,
+        "pag_style": "default",
+        "pag_rounded": true,
+        "pag_space": 10,
+        "pag_mgt": 10,
+        "pag_hide_mobile": false,
+        "colors_by_section": true,
+        "color_scheme": "scheme-1",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,60px,",
+        "mg_mb": ",,20px,",
+        "pd": "100px,,100px,",
+        "pd_mb": "30px,,30px,"
+      }
+    },
+    "featured_collection_ExdHVR": {
+      "type": "featured-collection",
+      "blocks": {
+        "product_carousel_b4dHbp": {
+          "type": "_product-carousel",
+          "name": "t:blocks.product_carousel.name",
+          "settings": {
+            "collection": "pizzas",
+            "products_count": 8,
+            "product_list": [],
+            "pr_border": "in_image",
+            "product_des": "2",
+            "image_ratio": "square",
+            "image_size": true,
+            "show_vendor": false,
+            "col_dk": "5",
+            "col_tb": "3",
+            "col_mb": "2",
+            "space_items": "x",
+            "pagination": false,
+            "paginate_pos": "center",
+            "dis_pagination": 30,
+            "btn_label": "",
+            "btn_style": "",
+            "icon": "none",
+            "size": "m",
+            "btn_fw": "medium",
+            "font_size_btn": 14,
+            "padding_btn": 30,
+            "min_width_btn": 100,
+            "min_width_dt_btn": 100,
+            "min_height_btn": 40,
+            "loop": false,
+            "autoplay": 0,
+            "pauseOnHover": false,
+            "navUI": true,
+            "nav_position": "default",
+            "nav_visible": "always",
+            "nav_style": "default",
+            "nav_shape": "rounded",
+            "nav_size": "medium",
+            "nav_hide_mobile": false,
+            "dotUI": false,
+            "pag_style": "default",
+            "pag_rounded": true,
+            "pag_space": 10,
+            "pag_mgt": 10,
+            "only_show_mobile": false,
+            "pag_hide_mobile": false
+          },
+          "blocks": {}
+        },
+        "pr-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": true,
+            "alignment": "center",
+            "heading_gap": 0,
+            "margin_bottom": 30
+          },
+          "blocks": {
+            "heading_section_WHF8Kx": {
+              "type": "_heading_section",
+              "settings": {
+                "heading": "Popular Dishes",
+                "line_height": "",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 24,
+                "font_size_heading": 24,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "button_wNXYef": {
+              "type": "button",
+              "name": "t:blocks.button.name",
+              "settings": {
+                "label": "View All",
+                "link": "shopify:\/\/collections\/pizzas",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-link",
+                "color_btn": "#ffffff",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#222222",
+                "background_hover_btn": "#333333",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "medium",
+                "font_size_btn": 16,
+                "padding_btn": 5,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "arrow_right",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_WHF8Kx",
+            "button_wNXYef"
+          ]
+        }
+      },
+      "block_order": [
+        "product_carousel_b4dHbp"
+      ],
+      "custom_css": [
+        ".hdt-pr-border_in_image .hdt-card-product__media {border-style: dashed;}",
+        ".hdt-slider .hdt-navigation {--gap-arrow: 45%;}",
+        ".hdt-heading-block {font-weight: 500;}",
+        ".hdt-btn-link {border-bottom-width: 0;}",
+        "@media (width >= 1350px) {.hdt-container-heading > .hdt-container {padding-inline: 0; } .hdt-button-block {justify-content: end; }}",
+        ".hdt-card-product__media + .hdt-card-product__info {margin-top: 2.5rem;}"
+      ],
+      "name": "t:sections.collection_products.name",
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-6483117a-720d-4116-8696-1c739fc5fd2e",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,115px,",
+        "mg_mb": ",,55px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "banners_8YLix7": {
+      "type": "banners",
+      "blocks": {
+        "banner_item_KWGHE9": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "none",
+            "colors_by_block": true,
+            "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+            "content_position_type": "auto",
+            "position_x": 7,
+            "position_y": 50,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center-start",
+            "alignment": "left",
+            "position_x_mb": 3,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "heading_Y36AEQ": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>24\/7 Home Delivery<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 20,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_HKX7CV": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 24,
+                "space_md": 24,
+                "space": 20
+              },
+              "blocks": {}
+            },
+            "text_gUCn3a": {
+              "type": "text",
+              "settings": {
+                "text": "<p>DELICIOUS <strong>PIZZA<\/strong><\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 45,
+                "font_size_text": 36,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_hT4ctC": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 14,
+                "space_md": 14,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "button_XQ8zkC": {
+              "type": "button",
+              "settings": {
+                "label": "Order Now",
+                "link": "shopify:\/\/collections\/pizzas",
+                "open_in_new_tab": false,
+                "full_width": false,
+                "btn_style": "hdt-btn-custom",
+                "color_btn": "#000000",
+                "color_hover_btn": "#ffffff",
+                "background_btn": "#ffe116",
+                "background_hover_btn": "#000000",
+                "border_w_btn": "",
+                "border_btn": "#222222",
+                "border_hover_btn": "#333333",
+                "size": "custom custom-inline",
+                "text_size": "hdt-text-base",
+                "font_weight": "semibold",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 172,
+                "min_height_btn": 25,
+                "rounded": "",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 16,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/b1.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_Y36AEQ",
+            "spacer_HKX7CV",
+            "text_gUCn3a",
+            "spacer_hT4ctC",
+            "button_XQ8zkC"
+          ]
+        },
+        "banner_item_mbbqd9": {
+          "type": "_banner-item",
+          "settings": {
+            "banner_url": "",
+            "banner_target": false,
+            "img_effect": "zoom",
+            "b_effect": "none",
+            "colors_by_block": false,
+            "color_scheme": "",
+            "content_position_type": "auto",
+            "position_x": 80,
+            "position_y": 40,
+            "gap_r": 20,
+            "gap_c": 20,
+            "content_position": "center",
+            "alignment": "left",
+            "position_x_mb": 3,
+            "position_y_mb": 50,
+            "gap_r_mb": 20,
+            "gap_c_mb": 20,
+            "content_position_mb": "center",
+            "alignment_mb": "left",
+            "overlay_content": false,
+            "overlay_color": "#000000",
+            "overlay_opacity": 0,
+            "background_content": false,
+            "background_content_color": "#ffffff",
+            "bg_opacity": 0,
+            "box_square": false,
+            "content_rounded": false,
+            "use_border_content": false,
+            "border_color": "#ffffff",
+            "background_border": "#ffffff",
+            "border_opacity": 0,
+            "border_style": "none",
+            "border_pd_dk": 0,
+            "padding_vertical": 30,
+            "padding_horizontal": 30,
+            "min_width_content": 350,
+            "border_pd": 0
+          },
+          "blocks": {
+            "heading_QjMWc7": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>ORDER ONLINE<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "semibold",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 24,
+                "font_size_heading": 20,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_H8U8UX": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 4,
+                "space_md": 4,
+                "space": 4
+              },
+              "blocks": {}
+            },
+            "text_diznR8": {
+              "type": "text",
+              "settings": {
+                "text": "<p>FAST DELIVERY<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "bold",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 45,
+                "font_size_text": 40,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "banner-media": {
+              "type": "_media",
+              "static": true,
+              "settings": {
+                "source": "image",
+                "image": "shopify:\/\/shop_images\/b2.jpg",
+                "external_video_url": "https:\/\/www.youtube.com\/watch?v=_9VUPq3SxOc",
+                "video_loop": true
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_QjMWc7",
+            "spacer_H8U8UX",
+            "text_diznR8"
+          ]
+        },
+        "banner-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "banner_item_KWGHE9",
+        "banner_item_mbbqd9"
+      ],
+      "custom_css": [
+        ".hdt-slider__slide:first-of-type .hdt-content-inner .hdt-text-custom,.hdt-slider__slide:last-of-type .hdt-content-inner .hdt-text-custom {font-family: var(--f_family_2);}",
+        ".hdt-slider__slide:first-of-type .hdt-content-inner .hdt-text-custom strong {color: #ffe116;}",
+        ".hdt-slider__slide:last-of-type .hdt-content-inner .hdt-text-custom {color: #fe4014;}"
+      ],
+      "name": "t:sections.banner.name",
+      "settings": {
+        "image_height": "fixed",
+        "fixed_height": 400,
+        "image_height_mb": "fixed",
+        "fixed_height_mb": 300,
+        "space_items": "30px",
+        "space_items_tb": "15px",
+        "space_items_mb": "15px",
+        "col_dk": "2",
+        "col_tb": "2",
+        "col_mb": "1",
+        "scrollsnap": false,
+        "colors_by_section": false,
+        "color_scheme": "",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,190px,",
+        "mg_mb": ",,90px,",
+        "pd": "",
+        "pd_mb": ",,26px,"
+      }
+    },
+    "tabs_collection_rYeKPg": {
+      "type": "tabs-collection",
+      "blocks": {
+        "tab_collection_UzdxMd": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Pizza",
+            "collection": "",
+            "hdt_show_icon_image": true,
+            "hdt_icon_image": "shopify:\/\/shop_images\/icon1.png",
+            "hdt_icon_spacing": 14
+          },
+          "blocks": {
+            "product_carousel_a7z6yc": {
+              "type": "_product-carousel",
+              "settings": {
+                "collection": "pizzas",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "square",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "icon": "none",
+                "size": "m",
+                "btn_fw": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "default",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "medium",
+                "nav_hide_mobile": false,
+                "dotUI": false,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 10,
+                "only_show_mobile": false,
+                "pag_hide_mobile": false
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_carousel_a7z6yc"
+          ]
+        },
+        "tab_collection_mDrxCC": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Burger",
+            "collection": "burgers",
+            "hdt_show_icon_image": true,
+            "hdt_icon_image": "shopify:\/\/shop_images\/icon2.png",
+            "hdt_icon_spacing": 14
+          },
+          "blocks": {
+            "product_carousel_4HeAh4": {
+              "type": "_product-carousel",
+              "settings": {
+                "collection": "burgers",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "icon": "none",
+                "size": "m",
+                "btn_fw": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "default",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "medium",
+                "nav_hide_mobile": false,
+                "dotUI": false,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 10,
+                "only_show_mobile": false,
+                "pag_hide_mobile": false
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_carousel_4HeAh4"
+          ]
+        },
+        "tab_collection_8tw67L": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Drink",
+            "collection": "",
+            "hdt_show_icon_image": true,
+            "hdt_icon_image": "shopify:\/\/shop_images\/icon3.png",
+            "hdt_icon_spacing": 14
+          },
+          "blocks": {
+            "product_carousel_LeFhcd": {
+              "type": "_product-carousel",
+              "settings": {
+                "collection": "soft-drink",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "icon": "none",
+                "size": "m",
+                "btn_fw": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "default",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "medium",
+                "nav_hide_mobile": false,
+                "dotUI": false,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 10,
+                "only_show_mobile": false,
+                "pag_hide_mobile": false
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_carousel_LeFhcd"
+          ]
+        },
+        "tab_collection_yjaaMg": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Fries",
+            "collection": "burgers",
+            "hdt_show_icon_image": true,
+            "hdt_icon_image": "shopify:\/\/shop_images\/icon4.png",
+            "hdt_icon_spacing": 14
+          },
+          "blocks": {
+            "product_carousel_qyYB6M": {
+              "type": "_product-carousel",
+              "settings": {
+                "collection": "burgers",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "icon": "none",
+                "size": "m",
+                "btn_fw": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "default",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "medium",
+                "nav_hide_mobile": false,
+                "dotUI": false,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 10,
+                "only_show_mobile": false,
+                "pag_hide_mobile": false
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_carousel_qyYB6M"
+          ]
+        },
+        "tab_collection_Q6Deff": {
+          "type": "_tab-collection",
+          "settings": {
+            "title": "Combo",
+            "collection": "pizzas",
+            "hdt_show_icon_image": true,
+            "hdt_icon_image": "shopify:\/\/shop_images\/icon5.png",
+            "hdt_icon_spacing": 14
+          },
+          "blocks": {
+            "product_carousel_neCGWc": {
+              "type": "_product-carousel",
+              "settings": {
+                "collection": "burgers",
+                "products_count": 8,
+                "product_list": [],
+                "pr_border": "in_image",
+                "product_des": "2",
+                "image_ratio": "adapt_image",
+                "image_size": true,
+                "show_vendor": false,
+                "col_dk": "5",
+                "col_tb": "3",
+                "col_mb": "2",
+                "space_items": "x",
+                "pagination": false,
+                "paginate_pos": "center",
+                "dis_pagination": 30,
+                "btn_label": "",
+                "btn_style": "",
+                "icon": "none",
+                "size": "m",
+                "btn_fw": "medium",
+                "font_size_btn": 14,
+                "padding_btn": 30,
+                "min_width_btn": 100,
+                "min_width_dt_btn": 100,
+                "min_height_btn": 40,
+                "loop": false,
+                "autoplay": 0,
+                "pauseOnHover": false,
+                "navUI": true,
+                "nav_position": "default",
+                "nav_visible": "hover",
+                "nav_style": "default",
+                "nav_shape": "rounded",
+                "nav_size": "medium",
+                "nav_hide_mobile": false,
+                "dotUI": false,
+                "pag_style": "default",
+                "pag_rounded": true,
+                "pag_space": 10,
+                "pag_mgt": 10,
+                "only_show_mobile": false,
+                "pag_hide_mobile": false
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "product_carousel_neCGWc"
+          ]
+        },
+        "tabs-collection-heading": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "center",
+            "heading_gap": 15,
+            "margin_bottom": 35
+          },
+          "blocks": {
+            "heading_section_kEVz7Y": {
+              "type": "_heading_section",
+              "name": "t:blocks.section_heading.name",
+              "settings": {
+                "heading": "Delicious Meals",
+                "line_height": "hdt-lh-1",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 40,
+                "font_size_heading": 30,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_section_kEVz7Y"
+          ]
+        }
+      },
+      "block_order": [
+        "tab_collection_UzdxMd",
+        "tab_collection_mDrxCC",
+        "tab_collection_8tw67L",
+        "tab_collection_yjaaMg",
+        "tab_collection_Q6Deff"
+      ],
+      "custom_css": [
+        ".hdt-tabs-item-title {min-height: 52px;}",
+        ".hdt-tabs-has_border_bg .hdt-tabs-list button {border-style: dashed;}",
+        ".hdt-card-product__media {border-style: dashed;}",
+        "wrapp-hdt-open-modal-btn {border-radius: unset;}",
+        "@media (width < 768px) {.hdt-heading-block {font-weight: 500; }}",
+        ".hdt-tabs-has_border_bg .hdt-tabs-list button:not([aria-current=\"true\"]):not(:hover) {border-color: #eae3e3;}",
+        " {--color-link: #eae3e3;}",
+        ".hdt-heading-block {font-weight: 500;}",
+        ".hdt-slider .hdt-navigation {--gap-arrow: 45%;}"
+      ],
+      "name": "t:sections.tabs_collections.carousel_name",
+      "settings": {
+        "tabs_des": "has_border_bg",
+        "tabs_list_pos": "center",
+        "tab_item_size": "lg",
+        "tab_item_border": "solid",
+        "border_width": 2,
+        "spacing_tabs_items": 30,
+        "tabs_head_spacing": 45,
+        "colors_by_section": true,
+        "color_scheme": "scheme-6483117a-720d-4116-8696-1c739fc5fd2e",
+        "background_opacity": 0,
+        "section_layout": "container",
+        "hdt_background_parallax": false,
+        "mg": ",,120px,",
+        "mg_mb": ",,80px,",
+        "pd": "",
+        "pd_mb": ""
+      }
+    },
+    "custom_section_LtA7hz": {
+      "type": "custom-section",
+      "blocks": {
+        "multi_column_dHDzGE": {
+          "type": "_multi_column",
+          "settings": {
+            "column_dk": "6",
+            "column_tb": "6",
+            "column_mb": "12",
+            "column_dk_10": "10",
+            "column_tb_10": "10",
+            "column_mb_10": "10",
+            "spacing_h_dk": 30,
+            "spacing_v_dk": 60,
+            "spacing_h_tb": 30,
+            "spacing_v_tb": 30,
+            "spacing_h_mb": 15,
+            "spacing_v_mb": 15,
+            "content_width": "auto",
+            "content_position": "center",
+            "content_position_mb": "center",
+            "alignment": "center",
+            "alignment_mb": "center",
+            "background_color": "rgba(0,0,0,0)",
+            "rounded": "none"
+          },
+          "blocks": {
+            "heading_ppgebj": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Subscribe Our Newsletter<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "medium",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 50,
+                "font_size_heading": 36,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            },
+            "spacer_daeMRy": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 10,
+                "space_md": 10,
+                "space": 10
+              },
+              "blocks": {}
+            },
+            "text_gMLcqV": {
+              "type": "text",
+              "name": "t:blocks.text.name",
+              "settings": {
+                "text": "<p>Keep up to Date with Our New Collection and Exclusive Offers<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "ffamily": "",
+                "text_size": "custom",
+                "line_height": "hdt-lh-1-2",
+                "font_weight": "normal",
+                "text_color": "hdt-s-text",
+                "countdown": "2025-12-30 15:00:00",
+                "txt_day": "days",
+                "font_size_text_lg": 16,
+                "font_size_text": 14,
+                "letter_spacing_text": 0
+              },
+              "blocks": {}
+            },
+            "spacer_Weipfx": {
+              "type": "spacer",
+              "settings": {
+                "direction": false,
+                "space_lg": 26,
+                "space_md": 26,
+                "space": 26
+              },
+              "blocks": {}
+            },
+            "newsletter_BNFyjf": {
+              "type": "_newsletter",
+              "settings": {
+                "color_scheme": "scheme-68d9cc3e-b966-417b-ae68-f51bd9a0616c",
+                "des_newsletter": "4",
+                "alignment": "left",
+                "button_lb": "Subscribe",
+                "size": "m",
+                "btn_fw": "medium",
+                "agree_form": false,
+                "content": "I agree with the terms and conditions",
+                "icon": "none",
+                "icon_position": "after",
+                "icon_height": 14,
+                "icon_spacing": 5
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_ppgebj",
+            "spacer_daeMRy",
+            "text_gMLcqV",
+            "spacer_Weipfx",
+            "newsletter_BNFyjf"
+          ]
+        }
+      },
+      "block_order": [
+        "multi_column_dHDzGE"
+      ],
+      "custom_css": [
+        ".hdt-newsletter__inner {background-color: #fff; border: unset; border-radius: 0; padding: 10px;}",
+        ".hdt-newsletter__submit {border-radius: 0; --hdt-btn-padding-x: 21px;}",
+        "input::placeholder {color: #000; font-size: 1.3rem;}"
+      ],
+      "name": "t:sections.custom_section.name",
+      "settings": {
+        "layout": "10",
+        "item_spacing": 30,
+        "item_spacing_tb": 15,
+        "item_spacing_mb": 15,
+        "colors_by_section": true,
+        "color_scheme": "scheme-68d9cc3e-b966-417b-ae68-f51bd9a0616c",
+        "background_opacity": 0,
+        "section_layout": "full_width",
+        "section_background": "shopify:\/\/shop_images\/bg2.jpg",
+        "hdt_background_parallax": false,
+        "mg": ",,0px,",
+        "mg_mb": ",,0px,",
+        "pd": "150px,0,150px,0",
+        "pd_mb": ""
+      }
+    },
+    "shipping_9pXycT": {
+      "type": "shipping",
+      "blocks": {
+        "shipping_CirHre": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "image_icon": "shopify:\/\/shop_images\/pizza_03.png",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_K8g4ny": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Free delivery anywhere<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_K8g4ny"
+          ]
+        },
+        "shipping_tJraQy": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "image_icon": "shopify:\/\/shop_images\/pizza_05.png",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_7i3xnY": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>30% Discount for member<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_7i3xnY"
+          ]
+        },
+        "shipping_zRiMf7": {
+          "type": "_shipping",
+          "settings": {
+            "icon_themes": "help",
+            "image_icon": "shopify:\/\/shop_images\/pizza_07.png",
+            "icon": ""
+          },
+          "blocks": {
+            "heading_hR7FTq": {
+              "type": "heading",
+              "settings": {
+                "heading": "<p>Visit our store locations<\/p>",
+                "hidden_br_mobile": false,
+                "hidden_on_mobile": false,
+                "line_height": "",
+                "font_weight": "normal",
+                "heading_size": "h_custom",
+                "text_color": "hdt-s-text",
+                "font_size_heading_lg": 16,
+                "font_size_heading": 16,
+                "letter_spacing_heading": 0
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "heading_hR7FTq"
+          ]
+        },
+        "section-heading-shipping": {
+          "type": "section-heading",
+          "static": true,
+          "settings": {
+            "design_heading": "1",
+            "horizontal": false,
+            "alignment": "left",
+            "heading_gap": 15,
+            "margin_bottom": 30
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "shipping_CirHre",
+        "shipping_tJraQy",
+        "shipping_zRiMf7"
+      ],
+      "settings": {
+        "content_align": "center",
+        "align_center": false,
+        "icon_design": "default",
+        "use_border": false,
+        "space_padding": false,
+        "icon_size": "medium",
+        "icon_color": "hdt-icon-secondary",
+        "col_dk": "3",
+        "col_tb": "3",
+        "col_mb": "1",
+        "carousel_mobile": true,
+        "dot_color": "",
+        "dot_rounded": true,
+        "colors_by_section": true,
+        "color_scheme": "scheme-f1eef643-ae91-433f-aa49-d17576042fb3",
+        "background_opacity": 1,
+        "section_layout": "full_width",
+        "hdt_background_parallax": false,
+        "mg": "",
+        "mg_mb": "",
+        "pd": "88px,,88px,",
+        "pd_mb": "28px,,28px,"
+      }
+    }
+  },
+  "order": [
+    "banners_Kpnm4B",
+    "custom_section_Mj4QkB",
+    "collections_list_pPNhgF",
+    "featured_collection_ExdHVR",
+    "banners_8YLix7",
+    "tabs_collection_rYeKPg",
+    "custom_section_LtA7hz",
+    "shipping_9pXycT"
+  ]
+}

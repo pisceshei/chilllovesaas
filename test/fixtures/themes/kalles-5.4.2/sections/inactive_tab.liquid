@@ -1,0 +1,40 @@
+<hdt-inactive-tab class="hdt-contents" config='{ "message": "{{ section.settings.message | escape }}", "delay": {{ section.settings.delay }} }'></hdt-inactive-tab>
+{% schema %}
+  {
+    "name": "t:sections.inactive_tab.name",
+    "class": "hdt-section",
+    "enabled_on": {
+      "groups": ["custom.system"]
+    },
+    "limit": 1,
+    "settings": [
+      {
+        "type": "paragraph",
+        "content": "t:sections.inactive_tab.settings.paragraph"
+      },
+      {
+        "type": "textarea",
+        "id": "message",
+        "label": "t:sections.inactive_tab.settings.message.label",
+        "default": "🔥 Don't forget this...; 🔥 Come back!",
+        "info": "t:sections.inactive_tab.settings.message.info"
+      },
+      {
+        "type": "range",
+        "id": "delay",
+        "min": 100,
+        "max": 5000,
+        "step": 100,
+        "unit": "ms",
+        "label": "t:sections.inactive_tab.settings.delay.label",
+        "info": "t:sections.inactive_tab.settings.delay.info",
+        "default": 1000
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.inactive_tab.name"
+      }
+    ]
+  }
+{% endschema %}

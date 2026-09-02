@@ -1,0 +1,129 @@
+{%- style -%}
+  {%- if section.settings.disable_text_copy -%}
+    body, .hdt-disable--copy {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -html-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+  }
+  {%- endif -%}
+  {%- if section.settings.disable_img_drag -%}
+    img { -webkit-user-drag: none;user-drag: none; }
+  {%- endif -%}
+{%- endstyle -%}
+
+<script>
+(function() {
+  {%- if section.settings.disable_text_copy -%}
+    document.addEventListener("contextmenu", function(event) {
+      event.preventDefault();
+    });
+  {%- endif -%}
+
+  {%- if section.settings.disable_img_copy -%}
+    document.addEventListener("mousedown", function(event) {
+      var target = event.target || event.srcElement;
+      if (target.tagName && target.tagName.toLowerCase() === "img") {
+        if (event.which === 2) {
+          event.preventDefault();
+        }
+      }
+    });
+
+    document.addEventListener("contextmenu", function(event) {
+      var target = event.target || event.srcElement;
+      if (target.tagName && target.tagName.toLowerCase() === "img") {
+        event.preventDefault();
+      }
+    });
+
+    document.addEventListener("contextmenu", function(event) {
+      var target = event.target || event.srcElement;
+      if (target && target.style && target.style.backgroundImage) {
+        event.preventDefault();
+      }
+    });
+  {%- endif -%}
+
+  {%- if section.settings.disable_img_drag -%}
+    var disableDragAndDropHdt = function() {
+      document.body.setAttribute("ondragstart", "return false;");
+      document.body.setAttribute("ondrop", "return false;");
+    };
+    if (document.readyState === "complete") {
+      disableDragAndDropHdt();
+    } else {
+      document.addEventListener("DOMContentLoaded", disableDragAndDropHdt);
+    }
+  {%- endif -%}
+
+  {%- if section.settings.disable_best_seller -%}
+    function removeBestSelling(){
+      document.querySelectorAll('[role="option"][value="best-selling"]').forEach(function(el){ el.remove(); });
+      document.querySelectorAll('select[name="sort_by"] option[value="best-selling"]').forEach(function(el){ el.remove(); });
+      document.querySelectorAll('[data-value="best-selling"]').forEach(function(el){ el.remove(); });
+      document.querySelectorAll('[value="best-selling"]').forEach(function(el){
+         el.remove(); });
+    }
+    if (document.readyState === 'complete') removeBestSelling();
+    else document.addEventListener('DOMContentLoaded', removeBestSelling);
+    document.addEventListener('facet:render', removeBestSelling, true);
+    document.addEventListener('shopify:section:load', removeBestSelling, true);
+    if (window.location.search.indexOf('sort_by=best-selling') > -1) {
+      if (!(window.Shopify && Shopify.designMode)) window.location.replace(window.location.pathname);
+    }
+  {%- endif -%}
+})();
+</script>
+{% schema %}
+{
+  "name": "🛡️ Shop protect",
+  "tag": "section",
+  "class": "hdt-shop-protect",
+  "enabled_on": {
+    "groups": ["custom.system"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Prevent image and content theft from your website"
+    },
+    {
+      "type": "checkbox",
+      "id": "disable_img_copy",
+      "label": "Disable images copy",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "disable_img_drag",
+      "label": "Disable images drag & drop",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "disable_text_copy",
+      "label": "Disable text copy",
+      "default": true
+    },
+    {
+      "type": "paragraph",
+      "content": "Disable sort by with best selling on collection and search page. Use to prevent competitors from snooping around by automatically hiding the best selling sort option on your collection page. Make sure your collections are not sorted by best selling. Basically making sure the competitor will not see your best-sellers."
+    },
+    {
+      "type": "checkbox",
+      "id": "disable_best_seller",
+      "label": "Disable best selling",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "🛡️ Shop protect",
+      "settings": {}
+    }
+  ]
+}
+{% endschema %}

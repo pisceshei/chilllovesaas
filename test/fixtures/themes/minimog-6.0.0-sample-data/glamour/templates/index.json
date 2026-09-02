@@ -1,0 +1,212 @@
+{
+  "sections": {
+    "2eb1eed5-611e-423b-bba2-766ea2a16ffe": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf-home__hero .m-hero__title {\n  font-weight: 400;\n}\n.sf-home__product-tabs.m-product-tabs .m-section__tabs {\n  margin-top: 0;\n}\n.m-footer {\n  border-top: 0;\n}\n@media (min-width: 1280px) {\n  .sf-home__product-tabs .m-tab-header {\n    font-size: 36px;\n  }\n}\n@media (min-width: 1536px) {\n  .sf-home__hero .m-hero__title {\n    font-size: 60px;\n  }\n}\n@media (max-width: 767px) {\n  .sf-home__image-card .m-image-card--content-stack .m-button {\n    margin-top: 0;\n  }\n  .sf-home__image-card .m-image-card--content-stack .m-button--white {\n    background-color: var(--color-btn-bg, var(--color-primary));\n    border-color: var(--color-btn-bg, var(--color-primary));\n    color: var(--color-btn-text, #fff);\n  }\n  .m-hero--content-stack .m-hero__inner {\n    display: block;\n  }\n}"
+      }
+    },
+    "1618820514d0b46ba8": {
+      "type": "image-with-text-1",
+      "blocks": {
+        "1618820514385b5792-0": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sweaters",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1618820514385b5792-1": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Leather Boots",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1618820514385b5792-2": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Denim Pants",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1618820514385b5792-3": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Sunglasses",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        },
+        "1618820514385b5792-4": {
+          "type": "item",
+          "settings": {
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "left",
+            "text_size": "medium",
+            "text_color": "black",
+            "title": "",
+            "subtitle": "",
+            "button_label": "Leather Bags",
+            "button_style": "m-button--white",
+            "button_size": "",
+            "button_fixed": false
+          }
+        }
+      },
+      "block_order": [
+        "1618820514385b5792-0",
+        "1618820514385b5792-1",
+        "1618820514385b5792-2",
+        "1618820514385b5792-3",
+        "1618820514385b5792-4"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "layout_1",
+        "gap": 0,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "sf-home__image-card section__flush-top",
+        "animations": "inherit"
+      }
+    },
+    "1626517376d33b363c": {
+      "type": "product-tabs",
+      "blocks": {
+        "1626517376d33b363c-0": {
+          "type": "tab",
+          "settings": {
+            "title": "New Arrivals"
+          }
+        },
+        "1626517376d33b363c-1": {
+          "type": "tab",
+          "settings": {
+            "title": "Best Sellers"
+          }
+        },
+        "d3904da3-8bcd-4631-96cc-b5c63336d957": {
+          "type": "tab",
+          "settings": {
+            "title": "On Sale"
+          }
+        }
+      },
+      "block_order": [
+        "1626517376d33b363c-0",
+        "1626517376d33b363c-1",
+        "d3904da3-8bcd-4631-96cc-b5c63336d957"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 10,
+        "show_button": true,
+        "button_type": "load",
+        "button_label": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": false,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "sf-home__product-tabs",
+        "animations": "inherit"
+      }
+    },
+    "162651824890b79669": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "container-fluid",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "right middle",
+        "text_alignment": "left",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "Leather Slingbag",
+        "subtitle": "<span class=\"font-medium\">New Arrivals<\/span>",
+        "text": "",
+        "button_label": "Shop Now",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "sf-home__hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    }
+  },
+  "order": [
+    "2eb1eed5-611e-423b-bba2-766ea2a16ffe",
+    "1618820514d0b46ba8",
+    "1626517376d33b363c",
+    "162651824890b79669"
+  ]
+}

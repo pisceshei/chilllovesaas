@@ -1,0 +1,32 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+-%}
+{%- unless block.settings.title == blank or product.description == blank -%}
+  <!--item-title>
+  <button aria-current="false" class="hdt-relative hdt-font-semibold">{{ block.settings.title | escape }}</button>
+  -->
+  <div class="hdt-tab-item-content hdt-rte" tab-item {{ block.shopify_attributes }}>
+    {{- product.description -}}
+  </div>
+{%- endunless -%}
+{% schema %}
+ {
+   "name": "t:sections.main-product-tabs.blocks.tab_des.name",
+   "tag": null,
+   "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "t:sections.main-product-tabs.blocks.title.label",
+      "default": "Description"
+    }/*,
+    {
+      "type": "checkbox",
+      "id": "open",
+      "label": "Open / Close"
+    }*/
+   ],
+   "presets": [{ "name": "t:sections.main-product-tabs.blocks.tab_des.name" }]
+ }
+{% endschema %}

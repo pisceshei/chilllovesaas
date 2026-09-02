@@ -1,0 +1,82 @@
+{%- liquid
+  assign image = image | default: product.featured_image
+  assign title = title | default: product.title
+  assign price = price | default: product.price
+  assign product_des = product.description
+  assign desc = desc | default: product_des
+  assign default_btn_label = 'sections.featured_collection_2.shop_now' | t
+  assign btn_label = btn_label | default: default_btn_label
+  assign btn_url = btn_url | default: product.url
+  if price == blank or price == nill or price == 0
+    assign price = product.price
+  endif
+-%}
+
+<div class="hdt-slider__slide hdt-product_list_item">
+ <div class="hdt-slider__inner hdt-product-wrapper">
+  <div class="hdt-product-inner">
+    {% if image != blank %}
+      <div class="hdt-product-img hdt-oh">
+        <a href="{{ btn_url }}" class="hdt-ratio" style="--aspect-ratioapt: {{ image.aspect_ratio | default: 1 }}">
+          {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: '', sizes: sizes, widths: widths }}
+        </a>
+      </div>
+    {% endif %}
+    <div class="hdt-product-info hdt-text-{{ section.settings.alignment }}">
+      <div class="hdt-product-info__inner">
+        <h3 class="hdt-product-title">
+          <a href="{{ btn_url }}">{{ title }}</a>
+        </h3>
+        <div class="hdt-product-price__wrapper">
+          <div class="hdt-inline-block">
+            {% if price != blank %}
+              <div class="hdt-price hdt-money hdt-price__list">
+                <hdt-price>{{ price | money }}</hdt-price>
+              </div>
+            {%- else -%}
+              {% render 'card-price', section_id: section.id, product: product, show_volume_note: false %}
+            {% endif %}
+          </div>
+        </div>
+        {% if section.settings.show_des %}
+          <div class="hdt-product-des">
+            {{ desc | strip_html | truncatewords: 30 }}
+          </div>
+        {% endif %}
+        {% if  section.settings.show_btn %}
+          {%- capture style -%}
+            {%- if section.settings.icon != "none" -%}--gap-btn-icon: {{ section.settings.icon_spacing }}px; --height-btn-icon: {{ section.settings.icon_height }}px;{%- endif -%}
+            {%- if section.settings.size == "custom custom-inline" -%}--hdt-btn-padding-x: {{ section.settings.padding_btn }}px; --hdt-btn-line-height: {{ section.settings.min_height_btn }}px; font-size: {{ section.settings.font_size_btn }}px;--minw-button: {{ section.settings.min_width_btn }}px; --minwdt-button: {{ section.settings.min_width_dt_btn }}px;{%- endif -%}
+            {%- if section.settings.btn_style == 'hdt-btn-custom' -%}--hdt-btn-color: {{ section.settings.color_btn.rgb }}; --hdt-btn-hover-color: {{ section.settings.color_hover_btn.rgb }}; --hdt-btn-bg: {% if section.settings.background_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ section.settings.background_btn.rgb }}{% endif %}; --hdt-btn-hover-bg: {% if section.settings.background_hover_btn == "rgba(0,0,0,0)" %}transparent{% else %}{{ section.settings.background_hover_btn.rgb }}{% endif %};
+            {% if section.settings.border_w_btn != blank %}
+              --hdt-btn-border-color: {{ section.settings.border_btn.rgb }}; --hdt-btn-hover-border-color: {{ section.settings.border_hover_btn.rgb }}; --hdt-btn-border-width: {{ section.settings.border_w_btn }};
+            {%- else -%}
+              --hdt-btn-border-color: {{ section.settings.background_btn.rgb }}; --hdt-btn-hover-border-color: {{ section.settings.background_hover_btn.rgb }}; --hdt-btn-border-width: {{ section.settings.border_w_btn }};
+            {%- endif -%}
+          {%- endif -%}
+          {%- endcapture -%}
+          {%- capture class -%}
+            hdt-button-block hdt-btn hdt-relative hdt-oh hdt-font-{{ section.settings.font_weight }} hdt-btn--size-{{ section.settings.size }} {{ section.settings.text_size }} {{ section.settings.btn_style }}{% if section.settings.boder_hover %} hdt-btn-boder-hover{% endif %}{% if section.settings.full_width %} hdt-btn-full-width{% endif %} {{ section.settings.rounded }}{% if section.settings.icon != "none" %} hdt-btn--with-icon hdt-btn--pos-icon-{{ section.settings.icon_position }}{% endif %}
+          {%- endcapture -%}
+          <div class="hdt-product-btn">
+            {% comment %} <a href="{{ btn_url }}" class="hdt-btn hdt-btn-primary">{{ btn_label }}</a> {% endcomment %}
+            <a {{ effect }} id="block-{{ section.id }}" href="{{ btn_url }}" class="{{ class }}" style="{{ style }}">  
+              {%- liquid
+                if section.settings.icon != 'none'
+                  render 'icons', icon: section.settings.icon
+                endif
+              -%}
+              <span>
+                {%- liquid
+                  echo btn_label
+                -%}
+              </span>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+ </div>
+</div>

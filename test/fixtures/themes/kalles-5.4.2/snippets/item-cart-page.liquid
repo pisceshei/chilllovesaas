@@ -1,0 +1,83 @@
+{%- comment -%}
+  Renders a item cart page
+
+  Accepts:
+  - item: {Object} (required)
+  - form_id: {String} (required)
+
+  Usage:
+  {%- render 'item-cart-page', item: item, form_id: form_id -%}
+{%- endcomment -%}
+{%- assign image  = item.image | default: settings.placeholder_img -%}
+<hdt-line-item class="hdt-line-item{% if item.variant.id == settings.gift_card_pr.selected_or_first_available_variant.id or item.variant.id == gift_wrap_pr_id %} is-gift-wrap{% endif %}">
+  <div class="hdt-page-cart__infos-wrap hdt-flex hdt-align-center">
+    <div class="hdt-page-cart__image">
+      <a href="{{ item.url }}" class="hdt-page-cart__img hdt-block hdt-relative hdt-oh hdt-ratio" style="--aspect-ratioapt:{{ image.aspect_ratio | default: 0.6811989100817438 }}">
+        {%- if image != blank -%}
+          {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, sizes: '(max-width: 767px) 80px, 160px', widths: '80, 160' }}
+        {%- else -%}
+          <span class="hdt-page-cart__img-placeholder"></span>
+        {%- endif -%}
+      </a>
+    </div>
+    <div class="hdt-page-cart__info">
+      <a href="{{ item.url }}" class="hdt-page-cart__title hdt-text-base hdt-font-semibold hdt-s-text">{{ item.product.title }}</a>
+      <div class="hdt-page-cart__meta-variant">
+        {%- if item.product.has_only_default_variant == false -%}
+          {%- for option in item.options_with_values -%}
+            <div class="hdt-product-option">
+              <span>{{ option.name }}:<strong> {{ option.value -}}</strong></span>
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
+      </div>
+      {%- if item.properties.size != 0 -%}
+        <ul class="hdt-page-cart__meta-propertyList hdt-s-text2">
+          {%- for property in item.properties -%}
+            {%- assign property_first_char = property.first | slice: 0 -%}
+            {%- if property.last != blank and property_first_char != '_' -%}
+              <li class="hdt-product-option hdt-product-details__item hdt-product-details__item--property hdt-text-sm hdt-s-text2">
+                <span class="hdt-product-details__item-label"><span class="hdt-font-normal">{{ property.first }}: </span></span>
+                <span>
+                  {%- if property.last contains '/uploads/' -%}
+                    <a href="{{ property.last }}" target="_blank" aria-describedby="a11y-new-window-message">{{ property.last | split: '/' | last }}</a>
+                  {%- else -%}
+                    {{ property.last }}
+                  {%- endif -%}
+                </span>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+      {%- if item.line_level_discount_allocations.size != 0 -%}
+        <ul class="hdt-discounts hdt-cart_discounts hdt-font-normal" role="list" aria-label="{{ 'customer.order.discount' | t }}">
+          {%- for discount in item.line_level_discount_allocations -%}
+            <li class="hdt-discounts__discount hdt-page-cart-discount_item">{% render 'icon' with 'discount' %} {{ discount.discount_application.title }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+      {%- if item.selling_plan_allocation != null %}<p class="hdt-product-option">{{ item.selling_plan_allocation.selling_plan.name }}</p>{% endif -%}
+      <div class="hdt-flex hdt-align-center hdt-justify-start">
+        <hdt-tooltip placement="top" style="margin-inline-end: 10px">      
+          <wrapp-remove-item-oncart placement="none" class="hdt-inline-flex hdt-align-center" data-index="{{ item.index | plus: 1 }}" form="id:{{ form_id }}">
+            <a href="{{ routes.cart_change_url }}?line={{ item.index | plus: 1 }}&quantity=0" class="hdt-mini-cart__remove hdt-s-text">
+              <svg viewBox="0 0 24 24" width="17"><use href="#icon-cart-remove"></use></svg>
+              <span class="sr-only">{{ 'sections.cart.remove_item' | t }}</span>
+            </a>
+          </wrapp-remove-item-oncart>
+        </hdt-tooltip>
+        {% comment %} {%- if item.product.variants.size > 1 or qty_rules or item.product.selling_plan_groups.size > 0 -%}
+          <wrapp-hdt-open-modal-btn class="hdt-ultra_btn_parent hdt-inline-flex hdt-align-center {{ class }}" placement="{{ placement | default: 'none' }}" {{ tooltip_auto }} style="margin-inline-end: 10px">
+            <button type="button" handle="{{ item.product.handle }}" aria-controls="hdt-quick-add-modal" aria-expanded="false" class="hdt-card-product__btn-ultra">
+              <span class="hdt-pr-card-icon">
+                <svg viewBox="0 0 24 24" width="17"><use href="#icon-cart-edit"/></svg>
+              </span>
+              <span class="hdt-truncate{% unless disable_sr_only %} sr-only{% endunless %}">{{ 'products.product.quick_add' | t }}</span>
+            </button>
+          </wrapp-hdt-open-modal-btn>
+        {%- endif -%} {% endcomment %}
+      </div>
+    </div>
+  </div>
+</hdt-line-item>

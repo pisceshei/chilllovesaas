@@ -1,0 +1,90 @@
+{%- liquid
+  assign collection = block.settings.collection | default: closest.collection
+  assign image = block.settings.image | default: collection.metafields.theme.featured_image_collection.value | default: collection.image | default: collection.products.first.featured_image
+  assign title = block.settings.title | default: collection.title
+  assign collection_link = block.settings.link | default: collection.url
+-%}
+<div class="hdt-slider__slide hdt-category-{{ collection.id }}" {{ block.shopify_attributes }}>
+  <div class="hdt-categories_item hdt-flex hdt-flex-col hdt-align-center" hdt-reveal="slide-in" timeline>
+    <div class="hdt-relative hdt-oh">
+      <a href="{{ collection_link }}" class=" hdt-block hdt-categories_image hdt-ratio hdt-oh hdt-radius-full">
+        {%- if image != blank -%}
+          {{ image | image_url: width: image.width | image_tag: loading: 'lazy', width: image.width, height: image.height, class: '', sizes: '(min-width: 768px) 160px, 135px', widths: '100,135,160,200,270,320' }}
+        {%- else -%}
+          {{ 'collection-apparel-1' | placeholder_svg_tag: 'placeholder-svg hdt-oh hdt-radius-full' }}
+        {%- endif -%}
+      </a>
+      {%- if block.settings.title_badge != blank -%}
+        <span class="hdt-collection_label hdt-absolute hdt-top-0 hdt-left-0 hdt-text-xs hdt-radius-full hdt-font-medium hdt-align-center hdt-justify-center" style="color: {{ block.settings.text_badge_color }}; background-color: {{ block.settings.badge_color }};">{{ block.settings.title_badge }}</span>
+      {%- endif -%}
+    </div>
+    {%- if title != '.' -%}
+    <a href="{{ collection_link }}" class="hdt-btn hdt-btn-link {{ section.settings.font_size }}">{{ title }}</a>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+  {
+    "name": "Category item",
+    "tag": null,
+    "settings": [
+      {
+        "id": "collection",
+        "type": "collection",
+        "label": "Collection"
+      },
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "Choose Image",
+        "info": "Leave empty to use 'Collection image'"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Title",
+        "info": "Leave empty to use 'Collection title'",
+        "default": "Collection name"
+      },
+      {
+        "type": "url",
+        "id": "link",
+        "label": "Link (optional)",
+        "info": "Leave empty to use 'Collection URL'"
+      },
+      {
+        "type": "header",
+        "content": "2. Badge option"
+      },
+      {
+        "type": "text",
+        "id": "title_badge",
+        "label": "Badge label",
+        "default": "10% off"
+      },
+      {
+        "type": "color",
+        "id": "text_badge_color",
+        "label": "Text color",
+        "default": "#fff",
+        "visible_if": "{{ block.settings.title_badge != blank }}"
+      },
+      {
+        "type": "color",
+        "id": "badge_color",
+        "label": "Badge color",
+        "default": "#000",
+        "visible_if": "{{ block.settings.title_badge != blank }}"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Category item",
+        "settings": {
+          "collection": "{{ closest.collection }}"
+        }
+      }
+    ]
+  }
+{% endschema %}

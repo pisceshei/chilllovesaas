@@ -1,0 +1,1008 @@
+<!-- _product-grid.liquid -->
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+  if block.settings.space_items == 'x'
+    assign space_item = settings.spacing_grid_horizontal
+    assign space_item_tb = settings.spacing_grid_horizontal | divided_by: 2
+    assign space_item_mb = settings.spacing_grid_horizontal | divided_by: 2
+  else
+    assign space_item = block.settings.space_items
+    assign space_item_tb = space_item | times: 0.666 | round
+    assign space_item_mb = space_item | times: 0.333 | round
+  endif
+
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+-%}
+
+{%- capture sizes -%}
+  (min-width: 1150px) calc(({{ current_width }} -  ({{ space_item }}px * ( {{ block.settings.col_dk }} - 1 ))) * 1 / {{ block.settings.col_dk }}),(min-width: 768px) calc( ({{ current_width_tb }} - ({{ space_item_tb }}px * ( {{ block.settings.col_tb }} - 1 ))) * 1 / {{ block.settings.col_tb }}), calc( ({{ current_width_mb }} - ({{ space_item_mb }}px * ( {{ block.settings.col_mb }} - 1 ) )) * 1 / {{ block.settings.col_mb }})
+{%- endcapture -%}
+<div main-content>
+{%- if request.visual_preview_mode or block.settings.product_list == blank and block.settings.collection == blank %}
+  <hdt-reval-items reveal-on-scroll="true" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+    {%- liquid
+      for i in (1..block.settings.products_count)
+        capture current
+          cycle 1, 2, 3, 4, 4, 3, 2, 1
+        endcapture
+        assign placeholder_image = 'product-apparel-' | append: current
+        render 'card-product-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: block.id, class: 'hdt-slider__slide'
+      endfor
+    -%}
+  </hdt-reval-items>
+{%- else -%}
+  {%- if block.settings.product_list != blank %}
+    {%- paginate block.settings.product_list by block.settings.products_count -%}
+      <hdt-reval-items reveal-on-scroll="true" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+        {%- liquid
+          if block.settings.product_list != blank
+            case block.settings.product_des
+              when '1'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product1', card_product: product, class: 'hdt-pr-style1', section_id: block.id, sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '2'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product2', card_product: product, section_id: block.id, class: 'hdt-pr-style2', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '3'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product3', card_product: product, section_id: block.id, class: 'hdt-pr-style3', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '4'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product4', card_product: product, section_id: block.id, class: 'hdt-pr-style4', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '5'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product5', card_product: product, section_id: block.id, class: 'hdt-pr-style5', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '6'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product6', card_product: product, section_id: block.id, class: 'hdt-pr-style6', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '7'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  unless settings.remove_collection_url or block.settings.product_list != blank
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product7', card_product: product, section_id: block.id, class: 'hdt-pr-style7', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '8'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product8', card_product: product, section_id: block.id, class: 'hdt-pr-style8', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '9'  
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product9', card_product: product, section_id: block.id, class: 'hdt-pr-style9', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '10'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product10', card_product: product, section_id: section.id, class: 'hdt-pr-style10', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '11'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in block.settings.product_list
+                  render 'card-product11', card_product: product, section_id: section.id, class: 'hdt-pr-style11', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+            endcase
+          else
+            for i in (1..block.settings.products_count)
+              capture current
+                cycle 1, 2, 3, 4
+              endcapture
+              assign placeholder_image = 'product-apparel-' | append: current
+              render 'card-product-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: block.id, class: 'hdt-slider__slide'
+            endfor
+          endif
+        -%}
+      </hdt-reval-items>
+      {%- if block.settings.pagination %}
+        {%- if paginate.next -%}
+          {{ 'hdt-pagination.css' | asset_url | stylesheet_tag }}
+          {%- if block.settings.pagination_type == "view_all" -%}
+            <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in" style="--pagination-distance:{{ block.settings.dis_pagination }}px;" color-scheme="{{ block.settings.pagination_color_scheme }}">
+              <a class="hdt-view-all-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+                {% assign view_all_df = 'general.pagination.view_all' | t %}
+                <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+                {%- if block.settings.endable_btn_icon -%}
+                  <svg id="t4s-icon-btn" viewBox="0 0 14 10" fill="none">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path>
+                  </svg>
+                {%- endif -%}
+              </a>
+            </div>
+          {%- elsif block.settings.pagination_type == "load_more" -%} 
+            {%-liquid
+              if template.name == 'collection'
+                assign collection_url = ''
+                assign paginate_url = paginate.next.url
+              else 
+                assign collection_url = collection.url
+                assign paginate_url = paginate.next.url | remove: routes.root_url
+              endif
+            -%}
+            <div loadmore-btn-wrapp class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-block hdt-text-{{ block.settings.paginate_pos }}" style="--pagination-distance:{{ block.settings.dis_pagination }}px;" color-scheme="{{ block.settings.pagination_color_scheme }}">
+              {%- if block.settings.enable_progressbar -%}
+                {% liquid
+                  assign current_pr_size = paginate.current_page | times: block.settings.products_count | at_most: block.settings.product_list.size
+                %}
+                {% render 'progress_bar', paginate: paginate, results_count: block.settings.product_list.size, current_pr_size: current_pr_size %}
+              {%- endif -%}
+              <wrapp-hdt-lm-url class="hdt-contents" {% if section.id contains 'tabs_collection' %} tab-id="tab-{{ section.id }}-{{ block.settings.collection.id }}-{{ block.id }}"{% endif %}>
+                <a section-id="{{ section.id }}" append="products-{{ section.id }}-{{ block.settings.collection.id }}" href="{{ paginate.next.url }}" class="hdt-loamore-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" hdt-reveal="slide-in" timeline>
+                  {% assign loadmore_df = 'general.pagination.load_more_products' | t %}
+                  <span>{{ block.settings.btn_label | default: loadmore_df | escape }}</span>
+                  {%- if block.settings.endable_btn_icon -%}
+                    <svg class="t4s-btn-icon" viewBox="0 0 32 32" width="32"><path d="M 15 4 L 15 24.0625 L 8.21875 17.28125 L 6.78125 18.71875 L 15.28125 27.21875 L 16 27.90625 L 16.71875 27.21875 L 25.21875 18.71875 L 23.78125 17.28125 L 17 24.0625 L 17 4 Z"/></svg>
+                  {%- endif -%}
+                </a>
+              </wrapp-hdt-lm-url>
+            </div>
+          {%- endif -%} 
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- else -%}
+    {%- assign collection = collections[block.settings.collection] -%}
+    {%- paginate collection.products by block.settings.products_count -%}
+      <hdt-reval-items reveal-on-scroll="true" id="products-{{ section.id }}-{{ block.settings.collection.id }}" scroll-into-view class="hdt-collection-products hdt-collection-has-pr{{ block.settings.product_des }} hdt-pr-border_{{ block.settings.pr_border }} hdt-row-grid hdt-row-grid--modify hdt-justify-center hdt-ratio--{{ block.settings.image_ratio }} {% unless block.settings.image_size %} hdt-ratio--contain{% endunless %} hdt-spacing-{{ block.settings.space_items }} lg:hdt-grid-cols-{{ block.settings.col_dk }} md:hdt-grid-cols-{{ block.settings.col_tb }} hdt-grid-cols-{{ block.settings.col_mb }}">
+        {%- liquid
+          if block.settings.collection != blank
+            case block.settings.product_des
+              when '1'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product1', card_product: product, class: 'hdt-pr-style1', section_id: block.id, sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '2'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product2', card_product: product, section_id: block.id, class: 'hdt-pr-style2', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '3'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product3', card_product: product, section_id: block.id, class: 'hdt-pr-style3', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '4'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'top'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product4', card_product: product, section_id: block.id, class: 'hdt-pr-style4', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '5'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product5', card_product: product, section_id: block.id, class: 'hdt-pr-style5', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '6'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product6', card_product: product, section_id: block.id, class: 'hdt-pr-style6', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '7'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product7', card_product: product, section_id: block.id, class: 'hdt-pr-style7', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '8'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product8', card_product: product, section_id: block.id, class: 'hdt-pr-style8', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '9'  
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product9', card_product: product, section_id: block.id, class: 'hdt-pr-style9', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '10'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product10', card_product: product, section_id: section.id, class: 'hdt-pr-style10', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+              when '11'
+                capture btn_wishlist_code
+                  if settings.wishlist_mode != '0'
+                    render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'left'
+                  endif
+                endcapture
+                for product in collection.products 
+                  unless settings.remove_collection_url
+                    assign product_url = product.url | within: block.settings.collection
+                  endunless
+                  render 'card-product11', card_product: product, section_id: section.id, class: 'hdt-pr-style11', sizes: sizes, image_ratio: block.settings.image_ratio, color_list: color_list, size_list: size_list, product_url: product_url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+                endfor
+            endcase
+          else
+            for i in (1..block.settings.products_count)
+              capture current
+                cycle 1, 2, 3, 4
+              endcapture
+              assign placeholder_image = 'product-apparel-' | append: current
+              render 'card-product-placeholder', image_ratio: block.settings.image_ratio, placeholder_image: placeholder_image, section_id: block.id, class: 'hdt-slider__slide'
+            endfor
+          endif
+        -%}
+      </hdt-reval-items>
+      {%- if block.settings.pagination %}
+        {%- if paginate.next -%}
+          {{ 'hdt-pagination.css' | asset_url | stylesheet_tag }}
+          {%- if block.settings.pagination_type == "view_all" -%}
+            <div class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-flex hdt-justify-{{ block.settings.paginate_pos }}" timeline hdt-reveal="slide-in" style="--pagination-distance:{{ block.settings.dis_pagination }}px;" color-scheme="{{ block.settings.pagination_color_scheme }}">
+              <a class="hdt-view-all-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }}" href="{{ collection.url | default: routes.all_products_collection_url }}" hdt-reveal="slide-in" timeline>
+                {% assign view_all_df = 'general.pagination.view_all' | t %}
+                <span>{{ block.settings.btn_label | default: view_all_df | escape }}</span>
+                {%- if block.settings.endable_btn_icon -%}
+                  <svg id="t4s-icon-btn" viewBox="0 0 14 10" fill="none">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path>
+                  </svg>
+                {%- endif -%}
+              </a>
+            </div>
+          {%- elsif block.settings.pagination_type == "load_more" -%} 
+            {%-liquid
+              if template.name == 'collection'
+                assign collection_url = ''
+                assign paginate_url = paginate.next.url
+              else 
+                assign collection_url = collection.url
+                assign paginate_url = paginate.next.url | remove: routes.root_url
+              endif
+            -%}
+            <div loadmore-btn-wrapp class="hdt-pagination-wrapper hdt-prs-footer hdt-pagination-{{ block.settings.pagination_type }} hdt-block hdt-text-{{ block.settings.paginate_pos }}" style="--pagination-distance:{{ block.settings.dis_pagination }}px;" color-scheme="{{ block.settings.pagination_color_scheme }}">
+              {%- if block.settings.enable_progressbar -%}
+                {% render 'progress_bar', paginate: paginate, results_count: collection.products_count, collection: collection %}
+              {%- endif -%}
+              <wrapp-hdt-lm-url class="hdt-contents" {% if section.id contains 'tabs_collection' %} tab-id="tab-{{ section.id }}-{{ block.settings.collection.id }}-{{ block.id }}"{% endif %}>
+                <a section-id="{{ section.id }}" append="products-{{ section.id }}-{{ block.settings.collection.id }}" href="{{ paginate_url | prepend: collection_url }}" class="hdt-loamore-btn hdt-btn hdt-oh hdt-relative hdt-inline-flex hdt-align-center hdt-justify-center {{ block.settings.btn_style }} hdt-btn--size-{{ block.settings.size }} hdt-font-{{ block.settings.btn_fw }} {{ block.settings.rounded }}" hdt-reveal="slide-in" timeline>
+                  {% assign loadmore_df = 'general.pagination.load_more_products' | t %}
+                  <span>{{ block.settings.btn_label | default: loadmore_df | escape }}</span>
+                  {%- if block.settings.endable_btn_icon -%}
+                    <svg class="t4s-btn-icon" viewBox="0 0 32 32" width="32"><path d="M 15 4 L 15 24.0625 L 8.21875 17.28125 L 6.78125 18.71875 L 15.28125 27.21875 L 16 27.90625 L 16.71875 27.21875 L 25.21875 18.71875 L 23.78125 17.28125 L 17 24.0625 L 17 4 Z"/></svg>
+                  {%- endif -%}
+                </a>
+              </wrapp-hdt-lm-url>
+            </div>
+          {%- endif -%} 
+        {%- endif -%}
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- endif -%}
+{%- endif -%}
+</div>
+{% schema %}
+{
+  "name": "t:blocks.product_grid.name",
+  "class": "hdt-product-grid__wrapper",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.all.general_options.label"
+    },
+    {
+      "id": "collection",
+      "type": "collection",
+      "label": "t:sections.collection_products.settings.collection"
+    },
+    {
+      "type": "range",
+      "id": "products_count",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "label": "t:sections.all.limit",
+      "default": 8
+    },
+    {
+      "type": "product_list",
+      "id": "product_list",
+      "label": "t:sections.collection_products.settings.product_list.label",
+      "info": "t:sections.collection_products.settings.product_list.info"
+    },
+    {
+      "type": "select",
+      "id": "pr_border",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.collection_products.settings.pr_border.none"
+        },
+        {
+          "value": "in_image",
+          "label": "t:sections.collection_products.settings.pr_border.in_image"
+        },
+        {
+          "value": "on_item",
+          "label": "t:sections.collection_products.settings.pr_border.on_item"
+        },
+        {
+          "value": "on_grid",
+          "label": "t:sections.collection_products.settings.pr_border.on_grid"
+        }
+      ],
+      "label": "t:sections.collection_products.settings.pr_border.label",
+      "info": "t:sections.collection_products.settings.pr_border.info",
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "product_des",
+      "label": "t:sections.collection_products.settings.product_des",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        },
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        },
+        {
+          "value": "5",
+          "label": "5"
+        },
+        {
+          "value": "6",
+          "label": "6"
+        },
+        {
+          "value": "7",
+          "label": "7"
+        },
+        {
+          "value": "8",
+          "label": "8"
+        },
+        {
+          "value": "9",
+          "label": "9"
+        },
+        {
+          "value": "10",
+          "label": "10"
+        },
+        {
+          "value": "11",
+          "label": "11"
+        }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "options": [
+        {
+          "value": "adapt_image",
+          "label": "t:sections.all.images.ratio.adapt_image.label"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.all.images.ratio.square.label"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.all.images.ratio.portrait.label"
+        },
+        {
+          "value": "asos",
+          "label": "t:sections.all.images.ratio.asos.label"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.all.images.ratio.landscape.label"
+        },
+        {
+          "value": "custom-pr",
+          "label": "t:sections.all.images.ratio.custom.label"
+        }
+      ],
+      "label": "t:sections.all.images.ratio.label",
+      "default": "adapt_image"
+    },
+    {
+      "type": "checkbox",
+      "id": "image_size",
+      "label": "t:sections.all.images.size.cover",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.collection_products.settings.show_vendor",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "4",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "space_items",
+      "label": "t:sections.all.space_items.desktop",
+      "default": "x",
+      "options": [
+        {
+          "label": "t:sections.all.space_items.default",
+          "value": "x"
+        },
+        {
+          "label": "0",
+          "value": "0"
+        },
+        {
+          "label": "5px",
+          "value": "5"
+        },
+        {
+          "label": "10px",
+          "value": "10"
+        },
+        {
+          "label": "20px",
+          "value": "20"
+        }
+      ],
+      "visible_if": "{{ block.settings.pr_border != 'on_grid' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.product_grid.settings.pagination.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "pagination",
+      "label": "t:blocks.product_grid.settings.pagination.use_pagination",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "pagination_color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "select",
+      "id": "pagination_type",
+      "label": "t:sections.all.load_more.type.label",
+      "info": "t:sections.all.load_more.type.info",
+      "options": [
+        {
+          "value": "view_all",
+          "label": "t:sections.all.load_more.type.view_all.label"
+        },
+        {
+          "value": "load_more",
+          "label": "t:sections.all.load_more.type.load_more.label"
+        }
+      ],
+      "default": "load_more",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_progressbar",
+      "label": "Enable progress bar",
+      "default": false,
+      "visible_if": "{{ section.settings.pagination_type != 'links' }}"
+    },
+    {
+      "type": "select",
+      "id": "paginate_pos",
+      "label": "t:sections.all.load_more.position.label",
+      "default": "center",
+      "options": [
+        {
+          "value": "start",
+          "label": "t:sections.all.load_more.position.option_1.label"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.all.load_more.position.option_2.label"
+        },
+        {
+          "value": "end",
+          "label": "t:sections.all.load_more.position.option_3.label"
+        }
+      ],
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "range",
+      "id": "dis_pagination",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.load_more.distance.label",
+      "default": 30,
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "text",
+      "id": "btn_label",
+      "label": "t:sections.collection_products.settings.btn_label.label",
+      "info": "t:sections.collection_products.settings.btn_label.info",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "select",
+      "id": "btn_style",
+      "label": "t:blocks.button.settings.button_style.label",
+      "default": "",
+      "options": [
+        {
+          "value": "",
+          "label": "t:blocks.button.settings.button_style.options.default"
+        },
+        {
+          "value": "hdt-btn-outline",
+          "label": "t:blocks.button.settings.button_style.options.outline"
+        },
+        {
+          "value": "hdt-btn-link",
+          "label": "t:blocks.button.settings.button_style.options.link"
+        },
+        {
+          "value": "hdt-btn-secondary",
+          "label": "t:blocks.button.settings.button_style.options.secondary",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-tertiary",
+          "label": "t:blocks.button.settings.button_style.options.tertiary",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-accent",
+          "label": "t:blocks.button.settings.button_style.options.accent",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-hover-secondary",
+          "label": "t:blocks.button.settings.button_style.options.hover_secondary",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-hover-tertiary",
+          "label": "t:blocks.button.settings.button_style.options.hover_tertiary",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-hover-accent",
+          "label": "t:blocks.button.settings.button_style.options.hover_accent",
+          "group": "t:blocks.button.settings.button_style.solid"
+        },
+        {
+          "value": "hdt-btn-outline-secondary",
+          "label": "t:blocks.button.settings.button_style.options.outline_secondary",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-outline-tertiary",
+          "label": "t:blocks.button.settings.button_style.options.outline_tertiary",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-outline-accent",
+          "label": "t:blocks.button.settings.button_style.options.outline_accent",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-outline-hover-secondary",
+          "label": "t:blocks.button.settings.button_style.options.outline_hover_secondary",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-outline-hover-tertiary",
+          "label": "t:blocks.button.settings.button_style.options.outline_hover_tertiary",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-outline-hover-accent",
+          "label": "t:blocks.button.settings.button_style.options.outline_hover_accent",
+          "group": "t:blocks.button.settings.button_style.outline"
+        },
+        {
+          "value": "hdt-btn-link-secondary",
+          "label": "t:blocks.button.settings.button_style.options.link_secondary",
+          "group": "t:blocks.button.settings.button_style.link"
+        },
+        {
+          "value": "hdt-btn-link-accent",
+          "label": "t:blocks.button.settings.button_style.options.link_accent",
+          "group": "t:blocks.button.settings.button_style.link"
+        },
+        {
+          "value": "hdt-btn-link-hover",
+          "label": "t:blocks.button.settings.button_style.options.link_hover",
+          "group": "t:blocks.button.settings.button_style.link"
+        },
+        {
+          "value": "hdt-btn-link-secondary-hover",
+          "label": "t:blocks.button.settings.button_style.options.link_secondary_hover",
+          "group": "t:blocks.button.settings.button_style.link"
+        },
+        {
+          "value": "hdt-btn-link-accent-hover",
+          "label": "t:blocks.button.settings.button_style.options.link_accent_hover",
+          "group": "t:blocks.button.settings.button_style.link"
+        },
+      ],
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "endable_btn_icon",
+      "label": "t:blocks.button.settings.endable_btn_icon.label",
+      "default": false,
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "select",
+      "id": "size",
+      "label": "t:blocks.button.settings.button_size.label",
+      "options": [
+        {
+          "value": "xs",
+          "label": "t:blocks.button.settings.button_size.options.xs"
+        },
+        {
+          "value": "s",
+          "label": "t:blocks.button.settings.button_size.options.s"
+        },
+        {
+          "value": "m",
+          "label": "t:blocks.button.settings.button_size.options.m"
+        },
+        {
+          "value": "l",
+          "label": "t:blocks.button.settings.button_size.options.l"
+        },
+        {
+          "value": "xl",
+          "label": "t:blocks.button.settings.button_size.options.xl"
+        },
+        {
+          "value": "custom hdt-btn--size-custom-1",
+          "label": "t:blocks.button.settings.button_size.options.custom_1"
+        }
+      ],
+      "default": "m",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "select",
+      "id": "btn_fw",
+      "label": "t:settings_schema.typography.settings.font_weight.label",
+      "options": [
+        {
+          "value": "light",
+          "label": "t:settings_schema.typography.settings.font_weight.light"
+        },
+        {
+          "value": "normal",
+          "label": "t:settings_schema.typography.settings.font_weight.normal"
+        },
+        {
+          "value": "medium",
+          "label": "t:settings_schema.typography.settings.font_weight.medium"
+        },
+        {
+          "value": "semibold",
+          "label": "t:settings_schema.typography.settings.font_weight.semibold"
+        },
+        {
+          "value": "bold",
+          "label": "t:settings_schema.typography.settings.font_weight.bold"
+        },
+      ],
+      "default": "medium",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "select",
+      "id": "rounded",
+      "label": "t:blocks.column.settings.rounded.label",
+      "options": [
+        {
+          "value": "",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-btn-radius-none",
+          "label": "t:none"
+        },
+        {
+          "value": "hdt-btn-radius-xs",
+          "label": "t:blocks.column.settings.rounded.options.xs"
+        },
+        {
+          "value": "hdt-btn-radius-sm",
+          "label": "t:blocks.column.settings.rounded.options.sm"
+        },
+        {
+          "value": "hdt-btn-radius",
+          "label": "t:blocks.column.settings.rounded.options.medium"
+        },
+        {
+          "value": "hdt-btn-radius-lg",
+          "label": "t:blocks.column.settings.rounded.options.large"
+        },
+        {
+          "value": "hdt-btn-radius-full",
+          "label": "t:blocks.column.settings.rounded.options.full"
+        }
+      ],
+      "default": "",
+      "visible_if": "{{ block.settings.pagination }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.text.custom_size_options.label",
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_btn",
+      "min": 10,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "default": 14,
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_btn",
+      "min": 5,
+      "max": 80,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.button.settings.padding",
+      "default": 30,
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+    {
+      "type": "range",
+      "id": "min_width_btn",
+      "min": 100,
+      "max": 300,
+      "step": 2,
+      "unit": "px",
+      "label": "t:settings_schema.button.settings.min_width",
+      "default": 100,
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+    {
+      "type": "range",
+      "id": "min_width_dt_btn",
+      "min": 100,
+      "max": 300,
+      "step": 2,
+      "unit": "px",
+      "label": "t:settings_schema.button.settings.min_width_dt",
+      "default": 100,
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+    {
+      "type": "range",
+      "id": "min_height_btn",
+      "min": 25,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.button.settings.min_height",
+      "default": 40,
+      "visible_if": "{{ block.settings.size == 'custom custom-inline' }}"
+    },
+  ],
+  "blocks": [
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.product_grid.name"
+    }
+  ]
+}
+{% endschema %}

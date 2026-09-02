@@ -1,0 +1,201 @@
+<!-- blocks/_heading_icon.liquid -->
+{% liquid
+  assign image = block.settings.image
+  assign svg = block.settings.svg
+%}
+{% style %}
+  {% render 'spacing-vars', box: block %}
+  #{{ block.id }}{
+    --pt: {{ block.settings.padding_top }}px;
+    --pb: {{ block.settings.padding_bottom }}px; 
+    padding-top: var(--pt);
+    padding-bottom: var(--pb);
+    {% if block.settings.width == "custom" %}
+      --width: {{ block.settings.width_dk }}px;
+      --width-tb: {{ block.settings.width_tb }}px;
+      --width-mb: {{ block.settings.width_mb }}px;
+    {% endif %}
+    @media (max-width: 767px){
+      --pt: {{ block.settings.padding_top | times: block.settings.padding_rate }}px;
+      --pb: {{ block.settings.padding_bottom | times: block.settings.padding_rate }}px; 
+    }
+  }
+  #{{ block.id }}.hdt-line-true .hdt-heading-icon::before,
+  #{{ block.id }}.hdt-line-true .hdt-heading-icon::after{
+    content: "";
+    width: 24px;
+    height: 1px;
+    display: inline-block;
+    background: var(--text-color);
+    opacity: 0.8;
+  }
+  #{{ block.id }} .hdt-heading-icon{
+    gap: 8px;
+  }
+
+  {% if block.settings.width == "auto" %}
+    #{{ block.id }} :is(svg:not([width])){
+      width: 1em;
+      fill: currentColor;
+    }
+  {% endif %}
+  #{{ block.id }} :where(svg,img){
+    width: var(--width-mb, auto);
+    fill: currentColor;
+  }
+  @media (min-width: 768px){
+    #{{ block.id }} :where(svg,img){
+      width: var(--width-tb, auto);
+    }
+  }
+  @media (min-width: 1150px){
+    #{{ block.id }} :where(svg,img){
+      width: var(--width, auto);
+    }
+  }
+{% endstyle %}
+<div id="{{ block.id }}" class="hdt-icon {{ block.settings.text_color }} hdt-line-{{ block.settings.line }}" hdt-reveal="slide-in" timeline>
+  <div class="hdt-heading-icon hdt-inline-flex hdt-align-center hdt-section-spacing hdt-section-spacing-{{ block.id }}">
+    {%- if svg != blank -%}
+      {{ svg }}
+    {%- else -%}
+      {%- if image != blank -%}
+        {{ image | image_url: width: image.width | image_tag: width: image.width, widths: '20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300', class: 'hdt-object-cover', sizes: block.settings.width }}
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.icon.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "image",
+        "label": "t:blocks.icon.settings.image_upload.label"
+      },
+      {
+        "type": "liquid",
+        "id": "svg",
+        "label": "t:blocks.icon.settings.svg_upload.label",
+        "info": "t:blocks.icon.settings.svg_upload.info"
+      },
+      {
+        "type": "select",
+        "id": "text_color",
+        "options": [
+          {
+            "value": "hdt-s-text",
+            "label": "t:default"
+          },
+          {
+            "value": "hdt-text-secondary",
+            "label": "t:settings_schema.colors.secondary"
+          },
+          {
+            "value": "hdt-text-tertiary",
+            "label": "t:settings_schema.colors.tertiary"
+          },
+          {
+            "value": "hdt-text-primary",
+            "label": "t:settings_schema.colors.accent"
+
+          }
+        ],
+        "label": "t:blocks.icon.icon_color.label",
+        "default": "hdt-s-text"
+      },
+      {
+        "type": "checkbox",
+        "id": "line",
+        "label": "t:blocks.icon.show_line_icon.label",
+        "default": false
+      },
+      {
+        "type": "select",
+        "id": "width",
+        "label": "t:blocks.icon.width.label",
+        "options": [
+          {
+            "value": "auto",
+            "label": "t:blocks.icon.width.auto"
+          },
+          {
+            "value": "custom",
+            "label": "t:blocks.icon.width.custom"
+          }
+        ],
+        "default": "auto"
+      },
+      {
+        "type": "range",
+        "id": "width_dk",
+        "min": 10,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.icon.settings.width_lg.label",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "width_tb",
+        "min": 10,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.icon.settings.width_md.label",
+        "default": 30
+      },
+      {
+        "type": "range",
+        "id": "width_mb",
+        "min": 10,
+        "max": 50,
+        "step": 1,
+        "unit": "px",
+        "label": "t:blocks.icon.settings.width.label",
+        "default": 30
+      },
+      {
+        "type": "header",
+        "content": "t:sections.all.padding.section_spacing"
+      },
+      {
+        "type": "text",
+        "id": "mg",
+        "label": "Margin",
+        "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+        "default": ",,10px,",
+        "placeholder": ",,50px,"
+      },
+      {
+        "type": "text",
+        "id": "mg_mb",
+        "label": "Margin (Mobile)",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ block.settings.mg != blank }}"
+      },
+      {
+        "type": "text",
+        "id": "pd",
+        "label": "Padding",
+        "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+        "placeholder": "50px,,50px,"
+      },
+      {
+        "type": "text",
+        "id": "pd_mb",
+        "label": "Padding (Mobile)",
+        "placeholder": ",,50px,",
+        "visible_if": "{{ block.settings.pd != blank }}"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:blocks.icon.name"
+      }
+    ]
+  }
+{% endschema %}

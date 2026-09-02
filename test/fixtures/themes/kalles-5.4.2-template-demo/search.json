@@ -1,0 +1,99 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+ {
+  "sections": {
+    "collections_list_simple_4yRUED": {
+      "type": "top-list-collections",
+      "settings": {
+        "show_type": "all",
+        "menu": "footer",
+        "sort": "alphabetical",
+        "hide_mobile": false,
+        "navUI": true,
+        "colors_by_section": false,
+        "color_scheme": "scheme-1",
+        "background_opacity": 1,
+        "section_layout": "container",
+        "pd": "",
+        "pd_mb": "",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main_heading_xYyUyq": {
+      "type": "main-heading",
+      "blocks": {
+        "heading_search_cJ4KDc": {
+          "type": "_heading_search",
+          "settings": {
+            "text": "",
+            "line_height": "hdt-lh-1",
+            "font_family": "hdt-font-1",
+            "text_size": "2xl",
+            "text_color": "hdt-s-text",
+            "italic": false,
+            "uppercase": false,
+            "font_size_text_lg": 16,
+            "font_size_text": 14,
+            "letter_spacing_text": 0
+          },
+          "blocks": {}
+        }
+      },
+      "block_order": [
+        "heading_search_cJ4KDc"
+      ],
+      "settings": {
+        "use_dynamic_source": false,
+        "image": "shopify://shop_images/shop-banner.jpg",
+        "color_scheme": "scheme-77e4ef58-56a9-4631-876a-12098ba7d57d",
+        "bg_overlay": 54,
+        "space_item": 0,
+        "pd": "50px,,50px,",
+        "pd_mb": "40px,,40px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    },
+    "main-search": {
+      "type": "main-search",
+      "settings": {
+        "product_des": "1",
+        "image_ratio": "asos",
+        "image_size": true,
+        "show_vendor": false,
+        "pr_border": "none",
+        "products_count": 16,
+        "col_dk": "4",
+        "col_tb": "3",
+        "col_mb": "2",
+        "space_items": "x",
+        "pagination_type": "links",
+        "paginate_pos": "center",
+        "dis_pagination": 60,
+        "enable_sorting": true,
+        "enable_filtering": true,
+        "price_behavior": "auto",
+        "enable_num_cols_selector": true,
+        "full_width": false,
+        "color_scheme": "scheme-1",
+        "pd": ",,20px,",
+        "pd_mb": ",,20px,",
+        "mg": "",
+        "mg_mb": ""
+      }
+    }
+  },
+  "order": [
+    "collections_list_simple_4yRUED",
+    "main_heading_xYyUyq",
+    "main-search"
+  ]
+}

@@ -1,0 +1,23 @@
+<!-- blocks/_ourteam_grid.liquid -->
+<div class="hdt-row-grid hdt-grid-cols-{{ section.settings.col_mb }} md:hdt-grid-cols-{{ section.settings.col_tb }} lg:hdt-grid-cols-{{ section.settings.col_dk }}">
+  {% content_for 'blocks' %}
+</div>
+{% schema %}
+  {
+    "name": "t:sections.our-team.blocks.grid",
+    "tag": null,
+    "settings": [
+    
+    ],
+    "blocks": [
+      {
+        "type": "_ourteam_item"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.our-team.blocks.grid"
+      }
+    ],
+  }
+{% endschema %}

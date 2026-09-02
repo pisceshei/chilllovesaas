@@ -1,0 +1,276 @@
+{%-liquid 
+  unless request.host contains 'kalles'
+    continue
+  else 
+  endunless
+  assign demos = pages['demos'].metafields.home.menu.value | default: pages['demo'].metafields.home.menu.value
+  assign demo_size = demos.size | plus: 0
+  if demo_size < 1
+    continue
+  endif
+-%}
+<style>
+html:has(#drawer-demo-themes:checked){
+  overflow: hidden;
+  padding-inline-end: var(--scrollbar-w);
+}
+.hdt-demoo-container {
+  --container-w: min(700px,70vw);
+  --spacing-x: 20px;
+  --spacing-y: 20px;
+  z-index: 9999;
+  position: relative;
+  .backdrop{
+    position:fixed;
+    inset: 0;
+    width:100%;
+    height:100%;
+    background-color: rgb(0 0 0 / 0.3);
+    content: "";
+    cursor: var(--cursor-close-svg-url) 28 28,auto;
+    opacity: 0;
+    content-visibility: hidden;
+    pointer-events: none;
+  }
+
+  &:has(#drawer-demo-themes:checked){
+    .backdrop{
+      opacity: 1;
+      content-visibility: visible;
+      pointer-events: auto;
+    }
+    .hdt-demoo-buy-theme{
+      right: var(--container-w);
+      .hdt-demoos-btn{
+        .hdt-demoo-close-icon{
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .hdt-demoos-count{
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-15px);
+      }
+    }
+    .hdt-demoo-wrap{
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  .hdt-demoo-wrap{
+    max-width: var(--container-w);
+    position: fixed;
+    right: 0;
+    transition: 0.3s ease-in-out;
+    z-index: 999;
+    top: 0;
+    bottom: 0;
+    overflow-y: auto;
+    background-color: rgb(var(--color-background,var(--color-base-background)));
+    color: rgb(var(--color-foreground));
+    padding: 40px 20px;
+    transform: translateX(100%);
+    opacity: 0;
+    @media (750px < width < 1300px){
+      padding: 40px 20px 80px;
+    }
+    .hdt-demoo-item-title{transition: .25s ease-in-out;}
+    a.hdt-demoo-inner:hover{
+      .hdt-demoo-item-title{ color: rgb(var(--color-accent))}
+      }
+  }
+  .hdt-demoo-header{
+    margin-bottom: 30px;
+    h3{ 
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 600;
+      span {
+        font-size: clamp(16px, 2vw, 24px);
+      }
+    }
+  }
+  .hdt-demoo-item{
+    .hdt-demoo-wrap-title{
+      margin-top: 15px;
+    }
+    .hdt-demoo-item-image{
+      transition: .3s ;
+      box-shadow: 3px 5px 25px 0 rgba(0,0,0,.1);
+      &:hover{
+        box-shadow: 3px 5px 35px 0 rgba(0,0,0,.15);
+        transform: translateY(-5px);
+      }
+    }
+  }
+  .hdt-demoo-buy-theme{
+    position: fixed;
+    right: 0;
+    transition: 0.3s ease-in-out;
+    z-index: 1;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .hdt-demoos-btn {
+    pointer-events: auto;
+    a&{
+      .hdt-demoos-count{
+        gap: 5px;
+      }
+    }
+    &.hdt-purschase-btn{
+      .hdt-btn-wrappp{
+        background: rgb(var(--color-accent));
+        color: rgb(var(--hdt-btn-color));
+      }
+    }
+    .hdt-btn-wrappp{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      min-width: 150px;
+      color: rgb(var(--hdt-btn-bg));
+      background-color: rgb(var(--hdt-btn-color));
+      position: relative;
+      min-height: 44px;
+      font-size: clamp(14px, 2vw, 18px);
+      box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      &:hover{
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.2);
+      }
+    }
+    .hdt-demoos-count{
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: 0.2s ease-in-out;
+      opacity: 1;
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: fit-content;
+      right: 0;
+      bottom: 0;
+      margin: 0 auto;
+      transition-delay: 0.5s;
+    }
+    .hdt-demoos-num{
+      font-weight: 600;
+    }
+    .hdt-demoo-close-icon{
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      transition: 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(15px);
+      transition-delay: 0.5s;
+    }
+  }
+}
+@keyframes dmoo-count {
+  0%{
+    opacity: 1;
+    
+  }
+  100%{
+    opacity: 0;
+    width: 0;
+    opacity: 0;
+  }
+}
+
+</style>
+<div class="hdt-demoo-container hdt-hidden md:hdt-block">
+<div class="backdrop" onclick="document.getElementById('drawer-demo-themes').checked = false;"></div>
+<div class="hdt-demoo-buy-theme hdt-pe-none">
+  <label for="drawer-demo-themes" class="hdt-demoos-btn" aria-controls="drawer-demo-themes" aria-label="Open demo themes">
+    <div class="hdt-btn-wrappp">
+      <div class="hdt-demoos-count">
+        <div class="hdt-demoos-num">{{ demo_size }}+</div>
+        <span style="width:3px"></span>
+        <span class="hdt-demoos-label">demos</span>
+      </div>
+      <div class="hdt-demoo-close-icon">
+        Close
+      </div>
+    </div>
+  </label>
+  <a href="https://1.envato.market/nL6xBa" target="_blank" class="hdt-demoos-btn hdt-purschase-btn">
+    <div class="hdt-btn-wrappp">
+      <div class="hdt-demoos-count">
+        <div class="hdt-icon-plus">
+          <svg x="0px" y="0px" width="16px" height="20px" viewBox="0 0 16 20" enable-background="new 0 0 16 20" xml:space="preserve">
+            <path fill="currentColor" d="M16.097,5.831v12.751c0,0.232-0.084,0.434-0.251,0.602c-0.168,0.17-0.368,0.254-0.601,0.254H1.852
+              c-0.231,0-0.433-0.084-0.601-0.254C1.083,19.016,1,18.814,1,18.582V5.87c0-0.259,0.083-0.473,0.251-0.642
+              C1.419,5.06,1.62,4.976,1.852,4.976H4.02V4.587c0-1.269,0.445-2.352,1.335-3.246C6.245,0.447,7.296,0,8.51,0h0.077
+              c1.213,0,2.265,0.447,3.155,1.341s1.336,1.977,1.336,3.246v0.389h2.167c0.232,0,0.426,0.078,0.581,0.233
+              C16.007,5.391,16.097,5.598,16.097,5.831L16.097,5.831z M14.355,6.686h-1.277v1.478c0,0.259-0.084,0.473-0.252,0.641
+              c-0.168,0.169-0.368,0.253-0.6,0.253c-0.259,0-0.472-0.084-0.64-0.253c-0.168-0.168-0.251-0.382-0.251-0.641V6.686H5.761v1.478
+              c0,0.259-0.084,0.473-0.251,0.641C5.342,8.974,5.129,9.058,4.871,9.058c-0.232,0-0.433-0.084-0.601-0.253
+              C4.103,8.637,4.02,8.423,4.02,8.164V6.686H2.742v11.041h11.613V6.686z M5.761,4.976h5.575V4.587c0-0.803-0.271-1.483-0.813-2.041
+              C9.98,1.989,9.336,1.71,8.587,1.71H8.51c-0.749,0-1.394,0.279-1.936,0.836C6.032,3.104,5.761,3.784,5.761,4.587V4.976z"></path>
+            </svg>
+        </div>
+        <span class="hdt-demoos-label">Buy now</span>
+      </div>
+      <div class="hdt-demoo-close-icon">
+        Buy now
+      </div>
+    </div>
+  </a>
+</div>
+<input type="checkbox" class="hdt-hidden" id="drawer-demo-themes">
+<div class="hdt-demoo-wrap">
+  <div class="hdt-demoo-inner">
+    <div class="hdt-demoo-header">
+      <h3 class="hdt-text-center">{{ demo_size }} <span>demos</span></h3>
+      <p class="hdt-text-center hdt-body-base">Can't decide on one demo? Features from different demos can be<br class="hdt-hidden md:hdt-block"> combined! Start creating your website</p>
+    </div>
+    <div class="hdt-demoo-grid hdt-row-grid hdt-grid-cols-1 md:hdt-grid-cols-2 lg:hdt-grid-cols-3">
+      {%- for demo in demos -%}
+        {% liquid
+          assign image = demo.image 
+          assign labels = demo.label
+          assign url = demo.url.value.url
+          assign name = demo.name
+        %}
+        <div class="hdt-demoo-item">
+          <a href="{{ url }}" class="hdt-demoo-inner">
+            <div class="hdt-demoo-item-image">
+              {%- if image != blank -%}
+                {{ image | image_url: width: image.width, height: image.height | image_tag: loading: 'lazy', width: image.width, widths:'100,200,300,400,500,600,700,800,900,1000,1200,1400',
+                  loading: 'lazy', sizes: '', class: 'hdt-object-cover hdt-obj-eff' }}
+              {%- endif -%}
+            </div>
+            <div class="hdt-demoo-wrap-title hdt-flex hdt-justify-between hdt-align-center">
+              <div class="hdt-demoo-item-title">{{ name }}</div>
+              <div class="hdt-demo-label hdt-flex">
+                {%- for label in labels.value -%}
+                  <span class="hdt-demo_{{ label | handle }} hdt-flex hdt-align-center hdt-justify-center hdt-text-xs hdt-font-medium">{{ label }}</span>
+                {%- endfor -%}
+              </div>
+            </div>
+          </a>
+        </div>
+      {%- endfor -%}
+    </div>
+
+  </div>
+</div>
+</div>

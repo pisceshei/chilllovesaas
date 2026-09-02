@@ -1,0 +1,367 @@
+{
+  "sections": {
+    "1659926191a36ed220": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-brand-list .m-brands-list__logo .m-image {\n  opacity: 0.4;\n  transition: all 0.3s;\n}\n.m-custom-brand-list .m-brands-list__logo .m-image:hover {\n  opacity: 1;\n}\n@media (min-width: 1280px) {\n  .m-custom-featured-product-slide .m-featured-slider__product-content h3 {\n    font-size: 42px;\n  }\n}\n@media (max-width: 767px) {\n  .m-collection-list--home .m-section__header,\n  .m-collection-list--home .m-slider-controls {\n    text-align: center;\n  }\n}"
+      }
+    },
+    "16601254757b1ddb96": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": false,
+        "content_position": "left middle",
+        "text_alignment": "center",
+        "text_size": "large",
+        "text_color": "dark",
+        "title": "Cloud Nine <br>Fleece Onesie",
+        "subtitle": "",
+        "text": "<p>Your dog is awesome. Your dog is special. <br\/>Your dog is fabulous.<\/p>",
+        "button_label": "Shop now",
+        "button_link": "",
+        "button_style": "m-button--primary",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "16601268677487bcdb": {
+      "type": "brands-list",
+      "blocks": {
+        "1660126867d481e236-0": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1660126867d481e236-1": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1660126867d481e236-2": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "1660126867d481e236-3": {
+          "type": "image",
+          "settings": {
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        },
+        "dc3c4b90-46bf-4b0b-92f1-b2ea359824cd": {
+          "type": "image",
+          "settings": {            
+            "image_by_url": "",
+            "image_link": "",
+            "max_width": "150px"
+          }
+        }
+      },
+      "block_order": [
+        "1660126867d481e236-0",
+        "1660126867d481e236-1",
+        "1660126867d481e236-2",
+        "1660126867d481e236-3",
+        "dc3c4b90-46bf-4b0b-92f1-b2ea359824cd"
+      ],
+      "custom_css": [
+        ".m-section {border-bottom: 1px solid rgb(var(--color-border));}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 5,
+        "column_gap": 30,
+        "row_gap": 30,
+        "column_gap_mobile": 10,
+        "row_gap_mobile": 10,
+        "enable_slider": true,
+        "show_nav": false,
+        "show_pagination": false,
+        "autorotate": true,
+        "autorotate_speed": 3,
+        "padding_top": 40,
+        "padding_bottom": 40,
+        "custom_class": "m-custom-brand-list",
+        "animations": "inherit"
+      }
+    },
+    "16595850289c0b4c41": {
+      "type": "collection-list",
+      "blocks": {
+        "16595850286b090433-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Onesies"
+          }
+        },
+        "16595850286b090433-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Shirts"
+          }
+        },
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Hoodies"
+          }
+        },
+        "000d506b-f344-4512-84c7-ae2845e8709b": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Jackets"
+          }
+        },
+        "b38d2fea-cd4d-4044-bf3b-b752a74370c1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sweaters"
+          }
+        }
+      },
+      "block_order": [
+        "16595850286b090433-0",
+        "16595850286b090433-1",
+        "52a66cb1-ebc3-440c-8fe5-19e51807c2cd",
+        "000d506b-f344-4512-84c7-ae2845e8709b",
+        "b38d2fea-cd4d-4044-bf3b-b752a74370c1"
+      ],
+      "settings": {
+        "heading": "Season Collection",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "inside",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": true,
+        "count_inline_title": false,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": true,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "16601267994bdd0a5f": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Shop this look",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 6,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        "button_text": "Shop more",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16601272833abac709": {
+      "type": "featured-product-slider",
+      "blocks": {
+        "1660127283436a4fef-0": {
+          "type": "product",
+          "settings": {
+            "heading": "X Wray Sweater",
+            "description": "",
+            "product": "meet-the-parents-x-wray-sweater"
+          }
+        },
+        "1660127283436a4fef-1": {
+          "type": "product",
+          "settings": {
+            "heading": "Silver Linings Sweater",
+            "description": "",
+            "product": "silver-linings-sweater"
+          }
+        },
+        "1660127283436a4fef-2": {
+          "type": "product",
+          "settings": {
+            "heading": "U+Me Sweater",
+            "description": "",
+            "product": "u-me-sweater"
+          }
+        }
+      },
+      "block_order": [
+        "1660127283436a4fef-0",
+        "1660127283436a4fef-1",
+        "1660127283436a4fef-2"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-f3096242-58b5-4838-b67a-ad30f782a754",
+        "image_placement": "left",
+        "slide_autoplay": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "autorotate_speed": 5,
+        "pcard_layout": "",
+        "pcard_alignment": "left",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-featured-product-slide",
+        "animations": "inherit"
+      }
+    },
+    "16599564648cf272b8": {
+      "type": "custom-content",
+      "blocks": {
+        "8b084aae-ed6f-464a-9712-b73fc6bce1df": {
+          "type": "html",
+          "settings": {
+            "code": "<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0147\/0962\/0800\/files\/pet_image_2.png?v=1660127902\" alt=\"\">",
+            "width": "100%",
+            "block_custom_class": "m-custom-content-block-html",
+            "animations": "inherit"
+          }
+        },
+        "16599564645c09fdaa-0": {
+          "type": "text",
+          "settings": {
+            "title": "Little Beasts <br>around the World",
+            "subheading": "",
+            "text": "<p>We make sure to give back to animal focused non-profits. As rescued dog <br\/>parents and foster volunteers, we absolutely understand the need for these <br\/>organizations and the good that they do.<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "button_label": "about us",
+            "button_link": "#",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "8b084aae-ed6f-464a-9712-b73fc6bce1df",
+        "16599564645c09fdaa-0"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 20,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 32,
+        "custom_class": "m-custom-content-section"
+      }
+    },
+    "1660128836bcbc214e": {
+      "type": "instagram",
+      "settings": {
+        "heading": "@puppies.co",
+        "heading_size": "h2",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "layout": "grid",
+        "images_count": 5,
+        "grid_columns": 5,
+        "gap": 10,
+        "mobile_gap": 10,
+        "profile": "https:\/\/www.instagram.com\/minimog.trendy\/",
+        "button_label": "",
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "section__flush-bottom"
+      }
+    }
+  },
+  "order": [
+    "1659926191a36ed220",
+    "16601254757b1ddb96",
+    "16601268677487bcdb",
+    "16595850289c0b4c41",
+    "16601267994bdd0a5f",
+    "16601272833abac709",
+    "16599564648cf272b8",
+    "1660128836bcbc214e"
+  ]
+}

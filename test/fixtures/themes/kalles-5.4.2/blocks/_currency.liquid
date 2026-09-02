@@ -1,0 +1,15 @@
+{%- unless localization.available_countries.size <= 1 and settings.currency_type == "1" -%}
+  {%- render 'hdt_currency' -%}
+{%- endunless -%}
+{% schema %}
+  {
+    "name": "Currency",
+    "tag": null,
+    "settings": [
+    
+    ],
+    "presets": [
+      { "name": "Currency" }
+    ]
+  }
+{% endschema %}

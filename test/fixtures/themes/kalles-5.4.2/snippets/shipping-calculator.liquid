@@ -1,0 +1,41 @@
+
+{%- comment -%}
+  Renders a shipping calculator
+
+  Accepts:
+  - form_id: {String} Form ID (required)
+
+  Usage:
+   {%- render 'shipping-calculator' -%}
+{%- endcomment -%}
+
+<hdt-shipping-calculator class="hdt-shipping-calculator" id="shipping-calculator-{{ form_id }}">
+  <hdt-country-province-selector class="hdt-contents" {% if customer and customer.default_address %}country="{{ customer.default_address.country | escape }}"{% endif %}>
+    <div class="hdt-field">
+      <label for="ShippingCountry_{{ form_id }}">{{ 'sections.cart.shipping_estimator.country' | t }}</label>
+      <select id="ShippingCountry_{{ form_id }}" name="address[country]" data-default="{% if customer %}{{ customer.default_address.country }}{% endif %}">{{- country_option_tags -}}</select>
+    </div>
+    <div class="hdt-field">
+      <label for="ShippingProvince_{{ form_id }}" id="address_province_label">{{ 'sections.cart.shipping_estimator.province' | t }}</label>
+      <select id="ShippingProvince_{{ form_id }}" name="address[province]" data-default="{% if customer %}{{ customer.default_address.province }}{% endif %}"></select>
+    </div>
+  </hdt-country-province-selector>
+  <div class="hdt-field">
+    <label for="ShippingZip_{{ form_id }}">{{ 'sections.cart.shipping_estimator.zip_code' | t }}</label>
+    <input type="text" data-opend-focus id="ShippingZip_{{ form_id }}" name="address[zip]" value="{% if customer %}{{ customer.default_address.zip }}{% endif %}"/>
+  </div>
+  <div class="hdt-field hdt-cart__tool-btns">
+    <button type="button" class="hdt-get__rates hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-oh hdt-btn-default hdt-font-semibold"><span class="hdt-truncate">{{ 'sections.cart.shipping_estimator.estimate' | t }}</span></button>
+    <button aria-controls="dialog-is--rates" type="button" class="hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn hdt-oh hdt-btn-outline hdt-font-semibold"><span class="hdt-truncate">{{ 'sections.cart.tool.cancel' | t }}</span></button>
+  </div>
+  <div role="region" aria-live="polite" class="hdt-response__rates"></div>
+  <template data-lang-rates class="hdt-hidden">
+   {
+     "multiple_rates": {{ 'sections.cart.shipping_estimator.multiple_rates' | t | json }},
+     "one_rate": {{ 'sections.cart.shipping_estimator.one_rate' | t | json }},
+     "no_rates": {{ 'sections.cart.shipping_estimator.no_rates' | t | json }},
+     "errors": {{ 'sections.cart.shipping_estimator.errors' | t | json }},
+     "free": {{ 'sections.cart.shipping_estimator.free' | t | json }}
+   }
+  </template>
+</hdt-shipping-calculator>

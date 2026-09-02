@@ -1,0 +1,57 @@
+<!-- blocks/banner-item.liquid -->
+{%- liquid
+  assign current_width = settings.page_width | append: 'px'
+  assign current_width_tb = '100vw'
+  assign current_width_mb = '100vw'
+
+  assign color_list = 'products.theme_settings.color' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+  assign size_list = 'products.theme_settings.size' | t | downcase | strip | replace: ' ,', ',' | replace: ', ', ',' | split: ',' | uniq
+-%}
+{%- capture sizes -%}
+  (min-width: 1150px) calc(({{ current_width }} -  (( {{ block.settings.col_dk }} - 1 ))) * 1 / {{ block.settings.col_dk }}),(min-width: 768px) calc( ({{ current_width_tb }} - (( {{ block.settings.col_tb }} - 1 ))) * 1 / {{ block.settings.col_tb }}), calc( ({{ current_width_mb }} - (( {{ block.settings.col_mb }} - 1 ) )) * 1 / {{ block.settings.col_mb }})
+{%- endcapture -%}
+<div id="{{ block.id }}" class="hdt-banner__item hdt-h-full" {{ block.shopify_attributes }} {%- if block.settings.colors_by_block %} color-scheme="{{ block.settings.color_scheme }}"{% endif %}>
+  <div class="hdt-item_inner hdt-radius hdt-collection-products hdt-collection-has-pr10 hdt-ratio--adapt_image" hdt-reveal="slide-in" timeline>
+    {%- liquid
+      capture btn_wishlist_code
+        if settings.wishlist_mode != '0'
+          render 'btn-wishlist', class: 'hdt-card-product__btn-wishlist hdt-pr_btn', placement: 'right'
+        endif
+      endcapture
+      render 'card-product10', card_product: block.settings.product, section_id: section.id, class: 'hdt-pr-style10', sizes: sizes, image_ratio: "adapt_image", color_list: color_list, size_list: size_list, product_url: product.url, btn_wishlist_code: btn_wishlist_code, show_vendor: block.settings.show_vendor
+    -%}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "t:blocks.product_card.name",
+    "class": "hdt-slider__slide",
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:sections.all.general_options.label"
+      },
+      {
+        "type": "product",
+        "id": "product",
+        "label": "t:blocks.product_card.settings.product.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "colors_by_block",
+        "label": "t:sections.all.colors.display_colors_by_block"
+      },
+      {
+        "type": "color_scheme",
+        "id": "color_scheme",
+        "label": "t:sections.all.colors.label",
+        "visible_if": "{{ block.settings.colors_by_block == true }}"
+      },
+    ],
+    "presets":[
+      {
+        "name": "t:blocks.product_card.name"
+      }
+    ]
+  }
+{% endschema %}

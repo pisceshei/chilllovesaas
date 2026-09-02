@@ -1,0 +1,171 @@
+<!-- article-grid.liquid -->
+{% liquid
+  if block.settings.blog != blank
+    assign blog = block.settings.blog
+  endif
+%}
+{%- capture blog_html -%}
+{%- for i in (1..6) limit: block.settings.limit -%}
+  <div class="hdt-slider__slide hdt-main-article-item hdt-article-style-1">
+    <div class="hdt-article-inner hdt-relative">
+      <div class="hdt-article-thumb hdt-ratio--adapt_image hdt-relative hdt-oh">
+        <a href="{{ article.url }}" class="hdt-block hdt-eff-img-zoom">
+          {%- capture current -%}{% cycle 1, 2, 3 %}{%- endcapture -%}
+            <div class="hdt-ratio hdt-article-img hdt-oh" style="--aspect-ratioapt-md:{{ article.image.aspect_ratio | default: 2 }};--aspect-ratioapt:{{ article.image.aspect_ratio | default: 2 }}">
+              {{ 'blog-apparel-' | append: current | placeholder_svg_tag: 'hdt-placeholder-svg' }}  
+            </div>
+        </a>
+        <div class="hdt-article-label hdt-absolute">
+          {%- if block.settings.show_cate != 'disable' -%}
+            <div class="hdt-article-category hdt-row-flex">
+              <a class="hdt-text-xs hdt-font-bold hdt-btn" href="/admin/blogs">ACCESSORIES</a>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+      <div class="hdt-article-content_wapper">
+        <div class="hdt-article-info hdt-flex hdt-flex-col hdt-align-{{ block.settings.content_align }}">
+          {%- if block.settings.show_tags -%}
+            <div class="hdt-article-tags">
+                <a class="hdt-text-base hdt-font-normal" href="/admin/blogs">Tech</a> , <a class="hdt-text-base hdt-font-normal" href="/admin/blogs">Design</a>
+            </div>
+          {%- endif -%}
+          <h6 class="hdt-article-title hdt-line-clamp hdt-h6 hdt-font-medium hdt-text-lg hdt-s-text "><a href="{{ article.url }}">{{ 'onboarding.blog_title' | t }}</a></h6>
+          <div class="hdt-article-metas hdt-inline-block">
+            {%- if block.settings.show_author == true -%}
+              <span class="hdt-article-author hdt-s-text2 hdt-text-base">
+                <span class="hdt-article-author__name hdt-s-text2">{{ 'blogs.article.by' | t }}<span class="hdt-s-text">{{ 'onboarding.blog_author' | t }}</span></span>
+              </span>
+            {%- endif -%}
+            {%- if block.settings.show_date -%}
+              <span class="hdt-article-time hdt-s-text2 hdt-text-base">
+                {{ 'blogs.article.on' | t }}
+                <span class="hdt-article-time__top hdt-s-text">30</span>
+                <span class="hdt-article-time__bottom hdt-s-text">November</span>
+              </span>
+            {%- endif -%}
+            {%- if block.settings.show_comment == true -%} 
+              <span class="hdt-article-comment hdt-s-text2 hdt-text-base">
+                <a href="{{ article.url }}" class="hdt-inline-block">
+                  <span class="hdt-article-comment__count">{{ 'blogs.article.comments_html'| t: count: 30 }}</span>
+                </a>
+              </span>
+            {%- endif -%}
+          </div>
+          {%- if block.settings.show_content == true -%}
+            <div class="hdt-article-content hdt-s-text2 hdt-text-base hdt-text-{{ block.settings.content_align }} hdt-rte">{{ 'onboarding.blog_excerpt'| t }}</div>
+          {%- endif -%}
+          {%- if block.settings.show_readmore == true -%}
+            <div class="hdt-article-btn">
+              <a href="{{ article.url }}" class="hdt-btn hdt-inline-flex hdt-align-center hdt-justify-center hdt-relative hdt-btn-link hdt-text-base hdt-font-semibold hdt-article-btn__readmore"><span>CONTINUE READING</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="transparent" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 12H15" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M12 8L16 12L12 16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </a>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endfor -%}
+{%- endcapture -%}
+<div class="hdt-row-grid hdt-grid-cols-{{ block.settings.col_mb }} md:hdt-grid-cols-{{ block.settings.col_tb }} lg:hdt-grid-cols-{{ block.settings.col_dk }} hdt-slide-spacing-15 md:hdt-slide-spacing-30">
+  {%- for article in blog.articles limit: block.settings.limit -%}
+    {%- content_for 'block', type: "_article-card", id: "article-grid", closest.article: article -%}
+  {%- else -%}
+    {{ blog_html }}
+  {%- endfor -%}
+</div>
+{% schema %}
+{
+  "name": "Article grid",
+  "tag": null,
+  "settings": [
+    {
+      "id": "blog",
+      "type": "blog",
+      "label": "Blog"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "label": "t:sections.feature-blog.settings.limit",
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "col_dk",
+      "label": "t:sections.all.items_row.desktop",
+      "default": "3",
+      "options": [
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_tb",
+      "label": "t:sections.all.items_row.tablet",
+      "default": "3",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "col_mb",
+      "label": "t:sections.all.items_row.mobile",
+      "default": "2",
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        }
+      ]
+    },
+  ],
+  "blocks": [],
+  "presets": [
+    {
+      "name": "Article grid",
+      "blocks": [
+        {
+          "type": "_article-card",
+          "static": true,
+          "id": "article-grid"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

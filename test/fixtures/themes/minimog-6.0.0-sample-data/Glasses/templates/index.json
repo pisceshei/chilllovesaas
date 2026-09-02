@@ -1,0 +1,434 @@
+{
+  "sections": {
+    "1660285924f64839cf": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".sf__custom-01 .m-image-card__content {\n  padding-bottom: 40px !important;\n}\n\n@media (min-width: 1400px) {\n  .m-custom-slideshow .m-slide__content .m-slide__title {\n    font-weight: 800;\n    line-height: 1.45;\n    font-size: 60px;\n    margin-bottom: 15px;\n    letter-spacing: 2px;\n  }\n}\n\n@media (max-width: 767px) {\n  .sf__custom-01 .m-image-card__content {\n    padding-bottom: 20px !important;\n  }\n}"
+      }
+    },
+    "1620813069167db316": {
+      "type": "slider",
+      "blocks": {
+        "1620813069167db316-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "<span>JUST DROPPED<\/span>",
+            "title": "FEEL THE<br> AUTHENTIC PEACE",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "27403af4-f4e3-4833-9189-9868705845f7": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "JUST DROPPED",
+            "title": "CHOOSE THE BEST<br>CHOOSE US",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "c0ce169f-1329-47fc-9e42-915e4961aa32": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": false,
+            "content_position": "left bottom",
+            "text_alignment": "left",
+            "text_size": "medium",
+            "text_color": "white",
+            "subheading": "JUST DROPPED",
+            "title": "SHOP YOUR<br> OUTFIT STYLE",
+            "description": "",
+            "image_link": "",
+            "button_text": "SHOP NOW",
+            "button_link": "",
+            "button_style": "sf__btn-white",
+            "button_size": "",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1620813069167db316-0",
+        "27403af4-f4e3-4833-9189-9868705845f7",
+        "c0ce169f-1329-47fc-9e42-915e4961aa32"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "right",
+        "dots_color": "light",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-custom-slideshow",
+        "animations": "inherit"
+      }
+    },
+    "1621154878f83080d8": {
+      "type": "custom-content",
+      "blocks": {
+        "036757a8-8382-4411-9af9-391de3a97b6d": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "GLASSES",
+            "button_style": "m-button--white",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "1cd7758e-e921-4a68-9f23-64618b92f600": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "SUNGLASSES",
+            "button_style": "m-button--white",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "50a5ea32-ed4a-4f5d-bb05-6ea43bac55e7": {
+          "type": "image_card",
+          "settings": {
+            "width": "33%",
+            "color_scheme": "",
+            "content_position": "bottom_center",
+            "content_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "link": "",
+            "title": "",
+            "subtitle": "",
+            "button_label": "NEW ARRIVALS",
+            "button_style": "m-button--white",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "036757a8-8382-4411-9af9-391de3a97b6d",
+        "1cd7758e-e921-4a68-9f23-64618b92f600",
+        "50a5ea32-ed4a-4f5d-bb05-6ea43bac55e7"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 40,
+        "padding_top": 30,
+        "padding_bottom": 0,
+        "custom_class": "sf__custom-01"
+      }
+    },
+    "16211564572f5acba8": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "HOT THIS WEEK",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 9,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "load",
+        "button_text": "SHOP NOW",
+        "button_style": "sf__btn-primary",
+        "button_size": "",
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "1621156682db532b90": {
+      "type": "image-with-text-2",
+      "settings": {
+        "color_scheme": "",
+        "container": "w-full",
+        "hero_size": "adapt",
+        "show_overlay": false,
+        "bg_position": "center",
+        "image_link": "",
+        "parallax": false,
+        "content_in_container": true,
+        "content_position": "left middle",
+        "text_alignment": "center",
+        "text_size": "medium",
+        "text_color": "dark",
+        "title": "OUT OF THE BLUE",
+        "subtitle": "",
+        "text": "<p>Our mission is to change the way people think about ingredients<br\/> and products they put on their bodies.<\/p>",
+        "button_label": "GET STARTED",
+        "button_link": "",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "text_alignment_mobile": "center",
+        "use_content_above": false,
+        "custom_class": "m-custom-hero",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "162115776591d18f1f": {
+      "type": "collection-list",
+      "blocks": {
+        "162115776591d18f1f-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": "GUYS BESTSELLERS"
+          }
+        },
+        "162115776591d18f1f-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": "GALS BESTSELLERS"
+          }
+        },
+        "162115776591d18f1f-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": "QUALITY SHADES"
+          }
+        }
+      },
+      "block_order": [
+        "162115776591d18f1f-0",
+        "162115776591d18f1f-1",
+        "162115776591d18f1f-2"
+      ],
+      "settings": {
+        "heading": "DISCOVER MORE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "Luxe, lightweight, and made with the perfect blend of cashmere",
+        "header_alignment": "center",
+        "color_scheme": "",
+        "container": "container",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "left",
+        "hover_effect": "scaling-up",
+        "show_product_count": false,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 3,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom-collection-list",
+        "animations": "inherit"
+      }
+    },
+    "1621156809bb45e560": {
+      "type": "icon-box",
+      "blocks": {
+        "1621156809bb45e560-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "100 DAYS RETURN",
+            "description": "<p>No question asked<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1621156809bb45e560-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "LIFETIME WARRANTY",
+            "description": "<p>For original owners<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "1621156809bb45e560-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "CUSTOM SERVICES",
+            "description": "<p>Our priority<\/p>",
+            "link": "",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "1621156809bb45e560-0",
+        "1621156809bb45e560-1",
+        "1621156809bb45e560-2"
+      ],
+      "settings": {
+        "heading": "WE PROMISE",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "70px",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "16211572081080a2cd": {
+      "type": "custom-content",
+      "blocks": {
+        "7a120361-ca13-4089-9e54-92a3955bbb18": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"m:text-center\">\n<strong>NEED HELP ?<\/strong> Services Hours: <strong>Monday to Sunday 9a.m to 8p.m<\/strong>   Email: minimog@domain.com   Tel: +391 (0)35 2568<\/div>",
+            "width": "100%",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "7a120361-ca13-4089-9e54-92a3955bbb18"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container",
+        "color_scheme": "",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 18,
+        "padding_bottom": 18,
+        "custom_class": "m-custom-content-section"
+      }
+    }
+  },
+  "order": [
+    "1660285924f64839cf",
+    "1620813069167db316",
+    "1621154878f83080d8",
+    "16211564572f5acba8",
+    "1621156682db532b90",
+    "162115776591d18f1f",
+    "1621156809bb45e560",
+    "16211572081080a2cd"
+  ]
+}

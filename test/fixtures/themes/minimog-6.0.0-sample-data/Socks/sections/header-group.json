@@ -1,0 +1,112 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "36b98da9-1902-4a67-8ed4-54ba33dc3ada": {
+      "type": "scrolling-promotion",
+      "blocks": {
+        "12a9437e-bf73-42e9-9abd-968b3c8da146": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "LIGHT UP YOUR MOMENTS",
+            "text_size": 20,
+            "text_link": ""
+          }
+        },
+        "fdf66901-237e-46da-942e-39e96f8ec9db": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "BRIGHT YOUR EVERY",
+            "text_size": 20,
+            "text_link": ""
+          }
+        },
+        "182976a9-44ae-4977-89ed-eaf6ff479cac": {
+          "type": "announcement",
+          "settings": {
+            "custom_svg": "",
+            "icon_size": "medium",
+            "text": "DAY FREE SHIPPING OVER $50!",
+            "text_size": 20,
+            "text_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "12a9437e-bf73-42e9-9abd-968b3c8da146",
+        "fdf66901-237e-46da-942e-39e96f8ec9db",
+        "182976a9-44ae-4977-89ed-eaf6ff479cac"
+      ],
+      "settings": {
+        "container": "w-full",
+        "direction": "left",
+        "speed": 12,
+        "item_gap": 50,
+        "item_gap_mobile": 30,
+        "color_scheme": "scheme-31173954-7e4b-4d3b-9ea3-ea19219ba92b",
+        "padding_top": 10,
+        "padding_bottom": 10,
+        "custom_class": ""
+      }
+    },
+    "annoucement": {
+      "type": "annoucement",
+      "disabled": true,
+      "settings": {
+        "container": "container",
+        "color_scheme": "",
+        "show_announcement": true,
+        "homepage_only": true,
+        "show_close": true,
+        "show_divider": false,
+        "show_nav": false,
+        "autorotate": false,
+        "autorotate_speed": 3
+      }
+    },
+    "header": {
+      "type": "header",
+      "settings": {
+        "color_scheme": "",
+        "color_scheme_menu": "",
+        "header_design": "both-center",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "transparent_text_color": "#ffffff",
+        "logo_text": "STORE LOGO",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 135,
+        "sticky_logo_max_width": 115,
+        "mobile_logo_max_width": 105,
+        "main_menu": "main-menu-2",
+        "secondary_menu": "main-menu-3",
+        "mobile_menu": "",
+        "uppercase_parent_level": false,
+        "show_menu_column_divider": true,
+        "search": "show_full",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false,
+        "mb_show_currency_switcher": false,
+        "mb_show_country_selector": false,
+        "mb_show_language_switcher": false
+      }
+    }
+  },
+  "order": [
+    "36b98da9-1902-4a67-8ed4-54ba33dc3ada",
+    "annoucement",
+    "header"
+  ]
+}

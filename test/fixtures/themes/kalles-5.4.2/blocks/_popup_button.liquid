@@ -1,0 +1,26 @@
+{%- if block.settings.button_label != blank -%}
+  <input id="popup-button-{{ block.id }}" type="checkbox" action-close class="hdt-inline-flex hdt-align-center hdt-justify-center hdt-text-base hdt-font-semibold" style="margin-right: 10px;border-color: rgb(var(--color-line-border));">
+  <label for="popup-button-{{ block.id }}" style="color: rgb(var(--color-foreground2)); font-size: 1.2rem;">{{ block.settings.button_label }}</label>
+{%- endif -%}
+
+{% schema %}
+  {
+    "name": "t:sections.newsletter_popup.blocks.button.name",
+    "settings": [
+      {
+        "type": "text",
+        "id": "button_label",
+        "label": "t:sections.newsletter_popup.blocks.button.label",
+        "default": "Not interested"
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.newsletter_popup.blocks.button.name",
+        "settings": {
+          "button_label": "Not interested"
+        }
+      }
+    ]
+  }
+{% endschema %}

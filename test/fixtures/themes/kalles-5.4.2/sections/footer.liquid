@@ -1,0 +1,213 @@
+{%- liquid
+  assign sticky = settings.footer_sticky
+-%}
+{%- style -%}
+  {% render 'spacing-vars', box: section %}
+  .hdt-footer-col-block .hdt-footer-heading+.hdt-collapse-content {
+    margin-block-start: 20px;
+  }
+  @media only screen and (max-width: 767px){
+    .hdt-footer-col-block:not(:has(.hdt-section-spacing.open)) .hdt-footer-heading+.hdt-collapse-content {
+      margin-block-start: 0px;
+    }
+    .hdt-footer-collapse-true .hdt-footer-heading {
+      cursor: pointer
+    }
+    .hdt-footer-heading .hdt-collapse-icon {
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hdt-footer-collapse-true .hdt-footer-heading .hdt-collapse-icon:after,
+    .hdt-footer-collapse-true .hdt-footer-heading .hdt-collapse-icon:before {
+      position: absolute;
+      content: "";
+      background-color: rgb(var(--color-foreground));
+      transform: translate(-50%,-50%) rotate(-90deg);
+      top: 50%;
+      left: 50%;
+      transition: transform .25s ease-in-out, opacity .25s ease-in-out, -webkit-transform .25s ease-in-out;
+    }
+    .hdt-footer-collapse-true .hdt-footer-heading .hdt-collapse-icon:after {
+      width: 1px;
+      height: 12px;
+    }
+    .hdt-footer-collapse-true .hdt-footer-heading .hdt-collapse-icon:before{
+      width: 12px;
+      height: 1px;
+    }
+    .hdt-footer-collapse-true .open .hdt-footer-heading .hdt-collapse-icon:after {
+      transform: translate(-50%,-50%) rotate(90deg);
+    }
+    .hdt-footer-collapse-true .open .hdt-footer-heading .hdt-collapse-icon:before {
+      opacity: 0;
+    }
+    .hdt-footer-collapse-true .hdt-collapse-content {
+      height: 0;
+      overflow: hidden;
+      transition: all 0.25s ease-out;
+    }
+    .hdt-footer-collapse-true .open .hdt-collapse-content {
+      max-height: auto;
+      transition: all 0.25s ease-in-out 0s !important;
+    }
+  }
+  @media(min-width:1150px){
+    {%- if sticky %}
+      #MainContent,
+      #shopify-section-announcement-bar,
+      #shopify-section-top-bar,
+      #hdt-header,
+      .hdt-prefooter {
+        position: relative;
+        z-index: 4
+      }
+      #shopify-section-top-bar {
+        z-index: 466;
+      }
+      #MainContent {
+        z-index: 2;
+        background-color: rgb(var(--color-base-background));
+      }
+      .hdt-prefooter {
+        z-index: 1;
+      }
+      footer {
+        position: sticky;
+        position: -webkit-sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+      }
+    {% endif -%}
+  }
+  .hdt-footer-heading {
+    width: 100%;
+  }
+  .hdt-footer-heading-text {
+    font-size: 1em;
+  }
+  .hdt-footer-col-block {
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+  .hdt-footer-col-block>* {
+    flex: 1 0 100%;
+  }
+{%- endstyle -%}
+<div class="hdt-section-inner {{ section.id }} hdt-footer-section hdt-relative hdt-s-gradient hdt-section-spacing hdt-section-spacing-{{ section.id }}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};" {%- endif %} hdt-reveal="fade-in">
+  {%- if section.settings.background_image != blank -%}
+    {{ section.settings.background_image | image_url: width: section.settings.background_image.width | image_tag: loading: 'lazy', width: section.settings.background_image.width, height: section.settings.background_image.height, sizes: "100vw", widths: "375, 550, 750, 1100, 1500, 1780, 2000, 3000, 3840", class: 'hdt-footer-background-image hdt-w-full hdt-h-full hdt-object-cover hdt-absolute hdt-top-0 hdt-left-0 hdt-right-0 hdt-bottom-0' }}
+  {%- endif -%}
+  <div class="hdt-container {%- if section.settings.full_width -%}-full hdt-px-15{%- endif %} hdt-footer-collapse-{{ section.settings.collapse }} hdt-relative"> 
+    <div class="hdt-row">
+      {% content_for "blocks" %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.footer.name",
+  "class": "hdt-section hdt-section--custom",
+  "enabled_on": {
+    "groups": [
+      "footer"
+    ]
+  },
+  "blocks": [
+    {
+      "type": "group"
+    },
+    {
+      "type": "_footer-column"
+    }
+  ],
+  "settings": [
+    {
+      "type":"checkbox",
+      "id":"collapse",
+      "label":"t:sections.footer.settings.collapse.label",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "background_image",
+      "label": "Background image"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.padding.section_spacing"
+    },
+    {
+      "type": "text",
+      "id": "mg",
+      "label": "Margin",
+      "info": "Margin top, margin right, margin bottom, margin left. If you not use to blank",
+      "default": ",,50px,",
+      "placeholder": ",,50px,"
+    },
+    {
+      "type": "text",
+      "id": "mg_mb",
+      "label": "Margin (Mobile)",
+      "default": ",,30px,",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.mg != blank }}"
+    },
+    {
+      "type": "text",
+      "id": "pd",
+      "label": "Padding",
+      "info": "Padding top, padding right, padding bottom, padding left. If you not use to blank",
+      "placeholder": "50px,,50px,"
+    },
+    {
+      "type": "text",
+      "id": "pd_mb",
+      "label": "Padding (Mobile)",
+      "placeholder": ",,50px,",
+      "visible_if": "{{ section.settings.pd != blank }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0
+    },
+  ],
+  "presets": [    
+    {
+      "name": "t:sections.footer.name",
+      "blocks": [
+      ],
+      "settings": {
+        "collapse": true,
+        "full_width": false,
+      }
+    }
+  ]
+}
+{% endschema %}

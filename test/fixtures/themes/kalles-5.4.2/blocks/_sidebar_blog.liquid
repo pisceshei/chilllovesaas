@@ -1,0 +1,77 @@
+{% capture content %}
+  {%- content_for "blocks" -%}
+{% endcapture %}
+{% if section.settings.sidebar_mode == "drawer" %}
+<button aria-controls="drawer{{ block.id }}" class="hdt-flex hdt-align-center hdt-sidebar-btn hdt-fixed {% if section.settings.sidebar_position == 'left' %} hdt-left-0{% else %}hdt-right-0{% endif %}" color-scheme="{{ section.settings.color_scheme }}">
+  <span class="hdt-btn-icon">
+    <svg width="24px" height="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM7 5H4V19H7V5ZM20 5H9V19H20V5Z"></path></svg>
+  </span>
+</button>
+<hdt-drawer class="hdt-drawer hdt-contents" color-scheme="{{ section.settings.color_scheme }}">
+  <dialog id="drawer{{ block.id }}" class="hdt-dialog hdt-dialog-drawer hdt-sidebar-drawer hdt-sidebar-blog-drawer" scroll-lock pos="{{ section.settings.sidebar_position }}">
+    <div class="hdt-dialog-drawer__header">
+      <h6 class="hdt-flex hdt-align-center hdt-sidebar-title hdt-text-lg hdt-uppercase hdt-font-semibold">
+        <span>{{- 'products.sidebar.label' | t -}}</span>
+      </h6>
+      <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer{{ block.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+    </div>
+    <div class="hdt-dialog-drawer__inner ">
+      <div class="hdt-blogs-sidebar-inner hdt-current-scrollbar">
+        {{ content }}
+      </div>
+    </div>
+  </dialog>
+</hdt-drawer>
+{% elsif section.settings.sidebar_mode == "normal" %}
+<aside class="hdt-main-sidebar hdt-hidden lg:hdt-block hdt-col hdt-sidebar-{{ section.settings.sidebar_size }} {% if section.settings.sidebar_position == 'left' %} lg:hdt-order-first hdt-left-0 hdt-blogs-sidebar-left{% else %}hdt-right-0 hdt-blogs-sidebar-right{% endif %}" color-scheme="{{ section.settings.color_scheme }}">
+  <div class="hdt-blogs-sidebar-inner">
+    {{ content }}
+  </div>
+</aside>
+<button aria-controls="drawer{{ block.id }}" class="hdt-flex lg:hdt-hidden hdt-align-center hdt-sidebar-btn hdt-fixed {% if section.settings.sidebar_position == 'left' %} hdt-left-0{% else %}hdt-right-0{% endif %}" color-scheme="{{ section.settings.color_scheme }}">
+  <span class="hdt-btn-icon">
+    <svg width="24px" height="24px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 3C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3H21ZM7 5H4V19H7V5ZM20 5H9V19H20V5Z"></path></svg>
+  </span>
+</button>
+  <hdt-drawer class="hdt-drawer hdt-contents lg:hdt-hidden" color-scheme="{{ section.settings.color_scheme }}">
+    <dialog id="drawer{{ block.id }}" class="hdt-dialog hdt-dialog-drawer hdt-sidebar-drawer hdt-sidebar-blog-drawer" scroll-lock pos="{{ section.settings.sidebar_position }}">
+      <div class="hdt-dialog-drawer__header">
+        <h6 class="hdt-flex hdt-align-center hdt-sidebar-title hdt-text-lg hdt-uppercase hdt-font-semibold">
+          <span>{{- 'products.sidebar.label' | t -}}</span>
+        </h6>
+        <button ref="closeButton" class="hdt-s-text hdt-dialog-btn__close" aria-controls="drawer{{ block.id }}" aria-label="{{ 'accessibility.close' | t | escape }}">{%- render 'icon' with 'close' -%}</button>
+      </div>
+      <div class="hdt-dialog-drawer__inner">
+        <div class="hdt-blogs-sidebar-inner hdt-current-scrollbar">
+          {{ content }}
+        </div>
+      </div>
+  </dialog>
+  </hdt-drawer>
+{% endif %}
+
+{%- schema -%}
+{
+  "name": "t:sections.sidebar_blog.name",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_blog-cate"
+    },
+    {
+      "type": "_blog-gallery"
+    },
+    {
+      "type": "_blog-icon-box"
+    },
+    {
+      "type": "_blog-post"
+    },
+    {
+      "type": "_blog-tags-socials"
+    }
+  ],
+  "settings": [
+  ]
+}
+{% endschema %}

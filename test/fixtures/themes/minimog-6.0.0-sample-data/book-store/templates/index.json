@@ -1,0 +1,497 @@
+{
+  "sections": {
+    "0fc8dd8f-b18b-4cd3-a43e-acaed5aa13a8": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-slider--home .m-slide__subtitle,\n.m-slider--home .m-slide__title {\n  font-weight: 500;\n}\n.m-slider--home .m-slide__subtitle,\nbody .m-richtext__description,\n.m-image-box--home .m-icon-box__heading {\n  font-family: 'M-Body-Font';\n}\nbody .m-section__header {\n  margin-bottom: 30px;\n}\n.m-collection-list--home .m-collection-card__image,\n.m-custom--banner .m-image-card {\n  border-radius: 10px;\n}\n.custom__html-block2 {\n  padding: 70px 80px;\n  background-image: url(https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/bg.jpg?v=1622194012);\n  background-size: no-repeat;\n  background-size: cover;\n  background-position: center;\n  border-radius: 8px;\n}\n.custom__html-block2 .block__content {\n  text-align: center;\n  display: inline-block;\n}\n.custom__html-block2 .block__content h2 {\n  color: #fff;\n  margin-bottom: 6px;\n  margin-top: 0;\n}\n.custom__html-block2 .block__content p {\n  color: rgba(255, 255, 255, 0.7);\n}\n.custom__html-block2 .block__social {\n  margin-top: 50px;\n  text-align: center;\n}\n.custom__html-block2 .block__social ul {\n  margin: 0 -20px;\n  padding-left: 0;\n}\n.custom__html-block2 .block__social ul li {\n  display: inline-block;\n  padding: 0 20px;\n}\n.custom__html-block2 .block__social ul li a {\n  display: flex;\n  align-items: center;\n  color: #fff;\n}\n.custom__html-block2 .block__social ul li a img {\n  height: 15px;\n  margin-right: 10px;\n  margin-top: 0;\n  margin-bottom: 0;\n}\n.custom__html-block1 {\n  padding: 0 70px;\n  position: relative;\n}\n.custom__html-block1::after {\n  position: absolute;\n  content: \"\";\n  top: 22px;\n  left: 0;\n  width: 100%;\n  height: calc(100% - 56px);\n  border-radius: 8px;\n  background: #e3ebec;\n}\n.custom__html-block1 img {\n  max-width: 300px;\n  margin-right: 70px;\n}\n.custom__html-block1 .block__content {\n  position: relative;\n  z-index: 1;\n}\n.custom__html-block1 .block__content-text {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  width: 100%;\n}\n.custom__html-block1 .block__content-text .block__heading h3 {\n  font-size: 40px;\n  line-height: 56px;\n  margin-bottom: 4px;\n}\n.custom__html-block1 .block__content-text .block__heading p {\n  color: #696969;\n}\n\n@media (min-width: 768px) {\n  .m-slider--home .m-slide__subtitle {\n    font-size: 24px;\n  }\n}\n@media(max-width: 767px) {\n  .sf-custom--3 .m-section-my {\n    margin-bottom: 40px;\n  }\n  .custom__html-block1 {\n    padding: 0 20px 20px;\n  }\n  .custom__html-block1 .block__content,\n  .custom__html-block1 .block__content-text {\n    flex-direction: column;\n    text-align: center;\n  }\n  .custom__html-block1 img {\n    margin-right: 0;\n  }\n  .custom__html-block1 .block__content-text .block__heading h3 {\n    font-size: 24px;\n    line-height: 30px;\n    margin-top: 20px;\n  }\n  .custom__html-block1 .block__content-text .block__heading p {\n    margin-bottom: 20px;\n  }\n  .custom__html-block1::after {\n    height: 100%;\n  }\n  .custom__html-block2 {\n    padding: 50px 20px;\n    background-position: left;\n  }\n  .custom__html-block2 .block__content h3 {\n    font-size: 24px;\n    line-height: 30px;\n  }\n  .custom__html-block2 .block__social ul li {\n    margin-bottom: 15px;\n  }\n}"
+      }
+    },
+    "1621243260e1af0c20": {
+      "type": "slider",
+      "blocks": {
+        "1621243260e1af0c20-0": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font__weight-medium\">For Booklovers<\/span>",
+            "title": "<span class=\"font__weight-medium\">A World of Books for<br> Young and Old.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            "button_size": "sf__btn-small",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1621243260e1af0c20-1": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font__weight-medium\">For Booklovers.<\/span>",
+            "title": "<span class=\"font__weight-medium\">A World of Books for<br> Young and Old.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            "button_size": "sf__btn-small",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        },
+        "1621243260e1af0c20-2": {
+          "type": "slider_item",
+          "settings": {
+            "content_in_container": true,
+            "content_position": "left middle",
+            "text_alignment": "center",
+            "text_size": "medium",
+            "text_color": "black",
+            "subheading": "<span class=\"font__weight-medium\">For Booklovers.<\/span>",
+            "title": "<span class=\"font__weight-medium\">A World of Books for<br> Young and Old.<\/span>",
+            "description": "",
+            "image_link": "",
+            "button_text": "Shop now",
+            
+            "button_style": "sf__btn-primary",
+            "button_size": "sf__btn-small",
+            "show_footer": false,
+            "footer_alignment": "end",
+            "footer_text": "New Collection",
+            "footer_button": "Shop Now",
+            "footer_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "1621243260e1af0c20-0",
+        "1621243260e1af0c20-1",
+        "1621243260e1af0c20-2"
+      ],
+      "settings": {
+        "container": "w-full",
+        "slideshow_height": "adapt",
+        "show_overlay": false,
+        "dots_position": "bottom",
+        "dots_color": "dark",
+        "show_dots": true,
+        "show_arrows": false,
+        "autorotate": true,
+        "autorotate_speed": 5,
+        "use_content_above": false,
+        "custom_class": "m-slider--home",
+        "animations": "inherit"
+      }
+    },
+    "162209953296371dbc": {
+      "type": "icon-box",
+      "blocks": {
+        "162209953296371dbc-2": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body capitalize\">recommended books<\/span>",
+            "description": "<p>Turn organization into decor with a multi-use, three-tier rack that’s beautiful in any room<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162209953296371dbc-1": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body capitalize\">comming soon<\/span>",
+            "description": "<p>Turn organization into decor with a multi-use, three-tier rack that’s beautiful in any room<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-link",
+            "button_size": ""
+          }
+        },
+        "162209953296371dbc-0": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "<span class=\"font-body capitalize\">Featured people<\/span>",
+            "description": "<p>Turn organization into decor with a multi-use, three-tier rack that’s beautiful in any room<\/p>",
+            
+            
+            
+            "button_style": "sf__btn-secondary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "162209953296371dbc-2",
+        "162209953296371dbc-1",
+        "162209953296371dbc-0"
+      ],
+      "settings": {
+        "heading": "Member Favorites",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "left",
+        "container": "container-fluid",
+        
+        "item_per_row": 3,
+        "item_gap": 30,
+        "item_gap_mobile": 10,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "",
+        "content_alignment": "center",
+        "hover_effect": "none",
+        "enable_slider": true,
+        "show_pagination": true,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-image-box--home",
+        "animations": "inherit"
+      }
+    },
+    "1622195298f9850c12": {
+      "type": "custom-content",
+      "blocks": {
+        "2896ff1d-b246-4d01-bde5-d993aa527afb": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"custom__html-block1\">\n<div class=\"block__content flex items-center\">\n<img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/12.png?v=1622195418\">\n<div class=\"block__content-text\">\n<div class=\"block__heading\">\n<h3>Summer’s Most Anticipated Reads<\/h3>\n<p>The biggist books oth the season!<\/p>\n<\/div>\n<div class=\"block__action\">\n<a href=\"#\" class=\"m-button m-button--primary\">Shop Now<\/a>\n<\/div>\n<\/div>\n<\/div>\n<\/div>",
+            "width": "100%",
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "2896ff1d-b246-4d01-bde5-d993aa527afb"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "default",
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--html"
+      }
+    },
+    "1622102101fd8de171": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Bestsellers",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "left",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 4,
+        "items_per_row": 4,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        
+        "button_style": "sf__btn-primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m--featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1622189076591a7637": {
+      "type": "image-with-text",
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "container": "container-fluid",
+        
+        "item_gap": 100,
+        "item_gap_mobile": 30,
+        
+        "layout": "left",
+        "image_column_size": "6",
+        "hover_effect": false,
+        "title": "Inspiration for<br> Every Age.",
+        "sub_title": "",
+        "text": "<p>81% of students whom traditionally used bound books to<br\/> conduct research are now using digital devices.<\/p>",
+        "text_size": "medium",
+        "content_alignment": "left",
+        "button_label": "Shop Now",
+        
+        "button_style": "m-button--primary",
+        
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-iwt--home",
+        "animations": "inherit"
+      }
+    },
+    "16221893455845f8d5": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Just Released",
+        "heading_size": "h2",
+        
+        "description": "",
+        "header_alignment": "left",
+        
+        "container": "container-fluid",
+        "enable_flashsale": false,
+        "show_countdown": false,
+        "product_to_show": 5,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "hide_title": false,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "button_type": "link",
+        
+        "button_style": "sf__btn-primary",
+        
+        "infinite_load": false,
+        "max_page_load": 3,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 10,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m--featured-collection--home",
+        "animations": "inherit"
+      }
+    },
+    "1622189507ee6bfe14": {
+      "type": "custom-content",
+      "blocks": {
+        "33849c4b-a883-440c-befb-40afc37629fe": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            
+            "title": "Feature Book<br> of The Month",
+            "subtitle": "",
+            "button_label": "Discover now",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        },
+        "2a990eee-7285-4608-88ca-63bc3948ce0a": {
+          "type": "image_card",
+          "settings": {
+            "width": "50%",
+            
+            "content_position": "center_left",
+            "content_alignment": "left",
+            "text_size": "small",
+            "text_color": "black",
+            
+            "title": "Meat your next<br> favorite book",
+            "subtitle": "",
+            "button_label": "Shop now",
+            "button_style": "m-button--link",
+            "button_size": "sf__btn-small",
+            "button_fixed": false,
+            "use_content_above": true,
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "33849c4b-a883-440c-befb-40afc37629fe",
+        "2a990eee-7285-4608-88ca-63bc3948ce0a"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-custom--banner"
+      }
+    },
+    "16221897825fc7d563": {
+      "type": "collection-list",
+      "blocks": {
+        "16221897825fc7d563-0": {
+          "type": "collection_block",
+          "settings": {
+            "title": ""
+          }
+        },
+        "16221897825fc7d563-1": {
+          "type": "collection_block",
+          "settings": {
+            "title": ""
+          }
+        },
+        "16221897825fc7d563-2": {
+          "type": "collection_block",
+          "settings": {
+            "title": ""
+          }
+        },
+        "9212999b-c293-42d0-99b8-4f2a076e87ad": {
+          "type": "collection_block",
+          "settings": {
+            "title": ""
+          }
+        },
+        "df6b1871-a6c9-4f6b-8ff7-b114cf85311f": {
+          "type": "collection_block",
+          "settings": {
+            "title": ""
+          }
+        }
+      },
+      "block_order": [
+        "16221897825fc7d563-0",
+        "16221897825fc7d563-1",
+        "16221897825fc7d563-2",
+        "9212999b-c293-42d0-99b8-4f2a076e87ad",
+        "df6b1871-a6c9-4f6b-8ff7-b114cf85311f"
+      ],
+      "settings": {
+        "heading": "Shop by Categories",
+        "heading_size": "h2",
+        
+        "description": "81% of students whom traditionally used bound books to conduct research<br> are now using digital devices.",
+        "header_alignment": "center",
+        
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "standard",
+        "text_alignment": "center",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "mobile_gap": 10,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "m-collection-list--home",
+        "animations": "inherit"
+      }
+    },
+    "1622194006727ec921": {
+      "type": "custom-content",
+      "blocks": {
+        "2574140b-157e-4d1e-998f-f40bb18fdb07": {
+          "type": "html",
+          "settings": {
+            "code": "<div class=\"custom__html-block2\">\n<div class=\"block__content rte\">\n<h2>Join the Community<\/h2>\n<p>81% of students whom traditionally used bound books to<br> conduct research are now using digital devices.<\/p>\n<div class=\"block__social\">\n<ul>\n<li><a href=\"#\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/fb.png?v=1622194623\">137k Followers<\/a><\/li>\n<li><a href=\"#\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/ins.png?v=1622194623\">21k Followers<\/a><\/li>\n<li><a href=\"#\"><img src=\"https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/twt.png?v=1622194623\">21k Followers<\/a><\/li>\n<\/ul>\n<\/div>\n<\/div>\n<\/div>",
+            "width": "100%",
+            
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "2574140b-157e-4d1e-998f-f40bb18fdb07"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        
+        "gap": 30,
+        "use_scroll_mobile": false,
+        "gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "section__flush-bottom sf-custom--3"
+      }
+    }
+  },
+  "order": [
+    "0fc8dd8f-b18b-4cd3-a43e-acaed5aa13a8",
+    "1621243260e1af0c20",
+    "162209953296371dbc",
+    "1622195298f9850c12",
+    "1622102101fd8de171",
+    "1622189076591a7637",
+    "16221893455845f8d5",
+    "1622189507ee6bfe14",
+    "16221897825fc7d563",
+    "1622194006727ec921"
+  ]
+}

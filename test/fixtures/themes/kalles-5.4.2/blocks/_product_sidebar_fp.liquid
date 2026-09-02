@@ -1,0 +1,121 @@
+<hdt-accordion class="hdt-contents">
+  <details class="hdt-widget hdt-widget-featured-products" aria-expanded="false" open>
+    {%- if block.settings.widget_heading != blank -%}
+      <summary class="hdt-widget-title hdt-s-text hdt-flex hdt-align-center hdt-justify-between hdt-text-xl hdt-font-semibold">
+        <span>{{ block.settings.widget_heading }}</span>
+        <span accordion-icon>
+          <svg class="hdt-facet-title_icon" xmlns="http://www.w3.org/2000/svg" width="11" height="7" viewBox="0 0 11 7" fill="none"><path d="M11 5.5L5.5 6.55868e-08L-6.55868e-08 5.5L0.97625 6.47625L5.5 1.9525L10.0238 6.47625L11 5.5Z" fill="currentColor"/></svg>
+        </span>
+      </summary>
+    {%- endif -%}
+    <div class="hdt-widget-content">
+      <div class="hdt-products-list hdt-row-grid hdt-row-grid--modify hdt-ratio--{{ block.settings.image_ratio }} {% if block.settings.image_size %} hdt-object-cover{% else %} hdt-object-contain{% endif %} lg:hdt-grid-cols-1">
+        {%- assign product_collection = block.settings.product_list | default: block.settings.collection.products -%}
+          {%- if product_collection != blank -%}
+            {%- liquid
+            for product in product_collection limit: block.settings.products_count
+              render 'pr_loop_item', section_id: block.id, product: product, sizes: "92px", widths: "92, 100, 180, 200"
+            endfor -%}
+          {%- else -%}
+            {%- capture current -%}
+              {%- cycle 1, 2 , 3, 4 -%}
+            {%- endcapture -%}
+            {%- for i in (1..block.settings.products_count) -%}
+              <div class="hdt-card-product hdt-pr-loop hdt-loop-item">
+                <div class="hdt-card-product__wrapper hdt-flex hdt-loop-inner">
+                  <div class="hdt-card-product__media hdt-loop-img hdt-relative hdt-oh">
+                      <div class="hdt-product-img hdt-ratio" style="--aspect-ratioapt: 1">
+                        {{ 'product-apparel-' | append: current | placeholder_svg_tag: 'hdt-placeholder-svg' }}
+                      </div>
+                    <a data-pr-href class="hdt-full-width-link"  aria-label="link" href="{{ product.url }}"></a>
+                  </div>
+                  <div class="hdt-card-product__info">
+                    <a href="{{ product_url }}" class="hdt-card-product__title hdt-h6" data-no-instant>{{ 'onboarding.product_title' | t }}</a>
+                    {%- render 'card-price', product: product, price_class: '', show_compare_at_price: true -%}
+                  </div>
+                </div>
+              </div>
+            {%- endfor -%}
+          {%- endif -%}
+      </div>
+    </div>
+  </details>
+</hdt-accordion>
+{% schema %}
+  {
+    "name": "t:sections.collection_products.name",
+    "tag": null,
+    "settings": [
+      {
+        "type": "text",
+        "id": "widget_heading",
+        "label": "t:sections.main-collection.blocks.heading",
+        "default": "Sale products"
+      },
+      {
+        "id": "collection",
+        "type": "collection",
+        "label": "t:sections.collection_products.settings.collection"
+      },
+      {
+        "type": "product_list",
+        "id": "product_list",
+        "label": "t:sections.collection_products.settings.product_list.label",
+        "info": "t:sections.collection_products.settings.product_list.info",
+        "limit": 20
+      },
+      {
+        "type": "range",
+        "id": "products_count",
+        "min": 1,
+        "max": 20,
+        "step": 1,
+        "label": "t:sections.all.limit",
+        "default": 3
+      },
+      {
+        "type": "select",
+        "id": "image_ratio",
+        "options": [
+          {
+            "value": "adapt_image",
+            "label": "t:sections.all.images.ratio.adapt_image.label"
+          },
+          {
+            "value": "square",
+            "label": "t:sections.all.images.ratio.square.label"
+          },
+          {
+            "value": "portrait",
+            "label": "t:sections.all.images.ratio.portrait.label"
+          },
+          {
+            "value": "asos",
+            "label": "t:sections.all.images.ratio.asos.label"
+          },
+          {
+            "value": "landscape",
+            "label": "t:sections.all.images.ratio.landscape.label"
+          },
+          {
+            "value": "custom-pr",
+            "label": "t:sections.all.images.ratio.custom.label"
+          }
+        ],
+        "label": "t:sections.all.images.ratio.label",
+        "default": "adapt_image"
+      },
+      {
+        "type": "checkbox",
+        "id": "image_size",
+        "label": "t:sections.all.images.size.cover",
+        "default": true
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.collection_products.name"
+      }
+    ]
+  }
+{% endschema %}

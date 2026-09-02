@@ -1,0 +1,493 @@
+<!-- sections/announcement-bar.liquid -->
+{%- style -%}
+  {%- if section.settings.close_btn !='0' and request.design_mode == false -%}.hdt-announcement-hidden {display: none;}{%- endif -%}
+  .hdt-announcement-bar{
+    min-height: {{ section.settings.height | divided_by: 10.0 }}rem;
+    font-size: {{ section.settings.fontsize | divided_by: 10.0 }}rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .hdt-announcement-bar--bottom-border{
+    border-bottom: 0.1rem solid rgb(var(--color-line-border));
+  }
+  .hdt-announcement-bar a{
+    color: rgb(var(--color-foreground))!important;
+    text-decoration-thickness: 0.1rem!important;
+  }
+  .hdt-announcement-bar__text a{
+    position: relative;
+    z-index: 1;
+  }
+  .hdt-announcement-bar__text svg{
+    margin:0;
+    transition: all .3s ease;
+    position:relative;
+    top:-0.1rem;
+  }
+  .hdt-announcement-bar__wrap {
+    padding: 0.5rem 1rem;
+  }
+  .hdt-announcement-bar__grid{
+    display: grid;
+    {% if section.settings.close_btn != '0' %}
+      grid-template-columns: auto 1fr auto;
+      grid-template-areas: "block announcements close";
+    {% else %}
+      grid-template-columns: 1fr;
+      grid-template-areas: "announcements";
+    {% endif %}
+  }
+  .hdt-announcement-bar__grid hdt-marquee {
+    grid-area: announcements;
+  }
+  .hdt-announcement-bar .hdt-op-0{
+    opacity: 0!important;
+  }
+  .hdt-announcement-bar__wrap {
+    grid-area: announcements;
+  }
+  .hdt-announcement-bar__close{
+    grid-area: close;
+  }
+  .hdt-announcement-bar__close.hdt-block-empty{
+    grid-area: block;
+  }
+  .hdt-announcement-bar__close {
+    padding: 0;
+    background-color: transparent;
+    line-height: 1;
+    transition: .2s;
+    font-size: 1.2rem;
+    display: inline-flex;
+    padding-inline-start: 1rem;
+  }
+  .hdt-type-close-1 .hdt-announcement-bar__close svg{
+    width: 0.9rem;
+    height: 0.9rem;
+    stroke-width: 0.2rem;
+  }
+  .hdt-type-close-2 .hdt-announcement-bar__close{font-size:0}
+  .hdt-announcement-bar:not(.hdt-type-close-1) .hdt-iconsvg-close {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke-width: 0.15rem;
+  }
+  .hdt-announcement-bar.hdt-type-close-3 .hdt-iconsvg-close {
+    display: none !important;
+  }
+  .hdt-announcement-bar__text .hdt-cd--hide{display:none}
+  .hdt-announcement-bar__marquee-icon{
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    display: block;
+  }
+  .hdt-announcement-bar__marquee-icon-image{
+    width: 14px;
+    height: 14px;
+    display: block;
+  }
+  .hdt-announcement-bar .hdt-marquee-item{
+    display: inline-flex;
+    align-items: center;
+    column-gap: 0;
+    & > * {
+      padding-inline-start: calc( var(--space-item, var(--spacing-x)) / 2 );
+      padding-inline-end: calc( var(--space-item, var(--spacing-x)) / 2 );
+    }
+  }
+  .hdt-announcement-bar .hdt-marquee-inner{
+    column-gap: 0;
+  }
+  wrapp-close-announce {gap: 5px;cursor: pointer;}
+  @media (-moz-touch-enabled: 0), (hover: hover) and (min-width: 1150px){
+    .hdt-announcement-bar a:hover,
+    .hdt-announcement-bar__close:hover{
+      opacity: 0.65;
+    }
+    .hdt-announcement-bar__slider-content:hover .hdt-icon-arrow {
+      transform: translateX(0.25rem);
+    }
+  }
+{%- endstyle -%}
+{%- assign total_size = 0 -%}
+{%- if section.settings.close_btn != '0' -%}
+  {%- capture cap_btn -%}
+    <div class="hdt-announcement-bar__close hdt-s-text hdt-op-0 hdt-hidden md:hdt-block">
+      <wrapp-close-announce class="hdt-flex hdt-align-center hdt-justify-end hdt-p-0" aria-label="{{ 'accessibility.close' | t | escape }}">
+        <svg role="presentation" class="hdt-iconsvg-close hdt-inline-block hdt-s-text" viewBox="0 0 16 14" width="16"><path d="M15 0L1 14m14 0L1 0" stroke="currentColor" fill="none" fill-rule="evenodd"></path></svg>
+        {{- 'sections.announcements.close' | t -}}
+      </wrapp-close-announce>
+    </div>
+  {%- endcapture -%}
+{%- endif -%}
+<svg class="hdt-hidden"><symbol id="icon-{{ section.id }}" viewBox="0 0 14 10" fill="none" width="14"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.537.808a.5.5 0 01.817-.162l4 4a.5.5 0 010 .708l-4 4a.5.5 0 11-.708-.708L11.793 5.5H1a.5.5 0 010-1h10.793L8.646 1.354a.5.5 0 01-.109-.546z" fill="currentColor"></path></symbol></svg>
+{%- capture cap_arrow %}{% render 'icons', icon: 'arrow_right', class: 'hdt-inline-block hdt-s-text' %}{% endcapture -%}
+<div class="hdt-announcement-bar hdt-s-gradient hdt-type-close-{{ section.settings.close_btn  }}{% if section.settings.show_line_separator and section.blocks.size > 0 %} hdt-announcement-bar--bottom-border{% endif %}" {%- if section.settings.colors_by_section %} color-scheme="{{ section.settings.color_scheme }}" style="--background-opacity: {{ section.settings.background_opacity }};"{%- endif %}>
+  <div class="hdt-container{% if section.settings.full_width %}-full hdt-px-15{% endif %}">
+    {%- if section.blocks.size > 0 -%}
+      <div class="hdt-announcement-bar__grid">
+      {{- cap_btn | replace: 'hdt-announcement-bar__close', 'hdt-announcement-bar__close hdt-block-empty'-}}
+      {% comment %} , "autoHeight": true {% endcomment %}
+        {% if section.settings.design == 'slider' %}
+          <hdt-slider {% if section.settings.effect == 'fade' %} isfade{% endif %} class="hdt-announcement-bar__wrap hdt-text-center hdt-slider lg:hdt-slides-1 hdt-relative hdt-oh hdt-s-text" config='{"loop": true, "autoPlay": {{ section.settings.au_time | times: 1000 }}, "pauseOnHover":{{ section.settings.pause_when_hover }} }'>
+            <div class="hdt-slider__viewport">
+              <div class="hdt-slider__container hdt-align-center">
+              {%- for block in section.blocks -%}
+                {%- if block.settings.text != blank -%}
+                  {%- capture cap_date -%}
+                    <hdt-countdown config='{"month":"{{ block.settings.countdown | date: '%m' | plus: 0 }}", "date":"{{ block.settings.countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+                      <hdt-countdown-amount data-days>00</hdt-countdown-amount> {{  block.settings.txt_day }} <hdt-countdown-amount data-hours>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-minutes>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-seconds>00</hdt-countdown-amount>
+                    </hdt-countdown>
+                  {%- endcapture -%}
+                  {%- capture text_highlight -%}
+                    <span  style="font-size: clamp({{ block.settings.hdt_font_size | divided_by: 2 | at_least: 12 }}px, {{ block.settings.hdt_font_size | divided_by: 10.0 }}vw, {{ block.settings.hdt_font_size | plus: 0.0 }}px);">{{ block.settings.text_highlight }}</span>
+                  {%- endcapture -%}
+                  <div class="hdt-slider__slide">
+                    <div class="hdt-announcement-bar__slider-content hdt-relative">
+                      {%- if block.settings.link != blank -%}<a href="{{ block.settings.link }}" class="hdt-absolute hdt-top-0 hdt-right-0 hdt-bottom-0 hdt-left-0 hdt-left-0"></a>{%- endif -%}
+                      <div class="hdt-announcement-bar__text hdt-inline-block{% if block.settings.adding_border %} hdt-rte{% else %} hdt-tag-list{% endif %}">{{ block.settings.text | replace: '[countdown]', cap_date | replace: '[icon_arrow]', cap_arrow | replace: '[text_highlight]', text_highlight }}</div>
+                    </div>
+                  </div>
+                {%- endif -%}
+              {%- assign total_size = total_size | plus: block.settings.text.size -%}
+              {%- endfor -%}
+              </div>
+            </div>
+          </hdt-slider>
+        {% else %}
+          <hdt-marquee speed-factor="{{ section.settings.speed }}" direction="{{ section.settings.direction }}" {% if section.settings.pausable %}pausable{% endif %} class="hdt-marquee hdt-block hdt-relative hdt-oh hdt-current-scrollbar hdt-s-text" style="--space-item: {{ section.settings.space_item }}px;">
+            <div class="hdt-marquee-inner">
+              <div class="hdt-marquee-item">
+                {%- for block in section.blocks -%}
+                  {%- if block.settings.text != blank -%}
+                    {%- capture cap_date -%}
+                      <hdt-countdown config='{"month":"{{ block.settings.countdown | date: '%m' | plus: 0 }}", "date":"{{ block.settings.countdown | date: '%d, %Y %H:%M:%S' }}", "hideTimerOnComplete": true, "hasZero": true }'>
+                        <hdt-countdown-amount data-days>00</hdt-countdown-amount> {{  block.settings.txt_day }} <hdt-countdown-amount data-hours>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-minutes>00</hdt-countdown-amount><span>:</span><hdt-countdown-amount data-seconds>00</hdt-countdown-amount>
+                      </hdt-countdown>
+                    {%- endcapture -%}
+                    {%- capture text_highlight -%}
+                      <span  style="font-size: clamp({{ block.settings.hdt_font_size | divided_by: 2 | at_least: 12 }}px, {{ block.settings.hdt_font_size | divided_by: 10.0 }}vw, {{ block.settings.hdt_font_size | plus: 0.0 }}px);">{{ block.settings.text_highlight }}</span>
+                    {%- endcapture -%}
+                      {% if section.settings.hdt_using_image_icon %}
+                        {% if section.settings.hdt_image_icon != blank %}
+                          <div class="">
+                            <div class="hdt-announcement-bar__marquee-icon-image">{{ section.settings.hdt_image_icon | image_url: width: section.settings.hdt_image_icon.width | image_tag: width: section.settings.hdt_image_icon.width, widths: '20,30,40,50,60,70,80,90,100,120,140,160,180,200,220,240,260,280,300' }}</div>
+                          </div>
+                        {% else %}
+                          <div class="">
+                            <div class="hdt-announcement-bar__marquee-icon"><span></span></div>
+                          </div>
+                        {% endif %}
+                      {% endif %}
+                      <div class="hdt-marquee__item hdt-inline-block">
+                        {%- if block.settings.link != blank -%}<a href="{{ block.settings.link }}" class="hdt-absolute hdt-top-0 hdt-right-0 hdt-bottom-0 hdt-left-0 hdt-left-0"></a>{%- endif -%}
+                        <div class="hdt-announcement-bar__text hdt-inline-block{% if block.settings.adding_border %} hdt-rte{% else %} hdt-tag-list{% endif %}">{{ block.settings.text | replace: '[countdown]', cap_date | replace: '[icon_arrow]', cap_arrow | replace: '[text_highlight]', text_highlight }}</div>
+                      </div>
+                    {%- endif -%}
+                    {%- assign total_size = total_size | plus: block.settings.text.size -%}
+                  {%- endfor -%}
+              </div>
+            </div>
+          </hdt-marquee>
+        {% endif %}
+      {{- cap_btn | remove: ' hdt-op-0 hdt-hidden md:hdt-block' -}}
+    </div>
+    {%- endif -%} 
+  </div>
+</div>
+{%- if section.settings.close_btn !='0' %}<script>window.announceSize = 'theme4:announce-{{ total_size }}-closed';try { if ( sessionStorage.getItem(window.announceSize) != 'true' ) document.getElementById('shopify-section-{{ section.id }}').classList.remove('hdt-announcement-hidden'); } catch (err) {}</script>{% endif -%}
+{% schema %}
+{
+  "name": "t:sections.announcement-bar.name",
+  "class": "hdt-section-group hdt-section-announcement-bar hdt-announcement-hidden",
+  "max_blocks": 12,
+  "limit": 1,
+  "enabled_on": {
+    "groups": [
+      "header"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_line_separator",
+      "label": "t:sections.top-bar.settings.show_line_separator.label"
+    },
+    {
+      "type": "select",
+      "id": "close_btn",
+      "label": "t:sections.announcement-bar.settings.close_btn.label",
+      "info": "t:sections.announcement-bar.settings.close_btn.info",
+      "default": "1",
+      "options": [
+        {
+          "value": "0",
+          "label": "t:sections.announcement-bar.settings.close_btn.options_1.label"
+        },
+        {
+          "value": "1",
+          "label": "t:sections.announcement-bar.settings.close_btn.options_2.label"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.announcement-bar.settings.close_btn.options_3.label"
+        },
+        {
+          "value": "3",
+          "label": "t:sections.announcement-bar.settings.close_btn.options_4.label"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "height",
+      "label": "t:sections.announcement-bar.settings.height.label",
+      "default": 41,
+      "min": 20,
+      "max": 120,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "fontsize",
+      "label": "t:sections.announcement-bar.settings.fontsize.label",
+      "default": 12,
+      "min": 12,
+      "max": 18,
+      "step": 0.5,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "design",
+      "label": "t:sections.announcement-bar.settings.design.label",
+      "default": "slider",
+      "options": [
+        {
+          "value": "slider",
+          "label": "t:sections.announcement-bar.settings.design.slider"
+        },
+        {
+          "value": "marquee",
+          "label": "t:sections.announcement-bar.settings.design.marquee"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "hdt_using_image_icon",
+      "label": "Using svg source",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "hdt_image_icon",
+      "label": "Image source",
+      "visible_if": "{{ section.settings.hdt_using_image_icon }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.marquee.name",
+      "visible_if": "{{ section.settings.design == 'marquee' }}"
+    },
+    {
+      "type": "range",
+      "id": "space_item",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:sections.all.space_items.label",
+      "default": 30,
+      "visible_if": "{{ section.settings.design == 'marquee' }}"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "min": 0.1,
+      "max": 1,
+      "step": 0.1,
+      "default": 0.3,
+      "label": "t:blocks.marquee.settings.speed_factor",
+      "visible_if": "{{ section.settings.design == 'marquee' }}"
+    },
+    {
+      "type": "select",
+      "id": "direction",
+      "default": "rtl",
+      "label": "t:blocks.marquee.settings.direction.label",
+      "options": [
+        {
+          "value": "rtl",
+          "label": "t:blocks.marquee.settings.direction.options.rtl"
+        },
+        {
+          "value": "ltr",
+          "label": "t:blocks.marquee.settings.direction.options.ltr"
+        }
+      ],
+      "visible_if": "{{ section.settings.design == 'marquee' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "pausable",
+      "default": false,
+      "label": "t:blocks.marquee.settings.pausable",
+      "visible_if": "{{ section.settings.design == 'marquee' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.carousel.name",
+      "visible_if": "{{ section.settings.design == 'slider' }}"
+    },
+    {
+      "type": "select",
+      "id": "effect",
+      "label": "t:sections.announcement-bar.settings.effect.label",
+      "default": "carousel",
+      "options": [
+        {
+          "value": "fade",
+          "label": "t:sections.announcement-bar.settings.effect.options_1.label"
+        },
+        {
+          "value": "carousel",
+          "label": "t:sections.announcement-bar.settings.effect.options_2.label"
+        }
+      ],
+      "visible_if": "{{ section.settings.design == 'slider' }}"
+    },
+    {
+      "type": "range",
+      "id": "au_time",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "label": "t:blocks.carousel.settings.autoplay.label",
+      "info": "t:blocks.carousel.settings.autoplay.info",
+      "unit": "s",
+      "default": 3,
+      "visible_if": "{{ section.settings.design == 'slider' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_when_hover",
+      "default": false,
+      "label": "t:blocks.carousel.settings.autoplay.pause_on_hover",
+      "visible_if": "{{ section.settings.design == 'slider' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.all.section_layout.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "colors_by_section",
+      "label": "t:sections.all.colors.display_colors_by_section"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.all.colors.label",
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "range",
+      "id": "background_opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "label": "t:sections.all.background.opacity",
+      "default": 0,
+      "visible_if": "{{ section.settings.colors_by_section }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.all.full_width.label",
+      "default": false
+    },
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "t:sections.announcement-bar.blocks.announcement.name",
+      "settings": [
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.link.label"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "text",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.text.label",
+          "default": "Today deal sale off 70%. End in [countdown]. Hurry Up!! [icon_arrow]",
+          "info": "t:sections.announcement-bar.blocks.announcement.settings.text.info"
+        },
+        {
+          "type": "checkbox",
+          "id": "adding_border",
+          "label": "t:sections.all.adding_border.label",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "countdown",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.countdown.label",
+          "default": "2024-12-30 15:00:00",
+          "placeholder": "2024-12-30 15:00:00",
+          "info": "t:sections.announcement-bar.blocks.announcement.settings.countdown.info"
+        },
+        {
+          "type": "text",
+          "id": "txt_day",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.txt_day.label",
+          "default": "days"
+        },
+        {
+          "type": "text",
+          "id": "text_highlight",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.text_highlight.label",
+          "visible_if": "{{ block.settings.text contains '[text_highlight]' }}"
+        },
+        {
+          "type": "range",
+          "id": "hdt_font_size",
+          "label": "t:sections.announcement-bar.blocks.announcement.settings.hdt_font_size.label",
+          "default": 16,
+          "min": 12,
+          "max": 36,
+          "step": 1,
+          "unit": "px",
+          "visible_if": "{{ block.settings.text contains '[text_highlight]' }}"
+        },
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.announcement-bar.name",
+      "blocks": [
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "Welcome to our store"
+          }
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "The best shopify theme"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

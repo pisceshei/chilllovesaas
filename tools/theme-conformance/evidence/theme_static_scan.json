@@ -1,0 +1,566 @@
+{
+ "ella-7.2.0": {
+  "tags_unsupported": {
+   "Intended": 1,
+   "Accepts": 1,
+   "settings": 1,
+   "When": 1,
+   "determines": 1
+  },
+  "filters_unsupported": {
+   "section": 1,
+   "format_code": 1
+  },
+  "drop_prop_gaps": {
+   "request→RequestDrop(lmm)": {
+    "visual_preview_mode": 31,
+    "page_type": 20,
+    "design_mode": 15,
+    "origin": 10,
+    "host": 10,
+    "locale": 8,
+    "url": 8
+   },
+   "collections→CollectionsDrop(lmm)": {
+    "all": 14
+   },
+   "shop→ShopDrop(lmm)": {
+    "shipping_policy": 41,
+    "features": 2,
+    "policies": 2,
+    "password_message": 2,
+    "checkout": 1,
+    "money_with_currency_format": 1,
+    "description": 1
+   },
+   "product→ProductDrop(lmm)": {
+    "variant": 17,
+    "quantity_price_breaks_configured": 8,
+    "reviews": 5,
+    "index": 4,
+    "gift_card": 2,
+    "product": 1
+   },
+   "routes→RoutesDrop(lmm)": {
+    "cart_url": 13,
+    "search_url": 11,
+    "root_url": 9,
+    "account_login_url": 6,
+    "account_url": 5,
+    "collections_url": 4,
+    "product_recommendations_url": 3,
+    "all_products_collection_url": 3,
+    "account_logout_url": 2,
+    "account_addresses_url": 2,
+    "blogs_url": 2,
+    "cart_update_url": 2,
+    "account_register_url": 1,
+    "cart_add_url": 1,
+    "cart_change_url": 1,
+    "predictive_search_url": 1
+   },
+   "link→LinkDrop": {
+    "handle": 30,
+    "current": 8,
+    "levels": 4
+   },
+   "cart→CartDrop(lmm)": {
+    "item_count": 36,
+    "duties_included": 18,
+    "taxes_included": 18,
+    "attributes": 13,
+    "total_price": 8,
+    "currency": 5,
+    "cart_level_discount_applications": 4,
+    "items": 3,
+    "note": 2
+   },
+   "article→ArticleDrop(lmm)": {
+    "image": 34
+   },
+   "collection→CollectionDrop(lmm)": {
+    "results_count": 4,
+    "image": 3,
+    "featured_image": 2,
+    "terms": 2
+   },
+   "blog→BlogDrop(lmm)": {
+    "next_article": 3,
+    "previous_article": 3,
+    "comments_enabled": 3,
+    "moderated": 3
+   },
+   "option→ProductOptionDrop(lmm)": {
+    "value": 6
+   },
+   "color→ColorDrop": {
+    "swatch": 12,
+    "variant": 5
+   },
+   "localization→LocalizationDrop(lmm)": {
+    "available_countries": 23,
+    "country": 20,
+    "available_languages": 14,
+    "language": 14
+   },
+   "childlink→LinkDrop": {
+    "handle": 22,
+    "current": 11
+   },
+   "template→TemplateDrop(lmm)": {
+    "name": 19
+   },
+   "part→PartDrop(lmm)": {
+    "title": 18,
+    "is_link": 3,
+    "url": 3
+   },
+   "product_option→ProductOptionDrop(lmm)": {
+    "available": 1
+   },
+   "value→FacetValueDrop(lmm)": {
+    "alt": 5,
+    "selected": 4,
+    "available": 2,
+    "product_url": 2,
+    "id": 2
+   },
+   "pages→PagesDrop(lmm)": {
+    "size": 1
+   }
+  },
+  "unknown_roots_top": {
+   "bl_stts": 771,
+   "sec_stts": 521,
+   "card_product": 355,
+   "block_settings": 169,
+   "media": 125,
+   "item": 113,
+   "block_stts": 75,
+   "results": 66,
+   "country": 61,
+   "line_item": 51,
+   "current_variant": 45,
+   "product_resource": 40,
+   "product_card_product": 37,
+   "grandchildlink": 34,
+   "resource": 33,
+   "card_collection": 31,
+   "order": 30,
+   "selected_variant": 28,
+   "price_break": 27,
+   "quantity_rule": 24,
+   "language": 21,
+   "address": 19,
+   "selected_product": 17,
+   "property": 15,
+   "card_article": 14,
+   "referenced_product": 14,
+   "stts": 13,
+   "video": 13,
+   "bl_stt": 12,
+   "link_child_item": 11,
+   "gift_card": 10,
+   "products": 9,
+   "child_block": 8,
+   "variant_img": 8,
+   "v": 8,
+   "banner_image": 7,
+   "featured_product": 7,
+   "pick_up_availabilities": 6,
+   "background_video": 6,
+   "unavailable_variants": 6
+  },
+  "files": {
+   "tag:Intended": [
+    "snippets/layout-panel-style.liquid"
+   ],
+   "tag:Accepts": [
+    "snippets/layout-panel-style.liquid"
+   ],
+   "tag:settings": [
+    "snippets/layout-panel-style.liquid"
+   ],
+   "filter:section": [
+    "snippets/layout-panel-style.liquid"
+   ],
+   "tag:When": [
+    "snippets/typography-style.liquid"
+   ],
+   "tag:determines": [
+    "snippets/typography-style.liquid"
+   ],
+   "filter:format_code": [
+    "templates/gift_card.liquid"
+   ]
+  }
+ },
+ "minimog-6.0.0": {
+  "tags_unsupported": {},
+  "filters_unsupported": {
+   "color_to_hsl": 1,
+   "link_to_remove_tag": 4,
+   "link_to_add_tag": 3,
+   "md5": 1,
+   "default_pagination": 1,
+   "product_image_url": 2,
+   "format_code": 1
+  },
+  "drop_prop_gaps": {
+   "localization→LocalizationDrop(lmm)": {
+    "language": 4,
+    "available_countries": 3,
+    "country": 3,
+    "available_languages": 2
+   },
+   "shop→ShopDrop(lmm)": {
+    "shipping_policy": 8,
+    "features": 2,
+    "money_with_currency_format": 2,
+    "locale": 1,
+    "taxes_included": 1,
+    "description": 1
+   },
+   "template→TemplateDrop(lmm)": {
+    "name": 17,
+    "suffix": 4
+   },
+   "request→RequestDrop(lmm)": {
+    "page_type": 10,
+    "design_mode": 8,
+    "path": 5,
+    "locale": 3,
+    "origin": 2
+   },
+   "product→ProductDrop(lmm)": {
+    "quantity_price_breaks_configured": 15,
+    "gift_card": 1
+   },
+   "routes→RoutesDrop(lmm)": {
+    "root_url": 9,
+    "cart_url": 6,
+    "all_products_collection_url": 5,
+    "search_url": 4,
+    "product_recommendations_url": 3,
+    "account_url": 3,
+    "account_logout_url": 2,
+    "cart_update_url": 2,
+    "collections_url": 2,
+    "account_addresses_url": 2,
+    "account_register_url": 1,
+    "account_login_url": 1,
+    "cart_add_url": 1,
+    "cart_change_url": 1,
+    "predictive_search_url": 1
+   },
+   "article→ArticleDrop(lmm)": {
+    "image": 12,
+    "featured_media": 1
+   },
+   "blog→BlogDrop(lmm)": {
+    "previous_article": 5,
+    "next_article": 4,
+    "comments_enabled": 1,
+    "moderated": 1
+   },
+   "cart→CartDrop(lmm)": {
+    "items": 14,
+    "item_count": 10,
+    "attributes": 7,
+    "total_price": 4,
+    "taxes_included": 4,
+    "currency": 4,
+    "cart_level_discount_applications": 2,
+    "note": 1
+   },
+   "collection→CollectionDrop(lmm)": {
+    "image": 7,
+    "featured_image": 2,
+    "tags": 1,
+    "all_tags": 1
+   },
+   "images→ImagesDrop(lmm)": {
+    "value": 2
+   },
+   "link→LinkDrop": {
+    "object": 6,
+    "handle": 1
+   },
+   "option→ProductOptionDrop(lmm)": {
+    "value": 10,
+    "id": 1
+   },
+   "value→FacetValueDrop(lmm)": {
+    "selected": 6,
+    "variant": 3,
+    "id": 2,
+    "available": 1,
+    "product_url": 1
+   }
+  },
+  "unknown_roots_top": {
+   "item": 185,
+   "media": 73,
+   "selected_variant": 66,
+   "line_item": 35,
+   "price_break": 30,
+   "st": 26,
+   "prod": 26,
+   "section_settings": 25,
+   "results": 23,
+   "order": 22,
+   "current_collection": 19,
+   "preview_image": 18,
+   "image_mobile": 16,
+   "p": 16,
+   "second_image": 15,
+   "pcard_default_image": 15,
+   "address": 14,
+   "parts": 14,
+   "background_image": 13,
+   "header_settings": 13,
+   "gift_card": 13,
+   "bg_image": 12,
+   "discount": 12,
+   "content_positions": 10,
+   "country": 10,
+   "target_product": 10,
+   "gift_wrapping": 8,
+   "menu": 8,
+   "first_block": 7,
+   "property": 7,
+   "child": 6,
+   "page_image": 5,
+   "bg_image_mobile": 5,
+   "first_collection": 5,
+   "background_image_mobile": 5,
+   "tax_line": 5,
+   "pick_up_availabilities": 5,
+   "closest_location": 5,
+   "block_settings": 5,
+   "currency": 5
+  },
+  "files": {
+   "filter:color_to_hsl": [
+    "sections/apps.liquid"
+   ],
+   "filter:link_to_remove_tag": [
+    "snippets/filter-by-tags.liquid",
+    "snippets/selected-tags-filter.liquid"
+   ],
+   "filter:link_to_add_tag": [
+    "snippets/filter-by-tags.liquid"
+   ],
+   "filter:md5": [
+    "snippets/mm-socialshopwave-widget-recommends.liquid"
+   ],
+   "filter:default_pagination": [
+    "snippets/pagination.liquid"
+   ],
+   "filter:product_image_url": [
+    "snippets/product-reviews-app__snippet.liquid"
+   ],
+   "filter:format_code": [
+    "templates/gift_card.liquid"
+   ]
+  }
+ },
+ "kalles-5.4.2": {
+  "tags_unsupported": {},
+  "filters_unsupported": {
+   "url_for_type": 2,
+   "sort_by": 1,
+   "format_code": 1,
+   "md5": 1
+  },
+  "drop_prop_gaps": {
+   "product→ProductDrop(lmm)": {
+    "quantity_price_breaks_configured": 4,
+    "gift_card": 3,
+    "variants_count": 1,
+    "options_by_name": 1,
+    "created_at": 1,
+    "url_to_remove": 1
+   },
+   "article→ArticleDrop(lmm)": {
+    "image": 33,
+    "comments_enabled": 1
+   },
+   "page→PageDrop(lmm)": {
+    "metafields": 11
+   },
+   "shop→ShopDrop(lmm)": {
+    "shipping_policy": 13,
+    "metaobjects": 8,
+    "password_message": 2,
+    "money_with_currency_format": 2,
+    "description": 1
+   },
+   "request→RequestDrop(lmm)": {
+    "design_mode": 36,
+    "page_type": 33,
+    "origin": 12,
+    "locale": 10,
+    "visual_preview_mode": 6,
+    "host": 5,
+    "path": 5
+   },
+   "blog→BlogDrop(lmm)": {
+    "metafields": 6,
+    "previous_article": 3,
+    "next_article": 3,
+    "moderated": 2,
+    "comments_enabled": 2
+   },
+   "link→LinkDrop": {
+    "object": 49,
+    "current": 49,
+    "handle": 19,
+    "child_current": 3
+   },
+   "child_link→LinkDrop": {
+    "object": 10,
+    "handle": 5
+   },
+   "collection→CollectionDrop(lmm)": {
+    "metafields": 30,
+    "featured_image": 8,
+    "image": 6,
+    "next_product": 1,
+    "previous_product": 1,
+    "current": 1
+   },
+   "routes→RoutesDrop(lmm)": {
+    "search_url": 33,
+    "all_products_collection_url": 16,
+    "root_url": 15,
+    "cart_url": 7,
+    "cart_change_url": 4,
+    "predictive_search_url": 4,
+    "account_logout_url": 2,
+    "account_register_url": 2,
+    "account_login_url": 2,
+    "product_recommendations_url": 2,
+    "collections_url": 1,
+    "cart_update_url": 1,
+    "account_url": 1,
+    "account_addresses_url": 1
+   },
+   "localization→LocalizationDrop(lmm)": {
+    "available_countries": 16,
+    "available_languages": 12,
+    "country": 6
+   },
+   "option→ProductOptionDrop(lmm)": {
+    "value": 3
+   },
+   "variant→VariantDrop(lmm)": {
+    "next_incoming_date": 1
+   },
+   "template→TemplateDrop(lmm)": {
+    "name": 24,
+    "suffix": 2
+   },
+   "linklists→LinkListsDrop(lmm)": {
+    "theme_brands": 37,
+    "main": 7
+   },
+   "childlink→LinkDrop": {
+    "current": 61,
+    "object": 13
+   },
+   "cart→CartDrop(lmm)": {
+    "items": 17,
+    "taxes_included": 8,
+    "note": 8,
+    "total_price": 7,
+    "currency": 7,
+    "item_count": 6,
+    "cart_level_discount_applications": 5,
+    "attributes": 4,
+    "discount_applications": 1
+   },
+   "collections→CollectionsDrop(lmm)": {
+    "all": 1
+   },
+   "category→CategoryDrop(lmm)": {
+    "products": 8,
+    "handle": 8,
+    "url": 8,
+    "title": 8,
+    "all_products_count": 4
+   },
+   "pages→PagesDrop(lmm)": {
+    "size": 3
+   },
+   "value→FacetValueDrop(lmm)": {
+    "variant": 30,
+    "id": 16,
+    "product_url": 7,
+    "available": 1
+   },
+   "part→PartDrop(lmm)": {
+    "title": 5,
+    "is_link": 1,
+    "url": 1
+   }
+  },
+  "unknown_roots_top": {
+   "card_product": 317,
+   "arr_label": 249,
+   "item": 164,
+   "selected_variant": 161,
+   "available_v_first": 107,
+   "bk_stts": 70,
+   "grandchildlink": 69,
+   "order": 63,
+   "line_item": 58,
+   "box": 58,
+   "address": 51,
+   "media": 43,
+   "target": 43,
+   "quantity_rule": 41,
+   "third_link": 30,
+   "results": 29,
+   "protect_product": 27,
+   "property": 21,
+   "color_variants": 19,
+   "color_variants_avai": 18,
+   "image_item": 18,
+   "size_variants": 17,
+   "size_variants_avai": 17,
+   "featured_media": 17,
+   "color_obj": 16,
+   "gift_card": 13,
+   "iconbox_icon_img": 12,
+   "collection_item": 12,
+   "image_background": 12,
+   "v_image": 12,
+   "next_media": 11,
+   "closest_location": 10,
+   "gift_wrap_pr": 10,
+   "query": 10,
+   "image_mb": 9,
+   "color_values": 9,
+   "group_media_obj": 9,
+   "shipping_protection": 9,
+   "main_menu": 8,
+   "available_v": 8
+  },
+  "files": {
+   "filter:url_for_type": [
+    "blocks/_product-meta-type.liquid",
+    "snippets/type.liquid"
+   ],
+   "filter:sort_by": [
+    "sections/main-account.liquid"
+   ],
+   "filter:format_code": [
+    "sections/main-gift-cart.liquid"
+   ],
+   "filter:md5": [
+    "snippets/comment.liquid"
+   ]
+  }
+ }
+}

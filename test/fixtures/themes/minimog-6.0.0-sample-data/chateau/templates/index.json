@@ -1,0 +1,927 @@
+{
+  "sections": {
+    "custom_code_jQAVr6": {
+      "type": "custom-code",
+      "settings": {
+        "custom_css": ".m-custom-newsletter .m-newsletter-section__description {\n  opacity: 1;\n  margin-top: 16px;\n}\n.m-custom-newsletter .m-newsletter-form__button {\n  background-color: rgb(var(--color-button));\n  color: rgb(var(--color-button-text));\n  transition: all var(--m-duration-default, 0.25s);\n}\n.m-custom-newsletter .m-newsletter-form__button:hover,\n.m-newsletter-form__button:focus {\n  background-color: rgb(var(--color-button-hover));\n  color: rgb(var(--color-button-text-hover));\nborder-color: rgb(var(--color-button-hover));\n}\n\n  .m-custom-newsletter .m-newsletter-section__header {\n    margin-bottom: 32px;\n  }\n\n\n@media(min-width:1600px) {\n .m-first-section  .m-richtext__title {\n    font-size: 80px;\n  }\n .m-first-section  .m-richtext__subtitle {\nmargin-bottom: 24px;\n}\n}\n\n@media(max-width: 1360px) {\n.m-first-section .m-richtext__title {\nfont-size: 42px;\n}\n.m-image-custom__content .m-richtext__description  br{\ndisplay: none;\n}\n}\n\n@media(max-width: 1023px) {\n.m-first-section .m-section-py {\npadding-top: 0;\n}\n  .m-custom-newsletter  .m-newsletter-section__inner {\npadding: 0 20px;\n}\n.m-first-section .m-custom-content__wrapper   {\nflex-direction: column-reverse;\n}\n.m-first-section .m-custom-content__block-text {\npadding: 40px 16px ;\n}\n.m-first-section  .m-richtext {\ntext-align: center;\n}\n.m-first-section .m-richtext__title br {\ndisplay: none;\n}\n}\n@media(max-width: 767px) {\n.m-first-section .m-image {\n  --aspect-ratio: 0.86 !important;\n}\n.m-first-section br{\ndisplay: none;\n}\n\n.m-custom-compare .m-richtext__description  br{\ndisplay: none;\n}\n .m-first-section  .m-richtext__title {\nfont-size: 36px;\n}\n.m-custom-newsletter .m-newsletter-form__wrapper {\nflex-direction: column;\nrow-gap: 12px;\nalign-items: center;\n\n}\n.m-custom-newsletter .m-newsletter-form__button-inline .m-newsletter-form__button {\nposition: static;\nwidth: fit-content;\nborder-radius: 5px;\nborder-width-left: 1px;\n}\n.m-custom-newsletter .m-newsletter-section__header {\nmargin-bottom: 24px;\n}\n\n}"
+      }
+    },
+    "custom_content_g9YGAn": {
+      "type": "custom-content",
+      "blocks": {
+        "text_bMgPbC": {
+          "type": "text",
+          "settings": {
+            "title": "The Perfect<br> Match",
+            "subheading": "New Arrivals",
+            "text": "<p>Here is your chance to upgrade your wardrobe <br\/>with a variation of styles and fits that are both<br\/> feminine and relaxed.<\/p>",
+            "width": "33%",
+            "alignment": "center",
+            "align_text": "left",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop Collection",
+            "button_style": "m-button--link",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_7eyzG7": {
+          "type": "image",
+          "settings": {
+            "link": "",
+            "width": "66%",
+            "alignment": "center",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_bMgPbC",
+        "image_7eyzG7"
+      ],
+      "custom_css": [
+        "@media (min-width: 1620px) {.m-custom-content__block-text {width: 35%; } .m-custom-content__block-image {width: 65%; }}",
+        "@media (min-width: 1920px) {.m-custom-content__block-text {width: 40%; } .m-custom-content__block-image {width: 60%; }}",
+        "@media (min-width: 1280px) {.m-custom-content__block-text {--offset-margin: calc((100vw - var(--fluid-container-width)) \/ 2); padding-left: max(var(--fluid-container-offset), var(--offset-margin)); }}",
+        "@media (max-width: 1279px) {.m-custom-content__block-text {padding-left: 15px; padding-right: 15px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "scheme-dcc2b99a-a92f-4e6a-83e7-7f510e371b0c",
+        "content_color_scheme": "scheme-dcc2b99a-a92f-4e6a-83e7-7f510e371b0c",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 0,
+        "gap_mobile": 0,
+        "use_scroll_mobile": false,
+        "padding_top": 40,
+        "padding_bottom": 0,
+        "custom_class": "m-first-section"
+      }
+    },
+    "custom_content_gKFLxf": {
+      "type": "custom-content",
+      "blocks": {
+        "text_ra7EGa": {
+          "type": "text",
+          "settings": {
+            "title": "Living out every single day and<br>\nbe brave to show off your own true colors",
+            "subheading": "Minimog Store",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and<br\/> simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "medium",
+            "text_color": "inherit",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_ra7EGa"
+      ],
+      "custom_css": [
+        ".m-richtext__subtitle {margin-bottom: 12px;}",
+        "@media (max-width: 767px) {br {display: none; } .m-richtext__description {margin-top: 24px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "collection_list_xcEbWQ": {
+      "type": "collection-list",
+      "blocks": {
+        "collection_block_WPhhkL": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Sweaters"
+          }
+        },
+        "collection_block_GcmGMt": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Leather Boots"
+          }
+        },
+        "collection_block_nmaeXJ": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Tops"
+          }
+        },
+        "collection_block_YnFktr": {
+          "type": "collection_block",
+          "settings": {
+            "title": "Hand Bags"
+          }
+        }
+      },
+      "block_order": [
+        "collection_block_WPhhkL",
+        "collection_block_GcmGMt",
+        "collection_block_nmaeXJ",
+        "collection_block_YnFktr"
+      ],
+      "custom_css": [
+        ".m-collection-card__title,.m-collection-card__product-count,.m-collection-card__link {font-weight: 400;}",
+        "@media (min-width: 768px) {.m-collection-card__title, .m-collection-card__product-count, .m-collection-card__link {color: #ffffff; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "color_scheme": "default",
+        "container": "container-fluid",
+        "layout": "grid",
+        "expanded": true,
+        "card_style": "inside",
+        "text_alignment": "left",
+        "hover_effect": "scaling-down",
+        "show_product_count": true,
+        "count_inline_title": true,
+        "image_rounded": false,
+        "items_per_row": 4,
+        "item_gap": 5,
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "autorotate": false,
+        "autorotate_speed": 5,
+        "mobile_disable_slider": true,
+        "use_scroll_mobile": true,
+        "mobile_gap": 16,
+        "hidden_slide_control_mobile": false,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "product_tabs_mELpRB": {
+      "type": "product-tabs",
+      "blocks": {
+        "tab_YiMXkA": {
+          "type": "tab",
+          "settings": {
+            "title": "New Arrivals"
+          }
+        },
+        "tab_6ABAMB": {
+          "type": "tab",
+          "settings": {
+            "title": "Best Sellers"
+          }
+        },
+        "tab_JFcM9w": {
+          "type": "tab",
+          "settings": {
+            "title": "On Sale"
+          }
+        }
+      },
+      "block_order": [
+        "tab_YiMXkA",
+        "tab_6ABAMB",
+        "tab_JFcM9w"
+      ],
+      "custom_css": [
+        ".m-tab-header:after {height: 1px;}",
+        ".m-section__tabs {margin-top: 0;}",
+        "@media (min-width: 768px) {.m-tab-header {font-size: 36px; padding: 0; margin-left: 20px; margin-right: 20px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "tab_header": "horizontal",
+        "limit": 10,
+        "show_button": true,
+        "button_type": "link",
+        "button_label": "Shop All Products",
+        "button_style": "m-button--secondary",
+        "button_size": "",
+        "pcard_layout": "",
+        "pcard_image_ratio": "",
+        "show_vendor": false,
+        "items_per_row": 5,
+        "item_gap": 30,
+        "enable_slider": false,
+        "show_navigation": true,
+        "show_pagination": false,
+        "mobile_disable_slider": false,
+        "use_scroll_mobile": true,
+        "item_gap_mobile": 16,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "countdown_timer_n4N6JF": {
+      "type": "countdown-timer",
+      "custom_css": [
+        "@media (min-width: 768px) {.m-countdown__button {margin-top: 40px; }}",
+        "@media (max-width: 767px) {.m-countdown__header {margin-bottom: 24px; } .m-countdown-timer__digit {font-size: 36px; } .m-countdown__button {margin-top: 24px; } .m-section-py {--section-padding-top-mobile: 80px; --section-padding-bottom-mobile: 80px; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "dark",
+        "align": "center",
+        "background_in_container": true,
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "use_image_as_background": true,
+        "heading": "Annual Sale Event",
+        "description": "<p>Save on all best selling and exclusive styles<\/p>",
+        "time": "2024-08-26 23:00:00",
+        "heading_size": "h2",
+        "button_label": "Get Notified",
+        "button_style": "m-button--white",
+        "button_size": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_tabs_f4gjJg": {
+      "type": "collection-tabs",
+      "blocks": {
+        "collection_7gLQ4h": {
+          "type": "collection",
+          "settings": {
+            "heading": "Sweaters & Cardigans",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        },
+        "collection_tAMNqq": {
+          "type": "collection",
+          "settings": {
+            "heading": "The Bomber Jackets",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        },
+        "collection_Dxfxkz": {
+          "type": "collection",
+          "settings": {
+            "heading": "Corduroy Shirts",
+            "heading_size": "h4",
+            "text": "<p>This snuggly soft Cloud Relaxed Cardigan serves a relaxed fit, with saddle shoulders—where the armhole seams curve towards the neckline so that the sleeve seamlessly hugs your shoulder<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "collection_7gLQ4h",
+        "collection_tAMNqq",
+        "collection_Dxfxkz"
+      ],
+      "custom_css": [
+        ".collapsible__button-icon {font-weight: 500;}",
+        "@media (max-width: 1023px) and (min-width: 768px) {.m-section__header {margin-bottom: 20px; } .m-collection-tabs .collapsible__item {padding: 12px 0; }}",
+        "@media (max-width: 767px) {.m-section__header {margin-bottom: 32px; } .m-collection-tabs .collapsible__item {padding: 14px 0; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "header_alignment": "left",
+        "heading": "Beautifully functional<br> consciously crafted",
+        "heading_size": "h2",
+        "subheading": "Hot This Week",
+        "description": "",
+        "image_position": "right",
+        "image_ratio": "1\/1",
+        "prefix_header": "ordinal_number",
+        "trigger_behavior": "hover",
+        "autoplay": true,
+        "autoplay_duration": 5,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "lookbook_K7A9mD": {
+      "type": "lookbook",
+      "blocks": {
+        "shop_this_look_tcjANn": {
+          "type": "shop-this-look",
+          "settings": {
+            "color_scheme": "",
+            "title_text": "Beautifully Functional. Purposefully Designed.",
+            "title_size": "m:text-base",
+            "text_alignment": "center",
+            "title_link": "",
+            "button_label": "Shop this look"
+          }
+        },
+        "shop_this_look_TwWjxP": {
+          "type": "shop-this-look",
+          "settings": {
+            "color_scheme": "",
+            "title_text": "Beautifully Functional. Purposefully Designed.",
+            "title_size": "m:text-base",
+            "text_alignment": "center",
+            "title_link": "",
+            "button_label": "Shop this look"
+          }
+        },
+        "shop_this_look_jLD3FA": {
+          "type": "shop-this-look",
+          "settings": {
+            "color_scheme": "",
+            "title_text": "The t-shirt is designed with a crewneck collar.",
+            "title_size": "m:text-base",
+            "text_alignment": "center",
+            "title_link": "",
+            "button_label": "Shop this look"
+          }
+        }
+      },
+      "block_order": [
+        "shop_this_look_tcjANn",
+        "shop_this_look_TwWjxP",
+        "shop_this_look_jLD3FA"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {.m-stl-card__heading {padding: 0 2px; }}"
+      ],
+      "settings": {
+        "heading": "Check out mix & match",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "image_aspect_ratio": "3\/4",
+        "use_scroll_mobile": true,
+        "padding_top": 100,
+        "padding_bottom": 0,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "custom_content_tLXyFQ": {
+      "type": "custom-content",
+      "blocks": {
+        "text_paWdxy": {
+          "type": "text",
+          "settings": {
+            "title": "The Urban Lifestyle",
+            "subheading": "",
+            "text": "<p>Our new cozy collection is made with environmentally friendly materials and <br\/>simple to care for so you can stay cozy wherever .<\/p>",
+            "width": "100%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop Now",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_paWdxy"
+      ],
+      "custom_css": [
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "content_color_scheme": "",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": ""
+      }
+    },
+    "hotspots_image_XjaniW": {
+      "type": "hotspots-image",
+      "blocks": {
+        "hotpot_XgJrdN": {
+          "type": "hotspot",
+          "settings": {
+            "top": 46,
+            "left": 26,
+            "m_top": 66,
+            "m_left": 11,
+            "heading": "Waterproof",
+            "text": "<p>Clean lines meet rich leather in this architectural style, featuring a modern square toe, cushioned insole for extra comfort.<\/p>"
+          }
+        },
+        "hotpot_MpQAtL": {
+          "type": "hotspot",
+          "settings": {
+            "top": 36,
+            "left": 63,
+            "m_top": 19,
+            "m_left": 46,
+            "heading": "Ethical is Beautiful",
+            "text": "<p>Clean lines meet rich leather in this architectural style, featuring a modern square toe, cushioned insole for extra comfort.<\/p>"
+          }
+        },
+        "hotpot_47HmCD": {
+          "type": "hotspot",
+          "settings": {
+            "top": 68,
+            "left": 61,
+            "m_top": 78,
+            "m_left": 42,
+            "heading": "Made in Italy.",
+            "text": "<p>Clean lines meet rich leather in this architectural style, featuring a modern square toe, cushioned insole for extra comfort.<\/p>"
+          }
+        }
+      },
+      "block_order": [
+        "hotpot_XgJrdN",
+        "hotpot_MpQAtL",
+        "hotpot_47HmCD"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "image_max_width": 32,
+        "heading_size": "h4",
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit",
+        "enable_bg_zoom_effect": true
+      }
+    },
+    "testimonials_bzU636": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_JrQTB7": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Was I in Hawaii?! No. Did I feel like I was in Hawaii?! No, because it’s snowing outside. But, would I wear this in Hawaii ❤️<\/p>",
+            "footer": "<p>Jared S.<\/p>",
+            "image_text": ""
+          }
+        },
+        "testimonial_Ax89pn": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Always getting compliments from family, friends, and strangers. 🤗 🙌<\/p>",
+            "footer": "<p>Alyssa A.<\/p>",
+            "image_text": ""
+          }
+        },
+        "testimonial_XJEpTU": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Hands down one of the best shirts I’ve ever owned.  Fits great, feels amazing, seems to stay cool and is somewhat water resistant. <\/p>",
+            "footer": "<p>Ben B.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        },
+        "testimonial_nGPbrd": {
+          "type": "testimonial",
+          "settings": {
+            "title": "",
+            "description": "<p>Love Love Love this dress!It is extremely comfortable<\/p>",
+            "footer": "<p>Katie D.<\/p>",
+            "image_text": "",
+            "image_link": ""
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_JrQTB7",
+        "testimonial_Ax89pn",
+        "testimonial_XJEpTU",
+        "testimonial_nGPbrd"
+      ],
+      "custom_css": [
+        ".m-testimonials--layout-6 .m-stars {margin-top: 21px; margin-bottom: 14px;}",
+        "@media (max-width: 767px) {.m-testimonials--layout-6 .m-testimonials__header {margin-bottom: 24px; } .m-section__header {text-align: center; } .m-testimonials--layout-6 .m-stars {margin-top: 19px; margin-bottom: 13px; } .m-testimonials--layout-6.m-slider--pagination-fraction .m-slider-controls {margin-top: 32px; } .m-testimonials--layout-6.m-slider--pagination-fraction .m-testimonials__wrapper {padding-bottom: 70px; }}"
+      ],
+      "settings": {
+        "heading": "Happy Customers",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "left",
+        "container": "container-fluid",
+        "color_scheme": "footer",
+        "design": "testimonials-6",
+        "show_stars": true,
+        "autorotate": false,
+        "show_navigation": true,
+        "show_pagination": true,
+        "star_color": "#000000",
+        "item_color_scheme": "",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "collection_showcase_QVU9zk": {
+      "type": "collection-showcase",
+      "blocks": {
+        "collection_C8Xnwz": {
+          "type": "collection",
+          "settings": {
+            "title": "Tops",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Shirts",
+            "heading_size": "h2",
+            "button_text": "Shop Shirts",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_wgRzyq": {
+          "type": "collection",
+          "settings": {
+            "title": "Hoodies",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Hoddies",
+            "heading_size": "h2",
+            "button_text": "Shop Hoddies",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_8zaKFq": {
+          "type": "collection",
+          "settings": {
+            "title": "Outwear",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Outwear",
+            "heading_size": "h2",
+            "button_text": "Shop Outwear",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        },
+        "collection_WKDM8H": {
+          "type": "collection",
+          "settings": {
+            "title": "Pants",
+            "subheading": "New Collection",
+            "heading": "Organic Linen Pants",
+            "heading_size": "h2",
+            "button_text": "Shop Pants",
+            "button_style": "m-button--primary",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "collection_C8Xnwz",
+        "collection_wgRzyq",
+        "collection_8zaKFq",
+        "collection_WKDM8H"
+      ],
+      "custom_css": [
+        "@media (min-width: 1536px) {.m-collection-showcase__content-wrapper {max-width: 76%; }}",
+        "@media (max-width: 1023px) {.m-section-py {padding-top: 0; } .container-fluid {padding-left: 0; padding-right: 0; }}"
+      ],
+      "settings": {
+        "container": "container-fluid",
+        "color_scheme": "",
+        "color_scheme_tab": "dark",
+        "image_position": "left",
+        "product_to_show": 3,
+        "pcard_image_ratio": "original",
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "press_CkQaEQ": {
+      "type": "press",
+      "blocks": {
+        "news_HneUAc": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“We’re confident that this store will be <br\/>the next big thing in its industry.”<\/p>",
+            "image_width": "160px"
+          }
+        },
+        "news_M4RmKw": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“We’re confident that this store will be <br\/>the next big thing in its industry.”<\/p>",
+            "image_width": "160px"
+          }
+        },
+        "news_3FNLRy": {
+          "type": "news",
+          "settings": {
+            "title": "<p>“We’re confident that this store will be <br\/>the next big thing in its industry.”<\/p>",
+            "image_width": "160px"
+          }
+        }
+      },
+      "block_order": [
+        "news_HneUAc",
+        "news_M4RmKw",
+        "news_3FNLRy"
+      ],
+      "custom_css": [
+        ".m-section__heading {font-size: 18px; font-weight: 500;}",
+        ".m-section__header {margin-bottom: 40px;}",
+        "@media (max-width: 1024px) {.m-press__logo-wrapper {padding-left: 14px; padding-right: 14px; }}",
+        "@media (min-width: 1440px) {.m-press__list {margin-top: 60px; }}",
+        "@media (max-width: 767px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "Featured by Press",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "show_divider": false,
+        "autoplay": true,
+        "padding_top": 0,
+        "padding_bottom": 100,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "custom_content_xQPFjJ": {
+      "type": "custom-content",
+      "blocks": {
+        "text_tnxVNm": {
+          "type": "text",
+          "settings": {
+            "title": "Mid-rise super<br> baggy jeans",
+            "subheading": "Compare Product",
+            "text": "<p>Here is your chance to upgrade your wardrobe <br\/>with a variation of styles and fits that are both.<\/p>",
+            "width": "50%",
+            "alignment": "center",
+            "align_text": "center",
+            "text_size": "large",
+            "text_color": "inherit",
+            "button_label": "Shop This Product",
+            "button_link": "",
+            "button_style": "m-button--primary",
+            "button_size": "",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        },
+        "image_comparison_7Mw9Rq": {
+          "type": "image_comparison",
+          "settings": {
+            "width": "50%",
+            "product": "faded-effect-jean",
+            "subtitle": "",
+            "title": "",
+            "text": "",
+            "text_size": "medium",
+            "content_alignment": "left",
+            "text_color": "black",
+            "layout": "horizontal",
+            "image_height": "adapt",
+            "before_heading": "Before",
+            "after_heading": "After",
+            "block_custom_class": "",
+            "animations": "inherit"
+          }
+        }
+      },
+      "block_order": [
+        "text_tnxVNm",
+        "image_comparison_7Mw9Rq"
+      ],
+      "custom_css": [
+        ".m-image-comparison__heading {box-shadow: none; height: 34px; border-radius: 5px; padding: 6px 12px;}",
+        ".m-image-comparison__after .m-image-comparison__heading {top: auto; bottom: 22px;}",
+        "@media (max-width: 1023px) {.m-custom-content__wrapper {row-gap: 48px; flex-direction: column-reverse; } .image-comparison__header {display: none; } .m-custom-content__block-text {padding-left: 20px; padding-right: 20px; } .m-richtext__description + .m-richtext__button {margin-top: 32px; } .m-richtext__description {margin-top: 16px; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "dark",
+        "content_color_scheme": "dark",
+        "enable_parallax": false,
+        "parallax_direction": "vertical",
+        "gap": 30,
+        "gap_mobile": 16,
+        "use_scroll_mobile": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-compare"
+      }
+    },
+    "icon_box_9gTWLW": {
+      "type": "icon-box",
+      "blocks": {
+        "iconbox_aE9mVj": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "100 Days Return",
+            "description": "<p>Enjoy a seamless shopping experience, facilitated<br\/> by our complimentary shipping.<\/p>",
+            "link": "",
+            "button_label": "Learn More [arrow]",
+            "button_style": "m-button--plain",
+            "button_size": ""
+          }
+        },
+        "iconbox_nVnNqU": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Lifetime Warranty",
+            "description": "<p>Our dedicated team provides timely assistance, <br\/>committed to addressing your queries.<\/p>",
+            "link": "",
+            "button_label": "Contact Us [arrow]",
+            "button_style": "m-button--plain",
+            "button_size": ""
+          }
+        },
+        "iconbox_6cDkRW": {
+          "type": "iconbox",
+          "settings": {
+            "image_by_url": "",
+            "title": "Customers Services",
+            "description": "<p>Invest in our activewear with absolute confidence,<br\/> backed by our 30-day satisfaction guarantee.<\/p>",
+            "link": "",
+            "button_label": "Learn More [arrow]",
+            "button_style": "m-button--plain",
+            "button_size": ""
+          }
+        }
+      },
+      "block_order": [
+        "iconbox_aE9mVj",
+        "iconbox_nVnNqU",
+        "iconbox_6cDkRW"
+      ],
+      "custom_css": [
+        ".m-icon-box__heading {font-weight: 400; margin-bottom: 12px;}",
+        ".m-icon-box .m-button {margin-top: 20px;}",
+        "@media (max-width: 1169px) {br {display: none; }}"
+      ],
+      "settings": {
+        "heading": "",
+        "heading_size": "h3",
+        "subheading": "",
+        "description": "",
+        "header_alignment": "center",
+        "container": "container-fluid",
+        "color_scheme": "",
+        "item_per_row": 3,
+        "item_gap": 50,
+        "item_gap_mobile": 30,
+        "card_color_scheme": "",
+        "card_style": "vertical",
+        "image_max_width": "76px",
+        "content_alignment": "center",
+        "hover_effect": "scaling-up",
+        "enable_slider": false,
+        "show_pagination": false,
+        "show_navigation": false,
+        "use_scroll_mobile": true,
+        "use_grid_column_mb": false,
+        "padding_top": 80,
+        "padding_bottom": 80,
+        "custom_class": "",
+        "animations": "inherit"
+      }
+    },
+    "instagram_wftYim": {
+      "type": "instagram",
+      "custom_css": [
+        ".m-section__subheading {margin-bottom: 20px;}",
+        ".m-section__description {margin-top: 20px;}",
+        "@media (max-width: 767px) {.m-section__subheading {margin-bottom: 12px; } .m-section__description {margin-top: 16px; } .m-section__button {margin-top: 24px; } .m-section__header {margin-bottom: 48px; }}"
+      ],
+      "settings": {
+        "heading": "Sure we’re <br>on Instagram",
+        "heading_size": "h2",
+        "subheading": "Follow Us",
+        "description": "Tag @minimog in your Instagram photos <br>for a chance to be featured here.",
+        "header_alignment": "center",
+        "container": "w-full",
+        "color_scheme": "default",
+        "color_scheme_content": "scheme-b0b19418-6905-49a7-9cb1-2737708d37f4",
+        "layout": "metro",
+        "images_count": 8,
+        "grid_columns": 4,
+        "gap": 0,
+        "mobile_gap": 10,
+        "button_label": "Follow @minimog",
+        "button_style": "m-button--primary",
+        "use_scroll_mobile": true,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "custom_class": ""
+      }
+    },
+    "newsletter_MxGFBA": {
+      "type": "newsletter",
+      "custom_css": [
+        ".m-newsletter-section__description {opacity: 1; margin-top: 16px;}",
+        ".m-newsletter-form__button {background-color: rgb(var(--color-button)); color: rgb(var(--color-button-text)); transition: all var(--m-duration-default, 0.25s); border: none;}",
+        ".m-newsletter-form__button:hover,.m-newsletter-form__button:focus {background-color: rgba(var(--color-button-hover), .75); color: rgb(var(--color-button-text-hover));}",
+        "@media (min-width: 1024px) {.m-newsletter-section__header {margin-bottom: 32px; }}"
+      ],
+      "settings": {
+        "container": "w-full",
+        "color_scheme": "",
+        "form_layout": "vertical",
+        "form_design": "1",
+        "heading": "Let’s get in touch",
+        "description": "<p>Sign up for our newsletter and receive 10% off your first order<\/p>",
+        "text_size": "h2",
+        "email_placeholder": "Enter your email",
+        "submit_button": "Subsribe Now",
+        "text_color": "inherit",
+        "show_icon": false,
+        "icon_img_width": "30",
+        "show_agreement": false,
+        "padding_top": 100,
+        "padding_bottom": 100,
+        "custom_class": "m-custom-newsletter",
+        "animations": "inherit"
+      }
+    }
+  },
+  "order": [
+    "custom_code_jQAVr6",
+    "custom_content_g9YGAn",
+    "custom_content_gKFLxf",
+    "collection_list_xcEbWQ",
+    "product_tabs_mELpRB",
+    "countdown_timer_n4N6JF",
+    "collection_tabs_f4gjJg",
+    "lookbook_K7A9mD",
+    "custom_content_tLXyFQ",
+    "hotspots_image_XjaniW",
+    "testimonials_bzU636",
+    "collection_showcase_QVU9zk",
+    "press_CkQaEQ",
+    "custom_content_xQPFjJ",
+    "icon_box_9gTWLW",
+    "instagram_wftYim",
+    "newsletter_MxGFBA"
+  ]
+}

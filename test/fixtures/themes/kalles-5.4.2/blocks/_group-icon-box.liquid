@@ -1,0 +1,161 @@
+{% style %}
+  .hdt-group-block--{{ block.id }} {
+    {%- capture width -%}
+    --width-group: {{ block.settings.width }}%; --width-group-md: {{ block.settings.width_md }}%; --width-group-lg: {{ block.settings.width_lg }}%;
+    {%- endcapture -%}
+    {{ width | replace: ' 8%', '8.33333333%' | replace: ' 16%', '16.66666667%' | replace: ' 33%', '33.33333333%' | replace: ' 41%', '41.66666667%' | replace: ' 58%', '58.33333333%' | replace: ' 66%', '66.66666667%' | replace: ' 83%', '83.33333333%' | replace: ' 91%', '91.66666667%' }}
+    --padding-group: {{ block.settings.padding }}px; --padding-group-md: {{ block.settings.padding_md }}px; --padding-group-lg: {{ block.settings.padding_lg }}px;
+    --space-group: {{ block.settings.space }}px; --space-group-md: {{ block.settings.space_md }}px; --space-group-lg: {{ block.settings.space_lg }}px;
+  }
+  .hdt-group-block--{{ block.id }}>.hdt-group-block {
+    --space-groups: {{ block.settings.space }}px !important;
+  }
+  .hdt-group-block.hdt-hidden {
+    display: none;
+  }
+  @media (min-width: 768px) {
+    .hdt-group-block--{{ block.id }}>.hdt-group-block {
+      --space-groups: {{ block.settings.space_md }}px !important;
+    }
+    .hdt-group-block.md\:hdt-hidden {
+      display: none;
+    }
+    .hdt-group-block.md\:hdt-flex {
+      display: flex;
+    }
+  }
+  @media (min-width: 1050px) {
+    .hdt-group-block--{{ block.id }}>.hdt-group-block {
+      --space-groups: {{ block.settings.space_lg }}px !important;
+    }  
+    .hdt-group-block.lg\:hdt-hidden {
+      display: none;
+    }
+    .hdt-group-block.lg\:hdt-flex {
+      display: flex;
+    }  
+  }
+{% endstyle %}
+{%- capture visible -%}
+{%- if block.settings.width == 0 %} hdt-hidden{% endif -%}
+{%- if block.settings.width_md == 0 %} md:hdt-hidden{% else %} md:hdt-flex{% endif -%}
+{%- if block.settings.width_lg == 0 %} lg:hdt-hidden{% else %} lg:hdt-flex{% endif -%}
+{%- endcapture -%}
+<div id="Scroll-{{ block.id }}" class="hdt-group-block hdt-group-block--{{ block.id }} hdt-group-layout hdt-snap-center {{ visible }}" {{ block.shopify_attributes }}>
+  {% content_for "blocks" %}
+</div>
+
+{% schema %}
+{
+  "name": "Group box",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "icon"
+    },
+    {
+      "type": "heading"
+    },
+    {
+      "type": "text"
+    }
+  ],
+  "settings": [
+    {
+      "type": "range",
+      "id": "width_lg",
+      "label": "Width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "width_md",
+      "label": "Tablet width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "width",
+      "label": "Mobile width",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "padding_lg",
+      "label": "Padding",
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_md",
+      "label": "Tablet padding",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding",
+      "label": "Mobile padding",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "space_lg",
+      "label": "Vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "space_md",
+      "label": "Tablet vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "range",
+      "id": "space",
+      "label": "Mobile vertical space",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    }
+  ],
+  "presets": [
+    {
+      "name": "Group box"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,140 @@
+{
+  "name": "t:sections.name_group.system",
+  "type": "custom.system",
+  "sections": {
+    "cart-drawer": {
+      "type": "cart-drawer",
+      "blocks": {
+        "subtotal_hPmjgN": {
+          "type": "subtotal",
+          "settings": {}
+        },
+        "tax_rkEdFK": {
+          "type": "tax",
+          "settings": {
+            "url": ""
+          }
+        },
+        "agree_y3A6EM": {
+          "type": "agree",
+          "settings": {
+            "content": "I agree with the terms and conditions"
+          }
+        },
+        "btn_cart_74AGUK": {
+          "type": "btn_cart",
+          "settings": {
+            "style_class": "",
+            "icon": "none",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "btn_checkout_bcnmpT": {
+          "type": "btn_checkout",
+          "settings": {
+            "style_class": "hdt-btn-accent",
+            "icon": "none",
+            "icon_position": "before",
+            "icon_height": 16,
+            "icon_spacing": 5
+          }
+        },
+        "img_trust_zatTgB": {
+          "type": "img_trust",
+          "settings": {
+            "wimg": 350,
+            "svg": "visa,paypal,master,american_express,amazon",
+            "height": 25
+          }
+        }
+      },
+      "block_order": [
+        "subtotal_hPmjgN",
+        "tax_rkEdFK",
+        "agree_y3A6EM",
+        "btn_cart_74AGUK",
+        "btn_checkout_bcnmpT",
+        "img_trust_zatTgB"
+      ],
+      "settings": {
+        "colors_by_section": true,
+        "color_scheme": "scheme-e0b73555-c767-4eda-aa6d-4e44e10aefce",
+        "show_free_shipping_bar": true,
+        "show_cart_note": true,
+        "show_gift_wrap": true,
+        "show_shipping_estimator": true,
+        "show_cart_discount": true,
+        "discount_error_message": "Enter a valid discount code",
+        "heading": "Customers also bought",
+        "product_list": [],
+        "replaces_products_selected": true,
+        "limit": 5
+      }
+    },
+    "toolbar-mobile": {
+      "type": "toolbar-mobile",
+      "blocks": {
+        "shop_jQccrN": {
+          "type": "shop",
+          "settings": {
+            "title": "Shop",
+            "link": ""
+          }
+        },
+        "wishlist_FLDXnV": {
+          "type": "wishlist",
+          "settings": {
+            "title": "Wishlist"
+          }
+        },
+        "cart_qEaYLM": {
+          "type": "cart",
+          "settings": {
+            "title": "Cart"
+          }
+        },
+        "account_KBmadz": {
+          "type": "account",
+          "settings": {
+            "title": "Account"
+          }
+        },
+        "search_wxK4Le": {
+          "type": "search",
+          "settings": {
+            "title": "Search"
+          }
+        }
+      },
+      "block_order": [
+        "shop_jQccrN",
+        "wishlist_FLDXnV",
+        "cart_qEaYLM",
+        "account_KBmadz",
+        "search_wxK4Le"
+      ],
+      "settings": {
+        "color_scheme": "",
+        "background_opacity": 1,
+        "show_txt": true
+      }
+    },
+    "back_top_tBegYr": {
+      "type": "back_top",
+      "name": "t:sections.back_to_top.name",
+      "settings": {
+        "enable_hidden_mobile": false,
+        "enable_progress_bar": true,
+        "border_cl": "#f5f5f5",
+        "border_cl_active": "#000000"
+      }
+    }
+  },
+  "order": [
+    "cart-drawer",
+    "toolbar-mobile",
+    "back_top_tBegYr"
+  ]
+}

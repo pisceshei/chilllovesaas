@@ -1,0 +1,30 @@
+{%- liquid
+  assign target = product
+  assign product = section.settings.product | default: target
+-%}
+{%- if product.tags.size > 0 and product.collections.size > 0 -%}
+  {%- liquid
+    assign tags = product.tags | where: 't4_'
+    if product.tags.size == tags.size
+      assign show_tag_final = false
+    else
+      assign show_tag_final = true
+    endif
+  -%}
+  {%- if show_tag_final -%}
+    {%- assign tag_cat_url = collection.url | default: product.collections.first.url -%}
+    <div class="hdt-tags-wrapper hdt-s-text2">{{ 'products.product.tag' | t }}
+      {% for tag in product.tags -%}
+      {%- if tag contains 't4_' or tag contains 'badge_' %}{% continue %}{% endif -%}
+      <a class="hdt-inline-block hdt-s-text" href="{{ tag_cat_url }}/{{ tag | handle }}">{{ tag | remove: 'type ' | remove: 'Type ' }}</a> {% endfor -%}
+    </div>
+  {%- endif -%}
+  
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:sections.main-product.blocks.meta.settings.show_tags.label",
+  "tag": null,
+  "presets": [{ "name": "t:sections.main-product.blocks.meta.settings.show_tags.label" }]
+}
+{% endschema %}

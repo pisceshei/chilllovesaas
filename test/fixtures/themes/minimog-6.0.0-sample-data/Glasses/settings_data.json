@@ -1,0 +1,113 @@
+{
+  "current": {
+    "favicon": "",
+    "type_base_font": "roboto_condensed_n4",
+    "use_custom_font_body": true,
+    "custom_body_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Jost-Regular.ttf?v=1618297125@400\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Jost-ExtraBold.ttf?v=1628613323@800\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Jost-Medium.ttf?v=1622443602@500\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Jost-Bold.ttf?v=1618297125@700",
+    "custom_body_weight": "400",
+    "type_header_font": "roboto_condensed_n7",
+    "use_custom_font_heading": true,
+    "custom_heading_font": "https:\/\/cdn.shopify.com\/s\/files\/1\/0561\/2742\/2636\/files\/Jost-Bold.ttf?v=1618297125@700\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Jost-ExtraBold.ttf?v=1628613323@800\nhttps:\/\/cdn.shopify.com\/s\/files\/1\/0042\/0750\/9567\/files\/Jost-Medium.ttf?v=1622443602@500",
+    "custom_heading_weight": "700",
+    "type_header_base_size": 34,
+    "btn_uppercase_text": true,
+    "btn_base_size": 14,
+    "btn_letter_spacing": 1,
+    "btn_border_radius": 22,
+    "btn_weight": "700",
+    "img_overlay_opacity": 20,
+    "spacing_sections": 0,
+    "spacing_sections_mobile": 0,
+    "animations": "fade-in-up",
+    "pcard_layout": "1",
+    "pcard_alignment": "center",
+    "pcard_image_ratio": "1\/1",
+    "show_vendor": false,
+    "uppercase_prd_name": true,
+    "variant_option_design3": "color",
+    "product_colors": "red: #FF6961,\nyellow: #FDDA76,\nblack: #000000,\nblue: #8DB4D2,\ngreen: #C1E1C1,\npurple: #B19CD9,\nsilver: #EEEEEF,\nwhite: #FFFFFF,\nbrown: #836953,\nlight-brown: #feb035,\ndark-turquoise: #23cddc,\norange: #FFB347,\ntan: #E9D1BF,\nviolet: #B490B0,\npink: #FFD1DC,\ngrey: #E0E0E0,\nsky: #96BDC6,\npale-leaf: #CCD4BF",
+    "filter_color1": "",
+    "share_facebook": true,
+    "social_twitter_link": "https:\/\/twitter.com\/home",
+    "social_facebook_link": "https:\/\/facebook.com\/",
+    "social_pinterest_link": "https:\/\/pinterest.com\/",
+    "social_instagram_link": "https:\/\/instagram.com\/",
+    "wishlist_page": "wishlist",
+    "product_compare_page": "product-compare",
+    "custom_css": ".m-newsletter-form__wrapper {\n--color-border: 0,0,0;\n}\n.m-custom-hero .m-hero__content .m-hero__text {\n  color: var(--color-sub-text);\n}\n.m-menu .m-menu__item .m-menu__link--main {\n  font-size: 14px;\n  font-weight: 700;\n}\n.m-custom-slideshow .m-slide__content .m-slide__subtitle {\n  font-weight: 800;\n  font-size: 14px;\n  margin-bottom: 10px;\n  letter-spacing: 1px;\n}\n\n.m-custom-collection-list .m-collection-card__info .m-collection-card__title {\n  font-size: 16px;\n  font-weight: 700;\n  line-height: 1.4;\n  letter-spacing: 0.5px;\n}\n.m-custom-hero .m-hero__title {\n  font-weight: 700;\n  letter-spacing: 2px;\n}\n\n.m-custom-hero .m-hero__text {\n  margin-bottom: 36px;\n}\n\n.m-product-card .m-product-card__title .m-product-card__name {\n  font-weight: 700;\n  font-size: 14px;\n}\n.m-custom-content-section .m-section-py {\n  border-top: 1px solid #eeeeee;\n}\n[data-section-type=\"icon-box\"] .m\\:column:nth-child(2) .m-icon-box {\n  border-width: 0 1px 0 1px;\n  border-style: solid;\n  border-color: #eeeeee;\n}\n[data-section-type=\"icon-box\"] .m-icon-box__content h3 {\n  font-size: 16px;\n  line-height: 23px;\n  margin-bottom: 10px;\n  letter-spacing: 0.5px;\n}\n.m-footer .m-footer--block .m-footer--block-title {\n  letter-spacing: 1px;\n  font-weight: 700;\n  font-size: 14px;\n}\n\n@media (min-width: 1024px) {\n  .m-footer--bottom-inner {\n    border-top: 1px solid #e0e0e0;\n  }\n}\n@media (min-width: 1280px) {\n  .m-footer--block-newsletter {\n    padding-right: 134px;\n  }\n  .m-footer--block-newsletter .m-footer--block-title {\n    font-size: 24px;\n  }\n}\n\n@media (min-width: 768px) {\n  .m-custom-hero .m-hero__content .m-hero__title {\n    font-size: 36px;\n    margin-bottom: 20px;\n  }\n}",
+    "show_variant_swatch_image": true,
+    "use_theme_currencies": true,
+    "theme_currencies": "USD | EUR | GBP | VND",
+    "content_for_index": [
+
+    ],
+    "color_schemes": {
+      "default": {
+        "settings": {
+          "background": "#ffffff",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#eeeeee"
+        }
+      },
+      "dark": {
+        "settings": {
+          "background": "#000000",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#ffffff",
+          "subtext": "#c9c9c9",
+          "heading_text": "#ffffff",
+          "button": "#ffffff",
+          "button_label": "#222222",
+          "outline_button_label": "#ffffff",
+          "button_hover": "#ffffff",
+          "button_text_hover": "#222222",
+          "price_sale": "#e84e4e",
+          "price_regular": "#ffffff",
+          "form_field": "#ffffff",
+          "form_field_label": "#222222",
+          "tooltip": "#ffffff",
+          "tooltip_label": "#222222",
+          "border": "#4b4b4b"
+        }
+      },
+      "scheme-0acf230b-526e-49f5-99cb-98791d65f723": {
+        "settings": {
+          "background": "#efeded",
+          "background_secondary": "#f5f5f5",
+          "background_gradient": "",
+          "text": "#000000",
+          "subtext": "#666666",
+          "heading_text": "#000000",
+          "button": "#000000",
+          "button_label": "#ffffff",
+          "outline_button_label": "#000000",
+          "button_hover": "#222222",
+          "button_text_hover": "#ffffff",
+          "price_sale": "#e84e4e",
+          "price_regular": "#000000",
+          "form_field": "#ffffff",
+          "form_field_label": "#000000",
+          "tooltip": "#222222",
+          "tooltip_label": "#ffffff",
+          "border": "#000000"
+        }
+      }
+    }
+  }
+}

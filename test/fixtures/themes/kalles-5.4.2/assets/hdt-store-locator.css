@@ -1,0 +1,167 @@
+.hdt-store-locator__sidebar {
+  max-height: 70vh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.hdt-store-locator__listings {
+  height: 100%;
+  overflow: auto;
+  border: 1px solid rgb(var(--color-line-border));
+}
+
+.hdt-store-locator__listings .hdt-store-locator__item {
+  display: block;
+  border-bottom: 1px solid rgb(var(--color-line-border));
+  padding: 20px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+.hdt-store-locator__listings .hdt-store-locator__item .hdt-rte{
+  color: rgb(var(--color-foreground2));
+}
+.hdt-store-locator__listings .hdt-store-locator__item:last-child {
+  border-bottom: none;
+}
+.hdt-store-locator__listings
+  .hdt-store-locator__item
+  .hdt-store-locator__title {
+  display: block;
+  color: rgb(var(--color-foreground));
+  font-weight: 500;
+}
+/*  .hdt-store-locator__listings .hdt-store-locator__item.is--active .hdt-store-locator__title,
+.hdt-store-locator__listings .hdt-store-locator__item .hdt-store-locator__title:hover {
+color: var(--accent-color);
+} */
+.hdt-store-locator__listings .hdt-store-locator__item:hover,
+.hdt-store-locator__listings .hdt-store-locator__item.is--active {
+  background-color: rgb(var(--color-foreground)/0.05);
+}
+
+
+.hdt-store-locator__marker {
+  border: none;
+  cursor: pointer;
+  height: 40px;
+  width: 40px;
+  color: var(--color-marker);
+}
+.mapboxgl-marker:not(.hdt-store-locator__marker) svg path {
+  fill: var(--color-marker);
+}
+svg.hdt-icon--store-locator {
+  width: 100%;
+  height: 100%;
+  fill: currentcolor;
+}
+.has--custom-img-marker .hdt-store-locator__marker {
+  background-image: var(--marker-img);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  height: 56px;
+  width: 56px;
+}
+/* .has--custom-img-marker svg.hdt-icon--store-locator {
+display: none !important
+} */
+
+/* Marker tweaks */
+.hdt-main-store-locator .mapboxgl-popup {
+  padding-bottom: 50px;
+}
+
+.hdt-main-store-locator .mapboxgl-popup-close-button {
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  outline: none;
+  color: rgb(var(--hdt-btn-color));
+  font-size: 20px;
+  padding: 10px;
+  line-height: 1;
+}
+.hdt-main-store-locator .mapboxgl-popup-content {
+  padding: 0;
+  width: 250px;
+}
+.hdt-main-store-locator .mapboxgl-popup-content h3 {
+  background: rgb(var(--color-background));
+  color: rgb(var(--color-foreground));
+  margin: 0;
+  padding: 12px 15px 5px;
+  padding-inline-end: 30px;
+  border-radius: 3px 3px 0 0;
+  font-weight: 500;
+  margin-top: 0;
+  font-size: 18px;
+  border-bottom: 1px solid rgb(var(--color-line-border));
+}
+
+.hdt-main-store-locator .mapboxgl-popup-content p {
+  margin: 0;
+  padding: 10px 15px 15px;
+  font-size: 14px;
+  color: rgb(var(--color-foreground2));
+}
+
+.hdt-main-store-locator .mapboxgl-popup-anchor-top > .mapboxgl-popup-content {
+  margin-top: 15px;
+}
+
+.hdt-main-store-locator .mapboxgl-popup-anchor-top > .mapboxgl-popup-tip {
+  border-bottom-color: rgb(var(--color-line-border));
+}
+.hdt-store-locator .mapboxgl-ctrl-logo,
+.hdt-store-locator .mapboxgl-ctrl-bottom-right .mapboxgl-ctrl {
+  display: none !important;
+}
+.hdt-store-locator .mapboxgl-map,
+.hdt-store-locator .mapboxgl-canvas-container {
+  width: 100%;
+  height: 100%;
+}
+.hdt-store-locator .mapboxgl-canvas {
+  display: block !important;
+  height: 100%;
+}
+.hdt-store-locator__content {
+  min-height: 600px;
+}
+.hdt-store-locator__item .hdt-rte > p {
+  margin-bottom: 0;
+}
+@media (max-width: 767px) {
+  .hdt-store-locator__listings .hdt-store-locator__item {
+    padding: 10px;
+  }
+  .hdt-store-locator__sidebar {
+    max-height: 50vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hdt-store-locator__content {
+    height: 70vh;
+  }
+}
+/* searchbox */
+.hdt-store-locator .mapboxgl-ctrl-geocoder {
+  background: rbg(var(--color-background));
+  color: rgb(var(--color-foreground));
+}
+.hdt-store-locator .mapboxgl-ctrl-geocoder--input {
+  color: rgb(var(--color-input-secondary));
+  background-color: rgb(var(--color-input-primary));
+}
+.hdt-store-locator .mapboxgl-ctrl-geocoder .suggestions > li > a {
+  /* color: rgb(var(--hdt-btn-color)); */
+}
+.hdt-store-locator .mapboxgl-ctrl-geocoder .suggestions > .active > a,
+.hdt-store-locator .mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
+  /* color: rgb(var(--hdt-btn-color)/0.85); */
+  background-color: rgb(var(--color-background)/0.5);
+}
+.hdt-store-locator .mapboxgl-ctrl-geocoder--icon {
+  fill: rgb(var(--color-foreground));
+}

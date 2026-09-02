@@ -1,0 +1,93 @@
+<!-- blocks/image-text-column.liquid -->
+{%- style -%}
+  #{{ block.id }} .hdt-image-wrapper{
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    column-gap: var(--spacing-x);
+  }
+  #{{ block.id }}::after{
+    padding-bottom: {{ block.settings.height }}%;
+    content:"";
+    display: block;
+  }
+{%- endstyle -%}
+<div id="{{ block.id }}" class="hdt-relative {{ block.settings.image_position }} {{ block.settings.rounded }} hdt-oh" {{ block.shopify_attributes }}>
+  <div class="hdt-image-wrapper">
+    {% content_for 'blocks' %}
+  </div>
+</div>
+{% schema %}
+  {
+    "name": "Media",
+    "tag": null,
+    "blocks": [
+      {
+        "type": "@theme"
+      },
+      {
+        "type": "@app"
+      },
+      {
+        "type": "image"
+      },
+      {
+        "type": "_media"
+      }
+    ],
+    "settings": [
+      {
+        "type": "select",
+        "id": "image_position",
+        "label": "Image position",
+        "options": [
+          {
+            "value": "",
+            "label": "First"
+          },
+          {
+            "value": "md:hdt-order-last",
+            "label": "Last"
+          }
+        ],
+        "default": ""
+      },
+      {
+        "type": "select",
+        "id": "rounded",
+        "label": "t:blocks.column.settings.rounded.label",
+        "options": [
+          {
+            "value": "none",
+            "label": "t:none"
+          },
+          {
+            "value": "hdt-radius-xs",
+            "label": "t:blocks.column.settings.rounded.options.xs"
+          },
+          {
+            "value": "hdt-radius-sm",
+            "label": "t:blocks.column.settings.rounded.options.sm"
+          },
+          {
+            "value": "hdt-radius",
+            "label": "t:blocks.column.settings.rounded.options.medium"
+          },
+          {
+            "value": "hdt-radius-lg",
+            "label": "t:blocks.column.settings.rounded.options.large"
+          },
+          {
+            "value": "hdt-radius-full",
+            "label": "t:blocks.column.settings.rounded.options.full"
+          }
+        ],
+        "default": "none"
+      },
+    ],
+    "presets": [
+      {
+        "name": "Media"
+      }
+    ]
+  }
+{% endschema %}

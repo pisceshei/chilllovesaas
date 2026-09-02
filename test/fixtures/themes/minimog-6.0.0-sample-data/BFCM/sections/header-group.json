@@ -1,0 +1,93 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "annoucement": {
+      "type": "annoucement",
+      "settings": {
+        "show_announcement": false,
+        "homepage_only": true,
+        "show_close": true,
+        "message": "Open Doors To A World Of Fashion  |  Discover More",
+        "message_link": "",
+        "show_divider": false
+      }
+    },
+    "header": {
+      "type": "header",
+      "blocks": {
+        "a6389b6c-8b98-4168-945c-7a485daeb368": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "Home",
+            "container": "container-fluid",
+            "html": ""
+          }
+        },
+        "aa3a461e-6b78-4ad1-9c05-30ef313f0de1": {
+          "type": "banner",
+          "settings": {
+            "heading": "Shops",
+            "container": "inherit",
+            "banner_style": "outside",
+            "banner_link": "",
+            "banner_title": "20% off everything",
+            "banner_desc": "",
+            "banner_button_text": "Shop Now"
+          }
+        },
+        "1047a891-c149-4198-a360-0ac3972840d2": {
+          "type": "product-list",
+          "settings": {
+            "heading": "Products",
+            "container": "container-fluid",
+            "stretch_width": false,
+            "limit": 6,
+            "columns": 2
+          }
+        },
+        "5a364b12-3ede-40b3-a634-06f003dc1b41": {
+          "type": "custom_html",
+          "settings": {
+            "heading": "FoxKit",
+            "container": "inherit",
+            "html": ""
+          }
+        }
+      },
+      "block_order": [
+        "a6389b6c-8b98-4168-945c-7a485daeb368",
+        "aa3a461e-6b78-4ad1-9c05-30ef313f0de1",
+        "1047a891-c149-4198-a360-0ac3972840d2",
+        "5a364b12-3ede-40b3-a634-06f003dc1b41"
+      ],
+      "settings": {
+        "header_design": "logo-left-menu-center",
+        "container": "container-fluid",
+        "header_sticky": true,
+        "transparent_on_top": false,
+        "logo_text": "MINIMOG",
+        "logo_svg": "",
+        "logo_mobile_svg": "",
+        "logo_transparent_svg": "",
+        "logo_max_width": 130,
+        "sticky_logo_max_width": 130,
+        "mobile_logo_max_width": 120,
+        "main_menu": "main-menu",
+        "secondary_menu": "",
+        "mobile_menu": "",
+        "uppercase_parent_level": true,
+        "show_menu_column_divider": true,
+        "search": "show_icon",
+        "show_account_icon": true,
+        "show_cart_icon": true,
+        "show_wishlist_icon": true,
+        "show_compare_icon": false,
+        "show_currency_switcher": false,
+        "show_country_selector": false,
+        "show_language_switcher": false
+      }
+    }
+  },
+  "order": ["annoucement", "header"]
+}

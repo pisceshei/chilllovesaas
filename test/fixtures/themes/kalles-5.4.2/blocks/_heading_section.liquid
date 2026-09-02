@@ -1,0 +1,150 @@
+<!-- blocks/_heading_section.liquid -->
+<h2 hdt-reveal="slide-in" timeline id="block-{{ block.id }}" class="hdt-text-warry hdt-heading-block {{ block.settings.text_color }} hdt-{{ block.settings.heading_size }} {{ block.settings.line_height }}" {{ block.shopify_attributes }}><span>{{ block.settings.heading }}</span></h2>
+{%- if block.settings.heading_size == "h_custom" -%}
+  {%- style -%}
+    #block-{{ block.id }} {
+      --heading-fs-lg: {{ block.settings.font_size_heading_lg }}px; --heading-fs-mb: {{ block.settings.font_size_heading }}px; --heading-ls: {{ block.settings.letter_spacing_heading }}px; 
+    }
+  {%- endstyle -%}
+{%- endif -%}
+{% schema %}
+{
+  "name": "t:blocks.section_heading.name",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:blocks.section_heading.name",
+      "default": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "line_height",
+      "label": "t:settings_schema.typography.settings.line_height.label",
+      "options": [
+        {
+          "value": "",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-lh-1",
+          "label": "t:settings_schema.typography.settings.line_height.hdt-lh-1"
+        }
+      ],
+      "default": ""
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:settings_schema.heading.settings.label",
+      "options": [
+        {
+          "value": "base",
+          "label": "t:settings_schema.heading.settings.base_size"
+        },
+        {
+          "value": "h6",
+          "label": "t:settings_schema.heading.settings.h6_size"
+        },
+        {
+          "value": "h5",
+          "label": "t:settings_schema.heading.settings.h5_size"
+        },
+        {
+          "value": "h4",
+          "label": "t:settings_schema.heading.settings.h4_size"
+        },
+        {
+          "value": "h3",
+          "label": "t:settings_schema.heading.settings.h3_size"
+        },
+        {
+          "value": "h2",
+          "label": "t:settings_schema.heading.settings.h2_size"
+        },
+        {
+          "value": "h1",
+          "label": "t:settings_schema.heading.settings.h1_size"
+        },
+        {
+          "value": "h0",
+          "label": "t:settings_schema.heading.settings.h0_size"
+        },
+        {
+          "value": "h_custom",
+          "label": "t:settings_schema.typography.settings.font_size.custom"
+        }
+      ],
+      "default": "h5"
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "options": [
+        {
+          "value": "hdt-s-text",
+          "label": "t:default"
+        },
+        {
+          "value": "hdt-text-secondary",
+          "label": "t:settings_schema.colors.secondary"
+        },
+        {
+          "value": "hdt-text-tertiary",
+          "label": "t:settings_schema.colors.tertiary"
+        },
+        {
+          "value": "hdt-text-primary",
+          "label": "t:settings_schema.colors.accent"
+        }
+      ],
+      "label": "t:blocks.text.text_color.label",
+      "default": "hdt-s-text"
+    },
+    {
+      "type": "header",
+      "content": "t:blocks.text.custom_size_options.label",
+      "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_heading_lg",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.label",
+      "default": 50,
+      "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "font_size_heading",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.font_size.mobile_font_size",
+      "default": 24,
+      "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing_heading",
+      "min": -10,
+      "max": 10,
+      "step": 0.2,
+      "unit": "px",
+      "label": "t:settings_schema.typography.settings.letter_spacing",
+      "default": 0,
+      "visible_if": "{{ block.settings.heading_size == 'h_custom' }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:blocks.section_heading.name",
+    }
+  ]
+}
+{% endschema %}
